@@ -33,8 +33,7 @@
 #include <deemon/string.h>
 #include <deemon/system-features.h>
 #include <deemon/tuple.h>
-
-#include <hybrid/atomic.h>
+#include <deemon/util/atomic.h>
 
 #include "../runtime/runtime_error.h"
 #include "../runtime/strings.h"
@@ -48,13 +47,6 @@ DECL_BEGIN
 DeeSystem_DEFINE_strcmp(dee_strcmp)
 #endif /* !CONFIG_HAVE_strcmp */
 
-#ifdef CONFIG_NO_THREADS
-#define Dee_ATOMIC_READ(x) x
-#else /* CONFIG_NO_THREADS */
-#define Dee_ATOMIC_READ ATOMIC_READ
-#endif /* !CONFIG_NO_THREADS */
-
-
 typedef DeeKwdsObject Kwds;
 typedef DeeKwdsMappingObject KwdsMapping;
 
@@ -66,7 +58,7 @@ typedef struct {
 	DREF Kwds               *ki_map;  /* [1..1][const] The associated keywords table. */
 } KwdsIterator;
 
-#define READ_ITER(x) Dee_ATOMIC_READ((x)->ki_iter)
+#define READ_ITER(x) atomic_read(&(x)->ki_iter)
 
 INTDEF DeeTypeObject DeeKwdsIterator_Type;
 PRIVATE WUNUSED DREF Kwds *DCALL kwds_ctor(void);
@@ -136,21 +128,10 @@ kwdsiter_bool(KwdsIterator *__restrict self) {
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 kwds_nsi_nextitem(KwdsIterator *__restrict self) {
 	DREF DeeObject *value, *result;
-#ifdef CONFIG_NO_THREADS
-	struct kwds_entry *entry;
-	entry = self->ki_iter;
-	for (;;) {
-		if (entry >= self->ki_end)
-			return ITER_DONE;
-		if (entry->ke_name)
-			break;
-		++entry;
-	}
-	self->ki_iter = entry + 1;
-#else /* CONFIG_NO_THREADS */
 	struct kwds_entry *old_iter, *entry;
 	for (;;) {
-		entry = old_iter = ATOMIC_READ(self->ki_iter);
+		old_iter = atomic_read(&self->ki_iter);
+		entry    = old_iter;
 		for (;;) {
 			if (entry >= self->ki_end)
 				return ITER_DONE;
@@ -158,10 +139,9 @@ kwds_nsi_nextitem(KwdsIterator *__restrict self) {
 				break;
 			++entry;
 		}
-		if (ATOMIC_CMPXCH(self->ki_iter, old_iter, entry + 1))
+		if (atomic_cmpxch_weak_or_write(&self->ki_iter, old_iter, entry + 1))
 			break;
 	}
-#endif /* !CONFIG_NO_THREADS */
 	value = DeeInt_NewSize(entry->ke_index);
 	if unlikely(!value)
 		goto err;
@@ -174,21 +154,10 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 kwds_nsi_nextkey(KwdsIterator *__restrict self) {
-#ifdef CONFIG_NO_THREADS
-	struct kwds_entry *entry;
-	entry = self->ki_iter;
-	for (;;) {
-		if (entry >= self->ki_end)
-			return ITER_DONE;
-		if (entry->ke_name)
-			break;
-		++entry;
-	}
-	self->ki_iter = entry + 1;
-#else /* CONFIG_NO_THREADS */
 	struct kwds_entry *old_iter, *entry;
 	for (;;) {
-		entry = old_iter = ATOMIC_READ(self->ki_iter);
+		old_iter = atomic_read(&self->ki_iter);
+		entry    = old_iter;
 		for (;;) {
 			if (entry >= self->ki_end)
 				return ITER_DONE;
@@ -196,30 +165,18 @@ kwds_nsi_nextkey(KwdsIterator *__restrict self) {
 				break;
 			++entry;
 		}
-		if (ATOMIC_CMPXCH(self->ki_iter, old_iter, entry + 1))
+		if (atomic_cmpxch_weak_or_write(&self->ki_iter, old_iter, entry + 1))
 			break;
 	}
-#endif /* !CONFIG_NO_THREADS */
 	return_reference_((DeeObject *)entry->ke_name);
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 kwds_nsi_nextvalue(KwdsIterator *__restrict self) {
-#ifdef CONFIG_NO_THREADS
-	struct kwds_entry *entry;
-	entry = self->ki_iter;
-	for (;;) {
-		if (entry >= self->ki_end)
-			return ITER_DONE;
-		if (entry->ke_name)
-			break;
-		++entry;
-	}
-	self->ki_iter = entry + 1;
-#else /* CONFIG_NO_THREADS */
 	struct kwds_entry *old_iter, *entry;
 	for (;;) {
-		entry = old_iter = ATOMIC_READ(self->ki_iter);
+		old_iter = atomic_read(&self->ki_iter);
+		entry    = old_iter;
 		for (;;) {
 			if (entry >= self->ki_end)
 				return ITER_DONE;
@@ -227,10 +184,9 @@ kwds_nsi_nextvalue(KwdsIterator *__restrict self) {
 				break;
 			++entry;
 		}
-		if (ATOMIC_CMPXCH(self->ki_iter, old_iter, entry + 1))
+		if (atomic_cmpxch_weak_or_write(&self->ki_iter, old_iter, entry + 1))
 			break;
 	}
-#endif /* !CONFIG_NO_THREADS */
 	return DeeInt_NewSize(entry->ke_index);
 }
 
@@ -665,7 +621,7 @@ typedef struct {
 	DREF KwdsMapping        *ki_map;  /* [1..1][const] The associated keywords mapping. */
 } KmapIterator;
 
-#define READ_ITER(x) Dee_ATOMIC_READ((x)->ki_iter)
+#define READ_ITER(x) atomic_read(&(x)->ki_iter)
 
 STATIC_ASSERT(offsetof(KwdsIterator, ki_iter) == offsetof(KmapIterator, ki_iter));
 STATIC_ASSERT(offsetof(KwdsIterator, ki_end) == offsetof(KmapIterator, ki_end));
@@ -717,27 +673,16 @@ kmapiter_bool(KmapIterator *__restrict self) {
 			break;
 		++entry;
 	}
-	return Dee_ATOMIC_READ(self->ki_map->kmo_argv) != NULL;
+	return atomic_read(&self->ki_map->kmo_argv) != NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 kmap_nsi_nextitem(KmapIterator *__restrict self) {
 	DREF DeeObject *value, *result;
-#ifdef CONFIG_NO_THREADS
-	struct kwds_entry *entry;
-	entry = self->ki_iter;
-	for (;;) {
-		if (entry >= self->ki_end)
-			return ITER_DONE;
-		if (entry->ke_name)
-			break;
-		++entry;
-	}
-	self->ki_iter = entry + 1;
-#else /* CONFIG_NO_THREADS */
 	struct kwds_entry *old_iter, *entry;
 	for (;;) {
-		entry = old_iter = ATOMIC_READ(self->ki_iter);
+		old_iter = atomic_read(&self->ki_iter);
+		entry    = old_iter;
 		for (;;) {
 			if (entry >= self->ki_end)
 				return ITER_DONE;
@@ -745,10 +690,9 @@ kmap_nsi_nextitem(KmapIterator *__restrict self) {
 				break;
 			++entry;
 		}
-		if (ATOMIC_CMPXCH(self->ki_iter, old_iter, entry + 1))
+		if (atomic_cmpxch_weak_or_write(&self->ki_iter, old_iter, entry + 1))
 			break;
 	}
-#endif /* !CONFIG_NO_THREADS */
 	atomic_rwlock_read(&self->ki_map->kmo_lock);
 	if unlikely(!self->ki_map->kmo_argv) {
 		atomic_rwlock_endread(&self->ki_map->kmo_lock);
@@ -764,21 +708,10 @@ kmap_nsi_nextitem(KmapIterator *__restrict self) {
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 kmap_nsi_nextkey(KmapIterator *__restrict self) {
-#ifdef CONFIG_NO_THREADS
-	struct kwds_entry *entry;
-	entry = self->ki_iter;
-	for (;;) {
-		if (entry >= self->ki_end)
-			return ITER_DONE;
-		if (entry->ke_name)
-			break;
-		++entry;
-	}
-	self->ki_iter = entry + 1;
-#else /* CONFIG_NO_THREADS */
 	struct kwds_entry *old_iter, *entry;
 	for (;;) {
-		entry = old_iter = ATOMIC_READ(self->ki_iter);
+		old_iter = atomic_read(&self->ki_iter);
+		entry    = old_iter;
 		for (;;) {
 			if (entry >= self->ki_end)
 				return ITER_DONE;
@@ -786,11 +719,10 @@ kmap_nsi_nextkey(KmapIterator *__restrict self) {
 				break;
 			++entry;
 		}
-		if (ATOMIC_CMPXCH(self->ki_iter, old_iter, entry + 1))
+		if (atomic_cmpxch_weak_or_write(&self->ki_iter, old_iter, entry + 1))
 			break;
 	}
-#endif /* !CONFIG_NO_THREADS */
-	if unlikely(!Dee_ATOMIC_READ(self->ki_map->kmo_argv))
+	if unlikely(!atomic_read(&self->ki_map->kmo_argv))
 		return ITER_DONE;
 	return_reference_((DeeObject *)entry->ke_name);
 }
@@ -798,21 +730,10 @@ kmap_nsi_nextkey(KmapIterator *__restrict self) {
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 kmap_nsi_nextvalue(KmapIterator *__restrict self) {
 	DREF DeeObject *value;
-#ifdef CONFIG_NO_THREADS
-	struct kwds_entry *entry;
-	entry = self->ki_iter;
-	for (;;) {
-		if (entry >= self->ki_end)
-			return ITER_DONE;
-		if (entry->ke_name)
-			break;
-		++entry;
-	}
-	self->ki_iter = entry + 1;
-#else /* CONFIG_NO_THREADS */
 	struct kwds_entry *old_iter, *entry;
 	for (;;) {
-		entry = old_iter = ATOMIC_READ(self->ki_iter);
+		old_iter = atomic_read(&self->ki_iter);
+		entry    = old_iter;
 		for (;;) {
 			if (entry >= self->ki_end)
 				return ITER_DONE;
@@ -820,10 +741,9 @@ kmap_nsi_nextvalue(KmapIterator *__restrict self) {
 				break;
 			++entry;
 		}
-		if (ATOMIC_CMPXCH(self->ki_iter, old_iter, entry + 1))
+		if (atomic_cmpxch_weak_or_write(&self->ki_iter, old_iter, entry + 1))
 			break;
 	}
-#endif /* !CONFIG_NO_THREADS */
 	atomic_rwlock_read(&self->ki_map->kmo_lock);
 	if unlikely(!self->ki_map->kmo_argv) {
 		atomic_rwlock_endread(&self->ki_map->kmo_lock);
@@ -1012,7 +932,7 @@ kmap_visit(KwdsMapping *__restrict self, dvisit_t proc, void *arg) {
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 kmap_bool(KwdsMapping *__restrict self) {
-	if (!Dee_ATOMIC_READ(self->kmo_argv))
+	if (!atomic_read(&self->kmo_argv))
 		return 0;
 	return self->kmo_kwds->kw_size != 0;
 }
@@ -1034,21 +954,21 @@ done:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 kmap_size(KwdsMapping *__restrict self) {
-	if (!Dee_ATOMIC_READ(self->kmo_argv))
+	if (!atomic_read(&self->kmo_argv))
 		return_reference_(&DeeInt_Zero);
 	return DeeInt_NewSize(self->kmo_kwds->kw_size);
 }
 
 PRIVATE WUNUSED NONNULL((1)) size_t DCALL
 kmap_nsi_getsize(KwdsMapping *__restrict self) {
-	if (!Dee_ATOMIC_READ(self->kmo_argv))
+	if (!atomic_read(&self->kmo_argv))
 		return 0;
 	return self->kmo_kwds->kw_size;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 kmap_contains(KwdsMapping *self, DeeObject *key) {
-	if (!Dee_ATOMIC_READ(self->kmo_argv))
+	if (!atomic_read(&self->kmo_argv))
 		goto nope;
 	if (!DeeString_Check(key))
 		goto nope;
@@ -1262,7 +1182,7 @@ DeeKwdsMapping_HasItemString(DeeObject *__restrict self,
 	index = kwds_findstr(me->kmo_kwds, name, hash);
 	if unlikely(index == (size_t)-1)
 		return false;
-	if unlikely(!Dee_ATOMIC_READ(me->kmo_argv))
+	if unlikely(!atomic_read(&me->kmo_argv))
 		return false;
 	return true;
 }
@@ -1279,7 +1199,7 @@ DeeKwdsMapping_HasItemStringLen(DeeObject *__restrict self,
 	index = kwds_findstr_len(me->kmo_kwds, name, namesize, hash);
 	if unlikely(index == (size_t)-1)
 		return false;
-	if unlikely(!Dee_ATOMIC_READ(me->kmo_argv))
+	if unlikely(!atomic_read(&me->kmo_argv))
 		return false;
 	return true;
 }

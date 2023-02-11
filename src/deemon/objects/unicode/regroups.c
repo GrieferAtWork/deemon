@@ -30,8 +30,7 @@
 #include <deemon/seq.h>
 #include <deemon/string.h>
 #include <deemon/tuple.h>
-
-#include <hybrid/atomic.h>
+#include <deemon/util/atomic.h>
 
 #include "../../runtime/runtime_error.h"
 #include "../../runtime/strings.h"
@@ -196,20 +195,14 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 rgiter_next(ReGroupsIterator *__restrict self) {
 	DREF DeeObject *result;
 	size_t index;
-#ifndef CONFIG_NO_THREADS
 again:
-#endif /* CONFIG_NO_THREADS */
 	index = ReGroupsIterator_GetIndex(self);
 	if unlikely(index >= self->rgi_groups->rg_ngroups)
 		return ITER_DONE;
 	result = DeeRegexMatch_AsRangeObject(&self->rgi_groups->rg_groups[index]);
 	if likely(result) {
-#ifdef CONFIG_NO_THREADS
-		self->rgi_index = index + 1;
-#else  /* CONFIG_NO_THREADS */
-		if unlikely (!ATOMIC_CMPXCH(self->rgi_index, index, index + 1))
+		if unlikely(!atomic_cmpxch_or_write(&self->rgi_index, index, index + 1))
 			goto again;
-#endif /* !CONFIG_NO_THREADS */
 	}
 	return result;
 }
@@ -218,9 +211,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 rssiter_next(ReSubStringsIterator *__restrict self) {
 	DREF DeeObject *result;
 	size_t index;
-#ifndef CONFIG_NO_THREADS
 again:
-#endif /* CONFIG_NO_THREADS */
 	index = ReSubStringsIterator_GetIndex(self);
 	if unlikely(index >= self->rssi_strings->rss_ngroups)
 		return ITER_DONE;
@@ -228,12 +219,8 @@ again:
 	                                   self->rssi_strings->rss_baseown,
 	                                   self->rssi_strings->rss_baseptr);
 	if likely(result) {
-#ifdef CONFIG_NO_THREADS
-		self->rssi_index = index + 1;
-#else  /* CONFIG_NO_THREADS */
-		if unlikely (!ATOMIC_CMPXCH(self->rssi_index, index, index + 1))
+		if unlikely(!atomic_cmpxch_or_write(&self->rssi_index, index, index + 1))
 			goto again;
-#endif /* !CONFIG_NO_THREADS */
 	}
 	return result;
 }
@@ -242,9 +229,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 rsbiter_next(ReSubBytesIterator *__restrict self) {
 	DREF DeeObject *result;
 	size_t index;
-#ifndef CONFIG_NO_THREADS
 again:
-#endif /* CONFIG_NO_THREADS */
 	index = ReSubBytesIterator_GetIndex(self);
 	if unlikely(index >= self->rssi_strings->rss_ngroups)
 		return ITER_DONE;
@@ -252,12 +237,8 @@ again:
 	                                   self->rssi_strings->rss_baseown,
 	                                   self->rssi_strings->rss_baseptr);
 	if likely(result) {
-#ifdef CONFIG_NO_THREADS
-		self->rssi_index = index + 1;
-#else  /* CONFIG_NO_THREADS */
-		if unlikely (!ATOMIC_CMPXCH(self->rssi_index, index, index + 1))
+		if unlikely(!atomic_cmpxch_or_write(&self->rssi_index, index, index + 1))
 			goto again;
-#endif /* !CONFIG_NO_THREADS */
 	}
 	return result;
 }

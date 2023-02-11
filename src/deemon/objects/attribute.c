@@ -35,8 +35,8 @@
 #include <deemon/string.h>
 #include <deemon/super.h>
 #include <deemon/system-features.h>
+#include <deemon/util/atomic.h>
 
-#include <hybrid/atomic.h>
 #include <hybrid/spcall.h>
 
 #include "../runtime/runtime_error.h"
@@ -186,7 +186,7 @@ attr_get_name(Attr *__restrict self) {
 	uint16_t perm;
 again:
 	name_str = self->a_name;
-	__hybrid_atomic_thread_fence(__ATOMIC_ACQUIRE);
+	atomic_thread_fence(Dee_ATOMIC_ACQUIRE);
 	perm = self->a_info.a_perm;
 	if (perm & ATTR_NAMEOBJ) {
 		result = COMPILER_CONTAINER_OF(name_str,
@@ -203,11 +203,11 @@ again:
 			if unlikely(!result)
 				goto done;
 			/* Cache the name-string as part of the attribute structure. */
-			if (!ATOMIC_CMPXCH(self->a_name, name_str, DeeString_STR(result))) {
+			if (!atomic_cmpxch(&self->a_name, name_str, DeeString_STR(result))) {
 				Dee_Decref(result);
 				goto again;
 			}
-			ATOMIC_OR(self->a_info.a_perm, ATTR_NAMEOBJ);
+			atomic_or(&self->a_info.a_perm, ATTR_NAMEOBJ);
 			Dee_Incref(result);
 		}
 	}
@@ -222,7 +222,7 @@ attr_get_doc(Attr *__restrict self) {
 	uint16_t perm;
 again:
 	doc_str = self->a_info.a_doc;
-	__hybrid_atomic_thread_fence(__ATOMIC_ACQUIRE);
+	atomic_thread_fence(Dee_ATOMIC_ACQUIRE);
 	perm = self->a_info.a_perm;
 	if (perm & ATTR_DOCOBJ) {
 		result = COMPILER_CONTAINER_OF(doc_str,
@@ -241,11 +241,11 @@ again:
 			if unlikely(!result)
 				goto done;
 			/* Cache the doc-string as part of the attribute structure. */
-			if (!ATOMIC_CMPXCH(self->a_info.a_doc, doc_str, DeeString_STR(result))) {
+			if (!atomic_cmpxch(&self->a_info.a_doc, doc_str, DeeString_STR(result))) {
 				Dee_Decref(result);
 				goto again;
 			}
-			ATOMIC_OR(self->a_info.a_perm, ATTR_DOCOBJ);
+			atomic_or(&self->a_info.a_perm, ATTR_DOCOBJ);
 			Dee_Incref(result);
 		}
 	}
@@ -1196,10 +1196,10 @@ done:
 #else /* CONFIG_LONGJMP_ENUMATTR */
 	DREF Attr **presult;
 	do {
-		presult = ATOMIC_READ(self->ei_iter);
+		presult = atomic_read(&self->ei_iter);
 		if (presult == self->ei_end)
 			return (DREF Attr *)ITER_DONE;
-	} while (!ATOMIC_CMPXCH(self->ei_iter, presult, presult + 1));
+	} while (!atomic_cmpxch(&self->ei_iter, presult, presult + 1));
 	return_reference_(*presult);
 #endif /* !CONFIG_LONGJMP_ENUMATTR */
 }

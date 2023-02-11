@@ -28,8 +28,7 @@
 #include <deemon/seq.h>
 #include <deemon/string.h>
 #include <deemon/system-features.h> /* memcpy() */
-
-#include <hybrid/atomic.h>
+#include <deemon/util/atomic.h>
 
 #include "../../runtime/strings.h"
 #include "regroups.h"
@@ -290,7 +289,7 @@ rebfaiter_getseq(ReSequenceIterator *__restrict self) {
 	return bytes_re_findall((DeeBytesObject *)self->rsi_data, &args_copy);
 }
 
-#define REITER_GETDATAPTR(x) ATOMIC_READ((x)->rsi_exec.rx_startoff)
+#define REITER_GETDATAPTR(x) atomic_read(&(x)->rsi_exec.rx_startoff)
 
 #define DEFINE_REFA_COMPARE(name, op)                           \
 	PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL       \
@@ -1041,11 +1040,7 @@ err:
 #define rebspiter_bool respiter_bool
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 respiter_bool(ReSequenceIterator *__restrict self) {
-#ifdef CONFIG_NO_THREADS
-	return self->rsi_exec.rx_inbase != NULL;
-#else /* CONFIG_NO_THREADS */
-	return ATOMIC_READ(self->rsi_exec.rx_inbase) != NULL;
-#endif /* !CONFIG_NO_THREADS */
+	return atomic_read(&self->rsi_exec.rx_inbase) != NULL;
 }
 
 

@@ -31,12 +31,7 @@ typedef struct {
 	size_t          sr_size;  /* Max remaining number of items to-be yielded. */
 	size_t          sr_start; /* Starting index of the original sub-range. */
 } SubRangeIterator;
-
-#ifdef CONFIG_NO_THREADS
-#define READ_SIZE(x)            ((x)->sr_size)
-#else /* CONFIG_NO_THREADS */
-#define READ_SIZE(x) ATOMIC_READ((x)->sr_size)
-#endif /* !CONFIG_NO_THREADS */
+#define READ_SIZE(x) atomic_read(&(x)->sr_size)
 
 
 typedef struct {

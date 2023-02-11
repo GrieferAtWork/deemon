@@ -25,8 +25,7 @@
 #include <deemon/module.h>
 #include <deemon/object.h>
 #include <deemon/string.h>
-
-#include <hybrid/atomic.h>
+#include <deemon/util/atomic.h>
 
 #ifndef CONFIG_NO_THREADS
 #include <hybrid/sched/yield.h>
@@ -157,11 +156,11 @@ DCALL DeeModule_GetDeemon(void) {
 		init_state = INIT_COMPLET;
 #else /* CONFIG_NO_THREADS */
 		COMPILER_READ_BARRIER();
-		if (ATOMIC_CMPXCH(init_state, INIT_PENDING, INIT_PROGRES)) {
+		if (atomic_cmpxch(&init_state, INIT_PENDING, INIT_PROGRES)) {
 			init_builtins();
-			ATOMIC_WRITE(init_state, INIT_COMPLET);
+			atomic_write(&init_state, INIT_COMPLET);
 		} else {
-			while (ATOMIC_READ(init_state) != INIT_COMPLET)
+			while (atomic_read(&init_state) != INIT_COMPLET)
 				SCHED_YIELD();
 		}
 #endif /* !CONFIG_NO_THREADS */

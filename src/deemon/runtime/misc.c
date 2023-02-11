@@ -33,10 +33,7 @@
 #include <deemon/system-features.h> /* memcpy(), ... */
 #include <deemon/thread.h>
 #include <deemon/util/lock.h>
-
-#ifndef CONFIG_NO_THREADS
 #include <deemon/util/rwlock.h>
-#endif /* !CONFIG_NO_THREADS */
 
 #ifndef CONFIG_NO_DEC
 #include <deemon/dec.h>

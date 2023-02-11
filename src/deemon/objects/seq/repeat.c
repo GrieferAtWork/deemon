@@ -32,8 +32,8 @@
 #include <deemon/none.h>
 #include <deemon/object.h>
 #include <deemon/seq.h>
+#include <deemon/util/atomic.h>
 
-#include <hybrid/atomic.h>
 #include <hybrid/overflow.h>
 
 #include "../../runtime/runtime_error.h"
@@ -42,12 +42,7 @@
 
 DECL_BEGIN
 
-#ifndef CONFIG_NO_THREADS
-#define REPEATITER_READ_NUM(x) ATOMIC_READ((x)->ri_num)
-#else /* !CONFIG_NO_THREADS */
-#define REPEATITER_READ_NUM(x)            ((x)->ri_num)
-#endif /* !CONFIG_NO_THREADS */
-
+#define REPEATITER_READ_NUM(x) atomic_read(&(x)->ri_num)
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 repeatiter_ctor(RepeatIterator *__restrict self) {
@@ -669,18 +664,7 @@ INTERN DeeTypeObject SeqRepeat_Type = {
 
 
 
-
-
-
-
-
-
-#ifndef CONFIG_NO_THREADS
-#define REPEATITEMPITER_READ_NUM(x) ATOMIC_READ((x)->rii_num)
-#else /* !CONFIG_NO_THREADS */
-#define REPEATITEMPITER_READ_NUM(x)            ((x)->rii_num)
-#endif /* CONFIG_NO_THREADS */
-
+#define REPEATITEMPITER_READ_NUM(x) atomic_read(&(x)->rii_num)
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 repeatitemiter_ctor(RepeatItemIterator *__restrict self) {
@@ -840,16 +824,11 @@ PRIVATE struct type_cmp repeatitemiter_cmp = {
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 repeatitemiter_next(RepeatItemIterator *__restrict self) {
 	size_t count;
-#ifndef CONFIG_NO_THREADS
 	do {
-		if ((count = ATOMIC_READ(self->rii_num)) == 0)
+		count = atomic_read(&self->rii_num);
+		if (count == 0)
 			return ITER_DONE;
-	} while (!ATOMIC_CMPXCH_WEAK(self->ob_refcnt, count, count - 1));
-#else /* !CONFIG_NO_THREADS */
-	if (!self->rii_num)
-		return ITER_DONE;
-	--self->rii_num;
-#endif /* CONFIG_NO_THREADS */
+	} while (!atomic_cmpxch_weak_or_write(&self->ob_refcnt, count, count - 1));
 	return_reference_(self->rii_obj);
 }
 

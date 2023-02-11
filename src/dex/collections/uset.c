@@ -38,8 +38,8 @@
 #include <deemon/seq.h>
 #include <deemon/set.h>
 #include <deemon/system-features.h> /* memcpyc(), ... */
+#include <deemon/util/atomic.h>
 
-#include <hybrid/atomic.h>
 #include <hybrid/sched/yield.h>
 
 DECL_BEGIN
@@ -64,14 +64,7 @@ INTDEF DeeTypeObject USetIterator_Type;
 INTDEF DeeTypeObject URoSet_Type;
 INTDEF DeeTypeObject URoSetIterator_Type;
 
-
-
-
-#ifdef CONFIG_NO_THREADS
-#define READ_ITEM(x) ((x)->si_next)
-#else /* CONFIG_NO_THREADS */
-#define READ_ITEM(x) ATOMIC_READ((x)->si_next)
-#endif /* !CONFIG_NO_THREADS */
+#define READ_ITEM(x) atomic_read(&(x)->si_next)
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 usetiterator_next(USetIterator *__restrict self) {
@@ -80,16 +73,11 @@ usetiterator_next(USetIterator *__restrict self) {
 	USet *set = self->si_set;
 	USet_LockRead(set);
 	end = set->s_elem + (set->s_mask + 1);
-#ifndef CONFIG_NO_THREADS
-	for (;;)
-#endif /* !CONFIG_NO_THREADS */
-	{
-#ifdef CONFIG_NO_THREADS
-		item = ATOMIC_READ(self->si_next);
-#else /* CONFIG_NO_THREADS */
+	for (;;) {
 		struct uset_item *old_item;
-		old_item = item = ATOMIC_READ(self->si_next);
-#endif /* !CONFIG_NO_THREADS */
+		item     = atomic_read(&self->si_next);
+		old_item = item;
+
 		/* Validate that the pointer is still located in-bounds. */
 		if (item >= end) {
 			if unlikely(item > end)
@@ -98,24 +86,17 @@ usetiterator_next(USetIterator *__restrict self) {
 		}
 		if unlikely(item < set->s_elem)
 			goto set_has_changed;
+
 		/* Search for the next non-empty item. */
 		while (item < end && (!item->si_key || item->si_key == dummy))
 			++item;
 		if (item == end) {
-#ifdef CONFIG_NO_THREADS
-			self->si_next = item;
-#else /* CONFIG_NO_THREADS */
-			if (!ATOMIC_CMPXCH(self->si_next, old_item, item))
+			if (!atomic_cmpxch_or_write(&self->si_next, old_item, item))
 				continue;
-#endif /*!CONFIG_NO_THREADS */
 			goto iter_exhausted;
 		}
-#ifdef CONFIG_NO_THREADS
-		self->si_next = item + 1;
-#else /* CONFIG_NO_THREADS */
-		if (ATOMIC_CMPXCH(self->si_next, old_item, item + 1))
+		if (atomic_cmpxch_or_write(&self->si_next, old_item, item + 1))
 			break;
-#endif /* !CONFIG_NO_THREADS */
 	}
 	result = item->si_key;
 	Dee_Incref(result);
@@ -971,11 +952,7 @@ uset_iter(USet *__restrict self) {
 	DeeObject_Init(result, &USetIterator_Type);
 	result->si_set = self;
 	Dee_Incref(self);
-#ifdef CONFIG_NO_THREADS
-	result->si_next = self->s_elem;
-#else /* CONFIG_NO_THREADS */
-	result->si_next = ATOMIC_READ(self->s_elem);
-#endif /* !CONFIG_NO_THREADS */
+	result->si_next = atomic_read(&self->s_elem);
 done:
 	return result;
 }
@@ -983,20 +960,12 @@ done:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 uset_size(USet *__restrict self) {
-#ifdef CONFIG_NO_THREADS
-	return DeeInt_NewSize(self->s_used);
-#else /* CONFIG_NO_THREADS */
-	return DeeInt_NewSize(ATOMIC_READ(self->s_used));
-#endif /* !CONFIG_NO_THREADS */
+	return DeeInt_NewSize(atomic_read(&self->s_used));
 }
 
 PRIVATE WUNUSED NONNULL((1)) size_t DCALL
 uset_nsi_getsize(USet *__restrict self) {
-#ifdef CONFIG_NO_THREADS
-	return self->s_used;
-#else /* CONFIG_NO_THREADS */
-	return ATOMIC_READ(self->s_used);
-#endif /* !CONFIG_NO_THREADS */
+	return atomic_read(&self->s_used);
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
@@ -1057,11 +1026,7 @@ err:
 
 INTERN WUNUSED NONNULL((1)) int DCALL
 uset_bool(USet *__restrict self) {
-#ifdef CONFIG_NO_THREADS
-	return self->s_used != 0;
-#else /* CONFIG_NO_THREADS */
-	return ATOMIC_READ(self->s_used) != 0;
-#endif /* !CONFIG_NO_THREADS */
+	return atomic_read(&self->s_used) != 0;
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
@@ -1338,45 +1303,27 @@ INTERN DeeTypeObject USet_Type = {
 
 
 #undef READ_ITEM
-#ifdef CONFIG_NO_THREADS
-#define READ_ITEM(x) ((x)->si_next)
-#else /* CONFIG_NO_THREADS */
-#define READ_ITEM(x) ATOMIC_READ((x)->si_next)
-#endif /* !CONFIG_NO_THREADS */
+#define READ_ITEM(x) atomic_read(&(x)->si_next)
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 urosetiterator_next(URoSetIterator *__restrict self) {
 	struct uset_item *item, *end;
 	end = self->si_set->rs_elem + self->si_set->rs_mask + 1;
-#ifndef CONFIG_NO_THREADS
-	for (;;)
-#endif /* !CONFIG_NO_THREADS */
-	{
-#ifdef CONFIG_NO_THREADS
-		item = ATOMIC_READ(self->si_next);
-#else /* CONFIG_NO_THREADS */
+	for (;;) {
 		struct uset_item *old_item;
-		old_item = item = ATOMIC_READ(self->si_next);
-#endif /* !CONFIG_NO_THREADS */
+		item     = atomic_read(&self->si_next);
+		old_item = item;
 		if (item >= end)
 			goto iter_exhausted;
 		while (item < end && !item->si_key)
 			++item;
 		if (item == end) {
-#ifdef CONFIG_NO_THREADS
-			self->si_next = item;
-#else /* CONFIG_NO_THREADS */
-			if (!ATOMIC_CMPXCH(self->si_next, old_item, item))
+			if (!atomic_cmpxch_or_write(&self->si_next, old_item, item))
 				continue;
-#endif /* !CONFIG_NO_THREADS */
 			goto iter_exhausted;
 		}
-#ifdef CONFIG_NO_THREADS
-		self->si_next = item + 1;
-#else /* CONFIG_NO_THREADS */
-		if (ATOMIC_CMPXCH(self->si_next, old_item, item + 1))
+		if (atomic_cmpxch_or_write(&self->si_next, old_item, item + 1))
 			break;
-#endif /* !CONFIG_NO_THREADS */
 	}
 	return_reference_(item->si_key);
 iter_exhausted:

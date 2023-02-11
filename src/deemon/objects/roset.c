@@ -32,8 +32,7 @@
 #include <deemon/set.h>
 #include <deemon/string.h>
 #include <deemon/thread.h>
-
-#include <hybrid/atomic.h>
+#include <deemon/util/atomic.h>
 
 #include "../runtime/runtime_error.h"
 #include "../runtime/strings.h"
@@ -48,14 +47,9 @@ typedef struct {
 	struct roset_item *si_next; /* [?..1][in(si_set->rs_elem)][atomic]
 	                             * The first candidate for the next item. */
 } SetIterator;
+#define READ_ITEM(x) atomic_read(&(x)->si_next)
 
 INTDEF DeeTypeObject RoSetIterator_Type;
-
-#ifdef CONFIG_NO_THREADS
-#define READ_ITEM(x)            ((x)->si_next)
-#else /* CONFIG_NO_THREADS */
-#define READ_ITEM(x) ATOMIC_READ((x)->si_next)
-#endif /* !CONFIG_NO_THREADS */
 
 INTERN WUNUSED NONNULL((1)) int DCALL
 rosetiterator_ctor(SetIterator *__restrict self) {
@@ -121,35 +115,21 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 rosetiterator_next(SetIterator *__restrict self) {
 	struct roset_item *item, *end;
 	end = self->si_set->rs_elem + self->si_set->rs_mask + 1;
-#ifndef CONFIG_NO_THREADS
-	for (;;)
-#endif /* !CONFIG_NO_THREADS */
-	{
-#ifdef CONFIG_NO_THREADS
-		item = ATOMIC_READ(self->si_next);
-#else /* CONFIG_NO_THREADS */
+	for (;;) {
 		struct roset_item *old_item;
-		old_item = item = ATOMIC_READ(self->si_next);
-#endif /* !CONFIG_NO_THREADS */
+		item     = atomic_read(&self->si_next);
+		old_item = item;
 		if (item >= end)
 			goto iter_exhausted;
 		while (item < end && !item->si_key)
 			++item;
 		if (item == end) {
-#ifdef CONFIG_NO_THREADS
-			self->si_next = item;
-#else /* CONFIG_NO_THREADS */
-			if (!ATOMIC_CMPXCH(self->si_next, old_item, item))
+			if (!atomic_cmpxch_or_write(&self->si_next, old_item, item))
 				continue;
-#endif /* !CONFIG_NO_THREADS */
 			goto iter_exhausted;
 		}
-#ifdef CONFIG_NO_THREADS
-		self->si_next = item + 1;
-#else /* CONFIG_NO_THREADS */
-		if (ATOMIC_CMPXCH(self->si_next, old_item, item + 1))
+		if (atomic_cmpxch_or_write(&self->si_next, old_item, item + 1))
 			break;
-#endif /* !CONFIG_NO_THREADS */
 	}
 	return_reference_(item->si_key);
 iter_exhausted:

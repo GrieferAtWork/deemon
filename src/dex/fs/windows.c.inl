@@ -37,9 +37,9 @@
 #include <deemon/system-features.h> /* strend() */
 #include <deemon/system.h>
 #include <deemon/tuple.h>
+#include <deemon/util/atomic.h>
 #include <deemon/util/lock.h>
 
-#include <hybrid/atomic.h>
 #include <hybrid/unaligned.h>
 
 #include <Windows.h>
@@ -200,24 +200,17 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 env_next(Env *__restrict self) {
 	LPWCH result_string, next_string;
 	DREF DeeObject *name, *value, *result;
-#ifdef CONFIG_NO_THREADS
-	result_string = ATOMIC_READ(self->e_iter);
-	if (!*result_string)
-		return ITER_DONE;
-	next_string = result_string;
-	while (*next_string++)
-		;
-	self->e_iter = next_string;
-#else /* CONFIG_NO_THREADS */
 	do {
-		result_string = ATOMIC_READ(self->e_iter);
+		result_string = atomic_read(&self->e_iter);
 		if (!*result_string)
 			return ITER_DONE;
 		next_string = result_string;
 		while (*next_string++)
 			;
-	} while (!ATOMIC_CMPXCH(self->e_iter, result_string, next_string));
-#endif /* !CONFIG_NO_THREADS */
+	} while (!atomic_cmpxch_or_write(&self->e_iter,
+	                                 result_string,
+	                                 next_string));
+
 	/* Split the line to extract the name and value. */
 	next_string = result_string + 1;
 	/* XXX: This code assumes the double NUL-termination guarantied by windows. */
@@ -249,24 +242,17 @@ INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 enviterator_next_key(DeeObject *__restrict self) {
 	LPWCH result_string, next_string;
 	Env *me = (Env *)self;
-#ifdef CONFIG_NO_THREADS
-	result_string = ATOMIC_READ(me->e_iter);
-	if (!*result_string)
-		return ITER_DONE;
-	next_string = result_string;
-	while (*next_string++)
-		;
-	me->e_iter = next_string;
-#else /* CONFIG_NO_THREADS */
 	do {
-		result_string = ATOMIC_READ(me->e_iter);
+		result_string = atomic_read(&me->e_iter);
 		if (!*result_string)
 			return ITER_DONE;
 		next_string = result_string;
 		while (*next_string++)
 			;
-	} while (!ATOMIC_CMPXCH(me->e_iter, result_string, next_string));
-#endif /* !CONFIG_NO_THREADS */
+	} while (!atomic_cmpxch_or_write(&me->e_iter,
+	                                 result_string,
+	                                 next_string));
+
 	/* Split the line to extract the name and value. */
 	next_string = result_string + 1;
 	/* XXX: This code assumes the double NUL-termination guarantied by windows. */
@@ -281,24 +267,15 @@ INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 enviterator_next_value(DeeObject *__restrict self) {
 	LPWCH result_string, next_string;
 	Env *me = (Env *)self;
-#ifdef CONFIG_NO_THREADS
-	result_string = ATOMIC_READ(me->e_iter);
-	if (!*result_string)
-		return ITER_DONE;
-	next_string = result_string;
-	while (*next_string++)
-		;
-	me->e_iter = next_string;
-#else /* CONFIG_NO_THREADS */
 	do {
-		result_string = ATOMIC_READ(me->e_iter);
+		result_string = atomic_read(&me->e_iter);
 		if (!*result_string)
 			return ITER_DONE;
 		next_string = result_string;
 		while (*next_string++)
 			;
-	} while (!ATOMIC_CMPXCH(me->e_iter, result_string, next_string));
-#endif /* !CONFIG_NO_THREADS */
+	} while (!atomic_cmpxch(&me->e_iter, result_string, next_string));
+
 	/* Split the line to extract the name and value. */
 	next_string = result_string + 1;
 	/* XXX: This code assumes the double NUL-termination guarantied by windows. */
@@ -1710,7 +1687,7 @@ stat_get_nttype(Stat *__restrict self, bool try_get) {
 		if (self->s_valid & STAT_FNONTTYPE)
 			goto err_noinfo;
 		if (self->s_hand == INVALID_HANDLE_VALUE) {
-			ATOMIC_OR(self->s_valid, STAT_FNONTTYPE);
+			atomic_or(&self->s_valid, STAT_FNONTTYPE);
 			goto err_noinfo;
 		}
 		if (DeeThread_CheckInterrupt())
@@ -1720,7 +1697,7 @@ stat_get_nttype(Stat *__restrict self, bool try_get) {
 		DBG_ALIGNMENT_ENABLE();
 		if unlikely(result == FILE_TYPE_UNKNOWN)
 			goto err_noinfo;
-		new_type = ATOMIC_CMPXCH_VAL(self->s_ftype, FILE_TYPE_UNKNOWN, result);
+		new_type = atomic_cmpxch_val(&self->s_ftype, FILE_TYPE_UNKNOWN, result);
 		if (new_type != FILE_TYPE_UNKNOWN)
 			result = new_type;
 	}

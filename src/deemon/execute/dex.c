@@ -35,10 +35,7 @@
 #include <deemon/system-features.h> /* DeeSystem_DlOpen_USE_LOADLIBRARY, memcpyc(), ... */
 #include <deemon/system.h>          /* DeeSystem_Dl* */
 #include <deemon/tuple.h>
-
-#ifndef CONFIG_NO_THREADS
 #include <deemon/util/rwlock.h>
-#endif /* !CONFIG_NO_THREADS */
 
 #ifndef CONFIG_NO_DEC
 #include <deemon/dec.h>

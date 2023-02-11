@@ -36,9 +36,8 @@
 #include <deemon/string.h>
 #include <deemon/system-features.h> /* memcpyc(), ... */
 #include <deemon/tuple.h>
+#include <deemon/util/atomic.h>
 #include <deemon/util/rwlock.h>
-
-#include <hybrid/atomic.h>
 
 #include "../../runtime/runtime_error.h"
 #include "../../runtime/strings.h"
@@ -52,11 +51,7 @@ DECL_BEGIN
 DeeSystem_DEFINE_strcmp(dee_strcmp)
 #endif /* !CONFIG_HAVE_strcmp */
 
-#ifdef CONFIG_NO_THREADS
-#define BLVI_GETITER(self)             (self)->ki_iter
-#else /* CONFIG_NO_THREADS */
-#define BLVI_GETITER(self) ATOMIC_READ((self)->ki_iter)
-#endif /* !CONFIG_NO_THREADS */
+#define BLVI_GETITER(self) atomic_read(&(self)->ki_iter)
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 blvi_copy(BlackListVarkwdsIterator *__restrict self,
@@ -95,14 +90,10 @@ blvi_visit(BlackListVarkwdsIterator *__restrict self, dvisit_t proc, void *arg) 
 LOCAL struct kwds_entry *DCALL
 blvi_nextiter(BlackListVarkwdsIterator *__restrict self) {
 	struct kwds_entry *iter;
-#ifndef CONFIG_NO_THREADS
 	struct kwds_entry *old_iter;
 again:
-#endif /* !CONFIG_NO_THREADS */
-	iter = BLVI_GETITER(self);
-#ifndef CONFIG_NO_THREADS
+	iter     = BLVI_GETITER(self);
 	old_iter = iter;
-#endif /* !CONFIG_NO_THREADS */
 	for (;;) {
 		if (iter >= self->ki_end)
 			goto nope;
@@ -113,12 +104,8 @@ again:
 		}
 		++iter;
 	}
-#ifndef CONFIG_NO_THREADS
-	if (!ATOMIC_CMPXCH_WEAK(self->ki_iter, old_iter, iter + 1))
+	if (!atomic_cmpxch_weak_or_write(&self->ki_iter, old_iter, iter + 1))
 		goto again;
-#else /* !CONFIG_NO_THREADS */
-	self->ki_iter = iter + 1;
-#endif /* CONFIG_NO_THREADS */
 	return iter;
 nope:
 	return NULL;
@@ -352,11 +339,11 @@ again:
 	}
 
 	/* Check if more arguments need to be loaded. */
-	if (ATOMIC_READ(self->vk_load) < self->vk_ckwc) {
+	if (atomic_read(&self->vk_load) < self->vk_ckwc) {
 		size_t index;
 		rwlock_write(&self->vk_lock);
 		COMPILER_READ_BARRIER();
-		index = ATOMIC_READ(self->vk_load);
+		index = atomic_read(&self->vk_load);
 		while (index < self->vk_ckwc) {
 			dhash_t str_hash;
 			str = self->vk_ckwv[index++];
@@ -410,11 +397,11 @@ again:
 	}
 
 	/* Check if more arguments need to be loaded. */
-	if (ATOMIC_READ(self->vk_load) < self->vk_ckwc) {
+	if (atomic_read(&self->vk_load) < self->vk_ckwc) {
 		size_t index;
 		rwlock_write(&self->vk_lock);
 		COMPILER_READ_BARRIER();
-		index = ATOMIC_READ(self->vk_load);
+		index = atomic_read(&self->vk_load);
 		while (index < self->vk_ckwc) {
 			dhash_t str_hash;
 			str = self->vk_ckwv[index++];
@@ -465,11 +452,11 @@ again:
 	}
 
 	/* Check if more arguments need to be loaded. */
-	if (ATOMIC_READ(self->vk_load) < self->vk_ckwc) {
+	if (atomic_read(&self->vk_load) < self->vk_ckwc) {
 		size_t index;
 		rwlock_write(&self->vk_lock);
 		COMPILER_READ_BARRIER();
-		index = ATOMIC_READ(self->vk_load);
+		index = atomic_read(&self->vk_load);
 		while (index < self->vk_ckwc) {
 			dhash_t str_hash;
 			str = self->vk_ckwv[index++];
@@ -508,7 +495,7 @@ BlackListVarkwds_HasItem(BlackListVarkwds *__restrict self,
                          DeeObject *__restrict name) {
 	return (kwds_FindIndex(self->vk_kwds, (DeeStringObject *)name) != (size_t)-1) &&
 	       !BlackListVarkwds_IsBlackListed(self, name) &&
-	       ATOMIC_READ(self->vk_argv) != NULL;
+	       atomic_read(&self->vk_argv) != NULL;
 }
 
 INTERN WUNUSED NONNULL((1, 2)) bool DCALL
@@ -517,7 +504,7 @@ BlackListVarkwds_HasItemString(BlackListVarkwds *__restrict self,
                                dhash_t hash) {
 	return (kwds_FindIndexStr(self->vk_kwds, name, hash) != (size_t)-1) &&
 	       !BlackListVarkwds_IsBlackListedString(self, name, hash) &&
-	       ATOMIC_READ(self->vk_argv) != NULL;
+	       atomic_read(&self->vk_argv) != NULL;
 }
 
 INTERN WUNUSED NONNULL((1, 2)) bool DCALL
@@ -526,7 +513,7 @@ BlackListVarkwds_HasItemStringLen(BlackListVarkwds *__restrict self,
                                   size_t namesize, dhash_t hash) {
 	return (kwds_FindIndexStrLen(self->vk_kwds, name, namesize, hash) != (size_t)-1) &&
 	       !BlackListVarkwds_IsBlackListedStringLen(self, name, namesize, hash) &&
-	       ATOMIC_READ(self->vk_argv) != NULL;
+	       atomic_read(&self->vk_argv) != NULL;
 }
 
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
@@ -1263,11 +1250,11 @@ again:
 	}
 
 	/* Check if more arguments need to be loaded. */
-	if (ATOMIC_READ(self->bm_load) < self->bm_ckwc) {
+	if (atomic_read(&self->bm_load) < self->bm_ckwc) {
 		size_t index;
 		rwlock_write(&self->bm_lock);
 		COMPILER_READ_BARRIER();
-		index = ATOMIC_READ(self->bm_load);
+		index = atomic_read(&self->bm_load);
 		while (index < self->bm_ckwc) {
 			dhash_t str_hash;
 			str = self->bm_ckwv[index++];
@@ -1320,11 +1307,11 @@ again:
 	}
 
 	/* Check if more arguments need to be loaded. */
-	if (ATOMIC_READ(self->bm_load) < self->bm_ckwc) {
+	if (atomic_read(&self->bm_load) < self->bm_ckwc) {
 		size_t index;
 		rwlock_write(&self->bm_lock);
 		COMPILER_READ_BARRIER();
-		index = ATOMIC_READ(self->bm_load);
+		index = atomic_read(&self->bm_load);
 		while (index < self->bm_ckwc) {
 			dhash_t str_hash;
 			str = self->bm_ckwv[index++];
@@ -1373,11 +1360,11 @@ again:
 	}
 
 	/* Check if more arguments need to be loaded. */
-	if (ATOMIC_READ(self->bm_load) < self->bm_ckwc) {
+	if (atomic_read(&self->bm_load) < self->bm_ckwc) {
 		size_t index;
 		rwlock_write(&self->bm_lock);
 		COMPILER_READ_BARRIER();
-		index = ATOMIC_READ(self->bm_load);
+		index = atomic_read(&self->bm_load);
 		while (index < self->bm_ckwc) {
 			dhash_t str_hash;
 			str = self->bm_ckwv[index++];

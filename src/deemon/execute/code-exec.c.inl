@@ -46,8 +46,8 @@
 #include <deemon/thread.h>
 #include <deemon/traceback.h>
 #include <deemon/tuple.h>
+#include <deemon/util/atomic.h>
 
-#include <hybrid/atomic.h>
 #include <hybrid/byteorder.h>
 #include <hybrid/byteswap.h>
 #include <hybrid/overflow.h>
@@ -1769,7 +1769,7 @@ do_push_arg:
 						frame->cf_kw->fk_varkwds = varkwds;
 					}
 #else /* CONFIG_NO_THREADS */
-					oldval = ATOMIC_CMPXCH_VAL(frame->cf_kw->fk_varkwds, NULL, varkwds);
+					oldval = atomic_cmpxch_val(&frame->cf_kw->fk_varkwds, NULL, varkwds);
 					if unlikely(oldval) {
 						VARKWDS_DECREF(varkwds);
 						varkwds = oldval;
@@ -5233,7 +5233,7 @@ do_pack_dict:
 								frame->cf_kw->fk_varkwds = value;
 							}
 #else /* CONFIG_NO_THREADS */
-							oldval = ATOMIC_CMPXCH_VAL(frame->cf_kw->fk_varkwds, NULL, value);
+							oldval = atomic_cmpxch_val(&frame->cf_kw->fk_varkwds, NULL, value);
 							if unlikely(oldval) {
 								VARKWDS_DECREF(value);
 								value = oldval;
@@ -6681,7 +6681,7 @@ do_prefix_push_arg:
 								frame->cf_kw->fk_varkwds = varkwds;
 							}
 #else /* CONFIG_NO_THREADS */
-							oldval = ATOMIC_CMPXCH_VAL(frame->cf_kw->fk_varkwds, NULL, varkwds);
+							oldval = atomic_cmpxch_val(&frame->cf_kw->fk_varkwds, NULL, varkwds);
 							if unlikely(oldval) {
 								VARKWDS_DECREF(varkwds);
 								varkwds = oldval;

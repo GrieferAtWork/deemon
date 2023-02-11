@@ -26,8 +26,7 @@
 
 #include <deemon/alloc.h>
 #include <deemon/seq.h>
-
-#include <hybrid/atomic.h>
+#include <deemon/util/atomic.h>
 
 DECL_BEGIN
 
@@ -48,7 +47,7 @@ typedef struct {
 	OBJECT_HEAD
 	DREF StringSplit *s_split; /* [1..1][const] The split descriptor object. */
 	uint8_t          *s_next;  /* [0..1][atomic] Pointer to the starting address of the next split
-	                            *               (points into the s_enc-specific string of `s_split->s_str')
+	                            *                (points into the s_enc-specific string of `s_split->s_str')
 	                            *                When the iterator is exhausted, this pointer is set to `NULL'. */
 	uint8_t          *s_begin; /* [1..1][const] The starting address of the width string of `s_split->s_str'. */
 	uint8_t          *s_end;   /* [1..1][const] The end address of the width string of `s_split->s_str'. */
@@ -63,7 +62,7 @@ splititer_next(StringSplitIterator *__restrict self) {
 	uint8_t *next_ptr;
 	size_t result_len;
 	do {
-		result_start = ATOMIC_READ(self->s_next);
+		result_start = atomic_read(&self->s_next);
 		if (!result_start)
 			return ITER_DONE;
 		SWITCH_SIZEOF_WIDTH(self->s_width) {
@@ -107,7 +106,8 @@ splititer_next(StringSplitIterator *__restrict self) {
 			result_len = (size_t)((uint32_t *)result_end - (uint32_t *)result_start);
 			break;
 		}
-	} while (!ATOMIC_CMPXCH(self->s_next, result_start, next_ptr));
+	} while (!atomic_cmpxch(&self->s_next, result_start, next_ptr));
+
 	/* Return the part-string. */
 	return DeeString_NewWithWidth(result_start,
 	                              result_len,
@@ -121,7 +121,7 @@ casesplititer_next(StringSplitIterator *__restrict self) {
 	uint8_t *next_ptr;
 	size_t result_len, match_length;
 	do {
-		result_start = ATOMIC_READ(self->s_next);
+		result_start = atomic_read(&self->s_next);
 		if (!result_start)
 			return ITER_DONE;
 		SWITCH_SIZEOF_WIDTH(self->s_width) {
@@ -168,7 +168,8 @@ casesplititer_next(StringSplitIterator *__restrict self) {
 			result_len = (size_t)((uint32_t *)result_end - (uint32_t *)result_start);
 			break;
 		}
-	} while (!ATOMIC_CMPXCH(self->s_next, result_start, next_ptr));
+	} while (!atomic_cmpxch(&self->s_next, result_start, next_ptr));
+
 	/* Return the part-string. */
 	return DeeString_NewWithWidth(result_start,
 	                              result_len,
@@ -186,11 +187,7 @@ splititer_visit(StringSplitIterator *__restrict self, dvisit_t proc, void *arg) 
 	Dee_Visit(self->s_split);
 }
 
-#ifdef CONFIG_NO_THREADS
-#define GET_SPLIT_NEXT(x) ((x)->s_next)
-#else /* CONFIG_NO_THREADS */
-#define GET_SPLIT_NEXT(x) ATOMIC_READ((x)->s_next)
-#endif /* !CONFIG_NO_THREADS */
+#define GET_SPLIT_NEXT(x) atomic_read(&(x)->s_next)
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 splititer_bool(StringSplitIterator *__restrict self) {
@@ -718,7 +715,7 @@ typedef struct {
 	DREF LineSplit *ls_split; /* [1..1][const] The split descriptor object. */
 	uint8_t        *ls_next;  /* [0..1][atomic] Pointer to the starting address of the next split
 	                           *                (points into the s_enc-specific string of `ls_split->ls_str')
-	                           *                 When the iterator is exhausted, this pointer is set to NULL. */
+	                           *                When the iterator is exhausted, this pointer is set to NULL. */
 	uint8_t        *ls_begin; /* [1..1][const] The starting address of the width string of `ls_split->ls_str'. */
 	uint8_t        *ls_end;   /* [1..1][const] The end address of the width string of `ls_split->ls_str'. */
 	int             ls_width; /* [const] The width of `ls_split->ls_str' */
@@ -765,7 +762,7 @@ lineiter_next(LineSplitIterator *__restrict self) {
 	uint8_t *next_ptr;
 	size_t result_len;
 	do {
-		result_start = ATOMIC_READ(self->ls_next);
+		result_start = atomic_read(&self->ls_next);
 		if (!result_start)
 			return ITER_DONE;
 		SWITCH_SIZEOF_WIDTH(self->ls_width) {
@@ -818,10 +815,12 @@ lineiter_next(LineSplitIterator *__restrict self) {
 			                      (uint32_t *)result_start);
 			break;
 		}
-	} while (!ATOMIC_CMPXCH(self->ls_next, result_start, next_ptr));
+	} while (!atomic_cmpxch(&self->ls_next, result_start, next_ptr));
+
 	/* Add the linefeed itself if we're supposed to include it. */
 	if (self->ls_keep && next_ptr)
 		result_len += (size_t)(next_ptr - result_end) / STRING_SIZEOF_WIDTH(self->ls_width);
+
 	/* Return the part-string. */
 	return DeeString_NewWithWidth(result_start,
 	                              result_len,
@@ -864,11 +863,7 @@ PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 lineiter_copy(LineSplitIterator *__restrict self,
               LineSplitIterator *__restrict other) {
 	self->ls_split = other->ls_split;
-#ifdef CONFIG_NO_THREADS
-	self->ls_next = other->ls_next;
-#else /* CONFIG_NO_THREADS */
-	self->ls_next = ATOMIC_READ(other->ls_next);
-#endif /* !CONFIG_NO_THREADS */
+	self->ls_next  = atomic_read(&other->ls_next);
 	self->ls_begin = other->ls_begin;
 	self->ls_end   = other->ls_end;
 	self->ls_width = other->ls_width;

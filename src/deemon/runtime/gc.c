@@ -33,17 +33,13 @@
 #include <deemon/seq.h>
 #include <deemon/string.h>
 #include <deemon/system-features.h> /* memcpy(), bzero(), ... */
+#include <deemon/util/atomic.h>
+#include <deemon/util/recursive-rwlock.h>
+#include <deemon/util/rwlock.h>
 
 #ifndef CONFIG_NO_DEX
 #include <deemon/dex.h>
 #endif /* !CONFIG_NO_DEX */
-
-#ifndef CONFIG_NO_THREADS
-#include <deemon/util/recursive-rwlock.h>
-#include <deemon/util/rwlock.h>
-#endif /* !CONFIG_NO_THREADS */
-
-#include <hybrid/atomic.h>
 
 #include <stddef.h>
 #include <stdint.h>
@@ -124,14 +120,10 @@ PRIVATE bool did_untrack = false;
 
 #ifdef CONFIG_HAVE_PENDING_GC_OBJECTS
 PRIVATE struct gc_head *gc_pending = NULL; /* [0..1] Pending object for GC tracking. */
-#ifdef CONFIG_NO_THREADS
-#define GC_PENDING_MUSTSERVICE() (gc_pending != NULL)
-#else /* CONFIG_NO_THREADS */
-#define GC_PENDING_MUSTSERVICE() (ATOMIC_READ(gc_pending) != NULL)
-#endif /* !CONFIG_NO_THREADS */
+#define GC_PENDING_MUSTSERVICE() (atomic_read(&gc_pending) != NULL)
 PRIVATE void DCALL gc_pending_service(void) {
 	struct gc_head *chain;
-	chain = ATOMIC_XCH(gc_pending, NULL);
+	chain = atomic_xch(&gc_pending, NULL);
 	if (chain) {
 		struct gc_head *next, **pself;
 		pself = &gc_root;
@@ -198,10 +190,10 @@ DeeGC_Track(DeeObject *__restrict ob) {
 		ASSERT(GCHEAD_ISTRACKED(head));
 #endif /* GCHEAD_ISTRACKED */
 		do {
-			next = ATOMIC_READ(gc_pending);
+			next = atomic_read(&gc_pending);
 			head->gc_next = next;
 			COMPILER_WRITE_BARRIER();
-		} while (!ATOMIC_CMPXCH(gc_pending, next, head));
+		} while (!atomic_cmpxch(&gc_pending, next, head));
 	} else {
 		gc_pending_service();
 		ASSERT(head != gc_root);
@@ -541,7 +533,7 @@ gc_deps_insert(struct gc_deps *__restrict self,
 			continue;
 		/* Use this slot! */
 		dep->gd_object = obj;
-		dep->gd_extern = ATOMIC_FETCHINC(obj->ob_refcnt);
+		dep->gd_extern = atomic_fetchinc(&obj->ob_refcnt);
 		ASSERT(dep->gd_extern != 0);
 #ifdef GC_ASSERT_REFERENCE_COUNTS
 		ASSERT(dep->gd_extern >= num_tracked_references);
@@ -876,12 +868,12 @@ gc_trydestroy(struct gc_head *__restrict head,
 	init_dep->gd_object = &head->gc_object;
 	/* Capture + incref the given object's reference counter. */
 	for (;;) {
-		init_dep->gd_extern = ATOMIC_READ(head->gc_object.ob_refcnt);
+		init_dep->gd_extern = atomic_read(&head->gc_object.ob_refcnt);
 		if unlikely(!init_dep->gd_extern)
 			return 0; /* Object is already dead! */
-		if (ATOMIC_CMPXCH_WEAK(head->gc_object.ob_refcnt,
-		                       init_dep->gd_extern,
-		                       init_dep->gd_extern + 1))
+		if (atomic_cmpxch_weak_or_write(&head->gc_object.ob_refcnt,
+		                                init_dep->gd_extern,
+		                                init_dep->gd_extern + 1))
 			break;
 	}
 	/* Recursively visit our initial dependency. */
@@ -1057,7 +1049,7 @@ restart:
 			           * but that thread hadn't had the chance to untrack it, yet. */
 		ASSERT_OBJECT(&iter->gc_object);
 #else /* CONFIG_NO_THREADS */
-		if (ATOMIC_READ(iter->gc_object.ob_refcnt) == 0)
+		if (atomic_read(&iter->gc_object.ob_refcnt) == 0)
 			continue; /* The object may have just been decref()-ed by another thread,
 			           * but that thread hadn't had the chance to untrack it, yet. */
 		/* This can (and has been seen to) fail when another thread is currently
@@ -1180,7 +1172,7 @@ is_nonempty:
  * This is quite the simple task as a matter of fact:
  *   - We use `tp_visit' to recursively visit all GC-objects,
  *     where for every `code' object that we encounter, we
- *     simply do an ATOMIC_WRITE of the first instruction byte
+ *     simply do an atomic_write of the first instruction byte
  *     (unless the code is empty?), to set it to `ASM_RET_NONE'
  *   - `Code' objects are also GC objects, meaning that we can
  *     be sure that every existing piece of user-code can be
@@ -1236,14 +1228,11 @@ collect_restart_with_pending_hint:
 			continue; /* Not a code object. */
 		if (!((DeeCodeObject *)&iter->gc_object)->co_codebytes)
 			continue; /* Empty code? */
+
 		/* Exchange the first instruction with `ASM_RET_NONE' */
-#ifdef CONFIG_NO_THREADS
-		old_instr = ((DeeCodeObject *)&iter->gc_object)->co_code[0];
-		((DeeCodeObject *)&iter->gc_object)->co_code[0] = ASM_RET_NONE;
-#else /* CONFIG_NO_THREADS */
-		old_instr = ATOMIC_XCH(((DeeCodeObject *)&iter->gc_object)->co_code[0],
+		old_instr = atomic_xch(&((DeeCodeObject *)&iter->gc_object)->co_code[0],
 		                       ASM_RET_NONE);
-#endif /* !CONFIG_NO_THREADS */
+
 		/* One last thing: The interpreter checks the FFINALLY flag
 		 *                 to see if there might be finally-handlers
 		 *                 that must be invoked after a return-instruction
@@ -1251,15 +1240,8 @@ collect_restart_with_pending_hint:
 		 *              -- Delete that flag! We can't have the code
 		 *                 re-acquiring control, simply by pre-defining
 		 *                 a finally handler to guard the first text byte. */
-#ifdef CONFIG_NO_THREADS
-		old_flags = ((DeeCodeObject *)&iter->gc_object)->co_flags;
-		((DeeCodeObject *)&iter->gc_object)->co_flags = old_flags & ~CODE_FFINALLY;
-#else /* CONFIG_NO_THREADS */
-		old_flags = ATOMIC_FETCHAND(((DeeCodeObject *)&iter->gc_object)->co_flags,
-		                            ~CODE_FFINALLY);
-#endif /* !CONFIG_NO_THREADS */
-		if (old_instr != ASM_RET_NONE ||
-		    (old_flags & CODE_FFINALLY))
+		old_flags = atomic_fetchand(&((DeeCodeObject *)&iter->gc_object)->co_flags, ~CODE_FFINALLY);
+		if (old_instr != ASM_RET_NONE || (old_flags & CODE_FFINALLY))
 			++result;
 	}
 	GCLOCK_RELEASE();
@@ -1518,11 +1500,7 @@ gciter_visit(GCIter *__restrict self, dvisit_t proc, void *arg) {
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 gciter_bool(GCIter *__restrict self) {
-#ifdef CONFIG_NO_THREADS
-	return self->gi_next != NULL;
-#else /* CONFIG_NO_THREADS */
-	return ATOMIC_READ(self->gi_next) != NULL;
-#endif /* !CONFIG_NO_THREADS */
+	return atomic_read(&self->gi_next) != NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -1537,9 +1515,11 @@ gciter_next(GCIter *__restrict self) {
 		return ITER_DONE;
 	}
 	GCLOCK_ACQUIRE_READ();
+
 	/* Skip ZERO-ref entries. */
 	next = DeeGC_Head(result)->gc_next;
 	ASSERT(DeeGC_Head(result) != next);
+
 	/* Find the next object that we can actually incref()
 	 * (The GC chain may contain dangling (aka. weak) objects) */
 	while (next && !Dee_IncrefIfNotZero(&next->gc_object)) {
@@ -1549,6 +1529,7 @@ gciter_next(GCIter *__restrict self) {
 	GCLOCK_RELEASE_READ();
 	self->gi_next = next ? &next->gc_object : NULL; /* Inherit reference. */
 	rwlock_endwrite(&self->gi_lock);
+
 	/* Return the extracted item. */
 	return result;
 }

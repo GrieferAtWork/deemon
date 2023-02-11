@@ -33,13 +33,10 @@
 #include <deemon/objmethod.h>
 #include <deemon/string.h>
 #include <deemon/system-features.h> /* strlen() */
+#include <deemon/util/atomic.h>
 
 #include <stdarg.h>
 #include <stdbool.h>
-
-#ifndef CONFIG_NO_THREADS
-#include <hybrid/atomic.h>
-#endif /* !CONFIG_NO_THREADS */
 
 #include "../runtime/runtime_error.h"
 
@@ -714,12 +711,7 @@ type_member_set(struct type_member const *desc,
 	if (desc->m_field.m_type & STRUCT_CONST)
 		goto cant_access;
 	switch (desc->m_field.m_type & ~(STRUCT_ATOMIC)) {
-
-#ifdef CONFIG_NO_THREADS
-#define WRITE(dst, src) (dst) = (src)
-#else /* CONFIG_NO_THREADS */
-#define WRITE(dst, src) ATOMIC_WRITE(dst, src)
-#endif /* !CONFIG_NO_THREADS */
+#define WRITE(dst, src) atomic_write(&dst, src)
 
 	case STRUCT_WOBJECT_OPT:
 		if (DeeNone_Check(value)) {
@@ -782,7 +774,7 @@ type_member_set(struct type_member const *desc,
 		if (boolval) {
 #ifndef CONFIG_NO_THREADS
 			if (desc->m_field.m_type & STRUCT_ATOMIC) {
-				ATOMIC_OR(*pfield, mask);
+				atomic_or(pfield, mask);
 			} else
 #endif /* !CONFIG_NO_THREADS */
 			{
@@ -791,7 +783,7 @@ type_member_set(struct type_member const *desc,
 		} else {
 #ifndef CONFIG_NO_THREADS
 			if (desc->m_field.m_type & STRUCT_ATOMIC) {
-				ATOMIC_AND(*pfield, ~mask);
+				atomic_and(pfield, ~mask);
 			} else
 #endif /* !CONFIG_NO_THREADS */
 			{

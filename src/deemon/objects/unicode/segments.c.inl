@@ -26,8 +26,7 @@
 
 #include <deemon/seq.h>
 #include <deemon/string.h>
-
-#include <hybrid/atomic.h>
+#include <deemon/util/atomic.h>
 
 #include "../../runtime/strings.h"
 
@@ -41,12 +40,7 @@ typedef struct {
 	uint8_t              *s_end;   /* [1..1][== DeeString_WEND(s_str)] End pointer. */
 	unsigned int          s_width; /* [const] The width of a single character. */
 } StringSegmentsIterator;
-
-#ifdef CONFIG_NO_THREADS
-#define READ_PTR(x)            ((x)->s_ptr)
-#else /* CONFIG_NO_THREADS */
-#define READ_PTR(x) ATOMIC_READ((x)->s_ptr)
-#endif /* !CONFIG_NO_THREADS */
+#define READ_PTR(x) atomic_read(&(x)->s_ptr)
 
 
 typedef struct {
@@ -110,20 +104,12 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 ssegiter_next(StringSegmentsIterator *__restrict self) {
 	size_t part_size;
 	uint8_t *new_ptr, *ptr;
-#ifdef CONFIG_NO_THREADS
-	ptr = self->s_ptr;
-	if (ptr >= self->s_end)
-		return ITER_DONE;
-	new_ptr     = ptr + self->s_siz * STRING_SIZEOF_WIDTH(self->s_width);
-	self->s_ptr = new_ptr;
-#else /* CONFIG_NO_THREADS */
 	do {
 		ptr = READ_PTR(self);
 		if (ptr >= self->s_end)
 			return ITER_DONE;
 		new_ptr = ptr + self->s_siz * STRING_SIZEOF_WIDTH(self->s_width);
-	} while (!ATOMIC_CMPXCH(self->s_ptr, ptr, new_ptr));
-#endif /* !CONFIG_NO_THREADS */
+	} while (!atomic_cmpxch_or_write(&self->s_ptr, ptr, new_ptr));
 	part_size = self->s_siz;
 	if (new_ptr > self->s_end) {
 		part_size = (self->s_end - ptr) / STRING_SIZEOF_WIDTH(self->s_width);

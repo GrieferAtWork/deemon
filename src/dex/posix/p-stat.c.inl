@@ -26,8 +26,8 @@
 /**/
 
 #include <deemon/seq.h>
+#include <deemon/util/atomic.h>
 
-#include <hybrid/atomic.h>
 #include <hybrid/sync/atomic-rwlock.h>
 
 #include "../time/libtime.h"
@@ -933,7 +933,7 @@ stat_get_nttype(struct dee_stat *__restrict self, bool try_get) {
 		DBG_ALIGNMENT_ENABLE();
 		if unlikely(result == FILE_TYPE_UNKNOWN)
 			goto err_noinfo;
-		new_type = ATOMIC_CMPXCH_VAL(self->st_ftype, FILE_TYPE_UNKNOWN, result);
+		new_type = atomic_cmpxch_val(&self->st_ftype, FILE_TYPE_UNKNOWN, result);
 		if (new_type != FILE_TYPE_UNKNOWN)
 			result = new_type;
 	}

@@ -35,8 +35,7 @@
 #include <deemon/thread.h>
 #include <deemon/traceback.h>
 #include <deemon/tuple.h>
-
-#include <hybrid/atomic.h>
+#include <deemon/util/atomic.h>
 
 #include <stdarg.h>
 #include <stddef.h>
@@ -527,7 +526,7 @@ frame_revengsp(Frame *__restrict self) {
 PRIVATE WUNUSED NONNULL((1)) int32_t DCALL
 frame_getsp(Frame *__restrict self) {
 	int32_t result;
-	uint16_t flags = ATOMIC_READ(self->f_flags);
+	uint16_t flags = atomic_read(&self->f_flags);
 	if (!(flags & DEEFRAME_FUNDEFSP)) {
 		rwlock_read(&self->f_lock);
 		if unlikely(!self->f_frame) {

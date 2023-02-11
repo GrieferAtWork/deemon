@@ -30,8 +30,7 @@
 #include <deemon/int.h>
 #include <deemon/none.h>
 #include <deemon/thread.h>
-
-#include <hybrid/atomic.h>
+#include <deemon/util/atomic.h>
 
 #include <Windows.h>
 
@@ -352,7 +351,7 @@ mutex_timedenter(Mutex *__restrict self, uint64_t timeout) {
 	DBG_ALIGNMENT_ENABLE();
 again:
 	/* Try to acquire the semaphore and figure out who owns it. */
-	owner = ATOMIC_CMPXCH_VAL(self->m_owner, (DWORD)-1, caller);
+	owner = atomic_cmpxch_val(&self->m_owner, (DWORD)-1, caller);
 	if (owner == caller) {
 		/* We're already holding the semaphore. */
 		++self->m_recursion;

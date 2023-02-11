@@ -32,8 +32,7 @@
 #include <deemon/object.h>
 #include <deemon/string.h>
 #include <deemon/super.h>
-
-#include <hybrid/atomic.h>
+#include <deemon/util/atomic.h>
 
 #include "../runtime/strings.h"
 
@@ -71,11 +70,7 @@ im_ctor(InstanceMethod *__restrict self) {
 	/* Initialize a stub instance-method. */
 	self->im_func = Dee_None;
 	self->im_this = Dee_None;
-#ifdef CONFIG_NO_THREADS
-	Dee_None->ob_refcnt += 2;
-#else /* CONFIG_NO_THREADS */
-	ATOMIC_FETCHADD(Dee_None->ob_refcnt, 2);
-#endif /* !CONFIG_NO_THREADS */
+	Dee_Incref_n(Dee_None, 2);
 	return 0;
 }
 

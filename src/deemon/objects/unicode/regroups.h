@@ -48,11 +48,7 @@ typedef struct {
 	size_t         rgi_index;  /* [lock(ATOMIC)] Index of next not-enumerated group. */
 } ReGroupsIterator;
 
-#ifdef CONFIG_NO_THREADS
-#define ReGroupsIterator_GetIndex(x) (x)->rgi_index
-#else /* CONFIG_NO_THREADS */
-#define ReGroupsIterator_GetIndex(x) ATOMIC_READ((x)->rgi_index)
-#endif /* !CONFIG_NO_THREADS */
+#define ReGroupsIterator_GetIndex(x) atomic_read(&(x)->rgi_index)
 
 INTDEF DeeTypeObject ReGroups_Type;
 INTDEF DeeTypeObject ReGroupsIterator_Type;
@@ -94,11 +90,7 @@ typedef struct {
 	size_t             rssi_index;   /* [lock(ATOMIC)] Index of next not-enumerated group. */
 } ReSubStringsIterator;
 
-#ifdef CONFIG_NO_THREADS
-#define ReSubStringsIterator_GetIndex(x) (x)->rssi_index
-#else /* CONFIG_NO_THREADS */
-#define ReSubStringsIterator_GetIndex(x) ATOMIC_READ((x)->rssi_index)
-#endif /* !CONFIG_NO_THREADS */
+#define ReSubStringsIterator_GetIndex(x) atomic_read(&(x)->rssi_index)
 
 INTDEF DeeTypeObject ReSubStrings_Type;
 INTDEF DeeTypeObject ReSubStringsIterator_Type;

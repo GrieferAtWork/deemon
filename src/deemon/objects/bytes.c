@@ -35,8 +35,8 @@
 #include <deemon/system-features.h> /* memcpy(), bzero(), ... */
 #include <deemon/thread.h>
 #include <deemon/tuple.h>
+#include <deemon/util/atomic.h>
 
-#include <hybrid/atomic.h>
 #include <hybrid/minmax.h>
 #include <hybrid/overflow.h>
 
@@ -75,7 +75,7 @@ bytesiter_next(BytesIterator *__restrict self) {
 		pos = self->bi_iter;
 		if (pos >= self->bi_end)
 			return ITER_DONE;
-	} while (!ATOMIC_CMPXCH(self->bi_iter, pos, pos + 1));
+	} while (!atomic_cmpxch(&self->bi_iter, pos, pos + 1));
 	return DeeInt_NewU8(*pos);
 }
 
@@ -92,12 +92,8 @@ PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 bytesiter_copy(BytesIterator *__restrict self,
                BytesIterator *__restrict other) {
 	self->bi_bytes = other->bi_bytes;
-#ifdef CONFIG_NO_THREADS
-	self->bi_iter = other->bi_iter;
-#else /* CONFIG_NO_THREADS */
-	self->bi_iter = ATOMIC_READ(other->bi_iter);
-#endif /* !CONFIG_NO_THREADS */
-	self->bi_end = other->bi_end;
+	self->bi_iter  = atomic_read(&other->bi_iter);
+	self->bi_end   = other->bi_end;
 	Dee_Incref(self->bi_bytes);
 	return 0;
 }
@@ -1338,12 +1334,7 @@ bytes_nsi_xch(Bytes *self, size_t index, DeeObject *value) {
 	}
 	if unlikely(!DeeBytes_WRITABLE(self))
 		goto err_readonly;
-#ifdef CONFIG_NO_THREADS
-	result                     = DeeBytes_DATA(self)[index];
-	DeeBytes_DATA(self)[index] = val;
-#else /* CONFIG_NO_THREADS */
-	result = ATOMIC_XCH(DeeBytes_DATA(self)[index], val);
-#endif /* !CONFIG_NO_THREADS */
+	result = atomic_xch(&DeeBytes_DATA(self)[index], val);
 	return DeeInt_NewU8(result);
 err_readonly:
 	err_bytes_not_writable((DeeObject *)self);

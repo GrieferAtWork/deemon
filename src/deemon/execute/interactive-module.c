@@ -39,8 +39,7 @@
 #include <deemon/tuple.h>
 #include <deemon/util/cache.h>
 #include <deemon/util/recursive-rwlock.h>
-
-#include <hybrid/atomic.h>
+#include <deemon/util/atomic.h>
 
 #include "../runtime/runtime_error.h"
 #include "../runtime/strings.h"
@@ -414,14 +413,14 @@ do_exec_code:
 	 *    - self->im_module.mo_root
 	 *    - self->im_frame.cf_func->fo_code
 	 */
-	ASSERT(ATOMIC_READ(current_code->ob_refcnt) >= 2);
+	ASSERT(atomic_read(&current_code->ob_refcnt) >= 2);
 	ASSERT(self->im_module.mo_root == current_code);
 	ASSERT(self->im_frame.cf_func->fo_code == current_code);
-	is_reusing_code_object = (ATOMIC_READ(current_code->ob_refcnt) == 2 &&
+	is_reusing_code_object = (atomic_read(&current_code->ob_refcnt) == 2 &&
 	                          !DeeObject_IsShared(self->im_frame.cf_func));
 	if (is_reusing_code_object) {
 		DeeGC_Untrack((DeeObject *)current_code);
-		is_reusing_code_object = (ATOMIC_READ(current_code->ob_refcnt) == 2);
+		is_reusing_code_object = (atomic_read(&current_code->ob_refcnt) == 2);
 		if unlikely(!is_reusing_code_object)
 			DeeGC_Track((DeeObject *)current_code);
 	}

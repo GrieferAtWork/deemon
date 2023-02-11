@@ -34,8 +34,7 @@
 #include <deemon/thread.h>
 #include <deemon/system-features.h> /* bcmpc(), ... */
 #include <deemon/tuple.h>
-
-#include <hybrid/atomic.h>
+#include <deemon/util/atomic.h>
 
 #include "../runtime/runtime_error.h"
 #include "../runtime/strings.h"
@@ -57,12 +56,7 @@ typedef struct {
 	struct rodict_item *di_next; /* [?..1][in(di_dict->rd_elem)][atomic]
 	                              * The first candidate for the next item. */
 } DictIterator;
-
-#ifdef CONFIG_NO_THREADS
-#define READ_ITEM(x)            ((x)->di_next)
-#else /* CONFIG_NO_THREADS */
-#define READ_ITEM(x) ATOMIC_READ((x)->di_next)
-#endif /* !CONFIG_NO_THREADS */
+#define READ_ITEM(x) atomic_read(&(x)->di_next)
 
 INTERN WUNUSED NONNULL((1)) int DCALL
 rodictiterator_ctor(DictIterator *__restrict self) {
@@ -128,35 +122,21 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 rodictiterator_next_item(DictIterator *__restrict self) {
 	struct rodict_item *item, *end;
 	end = self->di_dict->rd_elem + self->di_dict->rd_mask + 1;
-#ifndef CONFIG_NO_THREADS
-	for (;;)
-#endif /* !CONFIG_NO_THREADS */
-	{
-#ifdef CONFIG_NO_THREADS
-		item = ATOMIC_READ(self->di_next);
-#else /* CONFIG_NO_THREADS */
+	for (;;) {
 		struct rodict_item *old_item;
-		old_item = item = ATOMIC_READ(self->di_next);
-#endif /* !CONFIG_NO_THREADS */
+		item     = atomic_read(&self->di_next);
+		old_item = item;
 		if (item >= end)
 			goto iter_exhausted;
 		while (item < end && !item->di_key)
 			++item;
 		if (item == end) {
-#ifdef CONFIG_NO_THREADS
-			self->di_next = item;
-#else /* CONFIG_NO_THREADS */
-			if (!ATOMIC_CMPXCH(self->di_next, old_item, item))
+			if (!atomic_cmpxch_or_write(&self->di_next, old_item, item))
 				continue;
-#endif /* !CONFIG_NO_THREADS */
 			goto iter_exhausted;
 		}
-#ifdef CONFIG_NO_THREADS
-		self->di_next = item + 1;
-#else /* CONFIG_NO_THREADS */
-		if (ATOMIC_CMPXCH(self->di_next, old_item, item + 1))
+		if (atomic_cmpxch_or_write(&self->di_next, old_item, item + 1))
 			break;
-#endif /* !CONFIG_NO_THREADS */
 	}
 	return DeeTuple_Pack(2, item->di_key, item->di_value);
 iter_exhausted:
@@ -167,35 +147,21 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 rodictiterator_next_key(DictIterator *__restrict self) {
 	struct rodict_item *item, *end;
 	end = self->di_dict->rd_elem + self->di_dict->rd_mask + 1;
-#ifndef CONFIG_NO_THREADS
-	for (;;)
-#endif /* !CONFIG_NO_THREADS */
-	{
-#ifdef CONFIG_NO_THREADS
-		item = ATOMIC_READ(self->di_next);
-#else /* CONFIG_NO_THREADS */
+	for (;;) {
 		struct rodict_item *old_item;
-		old_item = item = ATOMIC_READ(self->di_next);
-#endif /* !CONFIG_NO_THREADS */
+		item     = atomic_read(&self->di_next);
+		old_item = item;
 		if (item >= end)
 			goto iter_exhausted;
 		while (item < end && !item->di_key)
 			++item;
 		if (item == end) {
-#ifdef CONFIG_NO_THREADS
-			self->di_next = item;
-#else /* CONFIG_NO_THREADS */
-			if (!ATOMIC_CMPXCH(self->di_next, old_item, item))
+			if (!atomic_cmpxch_or_write(&self->di_next, old_item, item))
 				continue;
-#endif /* !CONFIG_NO_THREADS */
 			goto iter_exhausted;
 		}
-#ifdef CONFIG_NO_THREADS
-		self->di_next = item + 1;
-#else /* CONFIG_NO_THREADS */
-		if (ATOMIC_CMPXCH(self->di_next, old_item, item + 1))
+		if (atomic_cmpxch_or_write(&self->di_next, old_item, item + 1))
 			break;
-#endif /* !CONFIG_NO_THREADS */
 	}
 	return_reference_(item->di_key);
 iter_exhausted:
@@ -206,35 +172,21 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 rodictiterator_next_value(DictIterator *__restrict self) {
 	struct rodict_item *item, *end;
 	end = self->di_dict->rd_elem + self->di_dict->rd_mask + 1;
-#ifndef CONFIG_NO_THREADS
-	for (;;)
-#endif /* !CONFIG_NO_THREADS */
-	{
-#ifdef CONFIG_NO_THREADS
-		item = ATOMIC_READ(self->di_next);
-#else /* CONFIG_NO_THREADS */
+	for (;;) {
 		struct rodict_item *old_item;
-		old_item = item = ATOMIC_READ(self->di_next);
-#endif /* !CONFIG_NO_THREADS */
+		item     = atomic_read(&self->di_next);
+		old_item = item;
 		if (item >= end)
 			goto iter_exhausted;
 		while (item < end && !item->di_key)
 			++item;
 		if (item == end) {
-#ifdef CONFIG_NO_THREADS
-			self->di_next = item;
-#else /* CONFIG_NO_THREADS */
-			if (!ATOMIC_CMPXCH(self->di_next, old_item, item))
+			if (!atomic_cmpxch_or_write(&self->di_next, old_item, item))
 				continue;
-#endif /* !CONFIG_NO_THREADS */
 			goto iter_exhausted;
 		}
-#ifdef CONFIG_NO_THREADS
-		self->di_next = item + 1;
-#else /* CONFIG_NO_THREADS */
-		if (ATOMIC_CMPXCH(self->di_next, old_item, item + 1))
+		if (atomic_cmpxch_or_write(&self->di_next, old_item, item + 1))
 			break;
-#endif /* !CONFIG_NO_THREADS */
 	}
 	return_reference_(item->di_value);
 iter_exhausted:

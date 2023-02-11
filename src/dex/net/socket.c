@@ -39,8 +39,7 @@
 #include <deemon/string.h>
 #include <deemon/thread.h>
 #include <deemon/tuple.h>
-
-#include <hybrid/atomic.h>
+#include <deemon/util/atomic.h>
 
 DECL_BEGIN
 
@@ -197,7 +196,7 @@ again:
 			return -1;
 		}
 		memcpy(&self->s_sockaddr, result, sizeof(SockAddr));
-		ATOMIC_OR(self->s_state, SOCKET_FHASSOCKADDR);
+		atomic_or(&self->s_state, SOCKET_FHASSOCKADDR);
 		socket_endread(self);
 	} else {
 		socket_endread(self);
@@ -343,7 +342,7 @@ again_shutdown:
 		if (DeeThread_CheckInterrupt())
 			goto err;
 		socket_read(self);
-		if (ATOMIC_FETCHOR(self->s_state, SOCKET_FSHUTTINGDOWN) &
+		if (atomic_fetchor(&self->s_state, SOCKET_FSHUTTINGDOWN) &
 		    SOCKET_FSHUTTINGDOWN) {
 			/* Special case: Another shutdown operation is still in progress. */
 			socket_endread(self);
@@ -356,7 +355,7 @@ again_shutdown:
 			DBG_ALIGNMENT_DISABLE();
 			error = GET_NET_ERROR();
 			DBG_ALIGNMENT_ENABLE();
-			ATOMIC_AND(self->s_state, ~SOCKET_FSHUTTINGDOWN);
+			atomic_and(&self->s_state, ~SOCKET_FSHUTTINGDOWN);
 			socket_endread(self);
 			if (error == EINVAL) {
 				err_invalid_shutdown_how(error, mode);
@@ -366,8 +365,8 @@ again_shutdown:
 			goto err;
 		}
 		/* Indicate that shutdown has been completed. */
-		ATOMIC_OR(self->s_state, new_state);
-		ATOMIC_AND(self->s_state, ~SOCKET_FSHUTTINGDOWN);
+		atomic_or(&self->s_state, new_state);
+		atomic_and(&self->s_state, ~SOCKET_FSHUTTINGDOWN);
 		socket_upgrade(self); /* it's ok if this blocks. */
 	} else {
 		socket_write(self);
@@ -410,7 +409,7 @@ again_shutdown:
 		if (DeeThread_CheckInterrupt())
 			goto err;
 		socket_read(self);
-		if (ATOMIC_FETCHOR(self->s_state, SOCKET_FSHUTTINGDOWN) &
+		if (atomic_fetchor(&self->s_state, SOCKET_FSHUTTINGDOWN) &
 		    SOCKET_FSHUTTINGDOWN) {
 			/* Special case: The socket is already being shut down. */
 			socket_endread(self);
@@ -426,7 +425,7 @@ again_shutdown:
 			if (error == ENOTCONN) {
 				/* Ignore not-connected errors. */
 			} else {
-				ATOMIC_AND(self->s_state, ~SOCKET_FSHUTTINGDOWN);
+				atomic_and(&self->s_state, ~SOCKET_FSHUTTINGDOWN);
 				socket_endread(self);
 				if (error == EINVAL) {
 					err_invalid_shutdown_how(error, mode);
@@ -439,8 +438,8 @@ again_shutdown:
 			}
 		}
 		/* Indicate that shutdown has been completed. */
-		ATOMIC_OR(self->s_state, new_state);
-		ATOMIC_AND(self->s_state, ~SOCKET_FSHUTTINGDOWN);
+		atomic_or(&self->s_state, new_state);
+		atomic_and(&self->s_state, ~SOCKET_FSHUTTINGDOWN);
 		socket_endread(self);
 	}
 	return_none;
@@ -468,7 +467,7 @@ again:
 		goto err;
 	socket_read(self);
 	/* Enter the binding-state. */
-	if (ATOMIC_FETCHOR(self->s_state, SOCKET_FBINDING) & SOCKET_FBINDING) {
+	if (atomic_fetchor(&self->s_state, SOCKET_FBINDING) & SOCKET_FBINDING) {
 
 		socket_endread(self);
 		/* The socket is already in the middle of a binding-call. */
@@ -489,10 +488,10 @@ again:
 		/* Save the (now) active socket address. */
 		memcpy(&self->s_sockaddr, addr, sizeof(SockAddr));
 		COMPILER_WRITE_BARRIER();
-		ATOMIC_OR(self->s_state, SOCKET_FBOUND | SOCKET_FHASSOCKADDR);
+		atomic_or(&self->s_state, SOCKET_FBOUND | SOCKET_FHASSOCKADDR);
 	}
 	/* Unset the binding-flag. */
-	state = ATOMIC_FETCHAND(self->s_state, ~SOCKET_FBINDING);
+	state = atomic_fetchand(&self->s_state, ~SOCKET_FBINDING);
 	socket_endread(self);
 	if likely(error >= 0)
 		return 0;
@@ -586,7 +585,7 @@ again:
 		goto err;
 	socket_read(self);
 	/* Enter the connecting-state. */
-	if (ATOMIC_FETCHOR(self->s_state, SOCKET_FCONNECTING) & SOCKET_FCONNECTING) {
+	if (atomic_fetchor(&self->s_state, SOCKET_FCONNECTING) & SOCKET_FCONNECTING) {
 		socket_endread(self);
 		/* The socket is already in the middle of a connecting-call.
 		 * Wait for that other connect() call to complete, then try again. */
@@ -661,16 +660,16 @@ restart_select:
 				goto err_connect_failure;
 		}
 	}
-	ATOMIC_OR(self->s_state, SOCKET_FCONNECTED | SOCKET_FHASSOCKADDR);
+	atomic_or(&self->s_state, SOCKET_FCONNECTED | SOCKET_FHASSOCKADDR);
 	/* Unset the connecting-flag. */
-	ATOMIC_AND(self->s_state, ~SOCKET_FCONNECTING);
+	atomic_and(&self->s_state, ~SOCKET_FCONNECTING);
 	socket_endread(self);
 	return 0;
 err_connect_failed:
-	ATOMIC_AND(self->s_state, ~SOCKET_FCONNECTING);
+	atomic_and(&self->s_state, ~SOCKET_FCONNECTING);
 	goto err;
 err_connect_failure:
-	ATOMIC_AND(self->s_state, ~SOCKET_FCONNECTING);
+	atomic_and(&self->s_state, ~SOCKET_FCONNECTING);
 	socket_endread(self);
 	/* Handle errors. */
 	if (error == EADDRNOTAVAIL) {
@@ -760,7 +759,7 @@ again:
 		goto err;
 	socket_read(self);
 	/* Enter the listening-state. */
-	if (ATOMIC_FETCHOR(self->s_state, SOCKET_FSTARTLISTENING) &
+	if (atomic_fetchor(&self->s_state, SOCKET_FSTARTLISTENING) &
 	    SOCKET_FSTARTLISTENING) {
 
 		socket_endread(self);
@@ -773,9 +772,9 @@ again:
 	error = listen(self->s_socket, max_backlog);
 	DBG_ALIGNMENT_ENABLE();
 	if likely(error >= 0)
-		ATOMIC_OR(self->s_state, SOCKET_FLISTENING);
+		atomic_or(&self->s_state, SOCKET_FLISTENING);
 	/* Unset the binding-flag. */
-	state = ATOMIC_FETCHAND(self->s_state, ~SOCKET_FSTARTLISTENING);
+	state = atomic_fetchand(&self->s_state, ~SOCKET_FSTARTLISTENING);
 	socket_endread(self);
 	if likely(error >= 0)
 		return 0;
@@ -1380,7 +1379,7 @@ again:
 				err_configure_send(self);
 				goto err;
 			}
-			ATOMIC_OR(self->s_state, SOCKET_FSENDCONFOK);
+			atomic_or(&self->s_state, SOCKET_FSENDCONFOK);
 			socket_downgrade(self);
 		}
 	}
@@ -1481,7 +1480,7 @@ again:
 				err_configure_recv(self);
 				goto err;
 			}
-			ATOMIC_OR(self->s_state, SOCKET_FRECVCONFOK);
+			atomic_or(&self->s_state, SOCKET_FRECVCONFOK);
 			socket_downgrade(self);
 		}
 	}
@@ -1589,7 +1588,7 @@ again:
 				err_configure_send(self);
 				goto err;
 			}
-			ATOMIC_OR(self->s_state, SOCKET_FSENDCONFOK);
+			atomic_or(&self->s_state, SOCKET_FSENDCONFOK);
 			socket_downgrade(self);
 		}
 	}
@@ -1714,7 +1713,7 @@ again:
 				err_configure_recv(self);
 				goto err;
 			}
-			ATOMIC_OR(self->s_state, SOCKET_FRECVCONFOK);
+			atomic_or(&self->s_state, SOCKET_FRECVCONFOK);
 			socket_downgrade(self);
 		}
 	}
@@ -2670,10 +2669,9 @@ PRIVATE struct type_member tpconst socket_members[] = {
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 socket_str(DeeSocketObject *__restrict self) {
 	bool has_sock, has_peer;
-	uint16_t state;
+	uint16_t state = atomic_read(&self->s_state);
 	SockAddr sock, peer;
 	struct ascii_printer printer = ASCII_PRINTER_INIT;
-	state                        = ATOMIC_READ(self->s_state);
 	if (ascii_printer_printf(&printer, "<socket %K, %K, %K: ",
 	                         sock_getafnameorid(self->s_sockaddr.sa.sa_family),
 	                         sock_gettypenameorid(self->s_type),
@@ -2723,10 +2721,9 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 socket_repr(DeeSocketObject *__restrict self) {
 	bool has_sock, has_peer;
-	uint16_t state;
+	uint16_t state = atomic_read(&self->s_state);
 	SockAddr sock, peer;
 	struct ascii_printer printer = ASCII_PRINTER_INIT;
-	state                        = ATOMIC_READ(self->s_state);
 	if (ascii_printer_printf(&printer, "<socket(%R, %R, %R): ",
 	                         sock_getafnameorid(self->s_sockaddr.sa.sa_family),
 	                         sock_gettypenameorid(self->s_type),

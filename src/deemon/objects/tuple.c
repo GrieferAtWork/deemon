@@ -34,6 +34,7 @@
 #include <deemon/system-features.h>
 #include <deemon/thread.h>
 #include <deemon/tuple.h>
+#include <deemon/util/atomic.h>
 #include <deemon/util/lock.h>
 
 #include <hybrid/minmax.h>
@@ -68,7 +69,6 @@
 
 #include <hybrid/minmax.h>
 #if CONFIG_TUPLE_CACHE_MAXCOUNT && !defined(CONFIG_NO_THREADS)
-#include <hybrid/atomic.h>
 #include <hybrid/sched/yield.h>
 #endif /* CONFIG_TUPLE_CACHE_MAXCOUNT && !CONFIG_NO_THREADS */
 
@@ -432,11 +432,12 @@ DeeTuple_FromSequence(DeeObject *__restrict self) {
 	DREF DeeObject *result;
 	size_t i, seq_length;
 	ASSERT_OBJECT(self);
+
 	/* Optimizations for specific types such as `Tuple' and `List' */
 	if (DeeTuple_CheckExact(self))
 		return_reference_(self);
 	if (DeeList_CheckExact(self)) {
-		seq_length = ATOMIC_READ(DeeList_SIZE(self));
+		seq_length = atomic_read(&DeeList_SIZE(self));
 list_size_changed:
 		result = DeeTuple_NewUninitialized(seq_length);
 		if unlikely(!result)
@@ -455,6 +456,7 @@ list_size_changed:
 		DeeList_LockEndRead(self);
 		goto done;
 	}
+
 	/* Optimization for fast-sequence compatible objects. */
 	seq_length = DeeFastSeq_GetSize(self);
 	if (seq_length != DEE_FASTSEQ_NOTFAST) {
@@ -472,6 +474,7 @@ list_size_changed:
 		}
 		goto done;
 	}
+
 	/* Use general-purpose iterators to create a new tuple. */
 	self = DeeObject_IterSelf(self);
 	if unlikely(!self)
@@ -814,7 +817,7 @@ DeeTuple_ConcatInherited(/*inherit(on_success)*/ DREF DeeObject *self, DeeObject
 #endif
 		if (DeeList_CheckExact(sequence)) {
 			DREF Tuple *new_result;
-			size_t lstsize = ATOMIC_READ(DeeList_SIZE(sequence));
+			size_t lstsize = atomic_read(&DeeList_SIZE(sequence));
 			if unlikely(!lstsize)
 				goto done;
 handle_list_size:
@@ -862,7 +865,7 @@ handle_list_size:
 #endif
 		if (DeeList_CheckExact(sequence)) {
 			size_t lstsize;
-			lstsize = ATOMIC_READ(DeeList_SIZE(sequence));
+			lstsize = atomic_read(&DeeList_SIZE(sequence));
 handle_list_size2:
 			result = (DREF Tuple *)DeeTuple_NewUninitialized(oldsize + lstsize);
 			if unlikely(!result)
@@ -924,12 +927,7 @@ typedef struct {
 	DREF Tuple  *ti_tuple; /* [1..1][const] Referenced tuple. */
 	DWEAK size_t ti_index; /* [<= ti_tuple->t_size] Next-element index. */
 } TupleIterator;
-
-#ifdef CONFIG_NO_THREADS
-#define READ_INDEX(x)            ((x)->ti_index)
-#else /* CONFIG_NO_THREADS */
-#define READ_INDEX(x) ATOMIC_READ((x)->ti_index)
-#endif /* !CONFIG_NO_THREADS */
+#define READ_INDEX(x) atomic_read(&(x)->ti_index)
 
 INTDEF DeeTypeObject DeeTupleIterator_Type;
 
@@ -997,24 +995,15 @@ tuple_iterator_visit(TupleIterator *__restrict self, dvisit_t proc, void *arg) {
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 tuple_iterator_next(TupleIterator *__restrict self) {
 	DREF DeeObject *result;
-#ifdef CONFIG_NO_THREADS
-	if (self->ti_index >= DeeTuple_SIZE(self->ti_tuple))
-		return ITER_DONE;
-	result = DeeTuple_GET(self->ti_tuple, self->ti_index);
-	ASSERT_OBJECT(result);
-	++self->ti_index;
-	Dee_Incref(result);
-#else /* CONFIG_NO_THREADS */
 	size_t index;
 	do {
-		index = ATOMIC_READ(self->ti_index);
+		index = atomic_read(&self->ti_index);
 		if (index >= DeeTuple_SIZE(self->ti_tuple))
 			return ITER_DONE;
-	} while (!ATOMIC_CMPXCH(self->ti_index, index, index + 1));
+	} while (!atomic_cmpxch_weak_or_write(&self->ti_index, index, index + 1));
 	result = DeeTuple_GET(self->ti_tuple, index);
 	ASSERT_OBJECT(result);
 	Dee_Incref(result);
-#endif /* !CONFIG_NO_THREADS */
 	return result;
 }
 
@@ -1053,87 +1042,57 @@ tuple_iterator_nii_getindex(TupleIterator *__restrict self) {
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 tuple_iterator_nii_setindex(TupleIterator *__restrict self, size_t new_index) {
-#ifdef CONFIG_NO_THREADS
-	self->ti_index = new_index;
-#else /* CONFIG_NO_THREADS */
-	ATOMIC_WRITE(self->ti_index, new_index);
-#endif /* !CONFIG_NO_THREADS */
+	atomic_write(&self->ti_index, new_index);
 	return 0;
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 tuple_iterator_nii_rewind(TupleIterator *__restrict self) {
-#ifdef CONFIG_NO_THREADS
-	self->ti_index = 0;
-#else /* CONFIG_NO_THREADS */
-	ATOMIC_WRITE(self->ti_index, 0);
-#endif /* !CONFIG_NO_THREADS */
+	atomic_write(&self->ti_index, 0);
 	return 0;
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 tuple_iterator_nii_revert(TupleIterator *__restrict self, size_t step) {
-#ifdef CONFIG_NO_THREADS
-	if (OVERFLOW_USUB(self->ti_index, step, &self->ti_index))
-		self->ti_index = 0;
-#else /* CONFIG_NO_THREADS */
 	size_t old_index, new_index;
 	do {
-		old_index = ATOMIC_READ(self->ti_index);
+		old_index = atomic_read(&self->ti_index);
 		if (OVERFLOW_USUB(old_index, step, &new_index))
 			new_index = 0;
-	} while (!ATOMIC_CMPXCH_WEAK(self->ti_index, old_index, new_index));
-#endif /* !CONFIG_NO_THREADS */
+	} while (!atomic_cmpxch_weak_or_write(&self->ti_index, old_index, new_index));
 	return 0;
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 tuple_iterator_nii_advance(TupleIterator *__restrict self, size_t step) {
-#ifdef CONFIG_NO_THREADS
-	if (OVERFLOW_UADD(self->ti_index, step, &self->ti_index))
-		self->ti_index = (size_t)-1;
-#else /* CONFIG_NO_THREADS */
 	size_t old_index, new_index;
 	do {
-		old_index = ATOMIC_READ(self->ti_index);
+		old_index = atomic_read(&self->ti_index);
 		if (OVERFLOW_UADD(old_index, step, &new_index))
 			new_index = (size_t)-1;
-	} while (!ATOMIC_CMPXCH_WEAK(self->ti_index, old_index, new_index));
-#endif /* !CONFIG_NO_THREADS */
+	} while (!atomic_cmpxch_weak_or_write(&self->ti_index, old_index, new_index));
 	return 0;
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 tuple_iterator_nii_prev(TupleIterator *__restrict self) {
-#ifdef CONFIG_NO_THREADS
-	if (!self->ti_index)
-		return 1;
-	--self->ti_index;
-#else /* CONFIG_NO_THREADS */
 	size_t old_index;
 	do {
-		old_index = ATOMIC_READ(self->ti_index);
+		old_index = atomic_read(&self->ti_index);
 		if (!old_index)
 			return 1;
-	} while (!ATOMIC_CMPXCH_WEAK(self->ti_index, old_index, old_index - 1));
-#endif /* !CONFIG_NO_THREADS */
+	} while (!atomic_cmpxch_weak_or_write(&self->ti_index, old_index, old_index - 1));
 	return 0;
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 tuple_iterator_nii_next(TupleIterator *__restrict self) {
-#ifdef CONFIG_NO_THREADS
-	if (self->ti_index >= DeeTuple_SIZE(self->ti_tuple))
-		return 1;
-	++self->ti_index;
-#else /* CONFIG_NO_THREADS */
 	size_t old_index;
 	do {
-		old_index = ATOMIC_READ(self->ti_index);
+		old_index = atomic_read(&self->ti_index);
 		if (old_index >= DeeTuple_SIZE(self->ti_tuple))
 			return 1;
-	} while (!ATOMIC_CMPXCH_WEAK(self->ti_index, old_index, old_index + 1));
-#endif /* !CONFIG_NO_THREADS */
+	} while (!atomic_cmpxch_weak_or_write(&self->ti_index, old_index, old_index + 1));
 	return 0;
 }
 

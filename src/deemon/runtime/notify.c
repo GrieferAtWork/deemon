@@ -29,13 +29,10 @@
 #include <deemon/object.h>
 #include <deemon/string.h>
 #include <deemon/system-features.h> /* bcmpc(), ... */
+#include <deemon/util/recursive-rwlock.h>
 
 #include <hybrid/limitcore.h>
 #include <hybrid/typecore.h>
-
-#ifndef CONFIG_NO_THREADS
-#include <deemon/util/recursive-rwlock.h>
-#endif /* !CONFIG_NO_THREADS */
 
 #include "strings.h"
 

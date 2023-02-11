@@ -26,8 +26,7 @@
 
 #include <deemon/seq.h>
 #include <deemon/string.h>
-
-#include <hybrid/atomic.h>
+#include <deemon/util/atomic.h>
 
 #include "../../runtime/strings.h"
 
@@ -42,11 +41,7 @@ typedef struct {
 	DWEAK union dcharptr  soi_ptr;   /* Pointer to the next character. */
 	union dcharptr        soi_end;   /* [const][== DeeString_WEND(so_str)] The end of the string. */
 } StringOrdinalsIterator;
-#ifdef CONFIG_NO_THREADS
-#define READ_PTR(x)               (x)->soi_ptr.ptr
-#else /* CONFIG_NO_THREADS */
-#define READ_PTR(x)   ATOMIC_READ((x)->soi_ptr.ptr)
-#endif /* !CONFIG_NO_THREADS */
+#define READ_PTR(x) atomic_read(&(x)->soi_ptr.ptr)
 
 typedef struct {
 	/* A proxy object for viewing the characters of a string as an array of unsigned
@@ -128,18 +123,12 @@ stringordinalsiter_bool(StringOrdinalsIterator *__restrict self) {
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 stringordinalsiter_next(StringOrdinalsIterator *__restrict self) {
 	union dcharptr pchar;
-#ifdef CONFIG_NO_THREADS
-	pchar.ptr = READ_PTR(self);
-	if (pchar.ptr >= self->soi_end.ptr)
-		return ITER_DONE;
-	self->soi_ptr.cp8 = STRING_SIZEOF_WIDTH(self->soi_width);
-#else /* CONFIG_NO_THREADS */
 	do {
 		pchar.ptr = READ_PTR(self);
 		if (pchar.ptr >= self->soi_end.ptr)
 			return ITER_DONE;
-	} while (!ATOMIC_CMPXCH(self->soi_ptr.cp8, pchar.cp8, pchar.cp8 + STRING_SIZEOF_WIDTH(self->soi_width)));
-#endif /* !CONFIG_NO_THREADS */
+	} while (!atomic_cmpxch_or_write(&self->soi_ptr.cp8, pchar.cp8,
+	                                 pchar.cp8 + STRING_SIZEOF_WIDTH(self->soi_width)));
 	SWITCH_SIZEOF_WIDTH(self->soi_width) {
 
 	CASE_WIDTH_1BYTE:

@@ -33,13 +33,10 @@
 #include <deemon/system-features.h>
 #include <deemon/thread.h>
 #include <deemon/tuple.h>
-
-#ifndef CONFIG_NO_THREADS
 #include <deemon/util/rwlock.h>
-#endif /* !CONFIG_NO_THREADS */
 
-#include "../../runtime/strings.h"
 #include "../../runtime/runtime_error.h"
+#include "../../runtime/strings.h"
 
 DECL_BEGIN
 
@@ -277,22 +274,6 @@ PRIVATE struct type_member tpconst comiter_members[] = {
 	TYPE_MEMBER_END
 };
 
-#ifdef CONFIG_NO_THREADS
-#define DEFINE_COMITER_COMPARE(name, if_diff_combi, op)             \
-	PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL           \
-	name(CombinationsIterator *self, CombinationsIterator *other) { \
-		int result;                                                 \
-		if (DeeObject_AssertTypeExact(other, Dee_TYPE(self)))       \
-			goto err;                                               \
-		if (self->ci_combi != other->ci_combi)                      \
-			if_diff_combi;                                          \
-		result = bcmpc(self->ci_indices, other->ci_indices,         \
-		               self->ci_combi->c_comlen, sizeof(size_t));   \
-		return_bool_(result op 0);                                  \
-	err:                                                            \
-		return NULL;                                                \
-	}
-#else /* CONFIG_NO_THREADS */
 #define DEFINE_COMITER_COMPARE(name, if_diff_combi, op)             \
 	PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL           \
 	name(CombinationsIterator *self, CombinationsIterator *other) { \
@@ -319,7 +300,6 @@ PRIVATE struct type_member tpconst comiter_members[] = {
 	err:                                                            \
 		return NULL;                                                \
 	}
-#endif /* !CONFIG_NO_THREADS */
 DEFINE_COMITER_COMPARE(comiter_eq, return_false, ==)
 DEFINE_COMITER_COMPARE(comiter_ne, return_true, !=)
 DEFINE_COMITER_COMPARE(comiter_lo, return_bool(self->ci_combi < other->ci_combi), <)

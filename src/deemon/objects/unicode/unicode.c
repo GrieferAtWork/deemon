@@ -29,20 +29,14 @@
 #include <deemon/string.h>
 #include <deemon/stringutils.h>
 #include <deemon/system-features.h> /* memcpy(), bzero(), ... */
-
-#ifndef CONFIG_NO_THREADS
+#include <deemon/util/atomic.h>
 #include <deemon/util/rwlock.h>
-#endif /* !CONFIG_NO_THREADS */
 
 #include <hybrid/minmax.h>
 
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
-
-#ifndef CONFIG_NO_THREADS
-#include <hybrid/atomic.h>
-#endif /* !CONFIG_NO_THREADS */
 
 DECL_BEGIN
 
@@ -139,8 +133,8 @@ latincache_clear(size_t max_clear) {
 	DREF String **iter = latin1_chars;
 #ifndef CONFIG_NO_THREADS
 again:
-	rwlock_write(&latin1_chars_lock);
 #endif /* !CONFIG_NO_THREADS */
+	rwlock_write(&latin1_chars_lock);
 	for (; iter < COMPILER_ENDOF(latin1_chars); ++iter) {
 		DREF String *ob = *iter;
 		if (!ob)
@@ -211,7 +205,7 @@ again:
 #if STRING_WIDTH_1BYTE != 0
 		utf->u_width = STRING_WIDTH_1BYTE;
 #endif /* STRING_WIDTH_1BYTE != 0 */
-		if (!ATOMIC_CMPXCH(((String *)self)->s_data, NULL, utf)) {
+		if (!atomic_cmpxch(&((String *)self)->s_data, NULL, utf)) {
 			Dee_string_utf_free(utf);
 			goto again;
 		}
@@ -232,7 +226,7 @@ again:
 		for (i = 0; i < length; ++i)
 			result[i] = data[i];
 		result[length] = 0;
-		if likely(ATOMIC_CMPXCH(utf->u_data[STRING_WIDTH_2BYTE], NULL, result)) {
+		if likely(atomic_cmpxch(&utf->u_data[STRING_WIDTH_2BYTE], NULL, result)) {
 			Dee_UntrackAlloc((size_t *)result - 1);
 			return result;
 		}
@@ -257,7 +251,7 @@ again:
 #if STRING_WIDTH_1BYTE != 0
 		utf->u_width = STRING_WIDTH_1BYTE;
 #endif /* STRING_WIDTH_1BYTE != 0 */
-		if (!ATOMIC_CMPXCH(((String *)self)->s_data, NULL, utf)) {
+		if (!atomic_cmpxch(&((String *)self)->s_data, NULL, utf)) {
 			Dee_string_utf_free(utf);
 			goto again;
 		}
@@ -290,7 +284,7 @@ again:
 				result[i] = data[i];
 		}
 		result[length] = 0;
-		if likely(ATOMIC_CMPXCH(utf->u_data[STRING_WIDTH_4BYTE], NULL, result)) {
+		if likely(atomic_cmpxch(&utf->u_data[STRING_WIDTH_4BYTE], NULL, result)) {
 			Dee_UntrackAlloc((size_t *)result - 1);
 			return result;
 		}
@@ -316,7 +310,7 @@ again:
 		if ((utf->u_flags & STRING_UTF_FASCII) ||
 		    (utf->u_width != STRING_WIDTH_1BYTE)) {
 set_utf8_and_return_1byte:
-			ATOMIC_WRITE(utf->u_utf8, DeeString_STR(self));
+			atomic_write(&utf->u_utf8, DeeString_STR(self));
 			return DeeString_STR(self);
 		}
 	}
@@ -329,7 +323,7 @@ set_utf8_and_return_1byte:
 		bzero(utf, sizeof(struct string_utf));
 		utf->u_width                    = STRING_WIDTH_1BYTE;
 		utf->u_data[STRING_WIDTH_1BYTE] = (size_t *)DeeString_STR(self);
-		if (!ATOMIC_CMPXCH(((String *)self)->s_data, NULL, utf)) {
+		if (!atomic_cmpxch(&((String *)self)->s_data, NULL, utf)) {
 			Dee_string_utf_free(utf);
 			goto again;
 		}
@@ -375,7 +369,7 @@ set_utf8_and_return_1byte:
 		ASSERT(dst == result + result_length);
 		*dst = '\0';
 		/* Save the generated UTF-8 string in the string's UTF cache. */
-		if (!ATOMIC_CMPXCH(utf->u_utf8, NULL, (char *)result)) {
+		if (!atomic_cmpxch(&utf->u_utf8, NULL, (char *)result)) {
 			Dee_Free((size_t *)result - 1);
 			ASSERT(utf->u_utf8 != NULL);
 			return utf->u_utf8;
@@ -384,7 +378,7 @@ set_utf8_and_return_1byte:
 		return (char *)result;
 	}
 	/* No latin1 characters here! */
-	ATOMIC_OR(utf->u_flags, STRING_UTF_FASCII);
+	atomic_or(&utf->u_flags, STRING_UTF_FASCII);
 	goto set_utf8_and_return_1byte;
 err:
 	return NULL;
@@ -403,7 +397,7 @@ again:
 		if ((utf->u_flags & STRING_UTF_FASCII) ||
 		    (utf->u_width != STRING_WIDTH_1BYTE)) {
 set_utf8_and_return_1byte:
-			ATOMIC_WRITE(utf->u_utf8, DeeString_STR(self));
+			atomic_write(&utf->u_utf8, DeeString_STR(self));
 			return DeeString_STR(self);
 		}
 	}
@@ -416,7 +410,7 @@ set_utf8_and_return_1byte:
 		bzero(utf, sizeof(struct string_utf));
 		utf->u_width                    = STRING_WIDTH_1BYTE;
 		utf->u_data[STRING_WIDTH_1BYTE] = (size_t *)DeeString_STR(self);
-		if (!ATOMIC_CMPXCH(((String *)self)->s_data, NULL, utf)) {
+		if (!atomic_cmpxch(&((String *)self)->s_data, NULL, utf)) {
 			Dee_string_utf_free(utf);
 			goto again;
 		}
@@ -462,7 +456,7 @@ set_utf8_and_return_1byte:
 		ASSERT(dst == result + result_length);
 		*dst = '\0';
 		/* Save the generated UTF-8 string in the string's UTF cache. */
-		if (!ATOMIC_CMPXCH(utf->u_utf8, NULL, (char *)result)) {
+		if (!atomic_cmpxch(&utf->u_utf8, NULL, (char *)result)) {
 			Dee_Free((size_t *)result - 1);
 			ASSERT(utf->u_utf8 != NULL);
 			return utf->u_utf8;
@@ -471,7 +465,7 @@ set_utf8_and_return_1byte:
 		return (char *)result;
 	}
 	/* No latin1 characters here! */
-	ATOMIC_OR(utf->u_flags, STRING_UTF_FASCII);
+	atomic_or(&utf->u_flags, STRING_UTF_FASCII);
 	goto set_utf8_and_return_1byte;
 err:
 	return NULL;
@@ -521,7 +515,7 @@ DeeString_AsBytes(DeeObject *__restrict self, bool allow_invalid) {
 		/* The actual length of the string matches the length of of its single-byte
 		 * variant, in other words meaning that all of its characters could fit into
 		 * that range, and that the string consists only of ASCII characters. */
-		ATOMIC_OR(utf->u_flags, STRING_UTF_FASCII);
+		atomic_or(&utf->u_flags, STRING_UTF_FASCII);
 		utf->u_data[STRING_WIDTH_1BYTE] = (size_t *)DeeString_STR(self);
 		return (uint8_t *)DeeString_STR(self);
 	}
@@ -568,10 +562,10 @@ DeeString_AsBytes(DeeObject *__restrict self, bool allow_invalid) {
 
 	/* All right. - We've managed to construct the single-byte variant. */
 	if (contains_invalid)
-		ATOMIC_OR(utf->u_flags, STRING_UTF_FINVBYT);
+		atomic_or(&utf->u_flags, STRING_UTF_FINVBYT);
 
 	/* Deal with race conditions. */
-	if (!ATOMIC_CMPXCH(utf->u_data[STRING_WIDTH_1BYTE], NULL, (size_t *)result)) {
+	if (!atomic_cmpxch(&utf->u_data[STRING_WIDTH_1BYTE], NULL, (size_t *)result)) {
 		Dee_Free((size_t *)result - 1);
 		return (uint8_t *)utf->u_data[STRING_WIDTH_1BYTE];
 	}
@@ -665,7 +659,7 @@ load_2byte_width:
 					result = new_result;
 			}
 			/* Save the utf-16 encoded string. */
-			if (!ATOMIC_CMPXCH(*(uint16_t **)&utf->u_utf16, NULL, result)) {
+			if (!atomic_cmpxch(&*(uint16_t **)&utf->u_utf16, NULL, result)) {
 				DeeString_Free2ByteBuffer(result);
 				return (uint16_t *)utf->u_utf16;
 			}
@@ -674,7 +668,7 @@ load_2byte_width:
 		}
 		/* The 2-byte variant doesn't contain any illegal characters,
 			 * so we can simply re-use it as the utf-16 variant. */
-		ATOMIC_CMPXCH(*(uint16_t **)&utf->u_utf16, NULL, str);
+		atomic_cmpxch(&*(uint16_t **)&utf->u_utf16, NULL, str);
 		return (uint16_t *)utf->u_utf16;
 	}	break;
 
@@ -733,7 +727,7 @@ err_invalid_unicode:
 		ASSERT(dst == result + result_length);
 		*dst = 0;
 		/* Save the utf-16 encoded string. */
-		if (!ATOMIC_CMPXCH(*(uint16_t **)&utf->u_utf16, NULL, result)) {
+		if (!atomic_cmpxch(&*(uint16_t **)&utf->u_utf16, NULL, result)) {
 			DeeString_Free2ByteBuffer(result);
 			return (uint16_t *)utf->u_utf16;
 		}
@@ -830,7 +824,7 @@ again:
 		    (utf->u_width != STRING_WIDTH_1BYTE)) {
 			/* The single-byte variant is known to be encoded in UTF-8, or ASCII */
 print_ascii:
-			ATOMIC_WRITE(utf->u_utf8, DeeString_STR(self));
+			atomic_write(&utf->u_utf8, DeeString_STR(self));
 			return (*printer)(arg, DeeString_STR(self), DeeString_SIZE(self));
 		}
 	}
@@ -843,7 +837,7 @@ print_ascii:
 		bzero(utf, sizeof(struct string_utf));
 		utf->u_width                    = STRING_WIDTH_1BYTE;
 		utf->u_data[STRING_WIDTH_1BYTE] = (size_t *)DeeString_STR(self);
-		if (!ATOMIC_CMPXCH(((String *)self)->s_data, NULL, utf)) {
+		if (!atomic_cmpxch(&((String *)self)->s_data, NULL, utf)) {
 			Dee_string_utf_free(utf);
 			goto again;
 		}
@@ -877,7 +871,7 @@ print_ascii:
 	}
 	if (flush_start == (uint8_t *)DeeString_STR(self)) {
 		/* The entire string is ASCII (remember this fact!) */
-		ATOMIC_OR(utf->u_flags, STRING_UTF_FASCII);
+		atomic_or(&utf->u_flags, STRING_UTF_FASCII);
 		goto print_ascii;
 	}
 	/* Flush the remainder. */

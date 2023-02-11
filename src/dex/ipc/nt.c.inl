@@ -28,8 +28,7 @@
 #include <deemon/system-features.h>
 #include <deemon/system.h> /* DeeNTSystem_IsIntr() */
 #include <deemon/thread.h>
-
-#include <hybrid/atomic.h>
+#include <deemon/util/atomic.h>
 
 #include <Windows.h>
 
@@ -300,7 +299,7 @@ nt_QueryFullProcessImageName(HANDLE hProcess, DWORD dwFlags) {
 		DBG_ALIGNMENT_ENABLE();
 		if (!func)
 			*(void **)&func = (void *)(uintptr_t)-1;
-		ATOMIC_CMPXCH(pQueryFullProcessImageNameW, NULL, func);
+		atomic_cmpxch(&pQueryFullProcessImageNameW, NULL, func);
 	}
 	/* If the function is not supported, return ITER_DONE. */
 	if (*(void **)&func == (void *)(uintptr_t)-1)

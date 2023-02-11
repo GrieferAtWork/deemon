@@ -36,8 +36,7 @@
 #include <deemon/objmethod.h>
 #include <deemon/string.h>
 #include <deemon/system-features.h>
-
-#include <hybrid/atomic.h>
+#include <deemon/util/atomic.h>
 
 #ifdef CONFIG_HAVE_LIMITS_H
 #include <limits.h>
@@ -109,13 +108,13 @@ INTERN WUNUSED dtime_t DCALL time_now(void) {
 	if (pdyn_GetSystemTimePreciseAsFileTime == NULL) {
 		HMODULE hKernel32 = GetKernel32Handle();
 		if (!hKernel32) {
-			ATOMIC_WRITE(*(void **)&pdyn_GetSystemTimePreciseAsFileTime, (void *)(uintptr_t)-1);
+			atomic_write((void **)&pdyn_GetSystemTimePreciseAsFileTime, (void *)(uintptr_t)-1);
 		} else {
 			LPGETSYSTEMTIMEPRECISEASFILETIME func;
 			func = (LPGETSYSTEMTIMEPRECISEASFILETIME)GetProcAddress(hKernel32, "GetSystemTimePreciseAsFileTime");
 			if (!func)
 				*(void **)&func = (void *)(uintptr_t)-1;
-			ATOMIC_WRITE(pdyn_GetSystemTimePreciseAsFileTime, func);
+			atomic_write(&pdyn_GetSystemTimePreciseAsFileTime, func);
 		}
 	}
 	if (pdyn_GetSystemTimePreciseAsFileTime != (LPGETSYSTEMTIMEPRECISEASFILETIME)-1) {

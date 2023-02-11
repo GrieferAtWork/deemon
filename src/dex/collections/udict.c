@@ -41,8 +41,7 @@
 #include <deemon/system-features.h>
 #include <deemon/thread.h>
 #include <deemon/tuple.h>
-
-#include <hybrid/atomic.h>
+#include <deemon/util/atomic.h>
 
 DECL_BEGIN
 
@@ -53,11 +52,7 @@ INTDEF WUNUSED NONNULL((1)) int DCALL uset_bool(USet *__restrict self);
 STATIC_ASSERT(offsetof(USet, s_used) == offsetof(UDict, d_used));
 #define udict_bool uset_bool
 
-#ifdef CONFIG_NO_THREADS
-#define READ_ITEM(x) ((x)->di_next)
-#else /* CONFIG_NO_THREADS */
-#define READ_ITEM(x) ATOMIC_READ((x)->di_next)
-#endif /* !CONFIG_NO_THREADS */
+#define READ_ITEM(x) atomic_read(&(x)->di_next)
 
 STATIC_ASSERT(offsetof(UDictIterator, di_dict) == offsetof(USetIterator, si_set));
 STATIC_ASSERT(offsetof(UDictIterator, di_next) == offsetof(USetIterator, si_next));
@@ -109,16 +104,11 @@ udictiterator_next(UDictIterator *__restrict self) {
 	UDict *dict = self->di_dict;
 	USet_LockRead(dict);
 	end = dict->d_elem + (dict->d_mask + 1);
-#ifndef CONFIG_NO_THREADS
-	for (;;)
-#endif /* !CONFIG_NO_THREADS */
-	{
-#ifdef CONFIG_NO_THREADS
-		item = ATOMIC_READ(self->di_next);
-#else /* CONFIG_NO_THREADS */
+	for (;;) {
 		struct udict_item *old_item;
-		old_item = item = ATOMIC_READ(self->di_next);
-#endif /* !CONFIG_NO_THREADS */
+		item     = atomic_read(&self->di_next);
+		old_item = item;
+
 		/* Validate that the pointer is still located in-bounds. */
 		if (item >= end) {
 			if unlikely(item > end)
@@ -131,20 +121,12 @@ udictiterator_next(UDictIterator *__restrict self) {
 		while (item < end && (!item->di_key || item->di_key == dummy))
 			++item;
 		if (item == end) {
-#ifdef CONFIG_NO_THREADS
-			self->di_next = item;
-#else /* CONFIG_NO_THREADS */
-			if (!ATOMIC_CMPXCH(self->di_next, old_item, item))
+			if (!atomic_cmpxch_or_write(&self->di_next, old_item, item))
 				continue;
-#endif /*!CONFIG_NO_THREADS */
 			goto iter_exhausted;
 		}
-#ifdef CONFIG_NO_THREADS
-		self->di_next = item + 1;
-#else /* CONFIG_NO_THREADS */
-		if (ATOMIC_CMPXCH(self->di_next, old_item, item + 1))
+		if (atomic_cmpxch_or_write(&self->di_next, old_item, item + 1))
 			break;
-#endif /* !CONFIG_NO_THREADS */
 	}
 	key   = item->di_key;
 	value = item->di_value;
@@ -178,16 +160,11 @@ udictiterator_nextkey(UDictIterator *__restrict self) {
 	UDict *dict = self->di_dict;
 	USet_LockRead(dict);
 	end = dict->d_elem + (dict->d_mask + 1);
-#ifndef CONFIG_NO_THREADS
-	for (;;)
-#endif /* !CONFIG_NO_THREADS */
-	{
-#ifdef CONFIG_NO_THREADS
-		item = ATOMIC_READ(self->di_next);
-#else /* CONFIG_NO_THREADS */
+	for (;;) {
 		struct udict_item *old_item;
-		old_item = item = ATOMIC_READ(self->di_next);
-#endif /* !CONFIG_NO_THREADS */
+		item     = atomic_read(&self->di_next);
+		old_item = item;
+
 		/* Validate that the pointer is still located in-bounds. */
 		if (item >= end) {
 			if unlikely(item > end)
@@ -200,20 +177,12 @@ udictiterator_nextkey(UDictIterator *__restrict self) {
 		while (item < end && (!item->di_key || item->di_key == dummy))
 			++item;
 		if (item == end) {
-#ifdef CONFIG_NO_THREADS
-			self->di_next = item;
-#else /* CONFIG_NO_THREADS */
-			if (!ATOMIC_CMPXCH(self->di_next, old_item, item))
+			if (!atomic_cmpxch_or_write(&self->di_next, old_item, item))
 				continue;
-#endif /*!CONFIG_NO_THREADS */
 			goto iter_exhausted;
 		}
-#ifdef CONFIG_NO_THREADS
-		self->di_next = item + 1;
-#else /* CONFIG_NO_THREADS */
-		if (ATOMIC_CMPXCH(self->di_next, old_item, item + 1))
+		if (atomic_cmpxch_or_write(&self->di_next, old_item, item + 1))
 			break;
-#endif /* !CONFIG_NO_THREADS */
 	}
 	result = item->di_key;
 	Dee_Incref(result);
@@ -235,16 +204,11 @@ udictiterator_nextvalue(UDictIterator *__restrict self) {
 	UDict *dict = self->di_dict;
 	USet_LockRead(dict);
 	end = dict->d_elem + (dict->d_mask + 1);
-#ifndef CONFIG_NO_THREADS
-	for (;;)
-#endif /* !CONFIG_NO_THREADS */
-	{
-#ifdef CONFIG_NO_THREADS
-		item = ATOMIC_READ(self->di_next);
-#else /* CONFIG_NO_THREADS */
+	for (;;) {
 		struct udict_item *old_item;
-		old_item = item = ATOMIC_READ(self->di_next);
-#endif /* !CONFIG_NO_THREADS */
+		item     = atomic_read(&self->di_next);
+		old_item = item;
+
 		/* Validate that the pointer is still located in-bounds. */
 		if (item >= end) {
 			if unlikely(item > end)
@@ -253,24 +217,17 @@ udictiterator_nextvalue(UDictIterator *__restrict self) {
 		}
 		if unlikely(item < dict->d_elem)
 			goto dict_has_changed;
+
 		/* Search for the next non-empty item. */
 		while (item < end && (!item->di_key || item->di_key == dummy))
 			++item;
 		if (item == end) {
-#ifdef CONFIG_NO_THREADS
-			self->di_next = item;
-#else /* CONFIG_NO_THREADS */
-			if (!ATOMIC_CMPXCH(self->di_next, old_item, item))
+			if (!atomic_cmpxch_or_write(&self->di_next, old_item, item))
 				continue;
-#endif /*!CONFIG_NO_THREADS */
 			goto iter_exhausted;
 		}
-#ifdef CONFIG_NO_THREADS
-		self->di_next = item + 1;
-#else /* CONFIG_NO_THREADS */
-		if (ATOMIC_CMPXCH(self->di_next, old_item, item + 1))
+		if (atomic_cmpxch_or_write(&self->di_next, old_item, item + 1))
 			break;
-#endif /* !CONFIG_NO_THREADS */
 	}
 	result = item->di_value;
 	Dee_Incref(result);
@@ -1003,11 +960,7 @@ again_locked:
 
 PRIVATE WUNUSED NONNULL((1)) size_t DCALL
 udict_nsi_getsize(UDict *__restrict self) {
-#ifdef CONFIG_NO_THREADS
-	return self->d_used;
-#else /* CONFIG_NO_THREADS */
-	return ATOMIC_READ(self->d_used);
-#endif /* !CONFIG_NO_THREADS */
+	return atomic_read(&self->d_used);
 }
 
 PRIVATE WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
@@ -1044,11 +997,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 udict_size(UDict *__restrict self) {
-#ifdef CONFIG_NO_THREADS
-	return DeeInt_NewSize(self->d_used);
-#else /* CONFIG_NO_THREADS */
-	return DeeInt_NewSize(ATOMIC_READ(self->d_used));
-#endif /* !CONFIG_NO_THREADS */
+	return DeeInt_NewSize(atomic_read(&self->d_used));
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -1060,11 +1009,7 @@ udict_iter(UDict *__restrict self) {
 	DeeObject_Init(result, &UDictIterator_Type);
 	result->di_dict = self;
 	Dee_Incref(self);
-#ifdef CONFIG_NO_THREADS
-	result->di_next = self->d_elem;
-#else /* CONFIG_NO_THREADS */
-	result->di_next = ATOMIC_READ(self->d_elem);
-#endif /* !CONFIG_NO_THREADS */
+	result->di_next = atomic_read(&self->d_elem);
 done:
 	return (DREF DeeObject *)result;
 }
@@ -1458,11 +1403,7 @@ INTERN DeeTypeObject UDict_Type = {
 
 
 #undef READ_ITEM
-#ifdef CONFIG_NO_THREADS
-#define READ_ITEM(x) ((x)->di_next)
-#else /* CONFIG_NO_THREADS */
-#define READ_ITEM(x) ATOMIC_READ((x)->di_next)
-#endif /* !CONFIG_NO_THREADS */
+#define READ_ITEM(x) atomic_read(&(x)->di_next)
 
 STATIC_ASSERT(offsetof(UDictIterator, di_dict) == offsetof(URoDictIterator, di_dict));
 STATIC_ASSERT(offsetof(UDictIterator, di_next) == offsetof(URoDictIterator, di_next));
@@ -1514,35 +1455,21 @@ PRIVATE WUNUSED NONNULL((1)) struct udict_item *DCALL
 urodictiterator_nextitem(URoDictIterator *__restrict self) {
 	struct udict_item *item, *end;
 	end = self->di_dict->rd_elem + self->di_dict->rd_mask + 1;
-#ifndef CONFIG_NO_THREADS
-	for (;;)
-#endif /* !CONFIG_NO_THREADS */
-	{
-#ifdef CONFIG_NO_THREADS
-		item = ATOMIC_READ(self->di_next);
-#else /* CONFIG_NO_THREADS */
+	for (;;) {
 		struct udict_item *old_item;
-		old_item = item = ATOMIC_READ(self->di_next);
-#endif /* !CONFIG_NO_THREADS */
+		item     = atomic_read(&self->di_next);
+		old_item = item;
 		if (item >= end)
 			goto iter_exhausted;
 		while (item < end && !item->di_key)
 			++item;
 		if (item == end) {
-#ifdef CONFIG_NO_THREADS
-			self->di_next = item;
-#else /* CONFIG_NO_THREADS */
-			if (!ATOMIC_CMPXCH(self->di_next, old_item, item))
+			if (!atomic_cmpxch_or_write(&self->di_next, old_item, item))
 				continue;
-#endif /* !CONFIG_NO_THREADS */
 			goto iter_exhausted;
 		}
-#ifdef CONFIG_NO_THREADS
-		self->di_next = item + 1;
-#else /* CONFIG_NO_THREADS */
-		if (ATOMIC_CMPXCH(self->di_next, old_item, item + 1))
+		if (atomic_cmpxch_or_write(&self->di_next, old_item, item + 1))
 			break;
-#endif /* !CONFIG_NO_THREADS */
 	}
 	return item;
 iter_exhausted:

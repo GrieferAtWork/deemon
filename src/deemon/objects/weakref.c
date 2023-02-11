@@ -29,8 +29,7 @@
 #include <deemon/object.h>
 #include <deemon/string.h>
 #include <deemon/weakref.h>
-
-#include <hybrid/atomic.h>
+#include <deemon/util/atomic.h>
 
 #include "../runtime/runtime_error.h"
 #include "../runtime/strings.h"
@@ -225,12 +224,7 @@ ob_weakref_bool(WeakRef *__restrict self) {
 	return Dee_weakref_bound(&self->wr_ref);
 }
 
-#ifdef CONFIG_NO_THREADS
-#define LAZY_GETOBJ(x) ((x)->wr_ref.wr_obj)
-#else /* CONFIG_NO_THREADS */
-#define LAZY_GETOBJ(x) ATOMIC_READ((x)->wr_ref.wr_obj)
-#endif /* !CONFIG_NO_THREADS */
-
+#define LAZY_GETOBJ(x) atomic_read(&(x)->wr_ref.wr_obj)
 
 PRIVATE WUNUSED NONNULL((1)) dhash_t DCALL
 ob_weakref_hash(WeakRef *__restrict self) {

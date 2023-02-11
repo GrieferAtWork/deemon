@@ -1203,7 +1203,7 @@ INTERN DeeSTypeObject DeeStructured_Type = {
 	},
 #ifndef CONFIG_NO_THREADS
 	/* .st_cachelock = */ RWLOCK_INIT,
-#endif
+#endif /* !CONFIG_NO_THREADS */
 	/* .st_pointer  = */ &DeePointer_Type,
 	/* .st_lvalue   = */ &DeeLValue_Type,
 	/* .st_array    = */ STYPE_ARRAY_INIT,

@@ -35,8 +35,7 @@
 #include <deemon/string.h>
 #include <deemon/stringutils.h>
 #include <deemon/system-features.h> /* memcpy(), ... */
-
-#include <hybrid/atomic.h>
+#include <deemon/util/atomic.h>
 
 #include "../runtime/runtime_error.h"
 #include "../runtime/strings.h"
@@ -459,12 +458,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 reader_sync(Reader *__restrict self) {
-#ifdef CONFIG_NO_THREADS
-	if unlikely(!self->r_owner)
-#else /* CONFIG_NO_THREADS */
-	if unlikely(!ATOMIC_READ(self->r_owner))
-#endif /* !CONFIG_NO_THREADS */
-	{
+	if unlikely(!atomic_read(&self->r_owner)) {
 		return err_file_closed();
 	}
 	return 0;
@@ -1022,11 +1016,7 @@ writer_size(Writer *self, size_t argc, DeeObject *const *argv) {
 	size_t result;
 	if (DeeArg_Unpack(argc, argv, ":size"))
 		goto err;
-#ifdef CONFIG_NO_THREADS
-	result = self->w_printer.up_length;
-#else /* CONFIG_NO_THREADS */
-	result = ATOMIC_READ(self->w_printer.up_length);
-#endif /* !CONFIG_NO_THREADS */
+	result = atomic_read(&self->w_printer.up_length);
 	return DeeInt_NewSize(result);
 err:
 	return NULL;

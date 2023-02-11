@@ -26,8 +26,7 @@
 
 #include <deemon/alloc.h>
 #include <deemon/seq.h>
-
-#include <hybrid/atomic.h>
+#include <deemon/util/atomic.h>
 
 DECL_BEGIN
 
@@ -56,12 +55,7 @@ DeeBytes_FindAll(Bytes *self, DeeObject *other,
 INTDEF WUNUSED DREF DeeObject *DCALL
 DeeBytes_CaseFindAll(Bytes *self, DeeObject *other,
                      size_t start, size_t end);
-
-#ifdef CONFIG_NO_THREADS
-#define READ_PTR(x)            ((x)->bfi_ptr)
-#else /* CONFIG_NO_THREADS */
-#define READ_PTR(x) ATOMIC_READ((x)->bfi_ptr)
-#endif /* !CONFIG_NO_THREADS */
+#define READ_PTR(x) atomic_read(&(x)->bfi_ptr)
 
 
 INTDEF DeeTypeObject BytesFindIterator_Type;
@@ -158,12 +152,12 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 bfi_next(BytesFindIterator *__restrict self) {
 	uint8_t *ptr, *new_ptr;
 again:
-	ptr     = ATOMIC_READ(self->bfi_ptr);
+	ptr     = atomic_read(&self->bfi_ptr);
 	new_ptr = (uint8_t *)memmemb(ptr, (size_t)(self->bfi_end - ptr),
 	                             self->bfi_needle_ptr,
 	                             self->bfi_needle_len);
 	if (new_ptr) {
-		if (!ATOMIC_CMPXCH_WEAK(self->bfi_ptr, ptr, new_ptr + self->bfi_needle_len))
+		if (!atomic_cmpxch_weak(&self->bfi_ptr, ptr, new_ptr + self->bfi_needle_len))
 			goto again;
 		return DeeInt_NewSize((size_t)(new_ptr - self->bfi_start));
 	}
@@ -174,13 +168,13 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 bcfi_next(BytesFindIterator *__restrict self) {
 	uint8_t *ptr, *new_ptr;
 again:
-	ptr     = ATOMIC_READ(self->bfi_ptr);
+	ptr     = atomic_read(&self->bfi_ptr);
 	new_ptr = (uint8_t *)memasciicasemem(ptr, (size_t)(self->bfi_end - ptr),
 	                                     self->bfi_needle_ptr,
 	                                     self->bfi_needle_len);
 	if (new_ptr) {
 		size_t result;
-		if (!ATOMIC_CMPXCH_WEAK(self->bfi_ptr, ptr, new_ptr + self->bfi_needle_len))
+		if (!atomic_cmpxch_weak(&self->bfi_ptr, ptr, new_ptr + self->bfi_needle_len))
 			goto again;
 		result = (size_t)(new_ptr - self->bfi_start);
 		return DeeTuple_Newf(PCKuSIZ
@@ -204,7 +198,7 @@ bfi_visit(BytesFindIterator *__restrict self, dvisit_t proc, void *arg) {
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 bfi_bool(BytesFindIterator *__restrict self) {
 	uint8_t *ptr;
-	ptr = ATOMIC_READ(self->bfi_ptr);
+	ptr = atomic_read(&self->bfi_ptr);
 	ptr = memmemb(ptr, (size_t)(self->bfi_end - ptr),
 	              self->bfi_needle_ptr,
 	              self->bfi_needle_len);
@@ -214,7 +208,7 @@ bfi_bool(BytesFindIterator *__restrict self) {
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 bcfi_bool(BytesFindIterator *__restrict self) {
 	uint8_t *ptr;
-	ptr = ATOMIC_READ(self->bfi_ptr);
+	ptr = atomic_read(&self->bfi_ptr);
 	ptr = memasciicasemem(ptr, (size_t)(self->bfi_end - ptr),
 	                      self->bfi_needle_ptr,
 	                      self->bfi_needle_len);

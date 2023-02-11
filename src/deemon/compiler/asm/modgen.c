@@ -35,13 +35,12 @@
 #include <deemon/string.h>
 #include <deemon/system-features.h>
 #include <deemon/system.h> /* DeeSystem_GetWalltime() */
+#include <deemon/util/atomic.h>
 
 #ifndef CONFIG_NO_DEC
 #include <deemon/compiler/dec.h>
 #include <deemon/error.h>
 #endif /* !CONFIG_NO_DEC */
-
-#include <hybrid/atomic.h>
 
 DECL_BEGIN
 
@@ -74,11 +73,7 @@ module_compile(DeeModuleObject *__restrict mod,
 		goto err;
 	mod->mo_globalc = current_rootscope->rs_globalc;
 	mod->mo_importc = current_rootscope->rs_importc;
-#ifdef CONFIG_NO_THREADS
-	mod->mo_flags |= current_rootscope->rs_flags;
-#else /* CONFIG_NO_THREADS */
-	ATOMIC_OR(mod->mo_flags, current_rootscope->rs_flags);
-#endif /* !CONFIG_NO_THREADS */
+	atomic_or(&mod->mo_flags, current_rootscope->rs_flags);
 	mod->mo_bucketm = current_rootscope->rs_bucketm;
 	mod->mo_bucketv = current_rootscope->rs_bucketv;
 	mod->mo_importv = current_rootscope->rs_importv;
@@ -113,11 +108,7 @@ module_compile(DeeModuleObject *__restrict mod,
 #ifndef CONFIG_NO_DEC
 	/* Save the time when compilation of the module started. */
 	mod->mo_ctime = DeeSystem_GetWalltime();
-#ifdef CONFIG_NO_THREADS
-	mod->mo_flags |= MODULE_FHASCTIME;
-#else /* CONFIG_NO_THREADS */
-	ATOMIC_OR(mod->mo_flags, MODULE_FHASCTIME);
-#endif /* !CONFIG_NO_THREADS */
+	atomic_or(&mod->mo_flags, MODULE_FHASCTIME);
 #endif /* !CONFIG_NO_DEC */
 
 #ifndef CONFIG_NO_DEC

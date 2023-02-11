@@ -41,8 +41,7 @@
 #include <deemon/thread.h>
 #include <deemon/tuple.h>
 #include <deemon/system-features.h> /* memcpy(), ... */
-
-#include <hybrid/atomic.h>
+#include <deemon/util/atomic.h>
 
 #include "../runtime/runtime_error.h"
 #include "../runtime/strings.h"
@@ -90,42 +89,27 @@ typedef struct {
 	DWEAK struct class_operator *co_iter; /* [1..1] Current iterator position. */
 	struct class_operator       *co_end;  /* [1..1][const] Iterator end position. */
 } ClassOperatorTableIterator;
+#define COTI_GETITER(x) atomic_read(&(x)->co_iter)
 
 INTDEF DeeTypeObject ClassOperatorTableIterator_Type;
 INTDEF DeeTypeObject ClassOperatorTable_Type;
 
-#ifdef CONFIG_NO_THREADS
-#define COTI_GETITER(x) (x)->co_iter
-#else /* CONFIG_NO_THREADS */
-#define COTI_GETITER(x) ATOMIC_READ((x)->co_iter)
-#endif /* !CONFIG_NO_THREADS */
 
 LOCAL struct class_operator *DCALL
 coti_next_ent(ClassOperatorTableIterator *__restrict self) {
-#ifdef CONFIG_NO_THREADS
-	struct class_operator *result;
-	result = self->co_iter;
-	for (;; ++result) {
-		if (result >= self->co_end)
-			return NULL;
-		if (result->co_name != (uint16_t)-1)
-			break;
-	}
-	self->co_iter = result + 1;
-#else /* CONFIG_NO_THREADS */
 	struct class_operator *result, *start;
 	for (;;) {
-		result = start = ATOMIC_READ(self->co_iter);
+		start  = atomic_read(&self->co_iter);
+		result = start;
 		for (;; ++result) {
 			if (result >= self->co_end)
 				return NULL;
 			if (result->co_name != (uint16_t)-1)
 				break;
 		}
-		if (ATOMIC_CMPXCH_WEAK(self->co_iter, start, result + 1))
+		if (atomic_cmpxch_weak_or_write(&self->co_iter, start, result + 1))
 			break;
 	}
-#endif /* !CONFIG_NO_THREADS */
 	return result;
 }
 
@@ -519,38 +503,23 @@ STATIC_ASSERT(offsetof(ClassOperatorTableIterator, co_end) == offsetof(ClassAttr
 #define cati_cmp  coti_cmp
 #define cati_copy coti_copy
 
-#ifdef CONFIG_NO_THREADS
-#define CATI_GETITER(x) (x)->ca_iter
-#else /* CONFIG_NO_THREADS */
-#define CATI_GETITER(x) ATOMIC_READ((x)->ca_iter)
-#endif /* !CONFIG_NO_THREADS */
+#define CATI_GETITER(x) atomic_read(&(x)->ca_iter)
 
 LOCAL struct class_attribute *DCALL
 cati_next_ent(ClassAttributeTableIterator *__restrict self) {
-#ifdef CONFIG_NO_THREADS
-	struct class_attribute *result;
-	result = self->ca_iter;
-	for (;; ++result) {
-		if (result >= self->ca_end)
-			return NULL;
-		if (result->co_name != NULL)
-			break;
-	}
-	self->co_iter = result + 1;
-#else /* CONFIG_NO_THREADS */
 	struct class_attribute *result, *start;
 	for (;;) {
-		result = start = ATOMIC_READ(self->ca_iter);
+		start  = atomic_read(&self->ca_iter);
+		result = start;
 		for (;; ++result) {
 			if (result >= self->ca_end)
 				return NULL;
 			if (result->ca_name != NULL)
 				break;
 		}
-		if (ATOMIC_CMPXCH_WEAK(self->ca_iter, start, result + 1))
+		if (atomic_cmpxch_weak_or_write(&self->ca_iter, start, result + 1))
 			break;
 	}
-#endif /* !CONFIG_NO_THREADS */
 	return result;
 }
 
@@ -3731,11 +3700,7 @@ DeeInstance_BoundAttribute(struct class_desc *__restrict desc,
 		return -1;
 	} else {
 		/* Simply return the attribute as-is. */
-#ifdef CONFIG_NO_THREADS
-		return self->id_vtab[attr->ca_addr] != NULL;
-#else /* CONFIG_NO_THREADS */
-		return ATOMIC_READ(self->id_vtab[attr->ca_addr]) != NULL;
-#endif /* !CONFIG_NO_THREADS */
+		return atomic_read(&self->id_vtab[attr->ca_addr]) != NULL;
 	}
 unbound:
 	return 0;
@@ -4418,11 +4383,7 @@ INTERN WUNUSED NONNULL((1, 2)) bool
 	desc = DeeClass_DESC(tp_self);
 	ASSERT(addr <= desc->cd_desc->cd_imemb_size);
 	inst = DeeInstance_DESC(desc, self);
-#ifdef CONFIG_NO_THREADS
-	return inst->id_vtab[addr] != NULL;
-#else /* CONFIG_NO_THREADS */
-	return ATOMIC_READ(inst->id_vtab[addr]) != NULL;
-#endif /* !CONFIG_NO_THREADS */
+	return atomic_read(&inst->id_vtab[addr]) != NULL;
 }
 
 INTERN WUNUSED NONNULL((1, 2)) int

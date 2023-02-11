@@ -29,8 +29,8 @@
 #include <deemon/traceback.h>
 #include <deemon/system-features.h> /* fprintf(stderr, ...) */
 #include <deemon/tuple.h>
+#include <deemon/util/atomic.h>
 
-#include <hybrid/atomic.h>
 #include <hybrid/sched/yield.h>
 
 #ifndef CONFIG_NO_KEYBOARD_INTERRUPT
@@ -228,7 +228,7 @@ restore_interrupt_error(DeeThreadObject *__restrict ts,
 	/* Drop a reference to the traceback. - Those don't get scheduled. */
 	if (ITER_ISOK(frame->ef_trace))
 		Dee_Decref(frame->ef_trace);
-	while (ATOMIC_FETCHOR(ts->t_state, THREAD_STATE_INTERRUPTING) &
+	while (atomic_fetchor(&ts->t_state, THREAD_STATE_INTERRUPTING) &
 	       THREAD_STATE_INTERRUPTING)
 		SCHED_YIELD();
 	if (ts->t_interrupt.ti_intr) {
@@ -252,8 +252,8 @@ restore_interrupt_error(DeeThreadObject *__restrict ts,
 	ts->t_interrupt.ti_args = NULL;
 	/* Unset the interrupting-flag and set the interrupted-flag. */
 	do {
-		state = ATOMIC_READ(ts->t_state);
-	} while (!ATOMIC_CMPXCH_WEAK(ts->t_state, state,
+		state = atomic_read(&ts->t_state);
+	} while (!atomic_cmpxch_weak(&ts->t_state, state,
 	                             (state & ~(THREAD_STATE_INTERRUPTING)) |
 	                             THREAD_STATE_INTERRUPTED));
 	/* If the frame wasn't used, then still free it! */
@@ -329,14 +329,14 @@ INTERN void DCALL DeeError_UninstallKeyboardInterrupt(void) {
 #else /* CONFIG_NO_THREADS */
 INTDEF uint8_t keyboard_interrupt_counter;
 
-#define INC_KEYBOARD_INTERRUPT_COUNTER()                                                 \
-	do {                                                                                 \
-		uint8_t counter;                                                                 \
-		do {                                                                             \
-			if ((counter = ATOMIC_READ(keyboard_interrupt_counter)) == 0xff)             \
-				break;                                                                   \
-		} while (!ATOMIC_CMPXCH_WEAK(keyboard_interrupt_counter, counter, counter + 1)); \
-		ATOMIC_OR(DeeThread_Main.t_state, THREAD_STATE_INTERRUPTED);                     \
+#define INC_KEYBOARD_INTERRUPT_COUNTER()                                                  \
+	do {                                                                                  \
+		uint8_t counter;                                                                  \
+		do {                                                                              \
+			if ((counter = atomic_read(&keyboard_interrupt_counter)) == 0xff)             \
+				break;                                                                    \
+		} while (!atomic_cmpxch_weak(&keyboard_interrupt_counter, counter, counter + 1)); \
+		atomic_or(&DeeThread_Main.t_state, THREAD_STATE_INTERRUPTED);                     \
 	}	__WHILE0
 
 #ifndef CONFIG_NO_THREADS

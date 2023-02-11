@@ -35,8 +35,8 @@
 #include <deemon/system-features.h> /* memcpy() */
 #include <deemon/util/lock.h>
 #include <deemon/util/objectlist.h>
+#include <deemon/util/atomic.h>
 
-#include <hybrid/atomic.h>
 #include <hybrid/unaligned.h>
 
 DECL_BEGIN
@@ -260,11 +260,7 @@ DeeInstance_BoundAttribute(struct instance_desc *__restrict self,
 		return -1;
 	} else {
 		/* Simply return the attribute as-is. */
-#ifdef CONFIG_NO_THREADS
-		return self->id_vtab[attr->ca_addr] != NULL;
-#else /* CONFIG_NO_THREADS */
-		return ATOMIC_READ(self->id_vtab[attr->ca_addr]) != NULL;
-#endif /* !CONFIG_NO_THREADS */
+		return atomic_read(&self->id_vtab[attr->ca_addr]) != NULL;
 	}
 unbound:
 	return 0;

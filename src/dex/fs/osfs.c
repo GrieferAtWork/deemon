@@ -38,11 +38,11 @@
 #include <deemon/system-error.h>
 #include <deemon/system.h>
 #include <deemon/tuple.h>
+#include <deemon/util/atomic.h>
 
 #include "_res.h"
 
 #include <deemon/util/rwlock.h>
-#include <hybrid/atomic.h>
 #include <hybrid/unaligned.h>
 
 #include "../time/libtime.h"
@@ -1999,10 +1999,11 @@ err_nt:
 	if (error == ERROR_INVALID_PARAMETER &&
 	    (dwFlags & SYMBOLIC_LINK_FLAG_ALLOW_UNPRIVILEGED_CREATE)) {
 		/* Older versions of windows didn't accept this flag. */
-		ATOMIC_AND(dwSymlinkAdditionalFlags, ~SYMBOLIC_LINK_FLAG_ALLOW_UNPRIVILEGED_CREATE);
+		atomic_and(&dwSymlinkAdditionalFlags, ~SYMBOLIC_LINK_FLAG_ALLOW_UNPRIVILEGED_CREATE);
 		dwFlags &= ~SYMBOLIC_LINK_FLAG_ALLOW_UNPRIVILEGED_CREATE;
 		goto again;
 	}
+
 	/* Try to acquire the ~privilege~ to create symbolic links. */
 	if (error == ERROR_PRIVILEGE_NOT_HELD) {
 		if (!bHoldingSymlinkPriv) {

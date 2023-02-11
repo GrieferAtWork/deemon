@@ -36,8 +36,8 @@
 #include <deemon/system-features.h>
 #include <deemon/thread.h>
 #include <deemon/tuple.h>
+#include <deemon/util/atomic.h>
 
-#include <hybrid/atomic.h>
 #include <hybrid/sched/yield.h>
 
 #ifndef CONFIG_NO_DEX
@@ -63,7 +63,7 @@ module_symbol_getnameobj(struct module_symbol *__restrict self) {
 	uint16_t flags;
 again:
 	name_str = self->ss_name;
-	__hybrid_atomic_thread_fence(__ATOMIC_ACQUIRE);
+	atomic_thread_fence(Dee_ATOMIC_ACQUIRE);
 	flags = self->ss_flags;
 	if (flags & MODSYM_FNAMEOBJ) {
 		result = COMPILER_CONTAINER_OF(name_str,
@@ -76,11 +76,11 @@ again:
 		if unlikely(!result)
 			goto done;
 		/* Cache the name-string as part of the attribute structure. */
-		if (!ATOMIC_CMPXCH(self->ss_name, name_str, DeeString_STR(result))) {
+		if (!atomic_cmpxch(&self->ss_name, name_str, DeeString_STR(result))) {
 			Dee_Decref(result);
 			goto again;
 		}
-		ATOMIC_OR(self->ss_flags, MODSYM_FNAMEOBJ);
+		atomic_or(&self->ss_flags, MODSYM_FNAMEOBJ);
 		Dee_Incref(result);
 	}
 done:
@@ -95,7 +95,7 @@ module_symbol_getdocobj(struct module_symbol *__restrict self) {
 again:
 	doc_str = self->ss_doc;
 	ASSERT(doc_str != NULL);
-	__hybrid_atomic_thread_fence(__ATOMIC_ACQUIRE);
+	atomic_thread_fence(Dee_ATOMIC_ACQUIRE);
 	flags = self->ss_flags;
 	if (flags & MODSYM_FDOCOBJ) {
 		result = COMPILER_CONTAINER_OF(doc_str,
@@ -110,11 +110,11 @@ again:
 		if unlikely(!result)
 			goto done;
 		/* Cache the doc-string as part of the attribute structure. */
-		if (!ATOMIC_CMPXCH(self->ss_doc, doc_str, DeeString_STR(result))) {
+		if (!atomic_cmpxch(&self->ss_doc, doc_str, DeeString_STR(result))) {
 			Dee_Decref(result);
 			goto again;
 		}
-		ATOMIC_OR(self->ss_flags, MODSYM_FDOCOBJ);
+		atomic_or(&self->ss_flags, MODSYM_FDOCOBJ);
 		Dee_Incref(result);
 	}
 done:
@@ -147,10 +147,10 @@ DeeModule_GetRoot(DeeObject *__restrict self,
 		uint16_t flags;
 		/* Try to set the `MODULE_FDIDINIT' flag */
 		do {
-			flags = ATOMIC_READ(me->mo_flags);
+			flags = atomic_read(&me->mo_flags);
 			if (flags & MODULE_FINITIALIZING)
 				break; /* Don't interfere with an on-going initialization. */
-		} while (!ATOMIC_CMPXCH_WEAK(me->mo_flags, flags, flags | MODULE_FDIDINIT));
+		} while (!atomic_cmpxch_weak(&me->mo_flags, flags, flags | MODULE_FDIDINIT));
 	}
 	return (DREF DeeObject *)result;
 err:
@@ -673,10 +673,10 @@ INTDEF NONNULL((1)) void DCALL interactivemodule_lockwrite(DeeModuleObject *__re
 INTDEF NONNULL((1)) void DCALL interactivemodule_lockendread(DeeModuleObject *__restrict self);
 INTDEF NONNULL((1)) void DCALL interactivemodule_lockendwrite(DeeModuleObject *__restrict self);
 #else /* !CONFIG_NO_THREADS */
-#deifne interactivemodule_lockread(self)     (void)0
-#deifne interactivemodule_lockwrite(self)    (void)0
-#deifne interactivemodule_lockendread(self)  (void)0
-#deifne interactivemodule_lockendwrite(self) (void)0
+#define interactivemodule_lockread(self)     (void)0
+#define interactivemodule_lockwrite(self)    (void)0
+#define interactivemodule_lockendread(self)  (void)0
+#define interactivemodule_lockendwrite(self) (void)0
 #endif /* CONFIG_NO_THREADS */
 
 
@@ -899,7 +899,7 @@ DeeModule_RunInit(DeeObject *__restrict self) {
 	caller = DeeThread_Self();
 begin_init:
 	do {
-		flags = ATOMIC_READ(me->mo_flags);
+		flags = atomic_read(&me->mo_flags);
 		if (flags & MODULE_FDIDINIT)
 			return 0;
 		/* Check if the module has been loaded yet. */
@@ -916,10 +916,10 @@ begin_init:
 			err_module_not_loaded(me);
 			return -1; /* Not loaded yet. */
 		}
-	} while (!ATOMIC_CMPXCH(me->mo_flags, flags, flags | MODULE_FINITIALIZING));
+	} while (!atomic_cmpxch(&me->mo_flags, flags, flags | MODULE_FINITIALIZING));
 	if (flags & MODULE_FINITIALIZING) {
 		/* Module is already being loaded. */
-		while ((flags = ATOMIC_READ(me->mo_flags),
+		while ((flags = atomic_read(&me->mo_flags),
 		        (flags & (MODULE_FINITIALIZING | MODULE_FDIDINIT)) ==
 		        MODULE_FINITIALIZING)) {
 			/* Check if the module is being loaded in the current thread. */
@@ -1010,10 +1010,10 @@ begin_init:
 	}
 
 	/* Set the did-init flag when we're done now. */
-	ATOMIC_OR(me->mo_flags, MODULE_FDIDINIT);
+	atomic_or(&me->mo_flags, MODULE_FDIDINIT);
 	return 0;
 err:
-	ATOMIC_AND(me->mo_flags, ~(MODULE_FINITIALIZING));
+	atomic_and(&me->mo_flags, ~(MODULE_FINITIALIZING));
 	return -1;
 }
 
@@ -1023,7 +1023,7 @@ PUBLIC int (DCALL DeeModule_InitImports)(DeeObject *__restrict self) {
 	size_t i;
 	uint16_t flags;
 	ASSERT_OBJECT_TYPE(self, &DeeModule_Type);
-	flags = ATOMIC_READ(me->mo_flags);
+	flags = atomic_read(&me->mo_flags);
 
 	/* Quick check: When the did-init flag has been set, we can
 	 *              assume that all other modules imported by

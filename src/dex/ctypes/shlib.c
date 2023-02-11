@@ -34,12 +34,8 @@
 #include <deemon/string.h>
 #include <deemon/system-features.h>
 #include <deemon/system.h>
-
-#include <hybrid/atomic.h>
-
-#ifndef CONFIG_NO_THREADS
+#include <deemon/util/atomic.h>
 #include <deemon/util/rwlock.h>
-#endif /* !CONFIG_NO_THREADS */
 
 DECL_BEGIN
 
@@ -270,7 +266,7 @@ shlib_getattr(Shlib *self,
 			goto err;
 		result_type = new_type;
 		/* Save the reference in the shlib descriptor. */
-		if (!ATOMIC_CMPXCH(self->sh_vfunptr, NULL, result_type))
+		if (!atomic_cmpxch(&self->sh_vfunptr, NULL, result_type))
 			Dee_DecrefNokill((DeeObject *)result_type);
 		ASSERT(self->sh_vfunptr == result_type);
 	}

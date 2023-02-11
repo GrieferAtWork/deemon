@@ -38,8 +38,8 @@
 #include <deemon/string.h>
 #include <deemon/thread.h>
 #include <deemon/system-features.h> /* memcpyc(), ... */
+#include <deemon/util/atomic.h>
 
-#include <hybrid/atomic.h>
 #include <hybrid/sched/yield.h>
 
 #include "../runtime/runtime_error.h"
@@ -1125,20 +1125,12 @@ DeeHashSet_ContainsString(DeeObject *__restrict self,
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 set_size(Set *__restrict self) {
-#ifdef CONFIG_NO_THREADS
-	return DeeInt_NewSize(self->s_used);
-#else /* CONFIG_NO_THREADS */
-	return DeeInt_NewSize(ATOMIC_READ(self->s_used));
-#endif /* !CONFIG_NO_THREADS */
+	return DeeInt_NewSize(atomic_read(&self->s_used));
 }
 
 PRIVATE WUNUSED NONNULL((1)) size_t DCALL
 set_nsi_getsize(Set *__restrict self) {
-#ifdef CONFIG_NO_THREADS
-	return self->s_used;
-#else /* CONFIG_NO_THREADS */
-	return ATOMIC_READ(self->s_used);
-#endif /* !CONFIG_NO_THREADS */
+	return atomic_read(&self->s_used);
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
@@ -1163,12 +1155,7 @@ typedef struct {
 	                               *         is returned, though in the event that it is located
 	                               *         outside, an error is thrown (`err_changed_sequence()'). */
 } SetIterator;
-
-#ifdef CONFIG_NO_THREADS
-#define READ_ITEM(x)            ((x)->si_next)
-#else /* CONFIG_NO_THREADS */
-#define READ_ITEM(x) ATOMIC_READ((x)->si_next)
-#endif /* !CONFIG_NO_THREADS */
+#define READ_ITEM(x) atomic_read(&(x)->si_next)
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 setiterator_next(SetIterator *__restrict self) {
@@ -1177,16 +1164,11 @@ setiterator_next(SetIterator *__restrict self) {
 	Set *set = self->si_set;
 	DeeHashSet_LockRead(set);
 	end = set->s_elem + (set->s_mask + 1);
-#ifndef CONFIG_NO_THREADS
-	for (;;)
-#endif /* !CONFIG_NO_THREADS */
-	{
-#ifdef CONFIG_NO_THREADS
-		item = ATOMIC_READ(self->si_next);
-#else /* CONFIG_NO_THREADS */
+	for (;;) {
 		struct hashset_item *old_item;
-		old_item = item = ATOMIC_READ(self->si_next);
-#endif /* !CONFIG_NO_THREADS */
+		item = atomic_read(&self->si_next);
+		old_item = item;
+
 		/* Validate that the pointer is still located in-bounds. */
 		if (item >= end) {
 			if unlikely(item > end)
@@ -1195,24 +1177,17 @@ setiterator_next(SetIterator *__restrict self) {
 		}
 		if unlikely(item < set->s_elem)
 			goto set_has_changed;
+
 		/* Search for the next non-empty item. */
 		while (item < end && (!item->si_key || item->si_key == dummy))
 			++item;
 		if (item == end) {
-#ifdef CONFIG_NO_THREADS
-			self->si_next = item;
-#else /* CONFIG_NO_THREADS */
-			if (!ATOMIC_CMPXCH(self->si_next, old_item, item))
+			if (!atomic_cmpxch_weak_or_write(&self->si_next, old_item, item))
 				continue;
-#endif /* !CONFIG_NO_THREADS */
 			goto iter_exhausted;
 		}
-#ifdef CONFIG_NO_THREADS
-		self->si_next = item + 1;
-#else /* CONFIG_NO_THREADS */
-		if (ATOMIC_CMPXCH(self->si_next, old_item, item + 1))
+		if (atomic_cmpxch_weak_or_write(&self->si_next, old_item, item + 1))
 			break;
-#endif /* !CONFIG_NO_THREADS */
 	}
 	result = item->si_key;
 	Dee_Incref(result);
@@ -1269,11 +1244,7 @@ setiterator_init(SetIterator *__restrict self,
 		goto err;
 	self->si_set = set;
 	Dee_Incref(set);
-#ifdef CONFIG_NO_THREADS
-	self->si_next = set->s_elem;
-#else /* CONFIG_NO_THREADS */
-	self->si_next = ATOMIC_READ(set->s_elem);
-#endif /* !CONFIG_NO_THREADS */
+	self->si_next = atomic_read(&set->s_elem);
 	return 0;
 err:
 	return -1;
@@ -1341,21 +1312,13 @@ seti_nii_setindex(SetIterator *__restrict self, size_t new_index) {
 	DeeHashSet_LockEndRead(self->si_set);
 	if (new_index > mask + 1)
 		new_index = mask + 1;
-#ifdef CONFIG_NO_THREADS
-	self->si_next = vector + new_index;
-#else /* CONFIG_NO_THREADS */
-	ATOMIC_WRITE(self->si_next, vector + new_index);
-#endif /* !CONFIG_NO_THREADS */
+	atomic_write(&self->si_next, vector + new_index);
 	return 0;
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 seti_nii_rewind(SetIterator *__restrict self) {
-#ifdef CONFIG_NO_THREADS
-	self->si_next = self->si_set->s_elem;
-#else /* CONFIG_NO_THREADS */
-	ATOMIC_WRITE(self->si_next, ATOMIC_READ(self->si_set->s_elem));
-#endif /* !CONFIG_NO_THREADS */
+	atomic_write(&self->si_next, atomic_read(&self->si_set->s_elem));
 	return 0;
 }
 
@@ -1363,9 +1326,7 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 seti_nii_revert(SetIterator *__restrict self, size_t step) {
 	size_t index, mask;
 	struct hashset_item *vector, *elem;
-#ifndef CONFIG_NO_THREADS
 again:
-#endif /* !CONFIG_NO_THREADS */
 	DeeHashSet_LockRead(self->si_set);
 	vector = self->si_set->s_elem;
 	mask   = self->si_set->s_mask;
@@ -1376,12 +1337,8 @@ again:
 	index = (size_t)(elem - vector);
 	if (step < index)
 		vector = elem - step;
-#ifdef CONFIG_NO_THREADS
-	self->si_next = vector;
-#else /* CONFIG_NO_THREADS */
-	if (!ATOMIC_CMPXCH_WEAK(self->si_next, elem, vector))
+	if (!atomic_cmpxch_weak_or_write(&self->si_next, elem, vector))
 		goto again;
-#endif /* !CONFIG_NO_THREADS */
 	return elem == vector ? 1 : 2;
 }
 
@@ -1389,9 +1346,7 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 seti_nii_advance(SetIterator *__restrict self, size_t step) {
 	size_t index, mask;
 	struct hashset_item *vector, *elem;
-#ifndef CONFIG_NO_THREADS
 again:
-#endif /* !CONFIG_NO_THREADS */
 	DeeHashSet_LockRead(self->si_set);
 	vector = self->si_set->s_elem;
 	mask   = self->si_set->s_mask;
@@ -1403,12 +1358,8 @@ again:
 	if (index > mask + 1)
 		index = mask + 1;
 	vector += index;
-#ifdef CONFIG_NO_THREADS
-	self->si_next = vector;
-#else /* CONFIG_NO_THREADS */
-	if (!ATOMIC_CMPXCH_WEAK(self->si_next, elem, vector))
+	if (!atomic_cmpxch_weak_or_write(&self->si_next, elem, vector))
 		goto again;
-#endif /* !CONFIG_NO_THREADS */
 	return index == mask + 1 ? 1 : 2;
 }
 
@@ -1416,9 +1367,7 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 seti_nii_prev(SetIterator *__restrict self) {
 	size_t mask;
 	struct hashset_item *vector, *elem;
-#ifndef CONFIG_NO_THREADS
 again:
-#endif /* !CONFIG_NO_THREADS */
 	DeeHashSet_LockRead(self->si_set);
 	vector = self->si_set->s_elem;
 	mask   = self->si_set->s_mask;
@@ -1426,12 +1375,8 @@ again:
 	elem = READ_ITEM(self);
 	if unlikely(elem <= vector || elem > vector + mask)
 		return 1; /* Indeterminate (detached), or at start */
-#ifdef CONFIG_NO_THREADS
-	self->si_next = vector;
-#else /* CONFIG_NO_THREADS */
-	if (!ATOMIC_CMPXCH_WEAK(self->si_next, elem, vector))
+	if (!atomic_cmpxch_weak_or_write(&self->si_next, elem, vector))
 		goto again;
-#endif /* !CONFIG_NO_THREADS */
 	return 0;
 }
 
@@ -1439,9 +1384,7 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 seti_nii_next(SetIterator *__restrict self) {
 	size_t mask;
 	struct hashset_item *vector, *elem;
-#ifndef CONFIG_NO_THREADS
 again:
-#endif /* !CONFIG_NO_THREADS */
 	DeeHashSet_LockRead(self->si_set);
 	vector = self->si_set->s_elem;
 	mask   = self->si_set->s_mask;
@@ -1450,12 +1393,8 @@ again:
 	if unlikely(elem < vector || elem >= vector + mask)
 		return 1; /* Indeterminate (detached), or at end */
 	vector = elem + 1;
-#ifdef CONFIG_NO_THREADS
-	self->si_next = vector;
-#else /* CONFIG_NO_THREADS */
-	if (!ATOMIC_CMPXCH_WEAK(self->si_next, elem, vector))
+	if (!atomic_cmpxch_weak_or_write(&self->si_next, elem, vector))
 		goto again;
-#endif /* !CONFIG_NO_THREADS */
 	return 0;
 }
 
@@ -1591,11 +1530,7 @@ set_iter(Set *__restrict self) {
 	DeeObject_Init(result, &HashSetIterator_Type);
 	result->si_set = self;
 	Dee_Incref(self);
-#ifdef CONFIG_NO_THREADS
-	result->si_next = self->s_elem;
-#else /* CONFIG_NO_THREADS */
-	result->si_next = ATOMIC_READ(self->s_elem);
-#endif /* !CONFIG_NO_THREADS */
+	result->si_next = atomic_read(&self->s_elem);
 done:
 	return result;
 }
@@ -1678,11 +1613,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 set_bool(Set *__restrict self) {
-#ifdef CONFIG_NO_THREADS
-	return self->s_used != 0;
-#else
-	return ATOMIC_READ(self->s_used) != 0;
-#endif
+	return atomic_read(&self->s_used) != 0;
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL

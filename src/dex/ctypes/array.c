@@ -35,8 +35,7 @@
 #include <deemon/string.h>
 #include <deemon/system-features.h> /* bzero() */
 #include <hybrid/overflow.h>
-
-#include <hybrid/atomic.h>
+#include <deemon/util/atomic.h>
 
 #undef SSIZE_MAX
 #include <hybrid/limitcore.h>
@@ -70,27 +69,20 @@ PRIVATE WUNUSED DREF struct lvalue_object *DCALL
 aiter_next(ArrayIterator *__restrict self) {
 	DREF struct lvalue_object *result;
 	union pointer result_pointer;
-#ifdef CONFIG_NO_THREADS
-	result_pointer.uint = self->ai_pos.uint;
-	if (result_pointer.uint >= self->ai_end.uint)
-		return (DREF struct lvalue_object *)ITER_DONE;
-	self->ai_pos.uint += self->ai_siz;
-#else /* CONFIG_NO_THREADS */
 	do {
-		result_pointer.uint = ATOMIC_READ(self->ai_pos.uint);
+		result_pointer.uint = atomic_read(&self->ai_pos.uint);
 		if (result_pointer.uint >= self->ai_end.uint)
 			return (DREF struct lvalue_object *)ITER_DONE;
-	} while (!ATOMIC_CMPXCH_WEAK(self->ai_pos.uint,
-	                             result_pointer.uint,
-	                             result_pointer.uint +
-	                             self->ai_siz));
-#endif /* !CONFIG_NO_THREADS */
+	} while (!atomic_cmpxch_weak_or_write(&self->ai_pos.uint,
+	                                      result_pointer.uint,
+	                                      result_pointer.uint + self->ai_siz));
 
 	/* Construct an l-value object for the array item. */
 	result = DeeObject_MALLOC(struct lvalue_object);
 	if unlikely(!result)
 		goto done;
 	DeeObject_Init(result, DeeLValueType_AsType(self->ai_type));
+
 	/* Use the item pointer which we've just extracted. */
 	result->l_ptr.ptr = result_pointer.ptr;
 done:
@@ -99,11 +91,7 @@ done:
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 aiter_bool(ArrayIterator *__restrict self) {
-#ifdef CONFIG_NO_THREADS
-	return self->ai_pos.ptr >= self->ai_end.ptr;
-#else /* CONFIG_NO_THREADS */
-	return ATOMIC_READ(self->ai_pos.ptr) >= self->ai_end.ptr;
-#endif /* !CONFIG_NO_THREADS */
+	return atomic_read(&self->ai_pos.ptr) >= self->ai_end.ptr;
 }
 
 PRIVATE WUNUSED DREF struct lvalue_object *DCALL

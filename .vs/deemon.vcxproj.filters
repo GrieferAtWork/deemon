@@ -411,6 +411,9 @@
     <ClInclude Include="..\include\deemon\cxx\iterator.h">
       <Filter>include\deemon\cxx</Filter>
     </ClInclude>
+    <ClInclude Include="..\include\deemon\util\atomic.h">
+      <Filter>include\deemon\util</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\deemon\runtime\error.c">

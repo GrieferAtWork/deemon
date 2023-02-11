@@ -42,8 +42,7 @@
 #include <deemon/system.h>
 #include <deemon/thread.h>
 #include <deemon/tuple.h>
-
-#include <hybrid/atomic.h>
+#include <deemon/util/atomic.h>
 
 DECL_BEGIN
 
@@ -3908,7 +3907,7 @@ PRIVATE WCHAR const wKernel32Dll[] = { 'K', 'e', 'r', 'n', 'e', 'l', '3', '2', '
 /* @return: NULL: An error was thrown */
 PRIVATE HMODULE DCALL libwin32_GetPsAPIOrKernel32Module(void) {
 	HMODULE hResult;
-	hResult = ATOMIC_READ(libwin32_PsAPIOrKernel32Module);
+	hResult = atomic_read(&libwin32_PsAPIOrKernel32Module);
 	if (hResult != NULL)
 		return hResult;
 	DBG_ALIGNMENT_DISABLE();
@@ -3929,7 +3928,7 @@ PRIVATE HMODULE DCALL libwin32_GetPsAPIOrKernel32Module(void) {
 	                        "Failed to load \"psapi.dll\" or \"kernel32.dll\"");
 done_set:
 	DBG_ALIGNMENT_ENABLE();
-	ATOMIC_WRITE(libwin32_PsAPIOrKernel32Module, hResult);
+	atomic_write(&libwin32_PsAPIOrKernel32Module, hResult);
 	return hResult;
 }
 
@@ -4613,7 +4612,7 @@ PRIVATE WCHAR const wNtDllDll[] = { 'N', 't', 'D', 'l', 'l', '.', 'd', 'l', 'l',
 /* @return: NULL: An error was thrown */
 PRIVATE HMODULE DCALL libwin32_GetNtDllModule(void) {
 	HMODULE hResult;
-	hResult = ATOMIC_READ(libwin32_NtDllModule);
+	hResult = atomic_read(&libwin32_NtDllModule);
 	if (hResult != NULL)
 		return hResult;
 	DBG_ALIGNMENT_DISABLE();
@@ -4628,7 +4627,7 @@ PRIVATE HMODULE DCALL libwin32_GetNtDllModule(void) {
 	                        "Failed to load \"NtDll.dll\"");
 done_set:
 	DBG_ALIGNMENT_ENABLE();
-	ATOMIC_WRITE(libwin32_NtDllModule, hResult);
+	atomic_write(&libwin32_NtDllModule, hResult);
 	return hResult;
 }
 

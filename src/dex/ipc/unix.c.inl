@@ -39,9 +39,9 @@
 #include <deemon/system-features.h>
 #include <deemon/thread.h>
 #include <deemon/tuple.h>
+#include <deemon/util/atomic.h>
 #include <deemon/util/rwlock.h>
 
-#include <hybrid/atomic.h>
 #include <hybrid/sched/yield.h>
 
 #include <stdarg.h>
@@ -670,7 +670,7 @@ again:
 		return_false;
 	}
 	/* Set the starting-flag. */
-	if (ATOMIC_FETCHOR(self->p_state, PROCESS_FSTARTING) & PROCESS_FSTARTING) {
+	if (atomic_fetchor(&self->p_state, PROCESS_FSTARTING) & PROCESS_FSTARTING) {
 		rwlock_endread(&self->p_lock);
 		SCHED_YIELD();
 		goto again;
@@ -790,7 +790,7 @@ done_procenv_argv:
 	Dee_Free(used_argv);
 done_procenv:
 	rwlock_read(&self->p_lock);
-	ATOMIC_AND(self->p_state, ~PROCESS_FSTARTING);
+	atomic_and(&self->p_state, ~PROCESS_FSTARTING);
 	rwlock_endread(&self->p_lock);
 	Dee_XDecref(procenv);
 	Dee_XDecref(procerr);
@@ -808,12 +808,12 @@ process_detach(Process *self, size_t argc, DeeObject *const *argv) {
 	uint16_t state;
 	if (DeeArg_Unpack(argc, argv, ":" S_Process_function_detach_name))
 		goto err;
-	while (ATOMIC_FETCHOR(self->p_state, PROCESS_FDETACHING) &
+	while (atomic_fetchor(&self->p_state, PROCESS_FDETACHING) &
 	       PROCESS_FDETACHING)
 		SCHED_YIELD();
 	if (!(self->p_state & (PROCESS_FSTARTED | PROCESS_FTERMINATED))) {
 		/* Process was never started. */
-		ATOMIC_AND(self->p_state, ~THREAD_STATE_DETACHING);
+		atomic_and(&self->p_state, ~THREAD_STATE_DETACHING);
 		DeeError_Throwf(&DeeError_ValueError,
 		                "Cannot detach process %k that hasn't been started",
 		                self);
@@ -821,7 +821,7 @@ process_detach(Process *self, size_t argc, DeeObject *const *argv) {
 	}
 	if (!(self->p_state & PROCESS_FCHILD)) {
 		/* Process isn't one of our children. */
-		ATOMIC_AND(self->p_state, ~THREAD_STATE_DETACHING);
+		atomic_and(&self->p_state, ~THREAD_STATE_DETACHING);
 		DeeError_Throwf(&DeeError_ValueError,
 		                "Cannot detach process %k that isn't a child",
 		                self);
@@ -829,7 +829,7 @@ process_detach(Process *self, size_t argc, DeeObject *const *argv) {
 	}
 	if (self->p_state & THREAD_STATE_DETACHED) {
 		/* Process was already detached. */
-		ATOMIC_AND(self->p_state, ~PROCESS_FDETACHING);
+		atomic_and(&self->p_state, ~PROCESS_FDETACHING);
 		return_false;
 	}
 #ifdef CONFIG_HAVE_detach
@@ -837,9 +837,10 @@ process_detach(Process *self, size_t argc, DeeObject *const *argv) {
 #endif /* CONFIG_HAVE_detach */
 	/* Set the detached-flag and unset the detaching-flag. */
 	do {
-		state = ATOMIC_READ(self->p_state);
-	} while (!ATOMIC_CMPXCH_WEAK(self->p_state, state,
-	                             (state & ~PROCESS_FDETACHING) | PROCESS_FDETACHED));
+		state = atomic_read(&self->p_state);
+	} while (!atomic_cmpxch_weak_or_write(&self->p_state, state,
+	                                      (state & ~PROCESS_FDETACHING) |
+	                                      PROCESS_FDETACHED));
 	return_true;
 err:
 	return NULL;
@@ -994,7 +995,7 @@ again:
 		goto err;
 	}
 	if (result == 0) {
-		ATOMIC_AND(self->p_state, ~PROCESS_FDETACHING);
+		atomic_and(&self->p_state, ~PROCESS_FDETACHING);
 		return 1; /* Wait failed (timeout) */
 	}
 	if (result > 0)
@@ -1004,7 +1005,7 @@ again:
 	if (result == EINTR)
 		goto again;
 #endif /* EINTR */
-	ATOMIC_AND(self->p_state, ~PROCESS_FDETACHING);
+	atomic_and(&self->p_state, ~PROCESS_FDETACHING);
 	DeeUnixSystem_ThrowErrorf(&DeeError_SystemError, result,
 	                          "Failed to join process %k", self);
 err:
@@ -1032,7 +1033,7 @@ process_dojoin(Process *__restrict self,
 			goto err;
 
 		/* Wait for the process to terminate. */
-		while (ATOMIC_FETCHOR(self->p_state, PROCESS_FDETACHING) &
+		while (atomic_fetchor(&self->p_state, PROCESS_FDETACHING) &
 		       PROCESS_FDETACHING) {
 			uint64_t now;
 
@@ -1065,7 +1066,7 @@ process_dojoin(Process *__restrict self,
 		}
 		if (self->p_state & PROCESS_FDETACHED) {
 			/* Special case: The process was detached, but not joined. */
-			ATOMIC_AND(self->p_state, ~PROCESS_FDETACHING);
+			atomic_and(&self->p_state, ~PROCESS_FDETACHING);
 			DeeError_Throwf(&DeeError_ValueError,
 			                "Cannot join process %k after being detached",
 			                self);
@@ -1079,8 +1080,8 @@ process_dojoin(Process *__restrict self,
 done_join:
 		/* Delete the detaching-flag and set the detached-flag. */
 		do {
-			state = ATOMIC_READ(self->p_state);
-		} while (!ATOMIC_CMPXCH_WEAK(self->p_state, state,
+			state = atomic_read(&self->p_state);
+		} while (!atomic_cmpxch_weak(&self->p_state, state,
 		                             (state & ~PROCESS_FDETACHING) | new_flags));
 	}
 	*proc_result = self->p_status;
@@ -1149,17 +1150,17 @@ process_hasterminated(Process *self) {
 		goto nope;
 	if (self->p_state & PROCESS_FDIDJOIN)
 		goto yes;
-	if (ATOMIC_FETCHOR(self->p_state, PROCESS_FDETACHING) & PROCESS_FDETACHING)
+	if (atomic_fetchor(&self->p_state, PROCESS_FDETACHING) & PROCESS_FDETACHING)
 		goto nope;
 	error = tryjoinpid(self->p_pid, &self->p_status);
 	if (error <= 0) {
-		ATOMIC_AND(self->p_state, ~PROCESS_FDETACHING);
+		atomic_and(&self->p_state, ~PROCESS_FDETACHING);
 		goto nope;
 	}
 	/* Delete the detaching-flag and set the detached-flag. */
 	do {
-		state = ATOMIC_READ(self->p_state);
-	} while (!ATOMIC_CMPXCH_WEAK(self->p_state, state,
+		state = atomic_read(&self->p_state);
+	} while (!atomic_cmpxch_weak(&self->p_state, state,
 	                             (state & ~PROCESS_FDETACHING) |
 	                             (PROCESS_FDIDJOIN | PROCESS_FTERMINATED)));
 yes:
@@ -1929,7 +1930,7 @@ err_started:
 		                self);
 		goto err;
 	}
-	if (ATOMIC_READ(self->p_state) & (PROCESS_FSTARTING | PROCESS_FSTARTED))
+	if (atomic_read(&self->p_state) & (PROCESS_FSTARTING | PROCESS_FSTARTED))
 		goto err_started;
 	cmdline_utf8 = DeeString_AsUtf8(value);
 	if unlikely(!cmdline_utf8)

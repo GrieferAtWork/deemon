@@ -23,12 +23,10 @@
 #define NEXT_LARGER  7
 #endif /* __INTELLISENSE__ */
 
-#include <hybrid/atomic.h>
-#include <hybrid/sched/yield.h>
-
-#ifndef CONFIG_NO_THREADS
+#include <deemon/util/atomic.h>
 #include <deemon/util/rwlock.h>
-#endif /* !CONFIG_NO_THREADS */
+
+#include <hybrid/sched/yield.h>
 
 #define FUNC3(x, y) x##y
 #define FUNC2(x, y) FUNC3(x, y)
@@ -122,36 +120,35 @@ PRIVATE FUNC(Slab) FUNC(slab) = {
 };
 
 #ifndef CONFIG_NO_OBJECT_SLAB_STATS
-#define DEC_MAXPAIR(cur, max) \
-	ATOMIC_FETCHDEC(cur)
-#define INC_MAXPAIR(cur, max)                            \
-	do {                                                 \
-		size_t newval = ATOMIC_INCFETCH(cur);            \
-		size_t oldval;                                   \
-		for (;;) {                                       \
-			oldval = ATOMIC_READ(max);                   \
-			if (newval < oldval)                         \
-				break;                                   \
-			if (ATOMIC_CMPXCH_WEAK(max, oldval, newval)) \
-				break;                                   \
-		}                                                \
+#define DEC_MAXPAIR(cur, max) atomic_dec(&(cur))
+#define INC_MAXPAIR(cur, max)                                        \
+	do {                                                             \
+		size_t newval = atomic_incfetch(&(cur));                     \
+		size_t oldval;                                               \
+		for (;;) {                                                   \
+			oldval = atomic_read(&(max));                            \
+			if (newval < oldval)                                     \
+				break;                                               \
+			if (atomic_cmpxch_weak_or_write(&(max), oldval, newval)) \
+				break;                                               \
+		}                                                            \
 	}	__WHILE0
-#define ADD_MAXPAIR(cur, max, count)                     \
-	do {                                                 \
-		size_t newval = ATOMIC_ADDFETCH(cur, count);     \
-		size_t oldval;                                   \
-		for (;;) {                                       \
-			oldval = ATOMIC_READ(max);                   \
-			if (newval < oldval)                         \
-				break;                                   \
-			if (ATOMIC_CMPXCH_WEAK(max, oldval, newval)) \
-				break;                                   \
-		}                                                \
+#define ADD_MAXPAIR(cur, max, count)                                 \
+	do {                                                             \
+		size_t newval = atomic_addfetch(&(cur), count);              \
+		size_t oldval;                                               \
+		for (;;) {                                                   \
+			oldval = atomic_read(&(max));                            \
+			if (newval < oldval)                                     \
+				break;                                               \
+			if (atomic_cmpxch_weak_or_write(&(max), oldval, newval)) \
+				break;                                               \
+		}                                                            \
 	}	__WHILE0
 #else /* !CONFIG_NO_OBJECT_SLAB_STATS */
 #define DEC_MAXPAIR(cur, max)        (void)0
-#define INC_MAXPAIR(cur, max)        do{}__WHILE0
-#define ADD_MAXPAIR(cur, max, count) do{}__WHILE0
+#define INC_MAXPAIR(cur, max)        do { } __WHILE0
+#define ADD_MAXPAIR(cur, max, count) do { } __WHILE0
 #endif /* CONFIG_NO_OBJECT_SLAB_STATS */
 
 #define MY_REGION_START slab_config.sc_regions[INDEX].sr_start
@@ -190,9 +187,9 @@ FUNC(DeeSlab_StatSlab)(DeeSlabInfo *__restrict info) {
 		size_t freepages     = 0;
 		size_t freeitems     = 0;
 		FUNC(SlabPage) *iter = FUNC(slab).s_free;
-		tail                 = (uintptr_t)ATOMIC_READ(FUNC(slab).s_tail);
+		tail = (uintptr_t)atomic_read(&FUNC(slab).s_tail);
 		for (; iter; iter = iter->sp_next) {
-			freeitems += ATOMIC_READ(iter->sp_free);
+			freeitems += atomic_read(&iter->sp_free);
 			++freepages;
 		}
 		info->si_usedpages     = (tail - MY_REGION_START) / CONFIG_SLAB_PAGESIZE;
@@ -212,30 +209,30 @@ FUNC(DeeSlab_StatSlab)(DeeSlabInfo *__restrict info) {
 	atomic_lock_acquire(&FUNC(slab).s_lock);
 read_again:
 	COMPILER_READ_BARRIER();
-	info->si_cur_alloc = ATOMIC_READ(FUNC(slab).s_num_alloc);
-	info->si_max_alloc = ATOMIC_READ(FUNC(slab).s_max_alloc);
-	info->si_cur_free = ATOMIC_READ(FUNC(slab).s_num_free);
-	info->si_max_free = ATOMIC_READ(FUNC(slab).s_max_free);
-	info->si_max_fullpages = ATOMIC_READ(FUNC(slab).s_max_fullpages);
-	info->si_cur_freepages = ATOMIC_READ(FUNC(slab).s_num_freepages);
-	info->si_max_freepages = ATOMIC_READ(FUNC(slab).s_max_freepages);
-	tail = (uintptr_t)ATOMIC_READ(FUNC(slab).s_tail);
+	info->si_cur_alloc = atomic_read(&FUNC(slab).s_num_alloc);
+	info->si_max_alloc = atomic_read(&FUNC(slab).s_max_alloc);
+	info->si_cur_free = atomic_read(&FUNC(slab).s_num_free);
+	info->si_max_free = atomic_read(&FUNC(slab).s_max_free);
+	info->si_max_fullpages = atomic_read(&FUNC(slab).s_max_fullpages);
+	info->si_cur_freepages = atomic_read(&FUNC(slab).s_num_freepages);
+	info->si_max_freepages = atomic_read(&FUNC(slab).s_max_freepages);
+	tail = (uintptr_t)atomic_read(&FUNC(slab).s_tail);
 	COMPILER_BARRIER();
-	if (info->si_cur_alloc != ATOMIC_READ(FUNC(slab).s_num_alloc))
+	if (info->si_cur_alloc != atomic_read(&FUNC(slab).s_num_alloc))
 		goto read_again;
-	if (info->si_max_alloc != ATOMIC_READ(FUNC(slab).s_max_alloc))
+	if (info->si_max_alloc != atomic_read(&FUNC(slab).s_max_alloc))
 		goto read_again;
-	if (info->si_cur_free != ATOMIC_READ(FUNC(slab).s_num_free))
+	if (info->si_cur_free != atomic_read(&FUNC(slab).s_num_free))
 		goto read_again;
-	if (info->si_max_free != ATOMIC_READ(FUNC(slab).s_max_free))
+	if (info->si_max_free != atomic_read(&FUNC(slab).s_max_free))
 		goto read_again;
-	if (info->si_max_fullpages != ATOMIC_READ(FUNC(slab).s_max_fullpages))
+	if (info->si_max_fullpages != atomic_read(&FUNC(slab).s_max_fullpages))
 		goto read_again;
-	if (info->si_cur_freepages != ATOMIC_READ(FUNC(slab).s_num_freepages))
+	if (info->si_cur_freepages != atomic_read(&FUNC(slab).s_num_freepages))
 		goto read_again;
-	if (info->si_max_freepages != ATOMIC_READ(FUNC(slab).s_max_freepages))
+	if (info->si_max_freepages != atomic_read(&FUNC(slab).s_max_freepages))
 		goto read_again;
-	if (tail != (uintptr_t)ATOMIC_READ(FUNC(slab).s_tail))
+	if (tail != (uintptr_t)atomic_read(&FUNC(slab).s_tail))
 		goto read_again;
 	atomic_lock_release(&FUNC(slab).s_lock);
 	info->si_usedpages = (tail - MY_REGION_START) / CONFIG_SLAB_PAGESIZE;
@@ -268,10 +265,10 @@ read_again:
 LOCAL void DCALL
 FUNC(DeeSlab_ResetStatSlab)(void) {
 	atomic_lock_acquire(&FUNC(slab).s_lock);
-	ATOMIC_WRITE(FUNC(slab).s_max_free, ATOMIC_READ(FUNC(slab).s_num_free));
-	ATOMIC_WRITE(FUNC(slab).s_max_alloc, ATOMIC_READ(FUNC(slab).s_num_alloc));
-	ATOMIC_WRITE(FUNC(slab).s_max_fullpages, ATOMIC_READ(FUNC(slab).s_num_fullpages));
-	ATOMIC_WRITE(FUNC(slab).s_max_freepages, ATOMIC_READ(FUNC(slab).s_num_freepages));
+	atomic_write(&FUNC(slab).s_max_free, atomic_read(&FUNC(slab).s_num_free));
+	atomic_write(&FUNC(slab).s_max_alloc, atomic_read(&FUNC(slab).s_num_alloc));
+	atomic_write(&FUNC(slab).s_max_fullpages, atomic_read(&FUNC(slab).s_num_fullpages));
+	atomic_write(&FUNC(slab).s_max_freepages, atomic_read(&FUNC(slab).s_num_freepages));
 	atomic_lock_release(&FUNC(slab).s_lock);
 }
 #endif /* !CONFIG_NO_OBJECT_SLAB_STATS */
@@ -281,27 +278,27 @@ LOCAL WUNUSED ATTR_MALLOC void *
 (DCALL FUNC(DeeSlab_DoAlloc))(void) {
 	FUNC(SlabPage) *page;
 again:
-	page = ATOMIC_READ(FUNC(slab).s_free);
+	page = atomic_read(&FUNC(slab).s_free);
 	if likely(page != SLAB_PAGE_INVALID) {
 		/* Allocate from this page. */
 		unsigned int i, j;
 		uintptr_t alloc;
 		for (i = 0; i < SLAB_INUSE_BITSET_LENGTH; ++i) {
 			unsigned int index;
-			uintptr_t mask = ATOMIC_READ(page->sp_inuse[i]);
+			uintptr_t mask = atomic_read(&page->sp_inuse[i]);
 			if (mask == (uintptr_t)-1)
 				continue; /* Fully in use. */
 			/* Find the first free bit. */
 			for (j = 0, alloc = 1; mask & alloc; ++j, alloc <<= 1)
 				;
-			if (!ATOMIC_CMPXCH_WEAK(page->sp_inuse[i], mask, mask | alloc))
+			if (!atomic_cmpxch_weak_or_write(&page->sp_inuse[i], mask, mask | alloc))
 				goto again;
 			/* Got it! */
-			if (ATOMIC_DECFETCH(page->sp_free) == 0) {
+			if (atomic_decfetch(&page->sp_free) == 0) {
 				/* Try to remove this page from the set of available pages. */
 				atomic_lock_acquire(&FUNC(slab).s_lock);
 				COMPILER_READ_BARRIER();
-				if (ATOMIC_READ(page->sp_free) == 0) {
+				if (atomic_read(&page->sp_free) == 0) {
 					if ((*page->sp_pself = page->sp_next) != SLAB_PAGE_INVALID)
 						page->sp_next->sp_pself = page->sp_pself;
 					if ((page->sp_next = FUNC(slab).s_full) != SLAB_PAGE_INVALID)
@@ -323,16 +320,20 @@ again:
 		SCHED_YIELD();
 		goto again;
 	}
+
 	/* Must allocate a new page from the slab tail. */
-	page = ATOMIC_READ(FUNC(slab).s_tail);
+	page = atomic_read(&FUNC(slab).s_tail);
 	if unlikely((uintptr_t)page >= MY_REGION_END)
 		return NULL; /* Slab allocator has been fully exhausted */
+
 	/* XXX: Tell the OS that we want to use this page now, and give it a chance
 	 *      to indicate failure if there is insufficient memory, rather than
 	 *      giving us a SEGFAULT once we try to initialize it below... */
-	if (!ATOMIC_CMPXCH_WEAK(FUNC(slab).s_tail, page, (FUNC(SlabPage) *)((uintptr_t)page + CONFIG_SLAB_PAGESIZE)))
+	if (!atomic_cmpxch_weak(&FUNC(slab).s_tail, page,
+	                        (FUNC(SlabPage) *)((uintptr_t)page + CONFIG_SLAB_PAGESIZE)))
 		goto again;
 	COMPILER_BARRIER();
+
 	/* Initialize the new page, and add it as a free one. */
 #if SLAB_LASTINUSEALWAYSUSED == 0
 #if SLAB_INUSE_BITSET_LENGTH > 1
@@ -346,6 +347,7 @@ again:
 	       SLAB_INUSE_BITSET_LENGTH - 2,
 	       sizeof(uintptr_t));
 #endif /* SLAB_INUSE_BITSET_LENGTH > 1 */
+
 	/* Fill in the last in-use word such that trailing/control items cannot be allocated! */
 	page->sp_inuse[SLAB_INUSE_BITSET_LENGTH - 1] = (~(((uintptr_t)1 << ((__SIZEOF_POINTER__ * 8) -
 	                                                                    SLAB_LASTINUSEALWAYSUSED)) -
@@ -360,6 +362,7 @@ again:
 #endif /* SLAB_INUSE_BITSET_LENGTH != 1 || SLAB_LASTINUSEALWAYSUSED == 0 */
 	page->sp_free = SLAB_ITEMCOUNT - 1;
 	COMPILER_WRITE_BARRIER();
+
 #if SLAB_ITEMCOUNT >= 2
 	/* Remember the newly allocated page as containing free elements. */
 	atomic_lock_acquire(&FUNC(slab).s_lock);
@@ -407,11 +410,11 @@ FORCELOCAL void
 		mask = (uintptr_t)1 << (index % (__SIZEOF_POINTER__ * 8));
 		/* Clear the in-use bit in the availability bitset. */
 #ifdef NDEBUG
-		ATOMIC_AND(page->sp_inuse[i], ~mask);
+		atomic_and(&page->sp_inuse[i], ~mask);
 #else /* NDEBUG */
 		{
 			uintptr_t oldval;
-			oldval = ATOMIC_FETCHAND(page->sp_inuse[i], ~mask);
+			oldval = atomic_fetchand(&page->sp_inuse[i], ~mask);
 			/* FIXME: This assertion has been seen failing sporadically */
 			ASSERTF((oldval & mask) != 0,
 			        "Item at %p didn't have the in-use bit set (oldval=%p, mask=%p)",
@@ -421,11 +424,11 @@ FORCELOCAL void
 		DEC_MAXPAIR(FUNC(slab).s_num_alloc, FUNC(slab).s_max_alloc);
 		INC_MAXPAIR(FUNC(slab).s_num_free, FUNC(slab).s_max_free);
 		/* Mark the new item as free */
-		if (ATOMIC_FETCHINC(page->sp_free) == 0) {
+		if (atomic_fetchinc(&page->sp_free) == 0) {
 			/* Add the page to the set to of pages with available items. */
 			atomic_lock_acquire(&FUNC(slab).s_lock);
 			COMPILER_READ_BARRIER();
-			if (ATOMIC_READ(page->sp_free) != 0) {
+			if (atomic_read(&page->sp_free) != 0) {
 				if ((*page->sp_pself = page->sp_next) != SLAB_PAGE_INVALID)
 					page->sp_next->sp_pself = page->sp_pself;
 				if ((page->sp_next = FUNC(slab).s_free) != SLAB_PAGE_INVALID)

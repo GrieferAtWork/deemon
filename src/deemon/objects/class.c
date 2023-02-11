@@ -34,8 +34,7 @@
 #include <deemon/system-features.h>
 #include <deemon/thread.h>
 #include <deemon/tuple.h>
-
-#include <hybrid/atomic.h>
+#include <deemon/util/atomic.h>
 
 #include "../runtime/runtime_error.h"
 
@@ -287,12 +286,12 @@ calls_desc_cache_operator(struct class_desc *__restrict self,
 	ASSERT(name < CLASS_OPERATOR_USERCOUNT);
 	table_index = name / CLASS_HEADER_OPC2;
 again:
-	table = ATOMIC_READ(self->cd_ops[table_index]);
+	table = atomic_read(&self->cd_ops[table_index]);
 	if (!table) {
 		table = (struct class_optable *)Dee_TryCalloc(sizeof(struct class_optable));
 		if unlikely(!table)
 			goto done;
-		if (!ATOMIC_CMPXCH(self->cd_ops[table_index], NULL, table)) {
+		if (!atomic_cmpxch(&self->cd_ops[table_index], NULL, table)) {
 			/* Table was already allocated! */
 			Dee_Free(table);
 			goto again;
@@ -300,8 +299,9 @@ again:
 	}
 
 	/* Cache the operator function in the callback table. */
-	if (ATOMIC_CMPXCH(table->co_operators[name % CLASS_HEADER_OPC2], NULL, func))
-		Dee_Incref(func);
+	Dee_Incref(func);
+	if (!atomic_cmpxch(&table->co_operators[name % CLASS_HEADER_OPC2], NULL, func))
+		Dee_DecrefNokill(func);
 done:
 	;
 }
@@ -594,14 +594,14 @@ instance_destructor(DeeObject *__restrict self) {
 		result = NULL;
 	} else {
 		drefcnt_t new_refcnt;
-		ATOMIC_FETCHINC(self->ob_refcnt);
+		atomic_inc(&self->ob_refcnt);
 		result = DeeObject_ThisCall(callback, self, 0, NULL);
 		Dee_Decref(callback);
 
 		/* Check if `self' got revived. - If it did we let the caller
 		 * inherit a reference to it to prevent a race condition. */
 		for (;;) {
-			new_refcnt = ATOMIC_READ(self->ob_refcnt);
+			new_refcnt = atomic_read(&self->ob_refcnt);
 			if (new_refcnt > 1) {
 				/* Object got revived (let the caller inherit our reference) */
 				if likely(result) {
@@ -612,7 +612,7 @@ instance_destructor(DeeObject *__restrict self) {
 				}
 				return;
 			}
-			if (ATOMIC_CMPXCH_WEAK(self->ob_refcnt, new_refcnt, 0))
+			if (atomic_cmpxch_weak(&self->ob_refcnt, new_refcnt, 0))
 				break;
 		}
 	}
@@ -4764,16 +4764,8 @@ lazy_allocate(void **__restrict ptable, size_t table_size) {
 	new_table = Dee_Calloc(table_size);
 	if unlikely(!new_table)
 		goto err;
-#ifdef CONFIG_NO_THREADS
-	if unlikely(*ptable) {
+	if unlikely(!atomic_cmpxch(ptable, NULL, new_table))
 		Dee_Free(new_table);
-	} else {
-		*ptable = new_table;
-	}
-#else /* CONFIG_NO_THREADS */
-	if unlikely(!ATOMIC_CMPXCH(*ptable, NULL, new_table))
-		Dee_Free(new_table);
-#endif /* !CONFIG_NO_THREADS */
 	return 0;
 err:
 	return -1;

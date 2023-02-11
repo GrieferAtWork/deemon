@@ -24,8 +24,8 @@
 #include <deemon/dex.h>
 #include <deemon/object.h>
 #include <deemon/util/rwlock.h>
+#include <deemon/util/atomic.h>
 
-#include <hybrid/atomic.h>
 #include <hybrid/sequence/list.h>
 
 DECL_BEGIN
@@ -149,8 +149,8 @@ struct xml_node {
 	                                          *       Once equal to `xn_attr_end', all attributes have been loaded. */
 };
 
-#define XMLNode_Incref(x) (ATOMIC_FETCHINC((x)->xn_refcnt))
-#define XMLNode_Decref(x) (ATOMIC_DECFETCH((x)->xn_refcnt))
+#define XMLNode_Incref(x) (atomic_fetchinc(&(x)->xn_refcnt))
+#define XMLNode_Decref(x) (atomic_decfetch(&(x)->xn_refcnt))
 
 INTDEF NONNULL((1)) void DCALL XMLNode_Destroy(XMLNode *__restrict self);
 #define XMLNode_Alloc()    DeeSlab_MALLOC(XMLNode)

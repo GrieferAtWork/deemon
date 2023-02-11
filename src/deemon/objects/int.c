@@ -44,8 +44,8 @@
 #include <deemon/stringutils.h>
 #include <deemon/system-features.h>
 #include <deemon/tuple.h>
+#include <deemon/util/atomic.h>
 
-#include <hybrid/atomic.h>
 #include <hybrid/bit.h>
 #include <hybrid/byteorder.h>
 #include <hybrid/overflow.h>
@@ -182,7 +182,7 @@ DeeInt_Free(DeeIntObject *__restrict self) {
 		set = &free_ints[n_digits];
 #ifndef CONFIG_NO_THREADS
 		while (!rwlock_trywrite(&set->fis_lock)) {
-			if (ATOMIC_READ(set->fis_size) >= CONFIG_INT_CACHE_MAXSIZE)
+			if (atomic_read(&set->fis_size) >= CONFIG_INT_CACHE_MAXSIZE)
 				goto do_free;
 			SCHED_YIELD();
 		}

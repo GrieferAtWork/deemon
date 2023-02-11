@@ -205,9 +205,7 @@ DeeCompiler_End(void) {
 PUBLIC NONNULL((1)) void DCALL
 DeeCompiler_Unload(DREF DeeCompilerObject *__restrict compiler) {
 	ASSERT(DeeCompiler_Check(compiler));
-#ifndef CONFIG_NO_THREADS
 	recursive_rwlock_write(&DeeCompiler_Lock);
-#endif /* !CONFIG_NO_THREADS */
 	ASSERT(compiler != DeeCompiler_Current);
 	ASSERT(compiler->cp_recursion == 0);
 	if (compiler_loaded == compiler) {
@@ -217,9 +215,7 @@ DeeCompiler_Unload(DREF DeeCompilerObject *__restrict compiler) {
 		 *       may have already cleared this reference. */
 		Dee_weakref_clear(&DeeCompiler_Active);
 	}
-#ifndef CONFIG_NO_THREADS
 	recursive_rwlock_endwrite(&DeeCompiler_Lock);
-#endif /* !CONFIG_NO_THREADS */
 }
 
 

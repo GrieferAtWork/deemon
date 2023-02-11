@@ -27,8 +27,7 @@
 #include <deemon/alloc.h>
 #include <deemon/seq.h>
 #include <deemon/string.h>
-
-#include <hybrid/atomic.h>
+#include <deemon/util/atomic.h>
 
 #include "../../runtime/strings.h"
 
@@ -60,11 +59,7 @@ typedef struct {
 	size_t           bsi_sep_len;  /* [const][== bsi_split->bs_sep_len] Length of the separation sequence (in bytes). */
 } BytesSplitIterator;
 
-#ifndef CONFIG_NO_THREADS
-#define READ_BSI_ITER(x) ATOMIC_READ((x)->bsi_iter)
-#else /* !CONFIG_NO_THREADS */
-#define READ_BSI_ITER(x)            ((x)->bsi_iter)
-#endif /* CONFIG_NO_THREADS */
+#define READ_BSI_ITER(x) atomic_read(&(x)->bsi_iter)
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 bsi_init(BytesSplitIterator *__restrict self,
@@ -199,24 +194,8 @@ PRIVATE struct type_cmp bsi_cmp = {
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 bsi_next(BytesSplitIterator *__restrict self) {
 	uint8_t *start, *end;
-#ifdef CONFIG_NO_THREADS
-	start = self->bsi_iter;
-	if (!start)
-		return ITER_DONE;
-	end = (uint8_t *)memmemb(start,
-	                         self->bsi_end - start,
-	                         self->bsi_sep_ptr,
-	                         self->bsi_sep_len);
-	if (!end) {
-		self->bsi_iter = NULL;
-		return DeeBytes_NewView(self->bsi_bytes->b_orig,
-		                        start, (size_t)(self->bsi_end - start),
-		                        self->bsi_bytes->b_flags);
-	}
-	self->bsi_iter = end + self->bsi_sep_len;
-#else /* CONFIG_NO_THREADS */
 	for (;;) {
-		start = ATOMIC_READ(self->bsi_iter);
+		start = atomic_read(&self->bsi_iter);
 		if (!start)
 			return ITER_DONE;
 		end = (uint8_t *)memmemb(start,
@@ -224,16 +203,15 @@ bsi_next(BytesSplitIterator *__restrict self) {
 		                         self->bsi_sep_ptr,
 		                         self->bsi_sep_len);
 		if (!end) {
-			if (!ATOMIC_CMPXCH_WEAK(self->bsi_iter, start, NULL))
+			if (!atomic_cmpxch_weak_or_write(&self->bsi_iter, start, NULL))
 				continue;
 			return DeeBytes_NewView(self->bsi_bytes->b_orig,
 			                        start, (size_t)(self->bsi_end - start),
 			                        self->bsi_bytes->b_flags);
 		}
-		if (ATOMIC_CMPXCH_WEAK(self->bsi_iter, start, end + self->bsi_sep_len))
+		if (atomic_cmpxch_weak_or_write(&self->bsi_iter, start, end + self->bsi_sep_len))
 			break;
 	}
-#endif /* !CONFIG_NO_THREADS */
 	return DeeBytes_NewView(self->bsi_bytes->b_orig,
 	                        start, (size_t)(end - start),
 	                        self->bsi_bytes->b_flags);
@@ -242,24 +220,8 @@ bsi_next(BytesSplitIterator *__restrict self) {
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 bsci_next(BytesSplitIterator *__restrict self) {
 	uint8_t *start, *end;
-#ifdef CONFIG_NO_THREADS
-	start = self->bsi_iter;
-	if (!start)
-		return ITER_DONE;
-	end = (uint8_t *)memasciicasemem(start,
-	                                 self->bsi_end - start,
-	                                 self->bsi_sep_ptr,
-	                                 self->bsi_sep_len);
-	if (!end) {
-		self->bsi_iter = NULL;
-		return DeeBytes_NewView(self->bsi_bytes->b_orig,
-		                        start, (size_t)(self->bsi_end - start),
-		                        self->bsi_bytes->b_flags);
-	}
-	self->bsi_iter = end + self->bsi_sep_len;
-#else /* CONFIG_NO_THREADS */
 	for (;;) {
-		start = ATOMIC_READ(self->bsi_iter);
+		start = atomic_read(&self->bsi_iter);
 		if (!start)
 			return ITER_DONE;
 		end = (uint8_t *)memasciicasemem(start,
@@ -267,16 +229,15 @@ bsci_next(BytesSplitIterator *__restrict self) {
 		                                 self->bsi_sep_ptr,
 		                                 self->bsi_sep_len);
 		if (!end) {
-			if (!ATOMIC_CMPXCH_WEAK(self->bsi_iter, start, NULL))
+			if (!atomic_cmpxch_weak_or_write(&self->bsi_iter, start, NULL))
 				continue;
 			return DeeBytes_NewView(self->bsi_bytes->b_orig,
 			                        start, (size_t)(self->bsi_end - start),
 			                        self->bsi_bytes->b_flags);
 		}
-		if (ATOMIC_CMPXCH_WEAK(self->bsi_iter, start, end + self->bsi_sep_len))
+		if (atomic_cmpxch_weak_or_write(&self->bsi_iter, start, end + self->bsi_sep_len))
 			break;
 	}
-#endif /* !CONFIG_NO_THREADS */
 	return DeeBytes_NewView(self->bsi_bytes->b_orig,
 	                        start, (size_t)(end - start),
 	                        self->bsi_bytes->b_flags);
@@ -794,12 +755,7 @@ typedef struct {
 	uint8_t       *blsi_end;      /* [1..1][== DeeBytes_TERM(blsi_bytes)] Pointer to the end of input data. */
 	bool           blsi_keepends; /* [const] If true, keep line endings. */
 } BytesLineSplitIterator;
-
-#ifndef CONFIG_NO_THREADS
-#define READ_BLSI_ITER(x) ATOMIC_READ((x)->blsi_iter)
-#else /* !CONFIG_NO_THREADS */
-#define READ_BLSI_ITER(x)            ((x)->blsi_iter)
-#endif /* CONFIG_NO_THREADS */
+#define READ_BLSI_ITER(x) atomic_read(&(x)->blsi_iter)
 
 STATIC_ASSERT(offsetof(BytesSplitIterator, bsi_split) ==
               offsetof(BytesLineSplitIterator, blsi_bytes));
@@ -874,45 +830,16 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 blsi_next(BytesLineSplitIterator *__restrict self) {
 	uint8_t *start, *end;
-#ifdef CONFIG_NO_THREADS
-	start = self->blsi_iter;
-	if (!start)
-		return ITER_DONE;
-	end = start;
-	for (;;) {
-		uint8_t ch;
-		if (end >= self->blsi_end) {
-			if (!ATOMIC_CMPXCH_WEAK(self->blsi_iter, start, NULL))
-				goto again;
-			return DeeBytes_NewView(self->blsi_bytes->b_orig,
-			                        start, (size_t)(self->blsi_end - start),
-			                        self->blsi_bytes->b_flags);
-		}
-		ch = *end;
-		if (ch == '\n')
-			break;
-		if (ch == '\r') {
-			if (end + 1 < self->blsi_end && end[1] == '\n') {
-				self->blsi_iter = end + 2;
-				goto return_view;
-			}
-			break;
-		}
-		++end;
-	}
-	self->blsi_iter = end + 1;
-return_view:
-#else /* CONFIG_NO_THREADS */
 again:
 	for (;;) {
-		start = ATOMIC_READ(self->blsi_iter);
+		start = atomic_read(&self->blsi_iter);
 		if (!start)
 			return ITER_DONE;
 		end = start;
 		for (;;) {
 			uint8_t ch;
 			if (end >= self->blsi_end) {
-				if (!ATOMIC_CMPXCH_WEAK(self->blsi_iter, start, NULL))
+				if (!atomic_cmpxch_weak_or_write(&self->blsi_iter, start, NULL))
 					goto again;
 				return DeeBytes_NewView(self->blsi_bytes->b_orig,
 				                        start, (size_t)(self->blsi_end - start),
@@ -923,7 +850,7 @@ again:
 				break;
 			if (ch == '\r') {
 				if (end + 1 < self->blsi_end && end[1] == '\n') {
-					if (!ATOMIC_CMPXCH_WEAK(self->blsi_iter, start, end + 2))
+					if (!atomic_cmpxch_weak_or_write(&self->blsi_iter, start, end + 2))
 						goto again;
 					if (self->blsi_keepends)
 						end += 2;
@@ -933,13 +860,12 @@ again:
 			}
 			++end;
 		}
-		if (ATOMIC_CMPXCH_WEAK(self->blsi_iter, start, end + 1))
+		if (atomic_cmpxch_weak_or_write(&self->blsi_iter, start, end + 1))
 			break;
 	}
 	if (self->blsi_keepends)
 		end += 1;
 return_view:
-#endif /* !CONFIG_NO_THREADS */
 	return DeeBytes_NewView(self->blsi_bytes->b_orig,
 	                        start, (size_t)(end - start),
 	                        self->blsi_bytes->b_flags);

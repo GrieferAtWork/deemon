@@ -33,19 +33,14 @@
 #include <deemon/seq.h>
 #include <deemon/system-features.h>
 #include <deemon/util/lock.h>
-
-#include <hybrid/atomic.h>
+#include <deemon/util/atomic.h>
 
 #include "../../runtime/runtime_error.h"
 #include "../../runtime/strings.h"
 
 DECL_BEGIN
 
-#ifdef CONFIG_NO_THREADS
-#define RVI_GETPOS(x)            ((x)->rvi_pos)
-#else /* CONFIG_NO_THREADS */
-#define RVI_GETPOS(x) ATOMIC_READ((x)->rvi_pos)
-#endif /* !CONFIG_NO_THREADS */
+#define RVI_GETPOS(x) atomic_read(&(x)->rvi_pos)
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 rveciter_copy(RefVectorIterator *__restrict self,
@@ -84,18 +79,12 @@ rveciter_next(RefVectorIterator *__restrict self) {
 	DREF DeeObject **presult, *result;
 	RefVector *vector = self->rvi_vector;
 	for (;;) {
-#ifdef CONFIG_NO_THREADS
-		presult = self->rvi_pos;
-		if (presult >= vector->rv_vector + vector->rv_length)
-			return ITER_DONE;
-		++self->rvi_pos;
-#else /* CONFIG_NO_THREADS */
 		do {
-			presult = ATOMIC_READ(self->rvi_pos);
+			presult = atomic_read(&self->rvi_pos);
 			if (presult >= vector->rv_vector + vector->rv_length)
 				return ITER_DONE;
-		} while (!ATOMIC_CMPXCH_WEAK(self->rvi_pos, presult, presult + 1));
-#endif /* !CONFIG_NO_THREADS */
+		} while (!atomic_cmpxch_weak_or_write(&self->rvi_pos, presult, presult + 1));
+
 #ifndef CONFIG_NO_THREADS
 		if (vector->rv_plock)
 			atomic_rwlock_read(vector->rv_plock);
@@ -1106,51 +1095,38 @@ INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 sveciter_next(SharedVectorIterator *__restrict self) {
 	DREF DeeObject *result = ITER_DONE;
 	SharedVector *vec      = self->si_seq;
-#ifndef CONFIG_NO_THREADS
 	for (;;) {
 		size_t index;
 		atomic_rwlock_read(&vec->sv_lock);
-		index = ATOMIC_READ(self->si_index);
+		index = atomic_read(&self->si_index);
 		if (self->si_index >= vec->sv_length) {
 			atomic_rwlock_endread(&vec->sv_lock);
 			break;
 		}
 		result = vec->sv_vector[index];
+
 		/* Acquire a reference to keep the item alive. */
 		Dee_Incref(result);
 		atomic_rwlock_endread(&vec->sv_lock);
-		if (ATOMIC_CMPXCH(self->si_index, index, index + 1))
+		if (atomic_cmpxch_or_write(&self->si_index, index, index + 1))
 			break;
+
 		/* If some other thread stole the index, drop their value. */
 		Dee_Decref(result);
 	}
-#else /* !CONFIG_NO_THREADS */
-	if (self->si_index < vec->sv_length) {
-		result = vec->sv_vector[self->si_index++];
-		Dee_Incref(result);
-	}
-#endif /* CONFIG_NO_THREADS */
 	return result;
 }
 
 INTERN WUNUSED NONNULL((1)) int DCALL
 sveciter_bool(SharedVectorIterator *__restrict self) {
-#ifdef CONFIG_NO_THREADS
-	return self->si_index < self->si_seq->sv_length;
-#else /* CONFIG_NO_THREADS */
-	return (ATOMIC_READ(self->si_index) <
-	        ATOMIC_READ(self->si_seq->sv_length));
-#endif /* !CONFIG_NO_THREADS */
+	return (atomic_read(&self->si_index) <
+	        atomic_read(&self->si_seq->sv_length));
 }
 
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 sveciter_copy(SharedVectorIterator *__restrict self,
               SharedVectorIterator *__restrict other) {
-#ifdef CONFIG_NO_THREADS
-	self->si_index = other->si_index;
-#else /* CONFIG_NO_THREADS */
-	self->si_index = ATOMIC_READ(other->si_index);
-#endif /* !CONFIG_NO_THREADS */
+	self->si_index = atomic_read(&other->si_index);
 	self->si_seq = other->si_seq;
 	Dee_Incref(self->si_seq);
 	return 0;
@@ -1162,11 +1138,7 @@ sveciter_deep(SharedVectorIterator *__restrict self,
 	self->si_seq = (DREF SharedVector *)DeeObject_DeepCopy((DeeObject *)other->si_seq);
 	if unlikely(self->si_seq)
 		goto err;
-#ifdef CONFIG_NO_THREADS
-	self->si_index = other->si_index;
-#else /* CONFIG_NO_THREADS */
-	self->si_index = ATOMIC_READ(other->si_index);
-#endif /* !CONFIG_NO_THREADS */
+	self->si_index = atomic_read(&other->si_index);
 	return 0;
 err:
 	return -1;
@@ -1178,11 +1150,7 @@ PRIVATE struct type_member tpconst sveciter_members[] = {
 	TYPE_MEMBER_END
 };
 
-#ifdef CONFIG_NO_THREADS
-#define READ_INDEX(x)            ((x)->si_index)
-#else /* CONFIG_NO_THREADS */
-#define READ_INDEX(x) ATOMIC_READ((x)->si_index)
-#endif /* !CONFIG_NO_THREADS */
+#define READ_INDEX(x) atomic_read(&(x)->si_index)
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 sveciter_eq(SharedVectorIterator *self,
@@ -1342,11 +1310,7 @@ done:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 svec_size(SharedVector *__restrict self) {
-#ifdef CONFIG_NO_THREADS
-	size_t result = self->sv_length;
-#else  /* CONFIG_NO_THREADS */
-	size_t result = ATOMIC_READ(self->sv_length);
-#endif /* !CONFIG_NO_THREADS */
+	size_t result = atomic_read(&self->sv_length);
 	return DeeInt_NewSize(result);
 }
 
@@ -1402,11 +1366,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) size_t DCALL
 svec_nsi_getsize(SharedVector *__restrict self) {
 	ASSERT(self->sv_length != (size_t)-1);
-#ifdef CONFIG_NO_THREADS
-	return self->sv_length;
-#else /* CONFIG_NO_THREADS */
-	return ATOMIC_READ(self->sv_length);
-#endif /* !CONFIG_NO_THREADS */
+	return atomic_read(&self->sv_length);
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -1601,11 +1561,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 svec_bool(SharedVector *__restrict self) {
-#ifdef CONFIG_NO_THREADS
-	return self->sv_length != 0;
-#else /* CONFIG_NO_THREADS */
-	return ATOMIC_READ(self->sv_length) != 0;
-#endif /* !CONFIG_NO_THREADS */
+	return atomic_read(&self->sv_length) != 0;
 }
 
 INTERN DeeTypeObject SharedVector_Type = {

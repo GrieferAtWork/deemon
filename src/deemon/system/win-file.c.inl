@@ -38,8 +38,8 @@
 #include <deemon/system-features.h> /* memcpy(), bzero(), ... */
 #include <deemon/system.h>
 #include <deemon/thread.h>
+#include <deemon/util/atomic.h>
 
-#include <hybrid/atomic.h>
 #include <hybrid/byteorder.h>
 #include <hybrid/host.h>
 #include <hybrid/minmax.h>
@@ -477,7 +477,7 @@ nt_sysfile_gettype(SystemFile *__restrict self) {
 			error_file_io(self);
 			return FILE_TYPE_UNKNOWN;
 		}
-		ATOMIC_CMPXCH(self->sf_filetype,
+		atomic_cmpxch(&self->sf_filetype,
 		              (uint32_t)FILE_TYPE_UNKNOWN,
 		              (uint32_t)type);
 	}
@@ -492,7 +492,7 @@ nt_sysfile_trygettype(SystemFile *__restrict self) {
 		type = GetFileType(self->sf_handle);
 		DBG_ALIGNMENT_ENABLE();
 		if likely(type != FILE_TYPE_UNKNOWN) {
-			ATOMIC_CMPXCH(self->sf_filetype,
+			atomic_cmpxch(&self->sf_filetype,
 			              (uint32_t)FILE_TYPE_UNKNOWN,
 			              (uint32_t)type);
 		}
@@ -755,7 +755,7 @@ append_pending_utf8(SystemFile *__restrict self,
 	ASSERTF(bufsize <= COMPILER_LENOF(self->sf_pending),
 	        "A non-encodable unicode sequence that is longer than 7 bytes? WTF?");
 again:
-	pending_count = ATOMIC_READ(self->sf_pendingc);
+	pending_count = atomic_read(&self->sf_pendingc);
 	if unlikely(pending_count) {
 		size_t temp;
 		unsigned char with_pending[COMPILER_LENOF(self->sf_pending) * 2], *p;
@@ -763,11 +763,11 @@ again:
 		p = (unsigned char *)mempcpyc(with_pending, self->sf_pending,
 		                              pending_count, sizeof(unsigned char));
 		memcpyc(p, buffer, bufsize, sizeof(unsigned char));
-		if (!ATOMIC_CMPXCH(self->sf_pendingc, pending_count, 0))
+		if (!atomic_cmpxch(&self->sf_pendingc, pending_count, 0))
 			goto again;
 		temp = write_utf8_to_console(self, with_pending, pending_count + bufsize);
 		if unlikely(temp == (size_t)-1) {
-			ATOMIC_CMPXCH(self->sf_pendingc, 0, pending_count);
+			atomic_cmpxch(&self->sf_pendingc, 0, pending_count);
 			goto err;
 		}
 		pending_count += bufsize;
@@ -778,7 +778,7 @@ again:
 			return append_pending_utf8(self, with_pending + temp, pending_count);
 	} else {
 		memcpyc(self->sf_pending, buffer, bufsize, sizeof(unsigned char));
-		if (!ATOMIC_CMPXCH(self->sf_pendingc, 0, bufsize))
+		if (!atomic_cmpxch(&self->sf_pendingc, 0, bufsize))
 			goto again;
 	}
 	return 0;
@@ -795,7 +795,7 @@ write_to_console(SystemFile *__restrict self,
 again:
 	if (!bufsize)
 		return 0;
-	pending_count = ATOMIC_READ(self->sf_pendingc);
+	pending_count = atomic_read(&self->sf_pendingc);
 	if (pending_count) {
 		unsigned char with_pending[64], *p;
 		size_t total_length;
@@ -805,13 +805,13 @@ again:
 		if (total_length > COMPILER_LENOF(with_pending))
 			total_length = COMPILER_LENOF(with_pending);
 		memcpyc(p, buffer, total_length - pending_count, sizeof(char));
-		if (!ATOMIC_CMPXCH(self->sf_pendingc, pending_count, 0))
+		if (!atomic_cmpxch(&self->sf_pendingc, pending_count, 0))
 			goto again;
 		num_written = write_utf8_to_console(self,
 		                                    with_pending,
 		                                    total_length);
 		if unlikely(num_written == (size_t)-1) {
-			ATOMIC_CMPXCH(self->sf_pendingc, 0, pending_count);
+			atomic_cmpxch(&self->sf_pendingc, 0, pending_count);
 			goto err;
 		}
 		ASSERT(num_written <= total_length);

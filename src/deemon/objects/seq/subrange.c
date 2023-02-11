@@ -33,13 +33,10 @@
 #include <deemon/seq.h>
 #include <deemon/string.h>
 #include <deemon/thread.h>
+#include <deemon/util/atomic.h>
 
 #include <hybrid/minmax.h>
 #include <hybrid/overflow.h>
-
-#ifndef CONFIG_NO_THREADS
-#include <hybrid/atomic.h>
-#endif /* !CONFIG_NO_THREADS */
 
 #include "../../runtime/runtime_error.h"
 #include "../../runtime/strings.h"
@@ -73,19 +70,13 @@ subrangeiterator_visit(SubRangeIterator *__restrict self,
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 subrangeiterator_next(SubRangeIterator *__restrict self) {
-#ifdef CONFIG_NO_THREADS
-	if (!self->sr_size)
-		return ITER_DONE;
-	--self->sr_size;
-#else /* CONFIG_NO_THREADS */
 	size_t oldval;
 	/* Consume one from the max-iteration size. */
 	do {
-		oldval = ATOMIC_READ(self->sr_size);
+		oldval = atomic_read(&self->sr_size);
 		if (!oldval)
 			return ITER_DONE;
-	} while (!ATOMIC_CMPXCH(self->sr_size, oldval, oldval - 1));
-#endif /* !CONFIG_NO_THREADS */
+	} while (!atomic_cmpxch_weak_or_write(&self->sr_size, oldval, oldval - 1));
 	return DeeObject_IterNext(self->sr_iter);
 }
 

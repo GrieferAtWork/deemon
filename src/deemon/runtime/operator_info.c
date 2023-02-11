@@ -38,8 +38,7 @@
 #include <deemon/super.h>
 #include <deemon/system-features.h> /* memcpyc(), ... */
 #include <deemon/tuple.h>
-
-#include <hybrid/atomic.h>
+#include <deemon/util/atomic.h>
 
 #include "../objects/gc_inspect.h"
 #include "runtime_error.h"
@@ -1617,11 +1616,7 @@ PRIVATE struct type_member tpconst to_class_members[] = {
 	TYPE_MEMBER_END
 };
 
-#ifdef CONFIG_NO_THREADS
-#define TOI_GETOPID(x)            ((x)->to_opid)
-#else /* CONFIG_NO_THREADS */
-#define TOI_GETOPID(x) ATOMIC_READ((x)->to_opid)
-#endif /* !CONFIG_NO_THREADS */
+#define TOI_GETOPID(x) atomic_read(&(x)->to_opid)
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 toi_copy(TypeOperatorsIterator *__restrict self,
@@ -1666,18 +1661,10 @@ toi_next(TypeOperatorsIterator *__restrict self) {
 	DeeTypeObject *tp = self->to_type;
 	struct opinfo const *info;
 	uint16_t result;
-#ifndef CONFIG_NO_THREADS
 	uint16_t start;
-#endif /* !CONFIG_NO_THREADS */
-#ifndef CONFIG_NO_THREADS
-	for (;;)
-#endif /* !CONFIG_NO_THREADS */
-	{
-#ifndef CONFIG_NO_THREADS
-		result = start = ATOMIC_READ(self->to_opid);
-#else /* !CONFIG_NO_THREADS */
-		result        = self->to_opid;
-#endif /* CONFIG_NO_THREADS */
+	for (;;) {
+		start  = atomic_read(&self->to_opid);
+		result = start;
 		for (;; ++result) {
 			void const *my_ptr;
 
@@ -1709,12 +1696,8 @@ toi_next(TypeOperatorsIterator *__restrict self) {
 			    (!tp->tp_base || my_ptr != DeeType_GetOpPointer(tp->tp_base, info)))
 				break;
 		}
-#ifndef CONFIG_NO_THREADS
-		if (ATOMIC_CMPXCH_WEAK(self->to_opid, start, result + 1))
+		if (atomic_cmpxch_weak_or_write(&self->to_opid, start, result + 1))
 			break;
-#else /* !CONFIG_NO_THREADS */
-		self->to_opid = result + 1;
-#endif /* CONFIG_NO_THREADS */
 	}
 	if (self->to_name && *info->oi_sname)
 		return DeeString_New(info->oi_sname);

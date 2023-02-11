@@ -36,6 +36,7 @@
 #include <deemon/string.h>
 #include <deemon/system-features.h> /* bzero(), ... */
 #include <deemon/thread.h>
+#include <deemon/util/rwlock.h>
 
 DECL_BEGIN
 
@@ -252,9 +253,7 @@ DeeStructType_FromSequence(DeeObject *name,
 	}
 	/* Fill in remaining fields and start tracking the new struct type. */
 	Dee_Incref((DeeObject *)&DeeStruct_Type);
-#ifndef CONFIG_NO_THREADS
 	rwlock_cinit(&result->st_base.st_cachelock);
-#endif /* !CONFIG_NO_THREADS */
 	result->st_base.st_base.tp_base  = (DREF DeeTypeObject *)&DeeStruct_Type;
 	result->st_base.st_base.tp_name  = DeeStruct_Type.st_base.st_base.tp_name;
 	result->st_base.st_base.tp_flags = TP_FTRUNCATE | TP_FINHERITCTOR | TP_FHEAP | TP_FMOVEANY;

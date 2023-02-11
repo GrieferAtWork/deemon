@@ -29,8 +29,7 @@
 #include <deemon/object.h>
 #include <deemon/seq.h>
 #include <deemon/string.h>
-
-#include <hybrid/atomic.h>
+#include <deemon/util/atomic.h>
 
 #include "librt.h"
 
@@ -269,13 +268,7 @@ INTERN DeeTypeObject SlabStat_Type = {
 	/* .tp_class_members = */ ss_class_members
 };
 
-
-
-#ifdef CONFIG_NO_THREADS
-#define READ_INDEX(x)            ((x)->sti_index)
-#else /* CONFIG_NO_THREADS */
-#define READ_INDEX(x) ATOMIC_READ((x)->sti_index)
-#endif /* !CONFIG_NO_THREADS */
+#define READ_INDEX(x) atomic_read(&(x)->sti_index)
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 ssi_copy(SlabStatIteratorObject *__restrict self,
@@ -331,19 +324,12 @@ PRIVATE WUNUSED NONNULL((1)) DREF SlabInfoObject *DCALL
 ssi_next(SlabStatIteratorObject *__restrict self) {
 	DREF SlabInfoObject *result;
 	size_t index;
-#ifndef CONFIG_NO_THREADS
-	for (;;)
-#endif /* !CONFIG_NO_THREADS */
-	{
+	for (;;) {
 		index = READ_INDEX(self);
 		if (index >= self->sti_stat->st_stat.st_slabcount)
 			return (DREF SlabInfoObject *)ITER_DONE;
-#ifndef CONFIG_NO_THREADS
-		if (ATOMIC_CMPXCH_WEAK(self->sti_index, index, index + 1))
+		if (atomic_cmpxch_weak_or_write(&self->sti_index, index, index + 1))
 			break;
-#else /* !CONFIG_NO_THREADS */
-		self->sti_index index + 1;
-#endif /* CONFIG_NO_THREADS */
 	}
 	result = DeeObject_MALLOC(SlabInfoObject);
 	if unlikely(!result)

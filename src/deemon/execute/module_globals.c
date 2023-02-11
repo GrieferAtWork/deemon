@@ -32,8 +32,7 @@
 #include <deemon/seq.h>
 #include <deemon/string.h>
 #include <deemon/tuple.h>
-
-#include <hybrid/atomic.h>
+#include <deemon/util/atomic.h>
 
 #include "../runtime/runtime_error.h"
 #include "../runtime/strings.h"
@@ -57,13 +56,7 @@ INTDEF DeeTypeObject ModuleExportsIterator_Type;
 INTDEF DeeTypeObject ModuleGlobals_Type;
 INTDEF DeeTypeObject ModuleGlobalsIterator_Type;
 INTDEF WUNUSED NONNULL((1)) DREF ModuleExports *DCALL DeeModule_ViewExports(DeeModuleObject *__restrict self);
-
-
-#ifdef CONFIG_NO_THREADS
-#define READ_INDEX(x)             (x)->mei_index
-#else /* CONFIG_NO_THREADS */
-#define READ_INDEX(x) ATOMIC_READ((x)->mei_index)
-#endif /* !CONFIG_NO_THREADS */
+#define READ_INDEX(x) atomic_read(&(x)->mei_index)
 
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
@@ -199,7 +192,7 @@ again:
 continue_symbol_search:
 			++new_index;
 			if (new_index > module->mo_bucketm) {
-				if (!ATOMIC_CMPXCH(self->mei_index, old_index, new_index))
+				if (!atomic_cmpxch(&self->mei_index, old_index, new_index))
 					goto again;
 				DeeModule_UnlockSymbols(module);
 				return ITER_DONE;
@@ -212,7 +205,7 @@ continue_symbol_search:
 				goto err;
 			goto continue_symbol_search;
 		}
-		if (ATOMIC_CMPXCH(self->mei_index, old_index, new_index + 1))
+		if (atomic_cmpxch(&self->mei_index, old_index, new_index + 1))
 			break;
 		Dee_Decref_unlikely(result_value);
 	}
@@ -612,12 +605,7 @@ STATIC_ASSERT(offsetof(ModuleExportsIterator, mei_index) ==
 #define mgi_visit mei_visit
 #define mgi_cmp   mei_cmp
 
-
-#ifdef CONFIG_NO_THREADS
-#define READ_INDEX(x)             (x)->mgi_index
-#else /* CONFIG_NO_THREADS */
-#define READ_INDEX(x) ATOMIC_READ((x)->mgi_index)
-#endif /* !CONFIG_NO_THREADS */
+#define READ_INDEX(x) atomic_read(&(x)->mgi_index)
 
 typedef struct {
 	OBJECT_HEAD
@@ -649,26 +637,11 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 mgi_next(ModuleGlobalsIterator *__restrict self) {
 	DeeModuleObject *module = self->mgi_module;
 	DREF DeeObject *result;
-#ifdef CONFIG_NO_THREADS
-	uint16_t new_index = self->mgi_index;
-	if (new_index >= module->mo_globalc)
-		return ITER_DONE;
-	while ((result = module->mo_globalv[new_index]) == NULL) {
-		++new_index;
-		if (new_index >= module->mo_globalc) {
-			self->mgi_index = new_index;
-			return ITER_DONE;
-		}
-	}
-	Dee_Incref(result);
-	self->mgi_index = new_index;
-	return result;
-#else /* CONFIG_NO_THREADS */
 	uint16_t old_index, new_index;
 	DeeModule_LockSymbols(module);
 again:
 	for (;;) {
-		old_index = ATOMIC_READ(self->mgi_index);
+		old_index = atomic_read(&self->mgi_index);
 		if (old_index >= module->mo_globalc) {
 			DeeModule_UnlockSymbols(module);
 			return ITER_DONE;
@@ -679,20 +652,19 @@ again:
 			++new_index;
 			if (new_index >= module->mo_globalc) {
 				rwlock_endread(&module->mo_lock);
-				if (!ATOMIC_CMPXCH(self->mgi_index, old_index, new_index))
+				if (!atomic_cmpxch_or_write(&self->mgi_index, old_index, new_index))
 					goto again;
 				return ITER_DONE;
 			}
 		}
 		Dee_Incref(result);
 		rwlock_endread(&module->mo_lock);
-		if (ATOMIC_CMPXCH(self->mgi_index, old_index, new_index + 1))
+		if (atomic_cmpxch_or_write(&self->mgi_index, old_index, new_index + 1))
 			break;
 		Dee_Decref(result);
 	}
 	DeeModule_UnlockSymbols(module);
 	return result;
-#endif /* !CONFIG_NO_THREADS */
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF ModuleGlobals *DCALL
@@ -792,11 +764,7 @@ done:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 mg_size(ModuleGlobals *__restrict self) {
-#ifdef CONFIG_NO_THREADS
-	return DeeInt_NewU16(self->mg_module->mo_globalc);
-#else /* CONFIG_NO_THREADS */
-	return DeeInt_NewU16(ATOMIC_READ(self->mg_module->mo_globalc));
-#endif /* !CONFIG_NO_THREADS */
+	return DeeInt_NewU16(atomic_read(&self->mg_module->mo_globalc));
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL

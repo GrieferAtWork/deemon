@@ -113,15 +113,11 @@ suiter_set_iter(SetUnionIterator *__restrict self,
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 suiter_get_in2nd(SetUnionIterator *__restrict self) {
-#ifdef CONFIG_NO_THREADS
-	return_bool(self->sui_in2nd);
-#else /* CONFIG_NO_THREADS */
 	bool result;
 	COMPILER_BARRIER();
 	result = self->sui_in2nd;
 	COMPILER_BARRIER();
 	return_bool(result);
-#endif /* !CONFIG_NO_THREADS */
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
@@ -260,16 +256,19 @@ read_from_iter:
 		}
 		goto done;
 	}
+
 	/* Try to switch to the next iterator. */
 	if (self->sui_iter != iter)
 		goto again;
 	if (self->sui_in2nd)
 		goto done;
+
 #ifndef CONFIG_NO_THREADS
 	COMPILER_READ_BARRIER();
 	if (self->sui_iter != iter)
 		goto again; /* Test again to prevent race conditions. */
-#endif              /* !CONFIG_NO_THREADS */
+#endif /* !CONFIG_NO_THREADS */
+
 	/* Create the level #2 iterator. */
 	result = DeeObject_IterSelf(self->sui_union->su_b);
 	if unlikely(!result)
@@ -731,16 +730,19 @@ read_from_iter:
 		}
 		goto done;
 	}
+
 	/* Try to switch to the next iterator. */
 	if (self->ssd_iter != iter)
 		goto again;
 	if (self->ssd_in2nd)
 		goto done;
+
 #ifndef CONFIG_NO_THREADS
 	COMPILER_READ_BARRIER();
 	if (self->ssd_iter != iter)
 		goto again; /* Test again to prevent race conditions. */
-#endif              /* !CONFIG_NO_THREADS */
+#endif /* !CONFIG_NO_THREADS */
+
 	/* Create the level #2 iterator. */
 	result = DeeObject_IterSelf(self->ssd_set->ssd_b);
 	if unlikely(!result)

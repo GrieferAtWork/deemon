@@ -1439,7 +1439,7 @@ buffer_fini(Buffer *__restrict self) {
 		COMPILER_READ_BARRIER();
 		buffer_ttys_lock_enter();
 		if (self->fb_ttych.fbl_pself)
-#endif
+#endif /* !CONFIG_NO_THREADS */
 		{
 			if ((*self->fb_ttych.fbl_pself = self->fb_ttych.fbl_next) != NULL)
 				self->fb_ttych.fbl_next->fb_ttych.fbl_pself = self->fb_ttych.fbl_pself;

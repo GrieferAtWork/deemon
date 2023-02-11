@@ -35,8 +35,8 @@
 #include <deemon/system-features.h>
 #include <deemon/system.h>
 #include <deemon/thread.h>
+#include <deemon/util/atomic.h>
 
-#include <hybrid/atomic.h>
 #include <hybrid/minmax.h>
 #include <hybrid/sched/yield.h>
 
@@ -52,13 +52,6 @@
 #include <deemon/exec.h>
 /**/
 
-#include "../runtime/runtime_error.h"
-#include "../runtime/strings.h"
-
-#ifndef CONFIG_NO_THREADS
-#include <deemon/util/rwlock.h>
-#endif /* !CONFIG_NO_THREADS */
-
 #include <deemon/compiler/compiler.h>
 
 #include <deemon/compiler/assembler.h>
@@ -66,6 +59,10 @@
 #include <deemon/compiler/optimize.h>
 #include <deemon/compiler/tpp.h>
 #include <deemon/string.h>
+#include <deemon/util/rwlock.h>
+
+#include "../runtime/runtime_error.h"
+#include "../runtime/strings.h"
 
 #ifdef CONFIG_HAVE_LIMITS_H
 #include <limits.h>
@@ -160,10 +157,10 @@ DeeModule_BeginLoading(DeeModuleObject *__restrict self) {
 #endif /* !CONFIG_NO_THREADS */
 	ASSERT_OBJECT_TYPE(self, &DeeModule_Type);
 begin_loading:
-	flags = ATOMIC_FETCHOR(self->mo_flags, MODULE_FLOADING);
+	flags = atomic_fetchor(&self->mo_flags, MODULE_FLOADING);
 	if (flags & MODULE_FLOADING) {
 		/* Module is already being loaded. */
-		while ((flags = ATOMIC_READ(self->mo_flags),
+		while ((flags = atomic_read(&self->mo_flags),
 		        (flags & (MODULE_FLOADING | MODULE_FDIDLOAD)) ==
 		        MODULE_FLOADING)) {
 #ifdef CONFIG_NO_THREADS
@@ -197,12 +194,12 @@ begin_loading:
 
 PRIVATE NONNULL((1)) void DCALL
 DeeModule_FailLoading(DeeModuleObject *__restrict self) {
-	ATOMIC_AND(self->mo_flags, ~(MODULE_FLOADING));
+	atomic_and(&self->mo_flags, ~(MODULE_FLOADING));
 }
 
 PRIVATE NONNULL((1)) void DCALL
 DeeModule_DoneLoading(DeeModuleObject *__restrict self) {
-	ATOMIC_OR(self->mo_flags, MODULE_FDIDLOAD);
+	atomic_or(&self->mo_flags, MODULE_FDIDLOAD);
 }
 
 INTERN WUNUSED NONNULL((1)) int DCALL
@@ -2960,11 +2957,7 @@ pack_code_in_return:
 	}
 	result->mo_globalc = current_rootscope->rs_globalc;
 	result->mo_importc = current_rootscope->rs_importc;
-#ifdef CONFIG_NO_THREADS
-	result->mo_flags |= current_rootscope->rs_flags;
-#else /* CONFIG_NO_THREADS */
-	ATOMIC_OR(result->mo_flags, current_rootscope->rs_flags);
-#endif /* !CONFIG_NO_THREADS */
+	atomic_or(&result->mo_flags, current_rootscope->rs_flags);
 	result->mo_bucketm = current_rootscope->rs_bucketm;
 	result->mo_bucketv = current_rootscope->rs_bucketv;
 	result->mo_importv = current_rootscope->rs_importv;
@@ -2992,7 +2985,7 @@ pack_code_in_return:
 
 	COMPILER_END();
 	Dee_Decref(compiler);
-	ATOMIC_OR(result->mo_flags, MODULE_FDIDLOAD);
+	atomic_or(&result->mo_flags, MODULE_FDIDLOAD);
 	return (DREF DeeObject *)result;
 err_r_compiler_code:
 	ast_xdecref(code);
@@ -3000,7 +2993,7 @@ err_r_compiler:
 	COMPILER_END();
 	Dee_Decref(compiler);
 err_r:
-	ATOMIC_AND(result->mo_flags, ~(MODULE_FLOADING));
+	atomic_and(&result->mo_flags, ~(MODULE_FLOADING));
 	Dee_Decref_likely(result);
 	goto err;
 err_module_name:
@@ -3418,11 +3411,11 @@ PUBLIC void DCALL DeeModule_InitPath(void) {
 		module_init_state = INIT_COMPLET;
 #else /* CONFIG_NO_THREADS */
 		COMPILER_READ_BARRIER();
-		if (ATOMIC_CMPXCH(module_init_state, INIT_PENDING, INIT_PROGRES)) {
+		if (atomic_cmpxch(&module_init_state, INIT_PENDING, INIT_PROGRES)) {
 			do_init_module_path();
-			ATOMIC_WRITE(module_init_state, INIT_COMPLET);
+			atomic_write(&module_init_state, INIT_COMPLET);
 		} else {
-			while (ATOMIC_READ(module_init_state) != INIT_COMPLET)
+			while (atomic_read(&module_init_state) != INIT_COMPLET)
 				SCHED_YIELD();
 		}
 #endif /* !CONFIG_NO_THREADS */

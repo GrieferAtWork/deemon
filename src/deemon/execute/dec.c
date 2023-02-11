@@ -57,10 +57,10 @@
 #include <deemon/thread.h>
 #include <deemon/traceback.h>
 #include <deemon/tuple.h>
+#include <deemon/util/atomic.h>
 #include <deemon/util/lock.h>
 #include <deemon/weakref.h>
 
-#include <hybrid/atomic.h>
 #include <hybrid/byteorder.h>
 #include <hybrid/byteswap.h>
 #include <hybrid/unaligned.h>
@@ -2666,9 +2666,7 @@ err_kwds_i:
 	        self->df_base + header.co_textoff,
 	        header.co_textsiz,
 	        sizeof(instruction_t));
-#ifndef CONFIG_NO_THREADS
 	atomic_rwlock_init(&result->co_static_lock);
-#endif /* !CONFIG_NO_THREADS */
 
 	/* Fill in remaining, basic fields of the resulting code object. */
 	result->co_flags  = header.co_flags;
@@ -2889,11 +2887,7 @@ DeeModule_GetCTime(/*Module*/ DeeObject *__restrict self) {
 		}
 		/* Cache the result value in the module itself. */
 		me->mo_ctime = result;
-#ifdef CONFIG_NO_THREADS
-		me->mo_flags |= MODULE_FHASCTIME;
-#else /* CONFIG_NO_THREADS */
-		ATOMIC_OR(me->mo_flags, MODULE_FHASCTIME);
-#endif /* !CONFIG_NO_THREADS */
+		atomic_or(&me->mo_flags, MODULE_FHASCTIME);
 	}
 done:
 	return result;

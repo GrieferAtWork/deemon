@@ -35,8 +35,8 @@
 #include <deemon/none.h>
 #include <deemon/seq.h>
 #include <deemon/system-features.h> /* memcpy(), bzero(), ... */
+#include <deemon/util/atomic.h>
 
-#include <hybrid/atomic.h>
 #include <hybrid/typecore.h>
 
 DECL_BEGIN
@@ -899,11 +899,7 @@ deq_moveassign(Deque *__restrict self,
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL deq_bool(Deque *__restrict self) {
-#ifdef CONFIG_NO_THREADS
-	return self->d_size != 0;
-#else /* CONFIG_NO_THREADS */
-	return ATOMIC_READ(self->d_size) != 0;
-#endif /* !CONFIG_NO_THREADS */
+	return atomic_read(&self->d_size) != 0;
 }
 
 PRIVATE NONNULL((1, 2)) void DCALL
@@ -999,11 +995,7 @@ done:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 deq_size(Deque *__restrict self) {
-#ifndef CONFIG_NO_THREADS
-	return DeeInt_NewSize(ATOMIC_READ(self->d_size));
-#else /* !CONFIG_NO_THREADS */
-	return DeeInt_NewSize(self->d_size);
-#endif /* CONFIG_NO_THREADS */
+	return DeeInt_NewSize(atomic_read(&self->d_size));
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
@@ -1107,11 +1099,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) size_t DCALL
 deq_nsi_size(Deque *__restrict self) {
-#ifndef CONFIG_NO_THREADS
-	return ATOMIC_READ(self->d_size);
-#else /* !CONFIG_NO_THREADS */
-	return self->d_size;
-#endif /* CONFIG_NO_THREADS */
+	return atomic_read(&self->d_size);
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL

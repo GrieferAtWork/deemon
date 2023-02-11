@@ -30,11 +30,11 @@
 #include <deemon/int.h>
 #include <deemon/none.h>
 #include <deemon/thread.h>
+#include <deemon/util/atomic.h>
 
 #include "libthreading.h"
 
 #ifndef CONFIG_NO_THREADS
-#include <hybrid/atomic.h>
 #include <hybrid/sched/yield.h>
 #endif /* !CONFIG_NO_THREADS */
 
@@ -64,9 +64,9 @@ sema_enter(Semaphore *__restrict self) {
 #else /* CONFIG_NO_THREADS */
 	size_t count;
 	for (;;) {
-		count = ATOMIC_READ(self->sem_count);
+		count = atomic_read(&self->sem_count);
 		if (count) {
-			if (ATOMIC_CMPXCH_WEAK(self->sem_count, count, count - 1))
+			if (atomic_cmpxch_weak(&self->sem_count, count, count - 1))
 				break;
 			continue;
 		}
@@ -92,12 +92,12 @@ sema_leave(Semaphore *__restrict self, size_t count) {
 #else /* CONFIG_NO_THREADS */
 	size_t old_count;
 	for (;;) {
-		old_count = ATOMIC_READ(self->sem_count);
+		old_count = atomic_read(&self->sem_count);
 		if unlikely((old_count + count) < old_count) {
 			return DeeError_Throwf(&DeeError_IntegerOverflow,
 			                       "Integer overflow when posting to semaphore");
 		}
-		if (ATOMIC_CMPXCH_WEAK(self->sem_count, old_count, old_count + count))
+		if (atomic_cmpxch_weak(&self->sem_count, old_count, old_count + count))
 			break;
 	}
 	return 0;
@@ -139,10 +139,10 @@ sema_trywait(Semaphore *self, size_t argc, DeeObject *const *argv) {
 #else /* CONFIG_NO_THREADS */
 	for (;;) {
 		size_t count;
-		count = ATOMIC_READ(self->sem_count);
+		count = atomic_read(&self->sem_count);
 		if (!count)
 			return_false;
-		if (ATOMIC_CMPXCH_WEAK(self->sem_count, count, count - 1))
+		if (atomic_cmpxch_weak(&self->sem_count, count, count - 1))
 			break;
 	}
 	return_true;
@@ -164,12 +164,12 @@ sema_timedwait(Semaphore *self, size_t argc, DeeObject *const *argv) {
 #else /* CONFIG_NO_THREADS */
 	for (;;) {
 		size_t count;
-		count = ATOMIC_READ(self->sem_count);
+		count = atomic_read(&self->sem_count);
 		if (!count) {
 			/* XXX: Timeout? */
 			return_false;
 		}
-		if (ATOMIC_CMPXCH_WEAK(self->sem_count, count, count - 1))
+		if (atomic_cmpxch_weak(&self->sem_count, count, count - 1))
 			break;
 	}
 	return_true;
@@ -280,7 +280,7 @@ mutex_enter(Mutex *__restrict self) {
 		++self->m_recursion;
 	} else {
 		for (;;) {
-			if (ATOMIC_CMPXCH_WEAK(self->m_owner, NULL, caller))
+			if (atomic_cmpxch_weak(&self->m_owner, NULL, caller))
 				break;
 			if (DeeThread_CheckInterrupt())
 				return -1;
@@ -303,7 +303,7 @@ mutex_leave(Mutex *__restrict self) {
 	}
 	ASSERT(self->m_recursion != 0);
 	if (!--self->m_recursion)
-		ATOMIC_WRITE(self->m_owner, NULL);
+		atomic_write(&self->m_owner, NULL);
 #endif /* !CONFIG_NO_THREADS */
 	return 0;
 }
@@ -343,7 +343,7 @@ mutex_tryacquire(Mutex *self, size_t argc, DeeObject *const *argv) {
 		DeeThreadObject *caller = DeeThread_Self();
 		if (self->m_owner == caller) {
 			++self->m_recursion;
-		} else if (ATOMIC_CMPXCH_WEAK(self->m_owner, NULL, caller)) {
+		} else if (atomic_cmpxch_weak(&self->m_owner, NULL, caller)) {
 			self->m_recursion = 1;
 		} else {
 			return_false;
@@ -366,7 +366,7 @@ mutex_timedacquire(Mutex *self, size_t argc, DeeObject *const *argv) {
 		if (self->m_owner == caller) {
 			++self->m_recursion;
 		} else {
-			if (ATOMIC_CMPXCH_WEAK(self->m_owner, NULL, caller)) {
+			if (atomic_cmpxch_weak(&self->m_owner, NULL, caller)) {
 				self->m_recursion = 1;
 			} else {
 				/* XXX: Timeout? */

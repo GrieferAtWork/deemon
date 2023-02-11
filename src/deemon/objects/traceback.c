@@ -35,8 +35,7 @@
 #include <deemon/thread.h>
 #include <deemon/traceback.h>
 #include <deemon/tuple.h>
-
-#include <hybrid/atomic.h>
+#include <deemon/util/atomic.h>
 
 #include <stdarg.h>
 #include <stddef.h>
@@ -203,15 +202,10 @@ typedef struct {
 	struct code_frame       *ti_next;  /* [1..1][in(ti_trace->tb_frames)][atomic]
 	                                    * The next frame (yielded in reverse order) */
 } TraceIterator;
-INTDEF DeeTypeObject DeeTracebackIterator_Type;
+#define READ_NEXT(x)     atomic_read(&(x)->ti_next)
+#define WRITE_NEXT(x, y) atomic_write(&(x)->ti_next, y)
 
-#ifdef CONFIG_NO_THREADS
-#define READ_NEXT(x)     ((x)->ti_next)
-#define WRITE_NEXT(x, y) ((x)->ti_next = (y))
-#else /* CONFIG_NO_THREADS */
-#define READ_NEXT(x)     ATOMIC_READ((x)->ti_next)
-#define WRITE_NEXT(x, y) ATOMIC_WRITE((x)->ti_next, y)
-#endif /* !CONFIG_NO_THREADS */
+INTDEF DeeTypeObject DeeTracebackIterator_Type;
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 traceiter_ctor(TraceIterator *__restrict self) {
@@ -282,18 +276,12 @@ traceiter_bool(TraceIterator *__restrict self) {
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 traceiter_next(TraceIterator *__restrict self) {
 	struct code_frame *result_frame;
-#ifdef CONFIG_NO_THREADS
-	result_frame = self->ti_next;
-	if unlikely(result_frame < self->ti_trace->tb_frames)
-		return ITER_DONE;
-	self->ti_next = result_frame - 1;
-#else /* CONFIG_NO_THREADS */
 	do {
-		result_frame = ATOMIC_READ(self->ti_next);
+		result_frame = atomic_read(&self->ti_next);
 		if unlikely(result_frame < self->ti_trace->tb_frames)
 			return ITER_DONE;
-	} while (!ATOMIC_CMPXCH(self->ti_next, result_frame, result_frame - 1));
-#endif /* !CONFIG_NO_THREADS */
+	} while (!atomic_cmpxch_or_write(&self->ti_next, result_frame, result_frame - 1));
+
 	/* Create a new frame wrapper for this entry. */
 	return DeeFrame_NewReferenceWithLock((DeeObject *)self->ti_trace,
 	                                     result_frame,
@@ -358,18 +346,12 @@ traceiter_nii_hasprev(TraceIterator *__restrict self) {
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 traceiter_nii_next(TraceIterator *__restrict self) {
 	struct code_frame *result_frame;
-#ifdef CONFIG_NO_THREADS
-	result_frame = self->ti_next;
-	if unlikely(result_frame < self->ti_trace->tb_frames)
-		return 1;
-	self->ti_next = result_frame - 1;
-#else /* CONFIG_NO_THREADS */
 	do {
-		result_frame = ATOMIC_READ(self->ti_next);
+		result_frame = atomic_read(&self->ti_next);
 		if unlikely(result_frame < self->ti_trace->tb_frames)
 			return 1;
-	} while (!ATOMIC_CMPXCH(self->ti_next, result_frame, result_frame - 1));
-#endif /* !CONFIG_NO_THREADS */
+	} while (!atomic_cmpxch_or_write(&self->ti_next, result_frame, result_frame - 1));
+
 	/* Create a new frame wrapper for this entry. */
 	return 0;
 }

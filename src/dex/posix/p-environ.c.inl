@@ -26,8 +26,8 @@
 /**/
 
 #include <deemon/seq.h>
+#include <deemon/util/atomic.h>
 
-#include <hybrid/atomic.h>
 #include <hybrid/sync/atomic-rwlock.h>
 
 DECL_BEGIN
@@ -1614,11 +1614,7 @@ environ_iterator_copy(EnvironIterator *__restrict self,
                       EnvironIterator *__restrict other) {
 #ifdef posix_enumenv_USE_GetEnvironmentStringsW
 	self->ei_environment_strings = other->ei_environment_strings;
-#ifdef CONFIG_NO_THREADS
-	self->ei_environment_iter = other->ei_environment_iter;
-#else /* CONFIG_NO_THREADS */
-	self->ei_environment_iter = ATOMIC_READ(other->ei_environment_iter);
-#endif /* !CONFIG_NO_THREADS */
+	self->ei_environment_iter    = atomic_read(&other->ei_environment_iter);
 
 	/* Set the "owner" field to prevent `self->ei_environment_strings'
 	 * from being freed before we are finished with it! */
@@ -1632,11 +1628,7 @@ environ_iterator_copy(EnvironIterator *__restrict self,
 #if defined(posix_enumenv_USE_environ) || defined(posix_enumenv_USE_wenviron)
 	self->ei_environ         = other->ei_environ;
 	self->ei_environ_version = other->ei_environ_version;
-#ifdef CONFIG_NO_THREADS
-	self->ei_index = other->ei_index;
-#else /* CONFIG_NO_THREADS */
-	self->ei_index = ATOMIC_READ(other->ei_index);
-#endif /* !CONFIG_NO_THREADS */
+	self->ei_index           = atomic_read(&other->ei_index);
 	environ_lock_endread();
 	return 0;
 #endif /* posix_enumenv_USE_environ || posix_enumenv_USE_wenviron */
@@ -1700,19 +1692,11 @@ again:
 
 	/* Load next environ line and check if EOF has been reached */
 #ifdef posix_enumenv_USE_GetEnvironmentStringsW
-#ifdef CONFIG_NO_THREADS
-	envline = self->ei_environment_iter;
-#else /* CONFIG_NO_THREADS */
-	envline = ATOMIC_READ(self->ei_environment_iter);
-#endif /* !CONFIG_NO_THREADS */
+	envline = atomic_read(&self->ei_environment_iter);
 	if (!*envline)
 #else /* posix_enumenv_USE_GetEnvironmentStringsW */
-#ifdef CONFIG_NO_THREADS
-	line_index = self->ei_index;
-#else /* CONFIG_NO_THREADS */
-	line_index = ATOMIC_READ(self->ei_index);
-#endif /* !CONFIG_NO_THREADS */
-	envline = self->ei_environ[line_index];
+	line_index = atomic_read(&self->ei_index);
+	envline    = self->ei_environ[line_index];
 	if (!envline)
 #endif /* !posix_enumenv_USE_GetEnvironmentStringsW */
 	{
@@ -1754,28 +1738,20 @@ again:
 	{
 		ENVIRON_ITERATOR_tchar *new_iter;
 		new_iter = eq + value_len + 1;
-#ifdef CONFIG_NO_THREADS
-		self->ei_environment_iter = new_iter;
-#else /* CONFIG_NO_THREADS */
-		if (!ATOMIC_CMPXCH(self->ei_environment_iter, envline, new_iter)) {
+		if (!atomic_cmpxch_or_write(&self->ei_environment_iter, envline, new_iter)) {
 			environ_lock_endread();
 			ENVIRON_ITERATOR_DeeString_FreeBuffer(key_buf);
 			ENVIRON_ITERATOR_DeeString_FreeBuffer(value_buf);
 			goto again;
 		}
-#endif /* !CONFIG_NO_THREADS */
 	}
 #else /* posix_enumenv_USE_GetEnvironmentStringsW */
-#ifdef CONFIG_NO_THREADS
-	self->ei_index = line_index + 1;
-#else /* CONFIG_NO_THREADS */
-	if (!ATOMIC_CMPXCH(self->ei_index, line_index, line_index + 1)) {
+	if (!atomic_cmpxch_or_write(&self->ei_index, line_index, line_index + 1)) {
 		environ_lock_endread();
 		ENVIRON_ITERATOR_DeeString_FreeBuffer(key_buf);
 		ENVIRON_ITERATOR_DeeString_FreeBuffer(value_buf);
 		goto again;
 	}
-#endif /* !CONFIG_NO_THREADS */
 #endif /* !posix_enumenv_USE_GetEnvironmentStringsW */
 
 	/* Load environ strings */
@@ -1839,19 +1815,11 @@ again:
 
 	/* Load next environ line and check if EOF has been reached */
 #ifdef posix_enumenv_USE_GetEnvironmentStringsW
-#ifdef CONFIG_NO_THREADS
-	envline = self->ei_environment_iter;
-#else /* CONFIG_NO_THREADS */
-	envline = ATOMIC_READ(self->ei_environment_iter);
-#endif /* !CONFIG_NO_THREADS */
+	envline = atomic_read(&self->ei_environment_iter);
 	if (!*envline)
 #else /* posix_enumenv_USE_GetEnvironmentStringsW */
-#ifdef CONFIG_NO_THREADS
-	line_index = self->ei_index;
-#else /* CONFIG_NO_THREADS */
-	line_index = ATOMIC_READ(self->ei_index);
-#endif /* !CONFIG_NO_THREADS */
-	envline = self->ei_environ[line_index];
+	line_index = atomic_read(&self->ei_index);
+	envline    = self->ei_environ[line_index];
 	if (!envline)
 #endif /* !posix_enumenv_USE_GetEnvironmentStringsW */
 	{
@@ -1886,26 +1854,18 @@ again:
 	{
 		ENVIRON_ITERATOR_tchar *new_iter;
 		new_iter = eq + value_len + 1;
-#ifdef CONFIG_NO_THREADS
-		self->ei_environment_iter = new_iter;
-#else /* CONFIG_NO_THREADS */
-		if (!ATOMIC_CMPXCH(self->ei_environment_iter, envline, new_iter)) {
+		if (!atomic_cmpxch_or_write(&self->ei_environment_iter, envline, new_iter)) {
 			environ_lock_endread();
 			ENVIRON_ITERATOR_DeeString_FreeBuffer(key_buf);
 			goto again;
 		}
 	}
-#endif /* !CONFIG_NO_THREADS */
 #else /* posix_enumenv_USE_GetEnvironmentStringsW */
-#ifdef CONFIG_NO_THREADS
-	self->ei_index = line_index + 1;
-#else /* CONFIG_NO_THREADS */
-	if (!ATOMIC_CMPXCH(self->ei_index, line_index, line_index + 1)) {
+	if (!atomic_cmpxch_or_write(&self->ei_index, line_index, line_index + 1)) {
 		environ_lock_endread();
 		ENVIRON_ITERATOR_DeeString_FreeBuffer(key_buf);
 		goto again;
 	}
-#endif /* !CONFIG_NO_THREADS */
 #endif /* !posix_enumenv_USE_GetEnvironmentStringsW */
 
 	/* Load environ strings */
@@ -1949,18 +1909,10 @@ again:
 
 	/* Load next environ line and check if EOF has been reached */
 #ifdef posix_enumenv_USE_GetEnvironmentStringsW
-#ifdef CONFIG_NO_THREADS
-	envline = self->ei_environment_iter;
-#else /* CONFIG_NO_THREADS */
-	envline = ATOMIC_READ(self->ei_environment_iter);
-#endif /* !CONFIG_NO_THREADS */
+	envline = atomic_read(&self->ei_environment_iter);
 	if (!*envline)
 #else /* posix_enumenv_USE_GetEnvironmentStringsW */
-#ifdef CONFIG_NO_THREADS
-	line_index = self->ei_index;
-#else /* CONFIG_NO_THREADS */
-	line_index = ATOMIC_READ(self->ei_index);
-#endif /* !CONFIG_NO_THREADS */
+	line_index = atomic_read(&self->ei_index);
 	envline = self->ei_environ[line_index];
 	if (!envline)
 #endif /* !posix_enumenv_USE_GetEnvironmentStringsW */
@@ -1994,26 +1946,18 @@ again:
 	{
 		ENVIRON_ITERATOR_tchar *new_iter;
 		new_iter = eq + value_len + 1;
-#ifdef CONFIG_NO_THREADS
-		self->ei_environment_iter = new_iter;
-#else /* CONFIG_NO_THREADS */
-		if (!ATOMIC_CMPXCH(self->ei_environment_iter, envline, new_iter)) {
+		if (!atomic_cmpxch_or_write(&self->ei_environment_iter, envline, new_iter)) {
 			environ_lock_endread();
 			ENVIRON_ITERATOR_DeeString_FreeBuffer(value_buf);
 			goto again;
 		}
 	}
-#endif /* !CONFIG_NO_THREADS */
 #else /* posix_enumenv_USE_GetEnvironmentStringsW */
-#ifdef CONFIG_NO_THREADS
-	self->ei_index = line_index + 1;
-#else /* CONFIG_NO_THREADS */
-	if (!ATOMIC_CMPXCH(self->ei_index, line_index, line_index + 1)) {
+	if (!atomic_cmpxch_or_write(&self->ei_index, line_index, line_index + 1)) {
 		environ_lock_endread();
 		ENVIRON_ITERATOR_DeeString_FreeBuffer(value_buf);
 		goto again;
 	}
-#endif /* !CONFIG_NO_THREADS */
 #endif /* !posix_enumenv_USE_GetEnvironmentStringsW */
 
 	/* Load environ strings */
@@ -2051,21 +1995,13 @@ environ_iterator_bool(EnvironIterator *__restrict self) {
 
 	/* Load next environ line and check if EOF has been reached */
 #ifdef posix_enumenv_USE_GetEnvironmentStringsW
-#ifdef CONFIG_NO_THREADS
-	envline = self->ei_environment_iter;
-#else /* CONFIG_NO_THREADS */
-	envline = ATOMIC_READ(self->ei_environment_iter);
-#endif /* !CONFIG_NO_THREADS */
+	envline = atomic_read(&self->ei_environment_iter);
 	if (!*envline)
 #else /* posix_enumenv_USE_GetEnvironmentStringsW */
 	{
 		size_t line_index;
-#ifdef CONFIG_NO_THREADS
-		line_index = self->ei_index;
-#else /* CONFIG_NO_THREADS */
-		line_index = ATOMIC_READ(self->ei_index);
-#endif /* !CONFIG_NO_THREADS */
-		envline = self->ei_environ[line_index];
+		line_index = atomic_read(&self->ei_index);
+		envline    = self->ei_environ[line_index];
 	}
 	if (!envline)
 #endif /* !posix_enumenv_USE_GetEnvironmentStringsW */

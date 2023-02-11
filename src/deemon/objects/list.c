@@ -36,8 +36,8 @@
 #include <deemon/system-features.h>
 #include <deemon/thread.h>
 #include <deemon/tuple.h>
+#include <deemon/util/atomic.h>
 
-#include <hybrid/atomic.h>
 #include <hybrid/minmax.h>
 #include <hybrid/overflow.h>
 
@@ -1353,21 +1353,13 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL list_bool(List *__restrict self) {
-#ifdef CONFIG_NO_THREADS
-	return self->l_size != 0;
-#else /* CONFIG_NO_THREADS */
-	return ATOMIC_READ(self->l_size) != 0;
-#endif /* !CONFIG_NO_THREADS */
+	return atomic_read(&self->l_size) != 0;
 }
 
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 list_size(List *__restrict self) {
-#ifdef CONFIG_NO_THREADS
-	return DeeInt_NewSize(self->l_size);
-#else /* CONFIG_NO_THREADS */
-	return DeeInt_NewSize(ATOMIC_READ(self->l_size));
-#endif /* !CONFIG_NO_THREADS */
+	return DeeInt_NewSize(atomic_read(&self->l_size));
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
@@ -2233,11 +2225,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) size_t DCALL
 list_nsi_getsize(List *__restrict self) {
 	ASSERT(self->l_size != (size_t)-1);
-#ifdef CONFIG_NO_THREADS
-	return self->l_size;
-#else /* CONFIG_NO_THREADS */
-	return ATOMIC_READ(self->l_size);
-#endif /* !CONFIG_NO_THREADS */
+	return atomic_read(&self->l_size);
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -2527,11 +2515,7 @@ err:
 	return NULL;
 }
 
-#ifdef CONFIG_NO_THREADS
-#define WEAK_READSIZE(x) ((x)->l_size)
-#else /* CONFIG_NO_THREADS */
-#define WEAK_READSIZE(x) ATOMIC_READ((x)->l_size)
-#endif /* !CONFIG_NO_THREADS */
+#define WEAK_READSIZE(x) atomic_read(&(x)->l_size)
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 list_sizeof(List *self) {
@@ -3845,14 +3829,7 @@ PUBLIC DeeTypeObject DeeList_Type = {
 	/* .tp_class_members = */ list_class_members
 };
 
-
-
-#ifdef CONFIG_NO_THREADS
-#define LI_GETINDEX(x)            ((x)->li_index)
-#else /* CONFIG_NO_THREADS */
-#define LI_GETINDEX(x) ATOMIC_READ((x)->li_index)
-#endif /* !CONFIG_NO_THREADS */
-
+#define LI_GETINDEX(x) atomic_read(&(x)->li_index)
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 li_ctor(ListIterator *__restrict self) {
@@ -3917,18 +3894,10 @@ li_bool(ListIterator *__restrict self) {
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 li_next(ListIterator *__restrict self) {
-#ifdef CONFIG_NO_THREADS
-	DREF DeeObject *result;
-	if (self->li_index >= self->li_list->l_size)
-		return ITER_DONE;
-	result = self->li_list->l_elem[self->li_index++];
-	Dee_Incref(result);
-	return result;
-#else /* CONFIG_NO_THREADS */
 	size_t list_index;
 	DREF DeeObject *result;
 again:
-	list_index = ATOMIC_READ(self->li_index);
+	list_index = atomic_read(&self->li_index);
 	DeeList_LockRead(self->li_list);
 	if (list_index >= self->li_list->l_size) {
 		DeeList_LockEndRead(self->li_list);
@@ -3937,12 +3906,11 @@ again:
 	result = self->li_list->l_elem[list_index];
 	Dee_Incref(result);
 	DeeList_LockEndRead(self->li_list);
-	if (!ATOMIC_CMPXCH(self->li_index, list_index, list_index + 1)) {
+	if (!atomic_cmpxch_weak_or_write(&self->li_index, list_index, list_index + 1)) {
 		Dee_Decref(result);
 		goto again;
 	}
 	return result;
-#endif /* !CONFIG_NO_THREADS */
 }
 
 
@@ -3991,87 +3959,57 @@ list_iterator_nii_getindex(ListIterator *__restrict self) {
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 list_iterator_nii_setindex(ListIterator *__restrict self, size_t new_index) {
-#ifdef CONFIG_NO_THREADS
-	self->li_index = new_index;
-#else /* CONFIG_NO_THREADS */
-	ATOMIC_WRITE(self->li_index, new_index);
-#endif /* !CONFIG_NO_THREADS */
+	atomic_write(&self->li_index, new_index);
 	return 0;
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 list_iterator_nii_rewind(ListIterator *__restrict self) {
-#ifdef CONFIG_NO_THREADS
-	self->li_index = 0;
-#else /* CONFIG_NO_THREADS */
-	ATOMIC_WRITE(self->li_index, 0);
-#endif /* !CONFIG_NO_THREADS */
+	atomic_write(&self->li_index, 0);
 	return 0;
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 list_iterator_nii_revert(ListIterator *__restrict self, size_t step) {
-#ifdef CONFIG_NO_THREADS
-	if (OVERFLOW_USUB(self->li_index, step, &self->li_index))
-		self->li_index = 0;
-#else /* CONFIG_NO_THREADS */
 	size_t old_index, new_index;
 	do {
-		old_index = ATOMIC_READ(self->li_index);
+		old_index = atomic_read(&self->li_index);
 		if (OVERFLOW_USUB(old_index, step, &new_index))
 			new_index = 0;
-	} while (!ATOMIC_CMPXCH_WEAK(self->li_index, old_index, new_index));
-#endif /* !CONFIG_NO_THREADS */
+	} while (!atomic_cmpxch_weak_or_write(&self->li_index, old_index, new_index));
 	return 0;
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 list_iterator_nii_advance(ListIterator *__restrict self, size_t step) {
-#ifdef CONFIG_NO_THREADS
-	if (OVERFLOW_UADD(self->li_index, step, &self->li_index))
-		self->li_index = (size_t)-1;
-#else /* CONFIG_NO_THREADS */
 	size_t old_index, new_index;
 	do {
-		old_index = ATOMIC_READ(self->li_index);
+		old_index = atomic_read(&self->li_index);
 		if (OVERFLOW_UADD(old_index, step, &new_index))
 			new_index = (size_t)-1;
-	} while (!ATOMIC_CMPXCH_WEAK(self->li_index, old_index, new_index));
-#endif /* !CONFIG_NO_THREADS */
+	} while (!atomic_cmpxch_weak_or_write(&self->li_index, old_index, new_index));
 	return 0;
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 list_iterator_nii_prev(ListIterator *__restrict self) {
-#ifdef CONFIG_NO_THREADS
-	if (!self->li_index)
-		return 1;
-	--self->li_index;
-#else /* CONFIG_NO_THREADS */
 	size_t old_index;
 	do {
-		old_index = ATOMIC_READ(self->li_index);
+		old_index = atomic_read(&self->li_index);
 		if (!old_index)
 			return 1;
-	} while (!ATOMIC_CMPXCH_WEAK(self->li_index, old_index, old_index - 1));
-#endif /* !CONFIG_NO_THREADS */
+	} while (!atomic_cmpxch_weak_or_write(&self->li_index, old_index, old_index - 1));
 	return 0;
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 list_iterator_nii_next(ListIterator *__restrict self) {
-#ifdef CONFIG_NO_THREADS
-	if (self->li_index >= DeeList_SIZE(self->li_list))
-		return 1;
-	++self->li_index;
-#else /* CONFIG_NO_THREADS */
 	size_t old_index;
 	do {
-		old_index = ATOMIC_READ(self->li_index);
+		old_index = atomic_read(&self->li_index);
 		if (old_index >= DeeList_SIZE(self->li_list))
 			return 1;
-	} while (!ATOMIC_CMPXCH_WEAK(self->li_index, old_index, old_index + 1));
-#endif /* !CONFIG_NO_THREADS */
+	} while (!atomic_cmpxch_weak_or_write(&self->li_index, old_index, old_index + 1));
 	return 0;
 }
 
@@ -4082,17 +4020,9 @@ list_iterator_nii_hasprev(ListIterator *__restrict self) {
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 list_iterator_nii_peek(ListIterator *__restrict self) {
-#ifdef CONFIG_NO_THREADS
-	DREF DeeObject *result;
-	if (self->li_index >= self->li_list->l_size)
-		return ITER_DONE;
-	result = self->li_list->l_elem[self->li_index];
-	Dee_Incref(result);
-	return result;
-#else /* CONFIG_NO_THREADS */
 	size_t list_index;
 	DREF DeeObject *result;
-	list_index = ATOMIC_READ(self->li_index);
+	list_index = atomic_read(&self->li_index);
 	DeeList_LockRead(self->li_list);
 	if (list_index >= self->li_list->l_size) {
 		DeeList_LockEndRead(self->li_list);
@@ -4102,7 +4032,6 @@ list_iterator_nii_peek(ListIterator *__restrict self) {
 	Dee_Incref(result);
 	DeeList_LockEndRead(self->li_list);
 	return result;
-#endif /* !CONFIG_NO_THREADS */
 }
 
 PRIVATE struct type_nii tpconst list_iterator_nii = {

@@ -28,8 +28,7 @@
 #include <deemon/format.h>
 #include <deemon/objmethod.h>
 #include <deemon/seq.h>
-
-#include <hybrid/atomic.h>
+#include <deemon/util/atomic.h>
 
 /* Figure out how we want to implement the DIR-system */
 #undef posix_opendir_USE_FindFirstFileExW
@@ -756,7 +755,7 @@ again:
 	if (result == NULL) {
 		result = diriter_makepathstr(self);
 		/* Remember the full path string. */
-		if (!ATOMIC_CMPXCH(self->di_pathstr, NULL, result)) {
+		if (!atomic_cmpxch(&self->di_pathstr, NULL, result)) {
 			Dee_Decref_likely(result);
 			goto again;
 		}

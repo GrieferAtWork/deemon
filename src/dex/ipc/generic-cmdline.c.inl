@@ -29,8 +29,7 @@
 #include <deemon/string.h>
 #include <deemon/system-features.h> /* memcpyc(), ... */
 #include <deemon/tuple.h>
-
-#include <hybrid/atomic.h>
+#include <deemon/util/atomic.h>
 
 #include "libipc.h"
 
@@ -141,7 +140,7 @@ libcmdline_fini(DeeDexObject *__restrict UNUSED(self)) {
 }
 
 PRIVATE bool DCALL libcmdline_init(void) {
-	void *lib = ATOMIC_READ(libcmdline);
+	void *lib = atomic_read(&libcmdline);
 	if (lib) {
 		if (lib == (void *)(uintptr_t)-1)
 			goto err;
@@ -156,11 +155,11 @@ PRIVATE bool DCALL libcmdline_init(void) {
 	*(void **)&pdyn_cmdline_decode = dlsym(lib, CMDLINE_DECODE_NAME);
 	if unlikely(!pdyn_cmdline_decode)
 		goto err_disable;
-	if (!ATOMIC_CMPXCH(libcmdline, NULL, lib))
+	if (!atomic_cmpxch(&libcmdline, NULL, lib))
 		dlclose(lib);
 	return true;
 err_disable:
-	ATOMIC_WRITE(libcmdline, (void *)(uintptr_t)-1);
+	atomic_write(&libcmdline, (void *)(uintptr_t)-1);
 err:
 	DeeError_Throwf(&DeeError_NotImplemented,
 	                "Failed to load system library %q",

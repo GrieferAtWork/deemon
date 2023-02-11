@@ -33,8 +33,8 @@
 #include <deemon/seq.h>
 #include <deemon/string.h>
 #include <deemon/util/rwlock.h>
+#include <deemon/util/atomic.h>
 
-#include <hybrid/atomic.h>
 #include <hybrid/overflow.h>
 
 #include "../../runtime/runtime_error.h"
@@ -1076,15 +1076,7 @@ INTERN DeeTypeObject SeqRange_Type = {
 
 
 
-
-
-
-#ifdef CONFIG_NO_THREADS
-#define READ_INDEX(x) (x)->iri_index
-#else /* CONFIG_NO_THREADS */
-#define READ_INDEX(x) ATOMIC_READ((x)->iri_index)
-#endif /* !CONFIG_NO_THREADS */
-
+#define READ_INDEX(x) atomic_read(&(x)->iri_index)
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 iri_ctor(IntRangeIterator *__restrict self) {
@@ -1153,23 +1145,15 @@ iri_visit(IntRangeIterator *__restrict self,
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 iri_next(IntRangeIterator *__restrict self) {
 	dssize_t result_index, new_index;
-#ifndef CONFIG_NO_THREADS
-	do
-#endif /* !CONFIG_NO_THREADS */
-	{
+	do {
 		result_index = READ_INDEX(self);
 		/* Test for overflow/iteration done. */
 		if (OVERFLOW_SADD(result_index, self->iri_step, &new_index) ||
 		    (likely(self->iri_step >= 0) ? result_index >= self->iri_end
 		                                 : result_index <= self->iri_end))
 			return ITER_DONE;
-#ifdef CONFIG_NO_THREADS
-		self->iri_index = new_index;
-#endif /* CONFIG_NO_THREADS */
-	}
-#ifndef CONFIG_NO_THREADS
-	while (!ATOMIC_CMPXCH(self->iri_index, result_index, new_index));
-#endif /* !CONFIG_NO_THREADS */
+	} while (!atomic_cmpxch_or_write(&self->iri_index, result_index, new_index));
+
 	/* Return a new integer for the resulting index. */
 	return DeeInt_NewSSize(result_index);
 }

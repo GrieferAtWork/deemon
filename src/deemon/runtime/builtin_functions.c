@@ -37,9 +37,8 @@
 #include <deemon/string.h>
 #include <deemon/super.h>
 #include <deemon/thread.h>
+#include <deemon/util/atomic.h>
 #include <deemon/util/rwlock.h>
-
-#include <hybrid/atomic.h>
 
 #include "runtime_error.h"
 #include "strings.h"
@@ -281,7 +280,7 @@ again:
 			Dee_Incref(result); /* The reference stored in `jit_module' */
 		}
 		rwlock_write(&jit_access_lock);
-		if unlikely(ATOMIC_READ(jit_module)) {
+		if unlikely(atomic_read(&jit_module)) {
 			rwlock_endwrite(&jit_access_lock);
 			if (ITER_ISOK(result))
 				Dee_Decref(result);
@@ -322,7 +321,7 @@ do_exec:
 			if unlikely(!module)
 				goto err;
 			rwlock_write(&jit_access_lock);
-			exec = ATOMIC_READ(jit_exec);
+			exec = atomic_read(&jit_exec);
 			if (exec == NULL) {
 				jit_exec = ITER_DONE;
 				rwlock_endwrite(&jit_access_lock);
@@ -343,7 +342,7 @@ do_exec:
 		if unlikely(!exec)
 			goto err;
 		rwlock_write(&jit_access_lock);
-		module = ATOMIC_READ(jit_exec);
+		module = atomic_read(&jit_exec);
 		if likely(!module) {
 set_exec_and_run:
 			jit_exec = exec;

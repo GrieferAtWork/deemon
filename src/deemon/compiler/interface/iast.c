@@ -37,7 +37,7 @@
 #include <deemon/system-features.h>
 #include <deemon/tuple.h>
 
-#include <hybrid/atomic.h>
+#include <deemon/util/atomic.h>
 
 #include "../../runtime/builtin.h"
 #include "../../runtime/runtime_error.h"
@@ -202,18 +202,26 @@ PRIVATE DeeStringObject *tpconst ast_names[] = {
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 ast_gettypeid(Ast *__restrict self) {
 	uint16_t result;
+#ifdef CONFIG_NO_THREADS
+	result = self->ci_value->a_type;
+#else /* CONFIG_NO_THREADS */
 	do {
-		result = ATOMIC_READ(self->ci_value->a_type);
+		result = atomic_read(&self->ci_value->a_type);
 	} while unlikely(result >= COMPILER_LENOF(ast_names));
+#endif /* !CONFIG_NO_THREADS */
 	return DeeInt_NewU16(result);
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 ast_getkind(Ast *__restrict self) {
 	uint16_t result;
+#ifdef CONFIG_NO_THREADS
+	result = self->ci_value->a_type;
+#else /* CONFIG_NO_THREADS */
 	do {
-		result = ATOMIC_READ(self->ci_value->a_type);
+		result = atomic_read(&self->ci_value->a_type);
 	} while unlikely(result >= COMPILER_LENOF(ast_names));
+#endif /* !CONFIG_NO_THREADS */
 	return_reference(ast_names[result]);
 }
 
@@ -335,8 +343,7 @@ ast_getmultiple(Ast *__restrict self) {
 		for (i = 0; i < me->a_multiple.m_astc; ++i) {
 			temp = DeeCompiler_GetAst(me->a_multiple.m_astv[i]);
 			if unlikely(!temp) {
-				while (i--)
-					Dee_Decref(DeeTuple_GET(result, i));
+				Dee_Decrefv(DeeTuple_ELEM(result), i);
 				DeeTuple_FreeUninitialized(result);
 				result = NULL;
 				goto done;
@@ -772,8 +779,7 @@ err_r_i_triple_1:
 		}
 		goto done;
 err_r_i:
-		while (i--)
-			Dee_Decref(DeeTuple_GET(result, i));
+		Dee_Decrefv(DeeTuple_ELEM(result), i);
 		DeeTuple_FreeUninitialized(result);
 		result = NULL;
 	}

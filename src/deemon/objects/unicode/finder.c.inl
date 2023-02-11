@@ -24,9 +24,8 @@
 #include "string_functions.c"
 #endif /* __INTELLISENSE__ */
 
-#include <hybrid/atomic.h>
-
 #include <deemon/seq.h>
+#include <deemon/util/atomic.h>
 
 DECL_BEGIN
 
@@ -55,12 +54,7 @@ DeeString_FindAll(String *self, String *other,
 INTDEF WUNUSED DREF DeeObject *DCALL
 DeeString_CaseFindAll(String *self, String *other,
                       size_t start, size_t end);
-
-#ifdef CONFIG_NO_THREADS
-#define READ_PTR(x) ((x)->sfi_ptr.ptr)
-#else /* CONFIG_NO_THREADS */
-#define READ_PTR(x) ATOMIC_READ((x)->sfi_ptr.ptr)
-#endif /* !CONFIG_NO_THREADS */
+#define READ_PTR(x) atomic_read(&(x)->sfi_ptr.ptr)
 
 
 INTDEF DeeTypeObject StringFindIterator_Type;
@@ -213,7 +207,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 sfi_next(StringFindIterator *__restrict self) {
 	union dcharptr ptr, new_ptr;
 again:
-	ptr.ptr = ATOMIC_READ(self->sfi_ptr.ptr);
+	ptr.ptr = atomic_read(&self->sfi_ptr.ptr);
 	SWITCH_SIZEOF_WIDTH(self->sfi_width) {
 
 	CASE_WIDTH_1BYTE:
@@ -221,7 +215,7 @@ again:
 		                      self->sfi_needle_ptr.cp8,
 		                      self->sfi_needle_len);
 		if (new_ptr.cp8) {
-			if (!ATOMIC_CMPXCH_WEAK(self->sfi_ptr.cp8, ptr.cp8, new_ptr.cp8 + self->sfi_needle_len))
+			if (!atomic_cmpxch_weak(&self->sfi_ptr.cp8, ptr.cp8, new_ptr.cp8 + self->sfi_needle_len))
 				goto again;
 			return DeeInt_NewSize((size_t)(new_ptr.cp8 - self->sfi_start.cp8));
 		}
@@ -232,7 +226,7 @@ again:
 		                       self->sfi_needle_ptr.cp16,
 		                       self->sfi_needle_len);
 		if (new_ptr.cp16) {
-			if (!ATOMIC_CMPXCH_WEAK(self->sfi_ptr.cp16, ptr.cp16, new_ptr.cp16 + self->sfi_needle_len))
+			if (!atomic_cmpxch_weak(&self->sfi_ptr.cp16, ptr.cp16, new_ptr.cp16 + self->sfi_needle_len))
 				goto again;
 			return DeeInt_NewSize((size_t)(new_ptr.cp16 - self->sfi_start.cp16));
 		}
@@ -243,7 +237,7 @@ again:
 		                       self->sfi_needle_ptr.cp32,
 		                       self->sfi_needle_len);
 		if (new_ptr.cp32) {
-			if (!ATOMIC_CMPXCH_WEAK(self->sfi_ptr.cp32, ptr.cp32, new_ptr.cp32 + self->sfi_needle_len))
+			if (!atomic_cmpxch_weak(&self->sfi_ptr.cp32, ptr.cp32, new_ptr.cp32 + self->sfi_needle_len))
 				goto again;
 			return DeeInt_NewSize((size_t)(new_ptr.cp32 - self->sfi_start.cp32));
 		}
@@ -257,7 +251,7 @@ scfi_next(StringFindIterator *__restrict self) {
 	union dcharptr ptr, new_ptr;
 	size_t match_length, result;
 again:
-	ptr.ptr = ATOMIC_READ(self->sfi_ptr.ptr);
+	ptr.ptr = atomic_read(&self->sfi_ptr.ptr);
 	SWITCH_SIZEOF_WIDTH(self->sfi_width) {
 
 	CASE_WIDTH_1BYTE:
@@ -267,7 +261,7 @@ again:
 		                          &match_length);
 		if (!new_ptr.cp8)
 			goto iter_done;
-		if (!ATOMIC_CMPXCH_WEAK(self->sfi_ptr.cp8, ptr.cp8, new_ptr.cp8 + match_length))
+		if (!atomic_cmpxch_weak(&self->sfi_ptr.cp8, ptr.cp8, new_ptr.cp8 + match_length))
 			goto again;
 		result = (size_t)(new_ptr.cp8 - self->sfi_start.cp8);
 		break;
@@ -279,7 +273,7 @@ again:
 		                           &match_length);
 		if (!new_ptr.cp16)
 			goto iter_done;
-		if (!ATOMIC_CMPXCH_WEAK(self->sfi_ptr.cp16, ptr.cp16, new_ptr.cp16 + match_length))
+		if (!atomic_cmpxch_weak(&self->sfi_ptr.cp16, ptr.cp16, new_ptr.cp16 + match_length))
 			goto again;
 		result = (size_t)(new_ptr.cp16 - self->sfi_start.cp16);
 		break;
@@ -291,7 +285,7 @@ again:
 		                           &match_length);
 		if (!new_ptr.cp32)
 			goto iter_done;
-		if (!ATOMIC_CMPXCH_WEAK(self->sfi_ptr.cp32, ptr.cp32, new_ptr.cp32 + match_length))
+		if (!atomic_cmpxch_weak(&self->sfi_ptr.cp32, ptr.cp32, new_ptr.cp32 + match_length))
 			goto again;
 		result = (size_t)(new_ptr.cp32 - self->sfi_start.cp32);
 		break;
@@ -317,7 +311,7 @@ sfi_visit(StringFindIterator *__restrict self, dvisit_t proc, void *arg) {
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 sfi_bool(StringFindIterator *__restrict self) {
 	union dcharptr ptr;
-	ptr.ptr = ATOMIC_READ(self->sfi_ptr.ptr);
+	ptr.ptr = atomic_read(&self->sfi_ptr.ptr);
 	SWITCH_SIZEOF_WIDTH(self->sfi_width) {
 
 	CASE_WIDTH_1BYTE:
@@ -344,7 +338,7 @@ sfi_bool(StringFindIterator *__restrict self) {
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 scfi_bool(StringFindIterator *__restrict self) {
 	union dcharptr ptr;
-	ptr.ptr = ATOMIC_READ(self->sfi_ptr.ptr);
+	ptr.ptr = atomic_read(&self->sfi_ptr.ptr);
 	SWITCH_SIZEOF_WIDTH(self->sfi_width) {
 
 	CASE_WIDTH_1BYTE:

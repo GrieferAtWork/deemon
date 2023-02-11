@@ -34,10 +34,6 @@
 
 #include <hybrid/minmax.h>
 
-#ifndef CONFIG_NO_THREADS
-#include <hybrid/atomic.h>
-#endif /* !CONFIG_NO_THREADS */
-
 #include "../../runtime/runtime_error.h"
 #include "../../runtime/strings.h"
 

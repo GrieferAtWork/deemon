@@ -29,8 +29,7 @@
 #include <deemon/compiler/symbol.h>
 #include <deemon/error.h>
 #include <deemon/object.h>
-
-#include <hybrid/atomic.h>
+#include <deemon/util/atomic.h>
 
 DECL_BEGIN
 
@@ -463,7 +462,7 @@ DeeCompiler_DelItemType(DeeTypeObject *__restrict type) {
 			list = &com->cp_items.ci_list[i];
 			LIST_FOREACH_SAFE (iter, list, ci_link, next) {
 				if (DeeObject_InstanceOfExact(iter, type) &&
-				    ATOMIC_READ(iter->ob_refcnt) != 0) {
+				    atomic_read(&iter->ob_refcnt) != 0) {
 					ASSERT(LIST_ISBOUND(iter, ci_link));
 					LIST_UNBIND(iter, ci_link);
 					ASSERT(com->cp_items.ci_size);

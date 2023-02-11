@@ -31,8 +31,7 @@
 #include <deemon/object.h>
 #include <deemon/seq.h>
 #include <deemon/string.h>
-
-#include <hybrid/atomic.h>
+#include <deemon/util/atomic.h>
 
 #include "../runtime/strings.h"
 
@@ -263,11 +262,7 @@ cell_repr(Cell *__restrict self) {
 	return (DREF DeeStringObject *)DeeString_Newf("Cell(%R)", item);
 }
 
-#ifdef CONFIG_NO_THREADS
-#define CELL_READITEM(x) DeeCell_Item(x)
-#else /* CONFIG_NO_THREADS */
-#define CELL_READITEM(x) ATOMIC_READ((x)->c_item)
-#endif /* !CONFIG_NO_THREADS */
+#define CELL_READITEM(x) atomic_read(&(x)->c_item)
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 cell_bool(Cell *__restrict self) {

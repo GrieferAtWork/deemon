@@ -35,8 +35,7 @@
 #include <deemon/string.h>
 #include <deemon/system-features.h> /* _Exit(), abort() */
 #include <deemon/thread.h>
-
-#include <hybrid/atomic.h>
+#include <deemon/util/atomic.h>
 
 #include "../runtime/runtime_error.h"
 #include "../runtime/strings.h"
@@ -450,12 +449,7 @@ typedef struct {
 	DREF DocKwds     *dki_kwds; /* [1..1][const] The associated sequence. */
 	DWEAK char const *dki_iter; /* [1..1] Iterator position (start of next keyword name). */
 } DocKwdsIterator;
-
-#ifdef CONFIG_NO_THREADS
-#define DOCKWDSITER_RDITER(self)            ((self)->dki_iter)
-#else /* CONFIG_NO_THREADS */
-#define DOCKWDSITER_RDITER(self) ATOMIC_READ((self)->dki_iter)
-#endif /* !CONFIG_NO_THREADS */
+#define DOCKWDSITER_RDITER(self) atomic_read(&(self)->dki_iter)
 
 INTDEF DeeTypeObject DocKwds_Type;
 INTDEF DeeTypeObject DocKwdsIterator_Type;
@@ -465,15 +459,9 @@ dockwdsiter_next(DocKwdsIterator *__restrict self) {
 	char const *pos, *newpos;
 	char const *name_end;
 	bool is_escaped;
-#ifndef CONFIG_NO_THREADS
-	for (;;)
-#endif /* !CONFIG_NO_THREADS */
-	{
-#ifndef CONFIG_NO_THREADS
-		pos = newpos = ATOMIC_READ(self->dki_iter);
-#else /* !CONFIG_NO_THREADS */
-		pos = newpos  = self->dki_iter;
-#endif /* CONFIG_NO_THREADS */
+	for (;;) {
+		pos        = atomic_read(&self->dki_iter);
+		newpos     = pos;
 		is_escaped = false;
 		for (;; ++newpos) {
 			char ch = *newpos;
@@ -517,12 +505,8 @@ dockwdsiter_next(DocKwdsIterator *__restrict self) {
 					break;
 			}
 		}
-#ifndef CONFIG_NO_THREADS
-		if (ATOMIC_CMPXCH_WEAK(self->dki_iter, pos, newpos))
+		if (atomic_cmpxch_weak_or_write(&self->dki_iter, pos, newpos))
 			break;
-#else /* !CONFIG_NO_THREADS */
-		self->dki_iter = newpos;
-#endif /* CONFIG_NO_THREADS */
 	}
 	if (pos >= name_end)
 		return ITER_DONE;

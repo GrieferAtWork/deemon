@@ -35,8 +35,7 @@
 #include <deemon/string.h>
 #include <deemon/system-features.h>
 #include <deemon/tuple.h>
-
-#include <hybrid/atomic.h>
+#include <deemon/util/atomic.h>
 
 #include "../../runtime/runtime_error.h"
 #include "../../runtime/strings.h"
@@ -68,31 +67,25 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 smap_nsi_nextkey(SharedMapIterator *__restrict self) {
 	DREF DeeObject *result_key;
 	SharedMap *map = self->sm_seq;
-#ifndef CONFIG_NO_THREADS
 	for (;;) {
 		size_t index;
 		rwlock_read(&map->sm_lock);
-		index = ATOMIC_READ(self->sm_index);
+		index = atomic_read(&self->sm_index);
 		if (self->sm_index >= map->sm_length) {
 			rwlock_endread(&map->sm_lock);
 			return ITER_DONE;
 		}
 		result_key = map->sm_vector[index].si_key;
+
 		/* Acquire a reference to keep the item alive. */
 		Dee_Incref(result_key);
 		rwlock_endread(&map->sm_lock);
-		if (ATOMIC_CMPXCH(self->sm_index, index, index + 1))
+		if (atomic_cmpxch_or_write(&self->sm_index, index, index + 1))
 			break;
+
 		/* If some other thread stole the index, drop their value. */
 		Dee_Decref(result_key);
 	}
-#else /* !CONFIG_NO_THREADS */
-	if (self->sm_index < map->sm_length) {
-		result_key = map->sm_vector[self->sm_index].si_key;
-		Dee_Incref(result_key);
-		++self->sm_index;
-	}
-#endif /* CONFIG_NO_THREADS */
 	return result_key;
 }
 
@@ -100,31 +93,25 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 smap_nsi_nextvalue(SharedMapIterator *__restrict self) {
 	DREF DeeObject *result_value;
 	SharedMap *map = self->sm_seq;
-#ifndef CONFIG_NO_THREADS
 	for (;;) {
 		size_t index;
 		rwlock_read(&map->sm_lock);
-		index = ATOMIC_READ(self->sm_index);
+		index = atomic_read(&self->sm_index);
 		if (self->sm_index >= map->sm_length) {
 			rwlock_endread(&map->sm_lock);
 			return ITER_DONE;
 		}
 		result_value = map->sm_vector[index].si_value;
+
 		/* Acquire a reference to keep the item alive. */
 		Dee_Incref(result_value);
 		rwlock_endread(&map->sm_lock);
-		if (ATOMIC_CMPXCH(self->sm_index, index, index + 1))
+		if (atomic_cmpxch_or_write(&self->sm_index, index, index + 1))
 			break;
+
 		/* If some other thread stole the index, drop their value. */
 		Dee_Decref(result_value);
 	}
-#else /* !CONFIG_NO_THREADS */
-	if (self->sm_index < map->sm_length) {
-		result_value = map->sm_vector[self->sm_index].si_value;
-		Dee_Incref(result_value);
-		++self->sm_index;
-	}
-#endif /* CONFIG_NO_THREADS */
 	return result_value;
 }
 
@@ -133,36 +120,29 @@ smapiter_next(SharedMapIterator *__restrict self) {
 	DREF DeeObject *result;
 	DREF DeeObject *result_key, *result_value;
 	SharedMap *map = self->sm_seq;
-#ifndef CONFIG_NO_THREADS
 	for (;;) {
 		size_t index;
 		rwlock_read(&map->sm_lock);
-		index = ATOMIC_READ(self->sm_index);
+		index = atomic_read(&self->sm_index);
 		if (self->sm_index >= map->sm_length) {
 			rwlock_endread(&map->sm_lock);
 			return ITER_DONE;
 		}
 		result_key   = map->sm_vector[index].si_key;
 		result_value = map->sm_vector[index].si_value;
+
 		/* Acquire a reference to keep the item alive. */
 		Dee_Incref(result_key);
 		Dee_Incref(result_value);
 		rwlock_endread(&map->sm_lock);
-		if (ATOMIC_CMPXCH(self->sm_index, index, index + 1))
+		if (atomic_cmpxch_or_write(&self->sm_index, index, index + 1))
 			break;
+
 		/* If some other thread stole the index, drop their value. */
 		Dee_Decref(result_value);
 		Dee_Decref(result_key);
 	}
-#else /* !CONFIG_NO_THREADS */
-	if (self->sm_index < map->sm_length) {
-		result_key   = map->sm_vector[self->sm_index].si_key;
-		result_value = map->sm_vector[self->sm_index].si_value;
-		Dee_Incref(result_key);
-		Dee_Incref(result_value);
-		++self->sm_index;
-	}
-#endif /* CONFIG_NO_THREADS */
+
 	/* Got the key+value. Now pack them together into a tuple. */
 	result = DeeTuple_NewUninitialized(2);
 	if unlikely(!result) {
@@ -621,30 +601,18 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 smap_size(SharedMap *__restrict self) {
-#ifdef CONFIG_NO_THREADS
-	size_t result = self->sm_length;
-#else /* CONFIG_NO_THREADS */
-	size_t result = ATOMIC_READ(self->sm_length);
-#endif /* !CONFIG_NO_THREADS */
+	size_t result = atomic_read(&self->sm_length);
 	return DeeInt_NewSize(result);
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 smap_bool(SharedMap *__restrict self) {
-#ifdef CONFIG_NO_THREADS
-	return self->sm_length != 0;
-#else /* CONFIG_NO_THREADS */
-	return ATOMIC_READ(self->sm_length) != 0;
-#endif /* !CONFIG_NO_THREADS */
+	return atomic_read(&self->sm_length) != 0;
 }
 
 PRIVATE WUNUSED NONNULL((1)) size_t DCALL
 smap_nsi_getsize(SharedMap *__restrict self) {
-#ifdef CONFIG_NO_THREADS
-	return self->sm_length;
-#else /* CONFIG_NO_THREADS */
-	return ATOMIC_READ(self->sm_length);
-#endif /* !CONFIG_NO_THREADS */
+	return atomic_read(&self->sm_length);
 }
 
 

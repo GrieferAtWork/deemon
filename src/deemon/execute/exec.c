@@ -33,17 +33,14 @@
 #include <deemon/object.h>
 #include <deemon/system-features.h>
 #include <deemon/thread.h>
-
-#include <hybrid/atomic.h>
+#include <deemon/util/atomic.h>
+#include <deemon/util/rwlock.h>
 
 #ifndef CONFIG_NO_THREADS
 #include <hybrid/sched/yield.h>
 #endif /* !CONFIG_NO_THREADS */
 
 #ifndef CONFIG_NO_STDLIB
-#ifndef CONFIG_NO_THREADS
-#include <deemon/util/rwlock.h>
-#endif /* !CONFIG_NO_THREADS */
 #include <deemon/tuple.h>
 #endif /* !CONFIG_NO_STDLIB */
 
@@ -613,11 +610,7 @@ PRIVATE uint64_t exec_timestamp = (uint64_t)-1;
 #else /* CONFIG_NO_DEC */
 #define exec_timestamp         deemon_module.mo_ctime
 #define HAS_EXEC_TIMESTAMP    (deemon_module.mo_flags & MODULE_FHASCTIME)
-#ifdef CONFIG_NO_THREADS
-#define SET_EXEC_TIMESTAMP(x) (exec_timestamp = (x), deemon_module.mo_flags |= MODULE_FHASCTIME)
-#else /* CONFIG_NO_THREADS */
-#define SET_EXEC_TIMESTAMP(x) (exec_timestamp = (x), ATOMIC_OR(deemon_module.mo_flags, MODULE_FHASCTIME))
-#endif /* !CONFIG_NO_THREADS */
+#define SET_EXEC_TIMESTAMP(x) (exec_timestamp = (x), atomic_or(&deemon_module.mo_flags, MODULE_FHASCTIME))
 #endif /* !CONFIG_NO_DEC */
 
 
@@ -792,13 +785,13 @@ Dee_SetArgv(/*Tuple*/ DeeObject *__restrict argv) {
 PUBLIC WUNUSED ATTR_RETNONNULL /*Tuple*/ DREF DeeObject *DCALL Dee_GetArgv(void) {
 	DREF DeeTupleObject *result;
 	for (;;) {
-		result = ATOMIC_XCH(usercode_argv, NULL);
+		result = atomic_xch(&usercode_argv, NULL);
 		if (result)
 			break;
 		SCHED_YIELD();
 	}
 	Dee_Incref(result);
-	ATOMIC_WRITE(usercode_argv, result);
+	atomic_write(&usercode_argv, result);
 	ASSERT_OBJECT_TYPE_EXACT(result, &DeeTuple_Type);
 	return (DREF DeeObject *)result;
 }
@@ -810,12 +803,12 @@ Dee_SetArgv(/*Tuple*/ DeeObject *__restrict argv) {
 	Dee_Incref(argv);
 	do {
 		for (;;) {
-			old_argv = ATOMIC_READ(usercode_argv);
+			old_argv = atomic_read(&usercode_argv);
 			if (old_argv)
 				break;
 			SCHED_YIELD();
 		}
-	} while (!ATOMIC_CMPXCH(usercode_argv, old_argv, argv));
+	} while (!atomic_cmpxch(&usercode_argv, old_argv, argv));
 	Dee_Decref(old_argv);
 }
 #endif /* !CONFIG_NO_THREADS */

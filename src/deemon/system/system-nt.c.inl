@@ -37,8 +37,8 @@
 #include <deemon/system-features.h>
 #include <deemon/system.h>
 #include <deemon/thread.h>
+#include <deemon/util/atomic.h>
 
-#include <hybrid/atomic.h>
 #include <hybrid/unaligned.h>
 #include <hybrid/wordbits.h>
 
@@ -2143,13 +2143,13 @@ DeeNTSystem_PrintFinalPathNameByHandle(struct unicode_printer *__restrict printe
 		/* Try to load `GetFinalPathNameByHandleW()' */
 		HMODULE hKernel32 = GetKernel32Handle();
 		if (!hKernel32) {
-			ATOMIC_WRITE(*(void **)&pdyn_GetFinalPathNameByHandleW, (void *)(uintptr_t)-1);
+			atomic_write((void **)&pdyn_GetFinalPathNameByHandleW, (void *)(uintptr_t)-1);
 		} else {
 			LPGETFINALPATHNAMEBYHANDLEW func;
 			func = (LPGETFINALPATHNAMEBYHANDLEW)GetProcAddress(hKernel32, "GetFinalPathNameByHandleW");
 			if (!func)
 				*(void **)&func = (void *)(uintptr_t)-1;
-			ATOMIC_WRITE(pdyn_GetFinalPathNameByHandleW, func);
+			atomic_write(&pdyn_GetFinalPathNameByHandleW, func);
 		}
 	}
 	if (*(void **)&pdyn_GetFinalPathNameByHandleW == (void *)(uintptr_t)-1)
@@ -2393,7 +2393,7 @@ DeeNTSystem_PrintMappedFileName(struct Dee_unicode_printer *__restrict printer,
 		}
 		if (!lpGetMappedFileNameW)
 			*(void **)&lpGetMappedFileNameW = (void *)(uintptr_t)-1;
-		ATOMIC_WRITE(pdyn_GetMappedFileNameW, lpGetMappedFileNameW);
+		atomic_write(&pdyn_GetMappedFileNameW, lpGetMappedFileNameW);
 	}
 	if (*(void **)&pdyn_GetMappedFileNameW == (void *)(uintptr_t)-1)
 		return 2; /* Unsupported. */

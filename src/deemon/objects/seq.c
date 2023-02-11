@@ -35,9 +35,7 @@
 #include <deemon/string.h>
 #include <deemon/thread.h>
 #include <deemon/tuple.h>
-#ifndef CONFIG_NO_THREADS
 #include <deemon/util/rwlock.h>
-#endif /* !CONFIG_NO_THREADS */
 
 #include "../runtime/runtime_error.h"
 #include "../runtime/strings.h"
@@ -343,9 +341,7 @@ seqiterator_init(SeqIterator *__restrict self, size_t argc, DeeObject *const *ar
 	self->si_size    = DeeObject_SizeObject(self->si_seq);
 	if unlikely(!self->si_size)
 		goto err;
-#ifndef CONFIG_NO_THREADS
 	rwlock_init(&self->si_lock);
-#endif /* !CONFIG_NO_THREADS */
 	Dee_Incref(self->si_seq);
 	Dee_Incref(self->si_index);
 	return 0;
@@ -359,7 +355,6 @@ err:
 INTDEF DeeTypeObject DeeGenericIterator_Type;
 
 
-#ifndef CONFIG_NO_THREADS
 #define DEFINE_SEQITERATOR_COMPARE(name, cmp_name)                 \
 	PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL          \
 	name(SeqIterator *self, SeqIterator *other) {                  \
@@ -379,23 +374,6 @@ INTDEF DeeTypeObject DeeGenericIterator_Type;
 		Dee_Decref(lindex);                                        \
 		return result;                                             \
 	}
-#else /* CONFIG_NO_THREADS */
-#define DEFINE_SEQITERATOR_COMPARE(name, cmp_name)                 \
-	PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL          \
-	name(SeqIterator *self, SeqIterator *other) {                  \
-		DREF DeeObject *lindex, *rindex, *result;                  \
-		if (DeeObject_AssertType(other, &DeeGenericIterator_Type)) \
-			return NULL;                                           \
-		lindex = self->si_index;                                   \
-		Dee_Incref(lindex);                                        \
-		rindex = other->si_index;                                  \
-		Dee_Incref(rindex);                                        \
-		result = cmp_name(lindex, rindex);                         \
-		Dee_Decref(rindex);                                        \
-		Dee_Decref(lindex);                                        \
-		return result;                                             \
-	}
-#endif /* !CONFIG_NO_THREADS */
 DEFINE_SEQITERATOR_COMPARE(seqiterator_eq, DeeObject_CompareEqObject)
 DEFINE_SEQITERATOR_COMPARE(seqiterator_ne, DeeObject_CompareNeObject)
 DEFINE_SEQITERATOR_COMPARE(seqiterator_lo, DeeObject_CompareLoObject)

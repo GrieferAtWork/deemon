@@ -33,14 +33,10 @@
 #include <deemon/string.h>
 #include <deemon/system-features.h> /* strend(), memcpyc(), ... */
 #include <deemon/tuple.h>
+#include <deemon/util/atomic.h>
+#include <deemon/util/rwlock.h>
 
 #include "_res.h"
-
-#ifndef CONFIG_NO_THREADS
-#include <deemon/util/rwlock.h>
-#endif /* !CONFIG_NO_THREADS */
-
-#include <hybrid/atomic.h>
 
 DECL_BEGIN
 
@@ -125,10 +121,10 @@ iter_done:
 		return ITER_DONE;
 	}
 	do {
-		presult = self->e_iter;
+		presult = atomic_read(&self->e_iter);
 		if (!*presult)
 			goto iter_done;
-	} while (ATOMIC_CMPXCH(self->e_iter, presult, presult + 1));
+	} while (atomic_cmpxch_or_write(&self->e_iter, presult, presult + 1));
 	result   = *presult;
 	valstart = strrchr(result, '=');
 	if (!valstart)
@@ -192,10 +188,10 @@ iter_done:
 		return ITER_DONE;
 	}
 	do {
-		presult = me->e_iter;
+		presult = atomic_read(&me->e_iter);
 		if (!*presult)
 			goto iter_done;
-	} while (ATOMIC_CMPXCH(me->e_iter, presult, presult + 1));
+	} while (atomic_cmpxch_or_write(&me->e_iter, presult, presult + 1));
 	result   = *presult;
 	valstart = strrchr(result, '=');
 	if (!valstart) {
@@ -236,10 +232,10 @@ iter_done:
 		return ITER_DONE;
 	}
 	do {
-		presult = me->e_iter;
+		presult = atomic_read(&me->e_iter);
 		if (!*presult)
 			goto iter_done;
-	} while (ATOMIC_CMPXCH(me->e_iter, presult, presult + 1));
+	} while (atomic_cmpxch_or_write(&me->e_iter, presult, presult + 1));
 	result   = *presult;
 	valstart = strrchr(result, '=');
 	if (!valstart) {

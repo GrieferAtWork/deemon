@@ -32,8 +32,8 @@
 #include <deemon/system-features.h>
 #include <deemon/system.h>
 #include <deemon/thread.h>
+#include <deemon/util/atomic.h>
 
-#include <hybrid/atomic.h>
 #include <hybrid/host.h>
 #include <hybrid/overflow.h>
 
@@ -995,13 +995,13 @@ PUBLIC WUNUSED uint64_t DCALL DeeSystem_GetWalltime(void) {
 	if (pdyn_GetSystemTimePreciseAsFileTime == NULL) {
 		HMODULE hKernel32 = GetKernel32Handle();
 		if (!hKernel32) {
-			ATOMIC_WRITE(*(void **)&pdyn_GetSystemTimePreciseAsFileTime, (void *)(uintptr_t)-1);
+			atomic_write((void **)&pdyn_GetSystemTimePreciseAsFileTime, (void *)(uintptr_t)-1);
 		} else {
 			LPGETSYSTEMTIMEPRECISEASFILETIME func;
 			func = (LPGETSYSTEMTIMEPRECISEASFILETIME)GetProcAddress(hKernel32, "GetSystemTimePreciseAsFileTime");
 			if (!func)
 				*(void **)&func = (void *)(uintptr_t)-1;
-			ATOMIC_WRITE(pdyn_GetSystemTimePreciseAsFileTime, func);
+			atomic_write(&pdyn_GetSystemTimePreciseAsFileTime, func);
 		}
 	}
 	if (pdyn_GetSystemTimePreciseAsFileTime != (LPGETSYSTEMTIMEPRECISEASFILETIME)-1) {

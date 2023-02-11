@@ -31,8 +31,7 @@
 #include <deemon/object.h>
 #include <deemon/seq.h>
 #include <deemon/set.h>
-
-#include <hybrid/atomic.h>
+#include <deemon/util/atomic.h>
 
 #include "../runtime/strings.h"
 
@@ -53,12 +52,7 @@ typedef struct {
 	DREF GCSet  *gsi_set;   /* [1..1][const] The set being iterated. */
 	DWEAK size_t gsi_index; /* Index of the next set element to-be iterated. */
 } GCSetIterator;
-
-#ifdef CONFIG_NO_THREADS
-#define READ_INDEX(x)            ((x)->gsi_index)
-#else /* CONFIG_NO_THREADS */
-#define READ_INDEX(x) ATOMIC_READ((x)->gsi_index)
-#endif /* !CONFIG_NO_THREADS */
+#define READ_INDEX(x) atomic_read(&(x)->gsi_index)
 
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
@@ -105,21 +99,9 @@ gcsetiterator_visit(GCSetIterator *__restrict self, dvisit_t proc, void *arg) {
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 gcsetiterator_next(GCSetIterator *__restrict self) {
 	DeeObject *result;
-#ifdef CONFIG_NO_THREADS
-	size_t new_index;
-	new_index = self->gsi_index;
-	for (;;) {
-		if (new_index > self->gsi_set->gs_mask)
-			return ITER_DONE;
-		result = self->gsi_set->gs_elem[new_index++];
-		if (result)
-			break;
-	}
-	self->gsi_index = new_index;
-#else /* CONFIG_NO_THREADS */
 	size_t index, new_index;
 	do {
-		index     = self->gsi_index;
+		index     = atomic_read(&self->gsi_index);
 		new_index = index;
 		for (;;) {
 			if (new_index > self->gsi_set->gs_mask)
@@ -128,8 +110,7 @@ gcsetiterator_next(GCSetIterator *__restrict self) {
 			if (result)
 				break;
 		}
-	} while (!ATOMIC_CMPXCH(self->gsi_index, index, new_index));
-#endif /* !CONFIG_NO_THREADS */
+	} while (!atomic_cmpxch_weak_or_write(&self->gsi_index, index, new_index));
 	return_reference_(result);
 }
 

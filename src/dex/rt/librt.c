@@ -65,8 +65,7 @@
 #include <deemon/traceback.h>
 #include <deemon/tuple.h>
 #include <deemon/weakref.h>
-
-#include <hybrid/atomic.h>
+#include <deemon/util/atomic.h>
 
 DECL_BEGIN
 
@@ -93,7 +92,7 @@ librt_getstacklimit_f(size_t argc, DeeObject *const *argv) {
 	uint16_t result;
 	if (DeeArg_Unpack(argc, argv, ":getstacklimit"))
 		goto err;
-	result = ATOMIC_READ(DeeExec_StackLimit);
+	result = atomic_read(&DeeExec_StackLimit);
 	return DeeInt_NewU16(result);
 err:
 	return NULL;
@@ -104,7 +103,7 @@ librt_setstacklimit_f(size_t argc, DeeObject *const *argv) {
 	uint16_t result, newval = DEE_CONFIG_DEFAULT_STACK_LIMIT;
 	if (DeeArg_Unpack(argc, argv, "|" UNPu16 ":setstacklimit", &newval))
 		goto err;
-	result = ATOMIC_XCH(DeeExec_StackLimit, newval);
+	result = atomic_xch(&DeeExec_StackLimit, newval);
 	return DeeInt_NewU16(result);
 err:
 	return NULL;

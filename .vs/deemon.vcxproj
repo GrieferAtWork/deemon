@@ -149,6 +149,7 @@
     <ClInclude Include="..\include\deemon\thread.h" />
     <ClInclude Include="..\include\deemon\traceback.h" />
     <ClInclude Include="..\include\deemon\tuple.h" />
+    <ClInclude Include="..\include\deemon\util\atomic.h" />
     <ClInclude Include="..\include\deemon\util\bytewriter.h" />
     <ClInclude Include="..\include\deemon\util\cache.h" />
     <ClInclude Include="..\include\deemon\util\lock.h" />

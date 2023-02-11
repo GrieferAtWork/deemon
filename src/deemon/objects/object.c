@@ -42,9 +42,9 @@
 #include <deemon/super.h>
 #include <deemon/system-features.h> /* bzero(), ... */
 #include <deemon/tuple.h>
+#include <deemon/util/atomic.h>
 
 #include <hybrid/align.h>
-#include <hybrid/atomic.h>
 #include <hybrid/sched/yield.h>
 #include <hybrid/typecore.h>
 
@@ -177,10 +177,10 @@ weakrefs_get(DeeObject *__restrict ob) {
 LOCAL bool DCALL ptrlock_trylock(void **__restrict self) {
 	__BYTE_TYPE__ lold;
 	do {
-		lold = ATOMIC_READ(PTRLOCK_LBYTE(self));
+		lold = atomic_read(&PTRLOCK_LBYTE(self));
 		if (lold & PTRLOCK_LOCK_MASK)
 			return false;
-	} while (!ATOMIC_CMPXCH_WEAK(PTRLOCK_LBYTE(self), lold, lold | PTRLOCK_LOCK_MASK));
+	} while (!atomic_cmpxch_weak(&PTRLOCK_LBYTE(self), lold, lold | PTRLOCK_LOCK_MASK));
 	return true;
 }
 
@@ -188,24 +188,24 @@ LOCAL void DCALL ptrlock_lock(void **__restrict self) {
 	__BYTE_TYPE__ lold;
 again:
 	do {
-		lold = ATOMIC_READ(PTRLOCK_LBYTE(self));
+		lold = atomic_read(&PTRLOCK_LBYTE(self));
 		/* Wait while the lock already is in write-mode or has readers. */
 		if (lold & PTRLOCK_LOCK_MASK) {
 			SCHED_YIELD();
 			goto again;
 		}
-	} while (!ATOMIC_CMPXCH_WEAK(PTRLOCK_LBYTE(self), lold, lold | PTRLOCK_LOCK_MASK));
+	} while (!atomic_cmpxch_weak(&PTRLOCK_LBYTE(self), lold, lold | PTRLOCK_LOCK_MASK));
 }
 
 LOCAL void DCALL ptrlock_unlock(void **__restrict self) {
 #ifndef NDEBUG
 	__BYTE_TYPE__ lold;
 	do {
-		lold = ATOMIC_READ(PTRLOCK_LBYTE(self));
-	} while (!ATOMIC_CMPXCH_WEAK(PTRLOCK_LBYTE(self), lold, lold & ~(PTRLOCK_LOCK_MASK)));
+		lold = atomic_read(&PTRLOCK_LBYTE(self));
+	} while (!atomic_cmpxch_weak(&PTRLOCK_LBYTE(self), lold, lold & ~(PTRLOCK_LOCK_MASK)));
 	ASSERTF((lold & PTRLOCK_LOCK_MASK) != 0, "Pointer was not locked.");
 #else /* NDEBUG */
-	ATOMIC_AND(PTRLOCK_LBYTE(self), ~(PTRLOCK_LOCK_MASK));
+	atomic_and(&PTRLOCK_LBYTE(self), ~(PTRLOCK_LOCK_MASK));
 #endif /* !NDEBUG */
 }
 
@@ -262,7 +262,7 @@ again:
 		self->wr_next = NULL;
 	}
 	/* NOTE: This also unlocks the weakref list for writing. */
-	ATOMIC_WRITE(list->wl_nodes, self);
+	atomic_write(&list->wl_nodes, self);
 	return true;
 }
 
@@ -299,9 +299,9 @@ again:
 			self->wr_next                       = (struct weakref *)other;
 			((struct weakref *)other)->wr_pself = &self->wr_next;
 			WEAKREF_UNLOCK(other);
-			ATOMIC_WRITE(*self->wr_pself, self);
+			atomic_write(&*self->wr_pself, self);
 		} else {
-			ATOMIC_WRITE(other->wr_next, NULL); /* WEAKREF_UNLOCK(other); */
+			atomic_write(&other->wr_next, NULL); /* WEAKREF_UNLOCK(other); */
 			self->wr_obj = NULL;
 		}
 	} else {
@@ -384,15 +384,15 @@ again:
 					next->wr_pself = self->wr_pself;
 					WEAKREF_UNLOCK(next);
 				}
-				ATOMIC_WRITE(*self->wr_pself, next);
+				atomic_write(&*self->wr_pself, next);
 			}
 			self->wr_pself                      = other->wr_pself;
 			((struct weakref *)other)->wr_pself = &self->wr_next;
 			WEAKREF_UNLOCK(other);
-			ATOMIC_WRITE(self->wr_next, other);
-			ATOMIC_WRITE(*self->wr_pself, self);
+			atomic_write(&self->wr_next, other);
+			atomic_write(&*self->wr_pself, self);
 		} else {
-			ATOMIC_WRITE(other->wr_next, NULL); /* WEAKREF_UNLOCK(other); */
+			atomic_write(&other->wr_next, NULL); /* WEAKREF_UNLOCK(other); */
 			Dee_weakref_clear(self);
 		}
 	} else {
@@ -473,7 +473,7 @@ again:
 					next->wr_pself = self->wr_pself;
 					WEAKREF_UNLOCK(next);
 				}
-				ATOMIC_WRITE(*self->wr_pself, next);
+				atomic_write(&*self->wr_pself, next);
 			}
 			{
 				struct weakref *next;
@@ -489,10 +489,10 @@ again:
 						goto again;
 					}
 					next->wr_pself = &self->wr_next;
-					ATOMIC_WRITE(*self->wr_pself, self);
+					atomic_write(&*self->wr_pself, self);
 					WEAKREF_UNLOCK(next);
 				} else {
-					ATOMIC_WRITE(*self->wr_pself, self);
+					atomic_write(&*self->wr_pself, self);
 				}
 			}
 			/*WEAKREF_UNLOCK(other);*/
@@ -536,10 +536,10 @@ again:
 					goto again;
 				}
 				next->wr_pself = &dst->wr_next;
-				ATOMIC_WRITE(*dst->wr_pself, dst);
+				atomic_write(&*dst->wr_pself, dst);
 				WEAKREF_UNLOCK(next);
 			} else {
-				ATOMIC_WRITE(*dst->wr_pself, dst);
+				atomic_write(&*dst->wr_pself, dst);
 			}
 			/*WEAKREF_UNLOCK(src);*/
 		} else {
@@ -576,7 +576,7 @@ again:
 				next->wr_pself = self->wr_pself;
 				WEAKREF_UNLOCK(next);
 			}
-			ATOMIC_WRITE(*self->wr_pself, next);
+			atomic_write(&*self->wr_pself, next);
 		}
 		/*WEAKREF_UNLOCK(self);*/
 	}
@@ -615,14 +615,14 @@ again:
 				next->wr_pself = self->wr_pself;
 				WEAKREF_UNLOCK(next);
 			}
-			ATOMIC_WRITE(*self->wr_pself, next);
+			atomic_write(&*self->wr_pself, next);
 			self->wr_obj = NULL;
 		}
 #ifndef NDEBUG
 		self->wr_pself = (struct weakref **)WEAKREF_BAD_POINTER;
-		ATOMIC_WRITE(self->wr_next, (struct weakref *)((uintptr_t)WEAKREF_BAD_POINTER & PTRLOCK_ADDR_MASK));
+		atomic_write(&self->wr_next, (struct weakref *)((uintptr_t)WEAKREF_BAD_POINTER & PTRLOCK_ADDR_MASK));
 #else /* !NDEBUG */
-		ATOMIC_WRITE(self->wr_next, NULL);
+		atomic_write(&self->wr_next, NULL);
 #endif /* NDEBUG */
 		return true;
 	}
@@ -669,7 +669,7 @@ again:
 				next->wr_pself = self->wr_pself;
 				WEAKREF_UNLOCK(next);
 			}
-			ATOMIC_WRITE(*self->wr_pself, next);
+			atomic_write(&*self->wr_pself, next);
 		}
 
 		/* Now to re-insert the weakref. */
@@ -681,12 +681,12 @@ again:
 			/* Fix the self-pointer of the next object. */
 			WEAKREF_LOCK(next);
 			next->wr_pself = &self->wr_next;
-			ATOMIC_WRITE(self->wr_next, next);
+			atomic_write(&self->wr_next, next);
 			WEAKREF_UNLOCK(next);
 		} else {
-			ATOMIC_WRITE(self->wr_next, next);
+			atomic_write(&self->wr_next, next);
 		}
-		ATOMIC_WRITE(new_list->wl_nodes, self);
+		atomic_write(&new_list->wl_nodes, self);
 	}
 	return true;
 }
@@ -711,25 +711,18 @@ PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *
 		WEAKREF_LOCK(self);
 		COMPILER_READ_BARRIER();
 		result = self->wr_obj; /* Re-read in case it changed. */
-#ifdef CONFIG_NO_THREADS
-		if likely(result->ob_refcnt != 0) {
-			++result->ob_refcnt;
-		} else {
-			result = NULL;
-		}
-#else /* CONFIG_NO_THREADS */
 		{
 			/* Do an atomic-inc-if-not-zero on the reference counter. */
 			drefcnt_t refcnt;
 			do {
-				refcnt = ATOMIC_READ(result->ob_refcnt);
+				refcnt = atomic_read(&result->ob_refcnt);
 				if (!refcnt) {
 					result = NULL;
 					break;
 				}
-			} while (!ATOMIC_CMPXCH_WEAK(result->ob_refcnt, refcnt, refcnt + 1));
+			} while (!atomic_cmpxch_weak_or_write(&result->ob_refcnt,
+			                                      refcnt, refcnt + 1));
 		}
-#endif /* !CONFIG_NO_THREADS */
 		WEAKREF_UNLOCK(self);
 	}
 	return result;
@@ -751,12 +744,7 @@ PUBLIC WUNUSED NONNULL((1)) bool (DCALL Dee_weakref_bound)(struct weakref *__res
 		WEAKREF_LOCK(self);
 		COMPILER_READ_BARRIER();
 		curr = self->wr_obj; /* Re-read in case it changed. */
-#ifdef CONFIG_NO_THREADS
-		if (curr->ob_refcnt == 0)
-#else /* CONFIG_NO_THREADS */
-		if (ATOMIC_READ(curr->ob_refcnt) == 0)
-#endif /* !CONFIG_NO_THREADS */
-		{
+		if (atomic_read(&curr->ob_refcnt) == 0) {
 			WEAKREF_UNLOCK(self);
 			return false;
 		}
@@ -812,15 +800,15 @@ again:
 					next->wr_pself = self->wr_pself;
 					WEAKREF_UNLOCK(next);
 				}
-				ATOMIC_WRITE(*self->wr_pself, next);
+				atomic_write(&*self->wr_pself, next);
 
 				/* Now to re-insert the weakref. */
 				self->wr_obj = NULL;
 #ifndef NDEBUG
 				self->wr_pself = (struct weakref **)WEAKREF_BAD_POINTER;
-				ATOMIC_WRITE(self->wr_next, (struct weakref *)((uintptr_t)WEAKREF_BAD_POINTER & PTRLOCK_ADDR_MASK));
+				atomic_write(&self->wr_next, (struct weakref *)((uintptr_t)WEAKREF_BAD_POINTER & PTRLOCK_ADDR_MASK));
 #else /* !NDEBUG */
-				ATOMIC_WRITE(self->wr_next, NULL);
+				atomic_write(&self->wr_next, NULL);
 #endif /* NDEBUG */
 			}
 		} else {
@@ -849,7 +837,7 @@ again:
 						next->wr_pself = self->wr_pself;
 						WEAKREF_UNLOCK(next);
 					}
-					ATOMIC_WRITE(*self->wr_pself, next);
+					atomic_write(&*self->wr_pself, next);
 				}
 
 				/* Now to re-insert the weakref. */
@@ -861,38 +849,29 @@ again:
 					/* Fix the self-pointer of the next object. */
 					WEAKREF_LOCK(next);
 					next->wr_pself = &self->wr_next;
-					ATOMIC_WRITE(self->wr_next, next);
+					atomic_write(&self->wr_next, next);
 					WEAKREF_UNLOCK(next);
 				} else {
-					ATOMIC_WRITE(self->wr_next, next);
+					atomic_write(&self->wr_next, next);
 				}
-				ATOMIC_WRITE(new_list->wl_nodes, self);
+				atomic_write(&new_list->wl_nodes, self);
 			}
 		}
 	} else if (result != NULL) {
+		drefcnt_t refcnt;
 #if 0 /* Can't happen, because we're locking the weakref */
 		COMPILER_READ_BARRIER();
 		result = self->wr_obj; /* Re-read in case it changed. */
 #endif
-#ifdef CONFIG_NO_THREADS
-		if likely(result->ob_refcnt != 0) {
-			++result->ob_refcnt;
-		} else {
-			result = NULL;
-		}
-#else /* CONFIG_NO_THREADS */
-		{
-			/* Do an atomic-inc-if-not-zero on the reference counter. */
-			drefcnt_t refcnt;
-			do {
-				refcnt = ATOMIC_READ(result->ob_refcnt);
-				if (!refcnt) {
-					result = NULL;
-					break;
-				}
-			} while (!ATOMIC_CMPXCH_WEAK(result->ob_refcnt, refcnt, refcnt + 1));
-		}
-#endif /* !CONFIG_NO_THREADS */
+		/* Do an atomic-inc-if-not-zero on the reference counter. */
+		do {
+			refcnt = atomic_read(&result->ob_refcnt);
+			if (!refcnt) {
+				result = NULL;
+				break;
+			}
+		} while (!atomic_cmpxch_weak_or_write(&result->ob_refcnt,
+		                                      refcnt, refcnt + 1));
 		WEAKREF_UNLOCK(self);
 	}
 	return result;
@@ -910,7 +889,7 @@ PUBLIC NONNULL((1)) DREF DeeObject *
 PUBLIC WUNUSED NONNULL((2)) bool DCALL
 DeeObject_UndoConstruction(DeeTypeObject *undo_start,
                            DeeObject *self) {
-	if unlikely(!ATOMIC_CMPXCH(self->ob_refcnt, 1, 0))
+	if unlikely(!atomic_cmpxch(&self->ob_refcnt, 1, 0))
 		return false;
 	for (;; undo_start = DeeType_Base(undo_start)) {
 		if (!undo_start)
@@ -930,10 +909,10 @@ DeeObject_UndoConstruction(DeeTypeObject *undo_start,
 			{
 				drefcnt_t refcnt;
 				do {
-					refcnt = ATOMIC_READ(self->ob_refcnt);
+					refcnt = atomic_read(&self->ob_refcnt);
 					if (refcnt == 0)
 						goto destroy_weak;
-				} while (ATOMIC_CMPXCH(self->ob_refcnt, refcnt, refcnt + 1));
+				} while (atomic_cmpxch(&self->ob_refcnt, refcnt, refcnt + 1));
 				return false;
 			}
 		}
@@ -970,16 +949,16 @@ restart_clear_weakrefs:
 
 				/* Overwrite the weakly referenced object with NULL,
 				 * indicating that the link has been severed. */
-				ATOMIC_WRITE(iter->wr_obj, NULL);
-				ATOMIC_WRITE(list->wl_nodes, next);
+				atomic_write(&iter->wr_obj, NULL);
+				atomic_write(&list->wl_nodes, next);
 				if (iter->wr_del) {
 					(*iter->wr_del)(iter);
 				} else {
 #ifndef NDEBUG
 					iter->wr_pself = (struct weakref **)WEAKREF_BAD_POINTER;
-					ATOMIC_WRITE(iter->wr_next, (struct weakref *)((uintptr_t)WEAKREF_BAD_POINTER & PTRLOCK_ADDR_MASK));
+					atomic_write(&iter->wr_next, (struct weakref *)((uintptr_t)WEAKREF_BAD_POINTER & PTRLOCK_ADDR_MASK));
 #else /* !NDEBUG */
-					ATOMIC_WRITE(iter->wr_next, NULL);
+					atomic_write(&iter->wr_next, NULL);
 #endif /* NDEBUG */
 				}
 				goto restart_clear_weakrefs;
@@ -1090,22 +1069,22 @@ restart_clear_weakrefs:
 
 		/* Overwrite the weakly referenced object with NULL,
 		 * indicating that the link has been severed. */
-		ATOMIC_WRITE(iter->wr_obj, NULL);
-		ATOMIC_WRITE(list->wl_nodes, next);
+		atomic_write(&iter->wr_obj, NULL);
+		atomic_write(&list->wl_nodes, next);
 		if (iter->wr_del) {
 			(*iter->wr_del)(iter);
 		} else {
 #ifndef NDEBUG
 			iter->wr_pself = (struct weakref **)WEAKREF_BAD_POINTER;
-			ATOMIC_WRITE(iter->wr_next, (struct weakref *)((uintptr_t)WEAKREF_BAD_POINTER & PTRLOCK_ADDR_MASK));
+			atomic_write(&iter->wr_next, (struct weakref *)((uintptr_t)WEAKREF_BAD_POINTER & PTRLOCK_ADDR_MASK));
 #else /* !NDEBUG */
-			ATOMIC_WRITE(iter->wr_next, NULL);
+			atomic_write(&iter->wr_next, NULL);
 #endif /* NDEBUG */
 		}
 		goto restart_clear_weakrefs;
 	}
 #if 1
-	ATOMIC_WRITE(list->wl_nodes, NULL);
+	atomic_write(&list->wl_nodes, NULL);
 #else
 	UNLOCK_POINTER(list->wl_nodes);
 #endif
@@ -1162,7 +1141,7 @@ again:
 #ifndef CONFIG_NO_THREADS
 	/* Make sure that all threads now see this object as dead.
 	 * For why this is required, see `INCREF_IF_NONZERO()' */
-	__hybrid_atomic_thread_fence(__ATOMIC_ACQ_REL);
+	atomic_thread_fence(Dee_ATOMIC_ACQ_REL);
 #endif /* !CONFIG_NO_THREADS */
 #endif
 
@@ -1218,7 +1197,7 @@ again:
 					/* Same as below, but prevent recursion (after all: we're already inside of `DeeObject_Destroy()'!) */
 					{
 						drefcnt_t oldref;
-						oldref = ATOMIC_FETCHDEC(self->ob_refcnt);
+						oldref = atomic_fetchdec(&self->ob_refcnt);
 						ASSERTF(oldref != 0,
 						        "Upon revival, a destructor must let the caller inherit a "
 						        "reference (which may appear like a leak, but actually isn't)");
@@ -1293,7 +1272,7 @@ again:
 					/* Same as below, but prevent recursion (after all: we're already inside of `DeeObject_Destroy()'!) */
 					{
 						drefcnt_t oldref;
-						oldref = ATOMIC_FETCHDEC(self->ob_refcnt);
+						oldref = atomic_fetchdec(&self->ob_refcnt);
 						ASSERTF(oldref != 0,
 						        "Upon revival, a destructor must let the caller inherit a "
 						        "reference (which may appear like a leak, but actually isn't)");
@@ -4556,7 +4535,7 @@ get_reftracker(DeeObject *__restrict self) {
 	result->rt_last = &result->rt_first;
 	COMPILER_WRITE_BARRIER();
 	/* Setup the tracker for use by this object. */
-	new_result = ATOMIC_CMPXCH_VAL(self->ob_trace, NULL, result);
+	new_result = atomic_cmpxch_val(&self->ob_trace, NULL, result);
 	if unlikely(new_result != NULL) {
 		/* Race condition... */
 		Dee_Free(result);
@@ -4582,7 +4561,7 @@ reftracker_addchange(DeeObject *__restrict ob,
 again:
 	last = self->rt_last;
 	for (i = 0; i < COMPILER_LENOF(last->rc_chng); ++i) {
-		if (!ATOMIC_CMPXCH(last->rc_chng[i].rc_file, NULL, file))
+		if (!atomic_cmpxch(&last->rc_chng[i].rc_file, NULL, file))
 			continue;
 		last->rc_chng[i].rc_line = line;
 		return; /* Got it! */
@@ -4595,7 +4574,7 @@ again:
 	new_changes->rc_chng[0].rc_line = line;
 	new_changes->rc_prev            = last;
 	/* Save the new set of changes as the latest set active. */
-	if (!ATOMIC_CMPXCH(self->rt_last, last, new_changes)) {
+	if (!atomic_cmpxch(&self->rt_last, last, new_changes)) {
 		Dee_Free(new_changes);
 		goto again;
 	}
@@ -4606,10 +4585,10 @@ PUBLIC NONNULL((1)) void DCALL
 Dee_Incref_traced(DeeObject *__restrict ob,
                   char const *file, int line) {
 #ifndef CONFIG_NO_BADREFCNT_CHECKS
-	if (ATOMIC_FETCHINC(ob->ob_refcnt) == 0)
+	if (atomic_fetchinc(&ob->ob_refcnt) == 0)
 		DeeFatal_BadIncref(ob, file, line);
 #else /* !CONFIG_NO_BADREFCNT_CHECKS */
-	ATOMIC_FETCHINC(ob->ob_refcnt);
+	atomic_inc(&ob->ob_refcnt);
 #endif /* CONFIG_NO_BADREFCNT_CHECKS */
 	reftracker_addchange(ob, file, line);
 }
@@ -4618,10 +4597,10 @@ PUBLIC NONNULL((1)) void DCALL
 Dee_Incref_n_traced(DeeObject *__restrict ob, drefcnt_t n,
                     char const *file, int line) {
 #ifndef CONFIG_NO_BADREFCNT_CHECKS
-	if (ATOMIC_FETCHADD(ob->ob_refcnt, n) == 0)
+	if (atomic_fetchadd(&ob->ob_refcnt, n) == 0)
 		DeeFatal_BadIncref(ob, file, line);
 #else /* !CONFIG_NO_BADREFCNT_CHECKS */
-	ATOMIC_FETCHADD(ob->ob_refcnt, n);
+	atomic_add(&ob->ob_refcnt, n);
 #endif /* CONFIG_NO_BADREFCNT_CHECKS */
 	while (n--)
 		reftracker_addchange(ob, file, line);
@@ -4632,9 +4611,9 @@ Dee_IncrefIfNotZero_traced(DeeObject *__restrict ob,
                            char const *file, int line) {
 	drefcnt_t oldref;
 	do {
-		if ((oldref = ATOMIC_READ(ob->ob_refcnt)) == 0)
+		if ((oldref = atomic_read(&ob->ob_refcnt)) == 0)
 			return false;
-	} while (!ATOMIC_CMPXCH_WEAK(ob->ob_refcnt, oldref, oldref + 1));
+	} while (!atomic_cmpxch_weak(&ob->ob_refcnt, oldref, oldref + 1));
 	reftracker_addchange(ob, file, line);
 	return true;
 }
@@ -4643,7 +4622,7 @@ PUBLIC NONNULL((1)) void DCALL
 Dee_Decref_traced(DeeObject *__restrict ob,
                   char const *file, int line) {
 	drefcnt_t newref;
-	newref = ATOMIC_FETCHDEC(ob->ob_refcnt);
+	newref = atomic_fetchdec(&ob->ob_refcnt);
 #ifndef CONFIG_NO_BADREFCNT_CHECKS
 	if unlikely(newref == 0)
 		DeeFatal_BadDecref(ob, file, line);
@@ -4659,7 +4638,7 @@ PUBLIC NONNULL((1)) void DCALL
 Dee_DecrefDokill_traced(DeeObject *__restrict ob,
                         char const *file, int line) {
 #ifndef CONFIG_NO_BADREFCNT_CHECKS
-	if (ATOMIC_FETCHDEC(ob->ob_refcnt) != 1)
+	if (atomic_fetchdec(&ob->ob_refcnt) != 1)
 		DeeFatal_BadDecref(ob, file, line);
 #else /* !CONFIG_NO_BADREFCNT_CHECKS */
 	/* Without `CONFIG_NO_BADREFCNT_CHECKS', DeeObject_Destroy doesn't
@@ -4672,10 +4651,10 @@ PUBLIC NONNULL((1)) void DCALL
 Dee_DecrefNokill_traced(DeeObject *__restrict ob,
                         char const *file, int line) {
 #ifndef CONFIG_NO_BADREFCNT_CHECKS
-	if (ATOMIC_FETCHDEC(ob->ob_refcnt) <= 1)
+	if (atomic_fetchdec(&ob->ob_refcnt) <= 1)
 		DeeFatal_BadDecref(ob, file, line);
 #else /* !CONFIG_NO_BADREFCNT_CHECKS */
-	ATOMIC_FETCHDEC(ob->ob_refcnt);
+	atomic_dec(&ob->ob_refcnt);
 #endif /* CONFIG_NO_BADREFCNT_CHECKS */
 	reftracker_addchange(ob, file, -line);
 }
@@ -4683,7 +4662,7 @@ Dee_DecrefNokill_traced(DeeObject *__restrict ob,
 PUBLIC WUNUSED NONNULL((1)) bool DCALL
 Dee_DecrefIfOne_traced(DeeObject *__restrict ob,
                        char const *file, int line) {
-	if (!ATOMIC_CMPXCH(ob->ob_refcnt, 1, 0))
+	if (!atomic_cmpxch(&ob->ob_refcnt, 1, 0))
 		return false;
 	DeeObject_Destroy_d(ob, file, line);
 	return true;
@@ -4694,9 +4673,9 @@ Dee_DecrefIfNotOne_traced(DeeObject *__restrict ob,
                           char const *file, int line) {
 	drefcnt_t oldref;
 	do {
-		if ((oldref = ATOMIC_READ(ob->ob_refcnt)) <= 1)
+		if ((oldref = atomic_read(&ob->ob_refcnt)) <= 1)
 			return false;
-	} while (!ATOMIC_CMPXCH_WEAK(ob->ob_refcnt, oldref, oldref - 1));
+	} while (!atomic_cmpxch_weak(&ob->ob_refcnt, oldref, oldref - 1));
 	reftracker_addchange(ob, file, -line);
 	return true;
 }
@@ -4705,7 +4684,7 @@ PUBLIC WUNUSED NONNULL((1)) bool DCALL
 Dee_DecrefWasOk_traced(DeeObject *__restrict ob,
                        char const *file, int line) {
 	drefcnt_t newref;
-	newref = ATOMIC_FETCHDEC(ob->ob_refcnt);
+	newref = atomic_fetchdec(&ob->ob_refcnt);
 #ifndef CONFIG_NO_BADREFCNT_CHECKS
 	if unlikely(newref == 0)
 		DeeFatal_BadDecref(ob, file, line);

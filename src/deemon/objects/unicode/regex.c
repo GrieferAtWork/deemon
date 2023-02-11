@@ -28,11 +28,11 @@
 #include <deemon/string.h>
 #include <deemon/stringutils.h>
 #include <deemon/system-features.h>
+#include <deemon/util/atomic.h>
 #include <deemon/util/rwlock.h>
 
 #include <hybrid/align.h>
 #include <hybrid/alloca.h>
-#include <hybrid/atomic.h>
 #include <hybrid/bit.h>
 #include <hybrid/minmax.h>
 #include <hybrid/overflow.h>
@@ -992,7 +992,7 @@ again_insert_result:
 				utf = Dee_string_utf_alloc();
 				haslock = false;
 			}
-			if unlikely(!ATOMIC_CMPXCH(((DeeStringObject *)self)->s_data, NULL, utf)) {
+			if unlikely(!atomic_cmpxch(&((DeeStringObject *)self)->s_data, NULL, utf)) {
 				Dee_string_utf_free(utf);
 				utf = ((DeeStringObject *)self)->s_data;
 			}
@@ -1002,7 +1002,7 @@ again_insert_result:
 		ASSERT(utf);
 
 		/* Set the regex flag (so that the string destructor will later clean-up the regex cache) */
-		ATOMIC_OR(utf->u_flags, STRING_UTF_FREGEX);
+		atomic_or(&utf->u_flags, STRING_UTF_FREGEX);
 
 		/* Remember the string within the regex cache. */
 		ASSERT(first_dummy->rce_str == NULL ||

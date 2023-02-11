@@ -31,8 +31,8 @@
 #include <deemon/string.h>
 #include <deemon/tuple.h>
 #include <deemon/util/lock.h>
+#include <deemon/util/atomic.h>
 
-#include <hybrid/atomic.h>
 #include <hybrid/overflow.h>
 
 #include "../../runtime/runtime_error.h"
@@ -163,16 +163,14 @@ catiterator_bool(CatIterator *__restrict self) {
 	curr = self->c_curr;
 	Dee_Incref(curr);
 	atomic_rwlock_endread(&self->c_lock);
+
 	/* Check if the current iterator has remaining elements. */
 	result = DeeObject_Bool(curr);
 	Dee_Decref(curr);
 	if (result != 0)
 		goto done;
-#ifndef CONFIG_NO_THREADS
-	iterpos = ATOMIC_READ(self->c_pseq);
-#else /* !CONFIG_NO_THREADS */
-	iterpos = self->c_pseq;
-#endif /* CONFIG_NO_THREADS */
+	iterpos = atomic_read(&self->c_pseq);
+
 	/* Check if one of the upcoming sequences is non-empty. */
 	catend = DeeTuple_END(self->c_cat);
 	for (; iterpos < catend; ++iterpos) {

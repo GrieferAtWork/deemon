@@ -39,8 +39,8 @@
 #include <deemon/super.h>
 #include <deemon/system-features.h> /* bcmpc(), ... */
 #include <deemon/thread.h>
+#include <deemon/util/atomic.h>
 
-#include <hybrid/atomic.h>
 #include <hybrid/host.h>
 #include <hybrid/minmax.h>
 
@@ -1661,7 +1661,7 @@ again:
 		if unlikely(DeeModule_RunInit(mod) < 0)
 			goto err_mod;
 		rwlock_write(&files_module_lock);
-		if unlikely(ATOMIC_READ(files_module)) {
+		if unlikely(atomic_read(&files_module)) {
 			rwlock_endwrite(&files_module_lock);
 			Dee_Decref(mod);
 			goto again;

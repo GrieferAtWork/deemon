@@ -38,8 +38,8 @@
 #include <deemon/seq.h>
 #include <deemon/system-features.h>
 #include <deemon/thread.h>
+#include <deemon/util/atomic.h>
 
-#include <hybrid/atomic.h>
 #include <hybrid/overflow.h>
 
 DECL_BEGIN
@@ -1241,13 +1241,7 @@ INTERN DeeTypeObject FixedList_Type = {
 };
 
 
-
-
-#ifdef CONFIG_NO_THREADS
-#define FLI_GETITER(x) ((x)->li_iter)
-#else /* CONFIG_NO_THREADS */
-#define FLI_GETITER(x)  ATOMIC_READ((x)->li_iter)
-#endif /* !CONFIG_NO_THREADS */
+#define FLI_GETITER(x)  atomic_read(&(x)->li_iter)
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 fli_ctor(FixedListIterator *__restrict self) {
@@ -1328,40 +1322,24 @@ fli_getindex(FixedListIterator *__restrict self) {
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 fli_setindex(FixedListIterator *__restrict self, size_t new_index) {
-#ifdef CONFIG_NO_THREADS
-	self->li_iter = new_index;
-#else /* CONFIG_NO_THREADS */
-	ATOMIC_WRITE(self->li_iter, new_index);
-#endif /* !CONFIG_NO_THREADS */
+	atomic_write(&self->li_iter, new_index);
 	return 0;
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 fli_rewind(FixedListIterator *__restrict self) {
-#ifdef CONFIG_NO_THREADS
-	self->li_iter = 0;
-#else /* CONFIG_NO_THREADS */
-	ATOMIC_WRITE(self->li_iter, 0);
-#endif /* !CONFIG_NO_THREADS */
+	atomic_write(&self->li_iter, 0);
 	return 0;
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 fli_revert(FixedListIterator *__restrict self, size_t step) {
 	size_t oldpos, newpos;
-#ifdef CONFIG_NO_THREADS
-	oldpos = self->li_iter;
-	if (OVERFLOW_USUB(oldpos, step, &newpos))
-		newpos = 0;
-	self->li_iter = newpos;
-#else /* CONFIG_NO_THREADS */
 	do {
-		oldpos = ATOMIC_READ(self->li_iter);
+		oldpos = atomic_read(&self->li_iter);
 		if (OVERFLOW_USUB(oldpos, step, &newpos))
 			newpos = 0;
-	} while (!ATOMIC_CMPXCH(self->li_iter, oldpos, newpos));
-	ATOMIC_WRITE(self->li_iter, 0);
-#endif /* !CONFIG_NO_THREADS */
+	} while (!atomic_cmpxch_or_write(&self->li_iter, oldpos, newpos));
 	if (newpos == 0)
 		return 1;
 	return 2;
@@ -1370,19 +1348,11 @@ fli_revert(FixedListIterator *__restrict self, size_t step) {
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 fli_advance(FixedListIterator *__restrict self, size_t step) {
 	size_t oldpos, newpos;
-#ifdef CONFIG_NO_THREADS
-	oldpos = self->li_iter;
-	if (OVERFLOW_UADD(oldpos, step, &newpos))
-		newpos = (size_t)-1;
-	self->li_iter = newpos;
-#else /* CONFIG_NO_THREADS */
 	do {
-		oldpos = ATOMIC_READ(self->li_iter);
+		oldpos = atomic_read(&self->li_iter);
 		if (OVERFLOW_UADD(oldpos, step, &newpos))
 			newpos = (size_t)-1;
-	} while (!ATOMIC_CMPXCH(self->li_iter, oldpos, newpos));
-	ATOMIC_WRITE(self->li_iter, 0);
-#endif /* !CONFIG_NO_THREADS */
+	} while (!atomic_cmpxch_or_write(&self->li_iter, oldpos, newpos));
 	if (newpos >= self->li_list->fl_size)
 		return 1;
 	return 2;
@@ -1461,9 +1431,7 @@ fli_next(FixedListIterator *__restrict self) {
 	DREF DeeObject *result;
 	size_t iter, newiter;
 	FixedList *list = self->li_list;
-#ifndef CONFIG_NO_THREADS
 again:
-#endif /* !CONFIG_NO_THREADS */
 	iter = FLI_GETITER(self);
 	if (iter >= list->fl_size)
 		return ITER_DONE;
@@ -1472,12 +1440,8 @@ again:
 	for (;; ++newiter) {
 		if (newiter >= list->fl_size) {
 			rwlock_endread(&list->fl_lock);
-#ifdef CONFIG_NO_THREADS
-			self->li_iter = newiter;
-#else /* CONFIG_NO_THREADS */
-			if (!ATOMIC_CMPXCH(self->li_iter, iter, newiter))
+			if (!atomic_cmpxch_or_write(&self->li_iter, iter, newiter))
 				goto again;
-#endif /* !CONFIG_NO_THREADS */
 			return ITER_DONE;
 		}
 		result = list->fl_elem[newiter];
@@ -1486,14 +1450,10 @@ again:
 	}
 	Dee_Incref(result);
 	rwlock_endread(&list->fl_lock);
-#ifdef CONFIG_NO_THREADS
-	self->li_iter = newiter + 1;
-#else /* CONFIG_NO_THREADS */
-	if (!ATOMIC_CMPXCH(self->li_iter, iter, newiter + 1)) {
+	if (!atomic_cmpxch_or_write(&self->li_iter, iter, newiter + 1)) {
 		Dee_Decref(result);
 		goto again;
 	}
-#endif /* !CONFIG_NO_THREADS */
 	return result;
 }
 

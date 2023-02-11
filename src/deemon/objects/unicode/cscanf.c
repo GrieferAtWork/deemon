@@ -32,9 +32,8 @@
 #include <deemon/seq.h>
 #include <deemon/string.h>
 #include <deemon/stringutils.h>
+#include <deemon/util/atomic.h>
 #include <deemon/util/lock.h>
-
-#include <hybrid/atomic.h>
 
 #include "../../runtime/runtime_error.h"
 #include "../../runtime/strings.h"
@@ -63,11 +62,7 @@ typedef struct {
 	char               *si_fmtiter; /* [1..1][lock(READ(atomic), WRITE(si_lock))] The current format pointer (UTF-8). */
 } StringScanIterator;
 
-#ifdef CONFIG_NO_THREADS
-#define GET_FORMAT_POINTER(x)            ((x)->si_fmtiter)
-#else /* CONFIG_NO_THREADS */
-#define GET_FORMAT_POINTER(x) ATOMIC_READ((x)->si_fmtiter)
-#endif /* !CONFIG_NO_THREADS */
+#define GET_FORMAT_POINTER(x) atomic_read(&(x)->si_fmtiter)
 
 INTDEF DeeTypeObject StringScanIterator_Type;
 INTDEF DeeTypeObject StringScan_Type;
@@ -109,17 +104,14 @@ ssi_next(StringScanIterator *__restrict self) {
 	char *data, *format, ch;
 	char *format_end, *data_end;
 	int is_bytes = -1;
-#ifdef CONFIG_NO_THREADS
-	data   = self->si_datiter;
-	format = self->si_fmtiter;
-#else /* CONFIG_NO_THREADS */
 	char *orig_data, *orig_format;
 again:
-	data = orig_data = ATOMIC_READ(self->si_datiter);
-	format = orig_format = ATOMIC_READ(self->si_fmtiter);
-#endif /* !CONFIG_NO_THREADS */
-	format_end = self->si_fmtend;
-	data_end   = self->si_datend;
+	orig_data   = atomic_read(&self->si_datiter);
+	orig_format = atomic_read(&self->si_fmtiter);
+	data        = orig_data;
+	format      = orig_format;
+	format_end  = self->si_fmtend;
+	data_end    = self->si_datend;
 
 next_format:
 	if (format >= format_end)
@@ -499,12 +491,9 @@ match_ch:
 	if unlikely(!result)
 		goto err;
 done:
-#ifdef CONFIG_NO_THREADS
-	self->si_datiter = data;
-	self->si_fmtiter = format;
-#else /* CONFIG_NO_THREADS */
-	atomic_lock_acquire(&self->si_lock);
+
 	/* Check if another thread extracted a value in the mean time. */
+	atomic_lock_acquire(&self->si_lock);
 	if unlikely(self->si_datiter != orig_data ||
 	            self->si_fmtiter != orig_format) {
 		/* Race condition! -> Loop back and try to read a value once again. */
@@ -513,11 +502,11 @@ done:
 			Dee_Decref(result);
 		goto again;
 	}
+
 	/* Save the updated data & format pointers. */
 	self->si_datiter = data;
 	self->si_fmtiter = format;
 	atomic_lock_release(&self->si_lock);
-#endif /* !CONFIG_NO_THREADS */
 	return result;
 out_dataend:
 out_missmatch:

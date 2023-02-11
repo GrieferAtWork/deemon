@@ -28,6 +28,7 @@
 
 #include <deemon/seq.h>
 #include <deemon/string.h>
+#include <deemon/util/atomic.h>
 
 #include "../../runtime/strings.h"
 
@@ -41,11 +42,7 @@ typedef struct {
 	uint8_t             *b_end;   /* [1..1][== DeeBytes_WEND(b_str)] End pointer. */
 } BytesSegmentsIterator;
 
-#ifdef CONFIG_NO_THREADS
-#define READ_PTR(x)            ((x)->b_ptr)
-#else /* CONFIG_NO_THREADS */
-#define READ_PTR(x) ATOMIC_READ((x)->b_ptr)
-#endif /* !CONFIG_NO_THREADS */
+#define READ_PTR(x) atomic_read(&(x)->b_ptr)
 
 typedef struct {
 	OBJECT_HEAD
@@ -112,20 +109,12 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 bsegiter_next(BytesSegmentsIterator *__restrict self) {
 	size_t part_size;
 	uint8_t *new_ptr, *ptr;
-#ifdef CONFIG_NO_THREADS
-	ptr = self->b_ptr;
-	if (ptr >= self->b_end)
-		return ITER_DONE;
-	new_ptr     = ptr + self->b_siz;
-	self->b_ptr = new_ptr;
-#else /* CONFIG_NO_THREADS */
 	do {
-		ptr = READ_PTR(self);
+		ptr = atomic_read(&self->b_ptr);
 		if (ptr >= self->b_end)
 			return ITER_DONE;
 		new_ptr = ptr + self->b_siz;
-	} while (!ATOMIC_CMPXCH(self->b_ptr, ptr, new_ptr));
-#endif /* !CONFIG_NO_THREADS */
+	} while (!atomic_cmpxch_weak_or_write(&self->b_ptr, ptr, new_ptr));
 	part_size = self->b_siz;
 	if (new_ptr > self->b_end) {
 		part_size = (size_t)(self->b_end - ptr);

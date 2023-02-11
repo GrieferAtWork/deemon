@@ -39,8 +39,8 @@
 #include <deemon/system-features.h> /* bcmpc(), ... */
 #include <deemon/thread.h>
 #include <deemon/tuple.h>
+#include <deemon/util/atomic.h>
 
-#include <hybrid/atomic.h>
 #include <hybrid/sched/yield.h>
 
 #include "../runtime/runtime_error.h"
@@ -1067,11 +1067,7 @@ collect_memory:
 
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 dict_size(Dict *__restrict self) {
-#ifdef CONFIG_NO_THREADS
-	return DeeInt_NewSize(self->d_used);
-#else /* CONFIG_NO_THREADS */
-	return DeeInt_NewSize(ATOMIC_READ(self->d_used));
-#endif /* !CONFIG_NO_THREADS */
+	return DeeInt_NewSize(atomic_read(&self->d_used));
 }
 
 /* This one's basically your hasitem operator. */
@@ -1627,11 +1623,7 @@ INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL dictiterator_next_value(DeeObj
 
 PRIVATE WUNUSED NONNULL((1)) size_t DCALL
 dict_nsi_getsize(Dict *__restrict self) {
-#ifdef CONFIG_NO_THREADS
-	return self->d_used;
-#else /* CONFIG_NO_THREADS */
-	return ATOMIC_READ(self->d_used);
-#endif /* !CONFIG_NO_THREADS */
+	return atomic_read(&self->d_used);
 }
 
 PRIVATE WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
@@ -1751,11 +1743,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 dict_bool(Dict *__restrict self) {
-#ifdef CONFIG_NO_THREADS
-	return self->d_used != 0;
-#else /* CONFIG_NO_THREADS */
-	return ATOMIC_READ(self->d_used) != 0;
-#endif /* !CONFIG_NO_THREADS */
+	return atomic_read(&self->d_used) != 0;
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL

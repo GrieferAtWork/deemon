@@ -35,12 +35,11 @@
 #include <deemon/stringutils.h>
 #include <deemon/thread.h>
 #include <deemon/system-features.h> /* memmem() */
+#include <deemon/util/atomic.h>
 
 #include <hybrid/minmax.h>
 
 #include <stddef.h>
-
-#include <hybrid/atomic.h>
 
 #include "../runtime/runtime_error.h"
 #include "../runtime/strings.h"
@@ -914,12 +913,7 @@ typedef struct {
 	union dcharptr si_end;    /* [1..1][const] The string end pointer. */
 	unsigned int   si_width;  /* [const] The stirng width used during iteration (One of `STRING_WIDTH_*'). */
 } StringIterator;
-
-#ifdef CONFIG_NO_THREADS
-#define READ_ITER_PTR(x) (x)->si_iter.ptr
-#else /* CONFIG_NO_THREADS */
-#define READ_ITER_PTR(x) ATOMIC_READ((x)->si_iter.ptr)
-#endif /* !CONFIG_NO_THREADS */
+#define READ_ITER_PTR(x) atomic_read(&(x)->si_iter.ptr)
 
 
 PRIVATE NONNULL((1)) void DCALL
@@ -935,22 +929,16 @@ stringiter_visit(StringIterator *__restrict self, dvisit_t proc, void *arg) {
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 stringiter_next(StringIterator *__restrict self) {
 	DREF DeeObject *result;
-	/* Consume one character (atomically) */
-#ifdef CONFIG_NO_THREADS
-	union dcharptr pos;
-	pos.ptr = self->si_iter.ptr;
-	if (pos.ptr >= self->si_end.ptr)
-		return ITER_DONE;
-	self->si_iter.cp8 = pos.cp8 + STRING_SIZEOF_WIDTH(self->si_width);
-#else /* CONFIG_NO_THREADS */
 	union dcharptr pos, new_pos;
+
+	/* Consume one character (atomically) */
 	do {
 		pos.ptr = self->si_iter.ptr;
 		if (pos.ptr >= self->si_end.ptr)
 			return ITER_DONE;
 		new_pos.cp8 = pos.cp8 + STRING_SIZEOF_WIDTH(self->si_width);
-	} while (!ATOMIC_CMPXCH(self->si_iter.ptr, pos.ptr, new_pos.ptr));
-#endif /* !CONFIG_NO_THREADS */
+	} while (!atomic_cmpxch_or_write(&self->si_iter.ptr, pos.ptr, new_pos.ptr));
+
 	/* Create the single-character string. */
 	SWITCH_SIZEOF_WIDTH(self->si_width) {
 
@@ -1071,53 +1059,34 @@ stringiter_nii_setindex(StringIterator *__restrict self, size_t index) {
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 stringiter_nii_rewind(StringIterator *__restrict self) {
-#ifdef CONFIG_NO_THREADS
-	self->si_iter.ptr = DeeString_WSTR(self->si_string);
-#else /* CONFIG_NO_THREADS */
-	ATOMIC_WRITE(self->si_iter.ptr,
+	atomic_write(&self->si_iter.ptr,
 	             DeeString_WSTR(self->si_string));
-#endif /* !CONFIG_NO_THREADS */
 	return 0;
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 stringiter_nii_prev(StringIterator *__restrict self) {
-#ifdef CONFIG_NO_THREADS
-	union dcharptr pos;
-	pos.ptr = self->si_iter.ptr;
-	if (pos.ptr <= DeeString_WSTR(self->si_string))
-		return 1;
-	self->si_iter.cp8 = pos.cp8 - STRING_SIZEOF_WIDTH(self->si_width);
-#else /* CONFIG_NO_THREADS */
 	union dcharptr pos, new_pos;
 	do {
-		pos.ptr = self->si_iter.ptr;
+		pos.ptr = atomic_read(&self->si_iter.ptr);
 		if (pos.ptr <= (void *)DeeString_WSTR(self->si_string))
 			return 1;
 		new_pos.cp8 = pos.cp8 - STRING_SIZEOF_WIDTH(self->si_width);
-	} while (!ATOMIC_CMPXCH(self->si_iter.ptr, pos.ptr, new_pos.ptr));
-#endif /* !CONFIG_NO_THREADS */
+	} while (!atomic_cmpxch_or_write(&self->si_iter.ptr, pos.ptr, new_pos.ptr));
 	return 0;
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 stringiter_nii_next(StringIterator *__restrict self) {
-	/* Consume one character (atomically) */
-#ifdef CONFIG_NO_THREADS
-	union dcharptr pos;
-	pos.ptr = self->si_iter.ptr;
-	if (pos.ptr >= self->si_end.ptr)
-		return 1;
-	self->si_iter.cp8 = pos.cp8 + STRING_SIZEOF_WIDTH(self->si_width);
-#else /* CONFIG_NO_THREADS */
 	union dcharptr pos, new_pos;
+
+	/* Consume one character (atomically) */
 	do {
-		pos.ptr = self->si_iter.ptr;
+		pos.ptr = atomic_read(&self->si_iter.ptr);
 		if (pos.ptr >= self->si_end.ptr)
 			return 1;
 		new_pos.cp8 = pos.cp8 + STRING_SIZEOF_WIDTH(self->si_width);
-	} while (!ATOMIC_CMPXCH(self->si_iter.ptr, pos.ptr, new_pos.ptr));
-#endif /* !CONFIG_NO_THREADS */
+	} while (!atomic_cmpxch_or_write(&self->si_iter.ptr, pos.ptr, new_pos.ptr));
 	return 0;
 }
 
@@ -1128,6 +1097,7 @@ stringiter_nii_peek(StringIterator *__restrict self) {
 	pos.ptr = self->si_iter.ptr;
 	if (pos.ptr >= self->si_end.ptr)
 		return ITER_DONE;
+
 	/* Create the single-character string. */
 	SWITCH_SIZEOF_WIDTH(self->si_width) {
 
@@ -1464,28 +1434,16 @@ string_hashed(String *__restrict self) {
 
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 string_hasutf(String *__restrict self) {
-#ifdef CONFIG_NO_THREADS
-	return_bool(self->s_data != NULL);
-#else /* CONFIG_NO_THREADS */
-	return_bool(ATOMIC_READ(self->s_data) != NULL);
-#endif /* !CONFIG_NO_THREADS */
+	return_bool(atomic_read(&self->s_data) != NULL);
 }
 
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 string_hasregex(String *__restrict self) {
 	struct string_utf *utf;
-#ifdef CONFIG_NO_THREADS
-	utf = self->s_data;
-#else /* CONFIG_NO_THREADS */
-	utf = ATOMIC_READ(self->s_data);
-#endif /* !CONFIG_NO_THREADS */
+	utf = atomic_read(&self->s_data);
 	if (utf == NULL)
 		return_false;
-#ifdef CONFIG_NO_THREADS
-	return_bool((utf->u_flags & STRING_UTF_FREGEX) != 0);
-#else /* CONFIG_NO_THREADS */
-	return_bool((ATOMIC_READ(utf->u_flags) & STRING_UTF_FREGEX) != 0);
-#endif /* !CONFIG_NO_THREADS */
+	return_bool((atomic_read(&utf->u_flags) & STRING_UTF_FREGEX) != 0);
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
