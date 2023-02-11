@@ -680,6 +680,8 @@ DFUNDEF WUNUSED NONNULL((1)) bool (DCALL Dee_DecrefWasOk)(DeeObject *__restrict 
 #ifndef CONFIG_NO_BADREFCNT_CHECKS
 DFUNDEF NONNULL((1)) void DCALL DeeFatal_BadIncref(DeeObject *ob, char const *file, int line);
 DFUNDEF NONNULL((1)) void DCALL DeeFatal_BadDecref(DeeObject *ob, char const *file, int line);
+#define _DeeFatal_BadIncref(ob) DeeFatal_BadIncref((DeeObject *)(ob), __FILE__, __LINE__)
+#define _DeeFatal_BadDecref(ob) DeeFatal_BadDecref((DeeObject *)(ob), __FILE__, __LINE__)
 #endif /* !CONFIG_NO_BADREFCNT_CHECKS */
 #ifdef CONFIG_NO_THREADS
 #define _DeeRefcnt_FetchInc(x)    ((x)++)
@@ -689,13 +691,13 @@ DFUNDEF NONNULL((1)) void DCALL DeeFatal_BadDecref(DeeObject *ob, char const *fi
 #define _DeeRefcnt_AddFetch(x, n) ((x) += (n))
 #define _DeeRefcnt_FetchAdd(x, n) (((x) += (n)) - (n))
 #ifndef CONFIG_NO_BADREFCNT_CHECKS
-#define Dee_Incref_untraced(x)          (void)((x)->ob_refcnt++ || (DeeFatal_BadIncref((DeeObject *)(x), __FILE__, __LINE__), 0))
-#define Dee_Incref_n_untraced(x, n)     (void)(_DeeRefcnt_FetchAdd((x)->ob_refcnt, n) || (DeeFatal_BadIncref((DeeObject *)(x), __FILE__, __LINE__), 0))
+#define Dee_Incref_untraced(x)          (void)((x)->ob_refcnt++ || (_DeeFatal_BadIncref(x), 0))
+#define Dee_Incref_n_untraced(x, n)     (void)(_DeeRefcnt_FetchAdd((x)->ob_refcnt, n) || (_DeeFatal_BadIncref(x), 0))
 #define Dee_Decref_untraced(x)          (void)((x)->ob_refcnt-- > 1 || (DeeObject_Destroy((DeeObject *)(x)), 0))
 #define Dee_Decref_likely_untraced(x)   (void)(unlikely((x)->ob_refcnt-- > 1) || (DeeObject_Destroy((DeeObject *)(x)), 0))
 #define Dee_Decref_unlikely_untraced(x) (void)(likely((x)->ob_refcnt-- > 1) || (DeeObject_Destroy((DeeObject *)(x)), 0))
 #define Dee_DecrefDokill_untraced(x)    (void)(--(x)->ob_refcnt, DeeObject_Destroy((DeeObject *)(x)))
-#define Dee_DecrefNokill_untraced(x)    (void)((x)->ob_refcnt-- > 1 || (DeeFatal_BadDecref((DeeObject *)(x)), 0))
+#define Dee_DecrefNokill_untraced(x)    (void)((x)->ob_refcnt-- > 1 || (_DeeFatal_BadDecref(x), 0))
 #define Dee_DecrefWasOk_untraced(x)     ((x)->ob_refcnt-- > 1 ? false : (DeeObject_Destroy((DeeObject *)(x)), true))
 #else /* !CONFIG_NO_BADREFCNT_CHECKS */
 #define Dee_Incref_untraced(x)          (void)(++(x)->ob_refcnt)
@@ -739,13 +741,13 @@ DFUNDEF NONNULL((1)) void DCALL DeeFatal_BadDecref(DeeObject *ob, char const *fi
 #define _DeeRefcnt_AddFetch(x, n) __hybrid_atomic_addfetch(x, n, __ATOMIC_SEQ_CST)
 #endif /* !_DeeRefcnt_FetchAdd */
 #ifndef CONFIG_NO_BADREFCNT_CHECKS
-#define Dee_Incref_untraced(x)          (void)(_DeeRefcnt_FetchInc((x)->ob_refcnt) || (DeeFatal_BadIncref((DeeObject *)(x), __FILE__, __LINE__), 0))
-#define Dee_Incref_n_untraced(x, n)     (void)(_DeeRefcnt_FetchAdd((x)->ob_refcnt, n) || (DeeFatal_BadIncref((DeeObject *)(x), __FILE__, __LINE__), 0))
+#define Dee_Incref_untraced(x)          (void)(_DeeRefcnt_FetchInc((x)->ob_refcnt) || (_DeeFatal_BadIncref(x), 0))
+#define Dee_Incref_n_untraced(x, n)     (void)(_DeeRefcnt_FetchAdd((x)->ob_refcnt, n) || (_DeeFatal_BadIncref(x), 0))
 #define Dee_Decref_untraced(x)          (void)(_DeeRefcnt_FetchDec((x)->ob_refcnt) > 1 || (DeeObject_Destroy((DeeObject *)(x)), 0))
 #define Dee_Decref_likely_untraced(x)   (void)(unlikely(_DeeRefcnt_FetchDec((x)->ob_refcnt) > 1) || (DeeObject_Destroy((DeeObject *)(x)), 0))
 #define Dee_Decref_unlikely_untraced(x) (void)(likely(_DeeRefcnt_FetchDec((x)->ob_refcnt) > 1) || (DeeObject_Destroy((DeeObject *)(x)), 0))
 #define Dee_DecrefDokill_untraced(x)    (_DeeRefcnt_FetchDec((x)->ob_refcnt), DeeObject_Destroy((DeeObject *)(x)))
-#define Dee_DecrefNokill_untraced(x)    (void)(_DeeRefcnt_FetchDec((x)->ob_refcnt) > 1 || (DeeFatal_BadDecref((DeeObject *)(x), __FILE__, __LINE__), 0))
+#define Dee_DecrefNokill_untraced(x)    (void)(_DeeRefcnt_FetchDec((x)->ob_refcnt) > 1 || (_DeeFatal_BadDecref(x), 0))
 #define Dee_DecrefWasOk_untraced(x)     (_DeeRefcnt_FetchDec((x)->ob_refcnt) > 1 ? false : (DeeObject_Destroy((DeeObject *)(x)), true))
 #define Dee_DecrefIfOne_untraced(self)  Dee_DecrefIfOne_untraced_d((DeeObject *)(self), __FILE__, __LINE__)
 #else /* !CONFIG_NO_BADREFCNT_CHECKS */

@@ -4757,92 +4757,170 @@ PUBLIC ATTR_RETNONNULL NONNULL((1, 2)) DREF DeeObject **
 
 /* Maintain ABI compatibility by always providing traced variants of functions! */
 
+
+#ifndef CONFIG_NO_BADREFCNT_CHECKS
+/* Can still re-use debug information if bad-refcnt checks are enabled. */
+#undef DeeObject_Destroy
+#undef _DeeFatal_BadIncref
+#undef _DeeFatal_BadDecref
+#define DeeObject_Destroy(self) DeeObject_Destroy_d(self, file, line)
+#define _DeeFatal_BadIncref(ob) DeeFatal_BadIncref((DeeObject *)(ob), file, line)
+#define _DeeFatal_BadDecref(ob) DeeFatal_BadDecref((DeeObject *)(ob), file, line)
+#endif /* !CONFIG_NO_BADREFCNT_CHECKS */
+
 PUBLIC NONNULL((1)) void
 (DCALL Dee_Incref_traced)(DeeObject *__restrict ob,
-                          char const *UNUSED(file),
-                          int UNUSED(line)) {
+                          char const *file,
+                          int line) {
+	(void)file;
+	(void)line;
 	Dee_Incref(ob);
 }
 
 PUBLIC NONNULL((1)) void
 (DCALL Dee_Incref_n_traced)(DeeObject *__restrict ob, drefcnt_t n,
-                            char const *UNUSED(file),
-                            int UNUSED(line)) {
+                            char const *file,
+                            int line) {
+	(void)file;
+	(void)line;
 	Dee_Incref_n(ob, n);
 }
 
 PUBLIC WUNUSED NONNULL((1)) bool
 (DCALL Dee_IncrefIfNotZero_traced)(DeeObject *__restrict ob,
-                                   char const *UNUSED(file),
-                                   int UNUSED(line)) {
+                                   char const *file,
+                                   int line) {
+	(void)file;
+	(void)line;
 	return Dee_IncrefIfNotZero(ob);
 }
 
 PUBLIC NONNULL((1)) void
 (DCALL Dee_Decref_traced)(DeeObject *__restrict ob,
-                          char const *UNUSED(file),
-                          int UNUSED(line)) {
+                          char const *file,
+                          int line) {
+	(void)file;
+	(void)line;
 	Dee_Decref(ob);
 }
 
 PUBLIC NONNULL((1)) void
 (DCALL Dee_DecrefDokill_traced)(DeeObject *__restrict ob,
-                                char const *UNUSED(file),
-                                int UNUSED(line)) {
+                                char const *file,
+                                int line) {
+	(void)file;
+	(void)line;
 	Dee_DecrefDokill(ob);
 }
 
 PUBLIC NONNULL((1)) void
 (DCALL Dee_DecrefNokill_traced)(DeeObject *__restrict ob,
-                                char const *UNUSED(file),
-                                int UNUSED(line)) {
+                                char const *file,
+                                int line) {
+	(void)file;
+	(void)line;
 	Dee_DecrefNokill(ob);
 }
 
 PUBLIC WUNUSED NONNULL((1)) bool
 (DCALL Dee_DecrefIfOne_traced)(DeeObject *__restrict ob,
-                               char const *UNUSED(file),
-                               int UNUSED(line)) {
+                               char const *file,
+                               int line) {
+	(void)file;
+	(void)line;
 	return Dee_DecrefIfOne(ob);
 }
 
 PUBLIC WUNUSED NONNULL((1)) bool
 (DCALL Dee_DecrefIfNotOne_traced)(DeeObject *__restrict ob,
-                                  char const *UNUSED(file),
-                                  int UNUSED(line)) {
+                                  char const *file,
+                                  int line) {
+	(void)file;
+	(void)line;
 	return Dee_DecrefIfNotOne(ob);
 }
 
 PUBLIC WUNUSED NONNULL((1)) bool
 (DCALL Dee_DecrefWasOk_traced)(DeeObject *__restrict ob,
-                               char const *UNUSED(file),
-                               int UNUSED(line)) {
+                               char const *file,
+                               int line) {
+	(void)file;
+	(void)line;
 	return Dee_DecrefWasOk(ob);
 }
 
 PUBLIC ATTR_RETNONNULL NONNULL((1)) DREF DeeObject **
 (DCALL Dee_Increfv_traced)(DeeObject *const *__restrict object_vector,
                            size_t object_count,
-                           char const *UNUSED(file), int UNUSED(line)) {
+                           char const *file, int line) {
+#ifdef CONFIG_NO_BADREFCNT_CHECKS
+	(void)file;
+	(void)line;
 	return Dee_Increfv(object_vector, object_count);
+#else /* CONFIG_NO_BADREFCNT_CHECKS */
+	size_t i;
+	(void)file;
+	(void)line;
+	for (i = 0; i < object_count; ++i) {
+		DREF DeeObject *ob;
+		ob = object_vector[i];
+		Dee_Incref(ob);
+	}
+	return (DREF DeeObject **)object_vector;
+#endif /* !CONFIG_NO_BADREFCNT_CHECKS */
 }
 PUBLIC ATTR_RETNONNULL NONNULL((1)) DeeObject **
 (DCALL Dee_Decrefv_traced)(DREF DeeObject *const *__restrict object_vector,
                            size_t object_count,
-                           char const *UNUSED(file), int UNUSED(line)) {
+                           char const *file, int line) {
+	(void)file;
+	(void)line;
+#ifdef CONFIG_NO_BADREFCNT_CHECKS
 	return Dee_Decrefv(object_vector, object_count);
+#else /* CONFIG_NO_BADREFCNT_CHECKS */
+	while (object_count--) {
+		DREF DeeObject *ob;
+		ob = object_vector[object_count];
+		Dee_Decref(ob);
+	}
+	return (DREF DeeObject **)object_vector;
+#endif /* !CONFIG_NO_BADREFCNT_CHECKS */
 }
 PUBLIC ATTR_RETNONNULL NONNULL((1, 2)) DREF DeeObject **
 (DCALL Dee_Movrefv_traced)(/*out:ref*/ DeeObject **__restrict dst,
                            /*in*/ DeeObject *const *__restrict src,
                            size_t object_count,
-                           char const *UNUSED(file), int UNUSED(line)) {
+                           char const *file, int line) {
+#ifdef CONFIG_NO_BADREFCNT_CHECKS
+	(void)file;
+	(void)file;
 	return Dee_Movrefv(dst, src, object_count);
+#else /* CONFIG_NO_BADREFCNT_CHECKS */
+	size_t i;
+	(void)file;
+	(void)file;
+	for (i = 0; i < object_count; ++i) {
+		DREF DeeObject *ob;
+		ob = src[i];
+		Dee_Incref(ob);
+		dst[i] = ob;
+	}
+	return dst;
+#endif /* !CONFIG_NO_BADREFCNT_CHECKS */
 }
 
 DFUNDEF void (DCALL Dee_DumpReferenceLeaks)(void);
 PUBLIC void (DCALL Dee_DumpReferenceLeaks)(void) {
 }
+
+#ifndef CONFIG_NO_BADREFCNT_CHECKS
+#undef DeeObject_Destroy
+#undef _DeeFatal_BadIncref
+#undef _DeeFatal_BadDecref
+#define DeeObject_Destroy(self) DeeObject_Destroy_d(self, __FILE__, __LINE__)
+#define _DeeFatal_BadIncref(ob) DeeFatal_BadIncref((DeeObject *)(ob), __FILE__, __LINE__)
+#define _DeeFatal_BadDecref(ob) DeeFatal_BadDecref((DeeObject *)(ob), __FILE__, __LINE__)
+#endif /* !CONFIG_NO_BADREFCNT_CHECKS */
 #endif /* !CONFIG_TRACE_REFCHANGES */
 
 /* Also export all the reference-control macros as functions. */
