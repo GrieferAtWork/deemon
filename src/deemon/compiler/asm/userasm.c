@@ -2172,14 +2172,15 @@ has_operand:
 					opno += digit;
 					ch = *iter++;
 				}
-				if unlikely(opno > self->af_ast->a_assembly.as_opc) {
+				if unlikely(opno >= self->af_ast->a_assembly.as_opc) {
 					DeeError_Throwf(&DeeError_CompilerError,
-					                "Expected `]' after `%[' in user-assembly text");
+					                "Operand `%%%Iu' does not appear in arguments",
+					                opno);
 					goto err;
 				}
 				--iter;
 			}
-			ASSERT(opno <= self->af_ast->a_assembly.as_opc);
+			ASSERT(opno < self->af_ast->a_assembly.as_opc);
 
 			/* Label operands must be prefixed with `l' */
 			if ((opno >= (self->af_ast->a_assembly.as_num_i +

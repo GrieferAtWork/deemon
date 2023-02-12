@@ -557,11 +557,11 @@ struct ast {
 			size_t             as_num_o; /* Amount of output operands. */
 			size_t             as_num_i; /* Amount of input operands. */
 			size_t             as_num_l; /* Amount of input operands. */
-			size_t             as_opc;   /* [== as_num_o+as_num_i+as_num_l] Total number of operands. */
+			size_t             as_opc;   /* [== as_num_o + as_num_i + as_num_l] Total number of operands. */
 			struct asm_operand*as_opv;   /* [0..as_opc][owned] Vector of assembly operands.
-			                              *   - 0..as_num_o-1 are output operands.
-			                              *   - as_num_o..as_num_o+as_num_i-1 are input operands.
-			                              *   - as_num_o+as_num_i..as_opc-1 are label operands. */
+			                              * - 0..as_num_o-1 are output operands.
+			                              * - as_num_o..as_num_o+as_num_i-1 are input operands.
+			                              * - as_num_o+as_num_i..as_opc-1 are label operands. */
 		}                      a_assembly;
 
 	}
