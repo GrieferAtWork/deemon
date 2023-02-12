@@ -28,6 +28,9 @@
 #error "Never include this file directly. - Always include `<hybrid/__atomic.h>' instead"
 #endif /* !__GUARD_HYBRID___ATOMIC_H */
 
+#define __HYBRID_ATOMIC_LOCKFREE_MAX 8
+
+#ifdef __CC__
 #ifdef __x86_64__
 #define __CDECL_OR_DEFAULT /* Nothing */
 #else /* __x86_64__ */
@@ -35,8 +38,6 @@
 #endif /* !__x86_64__ */
 
 __DECL_BEGIN
-
-#define __HYBRID_ATOMIC_LOCKFREE_MAX 8
 
 #ifndef _InterlockedCompareExchange8
 #define _InterlockedCompareExchange8 _InterlockedCompareExchange8
@@ -385,10 +386,10 @@ __NOTHROW_NCX(_InterlockedXor64)(__int64 volatile *__px, __int64 __v) {
 #endif /* !_InterlockedXor64 */
 
 #ifndef _InterlockedIncrement64
-#define _InterlockedIncrement64(px) _InterlockedExchangeAdd64(px, 1)
+#define _InterlockedIncrement64(px) (_InterlockedExchangeAdd64(px, 1) + 1)
 #endif /* !_InterlockedIncrement64 */
 #ifndef _InterlockedDecrement64
-#define _InterlockedDecrement64(px) _InterlockedExchangeAdd64(px, -1)
+#define _InterlockedDecrement64(px) (_InterlockedExchangeAdd64(px, -1) - 1)
 #endif /* !_InterlockedDecrement64 */
 
 #define __hybrid_atomic_xch8_seq_cst(p, val)       ((__UINT8_TYPE__)_InterlockedExchange8((char volatile *)(p), (char)(val)))
@@ -1008,5 +1009,6 @@ __NAMESPACE_INT_END
 #endif /* __arm__ */
 
 __DECL_END
+#endif /* __CC__ */
 
 #endif /* !__GUARD_HYBRID___ATOMIC_MSVC_H */
