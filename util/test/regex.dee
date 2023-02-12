@@ -183,10 +183,16 @@ assert re_match_unicode(r"[\u{7E 7F}]+", "\x7E\x7Fxxxxxxxxxxxxxxxxx") == 2;
 /* Test some of the more advanced regex functions */
 assert "x".refind(r"[[:lower:]]") == (0, 1);
 assert "x".rerfind(r"[[:lower:]]") == (0, 1);
+assert "x".bytes().refind(r"[[:lower:]]") == (0, 1);
+assert "x".bytes().rerfind(r"[[:lower:]]") == (0, 1);
 assert "xyz".rereplace(r"[[:lower:]]", r"(&-&-&)") == "(x-x-x)(y-y-y)(z-z-z)";
 assert "xyz".rereplace(r"[[:lower:]]*", r"(&-&-&)") == "(xyz-xyz-xyz)";
+assert "xyz".bytes().rereplace(r"[[:lower:]]", r"(&-&-&)") == "(x-x-x)(y-y-y)(z-z-z)".bytes();
+assert "xyz".bytes().rereplace(r"[[:lower:]]*", r"(&-&-&)") == "(xyz-xyz-xyz)".bytes();
 assert "foo bar".refind(r"[[:lower:]]") == (0, 1);
 assert "foo bar".rerfind(r"[[:lower:]]") == (6, 7);
+assert "foo bar".bytes().refind(r"[[:lower:]]") == (0, 1);
+assert "foo bar".bytes().rerfind(r"[[:lower:]]") == (6, 7);
 assert "foo bar".rereplace(r"[[:lower:]]", r"(&)") == "(f)(o)(o) (b)(a)(r)";
 assert "foo bar".rereplace(r"[[:lower:]]*", r"(&)") == "(foo) (bar)";
 assert "foo bar".rereplace(r"[[:lower:]]+", r"(&)") == "(foo) (bar)";
@@ -239,3 +245,5 @@ assertReScanf(" #define FOO 42", r"\s*#\s*define\s+(\w+)\s+(\w+)", { "FOO", "42"
 
 assert "a aa aaa".rereplace(r"\baa\b", "X") == "a X aaa";
 assert "a aa aaa".rereplace(r"\<aa\>", "X") == "a X aaa";
+assert "a aa aaa".bytes().rereplace(r"\baa\b", "X") == "a X aaa".bytes();
+assert "a aa aaa".bytes().rereplace(r"\<aa\>", "X") == "a X aaa".bytes();
