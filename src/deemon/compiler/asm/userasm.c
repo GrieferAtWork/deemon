@@ -2039,7 +2039,7 @@ struct assembly_formatter {
 	struct ast            *af_ast;     /* [1..1] The user-assembly ast. */
 	struct ascii_printer   af_printer; /* Printer for the resulting assembly text. */
 	DREF DeeStringObject **af_opreprv; /* [1..1][af_ast->a_assembly.as_opc][owned]
-	                                    *  Vector of pre-allocated operand representations. */
+	                                    * Vector of pre-allocated operand representations. */
 };
 
 PRIVATE NONNULL((1)) void DCALL
@@ -2103,7 +2103,7 @@ next:
 			size_t opno;
 			char mod = 0;
 			DeeStringObject *oprepr;
-			if (!ch && iter == end)
+			if (!ch && iter >= end)
 				break;
 			if (ch == '=') {
 				/* Expand to a unique integer. */

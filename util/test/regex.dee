@@ -236,3 +236,6 @@ function assertReScanf(input, pattern, expected) {
 assertReScanf("#define FOO 42", r"#\s*define\s+(\w+)\s+(\w+)", { "FOO", "42" });
 assertReScanf(" #define FOO 42", r"#\s*define\s+(\w+)\s+(\w+)", {});
 assertReScanf(" #define FOO 42", r"\s*#\s*define\s+(\w+)\s+(\w+)", { "FOO", "42" });
+
+assert "a aa aaa".rereplace(r"\baa\b", "X") == "a X aaa";
+assert "a aa aaa".rereplace(r"\<aa\>", "X") == "a X aaa";
