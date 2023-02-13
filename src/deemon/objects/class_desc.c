@@ -3821,7 +3821,7 @@ err:
 INTERN WUNUSED NONNULL((1, 2, 3, 4)) DREF DeeObject *DCALL
 DeeInstance_CallAttributeKw(struct class_desc *__restrict desc,
                             struct instance_desc *__restrict self,
-                            DeeObject *__restrict this_arg,
+                            DeeObject *this_arg,
                             struct class_attribute *__restrict attr,
                             size_t argc, DeeObject *const *argv,
                             DeeObject *kw) {
@@ -4440,7 +4440,7 @@ INTERN NONNULL((1, 2, 4)) void
 
 
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *
-(DCALL DeeInstance_GetMemberSafe)(DeeTypeObject *__restrict tp_self,
+(DCALL DeeInstance_GetMemberSafe)(DeeTypeObject *tp_self,
                                   DeeObject *__restrict self,
                                   uint16_t addr) {
 	if (DeeObject_AssertType(tp_self, &DeeType_Type))
@@ -4462,7 +4462,7 @@ err:
 }
 
 INTERN WUNUSED NONNULL((1, 2)) int
-(DCALL DeeInstance_BoundMemberSafe)(DeeTypeObject *__restrict tp_self,
+(DCALL DeeInstance_BoundMemberSafe)(DeeTypeObject *tp_self,
                                     DeeObject *__restrict self,
                                     uint16_t addr) {
 	if (DeeObject_AssertType(tp_self, &DeeType_Type))
@@ -4483,7 +4483,7 @@ err:
 }
 
 INTERN WUNUSED NONNULL((1, 2)) int
-(DCALL DeeInstance_DelMemberSafe)(DeeTypeObject *__restrict tp_self,
+(DCALL DeeInstance_DelMemberSafe)(DeeTypeObject *tp_self,
                                   DeeObject *__restrict self,
                                   uint16_t addr) {
 	if (DeeObject_AssertType(tp_self, &DeeType_Type))
@@ -4545,8 +4545,8 @@ INTERN NONNULL((1, 3)) void
 }
 
 INTERN WUNUSED NONNULL((1, 3)) int
-(DCALL DeeClass_SetMemberSafe)(DeeTypeObject *__restrict self,
-                               uint16_t addr, DeeObject *__restrict value) {
+(DCALL DeeClass_SetMemberSafe)(DeeTypeObject *self,
+                               uint16_t addr, DeeObject *value) {
 	if (DeeObject_AssertType(self, &DeeType_Type))
 		goto err;
 	if (!DeeType_IsClass(self))

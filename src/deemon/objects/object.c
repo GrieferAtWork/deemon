@@ -310,11 +310,13 @@ again:
 }
 
 #ifdef __INTELLISENSE__
-PUBLIC void (DCALL Dee_weakref_copyassign)(struct weakref *__restrict self,
-                                          struct weakref const *__restrict other)
+PUBLIC void
+(DCALL Dee_weakref_copyassign)(struct weakref *self,
+                               struct weakref const *other)
 #else /* __INTELLISENSE__ */
-PUBLIC void (DCALL Dee_weakref_copyassign)(struct weakref *__restrict self,
-                                          struct weakref *__restrict other)
+PUBLIC void
+(DCALL Dee_weakref_copyassign)(struct weakref *self,
+                               struct weakref *other)
 #endif /* !__INTELLISENSE__ */
 {
 #ifndef NDEBUG
@@ -1097,7 +1099,7 @@ PUBLIC NONNULL((1)) void
 (DCALL DeeObject_Destroy_d)(DeeObject *__restrict self,
                             char const *UNUSED(file),
                             int UNUSED(line)) {
-	return DeeObject_Destroy(self);
+	DeeObject_Destroy(self);
 }
 
 PUBLIC NONNULL((1)) void
@@ -1105,7 +1107,7 @@ PUBLIC NONNULL((1)) void
 #else /* CONFIG_NO_BADREFCNT_CHECKS */
 PUBLIC NONNULL((1)) void
 (DCALL DeeObject_Destroy)(DeeObject *__restrict self) {
-	return DeeObject_Destroy_d(self, NULL, 0);
+	DeeObject_Destroy_d(self, NULL, 0);
 }
 
 PUBLIC NONNULL((1)) void
@@ -2512,7 +2514,7 @@ PUBLIC DeeTypeObject DeeObject_Type = {
 INTERN WUNUSED NONNULL((1)) int DCALL
 type_ctor(DeeTypeObject *__restrict self) {
 	/* Simply re-initialize everything to ZERO and set the HEAP flag. */
-	bzero(&self->tp_name,
+	bzero((void *)&self->tp_name,
 	      sizeof(DeeTypeObject) -
 	      offsetof(DeeTypeObject, tp_name));
 	self->tp_flags |= TP_FHEAP;
@@ -4199,25 +4201,21 @@ PRIVATE struct type_getset tpconst type_getsets[] = {
 
 
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-type_getattr(DeeObject *self,
-             DeeObject *name) {
+type_getattr(DeeObject *self, DeeObject *name) {
 	return DeeType_GetAttrString((DeeTypeObject *)self,
 	                             DeeString_STR(name),
 	                             DeeString_Hash(name));
 }
 
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
-type_delattr(DeeObject *__restrict self,
-             DeeObject *__restrict name) {
+type_delattr(DeeObject *self, DeeObject *name) {
 	return DeeType_DelAttrString((DeeTypeObject *)self,
 	                             DeeString_STR(name),
 	                             DeeString_Hash(name));
 }
 
 INTERN WUNUSED NONNULL((1, 2, 3)) int DCALL
-type_setattr(DeeObject *__restrict self,
-             DeeObject *__restrict name,
-             DeeObject *__restrict value) {
+type_setattr(DeeObject *self, DeeObject *name, DeeObject *value) {
 	return DeeType_SetAttrString((DeeTypeObject *)self,
 	                             DeeString_STR(name),
 	                             DeeString_Hash(name),
@@ -4225,8 +4223,7 @@ type_setattr(DeeObject *__restrict self,
 }
 
 INTERN WUNUSED DREF DeeObject *DCALL
-type_callattr(DeeObject *__restrict self,
-              DeeObject *__restrict name,
+type_callattr(DeeObject *self, DeeObject *name,
               size_t argc, DeeObject *const *argv) {
 	return DeeType_CallAttrString((DeeTypeObject *)self,
 	                              DeeString_STR(name),
@@ -4235,8 +4232,7 @@ type_callattr(DeeObject *__restrict self,
 }
 
 INTERN WUNUSED DREF DeeObject *DCALL
-type_callattr_kw(DeeObject *__restrict self,
-                 DeeObject *__restrict name,
+type_callattr_kw(DeeObject *self, DeeObject *name,
                  size_t argc, DeeObject *const *argv,
                  DeeObject *kw) {
 	return DeeType_CallAttrStringKw((DeeTypeObject *)self,
@@ -4251,13 +4247,13 @@ type_enumattr(DeeTypeObject *UNUSED(tp_self),
 	return DeeType_EnumAttr((DeeTypeObject *)self, proc, arg);
 }
 
-PRIVATE WUNUSED NONNULL((1)) dhash_t DCALL type_hash(DeeObject *__restrict self) {
+PRIVATE WUNUSED NONNULL((1)) dhash_t DCALL
+type_hash(DeeObject *__restrict self) {
 	return Dee_HashPointer(self);
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-type_eq(DeeObject *self,
-        DeeObject *some_object) {
+type_eq(DeeObject *self, DeeObject *some_object) {
 	if (DeeObject_AssertType(some_object, &DeeType_Type))
 		goto err;
 	return_bool_(self == some_object);
@@ -4266,8 +4262,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-type_ne(DeeObject *self,
-        DeeObject *some_object) {
+type_ne(DeeObject *self, DeeObject *some_object) {
 	if (DeeObject_AssertType(some_object, &DeeType_Type))
 		goto err;
 	return_bool_(self != some_object);

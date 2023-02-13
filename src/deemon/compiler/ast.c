@@ -347,7 +347,7 @@ DEFINE_AST_GENERATOR(, ast_operator_func,
 
 DEFINE_AST_GENERATOR(, ast_multiple,
                      (uint16_t flags, size_t exprc,
-                      /*inherit*/ DREF struct ast **exprv)) {
+                      /*inherit*/ DREF struct ast **__restrict exprv)) {
 	DREF struct ast *result;
 	/* Prevent AST ambiguity by not allowing
 	 * keep-last, single-element multiple ASTs.

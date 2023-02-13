@@ -257,7 +257,7 @@ DFUNDEF void DCALL Dee_DumpReferenceLeaks(void);
 
 
 #ifdef __INTELLISENSE__
-#define Dee_REQUIRES_OBJECT(x) ((void)&(x)->ob_refcnt, (x))
+#define Dee_REQUIRES_OBJECT(x) ((DeeObject *)&(x)->ob_refcnt)
 #else /* __INTELLISENSE__ */
 #define Dee_REQUIRES_OBJECT /* nothing */
 #endif /* !__INTELLISENSE__ */
@@ -532,13 +532,13 @@ DFUNDEF NONNULL((1)) void DCALL Dee_weakref_fini(struct Dee_weakref *__restrict 
  * overwriting whatever object was referenced before.
  * NOTE: Assignment here does _NOT_ override a set deletion callback! */
 DFUNDEF NONNULL((1, 2)) void DCALL Dee_weakref_move(struct Dee_weakref *__restrict dst, struct Dee_weakref *__restrict src);
-DFUNDEF NONNULL((1, 2)) void DCALL Dee_weakref_moveassign(struct Dee_weakref *__restrict dst, struct Dee_weakref *__restrict src);
+DFUNDEF NONNULL((1, 2)) void DCALL Dee_weakref_moveassign(struct Dee_weakref *dst, struct Dee_weakref *src);
 #ifdef __INTELLISENSE__
 DFUNDEF NONNULL((1, 2)) void (DCALL Dee_weakref_copy)(struct Dee_weakref *__restrict self, struct Dee_weakref const *__restrict other);
-DFUNDEF NONNULL((1, 2)) void (DCALL Dee_weakref_copyassign)(struct Dee_weakref *__restrict self, struct Dee_weakref const *__restrict other);
+DFUNDEF NONNULL((1, 2)) void (DCALL Dee_weakref_copyassign)(struct Dee_weakref *self, struct Dee_weakref const *other);
 #else /* __INTELLISENSE__ */
 DFUNDEF NONNULL((1, 2)) void (DCALL Dee_weakref_copy)(struct Dee_weakref *__restrict self, struct Dee_weakref *__restrict other);
-DFUNDEF NONNULL((1, 2)) void (DCALL Dee_weakref_copyassign)(struct Dee_weakref *__restrict self, struct Dee_weakref *__restrict other);
+DFUNDEF NONNULL((1, 2)) void (DCALL Dee_weakref_copyassign)(struct Dee_weakref *self, struct Dee_weakref *other);
 #ifdef __cplusplus
 #define Dee_weakref_copy(self, other) Dee_weakref_copy(self, (struct ::Dee_weakref *)(other))
 #define Dee_weakref_copyassign(self, other) Dee_weakref_copyassign(self, (struct ::Dee_weakref *)(other))
@@ -1007,9 +1007,9 @@ LOCAL ATTR_RETNONNULL NONNULL((1, 2)) DREF DeeObject **
 #endif /* !CONFIG_[NO_]INLINE_INCREFV */
 
 #ifdef __INTELLISENSE__
-#define Dee_Increfv_untraced(object_vector, object_count) ((void)(object_count), (DeeObject **)&Dee_REQUIRES_OBJECT(*(object_vector)))
-#define Dee_Decrefv_untraced(object_vector, object_count) ((void)(object_count), (DeeObject **)&Dee_REQUIRES_OBJECT(*(object_vector)))
-#define Dee_Movrefv_untraced(dst, src, object_count)      ((void)(object_count), Dee_REQUIRES_OBJECT(*(src)), (DeeObject **)&Dee_REQUIRES_OBJECT(*(dst)))
+#define Dee_Increfv_untraced(object_vector, object_count) ((void)(object_count), (DeeObject **)Dee_REQUIRES_OBJECT(*(object_vector)))
+#define Dee_Decrefv_untraced(object_vector, object_count) ((void)(object_count), (DeeObject **)Dee_REQUIRES_OBJECT(*(object_vector)))
+#define Dee_Movrefv_untraced(dst, src, object_count)      ((void)(object_count), Dee_REQUIRES_OBJECT(*(src)), (DeeObject **)Dee_REQUIRES_OBJECT(*(dst)))
 #elif defined(CONFIG_INLINE_INCREFV)
 #define Dee_Increfv_untraced(object_vector, object_count) \
 	Dee_Increfv_untraced((DeeObject **)(object_vector), object_count)
@@ -1061,9 +1061,9 @@ LOCAL ATTR_RETNONNULL NONNULL((1, 2)) DREF DeeObject **
 
 
 #ifdef __INTELLISENSE__
-#define Dee_XIncrefv_untraced(object_vector, object_count) ((void)(object_count), (DeeObject **)&Dee_REQUIRES_OBJECT(*(object_vector)))
-#define Dee_XDecrefv_untraced(object_vector, object_count) ((void)(object_count), (DeeObject **)&Dee_REQUIRES_OBJECT(*(object_vector)))
-#define Dee_XMovrefv_untraced(dst, src, object_count)      ((void)(object_count), Dee_REQUIRES_OBJECT(*(src)), (DeeObject **)&Dee_REQUIRES_OBJECT(*(dst)))
+#define Dee_XIncrefv_untraced(object_vector, object_count) ((void)(object_count), (DeeObject **)Dee_REQUIRES_OBJECT(*(object_vector)))
+#define Dee_XDecrefv_untraced(object_vector, object_count) ((void)(object_count), (DeeObject **)Dee_REQUIRES_OBJECT(*(object_vector)))
+#define Dee_XMovrefv_untraced(dst, src, object_count)      ((void)(object_count), Dee_REQUIRES_OBJECT(*(src)), (DeeObject **)Dee_REQUIRES_OBJECT(*(dst)))
 #else /* __INTELLISENSE__ */
 #define Dee_XIncrefv_untraced(object_vector, object_count) (Dee_XIncrefv)((DeeObject *const *)(object_vector), object_count)
 #define Dee_XDecrefv_untraced(object_vector, object_count) (Dee_XDecrefv)((DeeObject *const *)(object_vector), object_count)
@@ -2986,7 +2986,7 @@ DFUNDEF WUNUSED NONNULL((1, 2, 5)) int (DCALL DeeObject_SetItemStringLen)(DeeObj
 DFUNDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeObject_GetRange)(DeeObject *self, DeeObject *begin, DeeObject *end);
 DFUNDEF WUNUSED NONNULL((1, 3)) DREF DeeObject *(DCALL DeeObject_GetRangeBeginIndex)(DeeObject *self, Dee_ssize_t begin, DeeObject *end);
 DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *(DCALL DeeObject_GetRangeEndIndex)(DeeObject *self, DeeObject *begin, Dee_ssize_t end);
-DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *(DCALL DeeObject_GetRangeIndex)(DeeObject *self, Dee_ssize_t begin, Dee_ssize_t end);
+DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *(DCALL DeeObject_GetRangeIndex)(DeeObject *__restrict self, Dee_ssize_t begin, Dee_ssize_t end);
 DFUNDEF WUNUSED NONNULL((1, 2, 3)) int (DCALL DeeObject_DelRange)(DeeObject *self, DeeObject *begin, DeeObject *end);
 DFUNDEF WUNUSED NONNULL((1, 2, 3, 4)) int (DCALL DeeObject_SetRange)(DeeObject *self, DeeObject *begin, DeeObject *end, DeeObject *value);
 DFUNDEF WUNUSED NONNULL((1, 3, 4)) int (DCALL DeeObject_SetRangeBeginIndex)(DeeObject *self, Dee_ssize_t begin, DeeObject *end, DeeObject *value);
@@ -3163,9 +3163,9 @@ DFUNDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeObject_CallAttrTupl
  *              same way as `-2', however search for the attribute should
  *              not continue. */
 DFUNDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeObject_BoundAttr)(DeeObject *self, /*String*/ DeeObject *attr_name);
-DFUNDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeObject_BoundAttrString)(DeeObject *self, char const *__restrict attr_name);
-DFUNDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeObject_BoundAttrStringHash)(DeeObject *self, char const *__restrict attr_name, Dee_hash_t hash);
-DFUNDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeObject_BoundAttrStringLenHash)(DeeObject *self, char const *__restrict attr_name, size_t attrlen, Dee_hash_t hash);
+DFUNDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeObject_BoundAttrString)(DeeObject *__restrict self, char const *__restrict attr_name);
+DFUNDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeObject_BoundAttrStringHash)(DeeObject *__restrict self, char const *__restrict attr_name, Dee_hash_t hash);
+DFUNDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeObject_BoundAttrStringLenHash)(DeeObject *__restrict self, char const *__restrict attr_name, size_t attrlen, Dee_hash_t hash);
 #define DeeObject_BoundAttrStringLen(self, attr_name, attrlen) \
 	DeeObject_BoundAttrStringLenHash(self, attr_name, attrlen, Dee_HashPtr(attr_name, attrlen))
 

@@ -387,7 +387,7 @@ err:
 }
 
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
-NLen(DeeType_BoundCachedClassAttr)(DeeTypeObject *tp_self,
+NLen(DeeType_BoundCachedClassAttr)(DeeTypeObject *__restrict tp_self,
                                    ATTR_ARG, dhash_t hash) {
 	dhash_t i, perturb;
 	MEMBERCACHE_READ(&tp_self->tp_class_cache);
@@ -3720,8 +3720,8 @@ S(DeeType_CallInstanceMethodAttrKw,
 
 INTERN WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
 S(DeeType_CallIInstanceMethodAttrKw,
-  DeeType_CallIInstanceMethodAttrLenKw)(DeeTypeObject *__restrict tp_invoker,
-                                        DeeTypeObject *__restrict tp_self,
+  DeeType_CallIInstanceMethodAttrLenKw)(DeeTypeObject *tp_invoker,
+                                        DeeTypeObject *tp_self,
                                         ATTR_ARG, dhash_t hash,
                                         size_t argc, DeeObject *const *argv,
                                         DeeObject *kw) {

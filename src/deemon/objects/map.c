@@ -518,7 +518,7 @@ proxy_iterself_items(MapProxy *__restrict self) {
 PRIVATE struct type_seq proxykeys_seq = {
 	/* .tp_iter_self = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&proxy_iterself_keys,
 	/* .tp_size      = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&proxy_size,
-	/* .tp_contains  = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict self, DeeObject *__restrict))&proxy_contains_key
+	/* .tp_contains  = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&proxy_contains_key
 };
 
 PRIVATE struct type_seq proxyvalues_seq = {

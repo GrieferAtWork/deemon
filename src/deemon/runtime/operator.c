@@ -1647,7 +1647,7 @@ DeeObject_CallPack(DeeObject *self, size_t argc, ...) {
 }
 
 PUBLIC WUNUSED NONNULL((1, 2)) DREF DeeObject *
-DeeObject_Callf(DeeObject *__restrict self,
+DeeObject_Callf(DeeObject *self,
                 char const *__restrict format, ...) {
 	DREF DeeObject *result;
 	va_list args;

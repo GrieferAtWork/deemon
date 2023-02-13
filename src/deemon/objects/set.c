@@ -745,7 +745,7 @@ PRIVATE struct type_cmp set_cmp = {
 
 INTDEF WUNUSED DREF DeeObject *DCALL new_empty_sequence_iterator(void);
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-set_iterself(DeeObject *self) {
+set_iterself(DeeObject *__restrict self) {
 	if unlikely(Dee_TYPE(self) == &DeeSet_Type) {
 		/* Special case: Create an empty iterator.
 		 * >> This can happen when someone tries to iterate a symbolic empty-mapping object. */

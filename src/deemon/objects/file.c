@@ -1152,7 +1152,8 @@ err:
 
 
 PUBLIC WUNUSED NONNULL((1, 2)) dssize_t DCALL
-DeeFile_VPrintf(DeeObject *self, char const *__restrict format, va_list args) {
+DeeFile_VPrintf(DeeObject *__restrict self,
+                char const *__restrict format, va_list args) {
 	return DeeFormat_VPrintf((dformatprinter)&DeeFile_WriteAll, self, format, args);
 }
 

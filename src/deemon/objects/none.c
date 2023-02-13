@@ -336,8 +336,8 @@ PUBLIC DeeTypeObject DeeNone_Type = {
 		/* .tp_move_assign = */ (int (DCALL *)(DeeObject *, DeeObject *))&none_i2
 	},
 	/* .tp_cast = */ {
-		/* .tp_str  = */ (DREF DeeObject *(DCALL *)(DeeObject *))&none_str,
-		/* .tp_repr = */ (DREF DeeObject *(DCALL *)(DeeObject *))&none_str,
+		/* .tp_str  = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&none_str,
+		/* .tp_repr = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&none_str,
 		/* .tp_bool = */ &none_bool
 	},
 	/* .tp_call          = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&none_call,

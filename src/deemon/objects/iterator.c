@@ -65,8 +65,8 @@ get_generic_attribute(DeeTypeObject *__restrict tp_self,
 
 PRIVATE int DCALL iterator_inc(DeeObject **__restrict pself);
 PRIVATE int DCALL iterator_dec(DeeObject **__restrict pself);
-PRIVATE int DCALL iterator_inplace_add(DeeObject **__restrict pself, DeeObject *__restrict countob);
-PRIVATE int DCALL iterator_inplace_sub(DeeObject **__restrict pself, DeeObject *__restrict countob);
+PRIVATE int DCALL iterator_inplace_add(DeeObject **__restrict pself, DeeObject *countob);
+PRIVATE int DCALL iterator_inplace_sub(DeeObject **__restrict pself, DeeObject *countob);
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL iterator_add(DeeObject *self, DeeObject *countob);
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL iterator_sub(DeeObject *self, DeeObject *countob);
 
@@ -160,21 +160,21 @@ err:
 }
 
 
-#define DEFINE_ITERATOR_COMPARE(name, op, if_same)                  \
-	PRIVATE WUNUSED DREF DeeObject *DCALL                                   \
-	name(DeeObject *__restrict self, DeeObject *__restrict other) { \
-		dssize_t mylen, otlen;                                      \
-		if (DeeObject_AssertTypeExact(other, Dee_TYPE(self)))       \
-			return NULL;                                            \
-		if (self == other)                                          \
-			if_same;                                                \
-		mylen = get_remaining_iterations(self);                     \
-		if unlikely(mylen < 0)                                      \
-			return NULL;                                            \
-		otlen = get_remaining_iterations(other);                    \
-		if unlikely(otlen < 0)                                      \
-			return NULL;                                            \
-		return_bool_(otlen op mylen);                               \
+#define DEFINE_ITERATOR_COMPARE(name, op, if_same)            \
+	PRIVATE WUNUSED DREF DeeObject *DCALL                     \
+	name(DeeObject *self, DeeObject *other) {                 \
+		dssize_t mylen, otlen;                                \
+		if (DeeObject_AssertTypeExact(other, Dee_TYPE(self))) \
+			return NULL;                                      \
+		if (self == other)                                    \
+			if_same;                                          \
+		mylen = get_remaining_iterations(self);               \
+		if unlikely(mylen < 0)                                \
+			return NULL;                                      \
+		otlen = get_remaining_iterations(other);              \
+		if unlikely(otlen < 0)                                \
+			return NULL;                                      \
+		return_bool_(otlen op mylen);                         \
 	}
 DEFINE_ITERATOR_COMPARE(iterator_eq, ==, return_true)
 DEFINE_ITERATOR_COMPARE(iterator_ne, !=, return_false)
@@ -2216,7 +2216,7 @@ iterator_dec(DeeObject **__restrict pself) {
 
 PRIVATE int DCALL
 iterator_inplace_add(DeeObject **__restrict pself,
-                     DeeObject *__restrict countob) {
+                     DeeObject *countob) {
 	dssize_t count;
 	/* Increment the Iterator by `(int)count' */
 	if (DeeObject_AsSSize(countob, &count))
@@ -2233,7 +2233,7 @@ err:
 
 PRIVATE int DCALL
 iterator_inplace_sub(DeeObject **__restrict pself,
-                     DeeObject *__restrict countob) {
+                     DeeObject *countob) {
 	dssize_t count;
 	/* Increment the Iterator by `(int)count' */
 	if (DeeObject_AsSSize(countob, &count))
@@ -2388,8 +2388,7 @@ PRIVATE struct type_math iterator_math = {
 
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-iterator_assign(DeeObject *__restrict self,
-                DeeObject *__restrict other) {
+iterator_assign(DeeObject *self, DeeObject *other) {
 	size_t index;
 	if (DeeObject_AssertType(other, Dee_TYPE(self)))
 		goto err;

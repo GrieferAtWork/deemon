@@ -362,7 +362,7 @@ INTERN ATTR_COLD NONNULL((1, 2)) int
 
 INTERN ATTR_COLD NONNULL((1, 2)) int
 (DCALL err_keywords_func_not_accepted)(char const *__restrict name,
-                               DeeObject *__restrict kw) {
+                                       DeeObject *__restrict kw) {
 	return DeeError_Throwf(&DeeError_TypeError,
 	                       "Function %s does not accept keyword arguments %r",
 	                       name, kw);
@@ -712,7 +712,7 @@ INTERN ATTR_COLD NONNULL((1, 2)) int
 
 
 INTERN ATTR_COLD NONNULL((1)) int
-(DCALL err_invalid_refs_size)(DeeObject *code, size_t num_refs) {
+(DCALL err_invalid_refs_size)(DeeObject *__restrict code, size_t num_refs) {
 	ASSERT_OBJECT_TYPE_EXACT(code, &DeeCode_Type);
 	return DeeError_Throwf(&DeeError_TypeError,
 	                       "Code object expects %I16u references when %Iu were given",
@@ -900,7 +900,7 @@ INTERN ATTR_COLD NONNULL((1, 2)) int
 }
 
 INTERN ATTR_COLD NONNULL((1, 2)) int
-(DCALL err_unknown_key)(DeeObject *__restrict map, DeeObject *__restrict key) {
+(DCALL err_unknown_key)(DeeObject *map, DeeObject *key) {
 	ASSERT_OBJECT(map);
 	ASSERT_OBJECT(key);
 	return DeeError_Throwf(&DeeError_KeyError,

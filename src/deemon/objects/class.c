@@ -710,7 +710,7 @@ type_invoke_base_constructor(DeeTypeObject *__restrict tp_self,
 	ASSERT(!(tp_self->tp_flags & TP_FVARIABLE));
 	if (kw) {
 		if (tp_self->tp_init.tp_alloc.tp_any_ctor_kw) {
-			int (DCALL *func)(DeeObject *, size_t, DeeObject *const *, DeeObject *);
+			int (DCALL *func)(DeeObject *__restrict, size_t, DeeObject *const *, DeeObject *);
 			func = tp_self->tp_init.tp_alloc.tp_any_ctor_kw;
 			return DeeType_INVOKE_ANY_CTOR_KW(func, tp_self, self, argc, argv, kw);
 		}
@@ -731,13 +731,13 @@ type_invoke_base_constructor(DeeTypeObject *__restrict tp_self,
 		return DeeType_INVOKE_CTOR(func, tp_self, self);
 	}
 	if (tp_self->tp_init.tp_alloc.tp_any_ctor) {
-		int (DCALL *func)(DeeObject *, size_t, DeeObject *const *);
+		int (DCALL *func)(DeeObject *__restrict, size_t, DeeObject *const *);
 		func = tp_self->tp_init.tp_alloc.tp_any_ctor;
 		return DeeType_INVOKE_ANY_CTOR(func, tp_self, self, argc, argv);
 	}
 	if (tp_self->tp_init.tp_alloc.tp_copy_ctor &&
 	    (argc == 1 && DeeObject_InstanceOf(argv[0], tp_self))) {
-		int (DCALL *func)(DeeObject *, DeeObject *);
+		int (DCALL *func)(DeeObject *__restrict, DeeObject *__restrict);
 		func = tp_self->tp_init.tp_alloc.tp_copy_ctor;
 		return DeeType_INVOKE_COPY(func, tp_self, self, argv[0]);
 	}
@@ -768,19 +768,19 @@ instance_initsuper_as_copy(DeeTypeObject *tp_super,
 
 	/* Initialize the super-type. */
 	if (tp_super->tp_init.tp_alloc.tp_deep_ctor && deep_copy) {
-		int (DCALL *func)(DeeObject *, DeeObject *);
+		int (DCALL *func)(DeeObject *__restrict, DeeObject *__restrict);
 		func   = tp_super->tp_init.tp_alloc.tp_deep_ctor;
 		result = DeeType_INVOKE_DEEPCOPY(func, tp_super, self, other);
 	} else if (tp_super->tp_init.tp_alloc.tp_copy_ctor) {
-		int (DCALL *func)(DeeObject *, DeeObject *);
+		int (DCALL *func)(DeeObject *__restrict, DeeObject *__restrict);
 		func   = tp_super->tp_init.tp_alloc.tp_copy_ctor;
 		result = DeeType_INVOKE_COPY(func, tp_super, self, other);
 	} else if (tp_super->tp_init.tp_alloc.tp_any_ctor) {
-		int (DCALL *func)(DeeObject *, size_t, DeeObject *const *);
+		int (DCALL *func)(DeeObject *__restrict, size_t, DeeObject *const *);
 		func   = tp_super->tp_init.tp_alloc.tp_any_ctor;
 		result = DeeType_INVOKE_ANY_CTOR(func, tp_super, self, 1, (DeeObject **)&other);
 	} else if (tp_super->tp_init.tp_alloc.tp_any_ctor_kw) {
-		int (DCALL *func)(DeeObject *, size_t, DeeObject *const *, DeeObject *);
+		int (DCALL *func)(DeeObject *__restrict, size_t, DeeObject *const *, DeeObject *);
 		func   = tp_super->tp_init.tp_alloc.tp_any_ctor_kw;
 		result = DeeType_INVOKE_ANY_CTOR_KW(func, tp_super, self, 1, (DeeObject **)&other, NULL);
 	} else {
@@ -956,7 +956,7 @@ instance_builtin_nobase_tcopy(DeeTypeObject *tp_self,
 }
 #endif /* CONFIG_NOBASE_OPTIMIZED_CLASS_OPERATORS */
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
-instance_builtin_tdeepload(DeeTypeObject *__restrict tp_self,
+instance_builtin_tdeepload(DeeTypeObject *tp_self,
                            DeeObject *__restrict self) {
 	struct class_desc *desc        = DeeClass_DESC(tp_self);
 	struct instance_desc *instance = DeeInstance_DESC(desc, self);
@@ -1156,11 +1156,11 @@ instance_initsuper_as_ctor(DeeTypeObject *__restrict tp_super,
 		func   = tp_super->tp_init.tp_alloc.tp_ctor;
 		result = DeeType_INVOKE_CTOR(func, tp_super, self);
 	} else if (tp_super->tp_init.tp_alloc.tp_any_ctor) {
-		int (DCALL *func)(DeeObject *, size_t, DeeObject *const *);
+		int (DCALL *func)(DeeObject *__restrict, size_t, DeeObject *const *);
 		func   = tp_super->tp_init.tp_alloc.tp_any_ctor;
 		result = DeeType_INVOKE_ANY_CTOR(func, tp_super, self, 0, NULL);
 	} else if (tp_super->tp_init.tp_alloc.tp_any_ctor_kw) {
-		int (DCALL *func)(DeeObject *, size_t, DeeObject *const *, DeeObject *);
+		int (DCALL *func)(DeeObject *__restrict, size_t, DeeObject *const *, DeeObject *);
 		func   = tp_super->tp_init.tp_alloc.tp_any_ctor_kw;
 		result = DeeType_INVOKE_ANY_CTOR_KW(func, tp_super, self, 0, NULL, NULL);
 	} else {
@@ -1190,11 +1190,11 @@ instance_initsuper_as_init(DeeTypeObject *tp_super,
 		func   = tp_super->tp_init.tp_alloc.tp_ctor;
 		result = DeeType_INVOKE_CTOR(func, tp_super, self);
 	} else if (tp_super->tp_init.tp_alloc.tp_any_ctor) {
-		int (DCALL *func)(DeeObject *, size_t, DeeObject *const *);
+		int (DCALL *func)(DeeObject *__restrict, size_t, DeeObject *const *);
 		func   = tp_super->tp_init.tp_alloc.tp_any_ctor;
 		result = DeeType_INVOKE_ANY_CTOR(func, tp_super, self, argc, argv);
 	} else if (tp_super->tp_init.tp_alloc.tp_any_ctor_kw) {
-		int (DCALL *func)(DeeObject *, size_t, DeeObject *const *, DeeObject *);
+		int (DCALL *func)(DeeObject *__restrict, size_t, DeeObject *const *, DeeObject *);
 		func   = tp_super->tp_init.tp_alloc.tp_any_ctor_kw;
 		result = DeeType_INVOKE_ANY_CTOR_KW(func, tp_super, self, argc, argv, NULL);
 	} else {
@@ -1220,7 +1220,7 @@ instance_initsuper_as_initkw(DeeTypeObject *tp_super,
 
 	/* Initialize the super-type. */
 	if (tp_super->tp_init.tp_alloc.tp_any_ctor_kw) {
-		int (DCALL *func)(DeeObject *, size_t, DeeObject *const *, DeeObject *);
+		int (DCALL *func)(DeeObject *__restrict, size_t, DeeObject *const *, DeeObject *);
 		func   = tp_super->tp_init.tp_alloc.tp_any_ctor_kw;
 		result = DeeType_INVOKE_ANY_CTOR_KW(func, tp_super, self, argc, argv, kw);
 	} else {
@@ -1237,7 +1237,7 @@ instance_initsuper_as_initkw(DeeTypeObject *tp_super,
 			}
 		}
 		if (tp_super->tp_init.tp_alloc.tp_any_ctor) {
-			int (DCALL *func)(DeeObject *, size_t, DeeObject *const *);
+			int (DCALL *func)(DeeObject *__restrict, size_t, DeeObject *const *);
 			func   = tp_super->tp_init.tp_alloc.tp_any_ctor;
 			result = DeeType_INVOKE_ANY_CTOR(func, tp_super, self, argc, argv);
 		} else if (tp_super->tp_init.tp_alloc.tp_ctor && !argc) {
@@ -1258,7 +1258,7 @@ err:
 /* User-defined constructor invocation. */
 /* `OPERATOR_CONSTRUCTOR' + `CLASS_OPERATOR_SUPERARGS' */
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
-instance_super_tctor(DeeTypeObject *__restrict tp_self,
+instance_super_tctor(DeeTypeObject *tp_self,
                      DeeObject *__restrict self) {
 	struct class_desc *desc        = DeeClass_DESC(tp_self);
 	struct instance_desc *instance = DeeInstance_DESC(desc, self);
@@ -1333,7 +1333,7 @@ err_args_only:
 }
 
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
-instance_kwsuper_tctor(DeeTypeObject *__restrict tp_self,
+instance_kwsuper_tctor(DeeTypeObject *tp_self,
                        DeeObject *__restrict self) {
 	struct class_desc *desc        = DeeClass_DESC(tp_self);
 	struct instance_desc *instance = DeeInstance_DESC(desc, self);
@@ -1419,7 +1419,7 @@ err_args_only:
 }
 
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
-instance_super_tinit(DeeTypeObject *tp_self, DeeObject *self,
+instance_super_tinit(DeeTypeObject *tp_self, DeeObject *__restrict self,
                      size_t argc, DeeObject *const *argv) {
 	struct class_desc *desc        = DeeClass_DESC(tp_self);
 	struct instance_desc *instance = DeeInstance_DESC(desc, self);
@@ -1494,7 +1494,7 @@ err_args_only:
 }
 
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
-instance_kwsuper_tinit(DeeTypeObject *tp_self, DeeObject *self,
+instance_kwsuper_tinit(DeeTypeObject *tp_self, DeeObject *__restrict self,
                        size_t argc, DeeObject *const *argv) {
 	struct class_desc *desc        = DeeClass_DESC(tp_self);
 	struct instance_desc *instance = DeeInstance_DESC(desc, self);
@@ -1581,7 +1581,7 @@ err_args_only:
 
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 instance_super_tinitkw(DeeTypeObject *tp_self,
-                       DeeObject *self, size_t argc,
+                       DeeObject *__restrict self, size_t argc,
                        DeeObject *const *argv, DeeObject *kw) {
 	struct class_desc *desc        = DeeClass_DESC(tp_self);
 	struct instance_desc *instance = DeeInstance_DESC(desc, self);
@@ -1657,7 +1657,7 @@ err_args_only:
 
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 instance_kwsuper_tinitkw(DeeTypeObject *tp_self,
-                         DeeObject *self, size_t argc,
+                         DeeObject *__restrict self, size_t argc,
                          DeeObject *const *argv, DeeObject *kw) {
 	struct class_desc *desc        = DeeClass_DESC(tp_self);
 	struct instance_desc *instance = DeeInstance_DESC(desc, self);
@@ -1744,7 +1744,7 @@ err_args_only:
 
 /* `CLASS_OPERATOR_SUPERARGS' */
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
-instance_builtin_super_tctor(DeeTypeObject *__restrict tp_self,
+instance_builtin_super_tctor(DeeTypeObject *tp_self,
                              DeeObject *__restrict self) {
 	struct class_desc *desc        = DeeClass_DESC(tp_self);
 	struct instance_desc *instance = DeeInstance_DESC(desc, self);
@@ -1796,7 +1796,7 @@ err:
 }
 
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
-instance_builtin_kwsuper_tctor(DeeTypeObject *__restrict tp_self,
+instance_builtin_kwsuper_tctor(DeeTypeObject *tp_self,
                                DeeObject *__restrict self) {
 	struct class_desc *desc        = DeeClass_DESC(tp_self);
 	struct instance_desc *instance = DeeInstance_DESC(desc, self);
@@ -1860,7 +1860,7 @@ err:
 }
 
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
-instance_builtin_super_tinit(DeeTypeObject *tp_self, DeeObject *self,
+instance_builtin_super_tinit(DeeTypeObject *tp_self, DeeObject *__restrict self,
                              size_t argc, DeeObject *const *argv) {
 	struct class_desc *desc        = DeeClass_DESC(tp_self);
 	struct instance_desc *instance = DeeInstance_DESC(desc, self);
@@ -1912,7 +1912,7 @@ err:
 }
 
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
-instance_builtin_kwsuper_tinit(DeeTypeObject *tp_self, DeeObject *self,
+instance_builtin_kwsuper_tinit(DeeTypeObject *tp_self, DeeObject *__restrict self,
                                size_t argc, DeeObject *const *argv) {
 	struct class_desc *desc        = DeeClass_DESC(tp_self);
 	struct instance_desc *instance = DeeInstance_DESC(desc, self);
@@ -1977,7 +1977,7 @@ err:
 
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 instance_builtin_super_tinitkw(DeeTypeObject *tp_self,
-                               DeeObject *self, size_t argc,
+                               DeeObject *__restrict self, size_t argc,
                                DeeObject *const *argv, DeeObject *kw) {
 	struct class_desc *desc        = DeeClass_DESC(tp_self);
 	struct instance_desc *instance = DeeInstance_DESC(desc, self);
@@ -2030,7 +2030,7 @@ err:
 
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 instance_builtin_kwsuper_tinitkw(DeeTypeObject *tp_self,
-                                 DeeObject *self, size_t argc,
+                                 DeeObject *__restrict self, size_t argc,
                                  DeeObject *const *argv, DeeObject *kw) {
 	struct class_desc *desc        = DeeClass_DESC(tp_self);
 	struct instance_desc *instance = DeeInstance_DESC(desc, self);
@@ -2095,7 +2095,7 @@ err:
 
 /* `OPERATOR_CONSTRUCTOR' */
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
-instance_tctor(DeeTypeObject *__restrict tp_self,
+instance_tctor(DeeTypeObject *tp_self,
                DeeObject *__restrict self) {
 	struct class_desc *desc        = DeeClass_DESC(tp_self);
 	struct instance_desc *instance = DeeInstance_DESC(desc, self);
@@ -2142,7 +2142,7 @@ err:
 }
 
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
-instance_tinit(DeeTypeObject *tp_self, DeeObject *self,
+instance_tinit(DeeTypeObject *tp_self, DeeObject *__restrict self,
                size_t argc, DeeObject *const *argv) {
 	struct class_desc *desc        = DeeClass_DESC(tp_self);
 	struct instance_desc *instance = DeeInstance_DESC(desc, self);
@@ -2190,7 +2190,7 @@ err:
 
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 instance_tinitkw(DeeTypeObject *tp_self,
-                 DeeObject *self, size_t argc,
+                 DeeObject *__restrict self, size_t argc,
                  DeeObject *const *argv, DeeObject *kw) {
 	struct class_desc *desc        = DeeClass_DESC(tp_self);
 	struct instance_desc *instance = DeeInstance_DESC(desc, self);
@@ -2239,7 +2239,7 @@ err:
 #ifdef CONFIG_NOBASE_OPTIMIZED_CLASS_OPERATORS
 /* `OPERATOR_CONSTRUCTOR' (but the type doesn't have a base) */
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
-instance_nobase_tctor(DeeTypeObject *__restrict tp_self,
+instance_nobase_tctor(DeeTypeObject *tp_self,
                       DeeObject *__restrict self) {
 	struct class_desc *desc        = DeeClass_DESC(tp_self);
 	struct instance_desc *instance = DeeInstance_DESC(desc, self);
@@ -2275,7 +2275,7 @@ err:
 }
 
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
-instance_nobase_tinit(DeeTypeObject *tp_self, DeeObject *self,
+instance_nobase_tinit(DeeTypeObject *tp_self, DeeObject *__restrict self,
                       size_t argc, DeeObject *const *argv) {
 	struct class_desc *desc        = DeeClass_DESC(tp_self);
 	struct instance_desc *instance = DeeInstance_DESC(desc, self);
@@ -2312,7 +2312,7 @@ err:
 
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 instance_nobase_tinitkw(DeeTypeObject *tp_self,
-                        DeeObject *self, size_t argc,
+                        DeeObject *__restrict self, size_t argc,
                         DeeObject *const *argv, DeeObject *kw) {
 	struct class_desc *desc        = DeeClass_DESC(tp_self);
 	struct instance_desc *instance = DeeInstance_DESC(desc, self);
@@ -2351,7 +2351,7 @@ err:
 /* `OPERATOR_CONSTRUCTOR', with the `TP_FINHERITCTOR' flag set.
  * NOTE: These functions always invoke the user-defined constructor without any arguments! */
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
-instance_inherited_tinit(DeeTypeObject *tp_self, DeeObject *self,
+instance_inherited_tinit(DeeTypeObject *tp_self, DeeObject *__restrict self,
                          size_t argc, DeeObject *const *argv) {
 	struct class_desc *desc        = DeeClass_DESC(tp_self);
 	struct instance_desc *instance = DeeInstance_DESC(desc, self);
@@ -2398,7 +2398,7 @@ err:
 
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 instance_inherited_tinitkw(DeeTypeObject *tp_self,
-                           DeeObject *self, size_t argc,
+                           DeeObject *__restrict self, size_t argc,
                            DeeObject *const *argv, DeeObject *kw) {
 	struct class_desc *desc        = DeeClass_DESC(tp_self);
 	struct instance_desc *instance = DeeInstance_DESC(desc, self);
@@ -2445,7 +2445,7 @@ err:
 
 /* No predefined construction operators. */
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
-instance_builtin_tctor(DeeTypeObject *__restrict tp_self,
+instance_builtin_tctor(DeeTypeObject *tp_self,
                        DeeObject *__restrict self) {
 	struct class_desc *desc        = DeeClass_DESC(tp_self);
 	struct instance_desc *instance = DeeInstance_DESC(desc, self);
@@ -2470,7 +2470,7 @@ err_members:
 }
 
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
-instance_builtin_tinit(DeeTypeObject *tp_self, DeeObject *self,
+instance_builtin_tinit(DeeTypeObject *tp_self, DeeObject *__restrict self,
                        size_t argc, DeeObject *const *argv) {
 	struct class_desc *desc        = DeeClass_DESC(tp_self);
 	struct instance_desc *instance = DeeInstance_DESC(desc, self);
@@ -2501,7 +2501,7 @@ err:
 
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 instance_builtin_tinitkw(DeeTypeObject *tp_self,
-                         DeeObject *self, size_t argc,
+                         DeeObject *__restrict self, size_t argc,
                          DeeObject *const *argv, DeeObject *kw) {
 	struct class_desc *desc        = DeeClass_DESC(tp_self);
 	struct instance_desc *instance = DeeInstance_DESC(desc, self);
@@ -2543,7 +2543,7 @@ err:
 #ifdef CONFIG_NOBASE_OPTIMIZED_CLASS_OPERATORS
 /* No predefined construction operators. (but the type doesn't have a base) */
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
-instance_builtin_nobase_tctor(DeeTypeObject *__restrict tp_self,
+instance_builtin_nobase_tctor(DeeTypeObject *tp_self,
                               DeeObject *__restrict self) {
 	struct class_desc *desc        = DeeClass_DESC(tp_self);
 	struct instance_desc *instance = DeeInstance_DESC(desc, self);
@@ -2558,7 +2558,7 @@ instance_builtin_nobase_tctor(DeeTypeObject *__restrict tp_self,
 
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 instance_builtin_nobase_tinit(DeeTypeObject *tp_self,
-                              DeeObject *self,
+                              DeeObject *__restrict self,
                               size_t argc, DeeObject *const *argv) {
 	struct class_desc *desc        = DeeClass_DESC(tp_self);
 	struct instance_desc *instance = DeeInstance_DESC(desc, self);
@@ -2575,7 +2575,7 @@ instance_builtin_nobase_tinit(DeeTypeObject *tp_self,
 
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 instance_builtin_nobase_tinitkw(DeeTypeObject *tp_self,
-                                DeeObject *self, size_t argc,
+                                DeeObject *__restrict self, size_t argc,
                                 DeeObject *const *argv, DeeObject *kw) {
 	struct class_desc *desc        = DeeClass_DESC(tp_self);
 	struct instance_desc *instance = DeeInstance_DESC(desc, self);
@@ -2607,7 +2607,7 @@ err:
 
 /* No predefined construction operators, but `TP_FINHERITCTOR' is set. */
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
-instance_builtin_inherited_tctor(DeeTypeObject *__restrict tp_self,
+instance_builtin_inherited_tctor(DeeTypeObject *tp_self,
                                  DeeObject *__restrict self) {
 	struct class_desc *desc        = DeeClass_DESC(tp_self);
 	struct instance_desc *instance = DeeInstance_DESC(desc, self);
@@ -2632,7 +2632,7 @@ err_members:
 }
 
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
-instance_builtin_inherited_tinit(DeeTypeObject *tp_self, DeeObject *self,
+instance_builtin_inherited_tinit(DeeTypeObject *tp_self, DeeObject *__restrict self,
                                  size_t argc, DeeObject *const *argv) {
 	struct class_desc *desc        = DeeClass_DESC(tp_self);
 	struct instance_desc *instance = DeeInstance_DESC(desc, self);
@@ -2663,7 +2663,7 @@ err:
 
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 instance_builtin_inherited_tinitkw(DeeTypeObject *tp_self,
-                                   DeeObject *self, size_t argc,
+                                   DeeObject *__restrict self, size_t argc,
                                    DeeObject *const *argv, DeeObject *kw) {
 	struct class_desc *desc        = DeeClass_DESC(tp_self);
 	struct instance_desc *instance = DeeInstance_DESC(desc, self);
@@ -2713,23 +2713,23 @@ instance_kwsuper_ctor(DeeObject *__restrict self) {
 }
 
 INTERN WUNUSED NONNULL((1)) int DCALL
-instance_super_init(DeeObject *self, size_t argc, DeeObject *const *argv) {
+instance_super_init(DeeObject *__restrict self, size_t argc, DeeObject *const *argv) {
 	return instance_super_tinit(Dee_TYPE(self), self, argc, argv);
 }
 
 INTERN WUNUSED NONNULL((1)) int DCALL
-instance_kwsuper_init(DeeObject *self, size_t argc, DeeObject *const *argv) {
+instance_kwsuper_init(DeeObject *__restrict self, size_t argc, DeeObject *const *argv) {
 	return instance_kwsuper_tinit(Dee_TYPE(self), self, argc, argv);
 }
 
 INTERN WUNUSED NONNULL((1)) int DCALL
-instance_super_initkw(DeeObject *self, size_t argc,
+instance_super_initkw(DeeObject *__restrict self, size_t argc,
                       DeeObject *const *argv, DeeObject *kw) {
 	return instance_super_tinitkw(Dee_TYPE(self), self, argc, argv, kw);
 }
 
 INTERN WUNUSED NONNULL((1)) int DCALL
-instance_kwsuper_initkw(DeeObject *self, size_t argc,
+instance_kwsuper_initkw(DeeObject *__restrict self, size_t argc,
                         DeeObject *const *argv, DeeObject *kw) {
 	return instance_kwsuper_tinitkw(Dee_TYPE(self), self, argc, argv, kw);
 }
@@ -2745,23 +2745,25 @@ instance_builtin_kwsuper_ctor(DeeObject *__restrict self) {
 }
 
 INTERN WUNUSED NONNULL((1)) int DCALL
-instance_builtin_super_init(DeeObject *self, size_t argc, DeeObject *const *argv) {
+instance_builtin_super_init(DeeObject *__restrict self,
+                            size_t argc, DeeObject *const *argv) {
 	return instance_builtin_super_tinit(Dee_TYPE(self), self, argc, argv);
 }
 
 INTERN WUNUSED NONNULL((1)) int DCALL
-instance_builtin_kwsuper_init(DeeObject *self, size_t argc, DeeObject *const *argv) {
+instance_builtin_kwsuper_init(DeeObject *__restrict self,
+                              size_t argc, DeeObject *const *argv) {
 	return instance_builtin_kwsuper_tinit(Dee_TYPE(self), self, argc, argv);
 }
 
 INTERN WUNUSED NONNULL((1)) int DCALL
-instance_builtin_super_initkw(DeeObject *self, size_t argc,
+instance_builtin_super_initkw(DeeObject *__restrict self, size_t argc,
                               DeeObject *const *argv, DeeObject *kw) {
 	return instance_builtin_super_tinitkw(Dee_TYPE(self), self, argc, argv, kw);
 }
 
 INTERN WUNUSED NONNULL((1)) int DCALL
-instance_builtin_kwsuper_initkw(DeeObject *self, size_t argc,
+instance_builtin_kwsuper_initkw(DeeObject *__restrict self, size_t argc,
                                 DeeObject *const *argv, DeeObject *kw) {
 	return instance_builtin_kwsuper_tinitkw(Dee_TYPE(self), self, argc, argv, kw);
 }
@@ -2772,12 +2774,12 @@ instance_ctor(DeeObject *__restrict self) {
 }
 
 INTERN WUNUSED NONNULL((1)) int DCALL
-instance_init(DeeObject *self, size_t argc, DeeObject *const *argv) {
+instance_init(DeeObject *__restrict self, size_t argc, DeeObject *const *argv) {
 	return instance_tinit(Dee_TYPE(self), self, argc, argv);
 }
 
 INTERN WUNUSED NONNULL((1)) int DCALL
-instance_initkw(DeeObject *self, size_t argc,
+instance_initkw(DeeObject *__restrict self, size_t argc,
                 DeeObject *const *argv, DeeObject *kw) {
 	return instance_tinitkw(Dee_TYPE(self), self, argc, argv, kw);
 }
@@ -2789,24 +2791,25 @@ instance_nobase_ctor(DeeObject *__restrict self) {
 }
 
 INTERN WUNUSED NONNULL((1)) int DCALL
-instance_nobase_init(DeeObject *self, size_t argc, DeeObject *const *argv) {
+instance_nobase_init(DeeObject *__restrict self, size_t argc, DeeObject *const *argv) {
 	return instance_nobase_tinit(Dee_TYPE(self), self, argc, argv);
 }
 
 INTERN WUNUSED NONNULL((1)) int DCALL
-instance_nobase_initkw(DeeObject *self, size_t argc,
+instance_nobase_initkw(DeeObject *__restrict self, size_t argc,
                        DeeObject *const *argv, DeeObject *kw) {
 	return instance_nobase_tinitkw(Dee_TYPE(self), self, argc, argv, kw);
 }
 #endif /* CONFIG_NOBASE_OPTIMIZED_CLASS_OPERATORS */
 
 INTERN WUNUSED NONNULL((1)) int DCALL
-instance_inherited_init(DeeObject *self, size_t argc, DeeObject *const *argv) {
+instance_inherited_init(DeeObject *__restrict self,
+                        size_t argc, DeeObject *const *argv) {
 	return instance_inherited_tinit(Dee_TYPE(self), self, argc, argv);
 }
 
 INTERN WUNUSED NONNULL((1)) int DCALL
-instance_inherited_initkw(DeeObject *self, size_t argc,
+instance_inherited_initkw(DeeObject *__restrict self, size_t argc,
                           DeeObject *const *argv, DeeObject *kw) {
 	return instance_inherited_tinitkw(Dee_TYPE(self), self, argc, argv, kw);
 }
@@ -2817,46 +2820,48 @@ instance_builtin_ctor(DeeObject *__restrict self) {
 }
 
 INTERN WUNUSED NONNULL((1)) int DCALL
-instance_builtin_init(DeeObject *self, size_t argc, DeeObject *const *argv) {
+instance_builtin_init(DeeObject *__restrict self,
+                      size_t argc, DeeObject *const *argv) {
 	return instance_builtin_tinit(Dee_TYPE(self), self, argc, argv);
 }
 
 INTERN WUNUSED NONNULL((1)) int DCALL
-instance_builtin_initkw(DeeObject *self, size_t argc,
+instance_builtin_initkw(DeeObject *__restrict self, size_t argc,
                         DeeObject *const *argv, DeeObject *kw) {
 	return instance_builtin_tinitkw(Dee_TYPE(self), self, argc, argv, kw);
 }
 
 #ifdef CONFIG_NOBASE_OPTIMIZED_CLASS_OPERATORS
 INTERN WUNUSED NONNULL((1)) int DCALL
-instance_builtin_nobase_ctor(DeeObject *self) {
+instance_builtin_nobase_ctor(DeeObject *__restrict self) {
 	return instance_builtin_nobase_tctor(Dee_TYPE(self), self);
 }
 
 INTERN WUNUSED NONNULL((1)) int DCALL
-instance_builtin_nobase_init(DeeObject *self, size_t argc, DeeObject *const *argv) {
+instance_builtin_nobase_init(DeeObject *__restrict self, size_t argc, DeeObject *const *argv) {
 	return instance_builtin_nobase_tinit(Dee_TYPE(self), self, argc, argv);
 }
 
 INTERN WUNUSED NONNULL((1)) int DCALL
-instance_builtin_nobase_initkw(DeeObject *self, size_t argc,
+instance_builtin_nobase_initkw(DeeObject *__restrict self, size_t argc,
                                DeeObject *const *argv, DeeObject *kw) {
 	return instance_builtin_nobase_tinitkw(Dee_TYPE(self), self, argc, argv, kw);
 }
 #endif /* CONFIG_NOBASE_OPTIMIZED_CLASS_OPERATORS */
 
 INTERN WUNUSED NONNULL((1)) int DCALL
-instance_builtin_inherited_ctor(DeeObject *self) {
+instance_builtin_inherited_ctor(DeeObject *__restrict self) {
 	return instance_builtin_inherited_tctor(Dee_TYPE(self), self);
 }
 
 INTERN WUNUSED NONNULL((1)) int DCALL
-instance_builtin_inherited_init(DeeObject *self, size_t argc, DeeObject *const *argv) {
+instance_builtin_inherited_init(DeeObject *__restrict self, size_t argc,
+                                DeeObject *const *argv) {
 	return instance_builtin_inherited_tinit(Dee_TYPE(self), self, argc, argv);
 }
 
 INTERN WUNUSED NONNULL((1)) int DCALL
-instance_builtin_inherited_initkw(DeeObject *self, size_t argc,
+instance_builtin_inherited_initkw(DeeObject *__restrict self, size_t argc,
                                   DeeObject *const *argv, DeeObject *kw) {
 	return instance_builtin_inherited_tinitkw(Dee_TYPE(self), self, argc, argv, kw);
 }
@@ -3040,7 +3045,7 @@ err:
 }
 
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-instance_builtin_auto_trepr(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self) {
+instance_builtin_auto_trepr(DeeTypeObject *tp_self, DeeObject *__restrict self) {
 	struct unicode_printer printer = UNICODE_PRINTER_INIT;
 	struct class_desc *desc        = DeeClass_DESC(tp_self);
 	struct instance_desc *instance = DeeInstance_DESC(desc, self);
@@ -3106,7 +3111,7 @@ instance_builtin_auto_repr(DeeObject *__restrict self) {
 
 /* No predefined construction operators (with `CLASS_TP_FAUTOINIT'). */
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
-instance_auto_tinit(DeeTypeObject *tp_self, DeeObject *self,
+instance_auto_tinit(DeeTypeObject *tp_self, DeeObject *__restrict self,
                     size_t argc, DeeObject *const *argv) {
 	struct class_desc *desc        = DeeClass_DESC(tp_self);
 	struct instance_desc *instance = DeeInstance_DESC(desc, self);
@@ -3163,7 +3168,7 @@ err:
 
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 instance_auto_tinitkw(DeeTypeObject *tp_self,
-                      DeeObject *self, size_t argc,
+                      DeeObject *__restrict self, size_t argc,
                       DeeObject *const *argv, DeeObject *kw) {
 	struct class_desc *desc;
 	struct instance_desc *instance;
@@ -3222,7 +3227,7 @@ err:
 }
 
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
-instance_builtin_auto_tinit(DeeTypeObject *tp_self, DeeObject *self,
+instance_builtin_auto_tinit(DeeTypeObject *tp_self, DeeObject *__restrict self,
                             size_t argc, DeeObject *const *argv) {
 	struct class_desc *desc        = DeeClass_DESC(tp_self);
 	struct instance_desc *instance = DeeInstance_DESC(desc, self);
@@ -3264,7 +3269,7 @@ err_members:
 
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 instance_builtin_auto_tinitkw(DeeTypeObject *tp_self,
-                              DeeObject *self, size_t argc,
+                              DeeObject *__restrict self, size_t argc,
                               DeeObject *const *argv, DeeObject *kw) {
 	struct class_desc *desc        = DeeClass_DESC(tp_self);
 	struct instance_desc *instance = DeeInstance_DESC(desc, self);
@@ -3306,22 +3311,22 @@ err_members:
 }
 
 INTERN WUNUSED NONNULL((1)) int DCALL
-instance_auto_init(DeeObject *self, size_t argc, DeeObject *const *argv) {
+instance_auto_init(DeeObject *__restrict self, size_t argc, DeeObject *const *argv) {
 	return instance_auto_tinit(Dee_TYPE(self), self, argc, argv);
 }
 
 INTERN WUNUSED NONNULL((1)) int DCALL
-instance_auto_initkw(DeeObject *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
+instance_auto_initkw(DeeObject *__restrict self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	return instance_auto_tinitkw(Dee_TYPE(self), self, argc, argv, kw);
 }
 
 INTERN WUNUSED NONNULL((1)) int DCALL
-instance_builtin_auto_init(DeeObject *self, size_t argc, DeeObject *const *argv) {
+instance_builtin_auto_init(DeeObject *__restrict self, size_t argc, DeeObject *const *argv) {
 	return instance_builtin_auto_tinit(Dee_TYPE(self), self, argc, argv);
 }
 
 INTERN WUNUSED NONNULL((1)) int DCALL
-instance_builtin_auto_initkw(DeeObject *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
+instance_builtin_auto_initkw(DeeObject *__restrict self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	return instance_builtin_auto_tinitkw(Dee_TYPE(self), self, argc, argv, kw);
 }
 
@@ -3329,7 +3334,7 @@ instance_builtin_auto_initkw(DeeObject *self, size_t argc, DeeObject *const *arg
 #ifdef CONFIG_NOBASE_OPTIMIZED_CLASS_OPERATORS
 /* No predefined construction operators (with `CLASS_TP_FAUTOINIT'). */
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
-instance_auto_nobase_tinit(DeeTypeObject *tp_self, DeeObject *self,
+instance_auto_nobase_tinit(DeeTypeObject *tp_self, DeeObject *__restrict self,
                            size_t argc, DeeObject *const *argv) {
 	struct class_desc *desc        = DeeClass_DESC(tp_self);
 	struct instance_desc *instance = DeeInstance_DESC(desc, self);
@@ -3371,7 +3376,7 @@ err:
 
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 instance_auto_nobase_tinitkw(DeeTypeObject *tp_self,
-                             DeeObject *self, size_t argc,
+                             DeeObject *__restrict self, size_t argc,
                              DeeObject *const *argv, DeeObject *kw) {
 	struct class_desc *desc;
 	struct instance_desc *instance;
@@ -3415,7 +3420,7 @@ err:
 }
 
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
-instance_builtin_auto_nobase_tinit(DeeTypeObject *tp_self, DeeObject *self,
+instance_builtin_auto_nobase_tinit(DeeTypeObject *tp_self, DeeObject *__restrict self,
                                    size_t argc, DeeObject *const *argv) {
 	struct class_desc *desc        = DeeClass_DESC(tp_self);
 	struct instance_desc *instance = DeeInstance_DESC(desc, self);
@@ -3443,7 +3448,7 @@ err_members:
 
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 instance_builtin_auto_nobase_tinitkw(DeeTypeObject *tp_self,
-                                     DeeObject *self, size_t argc,
+                                     DeeObject *__restrict self, size_t argc,
                                      DeeObject *const *argv, DeeObject *kw) {
 	struct class_desc *desc        = DeeClass_DESC(tp_self);
 	struct instance_desc *instance = DeeInstance_DESC(desc, self);
@@ -3471,22 +3476,22 @@ err_members:
 }
 
 INTERN WUNUSED NONNULL((1)) int DCALL
-instance_auto_nobase_init(DeeObject *self, size_t argc, DeeObject *const *argv) {
+instance_auto_nobase_init(DeeObject *__restrict self, size_t argc, DeeObject *const *argv) {
 	return instance_auto_nobase_tinit(Dee_TYPE(self), self, argc, argv);
 }
 
 INTERN WUNUSED NONNULL((1)) int DCALL
-instance_auto_nobase_initkw(DeeObject *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
+instance_auto_nobase_initkw(DeeObject *__restrict self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	return instance_auto_nobase_tinitkw(Dee_TYPE(self), self, argc, argv, kw);
 }
 
 INTERN WUNUSED NONNULL((1)) int DCALL
-instance_builtin_auto_nobase_init(DeeObject *self, size_t argc, DeeObject *const *argv) {
+instance_builtin_auto_nobase_init(DeeObject *__restrict self, size_t argc, DeeObject *const *argv) {
 	return instance_builtin_auto_nobase_tinit(Dee_TYPE(self), self, argc, argv);
 }
 
 INTERN WUNUSED NONNULL((1)) int DCALL
-instance_builtin_auto_nobase_initkw(DeeObject *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
+instance_builtin_auto_nobase_initkw(DeeObject *__restrict self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	return instance_builtin_auto_nobase_tinitkw(Dee_TYPE(self), self, argc, argv, kw);
 }
 #endif /* CONFIG_NOBASE_OPTIMIZED_CLASS_OPERATORS */
@@ -3501,7 +3506,7 @@ instance_builtin_auto_nobase_initkw(DeeObject *self, size_t argc, DeeObject *con
 
 /* Builtin hash & comparison support. */
 INTERN WUNUSED NONNULL((1, 2)) dhash_t DCALL
-instance_builtin_thash(DeeTypeObject *__restrict tp_self,
+instance_builtin_thash(DeeTypeObject *tp_self,
                        DeeObject *__restrict self) {
 	struct class_desc *desc;
 	uint16_t i;
@@ -4039,7 +4044,7 @@ instance_callkw(DeeObject *self, size_t argc,
 }
 
 INTERN WUNUSED NONNULL((1, 2, 3)) dssize_t DCALL
-instance_enumattr(DeeTypeObject *__restrict tp_self,
+instance_enumattr(DeeTypeObject *tp_self,
                   DeeObject *__restrict self,
                   denum_t proc, void *arg) {
 	/* Hook function for user-defined enumattr() callbacks! */
@@ -4054,7 +4059,7 @@ instance_enumattr(DeeTypeObject *__restrict tp_self,
 
 #define DEFINE_UNARY_INSTANCE_WRAPPER_FUNCTION(instance_txxx, instance_xxx, op) \
 	INTERN WUNUSED DREF DeeObject *DCALL                                        \
-	instance_txxx(DeeTypeObject *__restrict tp_self,                            \
+	instance_txxx(DeeTypeObject *tp_self,                                       \
 	              DeeObject *__restrict self) {                                 \
 		DREF DeeObject *func, *result;                                          \
 		func = DeeClass_GetOperator(tp_self, op);                               \
@@ -4078,7 +4083,7 @@ DEFINE_UNARY_INSTANCE_WRAPPER_FUNCTION(instance_tsize, instance_size, OPERATOR_S
 #undef DEFINE_UNARY_INSTANCE_WRAPPER_FUNCTION
 
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-instance_tnext(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self) {
+instance_tnext(DeeTypeObject *tp_self, DeeObject *__restrict self) {
 	DREF DeeObject *func, *result;
 	func = DeeClass_GetOperator(tp_self, OPERATOR_ITERNEXT);
 	if unlikely(!func)
@@ -4165,7 +4170,7 @@ DEFINE_TRINARY_INSTANCE_WRAPPER_FUNCTION(instance_tgetrange, instance_getrange, 
 
 #define DEFINE_UNARY_INSTANCE_WRAPPER_FUNCTION_INT(instance_txxx, instance_xxx, op) \
 	INTERN WUNUSED NONNULL((1, 2)) int DCALL                                        \
-	instance_txxx(DeeTypeObject *__restrict tp_self,                                \
+	instance_txxx(DeeTypeObject *tp_self,                                           \
 	              DeeObject *__restrict self) {                                     \
 		DeeObject *func, *result;                                                   \
 		func = DeeClass_GetOperator(tp_self, op);                                   \
@@ -4274,7 +4279,7 @@ DEFINE_QUADARY_INSTANCE_WRAPPER_FUNCTION_INT(instance_tsetrange, instance_setran
 
 #define DEFINE_UNARY_INPLACE_INSTANCE_WRAPPER_FUNCTION(instance_txxx, instance_xxx, op) \
 	INTERN WUNUSED NONNULL((1, 2)) int DCALL                                            \
-	instance_txxx(DeeTypeObject *__restrict tp_self,                                    \
+	instance_txxx(DeeTypeObject *tp_self,                                               \
 	              DeeObject **__restrict pself) {                                       \
 		DREF DeeObject *func, *result;                                                  \
 		func = DeeClass_GetOperator(tp_self, op);                                       \
@@ -4336,7 +4341,7 @@ DEFINE_BINARY_INPLACE_INSTANCE_WRAPPER_FUNCTION(instance_tipow, instance_ipow, O
 
 
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-instance_tstr(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self) {
+instance_tstr(DeeTypeObject *tp_self, DeeObject *__restrict self) {
 	DREF DeeObject *func, *result;
 	func = DeeClass_GetOperator(tp_self, OPERATOR_STR);
 	if unlikely(!func)
@@ -4359,7 +4364,7 @@ instance_str(DeeObject *__restrict self) {
 }
 
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-instance_trepr(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self) {
+instance_trepr(DeeTypeObject *tp_self, DeeObject *__restrict self) {
 	DREF DeeObject *func, *result;
 	func = DeeClass_GetOperator(tp_self, OPERATOR_REPR);
 	if unlikely(!func)
@@ -4382,7 +4387,7 @@ instance_repr(DeeObject *__restrict self) {
 }
 
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-instance_tint(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self) {
+instance_tint(DeeTypeObject *tp_self, DeeObject *__restrict self) {
 	DREF DeeObject *func, *result;
 	func = DeeClass_GetOperator(tp_self, OPERATOR_INT);
 	if unlikely(!func)
@@ -4404,7 +4409,7 @@ instance_int(DeeObject *__restrict self) {
 }
 
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
-instance_tbool(DeeTypeObject *__restrict tp_self,
+instance_tbool(DeeTypeObject *tp_self,
                DeeObject *__restrict self) {
 	DREF DeeObject *func, *result;
 	int retval;
@@ -4431,7 +4436,7 @@ instance_bool(DeeObject *__restrict self) {
 
 
 INTERN WUNUSED NONNULL((1, 2, 3)) int DCALL
-instance_tint32(DeeTypeObject *__restrict tp_self,
+instance_tint32(DeeTypeObject *tp_self,
                 DeeObject *__restrict self,
                 int32_t *__restrict result) {
 	DREF DeeObject *intval;
@@ -4447,7 +4452,7 @@ err:
 }
 
 INTERN WUNUSED NONNULL((1, 2, 3)) int DCALL
-instance_tint64(DeeTypeObject *__restrict tp_self,
+instance_tint64(DeeTypeObject *tp_self,
                 DeeObject *__restrict self,
                 int64_t *__restrict result) {
 	DREF DeeObject *intval;
@@ -4463,7 +4468,7 @@ err:
 }
 
 INTERN WUNUSED NONNULL((1, 2, 3)) int DCALL
-instance_tdouble(DeeTypeObject *__restrict tp_self,
+instance_tdouble(DeeTypeObject *tp_self,
                  DeeObject *__restrict self,
                  double *__restrict result) {
 	DREF DeeObject *func, *value;
@@ -4501,7 +4506,7 @@ instance_double(DeeObject *__restrict self,
 }
 
 INTERN WUNUSED NONNULL((1, 2)) dhash_t DCALL
-instance_thash(DeeTypeObject *__restrict tp_self,
+instance_thash(DeeTypeObject *tp_self,
                DeeObject *__restrict self) {
 	DREF DeeObject *func, *result;
 	dhash_t result_value;
@@ -4534,7 +4539,7 @@ instance_hash(DeeObject *__restrict self) {
 
 /* GC support for class objects. */
 INTERN NONNULL((1, 2, 3)) void DCALL
-instance_tvisit(DeeTypeObject *__restrict tp_self,
+instance_tvisit(DeeTypeObject *tp_self,
                 DeeObject *__restrict self,
                 dvisit_t proc, void *arg) {
 	struct class_desc *desc;
@@ -4549,7 +4554,7 @@ instance_tvisit(DeeTypeObject *__restrict tp_self,
 }
 
 INTERN NONNULL((1, 2)) void DCALL
-instance_tclear(DeeTypeObject *__restrict tp_self,
+instance_tclear(DeeTypeObject *tp_self,
                 DeeObject *__restrict self) {
 	struct class_desc *desc;
 	uint16_t i;
@@ -4589,7 +4594,7 @@ again_i:
 }
 
 INTERN NONNULL((1, 2)) void DCALL
-instance_tpclear(DeeTypeObject *__restrict tp_self,
+instance_tpclear(DeeTypeObject *tp_self,
                  DeeObject *__restrict self,
                  unsigned int gc_priority) {
 	struct class_desc *desc;

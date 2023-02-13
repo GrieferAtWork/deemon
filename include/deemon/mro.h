@@ -886,7 +886,7 @@ INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeType_CallInstanceAttrStr
 INTDEF WUNUSED NONNULL((1, 2)) bool DCALL DeeType_HasInstanceAttrString(DeeTypeObject *__restrict self, char const *__restrict attr, dhash_t hash);
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeType_BoundInstanceAttrString(DeeTypeObject *__restrict self, char const *__restrict attr, dhash_t hash);
 INTDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeType_DelInstanceAttrString)(DeeTypeObject *__restrict self, char const *__restrict attr, dhash_t hash);
-INTDEF WUNUSED NONNULL((1, 2, 4)) int (DCALL DeeType_SetInstanceAttrString)(DeeTypeObject *__restrict self, char const *__restrict attr, dhash_t hash, DeeObject *value);
+INTDEF WUNUSED NONNULL((1, 2, 4)) int (DCALL DeeType_SetInstanceAttrString)(DeeTypeObject *self, char const *__restrict attr, dhash_t hash, DeeObject *value);
 
 
 #ifndef __INTELLISENSE__

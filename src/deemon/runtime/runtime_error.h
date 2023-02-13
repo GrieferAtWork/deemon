@@ -60,7 +60,7 @@ INTDEF ATTR_COLD int DCALL err_integer_overflow_i(size_t cutoff_bits, bool posit
 INTDEF NONNULL((1, 2)) int FCALL check_empty_keywords(DeeObject *kw, DeeTypeObject *tp_self);
 INTDEF NONNULL((1)) int FCALL check_empty_keywords_obj(DeeObject *__restrict kw);
 INTDEF ATTR_COLD NONNULL((1, 2)) int DCALL err_keywords_not_accepted(DeeTypeObject *tp_self, DeeObject *kw);
-INTDEF ATTR_COLD NONNULL((1, 2)) int DCALL err_keywords_func_not_accepted(char const *__restrict name, DeeObject *kw);
+INTDEF ATTR_COLD NONNULL((1, 2)) int DCALL err_keywords_func_not_accepted(char const *__restrict name, DeeObject *__restrict kw);
 INTDEF ATTR_COLD NONNULL((1, 2)) int DCALL err_keywords_ctor_not_accepted(DeeTypeObject *tp_self, DeeObject *kw);
 INTDEF ATTR_COLD int DCALL err_keywords_bad_for_argc(size_t argc, size_t kwdc);
 INTDEF ATTR_COLD NONNULL((1)) int DCALL err_keywords_not_found(char const *__restrict keyword);

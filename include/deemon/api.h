@@ -507,12 +507,12 @@ extern int (ATTR_CDECL _CrtCheckMemory)(void);
 #endif /* CONFIG_HOST_WINDOWS */
 #endif /* !NDEBUG */
 
-#ifdef __INTELLISENSE__
+#if defined(__INTELLISENSE__) && defined(__cplusplus)
 extern "C++" template<class T> T ____INTELLISENSE_req_type(T x);
 #define Dee_REQUIRES_TYPE(T, x)  ____INTELLISENSE_req_type<T>(x)
-#else /* __INTELLISENSE__ */
+#else /* __INTELLISENSE__ && __cplusplus */
 #define Dee_REQUIRES_TYPE(T, x) (x)
-#endif /* !__INTELLISENSE__ */
+#endif /* !__INTELLISENSE__ || !__cplusplus */
 
 #ifndef NDEBUG
 #define Dee_DPRINT(message)        (_Dee_dprint_enabled ? _Dee_dprint(message) : (void)0)

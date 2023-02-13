@@ -4492,8 +4492,7 @@ PRIVATE struct type_method tpconst seq_class_methods[] = {
 };
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-seq_assign(DeeObject *__restrict self,
-           DeeObject *__restrict other) {
+seq_assign(DeeObject *self, DeeObject *other) {
 	int result;
 	result = DeeObject_SetRange(self, Dee_None, Dee_None, other);
 	if unlikely(result < 0 && DeeError_Catch(&DeeError_NotImplemented))

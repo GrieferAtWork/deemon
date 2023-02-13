@@ -44,14 +44,14 @@
 DECL_BEGIN
 
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL type_getattr(DeeObject *self, DeeObject *name);
-INTDEF WUNUSED DREF DeeObject *DCALL type_callattr(DeeObject *__restrict self, DeeObject *__restrict name, size_t argc, DeeObject *const *argv);
-INTDEF WUNUSED DREF DeeObject *DCALL type_callattr_kw(DeeObject *__restrict self, DeeObject *__restrict name, size_t argc, DeeObject *const *argv, DeeObject *kw);
+INTDEF WUNUSED DREF DeeObject *DCALL type_callattr(DeeObject *self, DeeObject *name, size_t argc, DeeObject *const *argv);
+INTDEF WUNUSED DREF DeeObject *DCALL type_callattr_kw(DeeObject *self, DeeObject *name, size_t argc, DeeObject *const *argv, DeeObject *kw);
 #ifdef CONFIG_CALLTUPLE_OPTIMIZATIONS
 #define type_callattr_tuple(self, name, args)        type_callattr(self, name, DeeTuple_SIZE(args), DeeTuple_ELEM(args))
 #define type_callattr_tuple_kw(self, name, args, kw) type_callattr_kw(self, name, DeeTuple_SIZE(args), DeeTuple_ELEM(args), kw)
-#endif
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL type_delattr(DeeObject *__restrict self, DeeObject *__restrict name);
-INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL type_setattr(DeeObject *__restrict self, DeeObject *__restrict name, DeeObject *__restrict value);
+#endif /* CONFIG_CALLTUPLE_OPTIMIZATIONS */
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL type_delattr(DeeObject *self, DeeObject *name);
+INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL type_setattr(DeeObject *self, DeeObject *name, DeeObject *value);
 
 /* For type-type, these should be accessed as members, not as class-wrappers:
  * >> import type_ from deemon;
@@ -320,7 +320,7 @@ err:
 }
 
 PUBLIC WUNUSED NONNULL((1, 2)) dssize_t DCALL
-DeeObject_GenericEnumAttr(DeeTypeObject *tp_self, denum_t proc, void *arg) {
+DeeObject_GenericEnumAttr(DeeTypeObject *__restrict tp_self, denum_t proc, void *arg) {
 	dssize_t temp, result = 0;
 	ASSERT_OBJECT(tp_self);
 	ASSERT(DeeType_Check(tp_self));
@@ -722,7 +722,7 @@ err_cant_access:
 PUBLIC WUNUSED NONNULL((1, 2, 3, 5)) int DCALL
 DeeObject_TGenericSetAttrString(DeeTypeObject *tp_self, DeeObject *self,
                                 char const *__restrict name, dhash_t hash,
-                                DeeObject *__restrict value) {
+                                DeeObject *value) {
 	int result;
 	ASSERT_OBJECT(tp_self);
 	ASSERT_OBJECT(self);
@@ -1512,7 +1512,7 @@ yes:
 }
 
 INTERN WUNUSED NONNULL((1, 2)) bool DCALL
-DeeType_HasAttrStringLen(DeeTypeObject *self,
+DeeType_HasAttrStringLen(DeeTypeObject *__restrict self,
                          char const *__restrict name,
                          size_t namelen, dhash_t hash) {
 	DeeTypeObject *iter;
@@ -1780,7 +1780,7 @@ done:
 }
 
 INTERN WUNUSED NONNULL((1, 2, 5)) int
-(DCALL DeeType_SetAttrStringLen)(DeeTypeObject *self, char const *name,
+(DCALL DeeType_SetAttrStringLen)(DeeTypeObject *self, char const *__restrict name,
                                  size_t namelen, dhash_t hash, DeeObject *value) {
 	int result;
 	DeeTypeObject *iter;
@@ -1856,7 +1856,7 @@ done:
 
 
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-DeeType_GetInstanceAttrString(DeeTypeObject *self,
+DeeType_GetInstanceAttrString(DeeTypeObject *__restrict self,
                               char const *__restrict name, dhash_t hash) {
 	/* Use `tp_cache' and search for regular attributes, loading
 	 * them as though they were the equivalent typing in INSTANCE-mode.
@@ -1914,7 +1914,7 @@ done:
 }
 
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
-DeeType_BoundInstanceAttrString(DeeTypeObject *self,
+DeeType_BoundInstanceAttrString(DeeTypeObject *__restrict self,
                                 char const *__restrict name, dhash_t hash) {
 	DeeTypeObject *iter;
 	int result;
@@ -1999,7 +1999,7 @@ done:
 }
 
 INTERN WUNUSED NONNULL((1, 2)) bool DCALL
-DeeType_HasInstanceAttrString(DeeTypeObject *self,
+DeeType_HasInstanceAttrString(DeeTypeObject *__restrict self,
                               char const *__restrict name, dhash_t hash) {
 	DeeTypeObject *iter;
 	if (DeeType_HasCachedInstanceAttr(self, name, hash))
@@ -2027,7 +2027,7 @@ yes:
 }
 
 INTERN WUNUSED NONNULL((1, 2)) int
-(DCALL DeeType_DelInstanceAttrString)(DeeTypeObject *self,
+(DCALL DeeType_DelInstanceAttrString)(DeeTypeObject *__restrict self,
                                       char const *__restrict name, dhash_t hash) {
 	DeeTypeObject *iter;
 	int result;

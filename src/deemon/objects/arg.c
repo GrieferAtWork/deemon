@@ -1128,7 +1128,7 @@ done:
  * constructing a copy if all contained objects if `self' is being shared,
  * or destroying `self' without touching the argument vector if not. */
 PUBLIC NONNULL((1)) void DCALL
-DeeKwdsMapping_Decref(DREF DeeObject *self) {
+DeeKwdsMapping_Decref(DREF DeeObject *__restrict self) {
 	DREF KwdsMapping *me;
 	ASSERT_OBJECT_TYPE_EXACT(self, &DeeKwdsMapping_Type);
 	me = (DREF KwdsMapping *)self;
