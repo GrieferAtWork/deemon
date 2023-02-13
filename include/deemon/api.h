@@ -86,9 +86,10 @@
 #endif /* !DEE_SOURCE && CONFIG_BUILDING_DEEMON */
 
 /* Disable garbage */
-#define _CRT_SECURE_NO_DEPRECATE 1
-#define _CRT_SECURE_NO_WARNINGS  1
-#define _CRT_NONSTDC_NO_WARNINGS 1
+#define _CRT_SECURE_NO_DEPRECATE   1
+#define _CRT_SECURE_NO_WARNINGS    1
+#define _CRT_NONSTDC_NO_WARNINGS   1
+#define _CRT_DECLARE_NONSTDC_NAMES 1
 
 #include <__stdinc.h> /* __CC__ */
 

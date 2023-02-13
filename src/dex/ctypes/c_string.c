@@ -47,6 +47,13 @@ DECL_BEGIN
 DeeSystem_DEFINE_memrchr(dee_memrchr)
 #endif /* !CONFIG_HAVE_memrchr */
 
+#ifndef CONFIG_HAVE_memccpy
+#define CONFIG_HAVE_memccpy
+#undef memccpy
+#define memccpy dee_memccpy
+DeeSystem_DEFINE_memccpy(dee_memccpy)
+#endif /* !CONFIG_HAVE_memccpy */
+
 #ifndef CONFIG_HAVE_rawmemchr
 #define CONFIG_HAVE_rawmemchr
 #undef rawmemchr

@@ -883,6 +883,8 @@ func("bcmpq", "defined(CONFIG_HAVE_STRINGS_H) && defined(__USE_STRING_BWLQ)", te
 func("memcpy", stdc, test: "extern void *a; extern void const *b; return memcpy(a, b, 16) == a;");
 func("memset", stdc, test: "extern void *a; return memset(a, 0, 42) == a;");
 func("memmove", stdc, test: "extern void *a; extern void const *b; return memmove(a, b, 16) == a;");
+func("memccpy", "defined(CONFIG_HAVE_STRING_H) && (defined(__USE_MISC) || defined(__USE_XOPEN) || " + addparen(msvc) + ")", test: "extern void *a; extern void const *b; return memccpy(a, b, 7, 16) == a;");
+func("_memccpy", "defined(CONFIG_HAVE_STRING_H) && (defined(__USE_MISC) || defined(__USE_XOPEN) || " + addparen(msvc) + ")", test: "extern void *a; extern void const *b; return _memccpy(a, b, 7, 16) == a;");
 functest('strcmp("foo", "bar")', stdc);
 functest('strncmp("foo", "bar", 3)', stdc);
 functest('strcpy((char *)0, "bar")', stdc);
@@ -6556,6 +6558,22 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #define CONFIG_HAVE_memmove
 #endif
 
+#ifdef CONFIG_NO_memccpy
+#undef CONFIG_HAVE_memccpy
+#elif !defined(CONFIG_HAVE_memccpy) && \
+      (defined(memccpy) || defined(__memccpy_defined) || (defined(CONFIG_HAVE_STRING_H) && \
+       (defined(__USE_MISC) || defined(__USE_XOPEN) || defined(_MSC_VER))))
+#define CONFIG_HAVE_memccpy
+#endif
+
+#ifdef CONFIG_NO__memccpy
+#undef CONFIG_HAVE__memccpy
+#elif !defined(CONFIG_HAVE__memccpy) && \
+      (defined(_memccpy) || defined(___memccpy_defined) || (defined(CONFIG_HAVE_STRING_H) && \
+       (defined(__USE_MISC) || defined(__USE_XOPEN) || defined(_MSC_VER))))
+#define CONFIG_HAVE__memccpy
+#endif
+
 #ifdef CONFIG_NO_strcmp
 #undef CONFIG_HAVE_strcmp
 #else
@@ -8624,6 +8642,12 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 
 
 /* Substitute some known function aliases */
+#if defined(CONFIG_HAVE__memccpy) && !defined(CONFIG_HAVE_memccpy)
+#define CONFIG_HAVE_memccpy
+#undef memccpy
+#define memccpy _memccpy
+#endif /* memccpy = _memccpy */
+
 #if defined(CONFIG_HAVE__exit) && !defined(CONFIG_HAVE__Exit)
 #define CONFIG_HAVE__Exit
 #undef _Exit
@@ -10322,6 +10346,19 @@ DECL_END
 #endif /* !CONFIG_HAVE_memmove */
 
 
+#define _DeeSystem_DEFINE_memccpyT(rT, T, Tneedle, name)    \
+	LOCAL ATTR_PURE WUNUSED rT *                            \
+	name(void *__restrict dst, void const *__restrict src,  \
+	     Tneedle needle, size_t num_bytes) {                \
+		T *pdst = (T *)dst;                                 \
+		T const *psrc = (T const *)src;                     \
+		while (num_bytes--) {                               \
+			if ((*pdst++ = *psrc++) == (T)needle)           \
+				return pdst; /* Yes: +1 past the needle. */ \
+		}                                                   \
+		return NULL;                                        \
+	}
+
 #define _DeeSystem_DEFINE_memchrT(rT, T, Tneedle, name)   \
 	LOCAL ATTR_PURE WUNUSED NONNULL((1)) rT *             \
 	name(void const *__restrict p, Tneedle c, size_t n) { \
@@ -10428,6 +10465,7 @@ DECL_END
 		return buf;                                                 \
 	}
 
+#define DeeSystem_DEFINE_memccpy(name)  _DeeSystem_DEFINE_memccpyT(void, uint8_t, int, name)
 #define DeeSystem_DEFINE_memrchr(name)  _DeeSystem_DEFINE_memrchrT(void, uint8_t, int, name)
 #define DeeSystem_DEFINE_memrchrw(name) _DeeSystem_DEFINE_memrchrT(uint16_t, uint16_t, uint16_t, name)
 #define DeeSystem_DEFINE_memrchrl(name) _DeeSystem_DEFINE_memrchrT(uint32_t, uint32_t, uint32_t, name)
