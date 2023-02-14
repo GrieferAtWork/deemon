@@ -750,7 +750,7 @@ cat_deepcopy(Cat *__restrict self) {
 
 
 INTERN DeeTypeObject SeqConcat_Type = {
-	/* NOTE: `_Concat' objects are never empty, because then
+	/* NOTE: `_SeqConcat' objects are never empty, else
 	 *        we'd get an overlap with `Dee_EmptyTuple' */
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_SeqConcat",

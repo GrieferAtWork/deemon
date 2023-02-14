@@ -226,13 +226,13 @@ DFUNDEF void (DCALL DeeDbgObject_Free)(void *ptr, char const *file, int line);
 #define DeeDbgObject_Free(ptr, file, line) DeeObject_Free(ptr)
 #endif /* NDEBUG */
 #else /* !CONFIG_NO_OBJECT_SLABS */
-#define DeeObject_Free(ptr)                Dee_Free(ptr)
-#define DeeDbgObject_Free(ptr, file, line) DeeDbg_Free(ptr, file, line)
+#define DeeObject_Free    Dee_Free
+#define DeeDbgObject_Free DeeDbg_Free
 #endif /* CONFIG_NO_OBJECT_SLABS */
 #else /* __CC__ */
 #ifdef CONFIG_NO_OBJECT_SLABS
-#define DeeObject_Free                     Dee_Free
-#define DeeDbgObject_Free                  DeeDbg_Free
+#define DeeObject_Free    Dee_Free
+#define DeeDbgObject_Free DeeDbg_Free
 #endif /* CONFIG_NO_OBJECT_SLABS */
 #endif /* !__CC__ */
 
