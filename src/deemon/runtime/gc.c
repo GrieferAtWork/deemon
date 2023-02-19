@@ -1743,19 +1743,19 @@ PRIVATE struct type_method tpconst gcenum_methods[] = {
 	            "Try to collect at least @max GC objects and return the actual number collected\n"
 	            "Note that more than @max objects may be collected if sufficiently large reference cycles exist"),
 	TYPE_METHOD("referred", &gcenum_referred,
-	            "(start)->?Dset\n"
+	            "(start)->?DSet\n"
 	            "Returns a set of objects that are immediately referred to by @start"),
 	TYPE_METHOD("referredgc", &gcenum_referredgc,
-	            "(start)->?Dset\n"
+	            "(start)->?DSet\n"
 	            "Same as ?#referred, but only include gc-objects (s.a. :Type.__isgc__)"),
 	TYPE_METHOD("reachable", &gcenum_reachable,
-	            "(start)->?Dset\n"
+	            "(start)->?DSet\n"
 	            "Returns a set of objects that are reachable from @start"),
 	TYPE_METHOD("reachablegc", &gcenum_reachablegc,
-	            "(start)->?Dset\n"
+	            "(start)->?DSet\n"
 	            "Same as ?#reachable, but only include gc-objects (s.a. :Type.__isgc__)"),
 	TYPE_METHOD("referring", &gcenum_referring,
-	            "(to)->?Dset\n"
+	            "(to)->?DSet\n"
 	            "Returns a set of gc-objects (s.a. :Type.__isgc__) that are referring to @to"),
 	TYPE_METHOD("isreferring", &gcenum_isreferring,
 	            "(from,to)->?Dbool\n"

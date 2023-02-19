@@ -637,7 +637,7 @@ PRIVATE struct type_member tpconst su_class_members[] = {
 INTERN DeeTypeObject SetUnion_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_SetUnion",
-	/* .tp_doc      = */ DOC("(a:?Dset=!S0,b:?Dset=!S0)"),
+	/* .tp_doc      = */ DOC("(a:?DSet=!S0,b:?DSet=!S0)"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
@@ -894,7 +894,7 @@ PRIVATE struct type_member tpconst ssd_class_members[] = {
 INTERN DeeTypeObject SetSymmetricDifference_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_SetSymmetricDifference",
-	/* .tp_doc      = */ DOC("(a:?Dset=!S0,b:?Dset=!S0)"),
+	/* .tp_doc      = */ DOC("(a:?DSet=!S0,b:?DSet=!S0)"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
@@ -1081,7 +1081,7 @@ PRIVATE struct type_cmp siiter_cmp = {
 PRIVATE struct type_member tpconst siiter_members[] = {
 	TYPE_MEMBER_FIELD_DOC(STR_seq, STRUCT_OBJECT, offsetof(SetIntersectionIterator, sii_intersect), "->?Ert:SetIntersection"),
 	TYPE_MEMBER_FIELD_DOC("__iter__", STRUCT_OBJECT, offsetof(SetIntersectionIterator, sii_iter), "->?DIterator"),
-	TYPE_MEMBER_FIELD_DOC("__other__", STRUCT_OBJECT, offsetof(SetIntersectionIterator, sii_other), "->?Dset"),
+	TYPE_MEMBER_FIELD_DOC("__other__", STRUCT_OBJECT, offsetof(SetIntersectionIterator, sii_other), "->?DSet"),
 	TYPE_MEMBER_END
 };
 
@@ -1204,7 +1204,7 @@ PRIVATE struct type_member tpconst si_class_members[] = {
 INTERN DeeTypeObject SetIntersection_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_SetIntersection",
-	/* .tp_doc      = */ DOC("(a:?Dset=!S0,b:?Dset=!S0)"),
+	/* .tp_doc      = */ DOC("(a:?DSet=!S0,b:?DSet=!S0)"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
@@ -1286,7 +1286,7 @@ done:
 PRIVATE struct type_member tpconst sditer_members[] = {
 	TYPE_MEMBER_FIELD_DOC(STR_seq, STRUCT_OBJECT, offsetof(SetDifferenceIterator, sdi_diff), "->?Ert:SetDifference"),
 	TYPE_MEMBER_FIELD_DOC("__iter__", STRUCT_OBJECT, offsetof(SetDifferenceIterator, sdi_iter), "->?DIterator"),
-	TYPE_MEMBER_FIELD_DOC("__other__", STRUCT_OBJECT, offsetof(SetDifferenceIterator, sdi_other), "->?Dset"),
+	TYPE_MEMBER_FIELD_DOC("__other__", STRUCT_OBJECT, offsetof(SetDifferenceIterator, sdi_other), "->?DSet"),
 	TYPE_MEMBER_END
 };
 
@@ -1408,7 +1408,7 @@ PRIVATE struct type_member tpconst sd_class_members[] = {
 INTERN DeeTypeObject SetDifference_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_SetDifference",
-	/* .tp_doc      = */ DOC("(a:?Dset=!S0,b:?Dset=!S0)"),
+	/* .tp_doc      = */ DOC("(a:?DSet=!S0,b:?DSet=!S0)"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
