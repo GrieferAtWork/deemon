@@ -1,22 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
-    <ProjectConfiguration Include="Debug-GCC (NDEBUG)|Win32">
-      <Configuration>Debug-GCC (NDEBUG)</Configuration>
-      <Platform>Win32</Platform>
-    </ProjectConfiguration>
-    <ProjectConfiguration Include="Debug-GCC (NDEBUG)|x64">
-      <Configuration>Debug-GCC (NDEBUG)</Configuration>
-      <Platform>x64</Platform>
-    </ProjectConfiguration>
-    <ProjectConfiguration Include="Debug-GCC|Win32">
-      <Configuration>Debug-GCC</Configuration>
-      <Platform>Win32</Platform>
-    </ProjectConfiguration>
-    <ProjectConfiguration Include="Debug-GCC|x64">
-      <Configuration>Debug-GCC</Configuration>
-      <Platform>x64</Platform>
-    </ProjectConfiguration>
     <ProjectConfiguration Include="Debug-MSVC (NDEBUG)|Win32">
       <Configuration>Debug-MSVC (NDEBUG)</Configuration>
       <Platform>Win32</Platform>
@@ -31,22 +15,6 @@
     </ProjectConfiguration>
     <ProjectConfiguration Include="Debug-MSVC|x64">
       <Configuration>Debug-MSVC</Configuration>
-      <Platform>x64</Platform>
-    </ProjectConfiguration>
-    <ProjectConfiguration Include="Release-GCC (NDEBUG)|Win32">
-      <Configuration>Release-GCC (NDEBUG)</Configuration>
-      <Platform>Win32</Platform>
-    </ProjectConfiguration>
-    <ProjectConfiguration Include="Release-GCC (NDEBUG)|x64">
-      <Configuration>Release-GCC (NDEBUG)</Configuration>
-      <Platform>x64</Platform>
-    </ProjectConfiguration>
-    <ProjectConfiguration Include="Release-GCC|Win32">
-      <Configuration>Release-GCC</Configuration>
-      <Platform>Win32</Platform>
-    </ProjectConfiguration>
-    <ProjectConfiguration Include="Release-GCC|x64">
-      <Configuration>Release-GCC</Configuration>
       <Platform>x64</Platform>
     </ProjectConfiguration>
     <ProjectConfiguration Include="Release-MSVC (NDEBUG)|Win32">
@@ -82,54 +50,6 @@
     <WindowsTargetPlatformVersion>10.0.17763.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug-GCC|Win32'" Label="Configuration">
-    <ConfigurationType>Makefile</ConfigurationType>
-    <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v141</PlatformToolset>
-    <CharacterSet>MultiByte</CharacterSet>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug-GCC (NDEBUG)|Win32'" Label="Configuration">
-    <ConfigurationType>Makefile</ConfigurationType>
-    <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v141</PlatformToolset>
-    <CharacterSet>MultiByte</CharacterSet>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release-GCC|Win32'" Label="Configuration">
-    <ConfigurationType>Makefile</ConfigurationType>
-    <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v141</PlatformToolset>
-    <CharacterSet>MultiByte</CharacterSet>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release-GCC (NDEBUG)|Win32'" Label="Configuration">
-    <ConfigurationType>Makefile</ConfigurationType>
-    <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v141</PlatformToolset>
-    <CharacterSet>MultiByte</CharacterSet>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug-GCC|x64'" Label="Configuration">
-    <ConfigurationType>Makefile</ConfigurationType>
-    <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v141</PlatformToolset>
-    <CharacterSet>MultiByte</CharacterSet>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug-GCC (NDEBUG)|x64'" Label="Configuration">
-    <ConfigurationType>Makefile</ConfigurationType>
-    <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v141</PlatformToolset>
-    <CharacterSet>MultiByte</CharacterSet>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release-GCC|x64'" Label="Configuration">
-    <ConfigurationType>Makefile</ConfigurationType>
-    <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v141</PlatformToolset>
-    <CharacterSet>MultiByte</CharacterSet>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release-GCC (NDEBUG)|x64'" Label="Configuration">
-    <ConfigurationType>Makefile</ConfigurationType>
-    <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v141</PlatformToolset>
-    <CharacterSet>MultiByte</CharacterSet>
-  </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug-MSVC|Win32'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
@@ -189,30 +109,6 @@
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
   </ImportGroup>
-  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug-GCC|Win32'">
-    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
-  </ImportGroup>
-  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug-GCC (NDEBUG)|Win32'" Label="PropertySheets">
-    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
-  </ImportGroup>
-  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release-GCC|Win32'" Label="PropertySheets">
-    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
-  </ImportGroup>
-  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release-GCC (NDEBUG)|Win32'" Label="PropertySheets">
-    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
-  </ImportGroup>
-  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug-GCC|x64'" Label="PropertySheets">
-    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
-  </ImportGroup>
-  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug-GCC (NDEBUG)|x64'" Label="PropertySheets">
-    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
-  </ImportGroup>
-  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release-GCC|x64'" Label="PropertySheets">
-    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
-  </ImportGroup>
-  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release-GCC (NDEBUG)|x64'" Label="PropertySheets">
-    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
-  </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug-MSVC|Win32'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
@@ -238,103 +134,6 @@
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug-GCC|Win32'">
-    <OutDir>$(SolutionDir)..\lib\</OutDir>
-    <IncludePath>$(SolutionDir)\..\include;$(SolutionDir)\..\include\deemon\kos-headers;$(SolutionDir)\..\..\..\kxs\kos\include\i386-kos;$(SolutionDir)\..\..\..\kxs\kos\include;D:\cyg\root\usr\include\w32api</IncludePath>
-    <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
-    <IntDir>$(SolutionDir)..\build\.vs\$(ProjectName)\$(Platform)-$(Configuration)\</IntDir>
-    <NMakeBuildCommandLine>rundll32</NMakeBuildCommandLine>
-    <NMakeReBuildCommandLine>rundll32</NMakeReBuildCommandLine>
-    <NMakeCleanCommandLine>
-    </NMakeCleanCommandLine>
-    <AdditionalOptions>/TP</AdditionalOptions>
-    <NMakeForcedIncludes>$(SolutionDir)\..\include\deemon\kos-headers\compiler\intellisense.h;$(NMakeForcedIncludes)</NMakeForcedIncludes>
-    <NMakePreprocessorDefinitions>CONFIG_BUILDING_DEX</NMakePreprocessorDefinitions>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug-GCC (NDEBUG)|Win32'">
-    <OutDir>$(SolutionDir)..\lib\</OutDir>
-    <IncludePath>$(SolutionDir)\..\include;$(SolutionDir)\..\include\deemon\kos-headers;$(SolutionDir)\..\..\..\kxs\kos\include\i386-kos;$(SolutionDir)\..\..\..\kxs\kos\include;D:\cyg\root\usr\include\w32api</IncludePath>
-    <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
-    <IntDir>$(SolutionDir)..\build\.vs\$(ProjectName)\$(Platform)-$(Configuration)\</IntDir>
-    <NMakeBuildCommandLine>rundll32</NMakeBuildCommandLine>
-    <NMakeReBuildCommandLine>rundll32</NMakeReBuildCommandLine>
-    <NMakeCleanCommandLine />
-    <AdditionalOptions>/TP</AdditionalOptions>
-    <NMakeForcedIncludes>$(SolutionDir)\..\include\deemon\kos-headers\compiler\intellisense.h;$(NMakeForcedIncludes)</NMakeForcedIncludes>
-    <NMakePreprocessorDefinitions>NDEBUG;CONFIG_BUILDING_DEX</NMakePreprocessorDefinitions>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release-GCC|Win32'">
-    <OutDir>$(SolutionDir)..\lib\</OutDir>
-    <IncludePath>$(SolutionDir)\..\include;$(SolutionDir)\..\include\deemon\kos-headers;$(SolutionDir)\..\..\..\kxs\kos\include\i386-kos;$(SolutionDir)\..\..\..\kxs\kos\include;D:\cyg\root\usr\include\w32api</IncludePath>
-    <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
-    <IntDir>$(SolutionDir)..\build\.vs\$(ProjectName)\$(Platform)-$(Configuration)\</IntDir>
-    <NMakeBuildCommandLine>rundll32</NMakeBuildCommandLine>
-    <NMakeReBuildCommandLine>rundll32</NMakeReBuildCommandLine>
-    <NMakeCleanCommandLine />
-    <AdditionalOptions>/TP</AdditionalOptions>
-    <NMakeForcedIncludes>$(SolutionDir)\..\include\deemon\kos-headers\compiler\intellisense.h;$(NMakeForcedIncludes)</NMakeForcedIncludes>
-    <NMakePreprocessorDefinitions>CONFIG_BUILDING_DEX</NMakePreprocessorDefinitions>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release-GCC (NDEBUG)|Win32'">
-    <OutDir>$(SolutionDir)..\lib\</OutDir>
-    <IncludePath>$(SolutionDir)\..\include;$(SolutionDir)\..\include\deemon\kos-headers;$(SolutionDir)\..\..\..\kxs\kos\include\i386-kos;$(SolutionDir)\..\..\..\kxs\kos\include;D:\cyg\root\usr\include\w32api</IncludePath>
-    <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
-    <IntDir>$(SolutionDir)..\build\.vs\$(ProjectName)\$(Platform)-$(Configuration)\</IntDir>
-    <NMakeBuildCommandLine>rundll32</NMakeBuildCommandLine>
-    <NMakeReBuildCommandLine>rundll32</NMakeReBuildCommandLine>
-    <NMakeCleanCommandLine />
-    <AdditionalOptions>/TP</AdditionalOptions>
-    <NMakeForcedIncludes>$(SolutionDir)\..\include\deemon\kos-headers\compiler\intellisense.h;$(NMakeForcedIncludes)</NMakeForcedIncludes>
-    <NMakePreprocessorDefinitions>NDEBUG;CONFIG_BUILDING_DEX</NMakePreprocessorDefinitions>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug-GCC|x64'">
-    <IncludePath>$(SolutionDir)\..\include;$(SolutionDir)\..\include\deemon\kos-headers;$(SolutionDir)\..\..\..\kxs\kos\include\i386-kos;$(SolutionDir)\..\..\..\kxs\kos\include;D:\cyg\root\usr\include\w32api</IncludePath>
-    <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
-    <IntDir>$(SolutionDir)..\build\.vs\$(ProjectName)\$(Platform)-$(Configuration)\</IntDir>
-    <NMakeBuildCommandLine>rundll32</NMakeBuildCommandLine>
-    <NMakeReBuildCommandLine>rundll32</NMakeReBuildCommandLine>
-    <NMakeCleanCommandLine />
-    <AdditionalOptions>/TP</AdditionalOptions>
-    <NMakeForcedIncludes>$(SolutionDir)\..\include\deemon\kos-headers\compiler\intellisense.h;$(NMakeForcedIncludes)</NMakeForcedIncludes>
-    <NMakePreprocessorDefinitions>CONFIG_BUILDING_DEX</NMakePreprocessorDefinitions>
-    <OutDir>$(SolutionDir)..\lib\</OutDir>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug-GCC (NDEBUG)|x64'">
-    <IncludePath>$(SolutionDir)\..\include;$(SolutionDir)\..\include\deemon\kos-headers;$(SolutionDir)\..\..\..\kxs\kos\include\i386-kos;$(SolutionDir)\..\..\..\kxs\kos\include;D:\cyg\root\usr\include\w32api</IncludePath>
-    <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
-    <IntDir>$(SolutionDir)..\build\.vs\$(ProjectName)\$(Platform)-$(Configuration)\</IntDir>
-    <NMakeBuildCommandLine>rundll32</NMakeBuildCommandLine>
-    <NMakeReBuildCommandLine>rundll32</NMakeReBuildCommandLine>
-    <NMakeCleanCommandLine />
-    <AdditionalOptions>/TP</AdditionalOptions>
-    <NMakeForcedIncludes>$(SolutionDir)\..\include\deemon\kos-headers\compiler\intellisense.h;$(NMakeForcedIncludes)</NMakeForcedIncludes>
-    <NMakePreprocessorDefinitions>NDEBUG;CONFIG_BUILDING_DEX</NMakePreprocessorDefinitions>
-    <OutDir>$(SolutionDir)..\lib\</OutDir>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release-GCC|x64'">
-    <IncludePath>$(SolutionDir)\..\include;$(SolutionDir)\..\include\deemon\kos-headers;$(SolutionDir)\..\..\..\kxs\kos\include\i386-kos;$(SolutionDir)\..\..\..\kxs\kos\include;D:\cyg\root\usr\include\w32api</IncludePath>
-    <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
-    <IntDir>$(SolutionDir)..\build\.vs\$(ProjectName)\$(Platform)-$(Configuration)\</IntDir>
-    <NMakeBuildCommandLine>rundll32</NMakeBuildCommandLine>
-    <NMakeReBuildCommandLine>rundll32</NMakeReBuildCommandLine>
-    <NMakeCleanCommandLine />
-    <AdditionalOptions>/TP</AdditionalOptions>
-    <NMakeForcedIncludes>$(SolutionDir)\..\include\deemon\kos-headers\compiler\intellisense.h;$(NMakeForcedIncludes)</NMakeForcedIncludes>
-    <NMakePreprocessorDefinitions>CONFIG_BUILDING_DEX</NMakePreprocessorDefinitions>
-    <OutDir>$(SolutionDir)..\lib\</OutDir>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release-GCC (NDEBUG)|x64'">
-    <IncludePath>$(SolutionDir)\..\include;$(SolutionDir)\..\include\deemon\kos-headers;$(SolutionDir)\..\..\..\kxs\kos\include\i386-kos;$(SolutionDir)\..\..\..\kxs\kos\include;D:\cyg\root\usr\include\w32api</IncludePath>
-    <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
-    <IntDir>$(SolutionDir)..\build\.vs\$(ProjectName)\$(Platform)-$(Configuration)\</IntDir>
-    <NMakeBuildCommandLine>rundll32</NMakeBuildCommandLine>
-    <NMakeReBuildCommandLine>rundll32</NMakeReBuildCommandLine>
-    <NMakeCleanCommandLine />
-    <AdditionalOptions>/TP</AdditionalOptions>
-    <NMakeForcedIncludes>$(SolutionDir)\..\include\deemon\kos-headers\compiler\intellisense.h;$(NMakeForcedIncludes)</NMakeForcedIncludes>
-    <NMakePreprocessorDefinitions>CONFIG_BUILDING_DEX</NMakePreprocessorDefinitions>
-    <OutDir>$(SolutionDir)..\lib\</OutDir>
-  </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug-MSVC|Win32'">
     <IncludePath>$(SolutionDir)..\include;$(SolutionDir)..\include\deemon\kos-headers;$(IncludePath)</IncludePath>
     <OutDir>$(SolutionDir)..\lib\</OutDir>
@@ -343,7 +142,7 @@
     <NMakeBuildCommandLine>make</NMakeBuildCommandLine>
     <NMakeReBuildCommandLine>make -B</NMakeReBuildCommandLine>
     <NMakeCleanCommandLine>make</NMakeCleanCommandLine>
-    <LibraryPath>$(SolutionDir)\..\;$(LibraryPath)</LibraryPath>
+    <LibraryPath>$(SolutionDir)..;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug-MSVC (NDEBUG)|Win32'">
     <IncludePath>$(SolutionDir)..\include;$(SolutionDir)..\include\deemon\kos-headers;$(IncludePath)</IncludePath>
@@ -353,7 +152,7 @@
     <NMakeBuildCommandLine>make</NMakeBuildCommandLine>
     <NMakeReBuildCommandLine>make -B</NMakeReBuildCommandLine>
     <NMakeCleanCommandLine>make</NMakeCleanCommandLine>
-    <LibraryPath>$(SolutionDir)\..\;$(LibraryPath)</LibraryPath>
+    <LibraryPath>$(SolutionDir)..;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release-MSVC|Win32'">
     <IncludePath>$(SolutionDir)..\include;$(SolutionDir)..\include\deemon\kos-headers;$(IncludePath)</IncludePath>
@@ -363,7 +162,7 @@
     <NMakeBuildCommandLine>make</NMakeBuildCommandLine>
     <NMakeReBuildCommandLine>make -B</NMakeReBuildCommandLine>
     <NMakeCleanCommandLine>make</NMakeCleanCommandLine>
-    <LibraryPath>$(SolutionDir)\..\;$(LibraryPath)</LibraryPath>
+    <LibraryPath>$(SolutionDir)..;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release-MSVC (NDEBUG)|Win32'">
     <IncludePath>$(SolutionDir)..\include;$(SolutionDir)..\include\deemon\kos-headers;$(IncludePath)</IncludePath>
@@ -373,7 +172,7 @@
     <NMakeBuildCommandLine>make</NMakeBuildCommandLine>
     <NMakeReBuildCommandLine>make -B</NMakeReBuildCommandLine>
     <NMakeCleanCommandLine>make</NMakeCleanCommandLine>
-    <LibraryPath>$(SolutionDir)\..\;$(LibraryPath)</LibraryPath>
+    <LibraryPath>$(SolutionDir)..;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug-MSVC|x64'">
     <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
@@ -381,7 +180,7 @@
     <NMakeBuildCommandLine>make</NMakeBuildCommandLine>
     <NMakeReBuildCommandLine>make -B</NMakeReBuildCommandLine>
     <NMakeCleanCommandLine>make</NMakeCleanCommandLine>
-    <LibraryPath>$(SolutionDir)\..\;$(LibraryPath)</LibraryPath>
+    <LibraryPath>$(SolutionDir)..;$(LibraryPath)</LibraryPath>
     <IncludePath>$(SolutionDir)..\include;$(SolutionDir)..\include\deemon\kos-headers;$(IncludePath)</IncludePath>
     <OutDir>$(SolutionDir)..\lib\</OutDir>
   </PropertyGroup>
@@ -391,7 +190,7 @@
     <NMakeBuildCommandLine>make</NMakeBuildCommandLine>
     <NMakeReBuildCommandLine>make -B</NMakeReBuildCommandLine>
     <NMakeCleanCommandLine>make</NMakeCleanCommandLine>
-    <LibraryPath>$(SolutionDir)\..\;$(LibraryPath)</LibraryPath>
+    <LibraryPath>$(SolutionDir)..;$(LibraryPath)</LibraryPath>
     <IncludePath>$(SolutionDir)..\include;$(SolutionDir)..\include\deemon\kos-headers;$(IncludePath)</IncludePath>
     <OutDir>$(SolutionDir)..\lib\</OutDir>
   </PropertyGroup>
@@ -401,7 +200,7 @@
     <NMakeBuildCommandLine>make</NMakeBuildCommandLine>
     <NMakeReBuildCommandLine>make -B</NMakeReBuildCommandLine>
     <NMakeCleanCommandLine>make</NMakeCleanCommandLine>
-    <LibraryPath>$(SolutionDir)\..\;$(LibraryPath)</LibraryPath>
+    <LibraryPath>$(SolutionDir)..;$(LibraryPath)</LibraryPath>
     <IncludePath>$(SolutionDir)..\include;$(SolutionDir)..\include\deemon\kos-headers;$(IncludePath)</IncludePath>
     <OutDir>$(SolutionDir)..\lib\</OutDir>
   </PropertyGroup>
@@ -411,7 +210,7 @@
     <NMakeBuildCommandLine>make</NMakeBuildCommandLine>
     <NMakeReBuildCommandLine>make -B</NMakeReBuildCommandLine>
     <NMakeCleanCommandLine>make</NMakeCleanCommandLine>
-    <LibraryPath>$(SolutionDir)\..\;$(LibraryPath)</LibraryPath>
+    <LibraryPath>$(SolutionDir)..;$(LibraryPath)</LibraryPath>
     <IncludePath>$(SolutionDir)..\include;$(SolutionDir)..\include\deemon\kos-headers;$(IncludePath)</IncludePath>
     <OutDir>$(SolutionDir)..\lib\</OutDir>
   </PropertyGroup>
@@ -423,102 +222,6 @@
     <NMakePreprocessorDefinitions>CONFIG_BUILDING_DEEMON;$(NMakePreprocessorDefinitions)</NMakePreprocessorDefinitions>
     <NMakeForcedIncludes>$(SolutionDir)..\include\compiler\intellisense.h;$(NMakeForcedIncludes)</NMakeForcedIncludes>
   </PropertyGroup>
-  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug-GCC|Win32'">
-    <ClCompile>
-      <WarningLevel>Level4</WarningLevel>
-      <Optimization>Disabled</Optimization>
-      <SDLCheck>true</SDLCheck>
-      <CompileAs>CompileAsCpp</CompileAs>
-      <PreprocessorDefinitions>CONFIG_BUILDING_DEEMON;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-    </ClCompile>
-    <Link>
-      <GenerateDebugInformation>true</GenerateDebugInformation>
-    </Link>
-  </ItemDefinitionGroup>
-  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug-GCC (NDEBUG)|Win32'">
-    <ClCompile>
-      <WarningLevel>Level4</WarningLevel>
-      <Optimization>Disabled</Optimization>
-      <SDLCheck>true</SDLCheck>
-      <CompileAs>CompileAsCpp</CompileAs>
-      <PreprocessorDefinitions>CONFIG_BUILDING_DEEMON;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-    </ClCompile>
-    <Link>
-      <GenerateDebugInformation>true</GenerateDebugInformation>
-    </Link>
-  </ItemDefinitionGroup>
-  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release-GCC|Win32'">
-    <ClCompile>
-      <WarningLevel>Level4</WarningLevel>
-      <Optimization>Disabled</Optimization>
-      <SDLCheck>true</SDLCheck>
-      <CompileAs>CompileAsCpp</CompileAs>
-      <PreprocessorDefinitions>CONFIG_BUILDING_DEEMON;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-    </ClCompile>
-    <Link>
-      <GenerateDebugInformation>true</GenerateDebugInformation>
-    </Link>
-  </ItemDefinitionGroup>
-  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release-GCC (NDEBUG)|Win32'">
-    <ClCompile>
-      <WarningLevel>Level4</WarningLevel>
-      <Optimization>Disabled</Optimization>
-      <SDLCheck>true</SDLCheck>
-      <CompileAs>CompileAsCpp</CompileAs>
-      <PreprocessorDefinitions>CONFIG_BUILDING_DEEMON;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-    </ClCompile>
-    <Link>
-      <GenerateDebugInformation>true</GenerateDebugInformation>
-    </Link>
-  </ItemDefinitionGroup>
-  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug-GCC|x64'">
-    <ClCompile>
-      <WarningLevel>Level4</WarningLevel>
-      <Optimization>Disabled</Optimization>
-      <SDLCheck>true</SDLCheck>
-      <CompileAs>CompileAsCpp</CompileAs>
-      <PreprocessorDefinitions>CONFIG_BUILDING_DEEMON;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-    </ClCompile>
-    <Link>
-      <GenerateDebugInformation>true</GenerateDebugInformation>
-    </Link>
-  </ItemDefinitionGroup>
-  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug-GCC (NDEBUG)|x64'">
-    <ClCompile>
-      <WarningLevel>Level4</WarningLevel>
-      <Optimization>Disabled</Optimization>
-      <SDLCheck>true</SDLCheck>
-      <CompileAs>CompileAsCpp</CompileAs>
-      <PreprocessorDefinitions>CONFIG_BUILDING_DEEMON;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-    </ClCompile>
-    <Link>
-      <GenerateDebugInformation>true</GenerateDebugInformation>
-    </Link>
-  </ItemDefinitionGroup>
-  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release-GCC|x64'">
-    <ClCompile>
-      <WarningLevel>Level4</WarningLevel>
-      <Optimization>Disabled</Optimization>
-      <SDLCheck>true</SDLCheck>
-      <CompileAs>CompileAsCpp</CompileAs>
-      <PreprocessorDefinitions>CONFIG_BUILDING_DEEMON;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-    </ClCompile>
-    <Link>
-      <GenerateDebugInformation>true</GenerateDebugInformation>
-    </Link>
-  </ItemDefinitionGroup>
-  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release-GCC (NDEBUG)|x64'">
-    <ClCompile>
-      <WarningLevel>Level4</WarningLevel>
-      <Optimization>Disabled</Optimization>
-      <SDLCheck>true</SDLCheck>
-      <CompileAs>CompileAsCpp</CompileAs>
-      <PreprocessorDefinitions>CONFIG_BUILDING_DEEMON;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-    </ClCompile>
-    <Link>
-      <GenerateDebugInformation>true</GenerateDebugInformation>
-    </Link>
-  </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug-MSVC|Win32'">
     <ClCompile>
       <WarningLevel>Level4</WarningLevel>
