@@ -687,7 +687,7 @@ INTERN bool DCALL asm_rmdelop(void) {
 				}
 			} else if (*(iter + 0) == (ASM16_ADJSTACK & 0xff00) >> 8 &&
 			           *(iter + 1) == (ASM16_ADJSTACK & 0xff)) {
-				int16_t offset = (int16_t)UNALIGNED_GETLE16((uint16_t *)(iter + 2));
+				int16_t offset = (int16_t)UNALIGNED_GETLE16(iter + 2);
 				switch (offset) {
 
 				case -2:
@@ -928,7 +928,7 @@ INTERN bool DCALL asm_minjmp(void) {
 			int32_t target;
 			ASSERT(iter->ar_sym);
 			ASSERT(ASM_SYM_DEFINED(iter->ar_sym));
-			target = (int16_t)UNALIGNED_GETLE16((uint16_t *)(sc_main.sec_begin + iter->ar_addr));
+			target = (int16_t)UNALIGNED_GETLE16(sc_main.sec_begin + iter->ar_addr);
 			target += iter->ar_sym->as_addr;
 			target -= iter->ar_addr;
 			if (target >= INT8_MIN && target <= INT8_MAX) {
@@ -1001,7 +1001,7 @@ INTERN bool DCALL asm_minjmp(void) {
 			uint8_t *instr;
 			ASSERT(iter->ar_sym->as_stck != ASM_SYM_STCK_INVALID);
 			stack_offset = (iter->ar_sym->as_stck -
-			                (int16_t)UNALIGNED_GETLE16((uint16_t *)(sc_main.sec_begin + iter->ar_addr)));
+			                (int16_t)UNALIGNED_GETLE16(sc_main.sec_begin + iter->ar_addr));
 			if (stack_offset < INT8_MIN || stack_offset > INT8_MAX)
 				break;
 			/* Convert this into a `R_DMN_STCK8' relocation. */
@@ -1246,7 +1246,7 @@ INTERN WUNUSED int DCALL asm_linkstack(void) {
 
 		case R_DMN_STCK16:
 			ASSERT(iter->ar_sym->as_stck != ASM_SYM_STCK_INVALID);
-			rel_value = iter->ar_sym->as_stck - (int16_t)UNALIGNED_GETLE16((uint16_t *)target);
+			rel_value = iter->ar_sym->as_stck - (int16_t)UNALIGNED_GETLE16(target);
 			if unlikely(rel_value < INT16_MIN ||
 			            rel_value > INT16_MAX)
 				goto trunc;
@@ -1255,11 +1255,11 @@ INTERN WUNUSED int DCALL asm_linkstack(void) {
 			    (int16_t)rel_value <= INT8_MAX &&
 			    target >= code + 2 && target[-2] == ASM_EXTENDED1 &&
 			    !(iter->ar_type & R_DMN_FUSER)) {
-				*(int8_t *)target = (int8_t)rel_value;
-				target[-2]        = ASM_DELOP;
-				target[1]         = ASM_DELOP;
+				UNALIGNED_SETLE8(target, (uint8_t)(int8_t)rel_value);
+				target[-2] = ASM_DELOP;
+				target[1]  = ASM_DELOP;
 			} else {
-				UNALIGNED_SETLE16((uint16_t *)target, (uint16_t)(int16_t)rel_value);
+				UNALIGNED_SETLE16(target, (uint16_t)(int16_t)rel_value);
 			}
 			break;
 
@@ -1273,7 +1273,7 @@ INTERN WUNUSED int DCALL asm_linkstack(void) {
 
 		case R_DMN_STCKA16:
 			ASSERT(iter->ar_sym->as_stck != ASM_SYM_STCK_INVALID);
-			rel_value = UNALIGNED_GETLE16((uint16_t *)target) + iter->ar_sym->as_stck;
+			rel_value = UNALIGNED_GETLE16(target) + iter->ar_sym->as_stck;
 			if unlikely((uint16_t)rel_value > UINT16_MAX)
 				goto trunc;
 			if (current_assembler.a_flag & ASM_FOPTIMIZE &&
@@ -1284,7 +1284,7 @@ INTERN WUNUSED int DCALL asm_linkstack(void) {
 				target[-2]         = ASM_DELOP;
 				target[1]          = ASM_DELOP;
 			} else {
-				UNALIGNED_SETLE16((uint16_t *)target, (uint16_t)rel_value);
+				UNALIGNED_SETLE16(target, (uint16_t)rel_value);
 			}
 			break;
 
@@ -1333,16 +1333,16 @@ INTERN WUNUSED int DCALL asm_linktext(void) {
 
 		case R_DMN_ABS16:
 			rel_value += iter->ar_addr;
-			rel_value += UNALIGNED_GETLE16((uint16_t *)target);
+			rel_value += UNALIGNED_GETLE16(target);
 			if unlikely((uint32_t)rel_value > UINT16_MAX)
 				goto trunc;
-			UNALIGNED_SETLE16((uint16_t *)target, (uint16_t)rel_value);
+			UNALIGNED_SETLE16(target, (uint16_t)rel_value);
 			break;
 
 		case R_DMN_ABS32:
 			rel_value += iter->ar_addr;
-			rel_value += UNALIGNED_GETLE32((uint32_t *)target);
-			UNALIGNED_SETLE32((uint32_t *)target, (uint32_t)rel_value);
+			rel_value += UNALIGNED_GETLE32(target);
+			UNALIGNED_SETLE32(target, (uint32_t)rel_value);
 			break;
 
 		case R_DMN_ABS8:
@@ -1361,19 +1361,19 @@ INTERN WUNUSED int DCALL asm_linktext(void) {
 			break;
 
 		case R_DMN_DISP16:
-			rel_value += (int16_t)UNALIGNED_GETLE16((uint16_t *)target);
+			rel_value += (int16_t)UNALIGNED_GETLE16(target);
 			if unlikely(rel_value < INT16_MIN ||
 			            rel_value > INT16_MAX)
 				goto trunc;
-			UNALIGNED_SETLE16((uint16_t *)target, (uint16_t)(int16_t)rel_value);
+			UNALIGNED_SETLE16(target, (uint16_t)(int16_t)rel_value);
 			break;
 
 		case R_DMN_DISP32:
-			rel_value += (int32_t)UNALIGNED_GETLE32((uint32_t *)target);
+			rel_value += (int32_t)UNALIGNED_GETLE32(target);
 			if unlikely(rel_value < INT32_MIN ||
 			            rel_value > INT32_MAX)
 				goto trunc;
-			UNALIGNED_SETLE32((uint32_t *)target, (uint32_t)(int32_t)rel_value);
+			UNALIGNED_SETLE32(target, (uint32_t)(int32_t)rel_value);
 			break;
 
 		case R_DMN_STCK8:
@@ -1387,11 +1387,11 @@ INTERN WUNUSED int DCALL asm_linktext(void) {
 
 		case R_DMN_STCK16:
 			ASSERT(iter->ar_sym->as_stck != ASM_SYM_STCK_INVALID);
-			rel_value = iter->ar_sym->as_stck - (int16_t)UNALIGNED_GETLE16((uint16_t *)target);
+			rel_value = iter->ar_sym->as_stck - (int16_t)UNALIGNED_GETLE16(target);
 			if unlikely(rel_value < INT16_MIN ||
 			            rel_value > INT16_MAX)
 				goto trunc;
-			UNALIGNED_SETLE16((uint16_t *)target, (uint16_t)(int16_t)rel_value);
+			UNALIGNED_SETLE16(target, (uint16_t)(int16_t)rel_value);
 			break;
 
 		case R_DMN_STCKA8:
@@ -1404,10 +1404,10 @@ INTERN WUNUSED int DCALL asm_linktext(void) {
 
 		case R_DMN_STCKA16:
 			ASSERT(iter->ar_sym->as_stck != ASM_SYM_STCK_INVALID);
-			rel_value = UNALIGNED_GETLE16((uint16_t *)target) + iter->ar_sym->as_stck;
+			rel_value = UNALIGNED_GETLE16(target) + iter->ar_sym->as_stck;
 			if unlikely((uint16_t)rel_value > UINT16_MAX)
 				goto trunc;
-			UNALIGNED_SETLE16((uint16_t *)target, (uint16_t)rel_value);
+			UNALIGNED_SETLE16(target, (uint16_t)rel_value);
 			break;
 
 		case R_DMN_DELHAND: {
@@ -1748,8 +1748,8 @@ INTERN WUNUSED int
 	result = asm_alloc(2 * sizeof(instruction_t));
 	if unlikely(!result)
 		goto err;
-	*(result + 0) = (uint8_t)(instr >> 8);
-	*(result + 1) = (uint8_t)(instr);
+	*(result + 0) = (instruction_t)(instr >> 8);
+	*(result + 1) = (instruction_t)(instr);
 	return 0;
 err:
 	return -1;
@@ -1798,8 +1798,8 @@ INTERN WUNUSED int
 (DCALL asm_putimm8)(instruction_t instr, uint8_t imm8) {
 	instruction_t *result = asm_alloc(sizeof(instruction_t) + 1);
 	if likely(result) {
-		*(result + 0)            = instr;
-		*(uint8_t *)(result + 1) = imm8;
+		*(result + 0) = instr;
+		UNALIGNED_SETLE8(result + 1, imm8);
 		return 0;
 	}
 	return -1;
@@ -1809,9 +1809,9 @@ INTERN WUNUSED int
 (DCALL asm_putimm8_8)(instruction_t instr, uint8_t imm8_1, uint8_t imm8_2) {
 	instruction_t *result = asm_alloc(sizeof(instruction_t) + 2);
 	if likely(result) {
-		*(result + 0)            = instr;
-		*(uint8_t *)(result + 1) = imm8_1;
-		*(uint8_t *)(result + 2) = imm8_2;
+		*(result + 0) = instr;
+		UNALIGNED_SETLE8(result + 1, imm8_1);
+		UNALIGNED_SETLE8(result + 2, imm8_2);
 		return 0;
 	}
 	return -1;
@@ -1821,10 +1821,10 @@ INTERN WUNUSED int
 (DCALL asm_putimm8_8_8)(instruction_t instr, uint8_t imm8_1, uint8_t imm8_2, uint8_t imm8_3) {
 	instruction_t *result = asm_alloc(sizeof(instruction_t) + 3);
 	if likely(result) {
-		*(result + 0)            = instr;
-		*(uint8_t *)(result + 1) = imm8_1;
-		*(uint8_t *)(result + 2) = imm8_2;
-		*(uint8_t *)(result + 3) = imm8_3;
+		*(result + 0) = instr;
+		UNALIGNED_SETLE8(result + 1, imm8_1);
+		UNALIGNED_SETLE8(result + 2, imm8_2);
+		UNALIGNED_SETLE8(result + 3, imm8_3);
 		return 0;
 	}
 	return -1;
@@ -1834,9 +1834,9 @@ INTERN WUNUSED int
 (DCALL asm_putimm8_16)(instruction_t instr, uint8_t imm8_1, uint16_t imm16_2) {
 	instruction_t *result = asm_alloc(sizeof(instruction_t) + 3);
 	if likely(result) {
-		*(result + 0)            = instr;
-		*(uint8_t *)(result + 1) = imm8_1;
-		UNALIGNED_SETLE16((uint16_t *)(result + 2), imm16_2);
+		*(result + 0) = instr;
+		UNALIGNED_SETLE8(result + 1, imm8_1);
+		UNALIGNED_SETLE16(result + 2, imm16_2);
 		return 0;
 	}
 	return -1;
@@ -1847,7 +1847,7 @@ INTERN WUNUSED int
 	instruction_t *result = asm_alloc(sizeof(instruction_t) + 2);
 	if likely(result) {
 		*(result + 0) = instr;
-		UNALIGNED_SETLE16((uint16_t *)(result + 1), imm16);
+		UNALIGNED_SETLE16(result + 1, imm16);
 		return 0;
 	}
 	return -1;
@@ -1858,8 +1858,8 @@ INTERN WUNUSED int
 	instruction_t *result = asm_alloc(sizeof(instruction_t) + 3);
 	if likely(result) {
 		*(result + 0) = instr;
-		UNALIGNED_SETLE16((uint16_t *)(result + 1), imm16_1);
-		*(uint8_t *)(result + 3) = imm8_2;
+		UNALIGNED_SETLE16(result + 1, imm16_1);
+		UNALIGNED_SETLE8(result + 3, imm8_2);
 		return 0;
 	}
 	return -1;
@@ -1870,8 +1870,8 @@ INTERN WUNUSED int
 	instruction_t *result = asm_alloc(sizeof(instruction_t) + 4);
 	if likely(result) {
 		*(result + 0) = instr;
-		UNALIGNED_SETLE16((uint16_t *)(result + 1), imm16_1);
-		UNALIGNED_SETLE16((uint16_t *)(result + 3), imm16_2);
+		UNALIGNED_SETLE16(result + 1, imm16_1);
+		UNALIGNED_SETLE16(result + 3, imm16_2);
 		return 0;
 	}
 	return -1;
@@ -1882,9 +1882,9 @@ INTERN WUNUSED int
 	instruction_t *result = asm_alloc(sizeof(instruction_t) + 5);
 	if likely(result) {
 		*(result + 0) = instr;
-		UNALIGNED_SETLE16((uint16_t *)(result + 1), imm16_1);
-		*(uint8_t *)(result + 3) = imm8_2;
-		UNALIGNED_SETLE16((uint16_t *)(result + 4), imm16_3);
+		UNALIGNED_SETLE16(result + 1, imm16_1);
+		UNALIGNED_SETLE8(result + 3, imm8_2);
+		UNALIGNED_SETLE16(result + 4, imm16_3);
 		return 0;
 	}
 	return -1;
@@ -1895,9 +1895,9 @@ INTERN WUNUSED int
 	instruction_t *result = asm_alloc(sizeof(instruction_t) + 5);
 	if likely(result) {
 		*(result + 0) = instr;
-		UNALIGNED_SETLE16((uint16_t *)(result + 1), imm16_1);
-		UNALIGNED_SETLE16((uint16_t *)(result + 3), imm16_2);
-		*(uint8_t *)(result + 5) = imm8_3;
+		UNALIGNED_SETLE16(result + 1, imm16_1);
+		UNALIGNED_SETLE16(result + 3, imm16_2);
+		UNALIGNED_SETLE8(result + 5, imm8_3);
 		return 0;
 	}
 	return -1;
@@ -1908,9 +1908,9 @@ INTERN WUNUSED int
 	instruction_t *result = asm_alloc(sizeof(instruction_t) + 6);
 	if likely(result) {
 		*(result + 0) = instr;
-		UNALIGNED_SETLE16((uint16_t *)(result + 1), imm16_1);
-		UNALIGNED_SETLE16((uint16_t *)(result + 3), imm16_2);
-		UNALIGNED_SETLE16((uint16_t *)(result + 5), imm16_3);
+		UNALIGNED_SETLE16(result + 1, imm16_1);
+		UNALIGNED_SETLE16(result + 3, imm16_2);
+		UNALIGNED_SETLE16(result + 5, imm16_3);
 		return 0;
 	}
 	return -1;
@@ -1923,7 +1923,7 @@ INTERN WUNUSED int
 	if unlikely(!result)
 		goto err;
 	*(result + 0) = instr;
-	UNALIGNED_SETLE32((uint32_t *)(result + 1), imm32);
+	UNALIGNED_SETLE32(result + 1, imm32);
 	return 0;
 err:
 	return -1;
@@ -1939,9 +1939,9 @@ INTERN WUNUSED int
 	rel = asm_allocrel();
 	if unlikely(!rel)
 		goto err;
-	*(uint8_t *)(result + 0) = (uint8_t)((instr & 0xff00) >> 8);
-	*(uint8_t *)(result + 1) = (uint8_t)(instr & 0xff);
-	UNALIGNED_SETLE16((uint16_t *)(result + 2), sid);
+	*(result + 0) = (instruction_t)((instr & 0xff00) >> 8);
+	*(result + 1) = (instruction_t)((instr & 0xff));
+	UNALIGNED_SETLE16(result + 2, sid);
 	rel->ar_addr = asm_ip() - 2;
 	rel->ar_type = R_DMN_STATIC16;
 	return 0;
@@ -2179,7 +2179,7 @@ asm_do_gjmp(instruction_t instr,
 			*(data + 0) = (instruction_t)((ASM32_JMP & 0xff00) >> 8);
 			*(data + 1) = instr;
 			/* -4 to adjust for the ip offset of the immediate value itself. */
-			UNALIGNED_SETLE32((uint32_t *)(data + 2), (uint32_t)(int32_t)-4);
+			UNALIGNED_SETLE32(data + 2, (uint32_t)(int32_t)-4);
 		} else if (instr == ASM_FOREACH) {
 			/* foreach top, <Simm32>:
 			 * >>     foreach top, 1f  (8-bit)
@@ -2196,7 +2196,7 @@ asm_do_gjmp(instruction_t instr,
 			*(data + 4)           = (instruction_t)((ASM32_JMP & 0xff00) >> 8);
 			*(data + 5)           = (instruction_t)((ASM32_JMP & 0xff));
 			/* -4 to adjust for the ip offset of the immediate value itself. */
-			UNALIGNED_SETLE32((uint32_t *)(data + 6), (uint32_t)(int32_t)-4);
+			UNALIGNED_SETLE32(data + 6, (uint32_t)(int32_t)-4);
 		} else {
 			/* >>    jnX   1f     // 2
 			 * >>    jmp32 target // 6
@@ -2209,19 +2209,22 @@ asm_do_gjmp(instruction_t instr,
 			*(data + 2)           = (instruction_t)((ASM32_JMP & 0xff00) >> 8);
 			*(data + 3)           = (instruction_t)((ASM32_JMP & 0xff));
 			/* -4 to adjust for the ip offset of the immediate value itself. */
-			UNALIGNED_SETLE32((uint32_t *)(data + 4), (uint32_t)(int32_t)-4);
+			UNALIGNED_SETLE32(data + 4, (uint32_t)(int32_t)-4);
 		}
 		rel->ar_type = R_DMN_DISP32;
 		rel->ar_addr = asm_ip() - 4;
 		goto done;
 	}
+
 	/* Generate 16-bit instructions by default.
 	 * If possible, these will be optimized to 8-bit ones later. */
 	if unlikely((data = asm_alloc(3)) == NULL)
 		goto err;
 	*(data + 0) = (instruction_t)(instr | 1); /* |1 to indicate a 16-bit immediate value. */
+
 	/* -2 to adjust for the ip offset of the immediate value itself. */
-	UNALIGNED_SETLE16((uint16_t *)(data + 1), (uint16_t)(int16_t)-2);
+	UNALIGNED_SETLE16(data + 1, (uint16_t)(int16_t)-2);
+
 	/* Setup the relocation. */
 	rel->ar_type = R_DMN_DISP16;
 	rel->ar_addr = asm_ip() - 2;
@@ -2257,6 +2260,7 @@ asm_do_gjcc(struct ast *cond,
 	rel = asm_allocrel();
 	if unlikely(!rel)
 		goto err;
+
 	/* Emit the symbol prefix. */
 	if (asm_putddi(ddi_ast))
 		goto err;
@@ -2264,6 +2268,7 @@ asm_do_gjcc(struct ast *cond,
 		goto err;
 	rel->ar_sym = target;
 	++target->as_used;
+
 	/* Let's get big-code assembly mode out of the way! */
 	if unlikely(current_assembler.a_flag & ASM_FBIGCODE) {
 		/* >>    jnX   1f     // 2
@@ -2276,20 +2281,24 @@ asm_do_gjcc(struct ast *cond,
 		*(int8_t *)(data + 1) = 6; /* sizeof(jmp32) */
 		*(data + 2)           = (instruction_t)((ASM32_JMP & 0xff00) >> 8);
 		*(data + 3)           = (instruction_t)((ASM32_JMP & 0xff));
+
 		/* -4 to adjust for the ip offset of the immediate value itself. */
-		UNALIGNED_SETLE32((uint32_t *)(data + 4), (uint32_t)(int32_t)-4);
+		UNALIGNED_SETLE32(data + 4, (uint32_t)(int32_t)-4);
 		rel->ar_type = R_DMN_DISP32;
 		rel->ar_addr = asm_ip() - 4;
 		goto done;
 	}
+
 	/* Generate 16-bit instructions by default.
 	 * If possible, these will be optimized to 8-bit ones later. */
 	data = asm_alloc(3);
 	if unlikely(!data)
 		goto err;
 	*(data + 0) = (instruction_t)(instr | 1); /* |1 to indicate a 16-bit immediate value. */
+
 	/* -2 to adjust for the ip offset of the immediate value itself. */
-	UNALIGNED_SETLE16((uint16_t *)(data + 1), (uint16_t)(int16_t)-2);
+	UNALIGNED_SETLE16(data + 1, (uint16_t)(int16_t)-2);
+
 	/* Setup the relocation. */
 	rel->ar_type = R_DMN_DISP16;
 	rel->ar_addr = asm_ip() - 2;
@@ -2314,7 +2323,7 @@ asm_gsetstack_s(struct asm_sym *__restrict target) {
 		goto err;
 	*(data + 0) = (ASM16_ADJSTACK & 0xff00) >> 8;
 	*(data + 1) = (ASM16_ADJSTACK & 0xff);
-	UNALIGNED_SETLE16((uint16_t *)(data + 2), current_assembler.a_stackcur);
+	UNALIGNED_SETLE16(data + 2, current_assembler.a_stackcur);
 	rel->ar_addr = asm_ip() - 2;
 	rel->ar_type = R_DMN_STCK16;
 	return 0;

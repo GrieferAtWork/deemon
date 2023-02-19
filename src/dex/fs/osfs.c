@@ -2758,7 +2758,7 @@ DeeObject_AsFileTime(DeeObject *__restrict lpTime,
 		goto err;
 	}
 	value -= time_yer2day(1601) * MICROSECONDS_PER_DAY;
-	UNALIGNED_SET64((uint64_t *)lpFileTime,
+	UNALIGNED_SET64(lpFileTime,
 	                FILETIME_GET64(value *
 	                               (FILETIME_PER_SECONDS /
 	                                MICROSECONDS_PER_SECOND)));

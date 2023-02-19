@@ -962,7 +962,7 @@ DecFile_IsUpToDate(DecFile *__restrict self) {
 		uint16_t count;
 		uint8_t *reader;
 		depmap = (Dec_Strmap *)(self->df_base + LETOH32(hdr->e_depoff));
-		if unlikely((count = UNALIGNED_GETLE16((uint16_t *)&depmap->i_len)) == 0)
+		if unlikely((count = UNALIGNED_GETLE16(&depmap->i_len)) == 0)
 			goto done; /* Unlikely, but allowed. */
 		reader = depmap->i_map;
 		while (module_pathlen &&
@@ -1037,7 +1037,7 @@ DecFile_LoadImports(DecFile *__restrict self) {
 	       !DeeSystem_IsSep(module_pathstr[module_pathlen - 1]))
 		--module_pathlen;
 	impmap  = (Dec_Strmap const *)(self->df_base + LETOH32(hdr->e_impoff));
-	importc = UNALIGNED_GETLE16((uint16_t const *)&impmap->i_len);
+	importc = UNALIGNED_GETLE16(&impmap->i_len);
 	importv = (DREF DeeModuleObject **)Dee_Mallocc(importc, sizeof(DREF DeeModuleObject *));
 	if unlikely(!importv)
 		goto err;
@@ -1154,8 +1154,8 @@ DecFile_LoadGlobals(DecFile *__restrict self) {
 
 	/* Load the global object table. */
 	glbmap  = (Dec_Glbmap const *)(self->df_base + LETOH32(hdr->e_globoff));
-	globalc = UNALIGNED_GETLE16((uint16_t const *)&glbmap->g_cnt);
-	symbolc = UNALIGNED_GETLE16((uint16_t const *)&glbmap->g_len);
+	globalc = UNALIGNED_GETLE16(&glbmap->g_cnt);
+	symbolc = UNALIGNED_GETLE16(&glbmap->g_len);
 	if unlikely(globalc > symbolc)
 		GOTO_CORRUPTED(&glbmap->g_cnt, stop);
 	if unlikely(!symbolc)
@@ -1185,7 +1185,7 @@ DecFile_LoadGlobals(DecFile *__restrict self) {
 		dhash_t name_hash, hash_i, perturb;
 		if unlikely(reader >= end)
 			GOTO_CORRUPTED(reader, stop_symbolv); /* Validate bounds. */
-		flags = UNALIGNED_GETLE16((uint16_t *)reader), reader += 2;
+		flags = UNALIGNED_GETLE16(reader), reader += 2;
 		if (flags & ~MODSYM_FMASK)
 			GOTO_CORRUPTED(reader, stop_symbolv); /* Unknown flags are being used. */
 		/* The first `globalc' descriptors lack the `s_addr' field. */
@@ -1193,9 +1193,9 @@ DecFile_LoadGlobals(DecFile *__restrict self) {
 		if (i < globalc) {
 			addr = i;
 		} else {
-			addr = UNALIGNED_GETLE16((uint16_t *)reader), reader += 2;
+			addr = UNALIGNED_GETLE16(reader), reader += 2;
 			if (flags & MODSYM_FEXTERN) {
-				addr2 = UNALIGNED_GETLE16((uint16_t *)reader), reader += 2;
+				addr2 = UNALIGNED_GETLE16(reader), reader += 2;
 				if (!(flags & MODSYM_FPROPERTY) && addr2 >= self->df_module->mo_importc)
 					GOTO_CORRUPTED(reader, stop_symbolv); /* Validate module index. */
 			} else {
@@ -1307,7 +1307,7 @@ set_none_result:
 			double value;
 			uint64_t data;
 		} buffer;
-		buffer.data = UNALIGNED_GETLE64((uint64_t *)reader), reader += 8;
+		buffer.data = UNALIGNED_GETLE64(reader), reader += 8;
 		/* XXX: Special decoding when `double' doesn't conform to ieee754 */
 		result = DeeFloat_New(buffer.value);
 	}	break;
@@ -1469,11 +1469,11 @@ err_function_code:
 			if unlikely(doc < strtab || doc >= fileend)
 				GOTO_CORRUPTED(reader, corrupt);
 		}
-		cmemb_size  = *(uint8_t const *)reader, reader += 1;
-		imemb_size  = *(uint8_t const *)reader, reader += 1;
-		op_count    = *(uint8_t const *)reader, reader += 1;
-		cattr_count = *(uint8_t const *)reader, reader += 1;
-		iattr_count = *(uint8_t const *)reader, reader += 1;
+		cmemb_size  = UNALIGNED_GETLE8(reader), reader += 1;
+		imemb_size  = UNALIGNED_GETLE8(reader), reader += 1;
+		op_count    = UNALIGNED_GETLE8(reader), reader += 1;
+		cattr_count = UNALIGNED_GETLE8(reader), reader += 1;
+		iattr_count = UNALIGNED_GETLE8(reader), reader += 1;
 		iattr_mask  = 0;
 		if (iattr_count) {
 			while (iattr_count > (iattr_mask / 3) * 2)
@@ -1517,8 +1517,8 @@ err_function_code:
 				struct class_operator *entry;
 				uint8_t opname, opaddr;
 				uint16_t j, perturb;
-				opname = *(uint8_t const *)reader, reader += 1;
-				opaddr = *(uint8_t const *)reader, reader += 1;
+				opname = UNALIGNED_GETLE8(reader), reader += 1;
+				opaddr = UNALIGNED_GETLE8(reader), reader += 1;
 				if (opaddr >= cmemb_size)
 					GOTO_CORRUPTED(reader, corrupt_r);
 				j = perturb = opname & opbind_mask;
@@ -1550,8 +1550,8 @@ err_function_code:
 				DREF DeeStringObject *name_ob;
 				if unlikely(reader >= (uint8_t const *)fileend)
 					GOTO_CORRUPTED(reader, corrupt_r);
-				ataddr  = *(uint8_t const *)reader, reader += 1;
-				atflags = *(uint8_t const *)reader, reader += 1;
+				ataddr  = UNALIGNED_GETLE8(reader), reader += 1;
+				atflags = UNALIGNED_GETLE8(reader), reader += 1;
 				if unlikely(atflags & ~CLASS_ATTRIBUTE_FMASK)
 					GOTO_CORRUPTED(reader, corrupt_r);
 				if unlikely(ataddr >= cmemb_size)
@@ -1595,8 +1595,8 @@ err_function_code:
 			DREF DeeStringObject *name_ob;
 			if unlikely(reader >= (uint8_t const *)fileend)
 				GOTO_CORRUPTED(reader, corrupt_r);
-			ataddr  = *(uint8_t const *)reader, reader += 1;
-			atflags = *(uint8_t const *)reader, reader += 1;
+			ataddr  = UNALIGNED_GETLE8(reader), reader += 1;
+			atflags = UNALIGNED_GETLE8(reader), reader += 1;
 			if unlikely(atflags & ~CLASS_ATTRIBUTE_FMASK)
 				GOTO_CORRUPTED(reader, corrupt_r);
 			if unlikely(ataddr >= ((atflags & CLASS_ATTRIBUTE_FCLASSMEM) ? cmemb_size : imemb_size))
@@ -1832,7 +1832,7 @@ err_function_code:
 #define descriptor ((DeeClassDescriptorObject *)result)
 #endif /* !__INTELLISENSE__ */
 			/* 16-bit class descriptor. */
-			flags   = UNALIGNED_GETLE16((uint16_t *)reader), reader += 2;
+			flags   = UNALIGNED_GETLE16(reader), reader += 2;
 			fileend = (char const *)(self->df_base + self->df_size);
 			strtab  = (char const *)(self->df_base + LETOH32(self->df_ehdr->e_stroff));
 			name    = strtab + Dec_DecodePointer(&reader);
@@ -1845,9 +1845,9 @@ err_function_code:
 				if unlikely(doc < strtab || doc >= fileend)
 					GOTO_CORRUPTED(reader, corrupt);
 			}
-			cmemb_size  = UNALIGNED_GETLE16((uint16_t const *)reader), reader += 2;
-			imemb_size  = UNALIGNED_GETLE16((uint16_t const *)reader), reader += 2;
-			op_count    = UNALIGNED_GETLE16((uint16_t const *)reader), reader += 2;
+			cmemb_size  = UNALIGNED_GETLE16(reader), reader += 2;
+			imemb_size  = UNALIGNED_GETLE16(reader), reader += 2;
+			op_count    = UNALIGNED_GETLE16(reader), reader += 2;
 			cattr_count = Dec_DecodePointer(&reader);
 			iattr_count = Dec_DecodePointer(&reader);
 			iattr_mask  = 0;
@@ -1897,8 +1897,8 @@ err_function_code:
 					struct class_operator *entry;
 					uint16_t opname, opaddr;
 					uint16_t j, perturb;
-					opname = UNALIGNED_GETLE16((uint16_t const *)reader), reader += 2;
-					opaddr = UNALIGNED_GETLE16((uint16_t const *)reader), reader += 2;
+					opname = UNALIGNED_GETLE16(reader), reader += 2;
+					opaddr = UNALIGNED_GETLE16(reader), reader += 2;
 					if unlikely(opaddr == (uint16_t)-1)
 						GOTO_CORRUPTED(reader, corrupt_r);
 					if (opaddr >= cmemb_size)
@@ -1936,8 +1936,8 @@ err_function_code:
 					DREF DeeStringObject *name_ob;
 					if unlikely(reader >= (uint8_t const *)fileend)
 						GOTO_CORRUPTED(reader, corrupt_r);
-					ataddr  = UNALIGNED_GETLE16((uint16_t const *)reader), reader += 2;
-					atflags = UNALIGNED_GETLE16((uint16_t const *)reader), reader += 2;
+					ataddr  = UNALIGNED_GETLE16(reader), reader += 2;
+					atflags = UNALIGNED_GETLE16(reader), reader += 2;
 					if unlikely(atflags & ~CLASS_ATTRIBUTE_FMASK)
 						GOTO_CORRUPTED(reader, corrupt_r);
 					if unlikely(ataddr >= cmemb_size)
@@ -1981,8 +1981,8 @@ err_function_code:
 				DREF DeeStringObject *name_ob;
 				if unlikely(reader >= (uint8_t const *)fileend)
 					GOTO_CORRUPTED(reader, corrupt_r);
-				ataddr  = UNALIGNED_GETLE16((uint16_t const *)reader), reader += 2;
-				atflags = UNALIGNED_GETLE16((uint16_t const *)reader), reader += 2;
+				ataddr  = UNALIGNED_GETLE16(reader), reader += 2;
+				atflags = UNALIGNED_GETLE16(reader), reader += 2;
 				if unlikely(atflags & ~CLASS_ATTRIBUTE_FMASK)
 					GOTO_CORRUPTED(reader, corrupt_r);
 				if unlikely(ataddr >= ((atflags & CLASS_ATTRIBUTE_FCLASSMEM) ? cmemb_size : imemb_size))
@@ -2099,7 +2099,7 @@ DecFile_LoadObjectVector(DecFile *__restrict self,
 	uint8_t const *end    = self->df_base + self->df_size;
 	uint16_t i, count;
 	void *new_result;
-	count   = UNALIGNED_GETLE16((uint16_t const *)reader);
+	count   = UNALIGNED_GETLE16(reader);
 	*pcount = count;
 	reader += 2;
 	result = (DREF DeeObject **)Dee_Mallocc(count, sizeof(DREF DeeObject *));
@@ -2172,11 +2172,11 @@ load_strmap(DecFile *__restrict self,
 	if unlikely(map_addr + 2 >= self->df_size)
 		GOTO_CORRUPTED(self->df_base + map_addr, err_currupt); /* Map is out-of-bounds. */
 	reader     = self->df_base + map_addr;
-	map_length = UNALIGNED_GETLE16((uint16_t const *)reader), reader += 2;
+	map_length = UNALIGNED_GETLE16(reader), reader += 2;
 	if unlikely(!map_length)
 		return 0; /* Empty map (same as undefined). */
 	if unlikely(map_length == (uint16_t)-1) {
-		map_length = UNALIGNED_GETLE32((uint32_t const *)reader), reader += 4;
+		map_length = UNALIGNED_GETLE32(reader), reader += 4;
 		if unlikely(!map_length)
 			return 0; /* Empty map (same as undefined). */
 	}
@@ -2231,17 +2231,17 @@ DecFile_LoadDDI(DecFile *__restrict self,
 
 	/* Read generic DDI fields. */
 	if (is_8bit_ddi) {
-		ddi_strings = UNALIGNED_GETLE16((uint16_t const *)reader), reader += 2; /* Dec_8BitCodeDDI.cd_strings */
-		ddi_ddixdat = UNALIGNED_GETLE16((uint16_t const *)reader), reader += 2; /* Dec_8BitCodeDDI.cd_ddixdat */
-		ddi_ddiaddr = UNALIGNED_GETLE16((uint16_t const *)reader), reader += 2; /* Dec_8BitCodeDDI.cd_ddiaddr */
-		ddi_ddisize = UNALIGNED_GETLE16((uint16_t const *)reader), reader += 2; /* Dec_8BitCodeDDI.cd_ddisize */
-		ddi_ddiinit = *(uint8_t const *)reader, reader += 1;                    /* Dec_8BitCodeDDI.cd_ddiinit */
+		ddi_strings = UNALIGNED_GETLE16(reader), reader += 2; /* Dec_8BitCodeDDI.cd_strings */
+		ddi_ddixdat = UNALIGNED_GETLE16(reader), reader += 2; /* Dec_8BitCodeDDI.cd_ddixdat */
+		ddi_ddiaddr = UNALIGNED_GETLE16(reader), reader += 2; /* Dec_8BitCodeDDI.cd_ddiaddr */
+		ddi_ddisize = UNALIGNED_GETLE16(reader), reader += 2; /* Dec_8BitCodeDDI.cd_ddisize */
+		ddi_ddiinit = UNALIGNED_GETLE8(reader), reader += 1;                    /* Dec_8BitCodeDDI.cd_ddiinit */
 	} else {
-		ddi_strings = UNALIGNED_GETLE32((uint32_t const *)reader), reader += 4; /* Dec_CodeDDI.cd_strings */
-		ddi_ddixdat = UNALIGNED_GETLE32((uint32_t const *)reader), reader += 4; /* Dec_CodeDDI.cd_ddixdat */
-		ddi_ddiaddr = UNALIGNED_GETLE32((uint32_t const *)reader), reader += 4; /* Dec_CodeDDI.cd_ddiaddr */
-		ddi_ddisize = UNALIGNED_GETLE32((uint32_t const *)reader), reader += 4; /* Dec_CodeDDI.cd_ddisize */
-		ddi_ddiinit = UNALIGNED_GETLE16((uint16_t const *)reader), reader += 2; /* Dec_CodeDDI.cd_ddiinit */
+		ddi_strings = UNALIGNED_GETLE32(reader), reader += 4; /* Dec_CodeDDI.cd_strings */
+		ddi_ddixdat = UNALIGNED_GETLE32(reader), reader += 4; /* Dec_CodeDDI.cd_ddixdat */
+		ddi_ddiaddr = UNALIGNED_GETLE32(reader), reader += 4; /* Dec_CodeDDI.cd_ddiaddr */
+		ddi_ddisize = UNALIGNED_GETLE32(reader), reader += 4; /* Dec_CodeDDI.cd_ddisize */
+		ddi_ddiinit = UNALIGNED_GETLE16(reader), reader += 2; /* Dec_CodeDDI.cd_ddiinit */
 	}
 	ddi_text = self->df_base + ddi_ddiaddr;
 
@@ -2267,7 +2267,7 @@ DecFile_LoadDDI(DecFile *__restrict self,
 	result->d_ddisize = ddi_ddisize;
 
 	/* Parse the initial DDI register state. */
-	result->d_start.dr_flags = UNALIGNED_GETLE16((uint16_t *)reader), reader += 2;
+	result->d_start.dr_flags = UNALIGNED_GETLE16(reader), reader += 2;
 	if (result->d_start.dr_flags & ~DDI_REGS_FMASK)
 		GOTO_CORRUPTED(reader, err_currupted_r);
 	result->d_start.dr_uip  = (code_addr_t)decode_uleb((uint8_t const **)&reader);
@@ -2285,9 +2285,9 @@ DecFile_LoadDDI(DecFile *__restrict self,
 			GOTO_CORRUPTED(xdat, err_currupted_r_maps);
 		if (xdat >= self->df_base + self->df_size)
 			GOTO_CORRUPTED(xdat, err_currupted_r_maps);
-		xsiz = UNALIGNED_GETLE16((uint16_t *)xdat), xdat += 2;
+		xsiz = UNALIGNED_GETLE16(xdat), xdat += 2;
 		if unlikely(xsiz == (uint16_t)-1)
-			xsiz = UNALIGNED_GETLE32((uint32_t *)xdat), xdat += 4;
+			xsiz = UNALIGNED_GETLE32(xdat), xdat += 4;
 		if likely(xsiz != 0) {
 			void *bssptr;
 			struct Dee_ddi_exdat *xres;
@@ -2359,7 +2359,7 @@ DecFile_LoadCode(DecFile *__restrict self,
 	uint8_t const *reader = *preader, *end;
 	result = (DREF DeeCodeObject *)ITER_DONE;
 	end    = self->df_base + self->df_size;
-	header.co_flags = UNALIGNED_GETLE16((uint16_t const *)reader), reader += 2;
+	header.co_flags = UNALIGNED_GETLE16(reader), reader += 2;
 	/* Validate known flags. */
 	if (header.co_flags & ~(CODE_FMASK | DEC_CODE_F8BIT))
 		GOTO_CORRUPTED(reader, corrupt);
@@ -2367,17 +2367,17 @@ DecFile_LoadCode(DecFile *__restrict self,
 		if unlikely(reader + sizeof(Dec_8BitCode) - 2 >= end)
 			GOTO_CORRUPTED(reader, done); /* Validate bounds. */
 		/* Read all the fields and widen them. */
-		header.co_localc     = *(uint8_t const *)reader, reader += 1;
-		header.co_refc       = *(uint8_t const *)reader, reader += 1;
-		header.co_argc_min   = *(uint8_t const *)reader, reader += 1;
-		header.co_stackmax   = *(uint8_t const *)reader, reader += 1;
-		header.co_staticoff  = UNALIGNED_GETLE16((uint16_t const *)reader), reader += 2;
-		header.co_exceptoff  = UNALIGNED_GETLE16((uint16_t const *)reader), reader += 2;
-		header.co_defaultoff = UNALIGNED_GETLE16((uint16_t const *)reader), reader += 2;
-		header.co_ddioff     = UNALIGNED_GETLE16((uint16_t const *)reader), reader += 2;
-		header.co_kwdoff     = UNALIGNED_GETLE16((uint16_t const *)reader), reader += 2;
-		header.co_textsiz    = UNALIGNED_GETLE16((uint16_t const *)reader), reader += 2;
-		header.co_textoff    = UNALIGNED_GETLE16((uint16_t const *)reader), reader += 2;
+		header.co_localc     = UNALIGNED_GETLE8(reader), reader += 1;
+		header.co_refc       = UNALIGNED_GETLE8(reader), reader += 1;
+		header.co_argc_min   = UNALIGNED_GETLE8(reader), reader += 1;
+		header.co_stackmax   = UNALIGNED_GETLE8(reader), reader += 1;
+		header.co_staticoff  = UNALIGNED_GETLE16(reader), reader += 2;
+		header.co_exceptoff  = UNALIGNED_GETLE16(reader), reader += 2;
+		header.co_defaultoff = UNALIGNED_GETLE16(reader), reader += 2;
+		header.co_ddioff     = UNALIGNED_GETLE16(reader), reader += 2;
+		header.co_kwdoff     = UNALIGNED_GETLE16(reader), reader += 2;
+		header.co_textsiz    = UNALIGNED_GETLE16(reader), reader += 2;
+		header.co_textoff    = UNALIGNED_GETLE16(reader), reader += 2;
 	} else {
 		if unlikely(reader + sizeof(Dec_Code) - 2 >= end)
 			GOTO_CORRUPTED(reader, done); /* Validate bounds. */
@@ -2499,10 +2499,10 @@ DecFile_LoadCode(DecFile *__restrict self,
 			GOTO_CORRUPTED(except_reader, corrupt_r_static);
 		is8bit = !!(header.co_flags & DEC_CODE_F8BIT);
 		if (is8bit) {
-			count = *(uint8_t const *)except_reader;
+			count = UNALIGNED_GETLE8(except_reader);
 			except_reader += 1;
 		} else {
-			count = UNALIGNED_GETLE16((uint16_t const *)except_reader);
+			count = UNALIGNED_GETLE16(except_reader);
 			except_reader += 2;
 		}
 
@@ -2521,17 +2521,17 @@ DecFile_LoadCode(DecFile *__restrict self,
 			hand = exceptv + result->co_exceptc;
 			if unlikely(except_reader >= end) /* Validate bounds */
 				GOTO_CORRUPTED(except_reader, corrupt_r_except);
-			hand->eh_flags = UNALIGNED_GETLE16((uint16_t const *)except_reader), except_reader += 2; /* Dec_8BitCodeExcept.ce_flags / Dec_CodeExcept.ce_flags */
+			hand->eh_flags = UNALIGNED_GETLE16(except_reader), except_reader += 2; /* Dec_8BitCodeExcept.ce_flags / Dec_CodeExcept.ce_flags */
 			if (is8bit) {
-				hand->eh_start = UNALIGNED_GETLE16((uint16_t const *)except_reader), except_reader += 2; /* Dec_8BitCodeExcept.ce_begin */
-				hand->eh_end   = UNALIGNED_GETLE16((uint16_t const *)except_reader), except_reader += 2; /* Dec_8BitCodeExcept.ce_end */
-				hand->eh_addr  = UNALIGNED_GETLE16((uint16_t const *)except_reader), except_reader += 2; /* Dec_8BitCodeExcept.ce_addr */
-				hand->eh_stack = *(uint8_t const *)except_reader, except_reader += 1;                    /* Dec_8BitCodeExcept.ce_stack */
+				hand->eh_start = UNALIGNED_GETLE16(except_reader), except_reader += 2; /* Dec_8BitCodeExcept.ce_begin */
+				hand->eh_end   = UNALIGNED_GETLE16(except_reader), except_reader += 2; /* Dec_8BitCodeExcept.ce_end */
+				hand->eh_addr  = UNALIGNED_GETLE16(except_reader), except_reader += 2; /* Dec_8BitCodeExcept.ce_addr */
+				hand->eh_stack = UNALIGNED_GETLE8(except_reader), except_reader += 1;  /* Dec_8BitCodeExcept.ce_stack */
 			} else {
-				hand->eh_start = UNALIGNED_GETLE32((uint32_t const *)except_reader), except_reader += 4; /* Dec_CodeExcept.ce_begin */
-				hand->eh_end   = UNALIGNED_GETLE32((uint32_t const *)except_reader), except_reader += 4; /* Dec_CodeExcept.ce_end */
-				hand->eh_addr  = UNALIGNED_GETLE32((uint32_t const *)except_reader), except_reader += 4; /* Dec_CodeExcept.ce_addr */
-				hand->eh_stack = UNALIGNED_GETLE16((uint16_t const *)except_reader), except_reader += 2; /* Dec_CodeExcept.ce_stack */
+				hand->eh_start = UNALIGNED_GETLE32(except_reader), except_reader += 4; /* Dec_CodeExcept.ce_begin */
+				hand->eh_end   = UNALIGNED_GETLE32(except_reader), except_reader += 4; /* Dec_CodeExcept.ce_end */
+				hand->eh_addr  = UNALIGNED_GETLE32(except_reader), except_reader += 4; /* Dec_CodeExcept.ce_addr */
+				hand->eh_stack = UNALIGNED_GETLE16(except_reader), except_reader += 2; /* Dec_CodeExcept.ce_stack */
 			}
 
 			/* Do some quick validation on the exception descriptor. */

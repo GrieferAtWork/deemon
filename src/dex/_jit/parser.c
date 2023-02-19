@@ -118,7 +118,7 @@ JITLexer_MaybeExpressionBegin(JITLexer *__restrict self) {
 
 		case 4: {
 			uint32_t name;
-			name = UNALIGNED_GET32((uint32_t *)tokptr);
+			name = UNALIGNED_GET32(tokptr);
 			if (name == ENCODE_INT32('e', 'l', 's', 'e'))
 				goto no;
 			if (name == ENCODE_INT32('f', 'r', 'o', 'm'))
@@ -133,7 +133,7 @@ JITLexer_MaybeExpressionBegin(JITLexer *__restrict self) {
 
 		case 5: {
 			uint32_t name;
-			name = UNALIGNED_GET32((uint32_t *)tokptr);
+			name = UNALIGNED_GET32(tokptr);
 			if (name == ENCODE_INT32('c', 'a', 't', 'c') && tokptr[4] == 'h')
 				goto no;
 			if (name == ENCODE_INT32('y', 'i', 'e', 'l') && tokptr[4] == 'd')
@@ -151,8 +151,8 @@ JITLexer_MaybeExpressionBegin(JITLexer *__restrict self) {
 		case 6: {
 			uint32_t name;
 			uint16_t name2;
-			name  = UNALIGNED_GET32((uint32_t *)tokptr);
-			name2 = UNALIGNED_GET16((uint16_t *)(tokptr + 4));
+			name  = UNALIGNED_GET32(tokptr);
+			name2 = UNALIGNED_GET16(tokptr + 4);
 			if (name == ENCODE_INT32('r', 'e', 't', 'u') && name2 == ENCODE_INT16('r', 'n'))
 				goto no;
 			if (name == ENCODE_INT32('s', 'w', 'i', 't') && name2 == ENCODE_INT16('c', 'h'))
@@ -162,8 +162,8 @@ JITLexer_MaybeExpressionBegin(JITLexer *__restrict self) {
 		case 7: {
 			uint32_t name;
 			uint16_t name2;
-			name  = UNALIGNED_GET32((uint32_t *)tokptr);
-			name2 = UNALIGNED_GET16((uint16_t *)(tokptr + 4));
+			name  = UNALIGNED_GET32(tokptr);
+			name2 = UNALIGNED_GET16(tokptr + 4);
 			if (name == ENCODE_INT32('f', 'i', 'n', 'a') && name2 == ENCODE_INT16('l', 'l') && tokptr[6] == 'y')
 				goto no;
 			if (name == ENCODE_INT32('d', 'e', 'f', 'a') && name2 == ENCODE_INT16('u', 'l') && tokptr[6] == 't')
@@ -174,8 +174,8 @@ JITLexer_MaybeExpressionBegin(JITLexer *__restrict self) {
 
 		case 8: {
 			uint32_t namea, nameb;
-			namea = UNALIGNED_GET32((uint32_t *)tokptr);
-			nameb = UNALIGNED_GET32((uint32_t *)(tokptr + 4));
+			namea = UNALIGNED_GET32(tokptr);
+			nameb = UNALIGNED_GET32(tokptr + 4);
 			if (namea == ENCODE_INT32('c', 'o', 'n', 't') &&
 			    nameb == ENCODE_INT32('i', 'n', 'u', 'e'))
 				goto no;
@@ -524,7 +524,7 @@ err_rbrck_after_lbrck:
 				break;
 
 			case 4:
-				name = UNALIGNED_GET32((uint32_t *)name_begin);
+				name = UNALIGNED_GET32(name_begin);
 #ifndef __OPTIMIZE_SIZE__
 				if (name == ENCODE_INT32('h', 'a', 's', 'h')) {
 					result = OPERATOR_HASH;
@@ -564,47 +564,47 @@ err_rbrck_after_lbrck:
 
 #ifndef __OPTIMIZE_SIZE__
 			case 5:
-				name = UNALIGNED_GET32((uint32_t *)name_begin);
-				if (name == ENCODE_INT32('e', 'n', 't', 'e') && *((uint8_t *)(name_begin + 4)) == 'r') {
+				name = UNALIGNED_GET32(name_begin);
+				if (name == ENCODE_INT32('e', 'n', 't', 'e') && UNALIGNED_GET8(name_begin + 4) == 'r') {
 					result = OPERATOR_ENTER;
 					goto done_y1;
 				}
-				if (name == ENCODE_INT32('l', 'e', 'a', 'v') && *((uint8_t *)(name_begin + 4)) == 'e') {
+				if (name == ENCODE_INT32('l', 'e', 'a', 'v') && UNALIGNED_GET8(name_begin + 4) == 'e') {
 					result = OPERATOR_LEAVE;
 					goto done_y1;
 				}
-				if (name == ENCODE_INT32('s', 'u', 'p', 'e') && *((uint8_t *)(name_begin + 4)) == 'r' && (features & P_OPERATOR_FCLASS)) {
+				if (name == ENCODE_INT32('s', 'u', 'p', 'e') && UNALIGNED_GET8(name_begin + 4) == 'r' && (features & P_OPERATOR_FCLASS)) {
 					result = CLASS_OPERATOR_SUPERARGS;
 					goto done_y1;
 				}
 				break;
 
 			case 8:
-				if (UNALIGNED_GET32((uint32_t *)(name_begin + 0)) == ENCODE_INT32('c', 'o', 'n', 't') &&
-				    UNALIGNED_GET32((uint32_t *)(name_begin + 4)) == ENCODE_INT32('a', 'i', 'n', 's')) {
+				if (UNALIGNED_GET32(name_begin + 0) == ENCODE_INT32('c', 'o', 'n', 't') &&
+				    UNALIGNED_GET32(name_begin + 4) == ENCODE_INT32('a', 'i', 'n', 's')) {
 					result = OPERATOR_CONTAINS;
 					goto done_y1;
 				}
-				if (UNALIGNED_GET32((uint32_t *)(name_begin + 0)) == ENCODE_INT32('d', 'e', 'e', 'p') &&
-				    UNALIGNED_GET32((uint32_t *)(name_begin + 4)) == ENCODE_INT32('c', 'o', 'p', 'y')) {
+				if (UNALIGNED_GET32(name_begin + 0) == ENCODE_INT32('d', 'e', 'e', 'p') &&
+				    UNALIGNED_GET32(name_begin + 4) == ENCODE_INT32('c', 'o', 'p', 'y')) {
 					result = OPERATOR_DEEPCOPY;
 					goto done_y1;
 				}
 				break;
 
 			case 10:
-				if (UNALIGNED_GET32((uint32_t *)(name_begin + 0)) == ENCODE_INT32('d', 'e', 's', 't') &&
-				    UNALIGNED_GET32((uint32_t *)(name_begin + 4)) == ENCODE_INT32('r', 'u', 'c', 't') &&
-				    UNALIGNED_GET16((uint16_t *)(name_begin + 8)) == ENCODE_INT16('o', 'r')) {
+				if (UNALIGNED_GET32(name_begin + 0) == ENCODE_INT32('d', 'e', 's', 't') &&
+				    UNALIGNED_GET32(name_begin + 4) == ENCODE_INT32('r', 'u', 'c', 't') &&
+				    UNALIGNED_GET16(name_begin + 8) == ENCODE_INT16('o', 'r')) {
 					result = OPERATOR_DESTRUCTOR;
 					goto done_y1;
 				}
 				break;
 
 			case 11:
-				if (UNALIGNED_GET32((uint32_t *)(name_begin + 0)) == ENCODE_INT32('c', 'o', 'n', 's') &&
-				    UNALIGNED_GET32((uint32_t *)(name_begin + 4)) == ENCODE_INT32('t', 'r', 'u', 'c') &&
-				    UNALIGNED_GET32((uint32_t *)(name_begin + 8)) == ENCODE_INT32('t', 'o', 'r', 0)) {
+				if (UNALIGNED_GET32(name_begin + 0) == ENCODE_INT32('c', 'o', 'n', 's') &&
+				    UNALIGNED_GET32(name_begin + 4) == ENCODE_INT32('t', 'r', 'u', 'c') &&
+				    UNALIGNED_GET32(name_begin + 8) == ENCODE_INT32('t', 'o', 'r', 0)) {
 					result = OPERATOR_CONSTRUCTOR;
 					goto done_y1;
 				}
@@ -621,18 +621,18 @@ err_rbrck_after_lbrck:
 #if 0 /* Already handled by generic opinfo searches. */
 			/* Some special operators that didn't merit their own keyword. */
 			if (name_size == 4 &&
-			    UNALIGNED_GET32((uint32_t *)(name_begin + 0)) == ENCODE_INT32('b', 'o', 'o', 'l')) {
+			    UNALIGNED_GET32(name_begin + 0) == ENCODE_INT32('b', 'o', 'o', 'l')) {
 				result = OPERATOR_BOOL;
 				goto done_y1;
 			}
 			if (name_size == 3 &&
-			    UNALIGNED_GET32((uint32_t *)(name_begin + 0)) == ENCODE_INT32('i', 'n', 't', 0)) {
+			    UNALIGNED_GET32(name_begin + 0) == ENCODE_INT32('i', 'n', 't', 0)) {
 				result = OPERATOR_INT;
 				goto done_y1;
 			}
 			if (name_size == 5 &&
-			    UNALIGNED_GET32((uint32_t *)(name_begin + 0)) == ENCODE_INT32('f', 'l', 'o', 'a') &&
-			    *(uint8_t *)(name_begin + 4) == 't') {
+			    UNALIGNED_GET32(name_begin + 0) == ENCODE_INT32('f', 'l', 'o', 'a') &&
+			    UNALIGNED_GET8(name_begin + 4) == 't') {
 				result = OPERATOR_FLOAT;
 				goto done_y1;
 			}
@@ -653,41 +653,41 @@ err_rbrck_after_lbrck:
 
 				/* Even more backwards compatibility. */
 				if (name_size == 2) {
-					if (UNALIGNED_GET16((uint16_t *)(name_begin + 0)) == ENCODE_INT16('l', 't'))
+					if (UNALIGNED_GET16(name_begin + 0) == ENCODE_INT16('l', 't'))
 						goto do_operator_lo;
-					if (UNALIGNED_GET16((uint16_t *)(name_begin + 0)) == ENCODE_INT16('g', 't'))
+					if (UNALIGNED_GET16(name_begin + 0) == ENCODE_INT16('g', 't'))
 						goto do_operator_gr;
 				}
 				if (name_size == 6 &&
-				    UNALIGNED_GET32((uint32_t *)(name_begin + 0)) == ENCODE_INT32('r', 'e', 'a', 'd') &&
-				    UNALIGNED_GET16((uint16_t *)(name_begin + 4)) == ENCODE_INT16('n', 'p')) {
+				    UNALIGNED_GET32(name_begin + 0) == ENCODE_INT32('r', 'e', 'a', 'd') &&
+				    UNALIGNED_GET16(name_begin + 4) == ENCODE_INT16('n', 'p')) {
 					result = FILE_OPERATOR_READ;
 					goto done_y1;
 				}
 				if (name_size == 7 &&
-				    UNALIGNED_GET32((uint32_t *)(name_begin + 0)) == ENCODE_INT32('w', 'r', 'i', 't') &&
-				    UNALIGNED_GET32((uint32_t *)(name_begin + 4)) == ENCODE_INT32('e', 'n', 'p', 0)) {
+				    UNALIGNED_GET32(name_begin + 0) == ENCODE_INT32('w', 'r', 'i', 't') &&
+				    UNALIGNED_GET32(name_begin + 4) == ENCODE_INT32('e', 'n', 'p', 0)) {
 					result = FILE_OPERATOR_WRITE;
 					goto done_y1;
 				}
 				if (name_size == 9 &&
-				    UNALIGNED_GET32((uint32_t *)(name_begin + 0)) == ENCODE_INT32('s', 'u', 'p', 'e') &&
-				    UNALIGNED_GET32((uint32_t *)(name_begin + 4)) == ENCODE_INT32('r', 'a', 'r', 'g') &&
-				    *(uint8_t *)(name_begin + 8) == 's' && (features & P_OPERATOR_FCLASS)) {
+				    UNALIGNED_GET32(name_begin + 0) == ENCODE_INT32('s', 'u', 'p', 'e') &&
+				    UNALIGNED_GET32(name_begin + 4) == ENCODE_INT32('r', 'a', 'r', 'g') &&
+				    UNALIGNED_GET8(name_begin + 8) == 's' && (features & P_OPERATOR_FCLASS)) {
 					result = CLASS_OPERATOR_SUPERARGS;
 					goto done_y1;
 				}
 				if (name_size == 6 &&
-				    UNALIGNED_GET32((uint32_t *)(name_begin + 0)) == ENCODE_INT32('d', 'o', 'u', 'b') &&
-				    UNALIGNED_GET16((uint16_t *)(name_begin + 4)) == ENCODE_INT16('l', 'e')) {
+				    UNALIGNED_GET32(name_begin + 0) == ENCODE_INT32('d', 'o', 'u', 'b') &&
+				    UNALIGNED_GET16(name_begin + 4) == ENCODE_INT16('l', 'e')) {
 					result = OPERATOR_FLOAT;
 					goto done_y1;
 				}
 				if (name_size == 5 &&
-				    ((UNALIGNED_GET32((uint32_t *)(name_begin + 0)) == ENCODE_INT32('i', 'n', 't', '3') &&
-				      *(uint8_t *)(name_begin + 4) == '2') ||
-				     (UNALIGNED_GET32((uint32_t *)(name_begin + 0)) == ENCODE_INT32('i', 'n', 't', '6') &&
-				      *(uint8_t *)(name_begin + 4) == '4'))) {
+				    ((UNALIGNED_GET32(name_begin + 0) == ENCODE_INT32('i', 'n', 't', '3') &&
+				      UNALIGNED_GET8(name_begin + 4) == '2') ||
+				     (UNALIGNED_GET32(name_begin + 0) == ENCODE_INT32('i', 'n', 't', '6') &&
+				      UNALIGNED_GET8(name_begin + 4) == '4'))) {
 					result = OPERATOR_INT;
 					goto done_y1;
 				}

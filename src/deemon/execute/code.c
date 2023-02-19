@@ -471,24 +471,24 @@ DeeCode_GetSSymbolName(DeeObject const *__restrict self, uint16_t sid) {
 				goto done_exdat;
 
 			case DDI_EXDAT_O_SNAM | DDI_EXDAT_OP8:
-				if (*(uint8_t const *)(reader + 0) == sid) {
-					offset = *(uint8_t const *)(reader + 1);
+				if (UNALIGNED_GETLE8(reader + 0) == sid) {
+					offset = UNALIGNED_GETLE8(reader + 1);
 					goto return_strtab_offset;
 				}
 				reader += 1 + 1;
 				break;
 
 			case DDI_EXDAT_O_SNAM | DDI_EXDAT_OP16:
-				if (UNALIGNED_GETLE16((uint16_t const *)(reader + 0)) == sid) {
-					offset = UNALIGNED_GETLE16((uint16_t const *)(reader + 2));
+				if (UNALIGNED_GETLE16(reader + 0) == sid) {
+					offset = UNALIGNED_GETLE16(reader + 2);
 					goto return_strtab_offset;
 				}
 				reader += 2 + 2;
 				break;
 
 			case DDI_EXDAT_O_SNAM | DDI_EXDAT_OP32:
-				if (UNALIGNED_GETLE16((uint16_t const *)(reader + 0)) == sid) {
-					offset = UNALIGNED_GETLE32((uint32_t const *)(reader + 2));
+				if (UNALIGNED_GETLE16(reader + 0) == sid) {
+					offset = UNALIGNED_GETLE32(reader + 2);
 					goto return_strtab_offset;
 				}
 				reader += 2 + 4;
@@ -539,24 +539,24 @@ DeeCode_GetRSymbolName(DeeObject const *__restrict self, uint16_t rid) {
 				goto done_exdat;
 
 			case DDI_EXDAT_O_RNAM | DDI_EXDAT_OP8:
-				if (*(uint8_t const *)(reader + 0) == rid) {
-					offset = *(uint8_t const *)(reader + 1);
+				if (UNALIGNED_GETLE8(reader + 0) == rid) {
+					offset = UNALIGNED_GETLE8(reader + 1);
 					goto return_strtab_offset;
 				}
 				reader += 1 + 1;
 				break;
 
 			case DDI_EXDAT_O_RNAM | DDI_EXDAT_OP16:
-				if (UNALIGNED_GETLE16((uint16_t const *)(reader + 0)) == rid) {
-					offset = UNALIGNED_GETLE16((uint16_t const *)(reader + 2));
+				if (UNALIGNED_GETLE16(reader + 0) == rid) {
+					offset = UNALIGNED_GETLE16(reader + 2);
 					goto return_strtab_offset;
 				}
 				reader += 2 + 2;
 				break;
 
 			case DDI_EXDAT_O_RNAM | DDI_EXDAT_OP32:
-				if (UNALIGNED_GETLE16((uint16_t const *)(reader + 0)) == rid) {
-					offset = UNALIGNED_GETLE32((uint32_t const *)(reader + 2));
+				if (UNALIGNED_GETLE16(reader + 0) == rid) {
+					offset = UNALIGNED_GETLE32(reader + 2);
 					goto return_strtab_offset;
 				}
 				reader += 2 + 4;

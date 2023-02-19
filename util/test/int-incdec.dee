@@ -24,13 +24,13 @@
 local x;
 import * from deemon;
 
-#define SET_INCDEC_ASSERT(init, op, result)                   \
-	x = (init).__forcecopy__();                               \
-	/* 2 because accessing `x' temporary add +1 reference! */ \
-	assert x.__refcnt__ == 2;                                 \
-	B(x);                                                     \
-	op x;                                                     \
-	B(x);                                                     \
+#define SET_INCDEC_ASSERT(init, op, result)                     \
+	x = (init).__forcecopy__();                                 \
+	/* 2 because accessing `x' temporarily add +1 reference! */ \
+	assert x.__refcnt__ == 2;                                   \
+	B(x);                                                       \
+	op x;                                                       \
+	B(x);                                                       \
 	assert x == result
 
 SET_INCDEC_ASSERT(3, --, 2);

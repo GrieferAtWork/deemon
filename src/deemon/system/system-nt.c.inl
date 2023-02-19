@@ -323,7 +323,7 @@ DeeNTSystem_FixUncPath(/*String*/ DeeObject *__restrict filename) {
 		goto err;
 	filename_size = DeeString_SIZE(filename);
 	if (filename_size < 4 ||
-	    UNALIGNED_GET32((uint32_t *)DeeString_STR(filename)) != ENCODE_INT32('\\', '\\', '.', '\\')) {
+	    UNALIGNED_GET32(DeeString_STR(filename)) != ENCODE_INT32('\\', '\\', '.', '\\')) {
 		if (!DeeObject_IsShared(filename) &&
 		    DeeString_WIDTH(filename) == STRING_WIDTH_1BYTE) {
 			DeeString_FreeWidth(filename);
@@ -335,7 +335,7 @@ DeeNTSystem_FixUncPath(/*String*/ DeeObject *__restrict filename) {
 			           filename_size,
 			           sizeof(char));
 			/* Set the prefix. */
-			UNALIGNED_SET32((uint32_t *)DeeString_STR(result),
+			UNALIGNED_SET32(DeeString_STR(result),
 			                ENCODE_INT32('\\', '\\', '.', '\\'));
 			return result;
 		} else {

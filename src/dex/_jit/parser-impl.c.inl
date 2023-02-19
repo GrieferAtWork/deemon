@@ -1595,7 +1595,7 @@ skip_rbrck_and_done:
 			break;
 
 		case 4:
-			name = UNALIGNED_GET32((uint32_t *)tok_begin);
+			name = UNALIGNED_GET32(tok_begin);
 			if (name == ENCODE_INT32('n', 'o', 'n', 'e')) {
 #ifdef JIT_EVAL
 				result = Dee_None;
@@ -1739,9 +1739,9 @@ skip_rbrck_and_done:
 			break;
 
 		case 5:
-			name = UNALIGNED_GET32((uint32_t *)tok_begin);
+			name = UNALIGNED_GET32(tok_begin);
 			if (name == ENCODE_INT32('f', 'a', 'l', 's') &&
-			    *(uint8_t *)(tok_begin + 4) == 'e') {
+			    UNALIGNED_GET8(tok_begin + 4) == 'e') {
 #ifdef JIT_EVAL
 				result = Dee_False;
 				Dee_Incref(Dee_False);
@@ -1751,7 +1751,7 @@ skip_rbrck_and_done:
 				goto done_y1;
 			}
 			if (name == ENCODE_INT32('b', 'o', 'u', 'n') &&
-			    *(uint8_t *)(tok_begin + 4) == 'd') {
+			    UNALIGNED_GET8(tok_begin + 4) == 'd') {
 				result = CALL_PRIMARYF(YieldAndParseUnaryKeywordOperand,
 				                       JITLEXER_EVAL_FSECONDARY);
 #ifdef JIT_EVAL
@@ -1777,12 +1777,12 @@ skip_rbrck_and_done:
 				goto done;
 			}
 			if (name == ENCODE_INT32('w', 'h', 'i', 'l') &&
-			    *(uint8_t *)(tok_begin + 4) == 'e') {
+			    UNALIGNED_GET8(tok_begin + 4) == 'e') {
 				result = FUNC(While)(self, false);
 				goto done;
 			}
-			if ((name == ENCODE_INT32('c', 'l', 'a', 's') && *(uint8_t *)(tok_begin + 4) == 's') ||
-			    (name == ENCODE_INT32('f', 'i', 'n', 'a') && *(uint8_t *)(tok_begin + 4) == 'l')) {
+			if ((name == ENCODE_INT32('c', 'l', 'a', 's') && UNALIGNED_GET8(tok_begin + 4) == 's') ||
+			    (name == ENCODE_INT32('f', 'i', 'n', 'a') && UNALIGNED_GET8(tok_begin + 4) == 'l')) {
 #ifdef JIT_EVAL
 				uint16_t tp_flags = TP_FNORMAL;
 #endif /* JIT_EVAL */
@@ -1813,7 +1813,7 @@ skip_rbrck_and_done:
 				goto done;
 			}
 			if (name == ENCODE_INT32('s', 'u', 'p', 'e') &&
-			    *(uint8_t *)(tok_begin + 4) == 'r') {
+			    UNALIGNED_GET8(tok_begin + 4) == 'r') {
 				/* In jit, `super' is essentially compiled as `this as __identifier(class).base'
 				 * s.a. `JIT_RTSYM_THIS' and `JIT_RTSYM_CLASS' */
 #ifdef JIT_EVAL
@@ -1863,15 +1863,15 @@ err_oo_class_reinit_lvalue:
 				goto done;
 			}
 			if (name == ENCODE_INT32('_', '_', 'n', 't') &&
-			    *(uint8_t *)(tok_begin + 4) == 'h') {
+			    UNALIGNED_GET8(tok_begin + 4) == 'h') {
 				/* TODO */
 			}
 			break;
 
 		case 6:
-			name = UNALIGNED_GET32((uint32_t *)tok_begin);
+			name = UNALIGNED_GET32(tok_begin);
 			if (name == ENCODE_INT32('i', 'm', 'p', 'o') &&
-			    UNALIGNED_GET16((uint16_t *)(tok_begin + 4)) == ENCODE_INT16('r', 't')) {
+			    UNALIGNED_GET16(tok_begin + 4) == ENCODE_INT16('r', 't')) {
 #ifdef JIT_EVAL
 				result = DeeObject_GetAttrString((DeeObject *)DeeModule_GetDeemon(), "import");
 #else /* JIT_EVAL */
@@ -1881,7 +1881,7 @@ err_oo_class_reinit_lvalue:
 			}
 #if 1
 			if (name == ENCODE_INT32('a', 's', 's', 'e') &&
-			    UNALIGNED_GET16((uint16_t *)(tok_begin + 4)) == ENCODE_INT16('r', 't')) {
+			    UNALIGNED_GET16(tok_begin + 4) == ENCODE_INT16('r', 't')) {
 				/* TODO: Assert expressions */
 				DERROR_NOTIMPLEMENTED();
 				goto err;
@@ -1890,19 +1890,19 @@ err_oo_class_reinit_lvalue:
 			break;
 
 		case 7:
-			name = UNALIGNED_GET32((uint32_t *)tok_begin);
+			name = UNALIGNED_GET32(tok_begin);
 			if (name == ENCODE_INT32('f', 'o', 'r', 'e') &&
-			    UNALIGNED_GET16((uint16_t *)(tok_begin + 4)) == ENCODE_INT16('a', 'c') &&
-			    *(uint8_t *)(tok_begin + 6) == 'h') {
+			    UNALIGNED_GET16(tok_begin + 4) == ENCODE_INT16('a', 'c') &&
+			    UNALIGNED_GET8(tok_begin + 6) == 'h') {
 				result = FUNC(Foreach)(self, false);
 				goto done;
 			}
 			break;
 
 		case 8:
-			name = UNALIGNED_GET32((uint32_t *)tok_begin);
+			name = UNALIGNED_GET32(tok_begin);
 			if (name == ENCODE_INT32('d', 'e', 'e', 'p') &&
-			    UNALIGNED_GET32((uint32_t *)(tok_begin + 4)) == ENCODE_INT32('c', 'o', 'p', 'y')) {
+			    UNALIGNED_GET32(tok_begin + 4) == ENCODE_INT32('c', 'o', 'p', 'y')) {
 				result = CALL_PRIMARYF(YieldAndParseUnaryKeywordOperand,
 				                       JITLEXER_EVAL_FSECONDARY);
 #ifdef JIT_EVAL
@@ -1921,7 +1921,7 @@ err_oo_class_reinit_lvalue:
 				goto done;
 			}
 			if (name == ENCODE_INT32('o', 'p', 'e', 'r') &&
-			    UNALIGNED_GET32((uint32_t *)(tok_begin + 4)) == ENCODE_INT32('a', 't', 'o', 'r')) {
+			    UNALIGNED_GET32(tok_begin + 4) == ENCODE_INT32('a', 't', 'o', 'r')) {
 				/* Operator function access. */
 				int32_t opno;
 				JITLexer_Yield(self);

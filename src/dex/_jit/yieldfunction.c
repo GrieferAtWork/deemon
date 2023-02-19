@@ -601,7 +601,7 @@ JITYieldFunctionIterator_PopState(JITYieldFunctionIterator *__restrict self) {
 		if (self->ji_lex.jl_tok == JIT_KEYWORD &&
 		    self->ji_lex.jl_tokend == self->ji_lex.jl_tokstart + 4) {
 			uint32_t name;
-			name = UNALIGNED_GET32((uint32_t *)self->ji_lex.jl_tokstart);
+			name = UNALIGNED_GET32(self->ji_lex.jl_tokstart);
 			if (name == ENCODE_INT32('e', 'l', 's', 'e')) {
 				JITLexer_Yield(&self->ji_lex);
 do_skip_else:
@@ -1033,7 +1033,7 @@ parse_again_same_statement:
 				if (self->ji_lex.jl_tok == JIT_KEYWORD &&
 				    self->ji_lex.jl_tokend == self->ji_lex.jl_tokstart + 4) {
 					uint32_t next_name;
-					next_name = UNALIGNED_GET32((uint32_t *)self->ji_lex.jl_tokstart);
+					next_name = UNALIGNED_GET32(self->ji_lex.jl_tokstart);
 					if (next_name == ENCODE_INT32('e', 'l', 's', 'e')) {
 						JITLexer_Yield(&self->ji_lex);
 						goto parse_else_after_if;
@@ -1278,7 +1278,7 @@ err_missing_rparen_after_for:
 			break;
 
 		case 4:
-			name = UNALIGNED_GET32((uint32_t *)tok_begin);
+			name = UNALIGNED_GET32(tok_begin);
 			if (name == ENCODE_INT32('w', 'i', 't', 'h')) {
 				struct jit_state *st;
 				DREF DeeObject *obj;
@@ -1319,7 +1319,7 @@ err_obj_scope:
 			break;
 
 		case 5:
-			name = UNALIGNED_GET32((uint32_t *)tok_begin);
+			name = UNALIGNED_GET32(tok_begin);
 			if (name == ENCODE_INT32('y', 'i', 'e', 'l') &&
 			    *(uint8_t *)(tok_begin + 4) == 'd') {
 				/* The thing that we're actually after: `yield' statements! */
@@ -1387,10 +1387,10 @@ err_obj_scope:
 			break;
 
 		case 6:
-			name = UNALIGNED_GET32((uint32_t *)tok_begin);
+			name = UNALIGNED_GET32(tok_begin);
 #if 0 /* TODO */
 			if (name == ENCODE_INT32('s', 'w', 'i', 't') &&
-			    UNALIGNED_GET16((uint16_t *)(tok_begin + 4)) == ENCODE_INT16('c', 'h')) {
+			    UNALIGNED_GET16(tok_begin + 4) == ENCODE_INT16('c', 'h')) {
 				DERROR_NOTIMPLEMENTED();
 				goto err;
 			}
@@ -1398,10 +1398,10 @@ err_obj_scope:
 			break;
 
 		case 7:
-			name = UNALIGNED_GET32((uint32_t *)tok_begin);
+			name = UNALIGNED_GET32(tok_begin);
 			if (name == ENCODE_INT32('f', 'o', 'r', 'e') &&
-			    UNALIGNED_GET16((uint16_t *)(tok_begin + 4)) == ENCODE_INT16('a', 'c') &&
-			    *(uint8_t *)(tok_begin + 6) == 'h') {
+			    UNALIGNED_GET16(tok_begin + 4) == ENCODE_INT16('a', 'c') &&
+			    UNALIGNED_GET8(tok_begin + 6) == 'h') {
 				struct jit_state *st;
 				int temp;
 				JITLValue elem_lvalue;

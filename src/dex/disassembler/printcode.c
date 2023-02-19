@@ -239,7 +239,7 @@ do_switch_on_opcode:
 		case ASM_JT:
 		case ASM_JMP:
 		case ASM_FOREACH:
-			offset = *(int8_t *)(iter + 1);
+			offset = (int8_t)UNALIGNED_GETLE8(iter + 1);
 do_relative_jump:
 			iter = DeeAsm_NextInstr(iter);
 			if (textjumps_add(self, (code_addr_t)(iter_start - start_addr),
@@ -251,11 +251,11 @@ do_relative_jump:
 		case ASM_JT16:
 		case ASM_JMP16:
 		case ASM_FOREACH16:
-			offset = (int16_t)UNALIGNED_GETLE16((uint16_t *)(iter + 1));
+			offset = (int16_t)UNALIGNED_GETLE16(iter + 1);
 			goto do_relative_jump;
 
 		case ASM32_JMP:
-			offset = (int32_t)UNALIGNED_GETLE32((uint32_t *)(iter + 2));
+			offset = (int32_t)UNALIGNED_GETLE32(iter + 2);
 			goto do_relative_jump;
 
 		case ASM_JMP_POP:

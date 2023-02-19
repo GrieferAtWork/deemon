@@ -252,7 +252,7 @@ INTERN WUNUSED int
 	uint8_t *buf = dec_alloc(2);
 	if unlikely(!buf)
 		goto err;
-	UNALIGNED_SETLE16((uint16_t *)buf, host_endian_word);
+	UNALIGNED_SETLE16(buf, host_endian_word);
 	return 0;
 err:
 	return -1;
@@ -263,7 +263,7 @@ INTERN WUNUSED int
 	uint8_t *buf = dec_alloc(4);
 	if unlikely(!buf)
 		goto err;
-	UNALIGNED_SETLE32((uint32_t *)buf, host_endian_dword);
+	UNALIGNED_SETLE32(buf, host_endian_dword);
 	return 0;
 err:
 	return -1;
@@ -327,7 +327,7 @@ INTERN WUNUSED int
 	dst          = dec_alloc(8);
 	if unlikely(!dst)
 		goto err;
-	UNALIGNED_SETLE64((uint64_t *)dst, buffer.data);
+	UNALIGNED_SETLE64(dst, buffer.data);
 	return 0;
 err:
 	return -1;
@@ -467,33 +467,33 @@ INTERN WUNUSED uint8_t (DCALL dec_link)(void) {
 
 			case DECREL_ABS16_NULL:
 				if (dec_section_empty(relsym->ds_sect)) {
-					UNALIGNED_SET16((uint16_t *)target, 0);
+					UNALIGNED_SETLE16(target, 0);
 					break;
 				}
 				ATTR_FALLTHROUGH
 			case DECREL_ABS16:
-				relval = UNALIGNED_GETLE16((uint16_t *)target) + (relsym->ds_addr +
-				                                                  relsym->ds_sect->ds_base);
+				relval = UNALIGNED_GETLE16(target) + (relsym->ds_addr +
+				                                      relsym->ds_sect->ds_base);
 				if unlikely(relval > UINT16_MAX)
 					goto rel_trunc;
-				UNALIGNED_SETLE16((uint16_t *)target, (uint16_t)relval);
+				UNALIGNED_SETLE16(target, (uint16_t)relval);
 				break;
 
 			case DECREL_ABS32_NULL:
 				if (dec_section_empty(relsym->ds_sect)) {
-					UNALIGNED_SET32((uint32_t *)target, 0);
+					UNALIGNED_SETLE32(target, 0);
 					break;
 				}
 				ATTR_FALLTHROUGH
 			case DECREL_ABS32:
-				UNALIGNED_SETLE32((uint32_t *)target,
-				                  UNALIGNED_GETLE32((uint32_t *)target) +
+				UNALIGNED_SETLE32(target,
+				                  UNALIGNED_GETLE32(target) +
 				                  (relsym->ds_addr + relsym->ds_sect->ds_base));
 				break;
 
 			case DECREL_SIZE32:
-				UNALIGNED_SETLE32((uint32_t *)target,
-				                  UNALIGNED_GETLE32((uint32_t *)target) +
+				UNALIGNED_SETLE32(target,
+				                  UNALIGNED_GETLE32(target) +
 				                  (uint32_t)(relsym->ds_sect->ds_iter - relsym->ds_sect->ds_begin));
 				break;
 
@@ -742,7 +742,7 @@ INTERN WUNUSED NONNULL((1)) int
 			*dst++  = '.';
 			pathlen = (size_t)((dec_filestr + dec_filelen) - dec_filestart);
 			dst     = (char *)mempcpyc(dst, dec_filestart, pathlen, sizeof(char));
-			UNALIGNED_SET32((uint32_t *)dst, ENCODE_INT32('d', 'e', 'c', 0));
+			UNALIGNED_SET32(dst, ENCODE_INT32('d', 'e', 'c', 0));
 		}
 	} else {
 		Dee_Incref(dec_filename);

@@ -1307,7 +1307,7 @@ DeeAsm_NextInstrEf(instruction_t const *__restrict pc,
 
 	case ASM_ADJSTACK: {
 		int8_t effect;
-		effect = *(int8_t *)(pc + 1);
+		effect = (int8_t)(UNALIGNED_GETLE8(pc + 1));
 		*pstacksz += effect;
 		if (effect >= 0) {
 			*psp_add = (uint16_t)effect;
@@ -1320,17 +1320,18 @@ DeeAsm_NextInstrEf(instruction_t const *__restrict pc,
 
 	case ASM_LROT:
 	case ASM_RROT:
-		*psp_add = *psp_sub = (uint16_t)(*(uint8_t *)(pc + 1) + 3);
+		*psp_sub = (uint16_t)(UNALIGNED_GETLE8(pc + 1) + 3);
+		*psp_add = *psp_sub;
 		break;
 
 	case ASM_DUP_N:
-		*psp_sub = (uint16_t)(*(uint8_t *)(pc + 1) + 2);
+		*psp_sub = (uint16_t)(UNALIGNED_GETLE8(pc + 1) + 2);
 		*psp_add = *psp_sub + 1;
 		*pstacksz += 1;
 		break;
 
 	case ASM_POP_N:
-		*psp_add = (uint16_t)(*(uint8_t *)(pc + 1) + 1);
+		*psp_add = (uint16_t)(UNALIGNED_GETLE8(pc + 1) + 1);
 		*psp_sub = *psp_add + 1;
 		*pstacksz -= 1;
 		break;
@@ -1338,8 +1339,8 @@ DeeAsm_NextInstrEf(instruction_t const *__restrict pc,
 	case ASM_PACK_TUPLE:
 	case ASM_PACK_LIST:
 		*psp_add = 1;
-		*psp_sub = *(uint8_t *)(pc + 1);
-		*pstacksz -= *(uint8_t *)(pc + 1);
+		*psp_sub = UNALIGNED_GETLE8(pc + 1);
+		*pstacksz -= UNALIGNED_GETLE8(pc + 1);
 		++*pstacksz;
 		break;
 
@@ -1347,34 +1348,34 @@ DeeAsm_NextInstrEf(instruction_t const *__restrict pc,
 	case ASM_CALL_KW:
 	case ASM_EXTEND:
 		*psp_add = 1;
-		*psp_sub = 1 + *(uint8_t *)(pc + 1);
-		*pstacksz -= *(uint8_t *)(pc + 1);
+		*psp_sub = 1 + UNALIGNED_GETLE8(pc + 1);
+		*pstacksz -= UNALIGNED_GETLE8(pc + 1);
 		break;
 
 	case ASM_CALLCMEMBER_THIS_R:
 		*psp_add = 1;
-		*psp_sub = *(uint8_t *)(pc + 3);
-		*pstacksz -= *(uint8_t *)(pc + 3);
+		*psp_sub = UNALIGNED_GETLE8(pc + 3);
+		*pstacksz -= UNALIGNED_GETLE8(pc + 3);
 		++*pstacksz;
 		break;
 
 	case ASM_UNPACK:
 		*psp_sub = 1;
-		*psp_add = *(uint8_t *)(pc + 1);
-		*pstacksz += *(uint8_t *)(pc + 1);
+		*psp_add = UNALIGNED_GETLE8(pc + 1);
+		*pstacksz += UNALIGNED_GETLE8(pc + 1);
 		--*pstacksz;
 		break;
 
 	case ASM_FUNCTION_C_16:
 		*psp_add = 1;
-		*psp_sub = 1 + UNALIGNED_GETLE16((uint16_t *)(pc + 2));
+		*psp_sub = 1 + UNALIGNED_GETLE16(pc + 2);
 		*pstacksz -= (*psp_sub - 1);
 		break;
 
 	case ASM_CALLATTR:
 		*psp_add = 1;
-		*psp_sub = 2 + *(uint8_t *)(pc + 1);
-		*pstacksz -= 1 + *(uint8_t *)(pc + 1);
+		*psp_sub = 2 + UNALIGNED_GETLE8(pc + 1);
+		*pstacksz -= 1 + UNALIGNED_GETLE8(pc + 1);
 		break;
 
 	case ASM_CALLATTR_C_KW:
@@ -1382,13 +1383,13 @@ DeeAsm_NextInstrEf(instruction_t const *__restrict pc,
 	case ASM_CALLATTR_C:
 	case ASM_CALLATTR_C_SEQ:
 		*psp_add = 1;
-		*psp_sub = 1 + *(uint8_t *)(pc + 2);
+		*psp_sub = 1 + UNALIGNED_GETLE8(pc + 2);
 		*pstacksz -= (*psp_sub - 1);
 		break;
 
 	case ASM_CALLATTR_C_MAP:
 		*psp_add = 1;
-		*psp_sub = 1 + (uint16_t)(*(uint8_t *)(pc + 2) * 2);
+		*psp_sub = 1 + (uint16_t)(UNALIGNED_GETLE8(pc + 2) * 2);
 		*pstacksz -= (*psp_sub - 1);
 		break;
 
@@ -1396,22 +1397,22 @@ DeeAsm_NextInstrEf(instruction_t const *__restrict pc,
 	case ASM_CALL_GLOBAL:
 	case ASM_CALL_LOCAL:
 		*psp_add = 1;
-		*psp_sub = *(uint8_t *)(pc + 2);
-		*pstacksz -= *(uint8_t *)(pc + 2);
+		*psp_sub = UNALIGNED_GETLE8(pc + 2);
+		*pstacksz -= UNALIGNED_GETLE8(pc + 2);
 		*pstacksz += 1;
 		break;
 
 	case ASM_CALL_EXTERN:
 		*psp_add = 1;
-		*psp_sub = *(uint8_t *)(pc + 3);
-		*pstacksz -= *(uint8_t *)(pc + 3);
+		*psp_sub = UNALIGNED_GETLE8(pc + 3);
+		*pstacksz -= UNALIGNED_GETLE8(pc + 3);
 		*pstacksz += 1;
 		break;
 
 	case ASM_OPERATOR:
 		*psp_add = 1;
-		*psp_sub = 1 + *(uint8_t *)(pc + 2);
-		*pstacksz -= *(uint8_t *)(pc + 2);
+		*psp_sub = 1 + UNALIGNED_GETLE8(pc + 2);
+		*pstacksz -= UNALIGNED_GETLE8(pc + 2);
 		break;
 
 	case ASM_EXTENDED1:
@@ -1420,7 +1421,7 @@ DeeAsm_NextInstrEf(instruction_t const *__restrict pc,
 
 		case ASM16_ADJSTACK & 0xff: {
 			int16_t effect;
-			effect = (int16_t)UNALIGNED_GETLE16((uint16_t *)(pc + 2));
+			effect = (int16_t)UNALIGNED_GETLE16(pc + 2);
 			*pstacksz += effect;
 			if (effect >= 0) {
 				*psp_add = (uint16_t)effect;
@@ -1433,17 +1434,17 @@ DeeAsm_NextInstrEf(instruction_t const *__restrict pc,
 
 		case ASM16_LROT & 0xff:
 		case ASM16_RROT & 0xff:
-			*psp_add = *psp_sub = (uint16_t)(UNALIGNED_GETLE16((uint16_t *)(pc + 2)) + 3);
+			*psp_add = *psp_sub = (uint16_t)(UNALIGNED_GETLE16(pc + 2) + 3);
 			break;
 
 		case ASM16_DUP_N & 0xff:
-			*psp_sub = (uint16_t)(UNALIGNED_GETLE16((uint16_t *)(pc + 2)) + 2);
+			*psp_sub = (uint16_t)(UNALIGNED_GETLE16(pc + 2) + 2);
 			*psp_add = *psp_sub + 1;
 			*pstacksz += 1;
 			break;
 
 		case ASM16_POP_N & 0xff:
-			*psp_add = (uint16_t)(UNALIGNED_GETLE16((uint16_t *)(pc + 2)) + 1);
+			*psp_add = (uint16_t)(UNALIGNED_GETLE16(pc + 2) + 1);
 			*psp_sub = *psp_add + 1;
 			*pstacksz -= 1;
 			break;
@@ -1452,129 +1453,129 @@ DeeAsm_NextInstrEf(instruction_t const *__restrict pc,
 		case ASM16_PACK_LIST & 0xff:
 		case ASM16_PACK_HASHSET & 0xff:
 			*psp_add = 1;
-			*psp_sub = UNALIGNED_GETLE16((uint16_t *)(pc + 2));
+			*psp_sub = UNALIGNED_GETLE16(pc + 2);
 			*pstacksz -= *psp_sub;
 			*pstacksz += 1;
 			break;
 
 		case ASM16_UNPACK & 0xff:
 			*psp_sub = 1;
-			*psp_add = UNALIGNED_GETLE16((uint16_t *)(pc + 2));
+			*psp_add = UNALIGNED_GETLE16(pc + 2);
 			*pstacksz += *psp_add;
 			*pstacksz -= 1;
 			break;
 
 		case ASM16_FUNCTION_C & 0xff:
 			*psp_add = 1;
-			*psp_sub = 1 + *(uint8_t *)(pc + 4);
-			*pstacksz -= *(uint8_t *)(pc + 4);
+			*psp_sub = 1 + UNALIGNED_GETLE8(pc + 4);
+			*pstacksz -= UNALIGNED_GETLE8(pc + 4);
 			break;
 
 		case ASM16_FUNCTION_C_16 & 0xff:
 			*psp_add = 1;
-			*psp_sub = 1 + UNALIGNED_GETLE16((uint16_t *)(pc + 4));
+			*psp_sub = 1 + UNALIGNED_GETLE16(pc + 4);
 			*pstacksz -= (*psp_sub - 1);
 			break;
 
 		case ASM_CALLATTR_KWDS & 0xff:
 			*psp_add = 1;
-			*psp_sub = 3 + *(uint8_t *)(pc + 2);
-			*pstacksz -= 2 + *(uint8_t *)(pc + 2);
+			*psp_sub = 3 + UNALIGNED_GETLE8(pc + 2);
+			*pstacksz -= 2 + UNALIGNED_GETLE8(pc + 2);
 			break;
 
 		case ASM16_CALLATTR_C_KW & 0xff:
 		case ASM16_CALLATTR_C & 0xff:
 		case ASM16_CALLATTR_C_SEQ & 0xff:
 			*psp_add = 1;
-			*psp_sub = 1 + *(uint8_t *)(pc + 4);
-			*pstacksz -= *(uint8_t *)(pc + 4);
+			*psp_sub = 1 + UNALIGNED_GETLE8(pc + 4);
+			*pstacksz -= UNALIGNED_GETLE8(pc + 4);
 			break;
 
 		case ASM16_CALLATTR_C_MAP & 0xff:
 			*psp_add = 1;
-			*psp_sub = 1 + (uint16_t)(*(uint8_t *)(pc + 4) * 2);
-			*pstacksz -= *(uint8_t *)(pc + 4);
+			*psp_sub = 1 + (uint16_t)(UNALIGNED_GETLE8(pc + 4) * 2);
+			*pstacksz -= UNALIGNED_GETLE8(pc + 4);
 			break;
 
 		case ASM16_CALLATTR_THIS_C & 0xff:
 		case ASM16_CALL_GLOBAL & 0xff:
 		case ASM16_CALL_LOCAL & 0xff:
 			*psp_add = 1;
-			*psp_sub = *(uint8_t *)(pc + 4);
-			*pstacksz -= *(uint8_t *)(pc + 4);
+			*psp_sub = UNALIGNED_GETLE8(pc + 4);
+			*pstacksz -= UNALIGNED_GETLE8(pc + 4);
 			*pstacksz += 1;
 			break;
 
 		case ASM16_CALL_EXTERN & 0xff:
 			*psp_add = 1;
-			*psp_sub = *(uint8_t *)(pc + 6);
-			*pstacksz -= *(uint8_t *)(pc + 6);
+			*psp_sub = UNALIGNED_GETLE8(pc + 6);
+			*pstacksz -= UNALIGNED_GETLE8(pc + 6);
 			*pstacksz += 1;
 			break;
 
 		case ASM16_CALL_KW & 0xff:
 		case ASM_CALL_SEQ & 0xff:
 			*psp_add = 1;
-			*psp_sub = 1 + *(uint8_t *)(pc + 2);
-			*pstacksz -= *(uint8_t *)(pc + 2);
+			*psp_sub = 1 + UNALIGNED_GETLE8(pc + 2);
+			*pstacksz -= UNALIGNED_GETLE8(pc + 2);
 			break;
 
 		case ASM16_CALLCMEMBER_THIS_R & 0xff:
 			*psp_add = 1;
-			*psp_sub = *(uint8_t *)(pc + 6);
-			*pstacksz -= *(uint8_t *)(pc + 6);
+			*psp_sub = UNALIGNED_GETLE8(pc + 6);
+			*pstacksz -= UNALIGNED_GETLE8(pc + 6);
 			++*pstacksz;
 			break;
 
 		case ASM_CALL_MAP & 0xff:
 			*psp_add = 1;
-			*psp_sub = 1 + ((uint16_t) * (uint8_t *)(pc + 2) * 2);
-			*pstacksz -= ((uint16_t) * (uint8_t *)(pc + 2) * 2);
+			*psp_sub = 1 + ((uint16_t)UNALIGNED_GETLE8(pc + 2) * 2);
+			*pstacksz -= ((uint16_t)UNALIGNED_GETLE8(pc + 2) * 2);
 			break;
 
 		case ASM16_OPERATOR & 0xff:
 			*psp_add = 1;
-			*psp_sub = 1 + *(uint8_t *)(pc + 4);
-			*pstacksz -= *(uint8_t *)(pc + 4);
+			*psp_sub = 1 + UNALIGNED_GETLE8(pc + 4);
+			*pstacksz -= UNALIGNED_GETLE8(pc + 4);
 			break;
 
 		case ASM_PACK_HASHSET & 0xff:
 			*psp_add = 1;
-			*psp_sub = *(uint8_t *)(pc + 2);
-			*pstacksz -= *(uint8_t *)(pc + 2);
+			*psp_sub = UNALIGNED_GETLE8(pc + 2);
+			*pstacksz -= UNALIGNED_GETLE8(pc + 2);
 			*pstacksz += 1;
 			break;
 
 		case ASM_PACK_DICT & 0xff:
 			*psp_add = 1;
-			*psp_sub = *(uint8_t *)(pc + 2) * 2;
-			*pstacksz -= *(uint8_t *)(pc + 2) * 2;
+			*psp_sub = UNALIGNED_GETLE8(pc + 2) * 2;
+			*pstacksz -= UNALIGNED_GETLE8(pc + 2) * 2;
 			*pstacksz += 1;
 			break;
 
 		case ASM16_PACK_DICT & 0xff:
 			*psp_add = 1;
-			*psp_sub = UNALIGNED_GETLE16((uint16_t *)(pc + 2)) * 2;
+			*psp_sub = UNALIGNED_GETLE16(pc + 2) * 2;
 			*pstacksz -= *psp_sub;
 			*pstacksz += 1;
 			break;
 
 		case ASM_VARARGS_UNPACK & 0xff:
-			*psp_add = *(uint8_t *)(pc + 2);
+			*psp_add = UNALIGNED_GETLE8(pc + 2);
 			*psp_sub = 0;
 			*pstacksz += *psp_add;
 			break;
 
 		case ASM_SUPERCALLATTR_THIS_RC & 0xff:
 			*psp_add = 1;
-			*psp_sub = *(uint8_t *)(pc + 4);
+			*psp_sub = UNALIGNED_GETLE8(pc + 4);
 			*pstacksz += 1;
 			*pstacksz -= *psp_sub;
 			break;
 
 		case ASM16_SUPERCALLATTR_THIS_RC & 0xff:
 			*psp_add = 1;
-			*psp_sub = *(uint8_t *)(pc + 6);
+			*psp_sub = UNALIGNED_GETLE8(pc + 6);
 			*pstacksz += 1;
 			*pstacksz -= *psp_sub;
 			break;
@@ -1582,7 +1583,7 @@ DeeAsm_NextInstrEf(instruction_t const *__restrict pc,
 		case ASM16_STACK & 0xff: {
 			uint16_t sp_addr;
 			prefix_ip = pc + 4;
-			sp_addr   = UNALIGNED_GETLE16((uint16_t *)(pc + 2));
+			sp_addr   = UNALIGNED_GETLE16(pc + 2);
 			/* Calculate the relative stack effect for addressing this stack slot. */
 			prefix_stack_sub = (*pstacksz - sp_addr);
 			goto do_prefix;
@@ -1609,7 +1610,7 @@ DeeAsm_NextInstrEf(instruction_t const *__restrict pc,
 	case ASM_STACK: {
 		uint8_t sp_addr;
 		prefix_ip = pc + 2;
-		sp_addr   = *(uint8_t *)(pc + 1);
+		sp_addr   = UNALIGNED_GETLE8(pc + 1);
 		/* Calculate the relative stack effect for addressing this stack slot. */
 		prefix_stack_sub = (*pstacksz - sp_addr);
 		goto do_prefix;
@@ -1664,13 +1665,13 @@ do_prefix:
 
 		case ASM_DUP_N:
 		case ASM_POP_N:
-			*psp_add = *(uint8_t *)(prefix_ip + 1);
+			*psp_add = UNALIGNED_GETLE8(prefix_ip + 1);
 			*psp_sub = *psp_add;
 			break;
 
 		case ASM_OPERATOR:
 			*psp_add = 1;
-			*psp_sub = *(uint8_t *)(prefix_ip + 2);
+			*psp_sub = UNALIGNED_GETLE8(prefix_ip + 2);
 			*pstacksz -= *psp_sub;
 			*pstacksz += 1;
 			break;
@@ -1682,18 +1683,18 @@ do_prefix:
 
 		case ASM_FUNCTION_C:
 			*psp_add = 0;
-			*psp_sub = 1 + *(uint8_t *)(prefix_ip + 2);
-			*pstacksz -= 1 + *(uint8_t *)(prefix_ip + 2);
+			*psp_sub = 1 + UNALIGNED_GETLE8(prefix_ip + 2);
+			*pstacksz -= 1 + UNALIGNED_GETLE8(prefix_ip + 2);
 			break;
 
 		case ASM_FUNCTION_C_16:
 			*psp_add = 0;
-			*psp_sub = 1 + UNALIGNED_GETLE16((uint16_t *)(prefix_ip + 2));
+			*psp_sub = 1 + UNALIGNED_GETLE16(prefix_ip + 2);
 			*pstacksz -= *psp_sub;
 			break;
 
 		case ASM_UNPACK:
-			*psp_add = *(uint8_t *)(prefix_ip + 1);
+			*psp_add = UNALIGNED_GETLE8(prefix_ip + 1);
 			*psp_sub = 0;
 			*pstacksz += *psp_add;
 			break;
@@ -1704,19 +1705,19 @@ do_prefix:
 
 			case ASM16_OPERATOR & 0xff:
 				*psp_add = 1;
-				*psp_sub = 1 + *(uint8_t *)(prefix_ip + 4);
-				*pstacksz -= *(uint8_t *)(prefix_ip + 4);
+				*psp_sub = 1 + UNALIGNED_GETLE8(prefix_ip + 4);
+				*pstacksz -= UNALIGNED_GETLE8(prefix_ip + 4);
 				break;
 
 			case ASM16_FUNCTION_C & 0xff:
 				*psp_add = 0;
-				*psp_sub = 1 + *(uint8_t *)(prefix_ip + 4);
-				*pstacksz -= 1 + *(uint8_t *)(prefix_ip + 4);
+				*psp_sub = 1 + UNALIGNED_GETLE8(prefix_ip + 4);
+				*pstacksz -= 1 + UNALIGNED_GETLE8(prefix_ip + 4);
 				break;
 
 			case ASM16_FUNCTION_C_16 & 0xff:
 				*psp_add = 0;
-				*psp_sub = 1 + UNALIGNED_GETLE16((uint16_t *)(prefix_ip + 4));
+				*psp_sub = 1 + UNALIGNED_GETLE16(prefix_ip + 4);
 				*pstacksz -= *psp_sub;
 				break;
 
@@ -1729,18 +1730,18 @@ do_prefix:
 
 			case ASM16_LROT & 0xff:
 			case ASM16_RROT & 0xff:
-				*psp_add = UNALIGNED_GETLE16((uint16_t *)(prefix_ip + 2));
+				*psp_add = UNALIGNED_GETLE16(prefix_ip + 2);
 				*psp_sub = *psp_add;
 				break;
 
 			case ASM16_DUP_N & 0xff:
 			case ASM16_POP_N & 0xff:
-				*psp_add = UNALIGNED_GETLE16((uint16_t *)(prefix_ip + 2));
+				*psp_add = UNALIGNED_GETLE16(prefix_ip + 2);
 				*psp_sub = *psp_add;
 				break;
 
 			case ASM16_UNPACK & 0xff:
-				*psp_add = UNALIGNED_GETLE16((uint16_t *)(prefix_ip + 2));
+				*psp_add = UNALIGNED_GETLE16(prefix_ip + 2);
 				*psp_sub = 0;
 				*pstacksz += *psp_add;
 				break;
@@ -1904,7 +1905,7 @@ asm_uses_local(instruction_t const *__restrict pc, uint16_t lid) {
 	switch (pc[0]) {
 
 	case ASM_LOCAL:
-		if (*(uint8_t *)(pc + 1) == lid)
+		if (UNALIGNED_GETLE8(pc + 1) == lid)
 			result = prefix_symbol_usage(pc + 2);
 		pc += 2;
 		goto check_prefix_core_usage;
@@ -1912,14 +1913,14 @@ asm_uses_local(instruction_t const *__restrict pc, uint16_t lid) {
 	case ASM_PUSH_BND_LOCAL:
 	case ASM_PUSH_LOCAL:
 	case ASM_CALL_LOCAL:
-		if (*(uint8_t *)(pc + 1) != lid)
+		if (UNALIGNED_GETLE8(pc + 1) != lid)
 			break;
 		result = ASM_USING_READ;
 		break;
 
 	case ASM_DEL_LOCAL:
 	case ASM_POP_LOCAL:
-		if (*(uint8_t *)(pc + 1) != lid)
+		if (UNALIGNED_GETLE8(pc + 1) != lid)
 			break;
 		result = ASM_USING_WRITE;
 		break;
@@ -1930,20 +1931,20 @@ asm_uses_local(instruction_t const *__restrict pc, uint16_t lid) {
 		case ASM16_PUSH_BND_LOCAL & 0xff:
 		case ASM16_PUSH_LOCAL & 0xff:
 		case ASM16_CALL_LOCAL & 0xff:
-			if (UNALIGNED_GETLE16((uint16_t *)(pc + 2)) != lid)
+			if (UNALIGNED_GETLE16(pc + 2) != lid)
 				break;
 			result = ASM_USING_READ;
 			break;
 
 		case ASM16_DEL_LOCAL & 0xff:
 		case ASM16_POP_LOCAL & 0xff:
-			if (UNALIGNED_GETLE16((uint16_t *)(pc + 2)) != lid)
+			if (UNALIGNED_GETLE16(pc + 2) != lid)
 				break;
 			result = ASM_USING_WRITE;
 			break;
 
 		case ASM16_LOCAL & 0xff:
-			if (UNALIGNED_GETLE16((uint16_t *)(pc + 2)) == lid)
+			if (UNALIGNED_GETLE16(pc + 2) == lid)
 				result = prefix_symbol_usage(pc + 4);
 			pc += 4;
 			goto check_prefix_core_usage;
@@ -1967,12 +1968,12 @@ check_prefix_core_usage:
 		switch (*pc) {
 
 		case ASM_PUSH_LOCAL: /* mov PREFIX, local */
-			if (*(uint8_t *)(pc + 1) == lid)
+			if (UNALIGNED_GETLE8(pc + 1) == lid)
 				result |= ASM_USING_READ;
 			break;
 
 		case ASM_POP_LOCAL: /* mov local, PREFIX */
-			if (*(uint8_t *)(pc + 1) == lid)
+			if (UNALIGNED_GETLE8(pc + 1) == lid)
 				result |= ASM_USING_WRITE;
 			break;
 
@@ -1980,12 +1981,12 @@ check_prefix_core_usage:
 			switch (pc[1]) {
 
 			case ASM16_PUSH_LOCAL & 0xff: /* mov PREFIX, local */
-				if (UNALIGNED_GETLE16((uint16_t *)(pc + 2)) == lid)
+				if (UNALIGNED_GETLE16(pc + 2) == lid)
 					result |= ASM_USING_READ;
 				break;
 
 			case ASM16_POP_LOCAL & 0xff: /* mov local, PREFIX */
-				if (UNALIGNED_GETLE16((uint16_t *)(pc + 2)) == lid)
+				if (UNALIGNED_GETLE16(pc + 2) == lid)
 					result |= ASM_USING_WRITE;
 				break;
 
@@ -2011,7 +2012,7 @@ asm_uses_static(instruction_t const *__restrict pc, uint16_t sid) {
 	switch (pc[0]) {
 
 	case ASM_STATIC:
-		if (*(uint8_t *)(pc + 1) != sid)
+		if (UNALIGNED_GETLE8(pc + 1) != sid)
 			break;
 		result = prefix_symbol_usage(pc + 2);
 		result |= asm_uses_static(pc + 2, sid);
@@ -2019,7 +2020,7 @@ asm_uses_static(instruction_t const *__restrict pc, uint16_t sid) {
 		goto check_prefix_core_usage;
 
 	case ASM_POP_STATIC:
-		if (*(uint8_t *)(pc + 1) != sid)
+		if (UNALIGNED_GETLE8(pc + 1) != sid)
 			break;
 		result = ASM_USING_WRITE;
 		break;
@@ -2048,27 +2049,27 @@ asm_uses_static(instruction_t const *__restrict pc, uint16_t sid) {
 	case ASM_CALLATTR_C_TUPLE:
 	case ASM_CALLATTR_THIS_C:
 	case ASM_CALLATTR_THIS_C_TUPLE:
-		if (*(uint8_t *)(pc + 1) != sid)
+		if (UNALIGNED_GETLE8(pc + 1) != sid)
 			break;
 		result = ASM_USING_READ;
 		break;
 
 	case ASM_CLASS_C:
-		if (*(uint8_t *)(pc + 1) == sid) {
+		if (UNALIGNED_GETLE8(pc + 1) == sid) {
 			result = ASM_USING_READ;
 			break;
 		}
 		break;
 
 	case ASM_CLASS_GC:
-		if (*(uint8_t *)(pc + 2) == sid) {
+		if (UNALIGNED_GETLE8(pc + 2) == sid) {
 			result = ASM_USING_READ;
 			break;
 		}
 		break;
 
 	case ASM_CLASS_EC:
-		if (*(uint8_t *)(pc + 3) == sid) {
+		if (UNALIGNED_GETLE8(pc + 3) == sid) {
 			result = ASM_USING_READ;
 			break;
 		}
@@ -2078,28 +2079,28 @@ asm_uses_static(instruction_t const *__restrict pc, uint16_t sid) {
 		switch (pc[1]) {
 
 		case ASM16_CLASS_C & 0xff:
-			if (UNALIGNED_GETLE16((uint16_t *)(pc + 2)) == sid) {
+			if (UNALIGNED_GETLE16(pc + 2) == sid) {
 				result = ASM_USING_READ;
 				break;
 			}
 			break;
 
 		case ASM16_CLASS_GC & 0xff:
-			if (UNALIGNED_GETLE16((uint16_t *)(pc + 4)) == sid) {
+			if (UNALIGNED_GETLE16(pc + 4) == sid) {
 				result = ASM_USING_READ;
 				break;
 			}
 			break;
 
 		case ASM16_CLASS_EC & 0xff:
-			if (UNALIGNED_GETLE16((uint16_t *)(pc + 6)) == sid) {
+			if (UNALIGNED_GETLE16(pc + 6) == sid) {
 				result = ASM_USING_READ;
 				break;
 			}
 			break;
 
 		case ASM16_STATIC & 0xff:
-			if (UNALIGNED_GETLE16((uint16_t *)(pc + 2)) != sid)
+			if (UNALIGNED_GETLE16(pc + 2) != sid)
 				break;
 			result = prefix_symbol_usage(pc + 4);
 			result |= asm_uses_static(pc + 4, sid);
@@ -2107,7 +2108,7 @@ asm_uses_static(instruction_t const *__restrict pc, uint16_t sid) {
 			goto check_prefix_core_usage;
 
 		case ASM16_POP_STATIC & 0xff:
-			if (UNALIGNED_GETLE16((uint16_t *)(pc + 2)) != sid)
+			if (UNALIGNED_GETLE16(pc + 2) != sid)
 				break;
 			result = ASM_USING_WRITE;
 			break;
@@ -2136,7 +2137,7 @@ asm_uses_static(instruction_t const *__restrict pc, uint16_t sid) {
 		case ASM16_CALLATTR_C_TUPLE & 0xff:
 		case ASM16_CALLATTR_THIS_C & 0xff:
 		case ASM16_CALLATTR_THIS_C_TUPLE & 0xff:
-			if (UNALIGNED_GETLE16((uint16_t *)(pc + 2)) != sid)
+			if (UNALIGNED_GETLE16(pc + 2) != sid)
 				break;
 			result = ASM_USING_READ;
 			break;
@@ -2161,11 +2162,11 @@ check_prefix_core_usage:
 
 		case ASM_PUSH_STATIC: /* mov PREFIX, static */
 		case ASM_PUSH_CONST:  /* mov PREFIX, const */
-			if (*(uint8_t *)(pc + 1) == sid)
+			if (UNALIGNED_GETLE8(pc + 1) == sid)
 				result |= ASM_USING_READ;
 			break;
 		case ASM_POP_STATIC: /* mov static, PREFIX */
-			if (*(uint8_t *)(pc + 1) == sid)
+			if (UNALIGNED_GETLE8(pc + 1) == sid)
 				result |= ASM_USING_WRITE;
 			break;
 
@@ -2174,11 +2175,11 @@ check_prefix_core_usage:
 
 			case ASM16_PUSH_STATIC & 0xff: /* mov PREFIX, static */
 			case ASM16_PUSH_CONST & 0xff:  /* mov PREFIX, const */
-				if (UNALIGNED_GETLE16((uint16_t *)(pc + 2)) == sid)
+				if (UNALIGNED_GETLE16(pc + 2) == sid)
 					result |= ASM_USING_READ;
 				break;
 			case ASM16_POP_STATIC & 0xff: /* mov local, PREFIX */
-				if (UNALIGNED_GETLE16((uint16_t *)(pc + 2)) == sid)
+				if (UNALIGNED_GETLE16(pc + 2) == sid)
 					result |= ASM_USING_WRITE;
 				break;
 

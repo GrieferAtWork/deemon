@@ -323,7 +323,7 @@ FUNC(Statement)(JITLexer *__restrict self) {
 			break;
 
 		case 4:
-			name = UNALIGNED_GET32((uint32_t *)tok_begin);
+			name = UNALIGNED_GET32(tok_begin);
 			if (name == ENCODE_INT32('w', 'i', 't', 'h')) {
 				IF_EVAL(JITContext_PushScope(self->jl_context));
 				result = FUNC(With)(self, true);
@@ -338,9 +338,9 @@ FUNC(Statement)(JITLexer *__restrict self) {
 			break;
 
 		case 5:
-			name = UNALIGNED_GET32((uint32_t *)tok_begin);
+			name = UNALIGNED_GET32(tok_begin);
 			if (name == ENCODE_INT32('t', 'h', 'r', 'o') &&
-			    *(uint8_t *)(tok_begin + 4) == 'w') {
+			    UNALIGNED_GET8(tok_begin + 4) == 'w') {
 				JITLexer_Yield(self);
 				if (self->jl_tok == ';') {
 					JITLexer_Yield(self);
@@ -374,7 +374,7 @@ FUNC(Statement)(JITLexer *__restrict self) {
 				goto done;
 			}
 			if (name == ENCODE_INT32('w', 'h', 'i', 'l') &&
-			    *(uint8_t *)(tok_begin + 4) == 'e') {
+			    UNALIGNED_GET8(tok_begin + 4) == 'e') {
 				IF_EVAL(JITContext_PushScope(self->jl_context));
 				result = FUNC(While)(self, true);
 				LOAD_LVALUE(result, err_popscope);
@@ -382,7 +382,7 @@ FUNC(Statement)(JITLexer *__restrict self) {
 				goto done;
 			}
 			if (name == ENCODE_INT32('y', 'i', 'e', 'l') &&
-			    *(uint8_t *)(tok_begin + 4) == 'd') {
+			    UNALIGNED_GET8(tok_begin + 4) == 'd') {
 #ifdef JIT_EVAL
 				(void)SYNTAXERROR("Yield statements are not supported at this location");
 				goto err;
@@ -401,13 +401,13 @@ FUNC(Statement)(JITLexer *__restrict self) {
 #endif /* !JIT_EVAL */
 			}
 			if (name == ENCODE_INT32('p', 'r', 'i', 'n') &&
-			    *(uint8_t *)(tok_begin + 4) == 't') {
+			    UNALIGNED_GET8(tok_begin + 4) == 't') {
 				/* TODO */
 				DERROR_NOTIMPLEMENTED();
 				goto err;
 			}
 			if (name == ENCODE_INT32('b', 'r', 'e', 'a') &&
-			    *(uint8_t *)(tok_begin + 4) == 'k') {
+			    UNALIGNED_GET8(tok_begin + 4) == 'k') {
 				JITLexer_Yield(self);
 				if likely(self->jl_tok == ';') {
 					JITLexer_Yield(self);
@@ -425,14 +425,14 @@ FUNC(Statement)(JITLexer *__restrict self) {
 				goto done;
 			}
 			if (name == ENCODE_INT32('_', '_', 'a', 's') &&
-			    *(uint8_t *)(tok_begin + 4) == 'm')
+			    UNALIGNED_GET8(tok_begin + 4) == 'm')
 				goto do_asm;
 			break;
 
 		case 6:
-			name = UNALIGNED_GET32((uint32_t *)tok_begin);
+			name = UNALIGNED_GET32(tok_begin);
 			if (name == ENCODE_INT32('r', 'e', 't', 'u') &&
-			    UNALIGNED_GET16((uint16_t *)(tok_begin + 4)) == ENCODE_INT16('r', 'n')) {
+			    UNALIGNED_GET16(tok_begin + 4) == ENCODE_INT16('r', 'n')) {
 				JITLexer_Yield(self);
 				if (self->jl_tok == ';') {
 					JITLexer_Yield(self);
@@ -464,7 +464,7 @@ FUNC(Statement)(JITLexer *__restrict self) {
 				goto done;
 			}
 			if (name == ENCODE_INT32('a', 's', 's', 'e') &&
-			    UNALIGNED_GET16((uint16_t *)(tok_begin + 4)) == ENCODE_INT16('r', 't')) {
+			    UNALIGNED_GET16(tok_begin + 4) == ENCODE_INT16('r', 't')) {
 				IF_EVAL(JITContext_PushScope(self->jl_context));
 				result = FUNC(Assert)(self, true);
 				LOAD_LVALUE(result, err_popscope);
@@ -472,12 +472,12 @@ FUNC(Statement)(JITLexer *__restrict self) {
 				goto done;
 			}
 			if (name == ENCODE_INT32('i', 'm', 'p', 'o') &&
-			    UNALIGNED_GET16((uint16_t *)(tok_begin + 4)) == ENCODE_INT16('r', 't')) {
+			    UNALIGNED_GET16(tok_begin + 4) == ENCODE_INT16('r', 't')) {
 				result = FUNC(Import)(self, false);
 				goto done;
 			}
 			if (name == ENCODE_INT32('s', 'w', 'i', 't') &&
-			    UNALIGNED_GET16((uint16_t *)(tok_begin + 4)) == ENCODE_INT16('c', 'h')) {
+			    UNALIGNED_GET16(tok_begin + 4) == ENCODE_INT16('c', 'h')) {
 				/* TODO */
 				DERROR_NOTIMPLEMENTED();
 				goto err;
@@ -485,10 +485,10 @@ FUNC(Statement)(JITLexer *__restrict self) {
 			break;
 
 		case 7:
-			name = UNALIGNED_GET32((uint32_t *)tok_begin);
+			name = UNALIGNED_GET32(tok_begin);
 			if (name == ENCODE_INT32('f', 'o', 'r', 'e') &&
-			    UNALIGNED_GET16((uint16_t *)(tok_begin + 4)) == ENCODE_INT16('a', 'c') &&
-			    *(uint8_t *)(tok_begin + 6) == 'h') {
+			    UNALIGNED_GET16(tok_begin + 4) == ENCODE_INT16('a', 'c') &&
+			    UNALIGNED_GET8(tok_begin + 6) == 'h') {
 				IF_EVAL(JITContext_PushScope(self->jl_context));
 				result = FUNC(Foreach)(self, true);
 				LOAD_LVALUE(result, err_popscope);
@@ -496,8 +496,8 @@ FUNC(Statement)(JITLexer *__restrict self) {
 				goto done;
 			}
 			if (name == ENCODE_INT32('_', '_', 'a', 's') &&
-			    UNALIGNED_GET16((uint16_t *)(tok_begin + 4)) == ENCODE_INT16('m', '_') &&
-			    *(uint8_t *)(tok_begin + 6) == '_') {
+			    UNALIGNED_GET16(tok_begin + 4) == ENCODE_INT16('m', '_') &&
+			    UNALIGNED_GET8(tok_begin + 6) == '_') {
 				bool is_asm_goto;
 				bool need_trailing_rparen;
 do_asm:
@@ -616,19 +616,19 @@ err_unsupported_assembly:
 					JITLexer_Yield(self);
 #ifdef JIT_EVAL
 					if unlikely(FUNC(AssemblyOperands)(self, false)) /* OUTPUT */
-					goto err;
+						goto err;
 #else /* JIT_EVAL */
 					if unlikely(FUNC(AssemblyOperands)(self)) /* OUTPUT */
-					goto err;
+						goto err;
 #endif /* !JIT_EVAL */
 					if (JITLexer_IsColumn(self)) {
 						JITLexer_Yield(self);
 #ifdef JIT_EVAL
 						if unlikely(FUNC(AssemblyOperands)(self, false)) /* INPUT */
-						goto err;
+							goto err;
 #else /* JIT_EVAL */
 						if unlikely(FUNC(AssemblyOperands)(self)) /* INPUT */
-						goto err;
+							goto err;
 #endif /* !JIT_EVAL */
 						if (JITLexer_IsColumn(self)) {
 							JITLexer_Yield(self);
@@ -669,8 +669,8 @@ check_trailing_asm_semicolon:
 
 		case 8: {
 			uint32_t nam2;
-			name = UNALIGNED_GET32((uint32_t *)tok_begin);
-			nam2 = UNALIGNED_GET32((uint32_t *)(tok_begin + 4));
+			name = UNALIGNED_GET32(tok_begin);
+			nam2 = UNALIGNED_GET32(tok_begin + 4);
 			if (name == ENCODE_INT32('c', 'o', 'n', 't') &&
 			    nam2 == ENCODE_INT32('i', 'n', 'u', 'e')) {
 				JITLexer_Yield(self);

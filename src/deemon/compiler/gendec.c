@@ -1359,13 +1359,13 @@ dec_putddi_xdat_ptr(DeeDDIObject *__restrict ddi,
 					break;
 
 				case 2 + 2:
-					symbol_id     = UNALIGNED_GETLE16((uint16_t *)(iter + 0));
-					string_offset = UNALIGNED_GETLE16((uint16_t *)(iter + 2));
+					symbol_id     = UNALIGNED_GETLE16(iter + 0);
+					string_offset = UNALIGNED_GETLE16(iter + 2);
 					break;
 
 				case 2 + 4:
-					symbol_id     = UNALIGNED_GETLE16((uint16_t *)(iter + 0));
-					string_offset = UNALIGNED_GETLE32((uint32_t *)(iter + 2));
+					symbol_id     = UNALIGNED_GETLE16(iter + 0);
+					string_offset = UNALIGNED_GETLE32(iter + 2);
 					break;
 
 				default: goto defl_xdat;
@@ -1413,15 +1413,15 @@ defl_xdat:
 		}
 		size = (size_t)(xsect->ds_iter - xsect->ds_begin) - 2;
 		if (size <= UINT16_MAX) {
-			UNALIGNED_SETLE16((uint16_t *)xsect->ds_begin, (uint16_t)size);
+			UNALIGNED_SETLE16(xsect->ds_begin, (uint16_t)size);
 		} else {
 			if (dec_putl(0))
 				goto err;
 			memmoveup(xsect->ds_begin + 6,
 			          xsect->ds_begin + 2,
 			          size);
-			UNALIGNED_SET16((uint16_t *)(xsect->ds_begin + 0), 0xffff);
-			UNALIGNED_SETLE32((uint32_t *)(xsect->ds_begin + 2), (uint32_t)size);
+			UNALIGNED_SET16(xsect->ds_begin + 0, 0xffff);
+			UNALIGNED_SETLE32(xsect->ds_begin + 2, (uint32_t)size);
 		}
 
 		/* Switch back to the old section. */

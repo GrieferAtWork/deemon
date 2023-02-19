@@ -205,7 +205,7 @@ do_get_stack:
 		break;
 
 	case ASM_LOCAL:
-		imm_val = *(uint8_t *)(ip + 0);
+		imm_val = UNALIGNED_GETLE8(ip + 0);
 do_get_local:
 #ifdef EXEC_SAFE
 		if unlikely(imm_val >= code->co_localc) {
@@ -227,10 +227,10 @@ do_get_local:
 		switch (*ip++) {
 
 		case ASM16_STACK & 0xff:
-			imm_val = UNALIGNED_GETLE16((uint16_t *)ip);
+			imm_val = UNALIGNED_GETLE16(ip + 0);
 			goto do_get_stack;
 		case ASM16_LOCAL & 0xff:
-			imm_val = UNALIGNED_GETLE16((uint16_t *)(ip + 0));
+			imm_val = UNALIGNED_GETLE16(ip + 0);
 			goto do_get_local;
 
 		default:
@@ -302,25 +302,25 @@ do_get_static:
 
 	case ASM_EXTERN:
 #ifdef EXEC_SAFE
-		imm_val = *(uint8_t *)(ip + 1);
-		if unlikely(*(uint8_t *)(ip + 0) >= code->co_module->mo_importc) {
+		imm_val = UNALIGNED_GETLE8(ip + 1);
+		if unlikely(UNALIGNED_GETLE8(ip + 0) >= code->co_module->mo_importc) {
 err_invalid_extern:
 			frame->cf_sp = sp;
-			err_srt_invalid_extern(frame, *(uint8_t *)(ip + 0), imm_val);
+			err_srt_invalid_extern(frame, UNALIGNED_GETLE8(ip + 0), imm_val);
 			return NULL;
 		}
-		module = code->co_module->mo_importv[*(uint8_t *)(ip + 0)];
+		module = code->co_module->mo_importv[UNALIGNED_GETLE8(ip + 0)];
 		if unlikely(imm_val >= module->mo_globalc)
 			goto err_invalid_extern;
 #else /* EXEC_SAFE */
-		ASSERT(*(uint8_t *)(ip + 0) < code->co_module->mo_importc);
-		module  = code->co_module->mo_importv[*(uint8_t *)(ip + 0)];
-		imm_val = *(uint8_t *)(ip + 1);
+		ASSERT(UNALIGNED_GETLE8(ip + 0) < code->co_module->mo_importc);
+		module  = code->co_module->mo_importv[UNALIGNED_GETLE8(ip + 0)];
+		imm_val = UNALIGNED_GETLE8(ip + 1);
 		ASSERT(imm_val < module->mo_globalc);
 #endif /* !EXEC_SAFE */
 		goto do_get_module_object;
 	case ASM_GLOBAL:
-		imm_val = *(uint8_t *)(ip + 0);
+		imm_val = UNALIGNED_GETLE8(ip + 0);
 do_get_global:
 		module = code->co_module;
 #ifdef EXEC_SAFE
@@ -343,7 +343,7 @@ do_get_module_object:
 		break;
 
 	case ASM_LOCAL:
-		imm_val = *(uint8_t *)(ip + 0);
+		imm_val = UNALIGNED_GETLE8(ip + 0);
 do_get_local:
 #ifdef EXEC_SAFE
 		if unlikely(imm_val >= code->co_localc) {
@@ -366,40 +366,40 @@ do_get_local:
 		switch (*ip++) {
 
 		case ASM16_STACK & 0xff:
-			imm_val = UNALIGNED_GETLE16((uint16_t *)ip);
+			imm_val = UNALIGNED_GETLE16(ip + 0);
 			goto do_get_stack;
 
 		case ASM16_STATIC & 0xff:
-			imm_val = UNALIGNED_GETLE16((uint16_t *)ip);
+			imm_val = UNALIGNED_GETLE16(ip + 0);
 			goto do_get_static;
 
 		case ASM16_EXTERN & 0xff:
-			imm_val = UNALIGNED_GETLE16((uint16_t *)(ip + 0));
+			imm_val = UNALIGNED_GETLE16(ip + 0);
 #ifdef EXEC_SAFE
 			if unlikely(imm_val >= code->co_module->mo_importc) {
 err_invalid_extern16:
 				frame->cf_sp = sp;
-				err_srt_invalid_extern(frame, UNALIGNED_GETLE16((uint16_t *)(ip + 0)), imm_val);
+				err_srt_invalid_extern(frame, UNALIGNED_GETLE16(ip + 0), imm_val);
 				return NULL;
 			}
 			module  = code->co_module->mo_importv[imm_val];
-			imm_val = UNALIGNED_GETLE16((uint16_t *)(ip + 2));
+			imm_val = UNALIGNED_GETLE16(ip + 2);
 			if unlikely(imm_val >= module->mo_globalc)
 				goto err_invalid_extern16;
 #else /* EXEC_SAFE */
 			ASSERT(imm_val < code->co_module->mo_importc);
 			module  = code->co_module->mo_importv[imm_val];
-			imm_val = UNALIGNED_GETLE16((uint16_t *)(ip + 2));
+			imm_val = UNALIGNED_GETLE16(ip + 2);
 			ASSERT(imm_val < module->mo_globalc);
 #endif /* !EXEC_SAFE */
 			goto do_get_module_object;
 
 		case ASM16_GLOBAL & 0xff:
-			imm_val = UNALIGNED_GETLE16((uint16_t *)(ip + 0));
+			imm_val = UNALIGNED_GETLE16(ip + 0);
 			goto do_get_global;
 
 		case ASM16_LOCAL & 0xff:
-			imm_val = UNALIGNED_GETLE16((uint16_t *)(ip + 0));
+			imm_val = UNALIGNED_GETLE16(ip + 0);
 			goto do_get_local;
 
 		default:
@@ -485,26 +485,26 @@ do_get_static:
 
 	case ASM_EXTERN:
 #ifdef EXEC_SAFE
-		imm_val = *(uint8_t *)(ip + 1);
-		if unlikely(*(uint8_t *)(ip + 0) >= code->co_module->mo_importc) {
+		imm_val = UNALIGNED_GETLE8(ip + 1);
+		if unlikely(UNALIGNED_GETLE8(ip + 0) >= code->co_module->mo_importc) {
 err_invalid_extern:
 			frame->cf_sp = sp;
-			err_srt_invalid_extern(frame, *(uint8_t *)(ip + 0), imm_val);
+			err_srt_invalid_extern(frame, UNALIGNED_GETLE8(ip + 0), imm_val);
 			return NULL;
 		}
-		module = code->co_module->mo_importv[*(uint8_t *)(ip + 0)];
+		module = code->co_module->mo_importv[UNALIGNED_GETLE8(ip + 0)];
 		if unlikely(imm_val >= module->mo_globalc)
 			goto err_invalid_extern;
 #else /* EXEC_SAFE */
-		ASSERT(*(uint8_t *)(ip + 0) < code->co_module->mo_importc);
-		module  = code->co_module->mo_importv[*(uint8_t *)(ip + 0)];
-		imm_val = *(uint8_t *)(ip + 1);
+		ASSERT(UNALIGNED_GETLE8(ip + 0) < code->co_module->mo_importc);
+		module  = code->co_module->mo_importv[UNALIGNED_GETLE8(ip + 0)];
+		imm_val = UNALIGNED_GETLE8(ip + 1);
 		ASSERT(imm_val < module->mo_globalc);
 #endif /* !EXEC_SAFE */
 		goto do_get_module_object;
 
 	case ASM_GLOBAL:
-		imm_val = *(uint8_t *)(ip + 0);
+		imm_val = UNALIGNED_GETLE8(ip + 0);
 do_get_global:
 		module = code->co_module;
 #ifdef EXEC_SAFE
@@ -530,7 +530,7 @@ do_get_module_object:
 		break;
 
 	case ASM_LOCAL:
-		imm_val = *(uint8_t *)(ip + 0);
+		imm_val = UNALIGNED_GETLE8(ip + 0);
 do_get_local:
 #ifdef EXEC_SAFE
 		if unlikely(imm_val >= code->co_localc) {
@@ -553,40 +553,40 @@ do_get_local:
 		switch (*ip++) {
 
 		case ASM16_STACK & 0xff:
-			imm_val = UNALIGNED_GETLE16((uint16_t *)ip);
+			imm_val = UNALIGNED_GETLE16(ip + 0);
 			goto do_get_stack;
 
 		case ASM16_STATIC & 0xff:
-			imm_val = UNALIGNED_GETLE16((uint16_t *)ip);
+			imm_val = UNALIGNED_GETLE16(ip + 0);
 			goto do_get_static;
 
 		case ASM16_EXTERN & 0xff:
-			imm_val = UNALIGNED_GETLE16((uint16_t *)(ip + 0));
+			imm_val = UNALIGNED_GETLE16(ip + 0);
 #ifdef EXEC_SAFE
 			if unlikely(imm_val >= code->co_module->mo_importc) {
 err_invalid_extern16:
 				frame->cf_sp = sp;
-				err_srt_invalid_extern(frame, UNALIGNED_GETLE16((uint16_t *)(ip + 0)), imm_val);
+				err_srt_invalid_extern(frame, UNALIGNED_GETLE16(ip + 0), imm_val);
 				return NULL;
 			}
 			module  = code->co_module->mo_importv[imm_val];
-			imm_val = UNALIGNED_GETLE16((uint16_t *)(ip + 2));
+			imm_val = UNALIGNED_GETLE16(ip + 2);
 			if unlikely(imm_val >= module->mo_globalc)
 				goto err_invalid_extern16;
 #else /* EXEC_SAFE */
 			ASSERT(imm_val < code->co_module->mo_importc);
 			module  = code->co_module->mo_importv[imm_val];
-			imm_val = UNALIGNED_GETLE16((uint16_t *)(ip + 2));
+			imm_val = UNALIGNED_GETLE16(ip + 2);
 			ASSERT(imm_val < module->mo_globalc);
 #endif /* !EXEC_SAFE */
 			goto do_get_module_object;
 
 		case ASM16_GLOBAL & 0xff:
-			imm_val = UNALIGNED_GETLE16((uint16_t *)(ip + 0));
+			imm_val = UNALIGNED_GETLE16(ip + 0);
 			goto do_get_global;
 
 		case ASM16_LOCAL & 0xff:
-			imm_val = UNALIGNED_GETLE16((uint16_t *)(ip + 0));
+			imm_val = UNALIGNED_GETLE16(ip + 0);
 			goto do_get_local;
 
 		default:
@@ -676,27 +676,27 @@ do_set_static:
 
 	case ASM_EXTERN:
 #ifdef EXEC_SAFE
-		imm_val = *(uint8_t *)(ip + 1);
-		if unlikely(*(uint8_t *)(ip + 0) >= code->co_module->mo_importc) {
+		imm_val = UNALIGNED_GETLE8(ip + 1);
+		if unlikely(UNALIGNED_GETLE8(ip + 0) >= code->co_module->mo_importc) {
 err_invalid_extern:
 			frame->cf_sp = sp;
-			err_srt_invalid_extern(frame, *(uint8_t *)(ip + 0), imm_val);
+			err_srt_invalid_extern(frame, UNALIGNED_GETLE8(ip + 0), imm_val);
 			Dee_Decref(value);
 			return -1;
 		}
-		module = code->co_module->mo_importv[*(uint8_t *)(ip + 0)];
+		module = code->co_module->mo_importv[UNALIGNED_GETLE8(ip + 0)];
 		if unlikely(imm_val >= module->mo_globalc)
 			goto err_invalid_extern;
 #else /* EXEC_SAFE */
-		ASSERT(*(uint8_t *)(ip + 0) < code->co_module->mo_importc);
-		module  = code->co_module->mo_importv[*(uint8_t *)(ip + 0)];
-		imm_val = *(uint8_t *)(ip + 1);
+		ASSERT(UNALIGNED_GETLE8(ip + 0) < code->co_module->mo_importc);
+		module  = code->co_module->mo_importv[UNALIGNED_GETLE8(ip + 0)];
+		imm_val = UNALIGNED_GETLE8(ip + 1);
 		ASSERT(imm_val < module->mo_globalc);
 #endif /* !EXEC_SAFE */
 		goto do_set_module_object;
 
 	case ASM_GLOBAL:
-		imm_val = *(uint8_t *)(ip + 0);
+		imm_val = UNALIGNED_GETLE8(ip + 0);
 do_set_global:
 		module = code->co_module;
 #ifdef EXEC_SAFE
@@ -718,7 +718,7 @@ do_set_module_object:
 		break;
 
 	case ASM_LOCAL:
-		imm_val = *(uint8_t *)(ip + 0);
+		imm_val = UNALIGNED_GETLE8(ip + 0);
 do_set_local:
 #ifdef EXEC_SAFE
 		if unlikely(imm_val >= code->co_localc) {
@@ -739,41 +739,41 @@ do_set_local:
 		switch (*ip++) {
 
 		case ASM16_STACK & 0xff:
-			imm_val = UNALIGNED_GETLE16((uint16_t *)ip);
+			imm_val = UNALIGNED_GETLE16(ip + 0);
 			goto do_set_stack;
 
 		case ASM16_STATIC & 0xff:
-			imm_val = UNALIGNED_GETLE16((uint16_t *)ip);
+			imm_val = UNALIGNED_GETLE16(ip + 0);
 			goto do_set_static;
 
 		case ASM16_EXTERN & 0xff:
-			imm_val = UNALIGNED_GETLE16((uint16_t *)(ip + 0));
+			imm_val = UNALIGNED_GETLE16(ip + 0);
 #ifdef EXEC_SAFE
 			if unlikely(imm_val >= code->co_module->mo_importc) {
 err_invalid_extern16:
 				frame->cf_sp = sp;
-				err_srt_invalid_extern(frame, UNALIGNED_GETLE16((uint16_t *)(ip + 0)), imm_val);
+				err_srt_invalid_extern(frame, UNALIGNED_GETLE16(ip + 0), imm_val);
 				Dee_Decref(value);
 				return -1;
 			}
 			module  = code->co_module->mo_importv[imm_val];
-			imm_val = UNALIGNED_GETLE16((uint16_t *)(ip + 2));
+			imm_val = UNALIGNED_GETLE16(ip + 2);
 			if unlikely(imm_val >= module->mo_globalc)
 				goto err_invalid_extern16;
 #else /* EXEC_SAFE */
 			ASSERT(imm_val < code->co_module->mo_importc);
 			module  = code->co_module->mo_importv[imm_val];
-			imm_val = UNALIGNED_GETLE16((uint16_t *)(ip + 2));
+			imm_val = UNALIGNED_GETLE16(ip + 2);
 			ASSERT(imm_val < module->mo_globalc);
 #endif /* !EXEC_SAFE */
 			goto do_set_module_object;
 
 		case ASM16_GLOBAL & 0xff:
-			imm_val = UNALIGNED_GETLE16((uint16_t *)(ip + 0));
+			imm_val = UNALIGNED_GETLE16(ip + 0);
 			goto do_set_global;
 
 		case ASM16_LOCAL & 0xff:
-			imm_val = UNALIGNED_GETLE16((uint16_t *)(ip + 0));
+			imm_val = UNALIGNED_GETLE16(ip + 0);
 			goto do_set_local;
 
 #ifdef EXEC_SAFE

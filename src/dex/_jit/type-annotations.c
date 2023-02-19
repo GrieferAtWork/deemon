@@ -103,7 +103,7 @@ do_handle_lparen:
 
 		case 4: {
 			uint32_t name;
-			name = UNALIGNED_GET32((uint32_t *)tok_begin);
+			name = UNALIGNED_GET32(tok_begin);
 			if (name == ENCODE_INT32('n', 'o', 'n', 'e')) {
 				/* Don't consume a trailing "from" after "none" */
 				JITLexer_Yield(self);
@@ -148,10 +148,10 @@ do_handle_lparen:
 
 		case 5: {
 			uint32_t name;
-			name = UNALIGNED_GET32((uint32_t *)tok_begin);
-			if (name == ENCODE_INT32('_', '_', 'a', 's') && *(uint8_t *)(tok_begin + 4) == 'm')
+			name = UNALIGNED_GET32(tok_begin);
+			if (name == ENCODE_INT32('_', '_', 'a', 's') && UNALIGNED_GET8(tok_begin + 4) == 'm')
 				goto do_handle_asm_in_typedecl;
-			if (name == ENCODE_INT32('_', '_', 'n', 't') && *(uint8_t *)(tok_begin + 4) == 'h') {
+			if (name == ENCODE_INT32('_', '_', 'n', 't') && UNALIGNED_GET8(tok_begin + 4) == 'h') {
 				bool hasparen;
 				JITLexer_Yield(self);
 				if (self->jl_tok == '(') {
@@ -179,9 +179,9 @@ do_handle_lparen:
 		}	break;
 
 		case 7:
-			if (UNALIGNED_GET32((uint32_t *)(tok_begin + 0)) == ENCODE_INT32('_', '_', 'a', 's') &&
-			    UNALIGNED_GET16((uint16_t *)(tok_begin + 4)) == ENCODE_INT16('m', '_') &&
-			    *(uint8_t *)(tok_begin + 6) == '_') {
+			if (UNALIGNED_GET32(tok_begin + 0) == ENCODE_INT32('_', '_', 'a', 's') &&
+			    UNALIGNED_GET16(tok_begin + 4) == ENCODE_INT16('m', '_') &&
+			    UNALIGNED_GET8(tok_begin + 6) == '_') {
 				bool hasparen;
 do_handle_asm_in_typedecl:
 				JITLexer_Yield(self);

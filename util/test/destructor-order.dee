@@ -28,15 +28,15 @@
 		} finally {\
 			code\
 		}\
-	})().__iterself__();\
-	__r.__iternext__();\
+	})().operator iter();\
+	__r.operator next();\
 	__r;\
 })
 
+/* Test when deleting local variables */
 global state = 0;
-
 assert state == 0;
-x = destructor_callback {
+local x = destructor_callback {
 	assert state == 1;
 	state = 2;
 };
@@ -46,17 +46,15 @@ del x;
 assert state == 2;
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
+/* Test when deleting global variables */
+global state = 0;
+assert state == 0;
+global y = destructor_callback {
+	assert state == 1;
+	state = 2;
+};
+assert state == 0;
+state = 1;
+del y;
+assert state == 2;
 

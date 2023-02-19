@@ -77,7 +77,7 @@ DeeCodec_NormalizeName(DeeObject *__restrict name) {
 			}
 			ASSERT(dst == DeeString_STR(result) + DeeString_SIZE(result));
 			if (length >= 4 &&
-			    UNALIGNED_GET32((uint32_t *)DeeString_STR(result)) == ENCODE_INT32('i', 's', 'o', '-')) {
+			    UNALIGNED_GET32(DeeString_STR(result)) == ENCODE_INT32('i', 's', 'o', '-')) {
 				--DeeString_SIZE(result);
 				memmovedownc(DeeString_STR(result) + 3,
 				             DeeString_STR(result) + 4,
@@ -85,7 +85,7 @@ DeeCodec_NormalizeName(DeeObject *__restrict name) {
 				             sizeof(char));
 				DeeString_STR(result)[length - 2] = '\0';
 			} else if (length >= 3 &&
-			           UNALIGNED_GET16((uint16_t *)DeeString_STR(result)) == ENCODE_INT16('c', 'p') &&
+			           UNALIGNED_GET16(DeeString_STR(result)) == ENCODE_INT16('c', 'p') &&
 			           DeeString_STR(result)[2] == '-') {
 				--DeeString_SIZE(result);
 				memmovedownc(DeeString_STR(result) + 2,
@@ -97,11 +97,11 @@ DeeCodec_NormalizeName(DeeObject *__restrict name) {
 			return result;
 		}
 	}
-	if (length >= 4 && UNALIGNED_GET32((uint32_t *)str) == ENCODE_INT32('i', 's', 'o', '-')) {
+	if (length >= 4 && UNALIGNED_GET32(str) == ENCODE_INT32('i', 's', 'o', '-')) {
 		result = DeeString_NewBuffer(length - 1);
 		if unlikely(!result)
 			goto err;
-		UNALIGNED_SET16((uint16_t *)DeeString_STR(result), ENCODE_INT16('i', 's'));
+		UNALIGNED_SET16(DeeString_STR(result), ENCODE_INT16('i', 's'));
 		DeeString_STR(result)[3] = 'o';
 		memcpyc(DeeString_STR(result) + 3,
 		        str + 4,
@@ -110,11 +110,11 @@ DeeCodec_NormalizeName(DeeObject *__restrict name) {
 		return result;
 	}
 	if (length >= 3 &&
-	    UNALIGNED_GET16((uint16_t *)str) == ENCODE_INT16('c', 'p') && str[2] == '-') {
+	    UNALIGNED_GET16(str) == ENCODE_INT16('c', 'p') && str[2] == '-') {
 		result = DeeString_NewBuffer(length - 1);
 		if unlikely(!result)
 			goto err;
-		UNALIGNED_SET16((uint16_t *)DeeString_STR(result), ENCODE_INT16('c', 'p'));
+		UNALIGNED_SET16(DeeString_STR(result), ENCODE_INT16('c', 'p'));
 		memcpyc(DeeString_STR(result) + 2,
 		        str + 3,
 		        length - 3,
