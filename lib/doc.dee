@@ -3420,11 +3420,8 @@ err_unknown_attribute:
 						}
 					}
 				}
-			} else if (my_attr.isinstance) {
-				try {
-					object = parob.operator . (fixed_attribute_name);
-				} catch (Error.RuntimeError.UnboundLocal) {
-				}
+			} else if (my_attr.isinstance && fixed_attribute_name is bound) {
+				object = parob.operator . (fixed_attribute_name);
 			}
 		}
 		/* Types implement their own documentation strings. */
