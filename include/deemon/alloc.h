@@ -168,7 +168,7 @@ DFUNDEF void *(DCALL DeeDbg_UntrackAlloc)(void *ptr, char const *file, int line)
 #define Dee_MallocUsableSize(ptr) malloc_usable_size(ptr)
 #elif defined(CONFIG_HAVE__msize)
 #define Dee_MallocUsableSize(ptr) (likely(ptr) ? _msize(ptr) : 0)
-#endif /* CONFIG_HAVE__msize */
+#endif /* ... */
 
 #ifndef NDEBUG
 #define Dee_Malloc(n_bytes)          DeeDbg_Malloc(n_bytes, __FILE__, __LINE__)
