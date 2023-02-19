@@ -1216,6 +1216,7 @@ int main(int argc, char *argv[]) {
 			}
 			DeeTuple_SET(sys_argv, i, arg); /* Inherit */
 		}
+
 		/* Set the system argument vector. */
 		Dee_SetArgv((DeeObject *)sys_argv);
 		if (operation_mode == OPERATION_MODE_INTERACTIVE) {
@@ -1330,6 +1331,7 @@ int main(int argc, char *argv[]) {
 			DREF DeeObject *user_module_main;
 			DREF DeeObject *user_module_result;
 			DREF DeeObject *user_module_args;
+
 			/* The user's module has been loaded. - Now load dependencies and open it's root. */
 			user_module_main = DeeModule_GetRoot((DeeObject *)user_module, true);
 			Dee_Decref(user_module);

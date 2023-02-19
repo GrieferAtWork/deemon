@@ -468,6 +468,31 @@ DeeFile_DefaultStd(unsigned int id) {
 	return (DeeObject *)result;
 }
 
+PRIVATE void DCALL
+nt_sysfile_on_filetype_set(SystemFile *__restrict self, DWORD type) {
+	(void)self;
+	(void)type;
+	if (type == FILE_TYPE_CHAR) {
+		DWORD dwConsoleMode;
+		DBG_ALIGNMENT_DISABLE();
+		if (GetConsoleMode(self->sf_handle, &dwConsoleMode)) {
+#ifndef ENABLE_PROCESSED_OUTPUT
+#define ENABLE_PROCESSED_OUTPUT 0x1
+#endif /* !ENABLE_PROCESSED_OUTPUT */
+#ifndef ENABLE_VIRTUAL_TERMINAL_PROCESSING
+#define ENABLE_VIRTUAL_TERMINAL_PROCESSING 0x4
+#endif /* !ENABLE_VIRTUAL_TERMINAL_PROCESSING */
+			/* TODO: This is a good beginning, but it'd be better to port KOS's libansitty
+			 *       and use it (mainly so we're compatible with older versions of windows). */
+			dwConsoleMode |= ENABLE_PROCESSED_OUTPUT | ENABLE_VIRTUAL_TERMINAL_PROCESSING;
+			if (!SetConsoleMode(self->sf_handle, dwConsoleMode)) {
+				Dee_DPRINTF("[INIT] Failed to get an ansi-terminal for %p (SetConsoleMode returned %lu)\n",
+				            self->sf_handle, GetLastError());
+			}
+		}
+		DBG_ALIGNMENT_ENABLE();
+	}
+}
 
 /* Determine if the referenced file is a TTY file.
  * @return: * :                One of `FILE_TYPE_*'.
@@ -486,6 +511,7 @@ nt_sysfile_gettype(SystemFile *__restrict self) {
 		atomic_cmpxch(&self->sf_filetype,
 		              (uint32_t)FILE_TYPE_UNKNOWN,
 		              (uint32_t)type);
+		nt_sysfile_on_filetype_set(self, type);
 	}
 	return (DWORD)self->sf_filetype;
 }
@@ -501,6 +527,7 @@ nt_sysfile_trygettype(SystemFile *__restrict self) {
 			atomic_cmpxch(&self->sf_filetype,
 			              (uint32_t)FILE_TYPE_UNKNOWN,
 			              (uint32_t)type);
+			nt_sysfile_on_filetype_set(self, type);
 		}
 	}
 	return (DWORD)self->sf_filetype;
@@ -880,7 +907,6 @@ sysfile_write(SystemFile *__restrict self,
 		 * XXX: What about console input? Shouldn't that have the same problem? */
 		if unlikely(write_to_console(self, buffer, bufsize))
 			goto err;
-		/* TODO: Support for-, and emulation of `ENABLE_VIRTUAL_TERMINAL_PROCESSING' */
 		return bufsize;
 	}
 again:
