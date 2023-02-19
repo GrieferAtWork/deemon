@@ -669,6 +669,7 @@ PRIVATE struct dex_symbol symbols[] = {
 
 	/* A wrapper around the native shared-library loader. */
 	{ "ShLib", (DeeObject *)&DeeShlib_Type },
+	{ "dlopen", (DeeObject *)&DeeShlib_Type }, /* Convenience alias for `ShLib' */
 
 	/* Export all the C-types. */
 	{ "void", (DeeObject *)&DeeCVoid_Type },
