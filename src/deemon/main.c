@@ -1294,7 +1294,7 @@ int main(int argc, char *argv[]) {
 		                                                                     &script_options,
 		                                                                     true);
 		if unlikely(!user_module)
-			goto err;
+			goto err_discard_compiler_errors;
 		if (operation_mode == OPERATION_MODE_PRINTASM) {
 			/* Print a full disassembly of the user-module. */
 			int error = -1;
@@ -1334,7 +1334,7 @@ int main(int argc, char *argv[]) {
 			user_module_main = DeeModule_GetRoot((DeeObject *)user_module, true);
 			Dee_Decref(user_module);
 			if unlikely(!user_module_main)
-				goto err;
+				goto err_discard_compiler_errors;
 
 			/* With the root now open, invoke it using the system argument vector. */
 			user_module_args = Dee_GetArgv();
@@ -1435,6 +1435,14 @@ done:
 err_no_input:
 	DeeError_Throwf(&DeeError_RuntimeError,
 	                "No input files");
+	goto err;
+err_discard_compiler_errors:
+	/* Discard (and don't print) compiler errors, since we've already printed
+	 * them via our custom `co_error_handler' callback that was hooked into
+	 * the compiler while the primary module and its dependencies were being
+	 * compiled. */
+	while (DeeError_CurrentIs(&DeeError_CompilerError))
+		DeeError_Handled(ERROR_HANDLED_INTERRUPT);
 err:
 #ifdef EXIT_FAILURE
 	result = EXIT_FAILURE;
