@@ -288,15 +288,6 @@ END(_impl_assert_failed)
 /* ... */
 /* }; */
 
-/* struct list_object { */
-#define l_alloc         8 /* size_t l_alloc; */
-#define l_size         12 /* size_t l_size; */
-#define l_elem         16 /* DREF DeeObject **l_elem; */
-#ifndef CONFIG_NO_THREADS
-#define l_lock         20 /* atomic_rwlock_t l_lock; */
-#endif /* !CONFIG_NO_THREADS */
-/* }; */
-
 /* struct tuple_object { */
 #define t_size          DEE_OBJECT_OFFSETOF_DATA    /* size_t t_size; */
 #define t_elem         (DEE_OBJECT_OFFSETOF_DATA+4) /* DREF DeeObject *t_elem[]; */

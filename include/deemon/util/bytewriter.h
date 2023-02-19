@@ -28,30 +28,61 @@
 
 DECL_BEGIN
 
-struct bytewriter {
+#ifdef DEE_SOURCE
+#define Dee_bytewriter   bytewriter
+#define BYTEWRITER_INIT  DEE_BYTEWRITER_INIT
+#define bytewriter_init  Dee_bytewriter_init
+#define bytewriter_cinit Dee_bytewriter_cinit
+#define bytewriter_putb  Dee_bytewriter_putb
+#define bytewriter_putw  Dee_bytewriter_putw
+#define bytewriter_putl  Dee_bytewriter_putl
+#define bytewriter_putq  Dee_bytewriter_putq
+#define bytewriter_alloc Dee_bytewriter_alloc
+#define bytewriter_flush Dee_bytewriter_flush
+#endif /* DEE_SOURCE */
+
+struct Dee_bytewriter {
 	uint8_t *bw_base;  /* [0..1][owned] Base address. */
 	size_t   bw_size;  /* used size */
+#ifndef Dee_MallocUsableSize
 	size_t   bw_alloc; /* allocated size */
+#define Dee_bytewriter_getalloc(self)     ((self)->bw_alloc)
+#define _Dee_bytewriter_setalloc(self, v) (void)((self)->bw_alloc = (v))
+#else /* !Dee_MallocUsableSize */
+#define Dee_bytewriter_getalloc(self)     Dee_MallocUsableSize((self)->bw_base)
+#define _Dee_bytewriter_setalloc(self, v) (void)0
+#endif /* Dee_MallocUsableSize */
 };
-#define BYTEWRITER_INIT     { NULL, 0, 0 }
-#define bytewriter_init(x)      \
+#ifdef Dee_MallocUsableSize
+#define DEE_BYTEWRITER_INIT { NULL, 0 }
+#define Dee_bytewriter_init(x)  \
+	(void)((x)->bw_base = NULL, \
+	       (x)->bw_size = 0)
+#define Dee_bytewriter_cinit(x)              \
+	(void)(Dee_ASSERT((x)->bw_base == NULL), \
+	       Dee_ASSERT((x)->bw_size == 0))
+#else /* Dee_MallocUsableSize */
+#define DEE_BYTEWRITER_INIT { NULL, 0, 0 }
+#define Dee_bytewriter_init(x)  \
 	(void)((x)->bw_base = NULL, \
 	       (x)->bw_size = (x)->bw_alloc = 0)
-#define bytewriter_cinit(x)                  \
+#define Dee_bytewriter_cinit(x)              \
 	(void)(Dee_ASSERT((x)->bw_base == NULL), \
 	       Dee_ASSERT((x)->bw_size == 0),    \
 	       Dee_ASSERT((x)->bw_alloc == 0))
+#endif /* !Dee_MallocUsableSize */
 #define bytewriter_fini(x) \
 	Dee_Free((x)->bw_base)
 
 /* Reserve memory for at least `n_bytes'  */
-LOCAL uint8_t *DCALL
-bytewriter_alloc(struct bytewriter *__restrict self, size_t n_bytes) {
+LOCAL WUNUSED NONNULL((1)) uint8_t *DCALL
+Dee_bytewriter_alloc(struct Dee_bytewriter *__restrict self, size_t n_bytes) {
 	uint8_t *result;
-	Dee_ASSERT(self->bw_size <= self->bw_alloc);
+	size_t avail = Dee_bytewriter_getalloc(self);
+	Dee_ASSERT(self->bw_size <= avail);
 	result = self->bw_base;
-	if (n_bytes > (self->bw_alloc - self->bw_size)) {
-		size_t new_alloc = self->bw_alloc * 2;
+	if (n_bytes > (avail - self->bw_size)) {
+		size_t new_alloc = avail * 2;
 		if (!new_alloc)
 			new_alloc = 2;
 		while (new_alloc < self->bw_size + n_bytes)
@@ -63,8 +94,8 @@ bytewriter_alloc(struct bytewriter *__restrict self, size_t n_bytes) {
 			if unlikely(!result)
 				goto err;
 		}
-		self->bw_base  = result;
-		self->bw_alloc = new_alloc;
+		self->bw_base = result;
+		_Dee_bytewriter_setalloc(self, new_alloc);
 	}
 	result += self->bw_size;
 	self->bw_size += n_bytes;
@@ -75,29 +106,34 @@ err:
 
 
 /* Append a single byte/word/dword or qword, returning -1 on error and 0 on success */
-#define DEFINE_BYTEWRITER_PUTX(name, T, x)                             \
-	LOCAL int (DCALL name)(struct bytewriter * __restrict self, T x) { \
-		T *buf;                                                        \
-		buf = (T *)bytewriter_alloc(self, sizeof(T));                  \
-		if unlikely(!buf)                                              \
-			goto err;                                                  \
-		*buf = x;                                                      \
-		return 0;                                                      \
-	err:                                                               \
-		return -1;                                                     \
+#define DEE_DEFINE_BYTEWRITER_PUTX(name, T, x)                   \
+	LOCAL WUNUSED NONNULL((1)) int                               \
+	(DCALL name)(struct Dee_bytewriter * __restrict self, T x) { \
+		T *buf;                                                  \
+		buf = (T *)Dee_bytewriter_alloc(self, sizeof(T));        \
+		if unlikely(!buf)                                        \
+			goto err;                                            \
+		*buf = x;                                                \
+		return 0;                                                \
+	err:                                                         \
+		return -1;                                               \
 	}
-DEFINE_BYTEWRITER_PUTX(bytewriter_putb, uint8_t, byte)
-DEFINE_BYTEWRITER_PUTX(bytewriter_putw, uint16_t, word)
-DEFINE_BYTEWRITER_PUTX(bytewriter_putl, uint32_t, dword)
-DEFINE_BYTEWRITER_PUTX(bytewriter_putq, uint64_t, qword)
-#undef DEFINE_BYTEWRITER_PUTX
+DEE_DEFINE_BYTEWRITER_PUTX(Dee_bytewriter_putb, uint8_t, byte)
+DEE_DEFINE_BYTEWRITER_PUTX(Dee_bytewriter_putw, uint16_t, word)
+DEE_DEFINE_BYTEWRITER_PUTX(Dee_bytewriter_putl, uint32_t, dword)
+#ifdef __UINT64_TYPE__
+DEE_DEFINE_BYTEWRITER_PUTX(Dee_bytewriter_putq, __UINT64_TYPE__, qword)
+#endif /* __UINT64_TYPE__ */
+#undef DEE_DEFINE_BYTEWRITER_PUTX
 
 #ifndef __INTELLISENSE__
 #ifndef __NO_builtin_expect
-#define bytewriter_putb(self, byte)  __builtin_expect(bytewriter_putb(self, byte), 0)
-#define bytewriter_putw(self, word)  __builtin_expect(bytewriter_putw(self, word), 0)
-#define bytewriter_putl(self, dword) __builtin_expect(bytewriter_putl(self, dword), 0)
-#define bytewriter_putq(self, qword) __builtin_expect(bytewriter_putq(self, qword), 0)
+#define Dee_bytewriter_putb(self, byte)  __builtin_expect(Dee_bytewriter_putb(self, byte), 0)
+#define Dee_bytewriter_putw(self, word)  __builtin_expect(Dee_bytewriter_putw(self, word), 0)
+#define Dee_bytewriter_putl(self, dword) __builtin_expect(Dee_bytewriter_putl(self, dword), 0)
+#ifdef __UINT64_TYPE__
+#define Dee_bytewriter_putq(self, qword) __builtin_expect(Dee_bytewriter_putq(self, qword), 0)
+#endif /* __UINT64_TYPE__ */
 #endif /* !__NO_builtin_expect */
 #endif /* !__INTELLISENSE__ */
 
@@ -105,16 +141,19 @@ DEFINE_BYTEWRITER_PUTX(bytewriter_putq, uint64_t, qword)
 /* Deallocate all unused bytes, and return a heap-allocated pointer to what has been written.
  * When nothing has been written, `NULL' may be returned, which does not indicate an error,
  * as this function will never throw any. */
-LOCAL uint8_t *DCALL
-bytewriter_flush(struct bytewriter *__restrict self) {
+LOCAL NONNULL((1)) uint8_t *DCALL
+Dee_bytewriter_flush(struct Dee_bytewriter *__restrict self) {
+#ifndef Dee_MallocUsableSize
 	Dee_ASSERT(self->bw_alloc >= self->bw_size);
-	if (self->bw_alloc > self->bw_size) {
+	if (self->bw_alloc > self->bw_size)
+#endif /* !Dee_MallocUsableSize */
+	{
 		uint8_t *newbase;
 		newbase = (uint8_t *)Dee_TryRealloc(self->bw_base,
 		                                    self->bw_size);
 		if likely(newbase) {
-			self->bw_base  = newbase;
-			self->bw_alloc = self->bw_size;
+			self->bw_base = newbase;
+			_Dee_bytewriter_setalloc(self, self->bw_size);
 		}
 	}
 	return self->bw_base;

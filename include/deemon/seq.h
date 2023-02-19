@@ -22,11 +22,13 @@
 
 #include "api.h"
 
+#include "alloc.h" /* Dee_MallocUsableSize */
+#include "object.h"
+/**/
+
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
-
-#include "object.h"
 
 DECL_BEGIN
 
@@ -933,53 +935,68 @@ DeeFastSeq_GetItemNB(DeeObject *__restrict self, size_t index);
 /* Allocate a suitable heap-vector for all the elements of a given sequence,
  * before returning that vector (then populated by [1..1] references), which
  * the caller must inherit upon success.
- * @return: * :   A vector of objects (with a length of `*plength'),
+ * @return: * :   A vector of objects (with a length of `*p_length'),
  *                that must be freed using `Dee_Free', before inheriting
  *                a reference to each of its elements.
  * @return: NULL: An error occurred. */
 DFUNDEF WUNUSED NONNULL((1, 2)) /*owned(Dee_Free)*/ DREF DeeObject **DCALL
 DeeSeq_AsHeapVector(DeeObject *__restrict self,
-                    size_t *__restrict plength);
-
+                    /*[out]*/ size_t *__restrict p_length);
 DFUNDEF WUNUSED NONNULL((1, 2, 3)) /*owned(Dee_Free)*/ DREF DeeObject **DCALL
 DeeSeq_AsHeapVectorWithAlloc(DeeObject *__restrict self,
-                             size_t *__restrict plength,
-                             size_t *__restrict pallocated);
+                             /*[out]*/ size_t *__restrict p_length,
+                             /*[out]*/ size_t *__restrict p_allocated);
+#ifdef Dee_MallocUsableSize
+DFUNDEF WUNUSED NONNULL((1, 2)) /*owned(Dee_Free)*/ DREF DeeObject **DCALL
+DeeSeq_AsHeapVectorWithAlloc2(DeeObject *__restrict self,
+                              /*[out]*/ size_t *__restrict p_length);
+#endif /* Dee_MallocUsableSize */
 
 /* Same as `DeeSeq_AsHeapVectorWithAlloc()', however also inherit
- * a pre-allocated heap-vector `*pvector' with an allocated size
- * of `IN(*pallocated) * sizeof(DeeObject *)', which is updated
+ * a pre-allocated heap-vector `*p_vector' with an allocated size
+ * of `IN(*p_allocated) * sizeof(DeeObject *)', which is updated
  * as more memory needs to be allocated.
- * NOTE: `*pvector' may be updated to point to a new vector, even
+ * NOTE: `*p_vector' may be updated to point to a new vector, even
  *       when the function fails (i.e. (size_t)-1 is returned)
- * @param: pvector:     A pointer to a preallocated object-vector `[0..IN(*pallocated)]'
- *                      May only point to a `NULL' vector when `IN(*pallocated)' is ZERO(0).
+ * @param: p_vector:     A pointer to a preallocated object-vector `[0..IN(*p_allocated)]'
+ *                      May only point to a `NULL' vector when `IN(*p_allocated)' is ZERO(0).
  *                      Upon return, this pointer may have been updated to point to a
  *                      realloc()-ated vector, should the need to allocate more memory
  *                      have arisen.
- * @param: pallocated:  A pointer to an information field describing how much pointers
+ * @param: p_allocated:  A pointer to an information field describing how much pointers
  *                      are allocated upon entry / how much are allocated upon exit.
- *                      Just as `pvector', this pointer may be updated, even upon error.
- * @return: * :         The amount of filled in objects in `*pvector'
- * @return: (size_t)-1: An error occurred. Note that both `*pvector' and `*pallocated'
+ *                      Just as `p_vector', this pointer may be updated, even upon error.
+ * @return: * :         The amount of filled in objects in `*p_vector'
+ * @return: (size_t)-1: An error occurred. Note that both `*p_vector' and `*p_allocated'
  *                      may have been modified since entry, with their original values
  *                      no longer being valid! */
 DFUNDEF WUNUSED NONNULL((1, 2, 3)) size_t DCALL
 DeeSeq_AsHeapVectorWithAllocReuse(DeeObject *__restrict self,
-                                  /*in-out, owned(Dee_Free)*/ DeeObject ***__restrict pvector,
-                                  /*in-out*/ size_t *__restrict pallocated);
+                                  /*in-out, owned(Dee_Free)*/ DREF DeeObject ***__restrict p_vector,
+                                  /*in-out*/ size_t *__restrict p_allocated);
+#ifdef Dee_MallocUsableSize
+DFUNDEF WUNUSED NONNULL((1, 2)) size_t DCALL
+DeeSeq_AsHeapVectorWithAllocReuse2(DeeObject *__restrict self,
+                                   /*in-out, owned(Dee_Free)*/ DREF DeeObject ***__restrict p_vector);
+#endif /* Dee_MallocUsableSize */
 
 /* Same as `DeeSeq_AsHeapVectorWithAllocReuse()', but assume
- * that `IN(*pallocated) >= offset', while also leaving the first
+ * that `IN(*p_allocated) >= offset', while also leaving the first
  * `offset' vector entries untouched and inserting the first enumerated
- * sequence element at `(*pvector)[offset]', rather than `(*pvector)[0]'
+ * sequence element at `(*p_vector)[offset]', rather than `(*p_vector)[0]'
  * -> This function can be used to efficiently append elements to a
  *    vector which may already contain other objects upon entry. */
 DFUNDEF WUNUSED NONNULL((1, 2, 3)) size_t DCALL
 DeeSeq_AsHeapVectorWithAllocReuseOffset(DeeObject *__restrict self,
-                                        /*in-out, owned(Dee_Free)*/ DeeObject ***__restrict pvector,
-                                        /*in-out*/ size_t *__restrict pallocated,
+                                        /*in-out, owned(Dee_Free)*/ DREF DeeObject ***__restrict p_vector,
+                                        /*in-out*/ size_t *__restrict p_allocated,
                                         /*in*/ size_t offset);
+#ifdef Dee_MallocUsableSize
+DFUNDEF WUNUSED NONNULL((1, 2)) size_t DCALL
+DeeSeq_AsHeapVectorWithAllocReuseOffset2(DeeObject *__restrict self,
+                                         /*in-out, owned(Dee_Free)*/ DREF DeeObject ***__restrict p_vector,
+                                         /*in*/ size_t offset);
+#endif /* Dee_MallocUsableSize */
 
 /* Same as `DeeObject_Unpack()', but handle `DeeError_UnboundItem'
  * by filling in the resp. element from `objv[*]' with `NULL'.

@@ -364,6 +364,7 @@ EXPORTS
 	_DeeList_NewUninitialized@4=DeeList_NewUninitialized@4
 	_DeeList_NewVector@8=DeeList_NewVector@8
 	_DeeList_NewVectorInherited@8=DeeList_NewVectorInherited@8
+	_DeeList_NewVectorInheritedHeap2@8=DeeList_NewVectorInheritedHeap2@8
 	_DeeList_NewVectorInheritedHeap@12=DeeList_NewVectorInheritedHeap@12
 	_DeeList_Pop@8=DeeList_Pop@8
 	_DeeList_Reverse@4=DeeList_Reverse@4
@@ -700,8 +701,11 @@ EXPORTS
 	_DeeSeq_All@4=DeeSeq_All@4
 	_DeeSeq_Any@4=DeeSeq_Any@4
 	_DeeSeq_AsHeapVector@8=DeeSeq_AsHeapVector@8
+	_DeeSeq_AsHeapVectorWithAlloc2@8=DeeSeq_AsHeapVectorWithAlloc2@8
 	_DeeSeq_AsHeapVectorWithAlloc@12=DeeSeq_AsHeapVectorWithAlloc@12
+	_DeeSeq_AsHeapVectorWithAllocReuse2@8=DeeSeq_AsHeapVectorWithAllocReuse2@8
 	_DeeSeq_AsHeapVectorWithAllocReuse@12=DeeSeq_AsHeapVectorWithAllocReuse@12
+	_DeeSeq_AsHeapVectorWithAllocReuseOffset2@12=DeeSeq_AsHeapVectorWithAllocReuseOffset2@12
 	_DeeSeq_AsHeapVectorWithAllocReuseOffset@16=DeeSeq_AsHeapVectorWithAllocReuseOffset@16
 	_DeeSeq_ItemsToBytes@12=DeeSeq_ItemsToBytes@12
 	_DeeSeq_Max@8=DeeSeq_Max@8

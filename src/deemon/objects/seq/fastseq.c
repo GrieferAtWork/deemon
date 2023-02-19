@@ -195,20 +195,20 @@ DeeFastSeq_GetItemNB(DeeObject *__restrict self, size_t index) {
 /* Allocate a suitable heap-vector for all the elements of a given sequence,
  * before returning that vector (then populated by [1..1] references), which
  * the caller must inherit upon success.
- * @return: * :   A vector of objects (with a length of `*plength'),
+ * @return: * :   A vector of objects (with a length of `*p_length'),
  *                that must be freed using `Dee_Free', before inheriting
  *                a reference to each of its elements.
  * @return: NULL: An error occurred. */
 PUBLIC WUNUSED NONNULL((1, 2)) /*owned(Dee_Free)*/ DREF DeeObject **DCALL
 DeeSeq_AsHeapVector(DeeObject *__restrict self,
-                    size_t *__restrict plength) {
+                    size_t *__restrict p_length) {
 	size_t i, fastsize, alloc_size;
 	DREF DeeObject **result, *iter, *elem, **new_result;
 	fastsize = DeeFastSeq_GetSize(self);
 	if (fastsize != DEE_FASTSEQ_NOTFAST) {
 		/* Optimization for fast-sequence-compatible objects. */
-		*plength = fastsize;
-		result   = (DREF DeeObject **)Dee_Mallocc(fastsize, sizeof(DREF DeeObject *));
+		*p_length = fastsize;
+		result    = (DREF DeeObject **)Dee_Mallocc(fastsize, sizeof(DREF DeeObject *));
 		if unlikely(!result)
 			goto err;
 		for (i = 0; i < fastsize; ++i) {
@@ -219,6 +219,7 @@ DeeSeq_AsHeapVector(DeeObject *__restrict self,
 		}
 		goto done;
 	}
+
 	/* Must use iterators. */
 	iter = DeeObject_IterSelf(self);
 	if unlikely(!iter)
@@ -230,6 +231,7 @@ DeeSeq_AsHeapVector(DeeObject *__restrict self,
 		result = (DREF DeeObject **)Dee_Mallocc(alloc_size, sizeof(DREF DeeObject *));
 		goto err_r_iter;
 	}
+
 	/* Iterate items. */
 	while (ITER_ISOK(elem = DeeObject_IterNext(iter))) {
 		ASSERT(i <= alloc_size);
@@ -257,14 +259,17 @@ DeeSeq_AsHeapVector(DeeObject *__restrict self,
 		goto err_r_iter;
 	Dee_Decref(iter);
 	ASSERT(i <= alloc_size);
+
 	/* Free unused memory. */
-	if (i != alloc_size) {
-		new_result = (DREF DeeObject **)Dee_TryReallocc(result, i, sizeof(DREF DeeObject *));
+	if (i < alloc_size) {
+		new_result = (DREF DeeObject **)Dee_TryReallocc(result, i,
+		                                                sizeof(DREF DeeObject *));
 		if likely(new_result)
 			result = new_result;
 	}
+
 	/* Save the resulting length. */
-	*plength = i;
+	*p_length = i;
 done:
 	return result;
 err_r_iter_elem:
@@ -272,24 +277,47 @@ err_r_iter_elem:
 err_r_iter:
 	Dee_Decref(iter);
 err_r_i:
-	while (i--)
-		Dee_Decref(result[i]);
+	Dee_Decrefv(result, i);
 	Dee_Free(result);
 err:
 	return NULL;
 }
 
+#ifdef Dee_MallocUsableSize
 PUBLIC WUNUSED NONNULL((1, 2, 3)) /*owned(Dee_Free)*/ DREF DeeObject **DCALL
 DeeSeq_AsHeapVectorWithAlloc(DeeObject *__restrict self,
-                             size_t *__restrict plength,
-                             size_t *__restrict pallocated) {
+                             /*[out]*/ size_t *__restrict p_length,
+                             /*[out]*/ size_t *__restrict p_allocated) {
+	DREF DeeObject **result;
+	result       = DeeSeq_AsHeapVectorWithAlloc2(self, p_length);
+	*p_allocated = Dee_MallocUsableSize(result) / sizeof(DREF DeeObject *);
+	return result;
+}
+PUBLIC WUNUSED NONNULL((1, 2)) /*owned(Dee_Free)*/ DREF DeeObject **DCALL
+DeeSeq_AsHeapVectorWithAlloc2(DeeObject *__restrict self,
+                              /*[out]*/ size_t *__restrict p_length)
+#else /* Dee_MallocUsableSize */
+PUBLIC WUNUSED NONNULL((1, 2)) /*owned(Dee_Free)*/ DREF DeeObject **DCALL
+DeeSeq_AsHeapVectorWithAlloc2(DeeObject *__restrict self,
+                              /*[out]*/ size_t *__restrict p_length) {
+	size_t allocated; /* For binary compatibility... */
+	return DeeSeq_AsHeapVectorWithAlloc(self, p_length, &allocated);
+}
+PUBLIC WUNUSED NONNULL((1, 2, 3)) /*owned(Dee_Free)*/ DREF DeeObject **DCALL
+DeeSeq_AsHeapVectorWithAlloc(DeeObject *__restrict self,
+                             /*[out]*/ size_t *__restrict p_length,
+                             /*[out]*/ size_t *__restrict p_allocated)
+#endif /* !Dee_MallocUsableSize */
+{
 	size_t i, fastsize, alloc_size;
 	DREF DeeObject **result, *iter, *elem, **new_result;
 	fastsize = DeeFastSeq_GetSize(self);
 	if (fastsize != DEE_FASTSEQ_NOTFAST) {
 		/* Optimization for fast-sequence-compatible objects. */
-		*pallocated = fastsize;
-		*plength    = fastsize;
+#ifndef Dee_MallocUsableSize
+		*p_allocated = fastsize;
+#endif /* !Dee_MallocUsableSize */
+		*p_length = fastsize;
 		result = (DREF DeeObject **)Dee_Mallocc(fastsize, sizeof(DREF DeeObject *));
 		if unlikely(!result)
 			goto err;
@@ -301,17 +329,20 @@ DeeSeq_AsHeapVectorWithAlloc(DeeObject *__restrict self,
 		}
 		goto done;
 	}
+
 	/* Must use iterators. */
 	iter = DeeObject_IterSelf(self);
 	if unlikely(!iter)
 		goto err;
-	alloc_size = 16, i = 0;
+	alloc_size = 16;
+	i          = 0;
 	result = (DREF DeeObject **)Dee_TryMallocc(alloc_size, sizeof(DREF DeeObject *));
 	if unlikely(!result) {
 		alloc_size = 1;
 		result     = (DREF DeeObject **)Dee_Mallocc(alloc_size, sizeof(DREF DeeObject *));
 		goto err_r_iter;
 	}
+
 	/* Iterate items. */
 	while (ITER_ISOK(elem = DeeObject_IterNext(iter))) {
 		ASSERT(i <= alloc_size);
@@ -336,9 +367,12 @@ DeeSeq_AsHeapVectorWithAlloc(DeeObject *__restrict self,
 		goto err_r_iter;
 	Dee_Decref(iter);
 	ASSERT(i <= alloc_size);
+
 	/* Save the resulting length, and allocation. */
-	*pallocated = alloc_size;
-	*plength    = i;
+#ifndef Dee_MallocUsableSize
+	*p_allocated = alloc_size;
+#endif /* !Dee_MallocUsableSize */
+	*p_length = i;
 done:
 	return result;
 err_r_iter_elem:
@@ -346,8 +380,7 @@ err_r_iter_elem:
 err_r_iter:
 	Dee_Decref(iter);
 err_r_i:
-	while (i--)
-		Dee_Decref(result[i]);
+	Dee_Decrefv(result, i);
 	Dee_Free(result);
 err:
 	return NULL;
@@ -355,41 +388,72 @@ err:
 
 
 /* Same as `DeeSeq_AsHeapVectorWithAlloc()', however also inherit
- * a pre-allocated heap-vector `*pvector' with an allocated size
- * of `IN(*pallocated) * sizeof(DeeObject *)', which is updated
+ * a pre-allocated heap-vector `*p_vector' with an allocated size
+ * of `IN(*p_allocated) * sizeof(DeeObject *)', which is updated
  * as more memory needs to be allocated.
- * NOTE: `*pvector' may be updated to point to a new vector, even
+ * NOTE: `*p_vector' may be updated to point to a new vector, even
  *       when the function fails (i.e. (size_t)-1 is returned)
- * @param: pvector:     A pointer to a preallocated object-vector `[0..IN(*pallocated)]'
- *                      May only point to a `NULL' vector when `IN(*pallocated)' is ZERO(0).
+ * @param: p_vector:     A pointer to a preallocated object-vector `[0..IN(*p_allocated)]'
+ *                      May only point to a `NULL' vector when `IN(*p_allocated)' is ZERO(0).
  *                      Upon return, this pointer may have been updated to point to a
  *                      realloc()-ated vector, should the need to allocate more memory
  *                      have arisen.
- * @param: pallocated:  A pointer to an information field describing how much pointers
+ * @param: p_allocated:  A pointer to an information field describing how much pointers
  *                      are allocated upon entry / how much are allocated upon exit.
- *                      Just as `pvector', this pointer may be updated, even upon error.
- * @return: * :         The amount of filled in objects in `*pvector'
- * @return: (size_t)-1: An error occurred. Note that both `*pvector' and `*pallocated'
+ *                      Just as `p_vector', this pointer may be updated, even upon error.
+ * @return: * :         The amount of filled in objects in `*p_vector'
+ * @return: (size_t)-1: An error occurred. Note that both `*p_vector' and `*p_allocated'
  *                      may have been modified since entry, with their original values
  *                      no longer being valid! */
+#ifdef Dee_MallocUsableSize
 PUBLIC WUNUSED NONNULL((1, 2, 3)) size_t DCALL
 DeeSeq_AsHeapVectorWithAllocReuse(DeeObject *__restrict self,
-                                  /*in-out, owned(Dee_Free)*/ DeeObject ***__restrict pvector,
-                                  /*in-out*/ size_t *__restrict pallocated) {
-	DeeObject **new_elemv, **elemv = *pvector;
+                                  /*in-out, owned(Dee_Free)*/ DREF DeeObject ***__restrict p_vector,
+                                  /*in-out*/ size_t *__restrict p_allocated) {
+	size_t result;
+	ASSERT(*p_allocated <= Dee_MallocUsableSize(*p_vector) / sizeof(DeeObject **));
+	result       = DeeSeq_AsHeapVectorWithAllocReuse2(self, p_vector);
+	*p_allocated = Dee_MallocUsableSize(*p_vector) / sizeof(DeeObject **);
+	return result;
+}
+PUBLIC WUNUSED NONNULL((1, 2)) size_t DCALL
+DeeSeq_AsHeapVectorWithAllocReuse2(DeeObject *__restrict self,
+                                   /*in-out, owned(Dee_Free)*/ DREF DeeObject ***__restrict p_vector)
+#else /* Dee_MallocUsableSize */
+PUBLIC WUNUSED NONNULL((1, 2)) size_t DCALL
+DeeSeq_AsHeapVectorWithAllocReuse2(DeeObject *__restrict self,
+                                   /*in-out, owned(Dee_Free)*/ DREF DeeObject ***__restrict p_vector) {
+	/* For binary compatibility... */
+	size_t allocated = 0;
+	return DeeSeq_AsHeapVectorWithAllocReuse(self, p_vector, &allocated);
+}
+PUBLIC WUNUSED NONNULL((1, 2, 3)) size_t DCALL
+DeeSeq_AsHeapVectorWithAllocReuse(DeeObject *__restrict self,
+                                  /*in-out, owned(Dee_Free)*/ DREF DeeObject ***__restrict p_vector,
+                                  /*in-out*/ size_t *__restrict p_allocated)
+#endif /* !Dee_MallocUsableSize */
+{
+	DeeObject **new_elemv, **elemv = *p_vector;
 	DREF DeeObject *iterator, *elem;
-	size_t elema = *pallocated;
+#ifdef Dee_MallocUsableSize
+	size_t elema = Dee_MallocUsableSize(elemv);
+#else /* Dee_MallocUsableSize */
+	size_t elema = *p_allocated;
+#endif /* !Dee_MallocUsableSize */
 	size_t elemc, i;
 	ASSERT(!elema || elemv);
 	elemc = DeeFastSeq_GetSize(self);
 	if (elemc != DEE_FASTSEQ_NOTFAST) {
 		/* Fast sequence optimizations. */
 		if (elemc > elema) {
-			new_elemv = (DeeObject **)Dee_Reallocc(elemv, elemc, sizeof(DeeObject *));
+			new_elemv = (DeeObject **)Dee_Reallocc(elemv, elemc, sizeof(DREF DeeObject *));
 			if unlikely(!new_elemv)
 				goto err;
-			*pvector = elemv = new_elemv;
-			*pallocated      = elemc;
+			elemv     = new_elemv;
+			*p_vector = new_elemv;
+#ifndef Dee_MallocUsableSize
+			*p_allocated = elemc;
+#endif /* !Dee_MallocUsableSize */
 		}
 		for (i = 0; i < elemc; ++i) {
 			elem = DeeFastSeq_GetItem(self, i);
@@ -423,43 +487,76 @@ DeeSeq_AsHeapVectorWithAllocReuse(DeeObject *__restrict self,
 			elemv[elemc] = elem; /* Inherit reference. */
 			++elemc;
 		}
-		*pvector    = elemv;
-		*pallocated = elema;
+		*p_vector = elemv;
+#ifndef Dee_MallocUsableSize
+		*p_allocated = elema;
+#endif /* !Dee_MallocUsableSize */
 		if unlikely(!elem)
 			goto err_iterator;
 		Dee_Decref(iterator);
 	}
 	return elemc;
 err_iterator_elemc:
-	while (elemc--)
-		Dee_Decref(elemv[elemc]);
-	*pvector    = elemv;
-	*pallocated = elema;
+	Dee_Decrefv(elemv, elemc);
+	*p_vector = elemv;
+#ifndef Dee_MallocUsableSize
+	*p_allocated = elema;
+#endif /* !Dee_MallocUsableSize */
 err_iterator:
 	Dee_Decref(iterator);
 	goto err;
 err_i:
-	while (i--)
-		Dee_Decref(elemv[i]);
+	Dee_Decrefv(elemv, i);
 err:
 	return (size_t)-1;
 }
 
 
 /* Same as `DeeSeq_AsHeapVectorWithAllocReuse()', but assume
- * that `IN(*pallocated) >= offset', while also leaving the first
+ * that `IN(*p_allocated) >= offset', while also leaving the first
  * `offset' vector entries untouched and inserting the first enumerated
- * sequence element at `(*pvector)[offset]', rather than `(*pvector)[0]'
+ * sequence element at `(*p_vector)[offset]', rather than `(*p_vector)[0]'
  * -> This function can be used to efficiently append elements to a
  *    vector which may already contain other objects upon entry. */
+#ifdef Dee_MallocUsableSize
 PUBLIC WUNUSED NONNULL((1, 2, 3)) size_t DCALL
 DeeSeq_AsHeapVectorWithAllocReuseOffset(DeeObject *__restrict self,
-                                        /*in-out, owned(Dee_Free)*/ DeeObject ***__restrict pvector,
-                                        /*in-out*/ size_t *__restrict pallocated,
+                                        /*in-out, owned(Dee_Free)*/ DREF DeeObject ***__restrict p_vector,
+                                        /*in-out*/ size_t *__restrict p_allocated,
                                         /*in*/ size_t offset) {
-	DeeObject **new_elemv, **elemv = *pvector;
+	size_t result;
+	ASSERT(*p_allocated <= Dee_MallocUsableSize(*p_vector) / sizeof(DREF DeeObject **));
+	result       = DeeSeq_AsHeapVectorWithAllocReuseOffset2(self, p_vector, offset);
+	*p_allocated = Dee_MallocUsableSize(*p_vector) / sizeof(DREF DeeObject **);
+	return result;
+}
+PUBLIC WUNUSED NONNULL((1, 2)) size_t DCALL
+DeeSeq_AsHeapVectorWithAllocReuseOffset2(DeeObject *__restrict self,
+                                         /*in-out, owned(Dee_Free)*/ DREF DeeObject ***__restrict p_vector,
+                                         /*in*/ size_t offset)
+#else /* Dee_MallocUsableSize */
+PUBLIC WUNUSED NONNULL((1, 2)) size_t DCALL
+DeeSeq_AsHeapVectorWithAllocReuseOffset2(DeeObject *__restrict self,
+                                         /*in-out, owned(Dee_Free)*/ DREF DeeObject ***__restrict p_vector,
+                                         /*in*/ size_t offset) {
+	/* For binary compatibility... */
+	size_t allocated = offset;
+	return DeeSeq_AsHeapVectorWithAllocReuseOffset(self, p_vector, &allocated, offset);
+}
+PUBLIC WUNUSED NONNULL((1, 2, 3)) size_t DCALL
+DeeSeq_AsHeapVectorWithAllocReuseOffset(DeeObject *__restrict self,
+                                        /*in-out, owned(Dee_Free)*/ DREF DeeObject ***__restrict p_vector,
+                                        /*in-out*/ size_t *__restrict p_allocated,
+                                        /*in*/ size_t offset)
+#endif /* !Dee_MallocUsableSize */
+{
+	DeeObject **new_elemv, **elemv = *p_vector;
 	DREF DeeObject *iterator, *elem;
-	size_t elema = *pallocated;
+#ifdef Dee_MallocUsableSize
+	size_t elema = Dee_MallocUsableSize(elemv);
+#else /* Dee_MallocUsableSize */
+	size_t elema = *p_allocated;
+#endif /* !Dee_MallocUsableSize */
 	size_t elemc, i;
 	ASSERT(elema >= offset);
 	ASSERT(!elema || elemv);
@@ -472,8 +569,11 @@ DeeSeq_AsHeapVectorWithAllocReuseOffset(DeeObject *__restrict self,
 			                                       sizeof(DeeObject *));
 			if unlikely(!new_elemv)
 				goto err;
-			*pvector = elemv = new_elemv;
-			*pallocated      = offset + elemc;
+			elemv     = new_elemv;
+			*p_vector = new_elemv;
+#ifndef Dee_MallocUsableSize
+			*p_allocated      = offset + elemc;
+#endif /* !Dee_MallocUsableSize */
 		}
 		for (i = 0; i < elemc; ++i) {
 			elem = DeeFastSeq_GetItem(self, i);
@@ -509,24 +609,26 @@ DeeSeq_AsHeapVectorWithAllocReuseOffset(DeeObject *__restrict self,
 			elemv[offset + elemc] = elem; /* Inherit reference. */
 			++elemc;
 		}
-		*pvector    = elemv;
-		*pallocated = elema;
+		*p_vector = elemv;
+#ifndef Dee_MallocUsableSize
+		*p_allocated = elema;
+#endif /* !Dee_MallocUsableSize */
 		if unlikely(!elem)
 			goto err_iterator;
 		Dee_Decref(iterator);
 	}
 	return elemc;
 err_iterator_elemc:
-	while (elemc--)
-		Dee_Decref(elemv[offset + elemc]);
-	*pvector    = elemv;
-	*pallocated = elema;
+	Dee_Decrefv(elemv + offset, elemc);
+	*p_vector = elemv;
+#ifndef Dee_MallocUsableSize
+	*p_allocated = elema;
+#endif /* !Dee_MallocUsableSize */
 err_iterator:
 	Dee_Decref(iterator);
 	goto err;
 err_i:
-	while (i--)
-		Dee_Decref(elemv[offset + i]);
+	Dee_Decrefv(elemv + offset, i);
 err:
 	return (size_t)-1;
 }

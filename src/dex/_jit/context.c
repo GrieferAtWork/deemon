@@ -864,7 +864,7 @@ JITLValueList_CopyObjects(JITLValueList *__restrict self,
 done:
 	return 0;
 err_i:
-	dst->ol_size -= (self->ll_size - i);
+	dst->ol_elemc -= (self->ll_size - i);
 err:
 	return -1;
 }

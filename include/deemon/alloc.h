@@ -106,6 +106,23 @@
 #define CONFIG_HAVE__alloca
 #endif
 
+#ifdef CONFIG_NO__msize
+#undef CONFIG_HAVE__msize
+#elif !defined(CONFIG_HAVE__msize) && \
+      (defined(_msize) || defined(___msize_defined) || (defined(CONFIG_HAVE_MALLOC_H) && \
+       defined(_MSC_VER)))
+#define CONFIG_HAVE__msize
+#endif
+
+#ifdef CONFIG_NO_malloc_usable_size
+#undef CONFIG_HAVE_malloc_usable_size
+#elif !defined(CONFIG_HAVE_malloc_usable_size) && \
+      (defined(malloc_usable_size) || defined(__malloc_usable_size_defined) || \
+       (defined(CONFIG_HAVE_MALLOC_H) && (defined(__linux__) || defined(__linux) || \
+       defined(linux) || defined(__unix__) || defined(__unix) || defined(unix))))
+#define CONFIG_HAVE_malloc_usable_size
+#endif
+
 /* Try to substitute alloca() with alternatives */
 #ifndef CONFIG_HAVE_alloca
 #ifdef CONFIG_HAVE__alloca
@@ -144,6 +161,14 @@ DFUNDEF WUNUSED ATTR_MALLOC void *(DCALL DeeDbg_TryCalloc)(size_t n_bytes, char 
 DFUNDEF WUNUSED void *(DCALL DeeDbg_TryRealloc)(void *ptr, size_t n_bytes, char const *file, int line);
 DFUNDEF void (DCALL DeeDbg_Free)(void *ptr, char const *file, int line);
 DFUNDEF void *(DCALL DeeDbg_UntrackAlloc)(void *ptr, char const *file, int line);
+
+/* If supported by the OS, provide a way to determine the allocated size of an malloc-pointer. */
+#undef Dee_MallocUsableSize
+#ifdef CONFIG_HAVE_malloc_usable_size
+#define Dee_MallocUsableSize(ptr) malloc_usable_size(ptr)
+#elif defined(CONFIG_HAVE__msize)
+#define Dee_MallocUsableSize(ptr) (likely(ptr) ? _msize(ptr) : 0)
+#endif /* CONFIG_HAVE__msize */
 
 #ifndef NDEBUG
 #define Dee_Malloc(n_bytes)          DeeDbg_Malloc(n_bytes, __FILE__, __LINE__)

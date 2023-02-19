@@ -579,7 +579,7 @@ err_store_source:
 				                         expand_count,
 				                         buf);
 				if unlikely(error) {
-					expr_batch.ol_size -= expand_count;
+					expr_batch.ol_elemc -= expand_count;
 					goto err_store_source;
 				}
 				Dee_Decref(store_source);
@@ -609,14 +609,14 @@ continue_expression_after_dots:
 				}
 				/* Pack the expression to-be returned. */
 				if (!seq_type) {
-					ASSERT(expr_batch.ol_size >= expand_count);
+					ASSERT(expr_batch.ol_elemc >= expand_count);
 					current = DeeTuple_NewVectorSymbolic(expand_count,
-					                                     expr_batch.ol_list +
-					                                     expr_batch.ol_size -
+					                                     expr_batch.ol_elemv +
+					                                     expr_batch.ol_elemc -
 					                                     expand_count);
 					if unlikely(!current)
 						goto err_nocomma;
-					expr_batch.ol_size -= expand_count;
+					expr_batch.ol_elemc -= expand_count;
 					objectlist_fini(&expr_batch);
 				} else if (seq_type == &DeeTuple_Type) {
 					current = objectlist_packtuple(&expr_batch);
@@ -699,7 +699,7 @@ done_expression:
 
 #ifdef JIT_EVAL
 	/* Merge the current expression with the batch and comma lists. */
-	if (expr_batch.ol_size || expr_comma.ll_size) {
+	if (expr_batch.ol_elemc || expr_comma.ll_size) {
 		/* Flush any remaining entries from the comma-list. */
 		if (!seq_type) {
 			JITLValueList_Fini(&expr_comma);
@@ -733,7 +733,7 @@ done_expression:
 		/* WARNING: At this point, both `expr_batch' and `expr_comma' are
 		 *          in an undefined state, but don't hold any real data. */
 	} else {
-		ASSERT(!expr_batch.ol_list);
+		ASSERT(!expr_batch.ol_elemv);
 		ASSERT(!expr_comma.ll_list);
 		if (mode & AST_COMMA_FORCEMULTIPLE) {
 			/* If the caller wants to force us to package
@@ -776,7 +776,7 @@ done_expression_nocurrent:
 	current = 0;
 #else /* !JIT_EVAL */
 	/* Merge the current expression with the batch and comma lists. */
-	if (expr_batch.ol_size || expr_comma.ll_size) {
+	if (expr_batch.ol_elemc || expr_comma.ll_size) {
 		if (!seq_type) {
 			if (expr_comma.ll_size) {
 				current = JITLValue_GetValue(&expr_comma.ll_list[expr_comma.ll_size - 1],
@@ -784,9 +784,9 @@ done_expression_nocurrent:
 				if unlikely(!current)
 					goto err;
 			} else {
-				ASSERT(expr_batch.ol_size);
-				--expr_batch.ol_size;
-				current = expr_batch.ol_list[expr_batch.ol_size]; /* Inherit */
+				ASSERT(expr_batch.ol_elemc);
+				--expr_batch.ol_elemc;
+				current = expr_batch.ol_elemv[expr_batch.ol_elemc]; /* Inherit */
 			}
 			JITLValueList_Fini(&expr_comma);
 			objectlist_fini(&expr_batch);
@@ -814,7 +814,7 @@ done_expression_nocurrent:
 		/* WARNING: At this point, both `expr_batch' and `expr_comma' are
 		 *          in an undefined state, but don't hold any real data. */
 	} else {
-		ASSERT(!expr_batch.ol_list);
+		ASSERT(!expr_batch.ol_elemv);
 		ASSERT(!expr_comma.ll_list);
 		/* If the caller wants to force us to package
 		 * everything in a multi-branch, grant that wish. */

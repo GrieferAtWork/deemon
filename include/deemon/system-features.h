@@ -495,6 +495,11 @@ constant("RENAME_EXCHANGE");
 constant("RENAME_WHITEOUT");
 
 
+func("_msize", "defined(CONFIG_HAVE_MALLOC_H) && " + addparen(msvc), test: 'void *p = 0; extern size_t s; return (s = _msize(p)) == 0;');
+func("malloc_usable_size", "defined(CONFIG_HAVE_MALLOC_H) && " + addparen(unix), test: 'void *p = 0; extern size_t s; return (s = malloc_usable_size(p)) == 0;');
+func("_expand", "defined(CONFIG_HAVE_MALLOC_H) && " + addparen(msvc), test: 'void *p = 0; extern size_t s; return (p = _expand(p, s)) == p;');
+func("realloc_in_place", "defined(CONFIG_HAVE_MALLOC_H) && " + addparen(unix), test: 'void *p = 0; extern size_t s; return (p = _expand(p, s)) == p;');
+
 func("setjmp", "defined(CONFIG_HAVE_SETJMP_H) && " + addparen(stdc), test: 'extern jmp_buf env; return setjmp(env);');
 func("longjmp", "defined(CONFIG_HAVE_SETJMP_H) && " + addparen(stdc), test: 'extern jmp_buf env; longjmp(env, 2);');
 func("_setjmp", "defined(CONFIG_HAVE_SETJMP_H) && (defined(__USE_MISC) || defined(__USE_XOPEN))", test: 'extern jmp_buf env; return _setjmp(env);');
@@ -4129,6 +4134,40 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif !defined(CONFIG_HAVE_RENAME_WHITEOUT) && \
       (defined(RENAME_WHITEOUT) || defined(__RENAME_WHITEOUT_defined))
 #define CONFIG_HAVE_RENAME_WHITEOUT
+#endif
+
+#ifdef CONFIG_NO__msize
+#undef CONFIG_HAVE__msize
+#elif !defined(CONFIG_HAVE__msize) && \
+      (defined(_msize) || defined(___msize_defined) || (defined(CONFIG_HAVE_MALLOC_H) && \
+       defined(_MSC_VER)))
+#define CONFIG_HAVE__msize
+#endif
+
+#ifdef CONFIG_NO_malloc_usable_size
+#undef CONFIG_HAVE_malloc_usable_size
+#elif !defined(CONFIG_HAVE_malloc_usable_size) && \
+      (defined(malloc_usable_size) || defined(__malloc_usable_size_defined) || \
+       (defined(CONFIG_HAVE_MALLOC_H) && (defined(__linux__) || defined(__linux) || \
+       defined(linux) || defined(__unix__) || defined(__unix) || defined(unix))))
+#define CONFIG_HAVE_malloc_usable_size
+#endif
+
+#ifdef CONFIG_NO__expand
+#undef CONFIG_HAVE__expand
+#elif !defined(CONFIG_HAVE__expand) && \
+      (defined(_expand) || defined(___expand_defined) || (defined(CONFIG_HAVE_MALLOC_H) && \
+       defined(_MSC_VER)))
+#define CONFIG_HAVE__expand
+#endif
+
+#ifdef CONFIG_NO_realloc_in_place
+#undef CONFIG_HAVE_realloc_in_place
+#elif !defined(CONFIG_HAVE_realloc_in_place) && \
+      (defined(realloc_in_place) || defined(__realloc_in_place_defined) || (defined(CONFIG_HAVE_MALLOC_H) && \
+       (defined(__linux__) || defined(__linux) || defined(linux) || defined(__unix__) || \
+       defined(__unix) || defined(unix))))
+#define CONFIG_HAVE_realloc_in_place
 #endif
 
 #ifdef CONFIG_NO_setjmp
@@ -8596,7 +8635,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #else
 #define CONFIG_HAVE_CONSTANT_NAN
 #endif
-//[[[end]]]
+/*[[[end]]]*/
 
 #if (!defined(CONFIG_HAVE_struct_dirent_d_type_size_1) && \
      !defined(CONFIG_HAVE_struct_dirent_d_type_size_2) && \
@@ -8647,6 +8686,18 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #undef memccpy
 #define memccpy _memccpy
 #endif /* memccpy = _memccpy */
+
+#if defined(CONFIG_HAVE__msize) && !defined(CONFIG_HAVE_malloc_usable_size)
+#define CONFIG_HAVE_malloc_usable_size
+#undef malloc_usable_size
+#define malloc_usable_size(ptr) (likely(ptr) ? _msize(ptr) : 0)
+#endif /* malloc_usable_size = _msize */
+
+#if defined(CONFIG_HAVE__expand) && !defined(CONFIG_HAVE_realloc_in_place)
+#define CONFIG_HAVE_realloc_in_place
+#undef realloc_in_place
+#define realloc_in_place _expand
+#endif /* realloc_in_place = _expand */
 
 #if defined(CONFIG_HAVE__exit) && !defined(CONFIG_HAVE__Exit)
 #define CONFIG_HAVE__Exit

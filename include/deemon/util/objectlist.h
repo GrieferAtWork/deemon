@@ -24,103 +24,144 @@
 
 #include "../api.h"
 #include "../gc.h"
-#include "../list.h"
 #include "../object.h"
 #include "../seq.h"
 #include "../tuple.h"
 
 DECL_BEGIN
 
-struct objectlist {
-	size_t           ol_size;  /* Number of used entries. */
-	size_t           ol_alloc; /* Number of allocated entries. */
-	DREF DeeObject **ol_list;  /* [1..1][0..ol_size|ALLOC(ol_alloc)][owned] Vector of objects. */
+#ifdef DEE_SOURCE
+#define Dee_objectlist       objectlist
+#define OBJECTLIST_INIT      DEE_OBJECTLIST_INIT
+#define objectlist_init      Dee_objectlist_init
+#define objectlist_cinit     Dee_objectlist_cinit
+#define objectlist_fini      Dee_objectlist_fini
+#define objectlist_alloc     Dee_objectlist_alloc
+#define objectlist_append    Dee_objectlist_append
+#define objectlist_extendseq Dee_objectlist_extendseq
+#define objectlist_packlist  Dee_objectlist_packlist
+#define objectlist_packtuple Dee_objectlist_packtuple
+#endif /* DEE_SOURCE */
+
+#define DEE_OBJECTLIST_MINALLOC             8
+#define DEE_OBJECTLIST_MOREALLOC(old_alloc) ((old_alloc) * 2)
+
+struct Dee_objectlist {
+	DREF DeeObject **ol_elemv; /* [1..1][0..ol_elemc|ALLOC(ol_elema)][owned] Vector of objects. */
+	size_t           ol_elemc; /* Number of used entries. */
+#ifndef Dee_MallocUsableSize
+#define DEE_OBJECTLIST_HAVE_ELEMA
+	size_t           ol_elema; /* Number of allocated entries. */
+#define Dee_objectlist_getalloc(self)     ((self)->ol_elema)
+#define _Dee_objectlist_setalloc(self, v) (void)((self)->ol_elema = (v))
+#else /* !Dee_MallocUsableSize */
+#define Dee_objectlist_getalloc(self)     (Dee_MallocUsableSize((self)->ol_elemv) / sizeof(DREF DeeObject *))
+#define _Dee_objectlist_setalloc(self, v) (void)0
+#endif /* Dee_MallocUsableSize */
 };
 
-#define OBJECTLIST_INIT       { 0, 0, NULL }
-#define objectlist_init(self) \
-	((self)->ol_size = (self)->ol_alloc = 0, (self)->ol_list = NULL)
-#define objectlist_cinit(self)          \
-	(Dee_ASSERT((self)->ol_size == 0),  \
-	 Dee_ASSERT((self)->ol_alloc == 0), \
-	 Dee_ASSERT((self)->ol_list == NULL))
+#ifdef DEE_OBJECTLIST_HAVE_ELEMA
+#define DEE_OBJECTLIST_INIT { NULL, 0, 0 }
+#define Dee_objectlist_init(self) \
+	((self)->ol_elemv = NULL, (self)->ol_elemc = (self)->ol_elema = 0)
+#define Dee_objectlist_cinit(self)         \
+	(Dee_ASSERT((self)->ol_elemv == NULL), \
+	 Dee_ASSERT((self)->ol_elemc == 0),    \
+	 Dee_ASSERT((self)->ol_elema == 0))
+#else /* DEE_OBJECTLIST_HAVE_ELEMA */
+#define DEE_OBJECTLIST_INIT { NULL, 0 }
+#define Dee_objectlist_init(self) \
+	((self)->ol_elemv = NULL, (self)->ol_elemc = 0)
+#define Dee_objectlist_cinit(self)         \
+	(Dee_ASSERT((self)->ol_elemv == NULL), \
+	 Dee_ASSERT((self)->ol_elemc == 0))
+#endif /* !DEE_OBJECTLIST_HAVE_ELEMA */
+
+/* Initialize `self' from the contents of a given `seq' */
+#ifdef DEE_OBJECTLIST_HAVE_ELEMA
+#define Dee_objectlist_init_fromseq(self, seq) \
+	__builtin_expect(((self)->ol_elemv = DeeSeq_AsHeapVectorWithAlloc(seq, &(self)->ol_elemc, &(self)->ol_elema)) != NULL ? 0 : -1, 0)
+#else /* DEE_OBJECTLIST_HAVE_ELEMA */
+#define Dee_objectlist_init_fromseq(self, seq) \
+	__builtin_expect(((self)->ol_elemv = DeeSeq_AsHeapVectorWithAlloc2(seq, &(self)->ol_elemc)) != NULL ? 0 : -1, 0)
+#endif /* !DEE_OBJECTLIST_HAVE_ELEMA */
+
 
 /* Finalize the given object list. */
-LOCAL void DCALL
-objectlist_fini(struct objectlist *__restrict self) {
-	size_t i;
-	for (i = 0; i < self->ol_size; ++i)
-		Dee_Decref(self->ol_list[i]);
-	Dee_Free(self->ol_list);
-}
+#define Dee_objectlist_fini(self)                     \
+	(Dee_Decrefv((self)->ol_elemv, (self)->ol_elemc), \
+	 Dee_Free((self)->ol_elemv))
 
 /* Allocate memory for at least `num_objects' entries and return a pointer to
  * the first of them, leaving it up to the caller to initialize that memory.
  * Upon error, `NULL' is returned instead.
  * The caller is responsible to ensure that `num_objects' is non-zero. */
-LOCAL WUNUSED DREF DeeObject **DCALL
-objectlist_alloc(struct objectlist *__restrict self, size_t num_objects) {
+LOCAL WUNUSED NONNULL((1)) DREF DeeObject **DCALL
+Dee_objectlist_alloc(struct Dee_objectlist *__restrict self,
+                     size_t num_objects) {
 	DREF DeeObject **result;
-	size_t min_alloc = self->ol_size + num_objects;
+	size_t avail     = Dee_objectlist_getalloc(self);
+	size_t min_alloc = self->ol_elemc + num_objects;
 	Dee_ASSERT(num_objects != 0);
-	Dee_ASSERT(self->ol_size <= self->ol_alloc);
-	if (min_alloc > self->ol_alloc) {
+	Dee_ASSERT(self->ol_elemc <= avail);
+	if (min_alloc > avail) {
 		DREF DeeObject **new_list;
-		size_t new_alloc = self->ol_alloc * 2;
-		if (!new_alloc)
-			new_alloc = 2;
+		size_t new_alloc = DEE_OBJECTLIST_MOREALLOC(avail);
+		if (new_alloc < DEE_OBJECTLIST_MINALLOC)
+			new_alloc = DEE_OBJECTLIST_MINALLOC;
 		while (new_alloc < min_alloc)
-			new_alloc *= 2;
-		Dee_ASSERT(new_alloc > self->ol_size);
-		new_list = (DREF DeeObject **)Dee_TryReallocc(self->ol_list,
+			new_alloc = DEE_OBJECTLIST_MOREALLOC(new_alloc);
+		Dee_ASSERT(new_alloc > self->ol_elemc);
+		new_list = (DREF DeeObject **)Dee_TryReallocc(self->ol_elemv,
 		                                              new_alloc,
 		                                              sizeof(DREF DeeObject *));
 		if unlikely(!new_list) {
 			new_alloc = min_alloc;
-			new_list = (DREF DeeObject **)Dee_Reallocc(self->ol_list,
+			new_list = (DREF DeeObject **)Dee_Reallocc(self->ol_elemv,
 			                                           new_alloc,
 			                                           sizeof(DREF DeeObject *));
 			if unlikely(!new_list)
 				goto err;
 		}
-		self->ol_list  = new_list;
-		self->ol_alloc = new_alloc;
+		self->ol_elemv = new_list;
+		_Dee_objectlist_setalloc(self, new_alloc);
 	}
-	result = self->ol_list + self->ol_size;
-	self->ol_size += num_objects;
+	result = self->ol_elemv + self->ol_elemc;
+	self->ol_elemc += num_objects;
 	return result;
 err:
 	return NULL;
 }
 
 /* Append the given @value onto @self, returning -1 on error and 0 on success. */
-LOCAL int DCALL
-objectlist_append(struct objectlist *__restrict self,
-                  DeeObject *__restrict ob) {
-	Dee_ASSERT(self->ol_size <= self->ol_alloc);
-	if (self->ol_size >= self->ol_alloc) {
+LOCAL WUNUSED NONNULL((1, 2)) int DCALL
+Dee_objectlist_append(struct Dee_objectlist *__restrict self,
+                      DeeObject *__restrict ob) {
+	size_t elema = Dee_objectlist_getalloc(self);
+	Dee_ASSERT(self->ol_elemc <= elema);
+	if (self->ol_elemc >= elema) {
 		DREF DeeObject **new_list;
-		size_t new_alloc = self->ol_alloc * 2;
-		if (!new_alloc)
-			new_alloc = 2;
-		Dee_ASSERT(new_alloc > self->ol_size);
-		new_list = (DREF DeeObject **)Dee_TryReallocc(self->ol_list,
-		                                              new_alloc,
+		size_t new_elema = DEE_OBJECTLIST_MOREALLOC(elema);
+		if (new_elema < DEE_OBJECTLIST_MINALLOC)
+			new_elema = DEE_OBJECTLIST_MINALLOC;
+		Dee_ASSERT(new_elema > self->ol_elemc);
+		new_list = (DREF DeeObject **)Dee_TryReallocc(self->ol_elemv,
+		                                              new_elema,
 		                                              sizeof(DREF DeeObject *));
 		if unlikely(!new_list) {
-			new_alloc = self->ol_size + 1;
-			new_list = (DREF DeeObject **)Dee_Reallocc(self->ol_list,
-			                                           new_alloc,
+			new_elema = self->ol_elemc + 1;
+			new_list = (DREF DeeObject **)Dee_Reallocc(self->ol_elemv,
+			                                           new_elema,
 			                                           sizeof(DREF DeeObject *));
 			if unlikely(!new_list)
 				goto err;
 		}
-		self->ol_list  = new_list;
-		self->ol_alloc = new_alloc;
+		self->ol_elemv = new_list;
+		_Dee_objectlist_setalloc(self, new_elema);
 	}
-	self->ol_list[self->ol_size] = ob;
+	self->ol_elemv[self->ol_elemc] = ob;
 	Dee_Incref(ob);
-	++self->ol_size;
+	++self->ol_elemc;
 	return 0;
 err:
 	return -1;
@@ -129,43 +170,50 @@ err:
 /* Append all objects from a given `sequence'
  * @return: * :         The number of items appended.
  * @return: (size_t)-1: An error occurred. */
-LOCAL size_t DCALL
-objectlist_extendseq(struct objectlist *__restrict self,
-                     DeeObject *__restrict sequence) {
+LOCAL WUNUSED NONNULL((1, 2)) size_t DCALL
+Dee_objectlist_extendseq(struct Dee_objectlist *__restrict self,
+                         DeeObject *__restrict sequence) {
 	size_t more;
+#ifdef DEE_OBJECTLIST_HAVE_ELEMA
 	more = DeeSeq_AsHeapVectorWithAllocReuseOffset(sequence,
-	                                               &self->ol_list,
-	                                               &self->ol_alloc,
-	                                               self->ol_size);
+	                                               &self->ol_elemv,
+	                                               &self->ol_elema,
+	                                               self->ol_elemc);
+#else /* DEE_OBJECTLIST_HAVE_ELEMA */
+	more = DeeSeq_AsHeapVectorWithAllocReuseOffset2(sequence,
+	                                                &self->ol_elemv,
+	                                                self->ol_elemc);
+#endif /* !DEE_OBJECTLIST_HAVE_ELEMA */
 	if likely(more != (size_t)-1)
-		self->ol_size += more;
-	Dee_ASSERT(self->ol_alloc >= self->ol_size);
+		self->ol_elemc += more;
+	Dee_ASSERT(Dee_objectlist_getalloc(self) >= self->ol_elemc);
 	return more;
 }
 
 
-/* Pack the given objectlist into a List.
+/* Pack the given Dee_objectlist into a List.
  * Upon success, `self' will have been finalized. */
-LOCAL WUNUSED DREF DeeObject *DCALL
-objectlist_packlist(struct objectlist *__restrict self) {
-	return DeeList_NewVectorInheritedHeap(self->ol_alloc,
-	                                      self->ol_size,
-	                                      self->ol_list);
-}
+#ifdef __INTELLISENSE__
+extern WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+Dee_objectlist_packlist(struct Dee_objectlist *__restrict self);
+#elif defined(DEE_OBJECTLIST_HAVE_ELEMA)
+#define Dee_objectlist_packlist(self) \
+	DeeList_NewVectorInheritedHeap((self)->ol_elemv, (self)->ol_elemc, (self)->ol_elema)
+#else /* ... */
+#define Dee_objectlist_packlist(self) \
+	DeeList_NewVectorInheritedHeap2((self)->ol_elemv, (self)->ol_elemc)
+#endif /* !... */
 
 /* Pack the given objectlist into a Tuple.
  * Upon success, `self' will have been finalized. */
 LOCAL WUNUSED DREF DeeObject *DCALL
-objectlist_packtuple(struct objectlist *__restrict self) {
+Dee_objectlist_packtuple(struct objectlist *__restrict self) {
 	DREF DeeObject *result;
-	result = DeeTuple_NewVectorSymbolic(self->ol_size, self->ol_list);
+	result = DeeTuple_NewVectorSymbolic(self->ol_elemc, self->ol_elemv);
 	if likely(result)
-		Dee_Free(self->ol_list);
+		Dee_Free(self->ol_elemv);
 	return result;
 }
-
-
-
 
 DECL_END
 

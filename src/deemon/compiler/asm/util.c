@@ -148,17 +148,17 @@ list_getrange_as_tuple(DeeListObject *__restrict self,
 again:
 	DeeList_LockRead(self);
 	if unlikely(begin < 0)
-		begin += self->l_size;
+		begin += DeeList_SIZE(self);
 	if unlikely(end < 0)
-		end += self->l_size;
-	if unlikely((size_t)begin >= self->l_size ||
+		end += DeeList_SIZE(self);
+	if unlikely((size_t)begin >= DeeList_SIZE(self) ||
 	            (size_t)begin >= (size_t)end) {
 		/* Empty list. */
 		DeeList_LockEndRead(self);
 		return DeeList_New();
 	}
-	if unlikely((size_t)end > self->l_size)
-		end = (dssize_t)self->l_size;
+	if unlikely((size_t)end > DeeList_SIZE(self))
+		end = (dssize_t)DeeList_SIZE(self);
 	end -= begin;
 	ASSERT(end != 0);
 	result = (DREF DeeTupleObject *)DeeObject_TryMalloc(offsetof(DeeTupleObject, t_elem) +
@@ -172,7 +172,7 @@ again:
 	}
 	/* Copy vector elements. */
 	for (i = 0; i < (size_t)end; ++i) {
-		result->t_elem[i] = self->l_elem[(size_t)begin + i];
+		result->t_elem[i] = DeeList_GET(self, (size_t)begin + i);
 		Dee_Incref(result->t_elem[i]);
 	}
 	DeeList_LockEndRead(self);
