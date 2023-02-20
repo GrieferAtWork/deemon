@@ -2483,7 +2483,7 @@ PUBLIC int (DCALL DeeObject_AsInt16)(DeeObject *__restrict self,
 		return err_integer_overflow(self, 16, val32 > 0);
 	}
 return_value:
-	*result = (int8_t)val32;
+	*result = (int16_t)val32;
 	return 0;
 err:
 	return -1;
