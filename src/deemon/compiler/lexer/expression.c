@@ -1209,7 +1209,7 @@ err_restore_pos:
 				if (skip(')', W_EXPECTED_RPAREN_AFTER_LPAREN))
 					goto err_r;
 			}
-			if (tok == '{' && WARN(W_PROBABLY_MISSING_ARROW))
+			if (tok == '{' && !allow_cast && WARN(W_PROBABLY_MISSING_ARROW))
 				goto err;
 		}
 		result = ast_putddi(result, &loc);
