@@ -387,14 +387,16 @@ DeeArg_VUnpackKw(size_t argc, DeeObject *const *argv,
 
 
 /* Optimized format sequences for `Dee_Unpackf()' and `DeeArg_Unpack[Kw]()' */
-#define DEE_UNPu8  "I8u"
-#define DEE_UNPd8  "I8d"
-#define DEE_UNPu16 "I16u"
-#define DEE_UNPd16 "I16d"
-#define DEE_UNPu32 "I32u"
-#define DEE_UNPd32 "I32d"
-#define DEE_UNPu64 "I64u"
-#define DEE_UNPd64 "I64d"
+#define DEE_UNPu8   "I8u"
+#define DEE_UNPd8   "I8d"
+#define DEE_UNPu16  "I16u"
+#define DEE_UNPd16  "I16d"
+#define DEE_UNPu32  "I32u"
+#define DEE_UNPd32  "I32d"
+#define DEE_UNPu64  "I64u"
+#define DEE_UNPd64  "I64d"
+#define DEE_UNPu128 "I128u"
+#define DEE_UNPd128 "I128d"
 #ifdef __SIZEOF_LONG_LONG__
 #if __SIZEOF_LONG_LONG__ == 8
 #undef DEE_UNPu64
@@ -521,6 +523,8 @@ DeeArg_VUnpackKw(size_t argc, DeeObject *const *argv,
 #define UNPd32  DEE_UNPd32
 #define UNPu64  DEE_UNPu64
 #define UNPd64  DEE_UNPd64
+#define UNPu128 DEE_UNPu128
+#define UNPd128 DEE_UNPd128
 #define UNPuN   DEE_UNPuN
 #define UNPdN   DEE_UNPdN
 #define UNPuSIZ DEE_UNPuSIZ

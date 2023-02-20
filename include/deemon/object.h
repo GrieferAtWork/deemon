@@ -2809,16 +2809,18 @@ DFUNDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeObject_AsDouble)(DeeObject *__rest
 /* Cast-to-integer conversion operator invocation. */
 DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *(DCALL DeeObject_Int)(DeeObject *__restrict self);
 
-#define DEE_PRIVATE_OBJECT_AS_INT_1(self, result)  DeeObject_AsInt8(self, (int8_t *)(result))
-#define DEE_PRIVATE_OBJECT_AS_INT_2(self, result)  DeeObject_AsInt16(self, (int16_t *)(result))
-#define DEE_PRIVATE_OBJECT_AS_INT_4(self, result)  DeeObject_AsInt32(self, (int32_t *)(result))
-#define DEE_PRIVATE_OBJECT_AS_INT_8(self, result)  DeeObject_AsInt64(self, (int64_t *)(result))
-#define DEE_PRIVATE_OBJECT_AS_INT(size)            DEE_PRIVATE_OBJECT_AS_INT_##size
-#define DEE_PRIVATE_OBJECT_AS_UINT_1(self, result) DeeObject_AsUInt8(self, (uint8_t *)(result))
-#define DEE_PRIVATE_OBJECT_AS_UINT_2(self, result) DeeObject_AsUInt16(self, (uint16_t *)(result))
-#define DEE_PRIVATE_OBJECT_AS_UINT_4(self, result) DeeObject_AsUInt32(self, (uint32_t *)(result))
-#define DEE_PRIVATE_OBJECT_AS_UINT_8(self, result) DeeObject_AsUInt64(self, (uint64_t *)(result))
-#define DEE_PRIVATE_OBJECT_AS_UINT(size)           DEE_PRIVATE_OBJECT_AS_UINT_##size
+#define DEE_PRIVATE_OBJECT_AS_INT_1(self, result)   DeeObject_AsInt8(self, (int8_t *)(result))
+#define DEE_PRIVATE_OBJECT_AS_INT_2(self, result)   DeeObject_AsInt16(self, (int16_t *)(result))
+#define DEE_PRIVATE_OBJECT_AS_INT_4(self, result)   DeeObject_AsInt32(self, (int32_t *)(result))
+#define DEE_PRIVATE_OBJECT_AS_INT_8(self, result)   DeeObject_AsInt64(self, (int64_t *)(result))
+#define DEE_PRIVATE_OBJECT_AS_INT_16(self, result)  DeeObject_AsInt128(self, (Dee_int128_t *)(result))
+#define DEE_PRIVATE_OBJECT_AS_INT(size)             DEE_PRIVATE_OBJECT_AS_INT_##size
+#define DEE_PRIVATE_OBJECT_AS_UINT_1(self, result)  DeeObject_AsUInt8(self, (uint8_t *)(result))
+#define DEE_PRIVATE_OBJECT_AS_UINT_2(self, result)  DeeObject_AsUInt16(self, (uint16_t *)(result))
+#define DEE_PRIVATE_OBJECT_AS_UINT_4(self, result)  DeeObject_AsUInt32(self, (uint32_t *)(result))
+#define DEE_PRIVATE_OBJECT_AS_UINT_8(self, result)  DeeObject_AsUInt64(self, (uint64_t *)(result))
+#define DEE_PRIVATE_OBJECT_AS_UINT_16(self, result) DeeObject_AsUInt128(self, (Dee_uint128_t *)(result))
+#define DEE_PRIVATE_OBJECT_AS_UINT(size)            DEE_PRIVATE_OBJECT_AS_UINT_##size
 
 /* Helper macros for converting objects to integers */
 #define DeeObject_AsXInt(size, self, result)       DEE_PRIVATE_OBJECT_AS_INT(size)(self, result)

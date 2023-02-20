@@ -266,9 +266,15 @@ again:
 			length = 1;
 			format += 1;
 		} else if (*format == '1') {
-			ASSERTF(format[1] == '6', "Invalid format: `%s'", format);
-			length = 2;
-			format += 2;
+			if (format[2] == '2') {
+				ASSERTF(format[3] == '8', "Invalid format: `%s'", format);
+				length = 16;
+				format += 3;
+			} else {
+				ASSERTF(format[1] == '6', "Invalid format: `%s'", format);
+				length = 2;
+				format += 2;
+			}
 		} else if (*format == '3') {
 			ASSERTF(format[1] == '2', "Invalid format: `%s'", format);
 			length = 4;
@@ -306,8 +312,13 @@ do_int:
 			va_arg(args, uint32_t);
 		} else
 #endif /* __VA_SIZE < 8 */
-		{
+#if __VA_SIZE < 16
+		if (length <= 8) {
 			va_arg(args, uint64_t);
+		} else
+#endif /* __VA_SIZE < 16 */
+		{
+			va_arg(args, Dee_uint128_t);
 		}
 	}	goto again;
 
@@ -393,9 +404,35 @@ again:
 			++format;
 			length = 1;
 		} else if (*format == '1') {
-			ASSERTF(format[1] == '6', "Invalid format: `%s' (`%s')", format, *pformat);
-			format += 2;
-			length = 2;
+			if (format[2] == '2') {
+				union {
+					Dee_int128_t  s;
+					Dee_uint128_t u;
+				} data128;
+				ASSERTF(format[3] == '8', "Invalid format: `%s'", format);
+				data128.u = va_arg(pargs->vl_ap, Dee_uint128_t);
+				format += 3;
+				ASSERTF(format[-1] == 'd' || format[-1] == 'u' ||
+				        format[-1] == 'i' || format[-1] == 'x' ||
+				        format[-1] == 'b',
+				        "Invalid format: `%s'", format);
+				if (format[-1] == 'b') {
+					/* Boolean. */
+					result = DeeBool_For(!__hybrid_uint128_iszero(data128.u));
+					Dee_Incref(result);
+				} else if (format[-1] == 'd' || format[-1] == 'i') {
+					/* Signed integer. */
+					result = DeeInt_NewS128(data128.s);
+				} else {
+					/* Unsigned integer. */
+					result = DeeInt_NewU128(data128.u);
+				}
+				break;
+			} else {
+				ASSERTF(format[1] == '6', "Invalid format: `%s' (`%s')", format, *pformat);
+				format += 2;
+				length = 2;
+			}
 		} else if (*format == '3') {
 			ASSERTF(format[1] == '2', "Invalid format: `%s' (`%s')", format, *pformat);
 			format += 2;
@@ -415,9 +452,9 @@ again:
 		length = sizeof(int);
 has_length:
 		ASSERTF(format[-1] == 'd' || format[-1] == 'u' ||
-			    format[-1] == 'i' || format[-1] == 'x' ||
-			    format[-1] == 'b',
-			    "Invalid format: `%s'", format);
+		        format[-1] == 'i' || format[-1] == 'x' ||
+		        format[-1] == 'b',
+		        "Invalid format: `%s'", format);
 #if __VA_SIZE < 2
 		if (length <= 1) {
 			data.u32 = (uint32_t)va_arg(pargs->vl_ap, uint8_t);
@@ -703,12 +740,13 @@ invalid_argc2:
 	/* Int */
 	{
 		int length, temp;
-#define LEN_INT_IB1 0
-#define LEN_INT_IB2 1
-#define LEN_INT_IB4 2
-#define LEN_INT_IB8 3
-#define LEN_INT2(n) LEN_INT_IB##n
-#define LEN_INT(n) LEN_INT2(n)
+#define LEN_INT_IB1  0
+#define LEN_INT_IB2  1
+#define LEN_INT_IB4  2
+#define LEN_INT_IB8  3
+#define LEN_INT_IB16 4
+#define LEN_INT2(n)  LEN_INT_IB##n
+#define LEN_INT(n)   LEN_INT2(n)
 	case 'c':
 		length = 1;
 		goto do_integer_format;
@@ -738,9 +776,15 @@ do_integer_format:
 				length = LEN_INT(1);
 				format += 2;
 			} else if (*format == '1') {
-				ASSERTF(format[1] == '6', "Invalid format: `%s' (`%s')", format, *pformat);
-				length = LEN_INT(2);
-				format += 3;
+				if (format[1] == '2') {
+					ASSERTF(format[2] == '8', "Invalid format: `%s' (`%s')", format, *pformat);
+					length = LEN_INT(16);
+					format += 4;
+				} else {
+					ASSERTF(format[1] == '6', "Invalid format: `%s' (`%s')", format, *pformat);
+					length = LEN_INT(2);
+					format += 3;
+				}
 			} else if (*format == '3') {
 				ASSERTF(format[1] == '2', "Invalid format: `%s' (`%s')", format, *pformat);
 				length = LEN_INT(4);
@@ -783,8 +827,11 @@ do_integer_format:
 			case LEN_INT_IB4:
 				temp = DeeObject_AsInt32(self, va_arg(pargs->vl_ap, int32_t *));
 				break;
-			default:
+			case LEN_INT_IB8:
 				temp = DeeObject_AsInt64(self, va_arg(pargs->vl_ap, int64_t *));
+				break;
+			default:
+				temp = DeeObject_AsInt128(self, va_arg(pargs->vl_ap, Dee_int128_t *));
 				break;
 			}
 		} else if (format[-1] == 'u' || format[-1] == 'x') {
@@ -799,8 +846,11 @@ parse_unsigned_int:
 			case LEN_INT_IB4:
 				temp = DeeObject_AsUInt32(self, va_arg(pargs->vl_ap, uint32_t *));
 				break;
-			default:
+			case LEN_INT_IB8:
 				temp = DeeObject_AsUInt64(self, va_arg(pargs->vl_ap, uint64_t *));
+				break;
+			default:
+				temp = DeeObject_AsUInt128(self, va_arg(pargs->vl_ap, Dee_uint128_t *));
 				break;
 			}
 		} else {
@@ -812,6 +862,7 @@ parse_unsigned_int:
 					err_expected_single_character_string(self);
 				ch = DeeString_GetChar(self, 0);
 				switch (length) { /* unsigned int */
+
 				case LEN_INT_IB1:
 					if (ch > 0xff) {
 						err_integer_overflow_i(8, true);
@@ -819,6 +870,7 @@ parse_unsigned_int:
 					}
 					*va_arg(pargs->vl_ap, uint8_t *) = (uint8_t)ch;
 					break;
+
 				case LEN_INT_IB2:
 					if (ch > 0xffff) {
 						err_integer_overflow_i(16, true);
@@ -826,12 +878,20 @@ parse_unsigned_int:
 					}
 					*va_arg(pargs->vl_ap, uint16_t *) = (uint16_t)ch;
 					break;
+
 				case LEN_INT_IB4:
 					*va_arg(pargs->vl_ap, uint32_t *) = (uint32_t)ch;
 					break;
-				default:
+
+				case LEN_INT_IB8:
 					*va_arg(pargs->vl_ap, uint64_t *) = (uint64_t)ch;
 					break;
+
+				default: {
+					Dee_uint128_t *p = va_arg(pargs->vl_ap, Dee_uint128_t *);
+					__hybrid_uint128_set32(*p, ch);
+				}	break;
+
 				}
 				temp = 0;
 			} else {
@@ -925,8 +985,13 @@ again:
 			if (*format == '8') {
 				format += 2;
 			} else if (*format == '1') {
-				ASSERTF(format[1] == '6', "Invalid format: `%s'", format);
-				format += 3;
+				if (format[1] == '2') {
+					ASSERTF(format[2] == '8', "Invalid format: `%s'", format);
+					format += 4;
+				} else {
+					ASSERTF(format[1] == '6', "Invalid format: `%s'", format);
+					format += 3;
+				}
 			} else if (*format == '3') {
 				ASSERTF(format[1] == '2', "Invalid format: `%s'", format);
 				format += 3;
