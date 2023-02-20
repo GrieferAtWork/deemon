@@ -45,7 +45,7 @@ struct_type_rehash(DeeStructTypeObject *__restrict self) {
 	DREF DeeStructTypeObject *result;
 	size_t i, j, perturb, new_mask;
 	new_mask = (self->st_fmsk << 1) | 1;
-	result = (DREF DeeStructTypeObject *)DeeGCObject_Malloc(offsetof(DeeStructTypeObject, st_fvec) +
+	result = (DREF DeeStructTypeObject *)DeeGCObject_Calloc(offsetof(DeeStructTypeObject, st_fvec) +
 	                                                        (new_mask + 1) * sizeof(struct struct_field));
 	if unlikely(!result)
 		goto err;
@@ -57,9 +57,10 @@ struct_type_rehash(DeeStructTypeObject *__restrict self) {
 		j = perturb = self->st_fvec[i].sf_hash;
 		/* Re-insert this item in the hash-vector of the new struct-type. */
 		for (;; STRUCT_TYPE_HASHNX(j, perturb)) {
-			if (result->st_fvec[j].sf_name)
+			size_t slot = j & new_mask;
+			if (result->st_fvec[slot].sf_name)
 				continue;
-			memcpy(&result->st_fvec[j],
+			memcpy(&result->st_fvec[slot],
 			       &self->st_fvec[i],
 			       sizeof(struct struct_field));
 			break;
@@ -693,6 +694,7 @@ struct_init(DeeStructTypeObject *__restrict tp_self,
 	if (DeeArg_Unpack(argc, argv, "|o:struct", &value))
 		goto err;
 	/* Do an initial assignment using the initializer. */
+	bzero(self, tp_self->st_base.st_sizeof);
 	return struct_assign(tp_self, self, value);
 err:
 	return -1;
