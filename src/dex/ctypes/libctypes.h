@@ -551,22 +551,26 @@ INTDEF DeeSTypeObject DeeCInt8_Type;
 INTDEF DeeSTypeObject DeeCInt16_Type;
 INTDEF DeeSTypeObject DeeCInt32_Type;
 INTDEF DeeSTypeObject DeeCInt64_Type;
+INTDEF DeeSTypeObject DeeCInt128_Type;
 INTDEF DeeSTypeObject DeeCUInt8_Type;
 INTDEF DeeSTypeObject DeeCUInt16_Type;
 INTDEF DeeSTypeObject DeeCUInt32_Type;
 INTDEF DeeSTypeObject DeeCUInt64_Type;
+INTDEF DeeSTypeObject DeeCUInt128_Type;
 
 
-#define PRIVATE_CINT_SIZED_1  DeeCInt8_Type
-#define PRIVATE_CINT_SIZED_2  DeeCInt16_Type
-#define PRIVATE_CINT_SIZED_4  DeeCInt32_Type
-#define PRIVATE_CINT_SIZED_8  DeeCInt64_Type
-#define PRIVATE_CUINT_SIZED_1 DeeCUInt8_Type
-#define PRIVATE_CUINT_SIZED_2 DeeCUInt16_Type
-#define PRIVATE_CUINT_SIZED_4 DeeCUInt32_Type
-#define PRIVATE_CUINT_SIZED_8 DeeCUInt64_Type
-#define CINT_SIZED(sizeof)    PP_PRIVATE_CAT2(PRIVATE_CINT_SIZED_, sizeof)
-#define CUINT_SIZED(sizeof)   PP_PRIVATE_CAT2(PRIVATE_CUINT_SIZED_, sizeof)
+#define PRIVATE_CINT_SIZED_1   DeeCInt8_Type
+#define PRIVATE_CINT_SIZED_2   DeeCInt16_Type
+#define PRIVATE_CINT_SIZED_4   DeeCInt32_Type
+#define PRIVATE_CINT_SIZED_8   DeeCInt64_Type
+#define PRIVATE_CINT_SIZED_16  DeeCInt128_Type
+#define PRIVATE_CUINT_SIZED_1  DeeCUInt8_Type
+#define PRIVATE_CUINT_SIZED_2  DeeCUInt16_Type
+#define PRIVATE_CUINT_SIZED_4  DeeCUInt32_Type
+#define PRIVATE_CUINT_SIZED_8  DeeCUInt64_Type
+#define PRIVATE_CUINT_SIZED_16 DeeCUInt128_Type
+#define CINT_SIZED(sizeof)     PP_PRIVATE_CAT2(PRIVATE_CINT_SIZED_, sizeof)
+#define CUINT_SIZED(sizeof)    PP_PRIVATE_CAT2(PRIVATE_CUINT_SIZED_, sizeof)
 
 
 #ifdef __LONGDOUBLE
@@ -699,8 +703,8 @@ INTDEF DeeSTypeObject   DeeCULLong_Type;
 #define CONFIG_LONG_NEEDS_OWN_TYPE
 #undef DeeCLong_Type
 #undef DeeCULong_Type
-INTDEF DeeSTypeObject   DeeCLong_Type;
-INTDEF DeeSTypeObject   DeeCULong_Type;
+INTDEF DeeSTypeObject DeeCLong_Type;
+INTDEF DeeSTypeObject DeeCULong_Type;
 #endif /* ... */
 
 
@@ -953,10 +957,12 @@ INTDEF WUNUSED DREF DeeObject *DCALL int_news8(int8_t val);
 INTDEF WUNUSED DREF DeeObject *DCALL int_news16(int16_t val);
 INTDEF WUNUSED DREF DeeObject *DCALL int_news32(int32_t val);
 INTDEF WUNUSED DREF DeeObject *DCALL int_news64(int64_t val);
+INTDEF WUNUSED DREF DeeObject *DCALL int_news128(Dee_int128_t val);
 INTDEF WUNUSED DREF DeeObject *DCALL int_newu8(uint8_t val);
 INTDEF WUNUSED DREF DeeObject *DCALL int_newu16(uint16_t val);
 INTDEF WUNUSED DREF DeeObject *DCALL int_newu32(uint32_t val);
 INTDEF WUNUSED DREF DeeObject *DCALL int_newu64(uint64_t val);
+INTDEF WUNUSED DREF DeeObject *DCALL int_newu128(Dee_uint128_t val);
 
 
 DECL_END

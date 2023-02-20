@@ -231,7 +231,7 @@ f_ctypes_sizeof(size_t argc, DeeObject *const *argv) {
 		if (DeeBytes_Check(arg))
 			return DeeInt_NewSize(DeeBytes_SIZE(arg));
 		type = DeeSType_Get(arg);
-		if unlikely(!type)
+		if unlikely (!type)
 			goto err;
 	}
 	if (DeeLValueType_Check(type))
@@ -253,7 +253,7 @@ f_ctypes_alignof(size_t argc, DeeObject *const *argv) {
 		type = (DeeSTypeObject *)Dee_TYPE(arg);
 	} else {
 		type = DeeSType_Get(arg);
-		if unlikely(!type)
+		if unlikely (!type)
 			goto err;
 	}
 	if (DeeLValueType_Check(type))
@@ -381,124 +381,58 @@ err:
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
-f_ctypes_htole16(size_t argc, DeeObject *const *argv) {
-	uint16_t i;
-	if (DeeArg_Unpack(argc, argv, UNPu16 ":htole16", &i))
+f_ctypes_bswap128(size_t argc, DeeObject *const *argv) {
+	Dee_uint128_t i, res;
+	if (DeeArg_Unpack(argc, argv, UNPu128 ":bswap128", &i))
 		goto err;
-	return int_newu16(HTOLE16(i));
+#ifdef BSWAP128
+	res = BSWAP128(i);
+#else /* BSWAP128 */
+	__hybrid_uint128_vec64(res)[0] = BSWAP64(__hybrid_uint128_vec64(i)[1]);
+	__hybrid_uint128_vec64(res)[1] = BSWAP64(__hybrid_uint128_vec64(i)[0]);
+#endif /* !BSWAP128 */
+	return int_newu128(res);
 err:
 	return NULL;
 }
 
-PRIVATE WUNUSED DREF DeeObject *DCALL
-f_ctypes_letoh16(size_t argc, DeeObject *const *argv) {
-	uint16_t i;
-	if (DeeArg_Unpack(argc, argv, UNPu16 ":letoh16", &i))
-		goto err;
-	return int_newu16(LETOH16(i));
-err:
-	return NULL;
-}
-
-PRIVATE WUNUSED DREF DeeObject *DCALL
-f_ctypes_htole32(size_t argc, DeeObject *const *argv) {
-	uint32_t i;
-	if (DeeArg_Unpack(argc, argv, UNPu32 ":htole32", &i))
-		goto err;
-	return int_newu32(HTOLE32(i));
-err:
-	return NULL;
-}
-
-PRIVATE WUNUSED DREF DeeObject *DCALL
-f_ctypes_letoh32(size_t argc, DeeObject *const *argv) {
-	uint32_t i;
-	if (DeeArg_Unpack(argc, argv, UNPu32 ":letoh32", &i))
-		goto err;
-	return int_newu32(LETOH32(i));
-err:
-	return NULL;
-}
-
-PRIVATE WUNUSED DREF DeeObject *DCALL
-f_ctypes_htole64(size_t argc, DeeObject *const *argv) {
-	uint64_t i;
-	if (DeeArg_Unpack(argc, argv, UNPu64 ":htole64", &i))
-		goto err;
-	return int_newu64(HTOLE64(i));
-err:
-	return NULL;
-}
-
-PRIVATE WUNUSED DREF DeeObject *DCALL
-f_ctypes_letoh64(size_t argc, DeeObject *const *argv) {
-	uint64_t i;
-	if (DeeArg_Unpack(argc, argv, UNPu64 ":letoh64", &i))
-		goto err;
-	return int_newu64(LETOH64(i));
-err:
-	return NULL;
-}
-
-PRIVATE WUNUSED DREF DeeObject *DCALL
-f_ctypes_htobe16(size_t argc, DeeObject *const *argv) {
-	uint16_t i;
-	if (DeeArg_Unpack(argc, argv, UNPu16 ":htobe16", &i))
-		goto err;
-	return int_newu16(HTOBE16(i));
-err:
-	return NULL;
-}
-
-PRIVATE WUNUSED DREF DeeObject *DCALL
-f_ctypes_betoh16(size_t argc, DeeObject *const *argv) {
-	uint16_t i;
-	if (DeeArg_Unpack(argc, argv, UNPu16 ":betoh16", &i))
-		goto err;
-	return int_newu16(BETOH16(i));
-err:
-	return NULL;
-}
-
-PRIVATE WUNUSED DREF DeeObject *DCALL
-f_ctypes_htobe32(size_t argc, DeeObject *const *argv) {
-	uint32_t i;
-	if (DeeArg_Unpack(argc, argv, UNPu32 ":htobe32", &i))
-		goto err;
-	return int_newu32(HTOBE32(i));
-err:
-	return NULL;
-}
-
-PRIVATE WUNUSED DREF DeeObject *DCALL
-f_ctypes_betoh32(size_t argc, DeeObject *const *argv) {
-	uint32_t i;
-	if (DeeArg_Unpack(argc, argv, UNPu32 ":betoh32", &i))
-		goto err;
-	return int_newu32(BETOH32(i));
-err:
-	return NULL;
-}
-
-PRIVATE WUNUSED DREF DeeObject *DCALL
-f_ctypes_htobe64(size_t argc, DeeObject *const *argv) {
-	uint64_t i;
-	if (DeeArg_Unpack(argc, argv, UNPu64 ":htobe64", &i))
-		goto err;
-	return int_newu64(HTOBE64(i));
-err:
-	return NULL;
-}
-
-PRIVATE WUNUSED DREF DeeObject *DCALL
-f_ctypes_betoh64(size_t argc, DeeObject *const *argv) {
-	uint64_t i;
-	if (DeeArg_Unpack(argc, argv, UNPu64 ":betoh64", &i))
-		goto err;
-	return int_newu64(BETOH64(i));
-err:
-	return NULL;
-}
+#if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
+#define ctypes_htole16  DeeCUInt16_Type
+#define ctypes_letoh16  DeeCUInt16_Type
+#define ctypes_htole32  DeeCUInt32_Type
+#define ctypes_letoh32  DeeCUInt32_Type
+#define ctypes_htole64  DeeCUInt64_Type
+#define ctypes_letoh64  DeeCUInt64_Type
+#define ctypes_htole128 DeeCUInt128_Type
+#define ctypes_letoh128 DeeCUInt128_Type
+#define ctypes_htobe16  ctypes_bswap16
+#define ctypes_betoh16  ctypes_bswap16
+#define ctypes_htobe32  ctypes_bswap32
+#define ctypes_betoh32  ctypes_bswap32
+#define ctypes_htobe64  ctypes_bswap64
+#define ctypes_betoh64  ctypes_bswap64
+#define ctypes_htobe128 ctypes_bswap128
+#define ctypes_betoh128 ctypes_bswap128
+#elif __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
+#define ctypes_htole16  ctypes_bswap16
+#define ctypes_letoh16  ctypes_bswap16
+#define ctypes_htole32  ctypes_bswap32
+#define ctypes_letoh32  ctypes_bswap32
+#define ctypes_htole64  ctypes_bswap64
+#define ctypes_letoh64  ctypes_bswap64
+#define ctypes_htole128 ctypes_bswap128
+#define ctypes_letoh128 ctypes_bswap128
+#define ctypes_htobe16  DeeCUInt16_Type
+#define ctypes_betoh16  DeeCUInt16_Type
+#define ctypes_htobe32  DeeCUInt32_Type
+#define ctypes_betoh32  DeeCUInt32_Type
+#define ctypes_htobe64  DeeCUInt64_Type
+#define ctypes_betoh64  DeeCUInt64_Type
+#define ctypes_htobe128 DeeCUInt128_Type
+#define ctypes_betoh128 DeeCUInt128_Type
+#else /* __BYTE_ORDER__ == ... */
+#error "Unsupported `__BYTE_ORDER__'"
+#endif /* __BYTE_ORDER__ != ... */
 
 
 PRIVATE DEFINE_CMETHOD(ctypes_sizeof, f_ctypes_sizeof);
@@ -508,19 +442,7 @@ PRIVATE DEFINE_CMETHOD(ctypes_intfor, f_ctypes_intfor);
 PRIVATE DEFINE_CMETHOD(ctypes_bswap16, f_ctypes_bswap16);
 PRIVATE DEFINE_CMETHOD(ctypes_bswap32, f_ctypes_bswap32);
 PRIVATE DEFINE_CMETHOD(ctypes_bswap64, f_ctypes_bswap64);
-
-PRIVATE DEFINE_CMETHOD(ctypes_htole16, f_ctypes_htole16);
-PRIVATE DEFINE_CMETHOD(ctypes_letoh16, f_ctypes_letoh16);
-PRIVATE DEFINE_CMETHOD(ctypes_htole32, f_ctypes_htole32);
-PRIVATE DEFINE_CMETHOD(ctypes_letoh32, f_ctypes_letoh32);
-PRIVATE DEFINE_CMETHOD(ctypes_htole64, f_ctypes_htole64);
-PRIVATE DEFINE_CMETHOD(ctypes_letoh64, f_ctypes_letoh64);
-PRIVATE DEFINE_CMETHOD(ctypes_htobe16, f_ctypes_htobe16);
-PRIVATE DEFINE_CMETHOD(ctypes_betoh16, f_ctypes_betoh16);
-PRIVATE DEFINE_CMETHOD(ctypes_htobe32, f_ctypes_htobe32);
-PRIVATE DEFINE_CMETHOD(ctypes_betoh32, f_ctypes_betoh32);
-PRIVATE DEFINE_CMETHOD(ctypes_htobe64, f_ctypes_htobe64);
-PRIVATE DEFINE_CMETHOD(ctypes_betoh64, f_ctypes_betoh64);
+PRIVATE DEFINE_CMETHOD(ctypes_bswap128, f_ctypes_bswap128);
 
 PRIVATE DEFINE_CMETHOD(ctypes_malloc, capi_malloc);
 PRIVATE DEFINE_CMETHOD(ctypes_free, capi_free);
@@ -682,10 +604,12 @@ PRIVATE struct dex_symbol symbols[] = {
 	{ "int16_t", (DeeObject *)&DeeCInt16_Type },
 	{ "int32_t", (DeeObject *)&DeeCInt32_Type },
 	{ "int64_t", (DeeObject *)&DeeCInt64_Type },
+	{ "int128_t", (DeeObject *)&DeeCInt128_Type },
 	{ "uint8_t", (DeeObject *)&DeeCUInt8_Type },
 	{ "uint16_t", (DeeObject *)&DeeCUInt16_Type },
 	{ "uint32_t", (DeeObject *)&DeeCUInt32_Type },
 	{ "uint64_t", (DeeObject *)&DeeCUInt64_Type },
+	{ "uint128_t", (DeeObject *)&DeeCUInt128_Type },
 	/* TODO: endian-specific integer types (e.g. `le16' and `be16')
 	 *       These could be used in structures and always encode/decode
 	 *       the underlying value to/from a regular deemon `int' object
@@ -766,6 +690,12 @@ PRIVATE struct dex_symbol symbols[] = {
 	{ "letoh64", (DeeObject *)&ctypes_letoh64, MODSYM_FNORMAL,
 	  DOC("(x:?Guint64_t)->?Guint64_t\n"
 	      "Convert a 64-bit integer from little-endian to host-endian") },
+	{ "htole128", (DeeObject *)&ctypes_htole128, MODSYM_FNORMAL,
+	  DOC("(x:?Guint128_t)->?Guint128_t\n"
+	      "Convert a 128-bit integer from host-endian to little-endian") },
+	{ "letoh128", (DeeObject *)&ctypes_letoh128, MODSYM_FNORMAL,
+	  DOC("(x:?Guint128_t)->?Guint128_t\n"
+	      "Convert a 128-bit integer from little-endian to host-endian") },
 
 	{ "htobe16", (DeeObject *)&ctypes_htobe16, MODSYM_FNORMAL,
 	  DOC("(x:?Guint16_t)->?Guint16_t\n"
@@ -785,6 +715,12 @@ PRIVATE struct dex_symbol symbols[] = {
 	{ "betoh64", (DeeObject *)&ctypes_betoh64, MODSYM_FNORMAL,
 	  DOC("(x:?Guint64_t)->?Guint64_t\n"
 	      "Convert a 64-bit integer from big-endian to host-endian") },
+	{ "htobe128", (DeeObject *)&ctypes_htobe128, MODSYM_FNORMAL,
+	  DOC("(x:?Guint128_t)->?Guint128_t\n"
+	      "Convert a 128-bit integer from host-endian to big-endian") },
+	{ "betoh128", (DeeObject *)&ctypes_betoh128, MODSYM_FNORMAL,
+	  DOC("(x:?Guint128_t)->?Guint128_t\n"
+	      "Convert a 128-bit integer from big-endian to host-endian") },
 
 	/* <string.h> & <stdlib.h> - style ctypes functions */
 	{ "malloc", (DeeObject *)&ctypes_malloc, MODSYM_FNORMAL,
@@ -1355,7 +1291,7 @@ PUBLIC struct dex DEX = {
 	/* .d_init    = */ NULL,
 #ifndef NDEBUG
 	/* .d_fini    = */ &libctypes_fini,
-#else /* !NDEBUG */
+#else  /* !NDEBUG */
 	/* .d_fini    = */ NULL,
 #endif /* NDEBUG */
 	/* .d_imports = */ { NULL },

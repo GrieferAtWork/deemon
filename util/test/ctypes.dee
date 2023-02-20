@@ -1,0 +1,77 @@
+#!/usr/bin/deemon
+/* Copyright (c) 2018-2023 Griefer@Work                                       *
+ *                                                                            *
+ * This software is provided 'as-is', without any express or implied          *
+ * warranty. In no event will the authors be held liable for any damages      *
+ * arising from the use of this software.                                     *
+ *                                                                            *
+ * Permission is granted to anyone to use this software for any purpose,      *
+ * including commercial applications, and to alter it and redistribute it     *
+ * freely, subject to the following restrictions:                             *
+ *                                                                            *
+ * 1. The origin of this software must not be misrepresented; you must not    *
+ *    claim that you wrote the original software. If you use this software    *
+ *    in a product, an acknowledgement (see the following) in the product     *
+ *    documentation is required:                                              *
+ *    Portions Copyright (c) 2018-2023 Griefer@Work                           *
+ * 2. Altered source versions must be plainly marked as such, and must not be *
+ *    misrepresented as being the original software.                          *
+ * 3. This notice may not be removed or altered from any source distribution. *
+ */
+
+import deemon;
+import * from ctypes;
+
+function assertMinMax(sT: StructuredType, uT: StructuredType, bits: deemon.int) {
+	local uMinVal: deemon.int = 0;
+	local uMaxVal: deemon.int = (1 << bits) - 1;
+	local sMaxVal: deemon.int = uMaxVal >> 1;
+	local sMinVal: deemon.int = -(sMaxVal + 1);
+	assert sT.min == sMinVal;
+	assert sT.max == sMaxVal;
+	assert uT.min == uMinVal;
+	assert uT.max == uMaxVal;
+	assert type(sT.min) == sT;
+	assert type(sT.max) == sT;
+	assert type(uT.min) == uT;
+	assert type(uT.max) == uT;
+	assert (sT)(sT.min - 1) == sT.max;
+	assert (sT)(sT.max + 1) == sT.min;
+	assert (uT)(uT.min - 1) == uT.max;
+	assert (uT)(uT.max + 1) == uT.min;
+}
+
+assertMinMax(int8_t, uint8_t, 8);
+assertMinMax(int16_t, uint16_t, 16);
+assertMinMax(int32_t, uint32_t, 32);
+assertMinMax(int64_t, uint64_t, 64);
+assertMinMax(int128_t, uint128_t, 128);
+
+/* Assert C-like integer promotion */
+assert int == type((char)0 + 1);
+assert int == type((schar)0 + 1);
+assert int == type((uchar)0 + 1);
+assert int == type((short)0 + 1);
+assert int == type((ushort)0 + 1);
+assert int == type((int)0 + 1);
+assert uint == type((uint)0 + 1);
+assert long == type((long)0 + 1);
+assert ulong == type((ulong)0 + 1);
+assert llong == type((llong)0 + 1);
+assert ullong == type((ullong)0 + 1);
+assert int128_t == type((int128_t)0 + 1);
+assert uint128_t == type((uint128_t)0 + 1);
+
+
+/* FIXME: this breaks at the moment
+ * (yes: the min/max constants are re-assignable when they shouldn't be) */
+#if 0
+local x = int8_t.max;
+assert int8_t.max == x;
+assert int8_t.max == 127;
+x += 42;
+assert int8_t.max == x - 42;
+assert int8_t.max == 127;
+assert (try ({ int8_t.max := 42; none; }) catch (e...) e) is none;
+#endif
+

@@ -59,6 +59,10 @@
 #define SIZEOF 8
 #define SIGNED 1
 #include "define-integer.c.inl"
+#define SIZEOF 16
+#define SIGNED 1
+#include "define-integer.c.inl"
+
 #define SIZEOF 1
 #include "define-integer.c.inl"
 #define SIZEOF 2
@@ -66,6 +70,8 @@
 #define SIZEOF 4
 #include "define-integer.c.inl"
 #define SIZEOF 8
+#include "define-integer.c.inl"
+#define SIZEOF 16
 #include "define-integer.c.inl"
 
 /* `char' */
@@ -212,12 +218,14 @@
 #include "define-integer.c.inl"
 #endif /* CONFIG_INT_NEEDS_OWN_TYPE */
 
+#define CONFIG_DONT_PROMOTE_TO_INTEGER
 #ifdef CONFIG_LONG_NEEDS_OWN_TYPE
 /* `signed long' */
 #define SIGNED                1
 #define FORMAT_STR            "%ld"
 #define FORMAT_TYP            signed long
 #define T                     signed long
+#define F(x)                  x##l
 #define FFI_TYPE              ffi_type_slong
 #define SIZEOF                CONFIG_CTYPES_SIZEOF_LONG
 #define ALIGNOF               CONFIG_CTYPES_ALIGNOF_LONG
@@ -229,6 +237,7 @@
 #define FORMAT_STR            "%lu"
 #define FORMAT_TYP            unsigned long
 #define T                     unsigned long
+#define F(x)                  x##ul
 #define FFI_TYPE              ffi_type_ulong
 #define SIZEOF                CONFIG_CTYPES_SIZEOF_LONG
 #define ALIGNOF               CONFIG_CTYPES_ALIGNOF_LONG
@@ -244,6 +253,7 @@
 #define FORMAT_STR            "%lld"
 #define FORMAT_TYP            __LONGLONG
 #define T                     __LONGLONG
+#define F(x)                  x##ll
 #define SIZEOF                CONFIG_CTYPES_SIZEOF_LLONG
 #define ALIGNOF               CONFIG_CTYPES_ALIGNOF_LLONG
 #define TYPE_NAME             DeeCLLong_Type
@@ -254,6 +264,7 @@
 #define FORMAT_STR            "%llu"
 #define FORMAT_TYP            __ULONGLONG
 #define T                     __ULONGLONG
+#define F(x)                  x##ull
 #define SIZEOF                CONFIG_CTYPES_SIZEOF_LLONG
 #define ALIGNOF               CONFIG_CTYPES_ALIGNOF_LLONG
 #define TYPE_NAME             DeeCULLong_Type
@@ -261,6 +272,7 @@
 #define UNSIGNED_TYPE_NAME    DeeCULLong_Type
 #include "define-integer.c.inl"
 #endif /* CONFIG_LLONG_NEEDS_OWN_TYPE */
+#undef CONFIG_DONT_PROMOTE_TO_INTEGER
 
 /* Floating point types. */
 #define NAME       "float"
