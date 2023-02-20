@@ -1115,13 +1115,6 @@ int main(int argc, char *argv[]) {
 	Dee_DPRINT("\n");
 #endif /* __CYGWIN__ */
 
-#ifdef CONFIG_HOST_WINDOWS
-	/* Reset the default console-output code page to fix UTF-8 output.
-	 * See the explanation in `/src/deemon/system/win-file.c.inl:sysfile_write'
-	 * for why this needs to be done in order to get proper UTF-8 support. */
-	SetConsoleOutputCP(GetOEMCP());
-#endif /* CONFIG_HOST_WINDOWS */
-
 #ifdef _MSC_VER
 	/* The following stuff is required to correct errno-behavior when doing
 	 * (possibly) invalid stuff like `close(42)' (where `42' isn't an open
