@@ -71,9 +71,12 @@ err:
 	return result;
 }
 
+
+
 PRIVATE WUNUSED NONNULL((1)) dssize_t DCALL
 print_warning_message(struct unicode_printer *__restrict _printer,
                       int _wnum, va_list _args) {
+	static char const nth[4][3] = { "st", "nd", "rd", "th" };
 	dssize_t _warnf_temp, _warnf_result = 0;
 	struct TPPString *_temp_string = NULL;
 #ifndef __INTELLISENSE__

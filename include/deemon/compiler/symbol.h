@@ -634,6 +634,17 @@ struct symbol {
 			size_t                     a_declc;  /* Number of additional declaration locations. */
 			struct ast_loc            *a_declv;  /* [OVERRIDE(.l_file, REF(TPPFile_Decref) [0..1])]
 			                                      * [0..a_declc][owned] Additional declaration locations. */
+#define symbol_ambig_foreach_decl(i, decl, self)            \
+	for ((i) = 0; (i) < (self)->s_ambig.a_declc + 2; ++(i)) \
+		if (((decl) = (i) == 0                              \
+		              ? &(self)->s_decl                     \
+		              : (i) == 1                            \
+		                ? &(self)->s_ambig.a_decl2          \
+		                : &(self)->s_ambig.a_declv[(i)-2])  \
+		    ->l_file == NULL)                               \
+			;                                               \
+		else
+
 		}                s_ambig;  /* [SYMBOL_TYPE_AMBIG] */
 		DREF DeeObject  *s_const;  /* [SYMBOL_TYPE_CONST] The constant that the symbol evaluates to. */
 	}
