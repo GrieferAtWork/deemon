@@ -297,6 +297,12 @@ f_ctypes_intfor(size_t argc, DeeObject *const *argv) {
 		         : &DeeCUInt64_Type;
 		break;
 
+	case 16:
+		result = return_signed
+		         ? &DeeCInt128_Type
+		         : &DeeCUInt128_Type;
+		break;
+
 #ifdef CONFIG_SUCHAR_NEEDS_OWN_TYPE
 	case CONFIG_CTYPES_SIZEOF_CHAR:
 		result = return_signed
