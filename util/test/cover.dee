@@ -371,7 +371,7 @@ assert((try (assert(false),) catch (AssertionError) "here") == "here");
 }
 
 
-import("__builtins");
+import("rt.builtins");
 
 
 {

@@ -131,7 +131,7 @@ DECL_BEGIN
 #endif /* ... */
 
 
-/*[[[deemon import("_dexutils").gw("unlink", "file:?Dstring", libname: "posix");]]]*/
+/*[[[deemon import("rt._dexutils").gw("unlink", "file:?Dstring", libname: "posix");]]]*/
 FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_unlink_f_impl(DeeObject *file);
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_unlink_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define POSIX_UNLINK_DEF { "unlink", (DeeObject *)&posix_unlink, MODSYM_FNORMAL, DOC("(file:?Dstring)") },
@@ -259,7 +259,7 @@ err:
 
 
 
-/*[[[deemon import("_dexutils").gw("rmdir", "path:?Dstring", libname: "posix");]]]*/
+/*[[[deemon import("rt._dexutils").gw("rmdir", "path:?Dstring", libname: "posix");]]]*/
 FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_rmdir_f_impl(DeeObject *path);
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_rmdir_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define POSIX_RMDIR_DEF { "rmdir", (DeeObject *)&posix_rmdir, MODSYM_FNORMAL, DOC("(path:?Dstring)") },
@@ -350,7 +350,7 @@ err:
 
 
 
-/*[[[deemon import("_dexutils").gw("remove", "path:?Dstring", libname: "posix");]]]*/
+/*[[[deemon import("rt._dexutils").gw("remove", "path:?Dstring", libname: "posix");]]]*/
 FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_remove_f_impl(DeeObject *path);
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_remove_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define POSIX_REMOVE_DEF { "remove", (DeeObject *)&posix_remove, MODSYM_FNORMAL, DOC("(path:?Dstring)") },
@@ -576,7 +576,7 @@ err:
 }
 
 
-/*[[[deemon import("_dexutils").gw("unlinkat", "dfd:?X3?DFile?Dint?Dstring,file:?Dstring,atflags:u=0", libname: "posix");]]]*/
+/*[[[deemon import("rt._dexutils").gw("unlinkat", "dfd:?X3?DFile?Dint?Dstring,file:?Dstring,atflags:u=0", libname: "posix");]]]*/
 FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_unlinkat_f_impl(DeeObject *dfd, DeeObject *file, unsigned int atflags);
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_unlinkat_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define POSIX_UNLINKAT_DEF { "unlinkat", (DeeObject *)&posix_unlinkat, MODSYM_FNORMAL, DOC("(dfd:?X3?DFile?Dint?Dstring,file:?Dstring,atflags:?Dint=!0)") },
@@ -646,7 +646,7 @@ err:
 }
 
 
-/*[[[deemon import("_dexutils").gw("removeat", "dfd:?X3?DFile?Dint?Dstring,path:?Dstring,atflags:u=0", libname: "posix");]]]*/
+/*[[[deemon import("rt._dexutils").gw("removeat", "dfd:?X3?DFile?Dint?Dstring,path:?Dstring,atflags:u=0", libname: "posix");]]]*/
 FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_removeat_f_impl(DeeObject *dfd, DeeObject *path, unsigned int atflags);
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_removeat_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define POSIX_REMOVEAT_DEF { "removeat", (DeeObject *)&posix_removeat, MODSYM_FNORMAL, DOC("(dfd:?X3?DFile?Dint?Dstring,path:?Dstring,atflags:?Dint=!0)") },
@@ -710,7 +710,7 @@ err:
 }
 
 
-/*[[[deemon import("_dexutils").gw("rmdirat", "dfd:?X3?DFile?Dint?Dstring,path:?Dstring,atflags:u=0", libname: "posix");]]]*/
+/*[[[deemon import("rt._dexutils").gw("rmdirat", "dfd:?X3?DFile?Dint?Dstring,path:?Dstring,atflags:u=0", libname: "posix");]]]*/
 FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_rmdirat_f_impl(DeeObject *dfd, DeeObject *path, unsigned int atflags);
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_rmdirat_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define POSIX_RMDIRAT_DEF { "rmdirat", (DeeObject *)&posix_rmdirat, MODSYM_FNORMAL, DOC("(dfd:?X3?DFile?Dint?Dstring,path:?Dstring,atflags:?Dint=!0)") },

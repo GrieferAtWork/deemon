@@ -162,7 +162,7 @@ local STRINGS = {
 	"__assert",
 	"__badcall",
 
-	"d200",
+	"rt.d200",
 
 	("str_nomemory", "allocation failed"),
 	("str_dots", "..."),
@@ -214,13 +214,13 @@ local STRINGS = {
 	"const",
 };
 
-local geneartedStrings = HashSet();
+local generatedStrings = HashSet();
 for (local s: STRINGS) {
 	if (s is string)
-		s = { f"str_{s}", s };
-	if (s.last in geneartedStrings)
+		s = { f"str_{s.replace(".", "_")}", s };
+	if (s.last in generatedStrings)
 		continue;
-	geneartedStrings.insert(s.last);
+	generatedStrings.insert(s.last);
 	defString(s...);
 }
 
@@ -454,8 +454,8 @@ DEF_STRING(str___assert, "__assert", 0xd4715fbd, 0xdf7c220c44eeb5a4)
 #define STR___assert DeeString_STR(&str___assert)
 DEF_STRING(str___badcall, "__badcall", 0x9795b98b, 0xc9e3cd8eadb2ee72)
 #define STR___badcall DeeString_STR(&str___badcall)
-DEF_STRING(str_d200, "d200", 0xc82f1c9b, 0xdb2a210c2a9ae115)
-#define STR_d200 DeeString_STR(&str_d200)
+DEF_STRING(str_rt_d200, "rt.d200", 0x6b64a89c, 0x798d95b52acb68ab)
+#define STR_rt_d200 DeeString_STR(&str_rt_d200)
 DEF_STRING(str_nomemory, "allocation failed", 0xbef65010, 0x6315c4e658da5e37)
 #define STR_nomemory DeeString_STR(&str_nomemory)
 DEF_STRING(str_dots, "...", 0x1a086252, 0xf5eff0465042ef13)

@@ -487,7 +487,7 @@ DEF_WARNING(W_RECURSIVE_MODULE_DEPENDENCY, (WG_SYMBOL), WSTATE_ERROR, { DeeObjec
 DEF_WARNING(W_VARIABLE_READ_NEVER_WRITTEN, (WG_SYMBOL), WSTATE_ERROR, { struct symbol *sym = ARG(struct symbol *); WARNF("Read from variable `%s' that is never written", SYMBOL_NAME(sym)); PRINT_SYMBOL_DECLARATION(sym); })
 DEF_WARNING(W_NO_OPERATOR_SYMBOL, (WG_SYMBOL), WSTATE_ERROR, WARNF("Module `operators' is not exporting a dedicated symbol for `operator %s'", ARG(char *)))
 DEF_WARNING(W_NO_OPERATOR_FALLBACK_FUNCTION, (WG_SYMBOL), WSTATE_ERROR, WARNF("Module `operators' is not exporting the fallback `operator' function required to implement generic operator support"))
-DEF_WARNING(W_NO_D200_OLD_USER_CLASS, (WG_SYMBOL), WSTATE_ERROR, WARNF("Module `d200' is not exporting `OldUserClass' required to implement legacy user-classes"))
+DEF_WARNING(W_NO_D200_OLD_USER_CLASS, (WG_SYMBOL), WSTATE_ERROR, WARNF("Module `rt.d200' is not exporting `OldUserClass' required to implement legacy user-classes"))
 
 DEF_WARNING(W_COMPARE_SODO_NONBUILTIN_UNDEFINED, (WG_SYMBOL), WSTATE_WARN, WARNF("Comparing compiler-generated constants with `===' or `!==' produces undefined results"))
 

@@ -44,12 +44,12 @@ import math;
 import files;
 import random;
 import posix;
-import compat_util = .include.m_util;
-import compat_util_attr = .include.m_util_attr;
-import compat_math = .include.m_math;
-import compat_gcc = .include.__builtin_gcc;
-import compat_sys = .include.m_sys;
-import compat_fs = .include.m_fs;
+import compat_util = ..include.m_util;
+import compat_util_attr = ..include.m_util_attr;
+import compat_math = ..include.m_math;
+import compat_gcc = ..include.__builtin_gcc;
+import compat_sys = ..include.m_sys;
+import compat_fs = ..include.m_fs;
 final local opt_win32 = try import("win32") catch (...) none;
 #define W32_IMPORT(name) (try opt_win32.name catch (...) none)
 

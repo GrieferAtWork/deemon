@@ -28,7 +28,7 @@ DECL_BEGIN
 
 /*[[[deemon
 import * from deemon;
-import * from _dexutils;
+import * from rt._dexutils;
 MODULE_NAME = "posix";
 local orig_stdout = File.stdout;
 
@@ -267,7 +267,7 @@ print "/" "**" "/";
 /************************************************************************/
 
 #if defined(posix_open_USE_wopen) || defined(__DEEMON__)
-/*[[[deemon import("_dexutils").gw("_open", "filename:c:wchar_t[],oflags:u,mode:u=0644->?Dint", libname: "posix"); ]]]*/
+/*[[[deemon import("rt._dexutils").gw("_open", "filename:c:wchar_t[],oflags:u,mode:u=0644->?Dint", libname: "posix"); ]]]*/
 FORCELOCAL WUNUSED DREF DeeObject *DCALL posix__open_f_impl(dwchar_t const *filename, unsigned int oflags, unsigned int mode);
 PRIVATE WUNUSED DREF DeeObject *DCALL posix__open_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define POSIX__OPEN_DEF { "_open", (DeeObject *)&posix__open, MODSYM_FNORMAL, DOC("(filename:?Dstring,oflags:?Dint,mode:?Dint=!0644)->?Dint") },
@@ -297,7 +297,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix__open_f_impl(dwchar_t const *file
 //[[[end]]]
 #endif /* posix_open_USE_wopen */
 #if defined(posix_open_USE_open) || defined(__DEEMON__)
-/*[[[deemon import("_dexutils").gw("_open", "filename:c:char[],oflags:u,mode:u=0644->?Dint", libname: "posix"); ]]]*/
+/*[[[deemon import("rt._dexutils").gw("_open", "filename:c:char[],oflags:u,mode:u=0644->?Dint", libname: "posix"); ]]]*/
 FORCELOCAL WUNUSED DREF DeeObject *DCALL posix__open_f_impl(/*utf-8*/ char const *filename, unsigned int oflags, unsigned int mode);
 PRIVATE WUNUSED DREF DeeObject *DCALL posix__open_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define POSIX__OPEN_DEF { "_open", (DeeObject *)&posix__open, MODSYM_FNORMAL, DOC("(filename:?Dstring,oflags:?Dint,mode:?Dint=!0644)->?Dint") },
@@ -381,7 +381,7 @@ err:
 }
 
 #if defined(posix_open_USE_wopen) || defined(__DEEMON__)
-/*[[[deemon import("_dexutils").gw("open", "filename:c:wchar_t[],oflags:u,mode:u=0644->?Dint", libname: "posix"); ]]]*/
+/*[[[deemon import("rt._dexutils").gw("open", "filename:c:wchar_t[],oflags:u,mode:u=0644->?Dint", libname: "posix"); ]]]*/
 FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_open_f_impl(dwchar_t const *filename, unsigned int oflags, unsigned int mode);
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_open_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define POSIX_OPEN_DEF { "open", (DeeObject *)&posix_open, MODSYM_FNORMAL, DOC("(filename:?Dstring,oflags:?Dint,mode:?Dint=!0644)->?Dint") },
@@ -411,7 +411,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_open_f_impl(dwchar_t const *filen
 //[[[end]]]
 #endif /* posix_open_USE_wopen */
 #if defined(posix_open_USE_open) || defined(__DEEMON__)
-/*[[[deemon import("_dexutils").gw("open", "filename:c:char[],oflags:u,mode:u=0644->?Dint", libname: "posix"); ]]]*/
+/*[[[deemon import("rt._dexutils").gw("open", "filename:c:char[],oflags:u,mode:u=0644->?Dint", libname: "posix"); ]]]*/
 FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_open_f_impl(/*utf-8*/ char const *filename, unsigned int oflags, unsigned int mode);
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_open_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define POSIX_OPEN_DEF { "open", (DeeObject *)&posix_open, MODSYM_FNORMAL, DOC("(filename:?Dstring,oflags:?Dint,mode:?Dint=!0644)->?Dint") },
@@ -455,7 +455,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_open_f_impl(/*utf-8*/ char const 
 /************************************************************************/
 
 #if defined(posix_creat_USE_wcreat) || defined(__DEEMON__)
-/*[[[deemon import("_dexutils").gw("_creat", "filename:c:wchar_t[],mode:u=0644->?Dint", libname: "posix"); ]]]*/
+/*[[[deemon import("rt._dexutils").gw("_creat", "filename:c:wchar_t[],mode:u=0644->?Dint", libname: "posix"); ]]]*/
 FORCELOCAL WUNUSED DREF DeeObject *DCALL posix__creat_f_impl(dwchar_t const *filename, unsigned int mode);
 PRIVATE WUNUSED DREF DeeObject *DCALL posix__creat_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define POSIX__CREAT_DEF { "_creat", (DeeObject *)&posix__creat, MODSYM_FNORMAL, DOC("(filename:?Dstring,mode:?Dint=!0644)->?Dint") },
@@ -484,7 +484,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix__creat_f_impl(dwchar_t const *fil
 //[[[end]]]
 #endif /* posix_creat_USE_wcreat */
 #if defined(posix_creat_USE_creat) || defined(__DEEMON__)
-/*[[[deemon import("_dexutils").gw("_creat", "filename:c:char[],mode:u=0644->?Dint", libname: "posix"); ]]]*/
+/*[[[deemon import("rt._dexutils").gw("_creat", "filename:c:char[],mode:u=0644->?Dint", libname: "posix"); ]]]*/
 FORCELOCAL WUNUSED DREF DeeObject *DCALL posix__creat_f_impl(/*utf-8*/ char const *filename, unsigned int mode);
 PRIVATE WUNUSED DREF DeeObject *DCALL posix__creat_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define POSIX__CREAT_DEF { "_creat", (DeeObject *)&posix__creat, MODSYM_FNORMAL, DOC("(filename:?Dstring,mode:?Dint=!0644)->?Dint") },
@@ -566,7 +566,7 @@ err:
 }
 
 #if defined(posix_creat_USE_wcreat) || defined(__DEEMON__)
-/*[[[deemon import("_dexutils").gw("creat", "filename:c:wchar_t[],mode:u=0644->?Dint", libname: "posix"); ]]]*/
+/*[[[deemon import("rt._dexutils").gw("creat", "filename:c:wchar_t[],mode:u=0644->?Dint", libname: "posix"); ]]]*/
 FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_creat_f_impl(dwchar_t const *filename, unsigned int mode);
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_creat_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define POSIX_CREAT_DEF { "creat", (DeeObject *)&posix_creat, MODSYM_FNORMAL, DOC("(filename:?Dstring,mode:?Dint=!0644)->?Dint") },
@@ -595,7 +595,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_creat_f_impl(dwchar_t const *file
 //[[[end]]]
 #endif /* posix_creat_USE_wcreat */
 #if defined(posix_creat_USE_creat) || defined(__DEEMON__)
-/*[[[deemon import("_dexutils").gw("creat", "filename:c:char[],mode:u=0644->?Dint", libname: "posix"); ]]]*/
+/*[[[deemon import("rt._dexutils").gw("creat", "filename:c:char[],mode:u=0644->?Dint", libname: "posix"); ]]]*/
 FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_creat_f_impl(/*utf-8*/ char const *filename, unsigned int mode);
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_creat_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define POSIX_CREAT_DEF { "creat", (DeeObject *)&posix_creat, MODSYM_FNORMAL, DOC("(filename:?Dstring,mode:?Dint=!0644)->?Dint") },

@@ -1043,7 +1043,7 @@ err:
 }
 
 
-/*[[[deemon import("_dexutils").gw("fstat", "fd:?X2?DFile?Dint->?Gstat", libname: "posix"); ]]]*/
+/*[[[deemon import("rt._dexutils").gw("fstat", "fd:?X2?DFile?Dint->?Gstat", libname: "posix"); ]]]*/
 FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_fstat_f_impl(DeeObject *fd);
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_fstat_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define POSIX_FSTAT_DEF { "fstat", (DeeObject *)&posix_fstat, MODSYM_FNORMAL, DOC("(fd:?X2?DFile?Dint)->?Gstat") },
@@ -1082,7 +1082,7 @@ err:
 	return NULL;
 }
 
-/*[[[deemon import("_dexutils").gw("fstatat", "dfd:?X2?DFile?Dint,path:?Dstring,atflags:c:uint=0->?Gstat", libname: "posix"); ]]]*/
+/*[[[deemon import("rt._dexutils").gw("fstatat", "dfd:?X2?DFile?Dint,path:?Dstring,atflags:c:uint=0->?Gstat", libname: "posix"); ]]]*/
 FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_fstatat_f_impl(DeeObject *dfd, DeeObject *path, unsigned int atflags);
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_fstatat_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define POSIX_FSTATAT_DEF { "fstatat", (DeeObject *)&posix_fstatat, MODSYM_FNORMAL, DOC("(dfd:?X2?DFile?Dint,path:?Dstring,atflags:?Dint=!0)->?Gstat") },

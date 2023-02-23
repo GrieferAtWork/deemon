@@ -144,7 +144,7 @@ DeeSystem_DEFINE_strnlen(strnlen)
 
 
 
-/*[[[deemon import("_dexutils").gw("getcwd", "->?Dstring", libname: "posix");]]]*/
+/*[[[deemon import("rt._dexutils").gw("getcwd", "->?Dstring", libname: "posix");]]]*/
 FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_getcwd_f_impl(void);
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_getcwd_f(size_t argc, DeeObject *const *argv);
 #define POSIX_GETCWD_DEF { "getcwd", (DeeObject *)&posix_getcwd, MODSYM_FNORMAL, DOC("->?Dstring") },
@@ -171,7 +171,7 @@ err:
 
 
 
-/*[[[deemon import("_dexutils").gw("gettmp", "->?Dstring", libname: "posix");]]]*/
+/*[[[deemon import("rt._dexutils").gw("gettmp", "->?Dstring", libname: "posix");]]]*/
 FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_gettmp_f_impl(void);
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_gettmp_f(size_t argc, DeeObject *const *argv);
 #define POSIX_GETTMP_DEF { "gettmp", (DeeObject *)&posix_gettmp, MODSYM_FNORMAL, DOC("->?Dstring") },
@@ -213,7 +213,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_gettmp_f_impl(void)
 
 
 
-/*[[[deemon import("_dexutils").gw("gethostname", "->?Dstring", libname: "posix");]]]*/
+/*[[[deemon import("rt._dexutils").gw("gethostname", "->?Dstring", libname: "posix");]]]*/
 FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_gethostname_f_impl(void);
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_gethostname_f(size_t argc, DeeObject *const *argv);
 #define POSIX_GETHOSTNAME_DEF { "gethostname", (DeeObject *)&posix_gethostname, MODSYM_FNORMAL, DOC("->?Dstring") },
@@ -317,7 +317,7 @@ err:
 
 
 
-/*[[[deemon import("_dexutils").gw("chdir", "path:?Dstring", libname: "posix");]]]*/
+/*[[[deemon import("rt._dexutils").gw("chdir", "path:?Dstring", libname: "posix");]]]*/
 FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_chdir_f_impl(DeeObject *path);
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_chdir_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define POSIX_CHDIR_DEF { "chdir", (DeeObject *)&posix_chdir, MODSYM_FNORMAL, DOC("(path:?Dstring)") },
@@ -434,7 +434,7 @@ err:
 
 
 
-/*[[[deemon import("_dexutils").gw("fchdir", "fd:?X2?DFile?Dint", libname: "posix");]]]*/
+/*[[[deemon import("rt._dexutils").gw("fchdir", "fd:?X2?DFile?Dint", libname: "posix");]]]*/
 FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_fchdir_f_impl(DeeObject *fd);
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_fchdir_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define POSIX_FCHDIR_DEF { "fchdir", (DeeObject *)&posix_fchdir, MODSYM_FNORMAL, DOC("(fd:?X2?DFile?Dint)") },
@@ -502,7 +502,7 @@ err:
 
 
 
-/*[[[deemon import("_dexutils").gw("fchdirat", "dfd:?X3?DFile?Dint?Dstring,path:?Dstring,atflags:u=0", libname: "posix");]]]*/
+/*[[[deemon import("rt._dexutils").gw("fchdirat", "dfd:?X3?DFile?Dint?Dstring,path:?Dstring,atflags:u=0", libname: "posix");]]]*/
 FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_fchdirat_f_impl(DeeObject *dfd, DeeObject *path, unsigned int atflags);
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_fchdirat_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define POSIX_FCHDIRAT_DEF { "fchdirat", (DeeObject *)&posix_fchdirat, MODSYM_FNORMAL, DOC("(dfd:?X3?DFile?Dint?Dstring,path:?Dstring,atflags:?Dint=!0)") },

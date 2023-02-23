@@ -28,7 +28,7 @@ DECL_BEGIN
 
 /*[[[deemon
 import * from deemon;
-import * from _dexutils;
+import * from rt._dexutils;
 MODULE_NAME = "posix";
 local orig_stdout = File.stdout;
 
@@ -143,7 +143,7 @@ print "/" "**" "/";
 /* isatty()                                                             */
 /************************************************************************/
 
-/*[[[deemon import("_dexutils").gw("isatty", "fd:unix:fd->?Dbool", libname: "posix"); ]]]*/
+/*[[[deemon import("rt._dexutils").gw("isatty", "fd:unix:fd->?Dbool", libname: "posix"); ]]]*/
 FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_isatty_f_impl(int fd);
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_isatty_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define POSIX_ISATTY_DEF { "isatty", (DeeObject *)&posix_isatty, MODSYM_FNORMAL, DOC("(fd:?X2?Dint?DFile)->?Dbool") },
@@ -211,7 +211,7 @@ err:
 /* umask()                                                              */
 /************************************************************************/
 
-/*[[[deemon import("_dexutils").gw("umask", "mask:d->?Dint", libname: "posix"); ]]]*/
+/*[[[deemon import("rt._dexutils").gw("umask", "mask:d->?Dint", libname: "posix"); ]]]*/
 FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_umask_f_impl(int mask);
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_umask_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define POSIX_UMASK_DEF { "umask", (DeeObject *)&posix_umask, MODSYM_FNORMAL, DOC("(mask:?Dint)->?Dint") },
@@ -262,7 +262,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_umask_f_impl(int mask)
 /* dup()                                                                */
 /************************************************************************/
 
-/*[[[deemon import("_dexutils").gw("dup", "fd:unix:fd->?Dint", libname: "posix"); ]]]*/
+/*[[[deemon import("rt._dexutils").gw("dup", "fd:unix:fd->?Dint", libname: "posix"); ]]]*/
 FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_dup_f_impl(int fd);
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_dup_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define POSIX_DUP_DEF { "dup", (DeeObject *)&posix_dup, MODSYM_FNORMAL, DOC("(fd:?X2?Dint?DFile)->?Dint") },
@@ -322,7 +322,7 @@ err:
 /* dup2()                                                               */
 /************************************************************************/
 
-/*[[[deemon import("_dexutils").gw("dup2", "oldfd:unix:fd,newfd:unix:fd->?Dint", libname: "posix"); ]]]*/
+/*[[[deemon import("rt._dexutils").gw("dup2", "oldfd:unix:fd,newfd:unix:fd->?Dint", libname: "posix"); ]]]*/
 FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_dup2_f_impl(int oldfd, int newfd);
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_dup2_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define POSIX_DUP2_DEF { "dup2", (DeeObject *)&posix_dup2, MODSYM_FNORMAL, DOC("(oldfd:?X2?Dint?DFile,newfd:?X2?Dint?DFile)->?Dint") },
@@ -389,7 +389,7 @@ err:
 /* dup3()                                                               */
 /************************************************************************/
 
-/*[[[deemon import("_dexutils").gw("dup3", "oldfd:unix:fd,newfd:unix:fd,oflags:d->?Dint", libname: "posix"); ]]]*/
+/*[[[deemon import("rt._dexutils").gw("dup3", "oldfd:unix:fd,newfd:unix:fd,oflags:d->?Dint", libname: "posix"); ]]]*/
 FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_dup3_f_impl(int oldfd, int newfd, int oflags);
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_dup3_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define POSIX_DUP3_DEF { "dup3", (DeeObject *)&posix_dup3, MODSYM_FNORMAL, DOC("(oldfd:?X2?Dint?DFile,newfd:?X2?Dint?DFile,oflags:?Dint)->?Dint") },
@@ -577,7 +577,7 @@ err:
 /* close()                                                              */
 /************************************************************************/
 
-/*[[[deemon import("_dexutils").gw("close", "fd:unix:fd", libname: "posix"); ]]]*/
+/*[[[deemon import("rt._dexutils").gw("close", "fd:unix:fd", libname: "posix"); ]]]*/
 FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_close_f_impl(int fd);
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_close_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define POSIX_CLOSE_DEF { "close", (DeeObject *)&posix_close, MODSYM_FNORMAL, DOC("(fd:?X2?Dint?DFile)") },

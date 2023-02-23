@@ -1,3 +1,4 @@
+#!/usr/bin/deemon
 /* Copyright (c) 2018-2023 Griefer@Work                                       *
  *                                                                            *
  * This software is provided 'as-is', without any express or implied          *
@@ -18,56 +19,25 @@
  * 3. This notice may not be removed or altered from any source distribution. *
  */
 
-/* Backwards-compatibility and helpers to
- * achieve this with previous version of deemon. */
-
 import * from deemon;
 
-@@A class that may be specified as the base of other user-classes
-@@to achieve old-style member semanics, diverting lookup of member
-@@variables to be done at runtime:
-@@>class MyClass: OldUserClass from d200 {
-@@>    this() {
-@@>        this.my_member = 42;
-@@>    }
-@@>}
-@@>
-@@>print MyClass().my_member;
-@@>
-@@Note that once an old-style headers has been included, any
-@@class that doesn't declare an explicit base is automatically
-@@assembled to be deribed from `OldUserClass from d200'
-class OldUserClass
-	/* Inherit from weakrefable, because it used to be that
-	 * any user-defined class could be weakly referenced by
-	 * default, since _any_ object was capable of sustaining
-	 * weak references. */
-	: WeakRefAble
-{
-
-	@@A Dict mapping old member variables to their proper names
-	private member m_members: {string: Object} = Dict();
-
-	public operator . (name: string): Object {
-		return m_members[name];
-	}
-
-	public operator del. (name: string) {
-		del m_members[name];
-	}
-
-	public operator .= (name: string, value: Object) {
-		m_members[name] = value;
-	}
-
+function cformat(expected: string, format: string, args: Tuple | Object) {
+	assert format % args == expected;
+	assert format % args == expected.bytes();
+	assert format.bytes() % args == expected;
+	assert format.bytes() % args == expected.bytes();
+	if (args !is Sequence)
+		cformat(expected, format, (args,));
 }
 
-
-
-
-
-
-
-
-
+cformat('a10b',         'a%db',    10);
+cformat('aXYZb',        'a%sb',    'XYZ');
+cformat('a       XYZb', 'a%10sb',  'XYZ');
+cformat('aXYZ       b', 'a%-10sb', 'XYZ');
+cformat('a       XYZb', 'a%*sb',   (10, 'XYZ'));
+cformat('aXYZ       b', 'a%-*sb',  (10, 'XYZ'));
+cformat('a     "XYZ"b', 'a%10qb',  'XYZ');
+cformat('a"XYZ"     b', 'a%-10qb', 'XYZ');
+cformat('a     "XYZ"b', 'a%*qb',   (10, 'XYZ'));
+cformat('a"XYZ"     b', 'a%-*qb',  (10, 'XYZ'));
 

@@ -257,7 +257,7 @@ PRIVATE struct dex_symbol symbols[] = {
 	 *       >>            "threading",
 	 *       >>            "util",
 	 *       >>            "operators",
-	 *       >>            "d200",
+	 *       >>            "rt.d200",
 	 *       >>        };
 	 *       >>        // Using the regular import
 	 *       >>        if (name in allowed)

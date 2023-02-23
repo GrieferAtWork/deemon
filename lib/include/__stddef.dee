@@ -120,7 +120,7 @@ local function __ctypes_new(tp) {
 #define __builtin_breakpoint()             __asm__("debug break")
 #define __builtin_typeof(x)                type(x)
 #define __builtin_expect(x, y)             (x)
-#define __builtin_object(id)               (get_builtin from __builtins(id))
+#define __builtin_object(id)               ((get_builtin from rt.builtins)(id))
 #define __builtin_predictable(x)           false
 #define __builtin_exprast(...)             none
 #define __builtin_alloca(sz)               (malloc from ctypes)(sz) /* It's a leak, but it'll work... */
@@ -241,7 +241,7 @@ from ctypes import
 #pragma extension("-ffixed-length-integrals")
 
 /* Enable old-style classes (now emulated by
- * always extending `OldUserClass from d200') */
+ * always extending `OldUserClass from rt.d200') */
 #pragma extension("-fold-style-classes")
 
 /* Enable old-style character literals, causing '\x12' to be compiled

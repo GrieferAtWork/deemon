@@ -79,11 +79,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "win32", "dex\win32.vcxproj"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "lib", "lib", "{2360741E-FB49-40D4-B684-65FE0F4A9A7C}"
 	ProjectSection(SolutionItems) = preProject
-		..\lib\__builtins.dee = ..\lib\__builtins.dee
-		..\lib\_dexutils.dee = ..\lib\_dexutils.dee
 		..\lib\annotations.dee = ..\lib\annotations.dee
 		..\lib\codecs.dee = ..\lib\codecs.dee
-		..\lib\d200.dee = ..\lib\d200.dee
 		..\lib\doc.dee = ..\lib\doc.dee
 		..\lib\doctext.dee = ..\lib\doctext.dee
 		..\lib\errors.dee = ..\lib\errors.dee
@@ -114,7 +111,11 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "python", "python", "{9D0422
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "rt", "rt", "{E57BB1FF-CF31-4B75-8C2D-0227314048BB}"
 	ProjectSection(SolutionItems) = preProject
+		..\lib\rt\builtins.dee = ..\lib\rt\builtins.dee
 		..\lib\rt\bytecode.dee = ..\lib\rt\bytecode.dee
+		..\lib\rt\d200.dee = ..\lib\rt\d200.dee
+		..\lib\rt\dexutils.dee = ..\lib\rt\dexutils.dee
+		..\lib\rt\hash.dee = ..\lib\rt\hash.dee
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "include", "include", "{BB688EBB-D2A7-47A1-8304-B97665CA724A}"
@@ -445,6 +446,12 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "dex", "dex", "{5D607076-CF3
 		..\lib\include\dex\hashlib.dee = ..\lib\include\dex\hashlib.dee
 	EndProjectSection
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "gen", "gen", "{F1FEC7D8-F4AB-433D-9B03-0C4FA15B1E9F}"
+	ProjectSection(SolutionItems) = preProject
+		..\lib\rt\gen\cxxapi.dee = ..\lib\rt\gen\cxxapi.dee
+		..\lib\rt\gen\string.dee = ..\lib\rt\gen\string.dee
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug-MSVC (NDEBUG)|Win32 = Debug-MSVC (NDEBUG)|Win32
@@ -764,6 +771,7 @@ Global
 		{BD5D31FF-75B8-4FE3-989E-BE066BFDC464} = {D3451C56-5533-40B4-AD90-E912F4EE68A4}
 		{A3A8B55A-CC9A-4A3E-8E7D-854A7A77BE9E} = {BD5D31FF-75B8-4FE3-989E-BE066BFDC464}
 		{5D607076-CF32-4BFE-90B0-FED6C3CBE7A1} = {BB688EBB-D2A7-47A1-8304-B97665CA724A}
+		{F1FEC7D8-F4AB-433D-9B03-0C4FA15B1E9F} = {E57BB1FF-CF31-4B75-8C2D-0227314048BB}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {A751EA8C-34FD-41A5-B12E-5C7D76FEF65A}

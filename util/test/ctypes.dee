@@ -23,6 +23,10 @@ import deemon;
 import * from ctypes;
 
 function assertMinMax(sT: StructuredType, uT: StructuredType, bits: deemon.int) {
+	assert sizeof(sT) == bits / 8;
+	assert sizeof(uT) == bits / 8;
+	assert alignof(sT) in [1:sizeof(sT)+1];
+	assert alignof(sT) == alignof(uT);
 	local uMinVal: deemon.int = 0;
 	local uMaxVal: deemon.int = (1 << bits) - 1;
 	local sMaxVal: deemon.int = uMaxVal >> 1;

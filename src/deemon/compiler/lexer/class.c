@@ -1520,17 +1520,17 @@ do_parse_class_base_after_yield:
 
 		/* Automatically use `Object' as base class unless `@nobase' was specified. */
 		if (HAS(EXT_OLD_STYLE_CLASSES)) {
-			DREF DeeModuleObject *d200_module;
+			DREF DeeModuleObject *rt_d200_module;
 			PRIVATE char const old_base[] = "OldUserClass";
 			struct module_symbol *oldbase_sym;
 			struct symbol *base_symbol;
-			d200_module = (DeeModuleObject *)DeeModule_OpenGlobal((DeeObject *)&str_d200,
-			                                                      inner_compiler_options,
-			                                                      false);
-			if unlikely(!ITER_ISOK(d200_module)) {
-				if (d200_module) {
+			rt_d200_module = (DeeModuleObject *)DeeModule_OpenGlobal((DeeObject *)&str_rt_d200,
+			                                                         inner_compiler_options,
+			                                                         false);
+			if unlikely(!ITER_ISOK(rt_d200_module)) {
+				if (rt_d200_module) {
 #if 1
-					if (WARN(W_MODULE_NOT_FOUND, (DeeObject *)&str_d200))
+					if (WARN(W_MODULE_NOT_FOUND, (DeeObject *)&str_rt_d200))
 						goto err;
 #else
 					if (WARN(W_NO_D200_OLD_USER_CLASS))
@@ -1540,10 +1540,10 @@ do_parse_class_base_after_yield:
 				}
 				goto err;
 			}
-			oldbase_sym = DeeModule_GetSymbolString(d200_module, old_base,
+			oldbase_sym = DeeModule_GetSymbolString(rt_d200_module, old_base,
 			                                        Dee_HashStr(old_base));
 			if unlikely(!oldbase_sym) {
-				Dee_Decref(d200_module);
+				Dee_Decref(rt_d200_module);
 				if (WARN(W_NO_D200_OLD_USER_CLASS))
 					goto err;
 				goto use_object_base;
@@ -1552,11 +1552,11 @@ do_parse_class_base_after_yield:
 			/* Pack the reference to OldUserClass into a symbol. */
 			base_symbol = new_unnamed_symbol();
 			if unlikely(!base_symbol) {
-				Dee_Decref(d200_module);
+				Dee_Decref(rt_d200_module);
 				goto err;
 			}
 			base_symbol->s_type            = SYMBOL_TYPE_EXTERN;
-			base_symbol->s_extern.e_module = d200_module; /* Inherit reference. */
+			base_symbol->s_extern.e_module = rt_d200_module; /* Inherit reference. */
 			base_symbol->s_extern.e_symbol = oldbase_sym;
 
 			/* Create a symbol-ast for the base expression. */

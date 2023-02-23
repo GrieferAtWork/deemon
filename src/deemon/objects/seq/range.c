@@ -44,20 +44,20 @@
 DECL_BEGIN
 
 /* Intended sequence behavior:
->> print repr([0:7] as sequence);     // { 0, 1, 2, 3, 4, 5, 6 }
->> print repr([0:7, 1] as sequence);  // { 0, 1, 2, 3, 4, 5, 6 }
->> print repr([0:7, 2] as sequence);  // { 0, 2, 4, 6 }
->> print repr([0:7, 3] as sequence);  // { 0, 3, 6 }
->> print repr([0:7, -1] as sequence); // { }
->> print repr([0:7, -2] as sequence); // { }
->> print repr([0:7, -3] as sequence); // { }
->> print repr([7:0] as sequence);     // { }
->> print repr([7:0, 1] as sequence);  // { }
->> print repr([7:0, 2] as sequence);  // { }
->> print repr([7:0, 3] as sequence);  // { }
->> print repr([7:0, -1] as sequence); // { 7, 6, 5, 4, 3, 2, 1 }
->> print repr([7:0, -2] as sequence); // { 7, 5, 3, 1 }
->> print repr([7:0, -3] as sequence); // { 7, 4, 1 }
+>> print repr([0:7] as Sequence);     // { 0, 1, 2, 3, 4, 5, 6 }
+>> print repr([0:7, 1] as Sequence);  // { 0, 1, 2, 3, 4, 5, 6 }
+>> print repr([0:7, 2] as Sequence);  // { 0, 2, 4, 6 }
+>> print repr([0:7, 3] as Sequence);  // { 0, 3, 6 }
+>> print repr([0:7, -1] as Sequence); // { }
+>> print repr([0:7, -2] as Sequence); // { }
+>> print repr([0:7, -3] as Sequence); // { }
+>> print repr([7:0] as Sequence);     // { }
+>> print repr([7:0, 1] as Sequence);  // { }
+>> print repr([7:0, 2] as Sequence);  // { }
+>> print repr([7:0, 3] as Sequence);  // { }
+>> print repr([7:0, -1] as Sequence); // { 7, 6, 5, 4, 3, 2, 1 }
+>> print repr([7:0, -2] as Sequence); // { 7, 5, 3, 1 }
+>> print repr([7:0, -3] as Sequence); // { 7, 4, 1 }
 Implementation:
 function range(start, end, step?) {
 	if (step !is bound) {
@@ -127,6 +127,7 @@ again:
 	self->ri_first = other->ri_first;
 	Dee_Incref(old_index);
 	rwlock_endread(&other->ri_lock);
+
 	/* Create a copy of the index (may not be correct if it already changed) */
 	new_index = DeeObject_Copy(old_index);
 	Dee_Decref(old_index);
@@ -141,6 +142,7 @@ again:
 		goto again;
 	}
 	rwlock_init(&self->ri_lock);
+
 	/* Other members are constant, so we don't
 	 * need to bother with synchronizing them. */
 	self->ri_range = other->ri_range;
@@ -204,6 +206,7 @@ again:
 	is_first              = self->ri_first;
 	Dee_Incref(new_index);
 	rwlock_endread(&self->ri_lock);
+
 	/* Skip the index modification on the first loop. */
 	if (!is_first) {
 		temp = self->ri_step
@@ -212,6 +215,7 @@ again:
 		if unlikely(temp)
 			goto err_ni;
 	}
+
 	/* Check if the end has been reached */
 	temp = likely(!self->ri_range->r_rev)
 	       ? DeeObject_CompareLo(new_index, self->ri_end)
@@ -223,6 +227,7 @@ again:
 		Dee_Decref(new_index);
 		return ITER_DONE;
 	}
+
 	/* Save the new index object. */
 	rwlock_write(&self->ri_lock);
 	if unlikely(self->ri_index != old_index ||
@@ -500,16 +505,19 @@ range_contains(Range *self, DeeObject *index) {
 	DREF DeeObject *temp, *temp2, *temp3;
 	int error;
 	if likely(!self->r_rev) {
-		/* if (!(self->r_start <= index)) return false; */
+		/* >> if (!(self->r_start <= index))
+		 * >>     return false; */
 		error = DeeObject_CompareLe(self->r_start, index);
 		if (error <= 0) /* if false-or-error */
 			goto err_or_false;
-		/* if (self->r_end <= index) return false; */
+
+		/* >> if (self->r_end <= index)
+		 * >>     return false; */
 		error = DeeObject_CompareLe(self->r_end, index);
 		if (error != 0) /* if true-or-error */
 			goto err_or_false;
 		if (self->r_step) {
-			/* temp = index - self->r_start; */
+			/* >> temp = index - self->r_start; */
 			if (Dee_TYPE(index) == Dee_TYPE(self->r_start)) {
 				temp = DeeObject_Sub(index, self->r_start);
 			} else {
@@ -522,35 +530,44 @@ range_contains(Range *self, DeeObject *index) {
 			}
 			if unlikely(!temp)
 				goto err;
-			/* temp = temp % self->r_step; */
+
+			/* >> temp = temp % self->r_step; */
 			temp2 = DeeObject_Mod(temp, self->r_step);
 			Dee_Decref(temp);
 			if unlikely(!temp2)
 				goto err;
 			error = DeeObject_Bool(temp2);
 			Dee_Decref(temp2);
-			/* if ((index - self->r_start) % self->r_step) return false; */
+
+			/* >> if ((index - self->r_start) % self->r_step)
+			 * >>     return false; */
 			if (error != 0) /* if true-or-error */
 				goto err_or_false;
 		}
 	} else {
 		ASSERT(self->r_step);
-		/* if (self->r_start < index) return false; */
+
+		/* >> if (self->r_start < index)
+		 * >>     return false; */
 		error = DeeObject_CompareLo(self->r_start, index);
 		if (error != 0) /* if true-or-error */
 			goto err_or_false;
-		/* if (!(self->r_end < index)) return false; */
+
+		/* >> if (!(self->r_end < index))
+		 * >>     return false; */
 		error = DeeObject_CompareLo(self->r_end, index);
 		if (error <= 0) /* if false-or-error */
 			goto err_or_false;
-		/* temp = self->r_start - index; */
+
+		/* >> temp = self->r_start - index; */
 		temp = DeeObject_Sub(self->r_start, index);
 		if unlikely(!temp)
 			goto err;
 		temp3 = DeeObject_Neg(self->r_step);
 		if unlikely(!temp3)
 			goto err_temp;
-		/* temp2 = (self->r_start - index) % -self->r_step; */
+
+		/* >> temp2 = (self->r_start - index) % -self->r_step; */
 		temp2 = DeeObject_Mod(temp, temp3);
 		Dee_Decref(temp3);
 		Dee_Decref(temp);
@@ -558,7 +575,9 @@ range_contains(Range *self, DeeObject *index) {
 			goto err;
 		error = DeeObject_Bool(temp2);
 		Dee_Decref(temp2);
-		/* if ((self->r_start - index) % -self->r_step) return false; */
+
+		/* >> if ((self->r_start - index) % -self->r_step)
+		 * >>     return false; */
 		if (error != 0) /* if false-or-error */
 			goto err_or_false;
 	}

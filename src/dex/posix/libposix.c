@@ -1034,7 +1034,7 @@ local names = {
 	"ISVTX", "IRUSR", "IWUSR", "IXUSR", "IRGRP",
 	"IWGRP", "IXGRP", "IROTH", "IWOTH", "IXOTH"
 };
-import * from _dexutils;
+import * from rt._dexutils;
 include("p-stat-constants.def");
 for (local x: names)
 	gi("S_" + x, "STAT_" + x);

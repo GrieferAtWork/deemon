@@ -73,7 +73,7 @@ global final cxxGenericSequenceTypes: {string...} = {
 	"Tuple"    : "Sequence<>",
 };
 
-@@Types that have special treatment with written as (e.g.) @"HashSet with string",
+@@Types that have special treatment when written as (e.g.) @"HashSet with string",
 @@which in turn gets compiled as `HashSet<string>` within the c++ API.
 global final cxxAbstractSequenceTypes: {string...} = {
 	"Cell",

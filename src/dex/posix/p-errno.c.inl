@@ -38,7 +38,7 @@ DECL_BEGIN
 
 /*[[[deemon
 import * from deemon;
-import * from _dexutils;
+import * from rt._dexutils;
 MODULE_NAME = "posix";
 local orig_stdout = File.stdout;
 

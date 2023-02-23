@@ -46,7 +46,7 @@
  *     general rule-of-thumb is to simply store an attribute value, at
  *     which point missing members are automatically created.
  *     For classes without base this can easily be emulated by extending
- *     the compatibility class `OldUserClass from d200', however if a base
+ *     the compatibility class `OldUserClass from rt.d200', however if a base
  *     class is present, this becomes impossible.
  *   - Deemon does not allow for multiple-inheritance, where-as python does.
  *   - Deemon has support for private/public symbols in classes.

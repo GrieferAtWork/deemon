@@ -67,7 +67,7 @@ DECL_BEGIN
 /* pipe()                                                               */
 /************************************************************************/
 
-/*[[[deemon import("_dexutils").gw("pipe", "->?T2?Dint?Dint", libname: "posix"); ]]]*/
+/*[[[deemon import("rt._dexutils").gw("pipe", "->?T2?Dint?Dint", libname: "posix"); ]]]*/
 FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_pipe_f_impl(void);
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_pipe_f(size_t argc, DeeObject *const *argv);
 #define POSIX_PIPE_DEF { "pipe", (DeeObject *)&posix_pipe, MODSYM_FNORMAL, DOC("->?T2?Dint?Dint") },
@@ -192,7 +192,7 @@ err:
 /* pipe2()                                                              */
 /************************************************************************/
 
-/*[[[deemon import("_dexutils").gw("pipe2", "oflags:d->?T2?Dint?Dint", libname: "posix"); ]]]*/
+/*[[[deemon import("rt._dexutils").gw("pipe2", "oflags:d->?T2?Dint?Dint", libname: "posix"); ]]]*/
 FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_pipe2_f_impl(int oflags);
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_pipe2_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define POSIX_PIPE2_DEF { "pipe2", (DeeObject *)&posix_pipe2, MODSYM_FNORMAL, DOC("(oflags:?Dint)->?T2?Dint?Dint") },
