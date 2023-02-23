@@ -260,13 +260,6 @@ err:
 	return NULL;
 }
 
-PRIVATE ATTR_COLD NONNULL((2)) int DCALL
-F(float_divzero)(T value, DeeObject *__restrict some_object) {
-	return DeeError_Throwf(&DeeError_DivideByZero,
-	                       "Divide by Zero: `%f / %k'",
-	                       (double)value, some_object);
-}
-
 PRIVATE WUNUSED NONNULL((1, 3)) DREF DeeObject *DCALL
 F(float_div)(DeeSTypeObject *__restrict UNUSED(tp_self), T *self,
              DeeObject *__restrict some_object) {
@@ -275,10 +268,6 @@ F(float_div)(DeeSTypeObject *__restrict UNUSED(tp_self), T *self,
 	CTYPES_FAULTPROTECT(value = *self, return NULL);
 	if (DeeObject_AsDouble(some_object, &other_value))
 		goto err;
-	if unlikely(!other_value) {
-		(F(float_divzero)(value, some_object));
-		goto err;
-	}
 	return NEW_FLOAT(value / other_value);
 err:
 	return NULL;
@@ -326,12 +315,6 @@ F(float_inplace_div)(DeeSTypeObject *__restrict UNUSED(tp_self), T *self,
 	double other_value;
 	if (DeeObject_AsDouble(some_object, &other_value))
 		goto err;
-	if unlikely(!other_value) {
-		T value;
-		CTYPES_FAULTPROTECT(value = *self, goto err);
-		(F(float_divzero)(value, some_object));
-		goto err;
-	}
 	CTYPES_FAULTPROTECT(*self /= (T)other_value, goto err);
 	return 0;
 err:

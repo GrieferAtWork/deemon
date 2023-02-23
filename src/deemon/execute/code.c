@@ -419,21 +419,21 @@ DECL_BEGIN
  * NOTE: This function is called to deal with an encounter
  *       of a breakpoint during execution of code.
  * @param: frame: [in|out][OVERRIDE(->cf_result, DREF)]
- *                 The execution frame that triggered the breakpoint.
- *                 Anything and everything about the state described
- *                 within this frame is subject to change by this
- *                 function, including PC/SP, as well as the running
- *                 code itself.
- *                  - The stack pointer is the stack location as
- *                    it is at the breakpoint instruction, as well
- *                    as the instruction following thereafter.
- *                  - The instruction pointer points to the instruction
- *                    following the breakpoint, meaning that no further
- *                    adjustment is required if all that's supposed to
- *                    happen is execution continuing normally.
- *                  - The valid stack size is always stored in `cf_stacksz'
- * @return: * :    One of `TRIGGER_BREAKPOINT_*' describing how execution
- *                 should continue once the breakpoint has been dealt with. */
+ *                The execution frame that triggered the breakpoint.
+ *                Anything and everything about the state described
+ *                within this frame is subject to change by this
+ *                function, including PC/SP, as well as the running
+ *                code itself.
+ *                 - The stack pointer is the stack location as
+ *                   it is at the breakpoint instruction, as well
+ *                   as the instruction following thereafter.
+ *                 - The instruction pointer points to the instruction
+ *                   following the breakpoint, meaning that no further
+ *                   adjustment is required if all that's supposed to
+ *                   happen is execution continuing normally.
+ *                 - The valid stack size is always stored in `cf_stacksz'
+ * @return: * :   One of `TRIGGER_BREAKPOINT_*' describing how execution
+ *                should continue once the breakpoint has been dealt with. */
 INTERN WUNUSED NONNULL((1)) int DCALL
 trigger_breakpoint(struct code_frame *__restrict frame) {
 	/* TODO: Add some sort of hook that allows for debugging. */

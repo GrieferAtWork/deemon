@@ -357,6 +357,16 @@ err:
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
+f_ctypes_union(size_t argc, DeeObject *const *argv) {
+	DeeObject *fields;
+	if (DeeArg_Unpack(argc, argv, "o:union", &fields))
+		goto err;
+	return (DREF DeeObject *)DeeStructType_FromSequence(NULL, fields, STRUCT_TYPE_FUNION);
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED DREF DeeObject *DCALL
 f_ctypes_bswap16(size_t argc, DeeObject *const *argv) {
 	uint16_t i;
 	if (DeeArg_Unpack(argc, argv, UNPu16 ":bswap16", &i))
@@ -444,6 +454,8 @@ err:
 PRIVATE DEFINE_CMETHOD(ctypes_sizeof, f_ctypes_sizeof);
 PRIVATE DEFINE_CMETHOD(ctypes_alignof, f_ctypes_alignof);
 PRIVATE DEFINE_CMETHOD(ctypes_intfor, f_ctypes_intfor);
+PRIVATE DEFINE_CMETHOD(ctypes_union, f_ctypes_union);
+#define ctypes_struct DeeStructType_Type
 
 PRIVATE DEFINE_CMETHOD(ctypes_bswap16, f_ctypes_bswap16);
 PRIVATE DEFINE_CMETHOD(ctypes_bswap32, f_ctypes_bswap32);
@@ -594,6 +606,122 @@ PRIVATE struct dex_symbol symbols[] = {
 	{ "Array", (DeeObject *)&DeeArray_Type },
 	{ "Struct", (DeeObject *)&DeeStruct_Type },
 	{ "Function", (DeeObject *)&DeeCFunction_Type },
+	{ "struct", (DeeObject *)&ctypes_struct },
+	{ "union", (DeeObject *)&ctypes_union },
+	/* TODO: There needs to be a way of deemon types to list additional base types.
+	 *       All of these extra types must be non-variable, and have an instance
+	 *       size equal to that of `Object' (iow: not add any of their own fields).
+	 *       They also must implement a no-args constructor (that is called when
+	 *       instances of relevant sub-class are created)
+	 * -> Once that is possible, ctypes integer types must derive frmo `Numeric from deemon'
+	 *
+	 * User-code must be able to specify multiple bases for a class (just implement this
+	 * as passing a tuple of types of the make-class opcode), with the following syntax:
+	 * >> // Order doesn't matter; the runtime will figure out which type needs to be
+	 * >> // the *true* base-type of `MyList', and if you try to sub-class from more
+	 * >> // than 1 type with an instance size greater than `Object', an exception will
+	 * >> // be thrown a runtime.
+	 * >> class MyList: List, Number {
+	 * >>     this = super; // This inherts the constructor from `List'
+	 * >>     foo() {
+	 * >>         // In user-types with a single base, this is `this as ActualBaseType'
+	 * >>         // In user-types with multiple bases, this is `this as MyList.__base__',
+	 * >>         // such that the actual typing of `super' will be left up to the runtime
+	 * >>         super.append(42);
+	 * >>     }
+	 * >> };
+	 *
+	 * This new feature will integrate into the MRO (method-resolution-order) such that
+	 * sub-classes inherit attributes in a depth-first order (i.e. the *true* base goes
+	 * first, followed by each of the inner-most secondary bases, as well as their bases
+	 * recursively, and so on, going up all the way to the top):
+	 * - type->ATTRIBUTES
+	 * - type->true_base->ATTRIBUTES      -- Recursive lookup here doesn't search extra bases
+	 * - type->extra_bases[0]->ATTRIBUTES
+	 * - type->extra_bases[1]->ATTRIBUTES
+	 * - type->extra_bases[2]->ATTRIBUTES
+	 * iow: Compared to the current implementation, attribute lookup in extra bases simply
+	 *      takes place _AFTER_ an attribute was searched for like they are already being
+	 *      search at the moment.
+	 *
+	 * Also note that extra bases are inherited recursively during type creation:
+	 * >> function createType(bases: {Type...}): Type {
+	 * >>     local trueBase = List(for (local base: bases) if (IS_TRUE_BASE(base)) base);
+	 * >>     if (!trueBase)
+	 * >>         trueBase = [bases.first];
+	 * >>     if (#trueBase > 1)
+	 * >>         throw ...;
+	 * >>     trueBase = trueBase.first;
+	 * >>     local extraBases = [];
+	 * >>     for (local extraBase: bases) {
+	 * >>         if (extraBase == trueBase)
+	 * >>             continue;
+	 * >>         if (extraBase in extraBases)
+	 * >>             continue;
+	 * >>         if (IS_TRUE_BASE(extraBase))
+	 * >>             throw ...; // More than 1 true base type
+	 * >>         extraBases.append(extraBase);
+	 * >>     }
+	 * >>     for (local base: bases) {
+	 * >>         // HINT: `base.__bases__' also includes extra bases
+	 * >>         //       that were linked to `base' when it was created
+	 * >>         for (local extraBase: base.__bases__) {
+	 * >>             if (extraBase !in extraBases)
+	 * >>                 extraBases.append(extraBase);
+	 * >>         }
+	 * >>     }
+	 * >>     // Note how the order of `extraBases' still depends
+	 * >>     // on the order of types in the caller-given `bases',
+	 * >>     // as well as the order of extra bases that were
+	 * >>     // specified when each of the caller-given types were
+	 * >>     // originally created
+	 * >>     // Additionally, one can specify a base that had already
+	 * >>     // been given earlier once again in order to increase
+	 * >>     // its visibility within the MRO-order.
+	 * >>     // Finally, `extraBases' contains _ALL_ extra bases,
+	 * >>     // such that attributes/operators defined by them are
+	 * >>     // always less important than those of the true base.
+	 * >>     return DO_CREATE_TYPE(trueBase: trueBase, extraBases: extraBases);
+	 * >> }
+	 *
+	 * XXX: Wouldn't it be better NOT to leave the decision of the true
+	 *      base up to the runtime? This seems like something that the
+	 *      user should specify explicitly, rather than be something
+	 *      that the runtime should determine implicitly.
+	 * >> class MyClass extends TrueBase implements ExtraBase1, ExtraBase2, ExtraBase3 {
+	 * >>     ...
+	 * >> }
+	 * I know, I know: java... But this sort of thing would make the most sense here.
+	 * ... Anyways: the core idea that types must be able to specify extra bases holds,
+	 *              and is something that needs to be implemented independently of how
+	 *              user-defined classes might interact with such a feature, meaning
+	 *              that the runtime part can (and must be) be implemented long before
+	 *              the user-code part can be.
+	 */
+
+	/* TODO: Both Pointer and LValue types need 1 sub-class each: RefPointer and RefLValue
+	 *       These sub-classes behave the same as the original Pointer/LValue-type, except
+	 *       that they don't have constructors, and instance have 1 additional field that
+	 *       follows after the underlying pointer: `DREF DeeObject *ob_ref; // [1..1]'.
+	 * This field is a reference to the owning object. These extra types are then used
+	 * whenever you do a ctypes operation where it is clear which object a pointer/lvalue
+	 * points into. e.g.:
+	 * >> union foo {
+	 * >>     .s = int32_t,
+	 * >>     .u = uint32_t,
+	 * >> };
+	 * >> local x = (foo){ .u = 0x80000000 };
+	 * >> local p1 = x.s.ptr;
+	 * >> local p2 = (foo){ .u = 0x40000000 }.s.ptr;
+	 * >> print p1.ind.hex();
+	 * >> print p2.ind.hex();
+	 * Here, both `p1' and `p2' are RefPointer-objects, with `p1' holding a reference
+	 * to `x', and `p2' holding a reference to `(foo){ .u = 0x40000000 }'. This way,
+	 * using ctypes in user-code becomes much easier, as there's no need to make sure
+	 * that the objects pointed-to by pointer/lvalue instances stay alive for as long
+	 * as the pointer/lvalue type does (Because currently, `(foo){ .u = 0x40000000 }'
+	 * has already been destroyed by the time `print p2.ind.hex();' tries to use it)
+	 */
 
 	/* A wrapper around the native shared-library loader. */
 	{ "ShLib", (DeeObject *)&DeeShlib_Type },

@@ -517,12 +517,12 @@ struct text_label {
 	union {
 #ifdef __INTELLISENSE__
 		     struct ast   *tl_expr; /* [0..1][valid_if(CHAIN(bs_swcase|s_cases))][const]
-		                             *  Expression of a case-label. NOTE: NULL for the default case.
-		                             *  NOTE: Always NULL in `bs_swdefl|s_default' labels. */
+		                             * Expression of a case-label. NOTE: NULL for the default case.
+		                             * NOTE: Always NULL in `bs_swdefl|s_default' labels. */
 #else /* __INTELLISENSE__ */
 		DREF struct ast   *tl_expr; /* [0..1][valid_if(CHAIN(bs_swcase|s_cases))][const]
-		                             *  Expression of a case-label. NOTE: NULL for the default case.
-		                             *  NOTE: Always NULL in `bs_swdefl|s_default' labels. */
+		                             * Expression of a case-label. NOTE: NULL for the default case.
+		                             * NOTE: Always NULL in `bs_swdefl|s_default' labels. */
 #endif /* !__INTELLISENSE__ */
 		struct TPPKeyword *tl_name; /* [1..1][valid_if(CHAIN(bs_lbl[*]))][const] Name of this label. */
 	}
@@ -562,9 +562,9 @@ struct symbol {
 #define SYMBOL_TYPE_CATTR  0x0006  /* Class attribute. */
 #define SYMBOL_TYPE_ALIAS  0x0007  /* An alias for a different symbol. */
 #define SYMBOL_TYPE_ARG    0x0008  /* An argument passed to a function.
-	                                * NOTE: `s_symid' is the argument index in `s_scope->s_base->bs_argv',
-	                                *        meaning it may also be referring to the varargs, or kwargs
-	                                *        special argument objects. */
+                                    * NOTE: `s_symid' is the argument index in `s_scope->s_base->bs_argv',
+                                    *        meaning it may also be referring to the varargs, or varkwds
+                                    *        special argument objects. */
 #define SYMBOL_TYPE_LOCAL  0x0009  /* A local symbol. */
 #define SYMBOL_TYPE_STACK  0x000a  /* A stack symbol. */
 #define SYMBOL_TYPE_STATIC 0x000b  /* A static symbol. */
@@ -580,14 +580,14 @@ struct symbol {
 	uint16_t             s_flag;   /* Symbol flags (Set of `SYMBOL_F*') */
 #define SYMBOL_FNORMAL   0x0000    /* Normal symbol flags. */
 #define SYMBOL_FWEAK     0x0001    /* The symbol is defined weakly and can be overwritten by explicit
-	                                * declarations, or turned into a non-weak symbol if used. */
+                                    * declarations, or turned into a non-weak symbol if used. */
 #define SYMBOL_FALLOC    0x0002    /* Used during assembly: the symbol has been allocated. */
 #define SYMBOL_FALLOCREF 0x0004    /* A reference ID for the symbol has been allocated. */
 #define SYMBOL_FFINAL    0x0010    /* The variable was declared as `final' */
 #define SYMBOL_FVARYING  0x0020    /* The variable was declared as `varying' */
 #define SYMBOL_FSTACK_NOUNBIND_OK 0x0100 /* FLAG: If the symbol appears in a `del' expression, and `sym_bound' is non-ZERO,
-	                                      *       still don't warn about the fact that a stack variable isn't being unbound,
-	                                      *       but is only being overwritten. */
+                                          *       still don't warn about the fact that a stack variable isn't being unbound,
+                                          *       but is only being overwritten. */
 	uint16_t             s_symid;  /* [valid_if(SYMBOL_FALLOC)] The dynamic ID allocated for the symbol.
 	                                *  - SYMBOL_TYPE_GLOBAL: GID of the exported symbol.
 	                                *  - SYMBOL_TYPE_EXTERN: MID of the imported module.

@@ -61,7 +61,7 @@ typedef DeeYieldFunctionObject         YFunction;
 
 PRIVATE WUNUSED NONNULL((1, 2, 4)) int DCALL
 lookup_code_info_in_class(DeeTypeObject *type,
-                          DeeCodeObject *self,
+                          DeeCodeObject *code,
                           DeeFunctionObject *function,
                           struct function_info *__restrict info) {
 	struct class_desc *my_class;
@@ -75,7 +75,7 @@ lookup_code_info_in_class(DeeTypeObject *type,
 		if (my_class->cd_members[addr] == (DeeObject *)function ||
 		    (my_class->cd_members[addr] &&
 		     DeeFunction_Check(my_class->cd_members[addr]) &&
-		     ((DeeFunctionObject *)my_class->cd_members[addr])->fo_code == self)) {
+		     DeeFunction_CODE(my_class->cd_members[addr]) == code)) {
 			atomic_rwlock_endread(&my_class->cd_lock);
 			for (i = 0; i <= desc->cd_iattr_mask; ++i) {
 				struct class_attribute *attr;
@@ -150,9 +150,9 @@ lookup_code_info_in_class(DeeTypeObject *type,
 }
 
 PRIVATE WUNUSED NONNULL((1, 3)) int DCALL
-lookup_code_info(DeeCodeObject *self,
-                 DeeFunctionObject *function,
-                 struct function_info *__restrict info) {
+lookup_code_info(/*[in]*/ DeeCodeObject *code,
+                 /*[in]*/ DeeFunctionObject *function,
+                 /*[out]*/ struct function_info *__restrict info) {
 	DeeModuleObject *module;
 	uint16_t addr;
 	int result;
@@ -163,7 +163,7 @@ lookup_code_info(DeeCodeObject *self,
 	info->fi_getset = (uint16_t)-1;
 
 	/* Step #1: Search the code object's module for the given `function' */
-	module = self->co_module;
+	module = code->co_module;
 	if unlikely(!module)
 		goto without_module;
 	if unlikely(DeeInteractiveModule_Check(module))
@@ -174,7 +174,7 @@ lookup_code_info(DeeCodeObject *self,
 			continue;
 		if (module->mo_globalv[addr] == (DeeObject *)function ||
 		    (DeeFunction_Check(module->mo_globalv[addr]) &&
-		     ((DeeFunctionObject *)module->mo_globalv[addr])->fo_code == self)) {
+		     DeeFunction_CODE(module->mo_globalv[addr]) == code)) {
 			struct module_symbol *function_symbol;
 			rwlock_endread(&module->mo_lock);
 			function_symbol = DeeModule_GetSymbolID(module, addr);
@@ -206,7 +206,7 @@ lookup_code_info(DeeCodeObject *self,
 			continue;
 		Dee_Incref(glob);
 		rwlock_endread(&module->mo_lock);
-		result = lookup_code_info_in_class((DeeTypeObject *)glob, self, function, info);
+		result = lookup_code_info_in_class((DeeTypeObject *)glob, code, function, info);
 		Dee_Decref(glob);
 		if (result <= 0)
 			return result;
@@ -217,7 +217,7 @@ without_module:
 	if (function) {
 		/* Search though the function's references for class types, and
 		 * check if the given code object may be referring to one of them. */
-		uint16_t i, count = self->co_refc;
+		uint16_t i, count = code->co_refc;
 		for (i = 0; i < count; ++i) {
 			DeeObject *ref = function->fo_refv[i];
 			if (!ref)
@@ -226,12 +226,11 @@ without_module:
 				continue;
 			if (!DeeType_IsClass(ref))
 				continue;
-			result = lookup_code_info_in_class((DeeTypeObject *)ref, self, function, info);
+			result = lookup_code_info_in_class((DeeTypeObject *)ref, code, function, info);
 			if (result <= 0)
 				return result;
 		}
 	}
-
 
 	/* If we still haven't found anything about the function it's
 	 * probably been locally created as part of a caller's stack-frame.
@@ -241,7 +240,7 @@ without_module:
 	 * we can do is to check what kind of DDI information is provided by
 	 * the function's code. */
 	{
-		char *name = DeeCode_NAME(self);
+		char *name = DeeCode_NAME(code);
 		if (name) {
 			/* Well... At least we got the name. - That's something. */
 			info->fi_name = (DREF DeeStringObject *)DeeString_New(name);
@@ -260,18 +259,17 @@ err:
 
 PUBLIC WUNUSED NONNULL((1, 2)) int DCALL
 DeeCode_GetInfo(/*Code*/ DeeObject *__restrict self,
-                struct function_info *__restrict info) {
+                /*[out]*/ struct function_info *__restrict info) {
 	ASSERT_OBJECT_TYPE_EXACT(self, &DeeCode_Type);
 	return lookup_code_info((DeeCodeObject *)self, NULL, info);
 }
 
 PUBLIC WUNUSED NONNULL((1, 2)) int DCALL
 DeeFunction_GetInfo(/*Function*/ DeeObject *__restrict self,
-                    struct function_info *__restrict info) {
-	ASSERT_OBJECT_TYPE_EXACT(self, &DeeFunction_Type);
-	return lookup_code_info(((DeeFunctionObject *)self)->fo_code,
-	                        (DeeFunctionObject *)self,
-	                        info);
+                    /*[out]*/ struct function_info *__restrict info) {
+	DeeFunctionObject *me = (DeeFunctionObject *)self;
+	ASSERT_OBJECT_TYPE_EXACT(me, &DeeFunction_Type);
+	return lookup_code_info(me->fo_code, me, info);
 }
 
 
@@ -279,24 +277,19 @@ DeeFunction_GetInfo(/*Function*/ DeeObject *__restrict self,
 
 
 PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-DeeFunction_New(DeeObject *code, size_t refc,
+DeeFunction_New(DeeObject *code_, size_t refc,
                 DeeObject *const *refv) {
 	DREF Function *result;
-	size_t i;
+	DeeCodeObject *code = (DeeCodeObject *)code_;
 	ASSERT_OBJECT_TYPE_EXACT(code, &DeeCode_Type);
-	ASSERT(((DeeCodeObject *)code)->co_refc == refc);
+	ASSERT(code->co_refc == refc);
 	result = (DREF Function *)DeeObject_Malloc(offsetof(Function, fo_refv) +
 	                                           (refc * sizeof(DREF DeeObject *)));
 	if unlikely(!result)
 		goto done;
-	result->fo_code = (DREF DeeCodeObject *)code;
-	for (i = 0; i < refc; ++i) {
-		DREF DeeObject *obj = refv[i];
-		ASSERT_OBJECT(obj);
-		result->fo_refv[i] = obj;
-		Dee_Incref(obj);
-	}
+	result->fo_code = code;
 	Dee_Incref(code);
+	Dee_Movrefv(result->fo_refv, refv, refc);
 	DeeObject_Init(result, &DeeFunction_Type);
 done:
 	return (DREF DeeObject *)result;
@@ -304,38 +297,40 @@ done:
 
 
 INTERN WUNUSED NONNULL((1, 3)) DREF DeeObject *DCALL
-DeeFunction_NewInherited(DeeObject *code, size_t refc,
+DeeFunction_NewInherited(DeeObject *code_, size_t refc,
                          /*inherit(on_success)*/ DREF DeeObject *const *__restrict refv) {
+	DeeCodeObject *code = (DeeCodeObject *)code_;
 	DREF Function *result;
 	ASSERT_OBJECT_TYPE_EXACT(code, &DeeCode_Type);
-	ASSERTF(((DeeCodeObject *)code)->co_refc == refc,
-	        "((DeeCodeObject *)code)->co_refc = %I16u\n"
-	        "refc                             = %I16u\n"
-	        "name                             = %s\n",
-	        ((DeeCodeObject *)code)->co_refc, refc,
+	ASSERTF(code->co_refc == refc,
+	        "code->co_refc = %I16u\n"
+	        "refc          = %I16u\n"
+	        "name          = %s\n",
+	        code->co_refc, refc,
 	        DeeCode_NAME(code));
 	result = (DREF Function *)DeeObject_Malloc(offsetof(Function, fo_refv) +
 	                                           (refc * sizeof(DREF DeeObject *)));
 	if unlikely(!result)
 		goto done;
-	result->fo_code = (DREF DeeCodeObject *)code;
+	result->fo_code = code;
+	Dee_Incref(code);
 	memcpyc(result->fo_refv, refv, refc,
 	        sizeof(DREF DeeObject *));
-	Dee_Incref(code);
 	DeeObject_Init(result, &DeeFunction_Type);
 done:
 	return (DREF DeeObject *)result;
 }
 
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-DeeFunction_NewNoRefs(DeeObject *__restrict code) {
+DeeFunction_NewNoRefs(DeeObject *__restrict code_) {
+	DeeCodeObject *code = (DeeCodeObject *)code_;
 	DREF Function *result;
 	ASSERT_OBJECT_TYPE_EXACT(code, &DeeCode_Type);
-	ASSERT(((DeeCodeObject *)code)->co_refc == 0);
+	ASSERT(code->co_refc == 0);
 	result = (DREF Function *)DeeObject_Malloc(offsetof(Function, fo_refv));
 	if unlikely(!result)
 		goto done;
-	result->fo_code = (DREF DeeCodeObject *)code;
+	result->fo_code = code;
 	Dee_Incref(code);
 	DeeObject_Init(result, &DeeFunction_Type);
 done:

@@ -172,9 +172,10 @@ DeeStructType_FromSequence(DeeObject *name,
                            unsigned int flags) {
 	DREF DeeStructTypeObject *result;
 	size_t i, field_count;
+
+	/* Optimization for fast sequence types. */
 	field_count = DeeFastSeq_GetSize(fields);
 	if (field_count != DEE_FASTSEQ_NOTFAST) {
-		/* Optimization for fast sequence types. */
 		size_t result_mask = 1;
 		size_t min_align = 1, instance_size = 0;
 		while (result_mask <= field_count)
@@ -196,6 +197,7 @@ DeeStructType_FromSequence(DeeObject *name,
 			Dee_Decref(elem);
 			if unlikely(temp)
 				goto err_r;
+
 			/* Validate that this is a string/struct_type-pair. */
 			if (DeeObject_AssertTypeExact(field_name_and_type[0], &DeeString_Type) ||
 			    DeeObject_AssertType(field_name_and_type[1], &DeeSType_Type)) {
@@ -238,6 +240,7 @@ DeeStructType_FromSequence(DeeObject *name,
 				break;
 			}
 		}
+
 		/* Fill in size & alignment info. */
 		result->st_base.st_sizeof = instance_size;
 		result->st_base.st_align  = min_align;
@@ -252,14 +255,16 @@ DeeStructType_FromSequence(DeeObject *name,
 		if unlikely(!result)
 			goto err;
 	}
+
 	/* Fill in remaining fields and start tracking the new struct type. */
 	Dee_Incref((DeeObject *)&DeeStruct_Type);
 	rwlock_cinit(&result->st_base.st_cachelock);
 	result->st_base.st_base.tp_base  = (DREF DeeTypeObject *)&DeeStruct_Type;
 	result->st_base.st_base.tp_name  = DeeStruct_Type.st_base.st_base.tp_name;
 	result->st_base.st_base.tp_flags = TP_FTRUNCATE | TP_FINHERITCTOR | TP_FHEAP | TP_FMOVEANY;
+
+	/* Set the name of the new struct-type. */
 	if (name) {
-		/* Set the name of the new struct-type. */
 		result->st_base.st_base.tp_name = DeeString_STR(name);
 		result->st_base.st_base.tp_flags |= TP_FNAMEOBJECT;
 		Dee_Incref(name);
@@ -504,6 +509,7 @@ struct_getattr(DeeStructTypeObject *__restrict tp_self,
 			continue;
 		if (!DeeString_EqualsSTR(field->sf_name, name))
 			continue;
+
 		/* Found it! (return an l-value to the field in question) */
 		result = DeeObject_MALLOC(struct lvalue_object);
 		if unlikely(!result)
@@ -534,6 +540,7 @@ struct_delattr(DeeStructTypeObject *__restrict tp_self,
 			continue;
 		if (!DeeString_EqualsSTR(field->sf_name, name))
 			continue;
+
 		/* Found it! (clear out the memory of this object) */
 		dst  = (uint8_t *)((uintptr_t)self + field->sf_offset);
 		size = DeeSType_Sizeof(field->sf_type->lt_orig);
@@ -693,8 +700,9 @@ struct_init(DeeStructTypeObject *__restrict tp_self,
 	DeeObject *value = Dee_None;
 	if (DeeArg_Unpack(argc, argv, "|o:struct", &value))
 		goto err;
+
 	/* Do an initial assignment using the initializer. */
-	bzero(self, tp_self->st_base.st_sizeof);
+	CTYPES_FAULTPROTECT(bzero(self, tp_self->st_base.st_sizeof), goto err);
 	return struct_assign(tp_self, self, value);
 err:
 	return -1;

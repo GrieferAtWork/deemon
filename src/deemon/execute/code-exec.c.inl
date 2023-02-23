@@ -848,6 +848,7 @@ DeeCode_ExecFrameSafe(struct code_frame *__restrict frame)
 	 * >>                         // `y' share the same memory location with `x', even though
 	 * >>                         // The C standard 100% allows a compiler to do this.
 	 * >> }
+	 *
 	 * From what I understand, Microsoft actually has to do this due to some
 	 * crappy, but expensive and powerful programs that get compiled using
 	 * their compiler (*cough* NT Kernel *cough*), which actually need this
@@ -861,7 +862,8 @@ DeeCode_ExecFrameSafe(struct code_frame *__restrict frame)
 	 * >>     pMessage = cBuffer; // WRONG!!! WRONG!!! WRONG!!! If you do this, you're an idiot
 	 * >> }
 	 * >> LogSystemError(pMessage);
-	 * Anyways. Since I can't change what has already been decided, and since this
+	 *
+	 * Anyways: since I can't change what has already been decided, and since this
 	 * ERROR (Yes, I'd call this an actual compiler Error) probably will never get
 	 * fixed because MS is way too stuck in its ways, the only thing we can do is
 	 * try to use the same variable for all the usage instances of `prefix_ob'
@@ -899,7 +901,7 @@ DeeCode_ExecFrameSafe(struct code_frame *__restrict frame)
 	}
 
 #ifdef CONFIG_HAVE_EXEC_ALTSTACK
-	if (IS_ALTSTACK_PERIOD(this_thread->t_execsz)) {
+	if unlikely(IS_ALTSTACK_PERIOD(this_thread->t_execsz)) {
 		if (this_thread->t_exec == frame)
 			goto inc_execsz_start;
 		frame->cf_prev      = this_thread->t_exec;
@@ -945,7 +947,7 @@ inc_execsz_start:
 		 *   However in the time it took for us to register our code-frame,
 		 *   another set went ahead and set the assembly flag after failing
 		 *   to find any other thread actively executing said code object.
-		 *  (as usually indicated by the code object being apart of the
+		 *   (as usually indicated by the code object being apart of the
 		 *   frame-stack of another thread, which it hadn't yet become
 		 *   apart of in our thread).
 		 *   Therefor, now that the assembly flag has been set, we must
@@ -993,9 +995,9 @@ inc_execsz_start:
 #define PUSH(ob)              (*sp = (ob), ++sp)
 #define PUSHREF(ob)           (*sp = (ob), Dee_Incref(*sp), ++sp)
 #define STACK_BEGIN           frame->cf_stack
-#define STACK_END             (frame->cf_stack+code->co_framesize)
+#define STACK_END             (frame->cf_stack + code->co_framesize)
 #define STACKUSED             (sp - frame->cf_stack)
-#define STACKPREALLOC         ((uint16_t)((code->co_framesize/sizeof(DeeObject *))-code->co_localc))
+#define STACKPREALLOC         ((uint16_t)((code->co_framesize / sizeof(DeeObject *)) - code->co_localc))
 #ifdef USE_SWITCH
 #define RAW_TARGET2(op, _op) case op&0xff: target##_op:
 #else /* USE_SWITCH */
@@ -1307,8 +1309,8 @@ jump_16:
 assert_ip_bounds:
 			/* Raise an error if the new PC has been displaced out-of-bounds. */
 			if unlikely(ip.ptr < code->co_code ||
-				         ip.ptr >= code->co_code + code->co_codebytes)
-			goto err_invalid_ip;
+			            ip.ptr >= code->co_code + code->co_codebytes)
+				goto err_invalid_ip;
 #else /* EXEC_SAFE */
 			ASSERT(ip.ptr >= code->co_code);
 			ASSERT(ip.ptr < code->co_code + code->co_codebytes);
@@ -1734,9 +1736,8 @@ do_push_arg:
 					frame->cf_vargs = (DREF DeeTupleObject *)Dee_EmptyTuple;
 					Dee_Incref(Dee_EmptyTuple);
 				} else {
-					frame->cf_vargs = (DREF DeeTupleObject *)
-					DeeTuple_NewVector((size_t)(frame->cf_argc - code->co_argc_max),
-					                   frame->cf_argv + code->co_argc_max);
+					frame->cf_vargs = (DREF DeeTupleObject *)DeeTuple_NewVector((size_t)(frame->cf_argc - code->co_argc_max),
+					                                                            frame->cf_argv + code->co_argc_max);
 					if unlikely(!frame->cf_vargs)
 						HANDLE_EXCEPT();
 				}
@@ -3218,14 +3219,17 @@ do_setitem_c:
 		/* Breakpoint. */
 		TARGET(ASM_BREAKPOINT, -0, +0) {
 			int error;
+
 			/* Safe the instruction + stack-pointer. */
 			frame->cf_ip = ip.ptr;
 			frame->cf_sp = sp;
 #ifdef EXEC_FAST
 			frame->cf_stacksz = STACKPREALLOC;
 #endif /* EXEC_FAST */
+
 			/* Trigger a breakpoint. */
 			error = trigger_breakpoint(frame);
+
 			/* _always_ load new PC/SP from the frame to ensure that we are in a
 			 * consistent state before handling potential exception, or moving on.
 			 * After all: The purpose of this instruction is to allow some external
@@ -3233,7 +3237,7 @@ do_setitem_c:
 			 *            raising an exception, or passing control back to running code.
 			 * HINT: The idea for breakpoints is for some utility to replace opcodes
 			 *       that the runtime should pause at with `ASM_BREAKPOINT' instructions,
-			 *       causing it to halt and pass control over to said utility with
+			 *       causing it to halt and pass control over to said utility which
 			 *       will then be able to restore the original byte that was replaced
 			 *       with the breakpoint instruction.
 			 *    >> Using this fairly simple trick, it is even possible to allow for 
@@ -3246,6 +3250,7 @@ do_setitem_c:
 			 *       the stack to see where they will branch to! */
 			sp     = frame->cf_sp;
 			ip.ptr = frame->cf_ip;
+
 			/* Re-load the effective code object, allowing a
 			 * breakpoint handler to exchange the running code.
 			 * This can be happen if the breakpoint handler is supposed
@@ -3257,6 +3262,7 @@ do_setitem_c:
 			 * code, essentially giving even more freedom by literally
 			 * exchanging the assembly that should be executing. */
 			code = frame->cf_func->fo_code;
+
 			/* Check if we're supposed to handle an exception now. */
 			switch (error) {
 
@@ -3309,10 +3315,13 @@ do_setitem_c:
 				--this_thread->t_execsz;
 				this_thread->t_exec = frame->cf_prev;
 				frame->cf_prev      = CODE_FRAME_NOT_EXECUTING;
+
 				/* Indicate that the stack hasn't been allocated dynamically. */
 				frame->cf_stacksz = 0;
+
 				/* Continue execution in safe-mode. */
 				DeeCode_ExecFrameSafe(frame);
+
 				/* Once safe-mode execution finishes, propagate it's return value
 				 * and clean up any additional exception that we've raised before. */
 				goto end_nounhook;
@@ -3553,8 +3562,8 @@ do_callattr_c_seq:
 		}
 
 		RAW_TARGET(ASM_CALLATTR_C_MAP) {
+			USING_PREFIX_OBJECT
 			DREF DeeObject *callback_result, **new_sp;
-			DREF DeeObject *shared_map;
 			imm_val = READ_imm8();
 do_callattr_c_map:
 			imm_val2 = READ_imm8();
@@ -3572,26 +3581,26 @@ do_callattr_c_map:
 					Dee_Decref(imm_name);
 					goto err_requires_string;
 				}
-				shared_map = DeeSharedMap_NewShared(imm_val2, (DREF DeeSharedItem *)new_sp);
-				if unlikely(!shared_map) {
+				prefix_ob = DeeSharedMap_NewShared(imm_val2, (DREF DeeSharedItem *)new_sp);
+				if unlikely(!prefix_ob) {
 					Dee_Decref(imm_name);
 					HANDLE_EXCEPT();
 				}
 				sp              = new_sp;
 				callback_result = DeeObject_CallAttr(new_sp[-1], imm_name, 1,
-				                                     (DeeObject **)&shared_map);
-				DeeSharedMap_Decref(shared_map);
+				                                     (DeeObject **)&prefix_ob);
+				DeeSharedMap_Decref(prefix_ob);
 				Dee_Decref(imm_name);
 			}
 #else /* EXEC_SAFE */
 			ASSERT_STRING(CONSTimm);
-			shared_map = DeeSharedMap_NewShared(imm_val2, (DREF DeeSharedItem *)new_sp);
-			if unlikely(!shared_map)
+			prefix_ob = DeeSharedMap_NewShared(imm_val2, (DREF DeeSharedItem *)new_sp);
+			if unlikely(!prefix_ob)
 				HANDLE_EXCEPT();
 			sp              = new_sp;
 			callback_result = DeeObject_CallAttr(new_sp[-1], CONSTimm, 1,
-			                                     (DeeObject **)&shared_map);
-			DeeSharedMap_Decref(shared_map);
+			                                     (DeeObject **)&prefix_ob);
+			DeeSharedMap_Decref(prefix_ob);
 #endif /* !EXEC_SAFE */
 			if unlikely(!callback_result)
 				HANDLE_EXCEPT();
@@ -4223,62 +4232,50 @@ do_setattr_this_c:
 
 				RAW_TARGET(ASM_CALL_SEQ) {
 					/* Sequence constructor invocation (Implemented using `_SharedVector'). */
+					USING_PREFIX_OBJECT
 					uint8_t n_args = READ_imm8();
 					DREF DeeObject *callback_result;
-#ifdef NEED_UNIVERSAL_PREFIX_OB_WORKAROUND
-#define shared_vector prefix_ob
-#else /* NEED_UNIVERSAL_PREFIX_OB_WORKAROUND */
-					DREF DeeObject *shared_vector;
-#endif /* !NEED_UNIVERSAL_PREFIX_OB_WORKAROUND */
 					ASSERT_USAGE(-((int)n_args + 1), +1);
-					shared_vector = DeeSharedVector_NewShared(n_args, sp - n_args);
-					if unlikely(!shared_vector)
+					prefix_ob = DeeSharedVector_NewShared(n_args, sp - n_args);
+					if unlikely(!prefix_ob)
 						HANDLE_EXCEPT();
 					sp -= n_args; /* These operands have been inherited `DeeSharedVector_NewShared' */
 					/* Invoke the object that is now located in TOP
-					 * For this invocation, we pass only a single argument `shared_vector' */
-					callback_result = DeeObject_Call(TOP, 1, (DeeObject **)&shared_vector);
-					DeeSharedVector_Decref(shared_vector);
+					 * For this invocation, we pass only a single argument `prefix_ob' */
+					callback_result = DeeObject_Call(TOP, 1, (DeeObject **)&prefix_ob);
+					DeeSharedVector_Decref(prefix_ob);
 					if unlikely(!callback_result)
 						HANDLE_EXCEPT();
 					/* Replace the function that was called with its return value. */
 					Dee_Decref(TOP);
 					TOP = callback_result;
 					DISPATCH();
-#ifdef NEED_UNIVERSAL_PREFIX_OB_WORKAROUND
-#undef shared_vector
-#endif /* !NEED_UNIVERSAL_PREFIX_OB_WORKAROUND */
 				}
 
 				RAW_TARGET(ASM_CALL_MAP) {
 					/* Dict-style sequence constructor invocation (Implemented using `_sharedkeyvector'). */
+					USING_PREFIX_OBJECT
 					uint8_t n_args = READ_imm8();
 					DREF DeeObject *callback_result;
-#ifdef NEED_UNIVERSAL_PREFIX_OB_WORKAROUND
-#define shared_key_vector prefix_ob
-#else /* NEED_UNIVERSAL_PREFIX_OB_WORKAROUND */
-					DREF DeeObject *shared_key_vector;
-#endif /* !NEED_UNIVERSAL_PREFIX_OB_WORKAROUND */
 					ASSERT_USAGE(-(((int)n_args * 2) + 1), +1);
+
 					/* NOTE: The vector of DeeSharedItem structures has
 					 *       previously been constructed on the stack. */
-					shared_key_vector = DeeSharedMap_NewShared(n_args, (DeeSharedItem *)(sp - n_args * 2));
-					if unlikely(!shared_key_vector)
+					prefix_ob = DeeSharedMap_NewShared(n_args, (DeeSharedItem *)(sp - n_args * 2));
+					if unlikely(!prefix_ob)
 						HANDLE_EXCEPT();
 					sp -= n_args * 2; /* These operands have been inherited `DeeSharedVector_NewShared' */
+
 					/* Invoke the object that is now located in TOP
-					 * For this invocation, we pass only a single argument `shared_key_vector' */
-					callback_result = DeeObject_Call(TOP, 1, (DeeObject **)&shared_key_vector);
-					DeeSharedMap_Decref(shared_key_vector);
+					 * For this invocation, we pass only a single argument `prefix_ob' */
+					callback_result = DeeObject_Call(TOP, 1, (DeeObject **)&prefix_ob);
+					DeeSharedMap_Decref(prefix_ob);
 					if unlikely(!callback_result)
 						HANDLE_EXCEPT();
 					/* Replace the function that was called with its return value. */
 					Dee_Decref(TOP);
 					TOP = callback_result;
 					DISPATCH();
-#ifdef NEED_UNIVERSAL_PREFIX_OB_WORKAROUND
-#undef shared_key_vector
-#endif /* !NEED_UNIVERSAL_PREFIX_OB_WORKAROUND */
 				}
 
 				TARGET(ASM_THISCALL_TUPLE, -3, +1) {
@@ -6633,7 +6630,7 @@ do_prefix_push_arg:
 				PREFIX_TARGET(ASM_PUSH_VARARGS) {
 					/* Special case: Varargs. */
 #ifdef EXEC_SAFE
-					if (!(code->co_flags & CODE_FVARARGS))
+					if unlikely(!(code->co_flags & CODE_FVARARGS))
 						goto err_requires_varargs_code;
 #else /* EXEC_SAFE */
 					ASSERT(code->co_flags & CODE_FVARARGS);
@@ -6643,9 +6640,8 @@ do_prefix_push_arg:
 							frame->cf_vargs = (DREF DeeTupleObject *)Dee_EmptyTuple;
 							Dee_Incref(Dee_EmptyTuple);
 						} else {
-							frame->cf_vargs = (DREF DeeTupleObject *)
-							DeeTuple_NewVector((size_t)(frame->cf_argc - code->co_argc_max),
-							                   frame->cf_argv + code->co_argc_max);
+							frame->cf_vargs = (DREF DeeTupleObject *)DeeTuple_NewVector((size_t)(frame->cf_argc - code->co_argc_max),
+							                                                            frame->cf_argv + code->co_argc_max);
 							if unlikely(!frame->cf_vargs)
 								HANDLE_EXCEPT();
 						}

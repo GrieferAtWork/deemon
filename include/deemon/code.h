@@ -724,7 +724,7 @@ struct Dee_code_frame {
 	                                       * NOTE: When `cf_stacksz != 0', then this vector is allocated on the heap. */
 	DeeObject               **cf_sp;      /* [?..1][1..1] Pointer to the location where the next-to-be pushed object is stored.
 	                                       * NOTE: The stack pointer grows UPWARDS, meaning that
-	                                       *       the valid object-range is `cf_stack...cf_sp' */
+	                                       *       the used object-range is `[cf_stack, cf_sp)' */
 	Dee_instruction_t        *cf_ip;      /* [1..1][in(cf_func->fo_code->co_code)] Current instruction pointer. */
 	DREF struct Dee_tuple_object
 	                         *cf_vargs;   /* [0..1][lock(write_once)] Saved var-args object. */
@@ -734,7 +734,7 @@ struct Dee_code_frame {
 	                                       *        The caller of the frame should pre-initialize this field to NULL. */
 	uint16_t                  cf_stacksz; /* [valid_if(DeeCode_ExecFrameSafe)] Size of the heap-allocated stack.
 	                                       * HINT: This field is not used by code running in fast mode
-	                                       *      (aka. Code without the `CODE_FASSEMBLY' flag set). */
+	                                       *       (aka. Code without the `CODE_FASSEMBLY' flag set). */
 	uint16_t                  cf_flags;   /* Frame flags (Only used by yield-function-iterators; set of `CODE_F*') */
 #if __SIZEOF_POINTER__ > 4
 	uint16_t                  cf_padding[2]; /* ... */
@@ -803,21 +803,21 @@ DeeCode_ExecFrameSafeAltStack(struct Dee_code_frame *__restrict frame);
  * NOTE: This function is called to deal with an encounter
  *       of a breakpoint during execution of code.
  * @param: frame: [in|out][OVERRIDE(->cf_result, DREF)]
- *                 The execution frame that triggered the breakpoint.
- *                 Anything and everything about the state described
- *                 within this frame is subject to change by this
- *                 function, including PC/SP, as well as the running
- *                 code itself.
- *                  - The stack pointer is the stack location as
- *                    it is at the breakpoint instruction, as well
- *                    as the instruction following thereafter.
- *                  - The instruction pointer points to the instruction
- *                    following the breakpoint, meaning that no further
- *                    adjustment is required if all that's supposed to
- *                    happen is execution continuing normally.
- *                  - The valid stack size is always stored in `cf_stacksz'
- * @return: * :    One of `TRIGGER_BREAKPOINT_*' describing how execution
- *                 should continue once the breakpoint has been dealt with. */
+ *                The execution frame that triggered the breakpoint.
+ *                Anything and everything about the state described
+ *                within this frame is subject to change by this
+ *                function, including PC/SP, as well as the running
+ *                code itself.
+ *                 - The stack pointer is the stack location as
+ *                   it is at the breakpoint instruction, as well
+ *                   as the instruction following thereafter.
+ *                 - The instruction pointer points to the instruction
+ *                   following the breakpoint, meaning that no further
+ *                   adjustment is required if all that's supposed to
+ *                   happen is execution continuing normally.
+ *                 - The valid stack size is always stored in `cf_stacksz'
+ * @return: * :   One of `TRIGGER_BREAKPOINT_*' describing how execution
+ *                should continue once the breakpoint has been dealt with. */
 INTDEF WUNUSED NONNULL((1)) int DCALL
 trigger_breakpoint(struct Dee_code_frame *__restrict frame);
 #endif /* CONFIG_BUILDING_DEEMON */
@@ -853,7 +853,7 @@ trigger_breakpoint(struct Dee_code_frame *__restrict frame);
                                           * `ITER_DONE' after decref()-ing `cf_result' if it is
                                           * neither `NULL' nor `ITER_DONE'
                                           * WARNING: When this code is used to indicate the end of an iterator,
-                                          *          it should be noted that attempting to yielding the iterator
+                                          *          it should be noted that attempting to yield the iterator
                                           *          again will once again execute code, potentially leading to
                                           *          a scenario where an iterator that already claimed to have
                                           *          been exhausted can once again be spun. */
@@ -868,8 +868,8 @@ struct Dee_function_object {
 	DREF DeeCodeObject                       *fo_code;  /* [1..1][const] Associated code object. */
 	COMPILER_FLEXIBLE_ARRAY(DREF DeeObject *, fo_refv); /* [1..1][const][fo_code->co_refc] Vector of referenced objects. */
 };
-#define DeeFunction_CODE(x) ((DeeFunctionObject *)Dee_REQUIRES_OBJECT(x))->fo_code
-#define DeeFunction_REFS(x) ((DeeFunctionObject *)Dee_REQUIRES_OBJECT(x))->fo_refv
+#define DeeFunction_CODE(x) ((DeeFunctionObject const *)Dee_REQUIRES_OBJECT(x))->fo_code
+#define DeeFunction_REFS(x) ((DeeFunctionObject const *)Dee_REQUIRES_OBJECT(x))->fo_refv
 
 #define Dee_DEFINE_FUNCTION(name, fo_code_, fo_refc_, ...) \
 	struct {                                               \
@@ -925,12 +925,12 @@ struct Dee_yield_function_iterator_object {
 
 DDATDEF DeeTypeObject DeeFunction_Type;              /* foo; */
 DDATDEF DeeTypeObject DeeYieldFunction_Type;         /* foo(); */
-DDATDEF DeeTypeObject DeeYieldFunctionIterator_Type; /* foo().operator __iterself__(); */
-#define DeeFunction_Check(ob)                   DeeObject_InstanceOfExact(ob, &DeeFunction_Type) /* `function' is final */
+DDATDEF DeeTypeObject DeeYieldFunctionIterator_Type; /* foo().operator iter(); */
+#define DeeFunction_Check(ob)                   DeeObject_InstanceOfExact(ob, &DeeFunction_Type) /* `Function' is final */
 #define DeeFunction_CheckExact(ob)              DeeObject_InstanceOfExact(ob, &DeeFunction_Type)
-#define DeeYieldFunction_Check(ob)              DeeObject_InstanceOfExact(ob, &DeeYieldFunction_Type) /* `yield_function' is final */
+#define DeeYieldFunction_Check(ob)              DeeObject_InstanceOfExact(ob, &DeeYieldFunction_Type) /* `YieldFunction' is final */
 #define DeeYieldFunction_CheckExact(ob)         DeeObject_InstanceOfExact(ob, &DeeYieldFunction_Type)
-#define DeeYieldFunctionIterator_Check(ob)      DeeObject_InstanceOfExact(ob, &DeeYieldFunctionIterator_Type) /* `yield_function.Iterator' is final */
+#define DeeYieldFunctionIterator_Check(ob)      DeeObject_InstanceOfExact(ob, &DeeYieldFunctionIterator_Type) /* `YieldFunction.Iterator' is final */
 #define DeeYieldFunctionIterator_CheckExact(ob) DeeObject_InstanceOfExact(ob, &DeeYieldFunctionIterator_Type)
 
 
@@ -962,15 +962,23 @@ struct Dee_function_info {
  * @return: -1: An error occurred. */
 DFUNDEF WUNUSED NONNULL((1, 2)) int DCALL
 DeeFunction_GetInfo(/*Function*/ DeeObject *__restrict self,
-                    struct Dee_function_info *__restrict info);
+                    /*[out]*/ struct Dee_function_info *__restrict info);
 DFUNDEF WUNUSED NONNULL((1, 2)) int DCALL
 DeeCode_GetInfo(/*Code*/ DeeObject *__restrict self,
-                struct Dee_function_info *__restrict info);
+                /*[out]*/ struct Dee_function_info *__restrict info);
 
 
 
 
-#ifdef CONFIG_BUILDING_DEEMON
+#ifndef CONFIG_BUILDING_DEEMON
+#define DeeFunction_NewNoRefs(code)                            DeeFunction_New(code, 0, NULL)
+#define DeeFunction_ThisCall(self, this_arg, argc, argv)       DeeObject_ThisCall((DeeObject *)Dee_REQUIRES_OBJECT(self), this_arg, argc, argv)
+#define DeeFunction_ThisCallKw(self, this_arg, argc, argv, kw) DeeObject_ThisCallKw((DeeObject *)Dee_REQUIRES_OBJECT(self), this_arg, argc, argv, kw)
+#define DeeFunction_CallTuple(self, args)                      DeeObject_CallTuple((DeeObject *)Dee_REQUIRES_OBJECT(self), args)
+#define DeeFunction_CallTupleKw(self, args, kw)                DeeObject_CallTupleKw((DeeObject *)Dee_REQUIRES_OBJECT(self), args, kw)
+#define DeeFunction_ThisCallTuple(self, this_arg, args)        DeeObject_ThisCallTuple((DeeObject *)Dee_REQUIRES_OBJECT(self), this_arg, args)
+#define DeeFunction_ThisCallTupleKw(self, this_arg, args, kw)  DeeObject_ThisCallTupleKw((DeeObject *)Dee_REQUIRES_OBJECT(self), this_arg, args, kw)
+#else /* !CONFIG_BUILDING_DEEMON */
 INTDEF WUNUSED NONNULL((1, 3)) DREF DeeObject *DCALL
 DeeFunction_NewInherited(DeeObject *code, size_t refc,
                          /*inherit(on_success)*/ DREF DeeObject *const *__restrict refv);
@@ -981,12 +989,10 @@ DeeFunction_NewNoRefs(DeeObject *__restrict code);
 /* Optimized operator for calling a `function' object using the `thiscall' calling convention.
  * NOTE: Potentially required conversions are performed by this function automatically! */
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-DeeFunction_ThisCall(DeeFunctionObject *self,
-                     DeeObject *this_arg,
+DeeFunction_ThisCall(DeeFunctionObject *self, DeeObject *this_arg,
                      size_t argc, DeeObject *const *argv);
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-DeeFunction_ThisCallKw(DeeFunctionObject *self,
-                       DeeObject *this_arg,
+DeeFunction_ThisCallKw(DeeFunctionObject *self, DeeObject *this_arg,
                        size_t argc, DeeObject *const *argv,
                        DeeObject *kw);
 
