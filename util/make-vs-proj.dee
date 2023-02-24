@@ -33,10 +33,11 @@ assert isFileGitIgnored("deemon.exe");
 global final DEEMON_GUID = "8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942";
 global final DEEMON_CORE_GUID = "86D226C5-EF62-4562-AC06-E6A753DFA7CF";
 global final ROOT_FOLDER_GUID = "2150E333-8FDC-42A3-9474-1A3956D46DE8";
-global final DEX_NAMES = Tuple((
+global final DEX_NAMES = (
 	for (local dt: opendir("src/dex"))
 		if (dt.d_type == DT_DIR)
-			dt.d_name).sorted());
+			dt.d_name
+).sorted().frozen;
 
 
 global _STRING_GUID_HASH_VALUES: {int: string} = Dict();
@@ -428,7 +429,7 @@ function printVcxprojItemDefinitionGroups(fp: File, forDex: bool,
 			local extraPreprocessorStrings = forDex
 				? "CONFIG_BUILDING_DEX;"
 				: "CONFIG_BUILDING_DEEMON;";
-			for (local name, val: configuration.PreprocessorDefinitions) {
+			for (local name, val: configuration.PreprocessorDefinitions.sorted()) {
 				if (val != "1")
 					name = f"{name}={val}";
 				extraPreprocessorStrings += f"{name};";
