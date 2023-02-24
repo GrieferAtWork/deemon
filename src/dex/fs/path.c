@@ -892,8 +892,9 @@ fs_pathexpand(DeeObject *__restrict path, uint16_t options,
 		if (ch != '/')
 #endif /* !CONFIG_HOST_WINDOWS */
 		{
-			/* Print the current working directory when the given path isn't absolute. */
-			if (DeeSystem_PrintPwd(&printer, false))
+			/* Print the current working directory when the given path isn't absolute.
+			 * Make sure to include a trailing slash here! */
+			if (DeeSystem_PrintPwd(&printer, true))
 				goto err;
 #ifdef CONFIG_HOST_WINDOWS
 			/* Handle drive-relative paths. */

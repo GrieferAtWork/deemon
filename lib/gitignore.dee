@@ -23,7 +23,7 @@ import * from deemon;
 
 /* Helper library for checking if some given file is apart of any ".gitignore" file */
 
-#define NORMALIZE_PATH(p) fs.expand(fs.abspath(p), "pc")
+#define NORMALIZE_PATH(p) fs.expand(p, "pac")
 #ifdef __WINDOWS__
 #define FS_wmatch     casewmatch
 #define FS_startswith casestartswith
