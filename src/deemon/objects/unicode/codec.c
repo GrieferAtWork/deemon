@@ -722,7 +722,7 @@ PRIVATE rwlock_t libcodecs_lock = RWLOCK_INIT;
 INTERN bool DCALL libcodecs_shutdown(void) {
 	DREF DeeObject *old_lib;
 	rwlock_write(&libcodecs_lock);
-	old_lib   = g_libcodecs;
+	old_lib     = g_libcodecs;
 	g_libcodecs = NULL;
 	rwlock_endwrite(&libcodecs_lock);
 	if (!old_lib)

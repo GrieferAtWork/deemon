@@ -374,6 +374,8 @@ EXPORTS
 	_DeeMapFile_InitSysFd@32=DeeMapFile_InitSysFd@32
 	_DeeMem_ClearCaches@4=DeeMem_ClearCaches@4
 	_DeeModule_BoundAttrSymbol@8=DeeModule_BoundAttrSymbol@8
+	_DeeModule_CallExtern@16=DeeModule_CallExtern@16
+	_DeeModule_CallExternString@16=DeeModule_CallExternString@16
 	_DeeModule_DelAttrSymbol@8=DeeModule_DelAttrSymbol@8
 	_DeeModule_FromStaticPointer@4=DeeModule_FromStaticPointer@4
 	_DeeModule_Get@4=DeeModule_Get@4
@@ -381,6 +383,7 @@ EXPORTS
 	_DeeModule_GetCTime@4=DeeModule_GetCTime@4
 	_DeeModule_GetDeemon@0=DeeModule_GetDeemon@0
 	_DeeModule_GetExtern@8=DeeModule_GetExtern@8
+	_DeeModule_GetExternString@8=DeeModule_GetExternString@8
 	_DeeModule_GetNativeSymbol@8=DeeModule_GetNativeSymbol@8
 	_DeeModule_GetRoot@8=DeeModule_GetRoot@8
 	_DeeModule_GetString@8=DeeModule_GetString@8
@@ -388,8 +391,10 @@ EXPORTS
 	_DeeModule_GetSymbolString@12=DeeModule_GetSymbolString@12
 	_DeeModule_GetSymbolStringLen@16=DeeModule_GetSymbolStringLen@16
 	_DeeModule_GlobalName@8=DeeModule_GlobalName@8
-	_DeeModule_ImportRel@16=DeeModule_ImportRel@16
-	_DeeModule_ImportRelString@20=DeeModule_ImportRelString@20
+	_DeeModule_ImportGlobal@4=DeeModule_ImportGlobal@4
+	_DeeModule_ImportGlobalString@8=DeeModule_ImportGlobalString@8
+	_DeeModule_ImportRel@8=DeeModule_ImportRel@8
+	_DeeModule_ImportRelString@12=DeeModule_ImportRelString@12
 	_DeeModule_InitImports@4=DeeModule_InitImports@4
 	_DeeModule_InitPath@0=DeeModule_InitPath@0
 	_DeeModule_LoadSourceStream@20=DeeModule_LoadSourceStream@20
@@ -412,6 +417,7 @@ EXPORTS
 	_DeeModule_RunInit@4=DeeModule_RunInit@4
 	_DeeModule_SetAttrSymbol@12=DeeModule_SetAttrSymbol@12
 	_DeeModule_UnlockSymbols@4=DeeModule_UnlockSymbols@4
+	_DeeModule_VCallExternStringf@16=DeeModule_VCallExternStringf@16
 	_DeeModule_VCallExternf@16=DeeModule_VCallExternf@16
 	_DeeNTSystem_CreateFile@28=DeeNTSystem_CreateFile@28
 	_DeeNTSystem_CreateFileNoATime@28=DeeNTSystem_CreateFileNoATime@28

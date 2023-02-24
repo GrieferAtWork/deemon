@@ -97,7 +97,7 @@ local STRINGS = {
 	"strict",
 	"replace",
 	"ignore",
-	"fs",
+	"posix",
 	"environ",
 	"get",
 	"set",
@@ -336,8 +336,8 @@ DEF_STRING(str_replace, "replace", 0x54b94882, 0x2d4ba4f8cfd63bc6)
 #define STR_replace DeeString_STR(&str_replace)
 DEF_STRING(str_ignore, "ignore", 0xbd41ea58, 0xd951d03dedff60d2)
 #define STR_ignore DeeString_STR(&str_ignore)
-DEF_STRING(str_fs, "fs", 0xfbfe39e8, 0x18c3ce9b4f235ce6)
-#define STR_fs DeeString_STR(&str_fs)
+DEF_STRING(str_posix, "posix", 0x8a12ee56, 0xfc8c64936b261e96)
+#define STR_posix DeeString_STR(&str_posix)
 DEF_STRING(str_environ, "environ", 0xd8ecb380, 0x8d2a0a9c2432f221)
 #define STR_environ DeeString_STR(&str_environ)
 DEF_STRING(str_get, "get", 0x3b6d35a2, 0x7c8e1568eac4979f)

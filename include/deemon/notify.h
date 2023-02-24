@@ -37,11 +37,13 @@ DECL_BEGIN
 /* Notification callback system for changes in environment variables.
  * Using this system, callbacks can be registered to-be executed after
  * specific environment variables have changed their value.
+ *
  * The intended use for this is for libraries to invalidate caches that
- * might be associated with specific variables, such as the $PATHEXT
- * cache used by Window's implementation of the `process' module to
- * quickly map executable names to their full image paths.
- * However in order to ensure that this will remain the central hub
+ * might be associated with specific variables, such as the `$PATHEXT'
+ * cache used by Window's implementation of the `ipc' module to quickly
+ * map executable names to their full image paths.
+ *
+ * However, in order to ensure that this will remain the central hub
  * for custom notification callbacks, in addition to its name, a
  * notification class must be specified (which is not restricted
  * to those listed below). */
@@ -54,7 +56,7 @@ DECL_BEGIN
 #endif /* !CONFIG_HOST_WINDOWS */
 
 
-/* Returns the value of `(environ from fs).get(name, none)',
+/* Returns the value of `(environ from posix).get(name, none)',
  * or `ITER_DONE' if that expression evaluated to `none'
  * @return: * :        The value of the environment variable `name'
  * @return: NULL:      An error occurred.

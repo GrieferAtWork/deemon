@@ -772,7 +772,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 systemerror_call_posix_function(DeeSystemErrorObject *__restrict self,
                                 char const *__restrict name) {
-	return DeeModule_CallExternf("posix", name, "d", self->se_errno);
+	return DeeModule_CallExternStringf("posix", name, "d", self->se_errno);
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL

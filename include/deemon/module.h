@@ -896,6 +896,16 @@ DFUNDEF WUNUSED DREF /*Module*/ DeeObject *DCALL
 DeeModule_FromStaticPointer(void const *ptr);
 
 
+/* Get a global module that has already been loaded, given its name.
+ * If the module hasn't been loaded yet, NULL is returned.
+ * NOTE: These functions never throw an error! */
+DFUNDEF WUNUSED NONNULL((1)) DREF /*Module*/ DeeObject *DCALL
+DeeModule_Get(DeeObject *__restrict module_name);
+DFUNDEF WUNUSED NONNULL((1)) DREF /*Module*/ DeeObject *DCALL
+DeeModule_GetString(/*utf-8*/ char const *__restrict module_name,
+                    size_t module_namesize);
+
+
 /* Open a module, given its name in the global module namespace.
  * Global modules use their own cache that differs from the cache
  * used to unify modules through use of their filename.
@@ -923,40 +933,56 @@ DeeModule_FromStaticPointer(void const *ptr);
  *                      found and return `NULL', otherwise return `ITER_DONE'. */
 DFUNDEF WUNUSED NONNULL((1)) DREF /*Module*/ DeeObject *DCALL
 DeeModule_OpenGlobal(/*String*/ DeeObject *__restrict module_name,
-                     struct Dee_compiler_options *options,
-                     bool throw_error);
+                     struct Dee_compiler_options *options, bool throw_error);
 DFUNDEF WUNUSED DREF /*Module*/ DeeObject *DCALL
-DeeModule_OpenGlobalString(/*utf-8*/ char const *__restrict module_name,
-                           size_t module_namesize,
-                           struct Dee_compiler_options *options,
-                           bool throw_error);
+DeeModule_OpenGlobalString(/*utf-8*/ char const *__restrict module_name, size_t module_namesize,
+                           struct Dee_compiler_options *options, bool throw_error);
 
-/* Get a global module that has already been loaded, given its name.
- * If the module hasn't been loaded yet, NULL is returned.
- * NOTE: These functions never throw an error! */
+/* Same as `DeeModule_OpenGlobal()', but automatically call `DeeModule_RunInit()' on the returned module. */
 DFUNDEF WUNUSED NONNULL((1)) DREF /*Module*/ DeeObject *DCALL
-DeeModule_Get(DeeObject *__restrict module_name);
-DFUNDEF WUNUSED NONNULL((1)) DREF /*Module*/ DeeObject *DCALL
-DeeModule_GetString(/*utf-8*/ char const *__restrict module_name,
-                    size_t module_namesize);
-
+DeeModule_ImportGlobal(/*String*/ DeeObject *__restrict module_name);
+DFUNDEF WUNUSED DREF /*Module*/ DeeObject *DCALL
+DeeModule_ImportGlobalString(/*utf-8*/ char const *__restrict module_name,
+                             size_t module_namesize);
 
 /* Lookup an external symbol.
- * Convenience function (same as `DeeObject_GetAttrString(DeeModule_OpenGlobalString(...), ...)') */
+ * Convenience function (same as `DeeObject_GetAttr(DeeModule_OpenGlobal(...)+DeeModule_RunInit, ...)') */
 DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-DeeModule_GetExtern(/*utf-8*/ char const *__restrict module_name,
-                    /*utf-8*/ char const *__restrict global_name);
+DeeModule_GetExtern(/*String*/ DeeObject *__restrict module_name,
+                    /*String*/ DeeObject *__restrict global_name);
+DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+DeeModule_GetExternString(/*utf-8*/ char const *__restrict module_name,
+                          /*utf-8*/ char const *__restrict global_name);
 
-/* Helper wrapper for `DeeObject_Callf(DeeModule_GetExtern(...), ...)',
+/* Helper wrapper for `DeeObject_Call(DeeModule_GetExternString(...), ...)',
+ * that returns the return value of the call operation. */
+DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+DeeModule_CallExtern(/*String*/ DeeObject *__restrict module_name,
+                     /*String*/ DeeObject *__restrict global_name,
+                     size_t argc, DeeObject *const *argv);
+DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+DeeModule_CallExternString(/*utf-8*/ char const *__restrict module_name,
+                           /*utf-8*/ char const *__restrict global_name,
+                           size_t argc, DeeObject *const *argv);
+
+/* Helper wrapper for `DeeObject_Callf(DeeModule_GetExternString(...), ...)',
  * that returns the return value of the call operation. */
 DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *
-DeeModule_CallExternf(/*utf-8*/ char const *__restrict module_name,
-                      /*utf-8*/ char const *__restrict global_name,
+DeeModule_CallExternf(/*String*/ DeeObject *__restrict module_name,
+                      /*String*/ DeeObject *__restrict global_name,
                       char const *__restrict format, ...);
 DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-DeeModule_VCallExternf(/*utf-8*/ char const *__restrict module_name,
-                       /*utf-8*/ char const *__restrict global_name,
+DeeModule_VCallExternf(/*String*/ DeeObject *__restrict module_name,
+                       /*String*/ DeeObject *__restrict global_name,
                        char const *__restrict format, va_list args);
+DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *
+DeeModule_CallExternStringf(/*utf-8*/ char const *__restrict module_name,
+                            /*utf-8*/ char const *__restrict global_name,
+                            char const *__restrict format, ...);
+DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+DeeModule_VCallExternStringf(/*utf-8*/ char const *__restrict module_name,
+                             /*utf-8*/ char const *__restrict global_name,
+                             char const *__restrict format, va_list args);
 
 
 /* Open a module using a relative module name
@@ -1074,31 +1100,26 @@ DFUNDEF WUNUSED NONNULL((1)) uint64_t DCALL
 DeeModule_GetCTime(/*Module*/ DeeObject *__restrict self);
 #endif /* !CONFIG_NO_DEC */
 
-/* Same as `DeeModule_Import', but relative module
- * paths are imported in relation to `basemodule' */
+/* Same as `DeeModule_Import', but relative module paths are imported in relation to `basemodule'
+ * Not that these functions invoke `DeeModule_RunInit()' on the returned module!*/
 DFUNDEF WUNUSED NONNULL((1, 2)) DREF /*Module*/ DeeObject *DCALL
 DeeModule_ImportRel(/*Module*/ DeeObject *__restrict basemodule,
-                    /*String*/ DeeObject *__restrict module_name,
-                    struct Dee_compiler_options *options,
-                    bool throw_error);
+                    /*String*/ DeeObject *__restrict module_name);
 DFUNDEF WUNUSED NONNULL((1, 2)) DREF /*Module*/ DeeObject *DCALL
 DeeModule_ImportRelString(/*Module*/ DeeObject *__restrict basemodule,
                           /*utf-8*/ char const *__restrict module_name,
-                          size_t module_namesize,
-                          struct Dee_compiler_options *options,
-                          bool throw_error);
+                          size_t module_namesize);
 
 
 #ifdef CONFIG_BUILDING_DEEMON
 /* Implementation of the builtin `import()' and `module.open()' functions.
  * Using the module declaring the code of the current top execution frame (if it exists),
- * invoke `DeeModule_OpenRelative()' with its path and the given `module_name'.
+ * invoke `DeeModule_OpenRelative()' with its path and the given `module_name'. Not that
+ * this function invokes `DeeModule_RunInit()' on the returned module!
  * @param: throw_error: When true, throw an error if the module couldn't be
  *                      found and return `NULL', otherwise return `ITER_DONE'. */
 INTDEF WUNUSED NONNULL((1)) DREF /*Module*/ DeeObject *DCALL
-DeeModule_Import(/*String*/ DeeObject *__restrict module_name,
-                 struct Dee_compiler_options *options,
-                 bool throw_error);
+DeeModule_Import(/*String*/ DeeObject *__restrict module_name);
 
 /* Access global variables of a given module by their name described by a C-string.
  * These functions act and behave just as once would expect, raising errors when

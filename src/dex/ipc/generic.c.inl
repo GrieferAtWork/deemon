@@ -224,37 +224,17 @@ DEFINE_PROCESS_STD_FUNCTIONS(stdout, DEE_STDOUT)
 DEFINE_PROCESS_STD_FUNCTIONS(stderr, DEE_STDERR)
 #undef DEFINE_PROCESS_STD_FUNCTIONS
 
-PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-call_extern(DeeObject *module_name, DeeObject *global_name,
-            size_t argc, DeeObject *const *argv) {
-	DREF DeeObject *module, *result;
-	module = DeeModule_OpenGlobal(module_name, NULL, true);
-	if unlikely(!module)
-		goto err;
-	result = DeeObject_CallAttr(module, global_name, argc, argv);
-	Dee_Decref(module);
-	return result;
-err:
-	return NULL;
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-get_extern(DeeObject *module_name, DeeObject *global_name) {
-	DREF DeeObject *module, *result;
-	module = DeeModule_OpenGlobal(module_name, NULL, true);
-	if unlikely(!module)
-		goto err;
-	result = DeeObject_GetAttr(module, global_name);
-	Dee_Decref(module);
-	return result;
-err:
-	return NULL;
-}
-
-PRIVATE DEFINE_STRING(str_fs, "fs");
-PRIVATE DEFINE_STRING(str_getcwd, "getcwd");
-PRIVATE DEFINE_STRING(str_chdir, "chdir");
-PRIVATE DEFINE_STRING(str_environ, "environ");
+/*[[[deemon
+(PRIVATE_DEFINE_STRING from rt.gen.string)("str_posix", "posix");
+(PRIVATE_DEFINE_STRING from rt.gen.string)("str_getcwd", "getcwd");
+(PRIVATE_DEFINE_STRING from rt.gen.string)("str_chdir", "chdir");
+(PRIVATE_DEFINE_STRING from rt.gen.string)("str_environ", "environ");
+]]]*/
+PRIVATE DEFINE_STRING_EX(str_posix, "posix", 0x8a12ee56, 0xfc8c64936b261e96);
+PRIVATE DEFINE_STRING_EX(str_getcwd, "getcwd", 0x2a8d58b5, 0xd71ca646f3668c32);
+PRIVATE DEFINE_STRING_EX(str_chdir, "chdir", 0xd4e07810, 0x5d1f1c76d494fde6);
+PRIVATE DEFINE_STRING_EX(str_environ, "environ", 0xd8ecb380, 0x8d2a0a9c2432f221);
+/*[[[end]]]*/
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 process_get_threads(Process *__restrict self) {
@@ -266,8 +246,10 @@ process_get_threads(Process *__restrict self) {
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 process_get_environ(Process *__restrict self) {
-	if (self == &this_process)
-		return get_extern((DeeObject *)&str_fs, (DeeObject *)&str_environ);
+	if (self == &this_process) {
+		return DeeModule_GetExtern((DeeObject *)&str_posix,
+		                           (DeeObject *)&str_environ);
+	}
 	ipc_unimplemented();
 	return NULL;
 }
@@ -287,7 +269,8 @@ process_set_environ(Process *self, DeeObject *value) {
 	if (self == &this_process) {
 		DREF DeeObject *temp;
 		int result;
-		temp = get_extern((DeeObject *)&str_fs, (DeeObject *)&str_environ);
+		temp = DeeModule_GetExtern((DeeObject *)&str_posix,
+		                           (DeeObject *)&str_environ);
 		if unlikely(!temp)
 			goto err;
 		result = DeeObject_Assign(temp, value ? value : Dee_None);
@@ -307,8 +290,11 @@ process_del_environ(Process *__restrict self) {
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 process_get_pwd(Process *__restrict self) {
-	if (self == &this_process)
-		return call_extern((DeeObject *)&str_fs, (DeeObject *)&str_getcwd, 0, NULL);
+	if (self == &this_process) {
+		return DeeModule_CallExtern((DeeObject *)&str_posix,
+		                            (DeeObject *)&str_getcwd,
+		                            0, NULL);
+	}
 	ipc_unimplemented();
 	return NULL;
 }
@@ -322,9 +308,9 @@ process_set_pwd(Process *self, DeeObject *value) {
 		DREF DeeObject *temp;
 		if unlikely(!value)
 			goto err_running;
-		temp = call_extern((DeeObject *)&str_fs,
-		                   (DeeObject *)&str_chdir,
-		                   0, NULL);
+		temp = DeeModule_CallExtern((DeeObject *)&str_posix,
+		                            (DeeObject *)&str_chdir,
+		                            1, &value);
 		if unlikely(!temp)
 			goto err;
 		Dee_Decref(temp);

@@ -29,7 +29,7 @@
 #include <deemon/object.h>
 #include <deemon/string.h>
 #include <deemon/system-features.h> /* bcmpc(), ... */
-#include <deemon/util/recursive-rwlock.h>
+#include <deemon/util/atomic.h>
 
 #include <hybrid/limitcore.h>
 #include <hybrid/typecore.h>
@@ -39,67 +39,16 @@
 #ifndef CONFIG_NO_NOTIFICATIONS
 DECL_BEGIN
 
-
-/* [0..1][lock(WRITE_ONCE)] The `fs' module. */
-PRIVATE DREF DeeObject *fs_module = NULL;
-#ifndef CONFIG_NO_THREADS
-PRIVATE rwlock_t fs_module_lock = RWLOCK_INIT;
-#endif /* !CONFIG_NO_THREADS */
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-get_fs_object(DeeObject *__restrict name) {
-	DREF DeeObject *result, *mod;
-again:
-	rwlock_read(&fs_module_lock);
-	mod = fs_module;
-	if unlikely(!mod) {
-		rwlock_endread(&fs_module_lock);
-		mod = DeeModule_OpenGlobal((DeeObject *)&str_fs, NULL, true);
-		if unlikely(!mod)
-			goto err;
-		if unlikely(DeeModule_RunInit(mod) < 0)
-			goto err_mod;
-		rwlock_write(&fs_module_lock);
-		if unlikely(fs_module) {
-			rwlock_endwrite(&fs_module_lock);
-			Dee_Decref(mod);
-			goto again;
-		}
-		Dee_Incref(mod);
-		fs_module = mod;
-		rwlock_endwrite(&fs_module_lock);
-	} else {
-		Dee_Incref(mod);
-		rwlock_endread(&fs_module_lock);
-	}
-	result = DeeObject_GetAttr(mod, name);
-	Dee_Decref(mod);
-	return result;
-err_mod:
-	Dee_Decref(mod);
-err:
-	return NULL;
-}
-
-INTERN bool DCALL clear_fs_module(void) {
-	DREF DeeObject *mod;
-	rwlock_write(&fs_module_lock);
-	mod       = fs_module;
-	fs_module = NULL;
-	rwlock_endwrite(&fs_module_lock);
-	Dee_XDecref(mod);
-	return mod != NULL;
-}
-
 PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 Dee_GetEnv(DeeObject *__restrict name) {
 	DREF DeeObject *result;
-	DREF DeeObject *fs_environ;
-	fs_environ = get_fs_object((DeeObject *)&str_environ);
-	if unlikely(!fs_environ)
+	DREF DeeObject *posix_environ;
+	posix_environ = DeeModule_GetExtern((DeeObject *)&str_posix,
+	                                    (DeeObject *)&str_environ);
+	if unlikely(!posix_environ)
 		goto err;
-	result = DeeObject_GetItemDef(fs_environ, name, ITER_DONE);
-	Dee_Decref(fs_environ);
+	result = DeeObject_GetItemDef(posix_environ, name, ITER_DONE);
+	Dee_Decref(posix_environ);
 	if unlikely(!result)
 		goto err;
 	return result;

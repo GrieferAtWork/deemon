@@ -164,17 +164,11 @@ f_builtin_import(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	if (base) {
 		if (DeeObject_AssertType(module_name, &DeeModule_Type))
 			goto err;
-		result = DeeModule_ImportRel(base, module_name, NULL, true);
+		result = DeeModule_ImportRel(base, module_name);
 	} else {
-		result = DeeModule_Import(module_name, NULL, true);
+		result = DeeModule_Import(module_name);
 	}
-	if unlikely(!result)
-		goto err;
-	if unlikely(DeeModule_RunInit(result) < 0)
-		goto err_r;
 	return result;
-err_r:
-	Dee_Decref(result);
 err:
 	return NULL;
 }

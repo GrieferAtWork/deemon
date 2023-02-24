@@ -2549,10 +2549,10 @@ err:
 #define os_trychdir(path) (chdir(path) == 0)
 #else /* CONFIG_HAVE_chdir */
 PRIVATE bool DCALL os_trychdir(char const *path) {
-	/* Try to off-load the job to `fs.chdir()' (thus allowing the
+	/* Try to off-load the job to `posix.chdir()' (thus allowing the
 	 * user to override it if they know how we'd be able to do this) */
 	DREF DeeObject *result;
-	result = DeeModule_CallExternf("fs", "chdir", "s", path);
+	result = DeeModule_CallExternStringf("posix", "chdir", "s", path);
 	if (result) {
 		Dee_Decref(result);
 		return true;

@@ -862,7 +862,7 @@ JITLexer_EvalModule(JITLexer *__restrict self) {
 		if unlikely(!str)
 			goto err_trace;
 		if (DeeString_STR(str)[0] != '.') {
-			result = DeeModule_OpenGlobal(str, NULL, true);
+			result = DeeModule_ImportGlobal(str);
 		} else {
 			DeeModuleObject *base = self->jl_context->jc_impbase;
 			if unlikely(!base) {
@@ -871,14 +871,12 @@ JITLexer_EvalModule(JITLexer *__restrict self) {
 				                str);
 				goto err_trace;
 			}
-			result = DeeModule_ImportRel((DeeObject *)base, str, NULL, true);
+			result = DeeModule_ImportRel((DeeObject *)base, str);
 		}
 		Dee_Decref(str);
 	} else if (name_start[0] != '.') {
-		result = DeeModule_OpenGlobalString((char const *)name_start,
-		                                    (size_t)(name_end - name_start),
-		                                    NULL,
-		                                    true);
+		result = DeeModule_ImportGlobalString((char const *)name_start,
+		                                      (size_t)(name_end - name_start));
 	} else {
 		DeeModuleObject *base = self->jl_context->jc_impbase;
 		if unlikely(!base) {
@@ -890,17 +888,11 @@ JITLexer_EvalModule(JITLexer *__restrict self) {
 		}
 		result = DeeModule_ImportRelString((DeeObject *)base,
 		                                   (char const *)name_start,
-		                                   (size_t)(name_end - name_start),
-		                                   NULL,
-		                                   true);
+		                                   (size_t)(name_end - name_start));
 	}
 	if unlikely(!result)
 		goto err_trace;
-	if unlikely(DeeModule_RunInit(result) < 0)
-		goto err_rt_r;
 	return result;
-err_rt_r:
-	Dee_Decref(result);
 err_trace:
 	JITLexer_ErrorTrace(self, self->jl_tokstart);
 err:

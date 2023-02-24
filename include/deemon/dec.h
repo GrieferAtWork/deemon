@@ -417,7 +417,7 @@ typedef struct ATTR_PACKED {
 	uint8_t                cd_flags;         /* Additional flags to set for the resulting type (set of `TP_F*'). */
 	uint8_t                cd_nam[1];        /* Name of the class (Pointer to a NUL-terminated string within the `e_stroff' string table)
 	                                          * NOTE: Decode using `Dec_DecodePointer()' */
-	uint8_t                cd_doclen[1];     /* The length of the documentation string (when ZERO, there is doc-string)
+	uint8_t                cd_doclen[1];     /* The length of the documentation string (when ZERO, there is no doc-string)
 	                                          * NOTE: Decode using `Dec_DecodePointer()' */
 	uint8_t                cd_doc[1];        /* Only exists when `cd_doclen' evaluates to non-zero:
 	                                          * The offset into `e_stroff' of the documentation string's start.
@@ -474,7 +474,7 @@ Dec_DecodePointer(uint8_t const **__restrict pptr) {
  * NOTE: Unless otherwise stated, all operands are encoded in little-endian. */
 #define DTYPE_NONE       0x00   /* +0   `Dee_None'       -- Simply the none builtin object (no operand) */
 #define DTYPE_IEEE754    0x01   /* +8   `DeeFloat_Type'  -- 64-bit IEEE754 double-precision floating point number (`Dec_ieee754_double')
-                                 *                         (byteorder: little-endian, float-word-order: little-endian). */
+                                 *                          (byteorder: little-endian, float-word-order: little-endian). */
 #define DTYPE_SLEB       0x02   /* +n   `DeeInt_Type'    -- Variable-length, signed immediate integer (s.a. `READ_SLEB()') */
 #define DTYPE_ULEB       0x03   /* +n   `DeeInt_Type'    -- Variable-length, unsigned immediate integer (s.a. `READ_ULEB()') */
 #define DTYPE_STRING     0x04   /* +n   `DeeString_Type' -- Followed by 1/2 `Dec_DecodePointer()' immediate values, the first being
@@ -520,9 +520,9 @@ Dec_DecodePointer(uint8_t const **__restrict pptr) {
 /*      DTYPE16_            0x0f0e  */
 #define DTYPE16_CELL        0x0f0d /* +n     `DeeCell_Type'  -- Followed either by `DTYPE_NULL' for an empty Cell, or another object that is contained within. */
 #define DTYPE16_EXTENDED    0x0f0f /* Reserved for future expansion. */
-#define DTYPE16_BUILTIN_MIN 0x0f10 /* All extended type codes greater than this refer to a custom builtin SET id-0x10,
-                                    * that is then followed by 1 more byte naming the object within that set:
-                                    * >> 0x0f1142 // Use builtin object 0x42 from set #0x01  */
+#define DTYPE16_BUILTIN_MIN 0x0f10 /* All extended type codes greater-or-equal than this refer to a custom builtin SET
+                                    * id-0x10, that is then followed by 1 more byte naming the object within that set:
+                                    * >> 0F 11 42 // Use builtin object 0x42 from set #0x01  */
 
 
 

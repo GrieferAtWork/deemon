@@ -889,9 +889,11 @@ DeeModule_RunInit(DeeObject *__restrict self) {
 	DeeThreadObject *caller;
 	DeeModuleObject *me = (DeeModuleObject *)self;
 	ASSERT_OBJECT_TYPE(self, &DeeModule_Type);
+
 	/* Quick check: Don't do anything else if the module has already been loaded. */
 	if (me->mo_flags & MODULE_FDIDINIT)
 		return 0;
+
 	/* Make sure not to tinker with an interactive module's root code object. */
 	if ((me->mo_flags & MODULE_FINITIALIZING) &&
 	    DeeInteractiveModule_Check(self))
@@ -942,6 +944,7 @@ begin_init:
 			return 0;
 		goto begin_init;
 	}
+
 	/* Setup the module to indicate that we're the ones loading it. */
 	me->mo_loader = caller;
 
@@ -1433,7 +1436,7 @@ module_class_open(DeeObject *UNUSED(self),
 		goto err;
 	if (DeeObject_AssertTypeExact(module_name, &DeeString_Type))
 		goto err;
-	return DeeModule_Import(module_name, NULL, true);
+	return DeeModule_Import(module_name);
 err:
 	return NULL;
 }

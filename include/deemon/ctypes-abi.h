@@ -32,12 +32,13 @@ DECL_BEGIN
 
 
 /* Return the void type object. */
-LOCAL DREF DeeObject *DCALL DeeCTypes_GetVoid(void) {
-	return DeeModule_GetExtern("ctypes", "void");
+LOCAL WUNUSED DREF DeeObject *DCALL DeeCTypes_GetVoid(void) {
+	return DeeModule_GetExternString("ctypes", "void");
 }
 
 /* Construct a new void-pointer pointing to the given `address'. */
-LOCAL DREF DeeObject *DCALL DeeCTypes_CreateVoidPointer(void *address) {
+LOCAL WUNUSED DREF DeeObject *DCALL
+DeeCTypes_CreateVoidPointer(void *address) {
 	DREF DeeObject *result, *ptr;
 	result = DeeCTypes_GetVoid();
 	if likely(result) {
@@ -51,7 +52,8 @@ LOCAL DREF DeeObject *DCALL DeeCTypes_CreateVoidPointer(void *address) {
 /* Extract the address of a given pointer-like object.
  * @return:  0: Success.
  * @return: -1: Error. */
-LOCAL int DCALL DeeCTypes_GetPointer(DeeObject *__restrict self, void **paddress) {
+LOCAL WUNUSED NONNULL((1, 2)) int DCALL
+DeeCTypes_GetPointer(DeeObject *__restrict self, void **paddress) {
 	int result;
 	DREF DeeObject *ptr;
 	ptr = DeeObject_GetAttrString(self, "__ptr__");
