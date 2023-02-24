@@ -1,0 +1,155 @@
+/* Copyright (c) 2019-2023 Griefer@Work                                       *
+ *                                                                            *
+ * This software is provided 'as-is', without any express or implied          *
+ * warranty. In no event will the authors be held liable for any damages      *
+ * arising from the use of this software.                                     *
+ *                                                                            *
+ * Permission is granted to anyone to use this software for any purpose,      *
+ * including commercial applications, and to alter it and redistribute it     *
+ * freely, subject to the following restrictions:                             *
+ *                                                                            *
+ * 1. The origin of this software must not be misrepresented; you must not    *
+ *    claim that you wrote the original software. If you use this software    *
+ *    in a product, an acknowledgement (see the following) in the product     *
+ *    documentation is required:                                              *
+ *    Portions Copyright (c) 2019-2023 Griefer@Work                           *
+ * 2. Altered source versions must be plainly marked as such, and must not be *
+ *    misrepresented as being the original software.                          *
+ * 3. This notice may not be removed or altered from any source distribution. *
+ */
+import fs;
+import util;
+import * from deemon;
+
+/* Helper library for checking if some given file is apart of any ".gitignore" file */
+
+#define NORMALIZE_PATH(p) fs.expand(fs.abspath(p), "pc")
+#ifdef __WINDOWS__
+#define FS_wmatch     casewmatch
+#define FS_startswith casestartswith
+#else /* __WINDOWS__ */
+#define FS_wmatch     wmatch
+#define FS_startswith startswith
+#endif /* !__WINDOWS__ */
+
+
+@@List of root directories, such that `.gitignore` located in parent directories
+@@of these are ignored when checking of a child-file should be ignored.
+global final _searchRootDirectories: {string...} = HashSet();
+
+@@Register a new root directory with @_searchRootDirectories
+function registerRootDirectory(path: string) {
+	local rootDir = NORMALIZE_PATH(path).rstrip(fs.SEP);
+	_searchRootDirectories.insert(rootDir);
+}
+
+function _getNearestRootDirectoryOfPath(path: string): string | none {
+	for (;;) {
+		if (path in _searchRootDirectories)
+			return path;
+		local sep = path.rfind(fs.SEP);
+		if (sep < 0)
+			break;
+		path = path[:sep];
+	}
+	return none;
+}
+
+@@Returns the nearest root directory registered for @path
+function getNearestRootDirectoryOfPath(path: string): string | none {
+	local normalPath = NORMALIZE_PATH(path).rstrip(fs.SEP);
+	return _getNearestRootDirectoryOfPath(normalPath);
+}
+
+@@Mapping for PATHNAME -> GITIGNORE_FILE_LINES
+@@Files known not to exist are bound to @{}
+global final _knownGitIgnoreFiles: {string: {string...}} = Dict();
+
+function _listGitIgnoreInPath(absPath: string): {string...} {
+	local result = _knownGitIgnoreFiles.get(absPath);
+	if (result !is none)
+		return result;
+	local giFilename = fs.joinpath(absPath, ".gitignore");
+	local lines = try File.open(giFilename, "r") catch (...) none;
+	if (lines !is none) {
+		lines = lines.read().decode("utf-8").splitlines(false);
+		lines = List(for (local l: lines.each.strip().strip("/"))
+			if (l && !l.startswith("#"))
+				l
+#ifdef __WINDOWS__
+				.replace(r"/", r"\")
+#endif /* __WINDOWS__ */
+		);
+	} else {
+		lines = {};
+	}
+	_knownGitIgnoreFiles[absPath] = lines;
+	return lines;
+}
+
+function _enumerateRelevantGitIgnoreFiles(path: string): {(string, {string...})...} {
+	local rootPath = _getNearestRootDirectoryOfPath(path);
+	if (rootPath is none)
+		rootPath = fs.driveof(path);
+	assert path.startswith(rootPath);
+	local relPath = path[#rootPath:];
+	for (;;) {
+		local subPath = rootPath + relPath;
+		local gitIgnoreInPath = _listGitIgnoreInPath(subPath);
+		if (gitIgnoreInPath)
+			yield (subPath, gitIgnoreInPath);
+		local sepPosition = relPath.rfind(fs.SEP);
+		if (sepPosition < 0)
+			break;
+		relPath = relPath[:sepPosition];
+	}
+}
+
+@@Enumerate the absolute containing folders, as well as
+@@relevant .gitignore lines from all .gitignore files that
+@@may affect files in the given directory @path
+function enumerateRelevantGitIgnoreFiles(path: string): {(string, {string...})...} {
+	local normalPath = NORMALIZE_PATH(path).rstrip(fs.SEP);
+	return _enumerateRelevantGitIgnoreFiles(normalPath);
+}
+
+
+@@Check what a given `.gitignore` file is saying about @filename being ignored
+@@@return: true:  File is being ignored
+@@@return: false: File is not being ignored (for `.gitignore` lines starting with `!`)
+@@@return: none:  File may or may not be ignored
+function _isGitIgnoreIgnoringFile(
+		gitIgnorePath: string,
+		gitIgnoreLines: {string...},
+		normalFilename: string): bool | none {
+	local giRelFile = normalFilename[#gitIgnorePath:].lstrip(fs.SEP);
+//	print repr gitIgnorePath, repr giRelFile;
+	for (local l: gitIgnoreLines) {
+		if (l.startswith("!")) {
+			l = l[1:];
+			if (giRelFile.FS_wmatch(l))
+				return false; /* Wildcard pattern matches */
+			if (giRelFile.FS_startswith(l + "/"))
+				return false; /* Sub-folder containing the given file */
+		} else {
+			if (giRelFile.FS_wmatch(l))
+				return true; /* Wildcard pattern matches */
+			if (giRelFile.FS_startswith(l + "/"))
+				return true; /* Sub-folder containing the given file */
+		}
+	}
+	return none;
+}
+
+
+@@Check if a given file or path @filename is being .gitignore'd
+function isFileGitIgnored(filename: string): bool {
+	local normalFilename = NORMALIZE_PATH(filename);
+	local path = normalFilename[:normalFilename.rindex(fs.SEP)];
+	for (local gitignore, lines: _enumerateRelevantGitIgnoreFiles(path)) {
+		local res = _isGitIgnoreIgnoringFile(gitignore, lines, normalFilename);
+		if (res !is none)
+			return res;
+	}
+	return false;
+}

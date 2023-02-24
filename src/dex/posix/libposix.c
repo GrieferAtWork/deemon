@@ -1377,7 +1377,7 @@ PRIVATE struct dex_symbol symbols[] = {
 	D(POSIX_CLEARENV_DEF_DOC("Clear ?Genviron"))
 	D({ "environ", &DeeEnviron_Singleton, MODSYM_FREADONLY,
 	    DOC("->?S?T2?Dstring?Dstring\n"
-	        "A :mapping-style singleton instance that can be used to "
+	        "A ?DMapping-style singleton instance that can be used to "
 	        /**/ "access and enumerate environment variables by name:\n"
 	        "${"
 	        /**/ "print environ[\"PATH\"]; /* \"/bin:/usr/bin:...\" */"

@@ -25,11 +25,11 @@
 /* NOTE: Apply modifications using:
  * $ deemon -F src/deemon/compiler/instrlen.c
  * $ deemon -F src/deemon/execute/code-exec-targets.c.inl
- * $ deemon -F src/deemon/execute/asm/exec-386.S
+ * $ deemon -F src/deemon/execute/asm/exec.gas-386.S
  * $ deemon -F src/dex/disassembler/printinstr.c
  * $ deemon -F lib/rt/bytecode.dee
  * Or the 1-line variant (read for copy-n-pasting into your terminal):
- * $ deemon -F src/deemon/compiler/instrlen.c src/deemon/execute/code-exec-targets.c.inl src/deemon/execute/asm/exec-386.S src/dex/disassembler/printinstr.c lib/rt/bytecode.dee
+ * $ deemon -F src/deemon/compiler/instrlen.c src/deemon/execute/code-exec-targets.c.inl src/deemon/execute/asm/exec.gas-386.S src/dex/disassembler/printinstr.c lib/rt/bytecode.dee
  * Also: Don't forget to add new instructions to
  *      `/src/deemon/compiler/asm/userdb.def'
  */

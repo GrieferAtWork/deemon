@@ -880,7 +880,7 @@ function getPage(fp: File, path: string) {
 		}
 		return getModulesPage(fp);
 	}
-	throw FileNotFound(f"Missing page: {repr '/'.join(path)}");
+	throw Error(f"Missing page: {repr '/'.join(path)}");
 }
 
 
@@ -928,12 +928,16 @@ function clientThreadMain(con: socket) {
 					}
 				}
 			} catch (e...) {
+				local errorCode = 500;
+				if ({ AttributeError, FileNotFound }.each.baseof(type(e)) || ...) {
+					errorCode = 404;
+				}
 				File.Writer outputFp;
 				File.Writer errorFp;
 				writePageHeader(errorFp, e);
 				errorFp <<
 					"<main>\r\n"
-					"<h2>DOC Server crashed</h2><br/>"
+					"<h2>DOC Server crashed (" << errorCode << ")</h2><br/>"
 					"<hr/>";
 				if (e !is string)
 					errorFp << "<b>" << str(type e) << "</b>: ";
@@ -944,10 +948,6 @@ function clientThreadMain(con: socket) {
 					<< "<hr/></main>\r\n";
 				writePageFooter(errorFp);
 				errorFp = errorFp.string.encode("utf-8");
-				local errorCode = 500;
-				if ({ AttributeError, FileNotFound }.each.baseof(type(e)) || ...) {
-					errorCode = 404;
-				}
 				outputFp <<
 					"HTTP/1.1 " << errorCode << " " << {
 						404: "Page Not Found",

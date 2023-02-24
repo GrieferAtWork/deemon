@@ -1,0 +1,767 @@
+/* Copyright (c) 2018-2023 Griefer@Work                                       *
+ *                                                                            *
+ * This software is provided 'as-is', without any express or implied          *
+ * warranty. In no event will the authors be held liable for any damages      *
+ * arising from the use of this software.                                     *
+ *                                                                            *
+ * Permission is granted to anyone to use this software for any purpose,      *
+ * including commercial applications, and to alter it and redistribute it     *
+ * freely, subject to the following restrictions:                             *
+ *                                                                            *
+ * 1. The origin of this software must not be misrepresented; you must not    *
+ *    claim that you wrote the original software. If you use this software    *
+ *    in a product, an acknowledgement (see the following) in the product     *
+ *    documentation is required:                                              *
+ *    Portions Copyright (c) 2018-2023 Griefer@Work                           *
+ * 2. Altered source versions must be plainly marked as such, and must not be *
+ *    misrepresented as being the original software.                          *
+ * 3. This notice may not be removed or altered from any source distribution. *
+ */
+
+import * from deemon;
+import * from posix;
+import * from gitignore;
+import fs;
+
+fs.chdir(fs.headof(__FILE__) + "/..");
+
+/* Make sure that .gitignore is being parsed correctly. */
+fs.expand(fs.abspath(fs.headof(__FILE__) + ".."), "pc")
+		.replace("\\", "/").rstrip("/") + "/";;
+assert isFileGitIgnored("deemon.exe");
+
+global final DEEMON_GUID = "8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942";
+global final DEEMON_CORE_GUID = "86D226C5-EF62-4562-AC06-E6A753DFA7CF";
+global final ROOT_FOLDER_GUID = "2150E333-8FDC-42A3-9474-1A3956D46DE8";
+global final DEX_NAMES = Tuple((
+	for (local dt: opendir("src/dex"))
+		if (dt.d_type == DT_DIR)
+			dt.d_name).sorted());
+
+
+global _STRING_GUID_HASH_VALUES: {int: string} = Dict();
+function hashNameForGuid(name: string): string {
+	local hash = 0;
+	for (local c: name.ordinals)
+		hash = (hash << 3) ^ c;
+	while (hash > 0xFFFFFFFFFFFF)
+		hash = (hash & 0xFFFFFFFFFFFF) ^ (hash >> 1);
+	for (;;) {
+		local knownHash = _STRING_GUID_HASH_VALUES.get(hash);
+		if (knownHash is none)
+			break;
+		if (knownHash == name)
+			break;
+		++hash; // Ensure that GUIDs are always distinct
+	}
+	_STRING_GUID_HASH_VALUES[hash] = name;
+	return hash.tostr(16, 12, "X");
+}
+function folderGuid(name: string): string -> f'2360741E-FB49-40D4-B684-{hashNameForGuid(name)}';
+function filterFolderGuid(name: string): string -> f'372a956e-8c03-4d55-8939-{hashNameForGuid(name)}';
+function dexProjectGuid(name: string): string -> f'85DE4E2D-552A-48E3-A320-{hashNameForGuid(name)}';
+global final DEX_FOLDER_GUID = folderGuid("dex");
+
+class Configuration {
+	this = default;
+	public member name: string;
+	public member PreprocessorDefinitions: {string: string} = ();
+	public member InlineFunctionExpansion: string = "Disabled";
+	public member WholeProgramOptimization: bool = false;
+	public member RuntimeLibrary: string = "MultiThreadedDebugDLL";
+	public member SDLCheck: bool | none = none;
+	public member BufferSecurityCheck: bool = false;
+	public member BasicRuntimeChecks: string | none = none;
+	public member FavorSizeOrSpeed: string = "Neither";
+	public member Optimization: string = "Disabled";
+	public member GenerateDebugInformation: bool = true;
+	public member EnableCOMDATFolding: bool = false;
+	public member ExceptionHandling: bool = false;
+}
+
+class Architecture {
+	this = default;
+	public member name: string;
+	public member asmExt: string;
+	public member StackReserveSize: int | none = none;
+	public member ModuleDefinitionFile: string | none = none;
+	public member mlExe: string = "ml.exe";
+}
+
+global final CONFIGURATIONS: {Configuration...} = {
+	Configuration(name: "Debug-MSVC (NDEBUG)",
+		PreprocessorDefinitions: { "NDEBUG" : "1" },
+		SDLCheck: true,
+		BufferSecurityCheck: true,
+		BasicRuntimeChecks: "EnableFastChecks"),
+	Configuration(name: "Debug-MSVC",
+		SDLCheck: true,
+		BufferSecurityCheck: true,
+		BasicRuntimeChecks: "EnableFastChecks"),
+	Configuration(name: "Release-MSVC (NDEBUG)",
+		PreprocessorDefinitions: { "__OPTIMIZE__" : "1", "NDEBUG" : "1" },
+		InlineFunctionExpansion: "AnySuitable",
+		WholeProgramOptimization: true,
+		RuntimeLibrary: "MultiThreadedDLL",
+		FavorSizeOrSpeed: "Speed",
+		Optimization: "Full"),
+	Configuration(name: "Release-MSVC",
+		PreprocessorDefinitions: { "__OPTIMIZE__" : "1" },
+		InlineFunctionExpansion: "AnySuitable",
+		WholeProgramOptimization: true,
+		RuntimeLibrary: "MultiThreadedDLL",
+		FavorSizeOrSpeed: "Speed",
+		Optimization: "Full"),
+};
+
+global final ARCHITECTURES: {Architecture...} = {
+	Architecture(name: "Win32", asmExt: ".ms-x86.S", StackReserveSize: 0x400000, ModuleDefinitionFile: r'src\deemon\linker-scripts\link-deemon-msvc.def'),
+	Architecture(name: "x64",   asmExt: ".ms-x64.S", StackReserveSize: 0x800000, mlExe: "ml64.exe"),
+};
+
+function getArchitectureForAsmFile(filename: string): Architecture | none {
+	for (local architecture: ARCHITECTURES) {
+		if (filename.endswith(architecture.asmExt))
+			return architecture;
+	}
+	return none;
+}
+
+
+function createVsFile(filename: string, cb: Callable) {
+	print("Creating file: ", repr filename);
+	local newData = File.Writer();
+	cb(newData);
+	newData = newData.string.encode("utf-8");
+	local oldData = try File.open(".vs/" + filename, "r").read() catch (...) none;
+	if (oldData is none || oldData != newData) {
+		local fp;
+		try {
+			fp = File.open(".vs/" + filename, "w");
+		} catch (...) {
+			try fs.mkdir(".vs"); catch (...);
+			try fs.mkdir(".vs/dex"); catch (...);
+			fp = File.open(".vs/" + filename, "w");
+		}
+		with (fp) cb(fp);
+	}
+}
+
+class FsDirNode {
+	this = default;
+	public member fullPath: string;
+	public member subDirs: {FsDirNode...} = [];
+	public member files: {string...} = [];
+
+	public property name: string = {
+		get(): string {
+			return fs.tailof(fullPath);
+		}
+	}
+	public property allDirs: {FsDirNode...} = {
+		get(): {FsDirNode...} {
+			yield this;
+			for (local subDir: subDirs) {
+				yield subDir.allDirs...;
+			}
+		}
+	}
+	public property allDirsAndSubDirs: {(FsDirNode, FsDirNode)...} = {
+		get(): {FsDirNode...} {
+			for (local subDir: subDirs) {
+				yield (this, subDir);
+			}
+			for (local subDir: subDirs) {
+				yield subDir.allDirsAndSubDirs...;
+			}
+		}
+	}
+}
+
+function loadFsDir(path: string): FsDirNode {
+	local result = FsDirNode(fullPath: path.replace(r'/', r'\'));
+	for (local dt: opendir(path)) {
+		if (isFileGitIgnored(dt.d_fullname))
+			continue;
+		if (dt.d_type == DT_DIR) {
+			result.subDirs.append(loadFsDir(fs.joinpath(path, dt.d_name)));
+		} else {
+			result.files.append(dt.d_name);
+		}
+	}
+	result.subDirs.sort(key: FsDirNode.fullPath);
+	result.files.sort();
+	return result;
+}
+
+
+createVsFile("deemon.sln", fp -> {
+	fp << '\r\n'
+		'Microsoft Visual Studio Solution File, Format Version 12.00\r\n'
+		'# Visual Studio 15\r\n'
+		'VisualStudioVersion = 15.0.28307.1321\r\n'
+		'MinimumVisualStudioVersion = 10.0.40219.1\r\n'
+		'Project("{' << DEEMON_GUID << '}") = "deemon", "deemon.vcxproj", "{' << DEEMON_CORE_GUID << '}"\r\n'
+		'EndProject\r\n'
+		'Project("{' << ROOT_FOLDER_GUID << '}") = "dex", "dex", "{' << DEX_FOLDER_GUID << '}"\r\n'
+		'EndProject\r\n';
+	for (local dexName: DEX_NAMES) {
+		local dexGuid = dexProjectGuid(dexName);
+		fp << 'Project("{' << DEEMON_GUID << '}") = "' << dexName << '", "dex\\' << dexName << '.vcxproj", "{' << dexGuid << '}"\r\n'
+			'	ProjectSection(ProjectDependencies) = postProject\r\n'
+			'		{' << DEEMON_CORE_GUID << '} = {' << DEEMON_CORE_GUID << '}\r\n'
+			'	EndProjectSection\r\n';
+	}
+
+	local globalFolders: {FsDirNode...} = Tuple({
+		loadFsDir("lib"),
+		loadFsDir("util"),
+	});
+
+	for (local globalFolder: globalFolders) {
+		for (local dir: globalFolder.allDirs) {
+			local name = dir.name;
+			local guid = folderGuid(dir.fullPath);
+			fp << 'Project("{' << ROOT_FOLDER_GUID << '}") = "' << name << '", "' << name << '", "{' << guid << '}"\r\n'
+				'	ProjectSection(SolutionItems) = preProject\r\n';
+			for (local file: dir.files) {
+				local relPath = fs.joinpath("..", dir.fullPath, file).replace(r'/', r'\');
+				fp << '		' << relPath << ' = ' << relPath << '\r\n';
+			}
+			fp <<
+				'	EndProjectSection\r\n'
+				'EndProject\r\n';
+		}
+	}
+
+	fp <<
+'Global\r\n'
+'	GlobalSection(SolutionConfigurationPlatforms) = preSolution\r\n';
+	for (local configuration: CONFIGURATIONS) {
+		for (local architecture: ARCHITECTURES) {
+			fp << '		' << configuration.name << '|' << architecture.name << ' = ' << configuration.name << '|' << architecture.name << '\r\n';
+		}
+	}
+
+	fp <<
+'	EndGlobalSection\r\n'
+'	GlobalSection(ProjectConfigurationPlatforms) = postSolution\r\n';
+	local guids = { DEEMON_CORE_GUID, (for (local dexName: DEX_NAMES) dexProjectGuid(dexName))... };
+	for (local guid: guids) {
+		for (local configuration: CONFIGURATIONS) {
+			for (local architecture: ARCHITECTURES) {
+				fp <<
+					'		{' << guid << '}.' << configuration.name << '|' << architecture.name << '.ActiveCfg = ' << configuration.name << '|' << architecture.name << '\r\n'
+					'		{' << guid << '}.' << configuration.name << '|' << architecture.name << '.Build.0 = ' << configuration.name << '|' << architecture.name << '\r\n';
+			}
+		}
+	}
+
+	fp <<
+'	EndGlobalSection\r\n'
+'	GlobalSection(SolutionProperties) = preSolution\r\n'
+'		HideSolutionNode = FALSE\r\n'
+'	EndGlobalSection\r\n'
+'	GlobalSection(NestedProjects) = preSolution\r\n';
+	for (local dexName: DEX_NAMES) {
+		local dexGuid = dexProjectGuid(dexName);
+		fp << '		{' << dexGuid << '} = {' << DEX_FOLDER_GUID << '}\r\n';
+	}
+
+	for (local globalFolder: globalFolders) {
+		for (local dir, subDir: globalFolder.allDirsAndSubDirs) {
+			local dirGuid    = folderGuid(dir.fullPath);
+			local subDirGuid = folderGuid(subDir.fullPath);
+			fp << '		{' << subDirGuid << '} = {' << dirGuid << '}\r\n';
+		}
+	}
+
+	fp <<
+'	EndGlobalSection\r\n'
+'	GlobalSection(ExtensibilityGlobals) = postSolution\r\n'
+'		SolutionGuid = {A751EA8C-34FD-41A5-B12E-5C7D76FEF65A}\r\n'
+'	EndGlobalSection\r\n'
+'EndGlobal\r\n';
+});
+
+
+global final FILE_KIND_MSC = 0;
+global final FILE_KIND_HDR = 1;
+global final FILE_KIND_SRC = 2;
+global final HEADER_MAPPING: {string: int} = {
+	"h"   : FILE_KIND_HDR,
+	"inl" : FILE_KIND_HDR,
+	""    : FILE_KIND_HDR,
+	"c"   : FILE_KIND_SRC,
+};
+
+class SourceFile {
+	this = default;
+
+	@@Project-relative path to source file
+	public member path: string;
+
+	@@Source file kind (one o `FILE_KIND_*`)
+	public member kind: int;
+
+	public function getFilterPath(componentName: string): string {
+		if (r"\" !in path)
+			return "";
+		local result = path.rpartition(r"\").first;
+		if (componentName == "deemon") {
+			if (result.startswith(r"src\deemon")) {
+				result = f"src{result[10:]}";
+			} else if (result.startswith(r"include\deemon")) {
+				result = f"include{result[14:]}";
+			}
+		} else {
+			result = result.lsstrip(f"src\\dex\\{componentName}");
+		}
+		result = result.strip(r'\');
+		return result;
+	}
+}
+
+
+function scanSourceFiles(path: string, recursive: bool = true): {SourceFile...} {
+	for (local dt: opendir(path)) {
+		local ext = fs.extof(dt.d_name);
+		if (isFileGitIgnored(dt.d_fullname))
+			continue;
+		if (dt.d_type == DT_DIR) {
+			if (recursive) {
+				yield scanSourceFiles(fs.joinpath(path, dt.d_name), recursive: recursive)...;
+			}
+			continue;
+		}
+		yield SourceFile(
+			path: fs.joinpath(path, dt.d_name).replace(r'/', r'\').lsstrip(r".\"),
+			kind: HEADER_MAPPING.get(ext, FILE_KIND_MSC));
+	}
+}
+
+function printVcxprojSourceFileGroups(fp: File, pathPrefix: string, sourceFiles: {SourceFile...}): {Architecture...} {
+	fp << '\t<ItemGroup>\r\n';
+	for (local sourceFile: sourceFiles) {
+		if (sourceFile.kind != FILE_KIND_HDR)
+			continue;
+		fp << '		<ClInclude Include="' << pathPrefix << sourceFile.path << '" />\r\n';
+	}
+
+	fp << '\t</ItemGroup>\r\n\t<ItemGroup>\r\n';
+	for (local sourceFile: sourceFiles) {
+		if (sourceFile.kind != FILE_KIND_SRC)
+			continue;
+		fp << '		<ClCompile Include="' << pathPrefix << sourceFile.path << '" />\r\n';
+	}
+
+	local miscSourceFiles = List(
+		for (local sourceFile: sourceFiles)
+			if (sourceFile.kind !in [FILE_KIND_HDR, FILE_KIND_SRC])
+				sourceFile);
+	local hasAssemblySourceFilesInArchitectures: {Architecture...} = [];
+	if (miscSourceFiles) {
+		fp << '\t</ItemGroup>\r\n\t<ItemGroup>\r\n';
+		for (local sourceFile: miscSourceFiles) {
+			local sourceFilePath = sourceFile.path;
+			if (sourceFilePath.endswith(".S")) {
+				local asmArch = getArchitectureForAsmFile(sourceFilePath);
+				if (asmArch !is none) {
+					hasAssemblySourceFilesInArchitectures.append(asmArch);
+					fp << '		<CustomBuild Include="' << pathPrefix << sourceFilePath << '">\r\n'
+						'			<FileType>Document</FileType>\r\n';
+					local buildArtifactSourceFilePath = sourceFilePath.replace(r'\', r'-').rpartition(".").first;
+					local preprocessedSourceFilePath = f"{buildArtifactSourceFilePath}.asm";
+					local compiledSourceFilePath = f"{buildArtifactSourceFilePath}.obj";
+					for (local configuration: CONFIGURATIONS) {
+						for (local architecture: ARCHITECTURES) {
+							fp << '			<Command Condition="\'$(Configuration)|$(Platform)\'==\'' << configuration.name << '|' << architecture.name << '\'">'
+								'cl.exe /EP "$(SolutionDir)..\\' << sourceFilePath << '" &gt; "$(IntermediateOutputPath)\\' << preprocessedSourceFilePath << '"\r\n'
+								<< architecture.mlExe << ' /c /Cx /Fo "$(IntermediateOutputPath)\\' << compiledSourceFilePath << '" "$(IntermediateOutputPath)\\' << preprocessedSourceFilePath << '"'
+							'</Command>\r\n';
+						}
+					}
+					for (local configuration: CONFIGURATIONS) {
+						for (local architecture: ARCHITECTURES) {
+							fp << '			<Outputs Condition="\'$(Configuration)|$(Platform)\'==\'' << configuration.name << '|' << architecture.name << '\'">$(IntermediateOutputPath)\\' << compiledSourceFilePath << ';%(Outputs)</Outputs>\r\n';
+						}
+					}
+					for (local configuration: CONFIGURATIONS) {
+						for (local architecture: ARCHITECTURES) {
+							if (architecture !== asmArch) {
+								fp << '			<ExcludedFromBuild Condition="\'$(Configuration)|$(Platform)\'==\'' << configuration.name << '|' << architecture.name << '\'">true</ExcludedFromBuild>\r\n';
+							}
+						}
+					}
+					fp << '		</CustomBuild>\r\n';
+					continue;
+				}
+			}
+			fp << '		<None Include="' << pathPrefix << sourceFilePath << '" />\r\n';
+		}
+	}
+
+	fp << '\t</ItemGroup>\r\n';
+	return hasAssemblySourceFilesInArchitectures;
+}
+
+local deemonCoreSourceFiles: {SourceFile...} = [];
+deemonCoreSourceFiles.extend(scanSourceFiles("include"));
+deemonCoreSourceFiles.extend(scanSourceFiles("src/deemon"));
+deemonCoreSourceFiles.extend(scanSourceFiles(".", recursive: false));
+deemonCoreSourceFiles.sort(key: SourceFile.path);
+
+function printVcxprojItemDefinitionGroups(fp: File, forDex: bool,
+		hasAssemblySourceFilesInArchitectures: {Architecture...} = ()) {
+	for (local configuration: CONFIGURATIONS) {
+		for (local architecture: ARCHITECTURES) {
+			fp << '	<ItemDefinitionGroup Condition="\'$(Configuration)|$(Platform)\'==\'' << configuration.name << '|' << architecture.name << '\'">\r\n'
+				'		<ClCompile>\r\n'
+				'			<WarningLevel>Level4</WarningLevel>\r\n'
+				'			<FunctionLevelLinking>true</FunctionLevelLinking>\r\n'
+				'			<IntrinsicFunctions>true</IntrinsicFunctions>\r\n'
+				'			<CompileAs>CompileAsCpp</CompileAs>\r\n'
+				'			<ObjectFileName>$(IntDir)/%(RelativeDir)/</ObjectFileName>\r\n'
+				'			<RuntimeTypeInfo>false</RuntimeTypeInfo>\r\n'
+				'			<StringPooling>true</StringPooling>\r\n'
+				'			<MultiProcessorCompilation>true</MultiProcessorCompilation>\r\n';
+			local extraPreprocessorStrings = forDex
+				? "CONFIG_BUILDING_DEX;"
+				: "CONFIG_BUILDING_DEEMON;";
+			for (local name, val: configuration.PreprocessorDefinitions) {
+				if (val != "1")
+					name = f"{name}={val}";
+				extraPreprocessorStrings += f"{name};";
+			}
+			fp << '			<PreprocessorDefinitions>' << extraPreprocessorStrings << '%(PreprocessorDefinitions)</PreprocessorDefinitions>\r\n'
+				'			<FavorSizeOrSpeed>' << configuration.FavorSizeOrSpeed << '</FavorSizeOrSpeed>\r\n'
+				'			<InlineFunctionExpansion>' << configuration.InlineFunctionExpansion << '</InlineFunctionExpansion>\r\n'
+				'			<WholeProgramOptimization>' << configuration.WholeProgramOptimization << '</WholeProgramOptimization>\r\n'
+				'			<RuntimeLibrary>' << configuration.RuntimeLibrary << '</RuntimeLibrary>\r\n'
+				'			<BufferSecurityCheck>' << configuration.BufferSecurityCheck << '</BufferSecurityCheck>\r\n'
+				'			<ExceptionHandling>' << configuration.ExceptionHandling << '</ExceptionHandling>\r\n'
+				'			<Optimization>' << configuration.Optimization << '</Optimization>\r\n';
+			if (configuration.SDLCheck !is none)
+				fp << '			<SDLCheck>' << configuration.SDLCheck << '</SDLCheck>\r\n';
+			if (configuration.BasicRuntimeChecks !is none)
+				fp << '			<BasicRuntimeChecks>' << configuration.BasicRuntimeChecks << '</BasicRuntimeChecks>\r\n';
+			fp << '		</ClCompile>\r\n'
+				'		<Link>\r\n'
+				'			<OptimizeReferences>true</OptimizeReferences>\r\n'
+				'			<LinkTimeCodeGeneration>Default</LinkTimeCodeGeneration>\r\n'
+				'			<GenerateDebugInformation>' << configuration.GenerateDebugInformation << '</GenerateDebugInformation>\r\n'
+				'			<EnableCOMDATFolding>' << configuration.EnableCOMDATFolding << '</EnableCOMDATFolding>\r\n';
+			if (forDex) {
+				if (architecture in hasAssemblySourceFilesInArchitectures)
+					fp << '			<ImageHasSafeExceptionHandlers>false</ImageHasSafeExceptionHandlers>\r\n';
+				fp << '		<AdditionalDependencies>deemon.lib;%(AdditionalDependencies)</AdditionalDependencies>\r\n';
+			} else {
+				if (architecture.StackReserveSize !is none)
+					fp << '			<StackReserveSize>' << architecture.StackReserveSize << '</StackReserveSize>\r\n';
+				if (architecture.ModuleDefinitionFile !is none)
+					fp << '			<ModuleDefinitionFile>..\\' << architecture.ModuleDefinitionFile << '</ModuleDefinitionFile>\r\n';
+			}
+			fp <<
+				'		</Link>\r\n'
+				'	</ItemDefinitionGroup>\r\n';
+		}
+	}
+}
+
+createVsFile("deemon.vcxproj", fp -> {
+	fp << '<?xml version="1.0" encoding="utf-8"?>\r\n'
+		'<Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">\r\n'
+		'	<ItemGroup Label="ProjectConfigurations">\r\n';
+	for (local configuration: CONFIGURATIONS) {
+		for (local architecture: ARCHITECTURES) {
+			fp <<
+				'		<ProjectConfiguration Include="' << configuration.name << '|' << architecture.name << '">\r\n'
+				'			<Configuration>' << configuration.name << '</Configuration>\r\n'
+				'			<Platform>' << architecture.name << '</Platform>\r\n'
+				'		</ProjectConfiguration>\r\n';
+		}
+	}
+	fp << '	</ItemGroup>\r\n';
+
+	local hasAssemblySourceFilesInArchitectures = printVcxprojSourceFileGroups(fp, r"..\", deemonCoreSourceFiles);
+
+	fp << '	<PropertyGroup Label="Globals">\r\n'
+		'		<ProjectGuid>{' << DEEMON_CORE_GUID << '}</ProjectGuid>\r\n'
+		'		<RootNamespace>deemon</RootNamespace>\r\n'
+		'		<WindowsTargetPlatformVersion>10.0.17763.0</WindowsTargetPlatformVersion>\r\n'
+		'	</PropertyGroup>\r\n'
+		'	<Import Project="$(VCTargetsPath)\\Microsoft.Cpp.Default.props" />\r\n';
+
+	for (local configuration: CONFIGURATIONS) {
+		for (local architecture: ARCHITECTURES) {
+			fp << '	<PropertyGroup Condition="\'$(Configuration)|$(Platform)\'==\'' << configuration.name << '|' << architecture.name << '\'" Label="Configuration">\r\n'
+				'		<ConfigurationType>Application</ConfigurationType>\r\n'
+				'		<UseDebugLibraries>false</UseDebugLibraries>\r\n'
+				'		<PlatformToolset>v141</PlatformToolset>\r\n'
+				'		<WholeProgramOptimization>true</WholeProgramOptimization>\r\n'
+				'		<CharacterSet>MultiByte</CharacterSet>\r\n'
+				'	</PropertyGroup>\r\n';
+		}
+	}
+
+	fp << '	<Import Project="$(VCTargetsPath)\\Microsoft.Cpp.props" />\r\n'
+		'	<ImportGroup Label="ExtensionSettings">\r\n'
+		'	</ImportGroup>\r\n';
+
+	for (local configuration: CONFIGURATIONS) {
+		for (local architecture: ARCHITECTURES) {
+			fp << '	<ImportGroup Condition="\'$(Configuration)|$(Platform)\'==\'' << configuration.name << '|' << architecture.name << '\'" Label="PropertySheets">\r\n'
+				'		<Import Project="$(UserRootDir)\\Microsoft.Cpp.$(Platform).user.props" Condition="exists(\'$(UserRootDir)\\Microsoft.Cpp.$(Platform).user.props\')" Label="LocalAppDataPlatform" />\r\n'
+				'	</ImportGroup>\r\n';
+		}
+	}
+
+	fp << '	<PropertyGroup Label="UserMacros" />\r\n';
+
+	for (local configuration: CONFIGURATIONS) {
+		for (local architecture: ARCHITECTURES) {
+			fp << '	<PropertyGroup Condition="\'$(Configuration)|$(Platform)\'==\'' << configuration.name << '|' << architecture.name << '\'">\r\n'
+				'		<IncludePath>$(SolutionDir)..\\include;$(SolutionDir)..\\include\\deemon\\kos-headers;$(IncludePath)</IncludePath>\r\n'
+				'		<OutDir>$(SolutionDir)..\\</OutDir>\r\n'
+				'		<CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>\r\n'
+				'		<IntDir>$(SolutionDir)..\\build\\.vs\\$(ProjectName)\\$(Platform)-$(Configuration)\\a\\b\\c\\</IntDir>\r\n'
+				'		<NMakeBuildCommandLine>make</NMakeBuildCommandLine>\r\n'
+				'		<NMakeReBuildCommandLine>make -B</NMakeReBuildCommandLine>\r\n'
+				'		<NMakeCleanCommandLine>make</NMakeCleanCommandLine>\r\n'
+				'	</PropertyGroup>\r\n';
+		}
+	}
+	printVcxprojItemDefinitionGroups(fp, forDex: false,
+		hasAssemblySourceFilesInArchitectures: hasAssemblySourceFilesInArchitectures);
+	fp << '	<Import Project="$(VCTargetsPath)\\Microsoft.Cpp.targets" />\r\n'
+		'	<ImportGroup Label="ExtensionTargets">\r\n'
+		'	</ImportGroup>\r\n'
+		'</Project>';
+});
+
+
+function printVcxprojFilterSourceFileGroups(componentName: string, outputFilename: string, sourceFiles: {SourceFile...}) {
+	local basicFolderNames = HashSet();
+	for (local sourceFile: sourceFiles)
+		basicFolderNames.insert(sourceFile.getFilterPath(componentName));
+	basicFolderNames.remove("");
+	local folderNames = HashSet();
+	for (local basicFolderName: basicFolderNames) {
+		local whole = "";
+		for (local part: basicFolderName.split(r"\")) {
+			if (whole)
+				whole += r"\";
+			whole += part;
+			folderNames.insert(whole);
+		}
+	}
+	folderNames = folderNames.sorted();
+	if (!folderNames) {
+		/* No sub-namespaces --> don't need a filter file. */
+		try fs.unlink(f".vs/{outputFilename}"); catch (...);
+		return;
+	}
+
+	local pathPrefix: string = r"..\" * (1 + outputFilename.count("/"));
+	createVsFile(outputFilename, fp -> {
+		fp << '<?xml version="1.0" encoding="utf-8"?>\r\n'
+			'<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">\r\n'
+			'	<ItemGroup>\r\n';
+		for (local folderName: folderNames) {
+			fp << '		<Filter Include="' << folderName << '">\r\n'
+				'			<UniqueIdentifier>{' << filterFolderGuid(folderName) << '}</UniqueIdentifier>\r\n'
+				'		</Filter>\r\n';
+		}
+
+		fp << '\t</ItemGroup>\r\n\t<ItemGroup>\r\n';
+		for (local sourceFile: sourceFiles) {
+			if (sourceFile.kind != FILE_KIND_HDR)
+				continue;
+			local filterPath = sourceFile.getFilterPath(componentName);
+			if (filterPath) {
+				fp << '		<ClInclude Include="' << pathPrefix << sourceFile.path << '">\r\n'
+					'			<Filter>' << filterPath << '</Filter>\r\n'
+					'		</ClInclude>\r\n';
+			} else {
+				fp << '		<ClInclude Include="' << pathPrefix << sourceFile.path << '" />\r\n';
+			}
+		}
+
+		fp << '\t</ItemGroup>\r\n\t<ItemGroup>\r\n';
+		for (local sourceFile: sourceFiles) {
+			if (sourceFile.kind != FILE_KIND_SRC)
+				continue;
+			local filterPath = sourceFile.getFilterPath(componentName);
+			if (filterPath) {
+				fp << '		<ClCompile Include="' << pathPrefix << sourceFile.path << '">\r\n'
+					'			<Filter>' << filterPath << '</Filter>\r\n'
+					'		</ClCompile>\r\n';
+			} else {
+				fp << '		<ClCompile Include="' << pathPrefix << sourceFile.path << '" />\r\n';
+			}
+		}
+
+		local miscSourceFiles = List(
+			for (local sourceFile: sourceFiles)
+				if (sourceFile.kind !in [FILE_KIND_HDR, FILE_KIND_SRC])
+					sourceFile);
+		local customBuildSourceFiles: {SourceFile...} = [];
+		if (miscSourceFiles) {
+			fp << '\t</ItemGroup>\r\n\t<ItemGroup>\r\n';
+			for (local sourceFile: miscSourceFiles) {
+				local sourceFilePath = sourceFile.path;
+				if (sourceFilePath.endswith(".S")) {
+					local asmArch = getArchitectureForAsmFile(sourceFilePath);
+					if (asmArch !is none) {
+						customBuildSourceFiles.append(sourceFile);
+						continue;
+					}
+				}
+				local filterPath = sourceFile.getFilterPath(componentName);
+				if (filterPath) {
+					fp << '		<None Include="' << pathPrefix << sourceFile.path << '">\r\n'
+						'			<Filter>' << filterPath << '</Filter>\r\n'
+						'		</None>\r\n';
+				} else {
+					fp << '		<None Include="' << pathPrefix << sourceFile.path << '" />\r\n';
+				}
+			}
+		}
+		if (customBuildSourceFiles) {
+			fp << '\t</ItemGroup>\r\n\t<ItemGroup>\r\n';
+			for (local sourceFile: customBuildSourceFiles) {
+				local filterPath = sourceFile.getFilterPath(componentName);
+				if (filterPath) {
+					fp << '		<CustomBuild Include="' << pathPrefix << sourceFile.path << '">\r\n'
+						'			<Filter>' << filterPath << '</Filter>\r\n'
+						'		</CustomBuild>\r\n';
+				} else {
+					fp << '		<CustomBuild Include="' << pathPrefix << sourceFile.path << '" />\r\n';
+				}
+			}
+		}
+		fp << '	</ItemGroup>\r\n'
+			'</Project>';
+	});
+}
+
+
+printVcxprojFilterSourceFileGroups("deemon", "deemon.vcxproj.filters", deemonCoreSourceFiles);
+
+createVsFile("deemon.vcxproj.user", fp -> {
+	fp << '<?xml version="1.0" encoding="utf-8"?>\r\n'
+		'<Project ToolsVersion="12.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">\r\n';
+	for (local configuration: CONFIGURATIONS) {
+		for (local architecture: ARCHITECTURES) {
+			fp << '	<PropertyGroup Condition="\'$(Configuration)|$(Platform)\'==\'' << configuration.name << '|' << architecture.name << '\'">\r\n'
+				'		<DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>\r\n'
+				'		<LocalDebuggerWorkingDirectory>$(OutDir)</LocalDebuggerWorkingDirectory>\r\n'
+				'		<LocalDebuggerCommandArguments>-O3 input.dee</LocalDebuggerCommandArguments>\r\n'
+				'		<LocalDebuggerCommand>$(ProjectDir)..\\deemon.exe</LocalDebuggerCommand>\r\n'
+				'	</PropertyGroup>\r\n';
+		}
+	}
+	fp << '</Project>';
+});
+
+for (local dexName: DEX_NAMES) {
+	local dexSourceFiles: {SourceFile...} = [];
+	if (dexName == "ctypes") {
+		dexSourceFiles.extend(scanSourceFiles("src/dex/ctypes", recursive: false));
+		dexSourceFiles.extend(scanSourceFiles("src/dex/ctypes/ffi/libffi_msvc", recursive: false));
+	} else {
+		dexSourceFiles.extend(scanSourceFiles(f"src/dex/{dexName}"));
+	}
+	dexSourceFiles.sort(key: SourceFile.path);
+
+	createVsFile(f"dex/{dexName}.vcxproj", fp -> {
+		fp << '<?xml version="1.0" encoding="utf-8"?>\r\n'
+			'<Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">\r\n'
+			'	<ItemGroup Label="ProjectConfigurations">\r\n';
+		for (local configuration: CONFIGURATIONS) {
+			for (local architecture: ARCHITECTURES) {
+				fp <<
+					'		<ProjectConfiguration Include="' << configuration.name << '|' << architecture.name << '">\r\n'
+					'			<Configuration>' << configuration.name << '</Configuration>\r\n'
+					'			<Platform>' << architecture.name << '</Platform>\r\n'
+					'		</ProjectConfiguration>\r\n';
+			}
+		}
+		fp << '	</ItemGroup>\r\n';
+
+		local hasAssemblySourceFilesInArchitectures = printVcxprojSourceFileGroups(fp, r"..\..\", dexSourceFiles);
+
+		local dexGuid = dexProjectGuid(dexName);
+		fp << '	<PropertyGroup Label="Globals">\r\n'
+			'		<ProjectGuid>{' << dexGuid << '}</ProjectGuid>\r\n'
+			'		<RootNamespace>' << dexName << '</RootNamespace>\r\n'
+			'		<WindowsTargetPlatformVersion>10.0.17763.0</WindowsTargetPlatformVersion>\r\n'
+			'	</PropertyGroup>\r\n'
+			'	<Import Project="$(VCTargetsPath)\\Microsoft.Cpp.Default.props" />\r\n';
+
+		for (local configuration: CONFIGURATIONS) {
+			for (local architecture: ARCHITECTURES) {
+				fp << '	<PropertyGroup Condition="\'$(Configuration)|$(Platform)\'==\'' << configuration.name << '|' << architecture.name << '\'" Label="Configuration">\r\n'
+					'		<ConfigurationType>DynamicLibrary</ConfigurationType>\r\n'
+					'		<UseDebugLibraries>false</UseDebugLibraries>\r\n'
+					'		<PlatformToolset>v141</PlatformToolset>\r\n'
+					'		<WholeProgramOptimization>true</WholeProgramOptimization>\r\n'
+					'		<CharacterSet>MultiByte</CharacterSet>\r\n'
+					'	</PropertyGroup>\r\n';
+			}
+		}
+
+		fp << '	<Import Project="$(VCTargetsPath)\\Microsoft.Cpp.props" />\r\n'
+			'	<ImportGroup Label="ExtensionSettings">\r\n'
+			'	</ImportGroup>\r\n';
+
+		for (local configuration: CONFIGURATIONS) {
+			for (local architecture: ARCHITECTURES) {
+				fp << '	<ImportGroup Condition="\'$(Configuration)|$(Platform)\'==\'' << configuration.name << '|' << architecture.name << '\'" Label="PropertySheets">\r\n'
+					'		<Import Project="$(UserRootDir)\\Microsoft.Cpp.$(Platform).user.props" Condition="exists(\'$(UserRootDir)\\Microsoft.Cpp.$(Platform).user.props\')" Label="LocalAppDataPlatform" />\r\n'
+					'	</ImportGroup>\r\n';
+			}
+		}
+
+		fp << '	<PropertyGroup Label="UserMacros" />\r\n';
+
+		for (local configuration: CONFIGURATIONS) {
+			for (local architecture: ARCHITECTURES) {
+				local extraIncludePaths = ["$(SolutionDir)..\\include", "$(SolutionDir)..\\include\\deemon\\kos-headers"];
+				if (dexName == "ctypes")
+					extraIncludePaths.append("$(SolutionDir)..\\src\\dex\\ctypes\\ffi\\libffi_msvc");
+				fp << '	<PropertyGroup Condition="\'$(Configuration)|$(Platform)\'==\'' << configuration.name << '|' << architecture.name << '\'">\r\n'
+					'		<IncludePath>';
+				for (local extraIncludePath: extraIncludePaths)
+					fp << extraIncludePath << ';';
+				fp << '$(IncludePath)</IncludePath>\r\n'
+					'		<OutDir>$(SolutionDir)..\\lib\\</OutDir>\r\n'
+					'		<CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>\r\n'
+					'		<IntDir>$(SolutionDir)..\\build\\.vs\\$(ProjectName)\\$(Platform)-$(Configuration)\\a\\b\\c\\</IntDir>\r\n'
+					'		<NMakeBuildCommandLine>make</NMakeBuildCommandLine>\r\n'
+					'		<NMakeReBuildCommandLine>make -B</NMakeReBuildCommandLine>\r\n'
+					'		<NMakeCleanCommandLine>make</NMakeCleanCommandLine>\r\n'
+					'		<LibraryPath>$(SolutionDir)..;$(LibraryPath)</LibraryPath>\r\n'
+					'	</PropertyGroup>\r\n';
+			}
+		}
+
+		printVcxprojItemDefinitionGroups(fp, forDex: true,
+			hasAssemblySourceFilesInArchitectures: hasAssemblySourceFilesInArchitectures);
+
+		fp << '	<Import Project="$(VCTargetsPath)\\Microsoft.Cpp.targets" />\r\n'
+			'	<ImportGroup Label="ExtensionTargets">\r\n'
+			'	</ImportGroup>\r\n'
+			'</Project>';
+	});
+
+	printVcxprojFilterSourceFileGroups(dexName, f"dex/{dexName}.vcxproj.filters", dexSourceFiles);
+	createVsFile(f"dex/{dexName}.vcxproj.user", fp -> {
+		fp << '<?xml version="1.0" encoding="utf-8"?>\r\n'
+			'<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">\r\n'
+			'	<PropertyGroup />\r\n'
+			'</Project>\r\n';
+	});
+}
+
+

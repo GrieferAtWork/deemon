@@ -184,7 +184,7 @@ typedef Dee_code_saddr_t  code_saddr_t;
 #endif /* DEE_SOURCE */
 
 struct Dee_except_handler {
-	/* WARNING: Changes must be mirrored in `/src/deemon/execute/asm/exec-386.S' */
+	/* WARNING: Changes must be mirrored in `/src/deemon/execute/asm/exec.gas-386.S' */
 	DREF DeeTypeObject            *eh_mask;   /* [0..1][const] When set, only jump to this handler when the
 	                                           *               last raised exception is an instance of `eh_mask'. */
 	Dee_code_addr_t                eh_start;  /* [const][<= eh_end] Exception handler protection start address. */
@@ -489,7 +489,7 @@ INTDEF DeeDDIObject empty_ddi;
 
 
 struct Dee_code_object {
-	/* WARNING: Changes must be mirrored in `/src/deemon/execute/asm/exec-386.S' */
+	/* WARNING: Changes must be mirrored in `/src/deemon/execute/asm/exec.gas-386.S' */
 	Dee_OBJECT_HEAD /* GC Object. */
 	uint16_t                 co_flags;       /* Code flags (Set of `CODE_F*') */
 	uint16_t                 co_localc;      /* [const] Amount of local variables used by code. */
@@ -710,7 +710,7 @@ struct Dee_code_frame_kwds {
 /* Execution frame of a deemon code object.
  * NOTE: This structure is usually allocated on the host's stack. */
 struct Dee_code_frame {
-	/* WARNING: Changes must be mirrored in `/src/deemon/execute/asm/exec-386.S' */
+	/* WARNING: Changes must be mirrored in `/src/deemon/execute/asm/exec.gas-386.S' */
 	struct Dee_code_frame    *cf_prev;    /* [0..1] Previous execution frame.
 	                                       * NOTE: Set to `CODE_FRAME_NOT_EXECUTING' while
 	                                       *       the frame is not being executed. */
@@ -768,7 +768,7 @@ DeeCode_ExecFrameSafe(struct Dee_code_frame *__restrict frame);
 
 #ifndef DEE_EXEC_ALTSTACK_PERIOD
 #if defined(__i386__)
-#define DEE_EXEC_ALTSTACK_PERIOD  1024 /* NOTE: Changes must be mirrored in `exec-386.S' */
+#define DEE_EXEC_ALTSTACK_PERIOD  1024 /* NOTE: Changes must be mirrored in `exec.gas-386.S' */
 #elif defined(__x86_64__)
 #define DEE_EXEC_ALTSTACK_PERIOD  1024
 #endif
@@ -863,7 +863,7 @@ trigger_breakpoint(struct Dee_code_frame *__restrict frame);
 
 
 struct Dee_function_object {
-	/* WARNING: Changes must be mirrored in `/src/deemon/execute/asm/exec-386.S' */
+	/* WARNING: Changes must be mirrored in `/src/deemon/execute/asm/exec.gas-386.S' */
 	Dee_OBJECT_HEAD
 	DREF DeeCodeObject                       *fo_code;  /* [1..1][const] Associated code object. */
 	COMPILER_FLEXIBLE_ARRAY(DREF DeeObject *, fo_refv); /* [1..1][const][fo_code->co_refc] Vector of referenced objects. */

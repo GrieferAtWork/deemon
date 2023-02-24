@@ -1089,7 +1089,7 @@ PRIVATE struct dex_symbol symbols[] = {
 	{ "query", (DeeObject *)&DeeQuery_Type, MODSYM_FNORMAL },
 	{ "environ", &DeeEnv_Singleton, MODSYM_FNORMAL,
 	  DOC("->?S?T2?Dstring?Dstring\n"
-	      "A :mapping-style singleton instance that can be used to "
+	      "A ?DMapping-style singleton instance that can be used to "
 	      "access and enumerate environment variables by name:\n"
 	      "${"
 	      "print environ[\"PATH\"]; /* \"/bin:/usr/bin:...\" */"

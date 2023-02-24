@@ -36,7 +36,7 @@ import * from deemon;
 @@>
 @@Note that once an old-style headers has been included, any
 @@class that doesn't declare an explicit base is automatically
-@@assembled to be deribed from `OldUserClass from rt.F_decd200'
+@@assembled to be deribed from `OldUserClass from rt.d200'
 class OldUserClass
 	/* Inherit from weakrefable, because it used to be that
 	 * any user-defined class could be weakly referenced by

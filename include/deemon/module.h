@@ -285,7 +285,7 @@ INTDEF WUNUSED DREF struct Dee_string_object *DCALL module_symbol_getdocobj(stru
                                              *       of this module have also been initialized successfully. */
 
 struct Dee_module_object {
-	/* WARNING: Changes must be mirrored in `/src/deemon/execute/asm/exec-386.S' */
+	/* WARNING: Changes must be mirrored in `/src/deemon/execute/asm/exec.gas-386.S' */
 	Dee_OBJECT_HEAD /* GC Object. */
 	DREF struct Dee_string_object *mo_name;     /* [1..1][const] Name of this module (e.g.: `foo'). */
 	LIST_ENTRY(Dee_module_object)  mo_link;     /* [0..1][lock(INTERN(modules_lock))] Link into module file hash-table.*/

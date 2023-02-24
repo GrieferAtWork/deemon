@@ -509,7 +509,7 @@ fi
 if [[ "$WITH_ASSEMBLY_INTERPRETER" == "1" ]]; then
 	case "$TARGET_CPU" in
 	i?86)
-		WITH_ASSEMBLY_INTERPRETER="$BLD_PATH/core/src/deemon/execute/asm/exec-386.o"
+		WITH_ASSEMBLY_INTERPRETER="$BLD_PATH/core/src/deemon/execute/asm/exec.gas-386.o"
 		;;
 	*)
 		echo "Error: No assembly interpreter exists for this platform" | tee -a "$CONFIG_LOG"

@@ -1,74 +1,83 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <ItemGroup>
-    <ClCompile Include="..\..\src\dex\ctypes\array.c" />
-    <ClCompile Include="..\..\src\dex\ctypes\builtins.c" />
-    <ClCompile Include="..\..\src\dex\ctypes\cfunction.c" />
-    <ClCompile Include="..\..\src\dex\ctypes\core.c" />
-    <ClCompile Include="..\..\src\dex\ctypes\libctypes.c" />
-    <ClCompile Include="..\..\src\dex\ctypes\pointer-math.c" />
-    <ClCompile Include="..\..\src\dex\ctypes\pointer.c" />
-    <ClCompile Include="..\..\src\dex\ctypes\ffi\libffi_msvc\ffi64.c">
-      <Filter>ffi</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\dex\ctypes\ffi\libffi_msvc\prep_cif.c">
-      <Filter>ffi</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\dex\ctypes\ffi\libffi_msvc\raw_api.c">
-      <Filter>ffi</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\dex\ctypes\ffi\libffi_msvc\types.c">
-      <Filter>ffi</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\dex\ctypes\ffi\libffi_msvc\closures.c">
-      <Filter>ffi</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\dex\ctypes\ffi\libffi_msvc\ffi.c">
-      <Filter>ffi</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\dex\ctypes\shlib.c" />
-    <ClCompile Include="..\..\src\dex\ctypes\c_malloc.c" />
-    <ClCompile Include="..\..\src\dex\ctypes\struct.c" />
-    <ClCompile Include="..\..\src\dex\ctypes\c_string.c" />
-    <ClCompile Include="..\..\src\dex\ctypes\c_atomic.c" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="..\..\src\dex\ctypes\libctypes.h" />
-    <ClInclude Include="..\..\src\dex\ctypes\ffi\libffi_msvc\ffi_common.h">
-      <Filter>ffi</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\dex\ctypes\ffi\libffi_msvc\fficonfig.h">
-      <Filter>ffi</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\dex\ctypes\ffi\libffi_msvc\ffitarget.h">
-      <Filter>ffi</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\dex\ctypes\ffi\libffi_msvc\ffi.h">
-      <Filter>ffi</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\dex\ctypes\c_api.h" />
-    <ClInclude Include="..\..\src\dex\ctypes\_res.h" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="..\..\src\dex\ctypes\define-float.c.inl" />
-    <None Include="..\..\src\dex\ctypes\define-integer.c.inl" />
-    <None Include="..\..\src\dex\ctypes\pointer-math-impl.c.inl" />
-    <None Include="..\..\src\dex\ctypes\ffi\libffi_msvc\dlmalloc.inl">
-      <Filter>ffi</Filter>
-    </None>
-    <None Include="..\..\src\dex\ctypes\cfunction-invoke.c.inl" />
-  </ItemGroup>
-  <ItemGroup>
-    <Filter Include="ffi">
-      <UniqueIdentifier>{f0a9cf18-4534-4f2f-bf3f-3b10fe3ed90d}</UniqueIdentifier>
-    </Filter>
-  </ItemGroup>
-  <ItemGroup>
-    <CustomBuild Include="..\..\src\dex\ctypes\ffi\libffi_msvc\win32.S">
-      <Filter>ffi</Filter>
-    </CustomBuild>
-    <CustomBuild Include="..\..\src\dex\ctypes\ffi\libffi_msvc\win64.S">
-      <Filter>ffi</Filter>
-    </CustomBuild>
-  </ItemGroup>
+	<ItemGroup>
+		<Filter Include="ffi">
+			<UniqueIdentifier>{372a956e-8c03-4d55-8939-000000001AD9}</UniqueIdentifier>
+		</Filter>
+		<Filter Include="ffi\libffi_msvc">
+			<UniqueIdentifier>{372a956e-8c03-4d55-8939-7BA834DD6F9A}</UniqueIdentifier>
+		</Filter>
+	</ItemGroup>
+	<ItemGroup>
+		<ClInclude Include="..\..\src\dex\ctypes\_res.h" />
+		<ClInclude Include="..\..\src\dex\ctypes\c_api.h" />
+		<ClInclude Include="..\..\src\dex\ctypes\cfunction-invoke.c.inl" />
+		<ClInclude Include="..\..\src\dex\ctypes\define-float.c.inl" />
+		<ClInclude Include="..\..\src\dex\ctypes\define-integer.c.inl" />
+		<ClInclude Include="..\..\src\dex\ctypes\ffi\libffi_msvc\LICENSE">
+			<Filter>ffi\libffi_msvc</Filter>
+		</ClInclude>
+		<ClInclude Include="..\..\src\dex\ctypes\ffi\libffi_msvc\README">
+			<Filter>ffi\libffi_msvc</Filter>
+		</ClInclude>
+		<ClInclude Include="..\..\src\dex\ctypes\ffi\libffi_msvc\dlmalloc.inl">
+			<Filter>ffi\libffi_msvc</Filter>
+		</ClInclude>
+		<ClInclude Include="..\..\src\dex\ctypes\ffi\libffi_msvc\ffi.h">
+			<Filter>ffi\libffi_msvc</Filter>
+		</ClInclude>
+		<ClInclude Include="..\..\src\dex\ctypes\ffi\libffi_msvc\ffi_common.h">
+			<Filter>ffi\libffi_msvc</Filter>
+		</ClInclude>
+		<ClInclude Include="..\..\src\dex\ctypes\ffi\libffi_msvc\fficonfig.h">
+			<Filter>ffi\libffi_msvc</Filter>
+		</ClInclude>
+		<ClInclude Include="..\..\src\dex\ctypes\ffi\libffi_msvc\ffitarget.h">
+			<Filter>ffi\libffi_msvc</Filter>
+		</ClInclude>
+		<ClInclude Include="..\..\src\dex\ctypes\libctypes.h" />
+		<ClInclude Include="..\..\src\dex\ctypes\pointer-math-impl.c.inl" />
+	</ItemGroup>
+	<ItemGroup>
+		<ClCompile Include="..\..\src\dex\ctypes\array.c" />
+		<ClCompile Include="..\..\src\dex\ctypes\builtins.c" />
+		<ClCompile Include="..\..\src\dex\ctypes\c_atomic.c" />
+		<ClCompile Include="..\..\src\dex\ctypes\c_malloc.c" />
+		<ClCompile Include="..\..\src\dex\ctypes\c_string.c" />
+		<ClCompile Include="..\..\src\dex\ctypes\cfunction.c" />
+		<ClCompile Include="..\..\src\dex\ctypes\core.c" />
+		<ClCompile Include="..\..\src\dex\ctypes\ffi\libffi_msvc\closures.c">
+			<Filter>ffi\libffi_msvc</Filter>
+		</ClCompile>
+		<ClCompile Include="..\..\src\dex\ctypes\ffi\libffi_msvc\ffi.c">
+			<Filter>ffi\libffi_msvc</Filter>
+		</ClCompile>
+		<ClCompile Include="..\..\src\dex\ctypes\ffi\libffi_msvc\ffi64.c">
+			<Filter>ffi\libffi_msvc</Filter>
+		</ClCompile>
+		<ClCompile Include="..\..\src\dex\ctypes\ffi\libffi_msvc\prep_cif.c">
+			<Filter>ffi\libffi_msvc</Filter>
+		</ClCompile>
+		<ClCompile Include="..\..\src\dex\ctypes\ffi\libffi_msvc\raw_api.c">
+			<Filter>ffi\libffi_msvc</Filter>
+		</ClCompile>
+		<ClCompile Include="..\..\src\dex\ctypes\ffi\libffi_msvc\types.c">
+			<Filter>ffi\libffi_msvc</Filter>
+		</ClCompile>
+		<ClCompile Include="..\..\src\dex\ctypes\libctypes.c" />
+		<ClCompile Include="..\..\src\dex\ctypes\pointer-math.c" />
+		<ClCompile Include="..\..\src\dex\ctypes\pointer.c" />
+		<ClCompile Include="..\..\src\dex\ctypes\shlib.c" />
+		<ClCompile Include="..\..\src\dex\ctypes\struct.c" />
+	</ItemGroup>
+	<ItemGroup>
+	</ItemGroup>
+	<ItemGroup>
+		<CustomBuild Include="..\..\src\dex\ctypes\ffi\libffi_msvc\win32.ms-x86.S">
+			<Filter>ffi\libffi_msvc</Filter>
+		</CustomBuild>
+		<CustomBuild Include="..\..\src\dex\ctypes\ffi\libffi_msvc\win64.ms-x64.S">
+			<Filter>ffi\libffi_msvc</Filter>
+		</CustomBuild>
+	</ItemGroup>
 </Project>

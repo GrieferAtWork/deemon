@@ -102,7 +102,7 @@ struct Dee_traceback_object;
 struct Dee_string_object;
 
 struct Dee_except_frame {
-	/* WARNING: Changes must be mirrored in `/src/deemon/execute/asm/exec-386.S' */
+	/* WARNING: Changes must be mirrored in `/src/deemon/execute/asm/exec.gas-386.S' */
 	struct Dee_except_frame          *ef_prev;  /* [0..1][lock(PRIVATE(DeeThread_Self()))][owned] Previous frame. */
 	DREF DeeObject                   *ef_error; /* [1..1][const] The actual error object that got thrown. */
 	DREF struct Dee_traceback_object *ef_trace; /* [0..1][const] A copy of the execution stack at the time of the error being thrown.
@@ -290,7 +290,7 @@ struct Dee_thread_interrupt {
 #endif /* !CONFIG_NO_THREADS */
 
 struct Dee_thread_object {
-	/* WARNING: Changes must be mirrored in `/src/deemon/execute/asm/exec-386.S' */
+	/* WARNING: Changes must be mirrored in `/src/deemon/execute/asm/exec.gas-386.S' */
 	Dee_OBJECT_HEAD /* GC object. */
 	struct Dee_code_frame    *t_exec;       /* [lock(PRIVATE(DeeThread_Self()))][0..1][(!= NULL) == (t_execsz != 0)]
 	                                         * Linked list of code frames currently executing. */
