@@ -344,13 +344,13 @@
 			<RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
 			<BufferSecurityCheck>false</BufferSecurityCheck>
 			<ExceptionHandling>false</ExceptionHandling>
-			<Optimization>Full</Optimization>
+			<Optimization>MaxSpeed</Optimization>
 		</ClCompile>
 		<Link>
 			<OptimizeReferences>true</OptimizeReferences>
-			<LinkTimeCodeGeneration>Default</LinkTimeCodeGeneration>
+			<LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
 			<GenerateDebugInformation>true</GenerateDebugInformation>
-			<EnableCOMDATFolding>false</EnableCOMDATFolding>
+			<EnableCOMDATFolding>true</EnableCOMDATFolding>
 		<AdditionalDependencies>deemon.lib;%(AdditionalDependencies)</AdditionalDependencies>
 		</Link>
 	</ItemDefinitionGroup>
@@ -371,13 +371,13 @@
 			<RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
 			<BufferSecurityCheck>false</BufferSecurityCheck>
 			<ExceptionHandling>false</ExceptionHandling>
-			<Optimization>Full</Optimization>
+			<Optimization>MaxSpeed</Optimization>
 		</ClCompile>
 		<Link>
 			<OptimizeReferences>true</OptimizeReferences>
-			<LinkTimeCodeGeneration>Default</LinkTimeCodeGeneration>
+			<LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
 			<GenerateDebugInformation>true</GenerateDebugInformation>
-			<EnableCOMDATFolding>false</EnableCOMDATFolding>
+			<EnableCOMDATFolding>true</EnableCOMDATFolding>
 		<AdditionalDependencies>deemon.lib;%(AdditionalDependencies)</AdditionalDependencies>
 		</Link>
 	</ItemDefinitionGroup>
@@ -398,13 +398,13 @@
 			<RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
 			<BufferSecurityCheck>false</BufferSecurityCheck>
 			<ExceptionHandling>false</ExceptionHandling>
-			<Optimization>Full</Optimization>
+			<Optimization>MaxSpeed</Optimization>
 		</ClCompile>
 		<Link>
 			<OptimizeReferences>true</OptimizeReferences>
-			<LinkTimeCodeGeneration>Default</LinkTimeCodeGeneration>
+			<LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
 			<GenerateDebugInformation>true</GenerateDebugInformation>
-			<EnableCOMDATFolding>false</EnableCOMDATFolding>
+			<EnableCOMDATFolding>true</EnableCOMDATFolding>
 		<AdditionalDependencies>deemon.lib;%(AdditionalDependencies)</AdditionalDependencies>
 		</Link>
 	</ItemDefinitionGroup>
@@ -425,13 +425,13 @@
 			<RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
 			<BufferSecurityCheck>false</BufferSecurityCheck>
 			<ExceptionHandling>false</ExceptionHandling>
-			<Optimization>Full</Optimization>
+			<Optimization>MaxSpeed</Optimization>
 		</ClCompile>
 		<Link>
 			<OptimizeReferences>true</OptimizeReferences>
-			<LinkTimeCodeGeneration>Default</LinkTimeCodeGeneration>
+			<LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
 			<GenerateDebugInformation>true</GenerateDebugInformation>
-			<EnableCOMDATFolding>false</EnableCOMDATFolding>
+			<EnableCOMDATFolding>true</EnableCOMDATFolding>
 		<AdditionalDependencies>deemon.lib;%(AdditionalDependencies)</AdditionalDependencies>
 		</Link>
 	</ItemDefinitionGroup>

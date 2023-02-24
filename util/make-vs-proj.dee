@@ -105,14 +105,16 @@ global final CONFIGURATIONS: {Configuration...} = {
 		WholeProgramOptimization: true,
 		RuntimeLibrary: "MultiThreadedDLL",
 		FavorSizeOrSpeed: "Speed",
-		Optimization: "Full"),
+		Optimization: "MaxSpeed",
+		EnableCOMDATFolding: true),
 	Configuration(name: "Release-MSVC",
 		PreprocessorDefinitions: { "__OPTIMIZE__" : "1" },
 		InlineFunctionExpansion: "AnySuitable",
 		WholeProgramOptimization: true,
 		RuntimeLibrary: "MultiThreadedDLL",
 		FavorSizeOrSpeed: "Speed",
-		Optimization: "Full"),
+		Optimization: "MaxSpeed",
+		EnableCOMDATFolding: true),
 };
 
 global final ARCHITECTURES: {Architecture...} = {
@@ -449,7 +451,9 @@ function printVcxprojItemDefinitionGroups(fp: File, forDex: bool,
 			fp << '		</ClCompile>\r\n'
 				'		<Link>\r\n'
 				'			<OptimizeReferences>true</OptimizeReferences>\r\n'
-				'			<LinkTimeCodeGeneration>Default</LinkTimeCodeGeneration>\r\n'
+				'			<LinkTimeCodeGeneration>'
+					<< (configuration.WholeProgramOptimization ? 'UseLinkTimeCodeGeneration' : 'Default')
+					<< '</LinkTimeCodeGeneration>\r\n'
 				'			<GenerateDebugInformation>' << configuration.GenerateDebugInformation << '</GenerateDebugInformation>\r\n'
 				'			<EnableCOMDATFolding>' << configuration.EnableCOMDATFolding << '</EnableCOMDATFolding>\r\n';
 			if (forDex) {

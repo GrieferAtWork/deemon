@@ -790,13 +790,13 @@ ml64.exe /c /Cx /Fo "$(IntermediateOutputPath)\src-deemon-execute-asm-altstack.m
 			<RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
 			<BufferSecurityCheck>false</BufferSecurityCheck>
 			<ExceptionHandling>false</ExceptionHandling>
-			<Optimization>Full</Optimization>
+			<Optimization>MaxSpeed</Optimization>
 		</ClCompile>
 		<Link>
 			<OptimizeReferences>true</OptimizeReferences>
-			<LinkTimeCodeGeneration>Default</LinkTimeCodeGeneration>
+			<LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
 			<GenerateDebugInformation>true</GenerateDebugInformation>
-			<EnableCOMDATFolding>false</EnableCOMDATFolding>
+			<EnableCOMDATFolding>true</EnableCOMDATFolding>
 			<StackReserveSize>4194304</StackReserveSize>
 			<ModuleDefinitionFile>..\src\deemon\linker-scripts\link-deemon-msvc.def</ModuleDefinitionFile>
 		</Link>
@@ -818,13 +818,13 @@ ml64.exe /c /Cx /Fo "$(IntermediateOutputPath)\src-deemon-execute-asm-altstack.m
 			<RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
 			<BufferSecurityCheck>false</BufferSecurityCheck>
 			<ExceptionHandling>false</ExceptionHandling>
-			<Optimization>Full</Optimization>
+			<Optimization>MaxSpeed</Optimization>
 		</ClCompile>
 		<Link>
 			<OptimizeReferences>true</OptimizeReferences>
-			<LinkTimeCodeGeneration>Default</LinkTimeCodeGeneration>
+			<LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
 			<GenerateDebugInformation>true</GenerateDebugInformation>
-			<EnableCOMDATFolding>false</EnableCOMDATFolding>
+			<EnableCOMDATFolding>true</EnableCOMDATFolding>
 			<StackReserveSize>8388608</StackReserveSize>
 		</Link>
 	</ItemDefinitionGroup>
@@ -845,13 +845,13 @@ ml64.exe /c /Cx /Fo "$(IntermediateOutputPath)\src-deemon-execute-asm-altstack.m
 			<RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
 			<BufferSecurityCheck>false</BufferSecurityCheck>
 			<ExceptionHandling>false</ExceptionHandling>
-			<Optimization>Full</Optimization>
+			<Optimization>MaxSpeed</Optimization>
 		</ClCompile>
 		<Link>
 			<OptimizeReferences>true</OptimizeReferences>
-			<LinkTimeCodeGeneration>Default</LinkTimeCodeGeneration>
+			<LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
 			<GenerateDebugInformation>true</GenerateDebugInformation>
-			<EnableCOMDATFolding>false</EnableCOMDATFolding>
+			<EnableCOMDATFolding>true</EnableCOMDATFolding>
 			<StackReserveSize>4194304</StackReserveSize>
 			<ModuleDefinitionFile>..\src\deemon\linker-scripts\link-deemon-msvc.def</ModuleDefinitionFile>
 		</Link>
@@ -873,13 +873,13 @@ ml64.exe /c /Cx /Fo "$(IntermediateOutputPath)\src-deemon-execute-asm-altstack.m
 			<RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
 			<BufferSecurityCheck>false</BufferSecurityCheck>
 			<ExceptionHandling>false</ExceptionHandling>
-			<Optimization>Full</Optimization>
+			<Optimization>MaxSpeed</Optimization>
 		</ClCompile>
 		<Link>
 			<OptimizeReferences>true</OptimizeReferences>
-			<LinkTimeCodeGeneration>Default</LinkTimeCodeGeneration>
+			<LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
 			<GenerateDebugInformation>true</GenerateDebugInformation>
-			<EnableCOMDATFolding>false</EnableCOMDATFolding>
+			<EnableCOMDATFolding>true</EnableCOMDATFolding>
 			<StackReserveSize>8388608</StackReserveSize>
 		</Link>
 	</ItemDefinitionGroup>
