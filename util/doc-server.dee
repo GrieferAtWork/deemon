@@ -27,7 +27,7 @@ import util;
 import fs;
 
 global final STYLE_CSS: string =
-r"a:link {
+'a:link {
 	color: #a1ccf7;
 }
 a:visited {
@@ -103,7 +103,7 @@ body {
 	margin: 0px;
 }
 main {
-	width: 1000px;
+	max-width: 1000px;
 	margin: auto;
 	border: 1px solid black;
 	background-color: #4d4d4d;
@@ -153,7 +153,14 @@ th {
 	border: 2px solid green;
 	padding: 5px;
 	text-align: left;
+	white-space: break-spaces;
+	tab-size: 4;
 }
+
+.xspc { width: 0px; display: inline-block; }
+.xspc:after { content: "·"; color: #FF8080; }
+.xtab { width: 0px; display: inline-block; }
+.xtab:after { content: url("data:image/svg+xml,%3Csvg width=\'60px\' height=\'12px\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cpath d=\'M0,6H42m-6,6,6-6L36,1\' style=\'stroke:rgb(255,128,128);stroke-width:1.0;\'%3E%3C/path%3E%3C/svg%3E"); width: 0px; height: 0px; }
 
 .InlineSource {
 	font-family: Courier New;
@@ -253,7 +260,7 @@ th {
 .tooltip:hover .autotooltiptext {
 	visibility: visible;
 	opacity: 1;
-}";
+}';
 
 function writePageHeader(fp: File, title: string) {
 	fp <<
@@ -286,8 +293,8 @@ function escapeSpecialHtmlCharacters(text: string): string {
 
 function escapeSpecialHtmlCharactersWithSpace(text: string): string {
 	return escapeSpecialHtmlCharactersNoLf(text)
-		.replace(" ", "&nbsp;")
-		.replace("\n", "<br/>\r\n");
+		.replace(' ', '<span class="xspc"></span> ')
+		.replace('\t', '<span class="xtab"></span>\t');
 }
 
 global docObjectCache: {string: Doc} = Dict();
@@ -399,7 +406,7 @@ function checkDeecodeSourceCodePartForOperator(text: string): (string | none, st
 @@returning a pair of `(CSS_CLASS, TOKEN_REPR)`.
 @@If some token is just a user-defined literal, return @none as `CSS_CLASS`
 function splitDeemonSourceCodeTokens(text: string): {(string | none, string)...} {
-	text = text.unifylines().expandtabs(4);
+	text = text.unifylines();
 	local end = #text;
 	local i = 0;
 	local flushStart = 0;

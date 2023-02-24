@@ -3661,20 +3661,20 @@ err:
 
 PRIVATE struct type_method tpconst type_methods[] = {
 	TYPE_KWMETHOD("baseof", &type_baseof,
-	              "(other:?DType)->?Dbool\n"
-	              "Returns ?t if @this Type is equal to, or a base of @other\n"
-	              "If @other isn't a Type, ?f is returned\n"
+	              "(other:?.)->?Dbool\n"
+	              "Returns ?t if @this ?. is equal to, or a base of @other\n"
+	              "If @other isn't a ?., ?f is returned\n"
 	              "Using baseof, the behavior of ${x is y} can be approximated as:\n"
 	              "${"
 	              /**/ "print y.baseof(type(x)); // print x is y;"
 	              "}"),
 	TYPE_KWMETHOD("derivedfrom", &type_derivedfrom,
-	              "(other:?DType)->?Dbool\n"
-	              "Returns ?t if @this Type is equal to, or has been derived from @other\n"
-	              "If @other isn't a Type, ?f is returned"),
+	              "(other:?.)->?Dbool\n"
+	              "Returns ?t if @this ?. is equal to, or has been derived from @other\n"
+	              "If @other isn't a ?., ?f is returned"),
 	TYPE_KWMETHOD("newinstance", &type_newinstance,
 	              "(fields!!)->\n"
-	              "Allocate a new instance of @this Type and initialize members in accordance to @fields\n"
+	              "Allocate a new instance of @this ?. and initialize members in accordance to @fields\n"
 	              "${"
 	              /**/ "class MyClass {\n"
 	              /**/ "	member foo;\n"
@@ -3685,22 +3685,22 @@ PRIVATE struct type_method tpconst type_methods[] = {
 	              "}"
 	              "\n"
 
-	              "(initializer:?S?T2?DType?T1?S?T2?Dstring?O=!N)->\n"                 /* {(Type, ({(string,Object)...},)...} */
-	              "(initializer:?S?T2?DType?T2?S?T2?Dstring?O?N=!N)->\n"               /* {(Type, ({(string,Object)...}, none)...} */
-	              "(initializer:?S?T2?DType?T2?S?T2?Dstring?O?DTuple=!N)->\n"          /* {(Type, ({(string,Object)...}, Tuple)...} */
-	              "(initializer:?S?T2?DType?T3?S?T2?Dstring?O?DTuple?N=!N)->\n"        /* {(Type, ({(string,Object)...}, Tuple, none)...} */
-	              "(initializer:?S?T2?DType?T3?S?T2?Dstring?O?DTuple?DMapping=!N)->\n" /* {(Type, ({(string,Object)...}, Tuple, Mapping)...} */
-	              "(initializer:?S?T2?DType?T2?N?DTuple=!N)->\n"                       /* {(Type, (none, Tuple)...} */
-	              "(initializer:?S?T2?DType?T3?N?DTuple?N=!N)->\n"                     /* {(Type, (none, Tuple, none)...} */
-	              "(initializer:?S?T2?DType?T3?N?DTuple?DMapping=!N)->\n"              /* {(Type, (none, Tuple, Mapping)...} */
-	              "@throw TypeError No superargs tuple was provided for one of the Type's bases, when that base "
+	              "(initializer:?S?T2?.?T1?S?T2?Dstring?O=!N)->\n"                 /* {(Type, ({(string,Object)...},)...} */
+	              "(initializer:?S?T2?.?T2?S?T2?Dstring?O?N=!N)->\n"               /* {(Type, ({(string,Object)...}, none)...} */
+	              "(initializer:?S?T2?.?T2?S?T2?Dstring?O?DTuple=!N)->\n"          /* {(Type, ({(string,Object)...}, Tuple)...} */
+	              "(initializer:?S?T2?.?T3?S?T2?Dstring?O?DTuple?N=!N)->\n"        /* {(Type, ({(string,Object)...}, Tuple, none)...} */
+	              "(initializer:?S?T2?.?T3?S?T2?Dstring?O?DTuple?DMapping=!N)->\n" /* {(Type, ({(string,Object)...}, Tuple, Mapping)...} */
+	              "(initializer:?S?T2?.?T2?N?DTuple=!N)->\n"                       /* {(Type, (none, Tuple)...} */
+	              "(initializer:?S?T2?.?T3?N?DTuple?N=!N)->\n"                     /* {(Type, (none, Tuple, none)...} */
+	              "(initializer:?S?T2?.?T3?N?DTuple?DMapping=!N)->\n"              /* {(Type, (none, Tuple, Mapping)...} */
+	              "@throw TypeError No superargs tuple was provided for one of the type's bases, when that base "
 	              /*            */ "has a mandatory constructor that can't be invoked without any arguments. "
 	              /*            */ "Note that a user-defined class never has a mandatory constructor, with this "
 	              /*            */ "only affecting builtin types such as ?DInstanceMethod or ?DProperty\n"
-	              "A extended way of constructing and initializing a Type, that involves providing explicit "
+	              "A extended way of constructing and initializing a ?., that involves providing explicit "
 	              /**/ "member initializers on a per-Type bases, as well as argument tuples and optional keyword "
-	              /**/ "mappings to-be used for construction of one of the Type's sub-classes (allowing to provide "
-	              /**/ "for explicit argument lists when one of the Type's bases has a mandatory constructor)\n"
+	              /**/ "mappings to-be used for construction of one of the type's sub-classes (allowing to provide "
+	              /**/ "for explicit argument lists when one of the type's bases has a mandatory constructor)\n"
 	              "${"
 	              /**/ "import List from deemon;\n"
 	              /**/ "class MyList: List {\n"
@@ -3733,12 +3733,12 @@ PRIVATE struct type_method tpconst type_methods[] = {
 	              "Note that this function only searches instance-attributes, meaning that class/static "
 	              /**/ "attributes/members such as ?AIterator?Dstring. are not matched, whereas something like ?Afind?Dstring is\n"
 	              "Note that this function is quite similar to #hasinstanceattr, however unlike "
-	              /**/ "that function, this function will stop searching the base-classes of @this Type "
+	              /**/ "that function, this function will stop searching the base-classes of @this ?. "
 	              /**/ "when one of that types implements one of the attribute operators."),
 	TYPE_KWMETHOD("hasprivateattribute", &type_hasprivateattribute,
 	              "(name:?Dstring)->?Dbool\n"
 	              "Similar to #hasattribute, but only looks at attributes declared by "
-	              /**/ "@this Type, excluding any defined by a sub-class.\n"
+	              /**/ "@this ?., excluding any defined by a sub-class.\n"
 	              "${"
 	              /**/ "function hasprivateattribute(name: string): bool {\n"
 	              /**/ "	import attribute from deemon;\n"
@@ -3748,7 +3748,7 @@ PRIVATE struct type_method tpconst type_methods[] = {
 	TYPE_KWMETHOD("hasoperator", &type_hasoperator,
 	              "(name:?Dint)->?Dbool\n"
 	              "(name:?Dstring)->?Dbool\n"
-	              "Returns ?t if instances of @this Type implement an operator @name, "
+	              "Returns ?t if instances of @this ?. implement an operator @name, "
 	              /**/ "or ?f if not, or if @name is not recognized as an operator "
 	              /**/ "available for the Type-Type that is ${type this}\n"
 	              "Note that this function also looks at the operators of "
@@ -3824,7 +3824,7 @@ PRIVATE struct type_method tpconst type_methods[] = {
 	TYPE_KWMETHOD("hasprivateoperator", &type_hasprivateoperator,
 	              "(name:?Dint)->?Dbool\n"
 	              "(name:?Dstring)->?Dbool\n"
-	              "Returns ?t if instances of @this Type implement an operator @name, "
+	              "Returns ?t if instances of @this ?. implement an operator @name, "
 	              /**/ "or ?f if not, or if @name is not recognized as an operator provided "
 	              /**/ "available for the Type-Type that is ${type this}\n"
 	              "Note that this function intentionally don't look at operators of "
@@ -3834,24 +3834,24 @@ PRIVATE struct type_method tpconst type_methods[] = {
 	              "For a list of operator names, see #hasoperator"),
 	TYPE_KWMETHOD(STR_getinstanceattr, &type_getinstanceattr,
 	              "(name:?Dstring)->\n"
-	              "Lookup an attribute @name that is implemented by instances of @this Type\n"
+	              "Lookup an attribute @name that is implemented by instances of @this ?.\n"
 	              "Normally, such attributes can also be accessed using regular attribute lookup, "
-	              /**/ "however in ambiguous cases where both the Type, as well as instances implement "
+	              /**/ "however in ambiguous cases where both the type, as well as instances implement "
 	              /**/ "an attribute of the same name (s.a. ?AKeys?DDict vs. ?Akeys?DDict), using regular "
-	              /**/ "attribute lookup on the Type (as in ${posix.stat.isdir}) will always return the Type-attribute, "
+	              /**/ "attribute lookup on the type (as in ${posix.stat.isdir}) will always return the type-attribute, "
 	              /**/ "rather than a wrapper around the instance attribute.\n"
 	              "In such cases, this function may be used to explicitly lookup the instance variant:\n"
 	              "${"
 	              /**/ "import stat from posix;\n"
-	              /**/ "local statIsRegFunction = stat.getinstanceattr(\"isdir\");\n"
+	              /**/ "local statIsRegProperty = stat.getinstanceattr(\"isdir\");\n"
 	              /**/ "local myStatInstance = stat(\".\");\n"
-	              /**/ "// Same as `myStatInstance.isdir()' -- true\n"
-	              /**/ "print repr statIsRegFunction(myStatInstance);"
+	              /**/ "// Same as `myStatInstance.isdir' -- true\n"
+	              /**/ "print repr statIsRegProperty(myStatInstance);"
 	              "}\n"
 	              "Note that one minor exception exists to the default lookup rule, and it relates to how "
-	              /**/ "attributes of ?DType itself are queried (such as in the expression ${(Type from deemon).baseof}).\n"
+	              /**/ "attributes of ?. itself are queried (such as in the expression ${(Type from deemon).baseof}).\n"
 	              "In this case, access is always made as an instance-bound, meaning that for this purpose, "
-	              /**/ "?DType is considered an instance of ?DType (typetype), rather than the type of ?DType (typetype) "
+	              /**/ "?. is considered an instance of ?. (typetype), rather than the type of ?. (typetype) "
 	              /**/ "(I know that sounds complicated, but without this rule, ${(Type from deemon).baseof} would "
 	              /**/ "return a class method object taking 2 arguments, rather than the intended single argument)\n"
 	              "Also note that the `*instanceattr' functions will not check for types that have overwritten "
@@ -3865,8 +3865,8 @@ PRIVATE struct type_method tpconst type_methods[] = {
 
 #ifndef CONFIG_NO_DEEMON_100_COMPAT
 	/* Deprecated functions */
-	TYPE_KWMETHOD("same_or_derived_from", &type_derivedfrom, "(other:?DType)->?Dbool\nDeprecated alias for ?#derivedfrom"),
-	TYPE_METHOD("derived_from", &type_derivedfrom_not_same, "(other:?DType)->?Dbool\nDeprecated alias for ${this !== other && this.derivedfrom(other)}"),
+	TYPE_KWMETHOD("same_or_derived_from", &type_derivedfrom, "(other:?.)->?Dbool\nDeprecated alias for ?#derivedfrom"),
+	TYPE_METHOD("derived_from", &type_derivedfrom_not_same, "(other:?.)->?Dbool\nDeprecated alias for ${this !== other && this.derivedfrom(other)}"),
 	TYPE_METHOD("is_vartype", &type_is_vartype, "->?Dbool\nDeprecated alias for ?#__isvariable__"),
 	TYPE_METHOD("is_heaptype", &type_is_heaptype, "->?Dbool\nDeprecated alias for ?#__iscustom__"),
 	TYPE_METHOD("is_gctype", &type_is_gctype, "->?Dbool\nDeprecated alias for ?#__isgc__"),
@@ -4150,7 +4150,7 @@ PRIVATE struct type_getset tpconst type_getsets[] = {
 	TYPE_GETTER(STR___module__, &type_get_module,
 	            "->?X2?DModule?N\n"
 	            "Return the module used to define @this Type, or ?N if the module cannot "
-	            /**/ "be determined, which may be the case if the Type doesn't have any defining "
+	            /**/ "be determined, which may be the case if the type doesn't have any defining "
 	            /**/ "features such as operators, or class/instance member functions"),
 	TYPE_GETTER("__ctable__", &type_get_ctable,
 	            "->?AObjectTable?Ert:ClassDescriptor\n"
@@ -4293,7 +4293,7 @@ PRIVATE struct type_gc tpconst type_gc_data = {
 PUBLIC DeeTypeObject DeeType_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ DeeString_STR(&str_Type),
-	/* .tp_doc      = */ DOC("The so-called Type-Type, that is the Type of anything "
+	/* .tp_doc      = */ DOC("The so-called Type-Type, that is the type of anything "
 	                         /**/ "that is also a Type, such as ?Dint or ?DList, and even itself"),
 	/* .tp_flags    = */ TP_FGC | TP_FNAMEOBJECT,
 	/* .tp_weakrefs = */ WEAKREF_SUPPORT_ADDR(DeeTypeObject),
