@@ -86,6 +86,19 @@
 
 DECL_BEGIN
 
+/*[[[deemon
+print("#if 1");
+print("#define HASHOF_str_deemon ", (_Dee_HashSelect from rt.gen.hash)("deemon"));
+print("#else");
+print("#define HASHOF_str_deemon DeeString_Hash((DeeObject *)&str_deemon)");
+print("#endif");
+]]]*/
+#if 1
+#define HASHOF_str_deemon _Dee_HashSelect(UINT32_C(0x4579666d), UINT64_C(0xeb3bb684d0ec756))
+#else
+#define HASHOF_str_deemon DeeString_Hash((DeeObject *)&str_deemon)
+#endif
+/*[[[end]]]*/
 
 INTDEF struct module_symbol empty_module_buckets[];
 
@@ -1239,7 +1252,7 @@ DeeModule_DoGet(char const *__restrict name,
                 size_t size, dhash_t hash) {
 	DREF DeeModuleObject *result = NULL;
 	/* Check if the caller requested the builtin deemon module. */
-	if (size == 6 && hash == DeeString_Hash((DeeObject *)&str_deemon) &&
+	if (size == 6 && hash == HASHOF_str_deemon &&
 	    bcmpc(name, STR_deemon, 6, sizeof(char)) == 0) {
 		/* Yes, they did. */
 		result = DeeModule_GetDeemon();
@@ -2136,7 +2149,7 @@ DeeModule_OpenGlobal(DeeObject *__restrict module_name,
 	/* First off: Check if this is a request for the builtin `deemon' module.
 	 * NOTE: This check is always done in case-sensitive mode! */
 	if (DeeString_SIZE(module_name) == 6 &&
-	    DeeString_Hash(module_name) == DeeString_Hash((DeeObject *)&str_deemon) &&
+	    DeeString_Hash(module_name) == HASHOF_str_deemon &&
 	    bcmpc(DeeString_STR(module_name), STR_deemon, 6, sizeof(char)) == 0) {
 		/* Yes, it is. */
 		result = DeeModule_GetDeemon();
