@@ -23,6 +23,7 @@ import doctext;
 import * from doc;
 import * from net;
 import * from deemon;
+import * from errors;
 import util;
 import fs;
 
@@ -879,7 +880,7 @@ function getPage(fp: File, path: string) {
 		}
 		return getModulesPage(fp);
 	}
-	throw Error(f"Missing page: {repr '/'.join(path)}");
+	throw FileNotFound(f"Missing page: {repr '/'.join(path)}");
 }
 
 
@@ -943,8 +944,15 @@ function clientThreadMain(con: socket) {
 					<< "<hr/></main>\r\n";
 				writePageFooter(errorFp);
 				errorFp = errorFp.string.encode("utf-8");
+				local errorCode = 500;
+				if ({ AttributeError, FileNotFound }.each.baseof(type(e)) || ...) {
+					errorCode = 404;
+				}
 				outputFp <<
-					"HTTP/1.1 200 OK\r\n"
+					"HTTP/1.1 " << errorCode << " " << {
+						404: "Page Not Found",
+						500: "Internal Server Error",
+					}[errorCode] << "\r\n"
 					"Content-Length: " << #errorFp << "\r\n"
 					"Content-Type: text/html; charset=UTF-8\r\n"
 					"\r\n";
