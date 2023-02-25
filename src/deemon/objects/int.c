@@ -102,6 +102,13 @@
 
 DECL_BEGIN
 
+#ifndef CONFIG_HAVE_memend
+#define CONFIG_HAVE_memend
+#undef memend
+#define memend dee_memend
+DeeSystem_DEFINE_memend(dee_memend)
+#endif /* !CONFIG_HAVE_memend */
+
 #if CONFIG_INT_CACHE_MAXCOUNT != 0
 struct free_int {
 	struct free_int *fi_next; /* [0..1] Next free integer. */
@@ -1682,13 +1689,16 @@ err:
 }
 
 
+#define DECIMAL_THOUSANDS_GROUPINGS     3
+#define NON_DECIMAL_THOUSANDS_GROUPINGS 4
+
 PRIVATE WUNUSED NONNULL((1, 4)) dssize_t DCALL
 DeeInt_PrintDecimal(DREF DeeIntObject *__restrict self, uint32_t flags,
                     size_t precision, dformatprinter printer, void *arg) {
 	/* !!!DISCLAIMER!!! This function was originally taken from python,
 	 *                  but has been heavily modified since. */
-	size_t size, buflen, size_a, i, j, intlen;
-	dssize_t result;
+	size_t size, bufsize, size_a, i, j, intlen;
+	dssize_t result, temp;
 	digit *pout, *pin, rem, tenpow;
 	int negative;
 	char *buf, *iter;
@@ -1722,54 +1732,134 @@ err:
 	}
 	if (size == 0)
 		pout[size++] = 0;
-	buflen = 1 + 1 + (size - 1) * DeeInt_DECIMAL_SHIFT;
+	bufsize = 1 + 1 + (size - 1) * DeeInt_DECIMAL_SHIFT;
 	tenpow = 10;
 	rem    = pout[size - 1];
 	while (rem >= tenpow) {
 		tenpow *= 10;
-		++buflen;
+		++bufsize;
 	}
-	/* Allocate a string target buffer. */
-	buf = (char *)Dee_AMallocc(buflen,sizeof(char));
-	if unlikely(!buf)
-		goto err_pout;
-	iter = buf + buflen;
-	for (i = 0; i < size - 1; ++i) {
-		rem = pout[i];
-		for (j = 0; j < DeeInt_DECIMAL_SHIFT; ++j) {
-			*--iter = '0' + rem % 10;
-			rem /= 10;
-		}
-	}
-	rem = pout[i];
-	do {
-		*--iter = '0' + rem % 10;
-		rem /= 10;
-	} while (rem != 0);
-	if (negative) {
-		*--iter = '-';
-	} else if (flags & DEEINT_PRINT_FSIGN) {
-		*--iter = '+';
-	}
-	intlen = (size_t)((buf + buflen) - iter);
-	if (precision > intlen) {
-		Dee_ssize_t temp;
-		result = DeeFormat_Repeat(printer, arg, '0', precision - intlen);
-		if likely(result >= 0) {
-			temp = (*printer)(arg, iter, intlen);
-			if likely(temp >= 0) {
-				result += temp;
-			} else {
-				result = temp;
+	if (flags & DEEINT_PRINT_FSEPS) {
+		/* Allocate a string target buffer. */
+		bufsize += bufsize / DECIMAL_THOUSANDS_GROUPINGS;
+		buf = (char *)Dee_AMallocc(bufsize, sizeof(char));
+		if unlikely(!buf)
+			goto err_pout;
+		iter = buf + bufsize;
+		intlen = 0;
+		for (i = 0; i < size - 1; ++i) {
+			rem = pout[i];
+			for (j = 0; j < DeeInt_DECIMAL_SHIFT; ++j) {
+				*--iter = '0' + rem % 10;
+				++intlen;
+				rem /= 10;
+				if ((intlen % DECIMAL_THOUSANDS_GROUPINGS) == 0)
+					*--iter = '_';
 			}
 		}
+		rem = pout[i];
+		do {
+			*--iter = '0' + rem % 10;
+			++intlen;
+			rem /= 10;
+			if ((intlen % DECIMAL_THOUSANDS_GROUPINGS) == 0 && rem != 0)
+				*--iter = '_';
+		} while (rem != 0);
 	} else {
+		/* Allocate a string target buffer. */
+		buf = (char *)Dee_AMallocc(bufsize, sizeof(char));
+		if unlikely(!buf)
+			goto err_pout;
+		iter = buf + bufsize;
+		for (i = 0; i < size - 1; ++i) {
+			rem = pout[i];
+			for (j = 0; j < DeeInt_DECIMAL_SHIFT; ++j) {
+				*--iter = '0' + rem % 10;
+				rem /= 10;
+			}
+		}
+		rem = pout[i];
+		do {
+			*--iter = '0' + rem % 10;
+			rem /= 10;
+		} while (rem != 0);
+		intlen = (size_t)((buf + bufsize) - iter);
+	}
+	if (precision > intlen) {
+		size_t num_leading_zeroes;
+		result = 0;
+		if (negative || (flags & DEEINT_PRINT_FSIGN)) {
+			temp = (*printer)(arg, negative ? "-" : "+", 1);
+			if unlikely(temp < 0)
+				goto err_temp;
+			result = temp;
+		}
+		num_leading_zeroes = precision - intlen;
+		if (flags & DEEINT_PRINT_FSEPS) {
+			size_t first_sep_in_int, first_sep_in_pad;
+			first_sep_in_int = (size_t)((char *)memend(iter, '_', (size_t)((buf + bufsize) - iter)) - iter);
+			ASSERT(first_sep_in_int >= 1 && first_sep_in_int <= DECIMAL_THOUSANDS_GROUPINGS);
+			first_sep_in_pad = (num_leading_zeroes - (DECIMAL_THOUSANDS_GROUPINGS -
+			                                          first_sep_in_int)) %
+			                   DECIMAL_THOUSANDS_GROUPINGS;
+			ASSERT(first_sep_in_pad >= 0 && first_sep_in_pad < DECIMAL_THOUSANDS_GROUPINGS);
+			if (num_leading_zeroes < first_sep_in_pad)
+				goto do_normal_pad;
+			if (first_sep_in_pad) {
+				temp = DeeFormat_Repeat(printer, arg, '0', first_sep_in_pad);
+				if unlikely(temp < 0)
+					goto err_temp;
+				result += temp;
+				temp = (*printer)(arg, "_", 1);
+				if unlikely(temp < 0)
+					goto err_temp;
+				result += temp;
+				num_leading_zeroes -= first_sep_in_pad;
+			}
+			while (num_leading_zeroes >= DECIMAL_THOUSANDS_GROUPINGS) {
+#if DECIMAL_THOUSANDS_GROUPINGS == 3
+				temp = (*printer)(arg, "000", 3);
+#else /* DECIMAL_THOUSANDS_GROUPINGS == 3 */
+				temp = DeeFormat_Repeat(printer, arg, '0', DECIMAL_THOUSANDS_GROUPINGS);
+#endif /* DECIMAL_THOUSANDS_GROUPINGS != 3 */
+				if unlikely(temp < 0)
+					goto err_temp;
+				result += temp;
+				temp = (*printer)(arg, "_", 1);
+				if unlikely(temp < 0)
+					goto err_temp;
+				result += temp;
+				num_leading_zeroes -= DECIMAL_THOUSANDS_GROUPINGS;
+			}
+		}
+do_normal_pad:
+		temp = DeeFormat_Repeat(printer, arg, '0', num_leading_zeroes);
+		if unlikely(temp < 0)
+			goto err_temp;
+		result += temp;
+		if likely(result >= 0) {
+			temp = (*printer)(arg, iter, (size_t)((buf + bufsize) - iter));
+			if unlikely(temp < 0)
+				goto err_temp;
+			result += temp;
+		}
+	} else {
+		if (negative) {
+			*--iter = '-';
+		} else if (flags & DEEINT_PRINT_FSIGN) {
+			*--iter = '+';
+		}
+		intlen = (size_t)((buf + bufsize) - iter);
 		result = (*printer)(arg, iter, intlen);
 	}
+done_buf:
 	Dee_AFree(buf);
 done_pout:
 	Dee_AFree(pout);
 	return result;
+err_temp:
+	result = temp;
+	goto done_buf;
 err_pout:
 	result = -1;
 	goto done_pout;
@@ -1789,7 +1879,8 @@ DeeInt_Print(DeeObject *__restrict self, uint32_t radix_and_flags,
 		return DeeInt_PrintDecimal((DeeIntObject *)self, radix_and_flags,
 		                           precision, printer, arg);
 
-	{
+		/* Power-of-2 radices. */
+	case 2: {
 		twodigits number;
 		digit *src;
 		uint8_t num_bits, dig_bits, dig_mask, dig;
@@ -1798,8 +1889,6 @@ DeeInt_Print(DeeObject *__restrict self, uint32_t radix_and_flags,
 		dssize_t result;
 		DeeIntObject *me;
 		char const *digit_chars;
-		/* Power-of-2 radices. */
-	case 2:
 		dig_bits = 1;
 		dig_mask = 0x1;
 		goto do_print;
@@ -1829,17 +1918,23 @@ do_print:
 					goto err;
 				iter    = buf + bufsize;
 				*--iter = '0';
+				intlen  = 1;
 				goto do_print_prefix;
 			}
 			num_digits = (size_t) - (dssize_t)num_digits;
 		}
-		bufsize = 4 + ((num_digits * DIGIT_BITS) / dig_bits);
-		buf     = (char *)Dee_AMallocc(bufsize, sizeof(char));
+		bufsize = (num_digits * DIGIT_BITS) / dig_bits;
+		if (radix_and_flags & DEEINT_PRINT_FSEPS)
+			bufsize += bufsize / NON_DECIMAL_THOUSANDS_GROUPINGS;
+		bufsize += 4;
+		buf = (char *)Dee_AMallocc(bufsize, sizeof(char));
 		if unlikely(!buf)
 			goto err;
-		iter   = buf + bufsize;
-		src    = me->ob_digit;
-		number = 0, num_bits = 0;
+		iter     = buf + bufsize;
+		src      = me->ob_digit;
+		number   = 0;
+		num_bits = 0;
+		intlen   = 0;
 		do {
 			if (num_bits < dig_bits && num_digits) {
 				number &= (1 << num_bits) - 1;
@@ -1858,6 +1953,11 @@ do_print:
 				dig = number & dig_mask;
 				number >>= dig_bits;
 				*--iter = digit_chars[dig];
+				++intlen;
+				if (radix_and_flags & DEEINT_PRINT_FSEPS) {
+					if ((intlen % NON_DECIMAL_THOUSANDS_GROUPINGS) == 0 && (num_digits || num_bits))
+						*--iter = '_';
+				}
 			}
 		} while (num_digits);
 
@@ -1865,15 +1965,16 @@ do_print:
 		if (num_bits) {
 			dig     = number & dig_mask;
 			*--iter = digit_chars[dig];
+			++intlen;
 		}
 do_print_prefix:
 
 		/* Deal with custom precisions */
-		intlen = (size_t)((buf + bufsize) - iter);
 		if (precision > intlen) {
 			Dee_ssize_t temp;
 			char prefix[3];
 			size_t prefix_len = 0;
+			size_t num_leading_zeroes;
 			if (me->ob_size < 0) {
 				prefix[prefix_len++] = '-';
 			} else if (radix_and_flags & DEEINT_PRINT_FSIGN) {
@@ -1894,13 +1995,53 @@ do_print_prefix:
 				if unlikely(result < 0)
 					goto done_buf;
 			}
-			temp = DeeFormat_Repeat(printer, arg, '0', precision - intlen);
+			num_leading_zeroes = precision - intlen;
+			if (radix_and_flags & DEEINT_PRINT_FSEPS) {
+				size_t first_sep_in_int, first_sep_in_pad;
+				first_sep_in_int = (size_t)((char *)memend(iter, '_', (size_t)((buf + bufsize) - iter)) - iter);
+				ASSERT(first_sep_in_int >= 1 && first_sep_in_int <= NON_DECIMAL_THOUSANDS_GROUPINGS);
+				first_sep_in_pad = (num_leading_zeroes - (NON_DECIMAL_THOUSANDS_GROUPINGS -
+				                                          first_sep_in_int)) %
+				                   NON_DECIMAL_THOUSANDS_GROUPINGS;
+				ASSERT(first_sep_in_pad >= 0 && first_sep_in_pad < NON_DECIMAL_THOUSANDS_GROUPINGS);
+				if (num_leading_zeroes < first_sep_in_pad)
+					goto do_normal_pad;
+				if (first_sep_in_pad) {
+					temp = DeeFormat_Repeat(printer, arg, '0', first_sep_in_pad);
+					if unlikely(temp < 0)
+						goto err_temp;
+					result += temp;
+					temp = (*printer)(arg, "_", 1);
+					if unlikely(temp < 0)
+						goto err_temp;
+					result += temp;
+					num_leading_zeroes -= first_sep_in_pad;
+				}
+				while (num_leading_zeroes >= NON_DECIMAL_THOUSANDS_GROUPINGS) {
+#if NON_DECIMAL_THOUSANDS_GROUPINGS == 4
+					temp = (*printer)(arg, "0000", 4);
+#else /* NON_DECIMAL_THOUSANDS_GROUPINGS == 4 */
+					temp = DeeFormat_Repeat(printer, arg, '0', NON_DECIMAL_THOUSANDS_GROUPINGS);
+#endif /* NON_DECIMAL_THOUSANDS_GROUPINGS != 4 */
+					if unlikely(temp < 0)
+						goto err_temp;
+					result += temp;
+					temp = (*printer)(arg, "_", 1);
+					if unlikely(temp < 0)
+						goto err_temp;
+					result += temp;
+					num_leading_zeroes -= NON_DECIMAL_THOUSANDS_GROUPINGS;
+				}
+			}
+do_normal_pad:
+			temp = DeeFormat_Repeat(printer, arg, '0', num_leading_zeroes);
 			if unlikely(temp < 0) {
+err_temp:
 				result = temp;
 				goto done_buf;
 			}
 			result += temp;
-			temp = (*printer)(arg, iter, intlen);
+			temp = (*printer)(arg, iter, (size_t)((buf + bufsize) - iter));
 			if unlikely(temp < 0) {
 				result = temp;
 				goto done_buf;
@@ -3094,6 +3235,8 @@ int_tostr(DeeIntObject *self, size_t argc,
 				flags_and_radix |= DEEINT_PRINT_FNUMSYS;
 			} else if (ch == 's' || ch == '+') {
 				flags_and_radix |= DEEINT_PRINT_FSIGN;
+			} else if (ch == '_') {
+				flags_and_radix |= DEEINT_PRINT_FSEPS;
 			} else {
 				DeeError_Throwf(&DeeError_ValueError,
 				                "Invalid integer to flags:?Dstring %q",
@@ -3507,7 +3650,8 @@ PRIVATE struct type_method tpconst int_methods[] = {
 	              "#T{Option|Description~"
 	              "$\"u\", $\"X\"|Digits above $10 are printed in upper-case&"
 	              "$\"n\", $\"##\"|Prefix the integers with its number system prefix (e.g.: $\"0x\")&"
-	              "$\"s\", $\"+\"|Also prepend a sign prefix before positive integers}"),
+	              "$\"s\", $\"+\"|Also prepend a sign prefix before positive integers&"
+	              "$\"_\"|Include canonical thousands/group-separators}"),
 	TYPE_KWMETHOD("hex", &int_hex,
 	              "(precision=!0)->?Dstring\n"
 	              "Short-hand alias for ${this.tostr(radix: 16, precision: precision, mode: \"n\")} (s.a. ?#tostr)"),

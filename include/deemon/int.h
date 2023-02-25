@@ -776,6 +776,7 @@ DeeInt_Print(DeeObject *__restrict self, uint32_t radix_and_flags,
 #define DEEINT_PRINT_FNUMSYS 0x0002 /* Prepend the number system prefix before the integer itself (e.g.: `0x').
                                      * NOTE: If the radix cannot be represented as a prefix, this flag is ignored. */
 #define DEEINT_PRINT_FSIGN   0x0004 /* Always prepend a sign, even before for positive numbers. */
+#define DEEINT_PRINT_FSEPS   0x0008 /* Include _-characters to denote thousands/group-separators */
 
 #define DEEINT_PRINT_BIN     DEEINT_PRINT(2, DEEINT_PRINT_FNORMAL)
 #define DEEINT_PRINT_OCT     DEEINT_PRINT(8, DEEINT_PRINT_FNORMAL)
