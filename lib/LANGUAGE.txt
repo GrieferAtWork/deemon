@@ -824,8 +824,8 @@
  *  [x]          - `x' is optional
  *  a b          - `a' and `b' follow each other, but are whitespace separated
  *  a ## b       - `a' and `b' follow each other directly (not whitespace between)
- *  x ~~ y...    - Only starting at the second occurance of y, y must always be preceided by x  (e.g. "',' ~~ _keyword..." could match `foo, bar ,  foobar')
- *  x ~~ y##...  - Only starting at the second occurance of y, y must always be preceided by x. Instances are not whitespace separated  (e.g. "',' ~~ _keyword##..." could match `foo,bar,foobar')
+ *  x ~~ y...    - Only starting at the second occurrence of y, y must always be preceded by x  (e.g. "',' ~~ _keyword..." could match `foo, bar ,  foobar')
+ *  x ~~ y##...  - Only starting at the second occurrence of y, y must always be preceded by x. Instances are not whitespace separated  (e.g. "',' ~~ _keyword##..." could match `foo,bar,foobar')
  *  x...         - x can be repeated an unlimited about of times (but at least once)
  *  x##...       - x can be repeated an unlimited about of times (but at least once). Instances are not whitespace separated
  *  a ## b...    - same as "a ## ('' ~~ b...)"
@@ -844,6 +844,91 @@
 #define DDI(x)  x /* HINT: DDI information for this expression points to the start of `x' */
 
 _keyword ::= <TPP_ISKEYWORD(*)>;
+
+TOK_INT ::= (
+	/* NOTE: _-characters should be ignored in integers. Their only purpose is to
+	 *       better visualize thousands separators to humans reading the code.
+	 * However, a compiler is allowed to issue non-fatal warnings when (irregardless of radix):
+	 * The number of digits between _-separators (or the end of the integer literal)...
+	 *  - ... is inconsistent (e.g. `1000_000_00_0`)
+	 *  - ... isn't 3 for decimal literals     (e.g. `10_0000_0000`)
+	 *  - ... isn't 4 for non-decimal literals (e.g. `0xFFF_FFF_FFF`)
+	 * Note that for non-decimal integer literals, a leading _ following the radix prefix
+	 * is allowed to be present, though neither its presence nor absence should trigger a
+	 * warning. Iow: both of the following representations are valid and should not cause
+	 * a warning:
+	 *  - 0xFFFF_FFFF
+	 *  - 0x_FFFF_FFFF
+	 */
+	(('1' ... '9')      ## ('_' | ('0' ... '9'))##...) |
+	('0'                ## ('_' | ('0' ... '7'))##...) |
+	('0' ## ('x' | 'X') ## ('_' | ('0' ... '9') | ('A' ... 'F') | ('a' ... 'f'))##...) |
+	('0' ## ('b' | 'B') ## ('_' | '0' | '1')##...)
+);
+
+_tok_string_bk_hex ::= ('0' ... '9') | ('A' ... 'F') | ('a' ... 'f');
+_tok_string_bk_oct ::= ('0' ... '7');
+_tok_string_bk_escaped ::= (
+	'\\' |   /* Escapes to \ U+005C */
+	'\'' |   /* Escapes to ' U+0047 */
+	'\"' |   /* Escapes to " U+0022 */
+	'a'  |   /* Escapes to ␡ U+0007 */
+	'b'  |   /* Escapes to ␈ U+0008 */
+	'f'  |   /* Escapes to ␌ U+000c */
+	'n'  |   /* Escapes to ␊ U+000a */
+	'r'  |   /* Escapes to ␍ U+000d */
+	't'  |   /* Escapes to ␉ U+0009 */
+	'v'  |   /* Escapes to ␋ U+000b */
+	'e'  |   /* Escapes to ␛ U+001b */
+	('U' ## _tok_string_bk_hex ## _tok_string_bk_hex ## _tok_string_bk_hex ## _tok_string_bk_hex ##
+	        _tok_string_bk_hex ## _tok_string_bk_hex ## _tok_string_bk_hex ## _tok_string_bk_hex) |
+	('u' ## _tok_string_bk_hex ## _tok_string_bk_hex ## _tok_string_bk_hex ## _tok_string_bk_hex) |
+	(('x' | 'X') ## _tok_string_bk_hex...) |
+	(_tok_string_bk_oct ## [_tok_string_bk_oct ## [_tok_string_bk_oct]])
+);
+
+/* Consecutive strings (of the same type) are joined as if by the '+' operator.
+ * Whether or not strings of different type are joined when appearing next to
+ * each other is implementation-defined.
+ *
+ * The same also goes when trying to combine 'foo'-like strings with "foo"-like
+ * strings. The deemon standard only guaranties that strings of the same type,
+ * and using the same quoting character will be joined when appearing next to
+ * each other.
+ */
+TOK_STRING ::= (
+	/* Normal string literals (consecutive strings are joined as if by the '+' operator) */
+	(
+		'"' ## (
+			?any-except-double-quote-and-backslash? |
+			('\\' ## _tok_string_bk_escaped)
+		)##... ##
+		'"'
+	)... |
+
+	/* Raw string literals (consecutive strings are joined as if by the '+' operator) */
+	(
+		'r"' ##
+		(?any-except-double-quote?)##... ##
+		'"'
+	)... |
+
+	/* Format string literals (consecutive strings are joined as if by the '+' operator) */
+	(
+		('f' | 'F') ## '"' ## (
+			?any-except-double-quote-and-backslash-and-lbrace? |
+			('\\' ## (
+				'{' | /* Replaced with { U+007B */
+				'}' | /* Replaced with } U+007D */
+				_tok_string_bk_escaped
+			)) |
+			'{{' | /* Replaced with { U+007B */
+			'}}' | /* Replaced with } U+007D */
+			('{' ast_parse_expr '}')
+		)##... ##
+		'"'
+	)...
+);
 
 
 ast_parse_statement_or_braces ::= (
@@ -887,7 +972,17 @@ ast_parse_unaryhead ::= (
 	DDI(<TOK_CHAR>) |      /* string (including raw-strings and template-strings)
 	                        * GATW: When #pragma extension("-fcharacter-literals")
 	                        *       is enabled (disabled by default), this is compiled
-	                        *       as an ordinal (iow: `int') */
+	                        *       as an ordinal (iow: `int'):
+	                        * >> #pragma extension("-fcharacter-literals")
+	                        * >> local ord1 = 'A';
+	                        * >> local ord2 = "A".ord();
+	                        * >> #pragma extension("-fno-character-literals")
+	                        * >> local ord3 = 'A'.ord();
+	                        * >> local ord4 = "A".ord();
+	                        * >> assert ord1 == ord2;
+	                        * >> assert ord1 == ord3;
+	                        * >> assert ord1 == ord4;
+	                        */
 	DDI(<TOK_STRING>...) | /* string (including raw-strings and template-strings) */
 	DDI(<TOK_FLOAT>) |     /* float */
 

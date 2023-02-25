@@ -305,7 +305,6 @@ err_expr_ast:
 			case '\\': /* Escaped the following character itself. */
 			case '\'':
 			case '\"':
-			case '?':
 				break;
 
 			case '{':
