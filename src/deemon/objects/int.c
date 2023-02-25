@@ -3207,7 +3207,7 @@ int_str(DeeIntObject *__restrict self) {
 	return int_tostr_impl(self, DEEINT_PRINT_DEC, 0);
 }
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 int_tostr(DeeIntObject *self, size_t argc,
           DeeObject *const *argv, DeeObject *kw) {
 	PRIVATE struct keyword kwlist[] = { K(radix), K(precision), K(mode), KEND };
@@ -3250,7 +3250,7 @@ err:
 	return NULL;
 }
 
-PRIVATE struct keyword precision_kwlist[] = { K(precision), KEND };
+INTERN struct keyword precision_kwlist[] = { K(precision), KEND };
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 int_hex(DeeIntObject *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
@@ -3591,54 +3591,31 @@ DEFINE_INT_COMPARE_FUNCTION(islessequal, <=)
 DEFINE_INT_COMPARE_FUNCTION(islessgreater, !=)
 #undef DEFINE_INT_COMPARE_FUNCTION
 
-#ifdef CONFIG_HAVE_IEEE754
-struct Dee_float_ieee754_object {
-	Dee_OBJECT_HEAD
-	uint32_t f_words[2];
-};
-#ifdef CONFIG_HAVE_IEEE754_LE
-#define FLOAT_IEEE754_INIT(a, b) { Dee_OBJECT_HEAD_INIT(&DeeFloat_Type), { a, b } }
-#define float_ieee754_word0(x) ((x)->f_words[0])
-#define float_ieee754_word1(x) ((x)->f_words[1])
-#else /* CONFIG_HAVE_IEEE754_LE */
-#define FLOAT_IEEE754_INIT(a, b) { Dee_OBJECT_HEAD_INIT(&DeeFloat_Type), { b, a } }
-#define float_ieee754_word0(x) ((x)->f_words[1])
-#define float_ieee754_word1(x) ((x)->f_words[0])
-#endif /* !CONFIG_HAVE_IEEE754_LE */
-
-#define HAVE_float_isnan
-PRIVATE WUNUSED bool DCALL float_isnan(DeeFloatObject *self) {
-	uint32_t msw, lsw;
-	lsw = float_ieee754_word0((struct Dee_float_ieee754_object *)self);
-	msw = float_ieee754_word1((struct Dee_float_ieee754_object *)self);
-	lsw |= msw & __UINT32_C(0xfffff);
-	msw &= __UINT32_C(0x7ff00000);
-	return msw == __UINT32_C(0x7ff00000) && lsw != 0;
-}
-#elif defined(CONFIG_HAVE_isnan)
-#define HAVE_float_isnan
-#define float_isnan(self) isnan((self)->f_value)
-#endif /* ... */
-
-
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 int_isunordered(DeeIntObject *self, size_t argc, DeeObject *const *argv) {
 	DeeObject *y;
 	(void)self;
 	if (DeeArg_Unpack(argc, argv, "o:isunordered", &y))
 		goto err;
-#ifdef HAVE_float_isnan
-	if (DeeFloat_Check(y) && float_isnan((DeeFloatObject *)y))
-		return_true;
-#endif /* HAVE_float_isnan */
-	return_false;
+	return DeeObject_GetAttrString(y, "isnan");
 err:
 	return NULL;
 }
 
+DOC_REF(numeric_hex_doc);
+DOC_REF(numeric_bin_doc);
+DOC_REF(numeric_oct_doc);
+DOC_REF(numeric_divmod_doc);
+DOC_REF(numeric_nextafter_doc);
+DOC_REF(numeric_isgreater_doc);
+DOC_REF(numeric_isgreaterequal_doc);
+DOC_REF(numeric_isless_doc);
+DOC_REF(numeric_islessequal_doc);
+DOC_REF(numeric_islessgreater_doc);
+DOC_REF(numeric_isunordered_doc);
 
 PRIVATE struct type_method tpconst int_methods[] = {
-	TYPE_KWMETHOD("tostr", &int_tostr,
+	TYPE_KWMETHOD(STR_tostr, &int_tostr,
 	              "(radix=!10,precision=!0,mode=!P{})->?Dstring\n"
 	              "@param precision The minimum number of digits (excluding numsys/sign "
 	              /*            */ "prefixes) to print. Padding is done using $'0'-chars.\n"
@@ -3652,15 +3629,9 @@ PRIVATE struct type_method tpconst int_methods[] = {
 	              "$\"n\", $\"##\"|Prefix the integers with its number system prefix (e.g.: $\"0x\")&"
 	              "$\"s\", $\"+\"|Also prepend a sign prefix before positive integers&"
 	              "$\"_\"|Include canonical thousands/group-separators}"),
-	TYPE_KWMETHOD("hex", &int_hex,
-	              "(precision=!0)->?Dstring\n"
-	              "Short-hand alias for ${this.tostr(radix: 16, precision: precision, mode: \"n\")} (s.a. ?#tostr)"),
-	TYPE_KWMETHOD("bin", &int_bin,
-	              "(precision=!0)->?Dstring\n"
-	              "Short-hand alias for ${this.tostr(radix: 2, precision: precision, mode: \"n\")} (s.a. ?#tostr)"),
-	TYPE_KWMETHOD("oct", &int_oct,
-	              "(precision=!0)->?Dstring\n"
-	              "Short-hand alias for ${this.tostr(radix: 8, precision: precision, mode: \"n\")} (s.a. ?#tostr)"),
+	TYPE_KWMETHOD("hex", &int_hex, numeric_hex_doc),
+	TYPE_KWMETHOD("bin", &int_bin, numeric_bin_doc),
+	TYPE_KWMETHOD("oct", &int_oct, numeric_oct_doc),
 	TYPE_KWMETHOD("tobytes", &int_tobytes,
 	              "(length?:?.,byteorder:?Dstring=!N,signed=!f)->?DBytes\n"
 	              "@param byteorder The byteorder encoding used by the returned bytes. "
@@ -3677,16 +3648,7 @@ PRIVATE struct type_method tpconst int_methods[] = {
 	              "(signed=!f)->?.\n"
 	              "@throw IntegerOverflow @signed is ?f and @this integer is negative\n"
 	              "Return the number of bits needed to represent @this integer in base-2"),
-	TYPE_METHOD("__forcecopy__", &int_forcecopy,
-	            "->?.\n"
-	            "Internal function to force the creation of a copy of @this "
-	            /**/ "integer without performing aliasing for known constants.\n"
-	            "This function is implementation-specific and used by tests "
-	            /**/ "in order to ensure that inplace-optimization of certain "
-	            /**/ "operators functions correctly"),
-	TYPE_METHOD("divmod", &int_divmod_f,
-	            "(y:?.)->?T2?.?.\n"
-	            "Devide+modulo. Returns a tuple ${(this / y, this % y)}"),
+	TYPE_METHOD("divmod", &int_divmod_f, numeric_divmod_doc),
 	TYPE_METHOD("nextafter", &int_nextafter,
 	            "(y:?.)->?.\n"
 	            "Same as ${this > y ? this - 1 : this < y ? this + 1 : this}"),
@@ -3708,6 +3670,13 @@ PRIVATE struct type_method tpconst int_methods[] = {
 	TYPE_METHOD("isunordered", &int_isunordered,
 	            "(y:?X2?.?Dfloat)->?Dbool\n"
 	            "Same as ${y is float && y.isnan}"),
+	TYPE_METHOD("__forcecopy__", &int_forcecopy,
+	            "->?.\n"
+	            "Internal function to force the creation of a copy of @this "
+	            /**/ "integer without performing aliasing for known constants.\n"
+	            "This function is implementation-specific and used by tests "
+	            /**/ "in order to ensure that inplace-optimization of certain "
+	            /**/ "operators functions correctly"),
 	TYPE_METHOD_END
 };
 
@@ -3717,18 +3686,6 @@ int_get_abs(DeeIntObject *__restrict self) {
 	if (self->ob_size < 0)
 		return (DREF DeeIntObject *)int_neg(self);
 	return_reference_(self);
-}
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-int_return_true(DeeIntObject *__restrict self) {
-	(void)self;
-	return_true;
-}
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-int_return_false(DeeIntObject *__restrict self) {
-	(void)self;
-	return_false;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -3888,9 +3845,6 @@ PRIVATE struct type_getset tpconst int_getsets[] = {
 	TYPE_GETTER("floor", &DeeObject_NewRef, "->?."),
 	TYPE_GETTER("ceil", &DeeObject_NewRef, "->?."),
 	TYPE_GETTER("round", &DeeObject_NewRef, "->?."),
-	TYPE_GETTER("isnan", &int_return_false, "->?Dbool\nAlways returns !f"),
-	TYPE_GETTER("isinf", &int_return_false, "->?Dbool\nAlways returns !f"),
-	TYPE_GETTER("isfinite", &int_return_true, "->?Dbool\nAlways returns !t"),
 	TYPE_GETTER("isnormal", &int_return_nonzero, "->?Dbool\nSame as {this != 0}"),
 
 	/* Binary property helper functions */
@@ -3941,6 +3895,14 @@ PRIVATE struct type_getset tpconst int_getsets[] = {
 	TYPE_GETSET_END
 };
 
+PRIVATE struct type_member tpconst int_members[] = {
+	TYPE_MEMBER_CONST(STR_isfloat, Dee_False),
+	TYPE_MEMBER_CONST("isnan", Dee_False),
+	TYPE_MEMBER_CONST("isinf", Dee_False),
+	TYPE_MEMBER_CONST("isfinite", Dee_True),
+	TYPE_MEMBER_END
+};
+
 
 /* The max sequence size is the signed value of SIZE_MAX,
  * because negative values are reserved to indicate error
@@ -3966,6 +3928,7 @@ PRIVATE struct type_member tpconst int_class_members[] = {
 	                      /**/ "with the default implementation of function such as :Sequence.insert's index-argument "
 	                      /**/ "potentially not being able to correctly determine if a negative or positive number was given\n"
 	                      "Such behavior may be considered a bug, however it falls under the category of doesn't-matter-wont-fix\n"),
+	TYPE_MEMBER_CONST(STR_isfloat, Dee_False),
 	TYPE_MEMBER_END
 };
 
@@ -4115,7 +4078,7 @@ PUBLIC DeeTypeObject DeeInt_Type = {
 	/* .tp_buffer        = */ NULL,
 	/* .tp_methods       = */ int_methods,
 	/* .tp_getsets       = */ int_getsets,
-	/* .tp_members       = */ NULL,
+	/* .tp_members       = */ int_members,
 	/* .tp_class_methods = */ int_class_methods,
 	/* .tp_class_getsets = */ NULL,
 	/* .tp_class_members = */ int_class_members

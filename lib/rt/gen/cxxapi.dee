@@ -29,8 +29,8 @@ function commonType(types: {Type...}): Type {
 	types = List(types);
 	local result = types.first;
 	for (local x: types[1:]) {
-		while (result !== Object && !result.baseof(x))
-			result = result.__base__;
+		while (result !== Object && !Type.baseof(result, x))
+			result = Type.__base__(result);
 	}
 	return result;
 }

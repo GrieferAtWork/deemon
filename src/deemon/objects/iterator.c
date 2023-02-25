@@ -1012,7 +1012,7 @@ PRIVATE struct type_method tpconst iterator_methods[] = {
 	            "Revert @this Iterator by @step items\n"
 	            "${"
 	            /**/ "function revert(step: int) {\n"
-	            /**/ "	step = (int)step;\n"
+	            /**/ "	step = step.operator int();\n"
 	            /**/ "	if (step == 0)\n"
 	            /**/ "		return;\n"
 	            /**/ "	if (step < 0)\n"
@@ -1066,7 +1066,7 @@ PRIVATE struct type_method tpconst iterator_methods[] = {
 	            "Revert @this Iterator by @step items\n"
 	            "${"
 	            /**/ "function advance(step: int) {\n"
-	            /**/ "	step = (int)step;\n"
+	            /**/ "	step = step.operator int();\n"
 	            /**/ "	if (step == 0)\n"
 	            /**/ "		return;\n"
 	            /**/ "	if (step < 0)\n"
@@ -2193,7 +2193,7 @@ PRIVATE struct type_getset tpconst iterator_getsets[] = {
 	            /**/ "		return result;\n"
 	            /**/ "	}\n"
 	            /**/ "	set(index: int) {\n"
-	            /**/ "		index = (int)index;\n"
+	            /**/ "		index = index.operator int();\n"
 	            /**/ "		this.rewind();\n"
 	            /**/ "		this.advance(index);\n"
 	            /**/ "	}\n"
@@ -2218,7 +2218,7 @@ PRIVATE int DCALL
 iterator_inplace_add(DeeObject **__restrict pself,
                      DeeObject *countob) {
 	dssize_t count;
-	/* Increment the Iterator by `(int)count' */
+	/* Increment the Iterator by `count.operator int()' */
 	if (DeeObject_AsSSize(countob, &count))
 		goto err;
 	if unlikely((unlikely(count < 0)
@@ -2235,7 +2235,7 @@ PRIVATE int DCALL
 iterator_inplace_sub(DeeObject **__restrict pself,
                      DeeObject *countob) {
 	dssize_t count;
-	/* Increment the Iterator by `(int)count' */
+	/* Increment the Iterator by `count.operator int()' */
 	if (DeeObject_AsSSize(countob, &count))
 		goto err;
 	if unlikely((unlikely(count < 0)
@@ -2253,7 +2253,7 @@ iterator_add(DeeObject *self,
              DeeObject *countob) {
 	DREF DeeObject *result;
 	dssize_t count;
-	/* Increment the Iterator by `(int)count' */
+	/* Increment the Iterator by `count.operator int()' */
 	if (DeeObject_AsSSize(countob, &count))
 		goto err;
 	result = DeeObject_Copy(self);
@@ -2276,7 +2276,7 @@ iterator_sub(DeeObject *self,
              DeeObject *countob) {
 	DREF DeeObject *result;
 	dssize_t count;
-	/* Increment the Iterator by `(int)count' */
+	/* Increment the Iterator by `count.operator int()' */
 	if (DeeObject_AsSSize(countob, &count))
 		goto err;
 	result = DeeObject_Copy(self);

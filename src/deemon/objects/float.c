@@ -273,61 +273,51 @@ PRIVATE struct type_cmp float_cmp = {
 
 #ifdef DBL_MIN
 #define float_min_IS_CONSTANT
-#define float_HAVE_CONSTANT
 PRIVATE DEFINE_FLOAT(float_min, DBL_MIN);
 #endif /* DBL_MIN */
 
 #ifdef DBL_MAX
 #define float_max_IS_CONSTANT
-#define float_HAVE_CONSTANT
 PRIVATE DEFINE_FLOAT(float_max, DBL_MAX);
 #endif /* DBL_MAX */
 
 #ifdef DBL_EPSILON
 #define float_epsilon_IS_CONSTANT
-#define float_HAVE_CONSTANT
 PRIVATE DEFINE_FLOAT(float_epsilon, DBL_EPSILON);
 #endif /* DBL_EPSILON */
 
 #ifdef DBL_MIN_EXP
 #define float_min_exp_IS_CONSTANT
-#define float_HAVE_CONSTANT
 PRIVATE DEFINE_INT15(float_min_exp, DBL_MIN_EXP);
 #endif /* DBL_MIN_EXP */
 
 #ifdef DBL_MIN_10_EXP
 #define float_min_10_exp_IS_CONSTANT
-#define float_HAVE_CONSTANT
 PRIVATE DEFINE_INT15(float_min_10_exp, DBL_MIN_10_EXP);
 #endif /* DBL_MIN_10_EXP */
 
 #ifdef DBL_MAX_EXP
 #define float_max_exp_IS_CONSTANT
-#define float_HAVE_CONSTANT
 PRIVATE DEFINE_INT15(float_max_exp, DBL_MAX_EXP);
 #endif /* DBL_MAX_EXP */
 
 #ifdef DBL_MAX_10_EXP
 #define float_max_10_exp_IS_CONSTANT
-#define float_HAVE_CONSTANT
 PRIVATE DEFINE_INT15(float_max_10_exp, DBL_MAX_10_EXP);
 #endif /* DBL_MAX_10_EXP */
 
 #ifdef DBL_DIG
 #define float_dig_IS_CONSTANT
-#define float_HAVE_CONSTANT
 PRIVATE DEFINE_INT15(float_dig, DBL_DIG);
 #endif /* DBL_DIG */
 
 #ifdef DBL_MANT_DIG
 #define float_mant_dig_IS_CONSTANT
-#define float_HAVE_CONSTANT
 PRIVATE DEFINE_INT15(float_mant_dig, DBL_MANT_DIG);
 #endif /* DBL_MANT_DIG */
 
 #ifdef DBL_RADIX
 #define float_radix_IS_CONSTANT
-#define float_HAVE_CONSTANT
 PRIVATE DEFINE_INT15(float_radix, DBL_RADIX);
 #endif /* DBL_RADIX */
 
@@ -335,7 +325,6 @@ PRIVATE DEFINE_INT15(float_radix, DBL_RADIX);
 #undef float_rounds_IS_CONSTANT
 #ifdef CONFIG_HAVE_CONSTANT_DBL_ROUNDS
 #define float_rounds_IS_CONSTANT
-#define float_HAVE_CONSTANT
 PRIVATE DEFINE_INT15(float_rounds, DBL_ROUNDS);
 #elif defined(DBL_ROUNDS)
 #define float_HAVE_VARIABLE
@@ -350,7 +339,6 @@ float_rounds(DeeObject *__restrict self) {
 #undef float_inf_IS_CONSTANT
 #undef float_nan_IS_CONSTANT
 #ifdef CONFIG_HAVE_IEEE754
-#define float_HAVE_CONSTANT
 #define float_inf_IS_CONSTANT
 #define float_nan_IS_CONSTANT
 struct Dee_float_ieee754_object {
@@ -375,7 +363,6 @@ FLOAT_IEEE754_INIT(UINT32_C(0x7ff80000), UINT32_C(0x00000000));
 #undef FLOAT_IEEE754_INIT
 #elif defined(CONFIG_HAVE_CONSTANT_HUGE_VAL)
 #define float_inf_IS_CONSTANT
-#define float_HAVE_CONSTANT
 PRIVATE DEFINE_FLOAT(float_inf, HUGE_VAL);
 #elif defined(HUGE_VAL)
 #define float_inf_IS_VARIABLE
@@ -390,7 +377,6 @@ float_inf(DeeObject *__restrict self) {
 #if !defined(float_nan_IS_CONSTANT)
 #ifdef CONSTANT_NAN
 #define float_nan_IS_CONSTANT
-#define float_HAVE_CONSTANT
 PRIVATE DEFINE_FLOAT(float_nan, NAN);
 #elif defined(NAN) || defined(CONFIG_HAVE_nan)
 #define float_nan_IS_VARIABLE
@@ -409,9 +395,6 @@ float_nan(DeeObject *__restrict self) {
 
 
 
-#ifndef float_HAVE_CONSTANT
-#define float_class_members NULL
-#else /* !float_HAVE_CONSTANT */
 PRIVATE struct type_member tpconst float_class_members[] = {
 #ifdef float_min_IS_CONSTANT
 	TYPE_MEMBER_CONST_DOC("min", &float_min, "The lowest possible floating point value"),
@@ -452,9 +435,9 @@ PRIVATE struct type_member tpconst float_class_members[] = {
 #ifdef float_nan_IS_CONSTANT
 	TYPE_MEMBER_CONST_DOC("nan", &float_nan, "Not-a-number"),
 #endif /* float_nan_IS_CONSTANT */
+	TYPE_MEMBER_CONST(STR_isfloat, Dee_True),
 	TYPE_MEMBER_END
 };
-#endif /* float_HAVE_VARIABLE */
 
 
 #ifndef float_HAVE_VARIABLE
@@ -477,7 +460,7 @@ PRIVATE struct type_getset tpconst float_class_getsets[] = {
 
 #ifdef CONFIG_HAVE_IEEE754
 #define HAVE_float_get_abs
-PRIVATE WUNUSED NONNULL((1)) DREF Float *DCALL
+INTERN WUNUSED NONNULL((1)) DREF Float *DCALL
 float_get_abs(Float *__restrict self) {
 	DREF Float *result;
 	result = (DREF Float *)DeeFloat_New(self->f_value);
@@ -487,15 +470,15 @@ float_get_abs(Float *__restrict self) {
 }
 #elif defined(CONFIG_HAVE_fabs)
 #define HAVE_float_get_abs
-PRIVATE WUNUSED NONNULL((1)) DREF Float *DCALL
+INTERN WUNUSED NONNULL((1)) DREF Float *DCALL
 float_get_abs(Float *__restrict self) {
 	return (DREF Float *)DeeFloat_New(fabs(self->f_value));
 }
-#endif /* CONFIG_HAVE_fabs */
+#endif /* ... */
 
 #ifdef CONFIG_HAVE_trunc
 #define HAVE_float_get_trunc
-PRIVATE WUNUSED NONNULL((1)) DREF Float *DCALL
+INTERN WUNUSED NONNULL((1)) DREF Float *DCALL
 float_get_trunc(Float *__restrict self) {
 	return (DREF Float *)DeeFloat_New(trunc(self->f_value));
 }
@@ -503,7 +486,7 @@ float_get_trunc(Float *__restrict self) {
 
 #ifdef CONFIG_HAVE_floor
 #define HAVE_float_get_floor
-PRIVATE WUNUSED NONNULL((1)) DREF Float *DCALL
+INTERN WUNUSED NONNULL((1)) DREF Float *DCALL
 float_get_floor(Float *__restrict self) {
 	return (DREF Float *)DeeFloat_New(floor(self->f_value));
 }
@@ -511,7 +494,7 @@ float_get_floor(Float *__restrict self) {
 
 #ifdef CONFIG_HAVE_ceil
 #define HAVE_float_get_ceil
-PRIVATE WUNUSED NONNULL((1)) DREF Float *DCALL
+INTERN WUNUSED NONNULL((1)) DREF Float *DCALL
 float_get_ceil(Float *__restrict self) {
 	return (DREF Float *)DeeFloat_New(ceil(self->f_value));
 }
@@ -519,7 +502,7 @@ float_get_ceil(Float *__restrict self) {
 
 #ifdef CONFIG_HAVE_round
 #define HAVE_float_get_round
-PRIVATE WUNUSED NONNULL((1)) DREF Float *DCALL
+INTERN WUNUSED NONNULL((1)) DREF Float *DCALL
 float_get_round(Float *__restrict self) {
 	return (DREF Float *)DeeFloat_New(round(self->f_value));
 }
@@ -527,7 +510,7 @@ float_get_round(Float *__restrict self) {
 
 #ifdef CONFIG_HAVE_IEEE754
 #define HAVE_float_get_isnan
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 float_get_isnan(Float *__restrict self) {
 	uint32_t msw, lsw;
 	lsw = float_ieee754_word0(self);
@@ -538,7 +521,7 @@ float_get_isnan(Float *__restrict self) {
 }
 #elif defined(CONFIG_HAVE_isnan)
 #define HAVE_float_get_isnan
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 float_get_isnan(Float *__restrict self) {
 	return_bool(isnan(self->f_value));
 }
@@ -546,7 +529,7 @@ float_get_isnan(Float *__restrict self) {
 
 #ifdef CONFIG_HAVE_IEEE754
 #define HAVE_float_get_isinf
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 float_get_isinf(Float *__restrict self) {
 	uint32_t msw, lsw;
 	lsw = float_ieee754_word0(self);
@@ -557,7 +540,7 @@ float_get_isinf(Float *__restrict self) {
 }
 #elif defined(CONFIG_HAVE_isinf)
 #define HAVE_float_get_isinf
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 float_get_isinf(Float *__restrict self) {
 	return_bool(isinf(self->f_value));
 }
@@ -565,20 +548,20 @@ float_get_isinf(Float *__restrict self) {
 
 #ifdef CONFIG_HAVE_IEEE754
 #define HAVE_float_get_isfinite
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 float_get_isfinite(Float *__restrict self) {
 	int32_t hx = float_ieee754_word1(self);
 	return_bool((int)((uint32_t)((hx & 0x7fffffff) - 0x7ff00000) >> 31));
 }
 #elif defined(CONFIG_HAVE_isfinite)
 #define HAVE_float_get_isfinite
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 float_get_isfinite(Float *__restrict self) {
 	return_bool(isfinite(self->f_value));
 }
 #elif defined(CONFIG_HAVE_finite)
 #define HAVE_float_get_isfinite
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 float_get_isfinite(Float *__restrict self) {
 	return_bool(finite(self->f_value));
 }
@@ -587,7 +570,7 @@ float_get_isfinite(Float *__restrict self) {
 
 #ifdef CONFIG_HAVE_IEEE754
 #define HAVE_float_get_isnormal
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 float_get_isnormal(Float *__restrict self) {
 	uint32_t msw, lsw;
 	lsw = float_ieee754_word0(self);
@@ -600,7 +583,7 @@ float_get_isnormal(Float *__restrict self) {
 }
 #elif defined(CONFIG_HAVE_isnormal)
 #define HAVE_float_get_isnormal
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 float_get_isnormal(Float *__restrict self) {
 	return_bool(isnormal(self->f_value));
 }
@@ -639,7 +622,7 @@ PRIVATE struct type_getset tpconst float_getsets[] = {
 
 
 #define DEFINE_FLOAT_COMPARE_FUNCTION(name)                          \
-	PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL               \
+	INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL               \
 	float_##name(Float *self, size_t argc, DeeObject *const *argv) { \
 		double y;                                                    \
 		if (DeeArg_Unpack(argc, argv, "D:" #name, &y))               \
@@ -672,7 +655,7 @@ DEFINE_FLOAT_COMPARE_FUNCTION(islessgreater)
 
 #ifdef HAVE_float_get_isnan
 #define HAVE_float_isunordered
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 float_isunordered(Float *self, size_t argc, DeeObject *const *argv) {
 	DeeObject *y_obj;
 	double y;
@@ -702,7 +685,7 @@ err:
 }
 #elif defined(CONFIG_HAVE_isunordered)
 #define HAVE_float_isunordered
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 float_isunordered(Float *self, size_t argc, DeeObject *const *argv) {
 	DeeObject *y_obj;
 	double y;
@@ -722,7 +705,7 @@ err:
 
 #if defined(CONFIG_HAVE_nextafter) || defined(CONFIG_HAVE_nexttoward)
 #define HAVE_float_nextafter
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 float_nextafter(Float *self, size_t argc, DeeObject *const *argv) {
 	double y;
 	if (DeeArg_Unpack(argc, argv, "D:nextafter", &y))
@@ -763,7 +746,14 @@ PRIVATE struct type_method tpconst float_methods[] = {
 	TYPE_METHOD_END
 };
 
+PRIVATE struct type_member tpconst float_members[] = {
+	TYPE_MEMBER_CONST(STR_isfloat, Dee_True),
+	TYPE_MEMBER_END
+};
+
 #endif /* CONFIG_HAVE_FPU */
+
+
 
 PUBLIC DeeTypeObject DeeFloat_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
@@ -841,7 +831,7 @@ PUBLIC DeeTypeObject DeeFloat_Type = {
 	/* .tp_buffer        = */ NULL,
 	/* .tp_methods       = */ float_methods,
 	/* .tp_getsets       = */ float_getsets,
-	/* .tp_members       = */ NULL,
+	/* .tp_members       = */ float_members,
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ float_class_getsets,
 	/* .tp_class_members = */ float_class_members

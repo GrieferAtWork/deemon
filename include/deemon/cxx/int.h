@@ -532,9 +532,6 @@ public:
 	WUNUSED Ref<deemon::int_> (bitcount)(bool signed_) {
 		return inherit(DeeObject_CallAttrStringHashf(this, "bitcount", _Dee_HashSelect(UINT32_C(0x4cacc37f), UINT64_C(0x8e82ba8252728a35)), "b", signed_));
 	}
-	WUNUSED Ref<deemon::int_> (__forcecopy__)() {
-		return inherit(DeeObject_CallAttrStringHash(this, "__forcecopy__", _Dee_HashSelect(UINT32_C(0xc96f01d0), UINT64_C(0xc90cb18768481fa9)), 0, NULL));
-	}
 	WUNUSED NONNULL_CXX((1)) Ref<_AbstractTuple<deemon::int_, deemon::int_> > (divmod)(DeeObject *y) {
 		DeeObject *args[1];
 		args[0] = y;
@@ -625,6 +622,9 @@ public:
 	}
 	WUNUSED Ref<deemon::bool_> (isunordered)(size_t y) {
 		return inherit(DeeObject_CallAttrStringHashf(this, "isunordered", _Dee_HashSelect(UINT32_C(0x3907db0d), UINT64_C(0xb0d4b15ee21e7ffb)),  DEE_PCKuSIZ, y));
+	}
+	WUNUSED Ref<deemon::int_> (__forcecopy__)() {
+		return inherit(DeeObject_CallAttrStringHash(this, "__forcecopy__", _Dee_HashSelect(UINT32_C(0xc96f01d0), UINT64_C(0xc90cb18768481fa9)), 0, NULL));
 	}
 	class _Wrap___sizeof__
 		: public deemon::detail::ConstGetRefProxy<_Wrap___sizeof__, deemon::int_> {
@@ -728,57 +728,6 @@ public:
 	WUNUSED _Wrap_round (round)() {
 		return this;
 	}
-	class _Wrap_isnan
-		: public deemon::detail::ConstGetRefProxy<_Wrap_isnan, deemon::bool_> {
-	private:
-		DeeObject *m_self; /* [1..1] Linked object */
-	public:
-		_Wrap_isnan(DeeObject *self) DEE_CXX_NOTHROW
-			: m_self(self) {}
-		WUNUSED DREF DeeObject *_getref() const DEE_CXX_NOTHROW {
-			return DeeObject_GetAttrStringHash(m_self, "isnan", _Dee_HashSelect(UINT32_C(0x36d136ac), UINT64_C(0x428ff2e9a35f402a)));
-		}
-		WUNUSED bool bound() const {
-			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "isnan", _Dee_HashSelect(UINT32_C(0x36d136ac), UINT64_C(0x428ff2e9a35f402a))));
-		}
-	};
-	WUNUSED _Wrap_isnan (isnan)() {
-		return this;
-	}
-	class _Wrap_isinf
-		: public deemon::detail::ConstGetRefProxy<_Wrap_isinf, deemon::bool_> {
-	private:
-		DeeObject *m_self; /* [1..1] Linked object */
-	public:
-		_Wrap_isinf(DeeObject *self) DEE_CXX_NOTHROW
-			: m_self(self) {}
-		WUNUSED DREF DeeObject *_getref() const DEE_CXX_NOTHROW {
-			return DeeObject_GetAttrStringHash(m_self, "isinf", _Dee_HashSelect(UINT32_C(0xc8a63b33), UINT64_C(0xf5f86dfadcc14b6a)));
-		}
-		WUNUSED bool bound() const {
-			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "isinf", _Dee_HashSelect(UINT32_C(0xc8a63b33), UINT64_C(0xf5f86dfadcc14b6a))));
-		}
-	};
-	WUNUSED _Wrap_isinf (isinf)() {
-		return this;
-	}
-	class _Wrap_isfinite
-		: public deemon::detail::ConstGetRefProxy<_Wrap_isfinite, deemon::bool_> {
-	private:
-		DeeObject *m_self; /* [1..1] Linked object */
-	public:
-		_Wrap_isfinite(DeeObject *self) DEE_CXX_NOTHROW
-			: m_self(self) {}
-		WUNUSED DREF DeeObject *_getref() const DEE_CXX_NOTHROW {
-			return DeeObject_GetAttrStringHash(m_self, "isfinite", _Dee_HashSelect(UINT32_C(0x797c83cf), UINT64_C(0x9838bbd14d676c85)));
-		}
-		WUNUSED bool bound() const {
-			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "isfinite", _Dee_HashSelect(UINT32_C(0x797c83cf), UINT64_C(0x9838bbd14d676c85))));
-		}
-	};
-	WUNUSED _Wrap_isfinite (isfinite)() {
-		return this;
-	}
 	class _Wrap_isnormal
 		: public deemon::detail::ConstGetRefProxy<_Wrap_isnormal, deemon::bool_> {
 	private:
@@ -879,6 +828,23 @@ public:
 		}
 	};
 	WUNUSED _Wrap_msb (msb)() {
+		return this;
+	}
+	class _Wrap_nth
+		: public deemon::detail::ConstGetRefProxy<_Wrap_nth, string> {
+	private:
+		DeeObject *m_self; /* [1..1] Linked object */
+	public:
+		_Wrap_nth(DeeObject *self) DEE_CXX_NOTHROW
+			: m_self(self) {}
+		WUNUSED DREF DeeObject *_getref() const DEE_CXX_NOTHROW {
+			return DeeObject_GetAttrStringHash(m_self, "nth", _Dee_HashSelect(UINT32_C(0x8e4eb0c), UINT64_C(0x3c51c11b465d5ad5)));
+		}
+		WUNUSED bool bound() const {
+			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "nth", _Dee_HashSelect(UINT32_C(0x8e4eb0c), UINT64_C(0x3c51c11b465d5ad5))));
+		}
+	};
+	WUNUSED _Wrap_nth (nth)() {
 		return this;
 	}
 /*[[[end]]]*/

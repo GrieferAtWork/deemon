@@ -106,6 +106,8 @@ local STRINGS = {
 	"import",
 	"exec",
 	"isatty",
+	"isfloat",
+	"tostr",
 	"pop",
 	"remove",
 	"rremove",
@@ -354,6 +356,10 @@ DEF_STRING(str_exec, "exec", 0x6b42be28, 0x2efd876517f0e883)
 #define STR_exec DeeString_STR(&str_exec)
 DEF_STRING(str_isatty, "isatty", 0xab82818e, 0x66fe4c97c9502a99)
 #define STR_isatty DeeString_STR(&str_isatty)
+DEF_STRING(str_isfloat, "isfloat", 0xe3da5546, 0x96c4dbe16a19d65d)
+#define STR_isfloat DeeString_STR(&str_isfloat)
+DEF_STRING(str_tostr, "tostr", 0x6b502fcb, 0x9cdf9482b472ce73)
+#define STR_tostr DeeString_STR(&str_tostr)
 DEF_STRING(str_pop, "pop", 0x960361ff, 0x666fb01461b0a0eb)
 #define STR_pop DeeString_STR(&str_pop)
 DEF_STRING(str_remove, "remove", 0x3d2727dd, 0xe9f313a03e2051a)

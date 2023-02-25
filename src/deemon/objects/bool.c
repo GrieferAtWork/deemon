@@ -338,9 +338,15 @@ PRIVATE struct type_cmp bool_cmp = {
 	/* .tp_ge   = */ &bool_ge
 };
 
+PRIVATE struct type_member tpconst bool_members[] = {
+	TYPE_MEMBER_CONST(STR_isfloat, Dee_False),
+	TYPE_MEMBER_END
+};
+
 PRIVATE struct type_member tpconst bool_class_members[] = {
 	TYPE_MEMBER_CONST(STR_true, Dee_True),
 	TYPE_MEMBER_CONST(STR_false, Dee_False),
+	TYPE_MEMBER_CONST(STR_isfloat, Dee_False),
 	TYPE_MEMBER_END
 };
 
@@ -387,7 +393,7 @@ PUBLIC DeeTypeObject DeeBool_Type = {
 	/* .tp_buffer        = */ NULL,
 	/* .tp_methods       = */ NULL,
 	/* .tp_getsets       = */ NULL,
-	/* .tp_members       = */ NULL,
+	/* .tp_members       = */ bool_members,
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,
 	/* .tp_class_members = */ bool_class_members
