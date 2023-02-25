@@ -3834,6 +3834,51 @@ err_neg_or_zero:
 	return NULL;
 }
 
+/*[[[deemon
+(PRIVATE_DEFINE_STRING from rt.gen.string)("str_m3rd", "-3rd");
+(PRIVATE_DEFINE_STRING from rt.gen.string)("str_m2nd", "-2nd");
+(PRIVATE_DEFINE_STRING from rt.gen.string)("str_m1st", "-1st");
+(PRIVATE_DEFINE_STRING from rt.gen.string)("str_p1st", "1st");
+(PRIVATE_DEFINE_STRING from rt.gen.string)("str_p2nd", "2nd");
+(PRIVATE_DEFINE_STRING from rt.gen.string)("str_p3rd", "3rd");
+]]]*/
+PRIVATE DEFINE_STRING_EX(str_m3rd, "-3rd", 0x8be040f2, 0x2c6687ce52b2d5c);
+PRIVATE DEFINE_STRING_EX(str_m2nd, "-2nd", 0xb0b2978a, 0xf0d5319d0acbc254);
+PRIVATE DEFINE_STRING_EX(str_m1st, "-1st", 0xbcbf5323, 0x4d73a7bc07d3085e);
+PRIVATE DEFINE_STRING_EX(str_p1st, "1st", 0xe4efb48d, 0x421421a9365d165c);
+PRIVATE DEFINE_STRING_EX(str_p2nd, "2nd", 0x7c14eb33, 0x424c37e55ef4e885);
+PRIVATE DEFINE_STRING_EX(str_p3rd, "3rd", 0xc941bdb2, 0xb6806ce92422760e);
+/*[[[end]]]*/
+
+PRIVATE DeeObject *const str_mNTH[3] = { (DeeObject *)&str_m1st, (DeeObject *)&str_m2nd, (DeeObject *)&str_m3rd };
+PRIVATE DeeObject *const str_pNTH[3] = { (DeeObject *)&str_p1st, (DeeObject *)&str_p2nd, (DeeObject *)&str_p3rd };
+
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+int_get_nth(DeeIntObject *__restrict self) {
+	struct ascii_printer printer;
+	switch (self->ob_size) {
+	case -1:
+		if (self->ob_digit[0] >= 1 && self->ob_digit[0] <= 3)
+			return_reference_(str_mNTH[self->ob_digit[0] - 1]);
+		break;
+	case 1:
+		if (self->ob_digit[0] >= 1 && self->ob_digit[0] <= 3)
+			return_reference_(str_pNTH[self->ob_digit[0] - 1]);
+		break;
+	default:
+		break;
+	}
+	ascii_printer_init(&printer);
+	if unlikely(DeeInt_Print((DeeObject *)self, DEEINT_PRINT_DEC, 0, &ascii_printer_print, &printer) < 0)
+		goto err_printer;
+	if unlikely(ascii_printer_print(&printer, "th", 2) < 0)
+		goto err_printer;
+	return ascii_printer_pack(&printer);
+err_printer:
+	ascii_printer_fini(&printer);
+	return NULL;
+}
+
 
 
 PRIVATE struct type_getset tpconst int_getsets[] = {
@@ -3876,6 +3921,19 @@ PRIVATE struct type_getset tpconst int_getsets[] = {
 	            "${"
 	            /**/ "assert (this >> this.msb) == 1;"
 	            "}"),
+
+	TYPE_GETTER("nth", &int_get_nth,
+	            "->?Dstring\n"
+	            "Returns the value of @this ?. as a string (as per ?#op:str), with "
+	            "the standard english enumeration suffix applicable to the value of @{this}:\n"
+	            "#T{Value|Return~"
+	            "$-3|$\"-3rd\"&"
+	            "$-2|$\"-2nd\"&"
+	            "$-1|$\"-1st\"&"
+	            "$1|$\"1st\"&"
+	            "$2|$\"2nd\"&"
+	            "$3|$\"3rd\"}\n"
+	            "All other integer values are returned as ${f\"{this}th\"}"),
 
 	TYPE_GETTER(STR_int, &DeeObject_NewRef,
 	            "->?Dint\n"
