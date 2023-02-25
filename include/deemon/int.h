@@ -710,6 +710,7 @@ DeeInt_FromAscii(/*ascii*/ char const *__restrict str,
 #define DEEINT_STRING_FNORMAL  0x0000
 #define DEEINT_STRING_FESCAPED 0x0001 /* Decode escaped linefeeds in the given input string. */
 #define DEEINT_STRING_FTRY     0x0002 /* Don't throw a ValueError, but return ITER_DONE. */
+#define DEEINT_STRING_FNOSEPS  0x0004 /* Error out if _-characters are encountered during parsing. */
 
 /* @return:  0: Successfully parsed an integer.
  * @return: -1: An error occurred. (never returned when `DEEINT_STRING_FTRY' is set)

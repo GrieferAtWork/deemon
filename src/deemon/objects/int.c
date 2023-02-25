@@ -1023,12 +1023,20 @@ parse_ch:
 					if unlikely(dig >= Dee_UNICODE_DIGIT_IDENTITY_COUNT)
 						dig = DeeUni_GetNumericIdx8((uint8_t)dig);
 				} else {
-					if (uni != '\\')
+					if (uni != '\\') {
+						if (ch == '_' && !(radix_and_flags & DEEINT_STRING_FNOSEPS))
+							goto do_skip_char;
 						goto invalid_r;
+					}
 					goto handle_backslash_in_text;
 				}
 				--begin; /* Account for the additional `++begin' inside of for-advance */
 			} else if (ch != '\\') {
+				if (ch == '_' && !(radix_and_flags & DEEINT_STRING_FNOSEPS)) {
+do_skip_char:
+					++begin;
+					goto parse_ch;
+				}
 				goto invalid_r;
 			} else {
 handle_backslash_in_text:
@@ -1211,7 +1219,7 @@ DeeInt_FromString(/*utf-8*/ char const *__restrict str,
 			uint32_t ch;
 			digit dig;
 			struct unitraits *traits;
-			ch  = utf8_readchar_rev((char const **)&iter, begin);
+			ch     = utf8_readchar_rev((char const **)&iter, begin);
 			traits = DeeUni_Descriptor(ch);
 			if (traits->ut_flags & (UNICODE_ISNUMERIC | Dee_UNICODE_ISHEX)) {
 				dig = traits->ut_digit_idx;
@@ -1230,6 +1238,8 @@ DeeInt_FromString(/*utf-8*/ char const *__restrict str,
 					continue;
 				}
 				goto invalid_r;
+			} else if (ch == '_' && !(radix_and_flags & DEEINT_STRING_FNOSEPS)) {
+				continue;
 			} else {
 				goto invalid_r;
 			}

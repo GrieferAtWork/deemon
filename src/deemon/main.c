@@ -2663,15 +2663,13 @@ operation_mode_format(int argc, char **argv) {
 		filename = argv[i];
 		if (argc > 1) {
 			DREF DeeObject *fp;
-			size_t temp;
+			dssize_t temp;
 			fp = DeeFile_GetStd(DEE_STDOUT);
 			if unlikely(!fp)
 				goto err;
-			temp = DeeFile_WriteAll(fp, filename, strlen(filename));
-			if likely(temp != (size_t)-1)
-				temp = DeeFile_WriteAll(fp, ":\n", 2);
+			temp = DeeFile_Printf(fp, "%s:\n", filename);
 			Dee_Decref(fp);
-			if unlikely(temp == (size_t)-1)
+			if unlikely(temp == -1)
 				goto err;
 		}
 		if (dchdir_and_format_source_files(filename))

@@ -369,6 +369,20 @@ DEF_WARNING(W_UNCLEAR_SYMBOL_FROM_MODULE, (WG_QUALITY), WSTATE_WARN, {
 })
 DEF_WARNING(W_PACKED_USED_OUTSIDE_OF_MACRO, (WG_QUALITY), WSTATE_WARN,
             WARNF("Using `pack' outside of macros makes code harder to read. Consider using parenthesis instead"))
+DEF_WARNING(W_INCONSISTENT_THOUSANDS_SEPERATORS, (WG_QUALITY), WSTATE_WARN, {
+	size_t s1 = ARG(size_t);
+	size_t s2 = ARG(size_t);
+	WARNF("Thousands/grouping character `_' is used inconsistently in " TOK_S ": "
+	      "grouping with width %Iu and %Iu are present",
+	      TOK_A, s1, s2);
+})
+DEF_WARNING(W_INCORRECT_THOUSANDS_SEPERATORS, (WG_QUALITY), WSTATE_WARN, {
+	size_t expected = ARG(size_t);
+	size_t actual   = ARG(size_t);
+	WARNF("Thousands/grouping character `_' is used incorrectly in " TOK_S ": "
+	      "a separator should appear every %Iu digits, but actually appears every %Iu digits",
+	      TOK_A, expected, actual);
+})
 
 
 

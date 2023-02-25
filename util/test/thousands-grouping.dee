@@ -1,0 +1,142 @@
+#!/usr/bin/deemon
+/* Copyright (c) 2018-2023 Griefer@Work                                       *
+ *                                                                            *
+ * This software is provided 'as-is', without any express or implied          *
+ * warranty. In no event will the authors be held liable for any damages      *
+ * arising from the use of this software.                                     *
+ *                                                                            *
+ * Permission is granted to anyone to use this software for any purpose,      *
+ * including commercial applications, and to alter it and redistribute it     *
+ * freely, subject to the following restrictions:                             *
+ *                                                                            *
+ * 1. The origin of this software must not be misrepresented; you must not    *
+ *    claim that you wrote the original software. If you use this software    *
+ *    in a product, an acknowledgement (see the following) in the product     *
+ *    documentation is required:                                              *
+ *    Portions Copyright (c) 2018-2023 Griefer@Work                           *
+ * 2. Altered source versions must be plainly marked as such, and must not be *
+ *    misrepresented as being the original software.                          *
+ * 3. This notice may not be removed or altered from any source distribution. *
+ */
+import * from deemon;
+
+final local expected: int = 1000000000;
+
+assert 1_000_000_000 == expected;
+assert 0x3B9ACA00 == expected;
+assert 0x3B9A_CA00 == expected;
+assert 0x_3B9A_CA00 == expected;
+
+function assertString(s: string) {
+	assert int(s) == expected;
+	assert exec(s) == expected;
+}
+
+/* Also ensure that the int-from-string, and JIT-compiler can handle _-characters */
+assertString("1_000_000_000");
+assertString("0x3B9A_CA00");
+assertString("0x_3B9A_CA00");
+
+
+/* Also make sure that escaped line-feeds don't cause any trouble in integers
+ * Since this is a gatw-specific feature, we only assert it if hosted by that
+ * variant. */
+#if __DEEMON_VARIANT__ == "gatw"
+assert 1_000_000_00\
+0 == expected;
+assert 1_000_000_0\
+00 == expected;
+assert 1_000_000_\
+000 == expected;
+assert 1_000_000\
+_000 == expected;
+assert 1_000_00\
+0_000 == expected;
+assert 1_000_0\
+00_000 == expected;
+assert 1_000_\
+000_000 == expected;
+assert 1_000\
+_000_000 == expected;
+assert 1_00\
+0_000_000 == expected;
+assert 1_0\
+00_000_000 == expected;
+assert 1_\
+000_000_000 == expected;
+assert 1\
+_000_000_000 == expected;
+assert 1\
+\
+_\
+\
+0\
+\
+0\
+\
+0\
+\
+_\
+\
+0\
+\
+0\
+\
+0\
+\
+_\
+\
+0\
+\
+0\
+\
+0 == expected;
+
+assert 0\
+\
+x\
+\
+_\
+\
+3\
+\
+B\
+\
+9\
+\
+A\
+\
+_\
+\
+C\
+\
+A\
+\
+0\
+\
+0 == expected;
+
+/* Ensure that the compiler produces warnings for base uses of thousands groupings
+ * Reminder: suppressing a warning disables it only once, such that it's turned on
+ *           after being triggered once. -- As such, we can effectively assert that
+ *           the compiler *would* have produced a warning. */
+#pragma warning(suppress: "-Wquality")
+assert !__has_warning("-Wquality");
+assert 0x3B9ACA_00 == expected;
+assert __has_warning("-Wquality");
+
+#pragma warning(suppress: "-Wquality")
+assert !__has_warning("-Wquality");
+assert 0x3B_9A_CA_00 == expected;
+assert __has_warning("-Wquality");
+
+#pragma warning(suppress: "-Wquality")
+assert !__has_warning("-Wquality");
+assert 1_0_0_0_0_0_0_0_0_0 == expected;
+assert __has_warning("-Wquality");
+
+#pragma warning(suppress: "-Wquality")
+assert !__has_warning("-Wquality");
+assert 1000_000_00_0 == expected;
+assert __has_warning("-Wquality");
+#endif /* __DEEMON_VARIANT__ == "gatw" */

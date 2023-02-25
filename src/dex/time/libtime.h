@@ -39,6 +39,12 @@ DECL_BEGIN
 #undef ceildiv
 #define ceildiv(x, y) (((x) + ((y) - 1)) / (y))
 
+/* TODO: Re-write this dex to always use `hybrid/int128.h' */
+/* TODO: Re-write this dex to always use signed nanoseconds (giving a
+ *       range of +/-5395141535403007094485 years around 01.01.0000)
+ * -> Related to this, also change all functions taking timeouts to
+ *    use nanoseconds instead of milliseconds. */
+
 #if defined(__INT128_TYPE__) && defined(__UINT128_TYPE__)
 
 #define HAVE_128BIT_TIME 1

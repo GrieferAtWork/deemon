@@ -46,6 +46,12 @@
 
 DECL_BEGIN
 
+#ifndef CONFIG_HAVE_memrchr
+#define CONFIG_HAVE_memrchr
+#define memrchr dee_memrchr
+DeeSystem_DEFINE_memrchr(dee_memrchr)
+#endif /* !CONFIG_HAVE_memrchr */
+
 #define GET_CHOP(x) (ASSERT((x) < 128), chops[x])
 INTERN uint8_t const chops[128] = {
 /*[[[deemon
@@ -582,6 +588,60 @@ err:
 	return NULL;
 }
 
+PRIVATE WUNUSED NONNULL((1, 2)) size_t FCALL
+count_chars_without_escaped_linefeeds(char const *start,
+                                      char const *end) {
+	size_t result = 0;
+	while (start < end) {
+		uint32_t ch;
+		ch = utf8_readchar(&start, end);
+		if (ch == '\\') {
+			ch = utf8_readchar(&start, end);
+			if (ch == '\r')
+				utf8_readchar(&start, end);
+			continue;
+		}
+		++result;
+	}
+	return result;
+}
+
+PRIVATE WUNUSED int FCALL verify_consistent_grouping(void) {
+	char const *tok_start, *tok_end, *iter, *lastsep;
+	size_t interval, wanted_interval;
+	tok_start = token.t_begin;
+	tok_end   = token.t_end;
+	iter      = (char const *)memrchr(tok_start, '_', (size_t)(tok_end - tok_start));
+	if likely(!iter)
+		return 0; /* No separators present. */
+	ASSERTF(iter > tok_start, "If the '_' was at the start, it'd be a keyword token");
+
+	/* Figure out the  */
+	interval = count_chars_without_escaped_linefeeds(iter + 1, tok_end);
+	lastsep  = iter;
+	while (iter > tok_start) {
+		size_t offset;
+		--iter;
+		if (*iter != '_')
+			continue;
+		offset = count_chars_without_escaped_linefeeds(iter + 1, lastsep);
+		if (offset != interval) {
+			return WARN(W_INCONSISTENT_THOUSANDS_SEPERATORS,
+			            interval, offset);
+		}
+		lastsep = iter;
+	}
+
+	/* Decimals should use a thousands-interval of `3'.
+	 * For every other radix, the interval should be `4'. */
+	wanted_interval = *tok_start == '0' ? 4 : 3;
+	if (wanted_interval != interval) {
+		return WARN(W_INCORRECT_THOUSANDS_SEPERATORS,
+		            wanted_interval, interval);
+	}
+
+	return 0;
+}
 
 INTERN WUNUSED DREF struct ast *FCALL
 ast_parse_unaryhead(unsigned int lookup_mode) {
@@ -594,10 +654,18 @@ ast_parse_unaryhead(unsigned int lookup_mode) {
 	case TOK_INT: {
 		tint_t value;
 		DREF DeeObject *resval;
-		/* Use our own integer parser, so we can process infinite-precision integers. */
-		resval = DeeInt_FromString(token.t_begin, (size_t)(token.t_end - token.t_begin),
+		size_t toklen;
+
+		/* Verify that thousands-separators (if present) are used consistently. */
+		if unlikely(verify_consistent_grouping())
+			goto err;
+
+		/* Use our own integer parser, so we can process arbitrary-precision integers. */
+		toklen = (size_t)(token.t_end - token.t_begin);
+		resval = DeeInt_FromString(token.t_begin, toklen,
 		                           DEEINT_STRING(0, DEEINT_STRING_FESCAPED |
 		                                            DEEINT_STRING_FTRY));
+
 		/* Check if the integer failed to be parsed. */
 		if unlikely(resval == ITER_DONE) {
 			if (WARN(W_INVALID_INTEGER))
