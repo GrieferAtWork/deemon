@@ -473,8 +473,11 @@ posix_environ_getenv(DeeStringObject *name, DeeObject *defl) {
 		environ_lock_endread();
 		if (!error) {
 			/* Error. */
-			if (defl)
-				return_reference_(defl);
+			if (defl) {
+				if (defl != ITER_DONE)
+					Dee_Incref(defl);
+				return defl;
+			}
 			err_unknown_env_var((DeeObject *)name);
 			DeeString_FreeWideBuffer(buffer);
 			goto err;
@@ -529,8 +532,11 @@ again:
 		DBG_ALIGNMENT_ENABLE();
 		environ_lock_endread();
 		DeeString_FreeWideBuffer(buffer);
-		if (defl)
-			return_reference_(defl);
+		if (defl) {
+			if (defl != ITER_DONE)
+				Dee_Incref(defl);
+			return defl;
+		}
 		err_unknown_env_var((DeeObject *)name);
 		return NULL;
 	}
@@ -589,8 +595,11 @@ again:
 		DBG_ALIGNMENT_ENABLE();
 		environ_lock_endread();
 		DeeString_Free1ByteBuffer((uint8_t *)buffer);
-		if (defl)
-			return_reference_(defl);
+		if (defl) {
+			if (defl != ITER_DONE)
+				Dee_Incref(defl);
+			return defl;
+		}
 		err_unknown_env_var((DeeObject *)name);
 		return NULL;
 	}
@@ -617,8 +626,11 @@ err:
 #endif /* posix_getenv_USE_getenv || posix_getenv_USE_environ */
 
 #ifdef posix_getenv_USE_STUB
-	if (defl)
-		return_reference_(defl);
+	if (defl) {
+		if (defl != ITER_DONE)
+			Dee_Incref(defl);
+		return defl;
+	}
 	err_unknown_env_var((DeeObject *)name);
 	return NULL;
 #endif /* posix_getenv_USE_STUB */
