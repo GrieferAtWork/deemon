@@ -62,6 +62,24 @@ typedef WUNUSED_T ATTR_INS_T(2, 1) DREF DeeObject *
 typedef WUNUSED_T ATTR_INS_T(2, 1) DREF DeeObject *
 (DCALL *Dee_kwcmethod_t)(size_t argc, DeeObject *const *argv, DeeObject *kw);
 
+#if defined(__INTELLISENSE__) && defined(__cplusplus)
+/* Highlight usage errors in IDE */
+extern "C++" {
+namespace __intern {
+Dee_cmethod_t _Dee_RequiresCMethod(decltype(nullptr));
+Dee_kwcmethod_t _Dee_RequiresKwCMethod(decltype(nullptr));
+template<class _TReturn> Dee_cmethod_t _Dee_RequiresCMethod(WUNUSED_T NONNULL_T((1)) DREF _TReturn *(DCALL *_meth)(size_t, DeeObject *const *));
+template<class _TReturn> Dee_kwcmethod_t _Dee_RequiresKwCMethod(WUNUSED_T NONNULL_T((1)) DREF _TReturn *(DCALL *_meth)(size_t, DeeObject *const *, /*nullable*/ DeeObject *kw));
+} /* namespace __intern */
+} /* extern "C++" */
+#define Dee_REQUIRES_CMETHOD(meth)    ((decltype(::__intern::_Dee_RequiresCMethod(meth)))(meth))
+#define Dee_REQUIRES_KWCMETHOD(meth)  ((decltype(::__intern::_Dee_RequiresKwCMethod(meth)))(meth))
+#else /* __INTELLISENSE__ && __cplusplus */
+#define Dee_REQUIRES_CMETHOD(meth)    ((Dee_cmethod_t)(meth))
+#define Dee_REQUIRES_KWCMETHOD(meth)  ((Dee_kwcmethod_t)(meth))
+#endif /* !__INTELLISENSE__ || !__cplusplus */
+
+
 #ifdef DEE_SOURCE
 typedef Dee_cmethod_t   dcmethod_t;
 typedef Dee_kwcmethod_t dkwcmethod_t;
@@ -89,9 +107,9 @@ DDATDEF DeeTypeObject DeeKwObjMethod_Type;
 #define DeeKwObjMethod_Check(x)      DeeObject_InstanceOfExact(x, &DeeKwObjMethod_Type) /* `_KwObjMethod' is final. */
 #define DeeKwObjMethod_CheckExact(x) DeeObject_InstanceOfExact(x, &DeeKwObjMethod_Type)
 #define Dee_DEFINE_OBJMETHOD(name, func, self) \
-	DeeObjMethodObject name = { Dee_OBJECT_HEAD_INIT(&DeeObjMethod_Type), func, self }
+	DeeObjMethodObject name = { Dee_OBJECT_HEAD_INIT(&DeeObjMethod_Type), Dee_REQUIRES_OBJMETHOD(func), self }
 #define Dee_DEFINE_KWOBJMETHOD(name, func, self) \
-	DeeKwObjMethodObject name = { Dee_OBJECT_HEAD_INIT(&DeeKwObjMethod_Type), func, self }
+	DeeKwObjMethodObject name = { Dee_OBJECT_HEAD_INIT(&DeeKwObjMethod_Type), Dee_REQUIRES_KWOBJMETHOD(func), self }
 
 /* Construct a new `_ObjMethod' object. */
 DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
@@ -131,9 +149,9 @@ DDATDEF DeeTypeObject DeeKwClsMethod_Type;
 #define DeeKwClsMethod_Check(x)      DeeObject_InstanceOfExact(x, &DeeKwClsMethod_Type) /* `_KwClassMethod' is final. */
 #define DeeKwClsMethod_CheckExact(x) DeeObject_InstanceOfExact(x, &DeeKwClsMethod_Type)
 #define Dee_DEFINE_CLSMETHOD(name, func, type) \
-	DeeClsMethodObject name = { Dee_OBJECT_HEAD_INIT(&DeeClsMethod_Type), func, type }
+	DeeClsMethodObject name = { Dee_OBJECT_HEAD_INIT(&DeeClsMethod_Type), Dee_REQUIRES_OBJMETHOD(func), type }
 #define Dee_DEFINE_KWCLSMETHOD(name, func, type) \
-	DeeKwClsMethodObject name = { Dee_OBJECT_HEAD_INIT(&DeeKwClsMethod_Type), func, type }
+	DeeKwClsMethodObject name = { Dee_OBJECT_HEAD_INIT(&DeeKwClsMethod_Type), Dee_REQUIRES_KWOBJMETHOD(func), type }
 
 
 /* Construct a new `_ClassMethod' object. */
@@ -164,8 +182,11 @@ DDATDEF DeeTypeObject DeeClsProperty_Type;
 #define DeeClsProperty_SET(x)          ((DeeClsPropertyObject *)Dee_REQUIRES_OBJECT(x))->cp_set
 #define DeeClsProperty_Check(x)        DeeObject_InstanceOfExact(x, &DeeClsProperty_Type) /* `_ClassProperty' is final. */
 #define DeeClsProperty_CheckExact(x)   DeeObject_InstanceOfExact(x, &DeeClsProperty_Type)
-#define Dee_DEFINE_CLSPROPERTY(name, type, get, del, set) \
-	DeeClsPropertyObject name = { Dee_OBJECT_HEAD_INIT(&DeeClsProperty_Type), get, type, del, set }
+#define Dee_DEFINE_CLSPROPERTY(name, type, get, del, set)                     \
+	DeeClsPropertyObject name = { Dee_OBJECT_HEAD_INIT(&DeeClsProperty_Type), \
+	                              Dee_REQUIRES_GETMETHOD(get), type,          \
+	                              Dee_REQUIRES_DELMETHOD(del),                \
+	                              Dee_REQUIRES_SETMETHOD(set) }
 
 
 /* Create a new unbound class property object. */
@@ -217,9 +238,9 @@ DDATDEF DeeTypeObject DeeKwCMethod_Type;
 #define DeeKwCMethod_Check(x)      DeeObject_InstanceOfExact(x, &DeeKwCMethod_Type) /* `_KwCMethod' is final. */
 #define DeeKwCMethod_CheckExact(x) DeeObject_InstanceOfExact(x, &DeeKwCMethod_Type)
 #define Dee_DEFINE_CMETHOD(name, func) \
-	DeeCMethodObject name = { Dee_OBJECT_HEAD_INIT(&DeeCMethod_Type), func }
+	DeeCMethodObject name = { Dee_OBJECT_HEAD_INIT(&DeeCMethod_Type), Dee_REQUIRES_CMETHOD(func) }
 #define Dee_DEFINE_KWCMETHOD(name, func) \
-	DeeKwCMethodObject name = { Dee_OBJECT_HEAD_INIT(&DeeKwCMethod_Type), func }
+	DeeKwCMethodObject name = { Dee_OBJECT_HEAD_INIT(&DeeKwCMethod_Type), Dee_REQUIRES_KWCMETHOD(func) }
 
 
 #ifdef CONFIG_BUILDING_DEEMON

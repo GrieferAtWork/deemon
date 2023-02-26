@@ -36,6 +36,7 @@
 #include <deemon/string.h>
 #include <deemon/system-features.h> /* strend() */
 #include <deemon/system.h>
+#include <deemon/time-abi.h>
 #include <deemon/tuple.h>
 #include <deemon/util/atomic.h>
 #include <deemon/util/lock.h>
@@ -1748,15 +1749,8 @@ stat_fini(DeeStatObject *__restrict self) {
 #endif /* __BYTE_ORDER__ != __ORDER_BIG_ENDIAN__ */
 #define FILETIME_PER_SECONDS 10000000 /* 100 nanoseconds / 0.1 microseconds. */
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-DeeTime_NewFiletime(FILETIME const *__restrict val) {
-	uint64_t result;
-	result = (FILETIME_GET64(*(uint64_t *)val) /
-	          (FILETIME_PER_SECONDS / MICROSECONDS_PER_SECOND));
-	result += time_yer2day(1601) * MICROSECONDS_PER_DAY;
-	return DeeTime_New(result);
-}
-
+#define get_time_module() TIME_MODULE
+PRIVATE DEFINE_DeeTime_NewFILETIME(get_time_module);
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 stat_get_dev(DeeStatObject *__restrict self) {
@@ -1869,7 +1863,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 stat_get_atime(DeeStatObject *__restrict self) {
 	if unlikely(self->st_stat.s_valid & STAT_FNOTIME)
 		goto err_notime;
-	return DeeTime_NewFiletime(&self->st_stat.s_info.ftLastAccessTime);
+	return DeeTime_NewFILETIME(&self->st_stat.s_info.ftLastAccessTime);
 err_notime:
 	err_no_time_info();
 	return NULL;
@@ -1879,7 +1873,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 stat_get_mtime(DeeStatObject *__restrict self) {
 	if unlikely(self->st_stat.s_valid & STAT_FNOTIME)
 		goto err_notime;
-	return DeeTime_NewFiletime(&self->st_stat.s_info.ftLastWriteTime);
+	return DeeTime_NewFILETIME(&self->st_stat.s_info.ftLastWriteTime);
 err_notime:
 	err_no_time_info();
 	return NULL;
@@ -1889,7 +1883,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 stat_get_ctime(DeeStatObject *__restrict self) {
 	if unlikely(self->st_stat.s_valid & STAT_FNOTIME)
 		goto err_notime;
-	return DeeTime_NewFiletime(&self->st_stat.s_info.ftCreationTime);
+	return DeeTime_NewFILETIME(&self->st_stat.s_info.ftCreationTime);
 err_notime:
 	err_no_time_info();
 	return NULL;

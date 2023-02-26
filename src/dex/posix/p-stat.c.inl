@@ -26,11 +26,11 @@
 /**/
 
 #include <deemon/seq.h>
+#include <deemon/time-abi.h>
 #include <deemon/util/atomic.h>
 
 #include <hybrid/sync/atomic-rwlock.h>
-
-#include "../time/libtime.h"
+#include <hybrid/unaligned.h>
 
 DECL_BEGIN
 
@@ -913,7 +913,9 @@ INTDEF ATTR_COLD int DCALL err_stat_no_mtime_info(void);
 INTDEF ATTR_COLD int DCALL err_stat_no_ctime_info(void);
 INTDEF ATTR_COLD int DCALL err_stat_no_birthtime_info(void);
 INTDEF ATTR_COLD int DCALL err_stat_no_nttype_info(void);
-INTDEF WUNUSED DREF DeeObject *DCALL DeeTime_New(uint64_t microseconds);
+
+INTDEF DECLARE_DeeTime_NewUnix();
+INTDEF DECLARE_DeeTime_NewFILETIME();
 
 
 #ifdef posix_stat_USE_WINDOWS
@@ -1043,7 +1045,7 @@ err:
 }
 
 
-/*[[[deemon import("rt._dexutils").gw("fstat", "fd:?X2?DFile?Dint->?Gstat", libname: "posix"); ]]]*/
+/*[[[deemon import("rt.dexutils").gw("fstat", "fd:?X2?DFile?Dint->?Gstat", libname: "posix"); ]]]*/
 FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_fstat_f_impl(DeeObject *fd);
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_fstat_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define POSIX_FSTAT_DEF { "fstat", (DeeObject *)&posix_fstat, MODSYM_FNORMAL, DOC("(fd:?X2?DFile?Dint)->?Gstat") },
@@ -1082,7 +1084,7 @@ err:
 	return NULL;
 }
 
-/*[[[deemon import("rt._dexutils").gw("fstatat", "dfd:?X2?DFile?Dint,path:?Dstring,atflags:c:uint=0->?Gstat", libname: "posix"); ]]]*/
+/*[[[deemon import("rt.dexutils").gw("fstatat", "dfd:?X2?DFile?Dint,path:?Dstring,atflags:c:uint=0->?Gstat", libname: "posix"); ]]]*/
 FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_fstatat_f_impl(DeeObject *dfd, DeeObject *path, unsigned int atflags);
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_fstatat_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define POSIX_FSTATAT_DEF { "fstatat", (DeeObject *)&posix_fstatat, MODSYM_FNORMAL, DOC("(dfd:?X2?DFile?Dint,path:?Dstring,atflags:?Dint=!0)->?Gstat") },
@@ -1149,25 +1151,6 @@ stat_fini(DeeStatObject *__restrict self) {
 #endif /* dee_stat_fini_IS_NOOP */
 
 
-
-#ifdef posix_stat_USE_WINDOWS
-#if __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
-#define FILETIME_GET64(x) (((x) << 32) | ((x) >> 32))
-#else /* __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__ */
-#define FILETIME_GET64(x)   (x)
-#endif /* __BYTE_ORDER__ != __ORDER_BIG_ENDIAN__ */
-#define FILETIME_PER_SECONDS 10000000 /* 100 nanoseconds / 0.1 microseconds. */
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-DeeTime_NewFiletime(FILETIME const *__restrict val) {
-	uint64_t result;
-	result = (FILETIME_GET64(*(uint64_t *)val) /
-	          (FILETIME_PER_SECONDS / MICROSECONDS_PER_SECOND));
-	result += time_yer2day(1601) * MICROSECONDS_PER_DAY;
-#define NEED_DeeTime_New
-	return DeeTime_New(result);
-}
-#endif /* posix_stat_USE_WINDOWS */
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 stat_get_dev(DeeStatObject *__restrict self) {
@@ -1414,18 +1397,19 @@ stat_get_atime(DeeStatObject *__restrict self) {
 #ifdef posix_stat_USE_WINDOWS
 	if unlikely(self->so_stat.st_valid & NT_STAT_FNOTIME)
 		goto err_notime;
-	return DeeTime_NewFiletime(&self->so_stat.st_info.ftLastAccessTime);
+#define NEED_DeeTime_NewFILETIME
+	return DeeTime_NewFILETIME(&self->so_stat.st_info.ftLastAccessTime);
 err_notime:
 #define NEED_err_stat_no_atime_info
 	err_stat_no_atime_info();
 	return NULL;
 #elif defined(posix_stat_GET_ATIME_SEC) && defined(posix_stat_GET_ATIME_NSEC)
-#define NEED_DeeTime_New
-	return DeeTime_New(((uint64_t)posix_stat_GET_ATIME_SEC(&self->so_stat.st_info) * MICROSECONDS_PER_SECOND) +
-	                   ((uint64_t)posix_stat_GET_ATIME_NSEC(&self->so_stat.st_info) / NANOSECONDS_PER_MICROSECOND));
+#define NEED_DeeTime_NewUnix
+	return DeeTime_NewUnix(posix_stat_GET_ATIME_SEC(&self->so_stat.st_info),
+	                       posix_stat_GET_ATIME_NSEC(&self->so_stat.st_info));
 #elif defined(posix_stat_GET_ATIME_SEC)
-#define NEED_DeeTime_New
-	return DeeTime_New(((uint64_t)posix_stat_GET_ATIME_SEC(&self->so_stat.st_info) * MICROSECONDS_PER_SECOND));
+#define NEED_DeeTime_NewUnix
+	return DeeTime_NewUnix(posix_stat_GET_ATIME_SEC(&self->so_stat.st_info), 0);
 #else /* ... */
 #define posix_stat_get_atime_IS_STUB
 	(void)self;
@@ -1440,18 +1424,19 @@ stat_get_mtime(DeeStatObject *__restrict self) {
 #ifdef posix_stat_USE_WINDOWS
 	if unlikely(self->so_stat.st_valid & NT_STAT_FNOTIME)
 		goto err_notime;
-	return DeeTime_NewFiletime(&self->so_stat.st_info.ftLastWriteTime);
+#define NEED_DeeTime_NewFILETIME
+	return DeeTime_NewFILETIME(&self->so_stat.st_info.ftLastWriteTime);
 err_notime:
 #define NEED_err_stat_no_mtime_info
 	err_stat_no_mtime_info();
 	return NULL;
 #elif defined(posix_stat_GET_MTIME_SEC) && defined(posix_stat_GET_MTIME_NSEC)
-#define NEED_DeeTime_New
-	return DeeTime_New(((uint64_t)posix_stat_GET_MTIME_SEC(&self->so_stat.st_info) * MICROSECONDS_PER_SECOND) +
-	                   ((uint64_t)posix_stat_GET_MTIME_NSEC(&self->so_stat.st_info) / NANOSECONDS_PER_MICROSECOND));
+#define NEED_DeeTime_NewUnix
+	return DeeTime_NewUnix(posix_stat_GET_MTIME_SEC(&self->so_stat.st_info),
+	                       posix_stat_GET_MTIME_NSEC(&self->so_stat.st_info));
 #elif defined(posix_stat_GET_MTIME_SEC)
-#define NEED_DeeTime_New
-	return DeeTime_New(((uint64_t)posix_stat_GET_MTIME_SEC(&self->so_stat.st_info) * MICROSECONDS_PER_SECOND));
+#define NEED_DeeTime_NewUnix
+	return DeeTime_NewUnix(posix_stat_GET_MTIME_SEC(&self->so_stat.st_info), 0);
 #else /* ... */
 #define posix_stat_get_mtime_IS_STUB
 	(void)self;
@@ -1467,15 +1452,15 @@ err_notime:
 #elif defined(posix_stat_GET_CTIME_SEC) && defined(posix_stat_GET_CTIME_NSEC)
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 stat_get_ctime(DeeStatObject *__restrict self) {
-#define NEED_DeeTime_New
-	return DeeTime_New(((uint64_t)posix_stat_GET_CTIME_SEC(&self->so_stat.st_info) * MICROSECONDS_PER_SECOND) +
-	                   ((uint64_t)posix_stat_GET_CTIME_NSEC(&self->so_stat.st_info) / NANOSECONDS_PER_MICROSECOND));
+#define NEED_DeeTime_NewUnix
+	return DeeTime_NewUnix(posix_stat_GET_CTIME_SEC(&self->so_stat.st_info),
+	                       posix_stat_GET_CTIME_NSEC(&self->so_stat.st_info));
 }
 #elif defined(posix_stat_GET_CTIME_SEC)
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 stat_get_ctime(DeeStatObject *__restrict self) {
-#define NEED_DeeTime_New
-	return DeeTime_New(((uint64_t)posix_stat_GET_CTIME_SEC(&self->so_stat.st_info) * MICROSECONDS_PER_SECOND));
+#define NEED_DeeTime_NewUnix
+	return DeeTime_NewUnix(posix_stat_GET_CTIME_SEC(&self->so_stat.st_info), 0);
 }
 #elif !defined(posix_stat_get_mtime_IS_STUB)
 /* If the OS doesn't have a dedicated st_ctime timestamp, re-use the st_mtime-one (if present) */
@@ -1496,18 +1481,19 @@ stat_get_birthtime(DeeStatObject *__restrict self) {
 #ifdef posix_stat_USE_WINDOWS
 	if unlikely(self->so_stat.st_valid & NT_STAT_FNOTIME)
 		goto err_notime;
-	return DeeTime_NewFiletime(&self->so_stat.st_info.ftCreationTime);
+#define NEED_DeeTime_NewFILETIME
+	return DeeTime_NewFILETIME(&self->so_stat.st_info.ftCreationTime);
 err_notime:
 #define NEED_err_stat_no_birthtime_info
 	err_stat_no_birthtime_info();
 	return NULL;
 #elif defined(posix_stat_GET_BTIME_SEC) && defined(posix_stat_GET_BTIME_NSEC)
-#define NEED_DeeTime_New
-	return DeeTime_New(((uint64_t)posix_stat_GET_BTIME_SEC(&self->so_stat.st_info) * MICROSECONDS_PER_SECOND) +
-	                   ((uint64_t)posix_stat_GET_BTIME_NSEC(&self->so_stat.st_info) / NANOSECONDS_PER_MICROSECOND));
+#define NEED_DeeTime_NewUnix
+	return DeeTime_NewUnix(posix_stat_GET_BTIME_SEC(&self->so_stat.st_info),
+	                       posix_stat_GET_BTIME_NSEC(&self->so_stat.st_info));
 #elif defined(posix_stat_GET_BTIME_SEC)
-#define NEED_DeeTime_New
-	return DeeTime_New(((uint64_t)posix_stat_GET_BTIME_SEC(&self->so_stat.st_info) * MICROSECONDS_PER_SECOND));
+#define NEED_DeeTime_NewUnix
+	return DeeTime_NewUnix(posix_stat_GET_BTIME_SEC(&self->so_stat.st_info), 0);
 #else /* ... */
 #define posix_stat_get_birthtime_IS_STUB
 	(void)self;
@@ -2561,7 +2547,7 @@ PRIVATE struct type_method tpconst stat_class_methods[] = {
 
 
 /* Timestamp creation */
-#ifdef NEED_DeeTime_New
+#if defined(NEED_DeeTime_NewUnix) || defined(NEED_DeeTime_NewFILETIME)
 #undef NEED_DeeTime_New
 PRIVATE DREF DeeObject *dee_time_module = NULL;
 PRIVATE DREF DeeObject *DCALL get_time_module(void) {
@@ -2580,46 +2566,15 @@ posix_dex_fini(DeeDexObject *__restrict self) {
 	Dee_XDecref(dee_time_module);
 }
 
-/*[[[deemon (PRIVATE_DEFINE_STRING from rt.gen.string)("str_makeanon", "makeanon");]]]*/
-PRIVATE DEFINE_STRING_EX(str_makeanon, "makeanon", 0x2c680852, 0xee6c933604aac03d);
-/*[[[end]]]*/
+#ifdef NEED_DeeTime_NewUnix
+INTERN DEFINE_DeeTime_NewUnix(get_time_module);
+#endif /* NEED_DeeTime_NewUnix */
 
-PRIVATE WUNUSED DREF DeeObject *DCALL
-default_DeeTime_New(uint64_t microseconds) {
-	DeeObject *time_module = get_time_module();
-	if unlikely(!time_module)
-		return NULL;
-	return DeeObject_CallAttrf(time_module,
-	                           (DeeObject *)&str_makeanon,
-	                           "I64u",
-	                           microseconds);
-}
+#ifdef NEED_DeeTime_NewFILETIME
+INTERN DEFINE_DeeTime_NewFILETIME(get_time_module);
+#endif /* NEED_DeeTime_NewFILETIME */
 
-typedef DREF DeeObject *(DCALL *PDEETIME_NEW)(uint64_t microseconds);
-PRIVATE PDEETIME_NEW p_DeeTime_New = NULL;
-
-INTERN WUNUSED DREF DeeObject *DCALL
-DeeTime_New(uint64_t microseconds) {
-	PDEETIME_NEW funp = p_DeeTime_New;
-	if (!funp) {
-		DeeObject *time_module = get_time_module();
-		if unlikely(!time_module)
-			return NULL;
-
-		/* Try to lookup the object as a native function pointer. */
-		*(void **)&funp = DeeModule_GetNativeSymbol(time_module, "DeeTime_New");
-
-		/* Not a native dex, the wrong dex, or a user-implemented dex.
-		 * In any case, the specs describe a user-function `makeanon'
-		 * that also does what we need to do. */
-		if (funp == NULL)
-			funp = &default_DeeTime_New;
-		p_DeeTime_New = funp;
-		COMPILER_WRITE_BARRIER();
-	}
-	return (*funp)(microseconds);
-}
-#endif /* NEED_DeeTime_New */
+#endif /* NEED_DeeTime_NewUnix || NEED_DeeTime_NewFILETIME */
 
 
 /* Missing stat information errors. */

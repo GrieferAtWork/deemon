@@ -52,6 +52,7 @@
 #include <deemon/string.h>
 #include <deemon/system-features.h>
 #include <deemon/system.h>
+#include <deemon/time-abi.h>
 #include <deemon/util/lock.h>
 
 #include "../time/libtime.h"
@@ -676,22 +677,26 @@ stat_get_size(DeeStatObject *__restrict self) {
 	}
 }
 
+#define get_time_module() TIME_MODULE
+PRIVATE DEFINE_DeeTime_NewUnix(get_time_module);
+
+
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 stat_get_atime(DeeStatObject *__restrict self) {
-	/* TODO: Extensions for better resolution. */
-	return DeeTime_New((uint64_t)self->st_stat.st_atime * MICROSECONDS_PER_SECOND);
+	/* NOTE: Inaccuracies here are OK since the `fs' dex is deprecated (use the `posix' dex instead!) */
+	return DeeTime_NewUnix((uint64_t)self->st_stat.st_atime, 0);
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 stat_get_mtime(DeeStatObject *__restrict self) {
-	/* TODO: Extensions for better resolution. */
-	return DeeTime_New((uint64_t)self->st_stat.st_mtime * MICROSECONDS_PER_SECOND);
+	/* NOTE: Inaccuracies here are OK since the `fs' dex is deprecated (use the `posix' dex instead!) */
+	return DeeTime_NewUnix((uint64_t)self->st_stat.st_mtime, 0);
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 stat_get_ctime(DeeStatObject *__restrict self) {
-	/* TODO: Extensions for better resolution. */
-	return DeeTime_New((uint64_t)self->st_stat.st_ctime * MICROSECONDS_PER_SECOND);
+	/* NOTE: Inaccuracies here are OK since the `fs' dex is deprecated (use the `posix' dex instead!) */
+	return DeeTime_NewUnix((uint64_t)self->st_stat.st_ctime, 0);
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL

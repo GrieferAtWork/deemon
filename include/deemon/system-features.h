@@ -575,6 +575,11 @@ func("clock_gettime64", "defined(CONFIG_HAVE_TIME_H) && defined(__USE_POSIX19930
 constant("CLOCK_REALTIME", "defined(CONFIG_HAVE_TIME_H) && defined(__USE_POSIX199309)");
 func("gettimeofday", "defined(CONFIG_HAVE_SYS_TIME_H)", test: "struct timeval tv; return gettimeofday(&tv, NULL);");
 func("gettimeofday64", "defined(CONFIG_HAVE_SYS_TIME_H) && defined(__USE_TIME64)", test: "struct timeval64 tv; return gettimeofday64(&tv, NULL);");
+func("tzset", "defined(CONFIG_HAVE_TIME_H) && (defined(__USE_POSIX) || " + addparen(msvc) + ")", test: "tzset(); return 0;");
+func("_tzset", "defined(CONFIG_HAVE_TIME_H) && " + addparen(msvc), test: "_tzset(); return 0;");
+var("timezone", "defined(CONFIG_HAVE_TIME_H) && !" + addparen(msvc));
+var("_timezone", "defined(CONFIG_HAVE_TIME_H)");
+func("__timezone", "defined(CONFIG_HAVE_TIME_H) && " + addparen(msvc), test: "extern long v; v = (long)*__timezone(); return 0;");
 func("utimes", "defined(CONFIG_HAVE_SYS_TIME_H) && defined(__USE_MISC)", test: 'struct timeval tv[2]; tv[0].tv_sec = 0; tv[0].tv_usec = 0; tv[1] = tv[0]; return utimes("foo", tv);');
 func("utimes64", "defined(CONFIG_HAVE_SYS_TIME_H) && defined(__USE_MISC) && defined(__USE_TIME64)", test: 'struct timeval64 tv[2]; tv[0].tv_sec = 0; tv[0].tv_usec = 0; tv[1] = tv[0]; return utimes64("foo", tv);');
 func("lutimes", "defined(CONFIG_HAVE_SYS_TIME_H)", test: 'struct timeval tv[2]; tv[0].tv_sec = 0; tv[0].tv_usec = 0; tv[1] = tv[0]; return lutimes("foo", tv);');
@@ -4686,6 +4691,45 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #define CONFIG_HAVE_gettimeofday64
 #endif
 
+#ifdef CONFIG_NO_tzset
+#undef CONFIG_HAVE_tzset
+#elif !defined(CONFIG_HAVE_tzset) && \
+      (defined(tzset) || defined(__tzset_defined) || (defined(CONFIG_HAVE_TIME_H) && \
+       (defined(__USE_POSIX) || defined(_MSC_VER))))
+#define CONFIG_HAVE_tzset
+#endif
+
+#ifdef CONFIG_NO__tzset
+#undef CONFIG_HAVE__tzset
+#elif !defined(CONFIG_HAVE__tzset) && \
+      (defined(_tzset) || defined(___tzset_defined) || (defined(CONFIG_HAVE_TIME_H) && \
+       defined(_MSC_VER)))
+#define CONFIG_HAVE__tzset
+#endif
+
+#ifdef CONFIG_NO_timezone
+#undef CONFIG_HAVE_timezone
+#elif !defined(CONFIG_HAVE_timezone) && \
+      (defined(timezone) || defined(__timezone_defined) || (defined(CONFIG_HAVE_TIME_H) && \
+       !defined(_MSC_VER)))
+#define CONFIG_HAVE_timezone
+#endif
+
+#ifdef CONFIG_NO__timezone
+#undef CONFIG_HAVE__timezone
+#elif !defined(CONFIG_HAVE__timezone) && \
+      (defined(_timezone) || defined(___timezone_defined) || defined(CONFIG_HAVE_TIME_H))
+#define CONFIG_HAVE__timezone
+#endif
+
+#ifdef CONFIG_NO___timezone
+#undef CONFIG_HAVE___timezone
+#elif !defined(CONFIG_HAVE___timezone) && \
+      (defined(__timezone) || defined(____timezone_defined) || (defined(CONFIG_HAVE_TIME_H) && \
+       defined(_MSC_VER)))
+#define CONFIG_HAVE___timezone
+#endif
+
 #ifdef CONFIG_NO_utimes
 #undef CONFIG_HAVE_utimes
 #elif !defined(CONFIG_HAVE_utimes) && \
@@ -8681,6 +8725,24 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 
 
 /* Substitute some known function aliases */
+#if defined(CONFIG_HAVE___timezone) && !defined(CONFIG_HAVE__timezone)
+#define CONFIG_HAVE__timezone
+#undef _timezone
+#define _timezone (*__timezone())
+#endif /* _timezone = __timezone */
+
+#if defined(CONFIG_HAVE__timezone) && !defined(CONFIG_HAVE_timezone)
+#define CONFIG_HAVE_timezone
+#undef timezone
+#define timezone _timezone
+#endif /* timezone = _timezone */
+
+#if defined(CONFIG_HAVE__tzset) && !defined(CONFIG_HAVE_tzset)
+#define CONFIG_HAVE_tzset
+#undef tzset
+#define tzset _tzset
+#endif /* tzset = _tzset */
+
 #if defined(CONFIG_HAVE__memccpy) && !defined(CONFIG_HAVE_memccpy)
 #define CONFIG_HAVE_memccpy
 #undef memccpy

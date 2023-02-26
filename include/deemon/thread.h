@@ -441,12 +441,12 @@ DeeThread_Detach(/*Thread*/ DeeObject *__restrict self);
  *                    thread after being encapsulated as `Error.ThreadError' objects.
  * @return:  0: Successfully joined the thread and wrote its return value in *pthread_result.
  * @return:  1: The given timeout has expired.
- * @param: timeout_microseconds: The timeout in microseconds, 0 for try-join,
- *                               or (uint64_t)-1 for infinite timeout. */
+ * @param: timeout_nanoseconds: The timeout in microseconds, 0 for try-join,
+ *                              or `(uint64_t)-1' for infinite timeout. */
 DFUNDEF WUNUSED NONNULL((1, 2)) int DCALL
 DeeThread_Join(/*Thread*/ DeeObject *__restrict self,
                DREF DeeObject **__restrict pthread_result,
-               uint64_t timeout_microseconds);
+               uint64_t timeout_nanoseconds);
 
 /* Capture a snapshot of the given thread's execution stack, returning
  * a traceback object describing what is actually being run by it.

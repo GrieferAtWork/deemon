@@ -59,7 +59,7 @@ DEFINE_LIBFS_FORWARD_WRAPPER_S(symlink)
 /* fchownat()                                                           */
 /************************************************************************/
 
-/*[[[deemon import("rt._dexutils").gw("fchownat", "dfd:d,filename:c:char[],owner:?X3?Efs:User?Dstring?Dint,group:?X3?Efs:Group?Dstring?Dint,atflags:d->?Dint", libname: "posix"); ]]]*/
+/*[[[deemon import("rt.dexutils").gw("fchownat", "dfd:d,filename:c:char[],owner:?X3?Efs:User?Dstring?Dint,group:?X3?Efs:Group?Dstring?Dint,atflags:d->?Dint", libname: "posix"); ]]]*/
 FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_fchownat_f_impl(int dfd, /*utf-8*/ char const *filename, DeeObject *owner, DeeObject *group, int atflags);
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_fchownat_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define POSIX_FCHOWNAT_DEF { "fchownat", (DeeObject *)&posix_fchownat, MODSYM_FNORMAL, DOC("(dfd:?Dint,filename:?Dstring,owner:?X3?Efs:User?Dstring?Dint,group:?X3?Efs:Group?Dstring?Dint,atflags:?Dint)->?Dint") },
@@ -169,7 +169,7 @@ err:
 /* fchmodat()                                                           */
 /************************************************************************/
 
-/*[[[deemon import("rt._dexutils").gw("fchmodat", "dfd:d,filename:c:char[],mode:u,atflags:d->?Dint", libname: "posix"); ]]]*/
+/*[[[deemon import("rt.dexutils").gw("fchmodat", "dfd:d,filename:c:char[],mode:u,atflags:d->?Dint", libname: "posix"); ]]]*/
 FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_fchmodat_f_impl(int dfd, /*utf-8*/ char const *filename, unsigned int mode, int atflags);
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_fchmodat_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define POSIX_FCHMODAT_DEF { "fchmodat", (DeeObject *)&posix_fchmodat, MODSYM_FNORMAL, DOC("(dfd:?Dint,filename:?Dstring,mode:?Dint,atflags:?Dint)->?Dint") },

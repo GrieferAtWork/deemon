@@ -96,22 +96,26 @@ STATIC_ASSERT(sizeof(long) == __SIZEOF_LONG__);
 #define VA_SIZE  __SIZEOF_INT__
 
 
-#if VA_SIZE == 8
+#if VA_SIZE >= 8
+#   define LENGTH_I128 0x51
 #   define LENGTH_I64  0x40
 #   define LENGTH_I32  0x30
 #   define LENGTH_I16  0x20
 #   define LENGTH_I8   0x10
-#elif VA_SIZE == 4
+#elif VA_SIZE >= 4
+#   define LENGTH_I128 0x52
 #   define LENGTH_I64  0x41
 #   define LENGTH_I32  0x30
 #   define LENGTH_I16  0x20
 #   define LENGTH_I8   0x10
-#elif VA_SIZE == 2
+#elif VA_SIZE >= 2
+#   define LENGTH_I128 0x53
 #   define LENGTH_I64  0x42
 #   define LENGTH_I32  0x31
 #   define LENGTH_I16  0x20
 #   define LENGTH_I8   0x10
-#elif VA_SIZE == 1
+#elif VA_SIZE >= 1
+#   define LENGTH_I128 0x54
 #   define LENGTH_I64  0x43
 #   define LENGTH_I32  0x32
 #   define LENGTH_I16  0x21
@@ -366,6 +370,72 @@ strnlen32(uint32_t const *__restrict str, size_t maxlen) {
 	return (size_t)(end - str);
 }
 
+typedef union {
+	Dee_uint128_t u;
+	Dee_int128_t i;
+} Xint128_t;
+
+PRIVATE WUNUSED NONNULL((1, 3)) dssize_t DCALL
+print_int128(dformatprinter printer, void *arg,
+             Xint128_t *value, size_t precision,
+             unsigned int flags, unsigned int numsys) {
+	dssize_t result = 0, temp;
+	char const *dec;
+	bool is_neg;
+	char *iter, buffer[131]; /* 128-bit binary, w/prefix + sign */
+	dec    = DeeAscii_ItoaDigits(flags & F_UPPER);
+	is_neg = false;
+	if ((flags & F_SIGNED) && __hybrid_int128_isneg(value->i)) {
+		is_neg = true;
+		__hybrid_int128_neg(value->i);
+	}
+	iter = COMPILER_ENDOF(buffer);
+	/* Actually translate the given input integer. */
+	do {
+		Dee_uint128_t digit;
+		digit = value->u;
+		__hybrid_uint128_mod8(digit, numsys);
+		__hybrid_uint128_div8(value->u, numsys);
+		*--iter = dec[__hybrid_uint128_get8(digit)];
+	} while (!__hybrid_uint128_iszero(value->u));
+	if (flags & F_PREFIX && numsys != 10) {
+		if (numsys == 16) {
+			*--iter = dec[33]; /* X/x */
+		} else if (numsys == 2) {
+			*--iter = dec[11]; /* B/b */
+		}
+		*--iter = '0';
+	}
+	if (is_neg) {
+		*--iter = '-';
+	} else if (flags & F_SIGN) {
+		*--iter = '+';
+	}
+	for (;;) {
+		size_t bufsize = (size_t)(COMPILER_ENDOF(buffer) - iter);
+		if ((flags & F_HASPREC) && precision > bufsize) {
+			size_t precbufsize = COMPILER_LENOF(buffer) - bufsize;
+			precision -= bufsize;
+			if (precbufsize > precision)
+				precbufsize = precision;
+			ASSERT(precbufsize != 0);
+			bufsize += precbufsize;
+			iter -= precbufsize;
+			memset(iter, '0', precbufsize);
+			ASSERT(precbufsize <= precision);
+			precision -= precbufsize;
+		}
+		print(iter, bufsize);
+		if (precision <= bufsize)
+			break;
+		ASSERT(flags & F_HASPREC);
+		iter = COMPILER_ENDOF(buffer);
+	}
+	return result;
+err:
+	return temp;
+}
+
 
 /* General-purpose printing of formatted data to the given `printer'.
  * These functions implement c's `printf()' standard (except for the
@@ -530,11 +600,22 @@ nextfmt:
 		ch = *format++;
 		if (ch == '8') {
 			length = LENGTH_I8;
-		} else if (ch == '1' && *format == '6') {
-			length = LENGTH_I16;
+		} else if (ch == '1') {
+			if (*format == '6') {
+				length = LENGTH_I16;
+				++format;
+			} else if (*format == '2') {
+				++format;
+				ASSERT(*format == '8');
+				++format;
+				length = LENGTH_I128;
+			}
 		} else if (ch == '3' && *format == '2') {
 			length = LENGTH_I32;
+			++format;
 		} else if (ch == '6' && *format == '4') {
+			++format;
+			ATTR_FALLTHROUGH
 	case 'j':
 			length = LENGTH_I64;
 		} else {
@@ -611,13 +692,25 @@ nextfmt:
 				data.i = (int64_t)(int32_t)(uint32_t)data.u;
 		} else
 #endif /* VA_SIZE < 8 */
-		{
+#if VA_SIZE < 16
+		if (LENGTH_VASIZEOF(length) == LENGTH_VASIZEOF(LENGTH_I64)) {
 			data.u = va_arg(args, uint64_t);
+		} else
+#endif /* VA_SIZE < 16 */
+		{
+			Xint128_t val128;
+			val128.i = va_arg(args, Dee_int128_t);
+			temp = print_int128(printer, arg, &val128,
+			                    precision, flags, numsys);
+			if unlikely(temp < 0)
+				goto err;
+			result += temp;
+			break;
 		}
 
 		dec    = DeeAscii_ItoaDigits(flags & F_UPPER);
 		is_neg = false;
-		if (flags & F_SIGNED && data.i < 0) {
+		if ((flags & F_SIGNED) && (data.i < 0)) {
 			is_neg = true;
 			data.i = -data.i;
 		}

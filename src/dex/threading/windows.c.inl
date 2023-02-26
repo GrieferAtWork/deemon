@@ -204,10 +204,12 @@ PRIVATE WUNUSED DREF DeeObject *DCALL
 sema_timedwait(Semaphore *self, size_t argc,
                DeeObject *const *argv) {
 	int error;
-	uint64_t timeout;
-	if (DeeArg_Unpack(argc, argv, UNPu64 ":timedwait", &timeout))
+	uint64_t timeout_nanoseconds;
+	uint64_t timeout_microseconds;
+	if (DeeArg_Unpack(argc, argv, UNPu64 ":timedwait", &timeout_nanoseconds))
 		goto err;
-	error = nt_WaitForSemaphore(self->sem_handle, timeout);
+	timeout_microseconds = timeout_nanoseconds / 1000;
+	error = nt_WaitForSemaphore(self->sem_handle, timeout_microseconds);
 	if unlikely(error < 0)
 		goto err;
 	return_bool_(error == 0);
@@ -240,11 +242,11 @@ PRIVATE struct type_method tpconst sema_methods[] = {
 	            "@return false: No ticket was available\n"
 	            "Check if unused tickets are available and acquire one"),
 	TYPE_METHOD("timedwait", &sema_timedwait,
-	            "(timeout_microseconds:?Dint)->?Dbool\n"
+	            "(timeout_nanoseconds:?Dint)->?Dbool\n"
 	            "@interrupt\n"
 	            "@return true: A ticket was acquired\n"
-	            "@return false: The given @timeout_microseconds has expired without a ticket becoming available\n"
-	            "Wait for up to @timeout_microseconds for a ticket to become ready and try to acquire it"),
+	            "@return false: The given @timeout_nanoseconds has expired without a ticket becoming available\n"
+	            "Wait for up to @timeout_nanoseconds for a ticket to become ready and try to acquire it"),
 	TYPE_METHOD("fileno", &sema_fileno,
 	            "->?Dint\n"
 	            "Non-portable windows extension to retrive the file descriptor number (HANDLE) of the semaphore"),
@@ -344,7 +346,7 @@ typedef struct {
 
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
-mutex_timedenter(Mutex *__restrict self, uint64_t timeout) {
+mutex_timedenter(Mutex *__restrict self, uint64_t timeout_nanoseconds) {
 	DWORD owner, caller;
 	DBG_ALIGNMENT_DISABLE();
 	caller = GetCurrentThreadId();
@@ -360,8 +362,10 @@ again:
 		self->m_recursion = 0;
 	} else {
 		int error;
+		uint64_t timeout_microseconds;
 		/* Wait for a ticket to become available. */
-		error = nt_WaitForSemaphore(self->m_sema, timeout);
+		timeout_microseconds = timeout_nanoseconds / 1000;
+		error = nt_WaitForSemaphore(self->m_sema, timeout_microseconds);
 		if (error)
 			return error; /* Error, or timeout. */
 		goto again;
@@ -460,10 +464,10 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 mutex_timedacquire(Mutex *self, size_t argc, DeeObject *const *argv) {
 	int error;
-	uint64_t timeout;
-	if (DeeArg_Unpack(argc, argv, UNPu64 ":tryacquire", &timeout))
+	uint64_t timeout_nanoseconds;
+	if (DeeArg_Unpack(argc, argv, UNPu64 ":tryacquire", &timeout_nanoseconds))
 		goto err;
-	error = mutex_timedenter(self, timeout);
+	error = mutex_timedenter(self, timeout_nanoseconds);
 	if unlikely(error < 0)
 		goto err;
 	return_bool_(error == 0);
@@ -491,9 +495,9 @@ PRIVATE struct type_method tpconst mutex_methods[] = {
 	            "Try to recursive acquire an exclusive lock but fail and "
 	            "return ?f if this is not possible without blocking"),
 	TYPE_METHOD("timedacquire", &mutex_timedacquire,
-	            "(timeout_microseconds:?Dint)->?Dbool\n"
+	            "(timeout_nanoseconds:?Dint)->?Dbool\n"
 	            "Try to recursive acquire an exclusive lock but fail and "
-	            "return ?f if the given @timeout_microseconds has passed"),
+	            "return ?f if the given @timeout_nanoseconds has passed"),
 	TYPE_METHOD("release", &mutex_release,
 	            "()\n"
 	            "@throw RuntimeError The calling thread has not acquired the mutex\n"

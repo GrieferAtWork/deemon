@@ -192,11 +192,11 @@ PRIVATE struct type_method tpconst sema_methods[] = {
 	            "@return false: No ticket was available\n"
 	            "Check if unused tickets are available and acquire one"),
 	TYPE_METHOD("timedwait", &sema_timedwait,
-	            "(timeout_microseconds:?Dint)->?Dbool\n"
+	            "(timeout_nanoseconds:?Dint)->?Dbool\n"
 	            "@interrupt\n"
 	            "@return true: A ticket was acquired\n"
-	            "@return false: The given @timeout_microseconds has expired without a ticket becoming available\n"
-	            "Wait for up to @timeout_microseconds for a ticket to become ready and try to acquire it"),
+	            "@return false: The given @timeout_nanoseconds has expired without a ticket becoming available\n"
+	            "Wait for up to @timeout_nanoseconds for a ticket to become ready and try to acquire it"),
 	TYPE_METHOD_END
 };
 
@@ -400,9 +400,9 @@ PRIVATE struct type_method tpconst mutex_methods[] = {
 	            "Try to recursive acquire an exclusive lock but fail and "
 	            "return ?f if this is not possible without blocking"),
 	TYPE_METHOD("timedacquire", &mutex_timedacquire,
-	            "(timeout_microseconds:?Dint)->?Dbool\n"
+	            "(timeout_nanoseconds:?Dint)->?Dbool\n"
 	            "Try to recursive acquire an exclusive lock but fail and "
-	            "return ?f if the given @timeout_microseconds has passed"),
+	            "return ?f if the given @timeout_nanoseconds has passed"),
 	TYPE_METHOD("release", &mutex_release,
 	            "()\n"
 	            "@throw RuntimeError The calling thread has not acquired the mutex\n"

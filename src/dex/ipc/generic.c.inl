@@ -127,8 +127,10 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 process_timedjoin(Process *self, size_t argc, DeeObject *const *argv) {
-	uint64_t timeout;
-	if (DeeArg_Unpack(argc, argv, UNPd64 ":" S_Process_function_timedjoin_name, &timeout))
+	uint64_t timeout_in_nanoseconds;
+	if (DeeArg_Unpack(argc, argv,
+	                  UNPd64 ":" S_Process_function_timedjoin_name,
+	                  &timeout_in_nanoseconds))
 		goto err;
 	ipc_unimplemented();
 err:

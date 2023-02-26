@@ -557,7 +557,9 @@ select_interruptible(SOCKET hSocket, LONG lNetworkEvents, DWORD dwTimeout) {
 }
 #endif /* CONFIG_HOST_WINDOWS */
 
-#define SELECT_TIMEOUT 100000 /* In microseconds. */
+#define SELECT_TIMEOUT_NANOSECONDS UINT64_C(100000000)
+#define SELECT_TIMEOUT_MICROSECONDS \
+	((uint32_t)(SELECT_TIMEOUT_NANOSECONDS / 1000))
 
 
 PRIVATE ATTR_COLD NONNULL((2, 3)) int DCALL
@@ -617,7 +619,7 @@ restart_select:
 #ifdef CONFIG_HOST_WINDOWS
 			error = select_interruptible(self->s_socket,
 			                             FD_CONNECT | FD_CLOSE,
-			                             SELECT_TIMEOUT / 1000);
+			                             SELECT_TIMEOUT_MICROSECONDS / 1000);
 			if (error != WSA_WAIT_EVENT_0) {
 				if (error == WSA_WAIT_IO_COMPLETION ||
 				    error == WSA_WAIT_TIMEOUT)
@@ -628,8 +630,8 @@ restart_select:
 			{
 				struct timeval timeout;
 				fd_set wfds;
-				timeout.tv_sec  = (long)(SELECT_TIMEOUT / 1000000);
-				timeout.tv_usec = (long)(SELECT_TIMEOUT % 1000000);
+				timeout.tv_sec  = (long)(SELECT_TIMEOUT_MICROSECONDS / 1000000);
+				timeout.tv_usec = (long)(SELECT_TIMEOUT_MICROSECONDS % 1000000);
 				FD_ZERO(&wfds);
 				FD_SET(self->s_socket, &wfds);
 				DBG_ALIGNMENT_DISABLE();
@@ -818,15 +820,17 @@ err:
 
 INTERN WUNUSED NONNULL((1, 3, 4)) int DCALL
 DeeSocket_Accept(DeeSocketObject *__restrict self,
-                 uint64_t timeout_microseconds,
+                 uint64_t timeout_nanoseconds,
                  sock_t *__restrict sock_fd,
                  SockAddr *__restrict addr) {
 	int error;
 	socklen_t socklen;
 	sock_t client_socket;
+	uint64_t timeout_microseconds;
+	timeout_microseconds = timeout_nanoseconds / 1000;
 restart:
 	socklen = SockAddr_Sizeof(self->s_sockaddr.sa.sa_family, self->s_proto);
-	if (timeout_microseconds == (uint64_t)-1) {
+	if (timeout_nanoseconds == (uint64_t)-1) {
 		/* Accept. */
 restart_no_timeout:
 		if (DeeThread_CheckInterrupt())
@@ -841,7 +845,7 @@ restart_no_timeout:
 #ifdef CONFIG_HOST_WINDOWS
 		error = select_interruptible(self->s_socket,
 		                             FD_ACCEPT | FD_CLOSE,
-		                             SELECT_TIMEOUT / 1000);
+		                             SELECT_TIMEOUT_MICROSECONDS / 1000);
 		if (error != WSA_WAIT_EVENT_0) {
 			socket_endread(self);
 			if (error == WSA_WAIT_IO_COMPLETION ||
@@ -853,8 +857,8 @@ restart_no_timeout:
 		{
 			struct timeval timeout;
 			fd_set rfds;
-			timeout.tv_sec = (long)(SELECT_TIMEOUT / 1000000);
-			timeout.tv_usec = (long)(SELECT_TIMEOUT % 1000000);
+			timeout.tv_sec = (long)(SELECT_TIMEOUT_MICROSECONDS / 1000000);
+			timeout.tv_usec = (long)(SELECT_TIMEOUT_MICROSECONDS % 1000000);
 			FD_ZERO(&rfds);
 			FD_SET(self->s_socket, &rfds);
 			error = select(self->s_socket + 1, &rfds, NULL, NULL, &timeout);
@@ -957,7 +961,7 @@ do_timed_select:
 		}
 #ifdef CONFIG_HOST_WINDOWS
 		{
-			DWORD timeout = SELECT_TIMEOUT;
+			DWORD timeout = SELECT_TIMEOUT_MICROSECONDS;
 			if (timeout > timeout_microseconds)
 				timeout = (DWORD)timeout_microseconds;
 			error = select_interruptible(self->s_socket, FD_ACCEPT | FD_CLOSE,
@@ -981,12 +985,12 @@ do_timed_select:
 		{
 			struct timeval timeout;
 			fd_set rfds;
-			if (timeout_microseconds < SELECT_TIMEOUT) {
+			if (timeout_microseconds < SELECT_TIMEOUT_MICROSECONDS) {
 				timeout.tv_sec = (long)(timeout_microseconds / 1000000);
 				timeout.tv_usec = (long)(timeout_microseconds % 1000000);
 			} else {
-				timeout.tv_sec = (long)(SELECT_TIMEOUT / 1000000);
-				timeout.tv_usec = (long)(SELECT_TIMEOUT % 1000000);
+				timeout.tv_sec = (long)(SELECT_TIMEOUT_MICROSECONDS / 1000000);
+				timeout.tv_usec = (long)(SELECT_TIMEOUT_MICROSECONDS % 1000000);
 			}
 			FD_ZERO(&rfds);
 			FD_SET(self->s_socket, &rfds);
@@ -1187,7 +1191,7 @@ retry_infinite:
 #ifdef CONFIG_HOST_WINDOWS
 		{
 			error = select_interruptible(self->s_socket, mode,
-			                             SELECT_TIMEOUT / 1000);
+			                             SELECT_TIMEOUT_MICROSECONDS / 1000);
 			if (error != WSA_WAIT_EVENT_0) {
 				if (error != WSA_WAIT_IO_COMPLETION &&
 				    error != WSA_WAIT_TIMEOUT)
@@ -1199,8 +1203,8 @@ retry_infinite:
 		{
 			struct timeval timeout;
 			fd_set fds;
-			timeout.tv_sec = (long)(SELECT_TIMEOUT / 1000000);
-			timeout.tv_usec = (long)(SELECT_TIMEOUT % 1000000);
+			timeout.tv_sec = (long)(SELECT_TIMEOUT_MICROSECONDS / 1000000);
+			timeout.tv_usec = (long)(SELECT_TIMEOUT_MICROSECONDS % 1000000);
 			FD_ZERO(&fds);
 			FD_SET(self->s_socket, &fds);
 			DBG_ALIGNMENT_DISABLE();
@@ -1261,8 +1265,8 @@ retry_timeout:
 #ifdef CONFIG_HOST_WINDOWS
 		{
 			DWORD timeout = (DWORD)((end_time - now) / 1000);
-			if (timeout > SELECT_TIMEOUT / 1000)
-				timeout = SELECT_TIMEOUT / 1000;
+			if (timeout > SELECT_TIMEOUT_MICROSECONDS / 1000)
+				timeout = SELECT_TIMEOUT_MICROSECONDS / 1000;
 			error = select_interruptible(self->s_socket, mode, timeout);
 			if (error != WSA_WAIT_EVENT_0) {
 				if (error != WSA_WAIT_IO_COMPLETION &&
@@ -1276,12 +1280,12 @@ retry_timeout:
 			struct timeval timeout;
 			fd_set fds;
 			uint64_t remaining_time = end_time - now;
-			if (remaining_time < SELECT_TIMEOUT) {
+			if (remaining_time < SELECT_TIMEOUT_MICROSECONDS) {
 				timeout.tv_sec = (long)(remaining_time / 1000000);
 				timeout.tv_usec = (long)(remaining_time % 1000000);
 			} else {
-				timeout.tv_sec = (long)(SELECT_TIMEOUT / 1000000);
-				timeout.tv_usec = (long)(SELECT_TIMEOUT % 1000000);
+				timeout.tv_sec = (long)(SELECT_TIMEOUT_MICROSECONDS / 1000000);
+				timeout.tv_usec = (long)(SELECT_TIMEOUT_MICROSECONDS % 1000000);
 			}
 			FD_ZERO(&fds);
 			FD_SET(self->s_socket, &fds);
@@ -1355,11 +1359,16 @@ err_connect_reset(neterrno_t error, Socket *__restrict socket) {
 
 INTERN WUNUSED NONNULL((1, 3)) dssize_t DCALL
 DeeSocket_Send(DeeSocketObject *__restrict self,
-               uint64_t timeout_microseconds,
+               uint64_t timeout_nanoseconds,
                void const *__restrict buf, size_t bufsize,
                int flags) {
 	dssize_t result;
-	uint64_t end_time = timeout_microseconds;
+	uint64_t end_time, timeout_microseconds;
+	/* TODO: Change this function to use nano-seconds internally! */
+	timeout_microseconds = timeout_nanoseconds / 1000;
+	if (timeout_nanoseconds == (uint64_t)-1)
+		timeout_microseconds = (uint64_t)-1;
+	end_time = timeout_microseconds;
 	if (timeout_microseconds && timeout_microseconds != (uint64_t)-1)
 		end_time = DeeThread_GetTimeMicroSeconds() + timeout_microseconds;
 again:
@@ -1456,11 +1465,16 @@ err:
 
 INTERN WUNUSED NONNULL((1, 3)) dssize_t DCALL
 DeeSocket_Recv(DeeSocketObject *__restrict self,
-               uint64_t timeout_microseconds,
+               uint64_t timeout_nanoseconds,
                void *__restrict buf, size_t bufsize,
                int flags) {
 	dssize_t result;
-	uint64_t end_time = timeout_microseconds;
+	uint64_t end_time, timeout_microseconds;
+	/* TODO: Change this function to use nano-seconds internally! */
+	timeout_microseconds = timeout_nanoseconds / 1000;
+	if (timeout_nanoseconds == (uint64_t)-1)
+		timeout_microseconds = (uint64_t)-1;
+	end_time = timeout_microseconds;
 	if (timeout_microseconds && timeout_microseconds != (uint64_t)-1)
 		end_time = DeeThread_GetTimeMicroSeconds() + timeout_microseconds;
 again:
@@ -1564,11 +1578,16 @@ err_host_unreachable(neterrno_t error, Socket *__restrict socket,
 
 INTERN WUNUSED NONNULL((1, 3, 6)) dssize_t DCALL
 DeeSocket_SendTo(DeeSocketObject *__restrict self,
-                 uint64_t timeout_microseconds,
+                 uint64_t timeout_nanoseconds,
                  void const *__restrict buf, size_t bufsize,
                  int flags, SockAddr const *__restrict target) {
 	dssize_t result;
-	uint64_t end_time = timeout_microseconds;
+	uint64_t end_time, timeout_microseconds;
+	/* TODO: Change this function to use nano-seconds internally! */
+	timeout_microseconds = timeout_nanoseconds / 1000;
+	if (timeout_nanoseconds == (uint64_t)-1)
+		timeout_microseconds = (uint64_t)-1;
+	end_time = timeout_microseconds;
 	if (timeout_microseconds && timeout_microseconds != (uint64_t)-1)
 		end_time = DeeThread_GetTimeMicroSeconds() + timeout_microseconds;
 again:
@@ -1686,12 +1705,17 @@ err:
 
 INTERN WUNUSED NONNULL((1, 3, 6)) dssize_t DCALL
 DeeSocket_RecvFrom(DeeSocketObject *__restrict self,
-                   uint64_t timeout_microseconds,
+                   uint64_t timeout_nanoseconds,
                    void *__restrict buf, size_t bufsize,
                    int flags, SockAddr *__restrict source) {
 	dssize_t result;
 	socklen_t length;
-	uint64_t end_time = timeout_microseconds;
+	uint64_t end_time, timeout_microseconds;
+	/* TODO: Change this function to use nano-seconds internally! */
+	timeout_microseconds = timeout_nanoseconds / 1000;
+	if (timeout_nanoseconds == (uint64_t)-1)
+		timeout_microseconds = (uint64_t)-1;
+	end_time = timeout_microseconds;
 	if (timeout_microseconds && timeout_microseconds != (uint64_t)-1)
 		end_time = DeeThread_GetTimeMicroSeconds() + timeout_microseconds;
 again:
@@ -1805,7 +1829,7 @@ PRIVATE WUNUSED size_t DCALL get_recv_burstsize(void) {
 
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeSocket_RecvData(DeeSocketObject *__restrict self,
-                   uint64_t timeout_microseconds,
+                   uint64_t timeout_nanoseconds,
                    size_t max_bufsize, int flags,
                    SockAddr *source) {
 	DREF DeeObject *result;
@@ -1819,7 +1843,7 @@ DeeSocket_RecvData(DeeSocketObject *__restrict self,
 				uint8_t *part = bytes_printer_alloc(&printer, chunksize);
 				if unlikely(!part)
 					goto err_printer;
-				recv_length = DeeSocket_Recv(self, timeout_microseconds, part, chunksize, flags);
+				recv_length = DeeSocket_Recv(self, timeout_nanoseconds, part, chunksize, flags);
 				if (recv_length == -2) {
 					/* A timeout during the first pass must cause ITER_DONE to be returned. */
 					if (BYTES_PRINTER_SIZE(&printer) == chunksize) {
@@ -1837,7 +1861,7 @@ DeeSocket_RecvData(DeeSocketObject *__restrict self,
 				if (!recv_length)
 					break;
 				/* Once we've managed to read ~something~, drop the timeout to not  */
-				timeout_microseconds = 0;
+				timeout_nanoseconds = 0;
 			}
 			/* Pack together the generated string. */
 			return bytes_printer_pack(&printer);
@@ -1852,10 +1876,10 @@ err_printer:
 	result = DeeBytes_NewBufferUninitialized(max_bufsize);
 	if unlikely(!result)
 		goto err;
-	recv_length = source ? DeeSocket_RecvFrom(self, timeout_microseconds,
+	recv_length = source ? DeeSocket_RecvFrom(self, timeout_nanoseconds,
 	                                          DeeBytes_DATA(result),
 	                                          max_bufsize, flags, source)
-	                     : DeeSocket_Recv(self, timeout_microseconds,
+	                     : DeeSocket_Recv(self, timeout_nanoseconds,
 	                                      DeeBytes_DATA(result),
 	                                      max_bufsize, flags);
 	if unlikely(recv_length < 0) {
@@ -1994,14 +2018,14 @@ socket_recv(Socket *self, size_t argc, DeeObject *const *argv) {
 					goto err;
 			} else {
 				/* "(max_size=!-1,int flags=!P{})->?Dstring\n" */
-				/* "(max_size=!-1,timeout_microseconds=!-1)->?Dstring\n" */
+				/* "(max_size=!-1,timeout_nanoseconds=!-1)->?Dstring\n" */
 				if (DeeObject_AsSSize(arg_0, (dssize_t *)&max_size))
 					goto err;
 			}
 		}
 	} else if (!arg_2) {
 		/* "(max_size=!-1,int flags=!P{})->?Dstring\n" */
-		/* "(max_size=!-1,timeout_microseconds=!-1)->?Dstring\n" */
+		/* "(max_size=!-1,timeout_nanoseconds=!-1)->?Dstring\n" */
 		if (DeeObject_AsSSize(arg_0, (dssize_t *)&max_size))
 			goto err;
 		if (DeeString_Check(arg_1)) {
@@ -2014,8 +2038,8 @@ socket_recv(Socket *self, size_t argc, DeeObject *const *argv) {
 				goto err;
 		}
 	} else {
-		/* "(max_size=!-1,timeout_microseconds=!-1,flags=!P{})->?Dstring\n" */
-		/* "(max_size=!-1,timeout_microseconds=!-1,flags=!0)->?Dstring\n" */
+		/* "(max_size=!-1,timeout_nanoseconds=!-1,flags=!P{})->?Dstring\n" */
+		/* "(max_size=!-1,timeout_nanoseconds=!-1,flags=!0)->?Dstring\n" */
 		if (DeeObject_AsSSize(arg_0, (dssize_t *)&max_size))
 			goto err;
 		if (DeeObject_AsInt64(arg_1, (int64_t *)&timeout))
@@ -2045,12 +2069,12 @@ socket_recvinto(Socket *self, size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, "o|oo:recvinto", &data, &arg1, &arg2))
 		goto err;
 	if (!arg1) {
-		//"(dst:?DBytes,timeout_microseconds=!-1,flags=!0)->?Dint\n"
+		//"(dst:?DBytes,timeout_nanoseconds=!-1,flags=!0)->?Dint\n"
 		timeout = (uint64_t)-1;
 		flags   = 0;
 	} else if (!arg2) {
 		//"(dst:?DBytes,flags=!P{})->?Dint\n"
-		//"(dst:?DBytes,timeout_microseconds=!-1,flags=!0)->?Dint\n"
+		//"(dst:?DBytes,timeout_nanoseconds=!-1,flags=!0)->?Dint\n"
 		if (DeeString_Check(arg1)) {
 			if (sock_getmsgflagsof(arg1, &flags))
 				goto err;
@@ -2061,8 +2085,8 @@ socket_recvinto(Socket *self, size_t argc, DeeObject *const *argv) {
 			flags = 0;
 		}
 	} else {
-		//"(dst:?DBytes,timeout_microseconds=!-1,flags=!P{})->?Dint\n"
-		//"(dst:?DBytes,timeout_microseconds=!-1,flags=!0)->?Dint\n"
+		//"(dst:?DBytes,timeout_nanoseconds=!-1,flags=!P{})->?Dint\n"
+		//"(dst:?DBytes,timeout_nanoseconds=!-1,flags=!0)->?Dint\n"
 		if (DeeObject_AsInt64(arg1, (int64_t *)&timeout))
 			goto err;
 		if (sock_getmsgflagsof(arg2, &flags))
@@ -2104,14 +2128,14 @@ socket_recvfrom(Socket *self, size_t argc, DeeObject *const *argv) {
 					goto err;
 			} else {
 				/* "(max_size=!-1,int flags=!P{})->(sockaddr,string)\n" */
-				/* "(max_size=!-1,timeout_microseconds=!-1)->(sockaddr,string)\n" */
+				/* "(max_size=!-1,timeout_nanoseconds=!-1)->(sockaddr,string)\n" */
 				if (DeeObject_AsSSize(arg_0, (dssize_t *)&max_size))
 					goto err;
 			}
 		}
 	} else if (!arg_2) {
 		/* "(max_size=!-1,int flags=!P{})->(sockaddr,string)\n" */
-		/* "(max_size=!-1,timeout_microseconds=!-1)->(sockaddr,string)\n" */
+		/* "(max_size=!-1,timeout_nanoseconds=!-1)->(sockaddr,string)\n" */
 		if (DeeObject_AsSSize(arg_0, (dssize_t *)&max_size))
 			goto err;
 		if (DeeString_Check(arg_1)) {
@@ -2124,8 +2148,8 @@ socket_recvfrom(Socket *self, size_t argc, DeeObject *const *argv) {
 				goto err;
 		}
 	} else {
-		/* "(max_size=!-1,timeout_microseconds=!-1,flags=!P{})->(sockaddr,string)\n" */
-		/* "(max_size=!-1,timeout_microseconds=!-1,flags=!0)->(sockaddr,string)\n" */
+		/* "(max_size=!-1,timeout_nanoseconds=!-1,flags=!P{})->(sockaddr,string)\n" */
+		/* "(max_size=!-1,timeout_nanoseconds=!-1,flags=!0)->(sockaddr,string)\n" */
 		if (DeeObject_AsSSize(arg_0, (dssize_t *)&max_size))
 			goto err;
 		if (DeeObject_AsInt64(arg_1, (int64_t *)&timeout))
@@ -2182,12 +2206,12 @@ socket_recvfrominto(Socket *self, size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, "o|oo:recvfrominto", &data, &arg1, &arg2))
 		goto err;
 	if (!arg1) {
-		//"(dst:?DBytes,timeout_microseconds=!-1,flags=!0)->?Dint\n"
+		//"(dst:?DBytes,timeout_nanoseconds=!-1,flags=!0)->?Dint\n"
 		timeout = (uint64_t)-1;
 		flags   = 0;
 	} else if (!arg2) {
 		//"(dst:?DBytes,flags=!P{})->?Dint\n"
-		//"(dst:?DBytes,timeout_microseconds=!-1,flags=!0)->?Dint\n"
+		//"(dst:?DBytes,timeout_nanoseconds=!-1,flags=!0)->?Dint\n"
 		if (DeeString_Check(arg1)) {
 			if (sock_getmsgflagsof(arg1, &flags))
 				goto err;
@@ -2198,8 +2222,8 @@ socket_recvfrominto(Socket *self, size_t argc, DeeObject *const *argv) {
 			flags = 0;
 		}
 	} else {
-		//"(dst:?DBytes,timeout_microseconds=!-1,flags=!P{})->?Dint\n"
-		//"(dst:?DBytes,timeout_microseconds=!-1,flags=!0)->?Dint\n"
+		//"(dst:?DBytes,timeout_nanoseconds=!-1,flags=!P{})->?Dint\n"
+		//"(dst:?DBytes,timeout_nanoseconds=!-1,flags=!0)->?Dint\n"
 		if (DeeObject_AsInt64(arg1, (int64_t *)&timeout))
 			goto err;
 		if (sock_getmsgflagsof(arg2, &flags))
@@ -2261,12 +2285,12 @@ socket_send(Socket *self, size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, "o|oo:send", &data, &arg_0, &arg_1))
 		goto err;
 	if (!arg_0) {
-		/* "(data:?DBytes,timeout_microseconds=!-1,flags=!0)->?Dint\n" */
+		/* "(data:?DBytes,timeout_nanoseconds=!-1,flags=!0)->?Dint\n" */
 		timeout = (uint64_t)-1;
 		flags   = 0;
 	} else if (!arg_1) {
 		/* "(data:?DBytes,flags=!P{})->?Dint\n" */
-		/* "(data:?DBytes,timeout_microseconds=!-1,flags=!0)->?Dint\n" */
+		/* "(data:?DBytes,timeout_nanoseconds=!-1,flags=!0)->?Dint\n" */
 		if (DeeString_Check(arg_0)) {
 			if (sock_getmsgflagsof(arg_0, &flags))
 				goto err;
@@ -2277,8 +2301,8 @@ socket_send(Socket *self, size_t argc, DeeObject *const *argv) {
 			flags = 0;
 		}
 	} else {
-		/* "(data:?DBytes,timeout_microseconds=!-1,flags=!0)->?Dint\n" */
-		/* "(data:?DBytes,timeout_microseconds=!-1,flags=!P{})->?Dint\n" */
+		/* "(data:?DBytes,timeout_nanoseconds=!-1,flags=!0)->?Dint\n" */
+		/* "(data:?DBytes,timeout_nanoseconds=!-1,flags=!P{})->?Dint\n" */
 		if (DeeObject_AsInt64(arg_0, (int64_t *)&timeout))
 			goto err;
 		if (sock_getmsgflagsof(arg_1, &flags))
@@ -2332,12 +2356,12 @@ socket_sendto(Socket *self, size_t argc, DeeObject *const *argv) {
 	}
 	DBG_ALIGNMENT_ENABLE();
 	if (!arg_0) {
-		/* "(data:?DBytes,timeout_microseconds=!-1,flags=!0)->?Dint\n" */
+		/* "(data:?DBytes,timeout_nanoseconds=!-1,flags=!0)->?Dint\n" */
 		timeout = (uint64_t)-1;
 		flags   = 0;
 	} else if (!arg_1) {
 		/* "(data:?DBytes,flags=!P{})->?Dint\n" */
-		/* "(data:?DBytes,timeout_microseconds=!-1,flags=!0)->?Dint\n" */
+		/* "(data:?DBytes,timeout_nanoseconds=!-1,flags=!0)->?Dint\n" */
 		if (DeeString_Check(arg_0)) {
 			if (sock_getmsgflagsof(arg_0, &flags))
 				goto err;
@@ -2348,8 +2372,8 @@ socket_sendto(Socket *self, size_t argc, DeeObject *const *argv) {
 			flags = 0;
 		}
 	} else {
-		/* "(data:?DBytes,timeout_microseconds=!-1,flags=!0)->?Dint\n" */
-		/* "(data:?DBytes,timeout_microseconds=!-1,flags=!P{})->?Dint\n" */
+		/* "(data:?DBytes,timeout_nanoseconds=!-1,flags=!0)->?Dint\n" */
+		/* "(data:?DBytes,timeout_nanoseconds=!-1,flags=!P{})->?Dint\n" */
 		if (DeeObject_AsInt64(arg_0, (int64_t *)&timeout))
 			goto err;
 		if (sock_getmsgflagsof(arg_1, &flags))
@@ -2484,16 +2508,16 @@ PRIVATE struct type_method tpconst socket_methods[] = {
 	            "Start listening for incoming connections on @this socket, preferrable after it has been ?#bound\n"
 	            "Note that calling this function may require the user to whitelist deemon in their firewall"),
 	TYPE_METHOD("accept", &socket_accept,
-	            "(timeout_microseconds=!-1)->?Gsocket\n"
-	            "(timeout_microseconds=!-1)->?N\n"
+	            "(timeout_nanoseconds=!-1)->?Gsocket\n"
+	            "(timeout_nanoseconds=!-1)->?N\n"
 	            "@interrupt\n"
 	            "@throw NetError.NotBound.NotListening @this socket is not listening for incoming connections\n"
 	            "@throw NetError.NoSupport The type of @this socket does not allow accepting of incoming connections\n"
 	            "@throw NetError Failed to start accept a connection for some reason\n"
 	            "@throw FileClosed @this socket has already been closed or was shut down\n"
-	            "@param timeout_microseconds The timeout describing for how long ?#accept should wait before returning ?N. "
+	            "@param timeout_nanoseconds The timeout describing for how long ?#accept should wait before returning ?N. "
 	            "You may pass ${-1} for an infinite timeout or $0 to fail immediately.\n"
-	            "@return A new socket object describing the connection to the new client, or ?N when @timeout_microseconds has passed\n"
+	            "@return A new socket object describing the connection to the new client, or ?N when @timeout_nanoseconds has passed\n"
 	            "Accept new incoming connections on a listening socket"),
 	TYPE_METHOD("tryaccept", &socket_tryaccept,
 	            "->?Gsocket\n"
@@ -2503,13 +2527,13 @@ PRIVATE struct type_method tpconst socket_methods[] = {
 	            "@throw NetError.NoSupport The type of @this socket does not allow accepting of incoming connections\n"
 	            "@throw NetError Failed to start accept a connection for some reason\n"
 	            "@throw FileClosed @this socket has already been closed or was shut down\n"
-	            "Same as calling ?#accept with a timeout_microseconds argument of ${0}"),
+	            "Same as calling ?#accept with a timeout_nanoseconds argument of ${0}"),
 	TYPE_METHOD("recv", &socket_recv,
 	            "(flags:?Dstring)->?DBytes\n"
 	            "(max_size=!-1,flags=!P{})->?DBytes\n"
-	            "(max_size=!-1,timeout_microseconds=!-1)->?DBytes\n"
-	            "(max_size=!-1,timeout_microseconds=!-1,flags=!P{})->?DBytes\n"
-	            "(max_size=!-1,timeout_microseconds=!-1,flags=!0)->?DBytes\n"
+	            "(max_size=!-1,timeout_nanoseconds=!-1)->?DBytes\n"
+	            "(max_size=!-1,timeout_nanoseconds=!-1,flags=!P{})->?DBytes\n"
+	            "(max_size=!-1,timeout_nanoseconds=!-1,flags=!0)->?DBytes\n"
 	            "@interrupt\n"
 	            "@throw NetError.NotConnected @this socket is not connected\n"
 	            "@throw NetError.NoSupport The specified @flags are not supported by @this socket\n"
@@ -2524,16 +2548,16 @@ PRIVATE struct type_method tpconst socket_methods[] = {
 	            "Receive data from a connection-oriented socket that has been connected\n"
 	            "Note that passing ${-1} for @max_size, will cause the function to try and receive "
 	            "all incoming data, potentially invoking the recv system call multiple times. "
-	            "In this situation, @timeout_microseconds is used as the initial timeout for the first "
+	            "In this situation, @timeout_nanoseconds is used as the initial timeout for the first "
 	            "chunk, with all following then read with a timeout of $0 (aka. try-read)\n"
-	            "When @timeout_microseconds expires before any data is received, an empty string is returned\n"
+	            "When @timeout_nanoseconds expires before any data is received, an empty string is returned\n"
 	            "Some protocols may also cause this function to return an empty string to indicate a graceful "
 	            "termination of the connection"),
 	TYPE_METHOD("recvinto", &socket_recvinto,
 	            "(dst:?DBytes,flags=!P{})->?Dint\n"
-	            "(dst:?DBytes,timeout_microseconds=!-1)->?Dint\n"
-	            "(dst:?DBytes,timeout_microseconds=!-1,flags=!P{})->?Dint\n"
-	            "(dst:?DBytes,timeout_microseconds=!-1,flags=!0)->?Dint\n"
+	            "(dst:?DBytes,timeout_nanoseconds=!-1)->?Dint\n"
+	            "(dst:?DBytes,timeout_nanoseconds=!-1,flags=!P{})->?Dint\n"
+	            "(dst:?DBytes,timeout_nanoseconds=!-1,flags=!0)->?Dint\n"
 	            "@interrupt\n"
 	            "@throw NetError.NotConnected @this socket is not connected\n"
 	            "@throw NetError.NoSupport The specified @flags are not supported by @this socket\n"
@@ -2546,44 +2570,44 @@ PRIVATE struct type_method tpconst socket_methods[] = {
 	TYPE_METHOD("recvfrom", &socket_recvfrom,
 	            "(flags:?Dstring)->?T2?Gsockaddr?DBytes\n"
 	            "(max_size=!-1,flags=!P{})->?T2?Gsockaddr?DBytes\n"
-	            "(max_size=!-1,timeout_microseconds=!-1)->?T2?Gsockaddr?DBytes\n"
-	            "(max_size=!-1,timeout_microseconds=!-1,flags=!P{})->?T2?Gsockaddr?DBytes\n"
-	            "(max_size=!-1,timeout_microseconds=!-1,flags=!0)->?T2?Gsockaddr?DBytes\n"
+	            "(max_size=!-1,timeout_nanoseconds=!-1)->?T2?Gsockaddr?DBytes\n"
+	            "(max_size=!-1,timeout_nanoseconds=!-1,flags=!P{})->?T2?Gsockaddr?DBytes\n"
+	            "(max_size=!-1,timeout_nanoseconds=!-1,flags=!0)->?T2?Gsockaddr?DBytes\n"
 	            "@interrupt\n"
 	            "@throw NetError.NoSupport The specified @flags are not supported by @this socket\n"
 	            "@throw NetError.ConnectReset The peer has reset the connection\n"
-	            "@throw NetError.ConnectReset.TimedOut The connection to the peer timed out (Note to be confused with @timeout_microseconds expiring; see below)\n"
+	            "@throw NetError.ConnectReset.TimedOut The connection to the peer timed out (Note to be confused with @timeout_nanoseconds expiring; see below)\n"
 	            "@throw NetError Failed to receive data for some reason\n"
 	            "@throw FileClosed @this socket has already been closed or was shut down\n"
 	            "@param flags A set of flags used during delivery. See ?#recv for information on the string-encoded version\n"
 	            "Same as ?#recv, but uses the recvfrom system call to read data, also returning "
 	            "the socket address from which the data originates as the first of 2 :Tuple "
 	            "arguments, the second being the text regularly returned ?#recv\n"
-	            "The given @timeout_microseconds can be passed as either $0 to try-receive pending packages, "
+	            "The given @timeout_nanoseconds can be passed as either $0 to try-receive pending packages, "
 	            "as ${-1} (default) to wait for incoming data indefinitely or until the socket is ?#{close}ed, or "
 	            "as any other integer value to specify how long to wait before returning ${(none, \"\")}"),
 	TYPE_METHOD("recvfrominto", &socket_recvfrominto,
 	            "(dst:?DBytes,flags=!P{})->?T2?Gsockaddr?Dint\n"
-	            "(dst:?DBytes,timeout_microseconds=!-1)->?T2?Gsockaddr?Dint\n"
-	            "(dst:?DBytes,timeout_microseconds=!-1,flags=!P{})->?T2?Gsockaddr?Dint\n"
-	            "(dst:?DBytes,timeout_microseconds=!-1,flags=!0)->?T2?Gsockaddr?Dint\n"
+	            "(dst:?DBytes,timeout_nanoseconds=!-1)->?T2?Gsockaddr?Dint\n"
+	            "(dst:?DBytes,timeout_nanoseconds=!-1,flags=!P{})->?T2?Gsockaddr?Dint\n"
+	            "(dst:?DBytes,timeout_nanoseconds=!-1,flags=!0)->?T2?Gsockaddr?Dint\n"
 	            "@interrupt\n"
 	            "@throw NetError.NoSupport The specified @flags are not supported by @this socket\n"
 	            "@throw NetError.ConnectReset The peer has reset the connection\n"
-	            "@throw NetError.ConnectReset.TimedOut The connection to the peer timed out (Note to be confused with @timeout_microseconds expiring; see below)\n"
+	            "@throw NetError.ConnectReset.TimedOut The connection to the peer timed out (Note to be confused with @timeout_nanoseconds expiring; see below)\n"
 	            "@throw NetError Failed to receive data for some reason\n"
 	            "@throw FileClosed @this socket has already been closed or was shut down\n"
 	            "@param flags A set of flags used during delivery. See ?#recv for information on the string-encoded version\n"
 	            "Same as ?#recvfrom, buf read received data into the given buffer @dst"),
 	TYPE_METHOD("send", &socket_send,
 	            "(data:?DBytes,flags=!P{})->?Dint\n"
-	            "(data:?DBytes,timeout_microseconds=!-1,flags=!0)->?Dint\n"
-	            "(data:?DBytes,timeout_microseconds=!-1,flags=!P{})->?Dint\n"
+	            "(data:?DBytes,timeout_nanoseconds=!-1,flags=!0)->?Dint\n"
+	            "(data:?DBytes,timeout_nanoseconds=!-1,flags=!P{})->?Dint\n"
 	            "@interrupt\n"
 	            "@throw NetError.NotConnected @this socket is not connected\n"
 	            "@throw NetError.NoSupport The specified @flags are not supported by @this socket\n"
 	            "@throw NetError.ConnectReset The peer has reset the connection\n"
-	            "@throw NetError.ConnectReset.TimedOut The connection to the peer timed out (Note to be confused with @timeout_microseconds expiring; see below)\n"
+	            "@throw NetError.ConnectReset.TimedOut The connection to the peer timed out (Note to be confused with @timeout_nanoseconds expiring; see below)\n"
 	            "@throw NetError.MessageSize The socket is not connection-mode and no peer address is set\n"
 	            "@throw NetError.NotBound The socket is not connection-mode and no peer address is set\n"
 	            "@throw NetError.NetUnreachable No route to the connected peer could be established\n"
@@ -2594,16 +2618,16 @@ PRIVATE struct type_method tpconst socket_methods[] = {
 	            "Send @data over the network to the peer of a connected socket"),
 	TYPE_METHOD("sendto", &socket_sendto,
 	            "(target:?DBytes,data:?DBytes,flags=!P{})->?Dint\n"
-	            "(target:?DBytes,data:?DBytes,timeout_microseconds=!-1,flags=!0)->?Dint\n"
-	            "(target:?DBytes,data:?DBytes,timeout_microseconds=!-1,flags=!P{})->?Dint\n"
+	            "(target:?DBytes,data:?DBytes,timeout_nanoseconds=!-1,flags=!0)->?Dint\n"
+	            "(target:?DBytes,data:?DBytes,timeout_nanoseconds=!-1,flags=!P{})->?Dint\n"
 	            "(target:?O,data:?DBytes,flags=!P{})->?Dint\n"
-	            "(target:?O,data:?DBytes,timeout_microseconds=!-1,flags=!0)->?Dint\n"
-	            "(target:?O,data:?DBytes,timeout_microseconds=!-1,flags=!P{})->?Dint\n"
+	            "(target:?O,data:?DBytes,timeout_nanoseconds=!-1,flags=!0)->?Dint\n"
+	            "(target:?O,data:?DBytes,timeout_nanoseconds=!-1,flags=!P{})->?Dint\n"
 	            "@interrupt\n"
 	            "@throw NetError.NotConnected @this socket is not connected\n"
 	            "@throw NetError.NoSupport The specified @flags are not supported by @this socket\n"
 	            "@throw NetError.ConnectReset The peer has reset the connection\n"
-	            "@throw NetError.ConnectReset.TimedOut The connection to the peer timed out (Note to be confused with @timeout_microseconds expiring; see below)\n"
+	            "@throw NetError.ConnectReset.TimedOut The connection to the peer timed out (Note to be confused with @timeout_nanoseconds expiring; see below)\n"
 	            "@throw NetError.NotBound The socket is not connection-mode and no peer address is set\n"
 	            "@throw NetError.NetUnreachable No route to the connected peer could be established\n"
 	            "@throw NetError Failed to send data for some reason\n"

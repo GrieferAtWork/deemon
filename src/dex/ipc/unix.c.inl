@@ -931,15 +931,15 @@ err:
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 wait_for_process(Process *__restrict self,
                  pid_t pid,
-                 uint64_t timeout_microseconds) {
+                 uint64_t timeout_nanoseconds) {
 	int result;
 #ifdef EINTR
 again:
 #endif /* EINTR */
 	/* Handle the simple cases: no timeout/infinite timeout. */
-	if (timeout_microseconds == 0) {
+	if (timeout_nanoseconds == 0) {
 		result = tryjoinpid(pid, &self->p_status);
-	} else if (timeout_microseconds == (uint64_t)-1) {
+	} else if (timeout_nanoseconds == (uint64_t)-1) {
 		result = joinpid(pid, &self->p_status);
 	} else {
 #if defined(CONFIG_HAVE_SYS_SIGNALFD_H) && \
@@ -1017,8 +1017,15 @@ err:
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 process_dojoin(Process *__restrict self,
                int *__restrict proc_result,
-               uint64_t timeout_microseconds) {
+               uint64_t timeout_nanoseconds) {
 	int result = 0;
+	uint64_t timeout_microseconds;
+	/* TODO: Change this function to use nano-seconds internally! */
+	if (timeout_nanoseconds != (uint64_t)-1) {
+		timeout_microseconds = timeout_nanoseconds / 1000;
+	} else {
+		timeout_microseconds = (uint64_t)-1;
+	}
 	if (!(self->p_state & PROCESS_FDIDJOIN)) {
 		uint64_t timeout_end = (uint64_t)-1;
 		uint16_t state, new_flags;
@@ -1074,7 +1081,7 @@ process_dojoin(Process *__restrict self,
 		}
 
 		/* Do the actual wait! */
-		result = wait_for_process(self, self->p_pid, timeout_microseconds);
+		result = wait_for_process(self, self->p_pid, timeout_microseconds * 1000);
 		if (result != 0)
 			goto done;
 done_join:
@@ -1126,10 +1133,11 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 process_timedjoin(Process *self, size_t argc, DeeObject *const *argv) {
 	int error, result;
-	uint64_t timeout;
-	if (DeeArg_Unpack(argc, argv, UNPd64 ":" S_Process_function_timedjoin_name, &timeout))
+	uint64_t timeout_nanoseconds;
+	if (DeeArg_Unpack(argc, argv, UNPd64 ":" S_Process_function_timedjoin_name,
+	                  &timeout_nanoseconds))
 		goto err;
-	error = process_dojoin(self, &result, timeout);
+	error = process_dojoin(self, &result, timeout_nanoseconds);
 	if unlikely(error < 0)
 		goto err;
 	if (error > 0)

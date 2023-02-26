@@ -202,6 +202,7 @@
 		<ClInclude Include="..\include\deemon\system-sjlj.h" />
 		<ClInclude Include="..\include\deemon\system.h" />
 		<ClInclude Include="..\include\deemon\thread.h" />
+		<ClInclude Include="..\include\deemon\time-abi.h" />
 		<ClInclude Include="..\include\deemon\traceback.h" />
 		<ClInclude Include="..\include\deemon\tuple.h" />
 		<ClInclude Include="..\include\deemon\util\atomic.h" />

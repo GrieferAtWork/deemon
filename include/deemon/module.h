@@ -331,7 +331,7 @@ struct Dee_module_object {
 #endif /* !CONFIG_NO_THREADS */
 #ifndef CONFIG_NO_DEC
 	uint64_t                       mo_ctime;    /* [valid_if(MODULE_FDIDLOAD && MODULE_FHASCTIME)]
-	                                             * Time (in milliseconds since 01.01.1970)
+	                                             * Time (in milliseconds since 01-01-1970)
 	                                             * when compilation of the module finished.
 	                                             * NOTE: Never equal to (uint64_t)-1 */
 #endif /* !CONFIG_NO_DEC */
@@ -1092,7 +1092,7 @@ DeeModule_GetRoot(/*Module*/ DeeObject *__restrict self,
 
 #ifndef CONFIG_NO_DEC
 /* Returns the compile-time of a given module (in microseconds
- * since 01.01.1970), or (uint64_t)-1 if an error occurred.
+ * since 01-01-1970), or (uint64_t)-1 if an error occurred.
  * NOTE: For Always using this function as sometimes,
  *       the timestamp is calculated lazily.
  * NOTE: If the module's file could not be found, 0 is returned. */

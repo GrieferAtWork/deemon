@@ -55,7 +55,7 @@ DECL_BEGIN
 /* sync()                                                               */
 /************************************************************************/
 
-/*[[[deemon import("rt._dexutils").gw("sync", "", libname: "posix"); ]]]*/
+/*[[[deemon import("rt.dexutils").gw("sync", "", libname: "posix"); ]]]*/
 FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_sync_f_impl(void);
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_sync_f(size_t argc, DeeObject *const *argv);
 #define POSIX_SYNC_DEF { "sync", (DeeObject *)&posix_sync, MODSYM_FNORMAL, DOC("()") },
@@ -89,7 +89,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_sync_f_impl(void)
 /* fsync()                                                              */
 /************************************************************************/
 
-/*[[[deemon import("rt._dexutils").gw("fsync", "fd:unix:fd", libname: "posix"); ]]]*/
+/*[[[deemon import("rt.dexutils").gw("fsync", "fd:unix:fd", libname: "posix"); ]]]*/
 FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_fsync_f_impl(int fd);
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_fsync_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define POSIX_FSYNC_DEF { "fsync", (DeeObject *)&posix_fsync, MODSYM_FNORMAL, DOC("(fd:?X2?Dint?DFile)") },
@@ -150,7 +150,7 @@ err:
 /* fdatasync()                                                          */
 /************************************************************************/
 
-/*[[[deemon import("rt._dexutils").gw("fdatasync", "fd:unix:fd", libname: "posix"); ]]]*/
+/*[[[deemon import("rt.dexutils").gw("fdatasync", "fd:unix:fd", libname: "posix"); ]]]*/
 FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_fdatasync_f_impl(int fd);
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_fdatasync_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define POSIX_FDATASYNC_DEF { "fdatasync", (DeeObject *)&posix_fdatasync, MODSYM_FNORMAL, DOC("(fd:?X2?Dint?DFile)") },

@@ -736,44 +736,44 @@ DeeSocket_Listen(DeeSocketObject *__restrict self, int max_backlog);
  * @return: -1: An error occurred.
  * @return:  0: Successfully accepted a new connection.
  * @return:  1: Timed out.
- * @param: timeout_microseconds: The timeout (in microseconds).
- *                               Set to `0' for try-accept; Set to (uint64_t)-1 to never time out. */
+ * @param: timeout_nanoseconds: The timeout (in nanoseconds).
+ *                              Set to `0' for try-accept; Set to (uint64_t)-1 to never time out. */
 INTDEF NONNULL((1, 3, 4)) int DCALL
 DeeSocket_Accept(DeeSocketObject *__restrict self,
-                 uint64_t timeout_microseconds,
+                 uint64_t timeout_nanoseconds,
                  sock_t *__restrict sock_fd,
                  SockAddr *__restrict addr);
 
-/* Send/Receive data. `timeout_microseconds' behaves the same as for `DeeSocket_Accept()'.
+/* Send/Receive data. `timeout_nanoseconds' behaves the same as for `DeeSocket_Accept()'.
  * @return: * : The number of received bytes.
  * @return: -1: An error occurred.
- * @return: -2: The given `timeout_microseconds' has expired. */
+ * @return: -2: The given `timeout_nanoseconds' has expired. */
 INTDEF WUNUSED NONNULL((1, 3)) dssize_t DCALL
 DeeSocket_Recv(DeeSocketObject *__restrict self,
-               uint64_t timeout_microseconds,
+               uint64_t timeout_nanoseconds,
                void *__restrict buf, size_t bufsize,
                int flags);
 INTDEF WUNUSED NONNULL((1, 3, 6)) dssize_t DCALL
 DeeSocket_RecvFrom(DeeSocketObject *__restrict self,
-                   uint64_t timeout_microseconds,
+                   uint64_t timeout_nanoseconds,
                    void *__restrict buf, size_t bufsize,
                    int flags, SockAddr *__restrict source);
 INTDEF WUNUSED NONNULL((1, 3)) dssize_t DCALL
 DeeSocket_Send(DeeSocketObject *__restrict self,
-               uint64_t timeout_microseconds,
+               uint64_t timeout_nanoseconds,
                void const *__restrict buf, size_t bufsize,
                int flags);
 INTDEF WUNUSED NONNULL((1, 3, 6)) dssize_t DCALL
 DeeSocket_SendTo(DeeSocketObject *__restrict self,
-                 uint64_t timeout_microseconds,
+                 uint64_t timeout_nanoseconds,
                  void const *__restrict buf, size_t bufsize,
                  int flags, SockAddr const *__restrict target);
 
 /* Receive data from the given source, or the bound peer (when `source' is NULL)
- * NOTE: When the given `timeout_microseconds' has expired, `ITER_DONE' is returned. */
+ * NOTE: When the given `timeout_nanoseconds' has expired, `ITER_DONE' is returned. */
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeSocket_RecvData(DeeSocketObject *__restrict self,
-                   uint64_t timeout_microseconds,
+                   uint64_t timeout_nanoseconds,
                    size_t max_bufsize, int flags,
                    SockAddr *source);
 

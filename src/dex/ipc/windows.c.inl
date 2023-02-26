@@ -932,7 +932,14 @@ err:
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 process_dojoin(Process *__restrict self,
                DWORD *__restrict proc_result,
-               uint64_t timeout_microseconds) {
+               uint64_t timeout_nanoseconds) {
+	uint64_t timeout_microseconds;
+	/* TODO: Change this function to use nano-seconds internally! */
+	if (timeout_nanoseconds != (uint64_t)-1) {
+		timeout_microseconds = timeout_nanoseconds / 1000;
+	} else {
+		timeout_microseconds = (uint64_t)-1;
+	}
 again:
 	if (!(self->p_state & PROCESS_FDIDJOIN)) {
 		uint64_t timeout_end = (uint64_t)-1;
@@ -1223,10 +1230,11 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 process_timedjoin(Process *self, size_t argc, DeeObject *const *argv) {
 	int error;
 	DWORD result;
-	uint64_t timeout;
-	if (DeeArg_Unpack(argc, argv, UNPd64 ":" S_Process_function_timedjoin_name, &timeout))
+	uint64_t timeout_nanoseconds;
+	if (DeeArg_Unpack(argc, argv, UNPd64 ":" S_Process_function_timedjoin_name,
+	                  &timeout_nanoseconds))
 		goto err;
-	error = process_dojoin(self, &result, timeout);
+	error = process_dojoin(self, &result, timeout_nanoseconds);
 	if unlikely(error < 0)
 		goto err;
 	if (error == 0)

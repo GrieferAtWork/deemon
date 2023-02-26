@@ -93,7 +93,7 @@ DeeSystem_PrintPwd(struct Dee_unicode_printer *__restrict printer,
 DFUNDEF WUNUSED NONNULL((1)) DREF /*String*/ DeeObject *DCALL
 DeeSystem_MakeAbsolute(/*String*/ DeeObject *__restrict filename);
 
-/* Return the current UTC realtime in microseconds since 01.01.1970T00:00:00+00:00 */
+/* Return the current UTC realtime in microseconds since 01-01-1970T00:00:00+00:00 */
 DFUNDEF WUNUSED uint64_t DCALL DeeSystem_GetWalltime(void);
 
 /* Return the last modified timestamp of `filename'

@@ -1,0 +1,206 @@
+#!/usr/bin/deemon
+/* Copyright (c) 2018-2023 Griefer@Work                                       *
+ *                                                                            *
+ * This software is provided 'as-is', without any express or implied          *
+ * warranty. In no event will the authors be held liable for any damages      *
+ * arising from the use of this software.                                     *
+ *                                                                            *
+ * Permission is granted to anyone to use this software for any purpose,      *
+ * including commercial applications, and to alter it and redistribute it     *
+ * freely, subject to the following restrictions:                             *
+ *                                                                            *
+ * 1. The origin of this software must not be misrepresented; you must not    *
+ *    claim that you wrote the original software. If you use this software    *
+ *    in a product, an acknowledgement (see the following) in the product     *
+ *    documentation is required:                                              *
+ *    Portions Copyright (c) 2018-2023 Griefer@Work                           *
+ * 2. Altered source versions must be plainly marked as such, and must not be *
+ *    misrepresented as being the original software.                          *
+ * 3. This notice may not be removed or altered from any source distribution. *
+ */
+
+import * from deemon;
+import * from errors;
+import * from time;
+
+local t = Time(nanosecond: 63844635905820157600);
+assert !t.isdelta;
+assert t.istimestamp;
+assert t.nanoseconds == 63844635905820157600;
+assert t.nanosecond  == 820157600;
+assert t.microsecond == 820157;
+assert t.millisecond == 820;
+assert t.second      == 5;
+assert t.minute      == 5;
+assert t.hour        == 13;
+assert t.wday        == 0;
+assert t.mweek       == 4;
+assert t.month       == 2;
+assert t.year        == 2023;
+assert t.decade      == 202;
+assert t.century     == 20;
+assert t.millennium  == 2;
+assert t.mday        == 26;
+assert t.yday        == 57;
+assert t.yweek       == 9;
+
+/* Assert that arithmetic works on time objects */
+assert t.istimestamp;
+assert !t.isdelta;
+assert !t.asdelta.istimestamp;
+assert t.asdelta.isdelta;
+assert t.astimestamp.istimestamp;
+assert !t.astimestamp.isdelta;
+assert (try t + t catch (e...) e) is ValueError;
+assert (t + nanoseconds(7)) == Time(nanosecond: 63844635905820157607);
+assert (t + nanoseconds(7)).istimestamp;
+assert !(t + nanoseconds(7)).isdelta;
+assert (t - t) is Time;
+assert (t - t) == Time();
+assert (t - t) == Time(0);
+assert (t - t).isdelta;
+assert !(t - t).istimestamp;
+assert t == t.asdelta;
+assert t.asdelta == t;
+assert (try -t catch (e...) e) is ValueError;
+assert (try t * 2 catch (e...) e) is ValueError;
+assert (try t * t catch (e...) e) is ValueError;
+assert (try t / 2 catch (e...) e) is ValueError;
+assert (try t / t catch (e...) e) is ValueError;
+assert (try t % 2 catch (e...) e) is ValueError;
+assert (try t % t catch (e...) e) is ValueError;
+assert (-t.asdelta) < Time(0);
+assert (t.asdelta / 1).isdelta;
+assert (t.asdelta / 1) is Time;
+assert (t.asdelta / 1) == Time(63844635905820157600);
+assert (t.asdelta / nanoseconds(1)) is int;
+assert (t.asdelta / nanoseconds(1)) == 63844635905820157600;
+assert (t.asdelta / nanoseconds(2)) is int;
+assert (t.asdelta / nanoseconds(2)) == 31922317952910078800;
+assert (t.asdelta % 1).isdelta;
+assert (t.asdelta % 1) is Time;
+assert (t.asdelta % 1) == 0;
+assert (t.asdelta % nanoseconds(1)).isdelta;
+assert (t.asdelta % nanoseconds(1)) is Time;
+assert (t.asdelta % nanoseconds(1)) == Time(0);
+assert (t.asdelta % nanoseconds(2)) == Time(0);
+assert (t.asdelta % nanoseconds(3)) == Time(1);
+assert (-nanoseconds(42)).isdelta;
+assert !(-nanoseconds(42)).istimestamp;
+assert (-t.asdelta).operator int() == -63844635905820157600;
+assert (-nanoseconds(42)).operator int() == -42;
+assert (-nanoseconds(42)) < Time(0);
+assert (-nanoseconds(42)) == Time(-42);
+
+
+function assertTimeEqual(a: Time, b: Time) {
+	assert a == b;
+	assert a.nanoseconds == b.nanoseconds;
+	assert a.nanosecond  == b.nanosecond;
+	assert a.microsecond == b.microsecond;
+	assert a.millisecond == b.millisecond;
+	assert a.second      == b.second;
+	assert a.minute      == b.minute;
+	assert a.hour        == b.hour;
+	assert a.wday        == b.wday;
+	assert a.mweek       == b.mweek;
+	assert a.month       == b.month;
+	assert a.year        == b.year;
+	assert a.decade      == b.decade;
+	assert a.century     == b.century;
+	assert a.millennium  == b.millennium;
+	assert a.mday        == b.mday;
+	assert a.yday        == b.yday;
+	assert a.yweek       == b.yweek;
+}
+
+/* Assert that you're able to construct from nanoseconds */
+local x = Time();
+x.nanoseconds = 63844635905820157600;
+assertTimeEqual(t, x);
+
+
+/* Assert that you're able to construct time-objects by assigning individual components */
+local x = Time();
+assert x.year == 0;
+assert x.month == 1;
+assert x.mday == 1;
+assert x.hour == 0;
+assert x.minute == 0;
+assert x.second == 0;
+assert x.nanosecond == 0;
+
+x.year = 2023;
+assert x.year == 2023;
+assert x.month == 1;
+assert x.mday == 1;
+assert x.hour == 0;
+assert x.minute == 0;
+assert x.second == 0;
+assert x.nanosecond == 0;
+
+x.month = 2;
+assert x.year == 2023;
+assert x.month == 2;
+assert x.mday == 1;
+assert x.hour == 0;
+assert x.minute == 0;
+assert x.second == 0;
+assert x.nanosecond == 0;
+
+x.mday = 26;
+assert x.year == 2023;
+assert x.month == 2;
+assert x.mday == 26;
+assert x.hour == 0;
+assert x.minute == 0;
+assert x.second == 0;
+assert x.nanosecond == 0;
+
+x.hour = 13;
+assert x.year == 2023;
+assert x.month == 2;
+assert x.mday == 26;
+assert x.hour == 13;
+assert x.minute == 0;
+assert x.second == 0;
+assert x.nanosecond == 0;
+
+x.minute = 5;
+assert x.year == 2023;
+assert x.month == 2;
+assert x.mday == 26;
+assert x.hour == 13;
+assert x.minute == 5;
+assert x.second == 0;
+assert x.nanosecond == 0;
+
+x.second = 5;
+assert x.year == 2023;
+assert x.month == 2;
+assert x.mday == 26;
+assert x.hour == 13;
+assert x.minute == 5;
+assert x.second == 5;
+assert x.nanosecond == 0;
+
+x.nanosecond = 820_157_600;
+assert x.year == 2023;
+assert x.month == 2;
+assert x.mday == 26;
+assert x.hour == 13;
+assert x.minute == 5;
+assert x.second == 5;
+assert x.nanosecond == 820157600;
+assertTimeEqual(t, x);
+
+
+/* Assert that the time library is also able to deal with negative timestamps. */
+local before0 = Time(nanosecond: -1);
+assert before0.year == -1;
+assert before0.month == 12;
+assert before0.mday == 31;
+assert before0.hour == 23;
+assert before0.minute == 59;
+assert before0.second == 59;
+assert before0.nanosecond == 999999999;

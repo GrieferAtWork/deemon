@@ -394,12 +394,8 @@ INTDEF WUNUSED DREF DeeObject *DCALL fs_pathexpand(DeeObject *__restrict path, u
 #define EXPAND_DEFAULT_OPTIONS \
 	(FS_EXPAND_FHOME | FS_EXPAND_FVARS | FS_EXPAND_FPATH | FS_EXPAND_FNOFAIL)
 
-
 /* Imported module access. */
 #define TIME_MODULE DEX.d_imports[0]
-
-/* Construct a new time object from `microseconds' */
-INTDEF WUNUSED DREF DeeObject *(DCALL DeeTime_New)(uint64_t microseconds);
 
 DECL_END
 

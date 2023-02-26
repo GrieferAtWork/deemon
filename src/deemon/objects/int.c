@@ -2323,7 +2323,7 @@ DeeInt_TryAs128(DeeObject *__restrict self,
 
 	case -1:
 		DUINT128_GETS64(*value)[DEE_INT128_LS64] = -(sdigit)DeeInt_DIGIT(self)[0];
-		DUINT128_GETS64(*value)[DEE_INT128_MS64] = 0;
+		DUINT128_GETS64(*value)[DEE_INT128_MS64] = -1;
 		return INT_SIGNED;
 
 	default: break;
@@ -2331,8 +2331,10 @@ DeeInt_TryAs128(DeeObject *__restrict self,
 	DUINT128_SET(result.u, 0);
 	sign = 1;
 	i    = DeeInt_SIZE(self);
-	if (i < 0)
-		sign = -1, i = -i;
+	if (i < 0) {
+		sign = -1;
+		i = -i;
+	}
 	while (--i >= 0) {
 		if (DUINT128_SHL_WILL_OVERFLOW(result.u, DIGIT_BITS))
 			goto overflow;

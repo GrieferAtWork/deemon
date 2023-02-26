@@ -82,10 +82,10 @@ DECL_BEGIN
 	    "Same as ?#join, but don't check for interrupts and fail immediately")
 #define S_Process_function_timedjoin_name "timedjoin"
 #define S_Process_function_timedjoin_doc                                    \
-	DOC("(timeout_in_microseconds:?Dint)->?X2?Dint?N\n"                     \
+	DOC("(timeout_in_nanoseconds:?Dint)->?X2?Dint?N\n"                      \
 	    "@throw ValueError @this process was never started\n"               \
 	    "@throw SystemError Failed to join @this process for some reason\n" \
-	    "Same as ?#join, but only attempt to join for a given @timeout_in_microseconds")
+	    "Same as ?#join, but only attempt to join for a given @timeout_in_nanoseconds")
 #define S_Process_getset_hasstarted_name "hasstarted"
 #define S_Process_getset_hasstarted_doc \
 	DOC("->?Dbool\n"                    \

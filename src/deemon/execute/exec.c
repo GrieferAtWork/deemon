@@ -615,7 +615,7 @@ PRIVATE uint64_t exec_timestamp = (uint64_t)-1;
 
 
 /* A couple of helper macros taken from the libtime DEX. */
-#define time_yer2day(x)              (((146097 * (x)) / 400) /*-1*/)
+#define time_year2day(x)              (((146097 * (x)) / 400) /*-1*/)
 #define MICROSECONDS_PER_MILLISECOND UINT64_C(1000)
 #define MILLISECONDS_PER_SECOND      UINT64_C(1000)
 #define SECONDS_PER_MINUTE           UINT64_C(60)
@@ -724,9 +724,9 @@ LOCAL uint64_t parse_timestamp(void) {
 	second = ((TIMESTAMP_SEC[0] - '0') * 10 + (TIMESTAMP_SEC[1] - '0'));
 
 	/* Pack everything together and return the result. */
-	return (((uint64_t)((time_yer2day(year) + monthstart + monthday) -
+	return (((uint64_t)((time_year2day(year) + monthstart + monthday) -
 	                    /* Subtract the year 1970 from the result. */
-	                    time_yer2day(1970)) *
+	                    time_year2day(1970)) *
 	         MICROSECONDS_PER_DAY) +
 	        /* Add the hour, minute and second to the calculation. */
 	        ((uint64_t)hour * MICROSECONDS_PER_HOUR) +
@@ -736,7 +736,7 @@ LOCAL uint64_t parse_timestamp(void) {
 #endif /* !... */
 
 
-/* Return the time (in UTC milliseconds since 01.01.1970) when deemon was compiled.
+/* Return the time (in UTC milliseconds since 01-01-1970) when deemon was compiled.
  * This value is also used to initialize the `mo_ctime' value of the builtin
  * `deemon' module, automatically forcing user-code to be recompiled if the
  * associated deemon core has changed, and if they are using the `deemon' module. */

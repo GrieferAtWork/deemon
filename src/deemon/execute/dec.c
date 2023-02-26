@@ -719,11 +719,11 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL DecFile_IsUpToDate(DecFile *__restrict se
  * @return: -1: An error occurred. */
 PRIVATE WUNUSED NONNULL((1)) int DCALL DecFile_Load(DecFile *__restrict self);
 
-/* Return the last-modified time (in microseconds since 01.01.1970).
+/* Return the last-modified time (in microseconds since 01-01-1970).
  * For this purpose, an internal cache is kept that is consulted
  * before and populated after making an attempt at contacting the
  * host operating system for the required information.
- * @return: * :           Last-modified time (in microseconds since 01.01.1970).
+ * @return: * :           Last-modified time (in microseconds since 01-01-1970).
  * @return: 0 :           The given file could not be found.
  * @return: (uint64_t)-1: The lookup failed and an error was thrown. */
 PRIVATE WUNUSED NONNULL((1)) uint64_t DCALL DecTime_Lookup(DeeObject *__restrict filename);
@@ -3089,11 +3089,11 @@ done:
 
 
 
-/* Return the last-modified time (in microseconds since 01.01.1970).
+/* Return the last-modified time (in microseconds since 01-01-1970).
  * For this purpose, an internal cache is kept that is consulted
  * before and populated after making an attempt at contacting the
  * host operating system for the required information.
- * @return: * :           Last-modified time (in microseconds since 01.01.1970).
+ * @return: * :           Last-modified time (in microseconds since 01-01-1970).
  * @return: 0 :           The given file could not be found.
  * @return: (uint64_t)-1: The lookup failed and an error was thrown. */
 PRIVATE WUNUSED NONNULL((1)) uint64_t DCALL

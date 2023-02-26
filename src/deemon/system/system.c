@@ -829,7 +829,7 @@ PUBLIC void DCALL DeeSystem_DlClose(void *handle) {
 #endif /* !__BYTE_ORDER__ != __ORDER_BIG_ENDIAN__ */
 
 /* A couple of helper macros taken from the libtime DEX. */
-#define time_yer2day(x)     (((146097 * (x)) / 400) /*-1*/)
+#define time_year2day(x)     (((146097 * (x)) / 400) /*-1*/)
 #define MICROSECONDS_PER_MILLISECOND UINT64_C(1000)
 #define MILLISECONDS_PER_SECOND      UINT64_C(1000)
 #define SECONDS_PER_MINUTE           UINT64_C(60)
@@ -899,8 +899,8 @@ nt_getunixfiletime(uint64_t filetime) {
 	LocalFileTimeToFileTime((LPFILETIME)&filetime, (LPFILETIME)&local_filetime);
 	DBG_ALIGNMENT_ENABLE();
 	result = FILETIME_GET64(filetime) / (FILETIME_PER_SECONDS / MICROSECONDS_PER_SECOND);
-	/* Window's filetime started counting on 01.01.1601. */
-	result -= (time_yer2day(1970) - time_yer2day(1601)) * MICROSECONDS_PER_DAY;
+	/* Window's filetime started counting on 01-01-1601. */
+	result -= (time_year2day(1970) - time_year2day(1601)) * MICROSECONDS_PER_DAY;
 	return result;
 }
 #endif /* DeeSystem_GetLastModified_USE_GETFILEATTRIBUTESEX || DeeSystem_GetWalltime_USE_GETSYSTEMTIMEPRECISEASFILETIME */
@@ -987,7 +987,7 @@ PRIVATE HMODULE DCALL GetKernel32Handle(void) {
 #endif /* DeeSystem_GetWalltime_USE_GETSYSTEMTIMEPRECISEASFILETIME */
 
 
-/* Return the current UTC realtime in microseconds since 01.01.1970T00:00:00+00:00 */
+/* Return the current UTC realtime in microseconds since 01-01-1970T00:00:00+00:00 */
 PUBLIC WUNUSED uint64_t DCALL DeeSystem_GetWalltime(void) {
 #ifdef DeeSystem_GetWalltime_USE_GETSYSTEMTIMEPRECISEASFILETIME
 	uint64_t filetime;

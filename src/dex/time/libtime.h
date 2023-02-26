@@ -28,105 +28,88 @@
 #include <deemon/thread.h>
 
 #include <hybrid/byteorder.h>
+#include <hybrid/int128.h>
 #include <hybrid/typecore.h>
 
+#include <stdbool.h>
 #include <stdint.h>
 
 DECL_BEGIN
 
-#define TIMECALL FCALL
-
 #undef ceildiv
 #define ceildiv(x, y) (((x) + ((y) - 1)) / (y))
 
-/* TODO: Re-write this dex to always use `hybrid/int128.h' */
-/* TODO: Re-write this dex to always use signed nanoseconds (giving a
- *       range of +/-5395141535403007094485 years around 01.01.0000)
- * -> Related to this, also change all functions taking timeouts to
- *    use nanoseconds instead of milliseconds. */
+/* Time types */
+#define TIME_TYPE_NANOSECONDS 0 /* Nanoseconds since 01-01-0000T00:00:00 (or # of delta nanoseconds) */
+#define TIME_TYPE_MONTHS      1 /* Months since 01.0000 (or # of delta months) */
+#define TIME_TYPE_INVALID     2 /* Invalid */
 
-#if defined(__INT128_TYPE__) && defined(__UINT128_TYPE__)
-
-#define HAVE_128BIT_TIME 1
-#define SIZEOF_DTIME_T 16
-typedef Dee_int128_t  dtime_t;
-typedef Dee_uint128_t dutime_t;
-typedef int64_t       dtime_half_t;
-typedef uint64_t      dutime_half_t;
-#define DUTIME_HALF_PRINTF "%I64u"
-#define DUTIME_HALF_UNPACK DEE_UNPu64
-
-#else /* __INT128_TYPE__ && __UINT128_TYPE__ */
-
-/* >> 2000*365*24*60*60*1000*1000 (MSB: 56 --> The top 8 bits are still
- *    clear, so this timer won't overrun for at least 582000 more years,
- *    at which point I'm assuming that anything will be capable of handling
- *    a 128-bit integer (which is why support for those exists)) */
-#define SIZEOF_DTIME_T 8
-typedef int64_t  dtime_t;
-typedef uint64_t dutime_t;
-typedef int32_t  dtime_half_t;
-typedef uint32_t dutime_half_t;
-#define DUTIME_HALF_PRINTF "%I32u"
-#define DUTIME_HALF_UNPACK DEE_UNPu32
-
-#endif /* !__INT128_TYPE__ || !__UINT128_TYPE__ */
-
-/* FIXME: 24*60*60*1000*1000 == 86400000000 == 0x141DD76000
- *        That doesn't fit into a 32-bit integer, but many places
- *        in this library assume that it does (this is bad...) */
+/* Time kinds */
+#define TIME_KIND_TIMESTAMP 0 /* Time since 01-01-0000 */
+#define TIME_KIND_DELTA     1 /* Delta time */
+#define TIME_KIND_INVALID   2 /* Invalid */
 
 
+/* Time representations. */
+#define TIME_REPR_INVALID     0  /* Invalid ID */
+#define TIME_REPR_NANOSECOND  1  /* Nanosecond of second */
+#define TIME_REPR_MICROSECOND 2  /* Microsecond of second */
+#define TIME_REPR_MILLISECOND 3  /* Millisecond of second */
+#define TIME_REPR_SECOND      4  /* Second of minute */
+#define TIME_REPR_MINUTE      5  /* Minute of hour */
+#define TIME_REPR_HOUR        6  /* Hour of day */
+#define TIME_REPR_WDAY        7  /* Day of week (0-based; 0 is Sunday) */
+#define TIME_REPR_MWEEK       8  /* Week of month (week 1 starts on the first sunday of the month; if the month doesn't start on a sun-day, week 0 exists) */
+#define TIME_REPR_MONTH       9  /* Month of year (1-based) */
+#define TIME_REPR_YEAR        10 /* Year */
+#define TIME_REPR_DECADE      11 /* Decade */
+#define TIME_REPR_CENTURY     12 /* Century */
+#define TIME_REPR_MILLENNIUM  13 /* Millennium */
+#define TIME_REPR_MDAY        14 /* Day of month (1-based) */
+#define TIME_REPR_YDAY        15 /* Day of year (1-based) */
+#define TIME_REPR_YWEEK       16 /* Week of year (week 1 starts on the first sunday of the year; if the year doesn't start on a sun-day, week 0 exists) */
 
-/* Time encoding */
-#define TIME_MICROSECONDS  0
-#define TIME_MONTHS        1
-/* Preferred representation.
- * >> print days(2);            // `2 days'
- * >> print days(2).hours;      // `48 hours'
- * >> print int(days(2));       // 2*24*60*60*1000*1000
- * >> print int(days(2).hours); // 2*24*60*60*1000*1000
- */
-#define TIME_REPR_NONE     0 /* No specific representation.
-                              * When this is set, an `Error.TypeError'
-                              * is thrown when `intval' is invoked. */
-#define TIME_REPR_MIC      1
-#define TIME_REPR_MIL      2
-#define TIME_REPR_SEC      3
-#define TIME_REPR_MIN      4
-#define TIME_REPR_HOR      5
-#define TIME_REPR_WDAY     6
-#define TIME_REPR_MWEK     7
-#define TIME_REPR_MON      8
-#define TIME_REPR_YER      9
-#define TIME_REPR_DEC     10
-#define TIME_REPR_CEN     11
-#define TIME_REPR_MLL     12
-#define TIME_REPR_MDAY    13
-#define TIME_REPR_YDAY    14
-#define TIME_REPR_YWEK    15
- /* Non-modulated variations (the other representation
-  * is truncated to singles of the next higher-level view) */
-#define TIME_REPR_PLURAL  16
-#define TIME_REPR_MICS   (TIME_REPR_PLURAL | 1)
-#define TIME_REPR_MILS   (TIME_REPR_PLURAL | 2)
-#define TIME_REPR_SECS   (TIME_REPR_PLURAL | 3)
-#define TIME_REPR_MINS   (TIME_REPR_PLURAL | 4)
-#define TIME_REPR_HORS   (TIME_REPR_PLURAL | 5)
-#define TIME_REPR_DAYS   (TIME_REPR_PLURAL | 6)
-#define TIME_REPR_WEKS   (TIME_REPR_PLURAL | 7)
-#define TIME_REPR_MONS   (TIME_REPR_PLURAL | 8)
+/* Non-modulated variations (the other representation
+ * is truncated to singles of the next higher-level view) */
+#define TIME_REPR_PLURAL       32
+#define TIME_REPR_NANOSECONDS  (TIME_REPR_PLURAL | TIME_REPR_NANOSECOND)  /* Total nanoseconds */
+#define TIME_REPR_MICROSECONDS (TIME_REPR_PLURAL | TIME_REPR_MICROSECOND) /* Total microseconds */
+#define TIME_REPR_MILLISECONDS (TIME_REPR_PLURAL | TIME_REPR_MILLISECOND) /* Total milliseconds */
+#define TIME_REPR_SECONDS      (TIME_REPR_PLURAL | TIME_REPR_SECOND)      /* Total seconds */
+#define TIME_REPR_MINUTES      (TIME_REPR_PLURAL | TIME_REPR_MINUTE)      /* Total minutes */
+#define TIME_REPR_HOURS        (TIME_REPR_PLURAL | TIME_REPR_HOUR)        /* Total hours */
+#define TIME_REPR_DAYS         (TIME_REPR_PLURAL | TIME_REPR_WDAY)        /* Total days */
+#define TIME_REPR_WEEKS        (TIME_REPR_PLURAL | TIME_REPR_MWEEK)       /* Total weeks */
+#define TIME_REPR_MONTHS       (TIME_REPR_PLURAL | TIME_REPR_MONTH)       /* Total months */
+#define TIME_REPR_YEARS        (TIME_REPR_PLURAL | TIME_REPR_YEAR)        /* Total years */
+#define TIME_REPR_DECADES      (TIME_REPR_PLURAL | TIME_REPR_DECADE)      /* Total decade */
+#define TIME_REPR_CENTURIES    (TIME_REPR_PLURAL | TIME_REPR_CENTURY)     /* Total centuries */
+#define TIME_REPR_MILLENNIA    (TIME_REPR_PLURAL | TIME_REPR_MILLENNIUM)  /* Total millennia */
+
 #if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
-#define TIME_KIND(type, repr) ((type) | (repr) << 8)
+#define TIME_TYPEKIND(type, kind) ((type) | (kind) << 8)
 #else /* __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__ */
-#define TIME_KIND(type, repr) ((type) << 8 | (repr))
+#define TIME_TYPEKIND(type, kind) ((type) << 8 | (kind))
 #endif /* __BYTE_ORDER__ != __ORDER_LITTLE_ENDIAN__ */
+
+union u_type_repr_kind {
+	struct {
+		uint8_t  t_type; /* Time encoding (One of `TIME_*') */
+		uint8_t  t_kind; /* Time representation (One of `TIME_REPR_*') */
+	}
+#ifndef __COMPILER_HAVE_TRANSPARENT_STRUCT
+	_dee_astruct
+#endif /* !__COMPILER_HAVE_TRANSPARENT_STRUCT */
+	;
+	uint16_t     t_typekind; /* Encoded using TIME_TYPEKIND(type, kind) */
+};
+
 
 typedef struct time_object DeeTimeObject;
 struct time_object {
 	Dee_OBJECT_HEAD
 	union {
-		/* Microseconds (1000*1000 / sec) since 0:0:0 1.1.0000 (Gregorian calender).
+		/* Nanoseconds (1_000_000_000 / sec) since 01-01-0000T00:00:00 (Gregorian calender).
 		 * NOTE: 0 was chosen due to the fact that this way time-offsets/timeouts
 		 *       and exact points in time can use the same type internally,
 		 *       making it quite strait-forward to do time-based calculation such
@@ -137,180 +120,327 @@ struct time_object {
 		 *       forth twice a year by one hour.
 		 *       The implementation does however take leap years into account!
 		 */
-		dtime_t      t_time;   /* TIME_MICROSECONDS */
-#ifdef HAVE_128BIT_TIME
-		dtime_half_t t_time_half[2];
-#endif /* HAVE_128BIT_TIME */
+		Dee_int128_t t_nanos;   /* TIME_TYPE_NANOSECONDS */
+
 		/* Because months can have differing lengths dependent on
 		 * which which they refer to, the time type needs to be able
-		 * to represent months and years just as well as microseconds.
+		 * to represent months and years just as well as nanoseconds.
 		 * For that reason, they are represented individually here, but are
-		 * converted into microseconds adjusted for some other time-object.
+		 * converted into nanoseconds adjusted for some other time-object.
 		 * Arithmetic rules are as follows:
-		 *   - MICROSECONDS + MICROSECONDS --> MICROSECONDS
-		 *   - MICROSECONDS + MONTHS       --> MICROSECONDS
-		 *   - MONTHS + MICROSECONDS       --> MICROSECONDS
-		 *   - MONTHS + MONTHS             --> MONTHS
+		 *   - NANOSECONDS <op> NANOSECONDS --> NANOSECONDS
+		 *   - NANOSECONDS <op> MONTHS      --> NANOSECONDS
+		 *   - MONTHS <op> NANOSECONDS      --> NANOSECONDS
+		 *   - MONTHS <op> MONTHS           --> MONTHS
 		 * As far as time representation goes, the representation
 		 * of the left-hand-side is always inherited by the result.
 		 */
-		dtime_half_t t_months; /* TIME_MONTHS */
+		Dee_int128_t t_months; /* TIME_TYPE_MONTHS */
 	}
 #ifndef __COMPILER_HAVE_TRANSPARENT_UNION
 	_dee_aunion
-#define t_time   _dee_aunion.t_time
-#ifdef HAVE_128BIT_TIME
-#define t_time_half _dee_aunion.t_time_half
-#endif /* HAVE_128BIT_TIME */
+#define t_nanos  _dee_aunion.t_nanos
 #define t_months _dee_aunion.t_months
 #endif /* !__COMPILER_HAVE_TRANSPARENT_UNION */
 	;
 	union {
 		struct {
 			uint8_t  t_type; /* Time encoding (One of `TIME_*') */
-			uint8_t  t_repr; /* Time representation (One of `TIME_REPR_*') */
+			uint8_t  t_kind; /* Time kind (One of `TIME_KIND_*') */
 		}
 #ifndef __COMPILER_HAVE_TRANSPARENT_STRUCT
 		_dee_astruct
 #endif /* !__COMPILER_HAVE_TRANSPARENT_STRUCT */
 		;
-		uint16_t     t_kind; /* Encoded using TIME_KIND(type, repr) */
+		uint16_t     t_typekind; /* Encoded using TIME_TYPEKIND(type, kind) */
 	}
 #ifndef __COMPILER_HAVE_TRANSPARENT_UNION
 	_dee_aunion2
-#define t_kind   _dee_aunion2.t_kind
+#define t_typekind   _dee_aunion2.t_typekind
 #ifndef __COMPILER_HAVE_TRANSPARENT_STRUCT
 #define t_type   _dee_aunion2._dee_astruct.t_type
-#define t_repr   _dee_aunion2._dee_astruct.t_repr
+#define t_kind   _dee_aunion2._dee_astruct.t_kind
 #else /* !__COMPILER_HAVE_TRANSPARENT_STRUCT */
 #define t_type   _dee_aunion2.t_type
-#define t_repr   _dee_aunion2.t_repr
+#define t_kind   _dee_aunion2.t_kind
 #endif /* __COMPILER_HAVE_TRANSPARENT_STRUCT */
 #elif !defined(__COMPILER_HAVE_TRANSPARENT_STRUCT)
 #define t_type   _dee_astruct.t_type
-#define t_repr   _dee_astruct.t_repr
+#define t_kind   _dee_astruct.t_kind
 #endif /* !__COMPILER_HAVE_TRANSPARENT_STRUCT */
 	;
 };
 
-#ifdef HAVE_128BIT_TIME
-#if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
-#define _Time_Set64(x, y) ((x).t_time_half[1] = 0, (x).t_time_half[0] = (y))
-#define _Time_Get64(x)    (x).t_time_half[0]
-#else /* __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__ */
-#define _Time_Set64(x, y) ((x).t_time_half[0] = 0, (x).t_time_half[1] = (y))
-#define _Time_Get64(x)    (x).t_time_half[1]
-#endif /* __BYTE_ORDER__ != __ORDER_LITTLE_ENDIAN__ */
-#else /* HAVE_128BIT_TIME */
-#define _Time_Get64(x)    (x).t_time
-#define _Time_Set64(x, y) ((x).t_time = (y))
-#endif /* !HAVE_128BIT_TIME */
+#define DeeTime_IsTimestamp(self) ((self)->t_kind == TIME_KIND_TIMESTAMP)
+#define DeeTime_IsDelta(self)     ((self)->t_kind != TIME_KIND_TIMESTAMP)
+
+
+/* Some time constants */
+#define MICROSECONDS_PER_MILLISECOND UINT16_C(1000)         /* signed-11-bit */
+#define MICROSECONDS_PER_SECOND      UINT32_C(1000000)      /* signed-21-bit */
+#define MICROSECONDS_PER_MINUTE      UINT32_C(60000000)     /* signed-27-bit */
+#define MICROSECONDS_PER_HOUR        UINT64_C(3600000000)   /* signed-33-bit */
+#define MICROSECONDS_PER_DAY         UINT64_C(86400000000)  /* signed-38-bit */
+#define MICROSECONDS_PER_WEEK        UINT64_C(604800000000) /* signed-41-bit */
+#define MILLISECONDS_PER_SECOND      UINT16_C(1000)         /* signed-11-bit */
+#define SECONDS_PER_MINUTE           UINT8_C(60)            /* signed-7-bit */
+#define MINUTES_PER_HOUR             UINT8_C(60)            /* signed-7-bit */
+#define HOURS_PER_DAY                UINT8_C(24)            /* signed-6-bit */
+#define DAYS_PER_WEEK                UINT8_C(7)             /* signed-4-bit */
+#define MONTHS_PER_YEAR              UINT8_C(12)            /* signed-5-bit */
+#define MONTHS_PER_DECADE            UINT8_C(120)           /* signed-8-bit */
+#define MONTHS_PER_CENTURY           UINT16_C(1200)         /* signed-12-bit */
+#define MONTHS_PER_MILLENNIUM        UINT16_C(12000)        /* signed-15-bit */
+#define YEARS_PER_DECADE             UINT8_C(10)            /* signed-5-bit */
+#define DECADES_PER_CENTURY          UINT8_C(10)            /* signed-5-bit */
+#define CENTURIES_PER_MILLENNIUM     UINT8_C(10)            /* signed-5-bit */
+#define SECONDS_PER_YEAR             UINT32_C(31556952)     /* signed-26-bit */
+#define MAX_DAYS_PER_MONTH           31
+#define MAX_DAYS_PER_YEAR            366
+
+#define SECONDS_PER_HOUR   UINT16_C(3600)        /* signed-13-bit */
+#define SECONDS_PER_DAY    UINT32_C(86400)       /* signed-18-bit */
+#define SECONDS_01_01_1970 UINT64_C(0xe79747c00) /* Seconds from 01-01-0000 to 01-01-1970 */
+
+
+/*
+ * Since we use nanoseconds from 00:00:00T01-01-0000, and 128-bit integers, that gives us the following limits:
+ * - nanoseconds  (128-bit): [-170141183460469231731687303715884105728, 170141183460469231731687303715884105727]
+ * - microseconds (119-bit): [-170141183460469231731687303715884106, 170141183460469231731687303715884105]
+ * - milliseconds (109-bit): [-170141183460469231731687303715885, 170141183460469231731687303715884]
+ * - seconds       (99-bit): [-170141183460469231731687303716, 170141183460469231731687303715]
+ * - minutes       (93-bit): [-2835686391007820528861455062, 2835686391007820528861455061]
+ * - hours         (87-bit): [-47261439850130342147690918, 47261439850130342147690917]
+ * - days          (82-bit): [-1969226660422097589487122, 1969226660422097589487121]
+ * - weeks         (79-bit): [-281318094346013941355304, 281318094346013941355303]
+ * - years         (74-bit): [-5391559471918239497012, 5391559471918239497011]
+ * - decades       (70-bit): [-539155947191823949702, 539155947191823949701]
+ * - centuries     (67-bit): [-53915594719182394971, 53915594719182394970]
+ * - millennia     (64-bit): [-5391559471918239498, 5391559471918239497]
+ */
+#define NANOSECONDS_PER_MICROSECOND UINT16_C(1000)                /* signed-11-bit */
+#define NANOSECONDS_PER_MILLISECOND UINT32_C(1000000)             /* signed-21-bit */
+#define NANOSECONDS_PER_SECOND      UINT32_C(1000000000)          /* signed-31-bit */
+#define NANOSECONDS_PER_MINUTE      UINT64_C(60000000000)         /* signed-37-bit */
+#define NANOSECONDS_PER_HOUR        UINT64_C(3600000000000)       /* signed-43-bit */
+#define NANOSECONDS_PER_DAY         UINT64_C(86400000000000)      /* signed-48-bit */
+#define NANOSECONDS_PER_WEEK        UINT64_C(604800000000000)     /* signed-51-bit */
+#define NANOSECONDS_PER_MONTH_AVG   UINT64_C(2629746000000000)    /* signed-53-bit */
+#define NANOSECONDS_PER_YEAR_AVG    UINT64_C(31556952000000000)   /* signed-56-bit */
+#define NANOSECONDS_PER_DECADE_AVG  UINT64_C(315569520000000000)  /* signed-60-bit */
+#define NANOSECONDS_PER_CENTURY_AVG UINT64_C(3155695200000000000) /* signed-63-bit */
+#define MONTHS_PER_DECADE           UINT8_C(120)                  /* signed-8-bit */
+#define MONTHS_PER_CENTURY          UINT16_C(1200)                /* signed-12-bit */
+#define MONTHS_PER_MILLENNIUM       UINT16_C(12000)               /* signed-15-bit */
+#define YEARS_PER_CENTURY           UINT8_C(100)                  /* signed-8-bit */
+#define YEARS_PER_MILLENNIUM        UINT16_C(1000)                /* signed-11-bit */
+#define DAYS_PER_400_YEARS          UINT32_C(146097)              /* signed-19-bit */
+PRIVATE Dee_int128_t const NANOSECONDS_PER_MILLENNIUM_AVG =
+__HYBRID_INT128_INIT16N(0x0000, 0x0000, 0x0000, 0x0001, 0xb5f0, 0xd0a5, 0xea0d, 0x8000);
+
+
+#define time_inplace_clearmod32(p_value, clearmod_mask)                             \
+	do {                                                                            \
+		uint32_t _ticm32_sub;                                            \
+		__hybrid_int128_mod32_r(*(p_value), clearmod_mask, _ticm32_sub); \
+		__hybrid_int128_sub32(*(p_value), _ticm32_sub);                  \
+	}	__WHILE0
+#define time_inplace_clearmod64(p_value, clearmod_mask)                  \
+	do {                                                                 \
+		uint64_t _ticm64_sub;                                            \
+		__hybrid_int128_mod64_r(*(p_value), clearmod_mask, _ticm64_sub); \
+		__hybrid_int128_sub64(*(p_value), _ticm64_sub);                  \
+	}	__WHILE0
+#define time_inplace_clearmod64_keepmod64(p_value, clearmod_mask, keepmod_mask) \
+	do {                                                                        \
+		uint64_t _ticm64_sub, _ticm64_add;                                      \
+		__hybrid_int128_mod64_r(*(p_value), clearmod_mask, _ticm64_sub);        \
+		__hybrid_int128_mod64_r(*(p_value), keepmod_mask, _ticm64_add);         \
+		__hybrid_int128_sub64(*(p_value), _ticm64_sub);                         \
+		__hybrid_int128_add64(*(p_value), _ticm64_add);                         \
+	}	__WHILE0
+
+
+/* Helpers for converting a specific year <=> day
+ * TODO: These are inaccurate -- fix them! */
+#define time_year2day(value)                 ((146097 * (value)) / 400)
+#define time_day2year(value)                 ((400 * (value)) / 146097)
+
+/* Proper (exact) conversion between days-since-01-01-0000 and the relevant year (or a year, and that year's 01-01-XXXX) */
+#define time_inplace_decade2day(p_value)     (__hybrid_int128_mul8(*(p_value), UINT8_C(10)), time_inplace_year2day(p_value))
+#define time_inplace_century2day(p_value)    (__hybrid_int128_mul8(*(p_value), UINT8_C(100)), time_inplace_year2day(p_value))
+#define time_inplace_millennium2day(p_value) (__hybrid_int128_mul16(*(p_value), UINT8_C(1000)), time_inplace_year2day(p_value))
+#define time_inplace_day2decade(p_value)     (time_inplace_day2year(p_value), __hybrid_int128_div8(*(p_value), UINT8_C(10)))
+#define time_inplace_day2century(p_value)    (time_inplace_day2year(p_value), __hybrid_int128_div8(*(p_value), UINT8_C(100)))
+#define time_inplace_day2millennium(p_value) (time_inplace_day2year(p_value), __hybrid_int128_div16(*(p_value), UINT16_C(1000)))
+
+/* Convert a specific year/... to that year/...'s starting nanosecond (rather than an amount of years/...) */
+#define time_inplace_year2nanosecond(p_value)       (time_inplace_year2day(p_value), time_inplace_days2nanoseconds(p_value))
+#define time_inplace_nanosecond2year(p_value)       (time_inplace_nanoseconds2days(p_value), time_inplace_day2year(p_value))
+#define time_inplace_decade2nanosecond(p_value)     (time_inplace_decade2day(p_value), time_inplace_days2nanoseconds(p_value))
+#define time_inplace_nanosecond2decade(p_value)     (time_inplace_nanoseconds2days(p_value), time_inplace_day2decade(p_value))
+#define time_inplace_century2nanosecond(p_value)    (time_inplace_century2day(p_value), time_inplace_days2nanoseconds(p_value))
+#define time_inplace_nanosecond2century(p_value)    (time_inplace_nanoseconds2days(p_value), time_inplace_day2century(p_value))
+#define time_inplace_millennium2nanosecond(p_value) (time_inplace_millennium2day(p_value), time_inplace_days2nanoseconds(p_value))
+#define time_inplace_nanosecond2millennium(p_value) (time_inplace_nanoseconds2days(p_value), time_inplace_day2millennium(p_value))
+
+/* Convert between time quantities (in the case of variable-length quantities, use that quantity's average length) */
+#define time_inplace_microseconds2nanoseconds(p_value) __hybrid_int128_mul16(*(p_value), NANOSECONDS_PER_MICROSECOND)
+#define time_inplace_nanoseconds2microseconds(p_value) __hybrid_int128_div16(*(p_value), NANOSECONDS_PER_MICROSECOND)
+#define time_inplace_milliseconds2nanoseconds(p_value) __hybrid_int128_mul32(*(p_value), NANOSECONDS_PER_MILLISECOND)
+#define time_inplace_nanoseconds2milliseconds(p_value) __hybrid_int128_div32(*(p_value), NANOSECONDS_PER_MILLISECOND)
+#define time_inplace_seconds2nanoseconds(p_value)      __hybrid_int128_mul32(*(p_value), NANOSECONDS_PER_SECOND)
+#define time_inplace_nanoseconds2seconds(p_value)      __hybrid_int128_div32(*(p_value), NANOSECONDS_PER_SECOND)
+#define time_inplace_minutes2nanoseconds(p_value)      __hybrid_int128_mul64(*(p_value), NANOSECONDS_PER_MINUTE)
+#define time_inplace_nanoseconds2minutes(p_value)      __hybrid_int128_div64(*(p_value), NANOSECONDS_PER_MINUTE)
+#define time_inplace_hours2nanoseconds(p_value)        __hybrid_int128_mul64(*(p_value), NANOSECONDS_PER_HOUR)
+#define time_inplace_nanoseconds2hours(p_value)        __hybrid_int128_div64(*(p_value), NANOSECONDS_PER_HOUR)
+#define time_inplace_days2nanoseconds(p_value)         __hybrid_int128_mul64(*(p_value), NANOSECONDS_PER_DAY)
+#define time_inplace_nanoseconds2days(p_value)         __hybrid_int128_div64(*(p_value), NANOSECONDS_PER_DAY)
+#define time_inplace_weeks2nanoseconds(p_value)        __hybrid_int128_mul64(*(p_value), NANOSECONDS_PER_WEEK)
+#define time_inplace_nanoseconds2weeks(p_value)        __hybrid_int128_div64(*(p_value), NANOSECONDS_PER_WEEK)
+#define time_inplace_months2nanoseconds(p_value)       __hybrid_int128_mul64(*(p_value), NANOSECONDS_PER_MONTH_AVG)
+#define time_inplace_nanoseconds2months(p_value)       __hybrid_int128_div64(*(p_value), NANOSECONDS_PER_MONTH_AVG)
+#define time_inplace_years2nanoseconds(p_value)        __hybrid_int128_mul64(*(p_value), NANOSECONDS_PER_YEAR_AVG)
+#define time_inplace_nanoseconds2years(p_value)        __hybrid_int128_div64(*(p_value), NANOSECONDS_PER_YEAR_AVG)
+#define time_inplace_decades2nanoseconds(p_value)      __hybrid_int128_mul64(*(p_value), NANOSECONDS_PER_DECADE_AVG)
+#define time_inplace_nanoseconds2decades(p_value)      __hybrid_int128_div64(*(p_value), NANOSECONDS_PER_DECADE_AVG)
+#define time_inplace_centuries2nanoseconds(p_value)    __hybrid_int128_mul64(*(p_value), NANOSECONDS_PER_CENTURY_AVG)
+#define time_inplace_nanoseconds2centuries(p_value)    __hybrid_int128_div64(*(p_value), NANOSECONDS_PER_CENTURY_AVG)
+#define time_inplace_millennia2nanoseconds(p_value)    __hybrid_int128_mul128(*(p_value), NANOSECONDS_PER_MILLENNIUM_AVG)
+#define time_inplace_nanoseconds2millennia(p_value)    __hybrid_int128_div128(*(p_value), NANOSECONDS_PER_MILLENNIUM_AVG)
+
+/* Encode/decode a time-value to/from various different representations. */
+#define time_get_nanoseconds(p_self, p_result)  (void)(*(p_result) = *(p_self))
+#define time_get_microseconds(p_self, p_result) (void)(*(p_result) = *(p_self), time_inplace_nanoseconds2microseconds(p_result))
+#define time_get_milliseconds(p_self, p_result) (void)(*(p_result) = *(p_self), time_inplace_nanoseconds2milliseconds(p_result))
+#define time_get_seconds(p_self, p_result)      (void)(*(p_result) = *(p_self), time_inplace_nanoseconds2seconds(p_result))
+#define time_get_minutes(p_self, p_result)      (void)(*(p_result) = *(p_self), time_inplace_nanoseconds2minutes(p_result))
+#define time_get_hours(p_self, p_result)        (void)(*(p_result) = *(p_self), time_inplace_nanoseconds2hours(p_result))
+#define time_get_days(p_self, p_result)         (void)(*(p_result) = *(p_self), time_inplace_nanoseconds2days(p_result))
+#define time_get_weeks(p_self, p_result)        (void)(*(p_result) = *(p_self), time_inplace_nanoseconds2weeks(p_result))
+#define time_get_month(p_self, p_result)        (void)(*(p_result) = *(p_self), time_inplace_nanosecond2month(p_result)) /* # of whole months since 01-01-0000 */
+#define time_get_months(p_self, p_result)       (void)(*(p_result) = *(p_self), time_inplace_nanoseconds2months(p_result))
+#define time_get_year(p_self, p_result)         (void)(*(p_result) = *(p_self), time_inplace_nanosecond2year(p_result)) /* # of whole years since 01-01-0000 */
+#define time_get_years(p_self, p_result)        (void)(*(p_result) = *(p_self), time_inplace_nanoseconds2years(p_result))
+#define time_get_decade(p_self, p_result)       (void)(*(p_result) = *(p_self), time_inplace_nanosecond2decade(p_result)) /* # of whole decades since 01-01-0000 */
+#define time_get_decades(p_self, p_result)      (void)(*(p_result) = *(p_self), time_inplace_nanoseconds2decades(p_result))
+#define time_get_century(p_self, p_result)      (void)(*(p_result) = *(p_self), time_inplace_nanosecond2century(p_result)) /* # of whole centuries since 01-01-0000 */
+#define time_get_centuries(p_self, p_result)    (void)(*(p_result) = *(p_self), time_inplace_nanoseconds2centuries(p_result))
+#define time_get_millennium(p_self, p_result)   (void)(*(p_result) = *(p_self), time_inplace_nanosecond2millennium(p_result)) /* # of whole millennia since 01-01-0000 */
+#define time_get_millennia(p_self, p_result)    (void)(*(p_result) = *(p_self), time_inplace_nanoseconds2millennia(p_result))
+
+#define time_set_nanoseconds(p_self, p_value)  (void)(*(p_self) = *(p_value))
+#define time_set_microseconds(p_self, p_value) (void)(*(p_self) = *(p_value), time_inplace_microseconds2nanoseconds(p_self))
+#define time_set_milliseconds(p_self, p_value) (void)(*(p_self) = *(p_value), time_inplace_milliseconds2nanoseconds(p_self))
+#define time_set_seconds(p_self, p_value)      (void)(*(p_self) = *(p_value), time_inplace_seconds2nanoseconds(p_self))
+#define time_set_minutes(p_self, p_value)      (void)(*(p_self) = *(p_value), time_inplace_minutes2nanoseconds(p_self))
+#define time_set_hours(p_self, p_value)        (void)(*(p_self) = *(p_value), time_inplace_hours2nanoseconds(p_self))
+#define time_set_days(p_self, p_value)         (void)(*(p_self) = *(p_value), time_inplace_days2nanoseconds(p_self))
+#define time_set_weeks(p_self, p_value)        (void)(*(p_self) = *(p_value), time_inplace_weeks2nanoseconds(p_self))
+#define time_set_months(p_self, p_value)       (void)(*(p_self) = *(p_value), time_inplace_months2nanoseconds(p_self))
+#define time_set_years(p_self, p_value)        (void)(*(p_self) = *(p_value), time_inplace_years2nanoseconds(p_self))
+#define time_set_decades(p_self, p_value)      (void)(*(p_self) = *(p_value), time_inplace_decades2nanoseconds(p_self))
+#define time_set_centuries(p_self, p_value)    (void)(*(p_self) = *(p_value), time_inplace_centuries2nanoseconds(p_self))
+#define time_set_millennia(p_self, p_value)    (void)(*(p_self) = *(p_value), time_inplace_millennia2nanoseconds(p_self))
 
 #ifdef CONFIG_BUILDING_LIBTIME
 INTDEF DeeTypeObject DeeTime_Type;
 #define DeeTime_Check(ob)      DeeObject_InstanceOf(ob, &DeeTime_Type)
 #define DeeTime_CheckExact(ob) DeeObject_InstanceOfExact(ob, &DeeTime_Type)
 
-EXPDEF WUNUSED DREF DeeObject *(DCALL DeeTime_New)(uint64_t microseconds);
-INTDEF WUNUSED DREF DeeObject *DCALL DeeTime_New_(dtime_t microseconds, uint16_t kind);
-INTDEF WUNUSED DREF DeeObject *DCALL DeeTime_NewMonths_(dtime_half_t num_months, uint16_t kind);
-#define DeeTime_New(microseconds, repr)     DeeTime_New_(microseconds, TIME_KIND(TIME_MICROSECONDS, repr))
-#define DeeTime_NewMonths(num_months, repr) DeeTime_NewMonths_(num_months, TIME_KIND(TIME_MONTHS, repr))
-INTDEF WUNUSED NONNULL((1)) dtime_t DCALL DeeTime_Get(DeeTimeObject const *__restrict self);
-#ifdef HAVE_128BIT_TIME
-INTDEF WUNUSED DREF DeeObject *DCALL DeeTime_New64_(uint64_t microseconds, uint16_t kind);
-#define DeeTime_New64(microseconds, repr) DeeTime_New64_(microseconds, TIME_KIND(TIME_MICROSECONDS, repr))
-INTDEF WUNUSED NONNULL((1)) uint64_t DCALL DeeTime_Get64(DeeTimeObject const *__restrict self);
-#else /* HAVE_128BIT_TIME */
-#define DeeTime_Get64(self)               DeeTime_Get(self)
-#define DeeTime_New64(microseconds, repr) DeeTime_New(microseconds, repr)
-#endif /* !HAVE_128BIT_TIME */
-#define DeeTime_Set(self, value) \
-	(void)((self)->t_time = (value), (self)->t_type = TIME_MICROSECONDS)
-#define DeeTime_Set64(self, value) \
-	(void)(_Time_Set64(*(self), value), (self)->t_type = TIME_MICROSECONDS)
+/* Return the integer value for the specified representation of `self' */
+INTDEF NONNULL((1, 2)) void FCALL
+_DeeTime_GetRepr(Dee_int128_t *__restrict p_result,
+                 DeeTimeObject const *__restrict self,
+                 uint8_t repr);
+INTDEF WUNUSED NONNULL((1)) Dee_int128_t FCALL
+DeeTime_GetRepr(DeeTimeObject const *__restrict self,
+                uint8_t repr);
+INTDEF WUNUSED NONNULL((1, 2)) uint8_t FCALL
+DeeTime_GetRepr8(DeeTimeObject const *__restrict self, uint8_t repr);
+INTDEF WUNUSED NONNULL((1, 2)) uint32_t FCALL
+DeeTime_GetRepr32(DeeTimeObject const *__restrict self, uint8_t repr);
 
-INTDEF WUNUSED dtime_t DCALL time_now(void);
+/* Set the integer value for the specified representation of `self' */
+INTDEF NONNULL((1, 2)) void FCALL
+DeeTime_SetRepr(DeeTimeObject *__restrict self,
+                Dee_int128_t const *__restrict p_value,
+                uint8_t repr);
+
+
+/* Return the nano-seconds value of `self'. When `self' references months,
+ * calculate the number of nanoseconds for those months since `01.0000'. */
+#define DeeTime_AsNano(self, p_result)               \
+	(*(p_result) = (self)->t_nanos,                  \
+	 likely((self)->t_type == TIME_TYPE_NANOSECONDS) \
+	 ? (void)0                                       \
+	 : time_inplace_months2nanoseconds(p_result))
+#define DeeTime_MakeNano(self)                                   \
+	(likely((self)->t_type == TIME_TYPE_NANOSECONDS)             \
+	 ? (void)0                                                   \
+	 : (void)(time_inplace_months2nanoseconds(&(self)->t_nanos), \
+	          (self)->t_type = TIME_TYPE_NANOSECONDS))
+
+
+/* Return the current time in UTC */
+INTDEF NONNULL((1)) void FCALL time_now_utc(Dee_int128_t *__restrict p_result);
+INTDEF NONNULL((1)) void FCALL time_now_local(Dee_int128_t *__restrict p_result);
+
+/* Convert between days-since-01-01-0000 and that the relevant year.
+ * When converting from year-to-day, return that year's 01-01-XXXX. */
+INTDEF NONNULL((1)) void FCALL time_inplace_day2year(Dee_int128_t *__restrict p_value);
+INTDEF NONNULL((1)) void FCALL time_inplace_year2day(Dee_int128_t *__restrict p_value);
+
+/* Convert between a specific month and that month's starting nano-second */
+INTDEF NONNULL((1)) void FCALL time_inplace_nanosecond2month(Dee_int128_t *__restrict p_value);
+INTDEF NONNULL((1)) void FCALL time_inplace_month2nanosecond(Dee_int128_t *__restrict p_value);
+
+/* Check if the year referenced by the year-counter `*p_year' is a leap-year */
+INTDEF NONNULL((1)) bool FCALL time_years_isleapyear(Dee_int128_t const *__restrict p_year);
+
+struct month {
+	uint64_t m_start; /* Nano-seconds into the year for when this month starts */
+	uint16_t m_len;   /* == end-start */
+	uint16_t m_name;  /* Offset into month_names to the month's name.
+	                   * NOTE: The full name can be found at `m_name+4' */
+};
+#define month_getstart(self)     ((self)[0].m_start)
+#define month_getend(self)       ((self)[1].m_start)
+#define month_getlen(self)       ((self)->m_len)
+#define month_getname_abbr(self) (month_names + (self)->m_name)
+#define month_getname_full(self) (month_names + (self)->m_name + 4)
+
+INTDEF char const abbr_wday_names[7][4];
+INTDEF char const full_wday_names[7][10];
+INTDEF char const am_pm[2][3];
+INTDEF char const am_pm_lower[2][3];
+INTDEF char const month_names[];
+INTDEF struct month const month_info[2][MONTHS_PER_YEAR + 1];
+#define month_info_for_year(p_year) month_info[time_years_isleapyear(p_year)]
+
+#define get_wday_full(i)  full_wday_names[i]
+#define get_wday_abbr(i)  abbr_wday_names[i]
+#define get_month_full(i) month_getname_full(&month_info[0][i])
+#define get_month_abbr(i) month_getname_abbr(&month_info[0][i])
+
+
+/* C-API functions exported by the `time' dex. */
+#ifdef CONFIG_BUILDING_LIBTIME
+#define LIBTIME_FUNDEF __EXPDEF
+#else /* CONFIG_BUILDING_LIBTIME */
+#define LIBTIME_FUNDEF __IMPDEF
+#endif /* !CONFIG_BUILDING_LIBTIME */
+
+LIBTIME_FUNDEF WUNUSED DREF DeeObject *DCALL
+DeeTime_NewUnix(int64_t seconds_since_01_01_1970,
+                uint32_t extra_nanoseconds);
+#ifdef CONFIG_HOST_WINDOWS
+LIBTIME_FUNDEF WUNUSED DREF DeeObject *DCALL
+DeeTime_NewFILETIME(void const *p_filetime);
+#endif /* CONFIG_HOST_WINDOWS */
+
 #endif /* CONFIG_BUILDING_LIBTIME */
-
-#define time_tick() DeeThread_GetTimeMicroSeconds()
-
-/* Convert between different time formats.
- *   - mic -- Microsecond (Really f-ing short)
- *   - mil -- Millisecond (1000 Microsecond)
- *   - sec -- Second (1000 Millisecond)
- *   - min -- Minute (60 Seconds)
- *   - hor -- Hour (60 Minutes)
- *   - day -- Day (24 Hours)
- *   - wek -- Week (7 Days)
- *   - mon -- Month (28-31 Days)
- *   - yer -- Year (12 Months / 365|366 Days)
- *   - dec -- Decade (10 Years)
- *   - cen -- Century (100 Years)
- *   - mll -- Millennium (1000 Years)
- */
-
-
-#define MICROSECONDS_PER_MILLISECOND UINT64_C(1000)
-#define MILLISECONDS_PER_SECOND      UINT64_C(1000)
-#define SECONDS_PER_MINUTE           UINT64_C(60)
-#define MINUTES_PER_HOUR             UINT64_C(60)
-#define HOURS_PER_DAY                UINT64_C(24)
-#define DAYS_PER_WEEK                UINT64_C(7)
-#define MONTHS_PER_YEAR              UINT64_C(12)
-#define YEARS_PER_DECADE             UINT64_C(10)
-#define DECADES_PER_CENTURY          UINT64_C(10)
-#define CENTURIES_PER_MILLENIUM      UINT64_C(10)
-#define MAX_DAYS_PER_MONTH           31
-#define MAX_DAYS_PER_YEAR            366
-
-#define time_isleapyear(year)   (!((year) % 400) || (((year) % 100) && !((year) % 4)))
-#define time_numleapyears(year) ((((year) / 4) - (((year) / 100) - ((year) / 400))) + 1)
-
-/* NOTE: Converting days <-> years and days <-> months assumes a base of `0'! */
-#define time_day2yer(x)    ((400 * ((x) + 1)) / 146097)
-#define time_yer2day(x)    (((146097 * (x)) / 400) /*-1*/)
-
-
-
-#define NANOSECONDS_PER_MICROSECOND 1000
-
-#define MICROSECONDS_PER_SECOND (MICROSECONDS_PER_MILLISECOND * MILLISECONDS_PER_SECOND)
-#define MICROSECONDS_PER_MINUTE (MICROSECONDS_PER_SECOND * SECONDS_PER_MINUTE)
-#define MICROSECONDS_PER_HOUR   (MICROSECONDS_PER_MINUTE * MINUTES_PER_HOUR)
-#define MICROSECONDS_PER_DAY    (MICROSECONDS_PER_HOUR * HOURS_PER_DAY)
-#define MICROSECONDS_PER_WEEK   (MICROSECONDS_PER_DAY * DAYS_PER_WEEK)
-#define MONTHS_PER_DECADE       (MONTHS_PER_YEAR * YEARS_PER_DECADE)
-#define MONTHS_PER_CENTURY      (MONTHS_PER_DECADE * DECADES_PER_CENTURY)
-#define MONTHS_PER_MILLENIUM    (MONTHS_PER_CENTURY * CENTURIES_PER_MILLENIUM)
-#define YEARS_PER_CENTURY       (YEARS_PER_DECADE * DECADES_PER_CENTURY)
-#define YEARS_PER_MILLENIUM     (YEARS_PER_CENTURY * CENTURIES_PER_MILLENIUM)
-
-/* Given `x' as microseconds from 0, return various interpretations. */
-#define time_get_microseconds(x) (x)
-#define time_get_milliseconds(x) ((x) / MICROSECONDS_PER_MILLISECOND)
-#define time_get_seconds(x)      ((x) / MICROSECONDS_PER_SECOND)
-#define time_get_minutes(x)      ((x) / MICROSECONDS_PER_MINUTE)
-#define time_get_hours(x)        ((x) / MICROSECONDS_PER_HOUR)
-#define time_get_days(x)         ((x) / MICROSECONDS_PER_DAY)
-#define time_get_weeks(x)        ((x) / MICROSECONDS_PER_WEEK)
-#define time_get_months(x)       time_day2mon(time_get_days(x))
-#define time_get_years(x)        time_day2yer(time_get_days(x))
-#define time_get_decades(x)      (time_day2yer(time_get_days(x)) / YEARS_PER_DECADE)
-#define time_get_centuries(x)    (time_day2yer(time_get_days(x)) / YEARS_PER_CENTURY)
-#define time_get_millenia(x)     (time_day2yer(time_get_days(x)) / YEARS_PER_MILLENIUM)
-#define time_set_microseconds(x) (x)
-#define time_set_milliseconds(x) ((x) * MICROSECONDS_PER_MILLISECOND)
-#define time_set_seconds(x)      ((x) * MICROSECONDS_PER_SECOND)
-#define time_set_minutes(x)      ((x) * MICROSECONDS_PER_MINUTE)
-#define time_set_hours(x)        ((x) * MICROSECONDS_PER_HOUR)
-#define time_set_days(x)         ((x) * MICROSECONDS_PER_DAY)
-#define time_set_weeks(x)        ((x) * MICROSECONDS_PER_WEEK)
-#define time_set_months(x)       time_set_days(time_mon2day(x))
-#define time_set_years(x)        time_set_days(time_yer2day(x))
-#define time_set_decades(x)      time_set_days(time_yer2day((x) * YEARS_PER_DECADE)))
-#define time_set_centuries(x)    time_set_days(time_yer2day((x) * YEARS_PER_CENTURY)))
-#define time_set_millenia(x)     time_set_days(time_yer2day((x) * YEARS_PER_MILLENIUM)))
 
 
 DECL_END

@@ -85,7 +85,7 @@ typedef struct ATTR_PACKED {
 	uint32_t e_rootoff;          /* Absolute file-offset of the root code object (`Dec_Code'). */
 	uint32_t e_stroff;           /* Absolute file-offset of the UTF-8 encoded string table. */
 	uint32_t e_strsiz;           /* The absolute length of the string table (in bytes). */
-	uint32_t e_timestamp_lo;     /* In microseconds since `01.01.1970', the point in
+	uint32_t e_timestamp_lo;     /* In microseconds since `01-01-1970', the point in
 	                              * time when this compiled source file was generated.
 	                              * Since DEC files are meant to be used as a shallow
 	                              * cache file that is automatically discarded if the

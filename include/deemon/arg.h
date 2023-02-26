@@ -276,6 +276,10 @@ struct dee_kwargs {
 	DeeObject        *kwa_kw;     /* [0..1] Keyword arguments descriptor / mapping. */
 };
 
+/* Check if there *may* still be more keyword arguments available in `self'. */
+#define DeeKwArgs_MaybeHaveMoreArgs(self) \
+	((self)->kwa_kw && (!DeeKwds_Check((self)->kwa_kw) || ((self)->kwa_kwused < DeeKwds_SIZE((self)->kwa_kw))))
+
 /* Initialize `self' to load keyword arguments.
  * @return: 0 : Success
  * @return: -1: An error was thrown */

@@ -215,12 +215,12 @@ class Synchronized: Callable {
 @@>}
 @@>
 @@>myfunc();
-@@>/* ??? Microseconds */
-@@>print repr myfunc.total.microseconds;
+@@>/* ??? (nanoseconds) */
+@@>print repr myfunc.total.nanoseconds;
 @@>
 @@>myfunc();
-@@>/* ??? Microseconds (about 2x as many; probably less due to CPU caching) */
-@@>print repr myfunc.total.microseconds;
+@@>/* ??? (nanoseconds; about 2x as many; probably less due to CPU caching) */
+@@>print repr myfunc.total.nanoseconds;
 class Timed: Callable {
 	private static member m_libtime: Module;
 	private member m_func: Callable;
@@ -258,7 +258,7 @@ class Timed: Callable {
 
 	@@Get/del (reset)/set the amount of time that has
 	@@already been spent while inside of the function.
-	@@>print myfunc.total.microseconds;
+	@@>print myfunc.total.nanoseconds;
 	property total: Time from time = {
 		get(): Time from time {
 			return m_total_spend;
@@ -273,7 +273,7 @@ do_del_total:
 				del total;
 			} else if (value is int from deemon) {
 				if (!value) goto do_del_total;
-				m_total_spend = m_libtime.makeanon(value);
+				m_total_spend = m_libtime.nanoseconds(value);
 			} else {
 				if (value !is m_libtime.Time)
 					throw Error.TypeError("Expected a Time object");
@@ -284,7 +284,7 @@ do_del_total:
 
 	@@@throw ValueError The function hasn't been called yet
 	@@Get the average time spent while inside of the function
-	@@>print myfunc.average.microseconds;
+	@@>print myfunc.average.nanoseconds;
 	property average: Time from time = {
 		get(): Time from time {
 			try {

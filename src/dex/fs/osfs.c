@@ -2748,16 +2748,19 @@ err:
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 DeeObject_AsFileTime(DeeObject *__restrict lpTime,
                      FILETIME *__restrict lpFileTime) {
+	/* XXX: This function is broken now that `time' uses nano-second precision
+	 *      But that's OK since the `fs' dex will be emulated by `posix' in the
+	 *      future. */
 	uint64_t value;
 	if (DeeObject_AsUInt64(lpTime, &value))
 		goto err;
-	if (value < time_yer2day(1601) * MICROSECONDS_PER_DAY) {
+	if (value < time_year2day(1601) * MICROSECONDS_PER_DAY) {
 		DeeError_Throwf(&DeeError_ValueError,
-		                "Invalid file timestamp %k (must be located after 01.01.1601)",
+		                "Invalid file timestamp %k (must be located after 01-01-1601)",
 		                lpTime);
 		goto err;
 	}
-	value -= time_yer2day(1601) * MICROSECONDS_PER_DAY;
+	value -= time_year2day(1601) * MICROSECONDS_PER_DAY;
 	UNALIGNED_SET64(lpFileTime,
 	                FILETIME_GET64(value *
 	                               (FILETIME_PER_SECONDS /

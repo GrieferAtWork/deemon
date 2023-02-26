@@ -576,6 +576,9 @@
 		<ClInclude Include="..\include\deemon\thread.h">
 			<Filter>include</Filter>
 		</ClInclude>
+		<ClInclude Include="..\include\deemon\time-abi.h">
+			<Filter>include</Filter>
+		</ClInclude>
 		<ClInclude Include="..\include\deemon\traceback.h">
 			<Filter>include</Filter>
 		</ClInclude>

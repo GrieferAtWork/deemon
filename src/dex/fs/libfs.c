@@ -36,8 +36,9 @@
 #include <deemon/map.h>
 #include <deemon/none.h>
 #include <deemon/objmethod.h>
-#include <deemon/system.h>
 #include <deemon/seq.h>
+#include <deemon/system.h>
+#include <deemon/time-abi.h>
 
 DECL_BEGIN
 
@@ -138,38 +139,6 @@ err_src:
 err:
 	return -1;
 }
-
-
-/*[[[deemon (PRIVATE_DEFINE_STRING from rt.gen.string)("str_makeanon", "makeanon");]]]*/
-PRIVATE DEFINE_STRING_EX(str_makeanon, "makeanon", 0x2c680852, 0xee6c933604aac03d);
-/*[[[end]]]*/
-PRIVATE WUNUSED DREF DeeObject *DCALL default_DeeTime_New(uint64_t microseconds) {
-	return DeeObject_CallAttrf(TIME_MODULE,
-	                           (DeeObject *)&str_makeanon,
-	                           "I64u",
-	                           microseconds);
-}
-
-typedef DREF DeeObject *(DCALL *PDEETIME_NEW)(uint64_t microseconds);
-PRIVATE PDEETIME_NEW p_DeeTime_New = NULL;
-
-INTERN WUNUSED DREF DeeObject *DCALL
-DeeTime_New(uint64_t microseconds) {
-	PDEETIME_NEW funp = p_DeeTime_New;
-	if (!funp) {
-		/* Try to lookup the object as a native function pointer. */
-		*(void **)&funp = DeeModule_GetNativeSymbol(TIME_MODULE, "DeeTime_New");
-		/* Not a native dex, the wrong dex, or a user-implemented dex.
-		 * In any case, the specs describe a user-function `makeanon'
-		 * that also does what we need to do. */
-		if (!funp)
-			funp = &default_DeeTime_New;
-		p_DeeTime_New = funp;
-		COMPILER_WRITE_BARRIER();
-	}
-	return (*funp)(microseconds);
-}
-
 
 PRIVATE WUNUSED DREF DeeObject *DCALL env_ctor(void) {
 	return_reference_(&DeeEnv_Singleton);
@@ -938,7 +907,7 @@ local names = {
 	"ISVTX", "IRUSR", "IWUSR", "IXUSR", "IRGRP",
 	"IWGRP", "IXGRP", "IROTH", "IWOTH", "IXOTH"
 };
-import * from rt._dexutils;
+import * from rt.dexutils;
 include("constants.def");
 for (local x: names)
 	gi("S_"+x, "STAT_"+x);

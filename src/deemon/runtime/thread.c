@@ -2001,18 +2001,26 @@ DeeThread_Detach(/*Thread*/ DeeObject *__restrict self) {
  *                    thread after being encapsulated as `Error.ThreadError' objects.
  * @return:  0: Successfully joined the thread and wrote its return value in *pthread_result.
  * @return:  1: The given timeout has expired.
- * @param: timeout_microseconds: The timeout in microseconds, 0 for try-join,
- *                               or (uint64_t)-1 for infinite timeout. */
+ * @param: timeout_nanoseconds: The timeout in microseconds, 0 for try-join,
+ *                              or `(uint64_t)-1' for infinite timeout. */
 PUBLIC WUNUSED NONNULL((1, 2)) int DCALL
 DeeThread_Join(/*Thread*/ DeeObject *__restrict self,
                DREF DeeObject **__restrict pthread_result,
-               uint64_t timeout_microseconds) {
+               uint64_t timeout_nanoseconds) {
+	uint64_t timeout_microseconds;
 	DeeThreadObject *me = (DeeThreadObject *)self;
+	/* TODO: Change this function to use nano-seconds internally! */
+	if (timeout_nanoseconds != (uint64_t)-1) {
+		timeout_microseconds = timeout_nanoseconds / 1000;
+	} else {
+		timeout_microseconds = (uint64_t)-1;
+	}
 	ASSERT_OBJECT_TYPE(self, &DeeThread_Type);
 again:
 	if (!(me->t_state & THREAD_STATE_DIDJOIN)) {
 		uint64_t timeout_end = (uint64_t)-1;
 		uint16_t state, new_flags;
+
 		/* Always set the did-join flag in the end. */
 		new_flags = THREAD_STATE_DIDJOIN;
 		if (timeout_microseconds != (uint64_t)-1) {
@@ -2022,10 +2030,12 @@ again:
 		if (timeout_microseconds != 0 &&
 		    DeeThread_CheckInterrupt())
 			goto err;
+
 		/* Wait for the thread to terminate. */
 		while (atomic_fetchor(&me->t_state, THREAD_STATE_DETACHING) &
 		       THREAD_STATE_DETACHING) {
 			uint64_t now;
+
 			/* Idly wait for another thread also in the process of joining this thread. */
 			if (timeout_microseconds == 0)
 				return 1; /* Timeout */
@@ -2034,12 +2044,15 @@ again:
 			now = DeeThread_GetTimeMicroSeconds();
 			if (now >= timeout_end)
 				return 1; /* Timeout */
+
 			/* Update the remaining timeout. */
 			timeout_microseconds = timeout_end - now;
 		}
+
 		/* Check for case: The thread was joined in the mean time. */
 		if (me->t_state & THREAD_STATE_DIDJOIN)
 			goto done_join;
+
 		/* Check for case: The thread has terminated, but was never ~actually~ detached. */
 		if ((me->t_state & (THREAD_STATE_TERMINATED | THREAD_STATE_DETACHED)) ==
 		    THREAD_STATE_TERMINATED)
@@ -2236,6 +2249,7 @@ done_join:
 relock_state:
 		while (atomic_fetchor(&me->t_state, THREAD_STATE_STARTING) & THREAD_STATE_STARTING)
 			SCHED_YIELD();
+
 		/* In case errors have occurred during execution
 		 * of the thread, package and rethrow those errors. */
 		req_alloc = me->t_exceptsz;
@@ -2246,6 +2260,7 @@ relock_state:
 				if unlikely(!try_alloc_wrappers(&error_frames, &req_alloc)) {
 					current_alloc = total_alloc - req_alloc;
 					atomic_and(&me->t_state, ~THREAD_STATE_STARTING);
+
 					/* Try to collect memory before allocating more wrappers. */
 					do {
 						if (!Dee_CollectMemory(sizeof(struct except_frame))) {
@@ -2296,6 +2311,7 @@ relock_state:
 			}
 			ASSERT(!frame_src);
 			atomic_and(&me->t_state, ~THREAD_STATE_STARTING);
+
 			/* Append the list of new exception to those of the calling thread. */
 			me                 = DeeThread_Self();
 			frame_dst->ef_prev = me->t_except; /* Inherit */
@@ -2308,6 +2324,7 @@ relock_state:
 			result = Dee_None;
 		Dee_Incref(result);
 		atomic_and(&me->t_state, ~THREAD_STATE_STARTING);
+
 		/* Save the thread-result in the caller-provided field. */
 		*pthread_result = result; /* Inherit reference. */
 	}
@@ -2776,7 +2793,7 @@ DeeThread_Detach(/*Thread*/ DeeObject *__restrict UNUSED(self)) {
 PUBLIC WUNUSED NONNULL((1, 2)) int DCALL
 DeeThread_Join(/*Thread*/ DeeObject *__restrict UNUSED(self),
                DREF DeeObject **__restrict UNUSED(pthread_result),
-               uint64_t UNUSED(timeout_microseconds)) {
+               uint64_t UNUSED(timeout_nanoseconds)) {
 	return err_no_thread_api();
 }
 #endif /* CONFIG_NO_THREADS */
@@ -2841,10 +2858,10 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 thread_timedjoin(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	int error;
 	DeeObject *result;
-	uint64_t timeout;
-	if (DeeArg_Unpack(argc, argv, UNPd64 ":timedjoin", &timeout))
+	uint64_t timeout_in_nanoseconds;
+	if (DeeArg_Unpack(argc, argv, UNPd64 ":timedjoin", &timeout_in_nanoseconds))
 		goto err;
-	error = DeeThread_Join(self, &result, timeout);
+	error = DeeThread_Join(self, &result, timeout_in_nanoseconds);
 	if unlikely(error < 0)
 		goto err;
 	if (error == 0)
@@ -3035,11 +3052,11 @@ PRIVATE struct type_method tpconst thread_methods[] = {
 	            "@throw ThreadCrash The error(s) that caused @this thread to crash, encapsulated in a :ThreadCrash error\n"
 	            "Same as ?#join, but don't check for interrupts and fail immediately"),
 	TYPE_METHOD("timedjoin", &thread_timedjoin,
-	            "(timeout_in_microseconds:?Dint)->?T2?Dbool?O\n"
+	            "(timeout_in_nanoseconds:?Dint)->?T2?Dbool?O\n"
 	            "@throw ValueError @this thread was never started\n"
 	            "@throw SystemError Failed to join @this thread for some reason\n"
 	            "@throw ThreadCrash The error(s) that caused @this thread to crash, encapsulated in a :ThreadCrash error\n"
-	            "Same as ?#join, but only attempt to join for a given @timeout_in_microseconds"),
+	            "Same as ?#join, but only attempt to join for a given @timeout_in_nanoseconds"),
 	TYPE_METHOD("interrupt", &thread_interrupt,
 	            "->?Dbool\n"
 	            "(signal)->?Dbool\n"
@@ -3092,7 +3109,7 @@ PRIVATE struct type_method tpconst thread_methods[] = {
 	            "->?T2?Dbool?O\n"
 	            "Old, deprecated name for ?#tryjoin"),
 	TYPE_METHOD("timed_join", &thread_timedjoin,
-	            "(timeout_in_microseconds:?Dint)->?T2?Dbool?O\n"
+	            "(timeout_in_nanoseconds:?Dint)->?T2?Dbool?O\n"
 	            "Old, deprecated name for ?#timedjoin"),
 	TYPE_METHOD("crash_error", &thread_crash_error,
 	            "->?X2?O?N\n"
@@ -3175,10 +3192,13 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 thread_sleep(DeeObject *UNUSED(self),
              size_t argc, DeeObject *const *argv) {
-	uint64_t timeout;
-	if (DeeArg_Unpack(argc, argv, UNPu64 ":sleep", &timeout))
+	uint64_t timeout_micro;
+	Dee_uint128_t timeout_nano;
+	if (DeeArg_Unpack(argc, argv, UNPu128 ":sleep", &timeout_nano))
 		goto err;
-	if (DeeThread_Sleep(timeout))
+	__hybrid_uint128_div16(timeout_nano, UINT16_C(1000));
+	timeout_micro = __hybrid_uint128_get64(timeout_nano);
+	if (DeeThread_Sleep(timeout_micro))
 		goto err;
 	return_none;
 err:
@@ -3238,9 +3258,9 @@ PRIVATE struct type_method tpconst thread_class_methods[] = {
 	            "()\n"
 	            "Willingly preempt execution to another thread or process"),
 	TYPE_METHOD("sleep", &thread_sleep,
-	            "(timeout_in_microseconds:?Dint)\n"
+	            "(timeout_in_nanoseconds:?Dint)\n"
 	            "@interrupt\n"
-	            "Suspending execution for a total of @timeout_in_microseconds"),
+	            "Suspending execution for a total of @timeout_in_nanoseconds"),
 	TYPE_METHOD("exit", &thread_exit,
 	            "(result=!N)\n"
 	            "@throw ThreadExit Always thrown to exit the current thread\n"
@@ -3638,17 +3658,7 @@ PRIVATE struct type_member tpconst thread_members[] = {
 #endif
 
 
-/* A couple of helper macros taken from the libtime DEX. */
-#define time_yer2day(x)     (((146097 * (x)) / 400) /*-1*/)
-#define MICROSECONDS_PER_MILLISECOND UINT64_C(1000)
-#define MILLISECONDS_PER_SECOND      UINT64_C(1000)
-#define SECONDS_PER_MINUTE           UINT64_C(60)
-#define MINUTES_PER_HOUR             UINT64_C(60)
-#define HOURS_PER_DAY                UINT64_C(24)
-#define MICROSECONDS_PER_SECOND (MICROSECONDS_PER_MILLISECOND * MILLISECONDS_PER_SECOND)
-#define MICROSECONDS_PER_MINUTE (MICROSECONDS_PER_SECOND * SECONDS_PER_MINUTE)
-#define MICROSECONDS_PER_HOUR   (MICROSECONDS_PER_MINUTE * MINUTES_PER_HOUR)
-#define MICROSECONDS_PER_DAY    (MICROSECONDS_PER_HOUR * HOURS_PER_DAY)
+#define MICROSECONDS_PER_SECOND UINT32_C(1000000)
 
 #ifdef DeeThread_Sleep_USE_USLEEP
 #ifndef CONFIG_HAVE_useconds_t
@@ -3658,6 +3668,7 @@ PRIVATE struct type_member tpconst thread_members[] = {
 
 /* Sleep for the specified number of microseconds (1/1000000 seconds). */
 PUBLIC WUNUSED int (DCALL DeeThread_Sleep)(uint64_t microseconds) {
+	/* TODO: Change this function to use nano-seconds instead! */
 #ifdef DeeThread_Sleep_USE_SLEEPEX
 	uint64_t end_time;
 	end_time = DeeThread_GetTimeMicroSeconds() + microseconds;
