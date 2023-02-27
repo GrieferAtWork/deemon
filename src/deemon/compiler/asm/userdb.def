@@ -329,7 +329,7 @@ INSTR("op", (
 	O2(ASM16_OPERATOR_TUPLE, FPREFIX | FPUSH,           (IMM16)(POP | FDOTSFLAG))         /* `PREFIX: push op <imm16>, pop...' */
 ))
 
-/* CONSTRAINTS: `op <gl>' */
+/* CONSTRAINTS: `del <gl>' */
 INSTR("del", (
 	O1(ASM_DEL_GLOBAL, FF0, (GLOBAL)) /* `del global <imm8/16>' */
 	O1(ASM_DEL_LOCAL,  FF0, (LOCAL))  /* `del local <imm8/16>' */
@@ -340,7 +340,7 @@ INSTR("del", (
 /* CONSTRAINTS: `swap <p>, <s>' */
 /* CONSTRAINTS: `swap <s>, <p>' */
 INSTR("swap", (
-	O0(ASM_SWAP, FNORMAL)                                  /* swap */
+	O0(ASM_SWAP, FNORMAL)                                   /* swap */
 	/* All the different spellings for `swap FIRST, SECOND' and `swap SECOND, FIRST' */
 	O2(ASM_SWAP, FNORMAL, (SPSUBIMM_EQ_2)(TOP))             /* swap #SP - 2, top */
 	O2(ASM_SWAP, FNORMAL, (SPADDIMM_EQ_N2)(TOP))            /* swap #SP + -2, top */

@@ -2040,7 +2040,7 @@ PRIVATE struct type_getset tpconst time_getsets[] = {
 	TYPE_GETSET("part", &time_datepart_get, &time_datepart_del, &time_datepart_set,
 	            "->?GTime\nDeprecated alias for ?#datepart"),
 #define DEFINE_DEPRECATED_TIME_AS(name, alias_for) \
-	TYPE_GETSET(#name, &time_getval_##alias_for, &time_delval_##alias_for, &time_setval_##alias_for, "->?Dint\nDeprecated alias for ?#" #alias_for)
+	TYPE_GETSET(name, &time_getval_##alias_for, &time_delval_##alias_for, &time_setval_##alias_for, "->?Dint\nDeprecated alias for ?#" #alias_for)
 	DEFINE_DEPRECATED_TIME_AS("mic", microsecond),
 	DEFINE_DEPRECATED_TIME_AS("mil", millisecond),
 	DEFINE_DEPRECATED_TIME_AS("sec", second),
@@ -3049,7 +3049,7 @@ time_init_kw(DeeTimeObject *__restrict self,
 		goto err;
 #define IF_LOADARG(i, name)                                                \
 	if ((error = time_init_getarg(&kwds, argc, argv, i, name, &arg)) <= 0) \
-		if unlikely (error < 0)                                            \
+		if unlikely(error < 0)                                             \
 			goto err;                                                      \
 		else
 	self->t_typekind = TIME_TYPEKIND(TIME_TYPE_NANOSECONDS, TIME_KIND_INVALID);
@@ -3307,7 +3307,7 @@ INTERN DeeTypeObject DeeTime_Type = {
 	                         ",seconds?:?Dint,minutes?:?Dint,hours?:?Dint,days?:?Dint,weeks?:?Dint,months?:?Dint"
 	                         ",years?:?Dint,decades?:?Dint,centuries?:?Dint,millennia?:?Dint"
 	                         ",year?:?Dint,month?:?Dint,day?:?Dint,hour?:?Dint,minute?:?Dint,second?:?Dint,nanosecond?:?Dint"
-	                         ",time_t?:?Dint))\n"
+	                         ",time_t?:?Dint)\n"
 	                         "Construct a new time object from the given arguments.\n"
 	                         "Arguments whose names are singular can be used to construct a timestamp for a "
 	                         /**/ "specific point in time (in this case, the time object is a ?#istimestamp). @time_t "
@@ -3471,18 +3471,18 @@ PRIVATE struct dex_symbol symbols[] = {
 	      "the return value as an integer") },
 	{ "maketime", (DeeObject *)&libtime_maketime, MODSYM_FNORMAL,
 	  DOC("(hour=!0,minute=!0,second=!0,nanosecond=!0)->?GTime\n"
-	      "Construct a new :time object using the given arguments for the "
+	      "Construct a new ?GTime object using the given arguments for the "
 	      "sub-day portion, while filling in the remainder as all zeroes:\n"
 	      "${"
-	      "import Time from time;"
-	      "Time(hour: hour, minute: minute, second: second, nanosecond: nanosecond);"
+	      /**/ "import Time from time;\n"
+	      /**/ "Time(hour: hour, minute: minute, second: second, nanosecond: nanosecond);"
 	      "}") },
 	{ "makedate", (DeeObject *)&libtime_makedate, MODSYM_FNORMAL,
 	  DOC("(year=!0,month=!0,day=!0)->?GTime\n"
-	      "Construct a new :time object using the given arguments for the "
+	      "Construct a new ?GTime object using the given arguments for the "
 	      "post-day portion, while filling in the remainder as all zeroes:\n"
 	      "${"
-	      /**/ "import Time from time;"
+	      /**/ "import Time from time;\n"
 	      /**/ "Time(year: year, month: month, day: day);"
 	      "}") },
 
