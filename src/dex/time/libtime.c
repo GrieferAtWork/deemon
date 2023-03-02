@@ -1596,7 +1596,7 @@ print_number_2:
 						if (__hybrid_int128_is8bit(number)) {
 							int8_t value = __hybrid_int128_get8(number);
 							if (value < 0)
-								value = -1;
+								value = -value;
 							if (value >= 1 && value <= 3)
 								suffix_offset = (uint8_t)value * 3;
 						}

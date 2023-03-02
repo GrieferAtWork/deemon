@@ -666,7 +666,7 @@ ml64.exe /c /Cx /Fo "$(IntermediateOutputPath)\src-deemon-execute-asm-altstack.m
 			<RuntimeTypeInfo>false</RuntimeTypeInfo>
 			<StringPooling>true</StringPooling>
 			<MultiProcessorCompilation>true</MultiProcessorCompilation>
-			<PreprocessorDefinitions>CONFIG_BUILDING_DEEMON;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+			<PreprocessorDefinitions>CONFIG_BUILDING_DEEMON;__NO_INLINE__;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
 			<FavorSizeOrSpeed>Neither</FavorSizeOrSpeed>
 			<InlineFunctionExpansion>Disabled</InlineFunctionExpansion>
 			<WholeProgramOptimization>false</WholeProgramOptimization>
@@ -696,7 +696,7 @@ ml64.exe /c /Cx /Fo "$(IntermediateOutputPath)\src-deemon-execute-asm-altstack.m
 			<RuntimeTypeInfo>false</RuntimeTypeInfo>
 			<StringPooling>true</StringPooling>
 			<MultiProcessorCompilation>true</MultiProcessorCompilation>
-			<PreprocessorDefinitions>CONFIG_BUILDING_DEEMON;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+			<PreprocessorDefinitions>CONFIG_BUILDING_DEEMON;__NO_INLINE__;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
 			<FavorSizeOrSpeed>Neither</FavorSizeOrSpeed>
 			<InlineFunctionExpansion>Disabled</InlineFunctionExpansion>
 			<WholeProgramOptimization>false</WholeProgramOptimization>
@@ -725,7 +725,7 @@ ml64.exe /c /Cx /Fo "$(IntermediateOutputPath)\src-deemon-execute-asm-altstack.m
 			<RuntimeTypeInfo>false</RuntimeTypeInfo>
 			<StringPooling>true</StringPooling>
 			<MultiProcessorCompilation>true</MultiProcessorCompilation>
-			<PreprocessorDefinitions>CONFIG_BUILDING_DEEMON;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+			<PreprocessorDefinitions>CONFIG_BUILDING_DEEMON;__NO_INLINE__;%(PreprocessorDefinitions)</PreprocessorDefinitions>
 			<FavorSizeOrSpeed>Neither</FavorSizeOrSpeed>
 			<InlineFunctionExpansion>Disabled</InlineFunctionExpansion>
 			<WholeProgramOptimization>false</WholeProgramOptimization>
@@ -755,7 +755,7 @@ ml64.exe /c /Cx /Fo "$(IntermediateOutputPath)\src-deemon-execute-asm-altstack.m
 			<RuntimeTypeInfo>false</RuntimeTypeInfo>
 			<StringPooling>true</StringPooling>
 			<MultiProcessorCompilation>true</MultiProcessorCompilation>
-			<PreprocessorDefinitions>CONFIG_BUILDING_DEEMON;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+			<PreprocessorDefinitions>CONFIG_BUILDING_DEEMON;__NO_INLINE__;%(PreprocessorDefinitions)</PreprocessorDefinitions>
 			<FavorSizeOrSpeed>Neither</FavorSizeOrSpeed>
 			<InlineFunctionExpansion>Disabled</InlineFunctionExpansion>
 			<WholeProgramOptimization>false</WholeProgramOptimization>
@@ -784,7 +784,7 @@ ml64.exe /c /Cx /Fo "$(IntermediateOutputPath)\src-deemon-execute-asm-altstack.m
 			<RuntimeTypeInfo>false</RuntimeTypeInfo>
 			<StringPooling>true</StringPooling>
 			<MultiProcessorCompilation>true</MultiProcessorCompilation>
-			<PreprocessorDefinitions>CONFIG_BUILDING_DEEMON;NDEBUG;__OPTIMIZE__;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+			<PreprocessorDefinitions>CONFIG_BUILDING_DEEMON;__OPTIMIZE__;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
 			<FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
 			<InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
 			<WholeProgramOptimization>true</WholeProgramOptimization>
@@ -812,7 +812,7 @@ ml64.exe /c /Cx /Fo "$(IntermediateOutputPath)\src-deemon-execute-asm-altstack.m
 			<RuntimeTypeInfo>false</RuntimeTypeInfo>
 			<StringPooling>true</StringPooling>
 			<MultiProcessorCompilation>true</MultiProcessorCompilation>
-			<PreprocessorDefinitions>CONFIG_BUILDING_DEEMON;NDEBUG;__OPTIMIZE__;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+			<PreprocessorDefinitions>CONFIG_BUILDING_DEEMON;__OPTIMIZE__;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
 			<FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
 			<InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
 			<WholeProgramOptimization>true</WholeProgramOptimization>

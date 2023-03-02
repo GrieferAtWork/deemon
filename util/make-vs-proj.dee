@@ -100,7 +100,7 @@ global final CONFIGURATIONS: {Configuration...} = {
 		BufferSecurityCheck: true,
 		BasicRuntimeChecks: "EnableFastChecks"),
 	Configuration(name: "Release-MSVC (NDEBUG)",
-		PreprocessorDefinitions: { "__OPTIMIZE__" : "1", "NDEBUG" : "1" },
+		PreprocessorDefinitions: { "NDEBUG" : "1" },
 		InlineFunctionExpansion: "AnySuitable",
 		WholeProgramOptimization: true,
 		RuntimeLibrary: "MultiThreadedDLL",
@@ -108,7 +108,6 @@ global final CONFIGURATIONS: {Configuration...} = {
 		Optimization: "MaxSpeed",
 		EnableCOMDATFolding: true),
 	Configuration(name: "Release-MSVC",
-		PreprocessorDefinitions: { "__OPTIMIZE__" : "1" },
 		InlineFunctionExpansion: "AnySuitable",
 		WholeProgramOptimization: true,
 		RuntimeLibrary: "MultiThreadedDLL",
@@ -431,6 +430,12 @@ function printVcxprojItemDefinitionGroups(fp: File, forDex: bool,
 			local extraPreprocessorStrings = forDex
 				? "CONFIG_BUILDING_DEX;"
 				: "CONFIG_BUILDING_DEEMON;";
+			if (configuration.InlineFunctionExpansion == "Disabled")
+				extraPreprocessorStrings += "__NO_INLINE__;";
+			if (configuration.FavorSizeOrSpeed == "Size")
+				extraPreprocessorStrings += "__OPTIMIZE_SIZE__;";
+			if (configuration.FavorSizeOrSpeed != "Neither")
+				extraPreprocessorStrings += "__OPTIMIZE__;";
 			for (local name, val: configuration.PreprocessorDefinitions.sorted()) {
 				if (val != "1")
 					name = f"{name}={val}";

@@ -5,8 +5,8 @@
 
 shopt -s extglob
 
-BLD_ROOT="$(readlink -f $(pwd))"
-SRC_ROOT="$(dirname $(readlink -f "$0"))"
+BLD_ROOT="$(readlink -f "$(pwd)")"
+SRC_ROOT="$(dirname "$(readlink -f "$0")")"
 BIN_PATH=""
 BLD_PATH=""
 
@@ -273,7 +273,6 @@ print_help_features() {
 	echo "                               to be used when 'DEEMON_PATH' isn't set at runtime. This feature"
 	echo "                               takes a ;-seperated list of absolute paths that will be hard-coded"
 	echo "                               into the deemon core."
-	echo "                               Note that when building for cygwin, this must be a windows-style path!"
 	echo "                             with:    --config=CONFIG_DEEMON_PATH=..."
 	echo "                             without: -"
 }

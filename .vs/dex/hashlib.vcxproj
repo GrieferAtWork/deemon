@@ -314,7 +314,7 @@
 			<RuntimeTypeInfo>false</RuntimeTypeInfo>
 			<StringPooling>true</StringPooling>
 			<MultiProcessorCompilation>true</MultiProcessorCompilation>
-			<PreprocessorDefinitions>CONFIG_BUILDING_DEX;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+			<PreprocessorDefinitions>CONFIG_BUILDING_DEX;__NO_INLINE__;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
 			<FavorSizeOrSpeed>Neither</FavorSizeOrSpeed>
 			<InlineFunctionExpansion>Disabled</InlineFunctionExpansion>
 			<WholeProgramOptimization>false</WholeProgramOptimization>
@@ -343,7 +343,7 @@
 			<RuntimeTypeInfo>false</RuntimeTypeInfo>
 			<StringPooling>true</StringPooling>
 			<MultiProcessorCompilation>true</MultiProcessorCompilation>
-			<PreprocessorDefinitions>CONFIG_BUILDING_DEX;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+			<PreprocessorDefinitions>CONFIG_BUILDING_DEX;__NO_INLINE__;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
 			<FavorSizeOrSpeed>Neither</FavorSizeOrSpeed>
 			<InlineFunctionExpansion>Disabled</InlineFunctionExpansion>
 			<WholeProgramOptimization>false</WholeProgramOptimization>
@@ -372,7 +372,7 @@
 			<RuntimeTypeInfo>false</RuntimeTypeInfo>
 			<StringPooling>true</StringPooling>
 			<MultiProcessorCompilation>true</MultiProcessorCompilation>
-			<PreprocessorDefinitions>CONFIG_BUILDING_DEX;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+			<PreprocessorDefinitions>CONFIG_BUILDING_DEX;__NO_INLINE__;%(PreprocessorDefinitions)</PreprocessorDefinitions>
 			<FavorSizeOrSpeed>Neither</FavorSizeOrSpeed>
 			<InlineFunctionExpansion>Disabled</InlineFunctionExpansion>
 			<WholeProgramOptimization>false</WholeProgramOptimization>
@@ -401,7 +401,7 @@
 			<RuntimeTypeInfo>false</RuntimeTypeInfo>
 			<StringPooling>true</StringPooling>
 			<MultiProcessorCompilation>true</MultiProcessorCompilation>
-			<PreprocessorDefinitions>CONFIG_BUILDING_DEX;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+			<PreprocessorDefinitions>CONFIG_BUILDING_DEX;__NO_INLINE__;%(PreprocessorDefinitions)</PreprocessorDefinitions>
 			<FavorSizeOrSpeed>Neither</FavorSizeOrSpeed>
 			<InlineFunctionExpansion>Disabled</InlineFunctionExpansion>
 			<WholeProgramOptimization>false</WholeProgramOptimization>
@@ -430,7 +430,7 @@
 			<RuntimeTypeInfo>false</RuntimeTypeInfo>
 			<StringPooling>true</StringPooling>
 			<MultiProcessorCompilation>true</MultiProcessorCompilation>
-			<PreprocessorDefinitions>CONFIG_BUILDING_DEX;NDEBUG;__OPTIMIZE__;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+			<PreprocessorDefinitions>CONFIG_BUILDING_DEX;__OPTIMIZE__;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
 			<FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
 			<InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
 			<WholeProgramOptimization>true</WholeProgramOptimization>
@@ -457,7 +457,7 @@
 			<RuntimeTypeInfo>false</RuntimeTypeInfo>
 			<StringPooling>true</StringPooling>
 			<MultiProcessorCompilation>true</MultiProcessorCompilation>
-			<PreprocessorDefinitions>CONFIG_BUILDING_DEX;NDEBUG;__OPTIMIZE__;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+			<PreprocessorDefinitions>CONFIG_BUILDING_DEX;__OPTIMIZE__;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
 			<FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
 			<InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
 			<WholeProgramOptimization>true</WholeProgramOptimization>
