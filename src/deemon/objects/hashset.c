@@ -1814,7 +1814,7 @@ set_set_maxloadfactor(DeeObject *UNUSED(self),
 
 INTDEF struct type_getset tpconst hashset_getsets[];
 INTERN_TPCONST struct type_getset tpconst hashset_getsets[] = {
-	TYPE_GETTER("frozen", &DeeRoSet_FromSequence,
+	TYPE_GETTER(STR_frozen, &DeeRoSet_FromSequence,
 	            "->?Ert:RoSet\n"
 	            "Returns a read-only (frozen) copy of @this HashSet"),
 #ifndef CONFIG_NO_DEEMON_100_COMPAT

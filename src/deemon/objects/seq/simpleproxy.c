@@ -109,6 +109,35 @@ proxy_size(SeqSimpleProxy *__restrict self) {
 	return DeeObject_SizeObject(self->sp_seq);
 }
 
+PRIVATE WUNUSED NONNULL((1)) DREF SeqSimpleProxy *DCALL
+proxy_get_frozen(SeqSimpleProxy *__restrict self) {
+	DREF DeeObject *inner_frozen;
+	DREF SeqSimpleProxy *result;
+	inner_frozen = DeeObject_GetAttr(self->sp_seq, (DeeObject *)&str_frozen);
+	if unlikely(!inner_frozen)
+		goto err;
+	if (inner_frozen == self->sp_seq) {
+		Dee_DecrefNokill(inner_frozen);
+		return_reference_(self);
+	}
+	result = DeeObject_MALLOC(SeqSimpleProxy);
+	if unlikely(!result)
+		goto err_inner;
+	result->sp_seq = inner_frozen; /* Inherit reference */
+	DeeObject_Init(result, Dee_TYPE(self));
+done:
+	return result;
+err_inner:
+	Dee_Decref(inner_frozen);
+err:
+	return NULL;
+}
+
+PRIVATE struct type_getset tpconst proxy_getsets[] = {
+	TYPE_GETTER(STR_frozen, &proxy_get_frozen, "->?."),
+	TYPE_GETSET_END
+};
+
 PRIVATE struct type_member tpconst proxy_members[] = {
 	TYPE_MEMBER_FIELD_DOC("__seq__", STRUCT_OBJECT, offsetof(SeqSimpleProxy, sp_seq), "->?DSequence"),
 	TYPE_MEMBER_END
@@ -543,16 +572,19 @@ PRIVATE struct type_seq classes_seq = {
 
 PRIVATE struct type_member tpconst ids_class_members[] = {
 	TYPE_MEMBER_CONST(STR_Iterator, &SeqIdsIterator_Type),
+	TYPE_MEMBER_CONST("Frozen", &SeqIds_Type),
 	TYPE_MEMBER_END
 };
 
 PRIVATE struct type_member tpconst types_class_members[] = {
 	TYPE_MEMBER_CONST(STR_Iterator, &SeqTypesIterator_Type),
+	TYPE_MEMBER_CONST("Frozen", &SeqTypes_Type),
 	TYPE_MEMBER_END
 };
 
 PRIVATE struct type_member tpconst classes_class_members[] = {
 	TYPE_MEMBER_CONST(STR_Iterator, &SeqClassesIterator_Type),
+	TYPE_MEMBER_CONST("Frozen", &SeqClasses_Type),
 	TYPE_MEMBER_END
 };
 
@@ -594,7 +626,7 @@ INTERN DeeTypeObject SeqIds_Type = {
 	/* .tp_with          = */ NULL,
 	/* .tp_buffer        = */ NULL,
 	/* .tp_methods       = */ NULL,
-	/* .tp_getsets       = */ NULL,
+	/* .tp_getsets       = */ proxy_getsets,
 	/* .tp_members       = */ proxy_members,
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,
@@ -639,7 +671,7 @@ INTERN DeeTypeObject SeqTypes_Type = {
 	/* .tp_with          = */ NULL,
 	/* .tp_buffer        = */ NULL,
 	/* .tp_methods       = */ NULL,
-	/* .tp_getsets       = */ NULL,
+	/* .tp_getsets       = */ proxy_getsets,
 	/* .tp_members       = */ proxy_members,
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,
@@ -684,7 +716,7 @@ INTERN DeeTypeObject SeqClasses_Type = {
 	/* .tp_with          = */ NULL,
 	/* .tp_buffer        = */ NULL,
 	/* .tp_methods       = */ NULL,
-	/* .tp_getsets       = */ NULL,
+	/* .tp_getsets       = */ proxy_getsets,
 	/* .tp_members       = */ proxy_members,
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,

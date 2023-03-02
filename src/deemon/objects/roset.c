@@ -552,7 +552,7 @@ PRIVATE struct type_method tpconst roset_methods[] = {
 };
 
 PRIVATE struct type_getset tpconst roset_getsets[] = {
-	TYPE_GETTER("frozen", &DeeObject_NewRef, "->?."),
+	TYPE_GETTER(STR_frozen, &DeeObject_NewRef, "->?."),
 	TYPE_GETTER("__sizeof__", &roset_sizeof, "->?Dint"),
 	TYPE_GETSET_END
 };

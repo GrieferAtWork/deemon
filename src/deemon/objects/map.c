@@ -1343,7 +1343,7 @@ PRIVATE struct type_getset tpconst map_getsets[] = {
 	            "Note that the returned object doesn't implement the ?DSequence- or ?DMapping "
 	            /**/ "interfaces, but instead simply behaves like a completely generic object.\n"
 	            "This attribute only makes sense if @this mapping behaves like ${{string: Object}}."),
-	TYPE_GETTER("frozen", &DeeRoDict_FromSequence,
+	TYPE_GETTER(STR_frozen, &DeeRoDict_FromSequence,
 	            "->?DMapping\n"
 	            "Returns a read-only (frozen) copy of @this Mapping"),
 	TYPE_GETSET_END
@@ -1434,10 +1434,10 @@ PUBLIC DeeTypeObject DeeMapping_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ DeeString_STR(&str_Mapping),
 	/* .tp_doc      = */ DOC("A recommended abstract base class for any Mapping "
-	                         "type that wishes to implement a key-value protocol\n"
+	                         /**/ "type that wishes to implement a key-value protocol\n"
 	                         "An object derived from this class must implement ${operator iter}, "
 	                         /**/ "and preferrably (but optionally) or ${operator []} (getitem)\n"
-	                         /**/ "The abstract declaration of a mapping-like sequence is ${{{object, object}...}}\n"
+	                         "The abstract declaration of a mapping-like sequence is ${{{object, object}...}}\n"
 	                         "\n"
 
 	                         "()\n"

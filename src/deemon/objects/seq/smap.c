@@ -642,8 +642,14 @@ PRIVATE struct type_seq smap_seq = {
 	/* .tp_nsi       = */ &smap_nsi
 };
 
+PRIVATE struct type_getset tpconst smap_getsets[] = {
+	TYPE_GETTER("frozen", &DeeObject_NewRef, "->?."),
+	TYPE_GETSET_END
+};
+
 PRIVATE struct type_member tpconst smap_class_members[] = {
 	TYPE_MEMBER_CONST(STR_Iterator, &SharedMapIterator_Type),
+	TYPE_MEMBER_CONST("Frozen", &SharedMap_Type),
 	TYPE_MEMBER_END
 };
 
@@ -694,7 +700,7 @@ INTERN DeeTypeObject SharedMap_Type = {
 	/* .tp_with          = */ NULL,
 	/* .tp_buffer        = */ NULL,
 	/* .tp_methods       = */ smap_methods,
-	/* .tp_getsets       = */ NULL,
+	/* .tp_getsets       = */ smap_getsets,
 	/* .tp_members       = */ NULL,
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,

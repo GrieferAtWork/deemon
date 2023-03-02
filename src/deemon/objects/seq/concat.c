@@ -29,9 +29,10 @@
 #include <deemon/object.h>
 #include <deemon/seq.h>
 #include <deemon/string.h>
+#include <deemon/system-features.h>
 #include <deemon/tuple.h>
-#include <deemon/util/lock.h>
 #include <deemon/util/atomic.h>
+#include <deemon/util/lock.h>
 
 #include <hybrid/overflow.h>
 
@@ -430,19 +431,63 @@ err_r:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-cat_getsequences(Cat *__restrict self) {
+cat_get_sequences(Cat *__restrict self) {
 	return DeeRefVector_NewReadonly((DeeObject *)self,
 	                                DeeTuple_SIZE(self),
 	                                DeeTuple_ELEM(self));
 }
 
+PRIVATE WUNUSED NONNULL((1)) DREF Cat *DCALL
+cat_get_frozen(Cat *__restrict self) {
+	size_t i;
+	DREF Cat *result;
+
+	/* Recursively freeze all referenced sequences. */
+	result = (DREF Cat *)DeeTuple_NewUninitialized(self->t_size);
+	if unlikely(!result)
+		goto err;
+	for (i = 0; i < self->t_size; ++i) {
+		DREF DeeObject *inner_frozen;
+		inner_frozen = DeeObject_GetAttr(self->t_elem[i], (DeeObject *)&str_frozen);
+		if unlikely(!inner_frozen)
+			goto err_r_i;
+		result->t_elem[i] = inner_frozen;
+	}
+
+	/* Check for special case: the frozen variants of all inner sequences
+	 * are identical to the non-frozen versions (by-id). In this case, we
+	 * don't need to actually copy `self', but can simply re-return the
+	 * original cat-object! */
+	if (bcmpc(result->t_elem, self->t_elem,
+	          result->t_size, sizeof(DREF DeeObject *)) == 0) {
+		for (i = 0; i < result->t_size; ++i)
+			Dee_DecrefNokill(result->t_elem[i]);
+		DeeTuple_FreeUninitialized((DeeObject *)result);
+		return_reference_(self);
+	}
+
+	/* Fix the resulting object type. */
+	ASSERT(result->ob_type == &DeeTuple_Type);
+	Dee_DecrefNokill(&DeeTuple_Type);
+	Dee_Incref(&SeqConcat_Type);
+	result->ob_type = &SeqConcat_Type;
+	return result;
+err_r_i:
+	Dee_Decrefv(result->t_elem, i);
+	DeeTuple_FreeUninitialized((DeeObject *)result);
+err:
+	return NULL;
+}
+
 PRIVATE struct type_getset tpconst cat_getsets[] = {
-	TYPE_GETTER("__sequences__", &cat_getsequences, "->?S?DSequence"),
+	TYPE_GETTER("__sequences__", &cat_get_sequences, "->?S?DSequence"),
+	TYPE_GETTER(STR_frozen, &cat_get_frozen, "->?."),
 	TYPE_GETSET_END
 };
 
 PRIVATE struct type_member tpconst cat_class_members[] = {
 	TYPE_MEMBER_CONST(STR_Iterator, &SeqConcatIterator_Type),
+	TYPE_MEMBER_CONST("Frozen", &SeqConcat_Type),
 	TYPE_MEMBER_END
 };
 

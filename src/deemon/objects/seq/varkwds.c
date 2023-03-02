@@ -805,8 +805,14 @@ PRIVATE struct type_seq blv_seq = {
 	/* .tp_nsi       = */ &blv_nsi
 };
 
+PRIVATE struct type_getset tpconst blv_getsets[] = {
+	TYPE_GETTER(STR_frozen, &DeeObject_NewRef, "->?."),
+	TYPE_GETSET_END
+};
+
 PRIVATE struct type_member tpconst blv_class_members[] = {
 	TYPE_MEMBER_CONST(STR_Iterator, &BlackListVarkwdsIterator_Type),
+	TYPE_MEMBER_CONST("Frozen", &BlackListVarkwds_Type),
 	TYPE_MEMBER_END
 };
 
@@ -935,7 +941,7 @@ INTERN DeeTypeObject BlackListVarkwds_Type = {
 	/* .tp_with          = */ NULL,
 	/* .tp_buffer        = */ NULL,
 	/* .tp_methods       = */ NULL,
-	/* .tp_getsets       = */ NULL,
+	/* .tp_getsets       = */ blv_getsets,
 	/* .tp_members       = */ NULL,
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,
@@ -1655,25 +1661,25 @@ PRIVATE struct type_seq blm_seq = {
 	/* .tp_nsi       = */ &blm_nsi
 };
 
-PRIVATE struct type_member tpconst blm_class_members[] = {
-	TYPE_MEMBER_CONST(STR_Iterator, &BlackListMappingIterator_Type),
-	TYPE_MEMBER_END
-};
-
-
 PRIVATE WUNUSED NONNULL((1)) DREF BlackListMapping *DCALL
 blm_copy(BlackListMapping *__restrict self) {
+	DREF DeeObject *result_kw;
 	DREF BlackListMapping *result;
+	/* Create a copy of the original keywords, since we're acting as a proxy. */
+	result_kw = DeeObject_Copy(self->bm_kw);
+	if unlikely(!result_kw)
+		goto err;
+	if (result_kw == self->bm_kw) {
+		Dee_DecrefNokill(result_kw);
+		return_reference_(self);
+	}
+
 	result = (DREF BlackListMapping *)DeeObject_Malloc(offsetof(BlackListMapping, bm_blck) +
 	                                                   (self->bm_mask + 1) *
 	                                                   sizeof(BlackListVarkwdsEntry));
 	if unlikely(!result)
-		goto done;
-
-	/* Create a copy of the original keywords, since we're acting as a proxy. */
-	result->bm_kw = DeeObject_Copy(self->bm_kw);
-	if unlikely(!result->bm_kw)
-		goto err_r;
+		goto err_result_kw;
+	result->bm_kw = result_kw; /* Inherit reference */
 	rwlock_init(&result->bm_lock);
 	result->bm_code = self->bm_code;
 	Dee_Incref(result->bm_code);
@@ -1688,10 +1694,10 @@ blm_copy(BlackListMapping *__restrict self) {
 	        sizeof(BlackListVarkwdsEntry));
 	rwlock_endread(&self->bm_lock);
 	DeeObject_Init(result, &BlackListMapping_Type);
-done:
 	return result;
-err_r:
-	DeeObject_Free(result);
+err_result_kw:
+	Dee_Decref(result_kw);
+err:
 	return NULL;
 }
 
@@ -1727,6 +1733,56 @@ err_r:
 	return NULL;
 }
 
+
+PRIVATE WUNUSED NONNULL((1)) DREF BlackListMapping *DCALL
+blm_get_frozen(BlackListMapping *__restrict self) {
+	DREF DeeObject *frozen_kw;
+	DREF BlackListMapping *result;
+	frozen_kw = DeeObject_GetAttr(self->bm_kw, (DeeObject *)&str_frozen);
+	if unlikely(!frozen_kw)
+		goto err;
+	if (frozen_kw == self->bm_kw) {
+		Dee_DecrefNokill(frozen_kw);
+		return_reference_(self);
+	}
+
+	result = (DREF BlackListMapping *)DeeObject_Malloc(offsetof(BlackListMapping, bm_blck) +
+	                                                   (self->bm_mask + 1) *
+	                                                   sizeof(BlackListVarkwdsEntry));
+	if unlikely(!result)
+		goto err_frozen_kw;
+
+	result->bm_kw = frozen_kw; /* Inherit reference */
+	rwlock_init(&result->bm_lock);
+	result->bm_code = self->bm_code;
+	Dee_Incref(result->bm_code);
+	result->bm_ckwc = self->bm_ckwc;
+	result->bm_ckwv = self->bm_ckwv;
+	result->bm_mask = self->bm_mask;
+	rwlock_read(&self->bm_lock);
+	result->bm_load = self->bm_load;
+	memcpyc(result->bm_blck,
+	        self->bm_blck,
+	        result->bm_mask + 1,
+	        sizeof(BlackListVarkwdsEntry));
+	rwlock_endread(&self->bm_lock);
+	DeeObject_Init(result, &BlackListMapping_Type);
+	return result;
+err_frozen_kw:
+	Dee_Decref(frozen_kw);
+err:
+	return NULL;
+}
+
+PRIVATE struct type_getset tpconst blm_getsets[] = {
+	TYPE_GETTER(STR_frozen, &blm_get_frozen, "->?."),
+	TYPE_GETSET_END
+};
+
+PRIVATE struct type_member tpconst blm_class_members[] = {
+	TYPE_MEMBER_CONST(STR_Iterator, &BlackListMappingIterator_Type),
+	TYPE_MEMBER_END
+};
 
 INTERN DeeTypeObject BlackListMapping_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
@@ -1767,7 +1823,7 @@ INTERN DeeTypeObject BlackListMapping_Type = {
 	/* .tp_with          = */ NULL,
 	/* .tp_buffer        = */ NULL,
 	/* .tp_methods       = */ NULL,
-	/* .tp_getsets       = */ NULL,
+	/* .tp_getsets       = */ blm_getsets,
 	/* .tp_members       = */ NULL,
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,

@@ -120,10 +120,12 @@ again:
 	result = DeeObject_IterNext(self->fi_iter);
 	if unlikely(!ITER_ISOK(result))
 		goto done;
+
 	/* Invoke the predicate for the discovered element. */
 	pred_result = DeeObject_Call(self->fi_func, 1, &result);
 	if unlikely(!pred_result)
 		goto err_r;
+
 	/* Cast the filter's return value to a boolean. */
 	pred_bool = DeeObject_Bool(pred_result);
 	Dee_Decref(pred_result);
@@ -146,14 +148,14 @@ filteriterator_hash(FilterIterator *__restrict self) {
 	       DeeObject_Hash(self->fi_func);
 }
 
-#define DEFINE_FILTERITERATOR_COMPARE(name, compare_object)                         \
-	PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL                           \
-	name(FilterIterator *self, FilterIterator *other) {                             \
+#define DEFINE_FILTERITERATOR_COMPARE(name, compare_object)            \
+	PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL              \
+	name(FilterIterator *self, FilterIterator *other) {                \
 		if (DeeObject_AssertTypeExact(other, &SeqFilterIterator_Type)) \
-			goto err;                                                               \
-		return compare_object(self->fi_iter, other->fi_iter);                       \
-	err:                                                                            \
-		return NULL;                                                                \
+			goto err;                                                  \
+		return compare_object(self->fi_iter, other->fi_iter);          \
+	err:                                                               \
+		return NULL;                                                   \
 	}
 DEFINE_FILTERITERATOR_COMPARE(filteriterator_eq, DeeObject_CompareEqObject)
 DEFINE_FILTERITERATOR_COMPARE(filteriterator_ne, DeeObject_CompareNeObject)

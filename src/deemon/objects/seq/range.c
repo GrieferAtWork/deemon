@@ -947,7 +947,6 @@ PRIVATE struct type_seq range_seq = {
 	/* .tp_nsi       = */ NULL /* TODO */
 };
 
-
 PRIVATE struct type_member tpconst range_members[] = {
 	TYPE_MEMBER_FIELD("start", STRUCT_OBJECT, offsetof(Range, r_start)),
 	TYPE_MEMBER_FIELD("end", STRUCT_OBJECT, offsetof(Range, r_end)),
@@ -956,8 +955,14 @@ PRIVATE struct type_member tpconst range_members[] = {
 	TYPE_MEMBER_END
 };
 
+PRIVATE struct type_getset tpconst range_getsets[] = {
+	TYPE_GETTER(STR_frozen, &DeeObject_NewRef, "->?."),
+	TYPE_GETSET_END
+};
+
 PRIVATE struct type_member tpconst range_class_members[] = {
 	TYPE_MEMBER_CONST(STR_Iterator, &SeqRangeIterator_Type),
+	TYPE_MEMBER_CONST("Frozen", &SeqRange_Type),
 	TYPE_MEMBER_END
 };
 
@@ -1026,7 +1031,7 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 range_init(Range *__restrict self,
            size_t argc, DeeObject *const *argv) {
 	self->r_step = NULL;
-	if (DeeArg_Unpack(argc, argv, "oo|o:_Range",
+	if (DeeArg_Unpack(argc, argv, "oo|o:_SeqRange",
 	                  &self->r_start,
 	                  &self->r_end,
 	                  &self->r_step))
@@ -1086,7 +1091,7 @@ INTERN DeeTypeObject SeqRange_Type = {
 	/* .tp_with          = */ NULL,
 	/* .tp_buffer        = */ NULL,
 	/* .tp_methods       = */ NULL,
-	/* .tp_getsets       = */ NULL,
+	/* .tp_getsets       = */ range_getsets,
 	/* .tp_members       = */ range_members,
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,
@@ -1465,14 +1470,19 @@ PRIVATE struct type_seq intrange_seq = {
 
 
 PRIVATE struct type_member tpconst intrange_members[] = {
-	TYPE_MEMBER_FIELD("start", STRUCT_ATOMIC | STRUCT_SSIZE_T, offsetof(IntRange, ir_start)),
-	TYPE_MEMBER_FIELD("end", STRUCT_ATOMIC | STRUCT_SSIZE_T, offsetof(IntRange, ir_end)),
-	TYPE_MEMBER_FIELD("step", STRUCT_ATOMIC | STRUCT_SSIZE_T, offsetof(IntRange, ir_step)),
+	TYPE_MEMBER_FIELD("start", STRUCT_ATOMIC | STRUCT_CONST | STRUCT_SSIZE_T, offsetof(IntRange, ir_start)),
+	TYPE_MEMBER_FIELD("end", STRUCT_ATOMIC | STRUCT_CONST | STRUCT_SSIZE_T, offsetof(IntRange, ir_end)),
+	TYPE_MEMBER_FIELD("step", STRUCT_ATOMIC | STRUCT_CONST | STRUCT_SSIZE_T, offsetof(IntRange, ir_step)),
+	TYPE_MEMBER_FIELD("__start__", STRUCT_ATOMIC | STRUCT_SSIZE_T, offsetof(IntRange, ir_start)),
+	TYPE_MEMBER_FIELD("__end__", STRUCT_ATOMIC | STRUCT_SSIZE_T, offsetof(IntRange, ir_end)),
+	TYPE_MEMBER_FIELD("__step__", STRUCT_ATOMIC | STRUCT_SSIZE_T, offsetof(IntRange, ir_step)),
 	TYPE_MEMBER_END
 };
 
+#define intrange_getsets range_getsets
 PRIVATE struct type_member tpconst intrange_class_members[] = {
 	TYPE_MEMBER_CONST(STR_Iterator, &SeqIntRangeIterator_Type),
+	TYPE_MEMBER_CONST("Frozen", &SeqIntRange_Type),
 	TYPE_MEMBER_END
 };
 
@@ -1565,7 +1575,7 @@ INTERN DeeTypeObject SeqIntRange_Type = {
 	/* .tp_with          = */ NULL,
 	/* .tp_buffer        = */ NULL,
 	/* .tp_methods       = */ NULL,
-	/* .tp_getsets       = */ NULL,
+	/* .tp_getsets       = */ intrange_getsets,
 	/* .tp_members       = */ intrange_members,
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,
@@ -1646,8 +1656,9 @@ DeeRange_New(DeeObject *begin,
 	ASSERT_OBJECT(begin);
 	ASSERT_OBJECT(end);
 	ASSERT_OBJECT_OPT(step);
-#ifndef ALWAYS_USE_OBJECT_RANGES
+
 	/* Check for special optimizations for the likely case of int-only arguments. */
+#ifndef ALWAYS_USE_OBJECT_RANGES
 	{
 		dssize_t i_begin, i_end, i_step;
 		if (DeeInt_Check(begin) && DeeInt_Check(end) &&
@@ -1663,6 +1674,7 @@ DeeRange_New(DeeObject *begin,
 					return DeeSeq_RepeatItemForever(begin);
 				}
 			}
+
 			/* Create an integer-based range. */
 			return DeeRange_NewInt(i_begin, i_end, i_step);
 		}
@@ -1670,17 +1682,20 @@ DeeRange_New(DeeObject *begin,
 do_object_range:
 #endif /* !ALWAYS_USE_OBJECT_RANGES */
 	temp = 0;
+
 	/* Check if `step' is negative (required for proper compare operations of the range iterator). */
 	if (step) {
 		temp = DeeObject_CompareLo(step, &DeeInt_Zero);
 		if unlikely(temp < 0)
 			goto err;
 	}
+
 	/* Create the new range. */
 	result = DeeObject_MALLOC(Range);
 	if unlikely(!result)
 		goto done;
 	DeeObject_Init(result, &SeqRange_Type);
+
 	/* Fill in members of the new range object. */
 	result->r_start = begin;
 	result->r_end   = end;

@@ -1505,8 +1505,14 @@ PRIVATE struct type_seq svec_seq = {
 	/* .tp_nsi       = */ &svec_nsi,
 };
 
+PRIVATE struct type_getset tpconst svec_getsets[] = {
+	TYPE_GETTER("frozen", &DeeObject_NewRef, "->?."),
+	TYPE_GETSET_END
+};
+
 PRIVATE struct type_member tpconst svec_class_members[] = {
 	TYPE_MEMBER_CONST(STR_Iterator, &SharedVectorIterator_Type),
+	TYPE_MEMBER_CONST("Frozen", &SharedVector_Type),
 	TYPE_MEMBER_END
 };
 
@@ -1602,7 +1608,7 @@ INTERN DeeTypeObject SharedVector_Type = {
 	/* .tp_with          = */ NULL,
 	/* .tp_buffer        = */ NULL,
 	/* .tp_methods       = */ NULL,
-	/* .tp_getsets       = */ NULL,
+	/* .tp_getsets       = */ svec_getsets,
 	/* .tp_members       = */ NULL,
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,

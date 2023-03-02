@@ -379,11 +379,13 @@ PRIVATE struct type_member tpconst map_filter_members[] = {
 
 PRIVATE struct type_member tpconst seq_filter_class_members[] = {
 	TYPE_MEMBER_CONST(STR_Iterator, &SeqHashFilterIterator_Type),
+	TYPE_MEMBER_CONST("Frozen", &SeqHashFilter_Type),
 	TYPE_MEMBER_END
 };
 
 PRIVATE struct type_member tpconst map_filter_class_members[] = {
 	TYPE_MEMBER_CONST(STR_Iterator, &MapHashFilterIterator_Type),
+	TYPE_MEMBER_CONST("Frozen", &MapHashFilter_Type),
 	TYPE_MEMBER_END
 };
 
@@ -443,6 +445,38 @@ err:
 	return -1;
 }
 
+PRIVATE WUNUSED NONNULL((1)) DREF HashFilter *DCALL
+hashfilter_get_frozen(HashFilter *__restrict self) {
+	DREF DeeObject *inner_frozen;
+	DREF HashFilter *result;
+	inner_frozen = DeeObject_GetAttr(self->f_seq, (DeeObject *)&str_frozen);
+	if unlikely(!inner_frozen)
+		goto err;
+	if (inner_frozen == self->f_seq) {
+		Dee_DecrefNokill(inner_frozen);
+		return_reference_(self);
+	}
+	result = DeeObject_MALLOC(HashFilter);
+	if unlikely(!result)
+		goto err_inner;
+	result->f_seq  = inner_frozen; /* Inherit reference */
+	result->f_hash = self->f_hash;
+	DeeObject_Init(result, Dee_TYPE(self));
+	return result;
+err_inner:
+	Dee_Decref(inner_frozen);
+err:
+	return NULL;
+}
+
+PRIVATE struct type_getset tpconst hashfilter_getsets[] = {
+	TYPE_GETTER(STR_frozen, &hashfilter_get_frozen, "->?."),
+	TYPE_GETSET_END
+};
+
+#define seq_filter_getsets hashfilter_getsets
+#define map_filter_getsets hashfilter_getsets
+
 
 INTERN DeeTypeObject SeqHashFilter_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
@@ -483,7 +517,7 @@ INTERN DeeTypeObject SeqHashFilter_Type = {
 	/* .tp_with          = */ NULL,
 	/* .tp_buffer        = */ NULL,
 	/* .tp_methods       = */ NULL,
-	/* .tp_getsets       = */ NULL,
+	/* .tp_getsets       = */ seq_filter_getsets,
 	/* .tp_members       = */ seq_filter_members,
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,
@@ -529,7 +563,7 @@ INTERN DeeTypeObject MapHashFilter_Type = {
 	/* .tp_with          = */ NULL,
 	/* .tp_buffer        = */ NULL,
 	/* .tp_methods       = */ NULL,
-	/* .tp_getsets       = */ NULL,
+	/* .tp_getsets       = */ map_filter_getsets,
 	/* .tp_members       = */ map_filter_members,
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,

@@ -4368,21 +4368,33 @@ PRIVATE struct type_getset tpconst seq_getsets[] = {
 	/* TODO: Override this attribute as pass-though in Sequence-proxy types. */
 	TYPE_GETTER("isfrozen", &seq_get_isfrozen,
 	            "->?Dbool\n"
-	            "Evaluates to true if the :{Object.id}s of elements of "
-	            /**/ "@this Sequence can never change under any circumstance.\n"
+	            "Evaluates to true if the ?Aid?Os of elements of "
+	            /**/ "@this Sequence can never change though use of any non-implementation-"
+	            /**/ "specific functions/attributes (i.e. anything that doesn't match #C{__*__}).\n"
 	            "This differs from the inverse of ?#ismutable, as in the case "
 	            /**/ "of a proxy Sequence, this property depends on the underlying "
-	            /**/ "Sequence, rather than what is exposed by the proxy itself"),
-	/* TODO: _YieldFunction should implement `frozen' as a lazy buffer that only
-	 *       enumerates elements as they are needed, and remembers them as part
-	 *       of a vector of generated elements. */
-	TYPE_GETTER("frozen", &DeeTuple_FromSequence,
+	            /**/ "Sequence, and the kind of transformation applied to it, rather "
+	            /**/ "than what is exposed by the proxy itself"),
+	TYPE_GETTER(STR_frozen, &DeeTuple_FromSequence,
 	            "->?#Frozen\n"
 	            "Returns a copy of @this Sequence, with all of its current elements, as well as "
 	            /**/ "their current order frozen in place, constructing a snapshot of the Sequence's "
-	            /**/ "current contents. - The actual type of Sequence returned is implementation- "
-	            /**/ "and type- specific, and copying itself may either be done immediately, or as "
-	            /**/ "elements of the returned sequence are accessed"),
+	            /**/ "current elements. - The actual type of Sequence returned is implementation- "
+	            /**/ "and type- specific, but a guaranty is made that nothing no non-implementation-"
+	            /**/ "specific functions/attributes (i.e. anything that doesn't match #C{__*__}) will "
+	            /**/ "be able to change the elements of the returned sequence.\n"
+	            "By default, this attribute simply casts @this Sequence into a ?DTuple, but sequence "
+	            /**/ "types that are known to already be immutable can override this attribute such "
+	            /**/ "that they simple re-return themselves.\n"
+	            "Note that this attributes does NOT perform a deep copy, and does NOT protect from "
+	            "potential changes made to the state of the elements of @this sequence. It ONLY makes "
+	            "a snapshot of the sequence itself. If you want to construct a frozen deep copy, you "
+	            "should do the following instead (assuming that elements of the sequence support being "
+	            "deep-copied):\n"
+	            "${"
+	            /**/ "local s = getSeq();\n"
+	            /**/ "local s = (for (local x: s) deepcopy x).frozen;"
+	            "}"),
 	TYPE_GETSET_END
 };
 

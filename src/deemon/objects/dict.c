@@ -2044,7 +2044,7 @@ INTERN_TPCONST struct type_getset tpconst dict_getsets[] = {
 	TYPE_GETTER("items", &dict_items,
 	            "->?AItems?.\n"
 	            "@return A proxy sequence for viewing the key-value pairs of @this ?."),
-	TYPE_GETTER("frozen", &DeeRoDict_FromSequence,
+	TYPE_GETTER(STR_frozen, &DeeRoDict_FromSequence,
 	            "->?Ert:RoDict\n"
 	            "Returns a read-only (frozen) copy of @this ?."),
 #ifndef CONFIG_NO_DEEMON_100_COMPAT

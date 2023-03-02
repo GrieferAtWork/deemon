@@ -508,7 +508,8 @@ err:
 	return -1;
 }
 
-PRIVATE NONNULL((1)) void DCALL com_fini(Combinations *__restrict self) {
+PRIVATE NONNULL((1)) void DCALL
+com_fini(Combinations *__restrict self) {
 	/* NOTE: `DeeTuple_ELEM()' just returns an invalid
 	 *        pointer for any object that isn't a tuple. */
 	if (self->c_elem &&
@@ -521,7 +522,8 @@ PRIVATE NONNULL((1)) void DCALL com_fini(Combinations *__restrict self) {
 	Dee_Decref(self->c_seq);
 }
 
-PRIVATE NONNULL((1, 2)) void DCALL com_visit(Combinations *__restrict self, dvisit_t proc, void *arg) {
+PRIVATE NONNULL((1, 2)) void DCALL
+com_visit(Combinations *__restrict self, dvisit_t proc, void *arg) {
 	/* NOTE: `DeeTuple_ELEM()' just returns an invalid
 	 *        pointer for any object that isn't a tuple. */
 	if (self->c_elem &&
@@ -539,11 +541,13 @@ PRIVATE struct type_seq com_seq = {
 
 PRIVATE struct type_member tpconst com_class_members[] = {
 	TYPE_MEMBER_CONST(STR_Iterator, &SeqCombinationsIterator_Type),
+	/* TODO: "Frozen" */
 	TYPE_MEMBER_END
 };
 
 PRIVATE struct type_member tpconst com_members[] = {
 	TYPE_MEMBER_FIELD_DOC("__seq__", STRUCT_OBJECT, offsetof(Combinations, c_seq), "->?DSequence"),
+	/* TODO: GETTER: "frozen" */
 	TYPE_MEMBER_END
 };
 
@@ -1524,8 +1528,9 @@ load_tp_size:
 			iterator = (*seq->tp_iter_self)(self);
 			if unlikely(!iterator)
 				goto err_r;
-			elem_c = elem_a = 0;
-			elem_v          = NULL;
+			elem_a = 0;
+			elem_c = 0;
+			elem_v = NULL;
 			while (ITER_ISOK(elem = DeeObject_IterNext(iterator))) {
 				ASSERT(elem_c <= elem_a);
 				if (elem_c >= elem_a) {
@@ -1541,8 +1546,7 @@ load_tp_size:
 						if unlikely(!new_elem_v) {
 							Dee_Decref(elem);
 err_elem_v:
-							while (elem_c--)
-								Dee_Decref(elem_v[elem_c]);
+							Dee_Decrefv(elem_v, elem_c);
 							Dee_Free(elem_v);
 							goto err_r;
 						}
@@ -1596,20 +1600,19 @@ err_r:
 
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeSeq_Permutations2(DeeObject *__restrict self, size_t r) {
-	DREF DeeObject *result;
+	DREF Combinations *result;
 	if (!r)
 		return DeeTuple_Pack(1, Dee_EmptySeq);
-	result = DeeSeq_Permutations(self);
-	if unlikely(!result || Dee_TYPE(result) != &SeqPermutations_Type)
-		goto done;
-	((Combinations *)result)->c_comlen = r;
-	if (r > ((Combinations *)result)->c_seqlen) {
-		Dee_Decref(result);
-		result = Dee_EmptySeq;
-		Dee_Incref(Dee_EmptySeq);
+	result = (DREF Combinations *)DeeSeq_Permutations(self);
+	if likely(result && Dee_TYPE(result) == &SeqPermutations_Type) {
+		result->c_comlen = r;
+		if (r > result->c_seqlen) {
+			Dee_Decref_likely(result);
+			result = (DREF Combinations *)Dee_EmptySeq;
+			Dee_Incref(Dee_EmptySeq);
+		}
 	}
-done:
-	return result;
+	return (DREF DeeObject *)result;
 }
 
 

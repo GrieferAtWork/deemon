@@ -301,14 +301,40 @@ PRIVATE struct type_member tpconst subrange_members[] = {
 };
 
 
+PRIVATE WUNUSED NONNULL((1)) DREF SubRange *DCALL
+subrange_get_frozen(SubRange *__restrict self) {
+	DREF DeeObject *inner_frozen;
+	DREF SubRange *result;
+	inner_frozen = DeeObject_GetAttr(self->sr_seq, (DeeObject *)&str_seq);
+	if unlikely(!inner_frozen)
+		goto err;
+	result = DeeObject_MALLOC(SubRange);
+	if unlikely(!result)
+		goto err_inner;
+	result->sr_seq   = inner_frozen;
+	result->sr_start = self->sr_start;
+	result->sr_size  = self->sr_size;
+	DeeObject_Init(result, &SeqSubRange_Type);
+	return result;
+err_inner:
+	Dee_Decref(inner_frozen);
+err:
+	return NULL;
+}
+
+PRIVATE struct type_getset tpconst subrange_getsets[] = {
+	TYPE_GETTER("frozen", &subrange_get_frozen, "->?."),
+	TYPE_GETSET_END
+};
+
 PRIVATE struct type_member tpconst subrange_class_members[] = {
 	TYPE_MEMBER_CONST(STR_Iterator, &SeqSubRangeIterator_Type),
+	TYPE_MEMBER_CONST("Frozen", &SeqSubRange_Type),
 	TYPE_MEMBER_END
 };
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-subrange_getitem(SubRange *self,
-                 DeeObject *index_ob) {
+subrange_getitem(SubRange *self, DeeObject *index_ob) {
 	size_t index;
 	if (DeeObject_AsSize(index_ob, &index))
 		goto err;
@@ -525,7 +551,7 @@ INTERN DeeTypeObject SeqSubRange_Type = {
 	/* .tp_with          = */ NULL,
 	/* .tp_buffer        = */ NULL,
 	/* .tp_methods       = */ NULL,
-	/* .tp_getsets       = */ NULL,
+	/* .tp_getsets       = */ subrange_getsets,
 	/* .tp_members       = */ subrange_members,
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,
@@ -747,9 +773,34 @@ PRIVATE struct type_member tpconst subrangen_members[] = {
 	TYPE_MEMBER_END
 };
 
+PRIVATE WUNUSED NONNULL((1)) DREF SubRangeN *DCALL
+subrangen_get_frozen(SubRangeN *__restrict self) {
+	DREF DeeObject *inner_frozen;
+	DREF SubRangeN *result;
+	inner_frozen = DeeObject_GetAttr(self->sr_seq, (DeeObject *)&str_seq);
+	if unlikely(!inner_frozen)
+		goto err;
+	result = DeeObject_MALLOC(SubRangeN);
+	if unlikely(!result)
+		goto err_inner;
+	result->sr_seq   = inner_frozen;
+	result->sr_start = self->sr_start;
+	DeeObject_Init(result, &SeqSubRangeN_Type);
+	return result;
+err_inner:
+	Dee_Decref(inner_frozen);
+err:
+	return NULL;
+}
+
+PRIVATE struct type_getset tpconst subrangen_getsets[] = {
+	TYPE_GETTER("frozen", &subrangen_get_frozen, "->?."),
+	TYPE_GETSET_END
+};
 
 PRIVATE struct type_member tpconst subrangen_class_members[] = {
 	TYPE_MEMBER_CONST(STR_Iterator, &DeeIterator_Type),
+	TYPE_MEMBER_CONST("Frozen", &DeeIterator_Type),
 	TYPE_MEMBER_END
 };
 
@@ -844,7 +895,7 @@ INTERN DeeTypeObject SeqSubRangeN_Type = {
 	/* .tp_with          = */ NULL,
 	/* .tp_buffer        = */ NULL,
 	/* .tp_methods       = */ NULL,
-	/* .tp_getsets       = */ NULL,
+	/* .tp_getsets       = */ subrangen_getsets,
 	/* .tp_members       = */ subrangen_members,
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,

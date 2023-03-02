@@ -601,6 +601,35 @@ PRIVATE struct type_seq repeat_seq = {
 	/* .tp_nsi       = */ &repeat_nsi
 };
 
+PRIVATE WUNUSED NONNULL((1)) DREF Repeat *DCALL
+repeat_get_frozen(Repeat *__restrict self) {
+	DREF DeeObject *inner_frozen;
+	DREF Repeat *result;
+	inner_frozen = DeeObject_GetAttr(self->r_seq, (DeeObject *)&str_frozen);
+	if unlikely(!inner_frozen)
+		goto err;
+	if (inner_frozen == self->r_seq) {
+		Dee_DecrefNokill(inner_frozen);
+		return_reference_(self);
+	}
+	result = DeeObject_MALLOC(Repeat);
+	if unlikely(!result)
+		goto err_inner;
+	result->r_seq = inner_frozen; /* Inherit reference */
+	result->r_num = self->r_num;
+	DeeObject_Init(result, &SeqRepeat_Type);
+	return result;
+err_inner:
+	Dee_Decref(inner_frozen);
+err:
+	return NULL;
+}
+
+PRIVATE struct type_getset tpconst repeat_getsets[] = {
+	TYPE_GETTER(STR_frozen, &repeat_get_frozen, "->?."),
+	TYPE_GETSET_END
+};
+
 PRIVATE struct type_member tpconst repeat_members[] = {
 	TYPE_MEMBER_FIELD_DOC("__seq__", STRUCT_OBJECT, offsetof(Repeat, r_seq), "->?DSequence"),
 	TYPE_MEMBER_FIELD("__num__", STRUCT_SIZE_T | STRUCT_CONST, offsetof(Repeat, r_num)),
@@ -609,6 +638,7 @@ PRIVATE struct type_member tpconst repeat_members[] = {
 
 PRIVATE struct type_member tpconst repeat_class_members[] = {
 	TYPE_MEMBER_CONST(STR_Iterator, &SeqRepeatIterator_Type),
+	TYPE_MEMBER_CONST("Frozen", &SeqRepeat_Type),
 	TYPE_MEMBER_END
 };
 
@@ -652,7 +682,7 @@ INTERN DeeTypeObject SeqRepeat_Type = {
 	/* .tp_with          = */ NULL,
 	/* .tp_buffer        = */ NULL,
 	/* .tp_methods       = */ NULL,
-	/* .tp_getsets       = */ NULL,
+	/* .tp_getsets       = */ repeat_getsets,
 	/* .tp_members       = */ repeat_members,
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,
@@ -1148,8 +1178,14 @@ PRIVATE struct type_member tpconst repeatitem_members[] = {
 	TYPE_MEMBER_END
 };
 
+PRIVATE struct type_getset tpconst repeatitem_getsets[] = {
+	TYPE_GETTER(STR_frozen, &DeeObject_NewRef, "->?."),
+	TYPE_GETSET_END
+};
+
 PRIVATE struct type_member tpconst repeatitem_class_members[] = {
 	TYPE_MEMBER_CONST(STR_Iterator, &SeqItemRepeatIterator_Type),
+	TYPE_MEMBER_CONST("Frozen", &SeqItemRepeat_Type),
 	TYPE_MEMBER_END
 };
 
@@ -1192,7 +1228,7 @@ INTERN DeeTypeObject SeqItemRepeat_Type = {
 	/* .tp_with          = */ NULL,
 	/* .tp_buffer        = */ NULL,
 	/* .tp_methods       = */ NULL,
-	/* .tp_getsets       = */ NULL,
+	/* .tp_getsets       = */ repeatitem_getsets,
 	/* .tp_members       = */ repeatitem_members,
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,

@@ -252,12 +252,6 @@ INTERN DeeTypeObject SeqSegmentsIterator_Type = {
 
 
 
-PRIVATE struct type_member tpconst seg_class_members[] = {
-	TYPE_MEMBER_CONST(STR_Iterator, &SeqSegmentsIterator_Type),
-	TYPE_MEMBER_END
-};
-
-
 STATIC_ASSERT(offsetof(Segments, s_seq) == offsetof(SegmentsIterator, si_iter));
 STATIC_ASSERT(offsetof(Segments, s_len) == offsetof(SegmentsIterator, si_len));
 #define seg_copy     segiter_copy
@@ -372,8 +366,7 @@ seg_nsi_getitem(Segments *__restrict self, size_t index) {
 	}
 	return result;
 err_r:
-	while (i--)
-		Dee_Decref(DeeTuple_GET(result, i));
+	Dee_Decrefv(DeeTuple_ELEM(result), i);
 	DeeTuple_FreeUninitialized(result);
 err:
 	return NULL;
@@ -440,7 +433,44 @@ PRIVATE struct type_member tpconst seg_members[] = {
 	TYPE_MEMBER_END
 };
 
-PRIVATE DeeTypeObject SeqSegments_Type = {
+INTDEF DeeTypeObject SeqSegments_Type;
+
+PRIVATE WUNUSED NONNULL((1)) DREF Segments *DCALL
+seg_get_frozen(Segments *__restrict self) {
+	DREF DeeObject *inner_frozen;
+	DREF Segments *result;
+	inner_frozen = DeeObject_GetAttr(self->s_seq, (DeeObject *)&str_frozen);
+	if unlikely(!inner_frozen)
+		goto err;
+	if (inner_frozen == self->s_seq) {
+		Dee_DecrefNokill(inner_frozen);
+		return_reference_(self);
+	}
+	result = DeeObject_MALLOC(Segments);
+	if unlikely(!result)
+		goto err_inner;
+	result->s_seq = inner_frozen; /* Inherit reference */
+	result->s_len = self->s_len;
+	DeeObject_Init(result, &SeqSegments_Type);
+	return result;
+err_inner:
+	Dee_Decref(inner_frozen);
+err:
+	return NULL;
+}
+
+PRIVATE struct type_getset tpconst seg_getsets[] = {
+	TYPE_GETTER(STR_frozen, &seg_get_frozen, "->?."),
+	TYPE_GETSET_END
+};
+
+PRIVATE struct type_member tpconst seg_class_members[] = {
+	TYPE_MEMBER_CONST(STR_Iterator, &SeqSegmentsIterator_Type),
+	TYPE_MEMBER_CONST("Frozen", &SeqSegments_Type),
+	TYPE_MEMBER_END
+};
+
+INTERN DeeTypeObject SeqSegments_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_SeqSegments",
 	/* .tp_doc      = */ DOC("(seq?:?DSequence,len=!1)"),
@@ -478,7 +508,7 @@ PRIVATE DeeTypeObject SeqSegments_Type = {
 	/* .tp_with          = */ NULL,
 	/* .tp_buffer        = */ NULL,
 	/* .tp_methods       = */ NULL,
-	/* .tp_getsets       = */ NULL,
+	/* .tp_getsets       = */ seg_getsets,
 	/* .tp_members       = */ seg_members,
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,

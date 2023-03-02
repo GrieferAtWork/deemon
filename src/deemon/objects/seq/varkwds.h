@@ -176,11 +176,11 @@ typedef struct {
 	size_t                                         bm_ckwc;  /* [const][!0] Number of black-listed keywords */
 	struct string_object *const                   *bm_ckwv;  /* [1..1][const][1..vk_ckwc][const] Vector of black-listed keywords. */
 	DREF DeeObject                                *bm_kw;    /* [1..1][const] The underlying mapping which is being affected. */
-	size_t                                         bm_load;  /* [lock(vk_lock, INCREMENT_ONLY)][<= bm_ckwc]
+	size_t                                         bm_load;  /* [lock(bm_lock, INCREMENT_ONLY)][<= bm_ckwc]
 	                                                          * Index of the next keyword which has yet to be loaded into
 	                                                          * the `vk_blck' hash-set for blacklisted identifiers. */
 	size_t                                         bm_mask;  /* [!0][const] Hash-mask for `vk_blck' */
-	COMPILER_FLEXIBLE_ARRAY(BlackListVarkwdsEntry, bm_blck); /* [lock(vk_lock)][0..vk_mask+1]
+	COMPILER_FLEXIBLE_ARRAY(BlackListVarkwdsEntry, bm_blck); /* [lock(bm_lock)][0..vk_mask+1]
 	                                                          * Hash-vector of loaded, black-listed keywords. */
 } BlackListMapping;
 #define BlackListMapping_BLCKNEXT(i, perturb) ((i) = (((i) << 2) + (i) + (perturb) + 1), (perturb) >>= 5)

@@ -125,6 +125,7 @@ local STRINGS = {
 	"pushback",
 	"popfront",
 	"popback",
+	"frozen",
 
 	"revert",
 	"advance",
@@ -394,6 +395,8 @@ DEF_STRING(str_popfront, "popfront", 0x46523911, 0x22a469cc52318bba)
 #define STR_popfront DeeString_STR(&str_popfront)
 DEF_STRING(str_popback, "popback", 0xd84577aa, 0xb77f74a49a9cc289)
 #define STR_popback DeeString_STR(&str_popback)
+DEF_STRING(str_frozen, "frozen", 0x82311b77, 0x7b55e2e6e642b6fd)
+#define STR_frozen DeeString_STR(&str_frozen)
 DEF_STRING(str_revert, "revert", 0x98ca826, 0x626b4fca0d39dcf2)
 #define STR_revert DeeString_STR(&str_revert)
 DEF_STRING(str_advance, "advance", 0xdd1157a0, 0x8667ad2c6ab8d35d)

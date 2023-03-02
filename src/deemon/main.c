@@ -1436,6 +1436,7 @@ err_discard_compiler_errors:
 	 * them via our custom `co_error_handler' callback that was hooked into
 	 * the compiler while the primary module and its dependencies were being
 	 * compiled. */
+	/* FIXME: This swallows explicitly thrown compiler errors (`DeeError_Throwf(&DeeError_CompilerError, ...)') */
 	while (DeeError_CurrentIs(&DeeError_CompilerError))
 		DeeError_Handled(ERROR_HANDLED_INTERRUPT);
 err:

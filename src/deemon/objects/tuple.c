@@ -1483,6 +1483,7 @@ PRIVATE struct type_method tpconst tuple_class_methods[] = {
 
 PRIVATE struct type_member tpconst tuple_class_members[] = {
 	TYPE_MEMBER_CONST(STR_Iterator, &DeeTupleIterator_Type),
+	TYPE_MEMBER_CONST("Frozen", &DeeTuple_Type),
 	TYPE_MEMBER_END
 };
 
@@ -1618,6 +1619,7 @@ err_empty:
 PRIVATE struct type_getset tpconst tuple_getsets[] = {
 	TYPE_GETTER_NODOC(STR_first, &tuple_first),
 	TYPE_GETTER_NODOC(STR_last, &tuple_last),
+	TYPE_GETTER(STR_frozen, &DeeObject_NewRef, "->?."),
 	TYPE_GETTER("__sizeof__", &tuple_sizeof, "->?Dint"),
 	TYPE_GETSET_END
 };

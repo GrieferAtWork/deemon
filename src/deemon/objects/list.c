@@ -3131,7 +3131,7 @@ PRIVATE struct type_getset tpconst list_getsets[] = {
 	TYPE_GETSET(STR_last, &list_get_last, &list_del_last, &list_set_last,
 	            "->\n"
 	            "@return The last item from @this List"),
-	TYPE_GETTER("frozen", &list_get_frozen,
+	TYPE_GETTER(STR_frozen, &list_get_frozen,
 	            "->?DTuple\n"
 	            "Return a copy of the contents of @this List as an immutable sequence"),
 	TYPE_GETTER("__sizeof__", &list_sizeof, "->?Dint"),

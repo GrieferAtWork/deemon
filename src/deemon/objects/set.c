@@ -596,10 +596,10 @@ INTERN_TPCONST struct type_method tpconst set_methods[] = {
 
 INTDEF struct type_getset tpconst set_getsets[];
 INTERN_TPCONST struct type_getset tpconst set_getsets[] = {
-	TYPE_GETTER("frozen", &DeeRoSet_FromSequence,
+	TYPE_GETTER(STR_frozen, &DeeRoSet_FromSequence,
 	            "->?#Frozen\n"
 	            "Returns a copy of @this ?., with all of its current elements frozen in place, "
-	            /**/ "constructing a snapshot of the set's current contents. - The actual type of "
+	            /**/ "constructing a snapshot of the set's current elements. - The actual type of "
 	            /**/ "set returned is implementation- and type- specific, and copying itself may "
 	            /**/ "either be done immediately, or as copy-on-write"),
 	TYPE_GETSET_END
