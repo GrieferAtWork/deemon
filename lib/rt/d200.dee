@@ -22,6 +22,7 @@
  * achieve this with previous version of deemon. */
 
 import * from deemon;
+import * from errors;
 
 @@A class that may be specified as the base of other user-classes
 @@to achieve old-style member semanics, diverting lookup of member
@@ -49,11 +50,19 @@ class OldUserClass
 	private member m_members: {string: Object} = Dict();
 
 	public operator . (name: string): Object {
-		return m_members[name];
+		try {
+			return m_members[name];
+		} catch (KeyError) {
+			throw AttributeError(f"Cannot get unknown attribute `{type this}.{name}'");
+		}
 	}
 
 	public operator del. (name: string) {
-		del m_members[name];
+		try {
+			del m_members[name];
+		} catch (KeyError) {
+			throw AttributeError(f"Cannot del unknown attribute `{type this}.{name}'");
+		}
 	}
 
 	public operator .= (name: string, value: Object) {
