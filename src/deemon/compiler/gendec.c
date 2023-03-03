@@ -33,6 +33,7 @@
 #include <deemon/error.h>
 #include <deemon/file.h>
 #include <deemon/float.h>
+#include <deemon/format.h>
 #include <deemon/hashset.h>
 #include <deemon/int.h>
 #include <deemon/list.h>
@@ -42,8 +43,8 @@
 #include <deemon/rodict.h>
 #include <deemon/roset.h>
 #include <deemon/string.h>
-#include <deemon/system.h> /* DeeSystem_SEP,  */
 #include <deemon/system-features.h> /* memmovedownc(), ... */
+#include <deemon/system.h>          /* DeeSystem_SEP,  */
 #include <deemon/tuple.h>
 
 #include <hybrid/byteorder.h>
@@ -1058,8 +1059,8 @@ INTERN WUNUSED int (DCALL dec_putobj)(DeeObject *self) {
 #ifndef NDEBUG
 		ASSERTF(num_written == me->rd_size,
 		        "Incorrect number of object written for rodict:\n"
-		        "Written  = %Iu\n"
-		        "Required = %Iu",
+		        "Written  = %" PRFuSIZ "\n"
+		        "Required = %" PRFuSIZ,
 		        num_written, me->rd_size);
 #endif /* !NDEBUG */
 		goto done;
@@ -1089,8 +1090,8 @@ INTERN WUNUSED int (DCALL dec_putobj)(DeeObject *self) {
 #ifndef NDEBUG
 		ASSERTF(num_written == me->rs_size,
 		        "Incorrect number of object written for roset:\n"
-		        "Written  = %Iu\n"
-		        "Required = %Iu",
+		        "Written  = %" PRFuSIZ "\n"
+		        "Required = %" PRFuSIZ,
 		        num_written, me->rs_size);
 #endif /* !NDEBUG */
 		goto done;

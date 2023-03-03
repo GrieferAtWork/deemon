@@ -26,14 +26,15 @@
 #include <deemon/api.h>
 #include <deemon/arg.h>
 #include <deemon/error.h>
+#include <deemon/format.h>
 #include <deemon/object.h>
 #include <deemon/seq.h>
 #include <deemon/string.h>
 #include <deemon/system-features.h>
 #include <deemon/tuple.h>
 
-#include "../../runtime/strings.h"
 #include "../../runtime/runtime_error.h"
+#include "../../runtime/strings.h"
 
 DECL_BEGIN
 
@@ -684,7 +685,7 @@ seo_init(SeqEachOperator *__restrict self,
 		goto err;
 	if unlikely(DeeTuple_SIZE(args) > COMPILER_LENOF(self->so_opargv)) {
 		DeeError_Throwf(&DeeError_UnpackError,
-		                "Too many operator arguments (%Iu > %Iu)",
+		                "Too many operator arguments (%" PRFuSIZ " > %" PRFuSIZ ")",
 		                (size_t)DeeTuple_SIZE(args),
 		                (size_t)COMPILER_LENOF(self->so_opargv));
 		goto err;

@@ -32,6 +32,7 @@
 #include <deemon/dict.h>
 #include <deemon/error.h>
 #include <deemon/file.h>
+#include <deemon/format.h>
 #include <deemon/hashset.h>
 #include <deemon/int.h>
 #include <deemon/list.h>
@@ -1114,7 +1115,7 @@ next_instr:
 					/* Also print the name of the base-function */
 					Dee_DPRINTF(" (%s)", base_name);
 				}
-				Dee_DPRINTF(" [sp=%I16u]\n", (uint16_t)STACKUSED);
+				Dee_DPRINTF(" [sp=%" PRFu16 "]\n", (uint16_t)STACKUSED);
 			}
 			DDI_STATE_WHILE(iter, &state);
 			Dee_ddi_state_fini(&state);

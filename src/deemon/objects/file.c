@@ -1890,7 +1890,7 @@ DeeFile_GetSize(DeeObject *__restrict self) {
 		/* Ensure that the file isn't too large. */
 		if unlikely(resval == (dpos_t)-1) {
 			DeeError_Throwf(&DeeError_ValueError,
-			                "Failed %k is too large (%I64u is bigger than 2^63 bytes)",
+			                "Failed %k is too large (%" PRFu64 " is bigger than 2^63 bytes)",
 			                self, resval);
 			goto err;
 		}
@@ -2567,7 +2567,8 @@ file_shr(DeeObject *self, DeeObject *some_object) {
 		goto err;
 	if unlikely(result < buffer.bb_size) {
 		DeeError_Throwf(&DeeError_FSError,
-		                "Failed to fill the entire buffer of %Iu bytes when only %Iu were read",
+		                "Failed to fill the entire buffer of %" PRFuSIZ " "
+		                "bytes when only %" PRFuSIZ " were read",
 		                buffer.bb_size, result);
 		goto err;
 	}

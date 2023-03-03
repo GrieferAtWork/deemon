@@ -30,6 +30,7 @@
 #include <deemon/error.h>
 #include <deemon/file.h>
 #include <deemon/float.h>
+#include <deemon/format.h>
 #include <deemon/gc.h>
 #include <deemon/int.h>
 #include <deemon/module.h>
@@ -992,7 +993,7 @@ DeeFatal_BadIncref(DeeObject *ob, char const *file, int line) {
 	BADREFCNT_BEGIN();
 	Dee_DPRINTF("\n\n\n" FILE_AND_LINE_FORMAT "BAD_INCREF(%p)\n",
 	            file, line, ob);
-	Dee_DPRINTF("refcnt : %Iu (%IX)\n", ob->ob_refcnt, ob->ob_refcnt);
+	Dee_DPRINTF("refcnt : %" PRFuSIZ " (%" PRFXSIZ ")\n", ob->ob_refcnt, ob->ob_refcnt);
 	type = Dee_TYPE(ob);
 	if (DeeObject_Check(type) && DeeType_Check(type)) {
 		Dee_DPRINTF("type : %s (%p)", type->tp_name, type);
@@ -1010,7 +1011,7 @@ DeeFatal_BadDecref(DeeObject *ob, char const *file, int line) {
 	BADREFCNT_BEGIN();
 	Dee_DPRINTF("\n\n\n" FILE_AND_LINE_FORMAT "BAD_DECREF(%p)\n",
 	            file, line, ob);
-	Dee_DPRINTF("refcnt : %Iu (%IX)\n", ob->ob_refcnt, ob->ob_refcnt);
+	Dee_DPRINTF("refcnt : %" PRFuSIZ " (%" PRFXSIZ ")\n", ob->ob_refcnt, ob->ob_refcnt);
 	type = Dee_TYPE(ob);
 	if (DeeObject_Check(type) && DeeType_Check(type)) {
 		Dee_DPRINTF("type : %s (%p)", type->tp_name, type);
@@ -1127,7 +1128,7 @@ again:
 		BADREFCNT_BEGIN();
 		Dee_DPRINTF("\n\n\n" FILE_AND_LINE_FORMAT "BAD_DESTROY(%p)\n",
 		            file, line, self);
-		Dee_DPRINTF("refcnt : %Iu (%IX)\n", self->ob_refcnt, self->ob_refcnt);
+		Dee_DPRINTF("refcnt : %" PRFuSIZ " (%" PRFXSIZ ")\n", self->ob_refcnt, self->ob_refcnt);
 		if (DeeObject_Check(type) && DeeType_Check(type)) {
 			Dee_DPRINTF("type : %s (%p)", type->tp_name, type);
 		} else {
@@ -4399,7 +4400,7 @@ print_refchange(struct Dee_refchange *__restrict item,
 		               (int)(unsigned int)(maxlen - mylen),
 		               " ");
 	}
-	REFLEAK_PRINTF("[%c][%Iu->%Iu]", mode[0], prev_total, next_total);
+	REFLEAK_PRINTF("[%c][%" PRFuSIZ "->%" PRFuSIZ "]", mode[0], prev_total, next_total);
 	count = next_total;
 	if (count > 15)
 		count = 15;
@@ -4463,7 +4464,7 @@ PUBLIC void DCALL Dee_DumpReferenceLeaks(void) {
 	struct Dee_reftracker *iter;
 	atomic_lock_acquire(&reftracker_lock);
 	for (iter = reftracker_list; iter; iter = iter->rt_next) {
-		REFLEAK_PRINTF("Object at %p of instance %s leaked %Iu references:\n",
+		REFLEAK_PRINTF("Object at %p of instance %s leaked %" PRFuSIZ " references:\n",
 		               iter->rt_obj, iter->rt_obj->ob_type->tp_name,
 		               iter->rt_obj->ob_refcnt);
 		print_refchanges(iter->rt_last, 1);
@@ -5016,18 +5017,18 @@ assert_badobject_impl(char const *check_name,
 		                 ob, type_name);
 	} else if (!ob->ob_type) {
 		_DeeAssert_Failf(check_name, file, line,
-		                 "Bad object at %p (%Iu references) has a NULL-pointer as type",
+		                 "Bad object at %p (%" PRFuSIZ " references) has a NULL-pointer as type",
 		                 ob, ob->ob_refcnt);
 	} else if (!ob->ob_type->ob_refcnt) {
 		_DeeAssert_Failf(check_name, file, line,
-		                 "Bad object at %p (instance of %s, %Iu references) has a type with a reference counter of 0",
+		                 "Bad object at %p (instance of %s, %" PRFuSIZ " references) has a type with a reference counter of 0",
 		                 ob, ob->ob_type->tp_name, ob->ob_refcnt);
 	} else {
 		char const *type_name = "?";
 		if (DeeObject_Check(ob->ob_type))
 			type_name = ob->ob_type->tp_name;
 		_DeeAssert_Failf(check_name, file, line,
-		                 "Bad object at %p (instance of %s, %Iu references)",
+		                 "Bad object at %p (instance of %s, %" PRFuSIZ " references)",
 		                 ob, type_name, ob->ob_refcnt);
 	}
 }
@@ -5051,12 +5052,12 @@ assert_badtype_impl(char const *check_name, char const *file,
 		                 ob, type_name, is_exact, wanted_type->tp_name);
 	} else if (!ob->ob_type) {
 		_DeeAssert_Failf(check_name, file, line,
-		                 "Bad object at %p (%Iu references) has a NULL-pointer "
+		                 "Bad object at %p (%" PRFuSIZ " references) has a NULL-pointer "
 		                 "as type when%sinstance of %s was needed",
 		                 ob, ob->ob_refcnt, is_exact, wanted_type->tp_name);
 	} else if (!ob->ob_type->ob_refcnt) {
 		_DeeAssert_Failf(check_name, file, line,
-		                 "Bad object at %p (instance of %s, %Iu references) has a type "
+		                 "Bad object at %p (instance of %s, %" PRFuSIZ " references) has a type "
 		                 "with a reference counter of 0 when%sinstance of %s was needed",
 		                 ob, ob->ob_type->tp_name, ob->ob_refcnt, is_exact, wanted_type->tp_name);
 	} else {
@@ -5070,14 +5071,14 @@ assert_badtype_impl(char const *check_name, char const *file,
 		}
 		if (include_obj_repr) {
 			_DeeAssert_Failf(check_name, file, line,
-			                 "Bad object at %p (instance of %s, %Iu references) "
+			                 "Bad object at %p (instance of %s, %" PRFuSIZ " references) "
 			                 "when%sinstance of %s was needed\n"
 			                 "repr: %r",
 			                 ob, type_name, ob->ob_refcnt, is_exact,
 			                 wanted_type->tp_name, ob);
 		} else {
 			_DeeAssert_Failf(check_name, file, line,
-			                 "Bad object at %p (instance of %s, %Iu references) "
+			                 "Bad object at %p (instance of %s, %" PRFuSIZ " references) "
 			                 "when%sinstance of %s was needed",
 			                 ob, type_name, ob->ob_refcnt, is_exact, wanted_type->tp_name);
 		}

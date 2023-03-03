@@ -30,6 +30,7 @@
 #include <deemon/dec.h>
 #include <deemon/error.h>
 #include <deemon/file.h>
+#include <deemon/format.h>
 #include <deemon/module.h>
 #include <deemon/object.h>
 #include <deemon/string.h>
@@ -587,12 +588,12 @@ PRIVATE void (DCALL dec_print_usage)(DeeModuleObject *__restrict mod) {
 	size_t total_size = 0;
 	for (root_id = 0; root_id < DEC_SECTION_COUNT; ++root_id)
 		total_size += sections_size(&current_dec.dw_sec_defl[root_id]);
-	PRINTF("module %k (%k), %Iu bytes:\n",
+	PRINTF("module %k (%k), %" PRFuSIZ " bytes:\n",
 	       mod->mo_name, mod->mo_path, total_size);
 	for (root_id = 0; root_id < DEC_SECTION_COUNT; ++root_id) {
 		struct dec_section *sec = &current_dec.dw_sec_defl[root_id];
 		size_t sec_size         = sections_size(sec);
-		PRINTF("\t.%s: %u%%, %Iu bytes, %u subsections\n",
+		PRINTF("\t.%s: %u%%, %" PRFuSIZ " bytes, %u subsections\n",
 		       section_names[root_id], (unsigned int)((sec_size * 100 + (total_size - 1)) / total_size),
 		       sec_size, sections_subsec(sec));
 	}
@@ -601,7 +602,7 @@ PRIVATE void (DCALL dec_print_usage)(DeeModuleObject *__restrict mod) {
 		unsigned int secnum     = 0;
 		for (;;) {
 			size_t sec_size = (size_t)(sec->ds_iter - sec->ds_begin);
-			PRINTF("\t.%s.%u: %u%%, %Iu bytes\n",
+			PRINTF("\t.%s.%u: %u%%, %" PRFuSIZ " bytes\n",
 			       section_names[root_id], secnum,
 			       (unsigned int)((sec_size * 100 + (total_size - 1)) / total_size), sec_size);
 			if ((sec = sec->ds_next) == NULL)

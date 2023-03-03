@@ -459,7 +459,7 @@ fallback:
 		if (unicode_printer_printf(&printer, "__%s__ (", info->oi_sname) < 0)
 			goto err_printer;
 	} else {
-		if (unicode_printer_printf(&printer, "%I16u (", operator_name) < 0)
+		if (unicode_printer_printf(&printer, "%" PRFu16 " (", operator_name) < 0)
 			goto err_printer;
 	}
 	for (i = 1; i < argc; ++i) {
@@ -658,7 +658,7 @@ f_rt_roloc(size_t argc, DeeObject *const *argv) {
 		err_readonly_local(code, frame->cf_ip, lid);
 	} else {
 		DeeError_Throwf(&DeeError_RuntimeError,
-		                "Cannot modify read-only local variable %I16u",
+		                "Cannot modify read-only local variable %" PRFu16,
 		                lid);
 	}
 done:

@@ -31,6 +31,7 @@
 #include <deemon/bool.h>
 #include <deemon/dex.h>
 #include <deemon/error.h>
+#include <deemon/format.h>
 #include <deemon/gc.h>
 #include <deemon/int.h>
 #include <deemon/map.h>
@@ -346,7 +347,8 @@ fl_moveassign(FixedList *__restrict self,
 		return 0;
 	if unlikely(self->fl_size != other->fl_size) {
 		return DeeError_Throwf(&DeeError_UnpackError,
-		                       "Expected a fixed list containing %Iu object%s when one containing %Iu was given",
+		                       "Expected a fixed list containing %" PRFuSIZ " object%s "
+		                       "when one containing %" PRFuSIZ " was given",
 		                       self->fl_size, self->fl_size > 1 ? "s" : "", other->fl_size);
 	}
 	items = (DREF DeeObject **)Dee_AMallocc(self->fl_size,

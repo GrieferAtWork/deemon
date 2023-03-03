@@ -38,6 +38,7 @@
 #include <deemon/exec.h>
 #include <deemon/file.h>
 #include <deemon/float.h>
+#include <deemon/format.h>
 #include <deemon/gc.h>
 #include <deemon/hashset.h>
 #include <deemon/int.h>
@@ -1100,7 +1101,7 @@ DecFile_LoadImports(DecFile *__restrict self) {
 			if unlikely(modtime > timestamp) {
 				GOTO_CORRUPTEDF(reader, stop_imports_module,
 				                "Dependency %q of module %r in %$q changed "
-				                "after .dec file was created (%I64u > %I64u)",
+				                "after .dec file was created (%" PRFu64 " > %" PRFu64 ")",
 				                strtab + off, self->df_module->mo_name,
 				                module_pathlen, module_pathstr,
 				                modtime, timestamp);
@@ -2193,10 +2194,11 @@ load_strmap(DecFile *__restrict self,
 		uint32_t pointer;
 		pointer = Dec_DecodePointer(&reader);
 		/* Validate that the pointer fits into the string-table. */
-		if unlikely(pointer >= string_size)
+		if unlikely(pointer >= string_size) {
 			GOTO_CORRUPTEDF(reader, err_currupt_vec,
-		                "[%I16u/%I16u] pointer = %#I32x, string_size = %#I32x",
-		                i, map_length, pointer, string_size);
+			                "[%" PRFu16 "/%" PRFu16 "] pointer = %#" PRFx32 ", string_size = %#" PRFx32 "",
+			                i, map_length, pointer, string_size);
+		}
 		vector[i] = pointer;
 	}
 

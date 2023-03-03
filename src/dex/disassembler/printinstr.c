@@ -827,12 +827,12 @@ libdisasm_printstack(dformatprinter printer, void *arg,
 		if (soff >= DeeCode_StackDepth(code)) {
 			if (flags & PCODE_FNOBADCOMMENT)
 				goto print_generic;
-			return DeeFormat_Printf(printer, arg, "%s%I16u /* invalid stack-offset */",
+			return DeeFormat_Printf(printer, arg, "%s%" PRFu16 " /* invalid stack-offset */",
 			                        is_prefix ? "stack #" : "#", soff);
 		}
 	}
 print_generic:
-	return DeeFormat_Printf(printer, arg, "%s%I16u",
+	return DeeFormat_Printf(printer, arg, "%s%" PRFu16,
 	                        is_prefix ? "stack #" : "#", soff);
 }
 
@@ -846,7 +846,7 @@ libdisasm_printrelstack(dformatprinter printer, void *arg,
 		goto invalid_offset;
 	if (stacksz == (uint16_t)-1) {
 print_generic:
-		return DeeFormat_Printf(printer, arg, "#SP - %I16u", sp_sub);
+		return DeeFormat_Printf(printer, arg, "#SP - %" PRFu16, sp_sub);
 	}
 	if (sp_sub > stacksz)
 		goto invalid_offset;
@@ -863,7 +863,9 @@ print_generic:
 					if ((name = DeeCode_GetDDIString((DeeObject *)code, iter->dx_spnamv[soff])) != NULL) {
 						if (!(flags & PCODE_FALTCOMMENT))
 							return DeeFormat_Printf(printer, arg, "stack " PREFIX_VARNAME "%s", name);
-						return DeeFormat_Printf(printer, arg, "stack " PREFIX_VARNAME "%s /* #%I16u / #SP - %I16u */",
+						return DeeFormat_Printf(printer, arg,
+						                        "stack " PREFIX_VARNAME "%s "
+						                        "/* #%" PRFu16 " / #SP - %" PRFu16 " */",
 						                        name, soff, sp_sub);
 					}
 				}
@@ -872,12 +874,12 @@ print_generic:
 		}
 	}
 	if (!(flags & PCODE_FALTCOMMENT))
-		return DeeFormat_Printf(printer, arg, "#%I16u", soff);
-	return DeeFormat_Printf(printer, arg, "#%I16u /* #SP - %I16u */", soff, sp_sub);
+		return DeeFormat_Printf(printer, arg, "#%" PRFu16, soff);
+	return DeeFormat_Printf(printer, arg, "#%" PRFu16 " /* #SP - %" PRFu16 " */", soff, sp_sub);
 invalid_offset:
 	if (flags & PCODE_FNOBADCOMMENT)
 		goto print_generic;
-	return DeeFormat_Printf(printer, arg, "#SP - %I16u /* invalid stack-offset */", sp_sub);
+	return DeeFormat_Printf(printer, arg, "#SP - %" PRFu16 " /* invalid stack-offset */", sp_sub);
 }
 
 PRIVATE dssize_t DCALL
@@ -1147,7 +1149,7 @@ found_it_member:
 			}
 		}
 	}
-	return DeeFormat_Printf(printer, arg, "%I16u", mid);
+	return DeeFormat_Printf(printer, arg, "%" PRFu16, mid);
 }
 
 PRIVATE dssize_t DCALL
@@ -2030,7 +2032,7 @@ print_global_const:
 	case ASM_VARARGS_CMP_GR_SZ:
 		imm = READ_imm8(iter);
 print_imm:
-		printf("%I16u", imm);
+		printf("%" PRFu16, imm);
 		break;
 
 	case ASM16_CALL_KW:
@@ -2041,7 +2043,7 @@ print_imm:
 		imm  = READ_imm8(iter);
 		imm2 = READ_imm8(iter);
 print_imm_const:
-		printf("%I16u, ", imm);
+		printf("%" PRFu16 ", ", imm);
 		INVOKE(libdisasm_printconst(printer, arg, imm2, code, flags, false));
 		break;
 
@@ -2049,7 +2051,7 @@ print_imm_const:
 		imm = READ_imm8(iter);
 		INVOKE(libdisasm_printconst(printer, arg, imm, code, flags, false));
 		imm = READ_imm8(iter);
-		printf(", #%I8u, ", imm);
+		printf(", #%" PRFu8 ", ", imm);
 		imm = READ_imm8(iter);
 		INVOKE(libdisasm_printconst(printer, arg, imm, code, flags, false));
 		break;
@@ -2058,7 +2060,7 @@ print_imm_const:
 		imm = READ_imm16(iter);
 		INVOKE(libdisasm_printconst(printer, arg, imm, code, flags, false));
 		imm = READ_imm8(iter);
-		printf(", #%I8u, ", imm);
+		printf(", #%" PRFu8 ", ", imm);
 		imm = READ_imm16(iter);
 		INVOKE(libdisasm_printconst(printer, arg, imm, code, flags, false));
 		break;
@@ -2082,14 +2084,14 @@ print_const_popdots_const:
 	case ASM16_PACK_DICT:
 		imm = READ_imm16(iter);
 print_pack_dict:
-		printf("%I32u", (uint32_t)imm * 2);
+		printf("%" PRFu32, (uint32_t)imm * 2);
 		break;
 
 	case ASM_CALL_SEQ:
-		printf("%I8u]", READ_imm8(iter));
+		printf("%" PRFu8 "]", READ_imm8(iter));
 		break;
 	case ASM_CALL_MAP:
-		printf("%I16u}", (uint16_t)((uint16_t)READ_imm8(iter) * 2));
+		printf("%" PRFu16 "}", (uint16_t)((uint16_t)READ_imm8(iter) * 2));
 		break;
 
 	case ASM16_PACK_TUPLE:
@@ -2112,7 +2114,7 @@ print_pack_dict:
 	case ASM_MUL_SIMM8:
 	case ASM_DIV_SIMM8:
 	case ASM_MOD_SIMM8:
-		printf("%I8d", READ_Simm8(iter));
+		printf("%" PRFd8, READ_Simm8(iter));
 		break;
 
 	case ASM16_ADJSTACK: {
@@ -2122,9 +2124,9 @@ print_pack_dict:
 	case ASM_ADJSTACK:
 		val = READ_Simm8(iter);
 do_print_adjstack:
-		printf("%c %I32d",
+		printf("%c %" PRFu32,
 		       val < 0 ? '-' : '+',
-		       val < 0 ? (int32_t)-val : (int32_t)val);
+		       val < 0 ? (uint32_t)-val : (uint32_t)val);
 	}	break;
 
 	case ASM16_OPERATOR: {
@@ -2136,10 +2138,10 @@ do_print_adjstack:
 do_print_operator:
 		info = Dee_OperatorInfo(NULL, (uint16_t)imm);
 		if (info) {
-			printf("__%s__, " PREFIX_STACKEFFECT "%I8u",
+			printf("__%s__, " PREFIX_STACKEFFECT "%" PRFu8,
 			       info->oi_sname, READ_imm8(iter));
 		} else {
-			printf("%I16u, " PREFIX_STACKEFFECT "%I8u",
+			printf("%" PRFu16 ", " PREFIX_STACKEFFECT "%" PRFu8,
 			       imm, READ_imm8(iter));
 		}
 	}	break;
@@ -2155,7 +2157,7 @@ do_print_operator_tuple:
 		if (info) {
 			printf("__%s__, pop", info->oi_sname);
 		} else {
-			printf("%I16u, pop", imm);
+			printf("%" PRFu16 ", pop", imm);
 		}
 	}	break;
 
@@ -2170,42 +2172,42 @@ do_print_operator_tuple:
 	case ASM16_SETMEMBER_THIS:
 		imm = READ_imm16(iter);
 print_imm_pop:
-		printf("%I16u, pop", imm);
+		printf("%" PRFu16 ", pop", imm);
 		break;
 
 	case ASM_RANGE_0_I32:
-		printf("%I32u", READ_imm32(iter));
+		printf("%" PRFu32, READ_imm32(iter));
 		break;
 
 	case ASM_SETITEM_I:
 	case ASM_GETRANGE_IP:
 	case ASM_SETRANGE_PI:
 	case ASM_SETRANGE_NI:
-		printf("%I16d, pop", READ_Simm16(iter));
+		printf("%" PRFd16 ", pop", READ_Simm16(iter));
 		break;
 
 	case ASM_GETRANGE_PI:
 	case ASM_GETRANGE_NI:
 	case ASM_GETITEM_I:
-		printf("%I16d", READ_Simm16(iter));
+		printf("%" PRFd16, READ_Simm16(iter));
 		break;
 
 	case ASM_GETRANGE_IN:
-		printf("%I16d, none", READ_Simm16(iter));
+		printf("%" PRFd16 ", none", READ_Simm16(iter));
 		break;
 
 	case ASM_SETRANGE_IP:
-		printf("%I16d, pop, pop", READ_Simm16(iter));
+		printf("%" PRFd16 ", pop, pop", READ_Simm16(iter));
 		break;
 
 	case ASM_SETRANGE_IN:
-		printf("%I16d, none, pop", READ_Simm16(iter));
+		printf("%" PRFd16 ", none, pop", READ_Simm16(iter));
 		break;
 
 	case ASM_GETRANGE_II:
 	case ASM_SETRANGE_II:
 		imm = (uint32_t)(uint16_t)READ_Simm16(iter);
-		printf("%I16d, " PREFIX_INTEGERAL "%I16d",
+		printf("%" PRFd16 ", " PREFIX_INTEGERAL "%" PRFd16,
 		       (int16_t)(uint16_t)imm, READ_Simm16(iter));
 		if (opcode == ASM_SETRANGE_II)
 			PRINT(", pop");
@@ -2236,7 +2238,7 @@ print_imm_pop:
 print_extern:
 		INVOKE(libdisasm_printextern(printer, arg, imm, imm2, code, flags));
 		if (opcode == ASM_CALL_EXTERN || opcode == ASM16_CALL_EXTERN)
-			printf(", " PREFIX_STACKEFFECT "%I8u", READ_imm8(iter));
+			printf(", " PREFIX_STACKEFFECT "%" PRFu8, READ_imm8(iter));
 		break;
 
 	case ASM16_PUSH_MODULE:
@@ -2265,7 +2267,7 @@ print_module:
 print_global:
 		INVOKE(libdisasm_printglobal(printer, arg, imm, code, flags));
 		if (opcode == ASM_CALL_GLOBAL || opcode == ASM16_CALL_GLOBAL)
-			printf(", " PREFIX_STACKEFFECT "%I8u", READ_imm8(iter));
+			printf(", " PREFIX_STACKEFFECT "%" PRFu8, READ_imm8(iter));
 		break;
 
 	case ASM16_PUSH_BND_LOCAL:
@@ -2285,7 +2287,7 @@ print_global:
 print_local:
 		INVOKE(libdisasm_printlocal(printer, arg, imm, ddi, code, flags));
 		if (opcode == ASM_CALL_LOCAL || opcode == ASM16_CALL_LOCAL)
-			printf(", " PREFIX_STACKEFFECT "%I8u", READ_imm8(iter));
+			printf(", " PREFIX_STACKEFFECT "%" PRFu8, READ_imm8(iter));
 		break;
 
 	case ASM16_PUSH_REF:
@@ -2326,7 +2328,7 @@ print_ref:
 			if (opcode == ASM_SETMEMBER_THIS_R)
 				PRINT(", pop");
 			if (opcode == ASM_CALLCMEMBER_THIS_R)
-				printf(", " PREFIX_STACKEFFECT "%I8u", READ_imm8(iter));
+				printf(", " PREFIX_STACKEFFECT "%" PRFu8, READ_imm8(iter));
 			break;
 
 		case ASM16_GETMEMBER_THIS_R:
@@ -2343,7 +2345,7 @@ print_ref:
 			if (opcode == ASM16_SETMEMBER_THIS_R)
 				PRINT(", pop");
 			if (opcode == ASM16_CALLCMEMBER_THIS_R)
-				printf(", " PREFIX_STACKEFFECT "%I8u", READ_imm8(iter));
+				printf(", " PREFIX_STACKEFFECT "%" PRFu8, READ_imm8(iter));
 			break;
 
 		default: break;
@@ -2483,17 +2485,17 @@ print_const:
 		case ASM16_CALLATTR_C:
 		case ASM_CALLATTR_THIS_C:
 		case ASM16_CALLATTR_THIS_C:
-			printf(", " PREFIX_STACKEFFECT "%I8u", READ_imm8(iter));
+			printf(", " PREFIX_STACKEFFECT "%" PRFu8, READ_imm8(iter));
 			break;
 
 		case ASM_CALLATTR_C_SEQ:
 		case ASM16_CALLATTR_C_SEQ:
-			printf(", [" PREFIX_STACKEFFECT "%I8u]", READ_imm8(iter));
+			printf(", [" PREFIX_STACKEFFECT "%" PRFu8 "]", READ_imm8(iter));
 			break;
 
 		case ASM_CALLATTR_C_MAP:
 		case ASM16_CALLATTR_C_MAP:
-			printf(", {" PREFIX_STACKEFFECT "%I16u}", (uint16_t)((uint16_t)READ_imm8(iter) * 2));
+			printf(", {" PREFIX_STACKEFFECT "%" PRFu16 "}", (uint16_t)((uint16_t)READ_imm8(iter) * 2));
 			break;
 
 		case ASM_FUNCTION_C_16:
@@ -2505,7 +2507,7 @@ print_const:
 		case ASM16_FUNCTION_C:
 			imm = READ_imm8(iter);
 do_print_stackeffect_after_const:
-			printf(", " PREFIX_STACKEFFECT "%I32u", (uint32_t)imm + 1);
+			printf(", " PREFIX_STACKEFFECT "%" PRFu32, (uint32_t)imm + 1);
 			break;
 
 		default: break;
@@ -2528,7 +2530,7 @@ do_print_superattr_rc:
 		INVOKE(libdisasm_printconst(printer, arg, imm2, code, flags, false));
 		if (opcode == ASM_SUPERCALLATTR_THIS_RC ||
 		    opcode == ASM16_SUPERCALLATTR_THIS_RC)
-			printf(", #%I8u", READ_imm8(iter));
+			printf(", #%" PRFu8, READ_imm8(iter));
 		break;
 
 	case ASM_PUSH_VARARGS:

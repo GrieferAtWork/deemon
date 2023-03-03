@@ -25,6 +25,7 @@
 /**/
 
 #include <deemon/error.h>
+#include <deemon/format.h>
 
 DECL_BEGIN
 
@@ -34,12 +35,13 @@ err_invalid_argc_len(char const *function_name, size_t function_size,
                      size_t argc_cur, size_t argc_min, size_t argc_max) {
 	if (argc_min == argc_max) {
 		return DeeError_Throwf(&DeeError_TypeError,
-		                       "function%s%$s expects %Iu arguments when %Iu w%s given",
+		                       "function%s%$s expects %" PRFuSIZ " arguments when %" PRFuSIZ " w%s given",
 		                       function_size ? " " : "", function_size, function_name,
 		                       argc_min, argc_cur, argc_cur == 1 ? "as" : "ere");
 	} else {
 		return DeeError_Throwf(&DeeError_TypeError,
-		                       "function%s%$s expects between %Iu and %Iu arguments when %Iu w%s given",
+		                       "function%s%$s expects between %" PRFuSIZ " and "
+		                       "%" PRFuSIZ " arguments when %" PRFuSIZ " w%s given",
 		                       function_size ? " " : "", function_size, function_name,
 		                       argc_min, argc_max, argc_cur, argc_cur == 1 ? "as" : "ere");
 	}
@@ -70,7 +72,7 @@ err_invalid_unpack_size(DeeObject *__restrict unpack_object,
 	ASSERT_OBJECT(unpack_object);
 	(void)unpack_object;
 	return DeeError_Throwf(&DeeError_UnpackError,
-	                       "Expected %Iu object%s when %Iu w%s given",
+	                       "Expected %" PRFuSIZ " object%s when %" PRFuSIZ " w%s given",
 	                       need_size, need_size > 1 ? "s" : "", real_size,
 	                       real_size == 1 ? "as" : "ere");
 }
@@ -84,7 +86,7 @@ err_invalid_unpack_iter_size(DeeObject *__restrict unpack_object,
 	(void)unpack_object;
 	(void)unpack_iterator;
 	return DeeError_Throwf(&DeeError_UnpackError,
-	                       "Expected %Iu object%s when at least %Iu w%s given",
+	                       "Expected %" PRFuSIZ " object%s when at least %" PRFuSIZ " w%s given",
 	                       need_size, need_size > 1 ? "s" : "", need_size + 1,
 	                       need_size == 0 ? "as" : "ere");
 }
@@ -315,7 +317,8 @@ INTERN ATTR_COLD int FCALL
 syn_asm_nonempty_string(JITLexer *__restrict self) {
 	syn_trace_here(self);
 	return DeeError_Throwf(&DeeError_SyntaxError,
-	                       "User-assembly statements with non-empty assembly text are not supported");
+	                       "User-assembly statements with non-empty "
+	                       "assembly text are not supported");
 }
 
 INTERN ATTR_COLD int FCALL
@@ -762,19 +765,23 @@ syn_template_string_unmatched_lbrace(JITLexer *__restrict self) {
 INTERN ATTR_COLD int FCALL
 syn_template_string_unmatched_rbrace(JITLexer *__restrict self) {
 	syn_trace_here(self);
-	return DeeError_Throwf(&DeeError_SyntaxError, "Unmatched '}' in template string");
+	return DeeError_Throwf(&DeeError_SyntaxError,
+	                       "Unmatched '}' in template string");
 }
 
 INTERN ATTR_COLD int FCALL
 syn_template_string_no_digit_or_hex_after_backslash_x_u_U(JITLexer *__restrict self) {
 	syn_trace_here(self);
-	return DeeError_Throwf(&DeeError_SyntaxError, "No digits, or hex-chars found after `\\x', `\\u' or `\\U'");
+	return DeeError_Throwf(&DeeError_SyntaxError,
+	                       "No digits, or hex-chars found after `\\x', `\\u' or `\\U'");
 }
 
 INTERN ATTR_COLD int FCALL
 syn_template_string_undefined_escape(JITLexer *__restrict self, int ch) {
 	syn_trace_here(self);
-	return DeeError_Throwf(&DeeError_SyntaxError, "Unknown escape character `%c' in template string", ch);
+	return DeeError_Throwf(&DeeError_SyntaxError,
+	                       "Unknown escape character `%c' in template string",
+	                       ch);
 }
 
 
@@ -785,12 +792,13 @@ INTERN ATTR_COLD int
                          size_t argc_min, size_t argc_max) {
 	if (argc_min == argc_max) {
 		return DeeError_Throwf(&DeeError_TypeError,
-		                       "function%s%s expects %Iu arguments when %Iu w%s given",
+		                       "function%s%s expects %" PRFuSIZ " arguments when %" PRFuSIZ " w%s given",
 		                       function_name ? " " : "", function_name ? function_name : "",
 		                       argc_min, argc_cur, argc_cur == 1 ? "as" : "ere");
 	} else {
 		return DeeError_Throwf(&DeeError_TypeError,
-		                       "function%s%s expects between %Iu and %Iu arguments when %Iu w%s given",
+		                       "function%s%s expects between %" PRFuSIZ " and %" PRFuSIZ " "
+		                       "arguments when %" PRFuSIZ " w%s given",
 		                       function_name ? " " : "", function_name ? function_name : "",
 		                       argc_min, argc_max, argc_cur, argc_cur == 1 ? "as" : "ere");
 	}

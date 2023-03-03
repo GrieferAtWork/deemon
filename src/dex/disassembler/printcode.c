@@ -501,7 +501,7 @@ libdisasm_printclassattribute(dformatprinter printer, void *arg,
 	dssize_t temp, result;
 	unsigned int i;
 	result = DeeFormat_Printf(printer, arg,
-	                          "%s        attribute %k, %I16u",
+	                          "%s        attribute %k, %" PRFu16,
 	                          line_prefix, self->ca_name,
 	                          self->ca_addr);
 	if unlikely(result < 0)
@@ -514,7 +514,7 @@ libdisasm_printclassattribute(dformatprinter printer, void *arg,
 	if (self->ca_addr >= addr_size)
 		INVOKE(DeeFormat_PRINT(printer, arg, " /* Invalid address */"));
 	if (self->ca_flag & ~CLASS_ATTRIBUTE_FMASK)
-		INVOKE(DeeFormat_Printf(printer, arg, " /* Invalid flags %#I16x */", self->ca_flag));
+		INVOKE(DeeFormat_Printf(printer, arg, " /* Invalid flags %#" PRFx16 " */", self->ca_flag));
 	INVOKE((*printer)(arg, "\n", 1));
 done:
 	return result;
@@ -531,9 +531,9 @@ libdisasm_printclass(dformatprinter printer, void *arg,
 	if (!line_prefix)
 		line_prefix = "";
 	result = DeeFormat_Printf(printer, arg,
-	                          "%s.const %Iu = class %k%s{\n"
-	                          "%s    /* INSTANCESIZE = %I16u */\n"
-	                          "%s    /* CLASSSIZE    = %I16u */\n",
+	                          "%s.const %" PRFuSIZ " = class %k%s{\n"
+	                          "%s    /* INSTANCESIZE = %" PRFu16 " */\n"
+	                          "%s    /* CLASSSIZE    = %" PRFu16 " */\n",
 	                          line_prefix, const_index,
 	                          self->cd_name ? self->cd_name : (DeeStringObject *)Dee_EmptyString,
 	                          self->cd_name ? " " : "",
@@ -561,11 +561,11 @@ libdisasm_printclass(dformatprinter printer, void *arg,
 			}
 			info = Dee_OperatorInfo(NULL, self->cd_clsop_list[i].co_name);
 			if (info) {
-				INVOKE(DeeFormat_Printf(printer, arg, "%s        %s = %I16u\n",
+				INVOKE(DeeFormat_Printf(printer, arg, "%s        %s = %" PRFu16 "\n",
 				                        line_prefix, info->oi_sname,
 				                        self->cd_clsop_list[i].co_addr));
 			} else {
-				INVOKE(DeeFormat_Printf(printer, arg, "%s        %#I16x = %I16u\n",
+				INVOKE(DeeFormat_Printf(printer, arg, "%s        %#" PRFx16 " = %" PRFu16 "\n",
 				                        line_prefix,
 				                        self->cd_clsop_list[i].co_name,
 				                        self->cd_clsop_list[i].co_addr));
@@ -896,7 +896,7 @@ prefix_except_prefix:
 								new_stacksz = stacksz = hand->eh_stack;
 								DeeAsm_NextInstrSp(iter, &new_stacksz);
 							}
-							printf(".except .L%s_%I16u_start, .L%s_%I16u_end, .L%s_%I16u_entry", name, i, name, i, name, i);
+							printf(".except .L%s_%" PRFu16 "_start, .L%s_%" PRFu16 "_end, .L%s_%" PRFu16 "_entry", name, i, name, i, name, i);
 							if (hand->eh_flags & EXCEPTION_HANDLER_FFINALLY)
 								PRINT(", @finally");
 							if (hand->eh_flags & EXCEPTION_HANDLER_FINTERPT)
@@ -910,7 +910,7 @@ prefix_except_prefix:
 							goto prefix_except_prefix;
 						}
 						/* start / end */
-						printf(".L%s_%I16u_%s:\n", name, i, type);
+						printf(".L%s_%" PRFu16 "_%s:\n", name, i, type);
 					}
 				}
 			}
@@ -1083,7 +1083,7 @@ prefix_except_prefix:
 			Dee_Incref(inner_code);
 			atomic_rwlock_endread(&code->co_static_lock);
 			temp = DeeFormat_Printf(printer, arg,
-			                        "%s.const %Iu = %s {\n",
+			                        "%s.const %" PRFuSIZ " = %s {\n",
 			                        line_prefix ? line_prefix : "",
 			                        i,
 			                        kind);

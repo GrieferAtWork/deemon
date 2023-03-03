@@ -28,6 +28,7 @@
 #include <deemon/error.h>
 #include <deemon/file.h>
 #include <deemon/filetypes.h>
+#include <deemon/format.h>
 #include <deemon/int.h>
 #include <deemon/mapfile.h>
 #include <deemon/none.h>
@@ -1671,7 +1672,7 @@ mapfile_init_kw(DeeMapFileObject *__restrict self, size_t argc,
 		mapflags |= DEE_MAPFILE_F_MUSTMMAP | DEE_MAPFILE_F_MAPSHARED;
 		if (nulbytes != 0) {
 			return DeeError_Throwf(&DeeError_ValueError,
-			                       "Cannot use `mapshared = true' with non-zero `nulbytes = %Iu'",
+			                       "Cannot use `mapshared = true' with non-zero `nulbytes = %" PRFuSIZ "'",
 			                       nulbytes);
 		}
 	}

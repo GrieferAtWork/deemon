@@ -373,14 +373,14 @@ DEF_WARNING(W_INCONSISTENT_THOUSANDS_SEPERATORS, (WG_QUALITY), WSTATE_WARN, {
 	size_t s1 = ARG(size_t);
 	size_t s2 = ARG(size_t);
 	WARNF("Thousands/grouping character `_' is used inconsistently in " TOK_S ": "
-	      "grouping with width %Iu and %Iu are present",
+	      "grouping with width %" PRFuSIZ " and %" PRFuSIZ " are present",
 	      TOK_A, s1, s2);
 })
 DEF_WARNING(W_INCORRECT_THOUSANDS_SEPERATORS, (WG_QUALITY), WSTATE_WARN, {
 	size_t expected = ARG(size_t);
 	size_t actual   = ARG(size_t);
 	WARNF("Thousands/grouping character `_' is used incorrectly in " TOK_S ": "
-	      "a separator should appear every %Iu digits, but actually appears every %Iu digits",
+	      "a separator should appear every %" PRFuSIZ " digits, but actually appears every %" PRFuSIZ " digits",
 	      TOK_A, expected, actual);
 })
 

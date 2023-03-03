@@ -784,7 +784,7 @@ nodns:
 #ifdef AF_INET
 	if (family == AF_INET) {
 		uint32_t host = NTOH32(*(uint32_t *)data);
-		return DeeString_Newf("%I8u.%I8u.%I8u.%I8u",
+		return DeeString_Newf("%" PRFu8 ".%" PRFu8 ".%" PRFu8 ".%" PRFu8,
 		                      (host & 0xff000000) >> 24, (host & 0xff0000) >> 16,
 		                      (host & 0xff00) >> 8, (host & 0xff));
 	}
@@ -792,7 +792,8 @@ nodns:
 #ifdef AF_INET6
 	if (family == AF_INET6) {
 		uint16_t *words = (uint16_t *)data;
-		return DeeString_Newf("%I16u:%I16u:%I16u:%I16u:%I16u:%I16u:%I16u:%I16u",
+		return DeeString_Newf("%" PRFu16 ":%" PRFu16 ":%" PRFu16 ":%" PRFu16 ":"
+		                      "%" PRFu16 ":%" PRFu16 ":%" PRFu16 ":%" PRFu16,
 		                      NTOH16(words[0]), NTOH16(words[1]),
 		                      NTOH16(words[2]), NTOH16(words[3]),
 		                      NTOH16(words[4]), NTOH16(words[5]),
@@ -817,7 +818,7 @@ SockAddr_ToString(SockAddr const *__restrict self, int protocol, int flags) {
 	case AF_INET:
 		result = sock_gethostbyaddr(&self->sa_inet.sin_addr, 4, family, flags);
 		if (!(flags & SOCKADDR_STR_FNOPORT))
-			return DeeString_Newf("%K:%I16u", result, NTOH16(self->sa_inet.sin_port));
+			return DeeString_Newf("%K:%" PRFu16, result, NTOH16(self->sa_inet.sin_port));
 		break;
 #endif /* AF_INET */
 
@@ -825,7 +826,7 @@ SockAddr_ToString(SockAddr const *__restrict self, int protocol, int flags) {
 	case AF_INET6:
 		result = sock_gethostbyaddr(&self->sa_inet6.sin6_addr, 16, family, flags);
 		if (!(flags & SOCKADDR_STR_FNOPORT))
-			return DeeString_Newf("[%K]:%I16u", result, NTOH16(self->sa_inet6.sin6_port));
+			return DeeString_Newf("[%K]:%" PRFu16, result, NTOH16(self->sa_inet6.sin6_port));
 		break;
 #endif /* AF_INET6 */
 
@@ -1106,7 +1107,7 @@ retry_addrinfo:
 			rwlock_endread(&sysdb_lock);
 			DeeError_Throwf(&DeeError_NotImplemented,
 			                "Address family %K for %q on port %q is too "
-			                "big (its size %Iu exceeds the limit of %Iu)",
+			                "big (its size %" PRFuSIZ " exceeds the limit of %" PRFuSIZ ")",
 			                sock_getafnameorid(info_family),
 			                host, port, info_len, sizeof(SockAddr));
 			error = -1;
@@ -1479,7 +1480,7 @@ do_generic_string_2:
 			DeeError_Throwf(&DeeError_TypeError,
 			                "Constructing address family %K requires "
 			                SOCKADDR_CTOR_ARGC_LIST
-			                " arguments, but %Iu were given",
+			                " arguments, but %" PRFuSIZ " were given",
 			                sock_getafnameorid(family), argc);
 #undef SOCKADDR_CTOR_ARGC_LIST
 			break;
@@ -1490,7 +1491,7 @@ do_generic_string_2:
 	case AF_UNIX:
 		if likely(argc != 1) {
 			DeeError_Throwf(&DeeError_TypeError,
-			                "Constructing address family AF_UNIX requires 1 argument, but %Iu were given",
+			                "Constructing address family AF_UNIX requires 1 argument, but %" PRFuSIZ " were given",
 			                argc);
 			goto err;
 		}
@@ -1531,7 +1532,7 @@ do_generic_string_2:
 		default:
 			DeeError_Throwf(&DeeError_TypeError,
 			                "Construction address Family AF_NETLINK "
-			                "requires 2 arguments, but %Iu were given",
+			                "requires 2 arguments, but %" PRFuSIZ " were given",
 			                argc);
 			goto err;
 		}
@@ -1548,7 +1549,7 @@ do_generic_string_2:
 					goto do_generic_string;
 				DeeError_Throwf(&DeeError_TypeError,
 				                "Construction address Family AF_BLUETOOTH with protocol "
-				                "BTPROTO_L2CAP requires 2 argument, but %Iu were given",
+				                "BTPROTO_L2CAP requires 2 argument, but %" PRFuSIZ " were given",
 				                argc);
 				goto err;
 			}
@@ -1567,7 +1568,7 @@ do_generic_string_2:
 					goto do_generic_string;
 				DeeError_Throwf(&DeeError_TypeError,
 				                "Construction address Family AF_BLUETOOTH with protocol "
-				                "BTPROTO_RFCOMM requires 2 argument, but %Iu were given",
+				                "BTPROTO_RFCOMM requires 2 argument, but %" PRFuSIZ " were given",
 				                argc);
 				goto err;
 			}
@@ -1586,7 +1587,7 @@ do_generic_string_2:
 					goto do_generic_string_2;
 				DeeError_Throwf(&DeeError_TypeError,
 				                "Construction address Family AF_BLUETOOTH with protocol "
-				                "BTPROTO_HCI requires 1 argument, but %Iu were given",
+				                "BTPROTO_HCI requires 1 argument, but %" PRFuSIZ " were given",
 				                argc);
 				goto err;
 			}
@@ -1609,7 +1610,7 @@ do_generic_string_2:
 					goto do_generic_string_2;
 				DeeError_Throwf(&DeeError_TypeError,
 				                "Construction address Family AF_BLUETOOTH with protocol "
-				                "BTPROTO_SCO requires 1 argument, but %Iu were given",
+				                "BTPROTO_SCO requires 1 argument, but %" PRFuSIZ " were given",
 				                argc);
 				goto err;
 			}

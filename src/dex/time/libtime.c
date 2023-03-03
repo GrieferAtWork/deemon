@@ -30,6 +30,7 @@
 #include <deemon/bool.h>
 #include <deemon/dex.h>
 #include <deemon/error.h>
+#include <deemon/format.h>
 #include <deemon/int.h>
 #include <deemon/none.h>
 #include <deemon/numeric.h>
@@ -1324,7 +1325,7 @@ print_text:
 				goto print_text;
 
 			case 'c':
-				printf("%s %s %0.2I8u %0.2I8u:%0.2I8u:%0.2I8u %I128d",
+				printf("%s %s %0.2" PRFu8 " %0.2" PRFu8 ":%0.2" PRFu8 ":%0.2" PRFu8 " %" PRFd128,
 				       get_wday_abbr(DeeTime_GetRepr8(self, TIME_REPR_WDAY)),
 				       get_month_abbr(DeeTime_GetRepr8(self, TIME_REPR_MONTH) - 1),
 				       DeeTime_GetRepr8(self, TIME_REPR_MDAY),
@@ -1335,14 +1336,14 @@ print_text:
 				break;
 
 			case 'x':
-				printf("%0.2I8u/%0.2I8u/%0.2I128u",
+				printf("%0.2" PRFu8 "/%0.2" PRFu8 "/%0.2" PRFu128,
 				       DeeTime_GetRepr8(self, TIME_REPR_MONTH),
 				       DeeTime_GetRepr8(self, TIME_REPR_MDAY),
 				       DeeTime_GetRepr(self, TIME_REPR_YEAR));
 				break;
 
 			case 'X':
-				printf("%0.2I8u:%0.2I8u:%0.2I8u",
+				printf("%0.2" PRFu8 ":%0.2" PRFu8 ":%0.2" PRFu8,
 				       DeeTime_GetRepr8(self, TIME_REPR_HOUR),
 				       DeeTime_GetRepr8(self, TIME_REPR_MINUTE),
 				       DeeTime_GetRepr8(self, TIME_REPR_SECOND));
@@ -1364,7 +1365,7 @@ print_text:
 				__hybrid_int128_div8(number, 100);
 				__hybrid_int128_mod8(number, 100);
 print_number_2:
-				printf("%0.2I128d", number);
+				printf("%0.2" PRFd128, number);
 				break;
 
 			case 'd':
@@ -1374,7 +1375,7 @@ print_number_2:
 			case 'D':
 				_DeeTime_GetRepr(&number, self, TIME_REPR_MDAY);
 				__hybrid_int128_mod8(number, 100);
-				printf("%0.2I8u/%0.2I8u/%0.2I8u",
+				printf("%0.2" PRFu8 "/%0.2" PRFu8 "/%0.2" PRFu8,
 				       DeeTime_GetRepr8(self, TIME_REPR_MONTH),
 				       DeeTime_GetRepr8(self, TIME_REPR_MDAY),
 				       __hybrid_int128_get8(number));
@@ -1383,11 +1384,11 @@ print_number_2:
 			case 'e':
 				_DeeTime_GetRepr(&number, self, TIME_REPR_MDAY);
 /*print_number_2_spc:*/
-				printf("%02I128u", number);
+				printf("%02" PRFu128, number);
 				break;
 
 			case 'F':
-				printf("%0.4I128d-%0.2u-%0.2u",
+				printf("%0.4" PRFd128 "-%0.2u-%0.2u",
 				       DeeTime_GetRepr(self, TIME_REPR_YEAR),
 				       DeeTime_GetRepr8(self, TIME_REPR_MONTH),
 				       DeeTime_GetRepr8(self, TIME_REPR_MDAY));
@@ -1405,7 +1406,7 @@ print_number_2:
 			case 'j':
 				_DeeTime_GetRepr(&number, self, TIME_REPR_YDAY);
 /*print_number_3_spc:*/
-				printf("%3I128d", number);
+				printf("%3" PRFd128, number);
 				break;
 
 			case 'm':
@@ -1428,7 +1429,7 @@ print_number_2:
 				ampm = number;
 				__hybrid_int128_div8(ampm, 12);
 				__hybrid_int128_mod8(number, 12);
-				printf("%0.2I8u:%0.2I8u:%0.2I8u %s",
+				printf("%0.2" PRFu8 ":%0.2" PRFu8 ":%0.2" PRFu8 " %s",
 				       __hybrid_int128_get8(number),
 				       DeeTime_GetRepr8(self, TIME_REPR_MINUTE),
 				       DeeTime_GetRepr8(self, TIME_REPR_SECOND),
@@ -1436,7 +1437,7 @@ print_number_2:
 			}	break;
 
 			case 'R':
-				printf("%0.2I8u:%0.2I8u",
+				printf("%0.2" PRFu8 ":%0.2" PRFu8,
 				       DeeTime_GetRepr8(self, TIME_REPR_HOUR),
 				       DeeTime_GetRepr8(self, TIME_REPR_MINUTE));
 				break;
@@ -1446,7 +1447,7 @@ print_number_2:
 				goto print_number_2;
 
 			case 'T':
-				printf("%0.2I8u:%0.2I8u:%0.2I8u",
+				printf("%0.2" PRFu8 ":%0.2" PRFu8 ":%0.2" PRFu8,
 				       DeeTime_GetRepr8(self, TIME_REPR_HOUR),
 				       DeeTime_GetRepr8(self, TIME_REPR_MINUTE),
 				       DeeTime_GetRepr8(self, TIME_REPR_SECOND));
@@ -1470,7 +1471,7 @@ print_number_2:
 
 			case 'Y':
 				_DeeTime_GetRepr(&number, self, TIME_REPR_YEAR);
-				printf("%I128d", number);
+				printf("%" PRFd128, number);
 				break;
 
 				/* I don't understand this week-based stuff.
@@ -1589,7 +1590,7 @@ print_number_2:
 					if (ascii_printer_SpecWriteUInt64(printer, number, &fmt_spec) < 0)
 						goto err;
 #else
-					printf("%I128d", number);
+					printf("%" PRFd128, number);
 #endif
 					if (repr_mode == 'n') {
 						size_t suffix_offset = 6;
@@ -1643,7 +1644,7 @@ PRIVATE int DCALL
 int128_overflow(Dee_int128_t const *__restrict value,
                 unsigned int after_bits) {
 	return DeeError_Throwf(&DeeError_IntegerOverflow,
-	                       "%s integer overflow after %u bits in %I128d",
+	                       "%s integer overflow after %u bits in %" PRFd128,
 	                       __hybrid_int128_isneg(*value) < 0
 	                       ? "negative"
 	                       : "positive",
@@ -2244,7 +2245,7 @@ time_mul(DeeTimeObject *self, DeeObject *other) {
 	return result;
 err_cannot_multiply_timestamp:
 	DeeError_Throwf(&DeeError_ValueError,
-	                "Cannot multiply timestamp %r by %I128d",
+	                "Cannot multiply timestamp %r by %" PRFd128,
 	                self, multiplier);
 err:
 	return NULL;
@@ -3187,14 +3188,14 @@ time_repr(DeeTimeObject *__restrict self) {
 			__hybrid_int128_divmod8(self->t_months, MONTHS_PER_YEAR,
 			                        years, months);
 			if (__hybrid_int128_iszero(years)) {
-				if unlikely(ascii_printer_printf(&printer, "months: %I8u", months) < 0)
+				if unlikely(ascii_printer_printf(&printer, "months: %" PRFu8, months) < 0)
 					goto err;
 			} else if (months == 0) {
-				if unlikely(ascii_printer_printf(&printer, "years: %I128u", years) < 0)
+				if unlikely(ascii_printer_printf(&printer, "years: %" PRFu128, years) < 0)
 					goto err;
 			} else {
 				if unlikely(ascii_printer_printf(&printer,
-				                                 "years: %I128u, months: %I8u",
+				                                 "years: %" PRFu128 ", months: %" PRFu8,
 				                                 years, months) < 0)
 					goto err;
 			}
@@ -3230,19 +3231,19 @@ time_repr(DeeTimeObject *__restrict self) {
 				label = "nanoseconds";
 				div   = nano;
 			}
-			if unlikely(ascii_printer_printf(&printer, "%s: %I128u", label, div) < 0)
+			if unlikely(ascii_printer_printf(&printer, "%s: %" PRFu128, label, div) < 0)
 				goto err;
 		}
 	} else {
 		uint32_t extra_nanoseconds;
 		/* Timestamp representation */
 		if unlikely(ascii_printer_printf(&printer,
-		                                 "year: %I128d, "
-		                                 "month: %I8u, "
-		                                 "day: %I8u, "
-		                                 "hour: %I8u, "
-		                                 "minute: %I8u, "
-		                                 "second: %I8u",
+		                                 "year: %" PRFd128 ", "
+		                                 "month: %" PRFu8 ", "
+		                                 "day: %" PRFu8 ", "
+		                                 "hour: %" PRFu8 ", "
+		                                 "minute: %" PRFu8 ", "
+		                                 "second: %" PRFu8,
 		                                 DeeTime_GetRepr(self, TIME_REPR_YEAR),
 		                                 DeeTime_GetRepr8(self, TIME_REPR_MONTH),
 		                                 DeeTime_GetRepr8(self, TIME_REPR_MDAY),
@@ -3252,7 +3253,7 @@ time_repr(DeeTimeObject *__restrict self) {
 			goto err;
 		extra_nanoseconds = DeeTime_GetRepr32(self, TIME_REPR_NANOSECOND);
 		if (extra_nanoseconds != 0) {
-			if unlikely(ascii_printer_printf(&printer, ", nanosecond: %I32u", extra_nanoseconds) < 0)
+			if unlikely(ascii_printer_printf(&printer, ", nanosecond: %" PRFu32, extra_nanoseconds) < 0)
 				goto err;
 		}
 	}

@@ -23,11 +23,12 @@
 #include <deemon/alloc.h>
 #include <deemon/api.h>
 #include <deemon/error.h>
+#include <deemon/format.h>
 #include <deemon/object.h>
 #include <deemon/string.h>
+#include <deemon/system-features.h> /* fprintf(stderr, ...) */
 #include <deemon/thread.h>
 #include <deemon/traceback.h>
-#include <deemon/system-features.h> /* fprintf(stderr, ...) */
 #include <deemon/tuple.h>
 #include <deemon/util/atomic.h>
 
@@ -168,7 +169,7 @@ PUBLIC NONNULL((1)) int
 	ts->t_except    = frame;
 	Dee_Incref(ob);
 	++ts->t_exceptsz;
-	Dee_DPRINTF("[RT] Throw exception: %r (%I16u)\n", ob, ts->t_exceptsz);
+	Dee_DPRINTF("[RT] Throw exception: %r (%" PRFu16 ")\n", ob, ts->t_exceptsz);
 done:
 	return -1;
 }

@@ -303,8 +303,8 @@ DeeFunction_NewInherited(DeeObject *code_, size_t refc,
 	DREF Function *result;
 	ASSERT_OBJECT_TYPE_EXACT(code, &DeeCode_Type);
 	ASSERTF(code->co_refc == refc,
-	        "code->co_refc = %I16u\n"
-	        "refc          = %I16u\n"
+	        "code->co_refc = %" PRFu16 "\n"
+	        "refc          = %" PRFu16 "\n"
 	        "name          = %s\n",
 	        code->co_refc, refc,
 	        DeeCode_NAME(code));

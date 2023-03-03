@@ -30,6 +30,7 @@
 #include <deemon/bytes.h>
 #include <deemon/error.h>
 #include <deemon/float.h>
+#include <deemon/format.h>
 #include <deemon/gc.h>
 #include <deemon/int.h>
 #include <deemon/none.h>
@@ -1827,7 +1828,7 @@ atype_fini(DeeArrayTypeObject *__restrict self) {
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 atype_repr(DeeArrayTypeObject *__restrict self) {
-	return DeeString_Newf("%r[%Iu]", self->at_orig, self->at_count);
+	return DeeString_Newf("%r[%" PRFuSIZ "]", self->at_orig, self->at_count);
 }
 
 PRIVATE struct type_member tpconst atype_members[] = {

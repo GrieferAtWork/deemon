@@ -121,6 +121,7 @@
 
 #include <deemon/dex.h>
 #include <deemon/file.h>
+#include <deemon/format.h>
 #include <deemon/util/lock.h>
 
 #include <hybrid/byteorder.h>
@@ -476,7 +477,7 @@ STATIC_ASSERT(LOCALHOST == SOCKADDRINET(127, 0, 0, 1));
 #endif /* !CONFIG_HOST_WINDOWS */
 
 #ifdef CONFIG_HOST_WINDOWS
-#define SOCK_FMT  "%Iu"
+#define SOCK_FMT  "%" PRFuSIZ
 typedef uintptr_t SocketHandleType;
 #else /* CONFIG_HOST_WINDOWS */
 #define SOCK_FMT  "%d"

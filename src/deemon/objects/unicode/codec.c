@@ -444,8 +444,8 @@ err:
 		/* Uneven (the last byte would not be used) */
 		if (error_mode == STRING_ERROR_FSTRICT) {
 			DeeError_Throwf(&DeeError_UnicodeDecodeError,
-			                "Cannot encode unmatched trailing byte in data block of %Iu bytes, "
-			                "when an number of bytes divisible by 2 was required",
+			                "Cannot encode unmatched trailing byte in data block of %" PRFuSIZ " "
+			                "bytes, when an number of bytes divisible by 2 was required",
 			                size);
 			goto err;
 		}
@@ -478,8 +478,8 @@ err:
 		/* Uneven (the last byte would not be used) */
 		if (error_mode == STRING_ERROR_FSTRICT) {
 			DeeError_Throwf(&DeeError_UnicodeDecodeError,
-			                "Cannot encode unmatched trailing byte in data block of %Iu bytes, "
-			                "when an number of bytes divisible by 4 was required",
+			                "Cannot encode unmatched trailing byte in data block of %" PRFuSIZ " "
+			                "bytes, when an number of bytes divisible by 4 was required",
 			                size);
 			goto err;
 		}

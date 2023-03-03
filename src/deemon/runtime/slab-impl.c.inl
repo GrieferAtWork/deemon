@@ -23,6 +23,7 @@
 #define NEXT_LARGER  7
 #endif /* __INTELLISENSE__ */
 
+#include <deemon/format.h>
 #include <deemon/util/atomic.h>
 #include <deemon/util/rwlock.h>
 
@@ -314,7 +315,7 @@ again:
 			INC_MAXPAIR(FUNC(slab).s_num_alloc, FUNC(slab).s_max_alloc);
 			index = (i * (__SIZEOF_POINTER__ * 8)) + j;
 			ASSERTF(index < SLAB_ITEMCOUNT, "Invalid index: %u", index);
-			LOG_SLAB("[SLAB] Alloc: %p (%Iu bytes)\n", &page->sp_items[indexj], (size_t)ITEMSIZE);
+			LOG_SLAB("[SLAB] Alloc: %p (%" PRFuSIZ " bytes)\n", &page->sp_items[indexj], (size_t)ITEMSIZE);
 			return &page->sp_items[index];
 		}
 		SCHED_YIELD();
@@ -395,7 +396,7 @@ FORCELOCAL void
 		FUNC(SlabPage) *page;
 		unsigned int index, i;
 		uintptr_t mask;
-		LOG_SLAB("[SLAB] Free: %p (%Iu bytes)\n", ptr, (size_t)ITEMSIZE);
+		LOG_SLAB("[SLAB] Free: %p (%" PRFuSIZ " bytes)\n", ptr, (size_t)ITEMSIZE);
 		page = (FUNC(SlabPage) *)((uintptr_t)ptr & ~(CONFIG_SLAB_PAGESIZE - 1));
 		ASSERTF((((uintptr_t)ptr - (uintptr_t)page) % ITEMSIZE) == 0,
 		        "Invalid slab-pointer %p is improperly aligned for slab of size %#Ix",

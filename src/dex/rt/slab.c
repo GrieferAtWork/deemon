@@ -25,6 +25,7 @@
 #include <deemon/api.h>
 #include <deemon/bool.h>
 #include <deemon/error.h>
+#include <deemon/format.h>
 #include <deemon/int.h>
 #include <deemon/object.h>
 #include <deemon/seq.h>
@@ -129,7 +130,7 @@ ss_nsi_getitem(SlabStatObject *__restrict self, size_t index) {
 	DREF SlabInfoObject *result;
 	if unlikely(index >= self->st_stat.st_slabcount) {
 		DeeError_Throwf(&DeeError_IndexError,
-		                "Index `%Iu' lies outside the valid bounds `0...%Iu' of sequence of type `%k'",
+		                "Index `%" PRFuSIZ "' lies outside the valid bounds `0...%" PRFuSIZ "' of sequence of type `%k'",
 		                index, self->st_stat.st_slabcount, Dee_TYPE(self));
 		return NULL;
 	}
@@ -401,7 +402,9 @@ STATIC_ASSERT(offsetof(SlabStatIteratorObject, sti_stat) ==
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 si_str(SlabInfoObject *__restrict self) {
-	return DeeString_Newf("size: %Iu, alloc: %Iu/%Iu, free: %Iu/%Iu",
+	return DeeString_Newf("size: %" PRFuSIZ ", "
+	                      "alloc: %" PRFuSIZ "/%" PRFuSIZ ", "
+	                      "free: %" PRFuSIZ "/%" PRFuSIZ,
 	                      self->si_info->si_itemsize,
 	                      self->si_info->si_cur_alloc,
 	                      self->si_info->si_max_alloc,

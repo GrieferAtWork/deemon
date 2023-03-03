@@ -527,8 +527,8 @@ do_handle_string_for_percent_s:
 					str_length = precision;
 				} else if (flags & F_FIXBUF) {
 					DeeError_Throwf(&DeeError_ValueError,
-					                "String argument is too short (%Iu characters) "
-					                "for fixed buffer length %Iu",
+					                "String argument is too short (%" PRFuSIZ " characters) "
+					                "for fixed buffer length %" PRFuSIZ,
 					                precision);
 					goto err_m1;
 				}
@@ -755,7 +755,7 @@ missing_argument:
 	/* Error if arguments remained unused. */
 	if unlikely(argc) {
 		DeeError_Throwf(&DeeError_ValueError,
-		                "%Iu arguments were unused", argc);
+		                "%" PRFuSIZ " arguments were unused", argc);
 		goto err_m1;
 	}
 	/* Flush the remainder. */

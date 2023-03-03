@@ -136,7 +136,7 @@ INTERN ATTR_COLD NONNULL((1, 2)) int
 INTERN ATTR_COLD int
 (DCALL err_divide_by_zero_i)(dssize_t a) {
 	return DeeError_Throwf(&DeeError_DivideByZero,
-	                       "Divide by Zero: `%Id / 0'", a);
+	                       "Divide by Zero: `%" PRFdSIZ " / 0'", a);
 }
 
 INTERN ATTR_COLD NONNULL((1, 2)) int
@@ -239,7 +239,8 @@ INTERN ATTR_COLD NONNULL((1)) int
                         size_t index, size_t size) {
 	ASSERT_OBJECT(self);
 	return DeeError_Throwf(&DeeError_IndexError,
-	                       "Index `%Iu' lies outside the valid bounds `0...%Iu' of sequence of type `%k'",
+	                       "Index `%" PRFuSIZ "' lies outside the valid bounds "
+	                       "`0...%" PRFuSIZ "' of sequence of type `%k'",
 	                       index, size, Dee_TYPE(self));
 }
 
@@ -254,7 +255,7 @@ INTERN ATTR_COLD int
 (DCALL err_va_index_out_of_bounds)(size_t index, size_t size) {
 	ASSERT(index >= size);
 	return DeeError_Throwf(&DeeError_IndexError,
-	                       "Index `%Iu' lies outside the valid bounds `0...%Iu' of varargs",
+	                       "Index `%" PRFuSIZ "' lies outside the valid bounds `0...%" PRFuSIZ "' of varargs",
 	                       index, size);
 }
 
@@ -262,7 +263,7 @@ INTERN ATTR_COLD NONNULL((1)) int
 (DCALL err_unbound_index)(DeeObject *__restrict self, size_t index) {
 	ASSERT_OBJECT(self);
 	return DeeError_Throwf(&DeeError_UnboundItem,
-	                       "Index `%Iu' of instance of `%k': %k has not been bound",
+	                       "Index `%" PRFuSIZ "' of instance of `%k': %k has not been bound",
 	                       index, Dee_TYPE(self), self);
 }
 
@@ -273,7 +274,7 @@ INTERN ATTR_COLD NONNULL((1)) int
 	ASSERT(DeeString_Check(str) || DeeBytes_Check(str));
 	length = DeeString_Check(str) ? DeeString_WLEN(str) : DeeBytes_SIZE(str);
 	return DeeError_Throwf(&DeeError_ValueError,
-	                       "Expected a single character but got %Iu characters in %r",
+	                       "Expected a single character but got %" PRFuSIZ " characters in %r",
 	                       length, str);
 }
 
@@ -297,7 +298,7 @@ INTERN ATTR_COLD NONNULL((1)) int
 		                       overflowing_object);
 	}
 	return DeeError_Throwf(&DeeError_IntegerOverflow,
-	                       "%s integer overflow after %Iu bits in %k",
+	                       "%s integer overflow after %" PRFuSIZ " bits in %k",
 	                       positive_overflow ? "positive" : "negative",
 	                       cutoff_bits, overflowing_object);
 }
@@ -310,7 +311,7 @@ INTERN ATTR_COLD int
 		                       positive_overflow ? "positive" : "negative");
 	}
 	return DeeError_Throwf(&DeeError_IntegerOverflow,
-	                       "%s integer overflow after %Iu bits",
+	                       "%s integer overflow after %" PRFuSIZ " bits",
 	                       positive_overflow ? "positive" : "negative",
 	                       cutoff_bits);
 }
@@ -378,8 +379,8 @@ INTERN ATTR_COLD NONNULL((1, 2)) int
 INTERN ATTR_COLD int
 (DCALL err_keywords_bad_for_argc)(size_t argc, size_t kwdc) {
 	return DeeError_Throwf(&DeeError_TypeError,
-	                       "Invalid keyword list containing %Iu keywords "
-	                       "when only %Iu arguments were given",
+	                       "Invalid keyword list containing %" PRFuSIZ " keywords "
+	                       "when only %" PRFuSIZ " arguments were given",
 	                       kwdc, argc);
 }
 
@@ -400,14 +401,14 @@ INTERN ATTR_COLD NONNULL((1)) int
 INTERN ATTR_COLD int
 (DCALL err_invalid_segment_size)(size_t segsz) {
 	return DeeError_Throwf(&DeeError_ValueError,
-	                       "Invalid segment size: %Iu",
+	                       "Invalid segment size: %" PRFuSIZ,
 	                       segsz);
 }
 
 INTERN ATTR_COLD int
 (DCALL err_invalid_distribution_count)(size_t distcnt) {
 	return DeeError_Throwf(&DeeError_ValueError,
-	                       "Invalid distribution count: %Iu",
+	                       "Invalid distribution count: %" PRFuSIZ,
 	                       distcnt);
 }
 
@@ -417,7 +418,8 @@ INTERN ATTR_COLD NONNULL((1)) int
                                     size_t argc_cur, size_t argc_min, size_t argc_max) {
 	if (argc_min == argc_max) {
 		return DeeError_Throwf(&DeeError_TypeError,
-		                       "Missing argument %s in call to function%s%s expecting %Iu arguments when %Iu w%s given",
+		                       "Missing argument %s in call to function%s%s expecting "
+		                       "%" PRFuSIZ " arguments when %" PRFuSIZ " w%s given",
 		                       argument_name,
 		                       function_name ? " " : "",
 		                       function_name ? function_name : "",
@@ -426,7 +428,8 @@ INTERN ATTR_COLD NONNULL((1)) int
 		                       argc_cur == 1 ? "as" : "ere");
 	} else {
 		return DeeError_Throwf(&DeeError_TypeError,
-		                       "Missing argument %s in call to function%s%s expecting between %Iu and %Iu arguments when %Iu w%s given",
+		                       "Missing argument %s in call to function%s%s expecting between "
+		                       "%" PRFuSIZ " and %" PRFuSIZ " arguments when %" PRFuSIZ " w%s given",
 		                       argument_name,
 		                       function_name ? " " : "",
 		                       function_name ? function_name : "",
@@ -442,12 +445,13 @@ INTERN ATTR_COLD int
                          size_t argc_min, size_t argc_max) {
 	if (argc_min == argc_max) {
 		return DeeError_Throwf(&DeeError_TypeError,
-		                       "function%s%s expects %Iu arguments when %Iu w%s given",
+		                       "function%s%s expects %" PRFuSIZ " arguments when %" PRFuSIZ " w%s given",
 		                       function_name ? " " : "", function_name ? function_name : "",
 		                       argc_min, argc_cur, argc_cur == 1 ? "as" : "ere");
 	} else {
 		return DeeError_Throwf(&DeeError_TypeError,
-		                       "function%s%s expects between %Iu and %Iu arguments when %Iu w%s given",
+		                       "function%s%s expects between %" PRFuSIZ " and %" PRFuSIZ " "
+		                       "arguments when %" PRFuSIZ " w%s given",
 		                       function_name ? " " : "", function_name ? function_name : "",
 		                       argc_min, argc_max, argc_cur, argc_cur == 1 ? "as" : "ere");
 	}
@@ -458,12 +462,13 @@ INTERN ATTR_COLD int
                              size_t argc_cur, size_t argc_min, size_t argc_max) {
 	if (argc_min == argc_max) {
 		return DeeError_Throwf(&DeeError_TypeError,
-		                       "function%s%$s expects %Iu arguments when %Iu w%s given",
+		                       "function%s%$s expects %" PRFuSIZ " arguments when %" PRFuSIZ " w%s given",
 		                       function_size ? " " : "", function_size, function_name,
 		                       argc_min, argc_cur, argc_cur == 1 ? "as" : "ere");
 	} else {
 		return DeeError_Throwf(&DeeError_TypeError,
-		                       "function%s%$s expects between %Iu and %Iu arguments when %Iu w%s given",
+		                       "function%s%$s expects between %" PRFuSIZ " and %" PRFuSIZ " "
+		                       "arguments when %" PRFuSIZ " w%s given",
 		                       function_size ? " " : "", function_size, function_name,
 		                       argc_min, argc_max, argc_cur, argc_cur == 1 ? "as" : "ere");
 	}
@@ -472,7 +477,8 @@ INTERN ATTR_COLD int
 INTERN ATTR_COLD int
 (DCALL err_invalid_argc_va)(char const *function_name, size_t argc_cur, size_t argc_min) {
 	return DeeError_Throwf(&DeeError_TypeError,
-	                       "function%s%s expects at least %Iu arguments when only %Iu w%s given",
+	                       "function%s%s expects at least %" PRFuSIZ " "
+	                       "arguments when only %" PRFuSIZ " w%s given",
 	                       function_name ? " " : "", function_name ? function_name : "",
 	                       argc_min, argc_cur, argc_cur == 1 ? "as" : "ere");
 }
@@ -484,12 +490,13 @@ INTERN ATTR_COLD NONNULL((1)) int
 	(void)unpack_object;
 	if (argc_min == argc_max) {
 		return DeeError_Throwf(&DeeError_UnpackError,
-		                       "Expected %Iu object%s when %Iu w%s given",
+		                       "Expected %" PRFuSIZ " object%s when %" PRFuSIZ " w%s given",
 		                       argc_min, argc_min > 1 ? "s" : "", argc_cur,
 		                       argc_min == 1 ? "as" : "ere");
 	} else {
 		return DeeError_Throwf(&DeeError_UnpackError,
-		                       "Expected between %Iu and %Iu objects when %Iu were given",
+		                       "Expected between %" PRFuSIZ " and %" PRFuSIZ " "
+		                       "objects when %" PRFuSIZ " were given",
 		                       argc_min, argc_max, argc_cur);
 	}
 }
@@ -500,7 +507,7 @@ INTERN ATTR_COLD NONNULL((1)) int
 	ASSERT_OBJECT(unpack_object);
 	(void)unpack_object;
 	return DeeError_Throwf(&DeeError_UnpackError,
-	                       "Expected %Iu object%s when %Iu w%s given",
+	                       "Expected %" PRFuSIZ " object%s when %" PRFuSIZ " w%s given",
 	                       need_size, need_size > 1 ? "s" : "", real_size,
 	                       real_size == 1 ? "as" : "ere");
 }
@@ -512,7 +519,8 @@ INTERN ATTR_COLD NONNULL((1)) int
 	ASSERT_OBJECT(unpack_object);
 	(void)unpack_object;
 	return DeeError_Throwf(&DeeError_UnpackError,
-	                       "Expected between %Iu and %Iu objects when %Iu w%s given",
+	                       "Expected between %" PRFuSIZ " and %" PRFuSIZ " "
+	                       "objects when %" PRFuSIZ " w%s given",
 	                       need_size_min, need_size_max, real_size,
 	                       real_size == 1 ? "as" : "ere");
 }
@@ -520,7 +528,7 @@ INTERN ATTR_COLD NONNULL((1)) int
 INTERN ATTR_COLD int
 (DCALL err_invalid_va_unpack_size)(size_t need_size, size_t real_size) {
 	return DeeError_Throwf(&DeeError_UnpackError,
-	                       "Expected %Iu object%s when %Iu w%s given",
+	                       "Expected %" PRFuSIZ " object%s when %" PRFuSIZ " w%s given",
 	                       need_size, need_size > 1 ? "s" : "", real_size,
 	                       real_size == 1 ? "as" : "ere");
 }
@@ -534,7 +542,7 @@ INTERN ATTR_COLD NONNULL((1, 2)) int
 	(void)unpack_object;
 	(void)unpack_iterator;
 	return DeeError_Throwf(&DeeError_UnpackError,
-	                       "Expected %Iu object%s when at least %Iu w%s given",
+	                       "Expected %" PRFuSIZ " object%s when at least %" PRFuSIZ " w%s given",
 	                       need_size, need_size > 1 ? "s" : "", need_size + 1,
 	                       need_size == 0 ? "as" : "ere");
 }
@@ -547,7 +555,8 @@ INTERN ATTR_COLD NONNULL((1, 2)) int
 	(void)unpack_object;
 	(void)unpack_iterator;
 	return DeeError_Throwf(&DeeError_UnpackError,
-	                       "Expected between %Iu and %Iu objects when at least %Iu w%s given",
+	                       "Expected between %" PRFuSIZ " and %" PRFuSIZ " "
+	                       "objects when at least %" PRFuSIZ " w%s given",
 	                       need_size_min, need_size_max, need_size_max + 1,
 	                       need_size_max == 0 ? "as" : "ere");
 }
@@ -602,7 +611,7 @@ INTERN ATTR_COLD NONNULL((1, 2)) int
 	if (!code_name)
 		code_name = DeeCode_NAME(code);
 	return DeeError_Throwf(&DeeError_UnboundLocal,
-	                       "Unbound local variable %I16u%s%s",
+	                       "Unbound local variable %" PRFu16 "%s%s",
 	                       local_index,
 	                       code_name ? " in function " : "",
 	                       code_name ? code_name : "");
@@ -627,7 +636,7 @@ INTERN ATTR_COLD NONNULL((1, 2)) int
 		}
 	}
 	return DeeError_Throwf(&DeeError_UnboundLocal,
-	                       "Unbound argument %I16u%s%s",
+	                       "Unbound argument %" PRFu16 "%s%s",
 	                       arg_index,
 	                       code_name ? " in function " : "",
 	                       code_name ? code_name : "");
@@ -678,12 +687,14 @@ INTERN ATTR_COLD NONNULL((1, 2)) int
 
 INTERN ATTR_COLD NONNULL((1, 2)) int
 (DCALL err_illegal_instruction)(struct code_object *code, void *ip) {
+	uint32_t offset;
 	char const *code_name = DeeCode_NAME(code);
 	if (!code_name)
 		code_name = "<anonymous>";
+	offset = (uint32_t)((instruction_t *)ip - code->co_code);
 	return DeeError_Throwf(&DeeError_IllegalInstruction,
-	                       "Illegal instruction at %s+%.4I32X",
-	                       code_name, (uint32_t)((instruction_t *)ip - code->co_code));
+	                       "Illegal instruction at %s+%.4" PRFX32,
+	                       code_name, offset);
 }
 
 INTERN ATTR_COLD NONNULL((1)) int
@@ -697,7 +708,7 @@ INTERN ATTR_COLD NONNULL((1)) int
 (DCALL err_invalid_class_addr)(DeeTypeObject *__restrict tp_self,
                                uint16_t addr) {
 	return DeeError_Throwf(&DeeError_TypeError,
-	                       "Invalid class address %I16u for %k",
+	                       "Invalid class address %" PRFu16 " for %k",
 	                       addr, tp_self);
 }
 
@@ -706,7 +717,7 @@ INTERN ATTR_COLD NONNULL((1, 2)) int
                                   DeeObject *UNUSED(self),
                                   uint16_t addr) {
 	return DeeError_Throwf(&DeeError_TypeError,
-	                       "Invalid class instance address %I16u for %k",
+	                       "Invalid class instance address %" PRFu16 " for %k",
 	                       addr, tp_self);
 }
 
@@ -715,7 +726,7 @@ INTERN ATTR_COLD NONNULL((1)) int
 (DCALL err_invalid_refs_size)(DeeObject *__restrict code, size_t num_refs) {
 	ASSERT_OBJECT_TYPE_EXACT(code, &DeeCode_Type);
 	return DeeError_Throwf(&DeeError_TypeError,
-	                       "Code object expects %I16u references when %Iu were given",
+	                       "Code object expects %" PRFu16 " references when %" PRFuSIZ " were given",
 	                       ((DeeCodeObject *)code)->co_refc, num_refs);
 }
 
@@ -736,7 +747,8 @@ INTERN ATTR_COLD NONNULL((1, 2)) int
 	ASSERT(DeeType_Check(tp));
 	return DeeError_Throwf(&DeeError_AttributeError,
 	                       "Cannot %s unknown attribute `%k.%s'",
-	                       access_names[access & ATTR_ACCESS_MASK], tp, name);
+	                       access_names[access & ATTR_ACCESS_MASK],
+	                       tp, name);
 }
 
 INTERN ATTR_COLD NONNULL((1)) int
@@ -749,9 +761,7 @@ INTERN ATTR_COLD NONNULL((1)) int
 	return DeeError_Throwf(&DeeError_AttributeError,
 	                       "Cannot %s unknown attribute `%k.%$s'",
 	                       access_names[access & ATTR_ACCESS_MASK],
-	                       tp,
-	                       namelen,
-	                       name);
+	                       tp, namelen, name);
 }
 
 INTERN ATTR_COLD NONNULL((1, 2)) int
@@ -1015,7 +1025,7 @@ INTERN ATTR_COLD NONNULL((1)) int
 INTERN ATTR_COLD NONNULL((1)) int
 (DCALL err_srt_invalid_sp)(struct code_frame *__restrict frame, size_t access_sp) {
 	return DeeError_Throwf(&DeeError_SegFault,
-	                       "Unbound stack variable %Iu lies above active end %Iu",
+	                       "Unbound stack variable %" PRFuSIZ " lies above active end %" PRFuSIZ,
 	                       access_sp, frame->cf_stacksz);
 }
 
@@ -1023,7 +1033,7 @@ PRIVATE ATTR_COLD NONNULL((1)) int
 (DCALL err_srt_invalid_symid)(struct code_frame *__restrict UNUSED(frame),
                               char category, uint16_t id) {
 	return DeeError_Throwf(&DeeError_IllegalInstruction,
-	                       "Attempted to access invalid %cID %I16u",
+	                       "Attempted to access invalid %cID %" PRFu16,
 	                       category, id);
 }
 

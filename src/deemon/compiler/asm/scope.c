@@ -23,6 +23,7 @@
 #include <deemon/api.h>
 #include <deemon/asm.h>
 #include <deemon/compiler/assembler.h>
+#include <deemon/format.h>
 #include <deemon/module.h>
 
 DECL_BEGIN
@@ -251,10 +252,10 @@ asm_leave_scope(DeeScopeObject *old_scope, uint16_t num_preserve) {
 	} while (scope && scope != old_scope);
 #ifndef NDEBUG
 	ASSERTF(current_assembler.a_stackcur >= num_stack_vars + num_preserve,
-	        "Stack is too small (Needed at least %I16u, but only have %I16u)\n"
-	        "old_stacksz    = %I16u\n"
-	        "num_stack_vars = %I16u\n"
-	        "num_preserve   = %I16u\n",
+	        "Stack is too small (Needed at least %" PRFu16 ", but only have %" PRFu16 ")\n"
+	        "old_stacksz    = %" PRFu16 "\n"
+	        "num_stack_vars = %" PRFu16 "\n"
+	        "num_preserve   = %" PRFu16 "\n",
 	        (uint16_t)(num_stack_vars + num_preserve),
 	        (uint16_t)current_assembler.a_stackcur,
 	        (uint16_t)current_assembler.a_scope->s_old_stack,
@@ -262,10 +263,10 @@ asm_leave_scope(DeeScopeObject *old_scope, uint16_t num_preserve) {
 	        (uint16_t)num_preserve);
 	ASSERTF(current_assembler.a_stackcur ==
 	        current_assembler.a_scope->s_old_stack + num_stack_vars + num_preserve,
-	        "Invalid stack depth when leaving scope (expected %I16u, but got %I16u)\n"
-	        "old_stacksz    = %I16u\n"
-	        "num_stack_vars = %I16u\n"
-	        "num_preserve   = %I16u\n",
+	        "Invalid stack depth when leaving scope (expected %" PRFu16 ", but got %" PRFu16 ")\n"
+	        "old_stacksz    = %" PRFu16 "\n"
+	        "num_stack_vars = %" PRFu16 "\n"
+	        "num_preserve   = %" PRFu16 "\n",
 	        (uint16_t)(current_assembler.a_scope->s_old_stack + num_stack_vars + num_preserve),
 	        (uint16_t)current_assembler.a_stackcur,
 	        (uint16_t)current_assembler.a_scope->s_old_stack,

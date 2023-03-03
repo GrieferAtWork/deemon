@@ -30,6 +30,7 @@
 #include <deemon/dict.h>
 #include <deemon/error.h>
 #include <deemon/float.h>
+#include <deemon/format.h>
 #include <deemon/hashset.h>
 #include <deemon/int.h>
 #include <deemon/list.h>
@@ -570,7 +571,7 @@ print_undefined_symbol_name:
 
 	case DAST_ALT: {
 		size_t i;
-		if (unicode_printer_printf(printer, "?X%Iu", self->da_alt.a_altc) < 0)
+		if (unicode_printer_printf(printer, "?X%" PRFuSIZ, self->da_alt.a_altc) < 0)
 			goto err;
 		for (i = 0; i < self->da_alt.a_altc; ++i) {
 			if unlikely(decl_ast_print_type(&self->da_alt.a_altv[i], printer))
@@ -580,7 +581,7 @@ print_undefined_symbol_name:
 
 	case DAST_TUPLE: {
 		size_t i;
-		if (unicode_printer_printf(printer, "?T%Iu", self->da_tuple.t_itemc) < 0)
+		if (unicode_printer_printf(printer, "?T%" PRFuSIZ, self->da_tuple.t_itemc) < 0)
 			goto err;
 		for (i = 0; i < self->da_tuple.t_itemc; ++i) {
 			if unlikely(decl_ast_print_type(&self->da_tuple.t_itemv[i], printer))

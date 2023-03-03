@@ -25,6 +25,7 @@
 #include <deemon/asm.h>
 #include <deemon/compiler/assembler.h>
 #include <deemon/file.h>
+#include <deemon/format.h>
 #include <deemon/system-features.h> /* memcpyc(), ... */
 
 #include <hybrid/byteorder.h>
@@ -485,7 +486,7 @@ continue_at_iter:
 		uint16_t opcode;
 		instruction_t *iiter = iter;
 #if 0
-		DeeFile_Printf(DeeFile_DefaultStddbg, "PC %.4I32X SP %I16u (`%s')\n",
+		DeeFile_Printf(DeeFile_DefaultStddbg, "PC %.4I32X SP %" PRFu16 " (`%s')\n",
 		               (uint32_t)(iter - sc_main.sec_begin), stacksz,
 		               mnemonic_names[*iter]);
 #endif
@@ -897,9 +898,9 @@ do_noreturn_optimization:
 				 * symbols defined for the same address. */
 				if (sym_iter->as_addr == nearest_symbol_addr &&
 				    sym_iter->as_stck != nearest_symbol->as_stck) {
-					Dee_DPRINTF("Conflicting symbol definitions at address +%I32x:\n"
-					            "%s(%d) : See 1st symbol allocated here (stack %I16u)\n"
-					            "%s(%d) : See 2nd symbol allocated here (stack %I16u)\n",
+					Dee_DPRINTF("Conflicting symbol definitions at address +%" PRFx32 ":\n"
+					            "%s(%d) : See 1st symbol allocated here (stack %" PRFu16 ")\n"
+					            "%s(%d) : See 2nd symbol allocated here (stack %" PRFu16 ")\n",
 					            nearest_symbol_addr,
 					            nearest_symbol->as_file,
 					            nearest_symbol->as_line,
@@ -2397,7 +2398,7 @@ delete_symbol_store:
 					            (code_size_t)(next - iter));
 				ASSERT(next_stacksz == stacksz - 1);
 				iter[0] = ASM_POP;
-				SET_RESULTF(iter, "Remove unused store to %s %I16X",
+				SET_RESULTF(iter, "Remove unused store to %s %" PRFX16 "",
 					        (opcode & 0xff) == ASM_POP_LOCAL ? STR_local : STR_static,
 					        pop_imma);
 				validate_stack_depth((code_addr_t)(iter - sc_main.sec_begin), stacksz);

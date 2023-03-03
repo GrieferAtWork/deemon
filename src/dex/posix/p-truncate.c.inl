@@ -234,7 +234,7 @@ EINTR_LABEL(again)
 		HANDLE_ENOENT_ENOTDIR(result, err, "File or directory " TRUNCATE_PRINTF_FILENAME " could not be found", filename)
 		HANDLE_ENOSYS(result, err, "truncate")
 		HANDLE_EACCES(result, err, "Failed to access " TRUNCATE_PRINTF_FILENAME, filename)
-		HANDLE_EFBIG_EINVAL(result, err, "Cannot truncate " TRUNCATE_PRINTF_FILENAME ": Invalid size %I64d", filename, len)
+		HANDLE_EFBIG_EINVAL(result, err, "Cannot truncate " TRUNCATE_PRINTF_FILENAME ": Invalid size %" PRFd64, filename, len)
 		HANDLE_ENXIO_EISDIR(result, err, "Cannot truncate directory " TRUNCATE_PRINTF_FILENAME, filename)
 		HANDLE_EROFS_ETXTBSY(result, err, "Read-only file " TRUNCATE_PRINTF_FILENAME, filename)
 		DeeUnixSystem_ThrowErrorf(&DeeError_SystemError, result,
@@ -321,7 +321,7 @@ EINTR_LABEL(again)
 		int error = DeeSystem_GetErrno();
 		EINTR_HANDLE(error, again, err)
 		HANDLE_ENOSYS(result, err, "ftruncate")
-		HANDLE_EFBIG_EINVAL(result, err, "Cannot truncate %d: Invalid size %I64d", fd, len)
+		HANDLE_EFBIG_EINVAL(result, err, "Cannot truncate %d: Invalid size %" PRFd64, fd, len)
 		HANDLE_EBADF(error, err, "Invalid handle %d", fd)
 		DeeUnixSystem_ThrowErrorf(&DeeError_SystemError, error,
 		                          "Failed to truncate %d", fd);

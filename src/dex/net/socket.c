@@ -1111,7 +1111,7 @@ restart_after_timeout:
 PRIVATE ATTR_COLD NONNULL((2)) int DCALL
 err_message_too_large(neterrno_t error, Socket *__restrict self, size_t bufsize) {
 	return DeeNet_ThrowErrorf(&DeeError_MessageSize, error,
-	                          "Message consisting of %Iu bytes is too large for socket %k",
+	                          "Message consisting of %" PRFuSIZ " bytes is too large for socket %k",
 	                          bufsize, self);
 }
 
@@ -1452,7 +1452,7 @@ again:
 			                   socket);
 		} else {
 			DeeNet_ThrowErrorf(&DeeError_NetError, error,
-			                   "Failed to send %Iu bytes of data through socket %k",
+			                   "Failed to send %" PRFuSIZ " bytes of data through socket %k",
 			                   bufsize, self);
 		}
 		goto err;
@@ -1692,7 +1692,7 @@ again:
 			                   SockAddr_ToString(target, self->s_proto, SOCKADDR_STR_FNOFAIL | SOCKADDR_STR_FNODNS));
 		} else {
 			DeeNet_ThrowErrorf(&DeeError_NetError, error,
-			                   "Failed to send %Iu bytes of data through socket %k to address %K",
+			                   "Failed to send %" PRFuSIZ " bytes of data through socket %k to address %K",
 			                   bufsize, self, SockAddr_ToString(target, self->s_proto, SOCKADDR_STR_FNOFAIL | SOCKADDR_STR_FNODNS));
 		}
 		goto err;

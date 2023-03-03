@@ -27,6 +27,7 @@
 #include <deemon/bool.h>
 #include <deemon/code.h>
 #include <deemon/error.h>
+#include <deemon/format.h>
 #include <deemon/gc.h>
 #include <deemon/int.h>
 #include <deemon/map.h>
@@ -1589,7 +1590,7 @@ code_init_kw(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 				goto err_r;
 			if unlikely(keyword_count > (uint16_t)-1) {
 				DeeError_Throwf(&DeeError_IntegerOverflow,
-				                "Too many arguments %Iu for when at most 0xffff can be used",
+				                "Too many arguments %" PRFuSIZ " for when at most 0xffff can be used",
 				                keyword_count);
 				goto err_r;
 			}
@@ -1624,8 +1625,8 @@ code_init_kw(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 			goto err_r_keywords;
 		if unlikely(default_c > coargc) {
 			DeeError_Throwf(&DeeError_IntegerOverflow,
-			                "Too many default arguments (%Iu) for "
-			                "code only taking %I16u arguments at most",
+			                "Too many default arguments (%" PRFuSIZ ") for "
+			                "code only taking %" PRFu16 " arguments at most",
 			                default_c, coargc);
 			goto err_r_keywords;
 		}

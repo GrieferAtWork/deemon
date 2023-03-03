@@ -445,7 +445,7 @@ kwds_repr(Kwds *__restrict self) {
 			continue;
 		if (!is_first && UNICODE_PRINTER_PRINT(&printer, ", ") < 0)
 			goto err;
-		if (unicode_printer_printf(&printer, "%r: %Iu",
+		if (unicode_printer_printf(&printer, "%r: %" PRFuSIZ,
 		                           self->kw_map[i].ke_name,
 		                           self->kw_map[i].ke_index) < 0)
 			goto err;

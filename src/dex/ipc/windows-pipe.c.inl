@@ -32,6 +32,7 @@
 #include <deemon/error.h>
 #include <deemon/file.h>
 #include <deemon/filetypes.h>
+#include <deemon/format.h>
 #include <deemon/system.h>
 #include <deemon/tuple.h>
 
@@ -73,7 +74,7 @@ pipe_class_new(DeeObject *UNUSED(self),
 		dwError = GetLastError();
 		DBG_ALIGNMENT_ENABLE();
 		DeeNTSystem_ThrowErrorf(NULL, dwError,
-		                        "Failed to create pipe (size: %I32u)",
+		                        "Failed to create pipe (size: %" PRFu32 ")",
 		                        pipe_size);
 		goto err;
 	}

@@ -246,8 +246,8 @@ error_init(DeeErrorObject *__restrict self,
 	ASSERT(!(Dee_TYPE(self)->tp_flags & TP_FVARIABLE));
 	instance_size = GET_INSTANCE_SIZE(self);
 	ASSERTF(instance_size >= sizeof(DeeErrorObject),
-	        "instance_size = %Iu\n"
-	        "name = %q\n",
+	        "instance_size = %" PRFuSIZ "\n"
+	        "name          = %q\n",
 	        instance_size,
 	        Dee_TYPE(self)->tp_name);
 	self->e_message = NULL;
@@ -541,9 +541,10 @@ nomemory_deep(DeeNoMemoryErrorObject *__restrict self,
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 nomemory_str(DeeNoMemoryErrorObject *__restrict self) {
-	if (self->nm_allocsize)
-		return DeeString_Newf("Failed to allocated %Iu bytes",
+	if (self->nm_allocsize) {
+		return DeeString_Newf("Failed to allocated %" PRFuSIZ " bytes",
 		                      self->nm_allocsize);
+	}
 	return error_str((DeeErrorObject *)self);
 }
 

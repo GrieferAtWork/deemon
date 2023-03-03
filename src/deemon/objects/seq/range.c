@@ -1488,9 +1488,13 @@ PRIVATE struct type_member tpconst intrange_class_members[] = {
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 intrange_repr(IntRange *__restrict self) {
-	return self->ir_step != 1
-	       ? DeeString_Newf("[%Id:%Id, %Id]", self->ir_start, self->ir_end, self->ir_step)
-	       : DeeString_Newf("[%Id:%Id]", self->ir_start, self->ir_end);
+	if (self->ir_step != 1) {
+		return DeeString_Newf("[%" PRFdSIZ ":%" PRFdSIZ ", %" PRFdSIZ "]",
+		                      self->ir_start, self->ir_end, self->ir_step);
+	} else {
+		return DeeString_Newf("[%" PRFdSIZ ":%" PRFdSIZ "]",
+		                      self->ir_start, self->ir_end);
+	}
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL

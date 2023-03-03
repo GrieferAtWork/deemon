@@ -2050,7 +2050,7 @@ bytes_toreplace(Bytes *__restrict self, size_t argc,
 		goto err;
 	if unlikely(find_needle.n_size != replace_needle.n_size) {
 		DeeError_Throwf(&DeeError_ValueError,
-		                "Find(%Iu) and replace(%Iu) needles have different sizes",
+		                "Find(%" PRFuSIZ ") and replace(%" PRFuSIZ ") needles have different sizes",
 		                find_needle.n_size, replace_needle.n_size);
 		goto err;
 	}
@@ -2102,7 +2102,7 @@ bytes_tocasereplace(Bytes *__restrict self, size_t argc,
 		goto err;
 	if unlikely(find_needle.n_size != replace_needle.n_size) {
 		DeeError_Throwf(&DeeError_ValueError,
-		                "Find(%Iu) and replace(%Iu) needles have different sizes",
+		                "Find(%" PRFuSIZ ") and replace(%" PRFuSIZ ") needles have different sizes",
 		                find_needle.n_size, replace_needle.n_size);
 		goto err;
 	}

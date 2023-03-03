@@ -31,6 +31,7 @@
 #include <deemon/arg.h>
 #include <deemon/bool.h>
 #include <deemon/error.h>
+#include <deemon/format.h>
 #include <deemon/int.h>
 #include <deemon/none.h>
 #include <deemon/object.h>
@@ -43,7 +44,7 @@ DECL_BEGIN
 
 PRIVATE ATTR_COLD int DCALL err_bad_atomic_size(size_t size) {
 	return DeeError_Throwf(&DeeError_TypeError,
-	                       "No support for %Iu-bytes large atomic operations",
+	                       "No support for %" PRFuSIZ "-bytes large atomic operations",
 	                       size);
 }
 

@@ -3642,7 +3642,7 @@ got_except_symbol:
 		if (info) {
 			printf("%s", info->oi_sname);
 		} else {
-			printf("%I16u", self->a_flag);
+			printf("%" PRFu16, self->a_flag);
 			PRINT(")");
 		}
 	}	break;
@@ -3992,7 +3992,7 @@ operator_fallback:
 			if (info) {
 				printf("%s", info->oi_sname);
 			} else {
-				printf("%I16u ", self->a_flag);
+				printf("%" PRFu16 " ", self->a_flag);
 			}
 			PRINT("(");
 			if (self->a_operator.o_op1) {
@@ -4236,7 +4236,7 @@ operator_fallback:
 			++indent;
 			for (i = 0; i < self->a_class.c_memberc; ++i) {
 				DO(DeeFormat_Repeat(printer, arg, '\t', indent - 1));
-				printf("<member(%I16u)> = ", self->a_class.c_memberv[i].cm_index);
+				printf("<member(%" PRFu16 ")> = ", self->a_class.c_memberv[i].cm_index);
 				DO(print_ast_code(self->a_class.c_memberv[i].cm_ast, printer, arg, true, self->a_scope, indent));
 				PRINT("\n");
 			}
@@ -4436,7 +4436,7 @@ class_member_in_class:
 				if (info) {
 					printf("%s", info->oi_sname);
 				} else {
-					printf("%I16u", op->co_name);
+					printf("%" PRFu16, op->co_name);
 				}
 			}
 			if (member) {
@@ -4592,7 +4592,7 @@ class_member_in_class:
 
 
 	default:
-		printf("/* unknown ast: %I16u */", self->a_type);
+		printf("/* unknown ast: %" PRFu16 " */", self->a_type);
 		break;
 	}
 done:
@@ -4653,7 +4653,7 @@ print_operator_name(uint16_t opid,
 	}
 	info = Dee_OperatorInfo(NULL, opid);
 	if unlikely(!info)
-		return unicode_printer_printf(printer, "%I16u", opid);
+		return unicode_printer_printf(printer, "%" PRFu16, opid);
 	return unicode_printer_printf(printer, "%q", info->oi_sname);
 }
 
@@ -4995,7 +4995,7 @@ print_single_expr:
 		if ((self->a_flag & AST_FACTION_KINDMASK) < COMPILER_LENOF(action_names)) {
 			printf("%q", action_names[self->a_flag & AST_FACTION_KINDMASK]);
 		} else {
-			printf("\"unknown:%I16u\"", self->a_flag & AST_FACTION_KINDMASK);
+			printf("\"unknown:%" PRFu16 "\"", self->a_flag & AST_FACTION_KINDMASK);
 		}
 		PRINT(", a: ");
 		if (AST_FACTION_ARGC_GT(self->a_flag) >= 1) {
@@ -5030,7 +5030,7 @@ print_single_expr:
 	/* case AST_ASSEMBLY: // TODO */
 
 	default:
-		printf("<ast(type: %I16u)>", self->a_type);
+		printf("<ast(type: %" PRFu16 ")>", self->a_type);
 		break;
 	}
 	PRINT(", scope: ");

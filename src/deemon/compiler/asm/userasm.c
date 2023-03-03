@@ -33,6 +33,7 @@
 #ifndef CONFIG_LANGUAGE_NO_ASM
 #include <deemon/bool.h>
 #include <deemon/dict.h>
+#include <deemon/format.h>
 #include <deemon/hashset.h>
 #include <deemon/int.h>
 #include <deemon/list.h>
@@ -191,9 +192,9 @@ asm_invoke_operand_print(struct asm_invoke_operand *__restrict self,
 		if ((self->io_class & OPERAND_CLASS_FMASK) == OPERAND_CLASS_DISP8 ||
 		    (self->io_class & OPERAND_CLASS_FMASK) == OPERAND_CLASS_DISP16 ||
 		    (self->io_class & OPERAND_CLASS_FMASK) == OPERAND_CLASS_DISP32) {
-			temp = ascii_printer_printf(printer, "%I64u", self->io_intexpr.ie_val);
+			temp = ascii_printer_printf(printer, "%" PRFu64, self->io_intexpr.ie_val);
 		} else {
-			temp = ascii_printer_printf(printer, "%I64d", self->io_intexpr.ie_val);
+			temp = ascii_printer_printf(printer, "%" PRFd64, self->io_intexpr.ie_val);
 		}
 		break;
 
@@ -1230,7 +1231,7 @@ done:
 
 
 #define get_label_repr(label_number) \
-	DeeString_Newf(USERLABEL_PREFIX "%Iu", (size_t)(label_number))
+	DeeString_Newf(USERLABEL_PREFIX "%" PRFuSIZ, (size_t)(label_number))
 #define OPNAME1(a)          (uint32_t)((a))
 #define OPNAME2(a, b)       (uint32_t)((b) | (a) << 8)
 #define OPNAME3(a, b, c)    (uint32_t)((c) | (b) << 8 | (a) << 16)
@@ -1417,7 +1418,7 @@ abs_stack_any:
 			    !SYMBOL_MUST_REFERENCE_TYPEMAY(sym) &&
 			    (sym->s_flag & SYMBOL_FALLOC)) {
 				/* in/out stack-operand */
-				result = DeeString_Newf("stack #%I16u", SYMBOL_STACK_OFFSET(sym));
+				result = DeeString_Newf("stack #" PRFu16, SYMBOL_STACK_OFFSET(sym));
 				break;
 			}
 		}
@@ -1441,7 +1442,7 @@ abs_stack_any:
 			/* Output-only stack-top operand (user-assembly must leave the value ontop of the stack) */
 			return_empty_string;
 		}
-		result = DeeString_Newf("stack #%I16u", current_assembler.a_stackcur - 1);
+		result = DeeString_Newf("stack #" PRFu16, current_assembler.a_stackcur - 1);
 		if unlikely(!result)
 			goto err;
 		break;
@@ -1468,7 +1469,7 @@ abs_stack_any:
 		mid = asm_msymid(sym);
 		if unlikely(mid < 0)
 			goto err;
-		result = DeeString_Newf("module %I16u", (uint16_t)mid);
+		result = DeeString_Newf("module " PRFu16, (uint16_t)mid);
 	}	break;
 
 	case ASM_OP_THIS:
@@ -1515,7 +1516,7 @@ abs_stack_any:
 		rid = asm_rsymid(sym);
 		if unlikely(rid < 0)
 			goto err;
-		result = DeeString_Newf("ref %I16u", (uint16_t)rid);
+		result = DeeString_Newf("ref " PRFu16, (uint16_t)rid);
 	}	break;
 
 	case ASM_OP_REF_GEN: {
@@ -1539,7 +1540,7 @@ abs_stack_any:
 		rid = asm_rsymid(sym);
 		if unlikely(rid < 0)
 			goto err;
-		result = DeeString_Newf("ref %I16u", (uint16_t)rid);
+		result = DeeString_Newf("ref " PRFu16, (uint16_t)rid);
 	}	break;
 
 	case ASM_OP_ARG:
@@ -1553,7 +1554,7 @@ abs_stack_any:
 		if (DeeBaseScope_IsVarargs(current_basescope, sym) ||
 		    DeeBaseScope_IsVarkwds(current_basescope, sym))
 			goto next_option;
-		result = DeeString_Newf("arg %I16u", sym->s_symid);
+		result = DeeString_Newf("arg " PRFu16, sym->s_symid);
 		break;
 
 	case ASM_OP_VARG:
@@ -1591,7 +1592,7 @@ abs_stack_any:
 		cid = asm_newconst(self->a_constexpr);
 		if unlikely(cid < 0)
 			goto err;
-		result = DeeString_Newf("const %I16u", (uint16_t)cid);
+		result = DeeString_Newf("const " PRFu16, (uint16_t)cid);
 	}	break;
 
 	case ASM_OP_STATIC: {
@@ -1610,7 +1611,7 @@ abs_stack_any:
 		}
 		if unlikely(sid < 0)
 			goto err;
-		result = DeeString_Newf("static %I16u", (uint16_t)sid);
+		result = DeeString_Newf("static " PRFu16, (uint16_t)sid);
 	}	break;
 
 	case ASM_OP_EXTERN: {
@@ -1625,7 +1626,7 @@ abs_stack_any:
 		eid = asm_esymid(sym);
 		if unlikely(eid < 0)
 			goto err;
-		result = DeeString_Newf("extern %I16u:%I16u", (uint16_t)eid,
+		result = DeeString_Newf("extern " PRFu16 ":" PRFu16, (uint16_t)eid,
 		                        SYMBOL_EXTERN_SYMBOL(sym)->ss_index);
 	}	break;
 
@@ -1643,7 +1644,7 @@ abs_stack_any:
 		}
 		if unlikely(gid < 0)
 			goto err;
-		result = DeeString_Newf("global %I16u", (uint16_t)gid);
+		result = DeeString_Newf("global " PRFu16, (uint16_t)gid);
 	}	break;
 
 	case ASM_OP_LOCAL: {
@@ -1663,7 +1664,7 @@ write_regular_local:
 		}
 		if unlikely(lid < 0)
 			goto err;
-		result = DeeString_Newf("local %I16u", (uint16_t)lid);
+		result = DeeString_Newf("local " PRFu16, (uint16_t)lid);
 	}	break;
 
 	case ASM_OP_LOCAL_GEN: {
@@ -1687,7 +1688,7 @@ write_regular_local:
 		if (mode != OPTION_MODE_INPUT)
 			cleanup->cm_kind = CLEANUP_MODE_FLOCAL_POP;
 		cleanup->cm_value = (uint16_t)lid;
-		result            = DeeString_Newf("local %I16u", (uint16_t)lid);
+		result            = DeeString_Newf("local " PRFu16, (uint16_t)lid);
 	}	break;
 
 	case ASM_OP_TRUE:
@@ -1866,7 +1867,7 @@ write_regular_local:
 			goto next_option;
 		if (intval < intmin || intval > intmax)
 			goto next_option;
-		result = DeeString_Newf("$%I64d", intval);
+		result = DeeString_Newf("$%" PRFd64, intval);
 	}	break;
 
 	{
@@ -1895,7 +1896,7 @@ write_regular_local:
 			goto next_option;
 		if (intval > intmax)
 			goto next_option;
-		result = DeeString_Newf("$%I64u", intval);
+		result = DeeString_Newf("$%" PRFu64 "", intval);
 	}	break;
 
 	case ASM_OP_CAST:
@@ -2107,7 +2108,7 @@ next:
 				break;
 			if (ch == '=') {
 				/* Expand to a unique integer. */
-				printf("%Iu", current_userasm.ua_asmuid);
+				printf("%" PRFuSIZ, current_userasm.ua_asmuid);
 				++current_userasm.ua_asmuid;
 				goto done_special;
 			}
@@ -2174,7 +2175,7 @@ has_operand:
 				}
 				if unlikely(opno >= self->af_ast->a_assembly.as_opc) {
 					DeeError_Throwf(&DeeError_CompilerError,
-					                "Operand `%%%Iu' does not appear in arguments",
+					                "Operand `%%%" PRFuSIZ "' does not appear in arguments",
 					                opno);
 					goto err;
 				}
@@ -2528,7 +2529,7 @@ create_assembly_file:
 						goto err;
 				} else {
 					char buffer[32];
-					Dee_sprintf(buffer, "%%%Iu", (size_t)count);
+					Dee_sprintf(buffer, "%%%" PRFuSIZ "", (size_t)count);
 					if (WARN(W_UASM_CANNOT_POP_ASSEMBLY_OUTPUT_EXPRESSION, buffer))
 						goto err;
 				}

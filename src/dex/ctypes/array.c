@@ -28,14 +28,16 @@
 #include <deemon/arg.h>
 #include <deemon/bool.h>
 #include <deemon/error.h>
+#include <deemon/format.h>
 #include <deemon/gc.h>
 #include <deemon/int.h>
 #include <deemon/none.h>
 #include <deemon/seq.h>
 #include <deemon/string.h>
 #include <deemon/system-features.h> /* bzero() */
-#include <hybrid/overflow.h>
 #include <deemon/util/atomic.h>
+
+#include <hybrid/overflow.h>
 
 #undef SSIZE_MAX
 #include <hybrid/limitcore.h>
@@ -265,7 +267,7 @@ array_get(DeeArrayTypeObject *tp_self, void *base, DeeObject *index_ob) {
 	/* Check bounds. */
 	if unlikely(index >= tp_self->at_count) {
 		DeeError_Throwf(&DeeError_IndexError,
-		                "Index `%Iu' lies outside the valid bounds `0...%Iu'",
+		                "Index `%" PRFuSIZ "' lies outside the valid bounds `0...%" PRFuSIZ "'",
 		                index, tp_self->at_count);
 		goto err;
 	}
@@ -436,7 +438,7 @@ array_setrange(DeeArrayTypeObject *tp_self, void *base,
 					if (item_size)
 						given_count /= item_size;
 					DeeError_Throwf(&DeeError_UnpackError,
-					                "Expected %Iu object%s when only %Iu w%s given",
+					                "Expected %" PRFuSIZ " object%s when only %" PRFuSIZ " w%s given",
 					                tp_self->at_count, tp_self->at_count == 1 ? "" : "s",
 					                given_count, given_count == 1 ? "as" : "ere");
 				}
@@ -460,7 +462,7 @@ array_setrange(DeeArrayTypeObject *tp_self, void *base,
 		if (elem != NULL) {
 			Dee_Decref(elem);
 			DeeError_Throwf(&DeeError_UnpackError,
-			                "Expected %Iu object%s when at least %Iu w%s given",
+			                "Expected %" PRFuSIZ " object%s when at least %" PRFuSIZ " w%s given",
 			                tp_self->at_count, tp_self->at_count == 1 ? "" : "s",
 			                tp_self->at_count + 1, tp_self->at_count == 0 ? "as" : "ere");
 		}
@@ -729,7 +731,7 @@ arraytype_new(DeeSTypeObject *__restrict item_type,
 		goto done;
 
 	/* Create the name of the resulting type. */
-	name = (DREF DeeStringObject *)DeeString_Newf("%k[%Iu]", item_type, num_items);
+	name = (DREF DeeStringObject *)DeeString_Newf("%k[%" PRFuSIZ "]", item_type, num_items);
 	if unlikely(!name)
 		goto err_r;
 

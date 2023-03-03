@@ -27,12 +27,13 @@
 #include <deemon/alloc.h>
 #include <deemon/arg.h>
 #include <deemon/error.h>
+#include <deemon/format.h>
 #include <deemon/gc.h>
 #include <deemon/none.h>
 #include <deemon/object.h>
 #include <deemon/seq.h>
-#include <deemon/thread.h>
 #include <deemon/system-features.h> /* memcpyc(), ... */
+#include <deemon/thread.h>
 
 #include <hybrid/byteorder.h>
 #include <hybrid/unaligned.h>
@@ -1754,8 +1755,8 @@ done:
 	recursive_rwlock_endwrite(&self->ji_lock);
 	ASSERTF(result ? ts->t_exceptsz == self->ji_ctx.jc_except + 0
 	               : ts->t_exceptsz == self->ji_ctx.jc_except + 1,
-	        "ts->t_exceptsz         = %I16u\n"
-	        "self->ji_ctx.jc_except = %I16u\n",
+	        "ts->t_exceptsz         = %" PRFu16 "\n"
+	        "self->ji_ctx.jc_except = %" PRFu16,
 	        ts->t_exceptsz, self->ji_ctx.jc_except);
 	return result;
 err_scope:

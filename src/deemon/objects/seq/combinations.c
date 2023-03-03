@@ -26,6 +26,7 @@
 #include <deemon/bool.h>
 #include <deemon/class.h>
 #include <deemon/error.h>
+#include <deemon/format.h>
 #include <deemon/int.h>
 #include <deemon/none.h>
 #include <deemon/object.h>
@@ -480,7 +481,8 @@ err_seq_len:
 			/* Make sure that the sequence fulfills the minimum length requirements. */
 			if unlikely(self->c_comlen >= self->c_seqlen) {
 				DeeError_Throwf(&DeeError_ValueError,
-				                "Sequence too short after deepcopy (needs at least %Iu items, but only has %Iu)",
+				                "Sequence too short after deepcopy (needs at "
+				                "least %" PRFuSIZ " items, but only has %" PRFuSIZ ")",
 				                self->c_comlen, self->c_seqlen);
 				goto err_seq_len;
 			}

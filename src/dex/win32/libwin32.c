@@ -33,6 +33,7 @@
 #include <deemon/dex.h>
 #include <deemon/error.h>
 #include <deemon/file.h>
+#include <deemon/format.h>
 #include <deemon/int.h>
 #include <deemon/none.h>
 #include <deemon/object.h>
@@ -1082,9 +1083,9 @@ again:
 		             "(hSourceProcessHandle: %p, "
 		             "hSourceHandle: %p, "
 		             "hTargetProcessHandle: %p, "
-		             "dwDesiredAccess: %#I32x, "
+		             "dwDesiredAccess: %#" PRFx32 ", "
 		             "bInheritHandle: %d, "
-		             "dwOptions: %#I32x)",
+		             "dwOptions: %#" PRFx32 ")",
 		             hSourceProcessHandle, hSourceHandle,
 		             hTargetProcessHandle, dwDesiredAccess,
 		             bInheritHandle, dwOptions);
@@ -1161,8 +1162,8 @@ again:
 			goto again;
 		}
 		RETURN_ERROR(dwError,
-		             "Failed to open file %lq (dwDesiredAccess: %#I32x, dwShareMode: %#I32x, "
-		             "dwCreationDisposition: %#I32x, dwFlagsAndAttributes: %#I32x, hTemplateFile: %p)",
+		             "Failed to open file %lq (dwDesiredAccess: %#" PRFx32 ", dwShareMode: %#" PRFx32 ", "
+		             "dwCreationDisposition: %#" PRFx32 ", dwFlagsAndAttributes: %#" PRFx32 ", hTemplateFile: %p)",
 		             lpFileName, dwDesiredAccess, dwShareMode,
 		             dwCreationDisposition, dwFlagsAndAttributes,
 		             hTemplateFile);
@@ -1546,7 +1547,7 @@ again:
 			goto again;
 		}
 		RETURN_ERROR_OR_FALSE(dwError,
-		                      "Failed to set file attribute of %lq to %#I32x",
+		                      "Failed to set file attribute of %lq to %#" PRFx32 "",
 		                      lpFileName, dwFileAttributes);
 	}
 	DBG_ALIGNMENT_ENABLE();
@@ -1604,7 +1605,7 @@ again:
 				goto again;
 			}
 			RETURN_ERROR(dwError,
-			             "Failed to seek file %p (offset: %I64d, whence: %I32u)",
+			             "Failed to seek file %p (offset: %" PRFd64 ", whence: %" PRFu32 ")",
 			             hFile, lDistanceToMove, dwMoveMethod);
 		}
 	}
@@ -1783,7 +1784,7 @@ again:
 			goto again;
 		}
 		RETURN_ERROR_OR_FALSE(dwError,
-		                      "Failed to set valid file data for %p to %I64u",
+		                      "Failed to set valid file data for %p to %" PRFu64,
 		                      hFile, ValidDataLength);
 	}
 	DBG_ALIGNMENT_ENABLE();
@@ -2850,7 +2851,7 @@ again:
 			goto again;
 		}
 		RETURN_ERROR_OR_FALSE(dwError,
-		                      "Failed to set attributes of file %lq to %#I32x",
+		                      "Failed to set attributes of file %lq to %#" PRFx32 "",
 		                      lpFileName, dwFileAttributes);
 	}
 	DBG_ALIGNMENT_ENABLE();
@@ -3187,7 +3188,7 @@ again:
 		}
 		RETURN_ERROR(dwError,
 		             "Failed to map a view of %p into memory "
-		             "(dwDesiredAccess: %#I32x, dwFileOffset: %I64u, dwNumberOfBytesToMap: %Iu)",
+		             "(dwDesiredAccess: %#" PRFx32 ", dwFileOffset: %" PRFu64 ", dwNumberOfBytesToMap: %" PRFuSIZ ")",
 		             hFileMappingObject, dwDesiredAccess,
 		             dwFileOffset, dwNumberOfBytesToMap);
 	}
@@ -3321,7 +3322,7 @@ again:
 		}
 		RETURN_ERROR(dwError,
 		             "Failed to create file mapping for %p "
-		             "(flProtect: %#I32x, dwMaximumSize: %I64u, lpName: %lq)",
+		             "(flProtect: %#" PRFx32 ", dwMaximumSize: %" PRFu64 ", lpName: %lq)",
 		             hFile, flProtect, dwMaximumSize, lpName);
 	}
 	DBG_ALIGNMENT_ENABLE();
@@ -3485,7 +3486,7 @@ check_interrupt:
 				if (DeeNTSystem_IsIntr(dwError))
 					goto check_interrupt;
 				RETURN_ERROR(dwError,
-				             "Failed to get STD handle %I32d",
+				             "Failed to get STD handle %" PRFd32,
 				             nStdHandle);
 			}
 			goto done;
@@ -3539,7 +3540,7 @@ again:
 			goto again;
 		}
 		RETURN_ERROR_OR_FALSE(dwError,
-		                      "Failed to set STD handle %I32u to %p",
+		                      "Failed to set STD handle %" PRFu32 " to %p",
 		                      nStdHandle, hHandle);
 	}
 	DBG_ALIGNMENT_ENABLE();
@@ -3619,9 +3620,9 @@ again:
 			goto again;
 		}
 		RETURN_ERROR(dwError,
-		             "Failed to create named pipe %lq (dwOpenMode: %#I32x, dwPipeMode: %#I32x, "
-		             "nMaxInstances: %#I32x, nOutBufferSize: %#I32x, nInBufferSize: %#I32x, "
-		             "nDefaultTimeOut: %#I32x)",
+		             "Failed to create named pipe %lq (dwOpenMode: %#" PRFx32 ", dwPipeMode: %#" PRFx32 ", "
+		             "nMaxInstances: %#" PRFx32 ", nOutBufferSize: %#" PRFx32 ", nInBufferSize: %#" PRFx32 ", "
+		             "nDefaultTimeOut: %#" PRFx32 ")",
 		             lpName, dwOpenMode, dwPipeMode, nMaxInstances,
 		             nOutBufferSize, nInBufferSize, nDefaultTimeOut);
 	}
@@ -3733,7 +3734,7 @@ again:
 			goto again;
 		}
 		RETURN_ERROR_OR_FALSE(dwError,
-		                      "Failed to wait for named pipe %lq (nTimeOut: %#I32x)",
+		                      "Failed to wait for named pipe %lq (nTimeOut: %#" PRFx32 ")",
 		                      lpNamedPipeName, nTimeOut);
 	}
 	DBG_ALIGNMENT_ENABLE();
@@ -3833,7 +3834,7 @@ check_interrupt:
 				goto check_interrupt;
 		}
 		RETURN_ERROR(dwError,
-		             "Failed to open process (dwDesiredAccess: %#I32x, bInheritHandle: %u, dwProcessId: %#I32x)",
+		             "Failed to open process (dwDesiredAccess: %#" PRFx32 ", bInheritHandle: %u, dwProcessId: %#" PRFx32 ")",
 		             dwDesiredAccess, (unsigned int)bInheritHandle, dwProcessId);
 	}
 got_hResult:
@@ -4045,7 +4046,7 @@ again:
 		}
 		Dee_Free(phModules);
 		RETURN_ERROR(dwError,
-		             "Failed to query process modules (hProcess: %p, dwFilterFlag: %#I32x)",
+		             "Failed to query process modules (hProcess: %p, dwFilterFlag: %#" PRFx32 ")",
 		             hProcess, dwFilterFlag);
 	}
 	DBG_ALIGNMENT_ENABLE();
@@ -4443,7 +4444,7 @@ again:
 			goto again;
 		}
 		RETURN_ERROR_OR_FALSE(dwError,
-		                      "Failed to terminate process %p (uExitCode: %I32u)",
+		                      "Failed to terminate process %p (uExitCode: %" PRFu32 ")",
 		                      hProcess, uExitCode);
 	}
 	DBG_ALIGNMENT_ENABLE();
@@ -4495,7 +4496,7 @@ again:
 			goto again;
 		}
 		RETURN_ERROR_OR_FALSE(dwError,
-		                      "Failed to terminate thread %p (dwExitCode: %I32u)",
+		                      "Failed to terminate thread %p (dwExitCode: %" PRFu32 ")",
 		                      hThread, dwExitCode);
 	}
 	DBG_ALIGNMENT_ENABLE();
@@ -4919,7 +4920,7 @@ again:
 		}
 		Dee_Decref_likely(result);
 		RETURN_ERROR_OR_FALSE(dwError,
-		                      "Failed to read process %p memory at (nSize: %Iu)",
+		                      "Failed to read process %p memory at (nSize: %" PRFuSIZ ")",
 		                      hProcess, (void *)lpBaseAddress, nSize);
 	}
 	DBG_ALIGNMENT_ENABLE();
@@ -4995,7 +4996,7 @@ again:
 		}
 		Dee_Decref_likely(result);
 		RETURN_ERROR_OR_FALSE(dwError,
-		                      "Failed to read wow64 process %p memory at (nSize: %Iu)",
+		                      "Failed to read wow64 process %p memory at (nSize: %" PRFuSIZ ")",
 		                      hProcess, (void *)lpBaseAddress, nSize);
 	}
 	DBG_ALIGNMENT_ENABLE();
@@ -5063,7 +5064,7 @@ again:
 		}
 		DeeObject_PutBuf(lpBuffer, &buf, Dee_BUFFER_FREADONLY);
 		RETURN_ERROR_OR_FALSE(dwError,
-		                      "Failed to write process %p memory at (nSize: %Iu)",
+		                      "Failed to write process %p memory at (nSize: %" PRFuSIZ ")",
 		                      hProcess, (void *)lpBaseAddress, buf.bb_size);
 	}
 	DBG_ALIGNMENT_ENABLE();
@@ -5135,7 +5136,7 @@ again:
 		}
 		DeeObject_PutBuf(lpBuffer, &buf, Dee_BUFFER_FREADONLY);
 		RETURN_ERROR_OR_FALSE(dwError,
-		                      "Failed to write wow64 process %.16I64X memory at (nSize: %Iu)",
+		                      "Failed to write wow64 process %.16" PRFX64 " memory at (nSize: %" PRFuSIZ ")",
 		                      hProcess, lpBaseAddress, buf.bb_size);
 	}
 	DBG_ALIGNMENT_ENABLE();
@@ -5194,7 +5195,7 @@ check_interrupt:
 			goto again;
 		}
 		RETURN_ERROR(dwError,
-		             "Failed to wait for handle %p (dwMilliseconds: %#I32x)",
+		             "Failed to wait for handle %p (dwMilliseconds: %#" PRFx32 ")",
 		             hHandle, dwMilliseconds);
 	}
 	DBG_ALIGNMENT_ENABLE();
@@ -5271,7 +5272,7 @@ check_interrupt:
 			goto again;
 		}
 		RETURN_ERROR(dwError,
-		             "Failed to wait for %Iu handles (bWaitAll: %u, dwMilliseconds: %#I32x)",
+		             "Failed to wait for %" PRFuSIZ " handles (bWaitAll: %u, dwMilliseconds: %#" PRFx32 ")",
 		             nCount, (unsigned int)bWaitAll, dwMilliseconds);
 	}
 	DBG_ALIGNMENT_ENABLE();
@@ -5336,7 +5337,7 @@ check_interrupt:
 			goto again;
 		}
 		RETURN_ERROR(dwError,
-		             "Failed to signal object %p and wait for %p (dwMilliseconds: %#I32x)",
+		             "Failed to signal object %p and wait for %p (dwMilliseconds: %#" PRFx32 ")",
 		             hObjectToSignal, hObjectToWaitOn, dwMilliseconds);
 	}
 	DBG_ALIGNMENT_ENABLE();
@@ -5498,7 +5499,7 @@ again:
 			goto again;
 		}
 		RETURN_ERROR(dwError,
-		             "Failed to open event (dwDesiredAccess: %#I32x, bInheritHandle: %u, lpName: %lq)",
+		             "Failed to open event (dwDesiredAccess: %#" PRFx32 ", bInheritHandle: %u, lpName: %lq)",
 		             dwDesiredAccess, (unsigned int)bInheritHandle, lpName);
 	}
 	DBG_ALIGNMENT_ENABLE();
@@ -5725,7 +5726,7 @@ again:
 			goto again;
 		}
 		RETURN_ERROR(dwError,
-		             "Failed to open mutex (dwDesiredAccess: %#I32x, bInheritHandle: %u, lpName: %lq)",
+		             "Failed to open mutex (dwDesiredAccess: %#" PRFx32 ", bInheritHandle: %u, lpName: %lq)",
 		             dwDesiredAccess, (unsigned int)bInheritHandle, lpName);
 	}
 	DBG_ALIGNMENT_ENABLE();
@@ -5844,7 +5845,7 @@ again:
 			goto again;
 		}
 		RETURN_ERROR(dwError,
-		             "Failed to create semaphore (lInitialCount: %I32u, lMaximumCount: %I32u, lpName: %lq)",
+		             "Failed to create semaphore (lInitialCount: %" PRFu32 ", lMaximumCount: %" PRFu32 ", lpName: %lq)",
 		             lInitialCount, lMaximumCount, lpName);
 	}
 	DBG_ALIGNMENT_ENABLE();
@@ -5905,7 +5906,7 @@ again:
 			goto again;
 		}
 		RETURN_ERROR(dwError,
-		             "Failed to open semaphore (dwDesiredAccess: %#I32x, bInheritHandle: %u, lpName: %lq)",
+		             "Failed to open semaphore (dwDesiredAccess: %#" PRFx32 ", bInheritHandle: %u, lpName: %lq)",
 		             dwDesiredAccess, (unsigned int)bInheritHandle, lpName);
 	}
 	DBG_ALIGNMENT_ENABLE();
@@ -6085,7 +6086,7 @@ again:
 			goto again;
 		}
 		RETURN_ERROR(dwError,
-		             "Failed to open waitable timer (dwDesiredAccess: %#I32x, bInheritHandle: %u, lpName: %lq)",
+		             "Failed to open waitable timer (dwDesiredAccess: %#" PRFx32 ", bInheritHandle: %u, lpName: %lq)",
 		             dwDesiredAccess, (unsigned int)bInheritHandle, lpName);
 	}
 	DBG_ALIGNMENT_ENABLE();

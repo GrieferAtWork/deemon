@@ -34,6 +34,7 @@
 #include <deemon/arg.h>
 #include <deemon/bool.h>
 #include <deemon/error.h>
+#include <deemon/format.h>
 #include <deemon/int.h>
 #include <deemon/none.h>
 #include <deemon/string.h>
@@ -177,36 +178,36 @@ DECL_BEGIN
 #ifndef FORMAT_STR
 #ifdef SIGNED
 #if SIZEOF <= 1
-#define FORMAT_STR "%I8d"
+#define FORMAT_STR "%" PRFd8
 #define FORMAT_TYP int8_t
 #elif SIZEOF <= 2
-#define FORMAT_STR "%I16d"
+#define FORMAT_STR "%" PRFd16
 #define FORMAT_TYP int16_t
 #elif SIZEOF <= 4
-#define FORMAT_STR "%I32d"
+#define FORMAT_STR "%" PRFd32
 #define FORMAT_TYP int32_t
 #elif SIZEOF <= 8
-#define FORMAT_STR "%I64d"
+#define FORMAT_STR "%" PRFd64
 #define FORMAT_TYP int64_t
 #elif SIZEOF <= 16
-#define FORMAT_STR "%I128d"
+#define FORMAT_STR "%" PRFd128
 #define FORMAT_TYP Dee_int128_t
 #endif /* SIZEOF <=´... */
 #else /* SIGNED */
 #if SIZEOF <= 1
-#define FORMAT_STR "%I8u"
+#define FORMAT_STR "%" PRFd8
 #define FORMAT_TYP uint8_t
 #elif SIZEOF <= 2
-#define FORMAT_STR "%I16u"
+#define FORMAT_STR "%" PRFd16
 #define FORMAT_TYP uint16_t
 #elif SIZEOF <= 4
-#define FORMAT_STR "%I32u"
+#define FORMAT_STR "%" PRFd32
 #define FORMAT_TYP uint32_t
 #elif SIZEOF <= 8
-#define FORMAT_STR "%I64u"
+#define FORMAT_STR "%" PRFd64
 #define FORMAT_TYP uint64_t
 #elif SIZEOF <= 16
-#define FORMAT_STR "%I128u"
+#define FORMAT_STR "%" PRFd128
 #define FORMAT_TYP Dee_uint128_t
 #endif /* SIZEOF <= ... */
 #endif /* !SIGNED */

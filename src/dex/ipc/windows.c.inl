@@ -1324,7 +1324,7 @@ pt_iter(ProcessThreads *__restrict self) {
 		dwError = GetLastError();
 		DBG_ALIGNMENT_ENABLE();
 		DeeNTSystem_ThrowErrorf(NULL, dwError,
-		                        "Failed to create a snapshot of the thread of process %I32u",
+		                        "Failed to create a snapshot of the thread of process %" PRFu32,
 		                        self->pt_id);
 		goto err_r;
 	}

@@ -29,6 +29,7 @@
 #include <deemon/bytes.h>
 #include <deemon/error.h>
 #include <deemon/float.h>
+#include <deemon/format.h>
 #include <deemon/gc.h>
 #include <deemon/int.h>
 #include <deemon/none.h>

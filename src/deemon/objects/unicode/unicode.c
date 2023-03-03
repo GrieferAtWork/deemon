@@ -691,7 +691,7 @@ load_2byte_width:
 err_invalid_unicode:
 				if (!(error_mode & (STRING_ERROR_FREPLAC | STRING_ERROR_FIGNORE))) {
 					DeeError_Throwf(&DeeError_UnicodeEncodeError,
-					                "Invalid unicode character U+%.4I32X", ch);
+					                "Invalid unicode character U+%.4" PRFX32, ch);
 					goto err;
 				}
 				if (error_mode & STRING_ERROR_FIGNORE)
@@ -1259,7 +1259,7 @@ read_text_i:
 					break;
 				}
 				DeeError_Throwf(&DeeError_UnicodeDecodeError,
-				                "Missing low surrogate for high surrogate U+%I32X",
+				                "Missing low surrogate for high surrogate U+%" PRFX32,
 				                ch);
 				goto err;
 			}
@@ -1291,7 +1291,7 @@ read_text_i:
 					goto continue_at_i;
 				}
 				DeeError_Throwf(&DeeError_UnicodeDecodeError,
-				                "Invalid low surrogate U+%I16X paired with high surrogate U+%I32X",
+				                "Invalid low surrogate U+%I16X paired with high surrogate U+%" PRFX32,
 				                low_value, ch);
 				goto err;
 			}
@@ -1344,9 +1344,9 @@ read_text_i:
 			utf->u_width                    = STRING_WIDTH_2BYTE;
 			utf->u_data[STRING_WIDTH_2BYTE] = (size_t *)text;
 			ASSERTF(character_count == WSTR_LENGTH(text),
-			        "character_count   = %Iu\n"
-			        "WSTR_LENGTH(text) = %Iu\n"
-			        "length            = %Iu\n"
+			        "character_count   = %" PRFuSIZ "\n"
+			        "WSTR_LENGTH(text) = %" PRFuSIZ "\n"
+			        "length            = %" PRFuSIZ "\n"
 			        "text              = %$I16s\n",
 			        character_count, WSTR_LENGTH(text),
 			        length, WSTR_LENGTH(text), text);
@@ -1500,9 +1500,9 @@ continue_at_i:
 			utf->u_width                    = STRING_WIDTH_2BYTE;
 			utf->u_data[STRING_WIDTH_2BYTE] = (size_t *)text;
 			ASSERTF(character_count == WSTR_LENGTH(text),
-			        "character_count   = %Iu\n"
-			        "WSTR_LENGTH(text) = %Iu\n"
-			        "length            = %Iu\n"
+			        "character_count   = %" PRFuSIZ "\n"
+			        "WSTR_LENGTH(text) = %" PRFuSIZ "\n"
+			        "length            = %" PRFuSIZ "\n"
 			        "text              = %$I16s\n",
 			        character_count, WSTR_LENGTH(text), length, WSTR_LENGTH(text), text);
 			char16_to_utf8(text, length, (uint8_t *)result->s_str);
@@ -1596,7 +1596,7 @@ DeeString_PackUtf32Buffer(/*inherit(always)*/ uint32_t *__restrict text,
 				}
 			} else {
 				DeeError_Throwf(&DeeError_UnicodeDecodeError,
-				                "Invalid unicode character U+%I32X",
+				                "Invalid unicode character U+%" PRFX32,
 				                ch);
 				goto err;
 			}
@@ -5532,7 +5532,7 @@ err:
 	return -1;
 err_bytes_too_large:
 	DeeError_Throwf(&DeeError_UnicodeEncodeError,
-	                "Unicode character U+%.4I32X cannot fit into a single byte",
+	                "Unicode character U+%.4" PRFX32 " cannot fit into a single byte",
 	                ch32);
 	goto err;
 }

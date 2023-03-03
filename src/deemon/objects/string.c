@@ -214,7 +214,7 @@ realloc_again:
 		string->s_len = alloc_size;
 	}
 	/* Copy text into the dynamic string. */
-	/*Dee_DPRINTF("PRINT: %IX - `%.*s'\n", datalen, (int)datalen, data);*/
+	/*Dee_DPRINTF("PRINT: %" PRFXSIZ " - `%.*s'\n", datalen, (int)datalen, data);*/
 	memcpyc(string->s_str + me->ap_length,
 	        data, datalen, sizeof(char));
 	me->ap_length += datalen;

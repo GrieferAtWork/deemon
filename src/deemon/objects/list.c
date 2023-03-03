@@ -2766,7 +2766,7 @@ list_setallocated(List *me, DeeObject *value) {
 			size_t my_size = DeeList_SIZE(me);
 			DeeList_LockEndWrite(me);
 			DeeError_Throwf(&DeeError_ValueError,
-			                "Cannot lower list allocation to %Iu when size is %Iu",
+			                "Cannot lower list allocation to %" PRFuSIZ " when size is %" PRFuSIZ,
 			                new_elema, my_size);
 			goto err;
 		}

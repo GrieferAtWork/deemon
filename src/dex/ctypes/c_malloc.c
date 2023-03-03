@@ -31,6 +31,7 @@
 #include <deemon/alloc.h>
 #include <deemon/arg.h>
 #include <deemon/error.h>
+#include <deemon/format.h>
 #include <deemon/none.h>
 #include <deemon/object.h>
 #include <deemon/system-features.h> /* strnlen() */
@@ -121,7 +122,7 @@ capi_calloc(size_t argc, DeeObject *const *argv) {
 	if unlikely((total < count || total < num_bytes) &&
 	            count && num_bytes) {
 		DeeError_Throwf(&DeeError_IntegerOverflow,
-		                "calloc allocation total of `%Iu * %Iu' is overflowing",
+		                "calloc allocation total of `%" PRFuSIZ " * %" PRFuSIZ "' is overflowing",
 		                count, num_bytes);
 		goto err;
 	}

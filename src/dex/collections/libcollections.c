@@ -28,6 +28,7 @@
 #include <deemon/api.h>
 #include <deemon/dex.h>
 #include <deemon/error.h>
+#include <deemon/format.h>
 
 DECL_BEGIN
 
@@ -53,7 +54,8 @@ err_index_out_of_bounds(DeeObject *__restrict self,
 	ASSERT_OBJECT(self);
 	ASSERT(index >= size);
 	return DeeError_Throwf(&DeeError_IndexError,
-	                       "Index `%Iu' lies outside the valid bounds `0...%Iu' of sequence of type `%k'",
+	                       "Index `%" PRFuSIZ "' lies outside the valid bounds "
+	                       "`0...%" PRFuSIZ "' of sequence of type `%k'",
 	                       index, size, Dee_TYPE(self));
 }
 
@@ -61,7 +63,7 @@ INTERN ATTR_COLD NONNULL((1)) int DCALL
 err_unbound_index(DeeObject *__restrict self, size_t index) {
 	ASSERT_OBJECT(self);
 	return DeeError_Throwf(&DeeError_UnboundItem,
-	                       "Index `%Iu' of instance of `%k': %k has not been bound",
+	                       "Index `%" PRFuSIZ "' of instance of `%k': %k has not been bound",
 	                       index, Dee_TYPE(self), self);
 }
 

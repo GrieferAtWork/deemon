@@ -45,6 +45,7 @@
 #include <deemon/bytes.h>
 #include <deemon/dex.h>
 #include <deemon/error.h>
+#include <deemon/format.h>
 #include <deemon/int.h>
 #include <deemon/none.h>
 #include <deemon/objmethod.h>
@@ -350,7 +351,7 @@ f_ctypes_intfor(size_t argc, DeeObject *const *argv) {
 	if (result)
 		return_reference_((DeeObject *)result);
 	DeeError_Throwf(&DeeError_ValueError,
-	                "No C integer type with a width of `%Iu' bytes exists",
+	                "No C integer type with a width of `%" PRFuSIZ "' bytes exists",
 	                intsize);
 err:
 	return NULL;

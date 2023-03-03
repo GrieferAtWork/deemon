@@ -20,7 +20,6 @@
 #ifndef GUARD_DEEMON_OBJECTS_CLASS_DESC_C
 #define GUARD_DEEMON_OBJECTS_CLASS_DESC_C 1
 
-#include <deemon/instancemethod.h>
 #include <deemon/alloc.h>
 #include <deemon/api.h>
 #include <deemon/arg.h>
@@ -29,6 +28,8 @@
 #include <deemon/class.h>
 #include <deemon/code.h>
 #include <deemon/error.h>
+#include <deemon/format.h>
+#include <deemon/instancemethod.h>
 #include <deemon/int.h>
 #include <deemon/map.h>
 #include <deemon/module.h>
@@ -38,9 +39,9 @@
 #include <deemon/seq.h>
 #include <deemon/string.h>
 #include <deemon/super.h>
+#include <deemon/system-features.h> /* memcpy(), ... */
 #include <deemon/thread.h>
 #include <deemon/tuple.h>
-#include <deemon/system-features.h> /* memcpy(), ... */
 #include <deemon/util/atomic.h>
 
 #include "../runtime/runtime_error.h"
@@ -1603,7 +1604,7 @@ cd_alloc_from_iattr(DeeObject *__restrict iattr,
 			if (ent->ca_flag & CLASS_ATTRIBUTE_FCLASSMEM) {
 				if (cmemb_size != (uint16_t)-1 && maxid >= cmemb_size) {
 					DeeError_Throwf(&DeeError_ValueError,
-					                "Instance attribute %r uses out-of-bounds class object table index %I16u (>= %I16u)",
+					                "Instance attribute %r uses out-of-bounds class object table index %" PRFu16 " (>= %" PRFu16 ")",
 					                ent->ca_name, maxid, cmemb_size);
 					goto err_iter_r;
 				}
@@ -1612,7 +1613,7 @@ cd_alloc_from_iattr(DeeObject *__restrict iattr,
 			} else {
 				if (imemb_size != (uint16_t)-1 && maxid >= imemb_size) {
 					DeeError_Throwf(&DeeError_ValueError,
-					                "Instance attribute %r uses out-of-bounds object table index %I16u (>= %I16u)",
+					                "Instance attribute %r uses out-of-bounds object table index %" PRFu16 " (>= %" PRFu16 ")",
 					                ent->ca_name, maxid, imemb_size);
 					goto err_iter_r;
 				}
@@ -1829,7 +1830,7 @@ got_flag:
 					maxid += CLASS_GETSET_SET;
 				if (class_csize != (uint16_t)-1 && maxid >= class_csize) {
 					DeeError_Throwf(&DeeError_ValueError,
-					                "Class attribute %r uses out-of-bounds class object table index %I16u (>= %I16u)",
+					                "Class attribute %r uses out-of-bounds class object table index %" PRFu16 " (>= %" PRFu16 ")",
 					                ent->ca_name, maxid, class_csize);
 					goto err_r_imemb_iter;
 				}
@@ -1871,11 +1872,11 @@ got_flag:
 				struct opinfo const *op = Dee_OperatorInfo(NULL, name);
 				if (op) {
 					DeeError_Throwf(&DeeError_ValueError,
-					                "Operator %s uses out-of-bounds class object table index %I16u (>= %I16u)",
+					                "Operator %s uses out-of-bounds class object table index %" PRFu16 " (>= %" PRFu16 ")",
 					                op->oi_sname, index, class_csize);
 				} else {
 					DeeError_Throwf(&DeeError_ValueError,
-					                "Operator 0x%.4I16x uses out-of-bounds class object table index %I16u (>= %I16u)",
+					                "Operator 0x%.4I16x uses out-of-bounds class object table index %" PRFu16 " (>= %" PRFu16 ")",
 					                name, index, class_csize);
 				}
 				goto err_r_imemb_iter;

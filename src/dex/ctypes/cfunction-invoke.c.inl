@@ -48,14 +48,14 @@ cfunction_call(DeeCFunctionTypeObject *__restrict tp_self,
 #ifdef VARARGS
 	if (argc < tp_self->ft_argc) {
 		DeeError_Throwf(&DeeError_TypeError,
-		                "Function `(%k)%p' requires at least %Iu arguments when %Iu were given",
+		                "Function `(%k)%p' requires at least %" PRFuSIZ " arguments when %" PRFuSIZ " were given",
 		                tp_self, self, tp_self->ft_argc, argc);
 		goto err;
 	}
 #else /* VARARGS */
 	if (argc != tp_self->ft_argc) {
 		DeeError_Throwf(&DeeError_TypeError,
-		                "Function `(%k)%p' requires %Iu arguments when %Iu were given",
+		                "Function `(%k)%p' requires %" PRFuSIZ " arguments when %" PRFuSIZ " were given",
 		                tp_self, self, tp_self->ft_argc, argc);
 		goto err;
 	}
