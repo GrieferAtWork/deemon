@@ -453,7 +453,7 @@ PRIVATE struct type_cmp seqiterator_cmp = {
 INTERN DeeTypeObject DeeGenericIterator_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_GenericIterator",
-	/* .tp_doc      = */ NULL,
+	/* .tp_doc      = */ DOC("(seq:?DSequence,index=!0)"),
 	/* .tp_flags    = */ TP_FNORMAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
