@@ -47,6 +47,8 @@ DDATDEF DeeNoneObject DeeNone_Singleton;
 DDATDEF DeeObject     DeeNone_Singleton;
 #define Dee_None    (&DeeNone_Singleton)
 #endif /* !GUARD_DEEMON_OBJECTS_NONE_C */
+#define DeeNone_NewRef() (Dee_Incref(Dee_None), Dee_None)
+
 #define Dee_return_none  Dee_return_reference_(Dee_None)
 
 /* WARNING: If these two macros are ever changed, make sure to allow

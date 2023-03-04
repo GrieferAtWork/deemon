@@ -2537,6 +2537,20 @@ type_str(DeeTypeObject *__restrict self) {
 	return_reference_(&str_Type);
 }
 
+INTERN WUNUSED NONNULL((1, 2)) dssize_t DCALL
+DeeType_Print(DeeTypeObject *__restrict self, dformatprinter printer, void *arg) {
+	if (self->tp_flags & TP_FNAMEOBJECT) {
+		DREF DeeStringObject *nameob;
+		nameob = COMPILER_CONTAINER_OF(self->tp_name,
+		                               DeeStringObject,
+		                               s_str);
+		return DeeString_PrintUtf8((DeeObject *)nameob, printer, arg);
+	}
+	if likely(self->tp_name)
+		return DeeFormat_PrintStr(printer, arg, self->tp_name);
+	return DeeString_PrintAscii(&str_Type, printer, arg);
+}
+
 PRIVATE WUNUSED NONNULL((1)) DREF DeeStringObject *DCALL
 type_repr(DeeTypeObject *__restrict self) {
 	DREF DeeObject *mod;
@@ -2553,6 +2567,33 @@ type_repr(DeeTypeObject *__restrict self) {
 	return result;
 fallback:
 	return type_str(self);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
+type_printrepr(DeeTypeObject *__restrict self, dformatprinter printer, void *arg) {
+	dssize_t result, temp;
+	DREF DeeModuleObject *mod;
+	char const *name;
+	mod = (DREF DeeModuleObject *)DeeType_GetModule(self);
+	if (!mod)
+		goto fallback;
+	result = DeeString_PrintUtf8((DeeObject *)mod->mo_name, printer, arg);
+	Dee_Decref(mod);
+	if unlikely(result < 0)
+		goto done;
+	name = self->tp_name;
+	if (name == NULL)
+		name = "<anonymous type>";
+	temp = DeeFormat_Printf(printer, arg, ".%s", name);
+	if unlikely(temp < 0)
+		goto err;
+	result += temp;
+done:
+	return result;
+err:
+	return temp;
+fallback:
+	return DeeType_Print(self, printer, arg);
 }
 
 
@@ -4315,9 +4356,11 @@ PUBLIC DeeTypeObject DeeType_Type = {
 		/* .tp_move_assign = */ NULL
 	},
 	/* .tp_cast = */ {
-		/* .tp_str  = */ (DeeObject *(DCALL *)(DeeObject *__restrict))&type_str,
-		/* .tp_repr = */ (DeeObject *(DCALL *)(DeeObject *__restrict))&type_repr,
-		/* .tp_bool = */ NULL
+		/* .tp_str       = */ (DeeObject *(DCALL *)(DeeObject *__restrict))&type_str,
+		/* .tp_repr      = */ (DeeObject *(DCALL *)(DeeObject *__restrict))&type_repr,
+		/* .tp_bool      = */ NULL,
+		/* .tp_print     = */ (dssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&DeeType_Print,
+		/* .tp_printrepr = */ (dssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&type_printrepr
 	},
 	/* .tp_call          = */ (DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&DeeObject_New,
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&type_visit,

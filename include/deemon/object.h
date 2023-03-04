@@ -131,6 +131,9 @@ typedef __SSIZE_TYPE__         Dee_ssize_t;
 typedef __LONG64_TYPE__        Dee_off_t;
 typedef __ULONG64_TYPE__       Dee_pos_t;
 typedef uintptr_t              Dee_hash_t;
+typedef WUNUSED_T ATTR_INS_T(2, 3) Dee_ssize_t
+(DPRINTER_CC *Dee_formatprinter_t)(void *arg, char const *__restrict data, size_t datalen);
+
 #define DEE_SIZEOF_DEE_POS_T 8
 
 #ifdef __cplusplus
@@ -140,12 +143,13 @@ typedef void (*Dee_funptr_t)();
 #endif /* !__cplusplus */
 
 #ifdef DEE_SOURCE
-typedef Dee_refcnt_t drefcnt_t;
-typedef Dee_ssize_t  dssize_t;
-typedef Dee_off_t    doff_t;
-typedef Dee_pos_t    dpos_t;
-typedef Dee_hash_t   dhash_t;
-typedef Dee_funptr_t dfunptr_t;
+typedef Dee_refcnt_t        drefcnt_t;
+typedef Dee_ssize_t         dssize_t;
+typedef Dee_off_t           doff_t;
+typedef Dee_pos_t           dpos_t;
+typedef Dee_hash_t          dhash_t;
+typedef Dee_funptr_t        dfunptr_t;
+typedef Dee_formatprinter_t dformatprinter;
 #endif /* DEE_SOURCE */
 
 /* Hashing helpers. */
@@ -1422,6 +1426,10 @@ struct Dee_type_cast {
 	WUNUSED_T NONNULL_T((1)) DREF DeeObject *(DCALL *tp_str)(DeeObject *__restrict self);
 	WUNUSED_T NONNULL_T((1)) DREF DeeObject *(DCALL *tp_repr)(DeeObject *__restrict self);
 	WUNUSED_T NONNULL_T((1)) int (DCALL *tp_bool)(DeeObject *__restrict self);
+	/* Optional fast-pass operator for `DeeObject_Print(tp_str(self), printer, arg)' */
+	WUNUSED_T NONNULL_T((1, 2)) Dee_ssize_t (DCALL *tp_print)(DeeObject *__restrict self, Dee_formatprinter_t printer, void *arg);
+	/* Optional fast-pass operator for `DeeObject_Print(tp_repr(self), printer, arg)' */
+	WUNUSED_T NONNULL_T((1, 2)) Dee_ssize_t (DCALL *tp_printrepr)(DeeObject *__restrict self, Dee_formatprinter_t printer, void *arg);
 };
 
 struct Dee_type_gc {
@@ -2611,6 +2619,13 @@ INTERN WUNUSED NONNULL((1, 3, 4)) int DCALL DeeObject_GenericFindAttrString(DeeT
 #define DeeObject_GenericHasAttrStringLen(self, attr, attrlen, hash)   DeeObject_TGenericHasAttrStringLen(Dee_TYPE(self), attr, attrlen, hash)
 #endif /* CONFIG_BUILDING_DEEMON */
 
+#ifdef CONFIG_BUILDING_DEEMON
+INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+DeeType_Print(DeeTypeObject *__restrict self, Dee_formatprinter_t printer, void *arg);
+#else /* CONFIG_BUILDING_DEEMON */
+#define DeeType_Print(self, printer, arg) DeeObject_Print((DeeObject *)(self), printer, arg)
+#endif /* !CONFIG_BUILDING_DEEMON */
+
 
 DDATDEF DeeTypeObject DeeObject_Type; /* `object' */
 DDATDEF DeeTypeObject DeeType_Type;   /* `type(object)' */
@@ -3020,13 +3035,6 @@ DFUNDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeObject_BoundItemStringLen)(DeeObje
 /* NOTE: The `argv' vector itself isn't inherited; only its elements are! */
 DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *(DCALL DeeObject_ConcatInherited)(/*inherit(on_success)*/ DREF DeeObject *self, DeeObject *other);
 DFUNDEF WUNUSED NONNULL((1, 3)) DREF DeeObject *(DCALL DeeObject_ExtendInherited)(/*inherit(on_success)*/ DREF DeeObject *self, size_t argc, /*inherit(on_success)*/ DREF DeeObject *const *argv);
-
-/* Process UTF-8-encoded `data' in whatever way you wish. */
-typedef WUNUSED_T ATTR_INS_T(2, 3) Dee_ssize_t
-(DPRINTER_CC *Dee_formatprinter_t)(void *arg, char const *__restrict data, size_t datalen);
-#ifdef DEE_SOURCE
-typedef Dee_formatprinter_t dformatprinter;
-#endif /* DEE_SOURCE */
 
 /* Print the given object to a format printer.
  * This is identical to printing the return value of `DeeObject_Str', but is quite

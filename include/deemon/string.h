@@ -860,6 +860,8 @@ DeeString_PrintUtf8(DeeObject *__restrict self,
 #else /* CONFIG_BUILDING_DEEMON */
 #define DeeString_PrintUtf8 DeeObject_Print
 #endif /* !CONFIG_BUILDING_DEEMON */
+#define DeeString_PrintAscii(self, printer, arg) \
+	(*printer)(arg, DeeString_STR(self), DeeString_SIZE(self))
 
 /* Print the escape-encoded variant of `self' */
 DFUNDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL

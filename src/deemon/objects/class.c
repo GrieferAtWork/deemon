@@ -3044,21 +3044,26 @@ err:
 	return -1;
 }
 
-INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-instance_builtin_auto_trepr(DeeTypeObject *tp_self, DeeObject *__restrict self) {
-	struct unicode_printer printer = UNICODE_PRINTER_INIT;
+
+INTERN WUNUSED NONNULL((1, 2, 3)) dssize_t DCALL
+instance_builtin_auto_tprintrepr(DeeTypeObject *tp_self,
+                                 DeeObject *__restrict self,
+                                 dformatprinter printer, void *arg) {
+#define DO(err, expr)                    \
+	do {                                 \
+		if unlikely((temp = (expr)) < 0) \
+			goto err;                    \
+		result += temp;                  \
+	}	__WHILE0
+	dssize_t temp, result;
 	struct class_desc *desc        = DeeClass_DESC(tp_self);
 	struct instance_desc *instance = DeeInstance_DESC(desc, self);
-	uint16_t i, count;
+	uint16_t i, count = desc->cd_desc->cd_imemb_size;
 	DREF DeeObject *ob;
 	bool is_first = true;
-	count         = desc->cd_desc->cd_imemb_size;
-	if (unicode_printer_print(&printer,
-	                          tp_self->tp_name,
-	                          strlen(tp_self->tp_name)) < 0)
-		goto err;
-	if (unicode_printer_putc(&printer, '('))
-		goto err;
+	result = DeeFormat_Printf(printer, arg, "%s(", tp_self->tp_name);
+	if unlikely(result < 0)
+		goto done;
 	atomic_rwlock_read(&instance->id_lock);
 	for (i = 0; i < count; ++i) {
 		size_t attr_index;
@@ -3077,36 +3082,31 @@ instance_builtin_auto_trepr(DeeTypeObject *tp_self, DeeObject *__restrict self) 
 				continue;
 			if (!CLASS_ATTRIBUTE_ALLOW_AUTOINIT(at))
 				continue;
-			if (!is_first) {
-				if (UNICODE_PRINTER_PRINT(&printer, ", ") < 0)
-					goto err_ob;
-			}
+			if (!is_first)
+				DO(err_ob, DeeFormat_PRINT(printer, arg, ", "));
+			DO(err_ob, DeeString_PrintUtf8((DeeObject *)at->ca_name, printer, arg));
+			DO(err_ob, DeeFormat_Printf(printer, arg, ": %k", ob));
 			is_first = false;
-			if (unicode_printer_printstring(&printer, (DeeObject *)at->ca_name) < 0)
-				goto err_ob;
-			if (UNICODE_PRINTER_PRINT(&printer, ": ") < 0)
-				goto err_ob;
-			if (unicode_printer_printobjectrepr(&printer, ob) < 0)
-				goto err_ob;
 			break;
 		}
 		Dee_Decref(ob);
 		atomic_rwlock_read(&instance->id_lock);
 	}
 	atomic_rwlock_endread(&instance->id_lock);
-	if (unicode_printer_putc(&printer, ')'))
-		goto err;
-	return unicode_printer_pack(&printer);
+	DO(err, DeeFormat_PRINT(printer, arg, ")"));
+done:
+	return result;
 err_ob:
 	Dee_Decref(ob);
 err:
-	unicode_printer_fini(&printer);
-	return NULL;
+	return temp;
+#undef DO
 }
 
-INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-instance_builtin_auto_repr(DeeObject *__restrict self) {
-	return instance_builtin_auto_trepr(Dee_TYPE(self), self);
+INTERN WUNUSED NONNULL((1, 2)) dssize_t DCALL
+instance_builtin_auto_printrepr(DeeObject *__restrict self,
+                                dformatprinter printer, void *arg) {
+	return instance_builtin_auto_tprintrepr(Dee_TYPE(self), self, printer, arg);
 }
 
 /* No predefined construction operators (with `CLASS_TP_FAUTOINIT'). */
@@ -4386,6 +4386,68 @@ instance_repr(DeeObject *__restrict self) {
 	return instance_trepr(Dee_TYPE(self), self);
 }
 
+
+/* TODO: Add a way for user-code to define the str-operator as:
+ * >> import * from deemon;
+ * >> class MyClass1 {
+ * >>     operator str(fp: File) {
+ * >>         fp << "MyClass1.str";
+ * >>     }
+ * >> };
+ * >> class MyClass2 {
+ * >>     operator str(): string {
+ * >>         return "MyClass2.str";
+ * >>     }
+ * >> };
+ * >> print MyClass1();     // "MyClass1.str"
+ * >> print MyClass2();     // "MyClass2.str"
+ * >> print str MyClass1(); // "MyClass1.str"
+ * >> print str MyClass2(); // "MyClass2.str"
+ */
+INTERN WUNUSED NONNULL((1, 2, 3)) dssize_t DCALL
+instance_tprint(DeeTypeObject *tp_self, DeeObject *__restrict self,
+                dformatprinter printer, void *arg) {
+	dssize_t result;
+	DREF DeeObject *obstr;
+	obstr = instance_tstr(tp_self, self);
+	if unlikely(!obstr)
+		goto err;
+	result = DeeObject_Print(obstr, printer, arg);
+	Dee_Decref(obstr);
+	return result;
+err:
+	return -1;
+}
+
+INTERN WUNUSED NONNULL((1, 2)) dssize_t DCALL
+instance_print(DeeObject *__restrict self,
+               dformatprinter printer, void *arg) {
+	return instance_tprint(Dee_TYPE(self), self, printer, arg);
+}
+
+INTERN WUNUSED NONNULL((1, 2, 3)) dssize_t DCALL
+instance_tprintrepr(DeeTypeObject *tp_self, DeeObject *__restrict self,
+                    dformatprinter printer, void *arg) {
+	dssize_t result;
+	DREF DeeObject *obstr;
+	obstr = instance_trepr(tp_self, self);
+	if unlikely(!obstr)
+		goto err;
+	result = DeeObject_Print(obstr, printer, arg);
+	Dee_Decref(obstr);
+	return result;
+err:
+	return -1;
+}
+
+INTERN WUNUSED NONNULL((1, 2)) dssize_t DCALL
+instance_printrepr(DeeObject *__restrict self,
+                   dformatprinter printer, void *arg) {
+	return instance_tprintrepr(Dee_TYPE(self), self, printer, arg);
+}
+
+
+
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 instance_tint(DeeTypeObject *tp_self, DeeObject *__restrict self) {
 	DREF DeeObject *func, *result;
@@ -5153,8 +5215,8 @@ err_custom_allocator:
 
 	/* Provide builtin support for comparison, if not already defined by the type itself! */
 #ifdef CLASS_TP_FAUTOINIT
-	if (!result->tp_cast.tp_repr && (desc->cd_flags & CLASS_TP_FAUTOINIT))
-		result->tp_cast.tp_repr = &instance_builtin_auto_repr;
+	if ((!result->tp_cast.tp_repr && !result->tp_cast.tp_printrepr) && (desc->cd_flags & CLASS_TP_FAUTOINIT))
+		result->tp_cast.tp_printrepr = &instance_builtin_auto_printrepr;
 #endif /* CLASS_TP_FAUTOINIT */
 	if (!result->tp_cmp)
 		result->tp_cmp = &instance_builtin_cmp;

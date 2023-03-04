@@ -248,6 +248,16 @@ super_bool(Super *__restrict self) {
 	return DeeObject_TBool(self->s_type, self->s_self);
 }
 
+PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
+super_print(Super *__restrict self, dformatprinter printer, void *arg) {
+	return DeeObject_TPrint(self->s_type, self->s_self, printer, arg);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
+super_printrepr(Super *__restrict self, dformatprinter printer, void *arg) {
+	return DeeObject_TPrintRepr(self->s_type, self->s_self, printer, arg);
+}
+
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 super_call(Super *self, size_t argc, DeeObject *const *argv) {
 	return DeeObject_TCall(self->s_type, self->s_self, argc, argv);
@@ -813,9 +823,11 @@ PUBLIC DeeTypeObject DeeSuper_Type = {
 		/* .tp_move_assign = */ (int (DCALL *)(DeeObject *, DeeObject *))&super_moveassign
 	},
 	/* .tp_cast = */ {
-		/* .tp_str  = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&super_str,
-		/* .tp_repr = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&super_repr,
-		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&super_bool
+		/* .tp_str       = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&super_str,
+		/* .tp_repr      = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&super_repr,
+		/* .tp_bool      = */ (int (DCALL *)(DeeObject *__restrict))&super_bool,
+		/* .tp_print     = */ (dssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&super_print,
+		/* .tp_printrepr = */ (dssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&super_printrepr
 	},
 	/* .tp_call          = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&super_call,
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&super_visit,

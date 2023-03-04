@@ -1191,7 +1191,7 @@ err:
  * - ASCII+[0-7]   --> \0, \1, ... \7
  * - other         --> \xAB */
 DFUNDEF WUNUSED NONNULL((1, 3)) Dee_ssize_t DCALL
-DeeFormat_QuoteBytes(/*ascii*/ Dee_formatprinter_t printer, void *arg,
+DeeFormat_QuoteBytes(/*ascii*/ dformatprinter printer, void *arg,
                      /*bytes*/ void const *__restrict data, size_t num_bytes) {
 	dssize_t temp, result = 0;
 	byte_t const *text, *flush_start, *end;

@@ -1971,7 +1971,7 @@ do_print_prefix:
 
 		/* Deal with custom precisions */
 		if (precision > intlen) {
-			Dee_ssize_t temp;
+			dssize_t temp;
 			char prefix[3];
 			size_t prefix_len = 0;
 			size_t num_leading_zeroes;
@@ -3209,6 +3209,11 @@ int_str(DeeIntObject *__restrict self) {
 	return int_tostr_impl(self, DEEINT_PRINT_DEC, 0);
 }
 
+PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
+int_print(DeeIntObject *__restrict self, dformatprinter printer, void *arg) {
+	return DeeInt_Print((DeeObject *)self, DEEINT_PRINT_DEC, 0, printer, arg);
+}
+
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 int_tostr(DeeIntObject *self, size_t argc,
           DeeObject *const *argv, DeeObject *kw) {
@@ -4064,9 +4069,11 @@ PUBLIC DeeTypeObject DeeInt_Type = {
 		/* .tp_move_assign = */ NULL
 	},
 	/* .tp_cast = */ {
-		/* .tp_str  = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&int_str,
-		/* .tp_repr = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&int_str,
-		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&int_bool
+		/* .tp_str       = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&int_str,
+		/* .tp_repr      = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&int_str,
+		/* .tp_bool      = */ (int (DCALL *)(DeeObject *__restrict))&int_bool,
+		/* .tp_print     = */ (dssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&int_print,
+		/* .tp_printrepr = */ (dssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&int_print
 	},
 	/* .tp_call          = */ NULL,
 	/* .tp_visit         = */ NULL,

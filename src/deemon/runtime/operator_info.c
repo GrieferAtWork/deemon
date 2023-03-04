@@ -1478,11 +1478,34 @@ DeeType_GetOpPointer(DeeTypeObject const *__restrict self,
 PUBLIC WUNUSED NONNULL((1)) bool DCALL
 DeeType_HasOperator(DeeTypeObject const *__restrict self, uint16_t name) {
 	struct opinfo const *info;
-	if (name == OPERATOR_CONSTRUCTOR) {
+	switch (name) {
+
+	case OPERATOR_CONSTRUCTOR:
 		/* Special case: the constructor operator (which cannot be inherited). */
 		return (self->tp_init.tp_alloc.tp_ctor != NULL ||
 		        self->tp_init.tp_alloc.tp_any_ctor != NULL ||
 		        self->tp_init.tp_alloc.tp_any_ctor_kw != NULL);
+
+	case OPERATOR_STR:
+		/* Special case: `operator str' can be implemented in 2 ways */
+		do {
+			if (self->tp_cast.tp_str != NULL ||
+			    self->tp_cast.tp_print != NULL)
+				return true;
+		} while ((self = DeeType_Base(self)) != NULL);
+		return false;
+
+	case OPERATOR_REPR:
+		/* Special case: `operator repr' can be implemented in 2 ways */
+		do {
+			if (self->tp_cast.tp_repr != NULL ||
+			    self->tp_cast.tp_printrepr != NULL)
+				return true;
+		} while ((self = DeeType_Base(self)) != NULL);
+		return false;
+
+	default:
+		break;
 	}
 	info = Dee_OperatorInfo(Dee_TYPE(self), name);
 	if (info) {
@@ -1500,11 +1523,37 @@ PUBLIC WUNUSED NONNULL((1)) bool DCALL
 DeeType_HasPrivateOperator(DeeTypeObject const *__restrict self, uint16_t name) {
 	void const *my_ptr;
 	struct opinfo const *info;
-	if (name == OPERATOR_CONSTRUCTOR) {
+	DeeTypeObject *base;
+	switch (name) {
+
+	case OPERATOR_CONSTRUCTOR:
 		/* Special case: the constructor operator (which cannot be inherited). */
 		return (self->tp_init.tp_alloc.tp_ctor != NULL ||
 		        self->tp_init.tp_alloc.tp_any_ctor != NULL ||
 		        self->tp_init.tp_alloc.tp_any_ctor_kw != NULL);
+
+	case OPERATOR_STR:
+		/* Special case: `operator str' can be implemented in 2 ways */
+		if (self->tp_cast.tp_str == NULL && self->tp_cast.tp_print == NULL)
+			return false;
+		base = DeeType_Base(self);
+		if (base == NULL)
+			return true;
+		return (self->tp_cast.tp_str != base->tp_cast.tp_str ||
+		        self->tp_cast.tp_print != base->tp_cast.tp_print);
+
+	case OPERATOR_REPR:
+		/* Special case: `operator repr' can be implemented in 2 ways */
+		if (self->tp_cast.tp_repr == NULL && self->tp_cast.tp_printrepr == NULL)
+			return false;
+		base = DeeType_Base(self);
+		if (base == NULL)
+			return true;
+		return (self->tp_cast.tp_repr != base->tp_cast.tp_repr ||
+		        self->tp_cast.tp_printrepr != base->tp_cast.tp_printrepr);
+
+	default:
+		break;
 	}
 	info = Dee_OperatorInfo(Dee_TYPE(self), name);
 	if (info == NULL)
@@ -1512,9 +1561,10 @@ DeeType_HasPrivateOperator(DeeTypeObject const *__restrict self, uint16_t name) 
 	my_ptr = DeeType_GetOpPointer(self, info);
 	if (my_ptr == NULL)
 		return false; /* Operator not implemented */
-	if (self->tp_base == NULL)
+	base = DeeType_Base(self);
+	if (base == NULL)
 		return true; /* No base --> operator is private */
-	if (my_ptr != DeeType_GetOpPointer(self->tp_base, info))
+	if (my_ptr != DeeType_GetOpPointer(base, info))
 		return true; /* Base has different impl -> operator is private */
 
 	/* Base has same impl -> operator was inherited */

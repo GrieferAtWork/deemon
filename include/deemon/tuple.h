@@ -169,9 +169,12 @@ DeeTuple_Append(/*inherit(on_success)*/ DREF DeeObject *__restrict self,
 INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 DeeTuple_Print(DeeObject *__restrict self,
                Dee_formatprinter_t printer, void *arg);
+INTDEF WUNUSED NONNULL((1, 2)) dssize_t DCALL
+DeeTuple_PrintRepr(DeeObject *__restrict self,
+                   Dee_formatprinter_t printer, void *arg);
 #else /* CONFIG_BUILDING_DEEMON */
-#define DeeTuple_Print(self, printer, arg) \
-	DeeObject_Print(self, printer, arg)
+#define DeeTuple_Print(self, printer, arg)     DeeObject_Print(self, printer, arg)
+#define DeeTuple_PrintRepr(self, printer, arg) DeeObject_PrintRepr(self, printer, arg)
 #endif /* !CONFIG_BUILDING_DEEMON */
 
 

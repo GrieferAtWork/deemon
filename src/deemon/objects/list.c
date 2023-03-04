@@ -1382,19 +1382,6 @@ err:
 	return temp;
 }
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-list_repr(List *__restrict me) {
-	struct unicode_printer printer = UNICODE_PRINTER_INIT;
-	if unlikely(DeeList_PrintRepr((DeeObject *)me,
-	                              &unicode_printer_print,
-	                              &printer) < 0)
-		goto err;
-	return unicode_printer_pack(&printer);
-err:
-	unicode_printer_fini(&printer);
-	return NULL;
-}
-
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 list_bool(List *__restrict me) {
 	return DeeList_SIZE_ATOMIC(me) != 0;
@@ -3880,9 +3867,11 @@ PUBLIC DeeTypeObject DeeList_Type = {
 		/* .tp_deepload    = */ (int (DCALL *)(DeeObject *__restrict))&list_deepload
 	},
 	/* .tp_cast = */ {
-		/* .tp_str  = */ NULL,
-		/* .tp_repr = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&list_repr,
-		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&list_bool
+		/* .tp_str       = */ NULL,
+		/* .tp_repr      = */ NULL,
+		/* .tp_bool      = */ (int (DCALL *)(DeeObject *__restrict))&list_bool,
+		/* .tp_print     = */ NULL,
+		/* .tp_printrepr = */ &DeeList_PrintRepr
 	},
 	/* .tp_call          = */ NULL,
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&list_visit,

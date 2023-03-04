@@ -232,8 +232,11 @@ DeeFormat_VPrintf(Dee_formatprinter_t printer, void *arg,
 
 
 
-#define DeeFormat_PRINT(printer, arg, str) \
-	(*printer)(arg, str, COMPILER_STRLEN(str))
+#define DeeFormat_Print(printer, arg, str, len)     (*printer)(arg, str, len)
+#define DeeFormat_PrintStr(printer, arg, str)       (*printer)(arg, str, strlen(str))
+#define DeeFormat_PRINT(printer, arg, str)          (*printer)(arg, str, COMPILER_STRLEN(str))
+#define DeeFormat_PrintObject(printer, arg, ob)     DeeObject_Print(ob, printer, arg)
+#define DeeFormat_PrintObjectRepr(printer, arg, ob) DeeObject_PrintRepr(ob, printer, arg)
 
 /* Quote (backslash-escape) the given text, printing the resulting text to `printer'.
  * NOTE: This function always generates pure ASCII, and is therefor safe to be used

@@ -444,12 +444,13 @@ EXPORTS
 	DeeNTSystem_IsXDev@4=_DeeNTSystem_IsXDev@4
 	DeeNTSystem_PrintFilenameOfHandle@8=_DeeNTSystem_PrintFilenameOfHandle@8
 	DeeNTSystem_PrintFinalPathNameByHandle@12=_DeeNTSystem_PrintFinalPathNameByHandle@12
-	DeeNTSystem_PrintFormatMessage@24=_DeeNTSystem_PrintFormatMessage@24
+	DeeNTSystem_PrintFormatMessage@32=_DeeNTSystem_PrintFormatMessage@32
 	DeeNTSystem_PrintMappedFileName@12=_DeeNTSystem_PrintMappedFileName@12
 	DeeNTSystem_TranslateErrno@4=_DeeNTSystem_TranslateErrno@4
 	DeeNTSystem_TranslateNtError@4=_DeeNTSystem_TranslateNtError@4
 	DeeNTSystem_TryGetFilenameOfHandle@4=_DeeNTSystem_TryGetFilenameOfHandle@4
 	DeeNTSystem_TryGetHandle@8=_DeeNTSystem_TryGetHandle@8
+	DeeNTSystem_UPrintFormatMessage@24=_DeeNTSystem_UPrintFormatMessage@24
 	DeeNTSystem_VThrowErrorf@16=_DeeNTSystem_VThrowErrorf@16
 	DeeNTSystem_VThrowLastErrorf@12=_DeeNTSystem_VThrowLastErrorf@12
 	DeeNotify_BeginListen@16=_DeeNotify_BeginListen@16

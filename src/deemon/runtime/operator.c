@@ -82,6 +82,16 @@ DeeSystem_DEFINE_memsetp(dee_memsetp)
 #define RESTRICT_IF_NOTYPE __restrict
 #endif /* !DEFINE_TYPED_OPERATORS */
 
+/* Default wrappers for implementing tp_str/tp_repr <===> tp_print/tp_printrepr */
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeObject_DefaultStrWithPrint(DeeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeObject_DefaultReprWithPrintRepr(DeeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1, 2)) dssize_t DCALL DeeObject_DefaultPrintWithStr(DeeObject *__restrict self, dformatprinter printer, void *arg);
+INTDEF WUNUSED NONNULL((1, 2)) dssize_t DCALL DeeObject_DefaultPrintReprWithRepr(DeeObject *__restrict self, dformatprinter printer, void *arg);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeObject_TDefaultStrWithPrint(DeeTypeObject *tp_self, DeeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeObject_TDefaultReprWithPrintRepr(DeeTypeObject *tp_self, DeeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1, 2, 3)) dssize_t DCALL DeeObject_TDefaultPrintWithStr(DeeTypeObject *tp_self, DeeObject *__restrict self, dformatprinter printer, void *arg);
+INTDEF WUNUSED NONNULL((1, 2, 3)) dssize_t DCALL DeeObject_TDefaultPrintReprWithRepr(DeeTypeObject *tp_self, DeeObject *__restrict self, dformatprinter printer, void *arg);
+
 
 /* Setup how operator callbacks are invoked.
  * NOTE: When executing operators in a super-context, we must be
@@ -145,13 +155,20 @@ DeeSystem_DEFINE_memsetp(dee_memsetp)
 #ifdef DEFINE_TYPED_OPERATORS
 #define DeeType_INVOKE_ASSIGN(tp_self, self, other)                ((tp_self)->tp_init.tp_assign == &instance_assign ? instance_tassign(tp_self, self, other) : (*(tp_self)->tp_init.tp_assign)(self, other))
 #define DeeType_INVOKE_MOVEASSIGN(tp_self, self, other)            ((tp_self)->tp_init.tp_move_assign == &instance_moveassign ? instance_tmoveassign(tp_self, self, other) : (*(tp_self)->tp_init.tp_move_assign)(self, other))
-#define DeeType_INVOKE_STR(tp_self, self)                          ((tp_self)->tp_cast.tp_str == &instance_str ? instance_tstr(tp_self, self) : (*(tp_self)->tp_cast.tp_str)(self))
+#define DeeType_INVOKE_STR(tp_self, self)                          ((tp_self)->tp_cast.tp_str == &DeeObject_DefaultStrWithPrint ? DeeObject_TDefaultStrWithPrint(tp_self, self) : (tp_self)->tp_cast.tp_str == &instance_str ? instance_tstr(tp_self, self) : (*(tp_self)->tp_cast.tp_str)(self))
+#define DeeType_INVOKE_PRINT(tp_self, self, printer, arg)          ((tp_self)->tp_cast.tp_print == &DeeObject_DefaultPrintWithStr ? DeeObject_TDefaultPrintWithStr(tp_self, self, printer, arg) : (tp_self)->tp_cast.tp_print == &instance_print ? instance_tprint(tp_self, self, printer, arg) : (*(tp_self)->tp_cast.tp_print)(self, printer, arg))
+#define DeeType_INVOKE_REPR(tp_self, self)                         ((tp_self)->tp_cast.tp_repr == &DeeObject_DefaultReprWithPrintRepr ? DeeObject_TDefaultReprWithPrintRepr(tp_self, self) : \
+                                                                    (tp_self)->tp_cast.tp_repr == &instance_repr ? instance_trepr(tp_self, self) : \
+                                                                    (*(tp_self)->tp_cast.tp_repr)(self))
 #ifdef CLASS_TP_FAUTOINIT
-#define DeeType_INVOKE_REPR(tp_self, self)                         ((tp_self)->tp_cast.tp_repr == &instance_repr ? instance_trepr(tp_self, self) : \
-                                                                   (tp_self)->tp_cast.tp_repr == &instance_builtin_auto_repr ? instance_builtin_auto_trepr(tp_self, self) : \
-                                                                   (*(tp_self)->tp_cast.tp_repr)(self))
+#define DeeType_INVOKE_PRINTREPR(tp_self, self, printer, arg)      ((tp_self)->tp_cast.tp_printrepr == &DeeObject_DefaultPrintReprWithRepr ? DeeObject_TDefaultPrintReprWithRepr(tp_self, self, printer, arg) : \
+                                                                    (tp_self)->tp_cast.tp_printrepr == &instance_printrepr ? instance_tprintrepr(tp_self, self, printer, arg) : \
+                                                                    (tp_self)->tp_cast.tp_printrepr == &instance_builtin_auto_printrepr ? instance_builtin_auto_tprintrepr(tp_self, self, printer, arg) : \
+                                                                    (*(tp_self)->tp_cast.tp_printrepr)(self, printer, arg))
 #else /* CLASS_TP_FAUTOINIT */
-#define DeeType_INVOKE_REPR(tp_self, self)                         ((tp_self)->tp_cast.tp_repr == &instance_repr ? instance_trepr(tp_self, self) : (*(tp_self)->tp_cast.tp_repr)(self))
+#define DeeType_INVOKE_PRINTREPR(tp_self, self, printer, arg)      ((tp_self)->tp_cast.tp_printrepr == &DeeObject_DefaultPrintReprWithRepr ? DeeObject_TDefaultPrintReprWithRepr(tp_self, self, printer, arg) : \
+                                                                    (tp_self)->tp_cast.tp_printrepr == &instance_printrepr ? instance_tprintrepr(tp_self, self, printer, arg) : \
+                                                                    (*(tp_self)->tp_cast.tp_printrepr)(self, printer, arg))
 #endif /* !CLASS_TP_FAUTOINIT */
 #define DeeType_INVOKE_BOOL(tp_self, self)                         ((tp_self)->tp_cast.tp_bool == &instance_bool ? instance_tbool(tp_self, self) : (*(tp_self)->tp_cast.tp_bool)(self))
 #define DeeType_INVOKE_NEXT(tp_self, self)                         ((tp_self)->tp_iter_next == &instance_next ? instance_tnext(tp_self, self) : (*(tp_self)->tp_iter_next)(self))
@@ -214,6 +231,8 @@ DeeSystem_DEFINE_memsetp(dee_memsetp)
 #define DeeType_INVOKE_MOVEASSIGN(tp_self, self, other)            (*(tp_self)->tp_init.tp_move_assign)(self, other)
 #define DeeType_INVOKE_STR(tp_self, self)                          (*(tp_self)->tp_cast.tp_str)(self)
 #define DeeType_INVOKE_REPR(tp_self, self)                         (*(tp_self)->tp_cast.tp_repr)(self)
+#define DeeType_INVOKE_PRINT(tp_self, self, printer, arg)          (*(tp_self)->tp_cast.tp_print)(self, printer, arg)
+#define DeeType_INVOKE_PRINTREPR(tp_self, self, printer, arg)      (*(tp_self)->tp_cast.tp_printrepr)(self, printer, arg)
 #define DeeType_INVOKE_BOOL(tp_self, self)                         (*(tp_self)->tp_cast.tp_bool)(self)
 #define DeeType_INVOKE_NEXT(tp_self, self)                         (*(tp_self)->tp_iter_next)(self)
 #define DeeType_INVOKE_CALL(tp_self, self, argc,  argv)            (*(tp_self)->tp_call)(self, argc,  argv)
@@ -1166,7 +1185,117 @@ STATIC_ASSERT(offsetof(struct trepr_frame, rf_obj) ==
 #define Xrepr_frame repr_frame
 #endif /* !DEFINE_TYPED_OPERATORS */
 
+DEFINE_INTERNAL_OPERATOR(DREF DeeObject *, DefaultStrWithPrint, (DeeObject *RESTRICT_IF_NOTYPE self)) {
+	dssize_t print_error;
+	struct unicode_printer printer = UNICODE_PRINTER_INIT;
+	LOAD_TP_SELF;
+	ASSERT(tp_self->tp_cast.tp_print &&
+	       tp_self->tp_cast.tp_print != &DeeObject_DefaultPrintWithStr);
+	print_error = DeeType_INVOKE_PRINT(tp_self, self, &unicode_printer_print, &printer);
+	if unlikely(print_error < 0)
+		goto err;
+	return unicode_printer_pack(&printer);
+err:
+	unicode_printer_fini(&printer);
+	return NULL;
+}
+
+DEFINE_INTERNAL_OPERATOR(DREF DeeObject *, DefaultReprWithPrintRepr, (DeeObject *RESTRICT_IF_NOTYPE self)) {
+	dssize_t print_error;
+	struct unicode_printer printer = UNICODE_PRINTER_INIT;
+	LOAD_TP_SELF;
+	ASSERT(tp_self->tp_cast.tp_printrepr &&
+	       tp_self->tp_cast.tp_printrepr != &DeeObject_DefaultPrintReprWithRepr);
+	print_error = DeeType_INVOKE_PRINTREPR(tp_self, self, &unicode_printer_print, &printer);
+	if unlikely(print_error < 0)
+		goto err;
+	return unicode_printer_pack(&printer);
+err:
+	unicode_printer_fini(&printer);
+	return NULL;
+}
+
+DEFINE_INTERNAL_OPERATOR(dssize_t, DefaultPrintWithStr, (DeeObject *RESTRICT_IF_NOTYPE self,
+                                                         dformatprinter printer, void *arg)) {
+	dssize_t result;
+	DREF DeeObject *str;
+	LOAD_TP_SELF;
+	ASSERT(tp_self->tp_cast.tp_str &&
+	       tp_self->tp_cast.tp_str != &DeeObject_DefaultStrWithPrint);
+	str = DeeType_INVOKE_STR(tp_self, self);
+	if unlikely(!str)
+		goto err;
+	result = DeeString_PrintUtf8(str, printer, arg);
+	Dee_Decref_likely(str);
+	return result;
+err:
+	return -1;
+}
+
+DEFINE_INTERNAL_OPERATOR(dssize_t, DefaultPrintReprWithRepr, (DeeObject *RESTRICT_IF_NOTYPE self,
+                                                              dformatprinter printer, void *arg)) {
+	dssize_t result;
+	DREF DeeObject *str;
+	LOAD_TP_SELF;
+	ASSERT(tp_self->tp_cast.tp_repr &&
+	       tp_self->tp_cast.tp_repr != &DeeObject_DefaultReprWithPrintRepr);
+	str = DeeType_INVOKE_REPR(tp_self, self);
+	if unlikely(!str)
+		goto err;
+	result = DeeString_PrintUtf8(str, printer, arg);
+	Dee_Decref_likely(str);
+	return result;
+err:
+	return -1;
+}
+
 #ifndef DEFINE_TYPED_OPERATORS
+INTERN NONNULL((1)) bool DCALL
+type_inherit_str(DeeTypeObject *__restrict self) {
+	DeeTypeObject *base;
+	if (self->tp_cast.tp_print) {
+		/* Substitute str with print */
+		self->tp_cast.tp_str = &DeeObject_DefaultStrWithPrint;
+		return true;
+	} else if (self->tp_cast.tp_str) {
+		/* Substitute print with str */
+		self->tp_cast.tp_print = &DeeObject_DefaultPrintWithStr;
+		return true;
+	}
+	base = DeeType_Base(self);
+	if (!base ||
+	    ((!base->tp_cast.tp_str || !base->tp_cast.tp_print) && !type_inherit_str(base)))
+		return false;
+	Dee_DPRINTF("[RT] Inherit `operator str' from %q into %q\n",
+	            base->tp_name, self->tp_name);
+	self->tp_cast.tp_str   = base->tp_cast.tp_str;
+	self->tp_cast.tp_print = base->tp_cast.tp_print;
+	return true;
+}
+
+INTERN NONNULL((1)) bool DCALL
+type_inherit_repr(DeeTypeObject *__restrict self) {
+	DeeTypeObject *base;
+	if (self->tp_cast.tp_printrepr) {
+		/* Substitute repr with printrepr */
+		self->tp_cast.tp_repr = &DeeObject_DefaultReprWithPrintRepr;
+		return true;
+	} else if (self->tp_cast.tp_repr) {
+		/* Substitute printrepr with repr */
+		self->tp_cast.tp_printrepr = &DeeObject_DefaultPrintReprWithRepr;
+		return true;
+	}
+	base = DeeType_Base(self);
+	if (!base ||
+	    ((!base->tp_cast.tp_repr || !base->tp_cast.tp_printrepr) && !type_inherit_repr(base)))
+		return false;
+	Dee_DPRINTF("[RT] Inherit `operator repr' from %q into %q\n",
+	            base->tp_name, self->tp_name);
+	self->tp_cast.tp_repr      = base->tp_cast.tp_repr;
+	self->tp_cast.tp_printrepr = base->tp_cast.tp_printrepr;
+	return true;
+}
+
 #define DEFINE_TYPE_INHERIT_FUNCTION(name, opname, field)          \
 	INTERN NONNULL((1)) bool DCALL                                 \
 	name(DeeTypeObject *__restrict self) {                         \
@@ -1192,8 +1321,6 @@ STATIC_ASSERT(offsetof(struct trepr_frame, rf_obj) ==
 		self->field2 = base->field2;                               \
 		return true;                                               \
 	}
-DEFINE_TYPE_INHERIT_FUNCTION(type_inherit_str, "operator str", tp_cast.tp_str)
-DEFINE_TYPE_INHERIT_FUNCTION(type_inherit_repr, "operator repr", tp_cast.tp_repr)
 DEFINE_TYPE_INHERIT_FUNCTION(type_inherit_bool, "operator bool", tp_cast.tp_bool)
 DEFINE_TYPE_INHERIT_FUNCTION2(type_inherit_call, "operator call", tp_call, tp_call_kw)
 #undef DEFINE_TYPE_INHERIT_FUNCTION2
@@ -1205,13 +1332,15 @@ DEFINE_OPERATOR(DREF DeeObject *, Str, (DeeObject *RESTRICT_IF_NOTYPE self)) {
 	DREF DeeObject *result;
 	LOAD_TP_SELF;
 	if unlikely(!tp_self->tp_cast.tp_str &&
-		         !type_inherit_str(tp_self))
-	goto missing;
+	            !type_inherit_str(tp_self))
+		goto missing;
+
 	/* Handle string-repr recursion for GC objects. */
-	if (tp_self->tp_flags & TP_FGC) {
+	if unlikely(tp_self->tp_flags & TP_FGC) {
 		struct Xrepr_frame opframe;
 		DeeThreadObject *this_thread;
 		this_thread = DeeThread_Self();
+
 		/* Trace objects for which __str__ is being invoked. */
 		opframe.rf_prev = (struct Xrepr_frame *)this_thread->t_str_curr;
 #ifdef DEFINE_TYPED_OPERATORS
@@ -1226,11 +1355,12 @@ DEFINE_OPERATOR(DREF DeeObject *, Str, (DeeObject *RESTRICT_IF_NOTYPE self)) {
 		opframe.rf_obj = self;
 		this_thread->t_str_curr = &opframe;
 #endif /* !DEFINE_TYPED_OPERATORS */
-		result                  = DeeType_INVOKE_STR(tp_self, self);
+		result = DeeType_INVOKE_STR(tp_self, self);
 		this_thread->t_str_curr = (struct repr_frame *)opframe.rf_prev;
 		ASSERT_OBJECT_TYPE_EXACT_OPT(result, &DeeString_Type);
 		return result;
 	}
+
 	/* Non-gc object (much simpler) */
 	return DeeType_INVOKE_STR(tp_self, self);
 missing:
@@ -1246,11 +1376,13 @@ DEFINE_OPERATOR(DREF DeeObject *, Repr, (DeeObject *RESTRICT_IF_NOTYPE self)) {
 	if unlikely(!tp_self->tp_cast.tp_repr &&
 	            !type_inherit_repr(tp_self))
 		goto missing;
+
 	/* Handle string-repr recursion for GC objects. */
 	if (tp_self->tp_flags & TP_FGC) {
 		struct Xrepr_frame opframe;
 		DeeThreadObject *this_thread;
 		this_thread = DeeThread_Self();
+
 		/* Trace objects for which __repr__ is being invoked. */
 		opframe.rf_prev = (struct Xrepr_frame *)this_thread->t_repr_curr;
 #ifdef DEFINE_TYPED_OPERATORS
@@ -1265,11 +1397,12 @@ DEFINE_OPERATOR(DREF DeeObject *, Repr, (DeeObject *RESTRICT_IF_NOTYPE self)) {
 		opframe.rf_obj = self;
 		this_thread->t_repr_curr = &opframe;
 #endif /* !DEFINE_TYPED_OPERATORS */
-		result                   = DeeType_INVOKE_REPR(tp_self, self);
+		result = DeeType_INVOKE_REPR(tp_self, self);
 		this_thread->t_repr_curr = (struct repr_frame *)opframe.rf_prev;
 		ASSERT_OBJECT_TYPE_EXACT_OPT(result, &DeeString_Type);
 		return result;
 	}
+
 	/* Non-gc object (much simpler) */
 	return DeeType_INVOKE_REPR(tp_self, self);
 missing:
@@ -1277,6 +1410,88 @@ missing:
 	return NULL;
 recursion:
 	return_reference_((DeeObject *)&str_dots);
+}
+
+DEFINE_OPERATOR(dssize_t, Print, (DeeObject *RESTRICT_IF_NOTYPE self,
+                                  dformatprinter printer, void *arg)) {
+	dssize_t result;
+	LOAD_TP_SELF;
+	if unlikely(!tp_self->tp_cast.tp_print &&
+	            !type_inherit_str(tp_self))
+		goto missing;
+
+	/* Handle string-repr recursion for GC objects. */
+	if unlikely(tp_self->tp_flags & TP_FGC) {
+		struct Xrepr_frame opframe;
+		DeeThreadObject *this_thread;
+		this_thread = DeeThread_Self();
+
+		/* Trace objects for which __str__ is being invoked. */
+		opframe.rf_prev = (struct Xrepr_frame *)this_thread->t_str_curr;
+#ifdef DEFINE_TYPED_OPERATORS
+		if unlikely(repr_contains(opframe.rf_prev, tp_self, self))
+			goto recursion;
+		opframe.rf_obj          = self;
+		opframe.rf_type         = tp_self;
+		this_thread->t_str_curr = (struct repr_frame *)&opframe;
+#else /* DEFINE_TYPED_OPERATORS */
+		if unlikely(repr_contains(opframe.rf_prev, self))
+			goto recursion;
+		opframe.rf_obj = self;
+		this_thread->t_str_curr = &opframe;
+#endif /* !DEFINE_TYPED_OPERATORS */
+		result = DeeType_INVOKE_PRINT(tp_self, self, printer, arg);
+		this_thread->t_str_curr = (struct repr_frame *)opframe.rf_prev;
+		return result;
+	}
+
+	/* Non-gc object (much simpler) */
+	return DeeType_INVOKE_PRINT(tp_self, self, printer, arg);
+missing:
+	return err_unimplemented_operator(tp_self, OPERATOR_STR);
+recursion:
+	return DeeString_PrintAscii(&str_dots, printer, arg);
+}
+
+DEFINE_OPERATOR(dssize_t, PrintRepr, (DeeObject *RESTRICT_IF_NOTYPE self,
+                                      dformatprinter printer, void *arg)) {
+	dssize_t result;
+	LOAD_TP_SELF;
+	if unlikely(!tp_self->tp_cast.tp_printrepr &&
+	            !type_inherit_repr(tp_self))
+		goto missing;
+
+	/* Handle string-repr recursion for GC objects. */
+	if (tp_self->tp_flags & TP_FGC) {
+		struct Xrepr_frame opframe;
+		DeeThreadObject *this_thread;
+		this_thread = DeeThread_Self();
+
+		/* Trace objects for which __repr__ is being invoked. */
+		opframe.rf_prev = (struct Xrepr_frame *)this_thread->t_repr_curr;
+#ifdef DEFINE_TYPED_OPERATORS
+		if unlikely(repr_contains(opframe.rf_prev, tp_self, self))
+			goto recursion;
+		opframe.rf_obj           = self;
+		opframe.rf_type          = tp_self;
+		this_thread->t_repr_curr = (struct repr_frame *)&opframe;
+#else /* DEFINE_TYPED_OPERATORS */
+		if unlikely(repr_contains(opframe.rf_prev, self))
+			goto recursion;
+		opframe.rf_obj = self;
+		this_thread->t_repr_curr = &opframe;
+#endif /* !DEFINE_TYPED_OPERATORS */
+		result = DeeType_INVOKE_PRINTREPR(tp_self, self, printer, arg);
+		this_thread->t_repr_curr = (struct repr_frame *)opframe.rf_prev;
+		return result;
+	}
+
+	/* Non-gc object (much simpler) */
+	return DeeType_INVOKE_PRINTREPR(tp_self, self, printer, arg);
+missing:
+	return err_unimplemented_operator(tp_self, OPERATOR_REPR);
+recursion:
+	return DeeString_PrintAscii(&str_dots, printer, arg);
 }
 
 #undef Xrepr_frame
@@ -4606,71 +4821,6 @@ PUBLIC WUNUSED NONNULL((1, 2, 5)) int
 err:
 	return -1;
 }
-
-PUBLIC WUNUSED NONNULL((1, 2)) dssize_t DCALL
-DeeObject_Print(DeeObject *__restrict self,
-                dformatprinter printer, void *arg) {
-	DREF DeeObject *ob_str;
-	dssize_t result;
-	DeeTypeObject *typ;
-	typ = Dee_TYPE(self);
-	if (typ == &DeeString_Type)
-		return DeeString_PrintUtf8(self, printer, arg);
-	if (typ == &DeeInt_Type)
-		return DeeInt_Print(self, DEEINT_PRINT_DEC, 0, printer, arg);
-	if (typ == &DeeTuple_Type)
-		return DeeTuple_Print(self, printer, arg);
-	if (typ == &DeeBytes_Type)
-		return DeeBytes_PrintUtf8(self, printer, arg);
-	if (typ == &DeeFloat_Type)
-		return DeeFormat_Printf(printer, arg, "%f", DeeFloat_VALUE(self));
-	if (typ == &DeeError_CompilerError ||
-	    typ == &DeeError_SyntaxError ||
-	    typ == &DeeError_SymbolError)
-		return DeeCompilerError_Print(self, printer, arg);
-	/* Fallback: print the object's __str__ operator result. */
-	ob_str = DeeObject_Str(self);
-	if unlikely(!ob_str)
-		goto err;
-	result = DeeString_PrintUtf8(ob_str, printer, arg);
-	Dee_Decref(ob_str);
-	return result;
-err:
-	return -1;
-}
-
-PUBLIC WUNUSED NONNULL((1, 2)) dssize_t DCALL
-DeeObject_PrintRepr(DeeObject *__restrict self,
-                    dformatprinter printer, void *arg) {
-	DREF DeeObject *ob_repr;
-	dssize_t result;
-	DeeTypeObject *typ;
-	typ = Dee_TYPE(self);
-	if (typ == &DeeString_Type)
-		return DeeString_PrintRepr(self, printer, arg);
-	if (typ == &DeeInt_Type)
-		return DeeInt_PrintRepr(self, printer, arg);
-	if (typ == &DeeBytes_Type)
-		return DeeBytes_PrintRepr(self, printer, arg);
-	if (typ == &DeeFloat_Type)
-		return DeeFloat_PrintRepr(self, printer, arg);
-	if (typ == &DeeList_Type)
-		return DeeList_PrintRepr(self, printer, arg);
-	if (typ == &DeeError_CompilerError ||
-	    typ == &DeeError_SyntaxError ||
-	    typ == &DeeError_SymbolError)
-		return DeeCompilerError_Print(self, printer, arg);
-
-	/* Fallback: print the object __repr__ operator result. */
-	ob_repr = DeeObject_Repr(self);
-	if unlikely(!ob_repr)
-		goto err;
-	result = DeeString_PrintUtf8(ob_repr, printer, arg);
-	Dee_Decref(ob_repr);
-	return result;
-err:
-	return -1;
-}
 #endif /* !DEFINE_TYPED_OPERATORS */
 
 DEFINE_OPERATOR(DREF DeeObject *, GetAttr,
@@ -4684,6 +4834,7 @@ DEFINE_OPERATOR(DREF DeeObject *, GetAttr,
 	if (iter->tp_attr)
 		goto do_iter_attr;
 	hash = DeeString_Hash(attr_name);
+
 	/* Search through the cache for the requested attribute. */
 	if ((result = DeeType_GetCachedAttr(iter, self, DeeString_STR(attr_name), hash)) != ITER_DONE)
 		goto done;
@@ -4692,6 +4843,7 @@ DEFINE_OPERATOR(DREF DeeObject *, GetAttr,
 			struct class_attribute *attr;
 			if ((attr = DeeType_QueryAttributeWithHash(tp_self, iter, attr_name, hash)) != NULL) {
 				struct class_desc *desc;
+
 				/* Check if we're allowed to access this attr. */
 				if (!class_attribute_mayaccess(attr, iter)) {
 					err_class_protected_member(iter, attr);

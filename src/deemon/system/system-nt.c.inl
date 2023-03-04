@@ -2456,7 +2456,7 @@ DeeNTSystem_FormatMessage(DeeNT_DWORD dwFlags, void const *lpSource,
 	int error;
 	DWORD dwLastError;
 	struct unicode_printer printer = UNICODE_PRINTER_INIT;
-	error = DeeNTSystem_PrintFormatMessage(&printer, dwFlags, lpSource,
+	error = DeeNTSystem_UPrintFormatMessage(&printer, dwFlags, lpSource,
 	                                       dwMessageId, dwLanguageId, Arguments);
 	if (error == 0)
 		return unicode_printer_pack(&printer);
@@ -2471,14 +2471,14 @@ err:
 	return NULL;
 }
 
-/* @return: 1:  The system call failed (s.a. `GetLastError()')
+/* @return: 1:  The system call failed (nothing was printed; s.a. `GetLastError()')
  * @return: 0:  Successfully printed the message.
  * @return: -1: A deemon callback failed and an error was thrown. */
-DFUNDEF WUNUSED int DCALL
-DeeNTSystem_PrintFormatMessage(struct unicode_printer *__restrict printer,
-                               DeeNT_DWORD dwFlags, void const *lpSource,
-                               DeeNT_DWORD dwMessageId, DeeNT_DWORD dwLanguageId,
-                               /* va_list * */ void *Arguments) {
+DFUNDEF WUNUSED NONNULL((1)) int DCALL
+DeeNTSystem_UPrintFormatMessage(struct unicode_printer *__restrict printer,
+                                DeeNT_DWORD dwFlags, void const *lpSource,
+                                DeeNT_DWORD dwMessageId, DeeNT_DWORD dwLanguageId,
+                                /* va_list * */ void *Arguments) {
 	LPWSTR buffer, newBuffer;
 	DWORD dwNewBufsize, dwBufSize = 128;
 	buffer = unicode_printer_alloc_wchar(printer, dwBufSize);
@@ -2540,6 +2540,45 @@ err_release:
 err:
 	return -1;
 }
+
+/* @param: p_success: Set to `false' if the system call failed and nothing was printed (s.a. `GetLastError()')
+ * @return: >= 0: Success.
+ * @return: < 0:  A deemon callback failed and an error was thrown (`*p_success' is undefined). */
+PUBLIC WUNUSED NONNULL((1, 8)) dssize_t DCALL
+DeeNTSystem_PrintFormatMessage(dformatprinter printer, void *arg,
+                               DeeNT_DWORD dwFlags, void const *lpSource,
+                               DeeNT_DWORD dwMessageId, DeeNT_DWORD dwLanguageId,
+                               /* va_list * */ void *Arguments,
+                               bool *__restrict p_success) {
+	if (printer == &unicode_printer_print) {
+		/* Special case: fast-forward to the underlying unicode printer. */
+		struct unicode_printer *upn = (struct unicode_printer *)arg;
+		size_t oldlen;
+		int error;
+		oldlen = UNICODE_PRINTER_LENGTH(upn);
+		error  = DeeNTSystem_UPrintFormatMessage(upn, dwFlags, lpSource,
+		                                         dwMessageId, dwLanguageId, Arguments);
+		if unlikely(error < 0)
+			return -1;
+		*p_success = error == 0;
+		return (dssize_t)(UNICODE_PRINTER_LENGTH(upn) - oldlen);
+	} else {
+		dssize_t result;
+		struct unicode_printer uprinter = UNICODE_PRINTER_INIT;
+		int error;
+		error = DeeNTSystem_UPrintFormatMessage(&uprinter, dwFlags, lpSource,
+		                                        dwMessageId, dwLanguageId, Arguments);
+		if unlikely(error < 0) {
+			result = -1;
+		} else {
+			*p_success = error == 0;
+			result = unicode_printer_printinto(&uprinter, printer, arg);
+		}
+		unicode_printer_fini(&uprinter);
+		return result;
+	}
+}
+
 
 /* Convenience wrapper around `DeeNTSystem_FormatMessage()' for getting error message.
  * When no error message exists, return an empty string.

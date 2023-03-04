@@ -1914,9 +1914,11 @@ PUBLIC DeeTypeObject DeeBytes_Type = {
 		/* .tp_move_assign = */ NULL
 	},
 	/* .tp_cast = */ {
-		/* .tp_str  = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&bytes_str,
-		/* .tp_repr = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&bytes_repr,
-		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&bytes_bool
+		/* .tp_str       = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&bytes_str,
+		/* .tp_repr      = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&bytes_repr,
+		/* .tp_bool      = */ (int (DCALL *)(DeeObject *__restrict))&bytes_bool,
+		/* .tp_print     = */ &DeeBytes_PrintUtf8,
+		/* .tp_printrepr = */ &DeeBytes_PrintRepr,
 	},
 	/* .tp_call          = */ NULL,
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&bytes_visit,

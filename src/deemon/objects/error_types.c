@@ -48,7 +48,7 @@ DECL_BEGIN
 
 #define INIT_CUSTOM_ERROR(tp_name, tp_doc, tp_flags, tp_base,                                          \
                           tp_ctor, tp_copy_ctor, tp_deep_ctor, tp_any_ctor,                            \
-                          T, tp_dtor, tp_str, tp_visit,                                                \
+                          T, tp_dtor, tp_str, tp_print, tp_visit,                                      \
                           tp_methods, tp_getsets, tp_members,                                          \
                           tp_class_members)                                                            \
 	{                                                                                                  \
@@ -62,10 +62,10 @@ DECL_BEGIN
 		/* .tp_init = */ {                                                                             \
 			{                                                                                          \
 				/* .tp_alloc = */ {                                                                    \
-					/* .tp_ctor      = */ (dfunptr_t)(tp_ctor),                                           \
-					/* .tp_copy_ctor = */ (dfunptr_t)(tp_copy_ctor),                                      \
-					/* .tp_deep_ctor = */ (dfunptr_t)(tp_deep_ctor),                                      \
-					/* .tp_any_ctor  = */ (dfunptr_t)(tp_any_ctor),                                       \
+					/* .tp_ctor      = */ (dfunptr_t)(tp_ctor),                                        \
+					/* .tp_copy_ctor = */ (dfunptr_t)(tp_copy_ctor),                                   \
+					/* .tp_deep_ctor = */ (dfunptr_t)(tp_deep_ctor),                                   \
+					/* .tp_any_ctor  = */ (dfunptr_t)(tp_any_ctor),                                    \
 					TYPE_FIXED_ALLOCATOR(T)                                                            \
 				}                                                                                      \
 			},                                                                                         \
@@ -75,8 +75,9 @@ DECL_BEGIN
 		},                                                                                             \
 		/* .tp_cast = */ {                                                                             \
 			/* .tp_str  = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))(tp_str),               \
-			/* .tp_repr = */ NULL,                                                                     \
-			/* .tp_bool = */ NULL                                                                      \
+			/* .tp_repr  = */ NULL,                                                                    \
+			/* .tp_bool  = */ NULL,                                                                    \
+			/* .tp_print = */ (dssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))(tp_print) \
 		},                                                                                             \
 		/* .tp_call          = */ NULL,                                                                \
 		/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))(tp_visit), \
@@ -312,22 +313,27 @@ error_str(DeeErrorObject *__restrict self) {
 	return DeeObject_Str((DeeObject *)Dee_TYPE(self));
 }
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-error_repr(DeeErrorObject *__restrict self) {
+PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
+error_print(DeeErrorObject *__restrict self, dformatprinter printer, void *arg) {
+	if (self->e_message)
+		return DeeString_PrintUtf8((DeeObject *)self->e_message, printer, arg);
+	if (self->e_inner)
+		return DeeFormat_Printf(printer, arg, "%k -> %k", Dee_TYPE(self), self->e_inner);
+	return DeeType_Print(Dee_TYPE(self), printer, arg);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
+error_printrepr(DeeErrorObject *__restrict self, dformatprinter printer, void *arg) {
 	if (self->e_inner) {
 		if (self->e_message) {
-			return DeeString_Newf("%k(%r, inner: %r)",
-			                      Dee_TYPE(self),
-			                      self->e_message,
-			                      self->e_inner);
+			return DeeFormat_Printf(printer, arg, "%r(%r, inner: %r)",
+			                        Dee_TYPE(self), self->e_message, self->e_inner);
 		}
-		return DeeString_Newf("%k(inner: %r)",
-		                      Dee_TYPE(self),
-		                      self->e_inner);
+		return DeeFormat_Printf(printer, arg, "%r(inner: %r)",
+		                        Dee_TYPE(self), self->e_inner);
 	}
-	return DeeString_Newf("%k(%r)",
-	                      Dee_TYPE(self),
-	                      self->e_message);
+	return DeeFormat_Printf(printer, arg, "%r(%r)",
+	                        Dee_TYPE(self), self->e_message);
 }
 
 PRIVATE struct type_member tpconst error_members[] = {
@@ -368,9 +374,11 @@ PUBLIC DeeTypeObject DeeError_Error = {
 		/* .tp_move_assign = */ NULL
 	},
 	/* .tp_cast = */ {
-		/* .tp_str  = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&error_str,
-		/* .tp_repr = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&error_repr,
-		/* .tp_bool = */ NULL
+		/* .tp_str       = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&error_str,
+		/* .tp_repr      = */ NULL,
+		/* .tp_bool      = */ NULL,
+		/* .tp_print     = */ (dssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&error_print,
+		/* .tp_printrepr = */ (dssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&error_printrepr,
 	},
 	/* .tp_call          = */ NULL,
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&error_visit,
@@ -409,11 +417,11 @@ PRIVATE struct type_member tpconst attribute_error_class_members[] = {
 PUBLIC DeeTypeObject DeeError_AttributeError =
 INIT_CUSTOM_ERROR("AttributeError", NULL, TP_FNORMAL | TP_FINHERITCTOR, &DeeError_Error,
                   NULL, NULL, NULL, NULL, DeeErrorObject, NULL, NULL, NULL,
-                  NULL, NULL, NULL, attribute_error_class_members);
+                  NULL, NULL, NULL, NULL, attribute_error_class_members);
 PUBLIC DeeTypeObject DeeError_UnboundAttribute =
 INIT_CUSTOM_ERROR("UnboundAttribute", NULL, TP_FNORMAL | TP_FINHERITCTOR, &DeeError_AttributeError,
                   NULL, NULL, NULL, NULL, DeeErrorObject, NULL, NULL, NULL,
-                  NULL, NULL, NULL, NULL);
+                  NULL, NULL, NULL, NULL, NULL);
 /* END::AttributeError */
 
 
@@ -459,19 +467,6 @@ comerr_visit(DeeCompilerErrorObject *__restrict self,
 	}
 }
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-comerr_str(DeeCompilerErrorObject *__restrict self) {
-	struct unicode_printer printer = UNICODE_PRINTER_INIT;
-	if unlikely(DeeCompilerError_Print((DeeObject *)self,
-	                                   &unicode_printer_print,
-	                                   &printer) < 0)
-		goto err;
-	return unicode_printer_pack(&printer);
-err:
-	unicode_printer_fini(&printer);
-	return NULL;
-}
-
 PRIVATE struct type_member tpconst compiler_error_class_members[] = {
 	TYPE_MEMBER_CONST("SyntaxError", &DeeError_SyntaxError),
 	TYPE_MEMBER_CONST("SymbolError", &DeeError_SymbolError),
@@ -480,16 +475,16 @@ PRIVATE struct type_member tpconst compiler_error_class_members[] = {
 PUBLIC DeeTypeObject DeeError_CompilerError =
 INIT_CUSTOM_ERROR("CompilerError", NULL, TP_FNORMAL | TP_FINHERITCTOR, &DeeError_Error,
                   NULL, NULL, NULL, NULL, DeeCompilerErrorObject,
-                  &comerr_fini, &comerr_str, &comerr_visit, NULL, NULL, NULL,
+                  &comerr_fini, NULL, &DeeCompilerError_Print, &comerr_visit, NULL, NULL, NULL,
                   compiler_error_class_members);
 PUBLIC DeeTypeObject DeeError_SyntaxError =
 INIT_CUSTOM_ERROR("SyntaxError", NULL, TP_FNORMAL | TP_FINHERITCTOR, &DeeError_CompilerError,
-                  NULL, NULL, NULL, NULL, DeeCompilerErrorObject, NULL, NULL, NULL,
-                  NULL, NULL, NULL, NULL);
+                  NULL, NULL, NULL, NULL, DeeCompilerErrorObject,
+                  NULL, NULL, &DeeCompilerError_Print, NULL, NULL, NULL, NULL, NULL);
 PUBLIC DeeTypeObject DeeError_SymbolError =
 INIT_CUSTOM_ERROR("SymbolError", NULL, TP_FNORMAL | TP_FINHERITCTOR, &DeeError_CompilerError,
-                  NULL, NULL, NULL, NULL, DeeCompilerErrorObject, NULL, NULL, NULL,
-                  NULL, NULL, NULL, NULL);
+                  NULL, NULL, NULL, NULL, DeeCompilerErrorObject,
+                  NULL, NULL, &DeeCompilerError_Print, NULL, NULL, NULL, NULL, NULL);
 /* END::CompilerError */
 
 
@@ -500,7 +495,7 @@ INIT_CUSTOM_ERROR("SymbolError", NULL, TP_FNORMAL | TP_FINHERITCTOR, &DeeError_C
 PUBLIC DeeTypeObject DeeError_ThreadCrash =
 INIT_CUSTOM_ERROR("ThreadCrash", NULL, TP_FNORMAL | TP_FINHERITCTOR, &DeeError_Error,
                   NULL, NULL, NULL, NULL, DeeErrorObject, NULL, NULL, NULL,
-                  NULL, NULL, NULL, NULL);
+                  NULL, NULL, NULL, NULL, NULL);
 
 
 
@@ -548,10 +543,21 @@ nomemory_str(DeeNoMemoryErrorObject *__restrict self) {
 	return error_str((DeeErrorObject *)self);
 }
 
+PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
+nomemory_print(DeeNoMemoryErrorObject *__restrict self,
+               dformatprinter printer, void *arg) {
+	if (self->nm_allocsize) {
+		return DeeFormat_Printf(printer, arg,
+		                        "Failed to allocated %" PRFuSIZ " bytes",
+		                        self->nm_allocsize);
+	}
+	return error_print((DeeErrorObject *)self, printer, arg);
+}
+
 PUBLIC DeeTypeObject DeeError_NoMemory =
 INIT_CUSTOM_ERROR("NoMemory", NULL, TP_FNORMAL | TP_FINHERITCTOR, &DeeError_Error,
                   NULL, &nomemory_copy, &nomemory_deep, &nomemory_ctor,
-                  DeeNoMemoryErrorObject, NULL, &nomemory_str, NULL,
+                  DeeNoMemoryErrorObject, NULL, &nomemory_str, &nomemory_print, NULL,
                   NULL, NULL, nomemory_members, NULL);
 /* END::NoMemory */
 
@@ -571,31 +577,31 @@ PRIVATE struct type_member tpconst runtimeerror_class_members[] = {
 PUBLIC DeeTypeObject DeeError_RuntimeError =
 INIT_CUSTOM_ERROR("RuntimeError", NULL, TP_FNORMAL | TP_FINHERITCTOR, &DeeError_Error,
                   NULL, NULL, NULL, NULL, DeeErrorObject, NULL, NULL, NULL,
-                  NULL, NULL, NULL, runtimeerror_class_members);
+                  NULL, NULL, NULL, NULL, runtimeerror_class_members);
 PUBLIC DeeTypeObject DeeError_NotImplemented =
 INIT_CUSTOM_ERROR("NotImplemented", NULL, TP_FNORMAL | TP_FINHERITCTOR, &DeeError_RuntimeError,
                   NULL, NULL, NULL, NULL, DeeErrorObject, NULL, NULL, NULL,
-                  NULL, NULL, NULL, NULL);
+                  NULL, NULL, NULL, NULL, NULL);
 PUBLIC DeeTypeObject DeeError_AssertionError =
 INIT_CUSTOM_ERROR("AssertionError", NULL, TP_FNORMAL | TP_FINHERITCTOR, &DeeError_RuntimeError,
                   NULL, NULL, NULL, NULL, DeeErrorObject, NULL, NULL, NULL,
-                  NULL, NULL, NULL, NULL);
+                  NULL, NULL, NULL, NULL, NULL);
 PUBLIC DeeTypeObject DeeError_UnboundLocal =
 INIT_CUSTOM_ERROR("UnboundLocal", NULL, TP_FNORMAL | TP_FINHERITCTOR, &DeeError_RuntimeError,
                   NULL, NULL, NULL, NULL, DeeErrorObject, NULL, NULL, NULL,
-                  NULL, NULL, NULL, NULL);
+                  NULL, NULL, NULL, NULL, NULL);
 PUBLIC DeeTypeObject DeeError_StackOverflow =
 INIT_CUSTOM_ERROR("StackOverflow", NULL, TP_FNORMAL | TP_FINHERITCTOR, &DeeError_RuntimeError,
                   NULL, NULL, NULL, NULL, DeeErrorObject, NULL, NULL, NULL,
-                  NULL, NULL, NULL, NULL);
+                  NULL, NULL, NULL, NULL, NULL);
 PUBLIC DeeTypeObject DeeError_SegFault =
 INIT_CUSTOM_ERROR("SegFault", NULL, TP_FNORMAL | TP_FINHERITCTOR, &DeeError_RuntimeError,
                   NULL, NULL, NULL, NULL, DeeErrorObject, NULL, NULL, NULL,
-                  NULL, NULL, NULL, NULL);
+                  NULL, NULL, NULL, NULL, NULL);
 PUBLIC DeeTypeObject DeeError_IllegalInstruction =
 INIT_CUSTOM_ERROR("IllegalInstruction", NULL, TP_FNORMAL | TP_FINHERITCTOR, &DeeError_RuntimeError,
                   NULL, NULL, NULL, NULL, DeeErrorObject, NULL, NULL, NULL,
-                  NULL, NULL, NULL, NULL);
+                  NULL, NULL, NULL, NULL, NULL);
 /* END::RuntimeError */
 
 
@@ -604,7 +610,7 @@ INIT_CUSTOM_ERROR("IllegalInstruction", NULL, TP_FNORMAL | TP_FINHERITCTOR, &Dee
 PUBLIC DeeTypeObject DeeError_TypeError =
 INIT_CUSTOM_ERROR("TypeError", NULL, TP_FNORMAL | TP_FINHERITCTOR, &DeeError_Error,
                   NULL, NULL, NULL, NULL, DeeErrorObject, NULL, NULL, NULL,
-                  NULL, NULL, NULL, NULL);
+                  NULL, NULL, NULL, NULL, NULL);
 
 
 
@@ -624,7 +630,7 @@ PRIVATE struct type_member tpconst valueerror_class_members[] = {
 PUBLIC DeeTypeObject DeeError_ValueError =
 INIT_CUSTOM_ERROR("ValueError", NULL, TP_FNORMAL | TP_FINHERITCTOR, &DeeError_Error,
                   NULL, NULL, NULL, NULL, DeeErrorObject, NULL, NULL, NULL,
-                  NULL, NULL, NULL, valueerror_class_members);
+                  NULL, NULL, NULL, NULL, valueerror_class_members);
 /* BEGIN::ValueError.ArithmeticError */
 PRIVATE struct type_member tpconst arithmetic_class_members[] = {
 	TYPE_MEMBER_CONST("IntegerOverflow", &DeeError_IntegerOverflow),
@@ -635,24 +641,24 @@ PRIVATE struct type_member tpconst arithmetic_class_members[] = {
 PUBLIC DeeTypeObject DeeError_ArithmeticError =
 INIT_CUSTOM_ERROR("ArithmeticError", NULL, TP_FNORMAL | TP_FINHERITCTOR, &DeeError_ValueError,
                   NULL, NULL, NULL, NULL, DeeErrorObject, NULL, NULL, NULL,
-                  NULL, NULL, NULL, arithmetic_class_members);
+                  NULL, NULL, NULL, NULL, arithmetic_class_members);
 PUBLIC DeeTypeObject DeeError_IntegerOverflow =
 INIT_CUSTOM_ERROR("IntegerOverflow", NULL, TP_FNORMAL | TP_FINHERITCTOR, &DeeError_ArithmeticError,
                   NULL, NULL, NULL, NULL, DeeErrorObject, NULL, NULL, NULL,
-                  NULL, NULL, NULL, NULL);
+                  NULL, NULL, NULL, NULL, NULL);
 PUBLIC DeeTypeObject DeeError_DivideByZero =
 INIT_CUSTOM_ERROR("DivideByZero", NULL, TP_FNORMAL | TP_FINHERITCTOR, &DeeError_ArithmeticError,
                   NULL, NULL, NULL, NULL, DeeErrorObject, NULL, NULL, NULL,
-                  NULL, NULL, NULL, NULL);
+                  NULL, NULL, NULL, NULL, NULL);
 PUBLIC DeeTypeObject DeeError_NegativeShift =
 INIT_CUSTOM_ERROR("NegativeShift", NULL, TP_FNORMAL | TP_FINHERITCTOR, &DeeError_ArithmeticError,
                   NULL, NULL, NULL, NULL, DeeErrorObject, NULL, NULL, NULL,
-                  NULL, NULL, NULL, NULL);
+                  NULL, NULL, NULL, NULL, NULL);
 /* END::ValueError.ArithmeticError */
 PUBLIC DeeTypeObject DeeError_KeyError =
 INIT_CUSTOM_ERROR("KeyError", NULL, TP_FNORMAL | TP_FINHERITCTOR, &DeeError_ValueError,
                   NULL, NULL, NULL, NULL, DeeErrorObject, NULL, NULL, NULL,
-                  NULL, NULL, NULL, NULL);
+                  NULL, NULL, NULL, NULL, NULL);
 /* BEGIN::ValueError.IndexError */
 PRIVATE struct type_member tpconst indexerror_class_members[] = {
 	TYPE_MEMBER_CONST("UnboundItem", &DeeError_UnboundItem),
@@ -661,16 +667,16 @@ PRIVATE struct type_member tpconst indexerror_class_members[] = {
 PUBLIC DeeTypeObject DeeError_IndexError =
 INIT_CUSTOM_ERROR("IndexError", NULL, TP_FNORMAL | TP_FINHERITCTOR, &DeeError_ValueError,
                   NULL, NULL, NULL, NULL, DeeErrorObject, NULL, NULL, NULL,
-                  NULL, NULL, NULL, indexerror_class_members);
+                  NULL, NULL, NULL, NULL, indexerror_class_members);
 PUBLIC DeeTypeObject DeeError_UnboundItem =
 INIT_CUSTOM_ERROR("UnboundItem", NULL, TP_FNORMAL | TP_FINHERITCTOR, &DeeError_IndexError,
                   NULL, NULL, NULL, NULL, DeeErrorObject, NULL, NULL, NULL,
-                  NULL, NULL, NULL, NULL);
+                  NULL, NULL, NULL, NULL, NULL);
 /* END::ValueError.IndexError */
 PUBLIC DeeTypeObject DeeError_SequenceError =
 INIT_CUSTOM_ERROR("SequenceError", NULL, TP_FNORMAL | TP_FINHERITCTOR, &DeeError_ValueError,
                   NULL, NULL, NULL, NULL, DeeErrorObject, NULL, NULL, NULL,
-                  NULL, NULL, NULL, NULL);
+                  NULL, NULL, NULL, NULL, NULL);
 /* BEGIN::ValueError.UnicodeError */
 PRIVATE struct type_member tpconst unicodeerror_class_members[] = {
 	TYPE_MEMBER_CONST("UnicodeDecodeError", &DeeError_UnicodeDecodeError),
@@ -680,28 +686,28 @@ PRIVATE struct type_member tpconst unicodeerror_class_members[] = {
 PUBLIC DeeTypeObject DeeError_UnicodeError =
 INIT_CUSTOM_ERROR("UnicodeError", NULL, TP_FNORMAL | TP_FINHERITCTOR, &DeeError_ValueError,
                   NULL, NULL, NULL, NULL, DeeErrorObject, NULL, NULL, NULL,
-                  NULL, NULL, NULL, unicodeerror_class_members);
+                  NULL, NULL, NULL, NULL, unicodeerror_class_members);
 PUBLIC DeeTypeObject DeeError_UnicodeDecodeError =
 INIT_CUSTOM_ERROR("UnicodeDecodeError", NULL, TP_FNORMAL | TP_FINHERITCTOR, &DeeError_UnicodeError,
                   NULL, NULL, NULL, NULL, DeeErrorObject, NULL, NULL, NULL,
-                  NULL, NULL, NULL, NULL);
+                  NULL, NULL, NULL, NULL, NULL);
 PUBLIC DeeTypeObject DeeError_UnicodeEncodeError =
 INIT_CUSTOM_ERROR("UnicodeEncodeError", NULL, TP_FNORMAL | TP_FINHERITCTOR, &DeeError_UnicodeError,
                   NULL, NULL, NULL, NULL, DeeErrorObject, NULL, NULL, NULL,
-                  NULL, NULL, NULL, NULL);
+                  NULL, NULL, NULL, NULL, NULL);
 /* END::ValueError.UnicodeError */
 PUBLIC DeeTypeObject DeeError_ReferenceError =
 INIT_CUSTOM_ERROR("ReferenceError", NULL, TP_FNORMAL | TP_FINHERITCTOR, &DeeError_ValueError,
                   NULL, NULL, NULL, NULL, DeeErrorObject, NULL, NULL, NULL,
-                  NULL, NULL, NULL, NULL);
+                  NULL, NULL, NULL, NULL, NULL);
 PUBLIC DeeTypeObject DeeError_UnpackError =
 INIT_CUSTOM_ERROR("UnpackError", NULL, TP_FNORMAL | TP_FINHERITCTOR, &DeeError_ValueError,
                   NULL, NULL, NULL, NULL, DeeErrorObject, NULL, NULL, NULL,
-                  NULL, NULL, NULL, NULL);
+                  NULL, NULL, NULL, NULL, NULL);
 PUBLIC DeeTypeObject DeeError_BufferError =
 INIT_CUSTOM_ERROR("BufferError", NULL, TP_FNORMAL | TP_FINHERITCTOR, &DeeError_ValueError,
                   NULL, NULL, NULL, NULL, DeeErrorObject, NULL, NULL, NULL,
-                  NULL, NULL, NULL, NULL);
+                  NULL, NULL, NULL, NULL, NULL);
 /* END::ValueError */
 
 
@@ -794,80 +800,69 @@ systemerror_getnterrmsg_np(DeeSystemErrorObject *__restrict self) {
 	ASSERT(!result || DeeString_Check(result));
 	if (result && DeeString_IsEmpty(result)) {
 		Dee_Decref_unlikely(result);
-		result = Dee_None;
-		Dee_Incref(result);
+		result = DeeNone_NewRef();
 	}
 	return result;
 }
 #endif /* CONFIG_HOST_WINDOWS */
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-systemerror_str(DeeSystemErrorObject *__restrict self) {
+#define DO(err, expr)                    \
+	do {                                 \
+		if unlikely((temp = (expr)) < 0) \
+			goto err;                    \
+		result += temp;                  \
+	}	__WHILE0
+
+PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
+systemerror_print(DeeSystemErrorObject *__restrict self, dformatprinter printer, void *arg) {
+	dssize_t temp, result;
 	DREF DeeObject *errno_name, *errno_desc;
-	struct unicode_printer printer = UNICODE_PRINTER_INIT;
-	if unlikely(unicode_printer_printobject(&printer,
-	                                        self->e_message
-	                                        ? (DeeObject *)self->e_message
-	                                        : (DeeObject *)Dee_TYPE(self)) < 0)
-		goto err;
+	result = DeeObject_Print(self->e_message
+	                         ? (DeeObject *)self->e_message
+	                         : (DeeObject *)Dee_TYPE(self),
+	                         printer, arg);
+	if unlikely(result < 0)
+		goto done;
 	if (self->se_errno != Dee_SYSTEM_ERROR_UNKNOWN) {
-#ifdef CONFIG_HOST_WINDOWS
-		dssize_t unix_code_length;
-#endif /* CONFIG_HOST_WINDOWS */
-		if unlikely(unicode_printer_putascii(&printer, '\n'))
-			goto err;
 		errno_name = systemerror_getstrerrorname(self);
 		if unlikely(!errno_name) {
-			if (!DeeError_Handled(ERROR_HANDLED_NORMAL))
+			if (!DeeError_Handled(ERROR_HANDLED_NORMAL)) {
+				temp = -1;
 				goto err;
-			errno_name = Dee_None;
-			Dee_Incref(errno_name);
+			}
+			errno_name = DeeNone_NewRef();
 		}
 		errno_desc = systemerror_getstrerror(self);
 		if unlikely(!errno_desc) {
-			if (!DeeError_Handled(ERROR_HANDLED_NORMAL))
+			if (!DeeError_Handled(ERROR_HANDLED_NORMAL)) {
+				temp = -1;
 				goto err_errno_name;
-			errno_desc = Dee_None;
-			Dee_Incref(errno_desc);
+			}
+			errno_desc = DeeNone_NewRef();
 		}
-#ifdef CONFIG_HOST_WINDOWS
-		unix_code_length = unicode_printer_printf(&printer, "errno(%d)", self->se_errno);
-		if unlikely(unix_code_length < 0)
-			goto err_errno_desc;
-#else /* CONFIG_HOST_WINDOWS */
-		if unlikely(unicode_printer_printf(&printer, "errno(%d)", self->se_errno) < 0)
-			goto err_errno_desc;
-#endif /* !CONFIG_HOST_WINDOWS */
+		DO(err_errno_desc, DeeFormat_Printf(printer, arg, "\nerrno(%d)", self->se_errno));
 		if (!DeeNone_Check(errno_name) || !DeeNone_Check(errno_desc)) {
 #ifdef CONFIG_HOST_WINDOWS
 			if (self->se_lasterror != NO_ERROR) {
+				size_t unix_code_length;
 				size_t windows_code_length;
+				unix_code_length    = (size_t)(uintptr_t)Dee_snprintf(NULL, 0, "%d", self->se_errno);
 				windows_code_length = (size_t)(uintptr_t)Dee_snprintf(NULL, 0, "%#I32x", self->se_lasterror);
-				unix_code_length -= 7;
-				if (windows_code_length > (size_t)unix_code_length) {
-					if unlikely(unicode_printer_repeatascii(&printer, ' ',
-					                                        windows_code_length -
-					                                        (size_t)unix_code_length) < 0)
-						goto err_errno_desc;
+				if (windows_code_length > unix_code_length) {
+					DO(err_errno_desc, DeeFormat_Repeat(printer, arg, ' ',
+					                                    windows_code_length -
+					                                    unix_code_length));
 				}
 			}
 #endif /* CONFIG_HOST_WINDOWS */
-			if unlikely(UNICODE_PRINTER_PRINT(&printer, ": ") < 0)
-				goto err_errno_desc;
-			if (DeeNone_Check(errno_name)) {
-				if unlikely(unicode_printer_putascii(&printer, '?'))
-					goto err_errno_desc;
-			} else {
-				if unlikely(unicode_printer_printobject(&printer, errno_name) < 0)
-					goto err_errno_desc;
-			}
+			DO(err_errno_desc, DeeFormat_PRINT(printer, arg, ": "));
+			DO(err_errno_desc,
+			   DeeNone_Check(errno_name) ? DeeFormat_PRINT(printer, arg, "?")
+			                             : DeeFormat_PrintObject(printer, arg, errno_name));
 			if (!DeeNone_Check(errno_desc)) {
-				if unlikely(UNICODE_PRINTER_PRINT(&printer, " (") < 0)
-					goto err_errno_desc;
-				if unlikely(unicode_printer_printobject(&printer, errno_desc) < 0)
-					goto err_errno_desc;
-				if unlikely(unicode_printer_putascii(&printer, ')'))
-					goto err_errno_desc;
+				DO(err_errno_desc, DeeFormat_PRINT(printer, arg, " ("));
+				DO(err_errno_desc, DeeFormat_PrintObject(printer, arg, errno_desc));
+				DO(err_errno_desc, DeeFormat_PRINT(printer, arg, ")"));
 			}
 		}
 		Dee_Decref(errno_desc);
@@ -876,107 +871,94 @@ systemerror_str(DeeSystemErrorObject *__restrict self) {
 
 #ifdef CONFIG_HOST_WINDOWS
 	if (self->se_lasterror != NO_ERROR) {
-		int message_error;
-		dssize_t windows_code_length;
-		if unlikely(unicode_printer_putascii(&printer, '\n'))
-			goto err;
-		windows_code_length = unicode_printer_printf(&printer, "nterr(%#I32x)", self->se_lasterror);
-		if unlikely(windows_code_length < 0)
-			goto err;
+		bool success;
+		DO(err, DeeFormat_Printf(printer, arg, "\nnterr(%#I32x)", self->se_lasterror));
 		if (self->se_errno != Dee_SYSTEM_ERROR_UNKNOWN) {
 			size_t unix_code_length;
-			unix_code_length = (size_t)(uintptr_t)Dee_snprintf(NULL, 0, "%d", self->se_errno);
-			windows_code_length -= 7;
-			if (unix_code_length > (size_t)windows_code_length) {
-				if unlikely(unicode_printer_repeatascii(&printer, ' ',
-				                                        unix_code_length -
-				                                        (size_t)windows_code_length) < 0)
-					goto err;
+			size_t windows_code_length;
+			unix_code_length    = (size_t)(uintptr_t)Dee_snprintf(NULL, 0, "%d", self->se_errno);
+			windows_code_length = (size_t)(uintptr_t)Dee_snprintf(NULL, 0, "%#I32x", self->se_lasterror);
+			if (unix_code_length > windows_code_length) {
+				DO(err, DeeFormat_Repeat(printer, arg, ' ',
+				                         unix_code_length -
+				                         windows_code_length));
 			}
 		}
-		if unlikely(UNICODE_PRINTER_PRINT(&printer, ": ") < 0)
-			goto err;
-		message_error = DeeNTSystem_PrintFormatMessage(&printer, FORMAT_MESSAGE_FROM_SYSTEM, NULL,
-		                                               (DWORD)self->se_lasterror,
-		                                               MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), NULL);
-		if unlikely(message_error < 0)
-			goto err;
-		if unlikely(message_error > 0) {
+		DO(err, DeeFormat_PRINT(printer, arg, ": "));
+		DO(err, DeeNTSystem_PrintFormatMessage(printer, arg, FORMAT_MESSAGE_FROM_SYSTEM, NULL,
+		                                       (DWORD)self->se_lasterror,
+		                                       MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+		                                       NULL, &success));
+		if unlikely(!success) {
 			/* No message string printed... */
-			if unlikely(unicode_printer_putascii(&printer, '?'))
-				goto err;
+			DO(err, DeeFormat_PRINT(printer, arg, "?"));
 		}
 	}
 #endif /* CONFIG_HOST_WINDOWS */
-	return unicode_printer_pack(&printer);
+done:
+	return result;
 err_errno_desc:
 	Dee_Decref(errno_desc);
 err_errno_name:
 	Dee_Decref(errno_name);
 err:
-	unicode_printer_fini(&printer);
-	return NULL;
+	return temp;
 }
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-systemerror_repr(DeeSystemErrorObject *__restrict self) {
-	struct unicode_printer printer = UNICODE_PRINTER_INIT;
+PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
+systemerror_printrepr(DeeSystemErrorObject *__restrict self, dformatprinter printer, void *arg) {
+	dssize_t temp, result;
 	bool is_first = true;
-	if unlikely(unicode_printer_printf(&printer, "%k(", Dee_TYPE(self)) < 0)
-		goto err;
+	result = DeeFormat_Printf(printer, arg, "%k(", Dee_TYPE(self));
+	if unlikely(result < 0)
+		goto done;
 	if (self->e_message) {
-		if unlikely(unicode_printer_printobjectrepr(&printer, (DeeObject *)self->e_message) < 0)
-			goto err;
+		DO(err, DeeString_PrintRepr((DeeObject *)self->e_message, printer, arg));
 		is_first = false;
 	}
 	if (self->e_inner) {
-		if (!is_first && unlikely(UNICODE_PRINTER_PRINT(&printer, ", ") < 0))
-			goto err;
-		if unlikely(UNICODE_PRINTER_PRINT(&printer, "inner: ") < 0)
-			goto err;
-		if unlikely(unicode_printer_printobjectrepr(&printer, (DeeObject *)self->e_inner) < 0)
-			goto err;
+		if (!is_first)
+			DO(err, DeeFormat_PRINT(printer, arg, ", "));
+		DO(err, DeeFormat_Printf(printer, arg, "inner: %r", self->e_inner));
 		is_first = false;
 	}
 	if (self->se_errno != Dee_SYSTEM_ERROR_UNKNOWN) {
 		DREF DeeObject *errno_name;
-		dssize_t print_error;
-		if (!is_first && unlikely(UNICODE_PRINTER_PRINT(&printer, ", ") < 0))
-			goto err;
-		if unlikely(UNICODE_PRINTER_PRINT(&printer, "errno: ") < 0)
-			goto err;
+		if (!is_first)
+			DO(err, DeeFormat_PRINT(printer, arg, ", "));
+		DO(err, DeeFormat_PRINT(printer, arg, "errno: "));
 		errno_name = systemerror_getstrerrorname(self);
 		if (!errno_name) {
 			if (!DeeError_Handled(ERROR_HANDLED_NORMAL))
 				goto err;
-			errno_name = Dee_None;
-			Dee_Incref(errno_name);
+			errno_name = DeeNone_NewRef();
 		}
-		print_error = DeeNone_Check(errno_name)
-		              ? unicode_printer_printf(&printer, "%d", self->se_errno)
-		              : unicode_printer_printobject(&printer, errno_name);
+		temp = DeeNone_Check(errno_name)
+		       ? DeeFormat_Printf(printer, arg, "%d", self->se_errno)
+		       : DeeFormat_Printf(printer, arg, "posix.%k", errno_name);
 		Dee_Decref(errno_name);
-		if unlikely(print_error < 0)
+		if unlikely(temp < 0)
 			goto err;
+		result += temp;
 #ifdef CONFIG_HOST_WINDOWS
 		is_first = false;
 #endif /* CONFIG_HOST_WINDOWS */
 	}
 #ifdef CONFIG_HOST_WINDOWS
 	if (self->se_lasterror != NO_ERROR) {
-		if (!is_first && unlikely(UNICODE_PRINTER_PRINT(&printer, ", ") < 0))
-			goto err;
-		if unlikely(unicode_printer_printf(&printer, "nterr_np: %#I32x", self->se_lasterror) < 0)
-			goto err;
+		if (!is_first)
+			DO(err, DeeFormat_PRINT(printer, arg, ", "));
+		DO(err, DeeFormat_Printf(printer, arg, "nterr_np: %#I32x", self->se_lasterror));
 	}
 #endif /* CONFIG_HOST_WINDOWS */
-	if unlikely(unicode_printer_putascii(&printer, ')'))
-		goto err;
-	return unicode_printer_pack(&printer);
+	DO(err, DeeFormat_PRINT(printer, arg, ")"));
+done:
+	return result;
 err:
-	unicode_printer_fini(&printer);
-	return NULL;
+	return temp;
 }
+
+#undef DO
 
 PRIVATE struct type_getset tpconst systemerror_getsets[] = {
 	TYPE_GETTER("strerrorname", &systemerror_getstrerrorname,
@@ -1036,9 +1018,11 @@ PUBLIC DeeTypeObject DeeError_SystemError = {
 		/* .tp_move_assign = */ NULL
 	},
 	/* .tp_cast = */ {
-		/* .tp_str  = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&systemerror_str,
-		/* .tp_repr = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&systemerror_repr,
-		/* .tp_bool = */ NULL
+		/* .tp_str       = */ NULL,
+		/* .tp_repr      = */ NULL,
+		/* .tp_bool      = */ NULL,
+		/* .tp_print     = */ (dssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&systemerror_print,
+		/* .tp_printrepr = */ (dssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&systemerror_printrepr
 	},
 	/* .tp_call          = */ NULL,
 	/* .tp_visit         = */ NULL,
@@ -1061,7 +1045,7 @@ PUBLIC DeeTypeObject DeeError_SystemError = {
 PUBLIC DeeTypeObject DeeError_UnsupportedAPI =
 INIT_CUSTOM_ERROR("UnsupportedAPI", NULL, TP_FNORMAL | TP_FINHERITCTOR, &DeeError_SystemError,
                   NULL, NULL, NULL, NULL, DeeSystemErrorObject, NULL, NULL, NULL,
-                  NULL, NULL, NULL, NULL);
+                  NULL, NULL, NULL, NULL, NULL);
 PRIVATE struct type_member tpconst fserror_class_members[] = {
 	TYPE_MEMBER_CONST("FileAccessError", &DeeError_FileAccessError),
 	TYPE_MEMBER_CONST("FileNotFound", &DeeError_FileNotFound),
@@ -1087,7 +1071,7 @@ PRIVATE struct type_member tpconst file_not_found_class_members[] = {
 PUBLIC DeeTypeObject DeeError_FSError =
 INIT_CUSTOM_ERROR("FSError", NULL, TP_FNORMAL | TP_FINHERITCTOR, &DeeError_SystemError,
                   NULL, NULL, NULL, NULL, DeeSystemErrorObject, NULL, NULL, NULL,
-                  NULL, NULL, NULL, fserror_class_members);
+                  NULL, NULL, NULL, NULL, fserror_class_members);
 PRIVATE struct type_member tpconst accesserror_members[] = {
 	TYPE_MEMBER_CONST("ReadOnlyFile", &DeeError_ReadOnlyFile),
 	TYPE_MEMBER_END
@@ -1097,66 +1081,65 @@ INIT_CUSTOM_ERROR("FileAccessError", "An error derived from :FSError that is thr
                                      "to access a file or directory without the necessary permissions",
                   TP_FNORMAL | TP_FINHERITCTOR, &DeeError_FSError,
                   NULL, NULL, NULL, NULL, DeeSystemErrorObject, NULL, NULL, NULL,
-                  NULL, NULL, NULL, accesserror_members);
+                  NULL, NULL, NULL, NULL, accesserror_members);
 PUBLIC DeeTypeObject DeeError_ReadOnlyFile =
 INIT_CUSTOM_ERROR("ReadOnlyFile", "An error derived from :FileAccessError that is thrown when attempting "
                                   "to modify a file or directory when it or the filesystem is read-only",
                   TP_FNORMAL | TP_FINHERITCTOR, &DeeError_FileAccessError,
                   NULL, NULL, NULL, NULL, DeeSystemErrorObject, NULL, NULL, NULL,
-                  NULL, NULL, NULL, NULL);
+                  NULL, NULL, NULL, NULL, NULL);
 PUBLIC DeeTypeObject DeeError_FileNotFound =
 INIT_CUSTOM_ERROR("FileNotFound", NULL, TP_FNORMAL | TP_FINHERITCTOR, &DeeError_FSError,
                   NULL, NULL, NULL, NULL, DeeSystemErrorObject, NULL, NULL, NULL,
-                  NULL, NULL, NULL, file_not_found_class_members);
+                  NULL, NULL, NULL, NULL, file_not_found_class_members);
 PUBLIC DeeTypeObject DeeError_FileExists =
 INIT_CUSTOM_ERROR("FileExists", "An error derived from :FSError that is thrown when attempting "
                                 "to create a filesystem object when the target path already exists",
                   TP_FNORMAL | TP_FINHERITCTOR, &DeeError_FSError,
                   NULL, NULL, NULL, NULL, DeeSystemErrorObject, NULL, NULL, NULL,
-                  NULL, NULL, NULL, file_exists_class_members);
+                  NULL, NULL, NULL, NULL, file_exists_class_members);
 PUBLIC DeeTypeObject DeeError_FileClosed =
 INIT_CUSTOM_ERROR("FileClosed", NULL, TP_FNORMAL | TP_FINHERITCTOR, &DeeError_FSError,
                   NULL, NULL, NULL, NULL, DeeSystemErrorObject, NULL, NULL, NULL,
-                  NULL, NULL, NULL, NULL);
+                  NULL, NULL, NULL, NULL, NULL);
 
 PUBLIC DeeTypeObject DeeError_NoDirectory =
 INIT_CUSTOM_ERROR("NoDirectory", "An error derived from :FileNotFound that is thrown when a "
                                  "directory was expected, but something different was found",
                   TP_FNORMAL | TP_FINHERITCTOR, &DeeError_FileNotFound,
                   NULL, NULL, NULL, NULL, DeeSystemErrorObject, NULL, NULL, NULL,
-                  NULL, NULL, NULL, NULL);
+                  NULL, NULL, NULL, NULL, NULL);
 PUBLIC DeeTypeObject DeeError_IsDirectory =
 INIT_CUSTOM_ERROR("IsDirectory", "An error derived from :FileExists that is thrown when something "
                                  "other than a directory was expected, but one was found none-the-less",
                   TP_FNORMAL | TP_FINHERITCTOR, &DeeError_FileExists,
                   NULL, NULL, NULL, NULL, DeeSystemErrorObject, NULL, NULL, NULL,
-                  NULL, NULL, NULL, NULL);
+                  NULL, NULL, NULL, NULL, NULL);
 PUBLIC DeeTypeObject DeeError_CrossDeviceLink =
 INIT_CUSTOM_ERROR("CrossDeviceLink", "An error derived from :FSError that is thrown when attempting "
                                      "to move a file between different devices or partitions",
                   TP_FNORMAL | TP_FINHERITCTOR, &DeeError_FSError,
                   NULL, NULL, NULL, NULL, DeeSystemErrorObject, NULL, NULL, NULL,
-                  NULL, NULL, NULL, NULL);
+                  NULL, NULL, NULL, NULL, NULL);
 PUBLIC DeeTypeObject DeeError_DirectoryNotEmpty =
 INIT_CUSTOM_ERROR("DirectoryNotEmpty", "An error derived from :FileExists that is thrown when "
                                        "attempting to remove a directory that isn't empty",
                   TP_FNORMAL | TP_FINHERITCTOR, &DeeError_FileExists,
                   NULL, NULL, NULL, NULL, DeeSystemErrorObject, NULL, NULL, NULL,
-                  NULL, NULL, NULL, NULL);
+                  NULL, NULL, NULL, NULL, NULL);
 PUBLIC DeeTypeObject DeeError_BusyFile =
 INIT_CUSTOM_ERROR("BusyFile", "An error derived from :FSError that is thrown when "
                               "attempting to remove a file or directory that is being "
                               "used by another process",
                   TP_FNORMAL | TP_FINHERITCTOR, &DeeError_FSError,
                   NULL, NULL, NULL, NULL, DeeSystemErrorObject, NULL, NULL, NULL,
-                  NULL, NULL, NULL, NULL);
+                  NULL, NULL, NULL, NULL, NULL);
 PUBLIC DeeTypeObject DeeError_NoSymlink =
 INIT_CUSTOM_ERROR("NoSymlink", "An error derived from :FileNotFound that is thrown when attempting "
                                "to invoke :readlink on a file that isn't a symbolic link",
                   TP_FNORMAL | TP_FINHERITCTOR, &DeeError_FileNotFound,
                   NULL, NULL, NULL, NULL, DeeSystemErrorObject, NULL, NULL, NULL,
-                  NULL, NULL, NULL, NULL);
-
+                  NULL, NULL, NULL, NULL, NULL);
 /* END::SystemError */
 
 
@@ -1180,14 +1163,16 @@ appexit_copy(struct appexit_object *__restrict self,
 	return 0;
 }
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-appexit_str(struct appexit_object *__restrict self) {
-	return DeeString_Newf("exit:%d", self->ae_exitcode);
+PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
+appexit_print(struct appexit_object *__restrict self,
+              dformatprinter printer, void *arg) {
+	return DeeFormat_Printf(printer, arg, "exit:%d", self->ae_exitcode);
 }
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-appexit_repr(struct appexit_object *__restrict self) {
-	return DeeString_Newf("AppExit(%d)", self->ae_exitcode);
+PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
+appexit_printrepr(struct appexit_object *__restrict self,
+                  dformatprinter printer, void *arg) {
+	return DeeFormat_Printf(printer, arg, "AppExit(%d)", self->ae_exitcode);
 }
 
 PRIVATE struct type_member tpconst appexit_members[] = {
@@ -1313,9 +1298,11 @@ PUBLIC DeeTypeObject DeeError_AppExit = {
 		/* .tp_move_assign = */ NULL
 	},
 	/* .tp_cast = */ {
-		/* .tp_str  = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&appexit_str,
-		/* .tp_repr = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&appexit_repr,
-		/* .tp_bool = */ NULL
+		/* .tp_str      = */ NULL,
+		/* .tp_repr     = */ NULL,
+		/* .tp_bool     = */ NULL,
+		/* .tp_strrepr  = */ (dssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&appexit_print,
+		/* .tp_reprrepr = */ (dssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&appexit_printrepr,
 	},
 	/* .tp_call          = */ NULL,
 	/* .tp_visit         = */ NULL,
@@ -1358,7 +1345,8 @@ PUBLIC DeeNoMemoryErrorObject DeeError_NoMemory_instance = {
 /* ==== Signal type subsystem ==== */
 PUBLIC DeeTypeObject DeeError_StopIteration =
 INIT_CUSTOM_ERROR("StopIteration", NULL, TP_FNORMAL | TP_FINHERITCTOR, &DeeError_Signal,
-                  NULL, NULL, NULL, NULL, DeeSignalObject, NULL, NULL, NULL, NULL, NULL, NULL, NULL);
+                  NULL, NULL, NULL, NULL, DeeSignalObject, NULL, NULL, NULL,
+                  NULL, NULL, NULL, NULL, NULL);
 PRIVATE struct type_member tpconst interrupt_class_members[] = {
 	TYPE_MEMBER_CONST("KeyboardInterrupt", &DeeError_KeyboardInterrupt),
 	TYPE_MEMBER_CONST("ThreadExit", &DeeError_ThreadExit),
@@ -1367,7 +1355,7 @@ PRIVATE struct type_member tpconst interrupt_class_members[] = {
 PUBLIC DeeTypeObject DeeError_Interrupt =
 INIT_CUSTOM_ERROR("Interrupt", NULL, TP_FNORMAL | TP_FINHERITCTOR | TP_FINTERRUPT /* Interrupt type! */, &DeeError_Signal,
                   NULL, NULL, NULL, NULL, DeeSignalObject, NULL, NULL, NULL,
-                  NULL, NULL, NULL, interrupt_class_members);
+                  NULL, NULL, NULL, NULL, interrupt_class_members);
 PRIVATE int DCALL
 threadexit_init(struct threadexit_object *__restrict self,
                 size_t argc, DeeObject *const *argv) {
@@ -1395,14 +1383,16 @@ PRIVATE struct type_member tpconst threadexit_members[] = {
 	TYPE_MEMBER_END
 };
 PUBLIC DeeTypeObject DeeError_ThreadExit =
-INIT_CUSTOM_ERROR("ThreadExit", NULL, TP_FNORMAL | TP_FINTERRUPT /* Interrupt type! */, &DeeError_Signal,
+INIT_CUSTOM_ERROR("ThreadExit", NULL,
+                  TP_FNORMAL | TP_FINTERRUPT /* Interrupt type! */, &DeeError_Signal,
                   NULL, NULL, NULL, &threadexit_init, struct threadexit_object,
-                  &threadexit_fini, NULL, &threadexit_visit,
+                  &threadexit_fini, NULL, NULL, &threadexit_visit,
                   NULL, NULL, threadexit_members, interrupt_class_members);
 PUBLIC DeeTypeObject DeeError_KeyboardInterrupt =
-INIT_CUSTOM_ERROR("KeyboardInterrupt", NULL, TP_FNORMAL | TP_FINHERITCTOR | TP_FINTERRUPT /* Interrupt type! */, &DeeError_Interrupt,
+INIT_CUSTOM_ERROR("KeyboardInterrupt", NULL,
+                  TP_FNORMAL | TP_FINHERITCTOR | TP_FINTERRUPT /* Interrupt type! */, &DeeError_Interrupt,
                   NULL, NULL, NULL, NULL, DeeSignalObject, NULL, NULL, NULL,
-                  NULL, NULL, NULL, NULL);
+                  NULL, NULL, NULL, NULL, NULL);
 INTDEF int DCALL none_i1(void *UNUSED(a));
 INTDEF int DCALL none_i2(void *UNUSED(a), void *UNUSED(b));
 PRIVATE struct type_member tpconst signal_class_members[] = {
@@ -1411,9 +1401,10 @@ PRIVATE struct type_member tpconst signal_class_members[] = {
 	TYPE_MEMBER_END
 };
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-signal_repr(DeeSignalObject *__restrict self) {
-	return DeeString_Newf("%k()", Dee_TYPE(self));
+PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
+signal_printrepr(DeeSignalObject *__restrict self,
+                 dformatprinter printer, void *arg) {
+	return DeeFormat_Printf(printer, arg, "%k()", Dee_TYPE(self));
 }
 
 PUBLIC DeeTypeObject DeeError_Signal = {
@@ -1441,9 +1432,11 @@ PUBLIC DeeTypeObject DeeError_Signal = {
 		/* .tp_move_assign = */ NULL
 	},
 	/* .tp_cast = */ {
-		/* .tp_str  = */ NULL,
-		/* .tp_repr = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&signal_repr,
-		/* .tp_bool = */ NULL
+		/* .tp_str       = */ NULL,
+		/* .tp_repr      = */ NULL,
+		/* .tp_bool      = */ NULL,
+		/* .tp_print     = */ NULL,
+		/* .tp_printrepr = */ (dssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&signal_printrepr,
 	},
 	/* .tp_call          = */ NULL,
 	/* .tp_visit         = */ NULL,

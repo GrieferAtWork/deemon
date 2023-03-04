@@ -1515,6 +1515,44 @@ err:
 	return temp;
 }
 
+INTERN WUNUSED NONNULL((1, 2)) dssize_t DCALL
+DeeTuple_PrintRepr(DeeObject *__restrict self,
+                   Dee_formatprinter_t printer, void *arg) {
+	Dee_ssize_t temp, result;
+	/* Special case: single-item tuples are
+	 * must be encoded with a trailing comma. */
+	if (DeeTuple_SIZE(self) == 1) {
+		result = DeeFormat_Printf(printer, arg, "(%r,)", DeeTuple_GET(self, 0));
+	} else {
+		size_t i, count;
+		result = DeeFormat_PRINT(printer, arg, "(");
+		if unlikely(result < 0)
+			goto done;
+		count = DeeTuple_SIZE(self);
+		for (i = 0; i < count; ++i) {
+			/* Print this item. */
+			if (i) {
+				temp = DeeFormat_PRINT(printer, arg, ", ");
+				if unlikely(temp < 0)
+					goto err;
+				result += temp;
+			}
+			temp = DeeObject_PrintRepr(DeeTuple_GET(self, i), printer, arg);
+			if unlikely(temp < 0)
+				goto err;
+			result += temp;
+		}
+		temp = DeeFormat_PRINT(printer, arg, ")");
+		if unlikely(temp < 0)
+			goto err;
+		result += temp;
+	}
+done:
+	return result;
+err:
+	return temp;
+}
+
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 tuple_str(Tuple *__restrict self) {
 	/* Special case to facilitate function-like use of `print':
@@ -1968,9 +2006,11 @@ PUBLIC DeeTypeObject DeeTuple_Type = {
 		/* .tp_move_assign = */ NULL
 	},
 	/* .tp_cast = */ {
-		/* .tp_str  = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&tuple_str,
-		/* .tp_repr = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&tuple_repr,
-		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&tuple_bool
+		/* .tp_str       = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&tuple_str,
+		/* .tp_repr      = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&tuple_repr,
+		/* .tp_bool      = */ (int (DCALL *)(DeeObject *__restrict))&tuple_bool,
+		/* .tp_print     = */ &DeeTuple_Print,
+		/* .tp_printrepr = */ &DeeTuple_PrintRepr
 	},
 	/* .tp_call          = */ NULL,
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&tuple_visit,

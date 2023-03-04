@@ -269,14 +269,24 @@ DeeNTSystem_FormatMessage(DeeNT_DWORD dwFlags, void const *lpSource,
                           DeeNT_DWORD dwMessageId, DeeNT_DWORD dwLanguageId,
                           /* va_list * */ void *Arguments);
 
-/* @return: 1:  The system call failed (s.a. `GetLastError()')
+/* @return: 1:  The system call failed (nothing was printed; s.a. `GetLastError()')
  * @return: 0:  Successfully printed the message.
  * @return: -1: A deemon callback failed and an error was thrown. */
-DFUNDEF WUNUSED int DCALL
-DeeNTSystem_PrintFormatMessage(struct Dee_unicode_printer *__restrict printer,
+DFUNDEF WUNUSED NONNULL((1)) int DCALL
+DeeNTSystem_UPrintFormatMessage(struct Dee_unicode_printer *__restrict printer,
+                                DeeNT_DWORD dwFlags, void const *lpSource,
+                                DeeNT_DWORD dwMessageId, DeeNT_DWORD dwLanguageId,
+                                /* va_list * */ void *Arguments);
+
+/* @param: p_success: Set to `false' if the system call failed and nothing was printed (s.a. `GetLastError()')
+ * @return: >= 0: Success.
+ * @return: < 0:  A deemon callback failed and an error was thrown (`*p_success' is undefined). */
+DFUNDEF WUNUSED NONNULL((1, 8)) Dee_ssize_t DCALL
+DeeNTSystem_PrintFormatMessage(Dee_formatprinter_t printer, void *arg,
                                DeeNT_DWORD dwFlags, void const *lpSource,
                                DeeNT_DWORD dwMessageId, DeeNT_DWORD dwLanguageId,
-                               /* va_list * */ void *Arguments);
+                               /* va_list * */ void *Arguments,
+                               bool *__restrict p_success);
 
 /* Convenience wrapper around `DeeNTSystem_FormatMessage()' for getting error message.
  * When no error message exists, return an empty string.

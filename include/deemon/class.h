@@ -920,8 +920,8 @@ INTDEF WUNUSED NONNULL((1)) int DCALL instance_builtin_auto_nobase_init(DeeObjec
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL instance_builtin_auto_nobase_tinitkw(DeeTypeObject *tp_self, DeeObject *__restrict self, size_t argc, DeeObject *const *argv, DeeObject *kw);
 INTDEF WUNUSED NONNULL((1)) int DCALL instance_builtin_auto_nobase_initkw(DeeObject *__restrict self, size_t argc, DeeObject *const *argv, DeeObject *kw);
 #endif /* CONFIG_NOBASE_OPTIMIZED_CLASS_OPERATORS */
-INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL instance_builtin_auto_trepr(DeeTypeObject *tp_self, DeeObject *__restrict self);
-INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL instance_builtin_auto_repr(DeeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1, 2, 3)) Dee_ssize_t DCALL instance_builtin_auto_tprintrepr(DeeTypeObject *tp_self, DeeObject *__restrict self, Dee_formatprinter_t printer, void *arg);
+INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL instance_builtin_auto_printrepr(DeeObject *__restrict self, Dee_formatprinter_t printer, void *arg);
 #endif /* CLASS_TP_FAUTOINIT */
 
 
@@ -967,6 +967,10 @@ INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL instance_tstr(DeeTypeObject
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL instance_str(DeeObject *__restrict self);
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL instance_trepr(DeeTypeObject *tp_self, DeeObject *__restrict self);
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL instance_repr(DeeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1, 2, 3)) Dee_ssize_t DCALL instance_tprint(DeeTypeObject *tp_self, DeeObject *__restrict self, Dee_formatprinter_t printer, void *arg);
+INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL instance_print(DeeObject *__restrict self, Dee_formatprinter_t printer, void *arg);
+INTDEF WUNUSED NONNULL((1, 2, 3)) Dee_ssize_t DCALL instance_tprintrepr(DeeTypeObject *tp_self, DeeObject *__restrict self, Dee_formatprinter_t printer, void *arg);
+INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL instance_printrepr(DeeObject *__restrict self, Dee_formatprinter_t printer, void *arg);
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL instance_tbool(DeeTypeObject *tp_self, DeeObject *__restrict self);
 INTDEF WUNUSED NONNULL((1)) int DCALL instance_bool(DeeObject *__restrict self);
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL instance_tcall(DeeTypeObject *tp_self, DeeObject *self, size_t argc, DeeObject *const *argv);

@@ -1828,9 +1828,11 @@ PUBLIC DeeTypeObject DeeString_Type = {
 		/* .tp_move_assign = */ NULL
 	},
 	/* .tp_cast = */ {
-		/* .tp_str  = */ &DeeObject_NewRef,
-		/* .tp_repr = */ &string_repr,
-		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&string_bool
+		/* .tp_str       = */ &DeeObject_NewRef,
+		/* .tp_repr      = */ &string_repr,
+		/* .tp_bool      = */ (int (DCALL *)(DeeObject *__restrict))&string_bool,
+		/* .tp_print     = */ &DeeString_PrintUtf8,
+		/* .tp_printrepr = */ &DeeString_PrintRepr
 	},
 	/* .tp_call          = */ NULL,
 	/* .tp_visit         = */ NULL,
