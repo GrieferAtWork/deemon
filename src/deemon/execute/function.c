@@ -653,40 +653,47 @@ function_visit(Function *__restrict self,
 	Dee_Visit(self->fo_code);
 }
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeStringObject *DCALL
-function_str(Function *__restrict self) {
+#define DO(err, expr)                    \
+	do {                                 \
+		if unlikely((temp = (expr)) < 0) \
+			goto err;                    \
+		result += temp;                  \
+	}	__WHILE0
+
+PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
+function_print(Function *__restrict self,
+               dformatprinter printer, void *arg) {
+	dssize_t temp, result;
 	uint16_t i;
-	struct unicode_printer printer = UNICODE_PRINTER_INIT;
-	if (UNICODE_PRINTER_PRINT(&printer, "<Function(") < 0)
-		goto err;
-	if (unicode_printer_printobjectrepr(&printer, (DeeObject *)self->fo_code) < 0)
-		goto err;
-	if (self->fo_code->co_refc) {
-		if (UNICODE_PRINTER_PRINT(&printer, ", { ") < 0)
-			goto err;
+	result = DeeFormat_PRINT(printer, arg, "<Function(");
+	if unlikely(result < 0)
+		goto done;
+	DO(err, DeeFormat_PrintObjectRepr(printer, arg, (DeeObject *)self->fo_code));
+	if (self->fo_code->co_refc > 0) {
+		DO(err, DeeFormat_PRINT(printer, arg, ", { "));
 		for (i = 0; i < self->fo_code->co_refc; ++i) {
-			if (i != 0 && UNICODE_PRINTER_PRINT(&printer, ", ") < 0)
-				goto err;
-			if (unicode_printer_printobjectrepr(&printer, self->fo_refv[i]) < 0)
-				goto err;
+			if (i != 0)
+				DO(err, DeeFormat_PRINT(printer, arg, ", "));
+			DO(err, DeeFormat_PrintObjectRepr(printer, arg, self->fo_refv[i]));
 		}
-		if (UNICODE_PRINTER_PRINT(&printer, " }") < 0)
-			goto err;
+		DO(err, DeeFormat_PRINT(printer, arg, " }"));
 	}
-	if (unicode_printer_putascii(&printer, '>'))
-		goto err;
-	return (DREF DeeStringObject *)unicode_printer_pack(&printer);
+	DO(err, DeeFormat_PRINT(printer, arg, ">"));
+done:
+	return result;
 err:
-	unicode_printer_fini(&printer);
-	return NULL;
+	return temp;
 }
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeStringObject *DCALL
-function_repr(Function *__restrict self) {
+PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
+function_printrepr(Function *__restrict self,
+                   dformatprinter printer, void *arg) {
 	char *name = DeeCode_NAME(self->fo_code);
-	if (name)
-		return (DREF DeeStringObject *)DeeString_New(name);
-	return function_str(self);
+	if (name != NULL)
+		return DeeFormat_PrintStr(printer, arg, name);
+	/* TODO: Print representation as java-style lambda: "(a, b, c) -> ..."
+	 * NOTE: For this purpose, also print default arguments (where present) */
+	return function_print(self, printer, arg);
 }
 
 PRIVATE WUNUSED NONNULL((1)) dhash_t DCALL
@@ -779,9 +786,11 @@ PUBLIC DeeTypeObject DeeFunction_Type = {
 		/* .tp_move_assign = */ NULL
 	},
 	/* .tp_cast = */ {
-		/* .tp_str  = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&function_str,
-		/* .tp_repr = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&function_repr,
-		/* .tp_bool = */ NULL
+		/* .tp_str       = */ NULL,
+		/* .tp_repr      = */ NULL,
+		/* .tp_bool      = */ NULL,
+		/* .tp_print     = */ (dssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&function_print,
+		/* .tp_printrepr = */ (dssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&function_printrepr
 	},
 	/* .tp_call          = */ &DeeFunction_Call,
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&function_visit,
