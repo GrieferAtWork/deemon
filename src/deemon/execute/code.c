@@ -1967,7 +1967,11 @@ code_printrepr(DeeCodeObject *__restrict self,
 		for (i = 0; i < defaultc; ++i) {
 			if (i != 0)
 				DO(DeeFormat_PRINT(printer, arg, ", "));
-			DO(DeeFormat_PrintObjectRepr(printer, arg, self->co_defaultv[i]));
+			if (self->co_defaultv[i]) {
+				DO(DeeFormat_PRINT(printer, arg, "<unbound>"));
+			} else {
+				DO(DeeFormat_PrintObjectRepr(printer, arg, self->co_defaultv[i]));
+			}
 		}
 		DO(DeeFormat_PRINT(printer, arg, " }"));
 	}
