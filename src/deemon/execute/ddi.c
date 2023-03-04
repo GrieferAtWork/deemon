@@ -25,6 +25,7 @@
 #include <deemon/asm.h>
 #include <deemon/bool.h>
 #include <deemon/code.h>
+#include <deemon/format.h>
 #include <deemon/object.h>
 #include <deemon/string.h>
 #include <deemon/system-features.h> /* memcpyc(), ... */
@@ -722,6 +723,14 @@ PRIVATE struct type_cmp ddi_cmp = {
 	/* .tp_ne   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&ddi_ne
 };
 
+
+PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
+ddi_printrepr(DeeDDIObject *__restrict self,
+              dformatprinter printer, void *arg) {
+	(void)self;
+	return DeeFormat_Printf(printer, arg, "Ddi(TODO)");
+}
+
 PUBLIC DeeTypeObject DeeDDI_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_Ddi",
@@ -745,9 +754,11 @@ PUBLIC DeeTypeObject DeeDDI_Type = {
 		/* .tp_move_assign = */ NULL
 	},
 	/* .tp_cast = */ {
-		/* .tp_str  = */ NULL,
-		/* .tp_repr = */ NULL,
-		/* .tp_bool = */ NULL
+		/* .tp_str       = */ NULL,
+		/* .tp_repr      = */ NULL,
+		/* .tp_bool      = */ NULL,
+		/* .tp_print     = */ NULL,
+		/* .tp_printrepr = */ (dssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&ddi_printrepr
 	},
 	/* .tp_call          = */ NULL,
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&ddi_visit,

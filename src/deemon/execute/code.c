@@ -1236,23 +1236,6 @@ PRIVATE struct type_cmp code_cmp = {
 	/* .tp_ne   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&code_ne
 };
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-code_str(DeeCodeObject *__restrict self) {
-	DREF DeeObject *result;
-	DREF DeeObject *name = code_get_name(self);
-	if unlikely(!name)
-		goto err;
-	if (DeeNone_Check(name)) {
-		result = DeeString_New("<code for <anonymous>>");
-	} else {
-		result = DeeString_Newf("<code for %r>", name);
-	}
-	Dee_Decref(name);
-	return result;
-err:
-	return NULL;
-}
-
 PRIVATE WUNUSED DREF DeeObject *DCALL code_ctor(void) {
 	return_reference_((DeeObject *)&empty_code);
 }
@@ -1506,7 +1489,7 @@ code_init_kw(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	DeeBuffer text_buf;
 	/* (text:?DBytes=!N,module:?DModule=!N,statics:?S?O=!N,
 	 *  except:?S?X2?T5?Dint?Dint?Dint?Dint?X2?Dstring?Dint?T6?Dint?Dint?Dint?Dint?X2?Dstring?Dint?DType=!N,
-	 *  localc=!0,stackc=!0,refc=!0,argc=!0,keywords:?S?Dstring=!N,defaults:?S?O=!N,
+	 *  nlocal=!0,nstack=!0,refc=!0,argc=!0,keywords:?S?Dstring=!N,defaults:?S?O=!N,
 	 *  flags:?X2?Dstring?Dint=!P{lenient},ddi:?Ert:Ddi=!N) */
 	PRIVATE DEFINE_KWLIST(kwlist, { K(text),
 	                                K(module),
@@ -1847,6 +1830,182 @@ err:
 }
 
 
+PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
+code_print(DeeCodeObject *__restrict self,
+           dformatprinter printer, void *arg) {
+	dssize_t result;
+	DREF DeeObject *name = code_get_name(self);
+	if unlikely(!name)
+		goto err;
+	if (DeeNone_Check(name)) {
+		result = DeeFormat_PRINT(printer, arg, "<code for <anonymous>>");
+	} else {
+		result = DeeFormat_Printf(printer, arg, "<code for %r>", name);
+	}
+	Dee_Decref(name);
+	return result;
+err:
+	return -1;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
+code_printrepr(DeeCodeObject *__restrict self,
+               dformatprinter printer, void *arg) {
+#define DO(x)                         \
+	do {                              \
+		if unlikely((temp = (x)) < 0) \
+			goto err;                 \
+		result += temp;               \
+	}	__WHILE0
+	dssize_t temp, result;
+	result = DeeFormat_Printf(printer, arg, "Code(text: { ");
+	if unlikely(result < 0)
+		goto done;
+	{
+		code_size_t i;
+		for (i = 0; i < self->co_codebytes; ++i) {
+			if (i != 0)
+				DO(DeeFormat_PRINT(printer, arg, ", "));
+			DO(DeeFormat_Printf(printer, arg, "%#" PRFx8, self->co_code[i]));
+		}
+	}
+	if (self->co_codebytes != 0)
+		DO(DeeFormat_PRINT(printer, arg, " "));
+	DO(DeeFormat_Printf(printer, arg,
+	                    "}, module: %r",
+	                    self->co_module));
+
+	if (self->co_staticc > 0) {
+		uint16_t i;
+		DO(DeeFormat_PRINT(printer, arg, ", statics: { "));
+		for (i = 0; i < self->co_staticc; ++i) {
+			DREF DeeObject *ob;
+			if (i != 0)
+				DO(DeeFormat_PRINT(printer, arg, ", "));
+			atomic_rwlock_read(&self->co_static_lock);
+			ob = self->co_staticv[i];
+			Dee_Incref(ob);
+			atomic_rwlock_endread(&self->co_static_lock);
+			temp = DeeFormat_PrintObjectRepr(printer, arg, ob);
+			Dee_Decref_unlikely(ob);
+			if unlikely(temp < 0)
+				goto err;
+			result += temp;
+		}
+		DO(DeeFormat_PRINT(printer, arg, " }"));
+	}
+	if (self->co_exceptc > 0) {
+		uint16_t i;
+		DO(DeeFormat_PRINT(printer, arg, ", except: { "));
+		for (i = 0; i < self->co_exceptc; ++i) {
+			struct except_handler const *hand;
+			if (i != 0)
+				DO(DeeFormat_PRINT(printer, arg, ", "));
+			hand = &self->co_exceptv[i];
+			DO(DeeFormat_Printf(printer, arg,
+			                    "("
+			                    "%#" PRFxN(DEE_SIZEOF_CODE_ADDR_T) ", "
+			                    "%#" PRFxN(DEE_SIZEOF_CODE_ADDR_T) ", "
+			                    "%#" PRFxN(DEE_SIZEOF_CODE_ADDR_T) ", "
+			                    "%" PRFu16,
+			                    hand->eh_start,
+			                    hand->eh_end,
+			                    hand->eh_addr,
+			                    hand->eh_stack));
+			if (hand->eh_mask || hand->eh_flags) {
+				DO(DeeFormat_PRINT(printer, arg, ", "));
+				if (hand->eh_flags & ~(EXCEPTION_HANDLER_FFINALLY |
+				                       EXCEPTION_HANDLER_FINTERPT |
+				                       EXCEPTION_HANDLER_FHANDLED)) {
+					DO(DeeFormat_Printf(printer, arg, "%#" PRFx16, hand->eh_flags));
+				} else {
+					unsigned int flag_i;
+					bool is_first = true;
+					DO(DeeFormat_PRINT(printer, arg, "\""));
+					for (flag_i = 0; flag_i < COMPILER_LENOF(except_flags_db); ++flag_i) {
+						if (!(hand->eh_flags & except_flags_db[flag_i].ef_flag))
+							continue;
+						if (!is_first)
+							DO(DeeFormat_PRINT(printer, arg, ","));
+						DO(DeeFormat_PrintStr(printer, arg, except_flags_db[flag_i].ef_name));
+						is_first = false;
+					}
+					DO(DeeFormat_PRINT(printer, arg, "\""));
+				}
+				if (hand->eh_mask)
+					DO(DeeFormat_Printf(printer, arg, ", %r", hand->eh_mask));
+			}
+			DO(DeeFormat_PRINT(printer, arg, ")"));
+		}
+		DO(DeeFormat_PRINT(printer, arg, " }"));
+	}
+	if (self->co_localc > 0)
+		DO(DeeFormat_Printf(printer, arg, ", nlocal: %" PRFu16, self->co_localc));
+	{
+		uint16_t nstack;
+		nstack = (uint16_t)((self->co_framesize / sizeof(DREF DeeObject *)) - self->co_localc);
+		if (nstack > 0)
+			DO(DeeFormat_Printf(printer, arg, ", nstack: %" PRFu16, nstack));
+	}
+	if (self->co_refc > 0)
+		DO(DeeFormat_Printf(printer, arg, ", refc: %" PRFu16, self->co_refc));
+	if (self->co_argc_max > 0)
+		DO(DeeFormat_Printf(printer, arg, ", argc: %" PRFu16, self->co_argc_max));
+	if (self->co_keywords != NULL) {
+		uint16_t i;
+		DO(DeeFormat_PRINT(printer, arg, ", keywords: { "));
+		for (i = 0; i < self->co_argc_max; ++i) {
+			if (i != 0)
+				DO(DeeFormat_PRINT(printer, arg, ", "));
+			DO(DeeString_PrintUtf8((DeeObject *)self->co_keywords[i], printer, arg));
+		}
+		DO(DeeFormat_PRINT(printer, arg, " }"));
+	}
+	if (self->co_argc_min < self->co_argc_max) {
+		uint16_t i, defaultc = self->co_argc_max - self->co_argc_min;
+		DO(DeeFormat_PRINT(printer, arg, ", defaults: { "));
+		for (i = 0; i < defaultc; ++i) {
+			if (i != 0)
+				DO(DeeFormat_PRINT(printer, arg, ", "));
+			DO(DeeFormat_PrintObjectRepr(printer, arg, self->co_defaultv[i]));
+		}
+		DO(DeeFormat_PRINT(printer, arg, " }"));
+	}
+	if (self->co_flags != CODE_FASSEMBLY) {
+		DO(DeeFormat_PRINT(printer, arg, ", flags: "));
+		if (self->co_flags & ~(CODE_FYIELDING | CODE_FCOPYABLE | CODE_FASSEMBLY |
+		                       CODE_FVARARGS | CODE_FVARKWDS | CODE_FTHISCALL |
+		                       CODE_FHEAPFRAME | CODE_FCONSTRUCTOR)) {
+			DO(DeeFormat_Printf(printer, arg, "%#" PRFx16, self->co_flags));
+		} else {
+			unsigned int flag_i;
+			bool is_first = true;
+			DO(DeeFormat_PRINT(printer, arg, "\""));
+			for (flag_i = 0; flag_i < COMPILER_LENOF(code_flags_db); ++flag_i) {
+				if (!(self->co_flags & code_flags_db[flag_i].cf_flag))
+					continue;
+				if (!is_first)
+					DO(DeeFormat_PRINT(printer, arg, ","));
+				DO(DeeFormat_PrintStr(printer, arg, code_flags_db[flag_i].cf_name));
+				is_first = false;
+			}
+			DO(DeeFormat_PRINT(printer, arg, "\""));
+		}
+	}
+	if (self->co_ddi != &empty_ddi) {
+		DO(DeeFormat_Printf(printer, arg,
+		                    ", ddi: %r",
+		                    self->co_ddi));
+	}
+	DO(DeeFormat_PRINT(printer, arg, ")"));
+done:
+	return result;
+err:
+	return temp;
+#undef DO
+}
+
+
 PUBLIC DeeTypeObject DeeCode_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_Code",
@@ -1903,9 +2062,11 @@ PUBLIC DeeTypeObject DeeCode_Type = {
 		/* .tp_move_assign = */ NULL
 	},
 	/* .tp_cast = */ {
-		/* .tp_str  = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&code_str,
-		/* .tp_repr = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&code_str,
-		/* .tp_bool = */ NULL
+		/* .tp_str       = */ NULL,
+		/* .tp_repr      = */ NULL,
+		/* .tp_bool      = */ NULL,
+		/* .tp_print     = */ (dssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&code_print,
+		/* .tp_printrepr = */ (dssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&code_printrepr
 	},
 	/* .tp_call          = */ NULL,
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&code_visit,

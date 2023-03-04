@@ -525,7 +525,7 @@ struct Dee_code_object {
 #endif /* !__COMPILER_HAVE_TRANSPARENT_UNION */
 	;
 	DREF struct Dee_string_object
-	                                   *const *co_keywords; /* [1..1][const][0..co_argc_max][const] Argument keywords. */
+	                                   *const *co_keywords; /* [1..1][const][0..co_argc_max || NULL][const] Argument keywords (or NULL if not known). */
 	DREF DeeObject                     *const *co_defaultv; /* [0..1][const][0..(co_argc_max-co_argc_min)][owned] Vector of default argument values.
 	                                                         * NOTE: NULL entries refer to optional arguments, producing an error
 	                                                         *       when attempted to be loaded without a user override. */
