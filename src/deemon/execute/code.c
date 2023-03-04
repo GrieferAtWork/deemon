@@ -1346,7 +1346,7 @@ code_deepcopy(DeeCodeObject *__restrict self) {
 				goto err_r;
 		}
 	}
-#if 0 /* Default information wouldn't change... */
+#if 0 /* Debug information wouldn't change... */
 	if (DeeObject_InplaceDeepCopy((DeeObject **)&result->co_ddi))
 		goto err_r;
 #endif
@@ -1358,7 +1358,7 @@ code_deepcopy(DeeCodeObject *__restrict self) {
 		}
 	}
 #endif
-#if 0 /* Modules are singletons! - If they weren't we'd be corrupting their filesystem namespace... */
+#if 0 /* Modules are singletons! - If they weren't, we'd be corrupting their filesystem namespace... */
 	if (DeeObject_XInplaceDeepCopy((DeeObject **)&result->co_module))
 		goto err_r;
 #endif

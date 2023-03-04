@@ -712,6 +712,7 @@ err:
 	return -1;
 }
 
+#ifdef CONFIG_HAVE_SEQEACH_OPERATOR_REPR
 PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
 seo_printrepr(SeqEachOperator *__restrict self,
               dformatprinter printer, void *arg) {
@@ -725,6 +726,7 @@ seo_printrepr(SeqEachOperator *__restrict self,
 	                                   NULL, 0,
 	                                   each_suffix, each_suffix ? 5 : 0);
 }
+#endif /* CONFIG_HAVE_SEQEACH_OPERATOR_REPR */
 
 PRIVATE NONNULL((1)) void DCALL
 seo_fini(SeqEachOperator *__restrict self) {
@@ -1265,7 +1267,9 @@ INTERN DeeTypeObject SeqEachOperator_Type = {
 		/* .tp_repr      = */ NULL,
 		/* .tp_bool      = */ (int (DCALL *)(DeeObject *__restrict))&sew_bool,
 		/* .tp_print     = */ NULL,
+#ifdef CONFIG_HAVE_SEQEACH_OPERATOR_REPR
 		/* .tp_printrepr = */ (dssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&seo_printrepr,
+#endif /* CONFIG_HAVE_SEQEACH_OPERATOR_REPR */
 	},
 	/* .tp_call          = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&sew_call,
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&seo_visit,

@@ -97,12 +97,30 @@ typedef struct {
 #endif /* (!__OPTIMIZE_SIZE__ && !CONFIG_NO_SEQEACH_ATTRIBUTE_OPTIMIZATIONS) */
 #endif /* !CONFIG_HAVE_SEQEACH_ATTRIBUTE_OPTIMIZATIONS */
 
+
+/* Define to get dedicated `operator repr' for `Sequence.each[...]'
+ * This actually degrades usability, since it prevents default repr
+ * (which includes the effective value of all elements) for these
+ * wrappers (which is actually rather helpful to have):
+ * >> local s = { "foo", "bar", "foobar" };
+ * >> #ifdef CONFIG_HAVE_SEQEACH_OPERATOR_REPR
+ * >> print repr s.each.upper(); // { "foo", "bar", "foobar" }.each.upper()
+ * >> #else // CONFIG_HAVE_SEQEACH_OPERATOR_REPR
+ * >> print repr s.each.upper(); // { "FOO", "BAR", "FOOBAR" }
+ * >> #endif // !CONFIG_HAVE_SEQEACH_OPERATOR_REPR
+ */
+#undef CONFIG_HAVE_SEQEACH_OPERATOR_REPR
+#if 0
+#define CONFIG_HAVE_SEQEACH_OPERATOR_REPR
+#endif
+
+
 #ifdef CONFIG_HAVE_SEQEACH_ATTRIBUTE_OPTIMIZATIONS
 
 /* Special proxies for commonly used operators. */
 typedef struct {
 	SEQ_EACH_HEAD
-	DREF struct string_object *sg_attr;       /* [1..1][const] The name of the attribute to access. */
+	DREF struct string_object *sg_attr; /* [1..1][const] The name of the attribute to access. */
 } SeqEachGetAttr;
 
 typedef struct {

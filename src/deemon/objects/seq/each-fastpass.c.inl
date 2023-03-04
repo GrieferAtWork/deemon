@@ -381,6 +381,7 @@ F(visit)(STRUCT_TYPE *__restrict self, dvisit_t proc, void *arg) {
 #endif /* DEFINE_CALLATTR || DEFINE_CALLATTRKW */
 }
 
+#ifdef CONFIG_HAVE_SEQEACH_OPERATOR_REPR
 PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
 F(printrepr)(STRUCT_TYPE *__restrict self,
              dformatprinter printer, void *arg) {
@@ -433,6 +434,7 @@ F(printrepr)(STRUCT_TYPE *__restrict self,
 #error "Unsupported each-fastpass mode"
 #endif /* !... */
 }
+#endif /* CONFIG_HAVE_SEQEACH_OPERATOR_REPR */
 
 
 #ifdef DEFINE_GETATTR
@@ -684,7 +686,9 @@ INTERN DeeTypeObject TYPE_OBJECT = {
 		/* .tp_repr      = */ NULL,
 		/* .tp_bool      = */ (int (DCALL *)(DeeObject *__restrict))&sew_bool,
 		/* .tp_print     = */ NULL,
+#ifdef CONFIG_HAVE_SEQEACH_OPERATOR_REPR
 		/* .tp_printrepr = */ (dssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&F(printrepr),
+#endif /* CONFIG_HAVE_SEQEACH_OPERATOR_REPR */
 	},
 #ifdef DEFINE_GETATTR
 	/* .tp_call          = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&F(call),
