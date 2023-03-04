@@ -221,15 +221,18 @@ seqiterator_visit(SeqIterator *__restrict self, dvisit_t proc, void *arg) {
 	rwlock_endread(&self->si_lock);
 }
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-seqiterator_repr(SeqIterator *__restrict self) {
-	DREF DeeObject *result, *index_ob;
+PRIVATE WUNUSED NONNULL((1)) dssize_t DCALL
+seqiterator_printrepr(SeqIterator *__restrict self,
+                      dformatprinter printer, void *arg) {
+	dssize_t result;
+	DREF DeeObject *index_ob;
 	rwlock_read(&self->si_lock);
 	index_ob = self->si_index;
 	Dee_Incref(index_ob);
 	rwlock_endread(&self->si_lock);
-	result = DeeString_Newf("Iterator[%k/%k, %r]",
-	                        index_ob, self->si_size, self->si_seq);
+	result = DeeFormat_Printf(printer, arg,
+	                          "GenericIterator(%r, %r /* of %r */)",
+	                          self->si_seq, index_ob, self->si_size);
 	Dee_Decref(index_ob);
 	return result;
 }
@@ -326,7 +329,7 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 seqiterator_init(SeqIterator *__restrict self, size_t argc, DeeObject *const *argv) {
 	DeeTypeObject *tp_iter;
 	self->si_index = &DeeInt_Zero;
-	if (DeeArg_Unpack(argc, argv, "o|o:Sequence.Iterator", &self->si_seq, &self->si_index))
+	if (DeeArg_Unpack(argc, argv, "o|o:_GenericIterator", &self->si_seq, &self->si_index))
 		goto err;
 	if (DeeObject_AssertTypeExact(self->si_index, &DeeInt_Type))
 		goto err;
@@ -470,9 +473,11 @@ INTERN DeeTypeObject DeeGenericIterator_Type = {
 		/* .tp_move_assign = */ NULL
 	},
 	/* .tp_cast = */ {
-		/* .tp_str  = */ NULL,
-		/* .tp_repr = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&seqiterator_repr,
-		/* .tp_bool = */ NULL
+		/* .tp_str       = */ NULL,
+		/* .tp_repr      = */ NULL,
+		/* .tp_bool      = */ NULL,
+		/* .tp_print     = */ NULL,
+		/* .tp_printrepr = */ (dssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&seqiterator_printrepr
 	},
 	/* .tp_call          = */ NULL,
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&seqiterator_visit,
