@@ -125,7 +125,6 @@ proxy_get_frozen(SeqSimpleProxy *__restrict self) {
 		goto err_inner;
 	result->sp_seq = inner_frozen; /* Inherit reference */
 	DeeObject_Init(result, Dee_TYPE(self));
-done:
 	return result;
 err_inner:
 	Dee_Decref(inner_frozen);
