@@ -45,45 +45,45 @@ get_scope_lookupmode(DeeObject *__restrict value,
 PRIVATE struct keyword suffix_kwlist[] = { K(head), KEND };
 
 PRIVATE struct keyword lookupmode_kwlist[] = { K(lookupmode), KEND };
-#define DEFINE_SIMPLE_SUFFIX_PARSER_FUNCTION(name, func, IF_SUFFIX, is_suffix)  \
-	PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL                          \
-	parser_##name(DeeCompilerWrapperObject *self, size_t argc,                  \
-	              DeeObject *const *argv, DeeObject *kw) {                      \
-		DREF DeeObject *result = NULL;                                          \
-		DeeCompilerAstObject *head;                                             \
-		DREF struct ast *result_ast;                                            \
-		COMPILER_BEGIN(self->cw_compiler);                                      \
-		if (DeeArg_UnpackKw(argc, argv, kw, suffix_kwlist, "o:" #name, &head))  \
-			goto done;                                                          \
-		if (DeeObject_AssertTypeExact(head, &DeeCompilerAst_Type)) \
-			goto done;                                                          \
-		if unlikely(head->ci_compiler != self->cw_compiler) {                   \
-			err_invalid_ast_compiler(head);                                     \
-			goto done;                                                          \
-		}                                                                       \
-		if unlikely(head->ci_value->a_scope->s_base != current_basescope) {     \
-			err_invalid_ast_basescope(head, current_basescope);                 \
-			goto done;                                                          \
-		}                                                                       \
-		ast_incref(head->ci_value);                                             \
-		IF_SUFFIX(if (!(is_suffix)) {                                           \
-			result_ast = head->ci_value;                                        \
-		} else) {                                                               \
-			uint16_t old_exceptsz = DeeThread_Self()->t_exceptsz;               \
-			result_ast            = func(head->ci_value);                       \
-			if unlikely(!result_ast) {                                          \
-				if (old_exceptsz == DeeThread_Self()->t_exceptsz) {             \
-					result = Dee_None;                                          \
-					Dee_Incref(result);                                         \
-				}                                                               \
-				goto done;                                                      \
-			}                                                                   \
-		}                                                                       \
-		result = DeeCompiler_GetAst(result_ast);                                \
-		ast_decref_unlikely(result_ast);                                        \
-	done:                                                                       \
-		COMPILER_END();                                                         \
-		return result;                                                          \
+#define DEFINE_SIMPLE_SUFFIX_PARSER_FUNCTION(name, func, IF_SUFFIX, is_suffix) \
+	PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL                         \
+	parser_##name(DeeCompilerWrapperObject *self, size_t argc,                 \
+	              DeeObject *const *argv, DeeObject *kw) {                     \
+		DREF DeeObject *result = NULL;                                         \
+		DeeCompilerAstObject *head;                                            \
+		DREF struct ast *result_ast;                                           \
+		COMPILER_BEGIN(self->cw_compiler);                                     \
+		if (DeeArg_UnpackKw(argc, argv, kw, suffix_kwlist, "o:" #name, &head)) \
+			goto done;                                                         \
+		if (DeeObject_AssertTypeExact(head, &DeeCompilerAst_Type))             \
+			goto done;                                                         \
+		if unlikely(head->ci_compiler != self->cw_compiler) {                  \
+			err_invalid_ast_compiler(head);                                    \
+			goto done;                                                         \
+		}                                                                      \
+		if unlikely(head->ci_value->a_scope->s_base != current_basescope) {    \
+			err_invalid_ast_basescope(head, current_basescope);                \
+			goto done;                                                         \
+		}                                                                      \
+		ast_incref(head->ci_value);                                            \
+		IF_SUFFIX(if (!(is_suffix)) {                                          \
+			result_ast = head->ci_value;                                       \
+		} else) {                                                              \
+			uint16_t old_exceptsz = DeeThread_Self()->t_exceptsz;              \
+			result_ast            = func(head->ci_value);                      \
+			if unlikely(!result_ast) {                                         \
+				if (old_exceptsz == DeeThread_Self()->t_exceptsz) {            \
+					result = Dee_None;                                         \
+					Dee_Incref(result);                                        \
+				}                                                              \
+				goto done;                                                     \
+			}                                                                  \
+		}                                                                      \
+		result = DeeCompiler_GetAst(result_ast);                               \
+		ast_decref_unlikely(result_ast);                                       \
+	done:                                                                      \
+		COMPILER_END();                                                        \
+		return result;                                                         \
 	}
 #define DEFINE_SIMPLE_LOOKUPMODE_PARSER_FUNCTION(name, func)                                  \
 	PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL                                        \

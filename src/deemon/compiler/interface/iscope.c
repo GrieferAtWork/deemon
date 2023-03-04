@@ -186,17 +186,16 @@ PRIVATE struct type_getset tpconst scope_getsets[] = {
 	TYPE_GETSET_END
 };
 
-INTERN WUNUSED NONNULL((1, 2)) int DCALL
+INTERN WUNUSED NONNULL((1, 2)) dssize_t DCALL
 print_scope_repr(DeeScopeObject *__restrict self,
-                 struct unicode_printer *__restrict printer) {
-	dssize_t error;
-	error = unicode_printer_printf(printer, "<scope at %p>", self);
-	return unlikely(error < 0) ? -1 : 0;
+                 dformatprinter printer, void *arg) {
+	return DeeFormat_Printf(printer, arg, "<scope at %p>", self);
 }
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-scope_str(DeeCompilerScopeObject *__restrict self) {
-	return DeeString_Newf("<scope at %p>", self->ci_value);
+PRIVATE WUNUSED NONNULL((1)) dssize_t DCALL
+scope_print(DeeCompilerScopeObject *__restrict self,
+            dformatprinter printer, void *arg) {
+	return print_scope_repr(self->ci_value, printer, arg);
 }
 
 
@@ -457,9 +456,11 @@ INTERN DeeTypeObject DeeCompilerScope_Type = {
 		/* .tp_move_assign = */ NULL
 	},
 	/* .tp_cast = */ {
-		/* .tp_str  = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&scope_str,
-		/* .tp_repr = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&scope_str,
-		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&scope_bool
+		/* .tp_str       = */ NULL,
+		/* .tp_repr      = */ NULL,
+		/* .tp_bool      = */ (int (DCALL *)(DeeObject *__restrict))&scope_bool,
+		/* .tp_print     = */ (dssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&scope_print,
+		/* .tp_printrepr = */ (dssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&scope_print
 	},
 	/* .tp_call          = */ NULL,
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&DeeCompilerObjItem_Visit,

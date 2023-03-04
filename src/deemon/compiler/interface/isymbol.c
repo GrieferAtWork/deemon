@@ -29,6 +29,7 @@
 #include <deemon/compiler/interface.h>
 #include <deemon/compiler/symbol.h>
 #include <deemon/error.h>
+#include <deemon/format.h>
 #include <deemon/none.h>
 #include <deemon/object.h>
 
@@ -193,6 +194,38 @@ symbol_name(DeeCompilerSymbolObject *__restrict self) {
 		result = DeeString_NewUtf8(sym->s_name->k_name,
 		                           sym->s_name->k_size,
 		                           STRING_ERROR_FIGNORE);
+	}
+	COMPILER_END();
+	return result;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
+symbol_print(DeeCompilerSymbolObject *__restrict self,
+             dformatprinter printer, void *arg) {
+	dssize_t result = -1;
+	struct symbol *sym;
+	COMPILER_BEGIN(self->ci_compiler);
+	sym = DeeCompilerItem_VALUE(self, struct symbol);
+	if likely(sym) {
+		result = DeeFormat_Print(printer, arg,
+		                         sym->s_name->k_name,
+		                         sym->s_name->k_size);
+	}
+	COMPILER_END();
+	return result;
+}
+
+PRIVATE WUNUSED NONNULL((1)) dssize_t DCALL
+symbol_printrepr(DeeCompilerSymbolObject *__restrict self,
+                 dformatprinter printer, void *arg) {
+	dssize_t result = -1;
+	struct symbol *sym;
+	COMPILER_BEGIN(self->ci_compiler);
+	sym = DeeCompilerItem_VALUE(self, struct symbol);
+	if likely(sym) {
+		result = DeeFormat_Printf(printer, arg, "<symbol %$q>",
+		                          sym->s_name->k_size,
+		                          sym->s_name->k_name);
 	}
 	COMPILER_END();
 	return result;
@@ -383,21 +416,6 @@ PRIVATE struct type_method tpconst symbol_methods[] = {
 
 
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-symbol_repr(DeeCompilerSymbolObject *__restrict self) {
-	DREF DeeObject *result = NULL;
-	struct symbol *sym;
-	COMPILER_BEGIN(self->ci_compiler);
-	sym = DeeCompilerItem_VALUE(self, struct symbol);
-	if likely(sym) {
-		result = DeeString_Newf("<symbol %$q>",
-		                        sym->s_name->k_size,
-		                        sym->s_name->k_name);
-	}
-	COMPILER_END();
-	return result;
-}
-
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 symbol_bool(DeeCompilerSymbolObject *__restrict self) {
 	int result = -1;
@@ -445,9 +463,11 @@ INTERN DeeTypeObject DeeCompilerSymbol_Type = {
 		/* .tp_move_assign = */ NULL
 	},
 	/* .tp_cast = */ {
-		/* .tp_str  = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&symbol_name,
-		/* .tp_repr = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&symbol_repr,
-		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&symbol_bool
+		/* .tp_str       = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&symbol_name,
+		/* .tp_repr      = */ NULL,
+		/* .tp_bool      = */ (int (DCALL *)(DeeObject *__restrict))&symbol_bool,
+		/* .tp_print     = */ (dssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&symbol_print,
+		/* .tp_printrepr = */ (dssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&symbol_printrepr
 	},
 	/* .tp_call          = */ NULL,
 	/* .tp_visit         = */ NULL,

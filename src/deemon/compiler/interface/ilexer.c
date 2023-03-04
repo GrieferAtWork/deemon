@@ -377,6 +377,19 @@ keyword_str(DeeCompilerItemObject *__restrict self) {
 	return result;
 }
 
+PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
+keyword_print(DeeCompilerItemObject *__restrict self,
+              dformatprinter printer, void *arg) {
+	dssize_t result = -1;
+	struct TPPKeyword *item;
+	COMPILER_BEGIN(self->ci_compiler);
+	item = DeeCompilerItem_VALUE(self, struct TPPKeyword);
+	if likely(item)
+		result = DeeFormat_Print(printer, arg, item->k_name, item->k_size);
+	COMPILER_END();
+	return result;
+}
+
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 keyword_hash(DeeCompilerItemObject *__restrict self) {
 	DREF DeeObject *result = NULL;
@@ -474,7 +487,7 @@ keyword_id(DeeCompilerItemObject *__restrict self) {
 }
 
 #define DEFINE_KEYWORD_FLAG_FUNCTIONS(name, flag)                                                                     \
-	PRIVATE WUNUSED DREF DeeObject *DCALL                                                                                     \
+	PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL                                                                \
 	keyword_get_##name(DeeCompilerItemObject *__restrict self) {                                                      \
 		DREF DeeObject *result = NULL;                                                                                \
 		struct TPPKeyword *item;                                                                                      \
@@ -488,7 +501,7 @@ keyword_id(DeeCompilerItemObject *__restrict self) {
 		COMPILER_END();                                                                                               \
 		return result;                                                                                                \
 	}                                                                                                                 \
-	PRIVATE int DCALL                                                                                                 \
+	PRIVATE WUNUSED NONNULL((1)) int DCALL                                                                            \
 	keyword_del_##name(DeeCompilerItemObject *__restrict self) {                                                      \
 		int result = -1;                                                                                              \
 		struct TPPKeyword *item;                                                                                      \
@@ -508,7 +521,7 @@ keyword_id(DeeCompilerItemObject *__restrict self) {
 		COMPILER_END();                                                                                               \
 		return result;                                                                                                \
 	}                                                                                                                 \
-	PRIVATE int DCALL                                                                                                 \
+	PRIVATE WUNUSED NONNULL((1)) int DCALL                                                                            \
 	keyword_set_##name(DeeCompilerItemObject *__restrict self,                                                        \
 	                   DeeObject *__restrict value) {                                                                 \
 		int newval, result = -1;                                                                                      \
@@ -803,9 +816,10 @@ INTERN DeeTypeObject DeeCompilerKeyword_Type = {
 		/* .tp_move_assign = */ NULL
 	},
 	/* .tp_cast = */ {
-		/* .tp_str  = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&keyword_str,
-		/* .tp_repr = */ NULL,
-		/* .tp_bool = */ NULL
+		/* .tp_str   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&keyword_str,
+		/* .tp_repr  = */ NULL,
+		/* .tp_bool  = */ NULL,
+		/* .tp_print = */ (dssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&keyword_print
 	},
 	/* .tp_call          = */ NULL,
 	/* .tp_visit         = */ NULL,

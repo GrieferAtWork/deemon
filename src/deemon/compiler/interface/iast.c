@@ -2926,25 +2926,30 @@ ast_setactionc(Ast *__restrict self,
 }
 
 
-#define PRINT(str)    print(str, COMPILER_STRLEN(str))
+#define DO(x)                         \
+	do {                              \
+		if unlikely((temp = (x)) < 0) \
+			goto err;                 \
+		result += temp;               \
+	}	__WHILE0
+#define print(p, s)   DO(DeeFormat_Print(printer, arg, p, s))
+#define printf(...)   DO(DeeFormat_Printf(printer, arg, __VA_ARGS__))
+#define PRINT(str)    DO(DeeFormat_PRINT(printer, arg, str))
+#define PRINTAST(obj) DO(print_ast_repr(obj, printer, arg))
+
 #define PRINT_TRUE()  print(STR_true, 4)
 #define PRINT_FALSE() print(STR_false, 5)
 #define PRINT_NONE()  print(STR_none, 4)
 
-#define DO(x)                \
-	do {                     \
-		if unlikely((x) < 0) \
-			goto err;        \
-	}	__WHILE0
-#define print(p, s) DO((*printer)(arg, p, s))
-#define printf(...) DO(DeeFormat_Printf(printer, arg, __VA_ARGS__))
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((2, 3, 6, 7)) dssize_t DCALL
 print_enter_scope(DeeScopeObject *caller_scope,
                   DeeScopeObject *__restrict child_scope,
                   dformatprinter printer, void *arg,
-                  bool is_expression, size_t *__restrict pindent,
+                  bool is_expression,
+                  size_t *__restrict pindent,
                   bool *__restrict pis_scope) {
+	dssize_t temp, result = 0;
 	if (child_scope == caller_scope)
 		return 0;
 	if (is_expression) {
@@ -3027,15 +3032,16 @@ print_symbol_name:
 			}
 		}
 	}
-	return 0;
+	return result;
 err:
-	return -1;
+	return temp;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) dssize_t DCALL
 print_leave_scope(dformatprinter printer, void *arg,
                   bool is_expression, bool need_semicolon,
                   size_t indent, bool is_scope) {
+	dssize_t temp, result = 0;
 	if (is_scope) {
 		if (need_semicolon) {
 			PRINT(";\n");
@@ -3049,10 +3055,9 @@ print_leave_scope(dformatprinter printer, void *arg,
 	} else if (!is_expression && need_semicolon) {
 		PRINT(";");
 	}
-
-	return 0;
+	return result;
 err:
-	return -1;
+	return temp;
 }
 
 
@@ -3070,15 +3075,16 @@ INTDEF WUNUSED NONNULL((1)) bool DCALL
 DeeString_IsSymbol(DeeStringObject *__restrict self,
                    size_t start_index,
                    size_t end_index);
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
 print_ast_code(struct ast *__restrict self,
                dformatprinter printer, void *arg, bool is_expression,
                DeeScopeObject *caller_scope, size_t indent);
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2, 3)) dssize_t DCALL
 print_symbol(struct symbol *__restrict sym,
              DeeScopeObject *__restrict ref_scope,
              dformatprinter printer, void *arg) {
+	dssize_t temp, result = 0;
 	if (sym->s_name == &TPPKeyword_Empty) {
 		if (sym->s_type == SYMBOL_TYPE_EXTERN) {
 			if (sym->s_extern.e_module == &deemon_module &&
@@ -3111,23 +3117,24 @@ print_symbol(struct symbol *__restrict sym,
 		print(sym->s_name->k_name, sym->s_name->k_size);
 	}
 done:
-	return 0;
+	return result;
 err:
-	return -1;
+	return temp;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
 print_code_tags(DeeBaseScopeObject *__restrict function_scope,
                 dformatprinter printer, void *arg) {
+	dssize_t temp, result = 0;
 	if (function_scope->bs_flags & CODE_FCOPYABLE)
 		PRINT("@copyable ");
 	if (function_scope->bs_flags & CODE_FTHISCALL)
 		PRINT("@thiscall ");
 	if (function_scope->bs_flags & CODE_FASSEMBLY)
 		PRINT("@assembly ");
-	return 0;
+	return result;
 err:
-	return -1;
+	return temp;
 }
 
 PRIVATE WUNUSED NONNULL((1)) bool DCALL
@@ -3138,10 +3145,11 @@ is_instance_method(DeeBaseScopeObject *__restrict self) {
 	return true;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
 print_function_atargs(struct ast *__restrict self,
                       dformatprinter printer, void *arg,
                       size_t indent, bool print_tags) {
+	dssize_t temp, result = 0;
 	DeeBaseScopeObject *function_scope;
 	size_t i;
 	function_scope = self->a_function.f_scope;
@@ -3170,16 +3178,17 @@ print_function_atargs(struct ast *__restrict self,
 	}
 	PRINT(") ");
 	DO(print_ast_code(self->a_function.f_code, printer, arg, false, self->a_scope, indent));
-	return 0;
+	return result;
 err:
-	return -1;
+	return temp;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
 print_asm_operator(struct asm_operand *__restrict operand,
                    dformatprinter printer, void *arg,
                    DeeScopeObject *caller_scope,
                    size_t indent) {
+	dssize_t temp, result = 0;
 #ifndef CONFIG_LANGUAGE_NO_ASM
 	if (operand->ao_name)
 		printf("[%$s] ", operand->ao_name->k_size, operand->ao_name->k_name);
@@ -3190,14 +3199,15 @@ print_asm_operator(struct asm_operand *__restrict operand,
 	       operand->ao_type->s_text);
 	DO(print_ast_code(operand->ao_expr, printer, arg, true, caller_scope, indent));
 	PRINT(")");
-	return 0;
+	return result;
 err:
-	return -1;
+	return temp;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
 print_asm_label_operator(struct asm_operand *__restrict operand,
                          dformatprinter printer, void *arg) {
+	dssize_t temp, result = 0;
 #ifndef CONFIG_LANGUAGE_NO_ASM
 	if (operand->ao_name)
 		printf("[%$s] ", operand->ao_name->k_size, operand->ao_name->k_name);
@@ -3205,12 +3215,12 @@ print_asm_label_operator(struct asm_operand *__restrict operand,
 	ASSERT(!operand->ao_type);
 	print(operand->ao_label->tl_name->k_name,
 	      operand->ao_label->tl_name->k_size);
-	return 0;
+	return result;
 err:
-	return -1;
+	return temp;
 }
 
-PRIVATE struct class_member *DCALL
+PRIVATE WUNUSED NONNULL((1)) struct class_member *DCALL
 find_class_member(struct ast *__restrict self, uint16_t index) {
 	size_t i;
 	for (i = 0; i < self->a_class.c_memberc; ++i) {
@@ -3224,10 +3234,11 @@ find_class_member(struct ast *__restrict self, uint16_t index) {
 PRIVATE char const property_names[3][4] = { "get", "del", "set" };
 
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
 print_ast_code(struct ast *__restrict self,
                dformatprinter printer, void *arg, bool is_expression,
                DeeScopeObject *caller_scope, size_t indent) {
+	dssize_t temp, result = 0;
 	bool need_semicolon = true;
 	ENTER_SCOPE(is_scope, caller_scope, self->a_scope, is_expression);
 	__IF0 {
@@ -4597,64 +4608,38 @@ class_member_in_class:
 	}
 done:
 	LEAVE_SCOPE(is_scope, is_expression, need_semicolon);
-	return 0;
+	return result;
 err:
-	return -1;
+	return temp;
 }
-
-#undef printf
-#undef PRINT
-#undef print
-#undef DO
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-ast_str(DeeCompilerAstObject *__restrict self) {
-	struct unicode_printer printer = UNICODE_PRINTER_INIT;
-	COMPILER_BEGIN(self->ci_compiler);
-	if unlikely(print_ast_code(self->ci_value,
-	                           &unicode_printer_print,
-	                           &printer, false, NULL, 0))
-		goto err;
-	COMPILER_END();
-	return unicode_printer_pack(&printer);
-err:
-	COMPILER_END();
-	unicode_printer_fini(&printer);
-	return NULL;
-}
-
-
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL
-print_scope_repr(DeeScopeObject *__restrict self,
-                 struct unicode_printer *__restrict printer);
 
 PRIVATE dssize_t DCALL
 print_operator_name(uint16_t opid,
-                    struct unicode_printer *__restrict printer) {
+                    dformatprinter printer, void *arg) {
 	struct opinfo const *info;
 	switch (opid) {
 
 	case AST_OPERATOR_POS_OR_ADD:
-		return unicode_printer_print8(printer, (uint8_t *)"\"+\"", 3);
+		return DeeFormat_PRINT(printer, arg, "\"+\"");
 
 	case AST_OPERATOR_NEG_OR_SUB:
-		return unicode_printer_print8(printer, (uint8_t *)"\"-\"", 3);
+		return DeeFormat_PRINT(printer, arg, "\"-\"");
 
 	case AST_OPERATOR_GETITEM_OR_SETITEM:
-		return unicode_printer_print8(printer, (uint8_t *)"\"[]\"", 4);
+		return DeeFormat_PRINT(printer, arg, "\"[]\"");
 
 	case AST_OPERATOR_GETRANGE_OR_SETRANGE:
-		return unicode_printer_print8(printer, (uint8_t *)"\"[:]\"", 5);
+		return DeeFormat_PRINT(printer, arg, "\"[:]\"");
 
 	case AST_OPERATOR_GETATTR_OR_SETATTR:
-		return unicode_printer_print8(printer, (uint8_t *)"\".\"", 3);
+		return DeeFormat_PRINT(printer, arg, "\".\"");
 
 	default: break;
 	}
 	info = Dee_OperatorInfo(NULL, opid);
 	if unlikely(!info)
-		return unicode_printer_printf(printer, "%" PRFu16, opid);
-	return unicode_printer_printf(printer, "%q", info->oi_sname);
+		return DeeFormat_Printf(printer, arg, "%" PRFu16, opid);
+	return DeeFormat_Printf(printer, arg, "%q", info->oi_sname);
 }
 
 
@@ -4682,20 +4667,15 @@ PRIVATE char const action_names[][10] = {
 	/* [AST_FACTION_ASSERT_M & AST_FACTION_KINDMASK] = */ "assert",
 };
 
+INTDEF WUNUSED NONNULL((1, 2)) dssize_t DCALL
+print_scope_repr(DeeScopeObject *__restrict self,
+                 dformatprinter printer, void *arg);
 
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+
+PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
 print_ast_repr(struct ast *__restrict self,
-               struct unicode_printer *__restrict printer) {
-#define DO(x)                \
-	do {                     \
-		if unlikely((x) < 0) \
-			goto err;        \
-	}	__WHILE0
-#define PUTC(c)       DO(unicode_printer_putascii(printer, c))
-#define PRINT(str)    DO(UNICODE_PRINTER_PRINT(printer, str))
-#define PRINTAST(ast) DO(print_ast_repr(ast, printer))
-#define print(p, s)   DO(unicode_printer_print(printer, p, s))
-#define printf(...)   DO(unicode_printer_printf(printer, __VA_ARGS__))
+               dformatprinter printer, void *arg) {
+	dssize_t temp, result = 0;
 	switch (self->a_type) {
 
 	case AST_CONSTEXPR:
@@ -4788,7 +4768,7 @@ print_single_expr:
 			}
 			if (handler->ce_flags & EXCEPTION_HANDLER_FINTERPT) {
 				if (!first_flag)
-					PUTC(',');
+					PRINT(",");
 				PRINT("interrupt");
 			}
 			PRINT("\", ");
@@ -4801,7 +4781,7 @@ print_single_expr:
 			PRINTAST(handler->ce_code);
 			PRINT(")");
 		}
-		PUTC('}');
+		PRINT("}");
 	}	break;
 
 	case AST_LOOP: {
@@ -4814,13 +4794,13 @@ print_single_expr:
 		}
 		if (self->a_flag & AST_FLOOP_POSTCOND) {
 			if (!first_flag)
-				PUTC(',');
+				PRINT(",");
 			PRINT("postcond");
 			first_flag = false;
 		}
 		if (self->a_flag & AST_FLOOP_UNLIKELY) {
 			if (!first_flag)
-				PUTC(',');
+				PRINT(",");
 			PRINT("unlikely");
 		}
 		PRINT("\", ");
@@ -4892,17 +4872,17 @@ print_single_expr:
 		}
 		if (self->a_flag & AST_FCOND_LIKELY) {
 			if (first_flag)
-				PUTC(',');
+				PRINT(",");
 			PRINT("likely");
 			first_flag = false;
 		}
 		if (self->a_flag & AST_FCOND_UNLIKELY) {
 			if (first_flag)
-				PUTC(',');
+				PRINT(",");
 			PRINT("unlikely");
 			first_flag = false;
 		}
-		PUTC('\"');
+		PRINT("\"");
 	}	break;
 
 	case AST_BOOL:
@@ -4926,7 +4906,7 @@ print_single_expr:
 
 	case AST_OPERATOR_FUNC:
 		PRINT("makeoperatorfunc(name: ");
-		DO(print_operator_name(self->a_flag, printer));
+		DO(print_operator_name(self->a_flag, printer, arg));
 		PRINT(", binding: ");
 		if (self->a_operator_func.of_binding) {
 			PRINTAST(self->a_operator_func.of_binding);
@@ -4938,7 +4918,7 @@ print_single_expr:
 	case AST_OPERATOR: {
 		bool first_flag;
 		PRINT("makeoperator(name: ");
-		DO(print_operator_name(self->a_flag, printer));
+		DO(print_operator_name(self->a_flag, printer, arg));
 		PRINT(", a: ");
 		if (self->a_operator.o_op0) {
 			PRINTAST(self->a_operator.o_op0);
@@ -4971,23 +4951,23 @@ print_single_expr:
 		}
 		if (self->a_operator.o_exflag & AST_OPERATOR_FVARARGS) {
 			if (!first_flag)
-				PUTC(',');
+				PRINT(",");
 			PRINT("varargs");
 			first_flag = false;
 		}
 		if (self->a_operator.o_exflag & AST_OPERATOR_FMAYBEPFX) {
 			if (!first_flag)
-				PUTC(',');
+				PRINT(",");
 			PRINT("maybeprefix");
 			first_flag = false;
 		}
 		if (self->a_operator.o_exflag & AST_OPERATOR_FDONTOPT) {
 			if (!first_flag)
-				PUTC(',');
+				PRINT(",");
 			PRINT("dontoptimize");
 			first_flag = false;
 		}
-		PUTC('\"');
+		PRINT("\"");
 	}	break;
 
 	case AST_ACTION:
@@ -5034,7 +5014,7 @@ print_single_expr:
 		break;
 	}
 	PRINT(", scope: ");
-	DO(print_scope_repr(self->a_scope, printer));
+	DO(print_scope_repr(self->a_scope, printer, arg));
 	if (self->a_ddi.l_file) {
 		PRINT(", loc: (");
 		printf("<file %$q>, %d, %d",
@@ -5044,30 +5024,37 @@ print_single_expr:
 		       self->a_ddi.l_col);
 		PRINT(")");
 	}
-	PUTC(')');
-	return 0;
+	PRINT(")");
+	return result;
 err:
-	return -1;
+	return temp;
+}
+
+
 #undef printf
 #undef PRINTAST
 #undef PRINT
 #undef print
-#undef PUTC
 #undef DO
+
+PRIVATE WUNUSED NONNULL((1)) dssize_t DCALL
+ast_print(DeeCompilerAstObject *__restrict self,
+          dformatprinter printer, void *arg) {
+	dssize_t result;
+	COMPILER_BEGIN(self->ci_compiler);
+	result = print_ast_code(self->ci_value, printer, arg, false, NULL, 0);
+	COMPILER_END();
+	return result;
 }
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-ast_repr(DeeCompilerAstObject *__restrict self) {
-	struct unicode_printer printer = UNICODE_PRINTER_INIT;
+PRIVATE WUNUSED NONNULL((1)) dssize_t DCALL
+ast_printrepr(DeeCompilerAstObject *__restrict self,
+			  dformatprinter printer, void *arg) {
+	dssize_t result;
 	COMPILER_BEGIN(self->ci_compiler);
-	if unlikely(print_ast_repr(self->ci_value, &printer))
-		goto err;
+	result = print_ast_repr(self->ci_value, printer, arg);
 	COMPILER_END();
-	return unicode_printer_pack(&printer);
-err:
-	COMPILER_END();
-	unicode_printer_fini(&printer);
-	return NULL;
+	return result;
 }
 
 
@@ -5455,9 +5442,11 @@ INTERN DeeTypeObject DeeCompilerAst_Type = {
 		/* .tp_move_assign = */ NULL
 	},
 	/* .tp_cast = */ {
-		/* .tp_str  = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ast_str,
-		/* .tp_repr = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ast_repr,
-		/* .tp_bool = */ NULL
+		/* .tp_str       = */ NULL,
+		/* .tp_repr      = */ NULL,
+		/* .tp_bool      = */ NULL,
+		/* .tp_print     = */ (dssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&ast_print,
+		/* .tp_printrepr = */ (dssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&ast_printrepr
 	},
 	/* .tp_call          = */ NULL,
 	/* .tp_visit         = */ NULL,
