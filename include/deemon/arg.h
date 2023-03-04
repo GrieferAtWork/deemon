@@ -155,7 +155,9 @@ DDATDEF DeeTypeObject DeeKwds_Type;
 
 
 #ifdef CONFIG_BUILDING_DEEMON
-INTDEF WUNUSED DREF DeeObject *DCALL DeeKwds_NewWithHint(size_t num_items);
+INTDEF WUNUSED DREF DeeObject *DCALL
+DeeKwds_NewWithHint(size_t num_items);
+
 /* Append a new entry for `name'.
  * NOTE: The keywords argument index is set to the old number of
  *       keywords that had already been defined previously. */
@@ -163,6 +165,11 @@ INTDEF WUNUSED NONNULL((1, 2)) int
 (DCALL DeeKwds_Append)(DREF DeeObject **__restrict pself,
                        char const *__restrict name,
                        size_t name_len, Dee_hash_t hash);
+
+/* Return the keyword-entry associated with `keyword_index'
+ * The caller must ensure that `keyword_index < DeeKwds_SIZE(self)' */
+INTDEF ATTR_RETNONNULL WUNUSED NONNULL((1, 2)) struct dee_kwds_entry *DCALL
+DeeKwds_GetByIndex(DeeObject *__restrict self, size_t keyword_index);
 
 #ifndef __INTELLISENSE__
 #ifndef __NO_builtin_expect

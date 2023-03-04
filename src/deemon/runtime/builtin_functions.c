@@ -360,116 +360,19 @@ err:
 
 INTERN DEFINE_KWCMETHOD(builtin_exec, &f_builtin_exec);
 
-PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-get_call_repr(DeeObject *func, DeeObject *args) {
-	DREF DeeObject *args_iter, *arg;
-	struct unicode_printer printer;
-	bool is_first;
-	unicode_printer_init(&printer);
-	if unlikely(unicode_printer_printobjectrepr(&printer, func) < 0)
-		goto err_printer;
-	if unlikely(unicode_printer_putascii(&printer, '(') != 0)
-		goto err_printer;
-	args_iter = DeeObject_IterSelf(args);
-	if unlikely(!args_iter)
-		goto err_printer;
-	is_first = true;
-	while (ITER_ISOK(arg = DeeObject_IterNext(args_iter))) {
-		if (!is_first) {
-			if unlikely(UNICODE_PRINTER_PRINT(&printer, ", ") < 0)
-				goto err_printer_args_iter_arg;
-		}
-		if unlikely(unicode_printer_printobjectrepr(&printer, arg) < 0)
-			goto err_printer_args_iter_arg;
-		Dee_Decref(arg);
-		is_first = false;
-	}
-	if unlikely(!arg)
-		goto err_printer_args_iter;
-	Dee_Decref(args_iter);
-	if unlikely(unicode_printer_putascii(&printer, ')') != 0)
-		goto err_printer;
-	return unicode_printer_pack(&printer);
-err_printer_args_iter_arg:
-	Dee_Decref(arg);
-err_printer_args_iter:
-	Dee_Decref_likely(args_iter);
-err_printer:
-	unicode_printer_fini(&printer);
-	return NULL;
-}
-
-
 PRIVATE WUNUSED DREF DeeObject *DCALL
 get_expression_repr(uint16_t operator_name,
                     size_t argc, DeeObject *const *argv) {
-	struct opinfo const *info;
-	struct unicode_printer printer;
-	size_t i;
-	info = Dee_OperatorInfo(argc ? Dee_TYPE(Dee_TYPE(argv[0])) : NULL,
-	                        operator_name);
-	if (!info)
-		goto fallback;
-	if (argc == 1) {
-		/* Generic unary operator. */
-		return DeeString_Newf("%s%r", info->oi_uname, argv[0]);
-	}
-	if (argc == 2) {
-		if (operator_name == OPERATOR_GETATTR) {
-			if (DeeString_Check(argv[1]))
-				return DeeString_Newf("%r.%k", argv[0], argv[1]);
-		} else if (operator_name == OPERATOR_DELATTR) {
-			if (DeeString_Check(argv[1]))
-				return DeeString_Newf("del %r.%k", argv[0], argv[1]);
-		} else if (operator_name == OPERATOR_GETITEM) {
-			return DeeString_Newf("%r[%r]", argv[0], argv[1]);
-		} else if (operator_name == OPERATOR_DELITEM) {
-			return DeeString_Newf("del %r[%r]", argv[0], argv[1]);
-		} else if (operator_name == OPERATOR_CONTAINS) {
-			return DeeString_Newf("%r in %r", argv[1], argv[0]);
-		} else if (operator_name == OPERATOR_CALL) {
-			return get_call_repr(argv[0], argv[1]);
-		} else {
-			/* Generic binary operator. */
-			return DeeString_Newf("%r %s %r", argv[0], info->oi_uname, argv[1]);
-		}
-	}
-	if (argc == 3) {
-		if (operator_name == OPERATOR_SETATTR) {
-			if (DeeString_Check(argv[1]))
-				return DeeString_Newf("%r.%k = %r", argv[0], argv[1], argv[2]);
-		} else if (operator_name == OPERATOR_SETITEM) {
-			return DeeString_Newf("%r[%r] = %r", argv[0], argv[1], argv[2]);
-		} else if (operator_name == OPERATOR_GETRANGE) {
-			return DeeString_Newf("%r[%r:%r]", argv[0], argv[1], argv[2]);
-		} else if (operator_name == OPERATOR_DELRANGE) {
-			return DeeString_Newf("del %r[%r:%r]", argv[0], argv[1], argv[2]);
-		}
-	}
-fallback:
-	/* Fallback: Print a generic operator representation. */
-	unicode_printer_init(&printer);
-	if (argc) {
-		if (unicode_printer_printf(&printer, "%r.", argv[0]) < 0)
-			goto err_printer;
-	}
-	if (UNICODE_PRINTER_PRINT(&printer, "operator ") < 0)
-		goto err_printer;
-	if (info) {
-		if (unicode_printer_printf(&printer, "__%s__ (", info->oi_sname) < 0)
-			goto err_printer;
-	} else {
-		if (unicode_printer_printf(&printer, "%" PRFu16 " (", operator_name) < 0)
-			goto err_printer;
-	}
-	for (i = 1; i < argc; ++i) {
-		if (unicode_printer_printf(&printer, "%s%r", i > 1 ? ", " : "", argv[i]) < 0)
-			goto err_printer;
-	}
-	if (UNICODE_PRINTER_PRINT(&printer, ")") < 0)
-		goto err_printer;
+	Dee_ssize_t error;
+	struct unicode_printer printer = UNICODE_PRINTER_INIT;
+	error = DeeFormat_PrintOperatorRepr(&unicode_printer_print, &printer,
+	                                    argv[0], operator_name,
+	                                    argc - 1, argv + 1,
+	                                    NULL, 0, NULL, 0);
+	if unlikely(error < 0)
+		goto err;
 	return unicode_printer_pack(&printer);
-err_printer:
+err:
 	unicode_printer_fini(&printer);
 	return NULL;
 }
@@ -482,17 +385,19 @@ f_rt_assert(size_t argc, DeeObject *const *argv) {
 	DeeObject *assertion_error;
 	int operator_name = -1;
 	if (argc) {
-		message = *argv;
+		message = argv[0];
 		if (DeeNone_Check(message))
 			message = Dee_EmptyString;
 		if (DeeObject_AssertTypeExact(message, &DeeString_Type))
 			goto err;
-		++argv, --argc;
+		++argv;
+		--argc;
 	}
 	if (argc) {
-		if (DeeObject_AsInt(*argv, &operator_name))
+		if (DeeObject_AsInt(argv[0], &operator_name))
 			goto err;
-		++argv, --argc;
+		++argv;
+		--argc;
 	}
 	if (operator_name >= 0) {
 		DREF DeeObject *repr;
@@ -514,11 +419,13 @@ f_rt_assert(size_t argc, DeeObject *const *argv) {
 	}
 	if unlikely(!message)
 		goto err;
+
 	/* Construct the assertion error object. */
 	assertion_error = DeeObject_New(&DeeError_AssertionError, 1, &message);
 	Dee_Decref(message);
 	if unlikely(!assertion_error)
 		goto err;
+
 	/* Throw the assertion error. */
 	DeeError_Throw(assertion_error);
 	Dee_Decref(assertion_error);

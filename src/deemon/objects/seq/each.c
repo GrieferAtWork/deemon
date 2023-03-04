@@ -225,16 +225,16 @@ se_setattr(SeqEachBase *__restrict self, DeeObject *__restrict attr, DeeObject *
 	SEQ_FOREACH_APPLY(self->se_seq, elem, DeeObject_SetAttr(elem, attr, value));
 }
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-se_str(SeqEachBase *__restrict self) {
-	return DeeString_Newf("<each of %r>", self->se_seq);
+PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
+se_print(SeqEachBase *__restrict self, dformatprinter printer, void *arg) {
+	return DeeFormat_Printf(printer, arg, "<each of %r>", self->se_seq);
 }
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-se_repr(SeqEachBase *__restrict self) {
+PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
+se_printrepr(SeqEachBase *__restrict self, dformatprinter printer, void *arg) {
 	if (DeeObject_InstanceOf(self->se_seq, &DeeSeq_Type))
-		return DeeString_Newf("%r.each", self->se_seq);
-	return DeeString_Newf("(%r as sequence).each", self->se_seq);
+		return DeeFormat_Printf(printer, arg, "%r.each", self->se_seq);
+	return DeeFormat_Printf(printer, arg, "(%r as Sequence).each", self->se_seq);
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
@@ -580,9 +580,11 @@ INTERN DeeTypeObject SeqEach_Type = {
 		/* .tp_move_assign = */ (int (DCALL *)(DeeObject *, DeeObject *))&se_moveassign
 	},
 	/* .tp_cast = */ {
-		/* .tp_str  = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&se_str,
-		/* .tp_repr = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&se_repr,
-		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&se_bool
+		/* .tp_str       = */ NULL,
+		/* .tp_repr      = */ NULL,
+		/* .tp_bool      = */ (int (DCALL *)(DeeObject *__restrict))&se_bool,
+		/* .tp_print     = */ (dssize_t(DCALL *)(DeeObject *__restrict, dformatprinter, void *))&se_print,
+		/* .tp_printrepr = */ (dssize_t(DCALL *)(DeeObject *__restrict, dformatprinter, void *))&se_printrepr,
 	},
 	/* .tp_call          = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&se_call,
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&se_visit,
@@ -708,6 +710,20 @@ seo_init(SeqEachOperator *__restrict self,
 	return 0;
 err:
 	return -1;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
+seo_printrepr(SeqEachOperator *__restrict self,
+              dformatprinter printer, void *arg) {
+	char const *each_suffix = ".each";
+	DeeTypeObject *seq_type = Dee_TYPE(self->se_seq);
+	if (DeeType_IsSeqEachWrapper(seq_type))
+		each_suffix = NULL;
+	return DeeFormat_PrintOperatorRepr(printer, arg,
+	                                   self->se_seq, self->so_opname,
+	                                   self->so_opargc, self->so_opargv,
+	                                   NULL, 0,
+	                                   each_suffix, each_suffix ? 5 : 0);
 }
 
 PRIVATE NONNULL((1)) void DCALL
@@ -1245,9 +1261,11 @@ INTERN DeeTypeObject SeqEachOperator_Type = {
 		/* .tp_move_assign = */ (int (DCALL *)(DeeObject *, DeeObject *))&sew_moveassign
 	},
 	/* .tp_cast = */ {
-		/* .tp_str  = */ NULL,
-		/* .tp_repr = */ NULL, /* TODO */
-		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&sew_bool
+		/* .tp_str       = */ NULL,
+		/* .tp_repr      = */ NULL,
+		/* .tp_bool      = */ (int (DCALL *)(DeeObject *__restrict))&sew_bool,
+		/* .tp_print     = */ NULL,
+		/* .tp_printrepr = */ (dssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&seo_printrepr,
 	},
 	/* .tp_call          = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&sew_call,
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&seo_visit,

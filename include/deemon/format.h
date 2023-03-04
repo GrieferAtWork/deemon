@@ -563,6 +563,16 @@ DFUNDEF WUNUSED NONNULL((1)) Dee_ssize_t
                                        size_t argc, DeeObject *const *argv,
                                        DeeObject *kw);
 
+/* Print a representation of invoking operator `name' on `self' with the given arguments.
+ * This function is used to generate the representation of the expression in the default
+ * assertion failure handler. */
+DFUNDEF WUNUSED NONNULL((1, 3)) Dee_ssize_t DCALL
+DeeFormat_PrintOperatorRepr(Dee_formatprinter_t printer, void *arg,
+                            DeeObject *self, uint16_t name,
+                            size_t argc, DeeObject *const *argv,
+                            char const *self_prefix, size_t self_prefix_len,
+                            char const *self_suffix, size_t self_suffix_len);
+
 
 DECL_END
 

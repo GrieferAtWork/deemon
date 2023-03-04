@@ -352,7 +352,26 @@ err:
 	return -1;
 }
 
-LOCAL size_t DCALL
+/* Return the keyword-entry associated with `keyword_index'
+ * The caller must ensure that `keyword_index < DeeKwds_SIZE(self)' */
+INTERN ATTR_RETNONNULL WUNUSED NONNULL((1, 2)) struct dee_kwds_entry *DCALL
+DeeKwds_GetByIndex(DeeObject *__restrict self, size_t keyword_index) {
+	DeeKwdsObject *me = (DeeKwdsObject *)self;
+	size_t i;
+	ASSERT_OBJECT_TYPE_EXACT(me, &DeeKwds_Type);
+	ASSERT(keyword_index < DeeKwds_SIZE(me));
+	for (i = 0;; ++i) {
+		ASSERT(i <= me->kw_mask);
+		if (!me->kw_map[i].ke_name)
+			continue;
+		if (me->kw_map[i].ke_index == keyword_index)
+			return &me->kw_map[i];
+	}
+}
+
+
+
+LOCAL WUNUSED NONNULL((1, 2)) size_t DCALL
 kwds_findstr(Kwds *__restrict self,
              char const *__restrict name,
              dhash_t hash) {
@@ -372,7 +391,7 @@ kwds_findstr(Kwds *__restrict self,
 	return (size_t)-1;
 }
 
-LOCAL size_t DCALL
+LOCAL WUNUSED NONNULL((1)) size_t DCALL
 kwds_findstr_len(Kwds *__restrict self,
                  char const *__restrict name,
                  size_t namesize,
@@ -1317,7 +1336,6 @@ no_such_key:
 	atomic_rwlock_endread(&me->kmo_lock);
 	return result;
 }
-
 
 /* Construct/access keyword arguments passed to a function as a
  * high-level {(string, Object)...}-like mapping that is bound to

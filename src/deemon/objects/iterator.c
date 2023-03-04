@@ -93,41 +93,66 @@ err:
 	return -1;
 }
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-iterator_repr(DeeObject *__restrict self) {
-	struct unicode_printer p = UNICODE_PRINTER_INIT;
-	DREF DeeObject *iterator = DeeObject_Copy(self);
+PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
+iterator_printrepr(DeeObject *__restrict self,
+                   dformatprinter printer, void *arg) {
+	dssize_t temp, result;
+	DREF DeeObject *iterator;
 	DREF DeeObject *elem;
+	bool is_first;
 	/* Create a representation of the Iterator's elements:
 	 * >> local x = [10, 20, 30];
-	 * >> local y = x.operator __iter__();
-	 * >> y.operator __next__();
-	 * >> print repr y; // { [...], 20, 30 }
+	 * >> local y = x.operator iter();
+	 * >> y.operator next();
+	 * >> print repr y; // { 20, 30 }.operator iter()
 	 */
-	if unlikely(!iterator)
+	result = DeeFormat_PRINT(printer, arg, "{ ");
+	if unlikely(result < 0)
+		goto done;
+	iterator = DeeObject_Copy(self);
+	if unlikely(!iterator) {
+		temp = -1;
 		goto err;
-	if unlikely(UNICODE_PRINTER_PRINT(&p, "{ [...]") < 0)
-		goto err_p_iterator;
-	while (ITER_ISOK(elem = DeeObject_IterNext(iterator))) {
-		if unlikely(unicode_printer_printf(&p, ", %r", elem) < 0)
-			goto err_p_iterator_elem;
-		Dee_Decref(elem);
-		if (DeeThread_CheckInterrupt())
-			goto err_p_iterator;
 	}
-	if unlikely(!elem)
-		goto err_p_iterator;
-	if unlikely(UNICODE_PRINTER_PRINT(&p, " }") < 0)
-		goto err_p_iterator;
+	is_first = true;
+	while (ITER_ISOK(elem = DeeObject_IterNext(iterator))) {
+		if (!is_first) {
+			temp = DeeFormat_PRINT(printer, arg, ", ");
+			if unlikely(temp < 0)
+				goto err_iterator_elem;
+			result += temp;
+		}
+		temp = DeeFormat_PrintObjectRepr(printer, arg, elem);
+		Dee_Decref(elem);
+		if unlikely(temp < 0)
+			goto err_iterator;
+		if (DeeThread_CheckInterrupt()) {
+			temp = -1;
+			goto err_iterator;
+		}
+		is_first = false;
+	}
 	Dee_Decref(iterator);
-	return unicode_printer_pack(&p);
-err_p_iterator_elem:
+	if unlikely(!elem) {
+		temp = -1;
+		goto err;
+	}
+	if (!is_first) {
+		temp = DeeFormat_PRINT(printer, arg, " }.operator iter()");
+	} else {
+		temp = DeeFormat_PRINT(printer, arg, "}.operator iter()");
+	}
+	if unlikely(temp < 0)
+		goto err;
+	result += temp;
+done:
+	return result;
+err_iterator_elem:
 	Dee_Decref(elem);
-err_p_iterator:
+err_iterator:
 	Dee_Decref(iterator);
-	unicode_printer_fini(&p);
 err:
-	return NULL;
+	return temp;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -2553,9 +2578,11 @@ PUBLIC DeeTypeObject DeeIterator_Type = {
 		/* .tp_move_assign = */ NULL
 	},
 	/* .tp_cast = */ {
-		/* .tp_str  = */ NULL,
-		/* .tp_repr = */ &iterator_repr,
-		/* .tp_bool = */ &iterator_bool
+		/* .tp_str       = */ NULL,
+		/* .tp_repr      = */ NULL,
+		/* .tp_bool      = */ &iterator_bool,
+		/* .tp_print     = */ NULL,
+		/* .tp_printrepr = */ &iterator_printrepr,
 	},
 	/* .tp_call          = */ &iterator_next,
 	/* .tp_visit         = */ NULL,

@@ -19,9 +19,9 @@
  */
 #ifdef __INTELLISENSE__
 #include "each.c"
-#define DEFINE_GETATTR 1
+//#define DEFINE_GETATTR 1
 //#define DEFINE_CALLATTR 1
-//#define DEFINE_CALLATTRKW 1
+#define DEFINE_CALLATTRKW 1
 #endif
 
 #include <deemon/map.h>
@@ -237,7 +237,7 @@ PRIVATE struct type_math sew_math = {
 #endif /* !DEFINE_GETATTR */
 
 
-PRIVATE WUNUSED DREF SeqEachIterator *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF SeqEachIterator *DCALL
 F(iter)(STRUCT_TYPE *__restrict self) {
 	DREF SeqEachIterator *result;
 	result = DeeObject_MALLOC(SeqEachIterator);
@@ -256,9 +256,9 @@ err_r:
 	return NULL;
 }
 
-LOCAL WUNUSED DREF DeeObject *DCALL
-F(transform)(STRUCT_TYPE *__restrict self,
-             /*inherit(always)*/ DREF DeeObject *__restrict elem) {
+LOCAL WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+F(transform)(STRUCT_TYPE *self,
+             /*inherit(always)*/ DREF DeeObject *elem) {
 	DREF DeeObject *result;
 #ifdef DEFINE_GETATTR
 	result = DeeObject_GetAttr(elem, (DeeObject *)self->sg_attr);
@@ -280,7 +280,7 @@ F(transform)(STRUCT_TYPE *__restrict self,
 	return result;
 }
 
-PRIVATE WUNUSED DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 F(nsi_getitem)(STRUCT_TYPE *__restrict self, size_t index) {
 	DREF DeeObject *result;
 	result = DeeObject_GetItemIndex(self->se_seq, index);
@@ -289,9 +289,8 @@ F(nsi_getitem)(STRUCT_TYPE *__restrict self, size_t index) {
 	return result;
 }
 
-PRIVATE WUNUSED DREF DeeObject *DCALL
-F(getitem)(STRUCT_TYPE *__restrict self,
-           DeeObject *__restrict index) {
+PRIVATE NONNULL((1, 2)) WUNUSED DREF DeeObject *DCALL
+F(getitem)(STRUCT_TYPE *self, DeeObject *index) {
 	DREF DeeObject *result;
 	result = DeeObject_GetItem(self->se_seq, index);
 	if likely(result)
@@ -358,7 +357,7 @@ PRIVATE struct type_member tpconst F(class_members)[] = {
 	TYPE_MEMBER_END
 };
 
-PRIVATE void DCALL
+PRIVATE NONNULL((1)) void DCALL
 F(fini)(STRUCT_TYPE *__restrict self) {
 	Dee_Decref(self->se_seq);
 	Dee_Decref(self->sg_attr);
@@ -370,7 +369,7 @@ F(fini)(STRUCT_TYPE *__restrict self) {
 #endif /* DEFINE_CALLATTR || DEFINE_CALLATTRKW */
 }
 
-PRIVATE void DCALL
+PRIVATE NONNULL((1, 2)) void DCALL
 F(visit)(STRUCT_TYPE *__restrict self, dvisit_t proc, void *arg) {
 	Dee_Visit(self->se_seq);
 	Dee_Visit(self->sg_attr);
@@ -380,6 +379,59 @@ F(visit)(STRUCT_TYPE *__restrict self, dvisit_t proc, void *arg) {
 #if defined(DEFINE_CALLATTR) || defined(DEFINE_CALLATTRKW)
 	Dee_Visitv(self->sg_argv, self->sg_argc);
 #endif /* DEFINE_CALLATTR || DEFINE_CALLATTRKW */
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
+F(printrepr)(STRUCT_TYPE *__restrict self,
+             dformatprinter printer, void *arg) {
+	char const *each_suffix = ".each";
+	DeeTypeObject *seq_type = Dee_TYPE(self->se_seq);
+	if (DeeType_IsSeqEachWrapper(seq_type))
+		each_suffix = "";
+#ifdef DEFINE_GETATTR
+	return DeeFormat_Printf(printer, arg, "%r%s.%k",
+	                        self->se_seq, each_suffix,
+	                        self->sg_attr);
+#elif defined(DEFINE_CALLATTR) || defined(DEFINE_CALLATTRKW)
+	{
+#ifdef DEFINE_CALLATTRKW
+		DeeObject *argv[2];
+#else /* DEFINE_CALLATTRKW */
+		DeeObject *argv[1];
+#endif /* !DEFINE_CALLATTRKW */
+		Dee_ssize_t result = -1;
+		size_t full_suffix_len;
+		char *full_suffix, *attr_utf8, *p;
+		attr_utf8 = DeeString_AsUtf8((DeeObject *)self->sg_attr);
+		if unlikely(!attr_utf8)
+			return -1;
+		full_suffix_len = strlen(each_suffix);
+		full_suffix_len += 1; /* "." */
+		full_suffix_len += WSTR_LENGTH(attr_utf8);
+		full_suffix = (char *)Dee_AMallocc(full_suffix_len, sizeof(char));
+		if unlikely(!full_suffix)
+			return -1;
+		p = (char *)mempcpyc(full_suffix, each_suffix, strlen(each_suffix), sizeof(char));
+		*p++ = '.';
+		p = (char *)mempcpyc(p, attr_utf8, WSTR_LENGTH(attr_utf8), sizeof(char));
+		(void)p;
+		ASSERT(full_suffix + full_suffix_len == p);
+		argv[0] = DeeTuple_NewVectorSymbolic(self->sg_argc, self->sg_argv);
+		if likely(argv[0]) {
+#ifdef DEFINE_CALLATTRKW
+			argv[1] = self->sg_kw;
+#endif /* !DEFINE_CALLATTRKW */
+			result = DeeFormat_PrintOperatorRepr(printer, arg, self->se_seq,
+			                                     OPERATOR_CALL, COMPILER_LENOF(argv), argv,
+			                                     NULL, 0, full_suffix, full_suffix_len);
+			DeeTuple_DecrefSymbolic(argv[0]);
+		}
+		Dee_AFree(full_suffix);
+		return result;
+	}
+#else /* ... */
+#error "Unsupported each-fastpass mode"
+#endif /* !... */
 }
 
 
@@ -628,9 +680,11 @@ INTERN DeeTypeObject TYPE_OBJECT = {
 		/* .tp_move_assign = */ (int (DCALL *)(DeeObject *, DeeObject *))&sew_moveassign
 	},
 	/* .tp_cast = */ {
-		/* .tp_str  = */ NULL,
-		/* .tp_repr = */ NULL,
-		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&sew_bool
+		/* .tp_str       = */ NULL,
+		/* .tp_repr      = */ NULL,
+		/* .tp_bool      = */ (int (DCALL *)(DeeObject *__restrict))&sew_bool,
+		/* .tp_print     = */ NULL,
+		/* .tp_printrepr = */ (dssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&F(printrepr),
 	},
 #ifdef DEFINE_GETATTR
 	/* .tp_call          = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&F(call),

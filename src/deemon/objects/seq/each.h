@@ -59,7 +59,7 @@ struct string_object;
 
 typedef struct {
 	/* `seq.each' -- The root wrapper descriptor which
-		* has yet to be bound to any specific operation. */
+	 * has yet to be bound to any specific operation. */
 	SEQ_EACH_HEAD
 } SeqEachBase;
 
@@ -133,7 +133,17 @@ INTDEF DeeTypeObject SeqEachCallAttr_Type;
 INTDEF DeeTypeObject SeqEachCallAttrIterator_Type;
 INTDEF DeeTypeObject SeqEachCallAttrKw_Type;
 INTDEF DeeTypeObject SeqEachCallAttrKwIterator_Type;
-#endif /* CONFIG_HAVE_SEQEACH_ATTRIBUTE_OPTIMIZATIONS */
+#define DeeType_IsSeqEachWrapper(self)  \
+	((self) == &SeqEachOperator_Type || \
+	 (self) == &SeqEachGetAttr_Type ||  \
+	 (self) == &SeqEachCallAttr_Type || \
+	 (self) == &SeqEachCallAttrKw_Type)
+#else /* CONFIG_HAVE_SEQEACH_ATTRIBUTE_OPTIMIZATIONS */
+#define DeeType_IsSeqEachWrapper(self)  \
+	((self) == &SeqEachGetAttr_Type ||  \
+	 (self) == &SeqEachCallAttr_Type || \
+	 (self) == &SeqEachCallAttrKw_Type)
+#endif /* !CONFIG_HAVE_SEQEACH_ATTRIBUTE_OPTIMIZATIONS */
 
 
 #ifdef CONFIG_HAVE_SEQEACH_ATTRIBUTE_OPTIMIZATIONS

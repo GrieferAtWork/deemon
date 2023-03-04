@@ -1425,6 +1425,271 @@ DeeObject_PInvokeOperator(DeeObject **__restrict pself, uint16_t name,
 
 
 
+#define DO(err, expr)                    \
+	do {                                 \
+		if unlikely((temp = (expr)) < 0) \
+			goto err;                    \
+		result += temp;                  \
+	}	__WHILE0
+
+PRIVATE WUNUSED NONNULL((1)) dssize_t DCALL
+print_call_args_repr(Dee_formatprinter_t printer, void *arg,
+                     size_t argc, DeeObject *const *argv,
+                     DeeObject *kw) {
+	Dee_ssize_t temp, result = 0;
+	size_t i;
+	DO(err, DeeFormat_PRINT(printer, arg, "("));
+	for (i = 0; i < argc; ++i) {
+		if (i != 0)
+			DO(err, DeeFormat_PRINT(printer, arg, ", "));
+		if (kw && DeeKwds_Check(kw)) {
+			size_t first_keyword;
+			ASSERT(DeeKwds_SIZE(kw) <= argc);
+			first_keyword = argc - DeeKwds_SIZE(kw);
+			if (i >= first_keyword) {
+				struct kwds_entry *keyword_descr;
+				size_t keyword_index;
+				keyword_index = i - first_keyword;
+				keyword_descr = DeeKwds_GetByIndex(kw, keyword_index);
+				DO(err, DeeFormat_Printf(printer, arg, "%k: ", keyword_descr->ke_name));
+			}
+		}
+		DO(err, DeeFormat_PrintObjectRepr(printer, arg, argv[i]));
+	}
+	if (kw && !DeeKwds_Check(kw)) {
+		/* Keywords are specified as per `foo(**{ "x": 10 })'. */
+		DO(err, DeeFormat_Printf(printer, arg, "**%r", kw));
+	}
+	DO(err, DeeFormat_PRINT(printer, arg, ")"));
+	return result;
+err:
+	return temp;
+	goto err;
+}
+
+
+
+
+/* Print a representation of invoking operator `name' on `self' with the given arguments.
+ * This function is used to generate the representation of the expression in the default
+ * assertion failure handler. */
+PUBLIC WUNUSED NONNULL((1, 3)) Dee_ssize_t DCALL
+DeeFormat_PrintOperatorRepr(Dee_formatprinter_t printer, void *arg,
+                            DeeObject *self, uint16_t name,
+                            size_t argc, DeeObject *const *argv,
+                            char const *self_prefix, size_t self_prefix_len,
+                            char const *self_suffix, size_t self_suffix_len) {
+	Dee_ssize_t temp, result = 0;
+	struct opinfo const *info;
+	info = Dee_OperatorInfo(Dee_TYPE(Dee_TYPE(self)), name);
+	switch (name) {
+
+	case OPERATOR_COPY:
+	case OPERATOR_DEEPCOPY:
+	case OPERATOR_STR:
+	case OPERATOR_REPR:
+		ASSERT(info);
+		if (argc == 0)
+			DO(err, DeeFormat_Printf(printer, arg, "%s ", info->oi_sname));
+		break;
+
+	case OPERATOR_BOOL:
+		ASSERT(info);
+		if (argc == 0)
+			DO(err, DeeFormat_PRINT(printer, arg, "!!"));
+		break;
+
+	case OPERATOR_INV:
+	case OPERATOR_POS:
+	case OPERATOR_NEG:
+	case OPERATOR_INC:
+	case OPERATOR_DEC:
+	case OPERATOR_SIZE:
+		ASSERT(info);
+		if (argc == 0)
+			DO(err, DeeFormat_PrintStr(printer, arg, info->oi_uname));
+		break;
+
+	case OPERATOR_CONTAINS:
+		if (argc == 1)
+			DO(err, DeeFormat_Printf(printer, arg, "%r in ", argv[0]));
+		break;
+
+	case OPERATOR_DELITEM:
+		if (argc == 1)
+			DO(err, DeeFormat_PRINT(printer, arg, "del "));
+		break;
+
+	case OPERATOR_DELRANGE:
+		if (argc == 2)
+			DO(err, DeeFormat_PRINT(printer, arg, "del "));
+		break;
+
+	case OPERATOR_DELATTR:
+		if (argc == 1 && DeeString_Check(argv[0]))
+			DO(err, DeeFormat_PRINT(printer, arg, "del "));
+		break;
+
+	default: break;
+	}
+
+	/* Print the main self-argument */
+	DO(err, DeeFormat_Printf(printer, arg, "%$s%r%$s",
+	                         self_prefix_len, self_prefix, self,
+	                         self_suffix_len, self_suffix));
+
+	switch (name) {
+
+	case OPERATOR_COPY:
+	case OPERATOR_DEEPCOPY:
+	case OPERATOR_STR:
+	case OPERATOR_REPR:
+	case OPERATOR_BOOL:
+	case OPERATOR_INV:
+	case OPERATOR_POS:
+	case OPERATOR_NEG:
+	case OPERATOR_INC:
+	case OPERATOR_DEC:
+	case OPERATOR_SIZE:
+		if (argc == 0)
+			goto done;
+		break;
+
+	case OPERATOR_CALL:
+		if ((argc == 1 || argc == 2) && DeeTuple_Check(argv[0])) {
+			DeeObject *kw = argc == 2 ? argv[1] : NULL;
+			if (kw && DeeKwds_Check(kw)) {
+				size_t c_argc = DeeTuple_SIZE(argv[0]);
+				size_t c_kwdc = DeeKwds_SIZE(kw);
+				if (c_kwdc > c_argc)
+					break; /* err_keywords_bad_for_argc() */
+			}
+			DO(err, print_call_args_repr(printer, arg,
+			                             DeeTuple_SIZE(argv[0]),
+			                             DeeTuple_ELEM(argv[0]),
+			                             kw));
+			goto done;
+		}
+		break;
+
+	case OPERATOR_ASSIGN:
+	case OPERATOR_ADD:
+	case OPERATOR_SUB:
+	case OPERATOR_MUL:
+	case OPERATOR_DIV:
+	case OPERATOR_MOD:
+	case OPERATOR_SHL:
+	case OPERATOR_SHR:
+	case OPERATOR_AND:
+	case OPERATOR_OR:
+	case OPERATOR_XOR:
+	case OPERATOR_POW:
+	case OPERATOR_INPLACE_ADD:
+	case OPERATOR_INPLACE_SUB:
+	case OPERATOR_INPLACE_MUL:
+	case OPERATOR_INPLACE_DIV:
+	case OPERATOR_INPLACE_MOD:
+	case OPERATOR_INPLACE_SHL:
+	case OPERATOR_INPLACE_SHR:
+	case OPERATOR_INPLACE_AND:
+	case OPERATOR_INPLACE_OR:
+	case OPERATOR_INPLACE_XOR:
+	case OPERATOR_INPLACE_POW:
+	case OPERATOR_EQ:
+	case OPERATOR_NE:
+	case OPERATOR_LO:
+	case OPERATOR_LE:
+	case OPERATOR_GR:
+	case OPERATOR_GE:
+		ASSERT(info);
+		if (argc == 1) {
+			DO(err, DeeFormat_Printf(printer, arg, " %s %r", info->oi_uname, argv[0]));
+			goto done;
+		}
+		break;
+
+	case OPERATOR_CONTAINS:
+		if (argc == 1)
+			goto done;
+		break;
+
+	case OPERATOR_GETITEM:
+	case OPERATOR_DELITEM:
+		if (argc == 1) {
+			DO(err, DeeFormat_Printf(printer, arg, "[%r]", argv[0]));
+			goto done;
+		}
+		break;
+
+	case OPERATOR_SETITEM:
+		if (argc == 2) {
+			DO(err, DeeFormat_Printf(printer, arg, "[%r] = %r", argv[0], argv[1]));
+			goto done;
+		}
+		break;
+
+	case OPERATOR_GETRANGE:
+	case OPERATOR_DELRANGE:
+	case OPERATOR_SETRANGE:
+		if (argc == (size_t)(name == OPERATOR_SETRANGE ? 3 : 2)) {
+			DO(err, DeeFormat_PRINT(printer, arg, "["));
+			if (!DeeNone_Check(argv[0]))
+				DO(err, DeeFormat_PrintObjectRepr(printer, arg, argv[0]));
+			DO(err, DeeFormat_PRINT(printer, arg, ":"));
+			if (!DeeNone_Check(argv[1]))
+				DO(err, DeeFormat_PrintObjectRepr(printer, arg, argv[1]));
+			DO(err, DeeFormat_PRINT(printer, arg, "]"));
+			if (name == OPERATOR_SETRANGE) {
+				DO(err, DeeFormat_Printf(printer, arg, " = %r", argv[2]));
+			}
+			goto done;
+		}
+		break;
+
+	case OPERATOR_GETATTR:
+	case OPERATOR_DELATTR:
+		if (argc == 1 && DeeString_Check(argv[0])) {
+			DO(err, DeeFormat_Printf(printer, arg, ".%k", argv[0]));
+			goto done;
+		}
+		break;
+
+	case OPERATOR_SETATTR:
+		if (argc == 2 && DeeString_Check(argv[0])) {
+			DO(err, DeeFormat_Printf(printer, arg, ".%k = %r", argv[0], argv[1]));
+			goto done;
+		}
+		break;
+
+	default: break;
+	}
+
+	/* Fallback: print as `<self>.operator <name> (<argv...>)' */
+	{
+		size_t i;
+		DO(err, DeeFormat_PRINT(printer, arg, ".operator "));
+		if (info) {
+			DO(err, DeeFormat_PrintStr(printer, arg, info->oi_uname));
+		} else {
+			DO(err, DeeFormat_Printf(printer, arg, "%" PRFu16, name));
+		}
+		DO(err, DeeFormat_PRINT(printer, arg, "("));
+		for (i = 0; i < argc; ++i) {
+			if (i != 0)
+				DO(err, DeeFormat_PRINT(printer, arg, ", "));
+			DO(err, DeeFormat_PrintObjectRepr(printer, arg, argv[i]));
+		}
+		DO(err, DeeFormat_PRINT(printer, arg, ")"));
+	}
+done:
+	return result;
+err:
+	return temp;
+}
+
+#undef DO
+
+
 PRIVATE WUNUSED NONNULL((1, 2)) void const *DCALL
 DeeType_GetOpPointer(DeeTypeObject const *__restrict self,
                      struct opinfo const *__restrict info) {
