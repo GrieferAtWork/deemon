@@ -2058,7 +2058,7 @@ PUBLIC DeeTypeObject DeeCode_Type = {
 				/* .tp_any_ctor  = */ (dfunptr_t)NULL,
 				/* .tp_free      = */ (dfunptr_t)NULL,
 				/* .tp_pad       = */ { (dfunptr_t)NULL },
-				/* .tp_free      = */ (dfunptr_t)&code_init_kw
+				/* .tp_any_ctor_kw = */ (dfunptr_t)&code_init_kw
 			}
 		},
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&code_fini,
