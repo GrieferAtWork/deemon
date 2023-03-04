@@ -918,11 +918,17 @@ sequence_should_use_getitem(DeeTypeObject *__restrict self) {
 	return false;
 }
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-seq_repr(DeeObject *__restrict self) {
+PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
+seq_printrepr(DeeObject *__restrict self, dformatprinter printer, void *arg) {
+#define DO(err, expr)                    \
+	do {                                 \
+		if unlikely((temp = (expr)) < 0) \
+			goto err;                    \
+		result += temp;                  \
+	}	__WHILE0
+	dssize_t temp, result = 0;
 	bool is_first;
 	DREF DeeObject *iterator, *elem;
-	struct unicode_printer printer = UNICODE_PRINTER_INIT;
 	if (sequence_should_use_getitem(Dee_TYPE(self))) {
 		size_t i, size;
 		size = DeeObject_Size(self);
@@ -930,75 +936,77 @@ seq_repr(DeeObject *__restrict self) {
 			/* If the size operator isn't actually implemented, try to use iterators instead! */
 			if (DeeError_Catch(&DeeError_NotImplemented))
 				goto do_try_iterators;
-			goto err_printer;
+			goto err_m1;
 		}
 		if (!size) {
-			if unlikely(UNICODE_PRINTER_PRINT(&printer, "{ }") < 0)
-				goto err_printer;
+			DO(err, DeeFormat_PRINT(printer, arg, "{ }"));
 		} else {
-			if unlikely(UNICODE_PRINTER_PRINT(&printer, "{ ") < 0)
-				goto err_printer;
+			DO(err, DeeFormat_PRINT(printer, arg, "{ "));
 			for (i = 0; i < size; ++i) {
-				if (i != 0 && unlikely(UNICODE_PRINTER_PRINT(&printer, ", ") < 0))
-					goto err_printer;
+				if (i != 0)
+					DO(err, DeeFormat_PRINT(printer, arg, ", "));
 				elem = DeeObject_GetItemIndex(self, i);
 				if likely(elem) {
-					if (unicode_printer_printobjectrepr(&printer, elem) < 0)
-						goto err_printer_elem;
+					DO(err_elem, DeeFormat_PrintObjectRepr(printer, arg, elem));
 					Dee_Decref(elem);
 				} else if (DeeError_Catch(&DeeError_UnboundItem)) {
-					if unlikely(UNICODE_PRINTER_PRINT(&printer, "<unbound>") < 0)
-						goto err_printer;
+					DO(err, DeeFormat_PRINT(printer, arg, "<unbound>"));
 				} else if (DeeError_Catch(&DeeError_IndexError)) {
 					/* Assume that the Sequence got re-sized while we were iterating it. */
 					if unlikely(!i) {
-						if unlikely(unicode_printer_putascii(&printer, '}'))
-							goto err_printer;
+						DO(err, DeeFormat_PRINT(printer, arg, "}"));
 						goto done;
 					}
 					break;
 				} else {
-					goto err_printer;
+					goto err_m1;
 				}
 			}
-			if unlikely(UNICODE_PRINTER_PRINT(&printer, " }") < 0)
-				goto err_printer;
+			DO(err, DeeFormat_PRINT(printer, arg, " }"));
 		}
 	} else {
 do_try_iterators:
 		iterator = DeeObject_IterSelf(self);
 		if unlikely(!iterator)
-			goto err_printer;
-		if unlikely(UNICODE_PRINTER_PRINT(&printer, "{ ") < 0)
-			goto err_printer_iterator;
+			goto err_m1;
+		DO(err_iterator, DeeFormat_PRINT(printer, arg, "{ "));
 		is_first = true;
 		while (ITER_ISOK(elem = DeeObject_IterNext(iterator))) {
-			if (unicode_printer_printf(&printer, "%s%r", is_first ? "" : ", ", elem) < 0)
-				goto err_printer_iterator_elem;
-			is_first = false;
+			if (!is_first)
+				DO(err_iterator_elem, DeeFormat_PRINT(printer, arg, ", "));
+			DO(err_iterator_elem, DeeFormat_PrintObjectRepr(printer, arg, elem));
 			Dee_Decref(elem);
+			is_first = false;
 			if (DeeThread_CheckInterrupt())
-				goto err_printer_iterator;
+				goto err_m1_iterator;
 		}
 		if unlikely(!elem)
-			goto err_printer_iterator;
-		if unlikely((is_first ? unicode_printer_putascii(&printer, '}')
-		                      : UNICODE_PRINTER_PRINT(&printer, " }")) < 0)
-			goto err_printer_iterator;
+			goto err_m1_iterator;
 		Dee_Decref(iterator);
+		if (is_first) {
+			DO(err, DeeFormat_PRINT(printer, arg, "}"));
+		} else {
+			DO(err, DeeFormat_PRINT(printer, arg, " }"));
+		}
 	}
 done:
-	return unicode_printer_pack(&printer);
-err_printer_elem:
+	return result;
+err_elem:
 	Dee_Decref(elem);
-	goto err_printer;
-err_printer_iterator_elem:
+	goto err;
+err_iterator_elem:
 	Dee_Decref(elem);
-err_printer_iterator:
+err_iterator:
 	Dee_Decref(iterator);
-err_printer:
-	unicode_printer_fini(&printer);
-	return NULL;
+err:
+	return temp;
+err_m1_iterator:
+	temp = -1;
+	goto err_iterator;
+err_m1:
+	temp = -1;
+	goto err;
+#undef DO
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeTypeObject *DCALL
@@ -5151,9 +5159,11 @@ PUBLIC DeeTypeObject DeeSeq_Type = {
 		/* .tp_move_assign = */ NULL
 	},
 	/* .tp_cast = */ {
-		/* .tp_str  = */ NULL,
-		/* .tp_repr = */ &seq_repr,
-		/* .tp_bool = */ &DeeSeq_NonEmpty
+		/* .tp_str       = */ NULL,
+		/* .tp_repr      = */ NULL,
+		/* .tp_bool      = */ &DeeSeq_NonEmpty,
+		/* .tp_print     = */ NULL,
+		/* .tp_printrepr = */ &seq_printrepr
 	},
 	/* .tp_call          = */ NULL,
 	/* .tp_visit         = */ NULL,
