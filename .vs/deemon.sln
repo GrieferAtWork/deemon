@@ -272,13 +272,13 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "rt", "rt", "{2360741E-FB49-
 		..\lib\rt\builtins.dee = ..\lib\rt\builtins.dee
 		..\lib\rt\bytecode.dee = ..\lib\rt\bytecode.dee
 		..\lib\rt\d200.dee = ..\lib\rt\d200.dee
-		..\lib\rt\dexutils.dee = ..\lib\rt\dexutils.dee
 		..\lib\rt\hash.dee = ..\lib\rt\hash.dee
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "gen", "gen", "{2360741E-FB49-40D4-B684-0003040EE286}"
 	ProjectSection(SolutionItems) = preProject
 		..\lib\rt\gen\cxxapi.dee = ..\lib\rt\gen\cxxapi.dee
+		..\lib\rt\gen\dexutils.dee = ..\lib\rt\gen\dexutils.dee
 		..\lib\rt\gen\hash.dee = ..\lib\rt\gen\hash.dee
 		..\lib\rt\gen\string.dee = ..\lib\rt\gen\string.dee
 	EndProjectSection

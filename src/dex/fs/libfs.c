@@ -907,7 +907,7 @@ local names = {
 	"ISVTX", "IRUSR", "IWUSR", "IXUSR", "IRGRP",
 	"IWGRP", "IXGRP", "IROTH", "IWOTH", "IXOTH"
 };
-import * from rt.dexutils;
+import * from rt.gen.dexutils;
 include("constants.def");
 for (local x: names)
 	gi("S_"+x, "STAT_"+x);

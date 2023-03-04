@@ -29,7 +29,7 @@ DECL_BEGIN
 
 /*[[[deemon
 import * from deemon;
-import * from rt.dexutils;
+import * from rt.gen.dexutils;
 MODULE_NAME = "posix";
 local orig_stdout = File.stdout;
 
@@ -339,7 +339,7 @@ PRIVATE DEFINE_CMETHOD(posix_read, posix_read_f);
 /************************************************************************/
 
 #if defined(posix_lseek_IS64) || defined(__DEEMON__)
-/*[[[deemon import("rt.dexutils").gw("lseek", "fd:unix:fd,offset:I64d,whence:d->?Dint", libname: "posix"); ]]]*/
+/*[[[deemon import("rt.gen.dexutils").gw("lseek", "fd:unix:fd,offset:I64d,whence:d->?Dint", libname: "posix"); ]]]*/
 FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_lseek_f_impl(int fd, int64_t offset, int whence);
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_lseek_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define POSIX_LSEEK_DEF { "lseek", (DeeObject *)&posix_lseek, MODSYM_FNORMAL, DOC("(fd:?X2?Dint?DFile,offset:?Dint,whence:?Dint)->?Dint") },
@@ -367,7 +367,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_lseek_f_impl(int fd, int64_t offs
 //[[[end]]]
 #endif /* posix_lseek_IS64 */
 #if !defined(posix_lseek_IS64) || defined(__DEEMON__)
-/*[[[deemon import("rt.dexutils").gw("lseek", "fd:unix:fd,offset:I32d,whence:d->?Dint", libname: "posix"); ]]]*/
+/*[[[deemon import("rt.gen.dexutils").gw("lseek", "fd:unix:fd,offset:I32d,whence:d->?Dint", libname: "posix"); ]]]*/
 FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_lseek_f_impl(int fd, int32_t offset, int whence);
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_lseek_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define POSIX_LSEEK_DEF { "lseek", (DeeObject *)&posix_lseek, MODSYM_FNORMAL, DOC("(fd:?X2?Dint?DFile,offset:?Dint,whence:?Dint)->?Dint") },
@@ -674,7 +674,7 @@ PRIVATE DEFINE_CMETHOD(posix_pread, posix_pread_f);
 /* write()                                                              */
 /************************************************************************/
 
-/*[[[deemon import("rt.dexutils").gw("write", "fd:unix:fd,buf:obj:buffer,count:Iud=-1->?Dint", libname: "posix"); ]]]*/
+/*[[[deemon import("rt.gen.dexutils").gw("write", "fd:unix:fd,buf:obj:buffer,count:Iud=-1->?Dint", libname: "posix"); ]]]*/
 FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_write_f_impl(int fd, DeeObject *buf, size_t count);
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_write_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define POSIX_WRITE_DEF { "write", (DeeObject *)&posix_write, MODSYM_FNORMAL, DOC("(fd:?X2?Dint?DFile,buf:?DBytes,count:?Dint=!-1)->?Dint") },

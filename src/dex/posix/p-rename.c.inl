@@ -128,7 +128,7 @@ DECL_BEGIN
 
 
 
-/*[[[deemon import("rt.dexutils").gw("rename", "oldpath:?Dstring,newpath:?Dstring", libname: "posix");]]]*/
+/*[[[deemon import("rt.gen.dexutils").gw("rename", "oldpath:?Dstring,newpath:?Dstring", libname: "posix");]]]*/
 FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_rename_f_impl(DeeObject *oldpath, DeeObject *newpath);
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_rename_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define POSIX_RENAME_DEF { "rename", (DeeObject *)&posix_rename, MODSYM_FNORMAL, DOC("(oldpath:?Dstring,newpath:?Dstring)") },
@@ -237,7 +237,7 @@ err:
 }
 
 
-/*[[[deemon import("rt.dexutils").gw("frename", "oldfd:?X2?DFile?Dint,newpath:?Dstring", libname: "posix");]]]*/
+/*[[[deemon import("rt.gen.dexutils").gw("frename", "oldfd:?X2?DFile?Dint,newpath:?Dstring", libname: "posix");]]]*/
 FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_frename_f_impl(DeeObject *oldfd, DeeObject *newpath);
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_frename_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define POSIX_FRENAME_DEF { "frename", (DeeObject *)&posix_frename, MODSYM_FNORMAL, DOC("(oldfd:?X2?DFile?Dint,newpath:?Dstring)") },
@@ -282,7 +282,7 @@ err:
 }
 
 
-/*[[[deemon import("rt.dexutils").gw("renameat",
+/*[[[deemon import("rt.gen.dexutils").gw("renameat",
 	"olddirfd:?X3?DFile?Dint?Dstring,oldpath:?Dstring,"
 	"newdirfd:?X3?DFile?Dint?Dstring,newpath:?Dstring,"
 	"atflags:u=0", libname: "posix");]]]*/
@@ -378,7 +378,7 @@ err:
 }
 
 
-/*[[[deemon import("rt.dexutils").gw("renameat2",
+/*[[[deemon import("rt.gen.dexutils").gw("renameat2",
 	"olddirfd:?X3?DFile?Dint?Dstring,oldpath:?Dstring,"
 	"newdirfd:?X3?DFile?Dint?Dstring,newpath:?Dstring,"
 	"flags:u=0,atflags:u=0", libname: "posix");]]]*/
@@ -583,7 +583,7 @@ err:
 
 
 
-/*[[[deemon import("rt.dexutils").gw("link", "oldpath:?Dstring,newpath:?Dstring", libname: "posix");]]]*/
+/*[[[deemon import("rt.gen.dexutils").gw("link", "oldpath:?Dstring,newpath:?Dstring", libname: "posix");]]]*/
 FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_link_f_impl(DeeObject *oldpath, DeeObject *newpath);
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_link_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define POSIX_LINK_DEF { "link", (DeeObject *)&posix_link, MODSYM_FNORMAL, DOC("(oldpath:?Dstring,newpath:?Dstring)") },
@@ -687,7 +687,7 @@ err:
 
 
 
-/*[[[deemon import("rt.dexutils").gw("flink", "oldfd:?X2?DFile?Dint,newpath:?Dstring", libname: "posix");]]]*/
+/*[[[deemon import("rt.gen.dexutils").gw("flink", "oldfd:?X2?DFile?Dint,newpath:?Dstring", libname: "posix");]]]*/
 FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_flink_f_impl(DeeObject *oldfd, DeeObject *newpath);
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_flink_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define POSIX_FLINK_DEF { "flink", (DeeObject *)&posix_flink, MODSYM_FNORMAL, DOC("(oldfd:?X2?DFile?Dint,newpath:?Dstring)") },
@@ -749,7 +749,7 @@ err:
 
 
 
-/*[[[deemon import("rt.dexutils").gw("linkat", "olddirfd:?X3?DFile?Dint?Dstring,oldpath:?Dstring,newdirfd:?X3?DFile?Dint?Dstring,newpath:?Dstring,atflags:u=0", libname: "posix");]]]*/
+/*[[[deemon import("rt.gen.dexutils").gw("linkat", "olddirfd:?X3?DFile?Dint?Dstring,oldpath:?Dstring,newdirfd:?X3?DFile?Dint?Dstring,newpath:?Dstring,atflags:u=0", libname: "posix");]]]*/
 FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_linkat_f_impl(DeeObject *olddirfd, DeeObject *oldpath, DeeObject *newdirfd, DeeObject *newpath, unsigned int atflags);
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_linkat_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define POSIX_LINKAT_DEF { "linkat", (DeeObject *)&posix_linkat, MODSYM_FNORMAL, DOC("(olddirfd:?X3?DFile?Dint?Dstring,oldpath:?Dstring,newdirfd:?X3?DFile?Dint?Dstring,newpath:?Dstring,atflags:?Dint=!0)") },
