@@ -3461,9 +3461,7 @@ PRIVATE struct dex_symbol symbols[] = {
 	  DOC("->?GTime\n"
 	      "Returns the current tick suitable for high-precision timings.\n"
 	      "The tick itself is offset from some undefined point in time, meaning that the only "
-	      "meaningful use, is to subtract the return values of two calls to this function.\n"
-	      "The value of the tick (in microseconds) can easily be extracted by casting/using "
-	      "the return value as an integer") },
+	      "meaningful use, is to subtract the return values of two calls to this function.") },
 	{ "maketime", (DeeObject *)&libtime_maketime, MODSYM_FNORMAL,
 	  DOC("(hour=!0,minute=!0,second=!0,nanosecond=!0)->?GTime\n"
 	      "Construct a new ?GTime object using the given arguments for the "
