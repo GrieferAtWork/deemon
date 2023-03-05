@@ -26,6 +26,7 @@
 #include <deemon/api.h>
 #include <deemon/arg.h>
 #include <deemon/bool.h>
+#include <deemon/format.h>
 #include <deemon/map.h>
 #include <deemon/object.h>
 #include <deemon/seq.h>
@@ -158,9 +159,10 @@ PRIVATE struct type_member tpconst byattr_members[] = {
 };
 
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-byattr_repr(MapByAttr *__restrict self) {
-	return DeeString_Newf("%r.byattr", self->mba_map);
+PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
+byattr_printrepr(MapByAttr *__restrict self,
+                 dformatprinter printer, void *arg) {
+	return DeeFormat_Printf(printer, arg, "%r.byattr", self->mba_map);
 }
 
 
@@ -222,9 +224,11 @@ INTERN DeeTypeObject MapByAttr_Type = {
 		/* .tp_move_assign = */ NULL
 	},
 	/* .tp_cast = */ {
-		/* .tp_str  = */ NULL,
-		/* .tp_repr = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&byattr_repr,
-		/* .tp_bool = */ NULL
+		/* .tp_str       = */ NULL,
+		/* .tp_repr      = */ NULL,
+		/* .tp_bool      = */ NULL,
+		/* .tp_print     = */ NULL,
+		/* .tp_printrepr = */ (dssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&byattr_printrepr
 	},
 	/* .tp_call          = */ NULL,
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&byattr_visit,

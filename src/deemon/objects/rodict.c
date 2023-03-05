@@ -48,6 +48,13 @@ DECL_BEGIN
 DeeSystem_DEFINE_strcmp(dee_strcmp)
 #endif /* !CONFIG_HAVE_strcmp */
 
+#define DO(err, expr)                    \
+	do {                                 \
+		if unlikely((temp = (expr)) < 0) \
+			goto err;                    \
+		result += temp;                  \
+	}	__WHILE0
+
 typedef DeeRoDictObject Dict;
 
 typedef struct {
@@ -811,30 +818,34 @@ rodict_bool(Dict *__restrict self) {
 	return self->rd_size != 0;
 }
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-rodict_repr(Dict *__restrict self) {
-	struct unicode_printer p = UNICODE_PRINTER_INIT;
-	bool is_first            = true;
+PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
+rodict_printrepr(Dict *__restrict self,
+                 dformatprinter printer, void *arg) {
+	dssize_t temp, result;
+	bool is_first = true;
 	size_t i;
-	if (UNICODE_PRINTER_PRINT(&p, "{ ") < 0)
-		goto err;
+	result = DeeFormat_PRINT(printer, arg, "{ ");
+	if unlikely(result < 0)
+		goto done;
 	for (i = 0; i <= self->rd_mask; ++i) {
 		if (!self->rd_elem[i].di_key)
 			continue;
-		if unlikely(unicode_printer_printf(&p, "%s%r: %r",
-		                                   is_first ? "" : ", ",
-		                                   self->rd_elem[i].di_key,
-		                                   self->rd_elem[i].di_value) < 0)
-			goto err;
+		if (!is_first)
+			DO(err, DeeFormat_PRINT(printer, arg, ", "));
+		DO(err, DeeFormat_Printf(printer, arg, "%r: %r",
+		                         self->rd_elem[i].di_key,
+		                         self->rd_elem[i].di_value));
 		is_first = false;
 	}
-	if unlikely((is_first ? unicode_printer_putascii(&p, '}')
-	                      : UNICODE_PRINTER_PRINT(&p, " }")) < 0)
-		goto err;
-	return unicode_printer_pack(&p);
+	if (is_first) {
+		DO(err, DeeFormat_PRINT(printer, arg, "}"));
+	} else {
+		DO(err, DeeFormat_PRINT(printer, arg, " }"));
+	}
+done:
+	return result;
 err:
-	unicode_printer_fini(&p);
-	return NULL;
+	return temp;
 }
 
 PRIVATE WUNUSED NONNULL((1)) size_t DCALL
@@ -1016,9 +1027,11 @@ PUBLIC DeeTypeObject DeeRoDict_Type = {
 		/* .tp_deepload    = */ NULL
 	},
 	/* .tp_cast = */ {
-		/* .tp_str  = */ NULL,
-		/* .tp_repr = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&rodict_repr,
-		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&rodict_bool
+		/* .tp_str       = */ NULL,
+		/* .tp_repr      = */ NULL,
+		/* .tp_bool      = */ (int (DCALL *)(DeeObject *__restrict))&rodict_bool,
+		/* .tp_print     = */ NULL,
+		/* .tp_printrepr = */ (dssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&rodict_printrepr
 	},
 	/* .tp_call          = */ NULL,
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&rodict_visit,

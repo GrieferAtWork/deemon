@@ -4552,7 +4552,7 @@ free_reftracker(struct Dee_reftracker *__restrict self) {
 	}
 }
 
-#define DID_DEFINE_DEEOBJECT_FREETRACKER 1
+#define DID_DEFINE_DEEOBJECT_FREETRACKER
 PUBLIC NONNULL((1)) void DCALL
 DeeObject_FreeTracker(DeeObject *__restrict self) {
 	free_reftracker(self->ob_trace);
@@ -5034,7 +5034,7 @@ PUBLIC ATTR_RETNONNULL NONNULL((1, 2)) DREF DeeObject **
 
 
 #ifndef DID_DEFINE_DEEOBJECT_FREETRACKER
-#define DID_DEFINE_DEEOBJECT_FREETRACKER 1
+#define DID_DEFINE_DEEOBJECT_FREETRACKER
 PUBLIC NONNULL((1)) void /* Defined only for binary compatibility */
 (DCALL DeeObject_FreeTracker)(DeeObject *__restrict UNUSED(self)) {
 }

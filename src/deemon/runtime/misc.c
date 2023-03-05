@@ -1085,7 +1085,8 @@ Dee_HashStr(char const *__restrict str) {
 	return Dee_HashPtr(str, strlen(str));
 }
 
-PUBLIC ATTR_MALLOC void *(DCALL Dee_Malloc)(size_t n_bytes) {
+PUBLIC ATTR_MALLOC WUNUSED void *
+(DCALL Dee_Malloc)(size_t n_bytes) {
 	void *result;
 again:
 	BEGIN_ALLOC();
@@ -1107,7 +1108,8 @@ again:
 	return result;
 }
 
-PUBLIC ATTR_MALLOC void *(DCALL Dee_Calloc)(size_t n_bytes) {
+PUBLIC ATTR_MALLOC WUNUSED void *
+(DCALL Dee_Calloc)(size_t n_bytes) {
 	void *result;
 again:
 	BEGIN_ALLOC();
@@ -1130,7 +1132,8 @@ again:
 	return result;
 }
 
-PUBLIC void *(DCALL Dee_Realloc)(void *ptr, size_t n_bytes) {
+PUBLIC WUNUSED void *
+(DCALL Dee_Realloc)(void *ptr, size_t n_bytes) {
 	void *result;
 #ifndef __REALLOC_ZERO_IS_NONNULL
 	if unlikely(!n_bytes)
@@ -1151,7 +1154,8 @@ again:
 
 
 
-PUBLIC ATTR_MALLOC void *(DCALL Dee_TryMalloc)(size_t n_bytes) {
+PUBLIC ATTR_MALLOC WUNUSED void *
+(DCALL Dee_TryMalloc)(size_t n_bytes) {
 	void *result;
 	BEGIN_TRYALLOC();
 	HEAP_CHECK();
@@ -1167,7 +1171,8 @@ PUBLIC ATTR_MALLOC void *(DCALL Dee_TryMalloc)(size_t n_bytes) {
 	return result;
 }
 
-PUBLIC ATTR_MALLOC void *(DCALL Dee_TryCalloc)(size_t n_bytes) {
+PUBLIC ATTR_MALLOC WUNUSED void *
+(DCALL Dee_TryCalloc)(size_t n_bytes) {
 	void *result;
 	BEGIN_TRYALLOC();
 	HEAP_CHECK();
@@ -1183,7 +1188,8 @@ PUBLIC ATTR_MALLOC void *(DCALL Dee_TryCalloc)(size_t n_bytes) {
 	return result;
 }
 
-PUBLIC void *(DCALL Dee_TryRealloc)(void *ptr, size_t n_bytes) {
+PUBLIC WUNUSED void *
+(DCALL Dee_TryRealloc)(void *ptr, size_t n_bytes) {
 	void *result;
 #ifndef __REALLOC_ZERO_IS_NONNULL
 	if unlikely(!n_bytes)
@@ -1225,7 +1231,7 @@ PUBLIC void (DCALL Dee_Free)(void *ptr) {
 #define DO_FREE_D(ptr, file, line)             _free_d(ptr, file, line, NULL)
 #endif /* !__KERNEL__ || __KOS_VERSION__ >= 400 */
 
-PUBLIC ATTR_MALLOC void *
+PUBLIC ATTR_MALLOC WUNUSED void *
 (DCALL DeeDbg_TryMalloc)(size_t n_bytes, char const *file, int line) {
 	void *result;
 	(void)file;
@@ -1244,7 +1250,7 @@ PUBLIC ATTR_MALLOC void *
 	return result;
 }
 
-PUBLIC ATTR_MALLOC void *
+PUBLIC ATTR_MALLOC WUNUSED void *
 (DCALL DeeDbg_TryCalloc)(size_t n_bytes, char const *file, int line) {
 	void *result;
 	(void)file;
@@ -1263,7 +1269,7 @@ PUBLIC ATTR_MALLOC void *
 	return result;
 }
 
-PUBLIC void *
+PUBLIC WUNUSED void *
 (DCALL DeeDbg_TryRealloc)(void *ptr, size_t n_bytes, char const *file, int line) {
 	void *result;
 	(void)file;
@@ -1279,7 +1285,7 @@ PUBLIC void *
 	return result;
 }
 
-PUBLIC ATTR_MALLOC void *
+PUBLIC ATTR_MALLOC WUNUSED void *
 (DCALL DeeDbg_Malloc)(size_t n_bytes, char const *file, int line) {
 	void *result;
 	(void)file;
@@ -1305,7 +1311,7 @@ again:
 	return result;
 }
 
-PUBLIC ATTR_MALLOC void *
+PUBLIC ATTR_MALLOC WUNUSED void *
 (DCALL DeeDbg_Calloc)(size_t n_bytes, char const *file, int line) {
 	void *result;
 	(void)file;
@@ -1331,7 +1337,7 @@ again:
 	return result;
 }
 
-PUBLIC void *
+PUBLIC WUNUSED void *
 (DCALL DeeDbg_Realloc)(void *ptr, size_t n_bytes, char const *file, int line) {
 	void *result;
 	(void)file;
@@ -1366,7 +1372,7 @@ PUBLIC void
 #define HAVE_DEEDBG_MALLOC 1
 
 
-PUBLIC ATTR_MALLOC void *
+PUBLIC ATTR_MALLOC WUNUSED void *
 (DCALL DeeDbg_TryMalloc)(size_t n_bytes, char const *file, int line) {
 	void *result;
 	(void)file;
@@ -1385,7 +1391,7 @@ PUBLIC ATTR_MALLOC void *
 	return result;
 }
 
-PUBLIC ATTR_MALLOC void *
+PUBLIC ATTR_MALLOC WUNUSED void *
 (DCALL DeeDbg_TryCalloc)(size_t n_bytes, char const *file, int line) {
 	void *result;
 	(void)file;
@@ -1404,7 +1410,7 @@ PUBLIC ATTR_MALLOC void *
 	return result;
 }
 
-PUBLIC void *
+PUBLIC WUNUSED void *
 (DCALL DeeDbg_TryRealloc)(void *ptr, size_t n_bytes, char const *file, int line) {
 	void *result;
 	(void)file;
@@ -1420,7 +1426,7 @@ PUBLIC void *
 	return result;
 }
 
-PUBLIC ATTR_MALLOC void *
+PUBLIC ATTR_MALLOC WUNUSED void *
 (DCALL DeeDbg_Malloc)(size_t n_bytes, char const *file, int line) {
 	void *result;
 	(void)file;
@@ -1446,7 +1452,7 @@ again:
 	return result;
 }
 
-PUBLIC ATTR_MALLOC void *
+PUBLIC ATTR_MALLOC WUNUSED void *
 (DCALL DeeDbg_Calloc)(size_t n_bytes, char const *file, int line) {
 	void *result;
 	(void)file;
@@ -1472,7 +1478,7 @@ again:
 	return result;
 }
 
-PUBLIC void *
+PUBLIC WUNUSED void *
 (DCALL DeeDbg_Realloc)(void *ptr, size_t n_bytes, char const *file, int line) {
 	void *result;
 	(void)file;
@@ -1616,32 +1622,32 @@ PUBLIC void *
 
 #ifndef HAVE_DEEDBG_MALLOC
 /* Fallback: The host does not provide a debug-allocation API. */
-PUBLIC ATTR_MALLOC void *
+PUBLIC ATTR_MALLOC WUNUSED void *
 (DCALL DeeDbg_Malloc)(size_t n_bytes, char const *UNUSED(file), int UNUSED(line)) {
 	return (Dee_Malloc)(n_bytes);
 }
 
-PUBLIC ATTR_MALLOC void *
+PUBLIC ATTR_MALLOC WUNUSED void *
 (DCALL DeeDbg_Calloc)(size_t n_bytes, char const *UNUSED(file), int UNUSED(line)) {
 	return (Dee_Calloc)(n_bytes);
 }
 
-PUBLIC void *
+PUBLIC WUNUSED void *
 (DCALL DeeDbg_Realloc)(void *ptr, size_t n_bytes, char const *UNUSED(file), int UNUSED(line)) {
 	return (Dee_Realloc)(ptr, n_bytes);
 }
 
-PUBLIC ATTR_MALLOC void *
+PUBLIC ATTR_MALLOC WUNUSED void *
 (DCALL DeeDbg_TryMalloc)(size_t n_bytes, char const *UNUSED(file), int UNUSED(line)) {
 	return (Dee_TryMalloc)(n_bytes);
 }
 
-PUBLIC ATTR_MALLOC void *
+PUBLIC ATTR_MALLOC WUNUSED void *
 (DCALL DeeDbg_TryCalloc)(size_t n_bytes, char const *UNUSED(file), int UNUSED(line)) {
 	return (Dee_TryCalloc)(n_bytes);
 }
 
-PUBLIC void *
+PUBLIC WUNUSED void *
 (DCALL DeeDbg_TryRealloc)(void *ptr, size_t n_bytes,
                           char const *UNUSED(file), int UNUSED(line)) {
 	return (Dee_TryRealloc)(ptr, n_bytes);
@@ -1832,7 +1838,8 @@ PRIVATE void DCALL determine_is_dprint_enabled(void) {
 
 
 
-PUBLIC void (DCALL _Dee_vdprintf)(char const *__restrict format, va_list args) {
+PUBLIC NONNULL((1)) void
+(DCALL _Dee_vdprintf)(char const *__restrict format, va_list args) {
 #ifdef NDEBUG
 	Dee_vsnprintf(NULL, 0, format, args);
 #else /* NDEBUG */
@@ -1849,7 +1856,8 @@ PUBLIC void (DCALL _Dee_vdprintf)(char const *__restrict format, va_list args) {
 #endif /* !NDEBUG */
 }
 
-PUBLIC void (DCALL _Dee_dprint)(char const *__restrict message) {
+PUBLIC NONNULL((1)) void
+(DCALL _Dee_dprint)(char const *__restrict message) {
 #ifdef NDEBUG
 	(void)message;
 #else /* NDEBUG */
@@ -1868,7 +1876,8 @@ PUBLIC void (DCALL _Dee_dprint)(char const *__restrict message) {
 #endif /* !NDEBUG */
 }
 
-PUBLIC void (_Dee_dprintf)(char const *__restrict format, ...) {
+PUBLIC NONNULL((1)) void
+(_Dee_dprintf)(char const *__restrict format, ...) {
 #ifdef NDEBUG
 	va_list args;
 	va_start(args, format);
@@ -1914,24 +1923,28 @@ PUBLIC dssize_t
 
 
 #ifdef NDEBUG
-PUBLIC void (_DeeAssert_Failf)(char const *UNUSED(expr),
-                               char const *UNUSED(file),
-                               int UNUSED(line),
-                               char const *UNUSED(format), ...) {
+PUBLIC void
+(_DeeAssert_Failf)(char const *UNUSED(expr),
+                   char const *UNUSED(file),
+                   int UNUSED(line),
+                   char const *UNUSED(format), ...) {
 }
-PUBLIC void (DCALL _DeeAssert_Fail)(char const *UNUSED(expr),
-                                    char const *UNUSED(file),
-                                    int UNUSED(line)) {
+PUBLIC void
+(DCALL _DeeAssert_Fail)(char const *UNUSED(expr),
+                        char const *UNUSED(file),
+                        int UNUSED(line)) {
 }
 #else /* NDEBUG */
-PRIVATE void assert_vprintf(char const *format, va_list args) {
+PRIVATE NONNULL((1)) void
+assert_vprintf(char const *format, va_list args) {
 	dssize_t error;
 	error = DeeFile_VPrintf(DeeFile_DefaultStddbg, format, args);
 	if unlikely(error < 0)
 		DeeError_Handled(ERROR_HANDLED_RESTORE);
 }
 
-PRIVATE void assert_printf(char const *format, ...) {
+PRIVATE NONNULL((1)) void
+assert_printf(char const *format, ...) {
 	va_list args;
 	va_start(args, format);
 	assert_vprintf(format, args);
@@ -1940,7 +1953,7 @@ PRIVATE void assert_printf(char const *format, ...) {
 
 PUBLIC void
 (_DeeAssert_Failf)(char const *expr, char const *file,
-                  int line, char const *format, ...) {
+                   int line, char const *format, ...) {
 	assert_printf("\n\n\n"
 	              "%s(%d) : Assertion failed : %s\n",
 	              file, line, expr);

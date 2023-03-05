@@ -87,18 +87,18 @@ INTDEF bool DCALL DeeGC_IsEmptyWithoutDex(void);
  * All these do is allocate a block of memory of `n_bytes' that
  * includes some storage at negative offsets to hold a `struct gc_head',
  * as is required for objects that should later be tracked by the GC. */
-DFUNDEF WUNUSED ATTR_MALLOC void *(DCALL DeeGCObject_Malloc)(size_t n_bytes);
-DFUNDEF WUNUSED ATTR_MALLOC void *(DCALL DeeGCObject_Calloc)(size_t n_bytes);
+DFUNDEF ATTR_MALLOC WUNUSED void *(DCALL DeeGCObject_Malloc)(size_t n_bytes);
+DFUNDEF ATTR_MALLOC WUNUSED void *(DCALL DeeGCObject_Calloc)(size_t n_bytes);
 DFUNDEF WUNUSED void *(DCALL DeeGCObject_Realloc)(void *p, size_t n_bytes);
-DFUNDEF WUNUSED ATTR_MALLOC void *(DCALL DeeGCObject_TryMalloc)(size_t n_bytes);
-DFUNDEF WUNUSED ATTR_MALLOC void *(DCALL DeeGCObject_TryCalloc)(size_t n_bytes);
+DFUNDEF ATTR_MALLOC WUNUSED void *(DCALL DeeGCObject_TryMalloc)(size_t n_bytes);
+DFUNDEF ATTR_MALLOC WUNUSED void *(DCALL DeeGCObject_TryCalloc)(size_t n_bytes);
 DFUNDEF WUNUSED void *(DCALL DeeGCObject_TryRealloc)(void *p, size_t n_bytes);
 DFUNDEF void (DCALL DeeGCObject_Free)(void *p);
-DFUNDEF WUNUSED ATTR_MALLOC void *(DCALL DeeDbgGCObject_Malloc)(size_t n_bytes, char const *file, int line);
-DFUNDEF WUNUSED ATTR_MALLOC void *(DCALL DeeDbgGCObject_Calloc)(size_t n_bytes, char const *file, int line);
+DFUNDEF ATTR_MALLOC WUNUSED void *(DCALL DeeDbgGCObject_Malloc)(size_t n_bytes, char const *file, int line);
+DFUNDEF ATTR_MALLOC WUNUSED void *(DCALL DeeDbgGCObject_Calloc)(size_t n_bytes, char const *file, int line);
 DFUNDEF WUNUSED void *(DCALL DeeDbgGCObject_Realloc)(void *p, size_t n_bytes, char const *file, int line);
-DFUNDEF WUNUSED ATTR_MALLOC void *(DCALL DeeDbgGCObject_TryMalloc)(size_t n_bytes, char const *file, int line);
-DFUNDEF WUNUSED ATTR_MALLOC void *(DCALL DeeDbgGCObject_TryCalloc)(size_t n_bytes, char const *file, int line);
+DFUNDEF ATTR_MALLOC WUNUSED void *(DCALL DeeDbgGCObject_TryMalloc)(size_t n_bytes, char const *file, int line);
+DFUNDEF ATTR_MALLOC WUNUSED void *(DCALL DeeDbgGCObject_TryCalloc)(size_t n_bytes, char const *file, int line);
 DFUNDEF WUNUSED void *(DCALL DeeDbgGCObject_TryRealloc)(void *p, size_t n_bytes, char const *file, int line);
 DFUNDEF void (DCALL DeeDbgGCObject_Free)(void *p, char const *file, int line);
 
@@ -140,10 +140,10 @@ DFUNDEF void (DCALL DeeDbgGCObject_Free)(void *p, char const *file, int line);
 #define DeeGCObject_FFree(ptr, size) (DeeGCObject_Free(ptr), (void)(size))
 #else /* CONFIG_NO_OBJECT_SLABS */
 #define DEE_PRIVATE_DEFINE_SLAB_FUNCTIONS(index, size)                               \
-	DFUNDEF WUNUSED ATTR_MALLOC void *(DCALL DeeGCObject_SlabMalloc##size)(void);    \
-	DFUNDEF WUNUSED ATTR_MALLOC void *(DCALL DeeGCObject_SlabCalloc##size)(void);    \
-	DFUNDEF WUNUSED ATTR_MALLOC void *(DCALL DeeGCObject_SlabTryMalloc##size)(void); \
-	DFUNDEF WUNUSED ATTR_MALLOC void *(DCALL DeeGCObject_SlabTryCalloc##size)(void); \
+	DFUNDEF ATTR_MALLOC WUNUSED void *(DCALL DeeGCObject_SlabMalloc##size)(void);    \
+	DFUNDEF ATTR_MALLOC WUNUSED void *(DCALL DeeGCObject_SlabCalloc##size)(void);    \
+	DFUNDEF ATTR_MALLOC WUNUSED void *(DCALL DeeGCObject_SlabTryMalloc##size)(void); \
+	DFUNDEF ATTR_MALLOC WUNUSED void *(DCALL DeeGCObject_SlabTryCalloc##size)(void); \
 	DFUNDEF void (DCALL DeeGCObject_SlabFree##size)(void *__restrict ptr);
 DeeSlab_ENUMERATE(DEE_PRIVATE_DEFINE_SLAB_FUNCTIONS)
 #undef DEE_PRIVATE_DEFINE_SLAB_FUNCTIONS
@@ -182,7 +182,7 @@ DeeSlab_ENUMERATE(DEE_PRIVATE_DEFINE_SLAB_FUNCTIONS)
  * This object also offers a hand full of member functions
  * that user-space an invoke to trigger various GC-related
  * functionality:
- *   - collect(int max = -1) -> int;
+ *   - collect(max: int = -1): int;
  * Also: remember that this derives from `Sequence', so you
  *       can use all its attributes, like `empty', etc.
  * NOTE: This object is exported as `gc from deemon' */

@@ -162,9 +162,12 @@ DeeKwds_NewWithHint(size_t num_items);
  * NOTE: The keywords argument index is set to the old number of
  *       keywords that had already been defined previously. */
 INTDEF WUNUSED NONNULL((1, 2)) int
+(DCALL DeeKwds_AppendStr)(DREF DeeObject **__restrict pself,
+                          char const *__restrict name,
+                          size_t name_len, Dee_hash_t hash);
+INTDEF WUNUSED NONNULL((1, 2)) int
 (DCALL DeeKwds_Append)(DREF DeeObject **__restrict pself,
-                       char const *__restrict name,
-                       size_t name_len, Dee_hash_t hash);
+                       DeeObject *__restrict name);
 
 /* Return the keyword-entry associated with `keyword_index'
  * The caller must ensure that `keyword_index < DeeKwds_SIZE(self)' */
@@ -173,7 +176,10 @@ DeeKwds_GetByIndex(DeeObject *__restrict self, size_t keyword_index);
 
 #ifndef __INTELLISENSE__
 #ifndef __NO_builtin_expect
-#define DeeKwds_Append(pself, name, name_len, hash) __builtin_expect(DeeKwds_Append(pself, name, name_len, hash), 0)
+#define DeeKwds_AppendStr(pself, name, name_len, hash) \
+	__builtin_expect(DeeKwds_AppendStr(pself, name, name_len, hash), 0)
+#define DeeKwds_Append(pself, name) \
+	__builtin_expect(DeeKwds_Append(pself, name), 0)
 #endif /* !__NO_builtin_expect */
 #endif /* !__INTELLISENSE__ */
 #endif /* CONFIG_BUILDING_DEEMON */

@@ -639,14 +639,15 @@ done:
 	return result;
 }
 
-INTDEF WUNUSED NONNULL((1, 2)) dssize_t DCALL
-print_ddi(struct ascii_printer *__restrict printer,
+INTDEF WUNUSED NONNULL((1, 3)) dssize_t DCALL
+print_ddi(dformatprinter printer, void *arg,
           DeeCodeObject *__restrict code, code_addr_t ip);
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-traceback_repr(DeeTracebackObject *__restrict self) {
-	struct ascii_printer printer = ASCII_PRINTER_INIT;
-	uint16_t i                   = self->tb_numframes;
+PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
+traceback_print(DeeTracebackObject *__restrict self,
+                dformatprinter printer, void *arg) {
+	dssize_t temp, result = 0;
+	uint16_t i = self->tb_numframes;
 	while (i--) {
 		DREF DeeCodeObject *code;
 		code_addr_t ip;
@@ -656,15 +657,15 @@ traceback_repr(DeeTracebackObject *__restrict self) {
 		Dee_Incref(code);
 		ip = (code_addr_t)(self->tb_frames[i].cf_ip - code->co_code);
 		atomic_lock_release(&self->tb_lock);
-		error = print_ddi(&printer, code, ip);
+		temp = print_ddi(printer, arg, code, ip);
 		Dee_Decref(code);
-		if unlikely(error < 0)
+		if unlikely(temp < 0)
 			goto err;
+		result += temp;
 	}
-	return ascii_printer_pack(&printer);
+	return result;
 err:
-	ascii_printer_fini(&printer);
-	return NULL;
+	return temp;
 }
 
 
@@ -758,9 +759,10 @@ PUBLIC DeeTypeObject DeeTraceback_Type = {
 		/* .tp_move_assign = */ NULL
 	},
 	/* .tp_cast = */ {
-		/* .tp_str  = */ NULL,
-		/* .tp_repr = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&traceback_repr,
-		/* .tp_bool = */ NULL
+		/* .tp_str   = */ NULL,
+		/* .tp_repr  = */ NULL,
+		/* .tp_bool  = */ NULL,
+		/* .tp_print = */ (dssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&traceback_print
 	},
 	/* .tp_call          = */ NULL,
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&traceback_visit,

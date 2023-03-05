@@ -37,11 +37,13 @@
 #define CONFIG_HAVE_STRING_H
 #endif
 
-#ifdef CONFIG_NO_STRING_H
-#undef CONFIG_HAVE_STRING_H
-#elif !defined(CONFIG_HAVE_STRING_H) && \
-      (defined(__NO_has_include) || __has_include(<string.h>))
-#define CONFIG_HAVE_STRING_H
+#ifdef CONFIG_NO_STRINGS_H
+#undef CONFIG_HAVE_STRINGS_H
+#elif !defined(CONFIG_HAVE_STRINGS_H) && \
+      (__has_include(<strings.h>) || (defined(__NO_has_include) && (defined(__linux__) || \
+       defined(__linux) || defined(linux) || defined(__unix__) || defined(__unix) || \
+       defined(unix))))
+#define CONFIG_HAVE_STRINGS_H
 #endif
 
 /* Figure out how to get alloca() (if it is even available) */
@@ -146,18 +148,18 @@ DECL_BEGIN
 #ifdef __CC__
 /* Default malloc/free functions used for heap allocation.
  * NOTE: Upon allocation failure caches are cleared and an `Error.NoMemory' is thrown. */
-DFUNDEF WUNUSED ATTR_MALLOC void *(DCALL Dee_Malloc)(size_t n_bytes);
-DFUNDEF WUNUSED ATTR_MALLOC void *(DCALL Dee_Calloc)(size_t n_bytes);
+DFUNDEF ATTR_MALLOC WUNUSED void *(DCALL Dee_Malloc)(size_t n_bytes);
+DFUNDEF ATTR_MALLOC WUNUSED void *(DCALL Dee_Calloc)(size_t n_bytes);
 DFUNDEF WUNUSED void *(DCALL Dee_Realloc)(void *ptr, size_t n_bytes);
-DFUNDEF WUNUSED ATTR_MALLOC void *(DCALL Dee_TryMalloc)(size_t n_bytes);
-DFUNDEF WUNUSED ATTR_MALLOC void *(DCALL Dee_TryCalloc)(size_t n_bytes);
+DFUNDEF ATTR_MALLOC WUNUSED void *(DCALL Dee_TryMalloc)(size_t n_bytes);
+DFUNDEF ATTR_MALLOC WUNUSED void *(DCALL Dee_TryCalloc)(size_t n_bytes);
 DFUNDEF WUNUSED void *(DCALL Dee_TryRealloc)(void *ptr, size_t n_bytes);
 DFUNDEF void (DCALL Dee_Free)(void *ptr);
-DFUNDEF WUNUSED ATTR_MALLOC void *(DCALL DeeDbg_Malloc)(size_t n_bytes, char const *file, int line);
-DFUNDEF WUNUSED ATTR_MALLOC void *(DCALL DeeDbg_Calloc)(size_t n_bytes, char const *file, int line);
+DFUNDEF ATTR_MALLOC WUNUSED void *(DCALL DeeDbg_Malloc)(size_t n_bytes, char const *file, int line);
+DFUNDEF ATTR_MALLOC WUNUSED void *(DCALL DeeDbg_Calloc)(size_t n_bytes, char const *file, int line);
 DFUNDEF WUNUSED void *(DCALL DeeDbg_Realloc)(void *ptr, size_t n_bytes, char const *file, int line);
-DFUNDEF WUNUSED ATTR_MALLOC void *(DCALL DeeDbg_TryMalloc)(size_t n_bytes, char const *file, int line);
-DFUNDEF WUNUSED ATTR_MALLOC void *(DCALL DeeDbg_TryCalloc)(size_t n_bytes, char const *file, int line);
+DFUNDEF ATTR_MALLOC WUNUSED void *(DCALL DeeDbg_TryMalloc)(size_t n_bytes, char const *file, int line);
+DFUNDEF ATTR_MALLOC WUNUSED void *(DCALL DeeDbg_TryCalloc)(size_t n_bytes, char const *file, int line);
 DFUNDEF WUNUSED void *(DCALL DeeDbg_TryRealloc)(void *ptr, size_t n_bytes, char const *file, int line);
 DFUNDEF void (DCALL DeeDbg_Free)(void *ptr, char const *file, int line);
 DFUNDEF void *(DCALL DeeDbg_UntrackAlloc)(void *ptr, char const *file, int line);
@@ -644,22 +646,22 @@ for (local n: usedSizes.sorted()) {
 
 #ifdef __CC__
 #define DEE_PRIVATE_DEFINE_SLAB_FUNCTIONS(index, size)                                                        \
-	DFUNDEF WUNUSED ATTR_MALLOC void *(DCALL DeeSlab_Malloc##size)(void);                                     \
-	DFUNDEF WUNUSED ATTR_MALLOC void *(DCALL DeeSlab_Calloc##size)(void);                                     \
-	DFUNDEF WUNUSED ATTR_MALLOC void *(DCALL DeeSlab_TryMalloc##size)(void);                                  \
-	DFUNDEF WUNUSED ATTR_MALLOC void *(DCALL DeeSlab_TryCalloc##size)(void);                                  \
-	DFUNDEF WUNUSED ATTR_MALLOC void *(DCALL DeeDbgSlab_Malloc##size)(char const *file, int line);            \
-	DFUNDEF WUNUSED ATTR_MALLOC void *(DCALL DeeDbgSlab_Calloc##size)(char const *file, int line);            \
-	DFUNDEF WUNUSED ATTR_MALLOC void *(DCALL DeeDbgSlab_TryMalloc##size)(char const *file, int line);         \
-	DFUNDEF WUNUSED ATTR_MALLOC void *(DCALL DeeDbgSlab_TryCalloc##size)(char const *file, int line);         \
-	DFUNDEF WUNUSED ATTR_MALLOC void *(DCALL DeeGCObject_SlabMalloc##size)(void);                             \
-	DFUNDEF WUNUSED ATTR_MALLOC void *(DCALL DeeGCObject_SlabCalloc##size)(void);                             \
-	DFUNDEF WUNUSED ATTR_MALLOC void *(DCALL DeeGCObject_SlabTryMalloc##size)(void);                          \
-	DFUNDEF WUNUSED ATTR_MALLOC void *(DCALL DeeGCObject_SlabTryCalloc##size)(void);                          \
-	DFUNDEF WUNUSED ATTR_MALLOC void *(DCALL DeeDbgGCObject_SlabMalloc##size)(char const *file, int line);    \
-	DFUNDEF WUNUSED ATTR_MALLOC void *(DCALL DeeDbgGCObject_SlabCalloc##size)(char const *file, int line);    \
-	DFUNDEF WUNUSED ATTR_MALLOC void *(DCALL DeeDbgGCObject_SlabTryMalloc##size)(char const *file, int line); \
-	DFUNDEF WUNUSED ATTR_MALLOC void *(DCALL DeeDbgGCObject_SlabTryCalloc##size)(char const *file, int line); \
+	DFUNDEF ATTR_MALLOC WUNUSED void *(DCALL DeeSlab_Malloc##size)(void);                                     \
+	DFUNDEF ATTR_MALLOC WUNUSED void *(DCALL DeeSlab_Calloc##size)(void);                                     \
+	DFUNDEF ATTR_MALLOC WUNUSED void *(DCALL DeeSlab_TryMalloc##size)(void);                                  \
+	DFUNDEF ATTR_MALLOC WUNUSED void *(DCALL DeeSlab_TryCalloc##size)(void);                                  \
+	DFUNDEF ATTR_MALLOC WUNUSED void *(DCALL DeeDbgSlab_Malloc##size)(char const *file, int line);            \
+	DFUNDEF ATTR_MALLOC WUNUSED void *(DCALL DeeDbgSlab_Calloc##size)(char const *file, int line);            \
+	DFUNDEF ATTR_MALLOC WUNUSED void *(DCALL DeeDbgSlab_TryMalloc##size)(char const *file, int line);         \
+	DFUNDEF ATTR_MALLOC WUNUSED void *(DCALL DeeDbgSlab_TryCalloc##size)(char const *file, int line);         \
+	DFUNDEF ATTR_MALLOC WUNUSED void *(DCALL DeeGCObject_SlabMalloc##size)(void);                             \
+	DFUNDEF ATTR_MALLOC WUNUSED void *(DCALL DeeGCObject_SlabCalloc##size)(void);                             \
+	DFUNDEF ATTR_MALLOC WUNUSED void *(DCALL DeeGCObject_SlabTryMalloc##size)(void);                          \
+	DFUNDEF ATTR_MALLOC WUNUSED void *(DCALL DeeGCObject_SlabTryCalloc##size)(void);                          \
+	DFUNDEF ATTR_MALLOC WUNUSED void *(DCALL DeeDbgGCObject_SlabMalloc##size)(char const *file, int line);    \
+	DFUNDEF ATTR_MALLOC WUNUSED void *(DCALL DeeDbgGCObject_SlabCalloc##size)(char const *file, int line);    \
+	DFUNDEF ATTR_MALLOC WUNUSED void *(DCALL DeeDbgGCObject_SlabTryMalloc##size)(char const *file, int line); \
+	DFUNDEF ATTR_MALLOC WUNUSED void *(DCALL DeeDbgGCObject_SlabTryCalloc##size)(char const *file, int line); \
 	DFUNDEF void (DCALL DeeSlab_Free##size)(void *ptr);                                                       \
 	DFUNDEF void (DCALL DeeDbgSlab_Free##size)(void *ptr, char const *file, int line);                        \
 	DFUNDEF void (DCALL DeeGCObject_SlabFree##size)(void *__restrict ptr);                                    \

@@ -90,9 +90,10 @@ invset_visit(DeeInverseSetObject *__restrict self, dvisit_t proc, void *arg) {
 	Dee_Visit(self->is_set);
 }
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-invset_repr(DeeInverseSetObject *__restrict self) {
-	return DeeString_Newf("~%r", self->is_set);
+PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
+invset_printrepr(DeeInverseSetObject *__restrict self,
+                 dformatprinter printer, void *arg) {
+	return DeeFormat_Printf(printer, arg, "~%r", self->is_set);
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -164,9 +165,11 @@ PUBLIC DeeTypeObject DeeInverseSet_Type = {
 		/* .tp_move_assign = */ NULL
 	},
 	/* .tp_cast = */ {
-		/* .tp_str  = */ NULL,
-		/* .tp_repr = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&invset_repr,
-		/* .tp_bool = */ NULL
+		/* .tp_str       = */ NULL,
+		/* .tp_repr      = */ NULL,
+		/* .tp_bool      = */ NULL,
+		/* .tp_print     = */ NULL,
+		/* .tp_printrepr = */ (dssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&invset_printrepr
 	},
 	/* .tp_call          = */ NULL,
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&invset_visit,

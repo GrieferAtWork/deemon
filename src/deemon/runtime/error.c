@@ -80,70 +80,61 @@ DeeError_Print(char const *reason, unsigned int handle_errors) {
 		DeeError_Display(reason, error_ob,
 		                 (DeeObject *)except_frame_gettb(thread_self->t_except));
 	}
+
 	/* If we're not supposed to handle any errors, then don't */
 	if (handle_errors == ERROR_PRINT_DONTHANDLE)
 		return true;
+
 	/* Handle the error according to interrupt-mode. */
 	return DeeError_Handled(handle_errors);
 }
+
+
+
+PRIVATE WUNUSED NONNULL((1)) dssize_t DPRINTER_CC
+stderr_printer(void *__restrict self,
+               char const *__restrict data, size_t datalen) {
+	size_t result;
+	DREF DeeObject *deemon_stderr;
+#ifdef CONFIG_HOST_WINDOWS
+	Dee_DPRINTER(self, data, datalen);
+#endif /* CONFIG_HOST_WINDOWS */
+	deemon_stderr = DeeFile_GetStd(DEE_STDERR);
+	if likely(deemon_stderr) {
+		result = DeeFile_WriteAll(deemon_stderr, data, datalen);
+		Dee_Decref_unlikely(deemon_stderr);
+	} else {
+		result = (size_t)-1;
+	}
+	return (dssize_t)result;
+}
+
 
 /* Display (print to stderr) an error, as well as an optional traceback. */
 PUBLIC NONNULL((2)) void DCALL
 DeeError_Display(char const *reason,
                  DeeObject *error,
                  DeeObject *traceback) {
-	DeeStringObject *error_str;
+	dssize_t status;
 	ASSERT_OBJECT(error);
 	ASSERT_OBJECT_TYPE_OPT(traceback, &DeeTraceback_Type);
-	error_str = (DeeStringObject *)DeeObject_Str(error);
-	if unlikely(!error_str)
-		goto handle_error;
-	if (!reason)
+	if (reason == NULL)
 		reason = "Unhandled exception\n";
-	/* TODO: Use a `dformatprinter' here, and stop relying on stdio!
-	 *       Also: When printing string objects, print them as UTF-8! */
-#if defined(CONFIG_HAVE_fprintf) && defined(CONFIG_HAVE_stderr)
-	DBG_ALIGNMENT_DISABLE();
-#ifdef CONFIG_HAVE_fwrite
-	fwrite(reason, sizeof(char), strlen(reason), stderr);
-#else /* CONFIG_HAVE_fwrite */
-	fprintf(stderr, "%s", reason);
-#endif /* !CONFIG_HAVE_fwrite */
-	fprintf(stderr, ">> %s: %s\n",
-	        Dee_TYPE(error)->tp_name,
-	        DeeString_STR(error_str));
-	DBG_ALIGNMENT_ENABLE();
-#endif /* CONFIG_HAVE_fprintf && CONFIG_HAVE_stderr */
-	Dee_DPRINT(reason);
-	Dee_DPRINT(">> ");
-	Dee_DPRINT(Dee_TYPE(error)->tp_name);
-	Dee_DPRINT(": ");
-	Dee_DPRINT(DeeString_STR(error_str));
-	Dee_DPRINT("\n");
-	Dee_Decref(error_str);
+	status = DeeFormat_Printf(&stderr_printer, NULL,
+	                          ">> %k: %k\n",
+	                          Dee_TYPE(error), error);
+	if unlikely(status < 0)
+		goto handle_print_error;
 	if (traceback) {
-		error_str = (DeeStringObject *)DeeObject_Repr(traceback);
-		if unlikely(!error_str) {
-			Dee_DPRINT("Failed to print traceback\n");
-#if defined(CONFIG_HAVE_fprintf) && defined(CONFIG_HAVE_stderr)
-			DBG_ALIGNMENT_DISABLE();
-			fprintf(stderr, "Failed to print traceback\n");
-			DBG_ALIGNMENT_ENABLE();
-#endif /* CONFIG_HAVE_fprintf && CONFIG_HAVE_stderr */
-			goto handle_error;
-		}
-#if defined(CONFIG_HAVE_fprintf) && defined(CONFIG_HAVE_stderr)
-		DBG_ALIGNMENT_DISABLE();
-		fprintf(stderr, "%s\n", DeeString_STR(error_str));
-		DBG_ALIGNMENT_ENABLE();
-#endif /* CONFIG_HAVE_fprintf && CONFIG_HAVE_stderr */
-		Dee_DPRINT(DeeString_STR(error_str));
-		Dee_DPRINT("\n");
-		Dee_Decref(error_str);
+		status = DeeObject_Print(traceback, &stderr_printer, NULL);
+		if unlikely(status < 0)
+			goto handle_print_error;
 	}
 	return;
-handle_error:
+handle_print_error:
 	DeeError_Handled(ERROR_HANDLED_RESTORE);
+	if (stderr_printer(NULL, "Failed to print error", 21) < 0)
+		DeeError_Handled(ERROR_HANDLED_RESTORE);
 }
 
 /* Throw a given object `ob' as an error.

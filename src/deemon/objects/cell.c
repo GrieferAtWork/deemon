@@ -26,6 +26,7 @@
 #include <deemon/bool.h>
 #include <deemon/cell.h>
 #include <deemon/error.h>
+#include <deemon/format.h>
 #include <deemon/gc.h>
 #include <deemon/none.h>
 #include <deemon/object.h>
@@ -239,27 +240,34 @@ DeeCell_Set(DeeObject *self, DeeObject *value) {
 	return 0;
 }
 
-
-/*[[[deemon (PRIVATE_DEFINE_STRING from rt.gen.string)("empty_cell_repr", "Cell()");]]]*/
-PRIVATE DEFINE_STRING_EX(empty_cell_repr, "Cell()", 0x96abe6c, 0x2370159788821e2);
-/*[[[end]]]*/
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeStringObject *DCALL
-cell_str(Cell *__restrict self) {
+PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
+cell_print(Cell *__restrict self,
+           dformatprinter printer, void *arg) {
+	dssize_t result;
 	DREF DeeObject *item;
 	item = DeeCell_TryGet((DeeObject *)self);
-	if (!item)
-		return_reference_(&str_Cell);
-	return (DREF DeeStringObject *)DeeString_Newf("Cell -> %K", item);
+	if (item) {
+		result = DeeFormat_Printf(printer, arg, "<cell with %k>", item);
+		Dee_Decref(item);
+	} else {
+		result = DeeFormat_PRINT(printer, arg, "<empty cell>");
+	}
+	return result;
 }
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeStringObject *DCALL
-cell_repr(Cell *__restrict self) {
+PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
+cell_printrepr(Cell *__restrict self,
+               dformatprinter printer, void *arg) {
+	dssize_t result;
 	DREF DeeObject *item;
 	item = DeeCell_TryGet((DeeObject *)self);
-	if (!item)
-		return_reference_((DeeStringObject *)&empty_cell_repr);
-	return (DREF DeeStringObject *)DeeString_Newf("Cell(%R)", item);
+	if (item) {
+		result = DeeFormat_Printf(printer, arg, "Cell(%r)", item);
+		Dee_Decref(item);
+	} else {
+		result = DeeFormat_PRINT(printer, arg, "Cell()");
+	}
+	return result;
 }
 
 #define CELL_READITEM(x) atomic_read(&(x)->c_item)
@@ -560,9 +568,11 @@ PUBLIC DeeTypeObject DeeCell_Type = {
 		/* .tp_deepload    = */ (int (DCALL *)(DeeObject *__restrict))&cell_deepload
 	},
 	/* .tp_cast = */ {
-		/* .tp_str  = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&cell_str,
-		/* .tp_repr = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&cell_repr,
-		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&cell_bool
+		/* .tp_str       = */ NULL,
+		/* .tp_repr      = */ NULL,
+		/* .tp_bool      = */ (int (DCALL *)(DeeObject *__restrict))&cell_bool,
+		/* .tp_print     = */ (dssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&cell_print,
+		/* .tp_printrepr = */ (dssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&cell_printrepr,
 	},
 	/* .tp_call          = */ NULL,
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&cell_visit,

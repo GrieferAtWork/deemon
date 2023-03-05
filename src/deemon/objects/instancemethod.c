@@ -27,6 +27,7 @@
 #include <deemon/callable.h>
 #include <deemon/class.h>
 #include <deemon/error.h>
+#include <deemon/format.h>
 #include <deemon/instancemethod.h>
 #include <deemon/none.h>
 #include <deemon/object.h>
@@ -100,26 +101,27 @@ err:
 	return -1;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 im_init(InstanceMethod *__restrict self,
         size_t argc, DeeObject *const *argv,
         DeeObject *kw) {
-	DeeObject *thisarg, *func;
 	PRIVATE struct keyword kwlist[] = { K(func), K(thisarg), KEND };
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist, "oo:InstanceMethod", &func, &thisarg))
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist, "oo:InstanceMethod",
+	                    &self->im_func, &self->im_this))
 		goto err;
-	self->im_this = thisarg;
-	self->im_func = func;
-	Dee_Incref(thisarg);
-	Dee_Incref(func);
+	Dee_Incref(self->im_this);
+	Dee_Incref(self->im_func);
 	return 0;
 err:
 	return -1;
 }
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-im_repr(InstanceMethod *__restrict self) {
-	return DeeString_Newf("InstanceMethod(func: %r, thisarg: %r)", self->im_func, self->im_this);
+PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
+im_printrepr(InstanceMethod *__restrict self,
+             dformatprinter printer, void *arg) {
+	return DeeFormat_Printf(printer, arg,
+	                        "InstanceMethod(func: %r, thisarg: %r)",
+	                        self->im_func, self->im_this);
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -158,8 +160,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-im_ne(InstanceMethod *self,
-      InstanceMethod *other) {
+im_ne(InstanceMethod *self, InstanceMethod *other) {
 	int temp;
 	if (DeeObject_AssertType(other, &DeeInstanceMethod_Type))
 		goto err;
@@ -195,7 +196,7 @@ INTDEF NONNULL((1, 2)) void DCALL super_visit(DeeSuperObject *__restrict self, d
 #define im_fini   super_fini
 #define im_visit  super_visit
 
-PRIVATE struct class_attribute *DCALL
+PRIVATE WUNUSED NONNULL((1)) struct class_attribute *DCALL
 instancemethod_getattr(InstanceMethod *__restrict self,
                        uint16_t *pgetset_index,
                        DeeTypeObject **pdecl_type) {
@@ -380,9 +381,11 @@ PUBLIC DeeTypeObject DeeInstanceMethod_Type = {
 		/* .tp_move_assign = */ NULL
 	},
 	/* .tp_cast = */ {
-		/* .tp_str  = */ NULL,
-		/* .tp_repr = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&im_repr,
-		/* .tp_bool = */ NULL
+		/* .tp_str       = */ NULL,
+		/* .tp_repr      = */ NULL,
+		/* .tp_bool      = */ NULL,
+		/* .tp_print     = */ NULL,
+		/* .tp_printrepr = */ (dssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&im_printrepr
 	},
 	/* .tp_call          = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&im_call,
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&im_visit,

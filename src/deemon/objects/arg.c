@@ -228,7 +228,7 @@ INTERN DeeTypeObject DeeKwdsIterator_Type = {
 	/* .tp_doc      = */ DOC("()\n"
 	                         "(map:?Ert:Kwds)\n"
 	                         "\n"
-	                         "next->?T2?Dstring?O"),
+	                         "next->?T2?Dstring?Dint"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
@@ -321,9 +321,9 @@ done:
  * NOTE: The keywords argument index is set to the old number of
  *       keywords that had already been defined previously. */
 INTERN WUNUSED NONNULL((1, 2)) int
-(DCALL DeeKwds_Append)(DREF DeeObject **__restrict pself,
-                       char const *__restrict name,
-                       size_t name_len, dhash_t hash) {
+(DCALL DeeKwds_AppendStr)(DREF DeeObject **__restrict pself,
+                          char const *__restrict name,
+                          size_t name_len, dhash_t hash) {
 	dhash_t i, perturb;
 	struct kwds_entry *entry;
 	DREF Kwds *self = (DREF Kwds *)*pself;
@@ -344,6 +344,41 @@ INTERN WUNUSED NONNULL((1, 2)) int
 	entry->ke_name = (DREF DeeStringObject *)DeeString_NewSized(name, name_len);
 	if unlikely(!entry->ke_name)
 		goto err;
+	entry->ke_name->s_hash = hash; /* Remember the hash! */
+	entry->ke_index        = self->kw_size++;
+	entry->ke_hash         = hash;
+	return 0;
+err:
+	return -1;
+}
+
+/* Append a new entry for `name'.
+ * NOTE: The keywords argument index is set to the old number of
+ *       keywords that had already been defined previously. */
+INTERN WUNUSED NONNULL((1, 2)) int
+(DCALL DeeKwds_Append)(DREF DeeObject **__restrict pself,
+                       DeeObject *__restrict name) {
+	dhash_t i, perturb, hash;
+	struct kwds_entry *entry;
+	DREF Kwds *self = (DREF Kwds *)*pself;
+	ASSERT_OBJECT_TYPE_EXACT(name, &DeeString_Type);
+	if (self->kw_size * 2 > self->kw_mask) {
+		/* Must allocate a larger map. */
+		self = kwds_rehash(self);
+		if unlikely(!self)
+			goto err;
+		*pself = (DREF DeeObject *)self;
+	}
+	ASSERT(self->kw_size < self->kw_mask);
+	hash    = DeeString_Hash(name);
+	perturb = i = hash & self->kw_mask;
+	for (;; DeeKwds_MAPNEXT(i, perturb)) {
+		entry = &self->kw_map[i & self->kw_mask];
+		if (!entry->ke_name)
+			break;
+	}
+	entry->ke_name = (DREF DeeStringObject *)name;
+	Dee_Incref(name);
 	entry->ke_name->s_hash = hash; /* Remember the hash! */
 	entry->ke_index        = self->kw_size++;
 	entry->ke_hash         = hash;
@@ -431,10 +466,35 @@ done:
 
 PRIVATE WUNUSED DREF Kwds *DCALL
 kwds_init(size_t argc, DeeObject *const *argv) {
-	/* TODO */
-	(void)argc;
-	(void)argv;
-	DERROR_NOTIMPLEMENTED();
+	DREF Kwds *result;
+	DeeObject *init;
+	DREF DeeObject *iter, *elem;
+	if (DeeArg_Unpack(argc, argv, "o:Kwds", &init))
+		goto err;
+	result = kwds_ctor();
+	if unlikely(!result)
+		goto err;
+	iter = DeeObject_IterSelf(init);
+	if unlikely(!iter)
+		goto err_r;
+	while (ITER_ISOK(elem = DeeObject_IterNext(iter))) {
+		if (DeeObject_AssertTypeExact(elem, &DeeString_Type))
+			goto err_r_iter_elem;
+		if (DeeKwds_Append((DeeObject **)&result, elem))
+			goto err_r_iter_elem;
+		Dee_Decref_likely(elem);
+	}
+	if unlikely(!elem)
+		goto err_r_iter;
+	Dee_Decref_likely(iter);
+	return result;
+err_r_iter_elem:
+	Dee_Decref_likely(elem);
+err_r_iter:
+	Dee_Decref_likely(iter);
+err_r:
+	Dee_Decref_likely(result);
+err:
 	return NULL;
 }
 
@@ -452,30 +512,38 @@ kwds_visit(Kwds *__restrict self, dvisit_t proc, void *arg) {
 		Dee_XVisit(self->kw_map[i].ke_name);
 }
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-kwds_repr(Kwds *__restrict self) {
+PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
+kwds_printrepr(Kwds *__restrict self,
+               dformatprinter printer, void *arg) {
+#define DO(err, expr)                    \
+	do {                                 \
+		if unlikely((temp = (expr)) < 0) \
+			goto err;                    \
+		result += temp;                  \
+	}	__WHILE0
+	dssize_t temp, result;
 	size_t i;
-	bool is_first                  = true;
-	struct unicode_printer printer = UNICODE_PRINTER_INIT;
-	if (UNICODE_PRINTER_PRINT(&printer, "{ ") < 0)
-		goto err;
+	bool is_first = true;
+	result = DeeFormat_PRINT(printer, arg, "{ ");
+	if unlikely(result < 0)
+		goto done;
 	for (i = 0; i <= self->kw_mask; ++i) {
 		if (!self->kw_map[i].ke_name)
 			continue;
-		if (!is_first && UNICODE_PRINTER_PRINT(&printer, ", ") < 0)
-			goto err;
-		if (unicode_printer_printf(&printer, "%r: %" PRFuSIZ,
-		                           self->kw_map[i].ke_name,
-		                           self->kw_map[i].ke_index) < 0)
-			goto err;
+		if (!is_first)
+			DO(err, DeeFormat_PRINT(printer, arg, ", "));
+		DO(err, DeeFormat_Printf(printer, arg,
+		                         "%r: %" PRFuSIZ,
+		                         self->kw_map[i].ke_name,
+		                         self->kw_map[i].ke_index));
 		is_first = false;
 	}
-	if (UNICODE_PRINTER_PRINT(&printer, " }") < 0)
-		goto err;
-	return unicode_printer_pack(&printer);
+	DO(err, DeeFormat_PRINT(printer, arg, " }"));
+done:
+	return result;
 err:
-	unicode_printer_fini(&printer);
-	return NULL;
+	return temp;
+#undef DO
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
@@ -587,7 +655,7 @@ PRIVATE struct type_member tpconst kwds_class_members[] = {
 PUBLIC DeeTypeObject DeeKwds_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_Kwds",
-	/* .tp_doc      = */ NULL,
+	/* .tp_doc      = */ DOC("(names:?S?Dstring)"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FVARIABLE | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONLOOPING,
@@ -608,9 +676,11 @@ PUBLIC DeeTypeObject DeeKwds_Type = {
 		/* .tp_deepload    = */ NULL
 	},
 	/* .tp_cast = */ {
-		/* .tp_str  = */ NULL,
-		/* .tp_repr = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&kwds_repr,
-		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&kwds_bool
+		/* .tp_str       = */ NULL,
+		/* .tp_repr      = */ NULL,
+		/* .tp_bool      = */ (int (DCALL *)(DeeObject *__restrict))&kwds_bool,
+		/* .tp_print     = */ NULL,
+		/* .tp_printrepr = */ (dssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&kwds_printrepr
 	},
 	/* .tp_call          = */ NULL,
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&kwds_visit,

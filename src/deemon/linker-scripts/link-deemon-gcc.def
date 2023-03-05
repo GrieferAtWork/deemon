@@ -227,6 +227,7 @@ EXPORTS
 	_DeeFormat_Print32@16=DeeFormat_Print32@16
 	_DeeFormat_Print8@16=DeeFormat_Print8@16
 	_DeeFormat_PrintArgumentTypesKw@20=DeeFormat_PrintArgumentTypesKw@20
+	_DeeFormat_PrintOperatorRepr@40=DeeFormat_PrintOperatorRepr@40
 	_DeeFormat_Putc@12=DeeFormat_Putc@12
 	_DeeFormat_Quote16@16=DeeFormat_Quote16@16
 	_DeeFormat_Quote32@16=DeeFormat_Quote32@16

@@ -27,6 +27,7 @@
 #include <deemon/class.h>
 #include <deemon/code.h>
 #include <deemon/format.h>
+#include <deemon/module.h>
 #include <deemon/none.h>
 #include <deemon/object.h>
 #include <deemon/property.h>
@@ -37,6 +38,14 @@
 #include "../runtime/strings.h"
 
 DECL_BEGIN
+
+#define DO(err, expr)                    \
+	do {                                 \
+		if unlikely((temp = (expr)) < 0) \
+			goto err;                    \
+		result += temp;                  \
+	}	__WHILE0
+
 
 typedef DeePropertyObject Property;
 
@@ -135,33 +144,6 @@ property_hash(Property *__restrict self) {
 	if (self->p_set)
 		result ^= DeeObject_Hash(self->p_set);
 	return result;
-}
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-property_repr(Property *__restrict self) {
-	struct unicode_printer printer = UNICODE_PRINTER_INIT;
-	if unlikely(UNICODE_PRINTER_PRINT(&printer, "Property(") < 0)
-		goto err;
-	if (self->p_get) {
-		if unlikely(unicode_printer_printf(&printer, "getter: %r%s", self->p_get,
-		                                   self->p_del || self->p_set ? ", " : "") < 0)
-			goto err;
-	}
-	if (self->p_del) {
-		if unlikely(unicode_printer_printf(&printer, "delete: %r%s", self->p_del,
-		                                   self->p_set ? ", " : "") < 0)
-			goto err;
-	}
-	if (self->p_set) {
-		if unlikely(unicode_printer_printf(&printer, "setter: %r", self->p_set) < 0)
-			goto err;
-	}
-	if (unicode_printer_putascii(&printer, ')'))
-		goto err;
-	return unicode_printer_pack(&printer);
-err:
-	unicode_printer_fini(&printer);
-	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
@@ -392,6 +374,68 @@ property_call(Property *self, size_t argc, DeeObject *const *argv) {
 	return NULL;
 }
 
+PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
+property_printrepr(Property *__restrict self,
+                   dformatprinter printer, void *arg) {
+	/* TODO: Better distinction between *actual* properties, and
+	 *       custom properties (w/ an attribute `iscustom: bool',
+	 *       and us making the repr dependent on that) */
+	dssize_t temp, result;
+	struct function_info info;
+	int error;
+	error = property_info(self, &info);
+	if unlikely(error < 0)
+		goto err_m1;
+	if (info.fi_name || info.fi_type) {
+		DeeModuleObject *mod = NULL;
+		if (self->p_get && DeeFunction_Check(self->p_get))
+			mod = ((DeeFunctionObject *)self->p_get)->fo_code->co_module;
+		if (self->p_del && DeeFunction_Check(self->p_del) && !mod)
+			mod = ((DeeFunctionObject *)self->p_del)->fo_code->co_module;
+		if (self->p_set && DeeFunction_Check(self->p_set) && !mod)
+			mod = ((DeeFunctionObject *)self->p_set)->fo_code->co_module;
+		result = mod ? DeeFormat_PrintObjectRepr(printer, arg, (DeeObject *)mod)
+		             : DeeFormat_PRINT(printer, arg, "<unknown module>");
+		if likely(result >= 0) {
+			if (info.fi_type && info.fi_name) {
+				temp = DeeFormat_Printf(printer, arg, ".%k.%k",
+				                        info.fi_type, info.fi_name);
+			} else if (info.fi_type) {
+				temp = DeeFormat_Printf(printer, arg, ".%k.<unknown>",
+				                        info.fi_type);
+			} else {
+				temp = DeeFormat_Printf(printer, arg, ".%k",
+				                        info.fi_name);
+			}
+			if likely(temp >= 0) {
+				result += temp;
+			} else {
+				result = temp;
+			}
+		}
+		function_info_fini(&info);
+		return result;
+	}
+	function_info_fini(&info);
+
+	result = DeeFormat_PRINT(printer, arg, "Property(");
+	if unlikely(result < 0)
+		goto done;
+	if (self->p_get)
+		DO(err, DeeFormat_Printf(printer, arg, "getter: %r", self->p_get));
+	if (self->p_del)
+		DO(err, DeeFormat_Printf(printer, arg, "%sdelete: %r", self->p_get ? ", " : "", self->p_del));
+	if (self->p_set)
+		DO(err, DeeFormat_Printf(printer, arg, "%ssetter: %r", (self->p_get || self->p_del) ? ", " : "", self->p_set));
+	DO(err, DeeFormat_PRINT(printer, arg, ")"));
+done:
+	return result;
+err_m1:
+	temp = -1;
+err:
+	return temp;
+}
+
 
 /* `Property from deemon' */
 PUBLIC DeeTypeObject DeeProperty_Type = {
@@ -422,9 +466,11 @@ PUBLIC DeeTypeObject DeeProperty_Type = {
 		/* .tp_move_assign = */ NULL
 	},
 	/* .tp_cast = */ {
-		/* .tp_str  = */ NULL,
-		/* .tp_repr = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&property_repr,
-		/* .tp_bool = */ NULL
+		/* .tp_str       = */ NULL,
+		/* .tp_repr      = */ NULL,
+		/* .tp_bool      = */ NULL,
+		/* .tp_print     = */ NULL,
+		/* .tp_printrepr = */ (dssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&property_printrepr
 	},
 	/* .tp_call          = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&property_call,
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&property_visit,

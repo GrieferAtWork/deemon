@@ -520,9 +520,9 @@ extern "C++" template<class T> T ____INTELLISENSE_req_type(T x);
 #define Dee_DPRINTF(...)           (_Dee_dprint_enabled ? _Dee_dprintf(__VA_ARGS__) : (void)0)
 #define Dee_VDPRINTF(format, args) _Dee_vdprintf(format, args) /* Always invoke because `format' may mandate a decref() operation! */
 DDATDEF int _Dee_dprint_enabled;
-DFUNDEF void (DCALL _Dee_dprint)(char const *__restrict message);
-DFUNDEF void (_Dee_dprintf)(char const *__restrict format, ...);
-DFUNDEF void (DCALL _Dee_vdprintf)(char const *__restrict format, va_list args);
+DFUNDEF NONNULL((1)) void (DCALL _Dee_dprint)(char const *__restrict message);
+DFUNDEF NONNULL((1)) void (_Dee_dprintf)(char const *__restrict format, ...);
+DFUNDEF NONNULL((1)) void (DCALL _Dee_vdprintf)(char const *__restrict format, va_list args);
 DFUNDEF __SSIZE_TYPE__ (DPRINTER_CC _Dee_dprinter)(void *arg, char const *__restrict data, size_t datalen);
 #endif /* !NDEBUG */
 

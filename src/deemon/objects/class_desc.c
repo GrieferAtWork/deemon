@@ -674,25 +674,31 @@ PRIVATE struct type_member tpconst cat_class_members[] = {
 };
 
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-ca_str(ClassAttribute *__restrict self) {
+PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
+ca_print(ClassAttribute *__restrict self,
+         dformatprinter printer, void *arg) {
 	DeeStringObject *cnam = self->ca_desc->cd_name;
-	if (cnam)
-		return DeeString_Newf("%k.%k", cnam, self->ca_attr->ca_name);
-	return_reference_((DeeObject *)self->ca_attr->ca_name);
+	if (cnam == NULL)
+		cnam = &str_lt_anonymous_gr;
+	return DeeFormat_Printf(printer, arg, "<ClassAttribute %k.%k>",
+	                        cnam, self->ca_attr->ca_name);
 }
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-ca_repr(ClassAttribute *__restrict self) {
+PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
+ca_printrepr(ClassAttribute *__restrict self,
+             dformatprinter printer, void *arg) {
 	ClassDescriptor *desc = self->ca_desc;
-	DeeStringObject *cnam = desc->cd_name;
-	char field_id         = 'c';
+	DeeStringObject *cnam = self->ca_desc->cd_name;
+	char field_id = 'c';
 	if (self->ca_attr >= desc->cd_iattr_list &&
 	    self->ca_attr <= desc->cd_iattr_list + desc->cd_iattr_mask)
 		field_id = 'i';
-	if (cnam)
-		return DeeString_Newf("%k.__class__.%cattr[%r]", cnam, field_id, self->ca_attr->ca_name);
-	return DeeString_Newf("<anonymous>.__class__.%cattr[%r]", field_id, self->ca_attr->ca_name);
+	if (cnam == NULL)
+		cnam = &str_lt_anonymous_gr;
+	return DeeFormat_Printf(printer, arg,
+	                        "%k.__class__.%cattr[%r]",
+	                        cnam, field_id,
+	                        self->ca_attr->ca_name);
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -912,9 +918,11 @@ INTERN DeeTypeObject ClassAttribute_Type = {
 		/* .tp_move_assign = */ NULL
 	},
 	/* .tp_cast = */ {
-		/* .tp_str  = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ca_str,
-		/* .tp_repr = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ca_repr,
-		/* .tp_bool = */ NULL
+		/* .tp_str       = */ NULL,
+		/* .tp_repr      = */ NULL,
+		/* .tp_bool      = */ NULL,
+		/* .tp_print     = */ (dssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&ca_print,
+		/* .tp_printrepr = */ (dssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&ca_printrepr
 	},
 	/* .tp_call          = */ NULL,
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&ca_visit,
@@ -1337,11 +1345,12 @@ PRIVATE struct type_member tpconst cd_class_members[] = {
 	TYPE_MEMBER_END
 };
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeStringObject *DCALL
 cd_str(ClassDescriptor *__restrict self) {
-	if (self->cd_name)
-		return_reference_((DeeObject *)self->cd_name);
-	return DeeString_New("<anonymous>");
+	DREF DeeStringObject *result = self->cd_name;
+	if (result == NULL)
+		result = &str_lt_anonymous_gr;
+	return_reference_(result);
 }
 
 
@@ -2009,7 +2018,7 @@ typedef struct {
 
 STATIC_ASSERT(offsetof(ObjectTable, ot_owner) ==
               offsetof(ClassAttributeTable, ca_desc));
-#define ot_fini    cot_fini
+#define ot_fini cot_fini
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 ot_str(ObjectTable *__restrict self) {

@@ -550,7 +550,7 @@ do_handle_string_for_percent_s:
 					str_length = (size_t)temp; /* Fir ljust width-strings. */
 				} else {
 					if (DeeBytes_Check(in_arg)) {
-						temp = DeeBytes_PrintUtf8(in_arg, printer, arg);
+						temp = DeeBytes_Print(in_arg, printer, arg);
 					} else {
 						temp = DeeString_PrintUtf8(in_arg, printer, arg);
 					}

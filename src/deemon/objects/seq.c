@@ -4377,8 +4377,16 @@ PRIVATE struct type_getset tpconst seq_getsets[] = {
 	            /**/ "	}\n"
 	            /**/ "}"
 	            "}"),
+	/* TODO: itemtype->?DType
+	 *       Check if the type of @this overrides the ?#ItemType class attribute.
+	 *       If so, return its value; else, return the common base-class of all
+	 *       items in @this ?.. When @this is empty, ?O is returned. */
 
-	/* TODO: Override this attribute as pass-though in Sequence-proxy types. */
+	/* TODO: ItemType->?DType   (class property)
+	 *       When this type of ?. only allows items of a certain ?DType,
+	 *       this class attribute is overwritten with that ?DType. Else,
+	 *       it simply evaluates to ?O */
+
 	TYPE_GETTER("isfrozen", &seq_get_isfrozen,
 	            "->?Dbool\n"
 	            "Evaluates to true if the ?Aid?Os of elements of "

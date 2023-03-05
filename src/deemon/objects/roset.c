@@ -39,6 +39,13 @@
 
 DECL_BEGIN
 
+#define DO(err, expr)                    \
+	do {                                 \
+		if unlikely((temp = (expr)) < 0) \
+			goto err;                    \
+		result += temp;                  \
+	}	__WHILE0
+
 typedef DeeRoSetObject Set;
 
 typedef struct {
@@ -508,29 +515,32 @@ roset_bool(Set *__restrict self) {
 	return self->rs_size != 0;
 }
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-roset_repr(Set *__restrict self) {
-	struct unicode_printer p = UNICODE_PRINTER_INIT;
-	bool is_first            = true;
+PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
+roset_printrepr(Set *__restrict self,
+                dformatprinter printer, void *arg) {
+	dssize_t temp, result;
+	bool is_first = true;
 	size_t i;
-	if (UNICODE_PRINTER_PRINT(&p, "{ ") < 0)
-		goto err;
+	result = DeeFormat_PRINT(printer, arg, "{ ");
+	if unlikely(result < 0)
+		goto done;
 	for (i = 0; i <= self->rs_mask; ++i) {
 		if (!self->rs_elem[i].si_key)
 			continue;
-		if unlikely(unicode_printer_printf(&p, "%s%r",
-		                                   is_first ? "" : ", ",
-		                                   self->rs_elem[i].si_key) < 0)
-			goto err;
+		if (!is_first)
+			DO(err, DeeFormat_PRINT(printer, arg, ", "));
+		DO(err, DeeFormat_PrintObjectRepr(printer, arg, self->rs_elem[i].si_key));
 		is_first = false;
 	}
-	if unlikely((is_first ? unicode_printer_putascii(&p, '}')
-	                      : UNICODE_PRINTER_PRINT(&p, " }")) < 0)
-		goto err;
-	return unicode_printer_pack(&p);
+	if (is_first) {
+		DO(err, DeeFormat_PRINT(printer, arg, "}"));
+	} else {
+		DO(err, DeeFormat_PRINT(printer, arg, " }"));
+	}
+done:
+	return result;
 err:
-	unicode_printer_fini(&p);
-	return NULL;
+	return temp;
 }
 
 PRIVATE struct type_seq roset_seq = {
@@ -647,9 +657,11 @@ PUBLIC DeeTypeObject DeeRoSet_Type = {
 		/* .tp_deepload    = */ NULL
 	},
 	/* .tp_cast = */ {
-		/* .tp_str  = */ NULL,
-		/* .tp_repr = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&roset_repr,
-		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&roset_bool
+		/* .tp_str       = */ NULL,
+		/* .tp_repr      = */ NULL,
+		/* .tp_bool      = */ (int (DCALL *)(DeeObject *__restrict))&roset_bool,
+		/* .tp_print     = */ NULL,
+		/* .tp_printrepr = */ (dssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&roset_printrepr
 	},
 	/* .tp_call          = */ NULL,
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&roset_visit,

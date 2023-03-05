@@ -966,11 +966,12 @@ PRIVATE struct type_member tpconst range_class_members[] = {
 	TYPE_MEMBER_END
 };
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-range_repr(Range *__restrict self) {
+PRIVATE WUNUSED NONNULL((1)) dssize_t DCALL
+range_printrepr(Range *__restrict self,
+                dformatprinter printer, void *arg) {
 	return self->r_step
-	       ? DeeString_Newf("[%r:%r, %r]", self->r_start, self->r_end, self->r_step)
-	       : DeeString_Newf("[%r:%r]", self->r_start, self->r_end);
+	       ? DeeFormat_Printf(printer, arg, "[%r:%r, %r]", self->r_start, self->r_end, self->r_step)
+	       : DeeFormat_Printf(printer, arg, "[%r:%r]", self->r_start, self->r_end);
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
@@ -1076,9 +1077,11 @@ INTERN DeeTypeObject SeqRange_Type = {
 		/* .tp_move_assign = */ NULL
 	},
 	/* .tp_cast = */ {
-		/* .tp_str  = */ NULL,
-		/* .tp_repr = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&range_repr,
-		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&range_bool
+		/* .tp_str       = */ NULL,
+		/* .tp_repr      = */ NULL,
+		/* .tp_bool      = */ (int (DCALL *)(DeeObject *__restrict))&range_bool,
+		/* .tp_print     = */ NULL,
+		/* .tp_printrepr = */ (dssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&range_printrepr
 	},
 	/* .tp_call          = */ NULL,
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&range_visit,
@@ -1486,14 +1489,17 @@ PRIVATE struct type_member tpconst intrange_class_members[] = {
 	TYPE_MEMBER_END
 };
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-intrange_repr(IntRange *__restrict self) {
+PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
+intrange_printrepr(IntRange *__restrict self,
+                   dformatprinter printer, void *arg) {
 	if (self->ir_step != 1) {
-		return DeeString_Newf("[%" PRFdSIZ ":%" PRFdSIZ ", %" PRFdSIZ "]",
-		                      self->ir_start, self->ir_end, self->ir_step);
+		return DeeFormat_Printf(printer, arg,
+		                        "[%" PRFdSIZ ":%" PRFdSIZ ", %" PRFdSIZ "]",
+		                        self->ir_start, self->ir_end, self->ir_step);
 	} else {
-		return DeeString_Newf("[%" PRFdSIZ ":%" PRFdSIZ "]",
-		                      self->ir_start, self->ir_end);
+		return DeeFormat_Printf(printer, arg,
+		                        "[%" PRFdSIZ ":%" PRFdSIZ "]",
+		                        self->ir_start, self->ir_end);
 	}
 }
 
@@ -1564,9 +1570,11 @@ INTERN DeeTypeObject SeqIntRange_Type = {
 		/* .tp_move_assign = */ NULL
 	},
 	/* .tp_cast = */ {
-		/* .tp_str  = */ NULL,
-		/* .tp_repr = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&intrange_repr,
-		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&intrange_bool
+		/* .tp_str       = */ NULL,
+		/* .tp_repr      = */ NULL,
+		/* .tp_bool      = */ (int (DCALL *)(DeeObject *__restrict))&intrange_bool,
+		/* .tp_print     = */ NULL,
+		/* .tp_printrepr = */ (dssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&intrange_printrepr
 	},
 	/* .tp_call          = */ NULL,
 	/* .tp_visit         = */ NULL,

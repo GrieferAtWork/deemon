@@ -50,9 +50,22 @@ err:
 	return NULL;
 }
 
+PRIVATE DeeObject *const bool_strings[2] = {
+	(DeeObject *)&str_false,
+	(DeeObject *)&str_true
+};
+#define bool_string(self) bool_strings[DeeBool_IsTrue(self) ? 1 : 0]
+
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 bool_str(DeeObject *__restrict self) {
-	return_reference(DeeBool_IsTrue(self) ? &str_true : &str_false);
+	return_reference(bool_string(self));
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
+bool_print(DeeObject *__restrict self,
+           dformatprinter printer, void *arg) {
+	DeeObject *str = bool_string(self);
+	return DeeString_PrintAscii(str, printer, arg);
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
@@ -377,9 +390,11 @@ PUBLIC DeeTypeObject DeeBool_Type = {
 		/* .tp_move_assign = */ NULL
 	},
 	/* .tp_cast = */ {
-		/* .tp_str  = */ &bool_str,
-		/* .tp_repr = */ &bool_str,
-		/* .tp_bool = */ &bool_bool
+		/* .tp_str       = */ &bool_str,
+		/* .tp_repr      = */ &bool_str,
+		/* .tp_bool      = */ &bool_bool,
+		/* .tp_print     = */ &bool_print,
+		/* .tp_printrepr = */ &bool_print
 	},
 	/* .tp_call          = */ NULL,
 	/* .tp_visit         = */ NULL,

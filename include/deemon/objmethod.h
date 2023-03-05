@@ -127,14 +127,14 @@ DFUNDEF ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) DeeTypeObject *DCALL
 DeeObjMethod_GetType(DeeObject const *__restrict self);
 
 struct Dee_clsmethod_object {
-	/* Unbound member function (`classmethod') (may be invoked as a thiscall object). */
+	/* Unbound member function (`ClassMethod') (may be invoked as a thiscall object). */
 	Dee_OBJECT_HEAD
 	Dee_objmethod_t     cm_func; /* [1..1] C-level object function. */
 	DREF DeeTypeObject *cm_type; /* [1..1] The type that this-arguments must match. */
 };
 
 struct Dee_kwclsmethod_object {
-	/* Unbound member function (`classmethod') (may be invoked as a thiscall object). */
+	/* Unbound member function (`KwClassMethod') (may be invoked as a thiscall object). */
 	Dee_OBJECT_HEAD
 	Dee_kwobjmethod_t   cm_func; /* [1..1] C-level object function. */
 	DREF DeeTypeObject *cm_type; /* [1..1] The type that this-arguments must match. */
@@ -162,8 +162,10 @@ DeeKwClsMethod_New(DeeTypeObject *__restrict type, Dee_kwobjmethod_t func);
 
 /* Returns the name of the function bound by the given
  * `_ClsMethod', or `NULL' if the name could not be determined. */
-DFUNDEF ATTR_PURE WUNUSED NONNULL((1)) char const *DCALL DeeClsMethod_GetName(DeeObject const *__restrict self);
-DFUNDEF ATTR_PURE WUNUSED NONNULL((1)) char const *DCALL DeeClsMethod_GetDoc(DeeObject const *__restrict self);
+DFUNDEF ATTR_PURE WUNUSED NONNULL((1)) char const *DCALL
+DeeClsMethod_GetName(DeeObject const *__restrict self);
+DFUNDEF ATTR_PURE WUNUSED NONNULL((1)) char const *DCALL
+DeeClsMethod_GetDoc(DeeObject const *__restrict self);
 
 
 
@@ -243,7 +245,6 @@ DDATDEF DeeTypeObject DeeKwCMethod_Type;
 	DeeKwCMethodObject name = { Dee_OBJECT_HEAD_INIT(&DeeKwCMethod_Type), Dee_REQUIRES_KWCMETHOD(func) }
 
 
-#ifdef CONFIG_BUILDING_DEEMON
 /* Invoke a given c-function callback.
  * Since this is the main way through which external functions are invoked,
  * we use this point to add some debug checks for proper use of exceptions.
@@ -263,12 +264,7 @@ DDATDEF DeeTypeObject DeeKwCMethod_Type;
  * with this:
  * >> if (DeeFormat_Printf(...) < 0) goto err;
  */
-#ifdef NDEBUG
-#define DeeCMethod_CallFunc(fun, argc, argv)               (*fun)(argc, argv)
-#define DeeKwCMethod_CallFunc(fun, argc, argv, kw)         (*fun)(argc, argv, kw)
-#define DeeObjMethod_CallFunc(fun, self, argc, argv)       (*fun)(self, argc, argv)
-#define DeeKwObjMethod_CallFunc(fun, self, argc, argv, kw) (*fun)(self, argc, argv, kw)
-#else /* NDEBUG */
+#if defined(CONFIG_BUILDING_DEEMON) && !defined(NDEBUG)
 #define DeeCMethod_CallFunc(fun, argc, argv)               DeeCMethod_CallFunc_d(fun, argc, argv)
 #define DeeObjMethod_CallFunc(fun, self, argc, argv)       DeeObjMethod_CallFunc_d(fun, self, argc, argv)
 #define DeeKwCMethod_CallFunc(fun, argc, argv, kw)         DeeKwCMethod_CallFunc_d(fun, argc, argv, kw)
@@ -277,8 +273,15 @@ INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeCMethod_CallFunc_d(Dee_cmet
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeObjMethod_CallFunc_d(Dee_objmethod_t fun, DeeObject *self, size_t argc, DeeObject *const *argv);
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeKwCMethod_CallFunc_d(Dee_kwcmethod_t fun, size_t argc, DeeObject *const *argv, DeeObject *kw);
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeKwObjMethod_CallFunc_d(Dee_kwobjmethod_t fun, DeeObject *self, size_t argc, DeeObject *const *argv, DeeObject *kw);
-#endif /* !NDEBUG */
-#endif /* CONFIG_BUILDING_DEEMON */
+#endif /* CONFIG_BUILDING_DEEMON && !NDEBUG */
+
+#ifndef DeeCMethod_CallFunc
+#define DeeCMethod_CallFunc(fun, argc, argv)               (*fun)(argc, argv)
+#define DeeKwCMethod_CallFunc(fun, argc, argv, kw)         (*fun)(argc, argv, kw)
+#define DeeObjMethod_CallFunc(fun, self, argc, argv)       (*fun)(self, argc, argv)
+#define DeeKwObjMethod_CallFunc(fun, self, argc, argv, kw) (*fun)(self, argc, argv, kw)
+#endif /* !DeeCMethod_CallFunc */
+
 
 DECL_END
 

@@ -46,6 +46,14 @@ DECL_BEGIN
 #define DBG_memset(...) (void)0
 #endif /* NDEBUG */
 
+#define DO(err, expr)                    \
+	do {                                 \
+		if unlikely((temp = (expr)) < 0) \
+			goto err;                    \
+		result += temp;                  \
+	}	__WHILE0
+
+
 STATIC_ASSERT_MSG(sizeof(char) == sizeof(uint8_t), "Probably won't work...");
 STATIC_ASSERT(STRING_SIZEOF_WIDTH(STRING_WIDTH_1BYTE) == 1);
 STATIC_ASSERT(STRING_SIZEOF_WIDTH(STRING_WIDTH_2BYTE) == 2);
@@ -844,8 +852,9 @@ print_ascii:
 		Dee_string_utf_untrack(utf);
 	}
 	result = 0;
-	iter = flush_start = (uint8_t *)DeeString_STR(self);
-	end                = iter + DeeString_SIZE(self);
+	iter = (uint8_t *)DeeString_STR(self);
+	end  = iter + DeeString_SIZE(self);
+	flush_start = iter;
 	for (; iter < end; ++iter) {
 		uint8_t utf8_encoded[2];
 		uint8_t ch = *iter;
@@ -854,19 +863,13 @@ print_ascii:
 		/* This is a true LATIN-1 character, which we
 		 * must manually encode as a 2-byte UTF-8 string. */
 		if (iter != flush_start) {
-			temp = (*printer)(arg, (char *)flush_start,
-			                  (size_t)((char *)iter - (char *)flush_start));
-			if unlikely(temp < 0)
-				goto err_temp;
-			result += temp;
+			DO(err_temp, (*printer)(arg, (char *)flush_start,
+			                        (size_t)((char *)iter - (char *)flush_start)));
 		}
 		/* Encode as: 110---xx 10xxxxxx */
 		utf8_encoded[0] = 0xc0 | ((ch & 0xc0) >> 6);
 		utf8_encoded[1] = 0x80 | (ch & 0x3f);
-		temp            = (*printer)(arg, (char *)utf8_encoded, 2 * sizeof(char));
-		if unlikely(temp < 0)
-			goto err_temp;
-		result += temp;
+		DO(err_temp, (*printer)(arg, (char *)utf8_encoded, 2 * sizeof(char)));
 		flush_start = iter + 1;
 	}
 	if (flush_start == (uint8_t *)DeeString_STR(self)) {
@@ -876,11 +879,8 @@ print_ascii:
 	}
 	/* Flush the remainder. */
 	if (flush_start != iter) {
-		temp = (*printer)(arg, (char *)flush_start,
-		                  (size_t)((char *)iter - (char *)flush_start));
-		if unlikely(temp < 0)
-			goto err_temp;
-		result += temp;
+		DO(err_temp, (*printer)(arg, (char *)flush_start,
+		                        (size_t)((char *)iter - (char *)flush_start)));
 	}
 	return result;
 err_temp:
@@ -917,10 +917,7 @@ DeeString_PrintRepr(DeeObject *__restrict self,
 	if unlikely(temp < 0)
 		goto err;
 	result += temp;
-	temp = DeeFormat_PRINT(printer, arg, "\"");
-	if unlikely(temp < 0)
-		goto done;
-	result += temp;
+	DO(err, DeeFormat_PRINT(printer, arg, "\""));
 done:
 	return result;
 err:
@@ -4127,7 +4124,8 @@ Dee_unicode_printer_printinto(struct unicode_printer *__restrict self,
                               dformatprinter printer, void *arg) {
 	void *str;
 	size_t length;
-	dssize_t temp, result;
+	dssize_t result;
+
 	/* Optimization for when the target is another unicode-printer. */
 	length = self->up_length;
 	if (printer == &unicode_printer_print) {
@@ -4158,6 +4156,7 @@ Dee_unicode_printer_printinto(struct unicode_printer *__restrict self,
 			return unicode_printer_print32(dst, (uint32_t *)str, length);
 		}
 	}
+
 	/* Because we must print everything in UTF-8, this part gets a
 	 * bit complicated since we need to convert everything on-the-fly. */
 	str    = self->up_buffer;
@@ -4168,138 +4167,20 @@ Dee_unicode_printer_printinto(struct unicode_printer *__restrict self,
 	{
 		SWITCH_SIZEOF_WIDTH(self->up_flags & UNICODE_PRINTER_FWIDTH) {
 
-		CASE_WIDTH_1BYTE: {
-			char *iter, *end, *flush_start;
-			/* If we're a 1-byte string, at the very least
-			 * we can directly print out ASCII-only data, and
-			 * make use of a flush-like buffering system. */
-			end = (flush_start = iter = (char *)str) + length;
-			while (iter < end) {
-				uint8_t ut8_encoded[2];
-				uint8_t ch = (uint8_t)*iter;
-				if likely(ch < 0x80) {
-					++iter;
-					continue;
-				}
-				/* LATIN-1 character (must flush until here, then print its unicode variant) */
-				if (flush_start < iter) {
-					temp = (*printer)(arg, flush_start, (size_t)(iter - flush_start));
-					if unlikely(temp < 0)
-						goto err;
-					result += temp;
-				}
-				ut8_encoded[0] = 0xc0 | ((ch & 0xc0) >> 6);
-				ut8_encoded[1] = 0x80 | (ch & 0x3f);
-				/* Print the UTF-8 variant. */
-				temp = (*printer)(arg, (char *)ut8_encoded, 2);
-				if unlikely(temp < 0)
-					goto err;
-				result += temp;
+		CASE_WIDTH_1BYTE:
+			result = DeeFormat_Print8(printer, arg, (uint8_t const *)str, length);
+			break;
 
-				flush_start = ++iter;
-			}
-			/* Flush the remainder. */
-			if (flush_start < end) {
-				temp = (*printer)(arg, flush_start, (size_t)(end - flush_start));
-				if unlikely(temp < 0)
-					goto err;
-				result += temp;
-			}
-		}	break;
+		CASE_WIDTH_2BYTE:
+			result = DeeFormat_Print16(printer, arg, (uint16_t const *)str, length);
+			break;
 
-		CASE_WIDTH_2BYTE: {
-			size_t i;
-			/* Since our string already uses more than 1 byte per character,
-			 * there'd be no point in trying to buffer anything, since any
-			 * buffer we'd be using would also have to be allocated by us.
-			 * Instead, let the caller deal with buffering (if they wish to),
-			 * and simply print one character at a time. */
-			for (i = 0; i < length; ++i) {
-				uint8_t utf8_repr[3];
-				uint8_t utf8_length;
-				uint16_t ch = ((uint16_t *)str)[i];
-				if (ch <= UTF8_1BYTE_MAX) {
-					utf8_repr[0] = (uint8_t)ch;
-					utf8_length  = 1;
-				} else if (ch <= UTF8_2BYTE_MAX) {
-					utf8_repr[0] = 0xc0 | (uint8_t)((ch >> 6) /* & 0x1f*/);
-					utf8_repr[1] = 0x80 | (uint8_t)((ch)&0x3f);
-					utf8_length  = 2;
-				} else {
-					utf8_repr[0] = 0xe0 | (uint8_t)((ch >> 12) /* & 0x0f*/);
-					utf8_repr[1] = 0x80 | (uint8_t)((ch >> 6) & 0x3f);
-					utf8_repr[2] = 0x80 | (uint8_t)((ch)&0x3f);
-					utf8_length  = 3;
-				}
-				temp = (*printer)(arg, (char *)utf8_repr, utf8_length);
-				if unlikely(temp < 0)
-					goto err;
-				result += temp;
-			}
-		}	break;
-
-		CASE_WIDTH_4BYTE: {
-			size_t i;
-			/* Same as the 2-byte variant: print one character at a time. */
-			for (i = 0; i < length; ++i) {
-				uint8_t utf8_repr[7];
-				uint8_t utf8_length;
-				uint32_t ch = ((uint32_t *)str)[i];
-				if (ch <= UTF8_1BYTE_MAX) {
-					utf8_repr[0] = (uint8_t)ch;
-					utf8_length  = 1;
-				} else if (ch <= UTF8_2BYTE_MAX) {
-					utf8_repr[0] = 0xc0 | (uint8_t)((ch >> 6) /* & 0x1f*/);
-					utf8_repr[1] = 0x80 | (uint8_t)((ch)&0x3f);
-					utf8_length  = 2;
-				} else if (ch <= UTF8_3BYTE_MAX) {
-					utf8_repr[0] = 0xe0 | (uint8_t)((ch >> 12) /* & 0x0f*/);
-					utf8_repr[1] = 0x80 | (uint8_t)((ch >> 6) & 0x3f);
-					utf8_repr[2] = 0x80 | (uint8_t)((ch)&0x3f);
-					utf8_length  = 3;
-				} else if (ch <= UTF8_4BYTE_MAX) {
-					utf8_repr[0] = 0xf0 | (uint8_t)((ch >> 18) /* & 0x07*/);
-					utf8_repr[1] = 0x80 | (uint8_t)((ch >> 12) & 0x3f);
-					utf8_repr[2] = 0x80 | (uint8_t)((ch >> 6) & 0x3f);
-					utf8_repr[3] = 0x80 | (uint8_t)((ch)&0x3f);
-					utf8_length  = 4;
-				} else if (ch <= UTF8_5BYTE_MAX) {
-					utf8_repr[0] = 0xf8 | (uint8_t)((ch >> 24) /* & 0x03*/);
-					utf8_repr[1] = 0x80 | (uint8_t)((ch >> 18) & 0x3f);
-					utf8_repr[2] = 0x80 | (uint8_t)((ch >> 12) & 0x3f);
-					utf8_repr[3] = 0x80 | (uint8_t)((ch >> 6) & 0x3f);
-					utf8_repr[4] = 0x80 | (uint8_t)((ch)&0x3f);
-					utf8_length  = 5;
-				} else if (ch <= UTF8_6BYTE_MAX) {
-					utf8_repr[0] = 0xfc | (uint8_t)((ch >> 30) /* & 0x01*/);
-					utf8_repr[1] = 0x80 | (uint8_t)((ch >> 24) & 0x3f);
-					utf8_repr[2] = 0x80 | (uint8_t)((ch >> 18) & 0x3f);
-					utf8_repr[3] = 0x80 | (uint8_t)((ch >> 12) & 0x3f);
-					utf8_repr[4] = 0x80 | (uint8_t)((ch >> 6) & 0x3f);
-					utf8_repr[5] = 0x80 | (uint8_t)((ch)&0x3f);
-					utf8_length  = 6;
-				} else {
-					utf8_repr[0] = 0xfe;
-					utf8_repr[1] = 0x80 | (uint8_t)((ch >> 30) & 0x03 /* & 0x3f*/);
-					utf8_repr[2] = 0x80 | (uint8_t)((ch >> 24) & 0x3f);
-					utf8_repr[3] = 0x80 | (uint8_t)((ch >> 18) & 0x3f);
-					utf8_repr[4] = 0x80 | (uint8_t)((ch >> 12) & 0x3f);
-					utf8_repr[5] = 0x80 | (uint8_t)((ch >> 6) & 0x3f);
-					utf8_repr[6] = 0x80 | (uint8_t)((ch)&0x3f);
-					utf8_length  = 7;
-				}
-				temp = (*printer)(arg, (char *)utf8_repr, utf8_length);
-				if unlikely(temp < 0)
-					goto err;
-				result += temp;
-			}
-		}	break;
-
+		CASE_WIDTH_4BYTE:
+			result = DeeFormat_Print32(printer, arg, (uint32_t const *)str, length);
+			break;
 		}
 	}
 	return result;
-err:
-	return temp;
 }
 
 PUBLIC WUNUSED NONNULL((1)) dssize_t DCALL
@@ -4543,6 +4424,7 @@ Dee_unicode_printer_tryresize_utf8(struct unicode_printer *__restrict self,
 		ASSERT(self->up_buffer != NULL);
 		ASSERT(buf >= (char *)((uint8_t *)self->up_buffer));
 		ASSERT(buf <= (char *)((uint8_t *)self->up_buffer + self->up_length));
+
 		/* The buffer was allocated in-line. */
 		old_length  = (size_t)(((uint8_t *)self->up_buffer + self->up_length) - (uint8_t *)buf);
 		total_avail = (size_t)(((uint8_t *)self->up_buffer + WSTR_LENGTH(self->up_buffer)) - (uint8_t *)buf);
@@ -4553,6 +4435,7 @@ Dee_unicode_printer_tryresize_utf8(struct unicode_printer *__restrict self,
 			self->up_length += new_length;
 			return buf;
 		}
+
 		/* Must allocate a new buffer. */
 		old_alloc = WSTR_LENGTH(self->up_buffer);
 		new_alloc = (self->up_length - old_length) + new_length;
@@ -4561,20 +4444,18 @@ Dee_unicode_printer_tryresize_utf8(struct unicode_printer *__restrict self,
 		do {
 			old_alloc *= 2;
 		} while (old_alloc < new_alloc);
+
 		/* Reallocate the buffer to fit the requested size. */
-		new_buffer = (String *)DeeObject_TryRealloc(COMPILER_CONTAINER_OF(self->up_buffer,
-		                                                                  String,
-		                                                                  s_str),
+		new_buffer = (String *)DeeObject_TryRealloc(COMPILER_CONTAINER_OF(self->up_buffer, String, s_str),
 		                                            (old_alloc + 1) * sizeof(char));
 		if unlikely(!new_buffer) {
 			old_alloc  = new_alloc;
-			new_buffer = (String *)DeeObject_TryRealloc(COMPILER_CONTAINER_OF(self->up_buffer,
-			                                                                  String,
-			                                                                  s_str),
+			new_buffer = (String *)DeeObject_TryRealloc(COMPILER_CONTAINER_OF(self->up_buffer, String, s_str),
 			                                            (old_alloc + 1) * sizeof(char));
 			if unlikely(!new_buffer)
 				goto err;
 		}
+
 		/* Install the reallocated buffer. */
 		self->up_buffer   = new_buffer->s_str;
 		new_buffer->s_len = old_alloc;
@@ -5551,42 +5432,36 @@ PUBLIC WUNUSED NONNULL((1)) int
  * NOTE: 8-bit here refers to the unicode range U+0000 - U+00FF */
 PUBLIC WUNUSED NONNULL((1, 3)) dssize_t DCALL
 DeeFormat_Print8(dformatprinter printer, void *arg,
-                 uint8_t const *__restrict text,
+                 /*latin-1*/ uint8_t const *__restrict text,
                  size_t textlen) {
 	uint8_t const *iter, *end, *flush_start;
-	dssize_t temp, result = 0;
+	dssize_t temp, result;
 	uint8_t utf8_buffer[2];
+
+	/* Optimizations for special printer targets. */
+	if (printer == &bytes_printer_print)
+		return bytes_printer_append((struct bytes_printer *)arg, text, textlen);
 	if (printer == &unicode_printer_print)
 		return unicode_printer_print8((struct unicode_printer *)arg, text, textlen);
+
 	/* Ascii-only data can simply be forwarded one-on-one */
+	result = 0;
 	end = (iter = flush_start = text) + textlen;
 	for (; iter < end; ++iter) {
 		if (*iter <= 0x7f)
 			continue;
 		/* Flush unwritten data. */
-		if (flush_start < iter) {
-			/* Flush the remainder. */
-			temp = (*printer)(arg, (char const *)flush_start, (size_t)(iter - flush_start));
-			if unlikely(temp < 0)
-				goto err;
-			result += temp;
-		}
+		if (flush_start < iter) /* Flush the remainder. */
+			DO(err, (*printer)(arg, (char const *)flush_start, (size_t)(iter - flush_start)));
+
 		/* Convert to a 2-wide multi-byte UTF-8 character. */
 		utf8_buffer[0] = 0xc0 | ((*iter & 0xc0) >> 6);
 		utf8_buffer[1] = 0x80 | (*iter & 0x3f);
-		temp           = (*printer)(arg, (char *)utf8_buffer, 2);
-		if unlikely(temp < 0)
-			goto err;
-		result += temp;
+		DO(err, (*printer)(arg, (char *)utf8_buffer, 2));
 		flush_start = iter + 1;
 	}
-	if (flush_start < end) {
-		/* Flush the remainder. */
-		temp = (*printer)(arg, (char const *)flush_start, (size_t)(end - flush_start));
-		if unlikely(temp < 0)
-			goto err;
-		result += temp;
-	}
+	if (flush_start < end) /* Flush the remainder. */
+		DO(err, (*printer)(arg, (char const *)flush_start, (size_t)(end - flush_start)));
 	return result;
 err:
 	return temp;
@@ -5594,10 +5469,10 @@ err:
 
 PUBLIC WUNUSED NONNULL((1, 3)) dssize_t DCALL
 DeeFormat_Print16(dformatprinter printer, void *arg,
-                  uint16_t const *__restrict text,
+                  /*utf-16-without-surrogats*/ uint16_t const *__restrict text,
                   size_t textlen) {
 	dssize_t temp, result = 0;
-	uint8_t utf8_buffer[3];
+	uint8_t utf8_buffer[3]; /* TODO: Buffer more than 1 character at-a-time */
 	size_t utf8_length;
 	if (printer == &unicode_printer_print)
 		return unicode_printer_print16((struct unicode_printer *)arg, text, textlen);
@@ -5616,10 +5491,7 @@ DeeFormat_Print16(dformatprinter printer, void *arg,
 			utf8_buffer[2] = 0x80 | (uint8_t)((ch)&0x3f);
 			utf8_length    = 3;
 		}
-		temp = (*printer)(arg, (char const *)utf8_buffer, utf8_length);
-		if unlikely(temp < 0)
-			goto err;
-		result += temp;
+		DO(err, (*printer)(arg, (char const *)utf8_buffer, utf8_length));
 	}
 	return result;
 err:
@@ -5628,19 +5500,17 @@ err:
 
 PUBLIC WUNUSED NONNULL((1, 3)) dssize_t DCALL
 DeeFormat_Print32(dformatprinter printer, void *arg,
-                  uint32_t const *__restrict text, size_t textlen) {
+                  /*utf-32*/ uint32_t const *__restrict text,
+                  size_t textlen) {
 	dssize_t temp, result = 0;
 	size_t utf8_length;
-	uint8_t utf8_buffer[UTF8_CUR_MBLEN];
+	uint8_t utf8_buffer[UTF8_CUR_MBLEN]; /* TODO: Buffer more than 1 character at-a-time */
 	if (printer == &unicode_printer_print)
 		return unicode_printer_print32((struct unicode_printer *)arg, text, textlen);
 	while (textlen--) {
 		uint32_t ch = *text++;
 		utf8_length = (size_t)((uint8_t *)utf8_writechar((char *)utf8_buffer, ch) - utf8_buffer);
-		temp        = (*printer)(arg, (char const *)utf8_buffer, utf8_length);
-		if unlikely(temp < 0)
-			goto err;
-		result += temp;
+		DO(err, (*printer)(arg, (char const *)utf8_buffer, utf8_length));
 	}
 	return result;
 err:
@@ -5976,9 +5846,12 @@ check_1byte:
 				}
 			}
 			break;
+
 		}
 	}
 }
+
+#undef DO
 
 DECL_END
 

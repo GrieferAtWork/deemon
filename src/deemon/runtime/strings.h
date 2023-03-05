@@ -167,6 +167,7 @@ local STRINGS = {
 
 	"rt.d200",
 
+	("str_lt_anonymous_gr", "<anonymous>"),
 	("str_nomemory", "allocation failed"),
 	("str_dots", "..."),
 
@@ -465,6 +466,8 @@ DEF_STRING(str___badcall, "__badcall", 0x9795b98b, 0xc9e3cd8eadb2ee72)
 #define STR___badcall DeeString_STR(&str___badcall)
 DEF_STRING(str_rt_d200, "rt.d200", 0x6b64a89c, 0x798d95b52acb68ab)
 #define STR_rt_d200 DeeString_STR(&str_rt_d200)
+DEF_STRING(str_lt_anonymous_gr, "<anonymous>", 0xd5f7311c, 0x536d809a7d1c1aab)
+#define STR_lt_anonymous_gr DeeString_STR(&str_lt_anonymous_gr)
 DEF_STRING(str_nomemory, "allocation failed", 0xbef65010, 0x6315c4e658da5e37)
 #define STR_nomemory DeeString_STR(&str_nomemory)
 DEF_STRING(str_dots, "...", 0x1a086252, 0xf5eff0465042ef13)

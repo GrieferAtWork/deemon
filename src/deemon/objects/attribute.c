@@ -27,6 +27,7 @@
 #include <deemon/bool.h>
 #include <deemon/class.h>
 #include <deemon/error.h>
+#include <deemon/format.h>
 #include <deemon/module.h>
 #include <deemon/mro.h>
 #include <deemon/none.h>
@@ -68,13 +69,6 @@ PRIVATE NONNULL((1, 2)) void DCALL
 attr_visit(Attr *__restrict self, dvisit_t proc, void *arg) {
 	Dee_Visit(self->a_info.a_decl);
 	Dee_XVisit(self->a_info.a_attrtype);
-}
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-attr_str(Attr *__restrict self) {
-	return DeeString_Newf("%k.%s",
-	                      self->a_info.a_decl,
-	                      self->a_name);
 }
 
 PRIVATE WUNUSED NONNULL((1)) dhash_t DCALL
@@ -270,7 +264,7 @@ PRIVATE char attr_flags[] = {
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 attr_getflags(Attr *__restrict self) {
 	DREF DeeObject *result;
-	uint16_t mask          = self->a_info.a_perm & 0x1ff;
+	uint16_t mask = self->a_info.a_perm & 0x1ff;
 	unsigned int num_flags = 0;
 	char *dst;
 	while (mask) {
@@ -296,20 +290,33 @@ done:
 	return result;
 }
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-attr_repr(Attr *__restrict self) {
-	DREF DeeObject *flags_str, *result;
-	flags_str = attr_getflags(self);
-	if unlikely(!flags_str)
-		goto err;
-	result = DeeString_Newf("Attribute(%r, %q, %r)",
+PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
+attr_print(Attr *__restrict self,
+           dformatprinter printer, void *arg) {
+	return DeeFormat_Printf(printer, arg, "%k.%s",
 	                        self->a_info.a_decl,
-	                        self->a_name,
-	                        flags_str);
-	Dee_Decref(flags_str);
-	return result;
-err:
-	return NULL;
+	                        self->a_name);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
+attr_printrepr(Attr *__restrict self,
+               dformatprinter printer, void *arg) {
+	char flags_str[COMPILER_LENOF(attr_flags) + 1];
+	char *flags_ptr = flags_str;
+	uint16_t flags_index, flags_mask;
+	flags_mask  = self->a_info.a_perm & 0x1ff;
+	flags_index = 0;
+	while (flags_mask) {
+		if (flags_mask & 1)
+			*flags_ptr++ = attr_flags[flags_index];
+		flags_mask >>= 1;
+		++flags_index;
+	}
+	*flags_ptr = '\0';
+	return DeeFormat_Printf(printer, arg,
+	                        "Attribute(%r, %q, %q)",
+	                        self->a_info.a_decl,
+	                        self->a_name, flags_str);
 }
 
 
@@ -677,9 +684,11 @@ PUBLIC DeeTypeObject DeeAttribute_Type = {
 		/* .tp_move_assign = */ NULL
 	},
 	/* .tp_cast = */ {
-		/* .tp_str  = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&attr_str,
-		/* .tp_repr = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&attr_repr,
-		/* .tp_bool = */ NULL
+		/* .tp_str       = */ NULL,
+		/* .tp_repr      = */ NULL,
+		/* .tp_bool      = */ NULL,
+		/* .tp_print     = */ (dssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&attr_print,
+		/* .tp_printrepr = */ (dssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&attr_printrepr
 	},
 	/* .tp_call          = */ NULL,
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&attr_visit,

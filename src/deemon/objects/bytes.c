@@ -725,49 +725,20 @@ err_readonly:
 	return err_bytes_not_writable((DeeObject *)self);
 }
 
+INTERN WUNUSED NONNULL((1, 2)) dssize_t DCALL
+DeeBytes_Print(DeeObject *__restrict self,
+                   dformatprinter printer, void *arg) {
+	return DeeFormat_Print8(printer, arg,
+	                        DeeBytes_DATA(self),
+	                        DeeBytes_SIZE(self));
+}
+
 #define DO(expr)                         \
 	do {                                 \
 		if unlikely((temp = (expr)) < 0) \
 			goto err;                    \
 		result += temp;                  \
 	}	__WHILE0
-
-INTERN WUNUSED NONNULL((1, 2)) dssize_t DCALL
-DeeBytes_PrintUtf8(DeeObject *__restrict self,
-                   dformatprinter printer, void *arg) {
-	dssize_t temp, result = 0;
-	uint8_t *iter, *end, *flush_start;
-	/* Optimizations for special printer targets. */
-	if (printer == &bytes_printer_print)
-		return bytes_printer_append((struct bytes_printer *)arg, DeeBytes_DATA(self), DeeBytes_SIZE(self));
-	if (printer == &unicode_printer_print)
-		return unicode_printer_print8((struct unicode_printer *)arg, DeeBytes_DATA(self), DeeBytes_SIZE(self));
-
-	end = (iter = flush_start = DeeBytes_DATA(self)) + DeeBytes_SIZE(self);
-	while (iter < end) {
-		uint8_t escape_buf[2];
-		uint8_t ch = *iter++;
-		if (ch < 0x80)
-			continue;
-		if (flush_start < iter - 1)
-			DO((*printer)(arg, (char const *)flush_start, (size_t)((iter - 1) - flush_start)));
-		escape_buf[0] = 0xc0 | ((ch & 0xc0) >> 6);
-		escape_buf[1] = 0x80 | (ch & 0x3f);
-		DO((*printer)(arg, (char const *)escape_buf, 2));
-		flush_start = iter;
-	}
-	if (flush_start < end)
-		DO((*printer)(arg, (char const *)flush_start, (size_t)(end - flush_start)));
-	return result;
-err:
-	return temp;
-}
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-bytes_str(Bytes *__restrict self) {
-	return DeeString_NewSized((char *)DeeBytes_DATA(self),
-	                          DeeBytes_SIZE(self));
-}
 
 INTERN WUNUSED NONNULL((1, 2)) dssize_t DCALL
 DeeBytes_PrintRepr(DeeObject *__restrict self,
@@ -789,7 +760,14 @@ err:
 #undef DO
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+bytes_str(Bytes *__restrict self) {
+	return DeeString_NewSized((char *)DeeBytes_DATA(self),
+	                          DeeBytes_SIZE(self));
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 bytes_repr(Bytes *__restrict self) {
+	/* Optimization: can use an ascii_printer, instead of the default unicode_printer */
 	struct ascii_printer printer = ASCII_PRINTER_INIT;
 	if unlikely(DeeBytes_PrintRepr((DeeObject *)self,
 	                               &ascii_printer_print,
@@ -1917,7 +1895,7 @@ PUBLIC DeeTypeObject DeeBytes_Type = {
 		/* .tp_str       = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&bytes_str,
 		/* .tp_repr      = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&bytes_repr,
 		/* .tp_bool      = */ (int (DCALL *)(DeeObject *__restrict))&bytes_bool,
-		/* .tp_print     = */ &DeeBytes_PrintUtf8,
+		/* .tp_print     = */ &DeeBytes_Print,
 		/* .tp_printrepr = */ &DeeBytes_PrintRepr,
 	},
 	/* .tp_call          = */ NULL,

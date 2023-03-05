@@ -98,6 +98,12 @@ none_str(DeeObject *__restrict UNUSED(a)) {
 	return_reference_(&str_none);
 }
 
+PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
+none_print(DeeObject *__restrict UNUSED(a),
+           dformatprinter printer, void *arg) {
+	return DeeString_PrintAscii(&str_none, printer, arg);
+}
+
 PRIVATE WUNUSED NONNULL((1)) dhash_t DCALL
 none_hash(DeeObject *__restrict UNUSED(self)) {
 	return 0;
@@ -336,9 +342,11 @@ PUBLIC DeeTypeObject DeeNone_Type = {
 		/* .tp_move_assign = */ (int (DCALL *)(DeeObject *, DeeObject *))&none_i2
 	},
 	/* .tp_cast = */ {
-		/* .tp_str  = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&none_str,
-		/* .tp_repr = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&none_str,
-		/* .tp_bool = */ &none_bool
+		/* .tp_str       = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&none_str,
+		/* .tp_repr      = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&none_str,
+		/* .tp_bool      = */ &none_bool,
+		/* .tp_print     = */ &none_print,
+		/* .tp_printrepr = */ &none_print
 	},
 	/* .tp_call          = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&none_call,
 	/* .tp_visit         = */ NULL,

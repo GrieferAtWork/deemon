@@ -1562,21 +1562,21 @@ PRIVATE struct type_seq set_seq = {
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 set_repr(Set *__restrict self) {
-	struct unicode_printer p;
 	dssize_t error;
+	struct unicode_printer p;
 	struct hashset_item *iter, *end;
-	bool is_first;
 	struct hashset_item *vector;
+	bool is_first;
 	size_t mask;
 again:
 	unicode_printer_init(&p);
 	if (UNICODE_PRINTER_PRINT(&p, "{ ") < 0)
 		goto err;
-	DeeHashSet_LockRead(self);
 	is_first = true;
-	vector   = self->s_elem;
-	mask     = self->s_mask;
-	end      = (iter = vector) + (mask + 1);
+	DeeHashSet_LockRead(self);
+	vector = self->s_elem;
+	mask   = self->s_mask;
+	end    = (iter = vector) + (mask + 1);
 	for (; iter < end; ++iter) {
 		DREF DeeObject *key;
 		if (iter->si_key == NULL ||

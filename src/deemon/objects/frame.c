@@ -139,26 +139,27 @@ DeeFrame_DecrefShared(DREF DeeObject *__restrict self) {
 
 
 
-#if defined(CONFIG_HOST_WINDOWS) && 0
-#define TRACEBACK_SLASH  "\\"
+#ifdef CONFIG_HOST_WINDOWS
+#define TRACEBACK_SLASH(path, file) (strchr(path, '\\') || strchr(file, '\\') ? "\\" : "/")
 #else /* CONFIG_HOST_WINDOWS */
-#define TRACEBACK_SLASH  "/"
+#define TRACEBACK_SLASH(path, file) "/"
+#define TRACEBACK_SLASH_S           "/"
 #endif /* !CONFIG_HOST_WINDOWS */
 
-INTERN WUNUSED NONNULL((1, 2)) dssize_t DCALL
-print_ddi(struct ascii_printer *__restrict printer,
+INTERN WUNUSED NONNULL((1, 3)) dssize_t DCALL
+print_ddi(dformatprinter printer, void *arg,
           DeeCodeObject *__restrict code, code_addr_t ip) {
-	dssize_t print_error;
+	dssize_t temp, result;
 	struct ddi_state state;
-	if (!DeeCode_FindDDI((DeeObject *)code, &state, NULL, ip, DDI_STATE_FNOTHROW | DDI_STATE_FNONAMES)) {
-		print_error = ascii_printer_printf(printer,
-		                                   "%s+%.4I32X\n",
-		                                   DeeCode_NAME(code),
-		                                   ip);
+	if (!DeeCode_FindDDI((DeeObject *)code, &state, NULL, ip,
+	                     DDI_STATE_FNOTHROW | DDI_STATE_FNONAMES)) {
+		result = DeeFormat_Printf(printer, arg, "%s+%.4I32X\n",
+		                          DeeCode_NAME(code), ip);
 	} else {
 		struct ddi_xregs *iter;
 		char const *path, *file, *name;
 		char const *base_name = DeeCode_NAME(code);
+		result = 0;
 		DDI_STATE_DO(iter, &state) {
 			file = DeeCode_GetDDIString((DeeObject *)code, iter->dx_base.dr_file);
 			name = DeeCode_GetDDIString((DeeObject *)code, iter->dx_base.dr_name);
@@ -167,48 +168,44 @@ print_ddi(struct ascii_printer *__restrict printer,
 			} else {
 				path = DeeCode_GetDDIString((DeeObject *)code, iter->dx_base.dr_path);
 			}
-			print_error = ascii_printer_printf(printer,
-			                                   "%s%s%s(%d,%d) : %s+%.4I32X",
-			                                   path ? path : "",
-			                                   path ? TRACEBACK_SLASH : "",
-			                                   file ? file : "",
-			                                   iter->dx_base.dr_lno + 1,
-			                                   iter->dx_base.dr_col + 1,
-			                                   name ? name
-			                                        : (code->co_flags & CODE_FCONSTRUCTOR
-			                                           ? "<anonymous_ctor>"
-			                                           : "<anonymous>"),
-			                                   ip);
-			if unlikely(print_error < 0)
+			temp = DeeFormat_Printf(printer, arg,
+			                        "%s%s%s(%d,%d) : %s+%.4I32X",
+			                        path ? path : "",
+			                        path ? TRACEBACK_SLASH(path, file ? file : "") : "",
+			                        file ? file : "",
+			                        iter->dx_base.dr_lno + 1,
+			                        iter->dx_base.dr_col + 1,
+			                        name ? name
+			                             : (code->co_flags & CODE_FCONSTRUCTOR
+			                                ? "<anonymous_ctor>"
+			                                : "<anonymous>"),
+			                        ip);
+			if unlikely(temp < 0) {
+				result = temp;
 				break;
+			}
+			result += temp;
 			if (name != base_name && *base_name) {
 				/* Also print the name of the base-function */
-				print_error = ascii_printer_printf(printer, " (%s)", base_name);
-				if unlikely(print_error < 0)
+				temp = DeeFormat_Printf(printer, arg, " (%s)", base_name);
+				if unlikely(temp < 0) {
+					result = temp;
 					break;
+				}
+				result += temp;
 			}
-			print_error = ascii_printer_putc(printer, '\n');
-			if unlikely(print_error < 0)
+			temp = DeeFormat_PRINT(printer, arg, "\n");
+			if unlikely(temp < 0) {
+				result = temp;
 				break;
+			}
+			result += temp;
 		}
 		DDI_STATE_WHILE(iter, &state);
 		Dee_ddi_state_fini(&state);
 	}
-	return print_error;
+	return result;
 }
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-print_ddi_string(DeeCodeObject *__restrict code, code_addr_t ip) {
-	struct ascii_printer printer = ASCII_PRINTER_INIT;
-	if unlikely(print_ddi(&printer, code, ip) < 0)
-		goto err;
-	return ascii_printer_pack(&printer);
-err:
-	ascii_printer_fini(&printer);
-	return NULL;
-}
-
-
 
 PRIVATE NONNULL((1)) void DCALL
 frame_fini(Frame *__restrict self) {
@@ -220,15 +217,16 @@ frame_visit(Frame *__restrict self, dvisit_t proc, void *arg) {
 	Dee_XVisit(self->f_owner);
 }
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-frame_repr(Frame *__restrict self) {
+PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
+frame_print(Frame *__restrict self,
+            dformatprinter printer, void *arg) {
+	dssize_t result;
 	DREF DeeCodeObject *code;
-	DREF DeeObject *result;
 	code_addr_t ip;
 	rwlock_read(&self->f_lock);
 	if (!self->f_frame) {
 		rwlock_endread(&self->f_lock);
-		return_empty_string;
+		return 0;
 	}
 	PLOCK_READ(self);
 	code = self->f_frame->cf_func->fo_code;
@@ -236,8 +234,8 @@ frame_repr(Frame *__restrict self) {
 	ip = (code_addr_t)(self->f_frame->cf_ip - code->co_code);
 	PLOCK_ENDREAD(self);
 	rwlock_endread(&self->f_lock);
-	result = print_ddi_string(code, ip);
-	Dee_Decref(code);
+	result = print_ddi(printer, arg, code, ip);
+	Dee_Decref_unlikely(code);
 	return result;
 }
 
@@ -300,27 +298,31 @@ frame_getlocation(Frame *__restrict self) {
 		goto err_state;
 	i = 0;
 	DDI_STATE_DO(iter, &state) {
-		char *temp, *file;
+		char *path, *file;
 		file = DeeCode_GetDDIString((DeeObject *)code, state.rs_regs.dr_file);
 		if unlikely(!file) {
 			fileob = Dee_None;
 			Dee_Incref(Dee_None);
 		} else {
 			if (!state.rs_regs.dr_path-- ||
-			    (temp = DeeCode_GetDDIString((DeeObject *)code, state.rs_regs.dr_file)) == NULL) {
+			    (path = DeeCode_GetDDIString((DeeObject *)code, state.rs_regs.dr_file)) == NULL) {
 				fileob = DeeString_New(file);
 			} else {
-				fileob = DeeString_Newf("%s" TRACEBACK_SLASH "%s", temp, file);
+#ifdef TRACEBACK_SLASH_S
+				fileob = DeeString_Newf("%s" TRACEBACK_SLASH_S "%s", path, file);
+#else /* TRACEBACK_SLASH_S */
+				fileob = DeeString_Newf("%s%s%s", path, TRACEBACK_SLASH(path, file), file);
+#endif /* !TRACEBACK_SLASH_S */
 			}
 			if unlikely(!fileob)
 				goto err_state_r;
 		}
-		temp = DeeCode_GetDDIString((DeeObject *)code, state.rs_regs.dr_name);
-		if (!temp) {
+		path = DeeCode_GetDDIString((DeeObject *)code, state.rs_regs.dr_name);
+		if (!path) {
 			nameob = Dee_None;
 			Dee_Incref(Dee_None);
 		} else {
-			nameob = DeeString_New(temp);
+			nameob = DeeString_New(path);
 			if unlikely(!nameob)
 				goto err_state_r_fileob;
 		}
@@ -344,8 +346,7 @@ frame_getlocation(Frame *__restrict self) {
 err_state_r_fileob:
 	Dee_Decref(fileob);
 err_state_r:
-	while (i--)
-		Dee_Decref(DeeTuple_GET(result, i));
+	Dee_Decrefv(DeeTuple_ELEM(result), i);
 	DeeTuple_FreeUninitialized(result);
 err_state:
 	Dee_ddi_state_fini(&state);
@@ -359,7 +360,7 @@ frame_getfile(Frame *__restrict self) {
 	DREF DeeObject *result;
 	DREF DeeCodeObject *code;
 	struct ddi_state state;
-	char *temp, *file;
+	char *path, *file;
 	code = frame_getddi(self, &state, NULL, NULL, DDI_STATE_FNONAMES);
 	if unlikely(!code)
 		goto err;
@@ -369,10 +370,14 @@ frame_getfile(Frame *__restrict self) {
 		Dee_Incref(Dee_None);
 	} else {
 		if (!state.rs_regs.dr_path-- ||
-		    (temp = DeeCode_GetDDIString((DeeObject *)code, state.rs_regs.dr_path)) == NULL) {
+		    (path = DeeCode_GetDDIString((DeeObject *)code, state.rs_regs.dr_path)) == NULL) {
 			result = DeeString_New(file);
 		} else {
-			result = DeeString_Newf("%s" TRACEBACK_SLASH "%s", temp, file);
+#ifdef TRACEBACK_SLASH_S
+			result = DeeString_Newf("%s" TRACEBACK_SLASH_S "%s", path, file);
+#else /* TRACEBACK_SLASH_S */
+			result = DeeString_Newf("%s%s%s", path, TRACEBACK_SLASH(path, file), file);
+#endif /* !TRACEBACK_SLASH_S */
 		}
 	}
 	Dee_ddi_state_fini(&state);
@@ -700,8 +705,9 @@ PUBLIC DeeTypeObject DeeFrame_Type = {
 	},
 	/* .tp_cast = */ {
 		/* .tp_str  = */ NULL,
-		/* .tp_repr = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&frame_repr,
-		/* .tp_bool = */ NULL
+		/* .tp_repr = */ NULL,
+		/* .tp_bool = */ NULL,
+		/* .tp_print = */ (dssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&frame_print
 	},
 	/* .tp_call          = */ NULL,
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&frame_visit,

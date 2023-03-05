@@ -25,11 +25,12 @@
 #include <deemon/arg.h>
 #include <deemon/bool.h>
 #include <deemon/error.h>
+#include <deemon/format.h>
 #include <deemon/none.h>
 #include <deemon/object.h>
 #include <deemon/string.h>
-#include <deemon/weakref.h>
 #include <deemon/util/atomic.h>
+#include <deemon/weakref.h>
 
 #include "../runtime/runtime_error.h"
 #include "../runtime/strings.h"
@@ -193,30 +194,34 @@ ob_weakref_moveassign(WeakRef *__restrict self,
 	return 0;
 }
 
-/*[[[deemon
-(PRIVATE_DEFINE_STRING from rt.gen.string)("empty_weakref", "empty WeakRef");
-(PRIVATE_DEFINE_STRING from rt.gen.string)("empty_weakref_repr", "WeakRef()");
-]]]*/
-PRIVATE DEFINE_STRING_EX(empty_weakref, "empty WeakRef", 0x21b9fba5, 0x271729924e7f107d);
-PRIVATE DEFINE_STRING_EX(empty_weakref_repr, "WeakRef()", 0x7f35b6fd, 0xa52703d4c6e4c57e);
-/*[[[end]]]*/
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-ob_weakref_str(WeakRef *__restrict self) {
+PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
+ob_weakref_print(WeakRef *__restrict self,
+                 dformatprinter printer, void *arg) {
+	dssize_t result;
 	DREF DeeObject *refobj;
 	refobj = Dee_weakref_lock(&self->wr_ref);
-	if (!refobj)
-		return_reference_((DeeObject *)&empty_weakref);
-	return DeeString_Newf("WeakRef -> %K", refobj);
+	if (refobj) {
+		result = DeeFormat_Printf(printer, arg, "<weakref to %k>", refobj);
+		Dee_Decref_unlikely(refobj);
+	} else {
+		result = DeeFormat_PRINT(printer, arg, "<empty weakref>");
+	}
+	return result;
 }
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-ob_weakref_repr(WeakRef *__restrict self) {
+PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
+ob_weakref_printrepr(WeakRef *__restrict self,
+                     dformatprinter printer, void *arg) {
+	dssize_t result;
 	DREF DeeObject *refobj;
 	refobj = Dee_weakref_lock(&self->wr_ref);
-	if (!refobj)
-		return_reference_((DeeObject *)&empty_weakref_repr);
-	return DeeString_Newf("WeakRef(%R)", refobj);
+	if (refobj) {
+		result = DeeFormat_Printf(printer, arg, "WeakRef(%r)", refobj);
+		Dee_Decref_unlikely(refobj);
+	} else {
+		result = DeeFormat_PRINT(printer, arg, "WeakRef()");
+	}
+	return result;
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
@@ -437,9 +442,11 @@ PUBLIC DeeTypeObject DeeWeakRef_Type = {
 		/* .tp_deepload    = */ NULL
 	},
 	/* .tp_cast = */ {
-		/* .tp_str  = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ob_weakref_str,
-		/* .tp_repr = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ob_weakref_repr,
-		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&ob_weakref_bool
+		/* .tp_str       = */ NULL,
+		/* .tp_repr      = */ NULL,
+		/* .tp_bool      = */ (int (DCALL *)(DeeObject *__restrict))&ob_weakref_bool,
+		/* .tp_print     = */ (dssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&ob_weakref_print,
+		/* .tp_printrepr = */ (dssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&ob_weakref_printrepr
 	},
 	/* .tp_call          = */ NULL,
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&ob_weakref_visit,

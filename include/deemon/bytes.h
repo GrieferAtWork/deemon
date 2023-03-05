@@ -175,13 +175,13 @@ DeeBytes_FromSequence(DeeObject *__restrict seq);
  * encoded as 2-byte UTF-8 sequences (aka: as LATIN-1), allowing
  * them to be properly interpreted by the given `printer' */
 INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
-DeeBytes_PrintUtf8(DeeObject *__restrict self,
-                   Dee_formatprinter_t printer, void *arg);
+DeeBytes_Print(DeeObject *__restrict self,
+               Dee_formatprinter_t printer, void *arg);
 INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 DeeBytes_PrintRepr(DeeObject *__restrict self,
                    Dee_formatprinter_t printer, void *arg);
 #else /* CONFIG_BUILDING_DEEMON */
-#define DeeBytes_PrintUtf8(self, printer, arg) \
+#define DeeBytes_Print(self, printer, arg) \
 	DeeObject_Print(self, printer, arg)
 #define DeeBytes_PrintRepr(self, printer, arg) \
 	DeeObject_PrintRepr(self, printer, arg)

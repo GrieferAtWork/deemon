@@ -62,6 +62,13 @@
 
 DECL_BEGIN
 
+#define DO(err, expr)                    \
+	do {                                 \
+		if unlikely((temp = (expr)) < 0) \
+			goto err;                    \
+		result += temp;                  \
+	}	__WHILE0
+
 /* Use libc functions for case-insensitive UTF-8 string compare when available. */
 #ifdef CONFIG_HAVE_memcasecmp
 #define MEMCASEEQ(a, b, s) (memcasecmp(a, b, s) == 0)
@@ -1272,27 +1279,16 @@ get_repr_id(char const *__restrict name, size_t length) {
 }
 
 
-PRIVATE WUNUSED NONNULL((1, 2, 3)) dssize_t DCALL
-time_format(struct unicode_printer *__restrict printer,
+PRIVATE WUNUSED NONNULL((1, 3, 4)) dssize_t DCALL
+time_format(dformatprinter printer, void *arg,
             char const *__restrict format,
             DeeTimeObject *__restrict self) {
 	/* TODO: re-write this function from scratch! */
-
-#define print(p, s)                                                    \
-	do {                                                               \
-		if unlikely((temp = unicode_printer_print(printer, p, s)) < 0) \
-			goto err;                                                  \
-		result += temp;                                                \
-	}	__WHILE0
-#define printf(...)                                                            \
-	do {                                                                       \
-		if unlikely((temp = unicode_printer_printf(printer, __VA_ARGS__)) < 0) \
-			goto err;                                                          \
-		result += temp;                                                        \
-	}	__WHILE0
+#define print(p, s) DO(err, DeeFormat_Print(printer, arg, p, s))
+#define printf(...) DO(err, DeeFormat_Printf(printer, arg, __VA_ARGS__))
+	dssize_t temp, result = 0;
 	Dee_int128_t number;
 	char const *text;
-	dssize_t result = 0, temp;
 	for (;;) {
 		char ch = *format++;
 		switch (ch) {
@@ -1689,7 +1685,7 @@ PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 time_doformat_string(DeeTimeObject *__restrict self,
                      char const *__restrict format) {
 	struct unicode_printer printer = UNICODE_PRINTER_INIT;
-	if (time_format(&printer, format, self) < 0)
+	if (time_format(&unicode_printer_print, &printer, format, self) < 0)
 		goto err;
 	return unicode_printer_pack(&printer);
 err:
@@ -3169,17 +3165,20 @@ err:
 	return -1;
 }
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-time_str(DeeTimeObject *__restrict self) {
+PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
+time_print(DeeTimeObject *__restrict self,
+           dformatprinter printer, void *arg) {
 	/* TODO: Re-design me! (and include special handling for delta timestamps) */
-	return time_doformat_string(self, "%A, the %[n:mday] of %B %Y, %H:%M:%S");
+	return time_format(printer, arg, "%A, the %[n:mday] of %B %Y, %H:%M:%S", self);
 }
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-time_repr(DeeTimeObject *__restrict self) {
-	struct ascii_printer printer = ASCII_PRINTER_INIT;
-	if unlikely(ASCII_PRINTER_PRINT(&printer, "Time(") < 0)
-		goto err;
+PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
+time_printrepr(DeeTimeObject *__restrict self,
+           dformatprinter printer, void *arg) {
+	dssize_t temp, result;
+	result = DeeFormat_PRINT(printer, arg, "Time(");
+	if unlikely(result < 0)
+		goto done;
 	if (DeeTime_IsDelta(self)) {
 		/* Delta representation */
 		if (self->t_type == TIME_TYPE_MONTHS) {
@@ -3188,17 +3187,15 @@ time_repr(DeeTimeObject *__restrict self) {
 			__hybrid_int128_divmod8(self->t_months, MONTHS_PER_YEAR,
 			                        years, months);
 			if (__hybrid_int128_iszero(years)) {
-				if unlikely(ascii_printer_printf(&printer, "months: %" PRFu8, months) < 0)
-					goto err;
+				temp = DeeFormat_Printf(printer, arg, "months: %" PRFu8, months);
 			} else if (months == 0) {
-				if unlikely(ascii_printer_printf(&printer, "years: %" PRFu128, years) < 0)
-					goto err;
+				temp = DeeFormat_Printf(printer, arg, "years: %" PRFu128, years);
 			} else {
-				if unlikely(ascii_printer_printf(&printer,
-				                                 "years: %" PRFu128 ", months: %" PRFu8,
-				                                 years, months) < 0)
-					goto err;
+				temp = DeeFormat_Printf(printer, arg, "years: %" PRFu128 ", months: %" PRFu8, years, months);
 			}
+			if unlikely(temp < 0)
+				goto err;
+			result += temp;
 		} else if (!__hybrid_int128_iszero(self->t_nanos)) {
 			Dee_int128_t div, nano = self->t_nanos;
 			uint64_t temp64;
@@ -3231,38 +3228,33 @@ time_repr(DeeTimeObject *__restrict self) {
 				label = "nanoseconds";
 				div   = nano;
 			}
-			if unlikely(ascii_printer_printf(&printer, "%s: %" PRFu128, label, div) < 0)
-				goto err;
+			DO(err, DeeFormat_Printf(printer, arg, "%s: %" PRFu128, label, div));
 		}
 	} else {
 		uint32_t extra_nanoseconds;
 		/* Timestamp representation */
-		if unlikely(ascii_printer_printf(&printer,
-		                                 "year: %" PRFd128 ", "
-		                                 "month: %" PRFu8 ", "
-		                                 "day: %" PRFu8 ", "
-		                                 "hour: %" PRFu8 ", "
-		                                 "minute: %" PRFu8 ", "
-		                                 "second: %" PRFu8,
-		                                 DeeTime_GetRepr(self, TIME_REPR_YEAR),
-		                                 DeeTime_GetRepr8(self, TIME_REPR_MONTH),
-		                                 DeeTime_GetRepr8(self, TIME_REPR_MDAY),
-		                                 DeeTime_GetRepr8(self, TIME_REPR_HOUR),
-		                                 DeeTime_GetRepr8(self, TIME_REPR_MINUTE),
-		                                 DeeTime_GetRepr8(self, TIME_REPR_SECOND)) < 0)
-			goto err;
+		DO(err, DeeFormat_Printf(printer, arg,
+		                         "year: %" PRFd128 ", "
+		                         "month: %" PRFu8 ", "
+		                         "day: %" PRFu8 ", "
+		                         "hour: %" PRFu8 ", "
+		                         "minute: %" PRFu8 ", "
+		                         "second: %" PRFu8,
+		                         DeeTime_GetRepr(self, TIME_REPR_YEAR),
+		                         DeeTime_GetRepr8(self, TIME_REPR_MONTH),
+		                         DeeTime_GetRepr8(self, TIME_REPR_MDAY),
+		                         DeeTime_GetRepr8(self, TIME_REPR_HOUR),
+		                         DeeTime_GetRepr8(self, TIME_REPR_MINUTE),
+		                         DeeTime_GetRepr8(self, TIME_REPR_SECOND)));
 		extra_nanoseconds = DeeTime_GetRepr32(self, TIME_REPR_NANOSECOND);
-		if (extra_nanoseconds != 0) {
-			if unlikely(ascii_printer_printf(&printer, ", nanosecond: %" PRFu32, extra_nanoseconds) < 0)
-				goto err;
-		}
+		if (extra_nanoseconds != 0)
+			DO(err, DeeFormat_Printf(printer, arg, ", nanosecond: %" PRFu32, extra_nanoseconds));
 	}
-	if unlikely(ascii_printer_putc(&printer, ')') < 0)
-		goto err;
-	return ascii_printer_pack(&printer);
+	DO(err, DeeFormat_PRINT(printer, arg, ")"));
+done:
+	return result;
 err:
-	ascii_printer_fini(&printer);
-	return NULL;
+	return temp;
 }
 
 
@@ -3409,9 +3401,11 @@ INTERN DeeTypeObject DeeTime_Type = {
 		/* .tp_move_assign = */ NULL
 	},
 	/* .tp_cast = */ {
-		/* .tp_str  = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&time_str,
-		/* .tp_repr = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&time_repr,
-		/* .tp_bool = */ (int(DCALL *)(DeeObject *__restrict))&time_bool
+		/* .tp_str       = */ NULL,
+		/* .tp_repr      = */ NULL,
+		/* .tp_bool      = */ (int(DCALL *)(DeeObject *__restrict))&time_bool,
+		/* .tp_print     = */ (dssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&time_print,
+		/* .tp_printrepr = */ (dssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&time_printrepr
 	},
 	/* .tp_call          = */ NULL,
 	/* .tp_visit         = */ NULL,

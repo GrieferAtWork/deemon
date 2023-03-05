@@ -25,6 +25,9 @@ print repr rt.argv;
 
 @@Run all tests found in the `/util/test' directory
 function runall() {
+	local path = joinpath(headof(__FILE__), "test/.*.dec");
+	//for (local x: query(path))
+	//	unlink(joinpath(headof(__FILE__), "test", x));
 	local path = joinpath(headof(__FILE__), "test/*.dee");
 	for (local x: query(path)) {
 		local test_name = x[:-4];

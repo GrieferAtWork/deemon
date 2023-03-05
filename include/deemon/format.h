@@ -291,13 +291,16 @@ DeeFormat_Putc(Dee_formatprinter_t printer, void *arg, uint32_t ch);
  * NOTE: 8-bit here refers to the unicode range U+0000 - U+00FF */
 DFUNDEF WUNUSED NONNULL((1, 3)) Dee_ssize_t DCALL
 DeeFormat_Print8(Dee_formatprinter_t printer, void *arg,
-                 uint8_t const *__restrict text, size_t textlen);
+                 /*latin-1*/ uint8_t const *__restrict text,
+                 size_t textlen);
 DFUNDEF WUNUSED NONNULL((1, 3)) Dee_ssize_t DCALL
 DeeFormat_Print16(Dee_formatprinter_t printer, void *arg,
-                  uint16_t const *__restrict text, size_t textlen);
+                  /*utf-16-without-surrogats*/ uint16_t const *__restrict text,
+                  size_t textlen);
 DFUNDEF WUNUSED NONNULL((1, 3)) Dee_ssize_t DCALL
 DeeFormat_Print32(Dee_formatprinter_t printer, void *arg,
-                  uint32_t const *__restrict text, size_t textlen);
+                  /*utf-32*/ uint32_t const *__restrict text,
+                  size_t textlen);
 
 
 struct va_list_struct { va_list vl_ap; };

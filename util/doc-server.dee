@@ -944,7 +944,7 @@ function clientThreadMain(con: socket) {
 				errorFp
 					<< escapeSpecialHtmlCharacters(e is string ? e : repr e)
 					<< "<hr/>"
-					<< escapeSpecialHtmlCharacters(repr(Traceback.current))
+					<< escapeSpecialHtmlCharacters(str(Traceback.current))
 					<< "<hr/></main>\r\n";
 				writePageFooter(errorFp);
 				errorFp = errorFp.string.encode("utf-8");
@@ -967,7 +967,7 @@ function clientThreadMain(con: socket) {
 	} catch (e...) {
 		print "Client thread crashed:";
 		print repr e;
-		print repr Traceback.current;
+		print Traceback.current;
 	}
 
 }

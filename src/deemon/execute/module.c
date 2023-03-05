@@ -1077,9 +1077,10 @@ module_str(DeeModuleObject *__restrict self) {
 	return_reference_((DeeObject *)self->mo_name);
 }
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-module_repr(DeeModuleObject *__restrict self) {
-	return DeeString_Newf("import(%r)", self->mo_name);
+PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
+module_printrepr(DeeModuleObject *__restrict self,
+                 dformatprinter printer, void *arg) {
+	return DeeFormat_Printf(printer, arg, "import(%r)", self->mo_name);
 }
 
 
@@ -1629,9 +1630,11 @@ PUBLIC DeeTypeObject DeeModule_Type = {
 		/* .tp_move_assign = */ NULL
 	},
 	/* .tp_cast = */ {
-		/* .tp_str  = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&module_str,
-		/* .tp_repr = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&module_repr,
-		/* .tp_bool = */ NULL
+		/* .tp_str       = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&module_str,
+		/* .tp_repr      = */ NULL,
+		/* .tp_bool      = */ NULL,
+		/* .tp_print     = */ NULL,
+		/* .tp_printrepr = */ (dssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&module_printrepr
 	},
 	/* .tp_call          = */ NULL,
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&module_visit,

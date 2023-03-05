@@ -1051,48 +1051,64 @@ PRIVATE struct type_cmp map_cmp = {
 };
 
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-map_repr(DeeObject *__restrict self) {
-	struct unicode_printer p = UNICODE_PRINTER_INIT;
-	DREF DeeObject *iterator = DeeObject_IterSelf(self);
+PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
+map_printrepr(DeeObject *__restrict self,
+              dformatprinter printer, void *arg) {
+	dssize_t temp, result;
+	DREF DeeObject *iterator;
 	DREF DeeObject *elem;
 	bool is_first = true;
+	result = DeeFormat_PRINT(printer, arg, "{ ");
+	if unlikely(result < 0)
+		goto done;
+	iterator = DeeObject_IterSelf(self);
 	if unlikely(!iterator)
-		goto err;
-	if unlikely(UNICODE_PRINTER_PRINT(&p, "{ ") < 0)
-		goto err_p_iterator;
+		goto err_m1;
 	while (ITER_ISOK(elem = DeeObject_IterNext(iterator))) {
-		dssize_t print_error;
 		DREF DeeObject *elem_key_and_value[2];
 		if (DeeObject_Unpack(elem, 2, elem_key_and_value))
-			goto err_p_iterator_elem;
+			goto err_m1_iterator_elem;
 		Dee_Decref(elem);
-		print_error = unicode_printer_printf(&p, "%s%r: %r",
-		                                     is_first ? "" : ", ",
-		                                     elem_key_and_value[0],
-		                                     elem_key_and_value[1]);
+		temp = DeeFormat_Printf(printer, arg, "%s%r: %r",
+		                        is_first ? "" : ", ",
+		                        elem_key_and_value[0],
+		                        elem_key_and_value[1]);
 		Dee_Decref(elem_key_and_value[1]);
 		Dee_Decref(elem_key_and_value[0]);
-		if (print_error < 0)
-			goto err_p_iterator;
+		if unlikely(temp < 0)
+			goto err_iterator;
+		result += temp;
 		is_first = false;
 		if (DeeThread_CheckInterrupt())
-			goto err_p_iterator;
+			goto err_m1_iterator;
 	}
+	Dee_Decref(iterator);
 	if unlikely(!elem)
-		goto err_p_iterator;
-	if unlikely((is_first ? unicode_printer_putascii(&p, '}')
-	                      : UNICODE_PRINTER_PRINT(&p, " }")) < 0)
-		goto err_p_iterator;
-	Dee_Decref(iterator);
-	return unicode_printer_pack(&p);
-err_p_iterator_elem:
+		goto err_m1;
+	if (is_first) {
+		temp = DeeFormat_PRINT(printer, arg, "}");
+	} else {
+		temp = DeeFormat_PRINT(printer, arg, " }");
+	}
+	if unlikely(temp < 0)
+		goto err;
+	result += temp;
+done:
+	return result;
+err_m1_iterator_elem:
+	temp = -1;
+/*err_iterator_elem:*/
 	Dee_Decref(elem);
-err_p_iterator:
+err_iterator:
 	Dee_Decref(iterator);
-	unicode_printer_fini(&p);
 err:
-	return NULL;
+	return temp;
+err_m1_iterator:
+	temp = -1;
+	goto err_iterator;
+err_m1:
+	temp = -1;
+	goto err;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF MapProxy *DCALL
@@ -1344,8 +1360,16 @@ PRIVATE struct type_getset tpconst map_getsets[] = {
 	            /**/ "interfaces, but instead simply behaves like a completely generic object.\n"
 	            "This attribute only makes sense if @this mapping behaves like ${{string: Object}}."),
 	TYPE_GETTER(STR_frozen, &DeeRoDict_FromSequence,
-	            "->?DMapping\n"
+	            "->?#Frozen\n"
 	            "Returns a read-only (frozen) copy of @this Mapping"),
+	/* TODO: keytype->?DType
+	 *       Check if the type of @this overrides the ?#KeyType class attribute.
+	 *       If so, return its value; else, return the common base-class of all
+	 *       keys in @this ?.. When @this is empty, ?O is returned.
+	 * TODO: valuetype->?DType
+	 *       Check if the type of @this overrides the ?#ValueType class attribute.
+	 *       If so, return its value; else, return the common base-class of all
+	 *       values in @this ?.. When @this is empty, ?O is returned. */
 	TYPE_GETSET_END
 };
 
@@ -1423,6 +1447,14 @@ PRIVATE struct type_member tpconst map_class_members[] = {
 	TYPE_MEMBER_CONST_DOC("Items", &DeeMappingItems_Type,
 	                      "->?DType\n"
 	                      "The return type of the ?#items member function"),
+	/* TODO: KeyType->?DType
+	 *       When this type of ?. only allows key of a certain ?DType,
+	 *       this class attribute is overwritten with that ?DType. Else,
+	 *       it simply evaluates to ?O
+	 * TODO: ValueType->?DType
+	 *       When this type of ?. only allows values of a certain ?DType,
+	 *       this class attribute is overwritten with that ?DType. Else,
+	 *       it simply evaluates to ?O */
 	TYPE_MEMBER_END
 };
 
@@ -1475,9 +1507,11 @@ PUBLIC DeeTypeObject DeeMapping_Type = {
 		/* .tp_move_assign = */ NULL
 	},
 	/* .tp_cast = */ {
-		/* .tp_str  = */ NULL,
-		/* .tp_repr = */ &map_repr,
-		/* .tp_bool = */ NULL
+		/* .tp_str       = */ NULL,
+		/* .tp_repr      = */ NULL,
+		/* .tp_bool      = */ NULL,
+		/* .tp_print     = */ NULL,
+		/* .tp_printrepr = */ (dssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&map_printrepr
 	},
 	/* .tp_call          = */ NULL,
 	/* .tp_visit         = */ NULL,

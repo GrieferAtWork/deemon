@@ -224,6 +224,13 @@ PRIVATE struct type_member tpconst ss_class_members[] = {
 	TYPE_MEMBER_END
 };
 
+PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
+ss_printrepr(SlabStatObject *__restrict UNUSED(self),
+             dformatprinter printer, void *arg) {
+	return DeeFormat_PRINT(printer, arg, "import(\"rt\").SlabStat()");
+}
+
+
 INTERN DeeTypeObject SlabStat_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_SlabStat",
@@ -247,9 +254,12 @@ INTERN DeeTypeObject SlabStat_Type = {
 		/* .tp_move_assign = */ NULL
 	},
 	/* .tp_cast = */ {
-		/* .tp_str  = */ NULL,
-		/* .tp_repr = */ NULL,
-		/* .tp_bool = */ NULL
+		/* .tp_str       = */ NULL,
+		/* .tp_repr      = */ NULL,
+		/* .tp_bool      = */ NULL,
+		/* .tp_print     = */ NULL,
+		/* .tp_printrepr = */ (dssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&ss_printrepr,
+
 	},
 	/* .tp_call          = */ NULL,
 	/* .tp_visit         = */ NULL,
@@ -400,21 +410,24 @@ STATIC_ASSERT(offsetof(SlabStatIteratorObject, sti_stat) ==
 #define si_fini  ssi_fini
 #define si_visit ssi_visit
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-si_str(SlabInfoObject *__restrict self) {
-	return DeeString_Newf("size: %" PRFuSIZ ", "
-	                      "alloc: %" PRFuSIZ "/%" PRFuSIZ ", "
-	                      "free: %" PRFuSIZ "/%" PRFuSIZ,
-	                      self->si_info->si_itemsize,
-	                      self->si_info->si_cur_alloc,
-	                      self->si_info->si_max_alloc,
-	                      self->si_info->si_cur_free,
-	                      self->si_info->si_max_free);
+PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
+si_print(SlabInfoObject *__restrict self,
+         dformatprinter printer, void *arg) {
+	return DeeFormat_Printf(printer, arg,
+	                        "size: %" PRFuSIZ ", "
+	                        "alloc: %" PRFuSIZ "/%" PRFuSIZ ", "
+	                        "free: %" PRFuSIZ "/%" PRFuSIZ,
+	                        self->si_info->si_itemsize,
+	                        self->si_info->si_cur_alloc,
+	                        self->si_info->si_max_alloc,
+	                        self->si_info->si_cur_free,
+	                        self->si_info->si_max_free);
 }
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-si_repr(SlabInfoObject *__restrict self) {
-	return DeeString_Newf("<slabinfo %k>", self);
+PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
+si_printrepr(SlabInfoObject *__restrict self, dformatprinter printer, void *arg) {
+	size_t index = self->si_info - self->si_stat->st_stat.st_slabs;
+	return DeeFormat_Printf(printer, arg, "%r[%" PRFuSIZ "]", self->si_stat, index);
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -527,9 +540,11 @@ INTERN DeeTypeObject SlabInfo_Type = {
 		/* .tp_move_assign = */ NULL
 	},
 	/* .tp_cast = */ {
-		/* .tp_str  = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&si_str,
-		/* .tp_repr = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&si_repr,
-		/* .tp_bool = */ NULL
+		/* .tp_str       = */ NULL,
+		/* .tp_repr      = */ NULL,
+		/* .tp_bool      = */ NULL,
+		/* .tp_print     = */ (dssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&si_print,
+		/* .tp_printrepr = */ (dssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&si_printrepr,
 	},
 	/* .tp_call          = */ NULL,
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&si_visit,

@@ -1699,11 +1699,11 @@ again:
 	unicode_printer_init(&p);
 	if (UNICODE_PRINTER_PRINT(&p, "{ ") < 0)
 		goto err;
-	DeeDict_LockRead(self);
 	is_first = true;
-	vector   = self->d_elem;
-	mask     = self->d_mask;
-	end      = (iter = vector) + (mask + 1);
+	DeeDict_LockRead(self);
+	vector = self->d_elem;
+	mask   = self->d_mask;
+	end    = (iter = vector) + (mask + 1);
 	for (; iter < end; ++iter) {
 		DREF DeeObject *key, *value;
 		if (iter->di_key == NULL ||
