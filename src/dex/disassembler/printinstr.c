@@ -940,27 +940,23 @@ libdisasm_printextern(dformatprinter printer, void *arg,
 		symbol = DeeModule_GetSymbolID(module, gid);
 		if (symbol) {
 			if (symbol->ss_flags & MODSYM_FPROPERTY) {
-				return DeeFormat_Printf(printer, arg,
-				                        "extern " PREFIX_VARNAME "%k:" PREFIX_VARNAME "%s+getter",
-				                        module->mo_name,
-				                        symbol->ss_name);
+				return DeeFormat_Printf(printer, arg, "extern " PREFIX_VARNAME "%k:" PREFIX_VARNAME "%s+getter",
+				                        module->mo_name, symbol->ss_name);
 			}
-			return DeeFormat_Printf(printer, arg,
-			                        "extern " PREFIX_VARNAME "%k:" PREFIX_VARNAME "%s",
-			                        module->mo_name,
-			                        symbol->ss_name);
+			return DeeFormat_Printf(printer, arg, "extern " PREFIX_VARNAME "%k:" PREFIX_VARNAME "%s",
+			                        module->mo_name, symbol->ss_name);
 		}
 		if (gid >= MODULE_PROPERTY_DEL) {
 			symbol = DeeModule_GetSymbolID(module, gid - MODULE_PROPERTY_DEL);
 			if (symbol && (symbol->ss_flags & (MODSYM_FPROPERTY | MODSYM_FREADONLY)) == MODSYM_FPROPERTY) {
-				return DeeFormat_Printf(printer, arg, "extern " PREFIX_VARNAME "%k:%s+delete",
-				                        module->mo_name, (unsigned int)gid);
+				return DeeFormat_Printf(printer, arg, "extern " PREFIX_VARNAME "%k:" PREFIX_VARNAME "%s+delete",
+				                        module->mo_name, symbol->ss_name);
 			}
 			if (gid >= MODULE_PROPERTY_SET) {
 				symbol = DeeModule_GetSymbolID(module, gid - MODULE_PROPERTY_SET);
 				if (symbol && (symbol->ss_flags & (MODSYM_FPROPERTY | MODSYM_FREADONLY)) == MODSYM_FPROPERTY) {
-					return DeeFormat_Printf(printer, arg, "extern " PREFIX_VARNAME "%k:%s+setter",
-					                        module->mo_name, (unsigned int)gid);
+					return DeeFormat_Printf(printer, arg, "extern " PREFIX_VARNAME "%k:" PREFIX_VARNAME "%s+setter",
+					                        module->mo_name, symbol->ss_name);
 				}
 			}
 		}
