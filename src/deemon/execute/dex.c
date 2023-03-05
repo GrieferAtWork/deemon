@@ -37,6 +37,8 @@
 #include <deemon/tuple.h>
 #include <deemon/util/rwlock.h>
 
+#include <hybrid/host.h>
+
 #ifndef CONFIG_NO_DEC
 #include <deemon/dec.h>
 #endif /* !CONFIG_NO_DEC */
@@ -221,6 +223,13 @@ err:
 	return -1;
 }
 
+/* Special handling needed to deal with the "@NN"
+ * suffix caused by STDCALL functions on i386-pe */
+#undef NEED_DeeModule_GetNativeSymbol_AT_SUFFIX
+#if defined(__i386__) && !defined(__x86_64__) && defined(__PE__)
+#define NEED_DeeModule_GetNativeSymbol_AT_SUFFIX
+#endif /* __i386__ && !__x86_64__ && __PE__ */
+
 /* Return the export address of a native symbol exported from a dex `self'.
  * When `self' isn't a dex, but a regular module, or if the symbol wasn't found, return `NULL'.
  * NOTE: Because native symbols cannot appear in user-defined modules,
@@ -244,18 +253,51 @@ DeeModule_GetNativeSymbol(DeeObject *__restrict self,
 	ASSERT_OBJECT_TYPE(self, &DeeModule_Type);
 	if (!DeeDex_Check(self) || !(me->d_module.mo_flags & MODULE_FDIDLOAD))
 		return NULL;
-	DBG_ALIGNMENT_DISABLE();
 	result = DeeSystem_DlSym(me->d_handle, name);
-	DBG_ALIGNMENT_ENABLE();
 	if (!result) {
+#ifdef NEED_DeeModule_GetNativeSymbol_AT_SUFFIX
+		/* Try again after inserting an underscore. */
+		char *temp_name;
+		size_t namelen = strlen(name);
+#ifdef Dee_AMallocNoFailc
+		Dee_AMallocNoFailc(temp_name, namelen + 6, sizeof(char));
+#else /* Dee_AMallocNoFailc */
+		temp_name = (char *)Dee_AMallocc(namelen + 6, sizeof(char));
+		if unlikely(!temp_name) {
+			DeeError_Handled(Dee_ERROR_HANDLED_RESTORE);
+			return NULL; /* ... Technically not correct, but if memory has gotten
+			              *     this low, that's the last or the user's problems. */
+		}
+#endif /* !Dee_AMallocNoFailc */
+		memcpyc(temp_name + 1, name, namelen + 1, sizeof(char));
+		temp_name[0] = '_';
+		result = DeeSystem_DlSym(me->d_handle, temp_name);
+		if (!result) {
+			/* Try to append (in order): "@0", "@4", "@8", "@12", "@16", "@20", "@24", "@28", "@32" */
+			size_t n;
+			for (n = 0; n <= 32; n += 4) {
+				Dee_sprintf(temp_name + 1 + namelen, "@%" PRFuSIZ, n);
+
+				/* Try without leading '_' */
+				result = DeeSystem_DlSym(me->d_handle, temp_name + 1);
+				if (result)
+					break;
+
+				/* Try with leading '_' */
+				result = DeeSystem_DlSym(me->d_handle, temp_name);
+				if (result)
+					break;
+			}
+		}
+		Dee_AFree(temp_name);
+
+#else /* NEED_DeeModule_GetNativeSymbol_AT_SUFFIX */
 		/* Try again after inserting an underscore. */
 #ifdef __ARCH_PAGESIZE_MIN
 		if (((uintptr_t)(name) & ~(__ARCH_PAGESIZE_MIN - 1)) ==
 		    ((uintptr_t)(name - 1) & ~(__ARCH_PAGESIZE_MIN - 1)) &&
 		    name[-1] == '_') {
-			DBG_ALIGNMENT_DISABLE();
 			result = DeeSystem_DlSym(me->d_handle, name - 1);
-			DBG_ALIGNMENT_ENABLE();
 		} else
 #endif /* __ARCH_PAGESIZE_MIN */
 		{
@@ -275,11 +317,10 @@ DeeModule_GetNativeSymbol(DeeObject *__restrict self,
 			        namelen + 1,
 			        sizeof(char));
 			temp_name[0] = '_';
-			DBG_ALIGNMENT_DISABLE();
 			result = DeeSystem_DlSym(me->d_handle, temp_name);
-			DBG_ALIGNMENT_ENABLE();
 			Dee_AFree(temp_name);
 		}
+#endif /* !NEED_DeeModule_GetNativeSymbol_AT_SUFFIX */
 	}
 	return result;
 }
@@ -450,9 +491,7 @@ dex_fini(DeeDexObject *__restrict self) {
 		 *        change, _all_ objects have to implement GC-visit! (though we could
 		 *        add a type-flag to indicate that pointed-to objects can never form
 		 *        a ~conventional~ loop) */
-		DBG_ALIGNMENT_DISABLE();
 		DeeSystem_DlClose(self->d_handle);
-		DBG_ALIGNMENT_ENABLE();
 #endif
 	}
 }
