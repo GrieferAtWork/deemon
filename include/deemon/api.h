@@ -355,8 +355,7 @@ DECL_BEGIN
 
 
 #ifdef CONFIG_BUILDING_DEEMON
-#if ((defined(__i386__) && !defined(__x86_64__)) && \
-     defined(CONFIG_HOST_WINDOWS))
+#if ((defined(__i386__) && !defined(__x86_64__)) && defined(__PE__))
 #if 0
 #define ASSEMBLY_NAME(x, s) PP_CAT4(__USER_LABEL_PREFIX__, x, @, s)
 #else
