@@ -923,9 +923,8 @@ check_sym_class:
 			goto err;
 		if (SYMBOL_EXTERN_SYMBOL(sym)->ss_flags & MODSYM_FPROPERTY) {
 			/* Generate an external call to the getter. */
-			return asm_gcall_extern((uint16_t)symid,
-			                        SYMBOL_EXTERN_SYMBOL(sym)->ss_index + MODULE_PROPERTY_GET,
-			                        0);
+			uint16_t slot = SYMBOL_EXTERN_SYMBOL(sym)->ss_index + MODULE_PROPERTY_GET;
+			return asm_gcall_extern((uint16_t)symid, slot, 0);
 		}
 		ASSERT(SYMBOL_EXTERN_SYMBOL(sym));
 		return asm_gpush_extern((uint16_t)symid, SYMBOL_EXTERN_SYMBOL(sym)->ss_index);
@@ -1674,9 +1673,8 @@ check_sym_class:
 				/* Call an external property:
 				 * >> call    extern <mid>:<gid + MODULE_PROPERTY_DEL>, #0
 				 * >> pop     top */
-				if (asm_gcall_extern((uint16_t)mid,
-				                     modsym->ss_index + MODULE_PROPERTY_DEL,
-				                     0))
+				uint16_t slot = modsym->ss_index + MODULE_PROPERTY_DEL;
+				if (asm_gcall_extern((uint16_t)mid, slot, 0))
 					goto err;
 				return asm_gpop();
 			} else {
@@ -1916,10 +1914,12 @@ check_sym_class:
 			if unlikely(symid < 0)
 				goto err;
 			if (SYMBOL_EXTERN_SYMBOL(sym)->ss_flags & MODSYM_FPROPERTY) {
+				uint16_t slot;
 				/* Invoke the external setter callback. */
-				return asm_gcall_extern((uint16_t)symid,
-				                        SYMBOL_EXTERN_SYMBOL(sym)->ss_index + MODULE_PROPERTY_SET,
-				                        1);
+				slot = SYMBOL_EXTERN_SYMBOL(sym)->ss_index + MODULE_PROPERTY_SET;
+				if (asm_gcall_extern((uint16_t)symid, slot, 1))
+					goto err;
+				return asm_gpop();
 			}
 			return asm_gpop_extern((uint16_t)symid, SYMBOL_EXTERN_SYMBOL(sym)->ss_index);
 
