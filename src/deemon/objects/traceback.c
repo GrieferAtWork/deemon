@@ -651,7 +651,6 @@ traceback_print(DeeTracebackObject *__restrict self,
 	while (i--) {
 		DREF DeeCodeObject *code;
 		code_addr_t ip;
-		dssize_t error;
 		atomic_lock_acquire(&self->tb_lock);
 		code = self->tb_frames[i].cf_func->fo_code;
 		Dee_Incref(code);
