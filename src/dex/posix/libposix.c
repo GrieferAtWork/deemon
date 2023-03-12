@@ -65,6 +65,37 @@
 DECL_BEGIN
 
 
+/* Timestamp creation */
+#if defined(NEED_DeeTime_NewUnix) || defined(NEED_DeeTime_NewFILETIME)
+PRIVATE DREF DeeObject *dee_time_module = NULL;
+PRIVATE DREF DeeObject *DCALL get_time_module(void) {
+	if (dee_time_module == NULL)
+		dee_time_module = DeeModule_OpenGlobalString("time", 4, NULL, true);
+	return dee_time_module;
+}
+
+#ifdef HAVE_posix_dex_fini
+#error "More than one posix_dex_fini() function"
+#endif /* HAVE_posix_dex_fini */
+#define HAVE_posix_dex_fini
+PRIVATE NONNULL((1)) void DCALL
+posix_dex_fini(DeeDexObject *__restrict self) {
+	(void)self;
+	Dee_XDecref(dee_time_module);
+}
+
+#ifdef NEED_DeeTime_NewUnix
+#undef NEED_DeeTime_NewUnix
+INTERN DEFINE_DeeTime_NewUnix(get_time_module);
+#endif /* NEED_DeeTime_NewUnix */
+
+#ifdef NEED_DeeTime_NewFILETIME
+#undef NEED_DeeTime_NewFILETIME
+INTERN DEFINE_DeeTime_NewFILETIME(get_time_module);
+#endif /* NEED_DeeTime_NewFILETIME */
+#endif /* NEED_DeeTime_NewUnix || NEED_DeeTime_NewFILETIME */
+
+
 #if defined(NEED_libposix_get_dfd_filename) || defined(__INTELLISENSE__)
 #undef NEED_libposix_get_dfd_filename
 INTERN WUNUSED DREF /*String*/ DeeObject *DCALL
@@ -124,6 +155,26 @@ local ALL_STUBS = {
 	("posix_enumenv_USE_STUB",      { "environ" }),
 	("posix_stat_USE_STUB",         { "stat" }),
 	("posix_lstat_USE_STUB",        { "lstat" }),
+	("diriter_get_d_name_IS_STUB", { "dirent.d_name" }),
+	("diriter_get_d_fullname_IS_STUB", { "dirent.d_fullname" }),
+	("diriter_get_d_type_IS_STUB", { "dirent.d_type" }),
+	("diriter_get_d_ino_IS_STUB", { "dirent.d_ino" }),
+	("diriter_get_d_namlen_IS_STUB", { "dirent.d_namlen" }),
+	("diriter_get_d_reclen_IS_STUB", { "dirent.d_reclen" }),
+	("diriter_get_d_off_IS_STUB", { "dirent.d_off" }),
+	("diriter_get_d_dev_IS_STUB", { "dirent.d_dev" }),
+	("diriter_get_d_mode_IS_STUB", { "dirent.d_mode" }),
+	("diriter_get_d_nlink_IS_STUB", { "dirent.d_nlink" }),
+	("diriter_get_d_uid_IS_STUB", { "dirent.d_uid" }),
+	("diriter_get_d_gid_IS_STUB", { "dirent.d_gid" }),
+	("diriter_get_d_rdev_IS_STUB", { "dirent.d_rdev" }),
+	("diriter_get_d_size_IS_STUB", { "dirent.d_size" }),
+	("diriter_get_d_blocks_IS_STUB", { "dirent.d_blocks" }),
+	("diriter_get_d_blksize_IS_STUB", { "dirent.d_blksize" }),
+	("diriter_get_d_atime_IS_STUB", { "dirent.d_atime" }),
+	("diriter_get_d_mtime_IS_STUB", { "dirent.d_mtime" }),
+	("diriter_get_d_ctime_IS_STUB", { "dirent.d_ctime" }),
+	("diriter_get_d_birthtime_IS_STUB", { "dirent.st_birthtime" }),
 	("posix_stat_get_dev_IS_STUB", { "stat.st_dev" }),
 	("posix_stat_get_ino_IS_STUB", { "stat.st_ino" }),
 	("posix_stat_get_mode_IS_STUB", { "stat.st_mode" }),
@@ -132,6 +183,8 @@ local ALL_STUBS = {
 	("posix_stat_get_gid_IS_STUB", { "stat.st_gid" }),
 	("posix_stat_get_rdev_IS_STUB", { "stat.st_rdev" }),
 	("posix_stat_get_size_IS_STUB", { "stat.st_size" }),
+	("posix_stat_get_blocks_IS_STUB", { "stat.st_blocks" }),
+	("posix_stat_get_blksize_IS_STUB", { "stat.st_blksize" }),
 	("posix_stat_get_atime_IS_STUB", { "stat.st_atime" }),
 	("posix_stat_get_mtime_IS_STUB", { "stat.st_mtime" }),
 	("posix_stat_get_ctime_IS_STUB", { "stat.st_ctime" }),
@@ -207,6 +260,146 @@ print("#undef POSIX_STUBS_TOTLEN");
 print("#define POSIX_STUBS_TOTLEN 0");
 print("#endif /" "* POSIX_STUBS_TOTLEN == 0 *" "/");
 ]]]*/
+#ifdef diriter_get_d_atime_IS_STUB
+#define len_diriter_get_d_atime_IS_STUB +15
+#define str_diriter_get_d_atime_IS_STUB 'd', 'i', 'r', 'e', 'n', 't', '.', 'd', '_', 'a', 't', 'i', 'm', 'e', '\0',
+#else /* diriter_get_d_atime_IS_STUB */
+#define len_diriter_get_d_atime_IS_STUB /* nothing */
+#define str_diriter_get_d_atime_IS_STUB /* nothing */
+#endif /* !diriter_get_d_atime_IS_STUB */
+#ifdef diriter_get_d_birthtime_IS_STUB
+#define len_diriter_get_d_birthtime_IS_STUB +20
+#define str_diriter_get_d_birthtime_IS_STUB 'd', 'i', 'r', 'e', 'n', 't', '.', 's', 't', '_', 'b', 'i', 'r', 't', 'h', 't', 'i', 'm', 'e', '\0',
+#else /* diriter_get_d_birthtime_IS_STUB */
+#define len_diriter_get_d_birthtime_IS_STUB /* nothing */
+#define str_diriter_get_d_birthtime_IS_STUB /* nothing */
+#endif /* !diriter_get_d_birthtime_IS_STUB */
+#ifdef diriter_get_d_blksize_IS_STUB
+#define len_diriter_get_d_blksize_IS_STUB +17
+#define str_diriter_get_d_blksize_IS_STUB 'd', 'i', 'r', 'e', 'n', 't', '.', 'd', '_', 'b', 'l', 'k', 's', 'i', 'z', 'e', '\0',
+#else /* diriter_get_d_blksize_IS_STUB */
+#define len_diriter_get_d_blksize_IS_STUB /* nothing */
+#define str_diriter_get_d_blksize_IS_STUB /* nothing */
+#endif /* !diriter_get_d_blksize_IS_STUB */
+#ifdef diriter_get_d_blocks_IS_STUB
+#define len_diriter_get_d_blocks_IS_STUB +16
+#define str_diriter_get_d_blocks_IS_STUB 'd', 'i', 'r', 'e', 'n', 't', '.', 'd', '_', 'b', 'l', 'o', 'c', 'k', 's', '\0',
+#else /* diriter_get_d_blocks_IS_STUB */
+#define len_diriter_get_d_blocks_IS_STUB /* nothing */
+#define str_diriter_get_d_blocks_IS_STUB /* nothing */
+#endif /* !diriter_get_d_blocks_IS_STUB */
+#ifdef diriter_get_d_ctime_IS_STUB
+#define len_diriter_get_d_ctime_IS_STUB +15
+#define str_diriter_get_d_ctime_IS_STUB 'd', 'i', 'r', 'e', 'n', 't', '.', 'd', '_', 'c', 't', 'i', 'm', 'e', '\0',
+#else /* diriter_get_d_ctime_IS_STUB */
+#define len_diriter_get_d_ctime_IS_STUB /* nothing */
+#define str_diriter_get_d_ctime_IS_STUB /* nothing */
+#endif /* !diriter_get_d_ctime_IS_STUB */
+#ifdef diriter_get_d_dev_IS_STUB
+#define len_diriter_get_d_dev_IS_STUB +13
+#define str_diriter_get_d_dev_IS_STUB 'd', 'i', 'r', 'e', 'n', 't', '.', 'd', '_', 'd', 'e', 'v', '\0',
+#else /* diriter_get_d_dev_IS_STUB */
+#define len_diriter_get_d_dev_IS_STUB /* nothing */
+#define str_diriter_get_d_dev_IS_STUB /* nothing */
+#endif /* !diriter_get_d_dev_IS_STUB */
+#ifdef diriter_get_d_fullname_IS_STUB
+#define len_diriter_get_d_fullname_IS_STUB +18
+#define str_diriter_get_d_fullname_IS_STUB 'd', 'i', 'r', 'e', 'n', 't', '.', 'd', '_', 'f', 'u', 'l', 'l', 'n', 'a', 'm', 'e', '\0',
+#else /* diriter_get_d_fullname_IS_STUB */
+#define len_diriter_get_d_fullname_IS_STUB /* nothing */
+#define str_diriter_get_d_fullname_IS_STUB /* nothing */
+#endif /* !diriter_get_d_fullname_IS_STUB */
+#ifdef diriter_get_d_gid_IS_STUB
+#define len_diriter_get_d_gid_IS_STUB +13
+#define str_diriter_get_d_gid_IS_STUB 'd', 'i', 'r', 'e', 'n', 't', '.', 'd', '_', 'g', 'i', 'd', '\0',
+#else /* diriter_get_d_gid_IS_STUB */
+#define len_diriter_get_d_gid_IS_STUB /* nothing */
+#define str_diriter_get_d_gid_IS_STUB /* nothing */
+#endif /* !diriter_get_d_gid_IS_STUB */
+#ifdef diriter_get_d_ino_IS_STUB
+#define len_diriter_get_d_ino_IS_STUB +13
+#define str_diriter_get_d_ino_IS_STUB 'd', 'i', 'r', 'e', 'n', 't', '.', 'd', '_', 'i', 'n', 'o', '\0',
+#else /* diriter_get_d_ino_IS_STUB */
+#define len_diriter_get_d_ino_IS_STUB /* nothing */
+#define str_diriter_get_d_ino_IS_STUB /* nothing */
+#endif /* !diriter_get_d_ino_IS_STUB */
+#ifdef diriter_get_d_mode_IS_STUB
+#define len_diriter_get_d_mode_IS_STUB +14
+#define str_diriter_get_d_mode_IS_STUB 'd', 'i', 'r', 'e', 'n', 't', '.', 'd', '_', 'm', 'o', 'd', 'e', '\0',
+#else /* diriter_get_d_mode_IS_STUB */
+#define len_diriter_get_d_mode_IS_STUB /* nothing */
+#define str_diriter_get_d_mode_IS_STUB /* nothing */
+#endif /* !diriter_get_d_mode_IS_STUB */
+#ifdef diriter_get_d_mtime_IS_STUB
+#define len_diriter_get_d_mtime_IS_STUB +15
+#define str_diriter_get_d_mtime_IS_STUB 'd', 'i', 'r', 'e', 'n', 't', '.', 'd', '_', 'm', 't', 'i', 'm', 'e', '\0',
+#else /* diriter_get_d_mtime_IS_STUB */
+#define len_diriter_get_d_mtime_IS_STUB /* nothing */
+#define str_diriter_get_d_mtime_IS_STUB /* nothing */
+#endif /* !diriter_get_d_mtime_IS_STUB */
+#ifdef diriter_get_d_name_IS_STUB
+#define len_diriter_get_d_name_IS_STUB +14
+#define str_diriter_get_d_name_IS_STUB 'd', 'i', 'r', 'e', 'n', 't', '.', 'd', '_', 'n', 'a', 'm', 'e', '\0',
+#else /* diriter_get_d_name_IS_STUB */
+#define len_diriter_get_d_name_IS_STUB /* nothing */
+#define str_diriter_get_d_name_IS_STUB /* nothing */
+#endif /* !diriter_get_d_name_IS_STUB */
+#ifdef diriter_get_d_namlen_IS_STUB
+#define len_diriter_get_d_namlen_IS_STUB +16
+#define str_diriter_get_d_namlen_IS_STUB 'd', 'i', 'r', 'e', 'n', 't', '.', 'd', '_', 'n', 'a', 'm', 'l', 'e', 'n', '\0',
+#else /* diriter_get_d_namlen_IS_STUB */
+#define len_diriter_get_d_namlen_IS_STUB /* nothing */
+#define str_diriter_get_d_namlen_IS_STUB /* nothing */
+#endif /* !diriter_get_d_namlen_IS_STUB */
+#ifdef diriter_get_d_nlink_IS_STUB
+#define len_diriter_get_d_nlink_IS_STUB +15
+#define str_diriter_get_d_nlink_IS_STUB 'd', 'i', 'r', 'e', 'n', 't', '.', 'd', '_', 'n', 'l', 'i', 'n', 'k', '\0',
+#else /* diriter_get_d_nlink_IS_STUB */
+#define len_diriter_get_d_nlink_IS_STUB /* nothing */
+#define str_diriter_get_d_nlink_IS_STUB /* nothing */
+#endif /* !diriter_get_d_nlink_IS_STUB */
+#ifdef diriter_get_d_off_IS_STUB
+#define len_diriter_get_d_off_IS_STUB +13
+#define str_diriter_get_d_off_IS_STUB 'd', 'i', 'r', 'e', 'n', 't', '.', 'd', '_', 'o', 'f', 'f', '\0',
+#else /* diriter_get_d_off_IS_STUB */
+#define len_diriter_get_d_off_IS_STUB /* nothing */
+#define str_diriter_get_d_off_IS_STUB /* nothing */
+#endif /* !diriter_get_d_off_IS_STUB */
+#ifdef diriter_get_d_rdev_IS_STUB
+#define len_diriter_get_d_rdev_IS_STUB +14
+#define str_diriter_get_d_rdev_IS_STUB 'd', 'i', 'r', 'e', 'n', 't', '.', 'd', '_', 'r', 'd', 'e', 'v', '\0',
+#else /* diriter_get_d_rdev_IS_STUB */
+#define len_diriter_get_d_rdev_IS_STUB /* nothing */
+#define str_diriter_get_d_rdev_IS_STUB /* nothing */
+#endif /* !diriter_get_d_rdev_IS_STUB */
+#ifdef diriter_get_d_reclen_IS_STUB
+#define len_diriter_get_d_reclen_IS_STUB +16
+#define str_diriter_get_d_reclen_IS_STUB 'd', 'i', 'r', 'e', 'n', 't', '.', 'd', '_', 'r', 'e', 'c', 'l', 'e', 'n', '\0',
+#else /* diriter_get_d_reclen_IS_STUB */
+#define len_diriter_get_d_reclen_IS_STUB /* nothing */
+#define str_diriter_get_d_reclen_IS_STUB /* nothing */
+#endif /* !diriter_get_d_reclen_IS_STUB */
+#ifdef diriter_get_d_size_IS_STUB
+#define len_diriter_get_d_size_IS_STUB +14
+#define str_diriter_get_d_size_IS_STUB 'd', 'i', 'r', 'e', 'n', 't', '.', 'd', '_', 's', 'i', 'z', 'e', '\0',
+#else /* diriter_get_d_size_IS_STUB */
+#define len_diriter_get_d_size_IS_STUB /* nothing */
+#define str_diriter_get_d_size_IS_STUB /* nothing */
+#endif /* !diriter_get_d_size_IS_STUB */
+#ifdef diriter_get_d_type_IS_STUB
+#define len_diriter_get_d_type_IS_STUB +14
+#define str_diriter_get_d_type_IS_STUB 'd', 'i', 'r', 'e', 'n', 't', '.', 'd', '_', 't', 'y', 'p', 'e', '\0',
+#else /* diriter_get_d_type_IS_STUB */
+#define len_diriter_get_d_type_IS_STUB /* nothing */
+#define str_diriter_get_d_type_IS_STUB /* nothing */
+#endif /* !diriter_get_d_type_IS_STUB */
+#ifdef diriter_get_d_uid_IS_STUB
+#define len_diriter_get_d_uid_IS_STUB +13
+#define str_diriter_get_d_uid_IS_STUB 'd', 'i', 'r', 'e', 'n', 't', '.', 'd', '_', 'u', 'i', 'd', '\0',
+#else /* diriter_get_d_uid_IS_STUB */
+#define len_diriter_get_d_uid_IS_STUB /* nothing */
+#define str_diriter_get_d_uid_IS_STUB /* nothing */
+#endif /* !diriter_get_d_uid_IS_STUB */
 #ifdef posix_access_USE_STUB
 #define len_posix_access_USE_STUB +7
 #define str_posix_access_USE_STUB 'a', 'c', 'c', 'e', 's', 's', '\0',
@@ -312,6 +505,13 @@ print("#endif /" "* POSIX_STUBS_TOTLEN == 0 *" "/");
 #define len_posix_fdatasync_USE_STUB /* nothing */
 #define str_posix_fdatasync_USE_STUB /* nothing */
 #endif /* !posix_fdatasync_USE_STUB */
+#ifdef posix_flink_USE_STUB
+#define len_posix_flink_USE_STUB +6
+#define str_posix_flink_USE_STUB 'f', 'l', 'i', 'n', 'k', '\0',
+#else /* posix_flink_USE_STUB */
+#define len_posix_flink_USE_STUB /* nothing */
+#define str_posix_flink_USE_STUB /* nothing */
+#endif /* !posix_flink_USE_STUB */
 #ifdef posix_freadlink_USE_STUB
 #define len_posix_freadlink_USE_STUB +10
 #define str_posix_freadlink_USE_STUB 'f', 'r', 'e', 'a', 'd', 'l', 'i', 'n', 'k', '\0',
@@ -368,6 +568,20 @@ print("#endif /" "* POSIX_STUBS_TOTLEN == 0 *" "/");
 #define len_posix_isatty_USE_STUB /* nothing */
 #define str_posix_isatty_USE_STUB /* nothing */
 #endif /* !posix_isatty_USE_STUB */
+#ifdef posix_link_USE_STUB
+#define len_posix_link_USE_STUB +5
+#define str_posix_link_USE_STUB 'l', 'i', 'n', 'k', '\0',
+#else /* posix_link_USE_STUB */
+#define len_posix_link_USE_STUB /* nothing */
+#define str_posix_link_USE_STUB /* nothing */
+#endif /* !posix_link_USE_STUB */
+#ifdef posix_linkat_USE_STUB
+#define len_posix_linkat_USE_STUB +7
+#define str_posix_linkat_USE_STUB 'l', 'i', 'n', 'k', 'a', 't', '\0',
+#else /* posix_linkat_USE_STUB */
+#define len_posix_linkat_USE_STUB /* nothing */
+#define str_posix_linkat_USE_STUB /* nothing */
+#endif /* !posix_linkat_USE_STUB */
 #ifdef posix_lseek_USE_STUB
 #define len_posix_lseek_USE_STUB +6
 #define str_posix_lseek_USE_STUB 'l', 's', 'e', 'e', 'k', '\0',
@@ -522,6 +736,20 @@ print("#endif /" "* POSIX_STUBS_TOTLEN == 0 *" "/");
 #define len_posix_stat_get_birthtime_IS_STUB /* nothing */
 #define str_posix_stat_get_birthtime_IS_STUB /* nothing */
 #endif /* !posix_stat_get_birthtime_IS_STUB */
+#ifdef posix_stat_get_blksize_IS_STUB
+#define len_posix_stat_get_blksize_IS_STUB +16
+#define str_posix_stat_get_blksize_IS_STUB 's', 't', 'a', 't', '.', 's', 't', '_', 'b', 'l', 'k', 's', 'i', 'z', 'e', '\0',
+#else /* posix_stat_get_blksize_IS_STUB */
+#define len_posix_stat_get_blksize_IS_STUB /* nothing */
+#define str_posix_stat_get_blksize_IS_STUB /* nothing */
+#endif /* !posix_stat_get_blksize_IS_STUB */
+#ifdef posix_stat_get_blocks_IS_STUB
+#define len_posix_stat_get_blocks_IS_STUB +15
+#define str_posix_stat_get_blocks_IS_STUB 's', 't', 'a', 't', '.', 's', 't', '_', 'b', 'l', 'o', 'c', 'k', 's', '\0',
+#else /* posix_stat_get_blocks_IS_STUB */
+#define len_posix_stat_get_blocks_IS_STUB /* nothing */
+#define str_posix_stat_get_blocks_IS_STUB /* nothing */
+#endif /* !posix_stat_get_blocks_IS_STUB */
 #ifdef posix_stat_get_ctime_IS_STUB
 #define len_posix_stat_get_ctime_IS_STUB +14
 #define str_posix_stat_get_ctime_IS_STUB 's', 't', 'a', 't', '.', 's', 't', '_', 'c', 't', 'i', 'm', 'e', '\0',
@@ -726,6 +954,26 @@ print("#endif /" "* POSIX_STUBS_TOTLEN == 0 *" "/");
 #define str_stat_class_ishidden_IS_STUB /* nothing */
 #endif /* !stat_class_ishidden_IS_STUB */
 #define POSIX_STUBS_TOTLEN 0 \
+	len_diriter_get_d_atime_IS_STUB \
+	len_diriter_get_d_birthtime_IS_STUB \
+	len_diriter_get_d_blksize_IS_STUB \
+	len_diriter_get_d_blocks_IS_STUB \
+	len_diriter_get_d_ctime_IS_STUB \
+	len_diriter_get_d_dev_IS_STUB \
+	len_diriter_get_d_fullname_IS_STUB \
+	len_diriter_get_d_gid_IS_STUB \
+	len_diriter_get_d_ino_IS_STUB \
+	len_diriter_get_d_mode_IS_STUB \
+	len_diriter_get_d_mtime_IS_STUB \
+	len_diriter_get_d_name_IS_STUB \
+	len_diriter_get_d_namlen_IS_STUB \
+	len_diriter_get_d_nlink_IS_STUB \
+	len_diriter_get_d_off_IS_STUB \
+	len_diriter_get_d_rdev_IS_STUB \
+	len_diriter_get_d_reclen_IS_STUB \
+	len_diriter_get_d_size_IS_STUB \
+	len_diriter_get_d_type_IS_STUB \
+	len_diriter_get_d_uid_IS_STUB \
 	len_posix_access_USE_STUB \
 	len_posix_chdir_USE_STUB \
 	len_posix_clearenv_USE_STUB \
@@ -741,6 +989,7 @@ print("#endif /" "* POSIX_STUBS_TOTLEN == 0 *" "/");
 	len_posix_fchdir_USE_STUB \
 	len_posix_fchdirat_USE_STUB \
 	len_posix_fdatasync_USE_STUB \
+	len_posix_flink_USE_STUB \
 	len_posix_freadlink_USE_STUB \
 	len_posix_frename_USE_STUB \
 	len_posix_fsync_USE_STUB \
@@ -749,6 +998,8 @@ print("#endif /" "* POSIX_STUBS_TOTLEN == 0 *" "/");
 	len_posix_gethostname_USE_STUB \
 	len_posix_getpid_USE_STUB \
 	len_posix_isatty_USE_STUB \
+	len_posix_link_USE_STUB \
+	len_posix_linkat_USE_STUB \
 	len_posix_lseek_USE_STUB \
 	len_posix_lstat_USE_STUB \
 	len_posix_open_USE_STUB \
@@ -771,6 +1022,8 @@ print("#endif /" "* POSIX_STUBS_TOTLEN == 0 *" "/");
 	len_posix_stat_USE_STUB \
 	len_posix_stat_get_atime_IS_STUB \
 	len_posix_stat_get_birthtime_IS_STUB \
+	len_posix_stat_get_blksize_IS_STUB \
+	len_posix_stat_get_blocks_IS_STUB \
 	len_posix_stat_get_ctime_IS_STUB \
 	len_posix_stat_get_dev_IS_STUB \
 	len_posix_stat_get_gid_IS_STUB \
@@ -814,6 +1067,26 @@ PRIVATE struct {
 	&posix_missing_features.s_utf,
 	DEE_STRING_HASH_UNSET,
 	POSIX_STUBS_TOTLEN - 1, {
+		str_diriter_get_d_atime_IS_STUB
+		str_diriter_get_d_birthtime_IS_STUB
+		str_diriter_get_d_blksize_IS_STUB
+		str_diriter_get_d_blocks_IS_STUB
+		str_diriter_get_d_ctime_IS_STUB
+		str_diriter_get_d_dev_IS_STUB
+		str_diriter_get_d_fullname_IS_STUB
+		str_diriter_get_d_gid_IS_STUB
+		str_diriter_get_d_ino_IS_STUB
+		str_diriter_get_d_mode_IS_STUB
+		str_diriter_get_d_mtime_IS_STUB
+		str_diriter_get_d_name_IS_STUB
+		str_diriter_get_d_namlen_IS_STUB
+		str_diriter_get_d_nlink_IS_STUB
+		str_diriter_get_d_off_IS_STUB
+		str_diriter_get_d_rdev_IS_STUB
+		str_diriter_get_d_reclen_IS_STUB
+		str_diriter_get_d_size_IS_STUB
+		str_diriter_get_d_type_IS_STUB
+		str_diriter_get_d_uid_IS_STUB
 		str_posix_access_USE_STUB
 		str_posix_chdir_USE_STUB
 		str_posix_clearenv_USE_STUB
@@ -829,6 +1102,7 @@ PRIVATE struct {
 		str_posix_fchdir_USE_STUB
 		str_posix_fchdirat_USE_STUB
 		str_posix_fdatasync_USE_STUB
+		str_posix_flink_USE_STUB
 		str_posix_freadlink_USE_STUB
 		str_posix_frename_USE_STUB
 		str_posix_fsync_USE_STUB
@@ -837,6 +1111,8 @@ PRIVATE struct {
 		str_posix_gethostname_USE_STUB
 		str_posix_getpid_USE_STUB
 		str_posix_isatty_USE_STUB
+		str_posix_link_USE_STUB
+		str_posix_linkat_USE_STUB
 		str_posix_lseek_USE_STUB
 		str_posix_lstat_USE_STUB
 		str_posix_open_USE_STUB
@@ -859,6 +1135,8 @@ PRIVATE struct {
 		str_posix_stat_USE_STUB
 		str_posix_stat_get_atime_IS_STUB
 		str_posix_stat_get_birthtime_IS_STUB
+		str_posix_stat_get_blksize_IS_STUB
+		str_posix_stat_get_blocks_IS_STUB
 		str_posix_stat_get_ctime_IS_STUB
 		str_posix_stat_get_dev_IS_STUB
 		str_posix_stat_get_gid_IS_STUB

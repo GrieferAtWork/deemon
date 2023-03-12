@@ -28,6 +28,7 @@
 #include <deemon/format.h>
 #include <deemon/objmethod.h>
 #include <deemon/seq.h>
+#include <deemon/time-abi.h>
 #include <deemon/util/atomic.h>
 
 /* Figure out how we want to implement the DIR-system */
@@ -51,18 +52,15 @@
 
 #undef posix_opendir_NEED_STAT_EXTENSION
 #ifdef posix_opendir_USE_opendir
+#undef DIR_dirent
+#undef DIR_readdir
 #ifdef CONFIG_HAVE_readdir64
-#undef dirent
-#undef readdir
-#define dirent  dirent64
-#define readdir readdir64
-#endif /* CONFIG_HAVE_readdir64 */
-
-/* (try to) substitute missing fields via `struct stat' */
-#if ((!defined(CONFIG_HAVE_struct_dirent_d_type) && defined(CONFIG_HAVE_struct_stat_st_mode)) || \
-     (!defined(CONFIG_HAVE_struct_dirent_d_ino) && defined(CONFIG_HAVE_struct_stat_st_ino)))
-#define posix_opendir_NEED_STAT_EXTENSION
-#endif /* !... */
+#define DIR_dirent  dirent64
+#define DIR_readdir readdir64
+#else /* CONFIG_HAVE_readdir64 */
+#define DIR_dirent  dirent
+#define DIR_readdir readdir
+#endif /* !CONFIG_HAVE_readdir64 */
 #endif /* posix_opendir_USE_opendir */
 
 #ifdef posix_opendir_USE_FindFirstFileExW
@@ -72,34 +70,379 @@
 /* Figure out how we can best implement lstat() */
 #ifdef posix_opendir_NEED_STAT_EXTENSION
 #ifdef posix_opendir_USE_FindFirstFileExW
-#define struct_stat_IS_BY_HANDLE_FILE_INFORMATION
-#define struct_stat BY_HANDLE_FILE_INFORMATION
+#define DIR_struct_stat BY_HANDLE_FILE_INFORMATION
+#define DIR_struct_stat_IS_BY_HANDLE_FILE_INFORMATION
 #elif defined(CONFIG_HAVE_fstatat64)
-#undef lstatat
-#define lstatat(dfd, filename, info) fstatat64(dfd, filename, info, AT_SYMLINK_NOFOLLOW)
-#define struct_stat                  struct stat64
+#define DIR_lstatat(dfd, filename, info) fstatat64(dfd, filename, info, AT_SYMLINK_NOFOLLOW)
+#define DIR_struct_stat                  struct stat64
 #elif defined(CONFIG_HAVE_fstatat)
-#undef lstatat
-#define lstatat(dfd, filename, info) fstatat(dfd, filename, info, AT_SYMLINK_NOFOLLOW)
-#define struct_stat                  struct stat
+#define DIR_lstatat(dfd, filename, info) fstatat(dfd, filename, info, AT_SYMLINK_NOFOLLOW)
+#define DIR_struct_stat                  struct stat
 #elif defined(CONFIG_HAVE_lstat64)
-#undef lstat
-#define lstat       lstat64
-#define struct_stat struct stat64
+#define DIR_lstat       lstat64
+#define DIR_struct_stat struct stat64
+#define DIR_struct_stat_IS_stat64
 #elif defined(CONFIG_HAVE_lstat)
-#define struct_stat stat
+#define DIR_lstat       lstat
+#define DIR_struct_stat struct stat
+#define DIR_struct_stat_IS_stat
 #elif defined(CONFIG_HAVE_stat64)
-#undef lstat
-#define lstat       stat64
-#define struct_stat struct stat64
+#define DIR_lstat       stat64
+#define DIR_struct_stat struct stat64
+#define DIR_struct_stat_IS_stat64
 #elif defined(CONFIG_HAVE_stat)
-#undef lstat
-#define lstat       stat
-#define struct_stat struct stat
+#define DIR_lstat       stat
+#define DIR_struct_stat struct stat
+#define DIR_struct_stat_IS_stat
 #else /* ... */
 #undef posix_opendir_NEED_STAT_EXTENSION
 #endif /* !... */
 #endif /* posix_opendir_NEED_STAT_EXTENSION */
+
+#if defined(DIR_lstat) && defined(CONFIG_HAVE_AT_FDCWD) && !defined(DIR_lstatat)
+#define DIR_lstat(filename, info) DIR_lstatat(AT_FDCWD, filename, info)
+#endif /* DIR_lstat && CONFIG_HAVE_AT_FDCWD && !DIR_lstatat */
+
+#undef DIR_stat_HAVE_st_dev
+#undef DIR_stat_HAVE_st_ino
+#undef DIR_stat_HAVE_st_mode
+#undef DIR_stat_HAVE_st_nlink
+#undef DIR_stat_HAVE_st_uid
+#undef DIR_stat_HAVE_st_gid
+#undef DIR_stat_HAVE_st_rdev
+#undef DIR_stat_HAVE_st_size
+#undef DIR_stat_HAVE_st_blksize
+#undef DIR_stat_HAVE_st_blocks
+#undef DIR_stat_HAVE_st_atime
+#undef DIR_stat_HAVE_st_atim
+#undef DIR_stat_HAVE_st_atimespec
+#undef DIR_stat_HAVE_st_atimensec
+#undef DIR_stat_HAVE_st_mtime
+#undef DIR_stat_HAVE_st_mtim
+#undef DIR_stat_HAVE_st_mtimespec
+#undef DIR_stat_HAVE_st_mtimensec
+#undef DIR_stat_HAVE_st_ctime
+#undef DIR_stat_HAVE_st_ctim
+#undef DIR_stat_HAVE_st_ctimespec
+#undef DIR_stat_HAVE_st_ctimensec
+#undef DIR_stat_HAVE_st_btime
+#undef DIR_stat_HAVE_st_btim
+#undef DIR_stat_HAVE_st_btimespec
+#undef DIR_stat_HAVE_st_btimensec
+#undef DIR_stat_HAVE_st_birthtime
+#undef DIR_stat_HAVE_st_birthtim
+#undef DIR_stat_HAVE_st_birthtimespec
+#undef DIR_stat_HAVE_st_birthtimensec
+#ifdef DIR_struct_stat_IS_stat
+#ifdef CONFIG_HAVE_struct_stat_st_dev
+#define DIR_stat_HAVE_st_dev
+#endif /* CONFIG_HAVE_struct_stat_st_dev */
+#ifdef CONFIG_HAVE_struct_stat_st_ino
+#define DIR_stat_HAVE_st_ino
+#endif /* CONFIG_HAVE_struct_stat_st_ino */
+#ifdef CONFIG_HAVE_struct_stat_st_mode
+#define DIR_stat_HAVE_st_mode
+#endif /* CONFIG_HAVE_struct_stat_st_mode */
+#ifdef CONFIG_HAVE_struct_stat_st_nlink
+#define DIR_stat_HAVE_st_nlink
+#endif /* CONFIG_HAVE_struct_stat_st_nlink */
+#ifdef CONFIG_HAVE_struct_stat_st_uid
+#define DIR_stat_HAVE_st_uid
+#endif /* CONFIG_HAVE_struct_stat_st_uid */
+#ifdef CONFIG_HAVE_struct_stat_st_gid
+#define DIR_stat_HAVE_st_gid
+#endif /* CONFIG_HAVE_struct_stat_st_gid */
+#ifdef CONFIG_HAVE_struct_stat_st_rdev
+#define DIR_stat_HAVE_st_rdev
+#endif /* CONFIG_HAVE_struct_stat_st_rdev */
+#ifdef CONFIG_HAVE_struct_stat_st_size
+#define DIR_stat_HAVE_st_size
+#endif /* CONFIG_HAVE_struct_stat_st_size */
+#ifdef CONFIG_HAVE_struct_stat_st_blksize
+#define DIR_stat_HAVE_st_blksize
+#endif /* CONFIG_HAVE_struct_stat_st_blksize */
+#ifdef CONFIG_HAVE_struct_stat_st_blocks
+#define DIR_stat_HAVE_st_blocks
+#endif /* CONFIG_HAVE_struct_stat_st_blocks */
+#ifdef CONFIG_HAVE_struct_stat_st_atime
+#define DIR_stat_HAVE_st_atime
+#endif /* CONFIG_HAVE_struct_stat_st_atime */
+#ifdef CONFIG_HAVE_struct_stat_st_atim
+#define DIR_stat_HAVE_st_atim
+#endif /* CONFIG_HAVE_struct_stat_st_atim */
+#ifdef CONFIG_HAVE_struct_stat_st_atimespec
+#define DIR_stat_HAVE_st_atimespec
+#endif /* CONFIG_HAVE_struct_stat_st_atimespec */
+#ifdef CONFIG_HAVE_struct_stat_st_atimensec
+#define DIR_stat_HAVE_st_atimensec
+#endif /* CONFIG_HAVE_struct_stat_st_atimensec */
+#ifdef CONFIG_HAVE_struct_stat_st_mtime
+#define DIR_stat_HAVE_st_mtime
+#endif /* CONFIG_HAVE_struct_stat_st_mtime */
+#ifdef CONFIG_HAVE_struct_stat_st_mtim
+#define DIR_stat_HAVE_st_mtim
+#endif /* CONFIG_HAVE_struct_stat_st_mtim */
+#ifdef CONFIG_HAVE_struct_stat_st_mtimespec
+#define DIR_stat_HAVE_st_mtimespec
+#endif /* CONFIG_HAVE_struct_stat_st_mtimespec */
+#ifdef CONFIG_HAVE_struct_stat_st_mtimensec
+#define DIR_stat_HAVE_st_mtimensec
+#endif /* CONFIG_HAVE_struct_stat_st_mtimensec */
+#ifdef CONFIG_HAVE_struct_stat_st_ctime
+#define DIR_stat_HAVE_st_ctime
+#endif /* CONFIG_HAVE_struct_stat_st_ctime */
+#ifdef CONFIG_HAVE_struct_stat_st_ctim
+#define DIR_stat_HAVE_st_ctim
+#endif /* CONFIG_HAVE_struct_stat_st_ctim */
+#ifdef CONFIG_HAVE_struct_stat_st_ctimespec
+#define DIR_stat_HAVE_st_ctimespec
+#endif /* CONFIG_HAVE_struct_stat_st_ctimespec */
+#ifdef CONFIG_HAVE_struct_stat_st_ctimensec
+#define DIR_stat_HAVE_st_ctimensec
+#endif /* CONFIG_HAVE_struct_stat_st_ctimensec */
+#ifdef CONFIG_HAVE_struct_stat_st_btime
+#define DIR_stat_HAVE_st_btime
+#endif /* CONFIG_HAVE_struct_stat_st_btime */
+#ifdef CONFIG_HAVE_struct_stat_st_btim
+#define DIR_stat_HAVE_st_btim
+#endif /* CONFIG_HAVE_struct_stat_st_btim */
+#ifdef CONFIG_HAVE_struct_stat_st_btimespec
+#define DIR_stat_HAVE_st_btimespec
+#endif /* CONFIG_HAVE_struct_stat_st_btimespec */
+#ifdef CONFIG_HAVE_struct_stat_st_btimensec
+#define DIR_stat_HAVE_st_btimensec
+#endif /* CONFIG_HAVE_struct_stat_st_btimensec */
+#ifdef CONFIG_HAVE_struct_stat_st_birthtime
+#define DIR_stat_HAVE_st_birthtime
+#endif /* CONFIG_HAVE_struct_stat_st_birthtime */
+#ifdef CONFIG_HAVE_struct_stat_st_birthtim
+#define DIR_stat_HAVE_st_birthtim
+#endif /* CONFIG_HAVE_struct_stat_st_birthtim */
+#ifdef CONFIG_HAVE_struct_stat_st_birthtimespec
+#define DIR_stat_HAVE_st_birthtimespec
+#endif /* CONFIG_HAVE_struct_stat_st_birthtimespec */
+#ifdef CONFIG_HAVE_struct_stat_st_birthtimensec
+#define DIR_stat_HAVE_st_birthtimensec
+#endif /* CONFIG_HAVE_struct_stat_st_birthtimensec */
+#endif /* DIR_struct_stat_IS_stat */
+#ifdef DIR_struct_stat_IS_stat64
+#ifdef CONFIG_HAVE_struct_stat64_st_dev
+#define DIR_stat_HAVE_st_dev
+#endif /* CONFIG_HAVE_struct_stat64_st_dev */
+#ifdef CONFIG_HAVE_struct_stat64_st_ino
+#define DIR_stat_HAVE_st_ino
+#endif /* CONFIG_HAVE_struct_stat64_st_ino */
+#ifdef CONFIG_HAVE_struct_stat64_st_mode
+#define DIR_stat_HAVE_st_mode
+#endif /* CONFIG_HAVE_struct_stat64_st_mode */
+#ifdef CONFIG_HAVE_struct_stat64_st_nlink
+#define DIR_stat_HAVE_st_nlink
+#endif /* CONFIG_HAVE_struct_stat64_st_nlink */
+#ifdef CONFIG_HAVE_struct_stat64_st_uid
+#define DIR_stat_HAVE_st_uid
+#endif /* CONFIG_HAVE_struct_stat64_st_uid */
+#ifdef CONFIG_HAVE_struct_stat64_st_gid
+#define DIR_stat_HAVE_st_gid
+#endif /* CONFIG_HAVE_struct_stat64_st_gid */
+#ifdef CONFIG_HAVE_struct_stat64_st_rdev
+#define DIR_stat_HAVE_st_rdev
+#endif /* CONFIG_HAVE_struct_stat64_st_rdev */
+#ifdef CONFIG_HAVE_struct_stat64_st_size
+#define DIR_stat_HAVE_st_size
+#endif /* CONFIG_HAVE_struct_stat64_st_size */
+#ifdef CONFIG_HAVE_struct_stat64_st_blksize
+#define DIR_stat_HAVE_st_blksize
+#endif /* CONFIG_HAVE_struct_stat64_st_blksize */
+#ifdef CONFIG_HAVE_struct_stat64_st_blocks
+#define DIR_stat_HAVE_st_blocks
+#endif /* CONFIG_HAVE_struct_stat64_st_blocks */
+#ifdef CONFIG_HAVE_struct_stat64_st_atime
+#define DIR_stat_HAVE_st_atime
+#endif /* CONFIG_HAVE_struct_stat64_st_atime */
+#ifdef CONFIG_HAVE_struct_stat64_st_atim
+#define DIR_stat_HAVE_st_atim
+#endif /* CONFIG_HAVE_struct_stat64_st_atim */
+#ifdef CONFIG_HAVE_struct_stat64_st_atimespec
+#define DIR_stat_HAVE_st_atimespec
+#endif /* CONFIG_HAVE_struct_stat64_st_atimespec */
+#ifdef CONFIG_HAVE_struct_stat64_st_atimensec
+#define DIR_stat_HAVE_st_atimensec
+#endif /* CONFIG_HAVE_struct_stat64_st_atimensec */
+#ifdef CONFIG_HAVE_struct_stat64_st_mtime
+#define DIR_stat_HAVE_st_mtime
+#endif /* CONFIG_HAVE_struct_stat64_st_mtime */
+#ifdef CONFIG_HAVE_struct_stat64_st_mtim
+#define DIR_stat_HAVE_st_mtim
+#endif /* CONFIG_HAVE_struct_stat64_st_mtim */
+#ifdef CONFIG_HAVE_struct_stat64_st_mtimespec
+#define DIR_stat_HAVE_st_mtimespec
+#endif /* CONFIG_HAVE_struct_stat64_st_mtimespec */
+#ifdef CONFIG_HAVE_struct_stat64_st_mtimensec
+#define DIR_stat_HAVE_st_mtimensec
+#endif /* CONFIG_HAVE_struct_stat64_st_mtimensec */
+#ifdef CONFIG_HAVE_struct_stat64_st_ctime
+#define DIR_stat_HAVE_st_ctime
+#endif /* CONFIG_HAVE_struct_stat64_st_ctime */
+#ifdef CONFIG_HAVE_struct_stat64_st_ctim
+#define DIR_stat_HAVE_st_ctim
+#endif /* CONFIG_HAVE_struct_stat64_st_ctim */
+#ifdef CONFIG_HAVE_struct_stat64_st_ctimespec
+#define DIR_stat_HAVE_st_ctimespec
+#endif /* CONFIG_HAVE_struct_stat64_st_ctimespec */
+#ifdef CONFIG_HAVE_struct_stat64_st_ctimensec
+#define DIR_stat_HAVE_st_ctimensec
+#endif /* CONFIG_HAVE_struct_stat64_st_ctimensec */
+#ifdef CONFIG_HAVE_struct_stat64_st_btime
+#define DIR_stat_HAVE_st_btime
+#endif /* CONFIG_HAVE_struct_stat64_st_btime */
+#ifdef CONFIG_HAVE_struct_stat64_st_btim
+#define DIR_stat_HAVE_st_btim
+#endif /* CONFIG_HAVE_struct_stat64_st_btim */
+#ifdef CONFIG_HAVE_struct_stat64_st_btimespec
+#define DIR_stat_HAVE_st_btimespec
+#endif /* CONFIG_HAVE_struct_stat64_st_btimespec */
+#ifdef CONFIG_HAVE_struct_stat64_st_btimensec
+#define DIR_stat_HAVE_st_btimensec
+#endif /* CONFIG_HAVE_struct_stat64_st_btimensec */
+#ifdef CONFIG_HAVE_struct_stat64_st_birthtime
+#define DIR_stat_HAVE_st_birthtime
+#endif /* CONFIG_HAVE_struct_stat64_st_birthtime */
+#ifdef CONFIG_HAVE_struct_stat64_st_birthtim
+#define DIR_stat_HAVE_st_birthtim
+#endif /* CONFIG_HAVE_struct_stat64_st_birthtim */
+#ifdef CONFIG_HAVE_struct_stat64_st_birthtimespec
+#define DIR_stat_HAVE_st_birthtimespec
+#endif /* CONFIG_HAVE_struct_stat64_st_birthtimespec */
+#ifdef CONFIG_HAVE_struct_stat64_st_birthtimensec
+#define DIR_stat_HAVE_st_birthtimensec
+#endif /* CONFIG_HAVE_struct_stat64_st_birthtimensec */
+#endif /* DIR_struct_stat_IS_stat64 */
+
+/* Helper macros to accessing timestamp data */
+#undef DIR_stat_GET_RAW_ATIME_SEC
+#undef DIR_stat_GET_RAW_ATIME_NSEC
+#undef DIR_stat_GET_RAW_MTIME_SEC
+#undef DIR_stat_GET_RAW_MTIME_NSEC
+#undef DIR_stat_GET_RAW_CTIME_SEC
+#undef DIR_stat_GET_RAW_CTIME_NSEC
+#undef DIR_stat_GET_RAW_BTIME_SEC
+#undef DIR_stat_GET_RAW_BTIME_NSEC
+#ifdef DIR_stat_HAVE_st_atimespec
+#define DIR_stat_GET_RAW_ATIME_SEC(st)  (st)->st_atimespec.tv_sec
+#define DIR_stat_GET_RAW_ATIME_NSEC(st) (st)->st_atimespec.tv_nsec
+#elif defined(DIR_stat_HAVE_st_atim)
+#define DIR_stat_GET_RAW_ATIME_SEC(st)  (st)->st_atim.tv_sec
+#define DIR_stat_GET_RAW_ATIME_NSEC(st) (st)->st_atim.tv_nsec
+#else /* ... */
+#ifdef DIR_stat_HAVE_st_atime
+#define DIR_stat_GET_RAW_ATIME_SEC(st)  (st)->st_atime
+#endif /* DIR_stat_HAVE_st_atime */
+#ifdef DIR_stat_HAVE_st_atimensec
+#define DIR_stat_GET_RAW_ATIME_NSEC(st) (st)->st_atimensec
+#endif /* DIR_stat_HAVE_st_atimensec */
+#endif /* !... */
+
+#ifdef DIR_stat_HAVE_st_mtimespec
+#define DIR_stat_GET_RAW_MTIME_SEC(st)  (st)->st_mtimespec.tv_sec
+#define DIR_stat_GET_RAW_MTIME_NSEC(st) (st)->st_mtimespec.tv_nsec
+#elif defined(DIR_stat_HAVE_st_mtim)
+#define DIR_stat_GET_RAW_MTIME_SEC(st)  (st)->st_mtim.tv_sec
+#define DIR_stat_GET_RAW_MTIME_NSEC(st) (st)->st_mtim.tv_nsec
+#else /* ... */
+#ifdef DIR_stat_HAVE_st_mtime
+#define DIR_stat_GET_RAW_MTIME_SEC(st)  (st)->st_mtime
+#endif /* DIR_stat_HAVE_st_mtime */
+#ifdef DIR_stat_HAVE_st_mtimensec
+#define DIR_stat_GET_RAW_MTIME_NSEC(st) (st)->st_mtimensec
+#endif /* DIR_stat_HAVE_st_mtimensec */
+#endif /* !... */
+
+#ifdef DIR_stat_HAVE_st_ctimespec
+#define DIR_stat_GET_RAW_CTIME_SEC(st)  (st)->st_ctimespec.tv_sec
+#define DIR_stat_GET_RAW_CTIME_NSEC(st) (st)->st_ctimespec.tv_nsec
+#elif defined(DIR_stat_HAVE_st_ctim)
+#define DIR_stat_GET_RAW_CTIME_SEC(st)  (st)->st_ctim.tv_sec
+#define DIR_stat_GET_RAW_CTIME_NSEC(st) (st)->st_ctim.tv_nsec
+#else /* ... */
+#ifdef DIR_stat_HAVE_st_ctime
+#define DIR_stat_GET_RAW_CTIME_SEC(st)  (st)->st_ctime
+#endif /* DIR_stat_HAVE_st_ctime */
+#ifdef DIR_stat_HAVE_st_ctimensec
+#define DIR_stat_GET_RAW_CTIME_NSEC(st) (st)->st_ctimensec
+#endif /* DIR_stat_HAVE_st_ctimensec */
+#endif /* !... */
+
+#ifdef DIR_stat_HAVE_st_btimespec
+#define DIR_stat_GET_RAW_BTIME_SEC(st)  (st)->st_btimespec.tv_sec
+#define DIR_stat_GET_RAW_BTIME_NSEC(st) (st)->st_btimespec.tv_nsec
+#elif defined(DIR_stat_HAVE_st_btim)
+#define DIR_stat_GET_RAW_BTIME_SEC(st)  (st)->st_btim.tv_sec
+#define DIR_stat_GET_RAW_BTIME_NSEC(st) (st)->st_btim.tv_nsec
+#elif defined(DIR_stat_HAVE_st_birthtimespec)
+#define DIR_stat_GET_RAW_BTIME_SEC(st)  (st)->st_birthtimespec.tv_sec
+#define DIR_stat_GET_RAW_BTIME_NSEC(st) (st)->st_birthtimespec.tv_nsec
+#elif defined(DIR_stat_HAVE_st_birthtim)
+#define DIR_stat_GET_RAW_BTIME_SEC(st)  (st)->st_birthtim.tv_sec
+#define DIR_stat_GET_RAW_BTIME_NSEC(st) (st)->st_birthtim.tv_nsec
+#else /* ... */
+#ifdef DIR_stat_HAVE_st_btime
+#define DIR_stat_GET_RAW_BTIME_SEC(st)  (st)->st_btime
+#elif defined(DIR_stat_HAVE_st_birthtime)
+#define DIR_stat_GET_RAW_BTIME_SEC(st)  (st)->st_birthtime
+#endif /* ... */
+#ifdef DIR_stat_HAVE_st_btimensec
+#define DIR_stat_GET_RAW_BTIME_NSEC(st) (st)->st_btimensec
+#elif defined(DIR_stat_HAVE_st_birthtimensec)
+#define DIR_stat_GET_RAW_BTIME_NSEC(st) (st)->st_birthtimensec
+#endif /* ... */
+#endif /* !... */
+
+#undef DIR_stat_GET_ATIME_SEC
+#undef DIR_stat_GET_ATIME_NSEC
+#undef DIR_stat_GET_MTIME_SEC
+#undef DIR_stat_GET_MTIME_NSEC
+#undef DIR_stat_GET_CTIME_SEC
+#undef DIR_stat_GET_CTIME_NSEC
+#undef DIR_stat_GET_BTIME_SEC
+#undef DIR_stat_GET_BTIME_NSEC
+#ifdef DIR_stat_GET_RAW_ATIME_SEC
+#define DIR_stat_GET_ATIME_SEC DIR_stat_GET_RAW_ATIME_SEC
+#endif /* DIR_stat_GET_RAW_ATIME_SEC */
+#ifdef DIR_stat_GET_RAW_ATIME_NSEC
+#define DIR_stat_GET_ATIME_NSEC DIR_stat_GET_RAW_ATIME_NSEC
+#endif /* DIR_stat_GET_RAW_ATIME_NSEC */
+
+#ifdef DIR_stat_GET_RAW_MTIME_SEC
+#define DIR_stat_GET_MTIME_SEC DIR_stat_GET_RAW_MTIME_SEC
+#endif /* DIR_stat_GET_RAW_MTIME_SEC */
+#ifdef DIR_stat_GET_RAW_MTIME_NSEC
+#define DIR_stat_GET_MTIME_NSEC DIR_stat_GET_RAW_MTIME_NSEC
+#endif /* DIR_stat_GET_RAW_MTIME_NSEC */
+
+#ifdef CONFIG_STAT_CTIME_IS_ACTUALLY_BIRTHTIME
+#ifdef DIR_stat_GET_RAW_CTIME_SEC
+#define DIR_stat_GET_BTIME_SEC DIR_stat_GET_RAW_CTIME_SEC
+#endif /* DIR_stat_GET_RAW_CTIME_SEC */
+#ifdef DIR_stat_GET_RAW_CTIME_NSEC
+#define DIR_stat_GET_BTIME_NSEC DIR_stat_GET_RAW_CTIME_NSEC
+#endif /* DIR_stat_GET_RAW_CTIME_NSEC */
+#else /* CONFIG_STAT_CTIME_IS_ACTUALLY_BIRTHTIME */
+#ifdef DIR_stat_GET_RAW_CTIME_SEC
+#define DIR_stat_GET_CTIME_SEC DIR_stat_GET_RAW_CTIME_SEC
+#endif /* DIR_stat_GET_RAW_CTIME_SEC */
+#ifdef DIR_stat_GET_RAW_CTIME_NSEC
+#define DIR_stat_GET_CTIME_NSEC DIR_stat_GET_RAW_CTIME_NSEC
+#endif /* DIR_stat_GET_RAW_CTIME_NSEC */
+
+#ifdef DIR_stat_GET_RAW_BTIME_SEC
+#define DIR_stat_GET_BTIME_SEC DIR_stat_GET_RAW_BTIME_SEC
+#endif /* DIR_stat_GET_RAW_BTIME_SEC */
+#ifdef DIR_stat_GET_RAW_BTIME_NSEC
+#define DIR_stat_GET_BTIME_NSEC DIR_stat_GET_RAW_BTIME_NSEC
+#endif /* DIR_stat_GET_RAW_BTIME_NSEC */
+#endif /* !CONFIG_STAT_CTIME_IS_ACTUALLY_BIRTHTIME */
+
+
 
 #ifdef posix_opendir_USE_opendir
 #ifdef CONFIG_HAVE_struct_dirent_d_namlen
@@ -109,6 +452,30 @@
 #else /* ... */
 #define dirent_namelen(x) strlen((x)->d_name)
 #endif /* !... */
+#endif /* posix_opendir_USE_opendir */
+
+
+/* Always need stat info for file size/timestamp fields. */
+#ifdef posix_opendir_USE_opendir
+#if ((!defined(CONFIG_HAVE_struct_dirent_d_type) && defined(DIR_stat_HAVE_st_mode)) || \
+     (!defined(CONFIG_HAVE_struct_dirent_d_ino) && defined(DIR_stat_HAVE_st_ino)))
+#define posix_opendir_NEED_STAT_EXTENSION
+#endif /* !... */
+#if (defined(DIR_stat_HAVE_st_dev) ||       /* d_dev */     \
+     defined(DIR_stat_HAVE_st_mode) ||      /* d_mode */    \
+     defined(DIR_stat_HAVE_st_nlink) ||     /* d_nlink */   \
+     defined(DIR_stat_HAVE_st_uid) ||       /* d_uid */     \
+     defined(DIR_stat_HAVE_st_gid) ||       /* d_gid */     \
+     defined(DIR_stat_HAVE_st_rdev) ||      /* d_rdev */    \
+     defined(DIR_stat_HAVE_st_size) ||      /* d_size */    \
+     defined(DIR_stat_HAVE_st_blksize) ||   /* d_blksize */ \
+     defined(DIR_stat_HAVE_st_blocks) ||    /* d_blocks */  \
+     defined(DIR_stat_GET_RAW_ATIME_SEC) || /* d_atime */   \
+     defined(DIR_stat_GET_RAW_MTIME_SEC) || /* d_mtime */   \
+     defined(DIR_stat_GET_RAW_CTIME_SEC) || /* d_ctime */   \
+     defined(DIR_stat_GET_RAW_BTIME_SEC) /* d_birthtime */)
+#define posix_opendir_NEED_STAT_EXTENSION
+#endif /* ... */
 #endif /* posix_opendir_USE_opendir */
 
 
@@ -124,29 +491,31 @@ typedef struct dir_object DeeDirObject;
 
 struct dir_iterator_object {
 	OBJECT_HEAD
-	DREF DeeObject  *di_path;     /* [1..1][const] String, File, or int */
-	DREF DeeObject  *di_pathstr;  /* [0..1][lock(WRITE_ONCE)] String */
-	bool             di_skipdots; /* [const] When true, skip '.' and '..' entries. */
+	DREF DeeObject    *di_path;     /* [1..1][const] String, File, or int */
+	DREF DeeObject    *di_pathstr;  /* [0..1][lock(WRITE_ONCE)] String */
+	bool               di_skipdots; /* [const] When true, skip '.' and '..' entries. */
 #ifdef posix_opendir_USE_FindFirstFileExW
-	bool             di_first;    /* [lock(di_lock)] When true, we're at the first entry. */
-	HANDLE           di_hnd;      /* [0..1|NULL(INVALID_HANDLE_VALUE)][lock(di_lock)]
-	                               * The iteration handle or INVALID_HANDLE_VALUE when exhausted. */
-	WIN32_FIND_DATAW di_data;     /* [lock(di_lock)][valid_if(di_hnd != INVALID_HANDLE_VALUE)]
-	                               * The file data for the next matching entry. */
+	bool               di_first;    /* [lock(di_lock)] When true, we're at the first entry. */
+	HANDLE             di_hnd;      /* [0..1|NULL(INVALID_HANDLE_VALUE)][lock(di_lock)]
+	                                 * The iteration handle or INVALID_HANDLE_VALUE when exhausted. */
+	WIN32_FIND_DATAW   di_data;     /* [lock(di_lock)][valid_if(di_hnd != INVALID_HANDLE_VALUE)]
+	                                 * The file data for the next matching entry. */
 #ifndef CONFIG_NO_THREADS
-	rwlock_t         di_lock;     /* Lock for the above fields. */
+	rwlock_t           di_lock;     /* Lock for the above fields. */
 #endif /* !CONFIG_NO_THREADS */
-#elif defined(posix_opendir_USE_opendir)
-	struct dirent   *di_ent;      /* [0..1] Last-read directory entry (or `NULL' for end-of-directory) */
-	DIR             *di_dir;      /* [1..1][const] The directory access stream. */
+#endif /* posix_opendir_USE_FindFirstFileExW */
+
+#ifdef posix_opendir_USE_opendir
+	struct DIR_dirent *di_ent;      /* [0..1] Last-read directory entry (or `NULL' for end-of-directory) */
+	DIR               *di_dir;      /* [1..1][const] The directory access stream. */
 #ifndef CONFIG_NO_THREADS
-	rwlock_t         di_lock;     /* Lock for the above fields. */
+	rwlock_t           di_lock;     /* Lock for the above fields. */
 #endif /* !CONFIG_NO_THREADS */
 #endif /* ... */
 
 #ifdef posix_opendir_NEED_STAT_EXTENSION
-	bool             di_stvalid;  /* [lock(di_lock)] Set to true if `di_st' has been loaded. */
-	struct_stat      di_st;       /* [lock(di_lock)] Additional stat information (lazily loaded). */
+	bool               di_stvalid;  /* [lock(di_lock)] Set to true if `di_st' has been loaded. */
+	DIR_struct_stat    di_st;       /* [lock(di_lock)] Additional stat information (lazily loaded). */
 #endif /* posix_opendir_NEED_STAT_EXTENSION */
 };
 
@@ -650,12 +1019,12 @@ again:
 	rwlock_endwrite(&self->di_lock);
 	Dee_Incref(self);
 	return self;
-#elif defined(CONFIG_HAVE_opendir) && defined(CONFIG_HAVE_readdir)
+#elif defined(posix_opendir_USE_opendir)
 	rwlock_write(&self->di_lock);
 again:
 	DBG_ALIGNMENT_DISABLE();
 	DeeSystem_SetErrno(0);
-	self->di_ent = readdir(self->di_dir);
+	self->di_ent = DIR_readdir(self->di_dir);
 	if (self->di_ent == NULL) {
 		int error = DeeSystem_GetErrno();
 		DBG_ALIGNMENT_ENABLE();
@@ -810,15 +1179,17 @@ err_printer:
 			                                      dirent_namelen(self->di_ent)) < 0)
 				goto err_printer;
 #else /* ... */
-			diriter_unbound_attr("d_name");
+			diriter_unbound_attr("d_fullname");
 			goto err_printer;
 #endif /* !... */
 			path = (DREF DeeStringObject *)unicode_printer_pack(&printer);
 		}
 		return path;
 	}
-#endif /* HAVE_D_FULLNAME */
-	diriter_unbound_attr("d_name");
+#else /* HAVE_D_FULLNAME */
+#define diriter_get_d_fullname_IS_STUB
+#endif /* !HAVE_D_FULLNAME */
+	diriter_unbound_attr("d_fullname");
 	return NULL;
 }
 
@@ -836,7 +1207,10 @@ diriter_get_d_name(DeeDirIteratorObject *__restrict self) {
 		                         dirent_namelen(self->di_ent),
 		                         STRING_ERROR_FREPLAC);
 	}
-#endif /* ... */
+#else /* ... */
+#define diriter_get_d_name_IS_STUB
+#endif /* !... */
+	(void)self;
 	diriter_unbound_attr("d_name");
 	return NULL;
 }
@@ -845,7 +1219,7 @@ diriter_get_d_name(DeeDirIteratorObject *__restrict self) {
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 diriter_loadstat(DeeDirIteratorObject *__restrict self) {
 	if (!self->di_stvalid) {
-#ifdef struct_stat_IS_BY_HANDLE_FILE_INFORMATION
+#ifdef DIR_struct_stat_IS_BY_HANDLE_FILE_INFORMATION
 		DREF DeeStringObject *fullname;
 		HANDLE hFile;
 		fullname = diriter_get_d_fullname(self);
@@ -874,16 +1248,16 @@ err_fullname:
 		Dee_Decref(fullname);
 err:
 		return -1;
-#else /* struct_stat_IS_BY_HANDLE_FILE_INFORMATION */
+#else /* DIR_struct_stat_IS_BY_HANDLE_FILE_INFORMATION */
 		int error;
 again:
-#if defined(lstatat) && defined(CONFIG_HAVE_dirfd)
-		if (lstatat(dirfd(self->di_dir), self->di_ent->d_name, &self->di_st) == 0) {
+#if defined(DIR_lstatat) && defined(CONFIG_HAVE_dirfd)
+		if (DIR_lstatat(dirfd(self->di_dir), self->di_ent->d_name, &self->di_st) == 0) {
 			self->di_stvalid = true;
 			return 0;
 		}
 		error = DeeSystem_GetErrno();
-#else /* lstatat && CONFIG_HAVE_dirfd */
+#else /* DIR_lstatat && CONFIG_HAVE_dirfd */
 		DREF DeeStringObject *fullname;
 		char const *utf8;
 		fullname = diriter_get_d_fullname(self);
@@ -894,14 +1268,14 @@ again:
 			Dee_Decref(fullname);
 			goto err;
 		}
-		if (lstat(utf8, &self->di_st) == 0) {
+		if (DIR_lstat(utf8, &self->di_st) == 0) {
 			self->di_stvalid = true;
 			Dee_Decref(fullname);
 			return 0;
 		}
 		error = DeeSystem_GetErrno();
 		Dee_Decref(fullname);
-#endif /* !lstatat || !CONFIG_HAVE_dirfd */
+#endif /* !DIR_lstatat || !CONFIG_HAVE_dirfd */
 		EINTR_HANDLE(error, again, err)
 		DeeUnixSystem_ThrowErrorf(NULL, error,
 		                          "Failed to stat %R in %k",
@@ -910,7 +1284,7 @@ again:
 		goto err;
 err:
 		return -1;
-#endif /* !struct_stat_IS_BY_HANDLE_FILE_INFORMATION */
+#endif /* !DIR_struct_stat_IS_BY_HANDLE_FILE_INFORMATION */
 	}
 	return 0;
 }
@@ -927,7 +1301,7 @@ diriter_get_d_type(DeeDirIteratorObject *__restrict self) {
 		} else if (self->di_data.dwFileAttributes & FILE_ATTRIBUTE_REPARSE_POINT) {
 			result = (DeeObject *)&posix_DT_LNK;
 		} else if (self->di_data.dwFileAttributes & FILE_ATTRIBUTE_DEVICE) {
-			result = (DeeObject *)&posix_DT_UNKNOWN;
+			result = (DeeObject *)&posix_DT_CHR; /* TODO: Must determine the type of device */
 		} else if (self->di_data.dwFileAttributes & FILE_ATTRIBUTE_SYSTEM) {
 			/* TODO: Check if it's an old-style cygwin symlink! */
 			result = (DeeObject *)&posix_DT_REG;
@@ -940,14 +1314,17 @@ diriter_get_d_type(DeeDirIteratorObject *__restrict self) {
 	if (self->di_ent != NULL) {
 #ifdef CONFIG_HAVE_struct_dirent_d_type
 		return DeeInt_New_D_TYPE(NATIVE_DT_TO_USED_DT(self->di_ent->d_type));
-#elif defined(posix_opendir_NEED_STAT_EXTENSION)
+#elif defined(posix_opendir_NEED_STAT_EXTENSION) && defined(DIR_stat_HAVE_st_mode)
 		if unlikely(diriter_loadstat(self))
 			goto err;
 #define NEED_err
 		return DeeInt_New_D_TYPE(USED_IFTODT(self->di_st.st_mode));
-#endif /* !CONFIG_HAVE_struct_dirent_d_type */
-	}
 #endif /* ... */
+	}
+#else /* ... */
+#define diriter_get_d_type_IS_STUB
+#endif /* !... */
+	(void)self;
 	diriter_unbound_attr("d_type");
 #ifdef NEED_err
 #undef NEED_err
@@ -968,18 +1345,21 @@ diriter_get_d_ino(DeeDirIteratorObject *__restrict self) {
 	}
 #elif (defined(posix_opendir_USE_opendir) &&        \
        (defined(CONFIG_HAVE_struct_dirent_d_ino) || \
-        (defined(posix_opendir_NEED_STAT_EXTENSION) && defined(CONFIG_HAVE_struct_stat_st_ino))))
+        (defined(posix_opendir_NEED_STAT_EXTENSION) && defined(DIR_stat_HAVE_st_ino))))
 	if (self->di_ent != NULL) {
 #ifdef CONFIG_HAVE_struct_dirent_d_ino
 		return DeeInt_NEWU(self->di_ent->d_ino);
-#elif defined(posix_opendir_NEED_STAT_EXTENSION) && defined(CONFIG_HAVE_struct_stat_st_ino)
+#elif defined(posix_opendir_NEED_STAT_EXTENSION) && defined(DIR_stat_HAVE_st_ino)
 		if unlikely(diriter_loadstat(self))
 			goto err;
 #define NEED_err
 		return DeeInt_NEWU(self->di_st.st_ino);
-#endif /* !CONFIG_HAVE_struct_dirent_d_type */
-	}
 #endif /* ... */
+	}
+#else /* ... */
+#define diriter_get_d_ino_IS_STUB
+#endif /* !... */
+	(void)self;
 	diriter_unbound_attr("d_ino");
 #ifdef NEED_err
 #undef NEED_err
@@ -1004,7 +1384,10 @@ diriter_get_d_namlen(DeeDirIteratorObject *__restrict self) {
 		return DeeInt_NewSize(strlen(self->di_ent->d_name));
 #endif /* !... */
 	}
-#endif /* ... */
+#else /* ... */
+#define diriter_get_d_namlen_IS_STUB
+#endif /* !... */
+	(void)self;
 	diriter_unbound_attr("d_namlen");
 #ifdef NEED_err
 #undef NEED_err
@@ -1026,11 +1409,14 @@ diriter_get_d_reclen(DeeDirIteratorObject *__restrict self) {
 #ifdef CONFIG_HAVE_struct_dirent_d_reclen
 		return DeeInt_NEWU(self->di_ent->d_reclen);
 #else /* CONFIG_HAVE_struct_dirent_d_reclen */
-		return DeeInt_NewSize((offsetof(struct dirent, d_name)) +
+		return DeeInt_NewSize((offsetof(struct DIR_dirent, d_name)) +
 		                      (strlen(self->di_ent->d_name) + 1) * sizeof(char));
 #endif /* !CONFIG_HAVE_struct_dirent_d_reclen */
 	}
-#endif /* ... */
+#else /* ... */
+#define diriter_get_d_reclen_IS_STUB
+#endif /* !... */
+	(void)self;
 	diriter_unbound_attr("d_reclen");
 #ifdef NEED_err
 #undef NEED_err
@@ -1040,16 +1426,435 @@ err:
 }
 
 
-#if defined(posix_opendir_USE_opendir) && defined(CONFIG_HAVE_struct_dirent_d_off)
-#define HAVE_diriter_get_d_off
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 diriter_get_d_off(DeeDirIteratorObject *__restrict self) {
-	if (self->di_ent != NULL)
+#ifdef posix_opendir_USE_FindFirstFileExW
+#define diriter_get_d_off_IS_STUB
+#elif defined(posix_opendir_USE_opendir) && defined(CONFIG_HAVE_struct_dirent_d_off)
+	if (self->di_ent != NULL) {
 		return DeeInt_NEWU(self->di_ent->d_off);
+	}
+#else /* ... */
+#define diriter_get_d_off_IS_STUB
+#endif /* !... */
+	(void)self;
 	diriter_unbound_attr("d_off");
 	return NULL;
 }
-#endif /* ... */
+
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+diriter_get_d_dev(DeeDirIteratorObject *__restrict self) {
+#ifdef posix_opendir_USE_FindFirstFileExW
+	if (self->di_hnd != INVALID_HANDLE_VALUE) {
+		if unlikely(diriter_loadstat(self))
+			goto err;
+#define NEED_err
+		return DeeInt_NewU32((uint32_t)self->di_st.dwVolumeSerialNumber);
+	}
+#elif defined(posix_opendir_NEED_STAT_EXTENSION) && defined(DIR_stat_HAVE_st_dev)
+	if (self->di_ent != NULL) {
+		if unlikely(diriter_loadstat(self))
+			goto err;
+#define NEED_err
+		return DeeInt_NEWU(self->di_st.st_dev);
+	}
+#else /* ... */
+#define diriter_get_d_dev_IS_STUB
+#endif /* !... */
+	(void)self;
+	diriter_unbound_attr("d_dev");
+#ifdef NEED_err
+#undef NEED_err
+err:
+#endif /* NEED_err */
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+diriter_get_d_mode(DeeDirIteratorObject *__restrict self) {
+#ifdef posix_opendir_USE_FindFirstFileExW
+	if (self->di_hnd != INVALID_HANDLE_VALUE) {
+		uint32_t result = 0444 | 0111; /* XXX: executable should depend on extension. */
+		if (!(self->di_data.dwFileAttributes & FILE_ATTRIBUTE_READONLY))
+			result |= 0222;
+		if (self->di_data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
+			result |= STAT_IFDIR;
+		} else if (self->di_data.dwFileAttributes & FILE_ATTRIBUTE_REPARSE_POINT) {
+			result |= STAT_IFLNK;
+		} else if (self->di_data.dwFileAttributes & FILE_ATTRIBUTE_DEVICE) {
+			result |= STAT_IFCHR; /* TODO: Must determine the type of device */
+		} else if (self->di_data.dwFileAttributes & FILE_ATTRIBUTE_SYSTEM) {
+			/* TODO: Check if it's an old-style cygwin symlink! */
+			result |= STAT_IFREG;
+		} else {
+			result |= STAT_IFREG;
+		}
+		return DeeInt_NewU32(result);
+	}
+#elif defined(posix_opendir_NEED_STAT_EXTENSION) && defined(DIR_stat_HAVE_st_mode)
+	if (self->di_ent != NULL) {
+		if unlikely(diriter_loadstat(self))
+			goto err;
+#define NEED_err
+		return DeeInt_NEWU(self->di_st.st_mode);
+	}
+#else /* ... */
+#define diriter_get_d_mode_IS_STUB
+#endif /* !... */
+	(void)self;
+	diriter_unbound_attr("d_mode");
+#ifdef NEED_err
+#undef NEED_err
+err:
+#endif /* NEED_err */
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+diriter_get_d_nlink(DeeDirIteratorObject *__restrict self) {
+#ifdef posix_opendir_USE_FindFirstFileExW
+	if (self->di_hnd != INVALID_HANDLE_VALUE) {
+		if unlikely(diriter_loadstat(self))
+			goto err;
+#define NEED_err
+		return DeeInt_NewU32((uint32_t)self->di_st.nNumberOfLinks);
+	}
+#elif defined(posix_opendir_NEED_STAT_EXTENSION) && defined(DIR_stat_HAVE_st_nlink)
+	if (self->di_ent != NULL) {
+		if unlikely(diriter_loadstat(self))
+			goto err;
+#define NEED_err
+		return DeeInt_NEWU(self->di_st.st_nlink);
+	}
+#else /* ... */
+#define diriter_get_d_nlink_IS_STUB
+#endif /* !... */
+	(void)self;
+	diriter_unbound_attr("d_nlink");
+#ifdef NEED_err
+#undef NEED_err
+err:
+#endif /* NEED_err */
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+diriter_get_d_uid(DeeDirIteratorObject *__restrict self) {
+#ifdef posix_opendir_USE_FindFirstFileExW
+#if 0 /* TODO */
+	if unlikely(self->so_stat.st_hand == INVALID_HANDLE_VALUE)
+		goto err_nouid;
+	return nt_NewUserDescriptorFromHandleOwner(self->so_stat.st_hand, SE_FILE_OBJECT);
+err_nouid:
+#else
+#define diriter_get_d_uid_IS_STUB
+#endif
+#elif defined(posix_opendir_NEED_STAT_EXTENSION) && defined(DIR_stat_HAVE_st_uid)
+	if (self->di_ent != NULL) {
+		if unlikely(diriter_loadstat(self))
+			goto err;
+#define NEED_err
+		return DeeInt_NEWU(self->di_st.st_uid);
+	}
+#else /* ... */
+#define diriter_get_d_uid_IS_STUB
+#endif /* !... */
+	(void)self;
+	diriter_unbound_attr("d_uid");
+#ifdef NEED_err
+#undef NEED_err
+err:
+#endif /* NEED_err */
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+diriter_get_d_gid(DeeDirIteratorObject *__restrict self) {
+#ifdef posix_opendir_USE_FindFirstFileExW
+#if 0 /* TODO */
+	if unlikely(self->so_stat.st_hand == INVALID_HANDLE_VALUE)
+		goto err_nogid;
+	return nt_NewUserDescriptorFromHandleGroup(self->so_stat.st_hand, SE_FILE_OBJECT);
+err_nogid:
+#else
+#define diriter_get_d_gid_IS_STUB
+#endif
+#elif defined(posix_opendir_NEED_STAT_EXTENSION) && defined(DIR_stat_HAVE_st_gid)
+	if (self->di_ent != NULL) {
+		if unlikely(diriter_loadstat(self))
+			goto err;
+#define NEED_err
+		return DeeInt_NEWU(self->di_st.st_gid);
+	}
+#else /* ... */
+#define diriter_get_d_gid_IS_STUB
+#endif /* !... */
+	(void)self;
+	diriter_unbound_attr("d_gid");
+#ifdef NEED_err
+#undef NEED_err
+err:
+#endif /* NEED_err */
+	return NULL;
+}
+
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+diriter_get_d_rdev(DeeDirIteratorObject *__restrict self) {
+#ifdef posix_opendir_USE_FindFirstFileExW
+#define diriter_get_d_rdev_IS_STUB
+#elif defined(posix_opendir_NEED_STAT_EXTENSION) && defined(DIR_stat_HAVE_st_rdev)
+	if (self->di_ent != NULL) {
+		if unlikely(diriter_loadstat(self))
+			goto err;
+#define NEED_err
+		return DeeInt_NEWU(self->di_st.st_rdev);
+	}
+#else /* ... */
+#define diriter_get_d_rdev_IS_STUB
+#endif /* !... */
+	(void)self;
+	diriter_unbound_attr("d_rdev");
+#ifdef NEED_err
+#undef NEED_err
+err:
+#endif /* NEED_err */
+	return NULL;
+}
+
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+diriter_get_d_size(DeeDirIteratorObject *__restrict self) {
+#ifdef posix_opendir_USE_FindFirstFileExW
+	if (self->di_hnd != INVALID_HANDLE_VALUE) {
+		return DeeInt_NewU64(((uint64_t)self->di_data.nFileSizeHigh << 32) |
+		                     ((uint64_t)self->di_data.nFileSizeLow));
+	}
+#elif defined(posix_opendir_NEED_STAT_EXTENSION) && defined(DIR_stat_HAVE_st_size)
+	if (self->di_ent != NULL) {
+		if unlikely(diriter_loadstat(self))
+			goto err;
+#define NEED_err
+		return DeeInt_NEWU(self->di_st.st_size);
+	}
+#else /* ... */
+#define diriter_get_d_size_IS_STUB
+#endif /* !... */
+	(void)self;
+	diriter_unbound_attr("d_size");
+#ifdef NEED_err
+#undef NEED_err
+err:
+#endif /* NEED_err */
+	return NULL;
+}
+
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+diriter_get_d_blocks(DeeDirIteratorObject *__restrict self) {
+#ifdef posix_opendir_USE_FindFirstFileExW
+	if (self->di_hnd != INVALID_HANDLE_VALUE) {
+		uint64_t result = ((uint64_t)self->di_data.nFileSizeHigh << 32) |
+		                  ((uint64_t)self->di_data.nFileSizeLow);
+		return DeeInt_NewU64(DEFAULT_BLOCKS_FROM_FILESIZE(result));
+	}
+#elif defined(posix_opendir_NEED_STAT_EXTENSION) && (defined(DIR_stat_HAVE_st_blocks) || defined(DIR_stat_HAVE_st_size))
+	if (self->di_ent != NULL) {
+		if unlikely(diriter_loadstat(self))
+			goto err;
+#define NEED_err
+#ifdef DIR_stat_HAVE_st_blocks
+		return DeeInt_NEWU(self->di_st.st_blocks);
+#else /* DIR_stat_HAVE_st_blocks */
+		return DeeInt_NEWU(DEFAULT_BLOCKS_FROM_FILESIZE(self->di_st.st_size));
+#endif /* !DIR_stat_HAVE_st_blocks */
+	}
+#else /* ... */
+#define diriter_get_d_blocks_IS_STUB
+#endif /* !... */
+	(void)self;
+	diriter_unbound_attr("d_blocks");
+#ifdef NEED_err
+#undef NEED_err
+err:
+#endif /* NEED_err */
+	return NULL;
+}
+
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+diriter_get_d_blksize(DeeDirIteratorObject *__restrict self) {
+#ifdef posix_opendir_USE_FindFirstFileExW
+	if (self->di_hnd != INVALID_HANDLE_VALUE) {
+		return DeeInt_NewU16(DEFAULT_BLOCKSIZE);
+	}
+#elif (defined(posix_opendir_NEED_STAT_EXTENSION) && \
+       (defined(DIR_stat_HAVE_st_blksize) || !defined(diriter_get_d_blocks_IS_STUB)))
+	if (self->di_ent != NULL) {
+#ifdef DIR_stat_HAVE_st_blksize
+		if unlikely(diriter_loadstat(self))
+			goto err;
+#define NEED_err
+		return DeeInt_NEWU(self->di_st.st_blksize);
+#else /* DIR_stat_HAVE_st_blksize */
+		return DeeInt_NewU16(DEFAULT_BLOCKSIZE);
+#endif /* !DIR_stat_HAVE_st_blksize */
+	}
+#else /* ... */
+#define diriter_get_d_blksize_IS_STUB
+#endif /* !... */
+	(void)self;
+	diriter_unbound_attr("d_blksize");
+#ifdef NEED_err
+#undef NEED_err
+err:
+#endif /* NEED_err */
+	return NULL;
+}
+
+
+
+#ifdef DECLARE_DeeTime_NewUnix
+INTDEF DECLARE_DeeTime_NewUnix();
+#undef DECLARE_DeeTime_NewUnix
+#endif /* DECLARE_DeeTime_NewUnix */
+
+#ifdef DECLARE_DeeTime_NewFILETIME
+INTDEF DECLARE_DeeTime_NewFILETIME();
+#undef DECLARE_DeeTime_NewFILETIME
+#endif /* DECLARE_DeeTime_NewFILETIME */
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+diriter_get_d_atime(DeeDirIteratorObject *__restrict self) {
+#ifdef posix_opendir_USE_FindFirstFileExW
+	if (self->di_hnd != INVALID_HANDLE_VALUE) {
+#define NEED_DeeTime_NewFILETIME
+		return DeeTime_NewFILETIME(&self->di_data.ftLastAccessTime);
+	}
+#elif defined(posix_opendir_NEED_STAT_EXTENSION) && defined(DIR_stat_GET_RAW_ATIME_SEC)
+	if (self->di_ent != NULL) {
+		if unlikely(diriter_loadstat(self))
+			goto err;
+#define NEED_err
+#define NEED_DeeTime_NewUnix
+#ifdef DIR_stat_GET_RAW_ATIME_NSEC
+		return DeeTime_NewUnix(DIR_stat_GET_RAW_ATIME_SEC(&self->di_st),
+		                       DIR_stat_GET_RAW_ATIME_NSEC(&self->di_st));
+#else /* DIR_stat_GET_RAW_ATIME_NSEC */
+		return DeeTime_NewUnix(DIR_stat_GET_RAW_ATIME_SEC(&self->di_st), 0);
+#endif /* !DIR_stat_GET_RAW_ATIME_NSEC */
+	}
+#else /* ... */
+#define diriter_get_d_atime_IS_STUB
+#endif /* !... */
+	(void)self;
+	diriter_unbound_attr("d_atime");
+#ifdef NEED_err
+#undef NEED_err
+err:
+#endif /* NEED_err */
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+diriter_get_d_mtime(DeeDirIteratorObject *__restrict self) {
+#ifdef posix_opendir_USE_FindFirstFileExW
+	if (self->di_hnd != INVALID_HANDLE_VALUE) {
+#define NEED_DeeTime_NewFILETIME
+		return DeeTime_NewFILETIME(&self->di_data.ftLastWriteTime);
+	}
+#elif defined(posix_opendir_NEED_STAT_EXTENSION) && defined(DIR_stat_GET_RAW_MTIME_SEC)
+	if (self->di_ent != NULL) {
+		if unlikely(diriter_loadstat(self))
+			goto err;
+#define NEED_err
+#define NEED_DeeTime_NewUnix
+#ifdef DIR_stat_GET_RAW_MTIME_NSEC
+		return DeeTime_NewUnix(DIR_stat_GET_RAW_MTIME_SEC(&self->di_st),
+		                       DIR_stat_GET_RAW_MTIME_NSEC(&self->di_st));
+#else /* DIR_stat_GET_RAW_MTIME_NSEC */
+		return DeeTime_NewUnix(DIR_stat_GET_RAW_MTIME_SEC(&self->di_st), 0);
+#endif /* !DIR_stat_GET_RAW_MTIME_NSEC */
+	}
+#else /* ... */
+#define diriter_get_d_mtime_IS_STUB
+#endif /* !... */
+	(void)self;
+	diriter_unbound_attr("d_mtime");
+#ifdef NEED_err
+#undef NEED_err
+err:
+#endif /* NEED_err */
+	return NULL;
+}
+
+#ifdef posix_opendir_USE_FindFirstFileExW
+/* If the OS doesn't have a dedicated st_ctime timestamp, re-use the d_mtime-one (if present) */
+#define diriter_get_d_ctime diriter_get_d_mtime
+#elif defined(posix_stat_GET_CTIME_SEC)
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+diriter_get_d_ctime(DeeDirIteratorObject *__restrict self) {
+	if (self->di_ent != NULL) {
+		if unlikely(diriter_loadstat(self))
+			goto err;
+#define NEED_DeeTime_NewUnix
+#ifdef DIR_stat_GET_RAW_CTIME_NSEC
+		return DeeTime_NewUnix(DIR_stat_GET_RAW_CTIME_SEC(&self->di_st),
+		                       DIR_stat_GET_RAW_CTIME_NSEC(&self->di_st));
+#else /* DIR_stat_GET_RAW_CTIME_NSEC */
+		return DeeTime_NewUnix(DIR_stat_GET_RAW_CTIME_SEC(&self->di_st), 0);
+#endif /* !DIR_stat_GET_RAW_CTIME_NSEC */
+	}
+	diriter_unbound_attr("d_ctime");
+err:
+	return NULL;
+}
+#elif !defined(diriter_get_d_mtime_IS_STUB)
+/* If the OS doesn't have a dedicated st_ctime timestamp, re-use the d_mtime-one (if present) */
+#define diriter_get_d_ctime diriter_get_d_mtime
+#else /* ... */
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+diriter_get_d_ctime(DeeDirIteratorObject *__restrict self) {
+#define diriter_get_d_ctime_IS_STUB
+	(void)self;
+	diriter_unbound_attr("d_ctime");
+	return NULL;
+}
+#endif /* !... */
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+diriter_get_d_birthtime(DeeDirIteratorObject *__restrict self) {
+#ifdef posix_opendir_USE_FindFirstFileExW
+	if (self->di_hnd != INVALID_HANDLE_VALUE) {
+#define NEED_DeeTime_NewFILETIME
+		return DeeTime_NewFILETIME(&self->di_data.ftCreationTime);
+	}
+#elif defined(posix_opendir_NEED_STAT_EXTENSION) && defined(DIR_stat_GET_RAW_BTIME_SEC)
+	if (self->di_ent != NULL) {
+		if unlikely(diriter_loadstat(self))
+			goto err;
+#define NEED_err
+#define NEED_DeeTime_NewUnix
+#ifdef DIR_stat_GET_RAW_BTIME_NSEC
+		return DeeTime_NewUnix(DIR_stat_GET_RAW_BTIME_SEC(&self->di_st),
+		                       DIR_stat_GET_RAW_BTIME_NSEC(&self->di_st));
+#else /* DIR_stat_GET_RAW_BTIME_NSEC */
+		return DeeTime_NewUnix(DIR_stat_GET_RAW_BTIME_SEC(&self->di_st), 0);
+#endif /* !DIR_stat_GET_RAW_BTIME_NSEC */
+	}
+#else /* ... */
+#define diriter_get_d_birthtime_IS_STUB
+#endif /* !... */
+	(void)self;
+	diriter_unbound_attr("d_birthtime");
+#ifdef NEED_err
+#undef NEED_err
+err:
+#endif /* NEED_err */
+	return NULL;
+}
+
 
 
 
@@ -1120,27 +1925,26 @@ PRIVATE struct type_getset tpconst diriter_getsets[] = {
 	TYPE_GETTER("d_reclen", &diriter_get_d_reclen,
 	            "->?Dint\n"
 	            "Size of the directory record (in bytes)"),
-#ifdef HAVE_diriter_get_d_off
 	TYPE_GETTER("d_off", &diriter_get_d_off,
 	            "->?Dint\n"
 	            "Offset of the next directory entry (non-portable!)"),
-#endif /* HAVE_diriter_get_d_off */
 
-	/* TODO: Additional (stat-like) fields (to take advantage of info that windows gives us):
-	 *  - d_dev: int     (stat::st_dev)
-	 *  - d_mode: int    (stat::st_mode)
-	 *  - d_nlink: int   (stat::st_nlink)
-	 *  - d_uid: int     (stat::st_uid)
-	 *  - d_gid: int     (stat::st_gid)
-	 *  - d_rdev: int    (stat::st_rdev)
-	 *  - d_size: int    (stat::st_size)
-	 *  - d_blksize: int (stat::st_blksize)
-	 *  - d_blocks: int  (stat::st_blocks)
-	 *  - d_atime: Time
-	 *  - d_mtime: Time
-	 *  - d_ctime: Time
-	 *  - d_birthtime: Time
-	 */
+	/* Additional (stat-like) fields (to take advantage of info that windows gives us) */
+	TYPE_GETTER("d_dev", &diriter_get_d_dev, "->?Dint\ns.a. ?Ast_dev?Gstat"),
+	TYPE_GETTER("d_mode", &diriter_get_d_mode, "->?Dint\ns.a. ?Ast_mode?Gstat"),
+	TYPE_GETTER("d_nlink", &diriter_get_d_nlink, "->?Dint\ns.a. ?Ast_nlink?Gstat"),
+	TYPE_GETTER("d_uid", &diriter_get_d_uid, "->?Dint\ns.a. ?Ast_uid?Gstat"),
+	TYPE_GETTER("d_gid", &diriter_get_d_gid, "->?Dint\ns.a. ?Ast_gid?Gstat"),
+	TYPE_GETTER("d_rdev", &diriter_get_d_rdev, "->?Dint\ns.a. ?Ast_rdev?Gstat"),
+	TYPE_GETTER("d_size", &diriter_get_d_size, "->?Dint\ns.a. ?Ast_size?Gstat"),
+	TYPE_GETTER("d_blocks", &diriter_get_d_blocks, "->?Dint\ns.a. ?Ast_blocks?Gstat"),
+	TYPE_GETTER("d_blksize", &diriter_get_d_blksize, "->?Dint\ns.a. ?Ast_blksize?Gstat"),
+	TYPE_GETTER("d_atime", &diriter_get_d_atime, "->?Etime:Time\ns.a. ?Ast_atime?Gstat"),
+	TYPE_GETTER("d_mtime", &diriter_get_d_mtime, "->?Etime:Time\ns.a. ?Ast_mtime?Gstat"),
+	TYPE_GETTER("d_ctime", &diriter_get_d_ctime, "->?Etime:Time\ns.a. ?Ast_ctime?Gstat"),
+	TYPE_GETTER("d_birthtime", &diriter_get_d_birthtime, "->?Etime:Time\ns.a. ?Ast_birthtime?Gstat"),
+	/* TODO: `stat->?Gstat' (returns the stat information for this directory entry) */
+
 	TYPE_GETSET_END
 };
 

@@ -454,12 +454,6 @@ DECL_BEGIN
 #endif /* ... */
 #endif /* !... */
 
-#undef CONFIG_STAT_CTIME_IS_ACTUALLY_BIRTHTIME
-#if (defined(_WIN32) || defined(__WIN32__)) && !defined(__CYGWIN__)
-/* MSVC thought it smart to rename `st_birthtime' to `st_ctime' */
-#define CONFIG_STAT_CTIME_IS_ACTUALLY_BIRTHTIME
-#endif
-
 #undef posix_stat_GET_ATIME_SEC
 #undef posix_stat_GET_ATIME_NSEC
 #undef posix_stat_GET_MTIME_SEC
@@ -908,14 +902,23 @@ INTDEF ATTR_COLD int DCALL err_stat_no_uid_info(void);
 INTDEF ATTR_COLD int DCALL err_stat_no_gid_info(void);
 INTDEF ATTR_COLD int DCALL err_stat_no_rdev_info(void);
 INTDEF ATTR_COLD int DCALL err_stat_no_size_info(void);
+INTDEF ATTR_COLD int DCALL err_stat_no_blocks_info(void);
+INTDEF ATTR_COLD int DCALL err_stat_no_blksize_info(void);
 INTDEF ATTR_COLD int DCALL err_stat_no_atime_info(void);
 INTDEF ATTR_COLD int DCALL err_stat_no_mtime_info(void);
 INTDEF ATTR_COLD int DCALL err_stat_no_ctime_info(void);
 INTDEF ATTR_COLD int DCALL err_stat_no_birthtime_info(void);
 INTDEF ATTR_COLD int DCALL err_stat_no_nttype_info(void);
 
+#ifdef DECLARE_DeeTime_NewUnix
 INTDEF DECLARE_DeeTime_NewUnix();
+#undef DECLARE_DeeTime_NewUnix
+#endif /* DECLARE_DeeTime_NewUnix */
+
+#ifdef DECLARE_DeeTime_NewFILETIME
 INTDEF DECLARE_DeeTime_NewFILETIME();
+#undef DECLARE_DeeTime_NewFILETIME
+#endif /* DECLARE_DeeTime_NewFILETIME */
 
 
 #ifdef posix_stat_USE_WINDOWS
@@ -1196,9 +1199,9 @@ stat_get_ino(DeeStatObject *__restrict self) {
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 stat_get_mode(DeeStatObject *__restrict self) {
 #ifdef posix_stat_USE_WINDOWS
-	uint32_t result = 0222 | 0111; /* XXX: executable should depend on extension. */
-	if (self->so_stat.st_info.dwFileAttributes & FILE_ATTRIBUTE_READONLY)
-		result |= 0444;
+	uint32_t result = 0444 | 0111; /* XXX: executable should depend on extension. */
+	if (!(self->so_stat.st_info.dwFileAttributes & FILE_ATTRIBUTE_READONLY))
+		result |= 0222;
 	switch (stat_get_nttype(&self->so_stat, true)) {
 
 	case FILE_TYPE_CHAR:
@@ -1388,6 +1391,87 @@ err_seek_error:
 	(void)self;
 #define NEED_err_stat_no_size_info
 	err_stat_no_size_info();
+	return NULL;
+#endif /* !... */
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+stat_get_blocks(DeeStatObject *__restrict self) {
+#ifdef posix_stat_USE_WINDOWS
+	uint64_t size;
+	if unlikely(self->so_stat.st_valid & NT_STAT_FNOSIZE)
+		goto err_nosize;
+	size = ((uint64_t)self->so_stat.st_info.nFileSizeHigh << 32) |
+	       ((uint64_t)self->so_stat.st_info.nFileSizeLow);
+	return DeeInt_NewU64(DEFAULT_BLOCKS_FROM_FILESIZE(size));
+err_nosize:
+#define NEED_err_stat_no_blocks_info
+	err_stat_no_blocks_info();
+	return NULL;
+#elif defined(posix_stat_HAVE_st_blocks)
+	return DeeInt_NEWU(self->so_stat.st_info.st_blocks);
+#elif defined(posix_stat_HAVE_st_size)
+	return DeeInt_NEWU(DEFAULT_BLOCKS_FROM_FILESIZE(self->so_stat.st_info.st_size));
+#elif (defined(posix_stat_USE_fopen) && defined(SEEK_END) &&                                           \
+       (defined(CONFIG_HAVE_fseeko64) || defined(CONFIG_HAVE_fseeko) || defined(CONFIG_HAVE_fseek)) && \
+       (defined(CONFIG_HAVE_ftello64) || defined(CONFIG_HAVE_ftello) || defined(CONFIG_HAVE_ftell)))
+#ifdef CONFIG_HAVE_fseeko64
+	if (fseeko64(self->so_stat.st_file, 0, SEEK_END) == -1)
+#elif defined(CONFIG_HAVE_fseeko)
+	if (fseeko(self->so_stat.st_file, 0, SEEK_END) == -1)
+#else /* ... */
+	if (fseek(self->so_stat.st_file, 0, SEEK_END) == -1)
+#endif /* !... */
+	{
+#ifdef CONFIG_HAVE_ferror
+#ifdef CONFIG_HAVE_clearerr
+		clearerr(self->so_stat.st_file);
+		if (fseeko64(self->so_stat.st_file, 0, SEEK_END) == -1)
+#endif /* CONFIG_HAVE_clearerr */
+		{
+			if (ferror(self->so_stat.st_file))
+				goto err_seek_error;
+#define NEED_err_seek_error
+		}
+#endif /* CONFIG_HAVE_ferror */
+	}
+#ifdef CONFIG_HAVE_ftello64
+	return DeeInt_NewU64(DEFAULT_BLOCKS_FROM_FILESIZE((uint64_t)ftello64(self->so_stat.st_file)));
+#elif defined(CONFIG_HAVE_ftello)
+	return DeeInt_NewUIntptr(DEFAULT_BLOCKS_FROM_FILESIZE((uintptr_t)ftello(self->so_stat.st_file)));
+#else /* ... */
+	return DeeInt_NewULong(DEFAULT_BLOCKS_FROM_FILESIZE((unsigned long)ftell(self->so_stat.st_file)));
+#endif /* !... */
+#ifdef NEED_err_seek_error
+#undef NEED_err_seek_error
+err_seek_error:
+	DeeError_Throwf(&DeeError_FSError, "Unable to seek file");
+	return NULL;
+#endif /* NEED_err_seek_error */
+#else /* ... */
+#define posix_stat_get_blocks_IS_STUB
+	(void)self;
+#define NEED_err_stat_no_blocks_info
+	err_stat_no_blocks_info();
+	return NULL;
+#endif /* !... */
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+stat_get_blksize(DeeStatObject *__restrict self) {
+#ifdef posix_stat_USE_WINDOWS
+	(void)self;
+	return DeeInt_NewU16(DEFAULT_BLOCKSIZE);
+#elif defined(posix_stat_HAVE_st_blksize)
+	return DeeInt_NEWU(self->so_stat.st_info.st_blksize);
+#elif !defined(posix_stat_get_blocks_IS_STUB)
+	(void)self;
+	return DeeInt_NewU16(DEFAULT_BLOCKSIZE);
+#else /* ... */
+#define posix_stat_get_blksize_IS_STUB
+	(void)self;
+#define NEED_err_stat_no_blksize_info
+	err_stat_no_blksize_info();
 	return NULL;
 #endif /* !... */
 }
@@ -2368,6 +2452,14 @@ PRIVATE struct type_getset tpconst stat_getsets[] = {
 	            "->?Dint\n"
 	            "@throw ValueError @this stat-file does not contain valid size information\n"
 	            "Returns the size of the stat-file in bytes"),
+	TYPE_GETTER("st_blocks", &stat_get_blocks,
+	            "->?Dint\n"
+	            "@throw ValueError @this stat-file does not contain valid block-count information\n"
+	            "Returns the number of filesystem blocks used by the stat-file"),
+	TYPE_GETTER("st_blksize", &stat_get_blksize,
+	            "->?Dint\n"
+	            "@throw ValueError @this stat-file does not contain valid block-count information\n"
+	            "Returns the size of a filesystem blocks, as used by the stat-file"),
 	TYPE_GETTER("st_atime", &stat_get_atime,
 	            "->?Etime:Time\n"
 	            "@throw ValueError @this stat-file does not contain valid time information\n"
@@ -2546,37 +2638,6 @@ PRIVATE struct type_method tpconst stat_class_methods[] = {
 };
 
 
-/* Timestamp creation */
-#if defined(NEED_DeeTime_NewUnix) || defined(NEED_DeeTime_NewFILETIME)
-#undef NEED_DeeTime_New
-PRIVATE DREF DeeObject *dee_time_module = NULL;
-PRIVATE DREF DeeObject *DCALL get_time_module(void) {
-	if (dee_time_module == NULL)
-		dee_time_module = DeeModule_OpenGlobalString("time", 4, NULL, true);
-	return dee_time_module;
-}
-
-#ifdef HAVE_posix_dex_fini
-#error "More than one posix_dex_fini() function"
-#endif /* HAVE_posix_dex_fini */
-#define HAVE_posix_dex_fini
-PRIVATE NONNULL((1)) void DCALL
-posix_dex_fini(DeeDexObject *__restrict self) {
-	(void)self;
-	Dee_XDecref(dee_time_module);
-}
-
-#ifdef NEED_DeeTime_NewUnix
-INTERN DEFINE_DeeTime_NewUnix(get_time_module);
-#endif /* NEED_DeeTime_NewUnix */
-
-#ifdef NEED_DeeTime_NewFILETIME
-INTERN DEFINE_DeeTime_NewFILETIME(get_time_module);
-#endif /* NEED_DeeTime_NewFILETIME */
-
-#endif /* NEED_DeeTime_NewUnix || NEED_DeeTime_NewFILETIME */
-
-
 /* Missing stat information errors. */
 #ifdef NEED_err_stat_no_mode_info
 #undef NEED_err_stat_no_mode_info
@@ -2649,6 +2710,24 @@ err_stat_no_size_info(void) {
 	return err_stat_no_info("st_size");
 }
 #endif /* NEED_err_stat_no_size_info */
+
+#ifdef NEED_err_stat_no_blocks_info
+#undef NEED_err_stat_no_blocks_info
+#define NEED_err_stat_no_info
+INTERN ATTR_NOINLINE ATTR_COLD int DCALL
+err_stat_no_blocks_info(void) {
+	return err_stat_no_info("st_blocks");
+}
+#endif /* NEED_err_stat_no_blocks_info */
+
+#ifdef NEED_err_stat_no_blksize_info
+#undef NEED_err_stat_no_blksize_info
+#define NEED_err_stat_no_info
+INTERN ATTR_NOINLINE ATTR_COLD int DCALL
+err_stat_no_blksize_info(void) {
+	return err_stat_no_info("st_blksize");
+}
+#endif /* NEED_err_stat_no_blksize_info */
 
 #ifdef NEED_err_stat_no_atime_info
 #undef NEED_err_stat_no_atime_info

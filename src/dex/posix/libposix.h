@@ -48,6 +48,18 @@
 #include <Windows.h>
 #endif /* CONFIG_HOST_WINDOWS */
 
+
+ /* MSVC thought it smart to rename `st_birthtime' to `st_ctime' */
+#undef CONFIG_STAT_CTIME_IS_ACTUALLY_BIRTHTIME
+#if (defined(_WIN32) || defined(__WIN32__)) && !defined(__CYGWIN__)
+#define CONFIG_STAT_CTIME_IS_ACTUALLY_BIRTHTIME
+#endif
+
+#define DEFAULT_BLOCKSIZE 512
+#define DEFAULT_BLOCKS_FROM_FILESIZE(fz) \
+	(((fz) + DEFAULT_BLOCKSIZE - 1) / DEFAULT_BLOCKSIZE)
+
+
 DECL_BEGIN
 
 /* Imported module access. */
