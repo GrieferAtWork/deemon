@@ -4810,7 +4810,7 @@ do_insert_match:
 				                                 (size_t)(match.rm_eo - match.rm_so)) < 0)
 					goto err;
 				++replace_iter;
-				if (ch == '\\')
+				if (ch != '&')
 					++replace_iter;
 				replace_flush = replace_iter;
 				break;

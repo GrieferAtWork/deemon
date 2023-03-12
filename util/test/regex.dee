@@ -243,7 +243,13 @@ assertReScanf("#define FOO 42", r"#\s*define\s+(\w+)\s+(\w+)", { "FOO", "42" });
 assertReScanf(" #define FOO 42", r"#\s*define\s+(\w+)\s+(\w+)", {});
 assertReScanf(" #define FOO 42", r"\s*#\s*define\s+(\w+)\s+(\w+)", { "FOO", "42" });
 
-assert "a aa aaa".rereplace(r"\baa\b", "X") == "a X aaa";
-assert "a aa aaa".rereplace(r"\<aa\>", "X") == "a X aaa";
-assert "a aa aaa".bytes().rereplace(r"\baa\b", "X") == "a X aaa".bytes();
-assert "a aa aaa".bytes().rereplace(r"\<aa\>", "X") == "a X aaa".bytes();
+function assertReReplace(input, pattern, replace, expected) {
+	assert input.rereplace(pattern, replace) == expected;
+	assert input.bytes().rereplace(pattern, replace) == expected.bytes();
+}
+
+assertReReplace("a aa aaa", r"\baa\b", "X", "a X aaa");
+assertReReplace("a aa aaa", r"\<aa\>", "X", "a X aaa");
+assertReReplace("<#define FOO 42>", r"(# *define) *([A-Za-z0-9]+)", r"#define [\2]", "<#define [FOO] 42>");
+assertReReplace("<# define   FOO 42>", r"(# *define) *([A-Za-z0-9]+)", r"#define [\2]", "<#define [FOO] 42>");
+
