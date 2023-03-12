@@ -632,10 +632,10 @@ handle_null_ob:
 		return DeeInt_NewU64(FIELD(uint64_t));
 
 	CASE(STRUCT_INT128):
-		return DeeInt_NewS128(FIELD(dint128_t));
+		return DeeInt_NewS128(FIELD(Dee_int128_t));
 
 	CASE(STRUCT_UNSIGNED | STRUCT_INT128):
-		return DeeInt_NewU128(FIELD(duint128_t));
+		return DeeInt_NewU128(FIELD(Dee_uint128_t));
 
 #undef CASE
 	default: break;
@@ -822,12 +822,12 @@ type_member_set(struct type_member const *desc,
 			int16_t s16;
 			int32_t s32;
 			int64_t s64;
-			dint128_t s128;
+			Dee_int128_t s128;
 			uint8_t u8;
 			uint16_t u16;
 			uint32_t u32;
 			uint64_t u64;
-			duint128_t u128;
+			Dee_uint128_t u128;
 		} data;
 	case STRUCT_UNSIGNED | STRUCT_INT8:
 		if (DeeObject_AsUInt8(value, &data.u8))
@@ -883,7 +883,7 @@ type_member_set(struct type_member const *desc,
 #ifndef CONFIG_NO_THREADS
 		COMPILER_WRITE_BARRIER();
 #endif /* !CONFIG_NO_THREADS */
-		FIELD(duint128_t) = data.u128;
+		FIELD(Dee_uint128_t) = data.u128;
 #ifndef CONFIG_NO_THREADS
 		COMPILER_WRITE_BARRIER();
 #endif /* !CONFIG_NO_THREADS */
@@ -895,7 +895,7 @@ type_member_set(struct type_member const *desc,
 #ifndef CONFIG_NO_THREADS
 		COMPILER_WRITE_BARRIER();
 #endif /* !CONFIG_NO_THREADS */
-		FIELD(dint128_t) = data.s128;
+		FIELD(Dee_int128_t) = data.s128;
 #ifndef CONFIG_NO_THREADS
 		COMPILER_WRITE_BARRIER();
 #endif /* !CONFIG_NO_THREADS */

@@ -33,6 +33,7 @@
 #include <deemon/tuple.h>
 
 #include <hybrid/byteswap.h>
+#include <hybrid/int128.h>
 
 #include <math.h> /* FIXME: This needs a feature check! */
 
@@ -95,7 +96,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 numeric_ass128(DeeObject *__restrict self) {
-	dint128_t result;
+	Dee_int128_t result;
 	if (DeeObject_AsInt128(self, &result))
 		goto err;
 	return DeeInt_NewS128(result);
@@ -145,7 +146,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 numeric_asu128(DeeObject *__restrict self) {
-	duint128_t result;
+	Dee_uint128_t result;
 	if (DeeObject_AsUInt128(self, &result))
 		goto err;
 	return DeeInt_NewU128(result);
@@ -235,7 +236,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 numeric_signed128(DeeObject *__restrict self) {
-	dint128_t result;
+	Dee_int128_t result;
 	if unlikely(DeeObject_GetInt128(self, &result) < 0)
 		goto err;
 	return DeeInt_NewS128(result);
@@ -245,8 +246,8 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 numeric_unsigned128(DeeObject *__restrict self) {
-	duint128_t result;
-	if unlikely(DeeObject_GetInt128(self, (dint128_t *)&result) < 0)
+	Dee_uint128_t result;
+	if unlikely(DeeObject_GetInt128(self, (Dee_int128_t *)&result) < 0)
 		goto err;
 	return DeeInt_NewU128(result);
 err:
@@ -285,15 +286,10 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 numeric_swap128(DeeObject *__restrict self) {
-	duint128_t result;
-	uint64_t temp;
-	if unlikely(DeeObject_GetInt128(self, (dint128_t *)&result) < 0)
+	Dee_uint128_t result;
+	if unlikely(DeeObject_GetInt128(self, (Dee_int128_t *)&result) < 0)
 		goto err;
-	temp = DUINT128_GET64(result)[0];
-	DUINT128_GET64(result)
-	[0] = BSWAP64(DUINT128_GET64(result)[1]);
-	DUINT128_GET64(result)
-	[1] = BSWAP64(temp);
+	__hybrid_uint128_bswap(result);
 	return DeeInt_NewU128(result);
 err:
 	return NULL;
@@ -331,15 +327,10 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 numeric_sswap128(DeeObject *__restrict self) {
-	dint128_t result;
-	uint64_t temp;
-	if unlikely(DeeObject_GetInt128(self, (dint128_t *)&result) < 0)
+	Dee_int128_t result;
+	if unlikely(DeeObject_GetInt128(self, (Dee_int128_t *)&result) < 0)
 		goto err;
-	temp = DUINT128_GET64(result)[0];
-	DUINT128_GET64(result)
-	[0] = BSWAP64(DUINT128_GET64(result)[1]);
-	DUINT128_GET64(result)
-	[1] = BSWAP64(temp);
+	__hybrid_int128_bswap(result);
 	return DeeInt_NewS128(result);
 err:
 	return NULL;

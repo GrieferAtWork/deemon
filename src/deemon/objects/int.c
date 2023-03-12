@@ -48,6 +48,7 @@
 
 #include <hybrid/bit.h>
 #include <hybrid/byteorder.h>
+#include <hybrid/int128.h>
 #include <hybrid/overflow.h>
 #include <hybrid/sched/yield.h>
 #include <hybrid/typecore.h>
@@ -98,6 +99,35 @@
 #define CONFIG_USE_PRECALCULATED_INT_FROM_STRING_CONSTANTS 0
 #endif /* !CONFIG_HAVE_MATH_H */
 #endif /* !CONFIG_USE_PRECALCULATED_INT_FROM_STRING_CONSTANTS */
+
+/* Figure out the most efficient way to shift a 128-bit integer by `DIGIT_BITS', both left and right */
+#if DIGIT_BITS < 8 && defined(__hybrid_uint128_shr8)
+#define __hybrid_uint128_shr_DIGIT_BITS(var)           __hybrid_uint128_shr8(var, DIGIT_BITS)
+#define __hybrid_uint128_shl_DIGIT_BITS(var)           __hybrid_uint128_shl8(var, DIGIT_BITS)
+#define __hybrid_uint128_shl_DIGIT_BITS_overflows(var) __hybrid_uint128_shl8_overflows(var, DIGIT_BITS)
+#elif DIGIT_BITS < 16 && defined(__hybrid_uint128_shr16)
+#define __hybrid_uint128_shr_DIGIT_BITS(var)           __hybrid_uint128_shr16(var, DIGIT_BITS)
+#define __hybrid_uint128_shl_DIGIT_BITS(var)           __hybrid_uint128_shl16(var, DIGIT_BITS)
+#define __hybrid_uint128_shl_DIGIT_BITS_overflows(var) __hybrid_uint128_shl16_overflows(var, DIGIT_BITS)
+#elif DIGIT_BITS < 32 && defined(__hybrid_uint128_shr32)
+#define __hybrid_uint128_shr_DIGIT_BITS(var)               __hybrid_uint128_shr32(var, DIGIT_BITS)
+#define __hybrid_uint128_shl_DIGIT_BITS(var)               __hybrid_uint128_shl32(var, DIGIT_BITS)
+#define __hybrid_uint128_shl_DIGIT_BITS_overflows(var)     __hybrid_uint128_shl32_overflows(var, DIGIT_BITS)
+#else /* ... */
+#define __hybrid_uint128_shr_DIGIT_BITS(var)           __hybrid_uint128_shr64(var, DIGIT_BITS)
+#define __hybrid_uint128_shl_DIGIT_BITS(var)           __hybrid_uint128_shl64(var, DIGIT_BITS)
+#define __hybrid_uint128_shl_DIGIT_BITS_overflows(var) __hybrid_uint128_shl64_overflows(var, DIGIT_BITS)
+#endif /* !... */
+
+#if DIGIT_BITS <= 8
+#define __hybrid_uint128_least_significant_DIGIT_BITS(var) (digit)(__hybrid_uint128_vec8_significand(var, 0) & DIGIT_MASK)
+#elif DIGIT_BITS <= 16
+#define __hybrid_uint128_least_significant_DIGIT_BITS(var) (digit)(__hybrid_uint128_vec16_significand(var, 0) & DIGIT_MASK)
+#elif DIGIT_BITS <= 32
+#define __hybrid_uint128_least_significant_DIGIT_BITS(var) (digit)(__hybrid_uint128_vec32_significand(var, 0) & DIGIT_MASK)
+#else /* DIGIT_BITS <= ... */
+#define __hybrid_uint128_least_significant_DIGIT_BITS(var) (digit)(__hybrid_uint128_vec64_significand(var, 0) & DIGIT_MASK)
+#endif /* DIGIT_BITS > ... */
 
 
 DECL_BEGIN
@@ -805,67 +835,64 @@ PUBLIC WUNUSED DREF DeeObject *DCALL DeeInt_NewS64(int64_t val) {
 
 /* 128-bit integer creation. */
 PUBLIC WUNUSED DREF DeeObject *DCALL
-DeeInt_NewU128(duint128_t val) {
+DeeInt_NewU128(Dee_uint128_t val) {
 	DREF DeeIntObject *result;
 	size_t req_digits;
-	duint128_t iter;
+	Dee_uint128_t iter;
+
 	/* Simplification: When it fits into a 64-bit integer, use that path! */
-	if (DUINT128_IS64(val))
-		return DeeInt_NewU64(DUINT128_GET64(val)[DEE_INT128_LS64]);
+	if (__hybrid_uint128_is64bit(val))
+		return DeeInt_NewU64(__hybrid_uint128_get64(val));
+
 	/* The remainder is basically the same as any other creator, but
 	 * using special macros implementing some basic 128-bit arithmetic. */
-	for (iter = val, req_digits = 0; !DSINT128_ISNUL(iter);
-	     DUINT128_SHR(iter, DIGIT_BITS), ++req_digits)
+	for (iter = val, req_digits = 0; !__hybrid_int128_iszero(iter);
+	     __hybrid_uint128_shr_DIGIT_BITS(iter), ++req_digits)
 		;
 	ASSERT(req_digits > 0);
 	result = DeeInt_Alloc(req_digits);
 	if likely(result) {
 		result->ob_size = req_digits;
-		for (req_digits = 0; !DSINT128_ISNUL(val);
-		     DUINT128_SHR(val, DIGIT_BITS), ++req_digits) {
-#if DIGIT_BITS == 30
-			result->ob_digit[req_digits] = (digit)(DUINT128_GET32(val)[DEE_INT128_LS32] & DIGIT_MASK);
-#else /* DIGIT_BITS == 30 */
-			result->ob_digit[req_digits] = (digit)(DUINT128_GET16(val)[DEE_INT128_LS16] & DIGIT_MASK);
-#endif /* DIGIT_BITS != 30 */
+		for (req_digits = 0; !__hybrid_int128_iszero(val);
+		     __hybrid_uint128_shr_DIGIT_BITS(val), ++req_digits) {
+			result->ob_digit[req_digits] = __hybrid_uint128_least_significant_DIGIT_BITS(val);
 		}
 	}
 	return (DREF DeeObject *)result;
 }
 
 PUBLIC WUNUSED DREF DeeObject *DCALL
-DeeInt_NewS128(dint128_t val) {
+DeeInt_NewS128(Dee_int128_t val) {
 	DREF DeeIntObject *result;
 	int sign;
 	size_t req_digits;
 	union {
-		dint128_t  s;
-		duint128_t u;
+		Dee_int128_t  s;
+		Dee_uint128_t u;
 	} iter, abs_val;
-	if (DSINT128_IS64(val))
-		return DeeInt_NewS64(DUINT128_GETS64(val)[DEE_INT128_LS64]);
+
+	/* Simplification: When it fits into a 64-bit integer, use that path! */
+	if (__hybrid_int128_is64bit(val))
+		return DeeInt_NewS64(__hybrid_int128_get64(val));
+
 	/* The remainder is basically the same as any other creator, but
 	 * using special macros implementing some basic 128-bit arithmetic. */
 	sign = 1;
 	abs_val.s = val;
-	if (DSINT128_ISNEG(val)) {
+	if (__hybrid_int128_isneg(val)) {
 		sign = -1;
-		DSINT128_TONEG(abs_val.s);
+		__hybrid_int128_neg(abs_val.s);
 	}
-	for (iter = abs_val, req_digits = 0; !DSINT128_ISNUL(iter.s);
-	     DUINT128_SHR(iter.s, DIGIT_BITS), ++req_digits)
+	for (iter = abs_val, req_digits = 0; !__hybrid_int128_iszero(iter.s);
+	     __hybrid_uint128_shr_DIGIT_BITS(iter.s), ++req_digits)
 		;
 	ASSERT(req_digits > 0);
 	result = DeeInt_Alloc(req_digits);
 	if likely(result) {
 		result->ob_size = req_digits * sign;
-		for (req_digits = 0; !DSINT128_ISNUL(abs_val.s);
-		     DUINT128_SHR(abs_val.u, DIGIT_BITS), ++req_digits) {
-#if DIGIT_BITS == 30
-			result->ob_digit[req_digits] = (digit)(DUINT128_GET32(abs_val.u)[DEE_INT128_LS32] & DIGIT_MASK);
-#else /* DIGIT_BITS == 30 */
-			result->ob_digit[req_digits] = (digit)(DUINT128_GET16(abs_val.u)[DEE_INT128_LS16] & DIGIT_MASK);
-#endif /* DIGIT_BITS != 30 */
+		for (req_digits = 0; !__hybrid_int128_iszero(abs_val.s);
+		     __hybrid_uint128_shr_DIGIT_BITS(abs_val.u), ++req_digits) {
+			result->ob_digit[req_digits] = __hybrid_uint128_least_significant_DIGIT_BITS(abs_val.u);
 		}
 	}
 	return (DREF DeeObject *)result;
@@ -873,10 +900,10 @@ DeeInt_NewS128(dint128_t val) {
 
 
 #if DIGIT_BITS == 30
-#define DeeInt_DECIMAL_SHIFT   9                 /* max(e such that 10**e fits in a digit) */
+#define DeeInt_DECIMAL_SHIFT 9                   /* max(e such that 10**e fits in a digit) */
 #define DeeInt_DECIMAL_BASE  ((digit)1000000000) /* 10 ** DECIMAL_SHIFT */
 #else /* DIGIT_BITS == 30 */
-#define DeeInt_DECIMAL_SHIFT   4            /* max(e such that 10**e fits in a digit) */
+#define DeeInt_DECIMAL_SHIFT 4              /* max(e such that 10**e fits in a digit) */
 #define DeeInt_DECIMAL_BASE  ((digit)10000) /* 10 ** DECIMAL_SHIFT */
 #endif /* DIGIT_BITS != 30 */
 
@@ -2301,10 +2328,10 @@ overflow:
 
 PUBLIC WUNUSED NONNULL((1, 2)) int DCALL
 DeeInt_TryAs128(DeeObject *__restrict self,
-                dint128_t *__restrict value) {
+                Dee_int128_t *__restrict value) {
 	union {
-		duint128_t u;
-		dint128_t  s;
+		Dee_uint128_t u;
+		Dee_int128_t  s;
 	} result;
 	bool negative;
 	dssize_t i;
@@ -2312,23 +2339,22 @@ DeeInt_TryAs128(DeeObject *__restrict self,
 	switch (DeeInt_SIZE(self)) {
 
 	case 0:
-		DUINT128_GET64(*value)[DEE_INT128_LS64] = 0;
-		DUINT128_GET64(*value)[DEE_INT128_MS64] = 0;
+		__hybrid_uint128_setzero(*value);
 		return 0;
 
 	case 1:
-		DUINT128_GET64(*value)[DEE_INT128_LS64] = DeeInt_DIGIT(self)[0];
-		DUINT128_GET64(*value)[DEE_INT128_MS64] = 0;
+		__hybrid_uint128_vec64_significand(*(Dee_uint128_t *)value, 0) = DeeInt_DIGIT(self)[0];
+		__hybrid_uint128_vec64_significand(*(Dee_uint128_t *)value, 1) = 0;
 		return INT_UNSIGNED;
 
 	case -1:
-		DUINT128_GETS64(*value)[DEE_INT128_LS64] = -(sdigit)DeeInt_DIGIT(self)[0];
-		DUINT128_GETS64(*value)[DEE_INT128_MS64] = -1;
+		__hybrid_int128_vec64_significand(*value, 0) = -(sdigit)DeeInt_DIGIT(self)[0];
+		__hybrid_int128_vec64_significand(*value, 1) = -1;
 		return INT_SIGNED;
 
 	default: break;
 	}
-	DUINT128_SET(result.u, 0);
+	__hybrid_uint128_setzero(result.u);
 	negative = false;
 	i        = DeeInt_SIZE(self);
 	if (i < 0) {
@@ -2336,10 +2362,10 @@ DeeInt_TryAs128(DeeObject *__restrict self,
 		i = -i;
 	}
 	while (--i >= 0) {
-		if (DUINT128_SHL_WILL_OVERFLOW(result.u, DIGIT_BITS))
+		if (__hybrid_uint128_shl_DIGIT_BITS_overflows(result.u))
 			goto overflow;
-		DUINT128_SHL(result.u, DIGIT_BITS);
-		DUINT128_OR(result.u, DeeInt_DIGIT(self)[i]);
+		__hybrid_uint128_shl_DIGIT_BITS(result.u);
+		__hybrid_uint128_or(result.u, DeeInt_DIGIT(self)[i]);
 	}
 	if (negative) {
 		static Dee_uint128_t const uint128_ill_pos =
@@ -2349,7 +2375,7 @@ DeeInt_TryAs128(DeeObject *__restrict self,
 overflow:
 			return negative ? INT_NEG_OVERFLOW : INT_POS_OVERFLOW;
 		}
-		DSINT128_TONEG(result.s);
+		__hybrid_int128_neg(result.s);
 		*value = result.s;
 		return INT_SIGNED;
 	}
@@ -2400,9 +2426,9 @@ PUBLIC WUNUSED NONNULL((1, 2)) bool
 
 PUBLIC WUNUSED NONNULL((1, 2)) bool
 (DCALL DeeInt_TryAsS128)(DeeObject *__restrict self,
-                         dint128_t *__restrict value) {
+                         Dee_int128_t *__restrict value) {
 	int error = DeeInt_TryAs128(self, value);
-	if (error == INT_UNSIGNED && DSINT128_ISNEG(*value))
+	if (error == INT_UNSIGNED && __hybrid_int128_isneg(*value))
 		return false;
 	return (error != INT_POS_OVERFLOW &&
 	        error != INT_NEG_OVERFLOW);
@@ -2450,9 +2476,9 @@ PUBLIC WUNUSED NONNULL((1, 2)) bool
 
 PUBLIC WUNUSED NONNULL((1, 2)) bool
 (DCALL DeeInt_TryAsU128)(DeeObject *__restrict self,
-                         duint128_t *__restrict value) {
-	int error = DeeInt_TryAs128(self, (dint128_t *)value);
-	if (error == INT_SIGNED && DSINT128_ISNEG(*(dint128_t const *)value))
+                         Dee_uint128_t *__restrict value) {
+	int error = DeeInt_TryAs128(self, (Dee_int128_t *)value);
+	if (error == INT_SIGNED && __hybrid_int128_isneg(*(Dee_int128_t const *)value))
 		return false;
 	return (error != INT_POS_OVERFLOW &&
 	        error != INT_NEG_OVERFLOW);
@@ -2502,7 +2528,7 @@ err_overflow:
 }
 
 PUBLIC WUNUSED NONNULL((1, 2)) int
-(DCALL DeeInt_As128)(DeeObject *__restrict self, dint128_t *__restrict value) {
+(DCALL DeeInt_As128)(DeeObject *__restrict self, Dee_int128_t *__restrict value) {
 	int result = DeeInt_TryAs128(self, value);
 	if (result == INT_POS_OVERFLOW || result == INT_NEG_OVERFLOW)
 		goto err_overflow;
@@ -2555,9 +2581,9 @@ err_overflow:
 }
 
 PUBLIC WUNUSED NONNULL((1, 2)) int
-(DCALL DeeInt_AsS128)(DeeObject *__restrict self, dint128_t *__restrict value) {
+(DCALL DeeInt_AsS128)(DeeObject *__restrict self, Dee_int128_t *__restrict value) {
 	int error = DeeInt_As128(self, value);
-	if (error == INT_UNSIGNED && DSINT128_ISNEG(*value))
+	if (error == INT_UNSIGNED && __hybrid_int128_isneg(*value))
 		goto err_overflow;
 	return 0;
 err_overflow:
@@ -2605,9 +2631,9 @@ err_overflow:
 }
 
 PUBLIC WUNUSED NONNULL((1, 2)) int
-(DCALL DeeInt_AsU128)(DeeObject *__restrict self, duint128_t *__restrict value) {
-	int error = DeeInt_As128(self, (dint128_t *)value);
-	if (error == INT_SIGNED && DSINT128_ISNEG(*value))
+(DCALL DeeInt_AsU128)(DeeObject *__restrict self, Dee_uint128_t *__restrict value) {
+	int error = DeeInt_As128(self, (Dee_int128_t *)value);
+	if (error == INT_SIGNED && __hybrid_int128_isneg(*value))
 		goto err_overflow;
 	return 0;
 err_overflow:

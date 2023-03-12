@@ -60,77 +60,9 @@
 
 DECL_BEGIN
 
-
-#if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
-#define DEE_INT128_MS8       15
-#define DEE_INT128_MS16      7
-#define DEE_INT128_MS32      3
-#define DEE_INT128_MS64      1
-#else /* __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__ */
-#define DEE_INT128_MS8       0
-#define DEE_INT128_MS16      0
-#define DEE_INT128_MS32      0
-#define DEE_INT128_MS64      0
-#endif /* __BYTE_ORDER__ != __ORDER_LITTLE_ENDIAN__ */
-
-#define DEE_INT128_LS8  (15 - DEE_INT128_MS8)
-#define DEE_INT128_LS16 (7 - DEE_INT128_MS16)
-#define DEE_INT128_LS32 (3 - DEE_INT128_MS32)
-#define DEE_INT128_LS64 (1 - DEE_INT128_MS64)
-
 #ifdef DEE_SOURCE
-#define Dee_int_object             int_object
-#define DSINT128_DEC               Dee_SINT128_DEC
-#define DSINT128_INC               Dee_SINT128_INC
-#define DSINT128_INV               Dee_SINT128_INV
-#define DSINT128_TONEG             Dee_SINT128_TONEG
-#define DSINT128_ISNEG             Dee_SINT128_ISNEG
-#define DSINT128_ISNUL             Dee_SINT128_ISNUL
-#define DSINT128_IS64              Dee_SINT128_IS64
-#define DUINT128_IS64              Dee_UINT128_IS64
-#define DUINT128_OR                Dee_UINT128_OR
-#define DUINT128_AND               Dee_UINT128_AND
-#define DUINT128_XOR               Dee_UINT128_XOR
-#define DUINT128_SHR               Dee_UINT128_SHR
-#define DUINT128_SHL               Dee_UINT128_SHL
-#define DUINT128_SET               Dee_UINT128_SET
-#define DSINT128_SET               Dee_SINT128_SET
-#define DUINT128_SHL_WILL_OVERFLOW Dee_UINT128_SHL_WILL_OVERFLOW
-#define DINT128_SETMIN             Dee_INT128_SETMIN
-#define DINT128_SETMAX             Dee_INT128_SETMAX
-#define DINT128_ISMIN              Dee_INT128_ISMIN
-#define DINT128_ISMAX              Dee_INT128_ISMAX
-#define DINT128_IS0MMIN            Dee_INT128_IS0MMIN
+#define Dee_int_object int_object
 #endif /* DEE_SOURCE */
-
-
-#define Dee_UINT128_SET   __hybrid_uint128_set
-#define Dee_SINT128_SET   __hybrid_int128_set
-#define Dee_SINT128_DEC   __hybrid_int128_dec
-#define Dee_SINT128_INC   __hybrid_int128_inc
-#define Dee_SINT128_INV   __hybrid_int128_inv
-#define Dee_SINT128_TONEG __hybrid_int128_neg
-#define Dee_SINT128_ISNEG __hybrid_int128_isneg
-#define Dee_SINT128_ISNUL __hybrid_int128_iszero
-#define Dee_SINT128_IS64  __hybrid_int128_is64bit
-#define Dee_UINT128_IS64  __hybrid_uint128_is64bit
-#define Dee_UINT128_OR    __hybrid_uint128_or
-#define Dee_UINT128_AND   __hybrid_uint128_and
-#define Dee_UINT128_XOR   __hybrid_uint128_xor
-
-/* Unsigned shift-right for n <= 64 */
-#define Dee_UINT128_SHR __hybrid_uint128_shr64
-
-/* Unsigned shift-left for n <= 64 */
-#define Dee_UINT128_SHL               __hybrid_uint128_shl64
-#define Dee_UINT128_SHL_WILL_OVERFLOW __hybrid_uint128_shl64_overflows
-
-#define Dee_INT128_SETMIN   __hybrid_int128_setmin
-#define Dee_INT128_SETMAX   __hybrid_int128_setmax
-#define Dee_INT128_ISMIN    __hybrid_int128_ismin
-#define Dee_INT128_ISMAX    __hybrid_int128_ismax
-#define Dee_INT128_IS0MMIN 	__hybrid_int128_iszero_minus_min
-
 
 typedef struct Dee_int_object DeeIntObject;
 

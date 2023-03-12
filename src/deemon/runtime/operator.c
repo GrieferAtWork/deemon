@@ -46,6 +46,8 @@
 #include <deemon/thread.h>
 #include <deemon/tuple.h>
 
+#include <hybrid/int128.h>
+
 #include <stdarg.h>
 
 #include "../objects/int_logic.h"
@@ -2079,16 +2081,8 @@ DEFINE_OPERATOR(int, GetInt32,
 				error = DeeType_INVOKE_DOUBLE(tp_self, self, &resflt);
 				if unlikely(error < 0)
 					goto err;
-				if unlikely(resflt < INT32_MIN || resflt > UINT32_MAX) {
-					if (tp_self->tp_flags & TP_FTRUNCATE) {
-						if (resflt < 0) {
-							*result = (int32_t)resflt;
-							return INT_SIGNED;
-						} else {
-							*result = (uint32_t)resflt;
-							return INT_UNSIGNED;
-						}
-					}
+				if unlikely((resflt < INT32_MIN || resflt > UINT32_MAX) &&
+				            !(tp_self->tp_flags & TP_FTRUNCATE)) {
 					return err_integer_overflow(self, 32, resflt > 0);
 				}
 				if (resflt < 0) {
@@ -2141,16 +2135,8 @@ DEFINE_OPERATOR(int, GetInt64,
 				error = DeeType_INVOKE_DOUBLE(tp_self, self, &resflt);
 				if unlikely(error)
 					goto err;
-				if unlikely(resflt < INT64_MIN || resflt > UINT64_MAX) {
-					if (tp_self->tp_flags & TP_FTRUNCATE) {
-						if (resflt < 0) {
-							*result = (int64_t)resflt;
-							return INT_SIGNED;
-						} else {
-							*result = (uint64_t)resflt;
-							return INT_UNSIGNED;
-						}
-					}
+				if unlikely((resflt < INT64_MIN || resflt > UINT64_MAX) &&
+				            !(tp_self->tp_flags & TP_FTRUNCATE)) {
 					return err_integer_overflow(self, 64, resflt > 0);
 				}
 				if (resflt < 0) {
@@ -2170,7 +2156,7 @@ err:
 #ifndef DEFINE_TYPED_OPERATORS
 DEFINE_OPERATOR(int, GetInt128,
                 (DeeObject *RESTRICT_IF_NOTYPE self,
-                 dint128_t *__restrict result)) {
+                 Dee_int128_t *__restrict result)) {
 	int error;
 	LOAD_TP_SELF;
 	if (tp_self == &DeeInt_Type)
@@ -2188,24 +2174,23 @@ DEFINE_OPERATOR(int, GetInt128,
 				return error;
 			}
 			if (tp_self->tp_math->tp_int64) {
-				DUINT128_GETS64(*result)[DEE_INT128_MS64] = 0;
-				error = DeeType_INVOKE_INT64(tp_self, self, &DUINT128_GETS64(*result)[DEE_INT128_LS64]);
-				if (error == INT_SIGNED && DUINT128_GETS64(*result)[DEE_INT128_LS64] < 0)
-					DUINT128_GETS64(*result)[DEE_INT128_MS64] = -1;
+				__hybrid_int128_vec64_significand(*result, 1) = 0;
+				error = DeeType_INVOKE_INT64(tp_self, self, &__hybrid_int128_vec64_significand(*result, 0));
+				if (error == INT_SIGNED && __hybrid_int128_vec64_significand(*result, 0) < 0)
+					__hybrid_int128_vec64_significand(*result, 1) = -1;
 				return error;
 			}
 			if (tp_self->tp_math->tp_int32) {
-				int32_t val32;
-				DUINT128_GETS64(*result)[DEE_INT128_MS64] = 0;
-				error = DeeType_INVOKE_INT32(tp_self, self, &val32);
+				__hybrid_int128_vec32_significand(*result, 1) = 0;
+				__hybrid_int128_vec32_significand(*result, 2) = 0;
+				__hybrid_int128_vec32_significand(*result, 3) = 0;
+				error = DeeType_INVOKE_INT32(tp_self, self, &__hybrid_int128_vec32_significand(*result, 0));
 				if unlikely(error < 0)
 					goto err;
-				if (error == INT_SIGNED) {
-					if (val32 < 0)
-						DUINT128_GETS64(*result)[DEE_INT128_MS64] = -1;
-					DUINT128_GETS64(*result)[DEE_INT128_LS64] = (int64_t)val32;
-				} else {
-					DUINT128_GETS64(*result)[DEE_INT128_LS64] = (int64_t)(uint64_t)(uint32_t)val32;
+				if (error == INT_SIGNED && __hybrid_int128_vec32_significand(*result, 0) < 0) {
+					__hybrid_int128_vec32_significand(*result, 1) = -1;
+					__hybrid_int128_vec32_significand(*result, 2) = -1;
+					__hybrid_int128_vec32_significand(*result, 3) = -1;
 				}
 				return error;
 			}
@@ -2214,27 +2199,18 @@ DEFINE_OPERATOR(int, GetInt128,
 				error = DeeType_INVOKE_DOUBLE(tp_self, self, &resflt);
 				if unlikely(error < 0)
 					goto err;
-				DUINT128_GETS64(*result)[DEE_INT128_MS64] = 0;
-				if unlikely(resflt < INT64_MIN || resflt > UINT64_MAX) {
-					if (tp_self->tp_flags & TP_FTRUNCATE) {
-						if (resflt < 0) {
-							DUINT128_GETS64(*result)[DEE_INT128_LS64] = (int64_t)resflt;
-							DUINT128_GETS64(*result)[DEE_INT128_MS64] = -1;
-							return INT_SIGNED;
-						} else {
-							DUINT128_GETS64(*result)[DEE_INT128_LS64] = (uint64_t)resflt;
-							return INT_UNSIGNED;
-						}
-					}
+				if unlikely((resflt < INT64_MIN || resflt > UINT64_MAX) &&
+				            !(tp_self->tp_flags & TP_FTRUNCATE)) {
 					return err_integer_overflow(self, 64, resflt > 0);
 				}
-				if (resflt < 0) {
-					DUINT128_GETS64(*result)[DEE_INT128_LS64] = (int64_t)resflt;
-					DUINT128_GETS64(*result)[DEE_INT128_MS64] = -1;
-					return INT_SIGNED;
+				if (resflt >= 0) {
+					__hybrid_uint128_vec64_significand(*(Dee_uint128_t *)result, 0) = (uint64_t)resflt;
+					__hybrid_uint128_vec64_significand(*(Dee_uint128_t *)result, 1) = 0;
+					return INT_UNSIGNED;
 				}
-				DUINT128_GETS64(*result)[DEE_INT128_LS64] = (int64_t)(uint64_t)resflt;
-				return INT_UNSIGNED;
+				__hybrid_int128_vec64_significand(*result, 0) = (int64_t)resflt;
+				__hybrid_int128_vec64_significand(*result, 1) = -1;
+				return INT_SIGNED;
 			}
 		}
 	} while (type_inherit_int(tp_self));
@@ -2303,11 +2279,8 @@ return_trunc64:
 				error = DeeType_INVOKE_DOUBLE(tp_self, self, &resflt);
 				if unlikely(error < 0)
 					goto err;
-				if unlikely(resflt < 0 || resflt > UINT32_MAX) {
-					if (tp_self->tp_flags & TP_FTRUNCATE) {
-						*result = (uint32_t)resflt;
-						return 0;
-					}
+				if unlikely((resflt < 0 || resflt > UINT32_MAX) &&
+				            !(tp_self->tp_flags & TP_FTRUNCATE)) {
 					return err_integer_overflow(self, 32, resflt > 0);
 				}
 				*result = (uint32_t)resflt;
@@ -2448,14 +2421,11 @@ neg_overflow:
 				error = DeeType_INVOKE_DOUBLE(tp_self, self, &resflt);
 				if unlikely(error)
 					goto err;
-				if unlikely(resflt < 0 || resflt > UINT64_MAX) {
-					if (tp_self->tp_flags & TP_FTRUNCATE) {
-						*result = (uint64_t)resflt;
-						return 0;
-					}
+				if unlikely((resflt < 0 || resflt > UINT64_MAX) &&
+				            !(tp_self->tp_flags & TP_FTRUNCATE)) {
 					return err_integer_overflow(self, 64, resflt > 0);
 				}
-				*result = (int64_t)resflt;
+				*result = (uint64_t)resflt;
 				return 0;
 			}
 		}
@@ -2512,11 +2482,8 @@ PUBLIC WUNUSED NONNULL((1, 2)) int
 				error = DeeType_INVOKE_DOUBLE(tp_self, self, &resflt);
 				if unlikely(error < 0)
 					goto err;
-				if unlikely(resflt < INT64_MIN || resflt > INT64_MAX) {
-					if (tp_self->tp_flags & TP_FTRUNCATE) {
-						*result = (int64_t)resflt;
-						return 0;
-					}
+				if unlikely((resflt < INT64_MIN || resflt > INT64_MAX) &&
+				            !(tp_self->tp_flags & TP_FTRUNCATE)) {
 					return err_integer_overflow(self, 64, resflt > 0);
 				}
 				*result = (int64_t)resflt;
@@ -2531,10 +2498,10 @@ err:
 
 PUBLIC WUNUSED NONNULL((1, 2)) int
 (DCALL DeeObject_AsInt128)(DeeObject *__restrict self,
-                           dint128_t *__restrict result) {
+                           Dee_int128_t *__restrict result) {
 	int error = DeeObject_GetInt128(self, result);
 	if (error == INT_UNSIGNED) {
-		if (DSINT128_ISNEG(*result))
+		if (__hybrid_int128_isneg(*result))
 			return err_integer_overflow(self, 128, true);
 #if INT_UNSIGNED != 0
 		return 0;
@@ -2552,10 +2519,10 @@ PUBLIC WUNUSED NONNULL((1, 2)) int
 
 PUBLIC WUNUSED NONNULL((1, 2)) int
 (DCALL DeeObject_AsUInt128)(DeeObject *__restrict self,
-                            duint128_t *__restrict result) {
-	int error = DeeObject_GetInt128(self, (dint128_t *)result);
+                            Dee_uint128_t *__restrict result) {
+	int error = DeeObject_GetInt128(self, (Dee_int128_t *)result);
 	if (error == INT_SIGNED) {
-		if (DSINT128_ISNEG(*result))
+		if (__hybrid_int128_isneg(*result))
 			return err_integer_overflow(self, 128, false);
 #if INT_SIGNED != 0
 		return 0;

@@ -1731,7 +1731,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 sockaddr_inet6_host(DeeSockAddrObject *__restrict self) {
 	if (self->sa_addr.sa.sa_family != AF_INET6)
 		return err_no_such_attribute(self, "inet6_host");
-	return DeeInt_NewU128(*(duint128_t *)&self->sa_addr.sa_inet6.sin6_addr);
+	return DeeInt_NewU128(*(Dee_uint128_t *)&self->sa_addr.sa_inet6.sin6_addr);
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL

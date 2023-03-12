@@ -202,29 +202,8 @@ DFUNDEF ATTR_PURE WUNUSED ATTR_INS(1, 2) Dee_hash_t (DCALL Dee_HashCase4Byte)(ui
 #define DeeObject_Id(ob)          ((uintptr_t)(ob))
 
 
-#define Dee_UINT128_GET8   __hybrid_uint128_vec8
-#define Dee_UINT128_GET16  __hybrid_uint128_vec16
-#define Dee_UINT128_GET32  __hybrid_uint128_vec32
-#define Dee_UINT128_GET64  __hybrid_uint128_vec64
-#define Dee_UINT128_GETS8  __hybrid_int128_vec8
-#define Dee_UINT128_GETS16 __hybrid_int128_vec16
-#define Dee_UINT128_GETS32 __hybrid_int128_vec32
-#define Dee_UINT128_GETS64 __hybrid_int128_vec64
 typedef __hybrid_uint128_t Dee_uint128_t;
 typedef __hybrid_int128_t Dee_int128_t;
-
-#ifdef DEE_SOURCE
-typedef Dee_int128_t  dint128_t;
-typedef Dee_uint128_t duint128_t;
-#define DUINT128_GET8   __hybrid_uint128_vec8
-#define DUINT128_GET16  __hybrid_uint128_vec16
-#define DUINT128_GET32  __hybrid_uint128_vec32
-#define DUINT128_GET64  __hybrid_uint128_vec64
-#define DUINT128_GETS8  __hybrid_int128_vec8
-#define DUINT128_GETS16 __hybrid_int128_vec16
-#define DUINT128_GETS32 __hybrid_int128_vec32
-#define DUINT128_GETS64 __hybrid_int128_vec64
-#endif /* DEE_SOURCE */
 
 
 #ifdef CONFIG_TRACE_REFCHANGES
