@@ -1393,7 +1393,12 @@ err:
 /* MMAP API                                                             */
 /************************************************************************/
 
-#ifndef CONFIG_HAVE_getpagesize
+#ifdef __CYGWIN__
+/* Cygwin's `getpagesize' is broken in that it returns the
+ * allocation granularity instead of the actual page-size. */
+#undef getpagesize
+#define getpagesize() 4096
+#elif !defined(CONFIG_HAVE_getpagesize)
 #ifdef __ARCH_PAGESIZE
 #define getpagesize() __ARCH_PAGESIZE
 #elif defined(PAGESIZE)
@@ -1685,32 +1690,68 @@ again:
 #else /* DeeMapFile_IS_CreateFileMapping */
 			mapsize += used_nulbytes;
 			mapsize = (mapsize + psm) & ~psm;
-#ifdef CONFIG_HAVE_MAP_SHARED
-			buf = (unsigned char *)MMAP(NULL, mapsize, PROT_READ | PROT_WRITE,
-			                            flags & DEE_MAPFILE_F_MAPSHARED
-			                            ? MAP_SHARED
-			                            : MAP_PRIVATE,
-			                            fd, map_offset);
-#else /* CONFIG_HAVE_MAP_SHARED */
+#ifndef CONFIG_HAVE_MAP_SHARED
 			if unlikely(flags & DEE_MAPFILE_F_MAPSHARED) {
 				return DeeError_Throwf(&DeeError_UnsupportedAPI,
 				                       "MAP_SHARED isn't supported");
 			}
+#define LOCAL_USED_mmap_flags MAP_PRIVATE
+#else /* !CONFIG_HAVE_MAP_SHARED */
+#define LOCAL_USED_mmap_flags (flags & DEE_MAPFILE_F_MAPSHARED ? MAP_SHARED : MAP_PRIVATE)
+#endif /* CONFIG_HAVE_MAP_SHARED */
+
+#if defined(__CYGWIN__)
+			/* Thanks to windows, cygwin has a (somewhat) broken mmap().
+			 *
+			 * Taken from `winsup/cygwin/mmap.cc:1108(mmap64)':
+			 * """
+			 * If the requested length is bigger than the file size, the remainder
+			 * is created as anonymous mapping, as reserved pages which raise a SIGBUS
+			 * when trying to access them.  This results in an allocation gap in the
+			 * first 64K block the file ends in, but there's nothing at all we can do
+			 * about that.
+			 * """
+			 *
+			 * (It would have been really nice for cygwin to simply have mmap() return
+			 * an error in this case, rather than literally creating a broken memory
+			 * mapping, but Oh well...)
+			 */
+			{
+				size_t const psx = 0x10000 - 1;
+				uint64_t true_filesize_psx, true_filesize_psm;
+				true_filesize_psm = STRUCT_STAT_GETSIZE(st);
+				true_filesize_psm = (true_filesize_psm + psm) & ~psm; /* Hardware page-size-aligned true file size */
+				true_filesize_psx = (true_filesize_psm + psx) & ~psx; /* Allocation granularity-aligned true file size */
+				if ((map_offset + mapsize) > true_filesize_psm &&     /* Does the mapping include pages beyond the end-of-file? */
+				    true_filesize_psx != true_filesize_psm) {         /* Would there be an unmapped (SIGSEGV) hole after the true end-of-file? */
+					buf = (unsigned char *)MAP_FAILED;
+				} else {
+					buf = (unsigned char *)MMAP(NULL, mapsize, PROT_READ | PROT_WRITE,
+					                            LOCAL_USED_mmap_flags, fd, map_offset);
+				}
+			}
+#else /* ... */
 			buf = (unsigned char *)MMAP(NULL, mapsize, PROT_READ | PROT_WRITE,
-			                            MAP_PRIVATE, fd, map_offset);
-#endif /* !CONFIG_HAVE_MAP_SHARED */
-			if (buf != (unsigned char *)MAP_FAILED)
+			                            LOCAL_USED_mmap_flags, fd, map_offset);
+#endif /* !... */
+
+			/*Dee_DPRINTF("mmap(%Iu, %d, %I64d) -> %p [psm: %Iu, errno:%d:%s, true_filesize: %I64u]\n",
+			            mapsize, fd, map_offset, buf, psm, errno, strerror(errno), (uint64_t)STRUCT_STAT_GETSIZE(st));*/
+#undef LOCAL_USED_mmap_flags
+			if likely(buf != (unsigned char *)MAP_FAILED)
 #endif /* !DeeMapFile_IS_CreateFileMapping */
 			{
 				/* Clear out the caller-required trailing NUL bytes.
 				 * We do this in a kind-of special way that tries not
 				 * to write-fault memory if it already contains NULs. */
 				unsigned char *nul;
+				Dee_DPRINTF("addend: %Iu\n", addend);
 				buf += addend;
 				nul = buf + map_bytes;
 #ifdef DeeMapFile_IS_CreateFileMapping
 				self->_dmf_vfre = 0;
 #endif /* DeeMapFile_IS_CreateFileMapping */
+				Dee_DPRINTF("nul: %p, used_nulbytes: %Iu\n", nul, used_nulbytes);
 				if (used_nulbytes) {
 #ifdef DeeMapFile_IS_CreateFileMapping
 					size_t bytes_in_page;
