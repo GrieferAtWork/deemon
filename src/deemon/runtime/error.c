@@ -91,11 +91,12 @@ DeeError_Print(char const *reason, unsigned int handle_errors) {
 
 
 
-PRIVATE WUNUSED NONNULL((1)) dssize_t DPRINTER_CC
+PRIVATE WUNUSED ATTR_INS(2, 3) dssize_t DPRINTER_CC
 stderr_printer(void *__restrict self,
                char const *__restrict data, size_t datalen) {
 	size_t result;
 	DREF DeeObject *deemon_stderr;
+	(void)self;
 #ifdef CONFIG_HOST_WINDOWS
 	Dee_DPRINTER(self, data, datalen);
 #endif /* CONFIG_HOST_WINDOWS */

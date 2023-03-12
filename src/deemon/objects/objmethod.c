@@ -2157,7 +2157,7 @@ PRIVATE struct type_getset tpconst kwcmethod_getsets[] = {
 };
 
 
-PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1, 2)) char const *DCALL
+PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) char const *DCALL
 cmethod_get_print_typename(DeeCMethodObject *__restrict self) {
 	char const *result = "c-method";
 	if (DeeKwCMethod_Check(self))

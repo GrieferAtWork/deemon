@@ -786,7 +786,7 @@ numeric_get_isnan(DeeObject *__restrict self) {
 		result = float_get_isnan((DeeFloatObject *)res);
 	}
 	Dee_Decref(res);
-	return res;
+	return result;
 err_res:
 	Dee_Decref(res);
 err:
@@ -819,7 +819,7 @@ numeric_get_isinf(DeeObject *__restrict self) {
 		result = float_get_isinf((DeeFloatObject *)res);
 	}
 	Dee_Decref(res);
-	return res;
+	return result;
 err_res:
 	Dee_Decref(res);
 err:
@@ -844,7 +844,7 @@ numeric_get_isfinite(DeeObject *__restrict self) {
 		goto err;
 	result = float_get_isfinite((DeeFloatObject *)res);
 	Dee_Decref(res);
-	return res;
+	return result;
 err:
 	return NULL;
 }
@@ -867,20 +867,20 @@ numeric_get_isnormal(DeeObject *__restrict self) {
 		goto err;
 	result = float_get_isnormal((DeeFloatObject *)res);
 	Dee_Decref(res);
-	return res;
+	return result;
 err:
 	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 numeric_get_nth(DeeObject *__restrict self) {
-	DREF DeeObject *intob, *res;
+	DREF DeeObject *intob, *result;
 	intob = DeeObject_Int(self);
 	if unlikely(!intob)
 		goto err;
-	res = int_get_nth((DeeIntObject *)intob);
+	result = int_get_nth((DeeIntObject *)intob);
 	Dee_Decref(intob);
-	return res;
+	return result;
 err:
 	return NULL;
 }

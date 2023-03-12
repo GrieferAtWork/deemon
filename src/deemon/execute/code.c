@@ -1968,9 +1968,9 @@ code_printrepr(DeeCodeObject *__restrict self,
 			if (i != 0)
 				DO(DeeFormat_PRINT(printer, arg, ", "));
 			if (self->co_defaultv[i]) {
-				DO(DeeFormat_PRINT(printer, arg, "<unbound>"));
-			} else {
 				DO(DeeFormat_PrintObjectRepr(printer, arg, self->co_defaultv[i]));
+			} else {
+				DO(DeeFormat_PRINT(printer, arg, "<unbound>"));
 			}
 		}
 		DO(DeeFormat_PRINT(printer, arg, " }"));

@@ -389,7 +389,7 @@ err:
 
 /* Return the keyword-entry associated with `keyword_index'
  * The caller must ensure that `keyword_index < DeeKwds_SIZE(self)' */
-INTERN ATTR_RETNONNULL WUNUSED NONNULL((1, 2)) struct dee_kwds_entry *DCALL
+INTERN ATTR_RETNONNULL WUNUSED NONNULL((1)) struct dee_kwds_entry *DCALL
 DeeKwds_GetByIndex(DeeObject *__restrict self, size_t keyword_index) {
 	DeeKwdsObject *me = (DeeKwdsObject *)self;
 	size_t i;

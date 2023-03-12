@@ -140,7 +140,7 @@ dee_memcaseeq(uint8_t const *a, uint8_t const *b, size_t s) {
 #ifdef CONFIG_HOST_WINDOWS
 #define time_now_local_USE_GetSystemTimePreciseAsFileTime
 #elif defined(CONFIG_HAVE_timezone) && defined(CONFIG_HAVE_tzset)
-#undef time_now_local_USE_time_now_utc_AND_tzset_AND_timezone
+#define time_now_local_USE_time_now_utc_AND_tzset_AND_timezone
 #else /* ... */
 #define time_now_local_USE_time_now_utc
 #endif /* !... */
@@ -1641,7 +1641,7 @@ int128_overflow(Dee_int128_t const *__restrict value,
                 unsigned int after_bits) {
 	return DeeError_Throwf(&DeeError_IntegerOverflow,
 	                       "%s integer overflow after %u bits in %" PRFd128,
-	                       __hybrid_int128_isneg(*value) < 0
+	                       __hybrid_int128_isneg(*value)
 	                       ? "negative"
 	                       : "positive",
 	                       after_bits,
@@ -3044,11 +3044,12 @@ time_init_kw(DeeTimeObject *__restrict self,
 	int error;
 	if (DeeKwArgs_Init(&kwds, &argc, argv, kw))
 		goto err;
-#define IF_LOADARG(i, name)                                                \
-	if ((error = time_init_getarg(&kwds, argc, argv, i, name, &arg)) <= 0) \
-		if unlikely(error < 0)                                             \
-			goto err;                                                      \
-		else
+#define IF_LOADARG(i, name)                                               \
+	if ((error = time_init_getarg(&kwds, argc, argv, i, name, &arg)) > 0) \
+		;                                                                 \
+	else if unlikely(error < 0)                                           \
+		goto err;                                                         \
+	else
 	self->t_typekind = TIME_TYPEKIND(TIME_TYPE_NANOSECONDS, TIME_KIND_INVALID);
 	__hybrid_int128_setzero(self->t_nanos);
 	IF_LOADARG(0, "nanoseconds") {

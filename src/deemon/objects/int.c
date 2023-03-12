@@ -1829,7 +1829,7 @@ err:
 			first_sep_in_pad = (num_leading_zeroes - (DECIMAL_THOUSANDS_GROUPINGS -
 			                                          first_sep_in_int)) %
 			                   DECIMAL_THOUSANDS_GROUPINGS;
-			ASSERT(first_sep_in_pad >= 0 && first_sep_in_pad < DECIMAL_THOUSANDS_GROUPINGS);
+			ASSERT(/*first_sep_in_pad >= 0 &&*/ first_sep_in_pad < DECIMAL_THOUSANDS_GROUPINGS);
 			if (num_leading_zeroes < first_sep_in_pad)
 				goto do_normal_pad;
 			if (first_sep_in_pad) {
@@ -2030,7 +2030,7 @@ do_print_prefix:
 				first_sep_in_pad = (num_leading_zeroes - (NON_DECIMAL_THOUSANDS_GROUPINGS -
 				                                          first_sep_in_int)) %
 				                   NON_DECIMAL_THOUSANDS_GROUPINGS;
-				ASSERT(first_sep_in_pad >= 0 && first_sep_in_pad < NON_DECIMAL_THOUSANDS_GROUPINGS);
+				ASSERT(/*first_sep_in_pad >= 0 &&*/ first_sep_in_pad < NON_DECIMAL_THOUSANDS_GROUPINGS);
 				if (num_leading_zeroes < first_sep_in_pad)
 					goto do_normal_pad;
 				if (first_sep_in_pad) {

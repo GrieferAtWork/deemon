@@ -171,7 +171,7 @@ INTDEF WUNUSED NONNULL((1, 2)) int
 
 /* Return the keyword-entry associated with `keyword_index'
  * The caller must ensure that `keyword_index < DeeKwds_SIZE(self)' */
-INTDEF ATTR_RETNONNULL WUNUSED NONNULL((1, 2)) struct dee_kwds_entry *DCALL
+INTDEF ATTR_RETNONNULL WUNUSED NONNULL((1)) struct dee_kwds_entry *DCALL
 DeeKwds_GetByIndex(DeeObject *__restrict self, size_t keyword_index);
 
 #ifndef __INTELLISENSE__
