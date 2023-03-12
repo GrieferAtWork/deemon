@@ -2138,7 +2138,7 @@ DeeInt_TryAs16(DeeObject *__restrict self,
                int16_t *__restrict value) {
 #if DIGIT_BITS <= 16
 	uint16_t prev, result;
-	int sign;
+	bool negative;
 	dssize_t i;
 	ASSERT_OBJECT_TYPE_EXACT(self, &DeeInt_Type);
 	switch (DeeInt_SIZE(self)) {
@@ -2157,26 +2157,26 @@ DeeInt_TryAs16(DeeObject *__restrict self,
 
 	default: break;
 	}
-	result = prev = 0, sign = 1;
+	result   = 0;
+	prev     = 0;
+	negative = false;
 	i = DeeInt_SIZE(self);
-	if (i < 0)
-		sign = -1, i = -i;
+	if (i < 0) {
+		negative = true;
+		i        = -i;
+	}
 	while (--i >= 0) {
 		result = (result << DIGIT_BITS) | DeeInt_DIGIT(self)[i];
 		if ((result >> DIGIT_BITS) != prev)
 			goto overflow;
 		prev = result;
 	}
-	if (sign < 0) {
-		if (result <= INT16_MAX) {
-			result = (uint16_t)(-(int16_t)result);
-		} else if (result == (uint16_t)(0 - (uint16_t)INT16_MIN)) {
-			result = (uint16_t)INT16_MIN;
-		} else {
+	if (negative) {
+		if unlikely(result > UINT16_C(0x8000)) {
 overflow:
-			return sign > 0 ? INT_POS_OVERFLOW : INT_NEG_OVERFLOW;
+			return negative ? INT_NEG_OVERFLOW : INT_POS_OVERFLOW;
 		}
-		*value = (int16_t)result;
+		*value = -(int16_t)result;
 		return INT_SIGNED;
 	}
 	*value = (int16_t)result;
@@ -2211,7 +2211,7 @@ PUBLIC WUNUSED NONNULL((1, 2)) int DCALL
 DeeInt_TryAs32(DeeObject *__restrict self,
                int32_t *__restrict value) {
 	uint32_t prev, result;
-	int sign;
+	bool negative;
 	dssize_t i;
 	ASSERT_OBJECT_TYPE_EXACT(self, &DeeInt_Type);
 	switch (DeeInt_SIZE(self)) {
@@ -2224,26 +2224,26 @@ DeeInt_TryAs32(DeeObject *__restrict self,
 		return INT_SIGNED;
 	default: break;
 	}
-	result = prev = 0, sign = 1;
+	result   = 0;
+	prev     = 0;
+	negative = false;
 	i = DeeInt_SIZE(self);
-	if (i < 0)
-		sign = -1, i = -i;
+	if (i < 0) {
+		negative = true;
+		i        = -i;
+	}
 	while (--i >= 0) {
 		result = (result << DIGIT_BITS) | DeeInt_DIGIT(self)[i];
 		if ((result >> DIGIT_BITS) != prev)
 			goto overflow;
 		prev = result;
 	}
-	if (sign < 0) {
-		if (result <= INT32_MAX) {
-			result = (uint32_t)(-(int32_t)result);
-		} else if (result == (uint32_t)(0 - (uint32_t)INT32_MIN)) {
-			result = (uint32_t)INT32_MIN;
-		} else {
+	if (negative) {
+		if unlikely(result > UINT32_C(0x80000000)) {
 overflow:
-			return sign > 0 ? INT_POS_OVERFLOW : INT_NEG_OVERFLOW;
+			return negative ? INT_NEG_OVERFLOW : INT_POS_OVERFLOW;
 		}
-		*value = (int32_t)result;
+		*value = -(int32_t)result;
 		return INT_SIGNED;
 	}
 	*value = (int32_t)result;
@@ -2254,7 +2254,7 @@ PUBLIC WUNUSED NONNULL((1, 2)) int DCALL
 DeeInt_TryAs64(DeeObject *__restrict self,
                int64_t *__restrict value) {
 	uint64_t prev, result;
-	int sign;
+	bool negative;
 	dssize_t i;
 	ASSERT_OBJECT_TYPE_EXACT(self, &DeeInt_Type);
 	switch (DeeInt_SIZE(self)) {
@@ -2273,26 +2273,26 @@ DeeInt_TryAs64(DeeObject *__restrict self,
 
 	default: break;
 	}
-	result = prev = 0, sign = 1;
+	result   = 0;
+	prev     = 0;
+	negative = false;
 	i = DeeInt_SIZE(self);
-	if (i < 0)
-		sign = -1, i = -i;
+	if (i < 0) {
+		negative = true;
+		i        = -i;
+	}
 	while (--i >= 0) {
 		result = (result << DIGIT_BITS) | DeeInt_DIGIT(self)[i];
 		if ((result >> DIGIT_BITS) != prev)
 			goto overflow;
 		prev = result;
 	}
-	if (sign < 0) {
-		if (result <= INT64_MAX) {
-			result = (uint64_t)(-(int64_t)result);
-		} else if (result == (uint64_t)(0 - (uint64_t)INT64_MIN)) {
-			result = (uint64_t)INT64_MIN;
-		} else {
+	if (negative) {
+		if unlikely(result > UINT64_C(0x8000000000000000)) {
 overflow:
-			return sign > 0 ? INT_POS_OVERFLOW : INT_NEG_OVERFLOW;
+			return negative ? INT_NEG_OVERFLOW : INT_POS_OVERFLOW;
 		}
-		*value = (int64_t)result;
+		*value = -(int64_t)result;
 		return INT_SIGNED;
 	}
 	*value = (int64_t)result;
@@ -2306,7 +2306,7 @@ DeeInt_TryAs128(DeeObject *__restrict self,
 		duint128_t u;
 		dint128_t  s;
 	} result;
-	int sign;
+	bool negative;
 	dssize_t i;
 	ASSERT_OBJECT_TYPE_EXACT(self, &DeeInt_Type);
 	switch (DeeInt_SIZE(self)) {
@@ -2329,10 +2329,10 @@ DeeInt_TryAs128(DeeObject *__restrict self,
 	default: break;
 	}
 	DUINT128_SET(result.u, 0);
-	sign = 1;
-	i    = DeeInt_SIZE(self);
+	negative = false;
+	i        = DeeInt_SIZE(self);
 	if (i < 0) {
-		sign = -1;
+		negative = true;
 		i = -i;
 	}
 	while (--i >= 0) {
@@ -2341,15 +2341,15 @@ DeeInt_TryAs128(DeeObject *__restrict self,
 		DUINT128_SHL(result.u, DIGIT_BITS);
 		DUINT128_OR(result.u, DeeInt_DIGIT(self)[i]);
 	}
-	if (sign < 0) {
-		if (!DINT128_ISMAX(result.s)) {
-			DSINT128_TONEG(result.s);
-		} else if (DINT128_IS0MMIN(result.s)) {
-			DINT128_SETMIN(result.s);
-		} else {
+	if (negative) {
+		static Dee_uint128_t const uint128_ill_pos =
+		__HYBRID_UINT128_INIT16N(0x8000, 0x0000, 0x0000, 0x0000,
+		                         0x0000, 0x0000, 0x0000, 0x0000);
+		if (__hybrid_uint128_gr128(result.u, uint128_ill_pos)) {
 overflow:
-			return sign > 0 ? INT_POS_OVERFLOW : INT_NEG_OVERFLOW;
+			return negative ? INT_NEG_OVERFLOW : INT_POS_OVERFLOW;
 		}
+		DSINT128_TONEG(result.s);
 		*value = result.s;
 		return INT_SIGNED;
 	}
