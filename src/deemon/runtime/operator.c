@@ -2533,18 +2533,42 @@ PUBLIC WUNUSED NONNULL((1, 2)) int
 (DCALL DeeObject_AsInt128)(DeeObject *__restrict self,
                            dint128_t *__restrict result) {
 	int error = DeeObject_GetInt128(self, result);
-	if (error == INT_UNSIGNED && DSINT128_ISNEG(*result))
-		return err_integer_overflow(self, 128, true);
-	return 0;
+	if (error == INT_UNSIGNED) {
+		if (DSINT128_ISNEG(*result))
+			return err_integer_overflow(self, 128, true);
+#if INT_UNSIGNED != 0
+		return 0;
+#endif /* INT_UNSIGNED != 0 */
+	} else {
+#if INT_UNSIGNED != 0
+		ASSERT(error <= 0);
+#else /* INT_UNSIGNED != 0 */
+		if likely(error > 0)
+			error = 0;
+#endif /* INT_UNSIGNED == 0 */
+	}
+	return error;
 }
 
 PUBLIC WUNUSED NONNULL((1, 2)) int
 (DCALL DeeObject_AsUInt128)(DeeObject *__restrict self,
                             duint128_t *__restrict result) {
 	int error = DeeObject_GetInt128(self, (dint128_t *)result);
-	if (error == INT_SIGNED && DSINT128_ISNEG(*result))
-		return err_integer_overflow(self, 128, false);
-	return 0;
+	if (error == INT_SIGNED) {
+		if (DSINT128_ISNEG(*result))
+			return err_integer_overflow(self, 128, false);
+#if INT_SIGNED != 0
+		return 0;
+#endif /* INT_SIGNED != 0 */
+	} else {
+#if INT_SIGNED != 0
+		ASSERT(error <= 0);
+#else /* INT_SIGNED != 0 */
+		if likely(error > 0)
+			error = 0;
+#endif /* INT_SIGNED == 0 */
+	}
+	return error;
 }
 #endif /* !DEFINE_TYPED_OPERATORS */
 
