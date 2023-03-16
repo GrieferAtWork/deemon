@@ -2548,7 +2548,7 @@ __LOCAL __ATTR_IN(1) __ATTR_IN(2) __ATTR_OUT_OPT(3) __ATTR_OUT_OPT(4) void
 	__hybrid_uint128_shl(__u128_mask, __u128_i);
 	for (;;) {
 		if (__hybrid_uint128_le128(__u128_b, __u128_a)) {
-			__hybrid_uint128_add128(__u128_res, __u128_mask);
+			__hybrid_uint128_or128(__u128_res, __u128_mask);
 			__hybrid_uint128_sub128(__u128_a, __u128_b);
 		}
 		if (!__u128_i)
