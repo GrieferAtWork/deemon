@@ -978,8 +978,8 @@ __DECL_END
 	(void)(!__hybrid_overflow_usub64(__hybrid_uint128_vec64_significand(var, 0),     \
 	                                 __hybrid_uint128_vec64_significand(v, 0),       \
 	                                 &__hybrid_uint128_vec64_significand(var, 0)) || \
-	       --__hybrid_uint128_vec64_significand(var, 1),                             \
-	       __hybrid_uint128_vec64_significand(var, 1) += __hybrid_uint128_vec64_significand(v, 1))
+	       (--__hybrid_uint128_vec64_significand(var, 1), 0),                        \
+	       __hybrid_uint128_vec64_significand(var, 1) -= __hybrid_uint128_vec64_significand(v, 1))
 #else /* __HYBRID_INT128_CONFIG_USE_64BIT_ARITHMETIC */
 #define __hybrid_uint128_add8(var, v)                                                               \
 	(void)(!__hybrid_overflow_uadd8(__hybrid_uint128_vec8_significand(var, 0), (__UINT8_TYPE__)(v), \
@@ -1025,8 +1025,7 @@ __DECL_END
 	                                  __hybrid_uint128_vec32_significand(v, 2),       \
 	                                  &__hybrid_uint128_vec32_significand(var, 2)) || \
 	        (++__hybrid_uint128_vec32_significand(var, 3), 0)),                       \
-	 (void)(__hybrid_uint128_vec32_significand(var, 3) +=                             \
-	        __hybrid_uint128_vec32_significand(v, 3)))
+	 (void)(__hybrid_uint128_vec32_significand(var, 3) += __hybrid_uint128_vec32_significand(v, 3)))
 #define __hybrid_uint128_sub8(var, v)                                                               \
 	(void)(!__hybrid_overflow_usub8(__hybrid_uint128_vec8_significand(var, 0), (__UINT8_TYPE__)(v), \
 	                                &__hybrid_uint128_vec8_significand(var, 0)) ||                  \
@@ -1071,8 +1070,7 @@ __DECL_END
 	                                  __hybrid_uint128_vec32_significand(v, 2),       \
 	                                  &__hybrid_uint128_vec32_significand(var, 2)) || \
 	        (--__hybrid_uint128_vec32_significand(var, 3), 0)),                       \
-	 (void)(__hybrid_uint128_vec32_significand(var, 3) -=                             \
-	        __hybrid_uint128_vec32_significand(v, 3)))
+	 (void)(__hybrid_uint128_vec32_significand(var, 3) -= __hybrid_uint128_vec32_significand(v, 3)))
 #endif /* !__HYBRID_INT128_CONFIG_USE_64BIT_ARITHMETIC */
 
 #ifdef __INTELLISENSE__ /* Only for syntax highlighting... */
