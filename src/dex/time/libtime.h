@@ -239,40 +239,35 @@ PRIVATE Dee_int128_t const NANOSECONDS_PER_MILLENNIUM_AVG =
 __HYBRID_INT128_INIT16N(0x0000, 0x0000, 0x0000, 0x0001, 0xb5f0, 0xd0a5, 0xea0d, 0x8000);
 
 
-#define time_inplace_clearmod32(p_value, clearmod_mask)                             \
-	do {                                                                            \
-		uint32_t _ticm32_sub;                                            \
-		__hybrid_int128_mod32_r(*(p_value), clearmod_mask, _ticm32_sub); \
-		__hybrid_int128_sub32(*(p_value), _ticm32_sub);                  \
+#define time_inplace_clearmod32(p_value, clearmod_mask)                       \
+	do {                                                                      \
+		uint32_t _ticm32_sub;                                                 \
+		__hybrid_int128_floormod32_r(*(p_value), clearmod_mask, _ticm32_sub); \
+		__hybrid_int128_sub32(*(p_value), _ticm32_sub);                       \
 	}	__WHILE0
-#define time_inplace_clearmod64(p_value, clearmod_mask)                  \
-	do {                                                                 \
-		uint64_t _ticm64_sub;                                            \
-		__hybrid_int128_mod64_r(*(p_value), clearmod_mask, _ticm64_sub); \
-		__hybrid_int128_sub64(*(p_value), _ticm64_sub);                  \
+#define time_inplace_clearmod64(p_value, clearmod_mask)                       \
+	do {                                                                      \
+		uint64_t _ticm64_sub;                                                 \
+		__hybrid_int128_floormod64_r(*(p_value), clearmod_mask, _ticm64_sub); \
+		__hybrid_int128_sub64(*(p_value), _ticm64_sub);                       \
 	}	__WHILE0
 #define time_inplace_clearmod64_keepmod64(p_value, clearmod_mask, keepmod_mask) \
 	do {                                                                        \
 		uint64_t _ticm64_sub, _ticm64_add;                                      \
-		__hybrid_int128_mod64_r(*(p_value), clearmod_mask, _ticm64_sub);        \
-		__hybrid_int128_mod64_r(*(p_value), keepmod_mask, _ticm64_add);         \
+		__hybrid_int128_floormod64_r(*(p_value), clearmod_mask, _ticm64_sub);   \
+		__hybrid_int128_floormod64_r(*(p_value), keepmod_mask, _ticm64_add);    \
 		__hybrid_int128_sub64(*(p_value), _ticm64_sub);                         \
 		__hybrid_int128_add64(*(p_value), _ticm64_add);                         \
 	}	__WHILE0
 
 
-/* Helpers for converting a specific year <=> day
- * TODO: These are inaccurate -- fix them! */
-#define time_year2day(value)                 ((146097 * (value)) / 400)
-#define time_day2year(value)                 ((400 * (value)) / 146097)
-
 /* Proper (exact) conversion between days-since-01-01-0000 and the relevant year (or a year, and that year's 01-01-XXXX) */
 #define time_inplace_decade2day(p_value)     (__hybrid_int128_mul8(*(p_value), UINT8_C(10)), time_inplace_year2day(p_value))
 #define time_inplace_century2day(p_value)    (__hybrid_int128_mul8(*(p_value), UINT8_C(100)), time_inplace_year2day(p_value))
 #define time_inplace_millennium2day(p_value) (__hybrid_int128_mul16(*(p_value), UINT8_C(1000)), time_inplace_year2day(p_value))
-#define time_inplace_day2decade(p_value)     (time_inplace_day2year(p_value), __hybrid_int128_div8(*(p_value), UINT8_C(10)))
-#define time_inplace_day2century(p_value)    (time_inplace_day2year(p_value), __hybrid_int128_div8(*(p_value), UINT8_C(100)))
-#define time_inplace_day2millennium(p_value) (time_inplace_day2year(p_value), __hybrid_int128_div16(*(p_value), UINT16_C(1000)))
+#define time_inplace_day2decade(p_value)     (time_inplace_day2year(p_value), __hybrid_int128_floordiv8(*(p_value), UINT8_C(10)))
+#define time_inplace_day2century(p_value)    (time_inplace_day2year(p_value), __hybrid_int128_floordiv8(*(p_value), UINT8_C(100)))
+#define time_inplace_day2millennium(p_value) (time_inplace_day2year(p_value), __hybrid_int128_floordiv16(*(p_value), UINT16_C(1000)))
 
 /* Convert a specific year/... to that year/...'s starting nanosecond (rather than an amount of years/...) */
 #define time_inplace_year2nanosecond(p_value)       (time_inplace_year2day(p_value), time_inplace_days2nanoseconds(p_value))
@@ -286,29 +281,29 @@ __HYBRID_INT128_INIT16N(0x0000, 0x0000, 0x0000, 0x0001, 0xb5f0, 0xd0a5, 0xea0d, 
 
 /* Convert between time quantities (in the case of variable-length quantities, use that quantity's average length) */
 #define time_inplace_microseconds2nanoseconds(p_value) __hybrid_int128_mul16(*(p_value), NANOSECONDS_PER_MICROSECOND)
-#define time_inplace_nanoseconds2microseconds(p_value) __hybrid_int128_div16(*(p_value), NANOSECONDS_PER_MICROSECOND)
+#define time_inplace_nanoseconds2microseconds(p_value) __hybrid_int128_floordiv16(*(p_value), NANOSECONDS_PER_MICROSECOND)
 #define time_inplace_milliseconds2nanoseconds(p_value) __hybrid_int128_mul32(*(p_value), NANOSECONDS_PER_MILLISECOND)
-#define time_inplace_nanoseconds2milliseconds(p_value) __hybrid_int128_div32(*(p_value), NANOSECONDS_PER_MILLISECOND)
+#define time_inplace_nanoseconds2milliseconds(p_value) __hybrid_int128_floordiv32(*(p_value), NANOSECONDS_PER_MILLISECOND)
 #define time_inplace_seconds2nanoseconds(p_value)      __hybrid_int128_mul32(*(p_value), NANOSECONDS_PER_SECOND)
-#define time_inplace_nanoseconds2seconds(p_value)      __hybrid_int128_div32(*(p_value), NANOSECONDS_PER_SECOND)
+#define time_inplace_nanoseconds2seconds(p_value)      __hybrid_int128_floordiv32(*(p_value), NANOSECONDS_PER_SECOND)
 #define time_inplace_minutes2nanoseconds(p_value)      __hybrid_int128_mul64(*(p_value), NANOSECONDS_PER_MINUTE)
-#define time_inplace_nanoseconds2minutes(p_value)      __hybrid_int128_div64(*(p_value), NANOSECONDS_PER_MINUTE)
+#define time_inplace_nanoseconds2minutes(p_value)      __hybrid_int128_floordiv64(*(p_value), NANOSECONDS_PER_MINUTE)
 #define time_inplace_hours2nanoseconds(p_value)        __hybrid_int128_mul64(*(p_value), NANOSECONDS_PER_HOUR)
-#define time_inplace_nanoseconds2hours(p_value)        __hybrid_int128_div64(*(p_value), NANOSECONDS_PER_HOUR)
+#define time_inplace_nanoseconds2hours(p_value)        __hybrid_int128_floordiv64(*(p_value), NANOSECONDS_PER_HOUR)
 #define time_inplace_days2nanoseconds(p_value)         __hybrid_int128_mul64(*(p_value), NANOSECONDS_PER_DAY)
-#define time_inplace_nanoseconds2days(p_value)         __hybrid_int128_div64(*(p_value), NANOSECONDS_PER_DAY)
+#define time_inplace_nanoseconds2days(p_value)         __hybrid_int128_floordiv64(*(p_value), NANOSECONDS_PER_DAY)
 #define time_inplace_weeks2nanoseconds(p_value)        __hybrid_int128_mul64(*(p_value), NANOSECONDS_PER_WEEK)
-#define time_inplace_nanoseconds2weeks(p_value)        __hybrid_int128_div64(*(p_value), NANOSECONDS_PER_WEEK)
+#define time_inplace_nanoseconds2weeks(p_value)        __hybrid_int128_floordiv64(*(p_value), NANOSECONDS_PER_WEEK)
 #define time_inplace_months2nanoseconds(p_value)       __hybrid_int128_mul64(*(p_value), NANOSECONDS_PER_MONTH_AVG)
-#define time_inplace_nanoseconds2months(p_value)       __hybrid_int128_div64(*(p_value), NANOSECONDS_PER_MONTH_AVG)
+#define time_inplace_nanoseconds2months(p_value)       __hybrid_int128_floordiv64(*(p_value), NANOSECONDS_PER_MONTH_AVG)
 #define time_inplace_years2nanoseconds(p_value)        __hybrid_int128_mul64(*(p_value), NANOSECONDS_PER_YEAR_AVG)
-#define time_inplace_nanoseconds2years(p_value)        __hybrid_int128_div64(*(p_value), NANOSECONDS_PER_YEAR_AVG)
+#define time_inplace_nanoseconds2years(p_value)        __hybrid_int128_floordiv64(*(p_value), NANOSECONDS_PER_YEAR_AVG)
 #define time_inplace_decades2nanoseconds(p_value)      __hybrid_int128_mul64(*(p_value), NANOSECONDS_PER_DECADE_AVG)
-#define time_inplace_nanoseconds2decades(p_value)      __hybrid_int128_div64(*(p_value), NANOSECONDS_PER_DECADE_AVG)
+#define time_inplace_nanoseconds2decades(p_value)      __hybrid_int128_floordiv64(*(p_value), NANOSECONDS_PER_DECADE_AVG)
 #define time_inplace_centuries2nanoseconds(p_value)    __hybrid_int128_mul64(*(p_value), NANOSECONDS_PER_CENTURY_AVG)
-#define time_inplace_nanoseconds2centuries(p_value)    __hybrid_int128_div64(*(p_value), NANOSECONDS_PER_CENTURY_AVG)
+#define time_inplace_nanoseconds2centuries(p_value)    __hybrid_int128_floordiv64(*(p_value), NANOSECONDS_PER_CENTURY_AVG)
 #define time_inplace_millennia2nanoseconds(p_value)    __hybrid_int128_mul128(*(p_value), NANOSECONDS_PER_MILLENNIUM_AVG)
-#define time_inplace_nanoseconds2millennia(p_value)    __hybrid_int128_div128(*(p_value), NANOSECONDS_PER_MILLENNIUM_AVG)
+#define time_inplace_nanoseconds2millennia(p_value)    __hybrid_int128_floordiv128(*(p_value), NANOSECONDS_PER_MILLENNIUM_AVG)
 
 /* Encode/decode a time-value to/from various different representations. */
 #define time_get_nanoseconds(p_self, p_result)  (void)(*(p_result) = *(p_self))
@@ -357,9 +352,9 @@ _DeeTime_GetRepr(Dee_int128_t *__restrict p_result,
 INTDEF WUNUSED NONNULL((1)) Dee_int128_t FCALL
 DeeTime_GetRepr(DeeTimeObject const *__restrict self,
                 uint8_t repr);
-INTDEF WUNUSED NONNULL((1, 2)) uint8_t FCALL
+INTDEF WUNUSED NONNULL((1)) uint8_t FCALL
 DeeTime_GetRepr8(DeeTimeObject const *__restrict self, uint8_t repr);
-INTDEF WUNUSED NONNULL((1, 2)) uint32_t FCALL
+INTDEF WUNUSED NONNULL((1)) uint32_t FCALL
 DeeTime_GetRepr32(DeeTimeObject const *__restrict self, uint8_t repr);
 
 /* Set the integer value for the specified representation of `self' */

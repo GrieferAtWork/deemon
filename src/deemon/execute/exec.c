@@ -615,7 +615,7 @@ PRIVATE uint64_t exec_timestamp = (uint64_t)-1;
 
 
 /* A couple of helper macros taken from the libtime DEX. */
-#define time_year2day(x)              (((146097 * (x)) / 400) /*-1*/)
+#define time_year2day(value) ((146097 * (value)) / 400) /* TODO: REMOVE ME */
 #define MICROSECONDS_PER_MILLISECOND UINT64_C(1000)
 #define MILLISECONDS_PER_SECOND      UINT64_C(1000)
 #define SECONDS_PER_MINUTE           UINT64_C(60)

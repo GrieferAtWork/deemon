@@ -404,8 +404,7 @@ done:
 err_elem:
 	Dee_Decref(elem);
 err:
-	while (result_len--)
-		Dee_Decref(obj_vector[result_len]);
+	Dee_Decrefv(obj_vector, result_len);
 	Dee_Free(obj_vector);
 	Dee_Free(result);
 	return NULL;
@@ -784,8 +783,7 @@ again:
 done_procenv_envp:
 	process_free_envp(used_envp);
 done_procenv_argv:
-	while (argv_objlength--)
-		Dee_Decref(argv_objvector[argv_objlength]);
+	Dee_Decrefv(argv_objvector, argv_objlength);
 	Dee_Free(argv_objvector);
 	Dee_Free(used_argv);
 done_procenv:

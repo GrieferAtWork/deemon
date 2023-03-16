@@ -846,14 +846,14 @@ DeeInt_NewU128(Dee_uint128_t val) {
 
 	/* The remainder is basically the same as any other creator, but
 	 * using special macros implementing some basic 128-bit arithmetic. */
-	for (iter = val, req_digits = 0; !__hybrid_int128_iszero(iter);
+	for (iter = val, req_digits = 0; !__hybrid_uint128_iszero(iter);
 	     __hybrid_uint128_shr_DIGIT_BITS(iter), ++req_digits)
 		;
 	ASSERT(req_digits > 0);
 	result = DeeInt_Alloc(req_digits);
 	if likely(result) {
 		result->ob_size = req_digits;
-		for (req_digits = 0; !__hybrid_int128_iszero(val);
+		for (req_digits = 0; !__hybrid_uint128_iszero(val);
 		     __hybrid_uint128_shr_DIGIT_BITS(val), ++req_digits) {
 			result->ob_digit[req_digits] = __hybrid_uint128_least_significant_DIGIT_BITS(val);
 		}
@@ -884,7 +884,7 @@ DeeInt_NewS128(Dee_int128_t val) {
 		__hybrid_int128_neg(abs_val.s);
 	}
 	for (iter = abs_val, req_digits = 0; !__hybrid_int128_iszero(iter.s);
-	     __hybrid_uint128_shr_DIGIT_BITS(iter.s), ++req_digits)
+	     __hybrid_uint128_shr_DIGIT_BITS(iter.u), ++req_digits)
 		;
 	ASSERT(req_digits > 0);
 	result = DeeInt_Alloc(req_digits);
@@ -2199,15 +2199,15 @@ DeeInt_TryAs16(DeeObject *__restrict self,
 		prev = result;
 	}
 	if (negative) {
-		if unlikely(result > UINT16_C(0x8000)) {
-overflow:
-			return negative ? INT_NEG_OVERFLOW : INT_POS_OVERFLOW;
-		}
+		if unlikely(result > UINT16_C(0x8000))
+			goto overflow;
 		*value = -(int16_t)result;
 		return INT_SIGNED;
 	}
 	*value = (int16_t)result;
 	return INT_UNSIGNED;
+overflow:
+	return negative ? INT_NEG_OVERFLOW : INT_POS_OVERFLOW;
 #else /* DIGIT_BITS <= 16 */
 	int32_t digval;
 	int result = DeeInt_TryAs32(self, &digval);
@@ -2266,15 +2266,15 @@ DeeInt_TryAs32(DeeObject *__restrict self,
 		prev = result;
 	}
 	if (negative) {
-		if unlikely(result > UINT32_C(0x80000000)) {
-overflow:
-			return negative ? INT_NEG_OVERFLOW : INT_POS_OVERFLOW;
-		}
+		if unlikely(result > UINT32_C(0x80000000))
+			goto overflow;
 		*value = -(int32_t)result;
 		return INT_SIGNED;
 	}
 	*value = (int32_t)result;
 	return INT_UNSIGNED;
+overflow:
+	return negative ? INT_NEG_OVERFLOW : INT_POS_OVERFLOW;
 }
 
 PUBLIC WUNUSED NONNULL((1, 2)) int DCALL
@@ -2315,15 +2315,15 @@ DeeInt_TryAs64(DeeObject *__restrict self,
 		prev = result;
 	}
 	if (negative) {
-		if unlikely(result > UINT64_C(0x8000000000000000)) {
-overflow:
-			return negative ? INT_NEG_OVERFLOW : INT_POS_OVERFLOW;
-		}
+		if unlikely(result > UINT64_C(0x8000000000000000))
+			goto overflow;
 		*value = -(int64_t)result;
 		return INT_SIGNED;
 	}
 	*value = (int64_t)result;
 	return INT_UNSIGNED;
+overflow:
+	return negative ? INT_NEG_OVERFLOW : INT_POS_OVERFLOW;
 }
 
 PUBLIC WUNUSED NONNULL((1, 2)) int DCALL
@@ -2339,12 +2339,12 @@ DeeInt_TryAs128(DeeObject *__restrict self,
 	switch (DeeInt_SIZE(self)) {
 
 	case 0:
-		__hybrid_uint128_setzero(*value);
+		__hybrid_int128_setzero(*value);
 		return 0;
 
 	case 1:
-		__hybrid_uint128_vec64_significand(*(Dee_uint128_t *)value, 0) = DeeInt_DIGIT(self)[0];
-		__hybrid_uint128_vec64_significand(*(Dee_uint128_t *)value, 1) = 0;
+		__hybrid_int128_vec64_significand(*value, 0) = DeeInt_DIGIT(self)[0];
+		__hybrid_int128_vec64_significand(*value, 1) = 0;
 		return INT_UNSIGNED;
 
 	case -1:
@@ -2371,16 +2371,16 @@ DeeInt_TryAs128(DeeObject *__restrict self,
 		static Dee_uint128_t const uint128_ill_pos =
 		__HYBRID_UINT128_INIT16N(0x8000, 0x0000, 0x0000, 0x0000,
 		                         0x0000, 0x0000, 0x0000, 0x0000);
-		if (__hybrid_uint128_gr128(result.u, uint128_ill_pos)) {
-overflow:
-			return negative ? INT_NEG_OVERFLOW : INT_POS_OVERFLOW;
-		}
+		if (__hybrid_uint128_gr128(result.u, uint128_ill_pos))
+			goto overflow;
 		__hybrid_int128_neg(result.s);
 		*value = result.s;
 		return INT_SIGNED;
 	}
 	*value = result.s;
 	return INT_UNSIGNED;
+overflow:
+	return negative ? INT_NEG_OVERFLOW : INT_POS_OVERFLOW;
 }
 
 /* Similar to the functions above, but explicitly require signed/unsigned 32/64-bit values. */
@@ -2543,7 +2543,7 @@ err_overflow:
 PUBLIC WUNUSED NONNULL((1, 2)) int
 (DCALL DeeInt_AsS8)(DeeObject *__restrict self, int8_t *__restrict value) {
 	int error = DeeInt_As8(self, value);
-	if (error == INT_UNSIGNED && *(uint8_t *)value > INT8_MAX)
+	if (error == INT_UNSIGNED && *value < 0)
 		goto err_overflow;
 	return 0;
 err_overflow:
@@ -2553,7 +2553,7 @@ err_overflow:
 PUBLIC WUNUSED NONNULL((1, 2)) int
 (DCALL DeeInt_AsS16)(DeeObject *__restrict self, int16_t *__restrict value) {
 	int error = DeeInt_As16(self, value);
-	if (error == INT_UNSIGNED && *(uint16_t *)value > INT16_MAX)
+	if (error == INT_UNSIGNED && *value < 0)
 		goto err_overflow;
 	return 0;
 err_overflow:
@@ -2563,7 +2563,7 @@ err_overflow:
 PUBLIC WUNUSED NONNULL((1, 2)) int
 (DCALL DeeInt_AsS32)(DeeObject *__restrict self, int32_t *__restrict value) {
 	int error = DeeInt_As32(self, value);
-	if (error == INT_UNSIGNED && *(uint32_t *)value > INT32_MAX)
+	if (error == INT_UNSIGNED && *value < 0)
 		goto err_overflow;
 	return 0;
 err_overflow:
@@ -2573,7 +2573,7 @@ err_overflow:
 PUBLIC WUNUSED NONNULL((1, 2)) int
 (DCALL DeeInt_AsS64)(DeeObject *__restrict self, int64_t *__restrict value) {
 	int error = DeeInt_As64(self, value);
-	if (error == INT_UNSIGNED && *(uint64_t *)value > INT64_MAX)
+	if (error == INT_UNSIGNED && *value < 0)
 		goto err_overflow;
 	return 0;
 err_overflow:
@@ -2593,7 +2593,7 @@ err_overflow:
 PUBLIC WUNUSED NONNULL((1, 2)) int
 (DCALL DeeInt_AsU8)(DeeObject *__restrict self, uint8_t *__restrict value) {
 	int error = DeeInt_As8(self, (int8_t *)value);
-	if (error == INT_SIGNED && *(int8_t *)value < 0)
+	if (error == INT_SIGNED && *(int8_t const *)value < 0)
 		goto err_overflow;
 	return 0;
 err_overflow:
@@ -2603,7 +2603,7 @@ err_overflow:
 PUBLIC WUNUSED NONNULL((1, 2)) int
 (DCALL DeeInt_AsU16)(DeeObject *__restrict self, uint16_t *__restrict value) {
 	int error = DeeInt_As16(self, (int16_t *)value);
-	if (error == INT_SIGNED && *(int16_t *)value < 0)
+	if (error == INT_SIGNED && *(int16_t const *)value < 0)
 		goto err_overflow;
 	return 0;
 err_overflow:
@@ -2613,7 +2613,7 @@ err_overflow:
 PUBLIC WUNUSED NONNULL((1, 2)) int
 (DCALL DeeInt_AsU32)(DeeObject *__restrict self, uint32_t *__restrict value) {
 	int error = DeeInt_As32(self, (int32_t *)value);
-	if (error == INT_SIGNED && *(int32_t *)value < 0)
+	if (error == INT_SIGNED && *(int32_t const *)value < 0)
 		goto err_overflow;
 	return 0;
 err_overflow:
@@ -2623,7 +2623,7 @@ err_overflow:
 PUBLIC WUNUSED NONNULL((1, 2)) int
 (DCALL DeeInt_AsU64)(DeeObject *__restrict self, uint64_t *__restrict value) {
 	int error = DeeInt_As64(self, (int64_t *)value);
-	if (error == INT_SIGNED && *(int64_t *)value < 0)
+	if (error == INT_SIGNED && *(int64_t const *)value < 0)
 		goto err_overflow;
 	return 0;
 err_overflow:
@@ -2633,7 +2633,7 @@ err_overflow:
 PUBLIC WUNUSED NONNULL((1, 2)) int
 (DCALL DeeInt_AsU128)(DeeObject *__restrict self, Dee_uint128_t *__restrict value) {
 	int error = DeeInt_As128(self, (Dee_int128_t *)value);
-	if (error == INT_SIGNED && __hybrid_int128_isneg(*value))
+	if (error == INT_SIGNED && __hybrid_int128_isneg(*(Dee_int128_t const *)value))
 		goto err_overflow;
 	return 0;
 err_overflow:

@@ -829,7 +829,7 @@ PUBLIC void DCALL DeeSystem_DlClose(void *handle) {
 #endif /* !__BYTE_ORDER__ != __ORDER_BIG_ENDIAN__ */
 
 /* A couple of helper macros taken from the libtime DEX. */
-#define time_year2day(x)     (((146097 * (x)) / 400) /*-1*/)
+#define time_year2day(value) ((146097 * (value)) / 400) /* TODO: REMOVE ME */
 #define MICROSECONDS_PER_MILLISECOND UINT64_C(1000)
 #define MILLISECONDS_PER_SECOND      UINT64_C(1000)
 #define SECONDS_PER_MINUTE           UINT64_C(60)
@@ -1721,8 +1721,8 @@ again:
 				uint64_t true_filesize_psx, true_filesize_psm;
 				true_filesize_psm = STRUCT_STAT_GETSIZE(st);
 				true_filesize_psm = (true_filesize_psm + psm) & ~psm; /* Hardware page-size-aligned true file size */
-				true_filesize_psx = (true_filesize_psm + psx) & ~psx; /* Allocation granularity-aligned true file size */
-				if ((map_offset + mapsize) > true_filesize_psm &&     /* Does the mapping include pages beyond the end-of-file? */
+				true_filesize_psx = (true_filesize_psm + psx) & ~psx; /* Allocation granularity-aligned true file size (read: non-sense enforced by the windows kernel) */
+				if ((map_offset + mapsize) > true_filesize_psm &&     /* Does the mapping include pages beyond the hardware end-of-file? */
 				    true_filesize_psx != true_filesize_psm) {         /* Would there be an unmapped (SIGSEGV) hole after the true end-of-file? */
 					buf = (unsigned char *)MAP_FAILED;
 				} else {

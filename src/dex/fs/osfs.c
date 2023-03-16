@@ -2744,6 +2744,8 @@ err:
 #endif /* WANT_DEEOBJECT_ASPATHHANDLEWITHWRITEATTRIBUTES */
 
 #ifdef WANT_DEEOBJECT_ASFILETIME
+#define time_year2day(value) ((146097 * (value)) / 400) /* TODO: REMOVE ME */
+
 /* Convert a given object into a windows FILETIME timestamp */
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 DeeObject_AsFileTime(DeeObject *__restrict lpTime,

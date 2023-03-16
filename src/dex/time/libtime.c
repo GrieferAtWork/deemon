@@ -176,8 +176,8 @@ PRIVATE HMODULE DCALL GetKernel32Handle(void) {
 #ifdef WANT_NANOSECONDS_01_01_1601
 #undef WANT_NANOSECONDS_01_01_1601
 /* Nano-seconds from 01-01-0000 to 01-01-1601 */
-static Dee_int128_t const NANOSECONDS_01_01_1601 =
-__HYBRID_INT128_INIT16N(0x0000, 0x0000, 0x0000, 0x0002, 0xbd24, 0xd971, 0x356e, 0x0000);
+static Dee_uint128_t const NANOSECONDS_01_01_1601 =
+__HYBRID_UINT128_INIT16N(0x0000, 0x0000, 0x0000, 0x0002, 0xbd24, 0xd971, 0x356e, 0x0000);
 #endif /* WANT_NANOSECONDS_01_01_1601 */
 
 
@@ -447,17 +447,17 @@ time_years_isleapyear(Dee_int128_t const *__restrict p_year) {
 	Dee_int128_t year_mod_4;
 
 	year_mod_400 = *p_year;
-	__hybrid_int128_mod16(year_mod_400, 400);
+	__hybrid_int128_floormod16(year_mod_400, 400);
 	if (__hybrid_int128_get16(year_mod_400) == 0)
 		return true;
 
 	year_mod_100 = *p_year;
-	__hybrid_int128_mod8(year_mod_100, 100);
+	__hybrid_int128_floormod8(year_mod_100, 100);
 	if (__hybrid_int128_get8(year_mod_100) == 0)
 		return false;
 
 	year_mod_4 = *p_year;
-	__hybrid_int128_mod8(year_mod_4, 4);
+	__hybrid_int128_floormod8(year_mod_4, 4);
 	return __hybrid_int128_get8(year_mod_4) == 0;
 }
 
@@ -617,7 +617,7 @@ time_inplace_day2year(Dee_int128_t *__restrict p_value) {
 	 * >> https://wiki.osdev.org/Julian_Day_Number */
 	Dee_int128_t base;
 	uint32_t temp, temp2, greg_yr;
-	__hybrid_int128_divmod32(*p_value, DAYS_PER_400_YEARS, base, temp);
+	__hybrid_int128_floordivmod32(*p_value, DAYS_PER_400_YEARS, base, temp);
 	__hybrid_int128_mul16(base, UINT16_C(400));
 	temp2   = temp;
 	greg_yr = 0;
@@ -636,7 +636,7 @@ INTERN NONNULL((1)) void FCALL
 time_inplace_year2day(Dee_int128_t *__restrict p_value) {
 	Dee_int128_t ydiv;
 	uint16_t ymod;
-	__hybrid_int128_divmod16(*p_value, UINT16_C(400), ydiv, ymod);
+	__hybrid_int128_floordivmod16(*p_value, UINT16_C(400), ydiv, ymod);
 	__hybrid_int128_mul32(ydiv, DAYS_PER_400_YEARS);
 	__hybrid_int128_add32(ydiv, y400_table[ymod]);
 	*p_value = ydiv;
@@ -675,7 +675,7 @@ time_inplace_month2nanosecond(Dee_int128_t *__restrict p_value) {
 	uint8_t month_in_year;
 	struct month const *months_of_year;
 	uint64_t month_start;
-	__hybrid_int128_divmod8(*p_value, MONTHS_PER_YEAR, year, month_in_year);
+	__hybrid_int128_floordivmod8(*p_value, MONTHS_PER_YEAR, year, month_in_year);
 	ASSERT(month_in_year < MONTHS_PER_YEAR);
 	months_of_year = month_info_for_year(&year);
 	month_start    = month_getstart(&months_of_year[month_in_year]);
@@ -684,14 +684,14 @@ time_inplace_month2nanosecond(Dee_int128_t *__restrict p_value) {
 	*p_value = year;
 }
 
-INTERN WUNUSED NONNULL((1, 2)) uint8_t FCALL
+INTERN WUNUSED NONNULL((1)) uint8_t FCALL
 DeeTime_GetRepr8(DeeTimeObject const *__restrict self, uint8_t repr) {
 	Dee_int128_t result;
 	_DeeTime_GetRepr(&result, self, repr);
 	return __hybrid_int128_get8(result);
 }
 
-INTERN WUNUSED NONNULL((1, 2)) uint32_t FCALL
+INTERN WUNUSED NONNULL((1)) uint32_t FCALL
 DeeTime_GetRepr32(DeeTimeObject const *__restrict self, uint8_t repr) {
 	Dee_int128_t result;
 	_DeeTime_GetRepr(&result, self, repr);
@@ -732,7 +732,7 @@ _DeeTime_GetRepr(Dee_int128_t *__restrict p_result,
 
 		case TIME_REPR_MONTH:
 			*p_result = self->t_months;
-			__hybrid_int128_mod8(*p_result, MONTHS_PER_YEAR);
+			__hybrid_int128_floormod8(*p_result, MONTHS_PER_YEAR);
 			__hybrid_int128_inc(*p_result); /* 1-based */
 			return;
 
@@ -742,22 +742,22 @@ _DeeTime_GetRepr(Dee_int128_t *__restrict p_result,
 
 		case TIME_REPR_YEARS:
 			*p_result = self->t_months;
-			__hybrid_int128_div8(*p_result, MONTHS_PER_YEAR);
+			__hybrid_int128_floordiv8(*p_result, MONTHS_PER_YEAR);
 			return;
 
 		case TIME_REPR_DECADES:
 			*p_result = self->t_months;
-			__hybrid_int128_div8(*p_result, MONTHS_PER_DECADE);
+			__hybrid_int128_floordiv8(*p_result, MONTHS_PER_DECADE);
 			return;
 
 		case TIME_REPR_CENTURIES:
 			*p_result = self->t_months;
-			__hybrid_int128_div16(*p_result, MONTHS_PER_CENTURY);
+			__hybrid_int128_floordiv16(*p_result, MONTHS_PER_CENTURY);
 			return;
 
 		case TIME_REPR_MILLENNIA:
 			*p_result = self->t_months;
-			__hybrid_int128_div16(*p_result, MONTHS_PER_MILLENNIUM);
+			__hybrid_int128_floordiv16(*p_result, MONTHS_PER_MILLENNIUM);
 			return;
 
 		default: break;
@@ -772,44 +772,44 @@ _DeeTime_GetRepr(Dee_int128_t *__restrict p_result,
 
 	case TIME_REPR_NANOSECOND: /* Nanosecond in Second */
 		*p_result = nanoseconds;
-		__hybrid_int128_mod32(*p_result, NANOSECONDS_PER_SECOND);
+		__hybrid_int128_floormod32(*p_result, NANOSECONDS_PER_SECOND);
 		break;
 
 	case TIME_REPR_MICROSECOND: /* Microsecond in Second */
 		*p_result = nanoseconds;
-		__hybrid_int128_mod32(*p_result, NANOSECONDS_PER_SECOND);
-		__hybrid_int128_div16(*p_result, NANOSECONDS_PER_MICROSECOND);
+		__hybrid_int128_floormod32(*p_result, NANOSECONDS_PER_SECOND);
+		__hybrid_int128_floordiv16(*p_result, NANOSECONDS_PER_MICROSECOND);
 		break;
 
 	case TIME_REPR_MILLISECOND: /* Millisecond in Second */
 		*p_result = nanoseconds;
-		__hybrid_int128_mod32(*p_result, NANOSECONDS_PER_SECOND);
-		__hybrid_int128_div32(*p_result, NANOSECONDS_PER_MILLISECOND);
+		__hybrid_int128_floormod32(*p_result, NANOSECONDS_PER_SECOND);
+		__hybrid_int128_floordiv32(*p_result, NANOSECONDS_PER_MILLISECOND);
 		break;
 
 	case TIME_REPR_SECOND: /* Second in Minute */
 		*p_result = nanoseconds;
-		__hybrid_int128_mod64(*p_result, NANOSECONDS_PER_MINUTE);
-		__hybrid_int128_div32(*p_result, NANOSECONDS_PER_SECOND);
+		__hybrid_int128_floormod64(*p_result, NANOSECONDS_PER_MINUTE);
+		__hybrid_int128_floordiv32(*p_result, NANOSECONDS_PER_SECOND);
 		break;
 
 	case TIME_REPR_MINUTE: /* Minute in Hour */
 		*p_result = nanoseconds;
-		__hybrid_int128_mod64(*p_result, NANOSECONDS_PER_HOUR);
-		__hybrid_int128_div64(*p_result, NANOSECONDS_PER_MINUTE);
+		__hybrid_int128_floormod64(*p_result, NANOSECONDS_PER_HOUR);
+		__hybrid_int128_floordiv64(*p_result, NANOSECONDS_PER_MINUTE);
 		break;
 
 	case TIME_REPR_HOUR: /* Hour in Day */
 		*p_result = nanoseconds;
-		__hybrid_int128_mod64(*p_result, NANOSECONDS_PER_DAY);
-		__hybrid_int128_div64(*p_result, NANOSECONDS_PER_HOUR);
+		__hybrid_int128_floormod64(*p_result, NANOSECONDS_PER_DAY);
+		__hybrid_int128_floordiv64(*p_result, NANOSECONDS_PER_HOUR);
 		break;
 
 	case TIME_REPR_WDAY: /* Day in Week */
 		*p_result = nanoseconds;
 		__hybrid_int128_sub64(*p_result, NANOSECONDS_PER_DAY);
-		__hybrid_int128_mod64(*p_result, NANOSECONDS_PER_WEEK);
-		__hybrid_int128_div64(*p_result, NANOSECONDS_PER_DAY);
+		__hybrid_int128_floormod64(*p_result, NANOSECONDS_PER_WEEK);
+		__hybrid_int128_floordiv64(*p_result, NANOSECONDS_PER_DAY);
 		break;
 
 	case TIME_REPR_MWEEK: { /* Week in Month */
@@ -823,14 +823,14 @@ _DeeTime_GetRepr(Dee_int128_t *__restrict p_result,
 		__hybrid_int128_add64(start_of_week0, NANOSECONDS_PER_DAY); /* Because 01-01-0000 was a saturday */
 		*p_result = nanoseconds;
 		__hybrid_int128_sub128(*p_result, start_of_week0);
-		__hybrid_int128_div64(*p_result, NANOSECONDS_PER_WEEK);
+		__hybrid_int128_floordiv64(*p_result, NANOSECONDS_PER_WEEK);
 		if (__hybrid_int128_eq128(start_of_week0, start_of_month))
 			__hybrid_int128_inc(*p_result); /* There is no week#0 */
 	}	break;
 
 	case TIME_REPR_MONTH: /* Month in Year */
 		time_get_month(&nanoseconds, p_result);
-		__hybrid_int128_mod8(*p_result, MONTHS_PER_YEAR);
+		__hybrid_int128_floormod8(*p_result, MONTHS_PER_YEAR);
 		__hybrid_int128_inc(*p_result); /* 1-based */
 		break;
 
@@ -876,7 +876,7 @@ _DeeTime_GetRepr(Dee_int128_t *__restrict p_result,
 		time_inplace_month2nanosecond(&start_of_month);
 		*p_result = nanoseconds;
 		__hybrid_int128_sub128(*p_result, start_of_month);
-		__hybrid_int128_div64(*p_result, NANOSECONDS_PER_DAY);
+		__hybrid_int128_floordiv64(*p_result, NANOSECONDS_PER_DAY);
 		__hybrid_int128_inc(*p_result); /* 1-based */
 	}	break;
 
@@ -886,7 +886,7 @@ _DeeTime_GetRepr(Dee_int128_t *__restrict p_result,
 		time_inplace_year2nanosecond(&start_of_year);
 		*p_result = nanoseconds;
 		__hybrid_int128_sub128(*p_result, start_of_year);
-		__hybrid_int128_div64(*p_result, NANOSECONDS_PER_DAY);
+		__hybrid_int128_floordiv64(*p_result, NANOSECONDS_PER_DAY);
 		__hybrid_int128_inc(*p_result);
 	}	break;
 
@@ -901,7 +901,7 @@ _DeeTime_GetRepr(Dee_int128_t *__restrict p_result,
 		__hybrid_int128_add64(start_of_week0, NANOSECONDS_PER_DAY); /* Because 01-01-0000 was a saturday */
 		*p_result = nanoseconds;
 		__hybrid_int128_sub128(*p_result, start_of_week0);
-		__hybrid_int128_div64(*p_result, NANOSECONDS_PER_WEEK);
+		__hybrid_int128_floordiv64(*p_result, NANOSECONDS_PER_WEEK);
 		if (__hybrid_int128_eq128(start_of_week0, start_of_year))
 			__hybrid_int128_inc(*p_result); /* There is no week#0 */
 	}	break;
@@ -1113,13 +1113,13 @@ DeeTime_SetRepr(DeeTimeObject *__restrict self,
 		uint16_t new_month_length;
 		_DeeTime_GetRepr(&old_months, self, TIME_REPR_MONTHS);
 		_DeeTime_GetRepr(&mday, self, TIME_REPR_MDAY);
-		__hybrid_int128_mod8_r(old_months, MONTHS_PER_YEAR, old_month);
+		__hybrid_int128_floormod8_r(old_months, MONTHS_PER_YEAR, old_month);
 		++old_month; /* 1-based */
 		month_delta = *p_value;
 		__hybrid_int128_sub8(month_delta, old_month);
 		new_months = old_months;
 		__hybrid_int128_add128(new_months, month_delta);
-		__hybrid_int128_divmod8(new_months, MONTHS_PER_YEAR, new_year, new_month);
+		__hybrid_int128_floordivmod8(new_months, MONTHS_PER_YEAR, new_year, new_month);
 		new_year_months  = month_info_for_year(&new_year);
 		new_month_length = month_getlen(&new_year_months[new_month]);
 
@@ -1133,7 +1133,7 @@ DeeTime_SetRepr(DeeTimeObject *__restrict self,
 		time_inplace_days2nanoseconds(&mday);
 		__hybrid_int128_add128(new_months, mday);
 		extra_nano = self->t_nanos; /* Keep hour+minute+second+nanosecond */
-		__hybrid_int128_mod64(extra_nano, NANOSECONDS_PER_DAY);
+		__hybrid_int128_floormod64(extra_nano, NANOSECONDS_PER_DAY);
 		__hybrid_int128_add128(new_months, extra_nano);
 		self->t_nanos = new_months;
 	}	break;
@@ -1358,8 +1358,8 @@ print_text:
 				/* TODO: @end locale_dependent */
 			case 'C':
 				_DeeTime_GetRepr(&number, self, TIME_REPR_YEAR);
-				__hybrid_int128_div8(number, 100);
-				__hybrid_int128_mod8(number, 100);
+				__hybrid_int128_floordiv8(number, 100);
+				__hybrid_int128_floormod8(number, 100);
 print_number_2:
 				printf("%0.2" PRFd128, number);
 				break;
@@ -1370,7 +1370,7 @@ print_number_2:
 
 			case 'D':
 				_DeeTime_GetRepr(&number, self, TIME_REPR_MDAY);
-				__hybrid_int128_mod8(number, 100);
+				__hybrid_int128_floormod8(number, 100);
 				printf("%0.2" PRFu8 "/%0.2" PRFu8 "/%0.2" PRFu8,
 				       DeeTime_GetRepr8(self, TIME_REPR_MONTH),
 				       DeeTime_GetRepr8(self, TIME_REPR_MDAY),
@@ -1396,7 +1396,7 @@ print_number_2:
 
 			case 'I':
 				_DeeTime_GetRepr(&number, self, TIME_REPR_HOUR);
-				__hybrid_int128_mod8(number, 12);
+				__hybrid_int128_floormod8(number, 12);
 				goto print_number_2;
 
 			case 'j':
@@ -1415,7 +1415,7 @@ print_number_2:
 
 			case 'p':
 				_DeeTime_GetRepr(&number, self, TIME_REPR_HOUR);
-				__hybrid_int128_div8(number, 12);
+				__hybrid_int128_floordiv8(number, 12);
 				text = am_pm[__hybrid_int128_get8(number)];
 				goto print_text;
 
@@ -1423,8 +1423,8 @@ print_number_2:
 				Dee_int128_t ampm;
 				_DeeTime_GetRepr(&number, self, TIME_REPR_HOUR);
 				ampm = number;
-				__hybrid_int128_div8(ampm, 12);
-				__hybrid_int128_mod8(number, 12);
+				__hybrid_int128_floordiv8(ampm, 12);
+				__hybrid_int128_floormod8(number, 12);
 				printf("%0.2" PRFu8 ":%0.2" PRFu8 ":%0.2" PRFu8 " %s",
 				       __hybrid_int128_get8(number),
 				       DeeTime_GetRepr8(self, TIME_REPR_MINUTE),
@@ -1452,7 +1452,7 @@ print_number_2:
 			case 'u':
 				_DeeTime_GetRepr(&number, self, TIME_REPR_WDAY);
 				__hybrid_int128_add8(number, 6);
-				__hybrid_int128_mod8(number, 7);
+				__hybrid_int128_floormod8(number, 7);
 				__hybrid_int128_inc(number);
 				goto print_number_2;
 
@@ -1462,7 +1462,7 @@ print_number_2:
 
 			case 'y':
 				_DeeTime_GetRepr(&number, self, TIME_REPR_YEAR);
-				__hybrid_int128_mod8(number, 100);
+				__hybrid_int128_floormod8(number, 100);
 				goto print_number_2;
 
 			case 'Y':
@@ -1812,7 +1812,7 @@ time_timepart_get(DeeTimeObject *__restrict self) {
 	result->t_kind  = TIME_KIND_TIMESTAMP;
 	result->t_nanos = self->t_nanos;
 	if likely(result->t_type == TIME_TYPE_NANOSECONDS) {
-		__hybrid_int128_mod64(result->t_nanos, NANOSECONDS_PER_DAY);
+		__hybrid_int128_floormod64(result->t_nanos, NANOSECONDS_PER_DAY);
 	} else {
 		__hybrid_int128_setzero(result->t_months);
 	}
@@ -1833,7 +1833,7 @@ time_timepart_set(DeeTimeObject *self,
 		goto err;
 	DeeTime_MakeNano(self);
 	time_inplace_clearmod64(&self->t_nanos, NANOSECONDS_PER_DAY);
-	__hybrid_int128_mod64(addend, NANOSECONDS_PER_DAY);
+	__hybrid_int128_floormod64(addend, NANOSECONDS_PER_DAY);
 	__hybrid_int128_add64(self->t_nanos, __hybrid_int128_get64(addend));
 	return 0;
 err:
@@ -1879,7 +1879,7 @@ time_datepart_set(DeeTimeObject *self,
 		__hybrid_int128_setzero(self->t_nanos);
 	}
 	time_inplace_clearmod64(&addend, NANOSECONDS_PER_DAY);
-	__hybrid_int128_mod64(self->t_nanos, NANOSECONDS_PER_DAY);
+	__hybrid_int128_floormod64(self->t_nanos, NANOSECONDS_PER_DAY);
 	__hybrid_int128_add128(self->t_nanos, addend);
 	self->t_kind = TIME_KIND_TIMESTAMP;
 	return 0;
@@ -1896,7 +1896,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 time_get_time_t(DeeTimeObject *__restrict self) {
 	Dee_int128_t result;
 	DeeTime_AsNano(self, &result);
-	__hybrid_int128_div32(result, NANOSECONDS_PER_SECOND);
+	__hybrid_int128_floordiv32(result, NANOSECONDS_PER_SECOND);
 	__hybrid_int128_sub64(result, SECONDS_01_01_1970);
 	return DeeInt_NewS128(result);
 }
@@ -1911,7 +1911,7 @@ time_set_time_t(DeeTimeObject *self,
 	/* NOTE: Must keep nano-seconds */
 	__hybrid_int128_add64(newval, SECONDS_01_01_1970);
 	__hybrid_int128_mul32(newval, NANOSECONDS_PER_SECOND);
-	__hybrid_int128_mod32_r(self->t_nanos, NANOSECONDS_PER_SECOND, extra_nano);
+	__hybrid_int128_floormod32_r(self->t_nanos, NANOSECONDS_PER_SECOND, extra_nano);
 	__hybrid_int128_add32(newval, extra_nano);
 	self->t_nanos    = newval;
 	self->t_typekind = TIME_TYPEKIND(TIME_TYPE_NANOSECONDS, TIME_KIND_TIMESTAMP);
@@ -2265,7 +2265,7 @@ time_div(DeeTimeObject *self, DeeObject *other) {
 		if unlikely(__hybrid_int128_iszero(rhs))
 			goto err_divzero;
 		DeeTime_AsNano(self, &res);
-		__hybrid_int128_div128(res, rhs);
+		__hybrid_int128_floordiv128(res, rhs);
 		return DeeInt_NewS128(res);
 	}
 
@@ -2279,7 +2279,7 @@ time_div(DeeTimeObject *self, DeeObject *other) {
 	result->t_type  = self->t_type;
 	result->t_kind  = TIME_KIND_DELTA;
 	result->t_nanos = self->t_nanos;
-	__hybrid_int128_div128(result->t_nanos, rhs);
+	__hybrid_int128_floordiv128(result->t_nanos, rhs);
 	DeeObject_Init(result, &DeeTime_Type);
 done:
 	return (DREF DeeObject *)result;
@@ -2310,7 +2310,7 @@ time_mod(DeeTimeObject *self, DeeObject *other) {
 	result->t_type  = self->t_type;
 	result->t_kind  = TIME_KIND_DELTA;
 	result->t_nanos = self->t_nanos;
-	__hybrid_int128_mod128(result->t_nanos, rhs);
+	__hybrid_int128_floormod128(result->t_nanos, rhs);
 	DeeObject_Init(result, &DeeTime_Type);
 done:
 	return (DREF DeeObject *)result;
@@ -3126,7 +3126,7 @@ time_init_kw(DeeTimeObject *__restrict self,
 			if (!__hybrid_int128_iszero(self->t_nanos)) {
 				/* Keep nano-seconds set by the `nanosecond' property. */
 				uint32_t extra_nano;
-				__hybrid_int128_mod32_r(self->t_nanos, NANOSECONDS_PER_SECOND, extra_nano);
+				__hybrid_int128_floormod32_r(self->t_nanos, NANOSECONDS_PER_SECOND, extra_nano);
 				__hybrid_int128_add32(arg, extra_nano);
 			}
 			self->t_nanos = arg;
@@ -3185,7 +3185,7 @@ time_printrepr(DeeTimeObject *__restrict self,
 		if (self->t_type == TIME_TYPE_MONTHS) {
 			Dee_int128_t years;
 			uint8_t months;
-			__hybrid_int128_divmod8(self->t_months, MONTHS_PER_YEAR,
+			__hybrid_int128_floordivmod8(self->t_months, MONTHS_PER_YEAR,
 			                        years, months);
 			if (__hybrid_int128_iszero(years)) {
 				temp = DeeFormat_Printf(printer, arg, "months: %" PRFu8, months);
@@ -3203,27 +3203,27 @@ time_printrepr(DeeTimeObject *__restrict self,
 			uint32_t temp32;
 			uint16_t temp16;
 			char const *label;
-			if ((__hybrid_int128_divmod64(nano, NANOSECONDS_PER_CENTURY_AVG, div, temp64), temp64 == 0)) {
+			if ((__hybrid_int128_floordivmod64(nano, NANOSECONDS_PER_CENTURY_AVG, div, temp64), temp64 == 0)) {
 				label = "centuries";
-			} else if ((__hybrid_int128_divmod64(nano, NANOSECONDS_PER_DECADE_AVG, div, temp64), temp64 == 0)) {
+			} else if ((__hybrid_int128_floordivmod64(nano, NANOSECONDS_PER_DECADE_AVG, div, temp64), temp64 == 0)) {
 				label = "decades";
-			} else if ((__hybrid_int128_divmod64(nano, NANOSECONDS_PER_YEAR_AVG, div, temp64), temp64 == 0)) {
+			} else if ((__hybrid_int128_floordivmod64(nano, NANOSECONDS_PER_YEAR_AVG, div, temp64), temp64 == 0)) {
 				label = "years";
-			} else if ((__hybrid_int128_divmod64(nano, NANOSECONDS_PER_MONTH_AVG, div, temp64), temp64 == 0)) {
+			} else if ((__hybrid_int128_floordivmod64(nano, NANOSECONDS_PER_MONTH_AVG, div, temp64), temp64 == 0)) {
 				label = "months";
-			} else if ((__hybrid_int128_divmod64(nano, NANOSECONDS_PER_WEEK, div, temp64), temp64 == 0)) {
+			} else if ((__hybrid_int128_floordivmod64(nano, NANOSECONDS_PER_WEEK, div, temp64), temp64 == 0)) {
 				label = "weeks";
-			} else if ((__hybrid_int128_divmod64(nano, NANOSECONDS_PER_DAY, div, temp64), temp64 == 0)) {
+			} else if ((__hybrid_int128_floordivmod64(nano, NANOSECONDS_PER_DAY, div, temp64), temp64 == 0)) {
 				label = "days";
-			} else if ((__hybrid_int128_divmod64(nano, NANOSECONDS_PER_HOUR, div, temp64), temp64 == 0)) {
+			} else if ((__hybrid_int128_floordivmod64(nano, NANOSECONDS_PER_HOUR, div, temp64), temp64 == 0)) {
 				label = "hours";
-			} else if ((__hybrid_int128_divmod64(nano, NANOSECONDS_PER_MINUTE, div, temp64), temp64 == 0)) {
+			} else if ((__hybrid_int128_floordivmod64(nano, NANOSECONDS_PER_MINUTE, div, temp64), temp64 == 0)) {
 				label = "minutes";
-			} else if ((__hybrid_int128_divmod32(nano, NANOSECONDS_PER_SECOND, div, temp32), temp32 == 0)) {
+			} else if ((__hybrid_int128_floordivmod32(nano, NANOSECONDS_PER_SECOND, div, temp32), temp32 == 0)) {
 				label = "seconds";
-			} else if ((__hybrid_int128_divmod32(nano, NANOSECONDS_PER_MILLISECOND, div, temp32), temp32 == 0)) {
+			} else if ((__hybrid_int128_floordivmod32(nano, NANOSECONDS_PER_MILLISECOND, div, temp32), temp32 == 0)) {
 				label = "milliseconds";
-			} else if ((__hybrid_int128_divmod16(nano, NANOSECONDS_PER_MICROSECOND, div, temp16), temp16 == 0)) {
+			} else if ((__hybrid_int128_floordivmod16(nano, NANOSECONDS_PER_MICROSECOND, div, temp16), temp16 == 0)) {
 				label = "microseconds";
 			} else {
 				label = "nanoseconds";
