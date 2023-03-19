@@ -27,6 +27,7 @@
 #include <deemon/error.h>
 #include <deemon/file.h>
 #include <deemon/filetypes.h>
+#include <deemon/format.h>
 #include <deemon/int.h>
 #include <deemon/none.h>
 #include <deemon/object.h>
@@ -1331,9 +1332,85 @@ PRIVATE struct mode_name const mode_names[] = {
 /* CASEEQ(x, 'w') --> x == 'w' || x == 'W' */
 #define CASEEQ(x, ch) ((x) == (ch) || (x) == (ch) - ('a' - 'A'))
 
+PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
+buffer_print(Buffer *__restrict self, dformatprinter printer, void * arg) {
+	dssize_t result;
+	char const *mode;
+	DREF DeeObject *inner_file;
+	uint16_t buffer_flags;
+	buf_read(self);
+	inner_file = self->fb_file;
+	if (inner_file == NULL) {
+		buf_endread(self);
+		return DeeFormat_PRINT(printer, arg, "<Buffer (closed)>");
+	}
+	buffer_flags = self->fb_flag;
+	Dee_Incref(inner_file);
+	buf_endread(self);
+	if (buffer_flags & FILE_BUFFER_FLNBUF) {
+		mode = "Line";
+	} else if (buffer_flags & FILE_BUFFER_FNODYNSCALE) {
+		mode = "NoOp";
+	} else if (buffer_flags & FILE_BUFFER_FLNIFTTY) {
+		mode = "Auto";
+	} else {
+		mode = "Full";
+	}
+	result = DeeFormat_Printf(printer, arg,
+	                          "<%s-Buffer for %k>",
+	                          mode, inner_file);
+	Dee_Decref(inner_file);
+	return result;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
+buffer_printrepr(Buffer *__restrict self, dformatprinter printer, void * arg) {
+	char mode[sizeof("sync,close,readonly,auto")], *mode_iter;
+	dssize_t result;
+	DREF DeeObject *inner_file;
+	uint16_t buffer_flags;
+	size_t buffer_size;
+	buf_read(self);
+	inner_file = self->fb_file;
+	if (inner_file == NULL) {
+		buf_endread(self);
+		return DeeFormat_PRINT(printer, arg, "File.Buffer()<.closed>");
+	}
+	buffer_flags = self->fb_flag;
+	buffer_size  = self->fb_size;
+	Dee_Incref(inner_file);
+	buf_endread(self);
+
+	/* Re-construct the buffer mode string. */
+	mode_iter = mode;
+	if (buffer_flags & Dee_FILE_BUFFER_FSYNC)
+		mode_iter = stpcpy(mode_iter, "sync,");
+	if (buffer_flags & Dee_FILE_BUFFER_FCLOFILE)
+		mode_iter = stpcpy(mode_iter, "close,");
+	if (buffer_flags & Dee_FILE_BUFFER_FREADONLY)
+		mode_iter = stpcpy(mode_iter, "readonly,");
+	if (buffer_flags & FILE_BUFFER_FLNBUF) {
+		mode_iter = stpcpy(mode_iter, "line");
+	} else if (buffer_flags & FILE_BUFFER_FNODYNSCALE) {
+		mode_iter = stpcpy(mode_iter, "none");
+	} else if (buffer_flags & FILE_BUFFER_FLNIFTTY) {
+		mode_iter = stpcpy(mode_iter, "auto");
+	} else {
+		mode_iter = stpcpy(mode_iter, "full");
+	}
+
+	/* Render the buffer's representation. */
+	result = DeeFormat_Printf(printer, arg,
+	                          "File.Buffer(%r, %q, %" PRFuSIZ ")",
+	                          inner_file, mode_iter, buffer_size);
+	Dee_Decref(inner_file);
+	return result;
+}
+
+
 PRIVATE WUNUSED NONNULL((1)) int DCALL
-buffer_ctor(Buffer *__restrict self,
-            size_t argc, DeeObject *const *argv) {
+buffer_init_operator(Buffer *__restrict self,
+                     size_t argc, DeeObject *const *argv) {
 	uint16_t mode = (FILE_BUFFER_MODE_AUTO);
 	DeeObject *file;
 	char const *mode_str = NULL;
@@ -1782,7 +1859,7 @@ PUBLIC DeeFileTypeObject DeeFileBuffer_Type = {
 					/* .tp_ctor      = */ (dfunptr_t)NULL,
 					/* .tp_copy_ctor = */ (dfunptr_t)NULL,
 					/* .tp_deep_ctor = */ (dfunptr_t)NULL,
-					/* .tp_any_ctor  = */ (dfunptr_t)&buffer_ctor,
+					/* .tp_any_ctor  = */ (dfunptr_t)&buffer_init_operator,
 					TYPE_FIXED_ALLOCATOR(Buffer)
 				}
 			},
@@ -1791,9 +1868,11 @@ PUBLIC DeeFileTypeObject DeeFileBuffer_Type = {
 			/* .tp_move_assign = */ NULL
 		},
 		/* .tp_cast = */ {
-			/* .tp_str  = */ NULL,
-			/* .tp_repr = */ NULL,
-			/* .tp_bool = */ NULL
+			/* .tp_str       = */ NULL,
+			/* .tp_repr      = */ NULL,
+			/* .tp_bool      = */ NULL,
+			/* .tp_print     = */ (dssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&buffer_print,
+			/* .tp_printrepr = */ (dssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&buffer_printrepr
 		},
 		/* .tp_call          = */ NULL,
 		/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&buffer_visit,

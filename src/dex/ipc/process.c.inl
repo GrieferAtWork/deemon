@@ -1187,6 +1187,7 @@ ipc_exe2path_start_listen(void) {
 		shared_lock_acquire(&ipc_exe2path_cache_startlisten_lock);
 		if (!ipc_exe2path_cache_listening) {
 			int ok;
+			/* TODO: The cache also needs to be cleared when the program's PWD changes! */
 			ok = DeeNotify_BeginListen(Dee_NOTIFICATION_CLASS_ENVIRON,
 			                           (DeeObject *)&str_PATH,
 			                           &ipc_exe2path_notify, NULL);
