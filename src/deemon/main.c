@@ -41,6 +41,7 @@
 #include <deemon/list.h>
 #include <deemon/module.h>
 #include <deemon/none.h>
+#include <deemon/notify.h>
 #include <deemon/string.h>
 #include <deemon/system-features.h> /* strend() */
 #include <deemon/system.h>
@@ -2499,6 +2500,9 @@ os_trychdir(char *__restrict path) {
 	DBG_ALIGNMENT_DISABLE();
 	if (SetCurrentDirectoryA(path)) {
 		DBG_ALIGNMENT_ENABLE();
+ok:
+		if (DeeNotify_BroadcastClass(Dee_NOTIFICATION_CLASS_PWD))
+			DeeError_Handled(ERROR_HANDLED_RESTORE);
 		return true;
 	}
 	DBG_ALIGNMENT_ENABLE();
@@ -2514,7 +2518,7 @@ os_trychdir(char *__restrict path) {
 	if (SetCurrentDirectoryW(wpath)) {
 		DBG_ALIGNMENT_ENABLE();
 		Dee_Decref(pathob);
-		return true;
+		goto ok;
 	}
 	dwError = GetLastError();
 	DBG_ALIGNMENT_ENABLE();
@@ -2533,7 +2537,7 @@ os_trychdir(char *__restrict path) {
 		if (SetCurrentDirectoryW(wpath)) {
 			DBG_ALIGNMENT_ENABLE();
 			Dee_Decref(pathob);
-			return true;
+			goto ok;
 		}
 		DBG_ALIGNMENT_ENABLE();
 	}
@@ -2547,7 +2551,13 @@ err:
 }
 #else /* CONFIG_HOST_WINDOWS */
 #ifdef CONFIG_HAVE_chdir
-#define os_trychdir(path) (chdir(path) == 0)
+#define os_trychdir(path)                                     \
+	(chdir(path) == 0                                         \
+	 ? ((DeeNotify_BroadcastClass(Dee_NOTIFICATION_CLASS_PWD) \
+	     ? (void)DeeError_Handled(ERROR_HANDLED_RESTORE)      \
+	     : (void)0),                                          \
+	    true)                                                 \
+	 : false)
 #else /* CONFIG_HAVE_chdir */
 PRIVATE bool DCALL os_trychdir(char const *path) {
 	/* Try to off-load the job to `posix.chdir()' (thus allowing the

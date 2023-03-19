@@ -454,10 +454,11 @@ EXPORTS
 	DeeNTSystem_UPrintFormatMessage@24=_DeeNTSystem_UPrintFormatMessage@24
 	DeeNTSystem_VThrowErrorf@16=_DeeNTSystem_VThrowErrorf@16
 	DeeNTSystem_VThrowLastErrorf@12=_DeeNTSystem_VThrowLastErrorf@12
-	DeeNotify_BeginListen@16=_DeeNotify_BeginListen@16
 	DeeNotify_Broadcast@8=_DeeNotify_Broadcast@8
+	DeeNotify_BroadcastClass@4=_DeeNotify_BroadcastClass@4
 	DeeNotify_BroadcastString@8=_DeeNotify_BroadcastString@8
 	DeeNotify_EndListen@16=_DeeNotify_EndListen@16
+	DeeNotify_StartListen@16=_DeeNotify_StartListen@16
 	DeeObjMethod_GetDoc@4=_DeeObjMethod_GetDoc@4
 	DeeObjMethod_GetName@4=_DeeObjMethod_GetName@4
 	DeeObjMethod_GetType@4=_DeeObjMethod_GetType@4

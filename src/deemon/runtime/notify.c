@@ -113,9 +113,9 @@ PRIVATE rwlock_t notify_lock = RWLOCK_INIT;
 #endif /* !CONFIG_NO_THREADS */
 
 /* The usual deal: it's a hash-vector (s.a.: Dict, member_table, etc. etc.) */
-PRIVATE size_t               notify_used = 0;
-PRIVATE size_t               notify_size = 0;
-PRIVATE size_t               notify_mask = 0;
+PRIVATE size_t /*         */ notify_used = 0;
+PRIVATE size_t /*         */ notify_size = 0;
+PRIVATE size_t /*         */ notify_mask = 0;
 PRIVATE struct notify_entry *notify_list = (struct notify_entry *)empty_notifications;
 
 #define NOTIFY_HASHST(hash)        ((hash) & notify_mask)
@@ -202,7 +202,7 @@ notify_rehash(int sizedir) {
  *               and `name' with the same `arg' and was not registered again / removed.
  * @return:  -1: An error occurred (Never returned by `DeeNotify_EndListen'). */
 PUBLIC WUNUSED NONNULL((2, 3)) int DCALL
-DeeNotify_BeginListen(uint16_t cls, DeeObject *__restrict name,
+DeeNotify_StartListen(uint16_t cls, DeeObject *__restrict name,
                       Dee_notify_t callback, DeeObject *arg) {
 	struct notify_entry *first_dummy;
 	dhash_t hash, perturb, i;
@@ -320,18 +320,17 @@ not_found:
 
 /* Broadcast a change notification for the given class `cls' and `name'
  * NOTE: The caller is responsible for passing a string for `name'
- * @return:  * : The number of callbacks that were executed.
+ * @return:  0 : Success.
  * @return: -1 : Callback invocation was stopped after a callback indicated an error. */
 PRIVATE WUNUSED NONNULL((2)) int DCALL
 DeeNotify_DoBroadcast(uint16_t cls,
                       char const *__restrict name,
                       size_t name_size,
                       dhash_t name_hash) {
+	int result = 0;
 	dhash_t perturb, i;
 	size_t mask;
-	int result = 0;
 	struct notify_entry *list;
-	int temp;
 	rwlock_read(&notify_lock);
 again:
 	mask    = notify_mask;
@@ -358,19 +357,19 @@ again:
 			arg  = entry->nh_arg;
 			Dee_XIncref(arg);
 			COMPILER_READ_BARRIER();
+
 			/* Found an entry that we're supposed to invoke! */
 			rwlock_endread(&notify_lock);
+
 			/* Invoke the notification callback. */
-			temp = (*func)(arg);
+			result = (*func)(arg);
 			Dee_XDecref(arg);
+
 			/* If an error occurred, forward it. */
-			if unlikely(temp)
-				return temp;
-#if __SIZEOF_POINTER__ > __SIZEOF_INT__
-			if likely(result != __INT_MAX__)
-				++result;
-#endif /* __SIZEOF_POINTER__ > __SIZEOF_INT__ */
+			if unlikely(result)
+				goto done;
 			rwlock_read(&notify_lock);
+
 			/* If the notification map changed, start
 			 * over, so we can call everything. */
 			if (mask != notify_mask ||
@@ -379,11 +378,12 @@ again:
 		}
 	}
 	rwlock_endread(&notify_lock);
+done:
 	return result;
 }
 
-PUBLIC WUNUSED NONNULL((2)) int DCALL
-DeeNotify_Broadcast(uint16_t cls, DeeObject *__restrict name) {
+PUBLIC WUNUSED NONNULL((2)) int
+(DCALL DeeNotify_Broadcast)(uint16_t cls, DeeObject *__restrict name) {
 	size_t name_size;
 	dhash_t name_hash;
 	ASSERT_OBJECT_TYPE_EXACT(name, &DeeString_Type);
@@ -394,8 +394,8 @@ DeeNotify_Broadcast(uint16_t cls, DeeObject *__restrict name) {
 	return DeeNotify_DoBroadcast(cls, DeeString_STR(name), name_size, name_hash);
 }
 
-PUBLIC WUNUSED NONNULL((2)) int DCALL
-DeeNotify_BroadcastString(uint16_t cls, char const *__restrict name) {
+PUBLIC WUNUSED NONNULL((2)) int
+(DCALL DeeNotify_BroadcastString)(uint16_t cls, char const *__restrict name) {
 	size_t name_size;
 	dhash_t name_hash;
 	name_size = strlen(name);
@@ -403,6 +403,52 @@ DeeNotify_BroadcastString(uint16_t cls, char const *__restrict name) {
 	            ? Dee_HashCasePtr(name, name_size * sizeof(char))
 	            : Dee_HashPtr(name, name_size * sizeof(char));
 	return DeeNotify_DoBroadcast(cls, name, name_size, name_hash);
+}
+
+PUBLIC WUNUSED NONNULL((2)) int
+(DCALL DeeNotify_BroadcastClass)(uint16_t cls) {
+	int result = 0;
+	size_t mask, i;
+	struct notify_entry *list;
+	rwlock_read(&notify_lock);
+again:
+	mask = notify_mask;
+	list = notify_list;
+	for (i = 0; i <= mask; ++i) {
+		DREF DeeObject *arg;
+		Dee_notify_t func;
+		struct notify_entry *entry;
+		entry = &notify_list[i];
+		if (!entry->nh_name)
+			break;
+		if (entry->nh_class != cls)
+			continue; /* Check the class. */
+		if (entry->nh_func == &dummy_notify)
+			continue; /* Skip dummy notifications. */
+		func = entry->nh_func;
+		arg  = entry->nh_arg;
+		Dee_XIncref(arg);
+		COMPILER_READ_BARRIER();
+		rwlock_endread(&notify_lock);
+
+		/* Invoke the notification callback. */
+		result = (*func)(arg);
+		Dee_XDecref(arg);
+
+		/* If an error occurred, forward it. */
+		if unlikely(result)
+			goto done;
+		rwlock_read(&notify_lock);
+
+		/* If the notification map changed, start
+			* over, so we can call everything. */
+		if (mask != notify_mask ||
+			list != notify_list)
+			goto again;
+	}
+	rwlock_endread(&notify_lock);
+done:
+	return result;
 }
 
 

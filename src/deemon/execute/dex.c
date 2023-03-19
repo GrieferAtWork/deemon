@@ -407,7 +407,7 @@ dex_initialize(DeeDexObject *__restrict self) {
 		hooks = self->d_dex->d_notify;
 		if (hooks)
 			for (; hooks->dn_name; ++hooks) {
-				if unlikely(DeeNotify_BeginListen((uint16_t)hooks->dn_class,
+				if unlikely(DeeNotify_StartListen((uint16_t)hooks->dn_class,
 				                                  (DeeObject *)hooks->dn_name,
 				                                  hooks->dn_callback,
 				                                  hooks->dn_arg) < 0) {

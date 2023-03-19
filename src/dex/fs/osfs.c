@@ -951,6 +951,8 @@ do_throw_not_dir:
 		goto err;
 	}
 done:
+	if (DeeNotify_BroadcastClass(Dee_NOTIFICATION_CLASS_PWD))
+		goto err;
 	return 0;
 err:
 	return -1;
@@ -1056,6 +1058,8 @@ check_error:
 		goto err;
 	}
 done:
+	if (DeeNotify_BroadcastClass(Dee_NOTIFICATION_CLASS_PWD))
+		goto err;
 	return 0;
 err:
 	return -1;

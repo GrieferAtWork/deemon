@@ -1154,7 +1154,7 @@ again:
  * This cache is cleared when $PATH or $PATHEXT is changed.
  * 
  * The first time that this cache is used, it is hooked into the
- * notify system via `DeeNotify_BeginListen()', and once the ipc
+ * notify system via `DeeNotify_StartListen()', and once the ipc
  * dex is unloaded, that hook is deleted by `DeeNotify_EndListen()' */
 PRIVATE DeeDictObject ipc_exe2path_cache  = Dee_DICT_INIT;
 PRIVATE bool ipc_exe2path_cache_listening = false;
@@ -1187,23 +1187,32 @@ ipc_exe2path_start_listen(void) {
 		shared_lock_acquire(&ipc_exe2path_cache_startlisten_lock);
 		if (!ipc_exe2path_cache_listening) {
 			int ok;
-			/* TODO: The cache also needs to be cleared when the program's PWD changes! */
-			ok = DeeNotify_BeginListen(Dee_NOTIFICATION_CLASS_ENVIRON,
+			ok = DeeNotify_StartListen(Dee_NOTIFICATION_CLASS_ENVIRON,
 			                           (DeeObject *)&str_PATH,
 			                           &ipc_exe2path_notify, NULL);
 #ifdef ipc_Process_USE_CreateProcessW
-			if likely(ok == 0) {
-				ok = DeeNotify_BeginListen(Dee_NOTIFICATION_CLASS_ENVIRON,
+			if likely(ok >= 0) {
+				ok = DeeNotify_StartListen(Dee_NOTIFICATION_CLASS_ENVIRON,
 				                           (DeeObject *)&str_PATHEXT,
 				                           &ipc_exe2path_notify, NULL);
-				if unlikely(ok != 0) {
+				if likely(ok >= 0) {
+					/* On windows, also need to be clear the cache when the program's PWD changes! */
+					ok = DeeNotify_StartListenClass(Dee_NOTIFICATION_CLASS_PWD,
+					                                &ipc_exe2path_notify, NULL);
+					if unlikely(ok < 0) {
+						DeeNotify_EndListen(Dee_NOTIFICATION_CLASS_ENVIRON,
+						                    (DeeObject *)&str_PATHEXT,
+						                    &ipc_exe2path_notify, NULL);
+					}
+				}
+				if unlikely(ok < 0) {
 					DeeNotify_EndListen(Dee_NOTIFICATION_CLASS_ENVIRON,
 					                    (DeeObject *)&str_PATH,
 					                    &ipc_exe2path_notify, NULL);
 				}
 			}
 #endif /* ipc_Process_USE_CreateProcessW */
-			if unlikely(ok != 0) {
+			if unlikely(ok < 0) {
 				shared_lock_release(&ipc_exe2path_cache_startlisten_lock);
 				DeeError_Handled(ERROR_HANDLED_RESTORE);
 				return;
@@ -1222,6 +1231,7 @@ PRIVATE void DCALL ipc_exe2path_fini(void) {
 		DeeNotify_EndListen(Dee_NOTIFICATION_CLASS_ENVIRON, (DeeObject *)&str_PATH, &ipc_exe2path_notify, NULL);
 #ifdef ipc_Process_USE_CreateProcessW
 		DeeNotify_EndListen(Dee_NOTIFICATION_CLASS_ENVIRON, (DeeObject *)&str_PATHEXT, &ipc_exe2path_notify, NULL);
+		DeeNotify_EndListenClass(Dee_NOTIFICATION_CLASS_PWD, &ipc_exe2path_notify, NULL);
 #endif /* ipc_Process_USE_CreateProcessW */
 	}
 }

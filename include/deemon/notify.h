@@ -47,13 +47,14 @@ DECL_BEGIN
  * for custom notification callbacks, in addition to its name, a
  * notification class must be specified (which is not restricted
  * to those listed below). */
-#define Dee_NOTIFICATION_CLASS_FNOCASE     0x8000 /* FLAG: Callback names are case-insensitive. */
-#define Dee_NOTIFICATION_CLASS_FIDMASK     0x7fff /* MASK: The actual notification class ID. */
+#define Dee_NOTIFICATION_CLASS_FNOCASE 0x8000 /* FLAG: Callback names are case-insensitive. */
+#define Dee_NOTIFICATION_CLASS_FIDMASK 0x7fff /* MASK: The actual notification class ID. */
 #ifdef CONFIG_HOST_WINDOWS
-#define Dee_NOTIFICATION_CLASS_ENVIRON     0x8000 /* Environment variable. (The callback name is the variable name) */
+#define Dee_NOTIFICATION_CLASS_ENVIRON 0x8000 /* Environment variable. (The callback name is the variable name) */
 #else /* CONFIG_HOST_WINDOWS */
-#define Dee_NOTIFICATION_CLASS_ENVIRON     0x0000 /* Environment variable. (The callback name is the variable name) */
+#define Dee_NOTIFICATION_CLASS_ENVIRON 0x0000 /* Environment variable. (The callback name is the variable name) */
 #endif /* !CONFIG_HOST_WINDOWS */
+#define Dee_NOTIFICATION_CLASS_PWD     0x0001 /* Process working directory. (`name' is ignored) */
 
 
 /* Returns the value of `(environ from posix).get(name, none)',
@@ -158,15 +159,33 @@ typedef int (DCALL *Dee_notify_t)(DeeObject *arg);
  *               and `name' with the same `arg' and was not registered again / removed.
  * @return:  -1: An error occurred (Never returned by `DeeNotify_EndListen').
  * WARNING: Notifications may be invoked more than once if added from a notification callback. */
-DFUNDEF WUNUSED NONNULL((2, 3)) int (DCALL DeeNotify_BeginListen)(uint16_t cls, DeeObject *__restrict name, Dee_notify_t callback, DeeObject *arg);
+DFUNDEF WUNUSED NONNULL((2, 3)) int (DCALL DeeNotify_StartListen)(uint16_t cls, DeeObject *__restrict name, Dee_notify_t callback, DeeObject *arg);
 DFUNDEF NONNULL((2, 3)) int (DCALL DeeNotify_EndListen)(uint16_t cls, DeeObject *__restrict name, Dee_notify_t callback, DeeObject *arg);
+
+/* Notify start/end functions for classes exclusively notified using `DeeNotify_BroadcastClass()'. */
+#define DeeNotify_StartListenClass(cls, callback, arg) \
+	DeeNotify_StartListen(cls, Dee_EmptyString, callback, arg)
+#define DeeNotify_EndListenClass(cls, callback, arg) \
+	DeeNotify_EndListen(cls, Dee_EmptyString, callback, arg)
 
 /* Broadcast a change notification for the given class `cls' and `name'
  * NOTE: The caller is responsible for passing a string for `name'
- * @return:  * : The number of callbacks that were executed.
+ * @return:  0 : Success.
  * @return: -1 : Callback invocation was stopped after a callback indicated an error. */
-DFUNDEF WUNUSED NONNULL((2)) int DCALL DeeNotify_Broadcast(uint16_t cls, DeeObject *__restrict name);
-DFUNDEF WUNUSED NONNULL((2)) int DCALL DeeNotify_BroadcastString(uint16_t cls, char const *__restrict name);
+DFUNDEF WUNUSED NONNULL((2)) int (DCALL DeeNotify_Broadcast)(uint16_t cls, DeeObject *__restrict name);
+DFUNDEF WUNUSED NONNULL((2)) int (DCALL DeeNotify_BroadcastString)(uint16_t cls, char const *__restrict name);
+
+/* Broadcast a change to all listeners of the given `cls' */
+DFUNDEF WUNUSED NONNULL((2)) int (DCALL DeeNotify_BroadcastClass)(uint16_t cls);
+
+#ifndef __INTELLISENSE__
+#ifndef __NO_builtin_expect
+#define DeeNotify_Broadcast(cls, name)       __builtin_expect(DeeNotify_Broadcast(cls, name), 0)
+#define DeeNotify_BroadcastString(cls, name) __builtin_expect(DeeNotify_BroadcastString(cls, name), 0)
+#define DeeNotify_BroadcastClass(cls)        __builtin_expect(DeeNotify_BroadcastClass(cls), 0)
+#endif /* !__NO_builtin_expect */
+#endif /* !__INTELLISENSE__ */
+
 
 #ifdef CONFIG_BUILDING_DEEMON
 /* Delete all registered notification callbacks.

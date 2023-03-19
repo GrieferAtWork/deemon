@@ -389,6 +389,8 @@ do_throw_not_dir:
 		}
 		goto err;
 	}
+	if (DeeNotify_BroadcastClass(Dee_NOTIFICATION_CLASS_PWD))
+		goto err;
 	return_none;
 err:
 	return NULL;
@@ -419,6 +421,8 @@ EINTR_LABEL(again)
 		err_unix_chdir(error, path);
 		goto err;
 	}
+	if (DeeNotify_BroadcastClass(Dee_NOTIFICATION_CLASS_PWD))
+		goto err;
 	return_none;
 err:
 	return NULL;
@@ -474,6 +478,8 @@ EINTR_LABEL(again)
 		err_unix_chdir(error, fd);
 		goto err;
 	}
+	if (DeeNotify_BroadcastClass(Dee_NOTIFICATION_CLASS_PWD))
+		goto err;
 	return_none;
 err:
 	return NULL;
@@ -537,8 +543,11 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_fchdirat_f_impl(DeeObject *dfd, D
 		if unlikely(!utf8_path)
 			goto err;
 EINTR_LABEL(again)
-		if (fchdirat(os_dfd, utf8_path, atflags) == 0)
+		if (fchdirat(os_dfd, utf8_path, atflags) == 0) {
+			if (DeeNotify_BroadcastClass(Dee_NOTIFICATION_CLASS_PWD))
+				goto err;
 			return_none;
+		}
 		EINTR_HANDLE(DeeSystem_GetErrno(), again, err);
 		/* fallthru to the fallback path below */
 	}

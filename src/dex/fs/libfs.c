@@ -325,7 +325,6 @@ err:
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
-
 f_libfs_chdir(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	DeeObject *path;
 	if (DeeArg_UnpackKw(argc, argv, kw, path_kwlist, "o:chdir", &path))
