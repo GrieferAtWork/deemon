@@ -30,6 +30,7 @@
 #include <deemon/error.h>
 #include <deemon/file.h>
 #include <deemon/filetypes.h>
+#include <deemon/format.h>
 #include <deemon/int.h>
 #include <deemon/none.h>
 #include <deemon/object.h>
@@ -3168,6 +3169,57 @@ PRIVATE struct type_member tpconst sysfile_members[] = {
 };
 #endif /* DEESYSTEM_FILE_USE_STDIO */
 
+
+PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
+sysfile_print(SystemFile *__restrict self, dformatprinter printer, void * arg) {
+#ifdef DEESYSTEM_FILE_HAVE_sf_filename
+	if (self->sf_filename != NULL)
+		return DeeFormat_Printf(printer, arg, "<File %r>", self->sf_filename);
+#endif /* DEESYSTEM_FILE_HAVE_sf_filename */
+#ifdef DEESYSTEM_FILE_USE_WINDOWS
+	return DeeFormat_Printf(printer, arg, "<File (handle %p)>", self->sf_handle);
+#elif defined(DEESYSTEM_FILE_USE_UNIX)
+	return DeeFormat_Printf(printer, arg, "<File (fd %d)>", self->sf_handle);
+#elif defined(DEESYSTEM_FILE_USE_STDIO) && defined(CONFIG_HAVE_fileno)
+	return DeeFormat_Printf(printer, arg, "<File (fd %d)>", fileno(self->sf_handle));
+#else /* ... */
+	(void)self;
+	return DeeFormat_PRINT(printer, arg, "<File>");
+#endif /* !... */
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
+sysfile_printrepr(SystemFile *__restrict self, dformatprinter printer, void * arg) {
+#ifdef DEESYSTEM_FILE_HAVE_sf_filename
+	if (self->sf_filename != NULL)
+		return DeeFormat_Printf(printer, arg, "File.open(%r)", self->sf_filename);
+#endif /* DEESYSTEM_FILE_HAVE_sf_filename */
+#ifdef DEESYSTEM_FILE_USE_WINDOWS
+	{
+		char const *name = self->ob_type->ft_base.tp_name;
+		if (name == NULL)
+			name = DeeSystemFile_Type.ft_base.tp_name;
+		return DeeFormat_Printf(printer, arg, "%s(fd: HANDLE(%#" PRFxPTR "), inherit: %s)",
+		                        name, self->sf_handle,
+		                        self->sf_ownhandle == self->sf_handle ? "true" : "false");
+	}
+#elif defined(DEESYSTEM_FILE_USE_UNIX)
+	{
+		char const *name = self->ob_type->ft_base.tp_name;
+		if (name == NULL)
+			name = DeeSystemFile_Type.ft_base.tp_name;
+		return DeeFormat_Printf(printer, arg, "%s(fd: %d, inherit: %s)",
+		                        name, self->sf_handle,
+		                        self->sf_ownhandle == self->sf_handle ? "true" : "false");
+	}
+#else /* ... */
+	return sysfile_print(self, printer, arg);
+#endif /* !... */
+}
+
+
+
+
 PUBLIC DeeFileTypeObject DeeSystemFile_Type = {
 	/* .ft_base = */ {
 		OBJECT_HEAD_INIT(&DeeFileType_Type),
@@ -3221,9 +3273,11 @@ PUBLIC DeeFileTypeObject DeeSystemFile_Type = {
 			/* .tp_move_assign = */ NULL
 		},
 		/* .tp_cast = */ {
-			/* .tp_str  = */ NULL,
-			/* .tp_repr = */ NULL,
-			/* .tp_bool = */ NULL
+			/* .tp_str       = */ NULL,
+			/* .tp_repr      = */ NULL,
+			/* .tp_bool      = */ NULL,
+			/* .tp_print     = */ (dssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&sysfile_print,
+			/* .tp_printrepr = */ (dssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&sysfile_printrepr
 		},
 		/* .tp_call          = */ NULL,
 		/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&sysfile_visit,
