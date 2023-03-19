@@ -622,6 +622,15 @@ DeeSystem_DEFINE_memcmpw(dee_memcmpw)
 DeeSystem_DEFINE_memcmpl(dee_memcmpl)
 #endif /* !CONFIG_HAVE_memcmpl */
 
+LOCAL ATTR_CONST int DCALL
+fix_memcmp_return(int value) {
+	if (value < -1) {
+		value = -1;
+	} else if (value > 1) {
+		value = 1;
+	}
+	return value;
+}
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 compare_strings(String *__restrict lhs,
@@ -641,7 +650,7 @@ compare_strings(String *__restrict lhs,
 			/* Most simple case: compare ascii/single-byte strings. */
 			result = memcmp(lhs_str, rhs->s_str, MIN(lhs_len, rhs_len));
 			if (result != 0)
-				return result;
+				return fix_memcmp_return(result);
 		} else {
 			struct string_utf *rhs_utf = rhs->s_data;
 			switch (rhs_utf->u_width) {
@@ -740,7 +749,7 @@ compare_strings(String *__restrict lhs,
 				common_len = MIN(lhs_len, rhs_len);
 				result     = memcmpw(lhs_str, rhs_str, common_len);
 				if (result != 0)
-					return result;
+					return fix_memcmp_return(result);
 			}	break;
 
 			CASE_WIDTH_4BYTE: {
@@ -788,7 +797,7 @@ compare_strings(String *__restrict lhs,
 				common_len = MIN(lhs_len, rhs_len);
 				result     = memcmpl(lhs_str, rhs_str, common_len);
 				if (result != 0)
-					return result;
+					return fix_memcmp_return(result);
 			}	break;
 
 			default: __builtin_unreachable();
