@@ -17,8 +17,8 @@
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
  */
-#ifndef GUARD_DEX_IPC_NT_GETPROCESSATTRIBUTE_C_INL
-#define GUARD_DEX_IPC_NT_GETPROCESSATTRIBUTE_C_INL 1
+#ifndef GUARD_DEX_IPC_NT_C_INL
+#define GUARD_DEX_IPC_NT_C_INL 1
 #define DEE_SOURCE
 #define _KOS_SOURCE 1
 
@@ -47,9 +47,9 @@
 #   define PATH_MAX MAX_PATH
 #elif defined(MAXPATH)
 #   define PATH_MAX MAXPATH
-#else
+#else /* ... */
 #   define PATH_MAX 260
-#endif
+#endif /* !... */
 #endif /* !PATH_MAX */
 
 
@@ -232,141 +232,6 @@ nt_GetProcessAttribute(HANDLE *__restrict lphProcess,
 }
 
 
-INTERN WUNUSED DREF DeeObject *DCALL nt_GetModuleFileName(HMODULE hModule) {
-	LPWSTR lpBuffer, lpNewBuffer;
-	DWORD dwBufSize = PATH_MAX, dwError;
-	lpBuffer        = DeeString_NewWideBuffer(dwBufSize);
-	if unlikely(!lpBuffer)
-		goto err;
-again:
-	if (DeeThread_CheckInterrupt())
-		goto err_buffer;
-	for (;;) {
-		DBG_ALIGNMENT_DISABLE();
-		dwError = GetModuleFileNameW((HMODULE)hModule, lpBuffer, dwBufSize + 1);
-		if (!dwError) {
-			dwError = GetLastError();
-			DBG_ALIGNMENT_ENABLE();
-			if (DeeNTSystem_IsIntr(dwError))
-				goto again;
-			if (DeeNTSystem_IsBufferTooSmall(dwError))
-				goto do_increase_buffer;
-			DeeNTSystem_ThrowErrorf(&DeeError_SystemError, dwError,
-			                        "Failed to lookup module name");
-			goto err_buffer;
-		}
-		DBG_ALIGNMENT_ENABLE();
-		if (dwError <= dwBufSize) {
-			if (dwError < dwBufSize)
-				break;
-			DBG_ALIGNMENT_DISABLE();
-			dwError = GetLastError();
-			DBG_ALIGNMENT_ENABLE();
-			if (!DeeNTSystem_IsBufferTooSmall(dwError))
-				break;
-		}
-		/* Increase buffer size. */
-do_increase_buffer:
-		dwBufSize *= 2;
-		lpNewBuffer = DeeString_ResizeWideBuffer(lpBuffer, dwBufSize);
-		if unlikely(!lpNewBuffer)
-			goto err_buffer;
-		lpBuffer = lpNewBuffer;
-	}
-	lpBuffer = DeeString_TruncateWideBuffer(lpBuffer, dwError);
-	return DeeString_PackWideBuffer(lpBuffer, STRING_ERROR_FREPLAC);
-err_buffer:
-	DeeString_FreeWideBuffer(lpBuffer);
-err:
-	return NULL;
-}
-
-
-typedef BOOL (WINAPI *LPQUERYFULLPROCESSIMAGENAMEW)(HANDLE hProcess, DWORD dwFlags, LPWSTR lpExeName, PDWORD lpdwSize);
-PRIVATE LPQUERYFULLPROCESSIMAGENAMEW pQueryFullProcessImageNameW = NULL;
-PRIVATE WCHAR const str_KERNEL32[] = { 'K', 'E', 'R', 'N', 'E', 'L', '3', '2', 0 };
-
-INTERN WUNUSED DREF DeeObject *DCALL
-nt_QueryFullProcessImageName(HANDLE hProcess, DWORD dwFlags) {
-	LPWSTR buffer, new_buffer;
-	DWORD bufsize = 256;
-	LPQUERYFULLPROCESSIMAGENAMEW func;
-	func = pQueryFullProcessImageNameW;
-	if (!func) {
-		DBG_ALIGNMENT_DISABLE();
-		*(FARPROC *)&func = GetProcAddress(GetModuleHandleW(str_KERNEL32),
-		                                   "QueryFullProcessImageNameW");
-		DBG_ALIGNMENT_ENABLE();
-		if (!func)
-			*(void **)&func = (void *)(uintptr_t)-1;
-		atomic_cmpxch(&pQueryFullProcessImageNameW, NULL, func);
-	}
-	/* If the function is not supported, return ITER_DONE. */
-	if (*(void **)&func == (void *)(uintptr_t)-1)
-		return ITER_DONE;
-	buffer = DeeString_NewWideBuffer(bufsize);
-	if unlikely(!buffer)
-		goto err;
-	DBG_ALIGNMENT_DISABLE();
-	while (!(*func)(hProcess, dwFlags, buffer, &bufsize)) {
-		DWORD dwError;
-		dwError = GetLastError();
-		DBG_ALIGNMENT_ENABLE();
-		switch (dwError) {
-
-		case ERROR_GEN_FAILURE:
-			/* Generated for Zombie Processes */
-			DeeString_FreeWideBuffer(buffer);
-			return_empty_string;
-
-		case ERROR_BUFFER_OVERFLOW:
-		case ERROR_MORE_DATA:
-		case ERROR_INSUFFICIENT_BUFFER:
-			/* Increase the buffer size. */
-			bufsize    = (DWORD)(WSTR_LENGTH(buffer) * 2);
-			new_buffer = DeeString_ResizeWideBuffer(buffer, bufsize);
-			if unlikely(!new_buffer)
-				goto err_r;
-			buffer = new_buffer;
-			break;
-
-		default:
-			DeeNTSystem_ThrowErrorf(NULL, dwError,
-			                        "Call to QueryFullProcessImageNameW failed");
-			goto err_r;
-		}
-		DBG_ALIGNMENT_DISABLE();
-	}
-	DBG_ALIGNMENT_ENABLE();
-	buffer = DeeString_TruncateWideBuffer(buffer, bufsize);
-	return DeeString_PackWideBuffer(buffer, STRING_ERROR_FREPLAC);
-err_r:
-	DeeString_FreeWideBuffer(buffer);
-err:
-	return NULL;
-}
-
-INTERN BOOL DCALL
-nt_GetExitCodeProcess(DWORD dwProcessId,
-                      HANDLE hProcess,
-                      LPDWORD lpExitCode) {
-	BOOL result;
-	DBG_ALIGNMENT_DISABLE();
-	result = GetExitCodeProcess(hProcess, lpExitCode);
-	DBG_ALIGNMENT_ENABLE();
-	if (result)
-		goto done;
-	DBG_ALIGNMENT_DISABLE();
-	if (GetLastError() == ERROR_ACCESS_DENIED &&
-	    (hProcess = OpenProcess(dwProcessId, FALSE, PROCESS_QUERY_LIMITED_INFORMATION)) != NULL) {
-		result = GetExitCodeProcess(hProcess, lpExitCode);
-		CloseHandle(hProcess);
-	}
-	DBG_ALIGNMENT_ENABLE();
-done:
-	return result;
-}
-
 DECL_END
 
-#endif /* !GUARD_DEX_IPC_NT_GETPROCESSATTRIBUTE_C_INL */
+#endif /* !GUARD_DEX_IPC_NT_C_INL */

@@ -127,19 +127,19 @@ PUBLIC ATTR_COLD NONNULL((3)) int
 
 
 
-/* Figure out how to implement `DeeUnixSystem_Readlink()' */
-#undef DeeUnixSystem_Readlink_USE_WINDOWS
+/* Figure out how to implement `DeeUnixSystem_ReadLink()' */
+#undef DeeUnixSystem_ReadLink_USE_WINDOWS
 #undef DEEUNIXSYSTEM_READLINK_USE_FREADLINKAT
-#undef DeeUnixSystem_Readlink_USE_READLINK
-#undef DeeUnixSystem_Readlink_USE_STUB
+#undef DeeUnixSystem_ReadLink_USE_READLINK
+#undef DeeUnixSystem_ReadLink_USE_STUB
 #if defined(CONFIG_HOST_WINDOWS)
-#define DeeUnixSystem_Readlink_USE_WINDOWS 1
+#define DeeUnixSystem_ReadLink_USE_WINDOWS 1
 #elif defined(CONFIG_HAVE_freadlinkat) && defined(AT_READLINK_REQSIZE) && defined(AT_FDCWD) && 0
 #define DEEUNIXSYSTEM_READLINK_USE_FREADLINKAT 1 /* TODO */
 #elif defined(CONFIG_HAVE_readlink) && defined(CONFIG_HAVE_lstat)
-#define DeeUnixSystem_Readlink_USE_READLINK 1
+#define DeeUnixSystem_ReadLink_USE_READLINK 1
 #else
-#define DeeUnixSystem_Readlink_USE_STUB 1
+#define DeeUnixSystem_ReadLink_USE_STUB 1
 #endif
 
 
@@ -149,44 +149,44 @@ PUBLIC ATTR_COLD NONNULL((3)) int
  * @return: -1 / NULL:     Error.
  * @return: 1 / ITER_DONE: The specified file isn't a symbolic link. */
 PUBLIC WUNUSED int DCALL
-DeeUnixSystem_Printlink(struct unicode_printer *__restrict printer,
+DeeUnixSystem_PrintLink(struct unicode_printer *__restrict printer,
                         /*String*/ DeeObject *__restrict filename) {
-#ifdef DeeUnixSystem_Readlink_USE_WINDOWS
+#ifdef DeeUnixSystem_ReadLink_USE_WINDOWS
 	/* TODO */
 	(void)printer;
 	(void)filename;
 	return 1;
-#endif /* DeeUnixSystem_Readlink_USE_WINDOWS */
+#endif /* DeeUnixSystem_ReadLink_USE_WINDOWS */
 
 #if (defined(DEEUNIXSYSTEM_READLINK_USE_FREADLINKAT) || \
-     defined(DeeUnixSystem_Readlink_USE_READLINK))
+     defined(DeeUnixSystem_ReadLink_USE_READLINK))
 	int result;
 	char const *utf8_filename;
 	utf8_filename = DeeString_AsUtf8(filename);
 	if unlikely(!utf8_filename)
 		goto err;
-	result = DeeUnixSystem_PrintlinkString(printer, utf8_filename);
+	result = DeeUnixSystem_PrintLinkString(printer, utf8_filename);
 	return result;
 err:
 	return -1;
-#endif /* DEEUNIXSYSTEM_READLINK_USE_FREADLINKAT || DeeUnixSystem_Readlink_USE_READLINK */
+#endif /* DEEUNIXSYSTEM_READLINK_USE_FREADLINKAT || DeeUnixSystem_ReadLink_USE_READLINK */
 
-#ifdef DeeUnixSystem_Readlink_USE_STUB
+#ifdef DeeUnixSystem_ReadLink_USE_STUB
 	(void)printer;
 	(void)filename;
 	return 1;
-#endif /* DeeUnixSystem_Readlink_USE_STUB */
+#endif /* DeeUnixSystem_ReadLink_USE_STUB */
 }
 
 PUBLIC WUNUSED int DCALL
-DeeUnixSystem_PrintlinkString(struct unicode_printer *__restrict printer,
+DeeUnixSystem_PrintLinkString(struct unicode_printer *__restrict printer,
                               /*utf-8*/ char const *filename) {
-#ifdef DeeUnixSystem_Readlink_USE_WINDOWS
+#ifdef DeeUnixSystem_ReadLink_USE_WINDOWS
 	/* TODO */
 	(void)printer;
 	(void)filename;
 	return 1;
-#endif /* DeeUnixSystem_Readlink_USE_WINDOWS */
+#endif /* DeeUnixSystem_ReadLink_USE_WINDOWS */
 
 #ifdef DEEUNIXSYSTEM_READLINK_USE_FREADLINKAT
 	/* TODO */
@@ -195,7 +195,7 @@ DeeUnixSystem_PrintlinkString(struct unicode_printer *__restrict printer,
 	return 1;
 #endif /* DEEUNIXSYSTEM_READLINK_USE_FREADLINKAT */
 
-#ifdef DeeUnixSystem_Readlink_USE_READLINK
+#ifdef DeeUnixSystem_ReadLink_USE_READLINK
 	char *buffer, *new_buffer;
 	int error;
 	size_t bufsize, new_size;
@@ -248,20 +248,20 @@ err_buf:
 	unicode_printer_free_utf8(printer, buffer);
 err:
 	return -1;
-#endif /* DeeUnixSystem_Readlink_USE_READLINK */
+#endif /* DeeUnixSystem_ReadLink_USE_READLINK */
 
-#ifdef DeeUnixSystem_Readlink_USE_STUB
+#ifdef DeeUnixSystem_ReadLink_USE_STUB
 	(void)printer;
 	(void)filename;
 	return 1;
-#endif /* DeeUnixSystem_Readlink_USE_STUB */
+#endif /* DeeUnixSystem_ReadLink_USE_STUB */
 }
 
 PUBLIC WUNUSED DREF DeeObject *DCALL
-DeeUnixSystem_Readlink(/*String*/ DeeObject *__restrict filename) {
+DeeUnixSystem_ReadLink(/*String*/ DeeObject *__restrict filename) {
 	int error;
 	struct unicode_printer printer = UNICODE_PRINTER_INIT;
-	error = DeeUnixSystem_Printlink(&printer, filename);
+	error = DeeUnixSystem_PrintLink(&printer, filename);
 	if (error == 0)
 		return unicode_printer_pack(&printer);
 	unicode_printer_fini(&printer);
@@ -271,10 +271,10 @@ DeeUnixSystem_Readlink(/*String*/ DeeObject *__restrict filename) {
 }
 
 PUBLIC WUNUSED DREF DeeObject *DCALL
-DeeUnixSystem_ReadlinkString(/*utf-8*/ char const *filename) {
+DeeUnixSystem_ReadLinkString(/*utf-8*/ char const *filename) {
 	int error;
 	struct unicode_printer printer = UNICODE_PRINTER_INIT;
-	error = DeeUnixSystem_PrintlinkString(&printer, filename);
+	error = DeeUnixSystem_PrintLinkString(&printer, filename);
 	if (error == 0)
 		return unicode_printer_pack(&printer);
 	unicode_printer_fini(&printer);
@@ -298,7 +298,7 @@ DeeUnixSystem_ReadlinkString(/*utf-8*/ char const *filename) {
 #elif defined(CONFIG_HAVE_frealpath4)
 #define frealpath(fd, resolved, buflen) frealpath4(fd, resolved, buflen, 0)
 #define DeeSystem_PrintFilenameOfFD_USE_FREALPATH 1
-#elif !defined(DeeUnixSystem_Readlink_USE_STUB)
+#elif !defined(DeeUnixSystem_ReadLink_USE_STUB)
 #define DeeSystem_PrintFilenameOfFD_USE_PROCFS 1
 #else
 #define DeeSystem_PrintFilenameOfFD_USE_STUB 1
@@ -403,10 +403,10 @@ increase_buffer_size:
 			goto increase_buffer_size;
 #endif /* ERANGE */
 #ifdef ENAMETOOLONG
-#ifndef DeeUnixSystem_Readlink_USE_STUB
+#ifndef DeeUnixSystem_ReadLink_USE_STUB
 		if (error != ENAMETOOLONG)
 #define DeeSystem_PrintFilenameOfFD_USE_PROCFS
-#endif /* !DeeUnixSystem_Readlink_USE_STUB */
+#endif /* !DeeUnixSystem_ReadLink_USE_STUB */
 #endif /* ENAMETOOLONG */
 		{
 			return DeeUnixSystem_ThrowErrorf(NULL, error,
@@ -420,7 +420,7 @@ increase_buffer_size:
 	{
 		char buf[64];
 		Dee_sprintf(buf, "/proc/self/fd/%d", fd);
-		return DeeUnixSystem_PrintlinkString(printer, buf);
+		return DeeUnixSystem_PrintLinkString(printer, buf);
 	}
 #endif /* DeeSystem_PrintFilenameOfFD_USE_PROCFS */
 

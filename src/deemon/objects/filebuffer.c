@@ -398,7 +398,7 @@ err:
  *       function is added to the `atexit()' chain unless deemon
  *       was built with the `CONFIG_NO_STDLIB' option enabled.
  * NOTE: This function can be called as `(File from deemon).buffer.sync()' */
-PUBLIC int DCALL DeeFileBuffer_SyncTTYs(void) {
+PUBLIC WUNUSED int DCALL DeeFileBuffer_SyncTTYs(void) {
 	int result = 0;
 	for (;;) {
 		DREF Buffer *buffer;

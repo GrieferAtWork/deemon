@@ -35,18 +35,10 @@
 		</ProjectConfiguration>
 	</ItemGroup>
 	<ItemGroup>
-		<ClInclude Include="..\..\src\dex\ipc\_res.h" />
-		<ClInclude Include="..\..\src\dex\ipc\generic-cmdline.c.inl" />
-		<ClInclude Include="..\..\src\dex\ipc\generic-pipe.c.inl" />
-		<ClInclude Include="..\..\src\dex\ipc\generic.c.inl" />
 		<ClInclude Include="..\..\src\dex\ipc\libipc.h" />
 		<ClInclude Include="..\..\src\dex\ipc\nt.c.inl" />
-		<ClInclude Include="..\..\src\dex\ipc\unix-cmdline.c.inl" />
-		<ClInclude Include="..\..\src\dex\ipc\unix-pipe.c.inl" />
-		<ClInclude Include="..\..\src\dex\ipc\unix.c.inl" />
-		<ClInclude Include="..\..\src\dex\ipc\windows-cmdline.c.inl" />
-		<ClInclude Include="..\..\src\dex\ipc\windows-pipe.c.inl" />
-		<ClInclude Include="..\..\src\dex\ipc\windows.c.inl" />
+		<ClInclude Include="..\..\src\dex\ipc\pipe.c.inl" />
+		<ClInclude Include="..\..\src\dex\ipc\process.c.inl" />
 	</ItemGroup>
 	<ItemGroup>
 		<ClCompile Include="..\..\src\dex\ipc\libipc.c" />

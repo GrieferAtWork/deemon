@@ -260,6 +260,8 @@ header_nostdinc("netdb.h", unix);
 header_nostdinc("math.h", addparen(stdc) + " && !defined(CONFIG_NO_FPU)");
 header_nostdinc("sys/param.h");
 header_nostdinc("envlock.h");
+header_nostdinc("spawn.h");
+header_nostdinc("vfork.h");
 
 include_known_headers();
 
@@ -304,13 +306,30 @@ func("_wspawnvp", msvc, test: "wchar_t s[] = { 'a', 0 }; wchar_t const *argv[2];
 func("wspawnvpe", "0", test: "wchar_t s[] = { 'a', 0 }; wchar_t *argv[2]; argv[0] = s; argv[1] = 0; return wspawnvpe(42, s, argv, argv);");
 func("_wspawnvpe", msvc, test: "wchar_t s[] = { 'a', 0 }; wchar_t const *argv[2]; argv[0] = s; argv[1] = 0; return _wspawnvpe(42, s, argv, argv);");
 func("fexecve", "defined(__USE_XOPEN2K8)", test: 'char *argv[2]; argv[0] = (char *)"a"; argv[1] = 0; return fexecve(42, argv, argv);');
+feature("pid_t", unix, test: "extern pid_t pid; return pid == 0;");
+functest("syscall(123, 0, 0, 0, 0, 0, 0)", "0");
+
+// posix_spawn API
+func("posix_spawn", "defined(CONFIG_HAVE_SPAWN_H)", test: 'extern posix_spawn_file_actions_t fa; extern posix_spawnattr_t at; extern pid_t pid; extern char **argv; extern char **envp; return posix_spawn(&pid, "foo", &fa, &at, argv, envp);');
+func("posix_fspawn_np", "defined(CONFIG_HAVE_SPAWN_H)", test: 'extern posix_spawn_file_actions_t fa; extern posix_spawnattr_t at; extern pid_t pid; extern char **argv; extern char **envp; return posix_fspawn_np(&pid, 99, &fa, &at, argv, envp);');
+func("posix_spawnattr_init", "defined(CONFIG_HAVE_SPAWN_H)", test: 'extern posix_spawnattr_t at; return posix_spawnattr_init(&at);');
+func("posix_spawnattr_destroy", "defined(CONFIG_HAVE_SPAWN_H)", test: 'extern posix_spawnattr_t at; return posix_spawnattr_destroy(&at);');
+func("posix_spawn_file_actions_init", "defined(CONFIG_HAVE_SPAWN_H)", test: 'extern posix_spawn_file_actions_t fa; return posix_spawn_file_actions_init(&fa);');
+func("posix_spawn_file_actions_destroy", "defined(CONFIG_HAVE_SPAWN_H)", test: 'extern posix_spawn_file_actions_t fa; return posix_spawn_file_actions_destroy(&fa);');
+func("posix_spawn_file_actions_adddup2", "defined(CONFIG_HAVE_SPAWN_H)", test: 'extern posix_spawn_file_actions_t fa; return posix_spawn_file_actions_adddup2(&fa, 88, 99);');
+func("posix_spawn_file_actions_addchdir", "0", test: 'extern posix_spawn_file_actions_t fa; return posix_spawn_file_actions_addchdir(&fa, "/");');
+func("posix_spawn_file_actions_addchdir_np", "0", test: 'extern posix_spawn_file_actions_t fa; return posix_spawn_file_actions_addchdir_np(&fa, "/");');
+func("posix_spawn_file_actions_addfchdir", "0", test: 'extern posix_spawn_file_actions_t fa; return posix_spawn_file_actions_addfchdir(&fa, 99);');
+func("posix_spawn_file_actions_addfchdir_np", "0", test: 'extern posix_spawn_file_actions_t fa; return posix_spawn_file_actions_addfchdir_np(&fa, 99);');
 
 func("cwait", msvc, test: 'int st; return cwait(&st, 42, 43);');
 func("_cwait", msvc, test: 'int st; return cwait(&st, 42, 43);');
 func("wait", unix, test: 'int st; return wait(&st);');
 func("waitpid", unix, test: 'int st; return waitpid(42, &st, 0);');
+constant("WNOHANG");
 func("wait4", addparen(linux) + " || " + addparen(kos), test: 'int st; struct rusage ru; return wait4(42, &st, 0, &ru);');
 func("waitid", addparen(linux) + " || " + addparen(kos), test: 'siginfo_t si; return waitid(P_ALL, 42, &si, WEXITED);');
+func("kill", unix, test: 'pid_t pid; return kill(pid, 9);');
 func("sigprocmask", unix, test: "sigset_t os; return sigprocmask(SIG_SETMASK, NULL, &os);");
 functest("detach(42)", kos + " && defined(__USE_KOS) && __KOS_VERSION__ >= 300");
 
@@ -327,10 +346,15 @@ functest('_open("foo.txt", O_RDONLY)', msvc);
 func("_wopen", "defined(_WIO_DEFINED) || " + addparen(msvc), test: "wchar_t s[] = { 'a', 0 }; return _wopen(s, O_RDONLY);");
 functest('open64("foo.txt", O_RDONLY)', "defined(__USE_LARGEFILE64)");
 functest("fcntl(42, 7) && fcntl(42, 7, 21)", "(defined(CONFIG_HAVE_FCNTL_H) || defined(CONFIG_HAVE_SYS_FCNTL_H)) && " + addparen(unix));
+functest("ioctl(42, 7) && ioctl(42, 7, (void *)0)", "(defined(CONFIG_HAVE_IOCTL_H) || defined(CONFIG_HAVE_SYS_IOCTL_H)) && " + addparen(unix));
 
+constant("F_GETFD");
 constant("F_SETFD");
+constant("F_GETFL");
 constant("F_SETFL");
 constant("FD_CLOEXEC");
+constant("FD_CLOFORK");
+constant("FIOCLEX");
 constant_nonzero("O_BINARY");
 constant_nonzero("__O_BINARY");
 constant_nonzero("_O_BINARY");
@@ -509,9 +533,11 @@ func("siglongjmp", "defined(CONFIG_HAVE_SETJMP_H) && defined(__USE_POSIX)", test
 
 func("read", unix, test: 'char buf[7]; return (int)read(0, buf, 7);');
 func("_read", msvc, test: 'char buf[7]; return (int)_read(0, buf, 7);');
+func("readall", "defined(CONFIG_HAVE_UNISTD_H) && defined(__USE_KOS)", test: 'char buf[7]; return (int)readall(0, buf, 7);');
 
 func("write", unix, test: 'char const buf[] = "foo"; return (int)write(1, buf, 3);');
 func("_write", msvc, test: 'char const buf[] = "foo"; return (int)_write(1, buf, 3);');
+func("writeall", "defined(CONFIG_HAVE_UNISTD_H) && defined(__USE_KOS)", test: 'char buf[7]; return (int)writeall(0, buf, 7);');
 
 func("lseek", unix, test: "return (int)lseek(1, 0, SEEK_SET);");
 func("lseek64", "defined(__USE_LARGEFILE64)", test: "return (int)lseek64(1, 0, SEEK_SET);");
@@ -618,6 +644,7 @@ functest("fsync(1)", isenabled("_POSIX_FSYNC") + " || (!defined(CONFIG_HAVE_UNIS
 functest("fdatasync(1)", unix);
 functest("_commit(1)", msvc);
 
+functest("gettid()", "0");
 functest("getpid()", unix);
 functest("_getpid()", msvc);
 
@@ -700,6 +727,7 @@ func("__p___argv", "defined(CONFIG_HAVE_STDLIB_H) && " + addparen(msvc), test: '
 func("__p___wargv", "defined(CONFIG_HAVE_STDLIB_H) && " + addparen(msvc), test: 'return ***__p___wargv();');
 
 func("wcslen", "defined(CONFIG_HAVE_WCHAR_H) && " + addparen(stdc), test: "wchar_t s[] = { 'a', 'b', 'c', 0 }; return (int)wcslen(s);");
+func("wmemchr", "defined(CONFIG_HAVE_WCHAR_H)", test: "extern wchar_t *buf; void *p = wmemchr(buf, L'!', 123); return p != NULL;");
 
 func("qsort", "defined(CONFIG_HAVE_STDLIB_H) && " + addparen(stdc), test: 'extern int cmpch(void const *a, void const *b); char buf[] = "foobar"; qsort(buf, 6, 1, &cmpch); return 0;');
 
@@ -1696,6 +1724,20 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #define CONFIG_HAVE_ENVLOCK_H
 #endif
 
+#ifdef CONFIG_NO_SPAWN_H
+#undef CONFIG_HAVE_SPAWN_H
+#elif !defined(CONFIG_HAVE_SPAWN_H) && \
+      (__has_include(<spawn.h>))
+#define CONFIG_HAVE_SPAWN_H
+#endif
+
+#ifdef CONFIG_NO_VFORK_H
+#undef CONFIG_HAVE_VFORK_H
+#elif !defined(CONFIG_HAVE_VFORK_H) && \
+      (__has_include(<vfork.h>))
+#define CONFIG_HAVE_VFORK_H
+#endif
+
 #ifdef CONFIG_HAVE_IO_H
 #include <io.h>
 #endif /* CONFIG_HAVE_IO_H */
@@ -2118,6 +2160,103 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #define CONFIG_HAVE_fexecve
 #endif
 
+#ifdef CONFIG_NO_pid_t
+#undef CONFIG_HAVE_pid_t
+#elif !defined(CONFIG_HAVE_pid_t) && \
+      (defined(__linux__) || defined(__linux) || defined(linux) || defined(__unix__) || \
+       defined(__unix) || defined(unix))
+#define CONFIG_HAVE_pid_t
+#endif
+
+#ifdef CONFIG_NO_syscall
+#undef CONFIG_HAVE_syscall
+#elif !defined(CONFIG_HAVE_syscall) && \
+      (defined(syscall) || defined(__syscall_defined))
+#define CONFIG_HAVE_syscall
+#endif
+
+#ifdef CONFIG_NO_posix_spawn
+#undef CONFIG_HAVE_posix_spawn
+#elif !defined(CONFIG_HAVE_posix_spawn) && \
+      (defined(posix_spawn) || defined(__posix_spawn_defined) || defined(CONFIG_HAVE_SPAWN_H))
+#define CONFIG_HAVE_posix_spawn
+#endif
+
+#ifdef CONFIG_NO_posix_fspawn_np
+#undef CONFIG_HAVE_posix_fspawn_np
+#elif !defined(CONFIG_HAVE_posix_fspawn_np) && \
+      (defined(posix_fspawn_np) || defined(__posix_fspawn_np_defined) || defined(CONFIG_HAVE_SPAWN_H))
+#define CONFIG_HAVE_posix_fspawn_np
+#endif
+
+#ifdef CONFIG_NO_posix_spawnattr_init
+#undef CONFIG_HAVE_posix_spawnattr_init
+#elif !defined(CONFIG_HAVE_posix_spawnattr_init) && \
+      (defined(posix_spawnattr_init) || defined(__posix_spawnattr_init_defined) || \
+       defined(CONFIG_HAVE_SPAWN_H))
+#define CONFIG_HAVE_posix_spawnattr_init
+#endif
+
+#ifdef CONFIG_NO_posix_spawnattr_destroy
+#undef CONFIG_HAVE_posix_spawnattr_destroy
+#elif !defined(CONFIG_HAVE_posix_spawnattr_destroy) && \
+      (defined(posix_spawnattr_destroy) || defined(__posix_spawnattr_destroy_defined) || \
+       defined(CONFIG_HAVE_SPAWN_H))
+#define CONFIG_HAVE_posix_spawnattr_destroy
+#endif
+
+#ifdef CONFIG_NO_posix_spawn_file_actions_init
+#undef CONFIG_HAVE_posix_spawn_file_actions_init
+#elif !defined(CONFIG_HAVE_posix_spawn_file_actions_init) && \
+      (defined(posix_spawn_file_actions_init) || defined(__posix_spawn_file_actions_init_defined) || \
+       defined(CONFIG_HAVE_SPAWN_H))
+#define CONFIG_HAVE_posix_spawn_file_actions_init
+#endif
+
+#ifdef CONFIG_NO_posix_spawn_file_actions_destroy
+#undef CONFIG_HAVE_posix_spawn_file_actions_destroy
+#elif !defined(CONFIG_HAVE_posix_spawn_file_actions_destroy) && \
+      (defined(posix_spawn_file_actions_destroy) || defined(__posix_spawn_file_actions_destroy_defined) || \
+       defined(CONFIG_HAVE_SPAWN_H))
+#define CONFIG_HAVE_posix_spawn_file_actions_destroy
+#endif
+
+#ifdef CONFIG_NO_posix_spawn_file_actions_adddup2
+#undef CONFIG_HAVE_posix_spawn_file_actions_adddup2
+#elif !defined(CONFIG_HAVE_posix_spawn_file_actions_adddup2) && \
+      (defined(posix_spawn_file_actions_adddup2) || defined(__posix_spawn_file_actions_adddup2_defined) || \
+       defined(CONFIG_HAVE_SPAWN_H))
+#define CONFIG_HAVE_posix_spawn_file_actions_adddup2
+#endif
+
+#ifdef CONFIG_NO_posix_spawn_file_actions_addchdir
+#undef CONFIG_HAVE_posix_spawn_file_actions_addchdir
+#elif !defined(CONFIG_HAVE_posix_spawn_file_actions_addchdir) && \
+      (defined(posix_spawn_file_actions_addchdir) || defined(__posix_spawn_file_actions_addchdir_defined))
+#define CONFIG_HAVE_posix_spawn_file_actions_addchdir
+#endif
+
+#ifdef CONFIG_NO_posix_spawn_file_actions_addchdir_np
+#undef CONFIG_HAVE_posix_spawn_file_actions_addchdir_np
+#elif !defined(CONFIG_HAVE_posix_spawn_file_actions_addchdir_np) && \
+      (defined(posix_spawn_file_actions_addchdir_np) || defined(__posix_spawn_file_actions_addchdir_np_defined))
+#define CONFIG_HAVE_posix_spawn_file_actions_addchdir_np
+#endif
+
+#ifdef CONFIG_NO_posix_spawn_file_actions_addfchdir
+#undef CONFIG_HAVE_posix_spawn_file_actions_addfchdir
+#elif !defined(CONFIG_HAVE_posix_spawn_file_actions_addfchdir) && \
+      (defined(posix_spawn_file_actions_addfchdir) || defined(__posix_spawn_file_actions_addfchdir_defined))
+#define CONFIG_HAVE_posix_spawn_file_actions_addfchdir
+#endif
+
+#ifdef CONFIG_NO_posix_spawn_file_actions_addfchdir_np
+#undef CONFIG_HAVE_posix_spawn_file_actions_addfchdir_np
+#elif !defined(CONFIG_HAVE_posix_spawn_file_actions_addfchdir_np) && \
+      (defined(posix_spawn_file_actions_addfchdir_np) || defined(__posix_spawn_file_actions_addfchdir_np_defined))
+#define CONFIG_HAVE_posix_spawn_file_actions_addfchdir_np
+#endif
+
 #ifdef CONFIG_NO_cwait
 #undef CONFIG_HAVE_cwait
 #elif !defined(CONFIG_HAVE_cwait) && \
@@ -2149,6 +2288,13 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #define CONFIG_HAVE_waitpid
 #endif
 
+#ifdef CONFIG_NO_WNOHANG
+#undef CONFIG_HAVE_WNOHANG
+#elif !defined(CONFIG_HAVE_WNOHANG) && \
+      (defined(WNOHANG) || defined(__WNOHANG_defined))
+#define CONFIG_HAVE_WNOHANG
+#endif
+
 #ifdef CONFIG_NO_wait4
 #undef CONFIG_HAVE_wait4
 #elif !defined(CONFIG_HAVE_wait4) && \
@@ -2163,6 +2309,14 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
       (defined(waitid) || defined(__waitid_defined) || ((defined(__linux__) || \
        defined(__linux) || defined(linux)) || defined(__KOS__)))
 #define CONFIG_HAVE_waitid
+#endif
+
+#ifdef CONFIG_NO_kill
+#undef CONFIG_HAVE_kill
+#elif !defined(CONFIG_HAVE_kill) && \
+      (defined(kill) || defined(__kill_defined) || (defined(__linux__) || defined(__linux) || \
+       defined(linux) || defined(__unix__) || defined(__unix) || defined(unix)))
+#define CONFIG_HAVE_kill
 #endif
 
 #ifdef CONFIG_NO_sigprocmask
@@ -2264,11 +2418,34 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #define CONFIG_HAVE_fcntl
 #endif
 
+#ifdef CONFIG_NO_ioctl
+#undef CONFIG_HAVE_ioctl
+#elif !defined(CONFIG_HAVE_ioctl) && \
+      (defined(ioctl) || defined(__ioctl_defined) || ((defined(CONFIG_HAVE_IOCTL_H) || \
+       defined(CONFIG_HAVE_SYS_IOCTL_H)) && (defined(__linux__) || defined(__linux) || \
+       defined(linux) || defined(__unix__) || defined(__unix) || defined(unix))))
+#define CONFIG_HAVE_ioctl
+#endif
+
+#ifdef CONFIG_NO_F_GETFD
+#undef CONFIG_HAVE_F_GETFD
+#elif !defined(CONFIG_HAVE_F_GETFD) && \
+      (defined(F_GETFD) || defined(__F_GETFD_defined))
+#define CONFIG_HAVE_F_GETFD
+#endif
+
 #ifdef CONFIG_NO_F_SETFD
 #undef CONFIG_HAVE_F_SETFD
 #elif !defined(CONFIG_HAVE_F_SETFD) && \
       (defined(F_SETFD) || defined(__F_SETFD_defined))
 #define CONFIG_HAVE_F_SETFD
+#endif
+
+#ifdef CONFIG_NO_F_GETFL
+#undef CONFIG_HAVE_F_GETFL
+#elif !defined(CONFIG_HAVE_F_GETFL) && \
+      (defined(F_GETFL) || defined(__F_GETFL_defined))
+#define CONFIG_HAVE_F_GETFL
 #endif
 
 #ifdef CONFIG_NO_F_SETFL
@@ -2283,6 +2460,20 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif !defined(CONFIG_HAVE_FD_CLOEXEC) && \
       (defined(FD_CLOEXEC) || defined(__FD_CLOEXEC_defined))
 #define CONFIG_HAVE_FD_CLOEXEC
+#endif
+
+#ifdef CONFIG_NO_FD_CLOFORK
+#undef CONFIG_HAVE_FD_CLOFORK
+#elif !defined(CONFIG_HAVE_FD_CLOFORK) && \
+      (defined(FD_CLOFORK) || defined(__FD_CLOFORK_defined))
+#define CONFIG_HAVE_FD_CLOFORK
+#endif
+
+#ifdef CONFIG_NO_FIOCLEX
+#undef CONFIG_HAVE_FIOCLEX
+#elif !defined(CONFIG_HAVE_FIOCLEX) && \
+      (defined(FIOCLEX) || defined(__FIOCLEX_defined))
+#define CONFIG_HAVE_FIOCLEX
 #endif
 
 #ifdef CONFIG_NO_O_BINARY
@@ -4236,6 +4427,14 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #define CONFIG_HAVE__read
 #endif
 
+#ifdef CONFIG_NO_readall
+#undef CONFIG_HAVE_readall
+#elif !defined(CONFIG_HAVE_readall) && \
+      (defined(readall) || defined(__readall_defined) || (defined(CONFIG_HAVE_UNISTD_H) && \
+       defined(__USE_KOS)))
+#define CONFIG_HAVE_readall
+#endif
+
 #ifdef CONFIG_NO_write
 #undef CONFIG_HAVE_write
 #elif !defined(CONFIG_HAVE_write) && \
@@ -4249,6 +4448,14 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif !defined(CONFIG_HAVE__write) && \
       (defined(_write) || defined(___write_defined) || defined(_MSC_VER))
 #define CONFIG_HAVE__write
+#endif
+
+#ifdef CONFIG_NO_writeall
+#undef CONFIG_HAVE_writeall
+#elif !defined(CONFIG_HAVE_writeall) && \
+      (defined(writeall) || defined(__writeall_defined) || (defined(CONFIG_HAVE_UNISTD_H) && \
+       defined(__USE_KOS)))
+#define CONFIG_HAVE_writeall
 #endif
 
 #ifdef CONFIG_NO_lseek
@@ -4920,6 +5127,13 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #define CONFIG_HAVE__commit
 #endif
 
+#ifdef CONFIG_NO_gettid
+#undef CONFIG_HAVE_gettid
+#elif !defined(CONFIG_HAVE_gettid) && \
+      (defined(gettid) || defined(__gettid_defined))
+#define CONFIG_HAVE_gettid
+#endif
+
 #ifdef CONFIG_NO_getpid
 #undef CONFIG_HAVE_getpid
 #elif !defined(CONFIG_HAVE_getpid) && \
@@ -5458,6 +5672,13 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif !defined(CONFIG_HAVE_wcslen) && \
       (defined(wcslen) || defined(__wcslen_defined) || defined(CONFIG_HAVE_WCHAR_H))
 #define CONFIG_HAVE_wcslen
+#endif
+
+#ifdef CONFIG_NO_wmemchr
+#undef CONFIG_HAVE_wmemchr
+#elif !defined(CONFIG_HAVE_wmemchr) && \
+      (defined(wmemchr) || defined(__wmemchr_defined) || defined(CONFIG_HAVE_WCHAR_H))
+#define CONFIG_HAVE_wmemchr
 #endif
 
 #ifdef CONFIG_NO_qsort
@@ -8767,6 +8988,18 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #define _Exit(exit_code) _exit(exit_code)
 #endif /* _Exit = _exit */
 
+#if !defined(CONFIG_HAVE_posix_spawn_file_actions_addchdir_np) && defined(CONFIG_HAVE_posix_spawn_file_actions_addchdir)
+#define CONFIG_HAVE_posix_spawn_file_actions_addchdir
+#undef posix_spawn_file_actions_addchdir
+#define posix_spawn_file_actions_addchdir posix_spawn_file_actions_addchdir_np
+#endif /* posix_spawn_file_actions_addchdir = posix_spawn_file_actions_addchdir_np */
+
+#if !defined(CONFIG_HAVE_posix_spawn_file_actions_addfchdir_np) && defined(CONFIG_HAVE_posix_spawn_file_actions_addfchdir)
+#define CONFIG_HAVE_posix_spawn_file_actions_addfchdir
+#undef posix_spawn_file_actions_addfchdir
+#define posix_spawn_file_actions_addfchdir posix_spawn_file_actions_addfchdir_np
+#endif /* posix_spawn_file_actions_addfchdir = posix_spawn_file_actions_addfchdir_np */
+
 #if defined(CONFIG_HAVE__execv) && !defined(CONFIG_HAVE_execv)
 #define CONFIG_HAVE_execv
 #undef execv
@@ -8862,6 +9095,17 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #undef wspawnvpe
 #define wspawnvpe(mode, file, argv, envp) _wspawnvpe(mode, file, (wchar_t const *const *)(argv), (wchar_t const *const *)(envp))
 #endif /* wspawnvpe = _wspawnvpe */
+
+#if (!defined(CONFIG_HAVE_pid_t) &&                                      \
+     (defined(CONFIG_HAVE_wspawnvpe) || defined(CONFIG_HAVE_wspawnvp) || \
+      defined(CONFIG_HAVE_wspawnve) || defined(CONFIG_HAVE_wspawnv) ||   \
+      defined(CONFIG_HAVE_spawnvpe) || defined(CONFIG_HAVE_spawnvp) ||   \
+      defined(CONFIG_HAVE_spawnve) || defined(CONFIG_HAVE_spawnv)))
+#undef CONFIG_NO_pid_t
+#define CONFIG_HAVE_pid_t
+#undef pid_t
+#define pid_t intptr_t
+#endif /* pid_t is intptr_t */
 
 #if defined(CONFIG_HAVE__wstat) && !defined(CONFIG_HAVE_wstat)
 #define CONFIG_HAVE_wstat
@@ -9200,6 +9444,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #endif /* euidaccess = eaccess */
 
 #if defined(CONFIG_HAVE_fork) && !defined(CONFIG_HAVE_vfork)
+#define CONFIG_HAVE_vfork_IS_fork
 #define CONFIG_HAVE_vfork
 #undef vfork
 #define vfork fork
@@ -9958,8 +10203,6 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif defined(CONFIG_HAVE__O_DOSPATH)
 #define CONFIG_HAVE_O_DOSPATH
 #define O_DOSPATH _O_DOSPATH
-#elif defined(CONFIG_HAVE__MSC_VER)
-#define O_DOSPATH 0
 #endif /* ... */
 #elif !defined(O_DOSPATH)
 #define O_DOSPATH O_DOSPATH
@@ -10587,6 +10830,7 @@ DECL_END
 #define DeeSystem_DEFINE_memchrw(name) _DeeSystem_DEFINE_memchrT(uint16_t, uint16_t, uint16_t, name)
 #define DeeSystem_DEFINE_memchrl(name) _DeeSystem_DEFINE_memchrT(uint32_t, uint32_t, uint32_t, name)
 #define DeeSystem_DEFINE_memchrq(name) _DeeSystem_DEFINE_memchrT(uint64_t, uint64_t, uint64_t, name)
+#define DeeSystem_DEFINE_wmemchr(name) _DeeSystem_DEFINE_memchrT(Dee_wchar_t, Dee_wchar_t, __WINT_TYPE__, name)
 
 #define DeeSystem_DEFINE_memcmpw(name) _DeeSystem_DEFINE_memcmpT(uint16_t, name)
 #define DeeSystem_DEFINE_memcmpl(name) _DeeSystem_DEFINE_memcmpT(uint32_t, name)

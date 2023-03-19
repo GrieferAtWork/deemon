@@ -22,5 +22,29 @@
 
 #pragma push_macro(undef, "from", "deemon", "import", "ipc")
 from deemon import process_id = "int", process_return = "int";
-from ipc import process = "Process";
+
+#pragma warning(push, "-Wno-quality")
+class process: Process from ipc {
+#pragma warning(pop)
+	this(exe_or_cmdline_or_pid, argv?, envp?)
+		: super(({
+			local superArgs;
+			/* It used to be that deemon would implicitly re-include the program
+			 * name by inserting it into the argument list at the first position.
+			 *
+			 * This has since changed, such that now you have to specify the full
+			 * argument list (including needing to specify the program name twice)
+			 *
+			 * For backwards compatibility, we do this automatically here. */
+			if (envp is bound) {
+				superArgs = (exe_or_cmdline_or_pid, (exe_or_cmdline_or_pid, argv...), envp);
+			} else if (argv is bound) {
+				superArgs = (exe_or_cmdline_or_pid, (exe_or_cmdline_or_pid, argv...));
+			} else {
+				superArgs = (exe_or_cmdline_or_pid,);
+			}
+			superArgs;
+		})...)
+	{}
+}
 #pragma pop_macro("from", "deemon", "import", "ipc")

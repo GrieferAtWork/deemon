@@ -23,7 +23,7 @@ import File, int from deemon;
 import fs;
 import Process, Pipe from ipc;
 
-local proc = Process("x86_64-w64-mingw32-addr2line.exe", ["-f", "-e", "deemon.exe"]);
+local proc = Process("x86_64-w64-mingw32-addr2line -f -e deemon.exe");
 local ir, iw = Pipe.new()...;
 local or, ow = Pipe.new()...;
 

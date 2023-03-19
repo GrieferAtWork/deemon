@@ -254,9 +254,13 @@ tuple_tp_free(void *__restrict ob) {
 
 PUBLIC NONNULL((1)) void DCALL
 DeeTuple_FreeUninitialized(DREF DeeObject *__restrict self) {
-	ASSERT(self->ob_refcnt == 1);
-	ASSERT(self->ob_type == &DeeTuple_Type);
-	tuple_tp_free(self);
+	if likely(self != (DeeObject *)&DeeTuple_Empty) {
+		ASSERT(self->ob_refcnt == 1);
+		ASSERT(self->ob_type == &DeeTuple_Type);
+		tuple_tp_free(self);
+	} else {
+		Dee_DecrefNokill(self);
+	}
 }
 
 PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -319,6 +323,7 @@ DeeTuple_ResizeUninitialized(/*inherit(on_success)*/ DREF DeeObject *__restrict 
 		}
 	}
 #endif /* CONFIG_TUPLE_CACHE_MAXCOUNT */
+
 	/* Resize the old tuple. */
 	new_tuple = (DREF Tuple *)DeeObject_Realloc(self,
 	                                            offsetof(Tuple, t_elem) +
@@ -337,8 +342,87 @@ err:
 	return NULL;
 }
 
+PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+DeeTuple_TryResizeUninitialized(/*inherit(on_success)*/ DREF DeeObject *__restrict self,
+                                size_t new_size) {
+	DREF Tuple *new_tuple;
+	ASSERT_OBJECT_TYPE_EXACT(self, &DeeTuple_Type);
+	if unlikely(DeeTuple_SIZE(self) == new_size)
+		return self;
+	if unlikely(DeeTuple_IsEmpty(self)) {
+		/* Special case: Must not resize the empty tuple. */
+		new_tuple = (DREF Tuple *)DeeTuple_TryNewUninitialized(new_size);
+		if likely(new_tuple)
+			Dee_DecrefNokill(self);
+		return (DREF DeeObject *)new_tuple;
+	}
+	ASSERT(DeeTuple_SIZE(self) != 0);
+	ASSERTF(self->ob_refcnt == 1, "The tuple is being shared");
+	if unlikely(!new_size) {
+		/* Special case: Resize to an empty tuple. */
+		Dee_DecrefNokill(&DeeTuple_Type);
+		tuple_tp_free(self);
+		return_empty_tuple;
+	}
+
+#if CONFIG_TUPLE_CACHE_MAXCOUNT
+	/* Check if we can use a cached tuple. */
+	if (new_size < CONFIG_TUPLE_CACHE_MAXCOUNT) {
+		struct tuple_cache *c = &cache[new_size - 1];
+		if (c->c_count) {
+			atomic_lock_acquire(&c->c_lock);
+#ifndef CONFIG_NO_THREADS
+			COMPILER_READ_BARRIER();
+			if (c->c_head)
+#endif /* !CONFIG_NO_THREADS */
+			{
+				STATIC_ASSERT((offsetof(Tuple, t_elem) %
+				               sizeof(DREF DeeObject *)) == 0);
+				ASSERT(c->c_head);
+				new_tuple = (DREF Tuple *)c->c_head;
+				c->c_head = ((struct cached_object *)new_tuple)->co_next;
+				--c->c_count;
+				atomic_lock_release(&c->c_lock);
+				/* Copy tuple data (And inherit the reference to `DeeTuple_Type') */
+				memcpyc(new_tuple, self,
+				        (offsetof(Tuple, t_elem) / sizeof(DREF DeeObject *)) +
+				        MIN(DeeTuple_SIZE(self), new_size),
+				        sizeof(DREF DeeObject *));
+#ifndef NDEBUG
+				if (new_size > DeeTuple_SIZE(self)) {
+					DBG_memset(&new_tuple->t_elem[DeeTuple_SIZE(self)], 0xcc,
+					           (new_size - DeeTuple_SIZE(self)) * sizeof(DREF DeeObject *));
+				}
+#endif /* !NDEBUG */
+				tuple_tp_free(self);
+				new_tuple->t_size = new_size;
+				return (DREF DeeObject *)new_tuple;
+			}
+			atomic_lock_release(&c->c_lock);
+		}
+	}
+#endif /* CONFIG_TUPLE_CACHE_MAXCOUNT */
+
+	/* Try to resize the old tuple. */
+	new_tuple = (DREF Tuple *)DeeObject_TryRealloc(self,
+	                                               offsetof(Tuple, t_elem) +
+	                                               new_size * sizeof(DREF DeeObject *));
+	if unlikely(!new_tuple)
+		goto err;
+#ifndef NDEBUG
+	if (new_size > new_tuple->t_size) {
+		DBG_memset(&new_tuple->t_elem[new_tuple->t_size], 0xcc,
+		           (new_size - new_tuple->t_size) * sizeof(DREF DeeObject *));
+	}
+#endif /* !NDEBUG */
+	new_tuple->t_size = new_size;
+	return (DREF DeeObject *)new_tuple;
+err:
+	return NULL;
+}
+
 PUBLIC WUNUSED ATTR_RETNONNULL NONNULL((1)) DREF DeeObject *DCALL
-DeeTuple_TruncateUninitialized(/*inherit(on_success)*/ DREF DeeObject *__restrict self,
+DeeTuple_TruncateUninitialized(/*inherit(always)*/ DREF DeeObject *__restrict self,
                                size_t new_size) {
 	DREF Tuple *new_tuple;
 	ASSERT_OBJECT_TYPE_EXACT(self, &DeeTuple_Type);

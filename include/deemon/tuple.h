@@ -100,6 +100,11 @@ DeeTuple_TryNewUninitialized(size_t n);
 DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeTuple_ResizeUninitialized(/*inherit(on_success)*/ DREF DeeObject *__restrict self, size_t n);
 
+/* Same as `DeeTuple_ResizeUninitialized()', but
+ * doesn't throw an exception when returning `NULL' */
+DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+DeeTuple_TryResizeUninitialized(/*inherit(on_success)*/ DREF DeeObject *__restrict self, size_t n);
+
 DFUNDEF WUNUSED ATTR_RETNONNULL NONNULL((1)) DREF DeeObject *DCALL
 DeeTuple_TruncateUninitialized(/*inherit(always)*/ DREF DeeObject *__restrict self, size_t n);
 

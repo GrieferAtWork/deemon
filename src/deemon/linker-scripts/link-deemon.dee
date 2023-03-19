@@ -27,8 +27,7 @@
 fs.chdir(fs.path.head(__FILE__));
 
 local proc = process("cmd", ["/c", "dumpbin", "/exports",
-	"E:\\c\\dexmon\\deemon\\deemon.exe"
-	//"../../../deemon.exe"
+	fs.path.abs(r"..\..\..\deemon.exe")
 ]);
 local r, w = pipe.new()...;
 proc.stdout = w;

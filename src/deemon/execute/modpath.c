@@ -3391,7 +3391,7 @@ do_increase_buffer:
 	size_t length;
 	int error;
 	struct unicode_printer printer = UNICODE_PRINTER_INIT;
-	error = DeeUnixSystem_PrintlinkString(&printer, "/proc/self/exe");
+	error = DeeUnixSystem_PrintLinkString(&printer, "/proc/self/exe");
 	if unlikely(error != 0) {
 		if (error < 0)
 			goto err_printer;

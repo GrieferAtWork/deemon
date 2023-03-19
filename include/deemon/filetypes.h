@@ -70,6 +70,7 @@ typedef struct Dee_file_writer_object DeeFileWriterObject;
 struct Dee_system_file_object {
 	Dee_LFILE_OBJECT_HEAD
 #ifdef DEESYSTEM_FILE_USE_WINDOWS
+#define DEESYSTEM_FILE_HAVE_sf_filename
 	DREF DeeObject  *sf_filename;   /* [0..1][lock(WRITE_ONCE)] The filename of this systemfile. */
 	/*HANDLE*/ void *sf_handle;     /* [0..1] Underlying file handle.
 	                                 *      - STD handles are set to `NULL' before being initialized.
@@ -81,12 +82,14 @@ struct Dee_system_file_object {
 #define DeeSystemFile_GetHandle(self) ((DeeSystemFileObject *)Dee_REQUIRES_OBJECT(self))->sf_handle
 #endif /* DEESYSTEM_FILE_USE_WINDOWS */
 #ifdef DEESYSTEM_FILE_USE_UNIX
+#define DEESYSTEM_FILE_HAVE_sf_filename
 	DREF DeeObject  *sf_filename;   /* [0..1][const] The filename, or NULL if not known. */
 	int              sf_handle;     /* [0..1] Underlying system file. */
 	int              sf_ownhandle;  /* [0..1] The owned underlying system file. */
 #define DeeSystemFile_GetHandle(self) ((DeeSystemFileObject *)Dee_REQUIRES_OBJECT(self))->sf_handle
 #endif /* DEESYSTEM_FILE_USE_UNIX */
 #ifdef DEESYSTEM_FILE_USE_STDIO
+#define DEESYSTEM_FILE_HAVE_sf_filename
 	DREF DeeObject  *sf_filename;   /* [0..1][const] The filename, or NULL if not known. */
 	/*FILE*/ void   *sf_handle;     /* [0..1] Underlying system file. */
 	/*FILE*/ void   *sf_ownhandle;  /* [0..1] The owned underlying system file. */
@@ -204,7 +207,7 @@ DeeFileBuffer_SetMode(DeeObject *__restrict self,
  *       function is added to the `atexit()' chain unless deemon
  *       was built with the `CONFIG_NO_STDLIB' option enabled.
  * NOTE: This function can be called as `(File from deemon).buffer.sync()' */
-DFUNDEF int DCALL DeeFileBuffer_SyncTTYs(void);
+DFUNDEF WUNUSED int DCALL DeeFileBuffer_SyncTTYs(void);
 
 
 

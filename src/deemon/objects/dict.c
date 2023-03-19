@@ -66,7 +66,7 @@ PUBLIC DeeObject DeeDict_Dummy = {
 
 typedef DeeDictObject Dict;
 
-PRIVATE struct dict_item const empty_dict_items[1] = {
+PUBLIC_CONST struct Dee_dict_item const DeeDict_EmptyItems[1] = {
 	{ NULL, NULL, 0 }
 };
 
@@ -82,7 +82,7 @@ DeeDict_NewKeyItemsInherited(size_t num_keyitems, DREF DeeObject **key_items) {
 		result->d_mask = 0;
 		result->d_size = 0;
 		result->d_used = 0;
-		result->d_elem = (struct dict_item *)empty_dict_items;
+		result->d_elem = (struct dict_item *)DeeDict_EmptyItems;
 	} else {
 		size_t min_mask = 16 - 1, mask;
 
@@ -172,7 +172,7 @@ dict_init_iterator(Dict *self, DeeObject *iterator) {
 	self->d_mask = 0;
 	self->d_size = 0;
 	self->d_used = 0;
-	self->d_elem = (struct dict_item *)empty_dict_items;
+	self->d_elem = (struct dict_item *)DeeDict_EmptyItems;
 	atomic_rwlock_init(&self->d_lock);
 	weakref_support_init(self);
 	if unlikely(dict_insert_iterator(self, iterator)) {
@@ -208,7 +208,7 @@ dict_init_sequence(Dict *__restrict self,
 		self->d_mask = src->rd_mask;
 		self->d_used = self->d_size = src->rd_size;
 		if unlikely(!self->d_size) {
-			self->d_elem = (struct dict_item *)empty_dict_items;
+			self->d_elem = (struct dict_item *)DeeDict_EmptyItems;
 		} else {
 			self->d_elem = (struct dict_item *)Dee_Mallocc(src->rd_mask + 1,
 			                                               sizeof(struct dict_item));
@@ -282,7 +282,7 @@ dict_ctor(Dict *__restrict self) {
 	self->d_mask = 0;
 	self->d_size = 0;
 	self->d_used = 0;
-	self->d_elem = (struct dict_item *)empty_dict_items;
+	self->d_elem = (struct dict_item *)DeeDict_EmptyItems;
 	atomic_rwlock_init(&self->d_lock);
 	weakref_support_init(self);
 	return 0;
@@ -298,7 +298,7 @@ again:
 	self->d_mask = other->d_mask;
 	self->d_used = other->d_used;
 	self->d_size = other->d_size;
-	if ((self->d_elem = other->d_elem) != empty_dict_items) {
+	if ((self->d_elem = other->d_elem) != DeeDict_EmptyItems) {
 		self->d_elem = (struct dict_item *)Dee_TryMallocc(other->d_mask + 1,
 		                                                  sizeof(struct dict_item));
 		if unlikely(!self->d_elem) {
@@ -349,7 +349,7 @@ dict_deepload(Dict *__restrict self) {
 	for (;;) {
 		DeeDict_LockRead(self);
 		/* Optimization: if the Dict is empty, then there's nothing to copy! */
-		if (self->d_elem == empty_dict_items) {
+		if (self->d_elem == DeeDict_EmptyItems) {
 			DeeDict_LockEndRead(self);
 			return 0;
 		}
@@ -436,7 +436,7 @@ remove_duplicate_key:
 	old_map      = self->d_elem;
 	self->d_elem = new_map;
 	DeeDict_LockEndWrite(self);
-	if (old_map != empty_dict_items) {
+	if (old_map != DeeDict_EmptyItems) {
 		while (i--) {
 			if (!old_map[i].di_key)
 				continue;
@@ -462,10 +462,10 @@ err_items:
 
 PRIVATE NONNULL((1)) void DCALL dict_fini(Dict *__restrict self) {
 	weakref_support_fini(self);
-	ASSERT((self->d_elem == empty_dict_items) == (self->d_mask == 0));
-	ASSERT((self->d_elem == empty_dict_items) == (self->d_size == 0));
+	ASSERT((self->d_elem == DeeDict_EmptyItems) == (self->d_mask == 0));
+	ASSERT((self->d_elem == DeeDict_EmptyItems) == (self->d_size == 0));
 	ASSERT(self->d_used <= self->d_size);
-	if (self->d_elem != empty_dict_items) {
+	if (self->d_elem != DeeDict_EmptyItems) {
 		struct dict_item *iter, *end;
 		end = (iter = self->d_elem) + (self->d_mask + 1);
 		for (; iter < end; ++iter) {
@@ -482,19 +482,19 @@ PRIVATE NONNULL((1)) void DCALL dict_clear(Dict *__restrict self) {
 	struct dict_item *elem;
 	size_t mask;
 	DeeDict_LockWrite(self);
-	ASSERT((self->d_elem == empty_dict_items) == (self->d_mask == 0));
-	ASSERT((self->d_elem == empty_dict_items) == (self->d_size == 0));
+	ASSERT((self->d_elem == DeeDict_EmptyItems) == (self->d_mask == 0));
+	ASSERT((self->d_elem == DeeDict_EmptyItems) == (self->d_size == 0));
 	ASSERT(self->d_used <= self->d_size);
 	/* Extract the vector and mask. */
 	elem         = self->d_elem;
 	mask         = self->d_mask;
-	self->d_elem = (struct dict_item *)empty_dict_items;
+	self->d_elem = (struct dict_item *)DeeDict_EmptyItems;
 	self->d_mask = 0;
 	self->d_used = 0;
 	self->d_size = 0;
 	DeeDict_LockEndWrite(self);
 	/* Destroy the vector. */
-	if (elem != empty_dict_items) {
+	if (elem != DeeDict_EmptyItems) {
 		struct dict_item *iter, *end;
 		end = (iter = elem) + (mask + 1);
 		for (; iter < end; ++iter) {
@@ -510,10 +510,10 @@ PRIVATE NONNULL((1)) void DCALL dict_clear(Dict *__restrict self) {
 PRIVATE NONNULL((1, 2)) void DCALL
 dict_visit(Dict *__restrict self, dvisit_t proc, void *arg) {
 	DeeDict_LockRead(self);
-	ASSERT((self->d_elem == empty_dict_items) == (self->d_mask == 0));
-	ASSERT((self->d_elem == empty_dict_items) == (self->d_size == 0));
+	ASSERT((self->d_elem == DeeDict_EmptyItems) == (self->d_mask == 0));
+	ASSERT((self->d_elem == DeeDict_EmptyItems) == (self->d_size == 0));
 	ASSERT(self->d_used <= self->d_size);
-	if (self->d_elem != empty_dict_items) {
+	if (self->d_elem != DeeDict_EmptyItems) {
 		struct dict_item *iter, *end;
 		end = (iter = self->d_elem) + (self->d_mask + 1);
 		for (; iter < end; ++iter) {
@@ -546,7 +546,7 @@ dict_rehash(Dict *__restrict self, int sizedir) {
 			ASSERT(!self->d_used);
 			/* Special case: delete the vector. */
 			if (self->d_size) {
-				ASSERT(self->d_elem != empty_dict_items);
+				ASSERT(self->d_elem != DeeDict_EmptyItems);
 				/* Must discard dummy items. */
 				end = (iter = self->d_elem) + (self->d_mask + 1);
 				for (; iter < end; ++iter) {
@@ -556,9 +556,9 @@ dict_rehash(Dict *__restrict self, int sizedir) {
 						Dee_DecrefNokill(dummy);
 				}
 			}
-			if (self->d_elem != empty_dict_items)
+			if (self->d_elem != DeeDict_EmptyItems)
 				Dee_Free(self->d_elem);
-			self->d_elem = (struct dict_item *)empty_dict_items;
+			self->d_elem = (struct dict_item *)DeeDict_EmptyItems;
 			self->d_mask = 0;
 			self->d_size = 0;
 			return true;
@@ -572,9 +572,9 @@ dict_rehash(Dict *__restrict self, int sizedir) {
 	new_vector = (struct dict_item *)Dee_TryCallocc(new_mask + 1, sizeof(struct dict_item));
 	if unlikely(!new_vector)
 		return false;
-	ASSERT((self->d_elem == empty_dict_items) == (self->d_mask == 0));
-	ASSERT((self->d_elem == empty_dict_items) == (self->d_size == 0));
-	if (self->d_elem != empty_dict_items) {
+	ASSERT((self->d_elem == DeeDict_EmptyItems) == (self->d_mask == 0));
+	ASSERT((self->d_elem == DeeDict_EmptyItems) == (self->d_size == 0));
+	if (self->d_elem != DeeDict_EmptyItems) {
 		/* Re-insert all existing items into the new Dict vector. */
 		end = (iter = self->d_elem) + (self->d_mask + 1);
 		for (; iter < end; ++iter) {
@@ -928,7 +928,7 @@ again:
 	if (first_dummy && me->d_size + 1 < me->d_mask) {
 		DREF DeeStringObject *key_ob;
 		size_t key_len = strlen(key);
-		ASSERT(first_dummy != empty_dict_items);
+		ASSERT(first_dummy != DeeDict_EmptyItems);
 		ASSERT(!first_dummy->di_key ||
 		       first_dummy->di_key == dummy);
 		/* Write to the first dummy item. */
@@ -1024,7 +1024,7 @@ again:
 #endif /* !CONFIG_NO_THREADS */
 	if (first_dummy && me->d_size + 1 < me->d_mask) {
 		DREF DeeStringObject *key_ob;
-		ASSERT(first_dummy != empty_dict_items);
+		ASSERT(first_dummy != DeeDict_EmptyItems);
 		ASSERT(!first_dummy->di_key ||
 		       first_dummy->di_key == dummy);
 		/* Write to the first dummy item. */
@@ -1440,7 +1440,7 @@ again:
 	    (self->d_size + 1 < self->d_mask ||
 	     first_dummy->di_key != NULL)) {
 		bool wasdummy;
-		ASSERT(first_dummy != empty_dict_items);
+		ASSERT(first_dummy != DeeDict_EmptyItems);
 		ASSERT(!first_dummy->di_key ||
 		       first_dummy->di_key == dummy);
 		wasdummy = first_dummy->di_key != NULL;
@@ -1580,7 +1580,7 @@ again:
 	    (self->d_size + 1 < self->d_mask ||
 	     first_dummy->di_key != NULL)) {
 		bool wasdummy;
-		ASSERT(first_dummy != empty_dict_items);
+		ASSERT(first_dummy != DeeDict_EmptyItems);
 		ASSERT(!first_dummy->di_key ||
 		       first_dummy->di_key == dummy);
 		wasdummy = first_dummy->di_key != NULL;

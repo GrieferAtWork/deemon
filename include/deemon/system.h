@@ -364,10 +364,10 @@ DeeSystem_PrintFilenameOfFD(struct Dee_unicode_printer *__restrict printer, int 
  * @return: 0 / * :        Success.
  * @return: -1 / NULL:     Error.
  * @return: 1 / ITER_DONE: The specified file isn't a symbolic link. */
-DFUNDEF WUNUSED int DCALL DeeUnixSystem_Printlink(struct Dee_unicode_printer *__restrict printer, /*String*/ DeeObject *__restrict filename);
-DFUNDEF WUNUSED int DCALL DeeUnixSystem_PrintlinkString(struct Dee_unicode_printer *__restrict printer, /*utf-8*/ char const *filename);
-DFUNDEF WUNUSED DREF DeeObject *DCALL DeeUnixSystem_Readlink(/*String*/ DeeObject *__restrict filename);
-DFUNDEF WUNUSED DREF DeeObject *DCALL DeeUnixSystem_ReadlinkString(/*utf-8*/ char const *filename);
+DFUNDEF WUNUSED int DCALL DeeUnixSystem_PrintLink(struct Dee_unicode_printer *__restrict printer, /*String*/ DeeObject *__restrict filename);
+DFUNDEF WUNUSED int DCALL DeeUnixSystem_PrintLinkString(struct Dee_unicode_printer *__restrict printer, /*utf-8*/ char const *filename);
+DFUNDEF WUNUSED DREF DeeObject *DCALL DeeUnixSystem_ReadLink(/*String*/ DeeObject *__restrict filename);
+DFUNDEF WUNUSED DREF DeeObject *DCALL DeeUnixSystem_ReadLinkString(/*utf-8*/ char const *filename);
 
 /* Retrieve the unix FD associated with a given object.
  * The translation is done by performing the following:

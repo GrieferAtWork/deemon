@@ -156,9 +156,11 @@ PRIVATE HANDLE DCALL os_getcurrenthread(void) {
 #ifndef CONFIG_NO_THREADID
 #ifdef CONFIG_HOST_WINDOWS
 #define os_gettid() (dthreadid_t)GetCurrentThreadId()
-#elif defined(SYS_gettid)
+#elif defined(CONFIG_HAVE_gettid)
+#define os_gettid() gettid()
+#elif defined(CONFIG_HAVE_syscall) && defined(SYS_gettid)
 #define os_gettid() (dthreadid_t)syscall(SYS_gettid)
-#elif defined(__NR_gettid)
+#elif defined(CONFIG_HAVE_syscall) && defined(__NR_gettid)
 #define os_gettid() (dthreadid_t)syscall(__NR_gettid)
 #else /* ... */
 /*#warning "Threadid is not available. Try building with `-DCONFIG_NO_THREADID' to reduce overhead"*/
@@ -3027,15 +3029,15 @@ PRIVATE struct type_method tpconst thread_methods[] = {
 	TYPE_METHOD("start", &thread_start,
 	            "->?Dbool\n"
 	            "@throw SystemError Failed to start @this thread for some reason\n"
-	            "@return true: The :thread is now running\n"
-	            "@return false: The :thread had already been started\n"
+	            "@return true The ?. is now running\n"
+	            "@return false The ?. had already been started\n"
 	            "Starts @this thread"),
 	TYPE_METHOD("detach", &thread_detach,
 	            "->?Dbool\n"
 	            "@throw ValueError @this thread was never started\n"
 	            "@throw SystemError Failed to detach @this thread for some reason\n"
-	            "@return true: The :thread has been detached\n"
-	            "@return false: The :thread was already detached\n"
+	            "@return true The ?. has been detached\n"
+	            "@return false The ?. was already detached\n"
 	            "Detaches @this thread"),
 	TYPE_METHOD("join", &thread_join,
 	            "->\n"
@@ -3062,7 +3064,7 @@ PRIVATE struct type_method tpconst thread_methods[] = {
 	            "(signal)->?Dbool\n"
 	            "(async_func:?DCallable,async_args:?DTuple)->?Dbool\n"
 	            "@return true: The interrupt was delivered\n"
-	            "@return false: The :thread has already terminated and can no longer process interrupts\n"
+	            "@return false: The ?. has already terminated and can no longer process interrupts\n"
 	            "Throws the given @signal or an instance of :Interrupt within @this thread, "
 	            "or schedule the given @async_func to be called asynchronously using @async_args\n"
 	            "Calling the function with no arguments is identical to:\n"
@@ -3545,9 +3547,9 @@ thread_hascrashed(DeeObject *__restrict self) {
 PRIVATE struct type_getset tpconst thread_getsets[] = {
 	TYPE_GETSET("callback", &thread_callback_get, &thread_callback_del, &thread_callback_set,
 	            "->?DCallable\n"
-	            "@throw AttributeError Attempted to overwrite the callback of a sub-class of :thread, rather than an exact instance. "
+	            "@throw AttributeError Attempted to overwrite the callback of a sub-class of ?., rather than an exact instance. "
 	            /*                 */ "To prevent the need of overwriting this attribute whenever a sub-class wishes to provide a $run "
-	            /*                 */ "member function, write-access to this field is denied in sub-classes of :thread and only granted "
+	            /*                 */ "member function, write-access to this field is denied in sub-classes of ?. and only granted "
 	            /*                 */ "to exact instances\n"
 	            "@throw ValueError Attempted to delete or set the attribute when @this thread has already been started.\n"
 	            "The callback that will be executed when the thread is started\n"
@@ -3556,9 +3558,9 @@ PRIVATE struct type_getset tpconst thread_getsets[] = {
 	            /**/ "overwritten by sub-classes to provide an automatic and implicit thread-callback"),
 	TYPE_GETSET("callargs", &thread_callargs_get, &thread_callargs_del, &thread_callargs_set,
 	            "->?DTuple\n"
-	            "@throw AttributeError Attempted to overwrite the callback arguments of a sub-class of :thread, rather than an exact instance. "
+	            "@throw AttributeError Attempted to overwrite the callback arguments of a sub-class of ?., rather than an exact instance. "
 	            /*                 */ "To prevent the need of overwriting this attribute whenever a sub-class wishes to provide a $run "
-	            /*                 */ "member function, write-access to this field is denied in sub-classes of :thread and only granted "
+	            /*                 */ "member function, write-access to this field is denied in sub-classes of ?. and only granted "
 	            /*                 */ "to exact instances\n"
 	            "@throw ValueError Attempted to delete or set the attribute when @this thread has already been started\n"
 	            "The callback arguments that are passed to ?#callback when the thread is started\n"

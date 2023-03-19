@@ -204,7 +204,7 @@ struct time_object {
 
 
 /*
- * Since we use nanoseconds from 00:00:00T01-01-0000, and 128-bit integers, that gives us the following limits:
+ * Since we use nanoseconds from 01-01-0000T00:00:00, and 128-bit integers, that gives us the following limits:
  * - nanoseconds  (128-bit): [-170141183460469231731687303715884105728, 170141183460469231731687303715884105727]
  * - microseconds (119-bit): [-170141183460469231731687303715884106, 170141183460469231731687303715884105]
  * - milliseconds (109-bit): [-170141183460469231731687303715885, 170141183460469231731687303715884]
@@ -235,7 +235,7 @@ struct time_object {
 #define YEARS_PER_CENTURY           UINT8_C(100)                  /* signed-8-bit */
 #define YEARS_PER_MILLENNIUM        UINT16_C(1000)                /* signed-11-bit */
 #define DAYS_PER_400_YEARS          UINT32_C(146097)              /* signed-19-bit */
-PRIVATE Dee_int128_t const NANOSECONDS_PER_MILLENNIUM_AVG =
+PRIVATE Dee_int128_t const NANOSECONDS_PER_MILLENNIUM_AVG =       /* signed-66-bit */
 __HYBRID_INT128_INIT16N(0x0000, 0x0000, 0x0000, 0x0001, 0xb5f0, 0xd0a5, 0xea0d, 0x8000);
 
 

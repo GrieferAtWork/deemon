@@ -455,7 +455,6 @@ again:
 	DBG_ALIGNMENT_DISABLE();
 	while (!IFELSE_WCHAR(wgetcwd((wchar_t *)buffer, bufsize + 1),
 	                     getcwd((char *)buffer, bufsize + 1))) {
-		DBG_ALIGNMENT_ENABLE();
 		/* Increase the buffer and try again. */
 #if defined(CONFIG_HAVE_errno) && defined(ERANGE)
 		int error = DeeSystem_GetErrno();
@@ -481,6 +480,7 @@ again:
 			goto err_release;
 		}
 #endif /* CONFIG_HAVE_errno && ERANGE */
+		DBG_ALIGNMENT_ENABLE();
 		bufsize *= 2;
 		new_buffer = IFELSE_WCHAR(unicode_printer_resize_wchar(printer, buffer, bufsize),
 		                          unicode_printer_resize_utf8(printer, buffer, bufsize));

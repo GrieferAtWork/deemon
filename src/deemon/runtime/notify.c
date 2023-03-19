@@ -46,18 +46,28 @@ Dee_GetEnv(DeeObject *__restrict name) {
 	posix_environ = DeeModule_GetExtern((DeeObject *)&str_posix,
 	                                    (DeeObject *)&str_environ);
 	if unlikely(!posix_environ)
-		goto err;
+		goto err_tryhandle;
 	result = DeeObject_GetItemDef(posix_environ, name, ITER_DONE);
 	Dee_Decref(posix_environ);
 	if unlikely(!result)
-		goto err;
+		goto err_tryhandle;
+	/* Since the posix module may be overwritten somehow,
+	 * we have to assert that we actually got a string. */
+	if (result != ITER_DONE) {
+		if (DeeObject_AssertTypeExact(result, &DeeString_Type))
+			goto err_r;
+	}
 	return result;
-err:
+err_tryhandle:
 	if (DeeError_Catch(&DeeError_ValueError) ||     /* Super-error that includes `KeyError' (thrown when a key (env_name) wasn't found) */
 	    DeeError_Catch(&DeeError_AttributeError) || /* Attribute-error (thrown when `fs' doesn't export a symbol `environ') */
 	    DeeError_Catch(&DeeError_UnsupportedAPI) || /* Unsupported-API (thrown when `fs' only provides a stub implementation for `environ') */
 	    DeeError_Catch(&DeeError_NotImplemented))   /* Not-implemented error (thrown if `fs.environ' doesn't support lookup) */
 		return ITER_DONE;
+	return NULL;
+err_r:
+	Dee_Decref(result);
+/*err:*/
 	return NULL;
 }
 

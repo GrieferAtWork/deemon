@@ -841,6 +841,7 @@ EXPORTS
 	DeeTuple_ResizeUninitialized@8=_DeeTuple_ResizeUninitialized@8
 	DeeTuple_TruncateUninitialized@8=_DeeTuple_TruncateUninitialized@8
 	DeeTuple_TryNewUninitialized@4=_DeeTuple_TryNewUninitialized@4
+	DeeTuple_TryResizeUninitialized@8=_DeeTuple_TryResizeUninitialized@8
 	DeeTuple_Types@4=_DeeTuple_Types@4
 	DeeTuple_VNewf@8=_DeeTuple_VNewf@8
 	DeeTuple_VPack@8=_DeeTuple_VPack@8
@@ -856,10 +857,10 @@ EXPORTS
 	DeeUni_GetNumericIdxD@4=_DeeUni_GetNumericIdxD@4
 	DeeUni_ToFolded@8=_DeeUni_ToFolded@8
 	DeeUnixSystem_GetFD@4=_DeeUnixSystem_GetFD@4
-	DeeUnixSystem_Printlink@8=_DeeUnixSystem_Printlink@8
-	DeeUnixSystem_PrintlinkString@8=_DeeUnixSystem_PrintlinkString@8
-	DeeUnixSystem_Readlink@4=_DeeUnixSystem_Readlink@4
-	DeeUnixSystem_ReadlinkString@4=_DeeUnixSystem_ReadlinkString@4
+	DeeUnixSystem_PrintLink@8=_DeeUnixSystem_PrintLink@8
+	DeeUnixSystem_PrintLinkString@8=_DeeUnixSystem_PrintLinkString@8
+	DeeUnixSystem_ReadLink@4=_DeeUnixSystem_ReadLink@4
+	DeeUnixSystem_ReadLinkString@4=_DeeUnixSystem_ReadLinkString@4
 	DeeUnixSystem_VThrowErrorf@16=_DeeUnixSystem_VThrowErrorf@16
 	Dee_AtExit@8=_Dee_AtExit@8
 	Dee_Atoi16@16=_Dee_Atoi16@16

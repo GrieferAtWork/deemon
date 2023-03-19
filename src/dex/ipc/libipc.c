@@ -27,36 +27,94 @@
 
 #include <deemon/api.h>
 #include <deemon/dex.h>
+#include <deemon/error.h>
+#include <deemon/system.h>
 
 #ifndef __INTELLISENSE__
-#ifdef CONFIG_HOST_WINDOWS
-#   include "windows.c.inl"
-#elif defined(CONFIG_HOST_UNIX)
-#   include "unix.c.inl"
-#else /* ... */
-#   include "generic.c.inl"
-#   include "generic-pipe.c.inl"
-#endif /* !... */
-#endif /* !__INTELLISENSE__ */
-
+#include "pipe.c.inl"
+#include "process.c.inl"
+#else /* !__INTELLISENSE__ */
+#define WANT_DeeObject_AsFileSystemPathString
+#define WANT_ipc_unimplemented
+#define WANT_err_unbound_attribute
+#define WANT_err_file_not_found
+#endif /* __INTELLISENSE__ */
 
 DECL_BEGIN
 
+
+#ifdef WANT_DeeObject_AsFileSystemPathString
+#undef WANT_DeeObject_AsFileSystemPathString
+INTERN WUNUSED NONNULL((1)) DREF DeeStringObject *DCALL
+DeeObject_AsFileSystemPathString(DeeObject *__restrict self) {
+	if (DeeString_Check(self)) {
+		Dee_Incref(self);
+		return (DREF DeeStringObject *)self;
+	} else {
+#ifdef CONFIG_HOST_WINDOWS
+		void *hExeHandle;
+		hExeHandle = DeeNTSystem_GetHandle(self);
+		if unlikely(hExeHandle == (void *)-1)
+			return NULL;
+		return (DREF DeeStringObject *)DeeNTSystem_GetFilenameOfHandle(hExeHandle);
+#else /* CONFIG_HOST_WINDOWS */
+		int fd = DeeUnixSystem_GetFD(self);
+		if unlikely(fd == -1)
+			return NULL;
+		return (DREF DeeStringObject *)DeeSystem_GetFilenameOfFD(fd);
+#endif /* !CONFIG_HOST_WINDOWS */
+	}
+}
+#endif /* WANT_DeeObject_AsFileSystemPathString */
+
+
+#ifdef WANT_ipc_unimplemented
+#undef WANT_ipc_unimplemented
+INTERN ATTR_COLD int DCALL ipc_unimplemented(void) {
+	return DeeError_Throwf(&DeeError_UnsupportedAPI,
+	                       "IPC function not supported");
+}
+#endif /* !WANT_ipc_unimplemented */
+
+#ifdef WANT_err_unbound_attribute
+#undef WANT_err_unbound_attribute
+INTERN ATTR_COLD NONNULL((1, 2)) int DCALL
+err_unbound_attribute(DeeTypeObject *__restrict tp,
+                      char const *__restrict name) {
+	ASSERT_OBJECT(tp);
+	ASSERT(DeeType_Check(tp));
+	return DeeError_Throwf(&DeeError_UnboundAttribute,
+	                       "Unbound attribute `%k.%s'",
+	                       tp, name);
+}
+#endif /* WANT_err_unbound_attribute */
+
+#ifdef WANT_err_file_not_found
+#undef WANT_err_file_not_found
+INTERN ATTR_COLD NONNULL((1)) int DCALL
+err_file_not_found(char const *__restrict filename) {
+	return DeeError_Throwf(&DeeError_FileNotFound,
+	                       "File %q could not be found",
+	                       filename);
+}
+#endif /* !WANT_err_file_not_found */
+
+
 PRIVATE struct dex_symbol symbols[] = {
 	{ "Process", (DeeObject *)&DeeProcess_Type },
-	{ "enumproc", (DeeObject *)&DeeProcEnum_Type },
 	{ "Pipe", (DeeObject *)&DeePipe_Type },
+	// TODO: { "enumproc", (DeeObject *)&DeeProcEnum_Type },
 	{ NULL }
 };
 
 PUBLIC struct dex DEX = {
 	/* .d_symbols      = */ symbols,
 	/* .d_init         = */ NULL,
-#ifdef HAVE_LIBCMDLINE_FINI
-	/* .d_fini         = */ libcmdline_fini,
-#else /* HAVE_LIBCMDLINE_FINI */
+#ifdef HAVE_libipc_fini
+	/* .d_fini         = */ &libipc_fini,
+#else /* HAVE_libipc_fini */
 	/* .d_fini         = */ NULL,
-#endif /* !HAVE_LIBCMDLINE_FINI */
+#endif /* !HAVE_libipc_fini */
 	/* .d_import_names = */ { NULL }
 };
 

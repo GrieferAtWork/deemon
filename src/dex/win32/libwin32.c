@@ -668,7 +668,7 @@ print "/" "**" "/";
 	LIBWIN32_DUPLICATE_CLOSE_SOURCE_DEF \
 	LIBWIN32_DUPLICATE_SAME_ACCESS_DEF \
 /**/
-//[[[end]]]
+/*[[[end]]]*/
 
 
 typedef struct {
@@ -924,7 +924,7 @@ err:
 	return NULL;
 }
 FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_GetHandle_f_impl(HANDLE hHandle)
-//[[[end]]]
+/*[[[end]]]*/
 {
 	return libwin32_CreateHandle(hHandle);
 }
@@ -943,7 +943,7 @@ err:
 	return NULL;
 }
 FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_GetLastError_f_impl(void)
-//[[[end]]]
+/*[[[end]]]*/
 {
 	return DeeInt_NewU32((uint32_t)GetLastError());
 }
@@ -967,7 +967,7 @@ err:
 	return NULL;
 }
 FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_SetLastError_f_impl(DWORD dwErrCode)
-//[[[end]]]
+/*[[[end]]]*/
 {
 	SetLastError(dwErrCode);
 	return_none;
@@ -995,7 +995,7 @@ err:
 	return NULL;
 }
 FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_CloseHandle_f_impl(HANDLE hObject)
-//[[[end]]]
+/*[[[end]]]*/
 {
 	BOOL bResult;
 again:
@@ -1061,7 +1061,7 @@ err:
 	return NULL;
 }
 FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_DuplicateHandle_f_impl(HANDLE hSourceProcessHandle, HANDLE hSourceHandle, HANDLE hTargetProcessHandle, DWORD dwDesiredAccess, bool bInheritHandle, DWORD dwOptions)
-//[[[end]]]
+/*[[[end]]]*/
 {
 	HANDLE hResult;
 	DREF DeeObject *result;
@@ -1142,7 +1142,7 @@ err:
 	return NULL;
 }
 FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_CreateFile_f_impl(DeeObject *lpFileName, DWORD dwDesiredAccess, DWORD dwShareMode, DeeObject *lpSecurityAttributes, DWORD dwCreationDisposition, DWORD dwFlagsAndAttributes, HANDLE hTemplateFile)
-//[[[end]]]
+/*[[[end]]]*/
 {
 	HANDLE hResult;
 	DREF DeeObject *result;
@@ -1210,7 +1210,7 @@ err:
 	return NULL;
 }
 FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_WriteFile_f_impl(HANDLE hFile, DeeObject *lpBuffer, DeeObject *lpOverlapped)
-//[[[end]]]
+/*[[[end]]]*/
 {
 	DREF DeeObject *result;
 	DeeBuffer buffer;
@@ -1275,7 +1275,7 @@ err:
 	return NULL;
 }
 FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_ReadFile_f_impl(HANDLE hFile, DeeObject *lpBuffer, DeeObject *lpOverlapped)
-//[[[end]]]
+/*[[[end]]]*/
 {
 	DREF DeeObject *result;
 	DeeBuffer buffer;
@@ -1336,7 +1336,7 @@ err:
 	return NULL;
 }
 FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_CreateDirectory_f_impl(LPCWSTR lpPathName, DeeObject *lpSecurityAttributes)
-//[[[end]]]
+/*[[[end]]]*/
 {
 	BOOL bResult;
 again:
@@ -1387,7 +1387,7 @@ err:
 	return NULL;
 }
 FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_RemoveDirectory_f_impl(LPCWSTR lpPathName)
-//[[[end]]]
+/*[[[end]]]*/
 {
 	BOOL bResult;
 again:
@@ -1437,7 +1437,7 @@ err:
 	return NULL;
 }
 FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_DeleteFile_f_impl(LPCWSTR lpFileName)
-//[[[end]]]
+/*[[[end]]]*/
 {
 	BOOL bResult;
 again:
@@ -1484,7 +1484,7 @@ err:
 	return NULL;
 }
 FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_SetEndOfFile_f_impl(HANDLE hFile)
-//[[[end]]]
+/*[[[end]]]*/
 {
 	BOOL bResult;
 again:
@@ -1535,7 +1535,7 @@ err:
 	return NULL;
 }
 FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_SetFileAttributesW_f_impl(LPCWSTR lpFileName, DWORD dwFileAttributes)
-//[[[end]]]
+/*[[[end]]]*/
 {
 	BOOL bResult;
 again:
@@ -1585,7 +1585,7 @@ err:
 	return NULL;
 }
 FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_SetFilePointer_f_impl(HANDLE hFile, int64_t lDistanceToMove, DWORD dwMoveMethod)
-//[[[end]]]
+/*[[[end]]]*/
 {
 	DWORD dwResult;
 	LONG lDistanceToMoveLow;
@@ -1649,7 +1649,7 @@ err:
 	return NULL;
 }
 FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_GetFileTime_f_impl(HANDLE hFile)
-//[[[end]]]
+/*[[[end]]]*/
 {
 	BOOL bResult;
 	ALIGNED_FILETIME ftCreationTime;
@@ -1710,7 +1710,7 @@ err:
 	return NULL;
 }
 FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_SetFileTime_f_impl(HANDLE hFile, DeeObject *lpCreationTime, DeeObject *lpLastAccessTime, DeeObject *lpLastWriteTime)
-//[[[end]]]
+/*[[[end]]]*/
 {
 	ALIGNED_FILETIME ftCreationTime;
 	ALIGNED_FILETIME ftLastAccessTime;
@@ -1772,7 +1772,7 @@ err:
 	return NULL;
 }
 FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_SetFileValidData_f_impl(HANDLE hFile, uint64_t ValidDataLength)
-//[[[end]]]
+/*[[[end]]]*/
 {
 	BOOL bResult;
 again:
@@ -1812,7 +1812,7 @@ err:
 	return NULL;
 }
 FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_GetTempPath_f_impl(void)
-//[[[end]]]
+/*[[[end]]]*/
 {
 	LPWSTR lpBuffer, lpNewBuffer;
 	DWORD dwBufSize = PATH_MAX, dwError;
@@ -1867,7 +1867,7 @@ err:
 	return NULL;
 }
 FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_GetDllDirectory_f_impl(void)
-//[[[end]]]
+/*[[[end]]]*/
 {
 	LPWSTR lpBuffer, lpNewBuffer;
 	DWORD dwBufSize = PATH_MAX, dwError;
@@ -1951,7 +1951,7 @@ err:
 	return NULL;
 }
 FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_SetDllDirectory_f_impl(LPCWSTR lpPathName)
-//[[[end]]]
+/*[[[end]]]*/
 {
 	BOOL bResult;
 	typedef BOOL (WINAPI *LPSETDLLDIRECTORYW)(LPCWSTR lpPathName);
@@ -2018,7 +2018,7 @@ err:
 	return NULL;
 }
 FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_GetDiskFreeSpace_f_impl(LPCWSTR lpRootPathName)
-//[[[end]]]
+/*[[[end]]]*/
 {
 	BOOL bResult;
 	DWORD dwSectorsPerCluster;
@@ -2082,7 +2082,7 @@ err:
 	return NULL;
 }
 FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_GetDiskFreeSpaceEx_f_impl(LPCWSTR lpDirectoryName)
-//[[[end]]]
+/*[[[end]]]*/
 {
 	BOOL bResult;
 	ULARGE_INTEGER uFreeBytesAvailableToCaller;
@@ -2142,7 +2142,7 @@ err:
 	return NULL;
 }
 FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_GetDriveType_f_impl(LPCWSTR lpRootPathName)
-//[[[end]]]
+/*[[[end]]]*/
 {
 	UINT uResult;
 	DWORD dwError;
@@ -2196,7 +2196,7 @@ err:
 	return NULL;
 }
 FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_GetModuleFileName_f_impl(HANDLE hModule)
-//[[[end]]]
+/*[[[end]]]*/
 {
 	LPWSTR lpBuffer, lpNewBuffer;
 	DWORD dwBufSize = PATH_MAX, dwError;
@@ -2264,7 +2264,7 @@ err:
 	return NULL;
 }
 FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_GetSystemDirectory_f_impl(void)
-//[[[end]]]
+/*[[[end]]]*/
 {
 	LPWSTR lpBuffer, lpNewBuffer;
 	DWORD dwBufSize = PATH_MAX, dwError;
@@ -2322,7 +2322,7 @@ err:
 	return NULL;
 }
 FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_GetWindowsDirectory_f_impl(void)
-//[[[end]]]
+/*[[[end]]]*/
 {
 	LPWSTR lpBuffer, lpNewBuffer;
 	DWORD dwBufSize = PATH_MAX, dwError;
@@ -2378,7 +2378,7 @@ err:
 	return NULL;
 }
 FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_GetSystemWindowsDirectory_f_impl(void)
-//[[[end]]]
+/*[[[end]]]*/
 {
 	LPWSTR lpBuffer, lpNewBuffer;
 	DWORD dwBufSize = PATH_MAX, dwError;
@@ -2436,7 +2436,7 @@ err:
 	return NULL;
 }
 FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_GetSystemWow64Directory_f_impl(void)
-//[[[end]]]
+/*[[[end]]]*/
 {
 	LPWSTR lpBuffer, lpNewBuffer;
 	DWORD dwBufSize                                                 = PATH_MAX, dwError;
@@ -2533,7 +2533,7 @@ err:
 	return NULL;
 }
 FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_GetLogicalDriveStrings_f_impl(void)
-//[[[end]]]
+/*[[[end]]]*/
 {
 	LPWSTR lpBuffer, lpNewBuffer;
 	DWORD dwBufSize = PATH_MAX, dwError;
@@ -2605,7 +2605,7 @@ err:
 	return NULL;
 }
 FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_QueryDosDevice_f_impl(LPCWSTR lpDeviceName)
-//[[[end]]]
+/*[[[end]]]*/
 {
 	LPWSTR lpBuffer, lpNewBuffer;
 	DWORD dwBufSize = PATH_MAX, dwError;
@@ -2685,7 +2685,7 @@ err:
 	return NULL;
 }
 FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_GetFileType_f_impl(HANDLE hFile)
-//[[[end]]]
+/*[[[end]]]*/
 {
 	DWORD dwType;
 again:
@@ -2734,7 +2734,7 @@ err:
 	return NULL;
 }
 FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_GetFileSize_f_impl(HANDLE hFile)
-//[[[end]]]
+/*[[[end]]]*/
 {
 	DWORD dwSizeLow, dwSizeHigh;
 again:
@@ -2786,7 +2786,7 @@ err:
 	return NULL;
 }
 FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_GetFileAttributes_f_impl(LPCWSTR lpFileName)
-//[[[end]]]
+/*[[[end]]]*/
 {
 	DWORD dwResult;
 again:
@@ -2838,7 +2838,7 @@ err:
 	return NULL;
 }
 FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_SetFileAttributes_f_impl(LPCWSTR lpFileName, DWORD dwFileAttributes)
-//[[[end]]]
+/*[[[end]]]*/
 {
 	BOOL bResult;
 again:
@@ -2891,7 +2891,7 @@ err:
 	return NULL;
 }
 FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_GetCompressedFileSize_f_impl(LPCWSTR lpFileName)
-//[[[end]]]
+/*[[[end]]]*/
 {
 	DWORD dwSizeLow, dwSizeHigh;
 again:
@@ -2941,7 +2941,7 @@ err:
 	return NULL;
 }
 FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_FlushFileBuffers_f_impl(HANDLE hFile)
-//[[[end]]]
+/*[[[end]]]*/
 {
 	BOOL bResult;
 again:
@@ -2991,7 +2991,7 @@ err:
 	return NULL;
 }
 FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_GetFinalPathNameByHandle_f_impl(HANDLE hFile, DWORD dwFlags)
-//[[[end]]]
+/*[[[end]]]*/
 {
 	int error;
 	struct unicode_printer printer = UNICODE_PRINTER_INIT;
@@ -3044,7 +3044,7 @@ err:
 	return NULL;
 }
 FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_GetFilenameOfHandle_f_impl(HANDLE hFile)
-//[[[end]]]
+/*[[[end]]]*/
 {
 	DREF DeeObject *result;
 	result = DeeNTSystem_TryGetFilenameOfHandle((void *)hFile);
@@ -3076,7 +3076,7 @@ err:
 	return NULL;
 }
 FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_FormatErrorMessage_f_impl(DWORD dwError)
-//[[[end]]]
+/*[[[end]]]*/
 {
 	DREF DeeObject *result;
 	result = DeeNTSystem_FormatErrorMessage(dwError);
@@ -3115,7 +3115,7 @@ err:
 	return NULL;
 }
 FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_GetMappedFileName_f_impl(HANDLE hProcess, void *lpv)
-//[[[end]]]
+/*[[[end]]]*/
 {
 	int error;
 	struct unicode_printer printer = UNICODE_PRINTER_INIT;
@@ -3170,7 +3170,7 @@ err:
 	return NULL;
 }
 FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_MapViewOfFile_f_impl(HANDLE hFileMappingObject, DWORD dwDesiredAccess, uint64_t dwFileOffset, size_t dwNumberOfBytesToMap)
-//[[[end]]]
+/*[[[end]]]*/
 {
 	DREF DeeObject *result;
 	LPVOID pResult;
@@ -3235,7 +3235,7 @@ err:
 	return NULL;
 }
 FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_UnmapViewOfFile_f_impl(void *lpBaseAddress)
-//[[[end]]]
+/*[[[end]]]*/
 {
 	BOOL bOk;
 again:
@@ -3302,7 +3302,7 @@ err:
 	return NULL;
 }
 FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_CreateFileMapping_f_impl(HANDLE hFile, DeeObject *lpFileMappingAttributes, DWORD flProtect, uint64_t dwMaximumSize, LPCWSTR lpName)
-//[[[end]]]
+/*[[[end]]]*/
 {
 	DREF DeeObject *result;
 	HANDLE hResult;
@@ -3360,7 +3360,7 @@ err:
 	return NULL;
 }
 FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_GetCurrentProcess_f_impl(void)
-//[[[end]]]
+/*[[[end]]]*/
 {
 	HANDLE hCurrentProcess;
 	DBG_ALIGNMENT_DISABLE();
@@ -3385,7 +3385,7 @@ err:
 	return NULL;
 }
 FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_GetCurrentThread_f_impl(void)
-//[[[end]]]
+/*[[[end]]]*/
 {
 	HANDLE hCurrentThread;
 	DBG_ALIGNMENT_DISABLE();
@@ -3410,7 +3410,7 @@ err:
 	return NULL;
 }
 FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_GetCurrentProcessId_f_impl(void)
-//[[[end]]]
+/*[[[end]]]*/
 {
 	DWORD dwCurrentProcessId;
 	DBG_ALIGNMENT_DISABLE();
@@ -3435,7 +3435,7 @@ err:
 	return NULL;
 }
 FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_GetCurrentThreadId_f_impl(void)
-//[[[end]]]
+/*[[[end]]]*/
 {
 	DWORD dwCurrentThreadId;
 	DBG_ALIGNMENT_DISABLE();
@@ -3465,7 +3465,7 @@ err:
 	return NULL;
 }
 FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_GetStdHandle_f_impl(int32_t nStdHandle)
-//[[[end]]]
+/*[[[end]]]*/
 {
 	HANDLE hResult;
 again:
@@ -3528,7 +3528,7 @@ err:
 	return NULL;
 }
 FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_SetStdHandle_f_impl(DWORD nStdHandle, HANDLE hHandle)
-//[[[end]]]
+/*[[[end]]]*/
 {
 	BOOL bOk;
 again:
@@ -3599,7 +3599,7 @@ err:
 	return NULL;
 }
 FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_CreateNamedPipe_f_impl(LPCWSTR lpName, DWORD dwOpenMode, DWORD dwPipeMode, DWORD nMaxInstances, DWORD nOutBufferSize, DWORD nInBufferSize, DWORD nDefaultTimeOut, DeeObject *lpSecurityAttributes)
-//[[[end]]]
+/*[[[end]]]*/
 {
 	HANDLE hResult;
 	DREF DeeObject *result;
@@ -3666,7 +3666,7 @@ err:
 	return NULL;
 }
 FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_ConnectNamedPipe_f_impl(HANDLE hNamedPipe, DeeObject *lpOverlapped)
-//[[[end]]]
+/*[[[end]]]*/
 {
 	BOOL bOk;
 again:
@@ -3722,7 +3722,7 @@ err:
 	return NULL;
 }
 FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_WaitNamedPipe_f_impl(LPCWSTR lpNamedPipeName, DWORD nTimeOut)
-//[[[end]]]
+/*[[[end]]]*/
 {
 	BOOL bOk;
 again:
@@ -3809,7 +3809,7 @@ err:
 	return NULL;
 }
 FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_OpenProcess_f_impl(DWORD dwDesiredAccess, bool bInheritHandle, DWORD dwProcessId)
-//[[[end]]]
+/*[[[end]]]*/
 {
 	HANDLE hResult;
 	DREF DeeObject *result;
@@ -3876,7 +3876,7 @@ err:
 	return NULL;
 }
 FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_GetExitCodeProcess_f_impl(HANDLE hProcess)
-//[[[end]]]
+/*[[[end]]]*/
 {
 	BOOL bOk;
 	DWORD dwExitCode;
@@ -4016,7 +4016,7 @@ err:
 	return NULL;
 }
 FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_EnumProcessModules_f_impl(HANDLE hProcess, DWORD dwFilterFlag)
-//[[[end]]]
+/*[[[end]]]*/
 {
 	BOOL bOk;
 	HMODULE *phModules;
@@ -4113,7 +4113,7 @@ err:
 	return NULL;
 }
 FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_EnumProcesses_f_impl(void)
-//[[[end]]]
+/*[[[end]]]*/
 {
 	BOOL bOk;
 	DWORD *pidProcesses;
@@ -4211,7 +4211,7 @@ err:
 	return NULL;
 }
 FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_GetProcessImageFileName_f_impl(HANDLE hProcess)
-//[[[end]]]
+/*[[[end]]]*/
 {
 	LPWSTR lpBuffer, lpNewBuffer;
 	DWORD dwBufSize = PATH_MAX, dwError;
@@ -4286,7 +4286,7 @@ err:
 	return NULL;
 }
 FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_GetModuleBaseName_f_impl(HANDLE hProcess, HANDLE hModule)
-//[[[end]]]
+/*[[[end]]]*/
 {
 	LPWSTR lpBuffer, lpNewBuffer;
 	DWORD dwBufSize = PATH_MAX, dwError;
@@ -4361,7 +4361,7 @@ err:
 	return NULL;
 }
 FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_GetModuleFileNameEx_f_impl(HANDLE hProcess, HANDLE hModule)
-//[[[end]]]
+/*[[[end]]]*/
 {
 	LPWSTR lpBuffer, lpNewBuffer;
 	DWORD dwBufSize = PATH_MAX, dwError;
@@ -4432,7 +4432,7 @@ err:
 	return NULL;
 }
 FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_TerminateProcess_f_impl(HANDLE hProcess, UINT uExitCode)
-//[[[end]]]
+/*[[[end]]]*/
 {
 	BOOL bOk;
 again:
@@ -4484,7 +4484,7 @@ err:
 	return NULL;
 }
 FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_TerminateThread_f_impl(HANDLE hThread, DWORD dwExitCode)
-//[[[end]]]
+/*[[[end]]]*/
 {
 	BOOL bOk;
 again:
@@ -4534,7 +4534,7 @@ err:
 	return NULL;
 }
 FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_SuspendThread_f_impl(HANDLE hThread)
-//[[[end]]]
+/*[[[end]]]*/
 {
 	DWORD dwResult;
 again:
@@ -4584,7 +4584,7 @@ err:
 	return NULL;
 }
 FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_ResumeThread_f_impl(HANDLE hThread)
-//[[[end]]]
+/*[[[end]]]*/
 {
 	DWORD dwResult;
 again:
@@ -4716,7 +4716,7 @@ err:
 	return NULL;
 }
 FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_NtQueryInformationProcess_f_impl(HANDLE ProcessHandle, unsigned int ProcessInformationClass, size_t ProcessInformationLength)
-//[[[end]]]
+/*[[[end]]]*/
 {
 	NTSTATUS nsResult;
 	ULONG ulReturnLength;
@@ -4808,7 +4808,7 @@ err:
 	return NULL;
 }
 FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_NtWow64QueryInformationProcess64_f_impl(HANDLE ProcessHandle, unsigned int ProcessInformationClass, size_t ProcessInformationLength)
-//[[[end]]]
+/*[[[end]]]*/
 {
 	NTSTATUS nsResult;
 	ULONG ulReturnLength;
@@ -4900,7 +4900,7 @@ err:
 	return NULL;
 }
 FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_ReadProcessMemory_f_impl(HANDLE hProcess, uintptr_t lpBaseAddress, SIZE_T nSize)
-//[[[end]]]
+/*[[[end]]]*/
 {
 	SIZE_T szNumberOfBytesRead;
 	DREF DeeBytesObject *result;
@@ -4968,7 +4968,7 @@ err:
 	return NULL;
 }
 FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_NtWow64ReadVirtualMemory64_f_impl(HANDLE hProcess, uint64_t lpBaseAddress, ULONG64 nSize)
-//[[[end]]]
+/*[[[end]]]*/
 {
 #if __SIZEOF_POINTER__ >= 8
 	return libwin32_ReadProcessMemory_f_impl(hProcess, (uintptr_t)lpBaseAddress, (SIZE_T)nSize);
@@ -5045,7 +5045,7 @@ err:
 	return NULL;
 }
 FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_WriteProcessMemory_f_impl(HANDLE hProcess, uintptr_t lpBaseAddress, DeeObject *lpBuffer)
-//[[[end]]]
+/*[[[end]]]*/
 {
 	SIZE_T szNumberOfBytesWritten;
 	BOOL bOk;
@@ -5109,7 +5109,7 @@ err:
 	return NULL;
 }
 FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_NtWow64WriteVirtualMemory64_f_impl(HANDLE hProcess, uint64_t lpBaseAddress, DeeObject *lpBuffer)
-//[[[end]]]
+/*[[[end]]]*/
 {
 #if __SIZEOF_POINTER__ >= 8
 	return libwin32_WriteProcessMemory_f_impl(hProcess, (uintptr_t)lpBaseAddress, lpBuffer);
@@ -5180,7 +5180,7 @@ err:
 	return NULL;
 }
 FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_WaitForSingleObject_f_impl(HANDLE hHandle, DWORD dwMilliseconds)
-//[[[end]]]
+/*[[[end]]]*/
 {
 	DWORD dwResult;
 again:
@@ -5234,7 +5234,7 @@ err:
 	return NULL;
 }
 FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_WaitForMultipleObjects_f_impl(DeeObject *lpHandles, bool bWaitAll, DWORD dwMilliseconds)
-//[[[end]]]
+/*[[[end]]]*/
 {
 	DWORD dwResult;
 	union {
@@ -5319,7 +5319,7 @@ err:
 	return NULL;
 }
 FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_SignalObjectAndWait_f_impl(HANDLE hObjectToSignal, HANDLE hObjectToWaitOn, DWORD dwMilliseconds)
-//[[[end]]]
+/*[[[end]]]*/
 {
 	DWORD dwResult;
 again:
@@ -5371,7 +5371,7 @@ err:
 	return NULL;
 }
 FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_Sleep_f_impl(DWORD dwMilliseconds)
-//[[[end]]]
+/*[[[end]]]*/
 {
 	DWORD dwResult;
 again:
@@ -5424,7 +5424,7 @@ err:
 	return NULL;
 }
 FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_CreateEvent_f_impl(DeeObject *lpEventAttributes, bool bManualReset, bool bInitialState, LPCWSTR lpName)
-//[[[end]]]
+/*[[[end]]]*/
 {
 	HANDLE hResult;
 	DREF DeeObject *result;
@@ -5486,7 +5486,7 @@ err:
 	return NULL;
 }
 FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_OpenEvent_f_impl(DWORD dwDesiredAccess, bool bInheritHandle, LPCWSTR lpName)
-//[[[end]]]
+/*[[[end]]]*/
 {
 	HANDLE hResult;
 	DREF DeeObject *result;
@@ -5541,7 +5541,7 @@ err:
 	return NULL;
 }
 FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_ResetEvent_f_impl(HANDLE hEvent)
-//[[[end]]]
+/*[[[end]]]*/
 {
 	BOOL bOk;
 again:
@@ -5592,7 +5592,7 @@ err:
 	return NULL;
 }
 FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_SetEvent_f_impl(HANDLE hEvent)
-//[[[end]]]
+/*[[[end]]]*/
 {
 	BOOL bOk;
 again:
@@ -5651,7 +5651,7 @@ err:
 	return NULL;
 }
 FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_CreateMutex_f_impl(DeeObject *lpMutexAttributes, bool bInitialOwner, LPCWSTR lpName)
-//[[[end]]]
+/*[[[end]]]*/
 {
 	HANDLE hResult;
 	DREF DeeObject *result;
@@ -5713,7 +5713,7 @@ err:
 	return NULL;
 }
 FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_OpenMutex_f_impl(DWORD dwDesiredAccess, bool bInheritHandle, LPCWSTR lpName)
-//[[[end]]]
+/*[[[end]]]*/
 {
 	HANDLE hResult;
 	DREF DeeObject *result;
@@ -5767,7 +5767,7 @@ err:
 	return NULL;
 }
 FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_ReleaseMutex_f_impl(HANDLE hMutex)
-//[[[end]]]
+/*[[[end]]]*/
 {
 	BOOL bOk;
 again:
@@ -5828,7 +5828,7 @@ err:
 	return NULL;
 }
 FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_CreateSemaphore_f_impl(DeeObject *lpSemaphoreAttributes, LONG lInitialCount, LONG lMaximumCount, LPCWSTR lpName)
-//[[[end]]]
+/*[[[end]]]*/
 {
 	HANDLE hResult;
 	DREF DeeObject *result;
@@ -5893,7 +5893,7 @@ err:
 	return NULL;
 }
 FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_OpenSemaphore_f_impl(DWORD dwDesiredAccess, bool bInheritHandle, LPCWSTR lpName)
-//[[[end]]]
+/*[[[end]]]*/
 {
 	HANDLE hResult;
 	DREF DeeObject *result;
@@ -5949,7 +5949,7 @@ err:
 	return NULL;
 }
 FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_ReleaseSemaphore_f_impl(HANDLE hSemaphore, LONG lReleaseCount)
-//[[[end]]]
+/*[[[end]]]*/
 {
 	BOOL bOk;
 	LONG lPreviousCount;
@@ -6009,7 +6009,7 @@ err:
 	return NULL;
 }
 FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_CreateWaitableTimer_f_impl(DeeObject *lpTimerAttributes, bool bManualReset, LPCWSTR lpTimerName)
-//[[[end]]]
+/*[[[end]]]*/
 {
 	HANDLE hResult;
 	DREF DeeObject *result;
@@ -6073,7 +6073,7 @@ err:
 	return NULL;
 }
 FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_OpenWaitableTimer_f_impl(DWORD dwDesiredAccess, bool bInheritHandle, LPCWSTR lpName)
-//[[[end]]]
+/*[[[end]]]*/
 {
 	HANDLE hResult;
 	DREF DeeObject *result;
@@ -6128,7 +6128,7 @@ err:
 	return NULL;
 }
 FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_CancelWaitableTimer_f_impl(HANDLE hTimer)
-//[[[end]]]
+/*[[[end]]]*/
 {
 	BOOL bOk;
 again:

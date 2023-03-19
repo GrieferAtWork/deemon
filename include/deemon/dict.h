@@ -59,6 +59,14 @@ struct Dee_dict_object {
 	Dee_WEAKREF_SUPPORT
 };
 
+#ifdef CONFIG_NO_THREADS
+#define Dee_DICT_INIT \
+	{ Dee_OBJECT_HEAD_INIT(&DeeDict_Type), 0, 0, 0, (struct Dee_dict_item *)DeeDict_EmptyItems, Dee_WEAKREF_SUPPORT_INIT }
+#else /* CONFIG_NO_THREADS */
+#define Dee_DICT_INIT \
+	{ Dee_OBJECT_HEAD_INIT(&DeeDict_Type), 0, 0, 0, (struct Dee_dict_item *)DeeDict_EmptyItems, DEE_ATOMIC_RWLOCK_INIT, Dee_WEAKREF_SUPPORT_INIT }
+#endif /* !CONFIG_NO_THREADS */
+
 /* The main `Dict' container class (and all related types):
  * >> class Dict: Mapping { ... };
  * >> class Dict.Proxy: Sequence { ... };
@@ -87,6 +95,7 @@ DDATDEF DeeTypeObject DeeDictValues_Type;
  * DON'T USE THIS OBJECT AS KEY FOR DICTS OR HASHSETS!
  * DO NOT EXPOSE THIS OBJECT TO USER-CODE! (not even in `rt'!) */
 DDATDEF DeeObject DeeDict_Dummy;
+DDATDEF struct Dee_dict_item const DeeDict_EmptyItems[1];
 
 
 #define DeeDict_New()  DeeObject_NewDefault(&DeeDict_Type)
@@ -118,6 +127,10 @@ INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeDict_ByHash(DeeObject *__re
 #define DeeDict_SetItemString(self, key, hash, value)             DeeObject_SetItemString(self, key, hash, value)
 #define DeeDict_SetItemStringLen(self, key, keylen, hash, value)  DeeObject_SetItemStringLen(self, key, keylen, hash, value)
 #endif /* !CONFIG_BUILDING_DEEMON */
+#define DeeDict_GetItem(self, key)        DeeObject_GetItem(self, key)
+#define DeeDict_DelItem(self, key)        DeeObject_DelItem(self, key)
+#define DeeDict_SetItem(self, key, value) DeeObject_SetItem(self, key, value)
+#define DeeDict_Clear(self)               ((*DeeDict_Type.tp_gc->tp_clear)(self))
 
 /* Create a new Dict by inheriting a set of passed key-item pairs.
  * @param: key_items:    A vector containing `num_keyitems*2' elements,
