@@ -47,9 +47,9 @@ mergesort_impl(DREF DeeObject **__restrict dst,
 	case 2:
 		error = DeeObject_CompareLo(src[0], src[1]);
 		if unlikely(error < 0 &&
-			         !DeeError_Catch(&DeeError_TypeError) &&
-			         !DeeError_Catch(&DeeError_NotImplemented))
-		goto err;
+		            !DeeError_Catch(&DeeError_TypeError) &&
+		            !DeeError_Catch(&DeeError_NotImplemented))
+			goto err;
 		if (error <= 0) {
 			dst[0] = src[1];
 			dst[1] = src[0];
@@ -144,9 +144,9 @@ mergesort_impl_p(DREF DeeObject **__restrict dst,
 		error = compare_lo(src[0], src[1], key);
 		if (error <= 0) {
 			if unlikely(error < 0 &&
-				         !DeeError_Catch(&DeeError_TypeError) &&
-				         !DeeError_Catch(&DeeError_NotImplemented))
-			goto err;
+			            !DeeError_Catch(&DeeError_TypeError) &&
+			            !DeeError_Catch(&DeeError_NotImplemented))
+				goto err;
 			dst[0] = src[1];
 			dst[1] = src[0];
 		} else {
@@ -173,9 +173,9 @@ mergesort_impl_p(DREF DeeObject **__restrict dst,
 			error = compare_lo(*iter1, *iter2, key);
 			if (error <= 0) {
 				if unlikely(error < 0 &&
-					         !DeeError_Catch(&DeeError_TypeError) &&
-					         !DeeError_Catch(&DeeError_NotImplemented))
-				goto err;
+				            !DeeError_Catch(&DeeError_TypeError) &&
+				            !DeeError_Catch(&DeeError_NotImplemented))
+					goto err;
 				*dst++ = *iter2++;
 				--s2;
 			} else {
@@ -213,9 +213,9 @@ insertsort_impl(DREF DeeObject **__restrict dst,
 			/* Check if we need to insert the object in this location. */
 			temp = DeeObject_CompareLo(ob, dst[j]);
 			if unlikely(temp < 0 &&
-				         !DeeError_Catch(&DeeError_TypeError) &&
-				         !DeeError_Catch(&DeeError_NotImplemented))
-			goto err;
+			            !DeeError_Catch(&DeeError_TypeError) &&
+			            !DeeError_Catch(&DeeError_NotImplemented))
+				goto err;
 			if (temp > 0)
 				break;
 		}
@@ -240,9 +240,9 @@ insertsort_impl_p(DREF DeeObject **__restrict dst,
 			/* Check if we need to insert the object in this location. */
 			temp = compare_lo(src_ob, dst[j], key);
 			if unlikely(temp < 0 &&
-				         !DeeError_Catch(&DeeError_TypeError) &&
-				         !DeeError_Catch(&DeeError_NotImplemented))
-			goto err;
+			            !DeeError_Catch(&DeeError_TypeError) &&
+			            !DeeError_Catch(&DeeError_NotImplemented))
+				goto err;
 			if (temp > 0)
 				break;
 		}
@@ -337,9 +337,9 @@ DeeSeq_InsertionSort(DREF DeeObject **__restrict dst,
 		       ? compare_lo(src[0], src[1], key)
 		       : DeeObject_CompareLo(src[0], src[1]);
 		if unlikely(temp < 0 &&
-			         !DeeError_Catch(&DeeError_TypeError) &&
-			         !DeeError_Catch(&DeeError_NotImplemented))
-		goto err;
+		            !DeeError_Catch(&DeeError_TypeError) &&
+		            !DeeError_Catch(&DeeError_NotImplemented))
+			goto err;
 		if (temp <= 0) {
 			dst[0] = src[0];
 			dst[1] = src[1];
