@@ -476,7 +476,7 @@ DFUNDEF WUNUSED DREF DeeObject *DCALL DeeFile_SetStd(unsigned int id, DeeObject 
 DFUNDEF bool DCALL DeeFile_ResetStd(void);
 
 /* Return the the default stream for a given STD number. */
-DFUNDEF ATTR_RETNONNULL DeeObject *DCALL DeeFile_DefaultStd(unsigned int id);
+DFUNDEF WUNUSED ATTR_RETNONNULL DeeObject *DCALL DeeFile_DefaultStd(unsigned int id);
 
 
 /* DEE_STDDBG -- Same as `DEE_STDERR', but on windows, also print to `OutputDebugString()'

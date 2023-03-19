@@ -759,19 +759,10 @@
 		<ClInclude Include="..\src\deemon\runtime\strings.h">
 			<Filter>src\runtime</Filter>
 		</ClInclude>
-		<ClInclude Include="..\src\deemon\system\generic-file.c.inl">
-			<Filter>src\system</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\system\stdio-file.c.inl">
-			<Filter>src\system</Filter>
-		</ClInclude>
 		<ClInclude Include="..\src\deemon\system\system-nt.c.inl">
 			<Filter>src\system</Filter>
 		</ClInclude>
 		<ClInclude Include="..\src\deemon\system\system-unix.c.inl">
-			<Filter>src\system</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\system\unix-file.c.inl">
 			<Filter>src\system</Filter>
 		</ClInclude>
 		<ClInclude Include="..\src\deemon\system\win-file.c.inl">

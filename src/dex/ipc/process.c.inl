@@ -35,6 +35,7 @@
 #include <deemon/notify.h>
 #include <deemon/object.h>
 #include <deemon/seq.h>
+#include <deemon/string.h>
 #include <deemon/system-features.h>
 #include <deemon/system.h>
 #include <deemon/thread.h>
@@ -839,6 +840,224 @@ process_clear(Process *__restrict self) {
 PRIVATE struct type_gc tpconst process_gc = {
 	/* .tp_clear = */ (void (DCALL *)(DeeObject *__restrict))&process_clear
 };
+
+
+#define DO(err, expr)                    \
+	do {                                 \
+		if unlikely((temp = (expr)) < 0) \
+			goto err;                    \
+		result += temp;                  \
+	}	__WHILE0
+
+PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
+process_print(Process *__restrict self,
+              dformatprinter printer, void *arg) {
+	DREF DeeObject *proc_exe;
+#ifdef ipc_Process_USE_cmdline
+	DREF DeeStringObject *proc_cmdline;
+#endif /* ipc_Process_USE_cmdline */
+#ifdef ipc_Process_USE_argv
+	DREF DeeObject *proc_argv;
+#endif /* ipc_Process_USE_argv */
+#ifdef ipc_Process_pid_t
+	ipc_Process_pid_t proc_pid;
+#endif /* ipc_Process_pid_t */
+	uint16_t proc_state;
+	dssize_t temp, result = 0;
+
+	/* Load process properties. */
+	rwlock_read(&self->p_lock);
+	proc_exe = self->p_exe;
+	Dee_XIncref(proc_exe);
+#ifdef ipc_Process_USE_cmdline
+	proc_cmdline = self->p_cmdline;
+	Dee_XIncref(proc_cmdline);
+#endif /* ipc_Process_USE_cmdline */
+#ifdef ipc_Process_USE_argv
+	proc_argv = self->p_argv;
+	Dee_XIncref(proc_argv);
+#endif /* ipc_Process_USE_argv */
+#ifdef ipc_Process_pid_t
+	proc_pid = self->p_pid;
+#endif /* ipc_Process_pid_t */
+	proc_state = self->p_state;
+	rwlock_endread(&self->p_lock);
+
+	/* Print a human-readable representation of the process. */
+	DO(err, DeeFormat_PRINT(printer, arg, "<Process "));
+	if (proc_state & PROCESS_FLAG_SELF) {
+		DO(err, DeeFormat_PRINT(printer, arg, "<this process>"));
+	} else {
+		char const *status;
+		bool has_name = false;
+#ifdef ipc_Process_USE_cmdline
+		if (proc_cmdline) {
+			has_name = true;
+			DO(err, DeeFormat_PrintObjectRepr(printer, arg, (DeeObject *)proc_cmdline));
+		} else
+#endif /* ipc_Process_USE_cmdline */
+#ifdef ipc_Process_USE_argv
+		if (proc_argv) {
+			has_name = true;
+			DO(err, DeeFormat_PrintObjectRepr(printer, arg, (DeeObject *)proc_argv));
+		} else
+#endif /* ipc_Process_USE_argv */
+		if (proc_exe) {
+			has_name = true;
+			DO(err, DeeFormat_PrintObjectRepr(printer, arg, (DeeObject *)proc_exe));
+		}
+
+#ifdef ipc_Process_pid_t
+		if (proc_pid != ipc_Process_pid_t_INVALID) {
+			if (has_name)
+				DO(err, DeeFormat_PRINT(printer, arg, ", "));
+			DO(err, DeeFormat_Printf(printer, arg, "pid: %" PRFdPID, proc_pid));
+			has_name = true;
+		}
+#endif /* ipc_Process_pid_t */
+
+		status = NULL;
+		if (proc_state & PROCESS_FLAG_TERMINATED) {
+			status = "(terminated)";
+		} else if (proc_state & PROCESS_FLAG_EXTERN) {
+			status = "(extern)";
+		} else if (proc_state & PROCESS_FLAG_DETACHED) {
+			status = "(detached)";
+		} else if (proc_state & PROCESS_FLAG_STARTED) {
+			status = "(started)";
+		}
+		if (status != NULL) {
+			if (has_name)
+				DO(err, DeeFormat_PRINT(printer, arg, " "));
+			DO(err, DeeFormat_PrintStr(printer, arg, status));
+		}
+	}
+	DO(err, DeeFormat_PRINT(printer, arg, ">"));
+done:
+	Dee_XDecref(proc_exe);
+#ifdef ipc_Process_USE_cmdline
+	Dee_XDecref(proc_cmdline);
+#endif /* ipc_Process_USE_cmdline */
+#ifdef ipc_Process_USE_argv
+	Dee_XDecref(proc_argv);
+#endif /* ipc_Process_USE_argv */
+	return result;
+err:
+	result = temp;
+	goto done;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
+process_printrepr(Process *__restrict self,
+                  dformatprinter printer, void *arg) {
+	DREF DeeObject *proc_exe;
+	DREF DeeObject *proc_argv;
+	DREF DeeObject *proc_environ;
+	DREF DeeObject *proc_pwd;
+	DREF DeeObject *proc_stdfd[COMPILER_LENOF(self->p_stdfd)];
+#ifdef ipc_Process_USE_cmdline
+	DREF DeeStringObject *proc_cmdline;
+#endif /* ipc_Process_USE_cmdline */
+	uint16_t proc_state;
+	dssize_t temp, result = 0;
+
+	/* Load process properties. */
+	rwlock_read(&self->p_lock);
+
+	/* Check for special case: external process reference */
+#ifdef ipc_Process_pid_t
+	if (self->p_state & PROCESS_FLAG_EXTERN) {
+		ipc_Process_pid_t pid = self->p_pid;
+		rwlock_endread(&self->p_lock);
+		return DeeFormat_Printf(printer, arg, "Process(pid: " PRFdPID ")", pid);
+	}
+#endif /* ipc_Process_pid_t */
+
+	/* Check for special case: current process reference */
+	if (self->p_state & PROCESS_FLAG_SELF) {
+		rwlock_endread(&self->p_lock);
+		return DeeFormat_PRINT(printer, arg, "Process.current");
+	}
+
+	proc_exe = self->p_exe;
+	Dee_XIncref(proc_exe);
+#ifdef ipc_Process_USE_cmdline
+	proc_cmdline = self->p_cmdline;
+	Dee_XIncref(proc_cmdline);
+#elif defined(ipc_Process_USE_argv)
+	proc_argv = self->p_argv;
+	Dee_XIncref(proc_argv);
+#endif /* ipc_Process_USE_cmdline */
+	proc_environ = self->p_envp;
+	Dee_XIncref(proc_environ);
+	proc_pwd = self->p_pwd;
+	Dee_XIncref(proc_pwd);
+	Dee_XMovrefv(proc_stdfd, self->p_stdfd, COMPILER_LENOF(proc_stdfd));
+	proc_state = self->p_state;
+	rwlock_endread(&self->p_lock);
+
+#ifdef ipc_Process_USE_cmdline
+	proc_argv = NULL;
+	if (proc_cmdline) {
+		proc_argv = (DREF DeeObject *)ipc_cmdline2argv(proc_cmdline);
+		Dee_Decref(proc_cmdline);
+		if unlikely(!proc_argv) {
+			temp = -1;
+			goto err;
+		}
+	}
+#endif /* ipc_Process_USE_cmdline */
+
+	/* Print a human-readable representation of the process. */
+	/* TODO: Add keyword argument support to the real constructor! */
+	DO(err, DeeFormat_PRINT(printer, arg, "Process(exe: "));
+	if likely(proc_exe != NULL) {
+		DO(err, DeeFormat_PrintObjectRepr(printer, arg, proc_exe));
+	} else {
+		DO(err, DeeFormat_PRINT(printer, arg, "?"));
+	}
+	DO(err, DeeFormat_PRINT(printer, arg, ", argv: "));
+	if likely(proc_argv != NULL) {
+		DO(err, DeeFormat_PrintObjectRepr(printer, arg, proc_argv));
+	} else {
+		DO(err, DeeFormat_PRINT(printer, arg, "?"));
+	}
+	if (proc_environ)
+		DO(err, DeeFormat_Printf(printer, arg, ", environ: %r", proc_environ));
+	/* TODO: allow direct specification of all of the following arguments within the constructor */
+	if (proc_pwd)
+		DO(err, DeeFormat_Printf(printer, arg, ", pwd: %r", proc_pwd));
+	if (proc_stdfd[DEE_STDIN])
+		DO(err, DeeFormat_Printf(printer, arg, ", stdin: %r", proc_stdfd[DEE_STDIN]));
+	if (proc_stdfd[DEE_STDOUT])
+		DO(err, DeeFormat_Printf(printer, arg, ", stdout: %r", proc_stdfd[DEE_STDOUT]));
+	if (proc_stdfd[DEE_STDERR])
+		DO(err, DeeFormat_Printf(printer, arg, ", stderr: %r", proc_stdfd[DEE_STDERR]));
+	DO(err, DeeFormat_PRINT(printer, arg, ")"));
+
+	/* Still (somewhat) include the process's status in its representation */
+	if (proc_state & PROCESS_FLAG_TERMINATED) {
+		DO(err, DeeFormat_PRINT(printer, arg, "<.hasterminated>"));
+	} else if (proc_state & PROCESS_FLAG_DETACHED) {
+		DO(err, DeeFormat_PRINT(printer, arg, "<.wasdetached>"));
+	} else if (proc_state & PROCESS_FLAG_STARTED) {
+		DO(err, DeeFormat_PRINT(printer, arg, "<.hasstarted>"));
+	}
+
+done:
+	Dee_XDecrefv(proc_stdfd, COMPILER_LENOF(proc_stdfd));
+	Dee_XDecref(proc_pwd);
+	Dee_XDecref(proc_environ);
+	Dee_XDecref(proc_argv);
+	Dee_XDecref(proc_exe);
+	return result;
+err:
+	result = temp;
+	goto done;
+}
+
+#undef DO
+
 
 
 #ifdef NEED_ipc_joinpid_impl
@@ -4844,9 +5063,11 @@ INTERN DeeTypeObject DeeProcess_Type = {
 		/* .tp_move_assign = */ NULL
 	},
 	/* .tp_cast = */ {
-		/* .tp_str  = */ NULL,
-		/* .tp_repr = */ NULL,
-		/* .tp_bool = */ NULL
+		/* .tp_str       = */ NULL,
+		/* .tp_repr      = */ NULL,
+		/* .tp_bool      = */ NULL,
+		/* .tp_print     = */ (dssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&process_print,
+		/* .tp_printrepr = */ (dssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&process_printrepr
 	},
 	/* .tp_call          = */ NULL,
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&process_visit,

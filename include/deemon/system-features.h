@@ -661,6 +661,7 @@ functest("dup3(1, 2, 0)", "defined(__USE_GNU)");
 
 functest("isatty(1)", unix);
 functest("_isatty(1)", msvc);
+func("fisatty", "defined(__USE_KOS)", test: 'extern FILE *fp; return fisatty(fp);');
 
 func("getcwd", unix, test: 'char buf[256]; char *p = getcwd(buf, 256); return p != 0;');
 func("_getcwd", msvc, test: 'char buf[256]; char *p = _getcwd(buf, 256); return p != 0;');
@@ -5215,6 +5216,13 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif !defined(CONFIG_HAVE__isatty) && \
       (defined(_isatty) || defined(___isatty_defined) || defined(_MSC_VER))
 #define CONFIG_HAVE__isatty
+#endif
+
+#ifdef CONFIG_NO_fisatty
+#undef CONFIG_HAVE_fisatty
+#elif !defined(CONFIG_HAVE_fisatty) && \
+      (defined(fisatty) || defined(__fisatty_defined) || defined(__USE_KOS))
+#define CONFIG_HAVE_fisatty
 #endif
 
 #ifdef CONFIG_NO_getcwd
