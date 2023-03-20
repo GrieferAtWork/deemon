@@ -310,6 +310,7 @@ DeeFile_OpenRoMemory(void const *data, size_t data_size) {
 	result->mf_begin = (char *)data;
 	result->mf_end   = (char *)data + data_size;
 	result->mf_ptr   = result->mf_begin;
+	atomic_rwlock_init(&result->mf_lock);
 	DeeObject_Init(result, &DeeMemoryFile_Type);
 done:
 	return (DREF DeeObject *)result;

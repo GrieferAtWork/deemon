@@ -423,7 +423,7 @@ PUBLIC WUNUSED NONNULL((2)) int
 	return DeeNotify_DoBroadcast(cls, name, name_size, name_hash);
 }
 
-PUBLIC WUNUSED NONNULL((2)) int
+PUBLIC WUNUSED int
 (DCALL DeeNotify_BroadcastClass)(uint16_t cls) {
 	int result = 0;
 	size_t mask, i;

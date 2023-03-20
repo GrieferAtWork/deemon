@@ -176,7 +176,7 @@ DFUNDEF WUNUSED NONNULL((2)) int (DCALL DeeNotify_Broadcast)(uint16_t cls, DeeOb
 DFUNDEF WUNUSED NONNULL((2)) int (DCALL DeeNotify_BroadcastString)(uint16_t cls, char const *__restrict name);
 
 /* Broadcast a change to all listeners of the given `cls' */
-DFUNDEF WUNUSED NONNULL((2)) int (DCALL DeeNotify_BroadcastClass)(uint16_t cls);
+DFUNDEF WUNUSED int (DCALL DeeNotify_BroadcastClass)(uint16_t cls);
 
 #ifndef __INTELLISENSE__
 #ifndef __NO_builtin_expect

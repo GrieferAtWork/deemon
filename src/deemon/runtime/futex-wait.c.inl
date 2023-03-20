@@ -58,6 +58,10 @@ DECL_BEGIN
 #define LOCAL_os_futex_waitX_timed os_futex_wait64_timed
 #endif /* LOCAL_sizeof_expected != 4 */
 
+#ifndef NANOSECONDS_PER_SECOND
+#define NANOSECONDS_PER_SECOND 1000000000
+#endif /* !NANOSECONDS_PER_SECOND */
+
 /* Blocking wait if `*(uint32_t *)addr == expected', until someone calls `DeeFutex_Wake*(addr)'
  * @return: 1 : [DeeFutex_Wait32Timed] The given `timeout_nanoseconds' expired.
  * @return: 0 : Success (someone called `DeeFutex_Wake*(addr)', or `*addr != expected', or spurious wake-up)
@@ -270,41 +274,43 @@ again_call_inc_dwThreads:
 		}
 #undef LOCAL_dwTimeout
 #elif defined(DeeFutex_USES_CONTROL_STRUCTURE)
-		uint32_t ctrl_word;
 		DREF struct futex_controller *ctrl;
 		ctrl = futex_ataddr_create((uintptr_t)addr);
 		if unlikely(!ctrl)
 			return -1;
 
 #ifdef DeeFutex_USE_os_futex_32_only
+		{
+			uint32_t ctrl_word;
 again_read_ctrl_word:
-		ctrl_word = atomic_read(&ctrl->fc_word);
-		if (LOCAL_should_wait()) {
+			ctrl_word = atomic_read(&ctrl->fc_word);
+			if (LOCAL_should_wait()) {
 #ifdef LOCAL_HAVE_timeout_nanoseconds
-			if (LOCAL_os_futex_wait32_timed(&ctrl->fc_word, ctrl_word, timeout_nanoseconds) < 0)
+				if (LOCAL_os_futex_wait32_timed(&ctrl->fc_word, ctrl_word, timeout_nanoseconds) < 0)
 #else /* LOCAL_HAVE_timeout_nanoseconds */
-			if (LOCAL_os_futex_wait32(&ctrl->fc_word, ctrl_word) < 0)
+				if (LOCAL_os_futex_wait32(&ctrl->fc_word, ctrl_word) < 0)
 #endif /* !LOCAL_HAVE_timeout_nanoseconds */
-			{
-				int error = DeeSystem_GetErrno();
-				DeeSystem_IF_E1(error, EINTR, {
-					futex_controller_decref(ctrl);
-					goto again;
-				});
-#ifdef LOCAL_HAVE_timeout_nanoseconds
-				DeeSystem_IF_E3(error, ETIMEDOUT, EAGAIN, EWOULDBLOCK, {
-					futex_controller_decref(ctrl);
-					return 1;
-				});
-#endif /* LOCAL_HAVE_timeout_nanoseconds */
-				DeeSystem_IF_E1(error, ENOMEM, {
-					if (Dee_CollectMemory(1))
+				{
+					int error = DeeSystem_GetErrno();
+					DeeSystem_IF_E1(error, EINTR, {
+						futex_controller_decref(ctrl);
 						goto again;
+					});
+#ifdef LOCAL_HAVE_timeout_nanoseconds
+					DeeSystem_IF_E3(error, ETIMEDOUT, EAGAIN, EWOULDBLOCK, {
+						futex_controller_decref(ctrl);
+						return 1;
+					});
+#endif /* LOCAL_HAVE_timeout_nanoseconds */
+					DeeSystem_IF_E1(error, ENOMEM, {
+						if (Dee_CollectMemory(1))
+							goto again;
+						futex_controller_decref(ctrl);
+						goto again_read_ctrl_word;
+					});
 					futex_controller_decref(ctrl);
-					goto again_read_ctrl_word;
-				});
-				futex_controller_decref(ctrl);
-				return DeeUnixSystem_ThrowErrorf(NULL, error, "Futex wait operation failed");
+					return DeeUnixSystem_ThrowErrorf(NULL, error, "Futex wait operation failed");
+				}
 			}
 		}
 #elif defined(DeeFutex_USE_pthread_cond_t_AND_pthread_mutex_t)
@@ -318,19 +324,19 @@ again_pthread_mutex_lock:
 			struct timespec ts;
 			if (timeout_nanoseconds != (__UINT64_TYPE__)-1) {
 #ifdef CONFIG_HAVE_pthread_cond_reltimedwait_np
-				ts.tv_sec  = timeout_nanoseconds / UINT64_C(1000000000);
-				ts.tv_nsec = timeout_nanoseconds % UINT64_C(1000000000);
+				ts.tv_sec  = timeout_nanoseconds / NANOSECONDS_PER_SECOND;
+				ts.tv_nsec = timeout_nanoseconds % NANOSECONDS_PER_SECOND;
 				error = pthread_cond_reltimedwait_np(&ctrl->fc_cond, &ctrl->fc_mutx, &ts);
 #else /* CONFIG_HAVE_pthread_cond_reltimedwait_np */
 				error = gettimeofday(NULL, &ts);
 				if unlikely(error != 0) {
 					error = DeeSystem_GetErrno();
 				} else {
-					ts.tv_sec  += timeout_nanoseconds / UINT64_C(1000000000);
-					ts.tv_nsec += timeout_nanoseconds % UINT64_C(1000000000);
-					if (ts.tv_nsec > UINT64_C(1000000000)) {
+					ts.tv_sec  += timeout_nanoseconds / NANOSECONDS_PER_SECOND;
+					ts.tv_nsec += timeout_nanoseconds % NANOSECONDS_PER_SECOND;
+					if (ts.tv_nsec > NANOSECONDS_PER_SECOND) {
 						++ts.tv_sec;
-						ts.tv_nsec -= UINT64_C(1000000000);
+						ts.tv_nsec -= NANOSECONDS_PER_SECOND;
 					}
 					error = pthread_cond_timedwait(&ctrl->fc_cond, &ctrl->fc_mutx, &ts);
 				}
@@ -379,11 +385,11 @@ again_inc_n_threads:
 				struct timespec ts;
 				error = gettimeofday(NULL, &ts);
 				if likely(error == 0) {
-					ts.tv_sec  += timeout_nanoseconds / UINT64_C(1000000000);
-					ts.tv_nsec += timeout_nanoseconds % UINT64_C(1000000000);
-					if (ts.tv_nsec > UINT64_C(1000000000)) {
+					ts.tv_sec  += timeout_nanoseconds / NANOSECONDS_PER_SECOND;
+					ts.tv_nsec += timeout_nanoseconds % NANOSECONDS_PER_SECOND;
+					if (ts.tv_nsec > NANOSECONDS_PER_SECOND) {
 						++ts.tv_sec;
-						ts.tv_nsec -= UINT64_C(1000000000);
+						ts.tv_nsec -= NANOSECONDS_PER_SECOND;
 					}
 					error = sem_timedwait(&ctrl->fc_sem, &ts);
 				}

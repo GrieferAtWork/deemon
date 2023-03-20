@@ -12467,6 +12467,9 @@ local errno_names = {
 	"EXDEV",
 	"ENOLINK",
 	"EINTR",
+	"EWOULDBLOCK",
+	"EAGAIN",
+	"ETIMEDOUT",
 };
 
 for (local x: errno_names) {
@@ -12670,6 +12673,21 @@ for (local x: [1:n+1]) {
 #else /* EINTR */
 #define DeePrivateSystem_IF_HAVE_EINTR(tt, ff) ff
 #endif /* !EINTR */
+#ifdef EWOULDBLOCK
+#define DeePrivateSystem_IF_HAVE_EWOULDBLOCK(tt, ff) tt
+#else /* EWOULDBLOCK */
+#define DeePrivateSystem_IF_HAVE_EWOULDBLOCK(tt, ff) ff
+#endif /* !EWOULDBLOCK */
+#ifdef EAGAIN
+#define DeePrivateSystem_IF_HAVE_EAGAIN(tt, ff) tt
+#else /* EAGAIN */
+#define DeePrivateSystem_IF_HAVE_EAGAIN(tt, ff) ff
+#endif /* !EAGAIN */
+#ifdef ETIMEDOUT
+#define DeePrivateSystem_IF_HAVE_ETIMEDOUT(tt, ff) tt
+#else /* ETIMEDOUT */
+#define DeePrivateSystem_IF_HAVE_ETIMEDOUT(tt, ff) ff
+#endif /* !ETIMEDOUT */
 #define DeePrivateSystem_IF_E1(errno, e1, ...) \
 	do {                                       \
 		if ((errno) == e1) {                   \

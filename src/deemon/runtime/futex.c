@@ -219,10 +219,13 @@ LOCAL int DCALL os_futex_wait64_timed(void *uaddr, uint64_t expected,
  * >>     atomic_inc(&STATUS);
  * >>     WAKE(&STATUS); */
 #define DeeFutex_USE_os_futex_32_only
-#elif defined(CONFIG_HOST_WINDOWS) || defined(__CYGWIN__)
+#elif defined(CONFIG_HOST_WINDOWS)
 /* Windows 8+:     WaitOnAddress is pretty much the same as futex()
  * Windows Vista+: SRWLOCK + CRITICAL_SECTION (same as `pthread_cond_t' + `pthread_mutex_t')
  * Windows XP+:    CreateSemaphoreW (same as `sem_t') */
+#define DeeFutex_USE_WaitOnAddress_OR_CONDITION_VARIABLE_AND_SRWLOCK_OR_CreateSemaphoreW
+#elif defined(__CYGWIN__) && 0
+/* TODO: This would work, but breaks because we don't define `DeeNTSystem_ThrowErrorf()' on cygwin... */
 #define DeeFutex_USE_WaitOnAddress_OR_CONDITION_VARIABLE_AND_SRWLOCK_OR_CreateSemaphoreW
 #elif defined(CONFIG_HAVE_pthread_cond_t) && defined(CONFIG_HAVE_pthread_mutex_t)
 /* Waiting is implemented by blocking on a condition-variable.
@@ -606,9 +609,9 @@ futex_controller_do_new_impl(void) {
 #elif defined(DeeFutex_USE_pthread_cond_t_AND_pthread_mutex_t)
 	{
 		int error;
-		error = pthread_mutex_init(&result->fc_mutx);
+		error = pthread_mutex_init(&result->fc_mutx, NULL);
 		if likely(error == 0) {
-			error = pthread_cond_init(&result->fc_cond);
+			error = pthread_cond_init(&result->fc_cond, NULL);
 			if unlikely(error != 0) {
 				(void)pthread_mutex_destroy(&result->fc_mutx);
 			}
@@ -676,7 +679,7 @@ futex_controller_tryincref(struct futex_controller *__restrict self) {
 		if unlikely(refcnt == 0)
 			return false; /* It's already dead... */
 	} while (!atomic_cmpxch_weak_explicit(&self->fc_refcnt, refcnt, refcnt + 1,
-	                                      __ATOMIC_RELEASE, __ATOMIC_RELEASE));
+	                                      __ATOMIC_SEQ_CST, __ATOMIC_RELAXED));
 	return true;
 }
 
