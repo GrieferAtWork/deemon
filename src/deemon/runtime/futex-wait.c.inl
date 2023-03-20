@@ -49,11 +49,11 @@ DECL_BEGIN
 #endif /* !... */
 
 #if LOCAL_sizeof_expected == 4
-#define LOCAL_expected_t           uint32_t
+#define LOCAL_expected_t           __UINT32_TYPE__
 #define LOCAL_os_futex_waitX       os_futex_wait32
 #define LOCAL_os_futex_waitX_timed os_futex_wait32_timed
 #else /* LOCAL_sizeof_expected == 4 */
-#define LOCAL_expected_t           uint64_t
+#define LOCAL_expected_t           __UINT64_TYPE__
 #define LOCAL_os_futex_waitX       os_futex_wait64
 #define LOCAL_os_futex_waitX_timed os_futex_wait64_timed
 #endif /* LOCAL_sizeof_expected != 4 */
@@ -66,7 +66,7 @@ PUBLIC WUNUSED NONNULL((1)) int
 (DCALL LOCAL_DeeFutex_WaitX)(void *addr,
                              LOCAL_expected_t expected
 #ifdef LOCAL_HAVE_timeout_nanoseconds
-                             , uint64_t timeout_nanoseconds
+                             , __UINT64_TYPE__ timeout_nanoseconds
 #endif /* LOCAL_HAVE_timeout_nanoseconds */
                              )
 {
@@ -316,7 +316,7 @@ again_pthread_mutex_lock:
 			int error;
 #ifdef LOCAL_HAVE_timeout_nanoseconds
 			struct timespec ts;
-			if (timeout_nanoseconds != (uint64_t)-1) {
+			if (timeout_nanoseconds != (__UINT64_TYPE__)-1) {
 #ifdef CONFIG_HAVE_pthread_cond_reltimedwait_np
 				ts.tv_sec  = timeout_nanoseconds / UINT64_C(1000000000);
 				ts.tv_nsec = timeout_nanoseconds % UINT64_C(1000000000);
@@ -375,7 +375,7 @@ again_inc_n_threads:
 		{
 			int error;
 #ifdef LOCAL_HAVE_timeout_nanoseconds
-			if (timeout_nanoseconds != (uint64_t)-1) {
+			if (timeout_nanoseconds != (__UINT64_TYPE__)-1) {
 				struct timespec ts;
 				error = gettimeofday(NULL, &ts);
 				if likely(error == 0) {
