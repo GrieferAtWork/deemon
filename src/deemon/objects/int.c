@@ -45,6 +45,7 @@
 #include <deemon/system-features.h>
 #include <deemon/tuple.h>
 #include <deemon/util/atomic.h>
+#include <deemon/util/lock.h>
 
 #include <hybrid/bit.h>
 #include <hybrid/byteorder.h>
@@ -60,10 +61,6 @@
 #undef SSIZE_MAX
 #include <hybrid/limitcore.h>
 #define SSIZE_MAX __SSIZE_MAX__
-
-#if CONFIG_INT_CACHE_MAXCOUNT != 0
-#include <deemon/util/rwlock.h>
-#endif /* CONFIG_INT_CACHE_MAXCOUNT != 0 */
 
 #ifdef CONFIG_HAVE_LIMITS_H
 #include <limits.h> /* CHAR_BIT */
@@ -148,9 +145,16 @@ struct free_int_set {
 	size_t           fis_size; /* [lock(fis_lock)][<= CONFIG_INT_CACHE_MAXSIZE]
 	                            * Amount of free integer objects in this set. */
 #ifndef CONFIG_NO_THREADS
-	rwlock_t         fis_lock; /* Lock for this free integer set. */
+	atomic_lock_t    fis_lock; /* Lock for this free integer set. */
 #endif  /* !CONFIG_NO_THREADS */
 };
+
+#define free_int_set_available(self)  Dee_atomic_lock_available(&(self)->fis_lock)
+#define free_int_set_acquired(self)   Dee_atomic_lock_acquired(&(self)->fis_lock)
+#define free_int_set_tryacquire(self) Dee_atomic_lock_tryacquire(&(self)->fis_lock)
+#define free_int_set_acquire(self)    Dee_atomic_lock_acquire(&(self)->fis_lock)
+#define free_int_set_waitfor(self)    Dee_atomic_lock_waitfor(&(self)->fis_lock)
+#define free_int_set_release(self)    Dee_atomic_lock_release(&(self)->fis_lock)
 
 PRIVATE struct free_int_set free_ints[CONFIG_INT_CACHE_MAXCOUNT];
 
@@ -164,7 +168,7 @@ intcache_clear(size_t max_clear) {
 		size_t total_free;
 		set = &free_ints[i];
 #ifndef CONFIG_NO_THREADS
-		while (!rwlock_trywrite(&set->fis_lock)) {
+		while (!free_int_set_tryacquire(set)) {
 			if (!set->fis_size)
 				goto next_set;
 			SCHED_YIELD();
@@ -194,7 +198,7 @@ intcache_clear(size_t max_clear) {
 			chain_end->fi_next = NULL;
 		}
 		ASSERT((set->fis_head != NULL) == (set->fis_size != 0));
-		rwlock_endwrite(&set->fis_lock);
+		free_int_set_release(set);
 		/* Free all of the extracted chain elements. */
 		while (chain) {
 			chain_end = chain->fi_next;
@@ -218,7 +222,7 @@ DeeInt_Free(DeeIntObject *__restrict self) {
 		struct free_int_set *set;
 		set = &free_ints[n_digits];
 #ifndef CONFIG_NO_THREADS
-		while (!rwlock_trywrite(&set->fis_lock)) {
+		while (!free_int_set_tryacquire(set)) {
 			if (atomic_read(&set->fis_size) >= CONFIG_INT_CACHE_MAXSIZE)
 				goto do_free;
 			SCHED_YIELD();
@@ -229,10 +233,10 @@ DeeInt_Free(DeeIntObject *__restrict self) {
 			((struct free_int *)self)->fi_next = set->fis_head;
 			set->fis_head                      = (struct free_int *)self;
 			++set->fis_size;
-			rwlock_endwrite(&set->fis_lock);
+			free_int_set_release(set);
 			return;
 		}
-		rwlock_endwrite(&set->fis_lock);
+		free_int_set_release(set);
 	}
 do_free:
 	DeeObject_Free(self);
@@ -251,7 +255,7 @@ DeeInt_Alloc_dbg(size_t n_digits, char const *file, int line)
 		struct free_int_set *set;
 		set = &free_ints[n_digits];
 #ifndef CONFIG_NO_THREADS
-		while (!rwlock_trywrite(&set->fis_lock)) {
+		while (!free_int_set_tryacquire(set)) {
 			if (!set->fis_size)
 				goto do_alloc;
 			SCHED_YIELD();
@@ -263,10 +267,10 @@ DeeInt_Alloc_dbg(size_t n_digits, char const *file, int line)
 			set->fis_head = ((struct free_int *)result)->fi_next;
 			--set->fis_size;
 			ASSERT((set->fis_size != 0) == (set->fis_head != NULL));
-			rwlock_endwrite(&set->fis_lock);
+			free_int_set_release(set);
 			goto init_result;
 		}
-		rwlock_endwrite(&set->fis_lock);
+		free_int_set_release(set);
 	}
 do_alloc:
 #ifdef NDEBUG

@@ -21,10 +21,7 @@
 #define GUARD_DEEMON_UTIL_CACHE_H 1
 
 #include "../api.h"
-
-#ifndef CONFIG_NO_THREADS
-#include "rwlock.h"
-#endif /* !CONFIG_NO_THREADS */
+#include "lock.h"
 
 #include <stddef.h>
 
@@ -62,7 +59,7 @@ struct Dee_cache_object {
 
 #ifndef CONFIG_NO_THREADS
 #define DEE_DECLARE_STRUCT_CACHE(name, ALLOC_TYPE)             \
-	INTDEF Dee_rwlock_t structcache_##name##_lock;             \
+	INTDEF Dee_atomic_lock_t structcache_##name##_lock;        \
 	INTDEF struct Dee_cache_struct *structcache_##name##_list; \
 	INTDEF size_t structcache_##name##_size;                   \
 	INTDEF size_t DCALL name##_clear(size_t max_clear);        \
@@ -71,7 +68,7 @@ struct Dee_cache_object {
 	DEE_OBJECT_CACHE_IFDBG(                                    \
 	INTDEF ALLOC_TYPE *DCALL name##_dbgalloc(char const *file, int line);)
 #define DEE_DECLARE_OBJECT_CACHE(name, ALLOC_TYPE)                         \
-	INTDEF Dee_rwlock_t obcache_##name##_lock;                             \
+	INTDEF Dee_atomic_lock_t obcache_##name##_lock;                        \
 	INTDEF struct Dee_cache_object *obcache_##name##_list;                 \
 	INTDEF size_t obcache_##name##_size;                                   \
 	INTDEF size_t DCALL name##_clear(size_t max_clear);                    \
@@ -85,7 +82,7 @@ struct Dee_cache_object {
 #define DEE_DEFINE_STRUCT_CACHE_TRYALLOC(name, ALLOC_TYPE, object_size)               \
 	INTERN ALLOC_TYPE *(DCALL name##_tryalloc)(void) {                                \
 		ALLOC_TYPE *result;                                                           \
-		Dee_rwlock_write(&structcache_##name##_lock);                                 \
+		Dee_atomic_lock_acquire(&structcache_##name##_lock);                          \
 		Dee_ASSERT((structcache_##name##_size != 0) ==                                \
 		           (structcache_##name##_list != NULL));                              \
 		result = (ALLOC_TYPE *)structcache_##name##_list;                             \
@@ -93,19 +90,19 @@ struct Dee_cache_object {
 			structcache_##name##_list = ((struct Dee_cache_struct *)result)->cs_next; \
 			--structcache_##name##_size;                                              \
 		}                                                                             \
-		Dee_rwlock_endwrite(&structcache_##name##_lock);                              \
+		Dee_atomic_lock_release(&structcache_##name##_lock);                          \
 		if (!result)                                                                  \
 			result = (ALLOC_TYPE *)(Dee_TryMalloc)(object_size);                      \
 		DEE_OBJECT_CACHE_IFDBG(else memset(result, 0xcc, object_size);)               \
 		return result;                                                                \
 	}
 #define DEE_DEFINE_STRUCT_CACHE_EX(name, ALLOC_TYPE, object_size, limit)              \
-	INTERN Dee_rwlock_t structcache_##name##_lock             = RWLOCK_INIT;          \
+	INTERN Dee_atomic_lock_t structcache_##name##_lock        = ATOMIC_LOCK_INIT;     \
 	INTERN struct Dee_cache_struct *structcache_##name##_list = NULL;                 \
 	INTERN size_t structcache_##name##_size                   = 0;                    \
 	INTERN size_t DCALL name##_clear(size_t max_clear) {                              \
 		size_t result = 0;                                                            \
-		Dee_rwlock_write(&structcache_##name##_lock);                                 \
+		Dee_atomic_lock_acquire(&structcache_##name##_lock);                          \
 		while (result < max_clear && structcache_##name##_list) {                     \
 			struct Dee_cache_struct *iter;                                            \
 			Dee_ASSERT(structcache_##name##_size != 0);                               \
@@ -115,24 +112,24 @@ struct Dee_cache_object {
 			result += object_size;                                                    \
 			Dee_Free(iter);                                                           \
 		}                                                                             \
-		Dee_rwlock_endwrite(&structcache_##name##_lock);                              \
+		Dee_atomic_lock_release(&structcache_##name##_lock);                          \
 		return result;                                                                \
 	}                                                                                 \
 	INTERN void DCALL name##_free(ALLOC_TYPE *__restrict ob) {                        \
-		Dee_rwlock_write(&structcache_##name##_lock);                                 \
+		Dee_atomic_lock_acquire(&structcache_##name##_lock);                          \
 		if (structcache_##name##_size < limit) {                                      \
 			++structcache_##name##_size;                                              \
 			((struct Dee_cache_struct *)ob)->cs_next = structcache_##name##_list;     \
 			structcache_##name##_list = (struct Dee_cache_struct *)ob;                \
-			Dee_rwlock_endwrite(&structcache_##name##_lock);                          \
+			Dee_atomic_lock_release(&structcache_##name##_lock);                      \
 		} else {                                                                      \
-			Dee_rwlock_endwrite(&structcache_##name##_lock);                          \
+			Dee_atomic_lock_release(&structcache_##name##_lock);                      \
 			Dee_Free(ob);                                                             \
 		}                                                                             \
 	}                                                                                 \
 	INTERN ALLOC_TYPE *(DCALL name##_alloc)(void) {                                   \
 		ALLOC_TYPE *result;                                                           \
-		Dee_rwlock_write(&structcache_##name##_lock);                                 \
+		Dee_atomic_lock_acquire(&structcache_##name##_lock);                          \
 		Dee_ASSERT((structcache_##name##_size != 0) ==                                \
 		           (structcache_##name##_list != NULL));                              \
 		result = (ALLOC_TYPE *)structcache_##name##_list;                             \
@@ -140,7 +137,7 @@ struct Dee_cache_object {
 			structcache_##name##_list = ((struct Dee_cache_struct *)result)->cs_next; \
 			--structcache_##name##_size;                                              \
 		}                                                                             \
-		Dee_rwlock_endwrite(&structcache_##name##_lock);                              \
+		Dee_atomic_lock_release(&structcache_##name##_lock);                          \
 		if (!result)                                                                  \
 			result = (ALLOC_TYPE *)(Dee_Malloc)(object_size);                         \
 		DEE_OBJECT_CACHE_IFDBG(else memset(result, 0xcc, object_size);)               \
@@ -149,7 +146,7 @@ struct Dee_cache_object {
 	DEE_OBJECT_CACHE_IFDBG(                                                           \
 	INTERN ALLOC_TYPE *DCALL name##_dbgalloc(char const *file, int line) {            \
 		ALLOC_TYPE *result;                                                           \
-		/*Dee_rwlock_write(&structcache_##name##_lock);                               \
+		/*Dee_atomic_lock_acquire(&structcache_##name##_lock);                        \
 		Dee_ASSERT((structcache_##name##_size != 0) ==                                \
 		           (structcache_##name##_list != NULL));                              \
 		result = (ALLOC_TYPE *)structcache_##name##_list;                             \
@@ -157,7 +154,7 @@ struct Dee_cache_object {
 			structcache_##name##_list = ((struct Dee_cache_struct *)result)->cs_next; \
 			--structcache_##name##_size;                                              \
 		}                                                                             \
-		Dee_rwlock_endwrite(&structcache_##name##_lock);                              \
+		Dee_atomic_lock_release(&structcache_##name##_lock);                          \
 		if (!result)*/ {                                                              \
 			result = (ALLOC_TYPE *)DeeDbg_Malloc(object_size, file, line);            \
 		}                                                                             \
@@ -165,12 +162,12 @@ struct Dee_cache_object {
 		return result;                                                                \
 	})
 #define DEE_DEFINE_OBJECT_CACHE_EX(name, ALLOC_TYPE, object_size, limit)          \
-	INTERN Dee_rwlock_t obcache_##name##_lock             = RWLOCK_INIT;          \
+	INTERN Dee_atomic_lock_t obcache_##name##_lock        = ATOMIC_LOCK_INIT;     \
 	INTERN struct Dee_cache_object *obcache_##name##_list = NULL;                 \
 	INTERN size_t obcache_##name##_size                   = 0;                    \
 	INTERN size_t DCALL name##_clear(size_t max_clear) {                          \
 		size_t result = 0;                                                        \
-		Dee_rwlock_write(&obcache_##name##_lock);                                 \
+		Dee_atomic_lock_acquire(&obcache_##name##_lock);                          \
 		while (result < max_clear && obcache_##name##_list) {                     \
 			struct Dee_cache_object *iter;                                        \
 			Dee_ASSERT(obcache_##name##_size != 0);                               \
@@ -180,24 +177,24 @@ struct Dee_cache_object {
 			result += object_size;                                                \
 			DeeObject_Free(iter);                                                 \
 		}                                                                         \
-		Dee_rwlock_endwrite(&obcache_##name##_lock);                              \
+		Dee_atomic_lock_release(&obcache_##name##_lock);                          \
 		return result;                                                            \
 	}                                                                             \
 	INTERN void DCALL name##_free(ALLOC_TYPE *__restrict ob) {                    \
-		Dee_rwlock_write(&obcache_##name##_lock);                                 \
+		Dee_atomic_lock_acquire(&obcache_##name##_lock);                          \
 		if (obcache_##name##_size < limit) {                                      \
 			++obcache_##name##_size;                                              \
 			((struct Dee_cache_object *)ob)->co_next = obcache_##name##_list;     \
 			obcache_##name##_list = (struct Dee_cache_object *)ob;                \
-			Dee_rwlock_endwrite(&obcache_##name##_lock);                          \
+			Dee_atomic_lock_release(&obcache_##name##_lock);                      \
 		} else {                                                                  \
-			Dee_rwlock_endwrite(&obcache_##name##_lock);                          \
+			Dee_atomic_lock_release(&obcache_##name##_lock);                      \
 			DeeObject_Free(ob);                                                   \
 		}                                                                         \
 	}                                                                             \
 	INTERN ALLOC_TYPE *(DCALL name##_alloc)(void) {                               \
 		ALLOC_TYPE *result;                                                       \
-		Dee_rwlock_write(&obcache_##name##_lock);                                 \
+		Dee_atomic_lock_acquire(&obcache_##name##_lock);                          \
 		Dee_ASSERT((obcache_##name##_size != 0) ==                                \
 		           (obcache_##name##_list != NULL));                              \
 		result = (ALLOC_TYPE *)obcache_##name##_list;                             \
@@ -205,7 +202,7 @@ struct Dee_cache_object {
 			obcache_##name##_list = ((struct Dee_cache_object *)result)->co_next; \
 			--obcache_##name##_size;                                              \
 		}                                                                         \
-		Dee_rwlock_endwrite(&obcache_##name##_lock);                              \
+		Dee_atomic_lock_release(&obcache_##name##_lock);                          \
 		if (!result)                                                              \
 			result = (ALLOC_TYPE *)(DeeObject_Malloc)(object_size);               \
 		DEE_OBJECT_CACHE_IFDBG(else memset(result, 0xcc, object_size);)           \
@@ -214,7 +211,7 @@ struct Dee_cache_object {
 	DEE_OBJECT_CACHE_IFDBG(                                                       \
 	INTERN ALLOC_TYPE *DCALL name##_dbgalloc(char const *file, int line) {        \
 		ALLOC_TYPE *result;                                                       \
-		/*Dee_rwlock_write(&obcache_##name##_lock);                               \
+		/*Dee_atomic_lock_acquire(&obcache_##name##_lock);                        \
 		Dee_ASSERT((obcache_##name##_size != 0) ==                                \
 		           (obcache_##name##_list != NULL));                              \
 		result = (ALLOC_TYPE *)obcache_##name##_list;                             \
@@ -222,7 +219,7 @@ struct Dee_cache_object {
 			obcache_##name##_list = ((struct Dee_cache_object *)result)->co_next; \
 			--obcache_##name##_size;                                              \
 		}                                                                         \
-		Dee_rwlock_endwrite(&obcache_##name##_lock);                              \
+		Dee_atomic_lock_release(&obcache_##name##_lock);                          \
 		if (!result)*/ {                                                          \
 			result = (ALLOC_TYPE *)DeeDbgObject_Malloc(object_size, file, line);  \
 		}                                                                         \

@@ -483,10 +483,10 @@ PRIVATE NONNULL((1)) void DCALL
 ptype_fini(DeePointerTypeObject *__restrict self) {
 	DeeSTypeObject *orig = self->pt_orig;
 	/* Delete the weak-link to the original type. */
-	rwlock_write(&orig->st_cachelock);
+	DeeSType_CacheLockWrite(orig);
 	if (orig->st_pointer == self)
 		orig->st_pointer = NULL;
-	rwlock_endwrite(&orig->st_cachelock);
+	DeeSType_CacheLockEndWrite(orig);
 	Dee_Decref(DeeSType_AsType(orig));
 }
 
@@ -589,10 +589,10 @@ PRIVATE NONNULL((1)) void DCALL
 ltype_fini(DeeLValueTypeObject *__restrict self) {
 	DeeSTypeObject *orig = self->lt_orig;
 	/* Delete the weak-link to the original type. */
-	rwlock_write(&orig->st_cachelock);
+	DeeSType_CacheLockWrite(orig);
 	if (orig->st_lvalue == self)
 		orig->st_lvalue = NULL;
-	rwlock_endwrite(&orig->st_cachelock);
+	DeeSType_CacheLockEndWrite(orig);
 	Dee_Decref(DeeSType_AsType(orig));
 }
 
@@ -746,27 +746,27 @@ INTERN WUNUSED NONNULL((1)) DREF DeePointerTypeObject *DCALL
 DeeSType_Pointer(DeeSTypeObject *__restrict self) {
 	DREF DeePointerTypeObject *result;
 	ASSERT_OBJECT_TYPE(DeeSType_AsType(self), &DeeSType_Type);
-	rwlock_read(&self->st_cachelock);
+	DeeSType_CacheLockRead(self);
 	result = self->st_pointer;
 	if (result && !Dee_IncrefIfNotZero(DeePointerType_AsType(result)))
 		result = NULL;
-	rwlock_endread(&self->st_cachelock);
+	DeeSType_CacheLockEndRead(self);
 	if (!result) {
 		/* Lazily construct missing types. */
 		result = pointertype_new(self);
 		if likely(result) {
-			rwlock_write(&self->st_cachelock);
+			DeeSType_CacheLockWrite(self);
 			/* Check if the type was created due to race conditions. */
 			if unlikely(self->st_pointer &&
 			            Dee_IncrefIfNotZero(DeePointerType_AsType(self->st_pointer))) {
 				DREF DeePointerTypeObject *new_result;
 				new_result = self->st_pointer;
-				rwlock_endwrite(&self->st_cachelock);
+				DeeSType_CacheLockEndWrite(self);
 				Dee_DecrefDokill(DeePointerType_AsType(result));
 				return new_result;
 			}
 			self->st_pointer = result; /* Weakly referenced. */
-			rwlock_endwrite(&self->st_cachelock);
+			DeeSType_CacheLockEndWrite(self);
 		}
 	}
 	return result;
@@ -776,27 +776,27 @@ INTERN WUNUSED NONNULL((1)) DREF DeeLValueTypeObject *DCALL
 DeeSType_LValue(DeeSTypeObject *__restrict self) {
 	DREF DeeLValueTypeObject *result;
 	ASSERT_OBJECT_TYPE(DeeSType_AsType(self), &DeeSType_Type);
-	rwlock_read(&self->st_cachelock);
+	DeeSType_CacheLockRead(self);
 	result = self->st_lvalue;
 	if (result && !Dee_IncrefIfNotZero(DeeLValueType_AsType(result)))
 		result = NULL;
-	rwlock_endread(&self->st_cachelock);
+	DeeSType_CacheLockEndRead(self);
 	if (!result) {
 		/* Lazily construct missing types. */
 		result = lvaluetype_new(self);
 		if likely(result) {
-			rwlock_write(&self->st_cachelock);
+			DeeSType_CacheLockWrite(self);
 			/* Check if the type was created due to race conditions. */
 			if unlikely(self->st_lvalue &&
 			            Dee_IncrefIfNotZero(DeeLValueType_AsType(self->st_lvalue))) {
 				DREF DeeLValueTypeObject *new_result;
 				new_result = self->st_lvalue;
-				rwlock_endwrite(&self->st_cachelock);
+				DeeSType_CacheLockEndWrite(self);
 				Dee_DecrefDokill(DeeLValueType_AsType(result));
 				return new_result;
 			}
 			self->st_lvalue = result; /* Weakly referenced. */
-			rwlock_endwrite(&self->st_cachelock);
+			DeeSType_CacheLockEndWrite(self);
 		}
 	}
 	return result;
@@ -1203,7 +1203,7 @@ INTERN DeeSTypeObject DeeStructured_Type = {
 		/* .tp_class_members = */ NULL
 	},
 #ifndef CONFIG_NO_THREADS
-	/* .st_cachelock = */ RWLOCK_INIT,
+	/* .st_cachelock = */ ATOMIC_RWLOCK_INIT,
 #endif /* !CONFIG_NO_THREADS */
 	/* .st_pointer  = */ &DeePointer_Type,
 	/* .st_lvalue   = */ &DeeLValue_Type,
@@ -1823,10 +1823,10 @@ PRIVATE NONNULL((1)) void DCALL
 atype_fini(DeeArrayTypeObject *__restrict self) {
 	DeeSTypeObject *orig = self->at_orig;
 	/* Delete the weak-link to the original type. */
-	rwlock_write(&orig->st_cachelock);
+	DeeSType_CacheLockWrite(orig);
 	ASSERT(LIST_ISBOUND(self, at_chain));
 	LIST_REMOVE(self, at_chain);
-	rwlock_endwrite(&orig->st_cachelock);
+	DeeSType_CacheLockEndWrite(orig);
 	Dee_Decref((DeeObject *)orig);
 }
 
@@ -1907,10 +1907,10 @@ ftype_fini(DeeCFunctionTypeObject *__restrict self) {
 	size_t i;
 	DeeSTypeObject *orig = self->ft_orig;
 	/* Delete the weak-link to the original type. */
-	rwlock_write(&orig->st_cachelock);
+	DeeSType_CacheLockWrite(orig);
 	ASSERT(LIST_ISBOUND(self, ft_chain));
 	LIST_REMOVE(self, ft_chain);
-	rwlock_endwrite(&orig->st_cachelock);
+	DeeSType_CacheLockEndWrite(orig);
 	Dee_Decref(DeeSType_AsType(orig));
 	for (i = 0; i < self->ft_argc; ++i)
 		Dee_Decref(DeeSType_AsType(self->ft_argv[i]));

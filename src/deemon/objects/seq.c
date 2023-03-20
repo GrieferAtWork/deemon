@@ -35,7 +35,7 @@
 #include <deemon/string.h>
 #include <deemon/thread.h>
 #include <deemon/tuple.h>
-#include <deemon/util/rwlock.h>
+#include <deemon/util/lock.h>
 
 #include "../runtime/runtime_error.h"
 #include "../runtime/strings.h"
@@ -172,9 +172,26 @@ typedef struct {
 	DREF DeeObject *si_size;  /* [1..1][const] The size of the Sequence. */
 	DREF DeeObject *si_index; /* [1..1][lock(si_lock)] The current index (`int' object). */
 #ifndef CONFIG_NO_THREADS
-	rwlock_t        si_lock;  /* Lock for accessing `si_index' */
+	atomic_rwlock_t si_lock;  /* Lock for accessing `si_index' */
 #endif /* !CONFIG_NO_THREADS */
 } SeqIterator;
+
+#define SeqIterator_LockReading(self)    Dee_atomic_rwlock_reading(&(self)->si_lock)
+#define SeqIterator_LockWriting(self)    Dee_atomic_rwlock_writing(&(self)->si_lock)
+#define SeqIterator_LockTryRead(self)    Dee_atomic_rwlock_tryread(&(self)->si_lock)
+#define SeqIterator_LockTryWrite(self)   Dee_atomic_rwlock_trywrite(&(self)->si_lock)
+#define SeqIterator_LockCanRead(self)    Dee_atomic_rwlock_canread(&(self)->si_lock)
+#define SeqIterator_LockCanWrite(self)   Dee_atomic_rwlock_canwrite(&(self)->si_lock)
+#define SeqIterator_LockWaitRead(self)   Dee_atomic_rwlock_waitread(&(self)->si_lock)
+#define SeqIterator_LockWaitWrite(self)  Dee_atomic_rwlock_waitwrite(&(self)->si_lock)
+#define SeqIterator_LockRead(self)       Dee_atomic_rwlock_read(&(self)->si_lock)
+#define SeqIterator_LockWrite(self)      Dee_atomic_rwlock_write(&(self)->si_lock)
+#define SeqIterator_LockTryUpgrade(self) Dee_atomic_rwlock_tryupgrade(&(self)->si_lock)
+#define SeqIterator_LockUpgrade(self)    Dee_atomic_rwlock_upgrade(&(self)->si_lock)
+#define SeqIterator_LockDowngrade(self)  Dee_atomic_rwlock_downgrade(&(self)->si_lock)
+#define SeqIterator_LockEndWrite(self)   Dee_atomic_rwlock_endwrite(&(self)->si_lock)
+#define SeqIterator_LockEndRead(self)    Dee_atomic_rwlock_endread(&(self)->si_lock)
+#define SeqIterator_LockEnd(self)        Dee_atomic_rwlock_end(&(self)->si_lock)
 
 PRIVATE /*WUNUSED*/ NONNULL((1)) int DCALL
 seqiterator_ctor(SeqIterator *__restrict self) {
@@ -182,7 +199,7 @@ seqiterator_ctor(SeqIterator *__restrict self) {
 	self->si_seq     = Dee_EmptySeq;
 	self->si_index   = &DeeInt_Zero;
 	self->si_size    = &DeeInt_Zero;
-	rwlock_init(&self->si_lock);
+	atomic_rwlock_init(&self->si_lock);
 	Dee_Incref(Dee_EmptySeq);
 	Dee_Incref(&DeeInt_Zero);
 	Dee_Incref(&DeeInt_Zero);
@@ -197,11 +214,11 @@ seqiterator_copy(SeqIterator *__restrict self,
 	self->si_size    = other->si_size;
 	Dee_Incref(self->si_seq);
 	Dee_Incref(self->si_size);
-	rwlock_init(&self->si_lock);
-	rwlock_read(&other->si_lock);
+	atomic_rwlock_init(&self->si_lock);
+	SeqIterator_LockRead(other);
 	self->si_index = other->si_index;
 	Dee_Incref(self->si_index);
-	rwlock_endread(&other->si_lock);
+	SeqIterator_LockEndRead(other);
 	return 0;
 }
 
@@ -216,9 +233,9 @@ PRIVATE NONNULL((1, 2)) void DCALL
 seqiterator_visit(SeqIterator *__restrict self, dvisit_t proc, void *arg) {
 	Dee_Visit(self->si_seq);
 	Dee_Visit(self->si_size);
-	rwlock_read(&self->si_lock);
+	SeqIterator_LockRead(self);
 	Dee_Visit(self->si_index);
-	rwlock_endread(&self->si_lock);
+	SeqIterator_LockEndRead(self);
 }
 
 PRIVATE WUNUSED NONNULL((1)) dssize_t DCALL
@@ -226,10 +243,10 @@ seqiterator_printrepr(SeqIterator *__restrict self,
                       dformatprinter printer, void *arg) {
 	dssize_t result;
 	DREF DeeObject *index_ob;
-	rwlock_read(&self->si_lock);
+	SeqIterator_LockRead(self);
 	index_ob = self->si_index;
 	Dee_Incref(index_ob);
-	rwlock_endread(&self->si_lock);
+	SeqIterator_LockEndRead(self);
 	result = DeeFormat_Printf(printer, arg,
 	                          "GenericIterator(%r, %r /* of %r */)",
 	                          self->si_seq, index_ob, self->si_size);
@@ -243,10 +260,10 @@ seqiterator_next(SeqIterator *__restrict self) {
 	int error;
 	DREF DeeObject *result, *new_index;
 again:
-	rwlock_read(&self->si_lock);
+	SeqIterator_LockRead(self);
 	old_index = self->si_index;
 	Dee_Incref(old_index);
-	rwlock_endread(&self->si_lock);
+	SeqIterator_LockEndRead(self);
 	/* Check if the Iterator has been exhausted. */
 	error = DeeObject_CompareGe(old_index, self->si_size);
 	if unlikely(error < 0)
@@ -290,11 +307,11 @@ set_new_index_plus:
 		Dee_Decref(result);
 		goto err_new_index;
 	}
-	rwlock_write(&self->si_lock);
+	SeqIterator_LockWrite(self);
 	COMPILER_READ_BARRIER();
 	if (old_index != self->si_index) {
 		/* The index was changed in the mean time. */
-		rwlock_endwrite(&self->si_lock);
+		SeqIterator_LockEndWrite(self);
 		Dee_Decref(result);
 		old_index = new_index;
 old_index_again:
@@ -302,7 +319,7 @@ old_index_again:
 		goto again;
 	}
 	self->si_index = new_index; /* Override reference. */
-	rwlock_endwrite(&self->si_lock);
+	SeqIterator_LockEndWrite(self);
 	/* Drop the old-index reference we've inherited
 	 * when overriding `self->si_index' */
 	Dee_Decref(old_index);
@@ -344,7 +361,7 @@ seqiterator_init(SeqIterator *__restrict self, size_t argc, DeeObject *const *ar
 	self->si_size    = DeeObject_SizeObject(self->si_seq);
 	if unlikely(!self->si_size)
 		goto err;
-	rwlock_init(&self->si_lock);
+	atomic_rwlock_init(&self->si_lock);
 	Dee_Incref(self->si_seq);
 	Dee_Incref(self->si_index);
 	return 0;
@@ -364,14 +381,14 @@ INTDEF DeeTypeObject DeeGenericIterator_Type;
 		DREF DeeObject *lindex, *rindex, *result;                  \
 		if (DeeObject_AssertType(other, &DeeGenericIterator_Type)) \
 			return NULL;                                           \
-		rwlock_read(&self->si_lock);                               \
+		SeqIterator_LockRead(self);                                \
 		lindex = self->si_index;                                   \
 		Dee_Incref(lindex);                                        \
-		rwlock_endread(&self->si_lock);                            \
-		rwlock_read(&other->si_lock);                              \
+		SeqIterator_LockEndRead(self);                             \
+		SeqIterator_LockRead(other);                               \
 		rindex = other->si_index;                                  \
 		Dee_Incref(rindex);                                        \
-		rwlock_endread(&other->si_lock);                           \
+		SeqIterator_LockEndRead(other);                            \
 		result = cmp_name(lindex, rindex);                         \
 		Dee_Decref(rindex);                                        \
 		Dee_Decref(lindex);                                        \
@@ -390,10 +407,10 @@ DEFINE_SEQITERATOR_COMPARE(seqiterator_ge, DeeObject_CompareGeObject)
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 seqiterator_index_get(SeqIterator *__restrict self) {
 	DREF DeeObject *result;
-	rwlock_read(&self->si_lock);
+	SeqIterator_LockRead(self);
 	result = self->si_index;
 	Dee_Incref(result);
-	rwlock_endread(&self->si_lock);
+	SeqIterator_LockEndRead(self);
 	return result;
 }
 
@@ -401,10 +418,10 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 seqiterator_index_del(SeqIterator *__restrict self) {
 	DREF DeeObject *old_ob;
 	Dee_Incref(&DeeInt_Zero);
-	rwlock_write(&self->si_lock);
+	SeqIterator_LockWrite(self);
 	old_ob         = self->si_index;
 	self->si_index = &DeeInt_Zero;
-	rwlock_endwrite(&self->si_lock);
+	SeqIterator_LockEndWrite(self);
 	Dee_Decref(old_ob);
 	return 0;
 }
@@ -415,10 +432,10 @@ seqiterator_index_set(SeqIterator *self, DeeObject *new_index) {
 	if (DeeObject_AssertTypeExact(new_index, &DeeInt_Type))
 		goto err;
 	Dee_Incref(new_index);
-	rwlock_write(&self->si_lock);
+	SeqIterator_LockWrite(self);
 	old_ob         = self->si_index;
 	self->si_index = new_index;
-	rwlock_endwrite(&self->si_lock);
+	SeqIterator_LockEndWrite(self);
 	Dee_Decref(old_ob);
 	return 0;
 err:
@@ -562,7 +579,7 @@ seq_iterself(DeeObject *__restrict self) {
 				/* Save a reference to the associated Sequence. */
 				result->si_seq = self;
 				Dee_Incref(self);
-				rwlock_init(&result->si_lock);
+				atomic_rwlock_init(&result->si_lock);
 				DeeObject_Init(result, &DeeGenericIterator_Type);
 				return (DREF DeeObject *)result;
 			}

@@ -37,7 +37,6 @@
 #include <deemon/system-features.h> /* memcpyc(), ... */
 #include <deemon/tuple.h>
 #include <deemon/util/atomic.h>
-#include <deemon/util/rwlock.h>
 
 #include "../../runtime/runtime_error.h"
 #include "../../runtime/strings.h"
@@ -51,25 +50,25 @@ DECL_BEGIN
 DeeSystem_DEFINE_strcmp(dee_strcmp)
 #endif /* !CONFIG_HAVE_strcmp */
 
-#define BLVI_GETITER(self) atomic_read(&(self)->ki_iter)
+#define BLVI_GETITER(self) atomic_read(&(self)->blki_iter)
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 blvi_copy(BlackListVarkwdsIterator *__restrict self,
           BlackListVarkwdsIterator *__restrict other) {
-	self->ki_iter = BLVI_GETITER(other);
-	self->ki_end  = other->ki_end;
-	self->ki_map  = other->ki_map;
-	Dee_Incref(self->ki_map);
+	self->blki_iter = BLVI_GETITER(other);
+	self->blki_end  = other->blki_end;
+	self->blki_map  = other->blki_map;
+	Dee_Incref(self->blki_map);
 	return 0;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 blvi_deep(BlackListVarkwdsIterator *__restrict self,
           BlackListVarkwdsIterator *__restrict other) {
-	self->ki_iter = BLVI_GETITER(other);
-	self->ki_end  = other->ki_end;
-	self->ki_map  = (DREF BlackListVarkwds *)DeeObject_DeepCopy((DeeObject *)other->ki_map);
-	if unlikely(!self->ki_map)
+	self->blki_iter = BLVI_GETITER(other);
+	self->blki_end  = other->blki_end;
+	self->blki_map  = (DREF BlackListVarkwds *)DeeObject_DeepCopy((DeeObject *)other->blki_map);
+	if unlikely(!self->blki_map)
 		goto err;
 	return 0;
 err:
@@ -78,12 +77,12 @@ err:
 
 PRIVATE NONNULL((1)) void DCALL
 blvi_fini(BlackListVarkwdsIterator *__restrict self) {
-	Dee_Decref(self->ki_map);
+	Dee_Decref(self->blki_map);
 }
 
 PRIVATE NONNULL((1, 2)) void DCALL
 blvi_visit(BlackListVarkwdsIterator *__restrict self, dvisit_t proc, void *arg) {
-	Dee_Visit(self->ki_map);
+	Dee_Visit(self->blki_map);
 }
 
 
@@ -95,16 +94,16 @@ again:
 	iter     = BLVI_GETITER(self);
 	old_iter = iter;
 	for (;;) {
-		if (iter >= self->ki_end)
+		if (iter >= self->blki_end)
 			goto nope;
 		if (iter->ke_name) {
 			/* Skip values which have been black-listed. */
-			if (!BlackListVarkwds_IsBlackListed(self->ki_map, (DeeObject *)iter->ke_name))
+			if (!BlackListVarkwds_IsBlackListed(self->blki_map, (DeeObject *)iter->ke_name))
 				break;
 		}
 		++iter;
 	}
-	if (!atomic_cmpxch_weak_or_write(&self->ki_iter, old_iter, iter + 1))
+	if (!atomic_cmpxch_weak_or_write(&self->blki_iter, old_iter, iter + 1))
 		goto again;
 	return iter;
 nope:
@@ -118,14 +117,14 @@ blvi_next(BlackListVarkwdsIterator *__restrict self) {
 	ent = blvi_nextiter(self);
 	if (!ent)
 		return ITER_DONE;
-	rwlock_read(&self->ki_map->vk_lock);
-	if unlikely(!self->ki_map->vk_argv) {
-		rwlock_endread(&self->ki_map->vk_lock);
+	BlackListVarkwds_LockRead(self->blki_map);
+	if unlikely(!self->blki_map->blvk_argv) {
+		BlackListVarkwds_LockEndRead(self->blki_map);
 		return ITER_DONE;
 	}
-	value = self->ki_map->vk_argv[ent->ke_index];
+	value = self->blki_map->blvk_argv[ent->ke_index];
 	Dee_Incref(value);
-	rwlock_endread(&self->ki_map->vk_lock);
+	BlackListVarkwds_LockEndRead(self->blki_map);
 	result = DeeTuple_Pack(2, ent->ke_name, value);
 	Dee_Decref_unlikely(value);
 	return result;
@@ -147,14 +146,14 @@ blvi_nsi_nextvalue(BlackListVarkwdsIterator *__restrict self) {
 	ent = blvi_nextiter(self);
 	if (!ent)
 		return ITER_DONE;
-	rwlock_read(&self->ki_map->vk_lock);
-	if unlikely(!self->ki_map->vk_argv) {
-		rwlock_endread(&self->ki_map->vk_lock);
+	BlackListVarkwds_LockRead(self->blki_map);
+	if unlikely(!self->blki_map->blvk_argv) {
+		BlackListVarkwds_LockEndRead(self->blki_map);
 		return ITER_DONE;
 	}
-	result = self->ki_map->vk_argv[ent->ke_index];
+	result = self->blki_map->blvk_argv[ent->ke_index];
 	Dee_Incref(result);
-	rwlock_endread(&self->ki_map->vk_lock);
+	BlackListVarkwds_LockEndRead(self->blki_map);
 	return result;
 }
 
@@ -187,7 +186,7 @@ PRIVATE struct type_cmp blvi_cmp = {
 };
 
 PRIVATE struct type_member tpconst blvi_members[] = {
-	TYPE_MEMBER_FIELD_DOC(STR_seq, STRUCT_OBJECT, offsetof(BlackListVarkwdsIterator, ki_map), "->?Ert:BlackListVarkwds"),
+	TYPE_MEMBER_FIELD_DOC(STR_seq, STRUCT_OBJECT, offsetof(BlackListVarkwdsIterator, blki_map), "->?Ert:BlackListVarkwds"),
 	TYPE_MEMBER_END
 };
 
@@ -321,9 +320,9 @@ BlackListVarkwds_IsBlackListed(BlackListVarkwds *__restrict self,
 	ASSERT_OBJECT_TYPE_EXACT(name, &DeeString_Type);
 	hash = DeeString_Hash(name);
 again:
-	i = perturb = hash & self->vk_mask;
+	i = perturb = hash & self->blvk_mask;
 	for (;; BlackListVarkwds_BLCKNEXT(i, perturb)) {
-		str = self->vk_blck[i & self->vk_mask].ve_str;
+		str = self->blvk_blck[i & self->blvk_mask].blve_str;
 		if (!str)
 			break;
 		if (DeeString_HASH(str) != hash)
@@ -339,24 +338,24 @@ again:
 	}
 
 	/* Check if more arguments need to be loaded. */
-	if (atomic_read(&self->vk_load) < self->vk_ckwc) {
+	if (atomic_read(&self->blvk_load) < self->blvk_ckwc) {
 		size_t index;
-		rwlock_write(&self->vk_lock);
+		BlackListVarkwds_LockWrite(self);
 		COMPILER_READ_BARRIER();
-		index = atomic_read(&self->vk_load);
-		while (index < self->vk_ckwc) {
+		index = atomic_read(&self->blvk_load);
+		while (index < self->blvk_ckwc) {
 			dhash_t str_hash;
-			str = self->vk_ckwv[index++];
+			str = self->blvk_ckwv[index++];
 
 			/* Remember the string by caching it within out hash-vector. */
 			str_hash = DeeString_Hash((DeeObject *)str);
-			i = perturb = str_hash & self->vk_mask;
+			i = perturb = str_hash & self->blvk_mask;
 			for (;; BlackListVarkwds_BLCKNEXT(i, perturb)) {
 				BlackListVarkwdsEntry *ent;
-				ent = &self->vk_blck[i & self->vk_mask];
-				if (ent->ve_str)
+				ent = &self->blvk_blck[i & self->blvk_mask];
+				if (ent->blve_str)
 					continue;
-				ent->ve_str = str;
+				ent->blve_str = str;
 				break;
 			}
 
@@ -365,13 +364,13 @@ again:
 			    DeeString_SIZE(str) == DeeString_SIZE(name) &&
 			    bcmpc(DeeString_STR(str), DeeString_STR(name),
 			          DeeString_SIZE(name), sizeof(char)) == 0) {
-				self->vk_load = index;
-				rwlock_endwrite(&self->vk_lock);
+				self->blvk_load = index;
+				BlackListVarkwds_LockEndWrite(self);
 				return true;
 			}
 		}
-		self->vk_load = index;
-		rwlock_endwrite(&self->vk_lock);
+		self->blvk_load = index;
+		BlackListVarkwds_LockEndWrite(self);
 		goto again;
 	}
 	return false;
@@ -384,9 +383,9 @@ BlackListVarkwds_IsBlackListedString(BlackListVarkwds *__restrict self,
 	dhash_t i, perturb;
 	DeeStringObject *str;
 again:
-	i = perturb = hash & self->vk_mask;
+	i = perturb = hash & self->blvk_mask;
 	for (;; BlackListVarkwds_BLCKNEXT(i, perturb)) {
-		str = self->vk_blck[i & self->vk_mask].ve_str;
+		str = self->blvk_blck[i & self->blvk_mask].blve_str;
 		if (!str)
 			break;
 		if (DeeString_HASH(str) != hash)
@@ -397,37 +396,37 @@ again:
 	}
 
 	/* Check if more arguments need to be loaded. */
-	if (atomic_read(&self->vk_load) < self->vk_ckwc) {
+	if (atomic_read(&self->blvk_load) < self->blvk_ckwc) {
 		size_t index;
-		rwlock_write(&self->vk_lock);
+		BlackListVarkwds_LockWrite(self);
 		COMPILER_READ_BARRIER();
-		index = atomic_read(&self->vk_load);
-		while (index < self->vk_ckwc) {
+		index = atomic_read(&self->blvk_load);
+		while (index < self->blvk_ckwc) {
 			dhash_t str_hash;
-			str = self->vk_ckwv[index++];
+			str = self->blvk_ckwv[index++];
 
 			/* Remember the string by caching it within out hash-vector. */
 			str_hash = DeeString_Hash((DeeObject *)str);
-			i = perturb = str_hash & self->vk_mask;
+			i = perturb = str_hash & self->blvk_mask;
 			for (;; BlackListVarkwds_BLCKNEXT(i, perturb)) {
 				BlackListVarkwdsEntry *ent;
-				ent = &self->vk_blck[i & self->vk_mask];
-				if (ent->ve_str)
+				ent = &self->blvk_blck[i & self->blvk_mask];
+				if (ent->blve_str)
 					continue;
-				ent->ve_str = str;
+				ent->blve_str = str;
 				break;
 			}
 
 			/* Check if this one's our's, and stop loading if it is. */
 			if (str_hash == hash &&
 			    strcmp(DeeString_STR(str), name) == 0) {
-				self->vk_load = index;
-				rwlock_endwrite(&self->vk_lock);
+				self->blvk_load = index;
+				BlackListVarkwds_LockEndWrite(self);
 				return true;
 			}
 		}
-		self->vk_load = index;
-		rwlock_endwrite(&self->vk_lock);
+		self->blvk_load = index;
+		BlackListVarkwds_LockEndWrite(self);
 		goto again;
 	}
 	return false;
@@ -440,9 +439,9 @@ BlackListVarkwds_IsBlackListedStringLen(BlackListVarkwds *__restrict self,
 	dhash_t i, perturb;
 	DeeStringObject *str;
 again:
-	i = perturb = hash & self->vk_mask;
+	i = perturb = hash & self->blvk_mask;
 	for (;; BlackListVarkwds_BLCKNEXT(i, perturb)) {
-		str = self->vk_blck[i & self->vk_mask].ve_str;
+		str = self->blvk_blck[i & self->blvk_mask].blve_str;
 		if (!str)
 			break;
 		if (DeeString_HASH(str) != hash)
@@ -452,37 +451,37 @@ again:
 	}
 
 	/* Check if more arguments need to be loaded. */
-	if (atomic_read(&self->vk_load) < self->vk_ckwc) {
+	if (atomic_read(&self->blvk_load) < self->blvk_ckwc) {
 		size_t index;
-		rwlock_write(&self->vk_lock);
+		BlackListVarkwds_LockWrite(self);
 		COMPILER_READ_BARRIER();
-		index = atomic_read(&self->vk_load);
-		while (index < self->vk_ckwc) {
+		index = atomic_read(&self->blvk_load);
+		while (index < self->blvk_ckwc) {
 			dhash_t str_hash;
-			str = self->vk_ckwv[index++];
+			str = self->blvk_ckwv[index++];
 
 			/* Remember the string by caching it within out hash-vector. */
 			str_hash = DeeString_Hash((DeeObject *)str);
-			i = perturb = str_hash & self->vk_mask;
+			i = perturb = str_hash & self->blvk_mask;
 			for (;; BlackListVarkwds_BLCKNEXT(i, perturb)) {
 				BlackListVarkwdsEntry *ent;
-				ent = &self->vk_blck[i & self->vk_mask];
-				if (ent->ve_str)
+				ent = &self->blvk_blck[i & self->blvk_mask];
+				if (ent->blve_str)
 					continue;
-				ent->ve_str = str;
+				ent->blve_str = str;
 				break;
 			}
 
 			/* Check if this one's our's, and stop loading if it is. */
 			if (str_hash == hash && DeeString_SIZE(str) == namesize &&
 			    bcmpc(DeeString_STR(str), name, namesize, sizeof(char)) == 0) {
-				self->vk_load = index;
-				rwlock_endwrite(&self->vk_lock);
+				self->blvk_load = index;
+				BlackListVarkwds_LockEndWrite(self);
 				return true;
 			}
 		}
-		self->vk_load = index;
-		rwlock_endwrite(&self->vk_lock);
+		self->blvk_load = index;
+		BlackListVarkwds_LockEndWrite(self);
 		goto again;
 	}
 	return false;
@@ -493,27 +492,27 @@ again:
 INTERN WUNUSED NONNULL((1, 2)) bool DCALL
 BlackListVarkwds_HasItem(BlackListVarkwds *__restrict self,
                          DeeObject *__restrict name) {
-	return (kwds_FindIndex(self->vk_kwds, (DeeStringObject *)name) != (size_t)-1) &&
+	return (kwds_FindIndex(self->blvk_kwds, (DeeStringObject *)name) != (size_t)-1) &&
 	       !BlackListVarkwds_IsBlackListed(self, name) &&
-	       atomic_read(&self->vk_argv) != NULL;
+	       atomic_read(&self->blvk_argv) != NULL;
 }
 
 INTERN WUNUSED NONNULL((1, 2)) bool DCALL
 BlackListVarkwds_HasItemString(BlackListVarkwds *__restrict self,
                                char const *__restrict name,
                                dhash_t hash) {
-	return (kwds_FindIndexStr(self->vk_kwds, name, hash) != (size_t)-1) &&
+	return (kwds_FindIndexStr(self->blvk_kwds, name, hash) != (size_t)-1) &&
 	       !BlackListVarkwds_IsBlackListedString(self, name, hash) &&
-	       atomic_read(&self->vk_argv) != NULL;
+	       atomic_read(&self->blvk_argv) != NULL;
 }
 
 INTERN WUNUSED NONNULL((1, 2)) bool DCALL
 BlackListVarkwds_HasItemStringLen(BlackListVarkwds *__restrict self,
                                   char const *__restrict name,
                                   size_t namesize, dhash_t hash) {
-	return (kwds_FindIndexStrLen(self->vk_kwds, name, namesize, hash) != (size_t)-1) &&
+	return (kwds_FindIndexStrLen(self->blvk_kwds, name, namesize, hash) != (size_t)-1) &&
 	       !BlackListVarkwds_IsBlackListedStringLen(self, name, namesize, hash) &&
-	       atomic_read(&self->vk_argv) != NULL;
+	       atomic_read(&self->blvk_argv) != NULL;
 }
 
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
@@ -521,19 +520,19 @@ BlackListVarkwds_GetItem(BlackListVarkwds *self,
                          DeeObject *name) {
 	size_t index;
 	DREF DeeObject *result;
-	index = kwds_FindIndex(self->vk_kwds, (DeeStringObject *)name);
+	index = kwds_FindIndex(self->blvk_kwds, (DeeStringObject *)name);
 	if unlikely(index == (size_t)-1)
 		goto missing;
 	if unlikely(BlackListVarkwds_IsBlackListed(self, name))
 		goto missing;
-	rwlock_read(&self->vk_lock);
-	if unlikely(!self->vk_argv) {
-		rwlock_endread(&self->vk_lock);
+	BlackListVarkwds_LockRead(self);
+	if unlikely(!self->blvk_argv) {
+		BlackListVarkwds_LockEndRead(self);
 		goto missing;
 	}
-	result = self->vk_argv[index];
+	result = self->blvk_argv[index];
 	Dee_Incref(result);
-	rwlock_endread(&self->vk_lock);
+	BlackListVarkwds_LockEndRead(self);
 	return result;
 missing:
 	err_unknown_key((DeeObject *)self, name);
@@ -545,19 +544,19 @@ BlackListVarkwds_GetItemString(BlackListVarkwds *__restrict self,
                                char const *__restrict name, dhash_t hash) {
 	size_t index;
 	DREF DeeObject *result;
-	index = kwds_FindIndexStr(self->vk_kwds, name, hash);
+	index = kwds_FindIndexStr(self->blvk_kwds, name, hash);
 	if unlikely(index == (size_t)-1)
 		goto missing;
 	if unlikely(BlackListVarkwds_IsBlackListedString(self, name, hash))
 		goto missing;
-	rwlock_read(&self->vk_lock);
-	if unlikely(!self->vk_argv) {
-		rwlock_endread(&self->vk_lock);
+	BlackListVarkwds_LockRead(self);
+	if unlikely(!self->blvk_argv) {
+		BlackListVarkwds_LockEndRead(self);
 		goto missing;
 	}
-	result = self->vk_argv[index];
+	result = self->blvk_argv[index];
 	Dee_Incref(result);
-	rwlock_endread(&self->vk_lock);
+	BlackListVarkwds_LockEndRead(self);
 	return result;
 missing:
 	err_unknown_key_str((DeeObject *)self, name);
@@ -570,19 +569,19 @@ BlackListVarkwds_GetItemStringLen(BlackListVarkwds *__restrict self,
                                   size_t namesize, dhash_t hash) {
 	size_t index;
 	DREF DeeObject *result;
-	index = kwds_FindIndexStrLen(self->vk_kwds, name, namesize, hash);
+	index = kwds_FindIndexStrLen(self->blvk_kwds, name, namesize, hash);
 	if unlikely(index == (size_t)-1)
 		goto missing;
 	if unlikely(BlackListVarkwds_IsBlackListedStringLen(self, name, namesize, hash))
 		goto missing;
-	rwlock_read(&self->vk_lock);
-	if unlikely(!self->vk_argv) {
-		rwlock_endread(&self->vk_lock);
+	BlackListVarkwds_LockRead(self);
+	if unlikely(!self->blvk_argv) {
+		BlackListVarkwds_LockEndRead(self);
 		goto missing;
 	}
-	result = self->vk_argv[index];
+	result = self->blvk_argv[index];
 	Dee_Incref(result);
-	rwlock_endread(&self->vk_lock);
+	BlackListVarkwds_LockEndRead(self);
 	return result;
 missing:
 	err_unknown_key_str_len((DeeObject *)self, name, namesize);
@@ -595,19 +594,19 @@ BlackListVarkwds_GetItemDef(BlackListVarkwds *__restrict self,
                             DeeObject *__restrict def) {
 	size_t index;
 	DREF DeeObject *result;
-	index = kwds_FindIndex(self->vk_kwds, (DeeStringObject *)name);
+	index = kwds_FindIndex(self->blvk_kwds, (DeeStringObject *)name);
 	if unlikely(index == (size_t)-1)
 		goto missing;
 	if unlikely(BlackListVarkwds_IsBlackListed(self, name))
 		goto missing;
-	rwlock_read(&self->vk_lock);
-	if unlikely(!self->vk_argv) {
-		rwlock_endread(&self->vk_lock);
+	BlackListVarkwds_LockRead(self);
+	if unlikely(!self->blvk_argv) {
+		BlackListVarkwds_LockEndRead(self);
 		goto missing;
 	}
-	result = self->vk_argv[index];
+	result = self->blvk_argv[index];
 	Dee_Incref(result);
-	rwlock_endread(&self->vk_lock);
+	BlackListVarkwds_LockEndRead(self);
 	return result;
 missing:
 	if (def != ITER_DONE)
@@ -621,19 +620,19 @@ BlackListVarkwds_GetItemStringDef(BlackListVarkwds *__restrict self,
                                   DeeObject *__restrict def) {
 	size_t index;
 	DREF DeeObject *result;
-	index = kwds_FindIndexStr(self->vk_kwds, name, hash);
+	index = kwds_FindIndexStr(self->blvk_kwds, name, hash);
 	if unlikely(index == (size_t)-1)
 		goto missing;
 	if unlikely(BlackListVarkwds_IsBlackListedString(self, name, hash))
 		goto missing;
-	rwlock_read(&self->vk_lock);
-	if unlikely(!self->vk_argv) {
-		rwlock_endread(&self->vk_lock);
+	BlackListVarkwds_LockRead(self);
+	if unlikely(!self->blvk_argv) {
+		BlackListVarkwds_LockEndRead(self);
 		goto missing;
 	}
-	result = self->vk_argv[index];
+	result = self->blvk_argv[index];
 	Dee_Incref(result);
-	rwlock_endread(&self->vk_lock);
+	BlackListVarkwds_LockEndRead(self);
 	return result;
 missing:
 	if (def != ITER_DONE)
@@ -648,19 +647,19 @@ BlackListVarkwds_GetItemStringLenDef(BlackListVarkwds *__restrict self,
                                      DeeObject *__restrict def) {
 	size_t index;
 	DREF DeeObject *result;
-	index = kwds_FindIndexStrLen(self->vk_kwds, name, namesize, hash);
+	index = kwds_FindIndexStrLen(self->blvk_kwds, name, namesize, hash);
 	if unlikely(index == (size_t)-1)
 		goto missing;
 	if unlikely(BlackListVarkwds_IsBlackListedStringLen(self, name, namesize, hash))
 		goto missing;
-	rwlock_read(&self->vk_lock);
-	if unlikely(!self->vk_argv) {
-		rwlock_endread(&self->vk_lock);
+	BlackListVarkwds_LockRead(self);
+	if unlikely(!self->blvk_argv) {
+		BlackListVarkwds_LockEndRead(self);
 		goto missing;
 	}
-	result = self->vk_argv[index];
+	result = self->blvk_argv[index];
 	Dee_Incref(result);
-	rwlock_endread(&self->vk_lock);
+	BlackListVarkwds_LockEndRead(self);
 	return result;
 missing:
 	if (def != ITER_DONE)
@@ -671,27 +670,27 @@ missing:
 
 PRIVATE NONNULL((1)) void DCALL
 blv_fini(BlackListVarkwds *__restrict self) {
-	if (self->vk_argv) {
+	if (self->blvk_argv) {
 		size_t argc;
-		argc = DeeKwds_SIZE(self->vk_kwds);
-		Dee_Decrefv(self->vk_argv, argc);
-		Dee_Free(self->vk_argv);
+		argc = DeeKwds_SIZE(self->blvk_kwds);
+		Dee_Decrefv(self->blvk_argv, argc);
+		Dee_Free(self->blvk_argv);
 	}
-	Dee_Decref(self->vk_code);
-	Dee_Decref(self->vk_kwds);
+	Dee_Decref(self->blvk_code);
+	Dee_Decref(self->blvk_kwds);
 }
 
 PRIVATE NONNULL((1, 2)) void DCALL
 blv_visit(BlackListVarkwds *__restrict self, dvisit_t proc, void *arg) {
-	rwlock_read(&self->vk_lock);
-	if (self->vk_argv) {
+	BlackListVarkwds_LockRead(self);
+	if (self->blvk_argv) {
 		size_t argc;
-		argc = DeeKwds_SIZE(self->vk_kwds);
-		Dee_Visitv(self->vk_argv, argc);
+		argc = DeeKwds_SIZE(self->blvk_kwds);
+		Dee_Visitv(self->blvk_argv, argc);
 	}
-	rwlock_endread(&self->vk_lock);
-	Dee_Visit(self->vk_code);
-	Dee_Visit(self->vk_kwds);
+	BlackListVarkwds_LockEndRead(self);
+	Dee_Visit(self->blvk_code);
+	Dee_Visit(self->blvk_kwds);
 }
 
 
@@ -699,7 +698,7 @@ blv_visit(BlackListVarkwds *__restrict self, dvisit_t proc, void *arg) {
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 blv_bool(BlackListVarkwds *__restrict self) {
 	size_t i;
-	DeeKwdsObject *kw = self->vk_kwds;
+	DeeKwdsObject *kw = self->blvk_kwds;
 	for (i = 0; i <= kw->kw_mask; ++i) {
 		DeeStringObject *name;
 		name = kw->kw_map[i].ke_name;
@@ -716,7 +715,7 @@ blv_bool(BlackListVarkwds *__restrict self) {
 PRIVATE WUNUSED NONNULL((1)) size_t DCALL
 blv_nsi_size(BlackListVarkwds *__restrict self) {
 	size_t i, result = 0;
-	DeeKwdsObject *kw = self->vk_kwds;
+	DeeKwdsObject *kw = self->blvk_kwds;
 	for (i = 0; i <= kw->kw_mask; ++i) {
 		DeeStringObject *name;
 		name = kw->kw_map[i].ke_name;
@@ -736,9 +735,9 @@ blv_iter(BlackListVarkwds *__restrict self) {
 	result = DeeObject_MALLOC(BlackListVarkwdsIterator);
 	if unlikely(!result)
 		goto done;
-	result->ki_iter = self->vk_kwds->kw_map;
-	result->ki_end  = result->ki_iter + self->vk_kwds->kw_mask + 1;
-	result->ki_map  = self;
+	result->blki_iter = self->blvk_kwds->kw_map;
+	result->blki_end  = result->blki_iter + self->blvk_kwds->kw_mask + 1;
+	result->blki_map  = self;
 	Dee_Incref(self);
 	DeeObject_Init(result, &BlackListVarkwdsIterator_Type);
 done:
@@ -820,32 +819,32 @@ PRIVATE WUNUSED NONNULL((1)) DREF BlackListVarkwds *DCALL
 blv_copy(BlackListVarkwds *__restrict self) {
 	DREF BlackListVarkwds *result;
 	size_t count;
-	result = (DREF BlackListVarkwds *)DeeObject_Malloc(offsetof(BlackListVarkwds, vk_blck) +
-	                                                   (self->vk_mask + 1) *
+	result = (DREF BlackListVarkwds *)DeeObject_Malloc(offsetof(BlackListVarkwds, blvk_blck) +
+	                                                   (self->blvk_mask + 1) *
 	                                                   sizeof(BlackListVarkwdsEntry));
 	if unlikely(!result)
 		goto done;
-	count = self->vk_kwds->kw_size;
-	result->vk_argv = (DREF DeeObject **)Dee_Mallocc(count,
+	count = self->blvk_kwds->kw_size;
+	result->blvk_argv = (DREF DeeObject **)Dee_Mallocc(count,
 	                                                 sizeof(DREF DeeObject *));
-	if unlikely(!result->vk_argv)
+	if unlikely(!result->blvk_argv)
 		goto err_r;
-	rwlock_read(&self->vk_lock);
-	Dee_Movrefv(result->vk_argv, self->vk_argv, count);
-	result->vk_load = self->vk_load;
-	memcpyc(result->vk_blck,
-	        self->vk_blck,
-	        self->vk_mask + 1,
+	BlackListVarkwds_LockRead(self);
+	Dee_Movrefv(result->blvk_argv, self->blvk_argv, count);
+	result->blvk_load = self->blvk_load;
+	memcpyc(result->blvk_blck,
+	        self->blvk_blck,
+	        self->blvk_mask + 1,
 	        sizeof(BlackListVarkwdsEntry));
-	rwlock_endread(&self->vk_lock);
-	rwlock_init(&result->vk_lock);
-	result->vk_code = self->vk_code;
-	Dee_Incref(result->vk_code);
-	result->vk_ckwc = self->vk_ckwc;
-	result->vk_ckwv = self->vk_ckwv;
-	result->vk_kwds = self->vk_kwds;
-	Dee_Incref(result->vk_kwds);
-	result->vk_mask = self->vk_mask;
+	BlackListVarkwds_LockEndRead(self);
+	atomic_rwlock_init(&result->blvk_lock);
+	result->blvk_code = self->blvk_code;
+	Dee_Incref(result->blvk_code);
+	result->blvk_ckwc = self->blvk_ckwc;
+	result->blvk_ckwv = self->blvk_ckwv;
+	result->blvk_kwds = self->blvk_kwds;
+	Dee_Incref(result->blvk_kwds);
+	result->blvk_mask = self->blvk_mask;
 	DeeObject_Init(result, &BlackListVarkwds_Type);
 done:
 	return result;
@@ -858,44 +857,44 @@ PRIVATE WUNUSED NONNULL((1)) DREF BlackListVarkwds *DCALL
 blv_deep(BlackListVarkwds *__restrict self) {
 	DREF BlackListVarkwds *result;
 	size_t i, count;
-	result = (DREF BlackListVarkwds *)DeeObject_Malloc(offsetof(BlackListVarkwds, vk_blck) +
-	                                                   (self->vk_mask + 1) *
+	result = (DREF BlackListVarkwds *)DeeObject_Malloc(offsetof(BlackListVarkwds, blvk_blck) +
+	                                                   (self->blvk_mask + 1) *
 	                                                   sizeof(BlackListVarkwdsEntry));
 	if unlikely(!result)
 		goto done;
-	count = self->vk_kwds->kw_size;
-	result->vk_argv = (DREF DeeObject **)Dee_Mallocc(count,
+	count = self->blvk_kwds->kw_size;
+	result->blvk_argv = (DREF DeeObject **)Dee_Mallocc(count,
 	                                                 sizeof(DREF DeeObject *));
-	if unlikely(!result->vk_argv)
+	if unlikely(!result->blvk_argv)
 		goto err_r;
-	rwlock_read(&self->vk_lock);
-	Dee_Movrefv(result->vk_argv, self->vk_argv, count);
-	result->vk_load = self->vk_load;
-	memcpyc(result->vk_blck,
-	        self->vk_blck,
-	        self->vk_mask + 1,
+	BlackListVarkwds_LockRead(self);
+	Dee_Movrefv(result->blvk_argv, self->blvk_argv, count);
+	result->blvk_load = self->blvk_load;
+	memcpyc(result->blvk_blck,
+	        self->blvk_blck,
+	        self->blvk_mask + 1,
 	        sizeof(BlackListVarkwdsEntry));
-	rwlock_endread(&self->vk_lock);
+	BlackListVarkwds_LockEndRead(self);
 
 	/* Construct deep copies of all of the arguments. */
 	for (i = 0; i < count; ++i) {
-		if (DeeObject_InplaceDeepCopy(&result->vk_argv[i]))
+		if (DeeObject_InplaceDeepCopy(&result->blvk_argv[i]))
 			goto err_r_argv;
 	}
-	rwlock_init(&result->vk_lock);
-	result->vk_code = self->vk_code;
-	Dee_Incref(result->vk_code);
-	result->vk_ckwc = self->vk_ckwc;
-	result->vk_ckwv = self->vk_ckwv;
-	result->vk_kwds = self->vk_kwds;
-	Dee_Incref(result->vk_kwds);
-	result->vk_mask = self->vk_mask;
+	atomic_rwlock_init(&result->blvk_lock);
+	result->blvk_code = self->blvk_code;
+	Dee_Incref(result->blvk_code);
+	result->blvk_ckwc = self->blvk_ckwc;
+	result->blvk_ckwv = self->blvk_ckwv;
+	result->blvk_kwds = self->blvk_kwds;
+	Dee_Incref(result->blvk_kwds);
+	result->blvk_mask = self->blvk_mask;
 	DeeObject_Init(result, &BlackListVarkwds_Type);
 done:
 	return result;
 err_r_argv:
-	Dee_Decrefv(result->vk_argv, count);
-	Dee_Free(result->vk_argv);
+	Dee_Decrefv(result->blvk_argv, count);
+	Dee_Free(result->blvk_argv);
 err_r:
 	DeeObject_Free(result);
 	return NULL;
@@ -979,17 +978,17 @@ BlackListVarkwds_New(struct code_object *__restrict code,
 	/* Calculate an appropriate mask for the blacklist hash-set. */
 	for (mask = 3; mask <= argc; mask = (mask << 1) | 1)
 		;
-	result = (DREF BlackListVarkwds *)DeeObject_Calloc(offsetof(BlackListVarkwds, vk_blck) +
+	result = (DREF BlackListVarkwds *)DeeObject_Calloc(offsetof(BlackListVarkwds, blvk_blck) +
 	                                                   (mask + 1) * sizeof(BlackListVarkwdsEntry));
 	if unlikely(!result)
 		goto done;
-	rwlock_cinit(&result->vk_lock);
-	result->vk_code = code; /* Weakly referenced. */
-	result->vk_ckwc = argc - positional_argc;
-	result->vk_ckwv = code->co_keywords + positional_argc;
-	result->vk_kwds = kwds; /* Weakly referenced. */
-	result->vk_argv = (DREF DeeObject **)(DeeObject **)argv; /* Weakly referenced. */
-	result->vk_mask = mask;
+	atomic_rwlock_cinit(&result->blvk_lock);
+	result->blvk_code = code; /* Weakly referenced. */
+	result->blvk_ckwc = argc - positional_argc;
+	result->blvk_ckwv = code->co_keywords + positional_argc;
+	result->blvk_kwds = kwds; /* Weakly referenced. */
+	result->blvk_argv = (DREF DeeObject **)(DeeObject **)argv; /* Weakly referenced. */
+	result->blvk_mask = mask;
 	DeeObject_Init(result, &BlackListVarkwds_Type);
 done:
 	return (DREF DeeObject *)result;
@@ -1008,8 +1007,8 @@ BlackListVarkwds_Decref(DREF DeeObject *__restrict self) {
 	if (!DeeObject_IsShared(me)) {
 		/* Simple case: user-code didn't share the keyword mapping with its caller,
 		 *              so our cleanup process has been greatly simplified. */
-		/*Dee_Decref(me->vk_code);*/ /* Not actually referenced */
-		/*Dee_Decref(me->vk_kwds);*/ /* Not actually referenced */
+		/*Dee_Decref(me->blvk_code);*/ /* Not actually referenced */
+		/*Dee_Decref(me->blvk_kwds);*/ /* Not actually referenced */
 		Dee_DecrefNokill(&BlackListVarkwds_Type);
 		DeeObject_FreeTracker((DeeObject *)me);
 		DeeObject_Free(me);
@@ -1017,22 +1016,22 @@ BlackListVarkwds_Decref(DREF DeeObject *__restrict self) {
 	}
 
 	/* Must transform the object such that it can continue to exist without causing problems. */
-	kwdc = DeeKwds_SIZE(me->vk_kwds);
+	kwdc = DeeKwds_SIZE(me->blvk_kwds);
 	argv = (DREF DeeObject **)Dee_TryMallocc(kwdc, sizeof(DREF DeeObject *));
 	if likely(argv) {
 		/* Initialize the argument vector copy. */
-		Dee_Movrefv(argv, me->vk_argv, kwdc);
+		Dee_Movrefv(argv, me->blvk_argv, kwdc);
 	}
 
 	/* Override the old argv such that the object holds its own copy. */
-	rwlock_write(&me->vk_lock);
-	me->vk_argv = argv; /* Inherit */
-	rwlock_endwrite(&me->vk_lock);
+	BlackListVarkwds_LockWrite(me);
+	me->blvk_argv = argv; /* Inherit */
+	BlackListVarkwds_LockEndWrite(me);
 
 	/* Construct references to pointed-to objects (done now, so we could
 	 * skip that step within the `!DeeObject_IsShared(me)' path above) */
-	Dee_Incref(me->vk_code);
-	Dee_Incref(me->vk_kwds);
+	Dee_Incref(me->blvk_code);
+	Dee_Incref(me->blvk_kwds);
 
 	/* Drop our own reference (which should still be shared right now) */
 	Dee_Decref_unlikely(self);
@@ -1244,9 +1243,9 @@ BlackListMapping_IsBlackListed(BlackListMapping *__restrict self,
 	ASSERT_OBJECT_TYPE_EXACT(name, &DeeString_Type);
 	hash = DeeString_Hash(name);
 again:
-	i = perturb = hash & self->bm_mask;
+	i = perturb = hash & self->blm_mask;
 	for (;; BlackListMapping_BLCKNEXT(i, perturb)) {
-		str = self->bm_blck[i & self->bm_mask].ve_str;
+		str = self->blm_blck[i & self->blm_mask].blve_str;
 		if (!str)
 			break;
 		if (DeeString_HASH(str) != hash)
@@ -1256,23 +1255,23 @@ again:
 	}
 
 	/* Check if more arguments need to be loaded. */
-	if (atomic_read(&self->bm_load) < self->bm_ckwc) {
+	if (atomic_read(&self->blm_load) < self->blm_ckwc) {
 		size_t index;
-		rwlock_write(&self->bm_lock);
+		BlackListMapping_LockWrite(self);
 		COMPILER_READ_BARRIER();
-		index = atomic_read(&self->bm_load);
-		while (index < self->bm_ckwc) {
+		index = atomic_read(&self->blm_load);
+		while (index < self->blm_ckwc) {
 			dhash_t str_hash;
-			str = self->bm_ckwv[index++];
+			str = self->blm_ckwv[index++];
 			/* Remember the string by caching it within out hash-vector. */
 			str_hash = DeeString_Hash((DeeObject *)str);
-			i = perturb = str_hash & self->bm_mask;
+			i = perturb = str_hash & self->blm_mask;
 			for (;; BlackListMapping_BLCKNEXT(i, perturb)) {
 				BlackListVarkwdsEntry *ent;
-				ent = &self->bm_blck[i & self->bm_mask];
-				if (ent->ve_str)
+				ent = &self->blm_blck[i & self->blm_mask];
+				if (ent->blve_str)
 					continue;
-				ent->ve_str = str;
+				ent->blve_str = str;
 				break;
 			}
 
@@ -1281,13 +1280,13 @@ again:
 			    DeeString_SIZE(str) == DeeString_SIZE(name) &&
 			    bcmpc(DeeString_STR(str), DeeString_STR(name),
 			          DeeString_SIZE(name), sizeof(char)) == 0) {
-				self->bm_load = index;
-				rwlock_endwrite(&self->bm_lock);
+				self->blm_load = index;
+				BlackListMapping_LockEndWrite(self);
 				return true;
 			}
 		}
-		self->bm_load = index;
-		rwlock_endwrite(&self->bm_lock);
+		self->blm_load = index;
+		BlackListMapping_LockEndWrite(self);
 		goto again;
 	}
 	return false;
@@ -1300,9 +1299,9 @@ BlackListMapping_IsBlackListedString(BlackListMapping *__restrict self,
 	dhash_t i, perturb;
 	DeeStringObject *str;
 again:
-	i = perturb = hash & self->bm_mask;
+	i = perturb = hash & self->blm_mask;
 	for (;; BlackListMapping_BLCKNEXT(i, perturb)) {
-		str = self->bm_blck[i & self->bm_mask].ve_str;
+		str = self->blm_blck[i & self->blm_mask].blve_str;
 		if (!str)
 			break;
 		if (DeeString_HASH(str) != hash)
@@ -1313,35 +1312,35 @@ again:
 	}
 
 	/* Check if more arguments need to be loaded. */
-	if (atomic_read(&self->bm_load) < self->bm_ckwc) {
+	if (atomic_read(&self->blm_load) < self->blm_ckwc) {
 		size_t index;
-		rwlock_write(&self->bm_lock);
+		BlackListMapping_LockWrite(self);
 		COMPILER_READ_BARRIER();
-		index = atomic_read(&self->bm_load);
-		while (index < self->bm_ckwc) {
+		index = atomic_read(&self->blm_load);
+		while (index < self->blm_ckwc) {
 			dhash_t str_hash;
-			str = self->bm_ckwv[index++];
+			str = self->blm_ckwv[index++];
 			/* Remember the string by caching it within out hash-vector. */
 			str_hash = DeeString_Hash((DeeObject *)str);
-			i = perturb = str_hash & self->bm_mask;
+			i = perturb = str_hash & self->blm_mask;
 			for (;; BlackListMapping_BLCKNEXT(i, perturb)) {
 				BlackListVarkwdsEntry *ent;
-				ent = &self->bm_blck[i & self->bm_mask];
-				if (ent->ve_str)
+				ent = &self->blm_blck[i & self->blm_mask];
+				if (ent->blve_str)
 					continue;
-				ent->ve_str = str;
+				ent->blve_str = str;
 				break;
 			}
 			/* Check if this one's our's, and stop loading if it is. */
 			if (str_hash == hash &&
 			    strcmp(DeeString_STR(str), name) == 0) {
-				self->bm_load = index;
-				rwlock_endwrite(&self->bm_lock);
+				self->blm_load = index;
+				BlackListMapping_LockEndWrite(self);
 				return true;
 			}
 		}
-		self->bm_load = index;
-		rwlock_endwrite(&self->bm_lock);
+		self->blm_load = index;
+		BlackListMapping_LockEndWrite(self);
 		goto again;
 	}
 	return false;
@@ -1354,9 +1353,9 @@ BlackListMapping_IsBlackListedStringLen(BlackListMapping *__restrict self,
 	dhash_t i, perturb;
 	DeeStringObject *str;
 again:
-	i = perturb = hash & self->bm_mask;
+	i = perturb = hash & self->blm_mask;
 	for (;; BlackListMapping_BLCKNEXT(i, perturb)) {
-		str = self->bm_blck[i & self->bm_mask].ve_str;
+		str = self->blm_blck[i & self->blm_mask].blve_str;
 		if (!str)
 			break;
 		if (DeeString_HASH(str) != hash)
@@ -1366,37 +1365,37 @@ again:
 	}
 
 	/* Check if more arguments need to be loaded. */
-	if (atomic_read(&self->bm_load) < self->bm_ckwc) {
+	if (atomic_read(&self->blm_load) < self->blm_ckwc) {
 		size_t index;
-		rwlock_write(&self->bm_lock);
+		BlackListMapping_LockWrite(self);
 		COMPILER_READ_BARRIER();
-		index = atomic_read(&self->bm_load);
-		while (index < self->bm_ckwc) {
+		index = atomic_read(&self->blm_load);
+		while (index < self->blm_ckwc) {
 			dhash_t str_hash;
-			str = self->bm_ckwv[index++];
+			str = self->blm_ckwv[index++];
 
 			/* Remember the string by caching it within out hash-vector. */
 			str_hash = DeeString_Hash((DeeObject *)str);
-			i = perturb = str_hash & self->bm_mask;
+			i = perturb = str_hash & self->blm_mask;
 			for (;; BlackListMapping_BLCKNEXT(i, perturb)) {
 				BlackListVarkwdsEntry *ent;
-				ent = &self->bm_blck[i & self->bm_mask];
-				if (ent->ve_str)
+				ent = &self->blm_blck[i & self->blm_mask];
+				if (ent->blve_str)
 					continue;
-				ent->ve_str = str;
+				ent->blve_str = str;
 				break;
 			}
 
 			/* Check if this one's our's, and stop loading if it is. */
 			if (str_hash == hash && DeeString_SIZE(str) == namesize &&
 			    bcmpc(DeeString_STR(str), name, namesize, sizeof(char)) == 0) {
-				self->bm_load = index;
-				rwlock_endwrite(&self->bm_lock);
+				self->blm_load = index;
+				BlackListMapping_LockEndWrite(self);
 				return true;
 			}
 		}
-		self->bm_load = index;
-		rwlock_endwrite(&self->bm_lock);
+		self->blm_load = index;
+		BlackListMapping_LockEndWrite(self);
 		goto again;
 	}
 	return false;
@@ -1414,7 +1413,7 @@ BlackListMapping_BoundItem(BlackListMapping *__restrict self,
 			return err_unknown_key((DeeObject *)self, name);
 		return -2;
 	}
-	return DeeObject_BoundItem(self->bm_kw, name, allow_missing);
+	return DeeObject_BoundItem(self->blm_kw, name, allow_missing);
 }
 
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
@@ -1426,7 +1425,7 @@ BlackListMapping_BoundItemString(BlackListMapping *__restrict self,
 			return err_unknown_key_str((DeeObject *)self, name);
 		return -2;
 	}
-	return DeeObject_BoundItemString(self->bm_kw, name, hash, allow_missing);
+	return DeeObject_BoundItemString(self->blm_kw, name, hash, allow_missing);
 }
 
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
@@ -1439,7 +1438,7 @@ BlackListMapping_BoundItemStringLen(BlackListMapping *__restrict self,
 			return err_unknown_key_str_len((DeeObject *)self, name, namesize);
 		return -2;
 	}
-	return DeeObject_BoundItemStringLen(self->bm_kw, name, namesize, hash, allow_missing);
+	return DeeObject_BoundItemStringLen(self->blm_kw, name, namesize, hash, allow_missing);
 }
 
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
@@ -1448,7 +1447,7 @@ BlackListMapping_GetItem(BlackListMapping *self,
 	if (DeeString_Check(name) &&
 	    BlackListMapping_IsBlackListed(self, name))
 		goto missing;
-	return DeeObject_GetItem(self->bm_kw, name);
+	return DeeObject_GetItem(self->blm_kw, name);
 missing:
 	err_unknown_key((DeeObject *)self, name);
 	return NULL;
@@ -1459,7 +1458,7 @@ BlackListMapping_GetItemString(BlackListMapping *__restrict self,
                                char const *__restrict name, dhash_t hash) {
 	if (BlackListMapping_IsBlackListedString(self, name, hash))
 		goto missing;
-	return DeeObject_GetItemString(self->bm_kw, name, hash);
+	return DeeObject_GetItemString(self->blm_kw, name, hash);
 missing:
 	err_unknown_key_str((DeeObject *)self, name);
 	return NULL;
@@ -1471,7 +1470,7 @@ BlackListMapping_GetItemStringLen(BlackListMapping *__restrict self,
                                   size_t namesize, dhash_t hash) {
 	if (BlackListMapping_IsBlackListedStringLen(self, name, namesize, hash))
 		goto missing;
-	return DeeObject_GetItemStringLen(self->bm_kw, name, namesize, hash);
+	return DeeObject_GetItemStringLen(self->blm_kw, name, namesize, hash);
 missing:
 	err_unknown_key_str_len((DeeObject *)self, name, namesize);
 	return NULL;
@@ -1484,7 +1483,7 @@ BlackListMapping_GetItemDef(BlackListMapping *__restrict self,
 	if (DeeString_Check(name) &&
 	    BlackListMapping_IsBlackListed(self, name))
 		goto missing;
-	return DeeObject_GetItemDef(self->bm_kw, name, def);
+	return DeeObject_GetItemDef(self->blm_kw, name, def);
 missing:
 	if (def != ITER_DONE)
 		Dee_Incref(def);
@@ -1497,7 +1496,7 @@ BlackListMapping_GetItemStringDef(BlackListMapping *__restrict self,
                                   DeeObject *__restrict def) {
 	if (BlackListMapping_IsBlackListedString(self, name, hash))
 		goto missing;
-	return DeeObject_GetItemStringDef(self->bm_kw, name, hash, def);
+	return DeeObject_GetItemStringDef(self->blm_kw, name, hash, def);
 missing:
 	if (def != ITER_DONE)
 		Dee_Incref(def);
@@ -1511,7 +1510,7 @@ BlackListMapping_GetItemStringLenDef(BlackListMapping *__restrict self,
                                      DeeObject *__restrict def) {
 	if (BlackListMapping_IsBlackListedStringLen(self, name, namesize, hash))
 		goto missing;
-	return DeeObject_GetItemStringLenDef(self->bm_kw, name, namesize, hash, def);
+	return DeeObject_GetItemStringLenDef(self->blm_kw, name, namesize, hash, def);
 missing:
 	if (def != ITER_DONE)
 		Dee_Incref(def);
@@ -1520,20 +1519,20 @@ missing:
 
 PRIVATE NONNULL((1)) void DCALL
 blm_fini(BlackListMapping *__restrict self) {
-	Dee_Decref(self->bm_code);
-	Dee_Decref(self->bm_kw);
+	Dee_Decref(self->blm_code);
+	Dee_Decref(self->blm_kw);
 }
 
 PRIVATE NONNULL((1, 2)) void DCALL
 blm_visit(BlackListMapping *__restrict self, dvisit_t proc, void *arg) {
-	Dee_Visit(self->bm_code);
-	Dee_Visit(self->bm_kw);
+	Dee_Visit(self->blm_code);
+	Dee_Visit(self->blm_kw);
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 blm_bool(BlackListMapping *__restrict self) {
 	DREF DeeObject *vals[2], *elem, *iter;
-	iter = DeeObject_IterSelf(self->bm_kw);
+	iter = DeeObject_IterSelf(self->blm_kw);
 	if unlikely(!iter)
 		goto err;
 	while (ITER_ISOK(elem = DeeObject_IterNext(iter))) {
@@ -1564,7 +1563,7 @@ PRIVATE WUNUSED NONNULL((1)) size_t DCALL
 blm_nsi_size(BlackListMapping *__restrict self) {
 	size_t result = 0;
 	DREF DeeObject *vals[2], *elem, *iter;
-	iter = DeeObject_IterSelf(self->bm_kw);
+	iter = DeeObject_IterSelf(self->blm_kw);
 	if unlikely(!iter)
 		goto err;
 	while (ITER_ISOK(elem = DeeObject_IterNext(iter))) {
@@ -1596,7 +1595,7 @@ blm_iter(BlackListMapping *__restrict self) {
 	result = DeeObject_MALLOC(BlackListMappingIterator);
 	if unlikely(!result)
 		goto done;
-	result->mi_iter = DeeObject_IterSelf(self->bm_kw);
+	result->mi_iter = DeeObject_IterSelf(self->blm_kw);
 	if unlikely(!result->mi_iter)
 		goto err_r;
 	result->mi_map = self;
@@ -1620,7 +1619,7 @@ blm_contains(BlackListMapping *self,
 	if (DeeString_Check(key) &&
 	    BlackListMapping_IsBlackListed(self, key))
 		return_false;
-	return DeeObject_ContainsObject(self->bm_kw, key);
+	return DeeObject_ContainsObject(self->blm_kw, key);
 }
 
 PRIVATE WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
@@ -1666,33 +1665,33 @@ blm_copy(BlackListMapping *__restrict self) {
 	DREF DeeObject *result_kw;
 	DREF BlackListMapping *result;
 	/* Create a copy of the original keywords, since we're acting as a proxy. */
-	result_kw = DeeObject_Copy(self->bm_kw);
+	result_kw = DeeObject_Copy(self->blm_kw);
 	if unlikely(!result_kw)
 		goto err;
-	if (result_kw == self->bm_kw) {
+	if (result_kw == self->blm_kw) {
 		Dee_DecrefNokill(result_kw);
 		return_reference_(self);
 	}
 
-	result = (DREF BlackListMapping *)DeeObject_Malloc(offsetof(BlackListMapping, bm_blck) +
-	                                                   (self->bm_mask + 1) *
+	result = (DREF BlackListMapping *)DeeObject_Malloc(offsetof(BlackListMapping, blm_blck) +
+	                                                   (self->blm_mask + 1) *
 	                                                   sizeof(BlackListVarkwdsEntry));
 	if unlikely(!result)
 		goto err_result_kw;
-	result->bm_kw = result_kw; /* Inherit reference */
-	rwlock_init(&result->bm_lock);
-	result->bm_code = self->bm_code;
-	Dee_Incref(result->bm_code);
-	result->bm_ckwc = self->bm_ckwc;
-	result->bm_ckwv = self->bm_ckwv;
-	result->bm_mask = self->bm_mask;
-	rwlock_read(&self->bm_lock);
-	result->bm_load = self->bm_load;
-	memcpyc(result->bm_blck,
-	        self->bm_blck,
-	        result->bm_mask + 1,
+	result->blm_kw = result_kw; /* Inherit reference */
+	atomic_rwlock_init(&result->blm_lock);
+	result->blm_code = self->blm_code;
+	Dee_Incref(result->blm_code);
+	result->blm_ckwc = self->blm_ckwc;
+	result->blm_ckwv = self->blm_ckwv;
+	result->blm_mask = self->blm_mask;
+	BlackListMapping_LockRead(self);
+	result->blm_load = self->blm_load;
+	memcpyc(result->blm_blck,
+	        self->blm_blck,
+	        result->blm_mask + 1,
 	        sizeof(BlackListVarkwdsEntry));
-	rwlock_endread(&self->bm_lock);
+	BlackListMapping_LockEndRead(self);
 	DeeObject_Init(result, &BlackListMapping_Type);
 	return result;
 err_result_kw:
@@ -1704,27 +1703,27 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF BlackListMapping *DCALL
 blm_deep(BlackListMapping *__restrict self) {
 	DREF BlackListMapping *result;
-	result = (DREF BlackListMapping *)DeeObject_Malloc(offsetof(BlackListMapping, bm_blck) +
-	                                                   (self->bm_mask + 1) *
+	result = (DREF BlackListMapping *)DeeObject_Malloc(offsetof(BlackListMapping, blm_blck) +
+	                                                   (self->blm_mask + 1) *
 	                                                   sizeof(BlackListVarkwdsEntry));
 	if unlikely(!result)
 		goto done;
-	result->bm_kw = DeeObject_DeepCopy(self->bm_kw);
-	if unlikely(!result->bm_kw)
+	result->blm_kw = DeeObject_DeepCopy(self->blm_kw);
+	if unlikely(!result->blm_kw)
 		goto err_r;
-	rwlock_init(&result->bm_lock);
-	result->bm_code = self->bm_code; /* Immutable, so no copy required */
-	Dee_Incref(result->bm_code);
-	result->bm_ckwc = self->bm_ckwc;
-	result->bm_ckwv = self->bm_ckwv;
-	result->bm_mask = self->bm_mask;
-	rwlock_read(&self->bm_lock);
-	result->bm_load = self->bm_load;
-	memcpyc(result->bm_blck,
-	        self->bm_blck,
-	        result->bm_mask + 1,
+	atomic_rwlock_init(&result->blm_lock);
+	result->blm_code = self->blm_code; /* Immutable, so no copy required */
+	Dee_Incref(result->blm_code);
+	result->blm_ckwc = self->blm_ckwc;
+	result->blm_ckwv = self->blm_ckwv;
+	result->blm_mask = self->blm_mask;
+	BlackListMapping_LockRead(self);
+	result->blm_load = self->blm_load;
+	memcpyc(result->blm_blck,
+	        self->blm_blck,
+	        result->blm_mask + 1,
 	        sizeof(BlackListVarkwdsEntry));
-	rwlock_endread(&self->bm_lock);
+	BlackListMapping_LockEndRead(self);
 	DeeObject_Init(result, &BlackListMapping_Type);
 done:
 	return result;
@@ -1738,34 +1737,34 @@ PRIVATE WUNUSED NONNULL((1)) DREF BlackListMapping *DCALL
 blm_get_frozen(BlackListMapping *__restrict self) {
 	DREF DeeObject *frozen_kw;
 	DREF BlackListMapping *result;
-	frozen_kw = DeeObject_GetAttr(self->bm_kw, (DeeObject *)&str_frozen);
+	frozen_kw = DeeObject_GetAttr(self->blm_kw, (DeeObject *)&str_frozen);
 	if unlikely(!frozen_kw)
 		goto err;
-	if (frozen_kw == self->bm_kw) {
+	if (frozen_kw == self->blm_kw) {
 		Dee_DecrefNokill(frozen_kw);
 		return_reference_(self);
 	}
 
-	result = (DREF BlackListMapping *)DeeObject_Malloc(offsetof(BlackListMapping, bm_blck) +
-	                                                   (self->bm_mask + 1) *
+	result = (DREF BlackListMapping *)DeeObject_Malloc(offsetof(BlackListMapping, blm_blck) +
+	                                                   (self->blm_mask + 1) *
 	                                                   sizeof(BlackListVarkwdsEntry));
 	if unlikely(!result)
 		goto err_frozen_kw;
 
-	result->bm_kw = frozen_kw; /* Inherit reference */
-	rwlock_init(&result->bm_lock);
-	result->bm_code = self->bm_code;
-	Dee_Incref(result->bm_code);
-	result->bm_ckwc = self->bm_ckwc;
-	result->bm_ckwv = self->bm_ckwv;
-	result->bm_mask = self->bm_mask;
-	rwlock_read(&self->bm_lock);
-	result->bm_load = self->bm_load;
-	memcpyc(result->bm_blck,
-	        self->bm_blck,
-	        result->bm_mask + 1,
+	result->blm_kw = frozen_kw; /* Inherit reference */
+	atomic_rwlock_init(&result->blm_lock);
+	result->blm_code = self->blm_code;
+	Dee_Incref(result->blm_code);
+	result->blm_ckwc = self->blm_ckwc;
+	result->blm_ckwv = self->blm_ckwv;
+	result->blm_mask = self->blm_mask;
+	BlackListMapping_LockRead(self);
+	result->blm_load = self->blm_load;
+	memcpyc(result->blm_blck,
+	        self->blm_blck,
+	        result->blm_mask + 1,
 	        sizeof(BlackListVarkwdsEntry));
-	rwlock_endread(&self->bm_lock);
+	BlackListMapping_LockEndRead(self);
 	DeeObject_Init(result, &BlackListMapping_Type);
 	return result;
 err_frozen_kw:
@@ -1846,16 +1845,16 @@ BlackListMapping_New(struct code_object *__restrict code,
 	/* Calculate an appropriate mask for the blacklist hash-set. */
 	for (mask = 3; mask <= argc; mask = (mask << 1) | 1)
 		;
-	result = (DREF BlackListMapping *)DeeObject_Calloc(offsetof(BlackListMapping, bm_blck) +
+	result = (DREF BlackListMapping *)DeeObject_Calloc(offsetof(BlackListMapping, blm_blck) +
 	                                                   (mask + 1) * sizeof(BlackListVarkwdsEntry));
 	if unlikely(!result)
 		goto done;
-	rwlock_cinit(&result->bm_lock);
-	result->bm_code = code;
-	result->bm_ckwc = argc - positional_argc;
-	result->bm_ckwv = code->co_keywords + positional_argc;
-	result->bm_kw   = kw;
-	result->bm_mask = mask;
+	atomic_rwlock_cinit(&result->blm_lock);
+	result->blm_code = code;
+	result->blm_ckwc = argc - positional_argc;
+	result->blm_ckwv = code->co_keywords + positional_argc;
+	result->blm_kw   = kw;
+	result->blm_mask = mask;
 	Dee_Incref(code);
 	Dee_Incref(kw);
 	DeeObject_Init(result, &BlackListMapping_Type);

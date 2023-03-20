@@ -39,29 +39,29 @@ DECL_BEGIN
 typedef struct Dee_hashset_object DeeHashSetObject;
 
 struct Dee_hashset_item {
-	DREF DeeObject *si_key;  /* [0..1][lock(:s_lock)] Set item key. */
-	Dee_hash_t      si_hash; /* [valis_if(si_key)][lock(:s_lock)] Hash of `si_key' (with a starting value of `0').
-	                          * NOTE: Some random value when `si_key' is the dummy key. */
+	DREF DeeObject *hsi_key;  /* [0..1][lock(:hs_lock)] Set item key. */
+	Dee_hash_t      hsi_hash; /* [valis_if(hsi_key)][lock(:hs_lock)] Hash of `hsi_key' (with a starting value of `0').
+	                           * NOTE: Some random value when `hsi_key' is the dummy key. */
 };
 
 struct Dee_hashset_object {
 	Dee_OBJECT_HEAD /* GC Object */
-	size_t                   s_mask; /* [lock(s_lock)][> s_size || s_mask == 0] Allocated set size. */
-	size_t                   s_size; /* [lock(s_lock)][< s_mask || s_mask == 0] Amount of non-NULL keys. */
-	size_t                   s_used; /* [lock(s_lock)][<= s_size] Amount of keys actually in use.
-	                                  * HINT: The difference to `s_size' is the number of dummy keys currently in use. */
-	struct Dee_hashset_item *s_elem; /* [1..s_size|ALLOC(s_mask+1)][lock(s_lock)]
-	                                  * [ownes_if(!= INTERNAL(empty_set_items))] Set keys. */
+	size_t                   hs_mask; /* [lock(hs_lock)][> hs_size || hs_mask == 0] Allocated set size. */
+	size_t                   hs_size; /* [lock(hs_lock)][< hs_mask || hs_mask == 0] Amount of non-NULL keys. */
+	size_t                   hs_used; /* [lock(hs_lock)][<= hs_size] Amount of keys actually in use.
+	                                   * HINT: The difference to `hs_size' is the number of dummy keys currently in use. */
+	struct Dee_hashset_item *hs_elem; /* [1..hs_size|ALLOC(hs_mask+1)][lock(hs_lock)]
+	                                   * [ownes_if(!= INTERNAL(empty_set_items))] Set keys. */
 #ifndef CONFIG_NO_THREADS
-	Dee_atomic_rwlock_t      s_lock; /* Lock used for accessing this set. */
+	Dee_atomic_rwlock_t      hs_lock; /* Lock used for accessing this set. */
 #endif /* !CONFIG_NO_THREADS */
 	Dee_WEAKREF_SUPPORT
 };
 
 /* The main `HashSet' container class. */
 DDATDEF DeeTypeObject DeeHashSet_Type;
-#define DeeHashSet_Check(ob)       DeeObject_InstanceOf(ob, &DeeHashSet_Type)
-#define DeeHashSet_CheckExact(ob)  DeeObject_InstanceOfExact(ob, &DeeHashSet_Type)
+#define DeeHashSet_Check(ob)      DeeObject_InstanceOf(ob, &DeeHashSet_Type)
+#define DeeHashSet_CheckExact(ob) DeeObject_InstanceOfExact(ob, &DeeHashSet_Type)
 
 #define DeeHashSet_New() DeeObject_NewDefault(&DeeHashSet_Type)
 DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeHashSet_FromSequence(DeeObject *__restrict self);
@@ -115,45 +115,49 @@ DeeHashSet_NewItemsInherited(size_t num_items,
  * >>     perturb = i = DeeHashSet_HashSt(self, hash);
  * >>     for (;; i = DeeHashSet_HashNx(i, perturb), DeeHashSet_HashPt(perturb)) {
  * >>          struct hashset_item *item = DeeHashSet_HashIt(self, i);
- * >>          if (!item->si_key)
+ * >>          if (!item->hsi_key)
  * >>              break; // Not found
- * >>          if (item->si_hash != hash)
+ * >>          if (item->hsi_hash != hash)
  * >>              continue; // Non-matching hash
- * >>          if (DeeObject_CompareEq(key, item->si_key))
+ * >>          if (DeeObject_CompareEq(key, item->hsi_key))
  * >>              return item->si_item;
  * >>     }
  * >>     return NULL;
  * >> }
  * Requirements to prevent an infinite loop:
- *   - `DeeHashSet_HashNx()' must be able to eventually enumerate all integers `<= s_mask'
- *   - `s_size' must always be lower than `s_mask', ensuring that at least one(1)
+ *   - `DeeHashSet_HashNx()' must be able to eventually enumerate all integers `<= hs_mask'
+ *   - `hs_size' must always be lower than `hs_mask', ensuring that at least one(1)
  *      entry exists that no value has been assigned to (Acting as a sentinel to
  *      terminate a search for an existing element).
- *   - `s_elem' must never be empty (or `NULL' for that matter)
+ *   - `hs_elem' must never be empty (or `NULL' for that matter)
  * NOTE: I can't say that I came up with the way that this mapping
  *       algorithm works (but noone can really claim to have invented
  *       something ~new~ nowadays. - It's always been done already).
  *       Yet the point here is, that this is similar to what python
  *       does for its dictionary lookup.
  */
-#define DeeHashSet_HashSt(self, hash)  ((hash) & ((DeeHashSetObject *)Dee_REQUIRES_OBJECT(self))->s_mask)
+#define DeeHashSet_HashSt(self, hash)  ((hash) & ((DeeHashSetObject *)Dee_REQUIRES_OBJECT(self))->hs_mask)
 #define DeeHashSet_HashNx(hs, perturb) (void)((hs) = ((hs) << 2) + (hs) + (perturb) + 1, (perturb) >>= 5) /* This `5' is tunable. */
-#define DeeHashSet_HashIt(self, i)     (((DeeHashSetObject *)Dee_REQUIRES_OBJECT(self))->s_elem + ((i) & ((DeeHashSetObject *)(self))->s_mask))
+#define DeeHashSet_HashIt(self, i)     (((DeeHashSetObject *)Dee_REQUIRES_OBJECT(self))->hs_elem + ((i) & ((DeeHashSetObject *)(self))->hs_mask))
 
 
 /* Locking helpers. */
-#define DeeHashSet_LockReading(x)    Dee_atomic_rwlock_reading(&((DeeHashSetObject *)Dee_REQUIRES_OBJECT(x))->s_lock)
-#define DeeHashSet_LockWriting(x)    Dee_atomic_rwlock_writing(&((DeeHashSetObject *)Dee_REQUIRES_OBJECT(x))->s_lock)
-#define DeeHashSet_LockTryread(x)    Dee_atomic_rwlock_tryread(&((DeeHashSetObject *)Dee_REQUIRES_OBJECT(x))->s_lock)
-#define DeeHashSet_LockTrywrite(x)   Dee_atomic_rwlock_trywrite(&((DeeHashSetObject *)Dee_REQUIRES_OBJECT(x))->s_lock)
-#define DeeHashSet_LockRead(x)       Dee_atomic_rwlock_read(&((DeeHashSetObject *)Dee_REQUIRES_OBJECT(x))->s_lock)
-#define DeeHashSet_LockWrite(x)      Dee_atomic_rwlock_write(&((DeeHashSetObject *)Dee_REQUIRES_OBJECT(x))->s_lock)
-#define DeeHashSet_LockTryUpgrade(x) Dee_atomic_rwlock_tryupgrade(&((DeeHashSetObject *)Dee_REQUIRES_OBJECT(x))->s_lock)
-#define DeeHashSet_LockUpgrade(x)    Dee_atomic_rwlock_upgrade(&((DeeHashSetObject *)Dee_REQUIRES_OBJECT(x))->s_lock)
-#define DeeHashSet_LockDowngrade(x)  Dee_atomic_rwlock_downgrade(&((DeeHashSetObject *)Dee_REQUIRES_OBJECT(x))->s_lock)
-#define DeeHashSet_LockEndWrite(x)   Dee_atomic_rwlock_endwrite(&((DeeHashSetObject *)Dee_REQUIRES_OBJECT(x))->s_lock)
-#define DeeHashSet_LockEndRead(x)    Dee_atomic_rwlock_endread(&((DeeHashSetObject *)Dee_REQUIRES_OBJECT(x))->s_lock)
-#define DeeHashSet_LockEnd(x)        Dee_atomic_rwlock_end(&((DeeHashSetObject *)Dee_REQUIRES_OBJECT(x))->s_lock)
+#define DeeHashSet_LockReading(self)    Dee_atomic_rwlock_reading(&((DeeHashSetObject *)Dee_REQUIRES_OBJECT(self))->hs_lock)
+#define DeeHashSet_LockWriting(self)    Dee_atomic_rwlock_writing(&((DeeHashSetObject *)Dee_REQUIRES_OBJECT(self))->hs_lock)
+#define DeeHashSet_LockTryRead(self)    Dee_atomic_rwlock_tryread(&((DeeHashSetObject *)Dee_REQUIRES_OBJECT(self))->hs_lock)
+#define DeeHashSet_LockTryWrite(self)   Dee_atomic_rwlock_trywrite(&((DeeHashSetObject *)Dee_REQUIRES_OBJECT(self))->hs_lock)
+#define DeeHashSet_LockCanRead(self)    Dee_atomic_rwlock_canread(&((DeeHashSetObject *)Dee_REQUIRES_OBJECT(self))->hs_lock)
+#define DeeHashSet_LockCanWrite(self)   Dee_atomic_rwlock_canwrite(&((DeeHashSetObject *)Dee_REQUIRES_OBJECT(self))->hs_lock)
+#define DeeHashSet_LockWaitRead(self)   Dee_atomic_rwlock_waitread(&((DeeHashSetObject *)Dee_REQUIRES_OBJECT(self))->hs_lock)
+#define DeeHashSet_LockWaitWrite(self)  Dee_atomic_rwlock_waitwrite(&((DeeHashSetObject *)Dee_REQUIRES_OBJECT(self))->hs_lock)
+#define DeeHashSet_LockRead(self)       Dee_atomic_rwlock_read(&((DeeHashSetObject *)Dee_REQUIRES_OBJECT(self))->hs_lock)
+#define DeeHashSet_LockWrite(self)      Dee_atomic_rwlock_write(&((DeeHashSetObject *)Dee_REQUIRES_OBJECT(self))->hs_lock)
+#define DeeHashSet_LockTryUpgrade(self) Dee_atomic_rwlock_tryupgrade(&((DeeHashSetObject *)Dee_REQUIRES_OBJECT(self))->hs_lock)
+#define DeeHashSet_LockUpgrade(self)    Dee_atomic_rwlock_upgrade(&((DeeHashSetObject *)Dee_REQUIRES_OBJECT(self))->hs_lock)
+#define DeeHashSet_LockDowngrade(self)  Dee_atomic_rwlock_downgrade(&((DeeHashSetObject *)Dee_REQUIRES_OBJECT(self))->hs_lock)
+#define DeeHashSet_LockEndWrite(self)   Dee_atomic_rwlock_endwrite(&((DeeHashSetObject *)Dee_REQUIRES_OBJECT(self))->hs_lock)
+#define DeeHashSet_LockEndRead(self)    Dee_atomic_rwlock_endread(&((DeeHashSetObject *)Dee_REQUIRES_OBJECT(self))->hs_lock)
+#define DeeHashSet_LockEnd(self)        Dee_atomic_rwlock_end(&((DeeHashSetObject *)Dee_REQUIRES_OBJECT(self))->hs_lock)
 
 DECL_END
 

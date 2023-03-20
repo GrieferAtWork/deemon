@@ -122,9 +122,9 @@ asm_allowconst(DeeObject *__restrict self) {
 		iter = ((DeeRoSetObject *)self)->rs_elem;
 		end  = iter + ((DeeRoSetObject *)self)->rs_mask + 1;
 		for (; iter < end; ++iter) {
-			if (!iter->si_key)
+			if (!iter->rsi_key)
 				continue;
-			if (!asm_allowconst(iter->si_key))
+			if (!asm_allowconst(iter->rsi_key))
 				goto illegal;
 		}
 		goto allowed;
@@ -234,9 +234,9 @@ again0:
 		size_t i;
 		DeeRoSetObject *me = (DeeRoSetObject *)self;
 		for (i = 0; i <= me->rs_mask; ++i) {
-			if (!me->rs_elem[i].si_key)
+			if (!me->rs_elem[i].rsi_key)
 				continue;
-			temp = allow_constexpr(me->rs_elem[i].si_key);
+			temp = allow_constexpr(me->rs_elem[i].rsi_key);
 			if (temp == CONSTEXPR_ILLEGAL)
 				goto illegal;
 			if (temp == CONSTEXPR_USECOPY)
@@ -273,9 +273,9 @@ again0:
 			size_t i;
 			DeeHashSetObject *me = (DeeHashSetObject *)self;
 			DeeHashSet_LockRead(self);
-			for (i = 0; i <= me->s_mask; ++i) {
+			for (i = 0; i <= me->hs_mask; ++i) {
 				int temp;
-				DeeObject *key = me->s_elem[i].si_key;
+				DeeObject *key = me->hs_elem[i].hsi_key;
 				if (!key)
 					continue;
 				temp = allow_constexpr(key);

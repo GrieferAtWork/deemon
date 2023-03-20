@@ -2054,15 +2054,15 @@ ot_nsi_getitem(ObjectTable *__restrict self, size_t index) {
 	DREF DeeObject *result;
 	if unlikely(index >= self->ot_size)
 		goto err_index;
-	atomic_rwlock_read(&self->ot_desc->id_lock);
+	Dee_instance_desc_lock_read(self->ot_desc);
 	result = self->ot_desc->id_vtab[index];
 	if unlikely(!result)
 		goto err_unbound;
 	Dee_Incref(result);
-	atomic_rwlock_endread(&self->ot_desc->id_lock);
+	Dee_instance_desc_lock_endread(self->ot_desc);
 	return result;
 err_unbound:
-	atomic_rwlock_endread(&self->ot_desc->id_lock);
+	Dee_instance_desc_lock_endread(self->ot_desc);
 	err_unbound_index((DeeObject *)self, index);
 	return NULL;
 err_index:
@@ -2074,10 +2074,10 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 ot_nsi_getitem_fast(ObjectTable *__restrict self, size_t index) {
 	DREF DeeObject *result;
 	ASSERT(index < self->ot_size);
-	atomic_rwlock_read(&self->ot_desc->id_lock);
+	Dee_instance_desc_lock_read(self->ot_desc);
 	result = self->ot_desc->id_vtab[index];
 	Dee_XIncref(result);
-	atomic_rwlock_endread(&self->ot_desc->id_lock);
+	Dee_instance_desc_lock_endread(self->ot_desc);
 	return result;
 }
 
@@ -2086,14 +2086,14 @@ ot_nsi_delitem(ObjectTable *__restrict self, size_t index) {
 	DREF DeeObject *oldval;
 	if unlikely(index >= self->ot_size)
 		goto err_index;
-	atomic_rwlock_write(&self->ot_desc->id_lock);
+	Dee_instance_desc_lock_write(self->ot_desc);
 	oldval = self->ot_desc->id_vtab[index];
 #ifdef CONFIG_ERROR_DELETE_UNBOUND
 	if unlikely(!oldval)
 		goto err_unbound;
 #endif /* CONFIG_ERROR_DELETE_UNBOUND */
 	self->ot_desc->id_vtab[index] = NULL;
-	atomic_rwlock_endwrite(&self->ot_desc->id_lock);
+	Dee_instance_desc_lock_endwrite(self->ot_desc);
 #ifdef CONFIG_ERROR_DELETE_UNBOUND
 	Dee_Decref(oldval);
 #else /* CONFIG_ERROR_DELETE_UNBOUND */
@@ -2102,7 +2102,7 @@ ot_nsi_delitem(ObjectTable *__restrict self, size_t index) {
 	return 0;
 #ifdef CONFIG_ERROR_DELETE_UNBOUND
 err_unbound:
-	atomic_rwlock_endwrite(&self->ot_desc->id_lock);
+	Dee_instance_desc_lock_endwrite(self->ot_desc);
 	return err_unbound_index((DeeObject *)self, index);
 #endif /* CONFIG_ERROR_DELETE_UNBOUND */
 err_index:
@@ -2116,10 +2116,10 @@ ot_nsi_setitem(ObjectTable *__restrict self, size_t index,
 	if unlikely(index >= self->ot_size)
 		goto err_index;
 	Dee_Incref(value);
-	atomic_rwlock_write(&self->ot_desc->id_lock);
+	Dee_instance_desc_lock_write(self->ot_desc);
 	oldval                        = self->ot_desc->id_vtab[index];
 	self->ot_desc->id_vtab[index] = value;
-	atomic_rwlock_endwrite(&self->ot_desc->id_lock);
+	Dee_instance_desc_lock_endwrite(self->ot_desc);
 	Dee_XDecref(oldval);
 	return 0;
 err_index:
@@ -2132,16 +2132,16 @@ ot_nsi_xchitem(ObjectTable *__restrict self, size_t index,
 	DREF DeeObject *oldval;
 	if unlikely(index >= self->ot_size)
 		goto err_index;
-	atomic_rwlock_write(&self->ot_desc->id_lock);
+	Dee_instance_desc_lock_write(self->ot_desc);
 	oldval = self->ot_desc->id_vtab[index];
 	if unlikely(!oldval)
 		goto err_unbound;
 	Dee_Incref(newval);
 	self->ot_desc->id_vtab[index] = newval;
-	atomic_rwlock_endwrite(&self->ot_desc->id_lock);
+	Dee_instance_desc_lock_endwrite(self->ot_desc);
 	return oldval;
 err_unbound:
-	atomic_rwlock_endwrite(&self->ot_desc->id_lock);
+	Dee_instance_desc_lock_endwrite(self->ot_desc);
 	err_unbound_index((DeeObject *)self, index);
 	goto err;
 err_index:
@@ -2845,7 +2845,7 @@ DeeClass_EnumInstanceAttributes(DeeTypeObject *__restrict self,
 			inst = DeeInstance_DESC(my_class, instance);
 		}
 		if (inst)
-			atomic_rwlock_read(&inst->id_lock);
+			Dee_instance_desc_lock_read(inst);
 		if (inst && !(attr->ca_flag & CLASS_ATTRIBUTE_FGETSET)) {
 			/* Actually figure out the type of the attr. */
 			attr_type = (DREF DeeTypeObject *)inst->id_vtab[attr->ca_addr];
@@ -2870,7 +2870,7 @@ DeeClass_EnumInstanceAttributes(DeeTypeObject *__restrict self,
 			}
 		}
 		if (inst)
-			atomic_rwlock_endread(&inst->id_lock);
+			Dee_instance_desc_lock_endread(inst);
 		if (attr->ca_flag & CLASS_ATTRIBUTE_FGETSET) {
 			perm |= ATTR_PROPERTY;
 		} else if (attr->ca_flag & CLASS_ATTRIBUTE_FMETHOD) {
@@ -3063,7 +3063,7 @@ DeeClass_FindInstanceAttribute(DeeTypeObject *tp_invoker, DeeTypeObject *self, D
 		inst = DeeInstance_DESC(my_class, instance);
 	}
 	if (inst)
-		atomic_rwlock_read(&inst->id_lock);
+		Dee_instance_desc_lock_read(inst);
 	if (inst && !(attr->ca_flag & CLASS_ATTRIBUTE_FGETSET)) {
 		/* Actually figure out the type of the attr. */
 		attr_type = (DREF DeeTypeObject *)inst->id_vtab[attr->ca_addr];
@@ -3088,7 +3088,7 @@ DeeClass_FindInstanceAttribute(DeeTypeObject *tp_invoker, DeeTypeObject *self, D
 		}
 	}
 	if (inst)
-		atomic_rwlock_endread(&inst->id_lock);
+		Dee_instance_desc_lock_endread(inst);
 	if (attr->ca_flag & CLASS_ATTRIBUTE_FGETSET) {
 		perm |= ATTR_PROPERTY;
 	} else if (attr->ca_flag & CLASS_ATTRIBUTE_FMETHOD) {
@@ -3633,10 +3633,10 @@ DeeInstance_GetAttribute(struct class_desc *__restrict desc,
 		self = class_desc_as_instance(desc);
 	if (attr->ca_flag & CLASS_ATTRIBUTE_FGETSET) {
 		DREF DeeObject *getter;
-		atomic_rwlock_read(&self->id_lock);
+		Dee_instance_desc_lock_read(self);
 		getter = self->id_vtab[attr->ca_addr + CLASS_GETSET_GET];
 		Dee_XIncref(getter);
-		atomic_rwlock_endread(&self->id_lock);
+		Dee_instance_desc_lock_endread(self);
 		if unlikely(!getter)
 			goto illegal;
 
@@ -3648,20 +3648,20 @@ DeeInstance_GetAttribute(struct class_desc *__restrict desc,
 	} else if (attr->ca_flag & CLASS_ATTRIBUTE_FMETHOD) {
 		/* Construct a thiscall function. */
 		DREF DeeObject *callback;
-		atomic_rwlock_read(&self->id_lock);
+		Dee_instance_desc_lock_read(self);
 		callback = self->id_vtab[attr->ca_addr];
 		Dee_XIncref(callback);
-		atomic_rwlock_endread(&self->id_lock);
+		Dee_instance_desc_lock_endread(self);
 		if unlikely(!callback)
 			goto unbound;
 		result = DeeInstanceMethod_New(callback, this_arg);
 		Dee_Decref(callback);
 	} else {
 		/* Simply return the attribute as-is. */
-		atomic_rwlock_read(&self->id_lock);
+		Dee_instance_desc_lock_read(self);
 		result = self->id_vtab[attr->ca_addr];
 		Dee_XIncref(result);
-		atomic_rwlock_endread(&self->id_lock);
+		Dee_instance_desc_lock_endread(self);
 		if unlikely(!result)
 			goto unbound;
 	}
@@ -3687,10 +3687,10 @@ DeeInstance_BoundAttribute(struct class_desc *__restrict desc,
 		self = class_desc_as_instance(desc);
 	if (attr->ca_flag & CLASS_ATTRIBUTE_FGETSET) {
 		DREF DeeObject *getter;
-		atomic_rwlock_read(&self->id_lock);
+		Dee_instance_desc_lock_read(self);
 		getter = self->id_vtab[attr->ca_addr + CLASS_GETSET_GET];
 		Dee_XIncref(getter);
-		atomic_rwlock_endread(&self->id_lock);
+		Dee_instance_desc_lock_endread(self);
 		if unlikely(!getter)
 			goto unbound;
 
@@ -3728,10 +3728,10 @@ DeeInstance_CallAttribute(struct class_desc *__restrict desc,
 		self = class_desc_as_instance(desc);
 	if (attr->ca_flag & CLASS_ATTRIBUTE_FGETSET) {
 		DREF DeeObject *getter;
-		atomic_rwlock_read(&self->id_lock);
+		Dee_instance_desc_lock_read(self);
 		getter = self->id_vtab[attr->ca_addr + CLASS_GETSET_GET];
 		Dee_XIncref(getter);
-		atomic_rwlock_endread(&self->id_lock);
+		Dee_instance_desc_lock_endread(self);
 		if unlikely(!getter)
 			goto illegal;
 
@@ -3748,10 +3748,10 @@ DeeInstance_CallAttribute(struct class_desc *__restrict desc,
 		Dee_Decref(callback);
 	} else {
 		/* Call the attr as-is. */
-		atomic_rwlock_read(&self->id_lock);
+		Dee_instance_desc_lock_read(self);
 		callback = self->id_vtab[attr->ca_addr];
 		Dee_XIncref(callback);
-		atomic_rwlock_endread(&self->id_lock);
+		Dee_instance_desc_lock_endread(self);
 		if unlikely(!callback)
 			goto unbound;
 		result = (attr->ca_flag & CLASS_ATTRIBUTE_FMETHOD)
@@ -3784,10 +3784,10 @@ DeeInstance_VCallAttributef(struct class_desc *__restrict desc,
 		self = class_desc_as_instance(desc);
 	if (attr->ca_flag & CLASS_ATTRIBUTE_FGETSET) {
 		DREF DeeObject *getter;
-		atomic_rwlock_read(&self->id_lock);
+		Dee_instance_desc_lock_read(self);
 		getter = self->id_vtab[attr->ca_addr + CLASS_GETSET_GET];
 		Dee_XIncref(getter);
-		atomic_rwlock_endread(&self->id_lock);
+		Dee_instance_desc_lock_endread(self);
 		if unlikely(!getter)
 			goto illegal;
 
@@ -3804,10 +3804,10 @@ DeeInstance_VCallAttributef(struct class_desc *__restrict desc,
 		Dee_Decref(callback);
 	} else {
 		/* Call the attr as-is. */
-		atomic_rwlock_read(&self->id_lock);
+		Dee_instance_desc_lock_read(self);
 		callback = self->id_vtab[attr->ca_addr];
 		Dee_XIncref(callback);
-		atomic_rwlock_endread(&self->id_lock);
+		Dee_instance_desc_lock_endread(self);
 		if unlikely(!callback)
 			goto unbound;
 		result = (attr->ca_flag & CLASS_ATTRIBUTE_FMETHOD)
@@ -3841,10 +3841,10 @@ DeeInstance_CallAttributeKw(struct class_desc *__restrict desc,
 		self = class_desc_as_instance(desc);
 	if (attr->ca_flag & CLASS_ATTRIBUTE_FGETSET) {
 		DREF DeeObject *getter;
-		atomic_rwlock_read(&self->id_lock);
+		Dee_instance_desc_lock_read(self);
 		getter = self->id_vtab[attr->ca_addr + CLASS_GETSET_GET];
 		Dee_XIncref(getter);
-		atomic_rwlock_endread(&self->id_lock);
+		Dee_instance_desc_lock_endread(self);
 		if unlikely(!getter)
 			goto illegal;
 
@@ -3861,10 +3861,10 @@ DeeInstance_CallAttributeKw(struct class_desc *__restrict desc,
 		Dee_Decref(callback);
 	} else {
 		/* Call the attr as-is. */
-		atomic_rwlock_read(&self->id_lock);
+		Dee_instance_desc_lock_read(self);
 		callback = self->id_vtab[attr->ca_addr];
 		Dee_XIncref(callback);
-		atomic_rwlock_endread(&self->id_lock);
+		Dee_instance_desc_lock_endread(self);
 		if unlikely(!callback)
 			goto unbound;
 		result = (attr->ca_flag & CLASS_ATTRIBUTE_FMETHOD)
@@ -3898,10 +3898,10 @@ DeeInstance_CallAttributeTuple(struct class_desc *__restrict desc,
 		self = class_desc_as_instance(desc);
 	if (attr->ca_flag & CLASS_ATTRIBUTE_FGETSET) {
 		DREF DeeObject *getter;
-		atomic_rwlock_read(&self->id_lock);
+		Dee_instance_desc_lock_read(self);
 		getter = self->id_vtab[attr->ca_addr + CLASS_GETSET_GET];
 		Dee_XIncref(getter);
-		atomic_rwlock_endread(&self->id_lock);
+		Dee_instance_desc_lock_endread(self);
 		if unlikely(!getter)
 			goto illegal;
 
@@ -3918,10 +3918,10 @@ DeeInstance_CallAttributeTuple(struct class_desc *__restrict desc,
 		Dee_Decref(callback);
 	} else {
 		/* Call the attr as-is. */
-		atomic_rwlock_read(&self->id_lock);
+		Dee_instance_desc_lock_read(self);
 		callback = self->id_vtab[attr->ca_addr];
 		Dee_XIncref(callback);
-		atomic_rwlock_endread(&self->id_lock);
+		Dee_instance_desc_lock_endread(self);
 		if unlikely(!callback)
 			goto unbound;
 		result = (attr->ca_flag & CLASS_ATTRIBUTE_FMETHOD)
@@ -3954,10 +3954,10 @@ DeeInstance_CallAttributeTupleKw(struct class_desc *__restrict desc,
 		self = class_desc_as_instance(desc);
 	if (attr->ca_flag & CLASS_ATTRIBUTE_FGETSET) {
 		DREF DeeObject *getter;
-		atomic_rwlock_read(&self->id_lock);
+		Dee_instance_desc_lock_read(self);
 		getter = self->id_vtab[attr->ca_addr + CLASS_GETSET_GET];
 		Dee_XIncref(getter);
-		atomic_rwlock_endread(&self->id_lock);
+		Dee_instance_desc_lock_endread(self);
 		if unlikely(!getter)
 			goto illegal;
 
@@ -3974,10 +3974,10 @@ DeeInstance_CallAttributeTupleKw(struct class_desc *__restrict desc,
 		Dee_Decref(callback);
 	} else {
 		/* Call the attr as-is. */
-		atomic_rwlock_read(&self->id_lock);
+		Dee_instance_desc_lock_read(self);
 		callback = self->id_vtab[attr->ca_addr];
 		Dee_XIncref(callback);
-		atomic_rwlock_endread(&self->id_lock);
+		Dee_instance_desc_lock_endread(self);
 		if unlikely(!callback)
 			goto unbound;
 		result = (attr->ca_flag & CLASS_ATTRIBUTE_FMETHOD)
@@ -4014,10 +4014,10 @@ DeeInstance_DelAttribute(struct class_desc *__restrict desc,
 		self = class_desc_as_instance(desc);
 	if (attr->ca_flag & CLASS_ATTRIBUTE_FGETSET) {
 		DREF DeeObject *delfun, *temp;
-		atomic_rwlock_read(&self->id_lock);
+		Dee_instance_desc_lock_read(self);
 		delfun = self->id_vtab[attr->ca_addr + CLASS_GETSET_DEL];
 		Dee_XIncref(delfun);
-		atomic_rwlock_endread(&self->id_lock);
+		Dee_instance_desc_lock_endread(self);
 		if unlikely(!delfun)
 			goto illegal;
 
@@ -4033,10 +4033,10 @@ DeeInstance_DelAttribute(struct class_desc *__restrict desc,
 		DREF DeeObject *old_value;
 
 		/* Simply unbind the field in the attr table. */
-		atomic_rwlock_write(&self->id_lock);
-		old_value                    = self->id_vtab[attr->ca_addr];
+		Dee_instance_desc_lock_write(self);
+		old_value = self->id_vtab[attr->ca_addr];
 		self->id_vtab[attr->ca_addr] = NULL;
-		atomic_rwlock_endwrite(&self->id_lock);
+		Dee_instance_desc_lock_endwrite(self);
 #ifdef CONFIG_ERROR_DELETE_UNBOUND
 		if unlikely(!old_value)
 			goto unbound;
@@ -4075,10 +4075,10 @@ DeeInstance_SetAttribute(struct class_desc *__restrict desc,
 		/* Make sure that the access is allowed. */
 		if (attr->ca_flag & CLASS_ATTRIBUTE_FREADONLY)
 			goto illegal;
-		atomic_rwlock_read(&self->id_lock);
+		Dee_instance_desc_lock_read(self);
 		setter = self->id_vtab[attr->ca_addr + CLASS_GETSET_SET];
 		Dee_XIncref(setter);
-		atomic_rwlock_endread(&self->id_lock);
+		Dee_instance_desc_lock_endread(self);
 		if unlikely(!setter)
 			goto illegal;
 
@@ -4094,16 +4094,16 @@ DeeInstance_SetAttribute(struct class_desc *__restrict desc,
 		DREF DeeObject *old_value;
 
 		/* Simply override the field in the attr table. */
-		atomic_rwlock_write(&self->id_lock);
+		Dee_instance_desc_lock_write(self);
 		old_value = self->id_vtab[attr->ca_addr];
 		if (old_value && (attr->ca_flag & CLASS_ATTRIBUTE_FREADONLY)) {
-			atomic_rwlock_endwrite(&self->id_lock);
+			Dee_instance_desc_lock_endwrite(self);
 			goto illegal; /* readonly fields can only be set once. */
 		} else {
 			Dee_Incref(value);
 			self->id_vtab[attr->ca_addr] = value;
 		}
-		atomic_rwlock_endwrite(&self->id_lock);
+		Dee_instance_desc_lock_endwrite(self);
 
 		/* Drop a reference from the old value. */
 		Dee_XDecref(old_value);
@@ -4129,16 +4129,16 @@ INTERN WUNUSED NONNULL((1, 2, 3, 4)) int
 		return 2; /* Not a basic attribute. */
 
 	/* Simply override the field in the attr table. */
-	atomic_rwlock_write(&self->id_lock);
+	Dee_instance_desc_lock_write(self);
 	old_value = self->id_vtab[attr->ca_addr];
 	if (old_value && (attr->ca_flag & CLASS_ATTRIBUTE_FREADONLY)) {
-		atomic_rwlock_endwrite(&self->id_lock);
+		Dee_instance_desc_lock_endwrite(self);
 		goto illegal; /* readonly fields can only be set once. */
 	} else {
 		Dee_Incref(value);
 		self->id_vtab[attr->ca_addr] = value;
 	}
-	atomic_rwlock_endwrite(&self->id_lock);
+	Dee_instance_desc_lock_endwrite(self);
 
 	/* Drop a reference from the old value. */
 	Dee_XDecref(old_value);
@@ -4372,10 +4372,10 @@ INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *
 	ASSERT(addr <= desc->cd_desc->cd_imemb_size);
 	inst = DeeInstance_DESC(desc, self);
 	/* Lock and extract the member. */
-	atomic_rwlock_read(&inst->id_lock);
+	Dee_instance_desc_lock_read(inst);
 	result = inst->id_vtab[addr];
 	Dee_XIncref(result);
-	atomic_rwlock_endread(&inst->id_lock);
+	Dee_instance_desc_lock_endread(inst);
 	if (!result)
 		err_unbound_member(tp_self, desc, addr);
 	return result;
@@ -4411,10 +4411,10 @@ INTERN WUNUSED NONNULL((1, 2)) int
 	inst = DeeInstance_DESC(desc, self);
 
 	/* Lock and extract the member. */
-	atomic_rwlock_write(&inst->id_lock);
-	old_value           = inst->id_vtab[addr];
+	Dee_instance_desc_lock_write(inst);
+	old_value = inst->id_vtab[addr];
 	inst->id_vtab[addr] = NULL;
-	atomic_rwlock_endwrite(&inst->id_lock);
+	Dee_instance_desc_lock_endwrite(inst);
 #ifdef CONFIG_ERROR_DELETE_UNBOUND
 	if unlikely(!old_value)
 		return err_unbound_member(tp_self, desc, addr);
@@ -4441,10 +4441,10 @@ INTERN NONNULL((1, 2, 4)) void
 
 	/* Lock and extract the member. */
 	Dee_Incref(value);
-	atomic_rwlock_write(&inst->id_lock);
+	Dee_instance_desc_lock_write(inst);
 	old_value           = inst->id_vtab[addr];
 	inst->id_vtab[addr] = value;
-	atomic_rwlock_endwrite(&inst->id_lock);
+	Dee_instance_desc_lock_endwrite(inst);
 	Dee_XDecref(old_value);
 }
 

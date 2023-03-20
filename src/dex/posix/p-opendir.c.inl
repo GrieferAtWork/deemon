@@ -30,6 +30,7 @@
 #include <deemon/seq.h>
 #include <deemon/time-abi.h>
 #include <deemon/util/atomic.h>
+#include <deemon/util/lock.h>
 
 /* Figure out how we want to implement the DIR-system */
 #undef posix_opendir_USE_FindFirstFileExW
@@ -491,33 +492,71 @@ typedef struct dir_object DeeDirObject;
 
 struct dir_iterator_object {
 	OBJECT_HEAD
-	DREF DeeObject    *di_path;     /* [1..1][const] String, File, or int */
-	DREF DeeObject    *di_pathstr;  /* [0..1][lock(WRITE_ONCE)] String */
-	bool               di_skipdots; /* [const] When true, skip '.' and '..' entries. */
+	DREF DeeObject    *odi_path;     /* [1..1][const] String, File, or int */
+	DREF DeeObject    *odi_pathstr;  /* [0..1][lock(WRITE_ONCE)] String */
+	bool               odi_skipdots; /* [const] When true, skip '.' and '..' entries. */
 #ifdef posix_opendir_USE_FindFirstFileExW
-	bool               di_first;    /* [lock(di_lock)] When true, we're at the first entry. */
-	HANDLE             di_hnd;      /* [0..1|NULL(INVALID_HANDLE_VALUE)][lock(di_lock)]
-	                                 * The iteration handle or INVALID_HANDLE_VALUE when exhausted. */
-	WIN32_FIND_DATAW   di_data;     /* [lock(di_lock)][valid_if(di_hnd != INVALID_HANDLE_VALUE)]
-	                                 * The file data for the next matching entry. */
+	bool               odi_first;    /* [lock(odi_lock)] When true, we're at the first entry. */
+	HANDLE             odi_hnd;      /* [0..1|NULL(INVALID_HANDLE_VALUE)][lock(odi_lock)]
+	                                  * The iteration handle or INVALID_HANDLE_VALUE when exhausted. */
+	WIN32_FIND_DATAW   odi_data;     /* [lock(odi_lock)][valid_if(odi_hnd != INVALID_HANDLE_VALUE)]
+	                                  * The file data for the next matching entry. */
 #ifndef CONFIG_NO_THREADS
-	rwlock_t           di_lock;     /* Lock for the above fields. */
+	atomic_rwlock_t    odi_lock;     /* Lock for the above fields. */
+#define dir_iterator_object_HAVE_odi_lock
 #endif /* !CONFIG_NO_THREADS */
 #endif /* posix_opendir_USE_FindFirstFileExW */
 
 #ifdef posix_opendir_USE_opendir
-	struct DIR_dirent *di_ent;      /* [0..1] Last-read directory entry (or `NULL' for end-of-directory) */
-	DIR               *di_dir;      /* [1..1][const] The directory access stream. */
+	struct DIR_dirent *odi_ent;      /* [0..1] Last-read directory entry (or `NULL' for end-of-directory) */
+	DIR               *odi_dir;      /* [1..1][const] The directory access stream. */
 #ifndef CONFIG_NO_THREADS
-	rwlock_t           di_lock;     /* Lock for the above fields. */
+	atomic_rwlock_t    odi_lock;     /* Lock for the above fields. */
+#define dir_iterator_object_HAVE_odi_lock
 #endif /* !CONFIG_NO_THREADS */
 #endif /* ... */
 
 #ifdef posix_opendir_NEED_STAT_EXTENSION
-	bool               di_stvalid;  /* [lock(di_lock)] Set to true if `di_st' has been loaded. */
-	DIR_struct_stat    di_st;       /* [lock(di_lock)] Additional stat information (lazily loaded). */
+	bool               odi_stvalid;  /* [lock(odi_lock)] Set to true if `odi_st' has been loaded. */
+	DIR_struct_stat    odi_st;       /* [lock(odi_lock)] Additional stat information (lazily loaded). */
 #endif /* posix_opendir_NEED_STAT_EXTENSION */
 };
+
+#ifdef dir_iterator_object_HAVE_odi_lock
+#define DeeDirIterator_LockReading(self)    Dee_atomic_rwlock_reading(&(self)->odi_lock)
+#define DeeDirIterator_LockWriting(self)    Dee_atomic_rwlock_writing(&(self)->odi_lock)
+#define DeeDirIterator_LockTryRead(self)    Dee_atomic_rwlock_tryread(&(self)->odi_lock)
+#define DeeDirIterator_LockTryWrite(self)   Dee_atomic_rwlock_trywrite(&(self)->odi_lock)
+#define DeeDirIterator_LockCanRead(self)    Dee_atomic_rwlock_canread(&(self)->odi_lock)
+#define DeeDirIterator_LockCanWrite(self)   Dee_atomic_rwlock_canwrite(&(self)->odi_lock)
+#define DeeDirIterator_LockWaitRead(self)   Dee_atomic_rwlock_waitread(&(self)->odi_lock)
+#define DeeDirIterator_LockWaitWrite(self)  Dee_atomic_rwlock_waitwrite(&(self)->odi_lock)
+#define DeeDirIterator_LockRead(self)       Dee_atomic_rwlock_read(&(self)->odi_lock)
+#define DeeDirIterator_LockWrite(self)      Dee_atomic_rwlock_write(&(self)->odi_lock)
+#define DeeDirIterator_LockTryUpgrade(self) Dee_atomic_rwlock_tryupgrade(&(self)->odi_lock)
+#define DeeDirIterator_LockUpgrade(self)    Dee_atomic_rwlock_upgrade(&(self)->odi_lock)
+#define DeeDirIterator_LockDowngrade(self)  Dee_atomic_rwlock_downgrade(&(self)->odi_lock)
+#define DeeDirIterator_LockEndWrite(self)   Dee_atomic_rwlock_endwrite(&(self)->odi_lock)
+#define DeeDirIterator_LockEndRead(self)    Dee_atomic_rwlock_endread(&(self)->odi_lock)
+#define DeeDirIterator_LockEnd(self)        Dee_atomic_rwlock_end(&(self)->odi_lock)
+#else /* dir_iterator_object_HAVE_odi_lock */
+#define DeeDirIterator_LockReading(self)    1
+#define DeeDirIterator_LockWriting(self)    1
+#define DeeDirIterator_LockTryRead(self)    1
+#define DeeDirIterator_LockTryWrite(self)   1
+#define DeeDirIterator_LockCanRead(self)    1
+#define DeeDirIterator_LockCanWrite(self)   1
+#define DeeDirIterator_LockWaitRead(self)   1
+#define DeeDirIterator_LockWaitWrite(self)  1
+#define DeeDirIterator_LockRead(self)       (void)0
+#define DeeDirIterator_LockWrite(self)      (void)0
+#define DeeDirIterator_LockTryUpgrade(self) 1
+#define DeeDirIterator_LockUpgrade(self)    1
+#define DeeDirIterator_LockDowngrade(self)  (void)0
+#define DeeDirIterator_LockEndWrite(self)   (void)0
+#define DeeDirIterator_LockEndRead(self)    (void)0
+#define DeeDirIterator_LockEnd(self)        (void)0
+#endif /* !dir_iterator_object_HAVE_odi_lock */
 
 struct dir_object {
 	OBJECT_HEAD
@@ -808,12 +847,12 @@ directory_open(DeeDirIteratorObject *__restrict self,
 	wpattern[wname_length++] = '*';
 	wpattern[wname_length]   = 0;
 	DBG_ALIGNMENT_DISABLE();
-	self->di_hnd = FindFirstFileExW(wpattern, FindExInfoBasic, &self->di_data,
+	self->odi_hnd = FindFirstFileExW(wpattern, FindExInfoBasic, &self->odi_data,
 	                                FindExSearchNameMatch, NULL, 0);
 	DBG_ALIGNMENT_ENABLE();
 	Dee_AFree(wpattern);
-	self->di_first = true;
-	if unlikely(self->di_hnd == INVALID_HANDLE_VALUE) {
+	self->odi_first = true;
+	if unlikely(self->odi_hnd == INVALID_HANDLE_VALUE) {
 		DWORD dwError;
 		DBG_ALIGNMENT_DISABLE();
 		dwError = GetLastError();
@@ -842,16 +881,16 @@ directory_open(DeeDirIteratorObject *__restrict self,
 			goto err;
 		}
 		/* Empty directory? ok... */
-		self->di_first = false;
+		self->odi_first = false;
 	} else if (skipdots) {
-		while (self->di_data.cFileName[0] == '.' &&
-		       (self->di_data.cFileName[1] == 0 ||
-		        (self->di_data.cFileName[1] == '.' &&
-		         self->di_data.cFileName[2] == 0))) {
+		while (self->odi_data.cFileName[0] == '.' &&
+		       (self->odi_data.cFileName[1] == 0 ||
+		        (self->odi_data.cFileName[1] == '.' &&
+		         self->odi_data.cFileName[2] == 0))) {
 			/* Skip this one... */
 again_skipdots:
 			DBG_ALIGNMENT_DISABLE();
-			if (!FindNextFileW(self->di_hnd, &self->di_data)) {
+			if (!FindNextFileW(self->odi_hnd, &self->odi_data)) {
 				HANDLE hnd;
 				DWORD dwError = GetLastError();
 				DBG_ALIGNMENT_ENABLE();
@@ -865,23 +904,23 @@ again_skipdots:
 						                        path);
 					}
 					DBG_ALIGNMENT_DISABLE();
-					FindClose(self->di_hnd);
+					FindClose(self->odi_hnd);
 					DBG_ALIGNMENT_ENABLE();
 					goto err;
 				}
-				hnd          = self->di_hnd;
-				self->di_hnd = INVALID_HANDLE_VALUE;
+				hnd          = self->odi_hnd;
+				self->odi_hnd = INVALID_HANDLE_VALUE;
 				DBG_ALIGNMENT_DISABLE();
 				FindClose(hnd);
 				DBG_ALIGNMENT_ENABLE();
 				/* Directory only contains "." and ".." */
-				self->di_first = false;
+				self->odi_first = false;
 				break;
 			}
 			DBG_ALIGNMENT_ENABLE();
 		}
 	}
-	rwlock_init(&self->di_lock);
+	atomic_rwlock_init(&self->odi_lock);
 #elif defined(posix_opendir_USE_opendir)
 	DIR *dir;
 #define NEED_err
@@ -949,15 +988,15 @@ EINTR_LABEL(again)
 		goto err;
 	}
 	DBG_ALIGNMENT_ENABLE();
-	self->di_dir     = dir;
-	self->di_ent     = NULL;
-	rwlock_init(&self->di_lock);
+	self->odi_dir     = dir;
+	self->odi_ent     = NULL;
+	atomic_rwlock_init(&self->odi_lock);
 #endif /* ... */
-	self->di_skipdots = skipdots;
-	self->di_path     = path;
-	self->di_pathstr  = NULL;
+	self->odi_skipdots = skipdots;
+	self->odi_path     = path;
+	self->odi_pathstr  = NULL;
 #ifdef posix_opendir_NEED_STAT_EXTENSION
-	self->di_stvalid = false;
+	self->odi_stvalid = false;
 #endif /* posix_opendir_NEED_STAT_EXTENSION */
 	Dee_Incref(path);
 	return 0;
@@ -972,32 +1011,32 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeDirIteratorObject *DCALL
 diriter_next(DeeDirIteratorObject *__restrict self) {
 #ifdef posix_opendir_USE_FindFirstFileExW
 again:
-	rwlock_write(&self->di_lock);
-	if (!self->di_first) {
-		if (self->di_hnd == INVALID_HANDLE_VALUE) {
-			rwlock_endwrite(&self->di_lock);
+	DeeDirIterator_LockWrite(self);
+	if (!self->odi_first) {
+		if (self->odi_hnd == INVALID_HANDLE_VALUE) {
+			DeeDirIterator_LockEndWrite(self);
 			return (DREF DeeDirIteratorObject *)ITER_DONE;
 		}
 		DBG_ALIGNMENT_DISABLE();
-		if (!FindNextFileW(self->di_hnd, &self->di_data)) {
+		if (!FindNextFileW(self->odi_hnd, &self->odi_data)) {
 			HANDLE hnd;
 			DWORD dwError = GetLastError();
 			DBG_ALIGNMENT_ENABLE();
 			if unlikely(dwError != ERROR_NO_MORE_FILES) {
-				rwlock_endwrite(&self->di_lock);
+				DeeDirIterator_LockEndWrite(self);
 				if (DeeNTSystem_IsBadAllocError(dwError)) {
 					if (Dee_CollectMemory(1))
 						goto again;
 				} else {
 					DeeNTSystem_ThrowErrorf(&DeeError_FSError, dwError,
 					                        "Failed to read entries from directory %r",
-					                        self->di_path);
+					                        self->odi_path);
 				}
 				return NULL;
 			}
-			hnd          = self->di_hnd;
-			self->di_hnd = INVALID_HANDLE_VALUE;
-			rwlock_endwrite(&self->di_lock);
+			hnd           = self->odi_hnd;
+			self->odi_hnd = INVALID_HANDLE_VALUE;
+			DeeDirIterator_LockEndWrite(self);
 			DBG_ALIGNMENT_DISABLE();
 			FindClose(hnd);
 			DBG_ALIGNMENT_ENABLE();
@@ -1005,49 +1044,49 @@ again:
 		}
 		DBG_ALIGNMENT_ENABLE();
 	}
-	self->di_first = false;
-	if (self->di_skipdots) {
-		if (self->di_data.cFileName[0] == '.' &&
-		    (self->di_data.cFileName[1] == 0 ||
-		     (self->di_data.cFileName[1] == '.' &&
-		      self->di_data.cFileName[2] == 0)))
+	self->odi_first = false;
+	if (self->odi_skipdots) {
+		if (self->odi_data.cFileName[0] == '.' &&
+		    (self->odi_data.cFileName[1] == 0 ||
+		     (self->odi_data.cFileName[1] == '.' &&
+		      self->odi_data.cFileName[2] == 0)))
 			goto again; /* Skip this one... */
 	}
 #ifdef posix_opendir_NEED_STAT_EXTENSION
-	self->di_stvalid = false;
+	self->odi_stvalid = false;
 #endif /* posix_opendir_NEED_STAT_EXTENSION */
-	rwlock_endwrite(&self->di_lock);
+	DeeDirIterator_LockEndWrite(self);
 	Dee_Incref(self);
 	return self;
 #elif defined(posix_opendir_USE_opendir)
-	rwlock_write(&self->di_lock);
+	DeeDirIterator_LockWrite(self);
 again:
 	DBG_ALIGNMENT_DISABLE();
 	DeeSystem_SetErrno(0);
-	self->di_ent = DIR_readdir(self->di_dir);
-	if (self->di_ent == NULL) {
+	self->odi_ent = DIR_readdir(self->odi_dir);
+	if (self->odi_ent == NULL) {
 		int error = DeeSystem_GetErrno();
 		DBG_ALIGNMENT_ENABLE();
-		rwlock_endwrite(&self->di_lock);
+		DeeDirIterator_LockEndWrite(self);
 		if (error == 0)
 			return (DREF DeeDirIteratorObject *)ITER_DONE; /* End of directory. */
 		EINTR_HANDLE(error, again, err)
 		DeeUnixSystem_ThrowErrorf(NULL, error,
 		                          "Failed to read entries from directory %r",
-		                          self->di_path);
+		                          self->odi_path);
 err:
 		return NULL;
 	}
 	DBG_ALIGNMENT_ENABLE();
-	if (self->di_skipdots) {
-		char *name = self->di_ent->d_name;
+	if (self->odi_skipdots) {
+		char *name = self->odi_ent->d_name;
 		if (name[0] == '.' && (name[1] == 0 || (name[1] == '.' && name[2] == 0)))
 			goto again; /* Skip this one... */
 	}
 #ifdef posix_opendir_NEED_STAT_EXTENSION
-	self->di_stvalid = false;
+	self->odi_stvalid = false;
 #endif /* posix_opendir_NEED_STAT_EXTENSION */
-	rwlock_endwrite(&self->di_lock);
+	DeeDirIterator_LockEndWrite(self);
 	Dee_Incref(self);
 	return self;
 #else /* ... */
@@ -1059,18 +1098,18 @@ err:
 PRIVATE NONNULL((1)) void DCALL
 diriter_fini(DeeDirIteratorObject *__restrict self) {
 #ifdef posix_opendir_USE_FindFirstFileExW
-	if (self->di_hnd != INVALID_HANDLE_VALUE) {
+	if (self->odi_hnd != INVALID_HANDLE_VALUE) {
 		DBG_ALIGNMENT_DISABLE();
-		FindClose(self->di_hnd);
+		FindClose(self->odi_hnd);
 		DBG_ALIGNMENT_ENABLE();
 	}
 #elif defined(posix_opendir_USE_opendir)
 	DBG_ALIGNMENT_DISABLE();
-	closedir(self->di_dir);
+	closedir(self->odi_dir);
 	DBG_ALIGNMENT_ENABLE();
 #endif /* ... */
-	Dee_XDecref(self->di_pathstr);
-	Dee_Decref(self->di_path);
+	Dee_XDecref(self->odi_pathstr);
+	Dee_Decref(self->odi_path);
 }
 
 
@@ -1085,7 +1124,7 @@ diriter_unbound_attr(char const *__restrict name) {
 PRIVATE WUNUSED NONNULL((1)) DREF DeeStringObject *DCALL
 diriter_makepathstr(DeeDirIteratorObject *__restrict self) {
 	DREF DeeStringObject *result;
-	result = (DREF DeeStringObject *)self->di_path;
+	result = (DREF DeeStringObject *)self->odi_path;
 	if (DeeString_Check(result))
 		return_reference_(result);
 #ifdef posix_opendir_USE_FindFirstFileExW
@@ -1120,11 +1159,11 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeStringObject *DCALL
 diriter_getpathstr(DeeDirIteratorObject *__restrict self) {
 	DREF DeeStringObject *result;
 again:
-	result = (DREF DeeStringObject *)self->di_pathstr;
+	result = (DREF DeeStringObject *)self->odi_pathstr;
 	if (result == NULL) {
 		result = diriter_makepathstr(self);
 		/* Remember the full path string. */
-		if unlikely(!atomic_cmpxch_weak(&self->di_pathstr, NULL, result)) {
+		if unlikely(!atomic_cmpxch_weak(&self->odi_pathstr, NULL, result)) {
 			Dee_Decref_likely(result);
 			goto again;
 		}
@@ -1136,10 +1175,10 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeStringObject *DCALL
 diriter_get_d_fullname(DeeDirIteratorObject *__restrict self) {
 #ifdef posix_opendir_USE_FindFirstFileExW
 #define HAVE_D_FULLNAME
-	if (self->di_hnd != INVALID_HANDLE_VALUE)
+	if (self->odi_hnd != INVALID_HANDLE_VALUE)
 #elif defined(posix_opendir_USE_opendir)
 #define HAVE_D_FULLNAME
-	if (self->di_ent != NULL)
+	if (self->odi_ent != NULL)
 #endif /* ... */
 #ifdef HAVE_D_FULLNAME
 #undef HAVE_D_FULLNAME
@@ -1171,12 +1210,12 @@ err_printer:
 #endif /* !posix_opendir_USE_FindFirstFileExW */
 			}
 #ifdef posix_opendir_USE_FindFirstFileExW
-			if unlikely(unicode_printer_printwide(&printer, self->di_data.cFileName,
-			                                      wcslen(self->di_data.cFileName)) < 0)
+			if unlikely(unicode_printer_printwide(&printer, self->odi_data.cFileName,
+			                                      wcslen(self->odi_data.cFileName)) < 0)
 				goto err_printer;
 #elif defined(posix_opendir_USE_opendir)
-			if unlikely(unicode_printer_printutf8(&printer, self->di_ent->d_name,
-			                                      dirent_namelen(self->di_ent)) < 0)
+			if unlikely(unicode_printer_printutf8(&printer, self->odi_ent->d_name,
+			                                      dirent_namelen(self->odi_ent)) < 0)
 				goto err_printer;
 #else /* ... */
 			diriter_unbound_attr("d_fullname");
@@ -1196,15 +1235,15 @@ err_printer:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 diriter_get_d_name(DeeDirIteratorObject *__restrict self) {
 #ifdef posix_opendir_USE_FindFirstFileExW
-	if (self->di_hnd != INVALID_HANDLE_VALUE) {
-		return DeeString_NewWide(self->di_data.cFileName,
-		                         wcslen(self->di_data.cFileName),
+	if (self->odi_hnd != INVALID_HANDLE_VALUE) {
+		return DeeString_NewWide(self->odi_data.cFileName,
+		                         wcslen(self->odi_data.cFileName),
 		                         STRING_ERROR_FREPLAC);
 	}
 #elif defined(posix_opendir_USE_opendir)
-	if (self->di_ent != NULL) {
-		return DeeString_NewUtf8(self->di_ent->d_name,
-		                         dirent_namelen(self->di_ent),
+	if (self->odi_ent != NULL) {
+		return DeeString_NewUtf8(self->odi_ent->d_name,
+		                         dirent_namelen(self->odi_ent),
 		                         STRING_ERROR_FREPLAC);
 	}
 #else /* ... */
@@ -1218,7 +1257,7 @@ diriter_get_d_name(DeeDirIteratorObject *__restrict self) {
 #ifdef posix_opendir_NEED_STAT_EXTENSION
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 diriter_loadstat(DeeDirIteratorObject *__restrict self) {
-	if (!self->di_stvalid) {
+	if (!self->odi_stvalid) {
 #ifdef DIR_struct_stat_IS_BY_HANDLE_FILE_INFORMATION
 		DREF DeeStringObject *fullname;
 		HANDLE hFile;
@@ -1236,8 +1275,8 @@ diriter_loadstat(DeeDirIteratorObject *__restrict self) {
 			goto err_fullname;
 		}
 		/* Actually retrieve stat information. */
-		if (GetFileInformationByHandle(hFile, &self->di_st)) {
-			self->di_stvalid = true;
+		if (GetFileInformationByHandle(hFile, &self->odi_st)) {
+			self->odi_stvalid = true;
 			CloseHandle(hFile);
 			Dee_Decref(fullname);
 			return 0;
@@ -1252,8 +1291,8 @@ err:
 		int error;
 again:
 #if defined(DIR_lstatat) && defined(CONFIG_HAVE_dirfd)
-		if (DIR_lstatat(dirfd(self->di_dir), self->di_ent->d_name, &self->di_st) == 0) {
-			self->di_stvalid = true;
+		if (DIR_lstatat(dirfd(self->odi_dir), self->odi_ent->d_name, &self->odi_st) == 0) {
+			self->odi_stvalid = true;
 			return 0;
 		}
 		error = DeeSystem_GetErrno();
@@ -1268,8 +1307,8 @@ again:
 			Dee_Decref(fullname);
 			goto err;
 		}
-		if (DIR_lstat(utf8, &self->di_st) == 0) {
-			self->di_stvalid = true;
+		if (DIR_lstat(utf8, &self->odi_st) == 0) {
+			self->odi_stvalid = true;
 			Dee_Decref(fullname);
 			return 0;
 		}
@@ -1294,15 +1333,15 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 diriter_get_d_type(DeeDirIteratorObject *__restrict self) {
 #ifdef posix_opendir_USE_FindFirstFileExW
-	if (self->di_hnd != INVALID_HANDLE_VALUE) {
+	if (self->odi_hnd != INVALID_HANDLE_VALUE) {
 		DeeObject *result;
-		if (self->di_data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
+		if (self->odi_data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
 			result = (DeeObject *)&posix_DT_DIR;
-		} else if (self->di_data.dwFileAttributes & FILE_ATTRIBUTE_REPARSE_POINT) {
+		} else if (self->odi_data.dwFileAttributes & FILE_ATTRIBUTE_REPARSE_POINT) {
 			result = (DeeObject *)&posix_DT_LNK;
-		} else if (self->di_data.dwFileAttributes & FILE_ATTRIBUTE_DEVICE) {
+		} else if (self->odi_data.dwFileAttributes & FILE_ATTRIBUTE_DEVICE) {
 			result = (DeeObject *)&posix_DT_CHR; /* TODO: Must determine the type of device */
-		} else if (self->di_data.dwFileAttributes & FILE_ATTRIBUTE_SYSTEM) {
+		} else if (self->odi_data.dwFileAttributes & FILE_ATTRIBUTE_SYSTEM) {
 			/* TODO: Check if it's an old-style cygwin symlink! */
 			result = (DeeObject *)&posix_DT_REG;
 		} else {
@@ -1311,14 +1350,14 @@ diriter_get_d_type(DeeDirIteratorObject *__restrict self) {
 		return_reference_(result);
 	}
 #elif defined(posix_opendir_USE_opendir)
-	if (self->di_ent != NULL) {
+	if (self->odi_ent != NULL) {
 #ifdef CONFIG_HAVE_struct_dirent_d_type
-		return DeeInt_New_D_TYPE(NATIVE_DT_TO_USED_DT(self->di_ent->d_type));
+		return DeeInt_New_D_TYPE(NATIVE_DT_TO_USED_DT(self->odi_ent->d_type));
 #elif defined(posix_opendir_NEED_STAT_EXTENSION) && defined(DIR_stat_HAVE_st_mode)
 		if unlikely(diriter_loadstat(self))
 			goto err;
 #define NEED_err
-		return DeeInt_New_D_TYPE(USED_IFTODT(self->di_st.st_mode));
+		return DeeInt_New_D_TYPE(USED_IFTODT(self->odi_st.st_mode));
 #endif /* ... */
 	}
 #else /* ... */
@@ -1337,23 +1376,23 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 diriter_get_d_ino(DeeDirIteratorObject *__restrict self) {
 #ifdef posix_opendir_USE_FindFirstFileExW
-	if (self->di_hnd != INVALID_HANDLE_VALUE) {
+	if (self->odi_hnd != INVALID_HANDLE_VALUE) {
 		if unlikely(diriter_loadstat(self))
 			return NULL;
-		return DeeInt_NewU64(((uint64_t)self->di_st.nFileIndexLow) |
-		                     ((uint64_t)self->di_st.nFileIndexHigh << 32));
+		return DeeInt_NewU64(((uint64_t)self->odi_st.nFileIndexLow) |
+		                     ((uint64_t)self->odi_st.nFileIndexHigh << 32));
 	}
 #elif (defined(posix_opendir_USE_opendir) &&        \
        (defined(CONFIG_HAVE_struct_dirent_d_ino) || \
         (defined(posix_opendir_NEED_STAT_EXTENSION) && defined(DIR_stat_HAVE_st_ino))))
-	if (self->di_ent != NULL) {
+	if (self->odi_ent != NULL) {
 #ifdef CONFIG_HAVE_struct_dirent_d_ino
-		return DeeInt_NEWU(self->di_ent->d_ino);
+		return DeeInt_NEWU(self->odi_ent->d_ino);
 #elif defined(posix_opendir_NEED_STAT_EXTENSION) && defined(DIR_stat_HAVE_st_ino)
 		if unlikely(diriter_loadstat(self))
 			goto err;
 #define NEED_err
-		return DeeInt_NEWU(self->di_st.st_ino);
+		return DeeInt_NEWU(self->odi_st.st_ino);
 #endif /* ... */
 	}
 #else /* ... */
@@ -1372,16 +1411,16 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 diriter_get_d_namlen(DeeDirIteratorObject *__restrict self) {
 #ifdef posix_opendir_USE_FindFirstFileExW
-	if (self->di_hnd != INVALID_HANDLE_VALUE)
-		return DeeInt_NewSize(wcslen(self->di_data.cFileName));
+	if (self->odi_hnd != INVALID_HANDLE_VALUE)
+		return DeeInt_NewSize(wcslen(self->odi_data.cFileName));
 #elif defined(posix_opendir_USE_opendir)
-	if (self->di_ent != NULL) {
+	if (self->odi_ent != NULL) {
 #ifdef CONFIG_HAVE_struct_dirent_d_namlen
-		return DeeInt_NEWU(self->di_ent->d_namlen);
+		return DeeInt_NEWU(self->odi_ent->d_namlen);
 #elif defined(_D_EXACT_NAMLEN)
-		return DeeInt_NEWU(_D_EXACT_NAMLEN(self->di_ent));
+		return DeeInt_NEWU(_D_EXACT_NAMLEN(self->odi_ent));
 #else /* ... */
-		return DeeInt_NewSize(strlen(self->di_ent->d_name));
+		return DeeInt_NewSize(strlen(self->odi_ent->d_name));
 #endif /* !... */
 	}
 #else /* ... */
@@ -1400,17 +1439,17 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 diriter_get_d_reclen(DeeDirIteratorObject *__restrict self) {
 #ifdef posix_opendir_USE_FindFirstFileExW
-	if (self->di_hnd != INVALID_HANDLE_VALUE) {
-		return DeeInt_NewSize((sizeof(self->di_data) - sizeof(self->di_data.cFileName)) +
-		                      (wcslen(self->di_data.cFileName) * sizeof(self->di_data.cFileName[0])));
+	if (self->odi_hnd != INVALID_HANDLE_VALUE) {
+		return DeeInt_NewSize((sizeof(self->odi_data) - sizeof(self->odi_data.cFileName)) +
+		                      (wcslen(self->odi_data.cFileName) * sizeof(self->odi_data.cFileName[0])));
 	}
 #elif defined(posix_opendir_USE_opendir)
-	if (self->di_ent != NULL) {
+	if (self->odi_ent != NULL) {
 #ifdef CONFIG_HAVE_struct_dirent_d_reclen
-		return DeeInt_NEWU(self->di_ent->d_reclen);
+		return DeeInt_NEWU(self->odi_ent->d_reclen);
 #else /* CONFIG_HAVE_struct_dirent_d_reclen */
 		return DeeInt_NewSize((offsetof(struct DIR_dirent, d_name)) +
-		                      (strlen(self->di_ent->d_name) + 1) * sizeof(char));
+		                      (strlen(self->odi_ent->d_name) + 1) * sizeof(char));
 #endif /* !CONFIG_HAVE_struct_dirent_d_reclen */
 	}
 #else /* ... */
@@ -1431,8 +1470,8 @@ diriter_get_d_off(DeeDirIteratorObject *__restrict self) {
 #ifdef posix_opendir_USE_FindFirstFileExW
 #define diriter_get_d_off_IS_STUB
 #elif defined(posix_opendir_USE_opendir) && defined(CONFIG_HAVE_struct_dirent_d_off)
-	if (self->di_ent != NULL) {
-		return DeeInt_NEWU(self->di_ent->d_off);
+	if (self->odi_ent != NULL) {
+		return DeeInt_NEWU(self->odi_ent->d_off);
 	}
 #else /* ... */
 #define diriter_get_d_off_IS_STUB
@@ -1446,18 +1485,18 @@ diriter_get_d_off(DeeDirIteratorObject *__restrict self) {
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 diriter_get_d_dev(DeeDirIteratorObject *__restrict self) {
 #ifdef posix_opendir_USE_FindFirstFileExW
-	if (self->di_hnd != INVALID_HANDLE_VALUE) {
+	if (self->odi_hnd != INVALID_HANDLE_VALUE) {
 		if unlikely(diriter_loadstat(self))
 			goto err;
 #define NEED_err
-		return DeeInt_NewU32((uint32_t)self->di_st.dwVolumeSerialNumber);
+		return DeeInt_NewU32((uint32_t)self->odi_st.dwVolumeSerialNumber);
 	}
 #elif defined(posix_opendir_NEED_STAT_EXTENSION) && defined(DIR_stat_HAVE_st_dev)
-	if (self->di_ent != NULL) {
+	if (self->odi_ent != NULL) {
 		if unlikely(diriter_loadstat(self))
 			goto err;
 #define NEED_err
-		return DeeInt_NEWU(self->di_st.st_dev);
+		return DeeInt_NEWU(self->odi_st.st_dev);
 	}
 #else /* ... */
 #define diriter_get_d_dev_IS_STUB
@@ -1474,17 +1513,17 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 diriter_get_d_mode(DeeDirIteratorObject *__restrict self) {
 #ifdef posix_opendir_USE_FindFirstFileExW
-	if (self->di_hnd != INVALID_HANDLE_VALUE) {
+	if (self->odi_hnd != INVALID_HANDLE_VALUE) {
 		uint32_t result = 0444 | 0111; /* XXX: executable should depend on extension. */
-		if (!(self->di_data.dwFileAttributes & FILE_ATTRIBUTE_READONLY))
+		if (!(self->odi_data.dwFileAttributes & FILE_ATTRIBUTE_READONLY))
 			result |= 0222;
-		if (self->di_data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
+		if (self->odi_data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
 			result |= STAT_IFDIR;
-		} else if (self->di_data.dwFileAttributes & FILE_ATTRIBUTE_REPARSE_POINT) {
+		} else if (self->odi_data.dwFileAttributes & FILE_ATTRIBUTE_REPARSE_POINT) {
 			result |= STAT_IFLNK;
-		} else if (self->di_data.dwFileAttributes & FILE_ATTRIBUTE_DEVICE) {
+		} else if (self->odi_data.dwFileAttributes & FILE_ATTRIBUTE_DEVICE) {
 			result |= STAT_IFCHR; /* TODO: Must determine the type of device */
-		} else if (self->di_data.dwFileAttributes & FILE_ATTRIBUTE_SYSTEM) {
+		} else if (self->odi_data.dwFileAttributes & FILE_ATTRIBUTE_SYSTEM) {
 			/* TODO: Check if it's an old-style cygwin symlink! */
 			result |= STAT_IFREG;
 		} else {
@@ -1493,11 +1532,11 @@ diriter_get_d_mode(DeeDirIteratorObject *__restrict self) {
 		return DeeInt_NewU32(result);
 	}
 #elif defined(posix_opendir_NEED_STAT_EXTENSION) && defined(DIR_stat_HAVE_st_mode)
-	if (self->di_ent != NULL) {
+	if (self->odi_ent != NULL) {
 		if unlikely(diriter_loadstat(self))
 			goto err;
 #define NEED_err
-		return DeeInt_NEWU(self->di_st.st_mode);
+		return DeeInt_NEWU(self->odi_st.st_mode);
 	}
 #else /* ... */
 #define diriter_get_d_mode_IS_STUB
@@ -1514,18 +1553,18 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 diriter_get_d_nlink(DeeDirIteratorObject *__restrict self) {
 #ifdef posix_opendir_USE_FindFirstFileExW
-	if (self->di_hnd != INVALID_HANDLE_VALUE) {
+	if (self->odi_hnd != INVALID_HANDLE_VALUE) {
 		if unlikely(diriter_loadstat(self))
 			goto err;
 #define NEED_err
-		return DeeInt_NewU32((uint32_t)self->di_st.nNumberOfLinks);
+		return DeeInt_NewU32((uint32_t)self->odi_st.nNumberOfLinks);
 	}
 #elif defined(posix_opendir_NEED_STAT_EXTENSION) && defined(DIR_stat_HAVE_st_nlink)
-	if (self->di_ent != NULL) {
+	if (self->odi_ent != NULL) {
 		if unlikely(diriter_loadstat(self))
 			goto err;
 #define NEED_err
-		return DeeInt_NEWU(self->di_st.st_nlink);
+		return DeeInt_NEWU(self->odi_st.st_nlink);
 	}
 #else /* ... */
 #define diriter_get_d_nlink_IS_STUB
@@ -1551,11 +1590,11 @@ err_nouid:
 #define diriter_get_d_uid_IS_STUB
 #endif
 #elif defined(posix_opendir_NEED_STAT_EXTENSION) && defined(DIR_stat_HAVE_st_uid)
-	if (self->di_ent != NULL) {
+	if (self->odi_ent != NULL) {
 		if unlikely(diriter_loadstat(self))
 			goto err;
 #define NEED_err
-		return DeeInt_NEWU(self->di_st.st_uid);
+		return DeeInt_NEWU(self->odi_st.st_uid);
 	}
 #else /* ... */
 #define diriter_get_d_uid_IS_STUB
@@ -1581,11 +1620,11 @@ err_nogid:
 #define diriter_get_d_gid_IS_STUB
 #endif
 #elif defined(posix_opendir_NEED_STAT_EXTENSION) && defined(DIR_stat_HAVE_st_gid)
-	if (self->di_ent != NULL) {
+	if (self->odi_ent != NULL) {
 		if unlikely(diriter_loadstat(self))
 			goto err;
 #define NEED_err
-		return DeeInt_NEWU(self->di_st.st_gid);
+		return DeeInt_NEWU(self->odi_st.st_gid);
 	}
 #else /* ... */
 #define diriter_get_d_gid_IS_STUB
@@ -1605,11 +1644,11 @@ diriter_get_d_rdev(DeeDirIteratorObject *__restrict self) {
 #ifdef posix_opendir_USE_FindFirstFileExW
 #define diriter_get_d_rdev_IS_STUB
 #elif defined(posix_opendir_NEED_STAT_EXTENSION) && defined(DIR_stat_HAVE_st_rdev)
-	if (self->di_ent != NULL) {
+	if (self->odi_ent != NULL) {
 		if unlikely(diriter_loadstat(self))
 			goto err;
 #define NEED_err
-		return DeeInt_NEWU(self->di_st.st_rdev);
+		return DeeInt_NEWU(self->odi_st.st_rdev);
 	}
 #else /* ... */
 #define diriter_get_d_rdev_IS_STUB
@@ -1627,16 +1666,16 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 diriter_get_d_size(DeeDirIteratorObject *__restrict self) {
 #ifdef posix_opendir_USE_FindFirstFileExW
-	if (self->di_hnd != INVALID_HANDLE_VALUE) {
-		return DeeInt_NewU64(((uint64_t)self->di_data.nFileSizeHigh << 32) |
-		                     ((uint64_t)self->di_data.nFileSizeLow));
+	if (self->odi_hnd != INVALID_HANDLE_VALUE) {
+		return DeeInt_NewU64(((uint64_t)self->odi_data.nFileSizeHigh << 32) |
+		                     ((uint64_t)self->odi_data.nFileSizeLow));
 	}
 #elif defined(posix_opendir_NEED_STAT_EXTENSION) && defined(DIR_stat_HAVE_st_size)
-	if (self->di_ent != NULL) {
+	if (self->odi_ent != NULL) {
 		if unlikely(diriter_loadstat(self))
 			goto err;
 #define NEED_err
-		return DeeInt_NEWU(self->di_st.st_size);
+		return DeeInt_NEWU(self->odi_st.st_size);
 	}
 #else /* ... */
 #define diriter_get_d_size_IS_STUB
@@ -1654,20 +1693,20 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 diriter_get_d_blocks(DeeDirIteratorObject *__restrict self) {
 #ifdef posix_opendir_USE_FindFirstFileExW
-	if (self->di_hnd != INVALID_HANDLE_VALUE) {
-		uint64_t result = ((uint64_t)self->di_data.nFileSizeHigh << 32) |
-		                  ((uint64_t)self->di_data.nFileSizeLow);
+	if (self->odi_hnd != INVALID_HANDLE_VALUE) {
+		uint64_t result = ((uint64_t)self->odi_data.nFileSizeHigh << 32) |
+		                  ((uint64_t)self->odi_data.nFileSizeLow);
 		return DeeInt_NewU64(DEFAULT_BLOCKS_FROM_FILESIZE(result));
 	}
 #elif defined(posix_opendir_NEED_STAT_EXTENSION) && (defined(DIR_stat_HAVE_st_blocks) || defined(DIR_stat_HAVE_st_size))
-	if (self->di_ent != NULL) {
+	if (self->odi_ent != NULL) {
 		if unlikely(diriter_loadstat(self))
 			goto err;
 #define NEED_err
 #ifdef DIR_stat_HAVE_st_blocks
-		return DeeInt_NEWU(self->di_st.st_blocks);
+		return DeeInt_NEWU(self->odi_st.st_blocks);
 #else /* DIR_stat_HAVE_st_blocks */
-		return DeeInt_NEWU(DEFAULT_BLOCKS_FROM_FILESIZE(self->di_st.st_size));
+		return DeeInt_NEWU(DEFAULT_BLOCKS_FROM_FILESIZE(self->odi_st.st_size));
 #endif /* !DIR_stat_HAVE_st_blocks */
 	}
 #else /* ... */
@@ -1686,17 +1725,17 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 diriter_get_d_blksize(DeeDirIteratorObject *__restrict self) {
 #ifdef posix_opendir_USE_FindFirstFileExW
-	if (self->di_hnd != INVALID_HANDLE_VALUE) {
+	if (self->odi_hnd != INVALID_HANDLE_VALUE) {
 		return DeeInt_NewU16(DEFAULT_BLOCKSIZE);
 	}
 #elif (defined(posix_opendir_NEED_STAT_EXTENSION) && \
        (defined(DIR_stat_HAVE_st_blksize) || !defined(diriter_get_d_blocks_IS_STUB)))
-	if (self->di_ent != NULL) {
+	if (self->odi_ent != NULL) {
 #ifdef DIR_stat_HAVE_st_blksize
 		if unlikely(diriter_loadstat(self))
 			goto err;
 #define NEED_err
-		return DeeInt_NEWU(self->di_st.st_blksize);
+		return DeeInt_NEWU(self->odi_st.st_blksize);
 #else /* DIR_stat_HAVE_st_blksize */
 		return DeeInt_NewU16(DEFAULT_BLOCKSIZE);
 #endif /* !DIR_stat_HAVE_st_blksize */
@@ -1728,21 +1767,21 @@ INTDEF DECLARE_DeeTime_NewFILETIME();
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 diriter_get_d_atime(DeeDirIteratorObject *__restrict self) {
 #ifdef posix_opendir_USE_FindFirstFileExW
-	if (self->di_hnd != INVALID_HANDLE_VALUE) {
+	if (self->odi_hnd != INVALID_HANDLE_VALUE) {
 #define NEED_DeeTime_NewFILETIME
-		return DeeTime_NewFILETIME(&self->di_data.ftLastAccessTime);
+		return DeeTime_NewFILETIME(&self->odi_data.ftLastAccessTime);
 	}
 #elif defined(posix_opendir_NEED_STAT_EXTENSION) && defined(DIR_stat_GET_RAW_ATIME_SEC)
-	if (self->di_ent != NULL) {
+	if (self->odi_ent != NULL) {
 		if unlikely(diriter_loadstat(self))
 			goto err;
 #define NEED_err
 #define NEED_DeeTime_NewUnix
 #ifdef DIR_stat_GET_RAW_ATIME_NSEC
-		return DeeTime_NewUnix(DIR_stat_GET_RAW_ATIME_SEC(&self->di_st),
-		                       DIR_stat_GET_RAW_ATIME_NSEC(&self->di_st));
+		return DeeTime_NewUnix(DIR_stat_GET_RAW_ATIME_SEC(&self->odi_st),
+		                       DIR_stat_GET_RAW_ATIME_NSEC(&self->odi_st));
 #else /* DIR_stat_GET_RAW_ATIME_NSEC */
-		return DeeTime_NewUnix(DIR_stat_GET_RAW_ATIME_SEC(&self->di_st), 0);
+		return DeeTime_NewUnix(DIR_stat_GET_RAW_ATIME_SEC(&self->odi_st), 0);
 #endif /* !DIR_stat_GET_RAW_ATIME_NSEC */
 	}
 #else /* ... */
@@ -1760,21 +1799,21 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 diriter_get_d_mtime(DeeDirIteratorObject *__restrict self) {
 #ifdef posix_opendir_USE_FindFirstFileExW
-	if (self->di_hnd != INVALID_HANDLE_VALUE) {
+	if (self->odi_hnd != INVALID_HANDLE_VALUE) {
 #define NEED_DeeTime_NewFILETIME
-		return DeeTime_NewFILETIME(&self->di_data.ftLastWriteTime);
+		return DeeTime_NewFILETIME(&self->odi_data.ftLastWriteTime);
 	}
 #elif defined(posix_opendir_NEED_STAT_EXTENSION) && defined(DIR_stat_GET_RAW_MTIME_SEC)
-	if (self->di_ent != NULL) {
+	if (self->odi_ent != NULL) {
 		if unlikely(diriter_loadstat(self))
 			goto err;
 #define NEED_err
 #define NEED_DeeTime_NewUnix
 #ifdef DIR_stat_GET_RAW_MTIME_NSEC
-		return DeeTime_NewUnix(DIR_stat_GET_RAW_MTIME_SEC(&self->di_st),
-		                       DIR_stat_GET_RAW_MTIME_NSEC(&self->di_st));
+		return DeeTime_NewUnix(DIR_stat_GET_RAW_MTIME_SEC(&self->odi_st),
+		                       DIR_stat_GET_RAW_MTIME_NSEC(&self->odi_st));
 #else /* DIR_stat_GET_RAW_MTIME_NSEC */
-		return DeeTime_NewUnix(DIR_stat_GET_RAW_MTIME_SEC(&self->di_st), 0);
+		return DeeTime_NewUnix(DIR_stat_GET_RAW_MTIME_SEC(&self->odi_st), 0);
 #endif /* !DIR_stat_GET_RAW_MTIME_NSEC */
 	}
 #else /* ... */
@@ -1795,15 +1834,15 @@ err:
 #elif defined(posix_stat_GET_CTIME_SEC)
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 diriter_get_d_ctime(DeeDirIteratorObject *__restrict self) {
-	if (self->di_ent != NULL) {
+	if (self->odi_ent != NULL) {
 		if unlikely(diriter_loadstat(self))
 			goto err;
 #define NEED_DeeTime_NewUnix
 #ifdef DIR_stat_GET_RAW_CTIME_NSEC
-		return DeeTime_NewUnix(DIR_stat_GET_RAW_CTIME_SEC(&self->di_st),
-		                       DIR_stat_GET_RAW_CTIME_NSEC(&self->di_st));
+		return DeeTime_NewUnix(DIR_stat_GET_RAW_CTIME_SEC(&self->odi_st),
+		                       DIR_stat_GET_RAW_CTIME_NSEC(&self->odi_st));
 #else /* DIR_stat_GET_RAW_CTIME_NSEC */
-		return DeeTime_NewUnix(DIR_stat_GET_RAW_CTIME_SEC(&self->di_st), 0);
+		return DeeTime_NewUnix(DIR_stat_GET_RAW_CTIME_SEC(&self->odi_st), 0);
 #endif /* !DIR_stat_GET_RAW_CTIME_NSEC */
 	}
 	diriter_unbound_attr("d_ctime");
@@ -1826,21 +1865,21 @@ diriter_get_d_ctime(DeeDirIteratorObject *__restrict self) {
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 diriter_get_d_birthtime(DeeDirIteratorObject *__restrict self) {
 #ifdef posix_opendir_USE_FindFirstFileExW
-	if (self->di_hnd != INVALID_HANDLE_VALUE) {
+	if (self->odi_hnd != INVALID_HANDLE_VALUE) {
 #define NEED_DeeTime_NewFILETIME
-		return DeeTime_NewFILETIME(&self->di_data.ftCreationTime);
+		return DeeTime_NewFILETIME(&self->odi_data.ftCreationTime);
 	}
 #elif defined(posix_opendir_NEED_STAT_EXTENSION) && defined(DIR_stat_GET_RAW_BTIME_SEC)
-	if (self->di_ent != NULL) {
+	if (self->odi_ent != NULL) {
 		if unlikely(diriter_loadstat(self))
 			goto err;
 #define NEED_err
 #define NEED_DeeTime_NewUnix
 #ifdef DIR_stat_GET_RAW_BTIME_NSEC
-		return DeeTime_NewUnix(DIR_stat_GET_RAW_BTIME_SEC(&self->di_st),
-		                       DIR_stat_GET_RAW_BTIME_NSEC(&self->di_st));
+		return DeeTime_NewUnix(DIR_stat_GET_RAW_BTIME_SEC(&self->odi_st),
+		                       DIR_stat_GET_RAW_BTIME_NSEC(&self->odi_st));
 #else /* DIR_stat_GET_RAW_BTIME_NSEC */
-		return DeeTime_NewUnix(DIR_stat_GET_RAW_BTIME_SEC(&self->di_st), 0);
+		return DeeTime_NewUnix(DIR_stat_GET_RAW_BTIME_SEC(&self->odi_st), 0);
 #endif /* !DIR_stat_GET_RAW_BTIME_NSEC */
 	}
 #else /* ... */
@@ -1861,8 +1900,8 @@ err:
 PRIVATE NONNULL((1, 2)) void DCALL
 diriter_visit(DeeDirIteratorObject *__restrict self, dvisit_t proc, void *arg) {
 	/* Not needed (and mustn't be enabled; `diriter_visit' is re-used as `dir_visit'!) */
-	/*Dee_XVisit(self->di_pathstr);*/
-	Dee_Visit(self->di_path);
+	/*Dee_XVisit(self->odi_pathstr);*/
+	Dee_Visit(self->odi_path);
 }
 
 
@@ -1896,8 +1935,8 @@ diriter_getseq(DeeDirIteratorObject *__restrict self) {
 	result = DeeObject_MALLOC(DeeDirObject);
 	if likely(result) {
 		DeeObject_Init(result, &DeeDir_Type);
-		result->d_path      = self->di_path;
-		result->d_skipdots  = self->di_skipdots;
+		result->d_path      = self->odi_path;
+		result->d_skipdots  = self->odi_skipdots;
 		result->d_inheritfd = false;
 		Dee_Incref(result->d_path);
 	}
@@ -1949,7 +1988,7 @@ PRIVATE struct type_getset tpconst diriter_getsets[] = {
 };
 
 PRIVATE struct type_member tpconst diriter_members[] = {
-	TYPE_MEMBER_FIELD_DOC("path", STRUCT_OBJECT, offsetof(DeeDirIteratorObject, di_path),
+	TYPE_MEMBER_FIELD_DOC("path", STRUCT_OBJECT, offsetof(DeeDirIteratorObject, odi_path),
 	                      "->?X3?Dstring?DFile?Dint"),
 	TYPE_MEMBER_END
 };
@@ -2019,7 +2058,7 @@ dir_fini(DeeDirObject *__restrict self) {
 	Dee_Decref(self->d_path);
 }
 
-STATIC_ASSERT(offsetof(DeeDirIteratorObject, di_path) ==
+STATIC_ASSERT(offsetof(DeeDirIteratorObject, odi_path) ==
               offsetof(DeeDirObject, d_path));
 #define dir_visit   diriter_visit
 #define dir_members diriter_members

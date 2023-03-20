@@ -33,6 +33,7 @@
 #include <deemon/object.h>
 #include <deemon/string.h>
 #include <deemon/system-features.h> /* atexit(), memcpy(), ... */
+#include <deemon/util/atomic.h>
 
 #include "../runtime/runtime_error.h"
 #include "../runtime/strings.h"
@@ -62,13 +63,16 @@ typedef DeeFileBufferObject Buffer;
 /* [0..1][lock(buffer_ttys_lock)] Chain of tty-buffers. */
 PRIVATE Buffer *buffer_ttys = NULL;
 #ifndef CONFIG_NO_THREADS
-PRIVATE rwlock_t buffer_ttys_lock = RWLOCK_INIT;
-#define buffer_ttys_lock_enter() rwlock_write(&buffer_ttys_lock)
-#define buffer_ttys_lock_leave() rwlock_endwrite(&buffer_ttys_lock)
-#else /* CONFIG_NO_THREADS */
-#define buffer_ttys_lock_enter() (void)0
-#define buffer_ttys_lock_leave() (void)0
-#endif /* !CONFIG_NO_THREADS */
+PRIVATE atomic_lock_t buffer_ttys_lock = ATOMIC_LOCK_INIT;
+#endif /* CONFIG_NO_THREADS */
+#define buffer_ttys_lock_available()  Dee_atomic_lock_available(&buffer_ttys_lock)
+#define buffer_ttys_lock_acquired()   Dee_atomic_lock_acquired(&buffer_ttys_lock)
+#define buffer_ttys_lock_tryacquire() Dee_atomic_lock_tryacquire(&buffer_ttys_lock)
+#define buffer_ttys_lock_acquire()    Dee_atomic_lock_acquire(&buffer_ttys_lock)
+#define buffer_ttys_lock_waitfor()    Dee_atomic_lock_waitfor(&buffer_ttys_lock)
+#define buffer_ttys_lock_release()    Dee_atomic_lock_release(&buffer_ttys_lock)
+
+
 #ifdef CONFIG_HAVE_atexit
 PRIVATE bool atexit_registered = false;
 #endif /* CONFIG_HAVE_atexit */
@@ -107,7 +111,7 @@ PRIVATE void atexit_flushall(void) {
 		 *      I'm guessing it's OK as this'll probably be one of
 		 *      the first things to get executed during termination,
 		 *      but can we be certain that it will? */
-		buffer_ttys_lock_enter();
+		buffer_ttys_lock_acquire();
 		buffer = buffer_ttys;
 		while (buffer && !Dee_IncrefIfNotZero(buffer))
 			buffer = buffer->fb_ttych.fbl_next;
@@ -117,7 +121,7 @@ PRIVATE void atexit_flushall(void) {
 				buffer->fb_ttych.fbl_next->fb_ttych.fbl_pself = buffer->fb_ttych.fbl_pself;
 			buffer->fb_ttych.fbl_pself = NULL;
 		}
-		buffer_ttys_lock_leave();
+		buffer_ttys_lock_release();
 		if (!buffer)
 			break;
 		/* Synchronize this buffer. */
@@ -135,7 +139,7 @@ PRIVATE void atexit_flushall(void) {
 
 PRIVATE NONNULL((1)) void DCALL
 buffer_addtty(Buffer *__restrict self) {
-	buffer_ttys_lock_enter();
+	buffer_ttys_lock_acquire();
 #ifdef CONFIG_HAVE_atexit
 	if (!atexit_registered) {
 		/* NOTE: If atexit() fails, there's nothing we could do about it,
@@ -150,18 +154,18 @@ buffer_addtty(Buffer *__restrict self) {
 			buffer_ttys->fb_ttych.fbl_pself = &self->fb_ttych.fbl_next;
 		buffer_ttys = self;
 	}
-	buffer_ttys_lock_leave();
+	buffer_ttys_lock_release();
 }
 
 PRIVATE NONNULL((1)) void DCALL
 buffer_deltty(Buffer *__restrict self) {
-	buffer_ttys_lock_enter();
+	buffer_ttys_lock_acquire();
 	if (self->fb_ttych.fbl_pself) {
 		if ((*self->fb_ttych.fbl_pself = self->fb_ttych.fbl_next) != NULL)
 			self->fb_ttych.fbl_next->fb_ttych.fbl_pself = self->fb_ttych.fbl_pself;
 		self->fb_ttych.fbl_pself = NULL;
 	}
-	buffer_ttys_lock_leave();
+	buffer_ttys_lock_release();
 }
 
 
@@ -200,7 +204,6 @@ buffer_init(Buffer *__restrict self,
 	{
 		Dee_Incref(file);
 	}
-	/* rwlock_init(&self->fo_lock); */
 	recursive_rwlock_init(&self->fb_lock);
 	self->fb_file            = file;
 	self->fb_ptr             = self->fb_base;
@@ -403,11 +406,11 @@ PUBLIC WUNUSED int DCALL DeeFileBuffer_SyncTTYs(void) {
 	int result = 0;
 	for (;;) {
 		DREF Buffer *buffer;
-		buffer_ttys_lock_enter();
+		buffer_ttys_lock_acquire();
 		buffer = buffer_ttys;
 		while (buffer && !Dee_IncrefIfNotZero(buffer))
 			buffer = buffer->fb_ttych.fbl_next;
-		buffer_ttys_lock_leave();
+		buffer_ttys_lock_release();
 		if (!buffer)
 			break;
 		/* Synchronize this buffer. */
@@ -1514,14 +1517,14 @@ buffer_fini(Buffer *__restrict self) {
 	if (self->fb_ttych.fbl_pself) {
 #ifndef CONFIG_NO_THREADS
 		COMPILER_READ_BARRIER();
-		buffer_ttys_lock_enter();
+		buffer_ttys_lock_acquire();
 		if (self->fb_ttych.fbl_pself)
 #endif /* !CONFIG_NO_THREADS */
 		{
 			if ((*self->fb_ttych.fbl_pself = self->fb_ttych.fbl_next) != NULL)
 				self->fb_ttych.fbl_next->fb_ttych.fbl_pself = self->fb_ttych.fbl_pself;
 		}
-		buffer_ttys_lock_leave();
+		buffer_ttys_lock_release();
 	}
 	/* Synchronize the buffer one last time. */
 	if unlikely(buffer_sync_nolock(self, BUFFER_SYNC_FNORMAL)) {

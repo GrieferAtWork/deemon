@@ -1601,29 +1601,29 @@ deqiter_copy(DequeIteratorObject *__restrict self,
 	atomic_rwlock_init(&self->di_lock);
 	self->di_deq = other->di_deq;
 	Dee_Incref(self->di_deq);
-	atomic_rwlock_read(&other->di_lock);
+	DequeIterator_LockRead(other);
 	self->di_ver  = other->di_ver;
 	self->di_iter = other->di_iter;
-	atomic_rwlock_endread(&other->di_lock);
+	DequeIterator_LockEndRead(other);
 	return 0;
 }
 
 PRIVATE WUNUSED NONNULL((1)) size_t DCALL
 deqiter_getindex(DequeIteratorObject *__restrict self) {
 	size_t result;
-	atomic_rwlock_read(&self->di_lock);
+	DequeIterator_LockRead(self);
 	Deque_LockRead(self->di_deq);
 	result = unlikely(self->di_ver != self->di_deq->d_version)
 	         ? (size_t)-1
 	         : DequeIterator_GetIndex(&self->di_iter, self->di_deq);
 	Deque_LockEndRead(self->di_deq);
-	atomic_rwlock_endread(&self->di_lock);
+	DequeIterator_LockEndRead(self);
 	return result;
 }
 
 PRIVATE NONNULL((1)) void DCALL
 deqiter_setindex(DequeIteratorObject *__restrict self, size_t index) {
-	atomic_rwlock_write(&self->di_lock);
+	DequeIterator_LockWrite(self);
 	Deque_LockRead(self->di_deq);
 	self->di_ver = self->di_deq->d_version;
 	if unlikely(index >= self->di_deq->d_size) {
@@ -1634,7 +1634,7 @@ deqiter_setindex(DequeIteratorObject *__restrict self, size_t index) {
 		                     index);
 	}
 	Deque_LockEndRead(self->di_deq);
-	atomic_rwlock_endwrite(&self->di_lock);
+	DequeIterator_LockEndWrite(self);
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
@@ -1698,16 +1698,16 @@ deqiter_visit(DequeIteratorObject *__restrict self, dvisit_t proc, void *arg) {
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 deqiter_bool(DequeIteratorObject *__restrict self) {
 	int result;
-	atomic_rwlock_read(&self->di_lock);
+	DequeIterator_LockRead(self);
 	result = (self->di_ver == self->di_deq->d_version);
-	atomic_rwlock_endread(&self->di_lock);
+	DequeIterator_LockEndRead(self);
 	return result;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 deqiter_next(DequeIteratorObject *__restrict self) {
 	DREF DeeObject *result;
-	atomic_rwlock_write(&self->di_lock);
+	DequeIterator_LockWrite(self);
 	Deque_LockRead(self->di_deq);
 	if (self->di_ver != self->di_deq->d_version) {
 		result = ITER_DONE;
@@ -1721,7 +1721,7 @@ deqiter_next(DequeIteratorObject *__restrict self) {
 		}
 	}
 	Deque_LockEndRead(self->di_deq);
-	atomic_rwlock_endwrite(&self->di_lock);
+	DequeIterator_LockEndWrite(self);
 	return result;
 }
 

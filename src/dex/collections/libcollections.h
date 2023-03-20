@@ -70,11 +70,23 @@ typedef struct deque {
 	Dee_WEAKREF_SUPPORT
 } Deque;
 
-#define Deque_LockRead(self)      Dee_atomic_rwlock_read(&(self)->d_lock)
-#define Deque_LockWrite(self)     Dee_atomic_rwlock_write(&(self)->d_lock)
-#define Deque_LockEndRead(self)   Dee_atomic_rwlock_endread(&(self)->d_lock)
-#define Deque_LockEndWrite(self)  Dee_atomic_rwlock_endwrite(&(self)->d_lock)
-#define Deque_LockDowngrade(self) Dee_atomic_rwlock_downgrade(&(self)->d_lock)
+#define Deque_LockReading(self)    Dee_atomic_rwlock_reading(&(self)->d_lock)
+#define Deque_LockWriting(self)    Dee_atomic_rwlock_writing(&(self)->d_lock)
+#define Deque_LockTryRead(self)    Dee_atomic_rwlock_tryread(&(self)->d_lock)
+#define Deque_LockTryWrite(self)   Dee_atomic_rwlock_trywrite(&(self)->d_lock)
+#define Deque_LockCanRead(self)    Dee_atomic_rwlock_canread(&(self)->d_lock)
+#define Deque_LockCanWrite(self)   Dee_atomic_rwlock_canwrite(&(self)->d_lock)
+#define Deque_LockWaitRead(self)   Dee_atomic_rwlock_waitread(&(self)->d_lock)
+#define Deque_LockWaitWrite(self)  Dee_atomic_rwlock_waitwrite(&(self)->d_lock)
+#define Deque_LockRead(self)       Dee_atomic_rwlock_read(&(self)->d_lock)
+#define Deque_LockWrite(self)      Dee_atomic_rwlock_write(&(self)->d_lock)
+#define Deque_LockTryUpgrade(self) Dee_atomic_rwlock_tryupgrade(&(self)->d_lock)
+#define Deque_LockUpgrade(self)    Dee_atomic_rwlock_upgrade(&(self)->d_lock)
+#define Deque_LockDowngrade(self)  Dee_atomic_rwlock_downgrade(&(self)->d_lock)
+#define Deque_LockEndWrite(self)   Dee_atomic_rwlock_endwrite(&(self)->d_lock)
+#define Deque_LockEndRead(self)    Dee_atomic_rwlock_endread(&(self)->d_lock)
+#define Deque_LockEnd(self)        Dee_atomic_rwlock_end(&(self)->d_lock)
+
 
 #define DEQUE_BUCKETSZ(x) ((x)->d_bucket_sz)
 #define DEQUE_HEADFREE(x) ((x)->d_head_idx)
@@ -338,6 +350,23 @@ typedef struct {
 	                              * iterator behaves as though it was exhausted. */
 } DequeIteratorObject;
 
+#define DequeIterator_LockReading(self)    Dee_atomic_rwlock_reading(&(self)->di_lock)
+#define DequeIterator_LockWriting(self)    Dee_atomic_rwlock_writing(&(self)->di_lock)
+#define DequeIterator_LockTryRead(self)    Dee_atomic_rwlock_tryread(&(self)->di_lock)
+#define DequeIterator_LockTryWrite(self)   Dee_atomic_rwlock_trywrite(&(self)->di_lock)
+#define DequeIterator_LockCanRead(self)    Dee_atomic_rwlock_canread(&(self)->di_lock)
+#define DequeIterator_LockCanWrite(self)   Dee_atomic_rwlock_canwrite(&(self)->di_lock)
+#define DequeIterator_LockWaitRead(self)   Dee_atomic_rwlock_waitread(&(self)->di_lock)
+#define DequeIterator_LockWaitWrite(self)  Dee_atomic_rwlock_waitwrite(&(self)->di_lock)
+#define DequeIterator_LockRead(self)       Dee_atomic_rwlock_read(&(self)->di_lock)
+#define DequeIterator_LockWrite(self)      Dee_atomic_rwlock_write(&(self)->di_lock)
+#define DequeIterator_LockTryUpgrade(self) Dee_atomic_rwlock_tryupgrade(&(self)->di_lock)
+#define DequeIterator_LockUpgrade(self)    Dee_atomic_rwlock_upgrade(&(self)->di_lock)
+#define DequeIterator_LockDowngrade(self)  Dee_atomic_rwlock_downgrade(&(self)->di_lock)
+#define DequeIterator_LockEndWrite(self)   Dee_atomic_rwlock_endwrite(&(self)->di_lock)
+#define DequeIterator_LockEndRead(self)    Dee_atomic_rwlock_endread(&(self)->di_lock)
+#define DequeIterator_LockEnd(self)        Dee_atomic_rwlock_end(&(self)->di_lock)
+
 /* The deque type, and its iterator. */
 INTDEF DeeTypeObject Deque_Type;
 INTDEF DeeTypeObject DequeIterator_Type;
@@ -353,11 +382,28 @@ typedef struct {
 	Dee_OBJECT_HEAD /* GC object */
 	Dee_WEAKREF_SUPPORT
 #ifndef CONFIG_NO_THREADS
-	Dee_rwlock_t                              fl_lock;  /* Lock for this list. */
+	Dee_atomic_rwlock_t                       fl_lock;  /* Lock for this list. */
 #endif /* !CONFIG_NO_THREADS */
 	size_t                                    fl_size;  /* [const] Length of the list. */
 	COMPILER_FLEXIBLE_ARRAY(DREF DeeObject *, fl_elem); /* [0..1][fl_size] List items. */
 } FixedList;
+
+#define FixedList_LockReading(self)    Dee_atomic_rwlock_reading(&(self)->fl_lock)
+#define FixedList_LockWriting(self)    Dee_atomic_rwlock_writing(&(self)->fl_lock)
+#define FixedList_LockTryRead(self)    Dee_atomic_rwlock_tryread(&(self)->fl_lock)
+#define FixedList_LockTryWrite(self)   Dee_atomic_rwlock_trywrite(&(self)->fl_lock)
+#define FixedList_LockCanRead(self)    Dee_atomic_rwlock_canread(&(self)->fl_lock)
+#define FixedList_LockCanWrite(self)   Dee_atomic_rwlock_canwrite(&(self)->fl_lock)
+#define FixedList_LockWaitRead(self)   Dee_atomic_rwlock_waitread(&(self)->fl_lock)
+#define FixedList_LockWaitWrite(self)  Dee_atomic_rwlock_waitwrite(&(self)->fl_lock)
+#define FixedList_LockRead(self)       Dee_atomic_rwlock_read(&(self)->fl_lock)
+#define FixedList_LockWrite(self)      Dee_atomic_rwlock_write(&(self)->fl_lock)
+#define FixedList_LockTryUpgrade(self) Dee_atomic_rwlock_tryupgrade(&(self)->fl_lock)
+#define FixedList_LockUpgrade(self)    Dee_atomic_rwlock_upgrade(&(self)->fl_lock)
+#define FixedList_LockDowngrade(self)  Dee_atomic_rwlock_downgrade(&(self)->fl_lock)
+#define FixedList_LockEndWrite(self)   Dee_atomic_rwlock_endwrite(&(self)->fl_lock)
+#define FixedList_LockEndRead(self)    Dee_atomic_rwlock_endread(&(self)->fl_lock)
+#define FixedList_LockEnd(self)        Dee_atomic_rwlock_end(&(self)->fl_lock)
 
 typedef struct {
 	Dee_OBJECT_HEAD
@@ -391,72 +437,75 @@ typedef struct urodict_iterator_object URoDictIterator;
 
 /* UDICT */
 struct udict_item {
-	DREF DeeObject *di_key;   /* [0..1][lock(:d_lock)] Dictionary item key. */
+	DREF DeeObject *di_key;   /* [0..1][lock(:ud_lock)] Dictionary item key. */
 	DREF DeeObject *di_value; /* [1..1|if(di_key == dummy, 0..0)][valid_if(di_key)]
-	                           * [lock(:d_lock)] Dictionary item value. */
+	                           * [lock(:ud_lock)] Dictionary item value. */
 };
 
 struct udict_object {
 	OBJECT_HEAD /* GC Object */
-	size_t              d_mask; /* [lock(d_lock)][> d_size || d_mask == 0] Allocated dictionary size. */
-	size_t              d_used; /* [lock(d_lock)][<= d_size] Amount of key-item pairs actually in use.
-	                             *  HINT: The difference to `d_size' is the number of dummy keys currently in use. */
-	size_t              d_size; /* [lock(d_lock)][< d_mask || d_mask == 0] Amount of non-NULL key-item pairs. */
-	struct udict_item  *d_elem; /* [1..d_size|ALLOC(d_mask+1)][lock(d_lock)]
+	size_t              ud_mask; /* [lock(ud_lock)][> ud_size || ud_mask == 0] Allocated dictionary size. */
+	size_t              ud_used; /* [lock(ud_lock)][<= ud_size] Amount of key-item pairs actually in use.
+	                             *  HINT: The difference to `ud_size' is the number of dummy keys currently in use. */
+	size_t              ud_size; /* [lock(ud_lock)][< ud_mask || ud_mask == 0] Amount of non-NULL key-item pairs. */
+	struct udict_item  *ud_elem; /* [1..ud_size|ALLOC(ud_mask+1)][lock(ud_lock)]
 	                             * [owned_if(!= INTERNAL(empty_dict_items))] Dict key-item pairs (items). */
 #ifndef CONFIG_NO_THREADS
-	Dee_atomic_rwlock_t d_lock; /* Lock used for accessing this Dict. */
+	Dee_atomic_rwlock_t ud_lock; /* Lock used for accessing this Dict. */
 #endif /* !CONFIG_NO_THREADS */
 	WEAKREF_SUPPORT
 };
 
-#define UDict_HashSt(self, hash)  ((hash) & ((UDict *)Dee_REQUIRES_OBJECT(self))->d_mask)
+#define UDict_HashSt(self, hash)  ((hash) & ((UDict *)Dee_REQUIRES_OBJECT(self))->ud_mask)
 #define UDict_HashNx(hs, perturb) (void)((hs) = ((hs) << 2) + (hs) + (perturb) + 1, (perturb) >>= 5) /* This `5' is tunable. */
-#define UDict_HashIt(self, i)     (((UDict *)Dee_REQUIRES_OBJECT(self))->d_elem + ((i) & ((UDict *)(self))->d_mask))
+#define UDict_HashIt(self, i)     (((UDict *)Dee_REQUIRES_OBJECT(self))->ud_elem + ((i) & ((UDict *)(self))->ud_mask))
 
-#define UDict_LockReading(x)    Dee_atomic_rwlock_reading(&((UDict *)Dee_REQUIRES_OBJECT(x))->d_lock)
-#define UDict_LockWriting(x)    Dee_atomic_rwlock_writing(&((UDict *)Dee_REQUIRES_OBJECT(x))->d_lock)
-#define UDict_LockTryread(x)    Dee_atomic_rwlock_tryread(&((UDict *)Dee_REQUIRES_OBJECT(x))->d_lock)
-#define UDict_LockTrywrite(x)   Dee_atomic_rwlock_trywrite(&((UDict *)Dee_REQUIRES_OBJECT(x))->d_lock)
-#define UDict_LockRead(x)       Dee_atomic_rwlock_read(&((UDict *)Dee_REQUIRES_OBJECT(x))->d_lock)
-#define UDict_LockWrite(x)      Dee_atomic_rwlock_write(&((UDict *)Dee_REQUIRES_OBJECT(x))->d_lock)
-#define UDict_LockTryUpgrade(x) Dee_atomic_rwlock_tryupgrade(&((UDict *)Dee_REQUIRES_OBJECT(x))->d_lock)
-#define UDict_LockUpgrade(x)    Dee_atomic_rwlock_upgrade(&((UDict *)Dee_REQUIRES_OBJECT(x))->d_lock)
-#define UDict_LockDowngrade(x)  Dee_atomic_rwlock_downgrade(&((UDict *)Dee_REQUIRES_OBJECT(x))->d_lock)
-#define UDict_LockEndWrite(x)   Dee_atomic_rwlock_endwrite(&((UDict *)Dee_REQUIRES_OBJECT(x))->d_lock)
-#define UDict_LockEndRead(x)    Dee_atomic_rwlock_endread(&((UDict *)Dee_REQUIRES_OBJECT(x))->d_lock)
-#define UDict_LockEnd(x)        Dee_atomic_rwlock_end(&((UDict *)Dee_REQUIRES_OBJECT(x))->d_lock)
+#define UDict_LockReading(self)    Dee_atomic_rwlock_reading(&(self)->ud_lock)
+#define UDict_LockWriting(self)    Dee_atomic_rwlock_writing(&(self)->ud_lock)
+#define UDict_LockTryRead(self)    Dee_atomic_rwlock_tryread(&(self)->ud_lock)
+#define UDict_LockTryWrite(self)   Dee_atomic_rwlock_trywrite(&(self)->ud_lock)
+#define UDict_LockCanRead(self)    Dee_atomic_rwlock_canread(&(self)->ud_lock)
+#define UDict_LockCanWrite(self)   Dee_atomic_rwlock_canwrite(&(self)->ud_lock)
+#define UDict_LockWaitRead(self)   Dee_atomic_rwlock_waitread(&(self)->ud_lock)
+#define UDict_LockWaitWrite(self)  Dee_atomic_rwlock_waitwrite(&(self)->ud_lock)
+#define UDict_LockRead(self)       Dee_atomic_rwlock_read(&(self)->ud_lock)
+#define UDict_LockWrite(self)      Dee_atomic_rwlock_write(&(self)->ud_lock)
+#define UDict_LockTryUpgrade(self) Dee_atomic_rwlock_tryupgrade(&(self)->ud_lock)
+#define UDict_LockUpgrade(self)    Dee_atomic_rwlock_upgrade(&(self)->ud_lock)
+#define UDict_LockDowngrade(self)  Dee_atomic_rwlock_downgrade(&(self)->ud_lock)
+#define UDict_LockEndWrite(self)   Dee_atomic_rwlock_endwrite(&(self)->ud_lock)
+#define UDict_LockEndRead(self)    Dee_atomic_rwlock_endread(&(self)->ud_lock)
+#define UDict_LockEnd(self)        Dee_atomic_rwlock_end(&(self)->ud_lock)
 
 struct urodict_object {
 	OBJECT_HEAD
-	size_t                                     rd_mask;  /* [const][!0] Allocated dictionary mask. */
-	size_t                                     rd_size;  /* [const][< rd_mask] Amount of non-NULL key-item pairs. */
-	COMPILER_FLEXIBLE_ARRAY(struct udict_item, rd_elem); /* [rd_mask+1] Dict key-item pairs. */
+	size_t                                     urd_mask;  /* [const][!0] Allocated dictionary mask. */
+	size_t                                     urd_size;  /* [const][< urd_mask] Amount of non-NULL key-item pairs. */
+	COMPILER_FLEXIBLE_ARRAY(struct udict_item, urd_elem); /* [urd_mask+1] Dict key-item pairs. */
 };
 
-#define URoDict_HashSt(self, hash)  ((hash) & ((URoDict *)Dee_REQUIRES_OBJECT(self))->rd_mask)
+#define URoDict_HashSt(self, hash)  ((hash) & ((URoDict *)Dee_REQUIRES_OBJECT(self))->urd_mask)
 #define URoDict_HashNx(hs, perturb) (void)((hs) = ((hs) << 2) + (hs) + (perturb) + 1, (perturb) >>= 5) /* This `5' is tunable. */
-#define URoDict_HashIt(self, i)     (((URoDict *)Dee_REQUIRES_OBJECT(self))->rd_elem + ((i) & ((URoDict *)(self))->rd_mask))
-
+#define URoDict_HashIt(self, i)     (((URoDict *)Dee_REQUIRES_OBJECT(self))->urd_elem + ((i) & ((URoDict *)(self))->urd_mask))
 
 
 struct udict_iterator_object {
 	OBJECT_HEAD
-	DREF UDict        *di_dict; /* [1..1][const] The dict that is being iterated. */
-	struct udict_item *di_next; /* [?..1][MAYBE(in(di_dict->d_elem))][atomic]
-	                             * The first candidate for the next item.
-	                             * NOTE: Before being dereferenced, this pointer is checked
-	                             *       for being located inside the dict's element vector.
-	                             *       In the event that it is located at its end, `ITER_DONE'
-	                             *       is returned, though in the event that it is located
-	                             *       outside, an error is thrown (`err_changed_sequence()'). */
+	DREF UDict        *udi_dict; /* [1..1][const] The dict that is being iterated. */
+	struct udict_item *udi_next; /* [?..1][MAYBE(in(udi_dict->ud_elem))][atomic]
+	                              * The first candidate for the next item.
+	                              * NOTE: Before being dereferenced, this pointer is checked
+	                              *       for being located inside the dict's element vector.
+	                              *       In the event that it is located at its end, `ITER_DONE'
+	                              *       is returned, though in the event that it is located
+	                              *       outside, an error is thrown (`err_changed_sequence()'). */
 };
 
 struct urodict_iterator_object {
 	OBJECT_HEAD
-	DREF URoDict      *di_dict; /* [1..1][const] The dict that is being iterated. */
-	struct udict_item *di_next; /* [?..1][MAYBE(in(di_dict->rd_elem))][atomic]
-	                             * The first candidate for the next item. */
+	DREF URoDict      *urdi_dict; /* [1..1][const] The dict that is being iterated. */
+	struct udict_item *urdi_next; /* [?..1][MAYBE(in(urdi_dict->urd_elem))][atomic]
+	                               * The first candidate for the next item. */
 };
 
 
@@ -465,65 +514,69 @@ struct urodict_iterator_object {
 
 /* USET */
 struct uset_item {
-	DREF DeeObject *si_key; /* [0..1][lock(:s_lock)] Set item key. */
+	DREF DeeObject *usi_key; /* [0..1][lock(:us_lock)] Set item key. */
 };
 
 struct uset_iterator_object {
 	OBJECT_HEAD
-	DREF USet        *si_set;  /* [1..1][const] The set that is being iterated. */
-	struct uset_item *si_next; /* [?..1][MAYBE(in(si_set->s_elem))][atomic]
-	                            * The first candidate for the next item.
-	                            * NOTE: Before being dereferenced, this pointer is checked
-	                            *       for being located inside the set's element vector.
-	                            *       In the event that it is located at its end, `ITER_DONE'
-	                            *       is returned, though in the event that it is located
-	                            *       outside, an error is thrown (`err_changed_sequence()'). */
+	DREF USet        *usi_set;  /* [1..1][const] The set that is being iterated. */
+	struct uset_item *usi_next; /* [?..1][MAYBE(in(usi_set->us_elem))][atomic]
+	                             * The first candidate for the next item.
+	                             * NOTE: Before being dereferenced, this pointer is checked
+	                             *       for being located inside the set's element vector.
+	                             *       In the event that it is located at its end, `ITER_DONE'
+	                             *       is returned, though in the event that it is located
+	                             *       outside, an error is thrown (`err_changed_sequence()'). */
 };
 
 struct uset_object {
 	OBJECT_HEAD /* GC Object */
-	size_t              s_mask; /* [lock(s_lock)][> s_size || s_mask == 0] Allocated set size. */
-	size_t              s_used; /* [lock(s_lock)][<= s_size] Amount of keys actually in use.
-	                             * HINT: The difference to `s_size' is the number of dummy keys currently in use. */
-	size_t              s_size; /* [lock(s_lock)][< s_mask || s_mask == 0] Amount of non-NULL keys. */
-	struct uset_item   *s_elem; /* [1..s_size|ALLOC(s_mask+1)][lock(s_lock)]
+	size_t              us_mask; /* [lock(us_lock)][> us_size || us_mask == 0] Allocated set size. */
+	size_t              us_used; /* [lock(us_lock)][<= us_size] Amount of keys actually in use.
+	                              * HINT: The difference to `us_size' is the number of dummy keys currently in use. */
+	size_t              us_size; /* [lock(us_lock)][< us_mask || us_mask == 0] Amount of non-NULL keys. */
+	struct uset_item   *us_elem; /* [1..us_size|ALLOC(us_mask+1)][lock(us_lock)]
 	                             * [ownes_if(!= INTERNAL(empty_set_items))] Set keys. */
 #ifndef CONFIG_NO_THREADS
-	Dee_atomic_rwlock_t s_lock; /* Lock used for accessing this set. */
+	Dee_atomic_rwlock_t us_lock; /* Lock used for accessing this set. */
 #endif /* !CONFIG_NO_THREADS */
 	WEAKREF_SUPPORT
 };
 
-#define USet_HashSt(self, hash)  ((hash) & ((USet *)Dee_REQUIRES_OBJECT(self))->s_mask)
+#define USet_HashSt(self, hash)  ((hash) & ((USet *)Dee_REQUIRES_OBJECT(self))->us_mask)
 #define USet_HashNx(hs, perturb) (void)((hs) = ((hs) << 2) + (hs) + (perturb) + 1, (perturb) >>= 5) /* This `5' is tunable. */
-#define USet_HashIt(self, i)     (((USet *)Dee_REQUIRES_OBJECT(self))->s_elem + ((i) & ((USet *)(self))->s_mask))
+#define USet_HashIt(self, i)     (((USet *)Dee_REQUIRES_OBJECT(self))->us_elem + ((i) & ((USet *)(self))->us_mask))
 
-#define USet_LockReading(x)    Dee_atomic_rwlock_reading(&((USet *)Dee_REQUIRES_OBJECT(x))->s_lock)
-#define USet_LockWriting(x)    Dee_atomic_rwlock_writing(&((USet *)Dee_REQUIRES_OBJECT(x))->s_lock)
-#define USet_LockTryread(x)    Dee_atomic_rwlock_tryread(&((USet *)Dee_REQUIRES_OBJECT(x))->s_lock)
-#define USet_LockTrywrite(x)   Dee_atomic_rwlock_trywrite(&((USet *)Dee_REQUIRES_OBJECT(x))->s_lock)
-#define USet_LockRead(x)       Dee_atomic_rwlock_read(&((USet *)Dee_REQUIRES_OBJECT(x))->s_lock)
-#define USet_LockWrite(x)      Dee_atomic_rwlock_write(&((USet *)Dee_REQUIRES_OBJECT(x))->s_lock)
-#define USet_LockTryUpgrade(x) Dee_atomic_rwlock_tryupgrade(&((USet *)Dee_REQUIRES_OBJECT(x))->s_lock)
-#define USet_LockUpgrade(x)    Dee_atomic_rwlock_upgrade(&((USet *)Dee_REQUIRES_OBJECT(x))->s_lock)
-#define USet_LockDowngrade(x)  Dee_atomic_rwlock_downgrade(&((USet *)Dee_REQUIRES_OBJECT(x))->s_lock)
-#define USet_LockEndWrite(x)   Dee_atomic_rwlock_endwrite(&((USet *)Dee_REQUIRES_OBJECT(x))->s_lock)
-#define USet_LockEndRead(x)    Dee_atomic_rwlock_endread(&((USet *)Dee_REQUIRES_OBJECT(x))->s_lock)
-#define USet_LockEnd(x)        Dee_atomic_rwlock_end(&((USet *)Dee_REQUIRES_OBJECT(x))->s_lock)
+#define USet_LockReading(self)    Dee_atomic_rwlock_reading(&(self)->us_lock)
+#define USet_LockWriting(self)    Dee_atomic_rwlock_writing(&(self)->us_lock)
+#define USet_LockTryRead(self)    Dee_atomic_rwlock_tryread(&(self)->us_lock)
+#define USet_LockTryWrite(self)   Dee_atomic_rwlock_trywrite(&(self)->us_lock)
+#define USet_LockCanRead(self)    Dee_atomic_rwlock_canread(&(self)->us_lock)
+#define USet_LockCanWrite(self)   Dee_atomic_rwlock_canwrite(&(self)->us_lock)
+#define USet_LockWaitRead(self)   Dee_atomic_rwlock_waitread(&(self)->us_lock)
+#define USet_LockWaitWrite(self)  Dee_atomic_rwlock_waitwrite(&(self)->us_lock)
+#define USet_LockRead(self)       Dee_atomic_rwlock_read(&(self)->us_lock)
+#define USet_LockWrite(self)      Dee_atomic_rwlock_write(&(self)->us_lock)
+#define USet_LockTryUpgrade(self) Dee_atomic_rwlock_tryupgrade(&(self)->us_lock)
+#define USet_LockUpgrade(self)    Dee_atomic_rwlock_upgrade(&(self)->us_lock)
+#define USet_LockDowngrade(self)  Dee_atomic_rwlock_downgrade(&(self)->us_lock)
+#define USet_LockEndWrite(self)   Dee_atomic_rwlock_endwrite(&(self)->us_lock)
+#define USet_LockEndRead(self)    Dee_atomic_rwlock_endread(&(self)->us_lock)
+#define USet_LockEnd(self)        Dee_atomic_rwlock_end(&(self)->us_lock)
 
 
 struct uroset_iterator_object {
 	OBJECT_HEAD
-	DREF URoSet      *si_set;  /* [1..1][const] The set that is being iterated. */
-	struct uset_item *si_next; /* [?..1][MAYBE(in(si_set->rs_elem))][atomic]
-	                            * The first candidate for the next item. */
+	DREF URoSet      *ursi_set;  /* [1..1][const] The set that is being iterated. */
+	struct uset_item *ursi_next; /* [?..1][MAYBE(in(ursi_set->urs_elem))][atomic]
+	                              * The first candidate for the next item. */
 };
 
 struct uroset_object {
 	OBJECT_HEAD
-	size_t                                    rs_mask;  /* [> rs_size] Allocated set size. */
-	size_t                                    rs_size;  /* [< rs_mask] Amount of non-NULL keys. */
-	COMPILER_FLEXIBLE_ARRAY(struct uset_item, rs_elem); /* [1..rs_mask+1] Set key hash-vector. */
+	size_t                                    urs_mask;  /* [> urs_size] Allocated set size. */
+	size_t                                    urs_size;  /* [< urs_mask] Amount of non-NULL keys. */
+	COMPILER_FLEXIBLE_ARRAY(struct uset_item, urs_elem); /* [1..urs_mask+1] Set key hash-vector. */
 };
 
 

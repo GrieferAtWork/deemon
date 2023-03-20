@@ -320,7 +320,7 @@ END(_impl_assert_failed)
 #define mo_globalv     (mo_globpself+24) /* DREF DeeObject **mo_globalv; */
 #define mo_root        (mo_globpself+28) /* DREF DeeCodeObject *mo_root; */
 #ifndef CONFIG_NO_THREADS
-#define mo_lock        (mo_globpself+32) /* rwlock_t mo_lock; */
+#define mo_lock        (mo_globpself+32) /* atomic_rwlock_t mo_lock; */
 #define mo_loader      (mo_globpself+36) /* struct thread_object *mo_loader; */
 #endif /* !CONFIG_NO_THREADS */
 /* }; */

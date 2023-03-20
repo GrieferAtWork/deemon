@@ -34,7 +34,7 @@
 #include <deemon/system-features.h>
 #include <deemon/thread.h>
 #include <deemon/tuple.h>
-#include <deemon/util/rwlock.h>
+#include <deemon/util/lock.h>
 
 #include "../../runtime/runtime_error.h"
 #include "../../runtime/strings.h"
@@ -107,14 +107,31 @@ err:
 typedef struct {
 	OBJECT_HEAD
 	DREF Combinations *ci_combi;   /* [1..1][const] The underlying combinations sequence proxy. */
-#ifndef CONFIG_NO_THREADS
-	rwlock_t           ci_lock;    /* Lock for this combinations iterator. */
-#endif /* !CONFIG_NO_THREADS */
 	size_t            *ci_indices; /* [1..ci_combi->c_comlen][lock(ci_lock)][owned]
 	                                * Indices to-be used for the next set of combinations to-be
 	                                * combined to generate the next item. */
+#ifndef CONFIG_NO_THREADS
+	atomic_rwlock_t    ci_lock;    /* Lock for this combinations iterator. */
+#endif /* !CONFIG_NO_THREADS */
 	bool               ci_first;   /* [lock(ci_lock)] True prior to the first iteration. */
 } CombinationsIterator;
+
+#define CombinationsIterator_LockReading(self)    Dee_atomic_rwlock_reading(&(self)->ci_lock)
+#define CombinationsIterator_LockWriting(self)    Dee_atomic_rwlock_writing(&(self)->ci_lock)
+#define CombinationsIterator_LockTryRead(self)    Dee_atomic_rwlock_tryread(&(self)->ci_lock)
+#define CombinationsIterator_LockTryWrite(self)   Dee_atomic_rwlock_trywrite(&(self)->ci_lock)
+#define CombinationsIterator_LockCanRead(self)    Dee_atomic_rwlock_canread(&(self)->ci_lock)
+#define CombinationsIterator_LockCanWrite(self)   Dee_atomic_rwlock_canwrite(&(self)->ci_lock)
+#define CombinationsIterator_LockWaitRead(self)   Dee_atomic_rwlock_waitread(&(self)->ci_lock)
+#define CombinationsIterator_LockWaitWrite(self)  Dee_atomic_rwlock_waitwrite(&(self)->ci_lock)
+#define CombinationsIterator_LockRead(self)       Dee_atomic_rwlock_read(&(self)->ci_lock)
+#define CombinationsIterator_LockWrite(self)      Dee_atomic_rwlock_write(&(self)->ci_lock)
+#define CombinationsIterator_LockTryUpgrade(self) Dee_atomic_rwlock_tryupgrade(&(self)->ci_lock)
+#define CombinationsIterator_LockUpgrade(self)    Dee_atomic_rwlock_upgrade(&(self)->ci_lock)
+#define CombinationsIterator_LockDowngrade(self)  Dee_atomic_rwlock_downgrade(&(self)->ci_lock)
+#define CombinationsIterator_LockEndWrite(self)   Dee_atomic_rwlock_endwrite(&(self)->ci_lock)
+#define CombinationsIterator_LockEndRead(self)    Dee_atomic_rwlock_endread(&(self)->ci_lock)
+#define CombinationsIterator_LockEnd(self)        Dee_atomic_rwlock_end(&(self)->ci_lock)
 
 PRIVATE NONNULL((1)) void DCALL
 comiter_fini(CombinationsIterator *__restrict self) {
@@ -132,7 +149,7 @@ comiter_ctor(CombinationsIterator *__restrict self) {
 	if unlikely(!self->ci_indices)
 		goto err_combi;
 	self->ci_first = true;
-	rwlock_init(&self->ci_lock);
+	atomic_rwlock_init(&self->ci_lock);
 	return 0;
 err_combi:
 	Dee_Decref_likely(self->ci_combi);
@@ -148,7 +165,7 @@ comiter_init(CombinationsIterator *__restrict self,
 		goto err;
 	if (DeeObject_AssertTypeExact(self->ci_combi, &SeqCombinations_Type))
 		goto err;
-	rwlock_init(&self->ci_lock);
+	atomic_rwlock_init(&self->ci_lock);
 	comlen           = self->ci_combi->c_comlen;
 	self->ci_indices = (size_t *)Dee_Mallocc(comlen, sizeof(size_t));
 	if unlikely(!self->ci_indices)
@@ -169,14 +186,14 @@ comiter_copy(CombinationsIterator *__restrict self,
 	                                         sizeof(size_t));
 	if unlikely(!self->ci_indices)
 		goto err;
-	rwlock_read(&other->ci_lock);
+	CombinationsIterator_LockRead(other);
 	memcpyc(self->ci_indices,
 	        other->ci_indices,
 	        other->ci_combi->c_comlen,
 	        sizeof(size_t));
 	self->ci_first = other->ci_first;
-	rwlock_endread(&other->ci_lock);
-	rwlock_init(&self->ci_lock);
+	CombinationsIterator_LockEndRead(other);
+	atomic_rwlock_init(&self->ci_lock);
 	self->ci_combi = other->ci_combi;
 	Dee_Incref(self->ci_combi);
 	return 0;
@@ -191,14 +208,14 @@ comiter_deep(CombinationsIterator *__restrict self,
 	                                         sizeof(size_t));
 	if unlikely(!self->ci_indices)
 		goto err;
-	rwlock_read(&other->ci_lock);
+	CombinationsIterator_LockRead(other);
 	memcpyc(self->ci_indices,
 	        other->ci_indices,
 	        other->ci_combi->c_comlen,
 	        sizeof(size_t));
 	self->ci_first = other->ci_first;
-	rwlock_endread(&other->ci_lock);
-	rwlock_init(&self->ci_lock);
+	CombinationsIterator_LockEndRead(other);
+	atomic_rwlock_init(&self->ci_lock);
 	self->ci_combi = (DREF Combinations *)DeeObject_DeepCopy((DeeObject *)other->ci_combi);
 	if unlikely(!self->ci_combi)
 		goto err_indices;
@@ -223,7 +240,7 @@ comiter_next(CombinationsIterator *__restrict self) {
 	result_indices = (size_t *)Dee_AMallocc(comlen, sizeof(size_t));
 	if unlikely(!result_indices)
 		goto err;
-	rwlock_write(&self->ci_lock);
+	CombinationsIterator_LockWrite(self);
 	if (self->ci_first) {
 		self->ci_first = false;
 		goto copy_indices;
@@ -234,7 +251,7 @@ comiter_next(CombinationsIterator *__restrict self) {
 			goto update_indices;
 	}
 	/* Signal `ITER_DONE' */
-	rwlock_endwrite(&self->ci_lock);
+	CombinationsIterator_LockEndWrite(self);
 	Dee_AFree(result_indices);
 	return ITER_DONE;
 update_indices:
@@ -246,7 +263,7 @@ copy_indices:
 	        self->ci_indices,
 	        comlen,
 	        sizeof(size_t));
-	rwlock_endwrite(&self->ci_lock);
+	CombinationsIterator_LockEndWrite(self);
 	result = DeeTuple_NewUninitialized(comlen);
 	if unlikely(!result)
 		goto err_indices;
@@ -261,8 +278,7 @@ copy_indices:
 	Dee_AFree(result_indices);
 	return result;
 err_indices_r:
-	while (i--)
-		Dee_Decref(DeeTuple_GET(result, i));
+	Dee_Decrefv(DeeTuple_ELEM(result), i);
 	DeeTuple_FreeUninitialized(result);
 err_indices:
 	Dee_AFree(result_indices);
@@ -284,19 +300,19 @@ PRIVATE struct type_member tpconst comiter_members[] = {
 		if (self->ci_combi != other->ci_combi)                      \
 			if_diff_combi;                                          \
 	again_lock:                                                     \
-		rwlock_read(&self->ci_lock);                                \
-		if unlikely(!rwlock_tryread(&other->ci_lock)) {             \
-			rwlock_endread(&self->ci_lock);                         \
-			rwlock_read(&other->ci_lock);                           \
-			if unlikely(!rwlock_tryread(&self->ci_lock)) {          \
-				rwlock_endread(&other->ci_lock);                    \
+		CombinationsIterator_LockRead(self);                        \
+		if unlikely(!CombinationsIterator_LockTryRead(other)) {     \
+			CombinationsIterator_LockEndRead(self);                 \
+			CombinationsIterator_LockRead(other);                   \
+			if unlikely(!CombinationsIterator_LockTryRead(self)) {  \
+				CombinationsIterator_LockEndRead(other);            \
 				goto again_lock;                                    \
 			}                                                       \
 		}                                                           \
 		result = bcmpc(self->ci_indices, other->ci_indices,         \
 		               self->ci_combi->c_comlen, sizeof(size_t));   \
-		rwlock_endread(&other->ci_lock);                            \
-		rwlock_endread(&self->ci_lock);                             \
+		CombinationsIterator_LockEndRead(other);                    \
+		CombinationsIterator_LockEndRead(self);                     \
 		return_bool_(result op 0);                                  \
 	err:                                                            \
 		return NULL;                                                \
@@ -372,7 +388,7 @@ com_iter(Combinations *__restrict self) {
 	if unlikely(!result)
 		goto done;
 	result->ci_combi = self;
-	rwlock_init(&result->ci_lock);
+	atomic_rwlock_init(&result->ci_lock);
 	comlen             = self->c_comlen;
 	result->ci_indices = (size_t *)Dee_Mallocc(comlen, sizeof(size_t));
 	if unlikely(!result->ci_indices)
@@ -609,14 +625,14 @@ rcomiter_next(CombinationsIterator *__restrict self) {
 	comlen = self->ci_combi->c_comlen;
 	seqlen = self->ci_combi->c_seqlen;
 	if (self->ci_first) {
-		rwlock_write(&self->ci_lock);
+		CombinationsIterator_LockWrite(self);
 		COMPILER_READ_BARRIER();
 		if (!self->ci_first) {
-			rwlock_endwrite(&self->ci_lock);
+			CombinationsIterator_LockEndWrite(self);
 		} else {
 			DREF DeeObject *elem;
 			self->ci_first = false;
-			rwlock_endwrite(&self->ci_lock);
+			CombinationsIterator_LockEndWrite(self);
 			result = DeeTuple_NewUninitialized(comlen);
 			if unlikely(!result)
 				goto err;
@@ -633,14 +649,14 @@ rcomiter_next(CombinationsIterator *__restrict self) {
 	result_indices = (size_t *)Dee_AMallocc(comlen, sizeof(size_t));
 	if unlikely(!result_indices)
 		goto err;
-	rwlock_write(&self->ci_lock);
+	CombinationsIterator_LockWrite(self);
 	i = comlen;
 	while (i--) {
 		if (self->ci_indices[i] != seqlen - 1)
 			goto update_indices;
 	}
 	/* Signal `ITER_DONE' */
-	rwlock_endwrite(&self->ci_lock);
+	CombinationsIterator_LockEndWrite(self);
 	Dee_AFree(result_indices);
 	return ITER_DONE;
 update_indices:
@@ -651,7 +667,7 @@ update_indices:
 	        self->ci_indices,
 	        comlen,
 	        sizeof(size_t));
-	rwlock_endwrite(&self->ci_lock);
+	CombinationsIterator_LockEndWrite(self);
 	result = DeeTuple_NewUninitialized(comlen);
 	if unlikely(!result)
 		goto err_indices;
@@ -674,8 +690,7 @@ set_temp:
 	Dee_AFree(result_indices);
 	return result;
 err_indices_r:
-	while (i--)
-		Dee_Decref(DeeTuple_GET(result, i));
+	Dee_Decrefv(DeeTuple_ELEM(result), i);
 	DeeTuple_FreeUninitialized(result);
 err_indices:
 	Dee_AFree(result_indices);
@@ -699,7 +714,7 @@ rcomiter_ctor(CombinationsIterator *__restrict self) {
 	if unlikely(!self->ci_indices)
 		goto err_combi;
 	self->ci_first = true;
-	rwlock_init(&self->ci_lock);
+	atomic_rwlock_init(&self->ci_lock);
 	return 0;
 err_combi:
 	Dee_Decref_likely(self->ci_combi);
@@ -715,7 +730,7 @@ rcomiter_init(CombinationsIterator *__restrict self,
 		goto err;
 	if (DeeObject_AssertTypeExact(self->ci_combi, &SeqRepeatCombinations_Type))
 		goto err;
-	rwlock_init(&self->ci_lock);
+	atomic_rwlock_init(&self->ci_lock);
 	comlen           = self->ci_combi->c_comlen;
 	self->ci_indices = (size_t *)Dee_Mallocc(comlen, sizeof(size_t));
 	if unlikely(!self->ci_indices)
@@ -781,7 +796,7 @@ rcom_iter(Combinations *__restrict self) {
 	if unlikely(!result)
 		goto done;
 	result->ci_combi = self;
-	rwlock_init(&result->ci_lock);
+	atomic_rwlock_init(&result->ci_lock);
 	result->ci_indices = (size_t *)Dee_Callocc(self->c_comlen, sizeof(size_t));
 	if unlikely(!result->ci_indices)
 		goto err_r;
@@ -861,7 +876,7 @@ pmutiter_next(CombinationsIterator *__restrict self) {
 	result_indices = (size_t *)Dee_AMallocc(comlen, sizeof(size_t));
 	if unlikely(!result_indices)
 		goto err;
-	rwlock_write(&self->ci_lock);
+	CombinationsIterator_LockWrite(self);
 	if (self->ci_first) {
 		self->ci_first = false;
 		goto copy_indices;
@@ -869,7 +884,7 @@ pmutiter_next(CombinationsIterator *__restrict self) {
 	if (self->ci_indices[0] >= seqlen) {
 		/* Signal `ITER_DONE' */
 signal_done:
-		rwlock_endwrite(&self->ci_lock);
+		CombinationsIterator_LockEndWrite(self);
 		Dee_AFree(result_indices);
 		return ITER_DONE;
 	}
@@ -900,7 +915,7 @@ copy_indices:
 	        self->ci_indices,
 	        comlen,
 	        sizeof(size_t));
-	rwlock_endwrite(&self->ci_lock);
+	CombinationsIterator_LockEndWrite(self);
 	result = DeeTuple_NewUninitialized(comlen);
 	if unlikely(!result)
 		goto err_indices;
@@ -939,7 +954,7 @@ pmutiter_ctor(CombinationsIterator *__restrict self) {
 	if unlikely(!self->ci_indices)
 		goto err_combi;
 	self->ci_first = true;
-	rwlock_init(&self->ci_lock);
+	atomic_rwlock_init(&self->ci_lock);
 	return 0;
 err_combi:
 	Dee_Decref_likely(self->ci_combi);
@@ -955,7 +970,7 @@ pmutiter_init(CombinationsIterator *__restrict self,
 		goto err;
 	if (DeeObject_AssertTypeExact(self->ci_combi, &SeqPermutations_Type))
 		goto err;
-	rwlock_init(&self->ci_lock);
+	atomic_rwlock_init(&self->ci_lock);
 	comlen           = self->ci_combi->c_comlen;
 	self->ci_indices = (size_t *)Dee_Mallocc(comlen, sizeof(size_t));
 	if unlikely(!self->ci_indices)
@@ -1023,7 +1038,7 @@ pmut_iter(Combinations *__restrict self) {
 	if unlikely(!result)
 		goto done;
 	result->ci_combi = self;
-	rwlock_init(&result->ci_lock);
+	atomic_rwlock_init(&result->ci_lock);
 	comlen             = self->c_comlen;
 	result->ci_indices = (size_t *)Dee_Mallocc(comlen, sizeof(size_t));
 	if unlikely(!result->ci_indices)

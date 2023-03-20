@@ -3265,7 +3265,7 @@ DeeType_FindCachedAttr(DeeTypeObject *tp_self, DeeObject *instance,
 				inst = DeeInstance_DESC(item->mcs_attrib.a_desc, instance);
 			}
 			if (inst) {
-				rwlock_read(&inst->id_lock);
+				Dee_instance_desc_lock_read(inst);
 				if (catt->ca_flag & CLASS_ATTRIBUTE_FGETSET) {
 					if (!inst->id_vtab[catt->ca_addr + CLASS_GETSET_GET])
 						perm &= ~ATTR_PERMGET;
@@ -3283,7 +3283,7 @@ DeeType_FindCachedAttr(DeeTypeObject *tp_self, DeeObject *instance,
 						Dee_Incref(member_type);
 					}
 				}
-				rwlock_endread(&inst->id_lock);
+				Dee_instance_desc_lock_endread(inst);
 			}
 			if (catt->ca_flag & CLASS_ATTRIBUTE_FREADONLY)
 				perm &= ~(ATTR_PERMDEL | ATTR_PERMSET);
@@ -3397,7 +3397,7 @@ DeeType_FindCachedClassAttr(DeeTypeObject *tp_self,
 				member_type = NULL;
 			}
 			inst = class_desc_as_instance(item->mcs_attrib.a_desc);
-			rwlock_read(&inst->id_lock);
+			Dee_instance_desc_lock_read(inst);
 			if (catt->ca_flag & CLASS_ATTRIBUTE_FGETSET) {
 				if (!inst->id_vtab[catt->ca_addr + CLASS_GETSET_GET])
 					perm &= ~ATTR_PERMGET;
@@ -3415,7 +3415,7 @@ DeeType_FindCachedClassAttr(DeeTypeObject *tp_self,
 					Dee_Incref(member_type);
 				}
 			}
-			rwlock_endread(&inst->id_lock);
+			Dee_instance_desc_lock_endread(inst);
 			if (catt->ca_flag & CLASS_ATTRIBUTE_FREADONLY)
 				perm &= ~(ATTR_PERMDEL | ATTR_PERMSET);
 		}	break;
@@ -3481,7 +3481,7 @@ DeeType_FindCachedClassAttr(DeeTypeObject *tp_self,
 			if (catt->ca_flag & CLASS_ATTRIBUTE_FCLASSMEM) {
 				struct instance_desc *inst;
 				inst = class_desc_as_instance(item->mcs_attrib.a_desc);
-				rwlock_read(&inst->id_lock);
+				Dee_instance_desc_lock_read(inst);
 				if (catt->ca_flag & CLASS_ATTRIBUTE_FGETSET) {
 					if (!inst->id_vtab[catt->ca_addr + CLASS_GETSET_GET])
 						perm &= ~ATTR_PERMGET;
@@ -3499,7 +3499,7 @@ DeeType_FindCachedClassAttr(DeeTypeObject *tp_self,
 						Dee_Incref(member_type);
 					}
 				}
-				rwlock_endread(&inst->id_lock);
+				Dee_instance_desc_lock_endread(inst);
 			}
 			if (catt->ca_flag & CLASS_ATTRIBUTE_FREADONLY)
 				perm &= ~(ATTR_PERMDEL | ATTR_PERMSET);

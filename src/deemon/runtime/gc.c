@@ -34,8 +34,8 @@
 #include <deemon/string.h>
 #include <deemon/system-features.h> /* memcpy(), bzero(), ... */
 #include <deemon/util/atomic.h>
+#include <deemon/util/lock.h>
 #include <deemon/util/recursive-rwlock.h>
-#include <deemon/util/rwlock.h>
 
 #ifndef CONFIG_NO_DEX
 #include <deemon/dex.h>
@@ -1480,13 +1480,21 @@ INTERN void DCALL gc_dump_all(void) {
 
 typedef struct {
 	OBJECT_HEAD
-#ifndef CONFIG_NO_THREADS
-	rwlock_t        gi_lock; /* Lock for `gi_next' */
-#endif /* !CONFIG_NO_THREADS */
 	DREF DeeObject *gi_next; /* [0..1][lock(gi_lock)]
 	                          * The next GC object to-be iterated, or
 	                          * NULL when the iterator has been exhausted. */
+#ifndef CONFIG_NO_THREADS
+	atomic_lock_t   gi_lock; /* Lock for `gi_next' */
+#endif /* !CONFIG_NO_THREADS */
 } GCIter;
+
+#define GCIter_LockAvailable(self)  Dee_atomic_lock_available(&(self)->gi_lock)
+#define GCIter_LockAcquired(self)   Dee_atomic_lock_acquired(&(self)->gi_lock)
+#define GCIter_LockTryAcquire(self) Dee_atomic_lock_tryacquire(&(self)->gi_lock)
+#define GCIter_LockAcquire(self)    Dee_atomic_lock_acquire(&(self)->gi_lock)
+#define GCIter_LockWaitFor(self)    Dee_atomic_lock_waitfor(&(self)->gi_lock)
+#define GCIter_LockRelease(self)    Dee_atomic_lock_release(&(self)->gi_lock)
+
 
 PRIVATE NONNULL((1)) void DCALL
 gciter_fini(GCIter *__restrict self) {
@@ -1507,11 +1515,11 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 gciter_next(GCIter *__restrict self) {
 	DREF DeeObject *result;
 	struct gc_head *next;
-	rwlock_write(&self->gi_lock);
+	GCIter_LockAcquire(self);
 	result = self->gi_next; /* Inherit reference. */
 	if unlikely(!result) {
 		/* Iterator has been exhausted. */
-		rwlock_endwrite(&self->gi_lock);
+		GCIter_LockRelease(self);
 		return ITER_DONE;
 	}
 	GCLOCK_ACQUIRE_READ();
@@ -1528,7 +1536,7 @@ gciter_next(GCIter *__restrict self) {
 	}
 	GCLOCK_RELEASE_READ();
 	self->gi_next = next ? &next->gc_object : NULL; /* Inherit reference. */
-	rwlock_endwrite(&self->gi_lock);
+	GCIter_LockRelease(self);
 
 	/* Return the extracted item. */
 	return result;
@@ -1602,7 +1610,7 @@ gcenum_iter(DeeObject *__restrict UNUSED(self)) {
 		first = first->gc_next;
 	}
 	GCLOCK_RELEASE_READ();
-	rwlock_init(&result->gi_lock);
+	atomic_lock_init(&result->gi_lock);
 	/* Save the first object in the iterator. */
 	result->gi_next = first ? &first->gc_object : NULL;
 	DeeObject_Init(result, &GCIter_Type);

@@ -49,13 +49,13 @@ DECL_BEGIN
 #define dummy (&DeeDict_Dummy)
 
 INTDEF WUNUSED NONNULL((1)) int DCALL uset_bool(USet *__restrict self);
-STATIC_ASSERT(offsetof(USet, s_used) == offsetof(UDict, d_used));
+STATIC_ASSERT(offsetof(USet, us_used) == offsetof(UDict, ud_used));
 #define udict_bool uset_bool
 
-#define READ_ITEM(x) atomic_read(&(x)->di_next)
+#define READ_ITEM(x) atomic_read(&(x)->udi_next)
 
-STATIC_ASSERT(offsetof(UDictIterator, di_dict) == offsetof(USetIterator, si_set));
-STATIC_ASSERT(offsetof(UDictIterator, di_next) == offsetof(USetIterator, si_next));
+STATIC_ASSERT(offsetof(UDictIterator, udi_dict) == offsetof(USetIterator, usi_set));
+STATIC_ASSERT(offsetof(UDictIterator, udi_next) == offsetof(USetIterator, usi_next));
 INTDEF struct type_cmp usetiterator_cmp;
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL usetiterator_copy(USetIterator *__restrict self, USetIterator *__restrict other);
 INTDEF NONNULL((1)) void DCALL usetiterator_fini(USetIterator *__restrict self);
@@ -65,17 +65,17 @@ INTDEF NONNULL((1, 2)) void DCALL usetiterator_visit(USetIterator *__restrict se
 #define udictiterator_fini  usetiterator_fini
 #define udictiterator_visit usetiterator_visit
 
-STATIC_ASSERT(offsetof(UDict, d_elem) == offsetof(USet, s_elem));
-STATIC_ASSERT(offsetof(UDict, d_mask) == offsetof(USet, s_mask));
+STATIC_ASSERT(offsetof(UDict, ud_elem) == offsetof(USet, us_elem));
+STATIC_ASSERT(offsetof(UDict, ud_mask) == offsetof(USet, us_mask));
 INTDEF WUNUSED NONNULL((1)) int DCALL usetiterator_bool(USetIterator *__restrict self);
 #define udictiterator_bool usetiterator_bool
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 udictiterator_ctor(UDictIterator *__restrict self) {
-	self->di_dict = (DREF UDict *)DeeObject_NewDefault(&UDict_Type);
-	if unlikely(!self->di_dict)
+	self->udi_dict = (DREF UDict *)DeeObject_NewDefault(&UDict_Type);
+	if unlikely(!self->udi_dict)
 		goto err;
-	self->di_next = self->di_dict->d_elem;
+	self->udi_next = self->udi_dict->ud_elem;
 	return 0;
 err:
 	return -1;
@@ -89,9 +89,9 @@ udictiterator_init(UDictIterator *__restrict self,
 		goto err;
 	if (DeeObject_AssertType(dict, &UDict_Type))
 		goto err;
-	self->di_dict = dict;
+	self->udi_dict = dict;
 	Dee_Incref(dict);
-	self->di_next = dict->d_elem;
+	self->udi_next = dict->ud_elem;
 	return 0;
 err:
 	return -1;
@@ -101,12 +101,12 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 udictiterator_next(UDictIterator *__restrict self) {
 	DREF DeeObject *result, *key, *value;
 	struct udict_item *item, *end;
-	UDict *dict = self->di_dict;
-	USet_LockRead(dict);
-	end = dict->d_elem + (dict->d_mask + 1);
+	UDict *dict = self->udi_dict;
+	UDict_LockRead(dict);
+	end = dict->ud_elem + (dict->ud_mask + 1);
 	for (;;) {
 		struct udict_item *old_item;
-		item     = atomic_read(&self->di_next);
+		item     = atomic_read(&self->udi_next);
 		old_item = item;
 
 		/* Validate that the pointer is still located in-bounds. */
@@ -115,24 +115,24 @@ udictiterator_next(UDictIterator *__restrict self) {
 				goto dict_has_changed;
 			goto iter_exhausted;
 		}
-		if unlikely(item < dict->d_elem)
+		if unlikely(item < dict->ud_elem)
 			goto dict_has_changed;
 		/* Search for the next non-empty item. */
 		while (item < end && (!item->di_key || item->di_key == dummy))
 			++item;
 		if (item == end) {
-			if (!atomic_cmpxch_weak_or_write(&self->di_next, old_item, item))
+			if (!atomic_cmpxch_weak_or_write(&self->udi_next, old_item, item))
 				continue;
 			goto iter_exhausted;
 		}
-		if (atomic_cmpxch_weak_or_write(&self->di_next, old_item, item + 1))
+		if (atomic_cmpxch_weak_or_write(&self->udi_next, old_item, item + 1))
 			break;
 	}
 	key   = item->di_key;
 	value = item->di_value;
 	Dee_Incref(key);
 	Dee_Incref(value);
-	USet_LockEndRead(dict);
+	UDict_LockEndRead(dict);
 	result = (DREF DeeObject *)DeeTuple_NewUninitialized(2);
 	if unlikely(!result)
 		goto err_key_value;
@@ -144,12 +144,12 @@ err_key_value:
 	Dee_Decref(value);
 	goto err;
 dict_has_changed:
-	USet_LockEndRead(dict);
+	UDict_LockEndRead(dict);
 	err_changed_sequence((DeeObject *)dict);
 err:
 	return NULL;
 iter_exhausted:
-	USet_LockEndRead(dict);
+	UDict_LockEndRead(dict);
 	return ITER_DONE;
 }
 
@@ -157,12 +157,12 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 udictiterator_nextkey(UDictIterator *__restrict self) {
 	DREF DeeObject *result;
 	struct udict_item *item, *end;
-	UDict *dict = self->di_dict;
-	USet_LockRead(dict);
-	end = dict->d_elem + (dict->d_mask + 1);
+	UDict *dict = self->udi_dict;
+	UDict_LockRead(dict);
+	end = dict->ud_elem + (dict->ud_mask + 1);
 	for (;;) {
 		struct udict_item *old_item;
-		item     = atomic_read(&self->di_next);
+		item     = atomic_read(&self->udi_next);
 		old_item = item;
 
 		/* Validate that the pointer is still located in-bounds. */
@@ -171,29 +171,29 @@ udictiterator_nextkey(UDictIterator *__restrict self) {
 				goto dict_has_changed;
 			goto iter_exhausted;
 		}
-		if unlikely(item < dict->d_elem)
+		if unlikely(item < dict->ud_elem)
 			goto dict_has_changed;
 		/* Search for the next non-empty item. */
 		while (item < end && (!item->di_key || item->di_key == dummy))
 			++item;
 		if (item == end) {
-			if (!atomic_cmpxch_weak_or_write(&self->di_next, old_item, item))
+			if (!atomic_cmpxch_weak_or_write(&self->udi_next, old_item, item))
 				continue;
 			goto iter_exhausted;
 		}
-		if (atomic_cmpxch_weak_or_write(&self->di_next, old_item, item + 1))
+		if (atomic_cmpxch_weak_or_write(&self->udi_next, old_item, item + 1))
 			break;
 	}
 	result = item->di_key;
 	Dee_Incref(result);
-	USet_LockEndRead(dict);
+	UDict_LockEndRead(dict);
 	return result;
 dict_has_changed:
-	USet_LockEndRead(dict);
+	UDict_LockEndRead(dict);
 	err_changed_sequence((DeeObject *)dict);
 	return NULL;
 iter_exhausted:
-	USet_LockEndRead(dict);
+	UDict_LockEndRead(dict);
 	return ITER_DONE;
 }
 
@@ -201,12 +201,12 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 udictiterator_nextvalue(UDictIterator *__restrict self) {
 	DREF DeeObject *result;
 	struct udict_item *item, *end;
-	UDict *dict = self->di_dict;
-	USet_LockRead(dict);
-	end = dict->d_elem + (dict->d_mask + 1);
+	UDict *dict = self->udi_dict;
+	UDict_LockRead(dict);
+	end = dict->ud_elem + (dict->ud_mask + 1);
 	for (;;) {
 		struct udict_item *old_item;
-		item     = atomic_read(&self->di_next);
+		item     = atomic_read(&self->udi_next);
 		old_item = item;
 
 		/* Validate that the pointer is still located in-bounds. */
@@ -215,30 +215,30 @@ udictiterator_nextvalue(UDictIterator *__restrict self) {
 				goto dict_has_changed;
 			goto iter_exhausted;
 		}
-		if unlikely(item < dict->d_elem)
+		if unlikely(item < dict->ud_elem)
 			goto dict_has_changed;
 
 		/* Search for the next non-empty item. */
 		while (item < end && (!item->di_key || item->di_key == dummy))
 			++item;
 		if (item == end) {
-			if (!atomic_cmpxch_weak_or_write(&self->di_next, old_item, item))
+			if (!atomic_cmpxch_weak_or_write(&self->udi_next, old_item, item))
 				continue;
 			goto iter_exhausted;
 		}
-		if (atomic_cmpxch_weak_or_write(&self->di_next, old_item, item + 1))
+		if (atomic_cmpxch_weak_or_write(&self->udi_next, old_item, item + 1))
 			break;
 	}
 	result = item->di_value;
 	Dee_Incref(result);
-	USet_LockEndRead(dict);
+	UDict_LockEndRead(dict);
 	return result;
 dict_has_changed:
-	USet_LockEndRead(dict);
+	UDict_LockEndRead(dict);
 	err_changed_sequence((DeeObject *)dict);
 	return NULL;
 iter_exhausted:
-	USet_LockEndRead(dict);
+	UDict_LockEndRead(dict);
 	return ITER_DONE;
 }
 
@@ -247,7 +247,7 @@ iter_exhausted:
 
 
 PRIVATE struct type_member tpconst udictiterator_members[] = {
-	TYPE_MEMBER_FIELD_DOC("seq", STRUCT_OBJECT, offsetof(UDictIterator, di_dict), "->?GUniqueDict"),
+	TYPE_MEMBER_FIELD_DOC("seq", STRUCT_OBJECT, offsetof(UDictIterator, udi_dict), "->?GUniqueDict"),
 	TYPE_MEMBER_END
 };
 
@@ -306,19 +306,19 @@ udict_setitem(UDict *self, DeeObject *key, DeeObject *value);
 PRIVATE NONNULL((1)) void DCALL
 udict_fini(UDict *__restrict self) {
 	weakref_support_fini(self);
-	ASSERT((self->d_elem == empty_dict_items) == (self->d_mask == 0));
-	ASSERT((self->d_elem == empty_dict_items) == (self->d_size == 0));
-	ASSERT(self->d_used <= self->d_size);
-	if (self->d_elem != empty_dict_items) {
+	ASSERT((self->ud_elem == empty_dict_items) == (self->ud_mask == 0));
+	ASSERT((self->ud_elem == empty_dict_items) == (self->ud_size == 0));
+	ASSERT(self->ud_used <= self->ud_size);
+	if (self->ud_elem != empty_dict_items) {
 		struct udict_item *iter, *end;
-		end = (iter = self->d_elem) + (self->d_mask + 1);
+		end = (iter = self->ud_elem) + (self->ud_mask + 1);
 		for (; iter < end; ++iter) {
 			if (!iter->di_key)
 				continue;
 			Dee_Decref(iter->di_key);
 			Dee_XDecref(iter->di_value);
 		}
-		Dee_Free(self->d_elem);
+		Dee_Free(self->ud_elem);
 	}
 }
 
@@ -353,11 +353,11 @@ err:
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 udict_init_iterator(UDict *self, DeeObject *iterator) {
-	self->d_mask = 0;
-	self->d_size = 0;
-	self->d_used = 0;
-	self->d_elem = (struct udict_item *)empty_dict_items;
-	atomic_rwlock_init(&self->d_lock);
+	self->ud_mask = 0;
+	self->ud_size = 0;
+	self->ud_used = 0;
+	self->ud_elem = (struct udict_item *)empty_dict_items;
+	atomic_rwlock_init(&self->ud_lock);
 	weakref_support_init(self);
 	if unlikely(udict_insert_iterator(self, iterator)) {
 		udict_fini(self);
@@ -390,11 +390,11 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 udict_ctor(UDict *__restrict self) {
-	self->d_mask = 0;
-	self->d_size = 0;
-	self->d_used = 0;
-	self->d_elem = (struct udict_item *)empty_dict_items;
-	atomic_rwlock_init(&self->d_lock);
+	self->ud_mask = 0;
+	self->ud_size = 0;
+	self->ud_used = 0;
+	self->ud_elem = (struct udict_item *)empty_dict_items;
+	atomic_rwlock_init(&self->ud_lock);
 	weakref_support_init(self);
 	return 0;
 }
@@ -403,26 +403,26 @@ PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 udict_copy(UDict *__restrict self,
            UDict *__restrict other) {
 	struct udict_item *iter, *end;
-	atomic_rwlock_init(&self->d_lock);
+	atomic_rwlock_init(&self->ud_lock);
 again:
 	UDict_LockRead(other);
-	self->d_mask = other->d_mask;
-	self->d_used = other->d_used;
-	self->d_size = other->d_size;
-	if ((self->d_elem = other->d_elem) != empty_dict_items) {
-		self->d_elem = (struct udict_item *)Dee_TryMallocc(other->d_mask + 1,
+	self->ud_mask = other->ud_mask;
+	self->ud_used = other->ud_used;
+	self->ud_size = other->ud_size;
+	if ((self->ud_elem = other->ud_elem) != empty_dict_items) {
+		self->ud_elem = (struct udict_item *)Dee_TryMallocc(other->ud_mask + 1,
 		                                                   sizeof(struct udict_item));
-		if unlikely(!self->d_elem) {
+		if unlikely(!self->ud_elem) {
 			UDict_LockEndRead(other);
-			if (Dee_CollectMemory((other->d_mask + 1) *
+			if (Dee_CollectMemory((other->ud_mask + 1) *
 			                      sizeof(struct udict_item)))
 				goto again;
 			goto err;
 		}
-		memcpyc(self->d_elem, other->d_elem,
-		        self->d_mask + 1,
+		memcpyc(self->ud_elem, other->ud_elem,
+		        self->ud_mask + 1,
 		        sizeof(struct udict_item));
-		end = (iter = self->d_elem) + (self->d_mask + 1);
+		end = (iter = self->ud_elem) + (self->ud_mask + 1);
 		for (; iter < end; ++iter) {
 			if (!iter->di_key)
 				continue;
@@ -441,12 +441,12 @@ err:
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 udict_deepload(UDict *__restrict self) {
 	typedef struct {
-		DREF DeeObject *e_key;   /* [0..1][lock(:d_lock)] Dictionary item key. */
-		DREF DeeObject *e_value; /* [1..1|if(di_key == dummy, 0..0)][valid_if(di_key)][lock(:d_lock)] Dictionary item value. */
+		DREF DeeObject *e_key;   /* [0..1][lock(:ud_lock)] Dictionary item key. */
+		DREF DeeObject *e_value; /* [1..1|if(di_key == dummy, 0..0)][valid_if(di_key)][lock(:ud_lock)] Dictionary item value. */
 	} Entry;
 	/* #1 Allocate 2 new element-vector of the same size as `self'
-	 *    One of them has a length `d_mask+1', the other `d_used'
-	 * #2 Copy all key/value pairs from `self' into the d_used-one (create references)
+	 *    One of them has a length `ud_mask+1', the other `ud_used'
+	 * #2 Copy all key/value pairs from `self' into the ud_used-one (create references)
 	 *    NOTE: Skip NULL/dummy entries in the Dict vector.
 	 * #3 Go through the vector and create deep copies of all keys and items.
 	 *    For every key, hash it and insert it into the 2nd vector from before.
@@ -460,11 +460,11 @@ udict_deepload(UDict *__restrict self) {
 	for (;;) {
 		UDict_LockRead(self);
 		/* Optimization: if the Dict is empty, then there's nothing to copy! */
-		if (self->d_elem == empty_dict_items) {
+		if (self->ud_elem == empty_dict_items) {
 			UDict_LockEndRead(self);
 			return 0;
 		}
-		item_count = self->d_used;
+		item_count = self->ud_used;
 		if (item_count <= old_item_count)
 			break;
 		UDict_LockEndRead(self);
@@ -476,13 +476,13 @@ udict_deepload(UDict *__restrict self) {
 	}
 	/* Copy all used items. */
 	for (i = 0, hash_i = 0; i < item_count; ++hash_i) {
-		ASSERT(hash_i <= self->d_mask);
-		if (self->d_elem[hash_i].di_key == NULL)
+		ASSERT(hash_i <= self->ud_mask);
+		if (self->ud_elem[hash_i].di_key == NULL)
 			continue;
-		if (self->d_elem[hash_i].di_key == dummy)
+		if (self->ud_elem[hash_i].di_key == dummy)
 			continue;
-		items[i].e_key   = self->d_elem[hash_i].di_key;
-		items[i].e_value = self->d_elem[hash_i].di_value;
+		items[i].e_key   = self->ud_elem[hash_i].di_key;
+		items[i].e_value = self->ud_elem[hash_i].di_value;
 		Dee_Incref(items[i].e_key);
 		Dee_Incref(items[i].e_value);
 		++i;
@@ -530,12 +530,12 @@ udict_deepload(UDict *__restrict self) {
 		}
 	}
 	UDict_LockWrite(self);
-	i            = self->d_mask + 1;
-	self->d_mask = new_mask;
-	self->d_used = item_count;
-	self->d_size = item_count;
-	old_map      = self->d_elem;
-	self->d_elem = new_map;
+	i            = self->ud_mask + 1;
+	self->ud_mask = new_mask;
+	self->ud_used = item_count;
+	self->ud_size = item_count;
+	old_map      = self->ud_elem;
+	self->ud_elem = new_map;
 	UDict_LockEndWrite(self);
 	if (old_map != empty_dict_items) {
 		while (i--) {
@@ -577,16 +577,16 @@ udict_clear(UDict *__restrict self) {
 	struct udict_item *elem;
 	size_t mask;
 	UDict_LockWrite(self);
-	ASSERT((self->d_elem == empty_dict_items) == (self->d_mask == 0));
-	ASSERT((self->d_elem == empty_dict_items) == (self->d_size == 0));
-	ASSERT(self->d_used <= self->d_size);
+	ASSERT((self->ud_elem == empty_dict_items) == (self->ud_mask == 0));
+	ASSERT((self->ud_elem == empty_dict_items) == (self->ud_size == 0));
+	ASSERT(self->ud_used <= self->ud_size);
 	/* Extract the vector and mask. */
-	elem         = self->d_elem;
-	mask         = self->d_mask;
-	self->d_elem = (struct udict_item *)empty_dict_items;
-	self->d_mask = 0;
-	self->d_used = 0;
-	self->d_size = 0;
+	elem         = self->ud_elem;
+	mask         = self->ud_mask;
+	self->ud_elem = (struct udict_item *)empty_dict_items;
+	self->ud_mask = 0;
+	self->ud_used = 0;
+	self->ud_size = 0;
 	UDict_LockEndWrite(self);
 	/* Destroy the vector. */
 	if (elem != empty_dict_items) {
@@ -605,12 +605,12 @@ udict_clear(UDict *__restrict self) {
 PRIVATE NONNULL((1, 2)) void DCALL
 udict_visit(UDict *__restrict self, dvisit_t proc, void *arg) {
 	UDict_LockRead(self);
-	ASSERT((self->d_elem == empty_dict_items) == (self->d_mask == 0));
-	ASSERT((self->d_elem == empty_dict_items) == (self->d_size == 0));
-	ASSERT(self->d_used <= self->d_size);
-	if (self->d_elem != empty_dict_items) {
+	ASSERT((self->ud_elem == empty_dict_items) == (self->ud_mask == 0));
+	ASSERT((self->ud_elem == empty_dict_items) == (self->ud_size == 0));
+	ASSERT(self->ud_used <= self->ud_size);
+	if (self->ud_elem != empty_dict_items) {
 		struct udict_item *iter, *end;
-		end = (iter = self->d_elem) + (self->d_mask + 1);
+		end = (iter = self->ud_elem) + (self->ud_mask + 1);
 		for (; iter < end; ++iter) {
 			if (!iter->di_key)
 				continue;
@@ -630,19 +630,19 @@ udict_visit(UDict *__restrict self, dvisit_t proc, void *arg) {
 PRIVATE NONNULL((1)) bool DCALL
 udict_rehash(UDict *__restrict self, int sizedir) {
 	struct udict_item *new_vector, *iter, *end;
-	size_t new_mask = self->d_mask;
+	size_t new_mask = self->ud_mask;
 	if (sizedir > 0) {
 		new_mask = (new_mask << 1) | 1;
 		if unlikely(new_mask == 1)
 			new_mask = 16 - 1; /* Start out bigger than 2. */
 	} else if (sizedir < 0) {
-		if unlikely(!self->d_used) {
-			ASSERT(!self->d_used);
+		if unlikely(!self->ud_used) {
+			ASSERT(!self->ud_used);
 			/* Special case: delete the vector. */
-			if (self->d_size) {
-				ASSERT(self->d_elem != empty_dict_items);
+			if (self->ud_size) {
+				ASSERT(self->ud_elem != empty_dict_items);
 				/* Must discard dummy items. */
-				end = (iter = self->d_elem) + (self->d_mask + 1);
+				end = (iter = self->ud_elem) + (self->ud_mask + 1);
 				for (; iter < end; ++iter) {
 					ASSERT(iter->di_key == NULL ||
 					       iter->di_key == dummy);
@@ -650,27 +650,27 @@ udict_rehash(UDict *__restrict self, int sizedir) {
 						Dee_DecrefNokill(dummy);
 				}
 			}
-			if (self->d_elem != empty_dict_items)
-				Dee_Free(self->d_elem);
-			self->d_elem = (struct udict_item *)empty_dict_items;
-			self->d_mask = 0;
-			self->d_size = 0;
+			if (self->ud_elem != empty_dict_items)
+				Dee_Free(self->ud_elem);
+			self->ud_elem = (struct udict_item *)empty_dict_items;
+			self->ud_mask = 0;
+			self->ud_size = 0;
 			return true;
 		}
 		new_mask = (new_mask >> 1);
-		if (self->d_used >= new_mask)
+		if (self->ud_used >= new_mask)
 			return true;
 	}
-	ASSERT(self->d_used < new_mask);
-	ASSERT(self->d_used <= self->d_size);
+	ASSERT(self->ud_used < new_mask);
+	ASSERT(self->ud_used <= self->ud_size);
 	new_vector = (struct udict_item *)Dee_TryCallocc(new_mask + 1, sizeof(struct udict_item));
 	if unlikely(!new_vector)
 		return false;
-	ASSERT((self->d_elem == empty_dict_items) == (self->d_mask == 0));
-	ASSERT((self->d_elem == empty_dict_items) == (self->d_size == 0));
-	if (self->d_elem != empty_dict_items) {
+	ASSERT((self->ud_elem == empty_dict_items) == (self->ud_mask == 0));
+	ASSERT((self->ud_elem == empty_dict_items) == (self->ud_size == 0));
+	if (self->ud_elem != empty_dict_items) {
 		/* Re-insert all existing items into the new Dict vector. */
-		end = (iter = self->d_elem) + (self->d_mask + 1);
+		end = (iter = self->ud_elem) + (self->ud_mask + 1);
 		for (; iter < end; ++iter) {
 			struct udict_item *item;
 			dhash_t i, perturb;
@@ -687,13 +687,13 @@ udict_rehash(UDict *__restrict self, int sizedir) {
 			item->di_key   = iter->di_key;
 			item->di_value = iter->di_value;
 		}
-		Dee_Free(self->d_elem);
+		Dee_Free(self->ud_elem);
 		/* With all dummy items gone, the size now equals what is actually used. */
-		self->d_size = self->d_used;
+		self->ud_size = self->ud_used;
 	}
-	ASSERT(self->d_size == self->d_used);
-	self->d_mask = new_mask;
-	self->d_elem = new_vector;
+	ASSERT(self->ud_size == self->ud_used);
+	self->ud_mask = new_mask;
+	self->ud_elem = new_vector;
 	return true;
 }
 
@@ -703,10 +703,10 @@ udict_contains(UDict *self, DeeObject *key) {
 	dhash_t i, perturb;
 	dhash_t hash = UHASH(key);
 	UDict_LockRead(self);
-	perturb = i = hash & self->d_mask;
+	perturb = i = hash & self->ud_mask;
 	for (;; UDict_HashNx(i, perturb)) {
 		struct udict_item *item;
-		item = &self->d_elem[i & self->d_mask];
+		item = &self->ud_elem[i & self->ud_mask];
 		if (USAME(item->di_key, key)) {
 			UDict_LockEndRead(self);
 			return_true; /* Found the item. */
@@ -724,10 +724,10 @@ udict_getitem(UDict *self, DeeObject *key) {
 	dhash_t i, perturb;
 	dhash_t hash = UHASH(key);
 	UDict_LockRead(self);
-	perturb = i = hash & self->d_mask;
+	perturb = i = hash & self->ud_mask;
 	for (;; UDict_HashNx(i, perturb)) {
 		struct udict_item *item;
-		item = &self->d_elem[i & self->d_mask];
+		item = &self->ud_elem[i & self->ud_mask];
 		if (USAME(item->di_key, key)) {
 			/* Found the item. */
 			DREF DeeObject *result;
@@ -749,10 +749,10 @@ UDict_GetItemDef(UDict *self, DeeObject *key, DeeObject *def) {
 	dhash_t i, perturb;
 	dhash_t hash = UHASH(key);
 	UDict_LockRead(self);
-	perturb = i = hash & self->d_mask;
+	perturb = i = hash & self->ud_mask;
 	for (;; UDict_HashNx(i, perturb)) {
 		struct udict_item *item;
-		item = &self->d_elem[i & self->d_mask];
+		item = &self->ud_elem[i & self->ud_mask];
 		if (USAME(item->di_key, key)) {
 			/* Found the item. */
 			DREF DeeObject *result;
@@ -776,10 +776,10 @@ udict_popitem(UDict *self, DeeObject *key, DeeObject *def) {
 	dhash_t i, perturb;
 	dhash_t hash = UHASH(key);
 	UDict_LockWrite(self);
-	perturb = i = hash & self->d_mask;
+	perturb = i = hash & self->ud_mask;
 	for (;; UDict_HashNx(i, perturb)) {
 		struct udict_item *item;
-		item = &self->d_elem[i & self->d_mask];
+		item = &self->ud_elem[i & self->ud_mask];
 		if (USAME(item->di_key, key)) {
 			/* Found the item. */
 			DREF DeeObject *result;
@@ -787,8 +787,8 @@ udict_popitem(UDict *self, DeeObject *key, DeeObject *def) {
 			Dee_Incref(dummy);
 			item->di_key   = dummy;
 			item->di_value = NULL;
-			ASSERT(self->d_used);
-			if (--self->d_used <= self->d_size / 3)
+			ASSERT(self->ud_used);
+			if (--self->ud_used <= self->ud_size / 3)
 				udict_rehash(self, -1);
 			UDict_LockEndWrite(self);
 			Dee_DecrefNokill(key);
@@ -820,10 +820,10 @@ again:
 	UDict_LockWrite(self);
 again_locked:
 	first_dummy = NULL;
-	perturb = i = hash & self->d_mask;
+	perturb = i = hash & self->ud_mask;
 	for (;; UDict_HashNx(i, perturb)) {
 		struct udict_item *item;
-		item = &self->d_elem[i & self->d_mask];
+		item = &self->ud_elem[i & self->ud_mask];
 		if (!item->di_key) {
 			if (!first_dummy)
 				first_dummy = item;
@@ -843,7 +843,7 @@ again_locked:
 			return 0;
 		}
 	}
-	if (first_dummy && self->d_size + 1 < self->d_mask) {
+	if (first_dummy && self->ud_size + 1 < self->ud_mask) {
 		ASSERT(first_dummy != empty_dict_items);
 		ASSERT(!first_dummy->di_key ||
 		       first_dummy->di_key == dummy);
@@ -854,10 +854,10 @@ again_locked:
 		first_dummy->di_value = value;
 		Dee_Incref(key);
 		Dee_Incref(value);
-		++self->d_used;
-		++self->d_size;
+		++self->ud_used;
+		++self->ud_size;
 		/* Try to keep the Dict vector big at least twice as big as the element count. */
-		if (self->d_size * 2 > self->d_mask)
+		if (self->ud_size * 2 > self->ud_mask)
 			udict_rehash(self, 1);
 		UDict_LockEndWrite(self);
 		return 0;
@@ -888,10 +888,10 @@ again:
 	UDict_LockWrite(self);
 again_locked:
 	first_dummy = NULL;
-	perturb = i = hash & self->d_mask;
+	perturb = i = hash & self->ud_mask;
 	for (;; UDict_HashNx(i, perturb)) {
 		struct udict_item *item;
-		item = &self->d_elem[i & self->d_mask];
+		item = &self->ud_elem[i & self->ud_mask];
 		if (!item->di_key) {
 			if (!first_dummy)
 				first_dummy = item;
@@ -929,7 +929,7 @@ again_locked:
 		UDict_LockEndWrite(self);
 		return 0;
 	}
-	if (first_dummy && self->d_size + 1 < self->d_mask) {
+	if (first_dummy && self->ud_size + 1 < self->ud_mask) {
 		ASSERT(first_dummy != empty_dict_items);
 		ASSERT(!first_dummy->di_key ||
 		       first_dummy->di_key == dummy);
@@ -940,10 +940,10 @@ again_locked:
 		first_dummy->di_value = value;
 		Dee_Incref(key);
 		Dee_Incref(value);
-		++self->d_used;
-		++self->d_size;
+		++self->ud_used;
+		++self->ud_size;
 		/* Try to keep the Dict vector big at least twice as big as the element count. */
-		if (self->d_size * 2 > self->d_mask)
+		if (self->ud_size * 2 > self->ud_mask)
 			udict_rehash(self, 1);
 		UDict_LockEndWrite(self);
 		return 0;
@@ -960,7 +960,7 @@ again_locked:
 
 PRIVATE WUNUSED NONNULL((1)) size_t DCALL
 udict_nsi_getsize(UDict *__restrict self) {
-	return atomic_read(&self->d_used);
+	return atomic_read(&self->ud_used);
 }
 
 PRIVATE WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
@@ -997,7 +997,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 udict_size(UDict *__restrict self) {
-	return DeeInt_NewSize(atomic_read(&self->d_used));
+	return DeeInt_NewSize(atomic_read(&self->ud_used));
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -1007,9 +1007,9 @@ udict_iter(UDict *__restrict self) {
 	if unlikely(!result)
 		goto done;
 	DeeObject_Init(result, &UDictIterator_Type);
-	result->di_dict = self;
+	result->udi_dict = self;
 	Dee_Incref(self);
-	result->di_next = atomic_read(&self->d_elem);
+	result->udi_next = atomic_read(&self->ud_elem);
 done:
 	return (DREF DeeObject *)result;
 }
@@ -1060,15 +1060,15 @@ udict_popsomething(UDict *self, size_t argc, DeeObject *const *argv) {
 	if unlikely(!result)
 		goto err;
 	UDict_LockWrite(self);
-	if unlikely(!self->d_used) {
+	if unlikely(!self->ud_used) {
 		UDict_LockEndWrite(self);
 		DeeTuple_FreeUninitialized(result);
 		err_empty_sequence((DeeObject *)self);
 		goto err;
 	}
-	iter = self->d_elem;
+	iter = self->ud_elem;
 	while (!iter->di_key || iter->di_key == dummy) {
-		ASSERT(iter != self->d_elem + self->d_mask);
+		ASSERT(iter != self->ud_elem + self->ud_mask);
 		++iter;
 	}
 	DeeTuple_SET(result, 0, iter->di_key);   /* Inherit reference. */
@@ -1076,8 +1076,8 @@ udict_popsomething(UDict *self, size_t argc, DeeObject *const *argv) {
 	Dee_Incref(dummy);
 	iter->di_key   = dummy;
 	iter->di_value = NULL;
-	ASSERT(self->d_used);
-	if (--self->d_used <= self->d_size / 3)
+	ASSERT(self->ud_used);
+	if (--self->ud_used <= self->ud_size / 3)
 		udict_rehash(self, -1);
 	UDict_LockEndWrite(self);
 	return result;
@@ -1188,7 +1188,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 udict_sizeof(UDict *self) {
 	return DeeInt_NewSize(sizeof(UDict) +
-	                      ((self->d_mask + 1) *
+	                      ((self->ud_mask + 1) *
 	                       sizeof(struct udict_item)));
 }
 
@@ -1206,8 +1206,8 @@ again:
 		goto err;
 	UDict_LockRead(self);
 	is_first = true;
-	vector   = self->d_elem;
-	mask     = self->d_mask;
+	vector   = self->ud_elem;
+	mask     = self->ud_mask;
 	end      = (iter = vector) + (mask + 1);
 	for (; iter < end; ++iter) {
 		DREF DeeObject *key, *value;
@@ -1227,8 +1227,8 @@ again:
 			goto err;
 		is_first = false;
 		UDict_LockRead(self);
-		if (self->d_elem != vector ||
-		    self->d_mask != mask)
+		if (self->ud_elem != vector ||
+		    self->ud_mask != mask)
 			goto restart;
 	}
 	UDict_LockEndRead(self);
@@ -1257,8 +1257,8 @@ PRIVATE struct type_getset tpconst udict_getsets[] = {
 };
 
 PRIVATE struct type_member tpconst udict_members[] = {
-	TYPE_MEMBER_FIELD("__mask__", STRUCT_CONST | STRUCT_SIZE_T, offsetof(UDict, d_mask)),
-	TYPE_MEMBER_FIELD("__size__", STRUCT_CONST | STRUCT_SIZE_T, offsetof(UDict, d_size)),
+	TYPE_MEMBER_FIELD("__mask__", STRUCT_CONST | STRUCT_SIZE_T, offsetof(UDict, ud_mask)),
+	TYPE_MEMBER_FIELD("__size__", STRUCT_CONST | STRUCT_SIZE_T, offsetof(UDict, ud_size)),
 	TYPE_MEMBER_END
 };
 
@@ -1403,10 +1403,10 @@ INTERN DeeTypeObject UDict_Type = {
 
 
 #undef READ_ITEM
-#define READ_ITEM(x) atomic_read(&(x)->di_next)
+#define READ_ITEM(x) atomic_read(&(x)->urdi_next)
 
-STATIC_ASSERT(offsetof(UDictIterator, di_dict) == offsetof(URoDictIterator, di_dict));
-STATIC_ASSERT(offsetof(UDictIterator, di_next) == offsetof(URoDictIterator, di_next));
+STATIC_ASSERT(offsetof(UDictIterator, udi_dict) == offsetof(URoDictIterator, urdi_dict));
+STATIC_ASSERT(offsetof(UDictIterator, udi_next) == offsetof(URoDictIterator, urdi_next));
 #define urodictiterator_copy  udictiterator_copy
 #define urodictiterator_fini  udictiterator_fini
 #define urodictiterator_visit udictiterator_visit
@@ -1415,21 +1415,21 @@ STATIC_ASSERT(offsetof(UDictIterator, di_next) == offsetof(URoDictIterator, di_n
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 urodictiterator_bool(URoDictIterator *__restrict self) {
 	struct udict_item *item = READ_ITEM(self);
-	URoDict *dict           = self->di_dict;
+	URoDict *dict           = self->urdi_dict;
 	/* Check if the iterator is in-bounds.
 	 * NOTE: Since this is nothing but a shallow boolean check anyways, there
 	 *       is no need to lock the Dict since we're not dereferencing anything. */
-	return (item >= dict->rd_elem &&
-	        item < dict->rd_elem + (dict->rd_mask + 1));
+	return (item >= dict->urd_elem &&
+	        item < dict->urd_elem + (dict->urd_mask + 1));
 }
 
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 urodictiterator_ctor(URoDictIterator *__restrict self) {
-	self->di_dict = (DREF URoDict *)DeeObject_NewDefault(&URoDict_Type);
-	if unlikely(!self->di_dict)
+	self->urdi_dict = (DREF URoDict *)DeeObject_NewDefault(&URoDict_Type);
+	if unlikely(!self->urdi_dict)
 		goto err;
-	self->di_next = self->di_dict->rd_elem;
+	self->urdi_next = self->urdi_dict->urd_elem;
 	return 0;
 err:
 	return -1;
@@ -1443,9 +1443,9 @@ urodictiterator_init(URoDictIterator *__restrict self,
 		goto err;
 	if (DeeObject_AssertTypeExact(dict, &URoDict_Type))
 		goto err;
-	self->di_dict = dict;
+	self->urdi_dict = dict;
 	Dee_Incref(dict);
-	self->di_next = dict->rd_elem;
+	self->urdi_next = dict->urd_elem;
 	return 0;
 err:
 	return -1;
@@ -1454,21 +1454,21 @@ err:
 PRIVATE WUNUSED NONNULL((1)) struct udict_item *DCALL
 urodictiterator_nextitem(URoDictIterator *__restrict self) {
 	struct udict_item *item, *end;
-	end = self->di_dict->rd_elem + self->di_dict->rd_mask + 1;
+	end = self->urdi_dict->urd_elem + self->urdi_dict->urd_mask + 1;
 	for (;;) {
 		struct udict_item *old_item;
-		item     = atomic_read(&self->di_next);
+		item     = atomic_read(&self->urdi_next);
 		old_item = item;
 		if (item >= end)
 			goto iter_exhausted;
 		while (item < end && !item->di_key)
 			++item;
 		if (item == end) {
-			if (!atomic_cmpxch_weak_or_write(&self->di_next, old_item, item))
+			if (!atomic_cmpxch_weak_or_write(&self->urdi_next, old_item, item))
 				continue;
 			goto iter_exhausted;
 		}
-		if (atomic_cmpxch_weak_or_write(&self->di_next, old_item, item + 1))
+		if (atomic_cmpxch_weak_or_write(&self->urdi_next, old_item, item + 1))
 			break;
 	}
 	return item;
@@ -1505,7 +1505,7 @@ urodictiterator_nextvalue(URoDictIterator *__restrict self) {
 
 
 PRIVATE struct type_member tpconst urodictiterator_members[] = {
-	TYPE_MEMBER_FIELD_DOC("seq", STRUCT_OBJECT, offsetof(URoDictIterator, di_dict), "->?AFrozen?GUniqueDict"),
+	TYPE_MEMBER_FIELD_DOC("seq", STRUCT_OBJECT, offsetof(URoDictIterator, urdi_dict), "->?AFrozen?GUniqueDict"),
 	TYPE_MEMBER_END
 };
 
@@ -1557,11 +1557,11 @@ INTERN DeeTypeObject URoDictIterator_Type = {
 
 
 
-STATIC_ASSERT(offsetof(URoDict, rd_size) == offsetof(UDict, d_used));
+STATIC_ASSERT(offsetof(URoDict, urd_size) == offsetof(UDict, ud_used));
 #define urodict_bool udict_bool
 
 #define URODICT_ALLOC(mask)  ((DREF URoDict *)DeeObject_Calloc(SIZEOF_URODICT(mask)))
-#define SIZEOF_URODICT(mask) (offsetof(URoDict, rd_elem) + (((mask) + 1) * sizeof(struct udict_item)))
+#define SIZEOF_URODICT(mask) (offsetof(URoDict, urd_elem) + (((mask) + 1) * sizeof(struct udict_item)))
 #define URODICT_INITIAL_MASK 0x03
 
 INTERN WUNUSED DREF URoDict *DCALL URoDict_New(void) {
@@ -1569,9 +1569,9 @@ INTERN WUNUSED DREF URoDict *DCALL URoDict_New(void) {
 	result = (DREF URoDict *)DeeObject_Malloc(SIZEOF_URODICT(0));
 	if unlikely(!result)
 		goto done;
-	result->rd_mask           = 0;
-	result->rd_size           = 0;
-	result->rd_elem[0].di_key = NULL;
+	result->urd_mask           = 0;
+	result->urd_size           = 0;
+	result->urd_elem[0].di_key = NULL;
 	DeeObject_Init(result, &URoDict_Type);
 done:
 	return result;
@@ -1587,8 +1587,8 @@ URoDict_NewWithHint(size_t num_items) {
 	result = URODICT_ALLOC(mask);
 	if unlikely(!result)
 		goto done;
-	result->rd_mask = mask;
-	result->rd_size = 0;
+	result->urd_mask = mask;
+	result->urd_size = 0;
 	DeeObject_Init(result, &URoDict_Type);
 done:
 	return result;
@@ -1605,16 +1605,16 @@ urodict_rehash(DREF URoDict *__restrict self,
 	for (i = 0; i < old_mask; ++i) {
 		size_t j, perturb;
 		struct udict_item *item;
-		if (!self->rd_elem[i].di_key)
+		if (!self->urd_elem[i].di_key)
 			continue;
-		perturb = j = UHASH(self->rd_elem[i].di_key) & new_mask;
+		perturb = j = UHASH(self->urd_elem[i].di_key) & new_mask;
 		for (;; URoDict_HashNx(j, perturb)) {
-			item = &result->rd_elem[j & new_mask];
+			item = &result->urd_elem[j & new_mask];
 			if (!item->di_key)
 				break;
 		}
 		/* Copy the old item into the new slot. */
-		memcpy(item, &self->rd_elem[i], sizeof(struct udict_item));
+		memcpy(item, &self->urd_elem[i], sizeof(struct udict_item));
 	}
 	DeeObject_Free(self);
 done:
@@ -1631,7 +1631,7 @@ urodict_insert(DREF URoDict *__restrict self, size_t mask,
 	hash    = UHASH(key);
 	perturb = i = hash & mask;
 	for (;; URoDict_HashNx(i, perturb)) {
-		item = &self->rd_elem[i & mask];
+		item = &self->urd_elem[i & mask];
 		if (!item->di_key)
 			break;
 		if (!USAME(item->di_key, key))
@@ -1652,19 +1652,19 @@ PRIVATE WUNUSED NONNULL((1, 2, 3)) int DCALL
 URoDict_Insert(DREF URoDict **__restrict pself,
                DeeObject *key, DeeObject *value) {
 	URoDict *self = *pself;
-	if unlikely(self->rd_size * 2 > self->rd_mask) {
-		size_t old_size = self->rd_size;
-		size_t new_mask = (self->rd_mask << 1) | 1;
-		self = urodict_rehash(self, self->rd_mask, new_mask);
+	if unlikely(self->urd_size * 2 > self->urd_mask) {
+		size_t old_size = self->urd_size;
+		size_t new_mask = (self->urd_mask << 1) | 1;
+		self = urodict_rehash(self, self->urd_mask, new_mask);
 		if unlikely(!self)
 			goto err;
-		self->rd_mask = new_mask;
-		self->rd_size = old_size; /* `rd_size' is not saved by `rehash()' */
+		self->urd_mask = new_mask;
+		self->urd_size = old_size; /* `urd_size' is not saved by `rehash()' */
 	}
 	/* Insert the new key/value-pair into the Dict. */
 	Dee_Incref(key);
 	Dee_Incref(value);
-	urodict_insert(self, self->rd_mask, &self->rd_size, key, value);
+	urodict_insert(self, self->urd_mask, &self->urd_size, key, value);
 	return 0;
 err:
 	return -1;
@@ -1705,17 +1705,17 @@ URoDict_FromIterator_impl(DeeObject *__restrict self, size_t mask) {
 	if unlikely(!elem)
 		goto err_r;
 	/* Fill in control members and setup the resulting object. */
-	result->rd_size = elem_count;
-	result->rd_mask = mask;
+	result->urd_size = elem_count;
+	result->urd_mask = mask;
 	DeeObject_Init(result, &URoDict_Type);
 done:
 	return result;
 err_r:
 	for (elem_count = 0; elem_count <= mask; ++elem_count) {
-		if (!result->rd_elem[elem_count].di_key)
+		if (!result->urd_elem[elem_count].di_key)
 			continue;
-		Dee_Decref(result->rd_elem[elem_count].di_key);
-		Dee_Decref(result->rd_elem[elem_count].di_value);
+		Dee_Decref(result->urd_elem[elem_count].di_key);
+		Dee_Decref(result->urd_elem[elem_count].di_value);
 	}
 	DeeObject_Free(result);
 	return NULL;
@@ -1761,18 +1761,18 @@ urodict_deepcopy(URoDict *__restrict self) {
 	DREF URoDict *result;
 	size_t i;
 	int temp;
-	result = (DREF URoDict *)URoDict_NewWithHint(self->rd_size);
+	result = (DREF URoDict *)URoDict_NewWithHint(self->urd_size);
 	if unlikely(!result)
 		goto done;
-	for (i = 0; i <= self->rd_mask; ++i) {
+	for (i = 0; i <= self->urd_mask; ++i) {
 		DREF DeeObject *key_copy, *value_copy;
 		/* Deep-copy the key & value */
-		if (!self->rd_elem[i].di_key)
+		if (!self->urd_elem[i].di_key)
 			continue;
-		key_copy = DeeObject_DeepCopy(self->rd_elem[i].di_key);
+		key_copy = DeeObject_DeepCopy(self->urd_elem[i].di_key);
 		if unlikely(!key_copy)
 			goto err;
-		value_copy = DeeObject_DeepCopy(self->rd_elem[i].di_value);
+		value_copy = DeeObject_DeepCopy(self->urd_elem[i].di_value);
 		if unlikely(!value_copy) {
 			Dee_Decref(key_copy);
 			goto err;
@@ -1805,22 +1805,22 @@ err:
 PRIVATE NONNULL((1)) void DCALL
 urodict_fini(URoDict *__restrict self) {
 	size_t i;
-	for (i = 0; i <= self->rd_mask; ++i) {
-		if (!self->rd_elem[i].di_key)
+	for (i = 0; i <= self->urd_mask; ++i) {
+		if (!self->urd_elem[i].di_key)
 			continue;
-		Dee_Decref(self->rd_elem[i].di_key);
-		Dee_Decref(self->rd_elem[i].di_value);
+		Dee_Decref(self->urd_elem[i].di_key);
+		Dee_Decref(self->urd_elem[i].di_value);
 	}
 }
 
 PRIVATE NONNULL((1, 2)) void DCALL
 urodict_visit(URoDict *__restrict self, dvisit_t proc, void *arg) {
 	size_t i;
-	for (i = 0; i <= self->rd_mask; ++i) {
-		if (!self->rd_elem[i].di_key)
+	for (i = 0; i <= self->urd_mask; ++i) {
+		if (!self->urd_elem[i].di_key)
 			continue;
-		Dee_Visit(self->rd_elem[i].di_key);
-		Dee_Visit(self->rd_elem[i].di_value);
+		Dee_Visit(self->urd_elem[i].di_key);
+		Dee_Visit(self->urd_elem[i].di_value);
 	}
 }
 
@@ -1832,13 +1832,13 @@ urodict_repr(URoDict *__restrict self) {
 	size_t i;
 	if (UNICODE_PRINTER_PRINT(&p, "{ ") < 0)
 		goto err;
-	for (i = 0; i <= self->rd_mask; ++i) {
-		if (!self->rd_elem[i].di_key)
+	for (i = 0; i <= self->urd_mask; ++i) {
+		if (!self->urd_elem[i].di_key)
 			continue;
 		if unlikely(unicode_printer_printf(&p, "%s%r: %r",
 		                                   is_first ? "" : ", ",
-		                                   self->rd_elem[i].di_key,
-		                                   self->rd_elem[i].di_value) < 0)
+		                                   self->urd_elem[i].di_key,
+		                                   self->urd_elem[i].di_value) < 0)
 			goto err;
 		is_first = false;
 	}
@@ -1853,8 +1853,8 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) size_t DCALL
 urodict_nsi_getsize(URoDict *__restrict self) {
-	ASSERT(self->rd_size != (size_t)-2);
-	return self->rd_size;
+	ASSERT(self->urd_size != (size_t)-2);
+	return self->urd_size;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
@@ -1883,8 +1883,8 @@ urodict_iter(URoDict *__restrict self) {
 	result = DeeObject_MALLOC(URoDictIterator);
 	if unlikely(!result)
 		goto done;
-	result->di_dict = self;
-	result->di_next = self->rd_elem;
+	result->urdi_dict = self;
+	result->urdi_next = self->urd_elem;
 	Dee_Incref(self);
 	DeeObject_Init(result, &URoDictIterator_Type);
 done:
@@ -1893,7 +1893,7 @@ done:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 urodict_size(URoDict *__restrict self) {
-	return DeeInt_NewSize(self->rd_size);
+	return DeeInt_NewSize(self->urd_size);
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
@@ -1901,9 +1901,9 @@ urodict_contains(URoDict *self, DeeObject *key) {
 	size_t i, perturb, hash;
 	struct udict_item *item;
 	hash    = UHASH(key);
-	perturb = i = hash & self->rd_mask;
+	perturb = i = hash & self->urd_mask;
 	for (;; URoDict_HashNx(i, perturb)) {
-		item = &self->rd_elem[i & self->rd_mask];
+		item = &self->urd_elem[i & self->urd_mask];
 		if (!item->di_key)
 			break;
 		if (USAME(item->di_key, key))
@@ -1917,9 +1917,9 @@ urodict_getitem(URoDict *self, DeeObject *key) {
 	size_t i, perturb, hash;
 	struct udict_item *item;
 	hash    = UHASH(key);
-	perturb = i = hash & self->rd_mask;
+	perturb = i = hash & self->urd_mask;
 	for (;; URoDict_HashNx(i, perturb)) {
-		item = &self->rd_elem[i & self->rd_mask];
+		item = &self->urd_elem[i & self->urd_mask];
 		if (!item->di_key)
 			break;
 		if (USAME(item->di_key, key))
@@ -1970,8 +1970,8 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 urodict_sizeof(URoDict *self) {
-	return DeeInt_NewSize(offsetof(URoDict, rd_elem) +
-	                      ((self->rd_mask + 1) *
+	return DeeInt_NewSize(offsetof(URoDict, urd_elem) +
+	                      ((self->urd_mask + 1) *
 	                       sizeof(struct udict_item)));
 }
 
@@ -1990,8 +1990,8 @@ PRIVATE struct type_getset tpconst urodict_getsets[] = {
 };
 
 PRIVATE struct type_member tpconst urodict_members[] = {
-	TYPE_MEMBER_FIELD("__mask__", STRUCT_CONST | STRUCT_SIZE_T, offsetof(URoDict, rd_mask)),
-	TYPE_MEMBER_FIELD("__size__", STRUCT_CONST | STRUCT_SIZE_T, offsetof(URoDict, rd_size)),
+	TYPE_MEMBER_FIELD("__mask__", STRUCT_CONST | STRUCT_SIZE_T, offsetof(URoDict, urd_mask)),
+	TYPE_MEMBER_FIELD("__size__", STRUCT_CONST | STRUCT_SIZE_T, offsetof(URoDict, urd_size)),
 	TYPE_MEMBER_END
 };
 

@@ -3255,12 +3255,12 @@ asm_bind_deemon_export(DeeObject *__restrict constval) {
 		goto done;
 	}
 do_search:
-	rwlock_read(&deemon_module.mo_lock);
+	DeeModule_LockRead(&deemon_module);
 	for (i = 0; i < num_builtins_obj; ++i) {
 		struct symbol *result;
 		if (deemon_module.mo_globalv[i] != constval)
 			continue;
-		rwlock_endread(&deemon_module.mo_lock);
+		DeeModule_LockEndRead(&deemon_module);
 did_find_export:
 		/* Check if the symbol has already been bound. */
 		result = current_rootscope->rs_scope.bs_scope.s_del;
@@ -3283,7 +3283,7 @@ did_find_export:
 done_result:
 		return result;
 	}
-	rwlock_endread(&deemon_module.mo_lock);
+	DeeModule_LockEndRead(&deemon_module);
 done:
 	return ASM_BIND_DEEMON_EXPORT_NOTFOUND;
 }

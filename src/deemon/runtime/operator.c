@@ -1088,7 +1088,7 @@ DeeObject_XInplaceDeepCopyWithLock(DREF DeeObject **__restrict pself,
 	atomic_rwlock_read(plock);
 	temp = *pself;
 	if (!temp) {
-		rwlock_endread(plock);
+		atomic_rwlock_endread(plock);
 		goto done;
 	}
 	Dee_Incref(temp);
@@ -2522,7 +2522,7 @@ PUBLIC WUNUSED NONNULL((1, 2)) int
                             Dee_uint128_t *__restrict result) {
 	int error = DeeObject_GetInt128(self, (Dee_int128_t *)result);
 	if (error == INT_SIGNED) {
-		if (__hybrid_int128_isneg(*result))
+		if (__hybrid_int128_isneg(*(Dee_int128_t *)result))
 			return err_integer_overflow(self, 128, false);
 #if INT_SIGNED != 0
 		return 0;

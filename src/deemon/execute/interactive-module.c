@@ -448,7 +448,6 @@ do_exec_code:
 		current_code->co_staticv   = NULL;
 		current_code->co_staticc   = 0;
 	} else {
-		size_t i;
 		instruction_t *text;
 		assembler_init();
 		current_assembler.a_constv = (DREF DeeObject **)Dee_Mallocc(current_assembler.a_consta,
@@ -457,12 +456,11 @@ do_exec_code:
 			goto done_assembler_fini;
 
 		/* Copy over static variables. */
-		atomic_rwlock_read(&current_code->co_static_lock);
-		for (i = 0; i < current_assembler.a_constc; ++i) {
-			current_assembler.a_constv[i] = current_code->co_staticv[i];
-			Dee_Incref(current_assembler.a_constv[i]);
-		}
-		atomic_rwlock_endread(&current_code->co_static_lock);
+		DeeCode_StaticLockRead(current_code);
+		Dee_Movrefv(current_assembler.a_constv,
+		            current_code->co_staticv,
+		            current_assembler.a_constc);
+		DeeCode_StaticLockEndRead(current_code);
 
 		/* Copy over all the unwritten text. */
 		text = asm_alloc(preexisting_codesize);
@@ -1104,7 +1102,7 @@ imod_init(InteractiveModule *__restrict self,
 	}
 
 #ifndef CONFIG_NO_THREADS
-	rwlock_init(&self->im_module.mo_lock);
+	atomic_rwlock_init(&self->im_module.mo_lock);
 	/* Setup the module to indicate that it isn't being loaded right now. */
 	self->im_module.mo_loader = NULL;
 #endif /* !CONFIG_NO_THREADS */

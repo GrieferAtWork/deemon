@@ -34,7 +34,7 @@
 #include <deemon/system-features.h> /* strend(), memcpyc(), ... */
 #include <deemon/tuple.h>
 #include <deemon/util/atomic.h>
-#include <deemon/util/rwlock.h>
+#include <deemon/util/lock.h>
 
 #include "_res.h"
 
@@ -67,7 +67,7 @@ typedef struct {
 	unsigned int e_version; /* The environment version when iteration started. */
 } Env;
 
-PRIVATE rwlock_t env_lock = RWLOCK_INIT;
+PRIVATE atomic_rwlock_t env_lock = ATOMIC_RWLOCK_INIT;
 PRIVATE unsigned int env_version = 0;
 
 PRIVATE char *empty_env[] = { NULL };
@@ -75,10 +75,10 @@ PRIVATE char *empty_env[] = { NULL };
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 env_init(Env *__restrict self) {
 /*again:*/
-	rwlock_read(&env_lock);
+	atomic_rwlock_read(&env_lock);
 	self->e_iter    = environ;
 	self->e_version = env_version;
-	rwlock_endread(&env_lock);
+	atomic_rwlock_endread(&env_lock);
 	if unlikely(!self->e_iter) {
 		self->e_iter = empty_env;
 		return -1;
@@ -113,11 +113,11 @@ env_next(Env *__restrict self) {
 	DREF DeeObject *result_tuple;
 	DREF DeeObject *name, *value;
 	char **presult, *result, *valstart;
-	rwlock_read(&env_lock);
+	atomic_rwlock_read(&env_lock);
 	/* Check environment version number. */
 	if ((my_version = self->e_version) != env_version) {
 iter_done:
-		rwlock_endread(&env_lock);
+		atomic_rwlock_endread(&env_lock);
 		return ITER_DONE;
 	}
 	do {
@@ -133,11 +133,11 @@ allocate_value:
 	value = DeeString_TryNewSized(valstart, strlen(valstart));
 	if unlikely(!value) {
 		/* Collect memory and try again. */
-		rwlock_endread(&env_lock);
+		atomic_rwlock_endread(&env_lock);
 		if (!Dee_CollectMemory(offsetof(DeeStringObject, s_str) +
 		                       (strlen(valstart) + 1) * sizeof(char)))
 			goto err;
-		rwlock_read(&env_lock);
+		atomic_rwlock_read(&env_lock);
 		if (my_version != env_version)
 			goto iter_done;
 		goto allocate_value;
@@ -148,18 +148,18 @@ allocate_name:
 	name = DeeString_TryNewSized(result, (size_t)(valstart - result));
 	if unlikely(!name) {
 		/* Collect memory and try again. */
-		rwlock_endread(&env_lock);
+		atomic_rwlock_endread(&env_lock);
 		if (!Dee_CollectMemory(offsetof(DeeStringObject, s_str) +
 		                       ((size_t)(valstart - result) + 1) * sizeof(char)))
 			goto err_value;
-		rwlock_read(&env_lock);
+		atomic_rwlock_read(&env_lock);
 		if (my_version != env_version) {
 			Dee_Decref(value);
 			goto iter_done;
 		}
 		goto allocate_name;
 	}
-	rwlock_endread(&env_lock);
+	atomic_rwlock_endread(&env_lock);
 	/* All right! we've managed to read the name + value! */
 	result_tuple = DeeTuple_PackSymbolic(2, name, value); /* Inherit name+value on success. */
 	if unlikely(!result_tuple)
@@ -180,11 +180,11 @@ enviterator_next_key(DeeObject *__restrict self) {
 	DREF DeeObject *name;
 	char **presult, *result, *valstart;
 	Env *me = (Env *)self;
-	rwlock_read(&env_lock);
+	atomic_rwlock_read(&env_lock);
 	/* Check environment version number. */
 	if ((my_version = me->e_version) != env_version) {
 iter_done:
-		rwlock_endread(&env_lock);
+		atomic_rwlock_endread(&env_lock);
 		return ITER_DONE;
 	}
 	do {
@@ -203,16 +203,16 @@ allocate_name:
 	name = DeeString_TryNewSized(result, (size_t)(valstart - result));
 	if unlikely(!name) {
 		/* Collect memory and try again. */
-		rwlock_endread(&env_lock);
+		atomic_rwlock_endread(&env_lock);
 		if (!Dee_CollectMemory(offsetof(DeeStringObject, s_str) +
 		                       ((size_t)(valstart - result) + 1) * sizeof(char)))
 			goto err;
-		rwlock_read(&env_lock);
+		atomic_rwlock_read(&env_lock);
 		if (my_version != env_version)
 			goto iter_done;
 		goto allocate_name;
 	}
-	rwlock_endread(&env_lock);
+	atomic_rwlock_endread(&env_lock);
 	return name;
 err:
 	return NULL;
@@ -224,11 +224,11 @@ enviterator_next_value(DeeObject *__restrict self) {
 	DREF DeeObject *value;
 	char **presult, *result, *valstart;
 	Env *me = (Env *)self;
-	rwlock_read(&env_lock);
+	atomic_rwlock_read(&env_lock);
 	/* Check environment version number. */
 	if ((my_version = me->e_version) != env_version) {
 iter_done:
-		rwlock_endread(&env_lock);
+		atomic_rwlock_endread(&env_lock);
 		return ITER_DONE;
 	}
 	do {
@@ -246,17 +246,17 @@ allocate_value:
 		value = DeeString_TryNewSized(valstart, strlen(valstart));
 		if unlikely(!value) {
 			/* Collect memory and try again. */
-			rwlock_endread(&env_lock);
+			atomic_rwlock_endread(&env_lock);
 			if (!Dee_CollectMemory(offsetof(DeeStringObject, s_str) +
 			                       (strlen(valstart) + 1) * sizeof(char)))
 				goto err;
-			rwlock_read(&env_lock);
+			atomic_rwlock_read(&env_lock);
 			if (my_version != env_version)
 				goto iter_done;
 			goto allocate_value;
 		}
 	}
-	rwlock_endread(&env_lock);
+	atomic_rwlock_endread(&env_lock);
 	return value;
 err:
 	return NULL;
@@ -332,11 +332,11 @@ err_unknown_env_var_s(char const *__restrict name) {
 INTERN WUNUSED NONNULL((1)) bool DCALL
 fs_hasenv(/*String*/ DeeObject *__restrict name) {
 	bool result;
-	rwlock_read(&env_lock);
+	atomic_rwlock_read(&env_lock);
 	DBG_ALIGNMENT_DISABLE();
 	result = getenv(DeeString_STR(name)) != NULL;
 	DBG_ALIGNMENT_ENABLE();
-	rwlock_endread(&env_lock);
+	atomic_rwlock_endread(&env_lock);
 	return result;
 }
 
@@ -346,12 +346,12 @@ fs_getenv(DeeObject *__restrict name, bool try_get) {
 	char *strval;
 	size_t valsiz;
 again:
-	rwlock_read(&env_lock);
+	atomic_rwlock_read(&env_lock);
 	DBG_ALIGNMENT_DISABLE();
 	strval = getenv(DeeString_STR(name));
 	DBG_ALIGNMENT_ENABLE();
 	if (!strval) {
-		rwlock_endread(&env_lock);
+		atomic_rwlock_endread(&env_lock);
 		if (!try_get)
 			err_unknown_env_var(name);
 		return NULL;
@@ -359,7 +359,7 @@ again:
 	valsiz = strlen(strval);
 	result = DeeString_TryNewSized(strval, valsiz);
 	if unlikely(!result) {
-		rwlock_endread(&env_lock);
+		atomic_rwlock_endread(&env_lock);
 		/* Collect memory and try again. */
 		if (!try_get) {
 			if (Dee_CollectMemory(offsetof(DeeStringObject, s_str) +
@@ -368,7 +368,7 @@ again:
 		}
 		return NULL;
 	}
-	rwlock_endread(&env_lock);
+	atomic_rwlock_endread(&env_lock);
 	return result;
 }
 
@@ -381,13 +381,13 @@ fs_printenv(char const *__restrict name,
 	size_t envlen;
 	dssize_t error;
 again:
-	rwlock_read(&env_lock);
+	atomic_rwlock_read(&env_lock);
 	env_ver = env_version;
 	DBG_ALIGNMENT_DISABLE();
 	envval = getenv(name);
 	DBG_ALIGNMENT_ENABLE();
 	if (!envval) {
-		rwlock_endread(&env_lock);
+		atomic_rwlock_endread(&env_lock);
 		if (!try_get) {
 			err_unknown_env_var_s(name);
 			goto err;
@@ -395,20 +395,20 @@ again:
 		return 1;
 	}
 	envlen = strlen(envval);
-	rwlock_endread(&env_lock);
+	atomic_rwlock_endread(&env_lock);
 	buf = unicode_printer_alloc_utf8(printer, envlen);
 	if unlikely(!buf)
 		goto err;
-	rwlock_read(&env_lock);
+	atomic_rwlock_read(&env_lock);
 	/* Check if the environment changed in the mean time. */
 	if unlikely(env_ver != env_version) {
-		rwlock_endread(&env_lock);
+		atomic_rwlock_endread(&env_lock);
 		unicode_printer_free_utf8(printer, buf);
 		goto again;
 	}
 	/* Copy the environment variable string. */
 	memcpyc(buf, envval, envlen, sizeof(char));
-	rwlock_endread(&env_lock);
+	atomic_rwlock_endread(&env_lock);
 	error = unicode_printer_commit_utf8(printer, buf, envlen);
 	if unlikely(error < 0)
 		goto err;

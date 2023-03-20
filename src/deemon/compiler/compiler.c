@@ -33,7 +33,7 @@
 #include <deemon/string.h>
 #include <deemon/system-features.h> /* memcpy(), ... */
 #include <deemon/tuple.h>
-#include <deemon/util/rwlock.h>
+#include <deemon/util/recursive-rwlock.h>
 
 #include "../runtime/strings.h"
 
@@ -46,7 +46,7 @@ DECL_BEGIN
 #endif /* NDEBUG */
 
 #ifndef CONFIG_NO_THREADS
-PUBLIC recursive_rwlock_t DeeCompiler_Lock = RWLOCK_INIT;
+PUBLIC recursive_rwlock_t DeeCompiler_Lock = RECURSIVE_RWLOCK_INIT;
 #endif /* !CONFIG_NO_THREADS */
 
 PUBLIC struct weakref DeeCompiler_Active   = WEAKREF_INIT;

@@ -44,6 +44,7 @@
 #include <deemon/system-features.h> /* bzero(), ... */
 #include <deemon/tuple.h>
 #include <deemon/util/atomic.h>
+#include <deemon/util/lock.h>
 
 #include <hybrid/align.h>
 #include <hybrid/sched/yield.h>
@@ -296,13 +297,13 @@ again:
 				SCHED_YIELD();
 				goto again;
 			}
-			self->wr_pself                      = other->wr_pself;
-			self->wr_next                       = (struct weakref *)other;
+			self->wr_pself = other->wr_pself;
+			self->wr_next  = (struct weakref *)other;
 			((struct weakref *)other)->wr_pself = &self->wr_next;
 			WEAKREF_UNLOCK(other);
 			atomic_write(self->wr_pself, self);
 		} else {
-			atomic_write(&other->wr_next, NULL); /* WEAKREF_UNLOCK(other); */
+			atomic_write(&((struct weakref *)other)->wr_next, NULL); /* WEAKREF_UNLOCK(other); */
 			self->wr_obj = NULL;
 		}
 	} else {
@@ -379,8 +380,8 @@ again:
 							return;
 						SCHED_YIELD();
 #if 0 /* Potential SEGFAULT */
-      WEAKREF_LOCK(next);
-      WEAKREF_UNLOCK(next);
+						WEAKREF_LOCK(next);
+						WEAKREF_UNLOCK(next);
 #endif
 						goto again;
 					}
@@ -389,13 +390,13 @@ again:
 				}
 				atomic_write(self->wr_pself, next);
 			}
-			self->wr_pself                      = other->wr_pself;
+			self->wr_pself = other->wr_pself;
 			((struct weakref *)other)->wr_pself = &self->wr_next;
 			WEAKREF_UNLOCK(other);
 			atomic_write(&self->wr_next, other);
 			atomic_write(self->wr_pself, self);
 		} else {
-			atomic_write(&other->wr_next, NULL); /* WEAKREF_UNLOCK(other); */
+			atomic_write(&((struct weakref *)other)->wr_next, NULL); /* WEAKREF_UNLOCK(other); */
 			Dee_weakref_clear(self);
 		}
 	} else {
@@ -468,8 +469,8 @@ again:
 							return;
 						SCHED_YIELD();
 #if 0 /* Potential SEGFAULT */
-      WEAKREF_LOCK(next);
-      WEAKREF_UNLOCK(next);
+						WEAKREF_LOCK(next);
+						WEAKREF_UNLOCK(next);
 #endif
 						goto again;
 					}
@@ -978,19 +979,20 @@ restart_clear_weakrefs:
 #define FILE_AND_LINE_FORMAT "%s:%d: "
 #endif /* ... */
 
-#ifdef CONFIG_NO_THREADS
-#define BADREFCNT_BEGIN() (void)0
-#define BADREFCNT_END()   (void)0
-#else /* CONFIG_NO_THREADS */
-PRIVATE rwlock_t bad_refcnt_lock = RWLOCK_INIT;
-#define BADREFCNT_BEGIN() rwlock_write(&bad_refcnt_lock)
-#define BADREFCNT_END()   rwlock_endwrite(&bad_refcnt_lock)
+#ifndef CONFIG_NO_THREADS
+PRIVATE atomic_lock_t bad_refcnt_lock = ATOMIC_LOCK_INIT;
 #endif /* !CONFIG_NO_THREADS */
+#define bad_refcnt_lock_available()  Dee_atomic_lock_available(&bad_refcnt_lock)
+#define bad_refcnt_lock_acquired()   Dee_atomic_lock_acquired(&bad_refcnt_lock)
+#define bad_refcnt_lock_tryacquire() Dee_atomic_lock_tryacquire(&bad_refcnt_lock)
+#define bad_refcnt_lock_acquire()    Dee_atomic_lock_acquire(&bad_refcnt_lock)
+#define bad_refcnt_lock_waitfor()    Dee_atomic_lock_waitfor(&bad_refcnt_lock)
+#define bad_refcnt_lock_release()    Dee_atomic_lock_release(&bad_refcnt_lock)
 
 PUBLIC NONNULL((1)) void DCALL
 DeeFatal_BadIncref(DeeObject *ob, char const *file, int line) {
 	DeeTypeObject *type;
-	BADREFCNT_BEGIN();
+	bad_refcnt_lock_acquire();
 	Dee_DPRINTF("\n\n\n" FILE_AND_LINE_FORMAT "BAD_INCREF(%p)\n",
 	            file, line, ob);
 	Dee_DPRINTF("refcnt : %" PRFuSIZ " (%" PRFXSIZ ")\n", ob->ob_refcnt, ob->ob_refcnt);
@@ -1001,14 +1003,14 @@ DeeFatal_BadIncref(DeeObject *ob, char const *file, int line) {
 		Dee_DPRINTF("type : <INVALID> - %p", type);
 	}
 	Dee_DPRINTF("\n\n\n");
-	BADREFCNT_END();
+	bad_refcnt_lock_release();
 	Dee_BREAKPOINT();
 }
 
 PUBLIC NONNULL((1)) void DCALL
 DeeFatal_BadDecref(DeeObject *ob, char const *file, int line) {
 	DeeTypeObject *type;
-	BADREFCNT_BEGIN();
+	bad_refcnt_lock_acquire();
 	Dee_DPRINTF("\n\n\n" FILE_AND_LINE_FORMAT "BAD_DECREF(%p)\n",
 	            file, line, ob);
 	Dee_DPRINTF("refcnt : %" PRFuSIZ " (%" PRFXSIZ ")\n", ob->ob_refcnt, ob->ob_refcnt);
@@ -1019,7 +1021,7 @@ DeeFatal_BadDecref(DeeObject *ob, char const *file, int line) {
 		Dee_DPRINTF("type : <INVALID> - %p", type);
 	}
 	Dee_DPRINTF("\n\n\n");
-	BADREFCNT_END();
+	bad_refcnt_lock_release();
 	Dee_BREAKPOINT();
 }
 #else /* !CONFIG_NO_BADREFCNT_CHECKS */
@@ -1125,7 +1127,7 @@ again:
 	orig_type = type = Dee_TYPE(self);
 #ifndef CONFIG_NO_BADREFCNT_CHECKS
 	if (self->ob_refcnt != 0) {
-		BADREFCNT_BEGIN();
+		bad_refcnt_lock_acquire();
 		Dee_DPRINTF("\n\n\n" FILE_AND_LINE_FORMAT "BAD_DESTROY(%p)\n",
 		            file, line, self);
 		Dee_DPRINTF("refcnt : %" PRFuSIZ " (%" PRFXSIZ ")\n", self->ob_refcnt, self->ob_refcnt);
@@ -1135,7 +1137,7 @@ again:
 			Dee_DPRINTF("type : <INVALID> - %p", type);
 		}
 		Dee_DPRINTF("\n\n\n");
-		BADREFCNT_END();
+		bad_refcnt_lock_release();
 		Dee_BREAKPOINT();
 	}
 #endif /* !CONFIG_NO_BADREFCNT_CHECKS */
@@ -2707,7 +2709,7 @@ type_new_raw(DeeTypeObject *__restrict self) {
 	while (DeeType_IsClass(first_base)) {
 		struct class_desc *desc        = DeeClass_DESC(first_base);
 		struct instance_desc *instance = DeeInstance_DESC(desc, result);
-		rwlock_init(&instance->id_lock);
+		atomic_rwlock_init(&instance->id_lock);
 		bzeroc(instance->id_vtab,
 		       desc->cd_desc->cd_imemb_size,
 		       sizeof(DREF DeeObject *));
@@ -2801,10 +2803,10 @@ set_basic_member(DeeTypeObject *__restrict tp_self,
 			desc     = DeeClass_DESC(iter);
 			instance = DeeInstance_DESC(desc, self);
 			Dee_Incref(value);
-			rwlock_write(&instance->id_lock);
-			old_value                        = instance->id_vtab[attr->ca_addr];
+			Dee_instance_desc_lock_write(instance);
+			old_value = instance->id_vtab[attr->ca_addr];
 			instance->id_vtab[attr->ca_addr] = value;
-			rwlock_endwrite(&instance->id_lock);
+			Dee_instance_desc_lock_endwrite(instance);
 			if unlikely(old_value)
 				Dee_Decref(old_value);
 			return 0;
@@ -2844,10 +2846,10 @@ set_private_basic_member(DeeTypeObject *__restrict tp_self,
 			goto not_found;
 		instance = DeeInstance_DESC(desc, self);
 		Dee_Incref(value);
-		rwlock_write(&instance->id_lock);
-		old_value                        = instance->id_vtab[attr->ca_addr];
+		Dee_instance_desc_lock_write(instance);
+		old_value = instance->id_vtab[attr->ca_addr];
 		instance->id_vtab[attr->ca_addr] = value;
-		rwlock_endwrite(&instance->id_lock);
+		Dee_instance_desc_lock_endwrite(instance);
 		if unlikely(old_value)
 			Dee_Decref(old_value);
 		return 0;
@@ -3088,7 +3090,7 @@ type_new_extended(DeeTypeObject *self,
 	while (DeeType_IsClass(first_base)) {
 		struct class_desc *desc        = DeeClass_DESC(first_base);
 		struct instance_desc *instance = DeeInstance_DESC(desc, result);
-		rwlock_init(&instance->id_lock);
+		atomic_rwlock_init(&instance->id_lock);
 		bzeroc(instance->id_vtab,
 		       desc->cd_desc->cd_imemb_size,
 		       sizeof(DREF DeeObject *));
@@ -4387,6 +4389,13 @@ PUBLIC DeeTypeObject DeeType_Type = {
 #ifndef CONFIG_NO_THREADS
 PRIVATE atomic_lock_t reftracker_lock = ATOMIC_LOCK_INIT;
 #endif /* !CONFIG_NO_THREADS */
+#define reftracker_lock_available()  Dee_atomic_lock_available(&reftracker_lock)
+#define reftracker_lock_acquired()   Dee_atomic_lock_acquired(&reftracker_lock)
+#define reftracker_lock_tryacquire() Dee_atomic_lock_tryacquire(&reftracker_lock)
+#define reftracker_lock_acquire()    Dee_atomic_lock_acquire(&reftracker_lock)
+#define reftracker_lock_waitfor()    Dee_atomic_lock_waitfor(&reftracker_lock)
+#define reftracker_lock_release()    Dee_atomic_lock_release(&reftracker_lock)
+
 PRIVATE struct Dee_reftracker *reftracker_list = NULL;
 
 /* #define REFLEAK_PRINTF(...) fprintf(stderr, __VA_ARGS__) */
@@ -4498,14 +4507,14 @@ INTERN NONNULL((1)) void DCALL
 dump_reference_history(DeeObject *__restrict obj) {
 	if (!obj->ob_trace)
 		return;
-	atomic_lock_acquire(&reftracker_lock);
+	reftracker_lock_acquire();
 	print_refchanges(obj->ob_trace->rt_last, 1);
-	atomic_lock_release(&reftracker_lock);
+	reftracker_lock_release();
 }
 
 PUBLIC void DCALL Dee_DumpReferenceLeaks(void) {
 	struct Dee_reftracker *iter;
-	atomic_lock_acquire(&reftracker_lock);
+	reftracker_lock_acquire();
 	for (iter = reftracker_list; iter; iter = iter->rt_next) {
 		REFLEAK_PRINTF("Object at %p of instance %s leaked %" PRFuSIZ " references:\n",
 		               iter->rt_obj, iter->rt_obj->ob_type->tp_name,
@@ -4513,26 +4522,26 @@ PUBLIC void DCALL Dee_DumpReferenceLeaks(void) {
 		print_refchanges(iter->rt_last, 1);
 		REFLEAK_PRINTS("\n");
 	}
-	atomic_lock_release(&reftracker_lock);
+	reftracker_lock_release();
 }
 
 
 PRIVATE NONNULL((1)) void DCALL
 add_reftracker(struct Dee_reftracker *__restrict self) {
-	atomic_lock_acquire(&reftracker_lock);
+	reftracker_lock_acquire();
 	self->rt_pself = &reftracker_list;
 	if ((self->rt_next = reftracker_list) != NULL)
 		reftracker_list->rt_pself = &self->rt_next;
 	reftracker_list = self;
-	atomic_lock_release(&reftracker_lock);
+	reftracker_lock_release();
 }
 
 PRIVATE NONNULL((1)) void DCALL
 del_reftracker(struct Dee_reftracker *__restrict self) {
-	atomic_lock_acquire(&reftracker_lock);
+	reftracker_lock_acquire();
 	if ((*self->rt_pself = self->rt_next) != NULL)
 		self->rt_next->rt_pself = self->rt_pself;
-	atomic_lock_release(&reftracker_lock);
+	reftracker_lock_release();
 }
 
 /* Reference count tracing. */

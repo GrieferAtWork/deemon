@@ -22,10 +22,7 @@
 
 #include <deemon/api.h>
 #include <deemon/object.h>
-
-#ifndef CONFIG_NO_THREADS
-#include <deemon/util/rwlock.h>
-#endif /* !CONFIG_NO_THREADS */
+#include <deemon/util/lock.h>
 
 DECL_BEGIN
 
@@ -47,11 +44,28 @@ typedef struct {
 	DREF Range     *ri_range; /* [1..1][const] The underlying range object. */
 	DeeObject      *ri_end;   /* [1..1][const][== ri_range->r_end] Ending index. */
 	DeeObject      *ri_step;  /* [0..1][const][== ri_range->r_step] Step size (or NULL when `tp_inc()' should be used). */
-	bool            ri_first; /* [lock(ri_lock)] Only true during the first iteration to skip the initial modification. */
 #ifndef CONFIG_NO_THREADS
-	rwlock_t        ri_lock;  /* Lock for synchronizing access to ri_index. */
+	atomic_rwlock_t ri_lock;  /* Lock for synchronizing access to ri_index. */
 #endif /* !CONFIG_NO_THREADS */
+	bool            ri_first; /* [lock(ri_lock)] Only true during the first iteration to skip the initial modification. */
 } RangeIterator;
+
+#define RangeIterator_LockReading(self)    Dee_atomic_rwlock_reading(&(self)->ri_lock)
+#define RangeIterator_LockWriting(self)    Dee_atomic_rwlock_writing(&(self)->ri_lock)
+#define RangeIterator_LockTryRead(self)    Dee_atomic_rwlock_tryread(&(self)->ri_lock)
+#define RangeIterator_LockTryWrite(self)   Dee_atomic_rwlock_trywrite(&(self)->ri_lock)
+#define RangeIterator_LockCanRead(self)    Dee_atomic_rwlock_canread(&(self)->ri_lock)
+#define RangeIterator_LockCanWrite(self)   Dee_atomic_rwlock_canwrite(&(self)->ri_lock)
+#define RangeIterator_LockWaitRead(self)   Dee_atomic_rwlock_waitread(&(self)->ri_lock)
+#define RangeIterator_LockWaitWrite(self)  Dee_atomic_rwlock_waitwrite(&(self)->ri_lock)
+#define RangeIterator_LockRead(self)       Dee_atomic_rwlock_read(&(self)->ri_lock)
+#define RangeIterator_LockWrite(self)      Dee_atomic_rwlock_write(&(self)->ri_lock)
+#define RangeIterator_LockTryUpgrade(self) Dee_atomic_rwlock_tryupgrade(&(self)->ri_lock)
+#define RangeIterator_LockUpgrade(self)    Dee_atomic_rwlock_upgrade(&(self)->ri_lock)
+#define RangeIterator_LockDowngrade(self)  Dee_atomic_rwlock_downgrade(&(self)->ri_lock)
+#define RangeIterator_LockEndWrite(self)   Dee_atomic_rwlock_endwrite(&(self)->ri_lock)
+#define RangeIterator_LockEndRead(self)    Dee_atomic_rwlock_endread(&(self)->ri_lock)
+#define RangeIterator_LockEnd(self)        Dee_atomic_rwlock_end(&(self)->ri_lock)
 
 INTDEF DeeTypeObject SeqRangeIterator_Type;
 INTDEF DeeTypeObject SeqRange_Type;

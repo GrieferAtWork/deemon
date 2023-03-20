@@ -62,14 +62,31 @@ INTDEF DeeTypeObject RefVectorIterator_Type;
 
 typedef struct {
 	OBJECT_HEAD
-#ifndef CONFIG_NO_THREADS
-	Dee_atomic_rwlock_t    sv_lock;   /* Lock for this shared-vector. */
-#endif /* !CONFIG_NO_THREADS */
 	size_t                 sv_length; /* [lock(sv_lock)] The number of items in this vector. */
 	DREF DeeObject *const *sv_vector; /* [1..1][const][0..sv_length][lock(sv_lock)][owned]
 	                                   * The vector of objects that is being referenced.
 	                                   * NOTE: Elements of this vector must not be changed. */
+#ifndef CONFIG_NO_THREADS
+	Dee_atomic_rwlock_t    sv_lock;   /* Lock for this shared-vector. */
+#endif /* !CONFIG_NO_THREADS */
 } SharedVector;
+
+#define SharedVector_LockReading(self)    Dee_atomic_rwlock_reading(&(self)->sv_lock)
+#define SharedVector_LockWriting(self)    Dee_atomic_rwlock_writing(&(self)->sv_lock)
+#define SharedVector_LockTryRead(self)    Dee_atomic_rwlock_tryread(&(self)->sv_lock)
+#define SharedVector_LockTryWrite(self)   Dee_atomic_rwlock_trywrite(&(self)->sv_lock)
+#define SharedVector_LockCanRead(self)    Dee_atomic_rwlock_canread(&(self)->sv_lock)
+#define SharedVector_LockCanWrite(self)   Dee_atomic_rwlock_canwrite(&(self)->sv_lock)
+#define SharedVector_LockWaitRead(self)   Dee_atomic_rwlock_waitread(&(self)->sv_lock)
+#define SharedVector_LockWaitWrite(self)  Dee_atomic_rwlock_waitwrite(&(self)->sv_lock)
+#define SharedVector_LockRead(self)       Dee_atomic_rwlock_read(&(self)->sv_lock)
+#define SharedVector_LockWrite(self)      Dee_atomic_rwlock_write(&(self)->sv_lock)
+#define SharedVector_LockTryUpgrade(self) Dee_atomic_rwlock_tryupgrade(&(self)->sv_lock)
+#define SharedVector_LockUpgrade(self)    Dee_atomic_rwlock_upgrade(&(self)->sv_lock)
+#define SharedVector_LockDowngrade(self)  Dee_atomic_rwlock_downgrade(&(self)->sv_lock)
+#define SharedVector_LockEndWrite(self)   Dee_atomic_rwlock_endwrite(&(self)->sv_lock)
+#define SharedVector_LockEndRead(self)    Dee_atomic_rwlock_endread(&(self)->sv_lock)
+#define SharedVector_LockEnd(self)        Dee_atomic_rwlock_end(&(self)->sv_lock)
 
 INTDEF DeeTypeObject SharedVector_Type;
 

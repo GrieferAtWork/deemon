@@ -155,8 +155,8 @@ pipe_new_impl(size_t pipe_size) {
 	reader_file->sf_filename = NULL;
 	writer_file->sf_filename = NULL;
 #endif /* DEESYSTEM_FILE_HAVE_sf_filename */
-	DeeLFileObject_Init(reader_file, &DeePipeReader_Type);
-	DeeLFileObject_Init(writer_file, &DeePipeWriter_Type);
+	DeeObject_Init(reader_file, &DeePipeReader_Type);
+	DeeObject_Init(writer_file, &DeePipeWriter_Type);
 	DeeTuple_SET(result, 0, (DeeObject *)reader_file); /* Inherit reference */
 	DeeTuple_SET(result, 1, (DeeObject *)writer_file); /* Inherit reference */
 	return result;

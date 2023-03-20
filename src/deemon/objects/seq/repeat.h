@@ -24,7 +24,7 @@
 #include <deemon/bool.h>
 #include <deemon/object.h>
 #include <deemon/seq.h>
-#include <deemon/util/rwlock.h>
+#include <deemon/util/lock.h>
 
 #include "../../runtime/runtime_error.h"
 
@@ -32,30 +32,47 @@ DECL_BEGIN
 
 typedef struct {
 	OBJECT_HEAD
-	DREF DeeObject *r_seq; /* [1..1][const] The sequence being repeated. */
-	size_t          r_num; /* [!0][const] The number of times by which to repeat the sequence. */
+	DREF DeeObject *rp_seq; /* [1..1][const] The sequence being repeated. */
+	size_t          rp_num; /* [!0][const] The number of times by which to repeat the sequence. */
 } Repeat;
 
 typedef struct {
 	OBJECT_HEAD
-	DREF DeeObject *ri_obj; /* [1..1][const] The object being repeated. */
-	size_t          ri_num; /* [const] The number of times by which to repeat the object. */
+	DREF DeeObject *rpit_obj; /* [1..1][const] The object being repeated. */
+	size_t          rpit_num; /* [const] The number of times by which to repeat the object. */
 } RepeatItem;
 
 typedef struct {
 	OBJECT_HEAD
-	DREF Repeat    *ri_rep;  /* [1..1][const] The underlying repeat-proxy-sequence. */
-	DREF DeeObject *ri_iter; /* [1..1][lock(ri_lock)] The current repeat-iterator. */
-	size_t          ri_num;  /* [lock(ri_lock)] The remaining number of times to repeat the sequence. */
+	DREF Repeat    *rpi_rep;  /* [1..1][const] The underlying repeat-proxy-sequence. */
+	DREF DeeObject *rpi_iter; /* [1..1][lock(rpi_lock)] The current repeat-iterator. */
+	size_t          rpi_num;  /* [lock(rpi_lock)] The remaining number of times to repeat the sequence. */
 #ifndef CONFIG_NO_THREADS
-	rwlock_t        ri_lock; /* Lock for accessing the variable fields above. */
+	atomic_rwlock_t rpi_lock; /* Lock for accessing the variable fields above. */
 #endif /* !CONFIG_NO_THREADS */
 } RepeatIterator;
+
+#define RepeatIterator_LockReading(self)    Dee_atomic_rwlock_reading(&(self)->rpi_lock)
+#define RepeatIterator_LockWriting(self)    Dee_atomic_rwlock_writing(&(self)->rpi_lock)
+#define RepeatIterator_LockTryRead(self)    Dee_atomic_rwlock_tryread(&(self)->rpi_lock)
+#define RepeatIterator_LockTryWrite(self)   Dee_atomic_rwlock_trywrite(&(self)->rpi_lock)
+#define RepeatIterator_LockCanRead(self)    Dee_atomic_rwlock_canread(&(self)->rpi_lock)
+#define RepeatIterator_LockCanWrite(self)   Dee_atomic_rwlock_canwrite(&(self)->rpi_lock)
+#define RepeatIterator_LockWaitRead(self)   Dee_atomic_rwlock_waitread(&(self)->rpi_lock)
+#define RepeatIterator_LockWaitWrite(self)  Dee_atomic_rwlock_waitwrite(&(self)->rpi_lock)
+#define RepeatIterator_LockRead(self)       Dee_atomic_rwlock_read(&(self)->rpi_lock)
+#define RepeatIterator_LockWrite(self)      Dee_atomic_rwlock_write(&(self)->rpi_lock)
+#define RepeatIterator_LockTryUpgrade(self) Dee_atomic_rwlock_tryupgrade(&(self)->rpi_lock)
+#define RepeatIterator_LockUpgrade(self)    Dee_atomic_rwlock_upgrade(&(self)->rpi_lock)
+#define RepeatIterator_LockDowngrade(self)  Dee_atomic_rwlock_downgrade(&(self)->rpi_lock)
+#define RepeatIterator_LockEndWrite(self)   Dee_atomic_rwlock_endwrite(&(self)->rpi_lock)
+#define RepeatIterator_LockEndRead(self)    Dee_atomic_rwlock_endread(&(self)->rpi_lock)
+#define RepeatIterator_LockEnd(self)        Dee_atomic_rwlock_end(&(self)->rpi_lock)
 
 typedef struct {
 	OBJECT_HEAD
 	DREF RepeatItem   *rii_rep; /* [1..1][const] The underlying repeat-proxy-sequence. */
-	DeeObject         *rii_obj; /* [1..1][const][== rii_rep->r_obj] The object being repeated. */
+	DeeObject         *rii_obj; /* [1..1][const][== rii_rep->rpit_obj] The object being repeated. */
 	DWEAK size_t       rii_num; /* The remaining number of repetitions. */
 } RepeatItemIterator;
 

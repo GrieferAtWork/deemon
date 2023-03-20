@@ -775,14 +775,12 @@ code_visit(DeeCodeObject *__restrict self,
 	Dee_XVisit(self->co_module);
 
 	/* Visit default variables. */
-	for (i = 0; i < (uint16_t)(self->co_argc_max - self->co_argc_min); ++i)
-		Dee_XVisit(self->co_defaultv[i]);
+	Dee_XVisitv(self->co_defaultv, (uint16_t)(self->co_argc_max - self->co_argc_min));
 
 	/* Visit static variables. */
-	atomic_rwlock_read(&self->co_static_lock);
-	for (i = 0; i < self->co_staticc; ++i)
-		Dee_Visit(self->co_staticv[i]);
-	atomic_rwlock_endread(&self->co_static_lock);
+	DeeCode_StaticLockRead(self);
+	Dee_Visitv(self->co_staticv, self->co_staticc);
+	DeeCode_StaticLockEndRead(self);
 
 	/* Visit exception information. */
 	for (i = 0; i < self->co_exceptc; ++i)
@@ -798,7 +796,7 @@ code_clear(DeeCodeObject *__restrict self) {
 	size_t i, bufi = 0;
 	/* Clear out static variables. */
 restart:
-	atomic_rwlock_write(&self->co_static_lock);
+	DeeCode_StaticLockWrite(self);
 	for (i = 0; i < self->co_staticc; ++i) {
 		DREF DeeObject *ob = self->co_staticv[i];
 		if (DeeNone_Check(ob) || DeeString_Check(ob))
@@ -818,14 +816,14 @@ restart:
 			buffer[bufi] = ob; /* Inherit reference */
 			++bufi;
 			if (bufi >= COMPILER_LENOF(buffer)) {
-				atomic_rwlock_endwrite(&self->co_static_lock);
+				DeeCode_StaticLockEndWrite(self);
 				Dee_Decrefv(buffer, bufi);
 				bufi = 0;
 				goto restart;
 			}
 		}
 	}
-	atomic_rwlock_endwrite(&self->co_static_lock);
+	DeeCode_StaticLockEndWrite(self);
 	Dee_Decrefv(buffer, bufi);
 }
 
@@ -1074,10 +1072,10 @@ code_hash(DeeCodeObject *__restrict self) {
 		uint16_t i;
 		for (i = 0; i < self->co_staticc; ++i) {
 			DREF DeeObject *ob;
-			atomic_rwlock_read(&self->co_static_lock);
+			DeeCode_StaticLockRead(self);
 			ob = self->co_staticv[i];
 			Dee_Incref(ob);
-			atomic_rwlock_endread(&self->co_static_lock);
+			DeeCode_StaticLockEndRead(self);
 			result ^= DeeObject_Hash(ob);
 			Dee_Decref(ob);
 		}
@@ -1159,14 +1157,14 @@ code_eq_impl(DeeCodeObject *__restrict self,
 		uint16_t i;
 		for (i = 0; i < self->co_staticc; ++i) {
 			DREF DeeObject *lhs, *rhs;
-			atomic_rwlock_read(&self->co_static_lock);
+			DeeCode_StaticLockRead(self);
 			lhs = self->co_staticv[i];
 			Dee_Incref(lhs);
-			atomic_rwlock_endread(&self->co_static_lock);
-			atomic_rwlock_read(&other->co_static_lock);
+			DeeCode_StaticLockEndRead(self);
+			DeeCode_StaticLockRead(other);
 			rhs = other->co_staticv[i];
 			Dee_Incref(rhs);
-			atomic_rwlock_endread(&other->co_static_lock);
+			DeeCode_StaticLockEndRead(other);
 			temp = DeeObject_CompareEq(lhs, rhs);
 			Dee_Decref(rhs);
 			Dee_Decref(lhs);
@@ -1278,9 +1276,9 @@ code_copy(DeeCodeObject *__restrict self) {
 		                                                    sizeof(DREF DeeObject *));
 		if unlikely(!result->co_staticv)
 			goto err_r_default;
-		atomic_rwlock_read(&self->co_static_lock);
+		DeeCode_StaticLockRead(self);
 		Dee_Movrefv(result->co_staticv, self->co_staticv, result->co_staticc);
-		atomic_rwlock_endread(&self->co_static_lock);
+		DeeCode_StaticLockEndRead(self);
 	}
 	if (!result->co_exceptc) {
 		result->co_exceptv = NULL;
@@ -1882,10 +1880,10 @@ code_printrepr(DeeCodeObject *__restrict self,
 			DREF DeeObject *ob;
 			if (i != 0)
 				DO(DeeFormat_PRINT(printer, arg, ", "));
-			atomic_rwlock_read(&self->co_static_lock);
+			DeeCode_StaticLockRead(self);
 			ob = self->co_staticv[i];
 			Dee_Incref(ob);
-			atomic_rwlock_endread(&self->co_static_lock);
+			DeeCode_StaticLockEndRead(self);
 			temp = DeeFormat_PrintObjectRepr(printer, arg, ob);
 			Dee_Decref_unlikely(ob);
 			if unlikely(temp < 0)

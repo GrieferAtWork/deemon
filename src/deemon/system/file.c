@@ -352,7 +352,7 @@ DeeFile_OpenFd(DeeSysFD fd, /*String*/ DeeObject *filename,
 	Dee_XIncref(filename);
 #endif /* DEESYSTEM_FILE_USE_STDIO */
 
-	DeeLFileObject_Init(result, &DeeSystemFile_Type);
+	DeeObject_Init(result, &DeeSystemFile_Type);
 done:
 	return (DREF DeeObject *)result;
 #endif /* !DEESYSTEM_FILE_USE_STUB */
@@ -403,8 +403,7 @@ DeeSystemFile_Filename(/*SystemFile*/ DeeObject *__restrict self) {
 	SystemFile *me = (SystemFile *)self;
 	DREF DeeObject *result;
 	ASSERT_OBJECT_TYPE((DeeObject *)me, (DeeTypeObject *)&DeeSystemFile_Type);
-again:
-	result = me->sf_filename;
+	result = atomic_read(&me->sf_filename);
 	if (result) {
 		Dee_Incref(result);
 	} else {
@@ -422,27 +421,11 @@ again:
 		if unlikely(!result)
 			goto done;
 
-		/* Lazily cache the generated filename. */
-		DeeFile_LockWrite(me);
-		if (me->sf_filename) {
-			DREF DeeObject *new_result;
-			new_result = me->sf_filename;
-			Dee_Incref(new_result);
-			DeeFile_LockEndWrite(me);
+		/* Lazily remember the generated filename. */
+		if (!atomic_cmpxch(&me->sf_filename, NULL, result)) {
 			Dee_Decref(result);
-			result = new_result;
-		} else {
-			/* Make sure that the handle is still the same. */
-			if likely((DeeSysFD)me->sf_handle == hand) {
-				Dee_Incref(result);
-				me->sf_filename = result;
-				DeeFile_LockEndWrite(me);
-			} else {
-				/* Different handle... */
-				DeeFile_LockEndWrite(me);
-				Dee_Decref(result);
-				goto again;
-			}
+			result = me->sf_filename;
+			Dee_Incref(result);
 		}
 	}
 done:
@@ -735,7 +718,7 @@ again:
 	result = DeeObject_MALLOC(SystemFile);
 	if unlikely(!result)
 		goto err_fp;
-	DeeLFileObject_Init(result, &DeeFSFile_Type);
+	DeeObject_Init(result, &DeeFSFile_Type);
 	result->sf_handle    = hFile;
 	result->sf_ownhandle = hFile;    /* Inherit handle. */
 	result->sf_filename  = filename; /* Inherit reference. */
@@ -917,7 +900,7 @@ err:
 	result = DeeObject_MALLOC(SystemFile);
 	if unlikely(!result)
 		goto err_fd;
-	DeeLFileObject_Init(result, &DeeFSFile_Type);
+	DeeObject_Init(result, &DeeFSFile_Type);
 	result->sf_handle    = (DeeSysFD)fd;
 	result->sf_ownhandle = (DeeSysFD)fd; /* Inherit stream. */
 	result->sf_filename  = filename;
@@ -986,7 +969,7 @@ err:
 	result->sf_ownhandle = fp; /* Inherit stream. */
 	result->sf_filename  = filename;
 	Dee_Incref(filename);
-	DeeLFileObject_Init(result, &DeeFSFile_Type);
+	DeeObject_Init(result, &DeeFSFile_Type);
 	return (DREF DeeObject *)result;
 err_unsupported_mode:
 	DeeError_Throwf(&DeeError_UnsupportedAPI,
@@ -1078,28 +1061,28 @@ STATIC_ASSERT(DEE_STDDBG == 3);
 
 PRIVATE SystemFile sysf_std[] = {
 #ifdef DEESYSTEM_FILE_USE_WINDOWS
-	{ LFILE_OBJECT_HEAD_INIT(&DeeSystemFile_Type), NULL, NULL, NULL, FILE_TYPE_UNKNOWN, 0 },
-	{ LFILE_OBJECT_HEAD_INIT(&DeeSystemFile_Type), NULL, NULL, NULL, FILE_TYPE_UNKNOWN, 0 },
-	{ LFILE_OBJECT_HEAD_INIT(&DeeSystemFile_Type), NULL, NULL, NULL, FILE_TYPE_UNKNOWN, 0 }
+	{ FILE_OBJECT_HEAD_INIT(&DeeSystemFile_Type), NULL, NULL, NULL, FILE_TYPE_UNKNOWN, 0 },
+	{ FILE_OBJECT_HEAD_INIT(&DeeSystemFile_Type), NULL, NULL, NULL, FILE_TYPE_UNKNOWN, 0 },
+	{ FILE_OBJECT_HEAD_INIT(&DeeSystemFile_Type), NULL, NULL, NULL, FILE_TYPE_UNKNOWN, 0 }
 #elif defined(DEESYSTEM_FILE_USE_UNIX)
-	{ LFILE_OBJECT_HEAD_INIT(&DeeSystemFile_Type), NULL, STDIN_FILENO, -1 },
-	{ LFILE_OBJECT_HEAD_INIT(&DeeSystemFile_Type), NULL, STDOUT_FILENO, -1 },
-	{ LFILE_OBJECT_HEAD_INIT(&DeeSystemFile_Type), NULL, STDERR_FILENO, -1 }
+	{ FILE_OBJECT_HEAD_INIT(&DeeSystemFile_Type), NULL, STDIN_FILENO, -1 },
+	{ FILE_OBJECT_HEAD_INIT(&DeeSystemFile_Type), NULL, STDOUT_FILENO, -1 },
+	{ FILE_OBJECT_HEAD_INIT(&DeeSystemFile_Type), NULL, STDERR_FILENO, -1 }
 #elif defined(DEESYSTEM_FILE_USE_STDIO)
 #ifdef deemon_file_CAN_STATIC_INITIALIZE_SYSF_STD
 	{ FILE_OBJECT_HEAD_INIT(&DeeSystemFile_Type), NULL, stdin, NULL },
 	{ FILE_OBJECT_HEAD_INIT(&DeeSystemFile_Type), NULL, stdout, NULL },
 	{ FILE_OBJECT_HEAD_INIT(&DeeSystemFile_Type), NULL, stderr, NULL }
 #else /* deemon_file_CAN_STATIC_INITIALIZE_SYSF_STD */
-	{ LFILE_OBJECT_HEAD_INIT(&DeeSystemFile_Type), NULL, NULL, NULL },
-	{ LFILE_OBJECT_HEAD_INIT(&DeeSystemFile_Type), NULL, NULL, NULL },
-	{ LFILE_OBJECT_HEAD_INIT(&DeeSystemFile_Type), NULL, NULL, NULL }
+	{ FILE_OBJECT_HEAD_INIT(&DeeSystemFile_Type), NULL, NULL, NULL },
+	{ FILE_OBJECT_HEAD_INIT(&DeeSystemFile_Type), NULL, NULL, NULL },
+	{ FILE_OBJECT_HEAD_INIT(&DeeSystemFile_Type), NULL, NULL, NULL }
 #endif /* !deemon_file_CAN_STATIC_INITIALIZE_SYSF_STD */
 #endif /* ... */
 
 #ifdef DEE_STDDBG_IS_UNIQUE
 	,
-	{ LFILE_OBJECT_HEAD_INIT(&DebugFile_Type), (DeeObject *)(void *)-1, DeeSysFD_INVALID, DeeSysFD_INVALID }
+	{ FILE_OBJECT_HEAD_INIT(&DebugFile_Type), (DeeObject *)(void *)-1, DeeSysFD_INVALID, DeeSysFD_INVALID }
 #endif /* DEE_STDDBG_IS_UNIQUE */
 };
 
@@ -1141,7 +1124,6 @@ DeeFile_DefaultStd(unsigned int id) {
 			break;
 		}
 #endif /* !... */
-		DeeFile_LockWrite(result);
 
 		/* Make sure not to re-open an std-file that was already closed. */
 #ifdef HAVE_sysf_std_closed
@@ -1167,14 +1149,13 @@ DeeFile_DefaultStd(unsigned int id) {
 #endif
 			}
 		}
-		DeeFile_LockEndWrite(result);
 	}
 	return (DeeObject *)result;
 #elif defined(DEESYSTEM_FILE_USE_WINDOWS)
 	SystemFile *result;
 	ASSERT(id < COMPILER_LENOF(sysf_std));
 	result = &sysf_std[id];
-	if unlikely(!result->sf_handle) {
+	if unlikely(result->sf_handle == NULL) {
 		DWORD std_id;
 		HANDLE std_handle;
 		switch (id) {
@@ -1191,20 +1172,8 @@ DeeFile_DefaultStd(unsigned int id) {
 		DBG_ALIGNMENT_DISABLE();
 		std_handle = GetStdHandle(std_id);
 		DBG_ALIGNMENT_ENABLE();
-		DeeFile_LockWrite(result);
-		/* Make sure not to re-open an std-file that was already closed. */
-#ifndef CONFIG_NO_THREADS
-		COMPILER_READ_BARRIER();
-		if (!result->sf_handle)
-#endif /* !CONFIG_NO_THREADS */
-		{
-			result->sf_handle = std_handle;
-#if 1 /* Without this, close() on standard descriptors would \
-       * leave the file open (which might actually be intended?) */
-			result->sf_ownhandle = std_handle;
-#endif
-		}
-		DeeFile_LockEndWrite(result);
+		result->sf_handle    = std_handle;
+		result->sf_ownhandle = std_handle;
 	}
 	return (DeeObject *)result;
 #else /* ... */
@@ -2380,54 +2349,63 @@ sysfile_close(SystemFile *__restrict self) {
 
 	/* Windows implementation */
 #ifdef DEESYSTEM_FILE_USE_WINDOWS
-	if (self->sf_ownhandle != INVALID_HANDLE_VALUE) {
-		DBG_ALIGNMENT_DISABLE();
-		if unlikely(!CloseHandle(self->sf_ownhandle)) {
+	{
+		HANDLE hHandle;
+		atomic_write(&self->sf_handle, INVALID_HANDLE_VALUE);
+		hHandle = atomic_xch(&self->sf_ownhandle, INVALID_HANDLE_VALUE);
+		if (hHandle != INVALID_HANDLE_VALUE) {
+			DBG_ALIGNMENT_DISABLE();
+			if unlikely(!CloseHandle(hHandle)) {
+				DBG_ALIGNMENT_ENABLE();
+				return err_file_io(self);
+			}
 			DBG_ALIGNMENT_ENABLE();
-			return err_file_io(self);
 		}
-		DBG_ALIGNMENT_ENABLE();
+		REMEMBER_FILE_CLOSED(self);
+		return 0;
 	}
-	REMEMBER_FILE_CLOSED(self);
-	self->sf_handle    = INVALID_HANDLE_VALUE;
-	self->sf_ownhandle = INVALID_HANDLE_VALUE;
-	return 0;
 #endif /* DEESYSTEM_FILE_USE_WINDOWS */
 
 	/* Unix implementation */
 #ifdef DEESYSTEM_FILE_USE_UNIX
-	DBG_ALIGNMENT_DISABLE();
+	{
+		int fd;
+		atomic_write(&self->sf_handle, -1);
+		fd = atomic_xch(&self->sf_ownhandle, -1);
 #ifdef CONFIG_HAVE_close
-	if unlikely(close((int)self->sf_ownhandle) != 0) {
-		DBG_ALIGNMENT_ENABLE();
-		return err_file_io(self);
-	}
+		if (fd != -1) {
+			DBG_ALIGNMENT_DISABLE();
+			if unlikely(close(fd) != 0) {
+				DBG_ALIGNMENT_ENABLE();
+				return err_file_io(self);
+			}
+			DBG_ALIGNMENT_ENABLE();
+		}
 #endif /* CONFIG_HAVE_close */
-	DBG_ALIGNMENT_ENABLE();
-	REMEMBER_FILE_CLOSED(self);
-	self->sf_handle    = (DeeSysFD)-1;
-	self->sf_ownhandle = (DeeSysFD)-1;
-	return 0;
+		REMEMBER_FILE_CLOSED(self);
+		return 0;
+	}
 #endif /* DEESYSTEM_FILE_USE_UNIX */
 
 	/* Stdio implementation */
 #ifdef DEESYSTEM_FILE_USE_STDIO
-	if unlikely(!self->sf_handle)
-		return err_file_closed(self);
-	DBG_ALIGNMENT_DISABLE();
+	{
+		FILE *fp;
+		atomic_write(&self->sf_handle, NULL);
+		fp = (FILE *)atomic_xch(&self->sf_ownhandle, NULL);
+		if (fp != NULL) {
+			DBG_ALIGNMENT_DISABLE();
 #ifdef CONFIG_HAVE_fclose
-	if (self->sf_ownhandle) {
-		if (fclose((FILE *)self->sf_ownhandle) != 0) {
-			DBG_ALIGNMENT_ENABLE();
-			return error_file_io(self);
-		}
-	}
+			if (fclose((FILE *)fp) != 0) {
+				DBG_ALIGNMENT_ENABLE();
+				return error_file_io(self);
+			}
 #endif /* CONFIG_HAVE_fclose */
-	DBG_ALIGNMENT_ENABLE();
-	REMEMBER_FILE_CLOSED(self);
-	self->sf_ownhandle = NULL;
-	self->sf_handle    = NULL;
-	return 0;
+			DBG_ALIGNMENT_ENABLE();
+		}
+		REMEMBER_FILE_CLOSED(self);
+		return 0;
+	}
 #endif /* DEESYSTEM_FILE_USE_STDIO */
 
 	/* Stub implementation */
@@ -2837,7 +2815,6 @@ again_duplicate:
 	self->sf_filename = NULL;
 	self->sf_filetype = FILE_TYPE_UNKNOWN;
 	self->sf_pendingc = 0;
-	rwlock_init(&self->fo_lock);
 	return 0;
 err:
 	return -1;
@@ -2900,7 +2877,6 @@ again_dup:
 			self->sf_ownhandle = (DeeSysFD)fd;
 	}
 	self->sf_filename = NULL;
-	rwlock_init(&self->fo_lock);
 	return 0;
 err:
 	return -1;
@@ -3109,23 +3085,19 @@ sysfile_setbuf(SystemFile *self, size_t argc, DeeObject *const *argv) {
 		break;
 	}
 again_setbuf:
-	DeeFile_LockWrite(self);
 	if unlikely(!self->sf_handle) {
 		err_file_closed(self);
-		DeeFile_LockEndWrite(self);
 		return NULL;
 	}
 	/* Apply the buffer */
 	DBG_ALIGNMENT_DISABLE();
 	if (setvbuf((FILE *)self->sf_handle, NULL, mode, size)) {
 		DBG_ALIGNMENT_ENABLE();
-		DeeFile_LockEndWrite(self);
 		if (Dee_CollectMemory(size))
 			goto again_setbuf;
 		goto err;
 	}
 	DBG_ALIGNMENT_ENABLE();
-	DeeFile_LockEndWrite(self);
 done:
 	return_none;
 err_invalid_mode:

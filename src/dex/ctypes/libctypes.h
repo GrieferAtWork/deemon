@@ -23,13 +23,10 @@
 #include <deemon/api.h>
 #include <deemon/dex.h>
 #include <deemon/object.h>
+#include <deemon/util/lock.h>
 
 #include <hybrid/sequence/list.h>
 #include <hybrid/typecore.h>
-
-#ifndef CONFIG_NO_THREADS
-#include <deemon/util/rwlock.h>
-#endif /* !CONFIG_NO_THREADS */
 
 #ifndef CONFIG_NO_CFUNCTION
 #include <ffi.h>
@@ -199,7 +196,7 @@ struct stype_cfunction {
 struct stype_object {
 	DeeTypeObject           st_base;      /* The underlying type object. */
 #ifndef CONFIG_NO_THREADS
-	rwlock_t                st_cachelock; /* Lock for cached derived types. */
+	Dee_atomic_rwlock_t     st_cachelock; /* Lock for cached derived types. */
 #endif /* !CONFIG_NO_THREADS */
 	DeePointerTypeObject   *st_pointer;   /* [0..1][lock(st_cachelock)] A weak pointer to the pointer-type of this structured type. */
 	DeeLValueTypeObject    *st_lvalue;    /* [0..1][lock(st_cachelock)] A weak pointer to the lvalue-type of this structured type. */
@@ -224,6 +221,23 @@ struct stype_object {
 	struct stype_seq const  *st_seq;       /* [0..1] Sequence operators. */
 	struct stype_attr const *st_attr;      /* [0..1] Attribute access operators. */
 };
+
+#define DeeSType_CacheLockReading(self)    Dee_atomic_rwlock_reading(&(self)->st_cachelock)
+#define DeeSType_CacheLockWriting(self)    Dee_atomic_rwlock_writing(&(self)->st_cachelock)
+#define DeeSType_CacheLockTryRead(self)    Dee_atomic_rwlock_tryread(&(self)->st_cachelock)
+#define DeeSType_CacheLockTryWrite(self)   Dee_atomic_rwlock_trywrite(&(self)->st_cachelock)
+#define DeeSType_CacheLockCanRead(self)    Dee_atomic_rwlock_canread(&(self)->st_cachelock)
+#define DeeSType_CacheLockCanWrite(self)   Dee_atomic_rwlock_canwrite(&(self)->st_cachelock)
+#define DeeSType_CacheLockWaitRead(self)   Dee_atomic_rwlock_waitread(&(self)->st_cachelock)
+#define DeeSType_CacheLockWaitWrite(self)  Dee_atomic_rwlock_waitwrite(&(self)->st_cachelock)
+#define DeeSType_CacheLockRead(self)       Dee_atomic_rwlock_read(&(self)->st_cachelock)
+#define DeeSType_CacheLockWrite(self)      Dee_atomic_rwlock_write(&(self)->st_cachelock)
+#define DeeSType_CacheLockTryUpgrade(self) Dee_atomic_rwlock_tryupgrade(&(self)->st_cachelock)
+#define DeeSType_CacheLockUpgrade(self)    Dee_atomic_rwlock_upgrade(&(self)->st_cachelock)
+#define DeeSType_CacheLockDowngrade(self)  Dee_atomic_rwlock_downgrade(&(self)->st_cachelock)
+#define DeeSType_CacheLockEndWrite(self)   Dee_atomic_rwlock_endwrite(&(self)->st_cachelock)
+#define DeeSType_CacheLockEndRead(self)    Dee_atomic_rwlock_endread(&(self)->st_cachelock)
+#define DeeSType_CacheLockEnd(self)        Dee_atomic_rwlock_end(&(self)->st_cachelock)
 
 struct pointer_type_object {
 	DeeSTypeObject          pt_base;      /* The underlying type object. */

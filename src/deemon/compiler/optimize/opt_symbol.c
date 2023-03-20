@@ -90,10 +90,10 @@ INTERN WUNUSED NONNULL((1, 2)) int
 			/* The module is not initialized. */
 			ASSERT(sym->s_extern.e_symbol->ss_index <
 			       symmod->mo_globalc);
-			atomic_rwlock_read(&symmod->mo_lock);
+			DeeModule_LockRead(symmod);
 			symval = symmod->mo_globalv[sym->s_extern.e_symbol->ss_index];
 			Dee_XIncref(symval);
-			atomic_rwlock_endread(&symmod->mo_lock);
+			DeeModule_LockEndRead(symmod);
 			/* Make sure that the symbol value is allowed
 			 * to be expanded in constant expression. */
 			if likely(symval) {

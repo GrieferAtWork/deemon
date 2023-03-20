@@ -35,7 +35,7 @@
 #include <deemon/system-features.h>
 #include <deemon/system.h>
 #include <deemon/util/atomic.h>
-#include <deemon/util/rwlock.h>
+#include <deemon/util/lock.h>
 
 DECL_BEGIN
 
@@ -122,16 +122,33 @@ shlib_visit(Shlib *__restrict self, dvisit_t proc, void *arg) {
 
 
 #ifndef CONFIG_NO_THREADS
-PRIVATE rwlock_t static_type_lock = RWLOCK_INIT;
+PRIVATE atomic_rwlock_t static_type_lock = ATOMIC_RWLOCK_INIT;
 #endif /* !CONFIG_NO_THREADS */
+
+#define static_type_lock_reading()    Dee_atomic_rwlock_reading(&static_type_lock)
+#define static_type_lock_writing()    Dee_atomic_rwlock_writing(&static_type_lock)
+#define static_type_lock_tryread()    Dee_atomic_rwlock_tryread(&static_type_lock)
+#define static_type_lock_trywrite()   Dee_atomic_rwlock_trywrite(&static_type_lock)
+#define static_type_lock_canread()    Dee_atomic_rwlock_canread(&static_type_lock)
+#define static_type_lock_canwrite()   Dee_atomic_rwlock_canwrite(&static_type_lock)
+#define static_type_lock_waitread()   Dee_atomic_rwlock_waitread(&static_type_lock)
+#define static_type_lock_waitwrite()  Dee_atomic_rwlock_waitwrite(&static_type_lock)
+#define static_type_lock_read()       Dee_atomic_rwlock_read(&static_type_lock)
+#define static_type_lock_write()      Dee_atomic_rwlock_write(&static_type_lock)
+#define static_type_lock_tryupgrade() Dee_atomic_rwlock_tryupgrade(&static_type_lock)
+#define static_type_lock_upgrade()    Dee_atomic_rwlock_upgrade(&static_type_lock)
+#define static_type_lock_downgrade()  Dee_atomic_rwlock_downgrade(&static_type_lock)
+#define static_type_lock_endwrite()   Dee_atomic_rwlock_endwrite(&static_type_lock)
+#define static_type_lock_endread()    Dee_atomic_rwlock_endread(&static_type_lock)
+#define static_type_lock_end()        Dee_atomic_rwlock_end(&static_type_lock)
 
 PRIVATE DREF DeeSTypeObject *void_ptr = NULL; /* `void.ptr' */
 INTERN bool DCALL clear_void_pointer(void) {
 	DREF DeeSTypeObject *ptr;
-	rwlock_write(&static_type_lock);
+	static_type_lock_write();
 	ptr      = void_ptr;
 	void_ptr = NULL;
-	rwlock_endwrite(&static_type_lock);
+	static_type_lock_endwrite();
 	if (!ptr)
 		return false;
 	Dee_Decref_likely((DeeObject *)ptr);
@@ -140,25 +157,25 @@ INTERN bool DCALL clear_void_pointer(void) {
 
 LOCAL WUNUSED DREF DeeSTypeObject *DCALL get_void_pointer(void) {
 	DREF DeeSTypeObject *result;
-	rwlock_read(&static_type_lock);
+	static_type_lock_read();
 	result = void_ptr;
 	if (result) {
 		Dee_Incref((DeeObject *)result);
-		rwlock_endread(&static_type_lock);
+		static_type_lock_endread();
 		goto done;
 	}
-	rwlock_endread(&static_type_lock);
+	static_type_lock_endread();
 	result = (DREF DeeSTypeObject *)DeeSType_Pointer(&DeeCVoid_Type);
 	if unlikely(!result)
 		goto done;
-	rwlock_write(&static_type_lock);
+	static_type_lock_write();
 	if likely(!void_ptr) {
 		Dee_Incref((DeeObject *)result);
 		void_ptr = result;
 	} else {
 		ASSERT(void_ptr == result);
 	}
-	rwlock_endwrite(&static_type_lock);
+	static_type_lock_endwrite();
 done:
 	return result;
 }

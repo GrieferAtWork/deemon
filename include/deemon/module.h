@@ -338,6 +338,23 @@ struct Dee_module_object {
 	Dee_WEAKREF_SUPPORT
 };
 
+#define DeeModule_LockReading(self)    Dee_atomic_rwlock_reading(&(self)->mo_lock)
+#define DeeModule_LockWriting(self)    Dee_atomic_rwlock_writing(&(self)->mo_lock)
+#define DeeModule_LockTryRead(self)    Dee_atomic_rwlock_tryread(&(self)->mo_lock)
+#define DeeModule_LockTryWrite(self)   Dee_atomic_rwlock_trywrite(&(self)->mo_lock)
+#define DeeModule_LockCanRead(self)    Dee_atomic_rwlock_canread(&(self)->mo_lock)
+#define DeeModule_LockCanWrite(self)   Dee_atomic_rwlock_canwrite(&(self)->mo_lock)
+#define DeeModule_LockWaitRead(self)   Dee_atomic_rwlock_waitread(&(self)->mo_lock)
+#define DeeModule_LockWaitWrite(self)  Dee_atomic_rwlock_waitwrite(&(self)->mo_lock)
+#define DeeModule_LockRead(self)       Dee_atomic_rwlock_read(&(self)->mo_lock)
+#define DeeModule_LockWrite(self)      Dee_atomic_rwlock_write(&(self)->mo_lock)
+#define DeeModule_LockTryUpgrade(self) Dee_atomic_rwlock_tryupgrade(&(self)->mo_lock)
+#define DeeModule_LockUpgrade(self)    Dee_atomic_rwlock_upgrade(&(self)->mo_lock)
+#define DeeModule_LockDowngrade(self)  Dee_atomic_rwlock_downgrade(&(self)->mo_lock)
+#define DeeModule_LockEndWrite(self)   Dee_atomic_rwlock_endwrite(&(self)->mo_lock)
+#define DeeModule_LockEndRead(self)    Dee_atomic_rwlock_endread(&(self)->mo_lock)
+#define DeeModule_LockEnd(self)        Dee_atomic_rwlock_end(&(self)->mo_lock)
+
 
 /* Lock/unlock the symbols of an interactive module object.
  * If `self' is a regular module, these are no-ops. */

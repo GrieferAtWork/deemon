@@ -57,7 +57,7 @@ PRIVATE WUNUSED DREF FixedList *DCALL fl_ctor(void) {
 	result = (DREF FixedList *)DeeGCObject_Malloc(offsetof(FixedList, fl_elem));
 	if unlikely(!result)
 		goto done;
-	rwlock_init(&result->fl_lock);
+	atomic_rwlock_init(&result->fl_lock);
 	result->fl_size = 0;
 	weakref_support_init(result);
 	DeeObject_Init(result, &FixedList_Type);
@@ -74,14 +74,14 @@ fl_copy(FixedList *__restrict self) {
 	                                              (self->fl_size * sizeof(DREF DeeObject *)));
 	if unlikely(!result)
 		goto done;
-	rwlock_init(&result->fl_lock);
+	atomic_rwlock_init(&result->fl_lock);
 	result->fl_size = self->fl_size;
-	rwlock_read(&self->fl_lock);
+	FixedList_LockRead(self);
 	for (i = 0; i < self->fl_size; ++i) {
 		result->fl_elem[i] = self->fl_elem[i];
 		Dee_XIncref(result->fl_elem[i]);
 	}
-	rwlock_endread(&self->fl_lock);
+	FixedList_LockEndRead(self);
 	weakref_support_init(result);
 	DeeObject_Init(result, &FixedList_Type);
 	DeeGC_Track((DeeObject *)result);
@@ -158,7 +158,7 @@ fl_init_iterator(DeeObject *__restrict iterator) {
 			result = new_result;
 	}
 done:
-	rwlock_init(&result->fl_lock);
+	atomic_rwlock_init(&result->fl_lock);
 	result->fl_size = itemc;
 	weakref_support_init(result);
 	DeeObject_Init(result, &FixedList_Type);
@@ -194,7 +194,7 @@ fl_init_getitem(DREF DeeObject *(DCALL *getitem)(DeeObject *__restrict self,
 		}
 		result->fl_elem[i] = elem;
 	}
-	rwlock_init(&result->fl_lock);
+	atomic_rwlock_init(&result->fl_lock);
 	result->fl_size = length;
 	weakref_support_init(result);
 	DeeObject_Init(result, &FixedList_Type);
@@ -222,7 +222,7 @@ fl_init(size_t argc, DeeObject *const *argv) {
 		                                              (size * sizeof(DREF DeeObject *)));
 		if unlikely(!result)
 			goto err;
-		rwlock_init(&result->fl_lock);
+		atomic_rwlock_init(&result->fl_lock);
 		result->fl_size = size;
 		Dee_Incref_n(init, size);
 		memsetp(result->fl_elem, init, size);
@@ -233,7 +233,7 @@ fl_init(size_t argc, DeeObject *const *argv) {
 		                                              (size * sizeof(DREF DeeObject *)));
 		if unlikely(!result)
 			goto err;
-		rwlock_cinit(&result->fl_lock);
+		atomic_rwlock_cinit(&result->fl_lock);
 		result->fl_size = size;
 	} else {
 		size_t i;
@@ -284,7 +284,7 @@ init_from_iterator:
 		                                              (size * sizeof(DREF DeeObject *)));
 		if unlikely(!result)
 			goto err;
-		rwlock_init(&result->fl_lock);
+		atomic_rwlock_init(&result->fl_lock);
 		result->fl_size = size;
 		for (i = 0; i < size; ++i) {
 			DREF DeeObject *elem;
@@ -321,14 +321,14 @@ fl_assign(FixedList *__restrict self, DeeObject *__restrict other) {
 		goto err;
 	if (DeeObject_Unpack(other, self->fl_size, items))
 		goto err_items;
-	rwlock_write(&self->fl_lock);
+	FixedList_LockWrite(self);
 	/* Exchange all stored items. */
 	for (i = 0; i < self->fl_size; ++i) {
 		temp             = self->fl_elem[i];
 		self->fl_elem[i] = items[i];
 		items[i]         = temp;
 	}
-	rwlock_endwrite(&self->fl_lock);
+	FixedList_LockEndWrite(self);
 	/* Drop references to all of the old items. */
 	Dee_XDecrefv(items, self->fl_size);
 	Dee_AFree(items);
@@ -357,12 +357,12 @@ fl_moveassign(FixedList *__restrict self,
 		goto err;
 #ifndef CONFIG_NO_THREADS
 write_self_again:
-	rwlock_write(&self->fl_lock);
-	if (!rwlock_trywrite(&other->fl_lock)) {
-		rwlock_endwrite(&self->fl_lock);
-		rwlock_write(&other->fl_lock);
-		if (!rwlock_trywrite(&self->fl_lock)) {
-			rwlock_endwrite(&other->fl_lock);
+	FixedList_LockWrite(self);
+	if (!FixedList_LockTryWrite(other)) {
+		FixedList_LockEndWrite(self);
+		FixedList_LockWrite(other);
+		if (!FixedList_LockTryWrite(self)) {
+			FixedList_LockEndWrite(other);
 			goto write_self_again;
 		}
 	}
@@ -372,8 +372,8 @@ write_self_again:
 	memcpyc(items, self->fl_elem, self->fl_size, sizeof(DREF DeeObject *));          /* Backup old objects. */
 	memcpyc(self->fl_elem, other->fl_elem, self->fl_size, sizeof(DREF DeeObject *)); /* Copy new objects. */
 	bzeroc(other->fl_elem, self->fl_size, sizeof(DREF DeeObject *));                 /* Steal references. */
-	rwlock_endwrite(&other->fl_lock);
-	rwlock_endwrite(&self->fl_lock);
+	FixedList_LockEndWrite(other);
+	FixedList_LockEndWrite(self);
 
 	/* Drop references to all of the old items. */
 	Dee_XDecrefv(items, self->fl_size);
@@ -406,10 +406,10 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL fl_bool(FixedList *__restrict self) {
 PRIVATE NONNULL((1, 2)) void DCALL
 fl_visit(FixedList *__restrict self, dvisit_t proc, void *arg) {
 	size_t i;
-	rwlock_read(&self->fl_lock);
+	FixedList_LockRead(self);
 	for (i = 0; i < self->fl_size; ++i)
 		Dee_XVisit(self->fl_elem[i]);
-	rwlock_endread(&self->fl_lock);
+	FixedList_LockEndRead(self);
 }
 
 PRIVATE NONNULL((1)) void DCALL
@@ -417,7 +417,7 @@ fl_clear(FixedList *__restrict self) {
 	size_t i, buflen = 0;
 	DREF DeeObject *buf[16];
 again:
-	rwlock_write(&self->fl_lock);
+	FixedList_LockWrite(self);
 	for (i = 0; i < self->fl_size; ++i) {
 		DREF DeeObject *ob;
 		ob = self->fl_elem[i];
@@ -425,14 +425,14 @@ again:
 			continue;
 		self->fl_elem[i] = NULL;
 		if (buflen >= COMPILER_LENOF(buf)) {
-			rwlock_endwrite(&self->fl_lock);
+			FixedList_LockEndWrite(self);
 			Dee_Decref(ob);
 			Dee_Decrefv(buf, buflen);
 			goto again;
 		}
 		buf[buflen++] = ob; /* Inherit reference. */
 	}
-	rwlock_endwrite(&self->fl_lock);
+	FixedList_LockEndWrite(self);
 	/* Drop all of the references we took. */
 	Dee_Decrefv(buf, buflen);
 }
@@ -442,7 +442,7 @@ fl_pclear(FixedList *__restrict self, unsigned int gc_priority) {
 	size_t i, buflen = 0;
 	DREF DeeObject *buf[16];
 again:
-	rwlock_write(&self->fl_lock);
+	FixedList_LockWrite(self);
 	for (i = 0; i < self->fl_size; ++i) {
 		DREF DeeObject *ob;
 		ob = self->fl_elem[i];
@@ -452,14 +452,14 @@ again:
 			continue; /* Ignore this object (for now) */
 		self->fl_elem[i] = NULL;
 		if (buflen >= COMPILER_LENOF(buf)) {
-			rwlock_endwrite(&self->fl_lock);
+			FixedList_LockEndWrite(self);
 			Dee_Decref(ob);
 			Dee_Decrefv(buf, buflen);
 			goto again;
 		}
 		buf[buflen++] = ob; /* Inherit reference. */
 	}
-	rwlock_endwrite(&self->fl_lock);
+	FixedList_LockEndWrite(self);
 	/* Drop all of the references we took. */
 	Dee_Decrefv(buf, buflen);
 }
@@ -488,15 +488,15 @@ fl_nsi_getitem(FixedList *__restrict self, size_t index) {
 		err_index_out_of_bounds((DeeObject *)self, index, self->fl_size);
 		goto err;
 	}
-	rwlock_read(&self->fl_lock);
+	FixedList_LockRead(self);
 	result = self->fl_elem[index];
 	if unlikely(!result) {
-		rwlock_endread(&self->fl_lock);
+		FixedList_LockEndRead(self);
 		err_unbound_index((DeeObject *)self, index);
 		goto err;
 	}
 	Dee_Incref(result);
-	rwlock_endread(&self->fl_lock);
+	FixedList_LockEndRead(self);
 	return result;
 err:
 	return NULL;
@@ -506,10 +506,10 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 fl_nsi_getitem_fast(FixedList *__restrict self, size_t index) {
 	DREF DeeObject *result;
 	ASSERT(index < self->fl_size);
-	rwlock_read(&self->fl_lock);
+	FixedList_LockRead(self);
 	result = self->fl_elem[index];
 	Dee_XIncref(result);
-	rwlock_endread(&self->fl_lock);
+	FixedList_LockEndRead(self);
 	return result;
 }
 
@@ -520,17 +520,17 @@ fl_nsi_delitem(FixedList *__restrict self, size_t index) {
 		err_index_out_of_bounds((DeeObject *)self, index, self->fl_size);
 		goto err;
 	}
-	rwlock_read(&self->fl_lock);
+	FixedList_LockRead(self);
 	oldval = self->fl_elem[index];
 #ifdef CONFIG_ERROR_DELETE_UNBOUND
 	if unlikely(!oldval) {
-		rwlock_endread(&self->fl_lock);
+		FixedList_LockEndRead(self);
 		err_unbound_index((DeeObject *)self, index);
 		goto err;
 	}
 #endif /* CONFIG_ERROR_DELETE_UNBOUND */
 	self->fl_elem[index] = NULL;
-	rwlock_endread(&self->fl_lock);
+	FixedList_LockEndRead(self);
 #ifdef CONFIG_ERROR_DELETE_UNBOUND
 	Dee_Decref(oldval);
 #else /* CONFIG_ERROR_DELETE_UNBOUND */
@@ -550,10 +550,10 @@ fl_nsi_setitem(FixedList *__restrict self, size_t index,
 		goto err;
 	}
 	Dee_Incref(value);
-	rwlock_read(&self->fl_lock);
+	FixedList_LockRead(self);
 	oldval               = self->fl_elem[index];
 	self->fl_elem[index] = value;
-	rwlock_endread(&self->fl_lock);
+	FixedList_LockEndRead(self);
 	Dee_XDecref(oldval);
 	return 0;
 err:
@@ -568,16 +568,16 @@ fl_nsi_xchitem(FixedList *__restrict self, size_t index,
 		err_index_out_of_bounds((DeeObject *)self, index, self->fl_size);
 		goto err;
 	}
-	rwlock_read(&self->fl_lock);
+	FixedList_LockRead(self);
 	result = self->fl_elem[index];
 	if unlikely(!result) {
-		rwlock_endread(&self->fl_lock);
+		FixedList_LockEndRead(self);
 		err_unbound_index((DeeObject *)self, index);
 		goto err;
 	}
 	Dee_Incref(value);
 	self->fl_elem[index] = value;
-	rwlock_endread(&self->fl_lock);
+	FixedList_LockEndRead(self);
 	return result;
 err:
 	return NULL;
@@ -624,10 +624,10 @@ fl_contains(FixedList *self,
 	for (i = 0; i < self->fl_size; ++i) {
 		DREF DeeObject *elem;
 		int temp;
-		rwlock_read(&self->fl_lock);
+		FixedList_LockRead(self);
 		elem = self->fl_elem[i];
 		Dee_Incref(elem);
-		rwlock_endread(&self->fl_lock);
+		FixedList_LockEndRead(self);
 		temp = DeeObject_CompareEq(value, elem);
 		Dee_Decref(elem);
 		if (temp != 0) {
@@ -672,11 +672,11 @@ fl_nsi_getrange(FixedList *__restrict self, dssize_t start, dssize_t end) {
 	                                              count * sizeof(DREF DeeObject *));
 	if unlikely(!result)
 		goto done;
-	rwlock_init(&result->fl_lock);
+	atomic_rwlock_init(&result->fl_lock);
 	result->fl_size = count;
-	rwlock_read(&self->fl_lock);
+	FixedList_LockRead(self);
 	Dee_XMovrefv(result->fl_elem, self->fl_elem + (size_t)start, count);
-	rwlock_endread(&self->fl_lock);
+	FixedList_LockEndRead(self);
 	weakref_support_init(result);
 	DeeObject_Init(result, &FixedList_Type);
 	DeeGC_Track((DeeObject *)result);
@@ -703,7 +703,7 @@ fl_nsi_delrange(FixedList *__restrict self, dssize_t start, dssize_t end) {
 	values_buf = (DREF DeeObject **)Dee_AMallocc(count, sizeof(DREF DeeObject *));
 	if unlikely(!values_buf)
 		goto err;
-	rwlock_write(&self->fl_lock);
+	FixedList_LockWrite(self);
 	for (i = 0; i < count; ++i) {
 		DREF DeeObject **p_slot;
 		p_slot = &self->fl_elem[(size_t)start + i];
@@ -711,7 +711,7 @@ fl_nsi_delrange(FixedList *__restrict self, dssize_t start, dssize_t end) {
 		values_buf[i] = *p_slot;
 		*p_slot       = NULL;
 	}
-	rwlock_endwrite(&self->fl_lock);
+	FixedList_LockEndWrite(self);
 	Dee_XDecrefv(values_buf, count);
 	Dee_AFree(values_buf);
 	return 0;
@@ -737,7 +737,7 @@ fl_nsi_setrange(FixedList *self, dssize_t start, dssize_t end, DeeObject *values
 		goto err;
 	if (DeeObject_UnpackWithUnbound(values, count, values_buf))
 		goto err_values_buf;
-	rwlock_write(&self->fl_lock);
+	FixedList_LockWrite(self);
 	for (i = 0; i < count; ++i) {
 		DREF DeeObject **p_slot, *temp;
 		p_slot = &self->fl_elem[(size_t)start + i];
@@ -746,7 +746,7 @@ fl_nsi_setrange(FixedList *self, dssize_t start, dssize_t end, DeeObject *values
 		*p_slot       = values_buf[i];
 		values_buf[i] = temp;
 	}
-	rwlock_endwrite(&self->fl_lock);
+	FixedList_LockEndWrite(self);
 	Dee_XDecrefv(values_buf, count);
 	Dee_AFree(values_buf);
 	return 0;
@@ -826,10 +826,10 @@ fl_nsi_find(FixedList *self, size_t start, size_t end,
 		end = self->fl_size;
 	for (i = start; i < end; ++i) {
 		DREF DeeObject *elem;
-		rwlock_read(&self->fl_lock);
+		FixedList_LockRead(self);
 		elem = self->fl_elem[i];
 		Dee_XIncref(elem);
-		rwlock_endread(&self->fl_lock);
+		FixedList_LockEndRead(self);
 		if (elem) {
 			int error;
 			error = DeeObject_CompareKeyEq(keyed_search_item, elem, key);
@@ -854,10 +854,10 @@ fl_nsi_rfind(FixedList *self, size_t start, size_t end,
 	for (i = end; i > start;) {
 		DREF DeeObject *elem;
 		--i;
-		rwlock_read(&self->fl_lock);
+		FixedList_LockRead(self);
 		elem = self->fl_elem[i];
 		Dee_XIncref(elem);
-		rwlock_endread(&self->fl_lock);
+		FixedList_LockEndRead(self);
 		if (elem) {
 			int error;
 			error = DeeObject_CompareKeyEq(keyed_search_item, elem, key);
@@ -880,10 +880,10 @@ fl_nsi_pop(FixedList *__restrict self, dssize_t index) {
 		index += self->fl_size;
 	if unlikely((size_t)index >= self->fl_size)
 		goto err_bounds;
-	rwlock_read(&self->fl_lock);
+	FixedList_LockRead(self);
 	result = self->fl_elem[(size_t)index]; /* Steal reference */
 	self->fl_elem[(size_t)index] = NULL;
-	rwlock_endread(&self->fl_lock);
+	FixedList_LockEndRead(self);
 	if unlikely(!result) {
 		err_unbound_index((DeeObject *)self,
 		                  (size_t)index);
@@ -905,10 +905,10 @@ fl_nsi_remove(FixedList *self, size_t start, size_t end,
 	for (i = start; i < end; ++i) {
 		DREF DeeObject *elem;
 again_elem:
-		rwlock_read(&self->fl_lock);
+		FixedList_LockRead(self);
 		elem = self->fl_elem[i];
 		Dee_XIncref(elem);
-		rwlock_endread(&self->fl_lock);
+		FixedList_LockEndRead(self);
 		if (elem) {
 			int error;
 			error = DeeObject_CompareKeyEq(keyed_search_item, elem, key);
@@ -917,13 +917,13 @@ again_elem:
 				goto err;
 			if (error) {
 				/* Found it! */
-				rwlock_write(&self->fl_lock);
+				FixedList_LockWrite(self);
 				if unlikely(self->fl_elem[i] != elem) {
-					rwlock_endwrite(&self->fl_lock);
+					FixedList_LockEndWrite(self);
 					goto again_elem;
 				}
 				self->fl_elem[i] = NULL;
-				rwlock_endwrite(&self->fl_lock);
+				FixedList_LockEndWrite(self);
 				Dee_Decref(elem);
 				return 1;
 			}
@@ -944,10 +944,10 @@ fl_nsi_rremove(FixedList *self, size_t start, size_t end,
 		DREF DeeObject *elem;
 		--i;
 again_elem:
-		rwlock_read(&self->fl_lock);
+		FixedList_LockRead(self);
 		elem = self->fl_elem[i];
 		Dee_XIncref(elem);
-		rwlock_endread(&self->fl_lock);
+		FixedList_LockEndRead(self);
 		if (elem) {
 			int error;
 			error = DeeObject_CompareKeyEq(keyed_search_item, elem, key);
@@ -956,13 +956,13 @@ again_elem:
 				goto err;
 			if (error) {
 				/* Found it! */
-				rwlock_write(&self->fl_lock);
+				FixedList_LockWrite(self);
 				if unlikely(self->fl_elem[i] != elem) {
-					rwlock_endwrite(&self->fl_lock);
+					FixedList_LockEndWrite(self);
 					goto again_elem;
 				}
 				self->fl_elem[i] = NULL;
-				rwlock_endwrite(&self->fl_lock);
+				FixedList_LockEndWrite(self);
 				Dee_Decref(elem);
 				return 1;
 			}
@@ -983,10 +983,10 @@ fl_nsi_removeall(FixedList *self, size_t start, size_t end,
 	for (i = start; i < end; ++i) {
 		DREF DeeObject *elem;
 again_elem:
-		rwlock_read(&self->fl_lock);
+		FixedList_LockRead(self);
 		elem = self->fl_elem[i];
 		Dee_XIncref(elem);
-		rwlock_endread(&self->fl_lock);
+		FixedList_LockEndRead(self);
 		if (elem) {
 			int error;
 			error = DeeObject_CompareKeyEq(keyed_search_item, elem, key);
@@ -995,13 +995,13 @@ again_elem:
 				goto err;
 			if (error) {
 				/* Found one! */
-				rwlock_write(&self->fl_lock);
+				FixedList_LockWrite(self);
 				if unlikely(self->fl_elem[i] != elem) {
-					rwlock_endwrite(&self->fl_lock);
+					FixedList_LockEndWrite(self);
 					goto again_elem;
 				}
 				self->fl_elem[i] = NULL;
-				rwlock_endwrite(&self->fl_lock);
+				FixedList_LockEndWrite(self);
 				Dee_Decref(elem);
 				++result;
 			}
@@ -1022,10 +1022,10 @@ fl_nsi_removeif(FixedList *self, size_t start,
 	for (i = start; i < end; ++i) {
 		DREF DeeObject *elem;
 again_elem:
-		rwlock_read(&self->fl_lock);
+		FixedList_LockRead(self);
 		elem = self->fl_elem[i];
 		Dee_XIncref(elem);
-		rwlock_endread(&self->fl_lock);
+		FixedList_LockEndRead(self);
 		if (elem) {
 			int error;
 			DREF DeeObject *bshould;
@@ -1039,13 +1039,13 @@ again_elem:
 				goto err;
 			if (error) {
 				/* Found one! */
-				rwlock_write(&self->fl_lock);
+				FixedList_LockWrite(self);
 				if unlikely(self->fl_elem[i] != elem) {
-					rwlock_endwrite(&self->fl_lock);
+					FixedList_LockEndWrite(self);
 					goto again_elem;
 				}
 				self->fl_elem[i] = NULL;
-				rwlock_endwrite(&self->fl_lock);
+				FixedList_LockEndWrite(self);
 				Dee_Decref(elem);
 				++result;
 			}
@@ -1369,10 +1369,10 @@ fli_peek(FixedListIterator *__restrict self) {
 	if (iter >= list->fl_size)
 		return ITER_DONE;
 	newiter = iter;
-	rwlock_read(&list->fl_lock);
+	FixedList_LockRead(list);
 	for (;; ++newiter) {
 		if (newiter >= list->fl_size) {
-			rwlock_endread(&list->fl_lock);
+			FixedList_LockEndRead(list);
 			return ITER_DONE;
 		}
 		result = list->fl_elem[newiter];
@@ -1380,7 +1380,7 @@ fli_peek(FixedListIterator *__restrict self) {
 			break;
 	}
 	Dee_Incref(result);
-	rwlock_endread(&list->fl_lock);
+	FixedList_LockEndRead(list);
 	return result;
 }
 
@@ -1438,10 +1438,10 @@ again:
 	if (iter >= list->fl_size)
 		return ITER_DONE;
 	newiter = iter;
-	rwlock_read(&list->fl_lock);
+	FixedList_LockRead(list);
 	for (;; ++newiter) {
 		if (newiter >= list->fl_size) {
-			rwlock_endread(&list->fl_lock);
+			FixedList_LockEndRead(list);
 			if (!atomic_cmpxch_weak_or_write(&self->li_iter, iter, newiter))
 				goto again;
 			return ITER_DONE;
@@ -1451,7 +1451,7 @@ again:
 			break;
 	}
 	Dee_Incref(result);
-	rwlock_endread(&list->fl_lock);
+	FixedList_LockEndRead(list);
 	if (!atomic_cmpxch_weak_or_write(&self->li_iter, iter, newiter + 1)) {
 		Dee_Decref(result);
 		goto again;

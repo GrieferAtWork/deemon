@@ -213,12 +213,12 @@ roset_insert_nocheck(DeeRoSetObject *__restrict self,
 	perturb = i = ROSET_HASHST(self, hash);
 	for (;; ROSET_HASHNX(i, perturb)) {
 		item = ROSET_HASHIT(self, i);
-		if (!item->si_key)
+		if (!item->rsi_key)
 			break;
 	}
 	/* Fill in the item. */
-	item->si_hash = hash;
-	item->si_key  = key; /* Inherit reference. */
+	item->rsi_hash = hash;
+	item->rsi_key  = key; /* Inherit reference. */
 }
 
 #define dummy (&DeeDict_Dummy)
@@ -545,24 +545,24 @@ push_dict_parts:
 		DREF DeeRoSetObject *roset;
 check_set_again:
 		DeeHashSet_LockRead(value);
-		if (!((DeeHashSetObject *)value)->s_used) {
+		if (!((DeeHashSetObject *)value)->hs_used) {
 			/* Simple case: The set is empty, so we can just pack an empty HashSet at runtime. */
 			DeeHashSet_LockRead(value);
 			return asm_gpack_hashset(0);
 		}
-		mask = ((DeeHashSetObject *)value)->s_mask;
-		elem = ((DeeHashSetObject *)value)->s_elem;
+		mask = ((DeeHashSetObject *)value)->hs_mask;
+		elem = ((DeeHashSetObject *)value)->hs_elem;
 		for (i = 0; i <= mask; ++i) {
-			if (!elem[i].si_key)
+			if (!elem[i].hsi_key)
 				continue;
-			if (elem[i].si_key == dummy)
+			if (elem[i].hsi_key == dummy)
 				continue;
-			if (!asm_allowconst(elem[i].si_key)) {
+			if (!asm_allowconst(elem[i].hsi_key)) {
 				DeeHashSet_LockEndRead(value);
 				goto push_set_parts;
 			}
 		}
-		num_items = ((DeeHashSetObject *)value)->s_used;
+		num_items = ((DeeHashSetObject *)value)->hs_used;
 		ro_mask   = ROSET_INITIAL_MASK;
 		while (ro_mask <= num_items)
 			ro_mask = (ro_mask << 1) | 1;
@@ -578,14 +578,14 @@ check_set_again:
 		roset->rs_mask = ro_mask;
 		/* Pack all key-value pairs into the ro-set. */
 		for (i = 0; i <= mask; ++i) {
-			if (!elem[i].si_key)
+			if (!elem[i].hsi_key)
 				continue;
-			if (elem[i].si_key == dummy)
+			if (elem[i].hsi_key == dummy)
 				continue;
-			Dee_Incref(elem[i].si_key); /* Inherited by `roset_insert_nocheck()' */
+			Dee_Incref(elem[i].hsi_key); /* Inherited by `roset_insert_nocheck()' */
 			roset_insert_nocheck(roset,
-			                     elem[i].si_hash,
-			                     elem[i].si_key);
+			                     elem[i].hsi_hash,
+			                     elem[i].hsi_key);
 		}
 		DeeHashSet_LockEndRead(value);
 		DeeObject_Init(roset, &DeeRoSet_Type);
@@ -605,12 +605,12 @@ push_set_parts:
 		/* Construct a set by pushing its individual parts. */
 		num_items = 0;
 		DeeHashSet_LockRead(value);
-		for (i = 0; i <= ((DeeHashSetObject *)value)->s_mask; ++i) {
+		for (i = 0; i <= ((DeeHashSetObject *)value)->hs_mask; ++i) {
 			struct hashset_item *item;
 			int error;
 			DREF DeeObject *item_key;
-			item     = &((DeeHashSetObject *)value)->s_elem[i];
-			item_key = item->si_key;
+			item     = &((DeeHashSetObject *)value)->hs_elem[i];
+			item_key = item->hsi_key;
 			if (!item_key || item_key == dummy)
 				continue;
 			Dee_Incref(item_key);

@@ -153,7 +153,7 @@ PRIVATE WUNUSED NONNULL((1, 3)) int DCALL
 lookup_code_info(/*[in]*/ DeeCodeObject *code,
                  /*[in]*/ DeeFunctionObject *function,
                  /*[out]*/ struct function_info *__restrict info) {
-	DeeModuleObject *module;
+	DeeModuleObject *mod;
 	uint16_t addr;
 	int result;
 	info->fi_type   = NULL;
@@ -163,21 +163,21 @@ lookup_code_info(/*[in]*/ DeeCodeObject *code,
 	info->fi_getset = (uint16_t)-1;
 
 	/* Step #1: Search the code object's module for the given `function' */
-	module = code->co_module;
-	if unlikely(!module)
+	mod = code->co_module;
+	if unlikely(!mod)
 		goto without_module;
-	if unlikely(DeeInteractiveModule_Check(module))
+	if unlikely(DeeInteractiveModule_Check(mod))
 		goto without_module;
-	rwlock_read(&module->mo_lock);
-	for (addr = 0; addr < module->mo_globalc; ++addr) {
-		if (!module->mo_globalv[addr])
+	DeeModule_LockRead(mod);
+	for (addr = 0; addr < mod->mo_globalc; ++addr) {
+		if (!mod->mo_globalv[addr])
 			continue;
-		if (module->mo_globalv[addr] == (DeeObject *)function ||
-		    (DeeFunction_Check(module->mo_globalv[addr]) &&
-		     DeeFunction_CODE(module->mo_globalv[addr]) == code)) {
+		if (mod->mo_globalv[addr] == (DeeObject *)function ||
+		    (DeeFunction_Check(mod->mo_globalv[addr]) &&
+		     DeeFunction_CODE(mod->mo_globalv[addr]) == code)) {
 			struct module_symbol *function_symbol;
-			rwlock_endread(&module->mo_lock);
-			function_symbol = DeeModule_GetSymbolID(module, addr);
+			DeeModule_LockEndRead(mod);
+			function_symbol = DeeModule_GetSymbolID(mod, addr);
 			if (function_symbol) {
 				/* Found it! (it's a global) */
 				info->fi_name = module_symbol_getnameobj(function_symbol);
@@ -190,14 +190,14 @@ lookup_code_info(/*[in]*/ DeeCodeObject *code,
 				}
 				return 0;
 			}
-			rwlock_read(&module->mo_lock);
+			DeeModule_LockRead(mod);
 		}
 	}
 
 	/* Do another pass, this time looking for class objects
 	 * which the function may be defined to be apart of. */
-	for (addr = 0; addr < module->mo_globalc; ++addr) {
-		DeeObject *glob = module->mo_globalv[addr];
+	for (addr = 0; addr < mod->mo_globalc; ++addr) {
+		DeeObject *glob = mod->mo_globalv[addr];
 		if (!glob)
 			continue;
 		if (!DeeType_Check(glob))
@@ -205,14 +205,14 @@ lookup_code_info(/*[in]*/ DeeCodeObject *code,
 		if (!DeeType_IsClass(glob))
 			continue;
 		Dee_Incref(glob);
-		rwlock_endread(&module->mo_lock);
+		DeeModule_LockEndRead(mod);
 		result = lookup_code_info_in_class((DeeTypeObject *)glob, code, function, info);
 		Dee_Decref(glob);
 		if (result <= 0)
 			return result;
-		rwlock_read(&module->mo_lock);
+		DeeModule_LockRead(mod);
 	}
-	rwlock_endread(&module->mo_lock);
+	DeeModule_LockEndRead(mod);
 without_module:
 	if (function) {
 		/* Search though the function's references for class types, and

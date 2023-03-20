@@ -29,6 +29,7 @@
 #include <deemon/string.h>
 #include <deemon/system-features.h> /* memcpy() */
 #include <deemon/util/atomic.h>
+#include <deemon/util/lock.h>
 
 #include "../../runtime/strings.h"
 #include "regroups.h"
@@ -93,9 +94,26 @@ typedef struct {
 	DREF DeeObject         *rsi_data; /* [const][1..1] Data string or Bytes. */
 	struct DeeRegexBaseExec rsi_exec; /* Regex arguments. */
 #ifndef CONFIG_NO_THREADS
-	rwlock_t                rsi_lock; /* Lock used during iteration. */
+	atomic_rwlock_t         rsi_lock; /* Lock used during iteration. */
 #endif /* !CONFIG_NO_THREADS */
 } ReSequenceIterator;
+
+#define ReSequenceIterator_LockReading(self)    Dee_atomic_rwlock_reading(&(self)->rsi_lock)
+#define ReSequenceIterator_LockWriting(self)    Dee_atomic_rwlock_writing(&(self)->rsi_lock)
+#define ReSequenceIterator_LockTryRead(self)    Dee_atomic_rwlock_tryread(&(self)->rsi_lock)
+#define ReSequenceIterator_LockTryWrite(self)   Dee_atomic_rwlock_trywrite(&(self)->rsi_lock)
+#define ReSequenceIterator_LockCanRead(self)    Dee_atomic_rwlock_canread(&(self)->rsi_lock)
+#define ReSequenceIterator_LockCanWrite(self)   Dee_atomic_rwlock_canwrite(&(self)->rsi_lock)
+#define ReSequenceIterator_LockWaitRead(self)   Dee_atomic_rwlock_waitread(&(self)->rsi_lock)
+#define ReSequenceIterator_LockWaitWrite(self)  Dee_atomic_rwlock_waitwrite(&(self)->rsi_lock)
+#define ReSequenceIterator_LockRead(self)       Dee_atomic_rwlock_read(&(self)->rsi_lock)
+#define ReSequenceIterator_LockWrite(self)      Dee_atomic_rwlock_write(&(self)->rsi_lock)
+#define ReSequenceIterator_LockTryUpgrade(self) Dee_atomic_rwlock_tryupgrade(&(self)->rsi_lock)
+#define ReSequenceIterator_LockUpgrade(self)    Dee_atomic_rwlock_upgrade(&(self)->rsi_lock)
+#define ReSequenceIterator_LockDowngrade(self)  Dee_atomic_rwlock_downgrade(&(self)->rsi_lock)
+#define ReSequenceIterator_LockEndWrite(self)   Dee_atomic_rwlock_endwrite(&(self)->rsi_lock)
+#define ReSequenceIterator_LockEndRead(self)    Dee_atomic_rwlock_endread(&(self)->rsi_lock)
+#define ReSequenceIterator_LockEnd(self)        Dee_atomic_rwlock_end(&(self)->rsi_lock)
 
 STATIC_ASSERT(offsetof(ReSequence, rs_data) == offsetof(ReSequenceIterator, rsi_data));
 STATIC_ASSERT(offsetof(ReSequence, rs_exec) == offsetof(ReSequenceIterator, rsi_exec));
@@ -111,7 +129,7 @@ refaiter_ctor(ReSequenceIterator *__restrict self) {
 	self->rsi_data            = Dee_EmptyString;
 	self->rsi_exec.rx_pattern = (DREF String *)Dee_EmptyString;
 	Dee_Incref_n(Dee_EmptyString, 2);
-	rwlock_init(&self->rsi_lock);
+	atomic_rwlock_init(&self->rsi_lock);
 	return 0;
 }
 
@@ -125,7 +143,7 @@ rebfaiter_ctor(ReSequenceIterator *__restrict self) {
 	self->rsi_exec.rx_pattern = (DREF String *)Dee_EmptyString;
 	Dee_Incref(Dee_EmptyBytes);
 	Dee_Incref(Dee_EmptyString);
-	rwlock_init(&self->rsi_lock);
+	atomic_rwlock_init(&self->rsi_lock);
 	return 0;
 }
 
@@ -133,13 +151,13 @@ rebfaiter_ctor(ReSequenceIterator *__restrict self) {
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 refaiter_copy(ReSequenceIterator *__restrict self,
               ReSequenceIterator *__restrict other) {
-	rwlock_read(&other->rsi_lock);
+	ReSequenceIterator_LockRead(other);
 	memcpy(&self->rsi_exec, &other->rsi_exec, sizeof(self->rsi_exec));
-	rwlock_endread(&other->rsi_lock);
+	ReSequenceIterator_LockEndRead(other);
 	self->rsi_data = other->rsi_data;
 	Dee_Incref(self->rsi_data);
 	Dee_Incref(self->rsi_exec.rx_pattern);
-	rwlock_init(&self->rsi_lock);
+	atomic_rwlock_init(&self->rsi_lock);
 	return 0;
 }
 
@@ -155,7 +173,7 @@ refaiter_init(ReSequenceIterator *__restrict self,
 	       sizeof(ReSequence) - offsetof(ReSequence, rs_data));
 	Dee_Incref(self->rsi_data);
 	Dee_Incref(self->rsi_exec.rx_pattern);
-	rwlock_init(&self->rsi_lock);
+	atomic_rwlock_init(&self->rsi_lock);
 	return 0;
 err:
 	return -1;
@@ -173,7 +191,7 @@ rebfaiter_init(ReSequenceIterator *__restrict self,
 	       sizeof(ReSequence) - offsetof(ReSequence, rs_data));
 	Dee_Incref(self->rsi_data);
 	Dee_Incref(self->rsi_exec.rx_pattern);
-	rwlock_init(&self->rsi_lock);
+	atomic_rwlock_init(&self->rsi_lock);
 	return 0;
 err:
 	return -1;
@@ -199,9 +217,9 @@ refaiter_bool(ReSequenceIterator *__restrict self) {
 	size_t match_size;
 	Dee_ssize_t result;
 	struct DeeRegexExec exec;
-	rwlock_read(&self->rsi_lock);
+	ReSequenceIterator_LockRead(self);
 	DeeRegexBaseExec_Load(&self->rsi_exec, &exec, 0, NULL);
-	rwlock_endread(&self->rsi_lock);
+	ReSequenceIterator_LockEndRead(self);
 	result = DeeRegex_SearchNoEpsilon(&exec, (size_t)-1, &match_size);
 	if unlikely(result == DEE_RE_STATUS_ERROR)
 		goto err;
@@ -217,9 +235,9 @@ refaiter_next(ReSequenceIterator *__restrict self) {
 	Dee_ssize_t result;
 	struct DeeRegexExec exec;
 again:
-	rwlock_read(&self->rsi_lock);
+	ReSequenceIterator_LockRead(self);
 	DeeRegexBaseExec_Load(&self->rsi_exec, &exec, 0, NULL);
-	rwlock_endread(&self->rsi_lock);
+	ReSequenceIterator_LockEndRead(self);
 	result = DeeRegex_SearchNoEpsilon(&exec, (size_t)-1, &match_size);
 	if unlikely(result == DEE_RE_STATUS_ERROR)
 		goto err;
@@ -227,13 +245,13 @@ again:
 		return ITER_DONE;
 	if (match_size == 0)
 		return ITER_DONE; /* Prevent infinite loop on epsilon-match */
-	rwlock_write(&self->rsi_lock);
+	ReSequenceIterator_LockWrite(self);
 	if unlikely(self->rsi_exec.rx_startoff != exec.rx_startoff) {
-		rwlock_endwrite(&self->rsi_lock);
+		ReSequenceIterator_LockEndWrite(self);
 		goto again;
 	}
 	self->rsi_exec.rx_startoff = (size_t)result + match_size;
-	rwlock_endwrite(&self->rsi_lock);
+	ReSequenceIterator_LockEndWrite(self);
 	match_size = string_bytecnt2charcnt((DREF String *)self->rsi_data, (size_t)match_size, (char const *)exec.rx_inbase + (size_t)result);
 	result     = string_bytecnt2charcnt((DREF String *)self->rsi_data, (size_t)result, (char const *)exec.rx_inbase);
 	match_size += (size_t)result;
@@ -248,9 +266,9 @@ rebfaiter_next(ReSequenceIterator *__restrict self) {
 	Dee_ssize_t result;
 	struct DeeRegexExec exec;
 again:
-	rwlock_read(&self->rsi_lock);
+	ReSequenceIterator_LockRead(self);
 	DeeRegexBaseExec_Load(&self->rsi_exec, &exec, 0, NULL);
-	rwlock_endread(&self->rsi_lock);
+	ReSequenceIterator_LockEndRead(self);
 	result = DeeRegex_SearchNoEpsilon(&exec, (size_t)-1, &match_size);
 	if unlikely(result == DEE_RE_STATUS_ERROR)
 		goto err;
@@ -258,13 +276,13 @@ again:
 		return ITER_DONE;
 	if (match_size == 0)
 		return ITER_DONE; /* Prevent infinite loop on epsilon-match */
-	rwlock_write(&self->rsi_lock);
+	ReSequenceIterator_LockWrite(self);
 	if unlikely(self->rsi_exec.rx_startoff != exec.rx_startoff) {
-		rwlock_endwrite(&self->rsi_lock);
+		ReSequenceIterator_LockEndWrite(self);
 		goto again;
 	}
 	self->rsi_exec.rx_startoff = (size_t)result + match_size;
-	rwlock_endwrite(&self->rsi_lock);
+	ReSequenceIterator_LockEndWrite(self);
 	match_size += (size_t)result;
 	return DeeTuple_Newf(PCKuSIZ PCKuSIZ, (size_t)result, (size_t)match_size);
 err:
@@ -274,18 +292,18 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 refaiter_getseq(ReSequenceIterator *__restrict self) {
 	struct DeeRegexBaseExec args_copy;
-	rwlock_read(&self->rsi_lock);
+	ReSequenceIterator_LockRead(self);
 	memcpy(&args_copy, &self->rsi_exec, sizeof(struct DeeRegexBaseExec));
-	rwlock_endread(&self->rsi_lock);
+	ReSequenceIterator_LockEndRead(self);
 	return string_re_findall((DeeStringObject *)self->rsi_data, &args_copy);
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 rebfaiter_getseq(ReSequenceIterator *__restrict self) {
 	struct DeeRegexBaseExec args_copy;
-	rwlock_read(&self->rsi_lock);
+	ReSequenceIterator_LockRead(self);
 	memcpy(&args_copy, &self->rsi_exec, sizeof(struct DeeRegexBaseExec));
-	rwlock_endread(&self->rsi_lock);
+	ReSequenceIterator_LockEndRead(self);
 	return bytes_re_findall((DeeBytesObject *)self->rsi_data, &args_copy);
 }
 
@@ -465,11 +483,11 @@ regfaiter_next(ReSequenceIterator *__restrict self) {
 	if unlikely(!groups)
 		goto err;
 again:
-	rwlock_read(&self->rsi_lock);
+	ReSequenceIterator_LockRead(self);
 	DeeRegexBaseExec_Load(&self->rsi_exec, &exec,
 	                      self->rsi_exec.rx_code->rc_ngrps,
 	                      groups->rg_groups + 1);
-	rwlock_endread(&self->rsi_lock);
+	ReSequenceIterator_LockEndRead(self);
 	result = DeeRegex_SearchNoEpsilon(&exec, (size_t)-1, &match_size);
 	if unlikely(result == DEE_RE_STATUS_ERROR)
 		goto err_g;
@@ -477,13 +495,13 @@ again:
 		return (DREF ReGroups *)ITER_DONE;
 	if (match_size == 0)
 		return (DREF ReGroups *)ITER_DONE; /* Prevent infinite loop on epsilon-match */
-	rwlock_write(&self->rsi_lock);
+	ReSequenceIterator_LockWrite(self);
 	if unlikely(self->rsi_exec.rx_startoff != exec.rx_startoff) {
-		rwlock_endwrite(&self->rsi_lock);
+		ReSequenceIterator_LockEndWrite(self);
 		goto again;
 	}
 	self->rsi_exec.rx_startoff = (size_t)result + match_size;
-	rwlock_endwrite(&self->rsi_lock);
+	ReSequenceIterator_LockEndWrite(self);
 	string_bytecnt2charcnt_v((String *)self->rsi_data, (char const *)exec.rx_inbase,
 	                         groups->rg_groups + 1, self->rsi_exec.rx_code->rc_ngrps);
 	match_size = string_bytecnt2charcnt((String *)self->rsi_data, (size_t)match_size, (char const *)exec.rx_inbase + (size_t)result);
@@ -509,11 +527,11 @@ regbfaiter_next(ReSequenceIterator *__restrict self) {
 	if unlikely(!groups)
 		goto err;
 again:
-	rwlock_read(&self->rsi_lock);
+	ReSequenceIterator_LockRead(self);
 	DeeRegexBaseExec_Load(&self->rsi_exec, &exec,
 	                      self->rsi_exec.rx_code->rc_ngrps,
 	                      groups->rg_groups + 1);
-	rwlock_endread(&self->rsi_lock);
+	ReSequenceIterator_LockEndRead(self);
 	result = DeeRegex_SearchNoEpsilon(&exec, (size_t)-1, &match_size);
 	if unlikely(result == DEE_RE_STATUS_ERROR)
 		goto err_g;
@@ -521,13 +539,13 @@ again:
 		return (DREF ReGroups *)ITER_DONE;
 	if (match_size == 0)
 		return (DREF ReGroups *)ITER_DONE; /* Prevent infinite loop on epsilon-match */
-	rwlock_write(&self->rsi_lock);
+	ReSequenceIterator_LockWrite(self);
 	if unlikely(self->rsi_exec.rx_startoff != exec.rx_startoff) {
-		rwlock_endwrite(&self->rsi_lock);
+		ReSequenceIterator_LockEndWrite(self);
 		goto again;
 	}
 	self->rsi_exec.rx_startoff = (size_t)result + match_size;
-	rwlock_endwrite(&self->rsi_lock);
+	ReSequenceIterator_LockEndWrite(self);
 	match_size += (size_t)result;
 	groups->rg_groups[0].rm_so = result;
 	groups->rg_groups[0].rm_eo = match_size;
@@ -542,18 +560,18 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 regfaiter_getseq(ReSequenceIterator *__restrict self) {
 	struct DeeRegexBaseExec args_copy;
-	rwlock_read(&self->rsi_lock);
+	ReSequenceIterator_LockRead(self);
 	memcpy(&args_copy, &self->rsi_exec, sizeof(struct DeeRegexBaseExec));
-	rwlock_endread(&self->rsi_lock);
+	ReSequenceIterator_LockEndRead(self);
 	return string_reg_findall((String *)self->rsi_data, &args_copy);
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 regbfaiter_getseq(ReSequenceIterator *__restrict self) {
 	struct DeeRegexBaseExec args_copy;
-	rwlock_read(&self->rsi_lock);
+	ReSequenceIterator_LockRead(self);
 	memcpy(&args_copy, &self->rsi_exec, sizeof(struct DeeRegexBaseExec));
-	rwlock_endread(&self->rsi_lock);
+	ReSequenceIterator_LockEndRead(self);
 	return bytes_reg_findall((DeeBytesObject *)self->rsi_data, &args_copy);
 }
 
@@ -683,7 +701,7 @@ relaiter_init(ReSequenceIterator *__restrict self,
 	memcpy(&self->rsi_data, &reseq->rs_data, sizeof(ReSequence) - offsetof(ReSequence, rs_data));
 	Dee_Incref(self->rsi_data);
 	Dee_Incref(self->rsi_exec.rx_pattern);
-	rwlock_init(&self->rsi_lock);
+	atomic_rwlock_init(&self->rsi_lock);
 	return 0;
 err:
 	return -1;
@@ -700,7 +718,7 @@ reblaiter_init(ReSequenceIterator *__restrict self,
 	memcpy(&self->rsi_data, &reseq->rs_data, sizeof(ReSequence) - offsetof(ReSequence, rs_data));
 	Dee_Incref(self->rsi_data);
 	Dee_Incref(self->rsi_exec.rx_pattern);
-	rwlock_init(&self->rsi_lock);
+	atomic_rwlock_init(&self->rsi_lock);
 	return 0;
 err:
 	return -1;
@@ -710,18 +728,18 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 relaiter_getseq(ReSequenceIterator *__restrict self) {
 	struct DeeRegexBaseExec args_copy;
-	rwlock_read(&self->rsi_lock);
+	ReSequenceIterator_LockRead(self);
 	memcpy(&args_copy, &self->rsi_exec, sizeof(struct DeeRegexBaseExec));
-	rwlock_endread(&self->rsi_lock);
+	ReSequenceIterator_LockEndRead(self);
 	return string_re_locateall((String *)self->rsi_data, &args_copy);
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 reblaiter_getseq(ReSequenceIterator *__restrict self) {
 	struct DeeRegexBaseExec args_copy;
-	rwlock_read(&self->rsi_lock);
+	ReSequenceIterator_LockRead(self);
 	memcpy(&args_copy, &self->rsi_exec, sizeof(struct DeeRegexBaseExec));
-	rwlock_endread(&self->rsi_lock);
+	ReSequenceIterator_LockEndRead(self);
 	return bytes_re_locateall((DeeBytesObject *)self->rsi_data, &args_copy);
 }
 
@@ -741,9 +759,9 @@ relaiter_next(ReSequenceIterator *__restrict self) {
 	Dee_ssize_t result;
 	struct DeeRegexExec exec;
 again:
-	rwlock_read(&self->rsi_lock);
+	ReSequenceIterator_LockRead(self);
 	DeeRegexBaseExec_Load(&self->rsi_exec, &exec, 0, NULL);
-	rwlock_endread(&self->rsi_lock);
+	ReSequenceIterator_LockEndRead(self);
 	result = DeeRegex_SearchNoEpsilon(&exec, (size_t)-1, &match_size);
 	if unlikely(result == DEE_RE_STATUS_ERROR)
 		goto err;
@@ -751,13 +769,13 @@ again:
 		return ITER_DONE;
 	if (match_size == 0)
 		return ITER_DONE; /* Prevent infinite loop on epsilon-match */
-	rwlock_write(&self->rsi_lock);
+	ReSequenceIterator_LockWrite(self);
 	if unlikely(self->rsi_exec.rx_startoff != exec.rx_startoff) {
-		rwlock_endwrite(&self->rsi_lock);
+		ReSequenceIterator_LockEndWrite(self);
 		goto again;
 	}
 	self->rsi_exec.rx_startoff = (size_t)result + match_size;
-	rwlock_endwrite(&self->rsi_lock);
+	ReSequenceIterator_LockEndWrite(self);
 	return DeeString_NewUtf8((char const *)exec.rx_inbase + (size_t)result,
 	                         match_size, STRING_ERROR_FSTRICT);
 err:
@@ -770,9 +788,9 @@ reblaiter_next(ReSequenceIterator *__restrict self) {
 	Dee_ssize_t result;
 	struct DeeRegexExec exec;
 again:
-	rwlock_read(&self->rsi_lock);
+	ReSequenceIterator_LockRead(self);
 	DeeRegexBaseExec_Load(&self->rsi_exec, &exec, 0, NULL);
-	rwlock_endread(&self->rsi_lock);
+	ReSequenceIterator_LockEndRead(self);
 	result = DeeRegex_SearchNoEpsilon(&exec, (size_t)-1, &match_size);
 	if unlikely(result == DEE_RE_STATUS_ERROR)
 		goto err;
@@ -780,13 +798,13 @@ again:
 		return ITER_DONE;
 	if (match_size == 0)
 		return ITER_DONE; /* Prevent infinite loop on epsilon-match */
-	rwlock_write(&self->rsi_lock);
+	ReSequenceIterator_LockWrite(self);
 	if unlikely(self->rsi_exec.rx_startoff != exec.rx_startoff) {
-		rwlock_endwrite(&self->rsi_lock);
+		ReSequenceIterator_LockEndWrite(self);
 		goto again;
 	}
 	self->rsi_exec.rx_startoff = (size_t)result + match_size;
-	rwlock_endwrite(&self->rsi_lock);
+	ReSequenceIterator_LockEndWrite(self);
 	return DeeBytes_NewSubView(self->rsi_data,
 	                           (void *)((char const *)exec.rx_inbase + (size_t)result),
 	                           match_size);
@@ -913,7 +931,7 @@ respiter_init(ReSequenceIterator *__restrict self,
 		self->rsi_exec.rx_inbase = NULL;
 	Dee_Incref(self->rsi_data);
 	Dee_Incref(self->rsi_exec.rx_pattern);
-	rwlock_init(&self->rsi_lock);
+	atomic_rwlock_init(&self->rsi_lock);
 	return 0;
 err:
 	return -1;
@@ -933,7 +951,7 @@ rebspiter_init(ReSequenceIterator *__restrict self,
 		self->rsi_exec.rx_inbase = NULL;
 	Dee_Incref(self->rsi_data);
 	Dee_Incref(self->rsi_exec.rx_pattern);
-	rwlock_init(&self->rsi_lock);
+	atomic_rwlock_init(&self->rsi_lock);
 	return 0;
 err:
 	return -1;
@@ -942,18 +960,18 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 respiter_getseq(ReSequenceIterator *__restrict self) {
 	struct DeeRegexBaseExec args_copy;
-	rwlock_read(&self->rsi_lock);
+	ReSequenceIterator_LockRead(self);
 	memcpy(&args_copy, self->rsi_data, sizeof(struct DeeRegexBaseExec));
-	rwlock_endread(&self->rsi_lock);
+	ReSequenceIterator_LockEndRead(self);
 	return string_re_split((String *)self->rsi_data, &args_copy);
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 rebspiter_getseq(ReSequenceIterator *__restrict self) {
 	struct DeeRegexBaseExec args_copy;
-	rwlock_read(&self->rsi_lock);
+	ReSequenceIterator_LockRead(self);
 	memcpy(&args_copy, self->rsi_data, sizeof(struct DeeRegexBaseExec));
-	rwlock_endread(&self->rsi_lock);
+	ReSequenceIterator_LockEndRead(self);
 	return bytes_re_split((DeeBytesObject *)self->rsi_data, &args_copy);
 }
 
@@ -973,17 +991,17 @@ respiter_next(ReSequenceIterator *__restrict self) {
 	Dee_ssize_t result;
 	struct DeeRegexExec exec;
 again:
-	rwlock_read(&self->rsi_lock);
+	ReSequenceIterator_LockRead(self);
 	DeeRegexBaseExec_Load(&self->rsi_exec, &exec, 0, NULL);
-	rwlock_endread(&self->rsi_lock);
+	ReSequenceIterator_LockEndRead(self);
 	if (!exec.rx_inbase)
 		return ITER_DONE;
 	result = DeeRegex_SearchNoEpsilon(&exec, (size_t)-1, &match_size);
 	if unlikely(result == DEE_RE_STATUS_ERROR)
 		goto err;
-	rwlock_write(&self->rsi_lock);
+	ReSequenceIterator_LockWrite(self);
 	if unlikely(self->rsi_exec.rx_startoff != exec.rx_startoff) {
-		rwlock_endwrite(&self->rsi_lock);
+		ReSequenceIterator_LockEndWrite(self);
 		goto again;
 	}
 	if (result == DEE_RE_STATUS_NOMATCH ||
@@ -994,7 +1012,7 @@ again:
 	} else {
 		self->rsi_exec.rx_startoff = (size_t)result + match_size;
 	}
-	rwlock_endwrite(&self->rsi_lock);
+	ReSequenceIterator_LockEndWrite(self);
 	return DeeString_NewUtf8((char const *)exec.rx_inbase + exec.rx_startoff,
 	                         (size_t)result - exec.rx_startoff,
 	                         STRING_ERROR_FSTRICT);
@@ -1008,17 +1026,17 @@ rebspiter_next(ReSequenceIterator *__restrict self) {
 	Dee_ssize_t result;
 	struct DeeRegexExec exec;
 again:
-	rwlock_read(&self->rsi_lock);
+	ReSequenceIterator_LockRead(self);
 	DeeRegexBaseExec_Load(&self->rsi_exec, &exec, 0, NULL);
-	rwlock_endread(&self->rsi_lock);
+	ReSequenceIterator_LockEndRead(self);
 	if (!exec.rx_inbase)
 		return ITER_DONE;
 	result = DeeRegex_SearchNoEpsilon(&exec, (size_t)-1, &match_size);
 	if unlikely(result == DEE_RE_STATUS_ERROR)
 		goto err;
-	rwlock_write(&self->rsi_lock);
+	ReSequenceIterator_LockWrite(self);
 	if unlikely(self->rsi_exec.rx_startoff != exec.rx_startoff) {
-		rwlock_endwrite(&self->rsi_lock);
+		ReSequenceIterator_LockEndWrite(self);
 		goto again;
 	}
 	if (result == DEE_RE_STATUS_NOMATCH ||
@@ -1029,7 +1047,7 @@ again:
 	} else {
 		self->rsi_exec.rx_startoff = (size_t)result + match_size;
 	}
-	rwlock_endwrite(&self->rsi_lock);
+	ReSequenceIterator_LockEndWrite(self);
 	return DeeBytes_NewSubView(self->rsi_data,
 	                           (void *)((char const *)exec.rx_inbase + exec.rx_startoff),
 	                           (size_t)result - exec.rx_startoff);
@@ -1194,7 +1212,7 @@ refa_iter(ReSequence *__restrict self) {
 	Dee_Incref(result->rsi_data);
 	Dee_Incref(result->rsi_exec.rx_pattern);
 	DeeObject_Init(result, &ReFindAllIterator_Type);
-	rwlock_init(&result->rsi_lock);
+	atomic_rwlock_init(&result->rsi_lock);
 done:
 	return result;
 }
@@ -1210,7 +1228,7 @@ rebfa_iter(ReSequence *__restrict self) {
 	Dee_Incref(result->rsi_data);
 	Dee_Incref(result->rsi_exec.rx_pattern);
 	DeeObject_Init(result, &ReBytesFindAllIterator_Type);
-	rwlock_init(&result->rsi_lock);
+	atomic_rwlock_init(&result->rsi_lock);
 done:
 	return result;
 }
@@ -1448,7 +1466,7 @@ regfa_iter(ReSequence *__restrict self) {
 	Dee_Incref(result->rsi_data);
 	Dee_Incref(result->rsi_exec.rx_pattern);
 	DeeObject_Init(result, &RegFindAllIterator_Type);
-	rwlock_init(&result->rsi_lock);
+	atomic_rwlock_init(&result->rsi_lock);
 done:
 	return result;
 }
@@ -1464,7 +1482,7 @@ regbfa_iter(ReSequence *__restrict self) {
 	Dee_Incref(result->rsi_data);
 	Dee_Incref(result->rsi_exec.rx_pattern);
 	DeeObject_Init(result, &RegBytesFindAllIterator_Type);
-	rwlock_init(&result->rsi_lock);
+	atomic_rwlock_init(&result->rsi_lock);
 done:
 	return result;
 }
@@ -1623,7 +1641,7 @@ rela_iter(ReSequence *__restrict self) {
 	Dee_Incref(result->rsi_data);
 	Dee_Incref(result->rsi_exec.rx_pattern);
 	DeeObject_Init(result, &ReLocateAllIterator_Type);
-	rwlock_init(&result->rsi_lock);
+	atomic_rwlock_init(&result->rsi_lock);
 done:
 	return result;
 }
@@ -1639,7 +1657,7 @@ rebla_iter(ReSequence *__restrict self) {
 	Dee_Incref(result->rsi_data);
 	Dee_Incref(result->rsi_exec.rx_pattern);
 	DeeObject_Init(result, &ReBytesLocateAllIterator_Type);
-	rwlock_init(&result->rsi_lock);
+	atomic_rwlock_init(&result->rsi_lock);
 done:
 	return result;
 }
@@ -1814,7 +1832,7 @@ resp_iter(ReSequence *__restrict self) {
 	Dee_Incref(result->rsi_data);
 	Dee_Incref(result->rsi_exec.rx_pattern);
 	DeeObject_Init(result, &ReSplitIterator_Type);
-	rwlock_init(&result->rsi_lock);
+	atomic_rwlock_init(&result->rsi_lock);
 done:
 	return result;
 }
@@ -1834,7 +1852,7 @@ rebsp_iter(ReSequence *__restrict self) {
 	Dee_Incref(result->rsi_data);
 	Dee_Incref(result->rsi_exec.rx_pattern);
 	DeeObject_Init(result, &ReBytesSplitIterator_Type);
-	rwlock_init(&result->rsi_lock);
+	atomic_rwlock_init(&result->rsi_lock);
 done:
 	return result;
 }

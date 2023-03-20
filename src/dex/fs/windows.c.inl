@@ -2530,35 +2530,6 @@ diriter_visit(DirIterator *__restrict self, dvisit_t proc, void *arg) {
 	Dee_Visit(self->di_dir);
 }
 
-#if 0 /* Find-handles aren't real handles! */
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-diriter_copy(DirIterator *__restrict self,
-             DirIterator *__restrict other) {
-	HANDLE prochnd = GetCurrentProcess();
-	rwlock_read(&other->di_lock);
-	if (other->di_hnd == INVALID_HANDLE_VALUE) {
-		/* The other directory has been exhausted. */
-		self->di_hnd = INVALID_HANDLE_VALUE;
-	} else {
-		DBG_ALIGNMENT_DISABLE();
-		if (!DuplicateHandle(prochnd, other->di_hnd,
-		                     prochnd, &self->di_hnd,
-		                     0, TRUE, DUPLICATE_SAME_ACCESS)) {
-			DBG_ALIGNMENT_ENABLE();
-			rwlock_endread(&other->di_lock);
-			return DeeNTSystem_ThrowErrorf(NULL, GetLastError(),
-			                               "Failed to duplicate Find-handle");
-		}
-		DBG_ALIGNMENT_ENABLE();
-		memcpy(&self->di_data, &other->di_data, sizeof(WIN32_FIND_DATAW));
-	}
-	self->di_dir = other->di_dir;
-	Dee_Incref(self->di_dir);
-	rwlock_endread(&other->di_lock);
-	return 0;
-}
-#endif
-
 PRIVATE ATTR_COLD int DCALL
 err_handle_findnextfile(DWORD dwError, DeeObject *__restrict path) {
 	return DeeNTSystem_ThrowErrorf(&DeeError_FSError, dwError,

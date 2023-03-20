@@ -543,6 +543,23 @@ struct Dee_code_object {
 	                                                         *          instruction is always executed, no matter what. */
 };
 
+#define DeeCode_StaticLockReading(self)    Dee_atomic_rwlock_reading(&(self)->co_static_lock)
+#define DeeCode_StaticLockWriting(self)    Dee_atomic_rwlock_writing(&(self)->co_static_lock)
+#define DeeCode_StaticLockTryRead(self)    Dee_atomic_rwlock_tryread(&(self)->co_static_lock)
+#define DeeCode_StaticLockTryWrite(self)   Dee_atomic_rwlock_trywrite(&(self)->co_static_lock)
+#define DeeCode_StaticLockCanRead(self)    Dee_atomic_rwlock_canread(&(self)->co_static_lock)
+#define DeeCode_StaticLockCanWrite(self)   Dee_atomic_rwlock_canwrite(&(self)->co_static_lock)
+#define DeeCode_StaticLockWaitRead(self)   Dee_atomic_rwlock_waitread(&(self)->co_static_lock)
+#define DeeCode_StaticLockWaitWrite(self)  Dee_atomic_rwlock_waitwrite(&(self)->co_static_lock)
+#define DeeCode_StaticLockRead(self)       Dee_atomic_rwlock_read(&(self)->co_static_lock)
+#define DeeCode_StaticLockWrite(self)      Dee_atomic_rwlock_write(&(self)->co_static_lock)
+#define DeeCode_StaticLockTryUpgrade(self) Dee_atomic_rwlock_tryupgrade(&(self)->co_static_lock)
+#define DeeCode_StaticLockUpgrade(self)    Dee_atomic_rwlock_upgrade(&(self)->co_static_lock)
+#define DeeCode_StaticLockDowngrade(self)  Dee_atomic_rwlock_downgrade(&(self)->co_static_lock)
+#define DeeCode_StaticLockEndWrite(self)   Dee_atomic_rwlock_endwrite(&(self)->co_static_lock)
+#define DeeCode_StaticLockEndRead(self)    Dee_atomic_rwlock_endread(&(self)->co_static_lock)
+#define DeeCode_StaticLockEnd(self)        Dee_atomic_rwlock_end(&(self)->co_static_lock)
+
 #ifndef CONFIG_NO_THREADS
 #define _DEE_CODE_CO_STATIC_LOCK_FIELD Dee_atomic_rwlock_t co_static_lock;
 #define _DEE_CODE_CO_STATIC_LOCK_INIT  DEE_ATOMIC_RWLOCK_INIT,

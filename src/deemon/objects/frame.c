@@ -51,18 +51,18 @@ typedef DeeFrameObject Frame;
 #define PLOCK_READ(x)                                             \
 	((x)->f_plock ? ((x)->f_flags & DEEFRAME_FRECLOCK             \
 	                 ? (void)recursive_rwlock_read((x)->f_prlock) \
-	                 : (void)rwlock_read((x)->f_plock))           \
+	                 : (void)atomic_rwlock_read((x)->f_plock))    \
 	              : (void)0)
 #define PLOCK_TRYREAD(x)                                       \
 	((x)->f_plock ? ((x)->f_flags & DEEFRAME_FRECLOCK          \
 	                 ? recursive_rwlock_tryread((x)->f_prlock) \
-	                 : rwlock_tryread((x)->f_plock))           \
+	                 : atomic_rwlock_tryread((x)->f_plock))    \
 	              : true)
 #define PLOCK_WRITE(x)                                                  \
 	((x)->f_flags & DEEFRAME_FWRITABLE                                  \
 	 ? ((x)->f_plock ? ((x)->f_flags & DEEFRAME_FRECLOCK                \
 	                    ? (recursive_rwlock_write((x)->f_prlock), true) \
-	                    : (rwlock_write((x)->f_plock)),                 \
+	                    : (atomic_rwlock_write((x)->f_plock)),          \
 	                    true)                                           \
 	                 : true)                                            \
 	 : false)
@@ -70,18 +70,18 @@ typedef DeeFrameObject Frame;
 	((x)->f_flags & DEEFRAME_FWRITABLE                             \
 	 ? ((x)->f_plock ? ((x)->f_flags & DEEFRAME_FRECLOCK           \
 	                    ? recursive_rwlock_trywrite((x)->f_prlock) \
-	                    : rwlock_trywrite((x)->f_plock))           \
+	                    : atomic_rwlock_trywrite((x)->f_plock))    \
 	                 : true)                                       \
 	 : false)
 #define PLOCK_ENDREAD(x)                                             \
 	((x)->f_plock ? ((x)->f_flags & DEEFRAME_FRECLOCK                \
 	                 ? (void)recursive_rwlock_endread((x)->f_prlock) \
-	                 : (void)rwlock_endread((x)->f_plock))           \
+	                 : (void)atomic_rwlock_endread((x)->f_plock))    \
 	              : (void)0)
 #define PLOCK_ENDWRITE(x)                                             \
 	((x)->f_plock ? ((x)->f_flags & DEEFRAME_FRECLOCK                 \
 	                 ? (void)recursive_rwlock_endwrite((x)->f_prlock) \
-	                 : (void)rwlock_endwrite((x)->f_plock))           \
+	                 : (void)atomic_rwlock_endwrite((x)->f_plock))    \
 	              : (void)0)
 #else /* !CONFIG_NO_THREADS */
 #define PLOCK_READ(x)     (void)0
@@ -115,9 +115,9 @@ PUBLIC WUNUSED NONNULL((2)) DREF DeeObject *
 	result->f_owner = owner;
 	result->f_frame = frame;
 	result->f_flags = flags;
+	atomic_rwlock_init(&result->f_lock);
 #ifndef CONFIG_NO_THREADS
-	rwlock_init(&result->f_lock);
-	result->f_plock = (rwlock_t *)lock;
+	result->f_plock = (atomic_rwlock_t *)lock;
 #endif /* !CONFIG_NO_THREADS */
 	Dee_XIncref(owner);
 	DeeObject_Init(result, &DeeFrame_Type);
@@ -131,9 +131,9 @@ DeeFrame_DecrefShared(DREF DeeObject *__restrict self) {
 	Frame *me;
 	ASSERT_OBJECT_TYPE_EXACT(self, &DeeFrame_Type);
 	me = (Frame *)self;
-	rwlock_write(&me->f_lock);
+	DeeFrame_LockWrite(me);
 	me->f_frame = NULL;
-	rwlock_endwrite(&me->f_lock);
+	DeeFrame_LockEndWrite(me);
 	Dee_Decref_likely(self);
 }
 
@@ -223,9 +223,9 @@ frame_print(Frame *__restrict self,
 	dssize_t result;
 	DREF DeeCodeObject *code;
 	code_addr_t ip;
-	rwlock_read(&self->f_lock);
+	DeeFrame_LockRead(self);
 	if (!self->f_frame) {
-		rwlock_endread(&self->f_lock);
+		DeeFrame_LockEndRead(self);
 		return 0;
 	}
 	PLOCK_READ(self);
@@ -233,7 +233,7 @@ frame_print(Frame *__restrict self,
 	Dee_Incref(code);
 	ip = (code_addr_t)(self->f_frame->cf_ip - code->co_code);
 	PLOCK_ENDREAD(self);
-	rwlock_endread(&self->f_lock);
+	DeeFrame_LockEndRead(self);
 	result = print_ddi(printer, arg, code, ip);
 	Dee_Decref_unlikely(code);
 	return result;
@@ -248,9 +248,9 @@ frame_getddi(Frame *__restrict self,
 	uint8_t *result;
 	code_addr_t startip;
 	DREF DeeCodeObject *code;
-	rwlock_read(&self->f_lock);
+	DeeFrame_LockRead(self);
 	if unlikely(!self->f_frame) {
-		rwlock_endread(&self->f_lock);
+		DeeFrame_LockEndRead(self);
 		return (DREF DeeCodeObject *)ITER_DONE;
 	}
 	PLOCK_READ(self);
@@ -259,7 +259,7 @@ frame_getddi(Frame *__restrict self,
 	startip = (code_addr_t)(self->f_frame->cf_ip -
 	                        code->co_code);
 	PLOCK_ENDREAD(self);
-	rwlock_endread(&self->f_lock);
+	DeeFrame_LockEndRead(self);
 	if (pstartip)
 		*pstartip = startip;
 	result = DeeCode_FindDDI((DeeObject *)code,
@@ -446,16 +446,16 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 frame_getfunc(Frame *__restrict self) {
 	DREF DeeFunctionObject *result;
-	rwlock_read(&self->f_lock);
+	DeeFrame_LockRead(self);
 	if unlikely(!self->f_frame) {
-		rwlock_endread(&self->f_lock);
+		DeeFrame_LockEndRead(self);
 		return_none;
 	}
 	PLOCK_READ(self);
 	result = self->f_frame->cf_func;
 	Dee_Incref(result);
 	PLOCK_ENDREAD(self);
-	rwlock_endread(&self->f_lock);
+	DeeFrame_LockEndRead(self);
 	return (DREF DeeObject *)result;
 }
 
@@ -474,17 +474,17 @@ err_readonly_frame(Frame *__restrict UNUSED(self)) {
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 frame_getcode(Frame *__restrict self) {
 	DREF DeeCodeObject *result;
-	rwlock_read(&self->f_lock);
+	DeeFrame_LockRead(self);
 	if unlikely(!self->f_frame)
 		goto err_df;
 	PLOCK_READ(self);
 	result = self->f_frame->cf_func->fo_code;
 	Dee_Incref(result);
 	PLOCK_ENDREAD(self);
-	rwlock_endread(&self->f_lock);
+	DeeFrame_LockEndRead(self);
 	return (DREF DeeObject *)result;
 err_df:
-	rwlock_endread(&self->f_lock);
+	DeeFrame_LockEndRead(self);
 	err_dead_frame(self);
 	return NULL;
 }
@@ -492,17 +492,17 @@ err_df:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 frame_getpc(Frame *__restrict self) {
 	code_addr_t pc;
-	rwlock_read(&self->f_lock);
+	DeeFrame_LockRead(self);
 	if unlikely(!self->f_frame)
 		goto err_df;
 	PLOCK_READ(self);
 	pc = (code_addr_t)(self->f_frame->cf_ip -
 	                   self->f_frame->cf_func->fo_code->co_code);
 	PLOCK_ENDREAD(self);
-	rwlock_endread(&self->f_lock);
+	DeeFrame_LockEndRead(self);
 	return DeeInt_NewU32(pc);
 err_df:
-	rwlock_endread(&self->f_lock);
+	DeeFrame_LockEndRead(self);
 	err_dead_frame(self);
 	return NULL;
 }
@@ -533,9 +533,9 @@ frame_getsp(Frame *__restrict self) {
 	int32_t result;
 	uint16_t flags = atomic_read(&self->f_flags);
 	if (!(flags & DEEFRAME_FUNDEFSP)) {
-		rwlock_read(&self->f_lock);
+		DeeFrame_LockRead(self);
 		if unlikely(!self->f_frame) {
-			rwlock_endread(&self->f_lock);
+			DeeFrame_LockEndRead(self);
 			return -2;
 		}
 		if (flags & DEEFRAME_FREGENGSP) {
@@ -546,7 +546,7 @@ frame_getsp(Frame *__restrict self) {
 			                   self->f_frame->cf_stack);
 			PLOCK_ENDREAD(self);
 		}
-		rwlock_endread(&self->f_lock);
+		DeeFrame_LockEndRead(self);
 		return result;
 	}
 	if (flags & DEEFRAME_FUNDEFSP2)
@@ -569,16 +569,16 @@ frame_setpc(Frame *self, DeeObject *value) {
 	 * a later point in time could yield invalid results. */
 	if ((self->f_flags & (DEEFRAME_FUNDEFSP | DEEFRAME_FUNDEFSP2)) == DEEFRAME_FUNDEFSP)
 		frame_revengsp(self);
-	rwlock_read(&self->f_lock);
+	DeeFrame_LockRead(self);
 	if unlikely(!self->f_frame)
 		goto err_df;
 	PLOCK_READ(self);
 	self->f_frame->cf_ip = self->f_frame->cf_func->fo_code->co_code + pc;
 	PLOCK_ENDREAD(self);
-	rwlock_endread(&self->f_lock);
+	DeeFrame_LockEndRead(self);
 	return 0;
 err_df:
-	rwlock_endread(&self->f_lock);
+	DeeFrame_LockEndRead(self);
 	err_dead_frame(self);
 err:
 	return -1;

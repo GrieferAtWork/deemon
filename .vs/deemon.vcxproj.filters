@@ -603,9 +603,6 @@
 		<ClInclude Include="..\include\deemon\util\recursive-rwlock.h">
 			<Filter>include\util</Filter>
 		</ClInclude>
-		<ClInclude Include="..\include\deemon\util\rwlock.h">
-			<Filter>include\util</Filter>
-		</ClInclude>
 		<ClInclude Include="..\include\deemon\weakref.h">
 			<Filter>include</Filter>
 		</ClInclude>

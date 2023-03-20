@@ -29,7 +29,6 @@
 #include "object.h"
 #include "util/lock.h"
 #include "util/recursive-rwlock.h"
-#include "util/rwlock.h"
 
 DECL_BEGIN
 
@@ -112,7 +111,7 @@ struct frame_object {
 	                                 * The actual frame that is being referenced. */
 #ifndef CONFIG_NO_THREADS
 	union {
-		Dee_rwlock_t      *f_plock;       /* [0..1][valid_if(!DEEFRAME_FRECLOCK)][const]
+		Dee_atomic_rwlock_t    *f_plock;  /* [0..1][valid_if(!DEEFRAME_FRECLOCK)][const]
 		                                   * Lock that must be acquired when accessing the frame. */
 		Dee_recursive_rwlock_t *f_prlock; /* [1..1][valid_if(DEEFRAME_FRECLOCK)][const]
 		                                   * Lock that must be acquired when accessing the frame. */
@@ -123,7 +122,7 @@ struct frame_object {
 #define f_prlock  _dee_aunion.f_prlock
 #endif /* !__COMPILER_HAVE_TRANSPARENT_UNION */
 	;
-	Dee_rwlock_t           f_lock;  /* Lock for accessing fields of this frame object. */
+	Dee_atomic_rwlock_t f_lock;  /* Lock for accessing fields of this frame object. */
 #endif /* !CONFIG_NO_THREADS */
 #define DEEFRAME_FNORMAL   0x0000 /* Normal frame flags. */
 #define DEEFRAME_FREADONLY 0x0000 /* Contents of the frame may not be modified. */
@@ -148,6 +147,23 @@ struct frame_object {
 	uint16_t           f_flags; /* [const] Contents of the frame may be modified. */
 	uint16_t           f_revsp; /* [lock(f_lock)][valid_if(DEEFRAME_FREGENGSP)] Reverse engineered SP. */
 };
+
+#define DeeFrame_LockReading(self)    Dee_atomic_rwlock_reading(&(self)->f_lock)
+#define DeeFrame_LockWriting(self)    Dee_atomic_rwlock_writing(&(self)->f_lock)
+#define DeeFrame_LockTryRead(self)    Dee_atomic_rwlock_tryread(&(self)->f_lock)
+#define DeeFrame_LockTryWrite(self)   Dee_atomic_rwlock_trywrite(&(self)->f_lock)
+#define DeeFrame_LockCanRead(self)    Dee_atomic_rwlock_canread(&(self)->f_lock)
+#define DeeFrame_LockCanWrite(self)   Dee_atomic_rwlock_canwrite(&(self)->f_lock)
+#define DeeFrame_LockWaitRead(self)   Dee_atomic_rwlock_waitread(&(self)->f_lock)
+#define DeeFrame_LockWaitWrite(self)  Dee_atomic_rwlock_waitwrite(&(self)->f_lock)
+#define DeeFrame_LockRead(self)       Dee_atomic_rwlock_read(&(self)->f_lock)
+#define DeeFrame_LockWrite(self)      Dee_atomic_rwlock_write(&(self)->f_lock)
+#define DeeFrame_LockTryUpgrade(self) Dee_atomic_rwlock_tryupgrade(&(self)->f_lock)
+#define DeeFrame_LockUpgrade(self)    Dee_atomic_rwlock_upgrade(&(self)->f_lock)
+#define DeeFrame_LockDowngrade(self)  Dee_atomic_rwlock_downgrade(&(self)->f_lock)
+#define DeeFrame_LockEndWrite(self)   Dee_atomic_rwlock_endwrite(&(self)->f_lock)
+#define DeeFrame_LockEndRead(self)    Dee_atomic_rwlock_endread(&(self)->f_lock)
+#define DeeFrame_LockEnd(self)        Dee_atomic_rwlock_end(&(self)->f_lock)
 
 DDATDEF DeeTypeObject DeeFrame_Type;
 

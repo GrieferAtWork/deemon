@@ -185,10 +185,10 @@ DeeInstance_GetAttribute(struct instance_desc *__restrict self,
 		self = class_desc_as_instance_from_instance(self, this_arg);
 	if (attr->ca_flag & CLASS_ATTRIBUTE_FGETSET) {
 		DREF DeeObject *getter;
-		atomic_rwlock_read(&self->id_lock);
+		Dee_instance_desc_lock_read(self);
 		getter = self->id_vtab[attr->ca_addr + CLASS_GETSET_GET];
 		Dee_XIncref(getter);
-		atomic_rwlock_endread(&self->id_lock);
+		Dee_instance_desc_lock_endread(self);
 		if unlikely(!getter)
 			goto illegal;
 		/* Invoke the getter. */
@@ -199,20 +199,20 @@ DeeInstance_GetAttribute(struct instance_desc *__restrict self,
 	} else if (attr->ca_flag & CLASS_ATTRIBUTE_FMETHOD) {
 		/* Construct a thiscall function. */
 		DREF DeeObject *callback;
-		atomic_rwlock_read(&self->id_lock);
+		Dee_instance_desc_lock_read(self);
 		callback = self->id_vtab[attr->ca_addr];
 		Dee_XIncref(callback);
-		atomic_rwlock_endread(&self->id_lock);
+		Dee_instance_desc_lock_endread(self);
 		if unlikely(!callback)
 			goto unbound;
 		result = DeeInstanceMethod_New(callback, this_arg);
 		Dee_Decref(callback);
 	} else {
 		/* Simply return the attribute as-is. */
-		atomic_rwlock_read(&self->id_lock);
+		Dee_instance_desc_lock_read(self);
 		result = self->id_vtab[attr->ca_addr];
 		Dee_XIncref(result);
-		atomic_rwlock_endread(&self->id_lock);
+		Dee_instance_desc_lock_endread(self);
 		if unlikely(!result)
 			goto unbound;
 	}
@@ -238,10 +238,10 @@ DeeInstance_BoundAttribute(struct instance_desc *__restrict self,
 		self = class_desc_as_instance_from_instance(self, this_arg);
 	if (attr->ca_flag & CLASS_ATTRIBUTE_FGETSET) {
 		DREF DeeObject *getter;
-		atomic_rwlock_read(&self->id_lock);
+		Dee_instance_desc_lock_read(self);
 		getter = self->id_vtab[attr->ca_addr + CLASS_GETSET_GET];
 		Dee_XIncref(getter);
-		atomic_rwlock_endread(&self->id_lock);
+		Dee_instance_desc_lock_endread(self);
 		if unlikely(!getter)
 			goto unbound;
 		/* Invoke the getter. */
@@ -279,10 +279,10 @@ DeeInstance_DelAttribute(struct instance_desc *__restrict self,
 		self = class_desc_as_instance_from_instance(self, this_arg);
 	if (attr->ca_flag & CLASS_ATTRIBUTE_FGETSET) {
 		DREF DeeObject *delfun, *temp;
-		atomic_rwlock_read(&self->id_lock);
+		Dee_instance_desc_lock_read(self);
 		delfun = self->id_vtab[attr->ca_addr + CLASS_GETSET_DEL];
 		Dee_XIncref(delfun);
-		atomic_rwlock_endread(&self->id_lock);
+		Dee_instance_desc_lock_endread(self);
 		if unlikely(!delfun)
 			goto illegal;
 		/* Invoke the getter. */
@@ -296,10 +296,10 @@ DeeInstance_DelAttribute(struct instance_desc *__restrict self,
 	} else {
 		DREF DeeObject *old_value;
 		/* Simply unbind the field in the attr table. */
-		atomic_rwlock_write(&self->id_lock);
+		Dee_instance_desc_lock_write(self);
 		old_value = self->id_vtab[attr->ca_addr];
 		self->id_vtab[attr->ca_addr] = NULL;
-		atomic_rwlock_endwrite(&self->id_lock);
+		Dee_instance_desc_lock_endwrite(self);
 #ifdef CONFIG_ERROR_DELETE_UNBOUND
 		if unlikely(!old_value)
 			goto unbound;
@@ -336,10 +336,10 @@ DeeInstance_SetAttribute(struct instance_desc *__restrict self,
 		/* Make sure that the access is allowed. */
 		if (attr->ca_flag & CLASS_ATTRIBUTE_FREADONLY)
 			goto illegal;
-		atomic_rwlock_read(&self->id_lock);
+		Dee_instance_desc_lock_read(self);
 		setter = self->id_vtab[attr->ca_addr + CLASS_GETSET_SET];
 		Dee_XIncref(setter);
-		atomic_rwlock_endread(&self->id_lock);
+		Dee_instance_desc_lock_endread(self);
 		if unlikely(!setter)
 			goto illegal;
 		/* Invoke the getter. */
@@ -353,16 +353,16 @@ DeeInstance_SetAttribute(struct instance_desc *__restrict self,
 	} else {
 		DREF DeeObject *old_value;
 		/* Simply override the field in the attr table. */
-		atomic_rwlock_write(&self->id_lock);
+		Dee_instance_desc_lock_write(self);
 		old_value = self->id_vtab[attr->ca_addr];
 		if (old_value && (attr->ca_flag & CLASS_ATTRIBUTE_FREADONLY)) {
-			atomic_rwlock_endwrite(&self->id_lock);
+			Dee_instance_desc_lock_endwrite(self);
 			goto illegal; /* readonly fields can only be set once. */
 		} else {
 			Dee_Incref(value);
 			self->id_vtab[attr->ca_addr] = value;
 		}
-		atomic_rwlock_endwrite(&self->id_lock);
+		Dee_instance_desc_lock_endwrite(self);
 		/* Drop a reference from the old value. */
 		Dee_XDecref(old_value);
 	}

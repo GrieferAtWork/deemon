@@ -543,7 +543,7 @@ instance_clear_members(struct instance_desc *__restrict self, uint16_t size) {
 	uint16_t i;
 again:
 	buflen = 0;
-	atomic_rwlock_write(&self->id_lock);
+	Dee_instance_desc_lock_write(self);
 	for (i = 0; i < size; ++i) {
 		DeeObject *ob;
 		ob = self->id_vtab[i];
@@ -555,14 +555,14 @@ again:
 
 		/* We're responsible for destroying this member! */
 		if (buflen == COMPILER_LENOF(buffer)) {
-			atomic_rwlock_endwrite(&self->id_lock);
+			Dee_instance_desc_lock_endwrite(self);
 			Dee_Decref(ob);
 			Dee_Decrefv(buffer, buflen);
 			goto again;
 		}
 		buffer[buflen++] = ob; /* Inherit reference. */
 	}
-	atomic_rwlock_endwrite(&self->id_lock);
+	Dee_instance_desc_lock_endwrite(self);
 	if (buflen) {
 		/* Clear the buffer. */
 		Dee_Decrefv(buffer, buflen);
@@ -918,9 +918,9 @@ instance_builtin_tcopy(DeeTypeObject *tp_self,
 	atomic_rwlock_init(&instance->id_lock);
 	other_instance = DeeInstance_DESC(desc, other);
 	size           = desc->cd_desc->cd_imemb_size;
-	atomic_rwlock_read(&other_instance->id_lock);
+	Dee_instance_desc_lock_read(other_instance);
 	Dee_XMovrefv(instance->id_vtab, other_instance->id_vtab, size);
-	atomic_rwlock_endread(&other_instance->id_lock);
+	Dee_instance_desc_lock_endread(other_instance);
 
 	/* Initialize the super-classes. */
 	tp_super = DeeType_Base(tp_self);
@@ -949,9 +949,9 @@ instance_builtin_nobase_tcopy(DeeTypeObject *tp_self,
 	atomic_rwlock_init(&instance->id_lock);
 	other_instance = DeeInstance_DESC(desc, other);
 	size           = desc->cd_desc->cd_imemb_size;
-	atomic_rwlock_read(&other_instance->id_lock);
+	Dee_instance_desc_lock_read(other_instance);
 	Dee_XMovrefv(instance->id_vtab, other_instance->id_vtab, size);
-	atomic_rwlock_endread(&other_instance->id_lock);
+	Dee_instance_desc_lock_endread(other_instance);
 	return 0;
 }
 #endif /* CONFIG_NOBASE_OPTIMIZED_CLASS_OPERATORS */
@@ -1051,19 +1051,19 @@ instance_builtin_tassign(DeeTypeObject *tp_self,
 		goto err;
 
 	/* Load member values from `others' */
-	atomic_rwlock_read(&other_instance->id_lock);
+	Dee_instance_desc_lock_read(other_instance);
 	Dee_XMovrefv(old_items, other_instance->id_vtab, size);
-	atomic_rwlock_endread(&other_instance->id_lock);
+	Dee_instance_desc_lock_endread(other_instance);
 
 	/* Exchange our own member values with those loaded from `other' */
-	atomic_rwlock_write(&instance->id_lock);
+	Dee_instance_desc_lock_write(instance);
 	for (i = 0; i < size; ++i) {
 		DREF DeeObject *temp;
 		temp                 = instance->id_vtab[i];
 		instance->id_vtab[i] = old_items[i];
 		old_items[i]         = temp;
 	}
-	atomic_rwlock_endwrite(&instance->id_lock);
+	Dee_instance_desc_lock_endwrite(instance);
 
 	/* Decref all the old items. */
 	Dee_XDecrefv(old_items, size);
@@ -1097,23 +1097,23 @@ instance_builtin_tmoveassign(DeeTypeObject *tp_self,
 		goto err;
 
 	/* Load member values from `others', while also unbinding all members. */
-	atomic_rwlock_write(&other_instance->id_lock);
+	Dee_instance_desc_lock_read(other_instance);
 	memcpyc(old_items, other_instance->id_vtab,
 	        size, sizeof(DREF DeeObject *));
 	bzeroc(other_instance->id_vtab,
 	       size,
 	       sizeof(DREF DeeObject *));
-	atomic_rwlock_endread(&other_instance->id_lock);
+	Dee_instance_desc_lock_endread(other_instance);
 
 	/* Exchange our own member values with those loaded from `other' */
-	atomic_rwlock_write(&instance->id_lock);
+	Dee_instance_desc_lock_write(instance);
 	for (i = 0; i < size; ++i) {
 		DREF DeeObject *temp;
 		temp                 = instance->id_vtab[i];
 		instance->id_vtab[i] = old_items[i];
 		old_items[i]         = temp;
 	}
-	atomic_rwlock_endwrite(&instance->id_lock);
+	Dee_instance_desc_lock_endwrite(instance);
 
 	/* Decref all the old items. */
 	Dee_XDecrefv(old_items, size);
@@ -3064,14 +3064,14 @@ instance_builtin_auto_tprintrepr(DeeTypeObject *tp_self,
 	result = DeeFormat_Printf(printer, arg, "%s(", tp_self->tp_name);
 	if unlikely(result < 0)
 		goto done;
-	atomic_rwlock_read(&instance->id_lock);
+	Dee_instance_desc_lock_read(instance);
 	for (i = 0; i < count; ++i) {
 		size_t attr_index;
 		ob = instance->id_vtab[i];
 		if (!ob)
 			continue;
 		Dee_Incref(ob);
-		atomic_rwlock_endread(&instance->id_lock);
+		Dee_instance_desc_lock_endread(instance);
 		for (attr_index = 0;
 		     attr_index <= desc->cd_desc->cd_iattr_mask; ++attr_index) {
 			struct class_attribute *at;
@@ -3090,9 +3090,9 @@ instance_builtin_auto_tprintrepr(DeeTypeObject *tp_self,
 			break;
 		}
 		Dee_Decref(ob);
-		atomic_rwlock_read(&instance->id_lock);
+		Dee_instance_desc_lock_read(instance);
 	}
-	atomic_rwlock_endread(&instance->id_lock);
+	Dee_instance_desc_lock_endread(instance);
 	DO(err, DeeFormat_PRINT(printer, arg, ")"));
 done:
 	return result;
@@ -3515,18 +3515,18 @@ instance_builtin_thash(DeeTypeObject *tp_self,
 	dhash_t result = 0;
 	desc           = DeeClass_DESC(tp_self);
 	instance       = DeeInstance_DESC(desc, self);
-	atomic_rwlock_read(&instance->id_lock);
+	Dee_instance_desc_lock_read(instance);
 	for (i = 0; i < desc->cd_desc->cd_imemb_size; ++i) {
 		member = instance->id_vtab[i];
 		if (!member)
 			continue;
 		Dee_Incref(member);
-		atomic_rwlock_endread(&instance->id_lock);
+		Dee_instance_desc_lock_endread(instance);
 		result ^= DeeObject_Hash(member);
 		Dee_Decref(member);
-		atomic_rwlock_read(&instance->id_lock);
+		Dee_instance_desc_lock_read(instance);
 	}
-	atomic_rwlock_endread(&instance->id_lock);
+	Dee_instance_desc_lock_endread(instance);
 	return result;
 }
 
@@ -3546,7 +3546,7 @@ impl_instance_builtin_eq(DeeTypeObject *tp_self,
 	instance       = DeeInstance_DESC(desc, self);
 	other_instance = DeeInstance_DESC(desc, other);
 	size           = desc->cd_desc->cd_imemb_size;
-	atomic_rwlock_read(&instance->id_lock);
+	Dee_instance_desc_lock_read(instance);
 	for (i = 0; i < size; ++i) {
 		DREF DeeObject *lhs_val;
 		DREF DeeObject *rhs_val;
@@ -3554,12 +3554,12 @@ impl_instance_builtin_eq(DeeTypeObject *tp_self,
 		rhs_val = other_instance->id_vtab[i];
 		if (lhs_val != rhs_val) {
 			if (!lhs_val || !rhs_val) {
-				atomic_rwlock_endread(&instance->id_lock);
+				Dee_instance_desc_lock_endread(instance);
 				return 0; /* Different NULL values. */
 			}
 			Dee_Incref(lhs_val);
 			Dee_Incref(rhs_val);
-			atomic_rwlock_endread(&instance->id_lock);
+			Dee_instance_desc_lock_endread(instance);
 
 			/* Compare the two members. */
 			temp = DeeObject_CompareEq(lhs_val, rhs_val);
@@ -3569,7 +3569,7 @@ impl_instance_builtin_eq(DeeTypeObject *tp_self,
 				return temp; /* Error, or non-equal */
 		}
 	}
-	atomic_rwlock_endread(&instance->id_lock);
+	Dee_instance_desc_lock_endread(instance);
 	return 1; /* All elements are equal */
 }
 
@@ -3586,7 +3586,7 @@ impl_instance_builtin_lo(DeeTypeObject *tp_self,
 	instance       = DeeInstance_DESC(desc, self);
 	other_instance = DeeInstance_DESC(desc, other);
 	size           = desc->cd_desc->cd_imemb_size;
-	atomic_rwlock_read(&instance->id_lock);
+	Dee_instance_desc_lock_read(instance);
 	for (i = 0; i < size; ++i) {
 		DREF DeeObject *lhs_val;
 		DREF DeeObject *rhs_val;
@@ -3594,7 +3594,7 @@ impl_instance_builtin_lo(DeeTypeObject *tp_self,
 		rhs_val = other_instance->id_vtab[i];
 		if (lhs_val != rhs_val) {
 			if (!lhs_val || !rhs_val) {
-				atomic_rwlock_endread(&instance->id_lock);
+				Dee_instance_desc_lock_endread(instance);
 				/* Different NULL values. */
 				return lhs_val ? 0 : /* NON_NULL < *    --> false */
 				       rhs_val ? 1 : /* NULL < NON_NULL --> true */
@@ -3602,7 +3602,7 @@ impl_instance_builtin_lo(DeeTypeObject *tp_self,
 			}
 			Dee_Incref(lhs_val);
 			Dee_Incref(rhs_val);
-			atomic_rwlock_endread(&instance->id_lock);
+			Dee_instance_desc_lock_endread(instance);
 			/* Compare the two members. */
 			temp = DeeObject_CompareLo(lhs_val, rhs_val);
 			if (temp != 0) {
@@ -3617,7 +3617,7 @@ impl_instance_builtin_lo(DeeTypeObject *tp_self,
 				return temp; /* Error, or non-qual */
 		}
 	}
-	atomic_rwlock_endread(&instance->id_lock);
+	Dee_instance_desc_lock_endread(instance);
 	return 0; /* All elements are equal */
 }
 
@@ -3634,7 +3634,7 @@ impl_instance_builtin_le(DeeTypeObject *tp_self,
 	instance       = DeeInstance_DESC(desc, self);
 	other_instance = DeeInstance_DESC(desc, other);
 	size           = desc->cd_desc->cd_imemb_size;
-	atomic_rwlock_read(&instance->id_lock);
+	Dee_instance_desc_lock_read(instance);
 	for (i = 0; i < size; ++i) {
 		DREF DeeObject *lhs_val;
 		DREF DeeObject *rhs_val;
@@ -3643,7 +3643,7 @@ impl_instance_builtin_le(DeeTypeObject *tp_self,
 		if (lhs_val != rhs_val) {
 			size_t j;
 			if (!lhs_val || !rhs_val) {
-				atomic_rwlock_endread(&instance->id_lock);
+				Dee_instance_desc_lock_endread(instance);
 				/* Different NULL values. */
 				return !lhs_val ? 1 : /* NULL <= *        --> true */
 				       0;             /* NON_NULL <= NULL --> false */
@@ -3659,13 +3659,13 @@ impl_instance_builtin_le(DeeTypeObject *tp_self,
 			}
 
 			/* Last member! */
-			atomic_rwlock_endread(&instance->id_lock);
+			Dee_instance_desc_lock_endread(instance);
 			temp = DeeObject_CompareLe(lhs_val, rhs_val);
 			Dee_Decref(rhs_val);
 			Dee_Decref(lhs_val);
 			return temp;
 non_last_member:
-			atomic_rwlock_endread(&instance->id_lock);
+			Dee_instance_desc_lock_endread(instance);
 
 			/* Compare the two members. */
 			temp = DeeObject_CompareLo(lhs_val, rhs_val);
@@ -3681,7 +3681,7 @@ non_last_member:
 				return temp; /* Error, or non-qual */
 		}
 	}
-	atomic_rwlock_endread(&instance->id_lock);
+	Dee_instance_desc_lock_endread(instance);
 	return 1; /* All elements are equal */
 }
 
@@ -4609,10 +4609,10 @@ instance_tvisit(DeeTypeObject *tp_self,
 	struct instance_desc *instance;
 	desc     = DeeClass_DESC(tp_self);
 	instance = DeeInstance_DESC(desc, self);
-	atomic_rwlock_read(&instance->id_lock);
+	Dee_instance_desc_lock_read(instance);
 	for (i = 0; i < desc->cd_desc->cd_imemb_size; ++i)
 		Dee_XVisit(instance->id_vtab[i]);
-	atomic_rwlock_endread(&instance->id_lock);
+	Dee_instance_desc_lock_endread(instance);
 }
 
 INTERN NONNULL((1, 2)) void DCALL
@@ -4626,7 +4626,7 @@ instance_tclear(DeeTypeObject *tp_self,
 	desc     = DeeClass_DESC(tp_self);
 	instance = DeeInstance_DESC(desc, self);
 	buflen   = 0;
-	atomic_rwlock_write(&instance->id_lock);
+	Dee_instance_desc_lock_write(instance);
 	for (i = 0; i < desc->cd_desc->cd_imemb_size; ++i) {
 again_i:
 		if (!instance->id_vtab[i])
@@ -4637,18 +4637,18 @@ again_i:
 			continue;
 		}
 		if (buflen == COMPILER_LENOF(buffer)) {
-			atomic_rwlock_endwrite(&instance->id_lock);
+			Dee_instance_desc_lock_endwrite(instance);
 			while (buflen) {
 				--buflen;
 				Dee_Decref(buffer[buflen]);
 			}
-			atomic_rwlock_write(&instance->id_lock);
+			Dee_instance_desc_lock_write(instance);
 			goto again_i;
 		}
 		buffer[buflen++]     = instance->id_vtab[i]; /* Steal reference. */
 		instance->id_vtab[i] = NULL;
 	}
-	atomic_rwlock_endwrite(&instance->id_lock);
+	Dee_instance_desc_lock_endwrite(instance);
 	while (buflen) {
 		--buflen;
 		Dee_Decref(buffer[buflen]);
@@ -4667,7 +4667,7 @@ instance_tpclear(DeeTypeObject *tp_self,
 	desc     = DeeClass_DESC(tp_self);
 	instance = DeeInstance_DESC(desc, self);
 	buflen   = 0;
-	atomic_rwlock_write(&instance->id_lock);
+	Dee_instance_desc_lock_write(instance);
 	for (i = 0; i < desc->cd_desc->cd_imemb_size; ++i) {
 again_i:
 		if (!instance->id_vtab[i])
@@ -4680,18 +4680,18 @@ again_i:
 			continue;
 		}
 		if (buflen == COMPILER_LENOF(buffer)) {
-			atomic_rwlock_endwrite(&instance->id_lock);
+			Dee_instance_desc_lock_endwrite(instance);
 			while (buflen) {
 				--buflen;
 				Dee_Decref(buffer[buflen]);
 			}
-			atomic_rwlock_write(&instance->id_lock);
+			Dee_instance_desc_lock_write(instance);
 			goto again_i;
 		}
 		buffer[buflen++]     = instance->id_vtab[i]; /* Steal this reference. */
 		instance->id_vtab[i] = NULL;
 	}
-	atomic_rwlock_endwrite(&instance->id_lock);
+	Dee_instance_desc_lock_endwrite(instance);
 	while (buflen) {
 		--buflen;
 		Dee_Decref(buffer[buflen]);

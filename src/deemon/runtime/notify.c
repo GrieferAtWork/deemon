@@ -30,6 +30,7 @@
 #include <deemon/string.h>
 #include <deemon/system-features.h> /* bcmpc(), ... */
 #include <deemon/util/atomic.h>
+#include <deemon/util/lock.h>
 
 #include <hybrid/limitcore.h>
 #include <hybrid/typecore.h>
@@ -109,8 +110,25 @@ PRIVATE struct notify_entry const empty_notifications[1] = {
 };
 
 #ifndef CONFIG_NO_THREADS
-PRIVATE rwlock_t notify_lock = RWLOCK_INIT;
+PRIVATE atomic_rwlock_t notify_lock = ATOMIC_RWLOCK_INIT;
 #endif /* !CONFIG_NO_THREADS */
+
+#define notify_lock_reading()    Dee_atomic_rwlock_reading(&notify_lock)
+#define notify_lock_writing()    Dee_atomic_rwlock_writing(&notify_lock)
+#define notify_lock_tryread()    Dee_atomic_rwlock_tryread(&notify_lock)
+#define notify_lock_trywrite()   Dee_atomic_rwlock_trywrite(&notify_lock)
+#define notify_lock_canread()    Dee_atomic_rwlock_canread(&notify_lock)
+#define notify_lock_canwrite()   Dee_atomic_rwlock_canwrite(&notify_lock)
+#define notify_lock_waitread()   Dee_atomic_rwlock_waitread(&notify_lock)
+#define notify_lock_waitwrite()  Dee_atomic_rwlock_waitwrite(&notify_lock)
+#define notify_lock_read()       Dee_atomic_rwlock_read(&notify_lock)
+#define notify_lock_write()      Dee_atomic_rwlock_write(&notify_lock)
+#define notify_lock_tryupgrade() Dee_atomic_rwlock_tryupgrade(&notify_lock)
+#define notify_lock_upgrade()    Dee_atomic_rwlock_upgrade(&notify_lock)
+#define notify_lock_downgrade()  Dee_atomic_rwlock_downgrade(&notify_lock)
+#define notify_lock_endwrite()   Dee_atomic_rwlock_endwrite(&notify_lock)
+#define notify_lock_endread()    Dee_atomic_rwlock_endread(&notify_lock)
+#define notify_lock_end()        Dee_atomic_rwlock_end(&notify_lock)
 
 /* The usual deal: it's a hash-vector (s.a.: Dict, member_table, etc. etc.) */
 PRIVATE size_t /*         */ notify_used = 0;
@@ -211,7 +229,7 @@ DeeNotify_StartListen(uint16_t cls, DeeObject *__restrict name,
 	       ? DeeString_HashCase(name)
 	       : DeeString_Hash(name);
 again_lock:
-	rwlock_write(&notify_lock);
+	notify_lock_write();
 again:
 	first_dummy = NULL;
 	perturb = i = NOTIFY_HASHST(hash);
@@ -240,7 +258,7 @@ again:
 		     ? MEMCASEEQ(entry->nh_name, DeeString_STR(name), DeeString_SIZE(name) * sizeof(char))
 		     : 0 == bcmpc(entry->nh_name, DeeString_STR(name), DeeString_SIZE(name), sizeof(char)))) {
 			/* Already exists. */
-			rwlock_endwrite(&notify_lock);
+			notify_lock_endwrite();
 			return 1;
 		}
 	}
@@ -258,13 +276,13 @@ again:
 		/* Try to keep the notify vector big at least twice as big as the element count. */
 		if (notify_size * 2 > notify_mask)
 			notify_rehash(1);
-		rwlock_endwrite(&notify_lock);
+		notify_lock_endwrite();
 		return 0;
 	}
 	/* Rehash the notify and try again. */
 	if (notify_rehash(1))
 		goto again;
-	rwlock_endwrite(&notify_lock);
+	notify_lock_endwrite();
 	if (Dee_CollectMemory(1))
 		goto again_lock;
 	return -1;
@@ -279,7 +297,7 @@ DeeNotify_EndListen(uint16_t cls, DeeObject *__restrict name,
 	hash = (cls & Dee_NOTIFICATION_CLASS_FNOCASE)
 	       ? DeeString_HashCase(name)
 	       : DeeString_Hash(name);
-	rwlock_write(&notify_lock);
+	notify_lock_write();
 	if unlikely(!notify_used)
 		goto not_found;
 	perturb = i = hash & notify_mask;
@@ -309,11 +327,11 @@ DeeNotify_EndListen(uint16_t cls, DeeObject *__restrict name,
 	/* Keep track of how many entries are in use. */
 	if (--notify_used <= notify_size / 3)
 		notify_rehash(-1);
-	rwlock_endwrite(&notify_lock);
+	notify_lock_endwrite();
 	Dee_XDecref(arg);
 	return 0;
 not_found:
-	rwlock_endwrite(&notify_lock);
+	notify_lock_endwrite();
 	return 1;
 }
 
@@ -331,7 +349,7 @@ DeeNotify_DoBroadcast(uint16_t cls,
 	dhash_t perturb, i;
 	size_t mask;
 	struct notify_entry *list;
-	rwlock_read(&notify_lock);
+	notify_lock_read();
 again:
 	mask    = notify_mask;
 	list    = notify_list;
@@ -359,7 +377,7 @@ again:
 			COMPILER_READ_BARRIER();
 
 			/* Found an entry that we're supposed to invoke! */
-			rwlock_endread(&notify_lock);
+			notify_lock_endread();
 
 			/* Invoke the notification callback. */
 			result = (*func)(arg);
@@ -368,7 +386,7 @@ again:
 			/* If an error occurred, forward it. */
 			if unlikely(result)
 				goto done;
-			rwlock_read(&notify_lock);
+			notify_lock_read();
 
 			/* If the notification map changed, start
 			 * over, so we can call everything. */
@@ -377,7 +395,7 @@ again:
 				goto again;
 		}
 	}
-	rwlock_endread(&notify_lock);
+	notify_lock_endread();
 done:
 	return result;
 }
@@ -410,7 +428,7 @@ PUBLIC WUNUSED NONNULL((2)) int
 	int result = 0;
 	size_t mask, i;
 	struct notify_entry *list;
-	rwlock_read(&notify_lock);
+	notify_lock_read();
 again:
 	mask = notify_mask;
 	list = notify_list;
@@ -429,7 +447,7 @@ again:
 		arg  = entry->nh_arg;
 		Dee_XIncref(arg);
 		COMPILER_READ_BARRIER();
-		rwlock_endread(&notify_lock);
+		notify_lock_endread();
 
 		/* Invoke the notification callback. */
 		result = (*func)(arg);
@@ -438,7 +456,7 @@ again:
 		/* If an error occurred, forward it. */
 		if unlikely(result)
 			goto done;
-		rwlock_read(&notify_lock);
+		notify_lock_read();
 
 		/* If the notification map changed, start
 			* over, so we can call everything. */
@@ -446,7 +464,7 @@ again:
 			list != notify_list)
 			goto again;
 	}
-	rwlock_endread(&notify_lock);
+	notify_lock_endread();
 done:
 	return result;
 }
@@ -459,14 +477,14 @@ done:
 INTERN bool DCALL DeeNotify_Shutdown(void) {
 	size_t mask;
 	struct notify_entry *list;
-	rwlock_write(&notify_lock);
+	notify_lock_write();
 	mask        = notify_mask;
 	list        = notify_list;
 	notify_used = 0;
 	notify_size = 0;
 	notify_mask = 0;
 	notify_list = (struct notify_entry *)empty_notifications;
-	rwlock_endwrite(&notify_lock);
+	notify_lock_endwrite();
 	COMPILER_WRITE_BARRIER();
 	ASSERT((mask == 0) == (list == empty_notifications));
 	if (list == empty_notifications)

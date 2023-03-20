@@ -37,6 +37,7 @@
 #include <deemon/system-features.h> /* memcasecmp(), bzero(), ... */
 #include <deemon/thread.h>
 #include <deemon/tuple.h>
+#include <deemon/util/lock.h>
 
 DECL_BEGIN
 
@@ -386,7 +387,25 @@ sock_gettypevalue(char const *__restrict name, int *__restrict presult) {
 
 
 /* Lock used to access the system's database functions. */
-PRIVATE rwlock_t sysdb_lock = RWLOCK_INIT;
+#ifndef CONFIG_NO_THREADS
+PRIVATE atomic_rwlock_t sysdb_lock = ATOMIC_RWLOCK_INIT;
+#endif /* !CONFIG_NO_THREADS */
+#define sysdb_lock_reading()    Dee_atomic_rwlock_reading(&sysdb_lock)
+#define sysdb_lock_writing()    Dee_atomic_rwlock_writing(&sysdb_lock)
+#define sysdb_lock_tryread()    Dee_atomic_rwlock_tryread(&sysdb_lock)
+#define sysdb_lock_trywrite()   Dee_atomic_rwlock_trywrite(&sysdb_lock)
+#define sysdb_lock_canread()    Dee_atomic_rwlock_canread(&sysdb_lock)
+#define sysdb_lock_canwrite()   Dee_atomic_rwlock_canwrite(&sysdb_lock)
+#define sysdb_lock_waitread()   Dee_atomic_rwlock_waitread(&sysdb_lock)
+#define sysdb_lock_waitwrite()  Dee_atomic_rwlock_waitwrite(&sysdb_lock)
+#define sysdb_lock_read()       Dee_atomic_rwlock_read(&sysdb_lock)
+#define sysdb_lock_write()      Dee_atomic_rwlock_write(&sysdb_lock)
+#define sysdb_lock_tryupgrade() Dee_atomic_rwlock_tryupgrade(&sysdb_lock)
+#define sysdb_lock_upgrade()    Dee_atomic_rwlock_upgrade(&sysdb_lock)
+#define sysdb_lock_downgrade()  Dee_atomic_rwlock_downgrade(&sysdb_lock)
+#define sysdb_lock_endwrite()   Dee_atomic_rwlock_endwrite(&sysdb_lock)
+#define sysdb_lock_endread()    Dee_atomic_rwlock_endread(&sysdb_lock)
+#define sysdb_lock_end()        Dee_atomic_rwlock_end(&sysdb_lock)
 
 INTERN WUNUSED DREF DeeObject *DCALL
 sock_getprotoname(int value) {
@@ -395,7 +414,7 @@ sock_getprotoname(int value) {
 	char const *name;
 	size_t name_length;
 again:
-	rwlock_write(&sysdb_lock);
+	sysdb_lock_write();
 	DBG_ALIGNMENT_DISABLE();
 	ent = getprotobynumber(value);
 	DBG_ALIGNMENT_ENABLE();
@@ -404,7 +423,7 @@ again:
 		result = (DREF DeeStringObject *)DeeObject_TryMalloc(offsetof(DeeStringObject, s_str) +
 		                                                     (name_length + 1) * sizeof(char));
 		if unlikely(!result) {
-			rwlock_endwrite(&sysdb_lock);
+			sysdb_lock_endwrite();
 			if (Dee_CollectMemory(offsetof(DeeStringObject, s_str) +
 			                      (name_length + 1) * sizeof(char)))
 				goto again;
@@ -412,14 +431,14 @@ again:
 		}
 		memcpyc(result->s_str, name,
 		        name_length + 1, sizeof(char));
-		rwlock_endwrite(&sysdb_lock);
+		sysdb_lock_endwrite();
 		result->s_hash = (dhash_t)-1;
 		result->s_data = NULL;
 		result->s_len  = name_length;
 		DeeObject_Init(result, &DeeString_Type);
 		return (DREF DeeObject *)result;
 	}
-	rwlock_endwrite(&sysdb_lock);
+	sysdb_lock_endwrite();
 	if (!ent)
 		return ITER_DONE;
 	return_empty_string;
@@ -430,14 +449,14 @@ sock_getprotovalue(char const *__restrict name,
                    int *__restrict presult) {
 	struct protoent *ent;
 again:
-	rwlock_write(&sysdb_lock);
+	sysdb_lock_write();
 	ent = getprotobyname(name);
 	if (ent) {
 		*presult = ent->p_proto;
-		rwlock_endwrite(&sysdb_lock);
+		sysdb_lock_endwrite();
 		return true;
 	}
-	rwlock_endwrite(&sysdb_lock);
+	sysdb_lock_endwrite();
 	/* Search for case-insensitive `PROTO' in the name and re-try with
 	 * the following string after stripping leading underscores.
 	 * >> `sock_getprotovalue("IPPROTO_TCP")' should still work,
@@ -707,7 +726,7 @@ sock_gethostbyaddr(void const *__restrict data, socklen_t datalen,
 restart:
 	if (flags & SOCKADDR_STR_FNODNS)
 		goto nodns;
-	rwlock_write(&sysdb_lock);
+	sysdb_lock_write();
 	DBG_ALIGNMENT_DISABLE();
 	hp = (struct hostent *)gethostbyaddr((char const *)data, datalen, family);
 	DBG_ALIGNMENT_ENABLE();
@@ -715,7 +734,7 @@ restart:
 		DBG_ALIGNMENT_DISABLE();
 		error = h_errno;
 		DBG_ALIGNMENT_ENABLE();
-		rwlock_endwrite(&sysdb_lock);
+		sysdb_lock_endwrite();
 		if (flags & SOCKADDR_STR_FNOFAIL)
 			goto nodns;
 		if (error == HOST_NOT_FOUND) {
@@ -762,7 +781,7 @@ restart:
 	result = (DeeStringObject *)DeeObject_TryMalloc(offsetof(DeeStringObject, s_str) +
 	                                                (name_length + 1) * sizeof(char));
 	if unlikely(!result) {
-		rwlock_endwrite(&sysdb_lock);
+		sysdb_lock_endwrite();
 		if (Dee_CollectMemory(offsetof(DeeStringObject, s_str) +
 		                      (name_length + 1) * sizeof(char)))
 			goto restart;
@@ -770,7 +789,7 @@ restart:
 	}
 	memcpyc(result->s_str, hp->h_name,
 	        name_length + 1, sizeof(char));
-	rwlock_endwrite(&sysdb_lock);
+	sysdb_lock_endwrite();
 	DeeObject_Init(result, &DeeString_Type);
 	result->s_data = NULL;
 	result->s_hash = (dhash_t)-1;
@@ -779,7 +798,7 @@ restart:
 err:
 	return NULL;
 nodns2:
-	rwlock_endwrite(&sysdb_lock);
+	sysdb_lock_endwrite();
 nodns:
 #ifdef AF_INET
 	if (family == AF_INET) {
@@ -994,12 +1013,12 @@ retry_addrinfo:
 			hints.ai_protocol = protocol;
 			hints.ai_socktype = type;
 		}
-		rwlock_read(&sysdb_lock);
+		sysdb_lock_read();
 		DBG_ALIGNMENT_DISABLE();
 		error = getaddrinfo(host, port, family == AF_AUTO ? NULL : &hints, &info);
 		DBG_ALIGNMENT_ENABLE();
 		if (error != 0) {
-			rwlock_endread(&sysdb_lock);
+			sysdb_lock_endread();
 #ifdef EAI_AGAIN
 			if (error == EAI_AGAIN && attempt_counter < 3) {
 				if (DeeThread_Sleep(10000))
@@ -1079,7 +1098,7 @@ retry_addrinfo:
 			DBG_ALIGNMENT_DISABLE();
 			freeaddrinfo(info);
 			DBG_ALIGNMENT_ENABLE();
-			rwlock_endread(&sysdb_lock);
+			sysdb_lock_endread();
 			DeeError_Throwf(&DeeError_NetError,
 			                "Count not find any address for %q using port %q",
 			                host, port);
@@ -1091,7 +1110,7 @@ retry_addrinfo:
 			DBG_ALIGNMENT_DISABLE();
 			freeaddrinfo(info);
 			DBG_ALIGNMENT_ENABLE();
-			rwlock_endread(&sysdb_lock);
+			sysdb_lock_endread();
 			DeeError_Throwf(&DeeError_NotImplemented,
 			                "Host %q on port %q uses a different protocol %K than %K",
 			                host, port,
@@ -1104,7 +1123,7 @@ retry_addrinfo:
 			DBG_ALIGNMENT_DISABLE();
 			freeaddrinfo(info);
 			DBG_ALIGNMENT_ENABLE();
-			rwlock_endread(&sysdb_lock);
+			sysdb_lock_endread();
 			DeeError_Throwf(&DeeError_NotImplemented,
 			                "Address family %K for %q on port %q is too "
 			                "big (its size %" PRFuSIZ " exceeds the limit of %" PRFuSIZ ")",
@@ -1117,7 +1136,7 @@ retry_addrinfo:
 			DBG_ALIGNMENT_DISABLE();
 			freeaddrinfo(info);
 			DBG_ALIGNMENT_ENABLE();
-			rwlock_endread(&sysdb_lock);
+			sysdb_lock_endread();
 			error = 0;
 		}
 	}
@@ -1210,7 +1229,7 @@ no_special_hostname:
 		gethostbyname_attempt_counter = 0;
 do_gethostbyname_again:
 #endif /* TRY_AGAIN */
-		rwlock_read(&sysdb_lock);
+		sysdb_lock_read();
 		DBG_ALIGNMENT_DISABLE();
 		hp = (struct hostent *)gethostbyname(host);
 		DBG_ALIGNMENT_ENABLE();
@@ -1218,7 +1237,7 @@ do_gethostbyname_again:
 			DBG_ALIGNMENT_DISABLE();
 			error = h_errno;
 			DBG_ALIGNMENT_ENABLE();
-			rwlock_endread(&sysdb_lock);
+			sysdb_lock_endread();
 			if (error == HOST_NOT_FOUND) {
 				err_no_host(host, NULL, error);
 			} else if (error == NO_ADDRESS
@@ -1245,7 +1264,7 @@ do_gethostbyname_again:
 #ifdef AF_INET
 		if (hp->h_addrtype == AF_INET) {
 			self->sa_inet.sin_addr.s_addr = *(uint32_t *)hp->h_addr;
-			rwlock_endread(&sysdb_lock);
+			sysdb_lock_endread();
 do_port_inet:
 			self->sa_inet.sin_family = AF_INET;
 			if (get_port_name(port, port_length, &self->sa_inet.sin_port))
@@ -1257,7 +1276,7 @@ do_port_inet:
 #ifdef AF_INET6
 		if (hp->h_addrtype == AF_INET6) {
 			memcpy(&self->sa_inet6.sin6_addr, hp->h_addr, 16);
-			rwlock_endread(&sysdb_lock);
+			sysdb_lock_endread();
 do_port_inet6:
 			self->sa_inet6.sin6_family = AF_INET6;
 			if (get_port_name(port, port_length, &self->sa_inet6.sin6_port))
@@ -1268,7 +1287,7 @@ do_port_inet6:
 #endif /* AF_INET6 */
 		{
 			sa_family_t fam = (sa_family_t)hp->h_addrtype;
-			rwlock_endread(&sysdb_lock);
+			sysdb_lock_endread();
 			(void)error; /* XXX: New error code class? */
 			DeeError_Throwf(&DeeError_NetError,
 			                "Unsupported address family %K for host name %q",

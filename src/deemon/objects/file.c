@@ -40,6 +40,7 @@
 #include <deemon/system-features.h> /* bcmpc(), ... */
 #include <deemon/thread.h>
 #include <deemon/util/atomic.h>
+#include <deemon/util/lock.h>
 
 #include <hybrid/host.h>
 #include <hybrid/minmax.h>
@@ -1526,8 +1527,24 @@ PRIVATE DREF DeeObject *dee_std[DEE_STDCNT] = { ITER_DONE, ITER_DONE, ITER_DONE 
 #endif /* !DEE_STDDBG_IS_UNIQUE */
 
 #ifndef CONFIG_NO_THREADS
-PRIVATE rwlock_t dee_std_lock = RWLOCK_INIT;
+PRIVATE atomic_rwlock_t dee_std_lock = ATOMIC_RWLOCK_INIT;
 #endif /* !CONFIG_NO_THREADS */
+#define dee_std_lock_reading()    Dee_atomic_rwlock_reading(&dee_std_lock)
+#define dee_std_lock_writing()    Dee_atomic_rwlock_writing(&dee_std_lock)
+#define dee_std_lock_tryread()    Dee_atomic_rwlock_tryread(&dee_std_lock)
+#define dee_std_lock_trywrite()   Dee_atomic_rwlock_trywrite(&dee_std_lock)
+#define dee_std_lock_canread()    Dee_atomic_rwlock_canread(&dee_std_lock)
+#define dee_std_lock_canwrite()   Dee_atomic_rwlock_canwrite(&dee_std_lock)
+#define dee_std_lock_waitread()   Dee_atomic_rwlock_waitread(&dee_std_lock)
+#define dee_std_lock_waitwrite()  Dee_atomic_rwlock_waitwrite(&dee_std_lock)
+#define dee_std_lock_read()       Dee_atomic_rwlock_read(&dee_std_lock)
+#define dee_std_lock_write()      Dee_atomic_rwlock_write(&dee_std_lock)
+#define dee_std_lock_tryupgrade() Dee_atomic_rwlock_tryupgrade(&dee_std_lock)
+#define dee_std_lock_upgrade()    Dee_atomic_rwlock_upgrade(&dee_std_lock)
+#define dee_std_lock_downgrade()  Dee_atomic_rwlock_downgrade(&dee_std_lock)
+#define dee_std_lock_endwrite()   Dee_atomic_rwlock_endwrite(&dee_std_lock)
+#define dee_std_lock_endread()    Dee_atomic_rwlock_endread(&dee_std_lock)
+#define dee_std_lock_end()        Dee_atomic_rwlock_end(&dee_std_lock)
 
 PRIVATE uint16_t const std_buffer_modes[DEE_STDCNT] = {
 	/* [DEE_STDIN ] = */ FILE_BUFFER_MODE_AUTO | FILE_BUFFER_FREADONLY,
@@ -1555,12 +1572,12 @@ create_std_buffer(unsigned int id) {
 	if unlikely(!result)
 		goto done;
 #endif /* !CONFIG_NATIVE_STD_FILES_ARE_BUFFERED */
-	rwlock_write(&dee_std_lock);
+	dee_std_lock_write();
 	/* Save the newly created buffer in the standard stream vector. */
 	new_result = dee_std[id];
 	if unlikely(new_result != ITER_DONE) {
 		Dee_XIncref(new_result);
-		rwlock_endwrite(&dee_std_lock);
+		dee_std_lock_endwrite();
 		Dee_Decref(result);
 		result = new_result;
 		if (!result) {
@@ -1571,7 +1588,7 @@ create_std_buffer(unsigned int id) {
 	}
 	Dee_Incref(result);
 	dee_std[id] = result;
-	rwlock_endwrite(&dee_std_lock);
+	dee_std_lock_endwrite();
 done:
 	return result;
 }
@@ -1585,10 +1602,10 @@ PUBLIC WUNUSED DREF DeeObject *DCALL
 DeeFile_GetStd(unsigned int id) {
 	DREF DeeObject *result;
 	ASSERT(id < DEE_STDCNT);
-	rwlock_read(&dee_std_lock);
+	dee_std_lock_read();
 	result = dee_std[id];
 	if unlikely(!ITER_ISOK(result)) {
-		rwlock_endread(&dee_std_lock);
+		dee_std_lock_endread();
 		/* When the stream is `ITER_DONE', lazily create the STD stream. */
 		if (result == ITER_DONE)
 			return create_std_buffer(id);
@@ -1597,7 +1614,7 @@ DeeFile_GetStd(unsigned int id) {
 		goto done;
 	}
 	Dee_Incref(result);
-	rwlock_endread(&dee_std_lock);
+	dee_std_lock_endread();
 done:
 	return result;
 }
@@ -1606,10 +1623,10 @@ PUBLIC WUNUSED DREF DeeObject *DCALL
 DeeFile_TryGetStd(unsigned int id) {
 	DREF DeeObject *result;
 	ASSERT(id < DEE_STDCNT);
-	rwlock_read(&dee_std_lock);
+	dee_std_lock_read();
 	result = dee_std[id];
 	if unlikely(!ITER_ISOK(result)) {
-		rwlock_endread(&dee_std_lock);
+		dee_std_lock_endread();
 		/* When the stream is `ITER_DONE', lazily create the STD stream. */
 		if (result == ITER_DONE) {
 			result = create_std_buffer(id);
@@ -1619,7 +1636,7 @@ DeeFile_TryGetStd(unsigned int id) {
 		goto done;
 	}
 	Dee_Incref(result);
-	rwlock_endread(&dee_std_lock);
+	dee_std_lock_endread();
 done:
 	return result;
 }
@@ -1634,45 +1651,61 @@ DeeFile_SetStd(unsigned int id, DeeObject *file) {
 		Dee_ASSERT_OBJECT(file);
 		Dee_Incref(file);
 	}
-	rwlock_write(&dee_std_lock);
+	dee_std_lock_write();
 	/* Set the given stream. */
 	old_stream  = dee_std[id];
 	dee_std[id] = file;
-	rwlock_endwrite(&dee_std_lock);
+	dee_std_lock_endwrite();
 	return old_stream;
 }
 
 /* [0..1][lock(WRITE_ONCE)] The `files' module. */
 PRIVATE DREF DeeObject *files_module = NULL;
 #ifndef CONFIG_NO_THREADS
-PRIVATE rwlock_t files_module_lock = RWLOCK_INIT;
+PRIVATE atomic_rwlock_t files_module_lock = ATOMIC_RWLOCK_INIT;
 #endif /* !CONFIG_NO_THREADS */
+#define files_module_lock_reading()    Dee_atomic_rwlock_reading(&files_module_lock)
+#define files_module_lock_writing()    Dee_atomic_rwlock_writing(&files_module_lock)
+#define files_module_lock_tryread()    Dee_atomic_rwlock_tryread(&files_module_lock)
+#define files_module_lock_trywrite()   Dee_atomic_rwlock_trywrite(&files_module_lock)
+#define files_module_lock_canread()    Dee_atomic_rwlock_canread(&files_module_lock)
+#define files_module_lock_canwrite()   Dee_atomic_rwlock_canwrite(&files_module_lock)
+#define files_module_lock_waitread()   Dee_atomic_rwlock_waitread(&files_module_lock)
+#define files_module_lock_waitwrite()  Dee_atomic_rwlock_waitwrite(&files_module_lock)
+#define files_module_lock_read()       Dee_atomic_rwlock_read(&files_module_lock)
+#define files_module_lock_write()      Dee_atomic_rwlock_write(&files_module_lock)
+#define files_module_lock_tryupgrade() Dee_atomic_rwlock_tryupgrade(&files_module_lock)
+#define files_module_lock_upgrade()    Dee_atomic_rwlock_upgrade(&files_module_lock)
+#define files_module_lock_downgrade()  Dee_atomic_rwlock_downgrade(&files_module_lock)
+#define files_module_lock_endwrite()   Dee_atomic_rwlock_endwrite(&files_module_lock)
+#define files_module_lock_endread()    Dee_atomic_rwlock_endread(&files_module_lock)
+#define files_module_lock_end()        Dee_atomic_rwlock_end(&files_module_lock)
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 get_files_object(DeeObject *__restrict name) {
 	DREF DeeObject *result, *mod;
 again:
-	rwlock_read(&files_module_lock);
+	files_module_lock_read();
 	mod = files_module;
 	if unlikely(!mod) {
-		rwlock_endread(&files_module_lock);
+		files_module_lock_endread();
 		mod = DeeModule_OpenGlobal((DeeObject *)&str_files, NULL, true);
 		if unlikely(!mod)
 			goto err;
 		if unlikely(DeeModule_RunInit(mod) < 0)
 			goto err_mod;
-		rwlock_write(&files_module_lock);
+		files_module_lock_write();
 		if unlikely(atomic_read(&files_module)) {
-			rwlock_endwrite(&files_module_lock);
+			files_module_lock_endwrite();
 			Dee_Decref(mod);
 			goto again;
 		}
 		Dee_Incref(mod);
 		files_module = mod;
-		rwlock_endwrite(&files_module_lock);
+		files_module_lock_endwrite();
 	} else {
 		Dee_Incref(mod);
-		rwlock_endread(&files_module_lock);
+		files_module_lock_endread();
 	}
 	result = DeeObject_GetAttr(mod, name);
 	Dee_Decref(mod);
@@ -1685,10 +1718,10 @@ err:
 
 PRIVATE bool DCALL clear_files_module(void) {
 	DREF DeeObject *mod;
-	rwlock_write(&files_module_lock);
+	files_module_lock_write();
 	mod          = files_module;
 	files_module = NULL;
-	rwlock_endwrite(&files_module_lock);
+	files_module_lock_endwrite();
 	Dee_XDecref(mod);
 	return mod != NULL;
 }

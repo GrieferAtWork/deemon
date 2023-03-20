@@ -1909,13 +1909,13 @@ cmethod_call(DeeCMethodObject *self, size_t argc, DeeObject *const *argv) {
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) struct module_symbol *DCALL
-cmethod_getmodsym(DeeModuleObject *__restrict module,
+cmethod_getmodsym(DeeModuleObject *__restrict mod,
                   dcmethod_t func_ptr) {
 	uint16_t addr;
 	struct module_symbol *result;
-	rwlock_read(&module->mo_lock);
-	for (addr = 0; addr < module->mo_globalc; ++addr) {
-		DeeObject *glob = module->mo_globalv[addr];
+	DeeModule_LockRead(mod);
+	for (addr = 0; addr < mod->mo_globalc; ++addr) {
+		DeeObject *glob = mod->mo_globalv[addr];
 		if (!glob)
 			continue;
 		if (!DeeCMethod_Check(glob) &&
@@ -1923,13 +1923,13 @@ cmethod_getmodsym(DeeModuleObject *__restrict module,
 			continue;
 		if (DeeCMethod_FUNC(glob) != func_ptr)
 			continue;
-		rwlock_endread(&module->mo_lock);
-		result = DeeModule_GetSymbolID(module, addr);
+		DeeModule_LockEndRead(mod);
+		result = DeeModule_GetSymbolID(mod, addr);
 		if (result)
 			return result;
-		rwlock_read(&module->mo_lock);
+		DeeModule_LockRead(mod);
 	}
-	rwlock_endread(&module->mo_lock);
+	DeeModule_LockEndRead(mod);
 	return NULL;
 }
 
@@ -1974,21 +1974,21 @@ gotit:
 }
 
 PRIVATE WUNUSED NONNULL((1, 2, 3)) struct type_member const *DCALL
-cmethod_gettypefield(DeeModuleObject *module,
+cmethod_gettypefield(DeeModuleObject *mod,
                      DREF DeeTypeObject **__restrict ptype,
                      dcmethod_t func_ptr) {
 	uint16_t addr;
 	struct type_member const *result;
-	rwlock_read(&module->mo_lock);
-	for (addr = 0; addr < module->mo_globalc; ++addr) {
-		DeeObject *glob = module->mo_globalv[addr];
+	DeeModule_LockRead(mod);
+	for (addr = 0; addr < mod->mo_globalc; ++addr) {
+		DeeObject *glob = mod->mo_globalv[addr];
 		if (!glob)
 			continue;
 		/* Check for cmethod objects defined as TYPE_MEMBER_CONST() fields of exported types. */
 		if (!DeeType_Check(glob))
 			continue;
 		Dee_Incref(glob);
-		rwlock_endread(&module->mo_lock);
+		DeeModule_LockEndRead(mod);
 		result = type_seach_cmethod((DeeTypeObject *)glob, func_ptr, ptype);
 		if (result) {
 			Dee_Incref(*ptype);
@@ -1996,9 +1996,9 @@ cmethod_gettypefield(DeeModuleObject *module,
 			return result;
 		}
 		Dee_Decref_unlikely(glob);
-		rwlock_read(&module->mo_lock);
+		DeeModule_LockRead(mod);
 	}
-	rwlock_endread(&module->mo_lock);
+	DeeModule_LockEndRead(mod);
 	return NULL;
 }
 
@@ -2050,72 +2050,72 @@ kwcmethod_get_kwds(DeeCMethodObject *__restrict self) {
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 cmethod_get_name(DeeCMethodObject *__restrict self) {
-	DREF DeeModuleObject *module;
+	DREF DeeModuleObject *mod;
 	DREF DeeObject *result;
-	module = (DREF DeeModuleObject *)DeeModule_FromStaticPointer(*(void **)&self->cm_func);
-	if (module) {
+	mod = (DREF DeeModuleObject *)DeeModule_FromStaticPointer(*(void **)&self->cm_func);
+	if (mod) {
 		struct module_symbol *symbol;
 		struct type_member const *member;
 		DREF DeeTypeObject *type;
-		symbol = cmethod_getmodsym(module, self->cm_func);
+		symbol = cmethod_getmodsym(mod, self->cm_func);
 		if (symbol) {
 			result = (DREF DeeObject *)module_symbol_getnameobj(symbol);
-			Dee_Decref(module);
+			Dee_Decref(mod);
 			return result;
 		}
-		member = cmethod_gettypefield(module, &type, self->cm_func);
+		member = cmethod_gettypefield(mod, &type, self->cm_func);
 		if (member) {
 			result = DeeString_NewAuto(member->m_name);
 			Dee_Decref(type);
-			Dee_Decref(module);
+			Dee_Decref(mod);
 			return result;
 		}
-		Dee_Decref(module);
+		Dee_Decref(mod);
 	}
 	return_none;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 cmethod_get_type(DeeCMethodObject *__restrict self) {
-	DREF DeeModuleObject *module;
-	module = (DREF DeeModuleObject *)DeeModule_FromStaticPointer(*(void **)&self->cm_func);
-	if (module) {
+	DREF DeeModuleObject *mod;
+	mod = (DREF DeeModuleObject *)DeeModule_FromStaticPointer(*(void **)&self->cm_func);
+	if (mod) {
 		struct module_symbol *symbol;
 		struct type_member const *member;
 		DREF DeeTypeObject *type;
-		symbol = cmethod_getmodsym(module, self->cm_func);
+		symbol = cmethod_getmodsym(mod, self->cm_func);
 		if (symbol) {
-			Dee_Decref(module);
+			Dee_Decref(mod);
 			return_none;
 		}
-		member = cmethod_gettypefield(module, &type, self->cm_func);
+		member = cmethod_gettypefield(mod, &type, self->cm_func);
 		if (member) {
-			Dee_Decref(module);
+			Dee_Decref(mod);
 			return (DREF DeeObject *)type;
 		}
-		Dee_Decref(module);
+		Dee_Decref(mod);
 	}
 	return_none;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 cmethod_get_doc(DeeCMethodObject *__restrict self) {
-	DREF DeeModuleObject *module;
+	DREF DeeModuleObject *mod;
 	DREF DeeObject *result;
-	module = (DREF DeeModuleObject *)DeeModule_FromStaticPointer(*(void **)&self->cm_func);
-	if (module) {
+	mod = (DREF DeeModuleObject *)DeeModule_FromStaticPointer(*(void **)&self->cm_func);
+	if (mod) {
 		struct module_symbol *symbol;
 		struct type_member const *member;
 		DREF DeeTypeObject *type;
-		symbol = cmethod_getmodsym(module, self->cm_func);
+		symbol = cmethod_getmodsym(mod, self->cm_func);
 		if (symbol) {
 			if (symbol->ss_doc) {
 				result = (DREF DeeObject *)module_symbol_getdocobj(symbol);
-				Dee_Decref(module);
+				Dee_Decref(mod);
 				return result;
 			}
 		} else {
-			member = cmethod_gettypefield(module, &type, self->cm_func);
+			member = cmethod_gettypefield(mod, &type, self->cm_func);
 			if (member) {
 				if (member->m_doc) {
 					result = DeeString_NewAutoUtf8(member->m_doc);
@@ -2123,12 +2123,12 @@ cmethod_get_doc(DeeCMethodObject *__restrict self) {
 					result = Dee_None;
 					Dee_Incref(Dee_None);
 				}
-				Dee_Decref(module);
+				Dee_Decref(mod);
 				Dee_Decref(type);
 				return result;
 			}
 		}
-		Dee_Decref(module);
+		Dee_Decref(mod);
 	}
 	return_none;
 }

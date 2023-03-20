@@ -56,8 +56,8 @@ STATIC_ASSERT(offsetof(SharedMap, sm_lock) == offsetof(SharedVector, sv_lock));
 #endif /* !CONFIG_NO_THREADS */
 STATIC_ASSERT(offsetof(SharedMap, sm_length) == offsetof(SharedVector, sv_length));
 STATIC_ASSERT(offsetof(SharedMap, sm_vector) == offsetof(SharedVector, sv_vector));
-STATIC_ASSERT(offsetof(SharedMapIterator, sm_seq) == offsetof(SharedVectorIterator, si_seq));
-STATIC_ASSERT(offsetof(SharedMapIterator, sm_index) == offsetof(SharedVectorIterator, si_index));
+STATIC_ASSERT(offsetof(SharedMapIterator, smi_seq) == offsetof(SharedVectorIterator, si_seq));
+STATIC_ASSERT(offsetof(SharedMapIterator, smi_index) == offsetof(SharedVectorIterator, si_index));
 STATIC_ASSERT(sizeof(SharedMapIterator) == sizeof(SharedVectorIterator));
 
 
@@ -66,21 +66,21 @@ STATIC_ASSERT(sizeof(SharedMapIterator) == sizeof(SharedVectorIterator));
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 smap_nsi_nextkey(SharedMapIterator *__restrict self) {
 	DREF DeeObject *result_key;
-	SharedMap *map = self->sm_seq;
+	SharedMap *map = self->smi_seq;
 	for (;;) {
 		size_t index;
-		rwlock_read(&map->sm_lock);
-		index = atomic_read(&self->sm_index);
-		if (self->sm_index >= map->sm_length) {
-			rwlock_endread(&map->sm_lock);
+		SharedMap_LockRead(map);
+		index = atomic_read(&self->smi_index);
+		if (self->smi_index >= map->sm_length) {
+			SharedMap_LockEndRead(map);
 			return ITER_DONE;
 		}
 		result_key = map->sm_vector[index].si_key;
 
 		/* Acquire a reference to keep the item alive. */
 		Dee_Incref(result_key);
-		rwlock_endread(&map->sm_lock);
-		if (atomic_cmpxch_weak_or_write(&self->sm_index, index, index + 1))
+		SharedMap_LockEndRead(map);
+		if (atomic_cmpxch_weak_or_write(&self->smi_index, index, index + 1))
 			break;
 
 		/* If some other thread stole the index, drop their value. */
@@ -92,21 +92,21 @@ smap_nsi_nextkey(SharedMapIterator *__restrict self) {
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 smap_nsi_nextvalue(SharedMapIterator *__restrict self) {
 	DREF DeeObject *result_value;
-	SharedMap *map = self->sm_seq;
+	SharedMap *map = self->smi_seq;
 	for (;;) {
 		size_t index;
-		rwlock_read(&map->sm_lock);
-		index = atomic_read(&self->sm_index);
-		if (self->sm_index >= map->sm_length) {
-			rwlock_endread(&map->sm_lock);
+		SharedMap_LockRead(map);
+		index = atomic_read(&self->smi_index);
+		if (self->smi_index >= map->sm_length) {
+			SharedMap_LockEndRead(map);
 			return ITER_DONE;
 		}
 		result_value = map->sm_vector[index].si_value;
 
 		/* Acquire a reference to keep the item alive. */
 		Dee_Incref(result_value);
-		rwlock_endread(&map->sm_lock);
-		if (atomic_cmpxch_weak_or_write(&self->sm_index, index, index + 1))
+		SharedMap_LockEndRead(map);
+		if (atomic_cmpxch_weak_or_write(&self->smi_index, index, index + 1))
 			break;
 
 		/* If some other thread stole the index, drop their value. */
@@ -119,13 +119,13 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 smapiter_next(SharedMapIterator *__restrict self) {
 	DREF DeeObject *result;
 	DREF DeeObject *result_key, *result_value;
-	SharedMap *map = self->sm_seq;
+	SharedMap *map = self->smi_seq;
 	for (;;) {
 		size_t index;
-		rwlock_read(&map->sm_lock);
-		index = atomic_read(&self->sm_index);
-		if (self->sm_index >= map->sm_length) {
-			rwlock_endread(&map->sm_lock);
+		SharedMap_LockRead(map);
+		index = atomic_read(&self->smi_index);
+		if (self->smi_index >= map->sm_length) {
+			SharedMap_LockEndRead(map);
 			return ITER_DONE;
 		}
 		result_key   = map->sm_vector[index].si_key;
@@ -134,8 +134,8 @@ smapiter_next(SharedMapIterator *__restrict self) {
 		/* Acquire a reference to keep the item alive. */
 		Dee_Incref(result_key);
 		Dee_Incref(result_value);
-		rwlock_endread(&map->sm_lock);
-		if (atomic_cmpxch_weak_or_write(&self->sm_index, index, index + 1))
+		SharedMap_LockEndRead(map);
+		if (atomic_cmpxch_weak_or_write(&self->smi_index, index, index + 1))
 			break;
 
 		/* If some other thread stole the index, drop their value. */
@@ -192,8 +192,8 @@ INTDEF struct type_cmp sveciter_cmp;
 #define smapiter_cmp sveciter_cmp
 
 PRIVATE struct type_member tpconst smapiter_members[] = {
-	TYPE_MEMBER_FIELD_DOC(STR_seq, STRUCT_OBJECT, offsetof(SharedMapIterator, sm_seq), "->?Ert:SharedMap"),
-	TYPE_MEMBER_FIELD("__index__", STRUCT_SIZE_T, offsetof(SharedMapIterator, sm_index)),
+	TYPE_MEMBER_FIELD_DOC(STR_seq, STRUCT_OBJECT, offsetof(SharedMapIterator, smi_seq), "->?Ert:SharedMap"),
+	TYPE_MEMBER_FIELD("__index__", STRUCT_SIZE_T, offsetof(SharedMapIterator, smi_index)),
 	TYPE_MEMBER_END
 };
 
@@ -267,9 +267,9 @@ smap_iter(SharedMap *__restrict self) {
 	result = DeeObject_MALLOC(SharedMapIterator);
 	if unlikely(!result)
 		goto done;
-	result->sm_seq = self;
+	result->smi_seq = self;
 	Dee_Incref(self);
-	result->sm_index = 0;
+	result->smi_index = 0;
 	DeeObject_Init(result, &SharedMapIterator_Type);
 done:
 	return result;
@@ -319,7 +319,7 @@ sentinal_does_exist:
 PRIVATE NONNULL((1)) void DCALL
 smap_mark_loaded_and_endwrite(SharedMap *__restrict self) {
 	self->sm_loaded = 1;
-	rwlock_endwrite(&self->sm_lock);
+	SharedMap_LockEndWrite(self);
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
@@ -342,12 +342,12 @@ again_search:
 			break;
 		if (item->si_hash != hash)
 			continue;
-		rwlock_read(&self->sm_lock);
+		SharedMap_LockRead(self);
 		item_key = item->si_key;
 		if (self->sm_length == 0)
 			goto endread_and_not_found;
 		Dee_Incref(item_key);
-		rwlock_endread(&self->sm_lock);
+		SharedMap_LockEndRead(self);
 		temp = DeeObject_CompareEq(key, item->si_key);
 		Dee_Decref(item_key);
 		if (temp != 0) {
@@ -357,10 +357,10 @@ again_search:
 		}
 	}
 	/* Find the item in the key vector. */
-	rwlock_read(&self->sm_lock);
+	SharedMap_LockRead(self);
 	if (self->sm_loaded) {
 		if (!was_loaded) {
-			rwlock_endread(&self->sm_lock);
+			SharedMap_LockEndRead(self);
 			was_loaded = true;
 			goto again_search;
 		}
@@ -372,12 +372,12 @@ again_search:
 			item_value = self->sm_vector[i].si_value;
 			Dee_Incref(item_key);
 			Dee_Incref(item_value);
-			rwlock_endread(&self->sm_lock);
+			SharedMap_LockEndRead(self);
 			item_hash = DeeObject_Hash(item_key);
 			/* Cache the key-value pair in the hash-vector */
-			rwlock_write(&self->sm_lock);
+			SharedMap_LockWrite(self);
 			smap_cache(self, item_key, item_value, item_hash);
-			rwlock_endwrite(&self->sm_lock);
+			SharedMap_LockEndWrite(self);
 			/* Check if this is the key we're looking for. */
 			Dee_Decref(item_value);
 			if (item_hash == hash) {
@@ -390,15 +390,15 @@ again_search:
 				}
 			}
 			Dee_Decref(item_key);
-			rwlock_read(&self->sm_lock);
+			SharedMap_LockRead(self);
 		}
-		if (rwlock_tryupgrade(&self->sm_lock)) {
+		if (SharedMap_LockTryUpgrade(self)) {
 			smap_mark_loaded_and_endwrite(self);
 			goto not_found;
 		}
 	}
 endread_and_not_found:
-	rwlock_endread(&self->sm_lock);
+	SharedMap_LockEndRead(self);
 not_found:
 	return_false;
 err:
@@ -425,16 +425,16 @@ again_search:
 			break;
 		if (item->si_hash != hash)
 			continue;
-		rwlock_read(&self->sm_lock);
+		SharedMap_LockRead(self);
 		item_key = item->si_key;
 		if (self->sm_length == 0) {
-			rwlock_endread(&self->sm_lock);
+			SharedMap_LockEndRead(self);
 			goto not_found;
 		}
 		item_value = item->si_value;
 		Dee_Incref(item_key);
 		Dee_Incref(item_value);
-		rwlock_endread(&self->sm_lock);
+		SharedMap_LockEndRead(self);
 		temp = DeeObject_CompareEq(key, item->si_key);
 		Dee_Decref(item_key);
 		if (temp != 0) {
@@ -447,10 +447,10 @@ again_search:
 		Dee_Decref(item_value);
 	}
 	/* Find the item in the key vector. */
-	rwlock_read(&self->sm_lock);
+	SharedMap_LockRead(self);
 	if (self->sm_loaded) {
 		if (!was_loaded) {
-			rwlock_endread(&self->sm_lock);
+			SharedMap_LockEndRead(self);
 			was_loaded = true;
 			goto again_search;
 		}
@@ -462,12 +462,12 @@ again_search:
 			item_value = self->sm_vector[i].si_value;
 			Dee_Incref(item_key);
 			Dee_Incref(item_value);
-			rwlock_endread(&self->sm_lock);
+			SharedMap_LockEndRead(self);
 			item_hash = DeeObject_Hash(item_key);
 			/* Cache the key-value pair in the hash-vector */
-			rwlock_write(&self->sm_lock);
+			SharedMap_LockWrite(self);
 			smap_cache(self, item_key, item_value, item_hash);
-			rwlock_endwrite(&self->sm_lock);
+			SharedMap_LockEndWrite(self);
 			/* Check if this is the key we're looking for. */
 			if (item_hash == hash) {
 				temp = DeeObject_CompareEq(key, item_key);
@@ -482,14 +482,14 @@ again_search:
 			}
 			Dee_Decref(item_value);
 			Dee_Decref(item_key);
-			rwlock_read(&self->sm_lock);
+			SharedMap_LockRead(self);
 		}
-		if (rwlock_tryupgrade(&self->sm_lock)) {
+		if (SharedMap_LockTryUpgrade(self)) {
 			smap_mark_loaded_and_endwrite(self);
 			goto not_found;
 		}
 	}
-	rwlock_endread(&self->sm_lock);
+	SharedMap_LockEndRead(self);
 not_found:
 	err_unknown_key((DeeObject *)self, key);
 err:
@@ -516,16 +516,16 @@ again_search:
 			break;
 		if (item->si_hash != hash)
 			continue;
-		rwlock_read(&self->sm_lock);
+		SharedMap_LockRead(self);
 		item_key = item->si_key;
 		if (self->sm_length == 0) {
-			rwlock_endread(&self->sm_lock);
+			SharedMap_LockEndRead(self);
 			goto not_found;
 		}
 		item_value = item->si_value;
 		Dee_Incref(item_key);
 		Dee_Incref(item_value);
-		rwlock_endread(&self->sm_lock);
+		SharedMap_LockEndRead(self);
 		temp = DeeObject_CompareEq(key, item_key);
 		Dee_Decref(item_key);
 		if (temp != 0) {
@@ -538,10 +538,10 @@ again_search:
 		Dee_Decref(item_value);
 	}
 	/* Find the item in the key vector. */
-	rwlock_read(&self->sm_lock);
+	SharedMap_LockRead(self);
 	if (self->sm_loaded) {
 		if (!was_loaded) {
-			rwlock_endread(&self->sm_lock);
+			SharedMap_LockEndRead(self);
 			was_loaded = true;
 			goto again_search;
 		}
@@ -553,12 +553,12 @@ again_search:
 			item_value = self->sm_vector[i].si_value;
 			Dee_Incref(item_key);
 			Dee_Incref(item_value);
-			rwlock_endread(&self->sm_lock);
+			SharedMap_LockEndRead(self);
 			item_hash = DeeObject_Hash(item_key);
 			/* Cache the key-value pair in the hash-vector */
-			rwlock_write(&self->sm_lock);
+			SharedMap_LockWrite(self);
 			smap_cache(self, item_key, item_value, item_hash);
-			rwlock_endwrite(&self->sm_lock);
+			SharedMap_LockEndWrite(self);
 			/* Check if this is the key we're looking for. */
 			if (item_hash == hash) {
 				temp = DeeObject_CompareEq(key, item_key);
@@ -573,14 +573,14 @@ again_search:
 			}
 			Dee_Decref(item_value);
 			Dee_Decref(item_key);
-			rwlock_read(&self->sm_lock);
+			SharedMap_LockRead(self);
 		}
-		if (rwlock_tryupgrade(&self->sm_lock)) {
+		if (SharedMap_LockTryUpgrade(self)) {
 			smap_mark_loaded_and_endwrite(self);
 			goto not_found;
 		}
 	}
-	rwlock_endread(&self->sm_lock);
+	SharedMap_LockEndRead(self);
 not_found:
 	if (defl != ITER_DONE)
 		Dee_Incref(defl);
@@ -727,7 +727,7 @@ DeeSharedMap_NewShared(size_t length, DREF DeeSharedItem *vector) {
 	result->sm_vector = vector;
 	result->sm_loaded = 0;
 	result->sm_mask   = mask;
-	rwlock_cinit(&result->sm_lock);
+	atomic_rwlock_cinit(&result->sm_lock);
 	DeeObject_Init(result, &SharedMap_Type);
 done:
 	return (DREF DeeObject *)result;
@@ -767,7 +767,7 @@ done_decref_vector:
 		return;
 	}
 	/* Difficult case: must duplicate the vector. */
-	rwlock_write(&me->sm_lock);
+	SharedMap_LockWrite(me);
 	if (!me->sm_length) {
 		me->sm_vector = NULL;
 	} else {
@@ -785,7 +785,7 @@ done_decref_vector:
 		 * which it will take to its grave. */
 		me->sm_vector = (DeeSharedItem *)vector;
 	}
-	rwlock_endwrite(&me->sm_lock);
+	SharedMap_LockEndWrite(me);
 	Dee_Decref(me);
 	return;
 
@@ -796,7 +796,7 @@ err_cannot_inherit:
 	/* Override with an empty vector. */
 	me->sm_vector = NULL;
 	me->sm_length = 0;
-	rwlock_endwrite(&me->sm_lock);
+	SharedMap_LockEndWrite(me);
 	Dee_Decref(me);
 	/* Destroy the items that the caller wanted the vector to inherit. */
 	goto done_decref_vector;

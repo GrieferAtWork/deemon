@@ -42,7 +42,6 @@
 
 #include "_res.h"
 
-#include <deemon/util/rwlock.h>
 #include <hybrid/unaligned.h>
 
 #include "../time/libtime.h"

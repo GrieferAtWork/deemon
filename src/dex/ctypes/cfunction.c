@@ -230,7 +230,7 @@ INTERN DeeCFunctionTypeObject DeeCFunction_Type = {
 			/* .tp_class_members = */ NULL
 		},
 #ifndef CONFIG_NO_THREADS
-		/* .st_cachelock = */ RWLOCK_INIT,
+		/* .st_cachelock = */ ATOMIC_RWLOCK_INIT,
 #endif /* !CONFIG_NO_THREADS */
 		/* .st_pointer  = */ &DeePointer_Type,
 		/* .st_lvalue   = */ &DeeLValue_Type,
@@ -560,7 +560,7 @@ DeeSType_CFunction(DeeSTypeObject *__restrict return_type,
 	DREF DeeCFunctionTypeObject *result, *new_result;
 	DREF struct cfunction_type_list *pbucket;
 	ASSERT_OBJECT_TYPE(DeeSType_AsObject(return_type), &DeeSType_Type);
-	rwlock_read(&return_type->st_cachelock);
+	DeeSType_CacheLockRead(return_type);
 	ASSERT(!return_type->st_cfunction.sf_size ||
 	       return_type->st_cfunction.sf_mask);
 	hash = cfunction_hashof(return_type, calling_convention, argc, argv);
@@ -572,13 +572,13 @@ DeeSType_CFunction(DeeSTypeObject *__restrict return_type,
 			result = LIST_NEXT(result, ft_chain);
 		/* Check if we can re-use an existing type. */
 		if (result && Dee_IncrefIfNotZero(DeeCFunctionType_AsObject(result))) {
-			rwlock_endread(&return_type->st_cachelock);
+			DeeSType_CacheLockEndRead(return_type);
 			if (inherit_argv)
 				Dee_Free(argv);
 			return result;
 		}
 	}
-	rwlock_endread(&return_type->st_cachelock);
+	DeeSType_CacheLockEndRead(return_type);
 
 	/* Construct a new cfunction type. */
 	result = cfunctiontype_new(return_type, calling_convention,
@@ -588,7 +588,7 @@ DeeSType_CFunction(DeeSTypeObject *__restrict return_type,
 
 	/* Add the new type to the cache. */
 register_type:
-	rwlock_write(&return_type->st_cachelock);
+	DeeSType_CacheLockWrite(return_type);
 	ASSERT(!return_type->st_cfunction.sf_size ||
 	       return_type->st_cfunction.sf_mask);
 	if (return_type->st_cfunction.sf_size) {
@@ -600,7 +600,7 @@ register_type:
 
 		/* Check if we can re-use an existing type. */
 		if (new_result && Dee_IncrefIfNotZero(DeeCFunctionType_AsObject(new_result))) {
-			rwlock_endread(&return_type->st_cachelock);
+			DeeSType_CacheLockEndRead(return_type);
 			Dee_Decref(DeeCFunctionType_AsObject(result));
 			return new_result;
 		}
@@ -612,7 +612,7 @@ register_type:
 	     !return_type->st_cfunction.sf_mask)) {
 
 		/* No space at all! */
-		rwlock_endwrite(&return_type->st_cachelock);
+		DeeSType_CacheLockEndWrite(return_type);
 
 		/* Collect enough memory for a 1-item hash map. */
 		if (Dee_CollectMemory(sizeof(DeeCFunctionTypeObject *)))
@@ -627,7 +627,7 @@ register_type:
 	/* Insert the new cfunction type into the hash-map. */
 	pbucket = &return_type->st_cfunction.sf_list[hash & return_type->st_cfunction.sf_mask];
 	LIST_INSERT_HEAD(pbucket, result, ft_chain); /* Weak reference. */
-	rwlock_endwrite(&return_type->st_cachelock);
+	DeeSType_CacheLockEndWrite(return_type);
 done:
 	return result;
 #endif /* !CONFIG_NO_CFUNCTION */

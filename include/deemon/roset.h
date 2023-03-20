@@ -33,9 +33,9 @@ DECL_BEGIN
 #ifdef DEE_SOURCE
 #define Dee_roset_item   roset_item
 #define Dee_roset_object roset_object
-#define ROSET_HASHST     Dee_ROSET_HASHST
-#define ROSET_HASHNX     Dee_ROSET_HASHNX
-#define ROSET_HASHIT     Dee_ROSET_HASHIT
+#define ROSET_HASHST     DeeRoSet_HASHST
+#define ROSET_HASHNX     DeeRoSet_HASHNX
+#define ROSET_HASHIT     DeeRoSet_HASHIT
 #endif /* DEE_SOURCE */
 
 /* A read-only variant of a set object, who's main purpose is to be used
@@ -65,9 +65,9 @@ DECL_BEGIN
 typedef struct Dee_roset_object DeeRoSetObject;
 
 struct Dee_roset_item {
-	DREF DeeObject *si_key;  /* [0..1][const] Set item key. */
-	Dee_hash_t      si_hash; /* [valis_if(si_key)][const]
-	                          * Hash of `si_key' (with a starting value of `0'). */
+	DREF DeeObject *rsi_key;  /* [0..1][const] Set item key. */
+	Dee_hash_t      rsi_hash; /* [valis_if(rsi_key)][const]
+	                           * Hash of `rsi_key' (with a starting value of `0'). */
 };
 
 struct Dee_roset_object {
@@ -98,9 +98,9 @@ DeeRoSet_Insert(/*in|out*/ DREF DeeObject **__restrict pself,
                 DeeObject *__restrict key);
 
 /* Hash-iteration control. */
-#define Dee_ROSET_HASHST(self, ro)    ((ro) & ((DeeRoSetObject *)Dee_REQUIRES_OBJECT(self))->rs_mask)
-#define Dee_ROSET_HASHNX(hs, perturb) (void)((hs) = ((hs) << 2) + (hs) + (perturb) + 1, (perturb) >>= 5) /* This `5' is tunable. */
-#define Dee_ROSET_HASHIT(self, i)                             \
+#define DeeRoSet_HASHST(self, ro)    ((ro) & ((DeeRoSetObject *)Dee_REQUIRES_OBJECT(self))->rs_mask)
+#define DeeRoSet_HASHNX(hs, perturb) (void)((hs) = ((hs) << 2) + (hs) + (perturb) + 1, (perturb) >>= 5) /* This `5' is tunable. */
+#define DeeRoSet_HASHIT(self, i)                              \
 	(((DeeRoSetObject *)Dee_REQUIRES_OBJECT(self))->rs_elem + \
 	 ((i) & ((DeeRoSetObject *)Dee_REQUIRES_OBJECT(self))->rs_mask))
 

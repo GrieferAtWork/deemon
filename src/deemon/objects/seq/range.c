@@ -32,8 +32,8 @@
 #include <deemon/object.h>
 #include <deemon/seq.h>
 #include <deemon/string.h>
-#include <deemon/util/rwlock.h>
 #include <deemon/util/atomic.h>
+#include <deemon/util/lock.h>
 
 #include <hybrid/overflow.h>
 
@@ -90,7 +90,7 @@ ri_ctor(RangeIterator *__restrict self) {
 	self->ri_step  = NULL;
 	self->ri_first = true;
 	Dee_Incref(Dee_None);
-	rwlock_init(&self->ri_lock);
+	atomic_rwlock_init(&self->ri_lock);
 	return 0;
 err:
 	return -1;
@@ -111,7 +111,7 @@ ri_init(RangeIterator *__restrict self,
 	Dee_Incref(self->ri_index);
 	Dee_Incref(self->ri_range);
 	self->ri_first = true;
-	rwlock_init(&self->ri_lock);
+	atomic_rwlock_init(&self->ri_lock);
 	return 0;
 err:
 	return -1;
@@ -122,11 +122,11 @@ ri_copy(RangeIterator *__restrict self,
         RangeIterator *__restrict other) {
 	DREF DeeObject *new_index, *old_index;
 again:
-	rwlock_read(&other->ri_lock);
+	RangeIterator_LockRead(other);
 	old_index      = other->ri_index;
 	self->ri_first = other->ri_first;
 	Dee_Incref(old_index);
-	rwlock_endread(&other->ri_lock);
+	RangeIterator_LockEndRead(other);
 
 	/* Create a copy of the index (may not be correct if it already changed) */
 	new_index = DeeObject_Copy(old_index);
@@ -141,7 +141,7 @@ again:
 		 * was spun while we were copying its index. */
 		goto again;
 	}
-	rwlock_init(&self->ri_lock);
+	atomic_rwlock_init(&self->ri_lock);
 
 	/* Other members are constant, so we don't
 	 * need to bother with synchronizing them. */
@@ -157,18 +157,18 @@ err:
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 ri_deep(RangeIterator *__restrict self,
         RangeIterator *__restrict other) {
-	rwlock_read(&other->ri_lock);
+	RangeIterator_LockRead(other);
 	self->ri_range = other->ri_range;
 	self->ri_index = other->ri_index;
 	self->ri_first = other->ri_first;
 	Dee_Incref(self->ri_range);
 	Dee_Incref(self->ri_index);
-	rwlock_endread(&other->ri_lock);
+	RangeIterator_LockEndRead(other);
 	if (DeeObject_InplaceDeepCopy(&self->ri_index))
 		goto err_r;
 	if (DeeObject_InplaceDeepCopy((DeeObject **)&self->ri_range))
 		goto err_r;
-	rwlock_init(&self->ri_lock);
+	atomic_rwlock_init(&self->ri_lock);
 	self->ri_end  = self->ri_range->r_end;
 	self->ri_step = self->ri_range->r_step;
 	return 0;
@@ -188,9 +188,9 @@ ri_fini(RangeIterator *__restrict self) {
 PRIVATE NONNULL((1, 2)) void DCALL
 ri_visit(RangeIterator *__restrict self,
          dvisit_t proc, void *arg) {
-	rwlock_read(&self->ri_lock);
+	RangeIterator_LockRead(self);
 	Dee_Visit(self->ri_index);
-	rwlock_endread(&self->ri_lock);
+	RangeIterator_LockEndRead(self);
 	Dee_Visit(self->ri_range);
 }
 
@@ -201,11 +201,12 @@ ri_next(RangeIterator *__restrict self) {
 	int temp;
 	bool is_first;
 again:
-	rwlock_read(&self->ri_lock);
-	new_index = old_index = self->ri_index;
-	is_first              = self->ri_first;
+	RangeIterator_LockRead(self);
+	new_index = self->ri_index;
+	old_index = self->ri_index;
+	is_first  = self->ri_first;
 	Dee_Incref(new_index);
-	rwlock_endread(&self->ri_lock);
+	RangeIterator_LockEndRead(self);
 
 	/* Skip the index modification on the first loop. */
 	if (!is_first) {
@@ -229,10 +230,10 @@ again:
 	}
 
 	/* Save the new index object. */
-	rwlock_write(&self->ri_lock);
+	RangeIterator_LockWrite(self);
 	if unlikely(self->ri_index != old_index ||
 	            self->ri_first != is_first) {
-		rwlock_endwrite(&self->ri_lock);
+		RangeIterator_LockEndWrite(self);
 		Dee_Decref(new_index);
 		goto again;
 	}
@@ -240,7 +241,7 @@ again:
 	Dee_Incref(new_index);
 	self->ri_index = new_index;
 	self->ri_first = false;
-	rwlock_endwrite(&self->ri_lock);
+	RangeIterator_LockEndWrite(self);
 	Dee_Decref(old_index); /* Decref() the old index. */
 	return new_index;
 err_ni:
@@ -255,20 +256,20 @@ ri_get_next_index(RangeIterator *__restrict self) {
 	DREF DeeObject *old_index;
 	int temp;
 again:
-	rwlock_read(&self->ri_lock);
+	RangeIterator_LockRead(self);
 	new_index = old_index = self->ri_index;
 	Dee_Incref(new_index);
 	if (!self->ri_first) {
-		rwlock_endread(&self->ri_lock);
+		RangeIterator_LockEndRead(self);
 		temp = self->ri_step
 		       ? DeeObject_InplaceAdd(&new_index, self->ri_step)
 		       : DeeObject_Inc(&new_index);
 		if unlikely(temp)
 			goto err_r;
 		/* Save the new index object. */
-		rwlock_write(&self->ri_lock);
+		RangeIterator_LockWrite(self);
 		if unlikely(self->ri_index != old_index || self->ri_first) {
-			rwlock_endwrite(&self->ri_lock);
+			RangeIterator_LockEndWrite(self);
 			Dee_Decref(new_index);
 			goto again;
 		}
@@ -276,10 +277,10 @@ again:
 		Dee_Incref(new_index);
 		self->ri_index = new_index;
 		self->ri_first = true;
-		rwlock_endwrite(&self->ri_lock);
+		RangeIterator_LockEndWrite(self);
 		Dee_Decref(old_index); /* Decref() the old index. */
 	} else {
-		rwlock_endread(&self->ri_lock);
+		RangeIterator_LockEndRead(self);
 	}
 	return new_index;
 err_r:
@@ -303,23 +304,23 @@ ri_bool(RangeIterator *__restrict self) {
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 ri_index_get(RangeIterator *__restrict self) {
 	DREF DeeObject *result;
-	rwlock_read(&self->ri_lock);
+	RangeIterator_LockRead(self);
 	result = self->ri_index;
 	Dee_Incref(result);
-	rwlock_endread(&self->ri_lock);
+	RangeIterator_LockEndRead(self);
 	return result;
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 ri_index_del(RangeIterator *__restrict self) {
 	DREF DeeObject *old_index;
-	rwlock_write(&self->ri_lock);
+	RangeIterator_LockWrite(self);
 	old_index = self->ri_index;
 	/* Assign the original begin-index. */
 	self->ri_index = self->ri_range->r_start;
 	self->ri_first = true;
 	Dee_Incref(self->ri_index);
-	rwlock_endwrite(&self->ri_lock);
+	RangeIterator_LockEndWrite(self);
 	Dee_Decref(old_index);
 	return 0;
 }
@@ -332,13 +333,13 @@ ri_index_set(RangeIterator *__restrict self,
 		return err_reference_loop((DeeObject *)self, value);
 	/* XXX: Race condition: What if `value' starts referencing
 	 *      us before we acquire the following lock? */
-	rwlock_write(&self->ri_lock);
+	RangeIterator_LockWrite(self);
 	old_index = self->ri_index;
 	/* Assign the given value. */
 	self->ri_index = value;
 	self->ri_first = true;
 	Dee_Incref(value);
-	rwlock_endwrite(&self->ri_lock);
+	RangeIterator_LockEndWrite(self);
 	Dee_Decref(old_index);
 	return 0;
 }
@@ -495,7 +496,7 @@ range_iter(Range *__restrict self) {
 	Dee_Incref(result->ri_index);
 	Dee_Incref(result->ri_range);
 	result->ri_first = true;
-	rwlock_init(&result->ri_lock);
+	atomic_rwlock_init(&result->ri_lock);
 done:
 	return result;
 }

@@ -30,7 +30,7 @@
 #include <deemon/stringutils.h>
 #include <deemon/system-features.h> /* memcpy(), bzero(), ... */
 #include <deemon/util/atomic.h>
-#include <deemon/util/rwlock.h>
+#include <deemon/util/lock.h>
 
 #include <hybrid/minmax.h>
 
@@ -132,8 +132,24 @@ PRIVATE DREF String *latin1_chars[256] = {
 };
 
 #ifndef CONFIG_NO_THREADS
-PRIVATE rwlock_t latin1_chars_lock = RWLOCK_INIT;
+PRIVATE atomic_rwlock_t latin1_chars_lock = ATOMIC_RWLOCK_INIT;
 #endif /* !CONFIG_NO_THREADS */
+#define latin1_chars_lock_reading()    Dee_atomic_rwlock_reading(&latin1_chars_lock)
+#define latin1_chars_lock_writing()    Dee_atomic_rwlock_writing(&latin1_chars_lock)
+#define latin1_chars_lock_tryread()    Dee_atomic_rwlock_tryread(&latin1_chars_lock)
+#define latin1_chars_lock_trywrite()   Dee_atomic_rwlock_trywrite(&latin1_chars_lock)
+#define latin1_chars_lock_canread()    Dee_atomic_rwlock_canread(&latin1_chars_lock)
+#define latin1_chars_lock_canwrite()   Dee_atomic_rwlock_canwrite(&latin1_chars_lock)
+#define latin1_chars_lock_waitread()   Dee_atomic_rwlock_waitread(&latin1_chars_lock)
+#define latin1_chars_lock_waitwrite()  Dee_atomic_rwlock_waitwrite(&latin1_chars_lock)
+#define latin1_chars_lock_read()       Dee_atomic_rwlock_read(&latin1_chars_lock)
+#define latin1_chars_lock_write()      Dee_atomic_rwlock_write(&latin1_chars_lock)
+#define latin1_chars_lock_tryupgrade() Dee_atomic_rwlock_tryupgrade(&latin1_chars_lock)
+#define latin1_chars_lock_upgrade()    Dee_atomic_rwlock_upgrade(&latin1_chars_lock)
+#define latin1_chars_lock_downgrade()  Dee_atomic_rwlock_downgrade(&latin1_chars_lock)
+#define latin1_chars_lock_endwrite()   Dee_atomic_rwlock_endwrite(&latin1_chars_lock)
+#define latin1_chars_lock_endread()    Dee_atomic_rwlock_endread(&latin1_chars_lock)
+#define latin1_chars_lock_end()        Dee_atomic_rwlock_end(&latin1_chars_lock)
 
 INTERN size_t DCALL
 latincache_clear(size_t max_clear) {
@@ -142,14 +158,14 @@ latincache_clear(size_t max_clear) {
 #ifndef CONFIG_NO_THREADS
 again:
 #endif /* !CONFIG_NO_THREADS */
-	rwlock_write(&latin1_chars_lock);
+	latin1_chars_lock_write();
 	for (; iter < COMPILER_ENDOF(latin1_chars); ++iter) {
 		DREF String *ob = *iter;
 		if (!ob)
 			continue;
 		*iter = NULL;
 		if (!Dee_DecrefIfNotOne(ob)) {
-			rwlock_endwrite(&latin1_chars_lock);
+			latin1_chars_lock_endwrite();
 			result += offsetof(String, s_str) + 2 * sizeof(char);
 			Dee_Decref(ob);
 			if (result >= max_clear)
@@ -159,25 +175,25 @@ again:
 #endif /* !CONFIG_NO_THREADS */
 		}
 	}
-	rwlock_endwrite(&latin1_chars_lock);
+	latin1_chars_lock_endwrite();
 done:
 	return result;
 }
 
 PUBLIC WUNUSED DREF DeeObject *(DCALL DeeString_Chr8)(uint8_t ch) {
 	DREF String *result;
-	rwlock_read(&latin1_chars_lock);
+	latin1_chars_lock_read();
 	result = latin1_chars[ch];
 	if (result) {
 		Dee_Incref(result);
-		rwlock_endread(&latin1_chars_lock);
+		latin1_chars_lock_endread();
 	} else {
-		rwlock_endread(&latin1_chars_lock);
+		latin1_chars_lock_endread();
 		result = (DREF String *)DeeString_NewBuffer(1);
 		if unlikely(!result)
 			goto err;
 		result->s_str[0] = (char)ch;
-		rwlock_write(&latin1_chars_lock);
+		latin1_chars_lock_write();
 		if unlikely(latin1_chars[ch] != NULL) {
 			DREF String *new_result = latin1_chars[ch];
 			/* Special case: The string has been created in the mean time.
@@ -185,13 +201,13 @@ PUBLIC WUNUSED DREF DeeObject *(DCALL DeeString_Chr8)(uint8_t ch) {
 			 * a GC callback invoked during allocation of our string did
 			 * the job. */
 			Dee_Incref(new_result);
-			rwlock_endwrite(&latin1_chars_lock);
+			latin1_chars_lock_endwrite();
 			Dee_Decref(result);
 			return (DREF DeeObject *)new_result;
 		}
 		Dee_Incref(result); /* The reference stored in `latin1_chars' */
 		latin1_chars[ch] = result;
-		rwlock_endwrite(&latin1_chars_lock);
+		latin1_chars_lock_endwrite();
 	}
 	return (DREF DeeObject *)result;
 err:

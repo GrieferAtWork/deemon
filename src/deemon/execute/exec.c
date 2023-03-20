@@ -34,7 +34,7 @@
 #include <deemon/system-features.h>
 #include <deemon/thread.h>
 #include <deemon/util/atomic.h>
-#include <deemon/util/rwlock.h>
+#include <deemon/util/lock.h>
 
 #ifndef CONFIG_NO_THREADS
 #include <hybrid/sched/yield.h>
@@ -440,8 +440,14 @@ err:
 #ifndef CONFIG_NO_STDLIB
 
 #ifndef CONFIG_NO_THREADS
-PRIVATE rwlock_t atexit_lock = RWLOCK_INIT;
+PRIVATE atomic_lock_t atexit_lock = ATOMIC_LOCK_INIT;
 #endif /* !CONFIG_NO_THREADS */
+#define atexit_lock_available()  Dee_atomic_lock_available(&atexit_lock)
+#define atexit_lock_acquired()   Dee_atomic_lock_acquired(&atexit_lock)
+#define atexit_lock_tryacquire() Dee_atomic_lock_tryacquire(&atexit_lock)
+#define atexit_lock_acquire()    Dee_atomic_lock_acquire(&atexit_lock)
+#define atexit_lock_waitfor()    Dee_atomic_lock_waitfor(&atexit_lock)
+#define atexit_lock_release()    Dee_atomic_lock_release(&atexit_lock)
 
 struct atexit_entry {
 	DREF DeeObject      *ae_func; /* [1..1] The function that would be invoked. */
@@ -470,10 +476,10 @@ PUBLIC int DCALL
 Dee_RunAtExit(uint16_t flags) {
 	struct atexit_entry *list;
 	size_t size;
-	rwlock_write(&atexit_lock);
+	atexit_lock_acquire();
 	/* Only execute atexit() once! */
 	if ((atexit_mode & ATEXIT_FDIDRUN) && !atexit_size) {
-		rwlock_endwrite(&atexit_lock);
+		atexit_lock_release();
 		goto done;
 	}
 	atexit_mode |= ATEXIT_FDIDRUN;
@@ -481,7 +487,7 @@ Dee_RunAtExit(uint16_t flags) {
 	size        = atexit_size;
 	atexit_list = NULL;
 	atexit_size = 0;
-	rwlock_endwrite(&atexit_lock);
+	atexit_lock_release();
 	while (size--) {
 		if (!(flags & DEE_RUNATEXIT_FDONTRUN)) {
 			DREF DeeObject *temp;
@@ -501,12 +507,12 @@ Dee_RunAtExit(uint16_t flags) {
 					 * able to register additional callbacks, meaning that the
 					 * list must still be empty) */
 					++size; /* Restore the one entry we've just failed to execute. */
-					rwlock_write(&atexit_lock);
+					atexit_lock_acquire();
 					ASSERT(atexit_list == NULL);
 					ASSERT(atexit_size == 0);
 					atexit_list = list;
 					atexit_size = size;
-					rwlock_endwrite(&atexit_lock);
+					atexit_lock_release();
 					return -1;
 				}
 			} else {
@@ -543,10 +549,10 @@ Dee_AtExit(DeeObject *callback, DeeObject *args) {
 	ASSERT_OBJECT(callback);
 	ASSERT_OBJECT_TYPE_EXACT(args, &DeeTuple_Type);
 again:
-	rwlock_write(&atexit_lock);
+	atexit_lock_acquire();
 	/* Check if we're still allowed to register new entries. */
 	if (atexit_mode & ATEXIT_FDIDRUN) {
-		rwlock_endwrite(&atexit_lock);
+		atexit_lock_release();
 		DeeError_Throwf(&DeeError_RuntimeError,
 		                "atexit() cannot be called after "
 		                "callbacks had already been executed");
@@ -558,7 +564,7 @@ again:
 	                                                  sizeof(struct atexit_entry));
 	if unlikely(!new_list) {
 		size_t old_size = atexit_size;
-		rwlock_endwrite(&atexit_lock);
+		atexit_lock_release();
 		if (Dee_CollectMemory((old_size + 1) * sizeof(struct atexit_entry)))
 			goto again;
 		goto err;
@@ -579,7 +585,7 @@ again:
 	Dee_Incref(args);
 	new_list->ae_func = callback;
 	new_list->ae_args = (DREF DeeTupleObject *)args;
-	rwlock_endwrite(&atexit_lock);
+	atexit_lock_release();
 	return 0;
 err:
 	return -1;

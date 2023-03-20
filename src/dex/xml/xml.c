@@ -142,14 +142,14 @@ INTERN WUNUSED NONNULL((1, 2)) DREF XMLNode *DCALL
 XMLNode_GetPrev(XMLNode *__restrict self,
                 XMLNode *__restrict parent) {
 	DREF XMLNode *result;
-	rwlock_read(&parent->xn_lock);
+	atomic_rwlock_read(&parent->xn_lock);
 	result = self->xn_sib_prev;
 	if (result) {
 		XMLNode_Incref(result);
-		rwlock_endread(&parent->xn_lock);
+		atomic_rwlock_endread(&parent->xn_lock);
 		return result;
 	}
-	rwlock_endread(&parent->xn_lock);
+	atomic_rwlock_endread(&parent->xn_lock);
 	return (DREF XMLNode *)ITER_DONE;
 }
 
@@ -160,13 +160,13 @@ XMLNode_GetNext(XMLNode *self,
 	char *iter, *end, *temp;
 	bool ends_with_slash;
 again:
-	rwlock_read(&parent->xn_lock);
+	atomic_rwlock_read(&parent->xn_lock);
 	result = !self
 	         ? parent->xn_children.ncs_head
 	         : self->xn_sib_next;
 	if (result) {
 		XMLNode_Incref(result);
-		rwlock_endread(&parent->xn_lock);
+		atomic_rwlock_endread(&parent->xn_lock);
 		return result;
 	}
 	ASSERT(self == parent->xn_children.ncs_tail);
@@ -174,16 +174,16 @@ again:
 	end  = (char *)parent->xn_text_end;
 	ASSERT(iter <= end);
 	if (iter >= end) {
-		rwlock_endread(&parent->xn_lock);
+		atomic_rwlock_endread(&parent->xn_lock);
 		return (DREF XMLNode *)ITER_DONE;
 	}
-	if (!rwlock_upgrade(&parent->xn_lock)) {
+	if (!atomic_rwlock_upgrade(&parent->xn_lock)) {
 		COMPILER_READ_BARRIER();
 		iter = (char *)parent->xn_text_next;
 		end  = (char *)parent->xn_text_end;
 		ASSERT(iter <= end);
 		if (iter >= end) {
-			rwlock_endwrite(&parent->xn_lock);
+			atomic_rwlock_endwrite(&parent->xn_lock);
 			return (DREF XMLNode *)ITER_DONE;
 		}
 	}
@@ -194,7 +194,7 @@ find_block_start:
 	set_end_of_text:
 		/* No more child nodes. */
 		parent->xn_text_next = end;
-		rwlock_endwrite(&parent->xn_lock);
+		atomic_rwlock_endwrite(&parent->xn_lock);
 		return (DREF XMLNode *)ITER_DONE;
 	}
 	++iter;
@@ -218,13 +218,13 @@ find_block_start:
 	result = XMLNode_TryAlloc();
 	if unlikely(!result) {
 		parent->xn_text_next = iter;
-		rwlock_endwrite(&parent->xn_lock);
+		atomic_rwlock_endwrite(&parent->xn_lock);
 		if (Dee_CollectMemory(sizeof(XMLNode)))
 			goto again;
 		goto err;
 	}
 	result->xn_refcnt = 1;
-	rwlock_init(&result->xn_lock);
+	atomic_rwlock_init(&result->xn_lock);
 	LIST_INIT(&result->xn_changes);
 	LIST_ENTRY_UNBOUND_INIT(&result->xn_changed);
 	if ((result->xn_sib_prev = self) != NULL) {
@@ -369,7 +369,7 @@ done:
 		}
 	}
 	XMLNode_Incref(result); /* The reference that we're returning. */
-	rwlock_endwrite(&parent->xn_lock);
+	atomic_rwlock_endwrite(&parent->xn_lock);
 	return (DREF XMLNode *)ITER_DONE;
 err:
 	return NULL;

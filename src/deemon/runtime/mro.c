@@ -32,10 +32,11 @@
 #include <deemon/mro.h>
 #include <deemon/none.h>
 #include <deemon/object.h>
-#include <deemon/system-features.h> /* bcmpc(), ... */
 #include <deemon/objmethod.h>
 #include <deemon/string.h>
+#include <deemon/system-features.h> /* bcmpc(), ... */
 #include <deemon/tuple.h>
+#include <deemon/util/lock.h>
 
 #include "runtime_error.h"
 #include "strings.h"
@@ -56,8 +57,15 @@ DeeSystem_DEFINE_strcmp(dee_strcmp)
 #endif /* NDEBUG */
 
 #ifndef CONFIG_NO_THREADS
-PRIVATE rwlock_t membercache_list_lock = RWLOCK_INIT;
+PRIVATE atomic_lock_t membercache_list_lock = ATOMIC_LOCK_INIT;
 #endif /* !CONFIG_NO_THREADS */
+
+#define membercache_list_lock_available()  Dee_atomic_lock_available(&membercache_list_lock)
+#define membercache_list_lock_acquired()   Dee_atomic_lock_acquired(&membercache_list_lock)
+#define membercache_list_lock_tryacquire() Dee_atomic_lock_tryacquire(&membercache_list_lock)
+#define membercache_list_lock_acquire()    Dee_atomic_lock_acquire(&membercache_list_lock)
+#define membercache_list_lock_waitfor()    Dee_atomic_lock_waitfor(&membercache_list_lock)
+#define membercache_list_lock_release()    Dee_atomic_lock_release(&membercache_list_lock)
 
 /* [0..1][lock(membercache_list_lock)]
  *  Linked list of all existing type-member caches. */
@@ -91,7 +99,7 @@ membercache_fini(struct membercache *__restrict self) {
 #ifndef CONFIG_NO_THREADS
 	COMPILER_READ_BARRIER();
 #endif /* !CONFIG_NO_THREADS */
-	rwlock_write(&membercache_list_lock);
+	membercache_list_lock_acquire();
 	ASSERT(!self->mc_table);
 	/* Check check `mc_pself != NULL' again because another thread
 	 * may have cleared the tables of all member caches while collecting
@@ -100,14 +108,14 @@ membercache_fini(struct membercache *__restrict self) {
 		if ((*self->mc_pself = self->mc_next) != NULL)
 			self->mc_next->mc_pself = self->mc_pself;
 	}
-	rwlock_endwrite(&membercache_list_lock);
+	membercache_list_lock_release();
 }
 
 INTERN size_t DCALL
 membercache_clear(size_t max_clear) {
 	size_t result = 0;
 	struct membercache *entry;
-	rwlock_write(&membercache_list_lock);
+	membercache_list_lock_acquire();
 	while ((entry = membercache_list) != NULL) {
 		MEMBERCACHE_WRITE(entry);
 		/* Pop this entry from the global chain. */
@@ -129,7 +137,7 @@ membercache_clear(size_t max_clear) {
 		if (result >= max_clear)
 			break;
 	}
-	rwlock_endwrite(&membercache_list_lock);
+	membercache_list_lock_release();
 	return result;
 }
 
@@ -152,12 +160,12 @@ membercache_rehash(struct membercache *__restrict self) {
 		/* This is the first time that this cache is being rehashed.
 		 * >> Register it in the global chain of member caches,
 		 *    so we can clear it when memory gets low. */
-		rwlock_write(&membercache_list_lock);
+		membercache_list_lock_acquire();
 		if ((self->mc_next = membercache_list) != NULL)
 			membercache_list->mc_pself = &self->mc_next;
 		self->mc_pself   = &membercache_list;
 		membercache_list = self;
-		rwlock_endwrite(&membercache_list_lock);
+		membercache_list_lock_release();
 	} else {
 		/* Re-insert all existing items into the new table vector. */
 		end = (iter = self->mc_table) + (self->mc_mask + 1);

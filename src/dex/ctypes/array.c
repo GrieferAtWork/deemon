@@ -690,7 +690,7 @@ INTERN DeeArrayTypeObject DeeArray_Type = {
 			/* .tp_class_members = */ array_class_members
 		},
 #ifndef CONFIG_NO_THREADS
-		/* .st_cachelock = */ RWLOCK_INIT,
+		/* .st_cachelock = */ ATOMIC_RWLOCK_INIT,
 #endif /* !CONFIG_NO_THREADS */
 		/* .st_pointer  = */ &DeePointer_Type,
 		/* .st_lvalue   = */ &DeeLValue_Type,
@@ -819,7 +819,7 @@ DeeSType_Array(DeeSTypeObject *__restrict self,
 	DREF DeeArrayTypeObject *result, *new_result;
 	DREF struct array_type_list *pbucket;
 	ASSERT_OBJECT_TYPE(DeeSType_AsType(self), &DeeSType_Type);
-	rwlock_read(&self->st_cachelock);
+	DeeSType_CacheLockRead(self);
 	ASSERT(!self->st_array.sa_size ||
 	       self->st_array.sa_mask);
 	if (self->st_array.sa_size) {
@@ -829,11 +829,11 @@ DeeSType_Array(DeeSTypeObject *__restrict self,
 
 		/* Check if we can re-use an existing type. */
 		if (result && Dee_IncrefIfNotZero(DeeArrayType_AsType(result))) {
-			rwlock_endread(&self->st_cachelock);
+			DeeSType_CacheLockEndRead(self);
 			return result;
 		}
 	}
-	rwlock_endread(&self->st_cachelock);
+	DeeSType_CacheLockEndRead(self);
 
 	/* Construct a new array type. */
 	result = arraytype_new(self, num_items);
@@ -842,7 +842,7 @@ DeeSType_Array(DeeSTypeObject *__restrict self,
 
 	/* Add the new type to the cache. */
 register_type:
-	rwlock_write(&self->st_cachelock);
+	DeeSType_CacheLockWrite(self);
 	ASSERT(!self->st_array.sa_size ||
 	       self->st_array.sa_mask);
 	if (self->st_array.sa_size) {
@@ -852,7 +852,7 @@ register_type:
 
 		/* Check if we can re-use an existing type. */
 		if (new_result && Dee_IncrefIfNotZero(DeeArrayType_AsType(new_result))) {
-			rwlock_endread(&self->st_cachelock);
+			DeeSType_CacheLockEndRead(self);
 			Dee_Decref(DeeArrayType_AsType(result));
 			return new_result;
 		}
@@ -864,7 +864,7 @@ register_type:
 	     !self->st_array.sa_mask)) {
 
 		/* No space at all! */
-		rwlock_endwrite(&self->st_cachelock);
+		DeeSType_CacheLockEndWrite(self);
 
 		/* Collect enough memory for a 1-item hash map. */
 		if (Dee_CollectMemory(sizeof(DeeArrayTypeObject *)))
@@ -879,7 +879,7 @@ register_type:
 	/* Insert the new array type into the hash-map. */
 	pbucket = &self->st_array.sa_list[num_items & self->st_array.sa_mask];
 	LIST_INSERT_HEAD(pbucket, result, at_chain); /* Weak reference. */
-	rwlock_endwrite(&self->st_cachelock);
+	DeeSType_CacheLockEndWrite(self);
 done:
 	return result;
 }

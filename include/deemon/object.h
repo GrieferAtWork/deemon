@@ -2681,33 +2681,34 @@ DFUNDEF WUNUSED NONNULL((1)) int DCALL DeeObject_InplaceDeepCopy(/*in|out*/ DREF
 #define DeeObject_XInplaceDeepCopy(pself) (!*(pself) ? 0 : DeeObject_InplaceDeepCopy(pself))
 #ifndef CONFIG_NO_THREADS
 /* A helper functions to acquire the proper read/write locks on a given
- * Dee_rwlock_t when accessing memory pointed to by the given `*pself'.
- * This is highly useful due to the fact that practically the only
- * place where `DeeObject_InplaceDeepCopy()' might ever be encountered,
- * is in tp_deepload operators, where using it on a raw pointer is
- * not thread-safe, considering the fact that the caller must probably
- * be holding some kind of lock (presumably an `Dee_rwlock_t'), which must
- * be used in the following order to safely replace the field with a
- * deepcopy (the safe order of operations that is then performed by this helper):
+ * Dee_atomic_rwlock_t when accessing memory pointed to by the given `*pself'.
+ *
+ * This is highly useful due to the fact that practically the only place where
+ * `DeeObject_InplaceDeepCopy()' might ever be encountered, is in tp_deepload
+ * operators, where using it on a raw pointer is not thread-safe, considering
+ * the fact that the caller must probably be holding some kind of lock
+ * (presumably an `Dee_atomic_rwlock_t'), which must be used in the following
+ * order to safely replace the field with a deepcopy (the safe order of
+ * operations that is then performed by this helper):
  * >> DREF DeeObject *temp, *copy;
- * >> rwlock_read(plock);
+ * >> Dee_atomic_rwlock_read(plock);
  * >> temp = *pself;
  * >> #if IS_XDEEPCOPY
  * >> if (!temp) {
- * >>     rwlock_endread(plock);
+ * >>     Dee_atomic_rwlock_endread(plock);
  * >>     return 0;
  * >> }
  * >> #endif // IS_XDEEPCOPY
  * >> Dee_Incref(temp);
- * >> rwlock_endread(plock);
+ * >> Dee_atomic_rwlock_endread(plock);
  * >> copy = DeeObject_DeepCopy(temp);
  * >> Dee_Decref(temp);
  * >> if unlikely(!copy)
  * >>    return -1;
- * >> rwlock_write(plock);
+ * >> Dee_atomic_rwlock_write(plock);
  * >> temp   = *pself; // Inherit
  * >> *pself = copy;   // Inherit
- * >> rwlock_endwrite(plock);
+ * >> Dee_atomic_rwlock_endwrite(plock);
  * >> #if IS_XDEEPCOPY
  * >> Dee_XDecref(temp);
  * >> #else // IS_XDEEPCOPY

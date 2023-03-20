@@ -708,10 +708,10 @@ libdisasm_printconst(dformatprinter printer, void *arg,
 				goto print_generic;
 			return DeeFormat_Printf(printer, arg, "const %u /* invalid cid */", (unsigned int)cid);
 		}
-		atomic_rwlock_read(&code->co_static_lock);
+		DeeCode_StaticLockRead(code);
 		constval = code->co_staticv[cid];
 		Dee_Incref(constval);
-		atomic_rwlock_endread(&code->co_static_lock);
+		DeeCode_StaticLockEndRead(code);
 		if (DeeInt_Check(constval)) {
 			dssize_t temp, result = 0;
 			unsigned int numsys;
@@ -768,10 +768,10 @@ libdisasm_printstatic(dformatprinter printer, void *arg,
 #if 0
 		if (readonly && !(flags & PCODE_FNOARGCOMMENT)) {
 			DREF DeeObject *init;
-			atomic_rwlock_read(&code->co_static_lock);
+			DeeCode_StaticLockRead(code);
 			init = code->co_staticv[sid];
 			Dee_Incref(init);
-			atomic_rwlock_endread(&code->co_static_lock);
+			DeeCode_StaticLockEndRead(code);
 			return DeeFormat_Printf(printer, arg, "static %u /* %R */", sid, init);
 		}
 #endif
@@ -991,7 +991,7 @@ find_class_descriptor_in_constants(DeeCodeObject *__restrict code,
 	DREF DeeClassDescriptorObject *result;
 	uint16_t i;
 	bool has_child_code = false;
-	atomic_rwlock_read(&code->co_static_lock);
+	DeeCode_StaticLockRead(code);
 	for (i = 0; i < code->co_staticc; ++i) {
 		result = (DeeClassDescriptorObject *)code->co_staticv[i];
 		if (!DeeClassDescriptor_Check(result)) {
@@ -1005,7 +1005,7 @@ find_class_descriptor_in_constants(DeeCodeObject *__restrict code,
 			continue;
 		/* Found it! */
 		Dee_Incref(result);
-		atomic_rwlock_endread(&code->co_static_lock);
+		DeeCode_StaticLockEndRead(code);
 		return result;
 	}
 	if (has_child_code) {
@@ -1015,16 +1015,16 @@ find_class_descriptor_in_constants(DeeCodeObject *__restrict code,
 			child_code = (DREF DeeCodeObject *)code->co_staticv[i];
 			if (!DeeCode_Check(child_code))
 				continue;
-			atomic_rwlock_endread(&code->co_static_lock);
+			DeeCode_StaticLockEndRead(code);
 			result = find_class_descriptor_in_constants(child_code, class_name);
 			if (result) {
 				Dee_Decref(child_code);
 				return result;
 			}
-			atomic_rwlock_read(&code->co_static_lock);
+			DeeCode_StaticLockRead(code);
 		}
 	}
-	atomic_rwlock_endread(&code->co_static_lock);
+	DeeCode_StaticLockEndRead(code);
 	return NULL;
 }
 
@@ -1052,17 +1052,17 @@ libdisasm_printmembername(dformatprinter printer, void *arg,
 				    !(class_sym->ss_flags & (MODSYM_FPROPERTY | MODSYM_FEXTERN))) {
 					DREF DeeObject *class_type;
 					DeeClassDescriptorObject *desc;
-					atomic_rwlock_read(&mod->mo_lock);
+					DeeModule_LockRead(mod);
 					class_type = mod->mo_globalv[class_sym->ss_index];
 					Dee_XIncref(class_type);
-					atomic_rwlock_endread(&mod->mo_lock);
+					DeeModule_LockEndRead(mod);
 					if (!class_type) {
 						DREF DeeCodeObject *root;
 search_module_root_constants:
-						atomic_rwlock_read(&mod->mo_lock);
+						DeeModule_LockRead(mod);
 						root = mod->mo_root;
 						Dee_XIncref(root);
-						atomic_rwlock_endread(&mod->mo_lock);
+						DeeModule_LockEndRead(mod);
 						if (root) {
 							desc = find_class_descriptor_in_constants(root, class_name);
 							Dee_Decref(root);

@@ -180,14 +180,14 @@ DeeFastSeq_GetItemNB(DeeObject *__restrict self, size_t index) {
 		return_reference_(result);
 	}
 	ASSERT(tp_self == &SharedVector_Type);
-	rwlock_read(&((SharedVector *)self)->sv_lock);
+	SharedVector_LockRead((SharedVector *)self);
 	if unlikely(index >= ((SharedVector *)self)->sv_length) {
-		rwlock_endread(&((SharedVector *)self)->sv_lock);
+		SharedVector_LockEndRead((SharedVector *)self);
 		return_none;
 	}
 	result = ((SharedVector *)self)->sv_vector[index];
 	Dee_Incref(result);
-	rwlock_endread(&((SharedVector *)self)->sv_lock);
+	SharedVector_LockEndRead((SharedVector *)self);
 	return result;
 }
 

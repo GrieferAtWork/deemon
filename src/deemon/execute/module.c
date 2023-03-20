@@ -136,10 +136,10 @@ DeeModule_GetRoot(DeeObject *__restrict self,
 	result = (DREF DeeFunctionObject *)DeeObject_Malloc(offsetof(DeeFunctionObject, fo_refv));
 	if unlikely(!result)
 		goto err;
-	rwlock_read(&me->mo_lock);
+	DeeModule_LockRead(me);
 	result->fo_code = me->mo_root;
 	Dee_XIncref(result->fo_code);
-	rwlock_endread(&me->mo_lock);
+	DeeModule_LockEndRead(me);
 	if (!result->fo_code) {
 		result->fo_code = &empty_code;
 		Dee_Incref(&empty_code);
@@ -247,10 +247,10 @@ DeeModule_GetAttrSymbol(DeeModuleObject *__restrict self,
 	if likely(!(symbol->ss_flags & (MODSYM_FEXTERN | MODSYM_FPROPERTY))) {
 read_symbol:
 		ASSERT(symbol->ss_index < self->mo_globalc);
-		rwlock_read(&self->mo_lock);
+		DeeModule_LockRead(self);
 		result = self->mo_globalv[symbol->ss_index];
 		Dee_XIncref(result);
-		rwlock_endread(&self->mo_lock);
+		DeeModule_LockEndRead(self);
 		if unlikely(!result)
 			err_unbound_global(self, symbol->ss_index);
 		return result;
@@ -258,10 +258,10 @@ read_symbol:
 	/* External symbol, or property. */
 	if (symbol->ss_flags & MODSYM_FPROPERTY) {
 		DREF DeeObject *callback;
-		rwlock_read(&self->mo_lock);
+		DeeModule_LockRead(self);
 		callback = self->mo_globalv[symbol->ss_index + MODULE_PROPERTY_GET];
 		Dee_XIncref(callback);
-		rwlock_endread(&self->mo_lock);
+		DeeModule_LockEndRead(self);
 		if unlikely(!callback) {
 			err_module_cannot_read_property(self, MODULE_SYMBOL_GETNAMESTR(symbol));
 			return NULL;
@@ -286,18 +286,18 @@ DeeModule_BoundAttrSymbol(DeeModuleObject *__restrict self,
 		bool result;
 read_symbol:
 		ASSERT(symbol->ss_index < self->mo_globalc);
-		rwlock_read(&self->mo_lock);
+		DeeModule_LockRead(self);
 		result = self->mo_globalv[symbol->ss_index] != NULL;
-		rwlock_endread(&self->mo_lock);
+		DeeModule_LockEndRead(self);
 		return result;
 	}
 	/* External symbol, or property. */
 	if (symbol->ss_flags & MODSYM_FPROPERTY) {
 		DREF DeeObject *callback, *callback_result;
-		rwlock_read(&self->mo_lock);
+		DeeModule_LockRead(self);
 		callback = self->mo_globalv[symbol->ss_index + MODULE_PROPERTY_GET];
 		Dee_XIncref(callback);
-		rwlock_endread(&self->mo_lock);
+		DeeModule_LockEndRead(self);
 		if unlikely(!callback)
 			return 0;
 		/* Invoke the property callback. */
@@ -469,11 +469,11 @@ DeeModule_DelAttrSymbol(DeeModuleObject *__restrict self,
 			return err_module_readonly_global(self, MODULE_SYMBOL_GETNAMESTR(symbol));
 		if (symbol->ss_flags & MODSYM_FPROPERTY) {
 			DREF DeeObject *callback, *temp;
-			rwlock_read(&self->mo_lock);
+			DeeModule_LockRead(self);
 			ASSERT(symbol->ss_index + MODULE_PROPERTY_DEL < self->mo_globalc);
 			callback = self->mo_globalv[symbol->ss_index + MODULE_PROPERTY_DEL];
 			Dee_XIncref(callback);
-			rwlock_endread(&self->mo_lock);
+			DeeModule_LockEndRead(self);
 			if unlikely(!callback)
 				return err_module_cannot_delete_property(self, MODULE_SYMBOL_GETNAMESTR(symbol));
 			/* Invoke the property callback. */
@@ -487,10 +487,10 @@ DeeModule_DelAttrSymbol(DeeModuleObject *__restrict self,
 		self = self->mo_importv[symbol->ss_extern.ss_impid];
 	}
 	ASSERT(symbol->ss_index < self->mo_globalc);
-	rwlock_write(&self->mo_lock);
-	old_value                          = self->mo_globalv[symbol->ss_index];
+	DeeModule_LockWrite(self);
+	old_value = self->mo_globalv[symbol->ss_index];
 	self->mo_globalv[symbol->ss_index] = NULL;
-	rwlock_endwrite(&self->mo_lock);
+	DeeModule_LockEndWrite(self);
 #ifdef CONFIG_ERROR_DELETE_UNBOUND
 	if unlikely(!old_value) {
 		err_unbound_global(self, symbol->ss_index);
@@ -572,25 +572,25 @@ DeeModule_SetAttrSymbol(DeeModuleObject *__restrict self,
 			if (symbol->ss_flags & MODSYM_FPROPERTY)
 				goto err_is_readonly;
 			ASSERT(symbol->ss_index < self->mo_globalc);
-			rwlock_write(&self->mo_lock);
+			DeeModule_LockWrite(self);
 			/* Make sure not to allow write-access to global variables that
 			 * have already been assigned, but are marked as read-only. */
 			if unlikely(self->mo_globalv[symbol->ss_index] != NULL) {
-				rwlock_endwrite(&self->mo_lock);
+				DeeModule_LockEndWrite(self);
 err_is_readonly:
 				return err_module_readonly_global(self, MODULE_SYMBOL_GETNAMESTR(symbol));
 			}
 			Dee_Incref(value);
 			self->mo_globalv[symbol->ss_index] = value;
-			rwlock_endwrite(&self->mo_lock);
+			DeeModule_LockEndWrite(self);
 			return 0;
 		}
 		if (symbol->ss_flags & MODSYM_FPROPERTY) {
 			DREF DeeObject *callback;
-			rwlock_write(&self->mo_lock);
+			DeeModule_LockWrite(self);
 			callback = self->mo_globalv[symbol->ss_index + MODULE_PROPERTY_SET];
 			Dee_XIncref(callback);
-			rwlock_endwrite(&self->mo_lock);
+			DeeModule_LockEndWrite(self);
 			if unlikely(!callback)
 				return err_module_cannot_write_property(self, MODULE_SYMBOL_GETNAMESTR(symbol));
 			temp = DeeObject_Call(callback, 1, (DeeObject **)&value);
@@ -604,10 +604,10 @@ err_is_readonly:
 	}
 	ASSERT(symbol->ss_index < self->mo_globalc);
 	Dee_Incref(value);
-	rwlock_write(&self->mo_lock);
+	DeeModule_LockWrite(self);
 	temp                               = self->mo_globalv[symbol->ss_index];
 	self->mo_globalv[symbol->ss_index] = value;
-	rwlock_endwrite(&self->mo_lock);
+	DeeModule_LockEndWrite(self);
 	Dee_XDecref(temp);
 	return 0;
 }
@@ -1148,7 +1148,7 @@ module_enumattr(DeeTypeObject *UNUSED(tp_self),
 			if unlikely(DeeModule_RunInit((DeeObject *)self) < 0)
 				goto err_m1;
 			if (self->mo_flags & MODULE_FDIDINIT) {
-				rwlock_read(&self->mo_lock);
+				DeeModule_LockRead(self);
 				if (iter->ss_flags & MODSYM_FPROPERTY) {
 					/* Check which property operations have been bound. */
 					if (self->mo_globalv[iter->ss_index + MODULE_PROPERTY_GET])
@@ -1167,7 +1167,7 @@ module_enumattr(DeeTypeObject *UNUSED(tp_self),
 						Dee_Incref(attr_type);
 					}
 				}
-				rwlock_endread(&self->mo_lock);
+				DeeModule_LockEndRead(self);
 			}
 		}
 		doc_iter = iter;
@@ -1238,7 +1238,7 @@ DeeModule_FindAttrString(DeeModuleObject *__restrict self,
 				if unlikely(DeeModule_RunInit((DeeObject *)self) < 0)
 					goto err;
 				if (self->mo_flags & MODULE_FDIDINIT) {
-					rwlock_read(&self->mo_lock);
+					DeeModule_LockRead(self);
 					if (sym->ss_flags & MODSYM_FPROPERTY) {
 						/* Check which property operations have been bound. */
 						if (self->mo_globalv[sym->ss_index + MODULE_PROPERTY_GET])
@@ -1257,7 +1257,7 @@ DeeModule_FindAttrString(DeeModuleObject *__restrict self,
 							Dee_Incref(attr_type);
 						}
 					}
-					rwlock_endread(&self->mo_lock);
+					DeeModule_LockEndRead(self);
 				}
 			}
 			doc_sym = sym;
@@ -1487,7 +1487,7 @@ module_fini(DeeModuleObject *__restrict self) {
 PRIVATE NONNULL((1, 2)) void DCALL
 module_visit(DeeModuleObject *__restrict self,
              dvisit_t proc, void *arg) {
-	rwlock_read(&self->mo_lock);
+	DeeModule_LockRead(self);
 
 	/* Visit the root-code object. */
 	Dee_XVisit(self->mo_root);
@@ -1500,7 +1500,7 @@ module_visit(DeeModuleObject *__restrict self,
 		Dee_XVisitv(self->mo_globalv, self->mo_globalc);
 	}
 
-	rwlock_endread(&self->mo_lock);
+	DeeModule_LockEndRead(self);
 
 	/* Visit imported modules. */
 	Dee_XVisitv(self->mo_importv, self->mo_importc);
@@ -1511,7 +1511,7 @@ module_clear(DeeModuleObject *__restrict self) {
 	DREF DeeObject *buffer[16];
 	DREF DeeCodeObject *root_code;
 	size_t i, bufi = 0;
-	rwlock_write(&self->mo_lock);
+	DeeModule_LockWrite(self);
 	root_code     = self->mo_root;
 	self->mo_root = NULL;
 restart:
@@ -1527,15 +1527,15 @@ restart:
 			buffer[bufi] = ob;
 			++bufi;
 			if (bufi >= COMPILER_LENOF(buffer)) {
-				rwlock_endwrite(&self->mo_lock);
+				DeeModule_LockEndWrite(self);
 				Dee_Decrefv(buffer, bufi);
 				bufi = 0;
-				rwlock_write(&self->mo_lock);
+				DeeModule_LockWrite(self);
 				goto restart;
 			}
 		}
 	}
-	rwlock_endwrite(&self->mo_lock);
+	DeeModule_LockEndWrite(self);
 	Dee_Decrefv(buffer, bufi);
 	Dee_XDecref(root_code);
 }
@@ -1544,7 +1544,7 @@ PRIVATE void DCALL
 module_pclear(DeeModuleObject *__restrict self,
               unsigned int priority) {
 	size_t i;
-	rwlock_write(&self->mo_lock);
+	DeeModule_LockWrite(self);
 	i = self->mo_globalc;
 	while (i--) {
 		/* Operate in reverse order, better mirrors the
@@ -1558,11 +1558,11 @@ module_pclear(DeeModuleObject *__restrict self,
 		/* Temporarily unlock the module to immediately
 		 * destroy a global variable when the priority
 		 * level isn't encompassing _all_ objects, yet. */
-		rwlock_endwrite(&self->mo_lock);
+		DeeModule_LockEndWrite(self);
 		Dee_Decref(ob);
-		rwlock_write(&self->mo_lock);
+		DeeModule_LockWrite(self);
 	}
-	rwlock_endwrite(&self->mo_lock);
+	DeeModule_LockEndWrite(self);
 }
 
 
@@ -1683,7 +1683,7 @@ INTERN struct static_module_struct empty_module_head = {
 		/* .mo_globalv   = */ NULL,
 		/* .mo_root      = */ &empty_code,
 #ifndef CONFIG_NO_THREADS
-		/* .mo_lock      = */ RWLOCK_INIT,
+		/* .mo_lock      = */ ATOMIC_RWLOCK_INIT,
 		/* .mo_loader    = */ NULL,
 #endif /* !CONFIG_NO_THREADS */
 #ifndef CONFIG_NO_DEC

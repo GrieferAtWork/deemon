@@ -41,7 +41,6 @@
 #include <deemon/thread.h>
 #include <deemon/tuple.h>
 #include <deemon/util/lock.h>
-#include <deemon/util/rwlock.h>
 
 #include <hybrid/overflow.h>
 #include <hybrid/sched/yield.h>
@@ -623,7 +622,7 @@ err:
 typedef struct {
 	OBJECT_HEAD
 #ifndef CONFIG_NO_THREADS
-	rwlock_t              p_lock;     /* Lock for accessing members of this structure. */
+	atomic_rwlock_t       p_lock;     /* Lock for accessing members of this structure. */
 #endif /* !CONFIG_NO_THREADS */
 	/* NOTE: `EXTERN_CONST_IF' here means that only the thread that set `PROCESS_FLAG_STARTING' may modify the field. */
 	DREF DeeObject       *p_exe;      /* [lock(p_lock)][0..1][if(!PROCESS_FLAG_EXTERN,[1..1])][EXTERN_CONST_IF(PROCESS_FLAG_STARTING && !PROCESS_FLAG_EXTERN)]
@@ -653,11 +652,28 @@ typedef struct {
 	uint16_t              p_state;    /* [lock(READ(ATOMIC), WRITE(p_lock))] The state of the process (Set of `PROCESS_FLAG_*') */
 } Process;
 
+#define Process_LockReading(self)    Dee_atomic_rwlock_reading(&(self)->p_lock)
+#define Process_LockWriting(self)    Dee_atomic_rwlock_writing(&(self)->p_lock)
+#define Process_LockTryRead(self)    Dee_atomic_rwlock_tryread(&(self)->p_lock)
+#define Process_LockTryWrite(self)   Dee_atomic_rwlock_trywrite(&(self)->p_lock)
+#define Process_LockCanRead(self)    Dee_atomic_rwlock_canread(&(self)->p_lock)
+#define Process_LockCanWrite(self)   Dee_atomic_rwlock_canwrite(&(self)->p_lock)
+#define Process_LockWaitRead(self)   Dee_atomic_rwlock_waitread(&(self)->p_lock)
+#define Process_LockWaitWrite(self)  Dee_atomic_rwlock_waitwrite(&(self)->p_lock)
+#define Process_LockRead(self)       Dee_atomic_rwlock_read(&(self)->p_lock)
+#define Process_LockWrite(self)      Dee_atomic_rwlock_write(&(self)->p_lock)
+#define Process_LockTryUpgrade(self) Dee_atomic_rwlock_tryupgrade(&(self)->p_lock)
+#define Process_LockUpgrade(self)    Dee_atomic_rwlock_upgrade(&(self)->p_lock)
+#define Process_LockDowngrade(self)  Dee_atomic_rwlock_downgrade(&(self)->p_lock)
+#define Process_LockEndWrite(self)   Dee_atomic_rwlock_endwrite(&(self)->p_lock)
+#define Process_LockEndRead(self)    Dee_atomic_rwlock_endread(&(self)->p_lock)
+#define Process_LockEnd(self)        Dee_atomic_rwlock_end(&(self)->p_lock)
+
 
 PRIVATE Process this_process = {
 	OBJECT_HEAD_INIT(&DeeProcess_Type),
 #ifndef CONFIG_NO_THREADS
-	/* .p_lock    = */ RWLOCK_INIT,
+	/* .p_lock    = */ ATOMIC_RWLOCK_INIT,
 #endif /* !CONFIG_NO_THREADS */
 	/* .p_exe     = */ NULL,
 #ifdef ipc_Process_USE_cmdline
@@ -731,7 +747,7 @@ process_init(Process *__restrict self,
 #ifdef ipc_Process_pid_t
 		if unlikely(DeeObject_AsUINT(exe_or_cmdline_or_pid, &self->p_pid))
 			goto err;
-		rwlock_init(&self->p_lock);
+		atomic_rwlock_init(&self->p_lock);
 		self->p_exe = NULL;
 #ifdef ipc_Process_USE_cmdline
 		self->p_cmdline = NULL;
@@ -759,7 +775,7 @@ process_init(Process *__restrict self,
 	}
 
 	/* Default attributes that can't be specified as constructor arguments. */
-	rwlock_init(&self->p_lock);
+	atomic_rwlock_init(&self->p_lock);
 	self->p_pwd = NULL;
 	bzero(self->p_stdfd, sizeof(self->p_stdfd));
 	self->p_state = PROCESS_FLAG_NORMAL;
@@ -806,13 +822,13 @@ process_fini(Process *__restrict self) {
 
 PRIVATE NONNULL((1, 2)) void DCALL
 process_visit(Process *__restrict self, dvisit_t proc, void *arg) {
-	rwlock_read(&self->p_lock);
+	Process_LockRead(self);
 	Dee_XVisitv(self->p_stdfd, COMPILER_LENOF(self->p_stdfd));
 	Dee_XVisit(self->p_envp);
 #ifdef ipc_Process_USE_argv
 	Dee_XVisit(self->p_argv);
 #endif /* ipc_Process_USE_argv */
-	rwlock_endread(&self->p_lock);
+	Process_LockEndRead(self);
 }
 
 PRIVATE NONNULL((1)) void DCALL
@@ -822,7 +838,7 @@ process_clear(Process *__restrict self) {
 	                    + 1
 #endif /* ipc_Process_USE_argv */
 	];
-	rwlock_write(&self->p_lock);
+	Process_LockWrite(self);
 	memcpyc(objs, self->p_stdfd, COMPILER_LENOF(self->p_stdfd), sizeof(DREF DeeObject *));
 	objs[COMPILER_LENOF(self->p_stdfd) + 0] = self->p_envp;
 #ifdef ipc_Process_USE_argv
@@ -833,7 +849,7 @@ process_clear(Process *__restrict self) {
 #ifdef ipc_Process_USE_argv
 	self->p_argv = NULL;
 #endif /* ipc_Process_USE_argv */
-	rwlock_endwrite(&self->p_lock);
+	Process_LockEndWrite(self);
 	Dee_XDecrefv(objs, COMPILER_LENOF(objs));
 }
 
@@ -866,7 +882,7 @@ process_print(Process *__restrict self,
 	dssize_t temp, result = 0;
 
 	/* Load process properties. */
-	rwlock_read(&self->p_lock);
+	Process_LockRead(self);
 	proc_exe = self->p_exe;
 	Dee_XIncref(proc_exe);
 #ifdef ipc_Process_USE_cmdline
@@ -881,7 +897,7 @@ process_print(Process *__restrict self,
 	proc_pid = self->p_pid;
 #endif /* ipc_Process_pid_t */
 	proc_state = self->p_state;
-	rwlock_endread(&self->p_lock);
+	Process_LockEndRead(self);
 
 	/* Print a human-readable representation of the process. */
 	DO(err, DeeFormat_PRINT(printer, arg, "<Process "));
@@ -962,20 +978,20 @@ process_printrepr(Process *__restrict self,
 	dssize_t temp, result = 0;
 
 	/* Load process properties. */
-	rwlock_read(&self->p_lock);
+	Process_LockRead(self);
 
 	/* Check for special case: external process reference */
 #ifdef ipc_Process_pid_t
 	if (self->p_state & PROCESS_FLAG_EXTERN) {
 		ipc_Process_pid_t pid = self->p_pid;
-		rwlock_endread(&self->p_lock);
+		Process_LockEndRead(self);
 		return DeeFormat_Printf(printer, arg, "Process(pid: " PRFdPID ")", pid);
 	}
 #endif /* ipc_Process_pid_t */
 
 	/* Check for special case: current process reference */
 	if (self->p_state & PROCESS_FLAG_SELF) {
-		rwlock_endread(&self->p_lock);
+		Process_LockEndRead(self);
 		return DeeFormat_PRINT(printer, arg, "Process.current");
 	}
 
@@ -994,7 +1010,7 @@ process_printrepr(Process *__restrict self,
 	Dee_XIncref(proc_pwd);
 	Dee_XMovrefv(proc_stdfd, self->p_stdfd, COMPILER_LENOF(proc_stdfd));
 	proc_state = self->p_state;
-	rwlock_endread(&self->p_lock);
+	Process_LockEndRead(self);
 
 #ifdef ipc_Process_USE_cmdline
 	proc_argv = NULL;
@@ -2602,13 +2618,13 @@ process_start_impl(Process *__restrict self) {
 	return ipc_unimplemented();
 #else /* ipc_Process_USE_stub */
 again:
-	rwlock_read(&self->p_lock);
+	Process_LockRead(self);
 	/* Check if the process had already been started, or if
 	 * another thread is currently in the process of starting
 	 * the process. */
 	if unlikely(self->p_state & (PROCESS_FLAG_STARTED | PROCESS_FLAG_STARTING)) {
 		uint16_t state = self->p_state;
-		rwlock_endread(&self->p_lock);
+		Process_LockEndRead(self);
 		if (state & PROCESS_FLAG_STARTING) {
 			SCHED_YIELD();
 			goto again;
@@ -2617,10 +2633,10 @@ again:
 	}
 
 	/* Upgrade to a write-lock so we can set `PROCESS_FLAG_STARTED' */
-	if (!rwlock_upgrade(&self->p_lock)) {
+	if (!Process_LockUpgrade(self)) {
 		if unlikely(self->p_state & PROCESS_FLAG_STARTED) {
 			uint16_t state = self->p_state;
-			rwlock_endwrite(&self->p_lock);
+			Process_LockEndWrite(self);
 			if (state & PROCESS_FLAG_STARTING) {
 				SCHED_YIELD();
 				goto again;
@@ -2629,7 +2645,7 @@ again:
 		}
 	}
 	self->p_state |= PROCESS_FLAG_STARTING;
-	rwlock_endwrite(&self->p_lock);
+	Process_LockEndWrite(self);
 
 	/* Ensure that mandatory attributes have been set. */
 	ASSERT(self->p_exe);
@@ -2737,10 +2753,10 @@ again:
 
 				/* Successfully launched process. (remember the full exe path) */
 save_full_exe_str_and_process_created_ok:
-				rwlock_write(&self->p_lock);
+				Process_LockWrite(self);
 				old_exe_str = self->p_exe;
 				self->p_exe = (DREF DeeObject *)full_exe_str; /* Inherit reference */
-				rwlock_endwrite(&self->p_lock);
+				Process_LockEndWrite(self);
 				Dee_Decref(old_exe_str);
 				goto process_created_ok;
 			}
@@ -2832,11 +2848,11 @@ process_created_ok:
 		DBG_ALIGNMENT_ENABLE();
 
 		/* Remember that the process has now been started. */
-		rwlock_write(&self->p_lock);
+		Process_LockWrite(self);
 		self->p_handle = piProcessInformation.hProcess;
 		self->p_pid    = piProcessInformation.dwProcessId;
 		self->p_state |= PROCESS_FLAG_STARTED;
-		rwlock_endwrite(&self->p_lock);
+		Process_LockEndWrite(self);
 		return 0;
 	}
 #endif /* ipc_Process_USE_CreateProcessW */
@@ -3004,10 +3020,10 @@ err_argv:
 		ipc_unix_free_string_array(spawn_args.usa_argv, argv_objv, argc);
 
 		/* Remember that the process has now been started. */
-		rwlock_write(&self->p_lock);
+		Process_LockWrite(self);
 		self->p_pid = cpid;
 		self->p_state |= PROCESS_FLAG_STARTED;
-		rwlock_endwrite(&self->p_lock);
+		Process_LockEndWrite(self);
 		return 0;
 	}
 #endif /* ipc_Process_USE_UNIX_APIS */
@@ -3015,9 +3031,9 @@ err_argv:
 	__builtin_unreachable();
 err:
 	/* Clear the starting-flag to indicate that we're no longer trying to start the process. */
-	rwlock_write(&self->p_lock);
+	Process_LockWrite(self);
 	self->p_state &= ~PROCESS_FLAG_STARTING;
-	rwlock_endwrite(&self->p_lock);
+	Process_LockEndWrite(self);
 	return -1;
 #endif /* !ipc_Process_USE_stub */
 }
@@ -3055,13 +3071,13 @@ process_nt_gethandle_or_unlock(Process *__restrict self) {
 				hResult = OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, FALSE, self->p_pid);
 			if (hResult == NULL || hResult == INVALID_HANDLE_VALUE) {
 				DWORD dwPid = self->p_pid;
-				rwlock_endwrite(&self->p_lock);
+				Process_LockEndWrite(self);
 				ipc_nt_throw_process_access_error(dwPid);
 				return INVALID_HANDLE_VALUE;
 			}
 			self->p_handle = hResult;
 		} else {
-			rwlock_endwrite(&self->p_lock);
+			Process_LockEndWrite(self);
 			ipc_throw_process_not_started_error(self);
 			return INVALID_HANDLE_VALUE;
 		}
@@ -3082,7 +3098,7 @@ process_nt_gethandle_upgrade_or_unlock(Process *__restrict self, DWORD dwDesired
 		}
 		/* Special case: not-yet-started child process. */
 		if (!(self->p_state & PROCESS_FLAG_EXTERN)) {
-			rwlock_endwrite(&self->p_lock);
+			Process_LockEndWrite(self);
 			ipc_throw_process_not_started_error(self);
 			return INVALID_HANDLE_VALUE;
 		}
@@ -3098,7 +3114,7 @@ process_nt_gethandle_upgrade_or_unlock(Process *__restrict self, DWORD dwDesired
 		hResult = OpenProcess(dwDesiredAccess, FALSE, self->p_pid);
 	if (hResult == NULL || hResult == INVALID_HANDLE_VALUE) {
 		DWORD dwPid = self->p_pid;
-		rwlock_endwrite(&self->p_lock);
+		Process_LockEndWrite(self);
 		ipc_nt_throw_process_access_error(dwPid);
 		return INVALID_HANDLE_VALUE;
 	}
@@ -3118,7 +3134,7 @@ process_getpid_or_unlock(Process *__restrict self);
 PRIVATE WUNUSED NONNULL((1)) ipc_Process_pid_t DCALL
 process_getpid(Process *__restrict self) {
 	ipc_Process_pid_t result;
-	rwlock_read(&self->p_lock);
+	Process_LockRead(self);
 	result = self->p_pid;
 	if (result == ipc_Process_pid_t_INVALID) {
 #ifdef ipc_getpid
@@ -3131,14 +3147,14 @@ process_getpid(Process *__restrict self) {
 #ifdef ipc_Process_USE_CreateProcessW
 		if (self->p_handle != INVALID_HANDLE_VALUE) {
 			/* Lazily load handle for foreign process */
-			if (!rwlock_upgrade(&self->p_lock)) {
+			if (!Process_LockUpgrade(self)) {
 				result = self->p_pid;
 				if unlikely(result != ipc_Process_pid_t_INVALID) {
-					rwlock_endwrite(&self->p_lock);
+					Process_LockEndWrite(self);
 					return result;
 				}
 				if unlikely(self->p_handle == INVALID_HANDLE_VALUE) {
-					rwlock_endwrite(&self->p_lock);
+					Process_LockEndWrite(self);
 #define NEED_err_no_handle
 					goto err_no_handle;
 				}
@@ -3147,17 +3163,17 @@ process_getpid(Process *__restrict self) {
 			if (self->p_pid == 0) {
 				HANDLE hProcess = self->p_handle;
 				DWORD dwError   = GetLastError();
-				rwlock_endwrite(&self->p_lock);
+				Process_LockEndWrite(self);
 				DeeNTSystem_ThrowErrorf(NULL, dwError,
 				                        "Unable to get PID of process with handle %p",
 				                        hProcess);
 				return ipc_Process_pid_t_INVALID;
 			}
-			rwlock_endwrite(&self->p_lock);
+			Process_LockEndWrite(self);
 		} else
 #endif /* ipc_Process_USE_CreateProcessW */
 		{
-			rwlock_endread(&self->p_lock);
+			Process_LockEndRead(self);
 #ifdef NEED_err_no_handle
 #undef NEED_err_no_handle
 err_no_handle:
@@ -3166,7 +3182,7 @@ err_no_handle:
 			return ipc_Process_pid_t_INVALID;
 		}
 	}
-	rwlock_endread(&self->p_lock);
+	Process_LockEndRead(self);
 	return result;
 }
 #endif /* ipc_Process_pid_t */
@@ -3176,13 +3192,13 @@ err_no_handle:
  * @return: -1: Error */
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 process_hasterminated_impl(Process *__restrict self) {
-	rwlock_write(&self->p_lock);
+	Process_LockWrite(self);
 	if (self->p_state & PROCESS_FLAG_SELF) {
-		rwlock_endwrite(&self->p_lock);
+		Process_LockEndWrite(self);
 		return 1;
 	}
 	if (self->p_state & PROCESS_FLAG_TERMINATED) {
-		rwlock_endwrite(&self->p_lock);
+		Process_LockEndWrite(self);
 		/* Already terminated. */
 		return 0;
 	}
@@ -3205,14 +3221,14 @@ process_hasterminated_impl(Process *__restrict self) {
 				DWORD dwPid;
 				DBG_ALIGNMENT_ENABLE();
 				dwPid = self->p_pid;
-				rwlock_endwrite(&self->p_lock);
+				Process_LockEndWrite(self);
 				ipc_nt_throw_process_access_error(dwPid);
 				goto err;
 			}
 			DBG_ALIGNMENT_ENABLE();
 		}
 		DBG_ALIGNMENT_ENABLE();
-		rwlock_endwrite(&self->p_lock);
+		Process_LockEndWrite(self);
 		return dwExitCode == STILL_ACTIVE ? 1 : 0;
 	}
 err:
@@ -3229,17 +3245,17 @@ err:
 			if (error == ESRCH)
 				return 0;
 #endif /* ESRCH */
-			rwlock_endwrite(&self->p_lock);
+			Process_LockEndWrite(self);
 			DeeUnixSystem_ThrowErrorf(NULL, error, "Unable to access process with id %d", pid);
 			goto err;
 		}
 	}
-	rwlock_endwrite(&self->p_lock);
+	Process_LockEndWrite(self);
 	return 1;
 err:
 	return -1;
 #else /* ... */
-	rwlock_endwrite(&self->p_lock);
+	Process_LockEndWrite(self);
 	return ipc_unimplemented();
 #endif /* !... */
 }
@@ -3249,13 +3265,13 @@ err:
  * @return: -1: Error */
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 process_kill_impl(Process *__restrict self, int exit_code, int signo) {
-	rwlock_write(&self->p_lock);
+	Process_LockWrite(self);
 	if (self->p_state & PROCESS_FLAG_SELF) {
-		rwlock_endwrite(&self->p_lock);
+		Process_LockEndWrite(self);
 		return Dee_Exit(exit_code, false);
 	}
 	if (self->p_state & PROCESS_FLAG_TERMINATED) {
-		rwlock_endwrite(&self->p_lock);
+		Process_LockEndWrite(self);
 		/* Already terminated. */
 		return 1;
 	}
@@ -3308,7 +3324,7 @@ process_kill_impl(Process *__restrict self, int exit_code, int signo) {
 							DWORD dwPid;
 							DBG_ALIGNMENT_ENABLE();
 							dwPid = self->p_pid;
-							rwlock_endwrite(&self->p_lock);
+							Process_LockEndWrite(self);
 							ipc_nt_throw_process_access_error(dwPid);
 							goto err;
 						}
@@ -3318,7 +3334,7 @@ process_kill_impl(Process *__restrict self, int exit_code, int signo) {
 						goto ok;
 				}
 			}
-			rwlock_endwrite(&self->p_lock);
+			Process_LockEndWrite(self);
 			DeeNTSystem_ThrowErrorf(NULL, dwError, "Failed to terminate process %k", self);
 			goto err;
 		}
@@ -3326,7 +3342,7 @@ process_kill_impl(Process *__restrict self, int exit_code, int signo) {
 ok:
 	/* Set the did-terminate flag on success. */
 	self->p_state |= PROCESS_FLAG_TERMINATED;
-	rwlock_endwrite(&self->p_lock);
+	Process_LockEndWrite(self);
 	return 0;
 err:
 	return -1;
@@ -3343,7 +3359,7 @@ err:
 			if (error != ESRCH)
 #endif /* ESRCH */
 			{
-				rwlock_endwrite(&self->p_lock);
+				Process_LockEndWrite(self);
 				DeeUnixSystem_ThrowErrorf(NULL, error, "Failed to terminate process %k", self);
 				goto err;
 			}
@@ -3352,13 +3368,13 @@ err:
 
 	/* Set the did-terminate flag on success. */
 	self->p_state |= PROCESS_FLAG_TERMINATED;
-	rwlock_endwrite(&self->p_lock);
+	Process_LockEndWrite(self);
 err:
 	return -1;
 #else /* ... */
 	(void)exit_code;
 	(void)signo;
-	rwlock_endwrite(&self->p_lock);
+	Process_LockEndWrite(self);
 	return ipc_unimplemented();
 #endif /* !... */
 }
@@ -3374,14 +3390,14 @@ PRIVATE WUNUSED NONNULL((1, 3)) int DCALL
 process_join_impl2(Process *__restrict self,
                    uint64_t timeout_nanoseconds,
                    int *__restrict p_status) {
-	rwlock_write(&self->p_lock);
+	Process_LockWrite(self);
 	if (self->p_state & PROCESS_FLAG_DETACHED) {
-		rwlock_endwrite(&self->p_lock);
+		Process_LockEndWrite(self);
 		/* Already joined or detached. */
 		return 1;
 	}
 	if (self->p_state & PROCESS_FLAG_JOINING) {
-		rwlock_endwrite(&self->p_lock);
+		Process_LockEndWrite(self);
 		/* Wait for another process to finish joining */
 		if (timeout_nanoseconds != 0) {
 			uint64_t timeout_micro;
@@ -3406,7 +3422,7 @@ process_join_impl2(Process *__restrict self,
 		hProcess = process_nt_gethandle_or_unlock(self);
 		if unlikely(hProcess == INVALID_HANDLE_VALUE)
 			goto err_stopjoin;
-		rwlock_endwrite(&self->p_lock);
+		Process_LockEndWrite(self);
 		if (timeout_nanoseconds == 0) {
 			dwTimeout = 0;
 		} else if (timeout_nanoseconds == (uint64_t)-1) {
@@ -3420,11 +3436,11 @@ process_join_impl2(Process *__restrict self,
 		dwWaitState = WaitForMultipleObjectsEx(1, &hProcess, FALSE, dwTimeout, TRUE);
 		DBG_ALIGNMENT_ENABLE();
 		if (dwWaitState == WAIT_FAILED) {
-			rwlock_write(&self->p_lock);
+			Process_LockWrite(self);
 			hProcess = process_nt_gethandle_upgrade_or_unlock(self, SYNCHRONIZE);
 			if unlikely(hProcess == INVALID_HANDLE_VALUE)
 				goto err_stopjoin;
-			rwlock_endwrite(&self->p_lock);
+			Process_LockEndWrite(self);
 			DBG_ALIGNMENT_DISABLE();
 			dwWaitState = WaitForMultipleObjectsEx(1, &hProcess, FALSE, dwTimeout, TRUE);
 			DBG_ALIGNMENT_ENABLE();
@@ -3462,14 +3478,14 @@ process_join_impl2(Process *__restrict self,
 	}
 
 	/* Set the did-terminate flag on success. */
-	rwlock_write(&self->p_lock);
+	Process_LockWrite(self);
 	self->p_state |= PROCESS_FLAG_TERMINATED | PROCESS_FLAG_DETACHED;
-	rwlock_endwrite(&self->p_lock);
+	Process_LockEndWrite(self);
 	return 0;
 interrupted_stopjoin:
-	rwlock_write(&self->p_lock);
+	Process_LockWrite(self);
 	self->p_state &= ~PROCESS_FLAG_JOINING;
-	rwlock_endwrite(&self->p_lock);
+	Process_LockEndWrite(self);
 	if (DeeThread_CheckInterrupt())
 		goto err;
 	return 2;
@@ -3480,7 +3496,7 @@ interrupted_stopjoin:
 		pid_t pid = process_getpid_or_unlock(self);
 		if unlikely(pid == ipc_Process_pid_t_INVALID)
 			goto err;
-		rwlock_endwrite(&self->p_lock);
+		Process_LockEndWrite(self);
 
 		/* TODO: Alternative implementation that polls for has-exited
 		 *       by testing with `kill(pid, 0) != -1 || errno != ESRCH' */
@@ -3502,9 +3518,9 @@ interrupted_stopjoin:
 				/* WNOHANG -> process hasn't terminated, yet. */
 				if (timeout_nanoseconds != 0) {
 					uint64_t timeout_micro;
-					rwlock_write(&self->p_lock);
+					Process_LockWrite(self);
 					self->p_state &= ~PROCESS_FLAG_JOINING;
-					rwlock_endwrite(&self->p_lock);
+					Process_LockEndWrite(self);
 					timeout_micro = timeout_nanoseconds;
 					timeout_micro /= 1000;
 					timeout_micro /= 2;
@@ -3518,9 +3534,9 @@ interrupted_stopjoin:
 #endif /* EAGAIN */
 #ifdef EINTR
 			if (error == EINTR) {
-				rwlock_write(&self->p_lock);
+				Process_LockWrite(self);
 				self->p_state &= ~PROCESS_FLAG_JOINING;
-				rwlock_endwrite(&self->p_lock);
+				Process_LockEndWrite(self);
 				return 2;
 			}
 #endif /* EINTR */
@@ -3530,14 +3546,14 @@ interrupted_stopjoin:
 	}
 
 	/* Set the did-terminate flag on success. */
-	rwlock_write(&self->p_lock);
+	Process_LockWrite(self);
 	self->p_state |= PROCESS_FLAG_TERMINATED | PROCESS_FLAG_DETACHED;
-	rwlock_endwrite(&self->p_lock);
+	Process_LockEndWrite(self);
 	return 0;
 #else /* ... */
 
 	/* Not supported. */
-	rwlock_endwrite(&self->p_lock);
+	Process_LockEndWrite(self);
 	(void)self;
 	(void)timeout_nanoseconds;
 	(void)p_status;
@@ -3546,9 +3562,9 @@ interrupted_stopjoin:
 #endif /* !... */
 
 err_stopjoin:
-	rwlock_write(&self->p_lock);
+	Process_LockWrite(self);
 	self->p_state &= ~PROCESS_FLAG_JOINING;
-	rwlock_endwrite(&self->p_lock);
+	Process_LockEndWrite(self);
 err:
 	return -1;
 }
@@ -3593,14 +3609,14 @@ process_join_impl(Process *__restrict self,
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 process_detach_impl(Process *__restrict self) {
 again:
-	rwlock_write(&self->p_lock);
+	Process_LockWrite(self);
 	if (self->p_state & PROCESS_FLAG_DETACHED) {
-		rwlock_endwrite(&self->p_lock);
+		Process_LockEndWrite(self);
 		/* Already joined or detached. */
 		return 1;
 	}
 	if (self->p_state & PROCESS_FLAG_JOINING) {
-		rwlock_endwrite(&self->p_lock);
+		Process_LockEndWrite(self);
 		/* Wait for another process to finish joining */
 		if (DeeThread_Sleep(1000))
 			goto err; /* Error (interrupt delivery) */
@@ -3609,7 +3625,7 @@ again:
 
 	/* Set flags to indicate a detached process. */
 	self->p_state |= PROCESS_FLAG_JOINING | PROCESS_FLAG_DETACHED;
-	rwlock_endwrite(&self->p_lock);
+	Process_LockEndWrite(self);
 	return 0;
 err:
 	return -1;
@@ -3637,17 +3653,17 @@ process_getpid_or_unlock(Process *__restrict self) {
 			if (self->p_pid == 0) {
 				HANDLE hProcess = self->p_handle;
 				DWORD dwError   = GetLastError();
-				rwlock_endwrite(&self->p_lock);
+				Process_LockEndWrite(self);
 				DeeNTSystem_ThrowErrorf(NULL, dwError,
 				                        "Unable to get PID of process with handle %p",
 				                        hProcess);
 				return ipc_Process_pid_t_INVALID;
 			}
-			rwlock_endwrite(&self->p_lock);
+			Process_LockEndWrite(self);
 		} else
 #endif /* ipc_Process_USE_CreateProcessW */
 		{
-			rwlock_endwrite(&self->p_lock);
+			Process_LockEndWrite(self);
 			ipc_throw_process_not_started_error(self);
 			return ipc_Process_pid_t_INVALID;
 		}
@@ -3808,11 +3824,11 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 process_osfhandle_np(Process *__restrict self) {
 	HANDLE hProcess;
-	rwlock_write(&self->p_lock);
+	Process_LockWrite(self);
 	hProcess = process_nt_gethandle_or_unlock(self);
 	if unlikely(hProcess == INVALID_HANDLE_VALUE)
 		return NULL;
-	rwlock_endwrite(&self->p_lock);
+	Process_LockEndWrite(self);
 	return DeeInt_NewUIntptr((uintptr_t)hProcess);
 }
 #endif /* ipc_Process_USE_CreateProcessW */
@@ -3956,30 +3972,30 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 process_get_exe(Process *__restrict self) {
 	DREF DeeObject *result;
-	rwlock_read(&self->p_lock);
+	Process_LockRead(self);
 
 	/* Check if we've already cached the correct result. */
 	result = self->p_exe;
 	if (result) {
 		Dee_Incref(result);
-		rwlock_endread(&self->p_lock);
+		Process_LockEndRead(self);
 		goto done;
 	}
 
 	/* Make sure that the process has already started. */
 	if (!(self->p_state & PROCESS_FLAG_STARTED)) {
-		rwlock_endread(&self->p_lock);
+		Process_LockEndRead(self);
 #define WANT_err_unbound_attribute
 		err_unbound_attribute(&DeeProcess_Type, "exe");
 		goto err;
 	}
 
 	/* Get a write-lock. */
-	if (!rwlock_upgrade(&self->p_lock)) {
+	if (!Process_LockUpgrade(self)) {
 		result = self->p_exe;
 		if (result) {
 			Dee_Incref(result);
-			rwlock_endwrite(&self->p_lock);
+			Process_LockEndWrite(self);
 			goto done;
 		}
 	}
@@ -3987,7 +4003,7 @@ process_get_exe(Process *__restrict self) {
 	/* OS-specific part... */
 #ifdef ipc_Process_USE_CreateProcessW
 	if (self->p_state & PROCESS_FLAG_SELF) {
-		rwlock_endwrite(&self->p_lock);
+		Process_LockEndWrite(self);
 		result = ipc_nt_GetModuleFileName(NULL);
 		if unlikely(!result)
 			goto err;
@@ -3996,7 +4012,7 @@ process_get_exe(Process *__restrict self) {
 		hProcess = process_nt_gethandle_or_unlock(self);
 		if unlikely(hProcess == INVALID_HANDLE_VALUE)
 			goto err;
-		rwlock_endwrite(&self->p_lock);
+		Process_LockEndWrite(self);
 		result = ipc_nt_QueryFullProcessImageName(hProcess, 0);
 		if unlikely(!result)
 			goto err;
@@ -4014,7 +4030,7 @@ process_get_exe(Process *__restrict self) {
 		pid_t pid = process_getpid_or_unlock(self);
 		if unlikely(pid == ipc_Process_pid_t_INVALID)
 			goto err;
-		rwlock_endwrite(&self->p_lock);
+		Process_LockEndWrite(self);
 		Dee_sprintf(exepath, "/proc/%" PRFdPID "/exe", pid);
 		result = DeeUnixSystem_ReadLinkString(exepath);
 		if unlikely(result == ITER_DONE) {
@@ -4024,7 +4040,7 @@ process_get_exe(Process *__restrict self) {
 		}
 	}
 #else /* ... */
-	rwlock_endwrite(&self->p_lock);
+	Process_LockEndWrite(self);
 	if (self->p_state & PROCESS_FLAG_SELF) {
 		result = (DREF DeeObject *)DeeModule_GetDeemon()->mo_name;
 		Dee_Incref(result);
@@ -4033,16 +4049,16 @@ process_get_exe(Process *__restrict self) {
 		goto err;
 	}
 #endif /* !... */
-	rwlock_write(&self->p_lock);
+	Process_LockWrite(self);
 	if likely(!self->p_exe) {
 		Dee_Incref(result);
 		self->p_exe = result;
-		rwlock_endwrite(&self->p_lock);
+		Process_LockEndWrite(self);
 	} else {
 		DREF DeeObject *old_result;
 		old_result = self->p_exe;
 		Dee_Incref(old_result);
-		rwlock_endwrite(&self->p_lock);
+		Process_LockEndWrite(self);
 		Dee_Decref_likely(result);
 		result = old_result;
 	}
@@ -4064,15 +4080,15 @@ err_cannot_set_attribute_for_running_process(Process *__restrict self,
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 process_set_exe(Process *self, DeeObject *value) {
 	DREF DeeObject *old_value;
-	rwlock_write(&self->p_lock);
+	Process_LockWrite(self);
 	if (self->p_state & (PROCESS_FLAG_STARTING | PROCESS_FLAG_STARTED)) {
-		rwlock_endwrite(&self->p_lock);
+		Process_LockEndWrite(self);
 		goto err_running;
 	}
 	Dee_XIncref(value);
 	old_value   = self->p_exe;
 	self->p_exe = value;
-	rwlock_endwrite(&self->p_lock);
+	Process_LockEndWrite(self);
 	if (old_value) {
 		Dee_Decref(old_value);
 	}
@@ -4166,7 +4182,7 @@ process_get_argv(Process *__restrict self)
 #endif /* !ipc_Process_USE_cmdline */
 {
 	DREF DeeObject *result;
-	rwlock_read(&self->p_lock);
+	Process_LockRead(self);
 
 	/* Check if we've already cached the correct result. */
 #ifdef ipc_Process_USE_cmdline
@@ -4176,20 +4192,20 @@ process_get_argv(Process *__restrict self)
 #endif /* !ipc_Process_USE_cmdline */
 	if (result) {
 		Dee_Incref(result);
-		rwlock_endread(&self->p_lock);
+		Process_LockEndRead(self);
 		goto done;
 	}
 
 	/* Make sure that the process has already started. */
 	if (!(self->p_state & PROCESS_FLAG_STARTED)) {
-		rwlock_endread(&self->p_lock);
+		Process_LockEndRead(self);
 #define WANT_err_unbound_attribute
 		err_unbound_attribute(&DeeProcess_Type, "argv");
 		goto err;
 	}
 
 	/* Get a write-lock. */
-	if (!rwlock_upgrade(&self->p_lock)) {
+	if (!Process_LockUpgrade(self)) {
 #ifdef ipc_Process_USE_cmdline
 		result = (DREF DeeObject *)self->p_cmdline;
 #else /* ipc_Process_USE_cmdline */
@@ -4197,7 +4213,7 @@ process_get_argv(Process *__restrict self)
 #endif /* !ipc_Process_USE_cmdline */
 		if (result) {
 			Dee_Incref(result);
-			rwlock_endwrite(&self->p_lock);
+			Process_LockEndWrite(self);
 			goto done;
 		}
 	}
@@ -4209,7 +4225,7 @@ process_get_argv(Process *__restrict self)
 #endif /* !ipc_Process_USE_cmdline */
 	if (self->p_state & PROCESS_FLAG_SELF) {
 		LPWSTR lpwCommandLine;
-		rwlock_endwrite(&self->p_lock);
+		Process_LockEndWrite(self);
 		lpwCommandLine = GetCommandLineW();
 		if unlikely(!lpwCommandLine) {
 			DeeNTSystem_ThrowErrorf(NULL, GetLastError(),
@@ -4226,7 +4242,7 @@ process_get_argv(Process *__restrict self)
 		hProcess = process_nt_gethandle_or_unlock(self);
 		if unlikely(hProcess == INVALID_HANDLE_VALUE)
 			goto err;
-		rwlock_endwrite(&self->p_lock);
+		Process_LockEndWrite(self);
 		/* TODO: Try to read from `RTL_USER_PROCESS_PARAMETERS' */
 #define WANT_ipc_unimplemented
 		ipc_unimplemented();
@@ -4243,7 +4259,7 @@ process_get_argv(Process *__restrict self)
 		pid_t pid = process_getpid_or_unlock(self);
 		if unlikely(pid == ipc_Process_pid_t_INVALID)
 			goto err;
-		rwlock_endwrite(&self->p_lock);
+		Process_LockEndWrite(self);
 		Dee_sprintf(cmdline_path, "/proc/%" PRFdPID "/cmdline", pid);
 		cmdline_file = DeeFile_OpenString(cmdline_path, OPEN_FRDONLY, 0);
 		if (!ITER_ISOK(cmdline_file)) {
@@ -4265,7 +4281,7 @@ process_get_argv(Process *__restrict self)
 #ifdef ipc_Process_USE_cmdline
 #error "Unsupported configuration"
 #endif /* ipc_Process_USE_cmdline */
-	rwlock_endwrite(&self->p_lock);
+	Process_LockEndWrite(self);
 	if (self->p_state & PROCESS_FLAG_SELF) {
 		DeeObject *argv = Dee_GetArgv(), *name;
 		result = DeeTuple_NewUninitialized(1 + DeeTuple_SIZE(argv));
@@ -4280,7 +4296,7 @@ process_get_argv(Process *__restrict self)
 		goto err;
 	}
 #endif /* !... */
-	rwlock_write(&self->p_lock);
+	Process_LockWrite(self);
 #ifdef ipc_Process_USE_cmdline
 	if likely(!self->p_cmdline)
 #else /* ipc_Process_USE_cmdline */
@@ -4293,7 +4309,7 @@ process_get_argv(Process *__restrict self)
 #else /* ipc_Process_USE_cmdline */
 		self->p_argv = result;
 #endif /* !ipc_Process_USE_cmdline */
-		rwlock_endwrite(&self->p_lock);
+		Process_LockEndWrite(self);
 	} else {
 		DREF DeeObject *old_result;
 #ifdef ipc_Process_USE_cmdline
@@ -4302,7 +4318,7 @@ process_get_argv(Process *__restrict self)
 		old_result = self->p_argv;
 #endif /* !ipc_Process_USE_cmdline */
 		Dee_Incref(old_result);
-		rwlock_endwrite(&self->p_lock);
+		Process_LockEndWrite(self);
 		Dee_Decref_likely(result);
 		result = old_result;
 	}
@@ -4344,9 +4360,9 @@ process_set_argv(Process *self, DeeObject *value)
 		goto err;
 	}
 #endif /* ipc_Process_USE_cmdline */
-	rwlock_write(&self->p_lock);
+	Process_LockWrite(self);
 	if (self->p_state & (PROCESS_FLAG_STARTING | PROCESS_FLAG_STARTED)) {
-		rwlock_endwrite(&self->p_lock);
+		Process_LockEndWrite(self);
 		goto err_running;
 	}
 	Dee_XIncref(value);
@@ -4357,7 +4373,7 @@ process_set_argv(Process *self, DeeObject *value)
 	old_value    = self->p_argv;
 	self->p_argv = value;
 #endif /* !ipc_Process_USE_cmdline */
-	rwlock_endwrite(&self->p_lock);
+	Process_LockEndWrite(self);
 	if (old_value) {
 		Dee_Decref(old_value);
 	}
@@ -4412,37 +4428,37 @@ process_del_argv(Process *__restrict self) {
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 process_get_environ(Process *__restrict self) {
 	DREF DeeObject *result;
-	rwlock_read(&self->p_lock);
+	Process_LockRead(self);
 
 	/* Check if we've already cached the correct result. */
 	result = self->p_envp;
 	if (result) {
 		Dee_Incref(result);
-		rwlock_endread(&self->p_lock);
+		Process_LockEndRead(self);
 		goto done;
 	}
 
 	/* Make sure that the process has already started. */
 	if (!(self->p_state & PROCESS_FLAG_STARTED)) {
-		rwlock_endread(&self->p_lock);
+		Process_LockEndRead(self);
 #define WANT_err_unbound_attribute
 		err_unbound_attribute(&DeeProcess_Type, "environ");
 		goto err;
 	}
 
 	/* Get a write-lock. */
-	if (!rwlock_upgrade(&self->p_lock)) {
+	if (!Process_LockUpgrade(self)) {
 		result = self->p_envp;
 		if (result) {
 			Dee_Incref(result);
-			rwlock_endwrite(&self->p_lock);
+			Process_LockEndWrite(self);
 			goto done;
 		}
 	}
 
 	/* Special case when doing `Process.current.environ' (which just aliases `posix.environ') */
 	if (self->p_state & PROCESS_FLAG_SELF) {
-		rwlock_endwrite(&self->p_lock);
+		Process_LockEndWrite(self);
 		return DeeModule_GetExternString("posix", "environ");
 	}
 
@@ -4453,7 +4469,7 @@ process_get_environ(Process *__restrict self) {
 		hProcess = process_nt_gethandle_or_unlock(self);
 		if unlikely(hProcess == INVALID_HANDLE_VALUE)
 			goto err;
-		rwlock_endwrite(&self->p_lock);
+		Process_LockEndWrite(self);
 		/* TODO: Try to read from `RTL_USER_PROCESS_PARAMETERS' */
 #define WANT_ipc_unimplemented
 		ipc_unimplemented();
@@ -4467,7 +4483,7 @@ process_get_environ(Process *__restrict self) {
 		pid_t pid = process_getpid_or_unlock(self);
 		if unlikely(pid == ipc_Process_pid_t_INVALID)
 			goto err;
-		rwlock_endwrite(&self->p_lock);
+		Process_LockEndWrite(self);
 		Dee_sprintf(environ_path, "/proc/%" PRFdPID "/environ", pid);
 		environ_file = DeeFile_OpenString(environ_path, OPEN_FRDONLY, 0);
 		if (!ITER_ISOK(environ_file)) {
@@ -4486,7 +4502,7 @@ process_get_environ(Process *__restrict self) {
 			goto err;
 	}
 #else /* ... */
-	rwlock_endwrite(&self->p_lock);
+	Process_LockEndWrite(self);
 	{
 		ipc_unimplemented();
 		goto err;
@@ -4494,16 +4510,16 @@ process_get_environ(Process *__restrict self) {
 #endif /* !... */
 
 #if 0 /* Don't cache the environment blocks of external processes */
-	rwlock_write(&self->p_lock);
+	Process_LockWrite(self);
 	if likely(!self->p_envp) {
 		Dee_Incref(result);
 		self->p_envp = result;
-		rwlock_endwrite(&self->p_lock);
+		Process_LockEndWrite(self);
 	} else {
 		DREF DeeObject *old_result;
 		old_result = self->p_envp;
 		Dee_Incref(old_result);
-		rwlock_endwrite(&self->p_lock);
+		Process_LockEndWrite(self);
 		Dee_Decref_likely(result);
 		result = old_result;
 	}
@@ -4517,12 +4533,12 @@ err:
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 process_set_environ(Process *self, DeeObject *value) {
 	DREF DeeObject *old_value;
-	rwlock_write(&self->p_lock);
+	Process_LockWrite(self);
 	if (self->p_state & (PROCESS_FLAG_STARTING | PROCESS_FLAG_STARTED)) {
 		if (self->p_state & PROCESS_FLAG_SELF) {
 			int result;
 			DREF DeeObject *posix_environ;
-			rwlock_endwrite(&self->p_lock);
+			Process_LockEndWrite(self);
 			/* Special case: forward the request on-to `posix.environ' */
 			if (value == NULL)
 				value = Dee_EmptySeq; /* Clear environ */
@@ -4533,13 +4549,13 @@ process_set_environ(Process *self, DeeObject *value) {
 			Dee_Decref(posix_environ);
 			return result;
 		}
-		rwlock_endwrite(&self->p_lock);
+		Process_LockEndWrite(self);
 		goto err_running;
 	}
 	Dee_XIncref(value);
 	old_value    = self->p_envp;
 	self->p_envp = value;
-	rwlock_endwrite(&self->p_lock);
+	Process_LockEndWrite(self);
 	if (old_value) {
 		Dee_Decref(old_value);
 	}
@@ -4568,37 +4584,37 @@ process_del_environ(Process *__restrict self) {
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 process_get_pwd(Process *__restrict self) {
 	DREF DeeObject *result;
-	rwlock_read(&self->p_lock);
+	Process_LockRead(self);
 
 	/* Check if we've already cached the correct result. */
 	result = self->p_pwd;
 	if (result) {
 		Dee_Incref(result);
-		rwlock_endread(&self->p_lock);
+		Process_LockEndRead(self);
 		goto done;
 	}
 
 	/* Make sure that the process has already started. */
 	if (!(self->p_state & PROCESS_FLAG_STARTED)) {
-		rwlock_endread(&self->p_lock);
+		Process_LockEndRead(self);
 #define WANT_err_unbound_attribute
 		err_unbound_attribute(&DeeProcess_Type, "pwd");
 		goto err;
 	}
 
 	/* Get a write-lock. */
-	if (!rwlock_upgrade(&self->p_lock)) {
+	if (!Process_LockUpgrade(self)) {
 		result = self->p_pwd;
 		if (result) {
 			Dee_Incref(result);
-			rwlock_endwrite(&self->p_lock);
+			Process_LockEndWrite(self);
 			goto done;
 		}
 	}
 
 	/* Special case: current process */
 	if (self->p_state & PROCESS_FLAG_SELF) {
-		rwlock_endwrite(&self->p_lock);
+		Process_LockEndWrite(self);
 		return DeeModule_CallExternStringf("posix", "getcwd", "");
 	}
 
@@ -4609,7 +4625,7 @@ process_get_pwd(Process *__restrict self) {
 		hProcess = process_nt_gethandle_or_unlock(self);
 		if unlikely(hProcess == INVALID_HANDLE_VALUE)
 			goto err;
-		rwlock_endwrite(&self->p_lock);
+		Process_LockEndWrite(self);
 		/* TODO: Try to read from `RTL_USER_PROCESS_PARAMETERS' */
 #define WANT_ipc_unimplemented
 		ipc_unimplemented();
@@ -4622,7 +4638,7 @@ process_get_pwd(Process *__restrict self) {
 		pid_t pid = process_getpid_or_unlock(self);
 		if unlikely(pid == ipc_Process_pid_t_INVALID)
 			goto err;
-		rwlock_endwrite(&self->p_lock);
+		Process_LockEndWrite(self);
 		Dee_sprintf(cwdpath, "/proc/%" PRFdPID "/cwd", pid);
 		result = DeeUnixSystem_ReadLinkString(cwdpath);
 		if unlikely(result == ITER_DONE) {
@@ -4633,23 +4649,23 @@ process_get_pwd(Process *__restrict self) {
 	}
 #else /* ... */
 	{
-		rwlock_endwrite(&self->p_lock);
+		Process_LockEndWrite(self);
 		ipc_unimplemented();
 		goto err;
 	}
 #endif /* !... */
 
 #if 0 /* Don't cache the working directory of external processes */
-	rwlock_write(&self->p_lock);
+	Process_LockWrite(self);
 	if likely(!self->p_pwd) {
 		Dee_Incref(result);
 		self->p_pwd = result;
-		rwlock_endwrite(&self->p_lock);
+		Process_LockEndWrite(self);
 	} else {
 		DREF DeeObject *old_result;
 		old_result = self->p_pwd;
 		Dee_Incref(old_result);
-		rwlock_endwrite(&self->p_lock);
+		Process_LockEndWrite(self);
 		Dee_Decref_likely(result);
 		result = old_result;
 	}
@@ -4664,11 +4680,11 @@ err:
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 process_set_pwd(Process *self, DeeObject *value) {
 	DREF DeeObject *old_value;
-	rwlock_write(&self->p_lock);
+	Process_LockWrite(self);
 	if (self->p_state & (PROCESS_FLAG_STARTING | PROCESS_FLAG_STARTED)) {
 		if ((self->p_state & PROCESS_FLAG_SELF) && value != NULL) {
 			DREF DeeObject *response;
-			rwlock_endwrite(&self->p_lock);
+			Process_LockEndWrite(self);
 			/* Special case: change working directory of our own process. */
 			response = DeeModule_CallExternStringf("posix", "chdir", "o", value);
 			if unlikely(!response)
@@ -4676,13 +4692,13 @@ process_set_pwd(Process *self, DeeObject *value) {
 			Dee_Decref(response);
 			return 0;
 		}
-		rwlock_endwrite(&self->p_lock);
+		Process_LockEndWrite(self);
 		goto err_running;
 	}
 	Dee_XIncref(value);
 	old_value   = self->p_pwd;
 	self->p_pwd = value;
-	rwlock_endwrite(&self->p_lock);
+	Process_LockEndWrite(self);
 	if (old_value) {
 		Dee_Decref(old_value);
 	}
@@ -4719,37 +4735,37 @@ PRIVATE char const std_handle_names[3][8] = {
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 process_get_stdfd(Process *__restrict self, unsigned int std_handle_id) {
 	DREF DeeObject *result;
-	rwlock_read(&self->p_lock);
+	Process_LockRead(self);
 
 	/* Check if we've already cached the correct result. */
 	result = self->p_stdfd[std_handle_id];
 	if (result) {
 		Dee_Incref(result);
-		rwlock_endread(&self->p_lock);
+		Process_LockEndRead(self);
 		goto done;
 	}
 
 	/* Make sure that the process has already started. */
 	if (!(self->p_state & PROCESS_FLAG_STARTED)) {
-		rwlock_endread(&self->p_lock);
+		Process_LockEndRead(self);
 #define WANT_err_unbound_attribute
 		err_unbound_attribute(&DeeProcess_Type, std_handle_names[std_handle_id]);
 		goto err;
 	}
 
 	/* Get a write-lock. */
-	if (!rwlock_upgrade(&self->p_lock)) {
+	if (!Process_LockUpgrade(self)) {
 		result = self->p_stdfd[std_handle_id];
 		if (result) {
 			Dee_Incref(result);
-			rwlock_endwrite(&self->p_lock);
+			Process_LockEndWrite(self);
 			goto done;
 		}
 	}
 
 	/* Special case: current process */
 	if (self->p_state & PROCESS_FLAG_SELF) {
-		rwlock_endwrite(&self->p_lock);
+		Process_LockEndWrite(self);
 		return DeeFile_GetStd(std_handle_id);
 	}
 
@@ -4760,7 +4776,7 @@ process_get_stdfd(Process *__restrict self, unsigned int std_handle_id) {
 		hProcess = process_nt_gethandle_or_unlock(self);
 		if unlikely(hProcess == INVALID_HANDLE_VALUE)
 			goto err;
-		rwlock_endwrite(&self->p_lock);
+		Process_LockEndWrite(self);
 		/* TODO: Try to read from `RTL_USER_PROCESS_PARAMETERS' */
 #define WANT_ipc_unimplemented
 		ipc_unimplemented();
@@ -4773,7 +4789,7 @@ process_get_stdfd(Process *__restrict self, unsigned int std_handle_id) {
 		pid_t pid = process_getpid_or_unlock(self);
 		if unlikely(pid == ipc_Process_pid_t_INVALID)
 			goto err;
-		rwlock_endwrite(&self->p_lock);
+		Process_LockEndWrite(self);
 		Dee_sprintf(stdfd_path, "/proc/%" PRFdPID "/fd/%d", pid,
 		            DEE_STDID_TO_FILENO(std_handle_id));
 		result = DeeFile_OpenString(stdfd_path, OPEN_FRDWR, 0);
@@ -4787,23 +4803,23 @@ process_get_stdfd(Process *__restrict self, unsigned int std_handle_id) {
 	}
 #else /* ... */
 	{
-		rwlock_endwrite(&self->p_lock);
+		Process_LockEndWrite(self);
 		ipc_unimplemented();
 		goto err;
 	}
 #endif /* !... */
 
 #if 0 /* Don't cache STD files of external processes */
-	rwlock_write(&self->p_lock);
+	Process_LockWrite(self);
 	if likely(!self->p_stdfd) {
 		Dee_Incref(result);
 		self->p_stdfd = result;
-		rwlock_endwrite(&self->p_lock);
+		Process_LockEndWrite(self);
 	} else {
 		DREF DeeObject *old_result;
 		old_result = self->p_stdfd;
 		Dee_Incref(old_result);
-		rwlock_endwrite(&self->p_lock);
+		Process_LockEndWrite(self);
 		Dee_Decref_likely(result);
 		result = old_result;
 	}
@@ -4818,12 +4834,12 @@ err:
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 process_set_stdfd(Process *self, unsigned int std_handle_id, DeeObject *value) {
 	DREF DeeObject *old_value;
-	rwlock_write(&self->p_lock);
+	Process_LockWrite(self);
 	if (self->p_state & (PROCESS_FLAG_STARTING | PROCESS_FLAG_STARTED)) {
 		/* Special case: change std handle of current process. */
 		if (self->p_state & PROCESS_FLAG_SELF) {
 			DREF DeeObject *response;
-			rwlock_endwrite(&self->p_lock);
+			Process_LockEndWrite(self);
 			if (value == NULL)
 				value = DeeFile_DefaultStd(std_handle_id);
 			response = DeeFile_SetStd(std_handle_id, value);
@@ -4831,13 +4847,13 @@ process_set_stdfd(Process *self, unsigned int std_handle_id, DeeObject *value) {
 				Dee_Decref(response);
 			return 0;
 		}
-		rwlock_endwrite(&self->p_lock);
+		Process_LockEndWrite(self);
 		goto err_running;
 	}
 	Dee_XIncref(value);
 	old_value = self->p_stdfd[std_handle_id];
 	self->p_stdfd[std_handle_id] = value;
-	rwlock_endwrite(&self->p_lock);
+	Process_LockEndWrite(self);
 	if (old_value) {
 		Dee_Decref(old_value);
 	}

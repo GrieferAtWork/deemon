@@ -35,7 +35,7 @@
 #include <deemon/system-features.h> /* DeeSystem_DlOpen_USE_LOADLIBRARY, memcpyc(), ... */
 #include <deemon/system.h>          /* DeeSystem_Dl* */
 #include <deemon/tuple.h>
-#include <deemon/util/rwlock.h>
+#include <deemon/util/lock.h>
 
 #include <hybrid/host.h>
 
@@ -344,8 +344,25 @@ done:
 }
 
 #ifndef CONFIG_NO_THREADS
-PRIVATE rwlock_t dex_lock = RWLOCK_INIT;
+PRIVATE atomic_rwlock_t dex_lock = ATOMIC_RWLOCK_INIT;
 #endif /* !CONFIG_NO_THREADS */
+
+#define dex_lock_reading()    Dee_atomic_rwlock_reading(&dex_lock)
+#define dex_lock_writing()    Dee_atomic_rwlock_writing(&dex_lock)
+#define dex_lock_tryread()    Dee_atomic_rwlock_tryread(&dex_lock)
+#define dex_lock_trywrite()   Dee_atomic_rwlock_trywrite(&dex_lock)
+#define dex_lock_canread()    Dee_atomic_rwlock_canread(&dex_lock)
+#define dex_lock_canwrite()   Dee_atomic_rwlock_canwrite(&dex_lock)
+#define dex_lock_waitread()   Dee_atomic_rwlock_waitread(&dex_lock)
+#define dex_lock_waitwrite()  Dee_atomic_rwlock_waitwrite(&dex_lock)
+#define dex_lock_read()       Dee_atomic_rwlock_read(&dex_lock)
+#define dex_lock_write()      Dee_atomic_rwlock_write(&dex_lock)
+#define dex_lock_tryupgrade() Dee_atomic_rwlock_tryupgrade(&dex_lock)
+#define dex_lock_upgrade()    Dee_atomic_rwlock_upgrade(&dex_lock)
+#define dex_lock_downgrade()  Dee_atomic_rwlock_downgrade(&dex_lock)
+#define dex_lock_endwrite()   Dee_atomic_rwlock_endwrite(&dex_lock)
+#define dex_lock_endread()    Dee_atomic_rwlock_endread(&dex_lock)
+#define dex_lock_end()        Dee_atomic_rwlock_end(&dex_lock)
 
 /* [0..1][lock(dex_lock)] Global chain of loaded dex extensions. */
 PRIVATE DREF DeeDexObject *dex_chain;
@@ -354,7 +371,7 @@ PRIVATE DREF DeeDexObject *dex_chain;
 INTERN bool DCALL DeeDex_Cleanup(void) {
 	bool result = false;
 	DREF DeeDexObject *dex;
-	rwlock_read(&dex_lock);
+	dex_lock_read();
 	/* NOTE: Since DEX modules are only actually removed
 	 *       at a later phase, we can still be sure that
 	 *       we can safely traverse the list and simply
@@ -363,13 +380,13 @@ INTERN bool DCALL DeeDex_Cleanup(void) {
 	 *       randomly disappear. */
 	for (dex = dex_chain; dex;
 	     dex = dex->d_next) {
-		rwlock_endread(&dex_lock);
+		dex_lock_endread();
 		/* Invoke the clear-operator on the dex (If it implements it). */
 		if (dex->d_dex->d_clear && (*dex->d_dex->d_clear)(dex))
 			result = true;
-		rwlock_read(&dex_lock);
+		dex_lock_read();
 	}
-	rwlock_endread(&dex_lock);
+	dex_lock_endread();
 	return result;
 }
 
@@ -377,18 +394,18 @@ INTERN bool DCALL DeeDex_Cleanup(void) {
 INTERN void DCALL DeeDex_Finalize(void) {
 	DREF DeeDexObject *dex;
 again:
-	rwlock_write(&dex_lock);
+	dex_lock_write();
 	while ((dex = dex_chain) != NULL) {
 		dex_chain    = dex->d_next;
 		dex->d_pself = NULL;
 		dex->d_next  = NULL;
 		if (!Dee_DecrefIfNotOne((DeeObject *)dex)) {
-			rwlock_endwrite(&dex_lock);
+			dex_lock_endwrite();
 			Dee_Decref((DeeObject *)dex);
 			goto again;
 		}
 	}
-	rwlock_endwrite(&dex_lock);
+	dex_lock_endwrite();
 }
 
 
@@ -426,13 +443,13 @@ dex_initialize(DeeDexObject *__restrict self) {
 	}
 #endif /* !CONFIG_NO_NOTIFICATIONS */
 	/* Register the dex in the global chain. */
-	rwlock_write(&dex_lock);
+	dex_lock_write();
 	if ((self->d_next = dex_chain) != NULL)
 		dex_chain->d_pself = &self->d_next;
 	self->d_pself = &dex_chain;
 	dex_chain     = self;
 	Dee_Incref((DeeObject *)self); /* The reference stored in the dex chain. */
-	rwlock_endwrite(&dex_lock);
+	dex_lock_endwrite();
 	return 0;
 err:
 	return -1;
@@ -594,17 +611,17 @@ extern /*IMAGE_DOS_HEADER*/ int __ImageBase;
 PRIVATE WUNUSED DREF DeeObject *DCALL
 DeeModule_FromElfLoadAddr(ElfW(Addr) addr) {
 	DeeDexObject *iter;
-	rwlock_read(&dex_lock);
+	dex_lock_read();
 	for (iter = dex_chain; iter; iter = iter->d_next) {
 		struct link_map *lm;
 		lm = (struct link_map *)iter->d_handle;
 		if (lm->l_addr != addr)
 			continue;
 		Dee_Incref((DeeModuleObject *)iter);
-		rwlock_endread(&dex_lock);
+		dex_lock_endread();
 		return (DREF DeeObject *)iter;
 	}
-	rwlock_endread(&dex_lock);
+	dex_lock_endread();
 	return NULL;
 }
 
@@ -672,15 +689,15 @@ DeeModule_FromStaticPointer(void const *ptr) {
 	                       (LPCWSTR)ptr, &hTypeModule)) {
 		DeeDexObject *iter;
 		DBG_ALIGNMENT_ENABLE();
-		rwlock_read(&dex_lock);
+		dex_lock_read();
 		for (iter = dex_chain; iter; iter = iter->d_next) {
 			if ((HMODULE)iter->d_handle != hTypeModule)
 				continue;
 			Dee_Incref((DeeModuleObject *)iter);
-			rwlock_endread(&dex_lock);
+			dex_lock_endread();
 			return (DREF DeeObject *)iter;
 		}
-		rwlock_endread(&dex_lock);
+		dex_lock_endread();
 		DBG_ALIGNMENT_DISABLE();
 		if (hTypeModule == HINST_THISCOMPONENT) {
 			/* Type is declared as part of the builtin `deemon' module. */
@@ -705,7 +722,7 @@ DeeModule_FromStaticPointer(void const *ptr) {
 #ifdef DeeModule_FromStaticPointer_USE_XDLMODULE_INFO
 	struct module_basic_info info;
 	DeeDexObject *iter;
-	rwlock_read(&dex_lock);
+	dex_lock_read();
 	for (iter = dex_chain; iter; iter = iter->d_next) {
 		if (xdlmodule_info(iter->d_handle, MODULE_INFO_CLASS_BASIC, &info, sizeof(info)) < sizeof(info))
 			continue;
@@ -714,10 +731,10 @@ DeeModule_FromStaticPointer(void const *ptr) {
 		if ((uintptr_t)ptr >= info.mi_segend)
 			continue;
 		Dee_Incref((DeeModuleObject *)iter);
-		rwlock_endread(&dex_lock);
+		dex_lock_endread();
 		return (DREF DeeObject *)iter;
 	}
-	rwlock_endread(&dex_lock);
+	dex_lock_endread();
 	/* Check if we're dealing with the deemon core itself.
 	 * NOTE: This assumes KOS's special linker behavior where any
 	 *       pointer apart of a module can also be used as an
@@ -761,15 +778,15 @@ DeeModule_FromStaticPointer(void const *ptr) {
 	DeeDexObject *iter;
 	void *module_handle;
 	module_handle = dlgethandle(ptr, DLGETHANDLE_FNORMAL);
-	rwlock_read(&dex_lock);
+	dex_lock_read();
 	for (iter = dex_chain; iter; iter = iter->d_next) {
 		if (iter->d_handle != module_handle)
 			continue;
 		Dee_Incref((DeeModuleObject *)iter);
-		rwlock_endread(&dex_lock);
+		dex_lock_endread();
 		return (DREF DeeObject *)iter;
 	}
-	rwlock_endread(&dex_lock);
+	dex_lock_endread();
 	/* Check if we're dealing with the deemon core itself. */
 #if defined(__pic__) || defined(__PIC__) || defined(__pie__) || defined(__PIE__)
 	/* `dlgetmodule(NULL)' returns the module of the calling function */

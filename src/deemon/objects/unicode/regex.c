@@ -29,7 +29,7 @@
 #include <deemon/stringutils.h>
 #include <deemon/system-features.h>
 #include <deemon/util/atomic.h>
-#include <deemon/util/rwlock.h>
+#include <deemon/util/lock.h>
 
 #include <hybrid/align.h>
 #include <hybrid/alloca.h>

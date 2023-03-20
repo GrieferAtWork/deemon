@@ -27,6 +27,7 @@
 #include "string.h"
 
 #ifndef CONFIG_NO_THREADS
+#include "util/lock.h"
 #include "util/recursive-rwlock.h"
 #endif /* !CONFIG_NO_THREADS */
 
@@ -68,14 +69,12 @@ typedef struct Dee_file_writer_object DeeFileWriterObject;
 
 
 struct Dee_system_file_object {
-	Dee_LFILE_OBJECT_HEAD
+	Dee_FILE_OBJECT_HEAD
 #ifdef DEESYSTEM_FILE_USE_WINDOWS
 #define DEESYSTEM_FILE_HAVE_sf_filename
 	DREF DeeObject  *sf_filename;   /* [0..1][lock(WRITE_ONCE)] The filename of this systemfile. */
-	/*HANDLE*/ void *sf_handle;     /* [0..1] Underlying file handle.
-	                                 *      - STD handles are set to `NULL' before being initialized.
-	                                 *      - Closed handlers are set to `INVALID_HANDLE_VALUE' */
-	/*HANDLE*/ void *sf_ownhandle;  /* [0..1] The owned file handle. */
+	/*HANDLE*/ void *sf_handle;     /* [0..1][lock(CLEAR_ONCE)] Underlying file handle (or `INVALID_HANDLE_VALUE') */
+	/*HANDLE*/ void *sf_ownhandle;  /* [0..1][lock(CLEAR_ONCE)] The owned file handle (or `INVALID_HANDLE_VALUE') */
 	uint32_t         sf_filetype;   /* One of `FILE_TYPE_*' or `FILE_TYPE_UNKNOWN' when not loaded. */
 	unsigned char    sf_pendingc;   /* Number of write-pending characters (for UTF-8 console output). */
 	unsigned char    sf_pending[7]; /* Write-pending characters (for UTF-8 console output). */
@@ -83,16 +82,16 @@ struct Dee_system_file_object {
 #endif /* DEESYSTEM_FILE_USE_WINDOWS */
 #ifdef DEESYSTEM_FILE_USE_UNIX
 #define DEESYSTEM_FILE_HAVE_sf_filename
-	DREF DeeObject  *sf_filename;   /* [0..1][const] The filename, or NULL if not known. */
-	int              sf_handle;     /* [0..1] Underlying system file. */
-	int              sf_ownhandle;  /* [0..1] The owned underlying system file. */
+	DREF DeeObject  *sf_filename;   /* [0..1][lock(WRITE_ONCE)] The filename, or NULL if not known. */
+	int              sf_handle;     /* [0..1][lock(CLEAR_ONCE)] Underlying system file (or `-1') */
+	int              sf_ownhandle;  /* [0..1][lock(CLEAR_ONCE)] The owned underlying system file (or `-1') */
 #define DeeSystemFile_GetHandle(self) ((DeeSystemFileObject *)Dee_REQUIRES_OBJECT(self))->sf_handle
 #endif /* DEESYSTEM_FILE_USE_UNIX */
 #ifdef DEESYSTEM_FILE_USE_STDIO
 #define DEESYSTEM_FILE_HAVE_sf_filename
 	DREF DeeObject  *sf_filename;   /* [0..1][const] The filename, or NULL if not known. */
-	/*FILE*/ void   *sf_handle;     /* [0..1] Underlying system file. */
-	/*FILE*/ void   *sf_ownhandle;  /* [0..1] The owned underlying system file. */
+	/*FILE*/ void   *sf_handle;     /* [0..1][lock(CLEAR_ONCE)] Underlying system file (or `NULL') */
+	/*FILE*/ void   *sf_ownhandle;  /* [0..1][lock(CLEAR_ONCE)] The owned underlying system file (or `NULL') */
 #define DeeSystemFile_GetHandle(self) ((DeeSystemFileObject *)Dee_REQUIRES_OBJECT(self))->sf_handle
 #endif /* DEESYSTEM_FILE_USE_STDIO */
 };
@@ -212,11 +211,31 @@ DFUNDEF WUNUSED int DCALL DeeFileBuffer_SyncTTYs(void);
 
 
 struct Dee_memory_file_object {
-	Dee_LFILE_OBJECT_HEAD
-	char   *mf_begin; /* [0..1][<= mf_end][lock(fo_lock)] The effective start position. */
-	char   *mf_ptr;   /* [0..1][>= mf_begin][lock(fo_lock)] The current string position (May be above `r_end', in which case no more data may be read) */
-	char   *mf_end;   /* [0..1][>= mf_begin][lock(fo_lock)] The effective end position. */
+	Dee_FILE_OBJECT_HEAD
+	char               *mf_begin; /* [0..1][<= mf_end][lock(mf_lock)] The effective start position. */
+	char               *mf_ptr;   /* [0..1][>= mf_begin][lock(mf_lock)] The current string position (May be above `r_end', in which case no more data may be read) */
+	char               *mf_end;   /* [0..1][>= mf_begin][lock(mf_lock)] The effective end position. */
+#ifndef CONFIG_NO_THREADS
+	Dee_atomic_rwlock_t mf_lock;  /* Lock for this memory-file object. */
+#endif /* !CONFIG_NO_THREADS */
 };
+
+#define DeeMemoryFile_LockReading(self)    Dee_atomic_rwlock_reading(&(self)->mf_lock)
+#define DeeMemoryFile_LockWriting(self)    Dee_atomic_rwlock_writing(&(self)->mf_lock)
+#define DeeMemoryFile_LockTryRead(self)    Dee_atomic_rwlock_tryread(&(self)->mf_lock)
+#define DeeMemoryFile_LockTryWrite(self)   Dee_atomic_rwlock_trywrite(&(self)->mf_lock)
+#define DeeMemoryFile_LockCanRead(self)    Dee_atomic_rwlock_canread(&(self)->mf_lock)
+#define DeeMemoryFile_LockCanWrite(self)   Dee_atomic_rwlock_canwrite(&(self)->mf_lock)
+#define DeeMemoryFile_LockWaitRead(self)   Dee_atomic_rwlock_waitread(&(self)->mf_lock)
+#define DeeMemoryFile_LockWaitWrite(self)  Dee_atomic_rwlock_waitwrite(&(self)->mf_lock)
+#define DeeMemoryFile_LockRead(self)       Dee_atomic_rwlock_read(&(self)->mf_lock)
+#define DeeMemoryFile_LockWrite(self)      Dee_atomic_rwlock_write(&(self)->mf_lock)
+#define DeeMemoryFile_LockTryUpgrade(self) Dee_atomic_rwlock_tryupgrade(&(self)->mf_lock)
+#define DeeMemoryFile_LockUpgrade(self)    Dee_atomic_rwlock_upgrade(&(self)->mf_lock)
+#define DeeMemoryFile_LockDowngrade(self)  Dee_atomic_rwlock_downgrade(&(self)->mf_lock)
+#define DeeMemoryFile_LockEndWrite(self)   Dee_atomic_rwlock_endwrite(&(self)->mf_lock)
+#define DeeMemoryFile_LockEndRead(self)    Dee_atomic_rwlock_endread(&(self)->mf_lock)
+#define DeeMemoryFile_LockEnd(self)        Dee_atomic_rwlock_end(&(self)->mf_lock)
 
 DDATDEF DeeFileTypeObject DeeMemoryFile_Type;
 
@@ -242,15 +261,33 @@ DeeFile_ReleaseMemory(DREF /*File*/ DeeObject *__restrict self);
 
 
 struct Dee_file_reader_object {
-	Dee_LFILE_OBJECT_HEAD
-	char           *r_begin;  /* [0..1][in(r_string->s_str)][<= r_end][lock(fo_lock)] The effective start position within `r_string'. */
-	char           *r_ptr;    /* [0..1][>= r_begin][lock(fo_lock)] The current string position (May be above `r_end', in which case no more data may be read) */
-	char           *r_end;    /* [0..1][in(r_string->s_str)][>= r_begin][lock(fo_lock)] The effective end position within `r_string'. */
-	DREF DeeObject *r_owner;  /* [0..1][lock(fo_lock)] The owner for the data.
-	                           * NOTE: Set to NULL when the file is closed. */
-	DeeBuffer       r_buffer; /* [valid_if(r_owner)][lock(fo_lock)]
-	                           * The data buffer view for `r_owner' (using `Dee_BUFFER_FREADONLY') */
+	Dee_FILE_OBJECT_HEAD
+	char               *r_begin;  /* [0..1][in(r_string->s_str)][<= r_end][lock(r_lock)] The effective start position within `r_string'. */
+	char               *r_ptr;    /* [0..1][>= r_begin][lock(r_lock)] The current string position (May be above `r_end', in which case no more data may be read) */
+	char               *r_end;    /* [0..1][in(r_string->s_str)][>= r_begin][lock(r_lock)] The effective end position within `r_string'. */
+	DREF DeeObject     *r_owner;  /* [0..1][lock(r_lock)] The owner for the data. NOTE: Set to NULL when the file is closed. */
+	DeeBuffer           r_buffer; /* [valid_if(r_owner)][lock(r_lock)] The data buffer view for `r_owner' (using `Dee_BUFFER_FREADONLY') */
+#ifndef CONFIG_NO_THREADS
+	Dee_atomic_rwlock_t r_lock;   /* Lock for this file reader object. */
+#endif /* !CONFIG_NO_THREADS */
 };
+
+#define DeeFileReader_LockReading(self)    Dee_atomic_rwlock_reading(&(self)->r_lock)
+#define DeeFileReader_LockWriting(self)    Dee_atomic_rwlock_writing(&(self)->r_lock)
+#define DeeFileReader_LockTryRead(self)    Dee_atomic_rwlock_tryread(&(self)->r_lock)
+#define DeeFileReader_LockTryWrite(self)   Dee_atomic_rwlock_trywrite(&(self)->r_lock)
+#define DeeFileReader_LockCanRead(self)    Dee_atomic_rwlock_canread(&(self)->r_lock)
+#define DeeFileReader_LockCanWrite(self)   Dee_atomic_rwlock_canwrite(&(self)->r_lock)
+#define DeeFileReader_LockWaitRead(self)   Dee_atomic_rwlock_waitread(&(self)->r_lock)
+#define DeeFileReader_LockWaitWrite(self)  Dee_atomic_rwlock_waitwrite(&(self)->r_lock)
+#define DeeFileReader_LockRead(self)       Dee_atomic_rwlock_read(&(self)->r_lock)
+#define DeeFileReader_LockWrite(self)      Dee_atomic_rwlock_write(&(self)->r_lock)
+#define DeeFileReader_LockTryUpgrade(self) Dee_atomic_rwlock_tryupgrade(&(self)->r_lock)
+#define DeeFileReader_LockUpgrade(self)    Dee_atomic_rwlock_upgrade(&(self)->r_lock)
+#define DeeFileReader_LockDowngrade(self)  Dee_atomic_rwlock_downgrade(&(self)->r_lock)
+#define DeeFileReader_LockEndWrite(self)   Dee_atomic_rwlock_endwrite(&(self)->r_lock)
+#define DeeFileReader_LockEndRead(self)    Dee_atomic_rwlock_endread(&(self)->r_lock)
+#define DeeFileReader_LockEnd(self)        Dee_atomic_rwlock_end(&(self)->r_lock)
 
 DDATDEF DeeFileTypeObject DeeFileReader_Type; /* File.Reader */
 
@@ -276,11 +313,31 @@ DeeFile_OpenObjectBuffer(DeeObject *__restrict data,
 
 
 struct Dee_file_writer_object {
-	Dee_LFILE_OBJECT_HEAD
-	struct Dee_unicode_printer w_printer; /* [lock(fo_lock)][owned_if(!w_string)] The printer used to generate the string. */
-	DREF DeeStringObject      *w_string;  /* [lock(fo_lock)][0..1][valid_if((w_printer.up_flags & UNICODE_PRINTER_FWIDTH) != STRING_WIDTH_1BYTE)]
+	Dee_FILE_OBJECT_HEAD
+	struct Dee_unicode_printer w_printer; /* [lock(w_lock)][owned_if(!w_string)] The printer used to generate the string. */
+	DREF DeeStringObject      *w_string;  /* [lock(w_lock)][0..1][valid_if((w_printer.up_flags & UNICODE_PRINTER_FWIDTH) != STRING_WIDTH_1BYTE)]
 	                                       * Cached variant of the last-accessed, generated multi-byte string. */
+#ifndef CONFIG_NO_THREADS
+	Dee_atomic_rwlock_t        w_lock;    /* Lock for this file writer object. */
+#endif /* !CONFIG_NO_THREADS */
 };
+
+#define DeeFileWriter_LockReading(self)    Dee_atomic_rwlock_reading(&(self)->w_lock)
+#define DeeFileWriter_LockWriting(self)    Dee_atomic_rwlock_writing(&(self)->w_lock)
+#define DeeFileWriter_LockTryRead(self)    Dee_atomic_rwlock_tryread(&(self)->w_lock)
+#define DeeFileWriter_LockTryWrite(self)   Dee_atomic_rwlock_trywrite(&(self)->w_lock)
+#define DeeFileWriter_LockCanRead(self)    Dee_atomic_rwlock_canread(&(self)->w_lock)
+#define DeeFileWriter_LockCanWrite(self)   Dee_atomic_rwlock_canwrite(&(self)->w_lock)
+#define DeeFileWriter_LockWaitRead(self)   Dee_atomic_rwlock_waitread(&(self)->w_lock)
+#define DeeFileWriter_LockWaitWrite(self)  Dee_atomic_rwlock_waitwrite(&(self)->w_lock)
+#define DeeFileWriter_LockRead(self)       Dee_atomic_rwlock_read(&(self)->w_lock)
+#define DeeFileWriter_LockWrite(self)      Dee_atomic_rwlock_write(&(self)->w_lock)
+#define DeeFileWriter_LockTryUpgrade(self) Dee_atomic_rwlock_tryupgrade(&(self)->w_lock)
+#define DeeFileWriter_LockUpgrade(self)    Dee_atomic_rwlock_upgrade(&(self)->w_lock)
+#define DeeFileWriter_LockDowngrade(self)  Dee_atomic_rwlock_downgrade(&(self)->w_lock)
+#define DeeFileWriter_LockEndWrite(self)   Dee_atomic_rwlock_endwrite(&(self)->w_lock)
+#define DeeFileWriter_LockEndRead(self)    Dee_atomic_rwlock_endread(&(self)->w_lock)
+#define DeeFileWriter_LockEnd(self)        Dee_atomic_rwlock_end(&(self)->w_lock)
 
 DDATDEF DeeFileTypeObject DeeFileWriter_Type; /* File.Writer */
 

@@ -136,10 +136,10 @@ module_it_getattr_symbol(DeeModuleObject *__restrict self,
 	if likely(!(symbol->ss_flags & (MODSYM_FEXTERN | MODSYM_FPROPERTY))) {
 read_symbol:
 		ASSERT(symbol->ss_index < self->mo_globalc);
-		rwlock_read(&self->mo_lock);
+		DeeModule_LockRead(self);
 		result = self->mo_globalv[symbol->ss_index];
 		Dee_XIncref(result);
-		rwlock_endread(&self->mo_lock);
+		DeeModule_LockEndRead(self);
 		if unlikely(!result)
 			result = ITER_DONE; /* Unbound */
 		return result;
@@ -147,10 +147,10 @@ read_symbol:
 	/* External symbol, or property. */
 	if (symbol->ss_flags & MODSYM_FPROPERTY) {
 		DREF DeeObject *callback;
-		rwlock_read(&self->mo_lock);
+		DeeModule_LockRead(self);
 		callback = self->mo_globalv[symbol->ss_index + MODULE_PROPERTY_GET];
 		Dee_XIncref(callback);
-		rwlock_endread(&self->mo_lock);
+		DeeModule_LockEndRead(self);
 		if unlikely(!callback)
 			return ITER_DONE;
 		/* Invoke the property callback. */
@@ -167,39 +167,39 @@ read_symbol:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 mei_next(ModuleExportsIterator *__restrict self) {
 	DREF DeeObject *result, *result_name, *result_value;
-	DeeModuleObject *module = self->mei_module;
+	DeeModuleObject *mod = self->mei_module;
 	uint16_t old_index, new_index;
-	DeeModule_LockSymbols(module);
+	DeeModule_LockSymbols(mod);
 again:
 	for (;;) {
 		struct module_symbol *symbol;
 		old_index = READ_INDEX(self);
-		if (old_index > module->mo_bucketm) {
-			DeeModule_UnlockSymbols(module);
+		if (old_index > mod->mo_bucketm) {
+			DeeModule_UnlockSymbols(mod);
 			return ITER_DONE;
 		}
 		new_index = old_index;
 		for (;;) {
-			symbol = &module->mo_bucketv[new_index];
+			symbol = &mod->mo_bucketv[new_index];
 			if (symbol->ss_name) {
 				result_name = (DREF DeeObject *)module_symbol_getnameobj(symbol);
 				if unlikely(!result_name) {
-					DeeModule_UnlockSymbols(module);
+					DeeModule_UnlockSymbols(mod);
 					return NULL;
 				}
 				break;
 			}
 continue_symbol_search:
 			++new_index;
-			if (new_index > module->mo_bucketm) {
+			if (new_index > mod->mo_bucketm) {
 				if (!atomic_cmpxch_weak(&self->mei_index, old_index, new_index))
 					goto again;
-				DeeModule_UnlockSymbols(module);
+				DeeModule_UnlockSymbols(mod);
 				return ITER_DONE;
 			}
 		}
 		/* Read the current value of this symbol. */
-		result_value = module_it_getattr_symbol(module, symbol);
+		result_value = module_it_getattr_symbol(mod, symbol);
 		if (!ITER_ISOK(result_value)) {
 			if unlikely(!result_value)
 				goto err;
@@ -210,7 +210,7 @@ continue_symbol_search:
 		Dee_Decref_unlikely(result_value);
 	}
 	Dee_Incref(result_name);
-	DeeModule_UnlockSymbols(module);
+	DeeModule_UnlockSymbols(mod);
 	result = DeeTuple_PackSymbolic(2, result_name, result_value);
 	if unlikely(!result) {
 		Dee_Decref_unlikely(result_name);
@@ -326,26 +326,26 @@ done:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 me_size(ModuleExports *__restrict self) {
 	size_t i, total_symbols = 0;
-	DeeModuleObject *module = self->me_module;
-	DeeModule_LockSymbols(module);
-	for (i = 0; i <= module->mo_bucketm; ++i)
-		if (module->mo_bucketv[i].ss_name)
+	DeeModuleObject *mod = self->me_module;
+	DeeModule_LockSymbols(mod);
+	for (i = 0; i <= mod->mo_bucketm; ++i)
+		if (mod->mo_bucketv[i].ss_name)
 			++total_symbols;
-	DeeModule_UnlockSymbols(module);
+	DeeModule_UnlockSymbols(mod);
 	return DeeInt_NewSize(total_symbols);
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 me_contains(ModuleExports *self, DeeObject *key) {
 	bool result;
-	DeeModuleObject *module = self->me_module;
+	DeeModuleObject *mod = self->me_module;
 	if (!DeeString_Check(key))
 		return_false;
-	DeeModule_LockSymbols(module);
-	result = DeeModule_GetSymbolString(module,
+	DeeModule_LockSymbols(mod);
+	result = DeeModule_GetSymbolString(mod,
 	                                   DeeString_STR(key),
 	                                   DeeString_Hash(key)) != NULL;
-	DeeModule_UnlockSymbols(module);
+	DeeModule_UnlockSymbols(mod);
 	return_bool_(result);
 }
 
@@ -357,10 +357,10 @@ module_my_getattr_symbol(ModuleExports *__restrict exports_map,
 	if likely(!(symbol->ss_flags & (MODSYM_FEXTERN | MODSYM_FPROPERTY))) {
 read_symbol:
 		ASSERT(symbol->ss_index < self->mo_globalc);
-		rwlock_read(&self->mo_lock);
+		DeeModule_LockRead(self);
 		result = self->mo_globalv[symbol->ss_index];
 		Dee_XIncref(result);
-		rwlock_endread(&self->mo_lock);
+		DeeModule_LockEndRead(self);
 		if unlikely(!result) {
 			if (symbol->ss_flags & MODSYM_FNAMEOBJ) {
 				err_unknown_key((DeeObject *)exports_map,
@@ -374,10 +374,10 @@ read_symbol:
 	/* External symbol, or property. */
 	if (symbol->ss_flags & MODSYM_FPROPERTY) {
 		DREF DeeObject *callback;
-		rwlock_read(&self->mo_lock);
+		DeeModule_LockRead(self);
 		callback = self->mo_globalv[symbol->ss_index + MODULE_PROPERTY_GET];
 		Dee_XIncref(callback);
-		rwlock_endread(&self->mo_lock);
+		DeeModule_LockEndRead(self);
 		if unlikely(!callback) {
 			if (symbol->ss_flags & MODSYM_FNAMEOBJ) {
 				err_unknown_key((DeeObject *)exports_map,
@@ -402,22 +402,22 @@ read_symbol:
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 me_get(ModuleExports *self, DeeObject *key) {
 	DREF DeeObject *result;
-	DeeModuleObject *module = self->me_module;
+	DeeModuleObject *mod = self->me_module;
 	struct module_symbol *symbol;
 	if (!DeeString_Check(key))
 		goto unknown_key;
-	DeeModule_LockSymbols(module);
-	symbol = DeeModule_GetSymbolString(module,
+	DeeModule_LockSymbols(mod);
+	symbol = DeeModule_GetSymbolString(mod,
 	                                   DeeString_STR(key),
 	                                   DeeString_Hash(key));
 	if unlikely(!symbol) {
-		DeeModule_UnlockSymbols(module);
+		DeeModule_UnlockSymbols(mod);
 unknown_key:
 		err_unknown_key((DeeObject *)self, key);
 		return NULL;
 	}
-	result = module_my_getattr_symbol(self, module, symbol);
-	DeeModule_UnlockSymbols(module);
+	result = module_my_getattr_symbol(self, mod, symbol);
+	DeeModule_UnlockSymbols(mod);
 	return result;
 }
 
@@ -425,26 +425,26 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 me_get_f(ModuleExports *self, size_t argc, DeeObject *const *argv) {
 	DREF DeeObject *result;
 	DeeObject *key;
-	DeeModuleObject *module = self->me_module;
+	DeeModuleObject *mod = self->me_module;
 	struct module_symbol *symbol;
 	DeeObject *defl = Dee_None;
 	if (DeeArg_Unpack(argc, argv, "o|o:get", &key, &defl))
 		goto err;
 	if (!DeeString_Check(key))
 		goto unknown_key;
-	DeeModule_LockSymbols(module);
-	symbol = DeeModule_GetSymbolString(module,
+	DeeModule_LockSymbols(mod);
+	symbol = DeeModule_GetSymbolString(mod,
 	                                   DeeString_STR(key),
 	                                   DeeString_Hash(key));
 	if unlikely(!symbol) {
-		DeeModule_UnlockSymbols(module);
+		DeeModule_UnlockSymbols(mod);
 unknown_key:
 		err_unknown_key((DeeObject *)self, key);
 err:
 		return NULL;
 	}
-	result = module_it_getattr_symbol(module, symbol);
-	DeeModule_UnlockSymbols(module);
+	result = module_it_getattr_symbol(mod, symbol);
+	DeeModule_UnlockSymbols(mod);
 	if (result == ITER_DONE) {
 		result = defl;
 		Dee_Incref(defl);
@@ -455,22 +455,22 @@ err:
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 me_del(ModuleExports *__restrict self, DeeObject *__restrict key) {
 	int result;
-	DeeModuleObject *module = self->me_module;
+	DeeModuleObject *mod = self->me_module;
 	struct module_symbol *symbol;
 	if (!DeeString_Check(key))
 		goto unknown_key;
-	DeeModule_LockSymbols(module);
-	symbol = DeeModule_GetSymbolString(module,
+	DeeModule_LockSymbols(mod);
+	symbol = DeeModule_GetSymbolString(mod,
 	                                   DeeString_STR(key),
 	                                   DeeString_Hash(key));
 	if unlikely(!symbol) {
-		DeeModule_UnlockSymbols(module);
+		DeeModule_UnlockSymbols(mod);
 unknown_key:
 		err_unknown_key((DeeObject *)self, key);
 		return -1;
 	}
-	result = DeeModule_DelAttrSymbol(module, symbol);
-	DeeModule_UnlockSymbols(module);
+	result = DeeModule_DelAttrSymbol(mod, symbol);
+	DeeModule_UnlockSymbols(mod);
 	return result;
 }
 
@@ -479,22 +479,22 @@ me_set(ModuleExports *__restrict self,
        DeeObject *__restrict key,
        DeeObject *__restrict value) {
 	int result;
-	DeeModuleObject *module = self->me_module;
+	DeeModuleObject *mod = self->me_module;
 	struct module_symbol *symbol;
 	if (!DeeString_Check(key))
 		goto unknown_key;
-	DeeModule_LockSymbols(module);
-	symbol = DeeModule_GetSymbolString(module,
+	DeeModule_LockSymbols(mod);
+	symbol = DeeModule_GetSymbolString(mod,
 	                                   DeeString_STR(key),
 	                                   DeeString_Hash(key));
 	if unlikely(!symbol) {
-		DeeModule_UnlockSymbols(module);
+		DeeModule_UnlockSymbols(mod);
 unknown_key:
 		err_unknown_key((DeeObject *)self, key);
 		return -1;
 	}
-	result = DeeModule_SetAttrSymbol(module, symbol, value);
-	DeeModule_UnlockSymbols(module);
+	result = DeeModule_SetAttrSymbol(mod, symbol, value);
+	DeeModule_UnlockSymbols(mod);
 	return result;
 }
 
@@ -635,35 +635,35 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 mgi_next(ModuleGlobalsIterator *__restrict self) {
-	DeeModuleObject *module = self->mgi_module;
+	DeeModuleObject *mod = self->mgi_module;
 	DREF DeeObject *result;
 	uint16_t old_index, new_index;
-	DeeModule_LockSymbols(module);
+	DeeModule_LockSymbols(mod);
 again:
 	for (;;) {
 		old_index = atomic_read(&self->mgi_index);
-		if (old_index >= module->mo_globalc) {
-			DeeModule_UnlockSymbols(module);
+		if (old_index >= mod->mo_globalc) {
+			DeeModule_UnlockSymbols(mod);
 			return ITER_DONE;
 		}
 		new_index = old_index;
-		rwlock_read(&module->mo_lock);
-		while ((result = module->mo_globalv[new_index]) == NULL) {
+		DeeModule_LockRead(mod);
+		while ((result = mod->mo_globalv[new_index]) == NULL) {
 			++new_index;
-			if (new_index >= module->mo_globalc) {
-				rwlock_endread(&module->mo_lock);
+			if (new_index >= mod->mo_globalc) {
+				DeeModule_LockEndRead(mod);
 				if (!atomic_cmpxch_weak_or_write(&self->mgi_index, old_index, new_index))
 					goto again;
 				return ITER_DONE;
 			}
 		}
 		Dee_Incref(result);
-		rwlock_endread(&module->mo_lock);
+		DeeModule_LockEndRead(mod);
 		if (atomic_cmpxch_weak_or_write(&self->mgi_index, old_index, new_index + 1))
 			break;
 		Dee_Decref(result);
 	}
-	DeeModule_UnlockSymbols(module);
+	DeeModule_UnlockSymbols(mod);
 	return result;
 }
 
@@ -771,27 +771,27 @@ PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 mg_get(ModuleGlobals *self, DeeObject *index_ob) {
 	size_t index;
 	DREF DeeObject *result;
-	DeeModuleObject *module = self->mg_module;
+	DeeModuleObject *mod = self->mg_module;
 	if (DeeObject_AsSize(index_ob, &index))
 		goto err;
-	DeeModule_LockSymbols(module);
-	if (index >= module->mo_globalc) {
-		size_t num_globals = module->mo_globalc;
-		DeeModule_UnlockSymbols(module);
+	DeeModule_LockSymbols(mod);
+	if (index >= mod->mo_globalc) {
+		size_t num_globals = mod->mo_globalc;
+		DeeModule_UnlockSymbols(mod);
 		err_index_out_of_bounds((DeeObject *)self, index, num_globals);
 		goto err;
 	}
-	rwlock_read(&module->mo_lock);
-	result = module->mo_globalv[index];
+	DeeModule_LockRead(mod);
+	result = mod->mo_globalv[index];
 	if unlikely(!result) {
-		rwlock_endread(&module->mo_lock);
-		DeeModule_UnlockSymbols(module);
+		DeeModule_LockEndRead(mod);
+		DeeModule_UnlockSymbols(mod);
 		err_unbound_index((DeeObject *)self, index);
 		goto err;
 	}
 	Dee_Incref(result);
-	rwlock_endread(&module->mo_lock);
-	DeeModule_UnlockSymbols(module);
+	DeeModule_LockEndRead(mod);
+	DeeModule_UnlockSymbols(mod);
 	return result;
 err:
 	return NULL;
@@ -801,22 +801,22 @@ PRIVATE NONNULL((1, 2)) int DCALL
 mg_set(ModuleGlobals *self, DeeObject *index_ob, DeeObject *value) {
 	size_t index;
 	DREF DeeObject *result;
-	DeeModuleObject *module = self->mg_module;
+	DeeModuleObject *mod = self->mg_module;
 	if (DeeObject_AsSize(index_ob, &index))
 		goto err;
-	DeeModule_LockSymbols(module);
-	if (index >= module->mo_globalc) {
-		size_t num_globals = module->mo_globalc;
-		DeeModule_UnlockSymbols(module);
+	DeeModule_LockSymbols(mod);
+	if (index >= mod->mo_globalc) {
+		size_t num_globals = mod->mo_globalc;
+		DeeModule_UnlockSymbols(mod);
 		err_index_out_of_bounds((DeeObject *)self, index, num_globals);
 		goto err;
 	}
-	rwlock_write(&module->mo_lock);
+	DeeModule_LockWrite(mod);
 	Dee_XIncref(value);
-	result                    = module->mo_globalv[index];
-	module->mo_globalv[index] = value;
-	rwlock_endwrite(&module->mo_lock);
-	DeeModule_UnlockSymbols(module);
+	result = mod->mo_globalv[index];
+	mod->mo_globalv[index] = value;
+	DeeModule_LockEndWrite(mod);
+	DeeModule_UnlockSymbols(mod);
 	Dee_XDecref(result);
 	return 0;
 err:

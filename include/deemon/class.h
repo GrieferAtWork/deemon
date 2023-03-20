@@ -563,6 +563,23 @@ struct Dee_instance_desc {
 	                                                     * Instance member table. */
 };
 
+#define Dee_instance_desc_lock_reading(self)    Dee_atomic_rwlock_reading(&(self)->id_lock)
+#define Dee_instance_desc_lock_writing(self)    Dee_atomic_rwlock_writing(&(self)->id_lock)
+#define Dee_instance_desc_lock_tryread(self)    Dee_atomic_rwlock_tryread(&(self)->id_lock)
+#define Dee_instance_desc_lock_trywrite(self)   Dee_atomic_rwlock_trywrite(&(self)->id_lock)
+#define Dee_instance_desc_lock_canread(self)    Dee_atomic_rwlock_canread(&(self)->id_lock)
+#define Dee_instance_desc_lock_canwrite(self)   Dee_atomic_rwlock_canwrite(&(self)->id_lock)
+#define Dee_instance_desc_lock_waitread(self)   Dee_atomic_rwlock_waitread(&(self)->id_lock)
+#define Dee_instance_desc_lock_waitwrite(self)  Dee_atomic_rwlock_waitwrite(&(self)->id_lock)
+#define Dee_instance_desc_lock_read(self)       Dee_atomic_rwlock_read(&(self)->id_lock)
+#define Dee_instance_desc_lock_write(self)      Dee_atomic_rwlock_write(&(self)->id_lock)
+#define Dee_instance_desc_lock_tryupgrade(self) Dee_atomic_rwlock_tryupgrade(&(self)->id_lock)
+#define Dee_instance_desc_lock_upgrade(self)    Dee_atomic_rwlock_upgrade(&(self)->id_lock)
+#define Dee_instance_desc_lock_downgrade(self)  Dee_atomic_rwlock_downgrade(&(self)->id_lock)
+#define Dee_instance_desc_lock_endwrite(self)   Dee_atomic_rwlock_endwrite(&(self)->id_lock)
+#define Dee_instance_desc_lock_endread(self)    Dee_atomic_rwlock_endread(&(self)->id_lock)
+#define Dee_instance_desc_lock_end(self)        Dee_atomic_rwlock_end(&(self)->id_lock)
+
 #define DeeInstance_DESC(class_descriptor, self) \
 	((struct Dee_instance_desc *)((uintptr_t)Dee_REQUIRES_OBJECT(self) + (class_descriptor)->cd_offset))
 

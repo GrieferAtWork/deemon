@@ -36,6 +36,7 @@
 #include <deemon/system.h>
 #include <deemon/thread.h>
 #include <deemon/util/atomic.h>
+#include <deemon/util/lock.h>
 
 #include <hybrid/minmax.h>
 #include <hybrid/sched/yield.h>
@@ -59,7 +60,7 @@
 #include <deemon/compiler/optimize.h>
 #include <deemon/compiler/tpp.h>
 #include <deemon/string.h>
-#include <deemon/util/rwlock.h>
+#include <deemon/util/lock.h>
 
 #include "../runtime/runtime_error.h"
 #include "../runtime/strings.h"
@@ -491,21 +492,54 @@ PRIVATE size_t /*               */ modules_c = 0;    /* [lock(modules_lock)] Amo
 PRIVATE size_t /*               */ modules_a = 0;    /* [lock(modules_lock)] Allocated hash-map size. */
 PRIVATE struct module_object_list *modules_v = NULL; /* [lock(modules_lock)][0..modules_a][owned] Hash-map of modules, sorted by their filenames. */
 #ifndef CONFIG_NO_THREADS
-PRIVATE rwlock_t modules_lock = RWLOCK_INIT;
+PRIVATE atomic_rwlock_t modules_lock = ATOMIC_RWLOCK_INIT;
 #endif /* !CONFIG_NO_THREADS */
+#define modules_lock_reading()    Dee_atomic_rwlock_reading(&modules_lock)
+#define modules_lock_writing()    Dee_atomic_rwlock_writing(&modules_lock)
+#define modules_lock_tryread()    Dee_atomic_rwlock_tryread(&modules_lock)
+#define modules_lock_trywrite()   Dee_atomic_rwlock_trywrite(&modules_lock)
+#define modules_lock_canread()    Dee_atomic_rwlock_canread(&modules_lock)
+#define modules_lock_canwrite()   Dee_atomic_rwlock_canwrite(&modules_lock)
+#define modules_lock_waitread()   Dee_atomic_rwlock_waitread(&modules_lock)
+#define modules_lock_waitwrite()  Dee_atomic_rwlock_waitwrite(&modules_lock)
+#define modules_lock_read()       Dee_atomic_rwlock_read(&modules_lock)
+#define modules_lock_write()      Dee_atomic_rwlock_write(&modules_lock)
+#define modules_lock_tryupgrade() Dee_atomic_rwlock_tryupgrade(&modules_lock)
+#define modules_lock_upgrade()    Dee_atomic_rwlock_upgrade(&modules_lock)
+#define modules_lock_downgrade()  Dee_atomic_rwlock_downgrade(&modules_lock)
+#define modules_lock_endwrite()   Dee_atomic_rwlock_endwrite(&modules_lock)
+#define modules_lock_endread()    Dee_atomic_rwlock_endread(&modules_lock)
+#define modules_lock_end()        Dee_atomic_rwlock_end(&modules_lock)
 
 /* Name-based, global module hash table. */
 PRIVATE size_t /*               */ modules_glob_c = 0;    /* [lock(modules_glob_lock)] Amount of modules in-cache. */
 PRIVATE size_t /*               */ modules_glob_a = 0;    /* [lock(modules_glob_lock)] Allocated hash-map size. */
 PRIVATE struct module_object_list *modules_glob_v = NULL; /* [lock(modules_glob_lock)][0..modules_a][owned] Hash-map of modules, sorted by their filenames. */
 #ifndef CONFIG_NO_THREADS
-PRIVATE rwlock_t modules_glob_lock = RWLOCK_INIT;
+PRIVATE atomic_rwlock_t modules_glob_lock = ATOMIC_RWLOCK_INIT;
 #endif /* !CONFIG_NO_THREADS */
+#define modules_glob_lock_reading()    Dee_atomic_rwlock_reading(&modules_glob_lock)
+#define modules_glob_lock_writing()    Dee_atomic_rwlock_writing(&modules_glob_lock)
+#define modules_glob_lock_tryread()    Dee_atomic_rwlock_tryread(&modules_glob_lock)
+#define modules_glob_lock_trywrite()   Dee_atomic_rwlock_trywrite(&modules_glob_lock)
+#define modules_glob_lock_canread()    Dee_atomic_rwlock_canread(&modules_glob_lock)
+#define modules_glob_lock_canwrite()   Dee_atomic_rwlock_canwrite(&modules_glob_lock)
+#define modules_glob_lock_waitread()   Dee_atomic_rwlock_waitread(&modules_glob_lock)
+#define modules_glob_lock_waitwrite()  Dee_atomic_rwlock_waitwrite(&modules_glob_lock)
+#define modules_glob_lock_read()       Dee_atomic_rwlock_read(&modules_glob_lock)
+#define modules_glob_lock_write()      Dee_atomic_rwlock_write(&modules_glob_lock)
+#define modules_glob_lock_tryupgrade() Dee_atomic_rwlock_tryupgrade(&modules_glob_lock)
+#define modules_glob_lock_upgrade()    Dee_atomic_rwlock_upgrade(&modules_glob_lock)
+#define modules_glob_lock_downgrade()  Dee_atomic_rwlock_downgrade(&modules_glob_lock)
+#define modules_glob_lock_endwrite()   Dee_atomic_rwlock_endwrite(&modules_glob_lock)
+#define modules_glob_lock_endread()    Dee_atomic_rwlock_endread(&modules_glob_lock)
+#define modules_glob_lock_end()        Dee_atomic_rwlock_end(&modules_glob_lock)
+
 
 PRIVATE WUNUSED NONNULL((1)) DeeModuleObject *DCALL
 find_file_module(DeeStringObject *__restrict module_file, dhash_t hash) {
 	DeeModuleObject *result = NULL;
-	ASSERT(rwlock_reading(&modules_lock));
+	ASSERT(modules_lock_reading());
 	if (modules_a) {
 		result = LIST_FIRST(&modules_v[hash % modules_a]);
 		while (result) {
@@ -524,7 +558,7 @@ PRIVATE WUNUSED NONNULL((1)) DeeModuleObject *DCALL
 find_glob_module(DeeStringObject *__restrict module_name) {
 	dhash_t hash = fs_hashobj(module_name);
 	DeeModuleObject *result = NULL;
-	ASSERT(rwlock_reading(&modules_glob_lock));
+	ASSERT(modules_glob_lock_reading());
 	if (modules_glob_a) {
 		result = LIST_FIRST(&modules_glob_v[hash % modules_glob_a]);
 		while (result) {
@@ -543,7 +577,7 @@ find_glob_module_str(/*utf-8*/ char const *__restrict module_name_str,
                      size_t module_name_len) {
 	dhash_t hash = fs_hashutf8(module_name_str, module_name_len);
 	DeeModuleObject *result = NULL;
-	ASSERT(rwlock_reading(&modules_glob_lock));
+	ASSERT(modules_glob_lock_reading());
 	if (modules_glob_a) {
 		result = LIST_FIRST(&modules_glob_v[hash % modules_glob_a]);
 		while (result) {
@@ -561,9 +595,7 @@ PRIVATE bool DCALL rehash_file_modules(void) {
 	struct module_object_list *new_vector, *biter, *bend, *dst;
 	DeeModuleObject *iter, *next;
 	size_t new_size = modules_a * 2;
-#ifndef CONFIG_NO_THREADS
-	ASSERT(rwlock_writing(&modules_lock));
-#endif /* !CONFIG_NO_THREADS */
+	ASSERT(modules_lock_writing());
 	if unlikely(!new_size)
 		new_size = 4;
 do_alloc_new_vector:
@@ -605,9 +637,7 @@ PRIVATE bool DCALL rehash_glob_modules(void) {
 	struct module_object_list *new_vector, *biter, *bend, *dst;
 	DeeModuleObject *iter, *next;
 	size_t new_size = modules_glob_a * 2;
-#ifndef CONFIG_NO_THREADS
-	ASSERT(rwlock_writing(&modules_glob_lock));
-#endif /* !CONFIG_NO_THREADS */
+	ASSERT(modules_glob_lock_writing());
 	if unlikely(!new_size)
 		new_size = 4;
 do_alloc_new_vector:
@@ -651,7 +681,7 @@ add_file_module(DeeModuleObject *__restrict self) {
 	struct module_object_list *bucket;
 	ASSERT(!LIST_ISBOUND(self, mo_link));
 	ASSERT_OBJECT_TYPE_EXACT(self->mo_path, &DeeString_Type);
-	ASSERT(rwlock_writing(&modules_lock));
+	ASSERT(modules_lock_writing());
 	if (modules_c >= modules_a && !rehash_file_modules())
 		return false;
 	ASSERT(modules_a != 0);
@@ -671,7 +701,7 @@ add_glob_module(DeeModuleObject *__restrict self) {
 	ASSERT(!LIST_ISBOUND(self, mo_globlink));
 	ASSERT(self->mo_name);
 #ifndef CONFIG_NO_THREADS
-	ASSERT(rwlock_writing(&modules_glob_lock));
+	ASSERT(modules_glob_lock_writing());
 #endif /* !CONFIG_NO_THREADS */
 	Dee_DPRINTF("[RT] Cached global module %r loaded from %r\n",
 	            self->mo_name, self->mo_path ? self->mo_path : (DeeStringObject *)Dee_EmptyString);
@@ -691,7 +721,7 @@ add_glob_module(DeeModuleObject *__restrict self) {
 INTERN NONNULL((1)) void DCALL
 module_unbind(DeeModuleObject *__restrict self) {
 	if (LIST_ISBOUND(self, mo_link)) {
-		rwlock_write(&modules_lock);
+		modules_lock_write();
 		COMPILER_READ_BARRIER();
 		if (LIST_ISBOUND(self, mo_link)) {
 			LIST_REMOVE(self, mo_link);
@@ -700,11 +730,11 @@ module_unbind(DeeModuleObject *__restrict self) {
 				modules_v = NULL;
 				modules_a = 0;
 			}
-			rwlock_endwrite(&modules_lock);
+			modules_lock_endwrite();
 		}
 	}
 	if (LIST_ISBOUND(self, mo_globlink)) {
-		rwlock_write(&modules_glob_lock);
+		modules_glob_lock_write();
 		COMPILER_READ_BARRIER();
 		if (LIST_ISBOUND(self, mo_globlink)) {
 			LIST_REMOVE(self, mo_globlink);
@@ -714,7 +744,7 @@ module_unbind(DeeModuleObject *__restrict self) {
 				modules_glob_a = 0;
 			}
 		}
-		rwlock_endwrite(&modules_glob_lock);
+		modules_glob_lock_endwrite();
 	}
 }
 
@@ -752,28 +782,28 @@ DeeModule_OpenSourceFile(DeeObject *__restrict source_pathname,
 		goto err;
 
 	/* Quick check if this module had already been opened. */
-	rwlock_read(&modules_lock);
+	modules_lock_read();
 	hash   = fs_hashobj(module_path_ob);
 	result = find_file_module(module_path_ob, hash);
 	if (result && Dee_IncrefIfNotZero(result)) {
-		rwlock_endread(&modules_lock);
+		modules_lock_endread();
 got_result_modulepath:
 		Dee_Decref(module_path_ob);
 		goto got_result;
 	}
-	rwlock_endread(&modules_lock);
+	modules_lock_endread();
 
 	/* Also search for an existing instance
 	 * of the specified global module name. */
 #if 1 /* This is optional */
 	if (ITER_ISOK(module_global_name)) {
-		rwlock_read(&modules_glob_lock);
+		modules_glob_lock_read();
 		result = find_glob_module((DeeStringObject *)module_global_name);
 		if (result && Dee_IncrefIfNotZero(result)) {
-			rwlock_endread(&modules_glob_lock);
+			modules_glob_lock_endread();
 			goto got_result_modulepath;
 		}
-		rwlock_endread(&modules_glob_lock);
+		modules_glob_lock_endread();
 	}
 #endif
 
@@ -842,12 +872,12 @@ got_result_modulepath:
 	if (module_global_name) {
 set_file_module_global:
 #ifndef CONFIG_NO_THREADS
-		rwlock_write(&modules_lock);
-		if (!rwlock_trywrite(&modules_glob_lock)) {
-			rwlock_endwrite(&modules_lock);
-			rwlock_write(&modules_glob_lock);
-			if (!rwlock_trywrite(&modules_lock)) {
-				rwlock_endwrite(&modules_glob_lock);
+		modules_lock_write();
+		if (!modules_glob_lock_trywrite()) {
+			modules_lock_endwrite();
+			modules_glob_lock_write();
+			if (!modules_lock_trywrite()) {
+				modules_glob_lock_endwrite();
 				goto set_file_module_global;
 			}
 		}
@@ -856,8 +886,8 @@ set_file_module_global:
 		if likely(!existing_module)
 			existing_module = find_glob_module(module_name_ob);
 		if unlikely(existing_module && Dee_IncrefIfNotZero(existing_module)) {
-			rwlock_endwrite(&modules_glob_lock);
-			rwlock_endwrite(&modules_lock);
+			modules_glob_lock_endwrite();
+			modules_lock_endwrite();
 			Dee_DecrefDokill(result);
 			Dee_Decref_likely(input_stream);
 			result = existing_module;
@@ -866,7 +896,7 @@ set_file_module_global:
 		/* Add the module to the file-cache. */
 		if ((modules_c >= modules_a && !rehash_file_modules()) ||
 		    (modules_glob_c >= modules_glob_a && !rehash_glob_modules())) {
-			rwlock_endwrite(&modules_lock);
+			modules_lock_endwrite();
 			/* Try to collect some memory, then try again. */
 			if (Dee_CollectMemory(1))
 				goto set_file_module_global;
@@ -875,14 +905,14 @@ set_file_module_global:
 		}
 		add_glob_module(result);
 		add_file_module(result);
-		rwlock_endwrite(&modules_glob_lock);
-		rwlock_endwrite(&modules_lock);
+		modules_glob_lock_endwrite();
+		modules_lock_endwrite();
 	} else {
 set_file_module:
-		rwlock_write(&modules_lock);
+		modules_lock_write();
 		existing_module = find_file_module(module_path_ob, hash);
 		if unlikely(existing_module && Dee_IncrefIfNotZero(existing_module)) {
-			rwlock_endwrite(&modules_lock);
+			modules_lock_endwrite();
 			Dee_DecrefDokill(result);
 			Dee_Decref_likely(input_stream);
 			result = existing_module;
@@ -893,14 +923,14 @@ try_load_module_after_failure:
 		}
 		/* Add the module to the file-cache. */
 		if unlikely(!add_file_module(result)) {
-			rwlock_endwrite(&modules_lock);
+			modules_lock_endwrite();
 			/* Try to collect some memory, then try again. */
 			if (Dee_CollectMemory(1))
 				goto set_file_module;
 			Dee_Decref_likely(input_stream);
 			goto err_inputstream_r;
 		}
-		rwlock_endwrite(&modules_lock);
+		modules_lock_endwrite();
 	}
 load_module_after_failure:
 	/* Actually load the module from its source stream. */
@@ -1018,35 +1048,35 @@ DeeModule_OpenSourceStream(DeeObject *source_stream,
 	} else {
 		DeeModuleObject *existing_module;
 		/* Check if the module is already loaded in the global cache. */
-		rwlock_read(&modules_glob_lock);
+		modules_glob_lock_read();
 		result = find_glob_module((DeeStringObject *)module_name);
 		if (result && Dee_IncrefIfNotZero(result)) {
-			rwlock_endread(&modules_glob_lock);
+			modules_glob_lock_endread();
 			goto found_existing_module;
 		}
-		rwlock_endread(&modules_glob_lock);
+		modules_glob_lock_endread();
 		/* Create a new module. */
 		result = (DREF DeeModuleObject *)DeeModule_New(module_name);
 		/* Add the module to the global module cache. */
 set_global_module:
-		rwlock_write(&modules_glob_lock);
+		modules_glob_lock_write();
 		existing_module = find_glob_module((DeeStringObject *)module_name);
 		if unlikely(existing_module && Dee_IncrefIfNotZero(existing_module)) {
 			/* The module got created in the mean time. */
-			rwlock_endwrite(&modules_glob_lock);
+			modules_glob_lock_endwrite();
 			Dee_Decref(result);
 			result = existing_module;
 			goto found_existing_module;
 		}
 		/* Add the module to the global cache. */
 		if unlikely(!add_glob_module(result)) {
-			rwlock_endwrite(&modules_glob_lock);
+			modules_glob_lock_endwrite();
 			/* Try to collect some memory, then try again. */
 			if (Dee_CollectMemory(1))
 				goto set_global_module;
 			goto err_r;
 		}
-		rwlock_endwrite(&modules_glob_lock);
+		modules_glob_lock_endwrite();
 	}
 found_existing_module:
 	load_error = DeeModule_BeginLoading(result);
@@ -1223,7 +1253,7 @@ DeeModule_New(/*String*/ DeeObject *__restrict name) {
 	DeeObject_Init(result, &DeeModule_Type);
 	result->mo_name    = (DeeStringObject *)name;
 	result->mo_bucketv = empty_module_buckets;
-	rwlock_cinit(&result->mo_lock);
+	atomic_rwlock_cinit(&result->mo_lock);
 	Dee_Incref(name);
 	weakref_support_init(result);
 	DeeGC_Track((DREF DeeObject *)result);
@@ -1260,7 +1290,7 @@ DeeModule_DoGet(char const *__restrict name,
 		goto done;
 	}
 
-	rwlock_read(&modules_glob_lock);
+	modules_glob_lock_read();
 	if (modules_glob_a) {
 		result = LIST_FIRST(&modules_glob_v[hash % modules_glob_a]);
 		while (result) {
@@ -1272,7 +1302,7 @@ DeeModule_DoGet(char const *__restrict name,
 			result = LIST_NEXT(result, mo_globlink);
 		}
 	}
-	rwlock_endread(&modules_glob_lock);
+	modules_glob_lock_endread();
 done:
 	return (DREF DeeObject *)result;
 }
@@ -1339,15 +1369,19 @@ DeeModule_OpenInPathAbs(/*utf-8*/ char const *__restrict module_path, size_t mod
 	            module_global_name ? module_global_name : Dee_EmptyString,
 	            module_pathsize, module_path,
 	            module_namesize, module_name);
+	{
+		size_t buf_alloc;
 #if !defined(CONFIG_NO_DEC) && !defined(CONFIG_NO_DEX)
-	buf = (char *)Dee_AMallocc(module_pathsize + 1 + module_namesize + MAX_C((size_t)5, (size_t)SHLEN) + 1, sizeof(char));
+		buf_alloc = module_pathsize + 1 + module_namesize + MAX_C((size_t)5, (size_t)SHLEN) + 1;
 #elif !defined(CONFIG_NO_DEC)
-	buf = (char *)Dee_AMallocc(module_pathsize + 1 + module_namesize + 5 + 1, sizeof(char));
+		buf_alloc = module_pathsize + 1 + module_namesize + 5 + 1;
 #elif !defined(CONFIG_NO_DEX)
-	buf = (char *)Dee_AMallocc(module_pathsize + 1 + module_namesize + MAX_C((size_t)4, (size_t)SHLEN) + 1, sizeof(char));
+		buf_alloc = module_pathsize + 1 + module_namesize + MAX_C((size_t)4, (size_t)SHLEN) + 1;
 #else /* ... */
-	buf = (char *)Dee_AMallocc(module_pathsize + 1 + module_namesize + 4 + 1, sizeof(char));
+		buf_alloc = module_pathsize + 1 + module_namesize + 4 + 1;
 #endif /* !... */
+		buf = (char *)Dee_AMallocc(buf_alloc, sizeof(char));
+	}
 	if unlikely(!buf)
 		goto err;
 	dst = buf;
@@ -1410,7 +1444,7 @@ err_bad_module_name:
 again_search_fs_modules:
 
 	/* Search for modules that have already been cached. */
-	rwlock_read(&modules_lock);
+	modules_lock_read();
 	if (modules_a) {
 		LIST_FOREACH (result, &modules_v[hash % modules_a], mo_link) {
 			char *utf8_path;
@@ -1420,7 +1454,7 @@ again_search_fs_modules:
 			if unlikely(!utf8_path) {
 				if (!Dee_IncrefIfNotZero(result))
 					break;
-				rwlock_endread(&modules_lock);
+				modules_lock_endread();
 				utf8_path = DeeString_AsUtf8((DeeObject *)result->mo_path);
 				if unlikely(!utf8_path)
 					goto err_buf_r;
@@ -1442,13 +1476,13 @@ again_search_fs_modules:
 			/* Found it! */
 			if (!Dee_IncrefIfNotZero(result))
 				break;
-			rwlock_endread(&modules_lock);
+			modules_lock_endread();
 got_result_set_global:
 			if (module_global_name && likely(!LIST_ISBOUND(result, mo_globlink))) {
 				DeeModuleObject *existing_module;
 				/* Cache the module as global (if it wasn't already) */
 again_find_existing_global_module:
-				rwlock_write(&modules_glob_lock);
+				modules_glob_lock_write();
 				COMPILER_READ_BARRIER();
 				if likely(!LIST_ISBOUND(result, mo_globlink)) {
 					/* TODO: Must change `result->mo_name' to `module_global_name'
@@ -1477,24 +1511,24 @@ again_find_existing_global_module:
 
 					existing_module = find_glob_module(result->mo_name);
 					if unlikely(existing_module && Dee_IncrefIfNotZero(existing_module)) {
-						rwlock_endwrite(&modules_glob_lock);
+						modules_glob_lock_endwrite();
 						Dee_Decref_likely(result);
 						result = existing_module;
 						goto got_result;
 					}
 					if (!add_glob_module(result)) {
-						rwlock_endwrite(&modules_glob_lock);
+						modules_glob_lock_endwrite();
 						if (Dee_CollectMemory(1))
 							goto again_find_existing_global_module;
 						goto err_buf_r;
 					}
 				}
-				rwlock_endwrite(&modules_glob_lock);
+				modules_glob_lock_endwrite();
 			}
 			goto got_result;
 		}
 	}
-	rwlock_endread(&modules_lock);
+	modules_lock_endread();
 	if (ITER_ISOK(module_global_name)) {
 		module_name_ob = (DREF DeeStringObject *)module_global_name;
 		Dee_Incref(module_global_name);
@@ -1571,12 +1605,12 @@ err_buf_name_dec_stream:
 				if (module_global_name) {
 set_dec_file_module_global:
 #ifndef CONFIG_NO_THREADS
-					rwlock_write(&modules_lock);
-					if (!rwlock_trywrite(&modules_glob_lock)) {
-						rwlock_endwrite(&modules_lock);
-						rwlock_write(&modules_glob_lock);
-						if (!rwlock_trywrite(&modules_lock)) {
-							rwlock_endwrite(&modules_glob_lock);
+					modules_lock_write();
+					if (!modules_glob_lock_trywrite()) {
+						modules_lock_endwrite();
+						modules_glob_lock_write();
+						if (!modules_lock_trywrite()) {
+							modules_glob_lock_endwrite();
 							goto set_dec_file_module_global;
 						}
 					}
@@ -1585,8 +1619,8 @@ set_dec_file_module_global:
 					if likely(!existing_module)
 						existing_module = find_glob_module(module_name_ob);
 					if unlikely(existing_module && Dee_IncrefIfNotZero(existing_module)) {
-						rwlock_endwrite(&modules_glob_lock);
-						rwlock_endwrite(&modules_lock);
+						modules_glob_lock_endwrite();
+						modules_lock_endwrite();
 						Dee_DecrefDokill(result);
 						Dee_Decref_likely(dec_stream);
 						result = existing_module;
@@ -1595,7 +1629,7 @@ set_dec_file_module_global:
 					/* Add the module to the file-cache. */
 					if ((modules_c >= modules_a && !rehash_file_modules()) ||
 					    (modules_glob_c >= modules_glob_a && !rehash_glob_modules())) {
-						rwlock_endwrite(&modules_lock);
+						modules_lock_endwrite();
 						/* Try to collect some memory, then try again. */
 						if (Dee_CollectMemory(1))
 							goto set_dec_file_module_global;
@@ -1604,14 +1638,14 @@ set_dec_file_module_global:
 					}
 					add_glob_module(result);
 					add_file_module(result);
-					rwlock_endwrite(&modules_glob_lock);
-					rwlock_endwrite(&modules_lock);
+					modules_glob_lock_endwrite();
+					modules_lock_endwrite();
 				} else {
 set_dec_file_module:
-					rwlock_write(&modules_lock);
+					modules_lock_write();
 					existing_module = find_file_module(module_path_ob, hash);
 					if unlikely(existing_module && Dee_IncrefIfNotZero(existing_module)) {
-						rwlock_endwrite(&modules_lock);
+						modules_lock_endwrite();
 						Dee_DecrefDokill(result);
 						Dee_Decref_likely(dec_stream);
 						result = existing_module;
@@ -1622,14 +1656,14 @@ try_load_module_after_dec_failure:
 					}
 					/* Add the module to the file-cache. */
 					if unlikely(!add_file_module(result)) {
-						rwlock_endwrite(&modules_lock);
+						modules_lock_endwrite();
 						/* Try to collect some memory, then try again. */
 						if (Dee_CollectMemory(1))
 							goto set_dec_file_module;
 						Dee_Decref_likely(dec_stream);
 						goto err_buf_r;
 					}
-					rwlock_endwrite(&modules_lock);
+					modules_lock_endwrite();
 				}
 				error = DeeModule_OpenDec(result, dec_stream, options);
 				Dee_Decref_likely(dec_stream);
@@ -1753,12 +1787,12 @@ load_module_after_dec_failure:
 			if (module_global_name) {
 set_dex_file_module_global:
 #ifndef CONFIG_NO_THREADS
-				rwlock_write(&modules_lock);
-				if (!rwlock_trywrite(&modules_glob_lock)) {
-					rwlock_endwrite(&modules_lock);
-					rwlock_write(&modules_glob_lock);
-					if (!rwlock_trywrite(&modules_lock)) {
-						rwlock_endwrite(&modules_glob_lock);
+				modules_lock_write();
+				if (!modules_glob_lock_trywrite()) {
+					modules_lock_endwrite();
+					modules_glob_lock_write();
+					if (!modules_lock_trywrite()) {
+						modules_glob_lock_endwrite();
 						goto set_dex_file_module_global;
 					}
 				}
@@ -1767,8 +1801,8 @@ set_dex_file_module_global:
 				if likely(!existing_module)
 					existing_module = find_glob_module(module_name_ob);
 				if unlikely(existing_module && Dee_IncrefIfNotZero(existing_module)) {
-					rwlock_endwrite(&modules_glob_lock);
-					rwlock_endwrite(&modules_lock);
+					modules_glob_lock_endwrite();
+					modules_lock_endwrite();
 					Dee_DecrefDokill(result);
 					DeeSystem_DlClose(dex_handle);
 					result = existing_module;
@@ -1777,7 +1811,7 @@ set_dex_file_module_global:
 				/* Add the module to the file-cache. */
 				if ((modules_c >= modules_a && !rehash_file_modules()) ||
 				    (modules_glob_c >= modules_glob_a && !rehash_glob_modules())) {
-					rwlock_endwrite(&modules_lock);
+					modules_lock_endwrite();
 					/* Try to collect some memory, then try again. */
 					if (Dee_CollectMemory(1))
 						goto set_dex_file_module_global;
@@ -1786,14 +1820,14 @@ set_dex_file_module_global:
 				}
 				add_glob_module(result);
 				add_file_module(result);
-				rwlock_endwrite(&modules_glob_lock);
-				rwlock_endwrite(&modules_lock);
+				modules_glob_lock_endwrite();
+				modules_lock_endwrite();
 			} else {
 set_dex_file_module:
-				rwlock_write(&modules_lock);
+				modules_lock_write();
 				existing_module = find_file_module(module_path_ob, hash);
 				if unlikely(existing_module && Dee_IncrefIfNotZero(existing_module)) {
-					rwlock_endwrite(&modules_lock);
+					modules_lock_endwrite();
 					Dee_DecrefDokill(result);
 					DeeSystem_DlClose(dex_handle);
 					result = existing_module;
@@ -1804,14 +1838,14 @@ try_load_module_after_dex_failure:
 				}
 				/* Add the module to the file-cache. */
 				if unlikely(!add_file_module(result)) {
-					rwlock_endwrite(&modules_lock);
+					modules_lock_endwrite();
 					/* Try to collect some memory, then try again. */
 					if (Dee_CollectMemory(1))
 						goto set_dex_file_module;
 					DeeSystem_DlClose(dex_handle);
 					goto err_buf_r;
 				}
-				rwlock_endwrite(&modules_lock);
+				modules_lock_endwrite();
 			}
 load_module_after_dex_failure:
 			error = dex_load_handle((DeeDexObject *)result,
@@ -1867,12 +1901,12 @@ load_module_after_dex_failure:
 		if (module_global_name) {
 set_src_file_module_global:
 #ifndef CONFIG_NO_THREADS
-			rwlock_write(&modules_lock);
-			if (!rwlock_trywrite(&modules_glob_lock)) {
-				rwlock_endwrite(&modules_lock);
-				rwlock_write(&modules_glob_lock);
-				if (!rwlock_trywrite(&modules_lock)) {
-					rwlock_endwrite(&modules_glob_lock);
+			modules_lock_write();
+			if (!modules_glob_lock_trywrite()) {
+				modules_lock_endwrite();
+				modules_glob_lock_write();
+				if (!modules_lock_trywrite()) {
+					modules_glob_lock_endwrite();
 					goto set_src_file_module_global;
 				}
 			}
@@ -1881,8 +1915,8 @@ set_src_file_module_global:
 			if likely(!existing_module)
 				existing_module = find_glob_module(module_name_ob);
 			if unlikely(existing_module && Dee_IncrefIfNotZero(existing_module)) {
-				rwlock_endwrite(&modules_glob_lock);
-				rwlock_endwrite(&modules_lock);
+				modules_glob_lock_endwrite();
+				modules_lock_endwrite();
 				Dee_DecrefDokill(result);
 				Dee_Decref_likely(source_stream);
 				result = existing_module;
@@ -1891,7 +1925,7 @@ set_src_file_module_global:
 			/* Add the module to the file-cache. */
 			if ((modules_c >= modules_a && !rehash_file_modules()) ||
 			    (modules_glob_c >= modules_glob_a && !rehash_glob_modules())) {
-				rwlock_endwrite(&modules_lock);
+				modules_lock_endwrite();
 				/* Try to collect some memory, then try again. */
 				if (Dee_CollectMemory(1))
 					goto set_src_file_module_global;
@@ -1900,14 +1934,14 @@ set_src_file_module_global:
 			}
 			add_glob_module(result);
 			add_file_module(result);
-			rwlock_endwrite(&modules_glob_lock);
-			rwlock_endwrite(&modules_lock);
+			modules_glob_lock_endwrite();
+			modules_lock_endwrite();
 		} else {
 set_src_file_module:
-			rwlock_write(&modules_lock);
+			modules_lock_write();
 			existing_module = find_file_module(module_path_ob, hash);
 			if unlikely(existing_module && Dee_IncrefIfNotZero(existing_module)) {
-				rwlock_endwrite(&modules_lock);
+				modules_lock_endwrite();
 				Dee_DecrefDokill(result);
 				Dee_Decref_likely(source_stream);
 				result = existing_module;
@@ -1918,14 +1952,14 @@ try_load_module_after_src_failure:
 			}
 			/* Add the module to the file-cache. */
 			if unlikely(!add_file_module(result)) {
-				rwlock_endwrite(&modules_lock);
+				modules_lock_endwrite();
 				/* Try to collect some memory, then try again. */
 				if (Dee_CollectMemory(1))
 					goto set_src_file_module;
 				Dee_Decref_likely(source_stream);
 				goto err_buf_r;
 			}
-			rwlock_endwrite(&modules_lock);
+			modules_lock_endwrite();
 		}
 load_module_after_src_failure:
 		error = DeeModule_LoadSourceStreamEx(result,
@@ -2158,13 +2192,13 @@ DeeModule_OpenGlobal(DeeObject *__restrict module_name,
 	}
 
 	/* Search for a cache entry for this module in the global module cache. */
-	rwlock_read(&modules_glob_lock);
+	modules_glob_lock_read();
 	result = find_glob_module((DeeStringObject *)module_name);
 	if (result && Dee_IncrefIfNotZero(result)) {
-		rwlock_endread(&modules_glob_lock);
+		modules_glob_lock_endread();
 		goto done;
 	}
-	rwlock_endread(&modules_glob_lock);
+	modules_glob_lock_endread();
 
 	module_namestr = DeeString_AsUtf8(module_name);
 	if unlikely(!module_namestr)
@@ -2235,13 +2269,13 @@ DeeModule_OpenGlobalString(/*utf-8*/ char const *__restrict module_name,
 	}
 
 	/* Search for a cache entry for this module in the global module cache. */
-	rwlock_read(&modules_glob_lock);
+	modules_glob_lock_read();
 	result = find_glob_module_str(module_name, module_namesize);
 	if (result && Dee_IncrefIfNotZero(result)) {
-		rwlock_endread(&modules_glob_lock);
+		modules_glob_lock_endread();
 		goto done;
 	}
-	rwlock_endread(&modules_glob_lock);
+	modules_glob_lock_endread();
 
 	/* Construct the module name object. */
 	module_name_ob = DeeString_NewUtf8(module_name,
@@ -2918,7 +2952,7 @@ DeeExec_CompileModuleStream(DeeObject *source_stream,
 		goto err_module_name;
 	result->mo_name    = (DREF DeeStringObject *)module_name; /* Inherit reference. */
 	result->mo_bucketv = empty_module_buckets;
-	rwlock_cinit(&result->mo_lock);
+	atomic_rwlock_cinit(&result->mo_lock);
 	DeeObject_Init(result, &DeeModule_Type);
 	weakref_support_init(result);
 	DeeGC_Track((DREF DeeObject *)result);
@@ -3432,8 +3466,24 @@ err:
 
 
 #ifndef CONFIG_NO_THREADS
-PRIVATE rwlock_t deemon_home_lock = RWLOCK_INIT;
+PRIVATE atomic_rwlock_t deemon_home_lock = ATOMIC_RWLOCK_INIT;
 #endif /* !CONFIG_NO_THREADS */
+#define deemon_home_lock_reading()    Dee_atomic_rwlock_reading(&deemon_home_lock)
+#define deemon_home_lock_writing()    Dee_atomic_rwlock_writing(&deemon_home_lock)
+#define deemon_home_lock_tryread()    Dee_atomic_rwlock_tryread(&deemon_home_lock)
+#define deemon_home_lock_trywrite()   Dee_atomic_rwlock_trywrite(&deemon_home_lock)
+#define deemon_home_lock_canread()    Dee_atomic_rwlock_canread(&deemon_home_lock)
+#define deemon_home_lock_canwrite()   Dee_atomic_rwlock_canwrite(&deemon_home_lock)
+#define deemon_home_lock_waitread()   Dee_atomic_rwlock_waitread(&deemon_home_lock)
+#define deemon_home_lock_waitwrite()  Dee_atomic_rwlock_waitwrite(&deemon_home_lock)
+#define deemon_home_lock_read()       Dee_atomic_rwlock_read(&deemon_home_lock)
+#define deemon_home_lock_write()      Dee_atomic_rwlock_write(&deemon_home_lock)
+#define deemon_home_lock_tryupgrade() Dee_atomic_rwlock_tryupgrade(&deemon_home_lock)
+#define deemon_home_lock_upgrade()    Dee_atomic_rwlock_upgrade(&deemon_home_lock)
+#define deemon_home_lock_downgrade()  Dee_atomic_rwlock_downgrade(&deemon_home_lock)
+#define deemon_home_lock_endwrite()   Dee_atomic_rwlock_endwrite(&deemon_home_lock)
+#define deemon_home_lock_endread()    Dee_atomic_rwlock_endread(&deemon_home_lock)
+#define deemon_home_lock_end()        Dee_atomic_rwlock_end(&deemon_home_lock)
 
 PRIVATE DREF DeeStringObject *deemon_home = NULL;
 
@@ -3462,31 +3512,31 @@ PRIVATE DREF DeeStringObject *deemon_home = NULL;
  * NOTE: The home path _MUST_ include a trailing slash! */
 PUBLIC WUNUSED DREF /*String*/ DeeObject *DCALL DeeExec_GetHome(void) {
 	DREF DeeStringObject *result;
-	rwlock_read(&deemon_home_lock);
+	deemon_home_lock_read();
 	result = deemon_home;
 	if (result) {
 		Dee_Incref(result);
-		rwlock_endread(&deemon_home_lock);
+		deemon_home_lock_endread();
 		return (DREF DeeObject *)result;
 	}
-	rwlock_endread(&deemon_home_lock);
+	deemon_home_lock_endread();
 	/* Re-create the default home path. */
 	result = get_default_home();
 
 	/* Save the generated path in the global variable. */
 	if likely(result) {
 		DREF DeeStringObject *other;
-		rwlock_write(&deemon_home_lock);
+		deemon_home_lock_write();
 		other = deemon_home;
 		if unlikely(other) {
 			Dee_Incref(other);
-			rwlock_endwrite(&deemon_home_lock);
+			deemon_home_lock_endwrite();
 			Dee_Decref(result);
 			return (DREF DeeObject *)other;
 		}
 		Dee_Incref(result);
 		deemon_home = result;
-		rwlock_endwrite(&deemon_home_lock);
+		deemon_home_lock_endwrite();
 	}
 	return (DREF DeeObject *)result;
 }
@@ -3498,10 +3548,10 @@ DeeExec_SetHome(/*String*/ DeeObject *new_home) {
 	DREF DeeStringObject *old_home;
 	ASSERT_OBJECT_TYPE_EXACT_OPT(new_home, &DeeString_Type);
 	Dee_XIncref(new_home);
-	rwlock_write(&deemon_home_lock);
+	deemon_home_lock_write();
 	old_home    = deemon_home;
 	deemon_home = (DREF DeeStringObject *)new_home;
-	rwlock_endwrite(&deemon_home_lock);
+	deemon_home_lock_endwrite();
 	Dee_XDecref(old_home);
 }
 

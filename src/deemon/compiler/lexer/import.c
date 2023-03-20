@@ -634,12 +634,12 @@ ast_import_all_from_module(DeeModuleObject *__restrict mod,
 							if (error == 0) {
 								/* Both modules are now initialized. */
 								DeeObject *old_val, *new_val;
-								rwlock_read(&mod->mo_lock);
+								DeeModule_LockRead(mod);
 								old_val = mod->mo_globalv[iter->ss_index];
-								rwlock_endread(&mod->mo_lock);
-								rwlock_read(&sym->s_extern.e_module->mo_lock);
+								DeeModule_LockEndRead(mod);
+								DeeModule_LockRead(sym->s_extern.e_module);
 								new_val = sym->s_extern.e_module->mo_globalv[sym->s_extern.e_symbol->ss_index];
-								rwlock_endread(&sym->s_extern.e_module->mo_lock);
+								DeeModule_LockEndRead(sym->s_extern.e_module);
 								if (old_val == new_val) {
 									/* One of the modules contains a copy-alias (i.e. a secondary memory location)
 									 * for the other symbol. - Try to figure out which one is aliasing which, and

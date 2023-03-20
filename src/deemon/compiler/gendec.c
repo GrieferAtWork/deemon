@@ -930,7 +930,7 @@ INTERN WUNUSED int (DCALL dec_putobj)(DeeObject *self) {
 		if (dec_putb(DTYPE16_HASHSET & 0xff))
 			goto err;
 		DeeHashSet_LockRead(me);
-		length = me->s_used;
+		length = me->hs_used;
 		DeeHashSet_LockEndRead(me);
 		if (dec_putptr((uint32_t)length))
 			goto err;
@@ -938,10 +938,10 @@ INTERN WUNUSED int (DCALL dec_putobj)(DeeObject *self) {
 		/* Encode all of the set's elements. */
 		written = 0;
 		DeeHashSet_LockRead(me);
-		for (i = 0; i <= me->s_mask; ++i) {
+		for (i = 0; i <= me->hs_mask; ++i) {
 			DREF DeeObject *obj;
 			int error;
-			obj = me->s_elem[i].si_key;
+			obj = me->hs_elem[i].hsi_key;
 			if (!obj)
 				continue;
 			Dee_Incref(obj);
@@ -1078,10 +1078,10 @@ INTERN WUNUSED int (DCALL dec_putobj)(DeeObject *self) {
 		if (dec_putptr((uint32_t)me->rs_size))
 			goto err;
 		for (i = 0; i <= me->rs_mask; ++i) {
-			if (!me->rs_elem[i].si_key)
+			if (!me->rs_elem[i].rsi_key)
 				continue;
 			/* Emit the set item. */
-			if (dec_putobj(me->rs_elem[i].si_key))
+			if (dec_putobj(me->rs_elem[i].rsi_key))
 				goto err;
 #ifndef NDEBUG
 			++num_written;

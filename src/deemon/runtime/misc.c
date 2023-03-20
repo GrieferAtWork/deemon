@@ -33,7 +33,6 @@
 #include <deemon/system-features.h> /* memcpy(), ... */
 #include <deemon/thread.h>
 #include <deemon/util/lock.h>
-#include <deemon/util/rwlock.h>
 
 #include <hybrid/overflow.h>
 

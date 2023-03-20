@@ -25,7 +25,7 @@
 
 #include <deemon/format.h>
 #include <deemon/util/atomic.h>
-#include <deemon/util/rwlock.h>
+#include <deemon/util/lock.h>
 
 #include <hybrid/sched/yield.h>
 
@@ -102,7 +102,7 @@ typedef struct {
 
 PRIVATE FUNC(Slab) FUNC(slab) = {
 #ifndef CONFIG_NO_THREADS
-	/* .s_lock = */ RWLOCK_INIT,
+	/* .s_lock = */ ATOMIC_LOCK_INIT,
 #endif /* !CONFIG_NO_THREADS */
 	/* .s_free = */ SLAB_PAGE_INVALID,
 	/* .s_full = */ SLAB_PAGE_INVALID,

@@ -261,7 +261,7 @@ get_prefix_object_safe(struct code_frame *__restrict frame,
 {
 	DREF DeeObject *result;
 	instruction_t *ip = frame->cf_ip;
-	DeeModuleObject *module;
+	DeeModuleObject *mod;
 	uint16_t imm_val;
 	switch (*ip++) {
 
@@ -294,11 +294,11 @@ do_get_static:
 #else /* EXEC_SAFE */
 		ASSERT(imm_val < code->co_staticc);
 #endif /* !EXEC_SAFE */
-		atomic_rwlock_read(&code->co_static_lock);
+		DeeCode_StaticLockRead(code);
 		result = code->co_staticv[imm_val];
 		ASSERT_OBJECT(result);
 		Dee_Incref(result);
-		atomic_rwlock_endread(&code->co_static_lock);
+		DeeCode_StaticLockEndRead(code);
 		break;
 
 	case ASM_EXTERN:
@@ -310,36 +310,36 @@ err_invalid_extern:
 			err_srt_invalid_extern(frame, UNALIGNED_GETLE8(ip + 0), imm_val);
 			return NULL;
 		}
-		module = code->co_module->mo_importv[UNALIGNED_GETLE8(ip + 0)];
-		if unlikely(imm_val >= module->mo_globalc)
+		mod = code->co_module->mo_importv[UNALIGNED_GETLE8(ip + 0)];
+		if unlikely(imm_val >= mod->mo_globalc)
 			goto err_invalid_extern;
 #else /* EXEC_SAFE */
 		ASSERT(UNALIGNED_GETLE8(ip + 0) < code->co_module->mo_importc);
-		module  = code->co_module->mo_importv[UNALIGNED_GETLE8(ip + 0)];
+		mod  = code->co_module->mo_importv[UNALIGNED_GETLE8(ip + 0)];
 		imm_val = UNALIGNED_GETLE8(ip + 1);
-		ASSERT(imm_val < module->mo_globalc);
+		ASSERT(imm_val < mod->mo_globalc);
 #endif /* !EXEC_SAFE */
 		goto do_get_module_object;
 	case ASM_GLOBAL:
 		imm_val = UNALIGNED_GETLE8(ip + 0);
 do_get_global:
-		module = code->co_module;
+		mod = code->co_module;
 #ifdef EXEC_SAFE
-		if unlikely(imm_val >= module->mo_globalc) {
+		if unlikely(imm_val >= mod->mo_globalc) {
 			frame->cf_sp = sp;
 			err_srt_invalid_global(frame, imm_val);
 			return NULL;
 		}
 #else /* EXEC_SAFE */
-		ASSERT(imm_val < module->mo_globalc);
+		ASSERT(imm_val < mod->mo_globalc);
 #endif /* !EXEC_SAFE */
 do_get_module_object:
-		rwlock_read(&module->mo_lock);
-		result = module->mo_globalv[imm_val];
+		DeeModule_LockRead(mod);
+		result = mod->mo_globalv[imm_val];
 		Dee_XIncref(result);
-		rwlock_endread(&module->mo_lock);
+		DeeModule_LockEndRead(mod);
 		if unlikely(!result)
-			err_unbound_global(module, imm_val);
+			err_unbound_global(mod, imm_val);
 		ASSERT_OBJECT_OPT(result);
 		break;
 
@@ -383,15 +383,15 @@ err_invalid_extern16:
 				err_srt_invalid_extern(frame, UNALIGNED_GETLE16(ip + 0), imm_val);
 				return NULL;
 			}
-			module  = code->co_module->mo_importv[imm_val];
+			mod  = code->co_module->mo_importv[imm_val];
 			imm_val = UNALIGNED_GETLE16(ip + 2);
-			if unlikely(imm_val >= module->mo_globalc)
+			if unlikely(imm_val >= mod->mo_globalc)
 				goto err_invalid_extern16;
 #else /* EXEC_SAFE */
 			ASSERT(imm_val < code->co_module->mo_importc);
-			module  = code->co_module->mo_importv[imm_val];
+			mod  = code->co_module->mo_importv[imm_val];
 			imm_val = UNALIGNED_GETLE16(ip + 2);
-			ASSERT(imm_val < module->mo_globalc);
+			ASSERT(imm_val < mod->mo_globalc);
 #endif /* !EXEC_SAFE */
 			goto do_get_module_object;
 
@@ -444,7 +444,7 @@ xch_prefix_object_safe(struct code_frame *__restrict frame,
 {
 	DREF DeeObject *result;
 	instruction_t *ip = frame->cf_ip;
-	DeeModuleObject *module;
+	DeeModuleObject *mod;
 	uint16_t imm_val;
 	switch (*ip++) {
 
@@ -477,10 +477,10 @@ do_get_static:
 #else /* EXEC_SAFE */
 		ASSERT(imm_val < code->co_staticc);
 #endif /* !EXEC_SAFE */
-		atomic_rwlock_write(&code->co_static_lock);
-		result                    = code->co_staticv[imm_val]; /* Inherit reference. */
-		code->co_staticv[imm_val] = value;                     /* Inherit reference. */
-		atomic_rwlock_endwrite(&code->co_static_lock);
+		DeeCode_StaticLockWrite(code);
+		result = code->co_staticv[imm_val]; /* Inherit reference. */
+		code->co_staticv[imm_val] = value;  /* Inherit reference. */
+		DeeCode_StaticLockEndWrite(code);
 		ASSERT_OBJECT(result);
 		break;
 
@@ -493,40 +493,40 @@ err_invalid_extern:
 			err_srt_invalid_extern(frame, UNALIGNED_GETLE8(ip + 0), imm_val);
 			return NULL;
 		}
-		module = code->co_module->mo_importv[UNALIGNED_GETLE8(ip + 0)];
-		if unlikely(imm_val >= module->mo_globalc)
+		mod = code->co_module->mo_importv[UNALIGNED_GETLE8(ip + 0)];
+		if unlikely(imm_val >= mod->mo_globalc)
 			goto err_invalid_extern;
 #else /* EXEC_SAFE */
 		ASSERT(UNALIGNED_GETLE8(ip + 0) < code->co_module->mo_importc);
-		module  = code->co_module->mo_importv[UNALIGNED_GETLE8(ip + 0)];
+		mod  = code->co_module->mo_importv[UNALIGNED_GETLE8(ip + 0)];
 		imm_val = UNALIGNED_GETLE8(ip + 1);
-		ASSERT(imm_val < module->mo_globalc);
+		ASSERT(imm_val < mod->mo_globalc);
 #endif /* !EXEC_SAFE */
 		goto do_get_module_object;
 
 	case ASM_GLOBAL:
 		imm_val = UNALIGNED_GETLE8(ip + 0);
 do_get_global:
-		module = code->co_module;
+		mod = code->co_module;
 #ifdef EXEC_SAFE
-		if unlikely(imm_val >= module->mo_globalc) {
+		if unlikely(imm_val >= mod->mo_globalc) {
 			frame->cf_sp = sp;
 			err_srt_invalid_global(frame, imm_val);
 			return NULL;
 		}
 #else /* EXEC_SAFE */
-		ASSERT(imm_val < module->mo_globalc);
+		ASSERT(imm_val < mod->mo_globalc);
 #endif /* !EXEC_SAFE */
 do_get_module_object:
-		rwlock_write(&module->mo_lock);
-		result = module->mo_globalv[imm_val]; /* Inherit reference. */
+		DeeModule_LockWrite(mod);
+		result = mod->mo_globalv[imm_val]; /* Inherit reference. */
 		if unlikely(!result) {
-			rwlock_endwrite(&module->mo_lock);
-			err_unbound_global(module, imm_val);
+			DeeModule_LockEndWrite(mod);
+			err_unbound_global(mod, imm_val);
 			return NULL;
 		}
-		module->mo_globalv[imm_val] = value; /* Inherit reference. */
-		rwlock_endwrite(&module->mo_lock);
+		mod->mo_globalv[imm_val] = value; /* Inherit reference. */
+		DeeModule_LockEndWrite(mod);
 		ASSERT_OBJECT(result);
 		break;
 
@@ -570,15 +570,15 @@ err_invalid_extern16:
 				err_srt_invalid_extern(frame, UNALIGNED_GETLE16(ip + 0), imm_val);
 				return NULL;
 			}
-			module  = code->co_module->mo_importv[imm_val];
+			mod  = code->co_module->mo_importv[imm_val];
 			imm_val = UNALIGNED_GETLE16(ip + 2);
-			if unlikely(imm_val >= module->mo_globalc)
+			if unlikely(imm_val >= mod->mo_globalc)
 				goto err_invalid_extern16;
 #else /* EXEC_SAFE */
 			ASSERT(imm_val < code->co_module->mo_importc);
-			module  = code->co_module->mo_importv[imm_val];
+			mod  = code->co_module->mo_importv[imm_val];
 			imm_val = UNALIGNED_GETLE16(ip + 2);
-			ASSERT(imm_val < module->mo_globalc);
+			ASSERT(imm_val < mod->mo_globalc);
 #endif /* !EXEC_SAFE */
 			goto do_get_module_object;
 
@@ -631,7 +631,7 @@ set_prefix_object_safe(struct code_frame *__restrict frame,
 {
 	DREF DeeObject *old_value;
 	instruction_t *ip = frame->cf_ip;
-	DeeModuleObject *module;
+	DeeModuleObject *mod;
 	uint16_t imm_val;
 	ASSERT_OBJECT(value);
 	switch (*ip++) {
@@ -667,11 +667,11 @@ do_set_static:
 #else /* EXEC_SAFE */
 		ASSERT(imm_val < code->co_staticc);
 #endif /* !EXEC_SAFE */
-		atomic_rwlock_write(&code->co_static_lock);
+		DeeCode_StaticLockWrite(code);
 		old_value                 = code->co_staticv[imm_val];
 		code->co_staticv[imm_val] = value;
 		ASSERT_OBJECT(old_value);
-		atomic_rwlock_endwrite(&code->co_static_lock);
+		DeeCode_StaticLockEndWrite(code);
 		Dee_Decref(old_value);
 		break;
 
@@ -685,36 +685,36 @@ err_invalid_extern:
 			Dee_Decref(value);
 			return -1;
 		}
-		module = code->co_module->mo_importv[UNALIGNED_GETLE8(ip + 0)];
-		if unlikely(imm_val >= module->mo_globalc)
+		mod = code->co_module->mo_importv[UNALIGNED_GETLE8(ip + 0)];
+		if unlikely(imm_val >= mod->mo_globalc)
 			goto err_invalid_extern;
 #else /* EXEC_SAFE */
 		ASSERT(UNALIGNED_GETLE8(ip + 0) < code->co_module->mo_importc);
-		module  = code->co_module->mo_importv[UNALIGNED_GETLE8(ip + 0)];
+		mod  = code->co_module->mo_importv[UNALIGNED_GETLE8(ip + 0)];
 		imm_val = UNALIGNED_GETLE8(ip + 1);
-		ASSERT(imm_val < module->mo_globalc);
+		ASSERT(imm_val < mod->mo_globalc);
 #endif /* !EXEC_SAFE */
 		goto do_set_module_object;
 
 	case ASM_GLOBAL:
 		imm_val = UNALIGNED_GETLE8(ip + 0);
 do_set_global:
-		module = code->co_module;
+		mod = code->co_module;
 #ifdef EXEC_SAFE
-		if unlikely(imm_val >= module->mo_globalc) {
+		if unlikely(imm_val >= mod->mo_globalc) {
 			frame->cf_sp = sp;
 			err_srt_invalid_global(frame, imm_val);
 			Dee_Decref(value);
 			return -1;
 		}
 #else /* EXEC_SAFE */
-		ASSERT(imm_val < module->mo_globalc);
+		ASSERT(imm_val < mod->mo_globalc);
 #endif /* !EXEC_SAFE */
 do_set_module_object:
-		rwlock_write(&module->mo_lock);
-		old_value                   = module->mo_globalv[imm_val];
-		module->mo_globalv[imm_val] = value;
-		rwlock_endwrite(&module->mo_lock);
+		DeeModule_LockWrite(mod);
+		old_value = mod->mo_globalv[imm_val];
+		mod->mo_globalv[imm_val] = value;
+		DeeModule_LockEndWrite(mod);
 		Dee_XDecref(old_value);
 		break;
 
@@ -757,15 +757,15 @@ err_invalid_extern16:
 				Dee_Decref(value);
 				return -1;
 			}
-			module  = code->co_module->mo_importv[imm_val];
+			mod  = code->co_module->mo_importv[imm_val];
 			imm_val = UNALIGNED_GETLE16(ip + 2);
-			if unlikely(imm_val >= module->mo_globalc)
+			if unlikely(imm_val >= mod->mo_globalc)
 				goto err_invalid_extern16;
 #else /* EXEC_SAFE */
 			ASSERT(imm_val < code->co_module->mo_importc);
-			module  = code->co_module->mo_importv[imm_val];
+			mod  = code->co_module->mo_importv[imm_val];
 			imm_val = UNALIGNED_GETLE16(ip + 2);
-			ASSERT(imm_val < module->mo_globalc);
+			ASSERT(imm_val < mod->mo_globalc);
 #endif /* !EXEC_SAFE */
 			goto do_set_module_object;
 
@@ -973,18 +973,18 @@ inc_execsz_start:
 #define STATICimm             code->co_staticv[imm_val]
 #define CONSTimm              code->co_staticv[imm_val]
 #define CONSTimm2             code->co_staticv[imm_val2]
-#define EXTERN_LOCKREAD()     atomic_rwlock_read(&code->co_module->mo_importv[imm_val]->mo_lock)
-#define EXTERN_LOCKENDREAD()  atomic_rwlock_endread(&code->co_module->mo_importv[imm_val]->mo_lock)
-#define EXTERN_LOCKWRITE()    atomic_rwlock_write(&code->co_module->mo_importv[imm_val]->mo_lock)
-#define EXTERN_LOCKENDWRITE() atomic_rwlock_endwrite(&code->co_module->mo_importv[imm_val]->mo_lock)
-#define GLOBAL_LOCKREAD()     atomic_rwlock_read(&code->co_module->mo_lock)
-#define GLOBAL_LOCKENDREAD()  atomic_rwlock_endread(&code->co_module->mo_lock)
-#define GLOBAL_LOCKWRITE()    atomic_rwlock_write(&code->co_module->mo_lock)
-#define GLOBAL_LOCKENDWRITE() atomic_rwlock_endwrite(&code->co_module->mo_lock)
-#define STATIC_LOCKREAD()     atomic_rwlock_read(&code->co_static_lock)
-#define STATIC_LOCKENDREAD()  atomic_rwlock_endread(&code->co_static_lock)
-#define STATIC_LOCKWRITE()    atomic_rwlock_write(&code->co_static_lock)
-#define STATIC_LOCKENDWRITE() atomic_rwlock_endwrite(&code->co_static_lock)
+#define EXTERN_LOCKREAD()     DeeModule_LockRead(code->co_module->mo_importv[imm_val])
+#define EXTERN_LOCKENDREAD()  DeeModule_LockEndRead(code->co_module->mo_importv[imm_val])
+#define EXTERN_LOCKWRITE()    DeeModule_LockWrite(code->co_module->mo_importv[imm_val])
+#define EXTERN_LOCKENDWRITE() DeeModule_LockEndWrite(code->co_module->mo_importv[imm_val])
+#define GLOBAL_LOCKREAD()     DeeModule_LockRead(code->co_module)
+#define GLOBAL_LOCKENDREAD()  DeeModule_LockEndRead(code->co_module)
+#define GLOBAL_LOCKWRITE()    DeeModule_LockWrite(code->co_module)
+#define GLOBAL_LOCKENDWRITE() DeeModule_LockEndWrite(code->co_module)
+#define STATIC_LOCKREAD()     DeeCode_StaticLockRead(code)
+#define STATIC_LOCKENDREAD()  DeeCode_StaticLockEndRead(code)
+#define STATIC_LOCKWRITE()    DeeCode_StaticLockWrite(code)
+#define STATIC_LOCKENDWRITE() DeeCode_StaticLockEndWrite(code)
 #define THIS                  (frame->cf_this)
 #define TOP                   sp[-1]
 #define FIRST                 sp[-1]

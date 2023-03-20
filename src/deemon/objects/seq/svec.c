@@ -1097,17 +1097,17 @@ sveciter_next(SharedVectorIterator *__restrict self) {
 	SharedVector *vec      = self->si_seq;
 	for (;;) {
 		size_t index;
-		atomic_rwlock_read(&vec->sv_lock);
+		SharedVector_LockRead(vec);
 		index = atomic_read(&self->si_index);
 		if (self->si_index >= vec->sv_length) {
-			atomic_rwlock_endread(&vec->sv_lock);
+			SharedVector_LockEndRead(vec);
 			break;
 		}
 		result = vec->sv_vector[index];
 
 		/* Acquire a reference to keep the item alive. */
 		Dee_Incref(result);
-		atomic_rwlock_endread(&vec->sv_lock);
+		SharedVector_LockEndRead(vec);
 		if (atomic_cmpxch_weak_or_write(&self->si_index, index, index + 1))
 			break;
 
@@ -1319,12 +1319,12 @@ svec_contains(SharedVector *self,
               DeeObject *other) {
 	size_t index;
 	int temp;
-	atomic_rwlock_read(&self->sv_lock);
+	SharedVector_LockRead(self);
 	for (index = 0; index < self->sv_length; ++index) {
 		DREF DeeObject *item;
 		item = self->sv_vector[index];
 		Dee_Incref(item);
-		atomic_rwlock_endread(&self->sv_lock);
+		SharedVector_LockEndRead(self);
 		temp = DeeObject_CompareEq(other, item);
 		Dee_Decref(item);
 		if (temp != 0) {
@@ -1332,9 +1332,9 @@ svec_contains(SharedVector *self,
 				goto err;
 			return_true;
 		}
-		atomic_rwlock_read(&self->sv_lock);
+		SharedVector_LockRead(self);
 	}
-	atomic_rwlock_endread(&self->sv_lock);
+	SharedVector_LockEndRead(self);
 	return_false;
 err:
 	return NULL;
@@ -1347,16 +1347,16 @@ svec_getitem(SharedVector *self,
 	DREF DeeObject *result;
 	if (DeeObject_AsSize(index_ob, &index))
 		goto err;
-	atomic_rwlock_read(&self->sv_lock);
+	SharedVector_LockRead(self);
 	if unlikely(index >= self->sv_length) {
 		size_t my_length = self->sv_length;
-		atomic_rwlock_endread(&self->sv_lock);
+		SharedVector_LockEndRead(self);
 		err_index_out_of_bounds((DeeObject *)self, index, my_length);
 		goto err;
 	}
 	result = self->sv_vector[index];
 	Dee_Incref(result);
-	atomic_rwlock_endread(&self->sv_lock);
+	SharedVector_LockEndRead(self);
 	return result;
 err:
 	return NULL;
@@ -1372,30 +1372,30 @@ svec_nsi_getsize(SharedVector *__restrict self) {
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 svec_nsi_getitem(SharedVector *__restrict self, size_t index) {
 	DREF DeeObject *result;
-	atomic_rwlock_read(&self->sv_lock);
+	SharedVector_LockRead(self);
 	if unlikely(index >= self->sv_length) {
 		size_t my_length = self->sv_length;
-		atomic_rwlock_endread(&self->sv_lock);
+		SharedVector_LockEndRead(self);
 		err_index_out_of_bounds((DeeObject *)self, index, my_length);
 		return NULL;
 	}
 	result = self->sv_vector[index];
 	Dee_Incref(result);
-	atomic_rwlock_endread(&self->sv_lock);
+	SharedVector_LockEndRead(self);
 	return result;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 svec_nsi_getitem_fast(SharedVector *__restrict self, size_t index) {
 	DREF DeeObject *result;
-	atomic_rwlock_read(&self->sv_lock);
+	SharedVector_LockRead(self);
 	if unlikely(index >= self->sv_length) {
-		atomic_rwlock_endread(&self->sv_lock);
+		SharedVector_LockEndRead(self);
 		return NULL;
 	}
 	result = self->sv_vector[index];
 	Dee_Incref(result);
-	atomic_rwlock_endread(&self->sv_lock);
+	SharedVector_LockEndRead(self);
 	return result;
 }
 
@@ -1405,13 +1405,13 @@ svec_nsi_find(SharedVector *__restrict self,
               DeeObject *__restrict keyed_search_item,
               DeeObject *key) {
 	size_t i = start;
-	atomic_rwlock_read(&self->sv_lock);
+	SharedVector_LockRead(self);
 	for (; i < end && i < self->sv_length; ++i) {
 		DREF DeeObject *item;
 		int temp;
 		item = self->sv_vector[i];
 		Dee_Incref(item);
-		atomic_rwlock_endread(&self->sv_lock);
+		SharedVector_LockEndRead(self);
 		temp = DeeObject_CompareKeyEq(keyed_search_item, item, key);
 		Dee_Decref(item);
 		if (temp != 0) {
@@ -1419,9 +1419,9 @@ svec_nsi_find(SharedVector *__restrict self,
 				goto err;
 			return i;
 		}
-		atomic_rwlock_read(&self->sv_lock);
+		SharedVector_LockRead(self);
 	}
-	atomic_rwlock_endread(&self->sv_lock);
+	SharedVector_LockEndRead(self);
 	return (size_t)-1;
 err:
 	return (size_t)-2;
@@ -1433,7 +1433,7 @@ svec_nsi_rfind(SharedVector *__restrict self,
                DeeObject *__restrict keyed_search_item,
                DeeObject *key) {
 	size_t i = end;
-	atomic_rwlock_read(&self->sv_lock);
+	SharedVector_LockRead(self);
 	for (;;) {
 		DREF DeeObject *item;
 		int temp;
@@ -1444,7 +1444,7 @@ svec_nsi_rfind(SharedVector *__restrict self,
 		--i;
 		item = self->sv_vector[i];
 		Dee_Incref(item);
-		atomic_rwlock_endread(&self->sv_lock);
+		SharedVector_LockEndRead(self);
 		temp = DeeObject_CompareKeyEq(keyed_search_item, item, key);
 		Dee_Decref(item);
 		if (temp != 0) {
@@ -1452,9 +1452,9 @@ svec_nsi_rfind(SharedVector *__restrict self,
 				goto err;
 			return i;
 		}
-		atomic_rwlock_read(&self->sv_lock);
+		SharedVector_LockRead(self);
 	}
-	atomic_rwlock_endread(&self->sv_lock);
+	SharedVector_LockEndRead(self);
 	return (size_t)-1;
 err:
 	return (size_t)-2;
@@ -1528,19 +1528,19 @@ PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 svec_copy(SharedVector *__restrict self,
           SharedVector *__restrict other) {
 again:
-	atomic_rwlock_read(&other->sv_lock);
+	SharedVector_LockRead(other);
 	self->sv_length = other->sv_length;
 	self->sv_vector = (DREF DeeObject **)Dee_TryMallocc(self->sv_length,
 	                                                    sizeof(DREF DeeObject *));
 	if unlikely(!self->sv_vector) {
-		atomic_rwlock_endread(&other->sv_lock);
+		SharedVector_LockEndRead(other);
 		if (Dee_CollectMemory(self->sv_length * sizeof(DREF DeeObject *)))
 			goto again;
 		goto err;
 	}
 	Dee_Movrefv((DREF DeeObject **)self->sv_vector,
 	            other->sv_vector, self->sv_length);
-	atomic_rwlock_endread(&other->sv_lock);
+	SharedVector_LockEndRead(other);
 	atomic_rwlock_init(&self->sv_lock);
 	return 0;
 err:
@@ -1670,7 +1670,7 @@ DeeSharedVector_Decref(DREF DeeObject *__restrict self) {
 	}
 
 	/* Difficult case: must duplicate the vector. */
-	atomic_rwlock_write(&me->sv_lock);
+	SharedVector_LockWrite(me);
 	vector_copy = (DREF DeeObject **)Dee_TryMallocc(me->sv_length,
 	                                                sizeof(DREF DeeObject *));
 	if unlikely(!vector_copy)
@@ -1684,7 +1684,7 @@ DeeSharedVector_Decref(DREF DeeObject *__restrict self) {
 	/* Give the SharedVector its very own copy
 	 * which it will take to its grave. */
 	me->sv_vector = vector_copy;
-	atomic_rwlock_endwrite(&me->sv_lock);
+	SharedVector_LockEndWrite(me);
 	Dee_Decref(me);
 	return;
 
@@ -1696,7 +1696,7 @@ err_cannot_inherit:
 	/* Override with an empty vector. */
 	me->sv_vector = NULL;
 	me->sv_length = 0;
-	atomic_rwlock_endwrite(&me->sv_lock);
+	SharedVector_LockEndWrite(me);
 
 	/* Destroy the items that the caller wanted the vector to inherit. */
 	Dee_Decrefv(vector, length);

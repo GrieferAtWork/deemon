@@ -112,7 +112,7 @@ rosetiterator_bool(SetIterator *__restrict self) {
 		/* Check if the iterator is in-bounds. */
 		if (item > set->rs_elem + set->rs_mask)
 			return 0;
-		if (item->si_key)
+		if (item->rsi_key)
 			break;
 	}
 	return 1;
@@ -128,7 +128,7 @@ rosetiterator_next(SetIterator *__restrict self) {
 		old_item = item;
 		if (item >= end)
 			goto iter_exhausted;
-		while (item < end && !item->si_key)
+		while (item < end && !item->rsi_key)
 			++item;
 		if (item == end) {
 			if (!atomic_cmpxch_weak_or_write(&self->si_next, old_item, item))
@@ -138,7 +138,7 @@ rosetiterator_next(SetIterator *__restrict self) {
 		if (atomic_cmpxch_weak_or_write(&self->si_next, old_item, item + 1))
 			break;
 	}
-	return_reference_(item->si_key);
+	return_reference_(item->rsi_key);
 iter_exhausted:
 	return ITER_DONE;
 }
@@ -264,12 +264,12 @@ rehash(DREF Set *__restrict self, size_t old_mask, size_t new_mask) {
 	for (i = 0; i <= old_mask; ++i) {
 		size_t j, perturb;
 		struct roset_item *item;
-		if (!self->rs_elem[i].si_key)
+		if (!self->rs_elem[i].rsi_key)
 			continue;
-		perturb = j = self->rs_elem[i].si_hash & new_mask;
+		perturb = j = self->rs_elem[i].rsi_hash & new_mask;
 		for (;; ROSET_HASHNX(j, perturb)) {
 			item = &result->rs_elem[j & new_mask];
-			if (!item->si_key)
+			if (!item->rsi_key)
 				break;
 		}
 		/* Copy the old item into the new slot. */
@@ -291,12 +291,12 @@ insert(DREF Set *__restrict self, size_t mask,
 	for (;; ROSET_HASHNX(i, perturb)) {
 		int error;
 		item = &self->rs_elem[i & mask];
-		if (!item->si_key)
+		if (!item->rsi_key)
 			break;
-		if (item->si_hash != hash)
+		if (item->rsi_hash != hash)
 			continue;
 		/* Same hash. -> Check if it's also the same key. */
-		error = DeeObject_CompareEq(key, item->si_key);
+		error = DeeObject_CompareEq(key, item->rsi_key);
 		if unlikely(error < 0)
 			goto err;
 		if (error) {
@@ -305,8 +305,8 @@ insert(DREF Set *__restrict self, size_t mask,
 		}
 	}
 	/* Fill in the item. */
-	item->si_hash = hash;
-	item->si_key  = key; /* Inherit reference. */
+	item->rsi_hash = hash;
+	item->rsi_key  = key; /* Inherit reference. */
 	return 0;
 err:
 	/* Always inherit references (even upon error) */
@@ -419,9 +419,9 @@ done:
 	return (DREF DeeObject *)result;
 err_r:
 	for (elem_count = 0; elem_count <= mask; ++elem_count) {
-		if (!result->rs_elem[elem_count].si_key)
+		if (!result->rs_elem[elem_count].rsi_key)
 			continue;
-		Dee_Decref(result->rs_elem[elem_count].si_key);
+		Dee_Decref(result->rs_elem[elem_count].rsi_key);
 	}
 	DeeObject_Free(result);
 	return NULL;
@@ -472,11 +472,11 @@ roset_contains(Set *self,
 	for (;; ROSET_HASHNX(i, perturb)) {
 		int error;
 		item = ROSET_HASHIT(self, i);
-		if (!item->si_key)
+		if (!item->rsi_key)
 			break;
-		if (item->si_hash != hash)
+		if (item->rsi_hash != hash)
 			continue;
-		error = DeeObject_CompareEq(key, item->si_key);
+		error = DeeObject_CompareEq(key, item->rsi_key);
 		if unlikely(error < 0)
 			goto err;
 		if (!error)
@@ -494,9 +494,9 @@ PRIVATE NONNULL((1)) void DCALL
 roset_fini(Set *__restrict self) {
 	size_t i;
 	for (i = 0; i <= self->rs_mask; ++i) {
-		if (!self->rs_elem[i].si_key)
+		if (!self->rs_elem[i].rsi_key)
 			continue;
-		Dee_Decref(self->rs_elem[i].si_key);
+		Dee_Decref(self->rs_elem[i].rsi_key);
 	}
 }
 
@@ -504,9 +504,9 @@ PRIVATE NONNULL((1, 2)) void DCALL
 roset_visit(Set *__restrict self, dvisit_t proc, void *arg) {
 	size_t i;
 	for (i = 0; i <= self->rs_mask; ++i) {
-		if (!self->rs_elem[i].si_key)
+		if (!self->rs_elem[i].rsi_key)
 			continue;
-		Dee_Visit(self->rs_elem[i].si_key);
+		Dee_Visit(self->rs_elem[i].rsi_key);
 	}
 }
 
@@ -525,11 +525,11 @@ roset_printrepr(Set *__restrict self,
 	if unlikely(result < 0)
 		goto done;
 	for (i = 0; i <= self->rs_mask; ++i) {
-		if (!self->rs_elem[i].si_key)
+		if (!self->rs_elem[i].rsi_key)
 			continue;
 		if (!is_first)
 			DO(err, DeeFormat_PRINT(printer, arg, ", "));
-		DO(err, DeeFormat_PrintObjectRepr(printer, arg, self->rs_elem[i].si_key));
+		DO(err, DeeFormat_PrintObjectRepr(printer, arg, self->rs_elem[i].rsi_key));
 		is_first = false;
 	}
 	if (is_first) {
@@ -602,9 +602,9 @@ roset_deepcopy(Set *__restrict self) {
 	for (i = 0; i <= self->rs_mask; ++i) {
 		DREF DeeObject *key_copy;
 		/* Deep-copy the key & value */
-		if (!self->rs_elem[i].si_key)
+		if (!self->rs_elem[i].rsi_key)
 			continue;
-		key_copy = DeeObject_DeepCopy(self->rs_elem[i].si_key);
+		key_copy = DeeObject_DeepCopy(self->rs_elem[i].rsi_key);
 		if unlikely(!key_copy)
 			goto err;
 		/* Insert the copied key & value into the new set. */

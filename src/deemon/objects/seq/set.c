@@ -89,10 +89,10 @@ STATIC_ASSERT(offsetof(SetUnionIterator, sui_iter) == offsetof(SetUnion, su_b));
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 suiter_get_iter(SetUnionIterator *__restrict self) {
 	DREF DeeObject *result;
-	rwlock_read(&self->sui_lock);
+	SetUnionIterator_LockRead(self);
 	result = self->sui_iter;
 	Dee_Incref(result);
-	rwlock_endread(&self->sui_lock);
+	SetUnionIterator_LockEndRead(self);
 	return result;
 }
 
@@ -103,10 +103,10 @@ suiter_set_iter(SetUnionIterator *__restrict self,
 	if (DeeGC_ReferredBy(iter, (DeeObject *)self))
 		return err_reference_loop((DeeObject *)self, iter);
 	Dee_Incref(iter);
-	rwlock_read(&self->sui_lock);
+	SetUnionIterator_LockRead(self);
 	old_iter       = self->sui_iter;
 	self->sui_iter = iter;
-	rwlock_endread(&self->sui_lock);
+	SetUnionIterator_LockEndRead(self);
 	Dee_Decref(old_iter);
 	return 0;
 }
@@ -126,34 +126,34 @@ suiter_set_in2nd(SetUnionIterator *__restrict self,
 	int newval = DeeObject_Bool(value);
 	if unlikely(newval < 0)
 		return newval;
-	rwlock_write(&self->sui_lock);
+	SetUnionIterator_LockWrite(self);
 	self->sui_in2nd = !!newval;
-	rwlock_endwrite(&self->sui_lock);
+	SetUnionIterator_LockEndWrite(self);
 	return 0;
 }
 
 PRIVATE NONNULL((1, 2)) void DCALL
 suiter_visit(SetUnionIterator *__restrict self, dvisit_t proc, void *arg) {
 	Dee_Visit(self->sui_union);
-	rwlock_read(&self->sui_lock);
+	SetUnionIterator_LockRead(self);
 	Dee_Visit(self->sui_iter);
-	rwlock_endread(&self->sui_lock);
+	SetUnionIterator_LockEndRead(self);
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 suiter_copy(SetUnionIterator *__restrict self,
             SetUnionIterator *__restrict other) {
 	DREF DeeObject *iter;
-	rwlock_read(&other->sui_lock);
+	SetUnionIterator_LockRead(other);
 	iter            = other->sui_iter;
 	self->sui_in2nd = other->sui_in2nd;
 	Dee_Incref(iter);
-	rwlock_endread(&other->sui_lock);
+	SetUnionIterator_LockEndRead(other);
 	self->sui_iter = DeeObject_Copy(iter);
 	Dee_Decref(iter);
 	if unlikely(!self->sui_iter)
 		goto err;
-	rwlock_init(&self->sui_lock);
+	atomic_rwlock_init(&self->sui_lock);
 	self->sui_union = other->sui_union;
 	Dee_Incref(self->sui_union);
 	return 0;
@@ -165,16 +165,16 @@ PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 suiter_deep(SetUnionIterator *__restrict self,
             SetUnionIterator *__restrict other) {
 	DREF DeeObject *iter;
-	rwlock_read(&other->sui_lock);
+	SetUnionIterator_LockRead(other);
 	iter            = other->sui_iter;
 	self->sui_in2nd = other->sui_in2nd;
 	Dee_Incref(iter);
-	rwlock_endread(&other->sui_lock);
+	SetUnionIterator_LockEndRead(other);
 	self->sui_iter = DeeObject_DeepCopy(iter);
 	Dee_Decref(iter);
 	if unlikely(!self->sui_iter)
 		goto err;
-	rwlock_init(&self->sui_lock);
+	atomic_rwlock_init(&self->sui_lock);
 	self->sui_union = (DREF SetUnion *)DeeObject_DeepCopy((DeeObject *)other->sui_union);
 	if unlikely(!self->sui_union)
 		goto err_iter;
@@ -195,7 +195,7 @@ suiter_ctor(SetUnionIterator *__restrict self) {
 	self->sui_iter = DeeObject_IterSelf(self->sui_union->su_a);
 	if unlikely(!self->sui_iter)
 		goto err_union;
-	rwlock_init(&self->sui_lock);
+	atomic_rwlock_init(&self->sui_lock);
 	self->sui_in2nd = false;
 	return 0;
 err_union:
@@ -214,7 +214,7 @@ suiter_init(SetUnionIterator *__restrict self,
 	if ((self->sui_iter = DeeObject_IterSelf(self->sui_union->su_a)) == NULL)
 		goto err;
 	Dee_Incref(self->sui_union);
-	rwlock_init(&self->sui_lock);
+	atomic_rwlock_init(&self->sui_lock);
 	self->sui_in2nd = false;
 	return 0;
 err:
@@ -227,11 +227,11 @@ suiter_next(SetUnionIterator *__restrict self) {
 	DREF DeeObject *iter;
 	bool is_second;
 again:
-	rwlock_read(&self->sui_lock);
+	SetUnionIterator_LockRead(self);
 	iter      = self->sui_iter;
 	is_second = self->sui_in2nd;
 	Dee_Incref(iter);
-	rwlock_endread(&self->sui_lock);
+	SetUnionIterator_LockEndRead(self);
 read_from_iter:
 	result = DeeObject_IterNext(iter);
 	Dee_Decref(iter);
@@ -273,10 +273,10 @@ read_from_iter:
 	result = DeeObject_IterSelf(self->sui_union->su_b);
 	if unlikely(!result)
 		goto done;
-	rwlock_write(&self->sui_lock);
+	SetUnionIterator_LockWrite(self);
 	/* Check for another race condition. */
 	if unlikely(self->sui_iter != iter) {
-		rwlock_endwrite(&self->sui_lock);
+		SetUnionIterator_LockEndWrite(self);
 		Dee_Decref(result);
 		goto again;
 	}
@@ -284,7 +284,7 @@ read_from_iter:
 	self->sui_iter  = result; /* Inherit reference (x2) */
 	self->sui_in2nd = true;
 	Dee_Incref(result); /* Reference stored in `sui_iter' */
-	rwlock_endwrite(&self->sui_lock);
+	SetUnionIterator_LockEndWrite(self);
 	Dee_Decref(iter); /* Reference inherited from `sui_iter' */
 	iter      = result;
 	is_second = true;
@@ -304,14 +304,14 @@ suiter_eq(SetUnionIterator *self,
 	bool my_2nd, ot_2nd;
 	if (DeeObject_AssertTypeExact(other, Dee_TYPE(self)))
 		goto err;
-	rwlock_read(&self->sui_lock);
+	SetUnionIterator_LockRead(self);
 	my_iter = self->sui_iter;
 	my_2nd  = self->sui_in2nd;
-	rwlock_endread(&self->sui_lock);
-	rwlock_read(&other->sui_lock);
+	SetUnionIterator_LockEndRead(self);
+	SetUnionIterator_LockRead(other);
 	ot_iter = other->sui_iter;
 	ot_2nd  = other->sui_in2nd;
-	rwlock_endread(&other->sui_lock);
+	SetUnionIterator_LockEndRead(other);
 	if (my_2nd != ot_2nd) {
 		result = Dee_False;
 		Dee_Incref(result);
@@ -332,14 +332,14 @@ suiter_ne(SetUnionIterator *self,
 	bool my_2nd, ot_2nd;
 	if (DeeObject_AssertTypeExact(other, Dee_TYPE(self)))
 		goto err;
-	rwlock_read(&self->sui_lock);
+	SetUnionIterator_LockRead(self);
 	my_iter = self->sui_iter;
 	my_2nd  = self->sui_in2nd;
-	rwlock_endread(&self->sui_lock);
-	rwlock_read(&other->sui_lock);
+	SetUnionIterator_LockEndRead(self);
+	SetUnionIterator_LockRead(other);
 	ot_iter = other->sui_iter;
 	ot_2nd  = other->sui_in2nd;
-	rwlock_endread(&other->sui_lock);
+	SetUnionIterator_LockEndRead(other);
 	if (my_2nd != ot_2nd) {
 		result = Dee_True;
 		Dee_Incref(result);
@@ -360,14 +360,14 @@ suiter_lo(SetUnionIterator *self,
 	bool my_2nd, ot_2nd;
 	if (DeeObject_AssertTypeExact(other, Dee_TYPE(self)))
 		goto err;
-	rwlock_read(&self->sui_lock);
+	SetUnionIterator_LockRead(self);
 	my_iter = self->sui_iter;
 	my_2nd  = self->sui_in2nd;
-	rwlock_endread(&self->sui_lock);
-	rwlock_read(&other->sui_lock);
+	SetUnionIterator_LockEndRead(self);
+	SetUnionIterator_LockRead(other);
 	ot_iter = other->sui_iter;
 	ot_2nd  = other->sui_in2nd;
-	rwlock_endread(&other->sui_lock);
+	SetUnionIterator_LockEndRead(other);
 	if (my_2nd != ot_2nd) {
 		result = DeeBool_For(!my_2nd);
 		Dee_Incref(result);
@@ -388,14 +388,14 @@ suiter_le(SetUnionIterator *self,
 	bool my_2nd, ot_2nd;
 	if (DeeObject_AssertTypeExact(other, Dee_TYPE(self)))
 		goto err;
-	rwlock_read(&self->sui_lock);
+	SetUnionIterator_LockRead(self);
 	my_iter = self->sui_iter;
 	my_2nd  = self->sui_in2nd;
-	rwlock_endread(&self->sui_lock);
-	rwlock_read(&other->sui_lock);
+	SetUnionIterator_LockEndRead(self);
+	SetUnionIterator_LockRead(other);
 	ot_iter = other->sui_iter;
 	ot_2nd  = other->sui_in2nd;
-	rwlock_endread(&other->sui_lock);
+	SetUnionIterator_LockEndRead(other);
 	if (my_2nd != ot_2nd) {
 		result = DeeBool_For(!my_2nd);
 		Dee_Incref(result);
@@ -416,14 +416,14 @@ suiter_gr(SetUnionIterator *self,
 	bool my_2nd, ot_2nd;
 	if (DeeObject_AssertTypeExact(other, Dee_TYPE(self)))
 		goto err;
-	rwlock_read(&self->sui_lock);
+	SetUnionIterator_LockRead(self);
 	my_iter = self->sui_iter;
 	my_2nd  = self->sui_in2nd;
-	rwlock_endread(&self->sui_lock);
-	rwlock_read(&other->sui_lock);
+	SetUnionIterator_LockEndRead(self);
+	SetUnionIterator_LockRead(other);
 	ot_iter = other->sui_iter;
 	ot_2nd  = other->sui_in2nd;
-	rwlock_endread(&other->sui_lock);
+	SetUnionIterator_LockEndRead(other);
 	if (my_2nd != ot_2nd) {
 		result = DeeBool_For(my_2nd);
 		Dee_Incref(result);
@@ -444,14 +444,14 @@ suiter_ge(SetUnionIterator *self,
 	bool my_2nd, ot_2nd;
 	if (DeeObject_AssertTypeExact(other, Dee_TYPE(self)))
 		goto err;
-	rwlock_read(&self->sui_lock);
+	SetUnionIterator_LockRead(self);
 	my_iter = self->sui_iter;
 	my_2nd  = self->sui_in2nd;
-	rwlock_endread(&self->sui_lock);
-	rwlock_read(&other->sui_lock);
+	SetUnionIterator_LockEndRead(self);
+	SetUnionIterator_LockRead(other);
 	ot_iter = other->sui_iter;
 	ot_2nd  = other->sui_in2nd;
-	rwlock_endread(&other->sui_lock);
+	SetUnionIterator_LockEndRead(other);
 	if (my_2nd != ot_2nd) {
 		result = DeeBool_For(my_2nd);
 		Dee_Incref(result);
@@ -589,7 +589,7 @@ su_iter(SetUnion *__restrict self) {
 	result->sui_iter = DeeObject_IterSelf(self->su_a);
 	if unlikely(!result->sui_iter)
 		goto err_r;
-	rwlock_init(&result->sui_lock);
+	atomic_rwlock_init(&result->sui_lock);
 	result->sui_in2nd = false;
 	result->sui_union = self;
 	Dee_Incref(self);
@@ -700,11 +700,11 @@ ssditer_next(SetSymmetricDifferenceIterator *__restrict self) {
 	DREF DeeObject *iter;
 	bool is_second;
 again:
-	rwlock_read(&self->ssd_lock);
+	SetSymmetricDifferenceIterator_LockRead(self);
 	iter      = self->ssd_iter;
 	is_second = self->ssd_in2nd;
 	Dee_Incref(iter);
-	rwlock_endread(&self->ssd_lock);
+	SetSymmetricDifferenceIterator_LockEndRead(self);
 read_from_iter:
 	result = DeeObject_IterNext(iter);
 	Dee_Decref(iter);
@@ -747,10 +747,10 @@ read_from_iter:
 	result = DeeObject_IterSelf(self->ssd_set->ssd_b);
 	if unlikely(!result)
 		goto done;
-	rwlock_write(&self->ssd_lock);
+	SetSymmetricDifferenceIterator_LockWrite(self);
 	/* Check for another race condition. */
 	if unlikely(self->ssd_iter != iter) {
-		rwlock_endwrite(&self->ssd_lock);
+		SetSymmetricDifferenceIterator_LockEndWrite(self);
 		Dee_Decref(result);
 		goto again;
 	}
@@ -758,7 +758,7 @@ read_from_iter:
 	self->ssd_iter  = result; /* Inherit reference (x2) */
 	self->ssd_in2nd = true;
 	Dee_Incref(result); /* Reference stored in `ssd_iter' */
-	rwlock_endwrite(&self->ssd_lock);
+	SetSymmetricDifferenceIterator_LockEndWrite(self);
 	Dee_Decref(iter); /* Reference inherited from `ssd_iter' */
 	iter      = result;
 	is_second = true;
@@ -849,7 +849,7 @@ ssd_iter(SetSymmetricDifference *__restrict self) {
 	result->ssd_iter = DeeObject_IterSelf(self->ssd_a);
 	if unlikely(!result->ssd_iter)
 		goto err_r;
-	rwlock_init(&result->ssd_lock);
+	atomic_rwlock_init(&result->ssd_lock);
 	result->ssd_in2nd = false;
 	result->ssd_set   = self;
 	Dee_Incref(self);

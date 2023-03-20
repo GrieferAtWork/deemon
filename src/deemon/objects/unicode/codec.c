@@ -30,6 +30,7 @@
 #include <deemon/module.h>
 #include <deemon/string.h>
 #include <deemon/system-features.h> /* memcpyc(), ... */
+#include <deemon/util/lock.h>
 
 #include <hybrid/byteswap.h>
 #include <hybrid/unaligned.h>
@@ -716,15 +717,31 @@ err:
 
 PRIVATE DREF DeeObject *g_libcodecs = NULL;
 #ifndef CONFIG_NO_THREADS
-PRIVATE rwlock_t libcodecs_lock = RWLOCK_INIT;
+PRIVATE atomic_rwlock_t libcodecs_lock = ATOMIC_RWLOCK_INIT;
 #endif /* !CONFIG_NO_THREADS */
+#define libcodecs_lock_reading()    Dee_atomic_rwlock_reading(&libcodecs_lock)
+#define libcodecs_lock_writing()    Dee_atomic_rwlock_writing(&libcodecs_lock)
+#define libcodecs_lock_tryread()    Dee_atomic_rwlock_tryread(&libcodecs_lock)
+#define libcodecs_lock_trywrite()   Dee_atomic_rwlock_trywrite(&libcodecs_lock)
+#define libcodecs_lock_canread()    Dee_atomic_rwlock_canread(&libcodecs_lock)
+#define libcodecs_lock_canwrite()   Dee_atomic_rwlock_canwrite(&libcodecs_lock)
+#define libcodecs_lock_waitread()   Dee_atomic_rwlock_waitread(&libcodecs_lock)
+#define libcodecs_lock_waitwrite()  Dee_atomic_rwlock_waitwrite(&libcodecs_lock)
+#define libcodecs_lock_read()       Dee_atomic_rwlock_read(&libcodecs_lock)
+#define libcodecs_lock_write()      Dee_atomic_rwlock_write(&libcodecs_lock)
+#define libcodecs_lock_tryupgrade() Dee_atomic_rwlock_tryupgrade(&libcodecs_lock)
+#define libcodecs_lock_upgrade()    Dee_atomic_rwlock_upgrade(&libcodecs_lock)
+#define libcodecs_lock_downgrade()  Dee_atomic_rwlock_downgrade(&libcodecs_lock)
+#define libcodecs_lock_endwrite()   Dee_atomic_rwlock_endwrite(&libcodecs_lock)
+#define libcodecs_lock_endread()    Dee_atomic_rwlock_endread(&libcodecs_lock)
+#define libcodecs_lock_end()        Dee_atomic_rwlock_end(&libcodecs_lock)
 
 INTERN bool DCALL libcodecs_shutdown(void) {
 	DREF DeeObject *old_lib;
-	rwlock_write(&libcodecs_lock);
+	libcodecs_lock_write();
 	old_lib     = g_libcodecs;
 	g_libcodecs = NULL;
-	rwlock_endwrite(&libcodecs_lock);
+	libcodecs_lock_endwrite();
 	if (!old_lib)
 		return false;
 	Dee_Decref(old_lib);
@@ -734,23 +751,23 @@ INTERN bool DCALL libcodecs_shutdown(void) {
 
 PRIVATE WUNUSED DREF DeeObject *DCALL libcodecs_get(void) {
 	DREF DeeObject *result;
-	rwlock_read(&libcodecs_lock);
+	libcodecs_lock_read();
 	result = g_libcodecs;
 	if (result) {
 		Dee_Incref(result);
-		rwlock_endread(&libcodecs_lock);
+		libcodecs_lock_endread();
 		return result;
 	}
-	rwlock_endread(&libcodecs_lock);
+	libcodecs_lock_endread();
 	result = DeeModule_OpenGlobal((DeeObject *)&str_codecs, NULL, true);
 	if likely(result) {
-		rwlock_write(&libcodecs_lock);
+		libcodecs_lock_write();
 		ASSERT(!g_libcodecs || g_libcodecs == result);
 		if (!g_libcodecs) {
 			Dee_Incref(result);
 			g_libcodecs = result;
 		}
-		rwlock_endwrite(&libcodecs_lock);
+		libcodecs_lock_endwrite();
 		if unlikely(DeeModule_RunInit(result) < 0)
 			Dee_Clear(result);
 	}

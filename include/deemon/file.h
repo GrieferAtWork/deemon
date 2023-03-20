@@ -24,10 +24,7 @@
 
 #include "object.h"
 
-#ifndef CONFIG_NO_THREADS
-#include "util/rwlock.h"
-#endif /* !CONFIG_NO_THREADS */
-
+/**/
 #include <stdarg.h>  /* va_list */
 #include <stdbool.h> /* bool */
 #include <stddef.h>  /* NULL */
@@ -76,12 +73,10 @@
 DECL_BEGIN
 
 #ifdef DEE_SOURCE
-#define Dee_file_object        file_object
-#define Dee_filetype_object    filetype_object
-#define FILE_OBJECT_HEAD       Dee_FILE_OBJECT_HEAD
-#define FILE_OBJECT_HEAD_INIT  Dee_FILE_OBJECT_HEAD_INIT
-#define LFILE_OBJECT_HEAD      Dee_LFILE_OBJECT_HEAD
-#define LFILE_OBJECT_HEAD_INIT Dee_LFILE_OBJECT_HEAD_INIT
+#define Dee_file_object       file_object
+#define Dee_filetype_object   filetype_object
+#define FILE_OBJECT_HEAD      Dee_FILE_OBJECT_HEAD
+#define FILE_OBJECT_HEAD_INIT Dee_FILE_OBJECT_HEAD_INIT
 #endif /* DEE_SOURCE */
 
 
@@ -97,31 +92,9 @@ typedef Dee_ioflag_t dioflag_t;
 
 
 struct Dee_file_object {
+#define Dee_FILE_OBJECT_HEAD            Dee_OBJECT_HEAD_EX(DeeFileTypeObject)
+#define Dee_FILE_OBJECT_HEAD_INIT(type) Dee_OBJECT_HEAD_INIT(type)
 	Dee_OBJECT_HEAD_EX(DeeFileTypeObject)
-#define Dee_FILE_OBJECT_HEAD             Dee_OBJECT_HEAD_EX(DeeFileTypeObject)
-#define Dee_FILE_OBJECT_HEAD_INIT(type)  Dee_OBJECT_HEAD_INIT(type)
-#define DeeFileObject_Init(self, type)   (DeeObject_Init(self, type))
-#ifdef CONFIG_NO_THREADS
-#define Dee_FILE_OBJECT_HEADL            Dee_OBJECT_HEAD_EX(DeeFileTypeObject)
-#define Dee_FILE_OBJECT_HEADL_INIT(type) Dee_OBJECT_HEAD_INIT(type)
-#define DeeFileObject_InitL(self, type)  (DeeObject_Init(self, type))
-#define DeeFile_LockRead(self)           (void)0
-#define DeeFile_LockWrite(self)          (void)0
-#define DeeFile_LockEndRead(self)        (void)0
-#define DeeFile_LockEndWrite(self)       (void)0
-#define DeeFile_TryLockRead(self)        1
-#define DeeFile_TryLockWrite(self)       1
-#else /* CONFIG_NO_THREADS */
-#define Dee_LFILE_OBJECT_HEAD            Dee_OBJECT_HEAD_EX(DeeFileTypeObject) Dee_rwlock_t fo_lock;
-#define Dee_LFILE_OBJECT_HEAD_INIT(type) Dee_OBJECT_HEAD_INIT(type), RWLOCK_INIT
-#define DeeLFileObject_Init(self, type)  (DeeObject_Init(self, type), rwlock_init(&(self)->fo_lock))
-#define DeeFile_LockRead(self)           Dee_rwlock_read(&(self)->fo_lock)
-#define DeeFile_LockWrite(self)          Dee_rwlock_write(&(self)->fo_lock)
-#define DeeFile_LockEndRead(self)        Dee_rwlock_endread(&(self)->fo_lock)
-#define DeeFile_LockEndWrite(self)       Dee_rwlock_endwrite(&(self)->fo_lock)
-#define DeeFile_TryLockRead(self)        Dee_rwlock_tryread(&(self)->fo_lock)
-#define DeeFile_TryLockWrite(self)       Dee_rwlock_trywrite(&(self)->fo_lock)
-#endif /* !CONFIG_NO_THREADS */
 };
 
 /* The underlying system file descriptor type. */
