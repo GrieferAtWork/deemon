@@ -1104,7 +1104,8 @@ ipc_joinpid_impl(pid_t pid, int *p_status) {
 	int result;
 	struct reaped_childproc *ent;
 again:
-	shared_rwlock_read(&reaped_childprocs_lock);
+	if (shared_rwlock_read(&reaped_childprocs_lock))
+		goto err_interrupt;
 	result = ipc_tryjoinpid_locked(pid, p_status);
 	if (result == 0) {
 		shared_rwlock_endread(&reaped_childprocs_lock);
@@ -1114,15 +1115,16 @@ again:
 
 	ent = (struct reaped_childproc *)Dee_TryMalloc(sizeof(struct reaped_childproc));
 	if unlikely(!ent) {
-#if defined(CONFIG_HAVE_errno) && defined(ENOMEM)
-		errno = ENOMEM;
-#endif /* CONFIG_HAVE_errno && ENOMEM */
+#ifdef ENOMEM
+		DeeSystem_SetErrno(ENOMEM);
+#endif /* ENOMEM */
 		return -1;
 	}
 
 	/* Use a write-lock to ensure that only 1 thread is
 	 * ever waiting for child-processes at the same time. */
-	shared_rwlock_write(&reaped_childprocs_lock);
+	if (shared_rwlock_write(&reaped_childprocs_lock))
+		goto err_interrupt;
 	result = ipc_tryjoinpid_locked(pid, p_status);
 	if (result == 0) {
 		shared_rwlock_endwrite(&reaped_childprocs_lock);
@@ -1143,6 +1145,12 @@ again:
 	SLIST_INSERT(&reaped_childprocs, ent, rc_link);
 	shared_rwlock_endwrite(&reaped_childprocs_lock);
 	goto again;
+err_interrupt:
+#ifdef EINTR
+	DeeSystem_SetErrno(EINTR);
+#endif /* EINTR */
+	DeeError_Handled(ERROR_HANDLED_RESTORE);
+	return -1;
 }
 #endif /* NEED_ipc_joinpid_impl */
 

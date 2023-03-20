@@ -31,7 +31,6 @@
  * Dee_shared_lock_t: Shared lock (blocking wait; w/ interrupt checks)
  * Dee_atomic_rwlock_t: Like Dee_atomic_lock_t, but allows for read- and write-locks
  * Dee_shared_rwlock_t: Like Dee_shared_lock_t, but allows for read- and write-locks
- *
  */
 
 DECL_BEGIN
@@ -68,6 +67,21 @@ typedef int Dee_atomic_rwlock_t;
 #define Dee_atomic_rwlock_endwrite(self)   (void)0
 #define Dee_atomic_rwlock_endread(self)    (void)0
 #define Dee_atomic_rwlock_end(self)        (void)0
+
+/* No-op out the futex API (with only a single thread, the below is
+ * actually equivalent, so-long as you assume that dead-locks are
+ * impossible, too) */
+#define DeeFutex_WakeOne(addr)                                     (void)0
+#define DeeFutex_WakeAll(addr)                                     (void)0
+#define DeeFutex_Wait32(addr, expected)                            0
+#define DeeFutex_Wait32Timed(addr, expected, timeout_nanoseconds)  0
+#define DeeFutex_WaitPtr(addr, expected)                           0
+#define DeeFutex_WaitPtrTimed(addr, expected, timeout_nanoseconds) 0
+#if __SIZEOF_POINTER__ >= 8
+#define DeeFutex_Wait64(addr, expected)                           0
+#define DeeFutex_Wait64Timed(addr, expected, timeout_nanoseconds) 0
+#endif /* __SIZEOF_POINTER__ >= 8 */
+
 #else /* CONFIG_NO_THREADS */
 typedef struct atomic_lock Dee_atomic_lock_t;
 #define DEE_ATOMIC_LOCK_INIT       ATOMIC_LOCK_INIT
@@ -104,6 +118,37 @@ typedef struct atomic_rwlock Dee_atomic_rwlock_t;
 /* TODO: OS-specific optimized implementation for shared_lock (e.g. KOS's <kos/sched/shared-lock.h>)
  *       same for shared_rwlock (e.g. KOS's <kos/sched/shared-rwlock.h>) */
 
+/************************************************************************/
+/* Low-level, futex-based wait/wake scheduling.                         */
+/************************************************************************/
+
+/* Wake up 1, or all waiting threads at a given address. */
+DFUNDEF NONNULL((1)) void (DCALL DeeFutex_WakeOne)(void *addr);
+DFUNDEF NONNULL((1)) void (DCALL DeeFutex_WakeAll)(void *addr);
+
+/* Blocking wait if `*(uint32_t *)addr == expected', until someone calls `DeeFutex_Wake*(addr)'
+ * @return: 1 : [DeeFutex_Wait32Timed] The given `timeout_nanoseconds' expired.
+ * @return: 0 : Success (someone called `DeeFutex_Wake*(addr)', or `*addr != expected', or spurious wake-up)
+ * @return: -1: Error (an error was thrown) */
+DFUNDEF WUNUSED NONNULL((1)) int
+(DCALL DeeFutex_Wait32)(void *addr, uint32_t expected);
+DFUNDEF WUNUSED NONNULL((1)) int
+(DCALL DeeFutex_Wait32Timed)(void *addr, uint32_t expected,
+                             uint64_t timeout_nanoseconds);
+
+#if __SIZEOF_POINTER__ >= 8
+/* Same as above, but do a 64-bit equals-comparison test. */
+DFUNDEF WUNUSED NONNULL((1)) int
+(DCALL DeeFutex_Wait64)(void *addr, uint64_t expected);
+DFUNDEF WUNUSED NONNULL((1)) int
+(DCALL DeeFutex_Wait64Timed)(void *addr, uint64_t expected,
+                             uint64_t timeout_nanoseconds);
+#define DeeFutex_WaitPtr      DeeFutex_Wait64
+#define DeeFutex_WaitPtrTimed DeeFutex_Wait64Timed
+#else /* __SIZEOF_POINTER__ >= 8 */
+#define DeeFutex_WaitPtr      DeeFutex_Wait32
+#define DeeFutex_WaitPtrTimed DeeFutex_Wait32Timed
+#endif /* __SIZEOF_POINTER__ < 8 */
 #endif /* !CONFIG_NO_THREADS */
 
 /************************************************************************/
@@ -118,14 +163,26 @@ typedef Dee_atomic_lock_t Dee_shared_lock_t; /* Fallback: Use the atomic-lock im
 #define Dee_shared_lock_available  Dee_atomic_lock_available
 #define Dee_shared_lock_acquired   Dee_atomic_lock_acquired
 #define Dee_shared_lock_tryacquire Dee_atomic_lock_tryacquire
-#define Dee_shared_lock_release    Dee_atomic_lock_release
 #endif /* !DEE_SHARED_LOCK_INIT */
+
+/* Release a shared lock. */
+DFUNDEF NONNULL((1)) void (DCALL Dee_shared_lock_release)(Dee_shared_lock_t *__restrict self);
 
 /* Blocking acquire/wait-for a given lock.
  * @return: 0 : Success.
  * @return: -1: An exception was thrown. */
 DFUNDEF WUNUSED NONNULL((1)) int (DCALL Dee_shared_lock_acquire)(Dee_shared_lock_t *__restrict self);
 DFUNDEF WUNUSED NONNULL((1)) int (DCALL Dee_shared_lock_waitfor)(Dee_shared_lock_t *__restrict self);
+
+/* Same as `Dee_shared_lock_acquire()' / `Dee_shared_lock_waitfor()',
+ * but also takes an additional timeout in nano-seconds. The special
+ * values `0' (try-acquire) and `(uint64_t)-1' (infinite timeout) are
+ * also recognized for `timeout_nanoseconds'.
+ * @return: 1 : Timeout expired.
+ * @return: 0 : Success.
+ * @return: -1: An exception was thrown. */
+DFUNDEF WUNUSED NONNULL((1)) int (DCALL Dee_shared_lock_acquire_timed)(Dee_shared_lock_t *__restrict self, uint64_t timeout_nanoseconds);
+DFUNDEF WUNUSED NONNULL((1)) int (DCALL Dee_shared_lock_waitfor_timed)(Dee_shared_lock_t *__restrict self, uint64_t timeout_nanoseconds);
 
 #if !defined(__NO_builtin_expect) && !defined(__OPTIMIZE_SIZE__)
 #define Dee_shared_lock_acquire(self) __builtin_expect(Dee_shared_lock_tryacquire(self) ? 0 : (Dee_shared_lock_acquire)(self), 0)
@@ -166,10 +223,12 @@ typedef Dee_atomic_rwlock_t Dee_shared_rwlock_t; /* Fallback: Use the atomic-rwl
 #define Dee_shared_rwlock_tryupgrade Dee_atomic_rwlock_tryupgrade
 #define Dee_shared_rwlock_upgrade    Dee_atomic_rwlock_upgrade
 #define Dee_shared_rwlock_downgrade  Dee_atomic_rwlock_downgrade
-#define Dee_shared_rwlock_endwrite   Dee_atomic_rwlock_endwrite
-#define Dee_shared_rwlock_endread    Dee_atomic_rwlock_endread
-#define Dee_shared_rwlock_end        Dee_atomic_rwlock_end
 #endif /* !DEE_SHARED_RWLOCK_INIT */
+
+/* Release a lock of the indicated type. */
+DFUNDEF NONNULL((1)) void (DCALL Dee_shared_rwlock_endread)(Dee_shared_rwlock_t *__restrict self);
+DFUNDEF NONNULL((1)) void (DCALL Dee_shared_rwlock_endwrite)(Dee_shared_rwlock_t *__restrict self);
+DFUNDEF NONNULL((1)) void (DCALL Dee_shared_rwlock_end)(Dee_shared_rwlock_t *__restrict self);
 
 /* Blocking acquire/wait-for a given lock.
  * @return: 0 : Success.
@@ -178,6 +237,18 @@ DFUNDEF WUNUSED NONNULL((1)) int (DCALL Dee_shared_rwlock_read)(Dee_shared_rwloc
 DFUNDEF WUNUSED NONNULL((1)) int (DCALL Dee_shared_rwlock_write)(Dee_shared_rwlock_t *__restrict self);
 DFUNDEF WUNUSED NONNULL((1)) int (DCALL Dee_shared_rwlock_waitread)(Dee_shared_rwlock_t *__restrict self);
 DFUNDEF WUNUSED NONNULL((1)) int (DCALL Dee_shared_rwlock_waitwrite)(Dee_shared_rwlock_t *__restrict self);
+
+
+/* Same as `Dee_shared_rwlock_*', but also takes an additional timeout in nano-seconds.
+ * The special values `0' (try-acquire) and `(uint64_t)-1' (infinite timeout) are also
+ * recognized for `timeout_nanoseconds'.
+ * @return: 1 : Timeout expired.
+ * @return: 0 : Success.
+ * @return: -1: An exception was thrown. */
+DFUNDEF WUNUSED NONNULL((1)) int (DCALL Dee_shared_rwlock_read_timed)(Dee_shared_rwlock_t *__restrict self, uint64_t timeout_nanoseconds);
+DFUNDEF WUNUSED NONNULL((1)) int (DCALL Dee_shared_rwlock_write_timed)(Dee_shared_rwlock_t *__restrict self, uint64_t timeout_nanoseconds);
+DFUNDEF WUNUSED NONNULL((1)) int (DCALL Dee_shared_rwlock_waitread_timed)(Dee_shared_rwlock_t *__restrict self, uint64_t timeout_nanoseconds);
+DFUNDEF WUNUSED NONNULL((1)) int (DCALL Dee_shared_rwlock_waitwrite_timed)(Dee_shared_rwlock_t *__restrict self, uint64_t timeout_nanoseconds);
 
 #if !defined(__NO_builtin_expect) && !defined(__OPTIMIZE_SIZE__)
 #define Dee_shared_rwlock_read(self)      __builtin_expect(Dee_shared_rwlock_tryread(self) ? 0 : (Dee_shared_rwlock_read)(self), 0)

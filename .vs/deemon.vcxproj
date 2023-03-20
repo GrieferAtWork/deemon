@@ -258,6 +258,8 @@
 		<ClInclude Include="..\src\deemon\objects\unicode\string_functions.h" />
 		<ClInclude Include="..\src\deemon\objects\unicode\wildcompare.c.inl" />
 		<ClInclude Include="..\src\deemon\runtime\builtin.h" />
+		<ClInclude Include="..\src\deemon\runtime\futex-wait.c.inl" />
+		<ClInclude Include="..\src\deemon\runtime\futex-wake.c.inl" />
 		<ClInclude Include="..\src\deemon\runtime\mro-impl.c.inl" />
 		<ClInclude Include="..\src\deemon\runtime\runtime_error.h" />
 		<ClInclude Include="..\src\deemon\runtime\slab-impl.c.inl" />
@@ -428,6 +430,7 @@
 		<ClCompile Include="..\src\deemon\runtime\builtin_functions.c" />
 		<ClCompile Include="..\src\deemon\runtime\error.c" />
 		<ClCompile Include="..\src\deemon\runtime\format.c" />
+		<ClCompile Include="..\src\deemon\runtime\futex.c" />
 		<ClCompile Include="..\src\deemon\runtime\gc.c" />
 		<ClCompile Include="..\src\deemon\runtime\misc.c" />
 		<ClCompile Include="..\src\deemon\runtime\mro.c" />

@@ -1778,6 +1778,7 @@ DeeThread_Start(/*Thread*/ DeeObject *__restrict self) {
 #ifdef CONFIG_HOST_WINDOWS
 PRIVATE VOID NTAPI
 dummy_apc_func(ULONG_PTR UNUSED(Parameter)) {
+	Dee_DPRINTF("dummy_apc_func called in %k\n", DeeThread_Self());
 }
 #endif /* CONFIG_HOST_WINDOWS */
 #endif /* !CONFIG_THREADS_PTHREAD */
@@ -1790,17 +1791,29 @@ PRIVATE LPCANCELSYNCHRONOUSIO pCancelSynchronousIo = NULL;
 #endif /* CONFIG_HOST_WINDOWS */
 #endif /* !CONFIG_THREADS_PTHREAD */
 
+INTDEF void DCALL DeeFutex_WakeGlobal(void);
+
 /* Try to wake the thread. */
 PUBLIC NONNULL((1)) void DCALL
 DeeThread_Wake(/*Thread*/ DeeObject *__restrict self) {
 	DeeThreadObject *me = (DeeThreadObject *)self;
 	ASSERT_OBJECT_TYPE(self, &DeeThread_Type);
 
+	/* Wake up all threads that are currently waiting on a futex.
+	 * This is required for (some of) the futex implementations,
+	 * as a couple of them don't respond to EINTR-like events.
+	 *
+	 * We work around this issue by (essentially) keeping track
+	 * of all of the addresses that threads are blocking-waiting
+	 * for, and explicitly waking up all of those threads. */
+	DeeFutex_WakeGlobal();
+
 #ifndef CONFIG_THREADS_PTHREAD
 #ifdef CONFIG_HOST_WINDOWS
 	DBG_ALIGNMENT_DISABLE();
 	DeeSystemError_Push();
 	QueueUserAPC(&dummy_apc_func, me->t_thread, 0);
+
 	/* Also try to interrupt synchronous I/O, meaning calls like `ReadFile()'.
 	 * Sadly, we must manually check if that functionality is even available... */
 	if (ITER_ISOK(pCancelSynchronousIo)) {
@@ -1856,7 +1869,7 @@ reread_state:
 			/* If the thread wasn't started, that's an error. */
 			DeeError_Throwf(&DeeError_ValueError,
 			                "Cannot deliver interrupt to external thread %k",
-			                self);
+			                me);
 			goto err;
 		}
 #if 0
@@ -1864,7 +1877,7 @@ reread_state:
 			/* If the thread wasn't started, that's an error. */
 			DeeError_Throwf(&DeeError_ValueError,
 			                "Cannot deliver interrupt to thread %k that was never started",
-			                self);
+			                me);
 			goto err;
 		}
 #endif
@@ -1922,7 +1935,7 @@ reread_state:
 
 	/* Try to interrupt what the thread is currently doing, so it
 	 * will check for pending interrupts and handle them immediately. */
-	DeeThread_Wake(self);
+	DeeThread_Wake((DeeObject *)me);
 
 	/* And we're done! */
 	return 0;

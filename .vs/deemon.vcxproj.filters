@@ -744,6 +744,12 @@
 		<ClInclude Include="..\src\deemon\runtime\builtin.h">
 			<Filter>src\runtime</Filter>
 		</ClInclude>
+		<ClInclude Include="..\src\deemon\runtime\futex-wait.c.inl">
+			<Filter>src\runtime</Filter>
+		</ClInclude>
+		<ClInclude Include="..\src\deemon\runtime\futex-wake.c.inl">
+			<Filter>src\runtime</Filter>
+		</ClInclude>
 		<ClInclude Include="..\src\deemon\runtime\mro-impl.c.inl">
 			<Filter>src\runtime</Filter>
 		</ClInclude>
@@ -1248,6 +1254,9 @@
 			<Filter>src\runtime</Filter>
 		</ClCompile>
 		<ClCompile Include="..\src\deemon\runtime\format.c">
+			<Filter>src\runtime</Filter>
+		</ClCompile>
+		<ClCompile Include="..\src\deemon\runtime\futex.c">
 			<Filter>src\runtime</Filter>
 		</ClCompile>
 		<ClCompile Include="..\src\deemon\runtime\gc.c">

@@ -20,6 +20,8 @@
 #ifndef GUARD_DEEMON_UTIL_RWLOCK_H
 #define GUARD_DEEMON_UTIL_RWLOCK_H 1
 
+/* DEPRECATED HEADER -- REPLACE WITH <deemon/util/lock.h> */
+
 #include "../api.h"
 #ifdef CONFIG_NO_THREADS
 typedef int Dee_rwlock_t;

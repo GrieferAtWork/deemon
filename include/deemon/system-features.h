@@ -252,6 +252,8 @@ header_nostdinc("bluetooth/sco.h");
 header_nostdinc("bluetooth/hci.h");
 header_nostdinc("bluetooth.h");
 header_nostdinc("linux/netlink.h", addparen(linux) + " || " + addparen(kos));
+header_nostdinc("linux/futex.h", addparen(linux) + " || " + addparen(kos));
+header_nostdinc("kos/futex.h", addparen(kos));
 header_nostdinc("asm/types.h", addparen(linux) + " || " + addparen(kos));
 header_nostdinc("sys/un.h", addparen(linux) + " || " + addparen(kos));
 header_nostdinc("sys/socket.h", unix);
@@ -834,6 +836,21 @@ func("pthread_suspend_np", "defined(CONFIG_HAVE_PTHREAD_H) && 0", test: "extern 
 func("pthread_unsuspend_np", "defined(CONFIG_HAVE_PTHREAD_H) && 0", test: "extern pthread_t pt; return pthread_unsuspend_np(pt);");
 func("pthread_setname", "defined(CONFIG_HAVE_PTHREAD_H) && 0", test: 'extern pthread_t pt; return pthread_setname(pt, "foothread");');
 func("pthread_setname_np", "defined(CONFIG_HAVE_PTHREAD_H) && defined(__USE_GNU)", test: 'extern pthread_t pt; return pthread_setname_np(pt, "foothread");');
+func("pthread_cond_init", "defined(CONFIG_HAVE_PTHREAD_H)", test: 'extern pthread_cond_t cond; return pthread_cond_init(&cond, NULL);');
+func("pthread_cond_destroy", "defined(CONFIG_HAVE_PTHREAD_H)", test: 'extern pthread_cond_t cond; return pthread_cond_destroy(&cond);');
+func("pthread_cond_signal", "defined(CONFIG_HAVE_PTHREAD_H)", test: 'extern pthread_cond_t cond; return pthread_cond_signal(&cond);');
+func("pthread_cond_broadcast", "defined(CONFIG_HAVE_PTHREAD_H)", test: 'extern pthread_cond_t cond; return pthread_cond_broadcast(&cond);');
+func("pthread_cond_wait", "defined(CONFIG_HAVE_PTHREAD_H)", test: 'extern pthread_cond_t cond; extern pthread_mutex_t mtx; return pthread_cond_wait(&cond, &mtx);');
+func("pthread_cond_timedwait", "defined(CONFIG_HAVE_PTHREAD_H)", test: 'extern pthread_cond_t cond; extern pthread_mutex_t mtx; extern struct timespec ts; return pthread_cond_timedwait(&cond, &mtx, &ts);');
+func("pthread_cond_reltimedwait_np", "defined(CONFIG_HAVE_PTHREAD_H)", test: 'extern pthread_cond_t cond; extern pthread_mutex_t mtx; extern struct timespec ts; return pthread_cond_reltimedwait_np(&cond, &mtx, &ts);');
+func("pthread_mutex_init", "defined(CONFIG_HAVE_PTHREAD_H)", test: 'extern pthread_mutex_t mtx; return pthread_mutex_init(&mtx, NULL);');
+func("pthread_mutex_destroy", "defined(CONFIG_HAVE_PTHREAD_H)", test: 'extern pthread_mutex_t mtx; return pthread_mutex_destroy(&mtx);');
+func("pthread_mutex_lock", "defined(CONFIG_HAVE_PTHREAD_H)", test: 'extern pthread_mutex_t mtx; return pthread_mutex_lock(&mtx);');
+func("pthread_mutex_unlock", "defined(CONFIG_HAVE_PTHREAD_H)", test: 'extern pthread_mutex_t mtx; return pthread_mutex_unlock(&mtx);');
+func("futex_wake", "defined(CONFIG_HAVE_KOS_FUTEX_H)", test: 'extern lfutex_t ftx; return futex_wake(&ftx, 1);');
+func("futex_wakeall", "defined(CONFIG_HAVE_KOS_FUTEX_H)", test: 'extern lfutex_t ftx; return futex_wakeall(&ftx);');
+func("futex_waitwhile", "defined(CONFIG_HAVE_KOS_FUTEX_H)", test: 'extern lfutex_t ftx, val; return futex_waitwhile(&ftx, val);');
+func("futex_timedwaitwhile", "defined(CONFIG_HAVE_KOS_FUTEX_H)", test: 'extern lfutex_t ftx, val; extern struct timespec ts; return futex_timedwaitwhile(&ftx, val, &ts);');
 
 func("abort", "defined(CONFIG_HAVE_STDLIB_H) && " + addparen(stdc), test: "abort();");
 func("strerror", "defined(CONFIG_HAVE_STRING_H) && " + addparen(stdc), test: "char *p = strerror(1); return p != NULL;");
@@ -1660,6 +1677,21 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
       (__has_include(<linux/netlink.h>) || (defined(__NO_has_include) && ((defined(__linux__) || \
        defined(__linux) || defined(linux)) || defined(__KOS__))))
 #define CONFIG_HAVE_LINUX_NETLINK_H
+#endif
+
+#ifdef CONFIG_NO_LINUX_FUTEX_H
+#undef CONFIG_HAVE_LINUX_FUTEX_H
+#elif !defined(CONFIG_HAVE_LINUX_FUTEX_H) && \
+      (__has_include(<linux/futex.h>) || (defined(__NO_has_include) && ((defined(__linux__) || \
+       defined(__linux) || defined(linux)) || defined(__KOS__))))
+#define CONFIG_HAVE_LINUX_FUTEX_H
+#endif
+
+#ifdef CONFIG_NO_KOS_FUTEX_H
+#undef CONFIG_HAVE_KOS_FUTEX_H
+#elif !defined(CONFIG_HAVE_KOS_FUTEX_H) && \
+      (__has_include(<kos/futex.h>) || (defined(__NO_has_include) && defined(__KOS__)))
+#define CONFIG_HAVE_KOS_FUTEX_H
 #endif
 
 #ifdef CONFIG_NO_ASM_TYPES_H
@@ -6404,6 +6436,121 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
       (defined(pthread_setname_np) || defined(__pthread_setname_np_defined) || \
        (defined(CONFIG_HAVE_PTHREAD_H) && defined(__USE_GNU)))
 #define CONFIG_HAVE_pthread_setname_np
+#endif
+
+#ifdef CONFIG_NO_pthread_cond_init
+#undef CONFIG_HAVE_pthread_cond_init
+#elif !defined(CONFIG_HAVE_pthread_cond_init) && \
+      (defined(pthread_cond_init) || defined(__pthread_cond_init_defined) || defined(CONFIG_HAVE_PTHREAD_H))
+#define CONFIG_HAVE_pthread_cond_init
+#endif
+
+#ifdef CONFIG_NO_pthread_cond_destroy
+#undef CONFIG_HAVE_pthread_cond_destroy
+#elif !defined(CONFIG_HAVE_pthread_cond_destroy) && \
+      (defined(pthread_cond_destroy) || defined(__pthread_cond_destroy_defined) || \
+       defined(CONFIG_HAVE_PTHREAD_H))
+#define CONFIG_HAVE_pthread_cond_destroy
+#endif
+
+#ifdef CONFIG_NO_pthread_cond_signal
+#undef CONFIG_HAVE_pthread_cond_signal
+#elif !defined(CONFIG_HAVE_pthread_cond_signal) && \
+      (defined(pthread_cond_signal) || defined(__pthread_cond_signal_defined) || \
+       defined(CONFIG_HAVE_PTHREAD_H))
+#define CONFIG_HAVE_pthread_cond_signal
+#endif
+
+#ifdef CONFIG_NO_pthread_cond_broadcast
+#undef CONFIG_HAVE_pthread_cond_broadcast
+#elif !defined(CONFIG_HAVE_pthread_cond_broadcast) && \
+      (defined(pthread_cond_broadcast) || defined(__pthread_cond_broadcast_defined) || \
+       defined(CONFIG_HAVE_PTHREAD_H))
+#define CONFIG_HAVE_pthread_cond_broadcast
+#endif
+
+#ifdef CONFIG_NO_pthread_cond_wait
+#undef CONFIG_HAVE_pthread_cond_wait
+#elif !defined(CONFIG_HAVE_pthread_cond_wait) && \
+      (defined(pthread_cond_wait) || defined(__pthread_cond_wait_defined) || defined(CONFIG_HAVE_PTHREAD_H))
+#define CONFIG_HAVE_pthread_cond_wait
+#endif
+
+#ifdef CONFIG_NO_pthread_cond_timedwait
+#undef CONFIG_HAVE_pthread_cond_timedwait
+#elif !defined(CONFIG_HAVE_pthread_cond_timedwait) && \
+      (defined(pthread_cond_timedwait) || defined(__pthread_cond_timedwait_defined) || \
+       defined(CONFIG_HAVE_PTHREAD_H))
+#define CONFIG_HAVE_pthread_cond_timedwait
+#endif
+
+#ifdef CONFIG_NO_pthread_cond_reltimedwait_np
+#undef CONFIG_HAVE_pthread_cond_reltimedwait_np
+#elif !defined(CONFIG_HAVE_pthread_cond_reltimedwait_np) && \
+      (defined(pthread_cond_reltimedwait_np) || defined(__pthread_cond_reltimedwait_np_defined) || \
+       defined(CONFIG_HAVE_PTHREAD_H))
+#define CONFIG_HAVE_pthread_cond_reltimedwait_np
+#endif
+
+#ifdef CONFIG_NO_pthread_mutex_init
+#undef CONFIG_HAVE_pthread_mutex_init
+#elif !defined(CONFIG_HAVE_pthread_mutex_init) && \
+      (defined(pthread_mutex_init) || defined(__pthread_mutex_init_defined) || \
+       defined(CONFIG_HAVE_PTHREAD_H))
+#define CONFIG_HAVE_pthread_mutex_init
+#endif
+
+#ifdef CONFIG_NO_pthread_mutex_destroy
+#undef CONFIG_HAVE_pthread_mutex_destroy
+#elif !defined(CONFIG_HAVE_pthread_mutex_destroy) && \
+      (defined(pthread_mutex_destroy) || defined(__pthread_mutex_destroy_defined) || \
+       defined(CONFIG_HAVE_PTHREAD_H))
+#define CONFIG_HAVE_pthread_mutex_destroy
+#endif
+
+#ifdef CONFIG_NO_pthread_mutex_lock
+#undef CONFIG_HAVE_pthread_mutex_lock
+#elif !defined(CONFIG_HAVE_pthread_mutex_lock) && \
+      (defined(pthread_mutex_lock) || defined(__pthread_mutex_lock_defined) || \
+       defined(CONFIG_HAVE_PTHREAD_H))
+#define CONFIG_HAVE_pthread_mutex_lock
+#endif
+
+#ifdef CONFIG_NO_pthread_mutex_unlock
+#undef CONFIG_HAVE_pthread_mutex_unlock
+#elif !defined(CONFIG_HAVE_pthread_mutex_unlock) && \
+      (defined(pthread_mutex_unlock) || defined(__pthread_mutex_unlock_defined) || \
+       defined(CONFIG_HAVE_PTHREAD_H))
+#define CONFIG_HAVE_pthread_mutex_unlock
+#endif
+
+#ifdef CONFIG_NO_futex_wake
+#undef CONFIG_HAVE_futex_wake
+#elif !defined(CONFIG_HAVE_futex_wake) && \
+      (defined(futex_wake) || defined(__futex_wake_defined) || defined(CONFIG_HAVE_KOS_FUTEX_H))
+#define CONFIG_HAVE_futex_wake
+#endif
+
+#ifdef CONFIG_NO_futex_wakeall
+#undef CONFIG_HAVE_futex_wakeall
+#elif !defined(CONFIG_HAVE_futex_wakeall) && \
+      (defined(futex_wakeall) || defined(__futex_wakeall_defined) || defined(CONFIG_HAVE_KOS_FUTEX_H))
+#define CONFIG_HAVE_futex_wakeall
+#endif
+
+#ifdef CONFIG_NO_futex_waitwhile
+#undef CONFIG_HAVE_futex_waitwhile
+#elif !defined(CONFIG_HAVE_futex_waitwhile) && \
+      (defined(futex_waitwhile) || defined(__futex_waitwhile_defined) || defined(CONFIG_HAVE_KOS_FUTEX_H))
+#define CONFIG_HAVE_futex_waitwhile
+#endif
+
+#ifdef CONFIG_NO_futex_timedwaitwhile
+#undef CONFIG_HAVE_futex_timedwaitwhile
+#elif !defined(CONFIG_HAVE_futex_timedwaitwhile) && \
+      (defined(futex_timedwaitwhile) || defined(__futex_timedwaitwhile_defined) || \
+       defined(CONFIG_HAVE_KOS_FUTEX_H))
+#define CONFIG_HAVE_futex_timedwaitwhile
 #endif
 
 #ifdef CONFIG_NO_abort

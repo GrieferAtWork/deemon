@@ -48,6 +48,19 @@ PRIVATE ATTR_COLD int DCALL err_bad_atomic_size(size_t size) {
 	                       size);
 }
 
+PRIVATE ATTR_COLD int DCALL err_bad_futex_size(size_t size) {
+	return DeeError_Throwf(&DeeError_TypeError,
+	                       "No support for %" PRFuSIZ "-bytes large futex operations",
+	                       size);
+}
+
+PRIVATE ATTR_COLD int DCALL err_unaligned_futex_poiner(void *ptr, size_t size) {
+	return DeeError_Throwf(&DeeError_SegFault,
+	                       "Cannot do %" PRFuSIZ "-bytes large futex operation "
+	                       "on %p (pointer is not properly aligned)",
+	                       size, ptr);
+}
+
 union atomic_operand {
 	int8_t ao_s8;
 	int16_t ao_s16;
@@ -356,6 +369,141 @@ err:                                                                        \
 DEFINE_ATOMIC_UNOP_VOID(capi_atomic_inc, "atomic_inc", atomic_inc)
 DEFINE_ATOMIC_UNOP_VOID(capi_atomic_dec, "atomic_dec", atomic_dec)
 #undef DEFINE_ATOMIC_UNOP_VOID
+
+
+/* Futex API */
+INTERN WUNUSED DREF DeeObject *DCALL
+capi_futex_wakeone(size_t argc, DeeObject *const *argv) {
+	DeeObject *ob_ptr;
+	union pointer ptr;
+	DeeSTypeObject *basetype;
+	if (DeeArg_Unpack(argc, argv, "o:futex_wakeone", &ob_ptr))
+		goto err;
+	if unlikely(DeeObject_AsGenericPointer(ob_ptr, &basetype, &ptr))
+		goto err;
+	/* Because our `capi_futex_wait()' emulates 8-bit and 16-bit waits
+	 * by waiting for the relevant 32-bit word, we have to match its
+	 * alignment here! */
+	ptr.uint &= ~3;
+	DeeFutex_WakeOne(ptr.pvoid);
+	return_none;
+err:
+	return NULL;
+}
+
+INTERN WUNUSED DREF DeeObject *DCALL
+capi_futex_wakeall(size_t argc, DeeObject *const *argv) {
+	DeeObject *ob_ptr;
+	union pointer ptr;
+	DeeSTypeObject *basetype;
+	if (DeeArg_Unpack(argc, argv, "o:futex_wakeall", &ob_ptr))
+		goto err;
+	if unlikely(DeeObject_AsGenericPointer(ob_ptr, &basetype, &ptr))
+		goto err;
+	/* Because our `capi_futex_wait()' emulates 8-bit and 16-bit waits
+	 * by waiting for the relevant 32-bit word, we have to match its
+	 * alignment here! */
+	ptr.uint &= ~3;
+	DeeFutex_WakeAll(ptr.pvoid);
+	return_none;
+err:
+	return NULL;
+}
+
+INTERN WUNUSED DREF DeeObject *DCALL
+capi_futex_wait(size_t argc, DeeObject *const *argv) {
+	int wait_error;
+	uint64_t timeout_nanoseconds = (uint64_t)-1;
+	DeeObject *ob_ptr, *ob_expected;
+	union atomic_operand expected;
+	union pointer ptr;
+	DeeSTypeObject *basetype;
+	if (DeeArg_Unpack(argc, argv, "oo|" UNPd64 ":futex_wait",
+	                  &ob_ptr, &ob_expected, &timeout_nanoseconds))
+		goto err;
+	if unlikely(DeeObject_AsGenericPointer(ob_ptr, &basetype, &ptr))
+		goto err;
+	if unlikely(get_atomic_operand(ob_expected, basetype, &expected))
+		goto err;
+
+	/* Do the futex wait operation. */
+	switch (basetype->st_sizeof) {
+
+	case 1: {
+		union {
+			uint8_t v8[2];
+			uint32_t v32;
+		} expected_oldval;
+		uint32_t *aligned_ptr;
+		unsigned int v8_index;
+		aligned_ptr = (uint32_t *)(ptr.uint & ~3);
+		v8_index    = (ptr.uint & 3);
+		CTYPES_FAULTPROTECT(expected_oldval.v32 = atomic_read(aligned_ptr), goto err);
+		if (expected_oldval.v8[v8_index] == expected.ao_u8) {
+			wait_error = DeeFutex_Wait32Timed(aligned_ptr, expected_oldval.v32, timeout_nanoseconds);
+		} else {
+			wait_error = 0;
+		}
+	}	break;
+
+	case 2: {
+		union {
+			uint16_t v16[2];
+			uint32_t v32;
+		} expected_oldval;
+		uint32_t *aligned_ptr;
+		unsigned int v16_index;
+		if unlikely(ptr.uint & 1)
+			goto err_unaligned;
+		aligned_ptr = (uint32_t *)(ptr.uint & ~3);
+		v16_index   = (ptr.uint & 2) >> 1;
+		CTYPES_FAULTPROTECT(expected_oldval.v32 = atomic_read(aligned_ptr), goto err);
+		if (expected_oldval.v16[v16_index] == expected.ao_u16) {
+			wait_error = DeeFutex_Wait32Timed(aligned_ptr, expected_oldval.v32, timeout_nanoseconds);
+		} else {
+			wait_error = 0;
+		}
+	}	break;
+
+	case 4: {
+		uint32_t true_oldval;
+		if unlikely(ptr.uint & 3)
+			goto err_unaligned;
+		CTYPES_FAULTPROTECT(true_oldval = atomic_read(ptr.p32), goto err);
+		if (true_oldval == expected.ao_u32) {
+			wait_error = DeeFutex_Wait32Timed(ptr.pvoid, expected.ao_u32, timeout_nanoseconds);
+		} else {
+			wait_error = 0;
+		}
+	}	break;
+
+#if __SIZEOF_POINTER__ >= 8
+	case 8: {
+		uint64_t true_oldval;
+		if unlikely(ptr.uint & 7)
+			goto err_unaligned;
+		CTYPES_FAULTPROTECT(true_oldval = atomic_read(ptr.p64), goto err);
+		if (true_oldval == expected.ao_u64) {
+			wait_error = DeeFutex_Wait64Timed(ptr.pvoid, expected.ao_u64, timeout_nanoseconds);
+		} else {
+			wait_error = 0;
+		}
+	}	break;
+#endif /* __SIZEOF_POINTER__ >= 8 */
+
+	default:
+		err_bad_futex_size(basetype->st_sizeof);
+		goto err;
+	}
+	if unlikely(wait_error < 0)
+		goto err;
+	return_bool(wait_error == 0);
+err_unaligned:
+	err_unaligned_futex_poiner(ptr.pvoid, basetype->st_sizeof);
+err:
+	return NULL;
+}
+
 
 
 DECL_END

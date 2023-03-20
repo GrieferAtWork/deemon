@@ -590,7 +590,10 @@ PRIVATE DEFINE_CMETHOD(ctypes_atomic_read, capi_atomic_read);
 PRIVATE DEFINE_CMETHOD(ctypes_atomic_inc, capi_atomic_inc);
 PRIVATE DEFINE_CMETHOD(ctypes_atomic_dec, capi_atomic_dec);
 
-
+/* Futex functions */
+PRIVATE DEFINE_CMETHOD(ctypes_futex_wakeone, capi_futex_wakeone);
+PRIVATE DEFINE_CMETHOD(ctypes_futex_wakeall, capi_futex_wakeall);
+PRIVATE DEFINE_CMETHOD(ctypes_futex_wait, capi_futex_wait);
 
 
 PRIVATE struct dex_symbol symbols[] = {
@@ -1349,6 +1352,26 @@ PRIVATE struct dex_symbol symbols[] = {
 	{ "atomic_dec", (DeeObject *)&ctypes_atomic_dec, MODSYM_FNORMAL,
 	  DOC("(ptr:?Aptr?GStructured)\n"
 	      "Atomic operation for ${--ptr.ind}") },
+
+	/* Futex functions */
+	{ "futex_wakeone", (DeeObject *)&ctypes_futex_wakeone, MODSYM_FNORMAL,
+	  DOC("(ptr:?Aptr?GStructured)\n"
+	      "Wake at most 1 thread that is waiting for @ptr to change (s.a. ?Gfutex_wait)") },
+	{ "futex_wakeall", (DeeObject *)&ctypes_futex_wakeall, MODSYM_FNORMAL,
+	  DOC("(ptr:?Aptr?GStructured)\n"
+	      "Wake all threads that are waiting for @ptr to change (s.a. ?Gfutex_wait)") },
+	{ "futex_wait", (DeeObject *)&ctypes_futex_wait, MODSYM_FNORMAL,
+	  DOC("(ptr:?Aptr?GStructured,expected:?Q!A!Aptr!Pind],timeout_nanoseconds=!-1)->?Dbool\n"
+	      "@return true You were woken up, either sporadically, because the value of ${ptr.ind} differs "
+	      /*        */ "from @expected, or because another thread called ?Gfutex_wakeone or ?Gfutex_wakeall\n"
+	      "@return false The given @timeout_nanoseconds has expired\n"
+	      "Atomically if ${ptr.ind == expected}. If this is isn't the case, immediatly return !t. "
+	      /**/ "Otherwise, wait until either @timeout_nanoseconds have elapsed, or another thread "
+	      /**/ "makes a call to ?Gfutex_wakeone or ?Gfutex_wakeall, or until the #I{stars align} "
+	      /**/ "(by which I mean that this function might also return sporadically)\n"
+	      "This function can be used to form the basis for any other, arbitrary synchronization "
+	      /**/ "primitive (mutex, semaphore, condition-variable, events, #Ianything)") },
+
 	{ NULL }
 };
 

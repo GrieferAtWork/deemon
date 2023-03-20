@@ -1188,7 +1188,7 @@ INTERN DeeSTypeObject DeeStructured_Type = {
 		/* .tp_cmp           = */ &struct_cmp,
 		/* .tp_seq           = */ &struct_seq,
 		/* .tp_iter_next     = */ NULL,
-		/* .tp_attr          = */ &struct_attr,
+		/* .tp_attr          = */ &struct_attr, /* TODO: Base attribute operators must go into another (hidden) base-class (else, these are always run _before_ standard struct methods/getsets) */
 		/* .tp_with          = */ NULL,
 		/* .tp_buffer        = */ &struct_buffer,
 #ifndef CONFIG_NO_DEEMON_100_COMPAT
@@ -1241,19 +1241,23 @@ DeeObject_Ref(DeeObject *__restrict self) {
 		tp_result = DeeSType_Pointer(((DeeLValueTypeObject *)Dee_TYPE(self))->lt_orig);
 		if unlikely(!tp_result)
 			goto err;
+
 		/* Create the new pointer object. */
 		result = (DREF struct pointer_object *)DeeObject_MALLOC(struct pointer_object);
 		if unlikely(!result)
 			goto err_tpres;
 		DeeObject_InitNoref(result, (DeeTypeObject *)tp_result); /* Inherit reference: result_type */
+
 		/* Copy the l-value pointer into the regular pointer. */
 		result->p_ptr.ptr = ((struct lvalue_object *)self)->l_ptr.ptr;
 		goto done;
 	}
+
 	/* Lookup the required pointer type. */
 	tp_result = DeeSType_Pointer(DeeType_AsSType(Dee_TYPE(self)));
 	if unlikely(!tp_result)
 		goto err;
+
 	/* Create the new pointer object. */
 	result = (DREF struct pointer_object *)DeeObject_MALLOC(struct pointer_object);
 	if unlikely(!result)

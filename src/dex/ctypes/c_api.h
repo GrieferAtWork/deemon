@@ -76,8 +76,6 @@ INTDEF WUNUSED DREF DeeObject *DCALL capi_memrmem(size_t argc, DeeObject *const 
 INTDEF WUNUSED DREF DeeObject *DCALL capi_memcasermem(size_t argc, DeeObject *const *argv);
 INTDEF WUNUSED DREF DeeObject *DCALL capi_memrev(size_t argc, DeeObject *const *argv);
 
-#if 1
-
 /* c_string (strings) */
 INTDEF WUNUSED DREF DeeObject *DCALL capi_strlen(size_t argc, DeeObject *const *argv);
 INTDEF WUNUSED DREF DeeObject *DCALL capi_strend(size_t argc, DeeObject *const *argv);
@@ -159,7 +157,10 @@ INTDEF WUNUSED DREF DeeObject *DCALL capi_atomic_read(size_t argc, DeeObject *co
 INTDEF WUNUSED DREF DeeObject *DCALL capi_atomic_inc(size_t argc, DeeObject *const *argv);
 INTDEF WUNUSED DREF DeeObject *DCALL capi_atomic_dec(size_t argc, DeeObject *const *argv);
 
-#endif
+/* Futex API */
+INTDEF WUNUSED DREF DeeObject *DCALL capi_futex_wakeone(size_t argc, DeeObject *const *argv);
+INTDEF WUNUSED DREF DeeObject *DCALL capi_futex_wakeall(size_t argc, DeeObject *const *argv);
+INTDEF WUNUSED DREF DeeObject *DCALL capi_futex_wait(size_t argc, DeeObject *const *argv);
 
 DECL_END
 

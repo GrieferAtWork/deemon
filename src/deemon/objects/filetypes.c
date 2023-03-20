@@ -359,6 +359,7 @@ reader_read(Reader *__restrict self, void *__restrict buffer,
 		result = (size_t)(self->r_end - self->r_ptr) * sizeof(char);
 		if (result > bufsize)
 			result = bufsize;
+
 		/* Copy data into the given buffer. */
 		memcpy(buffer, self->r_ptr, result);
 		self->r_ptr = (char *)((uint8_t *)self->r_ptr + result);
@@ -384,6 +385,7 @@ reader_pread(Reader *__restrict self, void *__restrict buffer,
 		result = result - (size_t)pos;
 		if (result > bufsize)
 			result = bufsize;
+
 		/* Copy data into the given buffer. */
 		memcpy(buffer, self->r_begin + (size_t)pos, result);
 	}
@@ -470,17 +472,21 @@ reader_close(Reader *__restrict self) {
 	DREF DeeObject *owner;
 	DeeFile_LockWrite(self);
 	ASSERT(self->r_ptr >= self->r_begin);
+
 	/* Extract the string from which data was being read. */
 	owner = self->r_owner;
+
 	/* Clear all fields to NULL. */
 	self->r_owner = NULL;
 	self->r_begin = NULL;
 	self->r_ptr   = NULL;
 	self->r_end   = NULL;
 	DeeFile_LockEndWrite(self);
+
 	/* If the string was already deleted, throw an error. */
 	if unlikely(!owner)
 		return err_file_closed();
+
 	/* Decref() the string. */
 	DeeObject_PutBuf(owner, &self->r_buffer, Dee_BUFFER_FREADONLY);
 	Dee_Decref(owner);
@@ -512,6 +518,7 @@ reader_setowner(Reader *__restrict self,
 	DeeFile_LockRead(self);
 	old_value     = self->r_owner;
 	self->r_owner = value;
+
 	/* Setup pointers to read from the entire string. */
 	self->r_begin = (char *)new_buffer.bb_base;
 	self->r_ptr   = (char *)new_buffer.bb_base;
@@ -570,6 +577,7 @@ reader_ungetc(Reader *__restrict self,
 		}
 #endif
 		(void)ch;
+
 		/* Rewind the file pointer. */
 		--self->r_ptr;
 		result = 0;
@@ -612,12 +620,15 @@ reader_init(Reader *__restrict self,
 		goto err;
 	if (DeeObject_GetBuf(self->r_owner, &self->r_buffer, Dee_BUFFER_FREADONLY))
 		goto err;
+
 	/* Truncate the end-pointer. */
 	if (end > self->r_buffer.bb_size)
 		end = self->r_buffer.bb_size;
+
 	/* Handle empty read. */
 	if unlikely(begin >= end)
 		begin = end = 0;
+
 	/* Fill in members. */
 	Dee_Incref(self->r_owner);
 	rwlock_init(&self->fo_lock);
@@ -740,12 +751,15 @@ DeeFile_OpenObjectBuffer(DeeObject *__restrict data,
 		goto done;
 	if (DeeObject_GetBuf(data, &result->r_buffer, Dee_BUFFER_FREADONLY))
 		goto err_r;
+
 	/* Truncate the end-pointer. */
 	if (end > result->r_buffer.bb_size)
 		end = result->r_buffer.bb_size;
+
 	/* Handle empty read. */
 	if unlikely(begin > end)
 		begin = end;
+
 	/* Fill in members. */
 	Dee_Incref(data);
 	result->r_owner = data;
@@ -802,6 +816,7 @@ writer_fini(Writer *__restrict self) {
 	if (self->w_string) {
 		Dee_Decref(self->w_string);
 	} else if (!self->w_printer.up_buffer) {
+		/* ... */
 	} else if ((self->w_printer.up_flags & UNICODE_PRINTER_FWIDTH) == STRING_WIDTH_1BYTE) {
 		Dee_Decref(COMPILER_CONTAINER_OF(self->w_printer.up_buffer,
 		                                 DeeStringObject,
@@ -817,6 +832,7 @@ writer_visit(Writer *__restrict self, dvisit_t proc, void *arg) {
 	if (self->w_string) {
 		Dee_Visit(self->w_string);
 	} else if (!self->w_printer.up_buffer) {
+		/* ... */
 	} else if ((self->w_printer.up_flags & UNICODE_PRINTER_FWIDTH) == STRING_WIDTH_1BYTE) {
 		Dee_Visit(COMPILER_CONTAINER_OF(self->w_printer.up_buffer,
 		                                DeeStringObject,
