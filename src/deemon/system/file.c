@@ -1454,11 +1454,12 @@ fallback:
 			goto again;
 		}
 		DBG_ALIGNMENT_ENABLE();
-		goto err;
+		goto err_io;
 	}
 	return 0;
-err:
+err_io:
 	err_file_io(self);
+err:
 	return -1;
 }
 
