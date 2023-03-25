@@ -286,9 +286,9 @@ again_read_ctrl_word:
 			ctrl_word = atomic_read(&ctrl->fc_word);
 			if (LOCAL_should_wait()) {
 #ifdef LOCAL_HAVE_timeout_nanoseconds
-				if (LOCAL_os_futex_wait32_timed(&ctrl->fc_word, ctrl_word, timeout_nanoseconds) < 0)
+				if (os_futex_wait32_timed(&ctrl->fc_word, ctrl_word, timeout_nanoseconds) < 0)
 #else /* LOCAL_HAVE_timeout_nanoseconds */
-				if (LOCAL_os_futex_wait32(&ctrl->fc_word, ctrl_word) < 0)
+				if (os_futex_wait32(&ctrl->fc_word, ctrl_word) < 0)
 #endif /* !LOCAL_HAVE_timeout_nanoseconds */
 				{
 					int error = DeeSystem_GetErrno();
