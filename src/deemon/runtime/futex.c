@@ -38,6 +38,10 @@
 #include <linux/futex.h>
 #endif /* CONFIG_HAVE_LINUX_FUTEX_H */
 
+#ifdef CONFIG_HAVE_KOS_FUTEX_H
+#include <kos/futex.h>
+#endif /* CONFIG_HAVE_KOS_FUTEX_H */
+
 #ifdef CONFIG_HAVE_TIME_H
 #include <time.h>
 #endif /* CONFIG_HAVE_TIME_H */
