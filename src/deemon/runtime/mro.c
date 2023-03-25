@@ -38,6 +38,8 @@
 #include <deemon/tuple.h>
 #include <deemon/util/lock.h>
 
+#include <hybrid/sequence/list.h>
+
 #include "runtime_error.h"
 #include "strings.h"
 
@@ -51,9 +53,9 @@ DeeSystem_DEFINE_strcmp(dee_strcmp)
 #endif /* !CONFIG_HAVE_strcmp */
 
 #ifndef NDEBUG
-#define DBG_memset memset
+#define DBG_memset (void)memset
 #else /* !NDEBUG */
-#define DBG_memset(...) (void)0
+#define DBG_memset(dst, byte, n_bytes) (void)0
 #endif /* NDEBUG */
 
 #ifndef CONFIG_NO_THREADS
@@ -67,9 +69,12 @@ PRIVATE atomic_lock_t membercache_list_lock = ATOMIC_LOCK_INIT;
 #define membercache_list_lock_waitfor()    Dee_atomic_lock_waitfor(&membercache_list_lock)
 #define membercache_list_lock_release()    Dee_atomic_lock_release(&membercache_list_lock)
 
+LIST_HEAD(membercache_list_struct, membercache);
+
 /* [0..1][lock(membercache_list_lock)]
- *  Linked list of all existing type-member caches. */
-PRIVATE struct membercache *membercache_list;
+ * Linked list of all existing type-member caches. */
+PRIVATE struct membercache_list_struct
+membercache_list = LIST_HEAD_INITIALIZER(membercache_list);
 
 #define streq(a, b) (strcmp(a, b) == 0)
 LOCAL NONNULL((1, 2)) bool DCALL
@@ -87,8 +92,7 @@ streq_len(char const *zero_zterminated,
 INTERN NONNULL((1)) void DCALL
 membercache_fini(struct membercache *__restrict self) {
 	MEMBERCACHE_WRITE(self);
-	ASSERT((self->mc_table != NULL) ==
-	       (self->mc_pself != NULL));
+	ASSERT((self->mc_table != NULL) == !!LIST_ISBOUND(self, mc_link));
 	if (!self->mc_table) {
 		MEMBERCACHE_ENDWRITE(self);
 		return;
@@ -96,18 +100,14 @@ membercache_fini(struct membercache *__restrict self) {
 	Dee_Free(self->mc_table);
 	self->mc_table = NULL;
 	MEMBERCACHE_ENDWRITE(self);
-#ifndef CONFIG_NO_THREADS
-	COMPILER_READ_BARRIER();
-#endif /* !CONFIG_NO_THREADS */
 	membercache_list_lock_acquire();
 	ASSERT(!self->mc_table);
+
 	/* Check check `mc_pself != NULL' again because another thread
 	 * may have cleared the tables of all member caches while collecting
 	 * memory, in the process unlinking all of them from the global chain. */
-	if (self->mc_pself) {
-		if ((*self->mc_pself = self->mc_next) != NULL)
-			self->mc_next->mc_pself = self->mc_pself;
-	}
+	if (LIST_ISBOUND(self, mc_link))
+		LIST_REMOVE(self, mc_link);
 	membercache_list_lock_release();
 }
 
@@ -116,23 +116,25 @@ membercache_clear(size_t max_clear) {
 	size_t result = 0;
 	struct membercache *entry;
 	membercache_list_lock_acquire();
-	while ((entry = membercache_list) != NULL) {
+	while (!LIST_EMPTY(&membercache_list)) {
+		entry = LIST_FIRST(&membercache_list);
 		MEMBERCACHE_WRITE(entry);
+
 		/* Pop this entry from the global chain. */
-		if ((membercache_list = entry->mc_next) != NULL) {
-			membercache_list->mc_pself = &membercache_list;
-		}
+		LIST_REMOVE(entry, mc_link);
+
 		if (entry->mc_table) {
 			/* Track how much member this operation will be freeing up. */
 			result += (entry->mc_mask + 1) * sizeof(struct membercache);
+
 			/* Clear this entry's table. */
 			Dee_Free(entry->mc_table);
 			entry->mc_table = NULL;
 			entry->mc_mask  = 0;
 			entry->mc_size  = 0;
 		}
-		entry->mc_pself = NULL;
-		DBG_memset(&entry->mc_next, 0xcc, sizeof(void *));
+
+		LIST_ENTRY_UNBOUND_INIT(&entry->mc_link);
 		MEMBERCACHE_ENDWRITE(entry);
 		if (result >= max_clear)
 			break;
@@ -161,10 +163,7 @@ membercache_rehash(struct membercache *__restrict self) {
 		 * >> Register it in the global chain of member caches,
 		 *    so we can clear it when memory gets low. */
 		membercache_list_lock_acquire();
-		if ((self->mc_next = membercache_list) != NULL)
-			membercache_list->mc_pself = &self->mc_next;
-		self->mc_pself   = &membercache_list;
-		membercache_list = self;
+		LIST_INSERT_HEAD(&membercache_list, self, mc_link);
 		membercache_list_lock_release();
 	} else {
 		/* Re-insert all existing items into the new table vector. */
@@ -258,7 +257,7 @@ membercache_rehash(struct membercache *__restrict self) {
 	 ? COMPILER_CONTAINER_OF(x, DeeTypeObject, tp_cache)->tp_name                                  \
 	 : PRIVATE_IS_KNOWN_TYPETYPE(COMPILER_CONTAINER_OF(x, DeeTypeObject, tp_class_cache)->ob_type) \
 	   ? COMPILER_CONTAINER_OF(x, DeeTypeObject, tp_class_cache)->tp_name                          \
-	   : "?") \
+	   : "?")
 
 
 INTERN NONNULL((1, 2, 4)) void DCALL

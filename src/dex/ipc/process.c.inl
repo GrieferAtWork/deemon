@@ -725,6 +725,18 @@ process_init(Process *__restrict self,
 		if unlikely(!self->p_exe)
 			goto err;
 		if (self->p_exe == ITER_DONE) {
+			/* TODO: On unix, try to make use of `/etc/shells':
+			 * >> function getDefaultShell(): string {
+			 * >>     local result = posix.environ.get("SHELL");
+			 * >>     if (result !is none)
+			 * >>         return result;
+			 * >>     for (local line: File.open("/etc/shells", "r")) {
+			 * >>         line = line[:-1]; // Strip trailing "\n"
+			 * >>         if (posix.access(line, posix.X_OK))
+			 * >>             return line;
+			 * >>     }
+			 * >>     return "/bin/sh";
+			 * >> } */
 			self->p_exe = (DREF DeeObject *)&str_DEFAULT_SHELL;
 			Dee_Incref(self->p_exe);
 		}
@@ -732,7 +744,7 @@ process_init(Process *__restrict self,
 		/* Now pack the cmdline/argv-tuple */
 #ifdef ipc_Process_USE_CreateProcessW
 		self->p_cmdline = ipc_argv2cmdline_cmd_c((DeeStringObject *)self->p_exe,
-		                                            (DeeStringObject *)exe_or_cmdline_or_pid);
+		                                         (DeeStringObject *)exe_or_cmdline_or_pid);
 		if unlikely(!self->p_cmdline)
 #else /* ipc_Process_USE_CreateProcessW */
 		self->p_argv = DeeTuple_Pack(3, self->p_exe, &str_DEFAULT_SHELL_C, exe_or_cmdline_or_pid);

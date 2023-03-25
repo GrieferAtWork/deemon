@@ -1688,11 +1688,13 @@ DeeThread_Start(/*Thread*/ DeeObject *__restrict self) {
 	uint16_t state;
 	DeeThreadObject *me = (DeeThreadObject *)self;
 	ASSERT_OBJECT_TYPE(self, &DeeThread_Type);
+
 	/* Set the starting-flag.
 	 * During a successfully control flow, this flag is later
 	 * replaced with the started-flag by the thread itself. */
 	do {
 		state = atomic_read(&me->t_state);
+
 		/* Check if the thread has already been started by testing
 		 * if either the started, or terminated flag has been set. */
 		if (state & (THREAD_STATE_STARTING |
@@ -1700,6 +1702,7 @@ DeeThread_Start(/*Thread*/ DeeObject *__restrict self) {
 		             THREAD_STATE_TERMINATED))
 			return 1;
 	} while (!atomic_cmpxch_weak(&me->t_state, state, state | THREAD_STATE_STARTING));
+
 	/* Create the reference that is passed to `thread_entry()'
 	 * and later stored in the thread's TLS self-pointer. */
 	Dee_Incref(me);
@@ -1840,8 +1843,7 @@ DeeThread_Wake(/*Thread*/ DeeObject *__restrict self) {
 }
 
 /* Schedule an interrupt for a given thread.
- * Interrupts are delivered when through threads
- * periodically calling `DeeThread_CheckInterrupt()'.
+ * Interrupts are received when a thread calls `DeeThread_CheckInterrupt()'.
  * NOTE: Interrupts are delivered in order of being received.
  * NOTE: When `interrupt_args' is non-NULL, rather than throwing the given
  *      `interrupt_main' as an error upon arrival, it is invoked

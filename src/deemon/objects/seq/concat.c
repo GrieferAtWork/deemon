@@ -48,31 +48,51 @@ typedef DeeTupleObject Cat;
 
 INTDEF DeeTypeObject SeqConcat_Type;
 INTDEF DeeTypeObject SeqConcatIterator_Type;
+#define SeqConcat_Check(ob) DeeObject_InstanceOfExact(ob, &SeqConcat_Type)
 
 typedef struct {
 	OBJECT_HEAD
-	DREF DeeObject      *c_curr; /* [1..1][lock(c_lock)] The current iterator. */
-	DeeObject    *const *c_pseq; /* [1..1][1..1][lock(c_lock)][in(c_cat)] The current sequence. */
-	DREF Cat            *c_cat;  /* [1..1][const] The underly sequence cat. */
+	DREF DeeObject      *cti_curr; /* [1..1][lock(cti_lock)] The current iterator. */
+	DeeObject    *const *cti_pseq; /* [1..1][1..1][lock(cti_lock)][in(cti_cat)] The current sequence. */
+	DREF Cat            *cti_cat;  /* [1..1][const] The underly sequence cat. */
 #ifndef CONFIG_NO_THREADS
-	atomic_rwlock_t      c_lock; /* Lock for this iterator. */
+	atomic_rwlock_t      cti_lock; /* Lock for this iterator. */
 #endif /* !CONFIG_NO_THREADS */
 } CatIterator;
+
+#define CatIterator_LockReading(self)    Dee_atomic_rwlock_reading(&(self)->cti_lock)
+#define CatIterator_LockWriting(self)    Dee_atomic_rwlock_writing(&(self)->cti_lock)
+#define CatIterator_LockTryRead(self)    Dee_atomic_rwlock_tryread(&(self)->cti_lock)
+#define CatIterator_LockTryWrite(self)   Dee_atomic_rwlock_trywrite(&(self)->cti_lock)
+#define CatIterator_LockCanRead(self)    Dee_atomic_rwlock_canread(&(self)->cti_lock)
+#define CatIterator_LockCanWrite(self)   Dee_atomic_rwlock_canwrite(&(self)->cti_lock)
+#define CatIterator_LockWaitRead(self)   Dee_atomic_rwlock_waitread(&(self)->cti_lock)
+#define CatIterator_LockWaitWrite(self)  Dee_atomic_rwlock_waitwrite(&(self)->cti_lock)
+#define CatIterator_LockRead(self)       Dee_atomic_rwlock_read(&(self)->cti_lock)
+#define CatIterator_LockRead2(a, b)      Dee_atomic_rwlock_read_2(&(a)->cti_lock, &(b)->cti_lock)
+#define CatIterator_LockWrite(self)      Dee_atomic_rwlock_write(&(self)->cti_lock)
+#define CatIterator_LockTryUpgrade(self) Dee_atomic_rwlock_tryupgrade(&(self)->cti_lock)
+#define CatIterator_LockUpgrade(self)    Dee_atomic_rwlock_upgrade(&(self)->cti_lock)
+#define CatIterator_LockDowngrade(self)  Dee_atomic_rwlock_downgrade(&(self)->cti_lock)
+#define CatIterator_LockEndWrite(self)   Dee_atomic_rwlock_endwrite(&(self)->cti_lock)
+#define CatIterator_LockEndRead(self)    Dee_atomic_rwlock_endread(&(self)->cti_lock)
+#define CatIterator_LockEnd(self)        Dee_atomic_rwlock_end(&(self)->cti_lock)
+
 
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 catiterator_ctor(CatIterator *__restrict self) {
-	self->c_cat = (DREF Cat *)DeeSeq_Concat(Dee_EmptySeq, Dee_EmptySeq);
-	if unlikely(!self->c_cat)
+	self->cti_cat = (DREF Cat *)DeeSeq_Concat(Dee_EmptySeq, Dee_EmptySeq);
+	if unlikely(!self->cti_cat)
 		goto err;
-	self->c_curr = DeeObject_IterSelf(Dee_EmptySeq);
-	if unlikely(!self->c_curr)
+	self->cti_curr = DeeObject_IterSelf(Dee_EmptySeq);
+	if unlikely(!self->cti_curr)
 		goto err_cat;
-	self->c_pseq = DeeTuple_ELEM(self->c_cat);
-	atomic_rwlock_init(&self->c_lock);
+	self->cti_pseq = DeeTuple_ELEM(self->cti_cat);
+	atomic_rwlock_init(&self->cti_lock);
 	return 0;
 err_cat:
-	Dee_Decref(self->c_cat);
+	Dee_Decref(self->cti_cat);
 err:
 	return -1;
 }
@@ -81,18 +101,18 @@ PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 catiterator_copy(CatIterator *__restrict self,
                  CatIterator *__restrict other) {
 	DREF DeeObject *iterator;
-	atomic_rwlock_read(&other->c_lock);
-	iterator     = other->c_curr;
-	self->c_pseq = other->c_pseq;
+	CatIterator_LockRead(other);
+	iterator       = other->cti_curr;
+	self->cti_pseq = other->cti_pseq;
 	Dee_Incref(iterator);
-	atomic_rwlock_endread(&other->c_lock);
-	self->c_curr = DeeObject_Copy(iterator);
+	CatIterator_LockEndRead(other);
+	self->cti_curr = DeeObject_Copy(iterator);
 	Dee_Decref(iterator);
-	if unlikely(!self->c_curr)
+	if unlikely(!self->cti_curr)
 		goto err;
-	self->c_cat = other->c_cat;
-	Dee_Incref(self->c_cat);
-	atomic_rwlock_init(&self->c_lock);
+	self->cti_cat = other->cti_cat;
+	Dee_Incref(self->cti_cat);
+	atomic_rwlock_init(&self->cti_lock);
 	return 0;
 err:
 	return -1;
@@ -103,23 +123,23 @@ catiterator_deep(CatIterator *__restrict self,
                  CatIterator *__restrict other) {
 	DREF DeeObject *iterator;
 	size_t sequence_index;
-	atomic_rwlock_read(&other->c_lock);
-	iterator       = other->c_curr;
-	sequence_index = other->c_pseq - DeeTuple_ELEM(other->c_cat);
+	CatIterator_LockRead(other);
+	iterator       = other->cti_curr;
+	sequence_index = other->cti_pseq - DeeTuple_ELEM(other->cti_cat);
 	Dee_Incref(iterator);
-	atomic_rwlock_endread(&other->c_lock);
-	self->c_curr = DeeObject_DeepCopy(iterator);
+	CatIterator_LockEndRead(other);
+	self->cti_curr = DeeObject_DeepCopy(iterator);
 	Dee_Decref(iterator);
-	if unlikely(!self->c_curr)
+	if unlikely(!self->cti_curr)
 		goto err;
-	self->c_cat = (DREF Cat *)DeeObject_DeepCopy((DeeObject *)other->c_cat);
-	if unlikely(!self->c_cat)
+	self->cti_cat = (DREF Cat *)DeeObject_DeepCopy((DeeObject *)other->cti_cat);
+	if unlikely(!self->cti_cat)
 		goto err_curr;
-	self->c_pseq = DeeTuple_ELEM(self->c_cat) + sequence_index;
-	atomic_rwlock_init(&self->c_lock);
+	self->cti_pseq = DeeTuple_ELEM(self->cti_cat) + sequence_index;
+	atomic_rwlock_init(&self->cti_lock);
 	return 0;
 err_curr:
-	Dee_Decref(self->c_curr);
+	Dee_Decref(self->cti_curr);
 err:
 	return -1;
 }
@@ -127,16 +147,16 @@ err:
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 catiterator_init(CatIterator *__restrict self,
                  size_t argc, DeeObject *const *argv) {
-	if (DeeArg_Unpack(argc, argv, "o:_SeqConcatIterator", &self->c_cat))
+	if (DeeArg_Unpack(argc, argv, "o:_SeqConcatIterator", &self->cti_cat))
 		goto err;
-	if (DeeObject_AssertTypeExact(self->c_cat, &SeqConcat_Type))
+	if (DeeObject_AssertTypeExact(self->cti_cat, &SeqConcat_Type))
 		goto err;
-	self->c_pseq = DeeTuple_ELEM(self->c_cat);
-	self->c_curr = DeeObject_IterSelf(self->c_pseq[0]);
-	if unlikely(!self->c_curr)
+	self->cti_pseq = DeeTuple_ELEM(self->cti_cat);
+	self->cti_curr = DeeObject_IterSelf(self->cti_pseq[0]);
+	if unlikely(!self->cti_curr)
 		goto err;
-	Dee_Incref(self->c_cat);
-	atomic_rwlock_init(&self->c_lock);
+	Dee_Incref(self->cti_cat);
+	atomic_rwlock_init(&self->cti_lock);
 	return 0;
 err:
 	return -1;
@@ -144,14 +164,14 @@ err:
 
 PRIVATE NONNULL((1)) void DCALL
 catiterator_fini(CatIterator *__restrict self) {
-	Dee_Decref(self->c_curr);
-	Dee_Decref(self->c_cat);
+	Dee_Decref(self->cti_curr);
+	Dee_Decref(self->cti_cat);
 }
 
 PRIVATE NONNULL((1, 2)) void DCALL
 catiterator_visit(CatIterator *__restrict self, dvisit_t proc, void *arg) {
-	Dee_Visit(self->c_curr);
-	Dee_Visit(self->c_cat);
+	Dee_Visit(self->cti_curr);
+	Dee_Visit(self->cti_cat);
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
@@ -160,20 +180,20 @@ catiterator_bool(CatIterator *__restrict self) {
 	DeeObject *const *iterpos;
 	DeeObject *const *catend;
 	DREF DeeObject *curr;
-	atomic_rwlock_read(&self->c_lock);
-	curr = self->c_curr;
+	CatIterator_LockRead(self);
+	curr = self->cti_curr;
 	Dee_Incref(curr);
-	atomic_rwlock_endread(&self->c_lock);
+	CatIterator_LockEndRead(self);
 
 	/* Check if the current iterator has remaining elements. */
 	result = DeeObject_Bool(curr);
 	Dee_Decref(curr);
 	if (result != 0)
 		goto done;
-	iterpos = atomic_read(&self->c_pseq);
+	iterpos = atomic_read(&self->cti_pseq);
 
 	/* Check if one of the upcoming sequences is non-empty. */
-	catend = DeeTuple_END(self->c_cat);
+	catend = DeeTuple_END(self->cti_cat);
 	for (; iterpos < catend; ++iterpos) {
 		result = DeeObject_Bool(*iterpos);
 		if (result != 0)
@@ -194,29 +214,20 @@ done:
 			return NULL;                                                       \
 		if (self == other)                                                     \
 			if_equal;                                                          \
-		for (;;) {                                                             \
-			atomic_rwlock_read(&self->c_lock);                                 \
-			if (!atomic_rwlock_tryread(&other->c_lock)) {                      \
-				atomic_rwlock_endread(&self->c_lock);                          \
-				atomic_rwlock_read(&other->c_lock);                            \
-				if (!atomic_rwlock_tryread(&self->c_lock))                     \
-					continue;                                                  \
-			}                                                                  \
-			break;                                                             \
-		}                                                                      \
-		my_pseq = (DREF DeeObject **)self->c_pseq;                             \
-		ot_pseq = (DREF DeeObject **)other->c_pseq;                            \
+		CatIterator_LockRead2(self, other);                                    \
+		my_pseq = (DREF DeeObject **)self->cti_pseq;                           \
+		ot_pseq = (DREF DeeObject **)other->cti_pseq;                          \
 		if (my_pseq != ot_pseq) {                                              \
-			atomic_rwlock_endread(&other->c_lock);                             \
-			atomic_rwlock_endread(&self->c_lock);                              \
+			CatIterator_LockEndRead(other);                                    \
+			CatIterator_LockEndRead(self);                                     \
 			if_diffseq;                                                        \
 		}                                                                      \
-		my_curr = self->c_curr;                                                \
+		my_curr = self->cti_curr;                                              \
 		Dee_Incref(my_curr);                                                   \
-		ot_curr = other->c_curr;                                               \
+		ot_curr = other->cti_curr;                                             \
 		Dee_Incref(ot_curr);                                                   \
-		atomic_rwlock_endread(&other->c_lock);                                 \
-		atomic_rwlock_endread(&self->c_lock);                                  \
+		CatIterator_LockEndRead(other);                                        \
+		CatIterator_LockEndRead(self);                                         \
 		result = compare_object(my_curr, ot_curr);                             \
 		Dee_Decref(ot_curr);                                                   \
 		Dee_Decref(my_curr);                                                   \
@@ -246,11 +257,11 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 catiterator_next(CatIterator *__restrict self) {
 	DREF DeeObject *iter, *result;
 again_locked:
-	atomic_rwlock_read(&self->c_lock);
+	CatIterator_LockRead(self);
 again:
-	iter = self->c_curr;
+	iter = self->cti_curr;
 	Dee_Incref(iter);
-	atomic_rwlock_endread(&self->c_lock);
+	CatIterator_LockEndRead(self);
 do_iter:
 	result = DeeObject_IterNext(iter);
 	Dee_Decref(iter);
@@ -258,48 +269,48 @@ do_iter:
 		DeeObject *const *pnext;
 		if unlikely(!result)
 			goto err;
-		atomic_rwlock_write(&self->c_lock);
+		CatIterator_LockWrite(self);
 
 		/* Check if the iterator has changed. */
-		if (self->c_curr != iter) {
-			atomic_rwlock_downgrade(&self->c_lock);
+		if (self->cti_curr != iter) {
+			CatIterator_LockDowngrade(self);
 			goto again;
 		}
 
 		/* Load the next sequence. */
-		pnext = self->c_pseq + 1;
-		ASSERT(pnext > DeeTuple_ELEM(self->c_cat));
-		ASSERT(pnext <= DeeTuple_ELEM(self->c_cat) + DeeTuple_SIZE(self->c_cat));
-		if unlikely(pnext == (DeeTuple_ELEM(self->c_cat) +
-		                      DeeTuple_SIZE(self->c_cat))) {
+		pnext = self->cti_pseq + 1;
+		ASSERT(pnext > DeeTuple_ELEM(self->cti_cat));
+		ASSERT(pnext <= DeeTuple_ELEM(self->cti_cat) + DeeTuple_SIZE(self->cti_cat));
+		if unlikely(pnext == (DeeTuple_ELEM(self->cti_cat) +
+		                      DeeTuple_SIZE(self->cti_cat))) {
 			/* Fully exhausted. */
-			atomic_rwlock_endwrite(&self->c_lock);
+			CatIterator_LockEndWrite(self);
 			return ITER_DONE;
 		}
-		atomic_rwlock_endwrite(&self->c_lock);
+		CatIterator_LockEndWrite(self);
 
 		/* Create an iterator for this sequence. */
 		iter = DeeObject_IterSelf(*pnext);
 		if unlikely(!iter)
 			goto err;
-		atomic_rwlock_write(&self->c_lock);
+		CatIterator_LockWrite(self);
 		COMPILER_READ_BARRIER();
 
 		/* Check if the sequence was changed by someone else. */
-		if (self->c_pseq != pnext - 1) {
-			atomic_rwlock_endwrite(&self->c_lock);
+		if (self->cti_pseq != pnext - 1) {
+			CatIterator_LockEndWrite(self);
 			Dee_Decref(iter);
 			goto again_locked;
 		}
 
 		/* Update the current sequence pointer. */
-		self->c_pseq = pnext;
+		self->cti_pseq = pnext;
 
 		/* Store our new iterator, replacing the previous one. */
-		result       = self->c_curr;
-		self->c_curr = iter;
-		Dee_Incref(iter); /* The reference now stored in `self->c_curr' */
-		atomic_rwlock_endwrite(&self->c_lock);
+		result       = self->cti_curr;
+		self->cti_curr = iter;
+		Dee_Incref(iter); /* The reference now stored in `self->cti_curr' */
+		CatIterator_LockEndWrite(self);
 
 		/* Drop the old iterator. */
 		Dee_Decref(result);
@@ -313,20 +324,20 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 catiterator_seq_get(CatIterator *__restrict self) {
 	DREF DeeObject *result;
-	atomic_rwlock_read(&self->c_lock);
-	result = *self->c_pseq;
+	CatIterator_LockRead(self);
+	result = *self->cti_pseq;
 	Dee_Incref(result);
-	atomic_rwlock_endread(&self->c_lock);
+	CatIterator_LockEndRead(self);
 	return result;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 catiterator_curr_get(CatIterator *__restrict self) {
 	DREF DeeObject *result;
-	atomic_rwlock_read(&self->c_lock);
-	result = self->c_curr;
+	CatIterator_LockRead(self);
+	result = self->cti_curr;
 	Dee_Incref(result);
-	atomic_rwlock_endread(&self->c_lock);
+	CatIterator_LockEndRead(self);
 	return result;
 }
 
@@ -337,10 +348,10 @@ catiterator_curr_set(CatIterator *__restrict self,
 	if (DeeGC_ReferredBy(value, (DeeObject *)self))
 		return err_reference_loop((DeeObject *)self, value);
 	Dee_Incref(value);
-	atomic_rwlock_write(&self->c_lock);
-	oldval       = self->c_curr;
-	self->c_curr = value;
-	atomic_rwlock_endread(&self->c_lock);
+	CatIterator_LockWrite(self);
+	oldval       = self->cti_curr;
+	self->cti_curr = value;
+	CatIterator_LockEndRead(self);
 	Dee_Decref(oldval);
 	return 0;
 }
@@ -352,7 +363,7 @@ PRIVATE struct type_getset tpconst catiterator_getsets[] = {
 };
 
 PRIVATE struct type_member tpconst catiterator_members[] = {
-	TYPE_MEMBER_FIELD_DOC("__sequences__", STRUCT_OBJECT, offsetof(CatIterator, c_cat), "->?S?DSequence"),
+	TYPE_MEMBER_FIELD_DOC("__sequences__", STRUCT_OBJECT, offsetof(CatIterator, cti_cat), "->?S?DSequence"),
 	TYPE_MEMBER_END
 };
 
@@ -415,13 +426,13 @@ cat_iter(Cat *__restrict self) {
 	if unlikely(!result)
 		goto done;
 	ASSERT(DeeTuple_SIZE(self) != 0);
-	result->c_curr = DeeObject_IterSelf(DeeTuple_GET(self, 0));
-	if unlikely(!result->c_curr)
+	result->cti_curr = DeeObject_IterSelf(DeeTuple_GET(self, 0));
+	if unlikely(!result->cti_curr)
 		goto err_r;
-	result->c_pseq = DeeTuple_ELEM(self);
-	result->c_cat  = self;
+	result->cti_pseq = DeeTuple_ELEM(self);
+	result->cti_cat  = self;
 	Dee_Incref(self);
-	atomic_rwlock_init(&result->c_lock);
+	atomic_rwlock_init(&result->cti_lock);
 	DeeObject_Init(result, &SeqConcatIterator_Type);
 done:
 	return result;
@@ -764,7 +775,8 @@ PRIVATE struct type_seq cat_seq = {
 INTDEF NONNULL((1)) void DCALL tuple_tp_free(void *__restrict ob);
 #define cat_tp_free  tuple_tp_free
 
-PRIVATE WUNUSED NONNULL((1)) int DCALL cat_bool(Cat *__restrict self) {
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+cat_bool(Cat *__restrict self) {
 	size_t i;
 	int temp;
 	for (i = 0; i < self->t_size; ++i) {
@@ -845,10 +857,10 @@ INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 DeeSeq_Concat(DeeObject *self, DeeObject *other) {
 	DREF DeeTupleObject *result;
 	/* Special handling for recursive cats. */
-	if (DeeObject_InstanceOf(self, &SeqConcat_Type)) {
+	if (SeqConcat_Check(self)) {
 		size_t lhs_size;
 		lhs_size = DeeTuple_SIZE(self);
-		if (DeeObject_InstanceOf(other, &SeqConcat_Type)) {
+		if (SeqConcat_Check(other)) {
 			DREF DeeObject **dst;
 			size_t rhs_size;
 			rhs_size = DeeTuple_SIZE(other);
@@ -869,7 +881,7 @@ DeeSeq_Concat(DeeObject *self, DeeObject *other) {
 			*dst = other;
 			Dee_Incref(other);
 		}
-	} else if (DeeObject_InstanceOf(other, &SeqConcat_Type)) {
+	} else if (SeqConcat_Check(other)) {
 		DREF DeeObject **dst;
 		size_t rhs_size;
 		rhs_size = DeeTuple_SIZE(other);
@@ -885,6 +897,7 @@ DeeSeq_Concat(DeeObject *self, DeeObject *other) {
 		if unlikely(!result)
 			goto err;
 	}
+
 	/* Fix the resulting object type. */
 	ASSERT(result->ob_type == &DeeTuple_Type);
 	Dee_DecrefNokill(&DeeTuple_Type);

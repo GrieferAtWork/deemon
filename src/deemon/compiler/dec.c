@@ -56,9 +56,9 @@ DeeSystem_DEFINE_memmem(dee_memmem)
 #endif /* !CONFIG_HAVE_memmem */
 
 #ifndef NDEBUG
-#define DBG_memset memset
+#define DBG_memset (void)memset
 #else /* !NDEBUG */
-#define DBG_memset(...) (void)0
+#define DBG_memset(dst, byte, n_bytes) (void)0
 #endif /* NDEBUG */
 
 

@@ -2094,8 +2094,9 @@ struct Dee_type_member {
 
 struct Dee_membercache_slot;
 struct Dee_membercache {
-	struct Dee_membercache     **mc_pself; /* [1..1][0..1][lock(INTERNAL(membercache_lock))] Self-pointer. */
-	struct Dee_membercache      *mc_next;  /* [0..1][lock(INTERNAL(membercache_lock))] Next cache. */
+	struct {
+		struct Dee_membercache *le_next, **le_prev;
+	}                            mc_link;  /* [0..1][lock(INTERNAL(membercache_lock))] Entry in global list of caches (or unbound if not yet linked) */
 	size_t                       mc_mask;  /* [lock(mc_lock)] Allocated table size -1. */
 	size_t                       mc_size;  /* [lock(mc_lock)] Amount of used table entries. */
 	struct Dee_membercache_slot *mc_table; /* [0..mc_mask+1][owned] Member cache table. */
@@ -2105,9 +2106,9 @@ struct Dee_membercache {
 };
 
 #ifndef CONFIG_NO_THREADS
-#define Dee_MEMBERCACHE_INIT { NULL, NULL, 0, 0, NULL, DEE_ATOMIC_RWLOCK_INIT }
+#define Dee_MEMBERCACHE_INIT { { NULL, NULL }, 0, 0, NULL, DEE_ATOMIC_RWLOCK_INIT }
 #else /* !CONFIG_NO_THREADS */
-#define Dee_MEMBERCACHE_INIT { NULL, NULL, 0, 0, NULL }
+#define Dee_MEMBERCACHE_INIT { { NULL, NULL }, 0, 0, NULL }
 #endif /* CONFIG_NO_THREADS */
 
 #ifdef DEE_SOURCE
@@ -2414,6 +2415,9 @@ DeeObject_PInvokeOperator(DeeObject **__restrict pself, uint16_t name,
 
 struct Dee_type_object {
 	Dee_OBJECT_HEAD
+#ifdef __INTELLISENSE__
+		;
+#endif /* __INTELLISENSE__ */
 	char const                         *tp_name;     /* [0..1] Name of this type. */
 	/*utf-8*/ char const               *tp_doc;      /* [0..1] Documentation string of this type and its operators. */
 	uint16_t                            tp_flags;    /* Type flags (Set of `TP_F*'). */

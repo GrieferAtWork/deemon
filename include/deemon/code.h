@@ -575,7 +575,7 @@ struct Dee_code_object {
                         co_codebytes_, co_module_, co_keywords_, co_defaultv_,  \
                         co_staticv_, co_exceptv_, co_ddi_, ...)                 \
 	struct {                                                                    \
-		struct gc_head_raw _gc_head_data;                                       \
+		struct gc_head_link _gc_head_data;                                       \
 		struct {                                                                \
 			Dee_OBJECT_HEAD                                                     \
 			uint16_t                              co_flags;                     \
@@ -634,8 +634,8 @@ struct Dee_code_object {
 struct empty_code_struct {
 	/* Even though never tracked, the empty code
 	 * object still needs the GC header for visiting. */
-	struct gc_head_raw c_head;
-	DeeCodeObject      c_code;
+	struct Dee_gc_head_link c_head;
+	DeeCodeObject           c_code;
 };
 
 #ifdef __INTELLISENSE__

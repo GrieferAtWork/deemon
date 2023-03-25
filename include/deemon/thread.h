@@ -186,23 +186,27 @@ struct Dee_deep_assoc {
 	 * >> local my_list = [10, 20];
 	 * >> my_list.append(my_list);
 	 * >> local dup = deepcopy my_list; // Here.
-	 * To deal with this, the `deepcopy' operator must be able
-	 * to recursively track all objects that are already in the
-	 * process of being copied, even when those object have only
-	 * been partially constructed.
-	 * Therefor, it is necessary to keep track of the association
-	 * of any GC-object (those are the ones that can be recursive
-	 * and therefor able to re-appear in chains) to the respective
+	 *
+	 * To deal with this, the `deepcopy' operator must be able to
+	 * recursively track all objects that are already in the process
+	 * of being copied, even when those object have only been
+	 * partially constructed.
+	 *
+	 * Therefor, it is necessary to keep track of the association of
+	 * any GC-object (those are the ones that can be recursive and
+	 * therefor able to re-appear in chains) to the respective
 	 * existing object, such that an attempt to deep-copy an object
 	 * that is already being duplicated will return the partially
 	 * constructed copy.
+	 *
 	 * For this, we need something that is similar to what a Dict
-	 * does, however it doesn't need to be thread-safe (because
-	 * we keep track of this thread-locally and only clear the
-	 * set of objects having already been copied once execution
-	 * is no longer inside any deepcopy operator), and also mustn't
-	 * keep track of objects based on __hash__ and __eq__, but based
-	 * on their pointers alone.
+	 * does, however it doesn't need to be thread-safe (because we
+	 * keep track of this thread-locally and only clear the set of
+	 * objects having already been copied once execution is no
+	 * longer inside any deepcopy operator), and also mustn't keep
+	 * track of objects based on __hash__ and __eq__, but based on
+	 * their pointers alone.
+	 *
 	 * It must however still keep a reference to both the old and
 	 * the new object, since there is a possibility that some object
 	 * is only temporarily being constructed during deepcopy, but
@@ -212,7 +216,7 @@ struct Dee_deep_assoc {
 	 * >>     local result;
 	 * >>     if (ob in THREAD_LOCAL_DEEPCOPY_MAP)
 	 * >>         return THREAD_LOCAL_DEEPCOPY_MAP[ob];
-	 * >>     if (type(ob).isgc()) {
+	 * >>     if (type(ob).__isgc__) {
 	 * >>         result = type(ob).begin_deepcopy();
 	 * >>         THREAD_LOCAL_DEEPCOPY_MAP[ob] = result;
 	 * >>         type(ob).perform_deepcopy(result, ob);
@@ -345,11 +349,13 @@ struct Dee_thread_object {
 	void                     *t_tlsdata;    /* [0..?][lock(PRIVATE(DeeThread_Self()))] Thread TLS data controller. (Set to NULL during thread creation / clear) */
 #ifdef CONFIG_THREADS_JOIN_SEMPAHORE
 	/* Semaphore signaled when the thread becomes joinable.
-	 * You might argue that `pthread_join()' could be used for this,
-	 * but besides the fact that there is no portable way to perform
-	 * a try/timed-join (other than maybe using `alarm()'), pthread_join
-	 * has the undesired side-effect of also detaching the thread so where
+	 *
+	 * You might argue that `pthread_join()' could be used for this, but
+	 * besides the fact that there is no portable way to perform a try/
+	 * timed-join (other than maybe using `alarm()'), pthread_join has
+	 * the undesired side-effect of also detaching the thread to where
 	 * any further use of its descriptor causes undefined behavior.
+	 *
 	 * This however would lead to various race conditions that can
 	 * easily be prevented by just always using a semaphore to
 	 * communicate thread termination. */
@@ -410,8 +416,7 @@ DFUNDEF WUNUSED NONNULL((1)) int DCALL
 DeeThread_Start(/*Thread*/ DeeObject *__restrict self);
 
 /* Schedule an interrupt for a given thread.
- * Interrupts are delivered when through threads
- * periodically calling `DeeThread_CheckInterrupt()'.
+ * Interrupts are received when a thread calls `DeeThread_CheckInterrupt()'.
  * NOTE: Interrupts are delivered in order of being received.
  * NOTE: When `interrupt_args' is non-NULL, rather than throwing the given
  *      `interrupt_main' as an error upon arrival, it is invoked

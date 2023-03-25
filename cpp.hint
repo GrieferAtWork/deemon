@@ -579,8 +579,8 @@
 
 #define Dee_float_object float_object
 
-#define Dee_gc_head_raw gc_head_raw
-#define Dee_gc_head     gc_head
+#define Dee_gc_head_link gc_head_link
+#define Dee_gc_head      gc_head
 
 #define Dee_hashset_item   hashset_item
 #define Dee_hashset_object hashset_object

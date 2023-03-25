@@ -34,20 +34,20 @@
 DECL_BEGIN
 
 #ifdef DEE_SOURCE
-#define Dee_gc_head_raw gc_head_raw
-#define Dee_gc_head     gc_head
+#define Dee_gc_head_link gc_head_link
+#define Dee_gc_head      gc_head
 #endif /* DEE_SOURCE */
 
 
 struct Dee_gc_head;
-struct Dee_gc_head_raw {
+struct Dee_gc_head_link {
 	/* The structure that is prefixed before every GC-allocated object. */
-	struct Dee_gc_head **gc_pself;  /* [1..1][== self][1..1][lock(INTERNAL(gc_lock))] Self-pointer in the global chain of GC objects. */
 	struct Dee_gc_head  *gc_next;   /* [0..1][lock(INTERNAL(gc_lock))] Next GC object. */
+	struct Dee_gc_head **gc_pself;  /* [1..1][== self][1..1][lock(INTERNAL(gc_lock))] Self-pointer in the global chain of GC objects. */
 };
 struct Dee_gc_head {
-	struct Dee_gc_head **gc_pself;  /* [1..1][== self][1..1][lock(INTERNAL(gc_lock))] Self-pointer in the global chain of GC objects. */
 	struct Dee_gc_head  *gc_next;   /* [0..1][lock(INTERNAL(gc_lock))] Next GC object. */
+	struct Dee_gc_head **gc_pself;  /* [1..1][== self][1..1][lock(INTERNAL(gc_lock))] Self-pointer in the global chain of GC objects. */
 	DeeObject            gc_object; /* The object that is being controlled by the GC. */
 };
 #define DEE_GC_OBJECT_OFFSET COMPILER_OFFSETOF(struct gc_head, gc_object)

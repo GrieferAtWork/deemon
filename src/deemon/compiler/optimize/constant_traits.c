@@ -159,6 +159,7 @@ INTERN WUNUSED NONNULL((1)) int
 again0:
 	type = Dee_TYPE(self);
 	/* Whitelist! */
+
 	/* Allow some basic types. */
 	{
 		size_t i;
@@ -167,6 +168,7 @@ again0:
 				goto allowed;
 		}
 	}
+
 	/* Check for special wrapper objects. */
 	if (type == &DeeObjMethod_Type) {
 		/* ObjMethod objects cannot be encoded in in DEC files. */
@@ -176,6 +178,7 @@ again0:
 		self = ((DeeObjMethodObject *)self)->om_this;
 		goto again0;
 	}
+
 	if (type == &DeeSuper_Type) {
 		int result = CONSTEXPR_ALLOWED, temp;
 		temp       = allow_constexpr((DeeObject *)DeeSuper_TYPE(self));
@@ -190,6 +193,7 @@ again0:
 			result = CONSTEXPR_USECOPY;
 		return result;
 	}
+
 	if (type == &DeeTuple_Type) {
 		/* Allow tuples consisting only of other allowed types. */
 		size_t i, count;
@@ -207,6 +211,7 @@ again0:
 		}
 		return result;
 	}
+
 	if (type == &DeeRoDict_Type) {
 		/* Allow read-only dicts consisting only of other allowed types. */
 		int temp, result = CONSTEXPR_ALLOWED;
@@ -228,6 +233,7 @@ again0:
 		}
 		return result;
 	}
+
 	if (type == &DeeRoSet_Type) {
 		/* Allow read-only sets consisting only of other allowed types. */
 		int temp, result = CONSTEXPR_ALLOWED;
@@ -244,6 +250,7 @@ again0:
 		}
 		return result;
 	}
+
 	/* Allow list/dict/set, but require them to always be copied. */
 	if (type == &DeeList_Type) {
 		/* Recursive GC-type. */
@@ -265,6 +272,7 @@ again0:
 		CONSTEXPR_FRAME_END;
 		goto usecopy;
 	}
+
 	if (type == &DeeHashSet_Type) {
 		/* Recursive GC-type. */
 		if (constexpr_onstack(self))
@@ -290,6 +298,7 @@ again0:
 		CONSTEXPR_FRAME_END;
 		goto usecopy;
 	}
+
 	if (type == &DeeDict_Type) {
 		/* Recursive GC-type. */
 		if (constexpr_onstack(self))

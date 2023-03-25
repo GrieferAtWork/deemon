@@ -588,9 +588,9 @@ DECL_END
 DECL_BEGIN
 
 #ifndef NDEBUG
-#define DBG_memset memset
+#define DBG_memset (void)memset
 #else /* !NDEBUG */
-#define DBG_memset(...) (void)0
+#define DBG_memset(dst, byte, n_bytes) (void)0
 #endif /* NDEBUG */
 
 static_assert(DEE_RE_STATUS_NOMATCH == (-RE_NOMATCH));

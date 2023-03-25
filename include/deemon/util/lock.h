@@ -131,6 +131,14 @@ typedef int Dee_shared_rwlock_t;
 #define Dee_shared_rwlock_waitread(self)                             0
 #define Dee_shared_rwlock_waitwrite(self)                            0
 
+#define DeeLock_Lock2(lock_a, trylock_a, unlock_a, \
+                      lock_b, trylock_b, unlock_b) \
+	(void)0
+#define DeeLock_Lock3(lock_a, trylock_a, unlock_a, \
+                      lock_b, trylock_b, unlock_b, \
+                      lock_c, trylock_c, unlock_c) \
+	(void)0
+
 DECL_END
 
 #else /* CONFIG_NO_THREADS */
@@ -372,7 +380,65 @@ DFUNDEF WUNUSED NONNULL((1)) int (DCALL Dee_shared_rwlock_waitwrite_timed)(Dee_s
 #define Dee_shared_rwlock_waitread(self)  (Dee_shared_rwlock_canread(self) ? 0 : (Dee_shared_rwlock_waitread)(self))
 #define Dee_shared_rwlock_waitwrite(self) (Dee_shared_rwlock_canwrite(self) ? 0 : (Dee_shared_rwlock_waitwrite)(self))
 #endif /* !__NO_builtin_expect */
+
+/* Helper macros to safely (i.e. without any chance of dead-locking
+ * (so-long as locks are distinct)) acquire multiple locks at once. */
+#define DeeLock_Lock2(lock_a, trylock_a, unlock_a, \
+                      lock_b, trylock_b, unlock_b) \
+	do {                                           \
+		lock_a;                                    \
+		if likely(trylock_b)                       \
+			break;                                 \
+		unlock_a;                                  \
+		lock_b;                                    \
+		if likely(trylock_a)                       \
+			break;                                 \
+		unlock_b;                                  \
+	}	__WHILE1
+#define DeeLock_Lock3(lock_a, trylock_a, unlock_a,  \
+                      lock_b, trylock_b, unlock_b,  \
+                      lock_c, trylock_c, unlock_c)  \
+	do {                                            \
+		DeeLock_Lock2(lock_a, trylock_a, unlock_a,  \
+		              lock_b, trylock_b, unlock_b); \
+		if likely(trylock_c)                        \
+			break;                                  \
+		unlock_b;                                   \
+		unlock_a;                                   \
+		lock_c;                                     \
+		if unlikely(!(trylock_b)) {                 \
+			unlock_c;                               \
+			continue;                               \
+		}                                           \
+		if likely(trylock_a)                        \
+			break;                                  \
+		unlock_b;                                   \
+		unlock_c;                                   \
+	}	__WHILE1
 #endif /* !CONFIG_NO_THREADS */
+
+/* Helpers to (safely) acquire multiple atomic [rw]locks at the same time. */
+#define Dee_atomic_lock_acquire_2(a, b)                                                                  \
+	DeeLock_Lock2(Dee_atomic_lock_acquire(a), Dee_atomic_lock_tryacquire(a), Dee_atomic_lock_release(a), \
+	              Dee_atomic_lock_acquire(b), Dee_atomic_lock_tryacquire(b), Dee_atomic_lock_release(b))
+#define Dee_atomic_rwlock_read_2(a, b)                                                                   \
+	DeeLock_Lock2(Dee_atomic_rwlock_read(a), Dee_atomic_rwlock_tryread(a), Dee_atomic_rwlock_endread(a), \
+	              Dee_atomic_rwlock_read(b), Dee_atomic_rwlock_tryread(b), Dee_atomic_rwlock_endread(b))
+#define Dee_atomic_rwlock_write_2(a, b)                                                                     \
+	DeeLock_Lock2(Dee_atomic_rwlock_write(a), Dee_atomic_rwlock_trywrite(a), Dee_atomic_rwlock_endwrite(a), \
+	              Dee_atomic_rwlock_write(b), Dee_atomic_rwlock_trywrite(b), Dee_atomic_rwlock_endwrite(b))
+#define Dee_atomic_lock_acquire_3(a, b, c)                                                               \
+	DeeLock_Lock3(Dee_atomic_lock_acquire(a), Dee_atomic_lock_tryacquire(a), Dee_atomic_lock_release(a), \
+	              Dee_atomic_lock_acquire(b), Dee_atomic_lock_tryacquire(b), Dee_atomic_lock_release(b), \
+	              Dee_atomic_lock_acquire(c), Dee_atomic_lock_tryacquire(c), Dee_atomic_lock_release(c))
+#define Dee_atomic_rwlock_read_3(a, b, c)                                                                \
+	DeeLock_Lock3(Dee_atomic_rwlock_read(a), Dee_atomic_rwlock_tryread(a), Dee_atomic_rwlock_endread(a), \
+	              Dee_atomic_rwlock_read(b), Dee_atomic_rwlock_tryread(b), Dee_atomic_rwlock_endread(b), \
+	              Dee_atomic_rwlock_read(c), Dee_atomic_rwlock_tryread(c), Dee_atomic_rwlock_endread(c))
+#define Dee_atomic_rwlock_write_3(a, b, c)                                                                  \
+	DeeLock_Lock3(Dee_atomic_rwlock_write(a), Dee_atomic_rwlock_trywrite(a), Dee_atomic_rwlock_endwrite(a), \
+	              Dee_atomic_rwlock_write(b), Dee_atomic_rwlock_trywrite(b), Dee_atomic_rwlock_endwrite(b), \
+	              Dee_atomic_rwlock_write(c), Dee_atomic_rwlock_trywrite(c), Dee_atomic_rwlock_endwrite(c))
 
 
 

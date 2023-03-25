@@ -1129,7 +1129,7 @@ DeeNTSystem_IsNoLink(/*DWORD*/ DeeNT_DWORD dwError) {
 #endif
 
 
-/* Figure out how to implement `DeeNTSystem_TranslateErrno()' */
+/* Figure out how to implement `DeeNTSystem_TranslateNtError()' */
 #undef DeeNTSystem_TranslateNtError_USE_ERRNO_KOS2NT
 #undef DeeNTSystem_TranslateNtError_USE_FALLBACK
 #if defined(CONFIG_HAVE_errno_kos2nt)

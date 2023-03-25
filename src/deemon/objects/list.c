@@ -125,22 +125,12 @@ list_moveassign(List *me, List *other) {
 	size_t old_elemc;
 	if (me == other)
 		goto done;
-#ifndef CONFIG_NO_THREADS
-again_lock_both:
-	DeeList_LockWrite(other);
-	if (!DeeList_TryLockWrite(me)) {
-		DeeList_LockEndWrite(other);
-		DeeList_LockWrite(me);
-		if (!DeeList_TryLockWrite(other)) {
-			DeeList_LockEndWrite(me);
-			goto again_lock_both;
-		}
-	}
-#endif /* !CONFIG_NO_THREADS */
+	DeeList_LockWrite2(me, other);
 	old_elemv  = me->l_list.ol_elemv;
 	old_elemc  = me->l_list.ol_elemc;
 	me->l_list = other->l_list;
 	Dee_objectlist_init(&other->l_list);
+	DeeList_LockEndWrite(other);
 	DeeList_LockEndWrite(me);
 	if (old_elemv) {
 		Dee_Decrefv(old_elemv, old_elemc);

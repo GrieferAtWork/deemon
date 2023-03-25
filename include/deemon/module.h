@@ -374,7 +374,7 @@ DFUNDEF WUNUSED ATTR_CONST ATTR_RETNONNULL DeeModuleObject *DCALL DeeModule_GetD
 /* A stub module-object named `' (empty string), and pointing to `empty_code'. */
 struct static_module_struct {
 	/* Even though never tracked, static modules still need the GC header for visiting. */
-	struct gc_head_raw m_head;
+	struct gc_head_link m_head;
 	DeeModuleObject    m_module;
 };
 
