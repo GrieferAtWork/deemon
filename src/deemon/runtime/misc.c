@@ -1906,7 +1906,7 @@ PUBLIC dssize_t
 #ifdef NDEBUG
 	(void)arg;
 	(void)data;
-	(void)datalen;
+	return (dssize_t)datalen;
 #else /* NDEBUG */
 	dssize_t result;
 	if (_Dee_dprint_enabled == 2)

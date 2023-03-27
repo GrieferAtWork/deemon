@@ -300,6 +300,7 @@ err_ex_frame:
 			if unlikely(!frame.cf_frame)
 				goto err;
 		}
+
 		/* Per-initialize local variable memory to ZERO. */
 		bzeroc(frame.cf_frame,
 		       code->co_localc,
@@ -323,7 +324,7 @@ err_ex_frame:
 		/* With the frame now set up, actually invoke the code. */
 		if unlikely(code->co_flags & CODE_FASSEMBLY) {
 			frame.cf_stacksz = 0;
-			result           = DeeCode_ExecFrameSafe(&frame);
+			result = DeeCode_ExecFrameSafe(&frame);
 
 			/* Delete remaining stack objects. */
 			while (frame.cf_sp > frame.cf_stack) {

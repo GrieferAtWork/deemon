@@ -829,7 +829,7 @@ err:
 #ifdef CONFIG_HAVE_open64
 	fd = open64(utf8_filename, used_oflags, mode);
 #else /* CONFIG_HAVE_open64 */
-	fd  = open(utf8_filename, used_oflags, mode);
+	fd = open(utf8_filename, used_oflags, mode);
 #endif /* !CONFIG_HAVE_open64 */
 	DBG_ALIGNMENT_ENABLE();
 #if defined(CONFIG_HAVE_wopen64) || defined(CONFIG_HAVE_wopen)

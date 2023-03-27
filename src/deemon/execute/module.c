@@ -906,6 +906,7 @@ begin_init:
 		flags = atomic_read(&me->mo_flags);
 		if (flags & MODULE_FDIDINIT)
 			return 0;
+
 		/* Check if the module has been loaded yet. */
 		if (!(flags & MODULE_FDIDLOAD)) {
 			if (flags & MODULE_FLOADING) {
@@ -931,6 +932,7 @@ begin_init:
 			/* Check if the module is being loaded in the current thread. */
 			if (me->mo_loader == caller)
 				return 1;
+
 #ifdef CONFIG_HOST_WINDOWS
 			/* Sleep a bit longer than usually. */
 			__NAMESPACE_INT_SYM SleepEx(1000, 0);
@@ -938,6 +940,7 @@ begin_init:
 			SCHED_YIELD();
 #endif /* !CONFIG_HOST_WINDOWS */
 		}
+
 		/* If the module has now been marked as having finished loading,
 		 * then simply act as though it was us that did it. */
 		if (flags & MODULE_FDIDINIT)
@@ -958,17 +961,17 @@ begin_init:
 	 *           initialize_module("module_b"):
 	 *              >> import("module_a"); // see above...
 	 *        #1: `thread_1' gets here first and starts to
-	 *             run the initialization code of `module_a'
+	 *            run the initialization code of `module_a'
 	 *        #2: `thread_2' gets here second and start to 
-	 *             run the initialization code of `module_b'
+	 *            run the initialization code of `module_b'
 	 *        #3: `thread_1' executing `module_a' starts to import `module_b'
-	 *             It succeeds as the module is already in-cache and calls
+	 *            It succeeds as the module is already in-cache and calls
 	 *            `DeeModule_RunInit()' to make sure that the module has been
-	 *             initialized, entering the idle-wait loop above that is
-	 *             designed to wait when another thread is already initializing
-	 *             the same module.
+	 *            initialized, entering the idle-wait loop above that is
+	 *            designed to wait when another thread is already initializing
+	 *            the same module.
 	 *        #4: `thread_2' does the same as `thread_1', and enters the wait
-	 *             loop, idly waiting for `thread_1' to finish initializing
+	 *            loop, idly waiting for `thread_1' to finish initializing
 	 *            `module_a', which it never will because of the obvious DEADLOCK!
 	 * NOTE:  This problem can also happen when loading a module, but is just much
 	 *        more difficult to invoke as it requires execution of multi-threaded
@@ -986,9 +989,9 @@ begin_init:
 	 *     modules, allowing for runtime checks on the presence of symbols.
 	 * ... Python could get away with something like that thanks to
 	 *     its GIL, but I would never stoop so low as to simply say:
-	 *        "Yeah. We've got thread... Only one of them can ever be
-	 *         executed at the same time, but it's still multi-threading..." 
-	 *     me: "NO!!! THIS IS MADNESS AND DEFEATS THE POINT!!!"
+	 *        "Yeah. We've got threads... Only one of them can ever be
+	 *        executed at the same time, but it's still multi-threading..." 
+	 *     me: "NO!!! THAT'S NOT TREADING! THATS JUST MADNESS AND DEFEATS THE POINT!!!"
 	 * T0D0: Stop going off-topic...
 	 */
 #ifndef CONFIG_NO_DEX
