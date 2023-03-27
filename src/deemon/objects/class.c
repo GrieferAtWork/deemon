@@ -3085,7 +3085,7 @@ instance_builtin_auto_tprintrepr(DeeTypeObject *tp_self,
 			if (!is_first)
 				DO(err_ob, DeeFormat_PRINT(printer, arg, ", "));
 			DO(err_ob, DeeString_PrintUtf8((DeeObject *)at->ca_name, printer, arg));
-			DO(err_ob, DeeFormat_Printf(printer, arg, ": %k", ob));
+			DO(err_ob, DeeFormat_Printf(printer, arg, ": %r", ob));
 			is_first = false;
 			break;
 		}
