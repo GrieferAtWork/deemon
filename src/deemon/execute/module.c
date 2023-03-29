@@ -1665,14 +1665,12 @@ INTERN struct static_module_struct empty_module_head = {
 	}, {
 		OBJECT_HEAD_INIT(&DeeModule_Type),
 		/* .mo_name      = */ (DeeStringObject *)Dee_EmptyString,
-		/* .mo_pself     = */ NULL,
-		/* .mo_next      = */ NULL,
+		/* .mo_link      = */ LIST_ENTRY_UNBOUND_INITIALIZER,
 		/* .mo_path      = */ NULL,
 #ifdef CONFIG_HOST_WINDOWS
 		/* .mo_pathhash  = */ 0,
 #endif /* CONFIG_HOST_WINDOWS */
-		/* .mo_globpself = */ NULL,
-		/* .mo_globnext  = */ NULL,
+		/* .mo_globlink  = */ LIST_ENTRY_UNBOUND_INITIALIZER,
 		/* .mo_importc   = */ 0,
 		/* .mo_globalc   = */ 0,
 #ifndef CONFIG_NO_DEC
