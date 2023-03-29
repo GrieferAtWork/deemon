@@ -41,10 +41,6 @@
 #include <hybrid/byteorder.h>
 #include <hybrid/byteswap.h>
 
-#ifdef _MSC_VER
-#pragma warning(disable : 4005)
-#endif /* _MSC_VER */
-
 #define PRIVDEF PRIVATE
 #undef PUBLIC
 #undef TPPFUN

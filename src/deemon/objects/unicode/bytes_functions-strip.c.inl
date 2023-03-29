@@ -240,16 +240,8 @@ DECL_BEGIN
  * >> ...
  * >> if (mask) {
  * >>     use_needle(&needle); // <<< Here
- * >> }
- */
-#ifdef __GNUC__
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
-#elif defined(_MSC_VER)
-#pragma warning(push)
-#pragma warning(disable: 4701)
-#endif /* ... */
-
+ * >> } */
+__pragma_GCC_diagnostic_push_ignored(Wmaybe_uninitialized)
 
 PRIVATE WUNUSED NONNULL((1)) DREF Bytes *DCALL
 LOCAL_bytes_strip(Bytes *self, size_t argc, DeeObject *const *argv) {
@@ -490,11 +482,7 @@ err:
 	return NULL;
 }
 
-#ifdef __GNUC__
-#pragma GCC diagnostic pop
-#elif defined(_MSC_VER)
-#pragma warning(pop)
-#endif /* ... */
+__pragma_GCC_diagnostic_pop_ignored(Wmaybe_uninitialized)
 
 #undef LOCAL_isspace
 

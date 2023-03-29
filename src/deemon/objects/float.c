@@ -220,34 +220,31 @@ PRIVATE struct type_math float_math = {
 	/* .tp_pow    = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))NULL
 };
 
-#ifdef _MSC_VER
-#pragma warning(push)
-#pragma warning(disable: 4127)
-#endif /* _MSC_VER */
-
 PRIVATE WUNUSED NONNULL((1)) dhash_t DCALL
 float_hash(Float *__restrict self) {
-	if (sizeof(double) == sizeof(dhash_t))
+	__STATIC_IF (sizeof(double) == sizeof(dhash_t)) {
 		return *(dhash_t *)&self->f_value;
-	if (sizeof(double) >= sizeof(uint64_t)) {
+	} __STATIC_ELSE (sizeof(double) == sizeof(dhash_t)) {
+		__STATIC_IF (sizeof(double) >= sizeof(uint64_t)) {
 #if __SIZEOF_POINTER__ == 4
-		return ((dhash_t)((uint32_t *)&self->f_value)[0] ^
-		        (dhash_t)((uint32_t *)&self->f_value)[1]);
+			return ((dhash_t)((uint32_t *)&self->f_value)[0] ^
+			        (dhash_t)((uint32_t *)&self->f_value)[1]);
 #else /* __SIZEOF_POINTER__ == 4 */
-		return (dhash_t)(*(uint64_t *)&self->f_value);
+			return (dhash_t)(*(uint64_t *)&self->f_value);
 #endif /* __SIZEOF_POINTER__ != 4 */
+		} __STATIC_ELSE (sizeof(double) >= sizeof(uint64_t)) {
+			__STATIC_IF (sizeof(double) >= sizeof(uint32_t)) {
+				return (dhash_t)(*(uint32_t *)&self->f_value);
+			} __STATIC_ELSE (sizeof(double) >= sizeof(uint32_t)) {
+				__STATIC_IF (sizeof(double) >= sizeof(uint16_t)) {
+					return (dhash_t)(*(uint16_t *)&self->f_value);
+				} __STATIC_ELSE (sizeof(double) >= sizeof(uint16_t)) {
+					return (dhash_t)(*(uint8_t *)&self->f_value);
+				}
+			}
+		}
 	}
-
-	if (sizeof(double) >= sizeof(uint32_t))
-		return (dhash_t)(*(uint32_t *)&self->f_value);
-	if (sizeof(double) >= sizeof(uint16_t))
-		return (dhash_t)(*(uint16_t *)&self->f_value);
-	return (dhash_t)(*(uint8_t *)&self->f_value);
 }
-
-#ifdef _MSC_VER
-#pragma warning(pop)
-#endif /* _MSC_VER */
 
 
 #define DEFINE_FLOAT_CMP(name, op)                        \

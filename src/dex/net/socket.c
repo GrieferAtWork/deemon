@@ -572,11 +572,6 @@ err_network_down(neterrno_t error, Socket *__restrict socket,
 	                                            SOCKADDR_STR_FNODNS));
 }
 
-#ifdef _MSC_VER
-#pragma warning(push)
-#pragma warning(disable : 4548)
-#endif /* _MSC_VER */
-
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 DeeSocket_Connect(DeeSocketObject *__restrict self,
                   SockAddr const *__restrict addr) {
@@ -718,10 +713,6 @@ err:
 	return -1;
 }
 
-#ifdef _MSC_VER
-#pragma warning(pop)
-#endif /* _MSC_VER */
-
 
 #ifdef CONFIG_NO_NOTIFICATIONS
 
@@ -812,11 +803,6 @@ err:
 	return -1;
 }
 
-
-#ifdef _MSC_VER
-#pragma warning(push)
-#pragma warning(disable : 4548)
-#endif /* _MSC_VER */
 
 INTERN WUNUSED NONNULL((1, 3, 4)) int DCALL
 DeeSocket_Accept(DeeSocketObject *__restrict self,
@@ -1092,9 +1078,6 @@ restart_after_timeout:
 		return 1;
 	goto restart;
 }
-#ifdef _MSC_VER
-#pragma warning(pop)
-#endif /* _MSC_VER */
 
 #ifdef CONFIG_HOST_WINDOWS
 #define send(socket, buffer, length, flags) \

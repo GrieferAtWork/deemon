@@ -288,6 +288,9 @@
 		<ClInclude Include="..\include\deemon\kos-headers\compiler\gcc-builtins.h">
 			<Filter>include\kos-headers\compiler</Filter>
 		</ClInclude>
+		<ClInclude Include="..\include\deemon\kos-headers\compiler\gcc-warnings.h">
+			<Filter>include\kos-headers\compiler</Filter>
+		</ClInclude>
 		<ClInclude Include="..\include\deemon\kos-headers\compiler\gcc.h">
 			<Filter>include\kos-headers\compiler</Filter>
 		</ClInclude>

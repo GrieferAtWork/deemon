@@ -24,17 +24,12 @@
 #include <deemon/api.h>
 
 #ifdef CONFIG_HOST_WINDOWS
-#ifdef _MSC_VER
-#pragma warning(push)
-#pragma warning(disable : 4820 4255 4668 4365 4574)
-#endif /* !_MSC_VER */
 
 #include <WS2tcpip.h>
 #include <WinSock2.h>
 #include <Windows.h>
 
 #ifdef _MSC_VER
-#pragma warning(pop)
 #pragma comment(lib, "Ws2_32.lib")
 #endif /* _MSC_VER */
 #endif /* CONFIG_HOST_WINDOWS */
@@ -57,12 +52,6 @@
 #endif /* CONFIG_HAVE_NETDB_H */
 #endif /* CONFIG_HOST_UNIX */
 #endif /* !CONFIG_HOST_WINDOWS */
-
-
-#ifdef _MSC_VER
-#pragma warning(push)
-#pragma warning(disable : 4820)
-#endif /* _MSC_VER */
 
 #ifdef CONFIG_HAVE_LIMITS_H
 #include <limits.h>
@@ -114,10 +103,6 @@
 #undef AF_UNIX
 #endif /* !CONFIG_HOST_WINDOWS */
 #endif /* !CONFIG_HAVE_SYS_UN_H */
-
-#ifdef _MSC_VER
-#pragma warning(pop)
-#endif /* _MSC_VER */
 
 #include <deemon/dex.h>
 #include <deemon/file.h>

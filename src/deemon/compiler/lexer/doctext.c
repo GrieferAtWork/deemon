@@ -544,13 +544,6 @@ err:
 #define table_casevert   case '|'
 
 
-/* Disable warnings that are just _wrong_ */
-#ifdef _MSC_VER
-#pragma warning(disable : 4701) /* potentially uninitialized local variable 'body_end' used */
-#pragma warning(disable : 4703) /* potentially uninitialized local variable 'body_end' used */
-#endif /* _MSC_VER */
-
-
 PRIVATE WUNUSED NONNULL((1, 2, 3)) int DCALL
 do_compile(/*utf-8*/ char const *text,
            /*utf-8*/ char const *end,

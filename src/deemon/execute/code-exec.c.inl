@@ -62,23 +62,11 @@
 #include <hybrid/limitcore.h>
 #define SSIZE_MAX __SSIZE_MAX__
 
-#ifdef _MSC_VER
-#pragma warning(disable: 4102) /* Unused label. */
-#pragma warning(push)
-#pragma warning(disable: 4127)
-#ifdef NDEBUG
-#pragma warning(disable: 4701) /* Potentially uninitialized variable (See `DEBUG_SET_IMMVAL2()' below) */
-#endif /* NDEBUG */
-#endif /* _MSC_VER */
-
-#ifdef __GNUC__
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wunused-label"
-#pragma GCC diagnostic ignored "-Wsign-compare"
-#if __GNUC__ >= 7
-#pragma GCC diagnostic ignored "-Wint-in-bool-context" /* Produces some incorrect warnings. */
-#endif /* __GNUC__ >= 7 */
-#endif /* __GNUC__ */
+__pragma_GCC_diagnostic_push
+__pragma_GCC_diagnostic_ignored(Wunused_label)
+__pragma_GCC_diagnostic_ignored(Wsign_compare)
+__pragma_GCC_diagnostic_ignored(Wint_in_bool_context)
+__pragma_GCC_diagnostic_ignored(MSconditional_expression_is_constant)
 
 #ifdef _MSC_VER
 /* Make sure to enable optimizations for the interpreter, as MSVC will otherwise
@@ -7220,13 +7208,7 @@ DECL_END
 #pragma optimize("", on)
 #endif /* _MSC_VER */
 
-#ifdef __GNUC__
-#pragma GCC diagnostic pop
-#endif /* __GNUC__ */
-
-#ifdef _MSC_VER
-#pragma warning(pop)
-#endif /* _MSC_VER */
+__pragma_GCC_diagnostic_pop
 
 #undef NEED_UNIVERSAL_PREFIX_OB_WORKAROUND
 #undef USING_PREFIX_OBJECT

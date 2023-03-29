@@ -821,6 +821,8 @@ err:
 #endif /* CONFIG_HAVE_O_BINARY */
 
 	/* Do the open. */
+	/* TODO: Don't try both utf8- and wide-char modes! only
+	 *       try 1, based on `CONFIG_PREFER_WCHAR_FUNCTIONS' */
 	utf8_filename = DeeString_AsUtf8(filename);
 	if unlikely(!utf8_filename)
 		goto err;

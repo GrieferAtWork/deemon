@@ -139,20 +139,12 @@
  * The later is the case for the deemon core, and (usually) dex-modules. */
 #ifdef DEE_SOURCE
 
-#ifdef _MSC_VER
-#pragma warning(disable: 4054) /* Cast from function pointer to `void *' */
-#pragma warning(disable: 4152) /* Literally the same thing as `4054', but emit for static initializers. */
-#endif /* _MSC_VER */
-
-#ifdef __GNUC__
-#if __GNUC__ >= 8
 /* Disable warnings about casting incompatible function pointers (for now)
  * While I really welcome these warnings, they pose one big problem with the
  * way in which I've introduced support for keyword-enabled functions, and
  * with how casts to `dfunptr_t' work. */
-#pragma GCC diagnostic ignored "-Wcast-function-type"
-#endif /* __GNUC__ >= 8 */
-#if __GNUC__ >= 4
+__pragma_GCC_diagnostic_ignored(Wcast_function_type)
+
 /* When declaring DeeTypeObject objects and the like, we often skip
  * the initializers for various fields that have no reason of being
  * explicitly initialized by the static initializer. This mainly affects
@@ -162,9 +154,7 @@
  *
  * As such, disable warnings about static struct initializers that
  * initialize some fields, but don't initialize _all_ fields. */
-#pragma GCC diagnostic ignored "-Wmissing-field-initializers"
-#endif /* __GNUC__ >= 4 */
-#endif /* __GNUC__ */
+__pragma_GCC_diagnostic_ignored(Wmissing_field_initializers)
 #endif /* DEE_SOURCE */
 
 
@@ -483,15 +473,6 @@ extern void (__debugbreak)(void);
 #endif /* !__i386__ || __x86_64__ */
 #endif /* !FCALL */
 #endif /* DEE_SOURCE */
-
-
-#ifdef _MSC_VER
-#pragma warning(disable: 4201)
-#pragma warning(disable: 4510)
-#pragma warning(disable: 4512)
-#pragma warning(disable: 4565)
-#pragma warning(disable: 4610)
-#endif /* _MSC_VER */
 
 #if !defined(NDEBUG) && !defined(CONFIG_NO_CHECKMEMORY) && defined(_DEBUG)
 #ifdef CONFIG_HOST_WINDOWS

@@ -7540,6 +7540,13 @@ err_buffer:
 
 
 
+#ifdef __GNUC__
+#if __GNUC__ > 4 || (__GNUC__ == 4 && __GNUC_MINOR__ >= 8)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
+#endif /* __GNUC__ > 4 || (__GNUC__ == 4 && __GNUC_MINOR__ >= 8) */
+#endif /* __GNUC__ */
+
 PRIVATE struct TPPKeyword *TPPCALL
 lookup_escaped_keyword(char const *__restrict name, size_t namelen,
                        size_t unescaped_size, int create_missing) {
@@ -7560,6 +7567,12 @@ lookup_escaped_keyword(char const *__restrict name, size_t namelen,
 		free(buf);
 	return result;
 }
+
+#ifdef __GNUC__
+#if __GNUC__ > 4 || (__GNUC__ == 4 && __GNUC_MINOR__ >= 8)
+#pragma GCC diagnostic pop
+#endif /* __GNUC__ > 4 || (__GNUC__ == 4 && __GNUC_MINOR__ >= 8) */
+#endif /* __GNUC__ */
 
 PUBLIC struct TPPKeyword *TPPCALL
 TPPLexer_LookupEscapedKeyword(char const *__restrict name, size_t namelen,

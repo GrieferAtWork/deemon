@@ -106,6 +106,7 @@
 		<ClInclude Include="..\include\deemon\kos-headers\compiler\clang.h" />
 		<ClInclude Include="..\include\deemon\kos-headers\compiler\docgen.h" />
 		<ClInclude Include="..\include\deemon\kos-headers\compiler\gcc-builtins.h" />
+		<ClInclude Include="..\include\deemon\kos-headers\compiler\gcc-warnings.h" />
 		<ClInclude Include="..\include\deemon\kos-headers\compiler\gcc.h" />
 		<ClInclude Include="..\include\deemon\kos-headers\compiler\generic.h" />
 		<ClInclude Include="..\include\deemon\kos-headers\compiler\intellisense-common.h" />
