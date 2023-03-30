@@ -684,14 +684,12 @@ PRIVATE Process this_process = {
 #endif /* !ipc_Process_USE_argv */
 	/* .p_envp    = */ NULL,
 	/* .p_pwd     = */ NULL,
-	/* .p_stdin   = */ NULL,
-	/* .p_stdout  = */ NULL,
-	/* .p_stderr  = */ NULL,
+	/* .p_stdfd   = */ { NULL, NULL, NULL },
 #ifdef ipc_Process_pid_t
 	/* .p_pid     = */ ipc_Process_pid_t_INVALID,
 #endif /* ipc_Process_pid_t */
 #ifdef ipc_Process_USE_CreateProcessW
-	/* .p_pid     = */ INVALID_HANDLE_VALUE,
+	/* .p_handle  = */ INVALID_HANDLE_VALUE,
 #endif /* ipc_Process_USE_CreateProcessW */
 	/* .p_state   = */ (PROCESS_FLAG_STARTING | PROCESS_FLAG_STARTED |
 	                    PROCESS_FLAG_EXTERN | PROCESS_FLAG_SELF)
