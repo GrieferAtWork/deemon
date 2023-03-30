@@ -587,6 +587,12 @@ DEF_STRING(str_cell_empty, "cell empty", 0x5df2baea, 0x87d3182524393808)
 #define STR_this_function "this_function"
 #endif /* !STR_this_function */
 
+/* Some versions of GCC think that using DeeString_STR() on a static
+ * string object will result in us reading from out-of-bounds memory,
+ * since it doesn't understand that static objects (with flexible array
+ * members) can still be larger than the object's minimal size. */
+__pragma_GCC_diagnostic_ignored(Wstringop_overflow)
+
 DECL_END
 
 #endif /* !GUARD_DEEMON_RUNTIME_STRINGS_H */
