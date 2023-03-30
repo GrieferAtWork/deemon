@@ -1149,6 +1149,30 @@ enumattr_start(void *arg) {
 }
 #endif /* CONFIG_LONGJMP_ENUMATTR */
 
+
+/* Without our use of SJLJ, gcc emits the following warning (on some platforms):
+ * >> /src/deemon/objects/attribute.c: In function ‘enumattriter_next’:
+ * >> /include/deemon/system-sjlj.h:90:37: warning: ‘({anonymous})’ may be used uninitialized in this function [-Wmaybe-uninitialized]
+ * >>    90 | #define DeeSystem_SetJmp(env)       _setjmp(env)
+ * >>       |                                     ^~~~~~~
+ * >> /include/deemon/system-sjlj.h:90:37: note: ‘({anonymous})’ was declared here
+ * >>    90 | #define DeeSystem_SetJmp(env)       _setjmp(env)
+ * >>       |                                     ^~~~~~~~~~~~
+ * >> /src/deemon/objects/attribute.c:1183:15: note: in expansion of macro ‘DeeSystem_SetJmp’
+ * >>  1183 |  if ((error = DeeSystem_SetJmp(self->ei_break)) == 0)
+ * >>       |               ^~~~~~~~~~~~~~~~
+ * >> /include/deemon/system-sjlj.h:90:37: warning: ‘({anonymous})’ may be used uninitialized in this function [-Wmaybe-uninitialized]
+ * >>    90 | #define DeeSystem_SetJmp(env)       _setjmp(env)
+ * >>       |                                     ^~~~~~~
+ * >> /include/deemon/system-sjlj.h:90:37: note: ‘({anonymous})’ was declared here
+ * >>    90 | #define DeeSystem_SetJmp(env)       _setjmp(env)
+ * >>       |                                     ^~~~~~~~~~~~
+ * >> /src/deemon/objects/attribute.c:1166:8: note: in expansion of macro ‘DeeSystem_SetJmp’
+ * >>  1166 |    if (DeeSystem_SetJmp(self->ei_break) == 0) {
+ *
+ * Obviously this is total bogus, so just suppress it. */
+__pragma_GCC_diagnostic_push_ignored(Wmaybe_uninitialized)
+
 PRIVATE WUNUSED NONNULL((1)) DREF Attr *DCALL
 enumattriter_next(EnumAttrIter *__restrict self) {
 #ifdef CONFIG_LONGJMP_ENUMATTR
@@ -1213,6 +1237,7 @@ done:
 #endif /* !CONFIG_LONGJMP_ENUMATTR */
 }
 
+__pragma_GCC_diagnostic_pop_ignored(Wmaybe_uninitialized)
 
 PRIVATE struct type_member tpconst enumattriter_members[] = {
 	TYPE_MEMBER_FIELD_DOC(STR_seq, STRUCT_OBJECT, offsetof(EnumAttrIter, ei_seq), "->?Ert:EnumAttr"),
