@@ -36,13 +36,10 @@
 	</ItemGroup>
 	<ItemGroup>
 		<ClInclude Include="..\..\src\dex\threading\libthreading.h" />
-		<ClInclude Include="..\..\src\dex\threading\nothread.c.inl" />
-		<ClInclude Include="..\..\src\dex\threading\unix.c.inl" />
-		<ClInclude Include="..\..\src\dex\threading\windows.c.inl" />
 	</ItemGroup>
 	<ItemGroup>
-		<ClCompile Include="..\..\src\dex\threading\host.c" />
 		<ClCompile Include="..\..\src\dex\threading\libthreading.c" />
+		<ClCompile Include="..\..\src\dex\threading\lock.c" />
 		<ClCompile Include="..\..\src\dex\threading\tls.c" />
 	</ItemGroup>
 	<PropertyGroup Label="Globals">

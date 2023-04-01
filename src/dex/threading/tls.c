@@ -56,15 +56,19 @@ thread_tls_get(size_t index) {
 		                                            (index + 1) * sizeof(DREF DeeObject *));
 		if unlikely(!desc)
 			goto err;
+
 		/* Save the new descriptor length. */
 		desc->td_size = index + 1;
+
 		/* ZERO-initialize all newly allocated indices. */
 		bzeroc(desc->td_elem + old_size,
 		       (index + 1) - old_size,
 		       sizeof(DREF DeeObject *));
+
 		/* Save the new descriptor. */
 		caller->t_tlsdata = (void *)desc;
 	}
+
 	/* Return a pointer into the descriptor. */
 	return &desc->td_elem[index];
 err:
@@ -79,6 +83,7 @@ thread_tls_tryget(size_t index) {
 	desc   = (struct tls_descriptor *)caller->t_tlsdata;
 	if unlikely(!desc || index >= desc->td_size)
 		goto err;
+
 	/* Return a pointer into the descriptor. */
 	return &desc->td_elem[index];
 err:
@@ -90,6 +95,7 @@ err:
 INTERN NONNULL((1)) void DCALL
 thread_tls_fini(struct tls_descriptor *__restrict data) {
 	size_t i, count = data->td_size;
+
 	/* Decref all allocated instances within this TLS vector. */
 	for (i = 0; i < count; ++i) {
 		DREF DeeObject *ob = data->td_elem[i];
@@ -103,6 +109,7 @@ INTERN NONNULL((1, 2)) void DCALL
 thread_tls_visit(struct tls_descriptor *__restrict data,
                  dvisit_t proc, void *arg) {
 	size_t i, count = data->td_size;
+
 	/* Visit all allocated objects. */
 	for (i = 0; i < count; ++i) {
 		DREF DeeObject *ob = data->td_elem[i];
@@ -121,14 +128,15 @@ PRIVATE atomic_lock_t tls_reglock = ATOMIC_LOCK_INIT;
 #define tls_reglock_waitfor()    Dee_atomic_lock_waitfor(&tls_reglock)
 #define tls_reglock_release()    Dee_atomic_lock_release(&tls_reglock)
 
-PRIVATE uint8_t *tls_inuse   = NULL; /* [lock(tls_reglock)][0..(tls_nexti+7)/8][owned] Bitset of all TLS indices currently in use. */
-PRIVATE size_t   tls_nexti   = 0;    /* [lock(tls_reglock)] The next TLS index used when all others are already in use. */
-PRIVATE size_t   tls_count   = 0;    /* [lock(tls_reglock)] The total number of TLS indices currently assigned. */
+PRIVATE uint8_t *tls_inuse = NULL; /* [lock(tls_reglock)][0..(tls_nexti+7)/8][owned] Bitset of all TLS indices currently in use. */
+PRIVATE size_t   tls_nexti = 0;    /* [lock(tls_reglock)] The next TLS index used when all others are already in use. */
+PRIVATE size_t   tls_count = 0;    /* [lock(tls_reglock)] The total number of TLS indices currently assigned. */
 
 /* Allocate a new TLS index.
  * @return: * :         The newly allocated TLS index.
  * @return: (size_t)-1: Not enough available memory. */
 PRIVATE WUNUSED size_t DCALL tls_alloc(void);
+
 /* Free a previously allocated TLS index. */
 PRIVATE void DCALL tls_free(size_t index);
 
@@ -140,7 +148,7 @@ PRIVATE WUNUSED size_t DCALL tls_alloc(void) {
 	size_t result;
 again:
 	tls_reglock_acquire();
-	ASSERTF(tls_nexti >= tls_count, "Inconsistent Tls state");
+	ASSERTF(tls_nexti >= tls_count, "Inconsistent TLS state");
 	if (tls_nexti != tls_count) {
 		/* Not all existing indices are in use. */
 		uint8_t *iter = tls_inuse + (tls_nexti + 7) / 8;
@@ -151,17 +159,20 @@ again:
 			byte = *--iter;
 			if (byte == 0xff)
 				continue;
+
 			/* One of these 8 indices isn't in use right now. */
 			result = (size_t)(iter - tls_inuse) * 8, bitno = 0;
 			while (byte & 1)
 				byte >>= 1, ++bitno;
 			ASSERT(!(*iter & (1 << bitno)));
+
 			/* Mask the index as now being in-use. */
 			*iter |= 1 << bitno;
 			result += bitno;
 			goto done;
 		}
 	}
+
 	/* Use the next unused index. */
 	if ((tls_nexti & 7) == 0) {
 		/* Must allocate more bitset memory. */
@@ -193,7 +204,7 @@ done:
 PRIVATE void DCALL tls_free(size_t index) {
 	tls_reglock_acquire();
 	ASSERTF(tls_count, "No indices allocated");
-	ASSERTF(tls_nexti >= tls_count, "Inconsistent Tls state");
+	ASSERTF(tls_nexti >= tls_count, "Inconsistent TLS state");
 	ASSERTF(index <= tls_nexti, "Invalid index");
 	ASSERTF((tls_inuse[index / 8] & (1 << (index % 8))), "The index wasn't allocated");
 
@@ -217,17 +228,18 @@ typedef struct {
 	OBJECT_HEAD
 	DREF DeeObject *t_factory; /* [0..1][const] A factory function used to construct TLS default value. */
 	size_t t_index;            /* [owned(tls_free)][const] The per-thread TLS index used by this controller. */
-} Tls;
+} TLS;
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
-tls_init(Tls *__restrict self,
+tls_init(TLS *__restrict self,
          size_t argc, DeeObject *const *argv) {
 	self->t_factory = NULL;
-	if (DeeArg_Unpack(argc, argv, "|o:Tls", &self->t_factory))
+	if (DeeArg_Unpack(argc, argv, "|o:TLS", &self->t_factory))
 		goto err;
 	self->t_index = tls_alloc();
 	if unlikely(self->t_index == (size_t)-1)
 		goto err;
+
 	/* Save a reference for the factory. */
 	Dee_XIncref(self->t_factory);
 	return 0;
@@ -236,26 +248,27 @@ err:
 }
 
 PRIVATE NONNULL((1)) void DCALL
-tls_fini(Tls *__restrict self) {
+tls_fini(TLS *__restrict self) {
 	/* Free the allocated TLS index. */
 	tls_free(self->t_index);
+
 	/* Destroy the associated factory. */
 	Dee_XDecref(self->t_factory);
 }
 
 PRIVATE NONNULL((1, 2)) void DCALL
-tls_visit(Tls *__restrict self, dvisit_t proc, void *arg) {
+tls_visit(TLS *__restrict self, dvisit_t proc, void *arg) {
 	Dee_XVisit(self->t_factory);
 }
 
 
 PRIVATE ATTR_COLD int DCALL err_tls_unbound(void) {
 	return DeeError_Throwf(&DeeError_UnboundAttribute,
-	                       "The Tls variable has been unbound");
+	                       "The TLS variable has been unbound");
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-tls_getvalue(Tls *__restrict self) {
+tls_getvalue(TLS *__restrict self) {
 	DREF DeeObject **presult, *result;
 	presult = thread_tls_get(self->t_index);
 	if unlikely(!presult)
@@ -278,6 +291,7 @@ tls_getvalue(Tls *__restrict self) {
 		result = DeeObject_Call(self->t_factory, 0, NULL);
 		if unlikely(!result)
 			goto err;
+
 		/* Must re-retrieve the TLS pointer in case the factory
 		 * did some other TLS manipulations that changed the vector. */
 		presult = thread_tls_get(self->t_index);
@@ -293,6 +307,7 @@ tls_getvalue(Tls *__restrict self) {
 			 *                  the existing value, but drop the new and
 			 *                  re-use the existing one. */
 			DREF DeeObject *new_result = *presult;
+
 			/* Extract the existing value first, in case the decref()
 			 * on the factory return value changes it again... */
 			Dee_Incref(new_result);
@@ -314,13 +329,14 @@ err:
  * @return:  0: Successfully unbound the TLS variable.
  * @return: -1: An error occurred. */
 PRIVATE WUNUSED NONNULL((1)) int DCALL
-tls_dodelitem(Tls *__restrict self) {
+tls_dodelitem(TLS *__restrict self) {
 	DREF DeeObject **pitem, *item;
 	pitem = thread_tls_get(self->t_index);
 	if unlikely(!pitem)
 		goto err;
 again:
 	item = *pitem; /* Inherit */
+
 	/* Check if the variable had been manually unbound. */
 	if unlikely(item == ITER_DONE)
 		return 1;
@@ -328,12 +344,15 @@ again:
 		/* The variable had never been assigned. */
 		if (self->t_factory &&
 		    !DeeNone_Check(self->t_factory)) {
+
 			/* Must still invoke the factory to remain consistent. */
 			item = DeeObject_Call(self->t_factory, 0, NULL);
 			if unlikely(!item)
 				goto err;
+
 			/* Mark the variable as unbound. */
 			pitem = thread_tls_get(self->t_index);
+
 			/* Check if the factory tinkered with the TLS variable. */
 			if unlikely(*pitem != NULL) {
 				Dee_Decref(item);
@@ -342,7 +361,6 @@ again:
 			*pitem = ITER_DONE;
 			COMPILER_BARRIER();
 			Dee_Decref(item);
-			;
 		} else {
 			/* Mark the variable as unbound. */
 			*pitem = ITER_DONE;
@@ -360,7 +378,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
-tls_delvalue(Tls *__restrict self) {
+tls_delvalue(TLS *__restrict self) {
 	int result = tls_dodelitem(self);
 	if (result > 0)
 		result = err_tls_unbound();
@@ -368,7 +386,7 @@ tls_delvalue(Tls *__restrict self) {
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-tls_setvalue(Tls *self, DeeObject *value) {
+tls_setvalue(TLS *self, DeeObject *value) {
 	DREF DeeObject **pitem, *item;
 	pitem = thread_tls_get(self->t_index);
 	if unlikely(!pitem)
@@ -383,7 +401,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-tls_xchitem(Tls *self, DeeObject *value) {
+tls_xchitem(TLS *self, DeeObject *value) {
 	DREF DeeObject **pitem, *result;
 again:
 	pitem = thread_tls_get(self->t_index);
@@ -413,15 +431,15 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) dhash_t DCALL
-tls_hash(Tls *__restrict self) {
+tls_hash(TLS *__restrict self) {
 	/* Since TLS indices are unique, they're perfect for hasing. */
 	return (dhash_t)self->t_index;
 }
 
 #define DEFINE_TLS_COMPARE(name, op)                      \
 	PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL \
-	name(Tls *self, Tls *other) {                         \
-		if (DeeObject_AssertType(other, &DeeTls_Type))    \
+	name(TLS *self, TLS *other) {                         \
+		if (DeeObject_AssertType(other, &DeeTLS_Type))    \
 			return NULL;                                  \
 		return_bool_(self->t_index op other->t_index);    \
 	}
@@ -433,7 +451,8 @@ DEFINE_TLS_COMPARE(tls_gr, >)
 DEFINE_TLS_COMPARE(tls_ge, >=)
 #undef DEFINE_TLS_COMPARE
 
-PRIVATE WUNUSED NONNULL((1)) int DCALL tls_bool(Tls *__restrict self) {
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+tls_bool(TLS *__restrict self) {
 	DREF DeeObject **slot;
 	slot = thread_tls_tryget(self->t_index);
 	return slot != NULL && ITER_ISOK(*slot);
@@ -445,14 +464,14 @@ typedef struct {
 	OBJECT_HEAD
 	DREF DeeObject *t_factory; /* [0..1][const] A factory function used to construct TLS default value. */
 	DREF DeeObject *t_value;   /* [0..1] The stored TLS value. */
-} Tls;
+} TLS;
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
-tls_init(Tls *__restrict self,
+tls_init(TLS *__restrict self,
          size_t argc, DeeObject *const *argv) {
 	self->t_value   = NULL;
 	self->t_factory = NULL;
-	if (DeeArg_Unpack(argc, argv, "|o:Tls", &self->t_factory))
+	if (DeeArg_Unpack(argc, argv, "|o:TLS", &self->t_factory))
 		goto err;
 	/* Save a reference for the factory. */
 	Dee_XIncref(self->t_factory);
@@ -462,14 +481,14 @@ err:
 }
 
 PRIVATE NONNULL((1)) void DCALL
-tls_fini(Tls *__restrict self) {
+tls_fini(TLS *__restrict self) {
 	if (ITER_ISOK(self->t_value))
 		Dee_Decref(self->t_value);
 	Dee_XDecref(self->t_factory);
 }
 
 PRIVATE NONNULL((1, 2)) void DCALL
-tls_visit(Tls *__restrict self, dvisit_t proc, void *arg) {
+tls_visit(TLS *__restrict self, dvisit_t proc, void *arg) {
 	if (ITER_ISOK(self->t_value))
 		Dee_Visit(self->t_value);
 	Dee_XVisit(self->t_factory);
@@ -482,7 +501,7 @@ PRIVATE ATTR_COLD int DCALL err_tls_unbound(void) {
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-tls_getvalue(Tls *__restrict self) {
+tls_getvalue(TLS *__restrict self) {
 	DREF DeeObject *result;
 	result = self->t_value;
 	if unlikely(result == ITER_DONE) {
@@ -535,7 +554,7 @@ err:
  * @return:  0: Successfully unbound the TLS variable.
  * @return: -1: An error occurred. */
 PRIVATE WUNUSED NONNULL((1)) int DCALL
-tls_dodelitem(Tls *__restrict self) {
+tls_dodelitem(TLS *__restrict self) {
 	DREF DeeObject *item;
 again:
 	item = self->t_value; /* Inherit */
@@ -575,7 +594,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
-tls_delvalue(Tls *__restrict self) {
+tls_delvalue(TLS *__restrict self) {
 	int result = tls_dodelitem(self);
 	if (result > 0)
 		result = err_tls_unbound();
@@ -583,7 +602,7 @@ tls_delvalue(Tls *__restrict self) {
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-tls_setvalue(Tls *self, DeeObject *value) {
+tls_setvalue(TLS *self, DeeObject *value) {
 	DREF DeeObject *item;
 	Dee_Incref(value);
 	item          = self->t_value; /* Inherit */
@@ -593,7 +612,7 @@ tls_setvalue(Tls *self, DeeObject *value) {
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-tls_xchitem(Tls *self, DeeObject *value) {
+tls_xchitem(TLS *self, DeeObject *value) {
 	DREF DeeObject *result;
 again:
 	result = self->t_value; /* Inherit */
@@ -619,13 +638,13 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) dhash_t DCALL
-tls_hash(Tls *__restrict self) {
+tls_hash(TLS *__restrict self) {
 	return DeeObject_HashGeneric(self);
 }
 #define DEFINE_TLS_COMPARE(name, op)                      \
 	PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL \
-	name(Tls *self, Tls *other) {                         \
-		if (DeeObject_AssertType(other, &DeeTls_Type))    \
+	name(TLS *self, TLS *other) {                         \
+		if (DeeObject_AssertType(other, &DeeTLS_Type))    \
 			return NULL;                                  \
 		return_bool_(self op other);                      \
 	}
@@ -637,7 +656,7 @@ DEFINE_TLS_COMPARE(tls_gr, >)
 DEFINE_TLS_COMPARE(tls_ge, >=)
 #undef DEFINE_TLS_COMPARE
 
-PRIVATE WUNUSED NONNULL((1)) int DCALL tls_bool(Tls *__restrict self) {
+PRIVATE WUNUSED NONNULL((1)) int DCALL tls_bool(TLS *__restrict self) {
 	return ITER_ISOK(self->t_value);
 }
 
@@ -646,17 +665,17 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL tls_bool(Tls *__restrict self) {
 
 PRIVATE struct type_getset tpconst tls_getsets[] = {
 	TYPE_GETSET("value", &tls_getvalue, &tls_delvalue, &tls_setvalue,
-	            "@throw AttributeError The Tls variable isn't bound, or has already been unbound\n"
-	            "Read/write access to the object assigned to this Tls variable slot in the calling thread\n"
-	            "If a factory has been defined, it will be invoked upon first access, unless that access is setting the Tls value.\n"
-	            "If no factory has been defined, the Tls is initialized as unbound and any attempt "
+	            "@throw AttributeError The TLS variable isn't bound, or has already been unbound\n"
+	            "Read/write access to the object assigned to this TLS variable slot in the calling thread\n"
+	            "If a factory has been defined, it will be invoked upon first access, unless that access is setting the TLS value.\n"
+	            "If no factory has been defined, the TLS is initialized as unbound and any attempt "
 	            /**/ "to read or delete it will cause an :AttributeError to be thrown"),
 	TYPE_GETSET_END
 };
 
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-tls_xch(Tls *self, size_t argc, DeeObject *const *argv) {
+tls_xch(TLS *self, size_t argc, DeeObject *const *argv) {
 	DeeObject *newval;
 	if (DeeArg_Unpack(argc, argv, "o:xch", &newval))
 		goto err;
@@ -666,7 +685,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-tls_pop(Tls *self, size_t argc, DeeObject *const *argv) {
+tls_pop(TLS *self, size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, ":pop"))
 		goto err;
 	return tls_xchitem(self, ITER_DONE);
@@ -675,7 +694,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-tls_get(Tls *self, size_t argc, DeeObject *const *argv) {
+tls_get(TLS *self, size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, ":get"))
 		goto err;
 	return tls_getvalue(self);
@@ -684,7 +703,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-tls_delete(Tls *self, size_t argc, DeeObject *const *argv) {
+tls_delete(TLS *self, size_t argc, DeeObject *const *argv) {
 	int result;
 	if (DeeArg_Unpack(argc, argv, ":delete"))
 		goto err;
@@ -697,7 +716,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-tls_set(Tls *self, size_t argc, DeeObject *const *argv) {
+tls_set(TLS *self, size_t argc, DeeObject *const *argv) {
 	DeeObject *ob;
 	if (DeeArg_Unpack(argc, argv, "o:set", &ob))
 		goto err;
@@ -711,23 +730,23 @@ err:
 PRIVATE struct type_method tpconst tls_methods[] = {
 	TYPE_METHOD("get", &tls_get,
 	            "->\n"
-	            "@throw UnboundAttribute The Tls variable isn't bound\n"
+	            "@throw UnboundAttribute The TLS variable isn't bound\n"
 	            "Return the stored object. Same as ${this.item}"),
 	TYPE_METHOD("delete", &tls_delete,
 	            "->?Dbool\n"
-	            "Unbind the Tls variable slot, returning ?f if "
+	            "Unbind the TLS variable slot, returning ?f if "
 	            "it had already been unbound and ?t otherwise"),
 	TYPE_METHOD("set", &tls_set,
 	            "(ob)\n"
-	            "Set the Tls variable. Same as ${this.item = ob}"),
+	            "Set the TLS variable. Same as ${this.item = ob}"),
 	TYPE_METHOD("xch", &tls_xch,
 	            "(ob)->\n"
-	            "@throw AttributeError The Tls variable had already been unbound\n"
-	            "Exchange the stored Tls value with @ob and return the old value"),
+	            "@throw AttributeError The TLS variable had already been unbound\n"
+	            "Exchange the stored TLS value with @ob and return the old value"),
 	TYPE_METHOD("pop", &tls_pop,
 	            "->\n"
-	            "@throw AttributeError The Tls variable had already been unbound\n"
-	            "Unbind the stored Tls object and return the previously stored object"),
+	            "@throw AttributeError The TLS variable had already been unbound\n"
+	            "Unbind the stored TLS object and return the previously stored object"),
 
 	/* Deprecated functions. */
 	TYPE_METHOD("exchange", &tls_xch,
@@ -746,20 +765,20 @@ PRIVATE struct type_cmp tls_cmp = {
 	/* .tp_ge   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&tls_ge,
 };
 
-INTERN DeeTypeObject DeeTls_Type = {
+INTERN DeeTypeObject DeeTLS_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
-	/* .tp_name     = */ "Tls",
+	/* .tp_name     = */ "TLS",
 	/* .tp_doc      = */ DOC("()\n"
 	                         "(factory:?DCallable)\n"
 	                         "Construct a new tls descriptor using an optional @factory that "
 	                         /**/ "is used to construct the default values of per-thread variables\n"
-	                         "You may pass ?N for @factory to pre-initialize the Tls value to ?N\n"
+	                         "You may pass ?N for @factory to pre-initialize the TLS value to ?N\n"
 	                         "When given, @factory is invoked as ${factory()} upon first access on a "
-	                         /**/ "per-thread basis, using its return value as initial value for the Tls\n"
+	                         /**/ "per-thread basis, using its return value as initial value for the TLS\n"
 	                         "\n"
 
 	                         "bool->\n"
-	                         "Returns ?t if the Tls variable has been bound in the calling thread"),
+	                         "Returns ?t if the TLS variable has been bound in the calling thread"),
 	/* .tp_flags    = */ TP_FNORMAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
@@ -771,7 +790,7 @@ INTERN DeeTypeObject DeeTls_Type = {
 				/* .tp_copy_ctor = */ (dfunptr_t)NULL,
 				/* .tp_deep_ctor = */ (dfunptr_t)NULL,
 				/* .tp_any_ctor  = */ (dfunptr_t)&tls_init,
-				TYPE_FIXED_ALLOCATOR(Tls)
+				TYPE_FIXED_ALLOCATOR(TLS)
 			}
 		},
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&tls_fini,

@@ -413,12 +413,104 @@ err:
 INTERN WUNUSED DREF DeeObject *DCALL
 capi_futex_wait(size_t argc, DeeObject *const *argv) {
 	int wait_error;
-	uint64_t timeout_nanoseconds = (uint64_t)-1;
 	DeeObject *ob_ptr, *ob_expected;
 	union atomic_operand expected;
 	union pointer ptr;
 	DeeSTypeObject *basetype;
-	if (DeeArg_Unpack(argc, argv, "oo|" UNPd64 ":futex_wait",
+	if (DeeArg_Unpack(argc, argv, "oo:futex_wait", &ob_ptr, &ob_expected))
+		goto err;
+	if unlikely(DeeObject_AsGenericPointer(ob_ptr, &basetype, &ptr))
+		goto err;
+	if unlikely(get_atomic_operand(ob_expected, basetype, &expected))
+		goto err;
+
+	/* Do the futex wait operation. */
+	switch (basetype->st_sizeof) {
+
+	case 1: {
+		union {
+			uint8_t v8[2];
+			uint32_t v32;
+		} expected_oldval;
+		uint32_t *aligned_ptr;
+		unsigned int v8_index;
+		aligned_ptr = (uint32_t *)(ptr.uint & ~3);
+		v8_index    = (ptr.uint & 3);
+		CTYPES_FAULTPROTECT(expected_oldval.v32 = atomic_read(aligned_ptr), goto err);
+		if (expected_oldval.v8[v8_index] == expected.ao_u8) {
+			wait_error = DeeFutex_Wait32(aligned_ptr, expected_oldval.v32);
+		} else {
+			wait_error = 0;
+		}
+	}	break;
+
+	case 2: {
+		union {
+			uint16_t v16[2];
+			uint32_t v32;
+		} expected_oldval;
+		uint32_t *aligned_ptr;
+		unsigned int v16_index;
+		if unlikely(ptr.uint & 1)
+			goto err_unaligned;
+		aligned_ptr = (uint32_t *)(ptr.uint & ~3);
+		v16_index   = (ptr.uint & 2) >> 1;
+		CTYPES_FAULTPROTECT(expected_oldval.v32 = atomic_read(aligned_ptr), goto err);
+		if (expected_oldval.v16[v16_index] == expected.ao_u16) {
+			wait_error = DeeFutex_Wait32(aligned_ptr, expected_oldval.v32);
+		} else {
+			wait_error = 0;
+		}
+	}	break;
+
+	case 4: {
+		uint32_t true_oldval;
+		if unlikely(ptr.uint & 3)
+			goto err_unaligned;
+		CTYPES_FAULTPROTECT(true_oldval = atomic_read(ptr.p32), goto err);
+		if (true_oldval == expected.ao_u32) {
+			wait_error = DeeFutex_Wait32(ptr.pvoid, expected.ao_u32);
+		} else {
+			wait_error = 0;
+		}
+	}	break;
+
+#if __SIZEOF_POINTER__ >= 8
+	case 8: {
+		uint64_t true_oldval;
+		if unlikely(ptr.uint & 7)
+			goto err_unaligned;
+		CTYPES_FAULTPROTECT(true_oldval = atomic_read(ptr.p64), goto err);
+		if (true_oldval == expected.ao_u64) {
+			wait_error = DeeFutex_Wait64(ptr.pvoid, expected.ao_u64);
+		} else {
+			wait_error = 0;
+		}
+	}	break;
+#endif /* __SIZEOF_POINTER__ >= 8 */
+
+	default:
+		err_bad_futex_size(basetype->st_sizeof);
+		goto err;
+	}
+	if unlikely(wait_error < 0)
+		goto err;
+	return_bool(wait_error == 0);
+err_unaligned:
+	err_unaligned_futex_poiner(ptr.pvoid, basetype->st_sizeof);
+err:
+	return NULL;
+}
+
+INTERN WUNUSED DREF DeeObject *DCALL
+capi_futex_timedwait(size_t argc, DeeObject *const *argv) {
+	int wait_error;
+	uint64_t timeout_nanoseconds;
+	DeeObject *ob_ptr, *ob_expected;
+	union atomic_operand expected;
+	union pointer ptr;
+	DeeSTypeObject *basetype;
+	if (DeeArg_Unpack(argc, argv, "oo" UNPu64 ":futex_timedwait",
 	                  &ob_ptr, &ob_expected, &timeout_nanoseconds))
 		goto err;
 	if unlikely(DeeObject_AsGenericPointer(ob_ptr, &basetype, &ptr))

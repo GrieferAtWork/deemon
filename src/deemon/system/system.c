@@ -1745,13 +1745,11 @@ again:
 				 * We do this in a kind-of special way that tries not
 				 * to write-fault memory if it already contains NULs. */
 				unsigned char *nul;
-				Dee_DPRINTF("addend: %Iu\n", addend);
 				buf += addend;
 				nul = buf + map_bytes;
 #ifdef DeeMapFile_IS_CreateFileMapping
 				self->_dmf_vfre = 0;
 #endif /* DeeMapFile_IS_CreateFileMapping */
-				Dee_DPRINTF("nul: %p, used_nulbytes: %Iu\n", nul, used_nulbytes);
 				if (used_nulbytes) {
 #ifdef DeeMapFile_IS_CreateFileMapping
 					size_t bytes_in_page;

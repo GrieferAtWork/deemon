@@ -35,7 +35,7 @@ class Random {
 	static final property current: Random = {
 		get(): Random {
 			if (m_random_tls !is bound)
-				m_random_tls = import("threading").Tls(Random());
+				m_random_tls = import("threading").TLS(Random());
 			return m_random_tls.value;
 		}
 	}

@@ -33,6 +33,8 @@
 #define CONFIG_THREADS_PTHREAD
 #endif /* !CONFIG_HOST_WINDOWS */
 
+
+/* TODO: Don't need to use semaphores anymore like a caveman -- just use the futex API! */
 #ifdef CONFIG_THREADS_PTHREAD
 #define CONFIG_THREADS_JOIN_SEMPAHORE
 #endif /* CONFIG_THREADS_PTHREAD */

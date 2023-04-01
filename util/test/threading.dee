@@ -1,0 +1,202 @@
+#!/usr/bin/deemon
+/* Copyright (c) 2018-2023 Griefer@Work                                       *
+ *                                                                            *
+ * This software is provided 'as-is', without any express or implied          *
+ * warranty. In no event will the authors be held liable for any damages      *
+ * arising from the use of this software.                                     *
+ *                                                                            *
+ * Permission is granted to anyone to use this software for any purpose,      *
+ * including commercial applications, and to alter it and redistribute it     *
+ * freely, subject to the following restrictions:                             *
+ *                                                                            *
+ * 1. The origin of this software must not be misrepresented; you must not    *
+ *    claim that you wrote the original software. If you use this software    *
+ *    in a product, an acknowledgement (see the following) in the product     *
+ *    documentation is required:                                              *
+ *    Portions Copyright (c) 2018-2023 Griefer@Work                           *
+ * 2. Altered source versions must be plainly marked as such, and must not be *
+ *    misrepresented as being the original software.                          *
+ * 3. This notice may not be removed or altered from any source distribution. *
+ */
+
+import * from threading;
+import * from deemon;
+
+function testLock(lock: Lock, isExclusive: bool = true) {
+	assert lock is Lock;
+	assert lock.available;
+	assert !lock.acquired;
+
+	assert lock.tryacquire();
+	assert isExclusive ? !lock.available : lock.available;
+	assert lock.acquired;
+
+	lock.release();
+	assert lock.available;
+	assert !lock.acquired;
+
+	lock.acquire();
+	assert isExclusive ? !lock.available : lock.available;
+	assert lock.acquired;
+	lock.release();
+	assert lock.available;
+	assert !lock.acquired;
+
+	assert lock.timedacquire(0);
+	assert isExclusive ? !lock.available : lock.available;
+	assert lock.acquired;
+	lock.release();
+	assert lock.available;
+	assert !lock.acquired;
+
+	with (lock) {
+		assert isExclusive ? !lock.available : lock.available;
+		assert lock.acquired;
+	}
+	assert lock.available;
+	assert !lock.acquired;
+}
+
+function testRWLock(lock: RWLock) {
+	assert lock is RWLock;
+	testLock(lock.shared, false);
+	testLock(lock.exclusive);
+
+	assert !lock.reading;
+	assert !lock.writing;
+	assert lock.canread;
+	assert lock.canwrite;
+
+	assert lock.tryread();
+	assert lock.reading;
+	assert !lock.writing;
+	assert lock.canread;
+	assert !lock.canwrite;
+
+	assert lock.tryread();
+	assert lock.reading;
+	assert !lock.writing;
+	assert lock.canread;
+	assert !lock.canwrite;
+
+	assert !lock.tryupgrade();
+	assert lock.reading;
+	assert !lock.writing;
+	assert lock.canread;
+	assert !lock.canwrite;
+
+	lock.endread();
+	assert lock.reading;
+	assert !lock.writing;
+	assert lock.canread;
+	assert !lock.canwrite;
+
+	lock.endread();
+	assert !lock.reading;
+	assert !lock.writing;
+	assert lock.canread;
+	assert lock.canwrite;
+
+	lock.read();
+	assert lock.reading;
+	assert !lock.writing;
+	assert lock.canread;
+	assert !lock.canwrite;
+
+	assert lock.tryupgrade();
+	assert lock.reading;
+	assert lock.writing;
+	assert !lock.canread;
+	assert !lock.canwrite;
+
+	lock.downgrade();
+	assert lock.reading;
+	assert !lock.writing;
+	assert lock.canread;
+	assert !lock.canwrite;
+
+	assert lock.upgrade();
+	assert lock.reading;
+	assert lock.writing;
+	assert !lock.canread;
+	assert !lock.canwrite;
+
+	lock.downgrade();
+	assert lock.reading;
+	assert !lock.writing;
+	assert lock.canread;
+	assert !lock.canwrite;
+
+	lock.endread();
+	assert !lock.reading;
+	assert !lock.writing;
+	assert lock.canread;
+	assert lock.canwrite;
+
+	assert lock.trywrite();
+	assert lock.reading;
+	assert lock.writing;
+	assert !lock.canread;
+	assert !lock.canwrite;
+
+	lock.endwrite();
+	assert !lock.reading;
+	assert !lock.writing;
+	assert lock.canread;
+	assert lock.canwrite;
+
+	lock.read();
+	assert lock.reading;
+	assert !lock.writing;
+	assert lock.canread;
+	assert !lock.canwrite;
+
+	lock.end();
+	assert !lock.reading;
+	assert !lock.writing;
+	assert lock.canread;
+	assert lock.canwrite;
+
+	lock.write();
+	assert lock.reading;
+	assert lock.writing;
+	assert !lock.canread;
+	assert !lock.canwrite;
+
+	lock.end();
+	assert !lock.reading;
+	assert !lock.writing;
+	assert lock.canread;
+	assert lock.canwrite;
+
+	with (lock.shared) {
+		assert lock.reading;
+		assert !lock.writing;
+		assert lock.canread;
+		assert !lock.canwrite;
+	}
+	assert !lock.reading;
+	assert !lock.writing;
+	assert lock.canread;
+	assert lock.canwrite;
+
+	with (lock.exclusive) {
+		assert lock.reading;
+		assert lock.writing;
+		assert !lock.canread;
+		assert !lock.canwrite;
+	}
+	assert !lock.reading;
+	assert !lock.writing;
+	assert lock.canread;
+	assert lock.canwrite;
+}
+
+testLock(AtomicLock());
+testLock(SharedLock());
+testLock(Semaphore(1));
+testRWLock(AtomicRWLock());
+testRWLock(SharedRWLock());
+
+assert SharedLock.derivedfrom(AtomicLock);
+assert SharedRWLock.derivedfrom(AtomicRWLock);

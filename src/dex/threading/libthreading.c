@@ -32,13 +32,23 @@ DECL_BEGIN
 
 
 PRIVATE struct dex_symbol symbols[] = {
-	{ "Semaphore", (DeeObject *)&DeeSemaphore_Type },
-	/* TODO: SharedLock   (non-recursive mutex) */
-	/* TODO: SharedRwLock (non-recursive r/w-lock) */
+	/* Normal locks */
+	{ "Lock", (DeeObject *)&DeeLock_Type },
+	{ "AtomicLock", (DeeObject *)&DeeAtomicLock_Type },
+	{ "SharedLock", (DeeObject *)&DeeSharedLock_Type },
 
-	{ "Mutex", (DeeObject *)&DeeMutex_Type },
-	//{ "RwLock", (DeeObject *)&DeeRWLock_Type }, /* TODO */
-	{ "Tls", (DeeObject *)&DeeTls_Type },
+	/* Read/write locks */
+	{ "RWLock", (DeeObject *)&DeeRWLock_Type },
+	{ "RWLockSharedLock", (DeeObject *)&DeeRWLockSharedLock_Type },
+	{ "RWLockExclusiveLock", (DeeObject *)&DeeRWLockExclusiveLock_Type },
+	{ "AtomicRWLock", (DeeObject *)&DeeAtomicRWLock_Type },
+	{ "SharedRWLock", (DeeObject *)&DeeSharedRWLock_Type },
+
+	/* Semaphore */
+	{ "Semaphore", (DeeObject *)&DeeSemaphore_Type },
+
+	/* ThreadLocalStorage */
+	{ "TLS", (DeeObject *)&DeeTLS_Type },
 	{ NULL }
 };
 

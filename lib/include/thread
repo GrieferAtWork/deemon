@@ -22,7 +22,7 @@
 
 #pragma push_macro(undef, "from", "deemon", "import", "threading")
 from deemon import thread_id = "int", sempahore_count = "int", thread = "Thread";
-from threading import semaphore = "Semaphore", mutex = "Mutex", tls = "Tls";
+from threading import semaphore = "Semaphore", mutex = "SharedLock", tls = "TLS";
 #pragma pop_macro("from", "deemon", "import", "threading")
 
 #define __atomic_once{...} \

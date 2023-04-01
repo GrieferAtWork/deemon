@@ -823,6 +823,7 @@ again_locked:
 next_thread:
 		iter = iter->t_globalnext;
 	}
+
 	/* Once all threads have been interrupted, move
 	 * on to the second phase of joining them all. */
 	if (interrupt_phase) {
@@ -840,23 +841,28 @@ handle_iter:
 		}
 	}
 	recursive_rwlock_endwrite(&globthread_lock);
+
 	/* When no more threads are left, then we are done! */
 	if (!iter)
 		return result;
+
 	/* There are still some threads left -> Return `true' eventually. */
 	result = true;
 	if (interrupt_phase) {
 		int error;
+
 		/* First phase: Send interrupt signals to all threads. */
 		error = DeeThread_Interrupt((DeeObject *)iter,
 		                            &DeeError_Interrupt_instance,
 		                            NULL);
 		atomic_or(&iter->t_state, THREAD_STATE_SHUTDOWNINTR);
+
 		/* NOTE: Also handle interrupt signals on error, because we're
 		 *       the ones trying to interrupt all the other threads. */
-		if (error < 0)
+		if (error < 0) {
 			DeeError_Print("Failed to signal interrupt\n",
 			               ERROR_PRINT_HANDLEINTR);
+		}
 	} else {
 		/* Second phase: Join all running threads. */
 		uint16_t state;
@@ -1161,7 +1167,7 @@ PUBLIC void DCALL DeeThread_Init(void) {
 	if unlikely(thread_self_tls == TLS_OUT_OF_INDEXES) {
 #if defined(CONFIG_HAVE_fprintf) && defined(CONFIG_HAVE_stderr)
 		fprintf(stderr, "Failed to initialize deemon thread subsystem: "
-		                "Couldn't allocate Thread.current Tls: %u\n",
+		                "Couldn't allocate Thread.current TLS: %u\n",
 		        (unsigned int)GetLastError());
 #endif /* CONFIG_HAVE_fprintf && CONFIG_HAVE_stderr */
 		abort();
@@ -1217,7 +1223,7 @@ PUBLIC void DCALL DeeThread_Init(void) {
 	if unlikely(error) {
 #if defined(CONFIG_HAVE_fprintf) && defined(CONFIG_HAVE_stderr)
 		fprintf(stderr, "Failed to initialize deemon thread subsystem: "
-		                "Couldn't allocate Thread.current Tls: %d - %s\n",
+		                "Couldn't allocate Thread.current TLS: %d - %s\n",
 		        error,
 #ifdef CONFIG_HAVE_strerror
 		        strerror(error)
@@ -1388,10 +1394,12 @@ INTERN WUNUSED NONNULL((1)) int
 		COMPILER_READ_BARRIER();
 		if (self->t_state & THREAD_STATE_INTERRUPTED)
 			break;
+
 		/* The interrupting-flag may get unset if construction is aborted
 		 * for some reason by the other end (e.g. allocation failure) */
 		if (!(self->t_state & THREAD_STATE_INTERRUPTING))
 			goto done;
+
 		/* Assume that the interrupt object is currently being constructed,
 		 * meaning the best thing we can do is to switch threads and let it
 		 * continue being created. */
@@ -1403,21 +1411,25 @@ next_interrupt:
 	       THREAD_STATE_INTERRUPTING) {
 		SCHED_YIELD();
 	}
+
 	/* Pop one interrupt descriptor. */
 	interrupt_main = self->t_interrupt.ti_intr; /* Inherit */
 	interrupt_args = self->t_interrupt.ti_args; /* Inherit */
 	ASSERT_OBJECT_TYPE_EXACT_OPT(interrupt_args, &DeeTuple_Type);
 	if ((next = self->t_interrupt.ti_next) != NULL) {
 		ASSERT(interrupt_main != NULL);
+
 		/* Handle the case of more than one remaining action. */
 		ASSERT(next->ti_intr);
 		memcpy(&self->t_interrupt, next, sizeof(struct thread_interrupt));
 		Dee_Free(next);
+
 		/* NOTE: Don't clear the interrupted-flag since
 		 *       there are still unhandled interrupts left. */
 		atomic_and(&self->t_state, ~THREAD_STATE_INTERRUPTING);
 		if (!interrupt_args)
 			goto throw_main;
+
 		/* When an asynchronous callback is to-be executed, also handle
 		 * the next interrupt if this one didn't cause any errors. */
 		callback_result = DeeObject_Call(interrupt_main,
@@ -1433,10 +1445,12 @@ next_interrupt:
 	self->t_interrupt.ti_intr = NULL;
 	self->t_interrupt.ti_args = NULL;
 	atomic_and(&self->t_state, ~(THREAD_STATE_INTERRUPTING |
-	                            THREAD_STATE_INTERRUPTED));
+	                             THREAD_STATE_INTERRUPTED));
+
 	/* Last interrupt action. */
 	if (interrupt_args) {
 		ASSERT(interrupt_main != NULL);
+
 		/* Call the given interrupt-object, thus executing it. */
 		callback_result = DeeObject_Call(interrupt_main,
 		                                 DeeTuple_SIZE(interrupt_args),
@@ -1457,6 +1471,7 @@ err:
 		DeeSystemError_Break();
 		return -1;
 	}
+
 #ifndef CONFIG_NO_KEYBOARD_INTERRUPT
 	/* Without any other interrupts, the main thread
 	 * can still handle keyboard interrupts! */

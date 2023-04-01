@@ -161,6 +161,7 @@ INTDEF WUNUSED DREF DeeObject *DCALL capi_atomic_dec(size_t argc, DeeObject *con
 INTDEF WUNUSED DREF DeeObject *DCALL capi_futex_wakeone(size_t argc, DeeObject *const *argv);
 INTDEF WUNUSED DREF DeeObject *DCALL capi_futex_wakeall(size_t argc, DeeObject *const *argv);
 INTDEF WUNUSED DREF DeeObject *DCALL capi_futex_wait(size_t argc, DeeObject *const *argv);
+INTDEF WUNUSED DREF DeeObject *DCALL capi_futex_timedwait(size_t argc, DeeObject *const *argv);
 
 DECL_END
 

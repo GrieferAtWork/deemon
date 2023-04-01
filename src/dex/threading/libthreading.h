@@ -26,9 +26,35 @@
 
 DECL_BEGIN
 
-INTDEF DeeTypeObject DeeSemaphore_Type; /* TODO */
-INTDEF DeeTypeObject DeeMutex_Type;     /* TODO */
-INTDEF DeeTypeObject DeeRWLock_Type;    /* TODO */
+/* Lock objects */
+INTDEF DeeTypeObject DeeLock_Type;
+INTDEF DeeTypeObject DeeAtomicLock_Type;
+INTDEF DeeTypeObject DeeSharedLock_Type;
+
+INTDEF DeeTypeObject DeeRWLock_Type;
+INTDEF DeeTypeObject DeeRWLockSharedLock_Type;
+INTDEF DeeTypeObject DeeRWLockExclusiveLock_Type;
+INTDEF DeeTypeObject DeeAtomicRWLock_Type;
+INTDEF DeeTypeObject DeeAtomicRWLockSharedLock_Type;
+INTDEF DeeTypeObject DeeAtomicRWLockExclusiveLock_Type;
+INTDEF DeeTypeObject DeeSharedRWLock_Type;
+INTDEF DeeTypeObject DeeSharedRWLockSharedLock_Type;
+INTDEF DeeTypeObject DeeSharedRWLockExclusiveLock_Type;
+
+INTDEF DeeTypeObject DeeSemaphore_Type;
+
+/* TODO: all(args...: Lock): Lock
+ *       Proxy lock which can be used to acquire multiple locks at the same time,
+ *       without running the risk of a dead-lock (assuming that the caller isn't
+ *       already holding at least one of the given locks)
+ *
+ * >> local a = AtomicLock();
+ * >> local b = SharedLock();
+ * >> local c = SharedRWLock();
+ * >> with (all(a, b, c.exclusive)) {
+ * >>     ... // At this point, all 3 locks are held (and were acquired in a safe manner)
+ * >> }
+ */
 
 
 #ifndef CONFIG_NO_THREADS
@@ -51,7 +77,7 @@ INTDEF NONNULL((1, 2)) void DCALL thread_tls_visit(struct tls_descriptor *__rest
 #endif /* !CONFIG_NO_THREADS */
 
 
-INTDEF DeeTypeObject DeeTls_Type;
+INTDEF DeeTypeObject DeeTLS_Type;
 
 DECL_END
 

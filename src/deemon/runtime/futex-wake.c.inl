@@ -89,7 +89,6 @@ PUBLIC NONNULL((1)) void
 #else /* LOCAL_IS_ONE */
 		WakeByAddressAll(&ctrl->fc_nt_word);
 #endif /* !LOCAL_IS_ONE */
-		futex_controller_decref(ctrl);
 	}	break;
 
 	case NT_FUTEX_IMPLEMENTATION_COND_AND_CRIT: {
@@ -100,7 +99,6 @@ PUBLIC NONNULL((1)) void
 		WakeAllConditionVariable(&ctrl->fc_nt_cond_crit.cc_cond);
 #endif /* !LOCAL_IS_ONE */
 		ReleaseSRWLockExclusive(&ctrl->fc_nt_cond_crit.cc_lock);
-		futex_controller_decref(ctrl);
 	}	break;
 
 	case NT_FUTEX_IMPLEMENTATION_SEMAPHORE: {
@@ -113,7 +111,6 @@ PUBLIC NONNULL((1)) void
 			(void)ReleaseSemaphore(ctrl->fc_nt_sem.sm_hSemaphore, dwWaitingThreads, NULL);
 #endif /* !LOCAL_IS_ONE */
 		}
-		futex_controller_decref(ctrl);
 	}	break;
 
 	default: __builtin_unreachable();

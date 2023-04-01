@@ -253,7 +253,7 @@ struct class_attribute;
  *                         is only there to improve meta-information, whilst FIRST_TYPE should implement an instance-
  *                         attribute `value', with when accessed should yield an element of <SECOND_TYPE>)
  *                         This type of encoding is used to represent `WeakRef with Object',
- *                        `Tls with Object' or `Cell with Object'
+ *                        `TLS with Object' or `Cell with Object'
  *   ?T<N>(<TYPE> * N) --- A Tuple expression containing <N> (encoded as a decimal) other types
  *                         e.g.: `?T2?Dstring?Dint' --- `(string, int)'
  *   ?X<N>(<TYPE> * N) --- A set of <N> (encoded as a decimal) alternative type representations
