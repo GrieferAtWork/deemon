@@ -127,10 +127,15 @@ PUBLIC NONNULL((1)) void
 	{
 		size_t n_threads;
 		n_threads = atomic_read(&ctrl->fc_n_threads);
+#ifdef LOCAL_IS_ONE
+		if (n_threads > 0)
+			(void)sem_post(&ctrl->fc_sem);
+#else /* LOCAL_IS_ONE */
 		while (n_threads > 0) {
 			(void)sem_post(&ctrl->fc_sem);
 			--n_threads;
 		}
+#endif /* !LOCAL_IS_ONE */
 	}
 #endif /* ... */
 
