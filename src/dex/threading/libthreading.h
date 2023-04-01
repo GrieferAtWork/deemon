@@ -43,6 +43,8 @@ INTDEF DeeTypeObject DeeSharedRWLockExclusiveLock_Type;
 
 INTDEF DeeTypeObject DeeSemaphore_Type;
 
+INTDEF DeeTypeObject DeeEvent_Type;
+
 /* TODO: all(args...: Lock): Lock
  *       Proxy lock which can be used to acquire multiple locks at the same time,
  *       without running the risk of a dead-lock (assuming that the caller isn't

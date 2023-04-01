@@ -73,6 +73,8 @@ typedef int Dee_atomic_rwlock_t;
 #define DeeFutex_Wait32Timed(addr, expected, timeout_nanoseconds)  0
 #define DeeFutex_WaitPtr(addr, expected)                           0
 #define DeeFutex_WaitPtrTimed(addr, expected, timeout_nanoseconds) 0
+#define DeeFutex_WaitInt(addr, expected)                           0
+#define DeeFutex_WaitIntTimed(addr, expected, timeout_nanoseconds) 0
 #if __SIZEOF_POINTER__ >= 8
 #define DeeFutex_Wait64(addr, expected)                           0
 #define DeeFutex_Wait64Timed(addr, expected, timeout_nanoseconds) 0
@@ -236,6 +238,15 @@ DFUNDEF WUNUSED NONNULL((1)) int
 #define DeeFutex_WaitPtr      DeeFutex_Wait32
 #define DeeFutex_WaitPtrTimed DeeFutex_Wait32Timed
 #endif /* __SIZEOF_POINTER__ < 8 */
+
+#if __SIZEOF_INT__ <= 4
+#define DeeFutex_WaitInt      DeeFutex_Wait32
+#define DeeFutex_WaitIntTimed DeeFutex_Wait32Timed
+#else /* __SIZEOF_INT__ <= 4 */
+#define DeeFutex_WaitInt      DeeFutex_Wait64
+#define DeeFutex_WaitIntTimed DeeFutex_Wait64Timed
+#endif /* __SIZEOF_INT__ > 4 */
+
 
 
 /************************************************************************/
@@ -456,6 +467,41 @@ DFUNDEF WUNUSED NONNULL((1)) int
 (DCALL Dee_semaphore_acquire_timed)(Dee_semaphore_t *__restrict self,
                                     uint64_t timeout_nanoseconds);
 
+
+
+
+/************************************************************************/
+/* Shared semaphore (scheduler-level blocking)                          */
+/************************************************************************/
+typedef struct {
+	unsigned int ev_state; /* 0: event has been triggered
+	                        * 1: event has NOT been triggered
+	                        * 2: event has NOT been triggered, and there are waiting threads */
+} Dee_event_t;
+
+#define DEE_EVENT_INIT_SET        { 0 }
+#define DEE_EVENT_INIT            { 1 }
+#define Dee_event_init_set(self)  (void)((self)->ev_state = 0)
+#define Dee_event_init(self)      (void)((self)->ev_state = 1)
+#define Dee_event_cinit_set(self) (void)(Dee_ASSERT((self)->ev_state == 0))
+#define Dee_event_cinit(self)     (void)(Dee_ASSERT((self)->ev_state == 0), (self)->ev_state = 1)
+#define Dee_event_get(self)       (__hybrid_atomic_load(&(self)->ev_state, __ATOMIC_ACQUIRE) == 0)
+#define Dee_event_set(self)                                          \
+	(__hybrid_atomic_xch(&(self)->ev_state, 0, __ATOMIC_SEQ_CST) > 1 \
+	 ? DeeFutex_WakeAll(&(self)->ev_state)                           \
+	 : (void)0)
+#define Dee_event_clear(self) \
+	(void)__hybrid_atomic_cmpxch(&(self)->ev_state, 0, 1, __ATOMIC_SEQ_CST, __ATOMIC_SEQ_CST)
+
+/* Blocking wait for an event to become set.
+ * @return: 1 : Timeout expired. (`Dee_event_waitfor_timed' only)
+ * @return: 0 : Success.
+ * @return: -1: An exception was thrown. */
+DFUNDEF WUNUSED NONNULL((1)) int
+(DCALL Dee_event_waitfor)(Dee_event_t *__restrict self);
+DFUNDEF WUNUSED NONNULL((1)) int
+(DCALL Dee_event_waitfor_timed)(Dee_event_t *__restrict self,
+                                uint64_t timeout_nanoseconds);
 
 
 

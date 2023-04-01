@@ -19,6 +19,7 @@
  */
 #ifndef GUARD_DEX_THREADING_LOCK_C
 #define GUARD_DEX_THREADING_LOCK_C 1
+#define CONFIG_BUILDING_LIBTHREADING
 #define DEE_SOURCE
 
 #include <deemon/alloc.h>
@@ -90,6 +91,13 @@ typedef struct {
 	Dee_semaphore_t sem_semaphore; /* Managed semaphore */
 #endif /* !CONFIG_NO_THREADS */
 } DeeSemaphoreObject;
+
+typedef struct {
+	OBJECT_HEAD
+#ifndef CONFIG_NO_THREADS
+	Dee_event_t e_event; /* Managed event */
+#endif /* !CONFIG_NO_THREADS */
+} DeeEventObject;
 
 typedef struct {
 	OBJECT_HEAD
@@ -1879,73 +1887,73 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-rwlock_shared_tryacquire(DeeGenericRWLockProxyObject *__restrict self,
+rwlock_shared_tryacquire(DeeGenericRWLockProxyObject *self,
                          size_t argc, DeeObject *const *argv) {
 	return DeeObject_CallAttr(self->grwl_lock, (DeeObject *)&str_tryread, argc, argv);
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-rwlock_exclusive_tryacquire(DeeGenericRWLockProxyObject *__restrict self,
+rwlock_exclusive_tryacquire(DeeGenericRWLockProxyObject *self,
                             size_t argc, DeeObject *const *argv) {
 	return DeeObject_CallAttr(self->grwl_lock, (DeeObject *)&str_trywrite, argc, argv);
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-rwlock_shared_acquire(DeeGenericRWLockProxyObject *__restrict self,
+rwlock_shared_acquire(DeeGenericRWLockProxyObject *self,
                       size_t argc, DeeObject *const *argv) {
 	return DeeObject_CallAttr(self->grwl_lock, (DeeObject *)&str_read, argc, argv);
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-rwlock_exclusive_acquire(DeeGenericRWLockProxyObject *__restrict self,
+rwlock_exclusive_acquire(DeeGenericRWLockProxyObject *self,
                          size_t argc, DeeObject *const *argv) {
 	return DeeObject_CallAttr(self->grwl_lock, (DeeObject *)&str_write, argc, argv);
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-rwlock_shared_release(DeeGenericRWLockProxyObject *__restrict self,
+rwlock_shared_release(DeeGenericRWLockProxyObject *self,
                       size_t argc, DeeObject *const *argv) {
 	return DeeObject_CallAttr(self->grwl_lock, (DeeObject *)&str_endread, argc, argv);
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-rwlock_exclusive_release(DeeGenericRWLockProxyObject *__restrict self,
+rwlock_exclusive_release(DeeGenericRWLockProxyObject *self,
                          size_t argc, DeeObject *const *argv) {
 	return DeeObject_CallAttr(self->grwl_lock, (DeeObject *)&str_endwrite, argc, argv);
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-rwlock_shared_timedacquire(DeeGenericRWLockProxyObject *__restrict self,
+rwlock_shared_timedacquire(DeeGenericRWLockProxyObject *self,
                            size_t argc, DeeObject *const *argv) {
 	return DeeObject_CallAttr(self->grwl_lock, (DeeObject *)&str_timedread, argc, argv);
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-rwlock_exclusive_timedacquire(DeeGenericRWLockProxyObject *__restrict self,
+rwlock_exclusive_timedacquire(DeeGenericRWLockProxyObject *self,
                               size_t argc, DeeObject *const *argv) {
 	return DeeObject_CallAttr(self->grwl_lock, (DeeObject *)&str_timedwrite, argc, argv);
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-rwlock_shared_waitfor(DeeGenericRWLockProxyObject *__restrict self,
+rwlock_shared_waitfor(DeeGenericRWLockProxyObject *self,
                       size_t argc, DeeObject *const *argv) {
 	return DeeObject_CallAttr(self->grwl_lock, (DeeObject *)&str_waitread, argc, argv);
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-rwlock_exclusive_waitfor(DeeGenericRWLockProxyObject *__restrict self,
+rwlock_exclusive_waitfor(DeeGenericRWLockProxyObject *self,
                          size_t argc, DeeObject *const *argv) {
 	return DeeObject_CallAttr(self->grwl_lock, (DeeObject *)&str_waitwrite, argc, argv);
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-rwlock_shared_timedwaitfor(DeeGenericRWLockProxyObject *__restrict self,
+rwlock_shared_timedwaitfor(DeeGenericRWLockProxyObject *self,
                            size_t argc, DeeObject *const *argv) {
 	return DeeObject_CallAttr(self->grwl_lock, (DeeObject *)&str_timedwaitread, argc, argv);
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-rwlock_exclusive_timedwaitfor(DeeGenericRWLockProxyObject *__restrict self,
+rwlock_exclusive_timedwaitfor(DeeGenericRWLockProxyObject *self,
                               size_t argc, DeeObject *const *argv) {
 	return DeeObject_CallAttr(self->grwl_lock, (DeeObject *)&str_timedwaitwrite, argc, argv);
 }
@@ -3449,7 +3457,7 @@ INTERN DeeTypeObject DeeSharedRWLock_Type = {
 };
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
-dshared_rwlock_shared_init(DeeGenericRWLockProxyObject *__restrict self,
+dshared_rwlock_shared_init(DeeGenericRWLockProxyObject *self,
                            size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, "o:SharedRWLockSharedLock", &self->grwl_lock))
 		goto err;
@@ -3462,7 +3470,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
-dshared_rwlock_exclusive_init(DeeGenericRWLockProxyObject *__restrict self,
+dshared_rwlock_exclusive_init(DeeGenericRWLockProxyObject *self,
                               size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, "o:SharedRWLockExclusiveLock", &self->grwl_lock))
 		goto err;
@@ -3495,7 +3503,7 @@ dshared_rwlock_exclusive_leave(DeeGenericRWLockProxyObject *__restrict self) {
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-dshared_rwlock_shared_tryacquire(DeeGenericRWLockProxyObject *__restrict self,
+dshared_rwlock_shared_tryacquire(DeeGenericRWLockProxyObject *self,
                                  size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, ":tryacquire"))
 		goto err;
@@ -3505,7 +3513,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-dshared_rwlock_exclusive_tryacquire(DeeGenericRWLockProxyObject *__restrict self,
+dshared_rwlock_exclusive_tryacquire(DeeGenericRWLockProxyObject *self,
                                     size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, ":tryacquire"))
 		goto err;
@@ -3515,7 +3523,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-dshared_rwlock_shared_acquire(DeeGenericRWLockProxyObject *__restrict self,
+dshared_rwlock_shared_acquire(DeeGenericRWLockProxyObject *self,
                               size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, ":acquire"))
 		goto err;
@@ -3527,7 +3535,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-dshared_rwlock_exclusive_acquire(DeeGenericRWLockProxyObject *__restrict self,
+dshared_rwlock_exclusive_acquire(DeeGenericRWLockProxyObject *self,
                                  size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, ":acquire"))
 		goto err;
@@ -3539,7 +3547,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-dshared_rwlock_shared_release(DeeGenericRWLockProxyObject *__restrict self,
+dshared_rwlock_shared_release(DeeGenericRWLockProxyObject *self,
                               size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, ":release"))
 		goto err;
@@ -3551,7 +3559,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-dshared_rwlock_exclusive_release(DeeGenericRWLockProxyObject *__restrict self,
+dshared_rwlock_exclusive_release(DeeGenericRWLockProxyObject *self,
                                  size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, ":release"))
 		goto err;
@@ -3563,7 +3571,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-dshared_rwlock_shared_timedacquire(DeeGenericRWLockProxyObject *__restrict self,
+dshared_rwlock_shared_timedacquire(DeeGenericRWLockProxyObject *self,
                                    size_t argc, DeeObject *const *argv) {
 	int error;
 	uint64_t timeout_nanoseconds;
@@ -3578,7 +3586,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-dshared_rwlock_exclusive_timedacquire(DeeGenericRWLockProxyObject *__restrict self,
+dshared_rwlock_exclusive_timedacquire(DeeGenericRWLockProxyObject *self,
                                       size_t argc, DeeObject *const *argv) {
 	int error;
 	uint64_t timeout_nanoseconds;
@@ -3593,7 +3601,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-dshared_rwlock_shared_waitfor(DeeGenericRWLockProxyObject *__restrict self,
+dshared_rwlock_shared_waitfor(DeeGenericRWLockProxyObject *self,
                               size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, ":acquire"))
 		goto err;
@@ -3605,7 +3613,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-dshared_rwlock_exclusive_waitfor(DeeGenericRWLockProxyObject *__restrict self,
+dshared_rwlock_exclusive_waitfor(DeeGenericRWLockProxyObject *self,
                                  size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, ":acquire"))
 		goto err;
@@ -3617,7 +3625,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-dshared_rwlock_shared_timedwaitfor(DeeGenericRWLockProxyObject *__restrict self,
+dshared_rwlock_shared_timedwaitfor(DeeGenericRWLockProxyObject *self,
                                    size_t argc, DeeObject *const *argv) {
 	int error;
 	uint64_t timeout_nanoseconds;
@@ -3632,7 +3640,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-dshared_rwlock_exclusive_timedwaitfor(DeeGenericRWLockProxyObject *__restrict self,
+dshared_rwlock_exclusive_timedwaitfor(DeeGenericRWLockProxyObject *self,
                                       size_t argc, DeeObject *const *argv) {
 	int error;
 	uint64_t timeout_nanoseconds;
@@ -3883,8 +3891,7 @@ semaphore_leave(DeeSemaphoreObject *__restrict self) {
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-semaphore_tryacquire(DeeSemaphoreObject *__restrict self,
-                     size_t argc, DeeObject *const *argv) {
+semaphore_tryacquire(DeeSemaphoreObject *self, size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, ":tryacquire"))
 		goto err;
 	return_bool(Dee_semaphore_tryacquire(&self->sem_semaphore));
@@ -3893,8 +3900,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-semaphore_acquire(DeeSemaphoreObject *__restrict self,
-                  size_t argc, DeeObject *const *argv) {
+semaphore_acquire(DeeSemaphoreObject *self, size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, ":acquire"))
 		goto err;
 	if unlikely(Dee_semaphore_acquire(&self->sem_semaphore))
@@ -3905,8 +3911,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-semaphore_release(DeeSemaphoreObject *__restrict self,
-                  size_t argc, DeeObject *const *argv) {
+semaphore_release(DeeSemaphoreObject *self, size_t argc, DeeObject *const *argv) {
 	uintptr_t count = 1;
 	if (DeeArg_Unpack(argc, argv, "|" UNPuPTR ":release", &count))
 		goto err;
@@ -3918,8 +3923,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-semaphore_timedacquire(DeeSemaphoreObject *__restrict self,
-                       size_t argc, DeeObject *const *argv) {
+semaphore_timedacquire(DeeSemaphoreObject *self, size_t argc, DeeObject *const *argv) {
 	int error;
 	uint64_t timeout_nanoseconds;
 	if (DeeArg_Unpack(argc, argv, UNPu64 ":timedacquire", &timeout_nanoseconds))
@@ -3933,8 +3937,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-semaphore_waitfor(DeeSemaphoreObject *__restrict self,
-                  size_t argc, DeeObject *const *argv) {
+semaphore_waitfor(DeeSemaphoreObject *self, size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, ":waitfor"))
 		goto err;
 	if unlikely(Dee_semaphore_waitfor(&self->sem_semaphore))
@@ -3945,8 +3948,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-semaphore_timedwaitfor(DeeSemaphoreObject *__restrict self,
-                       size_t argc, DeeObject *const *argv) {
+semaphore_timedwaitfor(DeeSemaphoreObject *self, size_t argc, DeeObject *const *argv) {
 	int error;
 	uint64_t timeout_nanoseconds;
 	if (DeeArg_Unpack(argc, argv, UNPu64 ":timedwaitfor", &timeout_nanoseconds))
@@ -4068,6 +4070,198 @@ INTERN DeeTypeObject DeeSemaphore_Type = {
 	/* .tp_buffer        = */ NULL,
 	/* .tp_methods       = */ semaphore_methods,
 	/* .tp_getsets       = */ semaphore_getsets,
+	/* .tp_members       = */ NULL,
+	/* .tp_class_methods = */ NULL,
+	/* .tp_class_getsets = */ NULL,
+	/* .tp_class_members = */ NULL
+};
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/************************************************************************/
+/* Event                                                            */
+/************************************************************************/
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+event_init_kw(DeeEventObject *__restrict self, size_t argc,
+              DeeObject *const *argv, DeeObject *kw) {
+	PRIVATE DEFINE_KWLIST(event_kwlist, { K(isset), KEND });
+	bool isset = false;
+	if (DeeArg_UnpackKw(argc, argv, kw, event_kwlist, "|b:Event", &isset))
+		goto err;
+	if (isset) {
+		Dee_event_init_set(&self->e_event);
+	} else {
+		Dee_event_init(&self->e_event);
+	}
+	return 0;
+err:
+	return -1;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+event_printrepr(DeeEventObject *__restrict self,
+                dformatprinter printer, void *arg) {
+	bool isset = Dee_event_get(&self->e_event);
+	return DeeFormat_Printf(printer, arg,
+	                        "Event(isset: %s)",
+	                        isset ? "true" : "false");
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+event_waitfor(DeeEventObject *self, size_t argc, DeeObject *const *argv) {
+	if (DeeArg_Unpack(argc, argv, ":waitfor"))
+		goto err;
+	if unlikely(Dee_event_waitfor(&self->e_event))
+		goto err;
+	return_none;
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+event_timedwaitfor(DeeEventObject *self, size_t argc, DeeObject *const *argv) {
+	int error;
+	uint64_t timeout_nanoseconds;
+	if (DeeArg_Unpack(argc, argv, UNPu64 ":timedwaitfor", &timeout_nanoseconds))
+		goto err;
+	error = Dee_event_waitfor_timed(&self->e_event, timeout_nanoseconds);
+	if unlikely(error < 0)
+		goto err;
+	return_bool(error == 0);
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+event_set(DeeEventObject *self, size_t argc, DeeObject *const *argv) {
+	if (DeeArg_Unpack(argc, argv, ":set"))
+		goto err;
+	Dee_event_set(&self->e_event);
+	return_none;
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+event_clear(DeeEventObject *self, size_t argc, DeeObject *const *argv) {
+	if (DeeArg_Unpack(argc, argv, ":clear"))
+		goto err;
+	Dee_event_clear(&self->e_event);
+	return_none;
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+event_isset_get(DeeEventObject *__restrict self) {
+	return_bool(Dee_event_get(&self->e_event));
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+event_isset_set(DeeEventObject *self, DeeObject *value) {
+	int val = DeeObject_Bool(value);
+	if unlikely(val < 0)
+		goto err;
+	if (val) {
+		Dee_event_set(&self->e_event);
+	} else {
+		Dee_event_clear(&self->e_event);
+	}
+	return 0;
+err:
+	return -1;
+}
+
+PRIVATE struct type_method event_methods[] = {
+	TYPE_METHOD(STR_waitfor, &event_waitfor,
+	            "()\n"
+	            "Wait until the event becomes set"),
+	TYPE_METHOD(STR_timedwaitfor, &event_timedwaitfor,
+	            "(timeout_nanoseconds:?Dint)->?Dbool\n"
+	            "Same as ?#waitfor, returning !t on success, but block for at "
+	            /**/ "most @timeout_nanoseconds. Once that amount of time has elapsed, "
+	            /**/ "stop trying to wait for the event to become set, and fail by "
+	            /**/ "returning !f instead."),
+	TYPE_METHOD("set", &event_set,
+	            "()\n"
+	            "Trigger the event as having taken place"),
+	TYPE_METHOD("clear", &event_clear,
+	            "()\n"
+	            "Clear the event as not havnig taken place"),
+	TYPE_METHOD_END
+};
+
+PRIVATE struct type_getset event_getsets[] = {
+	TYPE_GETSET("isset", &event_isset_get, NULL, &event_isset_set,
+	            "->?Dbool\n"
+	            "Get or set the has-taken-place status of the event"),
+	TYPE_GETSET_END
+};
+
+INTERN DeeTypeObject DeeEvent_Type = {
+	OBJECT_HEAD_INIT(&DeeType_Type),
+	/* .tp_name     = */ "Event",
+	/* .tp_doc      = */ DOC("(isset=!f)"),
+	/* .tp_flags    = */ TP_FNORMAL,
+	/* .tp_weakrefs = */ 0,
+	/* .tp_features = */ TF_NONE,
+	/* .tp_base     = */ &DeeObject_Type,
+	/* .tp_init = */ {
+		{
+			/* .tp_alloc = */ {
+				/* .tp_ctor      = */ (dfunptr_t)NULL,
+				/* .tp_copy_ctor = */ (dfunptr_t)NULL,
+				/* .tp_deep_ctor = */ (dfunptr_t)NULL,
+				/* .tp_any_ctor  = */ (dfunptr_t)NULL,
+				TYPE_FIXED_ALLOCATOR(DeeEventObject),
+				/* .tp_any_ctor_kw = */ (dfunptr_t)&event_init_kw
+			}
+		},
+		/* .tp_dtor        = */ NULL,
+		/* .tp_assign      = */ NULL,
+		/* .tp_move_assign = */ NULL
+	},
+	/* .tp_cast = */ {
+		/* .tp_str       = */ NULL,
+		/* .tp_repr      = */ NULL,
+		/* .tp_bool      = */ NULL,
+		/* .tp_print     = */ NULL,
+		/* .tp_printrepr = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&event_printrepr
+	},
+	/* .tp_call          = */ NULL,
+	/* .tp_visit         = */ NULL,
+	/* .tp_gc            = */ NULL,
+	/* .tp_math          = */ NULL,
+	/* .tp_cmp           = */ NULL,
+	/* .tp_seq           = */ NULL,
+	/* .tp_iter_next     = */ NULL,
+	/* .tp_attr          = */ NULL,
+	/* .tp_with          = */ NULL,
+	/* .tp_buffer        = */ NULL,
+	/* .tp_methods       = */ event_methods,
+	/* .tp_getsets       = */ event_getsets,
 	/* .tp_members       = */ NULL,
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,

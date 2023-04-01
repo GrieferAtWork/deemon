@@ -1453,6 +1453,72 @@ do_wait_with_timeout:
 }
 
 
+
+
+
+
+/************************************************************************/
+/* Shared event (scheduler-level blocking)                              */
+/************************************************************************/
+
+/* Blocking wait for an event to become set.
+ * @return: 1 : Timeout expired. (`Dee_event_waitfor_timed' only)
+ * @return: 0 : Success.
+ * @return: -1: An exception was thrown. */
+PUBLIC WUNUSED NONNULL((1)) int
+(DCALL Dee_event_waitfor)(Dee_event_t *__restrict self) {
+#ifdef CONFIG_NO_THREADS
+	COMPILER_IMPURE();
+	(void)self;
+	return 0;
+#else /* CONFIG_NO_THREADS */
+	int result;
+	if (Dee_event_get(self))
+		return 0;
+	atomic_cmpxch(&self->ev_state, 1, 2);
+	do {
+		result = DeeFutex_WaitInt(&self->ev_state, 2);
+	} while (result == 0 && !Dee_event_get(self));
+	return result;
+#endif /* !CONFIG_NO_THREADS */
+}
+
+PUBLIC WUNUSED NONNULL((1)) int
+(DCALL Dee_event_waitfor_timed)(Dee_event_t *__restrict self,
+                                uint64_t timeout_nanoseconds) {
+#ifdef CONFIG_NO_THREADS
+	COMPILER_IMPURE();
+	(void)self;
+	(void)timeout_nanoseconds;
+	return 0;
+#else /* CONFIG_NO_THREADS */
+	int error;
+	uint64_t now_microseconds, then_microseconds;
+	if (Dee_event_get(self))
+		return 0;
+	if (timeout_nanoseconds == (uint64_t)-1) {
+do_infinite_timeout:
+		return (Dee_event_waitfor)(self);
+	}
+	now_microseconds = DeeThread_GetTimeMicroSeconds();
+	if (OVERFLOW_UADD(now_microseconds, timeout_nanoseconds / 1000, &then_microseconds))
+		goto do_infinite_timeout;
+do_wait_with_timeout:
+	atomic_cmpxch(&self->ev_state, 1, 2);
+	error = DeeFutex_WaitIntTimed(&self->ev_state, 2, timeout_nanoseconds);
+	if unlikely(error != 0)
+		return error;
+	if (Dee_event_get(self))
+		return 0;
+	now_microseconds = DeeThread_GetTimeMicroSeconds();
+	if (OVERFLOW_USUB(then_microseconds, now_microseconds, &timeout_nanoseconds))
+		return 1; /* Timeout */
+	timeout_nanoseconds *= 1000;
+	goto do_wait_with_timeout;
+#endif /* !CONFIG_NO_THREADS */
+}
+
+
 DECL_END
 
 #endif /* !GUARD_DEEMON_RUNTIME_FUTEX_C */

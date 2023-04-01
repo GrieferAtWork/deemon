@@ -47,6 +47,9 @@ PRIVATE struct dex_symbol symbols[] = {
 	/* Semaphore */
 	{ "Semaphore", (DeeObject *)&DeeSemaphore_Type },
 
+	/* Event */
+	{ "Event", (DeeObject *)&DeeEvent_Type },
+
 	/* ThreadLocalStorage */
 	{ "TLS", (DeeObject *)&DeeTLS_Type },
 	{ NULL }
@@ -56,26 +59,20 @@ PRIVATE struct dex_symbol symbols[] = {
 
 #ifndef CONFIG_NO_THREADS
 PRIVATE struct tls_callback_hooks orig_hooks;
-PRIVATE struct tls_callback_hooks thrd_hooks = {
-	/* .tc_fini  = */ (void (DCALL *)(void *__restrict))&thread_tls_fini,
-	/* .tc_visit = */ (void (DCALL *)(void *__restrict, dvisit_t, void *))&thread_tls_visit
-};
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 libthreading_init(DeeDexObject *__restrict UNUSED(self)) {
 	/* Install our custom TLS callback hooks. */
-	memcpy(&orig_hooks, &_DeeThread_TlsCallbacks,
-	       sizeof(struct tls_callback_hooks));
-	memcpy(&_DeeThread_TlsCallbacks, &thrd_hooks,
-	       sizeof(struct tls_callback_hooks));
+	memcpy(&orig_hooks, &_DeeThread_TlsCallbacks, sizeof(struct tls_callback_hooks));
+	_DeeThread_TlsCallbacks.tc_fini  = (void(DCALL *)(void *__restrict)) & thread_tls_fini;
+	_DeeThread_TlsCallbacks.tc_visit = (void (DCALL *)(void *__restrict, dvisit_t, void *))&thread_tls_visit;
 	return 0;
 }
 
 PRIVATE NONNULL((1)) void DCALL
 libthreading_fini(DeeDexObject *__restrict UNUSED(self)) {
-	/* Restore the original callback hooks. */
-	memcpy(&_DeeThread_TlsCallbacks, &orig_hooks,
-	       sizeof(struct tls_callback_hooks));
+	/* Restore the original TLS callback hooks. */
+	memcpy(&_DeeThread_TlsCallbacks, &orig_hooks, sizeof(struct tls_callback_hooks));
 }
 
 #endif /* !CONFIG_NO_THREADS */

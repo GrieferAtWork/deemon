@@ -200,3 +200,22 @@ testRWLock(SharedRWLock());
 
 assert SharedLock.derivedfrom(AtomicLock);
 assert SharedRWLock.derivedfrom(AtomicRWLock);
+
+
+function testEvent(e: Event) {
+	assert !e.isset;
+
+	e.set();
+	assert e.isset;
+
+	e.clear();
+	assert !e.isset;
+
+	e.isset = true;
+	assert e.isset;
+
+	e.isset = false;
+	assert !e.isset;
+}
+
+testEvent(Event());
