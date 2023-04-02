@@ -1809,7 +1809,8 @@ PRIVATE LPCANCELSYNCHRONOUSIO pCancelSynchronousIo = NULL;
 #endif /* CONFIG_HOST_WINDOWS */
 #endif /* !CONFIG_THREADS_PTHREAD */
 
-INTDEF void DCALL DeeFutex_WakeGlobal(void);
+INTDEF NONNULL((1)) void DCALL
+DeeFutex_WakeGlobal(DeeThreadObject *thread);
 
 /* Try to wake the thread. */
 PUBLIC NONNULL((1)) void DCALL
@@ -1824,7 +1825,7 @@ DeeThread_Wake(/*Thread*/ DeeObject *__restrict self) {
 	 * We work around this issue by (essentially) keeping track
 	 * of all of the addresses that threads are blocking-waiting
 	 * for, and explicitly waking up all of those threads. */
-	DeeFutex_WakeGlobal();
+	DeeFutex_WakeGlobal(me);
 
 #ifndef CONFIG_THREADS_PTHREAD
 #ifdef CONFIG_HOST_WINDOWS

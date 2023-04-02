@@ -31,6 +31,7 @@
 #include <hybrid/overflow.h>
 #include <hybrid/sched/atomic-once.h>
 #include <hybrid/sched/yield.h>
+#include <hybrid/sequence/list.h>
 
 #include <stdbool.h>
 
@@ -224,7 +225,7 @@ LOCAL int DCALL os_futex_wait64_timed(void *uaddr, uint64_t expected,
  * >>     WAKE(&STATUS); */
 #define DeeFutex_USE_os_futex_32_only
 #elif defined(CONFIG_HOST_WINDOWS)
-/* Windows 8+:     WaitOnAddress is pretty much the same as futex()
+/* Windows 8+:     WaitOnAddress is pretty much the same as SYS_futex(2)
  * Windows Vista+: SRWLOCK + CRITICAL_SECTION (same as `pthread_cond_t' + `pthread_mutex_t')
  * Windows XP+:    CreateSemaphoreW (same as `sem_t') */
 #define DeeFutex_USE_WaitOnAddress_OR_CONDITION_VARIABLE_AND_SRWLOCK_OR_CreateSemaphoreW
@@ -281,6 +282,13 @@ DECL_BEGIN
 #define DeeFutex_USES_CONTROL_STRUCTURE
 #endif /* ... */
 
+/* Figure out if we need the OS futex wait list. */
+#undef DeeFutex_USES_OS_FUTEX_WAIT_LIST
+#if (defined(DeeFutex_USE_os_futex_32_only) || \
+     defined(DeeFutex_USE_WaitOnAddress_OR_CONDITION_VARIABLE_AND_SRWLOCK_OR_CreateSemaphoreW))
+#define DeeFutex_USES_OS_FUTEX_WAIT_LIST
+#endif /* ... */
+
 #ifdef DeeFutex_USES_CONTROL_STRUCTURE
 #include <hybrid/sequence/list.h>
 #include <hybrid/sequence/rbtree.h>
@@ -301,43 +309,6 @@ struct futex_controller {
 	uint32_t fc_word; /* Futex status word (incremented each time a wake happens) */
 #elif defined(DeeFutex_USE_WaitOnAddress_OR_CONDITION_VARIABLE_AND_SRWLOCK_OR_CreateSemaphoreW)
 	union {
-		/* ==== Rant on WaitOnAddress ====
-		 *
-		 * You would that that we'd be able to just directly use `WaitOnAddress' on the
-		 * actual futex address in order to implement fully support for futex operation.
-		 *
-		 * And you'd be correct (but sadly only kind-of)
-		 *
-		 * The problem here lies in the fact that `WaitOnAddress' IS NOT INTERRUPTIBLE,
-		 * and there is no `WaitOnAddressEx' function with `BOOL bAlertable' which we
-		 * could then set to `TRUE'
-		 *
-		 * As such, `DeeThread_Wake()' would have no way to interrupt/wake-up a thread
-		 * which is currently being blocked in a call to `WaitOnAddress'.
-		 *
-		 * Now you may think this could be solved by simply keeping a singly-linked list
-		 * of all threads that are currently inside of calls to `WaitOnAddress', so that
-		 * we could simply call `WakeByAddressAll' on all of those thread.
-		 * But the problem with this would be the race condition of a thread that has yet
-		 * to reach kernel-space and enter its truly-sleeping-state. If we were to try
-		 * and wake up the thread *before* then, it wouldn't get the memo and also would
-		 * not receive the interrupt.
-		 * This *could* be rectified if we had a method `IsThreadBlockedOnSomething()`,
-		 * but alas, no such method exists (and the only way to get information about
-		 * the actual sleep-state of threads doesn't let you specify a specific thread,
-		 * but needs *all* threads: https://stackoverflow.com/a/22949726/3296587). If
-		 * such a function existed, we'd be able to briefly wait until a thread that
-		 * already appears in the list of threads calling `WaitOnAddress' actually has
-		 * entered its sleep-state (so it'll be able to receive `WakeByAddressAll').
-		 *
-		 * So with all of this in mind, the only *real* way we have is to use a futex
-		 * control word like we also do under `DeeFutex_USE_os_futex_32_only', and then
-		 * have `DeeThread_Wake()' increment that control word for all futexes, before
-		 * then broadcasting to all threads which may be waiting for on some futex, thus
-		 * ensuring that *any* thread currently inside of a futex-wait call will act as
-		 * though it was woken by `DeeFutex_WakeAll()'. */
-		uint32_t fc_nt_word; /* NT_FUTEX_IMPLEMENTATION_WAITONADDRESS */
-
 		struct {
 			SRWLOCK            cc_lock; /* Lock (only ever used in its exclusive-mode) */
 			CONDITION_VARIABLE cc_cond; /* Condition variable */
@@ -412,6 +383,13 @@ PRIVATE LLRBTREE_ROOT(futex_controller) fcont_tree = NULL;
 /* [lock(LAZY_ATOMIC, WRITE_ONCE)] The chosen implementation for futex objects on NT */
 PRIVATE unsigned int nt_futex_implementation = NT_FUTEX_IMPLEMENTATION_UNINITIALIZED;
 
+#define LOAD_PROC_ADDRESS(err, pdyn_Foo, LPFOO, hModule, name) \
+	do {                                                       \
+		pdyn_Foo = (LPFOO)GetProcAddress(hModule, name);       \
+		if unlikely(!pdyn_Foo)                                 \
+			goto err;                                          \
+	}	__WHILE0
+
 typedef BOOL (WINAPI *LPWAITONADDRESS)(void volatile *Address, PVOID CompareAddress, SIZE_T AddressSize, DWORD dwMilliseconds);
 typedef void (WINAPI *LPWAKEBYADDRESSSINGLE)(PVOID Address);
 typedef void (WINAPI *LPWAKEBYADDRESSALL)(PVOID Address);
@@ -428,13 +406,6 @@ PRIVATE LPWAKEBYADDRESSALL /*   */ pdyn_WakeByAddressAll    = NULL;
 
 /* L"KernelBase.dll" */
 PRIVATE WCHAR const wKernelBaseDll[] = { 'K', 'e', 'r', 'n', 'e', 'l', 'B', 'a', 's', 'e', '.', 'd', 'l', 'l', 0 };
-
-#define LOAD_PROC_ADDRESS(err, pdyn_Foo, LPFOO, hModule, name) \
-	do {                                                       \
-		pdyn_Foo = (LPFOO)GetProcAddress(hModule, name);       \
-		if unlikely(!pdyn_Foo)                                 \
-			goto err;                                          \
-	}	__WHILE0
 
 PRIVATE bool DCALL nt_futex_try_initialize_WaitOnAddress(void) {
 	HMODULE hKernelBase;
@@ -536,13 +507,94 @@ PRIVATE void DCALL nt_futex_initialize_subsystem(void) {
 		nt_futex_do_initialize_subsystem();
 	});
 }
-
 #endif /* DeeFutex_USE_WaitOnAddress_OR_CONDITION_VARIABLE_AND_SRWLOCK_OR_CreateSemaphoreW */
 
 
 
-#ifdef DeeFutex_USES_CONTROL_STRUCTURE
 
+/* Even when the OS is providing a native futex API, we still need a way to keep track of
+ * threads that are currently inside blocking system calls to futex functions. This is because
+ * we need a way to know which thread is blocked-on (or about to be blocked-on) which address,
+ * so we're able to send sporadic wake-up signals to blocking threads in `DeeThread_Interrupt'
+ *
+ * This is needed because, while we're able to interrupt blocking threads through various
+ * different OS-specific means, all of these means only work to interrupt a thread that is
+ * already in kernel-space.
+ * 
+ * NOTE: The race condition where the thread in question may yet to have reached the point
+ *       where it is actually able to receive `os_futex_wakeall()' signals (but is already
+ *       apart of the wait-list) is solved because we simply keep on waking all threads on
+ *       the to-be woken thread's address until the thread we are trying to wake no longer
+ *       appears in the global list of waiting threads. */
+#ifdef DeeFutex_USES_OS_FUTEX_WAIT_LIST
+struct os_futex_wait_entry;
+LIST_HEAD(os_futex_wait_list_struct, os_futex_wait_entry);
+struct os_futex_wait_entry {
+	LIST_ENTRY(os_futex_wait_entry) ofwe_link; /* [1..1][lock(os_futex_wait_lock)] Link in list of waiting threads */
+	DeeThreadObject                *ofwe_thrd; /* [1..1][const] The thread that is waiting. */
+	uintptr_t                       ofwe_addr; /* [const] Address that this thread is waiting on */
+};
+
+/* [lock(os_futex_wait_lock)][0..n] List of threads that are currently waiting on futex addresses. */
+PRIVATE struct os_futex_wait_list_struct os_futex_wait_list = LIST_HEAD_INITIALIZER(os_futex_wait_list);
+PRIVATE Dee_atomic_lock_t /*          */ os_futex_wait_lock = DEE_ATOMIC_LOCK_INIT;
+
+#define os_futex_wait_begin(addr)                                       \
+	do {                                                                \
+		struct os_futex_wait_entry _ofwe_entry;                         \
+		_ofwe_entry.ofwe_addr = (uintptr_t)(addr);                      \
+		_ofwe_entry.ofwe_thrd = DeeThread_Self();                       \
+		Dee_atomic_lock_acquire(&os_futex_wait_lock);                   \
+		LIST_INSERT_HEAD(&os_futex_wait_list, &_ofwe_entry, ofwe_link); \
+		Dee_atomic_lock_release(&os_futex_wait_lock);                   \
+		do
+#define os_futex_wait_break()                         \
+	do {                                              \
+		Dee_atomic_lock_acquire(&os_futex_wait_lock); \
+		LIST_REMOVE(&_ofwe_entry, ofwe_link);         \
+		Dee_atomic_lock_release(&os_futex_wait_lock); \
+	}	__WHILE0
+#define os_futex_wait_end()    \
+		__WHILE0;              \
+		os_futex_wait_break(); \
+	}	__WHILE0
+
+INTERN NONNULL((1)) void DCALL
+os_futex_wait_list_wakethread(DeeThreadObject *thread) {
+	/* Search for entries regarding `thread' */
+	for (;;) {
+		struct os_futex_wait_entry *ent;
+		bool found_thread = false;
+		Dee_atomic_lock_acquire(&os_futex_wait_lock);
+		LIST_FOREACH (ent, &os_futex_wait_list, ofwe_link) {
+			if (ent->ofwe_thrd == thread) {
+				void *addr = (void *)ent->ofwe_addr;
+				Dee_atomic_lock_release(&os_futex_wait_lock);
+#ifdef DeeFutex_USE_WaitOnAddress_OR_CONDITION_VARIABLE_AND_SRWLOCK_OR_CreateSemaphoreW
+				WakeByAddressAll(addr);
+#else /* DeeFutex_USE_WaitOnAddress_OR_CONDITION_VARIABLE_AND_SRWLOCK_OR_CreateSemaphoreW */
+				os_futex_wakeall(addr);
+#endif /* !DeeFutex_USE_WaitOnAddress_OR_CONDITION_VARIABLE_AND_SRWLOCK_OR_CreateSemaphoreW */
+				found_thread = true;
+				break;
+			}
+		}
+		if (!found_thread) {
+			Dee_atomic_lock_release(&os_futex_wait_lock);
+			break;
+		}
+
+		/* Yield a bit so `thread' will hopefully get a quantum. */
+		SCHED_YIELD();
+		SCHED_YIELD();
+		SCHED_YIELD();
+	}
+}
+#endif /* DeeFutex_USES_OS_FUTEX_WAIT_LIST */
+
+
+
+#ifdef DeeFutex_USES_CONTROL_STRUCTURE
 PRIVATE NONNULL((1)) void DCALL
 futex_controller_do_destroy(struct futex_controller *__restrict self) {
 #ifdef DeeFutex_USE_os_futex_32_only
@@ -552,9 +604,6 @@ futex_controller_do_destroy(struct futex_controller *__restrict self) {
 	 *       the futex controller couldn't have been created in the first place if
 	 *       the implementation wasn't known. */
 	switch (nt_futex_implementation) {
-	case NT_FUTEX_IMPLEMENTATION_WAITONADDRESS:
-		/* Nothing to do here. */
-		break;
 	case NT_FUTEX_IMPLEMENTATION_COND_AND_CRIT:
 		/* Neither CONDITION_VARIABLEs, nor SWRLOCKs have destructors. */
 		break;
@@ -589,9 +638,6 @@ futex_controller_do_new_impl(void) {
 	result->fc_word = 0;
 #elif defined(DeeFutex_USE_WaitOnAddress_OR_CONDITION_VARIABLE_AND_SRWLOCK_OR_CreateSemaphoreW)
 	switch (nt_futex_implementation) {
-	case NT_FUTEX_IMPLEMENTATION_WAITONADDRESS:
-		result->fc_nt_word = 0;
-		break;
 	case NT_FUTEX_IMPLEMENTATION_COND_AND_CRIT:
 		/* Neither CONDITION_VARIABLEs, nor SWRLOCKs have destructors. */
 		InitializeConditionVariable(&result->fc_nt_cond_crit.cc_cond);
@@ -782,11 +828,6 @@ futex_controller_wakeall(struct futex_controller *__restrict self) {
 #elif defined(DeeFutex_USE_WaitOnAddress_OR_CONDITION_VARIABLE_AND_SRWLOCK_OR_CreateSemaphoreW)
 	switch (nt_futex_implementation) {
 
-	case NT_FUTEX_IMPLEMENTATION_WAITONADDRESS:
-		atomic_inc(&self->fc_nt_word);
-		WakeByAddressAll(&self->fc_nt_word);
-		break;
-
 	case NT_FUTEX_IMPLEMENTATION_COND_AND_CRIT:
 		AcquireSRWLockExclusive(&self->fc_nt_cond_crit.cc_lock);
 		WakeAllConditionVariable(&self->fc_nt_cond_crit.cc_cond);
@@ -831,20 +872,53 @@ again:
 		goto again;
 	}
 }
+#endif /* DeeFutex_USES_CONTROL_STRUCTURE */
 
-INTERN void DCALL DeeFutex_WakeGlobal(void) {
+
+#if (defined(DeeFutex_USES_OS_FUTEX_WAIT_LIST) || \
+     defined(DeeFutex_USES_CONTROL_STRUCTURE))
+INTERN NONNULL((1)) void DCALL
+DeeFutex_WakeGlobal(DeeThreadObject *thread) {
+	(void)thread;
+
+	/* Search for the thread in the OS futex wait list */
+#ifdef DeeFutex_USES_OS_FUTEX_WAIT_LIST
+#ifdef DeeFutex_USE_WaitOnAddress_OR_CONDITION_VARIABLE_AND_SRWLOCK_OR_CreateSemaphoreW
+	switch (nt_futex_implementation) {
+
+	case NT_FUTEX_IMPLEMENTATION_UNINITIALIZED:
+		/* If not yet initialized, there can't be *any* threads waiting *anywhere* */
+		return;
+
+	case NT_FUTEX_IMPLEMENTATION_WAITONADDRESS:
+		/* If the WaitOnAddress implementation is selected, futex controllers below go completely unused */
+		os_futex_wait_list_wakethread(thread);
+		return;
+
+	default: break;
+	}
+#else /* DeeFutex_USE_WaitOnAddress_OR_CONDITION_VARIABLE_AND_SRWLOCK_OR_CreateSemaphoreW */
+	os_futex_wait_list_wakethread(thread);
+#endif /* !DeeFutex_USE_WaitOnAddress_OR_CONDITION_VARIABLE_AND_SRWLOCK_OR_CreateSemaphoreW */
+#endif /* DeeFutex_USES_OS_FUTEX_WAIT_LIST */
+
+	/* Wake all threads connected to a futex control structure. */
+#ifdef DeeFutex_USES_CONTROL_STRUCTURE
 	atomic_rwlock_read(&fcont_lock);
 	if (fcont_tree != NULL)
 		futex_controller_wakeall_tree(fcont_tree);
 	atomic_rwlock_endread(&fcont_lock);
+#endif /* DeeFutex_USES_CONTROL_STRUCTURE */
 }
-
-#else /* DeeFutex_USES_CONTROL_STRUCTURE */
-INTERN void DCALL DeeFutex_WakeGlobal(void) {
+#else /* ... */
+INTERN NONNULL((1)) void DCALL
+DeeFutex_WakeGlobal(DeeThreadObject *thread) {
+	(void)thread;
 	/* No-op */
 	COMPILER_IMPURE();
 }
-#endif /* !DeeFutex_USES_CONTROL_STRUCTURE */
+#endif /* !... */
+
 
 /* Define the high-level implementations for futex operations
  * (using multi-include source files to prevent redundancy) */

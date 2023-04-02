@@ -52,6 +52,54 @@ PUBLIC NONNULL((1)) void
 #elif defined(DeeFutex_USE_stub) || defined(DeeFutex_USE_yield)
 	(void)addr;
 	COMPILER_IMPURE();
+#elif defined(DeeFutex_USE_WaitOnAddress_OR_CONDITION_VARIABLE_AND_SRWLOCK_OR_CreateSemaphoreW)
+	DREF struct futex_controller *ctrl;
+	switch (nt_futex_implementation) {
+
+	case NT_FUTEX_IMPLEMENTATION_UNINITIALIZED:
+		return; /* Not initialized -> no-one can be waiting *anywhere* */
+
+	case NT_FUTEX_IMPLEMENTATION_WAITONADDRESS:
+#ifdef LOCAL_IS_ONE
+		WakeByAddressSingle(addr);
+#else /* LOCAL_IS_ONE */
+		WakeByAddressAll(addr);
+#endif /* !LOCAL_IS_ONE */
+		return;
+
+	case NT_FUTEX_IMPLEMENTATION_COND_AND_CRIT: {
+		ctrl = futex_ataddr_get((uintptr_t)addr);
+		if (!ctrl)
+			return; /* No-one is waiting here... */
+		AcquireSRWLockExclusive(&ctrl->fc_nt_cond_crit.cc_lock);
+#ifdef LOCAL_IS_ONE
+		WakeConditionVariable(&ctrl->fc_nt_cond_crit.cc_cond);
+#else /* LOCAL_IS_ONE */
+		WakeAllConditionVariable(&ctrl->fc_nt_cond_crit.cc_cond);
+#endif /* !LOCAL_IS_ONE */
+		ReleaseSRWLockExclusive(&ctrl->fc_nt_cond_crit.cc_lock);
+	}	break;
+
+	case NT_FUTEX_IMPLEMENTATION_SEMAPHORE: {
+		DWORD dwWaitingThreads;
+		ctrl = futex_ataddr_get((uintptr_t)addr);
+		if (!ctrl)
+			return; /* No-one is waiting here... */
+		dwWaitingThreads = atomic_read(&ctrl->fc_nt_sem.sm_dwThreads);
+		if likely(dwWaitingThreads > 0) {
+#ifdef LOCAL_IS_ONE
+			(void)ReleaseSemaphore(ctrl->fc_nt_sem.sm_hSemaphore, 1, NULL);
+#else /* LOCAL_IS_ONE */
+			(void)ReleaseSemaphore(ctrl->fc_nt_sem.sm_hSemaphore, dwWaitingThreads, NULL);
+#endif /* !LOCAL_IS_ONE */
+		}
+	}	break;
+
+	default: __builtin_unreachable();
+	}
+
+	/* Drop the reference we got from `futex_ataddr_get' */
+	futex_controller_decref(ctrl);
 #elif defined(DeeFutex_USES_CONTROL_STRUCTURE)
 	DREF struct futex_controller *ctrl;
 #ifdef DeeFutex_USE_os_futex_32_only
@@ -79,42 +127,6 @@ PUBLIC NONNULL((1)) void
 #ifdef DeeFutex_USE_os_futex_32_only
 	atomic_inc(&ctrl->fc_word);
 	(void)LOCAL_os_futex_wake(&ctrl->fc_word);
-#elif defined(DeeFutex_USE_WaitOnAddress_OR_CONDITION_VARIABLE_AND_SRWLOCK_OR_CreateSemaphoreW)
-	switch (nt_futex_implementation) {
-
-	case NT_FUTEX_IMPLEMENTATION_WAITONADDRESS: {
-		atomic_inc(&ctrl->fc_nt_word);
-#ifdef LOCAL_IS_ONE
-		WakeByAddressSingle(&ctrl->fc_nt_word);
-#else /* LOCAL_IS_ONE */
-		WakeByAddressAll(&ctrl->fc_nt_word);
-#endif /* !LOCAL_IS_ONE */
-	}	break;
-
-	case NT_FUTEX_IMPLEMENTATION_COND_AND_CRIT: {
-		AcquireSRWLockExclusive(&ctrl->fc_nt_cond_crit.cc_lock);
-#ifdef LOCAL_IS_ONE
-		WakeConditionVariable(&ctrl->fc_nt_cond_crit.cc_cond);
-#else /* LOCAL_IS_ONE */
-		WakeAllConditionVariable(&ctrl->fc_nt_cond_crit.cc_cond);
-#endif /* !LOCAL_IS_ONE */
-		ReleaseSRWLockExclusive(&ctrl->fc_nt_cond_crit.cc_lock);
-	}	break;
-
-	case NT_FUTEX_IMPLEMENTATION_SEMAPHORE: {
-		DWORD dwWaitingThreads;
-		dwWaitingThreads = atomic_read(&ctrl->fc_nt_sem.sm_dwThreads);
-		if likely(dwWaitingThreads > 0) {
-#ifdef LOCAL_IS_ONE
-			(void)ReleaseSemaphore(ctrl->fc_nt_sem.sm_hSemaphore, 1, NULL);
-#else /* LOCAL_IS_ONE */
-			(void)ReleaseSemaphore(ctrl->fc_nt_sem.sm_hSemaphore, dwWaitingThreads, NULL);
-#endif /* !LOCAL_IS_ONE */
-		}
-	}	break;
-
-	default: __builtin_unreachable();
-	}
 #elif defined(DeeFutex_USE_pthread_cond_t_AND_pthread_mutex_t)
 	(void)pthread_mutex_lock(&ctrl->fc_mutx);
 #ifdef LOCAL_IS_ONE
