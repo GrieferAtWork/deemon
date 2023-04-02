@@ -255,7 +255,7 @@ USet_InitEmpty(USet *__restrict self) {
 	self->us_size = 0;
 	self->us_used = 0;
 	self->us_elem = empty_set_items;
-	atomic_rwlock_init(&self->us_lock);
+	Dee_atomic_rwlock_init(&self->us_lock);
 	weakref_support_init(self);
 	return 0;
 }
@@ -563,7 +563,7 @@ USet_InitSequence(USet *__restrict self,
 	if (type == &DeeHashSet_Type) {
 		DeeHashSetObject *src;
 		src = (DeeHashSetObject *)sequence;
-		atomic_rwlock_init(&self->us_lock);
+		Dee_atomic_rwlock_init(&self->us_lock);
 again_hashset:
 		DeeHashSet_LockRead(src);
 		self->us_used = self->us_size = src->hs_used;
@@ -595,7 +595,7 @@ again_hashset:
 	}
 	if (type == &URoSet_Type) {
 		URoSet *src = (URoSet *)sequence;
-		atomic_rwlock_init(&self->us_lock);
+		Dee_atomic_rwlock_init(&self->us_lock);
 		self->us_used = self->us_size = src->urs_size;
 		if unlikely(!self->us_size) {
 			self->us_mask = 0;
@@ -617,7 +617,7 @@ again_hashset:
 		size_t i;
 		DeeRoSetObject *src;
 		src = (DeeRoSetObject *)sequence;
-		atomic_rwlock_init(&self->us_lock);
+		Dee_atomic_rwlock_init(&self->us_lock);
 		self->us_used = self->us_size = src->rs_size;
 		if unlikely(!self->us_size) {
 			self->us_mask = 0;
@@ -684,7 +684,7 @@ again_hashset:
 				}
 				USet_DoInsertUnlocked(self, key);
 			}
-			atomic_rwlock_init(&self->us_lock);
+			Dee_atomic_rwlock_init(&self->us_lock);
 			weakref_support_init(self);
 			return 0;
 		}
@@ -767,7 +767,7 @@ PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 USet_InitCopy(USet *__restrict self,
               USet *__restrict other) {
 	struct uset_item *iter, *end;
-	atomic_rwlock_init(&self->us_lock);
+	Dee_atomic_rwlock_init(&self->us_lock);
 again:
 	USet_LockRead(other);
 	self->us_mask = other->us_mask;

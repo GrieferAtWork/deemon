@@ -861,7 +861,7 @@ enumattriter_setup(EnumAttrIter *__restrict self,
 	self->ei_seq = seq;
 	Dee_Incref(seq);
 #ifdef CONFIG_LONGJMP_ENUMATTR
-	atomic_lock_init(&self->ei_lock);
+	Dee_atomic_lock_init(&self->ei_lock);
 	/* Set the buffer pointer to its initial state. */
 	self->ei_bufpos = NULL;
 #else /* CONFIG_LONGJMP_ENUMATTR */
@@ -1180,7 +1180,7 @@ enumattriter_next(EnumAttrIter *__restrict self) {
 	int error;
 	/* Quick check: is the iterator exhausted. */
 again_locked:
-	atomic_lock_acquire(&self->ei_lock);
+	DeeEnumAttrIterator_LockAcquire(self);
 again:
 	/* Check for case: Iterator exhausted. */
 	if (self->ei_bufpos == (DREF Attr **)ITER_DONE)
@@ -1208,7 +1208,7 @@ again:
 		DeeSystem_LongJmp(self->ei_continue, CNTSIG_CONTINUE);
 	/* Handle signal return signals from the enumeration sub-routine. */
 	if (error == BRKSIG_COLLECT) {
-		atomic_lock_release(&self->ei_lock);
+		DeeEnumAttrIterator_LockRelease(self);
 		if (Dee_CollectMemory(sizeof(Attr)))
 			goto again_locked;
 		return NULL;
@@ -1224,7 +1224,7 @@ again:
 iter_done:
 	result = (Attr *)ITER_DONE;
 done:
-	atomic_lock_release(&self->ei_lock);
+	DeeEnumAttrIterator_LockRelease(self);
 	return result;
 #else /* CONFIG_LONGJMP_ENUMATTR */
 	DREF Attr **presult;

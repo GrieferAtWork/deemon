@@ -144,7 +144,7 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 list_ctor(List *__restrict self) {
 	weakref_support_init(self);
 	Dee_objectlist_init(&self->l_list);
-	atomic_rwlock_init(&self->l_lock);
+	Dee_atomic_rwlock_init(&self->l_lock);
 	return 0;
 }
 
@@ -155,7 +155,7 @@ list_copy(List *__restrict me,
 	size_t count;
 	ASSERT(me != other);
 	weakref_support_init(me);
-	atomic_rwlock_init(&me->l_lock);
+	Dee_atomic_rwlock_init(&me->l_lock);
 again:
 	DeeList_LockRead(other);
 	count  = other->l_list.ol_elemc;
@@ -268,7 +268,7 @@ do_realloc:
 	me->l_list.ol_elemc = elemc;
 	_DeeList_SetAlloc(me, elema);
 	weakref_support_init(me);
-	atomic_rwlock_init(&me->l_lock);
+	Dee_atomic_rwlock_init(&me->l_lock);
 	return 0;
 err:
 	elemv = Dee_Decrefv(elemv, elemc);
@@ -286,7 +286,7 @@ DeeList_NewHint(size_t n_prealloc) {
 	_DeeList_SetAlloc(result, n_prealloc);
 	result->l_list.ol_elemc  = 0;
 	weakref_support_init(result);
-	atomic_rwlock_init(&result->l_lock);
+	Dee_atomic_rwlock_init(&result->l_lock);
 	if likely(n_prealloc) {
 		result->l_list.ol_elemv = (DREF DeeObject **)Dee_TryMallocc(n_prealloc, sizeof(DREF DeeObject *));
 		if unlikely(!result->l_list.ol_elemv)
@@ -312,7 +312,7 @@ DeeList_NewUninitialized(size_t n_elem) {
 	_DeeList_SetAlloc(result, n_elem);
 	result->l_list.ol_elemc  = n_elem;
 	weakref_support_init(result);
-	atomic_rwlock_init(&result->l_lock);
+	Dee_atomic_rwlock_init(&result->l_lock);
 	/*DeeGC_Track((DeeObject *)result);*/ /* The caller must do this */
 done:
 	return (DREF DeeObject *)result;
@@ -361,7 +361,7 @@ DeeList_FromSequence(DeeObject *__restrict self) {
 	if (Dee_objectlist_init_fromseq(&result->l_list, self) != 0)
 		goto err_r;
 	weakref_support_init(result);
-	atomic_rwlock_init(&result->l_lock);
+	Dee_atomic_rwlock_init(&result->l_lock);
 	DeeObject_Init(result, &DeeList_Type);
 	DeeGC_Track((DeeObject *)result);
 	return (DREF DeeObject *)result;
@@ -436,7 +436,7 @@ DeeList_NewVectorInheritedHeap(/*inherit(on_success)*/ DREF DeeObject **objv,
 #endif /* !... */
 	DeeObject_Init(result, &DeeList_Type);
 	weakref_support_init(result);
-	atomic_rwlock_init(&result->l_lock);
+	Dee_atomic_rwlock_init(&result->l_lock);
 	DeeGC_Track((DeeObject *)result);
 done:
 	return (DREF DeeObject *)result;
@@ -468,7 +468,7 @@ DeeList_Copy(DeeObject *__restrict self) {
 		goto err_r;
 	DeeObject_Init(result, &DeeList_Type);
 	weakref_support_init(result);
-	atomic_rwlock_init(&result->l_lock);
+	Dee_atomic_rwlock_init(&result->l_lock);
 	DeeGC_Track((DeeObject *)result);
 done:
 	return (DREF DeeObject *)result;
@@ -576,7 +576,7 @@ allocate_new_vector:
 		result->l_list.ol_elemc = list_size + argc;
 		_DeeList_SetAlloc(result, list_size + argc);
 		weakref_support_init(result);
-		atomic_rwlock_init(&result->l_lock);
+		Dee_atomic_rwlock_init(&result->l_lock);
 		DeeGC_Track((DeeObject *)result);
 	}
 	return (DREF DeeObject *)result;
@@ -1254,7 +1254,7 @@ list_init_sequence(List *__restrict self,
 		self->l_list.ol_elemc = fast_size;
 		_DeeList_SetAlloc(self, fast_size);
 		weakref_support_init(self);
-		atomic_rwlock_init(&self->l_lock);
+		Dee_atomic_rwlock_init(&self->l_lock);
 		return 0;
 err_elem:
 		Dee_Decrefv(elem, i);
@@ -1298,7 +1298,7 @@ list_init(List *__restrict self,
 		self->l_list.ol_elemc = list_size;
 		_DeeList_SetAlloc(self, list_size);
 		weakref_support_init(self);
-		atomic_rwlock_init(&self->l_lock);
+		Dee_atomic_rwlock_init(&self->l_lock);
 		return 0;
 	}
 	return list_init_sequence(self, sequence);
@@ -1477,7 +1477,7 @@ again:
 	result->l_list.ol_elemc = (size_t)end;
 	_DeeList_SetAlloc(result, (size_t)end);
 	weakref_support_init(result);
-	atomic_rwlock_init(&result->l_lock);
+	Dee_atomic_rwlock_init(&result->l_lock);
 	result->l_list.ol_elemv = new_elemv;
 
 	/* Start tracking it as a GC object. */
@@ -1532,7 +1532,7 @@ again:
 	result->l_list.ol_elemc = (size_t)new_size;
 	_DeeList_SetAlloc(result, (size_t)new_size);
 	weakref_support_init(result);
-	atomic_rwlock_init(&result->l_lock);
+	Dee_atomic_rwlock_init(&result->l_lock);
 	result->l_list.ol_elemv = new_elemv;
 
 	/* Start tracking it as a GC object. */
@@ -3297,7 +3297,7 @@ again:
 	result->l_list.ol_elemc = res_elemc;
 	_DeeList_SetAlloc(result, res_elemc);
 	weakref_support_init(result);
-	atomic_rwlock_init(&result->l_lock);
+	Dee_atomic_rwlock_init(&result->l_lock);
 	DeeObject_Init(result, &DeeList_Type);
 	DeeGC_Track((DeeObject *)result);
 	return result;

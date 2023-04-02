@@ -90,7 +90,7 @@ ri_ctor(RangeIterator *__restrict self) {
 	self->ri_step  = NULL;
 	self->ri_first = true;
 	Dee_Incref(Dee_None);
-	atomic_rwlock_init(&self->ri_lock);
+	Dee_atomic_rwlock_init(&self->ri_lock);
 	return 0;
 err:
 	return -1;
@@ -111,7 +111,7 @@ ri_init(RangeIterator *__restrict self,
 	Dee_Incref(self->ri_index);
 	Dee_Incref(self->ri_range);
 	self->ri_first = true;
-	atomic_rwlock_init(&self->ri_lock);
+	Dee_atomic_rwlock_init(&self->ri_lock);
 	return 0;
 err:
 	return -1;
@@ -141,7 +141,7 @@ again:
 		 * was spun while we were copying its index. */
 		goto again;
 	}
-	atomic_rwlock_init(&self->ri_lock);
+	Dee_atomic_rwlock_init(&self->ri_lock);
 
 	/* Other members are constant, so we don't
 	 * need to bother with synchronizing them. */
@@ -168,7 +168,7 @@ ri_deep(RangeIterator *__restrict self,
 		goto err_r;
 	if (DeeObject_InplaceDeepCopy((DeeObject **)&self->ri_range))
 		goto err_r;
-	atomic_rwlock_init(&self->ri_lock);
+	Dee_atomic_rwlock_init(&self->ri_lock);
 	self->ri_end  = self->ri_range->r_end;
 	self->ri_step = self->ri_range->r_step;
 	return 0;
@@ -496,7 +496,7 @@ range_iter(Range *__restrict self) {
 	Dee_Incref(result->ri_index);
 	Dee_Incref(result->ri_range);
 	result->ri_first = true;
-	atomic_rwlock_init(&result->ri_lock);
+	Dee_atomic_rwlock_init(&result->ri_lock);
 done:
 	return result;
 }

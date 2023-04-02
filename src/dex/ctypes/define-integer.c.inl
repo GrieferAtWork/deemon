@@ -1334,7 +1334,7 @@ INTERN DeeSTypeObject TYPE_NAME = {
 		/* .tp_class_members = */ X(int_class_members)
 	},
 #ifndef CONFIG_NO_THREADS
-	/* .st_cachelock = */ ATOMIC_RWLOCK_INIT,
+	/* .st_cachelock = */ DEE_ATOMIC_RWLOCK_INIT,
 #endif /* !CONFIG_NO_THREADS */
 	/* .st_pointer  = */ NULL,
 	/* .st_lvalue   = */ NULL,

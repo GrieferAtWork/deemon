@@ -153,7 +153,7 @@ suiter_copy(SetUnionIterator *__restrict self,
 	Dee_Decref(iter);
 	if unlikely(!self->sui_iter)
 		goto err;
-	atomic_rwlock_init(&self->sui_lock);
+	Dee_atomic_rwlock_init(&self->sui_lock);
 	self->sui_union = other->sui_union;
 	Dee_Incref(self->sui_union);
 	return 0;
@@ -174,7 +174,7 @@ suiter_deep(SetUnionIterator *__restrict self,
 	Dee_Decref(iter);
 	if unlikely(!self->sui_iter)
 		goto err;
-	atomic_rwlock_init(&self->sui_lock);
+	Dee_atomic_rwlock_init(&self->sui_lock);
 	self->sui_union = (DREF SetUnion *)DeeObject_DeepCopy((DeeObject *)other->sui_union);
 	if unlikely(!self->sui_union)
 		goto err_iter;
@@ -195,7 +195,7 @@ suiter_ctor(SetUnionIterator *__restrict self) {
 	self->sui_iter = DeeObject_IterSelf(self->sui_union->su_a);
 	if unlikely(!self->sui_iter)
 		goto err_union;
-	atomic_rwlock_init(&self->sui_lock);
+	Dee_atomic_rwlock_init(&self->sui_lock);
 	self->sui_in2nd = false;
 	return 0;
 err_union:
@@ -214,7 +214,7 @@ suiter_init(SetUnionIterator *__restrict self,
 	if ((self->sui_iter = DeeObject_IterSelf(self->sui_union->su_a)) == NULL)
 		goto err;
 	Dee_Incref(self->sui_union);
-	atomic_rwlock_init(&self->sui_lock);
+	Dee_atomic_rwlock_init(&self->sui_lock);
 	self->sui_in2nd = false;
 	return 0;
 err:
@@ -589,7 +589,7 @@ su_iter(SetUnion *__restrict self) {
 	result->sui_iter = DeeObject_IterSelf(self->su_a);
 	if unlikely(!result->sui_iter)
 		goto err_r;
-	atomic_rwlock_init(&result->sui_lock);
+	Dee_atomic_rwlock_init(&result->sui_lock);
 	result->sui_in2nd = false;
 	result->sui_union = self;
 	Dee_Incref(self);
@@ -849,7 +849,7 @@ ssd_iter(SetSymmetricDifference *__restrict self) {
 	result->ssd_iter = DeeObject_IterSelf(self->ssd_a);
 	if unlikely(!result->ssd_iter)
 		goto err_r;
-	atomic_rwlock_init(&result->ssd_lock);
+	Dee_atomic_rwlock_init(&result->ssd_lock);
 	result->ssd_in2nd = false;
 	result->ssd_set   = self;
 	Dee_Incref(self);

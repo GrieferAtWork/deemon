@@ -102,7 +102,7 @@ typedef struct {
 
 PRIVATE FUNC(Slab) FUNC(slab) = {
 #ifndef CONFIG_NO_THREADS
-	/* .s_lock = */ ATOMIC_LOCK_INIT,
+	/* .s_lock = */ DEE_ATOMIC_LOCK_INIT,
 #endif /* !CONFIG_NO_THREADS */
 	/* .s_free = */ SLAB_PAGE_INVALID,
 	/* .s_full = */ SLAB_PAGE_INVALID,
@@ -183,7 +183,7 @@ FUNC(DeeSlab_StatSlab)(DeeSlabInfo *__restrict info) {
 	info->si_totalpages     = total_pages;
 	info->si_totalitems     = total_pages * SLAB_ITEMCOUNT;
 #ifdef CONFIG_NO_OBJECT_SLAB_STATS
-	atomic_lock_acquire(&FUNC(slab).s_lock);
+	Dee_atomic_lock_acquire(&FUNC(slab).s_lock);
 	{
 		size_t freepages     = 0;
 		size_t freeitems     = 0;
@@ -201,13 +201,13 @@ FUNC(DeeSlab_StatSlab)(DeeSlabInfo *__restrict info) {
 		info->si_cur_alloc     = (freepages * SLAB_ITEMCOUNT) - freeitems;
 		info->si_cur_alloc += info->si_cur_fullpages * SLAB_ITEMCOUNT;
 	}
-	atomic_lock_release(&FUNC(slab).s_lock);
+	Dee_atomic_lock_release(&FUNC(slab).s_lock);
 	info->si_max_alloc     = info->si_cur_alloc;
 	info->si_max_free      = info->si_cur_free;
 	info->si_max_fullpages = info->si_cur_fullpages;
 	info->si_max_freepages = info->si_cur_freepages;
 #else /* CONFIG_NO_OBJECT_SLAB_STATS */
-	atomic_lock_acquire(&FUNC(slab).s_lock);
+	Dee_atomic_lock_acquire(&FUNC(slab).s_lock);
 read_again:
 	COMPILER_READ_BARRIER();
 	info->si_cur_alloc = atomic_read(&FUNC(slab).s_num_alloc);
@@ -235,7 +235,7 @@ read_again:
 		goto read_again;
 	if (tail != (uintptr_t)atomic_read(&FUNC(slab).s_tail))
 		goto read_again;
-	atomic_lock_release(&FUNC(slab).s_lock);
+	Dee_atomic_lock_release(&FUNC(slab).s_lock);
 	info->si_usedpages = (tail - MY_REGION_START) / CONFIG_SLAB_PAGESIZE;
 	info->si_tailpages = (MY_REGION_END - tail) / CONFIG_SLAB_PAGESIZE;
 	if (info->si_max_freepages > info->si_usedpages)
@@ -265,12 +265,12 @@ read_again:
 #ifndef CONFIG_NO_OBJECT_SLAB_STATS
 LOCAL void DCALL
 FUNC(DeeSlab_ResetStatSlab)(void) {
-	atomic_lock_acquire(&FUNC(slab).s_lock);
+	Dee_atomic_lock_acquire(&FUNC(slab).s_lock);
 	atomic_write(&FUNC(slab).s_max_free, atomic_read(&FUNC(slab).s_num_free));
 	atomic_write(&FUNC(slab).s_max_alloc, atomic_read(&FUNC(slab).s_num_alloc));
 	atomic_write(&FUNC(slab).s_max_fullpages, atomic_read(&FUNC(slab).s_num_fullpages));
 	atomic_write(&FUNC(slab).s_max_freepages, atomic_read(&FUNC(slab).s_num_freepages));
-	atomic_lock_release(&FUNC(slab).s_lock);
+	Dee_atomic_lock_release(&FUNC(slab).s_lock);
 }
 #endif /* !CONFIG_NO_OBJECT_SLAB_STATS */
 
@@ -297,7 +297,7 @@ again:
 			/* Got it! */
 			if (atomic_decfetch(&page->sp_free) == 0) {
 				/* Try to remove this page from the set of available pages. */
-				atomic_lock_acquire(&FUNC(slab).s_lock);
+				Dee_atomic_lock_acquire(&FUNC(slab).s_lock);
 				COMPILER_READ_BARRIER();
 				if (atomic_read(&page->sp_free) == 0) {
 					if ((*page->sp_pself = page->sp_next) != SLAB_PAGE_INVALID)
@@ -309,7 +309,7 @@ again:
 					DEC_MAXPAIR(FUNC(slab).s_num_freepages, FUNC(slab).s_max_freepages);
 					INC_MAXPAIR(FUNC(slab).s_num_fullpages, FUNC(slab).s_max_fullpages);
 				}
-				atomic_lock_release(&FUNC(slab).s_lock);
+				Dee_atomic_lock_release(&FUNC(slab).s_lock);
 			}
 			DEC_MAXPAIR(FUNC(slab).s_num_free, FUNC(slab).s_max_free);
 			INC_MAXPAIR(FUNC(slab).s_num_alloc, FUNC(slab).s_max_alloc);
@@ -366,7 +366,7 @@ again:
 
 #if SLAB_ITEMCOUNT >= 2
 	/* Remember the newly allocated page as containing free elements. */
-	atomic_lock_acquire(&FUNC(slab).s_lock);
+	Dee_atomic_lock_acquire(&FUNC(slab).s_lock);
 	COMPILER_READ_BARRIER();
 	if ((page->sp_next = FUNC(slab).s_free) != SLAB_PAGE_INVALID)
 		FUNC(slab).s_free->sp_pself = &page->sp_next;
@@ -374,7 +374,7 @@ again:
 	FUNC(slab).s_free = page;
 	INC_MAXPAIR(FUNC(slab).s_num_freepages,
 	            FUNC(slab).s_max_freepages);
-	atomic_lock_release(&FUNC(slab).s_lock);
+	Dee_atomic_lock_release(&FUNC(slab).s_lock);
 	INC_MAXPAIR(FUNC(slab).s_num_alloc,
 	            FUNC(slab).s_max_alloc);
 	ADD_MAXPAIR(FUNC(slab).s_num_free,
@@ -427,7 +427,7 @@ FORCELOCAL void
 		/* Mark the new item as free */
 		if (atomic_fetchinc(&page->sp_free) == 0) {
 			/* Add the page to the set to of pages with available items. */
-			atomic_lock_acquire(&FUNC(slab).s_lock);
+			Dee_atomic_lock_acquire(&FUNC(slab).s_lock);
 			COMPILER_READ_BARRIER();
 			if (atomic_read(&page->sp_free) != 0) {
 				if ((*page->sp_pself = page->sp_next) != SLAB_PAGE_INVALID)
@@ -439,7 +439,7 @@ FORCELOCAL void
 				DEC_MAXPAIR(FUNC(slab).s_num_fullpages, FUNC(slab).s_max_fullpages);
 				INC_MAXPAIR(FUNC(slab).s_num_freepages, FUNC(slab).s_max_freepages);
 			}
-			atomic_lock_release(&FUNC(slab).s_lock);
+			Dee_atomic_lock_release(&FUNC(slab).s_lock);
 		}
 	}
 #ifdef NEXT_LARGER

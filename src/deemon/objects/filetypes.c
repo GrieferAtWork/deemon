@@ -50,7 +50,7 @@ typedef DeeFileWriterObject Writer;
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 mf_init(MemoryFile *__restrict self) {
-	atomic_rwlock_init(&self->mf_lock);
+	Dee_atomic_rwlock_init(&self->mf_lock);
 	self->mf_begin = NULL;
 	self->mf_ptr   = NULL;
 	self->mf_end   = NULL;
@@ -310,7 +310,7 @@ DeeFile_OpenRoMemory(void const *data, size_t data_size) {
 	result->mf_begin = (char *)data;
 	result->mf_end   = (char *)data + data_size;
 	result->mf_ptr   = result->mf_begin;
-	atomic_rwlock_init(&result->mf_lock);
+	Dee_atomic_rwlock_init(&result->mf_lock);
 	DeeObject_Init(result, &DeeMemoryFile_Type);
 done:
 	return (DREF DeeObject *)result;
@@ -641,7 +641,7 @@ reader_visit(Reader *__restrict self, dvisit_t proc, void *arg) {
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 reader_ctor(Reader *__restrict self) {
-	atomic_rwlock_init(&self->r_lock);
+	Dee_atomic_rwlock_init(&self->r_lock);
 	self->r_owner = NULL;
 	self->r_begin = NULL;
 	self->r_ptr   = NULL;
@@ -668,7 +668,7 @@ reader_init(Reader *__restrict self,
 
 	/* Fill in members. */
 	Dee_Incref(self->r_owner);
-	atomic_rwlock_init(&self->r_lock);
+	Dee_atomic_rwlock_init(&self->r_lock);
 	self->r_begin = (char *)self->r_buffer.bb_base + begin;
 	self->r_end   = (char *)self->r_buffer.bb_base + end;
 	self->r_ptr   = self->r_begin;
@@ -772,7 +772,7 @@ DeeFile_OpenObjectMemory(DeeObject *__restrict data_owner,
 #ifndef __INTELLISENSE__
 	result->r_buffer.bb_put = NULL; /* Hide the buffer interface component. */
 #endif /* !__INTELLISENSE__ */
-	atomic_rwlock_init(&result->r_lock);
+	Dee_atomic_rwlock_init(&result->r_lock);
 	DeeObject_Init(result, &DeeFileReader_Type);
 done:
 	return (DREF DeeObject *)result;
@@ -804,7 +804,7 @@ DeeFile_OpenObjectBuffer(DeeObject *__restrict data,
 	result->r_begin = (char *)result->r_buffer.bb_base + begin;
 	result->r_end   = (char *)result->r_buffer.bb_base + end;
 	result->r_ptr   = result->r_begin;
-	atomic_rwlock_init(&result->r_lock);
+	Dee_atomic_rwlock_init(&result->r_lock);
 	DeeObject_Init(result, &DeeFileReader_Type);
 done:
 	return (DREF DeeObject *)result;
@@ -820,7 +820,7 @@ err_r:
 
 PRIVATE /*WUNUSED*/ NONNULL((1)) int DCALL
 writer_ctor(Writer *__restrict self) {
-	atomic_rwlock_init(&self->w_lock);
+	Dee_atomic_rwlock_init(&self->w_lock);
 	unicode_printer_init(&self->w_printer);
 	self->w_string = NULL;
 	return 0;
@@ -833,7 +833,7 @@ writer_init(Writer *__restrict self, size_t argc, DeeObject *const *argv) {
 		goto err;
 	if (DeeObject_AssertTypeExact(init_string, &DeeString_Type))
 		goto err;
-	atomic_rwlock_init(&self->w_lock);
+	Dee_atomic_rwlock_init(&self->w_lock);
 	self->w_printer.up_flags = (uint8_t)DeeString_WIDTH(init_string);
 	if (self->w_printer.up_flags == STRING_WIDTH_1BYTE) {
 		self->w_string            = NULL;

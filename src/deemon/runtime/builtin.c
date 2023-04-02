@@ -103,7 +103,7 @@ INTERN struct static_module_struct deemon_module_head = {
 		/* .mo_globalv   = */ builtin_object_vector,
 		/* .mo_root      = */ &empty_code,
 #ifndef CONFIG_NO_THREADS
-		/* .mo_lock      = */ ATOMIC_RWLOCK_INIT,
+		/* .mo_lock      = */ DEE_ATOMIC_RWLOCK_INIT,
 		/* .mo_loader    = */ NULL,
 #endif /* !CONFIG_NO_THREADS */
 #ifndef CONFIG_NO_DEC

@@ -66,6 +66,14 @@ struct Dee_traceback_object {
 	                                                               *       Frames who's stack has yet to be duplicated have a `cf_sp = cf_stack = NULL', `cf_stacksz = 0'. */
 };
 
+#define DeeTraceback_LockAvailable(self)  Dee_atomic_lock_available(&(self)->tb_lock)
+#define DeeTraceback_LockAcquired(self)   Dee_atomic_lock_acquired(&(self)->tb_lock)
+#define DeeTraceback_LockTryAcquire(self) Dee_atomic_lock_tryacquire(&(self)->tb_lock)
+#define DeeTraceback_LockAcquire(self)    Dee_atomic_lock_acquire(&(self)->tb_lock)
+#define DeeTraceback_LockWaitFor(self)    Dee_atomic_lock_waitfor(&(self)->tb_lock)
+#define DeeTraceback_LockRelease(self)    Dee_atomic_lock_release(&(self)->tb_lock)
+
+
 #ifdef CONFIG_BUILDING_DEEMON
 #ifdef GUARD_DEEMON_OBJECTS_TRACEBACK_C
 struct empty_traceback_object {

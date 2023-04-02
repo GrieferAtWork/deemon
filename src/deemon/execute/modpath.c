@@ -1253,7 +1253,7 @@ DeeModule_New(/*String*/ DeeObject *__restrict name) {
 	DeeObject_Init(result, &DeeModule_Type);
 	result->mo_name    = (DeeStringObject *)name;
 	result->mo_bucketv = empty_module_buckets;
-	atomic_rwlock_cinit(&result->mo_lock);
+	Dee_atomic_rwlock_cinit(&result->mo_lock);
 	Dee_Incref(name);
 	weakref_support_init(result);
 	DeeGC_Track((DREF DeeObject *)result);
@@ -2952,7 +2952,7 @@ DeeExec_CompileModuleStream(DeeObject *source_stream,
 		goto err_module_name;
 	result->mo_name    = (DREF DeeStringObject *)module_name; /* Inherit reference. */
 	result->mo_bucketv = empty_module_buckets;
-	atomic_rwlock_cinit(&result->mo_lock);
+	Dee_atomic_rwlock_cinit(&result->mo_lock);
 	DeeObject_Init(result, &DeeModule_Type);
 	weakref_support_init(result);
 	DeeGC_Track((DREF DeeObject *)result);
@@ -3246,7 +3246,7 @@ PUBLIC DeeListObject DeeModule_Path = {
 	/* .l_list = */ DEE_OBJECTLIST_INIT
 #ifndef CONFIG_NO_THREADS
 	,
-	/* .l_lock = */ ATOMIC_RWLOCK_INIT
+	/* .l_lock = */ DEE_ATOMIC_RWLOCK_INIT
 #endif /* !CONFIG_NO_THREADS */
 };
 

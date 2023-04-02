@@ -183,13 +183,13 @@ typedef struct atomic_rwlock Dee_atomic_rwlock_t;
 #define Dee_atomic_rwlock_canwrite   atomic_rwlock_canwrite
 #define Dee_atomic_rwlock_waitread   atomic_rwlock_waitread
 #define Dee_atomic_rwlock_waitwrite  atomic_rwlock_waitwrite
-#define Dee_atomic_rwlock_read       atomic_rwlock_read
-#define Dee_atomic_rwlock_write      atomic_rwlock_write
+#define Dee_atomic_rwlock_read       atomic_rwlock_read       /* TODO: Refactor code using the hybrid name */
+#define Dee_atomic_rwlock_write      atomic_rwlock_write      /* TODO: Refactor code using the hybrid name */
 #define Dee_atomic_rwlock_tryupgrade atomic_rwlock_tryupgrade
 #define Dee_atomic_rwlock_upgrade    atomic_rwlock_upgrade
 #define Dee_atomic_rwlock_downgrade  atomic_rwlock_downgrade
-#define Dee_atomic_rwlock_endwrite   atomic_rwlock_endwrite
-#define Dee_atomic_rwlock_endread    atomic_rwlock_endread
+#define Dee_atomic_rwlock_endwrite   atomic_rwlock_endwrite   /* TODO: Refactor code using the hybrid name */
+#define Dee_atomic_rwlock_endread    atomic_rwlock_endread    /* TODO: Refactor code using the hybrid name */
 #define Dee_atomic_rwlock_end        atomic_rwlock_end
 
 /************************************************************************/
@@ -446,7 +446,7 @@ DFUNDEF WUNUSED NONNULL((1)) int
 (DCALL Dee_event_waitfor_timed)(Dee_event_t *__restrict self,
                                 uint64_t timeout_nanoseconds);
 
-
+DECL_END
 
 /* Helper macros to safely (i.e. without any chance of dead-locking
  * (so-long as locks are distinct)) acquire multiple locks at once. */
@@ -506,77 +506,5 @@ DFUNDEF WUNUSED NONNULL((1)) int
 	DeeLock_Lock3(Dee_atomic_rwlock_write(a), Dee_atomic_rwlock_trywrite(a), Dee_atomic_rwlock_endwrite(a), \
 	              Dee_atomic_rwlock_write(b), Dee_atomic_rwlock_trywrite(b), Dee_atomic_rwlock_endwrite(b), \
 	              Dee_atomic_rwlock_write(c), Dee_atomic_rwlock_trywrite(c), Dee_atomic_rwlock_endwrite(c))
-
-
-
-
-/* Unescaped symbol aliases
- *
- * TODO: Get rid of these! */
-#ifdef DEE_SOURCE
-#if !defined(ATOMIC_LOCK_INIT) || defined(CONFIG_NO_THREADS)
-#undef ATOMIC_LOCK_INIT
-#undef atomic_lock_cinit
-#undef atomic_lock_init
-#undef atomic_lock_available
-#undef atomic_lock_acquired
-#undef atomic_lock_tryacquire
-#undef atomic_lock_acquire
-#undef atomic_lock_waitfor
-#undef atomic_lock_release
-#define ATOMIC_LOCK_INIT       DEE_ATOMIC_LOCK_INIT
-#define atomic_lock_cinit      Dee_atomic_lock_cinit
-#define atomic_lock_init       Dee_atomic_lock_init
-#define atomic_lock_available  Dee_atomic_lock_available
-#define atomic_lock_acquired   Dee_atomic_lock_acquired
-#define atomic_lock_tryacquire Dee_atomic_lock_tryacquire
-#define atomic_lock_acquire    Dee_atomic_lock_acquire
-#define atomic_lock_waitfor    Dee_atomic_lock_waitfor
-#define atomic_lock_release    Dee_atomic_lock_release
-#endif /* !ATOMIC_LOCK_INIT || CONFIG_NO_THREADS */
-
-#if !defined(ATOMIC_RWLOCK_INIT) || defined(CONFIG_NO_THREADS)
-#undef ATOMIC_RWLOCK_INIT
-#undef atomic_rwlock_cinit
-#undef atomic_rwlock_init
-#undef atomic_rwlock_reading
-#undef atomic_rwlock_writing
-#undef atomic_rwlock_tryread
-#undef atomic_rwlock_trywrite
-#undef atomic_rwlock_canread
-#undef atomic_rwlock_canwrite
-#undef atomic_rwlock_waitread
-#undef atomic_rwlock_waitwrite
-#undef atomic_rwlock_read
-#undef atomic_rwlock_write
-#undef atomic_rwlock_tryupgrade
-#undef atomic_rwlock_upgrade
-#undef atomic_rwlock_downgrade
-#undef atomic_rwlock_endwrite
-#undef atomic_rwlock_endread
-#undef atomic_rwlock_end
-#define ATOMIC_RWLOCK_INIT       DEE_ATOMIC_RWLOCK_INIT
-#define atomic_rwlock_cinit      Dee_atomic_rwlock_cinit
-#define atomic_rwlock_init       Dee_atomic_rwlock_init
-#define atomic_rwlock_reading    Dee_atomic_rwlock_reading
-#define atomic_rwlock_writing    Dee_atomic_rwlock_writing
-#define atomic_rwlock_tryread    Dee_atomic_rwlock_tryread
-#define atomic_rwlock_trywrite   Dee_atomic_rwlock_trywrite
-#define atomic_rwlock_canread    Dee_atomic_rwlock_canread
-#define atomic_rwlock_canwrite   Dee_atomic_rwlock_canwrite
-#define atomic_rwlock_waitread   Dee_atomic_rwlock_waitread
-#define atomic_rwlock_waitwrite  Dee_atomic_rwlock_waitwrite
-#define atomic_rwlock_read       Dee_atomic_rwlock_read
-#define atomic_rwlock_write      Dee_atomic_rwlock_write
-#define atomic_rwlock_tryupgrade Dee_atomic_rwlock_tryupgrade
-#define atomic_rwlock_upgrade    Dee_atomic_rwlock_upgrade
-#define atomic_rwlock_downgrade  Dee_atomic_rwlock_downgrade
-#define atomic_rwlock_endwrite   Dee_atomic_rwlock_endwrite
-#define atomic_rwlock_endread    Dee_atomic_rwlock_endread
-#define atomic_rwlock_end        Dee_atomic_rwlock_end
-#endif /* !ATOMIC_RWLOCK_INIT || CONFIG_NO_THREADS */
-
-DECL_END
-#endif /* DEE_SOURCE */
 
 #endif /* !GUARD_DEEMON_UTIL_LOCK_H */

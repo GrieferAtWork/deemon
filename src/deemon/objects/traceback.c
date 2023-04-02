@@ -55,7 +55,7 @@ INTERN struct empty_traceback_object empty_traceback = {
 	OBJECT_HEAD_INIT(&DeeTraceback_Type),
 	/* .tb_thread    = */ &DeeThread_Main,
 #ifndef CONFIG_NO_THREADS
-	/* .tb_lock      = */ ATOMIC_LOCK_INIT,
+	/* .tb_lock      = */ DEE_ATOMIC_LOCK_INIT,
 #endif /* !CONFIG_NO_THREADS */
 	/* .tb_numframes = */ 0,
 	/* .tb_padding   = */ { 0, 0, 0 }
@@ -78,7 +78,7 @@ DeeTraceback_New(struct thread_object *__restrict thread) {
 		result->tb_numframes = thread->t_execsz;
 		result->tb_thread    = thread;
 		Dee_Incref(thread);
-		atomic_lock_init(&result->tb_lock);
+		Dee_atomic_lock_init(&result->tb_lock);
 		dst = result->tb_frames + thread->t_execsz;
 		src = thread->t_exec;
 		while (dst > result->tb_frames) {
@@ -167,7 +167,7 @@ DeeTraceback_AddFrame(DeeTracebackObject *__restrict self,
 		return; /* Different frame. */
 	if unlikely(self->tb_thread != DeeThread_Self())
 		return; /* Different thread. */
-	atomic_lock_acquire(&self->tb_lock);
+	DeeTraceback_LockAcquire(self);
 	if unlikely(dst->cf_stacksz)
 		goto done; /* Frame already initialized */
 	ASSERT(!dst->cf_sp);
@@ -192,7 +192,7 @@ DeeTraceback_AddFrame(DeeTracebackObject *__restrict self,
 		}
 	}
 done:
-	atomic_lock_release(&self->tb_lock);
+	DeeTraceback_LockRelease(self);
 }
 
 
@@ -466,17 +466,21 @@ traceback_fini(DeeTracebackObject *__restrict self) {
 		frame = &self->tb_frames[frame_index];
 		ASSERT_OBJECT_TYPE(frame->cf_func, &DeeFunction_Type);
 		ASSERT_OBJECT_TYPE(frame->cf_func->fo_code, &DeeCode_Type);
+
 		/* Decref local variables. */
 		Dee_XDecrefv(frame->cf_frame, frame->cf_func->fo_code->co_localc);
 		Dee_Free(frame->cf_frame);
+
 		/* Decref stack objects. */
 		if (frame->cf_stacksz) {
 			Dee_Decrefv(frame->cf_stack, frame->cf_stacksz);
 			Dee_Free(frame->cf_stack);
 		}
+
 		/* Decref argument objects. */
 		Dee_Decrefv(frame->cf_argv, frame->cf_argc);
 		Dee_Free((void *)frame->cf_argv);
+
 		/* Decref misc. frame objects. */
 		Dee_Decref(frame->cf_func);
 		Dee_XDecref(frame->cf_this);
@@ -490,34 +494,28 @@ PRIVATE NONNULL((1, 2)) void DCALL
 traceback_visit(DeeTracebackObject *__restrict self,
                 dvisit_t proc, void *arg) {
 	struct code_frame *iter, *end;
-	atomic_lock_acquire(&self->tb_lock);
+	DeeTraceback_LockAcquire(self);
 	Dee_Visit(self->tb_thread);
 	end = (iter = self->tb_frames) + self->tb_numframes;
 	for (; iter < end; ++iter) {
-		DREF DeeObject **oiter, **oend;
 		ASSERT_OBJECT_TYPE(iter->cf_func, &DeeFunction_Type);
 		ASSERT_OBJECT_TYPE(iter->cf_func->fo_code, &DeeCode_Type);
 		/* Visit local variables. */
-		oend = (oiter = iter->cf_frame) + iter->cf_func->fo_code->co_localc;
-		if (oiter) {
-			for (; oiter != oend; ++oiter)
-				Dee_XVisit(*oiter);
-		}
+		if (iter->cf_frame)
+			Dee_XVisitv(iter->cf_frame, iter->cf_func->fo_code->co_localc);
+
 		/* Visit stack objects. */
-		oend = (oiter = iter->cf_stack) + iter->cf_stacksz;
-		for (; oiter < oend; ++oiter)
-			Dee_Visit(*oiter);
+		Dee_Visitv(iter->cf_stack, iter->cf_stacksz);
+
 		/* Visit argument objects. */
-		oend = (oiter = (DREF DeeObject **)iter->cf_argv) + iter->cf_argc;
-		for (; oiter < oend; ++oiter)
-			Dee_Visit(*oiter);
+		Dee_Visitv(iter->cf_argv, iter->cf_argc);
 		Dee_Visit(iter->cf_func);
 		Dee_XVisit(iter->cf_this);
 		Dee_XVisit(iter->cf_vargs);
 		if (ITER_ISOK(iter->cf_result))
 			Dee_Visit(iter->cf_result);
 	}
-	atomic_lock_release(&self->tb_lock);
+	DeeTraceback_LockRelease(self);
 }
 
 PRIVATE NONNULL((1)) void DCALL
@@ -526,13 +524,14 @@ traceback_clear(DeeTracebackObject *__restrict self) {
 	struct code_frame *iter, *end;
 again:
 	decref_later = decref_later_buffer;
-	atomic_lock_acquire(&self->tb_lock);
+	DeeTraceback_LockAcquire(self);
 	iter = self->tb_frames;
 	end  = iter + self->tb_numframes;
 	for (; iter < end; ++iter) {
 		DREF DeeObject **oiter, **oend;
 		ASSERT_OBJECT_TYPE(iter->cf_func, &DeeFunction_Type);
 		ASSERT_OBJECT_TYPE(iter->cf_func->fo_code, &DeeCode_Type);
+
 		/* Decref local variables. */
 		oend = (oiter = iter->cf_frame) + iter->cf_func->fo_code->co_localc;
 		if (oiter) {
@@ -548,6 +547,7 @@ again:
 				}
 			}
 		}
+
 		/* Decref stack objects. */
 		oend = (oiter = iter->cf_stack) + iter->cf_stacksz;
 		for (; oiter != oend; ++oiter) {
@@ -562,6 +562,7 @@ again:
 					goto clear_buffer;
 			}
 		}
+
 		/* Decref argument objects. */
 		oend = (oiter = (DREF DeeObject **)iter->cf_argv) + iter->cf_argc;
 		for (; oiter < oend; ++oiter) {
@@ -604,14 +605,14 @@ again:
 			}
 		}
 	}
-	atomic_lock_release(&self->tb_lock);
+	DeeTraceback_LockRelease(self);
 	while (decref_later != decref_later_buffer) {
 		--decref_later;
 		Dee_Decref(*decref_later);
 	}
 	return;
 clear_buffer:
-	atomic_lock_release(&self->tb_lock);
+	DeeTraceback_LockRelease(self);
 	while (decref_later != decref_later_buffer) {
 		--decref_later;
 		Dee_Decref(*decref_later);
@@ -647,11 +648,11 @@ traceback_print(DeeTracebackObject *__restrict self,
 		DREF DeeCodeObject *code;
 		code_addr_t ip;
 		--i;
-		atomic_lock_acquire(&self->tb_lock);
+		DeeTraceback_LockAcquire(self);
 		code = self->tb_frames[i].cf_func->fo_code;
 		Dee_Incref(code);
 		ip = (code_addr_t)(self->tb_frames[i].cf_ip - code->co_code);
-		atomic_lock_release(&self->tb_lock);
+		DeeTraceback_LockRelease(self);
 		temp = print_ddi(printer, arg, code, ip);
 		Dee_Decref(code);
 		if unlikely(temp < 0)

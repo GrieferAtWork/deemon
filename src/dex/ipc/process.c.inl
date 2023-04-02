@@ -674,7 +674,7 @@ typedef struct {
 PRIVATE Process this_process = {
 	OBJECT_HEAD_INIT(&DeeProcess_Type),
 #ifndef CONFIG_NO_THREADS
-	/* .p_lock    = */ ATOMIC_RWLOCK_INIT,
+	/* .p_lock    = */ DEE_ATOMIC_RWLOCK_INIT,
 #endif /* !CONFIG_NO_THREADS */
 	/* .p_exe     = */ NULL,
 #ifdef ipc_Process_USE_cmdline
@@ -758,7 +758,7 @@ process_init(Process *__restrict self,
 #ifdef ipc_Process_pid_t
 		if unlikely(DeeObject_AsUINT(exe_or_cmdline_or_pid, &self->p_pid))
 			goto err;
-		atomic_rwlock_init(&self->p_lock);
+		Dee_atomic_rwlock_init(&self->p_lock);
 		self->p_exe = NULL;
 #ifdef ipc_Process_USE_cmdline
 		self->p_cmdline = NULL;
@@ -786,7 +786,7 @@ process_init(Process *__restrict self,
 	}
 
 	/* Default attributes that can't be specified as constructor arguments. */
-	atomic_rwlock_init(&self->p_lock);
+	Dee_atomic_rwlock_init(&self->p_lock);
 	self->p_pwd = NULL;
 	bzero(self->p_stdfd, sizeof(self->p_stdfd));
 	self->p_state = PROCESS_FLAG_NORMAL;

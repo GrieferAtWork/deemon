@@ -1518,7 +1518,7 @@ PRIVATE struct type_member tpconst svec_class_members[] = {
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 svec_ctor(SharedVector *__restrict self) {
-	atomic_rwlock_init(&self->sv_lock);
+	Dee_atomic_rwlock_init(&self->sv_lock);
 	self->sv_length = 0;
 	self->sv_vector = NULL;
 	return 0;
@@ -1541,7 +1541,7 @@ again:
 	Dee_Movrefv((DREF DeeObject **)self->sv_vector,
 	            other->sv_vector, self->sv_length);
 	SharedVector_LockEndRead(other);
-	atomic_rwlock_init(&self->sv_lock);
+	Dee_atomic_rwlock_init(&self->sv_lock);
 	return 0;
 err:
 	return -1;
@@ -1630,7 +1630,7 @@ DeeSharedVector_NewShared(size_t length, DREF DeeObject *const *vector) {
 	if unlikely(!result)
 		goto done;
 	DeeObject_Init(result, &SharedVector_Type);
-	atomic_rwlock_init(&result->sv_lock);
+	Dee_atomic_rwlock_init(&result->sv_lock);
 	result->sv_length = length;
 	result->sv_vector = vector;
 done:

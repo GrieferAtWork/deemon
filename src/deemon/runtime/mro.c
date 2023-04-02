@@ -197,10 +197,10 @@ membercache_rehash(struct membercache *__restrict self) {
 #define MEMBERCACHE_TRYWRITE_OR_RETURN(self) \
 	(void)0
 #elif 1
-#define MEMBERCACHE_TRYWRITE_OR_RETURN(self)           \
-	do {                                               \
-		if (!atomic_rwlock_trywrite(&(self)->mc_lock)) \
-			return;                                    \
+#define MEMBERCACHE_TRYWRITE_OR_RETURN(self)               \
+	do {                                                   \
+		if (!Dee_atomic_rwlock_trywrite(&(self)->mc_lock)) \
+			return;                                        \
 	}	__WHILE0
 #else
 #define MEMBERCACHE_TRYWRITE_OR_RETURN(self) \

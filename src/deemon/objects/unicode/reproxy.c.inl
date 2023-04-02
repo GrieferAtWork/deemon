@@ -129,7 +129,7 @@ refaiter_ctor(ReSequenceIterator *__restrict self) {
 	self->rsi_data            = Dee_EmptyString;
 	self->rsi_exec.rx_pattern = (DREF String *)Dee_EmptyString;
 	Dee_Incref_n(Dee_EmptyString, 2);
-	atomic_rwlock_init(&self->rsi_lock);
+	Dee_atomic_rwlock_init(&self->rsi_lock);
 	return 0;
 }
 
@@ -143,7 +143,7 @@ rebfaiter_ctor(ReSequenceIterator *__restrict self) {
 	self->rsi_exec.rx_pattern = (DREF String *)Dee_EmptyString;
 	Dee_Incref(Dee_EmptyBytes);
 	Dee_Incref(Dee_EmptyString);
-	atomic_rwlock_init(&self->rsi_lock);
+	Dee_atomic_rwlock_init(&self->rsi_lock);
 	return 0;
 }
 
@@ -157,7 +157,7 @@ refaiter_copy(ReSequenceIterator *__restrict self,
 	self->rsi_data = other->rsi_data;
 	Dee_Incref(self->rsi_data);
 	Dee_Incref(self->rsi_exec.rx_pattern);
-	atomic_rwlock_init(&self->rsi_lock);
+	Dee_atomic_rwlock_init(&self->rsi_lock);
 	return 0;
 }
 
@@ -173,7 +173,7 @@ refaiter_init(ReSequenceIterator *__restrict self,
 	       sizeof(ReSequence) - offsetof(ReSequence, rs_data));
 	Dee_Incref(self->rsi_data);
 	Dee_Incref(self->rsi_exec.rx_pattern);
-	atomic_rwlock_init(&self->rsi_lock);
+	Dee_atomic_rwlock_init(&self->rsi_lock);
 	return 0;
 err:
 	return -1;
@@ -191,7 +191,7 @@ rebfaiter_init(ReSequenceIterator *__restrict self,
 	       sizeof(ReSequence) - offsetof(ReSequence, rs_data));
 	Dee_Incref(self->rsi_data);
 	Dee_Incref(self->rsi_exec.rx_pattern);
-	atomic_rwlock_init(&self->rsi_lock);
+	Dee_atomic_rwlock_init(&self->rsi_lock);
 	return 0;
 err:
 	return -1;
@@ -701,7 +701,7 @@ relaiter_init(ReSequenceIterator *__restrict self,
 	memcpy(&self->rsi_data, &reseq->rs_data, sizeof(ReSequence) - offsetof(ReSequence, rs_data));
 	Dee_Incref(self->rsi_data);
 	Dee_Incref(self->rsi_exec.rx_pattern);
-	atomic_rwlock_init(&self->rsi_lock);
+	Dee_atomic_rwlock_init(&self->rsi_lock);
 	return 0;
 err:
 	return -1;
@@ -718,7 +718,7 @@ reblaiter_init(ReSequenceIterator *__restrict self,
 	memcpy(&self->rsi_data, &reseq->rs_data, sizeof(ReSequence) - offsetof(ReSequence, rs_data));
 	Dee_Incref(self->rsi_data);
 	Dee_Incref(self->rsi_exec.rx_pattern);
-	atomic_rwlock_init(&self->rsi_lock);
+	Dee_atomic_rwlock_init(&self->rsi_lock);
 	return 0;
 err:
 	return -1;
@@ -931,7 +931,7 @@ respiter_init(ReSequenceIterator *__restrict self,
 		self->rsi_exec.rx_inbase = NULL;
 	Dee_Incref(self->rsi_data);
 	Dee_Incref(self->rsi_exec.rx_pattern);
-	atomic_rwlock_init(&self->rsi_lock);
+	Dee_atomic_rwlock_init(&self->rsi_lock);
 	return 0;
 err:
 	return -1;
@@ -951,7 +951,7 @@ rebspiter_init(ReSequenceIterator *__restrict self,
 		self->rsi_exec.rx_inbase = NULL;
 	Dee_Incref(self->rsi_data);
 	Dee_Incref(self->rsi_exec.rx_pattern);
-	atomic_rwlock_init(&self->rsi_lock);
+	Dee_atomic_rwlock_init(&self->rsi_lock);
 	return 0;
 err:
 	return -1;
@@ -1212,7 +1212,7 @@ refa_iter(ReSequence *__restrict self) {
 	Dee_Incref(result->rsi_data);
 	Dee_Incref(result->rsi_exec.rx_pattern);
 	DeeObject_Init(result, &ReFindAllIterator_Type);
-	atomic_rwlock_init(&result->rsi_lock);
+	Dee_atomic_rwlock_init(&result->rsi_lock);
 done:
 	return result;
 }
@@ -1228,7 +1228,7 @@ rebfa_iter(ReSequence *__restrict self) {
 	Dee_Incref(result->rsi_data);
 	Dee_Incref(result->rsi_exec.rx_pattern);
 	DeeObject_Init(result, &ReBytesFindAllIterator_Type);
-	atomic_rwlock_init(&result->rsi_lock);
+	Dee_atomic_rwlock_init(&result->rsi_lock);
 done:
 	return result;
 }
@@ -1466,7 +1466,7 @@ regfa_iter(ReSequence *__restrict self) {
 	Dee_Incref(result->rsi_data);
 	Dee_Incref(result->rsi_exec.rx_pattern);
 	DeeObject_Init(result, &RegFindAllIterator_Type);
-	atomic_rwlock_init(&result->rsi_lock);
+	Dee_atomic_rwlock_init(&result->rsi_lock);
 done:
 	return result;
 }
@@ -1482,7 +1482,7 @@ regbfa_iter(ReSequence *__restrict self) {
 	Dee_Incref(result->rsi_data);
 	Dee_Incref(result->rsi_exec.rx_pattern);
 	DeeObject_Init(result, &RegBytesFindAllIterator_Type);
-	atomic_rwlock_init(&result->rsi_lock);
+	Dee_atomic_rwlock_init(&result->rsi_lock);
 done:
 	return result;
 }
@@ -1641,7 +1641,7 @@ rela_iter(ReSequence *__restrict self) {
 	Dee_Incref(result->rsi_data);
 	Dee_Incref(result->rsi_exec.rx_pattern);
 	DeeObject_Init(result, &ReLocateAllIterator_Type);
-	atomic_rwlock_init(&result->rsi_lock);
+	Dee_atomic_rwlock_init(&result->rsi_lock);
 done:
 	return result;
 }
@@ -1657,7 +1657,7 @@ rebla_iter(ReSequence *__restrict self) {
 	Dee_Incref(result->rsi_data);
 	Dee_Incref(result->rsi_exec.rx_pattern);
 	DeeObject_Init(result, &ReBytesLocateAllIterator_Type);
-	atomic_rwlock_init(&result->rsi_lock);
+	Dee_atomic_rwlock_init(&result->rsi_lock);
 done:
 	return result;
 }
@@ -1832,7 +1832,7 @@ resp_iter(ReSequence *__restrict self) {
 	Dee_Incref(result->rsi_data);
 	Dee_Incref(result->rsi_exec.rx_pattern);
 	DeeObject_Init(result, &ReSplitIterator_Type);
-	atomic_rwlock_init(&result->rsi_lock);
+	Dee_atomic_rwlock_init(&result->rsi_lock);
 done:
 	return result;
 }
@@ -1852,7 +1852,7 @@ rebsp_iter(ReSequence *__restrict self) {
 	Dee_Incref(result->rsi_data);
 	Dee_Incref(result->rsi_exec.rx_pattern);
 	DeeObject_Init(result, &ReBytesSplitIterator_Type);
-	atomic_rwlock_init(&result->rsi_lock);
+	Dee_atomic_rwlock_init(&result->rsi_lock);
 done:
 	return result;
 }

@@ -595,7 +595,7 @@ Deque_rrrot(Deque *__restrict self, size_t num_objects) {
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 deq_ctor(Deque *__restrict self) {
-	atomic_rwlock_init(&self->d_lock);
+	Dee_atomic_rwlock_init(&self->d_lock);
 	self->d_head      = NULL;
 	self->d_tail      = NULL;
 	self->d_size      = 0;
@@ -633,7 +633,7 @@ deq_copy(Deque *__restrict self,
 	DequeBucket *copy;
 	DequeBucket *copy_tail;
 	DequeBucket *next;
-	atomic_rwlock_init(&self->d_lock);
+	Dee_atomic_rwlock_init(&self->d_lock);
 	self->d_version = 0;
 again:
 	Deque_LockRead(other);
@@ -798,7 +798,7 @@ deq_init(Deque *__restrict self,
 		                "Invalid bucket size: 0");
 		goto err;
 	}
-	atomic_rwlock_init(&self->d_lock);
+	Dee_atomic_rwlock_init(&self->d_lock);
 	self->d_head     = NULL;
 	self->d_tail     = NULL;
 	self->d_size     = 0;
@@ -848,7 +848,7 @@ deq_assign(Deque *__restrict self,
 		bTemp.d_head_use  = 0;
 		bTemp.d_tail_sz   = 0;
 		bTemp.d_bucket_sz = DEQUE_BUCKET_DEFAULT_SIZE;
-		atomic_rwlock_init(&bTemp.d_lock);
+		Dee_atomic_rwlock_init(&bTemp.d_lock);
 #if __SIZEOF_INT__ == __SIZEOF_SIZE_T__
 		if (DeeObject_Foreach(seq, (dforeach_t)&Deque_PushBack, &bTemp) < 0)
 #else /* __SIZEOF_INT__ == __SIZEOF_SIZE_T__ */
@@ -980,7 +980,7 @@ deq_iter(Deque *__restrict self) {
 	result = DeeObject_MALLOC(DequeIteratorObject);
 	if unlikely(!result)
 		goto done;
-	atomic_rwlock_init(&result->di_lock);
+	Dee_atomic_rwlock_init(&result->di_lock);
 	result->di_ver = self->d_version;
 	COMPILER_READ_BARRIER();
 	DequeIterator_InitBegin(&result->di_iter, self);
@@ -1584,7 +1584,7 @@ INTERN DeeTypeObject Deque_Type = {
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 deqiter_ctor(DequeIteratorObject *__restrict self) {
-	atomic_rwlock_init(&self->di_lock);
+	Dee_atomic_rwlock_init(&self->di_lock);
 	self->di_deq = (DREF Deque *)DeeObject_NewDefault(&Deque_Type);
 	if unlikely(!self->di_deq)
 		goto err;
@@ -1598,7 +1598,7 @@ err:
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 deqiter_copy(DequeIteratorObject *__restrict self,
              DequeIteratorObject *__restrict other) {
-	atomic_rwlock_init(&self->di_lock);
+	Dee_atomic_rwlock_init(&self->di_lock);
 	self->di_deq = other->di_deq;
 	Dee_Incref(self->di_deq);
 	DequeIterator_LockRead(other);
@@ -1655,7 +1655,7 @@ deqiter_deep(DequeIteratorObject *__restrict self,
 		                     index);
 	}
 	Deque_LockEndRead(self->di_deq);
-	atomic_rwlock_init(&self->di_lock);
+	Dee_atomic_rwlock_init(&self->di_lock);
 	return 0;
 err:
 	return -1;
@@ -1669,7 +1669,7 @@ deqiter_init(DequeIteratorObject *__restrict self,
 		goto err;
 	if (DeeObject_AssertType(self->di_deq, &Deque_Type))
 		goto err;
-	atomic_rwlock_init(&self->di_lock);
+	Dee_atomic_rwlock_init(&self->di_lock);
 	Dee_Incref(self->di_deq);
 	Deque_LockRead(self->di_deq);
 	self->di_ver = self->di_deq->d_version;

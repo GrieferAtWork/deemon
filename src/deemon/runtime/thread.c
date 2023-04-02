@@ -4331,7 +4331,7 @@ done_traceback:
 			/* Initialize remaining members of the traceback. */
 			Dee_Incref(me); /* Reference stored in `tb_thread' */
 			result->tb_thread = me;
-			atomic_lock_init(&result->tb_lock);
+			Dee_atomic_lock_init(&result->tb_lock);
 			result->tb_numframes = traceback_used;
 			DeeObject_Init(result, &DeeTraceback_Type);
 			/* Tracebacks are GC objects, so we need to start tracking it here. */

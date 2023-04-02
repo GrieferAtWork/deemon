@@ -837,7 +837,7 @@ blv_copy(BlackListVarkwds *__restrict self) {
 	        self->blvk_mask + 1,
 	        sizeof(BlackListVarkwdsEntry));
 	BlackListVarkwds_LockEndRead(self);
-	atomic_rwlock_init(&result->blvk_lock);
+	Dee_atomic_rwlock_init(&result->blvk_lock);
 	result->blvk_code = self->blvk_code;
 	Dee_Incref(result->blvk_code);
 	result->blvk_ckwc = self->blvk_ckwc;
@@ -881,7 +881,7 @@ blv_deep(BlackListVarkwds *__restrict self) {
 		if (DeeObject_InplaceDeepCopy(&result->blvk_argv[i]))
 			goto err_r_argv;
 	}
-	atomic_rwlock_init(&result->blvk_lock);
+	Dee_atomic_rwlock_init(&result->blvk_lock);
 	result->blvk_code = self->blvk_code;
 	Dee_Incref(result->blvk_code);
 	result->blvk_ckwc = self->blvk_ckwc;
@@ -982,7 +982,7 @@ BlackListVarkwds_New(struct code_object *__restrict code,
 	                                                   (mask + 1) * sizeof(BlackListVarkwdsEntry));
 	if unlikely(!result)
 		goto done;
-	atomic_rwlock_cinit(&result->blvk_lock);
+	Dee_atomic_rwlock_cinit(&result->blvk_lock);
 	result->blvk_code = code; /* Weakly referenced. */
 	result->blvk_ckwc = argc - positional_argc;
 	result->blvk_ckwv = code->co_keywords + positional_argc;
@@ -1679,7 +1679,7 @@ blm_copy(BlackListMapping *__restrict self) {
 	if unlikely(!result)
 		goto err_result_kw;
 	result->blm_kw = result_kw; /* Inherit reference */
-	atomic_rwlock_init(&result->blm_lock);
+	Dee_atomic_rwlock_init(&result->blm_lock);
 	result->blm_code = self->blm_code;
 	Dee_Incref(result->blm_code);
 	result->blm_ckwc = self->blm_ckwc;
@@ -1711,7 +1711,7 @@ blm_deep(BlackListMapping *__restrict self) {
 	result->blm_kw = DeeObject_DeepCopy(self->blm_kw);
 	if unlikely(!result->blm_kw)
 		goto err_r;
-	atomic_rwlock_init(&result->blm_lock);
+	Dee_atomic_rwlock_init(&result->blm_lock);
 	result->blm_code = self->blm_code; /* Immutable, so no copy required */
 	Dee_Incref(result->blm_code);
 	result->blm_ckwc = self->blm_ckwc;
@@ -1752,7 +1752,7 @@ blm_get_frozen(BlackListMapping *__restrict self) {
 		goto err_frozen_kw;
 
 	result->blm_kw = frozen_kw; /* Inherit reference */
-	atomic_rwlock_init(&result->blm_lock);
+	Dee_atomic_rwlock_init(&result->blm_lock);
 	result->blm_code = self->blm_code;
 	Dee_Incref(result->blm_code);
 	result->blm_ckwc = self->blm_ckwc;
@@ -1849,7 +1849,7 @@ BlackListMapping_New(struct code_object *__restrict code,
 	                                                   (mask + 1) * sizeof(BlackListVarkwdsEntry));
 	if unlikely(!result)
 		goto done;
-	atomic_rwlock_cinit(&result->blm_lock);
+	Dee_atomic_rwlock_cinit(&result->blm_lock);
 	result->blm_code = code;
 	result->blm_ckwc = argc - positional_argc;
 	result->blm_ckwv = code->co_keywords + positional_argc;

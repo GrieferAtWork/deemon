@@ -52,7 +52,7 @@ DeeCell_New(DeeObject *__restrict item) {
 	DeeObject_Init(result, &DeeCell_Type);
 	Dee_Incref(item);
 	result->c_item = item;
-	atomic_rwlock_init(&result->c_lock);
+	Dee_atomic_rwlock_init(&result->c_lock);
 	DeeGC_Track((DeeObject *)result);
 done:
 	return (DREF DeeObject *)result;
@@ -61,7 +61,7 @@ done:
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 cell_ctor(Cell *__restrict self) {
 	self->c_item = NULL;
-	atomic_rwlock_init(&self->c_lock);
+	Dee_atomic_rwlock_init(&self->c_lock);
 	return 0;
 }
 
@@ -72,7 +72,7 @@ cell_copy(Cell *__restrict self,
 	self->c_item = other->c_item;
 	Dee_XIncref(self->c_item);
 	DeeCell_LockEndRead(other);
-	atomic_rwlock_init(&self->c_lock);
+	Dee_atomic_rwlock_init(&self->c_lock);
 	return 0;
 }
 
@@ -82,7 +82,7 @@ cell_init(Cell *__restrict self,
 	if (DeeArg_Unpack(argc, argv, "o:Cell", &self->c_item))
 		goto err;
 	Dee_Incref(self->c_item);
-	atomic_rwlock_init(&self->c_lock);
+	Dee_atomic_rwlock_init(&self->c_lock);
 	return 0;
 err:
 	return -1;

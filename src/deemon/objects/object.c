@@ -2709,7 +2709,7 @@ type_new_raw(DeeTypeObject *__restrict self) {
 	while (DeeType_IsClass(first_base)) {
 		struct class_desc *desc        = DeeClass_DESC(first_base);
 		struct instance_desc *instance = DeeInstance_DESC(desc, result);
-		atomic_rwlock_init(&instance->id_lock);
+		Dee_atomic_rwlock_init(&instance->id_lock);
 		bzeroc(instance->id_vtab,
 		       desc->cd_desc->cd_imemb_size,
 		       sizeof(DREF DeeObject *));
@@ -3090,7 +3090,7 @@ type_new_extended(DeeTypeObject *self,
 	while (DeeType_IsClass(first_base)) {
 		struct class_desc *desc        = DeeClass_DESC(first_base);
 		struct instance_desc *instance = DeeInstance_DESC(desc, result);
-		atomic_rwlock_init(&instance->id_lock);
+		Dee_atomic_rwlock_init(&instance->id_lock);
 		bzeroc(instance->id_vtab,
 		       desc->cd_desc->cd_imemb_size,
 		       sizeof(DREF DeeObject *));

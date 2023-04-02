@@ -1610,7 +1610,7 @@ gcenum_iter(DeeObject *__restrict UNUSED(self)) {
 		first = first->gc_next;
 	}
 	GCLOCK_RELEASE_READ();
-	atomic_lock_init(&result->gi_lock);
+	Dee_atomic_lock_init(&result->gi_lock);
 	/* Save the first object in the iterator. */
 	result->gi_next = first ? &first->gc_object : NULL;
 	DeeObject_Init(result, &GCIter_Type);

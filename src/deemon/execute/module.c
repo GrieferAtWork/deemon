@@ -1684,7 +1684,7 @@ INTERN struct static_module_struct empty_module_head = {
 		/* .mo_globalv   = */ NULL,
 		/* .mo_root      = */ &empty_code,
 #ifndef CONFIG_NO_THREADS
-		/* .mo_lock      = */ ATOMIC_RWLOCK_INIT,
+		/* .mo_lock      = */ DEE_ATOMIC_RWLOCK_INIT,
 		/* .mo_loader    = */ NULL,
 #endif /* !CONFIG_NO_THREADS */
 #ifndef CONFIG_NO_DEC

@@ -357,7 +357,7 @@ udict_init_iterator(UDict *self, DeeObject *iterator) {
 	self->ud_size = 0;
 	self->ud_used = 0;
 	self->ud_elem = (struct udict_item *)empty_dict_items;
-	atomic_rwlock_init(&self->ud_lock);
+	Dee_atomic_rwlock_init(&self->ud_lock);
 	weakref_support_init(self);
 	if unlikely(udict_insert_iterator(self, iterator)) {
 		udict_fini(self);
@@ -394,7 +394,7 @@ udict_ctor(UDict *__restrict self) {
 	self->ud_size = 0;
 	self->ud_used = 0;
 	self->ud_elem = (struct udict_item *)empty_dict_items;
-	atomic_rwlock_init(&self->ud_lock);
+	Dee_atomic_rwlock_init(&self->ud_lock);
 	weakref_support_init(self);
 	return 0;
 }
@@ -403,7 +403,7 @@ PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 udict_copy(UDict *__restrict self,
            UDict *__restrict other) {
 	struct udict_item *iter, *end;
-	atomic_rwlock_init(&self->ud_lock);
+	Dee_atomic_rwlock_init(&self->ud_lock);
 again:
 	UDict_LockRead(other);
 	self->ud_mask = other->ud_mask;

@@ -119,7 +119,7 @@ next_key:
 			}
 		}
 	}
-	atomic_rwlock_init(&result->hs_lock);
+	Dee_atomic_rwlock_init(&result->hs_lock);
 	/* Initialize and start tracking the new set. */
 	weakref_support_init(result);
 	DeeObject_Init(result, &DeeHashSet_Type);
@@ -142,7 +142,7 @@ set_init_iterator(Set *__restrict self,
 	self->hs_size = 0;
 	self->hs_used = 0;
 	self->hs_elem = empty_set_items;
-	atomic_rwlock_init(&self->hs_lock);
+	Dee_atomic_rwlock_init(&self->hs_lock);
 	weakref_support_init(self);
 	while (ITER_ISOK(elem = DeeObject_IterNext(iterator))) {
 		if unlikely(DeeHashSet_Insert((DeeObject *)self, elem) < 0)
@@ -179,7 +179,7 @@ set_init_sequence(Set *__restrict self,
 	if (tp == &DeeRoSet_Type) {
 		struct hashset_item *iter, *end;
 		DeeRoSetObject *src = (DeeRoSetObject *)sequence;
-		atomic_rwlock_init(&self->hs_lock);
+		Dee_atomic_rwlock_init(&self->hs_lock);
 		self->hs_mask = src->rs_mask;
 		self->hs_used = self->hs_size = src->rs_size;
 		if unlikely(!self->hs_size) {
@@ -251,7 +251,7 @@ set_ctor(Set *__restrict self) {
 	self->hs_size = 0;
 	self->hs_used = 0;
 	self->hs_elem = empty_set_items;
-	atomic_rwlock_init(&self->hs_lock);
+	Dee_atomic_rwlock_init(&self->hs_lock);
 	weakref_support_init(self);
 	return 0;
 }
@@ -260,7 +260,7 @@ PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 set_copy(Set *__restrict self,
          Set *__restrict other) {
 	struct hashset_item *iter, *end;
-	atomic_rwlock_init(&self->hs_lock);
+	Dee_atomic_rwlock_init(&self->hs_lock);
 again:
 	DeeHashSet_LockRead(other);
 	self->hs_mask = other->hs_mask;

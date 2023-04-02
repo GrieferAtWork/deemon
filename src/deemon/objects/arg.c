@@ -905,7 +905,7 @@ kmap_ctor(KwdsMapping *__restrict self) {
 	if unlikely(!self->kmo_kwds)
 		goto err;
 	self->kmo_argv = NULL;
-	atomic_rwlock_init(&self->kmo_lock);
+	Dee_atomic_rwlock_init(&self->kmo_lock);
 	return 0;
 err:
 	return -1;
@@ -925,7 +925,7 @@ kmap_copy(KwdsMapping *__restrict self,
 		Dee_Incref(self->kmo_argv[i]);
 	}
 	atomic_rwlock_endread(&other->kmo_lock);
-	atomic_rwlock_init(&self->kmo_lock);
+	Dee_atomic_rwlock_init(&self->kmo_lock);
 	self->kmo_kwds = other->kmo_kwds;
 	Dee_Incref(self->kmo_kwds);
 	return 0;
@@ -952,7 +952,7 @@ kmap_deep(KwdsMapping *__restrict self,
 		if (DeeObject_InplaceDeepCopy(&self->kmo_argv[i]))
 			goto err_r_argv;
 	}
-	atomic_rwlock_init(&self->kmo_lock);
+	Dee_atomic_rwlock_init(&self->kmo_lock);
 	self->kmo_kwds = other->kmo_kwds;
 	Dee_Incref(self->kmo_kwds);
 	return 0;
@@ -987,7 +987,7 @@ kmap_init(KwdsMapping *__restrict self,
 		Dee_Incref(self->kmo_argv[i]);
 	}
 	Dee_Incref(self->kmo_kwds);
-	atomic_rwlock_init(&self->kmo_lock);
+	Dee_atomic_rwlock_init(&self->kmo_lock);
 	return 0;
 err:
 	return -1;
@@ -1205,7 +1205,7 @@ DeeKwdsMapping_New(/*Kwds*/ DeeObject *kwds,
 		goto done;
 	result->kmo_argv = (DREF DeeObject **)(DeeObject **)argv;
 	result->kmo_kwds = (DREF DeeKwdsObject *)kwds;
-	atomic_rwlock_init(&result->kmo_lock);
+	Dee_atomic_rwlock_init(&result->kmo_lock);
 	DeeObject_Init(result, &DeeKwdsMapping_Type);
 done:
 	return (DREF DeeObject *)result;

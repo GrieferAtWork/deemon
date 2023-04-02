@@ -51,7 +51,7 @@ repeatiter_ctor(RepeatIterator *__restrict self) {
 		goto err;
 	self->rpi_iter = DeeObject_IterSelf(Dee_EmptySeq);
 	if unlikely(!self->rpi_iter) { Dee_Decref(self->rpi_rep); }
-	atomic_rwlock_init(&self->rpi_lock);
+	Dee_atomic_rwlock_init(&self->rpi_lock);
 	self->rpi_num = 0;
 	return 0;
 err:
@@ -74,7 +74,7 @@ repeatiter_copy(RepeatIterator *__restrict self,
 	self->rpi_iter = copy;
 	self->rpi_rep  = other->rpi_rep;
 	Dee_Incref(self->rpi_rep);
-	atomic_rwlock_init(&self->rpi_lock);
+	Dee_atomic_rwlock_init(&self->rpi_lock);
 	return 0;
 err:
 	return -1;
@@ -97,7 +97,7 @@ repeatiter_deep(RepeatIterator *__restrict self,
 	self->rpi_rep  = (DREF Repeat *)DeeObject_DeepCopy((DeeObject *)other->rpi_rep);
 	if unlikely(!self->rpi_rep)
 		goto err_iter;
-	atomic_rwlock_init(&self->rpi_lock);
+	Dee_atomic_rwlock_init(&self->rpi_lock);
 	return 0;
 err_iter:
 	Dee_Decref(self->rpi_iter);
@@ -116,7 +116,7 @@ repeatiter_init(RepeatIterator *__restrict self,
 	if unlikely(!self->rpi_iter)
 		goto err;
 	Dee_Incref(self->rpi_rep);
-	atomic_rwlock_init(&self->rpi_lock);
+	Dee_atomic_rwlock_init(&self->rpi_lock);
 	self->rpi_num = self->rpi_rep->rp_num - 1;
 	return 0;
 err:
@@ -430,7 +430,7 @@ repeat_iter(Repeat *__restrict self) {
 		goto err_r;
 	result->rpi_rep = self;
 	result->rpi_num = self->rp_num - 1;
-	atomic_rwlock_init(&result->rpi_lock);
+	Dee_atomic_rwlock_init(&result->rpi_lock);
 	Dee_Incref(self);
 	DeeObject_Init(result, &SeqRepeatIterator_Type);
 done:

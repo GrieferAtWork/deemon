@@ -727,7 +727,7 @@ DeeSharedMap_NewShared(size_t length, DREF DeeSharedItem *vector) {
 	result->sm_vector = vector;
 	result->sm_loaded = 0;
 	result->sm_mask   = mask;
-	atomic_rwlock_cinit(&result->sm_lock);
+	Dee_atomic_rwlock_cinit(&result->sm_lock);
 	DeeObject_Init(result, &SharedMap_Type);
 done:
 	return (DREF DeeObject *)result;

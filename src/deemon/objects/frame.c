@@ -48,40 +48,40 @@ DECL_BEGIN
 typedef DeeFrameObject Frame;
 
 #ifndef CONFIG_NO_THREADS
-#define PLOCK_READ(x)                                             \
-	((x)->f_plock ? ((x)->f_flags & DEEFRAME_FRECLOCK             \
-	                 ? (void)recursive_rwlock_read((x)->f_prlock) \
-	                 : (void)atomic_rwlock_read((x)->f_plock))    \
+#define PLOCK_READ(x)                                              \
+	((x)->f_plock ? ((x)->f_flags & DEEFRAME_FRECLOCK              \
+	                 ? (void)recursive_rwlock_read((x)->f_prlock)  \
+	                 : (void)Dee_atomic_rwlock_read((x)->f_plock)) \
 	              : (void)0)
-#define PLOCK_TRYREAD(x)                                       \
-	((x)->f_plock ? ((x)->f_flags & DEEFRAME_FRECLOCK          \
-	                 ? recursive_rwlock_tryread((x)->f_prlock) \
-	                 : atomic_rwlock_tryread((x)->f_plock))    \
+#define PLOCK_TRYREAD(x)                                        \
+	((x)->f_plock ? ((x)->f_flags & DEEFRAME_FRECLOCK           \
+	                 ? recursive_rwlock_tryread((x)->f_prlock)  \
+	                 : Dee_atomic_rwlock_tryread((x)->f_plock)) \
 	              : true)
 #define PLOCK_WRITE(x)                                                  \
 	((x)->f_flags & DEEFRAME_FWRITABLE                                  \
 	 ? ((x)->f_plock ? ((x)->f_flags & DEEFRAME_FRECLOCK                \
 	                    ? (recursive_rwlock_write((x)->f_prlock), true) \
-	                    : (atomic_rwlock_write((x)->f_plock)),          \
+	                    : (Dee_atomic_rwlock_write((x)->f_plock)),      \
 	                    true)                                           \
 	                 : true)                                            \
 	 : false)
-#define PLOCK_TRYWRITE(x)                                          \
-	((x)->f_flags & DEEFRAME_FWRITABLE                             \
-	 ? ((x)->f_plock ? ((x)->f_flags & DEEFRAME_FRECLOCK           \
-	                    ? recursive_rwlock_trywrite((x)->f_prlock) \
-	                    : atomic_rwlock_trywrite((x)->f_plock))    \
-	                 : true)                                       \
+#define PLOCK_TRYWRITE(x)                                           \
+	((x)->f_flags & DEEFRAME_FWRITABLE                              \
+	 ? ((x)->f_plock ? ((x)->f_flags & DEEFRAME_FRECLOCK            \
+	                    ? recursive_rwlock_trywrite((x)->f_prlock)  \
+	                    : Dee_atomic_rwlock_trywrite((x)->f_plock)) \
+	                 : true)                                        \
 	 : false)
-#define PLOCK_ENDREAD(x)                                             \
-	((x)->f_plock ? ((x)->f_flags & DEEFRAME_FRECLOCK                \
-	                 ? (void)recursive_rwlock_endread((x)->f_prlock) \
-	                 : (void)atomic_rwlock_endread((x)->f_plock))    \
-	              : (void)0)
-#define PLOCK_ENDWRITE(x)                                             \
+#define PLOCK_ENDREAD(x)                                              \
 	((x)->f_plock ? ((x)->f_flags & DEEFRAME_FRECLOCK                 \
-	                 ? (void)recursive_rwlock_endwrite((x)->f_prlock) \
-	                 : (void)atomic_rwlock_endwrite((x)->f_plock))    \
+	                 ? (void)recursive_rwlock_endread((x)->f_prlock)  \
+	                 : (void)Dee_atomic_rwlock_endread((x)->f_plock)) \
+	              : (void)0)
+#define PLOCK_ENDWRITE(x)                                              \
+	((x)->f_plock ? ((x)->f_flags & DEEFRAME_FRECLOCK                  \
+	                 ? (void)recursive_rwlock_endwrite((x)->f_prlock)  \
+	                 : (void)Dee_atomic_rwlock_endwrite((x)->f_plock)) \
 	              : (void)0)
 #else /* !CONFIG_NO_THREADS */
 #define PLOCK_READ(x)     (void)0
@@ -115,7 +115,7 @@ PUBLIC WUNUSED NONNULL((2)) DREF DeeObject *
 	result->f_owner = owner;
 	result->f_frame = frame;
 	result->f_flags = flags;
-	atomic_rwlock_init(&result->f_lock);
+	Dee_atomic_rwlock_init(&result->f_lock);
 #ifndef CONFIG_NO_THREADS
 	result->f_plock = (Dee_atomic_rwlock_t *)lock;
 #endif /* !CONFIG_NO_THREADS */

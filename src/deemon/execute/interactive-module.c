@@ -719,7 +719,7 @@ recover_old_code_object:
 			current_code->co_argc_max                   = 0;
 			current_code->co_framesize                  = old_co_framesize;
 			current_code->co_codebytes                  = (code_size_t)(preexisting_codesize + 1);
-			atomic_rwlock_init(&current_code->co_static_lock);
+			Dee_atomic_rwlock_init(&current_code->co_static_lock);
 			Dee_Incref((DeeObject *)self);
 			current_code->co_module   = (DREF DeeModuleObject *)self;
 			current_code->co_defaultv = NULL;
@@ -1102,7 +1102,7 @@ imod_init(InteractiveModule *__restrict self,
 	}
 
 #ifndef CONFIG_NO_THREADS
-	atomic_rwlock_init(&self->im_module.mo_lock);
+	Dee_atomic_rwlock_init(&self->im_module.mo_lock);
 	/* Setup the module to indicate that it isn't being loaded right now. */
 	self->im_module.mo_loader = NULL;
 #endif /* !CONFIG_NO_THREADS */
@@ -1341,7 +1341,7 @@ err_compiler_basefile:
 		init_code->co_argc_max  = 0;
 		init_code->co_framesize = 0;
 		init_code->co_codebytes = sizeof(instruction_t);
-		atomic_rwlock_init(&init_code->co_static_lock);
+		Dee_atomic_rwlock_init(&init_code->co_static_lock);
 		init_code->co_module   = (DREF struct module_object *)self;
 		init_code->co_defaultv = NULL;
 		init_code->co_staticv  = NULL;

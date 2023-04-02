@@ -89,7 +89,7 @@ catiterator_ctor(CatIterator *__restrict self) {
 	if unlikely(!self->cti_curr)
 		goto err_cat;
 	self->cti_pseq = DeeTuple_ELEM(self->cti_cat);
-	atomic_rwlock_init(&self->cti_lock);
+	Dee_atomic_rwlock_init(&self->cti_lock);
 	return 0;
 err_cat:
 	Dee_Decref(self->cti_cat);
@@ -112,7 +112,7 @@ catiterator_copy(CatIterator *__restrict self,
 		goto err;
 	self->cti_cat = other->cti_cat;
 	Dee_Incref(self->cti_cat);
-	atomic_rwlock_init(&self->cti_lock);
+	Dee_atomic_rwlock_init(&self->cti_lock);
 	return 0;
 err:
 	return -1;
@@ -136,7 +136,7 @@ catiterator_deep(CatIterator *__restrict self,
 	if unlikely(!self->cti_cat)
 		goto err_curr;
 	self->cti_pseq = DeeTuple_ELEM(self->cti_cat) + sequence_index;
-	atomic_rwlock_init(&self->cti_lock);
+	Dee_atomic_rwlock_init(&self->cti_lock);
 	return 0;
 err_curr:
 	Dee_Decref(self->cti_curr);
@@ -156,7 +156,7 @@ catiterator_init(CatIterator *__restrict self,
 	if unlikely(!self->cti_curr)
 		goto err;
 	Dee_Incref(self->cti_cat);
-	atomic_rwlock_init(&self->cti_lock);
+	Dee_atomic_rwlock_init(&self->cti_lock);
 	return 0;
 err:
 	return -1;
@@ -432,7 +432,7 @@ cat_iter(Cat *__restrict self) {
 	result->cti_pseq = DeeTuple_ELEM(self);
 	result->cti_cat  = self;
 	Dee_Incref(self);
-	atomic_rwlock_init(&result->cti_lock);
+	Dee_atomic_rwlock_init(&result->cti_lock);
 	DeeObject_Init(result, &SeqConcatIterator_Type);
 done:
 	return result;

@@ -73,7 +73,7 @@ socket_ctor(Socket *__restrict self,
 		                "AF_AUTO cannot be used during socket construction");
 		goto err;
 	}
-	atomic_rwlock_init(&self->s_lock);
+	Dee_atomic_rwlock_init(&self->s_lock);
 	self->s_state                 = SOCKET_FOPENED;
 	self->s_sockaddr.sa.sa_family = (sa_family_t)af;
 	self->s_type                  = type;
@@ -1949,7 +1949,7 @@ socket_doaccept(Socket *__restrict self, uint64_t timeout) {
 		return_none; /* Timeout */
 	}
 	/* Fill in the remaining members of the new socket. */
-	atomic_rwlock_init(&result->s_lock);
+	Dee_atomic_rwlock_init(&result->s_lock);
 	result->s_peeraddr.sa.sa_family = result->s_sockaddr.sa.sa_family;
 	result->s_state                 = (SOCKET_FOPENED | SOCKET_FHASSOCKADDR | SOCKET_FCONNECTED);
 	result->s_type                  = self->s_type;

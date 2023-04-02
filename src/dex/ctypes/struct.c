@@ -257,7 +257,7 @@ DeeStructType_FromSequence(DeeObject *name,
 
 	/* Fill in remaining fields and start tracking the new struct type. */
 	Dee_Incref((DeeObject *)&DeeStruct_Type);
-	atomic_rwlock_cinit(&result->st_base.st_cachelock);
+	Dee_atomic_rwlock_cinit(&result->st_base.st_cachelock);
 	result->st_base.st_base.tp_base  = (DREF DeeTypeObject *)&DeeStruct_Type;
 	result->st_base.st_base.tp_name  = DeeStruct_Type.st_base.st_base.tp_name;
 	result->st_base.st_base.tp_flags = TP_FTRUNCATE | TP_FINHERITCTOR | TP_FHEAP | TP_FMOVEANY;
@@ -787,7 +787,7 @@ INTERN struct empty_struct_type_object DeeStruct_Type = {
 			/* .tp_class_members = */ NULL
 		},
 #ifndef CONFIG_NO_THREADS
-		/* .st_cachelock = */ ATOMIC_RWLOCK_INIT,
+		/* .st_cachelock = */ DEE_ATOMIC_RWLOCK_INIT,
 #endif /* !CONFIG_NO_THREADS */
 		/* .st_pointer  = */ &DeePointer_Type,
 		/* .st_lvalue   = */ &DeeLValue_Type,

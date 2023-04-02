@@ -1569,7 +1569,7 @@ INTERN WUNUSED DREF DeeCodeObject *DCALL asm_gencode(void) {
 	result->co_argc_min = current_basescope->bs_argc_min;
 	result->co_argc_max = current_basescope->bs_argc_max;
 	result->co_padding  = 0;
-	atomic_rwlock_init(&result->co_static_lock);
+	Dee_atomic_rwlock_init(&result->co_static_lock);
 	result->co_framesize = (current_assembler.a_localc +
 	                        current_assembler.a_stackmax) *
 	                       sizeof(DeeObject *);

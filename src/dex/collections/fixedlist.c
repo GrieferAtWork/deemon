@@ -57,7 +57,7 @@ PRIVATE WUNUSED DREF FixedList *DCALL fl_ctor(void) {
 	result = (DREF FixedList *)DeeGCObject_Malloc(offsetof(FixedList, fl_elem));
 	if unlikely(!result)
 		goto done;
-	atomic_rwlock_init(&result->fl_lock);
+	Dee_atomic_rwlock_init(&result->fl_lock);
 	result->fl_size = 0;
 	weakref_support_init(result);
 	DeeObject_Init(result, &FixedList_Type);
@@ -74,7 +74,7 @@ fl_copy(FixedList *__restrict self) {
 	                                              (self->fl_size * sizeof(DREF DeeObject *)));
 	if unlikely(!result)
 		goto done;
-	atomic_rwlock_init(&result->fl_lock);
+	Dee_atomic_rwlock_init(&result->fl_lock);
 	result->fl_size = self->fl_size;
 	FixedList_LockRead(self);
 	for (i = 0; i < self->fl_size; ++i) {
@@ -158,7 +158,7 @@ fl_init_iterator(DeeObject *__restrict iterator) {
 			result = new_result;
 	}
 done:
-	atomic_rwlock_init(&result->fl_lock);
+	Dee_atomic_rwlock_init(&result->fl_lock);
 	result->fl_size = itemc;
 	weakref_support_init(result);
 	DeeObject_Init(result, &FixedList_Type);
@@ -194,7 +194,7 @@ fl_init_getitem(DREF DeeObject *(DCALL *getitem)(DeeObject *__restrict self,
 		}
 		result->fl_elem[i] = elem;
 	}
-	atomic_rwlock_init(&result->fl_lock);
+	Dee_atomic_rwlock_init(&result->fl_lock);
 	result->fl_size = length;
 	weakref_support_init(result);
 	DeeObject_Init(result, &FixedList_Type);
@@ -222,7 +222,7 @@ fl_init(size_t argc, DeeObject *const *argv) {
 		                                              (size * sizeof(DREF DeeObject *)));
 		if unlikely(!result)
 			goto err;
-		atomic_rwlock_init(&result->fl_lock);
+		Dee_atomic_rwlock_init(&result->fl_lock);
 		result->fl_size = size;
 		Dee_Incref_n(init, size);
 		memsetp(result->fl_elem, init, size);
@@ -233,7 +233,7 @@ fl_init(size_t argc, DeeObject *const *argv) {
 		                                              (size * sizeof(DREF DeeObject *)));
 		if unlikely(!result)
 			goto err;
-		atomic_rwlock_cinit(&result->fl_lock);
+		Dee_atomic_rwlock_cinit(&result->fl_lock);
 		result->fl_size = size;
 	} else {
 		size_t i;
@@ -284,7 +284,7 @@ init_from_iterator:
 		                                              (size * sizeof(DREF DeeObject *)));
 		if unlikely(!result)
 			goto err;
-		atomic_rwlock_init(&result->fl_lock);
+		Dee_atomic_rwlock_init(&result->fl_lock);
 		result->fl_size = size;
 		for (i = 0; i < size; ++i) {
 			DREF DeeObject *elem;
@@ -672,7 +672,7 @@ fl_nsi_getrange(FixedList *__restrict self, dssize_t start, dssize_t end) {
 	                                              count * sizeof(DREF DeeObject *));
 	if unlikely(!result)
 		goto done;
-	atomic_rwlock_init(&result->fl_lock);
+	Dee_atomic_rwlock_init(&result->fl_lock);
 	result->fl_size = count;
 	FixedList_LockRead(self);
 	Dee_XMovrefv(result->fl_elem, self->fl_elem + (size_t)start, count);

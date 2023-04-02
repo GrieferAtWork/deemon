@@ -153,6 +153,14 @@ struct Dee_enumattr_iterator_object {
 #endif /* !CONFIG_LONGJMP_ENUMATTR */
 };
 
+#ifdef CONFIG_LONGJMP_ENUMATTR
+#define DeeEnumAttrIterator_LockAvailable(self)  Dee_atomic_lock_available(&(self)->ei_lock)
+#define DeeEnumAttrIterator_LockAcquired(self)   Dee_atomic_lock_acquired(&(self)->ei_lock)
+#define DeeEnumAttrIterator_LockTryAcquire(self) Dee_atomic_lock_tryacquire(&(self)->ei_lock)
+#define DeeEnumAttrIterator_LockAcquire(self)    Dee_atomic_lock_acquire(&(self)->ei_lock)
+#define DeeEnumAttrIterator_LockWaitFor(self)    Dee_atomic_lock_waitfor(&(self)->ei_lock)
+#define DeeEnumAttrIterator_LockRelease(self)    Dee_atomic_lock_release(&(self)->ei_lock)
+#endif /* CONFIG_LONGJMP_ENUMATTR */
 
 DDATDEF DeeTypeObject DeeAttribute_Type;        /* `Attribute from deemon' */
 DDATDEF DeeTypeObject DeeEnumAttr_Type;         /* `enumattr from deemon' */

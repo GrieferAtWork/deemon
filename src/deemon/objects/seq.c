@@ -199,7 +199,7 @@ seqiterator_ctor(SeqIterator *__restrict self) {
 	self->si_seq     = Dee_EmptySeq;
 	self->si_index   = &DeeInt_Zero;
 	self->si_size    = &DeeInt_Zero;
-	atomic_rwlock_init(&self->si_lock);
+	Dee_atomic_rwlock_init(&self->si_lock);
 	Dee_Incref(Dee_EmptySeq);
 	Dee_Incref(&DeeInt_Zero);
 	Dee_Incref(&DeeInt_Zero);
@@ -214,7 +214,7 @@ seqiterator_copy(SeqIterator *__restrict self,
 	self->si_size    = other->si_size;
 	Dee_Incref(self->si_seq);
 	Dee_Incref(self->si_size);
-	atomic_rwlock_init(&self->si_lock);
+	Dee_atomic_rwlock_init(&self->si_lock);
 	SeqIterator_LockRead(other);
 	self->si_index = other->si_index;
 	Dee_Incref(self->si_index);
@@ -361,7 +361,7 @@ seqiterator_init(SeqIterator *__restrict self, size_t argc, DeeObject *const *ar
 	self->si_size    = DeeObject_SizeObject(self->si_seq);
 	if unlikely(!self->si_size)
 		goto err;
-	atomic_rwlock_init(&self->si_lock);
+	Dee_atomic_rwlock_init(&self->si_lock);
 	Dee_Incref(self->si_seq);
 	Dee_Incref(self->si_index);
 	return 0;
@@ -579,7 +579,7 @@ seq_iterself(DeeObject *__restrict self) {
 				/* Save a reference to the associated Sequence. */
 				result->si_seq = self;
 				Dee_Incref(self);
-				atomic_rwlock_init(&result->si_lock);
+				Dee_atomic_rwlock_init(&result->si_lock);
 				DeeObject_Init(result, &DeeGenericIterator_Type);
 				return (DREF DeeObject *)result;
 			}

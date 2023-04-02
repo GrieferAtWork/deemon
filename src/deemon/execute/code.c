@@ -1248,7 +1248,7 @@ code_copy(DeeCodeObject *__restrict self) {
 	if unlikely(!result)
 		goto done;
 	memcpy(result, self, offsetof(DeeCodeObject, co_code) + self->co_codebytes);
-	atomic_rwlock_init(&result->co_static_lock);
+	Dee_atomic_rwlock_init(&result->co_static_lock);
 	if (result->co_keywords) {
 		if (!result->co_argc_max) {
 			result->co_keywords = NULL;
@@ -1791,7 +1791,7 @@ got_flag:
 	result->co_framesize = (nlocal + nstack) * sizeof(DREF DeeObject *);
 	if (result->co_framesize > CODE_LARGEFRAME_THRESHOLD)
 		result->co_flags |= CODE_FHEAPFRAME;
-	atomic_rwlock_init(&result->co_static_lock);
+	Dee_atomic_rwlock_init(&result->co_static_lock);
 
 	/* Initialize the new code object, and start tracking it. */
 	DeeObject_Init(result, &DeeCode_Type);

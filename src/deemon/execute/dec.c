@@ -2660,7 +2660,7 @@ err_kwds_i:
 	        self->df_base + header.co_textoff,
 	        header.co_textsiz,
 	        sizeof(instruction_t));
-	atomic_rwlock_init(&result->co_static_lock);
+	Dee_atomic_rwlock_init(&result->co_static_lock);
 
 	/* Fill in remaining, basic fields of the resulting code object. */
 	result->co_flags  = header.co_flags;

@@ -920,7 +920,7 @@ again_skipdots:
 			DBG_ALIGNMENT_ENABLE();
 		}
 	}
-	atomic_rwlock_init(&self->odi_lock);
+	Dee_atomic_rwlock_init(&self->odi_lock);
 #elif defined(posix_opendir_USE_opendir)
 	DIR *dir;
 #define NEED_err
@@ -990,7 +990,7 @@ EINTR_LABEL(again)
 	DBG_ALIGNMENT_ENABLE();
 	self->odi_dir     = dir;
 	self->odi_ent     = NULL;
-	atomic_rwlock_init(&self->odi_lock);
+	Dee_atomic_rwlock_init(&self->odi_lock);
 #endif /* ... */
 	self->odi_skipdots = skipdots;
 	self->odi_path     = path;
