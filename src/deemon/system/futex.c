@@ -26,7 +26,7 @@
 #include <deemon/system.h>
 #include <deemon/thread.h>
 #include <deemon/util/atomic.h>
-#include <deemon/util/lock.h>
+#include <deemon/util/futex.h>
 
 #include <hybrid/overflow.h>
 #include <hybrid/sched/atomic-once.h>

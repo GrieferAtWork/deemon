@@ -37,6 +37,7 @@
 #include <deemon/object.h>
 #include <deemon/system-features.h>
 #include <deemon/util/atomic.h>
+#include <deemon/util/futex.h>
 
 #include <hybrid/overflow.h>
 

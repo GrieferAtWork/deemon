@@ -597,6 +597,9 @@
 		<ClInclude Include="..\include\deemon\util\cache.h">
 			<Filter>include\util</Filter>
 		</ClInclude>
+		<ClInclude Include="..\include\deemon\util\futex.h">
+			<Filter>include\util</Filter>
+		</ClInclude>
 		<ClInclude Include="..\include\deemon\util\lock.h">
 			<Filter>include\util</Filter>
 		</ClInclude>

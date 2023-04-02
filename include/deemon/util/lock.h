@@ -64,22 +64,6 @@ typedef int Dee_atomic_rwlock_t;
 #define Dee_atomic_rwlock_endread(self)    (void)0
 #define Dee_atomic_rwlock_end(self)        (void)0
 
-/* No-op out the futex API (with only a single thread, the below is
- * actually equivalent, so-long as you assume that dead-locks are
- * impossible, too) */
-#define DeeFutex_WakeOne(addr)                                     (void)0
-#define DeeFutex_WakeAll(addr)                                     (void)0
-#define DeeFutex_Wait32(addr, expected)                            0
-#define DeeFutex_Wait32Timed(addr, expected, timeout_nanoseconds)  0
-#define DeeFutex_WaitPtr(addr, expected)                           0
-#define DeeFutex_WaitPtrTimed(addr, expected, timeout_nanoseconds) 0
-#define DeeFutex_WaitInt(addr, expected)                           0
-#define DeeFutex_WaitIntTimed(addr, expected, timeout_nanoseconds) 0
-#if __SIZEOF_POINTER__ >= 8
-#define DeeFutex_Wait64(addr, expected)                           0
-#define DeeFutex_Wait64Timed(addr, expected, timeout_nanoseconds) 0
-#endif /* __SIZEOF_POINTER__ >= 8 */
-
 typedef int Dee_shared_lock_t;
 #define DEE_SHARED_LOCK_INIT                                     0
 #define DEE_SHARED_LOCK_INIT_LOCKED                              0
@@ -147,7 +131,6 @@ typedef int Dee_semaphore_t;
 #define Dee_semaphore_acquire(self)                            0
 #define Dee_semaphore_acquire_timed(self, timeout_nanoseconds) 0
 
-
 #define DeeLock_Lock2(lock_a, trylock_a, unlock_a, \
                       lock_b, trylock_b, unlock_b) \
 	(void)0
@@ -160,10 +143,12 @@ DECL_END
 
 #else /* CONFIG_NO_THREADS */
 
+#include "futex.h"
+/**/
+
 #include <hybrid/__atomic.h>
 #include <hybrid/sched/atomic-lock.h>
 #include <hybrid/sched/atomic-rwlock.h>
-#include <hybrid/typecore.h>
 
 #include <stdbool.h>
 #include <stdint.h>
@@ -206,48 +191,6 @@ typedef struct atomic_rwlock Dee_atomic_rwlock_t;
 #define Dee_atomic_rwlock_endwrite   atomic_rwlock_endwrite
 #define Dee_atomic_rwlock_endread    atomic_rwlock_endread
 #define Dee_atomic_rwlock_end        atomic_rwlock_end
-
-/************************************************************************/
-/* Low-level, futex-based wait/wake scheduling.                         */
-/************************************************************************/
-
-/* Wake up 1, or all waiting threads at a given address. */
-DFUNDEF NONNULL((1)) void (DCALL DeeFutex_WakeOne)(void *addr);
-DFUNDEF NONNULL((1)) void (DCALL DeeFutex_WakeAll)(void *addr);
-
-/* Blocking wait if `*(uint32_t *)addr == expected', until someone calls `DeeFutex_Wake*(addr)'
- * @return: 1 : [DeeFutex_Wait32Timed] The given `timeout_nanoseconds' expired.
- * @return: 0 : Success (someone called `DeeFutex_Wake*(addr)', or `*addr != expected', or spurious wake-up)
- * @return: -1: Error (an error was thrown) */
-DFUNDEF WUNUSED NONNULL((1)) int
-(DCALL DeeFutex_Wait32)(void *addr, uint32_t expected);
-DFUNDEF WUNUSED NONNULL((1)) int
-(DCALL DeeFutex_Wait32Timed)(void *addr, uint32_t expected,
-                             uint64_t timeout_nanoseconds);
-
-#if __SIZEOF_POINTER__ >= 8
-/* Same as above, but do a 64-bit equals-comparison test. */
-DFUNDEF WUNUSED NONNULL((1)) int
-(DCALL DeeFutex_Wait64)(void *addr, uint64_t expected);
-DFUNDEF WUNUSED NONNULL((1)) int
-(DCALL DeeFutex_Wait64Timed)(void *addr, uint64_t expected,
-                             uint64_t timeout_nanoseconds);
-#define DeeFutex_WaitPtr      DeeFutex_Wait64
-#define DeeFutex_WaitPtrTimed DeeFutex_Wait64Timed
-#else /* __SIZEOF_POINTER__ >= 8 */
-#define DeeFutex_WaitPtr      DeeFutex_Wait32
-#define DeeFutex_WaitPtrTimed DeeFutex_Wait32Timed
-#endif /* __SIZEOF_POINTER__ < 8 */
-
-#if __SIZEOF_INT__ <= 4
-#define DeeFutex_WaitInt      DeeFutex_Wait32
-#define DeeFutex_WaitIntTimed DeeFutex_Wait32Timed
-#else /* __SIZEOF_INT__ <= 4 */
-#define DeeFutex_WaitInt      DeeFutex_Wait64
-#define DeeFutex_WaitIntTimed DeeFutex_Wait64Timed
-#endif /* __SIZEOF_INT__ > 4 */
-
-
 
 /************************************************************************/
 /* Shared lock (scheduler-level blocking lock)                          */
