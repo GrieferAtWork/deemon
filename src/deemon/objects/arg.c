@@ -957,9 +957,7 @@ kmap_deep(KwdsMapping *__restrict self,
 	Dee_Incref(self->kmo_kwds);
 	return 0;
 err_r_argv:
-	i = count;
-	while (i--)
-		Dee_Decref(self->kmo_argv[i]);
+	Dee_Decrefv(self->kmo_argv, count);
 	Dee_Free(self->kmo_argv);
 err:
 	return -1;

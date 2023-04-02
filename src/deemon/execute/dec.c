@@ -1371,8 +1371,7 @@ err_function_code:
 			DREF DeeObject *temp;
 			temp = DecFile_LoadObject(self, &reader);
 			if unlikely(!ITER_ISOK(temp)) {
-				while (i--)
-					Dee_Decref(((DREF DeeFunctionObject *)result)->fo_refv[i]);
+				Dee_Decrefv(((DREF DeeFunctionObject *)result)->fo_refv, i);
 				DeeObject_Free(result);
 				if (!temp)
 					goto err_function_code;
@@ -1402,8 +1401,7 @@ err_function_code:
 				item = DecFile_LoadObject(self, &reader);
 			}
 			if unlikely(!ITER_ISOK(item)) {
-				while (i--)
-					Dee_Decref(DeeTuple_GET(result, i));
+				Dee_Decrefv(DeeTuple_ELEM(result), i);
 				DeeTuple_FreeUninitialized(result);
 				result = item;
 				goto done;
@@ -1430,8 +1428,7 @@ err_function_code:
 				item = DecFile_LoadObject(self, &reader);
 			}
 			if unlikely(!ITER_ISOK(item)) {
-				while (i--)
-					Dee_Decref(DeeList_GET(result, i));
+				Dee_Decrefv(DeeList_ELEM(result), i);
 				DeeList_FreeUninitialized(result);
 				result = item;
 				goto done;
@@ -2119,8 +2116,7 @@ DecFile_LoadObjectVector(DecFile *__restrict self,
 			if unlikely(!ITER_ISOK(result[i])) {
 				new_result = result[i];
 read_failed:
-				while (i--)
-					Dee_Decref(result[i]);
+				Dee_Decrefv(result, i);
 				Dee_Free(result);
 				*preader = reader;
 				return (DREF DeeObject **)new_result;
@@ -2606,8 +2602,7 @@ DecFile_LoadCode(DecFile *__restrict self,
 				char const *name;
 				if unlikely(kwd_reader >= end) {
 corrupt_kwds_i:
-					while (i--)
-						Dee_Decref(kwds[i]);
+					Dee_Decrefv(kwds, i);
 					Dee_Free(kwds);
 					GOTO_CORRUPTED(kwd_reader, corrupt_r_ddi);
 				}
@@ -2618,8 +2613,7 @@ corrupt_kwds_i:
 				if ((kwds[i] = (DREF DeeStringObject *)DeeString_NewUtf8(name, strlen(name),
 				                                                         STRING_ERROR_FSTRICT)) == NULL) {
 err_kwds_i:
-					while (i--)
-						Dee_Decref(kwds[i]);
+					Dee_Decrefv(kwds, i);
 					Dee_Free(kwds);
 					goto err_r_ddi;
 				}

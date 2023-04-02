@@ -797,7 +797,7 @@ DeeCode_ExecFrameSafe(struct Dee_code_frame *__restrict frame);
 #endif /* !DEE_EXEC_ALTSTACK_PERIOD */
 
 #ifndef DEE_EXEC_ALTSTACK_SIZE
- /* NOTE: Changes must be mirrored in `altstack-x86_64.S' */
+ /* NOTE: Changes must be mirrored in `altstack.ms-x64.S' */
 #define DEE_EXEC_ALTSTACK_SIZE (__SIZEOF_POINTER__ * 1024 * 512)
 #endif /* !DEE_EXEC_ALTSTACK_SIZE */
 

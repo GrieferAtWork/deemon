@@ -1844,6 +1844,7 @@ err:
 INTERN WUNUSED int DCALL
 asm_gpop_expr_multiple(size_t astc, struct ast **astv) {
 	size_t i, j;
+
 	/* Optimization: Trailing asts with no side-effects can be handled in reverse order */
 	while (astc && !ast_has_sideeffects(astv[astc - 1])) {
 		--astc; /* This way we don't have to rotate stack-elements. */
@@ -1853,6 +1854,7 @@ asm_gpop_expr_multiple(size_t astc, struct ast **astv) {
 	if (!astc)
 		goto done;
 	i = 0;
+
 	/* Find the first AST that does actually have side-effects. */
 	while (i < astc && !ast_has_sideeffects(astv[i]))
 		++i;
@@ -1862,10 +1864,12 @@ asm_gpop_expr_multiple(size_t astc, struct ast **astv) {
 		if (asm_gpop_expr(astv[j]))
 			goto err;
 	}
+
 	/* Handle leading asts without side-effects in reverse order. */
-	while (i--)
+	while (i--) {
 		if (asm_gpop_expr(astv[i]))
 			goto err;
+	}
 done:
 	return 0;
 err:

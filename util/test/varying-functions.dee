@@ -25,7 +25,7 @@ varying function foo() -> "v1";
 varying function foo() -> "v2";
 assert foo() == "v2";
 
-/* Without `varying', trying to re-assign a function symbol must throw an RuntimeError */
+/* Without `varying', trying to re-assign a function symbol must throw a RuntimeError */
 local error = none;
 try {
 	function bar() -> "v1";

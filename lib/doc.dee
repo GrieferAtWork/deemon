@@ -360,6 +360,7 @@ local final function getIteratorSequenceTypeDoc(typ: Type): string {
 		}
 		if (!result)
 			result = "?DSequence";
+		_knownIteratorSequenceTypes[typ] = result;
 	}
 	return result;
 }

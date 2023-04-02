@@ -138,8 +138,7 @@ segiter_next(SegmentsIterator *__restrict self) {
 	}
 	return result;
 err_r_i:
-	while (i--)
-		Dee_Decref(DeeTuple_GET(result, i));
+	Dee_Decrefv(DeeTuple_ELEM(result), i);
 	DeeTuple_FreeUninitialized(result);
 	return NULL;
 err_elem:

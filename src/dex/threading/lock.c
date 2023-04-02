@@ -265,17 +265,19 @@ DOC_DEF(doc_lock_tryacquire,
         "Try to acquire @this lock, returning !t on success, and !f if doing so would block");
 DOC_DEF(doc_lock_timedacquire,
         "(timeout_nanoseconds:?Dint)->?Dbool\n"
+        "@interrupt\n"
         "Same as ?#acquire, returning !t on success, but block for at "
         /**/ "most @timeout_nanoseconds. Once that amount of time has elapsed, "
         /**/ "stop trying to acquire the lock and fail by returning !f instead.");
 DOC_DEF(doc_lock_waitfor,
         "()\n"
         "@interrupt\n"
-        "Wait until acquiring @this lock without blocking becomes possible\n"
+        "Wait until @this lock can be acquired without blocking\n"
         "Note that by the time this function returns, trying to acquire the "
         /**/ "lock might already block once again.");
 DOC_DEF(doc_lock_timedwaitfor,
         "(timeout_nanoseconds:?Dint)->?Dbool\n"
+        "@interrupt\n"
         "Same as ?#waitfor, returning !t on success, but block for at "
         /**/ "most @timeout_nanoseconds. Once that amount of time has elapsed, "
         /**/ "stop trying to wait for the lock to become available, and fail "
@@ -324,7 +326,7 @@ DOC_DEF(doc_rwlock_timedwrite,
 DOC_DEF(doc_rwlock_waitread,
         "()\n"
         "@interrupt\n"
-        "Wait until acquiring a shared lock without blocking becomes possible\n"
+        "Wait until a shared lock can be acquired without blocking\n"
         "Note that by the time this function returns, trying to acquire a shared "
         /**/ "lock might already block once again.\n"
         "Same as ${this.shared.waitfor()}");
@@ -339,7 +341,7 @@ DOC_DEF(doc_rwlock_timedwaitread,
 DOC_DEF(doc_rwlock_waitwrite,
         "()\n"
         "@interrupt\n"
-        "Wait until acquiring an exclusive lock without blocking becomes possible\n"
+        "Wait until an exclusive lock can be acquired without blocking\n"
         "Note that by the time this function returns, trying to acquire an exclusive "
         /**/ "lock might already block once again.\n"
         "Same as ${this.exclusive.waitfor()}");
@@ -371,8 +373,8 @@ DOC_DEF(doc_rwlock_tryupgrade,
         "If the lock was upgraded, return !t. Otherwise, the shared lock is kept, and !f is returned.");
 DOC_DEF(doc_rwlock_upgrade,
         "->?DBool\n"
-        "@throws ValueError Not holding a shared lock at the moment\n"
         "@interrupt\n"
+        "@throws ValueError Not holding a shared lock at the moment\n"
         "@return true Lock upgrade could be performed atomically (without dropping the shared lock temporarily)\n"
         "@return false Lock upgrade was performed by temporarily dropping the shared lock, before acquiring an exclusive lock\n"
         "Upgrade a shared lock into an exclusive lock (if an interrupt error is thrown, the shared lock was released)");
@@ -393,11 +395,11 @@ DOC_DEF(doc_rwlock_canwrite,
         "->?Dbool\n"
         "Returns !t so-long as no shared- and no exclusive locks are being held (inverse of ?#reading)");
 DOC_DEF(doc_rwlock_shared,
-        "->?#Shared\n"
+        "->?GRWLockSharedLock\n"
         "Return a ?GLock-compatible wrapper object around @this read/write-lock "
         /**/ "that can be used to acquire a shared (read) locks");
 DOC_DEF(doc_rwlock_exclusive,
-        "->?#Exclusive\n"
+        "->?GRWLockExclusiveLock\n"
         "Return a ?GLock-compatible wrapper object around @this read/write-lock "
         /**/ "that can be used to acquire an exclusive (write) locks");
 
@@ -611,7 +613,7 @@ INTERN DeeTypeObject DeeLock_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "Lock",
 	/* .tp_doc      = */ DOC("Abstract base class for lock-objects.\n"
-	                         "Sub-classes of this type must implement at least the following member functions:\n"
+	                         "Sub-classes of this type must implement at least the following members:\n"
 	                         "${"
 	                         /**/ "function tryacquire(): bool;\n"
 	                         /**/ "function release();\n"
@@ -626,7 +628,7 @@ INTERN DeeTypeObject DeeLock_Type = {
 	                         /**/ "function timedwaitfor(timeout_nanoseconds: int): bool;\n"
 	                         /**/ "property available: bool = { get(): bool; };"
 	                         "}\n"
-	                         "This base-class also implements ?#op:enter and ?#op:leave such that they "
+	                         "This base-class also implements ?#{op:enter} and ?#{op:leave} such that they "
 	                         "will call the #Cacquire and #Crelease member functions of the sub-class."),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FABSTRACT,
 	/* .tp_weakrefs = */ 0,
@@ -1701,7 +1703,7 @@ INTERN DeeTypeObject DeeRWLock_Type = {
 	                         /**/ "function endread();\n"
 	                         /**/ "function endwrite();\n"
 	                         /**/ "function downgrade();\n"
-	                         /**/ "property reading: bool = { get(): bool; };"
+	                         /**/ "property reading: bool = { get(): bool; };\n"
 	                         /**/ "property writing: bool = { get(): bool; };"
 	                         "}\n"
 	                         "Unless overwritten by a sub-class, this type implements the "
@@ -1803,7 +1805,7 @@ rwlock_proxy_visit(DeeGenericRWLockProxyObject *__restrict self,
 }
 
 PRIVATE struct type_member rwlock_proxy_members[] = {
-	TYPE_MEMBER_FIELD("rwlock", STRUCT_OBJECT, offsetof(DeeGenericRWLockProxyObject, grwl_lock)),
+	TYPE_MEMBER_FIELD_DOC("rwlock", STRUCT_OBJECT, offsetof(DeeGenericRWLockProxyObject, grwl_lock), "->?GRWLock"),
 	TYPE_MEMBER_END
 };
 

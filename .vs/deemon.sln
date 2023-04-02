@@ -373,6 +373,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{2360741E-F
 		..\util\test\template-string-jit.dee = ..\util\test\template-string-jit.dee
 		..\util\test\template-string.dee = ..\util\test\template-string.dee
 		..\util\test\thousands-grouping.dee = ..\util\test\thousands-grouping.dee
+		..\util\test\threading.dee = ..\util\test\threading.dee
 		..\util\test\time.dee = ..\util\test\time.dee
 		..\util\test\type-annotations.dee = ..\util\test\type-annotations.dee
 		..\util\test\type-mro.dee = ..\util\test\type-mro.dee

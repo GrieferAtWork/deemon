@@ -414,6 +414,11 @@ PUBLIC WUNUSED int DCALL DeeFileBuffer_SyncTTYs(void) {
 		if (!buffer)
 			break;
 		/* Synchronize this buffer. */
+
+		/* FIXME: This right here dead-locks with `buffer_write()', because we're trying
+		 *        to acquire the same object-semantic lock twice here. If 2 threads try
+		 *        to do this at the same time, 2 buffers locks will already be held, and
+		 *        neither thread will be able to acquire the other thread's lock here! */
 		buf_write(buffer);
 		COMPILER_BARRIER();
 		result = buffer_sync_nolock(buffer, BUFFER_SYNC_FNORMAL);

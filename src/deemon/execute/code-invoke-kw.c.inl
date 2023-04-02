@@ -176,8 +176,7 @@ PP_CAT2(MY_FUNCTION_NAME, IntellisenseInternal)
 #ifdef KW_IS_MAPPING
 			val = DeeObject_GetItemDef(kw, (DeeObject *)name, ITER_DONE);
 			if unlikely(!ITER_ISOK(val)) {
-				while (i--)
-					Dee_XDecref(frame.cf_kw->fk_kargv[i]);
+				Dee_XDecrefv(frame.cf_kw->fk_kargv, i);
 				if (val != NULL) {
 					/* Missing, mandatory argument. */
 					err_invalid_argc_missing_kw(DeeString_STR(name),
@@ -199,8 +198,7 @@ PP_CAT2(MY_FUNCTION_NAME, IntellisenseInternal)
 				                            code->co_argc_min,
 				                            code->co_argc_max);
 #if CODE_FLAGS & CODE_FYIELDING
-				while (i--)
-					Dee_XDecref(frame.cf_kw->fk_kargv[i]);
+				Dee_XDecrefv(frame.cf_kw->fk_kargv, i);
 #endif /* CODE_FLAGS & CODE_FYIELDING */
 				goto err_ex_frame;
 			}
@@ -230,8 +228,7 @@ PP_CAT2(MY_FUNCTION_NAME, IntellisenseInternal)
 		val = DeeObject_GetItemDef(kw, (DeeObject *)name, ITER_DONE);
 		if (!ITER_ISOK(val)) {
 			if unlikely(!val) {
-				while (i--)
-					Dee_XDecref(frame.cf_kw->fk_kargv[i]);
+				Dee_XDecrefv(frame.cf_kw->fk_kargv, i);
 				goto err_ex_frame;
 			}
 			frame.cf_kw->fk_kargv[i] = NULL; /* Unset value. */

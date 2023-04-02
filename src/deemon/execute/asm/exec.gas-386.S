@@ -39,12 +39,12 @@
 
 
 /* Reminder: Optimization:
- * >>	testl %eax, %eax
- * >>	jnz   .except
+ * >>	testl  %eax, %eax
+ * >>	jnz    .except
  * >>	jmp    .disp
  * Considering that the except-branch
  * is unlikely, this can be written as:
- * >>	testl %eax, %eax
+ * >>	testl  %eax, %eax
  * >>	jz     .disp
  * >>	jmp    .except
  * When written as such, the more likely

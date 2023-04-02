@@ -1548,8 +1548,7 @@ INTERN WUNUSED DREF DeeCodeObject *DCALL asm_gencode(void) {
 				                                                   name->k_size,
 				                                                   STRING_ERROR_FIGNORE);
 				if unlikely(!nameob) {
-					while (i--)
-						Dee_Decref(kwds[i]);
+					Dee_Decrefv(kwds, i);
 					Dee_Free(kwds);
 					goto err_ddi;
 				}

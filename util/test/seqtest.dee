@@ -23,8 +23,8 @@ import * from deemon;
 import collections;
 
 final global LIKE_SEQ = "Sequence";
-final global LIKE_SET = "set";
-final global LIKE_MAP = "mapping";
+final global LIKE_SET = "Set";
+final global LIKE_MAP = "Mapping";
 
 function testSequenceType(typ: Type, cls: string) {
 	assert !typ();

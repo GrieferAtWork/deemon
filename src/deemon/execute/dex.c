@@ -121,8 +121,7 @@ dex_load_handle(DeeDexObject *__restrict self,
 			                                    NULL,
 			                                    true);
 			if unlikely(!import) {
-				while (i--)
-					Dee_Decref(imports[i]);
+				Dee_Decrefv(imports, i);
 				goto err_imp;
 			}
 			imports[i] = (DREF DeeModuleObject *)import;

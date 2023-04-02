@@ -458,29 +458,24 @@ PRIVATE WUNUSED DREF DeeTracebackObject *DCALL traceback_new(void) {
 PRIVATE NONNULL((1)) void DCALL
 traceback_fini(DeeTracebackObject *__restrict self) {
 	struct code_frame *frame;
-	size_t i, frame_index;
+	size_t frame_index;
 	Dee_Decref(self->tb_thread);
 	frame_index = self->tb_numframes;
-	while (frame_index--) {
+	while (frame_index) {
+		--frame_index;
 		frame = &self->tb_frames[frame_index];
 		ASSERT_OBJECT_TYPE(frame->cf_func, &DeeFunction_Type);
 		ASSERT_OBJECT_TYPE(frame->cf_func->fo_code, &DeeCode_Type);
 		/* Decref local variables. */
-		i = frame->cf_func->fo_code->co_localc;
-		while (i--)
-			Dee_XDecref(frame->cf_frame[i]);
+		Dee_XDecrefv(frame->cf_frame, frame->cf_func->fo_code->co_localc);
 		Dee_Free(frame->cf_frame);
 		/* Decref stack objects. */
 		if (frame->cf_stacksz) {
-			i = frame->cf_stacksz;
-			while (i--)
-				Dee_Decref(frame->cf_stack[i]);
+			Dee_Decrefv(frame->cf_stack, frame->cf_stacksz);
 			Dee_Free(frame->cf_stack);
 		}
 		/* Decref argument objects. */
-		i = frame->cf_argc;
-		while (i--)
-			Dee_Decref(frame->cf_argv[i]);
+		Dee_Decrefv(frame->cf_argv, frame->cf_argc);
 		Dee_Free((void *)frame->cf_argv);
 		/* Decref misc. frame objects. */
 		Dee_Decref(frame->cf_func);
@@ -648,9 +643,10 @@ traceback_print(DeeTracebackObject *__restrict self,
                 dformatprinter printer, void *arg) {
 	dssize_t temp, result = 0;
 	uint16_t i = self->tb_numframes;
-	while (i--) {
+	while (i) {
 		DREF DeeCodeObject *code;
 		code_addr_t ip;
+		--i;
 		atomic_lock_acquire(&self->tb_lock);
 		code = self->tb_frames[i].cf_func->fo_code;
 		Dee_Incref(code);

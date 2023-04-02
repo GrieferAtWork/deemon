@@ -4174,9 +4174,7 @@ again:
 		Dee_Free(pidProcesses);
 		return (DREF DeeObject *)result;
 err_pids_result:
-		while (i--) {
-			Dee_Decref_likely(DeeTuple_GET(result, i));
-		}
+		Dee_Decrefv_likely(DeeTuple_ELEM(result), i);
 		DeeTuple_FreeUninitialized((DREF DeeObject *)result);
 	}
 err_modules:

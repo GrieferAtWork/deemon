@@ -461,8 +461,7 @@ com_deepcopy(Combinations *__restrict self,
 		for (i = 0; i < other->c_seqlen; ++i) {
 			elem_copy[i] = DeeObject_DeepCopy(other->c_elem[i]);
 			if unlikely(!elem_copy[i]) {
-				while (i--)
-					Dee_Decref(elem_copy[i]);
+				Dee_Decrefv(elem_copy, i);
 				Dee_Free(elem_copy);
 				goto err;
 			}
@@ -930,8 +929,7 @@ copy_indices:
 	Dee_AFree(result_indices);
 	return result;
 err_indices_r:
-	while (i--)
-		Dee_Decref(DeeTuple_GET(result, i));
+	Dee_Decrefv(DeeTuple_ELEM(result), i);
 	DeeTuple_FreeUninitialized(result);
 err_indices:
 	Dee_AFree(result_indices);

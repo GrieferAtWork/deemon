@@ -827,7 +827,8 @@ retry:
 		 * >> add top, pop */
 		i                    = invoc->ai_opcount;
 		immediate_stackdepth = current_assembler.a_stackcur;
-		while (i--) {
+		while (i) {
+			--i;
 			if (!(invoc->ai_ops[i].io_class & OPERAND_CLASS_FSTACKFLAG))
 				continue;
 			if (!OPERAND_CLASS_ISDISP(invoc->ai_ops[i].io_class))

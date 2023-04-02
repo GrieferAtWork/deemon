@@ -26,8 +26,6 @@ import fs;
 fs.chdir(fs.headof(__FILE__) + "/..");
 
 /* Make sure that .gitignore is being parsed correctly. */
-fs.expand(fs.abspath(fs.headof(__FILE__) + ".."), "pc")
-		.replace("\\", "/").rstrip("/") + "/";;
 assert isFileGitIgnored("deemon.exe");
 
 global final DEEMON_GUID = "8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942";

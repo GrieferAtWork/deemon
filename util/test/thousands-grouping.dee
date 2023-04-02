@@ -116,7 +116,7 @@ A\
 \
 0 == expected;
 
-/* Ensure that the compiler produces warnings for base uses of thousands groupings
+/* Ensure that the compiler produces warnings for bad uses of thousands groupings
  * Reminder: suppressing a warning disables it only once, such that it's turned on
  *           after being triggered once. -- As such, we can effectively assert that
  *           the compiler *would* have produced a warning. */

@@ -36,7 +36,7 @@ assert f'before{'abc' + x}after' == "beforeabc42after";
 assert f"before{'"' + x}after" == "before\"42after";
 assert f'before{"'" + x}after' == "before\'42after";
 
-/* In deemon's template strings, braces can be escaped with bashlashes */
+/* In deemon's template strings, braces can be escaped with bash-slashes */
 assert f'\{' == '{';
 assert f'\}' == '}';
 

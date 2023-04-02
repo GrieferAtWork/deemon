@@ -1758,19 +1758,15 @@ err:
 
 PRIVATE NONNULL((1)) void DCALL
 imod_fini(InteractiveModule *__restrict self) {
-	size_t i;
 	Dee_XDecref(self->im_stream);
 	Dee_XDecref(self->im_compiler);
 	if (self->im_basefile)
 		TPPFile_Decref(self->im_basefile);
-	if (self->im_module.mo_root) {
-		for (i = 0; i < self->im_module.mo_root->co_localc; ++i)
-			Dee_XDecref(self->im_frame.cf_frame[i]);
-	}
+	if (self->im_module.mo_root)
+		Dee_XDecrefv(self->im_frame.cf_frame, self->im_module.mo_root->co_localc);
 	Dee_Free(self->im_frame.cf_frame);
-	i = (size_t)(self->im_frame.cf_sp - self->im_frame.cf_stack);
-	while (i--)
-		Dee_Decref(self->im_frame.cf_stack[i]);
+	Dee_Decrefv(self->im_frame.cf_stack, (size_t)(self->im_frame.cf_sp -
+	                                              self->im_frame.cf_stack));
 	Dee_Free(self->im_frame.cf_stack);
 	Dee_Decref(self->im_frame.cf_vargs);
 	Dee_XDecref(self->im_frame.cf_func);
@@ -1781,14 +1777,13 @@ imod_fini(InteractiveModule *__restrict self) {
 	}
 	decref_options(&self->im_options);
 	ASSERT(!(self->im_module.mo_flags & MODULE_FDIDLOAD));
-	for (i = 0; i < self->im_module.mo_globalc; ++i)
-		Dee_XDecref(self->im_module.mo_globalv[i]);
+	Dee_XDecrefv(self->im_module.mo_globalv, self->im_module.mo_globalc);
 	Dee_Free(self->im_module.mo_globalv);
 }
 
 PRIVATE NONNULL((1)) void DCALL
 imod_clear(InteractiveModule *__restrict self) {
-	size_t i, localc, old_globalc;
+	size_t localc, old_globalc;
 	DREF DeeObject *old_stream;
 	DREF DeeObject **old_globalv;
 	struct compiler_options old_options;
@@ -1817,10 +1812,10 @@ imod_clear(InteractiveModule *__restrict self) {
 	self->im_frame.cf_result  = NULL;
 	self->im_frame.cf_stacksz = 0;
 	self->im_frame.cf_flags   = 0;
-	localc                    = self->im_module.mo_root ? self->im_module.mo_root->co_localc : 0;
+	localc = self->im_module.mo_root ? self->im_module.mo_root->co_localc : 0;
 	ASSERT(!(self->im_module.mo_flags & MODULE_FDIDLOAD));
-	old_globalc                = self->im_module.mo_globalc;
-	old_globalv                = self->im_module.mo_globalv;
+	old_globalc = self->im_module.mo_globalc;
+	old_globalv = self->im_module.mo_globalv;
 	self->im_module.mo_globalc = 0;
 	self->im_module.mo_globalv = NULL;
 	recursive_rwlock_endwrite(&self->im_exec_lock);
@@ -1828,15 +1823,11 @@ imod_clear(InteractiveModule *__restrict self) {
 	Dee_XDecref(old_compiler);
 	if (old_basefile)
 		TPPFile_Decref(old_basefile);
-	for (i = 0; i < localc; ++i)
-		Dee_XDecref(old_frame.cf_frame[i]);
+	Dee_XDecrefv(old_frame.cf_frame, localc);
 	Dee_Free(old_frame.cf_frame);
-	for (i = 0; i < old_globalc; ++i)
-		Dee_XDecref(old_globalv[i]);
+	Dee_XDecrefv(old_globalv, old_globalc);
 	Dee_Free(old_globalv);
-	i = (size_t)(old_frame.cf_sp - old_frame.cf_stack);
-	while (i--)
-		Dee_Decref(old_frame.cf_stack[i]);
+	Dee_Decrefv(old_frame.cf_stack, (size_t)(old_frame.cf_sp - old_frame.cf_stack));
 	Dee_Free(old_frame.cf_stack);
 	Dee_XDecref(old_frame.cf_func);
 	if (old_options.co_inner) {
@@ -1849,7 +1840,6 @@ imod_clear(InteractiveModule *__restrict self) {
 
 PRIVATE NONNULL((1, 2)) void DCALL
 imod_visit(InteractiveModule *__restrict self, dvisit_t proc, void *arg) {
-	size_t i;
 	recursive_rwlock_read(&self->im_exec_lock);
 	recursive_rwlock_read(&self->im_lock);
 	Dee_Visit(self->im_stream);
@@ -1862,13 +1852,9 @@ imod_visit(InteractiveModule *__restrict self, dvisit_t proc, void *arg) {
 	visit_options(&self->im_options, proc, arg);
 	recursive_rwlock_endread(&self->im_lock);
 	/* TODO: `TPPFile_Visit(self->im_basefile)' */
-	if (self->im_module.mo_root) {
-		for (i = 0; i < self->im_module.mo_root->co_localc; ++i)
-			Dee_XVisit(self->im_frame.cf_frame[i]);
-	}
-	i = (size_t)(self->im_frame.cf_sp - self->im_frame.cf_stack);
-	while (i--)
-		Dee_Visit(self->im_frame.cf_stack[i]);
+	if (self->im_module.mo_root)
+		Dee_XVisitv(self->im_frame.cf_frame, self->im_module.mo_root->co_localc);
+	Dee_Visitv(self->im_frame.cf_stack, (size_t)(self->im_frame.cf_sp - self->im_frame.cf_stack));
 	Dee_Visit(self->im_frame.cf_vargs);
 	Dee_Visit(self->im_frame.cf_func);
 	recursive_rwlock_endread(&self->im_exec_lock);

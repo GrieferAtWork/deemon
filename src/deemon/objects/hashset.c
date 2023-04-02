@@ -391,9 +391,7 @@ remove_duplicate_key:
 err_items_v_new_map:
 	Dee_Free(new_map);
 err_items_v:
-	i = item_count;
-	while (i--)
-		Dee_Decref(items[i]);
+	Dee_Decrefv(items, item_count);
 err_items:
 	Dee_Free(items);
 	return -1;

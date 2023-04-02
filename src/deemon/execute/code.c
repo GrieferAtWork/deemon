@@ -92,7 +92,7 @@
 #if defined(EXEC_ALTSTACK_ALLOC_USE_STUB)
 #define EXEC_ALTSTACK_ASM_USE_STUB 1
 #elif defined(_MSC_VER) && defined(__x86_64__)
-#define EXEC_ALTSTACK_ASM_USE_EXTERNAL 1 /* The x86_64+msvc version is implemented in `asm/altstack-x86_64.S' */
+#define EXEC_ALTSTACK_ASM_USE_EXTERNAL 1 /* The x86_64+msvc version is implemented in `asm/altstack.ms-x64.S' */
 #elif defined(__COMPILER_HAVE_GCC_ASM) && \
      (defined(__x86_64__) || defined(__i386__))
 #define EXEC_ALTSTACK_ASM_USE_GCC 1
@@ -204,9 +204,9 @@ DECL_BEGIN
 #endif /* !MAP_FAILED */
 #elif defined(EXEC_ALTSTACK_ALLOC_USE_MALLOC)
 #define ALTSTACK_ALLOC_FAILED NULL
-#else
+#else /* ... */
 #define ALTSTACK_ALLOC_FAILED NULL
-#endif
+#endif /* !... */
 
 LOCAL void *DCALL tryalloc_altstack(void) {
 #ifdef EXEC_ALTSTACK_ALLOC_USE_VIRTUALALLOC
@@ -237,7 +237,7 @@ LOCAL void *DCALL tryalloc_altstack(void) {
 	              MMAP_STACK_FLAGS | MAP_STACK,
 	              fd, 0);
 #ifdef CONFIG_HAVE_close
-	close(fd);
+	(void)close(fd);
 #endif /* CONFIG_HAVE_close */
 	return result;
 #endif /* !MAP_ANONYMOUS */
@@ -254,12 +254,12 @@ LOCAL void *DCALL tryalloc_altstack(void) {
 
 STACK_ALLOCATOR_DECL void DCALL free_altstack(void *stack) {
 #ifdef EXEC_ALTSTACK_ALLOC_USE_VIRTUALALLOC
-	VirtualFree(stack, DEE_EXEC_ALTSTACK_SIZE, MEM_RELEASE);
+	(void)VirtualFree(stack, DEE_EXEC_ALTSTACK_SIZE, MEM_RELEASE);
 #endif /* EXEC_ALTSTACK_ALLOC_USE_VIRTUALALLOC */
 
 #ifdef EXEC_ALTSTACK_ALLOC_USE_MMAP
 #ifdef CONFIG_HAVE_munmap
-	munmap(stack, DEE_EXEC_ALTSTACK_SIZE);
+	(void)munmap(stack, DEE_EXEC_ALTSTACK_SIZE);
 #else /* CONFIG_HAVE_munmap */
 	(void)stack;
 #endif /* !CONFIG_HAVE_munmap */
@@ -714,7 +714,8 @@ check_other_threads:
 	return 0;
 already_executing:
 	DeeError_Throwf(&DeeError_ValueError,
-	                "Cannot set assembly mode for code object %k while it is being executed",
+	                "Cannot set assembly mode for code "
+	                "object %k while it is being executed",
 	                self);
 err:
 	return -1;
@@ -735,6 +736,7 @@ code_fini(DeeCodeObject *__restrict self) {
 		uint16_t count = self->co_argc_max - self->co_argc_min;
 		Dee_XDecrefv(self->co_defaultv, count);
 	}
+
 	/* Clear static variables/constants. */
 	Dee_Decrefv(self->co_staticv, self->co_staticc);
 

@@ -1105,8 +1105,7 @@ jf_getkwds(JITFunction *__restrict self) {
 done:
 	return result;
 err_r_i:
-	while (i--)
-		Dee_Decref_likely(DeeTuple_GET(result, i));
+	Dee_Decrefv_likely(DeeTuple_ELEM(result), i);
 	DeeTuple_FreeUninitialized(result);
 	return NULL;
 }

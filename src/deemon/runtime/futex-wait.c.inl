@@ -91,7 +91,7 @@ again:
 		/* Prevent dead-lock in case we got here after a race
 		 * between `DeeFutex_WakeOne()' and `DeeThread_Interrupt()'
 		 *
-		 * -> Wake up anyone else that might be waiting on this futx. */
+		 * -> Wake up anyone else that might be waiting on this futex. */
 		DeeFutex_WakeAll(addr);
 	} else {
 #if (defined(DeeFutex_USE_os_futex) || \

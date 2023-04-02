@@ -305,23 +305,23 @@ struct futex_controller {
 		 *
 		 * You would that that we'd be able to just directly use `WaitOnAddress' on the
 		 * actual futex address in order to implement fully support for futex operation.
-		 * 
+		 *
 		 * And you'd be correct (but sadly only kind-of)
-		 * 
+		 *
 		 * The problem here lies in the fact that `WaitOnAddress' IS NOT INTERRUPTIBLE,
 		 * and there is no `WaitOnAddressEx' function with `BOOL bAlertable' which we
 		 * could then set to `TRUE'
-		 * 
+		 *
 		 * As such, `DeeThread_Wake()' would have no way to interrupt/wake-up a thread
 		 * which is currently being blocked in a call to `WaitOnAddress'.
-		 * 
+		 *
 		 * Now you may think this could be solved by simply keeping a singly-linked list
-		 * of all threads that are currently inside of calls to `WaitOnAddress', so then
+		 * of all threads that are currently inside of calls to `WaitOnAddress', so that
 		 * we could simply call `WakeByAddressAll' on all of those thread.
-		 * But the problem with this would be the race condition between the thread that
-		 * has yet to reach kernel-space and enter its truly-sleeping-state. If we were
-		 * to try and wake up the thread *before* then, it wouldn't get the memo and also
-		 * would not receive the interrupt.
+		 * But the problem with this would be the race condition of a thread that has yet
+		 * to reach kernel-space and enter its truly-sleeping-state. If we were to try
+		 * and wake up the thread *before* then, it wouldn't get the memo and also would
+		 * not receive the interrupt.
 		 * This *could* be rectified if we had a method `IsThreadBlockedOnSomething()`,
 		 * but alas, no such method exists (and the only way to get information about
 		 * the actual sleep-state of threads doesn't let you specify a specific thread,
@@ -329,7 +329,7 @@ struct futex_controller {
 		 * such a function existed, we'd be able to briefly wait until a thread that
 		 * already appears in the list of threads calling `WaitOnAddress' actually has
 		 * entered its sleep-state (so it'll be able to receive `WakeByAddressAll').
-		 * 
+		 *
 		 * So with all of this in mind, the only *real* way we have is to use a futex
 		 * control word like we also do under `DeeFutex_USE_os_futex_32_only', and then
 		 * have `DeeThread_Wake()' increment that control word for all futexes, before
