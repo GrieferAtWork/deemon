@@ -320,7 +320,7 @@ END(_impl_assert_failed)
 #define mo_globalv     (mo_globpself+24) /* DREF DeeObject **mo_globalv; */
 #define mo_root        (mo_globpself+28) /* DREF DeeCodeObject *mo_root; */
 #ifndef CONFIG_NO_THREADS
-#define mo_lock        (mo_globpself+32) /* atomic_rwlock_t mo_lock; */
+#define mo_lock        (mo_globpself+32) /* Dee_atomic_rwlock_t mo_lock; */
 #define mo_loader      (mo_globpself+36) /* struct thread_object *mo_loader; */
 #endif /* !CONFIG_NO_THREADS */
 /* }; */
@@ -365,7 +365,7 @@ END(_impl_assert_failed)
 #define co_framesize   (DEE_OBJECT_OFFSETOF_DATA+16) /* uint32_t co_framesize; */
 #define co_codebytes   (DEE_OBJECT_OFFSETOF_DATA+20) /* code_size_t co_codebytes; */
 #ifndef CONFIG_NO_THREADS
-#define co_static_lock (DEE_OBJECT_OFFSETOF_DATA+24) /* atomic_rwlock_t co_static_lock; */
+#define co_static_lock (DEE_OBJECT_OFFSETOF_DATA+24) /* Dee_atomic_rwlock_t co_static_lock; */
 #define co_module      (DEE_OBJECT_OFFSETOF_DATA+28) /* DREF DeeModuleObject *co_module; */
 #define co_next        (DEE_OBJECT_OFFSETOF_DATA+28) /* DREF DeeCodeObject *co_next; */
 #define co_keywords    (DEE_OBJECT_OFFSETOF_DATA+32) /* DREF struct kwds_object *co_keywords; */

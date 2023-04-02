@@ -107,7 +107,7 @@ LIST_HEAD(xml_node_list, xml_node);
 struct xml_node {
 	DWEAK Dee_refcnt_t         xn_refcnt;    /* Reference counter. */
 #ifndef CONFIG_NO_THREADS
-	atomic_rwlock_t            xn_lock;      /* Lock for modifications made to this node. */
+	Dee_atomic_rwlock_t        xn_lock;      /* Lock for modifications made to this node. */
 #endif /* !CONFIG_NO_THREADS */
 	DREF struct xml_node_list  xn_changes;   /* [0..1][lock(xn_lock)] Chain of modified XML child Nodes. */
 	DREF LIST_ENTRY(xml_node)  xn_changed;   /* [lock(:xno_parent->xno_node->xn_lock)]

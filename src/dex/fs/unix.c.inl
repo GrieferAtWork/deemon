@@ -1049,10 +1049,10 @@ typedef struct {
 
 typedef struct {
 	OBJECT_HEAD
-	DREF Dir     *di_dir;  /* [1..1][const] The associated directory. */
-	DREF DIR     *di_hnd;  /* [0..1][lock(di_lock)] The directory being iterated. */
+	DREF Dir         *di_dir;  /* [1..1][const] The associated directory. */
+	DREF DIR         *di_hnd;  /* [0..1][lock(di_lock)] The directory being iterated. */
 #ifndef CONFIG_NO_THREADS
-	atomic_lock_t di_lock; /* Lock for this iterator. */
+	Dee_atomic_lock_t di_lock; /* Lock for this iterator. */
 #endif /* !CONFIG_NO_THREADS */
 } DirIterator;
 
@@ -1078,10 +1078,10 @@ diriter_next(DirIterator *__restrict self) {
 	struct dirent *ent;
 	size_t result_length;
 /*again:*/
-	atomic_lock_acquire(&self->di_lock);
+	Dee_atomic_lock_acquire(&self->di_lock);
 	/* Quick check: Has the iterator been exhausted. */
 	if (!self->di_hnd) {
-		atomic_lock_release(&self->di_lock);
+		Dee_atomic_lock_release(&self->di_lock);
 iter_done:
 		return (DREF DeeStringObject *)ITER_DONE;
 	}
@@ -1097,13 +1097,13 @@ read_filename:
 			DIR *dfd = self->di_hnd;
 			/* End of directory. */
 			self->di_hnd = NULL;
-			atomic_lock_release(&self->di_lock);
+			Dee_atomic_lock_release(&self->di_lock);
 			DBG_ALIGNMENT_DISABLE();
 			closedir(dfd);
 			DBG_ALIGNMENT_ENABLE();
 			goto iter_done;
 		}
-		atomic_lock_release(&self->di_lock);
+		Dee_atomic_lock_release(&self->di_lock);
 		DeeUnixSystem_ThrowErrorf(&DeeError_FSError, error,
 		                          "Failed to read entries from directory %r",
 		                          self->di_dir->d_path);
@@ -1116,7 +1116,7 @@ read_filename:
 		goto read_filename;
 	result_length = strlen(ent->d_name);
 	result        = (DREF DeeStringObject *)DeeString_TryNewSized(ent->d_name, result_length);
-	atomic_lock_release(&self->di_lock);
+	Dee_atomic_lock_release(&self->di_lock);
 	if unlikely(!result) {
 		Dee_BadAlloc(offsetof(DeeStringObject, s_str) +
 		             (result_length + 1) * sizeof(char));
@@ -1166,7 +1166,7 @@ dir_iter(Dir *__restrict self) {
 	}
 	Dee_Incref(self);
 	result->di_dir = self;
-	atomic_lock_init(&result->di_lock);
+	Dee_atomic_lock_init(&result->di_lock);
 	DeeObject_Init(result, &DeeDirIterator_Type);
 	return result;
 err_r:
@@ -1512,7 +1512,7 @@ query_iter(Dir *__restrict self) {
 	Dee_Incref(self);
 	result->q_wild        = query_start;
 	result->q_iter.di_dir = self;
-	atomic_lock_init(&result->q_iter.di_lock);
+	Dee_atomic_lock_init(&result->q_iter.di_lock);
 	DeeObject_Init(&result->q_iter, &DeeQueryIterator_Type);
 	return result;
 err_r:

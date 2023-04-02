@@ -120,7 +120,7 @@ thread_tls_visit(struct tls_descriptor *__restrict data,
 
 
 /* Lock for registering TLS objects. */
-PRIVATE atomic_lock_t tls_reglock = ATOMIC_LOCK_INIT;
+PRIVATE Dee_atomic_lock_t tls_reglock = DEE_ATOMIC_LOCK_INIT;
 #define tls_reglock_available()  Dee_atomic_lock_available(&tls_reglock)
 #define tls_reglock_acquired()   Dee_atomic_lock_acquired(&tls_reglock)
 #define tls_reglock_tryacquire() Dee_atomic_lock_tryacquire(&tls_reglock)

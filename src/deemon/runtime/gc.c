@@ -1480,11 +1480,11 @@ INTERN void DCALL gc_dump_all(void) {
 
 typedef struct {
 	OBJECT_HEAD
-	DREF DeeObject *gi_next; /* [0..1][lock(gi_lock)]
-	                          * The next GC object to-be iterated, or
-	                          * NULL when the iterator has been exhausted. */
+	DREF DeeObject   *gi_next; /* [0..1][lock(gi_lock)]
+	                            * The next GC object to-be iterated, or
+	                            * NULL when the iterator has been exhausted. */
 #ifndef CONFIG_NO_THREADS
-	atomic_lock_t   gi_lock; /* Lock for `gi_next' */
+	Dee_atomic_lock_t gi_lock; /* Lock for `gi_next' */
 #endif /* !CONFIG_NO_THREADS */
 } GCIter;
 

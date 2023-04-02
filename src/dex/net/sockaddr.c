@@ -388,7 +388,7 @@ sock_gettypevalue(char const *__restrict name, int *__restrict presult) {
 
 /* Lock used to access the system's database functions. */
 #ifndef CONFIG_NO_THREADS
-PRIVATE atomic_rwlock_t sysdb_lock = ATOMIC_RWLOCK_INIT;
+PRIVATE Dee_atomic_rwlock_t sysdb_lock = DEE_ATOMIC_RWLOCK_INIT;
 #endif /* !CONFIG_NO_THREADS */
 #define sysdb_lock_reading()    Dee_atomic_rwlock_reading(&sysdb_lock)
 #define sysdb_lock_writing()    Dee_atomic_rwlock_writing(&sysdb_lock)

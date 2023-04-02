@@ -59,7 +59,7 @@ DeeSystem_DEFINE_strcmp(dee_strcmp)
 #endif /* NDEBUG */
 
 #ifndef CONFIG_NO_THREADS
-PRIVATE atomic_lock_t membercache_list_lock = ATOMIC_LOCK_INIT;
+PRIVATE Dee_atomic_lock_t membercache_list_lock = DEE_ATOMIC_LOCK_INIT;
 #endif /* !CONFIG_NO_THREADS */
 
 #define membercache_list_lock_available()  Dee_atomic_lock_available(&membercache_list_lock)

@@ -492,7 +492,7 @@ PRIVATE size_t /*               */ modules_c = 0;    /* [lock(modules_lock)] Amo
 PRIVATE size_t /*               */ modules_a = 0;    /* [lock(modules_lock)] Allocated hash-map size. */
 PRIVATE struct module_object_list *modules_v = NULL; /* [lock(modules_lock)][0..modules_a][owned] Hash-map of modules, sorted by their filenames. */
 #ifndef CONFIG_NO_THREADS
-PRIVATE atomic_rwlock_t modules_lock = ATOMIC_RWLOCK_INIT;
+PRIVATE Dee_atomic_rwlock_t modules_lock = DEE_ATOMIC_RWLOCK_INIT;
 #endif /* !CONFIG_NO_THREADS */
 #define modules_lock_reading()    Dee_atomic_rwlock_reading(&modules_lock)
 #define modules_lock_writing()    Dee_atomic_rwlock_writing(&modules_lock)
@@ -516,7 +516,7 @@ PRIVATE size_t /*               */ modules_glob_c = 0;    /* [lock(modules_glob_
 PRIVATE size_t /*               */ modules_glob_a = 0;    /* [lock(modules_glob_lock)] Allocated hash-map size. */
 PRIVATE struct module_object_list *modules_glob_v = NULL; /* [lock(modules_glob_lock)][0..modules_a][owned] Hash-map of modules, sorted by their filenames. */
 #ifndef CONFIG_NO_THREADS
-PRIVATE atomic_rwlock_t modules_glob_lock = ATOMIC_RWLOCK_INIT;
+PRIVATE Dee_atomic_rwlock_t modules_glob_lock = DEE_ATOMIC_RWLOCK_INIT;
 #endif /* !CONFIG_NO_THREADS */
 #define modules_glob_lock_reading()    Dee_atomic_rwlock_reading(&modules_glob_lock)
 #define modules_glob_lock_writing()    Dee_atomic_rwlock_writing(&modules_glob_lock)
@@ -3466,7 +3466,7 @@ err:
 
 
 #ifndef CONFIG_NO_THREADS
-PRIVATE atomic_rwlock_t deemon_home_lock = ATOMIC_RWLOCK_INIT;
+PRIVATE Dee_atomic_rwlock_t deemon_home_lock = DEE_ATOMIC_RWLOCK_INIT;
 #endif /* !CONFIG_NO_THREADS */
 #define deemon_home_lock_reading()    Dee_atomic_rwlock_reading(&deemon_home_lock)
 #define deemon_home_lock_writing()    Dee_atomic_rwlock_writing(&deemon_home_lock)

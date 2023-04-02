@@ -117,7 +117,7 @@ PUBLIC WUNUSED NONNULL((2)) DREF DeeObject *
 	result->f_flags = flags;
 	atomic_rwlock_init(&result->f_lock);
 #ifndef CONFIG_NO_THREADS
-	result->f_plock = (atomic_rwlock_t *)lock;
+	result->f_plock = (Dee_atomic_rwlock_t *)lock;
 #endif /* !CONFIG_NO_THREADS */
 	Dee_XIncref(owner);
 	DeeObject_Init(result, &DeeFrame_Type);

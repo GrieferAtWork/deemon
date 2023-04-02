@@ -94,7 +94,7 @@ typedef struct {
 	DREF DeeObject         *rsi_data; /* [const][1..1] Data string or Bytes. */
 	struct DeeRegexBaseExec rsi_exec; /* Regex arguments. */
 #ifndef CONFIG_NO_THREADS
-	atomic_rwlock_t         rsi_lock; /* Lock used during iteration. */
+	Dee_atomic_rwlock_t     rsi_lock; /* Lock used during iteration. */
 #endif /* !CONFIG_NO_THREADS */
 } ReSequenceIterator;
 

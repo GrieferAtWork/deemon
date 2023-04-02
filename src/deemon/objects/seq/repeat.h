@@ -44,11 +44,11 @@ typedef struct {
 
 typedef struct {
 	OBJECT_HEAD
-	DREF Repeat    *rpi_rep;  /* [1..1][const] The underlying repeat-proxy-sequence. */
-	DREF DeeObject *rpi_iter; /* [1..1][lock(rpi_lock)] The current repeat-iterator. */
-	size_t          rpi_num;  /* [lock(rpi_lock)] The remaining number of times to repeat the sequence. */
+	DREF Repeat        *rpi_rep;  /* [1..1][const] The underlying repeat-proxy-sequence. */
+	DREF DeeObject     *rpi_iter; /* [1..1][lock(rpi_lock)] The current repeat-iterator. */
+	size_t              rpi_num;  /* [lock(rpi_lock)] The remaining number of times to repeat the sequence. */
 #ifndef CONFIG_NO_THREADS
-	atomic_rwlock_t rpi_lock; /* Lock for accessing the variable fields above. */
+	Dee_atomic_rwlock_t rpi_lock; /* Lock for accessing the variable fields above. */
 #endif /* !CONFIG_NO_THREADS */
 } RepeatIterator;
 

@@ -198,11 +198,11 @@ INTDEF DeeTypeObject DeeEnvironIterator_Type;
 #define environ_lock_endread()  ENV_UNLOCK
 #define environ_lock_endwrite() ENV_UNLOCK
 #else /* CONFIG_HAVE_ENV_LOCK && CONFIG_HAVE_ENV_UNLOCK */
-PRIVATE struct atomic_rwlock dee_environ_lock = ATOMIC_RWLOCK_INIT;
-#define environ_lock_read()     atomic_rwlock_read(&dee_environ_lock)
-#define environ_lock_write()    atomic_rwlock_write(&dee_environ_lock)
-#define environ_lock_endread()  atomic_rwlock_endread(&dee_environ_lock)
-#define environ_lock_endwrite() atomic_rwlock_endwrite(&dee_environ_lock)
+PRIVATE Dee_atomic_rwlock_t dee_environ_lock = DEE_ATOMIC_RWLOCK_INIT;
+#define environ_lock_read()     Dee_atomic_rwlock_read(&dee_environ_lock)
+#define environ_lock_write()    Dee_atomic_rwlock_write(&dee_environ_lock)
+#define environ_lock_endread()  Dee_atomic_rwlock_endread(&dee_environ_lock)
+#define environ_lock_endwrite() Dee_atomic_rwlock_endwrite(&dee_environ_lock)
 #endif /* !CONFIG_HAVE_ENV_LOCK || !CONFIG_HAVE_ENV_UNLOCK */
 #endif /* ... */
 

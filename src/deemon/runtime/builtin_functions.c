@@ -233,7 +233,7 @@ PRIVATE DREF DeeObject *jit_module = NULL; /* import("_jit") */
 PRIVATE DREF DeeObject *jit_exec = NULL;   /* _jit.exec */
 
 #ifndef CONFIG_NO_THREADS
-PRIVATE atomic_rwlock_t jit_access_lock = ATOMIC_RWLOCK_INIT;
+PRIVATE Dee_atomic_rwlock_t jit_access_lock = DEE_ATOMIC_RWLOCK_INIT;
 #endif /* !CONFIG_NO_THREADS */
 
 #define jit_access_lock_reading()    Dee_atomic_rwlock_reading(&jit_access_lock)

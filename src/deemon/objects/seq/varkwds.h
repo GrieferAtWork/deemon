@@ -50,7 +50,7 @@ typedef struct {
 	/* Variable keywords mapping-like object for Kwds+Argv */
 	OBJECT_HEAD
 #ifndef CONFIG_NO_THREADS
-	atomic_rwlock_t                                blvk_lock;  /* Lock for this kwds wrappers. */
+	Dee_atomic_rwlock_t                            blvk_lock;  /* Lock for this kwds wrappers. */
 #endif /* !CONFIG_NO_THREADS */
 	DREF struct code_object                       *blvk_code;  /* [1..1][const] The code object who's keyword arguments should
 	                                                            *               be blacklisted from the the resulting mapping.
@@ -178,7 +178,7 @@ typedef struct {
 	/* Variable keywords mapping-like object for general-purpose mapping-like objects. */
 	OBJECT_HEAD
 #ifndef CONFIG_NO_THREADS
-	atomic_rwlock_t                                blm_lock;  /* Lock for this kwds wrappers. */
+	Dee_atomic_rwlock_t                            blm_lock;  /* Lock for this kwds wrappers. */
 #endif /* !CONFIG_NO_THREADS */
 	DREF struct code_object                       *blm_code;  /* [1..1][const] The code object who's keyword arguments should
 	                                                           *               be blacklisted from the the resulting mapping.

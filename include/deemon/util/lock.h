@@ -514,7 +514,6 @@ DFUNDEF WUNUSED NONNULL((1)) int
  *
  * TODO: Get rid of these! */
 #ifdef DEE_SOURCE
-typedef Dee_atomic_lock_t atomic_lock_t;
 #if !defined(ATOMIC_LOCK_INIT) || defined(CONFIG_NO_THREADS)
 #undef ATOMIC_LOCK_INIT
 #undef atomic_lock_cinit
@@ -536,7 +535,6 @@ typedef Dee_atomic_lock_t atomic_lock_t;
 #define atomic_lock_release    Dee_atomic_lock_release
 #endif /* !ATOMIC_LOCK_INIT || CONFIG_NO_THREADS */
 
-typedef Dee_atomic_rwlock_t atomic_rwlock_t;
 #if !defined(ATOMIC_RWLOCK_INIT) || defined(CONFIG_NO_THREADS)
 #undef ATOMIC_RWLOCK_INIT
 #undef atomic_rwlock_cinit

@@ -63,7 +63,7 @@ typedef DeeFileBufferObject Buffer;
 /* [0..1][lock(buffer_ttys_lock)] Chain of tty-buffers. */
 PRIVATE Buffer *buffer_ttys = NULL;
 #ifndef CONFIG_NO_THREADS
-PRIVATE atomic_lock_t buffer_ttys_lock = ATOMIC_LOCK_INIT;
+PRIVATE Dee_atomic_lock_t buffer_ttys_lock = DEE_ATOMIC_LOCK_INIT;
 #endif /* CONFIG_NO_THREADS */
 #define buffer_ttys_lock_available()  Dee_atomic_lock_available(&buffer_ttys_lock)
 #define buffer_ttys_lock_acquired()   Dee_atomic_lock_acquired(&buffer_ttys_lock)

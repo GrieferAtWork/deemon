@@ -623,7 +623,7 @@ err:
 typedef struct {
 	OBJECT_HEAD
 #ifndef CONFIG_NO_THREADS
-	atomic_rwlock_t       p_lock;     /* Lock for accessing members of this structure. */
+	Dee_atomic_rwlock_t   p_lock;     /* Lock for accessing members of this structure. */
 #endif /* !CONFIG_NO_THREADS */
 	/* NOTE: `EXTERN_CONST_IF' here means that only the thread that set `PROCESS_FLAG_STARTING' may modify the field. */
 	DREF DeeObject       *p_exe;      /* [lock(p_lock)][0..1][if(!PROCESS_FLAG_EXTERN,[1..1])][EXTERN_CONST_IF(PROCESS_FLAG_STARTING && !PROCESS_FLAG_EXTERN)]

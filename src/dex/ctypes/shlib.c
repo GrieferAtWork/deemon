@@ -122,9 +122,8 @@ shlib_visit(Shlib *__restrict self, dvisit_t proc, void *arg) {
 
 
 #ifndef CONFIG_NO_THREADS
-PRIVATE atomic_rwlock_t static_type_lock = ATOMIC_RWLOCK_INIT;
+PRIVATE Dee_atomic_rwlock_t static_type_lock = DEE_ATOMIC_RWLOCK_INIT;
 #endif /* !CONFIG_NO_THREADS */
-
 #define static_type_lock_reading()    Dee_atomic_rwlock_reading(&static_type_lock)
 #define static_type_lock_writing()    Dee_atomic_rwlock_writing(&static_type_lock)
 #define static_type_lock_tryread()    Dee_atomic_rwlock_tryread(&static_type_lock)

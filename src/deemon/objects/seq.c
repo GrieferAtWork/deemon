@@ -168,11 +168,11 @@ typedef struct {
 	OBJECT_HEAD
 	/* TODO: Integrate NSI optimizations. */
 	DREF DeeObject *(DCALL *si_getitem)(DeeObject *self, DeeObject *index);
-	DREF DeeObject *si_seq;   /* [1..1][const] The Sequence being iterated. */
-	DREF DeeObject *si_size;  /* [1..1][const] The size of the Sequence. */
-	DREF DeeObject *si_index; /* [1..1][lock(si_lock)] The current index (`int' object). */
+	DREF DeeObject         *si_seq;   /* [1..1][const] The Sequence being iterated. */
+	DREF DeeObject         *si_size;  /* [1..1][const] The size of the Sequence. */
+	DREF DeeObject         *si_index; /* [1..1][lock(si_lock)] The current index (`int' object). */
 #ifndef CONFIG_NO_THREADS
-	atomic_rwlock_t si_lock;  /* Lock for accessing `si_index' */
+	Dee_atomic_rwlock_t     si_lock;  /* Lock for accessing `si_index' */
 #endif /* !CONFIG_NO_THREADS */
 } SeqIterator;
 

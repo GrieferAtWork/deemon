@@ -141,11 +141,11 @@ struct free_int {
 	struct free_int *fi_next; /* [0..1] Next free integer. */
 };
 struct free_int_set {
-	struct free_int *fis_head; /* [0..1][lock(fis_lock)] First free integer object. */
-	size_t           fis_size; /* [lock(fis_lock)][<= CONFIG_INT_CACHE_MAXSIZE]
-	                            * Amount of free integer objects in this set. */
+	struct free_int  *fis_head; /* [0..1][lock(fis_lock)] First free integer object. */
+	size_t            fis_size; /* [lock(fis_lock)][<= CONFIG_INT_CACHE_MAXSIZE]
+	                             * Amount of free integer objects in this set. */
 #ifndef CONFIG_NO_THREADS
-	atomic_lock_t    fis_lock; /* Lock for this free integer set. */
+	Dee_atomic_lock_t fis_lock; /* Lock for this free integer set. */
 #endif  /* !CONFIG_NO_THREADS */
 };
 

@@ -55,12 +55,20 @@ typedef struct {
 	char               *si_datend;  /* [1..1][const] End address of the input data (dereferences to a NUL-character). */
 	char               *si_fmtend;  /* [1..1][const] End address of the format string (dereferences to a NUL-character). */
 #ifndef CONFIG_NO_THREADS
-	atomic_lock_t       si_lock;    /* Lock for modifying the data and format pointers.
+	Dee_atomic_lock_t   si_lock;    /* Lock for modifying the data and format pointers.
 	                                 * NOTE: Not required to be held when reading those pointers! */
 #endif /* !CONFIG_NO_THREADS */
 	char               *si_datiter; /* [1..1][lock(READ(atomic), WRITE(si_lock))] The current data pointer (UTF-8). */
 	char               *si_fmtiter; /* [1..1][lock(READ(atomic), WRITE(si_lock))] The current format pointer (UTF-8). */
 } StringScanIterator;
+
+#define StringScanIterator_LockAvailable(self)  Dee_atomic_lock_available(&(self)->si_lock)
+#define StringScanIterator_LockAcquired(self)   Dee_atomic_lock_acquired(&(self)->si_lock)
+#define StringScanIterator_LockTryAcquire(self) Dee_atomic_lock_tryacquire(&(self)->si_lock)
+#define StringScanIterator_LockAcquire(self)    Dee_atomic_lock_acquire(&(self)->si_lock)
+#define StringScanIterator_LockWaitFor(self)    Dee_atomic_lock_waitfor(&(self)->si_lock)
+#define StringScanIterator_LockRelease(self)    Dee_atomic_lock_release(&(self)->si_lock)
+
 
 #define GET_FORMAT_POINTER(x) atomic_read(&(x)->si_fmtiter)
 
@@ -493,11 +501,11 @@ match_ch:
 done:
 
 	/* Check if another thread extracted a value in the mean time. */
-	atomic_lock_acquire(&self->si_lock);
+	StringScanIterator_LockAcquire(self);
 	if unlikely(self->si_datiter != orig_data ||
 	            self->si_fmtiter != orig_format) {
 		/* Race condition! -> Loop back and try to read a value once again. */
-		atomic_lock_release(&self->si_lock);
+		StringScanIterator_LockRelease(self);
 		if (ITER_ISOK(result))
 			Dee_Decref(result);
 		goto again;
@@ -506,7 +514,7 @@ done:
 	/* Save the updated data & format pointers. */
 	self->si_datiter = data;
 	self->si_fmtiter = format;
-	atomic_lock_release(&self->si_lock);
+	StringScanIterator_LockRelease(self);
 	return result;
 out_dataend:
 out_missmatch:
@@ -566,11 +574,11 @@ PRIVATE struct type_member tpconst ssi_members[] = {
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 ssi_copy(StringScanIterator *__restrict self,
          StringScanIterator *__restrict other) {
-	atomic_lock_acquire(&other->si_lock);
+	StringScanIterator_LockAcquire(other);
 	self->si_datiter = other->si_datiter;
 	self->si_fmtiter = other->si_fmtiter;
-	atomic_lock_release(&other->si_lock);
-	atomic_lock_init(&self->si_lock);
+	StringScanIterator_LockRelease(other);
+	Dee_atomic_lock_init(&self->si_lock);
 	self->si_scanner = other->si_scanner;
 	Dee_Incref(self->si_scanner);
 	self->si_datend = other->si_datend;
@@ -670,7 +678,7 @@ ss_iter(StringScanner *__restrict self) {
 		result->si_fmtiter = (char *)DeeBytes_DATA(self->ss_format);
 		result->si_fmtend  = result->si_fmtiter + DeeBytes_SIZE(self->ss_format);
 	}
-	atomic_lock_init(&result->si_lock);
+	Dee_atomic_lock_init(&result->si_lock);
 	result->si_scanner = self;
 	Dee_Incref(self);
 	DeeObject_Init(result, &StringScanIterator_Type);

@@ -980,7 +980,7 @@ restart_clear_weakrefs:
 #endif /* ... */
 
 #ifndef CONFIG_NO_THREADS
-PRIVATE atomic_lock_t bad_refcnt_lock = ATOMIC_LOCK_INIT;
+PRIVATE Dee_atomic_lock_t bad_refcnt_lock = DEE_ATOMIC_LOCK_INIT;
 #endif /* !CONFIG_NO_THREADS */
 #define bad_refcnt_lock_available()  Dee_atomic_lock_available(&bad_refcnt_lock)
 #define bad_refcnt_lock_acquired()   Dee_atomic_lock_acquired(&bad_refcnt_lock)
@@ -4387,7 +4387,7 @@ PUBLIC DeeTypeObject DeeType_Type = {
 
 #ifdef CONFIG_TRACE_REFCHANGES
 #ifndef CONFIG_NO_THREADS
-PRIVATE atomic_lock_t reftracker_lock = ATOMIC_LOCK_INIT;
+PRIVATE Dee_atomic_lock_t reftracker_lock = DEE_ATOMIC_LOCK_INIT;
 #endif /* !CONFIG_NO_THREADS */
 #define reftracker_lock_available()  Dee_atomic_lock_available(&reftracker_lock)
 #define reftracker_lock_acquired()   Dee_atomic_lock_acquired(&reftracker_lock)

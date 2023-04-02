@@ -409,7 +409,23 @@ struct futex_controller {
 
 
 /* Lock for the Futex tree controls below. */
-PRIVATE struct atomic_rwlock fcont_lock = ATOMIC_RWLOCK_INIT;
+PRIVATE Dee_atomic_rwlock_t fcont_lock = DEE_ATOMIC_RWLOCK_INIT;
+#define fcont_lock_reading()    Dee_atomic_rwlock_reading(&fcont_lock)
+#define fcont_lock_writing()    Dee_atomic_rwlock_writing(&fcont_lock)
+#define fcont_lock_tryread()    Dee_atomic_rwlock_tryread(&fcont_lock)
+#define fcont_lock_trywrite()   Dee_atomic_rwlock_trywrite(&fcont_lock)
+#define fcont_lock_canread()    Dee_atomic_rwlock_canread(&fcont_lock)
+#define fcont_lock_canwrite()   Dee_atomic_rwlock_canwrite(&fcont_lock)
+#define fcont_lock_waitread()   Dee_atomic_rwlock_waitread(&fcont_lock)
+#define fcont_lock_waitwrite()  Dee_atomic_rwlock_waitwrite(&fcont_lock)
+#define fcont_lock_read()       Dee_atomic_rwlock_read(&fcont_lock)
+#define fcont_lock_write()      Dee_atomic_rwlock_write(&fcont_lock)
+#define fcont_lock_tryupgrade() Dee_atomic_rwlock_tryupgrade(&fcont_lock)
+#define fcont_lock_upgrade()    Dee_atomic_rwlock_upgrade(&fcont_lock)
+#define fcont_lock_downgrade()  Dee_atomic_rwlock_downgrade(&fcont_lock)
+#define fcont_lock_endwrite()   Dee_atomic_rwlock_endwrite(&fcont_lock)
+#define fcont_lock_endread()    Dee_atomic_rwlock_endread(&fcont_lock)
+#define fcont_lock_end()        Dee_atomic_rwlock_end(&fcont_lock)
 
 /* [0..n][lock(fcont_lock)] List of free (but already-initialized) futex controllers. */
 PRIVATE struct futex_controller_slist fcont_freelist = SLIST_HEAD_INITIALIZER(fcont_freelist);
@@ -780,15 +796,15 @@ PRIVATE WUNUSED DREF struct futex_controller *DCALL
 futex_controller_new(void) {
 	DREF struct futex_controller *result;
 	if (atomic_read(&fcont_freesize) != 0) {
-		atomic_rwlock_write(&fcont_lock);
+		fcont_lock_write();
 		result = SLIST_FIRST(&fcont_freelist);
 		if likely(result != NULL) {
 			SLIST_REMOVE_HEAD(&fcont_freelist, fc_free);
 			--fcont_freesize;
-			atomic_rwlock_endwrite(&fcont_lock);
+			fcont_lock_endwrite();
 			goto set_refcnt;
 		}
-		atomic_rwlock_endwrite(&fcont_lock);
+		fcont_lock_endwrite();
 	}
 	result = futex_controller_do_new_impl();
 	if likely(result) {
@@ -819,7 +835,7 @@ futex_controller_tryincref(struct futex_controller *__restrict self) {
 /* Handler for when the controller's reference counter reaches `0' */
 PRIVATE NONNULL((1)) void DCALL
 futex_controller_destroy(struct futex_controller *__restrict self) {
-	atomic_rwlock_write(&fcont_lock);
+	fcont_lock_write();
 
 	/* Remove ourselves from the free (but only if that hasn't been done already) */
 	{
@@ -833,10 +849,10 @@ futex_controller_destroy(struct futex_controller *__restrict self) {
 	if (fcont_freesize < FCONT_FREELIST_MAXSIZE) {
 		SLIST_INSERT_HEAD(&fcont_freelist, self, fc_free);
 		++fcont_freesize;
-		atomic_rwlock_endwrite(&fcont_lock);
+		fcont_lock_endwrite();
 		return;
 	}
-	atomic_rwlock_endwrite(&fcont_lock);
+	fcont_lock_endwrite();
 
 	/* Must *actually* destroy the controller. */
 	futex_controller_do_destroy(self);
@@ -851,11 +867,11 @@ futex_controller_destroy(struct futex_controller *__restrict self) {
 PRIVATE WUNUSED DREF struct futex_controller *DCALL
 futex_ataddr_get(uintptr_t addr) {
 	DREF struct futex_controller *result;
-	atomic_rwlock_read(&fcont_lock);
+	fcont_lock_read();
 	result = futex_tree_locate(fcont_tree, addr);
 	if (result && !futex_controller_tryincref(result))
 		result = NULL;
-	atomic_rwlock_endread(&fcont_lock);
+	fcont_lock_endread();
 	return result;
 }
 
@@ -880,12 +896,12 @@ futex_ataddr_create(uintptr_t addr) {
 			result->fc_addr = addr;
 
 			/* Inject the new controller into the tree. */
-			atomic_rwlock_write(&fcont_lock);
+			fcont_lock_write();
 			existing_result = futex_tree_locate(fcont_tree, addr);
 			if unlikely(existing_result) {
 				if (futex_controller_tryincref(existing_result)) {
 					/* Race condition: another thread created the controller before we could. */
-					atomic_rwlock_endwrite(&fcont_lock);
+					fcont_lock_endwrite();
 					futex_controller_destroy(result);
 					return existing_result;
 				}
@@ -896,7 +912,7 @@ futex_ataddr_create(uintptr_t addr) {
 
 			/* Insert our newly created controller into the tree. */
 			futex_tree_insert(&fcont_tree, result);
-			atomic_rwlock_endwrite(&fcont_lock);
+			fcont_lock_endwrite();
 		}
 	}
 	return result;
@@ -986,10 +1002,10 @@ DeeFutex_WakeGlobal(DeeThreadObject *thread) {
 
 	/* Wake all threads connected to a futex control structure. */
 #ifdef DeeFutex_USES_CONTROL_STRUCTURE
-	atomic_rwlock_read(&fcont_lock);
+	fcont_lock_read();
 	if (fcont_tree != NULL)
 		futex_controller_wakeall_tree(fcont_tree);
-	atomic_rwlock_endread(&fcont_lock);
+	fcont_lock_endread();
 #endif /* DeeFutex_USES_CONTROL_STRUCTURE */
 }
 #else /* ... */

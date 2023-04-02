@@ -36,12 +36,12 @@ typedef struct {
 
 typedef struct {
 	OBJECT_HEAD
-	DREF SetUnion   *sui_union; /* [1..1][const] The underlying union-set. */
-	DREF DeeObject  *sui_iter;  /* [1..1][lock(sui_lock)] The current iterator. */
+	DREF SetUnion      *sui_union; /* [1..1][const] The underlying union-set. */
+	DREF DeeObject     *sui_iter;  /* [1..1][lock(sui_lock)] The current iterator. */
 #ifndef CONFIG_NO_THREADS
-	atomic_rwlock_t  sui_lock;  /* Lock for `sui_iter' and `sui_in2nd' */
+	Dee_atomic_rwlock_t sui_lock;  /* Lock for `sui_iter' and `sui_in2nd' */
 #endif /* !CONFIG_NO_THREADS */
-	bool             sui_in2nd; /* [lock(sui_lock)] The second set is being iterated. */
+	bool                sui_in2nd; /* [lock(sui_lock)] The second set is being iterated. */
 } SetUnionIterator;
 
 #define SetUnionIterator_LockReading(self)    Dee_atomic_rwlock_reading(&(self)->sui_lock)
@@ -113,7 +113,7 @@ typedef struct {
 	DREF SetSymmetricDifference *ssd_set;   /* [1..1][const] The underlying set. */
 	DREF DeeObject              *ssd_iter;  /* [1..1][lock(ssd_lock)] The current iterator. */
 #ifndef CONFIG_NO_THREADS
-	atomic_rwlock_t              ssd_lock;  /* Lock for `ssd_iter' and `ssd_in2nd' */
+	Dee_atomic_rwlock_t          ssd_lock;  /* Lock for `ssd_iter' and `ssd_in2nd' */
 #endif /* !CONFIG_NO_THREADS */
 	bool                         ssd_in2nd; /* [lock(ssd_lock)] The second set is being iterated. */
 } SetSymmetricDifferenceIterator;

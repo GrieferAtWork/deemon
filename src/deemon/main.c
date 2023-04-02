@@ -20,9 +20,6 @@
 #ifndef GUARD_MAIN_C
 #define GUARD_MAIN_C 1
 
-/* TODO: Many places that use `struct atomic_rwlock' could instead use
- *       `struct atomic_lock' (which can generate more efficient code) */
-
 #include <deemon/compiler/compiler.h>
 
 #include <deemon/alloc.h>

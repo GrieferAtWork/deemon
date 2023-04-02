@@ -106,14 +106,14 @@ err:
 
 typedef struct {
 	OBJECT_HEAD
-	DREF Combinations *ci_combi;   /* [1..1][const] The underlying combinations sequence proxy. */
-	size_t            *ci_indices; /* [1..ci_combi->c_comlen][lock(ci_lock)][owned]
-	                                * Indices to-be used for the next set of combinations to-be
-	                                * combined to generate the next item. */
+	DREF Combinations  *ci_combi;   /* [1..1][const] The underlying combinations sequence proxy. */
+	size_t             *ci_indices; /* [1..ci_combi->c_comlen][lock(ci_lock)][owned]
+	                                 * Indices to-be used for the next set of combinations to-be
+	                                 * combined to generate the next item. */
 #ifndef CONFIG_NO_THREADS
-	atomic_rwlock_t    ci_lock;    /* Lock for this combinations iterator. */
+	Dee_atomic_rwlock_t ci_lock;    /* Lock for this combinations iterator. */
 #endif /* !CONFIG_NO_THREADS */
-	bool               ci_first;   /* [lock(ci_lock)] True prior to the first iteration. */
+	bool                ci_first;   /* [lock(ci_lock)] True prior to the first iteration. */
 } CombinationsIterator;
 
 #define CombinationsIterator_LockReading(self)    Dee_atomic_rwlock_reading(&(self)->ci_lock)
