@@ -40,6 +40,7 @@
 #include <deemon/system.h>
 #include <deemon/thread.h>
 #include <deemon/tuple.h>
+#include <deemon/util/atomic.h>
 #include <deemon/util/lock.h>
 
 #include <hybrid/overflow.h>
@@ -1097,7 +1098,24 @@ struct reaped_childproc {
 
 /* [0..n][lock(reaped_childprocs_lock)] List of reaped child processes */
 PRIVATE struct reaped_childproc_slist reaped_childprocs = SLIST_HEAD_INITIALIZER(reaped_childprocs);
-PRIVATE shared_rwlock_t reaped_childprocs_lock          = SHARED_RWLOCK_INIT;
+PRIVATE Dee_shared_rwlock_t reaped_childprocs_lock      = DEE_SHARED_RWLOCK_INIT;
+#define reaped_childprocs_lock_reading()    Dee_shared_rwlock_reading(&reaped_childprocs_lock)
+#define reaped_childprocs_lock_writing()    Dee_shared_rwlock_writing(&reaped_childprocs_lock)
+#define reaped_childprocs_lock_tryread()    Dee_shared_rwlock_tryread(&reaped_childprocs_lock)
+#define reaped_childprocs_lock_trywrite()   Dee_shared_rwlock_trywrite(&reaped_childprocs_lock)
+#define reaped_childprocs_lock_canread()    Dee_shared_rwlock_canread(&reaped_childprocs_lock)
+#define reaped_childprocs_lock_canwrite()   Dee_shared_rwlock_canwrite(&reaped_childprocs_lock)
+#define reaped_childprocs_lock_waitread()   Dee_shared_rwlock_waitread(&reaped_childprocs_lock)
+#define reaped_childprocs_lock_waitwrite()  Dee_shared_rwlock_waitwrite(&reaped_childprocs_lock)
+#define reaped_childprocs_lock_read()       Dee_shared_rwlock_read(&reaped_childprocs_lock)
+#define reaped_childprocs_lock_write()      Dee_shared_rwlock_write(&reaped_childprocs_lock)
+#define reaped_childprocs_lock_tryupgrade() Dee_shared_rwlock_tryupgrade(&reaped_childprocs_lock)
+#define reaped_childprocs_lock_upgrade()    Dee_shared_rwlock_upgrade(&reaped_childprocs_lock)
+#define reaped_childprocs_lock_downgrade()  Dee_shared_rwlock_downgrade(&reaped_childprocs_lock)
+#define reaped_childprocs_lock_endwrite()   Dee_shared_rwlock_endwrite(&reaped_childprocs_lock)
+#define reaped_childprocs_lock_endread()    Dee_shared_rwlock_endread(&reaped_childprocs_lock)
+#define reaped_childprocs_lock_end()        Dee_shared_rwlock_end(&reaped_childprocs_lock)
+
 
 #define HAVE_ipc_reaped_childprocs_clear
 PRIVATE void DCALL
@@ -1130,14 +1148,14 @@ ipc_joinpid_impl(pid_t pid, int *p_status) {
 	int result;
 	struct reaped_childproc *ent;
 again:
-	if (shared_rwlock_read(&reaped_childprocs_lock))
+	if (reaped_childprocs_lock_read())
 		goto err_interrupt;
 	result = ipc_tryjoinpid_locked(pid, p_status);
 	if (result == 0) {
-		shared_rwlock_endread(&reaped_childprocs_lock);
+		reaped_childprocs_lock_endread();
 		return result;
 	}
-	shared_rwlock_endread(&reaped_childprocs_lock);
+	reaped_childprocs_lock_endread();
 
 	ent = (struct reaped_childproc *)Dee_TryMalloc(sizeof(struct reaped_childproc));
 	if unlikely(!ent) {
@@ -1149,11 +1167,11 @@ again:
 
 	/* Use a write-lock to ensure that only 1 thread is
 	 * ever waiting for child-processes at the same time. */
-	if (shared_rwlock_write(&reaped_childprocs_lock))
+	if (reaped_childprocs_lock_write())
 		goto err_interrupt;
 	result = ipc_tryjoinpid_locked(pid, p_status);
 	if (result == 0) {
-		shared_rwlock_endwrite(&reaped_childprocs_lock);
+		reaped_childprocs_lock_endwrite();
 		Dee_Free(ent);
 		return result;
 	}
@@ -1161,7 +1179,7 @@ again:
 	ent->rc_cpid = ipc_joinany(&ent->rc_stat);
 	if unlikely(ent->rc_cpid < 0) {
 		int error = ent->rc_cpid;
-		shared_rwlock_endwrite(&reaped_childprocs_lock);
+		reaped_childprocs_lock_endwrite();
 		Dee_Free(ent);
 		return error;
 	}
@@ -1169,7 +1187,7 @@ again:
 	/* Load the reaped child process descriptor
 	 * into the list of reaped processes. */
 	SLIST_INSERT(&reaped_childprocs, ent, rc_link);
-	shared_rwlock_endwrite(&reaped_childprocs_lock);
+	reaped_childprocs_lock_endwrite();
 	goto again;
 err_interrupt:
 #ifdef EINTR
@@ -1190,14 +1208,13 @@ err_interrupt:
  * The first time that this cache is used, it is hooked into the
  * notify system via `DeeNotify_StartListen()', and once the ipc
  * dex is unloaded, that hook is deleted by `DeeNotify_EndListen()' */
-PRIVATE DeeDictObject ipc_exe2path_cache  = Dee_DICT_INIT;
-PRIVATE bool ipc_exe2path_cache_listening = false;
-PRIVATE shared_lock_t ipc_exe2path_cache_startlisten_lock = SHARED_LOCK_INIT;
+PRIVATE DeeDictObject ipc_exe2path_cache = Dee_DICT_INIT;
+PRIVATE int ipc_exe2path_cache_listening = 0;
 
 PRIVATE NONNULL((1, 2)) void DCALL
 ipc_exe2path_remember(DeeStringObject *__restrict exe_str,
                       DeeStringObject *__restrict full_exe_str) {
-	if (ipc_exe2path_cache_listening) {
+	if (atomic_read(&ipc_exe2path_cache_listening) > 0) {
 		int error;
 		error = DeeDict_SetItem((DeeObject *)&ipc_exe2path_cache,
 		                        (DeeObject *)exe_str,
@@ -1215,45 +1232,55 @@ ipc_exe2path_notify(DeeObject *UNUSED(arg)) {
 
 
 /* (Try to) start listening for changes to $PATH and $PATHEXT */
+PRIVATE bool DCALL
+ipc_exe2path_do_start_listen(void) {
+	int ok;
+	ok = DeeNotify_StartListen(Dee_NOTIFICATION_CLASS_ENVIRON,
+	                           (DeeObject *)&str_PATH,
+	                           &ipc_exe2path_notify, NULL);
+#ifdef ipc_Process_USE_CreateProcessW
+	if likely(ok >= 0) {
+		ok = DeeNotify_StartListen(Dee_NOTIFICATION_CLASS_ENVIRON,
+		                           (DeeObject *)&str_PATHEXT,
+		                           &ipc_exe2path_notify, NULL);
+		if likely(ok >= 0) {
+			/* On windows, also need to be clear the cache when the program's PWD changes! */
+			ok = DeeNotify_StartListenClass(Dee_NOTIFICATION_CLASS_PWD,
+			                                &ipc_exe2path_notify, NULL);
+			if unlikely(ok < 0) {
+				DeeNotify_EndListen(Dee_NOTIFICATION_CLASS_ENVIRON,
+				                    (DeeObject *)&str_PATHEXT,
+				                    &ipc_exe2path_notify, NULL);
+			}
+		}
+		if unlikely(ok < 0) {
+			DeeNotify_EndListen(Dee_NOTIFICATION_CLASS_ENVIRON,
+			                    (DeeObject *)&str_PATH,
+			                    &ipc_exe2path_notify, NULL);
+		}
+	}
+#endif /* ipc_Process_USE_CreateProcessW */
+	if unlikely(ok < 0) {
+		DeeError_Handled(ERROR_HANDLED_RESTORE);
+		return false;
+	}
+	return true;
+}
+
+/* (Try to) start listening for changes to $PATH and $PATHEXT */
 PRIVATE void DCALL
 ipc_exe2path_start_listen(void) {
-	if (!ipc_exe2path_cache_listening) {
-		shared_lock_acquire(&ipc_exe2path_cache_startlisten_lock);
-		if (!ipc_exe2path_cache_listening) {
-			int ok;
-			ok = DeeNotify_StartListen(Dee_NOTIFICATION_CLASS_ENVIRON,
-			                           (DeeObject *)&str_PATH,
-			                           &ipc_exe2path_notify, NULL);
-#ifdef ipc_Process_USE_CreateProcessW
-			if likely(ok >= 0) {
-				ok = DeeNotify_StartListen(Dee_NOTIFICATION_CLASS_ENVIRON,
-				                           (DeeObject *)&str_PATHEXT,
-				                           &ipc_exe2path_notify, NULL);
-				if likely(ok >= 0) {
-					/* On windows, also need to be clear the cache when the program's PWD changes! */
-					ok = DeeNotify_StartListenClass(Dee_NOTIFICATION_CLASS_PWD,
-					                                &ipc_exe2path_notify, NULL);
-					if unlikely(ok < 0) {
-						DeeNotify_EndListen(Dee_NOTIFICATION_CLASS_ENVIRON,
-						                    (DeeObject *)&str_PATHEXT,
-						                    &ipc_exe2path_notify, NULL);
-					}
-				}
-				if unlikely(ok < 0) {
-					DeeNotify_EndListen(Dee_NOTIFICATION_CLASS_ENVIRON,
-					                    (DeeObject *)&str_PATH,
-					                    &ipc_exe2path_notify, NULL);
-				}
-			}
-#endif /* ipc_Process_USE_CreateProcessW */
-			if unlikely(ok < 0) {
-				shared_lock_release(&ipc_exe2path_cache_startlisten_lock);
-				DeeError_Handled(ERROR_HANDLED_RESTORE);
-				return;
-			}
-			ipc_exe2path_cache_listening = true;
-		}
-		shared_lock_release(&ipc_exe2path_cache_startlisten_lock);
+	if (atomic_read(&ipc_exe2path_cache_listening) > 0)
+		return;
+	while (!atomic_cmpxch_weak(&ipc_exe2path_cache_listening, 0, -1)) {
+		if (atomic_read(&ipc_exe2path_cache_listening) > 0)
+			return;
+		SCHED_YIELD();
+	}
+	if (ipc_exe2path_do_start_listen()) {
+		atomic_write(&ipc_exe2path_cache_listening, 1);
+	} else {
+		atomic_write(&ipc_exe2path_cache_listening, 0);
 	}
 }
 
@@ -1261,7 +1288,7 @@ ipc_exe2path_start_listen(void) {
 #define HAVE_ipc_exe2path_fini
 PRIVATE void DCALL ipc_exe2path_fini(void) {
 	(*DeeDict_Type.tp_init.tp_dtor)((DeeObject *)&ipc_exe2path_cache);
-	if (ipc_exe2path_cache_listening) {
+	if (atomic_read(&ipc_exe2path_cache_listening) > 0) {
 		DeeNotify_EndListen(Dee_NOTIFICATION_CLASS_ENVIRON, (DeeObject *)&str_PATH, &ipc_exe2path_notify, NULL);
 #ifdef ipc_Process_USE_CreateProcessW
 		DeeNotify_EndListen(Dee_NOTIFICATION_CLASS_ENVIRON, (DeeObject *)&str_PATHEXT, &ipc_exe2path_notify, NULL);

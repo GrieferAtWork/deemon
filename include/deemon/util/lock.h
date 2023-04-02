@@ -578,66 +578,6 @@ typedef Dee_atomic_rwlock_t atomic_rwlock_t;
 #define atomic_rwlock_end        Dee_atomic_rwlock_end
 #endif /* !ATOMIC_RWLOCK_INIT || CONFIG_NO_THREADS */
 
-typedef Dee_shared_lock_t shared_lock_t;
-#undef SHARED_LOCK_INIT
-#undef shared_lock_cinit
-#undef shared_lock_init
-#undef shared_lock_available
-#undef shared_lock_acquired
-#undef shared_lock_tryacquire
-#undef shared_lock_acquire
-#undef shared_lock_waitfor
-#undef shared_lock_release
-#define SHARED_LOCK_INIT       DEE_SHARED_LOCK_INIT
-#define shared_lock_cinit      Dee_shared_lock_cinit
-#define shared_lock_init       Dee_shared_lock_init
-#define shared_lock_available  Dee_shared_lock_available
-#define shared_lock_acquired   Dee_shared_lock_acquired
-#define shared_lock_tryacquire Dee_shared_lock_tryacquire
-#define shared_lock_acquire    Dee_shared_lock_acquire
-#define shared_lock_waitfor    Dee_shared_lock_waitfor
-#define shared_lock_release    Dee_shared_lock_release
-
-typedef Dee_shared_rwlock_t shared_rwlock_t;
-#undef SHARED_RWLOCK_INIT
-#undef shared_rwlock_cinit
-#undef shared_rwlock_init
-#undef shared_rwlock_reading
-#undef shared_rwlock_writing
-#undef shared_rwlock_tryread
-#undef shared_rwlock_trywrite
-#undef shared_rwlock_canread
-#undef shared_rwlock_canwrite
-#undef shared_rwlock_waitread
-#undef shared_rwlock_waitwrite
-#undef shared_rwlock_read
-#undef shared_rwlock_write
-#undef shared_rwlock_tryupgrade
-#undef shared_rwlock_upgrade
-#undef shared_rwlock_downgrade
-#undef shared_rwlock_endwrite
-#undef shared_rwlock_endread
-#undef shared_rwlock_end
-#define SHARED_RWLOCK_INIT       DEE_SHARED_RWLOCK_INIT
-#define shared_rwlock_cinit      Dee_shared_rwlock_cinit
-#define shared_rwlock_init       Dee_shared_rwlock_init
-#define shared_rwlock_reading    Dee_shared_rwlock_reading
-#define shared_rwlock_writing    Dee_shared_rwlock_writing
-#define shared_rwlock_tryread    Dee_shared_rwlock_tryread
-#define shared_rwlock_trywrite   Dee_shared_rwlock_trywrite
-#define shared_rwlock_canread    Dee_shared_rwlock_canread
-#define shared_rwlock_canwrite   Dee_shared_rwlock_canwrite
-#define shared_rwlock_waitread   Dee_shared_rwlock_waitread
-#define shared_rwlock_waitwrite  Dee_shared_rwlock_waitwrite
-#define shared_rwlock_read       Dee_shared_rwlock_read
-#define shared_rwlock_write      Dee_shared_rwlock_write
-#define shared_rwlock_tryupgrade Dee_shared_rwlock_tryupgrade
-#define shared_rwlock_upgrade    Dee_shared_rwlock_upgrade
-#define shared_rwlock_downgrade  Dee_shared_rwlock_downgrade
-#define shared_rwlock_endwrite   Dee_shared_rwlock_endwrite
-#define shared_rwlock_endread    Dee_shared_rwlock_endread
-#define shared_rwlock_end        Dee_shared_rwlock_end
-
 DECL_END
 #endif /* DEE_SOURCE */
 
