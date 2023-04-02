@@ -213,6 +213,7 @@
 		<ClInclude Include="..\include\deemon\util\lock.h" />
 		<ClInclude Include="..\include\deemon\util\objectlist.h" />
 		<ClInclude Include="..\include\deemon\util\recursive-rwlock.h" />
+		<ClInclude Include="..\include\deemon\util\rlock.h" />
 		<ClInclude Include="..\include\deemon\weakref.h" />
 		<ClInclude Include="..\src\deemon\Makefile" />
 		<ClInclude Include="..\src\deemon\cmdline.h" />

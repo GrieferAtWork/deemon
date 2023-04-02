@@ -112,10 +112,6 @@ typedef int Dee_shared_rwlock_t;
 #define Dee_shared_rwlock_write_timed(self, timeout_nanoseconds)     0
 #define Dee_shared_rwlock_waitread_timed(self, timeout_nanoseconds)  0
 #define Dee_shared_rwlock_waitwrite_timed(self, timeout_nanoseconds) 0
-#define Dee_shared_rwlock_read(self)                                 0
-#define Dee_shared_rwlock_write(self)                                0
-#define Dee_shared_rwlock_waitread(self)                             0
-#define Dee_shared_rwlock_waitwrite(self)                            0
 
 typedef int Dee_semaphore_t;
 #define DEE_SEMAPHORE_INIT(n_tickets)                          0
@@ -183,13 +179,13 @@ typedef struct atomic_rwlock Dee_atomic_rwlock_t;
 #define Dee_atomic_rwlock_canwrite   atomic_rwlock_canwrite
 #define Dee_atomic_rwlock_waitread   atomic_rwlock_waitread
 #define Dee_atomic_rwlock_waitwrite  atomic_rwlock_waitwrite
-#define Dee_atomic_rwlock_read       atomic_rwlock_read       /* TODO: Refactor code using the hybrid name */
-#define Dee_atomic_rwlock_write      atomic_rwlock_write      /* TODO: Refactor code using the hybrid name */
+#define Dee_atomic_rwlock_read       atomic_rwlock_read  /* TODO: Refactor code using the hybrid name */
+#define Dee_atomic_rwlock_write      atomic_rwlock_write /* TODO: Refactor code using the hybrid name */
 #define Dee_atomic_rwlock_tryupgrade atomic_rwlock_tryupgrade
 #define Dee_atomic_rwlock_upgrade    atomic_rwlock_upgrade
 #define Dee_atomic_rwlock_downgrade  atomic_rwlock_downgrade
-#define Dee_atomic_rwlock_endwrite   atomic_rwlock_endwrite   /* TODO: Refactor code using the hybrid name */
-#define Dee_atomic_rwlock_endread    atomic_rwlock_endread    /* TODO: Refactor code using the hybrid name */
+#define Dee_atomic_rwlock_endwrite   atomic_rwlock_endwrite /* TODO: Refactor code using the hybrid name */
+#define Dee_atomic_rwlock_endread    atomic_rwlock_endread  /* TODO: Refactor code using the hybrid name */
 #define Dee_atomic_rwlock_end        atomic_rwlock_end
 
 /************************************************************************/
@@ -253,12 +249,12 @@ DFUNDEF WUNUSED NONNULL((1)) int (DCALL Dee_shared_lock_waitfor_timed)(Dee_share
 /* Shared r/w-lock (scheduler-level blocking lock)                      */
 /************************************************************************/
 typedef struct {
-	uintptr_t srw_lock;    /* # of read-locks, or (uintptr_t)-1 if a write-lock is active. */
-	uint32_t  srw_waiting; /* non-zero if threads may be waiting on `srw_lock' */
+	uintptr_t    srw_lock;    /* # of read-locks, or (uintptr_t)-1 if a write-lock is active. */
+	unsigned int srw_waiting; /* non-zero if threads may be waiting on `srw_lock' */
 } Dee_shared_rwlock_t;
 
 #define _Dee_shared_rwlock_wake(self)                                     \
-	((self)->srw_waiting                                                  \
+	(__hybrid_atomic_load(&(self)->srw_waiting, __ATOMIC_ACQUIRE)         \
 	 ? (__hybrid_atomic_store(&(self)->srw_waiting, 0, __ATOMIC_RELEASE), \
 	    DeeFutex_WakeAll(&(self)->srw_lock))                              \
 	 : (void)0)

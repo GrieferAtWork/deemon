@@ -20,7 +20,8 @@
 #ifndef GUARD_DEEMON_UTIL_RECURSIVE_RWLOCK_H
 #define GUARD_DEEMON_UTIL_RECURSIVE_RWLOCK_H 1
 
-/* DEPRECATED HEADER -- WILL BE REPLACED BY STUFF FROM <deemon/util/lock.h> */
+/* DEPRECATED HEADER -- WILL BE REPLACED BY STUFF FROM <deemon/util/rlock.h> */
+/* Replace `Dee_recursive_rwlock_t' with `Dee_ratomic_rwlock_t' / `Dee_rshared_rwlock_t' */
 
 #include "../api.h"
 

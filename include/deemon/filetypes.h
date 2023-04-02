@@ -105,6 +105,7 @@ struct Dee_file_buffer_link {
 struct Dee_file_buffer_object {
 	Dee_FILE_OBJECT_HEAD
 #ifndef CONFIG_NO_THREADS
+	/* TODO: This lock right here should be shared (i.e.: preemptive) */
 	Dee_recursive_rwlock_t      fb_lock;  /* Lock for synchronizing access to the buffer. */
 #endif /* !CONFIG_NO_THREADS */
 	DREF DeeObject             *fb_file;  /* [0..1][lock(fb_lock)] The file referenced by this buffer.

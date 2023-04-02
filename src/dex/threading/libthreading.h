@@ -30,6 +30,9 @@ DECL_BEGIN
 INTDEF DeeTypeObject DeeLock_Type;
 INTDEF DeeTypeObject DeeAtomicLock_Type;
 INTDEF DeeTypeObject DeeSharedLock_Type;
+//TODO:INTDEF DeeTypeObject DeeRLock_Type;
+//TODO:INTDEF DeeTypeObject DeeRAtomicLock_Type;
+//TODO:INTDEF DeeTypeObject DeeRSharedLock_Type;
 
 INTDEF DeeTypeObject DeeRWLock_Type;
 INTDEF DeeTypeObject DeeRWLockSharedLock_Type;
@@ -40,6 +43,12 @@ INTDEF DeeTypeObject DeeAtomicRWLockExclusiveLock_Type;
 INTDEF DeeTypeObject DeeSharedRWLock_Type;
 INTDEF DeeTypeObject DeeSharedRWLockSharedLock_Type;
 INTDEF DeeTypeObject DeeSharedRWLockExclusiveLock_Type;
+//TODO:INTDEF DeeTypeObject DeeRAtomicRWLock_Type;
+//TODO:INTDEF DeeTypeObject DeeRAtomicRWLockSharedLock_Type;
+//TODO:INTDEF DeeTypeObject DeeRAtomicRWLockExclusiveLock_Type;
+//TODO:INTDEF DeeTypeObject DeeRSharedRWLock_Type;
+//TODO:INTDEF DeeTypeObject DeeRSharedRWLockSharedLock_Type;
+//TODO:INTDEF DeeTypeObject DeeRSharedRWLockExclusiveLock_Type;
 
 INTDEF DeeTypeObject DeeSemaphore_Type;
 
