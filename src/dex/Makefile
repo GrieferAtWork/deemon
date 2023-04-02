@@ -207,24 +207,3 @@ $(BLD_PATH)/dex/win32/%.o: $(SRC_ROOT)/%.c
 $(BIN_PATH)/lib/win32$(DLL): $(DEX_OBJECTS_win32) $(BIN_PATH)/deemon$(EXE)
 	$(DEX_CC) -o $@ -L$(BIN_PATH) $(LDFLAGS) $(DEX_LDFLAGS) $(DEX_OBJECTS_win32) $(LIBS) $(DEX_LIBS)
 endif
-
-
-### xml
-DEX += xml
-DEX_SOURCES_xml += $(wildcard $(SRC_ROOT)/src/dex/xml/*.c)
-DEX_OBJECTS_xml = $(call dex_objects,xml,$(DEX_SOURCES_xml))
--include $(foreach F,$(DEX_OBJECTS_xml),$(F:.o=.MF))
-$(BLD_PATH)/dex/xml/%.o: $(SRC_ROOT)/%.c
-	@mkdir -p $(dir $@)
-	$(DEX_CC) -MMD -MF $(@:.o=.MF) -c -o $@ $(CFLAGS) $(DEX_CFLAGS) $<
-$(BIN_PATH)/lib/xml$(DLL): $(DEX_OBJECTS_xml) $(BIN_PATH)/deemon$(EXE)
-	$(DEX_CC) -o $@ -L$(BIN_PATH) $(LDFLAGS) $(DEX_LDFLAGS) $(DEX_OBJECTS_xml) $(LIBS) $(DEX_LIBS)
-
-
-
-
-
-
-
-
-
