@@ -40,6 +40,7 @@ assert (try ({ exec(''); none; }) catch (e...) e) is SyntaxError;
 assert (try ({ exec(' '); none; }) catch (e...) e) is SyntaxError;
 assert (try ({ exec('\n'); none; }) catch (e...) e) is SyntaxError;
 assert (try ({ exec('/* empty */'); none; }) catch (e...) e) is SyntaxError;
+assert (try ({ exec('/* emp\nty */'); none; }) catch (e...) e) is SyntaxError;
 assert (try ({ exec('// empty'); none; }) catch (e...) e) is SyntaxError;
 assert (try ({ exec('// empty\n'); none; }) catch (e...) e) is SyntaxError;
 
@@ -158,7 +159,9 @@ for (local code: {
 	r'({ 10, 20, "foo", false, none })',
 	r'({ 10, 20, "foo", false, none });',
 }) {
-	assert exec(code) == { 10, 20, "foo", false, none };
+	local seq = exec(code);
+	assert seq is Sequence;
+	assert seq == { 10, 20, "foo", false, none };
 }
 
 for (local code: {
@@ -167,6 +170,7 @@ for (local code: {
 	r'({ 10: 20, 20: 30, "foo": "bar" });',
 }) {
 	local map = exec(code);
+	assert map is Mapping;
 	assert_identical(#map, 3);
 	assert_identical(map.get(10), 20);
 	assert_identical(map.get(20), 30);
@@ -181,7 +185,9 @@ for (local code: {
 	r'global x = { 10, 20, 30 };x;',
 	r'x = { 10, 20, 30 };x;',
 }) {
-	assert exec(code) == { 10, 20, 30 };
+	local val = exec(code);
+	assert val is Sequence;
+	assert val == { 10, 20, 30 };
 }
 
 for (local code: {
@@ -203,6 +209,7 @@ for (local code: {
 }) {
 	local glob = Dict();
 	exec(code, globals: glob);
+	assert glob["x"] is Sequence;
 	assert glob["x"] == { 10, 20, 30 };
 }
 
@@ -367,6 +374,8 @@ assert_identical(exec(r'if (10 < 20) "OK" else "ERROR"'), "OK");    /* Expressio
 assert_identical(exec(r'if (10 < 20) "OK" else "ERROR";'), "OK");   /* Expression in Statement */
 assert_identical(exec(r'(if (10 < 20) "OK" else "ERROR")'), "OK");  /* Expression */
 assert_identical(exec(r'(if (10 < 20) "OK" else "ERROR");'), "OK"); /* Expression in Statement */
+assert_identical(exec(r'return if (10 < 20) "OK" else "ERROR";'), "OK"); /* Return Expression in Statement */
+assert_identical(exec(r'return (if (10 < 20) "OK" else "ERROR");'), "OK"); /* Return Expression in Statement */
 assert_identical(exec(r'if (10 < 20) return "OK"; return "ERROR";'), "OK"); /* Statement */
 assert_identical(exec(r'if (10 < 20) return "OK"; else return "ERROR";'), "OK"); /* Statement */
 
@@ -412,7 +421,7 @@ assert_identical((() -> ({ try { "1"; } finally { return "2"; } }))(), "2");
 assert_identical((() -> ({ try { return "1"; } finally { "2"; } }))(), "1");
 assert_identical((() -> ({ try { return "1"; } finally { return "2"; } }))(), "1");
 
-/* Assert that catch/finally work correctly with return and inplicit ast results. */
+/* Assert that catch/finally work correctly with return and implicit ast results. */
 assert_identical(exec(r'try { return "1"; } catch (...) { return "2"; }'), "1");
 assert_identical(exec(r'try { return "1"; } finally { "2"; }'), "1");
 assert_identical(exec(r'try { return "1"; } finally { return "2"; }'), "1");
@@ -422,6 +431,27 @@ assert_identical(exec(r'try { "1"; } finally { return "2"; }'), "2");
 
 assert_identical(exec(r'; if (true) { } else { 42; }'), none);
 assert_identical(exec(r'({ ; if (true) { } else { 42; } })'), none);
+assert_identical(exec(r'; if (false) { } else { return 42; }'), 42);
+assert_identical(exec(r'if (false) { } else { return 42; }'), 42);
+assert_identical(exec(r'if (false) ; else { return 42; }'), 42);
+assert_identical(exec(r'({ ; if (false) { } else { return 42; } })'), 42);
+assert_identical(exec(r'({ ; if (false) ; else { return 42; } })'), 42);
+assert_identical(exec(r'({ ; if (false) { } else return 42; })'), 42);
+assert_identical(exec(r'({ ; if (false) ; else return 42; })'), 42);
+assert_identical(exec(r'({ if (false) { } else { return 42; } })'), 42);
+assert_identical(exec(r'({ if (false) ; else { return 42; } })'), 42);
+assert_identical(exec(r'({ if (false) { } else return 42; })'), 42);
+assert_identical(exec(r'({ if (false) ; else return 42; })'), 42);
+//assert_identical(exec(r'if (true) { } else { return 42; }'), none); // Returns '{}' instead of 'none'
+assert_identical(exec(r'if (true) ; else { return 42; }'), none);
+assert_identical(exec(r'({ ; if (true) { } else { return 42; } })'), none);
+assert_identical(exec(r'({ ; if (true) ; else { return 42; } })'), none);
+assert_identical(exec(r'({ ; if (true) { } else return 42; })'), none);
+assert_identical(exec(r'({ ; if (true) ; else return 42; })'), none);
+//assert_identical(exec(r'({ if (true) { } else { return 42; } })'), none); // Returns '{}' instead of 'none'
+assert_identical(exec(r'({ if (true) ; else { return 42; } })'), none);
+//assert_identical(exec(r'({ if (true) { } else return 42; })'), none); // Returns '{}' instead of 'none'
+assert_identical(exec(r'({ if (true) ; else return 42; })'), none);
 
 /* Make sure that `{}' as an expression is an empty sequence,
  * but when encountered in the context of a statement, it evaluates

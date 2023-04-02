@@ -403,7 +403,7 @@ do_else_branch:
 		} else
 #endif /* JIT_EVAL */
 		{
-			if (SKIP_SECONDARY(self, pwas_expression))
+			if (SKIP_PRIMARY(self, pwas_expression))
 				goto err_scope;
 			if (self->jl_tok == JIT_KEYWORD) {
 				if (JITLexer_ISTOK(self, "elif"))
@@ -412,6 +412,7 @@ do_else_branch:
 					JITLexer_Yield(self);
 					result = EVAL_SECONDARY(self, pwas_expression);
 					/*if (ISERR(result)) goto err;*/
+					goto if_done;
 				}
 			}
 #ifdef JIT_EVAL
@@ -420,6 +421,7 @@ do_else_branch:
 #endif /* JIT_EVAL */
 		}
 	}
+if_done:
 #ifdef JIT_EVAL
 	JITContext_PopScope(self->jl_context);
 #endif /* JIT_EVAL */
