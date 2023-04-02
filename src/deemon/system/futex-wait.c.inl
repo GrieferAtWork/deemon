@@ -337,6 +337,9 @@ again_call_inc_dwThreads:
 #ifdef DeeFutex_USE_pthread_cond_t_AND_pthread_mutex_t
 	int error;
 #endif /* DeeFutex_USE_pthread_cond_t_AND_pthread_mutex_t */
+#ifdef DeeFutex_USE_cnd_t_AND_mtx_t
+	int error;
+#endif /* DeeFutex_USE_cnd_t_AND_mtx_t */
 #ifdef DeeFutex_USE_sem_t
 	int error;
 #endif /* DeeFutex_USE_sem_t */
@@ -425,12 +428,32 @@ again_pthread_mutex_lock:
 	
 #ifdef LOCAL_HAVE_timeout_nanoseconds
 	if (timeout_nanoseconds != (uint64_t)-1) {
+#ifdef CONFIG_HAVE_pthread_cond_reltimedwait64_np
+		struct timespec64 ts;
+		ts.tv_sec  = timeout_nanoseconds / NANOSECONDS_PER_SECOND;
+		ts.tv_nsec = timeout_nanoseconds % NANOSECONDS_PER_SECOND;
+		error = pthread_cond_reltimedwait64_np(&ctrl->fc_cond, &ctrl->fc_mutx, &ts);
+#elif defined(CONFIG_HAVE_pthread_cond_reltimedwait_np)
 		struct timespec ts;
-#ifdef CONFIG_HAVE_pthread_cond_reltimedwait_np
 		ts.tv_sec  = timeout_nanoseconds / NANOSECONDS_PER_SECOND;
 		ts.tv_nsec = timeout_nanoseconds % NANOSECONDS_PER_SECOND;
 		error = pthread_cond_reltimedwait_np(&ctrl->fc_cond, &ctrl->fc_mutx, &ts);
-#else /* CONFIG_HAVE_pthread_cond_reltimedwait_np */
+#elif defined(CONFIG_HAVE_gettimeofday64) && defined(CONFIG_HAVE_pthread_cond_timedwait64)
+		struct timespec64 ts;
+		error = gettimeofday64(NULL, &ts);
+		if unlikely(error != 0) {
+			error = DeeSystem_GetErrno();
+		} else {
+			ts.tv_sec  += timeout_nanoseconds / NANOSECONDS_PER_SECOND;
+			ts.tv_nsec += timeout_nanoseconds % NANOSECONDS_PER_SECOND;
+			if (ts.tv_nsec > NANOSECONDS_PER_SECOND) {
+				++ts.tv_sec;
+				ts.tv_nsec -= NANOSECONDS_PER_SECOND;
+			}
+			error = pthread_cond_timedwait64(&ctrl->fc_cond, &ctrl->fc_mutx, &ts);
+		}
+#else /* ... */
+		struct timespec ts;
 		error = gettimeofday(NULL, &ts);
 		if unlikely(error != 0) {
 			error = DeeSystem_GetErrno();
@@ -443,7 +466,7 @@ again_pthread_mutex_lock:
 			}
 			error = pthread_cond_timedwait(&ctrl->fc_cond, &ctrl->fc_mutx, &ts);
 		}
-#endif /* !CONFIG_HAVE_pthread_cond_reltimedwait_np */
+#endif /* !... */
 	} else
 #endif /* LOCAL_HAVE_timeout_nanoseconds */
 	{
@@ -474,6 +497,127 @@ again_pthread_mutex_lock:
 	}
 #endif /* DeeFutex_USE_pthread_cond_t_AND_pthread_mutex_t */
 
+#ifdef DeeFutex_USE_cnd_t_AND_mtx_t
+#if defined(CONFIG_HAVE_thrd_nomem) || (defined(CONFIG_HAVE_thrd_error) && (defined(EINTR) || defined(ENOMEM)))
+again_mtx_lock:
+#endif /* CONFIG_HAVE_thrd_nomem || (CONFIG_HAVE_thrd_error && (EINTR || ENOMEM)) */
+	(void)mtx_lock(&ctrl->fc_mutx);
+
+	/* Check for interrupts _while_ we're holding a lock to `fc_mutx'. */
+	if (DeeThread_CheckInterrupt()) {
+		(void)mtx_unlock(&ctrl->fc_mutx);
+		(void)cnd_broadcast(&ctrl->fc_cond);
+		futex_controller_decref(ctrl);
+		return -1;
+	}
+
+	/* Check if we're actually supposed to wait */
+	if (!LOCAL_should_wait()) {
+		futex_controller_decref(ctrl);
+		return 0;
+	}
+	
+#ifdef LOCAL_HAVE_timeout_nanoseconds
+	if (timeout_nanoseconds != (uint64_t)-1) {
+#ifdef CONFIG_HAVE_cnd_reltimedwait64_np
+		struct timespec64 ts;
+		ts.tv_sec  = timeout_nanoseconds / NANOSECONDS_PER_SECOND;
+		ts.tv_nsec = timeout_nanoseconds % NANOSECONDS_PER_SECOND;
+		error = cnd_reltimedwait64_np(&ctrl->fc_cond, &ctrl->fc_mutx, &ts);
+#elif defined(CONFIG_HAVE_cnd_reltimedwait_np)
+		struct timespec ts;
+		ts.tv_sec  = timeout_nanoseconds / NANOSECONDS_PER_SECOND;
+		ts.tv_nsec = timeout_nanoseconds % NANOSECONDS_PER_SECOND;
+		error = cnd_reltimedwait_np(&ctrl->fc_cond, &ctrl->fc_mutx, &ts);
+#elif defined(CONFIG_HAVE_gettimeofday64) && defined(CONFIG_HAVE_cnd_timedwait64)
+		struct timespec64 ts;
+		error = gettimeofday64(NULL, &ts);
+		if unlikely(error != 0) {
+#ifdef CONFIG_HAVE_thrd_error
+			error = thrd_error;
+#else /* CONFIG_HAVE_thrd_error */
+			error = thrd_success + 1;
+#endif /* !CONFIG_HAVE_thrd_error */
+		} else {
+			ts.tv_sec  += timeout_nanoseconds / NANOSECONDS_PER_SECOND;
+			ts.tv_nsec += timeout_nanoseconds % NANOSECONDS_PER_SECOND;
+			if (ts.tv_nsec > NANOSECONDS_PER_SECOND) {
+				++ts.tv_sec;
+				ts.tv_nsec -= NANOSECONDS_PER_SECOND;
+			}
+			error = cnd_timedwait64(&ctrl->fc_cond, &ctrl->fc_mutx, &ts);
+		}
+#else /* ... */
+		struct timespec ts;
+		error = gettimeofday(NULL, &ts);
+		if unlikely(error != 0) {
+#ifdef CONFIG_HAVE_thrd_error
+			error = thrd_error;
+#else /* CONFIG_HAVE_thrd_error */
+			error = thrd_success + 1;
+#endif /* !CONFIG_HAVE_thrd_error */
+		} else {
+			ts.tv_sec  += timeout_nanoseconds / NANOSECONDS_PER_SECOND;
+			ts.tv_nsec += timeout_nanoseconds % NANOSECONDS_PER_SECOND;
+			if (ts.tv_nsec > NANOSECONDS_PER_SECOND) {
+				++ts.tv_sec;
+				ts.tv_nsec -= NANOSECONDS_PER_SECOND;
+			}
+			error = cnd_timedwait(&ctrl->fc_cond, &ctrl->fc_mutx, &ts);
+		}
+#endif /* !... */
+	} else
+#endif /* LOCAL_HAVE_timeout_nanoseconds */
+	{
+		error = cnd_wait(&ctrl->fc_cond, &ctrl->fc_mutx);
+	}
+	(void)mtx_unlock(&ctrl->fc_mutx);
+
+	/* Handle system errors */
+	if (error != thrd_success) {
+#ifdef LOCAL_HAVE_timeout_nanoseconds
+		if (error == thrd_timedout) {
+			futex_controller_decref(ctrl);
+			return 1;
+		}
+#endif /* LOCAL_HAVE_timeout_nanoseconds */
+#ifdef CONFIG_HAVE_thrd_nomem
+		if (error == thrd_nomem) {
+			if (Dee_CollectMemory(1))
+				goto again_mtx_lock;
+			futex_controller_decref(ctrl);
+			return -1;
+		}
+#endif /* CONFIG_HAVE_thrd_nomem */
+#ifdef CONFIG_HAVE_thrd_error
+		if (error == thrd_error) {
+			error = DeeSystem_GetErrno();
+#ifdef EINTR
+			if (error == EINTR)
+				goto again_mtx_lock;
+#endif /* EINTR */
+#ifdef ENOMEM
+			if (error == ENOMEM) {
+				if (Dee_CollectMemory(1))
+					goto again_mtx_lock;
+				futex_controller_decref(ctrl);
+				return -1;
+			}
+#endif /* ENOMEM */
+		} else
+#endif /* !CONFIG_HAVE_thrd_error */
+		{
+#ifdef EINVAL
+			error = EINVAL;
+#else /* EINVAL */
+			error = 1;
+#endif /* !EINVAL */
+		}
+		futex_controller_decref(ctrl);
+		return DeeUnixSystem_ThrowErrorf(NULL, error, "cnd_wait failed");
+	}
+#endif /* DeeFutex_USE_cnd_t_AND_mtx_t */
+
 #ifdef DeeFutex_USE_sem_t
 #if defined(EINTR) || defined(ENOMEM)
 again_inc_n_threads:
@@ -496,6 +640,29 @@ again_inc_n_threads:
 
 #ifdef LOCAL_HAVE_timeout_nanoseconds
 	if (timeout_nanoseconds != (uint64_t)-1) {
+#ifdef CONFIG_HAVE_sem_reltimedwait64_np
+		struct timespec64 ts;
+		ts.tv_sec  = timeout_nanoseconds / NANOSECONDS_PER_SECOND;
+		ts.tv_nsec = timeout_nanoseconds % NANOSECONDS_PER_SECOND;
+		error = sem_reltimedwait64_np(&ctrl->fc_sem, &ts);
+#elif defined(CONFIG_HAVE_sem_reltimedwait_np)
+		struct timespec ts;
+		ts.tv_sec  = timeout_nanoseconds / NANOSECONDS_PER_SECOND;
+		ts.tv_nsec = timeout_nanoseconds % NANOSECONDS_PER_SECOND;
+		error = sem_reltimedwait_np(&ctrl->fc_sem, &ts);
+#elif defined(CONFIG_HAVE_sem_timedwait64) && defined(CONFIG_HAVE_gettimeofday64)
+		struct timespec64 ts;
+		error = gettimeofday64(NULL, &ts);
+		if likely(error == 0) {
+			ts.tv_sec  += timeout_nanoseconds / NANOSECONDS_PER_SECOND;
+			ts.tv_nsec += timeout_nanoseconds % NANOSECONDS_PER_SECOND;
+			if (ts.tv_nsec > NANOSECONDS_PER_SECOND) {
+				++ts.tv_sec;
+				ts.tv_nsec -= NANOSECONDS_PER_SECOND;
+			}
+			error = sem_timedwait64(&ctrl->fc_sem, &ts);
+		}
+#else /* ... */
 		struct timespec ts;
 		error = gettimeofday(NULL, &ts);
 		if likely(error == 0) {
@@ -507,6 +674,7 @@ again_inc_n_threads:
 			}
 			error = sem_timedwait(&ctrl->fc_sem, &ts);
 		}
+#endif /* !... */
 	} else
 #endif /* LOCAL_HAVE_timeout_nanoseconds */
 	{

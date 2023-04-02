@@ -128,13 +128,17 @@ PUBLIC NONNULL((1)) void
 	atomic_inc(&ctrl->fc_word);
 	(void)LOCAL_os_futex_wake(&ctrl->fc_word);
 #elif defined(DeeFutex_USE_pthread_cond_t_AND_pthread_mutex_t)
-	(void)pthread_mutex_lock(&ctrl->fc_mutx);
 #ifdef LOCAL_IS_ONE
 	(void)pthread_cond_signal(&ctrl->fc_cond);
 #else /* LOCAL_IS_ONE */
 	(void)pthread_cond_broadcast(&ctrl->fc_cond);
 #endif /* !LOCAL_IS_ONE */
-	(void)pthread_mutex_unlock(&ctrl->fc_mutx);
+#elif defined(DeeFutex_USE_cnd_t_AND_mtx_t)
+#ifdef LOCAL_IS_ONE
+	(void)cnd_signal(&ctrl->fc_cond);
+#else /* LOCAL_IS_ONE */
+	(void)cnd_broadcast(&ctrl->fc_cond);
+#endif /* !LOCAL_IS_ONE */
 #elif defined(DeeFutex_USE_sem_t)
 	{
 		size_t n_threads;

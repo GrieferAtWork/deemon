@@ -224,6 +224,7 @@ header("sched.h", unix);
 header("signal.h", unix);
 header("sys/signal.h", addparen(linux) + " || " + addparen(kos));
 header("sys/syscall.h", addparen(linux) + " || " + addparen(kos));
+header("threads.h", "(!defined(__STDC_NO_THREADS__) || !__STDC_NO_THREADS__) && defined(__STDC_VERSION__) && (__STDC_VERSION__ >= 201112)");
 header("pthread.h", unix);
 header("sys/types.h", addparen(linux) + " || " + addparen(kos));
 header("semaphore.h", addparen(linux) + " || " + addparen(kos));
@@ -822,6 +823,7 @@ var("stdin", "defined(CONFIG_HAVE_STDIO_H) && " + addparen(stdc), test: "return 
 var("stdout", "defined(CONFIG_HAVE_STDIO_H) && " + addparen(stdc), test: "return stdout != (FILE *)0;");
 var("stderr", "defined(CONFIG_HAVE_STDIO_H) && " + addparen(stdc), test: "return stderr != (FILE *)0;");
 
+// <semaphore.h>
 func("sem_init", "defined(CONFIG_HAVE_SEMAPHORE_H)", test: "extern sem_t sem; return sem_init(&sem, 0, 0);");
 func("sem_destroy", "defined(CONFIG_HAVE_SEMAPHORE_H)", test: "extern sem_t sem; return sem_destroy(&sem);");
 func("sem_wait", "defined(CONFIG_HAVE_SEMAPHORE_H)", test: "extern sem_t sem; return sem_wait(&sem);");
@@ -829,7 +831,10 @@ func("sem_trywait", "defined(CONFIG_HAVE_SEMAPHORE_H)", test: "extern sem_t sem;
 func("sem_post", "defined(CONFIG_HAVE_SEMAPHORE_H)", test: "extern sem_t sem; return sem_post(&sem);");
 func("sem_timedwait", "defined(CONFIG_HAVE_SEMAPHORE_H) && defined(__USE_XOPEN2K)", test: "extern sem_t sem; extern struct timespec ts; return sem_timedwait(&sem, &ts);");
 func("sem_timedwait64", "defined(CONFIG_HAVE_SEMAPHORE_H) && defined(__USE_XOPEN2K) && defined(__USE_TIME64)", test: "extern sem_t sem; extern struct timespec64 ts; return sem_timedwait64(&sem, &ts);");
+func("sem_reltimedwait_np", "defined(CONFIG_HAVE_SEMAPHORE_H) && defined(__USE_XOPEN2K)", test: "extern sem_t sem; extern struct timespec ts; return sem_reltimedwait_np(&sem, &ts);");
+func("sem_reltimedwait64_np", "defined(CONFIG_HAVE_SEMAPHORE_H) && defined(__USE_XOPEN2K) && defined(__USE_TIME64)", test: "extern sem_t sem; extern struct timespec64 ts; return sem_reltimedwait64_np(&sem, &ts);");
 
+// <pthread.h>
 func("pthread_suspend", "defined(CONFIG_HAVE_PTHREAD_H) && 0", test: "extern pthread_t pt; return pthread_suspend(pt);");
 func("pthread_continue", "defined(CONFIG_HAVE_PTHREAD_H) && 0", test: "extern pthread_t pt; return pthread_continue(pt);");
 func("pthread_suspend_np", "defined(CONFIG_HAVE_PTHREAD_H) && 0", test: "extern pthread_t pt; return pthread_suspend_np(pt);");
@@ -842,11 +847,34 @@ func("pthread_cond_signal", "defined(CONFIG_HAVE_PTHREAD_H)", test: 'extern pthr
 func("pthread_cond_broadcast", "defined(CONFIG_HAVE_PTHREAD_H)", test: 'extern pthread_cond_t cond; return pthread_cond_broadcast(&cond);');
 func("pthread_cond_wait", "defined(CONFIG_HAVE_PTHREAD_H)", test: 'extern pthread_cond_t cond; extern pthread_mutex_t mtx; return pthread_cond_wait(&cond, &mtx);');
 func("pthread_cond_timedwait", "defined(CONFIG_HAVE_PTHREAD_H)", test: 'extern pthread_cond_t cond; extern pthread_mutex_t mtx; extern struct timespec ts; return pthread_cond_timedwait(&cond, &mtx, &ts);');
+func("pthread_cond_timedwait64", "defined(CONFIG_HAVE_PTHREAD_H) && defined(__USE_TIME64)", test: 'extern pthread_cond_t cond; extern pthread_mutex_t mtx; extern struct timespec64 ts; return pthread_cond_timedwait64(&cond, &mtx, &ts);');
 func("pthread_cond_reltimedwait_np", "defined(CONFIG_HAVE_PTHREAD_H)", test: 'extern pthread_cond_t cond; extern pthread_mutex_t mtx; extern struct timespec ts; return pthread_cond_reltimedwait_np(&cond, &mtx, &ts);');
+func("pthread_cond_reltimedwait64_np", "defined(CONFIG_HAVE_PTHREAD_H) && defined(__USE_TIME64)", test: 'extern pthread_cond_t cond; extern pthread_mutex_t mtx; extern struct timespec64 ts; return pthread_cond_reltimedwait64_np(&cond, &mtx, &ts);');
 func("pthread_mutex_init", "defined(CONFIG_HAVE_PTHREAD_H)", test: 'extern pthread_mutex_t mtx; return pthread_mutex_init(&mtx, NULL);');
 func("pthread_mutex_destroy", "defined(CONFIG_HAVE_PTHREAD_H)", test: 'extern pthread_mutex_t mtx; return pthread_mutex_destroy(&mtx);');
 func("pthread_mutex_lock", "defined(CONFIG_HAVE_PTHREAD_H)", test: 'extern pthread_mutex_t mtx; return pthread_mutex_lock(&mtx);');
 func("pthread_mutex_unlock", "defined(CONFIG_HAVE_PTHREAD_H)", test: 'extern pthread_mutex_t mtx; return pthread_mutex_unlock(&mtx);');
+
+// <threads.h>
+func("cnd_init", "defined(CONFIG_HAVE_THREADS_H)", test: 'extern cnd_t cnd; return cnd_init(&cnd);');
+func("cnd_destroy", "defined(CONFIG_HAVE_THREADS_H)", test: 'extern cnd_t cnd; cnd_destroy(&cnd); return 0;');
+func("cnd_signal", "defined(CONFIG_HAVE_THREADS_H)", test: 'extern cnd_t cnd; return cnd_signal(&cnd);');
+func("cnd_broadcast", "defined(CONFIG_HAVE_THREADS_H)", test: 'extern cnd_t cnd; return cnd_broadcast(&cnd);');
+func("cnd_wait", "defined(CONFIG_HAVE_THREADS_H)", test: 'extern cnd_t cnd; extern mtx_t mtx; return cnd_wait(&cnd, &mtx);');
+func("cnd_timedwait", "defined(CONFIG_HAVE_THREADS_H)", test: 'extern cnd_t cnd; extern mtx_t mtx; extern struct timespec ts; return cnd_timedwait(&cnd, &mtx, &ts);');
+func("cnd_timedwait64", "defined(CONFIG_HAVE_THREADS_H) && defined(__USE_TIME64)", test: 'extern cnd_t cnd; extern mtx_t mtx; extern struct timespec64 ts; return cnd_timedwait64(&cnd, &mtx, &ts);');
+func("cnd_reltimedwait_np", "defined(CONFIG_HAVE_THREADS_H)", test: 'extern cnd_t cnd; extern mtx_t mtx; extern struct timespec ts; return cnd_reltimedwait_np(&cnd, &mtx, &ts);');
+func("cnd_reltimedwait64_np", "defined(CONFIG_HAVE_THREADS_H) && defined(__USE_TIME64)", test: 'extern cnd_t cnd; extern mtx_t mtx; extern struct timespec64 ts; return cnd_reltimedwait64_np(&cnd, &mtx, &ts);');
+constant("thrd_success");
+constant("thrd_nomem");
+constant("thrd_timedout");
+constant("thrd_error");
+func("mtx_init", "defined(CONFIG_HAVE_THREADS_H)", test: 'extern mtx_t mtx; return mtx_init(&mtx);');
+func("mtx_destroy", "defined(CONFIG_HAVE_THREADS_H)", test: 'extern mtx_t mtx; mtx_destroy(&mtx); return 0;');
+func("mtx_lock", "defined(CONFIG_HAVE_THREADS_H)", test: 'extern mtx_t mtx; return mtx_lock(&mtx);');
+func("mtx_unlock", "defined(CONFIG_HAVE_THREADS_H)", test: 'extern mtx_t mtx; mtx_unlock(&mtx); return 0;');
+
+// <kos/futex.h>
 func("futex_wake", "defined(CONFIG_HAVE_KOS_FUTEX_H)", test: 'extern lfutex_t ftx; return futex_wake(&ftx, 1);');
 func("futex_wakeall", "defined(CONFIG_HAVE_KOS_FUTEX_H)", test: 'extern lfutex_t ftx; return futex_wakeall(&ftx);');
 func("futex_waitwhile", "defined(CONFIG_HAVE_KOS_FUTEX_H)", test: 'extern lfutex_t ftx, val; return futex_waitwhile(&ftx, val);');
@@ -1471,6 +1499,15 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #define CONFIG_HAVE_SYS_SYSCALL_H
 #endif
 
+#ifdef CONFIG_NO_THREADS_H
+#undef CONFIG_HAVE_THREADS_H
+#elif !defined(CONFIG_HAVE_THREADS_H) && \
+      (__has_include(<threads.h>) || (defined(__NO_has_include) && ((!defined(__STDC_NO_THREADS__) || \
+       !__STDC_NO_THREADS__) && defined(__STDC_VERSION__) && (__STDC_VERSION__ \
+       >= 201112))))
+#define CONFIG_HAVE_THREADS_H
+#endif
+
 #ifdef CONFIG_NO_PTHREAD_H
 #undef CONFIG_HAVE_PTHREAD_H
 #elif !defined(CONFIG_HAVE_PTHREAD_H) && \
@@ -1862,6 +1899,10 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #ifdef CONFIG_HAVE_SYS_SYSCALL_H
 #include <sys/syscall.h>
 #endif /* CONFIG_HAVE_SYS_SYSCALL_H */
+
+#ifdef CONFIG_HAVE_THREADS_H
+#include <threads.h>
+#endif /* CONFIG_HAVE_THREADS_H */
 
 #ifdef CONFIG_HAVE_PTHREAD_H
 #include <pthread.h>
@@ -6390,6 +6431,22 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #define CONFIG_HAVE_sem_timedwait64
 #endif
 
+#ifdef CONFIG_NO_sem_reltimedwait_np
+#undef CONFIG_HAVE_sem_reltimedwait_np
+#elif !defined(CONFIG_HAVE_sem_reltimedwait_np) && \
+      (defined(sem_reltimedwait_np) || defined(__sem_reltimedwait_np_defined) || \
+       (defined(CONFIG_HAVE_SEMAPHORE_H) && defined(__USE_XOPEN2K)))
+#define CONFIG_HAVE_sem_reltimedwait_np
+#endif
+
+#ifdef CONFIG_NO_sem_reltimedwait64_np
+#undef CONFIG_HAVE_sem_reltimedwait64_np
+#elif !defined(CONFIG_HAVE_sem_reltimedwait64_np) && \
+      (defined(sem_reltimedwait64_np) || defined(__sem_reltimedwait64_np_defined) || \
+       (defined(CONFIG_HAVE_SEMAPHORE_H) && defined(__USE_XOPEN2K) && defined(__USE_TIME64)))
+#define CONFIG_HAVE_sem_reltimedwait64_np
+#endif
+
 #ifdef CONFIG_NO_pthread_suspend
 #undef CONFIG_HAVE_pthread_suspend
 #elif !defined(CONFIG_HAVE_pthread_suspend) && \
@@ -6484,12 +6541,28 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #define CONFIG_HAVE_pthread_cond_timedwait
 #endif
 
+#ifdef CONFIG_NO_pthread_cond_timedwait64
+#undef CONFIG_HAVE_pthread_cond_timedwait64
+#elif !defined(CONFIG_HAVE_pthread_cond_timedwait64) && \
+      (defined(pthread_cond_timedwait64) || defined(__pthread_cond_timedwait64_defined) || \
+       (defined(CONFIG_HAVE_PTHREAD_H) && defined(__USE_TIME64)))
+#define CONFIG_HAVE_pthread_cond_timedwait64
+#endif
+
 #ifdef CONFIG_NO_pthread_cond_reltimedwait_np
 #undef CONFIG_HAVE_pthread_cond_reltimedwait_np
 #elif !defined(CONFIG_HAVE_pthread_cond_reltimedwait_np) && \
       (defined(pthread_cond_reltimedwait_np) || defined(__pthread_cond_reltimedwait_np_defined) || \
        defined(CONFIG_HAVE_PTHREAD_H))
 #define CONFIG_HAVE_pthread_cond_reltimedwait_np
+#endif
+
+#ifdef CONFIG_NO_pthread_cond_reltimedwait64_np
+#undef CONFIG_HAVE_pthread_cond_reltimedwait64_np
+#elif !defined(CONFIG_HAVE_pthread_cond_reltimedwait64_np) && \
+      (defined(pthread_cond_reltimedwait64_np) || defined(__pthread_cond_reltimedwait64_np_defined) || \
+       (defined(CONFIG_HAVE_PTHREAD_H) && defined(__USE_TIME64)))
+#define CONFIG_HAVE_pthread_cond_reltimedwait64_np
 #endif
 
 #ifdef CONFIG_NO_pthread_mutex_init
@@ -6522,6 +6595,128 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
       (defined(pthread_mutex_unlock) || defined(__pthread_mutex_unlock_defined) || \
        defined(CONFIG_HAVE_PTHREAD_H))
 #define CONFIG_HAVE_pthread_mutex_unlock
+#endif
+
+#ifdef CONFIG_NO_cnd_init
+#undef CONFIG_HAVE_cnd_init
+#elif !defined(CONFIG_HAVE_cnd_init) && \
+      (defined(cnd_init) || defined(__cnd_init_defined) || defined(CONFIG_HAVE_THREADS_H))
+#define CONFIG_HAVE_cnd_init
+#endif
+
+#ifdef CONFIG_NO_cnd_destroy
+#undef CONFIG_HAVE_cnd_destroy
+#elif !defined(CONFIG_HAVE_cnd_destroy) && \
+      (defined(cnd_destroy) || defined(__cnd_destroy_defined) || defined(CONFIG_HAVE_THREADS_H))
+#define CONFIG_HAVE_cnd_destroy
+#endif
+
+#ifdef CONFIG_NO_cnd_signal
+#undef CONFIG_HAVE_cnd_signal
+#elif !defined(CONFIG_HAVE_cnd_signal) && \
+      (defined(cnd_signal) || defined(__cnd_signal_defined) || defined(CONFIG_HAVE_THREADS_H))
+#define CONFIG_HAVE_cnd_signal
+#endif
+
+#ifdef CONFIG_NO_cnd_broadcast
+#undef CONFIG_HAVE_cnd_broadcast
+#elif !defined(CONFIG_HAVE_cnd_broadcast) && \
+      (defined(cnd_broadcast) || defined(__cnd_broadcast_defined) || defined(CONFIG_HAVE_THREADS_H))
+#define CONFIG_HAVE_cnd_broadcast
+#endif
+
+#ifdef CONFIG_NO_cnd_wait
+#undef CONFIG_HAVE_cnd_wait
+#elif !defined(CONFIG_HAVE_cnd_wait) && \
+      (defined(cnd_wait) || defined(__cnd_wait_defined) || defined(CONFIG_HAVE_THREADS_H))
+#define CONFIG_HAVE_cnd_wait
+#endif
+
+#ifdef CONFIG_NO_cnd_timedwait
+#undef CONFIG_HAVE_cnd_timedwait
+#elif !defined(CONFIG_HAVE_cnd_timedwait) && \
+      (defined(cnd_timedwait) || defined(__cnd_timedwait_defined) || defined(CONFIG_HAVE_THREADS_H))
+#define CONFIG_HAVE_cnd_timedwait
+#endif
+
+#ifdef CONFIG_NO_cnd_timedwait64
+#undef CONFIG_HAVE_cnd_timedwait64
+#elif !defined(CONFIG_HAVE_cnd_timedwait64) && \
+      (defined(cnd_timedwait64) || defined(__cnd_timedwait64_defined) || (defined(CONFIG_HAVE_THREADS_H) && \
+       defined(__USE_TIME64)))
+#define CONFIG_HAVE_cnd_timedwait64
+#endif
+
+#ifdef CONFIG_NO_cnd_reltimedwait_np
+#undef CONFIG_HAVE_cnd_reltimedwait_np
+#elif !defined(CONFIG_HAVE_cnd_reltimedwait_np) && \
+      (defined(cnd_reltimedwait_np) || defined(__cnd_reltimedwait_np_defined) || \
+       defined(CONFIG_HAVE_THREADS_H))
+#define CONFIG_HAVE_cnd_reltimedwait_np
+#endif
+
+#ifdef CONFIG_NO_cnd_reltimedwait64_np
+#undef CONFIG_HAVE_cnd_reltimedwait64_np
+#elif !defined(CONFIG_HAVE_cnd_reltimedwait64_np) && \
+      (defined(cnd_reltimedwait64_np) || defined(__cnd_reltimedwait64_np_defined) || \
+       (defined(CONFIG_HAVE_THREADS_H) && defined(__USE_TIME64)))
+#define CONFIG_HAVE_cnd_reltimedwait64_np
+#endif
+
+#ifdef CONFIG_NO_thrd_success
+#undef CONFIG_HAVE_thrd_success
+#elif !defined(CONFIG_HAVE_thrd_success) && \
+      (defined(thrd_success) || defined(__thrd_success_defined))
+#define CONFIG_HAVE_thrd_success
+#endif
+
+#ifdef CONFIG_NO_thrd_nomem
+#undef CONFIG_HAVE_thrd_nomem
+#elif !defined(CONFIG_HAVE_thrd_nomem) && \
+      (defined(thrd_nomem) || defined(__thrd_nomem_defined))
+#define CONFIG_HAVE_thrd_nomem
+#endif
+
+#ifdef CONFIG_NO_thrd_timedout
+#undef CONFIG_HAVE_thrd_timedout
+#elif !defined(CONFIG_HAVE_thrd_timedout) && \
+      (defined(thrd_timedout) || defined(__thrd_timedout_defined))
+#define CONFIG_HAVE_thrd_timedout
+#endif
+
+#ifdef CONFIG_NO_thrd_error
+#undef CONFIG_HAVE_thrd_error
+#elif !defined(CONFIG_HAVE_thrd_error) && \
+      (defined(thrd_error) || defined(__thrd_error_defined))
+#define CONFIG_HAVE_thrd_error
+#endif
+
+#ifdef CONFIG_NO_mtx_init
+#undef CONFIG_HAVE_mtx_init
+#elif !defined(CONFIG_HAVE_mtx_init) && \
+      (defined(mtx_init) || defined(__mtx_init_defined) || defined(CONFIG_HAVE_THREADS_H))
+#define CONFIG_HAVE_mtx_init
+#endif
+
+#ifdef CONFIG_NO_mtx_destroy
+#undef CONFIG_HAVE_mtx_destroy
+#elif !defined(CONFIG_HAVE_mtx_destroy) && \
+      (defined(mtx_destroy) || defined(__mtx_destroy_defined) || defined(CONFIG_HAVE_THREADS_H))
+#define CONFIG_HAVE_mtx_destroy
+#endif
+
+#ifdef CONFIG_NO_mtx_lock
+#undef CONFIG_HAVE_mtx_lock
+#elif !defined(CONFIG_HAVE_mtx_lock) && \
+      (defined(mtx_lock) || defined(__mtx_lock_defined) || defined(CONFIG_HAVE_THREADS_H))
+#define CONFIG_HAVE_mtx_lock
+#endif
+
+#ifdef CONFIG_NO_mtx_unlock
+#undef CONFIG_HAVE_mtx_unlock
+#elif !defined(CONFIG_HAVE_mtx_unlock) && \
+      (defined(mtx_unlock) || defined(__mtx_unlock_defined) || defined(CONFIG_HAVE_THREADS_H))
+#define CONFIG_HAVE_mtx_unlock
 #endif
 
 #ifdef CONFIG_NO_futex_wake

@@ -744,12 +744,6 @@
 		<ClInclude Include="..\src\deemon\runtime\builtin.h">
 			<Filter>src\runtime</Filter>
 		</ClInclude>
-		<ClInclude Include="..\src\deemon\runtime\futex-wait.c.inl">
-			<Filter>src\runtime</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\runtime\futex-wake.c.inl">
-			<Filter>src\runtime</Filter>
-		</ClInclude>
 		<ClInclude Include="..\src\deemon\runtime\mro-impl.c.inl">
 			<Filter>src\runtime</Filter>
 		</ClInclude>
@@ -764,6 +758,12 @@
 		</ClInclude>
 		<ClInclude Include="..\src\deemon\runtime\strings.h">
 			<Filter>src\runtime</Filter>
+		</ClInclude>
+		<ClInclude Include="..\src\deemon\system\futex-wait.c.inl">
+			<Filter>src\system</Filter>
+		</ClInclude>
+		<ClInclude Include="..\src\deemon\system\futex-wake.c.inl">
+			<Filter>src\system</Filter>
 		</ClInclude>
 		<ClInclude Include="..\src\deemon\system\system-nt.c.inl">
 			<Filter>src\system</Filter>
@@ -1256,10 +1256,10 @@
 		<ClCompile Include="..\src\deemon\runtime\format.c">
 			<Filter>src\runtime</Filter>
 		</ClCompile>
-		<ClCompile Include="..\src\deemon\runtime\futex.c">
+		<ClCompile Include="..\src\deemon\runtime\gc.c">
 			<Filter>src\runtime</Filter>
 		</ClCompile>
-		<ClCompile Include="..\src\deemon\runtime\gc.c">
+		<ClCompile Include="..\src\deemon\runtime\lock.c">
 			<Filter>src\runtime</Filter>
 		</ClCompile>
 		<ClCompile Include="..\src\deemon\runtime\misc.c">
@@ -1290,6 +1290,9 @@
 			<Filter>src\runtime</Filter>
 		</ClCompile>
 		<ClCompile Include="..\src\deemon\system\file.c">
+			<Filter>src\system</Filter>
+		</ClCompile>
+		<ClCompile Include="..\src\deemon\system\futex.c">
 			<Filter>src\system</Filter>
 		</ClCompile>
 		<ClCompile Include="..\src\deemon\system\system.c">
