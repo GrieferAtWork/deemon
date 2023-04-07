@@ -107,13 +107,30 @@ INTDEF NONNULL((1)) void *(DCALL DeeCompilerItem_GetValue)(DeeObject *__restrict
 
 LIST_HEAD(Dee_compiler_item_object_list, Dee_compiler_item_object);
 struct Dee_compiler_items {
-	size_t                                ci_size; /* [lock(ci_lock)] Amount of existing compiler items. */
-	size_t                                ci_mask; /* [lock(ci_lock)] Hash-map mask. */
-	struct Dee_compiler_item_object_list *ci_list; /* [0..1][0..ci_mask+1][owned][lock(ci_lock)] Hash-map of compiler items. */
+	size_t                                cis_size; /* [lock(cis_lock)] Amount of existing compiler items. */
+	size_t                                cis_mask; /* [lock(cis_lock)] Hash-map mask. */
+	struct Dee_compiler_item_object_list *cis_list; /* [0..1][0..cis_mask+1][owned][lock(cis_lock)] Hash-map of compiler items. */
 #ifndef CONFIG_NO_THREADS
-	Dee_atomic_rwlock_t                   ci_lock; /* Lock for compiler items. */
+	Dee_atomic_rwlock_t                   cis_lock; /* Lock for compiler items. */
 #endif /* !CONFIG_NO_THREADS */
 };
+
+#define Dee_compiler_items_lock_reading(self)    Dee_atomic_rwlock_reading(&(self)->cis_lock)
+#define Dee_compiler_items_lock_writing(self)    Dee_atomic_rwlock_writing(&(self)->cis_lock)
+#define Dee_compiler_items_lock_tryread(self)    Dee_atomic_rwlock_tryread(&(self)->cis_lock)
+#define Dee_compiler_items_lock_trywrite(self)   Dee_atomic_rwlock_trywrite(&(self)->cis_lock)
+#define Dee_compiler_items_lock_canread(self)    Dee_atomic_rwlock_canread(&(self)->cis_lock)
+#define Dee_compiler_items_lock_canwrite(self)   Dee_atomic_rwlock_canwrite(&(self)->cis_lock)
+#define Dee_compiler_items_lock_waitread(self)   Dee_atomic_rwlock_waitread(&(self)->cis_lock)
+#define Dee_compiler_items_lock_waitwrite(self)  Dee_atomic_rwlock_waitwrite(&(self)->cis_lock)
+#define Dee_compiler_items_lock_read(self)       Dee_atomic_rwlock_read(&(self)->cis_lock)
+#define Dee_compiler_items_lock_write(self)      Dee_atomic_rwlock_write(&(self)->cis_lock)
+#define Dee_compiler_items_lock_tryupgrade(self) Dee_atomic_rwlock_tryupgrade(&(self)->cis_lock)
+#define Dee_compiler_items_lock_upgrade(self)    Dee_atomic_rwlock_upgrade(&(self)->cis_lock)
+#define Dee_compiler_items_lock_downgrade(self)  Dee_atomic_rwlock_downgrade(&(self)->cis_lock)
+#define Dee_compiler_items_lock_endwrite(self)   Dee_atomic_rwlock_endwrite(&(self)->cis_lock)
+#define Dee_compiler_items_lock_endread(self)    Dee_atomic_rwlock_endread(&(self)->cis_lock)
+#define Dee_compiler_items_lock_end(self)        Dee_atomic_rwlock_end(&(self)->cis_lock)
 #endif /* CONFIG_BUILDING_DEEMON */
 
 struct Dee_compiler_object {

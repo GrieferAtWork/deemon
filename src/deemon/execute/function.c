@@ -70,13 +70,13 @@ lookup_code_info_in_class(DeeTypeObject *type,
 	size_t i;
 	my_class = DeeClass_DESC(type);
 	desc     = my_class->cd_desc;
-	atomic_rwlock_read(&my_class->cd_lock);
+	Dee_class_desc_lock_read(my_class);
 	for (addr = 0; addr < desc->cd_cmemb_size; ++addr) {
 		if (my_class->cd_members[addr] == (DeeObject *)function ||
 		    (my_class->cd_members[addr] &&
 		     DeeFunction_Check(my_class->cd_members[addr]) &&
 		     DeeFunction_CODE(my_class->cd_members[addr]) == code)) {
-			atomic_rwlock_endread(&my_class->cd_lock);
+			Dee_class_desc_lock_endread(my_class);
 			for (i = 0; i <= desc->cd_iattr_mask; ++i) {
 				struct class_attribute *attr;
 				attr = &desc->cd_iattr_list[i];
@@ -142,10 +142,10 @@ lookup_code_info_in_class(DeeTypeObject *type,
 				Dee_Incref(type);
 				return 0;
 			}
-			atomic_rwlock_read(&my_class->cd_lock);
+			Dee_class_desc_lock_read(my_class);
 		}
 	}
-	atomic_rwlock_endread(&my_class->cd_lock);
+	Dee_class_desc_lock_endread(my_class);
 	return 1;
 }
 

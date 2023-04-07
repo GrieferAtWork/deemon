@@ -967,7 +967,6 @@ EXPORTS
 	Dee_shared_lock_acquire_timed@12=_Dee_shared_lock_acquire_timed@12
 	Dee_shared_lock_waitfor@4=_Dee_shared_lock_waitfor@4
 	Dee_shared_lock_waitfor_timed@12=_Dee_shared_lock_waitfor_timed@12
-	Dee_shared_rwlock_end@4=_Dee_shared_rwlock_end@4
 	Dee_shared_rwlock_read@4=_Dee_shared_rwlock_read@4
 	Dee_shared_rwlock_read_timed@12=_Dee_shared_rwlock_read_timed@12
 	Dee_shared_rwlock_waitread@4=_Dee_shared_rwlock_waitread@4

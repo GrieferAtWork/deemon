@@ -1057,10 +1057,10 @@ DeeObject_InplaceDeepCopyWithLock(DREF DeeObject **__restrict pself,
 	DREF DeeObject *temp, *copy;
 
 	/* Step #1: Extract the existing object. */
-	atomic_rwlock_read(plock);
+	Dee_atomic_rwlock_read(plock);
 	temp = *pself;
 	Dee_Incref(temp);
-	atomic_rwlock_endread(plock);
+	Dee_atomic_rwlock_endread(plock);
 
 	/* Step #2: Create a deep copy for it. */
 	copy = DeeObject_DeepCopy(temp);
@@ -1069,10 +1069,10 @@ DeeObject_InplaceDeepCopyWithLock(DREF DeeObject **__restrict pself,
 		goto err;
 
 	/* Step #3: Write back the newly created deep copy. */
-	atomic_rwlock_write(plock);
+	Dee_atomic_rwlock_write(plock);
 	temp   = *pself; /* Inherit */
 	*pself = copy;   /* Inherit */
-	atomic_rwlock_endwrite(plock);
+	Dee_atomic_rwlock_endwrite(plock);
 	Dee_Decref(temp);
 	return 0;
 err:
@@ -1085,14 +1085,14 @@ DeeObject_XInplaceDeepCopyWithLock(DREF DeeObject **__restrict pself,
 	DREF DeeObject *temp, *copy;
 
 	/* Step #1: Extract the existing object. */
-	atomic_rwlock_read(plock);
+	Dee_atomic_rwlock_read(plock);
 	temp = *pself;
 	if (!temp) {
-		atomic_rwlock_endread(plock);
+		Dee_atomic_rwlock_endread(plock);
 		goto done;
 	}
 	Dee_Incref(temp);
-	atomic_rwlock_endread(plock);
+	Dee_atomic_rwlock_endread(plock);
 
 	/* Step #2: Create a deep copy for it. */
 	copy = DeeObject_DeepCopy(temp);
@@ -1101,10 +1101,10 @@ DeeObject_XInplaceDeepCopyWithLock(DREF DeeObject **__restrict pself,
 		goto err;
 
 	/* Step #3: Write back the newly created deep copy. */
-	atomic_rwlock_write(plock);
+	Dee_atomic_rwlock_write(plock);
 	temp   = *pself; /* Inherit */
 	*pself = copy;   /* Inherit */
-	atomic_rwlock_endwrite(plock);
+	Dee_atomic_rwlock_endwrite(plock);
 	Dee_XDecref(temp);
 done:
 	return 0;

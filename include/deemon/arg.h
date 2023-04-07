@@ -258,6 +258,23 @@ DDATDEF DeeTypeObject DeeKwdsMapping_Type;
 #define DeeKwdsMapping_Check(ob)      DeeObject_InstanceOfExact(ob, &DeeKwdsMapping_Type) /* `_KwdsMapping' is final */
 #define DeeKwdsMapping_CheckExact(ob) DeeObject_InstanceOfExact(ob, &DeeKwdsMapping_Type)
 
+#define DeeKwdsMapping_LockReading(self)    Dee_atomic_rwlock_reading(&(self)->kmo_lock)
+#define DeeKwdsMapping_LockWriting(self)    Dee_atomic_rwlock_writing(&(self)->kmo_lock)
+#define DeeKwdsMapping_LockTryRead(self)    Dee_atomic_rwlock_tryread(&(self)->kmo_lock)
+#define DeeKwdsMapping_LockTryWrite(self)   Dee_atomic_rwlock_trywrite(&(self)->kmo_lock)
+#define DeeKwdsMapping_LockCanRead(self)    Dee_atomic_rwlock_canread(&(self)->kmo_lock)
+#define DeeKwdsMapping_LockCanWrite(self)   Dee_atomic_rwlock_canwrite(&(self)->kmo_lock)
+#define DeeKwdsMapping_LockWaitRead(self)   Dee_atomic_rwlock_waitread(&(self)->kmo_lock)
+#define DeeKwdsMapping_LockWaitWrite(self)  Dee_atomic_rwlock_waitwrite(&(self)->kmo_lock)
+#define DeeKwdsMapping_LockRead(self)       Dee_atomic_rwlock_read(&(self)->kmo_lock)
+#define DeeKwdsMapping_LockWrite(self)      Dee_atomic_rwlock_write(&(self)->kmo_lock)
+#define DeeKwdsMapping_LockTryUpgrade(self) Dee_atomic_rwlock_tryupgrade(&(self)->kmo_lock)
+#define DeeKwdsMapping_LockUpgrade(self)    Dee_atomic_rwlock_upgrade(&(self)->kmo_lock)
+#define DeeKwdsMapping_LockDowngrade(self)  Dee_atomic_rwlock_downgrade(&(self)->kmo_lock)
+#define DeeKwdsMapping_LockEndWrite(self)   Dee_atomic_rwlock_endwrite(&(self)->kmo_lock)
+#define DeeKwdsMapping_LockEndRead(self)    Dee_atomic_rwlock_endread(&(self)->kmo_lock)
+#define DeeKwdsMapping_LockEnd(self)        Dee_atomic_rwlock_end(&(self)->kmo_lock)
+
 /* Construct a keywords-mapping object from a given `kwds' object,
  * as well as an argument vector that will be shared with the mapping.
  * The returned object then a mapping {(string, Object)...} for the

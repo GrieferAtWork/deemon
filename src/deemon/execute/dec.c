@@ -2930,13 +2930,30 @@ PRIVATE struct mtime_cache mtime_cache = {
 #endif /* !CONFIG_NO_THREADS */
 };
 
+#define mtime_cache_lock_reading()    Dee_atomic_rwlock_reading(&mtime_cache.mc_lock)
+#define mtime_cache_lock_writing()    Dee_atomic_rwlock_writing(&mtime_cache.mc_lock)
+#define mtime_cache_lock_tryread()    Dee_atomic_rwlock_tryread(&mtime_cache.mc_lock)
+#define mtime_cache_lock_trywrite()   Dee_atomic_rwlock_trywrite(&mtime_cache.mc_lock)
+#define mtime_cache_lock_canread()    Dee_atomic_rwlock_canread(&mtime_cache.mc_lock)
+#define mtime_cache_lock_canwrite()   Dee_atomic_rwlock_canwrite(&mtime_cache.mc_lock)
+#define mtime_cache_lock_waitread()   Dee_atomic_rwlock_waitread(&mtime_cache.mc_lock)
+#define mtime_cache_lock_waitwrite()  Dee_atomic_rwlock_waitwrite(&mtime_cache.mc_lock)
+#define mtime_cache_lock_read()       Dee_atomic_rwlock_read(&mtime_cache.mc_lock)
+#define mtime_cache_lock_write()      Dee_atomic_rwlock_write(&mtime_cache.mc_lock)
+#define mtime_cache_lock_tryupgrade() Dee_atomic_rwlock_tryupgrade(&mtime_cache.mc_lock)
+#define mtime_cache_lock_upgrade()    Dee_atomic_rwlock_upgrade(&mtime_cache.mc_lock)
+#define mtime_cache_lock_downgrade()  Dee_atomic_rwlock_downgrade(&mtime_cache.mc_lock)
+#define mtime_cache_lock_endwrite()   Dee_atomic_rwlock_endwrite(&mtime_cache.mc_lock)
+#define mtime_cache_lock_endread()    Dee_atomic_rwlock_endread(&mtime_cache.mc_lock)
+#define mtime_cache_lock_end()        Dee_atomic_rwlock_end(&mtime_cache.mc_lock)
+
 
 /* Try to free up memory from the dec time-cache. */
 INTERN size_t DCALL
 DecTime_ClearCache(size_t UNUSED(max_clear)) {
 	size_t result, old_mask;
 	struct mtime_entry *old_list;
-	atomic_rwlock_write(&mtime_cache.mc_lock);
+	mtime_cache_lock_write();
 	ASSERT((mtime_cache.mc_mask == 0) ==
 	       (mtime_cache.mc_list == empty_mtime_items));
 	old_mask            = mtime_cache.mc_mask;
@@ -2944,7 +2961,7 @@ DecTime_ClearCache(size_t UNUSED(max_clear)) {
 	mtime_cache.mc_size = 0;
 	mtime_cache.mc_mask = 0;
 	mtime_cache.mc_list = empty_mtime_items;
-	atomic_rwlock_endwrite(&mtime_cache.mc_lock);
+	mtime_cache_lock_endwrite();
 
 	/* Check for special case: no mask was allocated. */
 	if (!old_mask)
@@ -2973,7 +2990,7 @@ mtime_cache_lookup(DeeObject *__restrict path,
 	bool result = false;
 	dhash_t i, perturb;
 	dhash_t hash = fs_hashobj(path);
-	atomic_rwlock_read(&mtime_cache.mc_lock);
+	mtime_cache_lock_read();
 	perturb = i = MCACHE_HASHST(hash);
 	for (;; MCACHE_HASHNX(i, perturb)) {
 		struct mtime_entry *item = MCACHE_HASHIT(i);
@@ -2988,7 +3005,7 @@ mtime_cache_lookup(DeeObject *__restrict path,
 		result   = true;
 		break;
 	}
-	atomic_rwlock_endread(&mtime_cache.mc_lock);
+	mtime_cache_lock_endread();
 	return result;
 }
 
@@ -3041,7 +3058,7 @@ mtime_cache_insert(DeeObject *__restrict path,
 	size_t mask;
 	dhash_t i, perturb, hash;
 	hash = fs_hashobj(path);
-	atomic_rwlock_write(&mtime_cache.mc_lock);
+	mtime_cache_lock_write();
 again:
 	mask    = mtime_cache.mc_mask;
 	perturb = i = hash & mask;
@@ -3078,7 +3095,7 @@ again:
 	if (mtime_cache_rehash())
 		goto again;
 done:
-	atomic_rwlock_endwrite(&mtime_cache.mc_lock);
+	mtime_cache_lock_endwrite();
 }
 
 

@@ -84,6 +84,7 @@ compiler_init(DeeCompilerObject *__restrict self,
 	weakref_support_init(self);
 	bzero(&self->cp_tags, sizeof(self->cp_tags));
 	bzero(&self->cp_items, sizeof(self->cp_items));
+	Dee_atomic_rwlock_cinit(&self->cp_items.cis_lock);
 	self->cp_flags           = COMPILER_FNORMAL;
 	self->cp_prev            = NULL;
 	self->cp_recursion       = 0;

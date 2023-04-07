@@ -36,6 +36,7 @@
 #include <deemon/thread.h>
 #include <deemon/util/atomic.h>
 #include <deemon/util/lock.h>
+#include <deemon/util/rlock.h>
 
 #include <hybrid/overflow.h>
 #include <hybrid/sched/yield.h>
@@ -88,6 +89,34 @@ typedef struct {
 typedef struct {
 	OBJECT_HEAD
 #ifndef CONFIG_NO_THREADS
+	Dee_ratomic_lock_t ral_lock; /* Managed lock */
+#endif /* !CONFIG_NO_THREADS */
+} DeeRAtomicLockObject;
+
+typedef struct {
+	OBJECT_HEAD
+#ifndef CONFIG_NO_THREADS
+	Dee_rshared_lock_t rsl_lock; /* Managed lock */
+#endif /* !CONFIG_NO_THREADS */
+} DeeRSharedLockObject;
+
+typedef struct {
+	OBJECT_HEAD
+#ifndef CONFIG_NO_THREADS
+	Dee_ratomic_rwlock_t rarwl_lock; /* Managed lock */
+#endif /* !CONFIG_NO_THREADS */
+} DeeRAtomicRWLockObject;
+
+typedef struct {
+	OBJECT_HEAD
+#ifndef CONFIG_NO_THREADS
+	Dee_rshared_rwlock_t rsrwl_lock; /* Managed lock */
+#endif /* !CONFIG_NO_THREADS */
+} DeeRSharedRWLockObject;
+
+typedef struct {
+	OBJECT_HEAD
+#ifndef CONFIG_NO_THREADS
 	Dee_semaphore_t sem_semaphore; /* Managed semaphore */
 #endif /* !CONFIG_NO_THREADS */
 } DeeSemaphoreObject;
@@ -110,10 +139,10 @@ typedef struct {
 #define ASSERT_BINARY_COMPATIBLE_FIELDS(T1, f1, T2, f2)          \
 	STATIC_ASSERT(sizeof_field(T1, f1) == sizeof_field(T2, f2)); \
 	STATIC_ASSERT(offsetof(T1, f1) == offsetof(T2, f2))
-ASSERT_BINARY_COMPATIBLE_FIELDS(DeeAtomicLockObject, al_lock.a_lock,
-                                DeeSharedLockObject, sl_lock.s_lock);
-ASSERT_BINARY_COMPATIBLE_FIELDS(DeeAtomicRWLockObject, arwl_lock.arw_lock,
-                                DeeSharedRWLockObject, srwl_lock.srw_lock);
+ASSERT_BINARY_COMPATIBLE_FIELDS(DeeAtomicLockObject, al_lock, DeeSharedLockObject, sl_lock.s_lock);
+ASSERT_BINARY_COMPATIBLE_FIELDS(DeeAtomicRWLockObject, arwl_lock, DeeSharedRWLockObject, srwl_lock.srw_lock);
+ASSERT_BINARY_COMPATIBLE_FIELDS(DeeRAtomicLockObject, ral_lock, DeeRSharedLockObject, rsl_lock.rs_lock);
+ASSERT_BINARY_COMPATIBLE_FIELDS(DeeRAtomicRWLockObject, rarwl_lock, DeeRSharedRWLockObject, rsrwl_lock.rsrw_lock);
 #undef ASSERT_BINARY_COMPATIBLE_FIELDS
 
 PRIVATE ATTR_COLD NONNULL((1)) int DCALL
@@ -666,510 +695,6 @@ INTERN DeeTypeObject DeeLock_Type = {
 	/* .tp_methods       = */ lock_methods,
 	/* .tp_getsets       = */ lock_getsets,
 	/* .tp_members       = */ NULL,
-	/* .tp_class_methods = */ NULL,
-	/* .tp_class_getsets = */ NULL,
-	/* .tp_class_members = */ NULL
-};
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-/************************************************************************/
-/* Atomic lock                                                          */
-/************************************************************************/
-PRIVATE WUNUSED NONNULL((1)) int DCALL
-datomic_lock_ctor(DeeAtomicLockObject *__restrict self) {
-	Dee_atomic_lock_init(&self->al_lock);
-	return 0;
-}
-
-PRIVATE DEFINE_KWLIST(datomic_lock_init_kwlist, { K(acquired), KEND });
-
-PRIVATE WUNUSED NONNULL((1)) int DCALL
-datomic_lock_init_kw(DeeAtomicLockObject *__restrict self, size_t argc,
-                     DeeObject *const *argv, DeeObject *kw) {
-	bool acquired = false;
-	if (DeeArg_UnpackKw(argc, argv, kw, datomic_lock_init_kwlist,
-	                    "|b:AtomicLock", &acquired))
-		goto err;
-	if (acquired) {
-		Dee_atomic_lock_init_acquired(&self->al_lock);
-	} else {
-		Dee_atomic_lock_init(&self->al_lock);
-	}
-	return 0;
-err:
-	return -1;
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
-datomic_lock_printrepr(DeeAtomicLockObject *__restrict self,
-                       dformatprinter printer, void *arg) {
-	return DeeFormat_Printf(printer, arg,
-	                        "AtomicLock(acquired: %s)",
-	                        Dee_atomic_lock_acquired(&self->al_lock)
-	                        ? "true"
-	                        : "false");
-}
-
-PRIVATE WUNUSED NONNULL((1)) int DCALL
-datomic_lock_enter(DeeAtomicLockObject *__restrict self) {
-	while (!Dee_atomic_lock_tryacquire(&self->al_lock)) {
-		if (DeeThread_CheckInterrupt())
-			goto err;
-		SCHED_YIELD();
-	}
-	return 0;
-err:
-	return -1;
-}
-
-PRIVATE WUNUSED NONNULL((1)) int DCALL
-datomic_lock_leave(DeeAtomicLockObject *__restrict self) {
-	if unlikely(!Dee_atomic_lock_acquired(&self->al_lock))
-		goto err_not_acquired;
-	atomic_write(&self->al_lock.a_lock, 0);
-	return 0;
-err_not_acquired:
-	return err_lock_not_acquired((DeeObject *)self);
-}
-
-PRIVATE struct type_with datomic_lock_with = {
-	/* .tp_enter = */ (int (DCALL *)(DeeObject *__restrict))&datomic_lock_enter,
-	/* .tp_leave = */ (int (DCALL *)(DeeObject *__restrict))&datomic_lock_leave
-};
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-datomic_lock_tryacquire(DeeAtomicLockObject *self, size_t argc, DeeObject *const *argv) {
-	bool result;
-	if (DeeArg_Unpack(argc, argv, ":tryacquire"))
-		goto err;
-	result = Dee_atomic_lock_tryacquire(&self->al_lock);
-	return_bool_(result);
-err:
-	return NULL;
-}
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-datomic_lock_acquire(DeeAtomicLockObject *self, size_t argc, DeeObject *const *argv) {
-	if (DeeArg_Unpack(argc, argv, ":acquire"))
-		goto err;
-	if unlikely(datomic_lock_enter(self) != 0)
-		goto err;
-	return_none;
-err:
-	return NULL;
-}
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-datomic_lock_timedacquire(DeeAtomicLockObject *self, size_t argc, DeeObject *const *argv) {
-	uint64_t timeout_nanoseconds;
-	uint64_t now_microseconds, then_microseconds;
-	if (DeeArg_Unpack(argc, argv, UNPu64 ":timedacquire", &timeout_nanoseconds))
-		goto err;
-	if (Dee_atomic_lock_tryacquire(&self->al_lock))
-		goto ok;
-	if (timeout_nanoseconds == (uint64_t)-1) {
-do_infinite_timeout:
-		if unlikely(datomic_lock_enter(self) < 0)
-			goto err;
-		goto ok;
-	}
-	now_microseconds = DeeThread_GetTimeMicroSeconds();
-	if (OVERFLOW_UADD(now_microseconds, timeout_nanoseconds / 1000, &then_microseconds))
-		goto do_infinite_timeout;
-do_wait_with_timeout:
-	if (Dee_atomic_lock_tryacquire(&self->al_lock))
-		goto ok;
-	now_microseconds = DeeThread_GetTimeMicroSeconds();
-	if (OVERFLOW_USUB(then_microseconds, now_microseconds, &timeout_nanoseconds))
-		return_false; /* Timeout */
-	timeout_nanoseconds *= 1000;
-	if (DeeThread_CheckInterrupt())
-		goto err;
-	SCHED_YIELD();
-	goto do_wait_with_timeout;
-ok:
-	return_true;
-err:
-	return NULL;
-}
-
-PRIVATE WUNUSED NONNULL((1)) int DCALL
-datomic_lock_do_waitfor(DeeAtomicLockObject *__restrict self) {
-	while (!Dee_atomic_lock_available(&self->al_lock)) {
-		if (DeeThread_CheckInterrupt())
-			goto err;
-		SCHED_YIELD();
-	}
-	return 0;
-err:
-	return -1;
-}
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-datomic_lock_waitfor(DeeAtomicLockObject *self, size_t argc, DeeObject *const *argv) {
-	if (DeeArg_Unpack(argc, argv, ":waitfor"))
-		goto err;
-	if unlikely(datomic_lock_do_waitfor(self) != 0)
-		goto err;
-	return_none;
-err:
-	return NULL;
-}
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-datomic_lock_timedwaitfor(DeeAtomicLockObject *self, size_t argc, DeeObject *const *argv) {
-	uint64_t timeout_nanoseconds;
-	uint64_t now_microseconds, then_microseconds;
-	if (DeeArg_Unpack(argc, argv, UNPu64 ":timedwaitfor", &timeout_nanoseconds))
-		goto err;
-	if (Dee_atomic_lock_available(&self->al_lock))
-		goto ok;
-	if (timeout_nanoseconds == (uint64_t)-1) {
-do_infinite_timeout:
-		if unlikely(datomic_lock_do_waitfor(self) < 0)
-			goto err;
-		goto ok;
-	}
-	now_microseconds = DeeThread_GetTimeMicroSeconds();
-	if (OVERFLOW_UADD(now_microseconds, timeout_nanoseconds / 1000, &then_microseconds))
-		goto do_infinite_timeout;
-do_wait_with_timeout:
-	if (Dee_atomic_lock_available(&self->al_lock))
-		goto ok;
-	now_microseconds = DeeThread_GetTimeMicroSeconds();
-	if (OVERFLOW_USUB(then_microseconds, now_microseconds, &timeout_nanoseconds))
-		return_false; /* Timeout */
-	timeout_nanoseconds *= 1000;
-	if (DeeThread_CheckInterrupt())
-		goto err;
-	SCHED_YIELD();
-	goto do_wait_with_timeout;
-ok:
-	return_true;
-err:
-	return NULL;
-}
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-datomic_lock_release(DeeAtomicLockObject *self, size_t argc, DeeObject *const *argv) {
-	if (DeeArg_Unpack(argc, argv, ":release"))
-		goto err;
-	if unlikely(datomic_lock_leave(self) != 0)
-		goto err;
-	return_none;
-err:
-	return NULL;
-}
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-datomic_available_get(DeeAtomicLockObject *self) {
-	return_bool(Dee_atomic_lock_available(&self->al_lock));
-}
-
-PRIVATE struct type_method datomic_lock_methods[] = {
-	TYPE_METHOD(STR_tryacquire, &datomic_lock_tryacquire, DOC_GET(doc_lock_tryacquire)),
-	TYPE_METHOD(STR_acquire, &datomic_lock_acquire, DOC_GET(doc_lock_acquire)),
-	TYPE_METHOD(STR_release, &datomic_lock_release, DOC_GET(doc_lock_release)),
-	TYPE_METHOD(STR_timedacquire, &datomic_lock_timedacquire, DOC_GET(doc_lock_timedacquire)),
-	TYPE_METHOD(STR_waitfor, &datomic_lock_waitfor, DOC_GET(doc_lock_waitfor)),
-	TYPE_METHOD(STR_timedwaitfor, &datomic_lock_timedwaitfor, DOC_GET(doc_lock_timedwaitfor)),
-	TYPE_METHOD_END
-};
-
-PRIVATE struct type_getset datomic_lock_getsets[] = {
-	TYPE_GETTER(STR_available, &datomic_available_get, DOC_GET(doc_lock_available)),
-	TYPE_GETSET_END
-};
-
-PRIVATE struct type_member datomic_lock_members[] = {
-	TYPE_MEMBER_FIELD_DOC(STR_acquired,
-	                      STRUCT_CONST | STRUCT_ATOMIC | STRUCT_BOOL(__SIZEOF_ATOMIC_LOCK),
-	                      offsetof(DeeAtomicLockObject, al_lock.a_lock),
-	                      DOC_GET(doc_lock_acquired)),
-	TYPE_MEMBER_END
-};
-
-
-INTERN DeeTypeObject DeeAtomicLock_Type = {
-	OBJECT_HEAD_INIT(&DeeType_Type),
-	/* .tp_name     = */ "AtomicLock",
-	/* .tp_doc      = */ DOC("(acquired=!f)"),
-	/* .tp_flags    = */ TP_FNORMAL,
-	/* .tp_weakrefs = */ 0,
-	/* .tp_features = */ TF_NONE,
-	/* .tp_base     = */ &DeeLock_Type,
-	/* .tp_init = */ {
-		{
-			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (dfunptr_t)&datomic_lock_ctor,
-				/* .tp_copy_ctor = */ (dfunptr_t)NULL,
-				/* .tp_deep_ctor = */ (dfunptr_t)NULL,
-				/* .tp_any_ctor  = */ (dfunptr_t)NULL,
-				TYPE_FIXED_ALLOCATOR(DeeAtomicLockObject),
-				/* .tp_any_ctor_kw = */ (dfunptr_t)&datomic_lock_init_kw,
-			}
-		},
-		/* .tp_dtor        = */ NULL,
-		/* .tp_assign      = */ NULL,
-		/* .tp_move_assign = */ NULL
-	},
-	/* .tp_cast = */ {
-		/* .tp_str       = */ NULL,
-		/* .tp_repr      = */ NULL,
-		/* .tp_bool      = */ NULL,
-		/* .tp_print     = */ NULL,
-		/* .tp_printrepr = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&datomic_lock_printrepr
-	},
-	/* .tp_call          = */ NULL,
-	/* .tp_visit         = */ NULL,
-	/* .tp_gc            = */ NULL,
-	/* .tp_math          = */ NULL,
-	/* .tp_cmp           = */ NULL,
-	/* .tp_seq           = */ NULL,
-	/* .tp_iter_next     = */ NULL,
-	/* .tp_attr          = */ NULL,
-	/* .tp_with          = */ &datomic_lock_with,
-	/* .tp_buffer        = */ NULL,
-	/* .tp_methods       = */ datomic_lock_methods,
-	/* .tp_getsets       = */ datomic_lock_getsets,
-	/* .tp_members       = */ datomic_lock_members,
-	/* .tp_class_methods = */ NULL,
-	/* .tp_class_getsets = */ NULL,
-	/* .tp_class_members = */ NULL
-};
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-/************************************************************************/
-/* Shared lock                                                          */
-/************************************************************************/
-PRIVATE WUNUSED NONNULL((1)) int DCALL
-dshared_lock_ctor(DeeSharedLockObject *__restrict self) {
-	Dee_shared_lock_init(&self->sl_lock);
-	return 0;
-}
-
-#define dshared_lock_init_kwlist datomic_lock_init_kwlist
-
-PRIVATE WUNUSED NONNULL((1)) int DCALL
-dshared_lock_init_kw(DeeSharedLockObject *__restrict self, size_t argc,
-                     DeeObject *const *argv, DeeObject *kw) {
-	bool acquired = false;
-	if (DeeArg_UnpackKw(argc, argv, kw, dshared_lock_init_kwlist,
-	                    "|b:SharedLock", &acquired))
-		goto err;
-	if (acquired) {
-		Dee_shared_lock_init_acquired(&self->sl_lock);
-	} else {
-		Dee_shared_lock_init(&self->sl_lock);
-	}
-	return 0;
-err:
-	return -1;
-}
-
-
-PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
-dshared_lock_printrepr(DeeSharedLockObject *__restrict self,
-                       dformatprinter printer, void *arg) {
-	return DeeFormat_Printf(printer, arg,
-	                        "SharedLock(acquired: %s)",
-	                        Dee_shared_lock_acquired(&self->sl_lock)
-	                        ? "true"
-	                        : "false");
-}
-
-PRIVATE WUNUSED NONNULL((1)) int DCALL
-dshared_lock_enter(DeeSharedLockObject *__restrict self) {
-	return Dee_shared_lock_acquire(&self->sl_lock);
-}
-
-PRIVATE WUNUSED NONNULL((1)) int DCALL
-dshared_lock_leave(DeeSharedLockObject *__restrict self) {
-	if unlikely(!Dee_shared_lock_acquired(&self->sl_lock))
-		goto err_not_acquired;
-	_Dee_shared_lock_release_NDEBUG(&self->sl_lock);
-	return 0;
-err_not_acquired:
-	return err_lock_not_acquired((DeeObject *)self);
-}
-
-PRIVATE struct type_with dshared_lock_with = {
-	/* .tp_enter = */ (int (DCALL *)(DeeObject *__restrict))&dshared_lock_enter,
-	/* .tp_leave = */ (int (DCALL *)(DeeObject *__restrict))&dshared_lock_leave
-};
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-dshared_lock_tryacquire(DeeSharedLockObject *self, size_t argc, DeeObject *const *argv) {
-	bool result;
-	if (DeeArg_Unpack(argc, argv, ":tryacquire"))
-		goto err;
-	result = Dee_shared_lock_tryacquire(&self->sl_lock);
-	return_bool_(result);
-err:
-	return NULL;
-}
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-dshared_lock_acquire(DeeSharedLockObject *self, size_t argc, DeeObject *const *argv) {
-	if (DeeArg_Unpack(argc, argv, ":acquire"))
-		goto err;
-	if unlikely(Dee_shared_lock_acquire(&self->sl_lock) != 0)
-		goto err;
-	return_none;
-err:
-	return NULL;
-}
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-dshared_lock_timedacquire(DeeSharedLockObject *self, size_t argc, DeeObject *const *argv) {
-	int error;
-	uint64_t timeout_nanoseconds;
-	if (DeeArg_Unpack(argc, argv, UNPu64 ":timedacquire", &timeout_nanoseconds))
-		goto err;
-	error = Dee_shared_lock_acquire_timed(&self->sl_lock, timeout_nanoseconds);
-	if unlikely(error < 0)
-		goto err;
-	return_bool_(error == 0);
-err:
-	return NULL;
-}
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-dshared_lock_waitfor(DeeSharedLockObject *self, size_t argc, DeeObject *const *argv) {
-	if (DeeArg_Unpack(argc, argv, ":waitfor"))
-		goto err;
-	if unlikely(Dee_shared_lock_waitfor(&self->sl_lock) != 0)
-		goto err;
-	return_none;
-err:
-	return NULL;
-}
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-dshared_lock_timedwaitfor(DeeSharedLockObject *self, size_t argc, DeeObject *const *argv) {
-	int error;
-	uint64_t timeout_nanoseconds;
-	if (DeeArg_Unpack(argc, argv, UNPu64 ":timedwaitfor", &timeout_nanoseconds))
-		goto err;
-	error = Dee_shared_lock_waitfor_timed(&self->sl_lock, timeout_nanoseconds);
-	if unlikely(error < 0)
-		goto err;
-	return_bool_(error == 0);
-err:
-	return NULL;
-}
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-dshared_lock_release(DeeSharedLockObject *self, size_t argc, DeeObject *const *argv) {
-	if (DeeArg_Unpack(argc, argv, ":release"))
-		goto err;
-	if unlikely(dshared_lock_leave(self) != 0)
-		goto err;
-	return_none;
-err:
-	return NULL;
-}
-
-PRIVATE struct type_method dshared_lock_methods[] = {
-	TYPE_METHOD(STR_tryacquire, &dshared_lock_tryacquire, DOC_GET(doc_lock_tryacquire)),
-	TYPE_METHOD(STR_acquire, &dshared_lock_acquire, DOC_GET(doc_lock_acquire)),
-	TYPE_METHOD(STR_release, &dshared_lock_release, DOC_GET(doc_lock_release)),
-	TYPE_METHOD(STR_timedacquire, &dshared_lock_timedacquire, DOC_GET(doc_lock_timedacquire)),
-	TYPE_METHOD(STR_waitfor, &dshared_lock_waitfor, DOC_GET(doc_lock_waitfor)),
-	TYPE_METHOD(STR_timedwaitfor, &dshared_lock_timedwaitfor, DOC_GET(doc_lock_timedwaitfor)),
-	TYPE_METHOD_END
-};
-
-#define dshared_lock_getsets datomic_lock_getsets
-#define dshared_lock_members datomic_lock_members
-
-INTERN DeeTypeObject DeeSharedLock_Type = {
-	OBJECT_HEAD_INIT(&DeeType_Type),
-	/* .tp_name     = */ "SharedLock",
-	/* .tp_doc      = */ DOC("(acquired=!f)"),
-	/* .tp_flags    = */ TP_FNORMAL,
-	/* .tp_weakrefs = */ 0,
-	/* .tp_features = */ TF_NONE,
-	/* .tp_base     = */ &DeeAtomicLock_Type,
-	/* .tp_init = */ {
-		{
-			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (dfunptr_t)&dshared_lock_ctor,
-				/* .tp_copy_ctor = */ (dfunptr_t)NULL,
-				/* .tp_deep_ctor = */ (dfunptr_t)NULL,
-				/* .tp_any_ctor  = */ (dfunptr_t)NULL,
-				TYPE_FIXED_ALLOCATOR(DeeSharedLockObject),
-				/* .tp_any_ctor_kw = */ (dfunptr_t)&dshared_lock_init_kw,
-			}
-		},
-		/* .tp_dtor        = */ NULL,
-		/* .tp_assign      = */ NULL,
-		/* .tp_move_assign = */ NULL
-	},
-	/* .tp_cast = */ {
-		/* .tp_str       = */ NULL,
-		/* .tp_repr      = */ NULL,
-		/* .tp_bool      = */ NULL,
-		/* .tp_print     = */ NULL,
-		/* .tp_printrepr = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&dshared_lock_printrepr
-	},
-	/* .tp_call          = */ NULL,
-	/* .tp_visit         = */ NULL,
-	/* .tp_gc            = */ NULL,
-	/* .tp_math          = */ NULL,
-	/* .tp_cmp           = */ NULL,
-	/* .tp_seq           = */ NULL,
-	/* .tp_iter_next     = */ NULL,
-	/* .tp_attr          = */ NULL,
-	/* .tp_with          = */ &dshared_lock_with,
-	/* .tp_buffer        = */ NULL,
-	/* .tp_methods       = */ dshared_lock_methods,
-	/* .tp_getsets       = */ dshared_lock_getsets,
-	/* .tp_members       = */ dshared_lock_members,
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,
 	/* .tp_class_members = */ NULL
@@ -2146,6 +1671,510 @@ INTERN DeeTypeObject DeeRWLockExclusiveLock_Type = {
 
 
 /************************************************************************/
+/* Atomic lock                                                          */
+/************************************************************************/
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+datomic_lock_ctor(DeeAtomicLockObject *__restrict self) {
+	Dee_atomic_lock_init(&self->al_lock);
+	return 0;
+}
+
+PRIVATE DEFINE_KWLIST(datomic_lock_init_kwlist, { K(acquired), KEND });
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+datomic_lock_init_kw(DeeAtomicLockObject *__restrict self, size_t argc,
+                     DeeObject *const *argv, DeeObject *kw) {
+	bool acquired = false;
+	if (DeeArg_UnpackKw(argc, argv, kw, datomic_lock_init_kwlist,
+	                    "|b:AtomicLock", &acquired))
+		goto err;
+	if (acquired) {
+		Dee_atomic_lock_init_acquired(&self->al_lock);
+	} else {
+		Dee_atomic_lock_init(&self->al_lock);
+	}
+	return 0;
+err:
+	return -1;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+datomic_lock_printrepr(DeeAtomicLockObject *__restrict self,
+                       dformatprinter printer, void *arg) {
+	return DeeFormat_Printf(printer, arg,
+	                        "AtomicLock(acquired: %s)",
+	                        Dee_atomic_lock_acquired(&self->al_lock)
+	                        ? "true"
+	                        : "false");
+}
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+datomic_lock_enter(DeeAtomicLockObject *__restrict self) {
+	while (!Dee_atomic_lock_tryacquire(&self->al_lock)) {
+		if (DeeThread_CheckInterrupt())
+			goto err;
+		SCHED_YIELD();
+	}
+	return 0;
+err:
+	return -1;
+}
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+datomic_lock_leave(DeeAtomicLockObject *__restrict self) {
+	if unlikely(!Dee_atomic_lock_acquired(&self->al_lock))
+		goto err_not_acquired;
+	_Dee_atomic_lock_release_NDEBUG(&self->al_lock);
+	return 0;
+err_not_acquired:
+	return err_lock_not_acquired((DeeObject *)self);
+}
+
+PRIVATE struct type_with datomic_lock_with = {
+	/* .tp_enter = */ (int (DCALL *)(DeeObject *__restrict))&datomic_lock_enter,
+	/* .tp_leave = */ (int (DCALL *)(DeeObject *__restrict))&datomic_lock_leave
+};
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+datomic_lock_tryacquire(DeeAtomicLockObject *self, size_t argc, DeeObject *const *argv) {
+	bool result;
+	if (DeeArg_Unpack(argc, argv, ":tryacquire"))
+		goto err;
+	result = Dee_atomic_lock_tryacquire(&self->al_lock);
+	return_bool_(result);
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+datomic_lock_acquire(DeeAtomicLockObject *self, size_t argc, DeeObject *const *argv) {
+	if (DeeArg_Unpack(argc, argv, ":acquire"))
+		goto err;
+	if unlikely(datomic_lock_enter(self) != 0)
+		goto err;
+	return_none;
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+datomic_lock_timedacquire(DeeAtomicLockObject *self, size_t argc, DeeObject *const *argv) {
+	uint64_t timeout_nanoseconds;
+	uint64_t now_microseconds, then_microseconds;
+	if (DeeArg_Unpack(argc, argv, UNPu64 ":timedacquire", &timeout_nanoseconds))
+		goto err;
+	if (Dee_atomic_lock_tryacquire(&self->al_lock))
+		goto ok;
+	if (timeout_nanoseconds == (uint64_t)-1) {
+do_infinite_timeout:
+		if unlikely(datomic_lock_enter(self) < 0)
+			goto err;
+		goto ok;
+	}
+	now_microseconds = DeeThread_GetTimeMicroSeconds();
+	if (OVERFLOW_UADD(now_microseconds, timeout_nanoseconds / 1000, &then_microseconds))
+		goto do_infinite_timeout;
+do_wait_with_timeout:
+	if (Dee_atomic_lock_tryacquire(&self->al_lock))
+		goto ok;
+	now_microseconds = DeeThread_GetTimeMicroSeconds();
+	if (OVERFLOW_USUB(then_microseconds, now_microseconds, &timeout_nanoseconds))
+		return_false; /* Timeout */
+	timeout_nanoseconds *= 1000;
+	if (DeeThread_CheckInterrupt())
+		goto err;
+	SCHED_YIELD();
+	goto do_wait_with_timeout;
+ok:
+	return_true;
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+datomic_lock_do_waitfor(DeeAtomicLockObject *__restrict self) {
+	while (!Dee_atomic_lock_available(&self->al_lock)) {
+		if (DeeThread_CheckInterrupt())
+			goto err;
+		SCHED_YIELD();
+	}
+	return 0;
+err:
+	return -1;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+datomic_lock_waitfor(DeeAtomicLockObject *self, size_t argc, DeeObject *const *argv) {
+	if (DeeArg_Unpack(argc, argv, ":waitfor"))
+		goto err;
+	if unlikely(datomic_lock_do_waitfor(self) != 0)
+		goto err;
+	return_none;
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+datomic_lock_timedwaitfor(DeeAtomicLockObject *self, size_t argc, DeeObject *const *argv) {
+	uint64_t timeout_nanoseconds;
+	uint64_t now_microseconds, then_microseconds;
+	if (DeeArg_Unpack(argc, argv, UNPu64 ":timedwaitfor", &timeout_nanoseconds))
+		goto err;
+	if (Dee_atomic_lock_available(&self->al_lock))
+		goto ok;
+	if (timeout_nanoseconds == (uint64_t)-1) {
+do_infinite_timeout:
+		if unlikely(datomic_lock_do_waitfor(self) < 0)
+			goto err;
+		goto ok;
+	}
+	now_microseconds = DeeThread_GetTimeMicroSeconds();
+	if (OVERFLOW_UADD(now_microseconds, timeout_nanoseconds / 1000, &then_microseconds))
+		goto do_infinite_timeout;
+do_wait_with_timeout:
+	if (Dee_atomic_lock_available(&self->al_lock))
+		goto ok;
+	now_microseconds = DeeThread_GetTimeMicroSeconds();
+	if (OVERFLOW_USUB(then_microseconds, now_microseconds, &timeout_nanoseconds))
+		return_false; /* Timeout */
+	timeout_nanoseconds *= 1000;
+	if (DeeThread_CheckInterrupt())
+		goto err;
+	SCHED_YIELD();
+	goto do_wait_with_timeout;
+ok:
+	return_true;
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+datomic_lock_release(DeeAtomicLockObject *self, size_t argc, DeeObject *const *argv) {
+	if (DeeArg_Unpack(argc, argv, ":release"))
+		goto err;
+	if unlikely(datomic_lock_leave(self) != 0)
+		goto err;
+	return_none;
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+datomic_available_get(DeeAtomicLockObject *self) {
+	return_bool(Dee_atomic_lock_available(&self->al_lock));
+}
+
+PRIVATE struct type_method datomic_lock_methods[] = {
+	TYPE_METHOD(STR_tryacquire, &datomic_lock_tryacquire, DOC_GET(doc_lock_tryacquire)),
+	TYPE_METHOD(STR_acquire, &datomic_lock_acquire, DOC_GET(doc_lock_acquire)),
+	TYPE_METHOD(STR_release, &datomic_lock_release, DOC_GET(doc_lock_release)),
+	TYPE_METHOD(STR_timedacquire, &datomic_lock_timedacquire, DOC_GET(doc_lock_timedacquire)),
+	TYPE_METHOD(STR_waitfor, &datomic_lock_waitfor, DOC_GET(doc_lock_waitfor)),
+	TYPE_METHOD(STR_timedwaitfor, &datomic_lock_timedwaitfor, DOC_GET(doc_lock_timedwaitfor)),
+	TYPE_METHOD_END
+};
+
+PRIVATE struct type_getset datomic_lock_getsets[] = {
+	TYPE_GETTER(STR_available, &datomic_available_get, DOC_GET(doc_lock_available)),
+	TYPE_GETSET_END
+};
+
+PRIVATE struct type_member datomic_lock_members[] = {
+	TYPE_MEMBER_FIELD_DOC(STR_acquired,
+	                      STRUCT_CONST | STRUCT_ATOMIC | STRUCT_BOOL(__SIZEOF_ATOMIC_LOCK),
+	                      offsetof(DeeAtomicLockObject, al_lock.a_lock),
+	                      DOC_GET(doc_lock_acquired)),
+	TYPE_MEMBER_END
+};
+
+
+INTERN DeeTypeObject DeeAtomicLock_Type = {
+	OBJECT_HEAD_INIT(&DeeType_Type),
+	/* .tp_name     = */ "AtomicLock",
+	/* .tp_doc      = */ DOC("(acquired=!f)"),
+	/* .tp_flags    = */ TP_FNORMAL,
+	/* .tp_weakrefs = */ 0,
+	/* .tp_features = */ TF_NONE,
+	/* .tp_base     = */ &DeeLock_Type,
+	/* .tp_init = */ {
+		{
+			/* .tp_alloc = */ {
+				/* .tp_ctor      = */ (dfunptr_t)&datomic_lock_ctor,
+				/* .tp_copy_ctor = */ (dfunptr_t)NULL,
+				/* .tp_deep_ctor = */ (dfunptr_t)NULL,
+				/* .tp_any_ctor  = */ (dfunptr_t)NULL,
+				TYPE_FIXED_ALLOCATOR(DeeAtomicLockObject),
+				/* .tp_any_ctor_kw = */ (dfunptr_t)&datomic_lock_init_kw,
+			}
+		},
+		/* .tp_dtor        = */ NULL,
+		/* .tp_assign      = */ NULL,
+		/* .tp_move_assign = */ NULL
+	},
+	/* .tp_cast = */ {
+		/* .tp_str       = */ NULL,
+		/* .tp_repr      = */ NULL,
+		/* .tp_bool      = */ NULL,
+		/* .tp_print     = */ NULL,
+		/* .tp_printrepr = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&datomic_lock_printrepr
+	},
+	/* .tp_call          = */ NULL,
+	/* .tp_visit         = */ NULL,
+	/* .tp_gc            = */ NULL,
+	/* .tp_math          = */ NULL,
+	/* .tp_cmp           = */ NULL,
+	/* .tp_seq           = */ NULL,
+	/* .tp_iter_next     = */ NULL,
+	/* .tp_attr          = */ NULL,
+	/* .tp_with          = */ &datomic_lock_with,
+	/* .tp_buffer        = */ NULL,
+	/* .tp_methods       = */ datomic_lock_methods,
+	/* .tp_getsets       = */ datomic_lock_getsets,
+	/* .tp_members       = */ datomic_lock_members,
+	/* .tp_class_methods = */ NULL,
+	/* .tp_class_getsets = */ NULL,
+	/* .tp_class_members = */ NULL
+};
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/************************************************************************/
+/* Shared lock                                                          */
+/************************************************************************/
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+dshared_lock_ctor(DeeSharedLockObject *__restrict self) {
+	Dee_shared_lock_init(&self->sl_lock);
+	return 0;
+}
+
+#define dshared_lock_init_kwlist datomic_lock_init_kwlist
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+dshared_lock_init_kw(DeeSharedLockObject *__restrict self, size_t argc,
+                     DeeObject *const *argv, DeeObject *kw) {
+	bool acquired = false;
+	if (DeeArg_UnpackKw(argc, argv, kw, dshared_lock_init_kwlist,
+	                    "|b:SharedLock", &acquired))
+		goto err;
+	if (acquired) {
+		Dee_shared_lock_init_acquired(&self->sl_lock);
+	} else {
+		Dee_shared_lock_init(&self->sl_lock);
+	}
+	return 0;
+err:
+	return -1;
+}
+
+
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+dshared_lock_printrepr(DeeSharedLockObject *__restrict self,
+                       dformatprinter printer, void *arg) {
+	return DeeFormat_Printf(printer, arg,
+	                        "SharedLock(acquired: %s)",
+	                        Dee_shared_lock_acquired(&self->sl_lock)
+	                        ? "true"
+	                        : "false");
+}
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+dshared_lock_enter(DeeSharedLockObject *__restrict self) {
+	return Dee_shared_lock_acquire(&self->sl_lock);
+}
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+dshared_lock_leave(DeeSharedLockObject *__restrict self) {
+	if unlikely(!Dee_shared_lock_acquired(&self->sl_lock))
+		goto err_not_acquired;
+	_Dee_shared_lock_release_NDEBUG(&self->sl_lock);
+	return 0;
+err_not_acquired:
+	return err_lock_not_acquired((DeeObject *)self);
+}
+
+PRIVATE struct type_with dshared_lock_with = {
+	/* .tp_enter = */ (int (DCALL *)(DeeObject *__restrict))&dshared_lock_enter,
+	/* .tp_leave = */ (int (DCALL *)(DeeObject *__restrict))&dshared_lock_leave
+};
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+dshared_lock_tryacquire(DeeSharedLockObject *self, size_t argc, DeeObject *const *argv) {
+	bool result;
+	if (DeeArg_Unpack(argc, argv, ":tryacquire"))
+		goto err;
+	result = Dee_shared_lock_tryacquire(&self->sl_lock);
+	return_bool_(result);
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+dshared_lock_acquire(DeeSharedLockObject *self, size_t argc, DeeObject *const *argv) {
+	if (DeeArg_Unpack(argc, argv, ":acquire"))
+		goto err;
+	if unlikely(Dee_shared_lock_acquire(&self->sl_lock) != 0)
+		goto err;
+	return_none;
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+dshared_lock_timedacquire(DeeSharedLockObject *self, size_t argc, DeeObject *const *argv) {
+	int error;
+	uint64_t timeout_nanoseconds;
+	if (DeeArg_Unpack(argc, argv, UNPu64 ":timedacquire", &timeout_nanoseconds))
+		goto err;
+	error = Dee_shared_lock_acquire_timed(&self->sl_lock, timeout_nanoseconds);
+	if unlikely(error < 0)
+		goto err;
+	return_bool_(error == 0);
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+dshared_lock_waitfor(DeeSharedLockObject *self, size_t argc, DeeObject *const *argv) {
+	if (DeeArg_Unpack(argc, argv, ":waitfor"))
+		goto err;
+	if unlikely(Dee_shared_lock_waitfor(&self->sl_lock) != 0)
+		goto err;
+	return_none;
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+dshared_lock_timedwaitfor(DeeSharedLockObject *self, size_t argc, DeeObject *const *argv) {
+	int error;
+	uint64_t timeout_nanoseconds;
+	if (DeeArg_Unpack(argc, argv, UNPu64 ":timedwaitfor", &timeout_nanoseconds))
+		goto err;
+	error = Dee_shared_lock_waitfor_timed(&self->sl_lock, timeout_nanoseconds);
+	if unlikely(error < 0)
+		goto err;
+	return_bool_(error == 0);
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+dshared_lock_release(DeeSharedLockObject *self, size_t argc, DeeObject *const *argv) {
+	if (DeeArg_Unpack(argc, argv, ":release"))
+		goto err;
+	if unlikely(dshared_lock_leave(self) != 0)
+		goto err;
+	return_none;
+err:
+	return NULL;
+}
+
+PRIVATE struct type_method dshared_lock_methods[] = {
+	TYPE_METHOD(STR_tryacquire, &dshared_lock_tryacquire, DOC_GET(doc_lock_tryacquire)),
+	TYPE_METHOD(STR_acquire, &dshared_lock_acquire, DOC_GET(doc_lock_acquire)),
+	TYPE_METHOD(STR_release, &dshared_lock_release, DOC_GET(doc_lock_release)),
+	TYPE_METHOD(STR_timedacquire, &dshared_lock_timedacquire, DOC_GET(doc_lock_timedacquire)),
+	TYPE_METHOD(STR_waitfor, &dshared_lock_waitfor, DOC_GET(doc_lock_waitfor)),
+	TYPE_METHOD(STR_timedwaitfor, &dshared_lock_timedwaitfor, DOC_GET(doc_lock_timedwaitfor)),
+	TYPE_METHOD_END
+};
+
+#define dshared_lock_getsets datomic_lock_getsets
+#define dshared_lock_members datomic_lock_members
+
+INTERN DeeTypeObject DeeSharedLock_Type = {
+	OBJECT_HEAD_INIT(&DeeType_Type),
+	/* .tp_name     = */ "SharedLock",
+	/* .tp_doc      = */ DOC("(acquired=!f)"),
+	/* .tp_flags    = */ TP_FNORMAL,
+	/* .tp_weakrefs = */ 0,
+	/* .tp_features = */ TF_NONE,
+	/* .tp_base     = */ &DeeAtomicLock_Type,
+	/* .tp_init = */ {
+		{
+			/* .tp_alloc = */ {
+				/* .tp_ctor      = */ (dfunptr_t)&dshared_lock_ctor,
+				/* .tp_copy_ctor = */ (dfunptr_t)NULL,
+				/* .tp_deep_ctor = */ (dfunptr_t)NULL,
+				/* .tp_any_ctor  = */ (dfunptr_t)NULL,
+				TYPE_FIXED_ALLOCATOR(DeeSharedLockObject),
+				/* .tp_any_ctor_kw = */ (dfunptr_t)&dshared_lock_init_kw,
+			}
+		},
+		/* .tp_dtor        = */ NULL,
+		/* .tp_assign      = */ NULL,
+		/* .tp_move_assign = */ NULL
+	},
+	/* .tp_cast = */ {
+		/* .tp_str       = */ NULL,
+		/* .tp_repr      = */ NULL,
+		/* .tp_bool      = */ NULL,
+		/* .tp_print     = */ NULL,
+		/* .tp_printrepr = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&dshared_lock_printrepr
+	},
+	/* .tp_call          = */ NULL,
+	/* .tp_visit         = */ NULL,
+	/* .tp_gc            = */ NULL,
+	/* .tp_math          = */ NULL,
+	/* .tp_cmp           = */ NULL,
+	/* .tp_seq           = */ NULL,
+	/* .tp_iter_next     = */ NULL,
+	/* .tp_attr          = */ NULL,
+	/* .tp_with          = */ &dshared_lock_with,
+	/* .tp_buffer        = */ NULL,
+	/* .tp_methods       = */ dshared_lock_methods,
+	/* .tp_getsets       = */ dshared_lock_getsets,
+	/* .tp_members       = */ dshared_lock_members,
+	/* .tp_class_methods = */ NULL,
+	/* .tp_class_getsets = */ NULL,
+	/* .tp_class_members = */ NULL
+};
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/************************************************************************/
 /* Atomic RWLock                                                        */
 /************************************************************************/
 PRIVATE WUNUSED NONNULL((1)) int DCALL
@@ -2169,11 +2198,11 @@ datomic_rwlock_init_kw(DeeAtomicRWLockObject *__restrict self,
 			goto err_cannot_initialize_readers_with_writers;
 
 		/* Initialize in write-mode */
-		self->arwl_lock.arw_lock = (uintptr_t)-1;
+		Dee_atomic_rwlock_init_write(&self->arwl_lock);
 	} else {
-		if (readers == (uintptr_t)-1)
+		if unlikely(readers > DEE_ATOMIC_RWLOCK_MAX_READERS)
 			goto err_readers_counter_is_too_large;
-		self->arwl_lock.arw_lock = readers;
+		Dee_atomic_rwlock_init_read(&self->arwl_lock, readers);
 	}
 	return 0;
 err_cannot_initialize_readers_with_writers:
@@ -2199,12 +2228,9 @@ datomic_rwlock_printrepr(DeeAtomicRWLockObject *__restrict self,
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 datomic_rwlock_do_endread(DeeAtomicRWLockObject *self) {
-	uintptr_t lockword;
-	COMPILER_READ_BARRIER();
-	lockword = self->arwl_lock.arw_lock;
-	if unlikely(lockword == (uintptr_t)-1 || lockword == 0)
+	if unlikely(!Dee_atomic_rwlock_canendread(&self->arwl_lock))
 		goto err_not_reading;
-	atomic_decfetch_explicit(&self->arwl_lock.arw_lock, __ATOMIC_RELEASE);
+	_Dee_atomic_rwlock_endread_NDEBUG(&self->arwl_lock);
 	return 0;
 err_not_reading:
 	return err_read_lock_not_acquired((DeeObject *)self);
@@ -2212,9 +2238,9 @@ err_not_reading:
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 datomic_rwlock_do_endwrite(DeeAtomicRWLockObject *self) {
-	if unlikely(self->arwl_lock.arw_lock != (uintptr_t)-1)
+	if unlikely(!Dee_atomic_rwlock_canendwrite(&self->arwl_lock))
 		goto err_not_writing;
-	atomic_write(&self->arwl_lock.arw_lock, 0);
+	_Dee_atomic_rwlock_endwrite_NDEBUG(&self->arwl_lock);
 	return 0;
 err_not_writing:
 	return err_write_lock_not_acquired((DeeObject *)self);
@@ -2445,9 +2471,9 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 datomic_rwlock_downgrade(DeeAtomicRWLockObject *self, size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, ":downgrade"))
 		goto err;
-	if unlikely(!Dee_atomic_rwlock_writing(&self->arwl_lock))
+	if unlikely(!Dee_atomic_rwlock_canendwrite(&self->arwl_lock))
 		goto err_not_writing;
-	atomic_write(&self->arwl_lock.arw_lock, 1);
+	_Dee_atomic_rwlock_downgrade_NDEBUG(&self->arwl_lock);
 	return_none;
 err_not_writing:
 	err_write_lock_not_acquired((DeeObject *)self);
@@ -2481,15 +2507,14 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 datomic_rwlock_end(DeeAtomicRWLockObject *self, size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, ":end"))
 		goto err;
-	COMPILER_BARRIER();
-	if (self->arwl_lock.arw_lock != (uintptr_t)-1) {
+	if (!Dee_atomic_rwlock_writing(&self->arwl_lock)) {
 		/* Read-lock */
-		if (self->arwl_lock.arw_lock == 0)
+		if (!Dee_atomic_rwlock_reading(&self->arwl_lock))
 			goto err_nolock;
-		atomic_decfetch_explicit(&self->arwl_lock.arw_lock, __ATOMIC_RELEASE);
+		_Dee_atomic_rwlock_endread_NDEBUG(&self->arwl_lock);
 	} else {
 		/* Write-lock */
-		atomic_write(&self->arwl_lock.arw_lock, 0);
+		_Dee_atomic_rwlock_endwrite_NDEBUG(&self->arwl_lock);
 	}
 	return_none;
 err_nolock:
@@ -3079,13 +3104,12 @@ dshared_rwlock_init_kw(DeeSharedRWLockObject *__restrict self,
 			goto err_cannot_initialize_readers_with_writers;
 
 		/* Initialize in write-mode */
-		self->srwl_lock.srw_lock = (uintptr_t)-1;
+		Dee_shared_rwlock_init_write(&self->srwl_lock);
 	} else {
-		if (readers == (uintptr_t)-1)
+		if unlikely(readers > DEE_SHARED_RWLOCK_MAX_READERS)
 			goto err_readers_counter_is_too_large;
-		self->srwl_lock.srw_lock = readers;
+		Dee_shared_rwlock_init_read(&self->srwl_lock, readers);
 	}
-	self->srwl_lock.srw_waiting = 0;
 	return 0;
 err_cannot_initialize_readers_with_writers:
 	return err_rwlock_with_readers_and_writers();
@@ -3098,7 +3122,7 @@ err:
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 dshared_rwlock_printrepr(DeeSharedRWLockObject *__restrict self,
                          dformatprinter printer, void *arg) {
-	uintptr_t status = atomic_read(&self->srwl_lock.srw_lock);
+	uintptr_t status = atomic_read(&self->srwl_lock.srw_lock.arw_lock);
 	if (status == (uintptr_t)-1)
 		return DeeFormat_PRINT(printer, arg, "SharedRWLock(writing: true)");
 	if (status == 0)
@@ -3110,10 +3134,7 @@ dshared_rwlock_printrepr(DeeSharedRWLockObject *__restrict self,
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 dshared_rwlock_do_endread(DeeSharedRWLockObject *self) {
-	uintptr_t lockword;
-	COMPILER_READ_BARRIER();
-	lockword = self->srwl_lock.srw_lock;
-	if unlikely(lockword == (uintptr_t)-1 || lockword == 0)
+	if unlikely(!Dee_shared_rwlock_canendread(&self->srwl_lock))
 		goto err_not_reading;
 	_Dee_shared_rwlock_endread_NDEBUG(&self->srwl_lock);
 	return 0;
@@ -3123,7 +3144,7 @@ err_not_reading:
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 dshared_rwlock_do_endwrite(DeeSharedRWLockObject *self) {
-	if unlikely(self->srwl_lock.srw_lock != (uintptr_t)-1)
+	if unlikely(!Dee_shared_rwlock_canendwrite(&self->srwl_lock))
 		goto err_not_writing;
 	_Dee_shared_rwlock_endwrite_NDEBUG(&self->srwl_lock);
 	return 0;
@@ -3220,19 +3241,14 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 dshared_rwlock_end(DeeSharedRWLockObject *self, size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, ":end"))
 		goto err;
-	COMPILER_BARRIER();
-	if (self->srwl_lock.srw_lock != (uintptr_t)-1) {
+	if (!Dee_shared_rwlock_writing(&self->srwl_lock)) {
 		/* Read-lock */
-		uintptr_t temp;
-		if (self->srwl_lock.srw_lock == 0)
+		if (!Dee_shared_rwlock_reading(&self->srwl_lock))
 			goto err_nolock;
-		temp = atomic_decfetch_explicit(&self->srwl_lock.srw_lock, __ATOMIC_RELEASE);
-		if (temp == 0)
-			_Dee_shared_rwlock_wake(&self->srwl_lock);
+		_Dee_shared_rwlock_endread_NDEBUG(&self->srwl_lock);
 	} else {
 		/* Write-lock */
-		atomic_write(&self->srwl_lock.srw_lock, 0);
-		_Dee_shared_rwlock_wake(&self->srwl_lock);
+		_Dee_shared_rwlock_endwrite_NDEBUG(&self->srwl_lock);
 	}
 	return_none;
 err_nolock:
@@ -4211,7 +4227,7 @@ PRIVATE struct type_method event_methods[] = {
 	            "Trigger the event as having taken place"),
 	TYPE_METHOD("clear", &event_clear,
 	            "()\n"
-	            "Clear the event as not havnig taken place"),
+	            "Clear the event as not having taken place"),
 	TYPE_METHOD_END
 };
 

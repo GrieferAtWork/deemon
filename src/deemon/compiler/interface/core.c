@@ -39,13 +39,13 @@ typedef DeeCompilerWrapperObject CompilerWrapper;
 INTERN NONNULL((1)) void DCALL
 DeeCompilerItem_Fini(CompilerItem *__restrict self) {
 	DeeCompilerObject *com = self->ci_compiler;
-	atomic_rwlock_write(&com->cp_items.ci_lock);
-	ASSERT(com->cp_items.ci_size);
+	Dee_compiler_items_lock_write(&com->cp_items);
+	ASSERT(com->cp_items.cis_size);
 	if (LIST_ISBOUND(self, ci_link)) {
 		LIST_REMOVE(self, ci_link);
-		--com->cp_items.ci_size;
+		--com->cp_items.cis_size;
 	}
-	atomic_rwlock_endwrite(&com->cp_items.ci_lock);
+	Dee_compiler_items_lock_endwrite(&com->cp_items);
 #ifdef CONFIG_NO_THREADS
 	Dee_Decref(com);
 #else /* CONFIG_NO_THREADS */
@@ -65,13 +65,13 @@ DeeCompilerItem_Visit(CompilerItem *__restrict self, dvisit_t proc, void *arg) {
 INTERN NONNULL((1)) void DCALL
 DeeCompilerObjItem_Fini(CompilerItem *__restrict self) {
 	DeeCompilerObject *com = self->ci_compiler;
-	atomic_rwlock_write(&com->cp_items.ci_lock);
-	ASSERT(com->cp_items.ci_size);
+	Dee_compiler_items_lock_write(&com->cp_items);
+	ASSERT(com->cp_items.cis_size);
 	ASSERTF(LIST_ISBOUND(self, ci_link),
 	        "Compiler object-items must not be deleted externally");
 	LIST_REMOVE(self, ci_link);
-	--com->cp_items.ci_size;
-	atomic_rwlock_endwrite(&com->cp_items.ci_lock);
+	--com->cp_items.cis_size;
+	Dee_compiler_items_lock_endwrite(&com->cp_items);
 	COMPILER_BEGIN(com);
 	ASSERT_OBJECT((DeeObject *)self->ci_value);
 	Dee_Decref((DeeObject *)self->ci_value);
@@ -268,21 +268,21 @@ get_compiler_item_impl(DeeTypeObject *__restrict type,
 	ASSERT(!(type->tp_flags & TP_FVARIABLE));
 	ASSERT(recursive_rwlock_reading(&DeeCompiler_Lock));
 again:
-	atomic_rwlock_read(&self->cp_items.ci_lock);
-	if (self->cp_items.ci_list) {
+	Dee_compiler_items_lock_read(&self->cp_items);
+	if (self->cp_items.cis_list) {
 		struct compiler_item_object_list *list;
-		list = &self->cp_items.ci_list[Dee_HashPointer(value) & self->cp_items.ci_mask];
+		list = &self->cp_items.cis_list[Dee_HashPointer(value) & self->cp_items.cis_mask];
 		LIST_FOREACH(result, list, ci_link) {
 			if (result->ci_value != value)
 				continue;
 			if unlikely(!Dee_IncrefIfNotZero(result))
 				continue;
 			ASSERT_OBJECT_TYPE_EXACT(result, type);
-			atomic_rwlock_endread(&self->cp_items.ci_lock);
+			Dee_compiler_items_lock_endread(&self->cp_items);
 			return (DREF DeeObject *)result;
 		}
 	}
-	atomic_rwlock_endread(&self->cp_items.ci_lock);
+	Dee_compiler_items_lock_endread(&self->cp_items);
 
 	/* Construct a new item. */
 	result = DeeObject_MALLOC(CompilerItem);
@@ -290,64 +290,64 @@ again:
 		goto done;
 
 	/* Make sure that the item wasn't created in the mean time! */
-	atomic_rwlock_write(&self->cp_items.ci_lock);
-	if (self->cp_items.ci_list) {
+	Dee_compiler_items_lock_write(&self->cp_items);
+	if (self->cp_items.cis_list) {
 		DREF CompilerItem *new_result;
 		struct compiler_item_object_list *list;
-		list = &self->cp_items.ci_list[Dee_HashPointer(value) & self->cp_items.ci_mask];
+		list = &self->cp_items.cis_list[Dee_HashPointer(value) & self->cp_items.cis_mask];
 		LIST_FOREACH (new_result, list, ci_link) {
 			if likely(new_result->ci_value != value)
 				continue;
 			if unlikely(!Dee_IncrefIfNotZero(new_result))
 				continue;
 			ASSERT_OBJECT_TYPE_EXACT(new_result, type);
-			atomic_rwlock_endread(&self->cp_items.ci_lock);
+			Dee_compiler_items_lock_endread(&self->cp_items);
 			DeeObject_FREE(result);
 			return (DREF DeeObject *)new_result;
 		}
 	}
 
 	/* Insert the new item into the hash-map. */
-	if (self->cp_items.ci_size >= self->cp_items.ci_mask) {
-		size_t new_mask = (self->cp_items.ci_mask << 1) | 1;
+	if (self->cp_items.cis_size >= self->cp_items.cis_mask) {
+		size_t new_mask = (self->cp_items.cis_mask << 1) | 1;
 		struct compiler_item_object_list *new_map;
 		if (new_mask == 1)
 			new_mask = 16 - 1;
 		new_map = (struct compiler_item_object_list *)Dee_TryCallocc(new_mask + 1,
 		                                                             sizeof(struct compiler_item_object_list));
-		if unlikely(!new_map && !self->cp_items.ci_list) {
-			atomic_rwlock_endwrite(&self->cp_items.ci_lock);
+		if unlikely(!new_map && !self->cp_items.cis_list) {
+			Dee_compiler_items_lock_endwrite(&self->cp_items);
 			DeeObject_FREE(result);
 			goto again;
 		}
 
 		/* Re-hash the old map. */
-		if (self->cp_items.ci_list) {
+		if (self->cp_items.cis_list) {
 			size_t i;
-			for (i = 0; i <= self->cp_items.ci_mask; ++i) {
+			for (i = 0; i <= self->cp_items.cis_mask; ++i) {
 				DeeCompilerItemObject *iter, *next;
-				LIST_FOREACH_SAFE (iter, &self->cp_items.ci_list[i], ci_link, next) {
+				LIST_FOREACH_SAFE (iter, &self->cp_items.cis_list[i], ci_link, next) {
 					struct compiler_item_object_list *newlist;
 					newlist = &new_map[Dee_COMPILER_ITEM_HASH(iter) & new_mask];
 					LIST_REMOVE(iter, ci_link);
 					LIST_INSERT_HEAD(newlist, iter, ci_link);
 				}
 			}
-			Dee_Free(self->cp_items.ci_list);
+			Dee_Free(self->cp_items.cis_list);
 		}
-		self->cp_items.ci_mask = new_mask;
-		self->cp_items.ci_list = new_map;
+		self->cp_items.cis_mask = new_mask;
+		self->cp_items.cis_list = new_map;
 	}
 
 	/* Insert the new item into the hash-map. */
 	{
 		struct compiler_item_object_list *list;
-		list = &self->cp_items.ci_list[Dee_HashPointer(value) & self->cp_items.ci_mask];
+		list = &self->cp_items.cis_list[Dee_HashPointer(value) & self->cp_items.cis_mask];
 		LIST_INSERT_HEAD(list, result, ci_link);
 	}
 
 	/* Keep track of how many items there are. */
-	++self->cp_items.ci_size;
+	++self->cp_items.cis_size;
 
 	/* Initialize the new item. */
 	result->ci_compiler = self;
@@ -356,7 +356,7 @@ again:
 	Dee_Incref(self);
 	if (is_an_object)
 		Dee_Incref((DeeObject *)value);
-	atomic_rwlock_endwrite(&self->cp_items.ci_lock);
+	Dee_compiler_items_lock_endwrite(&self->cp_items);
 done:
 	return (DREF DeeObject *)result;
 }
@@ -402,12 +402,12 @@ INTERN bool DCALL DeeCompiler_DelItem(void *value) {
 	if (!com)
 		return false;
 	ASSERT(recursive_rwlock_reading(&DeeCompiler_Lock));
-	atomic_rwlock_write(&com->cp_items.ci_lock);
-	if unlikely(!com->cp_items.ci_list) {
-		atomic_rwlock_endwrite(&com->cp_items.ci_lock);
+	Dee_compiler_items_lock_write(&com->cp_items);
+	if unlikely(!com->cp_items.cis_list) {
+		Dee_compiler_items_lock_endwrite(&com->cp_items);
 		return false;
 	}
-	list = &com->cp_items.ci_list[Dee_HashPointer(value) & com->cp_items.ci_mask];
+	list = &com->cp_items.cis_list[Dee_HashPointer(value) & com->cp_items.cis_mask];
 	LIST_FOREACH (item, list, ci_link) {
 		if (item->ci_value != value)
 			continue;
@@ -426,11 +426,11 @@ INTERN bool DCALL DeeCompiler_DelItem(void *value) {
 #endif /* !NDEBUG */
 		ASSERT(LIST_ISBOUND(item, ci_link));
 		LIST_UNBIND(item, ci_link);
-		ASSERT(com->cp_items.ci_size);
-		--com->cp_items.ci_size;
+		ASSERT(com->cp_items.cis_size);
+		--com->cp_items.cis_size;
 		break;
 	}
-	atomic_rwlock_endwrite(&com->cp_items.ci_lock);
+	Dee_compiler_items_lock_endwrite(&com->cp_items);
 	return item != NULL;
 }
 
@@ -453,26 +453,26 @@ DeeCompiler_DelItemType(DeeTypeObject *__restrict type) {
 	ASSERT(recursive_rwlock_reading(&DeeCompiler_Lock));
 	if (!com)
 		return false;
-	atomic_rwlock_write(&com->cp_items.ci_lock);
-	if (com->cp_items.ci_size) {
-		ASSERT(com->cp_items.ci_list != NULL);
-		for (i = 0; i <= com->cp_items.ci_mask; ++i) {
+	Dee_compiler_items_lock_write(&com->cp_items);
+	if (com->cp_items.cis_size) {
+		ASSERT(com->cp_items.cis_list != NULL);
+		for (i = 0; i <= com->cp_items.cis_mask; ++i) {
 			CompilerItem *iter, *next;
 			struct compiler_item_object_list *list;
-			list = &com->cp_items.ci_list[i];
+			list = &com->cp_items.cis_list[i];
 			LIST_FOREACH_SAFE (iter, list, ci_link, next) {
 				if (DeeObject_InstanceOfExact(iter, type) &&
 				    atomic_read(&iter->ob_refcnt) != 0) {
 					ASSERT(LIST_ISBOUND(iter, ci_link));
 					LIST_UNBIND(iter, ci_link);
-					ASSERT(com->cp_items.ci_size);
-					--com->cp_items.ci_size;
+					ASSERT(com->cp_items.cis_size);
+					--com->cp_items.cis_size;
 					++result;
 				}
 			}
 		}
 	}
-	atomic_rwlock_endwrite(&com->cp_items.ci_lock);
+	Dee_compiler_items_lock_endwrite(&com->cp_items);
 	return result;
 }
 

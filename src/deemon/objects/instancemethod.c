@@ -212,11 +212,11 @@ instancemethod_getattr(InstanceMethod *__restrict self,
 			break;
 		my_class = DeeClass_DESC(tp_iter);
 		desc     = my_class->cd_desc;
-		atomic_rwlock_read(&my_class->cd_lock);
+		Dee_class_desc_lock_read(my_class);
 		for (addr = 0; addr < desc->cd_cmemb_size; ++addr) {
 			if (my_class->cd_members[addr] != self->im_func)
 				continue;
-			atomic_rwlock_endread(&my_class->cd_lock);
+			Dee_class_desc_lock_endread(my_class);
 			/* Found the address at which the function is located. */
 			for (i = 0; i <= desc->cd_iattr_mask; ++i) {
 				result = &desc->cd_iattr_list[i];
@@ -242,9 +242,9 @@ instancemethod_getattr(InstanceMethod *__restrict self,
 					*pdecl_type = tp_iter;
 				return result;
 			}
-			atomic_rwlock_read(&my_class->cd_lock);
+			Dee_class_desc_lock_read(my_class);
 		}
-		atomic_rwlock_endread(&my_class->cd_lock);
+		Dee_class_desc_lock_endread(my_class);
 	} while ((tp_iter = DeeType_Base(tp_iter)) != NULL);
 	return NULL;
 }

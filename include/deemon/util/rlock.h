@@ -32,6 +32,7 @@
 #ifdef CONFIG_NO_THREADS
 DECL_BEGIN
 
+/* TODO */
 
 DECL_END
 
@@ -125,18 +126,16 @@ Dee_ratomic_lock_waitfor(Dee_ratomic_lock_t *__restrict self) {
 }
 
 /* Release a recursive atomic lock. */
-#define Dee_ratomic_lock_release Dee_ratomic_lock_release
-LOCAL NONNULL((1)) void DCALL
-Dee_ratomic_lock_release(Dee_ratomic_lock_t *__restrict self) {
-	Dee_ASSERT(self->ra_lock > 0);
-	Dee_ASSERT(__hybrid_gettid_iscaller(self->ra_tid));
-	if (self->ra_lock > 1) {
-		__hybrid_atomic_dec(&self->ra_lock, __ATOMIC_RELEASE);
-		return;
-	}
-	self->ra_tid = __HYBRID_GETTID_INVALID;
-	__hybrid_atomic_store(&self->ra_lock, 0, __ATOMIC_RELEASE);
-}
+#define _Dee_ratomic_lock_release_NDEBUG(self)                 \
+	((self)->ra_lock > 1                                       \
+	 ? __hybrid_atomic_dec(&(self)->ra_lock, __ATOMIC_RELEASE) \
+	 : ((self)->ra_tid = __HYBRID_GETTID_INVALID,              \
+	    __hybrid_atomic_store(&(self)->ra_lock, 0, __ATOMIC_RELEASE)))
+#define Dee_ratomic_lock_release(self)                                                    \
+	(Dee_ASSERTF((self)->ra_lock > 0, "No locks held"),                                   \
+	 Dee_ASSERTF(__hybrid_gettid_iscaller((self)->ra_tid), "You're not the lock holder"), \
+	 _Dee_ratomic_lock_release_NDEBUG(self))
+
 
 
 
@@ -156,6 +155,7 @@ typedef struct {
 #define Dee_rshared_lock_available(self)  Dee_ratomic_lock_available(&(self)->rs_lock)
 #define Dee_rshared_lock_acquired(self)   Dee_ratomic_lock_acquired(&(self)->rs_lock)
 #define Dee_rshared_lock_tryacquire(self) Dee_ratomic_lock_tryacquire(&(self)->rs_lock)
+#define _Dee_rshared_lock_wakeone(self)   (void)(__hybrid_atomic_load(&(self)->rs_waiting, __ATOMIC_ACQUIRE) && (DeeFutex_WakeOne(&(self)->rs_lock.ra_lock), 1))
 
 /* Block until successfully acquired a recursive shared lock.
  * @return: 0 : Success.
@@ -213,20 +213,16 @@ Dee_rshared_lock_waitfor_timed(Dee_rshared_lock_t *__restrict self,
 
 
 /* Release a recursive shared lock. */
-#define Dee_rshared_lock_release Dee_rshared_lock_release
-LOCAL NONNULL((1)) void DCALL
-Dee_rshared_lock_release(Dee_rshared_lock_t *__restrict self) {
-	Dee_ASSERT(self->rs_lock.ra_lock > 0);
-	Dee_ASSERT(__hybrid_gettid_iscaller(self->rs_lock.ra_tid));
-	if (self->rs_lock.ra_lock > 1) {
-		__hybrid_atomic_dec(&self->rs_lock.ra_lock, __ATOMIC_RELEASE);
-		return;
-	}
-	self->rs_lock.ra_tid = __HYBRID_GETTID_INVALID;
-	__hybrid_atomic_store(&self->rs_lock.ra_lock, 0, __ATOMIC_RELEASE);
-	if (__hybrid_atomic_load(&self->rs_waiting, __ATOMIC_ACQUIRE) > 0)
-		DeeFutex_WakeOne(&self->rs_lock.ra_lock);
-}
+#define _Dee_rshared_lock_release_NDEBUG(self)                                \
+	((self)->rs_lock.ra_lock > 1                                              \
+	 ? __hybrid_atomic_dec(&(self)->rs_lock.ra_lock, __ATOMIC_RELEASE)        \
+	 : ((self)->rs_lock.ra_tid = __HYBRID_GETTID_INVALID,                     \
+	    __hybrid_atomic_store(&(self)->rs_lock.ra_lock, 0, __ATOMIC_RELEASE), \
+	    _Dee_rshared_lock_wakeone(self)))
+#define Dee_rshared_lock_release(self)                                                            \
+	(Dee_ASSERTF((self)->rs_lock.ra_lock > 0, "No locks held"),                                   \
+	 Dee_ASSERTF(__hybrid_gettid_iscaller((self)->rs_lock.ra_tid), "You're not the lock holder"), \
+	 _Dee_rshared_lock_release_NDEBUG(self))
 
 
 
@@ -373,18 +369,24 @@ Dee_ratomic_rwlock_downgrade(Dee_ratomic_rwlock_t *__restrict self) {
 }
 
 /* Release a write-lock */
-#define Dee_ratomic_rwlock_endwrite Dee_ratomic_rwlock_endwrite
-LOCAL NONNULL((1)) void DCALL
-Dee_ratomic_rwlock_endwrite(Dee_ratomic_rwlock_t *__restrict self) {
-	Dee_ASSERTF(self->rarw_lock.arw_lock == (uintptr_t)-1, "Lock not in write-mode");
-	Dee_ASSERTF(__hybrid_gettid_iscaller(self->rarw_tid), "You're not the write-holder");
-	if (self->rarw_nwrite > 0) {
-		--self->rarw_nwrite;
-		return;
-	}
-	self->rarw_tid = __HYBRID_GETTID_INVALID;
-	__hybrid_atomic_store(&self->rarw_lock.arw_lock, 0, __ATOMIC_RELEASE);
-}
+#define _Dee_ratomic_rwlock_endwrite_NDEBUG(self)   \
+	((self)->rarw_nwrite > 0                        \
+	 ? (void)--(self)->rarw_nwrite                  \
+	 : ((self)->rarw_tid = __HYBRID_GETTID_INVALID, \
+	    __hybrid_atomic_store(&(self)->rarw_lock.arw_lock, 0, __ATOMIC_RELEASE)))
+#define _Dee_ratomic_rwlock_endwrite_ex_NDEBUG(self) \
+	((self)->rarw_nwrite > 0                         \
+	 ? (--(self)->rarw_nwrite, 0)                    \
+	 : ((self)->rarw_tid = __HYBRID_GETTID_INVALID,  \
+	    __hybrid_atomic_store(&(self)->rarw_lock.arw_lock, 0, __ATOMIC_RELEASE), 1))
+#define Dee_ratomic_rwlock_endwrite(self)                                                    \
+	(Dee_ASSERTF((self)->rarw_lock.arw_lock == (uintptr_t)-1, "Lock not in write-mode"),     \
+	 Dee_ASSERTF(__hybrid_gettid_iscaller((self)->rarw_tid), "You're not the write-holder"), \
+	 _Dee_ratomic_rwlock_endwrite_NDEBUG(self))
+#define Dee_ratomic_rwlock_endwrite_ex(self)                                                 \
+	(Dee_ASSERTF((self)->rarw_lock.arw_lock == (uintptr_t)-1, "Lock not in write-mode"),     \
+	 Dee_ASSERTF(__hybrid_gettid_iscaller((self)->rarw_tid), "You're not the write-holder"), \
+	 _Dee_ratomic_rwlock_endwrite_ex_NDEBUG(self))
 
 /* Release a read- or write-lock */
 #define Dee_ratomic_rwlock_end Dee_ratomic_rwlock_end
@@ -413,26 +415,27 @@ Dee_ratomic_rwlock_end(Dee_ratomic_rwlock_t *__restrict self) {
 /* Recursive shared rwlock (scheduler-level blocking lock)              */
 /************************************************************************/
 typedef struct {
-	Dee_ratomic_rwlock_t srrw_lock;    /* Underlying recursive atomic read/write lock */
-	unsigned int         srrw_waiting; /* non-zero if threads may be waiting on `srrw_lock.rarw_lock.arw_lock' */
+	Dee_ratomic_rwlock_t rsrw_lock;    /* Underlying recursive atomic read/write lock */
+	unsigned int         rsrw_waiting; /* non-zero if threads may be waiting on `rsrw_lock.rarw_lock.arw_lock' */
 } Dee_rshared_rwlock_t;
 #define DEE_RSHARED_RWLOCK_INIT        { DEE_RATOMIC_RWLOCK_INIT, 0 }
-#define Dee_rshared_rwlock_init(self)  (void)(Dee_ratomic_rwlock_init(&(self)->srrw_lock), (self)->srrw_waiting = 0)
-#define Dee_rshared_rwlock_cinit(self) (void)(Dee_ratomic_rwlock_cinit(&(self)->srrw_lock), Dee_ASSERT((self)->srrw_waiting == 0))
+#define Dee_rshared_rwlock_init(self)  (void)(Dee_ratomic_rwlock_init(&(self)->rsrw_lock), (self)->rsrw_waiting = 0)
+#define Dee_rshared_rwlock_cinit(self) (void)(Dee_ratomic_rwlock_cinit(&(self)->rsrw_lock), Dee_ASSERT((self)->rsrw_waiting == 0))
 #define _Dee_rshared_rwlock_wake(self)                                     \
-	(__hybrid_atomic_load(&(self)->srrw_waiting, __ATOMIC_ACQUIRE)         \
-	 ? (__hybrid_atomic_store(&(self)->srrw_waiting, 0, __ATOMIC_RELEASE), \
-	    DeeFutex_WakeAll(&(self)->srrw_lock.rarw_lock.arw_lock))           \
+	(__hybrid_atomic_load(&(self)->rsrw_waiting, __ATOMIC_ACQUIRE)         \
+	 ? (__hybrid_atomic_store(&(self)->rsrw_waiting, 0, __ATOMIC_RELEASE), \
+	    DeeFutex_WakeAll(&(self)->rsrw_lock.rarw_lock.arw_lock))           \
 	 : (void)0)
-#define Dee_rshared_rwlock_reading(self)    Dee_ratomic_rwlock_reading(&(self)->srrw_lock)
-#define Dee_rshared_rwlock_writing(self)    Dee_ratomic_rwlock_writing(&(self)->srrw_lock)
-#define Dee_rshared_rwlock_tryread(self)    Dee_ratomic_rwlock_tryread(&(self)->srrw_lock)
-#define Dee_rshared_rwlock_trywrite(self)   Dee_ratomic_rwlock_trywrite(&(self)->srrw_lock)
-#define Dee_rshared_rwlock_canread(self)    Dee_ratomic_rwlock_canread(&(self)->srrw_lock)
-#define Dee_rshared_rwlock_canwrite(self)   Dee_ratomic_rwlock_canwrite(&(self)->srrw_lock)
-#define Dee_rshared_rwlock_tryupgrade(self) Dee_ratomic_rwlock_tryupgrade(&(self)->srrw_lock)
-#define Dee_rshared_rwlock_downgrade(self)  (Dee_ratomic_rwlock_downgrade(&(self)->srrw_lock), _Dee_rshared_rwlock_wake(self))
-#define Dee_rshared_rwlock_endwrite(self)   (Dee_ratomic_rwlock_endwrite(&(self)->srrw_lock), _Dee_rshared_rwlock_wake(self))
+#define Dee_rshared_rwlock_reading(self)     Dee_ratomic_rwlock_reading(&(self)->rsrw_lock)
+#define Dee_rshared_rwlock_writing(self)     Dee_ratomic_rwlock_writing(&(self)->rsrw_lock)
+#define Dee_rshared_rwlock_tryread(self)     Dee_ratomic_rwlock_tryread(&(self)->rsrw_lock)
+#define Dee_rshared_rwlock_trywrite(self)    Dee_ratomic_rwlock_trywrite(&(self)->rsrw_lock)
+#define Dee_rshared_rwlock_canread(self)     Dee_ratomic_rwlock_canread(&(self)->rsrw_lock)
+#define Dee_rshared_rwlock_canwrite(self)    Dee_ratomic_rwlock_canwrite(&(self)->rsrw_lock)
+#define Dee_rshared_rwlock_tryupgrade(self)  Dee_ratomic_rwlock_tryupgrade(&(self)->rsrw_lock)
+#define Dee_rshared_rwlock_downgrade(self)   (Dee_ratomic_rwlock_downgrade(&(self)->rsrw_lock), _Dee_rshared_rwlock_wake(self))
+#define Dee_rshared_rwlock_endwrite_ex(self) (Dee_ratomic_rwlock_endwrite_ex(&(self)->rsrw_lock) && (_Dee_rshared_rwlock_wake(self), 1))
+#define Dee_rshared_rwlock_endwrite(self)    (void)Dee_rshared_rwlock_endwrite_ex(self)
 
 /* Acquire a read-lock to `self' */
 #define Dee_rshared_rwlock_read Dee_rshared_rwlock_read
@@ -440,26 +443,26 @@ LOCAL WUNUSED NONNULL((1)) int DCALL
 Dee_rshared_rwlock_read(Dee_rshared_rwlock_t *__restrict self) {
 	uintptr_t lockword;
 again:
-	lockword = __hybrid_atomic_load(&self->srrw_lock.rarw_lock.arw_lock, __ATOMIC_ACQUIRE);
+	lockword = __hybrid_atomic_load(&self->rsrw_lock.rarw_lock.arw_lock, __ATOMIC_ACQUIRE);
 	if (lockword != (uintptr_t)-1) {
 again_lockword_not_UINTPTR_MAX:
 		Dee_ASSERTF(lockword != (uintptr_t)-2, "Too many read-locks");
-		if (__hybrid_atomic_cmpxch_weak(&self->srrw_lock.rarw_lock.arw_lock,
+		if (__hybrid_atomic_cmpxch_weak(&self->rsrw_lock.rarw_lock.arw_lock,
 		                                lockword, lockword + 1,
 		                                __ATOMIC_ACQUIRE, __ATOMIC_ACQUIRE))
 			return 0;
 		goto again;
 	}
-	if (__hybrid_gettid_iscaller(self->srrw_lock.rarw_tid)) {
+	if (__hybrid_gettid_iscaller(self->rsrw_lock.rarw_tid)) {
 		/* Special case for read-after-write */
-		++self->srrw_lock.rarw_nwrite;
+		++self->rsrw_lock.rarw_nwrite;
 		return 0;
 	}
 	do {
-		int result = DeeFutex_WaitPtr(&self->srrw_lock.rarw_lock.arw_lock, lockword);
+		int result = DeeFutex_WaitPtr(&self->rsrw_lock.rarw_lock.arw_lock, lockword);
 		if unlikely(result != 0)
 			return result;
-	} while ((lockword = __hybrid_atomic_load(&self->srrw_lock.rarw_lock.arw_lock,
+	} while ((lockword = __hybrid_atomic_load(&self->rsrw_lock.rarw_lock.arw_lock,
 	                                          __ATOMIC_ACQUIRE)) == (uintptr_t)-1);
 	goto again_lockword_not_UINTPTR_MAX;
 }
@@ -470,26 +473,26 @@ LOCAL WUNUSED NONNULL((1)) int DCALL
 Dee_rshared_rwlock_write(Dee_rshared_rwlock_t *__restrict self) {
 	uintptr_t lockword;
 again:
-	lockword = __hybrid_atomic_load(&self->srrw_lock.rarw_lock.arw_lock, __ATOMIC_ACQUIRE);
+	lockword = __hybrid_atomic_load(&self->rsrw_lock.rarw_lock.arw_lock, __ATOMIC_ACQUIRE);
 	if (lockword == 0) {
 again_lockword_zero:
-		if (!__hybrid_atomic_cmpxch_weak(&self->srrw_lock.rarw_lock.arw_lock, 0, (uintptr_t)-1,
+		if (!__hybrid_atomic_cmpxch_weak(&self->rsrw_lock.rarw_lock.arw_lock, 0, (uintptr_t)-1,
 		                                 __ATOMIC_ACQUIRE, __ATOMIC_ACQUIRE))
 			goto again;
-		self->srrw_lock.rarw_tid = __hybrid_gettid();
+		self->rsrw_lock.rarw_tid = __hybrid_gettid();
 		return 0;
 	}
 	if (lockword == (uintptr_t)-1) {
-		if (__hybrid_gettid_iscaller(self->srrw_lock.rarw_tid)) {
-			++self->srrw_lock.rarw_nwrite;
+		if (__hybrid_gettid_iscaller(self->rsrw_lock.rarw_tid)) {
+			++self->rsrw_lock.rarw_nwrite;
 			return 0;
 		}
 	}
 	do {
-		int result = DeeFutex_WaitPtr(&self->srrw_lock.rarw_lock.arw_lock, lockword);
+		int result = DeeFutex_WaitPtr(&self->rsrw_lock.rarw_lock.arw_lock, lockword);
 		if unlikely(result != 0)
 			return result;
-	} while ((lockword = __hybrid_atomic_load(&self->srrw_lock.rarw_lock.arw_lock,
+	} while ((lockword = __hybrid_atomic_load(&self->rsrw_lock.rarw_lock.arw_lock,
 	                                          __ATOMIC_ACQUIRE)) != 0);
 	goto again_lockword_zero;
 }
@@ -499,17 +502,17 @@ again_lockword_zero:
 LOCAL WUNUSED NONNULL((1)) int DCALL
 Dee_rshared_rwlock_waitread(Dee_rshared_rwlock_t *__restrict self) {
 	uintptr_t lockword;
-	lockword = __hybrid_atomic_load(&self->srrw_lock.rarw_lock.arw_lock, __ATOMIC_ACQUIRE);
+	lockword = __hybrid_atomic_load(&self->rsrw_lock.rarw_lock.arw_lock, __ATOMIC_ACQUIRE);
 	if (lockword == (uintptr_t)-1) {
-		if (__hybrid_gettid_iscaller(self->srrw_lock.rarw_tid)) {
+		if (__hybrid_gettid_iscaller(self->rsrw_lock.rarw_tid)) {
 			/* Special case for read-after-write */
 			return 0;
 		}
 		do {
-			int result = DeeFutex_WaitPtr(&self->srrw_lock.rarw_lock.arw_lock, lockword);
+			int result = DeeFutex_WaitPtr(&self->rsrw_lock.rarw_lock.arw_lock, lockword);
 			if unlikely(result != 0)
 				return result;
-		} while ((lockword = __hybrid_atomic_load(&self->srrw_lock.rarw_lock.arw_lock,
+		} while ((lockword = __hybrid_atomic_load(&self->rsrw_lock.rarw_lock.arw_lock,
 		                                          __ATOMIC_ACQUIRE)) == (uintptr_t)-1);
 	}
 	return 0;
@@ -520,18 +523,18 @@ Dee_rshared_rwlock_waitread(Dee_rshared_rwlock_t *__restrict self) {
 LOCAL WUNUSED NONNULL((1)) int DCALL
 Dee_rshared_rwlock_waitwrite(Dee_rshared_rwlock_t *__restrict self) {
 	uintptr_t lockword;
-	lockword = __hybrid_atomic_load(&self->srrw_lock.rarw_lock.arw_lock, __ATOMIC_ACQUIRE);
+	lockword = __hybrid_atomic_load(&self->rsrw_lock.rarw_lock.arw_lock, __ATOMIC_ACQUIRE);
 	if (lockword == 0)
 		return 0;
 	if (lockword == (uintptr_t)-1) {
-		if (__hybrid_gettid_iscaller(self->srrw_lock.rarw_tid))
+		if (__hybrid_gettid_iscaller(self->rsrw_lock.rarw_tid))
 			return 0;
 	}
 	do {
-		int result = DeeFutex_WaitPtr(&self->srrw_lock.rarw_lock.arw_lock, lockword);
+		int result = DeeFutex_WaitPtr(&self->rsrw_lock.rarw_lock.arw_lock, lockword);
 		if unlikely(result != 0)
 			return result;
-	} while ((lockword = __hybrid_atomic_load(&self->srrw_lock.rarw_lock.arw_lock, __ATOMIC_ACQUIRE)) != 0);
+	} while ((lockword = __hybrid_atomic_load(&self->rsrw_lock.rarw_lock.arw_lock, __ATOMIC_ACQUIRE)) != 0);
 	return 0;
 }
 
@@ -558,16 +561,17 @@ Dee_rshared_rwlock_waitwrite_timed(Dee_rshared_rwlock_t *__restrict self,
 LOCAL NONNULL((1)) void DCALL
 Dee_rshared_rwlock_endread(Dee_rshared_rwlock_t *__restrict self) {
 	uintptr_t lockword;
-	lockword = __hybrid_atomic_load(&self->srrw_lock.rarw_lock.arw_lock, __ATOMIC_ACQUIRE);
+	lockword = __hybrid_atomic_load(&self->rsrw_lock.rarw_lock.arw_lock, __ATOMIC_ACQUIRE);
 	if (lockword == (uintptr_t)-1) {
-		Dee_ASSERTF(__hybrid_gettid_iscaller(self->srrw_lock.rarw_tid),
+		Dee_ASSERTF(__hybrid_gettid_iscaller(self->rsrw_lock.rarw_tid),
 		            "You're not the write-holder, so you couldn't have done read-after-write");
-		Dee_ASSERTF(self->srrw_lock.rarw_nwrite > 0,
+		Dee_ASSERTF(self->rsrw_lock.rarw_nwrite > 0,
 		            "No recursive write-locks, so this can't be read-after-write");
-		--self->srrw_lock.rarw_nwrite;
+		--self->rsrw_lock.rarw_nwrite;
 	} else {
 		Dee_ASSERTF(lockword != 0, "No lock are held");
-		__hybrid_atomic_dec(&self->srrw_lock.rarw_lock.arw_lock, __ATOMIC_RELEASE);
+		lockword = __hybrid_atomic_fetchdec(&self->rsrw_lock.rarw_lock.arw_lock, __ATOMIC_RELEASE);
+		Dee_ASSERTF(lockword != 0, "No lock are held (race)");
 		if (lockword == 1)
 			_Dee_rshared_rwlock_wake(self); /* Last read-lock went away */
 	}
@@ -578,19 +582,20 @@ Dee_rshared_rwlock_endread(Dee_rshared_rwlock_t *__restrict self) {
 LOCAL NONNULL((1)) void DCALL
 Dee_rshared_rwlock_end(Dee_rshared_rwlock_t *__restrict self) {
 	uintptr_t lockword;
-	lockword = __hybrid_atomic_load(&self->srrw_lock.rarw_lock.arw_lock, __ATOMIC_ACQUIRE);
+	lockword = __hybrid_atomic_load(&self->rsrw_lock.rarw_lock.arw_lock, __ATOMIC_ACQUIRE);
 	if (lockword == (uintptr_t)-1) {
-		Dee_ASSERTF(__hybrid_gettid_iscaller(self->srrw_lock.rarw_tid), "You're not the write-holder");
-		if (self->srrw_lock.rarw_nwrite > 0) {
-			--self->srrw_lock.rarw_nwrite;
+		Dee_ASSERTF(__hybrid_gettid_iscaller(self->rsrw_lock.rarw_tid), "You're not the write-holder");
+		if (self->rsrw_lock.rarw_nwrite > 0) {
+			--self->rsrw_lock.rarw_nwrite;
 			return;
 		}
-		self->srrw_lock.rarw_tid = __HYBRID_GETTID_INVALID;
-		__hybrid_atomic_store(&self->srrw_lock.rarw_lock.arw_lock, 0, __ATOMIC_RELEASE);
+		self->rsrw_lock.rarw_tid = __HYBRID_GETTID_INVALID;
+		__hybrid_atomic_store(&self->rsrw_lock.rarw_lock.arw_lock, 0, __ATOMIC_RELEASE);
 		_Dee_rshared_rwlock_wake(self); /* Last write-lock went away */
 	} else {
 		Dee_ASSERTF(lockword != 0, "No lock are held");
-		__hybrid_atomic_dec(&self->srrw_lock.rarw_lock.arw_lock, __ATOMIC_RELEASE);
+		lockword = __hybrid_atomic_fetchdec(&self->rsrw_lock.rarw_lock.arw_lock, __ATOMIC_RELEASE);
+		Dee_ASSERTF(lockword != 0, "No lock are held (race)");
 		if (lockword == 1)
 			_Dee_rshared_rwlock_wake(self); /* Last read-lock went away */
 	}

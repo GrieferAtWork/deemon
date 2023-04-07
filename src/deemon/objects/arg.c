@@ -782,14 +782,14 @@ kmap_nsi_nextitem(KmapIterator *__restrict self) {
 		if (atomic_cmpxch_weak_or_write(&self->ki_iter, old_iter, entry + 1))
 			break;
 	}
-	atomic_rwlock_read(&self->ki_map->kmo_lock);
+	DeeKwdsMapping_LockRead(self->ki_map);
 	if unlikely(!self->ki_map->kmo_argv) {
-		atomic_rwlock_endread(&self->ki_map->kmo_lock);
+		DeeKwdsMapping_LockEndRead(self->ki_map);
 		return ITER_DONE;
 	}
 	value = self->ki_map->kmo_argv[entry->ke_index];
 	Dee_Incref(value);
-	atomic_rwlock_endread(&self->ki_map->kmo_lock);
+	DeeKwdsMapping_LockEndRead(self->ki_map);
 	result = DeeTuple_Pack(2, entry->ke_name, value);
 	Dee_Decref_unlikely(value);
 	return result;
@@ -833,14 +833,14 @@ kmap_nsi_nextvalue(KmapIterator *__restrict self) {
 		if (atomic_cmpxch_weak_or_write(&self->ki_iter, old_iter, entry + 1))
 			break;
 	}
-	atomic_rwlock_read(&self->ki_map->kmo_lock);
+	DeeKwdsMapping_LockRead(self->ki_map);
 	if unlikely(!self->ki_map->kmo_argv) {
-		atomic_rwlock_endread(&self->ki_map->kmo_lock);
+		DeeKwdsMapping_LockEndRead(self->ki_map);
 		return ITER_DONE;
 	}
 	value = self->ki_map->kmo_argv[entry->ke_index];
 	Dee_Incref(value);
-	atomic_rwlock_endread(&self->ki_map->kmo_lock);
+	DeeKwdsMapping_LockEndRead(self->ki_map);
 	return value;
 }
 
@@ -919,12 +919,12 @@ kmap_copy(KwdsMapping *__restrict self,
 	self->kmo_argv = (DREF DeeObject **)Dee_Mallocc(count, sizeof(DREF DeeObject *));
 	if unlikely(!self->kmo_argv)
 		goto err;
-	atomic_rwlock_read(&other->kmo_lock);
+	DeeKwdsMapping_LockRead(other);
 	for (i = 0; i < count; ++i) {
 		self->kmo_argv[i] = other->kmo_argv[i];
 		Dee_Incref(self->kmo_argv[i]);
 	}
-	atomic_rwlock_endread(&other->kmo_lock);
+	DeeKwdsMapping_LockEndRead(other);
 	Dee_atomic_rwlock_init(&self->kmo_lock);
 	self->kmo_kwds = other->kmo_kwds;
 	Dee_Incref(self->kmo_kwds);
@@ -941,12 +941,13 @@ kmap_deep(KwdsMapping *__restrict self,
 	self->kmo_argv = (DREF DeeObject **)Dee_Mallocc(count, sizeof(DREF DeeObject *));
 	if unlikely(!self->kmo_argv)
 		goto err;
-	atomic_rwlock_read(&other->kmo_lock);
+	DeeKwdsMapping_LockRead(other);
 	for (i = 0; i < count; ++i) {
 		self->kmo_argv[i] = other->kmo_argv[i];
 		Dee_Incref(self->kmo_argv[i]);
 	}
-	atomic_rwlock_endread(&other->kmo_lock);
+	DeeKwdsMapping_LockEndRead(other);
+
 	/* Construct deep copies of all of the arguments. */
 	for (i = 0; i < count; ++i) {
 		if (DeeObject_InplaceDeepCopy(&self->kmo_argv[i]))
@@ -1007,13 +1008,10 @@ kmap_fini(KwdsMapping *__restrict self) {
 
 PRIVATE NONNULL((1, 2)) void DCALL
 kmap_visit(KwdsMapping *__restrict self, dvisit_t proc, void *arg) {
-	atomic_rwlock_read(&self->kmo_lock);
-	if (self->kmo_argv) {
-		size_t count = self->kmo_kwds->kw_size;
-		while (count--)
-			Dee_Visit(self->kmo_argv[count]);
-	}
-	atomic_rwlock_endread(&self->kmo_lock);
+	DeeKwdsMapping_LockRead(self);
+	if (self->kmo_argv)
+		Dee_Visitv(self->kmo_argv, self->kmo_kwds->kw_size);
+	DeeKwdsMapping_LockEndRead(self);
 	/*Dee_Visit(self->kmo_kwds);*/ /* Only ever references strings, so there'd be no point. */
 }
 
@@ -1078,15 +1076,15 @@ kmap_nsi_getdefault(KwdsMapping *self, DeeObject *key, DeeObject *def) {
 	                     DeeString_Hash(key));
 	if (index == (size_t)-1)
 		goto nope;
-	atomic_rwlock_read(&self->kmo_lock);
+	DeeKwdsMapping_LockRead(self);
 	if unlikely(!self->kmo_argv) {
-		atomic_rwlock_endread(&self->kmo_lock);
+		DeeKwdsMapping_LockEndRead(self);
 		goto nope;
 	}
 	ASSERT(index < self->kmo_kwds->kw_size);
 	result = self->kmo_argv[index];
 	Dee_Incref(result);
-	atomic_rwlock_endread(&self->kmo_lock);
+	DeeKwdsMapping_LockEndRead(self);
 	return result;
 nope:
 	if (def != ITER_DONE)
@@ -1225,16 +1223,16 @@ DeeKwdsMapping_Decref(DREF DeeObject *__restrict self) {
 		DREF DeeObject **argv;
 		if (!argc) {
 clear_argv:
-			atomic_rwlock_write(&me->kmo_lock);
+			DeeKwdsMapping_LockWrite(me);
 			me->kmo_argv = NULL;
-			atomic_rwlock_endwrite(&me->kmo_lock);
+			DeeKwdsMapping_LockEndWrite(me);
 		} else {
 			do {
 				argv = (DREF DeeObject **)Dee_TryMallocc(argc, sizeof(DREF DeeObject *));
 			} while (unlikely(!argv) && Dee_TryCollectMemory(argc * sizeof(DREF DeeObject *)));
 			if unlikely(!argv)
 				goto clear_argv;
-			atomic_rwlock_write(&me->kmo_lock);
+			DeeKwdsMapping_LockWrite(me);
 			if unlikely(!me->kmo_argv) {
 				/* Shouldn't really happen, but is allowed by the specs... */
 				Dee_Free(argv);
@@ -1243,10 +1241,12 @@ clear_argv:
 				Dee_Movrefv(argv, me->kmo_argv, argc);
 			}
 			me->kmo_argv = argv; /* Remember the old arguments. */
-			atomic_rwlock_endwrite(&me->kmo_lock);
+			DeeKwdsMapping_LockEndWrite(me);
 		}
+
 		/* Create a reference for `kmo_kwds', which didn't contain one until now. */
 		Dee_Incref(me->kmo_kwds);
+
 		/* Drop our own reference (which should still be shared) */
 		Dee_Decref_unlikely(self);
 	} else {
@@ -1306,15 +1306,15 @@ no_such_key:
 		err_unknown_key_str((DeeObject *)self, name);
 		return NULL;
 	}
-	atomic_rwlock_read(&me->kmo_lock);
+	DeeKwdsMapping_LockRead(me);
 	if unlikely(!me->kmo_argv) {
-		atomic_rwlock_endread(&me->kmo_lock);
+		DeeKwdsMapping_LockEndRead(me);
 		goto no_such_key;
 	}
 	ASSERT(index < me->kmo_kwds->kw_size);
 	result = me->kmo_argv[index];
 	Dee_Incref(result);
-	atomic_rwlock_endread(&me->kmo_lock);
+	DeeKwdsMapping_LockEndRead(me);
 	return result;
 }
 
@@ -1335,15 +1335,15 @@ no_such_key:
 			Dee_Incref(def);
 		return def;
 	}
-	atomic_rwlock_read(&me->kmo_lock);
+	DeeKwdsMapping_LockRead(me);
 	if unlikely(!me->kmo_argv) {
-		atomic_rwlock_endread(&me->kmo_lock);
+		DeeKwdsMapping_LockEndRead(me);
 		goto no_such_key;
 	}
 	ASSERT(index < me->kmo_kwds->kw_size);
 	result = me->kmo_argv[index];
 	Dee_Incref(result);
-	atomic_rwlock_endread(&me->kmo_lock);
+	DeeKwdsMapping_LockEndRead(me);
 	return result;
 }
 
@@ -1363,15 +1363,15 @@ no_such_key:
 		err_unknown_key_str_len((DeeObject *)self, name, namesize);
 		return NULL;
 	}
-	atomic_rwlock_read(&me->kmo_lock);
+	DeeKwdsMapping_LockRead(me);
 	if unlikely(!me->kmo_argv) {
-		atomic_rwlock_endread(&me->kmo_lock);
+		DeeKwdsMapping_LockEndRead(me);
 		goto no_such_key;
 	}
 	ASSERT(index < me->kmo_kwds->kw_size);
 	result = me->kmo_argv[index];
 	Dee_Incref(result);
-	atomic_rwlock_endread(&me->kmo_lock);
+	DeeKwdsMapping_LockEndRead(me);
 	return result;
 }
 
@@ -1393,15 +1393,15 @@ no_such_key:
 			Dee_Incref(def);
 		return def;
 	}
-	atomic_rwlock_read(&me->kmo_lock);
+	DeeKwdsMapping_LockRead(me);
 	if unlikely(!me->kmo_argv) {
-		atomic_rwlock_endread(&me->kmo_lock);
+		DeeKwdsMapping_LockEndRead(me);
 		goto no_such_key;
 	}
 	ASSERT(index < me->kmo_kwds->kw_size);
 	result = me->kmo_argv[index];
 	Dee_Incref(result);
-	atomic_rwlock_endread(&me->kmo_lock);
+	DeeKwdsMapping_LockEndRead(me);
 	return result;
 }
 

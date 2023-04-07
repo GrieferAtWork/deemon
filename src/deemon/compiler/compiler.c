@@ -311,7 +311,7 @@ compiler_fini(DeeCompilerObject *__restrict self) {
 	if (!(self->cp_flags & COMPILER_FKEEPLEXER))
 		TPPLexer_Quit(&self->cp_lexer);
 	Dee_Decref(self->cp_scope);
-	Dee_Free(self->cp_items.ci_list);
+	Dee_Free(self->cp_items.cis_list);
 }
 
 PRIVATE NONNULL((1, 2)) void DCALL

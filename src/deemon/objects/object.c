@@ -3971,13 +3971,15 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 get_module_from_addr(struct class_desc *__restrict my_class, uint16_t addr) {
 	DeeObject *slot;
 	DREF DeeModuleObject *result = NULL;
-	atomic_rwlock_read(&my_class->cd_lock);
+	Dee_class_desc_lock_read(my_class);
 	slot = my_class->cd_members[addr];
 	if (slot && DeeFunction_Check(slot)) {
-		result = ((DeeFunctionObject *)slot)->fo_code->co_module;
+		DeeFunctionObject *slot_function;
+		slot_function = (DeeFunctionObject *)slot;
+		result        = slot_function->fo_code->co_module;
 		Dee_Incref(result);
 	}
-	atomic_rwlock_endread(&my_class->cd_lock);
+	Dee_class_desc_lock_endread(my_class);
 	return (DREF DeeObject *)result;
 }
 
@@ -3987,6 +3989,7 @@ DeeClass_GetModule(DeeTypeObject *__restrict self) {
 	DeeClassDescriptorObject *desc = my_class->cd_desc;
 	DREF DeeObject *result;
 	size_t i;
+
 	/* Search through the operator bindings table. */
 	for (i = 0; i <= desc->cd_clsop_mask; ++i) {
 		if (desc->cd_clsop_list[i].co_name == (uint16_t)-1)
@@ -3996,6 +3999,7 @@ DeeClass_GetModule(DeeTypeObject *__restrict self) {
 		if (result)
 			goto done;
 	}
+
 	/* Search through class attribute table. */
 	for (i = 0; i <= desc->cd_cattr_mask; ++i) {
 		if (!desc->cd_cattr_list[i].ca_name)
@@ -4082,6 +4086,7 @@ again:
 		if (result)
 			return result;
 	}
+
 	/* Special case for custom type-types (such
 	 * as those provided by the `ctypes' module)
 	 *  -> In this case, we simply return the module associated with the

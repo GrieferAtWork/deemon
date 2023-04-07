@@ -512,6 +512,23 @@ struct Dee_class_desc {
 	                                                        * instance-methods and operator callbacks). */
 };
 
+#define Dee_class_desc_lock_reading(self)    Dee_atomic_rwlock_reading(&(self)->cd_lock)
+#define Dee_class_desc_lock_writing(self)    Dee_atomic_rwlock_writing(&(self)->cd_lock)
+#define Dee_class_desc_lock_tryread(self)    Dee_atomic_rwlock_tryread(&(self)->cd_lock)
+#define Dee_class_desc_lock_trywrite(self)   Dee_atomic_rwlock_trywrite(&(self)->cd_lock)
+#define Dee_class_desc_lock_canread(self)    Dee_atomic_rwlock_canread(&(self)->cd_lock)
+#define Dee_class_desc_lock_canwrite(self)   Dee_atomic_rwlock_canwrite(&(self)->cd_lock)
+#define Dee_class_desc_lock_waitread(self)   Dee_atomic_rwlock_waitread(&(self)->cd_lock)
+#define Dee_class_desc_lock_waitwrite(self)  Dee_atomic_rwlock_waitwrite(&(self)->cd_lock)
+#define Dee_class_desc_lock_read(self)       Dee_atomic_rwlock_read(&(self)->cd_lock)
+#define Dee_class_desc_lock_write(self)      Dee_atomic_rwlock_write(&(self)->cd_lock)
+#define Dee_class_desc_lock_tryupgrade(self) Dee_atomic_rwlock_tryupgrade(&(self)->cd_lock)
+#define Dee_class_desc_lock_upgrade(self)    Dee_atomic_rwlock_upgrade(&(self)->cd_lock)
+#define Dee_class_desc_lock_downgrade(self)  Dee_atomic_rwlock_downgrade(&(self)->cd_lock)
+#define Dee_class_desc_lock_endwrite(self)   Dee_atomic_rwlock_endwrite(&(self)->cd_lock)
+#define Dee_class_desc_lock_endread(self)    Dee_atomic_rwlock_endread(&(self)->cd_lock)
+#define Dee_class_desc_lock_end(self)        Dee_atomic_rwlock_end(&(self)->cd_lock)
+
 #ifndef CONFIG_NO_THREADS
 #define Dee_class_desc_as_instance(x) ((struct Dee_instance_desc *)&(x)->cd_lock)
 #else /* !CONFIG_NO_THREADS */

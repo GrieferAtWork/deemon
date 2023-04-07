@@ -53,7 +53,7 @@ class_fini(DeeTypeObject *__restrict self) {
 	size = my_class->cd_desc->cd_cmemb_size;
 again:
 	buflen = 0;
-	atomic_rwlock_write(&my_class->cd_lock);
+	Dee_class_desc_lock_write(my_class);
 	for (i = 0; i < size; ++i) {
 		DeeObject *ob;
 		ob = my_class->cd_members[i];
@@ -64,7 +64,7 @@ again:
 			continue;
 		/* We're responsible for destroying this member! */
 		if (buflen == COMPILER_LENOF(buffer)) {
-			atomic_rwlock_endwrite(&my_class->cd_lock);
+			Dee_class_desc_lock_endwrite(my_class);
 			Dee_Decref(ob);
 			Dee_Decrefv(buffer, buflen);
 			goto again;
@@ -87,7 +87,7 @@ again:
 				continue;
 			/* We're responsible for destroying this member! */
 			if (buflen == COMPILER_LENOF(buffer)) {
-				atomic_rwlock_endwrite(&my_class->cd_lock);
+				Dee_class_desc_lock_endwrite(my_class);
 				Dee_Decref(ob);
 				Dee_Decrefv(buffer, buflen);
 				goto again;
@@ -95,7 +95,7 @@ again:
 			buffer[buflen++] = ob; /* Inherit reference. */
 		}
 	}
-	atomic_rwlock_endwrite(&my_class->cd_lock);
+	Dee_class_desc_lock_endwrite(my_class);
 	if (buflen) {
 		/* Clear the buffer. */
 		Dee_Decrefv(buffer, buflen);
@@ -129,7 +129,7 @@ class_visit(DeeTypeObject *__restrict self, dvisit_t proc, void *arg) {
 	uint16_t i, size;
 	my_class = DeeClass_DESC(self);
 	size     = my_class->cd_desc->cd_cmemb_size;
-	atomic_rwlock_read(&my_class->cd_lock);
+	Dee_class_desc_lock_read(my_class);
 	Dee_XVisitv(my_class->cd_members, size);
 
 	/* Also free all cached operators. */
@@ -140,7 +140,7 @@ class_visit(DeeTypeObject *__restrict self, dvisit_t proc, void *arg) {
 			continue;
 		Dee_XVisitv(table->co_operators, CLASS_HEADER_OPC2);
 	}
-	atomic_rwlock_endread(&my_class->cd_lock);
+	Dee_class_desc_lock_endread(my_class);
 	/* Only ever references strings itself, so no point in visiting this one! */
 	/*Dee_Visit(my_class->cd_desc);*/
 }
@@ -156,7 +156,7 @@ class_clear(DeeTypeObject *__restrict self) {
 	size = my_class->cd_desc->cd_cmemb_size;
 again:
 	buflen = 0;
-	atomic_rwlock_write(&my_class->cd_lock);
+	Dee_class_desc_lock_write(my_class);
 	for (i = 0; i < size; ++i) {
 		DeeObject *ob;
 		ob = my_class->cd_members[i];
@@ -167,7 +167,7 @@ again:
 			continue;
 		/* We're responsible for destroying this member! */
 		if (buflen == COMPILER_LENOF(buffer)) {
-			atomic_rwlock_endwrite(&my_class->cd_lock);
+			Dee_class_desc_lock_endwrite(my_class);
 			Dee_Decref(ob);
 			Dee_Decrefv(buffer, buflen);
 			goto again;
@@ -190,7 +190,7 @@ again:
 				continue;
 			/* We're responsible for destroying this member! */
 			if (buflen == COMPILER_LENOF(buffer)) {
-				atomic_rwlock_endwrite(&my_class->cd_lock);
+				Dee_class_desc_lock_endwrite(my_class);
 				Dee_Decref(ob);
 				Dee_Decrefv(buffer, buflen);
 				goto again;
@@ -198,7 +198,7 @@ again:
 			buffer[buflen++] = ob; /* Inherit reference. */
 		}
 	}
-	atomic_rwlock_endwrite(&my_class->cd_lock);
+	Dee_class_desc_lock_endwrite(my_class);
 	if (buflen) {
 		/* Clear the buffer. */
 		Dee_Decrefv(buffer, buflen);
@@ -220,7 +220,7 @@ class_pclear(DeeTypeObject *__restrict self, unsigned int gc_priority) {
 	size = my_class->cd_desc->cd_cmemb_size;
 again:
 	buflen = 0;
-	atomic_rwlock_write(&my_class->cd_lock);
+	Dee_class_desc_lock_write(my_class);
 	for (i = 0; i < size; ++i) {
 		DeeObject *ob;
 		ob = my_class->cd_members[i];
@@ -233,7 +233,7 @@ again:
 			continue;
 		/* We're responsible for destroying this member! */
 		if (buflen == COMPILER_LENOF(buffer)) {
-			atomic_rwlock_endwrite(&my_class->cd_lock);
+			Dee_class_desc_lock_endwrite(my_class);
 			Dee_Decref(ob);
 			Dee_Decrefv(buffer, buflen);
 			goto again;
@@ -258,7 +258,7 @@ again:
 				continue;
 			/* We're responsible for destroying this member! */
 			if (buflen == COMPILER_LENOF(buffer)) {
-				atomic_rwlock_endwrite(&my_class->cd_lock);
+				Dee_class_desc_lock_endwrite(my_class);
 				Dee_Decref(ob);
 				Dee_Decrefv(buffer, buflen);
 				goto again;
@@ -266,7 +266,7 @@ again:
 			buffer[buflen++] = ob; /* Inherit reference. */
 		}
 	}
-	atomic_rwlock_endwrite(&my_class->cd_lock);
+	Dee_class_desc_lock_endwrite(my_class);
 	if (buflen) {
 		/* Clear the buffer. */
 		Dee_Decrefv(buffer, buflen);
@@ -320,14 +320,14 @@ class_desc_get_known_operator(DeeTypeObject *__restrict tp_self,
 		struct class_optable *table;
 		table = self->cd_ops[name / CLASS_HEADER_OPC2];
 		if likely(table) {
-			atomic_rwlock_read(&self->cd_lock);
+			Dee_class_desc_lock_read(self);
 			result = table->co_operators[name % CLASS_HEADER_OPC2];
 			if likely(result) {
 				Dee_Incref(result);
-				atomic_rwlock_endread(&self->cd_lock);
+				Dee_class_desc_lock_endread(self);
 				return result;
 			}
-			atomic_rwlock_endread(&self->cd_lock);
+			Dee_class_desc_lock_endread(self);
 		}
 	}
 
@@ -343,15 +343,15 @@ class_desc_get_known_operator(DeeTypeObject *__restrict tp_self,
 
 		/* Found the entry! */
 		ASSERT(entry->co_addr < desc->cd_cmemb_size);
-		atomic_rwlock_read(&self->cd_lock);
+		Dee_class_desc_lock_read(self);
 		result = self->cd_members[entry->co_addr];
 		if unlikely(!result) {
-			atomic_rwlock_endread(&self->cd_lock);
+			Dee_class_desc_lock_endread(self);
 			err_unimplemented_operator(tp_self, name);
 			return NULL;
 		}
 		Dee_Incref(result);
-		atomic_rwlock_endread(&self->cd_lock);
+		Dee_class_desc_lock_endread(self);
 
 		/* Try to cache the associated operator (if possible) */
 		if (name < CLASS_OPERATOR_USERCOUNT)
@@ -380,17 +380,17 @@ DeeClass_GetOperator(DeeTypeObject *__restrict self, uint16_t name) {
 			struct class_optable *table;
 			table = iter_class->cd_ops[name / CLASS_HEADER_OPC2];
 			if likely(table) {
-				atomic_rwlock_read(&iter_class->cd_lock);
+				Dee_class_desc_lock_read(iter_class);
 				result = table->co_operators[name % CLASS_HEADER_OPC2];
 				if likely(result) {
 					Dee_Incref(result);
-					atomic_rwlock_endread(&iter_class->cd_lock);
+					Dee_class_desc_lock_endread(iter_class);
 					/* Inherit the base's operator locally, by caching it. */
 					if (iter != self && !OPERATOR_IS_CONSTRUCTOR_INHERITED(name))
 						calls_desc_cache_operator(DeeClass_DESC(self), name, result);
 					return result;
 				}
-				atomic_rwlock_endread(&iter_class->cd_lock);
+				Dee_class_desc_lock_endread(iter_class);
 			}
 		}
 
@@ -408,14 +408,14 @@ DeeClass_GetOperator(DeeTypeObject *__restrict self, uint16_t name) {
 
 			/* Found the entry! */
 			ASSERT(entry->co_addr < desc->cd_cmemb_size);
-			atomic_rwlock_read(&iter_class->cd_lock);
+			Dee_class_desc_lock_read(iter_class);
 			result = iter_class->cd_members[entry->co_addr];
 			if unlikely(!result) {
-				atomic_rwlock_endread(&iter_class->cd_lock);
+				Dee_class_desc_lock_endread(iter_class);
 				goto done; /* Deleted operator. */
 			}
 			Dee_Incref(result);
-			atomic_rwlock_endread(&iter_class->cd_lock);
+			Dee_class_desc_lock_endread(iter_class);
 
 			/* Try to cache the associated operator (if possible)
 			 * NOTE: Make sure not to accidentally cache inherited constructors! */
@@ -449,17 +449,17 @@ DeeClass_TryGetOperator(DeeTypeObject *__restrict self, uint16_t name) {
 			struct class_optable *table;
 			table = iter_class->cd_ops[name / CLASS_HEADER_OPC2];
 			if likely(table) {
-				atomic_rwlock_read(&iter_class->cd_lock);
+				Dee_class_desc_lock_read(iter_class);
 				result = table->co_operators[name % CLASS_HEADER_OPC2];
 				if likely(result) {
 					Dee_Incref(result);
-					atomic_rwlock_endread(&iter_class->cd_lock);
+					Dee_class_desc_lock_endread(iter_class);
 					/* Inherit the base's operator locally, by caching it. */
 					if (iter != self && !OPERATOR_IS_CONSTRUCTOR_INHERITED(name))
 						calls_desc_cache_operator(DeeClass_DESC(self), name, result);
 					return result;
 				}
-				atomic_rwlock_endread(&iter_class->cd_lock);
+				Dee_class_desc_lock_endread(iter_class);
 			}
 		}
 
@@ -477,14 +477,14 @@ DeeClass_TryGetOperator(DeeTypeObject *__restrict self, uint16_t name) {
 
 			/* Found the entry! */
 			ASSERT(entry->co_addr < desc->cd_cmemb_size);
-			atomic_rwlock_read(&iter_class->cd_lock);
+			Dee_class_desc_lock_read(iter_class);
 			result = iter_class->cd_members[entry->co_addr];
 			if unlikely(!result) {
-				atomic_rwlock_endread(&iter_class->cd_lock);
+				Dee_class_desc_lock_endread(iter_class);
 				return NULL; /* Deleted operator. */
 			}
 			Dee_Incref(result);
-			atomic_rwlock_endread(&iter_class->cd_lock);
+			Dee_class_desc_lock_endread(iter_class);
 
 			/* Try to cache the associated operator (if possible)
 			 * NOTE: Make sure not to accidentally cache inherited constructors! */
@@ -522,14 +522,14 @@ DeeClass_TryGetPrivateOperator(DeeTypeObject *__restrict self, uint16_t name) {
 
 		/* Found the entry! */
 		ASSERT(entry->co_addr < desc->cd_cmemb_size);
-		atomic_rwlock_read(&self_class->cd_lock);
+		Dee_class_desc_lock_read(self_class);
 		result = self_class->cd_members[entry->co_addr];
 		if unlikely(!result) {
-			atomic_rwlock_endread(&self_class->cd_lock);
+			Dee_class_desc_lock_endread(self_class);
 			break; /* Deleted operator. */
 		}
 		Dee_Incref(result);
-		atomic_rwlock_endread(&self_class->cd_lock);
+		Dee_class_desc_lock_endread(self_class);
 		return result;
 	}
 	return NULL;

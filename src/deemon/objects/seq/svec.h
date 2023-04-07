@@ -48,6 +48,60 @@ typedef struct {
 #endif /* CONFIG_NO_THREADS */
 } RefVector;
 
+#define RefVector_LockReading(self)    Dee_atomic_rwlock_reading((self)->rv_plock)
+#define RefVector_LockWriting(self)    Dee_atomic_rwlock_writing((self)->rv_plock)
+#define RefVector_LockTryRead(self)    Dee_atomic_rwlock_tryread((self)->rv_plock)
+#define RefVector_LockTryWrite(self)   Dee_atomic_rwlock_trywrite((self)->rv_plock)
+#define RefVector_LockCanRead(self)    Dee_atomic_rwlock_canread((self)->rv_plock)
+#define RefVector_LockCanWrite(self)   Dee_atomic_rwlock_canwrite((self)->rv_plock)
+#define RefVector_LockWaitRead(self)   Dee_atomic_rwlock_waitread((self)->rv_plock)
+#define RefVector_LockWaitWrite(self)  Dee_atomic_rwlock_waitwrite((self)->rv_plock)
+#define RefVector_LockRead(self)       Dee_atomic_rwlock_read((self)->rv_plock)
+#define RefVector_LockWrite(self)      Dee_atomic_rwlock_write((self)->rv_plock)
+#define RefVector_LockTryUpgrade(self) Dee_atomic_rwlock_tryupgrade((self)->rv_plock)
+#define RefVector_LockUpgrade(self)    Dee_atomic_rwlock_upgrade((self)->rv_plock)
+#define RefVector_LockDowngrade(self)  Dee_atomic_rwlock_downgrade((self)->rv_plock)
+#define RefVector_LockEndWrite(self)   Dee_atomic_rwlock_endwrite((self)->rv_plock)
+#define RefVector_LockEndRead(self)    Dee_atomic_rwlock_endread((self)->rv_plock)
+#define RefVector_LockEnd(self)        Dee_atomic_rwlock_end((self)->rv_plock)
+
+#ifdef CONFIG_NO_THREADS
+#define RefVector_XLockReading(self)    1
+#define RefVector_XLockWriting(self)    0
+#define RefVector_XLockTryRead(self)    1
+#define RefVector_XLockTryWrite(self)   1
+#define RefVector_XLockCanRead(self)    1
+#define RefVector_XLockCanWrite(self)   0
+#define RefVector_XLockWaitRead(self)   (void)0
+#define RefVector_XLockWaitWrite(self)  (void)0
+#define RefVector_XLockRead(self)       (void)0
+#define RefVector_XLockWrite(self)      (void)0
+#define RefVector_XLockTryUpgrade(self) 1
+#define RefVector_XLockUpgrade(self)    1
+#define RefVector_XLockDowngrade(self)  (void)0
+#define RefVector_XLockEndWrite(self)   (void)0
+#define RefVector_XLockEndRead(self)    (void)0
+#define RefVector_XLockEnd(self)        (void)0
+#else /* CONFIG_NO_THREADS */
+#define RefVector_XLockReading(self)    ((self)->rv_plock ? RefVector_LockReading(self) : 1)
+#define RefVector_XLockWriting(self)    ((self)->rv_plock ? RefVector_LockWriting(self) : 0)
+#define RefVector_XLockTryRead(self)    ((self)->rv_plock ? RefVector_LockTryRead(self) : 1)
+#define RefVector_XLockTryWrite(self)   ((self)->rv_plock ? RefVector_LockTryWrite(self) : 1)
+#define RefVector_XLockCanRead(self)    ((self)->rv_plock ? RefVector_LockCanRead(self) : 1)
+#define RefVector_XLockCanWrite(self)   ((self)->rv_plock ? RefVector_LockCanWrite(self) : 0)
+#define RefVector_XLockWaitRead(self)   ((self)->rv_plock ? RefVector_LockWaitRead(self) : (void)0)
+#define RefVector_XLockWaitWrite(self)  ((self)->rv_plock ? RefVector_LockWaitWrite(self) : (void)0)
+#define RefVector_XLockRead(self)       ((self)->rv_plock ? RefVector_LockRead(self) : (void)0)
+#define RefVector_XLockWrite(self)      ((self)->rv_plock ? RefVector_LockWrite(self) : (void)0)
+#define RefVector_XLockTryUpgrade(self) ((self)->rv_plock ? RefVector_LockTryUpgrade(self) : 1)
+#define RefVector_XLockUpgrade(self)    ((self)->rv_plock ? RefVector_LockUpgrade(self) : 1)
+#define RefVector_XLockDowngrade(self)  ((self)->rv_plock ? RefVector_LockDowngrade(self) : (void)0)
+#define RefVector_XLockEndWrite(self)   ((self)->rv_plock ? RefVector_LockEndWrite(self) : (void)0)
+#define RefVector_XLockEndRead(self)    ((self)->rv_plock ? RefVector_LockEndRead(self) : (void)0)
+#define RefVector_XLockEnd(self)        ((self)->rv_plock ? RefVector_LockEnd(self) : (void)0)
+#endif /* !CONFIG_NO_THREADS */
+
+
 typedef struct {
 	OBJECT_HEAD
 	DREF RefVector  *rvi_vector; /* [1..1][const] The underlying vector being iterated. */
