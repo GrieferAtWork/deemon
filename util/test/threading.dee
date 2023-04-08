@@ -22,13 +22,13 @@
 import * from threading;
 import * from deemon;
 
-function testLock(lock: Lock, isExclusive: bool = true) {
+function testLock(lock: Lock, isReadLockOrRecursive: bool = false) {
 	assert lock is Lock;
 	assert lock.available;
 	assert !lock.acquired;
 
 	assert lock.tryacquire();
-	assert isExclusive ? !lock.available : lock.available;
+	assert isReadLockOrRecursive ? lock.available : !lock.available;
 	assert lock.acquired;
 
 	lock.release();
@@ -36,31 +36,29 @@ function testLock(lock: Lock, isExclusive: bool = true) {
 	assert !lock.acquired;
 
 	lock.acquire();
-	assert isExclusive ? !lock.available : lock.available;
+	assert isReadLockOrRecursive ? lock.available : !lock.available;
 	assert lock.acquired;
 	lock.release();
 	assert lock.available;
 	assert !lock.acquired;
 
 	assert lock.timedacquire(0);
-	assert isExclusive ? !lock.available : lock.available;
+	assert isReadLockOrRecursive ? lock.available : !lock.available;
 	assert lock.acquired;
 	lock.release();
 	assert lock.available;
 	assert !lock.acquired;
 
 	with (lock) {
-		assert isExclusive ? !lock.available : lock.available;
+		assert isReadLockOrRecursive ? lock.available : !lock.available;
 		assert lock.acquired;
 	}
 	assert lock.available;
 	assert !lock.acquired;
 }
 
-function testRWLock(lock: RWLock) {
+function testRWLock(lock: RWLock, isRecursive: bool = false) {
 	assert lock is RWLock;
-	testLock(lock.shared, false);
-	testLock(lock.exclusive);
 
 	assert !lock.reading;
 	assert !lock.writing;
@@ -106,8 +104,8 @@ function testRWLock(lock: RWLock) {
 	assert lock.tryupgrade();
 	assert lock.reading;
 	assert lock.writing;
-	assert !lock.canread;
-	assert !lock.canwrite;
+	assert isRecursive ? lock.canread : !lock.canread;
+	assert isRecursive ? lock.canwrite : !lock.canwrite;
 
 	lock.downgrade();
 	assert lock.reading;
@@ -118,8 +116,8 @@ function testRWLock(lock: RWLock) {
 	assert lock.upgrade();
 	assert lock.reading;
 	assert lock.writing;
-	assert !lock.canread;
-	assert !lock.canwrite;
+	assert isRecursive ? lock.canread : !lock.canread;
+	assert isRecursive ? lock.canwrite : !lock.canwrite;
 
 	lock.downgrade();
 	assert lock.reading;
@@ -136,8 +134,8 @@ function testRWLock(lock: RWLock) {
 	assert lock.trywrite();
 	assert lock.reading;
 	assert lock.writing;
-	assert !lock.canread;
-	assert !lock.canwrite;
+	assert isRecursive ? lock.canread : !lock.canread;
+	assert isRecursive ? lock.canwrite : !lock.canwrite;
 
 	lock.endwrite();
 	assert !lock.reading;
@@ -160,8 +158,8 @@ function testRWLock(lock: RWLock) {
 	lock.write();
 	assert lock.reading;
 	assert lock.writing;
-	assert !lock.canread;
-	assert !lock.canwrite;
+	assert isRecursive ? lock.canread : !lock.canread;
+	assert isRecursive ? lock.canwrite : !lock.canwrite;
 
 	lock.end();
 	assert !lock.reading;
@@ -183,23 +181,32 @@ function testRWLock(lock: RWLock) {
 	with (lock.exclusive) {
 		assert lock.reading;
 		assert lock.writing;
-		assert !lock.canread;
-		assert !lock.canwrite;
+		assert isRecursive ? lock.canread : !lock.canread;
+		assert isRecursive ? lock.canwrite : !lock.canwrite;
 	}
 	assert !lock.reading;
 	assert !lock.writing;
 	assert lock.canread;
 	assert lock.canwrite;
+
+	testLock(lock.shared, isReadLockOrRecursive: true);
+	testLock(lock.exclusive, isReadLockOrRecursive: isRecursive);
 }
 
 testLock(AtomicLock());
 testLock(SharedLock());
+testLock(RAtomicLock(), isReadLockOrRecursive: true);
+testLock(RSharedLock(), isReadLockOrRecursive: true);
 testLock(Semaphore(1));
 testRWLock(AtomicRWLock());
 testRWLock(SharedRWLock());
+testRWLock(RAtomicRWLock(), isRecursive: true);
+testRWLock(RSharedRWLock(), isRecursive: true);
 
 assert SharedLock.derivedfrom(AtomicLock);
+assert RSharedLock.derivedfrom(RAtomicLock);
 assert SharedRWLock.derivedfrom(AtomicRWLock);
+assert RSharedRWLock.derivedfrom(RAtomicRWLock);
 
 
 function testEvent(e: Event) {

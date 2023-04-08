@@ -36,6 +36,8 @@ PRIVATE struct dex_symbol symbols[] = {
 	{ "Lock", (DeeObject *)&DeeLock_Type },
 	{ "AtomicLock", (DeeObject *)&DeeAtomicLock_Type },
 	{ "SharedLock", (DeeObject *)&DeeSharedLock_Type },
+	{ "RAtomicLock", (DeeObject *)&DeeRAtomicLock_Type },
+	{ "RSharedLock", (DeeObject *)&DeeRSharedLock_Type },
 
 	/* Read/write locks */
 	{ "RWLock", (DeeObject *)&DeeRWLock_Type },
@@ -43,6 +45,8 @@ PRIVATE struct dex_symbol symbols[] = {
 	{ "RWLockExclusiveLock", (DeeObject *)&DeeRWLockExclusiveLock_Type },
 	{ "AtomicRWLock", (DeeObject *)&DeeAtomicRWLock_Type },
 	{ "SharedRWLock", (DeeObject *)&DeeSharedRWLock_Type },
+	{ "RAtomicRWLock", (DeeObject *)&DeeRAtomicRWLock_Type },
+	{ "RSharedRWLock", (DeeObject *)&DeeRSharedRWLock_Type },
 
 	/* Semaphore */
 	{ "Semaphore", (DeeObject *)&DeeSemaphore_Type },

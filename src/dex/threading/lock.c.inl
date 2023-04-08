@@ -20,9 +20,9 @@
 #ifdef __INTELLISENSE__
 #include "lock.c"
 #define DEE_SOURCE
-#define DEFINE_DeeAtomicLock_Type__AND__DeeAtomicRWLock_Type
+//#define DEFINE_DeeAtomicLock_Type__AND__DeeAtomicRWLock_Type
 //#define DEFINE_DeeSharedLock_Type__AND__DeeSharedRWLock_Type
-//#define DEFINE_RDeeAtomicLock_Type__AND__DeeRAtomicRWLock_Type
+#define DEFINE_RDeeAtomicLock_Type__AND__DeeRAtomicRWLock_Type
 //#define DEFINE_RDeeSharedLock_Type__AND__DeeRSharedRWLock_Type
 #endif /* __INTELLISENSE__ */
 
@@ -73,9 +73,9 @@ DECL_BEGIN
 #endif /* ... */
 
 #ifdef LOCAL_IS_SHARED
-#define LOCAL_S_Atomic_or_Shared "Atomic"
-#else /* LOCAL_IS_SHARED */
 #define LOCAL_S_Atomic_or_Shared "Shared"
+#else /* LOCAL_IS_SHARED */
+#define LOCAL_S_Atomic_or_Shared "Atomic"
 #endif /* !LOCAL_IS_SHARED */
 
 #ifdef LOCAL_IS_RECURSIVE
@@ -200,11 +200,38 @@ DECL_BEGIN
 /* Select C-level API for RWLock-type */
 #ifdef LOCAL_IS_SHARED
 #ifdef LOCAL_IS_RECURSIVE
-#define LOCAL_rwlockapi_func(x) drshared_rwlock_##x
-#define LOCAL_DeeRWLockObject   DeeRSharedRWLockObject
-#define LOCAL_DeeRWLock_Type    DeeRSharedRWLock_Type
-#define LOCAL_rwlock_t          Dee_rshared_rwlock_t
-#define LOCAL_rwlock_init       Dee_rshared_rwlock_init
+#define LOCAL_rwlockapi_func(x)           drshared_rwlock_##x
+#define LOCAL_DeeRWLockObject             DeeRSharedRWLockObject
+#define LOCAL_DeeRWLock_Type              DeeRSharedRWLock_Type
+#define LOCAL_DeeRWLockSharedLock_Type    DeeRSharedRWLockSharedLock_Type
+#define LOCAL_DeeRWLockExclusiveLock_Type DeeRSharedRWLockExclusiveLock_Type
+#define LOCAL_rwlock_t                    Dee_rshared_rwlock_t
+#define LOCAL_rwlock_cinit                Dee_rshared_rwlock_cinit
+#define LOCAL_rwlock_init                 Dee_rshared_rwlock_init
+#define LOCAL_rwlock_reading              Dee_rshared_rwlock_reading
+#define LOCAL_rwlock_writing              Dee_rshared_rwlock_writing
+#define LOCAL_rwlock_tryread              Dee_rshared_rwlock_tryread
+#define LOCAL_rwlock_trywrite             Dee_rshared_rwlock_trywrite
+#define LOCAL_rwlock_canread              Dee_rshared_rwlock_canread
+#define LOCAL_rwlock_canwrite             Dee_rshared_rwlock_canwrite
+#define LOCAL_rwlock_canendread           Dee_rshared_rwlock_canendread
+#define LOCAL_rwlock_canendwrite          Dee_rshared_rwlock_canendwrite
+#define LOCAL_rwlock_canend               Dee_rshared_rwlock_canend
+#define LOCAL_rwlock_tryupgrade           Dee_rshared_rwlock_tryupgrade
+#define _LOCAL_rwlock_downgrade_NDEBUG    _Dee_rshared_rwlock_downgrade_NDEBUG
+#define _LOCAL_rwlock_endwrite_NDEBUG     _Dee_rshared_rwlock_endwrite_NDEBUG
+#define _LOCAL_rwlock_endread_NDEBUG      _Dee_rshared_rwlock_endread_NDEBUG
+#define _LOCAL_rwlock_end_NDEBUG          _Dee_rshared_rwlock_end_NDEBUG
+#define _LOCAL_rwlock_endread_ex_NDEBUG   _Dee_rshared_rwlock_endread_ex_NDEBUG
+#define _LOCAL_rwlock_end_ex_NDEBUG       _Dee_rshared_rwlock_end_ex_NDEBUG
+#define LOCAL_rwlock_waitread             Dee_rshared_rwlock_waitread
+#define LOCAL_rwlock_waitwrite            Dee_rshared_rwlock_waitwrite
+#define LOCAL_rwlock_waitread_timed       Dee_rshared_rwlock_waitread_timed
+#define LOCAL_rwlock_waitwrite_timed      Dee_rshared_rwlock_waitwrite_timed
+#define LOCAL_rwlock_read                 Dee_rshared_rwlock_read
+#define LOCAL_rwlock_write                Dee_rshared_rwlock_write
+#define LOCAL_rwlock_read_timed           Dee_rshared_rwlock_read_timed
+#define LOCAL_rwlock_write_timed          Dee_rshared_rwlock_write_timed
 #else /* LOCAL_IS_RECURSIVE */
 #define LOCAL_rwlockapi_func(x)           dshared_rwlock_##x
 #define LOCAL_DeeRWLockObject             DeeSharedRWLockObject
@@ -246,11 +273,38 @@ DECL_BEGIN
 #endif /* !LOCAL_IS_RECURSIVE */
 #else  /* LOCAL_IS_SHARED */
 #ifdef LOCAL_IS_RECURSIVE
-#define LOCAL_rwlockapi_func(x) dratomic_rwlock_##x
-#define LOCAL_DeeRWLockObject   DeeRAtomicRWLockObject
-#define LOCAL_DeeRWLock_Type    DeeRAtomicRWLock_Type
-#define LOCAL_rwlock_t          Dee_ratomic_rwlock_t
-#define LOCAL_rwlock_init       Dee_ratomic_rwlock_init
+#define LOCAL_rwlockapi_func(x)           dratomic_rwlock_##x
+#define LOCAL_DeeRWLockObject             DeeRAtomicRWLockObject
+#define LOCAL_DeeRWLock_Type              DeeRAtomicRWLock_Type
+#define LOCAL_DeeRWLockSharedLock_Type    DeeRAtomicRWLockSharedLock_Type
+#define LOCAL_DeeRWLockExclusiveLock_Type DeeRAtomicRWLockExclusiveLock_Type
+#define LOCAL_rwlock_t                    Dee_ratomic_rwlock_t
+#define LOCAL_rwlock_cinit                Dee_ratomic_rwlock_cinit
+#define LOCAL_rwlock_init                 Dee_ratomic_rwlock_init
+#define LOCAL_rwlock_reading              Dee_ratomic_rwlock_reading
+#define LOCAL_rwlock_writing              Dee_ratomic_rwlock_writing
+#define LOCAL_rwlock_tryread              Dee_ratomic_rwlock_tryread
+#define LOCAL_rwlock_trywrite             Dee_ratomic_rwlock_trywrite
+#define LOCAL_rwlock_canread              Dee_ratomic_rwlock_canread
+#define LOCAL_rwlock_canwrite             Dee_ratomic_rwlock_canwrite
+#define LOCAL_rwlock_canendread           Dee_ratomic_rwlock_canendread
+#define LOCAL_rwlock_canendwrite          Dee_ratomic_rwlock_canendwrite
+#define LOCAL_rwlock_canend               Dee_ratomic_rwlock_canend
+#define LOCAL_rwlock_tryupgrade           Dee_ratomic_rwlock_tryupgrade
+#define _LOCAL_rwlock_downgrade_NDEBUG    _Dee_ratomic_rwlock_downgrade_NDEBUG
+#define _LOCAL_rwlock_endwrite_NDEBUG     _Dee_ratomic_rwlock_endwrite_NDEBUG
+#define _LOCAL_rwlock_endread_NDEBUG      _Dee_ratomic_rwlock_endread_NDEBUG
+#define _LOCAL_rwlock_end_NDEBUG          _Dee_ratomic_rwlock_end_NDEBUG
+#define _LOCAL_rwlock_endread_ex_NDEBUG   _Dee_ratomic_rwlock_endread_ex_NDEBUG
+#define _LOCAL_rwlock_end_ex_NDEBUG       _Dee_ratomic_rwlock_end_ex_NDEBUG
+#define LOCAL_rwlock_waitread_p           Dee_ratomic_rwlock_waitread_p
+#define LOCAL_rwlock_waitwrite_p          Dee_ratomic_rwlock_waitwrite_p
+#define LOCAL_rwlock_waitread_timed_p     Dee_ratomic_rwlock_waitread_timed_p
+#define LOCAL_rwlock_waitwrite_timed_p    Dee_ratomic_rwlock_waitwrite_timed_p
+#define LOCAL_rwlock_read_p               Dee_ratomic_rwlock_read_p
+#define LOCAL_rwlock_write_p              Dee_ratomic_rwlock_write_p
+#define LOCAL_rwlock_read_timed_p         Dee_ratomic_rwlock_read_timed_p
+#define LOCAL_rwlock_write_timed_p        Dee_ratomic_rwlock_write_timed_p
 #else /* LOCAL_IS_RECURSIVE */
 #define LOCAL_rwlockapi_func(x)           datomic_rwlock_##x
 #define LOCAL_DeeRWLockObject             DeeAtomicRWLockObject
@@ -748,7 +802,7 @@ LOCAL_rwlockapi_init_kw(LOCAL_DeeRWLockObject *__restrict self,
 		/* Initialize in write-mode */
 		LOCAL_rwlock_init_write(&self->rwl_lock);
 	} else {
-		if unlikely(readers > DEE_ATOMIC_RWLOCK_MAX_READERS)
+		if unlikely(readers > LOCAL_RWLOCK_MAX_READERS)
 			goto err_readers_counter_is_too_large;
 		LOCAL_rwlock_init_read(&self->rwl_lock, readers);
 	}

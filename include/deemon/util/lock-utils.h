@@ -83,7 +83,6 @@ DECL_BEGIN
 #define Dee_atomic_lock_waitfor_timed_p(self, timeout_nanoseconds, err_label, timeout_label) \
 	_Dee_generic_lock_spinuntil_timed_p(Dee_atomic_lock_available(self), timeout_nanoseconds, err_label, timeout_label)
 
-
 /* Atomic rwlock acquire with interrupt checks (+ optional timeout) */
 #define Dee_atomic_rwlock_read_p(self, err_label) \
 	_Dee_generic_lock_spinuntil_p(Dee_atomic_rwlock_tryread(self), err_label)

@@ -40,8 +40,12 @@ DECL_END
 
 DECL_BEGIN
 
+/************************************************************************/
+/* Dee_ratomic_lock_t                                                   */
+/************************************************************************/
+
 LOCAL WUNUSED NONNULL((1)) int DCALL
-Dee_ratomic_lock_acquire_p_impl(Dee_ratomic_lock_t *__restrict self) {
+_Dee_ratomic_lock_acquire_p_impl(Dee_ratomic_lock_t *__restrict self) {
 	if (__hybrid_atomic_load(&self->ra_lock, __ATOMIC_ACQUIRE) == 0) {
 		if (!__hybrid_atomic_cmpxch(&self->ra_lock, 0, 1, __ATOMIC_ACQUIRE, __ATOMIC_ACQUIRE))
 			goto waitfor;
@@ -67,8 +71,8 @@ err:
 }
 
 LOCAL WUNUSED NONNULL((1)) int DCALL
-Dee_ratomic_lock_acquire_timed_p_impl(Dee_ratomic_lock_t *__restrict self,
-                                      uint64_t timeout_nanoseconds) {
+_Dee_ratomic_lock_acquire_timed_p_impl(Dee_ratomic_lock_t *__restrict self,
+                                       uint64_t timeout_nanoseconds) {
 	uint64_t now_microseconds, then_microseconds;
 	if (__hybrid_atomic_load(&self->ra_lock, __ATOMIC_ACQUIRE) == 0) {
 		if (!__hybrid_atomic_cmpxch(&self->ra_lock, 0, 1, __ATOMIC_ACQUIRE, __ATOMIC_ACQUIRE))
@@ -113,14 +117,14 @@ err:
 	return -1;
 }
 
-#define Dee_ratomic_lock_acquire_p(self, err_label)        \
-	do {                                                   \
-		if unlikely(Dee_ratomic_lock_acquire_p_impl(self)) \
-			goto err_label;                                \
+#define Dee_ratomic_lock_acquire_p(self, err_label)         \
+	do {                                                    \
+		if unlikely(_Dee_ratomic_lock_acquire_p_impl(self)) \
+			goto err_label;                                 \
 	}	__WHILE0
 #define Dee_ratomic_lock_acquire_timed_p(self, timeout_nanoseconds, err_label, timeout_label) \
 	do {                                                                                      \
-		int _status = Dee_ratomic_lock_acquire_timed_p_impl(self, timeout_nanoseconds);       \
+		int _status = _Dee_ratomic_lock_acquire_timed_p_impl(self, timeout_nanoseconds);      \
 		if unlikely(_status != 0) {                                                           \
 			if unlikely(_status < 0)                                                          \
 				goto err_label;                                                               \
@@ -167,6 +171,310 @@ err:
 			}                                                                                 \
 		}                                                                                     \
 	}	__WHILE0
+
+
+/************************************************************************/
+/* Dee_ratomic_rwlock_t                                                 */
+/************************************************************************/
+LOCAL NONNULL((1)) int DCALL
+_Dee_ratomic_rwlock_read_p_impl(Dee_ratomic_rwlock_t *__restrict self) {
+	uintptr_t lockword;
+again:
+	lockword = __hybrid_atomic_load(&self->rarw_lock.arw_lock, __ATOMIC_ACQUIRE);
+	if (lockword == 0) {
+		if (!__hybrid_atomic_cmpxch_weak(&self->rarw_lock.arw_lock, 0, 1,
+		                                 __ATOMIC_ACQUIRE, __ATOMIC_ACQUIRE))
+			goto again;
+		return 0;
+	}
+	if (lockword == (uintptr_t)-1) {
+		if (__hybrid_gettid_iscaller(self->rarw_tid)) {
+			++self->rarw_nwrite; /* read-after-write */
+			return 0;
+		}
+	}
+	do {
+		if (DeeThread_CheckInterrupt())
+			goto err;
+		__hybrid_yield();
+	} while (!__hybrid_atomic_cmpxch(&self->rarw_lock.arw_lock, 0, 1,
+	                                 __ATOMIC_ACQUIRE, __ATOMIC_ACQUIRE));
+	return 0;
+err:
+	return -1;
+}
+
+LOCAL NONNULL((1)) int DCALL
+_Dee_ratomic_rwlock_write_p_impl(Dee_ratomic_rwlock_t *__restrict self) {
+	uintptr_t lockword;
+again:
+	lockword = __hybrid_atomic_load(&self->rarw_lock.arw_lock, __ATOMIC_ACQUIRE);
+	if (lockword == 0) {
+again_lockword_zero:
+		if (!__hybrid_atomic_cmpxch_weak(&self->rarw_lock.arw_lock, 0, (uintptr_t)-1,
+		                                 __ATOMIC_ACQUIRE, __ATOMIC_ACQUIRE))
+			goto again;
+		self->rarw_tid = __hybrid_gettid();
+		return 0;
+	}
+	if (lockword == (uintptr_t)-1) {
+		if (__hybrid_gettid_iscaller(self->rarw_tid)) {
+			++self->rarw_nwrite;
+			return 0;
+		}
+	}
+	while (__hybrid_atomic_load(&self->rarw_lock.arw_lock, __ATOMIC_ACQUIRE) != 0) {
+		if (DeeThread_CheckInterrupt())
+			goto err;
+		__hybrid_yield();
+	}
+	goto again_lockword_zero;
+err:
+	return -1;
+}
+
+LOCAL NONNULL((1)) int DCALL
+_Dee_ratomic_rwlock_waitwrite_p_impl(Dee_ratomic_rwlock_t *__restrict self) {
+	uintptr_t lockword;
+	lockword = __hybrid_atomic_load(&self->rarw_lock.arw_lock, __ATOMIC_ACQUIRE);
+	if (lockword == 0)
+		return 0;
+	if (lockword == (uintptr_t)-1) {
+		if (__hybrid_gettid_iscaller(self->rarw_tid)) {
+			++self->rarw_nwrite;
+			return 0;
+		}
+	}
+	while (__hybrid_atomic_load(&self->rarw_lock.arw_lock, __ATOMIC_ACQUIRE) != 0) {
+		if (DeeThread_CheckInterrupt())
+			goto err;
+		__hybrid_yield();
+	}
+	return 0;
+err:
+	return -1;
+}
+
+
+LOCAL NONNULL((1)) int DCALL
+_Dee_ratomic_rwlock_read_timed_p_impl(Dee_ratomic_rwlock_t *__restrict self,
+                                      uint64_t timeout_nanoseconds) {
+	uint64_t now_microseconds, then_microseconds;
+	uintptr_t lockword;
+again:
+	lockword = __hybrid_atomic_load(&self->rarw_lock.arw_lock, __ATOMIC_ACQUIRE);
+	if (lockword == 0) {
+		if (!__hybrid_atomic_cmpxch_weak(&self->rarw_lock.arw_lock, 0, 1,
+		                                 __ATOMIC_ACQUIRE, __ATOMIC_ACQUIRE))
+			goto again;
+		return 0;
+	}
+	if (lockword == (uintptr_t)-1) {
+		if (__hybrid_gettid_iscaller(self->rarw_tid)) {
+			++self->rarw_nwrite; /* read-after-write */
+			return 0;
+		}
+	}
+	if (timeout_nanoseconds == (uint64_t)-1) {
+do_infinite_timeout:
+		goto do_infinite_timeout;
+	}
+	now_microseconds = DeeThread_GetTimeMicroSeconds();
+	if (__hybrid_overflow_uadd(now_microseconds, timeout_nanoseconds / 1000, &then_microseconds))
+		goto do_infinite_timeout;
+do_wait_with_timeout:
+	if (__hybrid_atomic_cmpxch(&self->rarw_lock.arw_lock, 0, 1,
+	                           __ATOMIC_ACQUIRE, __ATOMIC_ACQUIRE))
+		return 0;
+	now_microseconds = DeeThread_GetTimeMicroSeconds();
+	if (__hybrid_overflow_usub(then_microseconds, now_microseconds, &timeout_nanoseconds))
+		return 1; /* Timeout */
+	timeout_nanoseconds *= 1000;
+	if (DeeThread_CheckInterrupt())
+		goto err;
+	__hybrid_yield();
+	goto do_wait_with_timeout;
+err:
+	return -1;
+}
+
+LOCAL NONNULL((1)) int DCALL
+_Dee_ratomic_rwlock_write_timed_p_impl(Dee_ratomic_rwlock_t *__restrict self,
+                                       uint64_t timeout_nanoseconds) {
+	uint64_t now_microseconds, then_microseconds;
+	uintptr_t lockword;
+again:
+	lockword = __hybrid_atomic_load(&self->rarw_lock.arw_lock, __ATOMIC_ACQUIRE);
+	if (lockword == 0) {
+		if (!__hybrid_atomic_cmpxch_weak(&self->rarw_lock.arw_lock, 0, (uintptr_t)-1,
+		                                 __ATOMIC_ACQUIRE, __ATOMIC_ACQUIRE))
+			goto again;
+settid:
+		self->rarw_tid = __hybrid_gettid();
+		return 0;
+	}
+	if (lockword == (uintptr_t)-1) {
+		if (__hybrid_gettid_iscaller(self->rarw_tid)) {
+			++self->rarw_nwrite;
+			return 0;
+		}
+	}
+	if (timeout_nanoseconds == (uint64_t)-1) {
+do_infinite_timeout:
+		goto do_infinite_timeout;
+	}
+	now_microseconds = DeeThread_GetTimeMicroSeconds();
+	if (__hybrid_overflow_uadd(now_microseconds, timeout_nanoseconds / 1000, &then_microseconds))
+		goto do_infinite_timeout;
+do_wait_with_timeout:
+	if (!__hybrid_atomic_cmpxch(&self->rarw_lock.arw_lock, 0, (uintptr_t)-1,
+	                            __ATOMIC_ACQUIRE, __ATOMIC_ACQUIRE))
+		goto settid;
+	now_microseconds = DeeThread_GetTimeMicroSeconds();
+	if (__hybrid_overflow_usub(then_microseconds, now_microseconds, &timeout_nanoseconds))
+		return 1; /* Timeout */
+	timeout_nanoseconds *= 1000;
+	if (DeeThread_CheckInterrupt())
+		goto err;
+	__hybrid_yield();
+	goto do_wait_with_timeout;
+err:
+	return -1;
+}
+
+LOCAL NONNULL((1)) int DCALL
+_Dee_ratomic_rwlock_waitread_timed_p_impl(Dee_ratomic_rwlock_t *__restrict self,
+                                          uint64_t timeout_nanoseconds) {
+	uint64_t now_microseconds, then_microseconds;
+	uintptr_t lockword;
+	lockword = __hybrid_atomic_load(&self->rarw_lock.arw_lock, __ATOMIC_ACQUIRE);
+	if (lockword != (uintptr_t)-1)
+		return 0;
+	if (__hybrid_gettid_iscaller(self->rarw_tid))
+		return 0; /* read-after-write */
+	if (timeout_nanoseconds == (uint64_t)-1) {
+do_infinite_timeout:
+		goto do_infinite_timeout;
+	}
+	now_microseconds = DeeThread_GetTimeMicroSeconds();
+	if (__hybrid_overflow_uadd(now_microseconds, timeout_nanoseconds / 1000, &then_microseconds))
+		goto do_infinite_timeout;
+do_wait_with_timeout:
+	if (__hybrid_atomic_load(&self->rarw_lock.arw_lock, __ATOMIC_ACQUIRE) != (uintptr_t)-1)
+		return 0;
+	now_microseconds = DeeThread_GetTimeMicroSeconds();
+	if (__hybrid_overflow_usub(then_microseconds, now_microseconds, &timeout_nanoseconds))
+		return 1; /* Timeout */
+	timeout_nanoseconds *= 1000;
+	if (DeeThread_CheckInterrupt())
+		goto err;
+	__hybrid_yield();
+	goto do_wait_with_timeout;
+err:
+	return -1;
+}
+
+LOCAL NONNULL((1)) int DCALL
+_Dee_ratomic_rwlock_waitwrite_timed_p_impl(Dee_ratomic_rwlock_t *__restrict self,
+                                           uint64_t timeout_nanoseconds) {
+	uint64_t now_microseconds, then_microseconds;
+	uintptr_t lockword;
+	lockword = __hybrid_atomic_load(&self->rarw_lock.arw_lock, __ATOMIC_ACQUIRE);
+	if (lockword == 0)
+		return 0;
+	if (lockword == (uintptr_t)-1) {
+		if (__hybrid_gettid_iscaller(self->rarw_tid)) {
+			++self->rarw_nwrite;
+			return 0;
+		}
+	}
+	if (timeout_nanoseconds == (uint64_t)-1) {
+do_infinite_timeout:
+		goto do_infinite_timeout;
+	}
+	now_microseconds = DeeThread_GetTimeMicroSeconds();
+	if (__hybrid_overflow_uadd(now_microseconds, timeout_nanoseconds / 1000, &then_microseconds))
+		goto do_infinite_timeout;
+do_wait_with_timeout:
+	if (__hybrid_atomic_load(&self->rarw_lock.arw_lock, __ATOMIC_ACQUIRE) == 0)
+		return 0;
+	now_microseconds = DeeThread_GetTimeMicroSeconds();
+	if (__hybrid_overflow_usub(then_microseconds, now_microseconds, &timeout_nanoseconds))
+		return 1; /* Timeout */
+	timeout_nanoseconds *= 1000;
+	if (DeeThread_CheckInterrupt())
+		goto err;
+	__hybrid_yield();
+	goto do_wait_with_timeout;
+err:
+	return -1;
+}
+
+
+#define Dee_ratomic_rwlock_read_p(self, err_label)         \
+	do {                                                   \
+		if unlikely(_Dee_ratomic_rwlock_read_p_impl(self)) \
+			goto err_label;                                \
+	}	__WHILE0
+#define Dee_ratomic_rwlock_write_p(self, err_label)         \
+	do {                                                    \
+		if unlikely(_Dee_ratomic_rwlock_write_p_impl(self)) \
+			goto err_label;                                 \
+	}	__WHILE0
+#define Dee_ratomic_rwlock_waitread_p(self, err_label)                                                         \
+	do {                                                                                                       \
+		if (__hybrid_atomic_load(&(self)->rarw_lock.arw_lock, __ATOMIC_ACQUIRE) == (uintptr_t)-1) {            \
+			if (!__hybrid_gettid_iscaller((self)->rarw_tid)) { /* Read-after-write */                          \
+				while (__hybrid_atomic_load(&(self)->rarw_lock.arw_lock, __ATOMIC_ACQUIRE) == (uintptr_t)-1) { \
+					if (DeeThread_CheckInterrupt())                                                            \
+						goto err_label;                                                                        \
+					__hybrid_yield();                                                                          \
+				}                                                                                              \
+			}                                                                                                  \
+		}                                                                                                      \
+	}	__WHILE0
+#define Dee_ratomic_rwlock_waitwrite_p(self, err_label)         \
+	do {                                                        \
+		if unlikely(_Dee_ratomic_rwlock_waitwrite_p_impl(self)) \
+			goto err_label;                                     \
+	}	__WHILE0
+#define Dee_ratomic_rwlock_read_timed_p(self, timeout_nanoseconds, err_label, timeout_label) \
+	do {                                                                                     \
+		int _status = _Dee_ratomic_rwlock_read_timed_p_impl(self, timeout_nanoseconds);      \
+		if unlikely(_status != 0) {                                                          \
+			if unlikely(_status < 0)                                                         \
+				goto err_label;                                                              \
+			goto timeout_label;                                                              \
+		}                                                                                    \
+	}	__WHILE0
+#define Dee_ratomic_rwlock_write_timed_p(self, timeout_nanoseconds, err_label, timeout_label) \
+	do {                                                                                      \
+		int _status = _Dee_ratomic_rwlock_write_timed_p_impl(self, timeout_nanoseconds);      \
+		if unlikely(_status != 0) {                                                           \
+			if unlikely(_status < 0)                                                          \
+				goto err_label;                                                               \
+			goto timeout_label;                                                               \
+		}                                                                                     \
+	}	__WHILE0
+#define Dee_ratomic_rwlock_waitread_timed_p(self, timeout_nanoseconds, err_label, timeout_label) \
+	do {                                                                                         \
+		int _status = _Dee_ratomic_rwlock_waitread_timed_p_impl(self, timeout_nanoseconds);      \
+		if unlikely(_status != 0) {                                                              \
+			if unlikely(_status < 0)                                                             \
+				goto err_label;                                                                  \
+			goto timeout_label;                                                                  \
+		}                                                                                        \
+	}	__WHILE0
+#define Dee_ratomic_rwlock_waitwrite_timed_p(self, timeout_nanoseconds, err_label, timeout_label) \
+	do {                                                                                          \
+		int _status = _Dee_ratomic_rwlock_waitwrite_timed_p_impl(self, timeout_nanoseconds);      \
+		if unlikely(_status != 0) {                                                               \
+			if unlikely(_status < 0)                                                              \
+				goto err_label;                                                                   \
+			goto timeout_label;                                                                   \
+		}                                                                                         \
+	}	__WHILE0
+
 
 
 DECL_END
