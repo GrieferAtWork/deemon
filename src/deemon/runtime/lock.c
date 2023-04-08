@@ -49,9 +49,9 @@ PUBLIC WUNUSED NONNULL((1)) int
 	unsigned int lockword;
 	while ((lockword = atomic_xch_explicit(&self->s_lock.a_lock, 1, __ATOMIC_ACQUIRE)) != 0) {
 		int error;
-		atomic_inc(&self->s_waiting);
+		_Dee_shared_lock_waiting_start(self);
 		error = DeeFutex_WaitInt(&self->s_lock, lockword);
-		atomic_dec(&self->s_waiting);
+		_Dee_shared_lock_waiting_end(self);
 		if unlikely(error != 0)
 			return error;
 	}
@@ -70,9 +70,9 @@ PUBLIC WUNUSED NONNULL((1)) int
 	unsigned int lockword;
 	while ((lockword = atomic_read(&self->s_lock.a_lock)) != 0) {
 		int error;
-		atomic_inc(&self->s_waiting);
+		_Dee_shared_lock_waiting_start(self);
 		error = DeeFutex_WaitInt(&self->s_lock.a_lock, lockword);
-		atomic_dec(&self->s_waiting);
+		_Dee_shared_lock_waiting_end(self);
 		if unlikely(error != 0)
 			return error;
 	}
@@ -104,9 +104,9 @@ again:
 		uint64_t now_microseconds, then_microseconds;
 		if (timeout_nanoseconds == (uint64_t)-1) {
 do_infinite_timeout:
-			atomic_inc(&self->s_waiting);
+			_Dee_shared_lock_waiting_start(self);
 			error = DeeFutex_WaitInt(&self->s_lock.a_lock, lockword);
-			atomic_dec(&self->s_waiting);
+			_Dee_shared_lock_waiting_end(self);
 			if unlikely(error != 0)
 				return error;
 			goto again;
@@ -115,9 +115,9 @@ do_infinite_timeout:
 		if (OVERFLOW_UADD(now_microseconds, timeout_nanoseconds / 1000, &then_microseconds))
 			goto do_infinite_timeout;
 do_wait_with_timeout:
-		atomic_inc(&self->s_waiting);
+		_Dee_shared_lock_waiting_start(self);
 		error = DeeFutex_WaitIntTimed(&self->s_lock.a_lock, lockword, timeout_nanoseconds);
-		atomic_dec(&self->s_waiting);
+		_Dee_shared_lock_waiting_end(self);
 		if unlikely(error != 0)
 			return error;
 		if ((lockword = atomic_fetchinc_explicit(&self->s_lock.a_lock, __ATOMIC_ACQUIRE)) != 0) {
@@ -149,9 +149,9 @@ again:
 		int error;
 		if (timeout_nanoseconds == (uint64_t)-1) {
 do_infinite_timeout:
-			atomic_inc(&self->s_waiting);
+			_Dee_shared_lock_waiting_start(self);
 			error = DeeFutex_WaitInt(&self->s_lock.a_lock, lockword);
-			atomic_dec(&self->s_waiting);
+			_Dee_shared_lock_waiting_end(self);
 			if unlikely(error != 0)
 				return error;
 			goto again;
@@ -160,9 +160,9 @@ do_infinite_timeout:
 		if (OVERFLOW_UADD(now_microseconds, timeout_nanoseconds / 1000, &then_microseconds))
 			goto do_infinite_timeout;
 do_wait_with_timeout:
-		atomic_inc(&self->s_waiting);
+		_Dee_shared_lock_waiting_start(self);
 		error = DeeFutex_WaitIntTimed(&self->s_lock.a_lock, lockword, timeout_nanoseconds);
-		atomic_dec(&self->s_waiting);
+		_Dee_shared_lock_waiting_end(self);
 		if unlikely(error != 0)
 			return error;
 		if ((lockword = atomic_read(&self->s_lock.a_lock)) != 0) {
@@ -199,7 +199,7 @@ PUBLIC WUNUSED NONNULL((1)) int
 #else /* CONFIG_NO_THREADS */
 	while (!Dee_shared_rwlock_tryread(self)) {
 		int error;
-		atomic_write(&self->srw_waiting, 1);
+		_Dee_shared_rwlock_mark_waiting(self);
 		error = DeeFutex_WaitPtr(&self->srw_lock.arw_lock, (uintptr_t)-1);
 		if unlikely(error != 0)
 			return error;
@@ -224,7 +224,7 @@ PUBLIC WUNUSED NONNULL((1)) int
 				break;
 		} else {
 			int error;
-			atomic_write(&self->srw_waiting, 1);
+			_Dee_shared_rwlock_mark_waiting(self);
 			error = DeeFutex_WaitPtr(&self->srw_lock.arw_lock, lockword);
 			if unlikely(error != 0)
 				return error;
@@ -244,7 +244,7 @@ PUBLIC WUNUSED NONNULL((1)) int
 #else /* CONFIG_NO_THREADS */
 	while (!Dee_shared_rwlock_canread(self)) {
 		int error;
-		atomic_write(&self->srw_waiting, 1);
+		_Dee_shared_rwlock_mark_waiting(self);
 		error = DeeFutex_WaitPtr(&self->srw_lock.arw_lock, (uintptr_t)-1);
 		if unlikely(error != 0)
 			return error;
@@ -266,7 +266,7 @@ PUBLIC WUNUSED NONNULL((1)) int
 		uintptr_t lockword = atomic_read(&self->srw_lock.arw_lock);
 		if (lockword == 0)
 			break;
-		atomic_write(&self->srw_waiting, 1);
+		_Dee_shared_rwlock_mark_waiting(self);
 		error = DeeFutex_WaitPtr(&self->srw_lock.arw_lock, lockword);
 		if unlikely(error != 0)
 			return error;
@@ -296,7 +296,7 @@ do_infinite_timeout:
 		if (OVERFLOW_UADD(now_microseconds, timeout_nanoseconds / 1000, &then_microseconds))
 			goto do_infinite_timeout;
 do_wait_with_timeout:
-		atomic_write(&self->srw_waiting, 1);
+		_Dee_shared_rwlock_mark_waiting(self);
 		error = DeeFutex_WaitPtrTimed(&self->srw_lock.arw_lock, (uintptr_t)-1, timeout_nanoseconds);
 		if unlikely(error != 0)
 			return error;
@@ -339,7 +339,7 @@ do_infinite_timeout:
 			if (OVERFLOW_UADD(now_microseconds, timeout_nanoseconds / 1000, &then_microseconds))
 				goto do_infinite_timeout;
 do_wait_with_timeout:
-			atomic_write(&self->srw_waiting, 1);
+			_Dee_shared_rwlock_mark_waiting(self);
 			error = DeeFutex_WaitPtrTimed(&self->srw_lock.arw_lock, lockword, timeout_nanoseconds);
 			if unlikely(error != 0)
 				return error;
@@ -380,7 +380,7 @@ do_infinite_timeout:
 		if (OVERFLOW_UADD(now_microseconds, timeout_nanoseconds / 1000, &then_microseconds))
 			goto do_infinite_timeout;
 do_wait_with_timeout:
-		atomic_write(&self->srw_waiting, 1);
+		_Dee_shared_rwlock_mark_waiting(self);
 		error = DeeFutex_WaitPtrTimed(&self->srw_lock.arw_lock, (uintptr_t)-1, timeout_nanoseconds);
 		if unlikely(error != 0)
 			return error;
@@ -419,7 +419,7 @@ do_infinite_timeout:
 	if (OVERFLOW_UADD(now_microseconds, timeout_nanoseconds / 1000, &then_microseconds))
 		goto do_infinite_timeout;
 do_wait_with_timeout:
-	atomic_write(&self->srw_waiting, 1);
+	_Dee_shared_rwlock_mark_waiting(self);
 	error = DeeFutex_WaitPtrTimed(&self->srw_lock.arw_lock, lockword, timeout_nanoseconds);
 	if unlikely(error != 0)
 		return error;
@@ -447,9 +447,9 @@ do_wait_with_timeout:
 PRIVATE WUNUSED NONNULL((1)) int
 (DCALL Dee_semaphore_do_waitfor)(Dee_semaphore_t *__restrict self) {
 	int result;
-	atomic_inc(&self->se_waiting);
+	_Dee_semaphore_waiting_start(self);
 	result = DeeFutex_WaitPtr(&self->se_tickets, 0);
-	atomic_dec(&self->se_waiting);
+	_Dee_semaphore_waiting_end(self);
 	return result;
 }
 
@@ -457,9 +457,9 @@ PRIVATE WUNUSED NONNULL((1)) int
 (DCALL Dee_semaphore_do_waitfor_timed)(Dee_semaphore_t *__restrict self,
                                        uint64_t timeout_nanoseconds) {
 	int result;
-	atomic_inc(&self->se_waiting);
+	_Dee_semaphore_waiting_start(self);
 	result = DeeFutex_WaitPtrTimed(&self->se_tickets, 0, timeout_nanoseconds);
-	atomic_dec(&self->se_waiting);
+	_Dee_semaphore_waiting_end(self);
 	return result;
 }
 #endif /* !CONFIG_NO_THREADS */
@@ -682,9 +682,15 @@ settid:
 waitfor:
 	if (timeout_nanoseconds == (uint64_t)-1) {
 do_infinite_timeout:
-		result = DeeFutex_WaitInt(&self->rs_lock.ra_lock, lockword);
-		if unlikely(result != 0)
-			return result;
+		_Dee_rshared_lock_waiting_start(self);
+		do {
+			result = DeeFutex_WaitInt(&self->rs_lock.ra_lock, lockword);
+			if unlikely(result != 0) {
+				_Dee_rshared_lock_waiting_end(self);
+				return result;
+			}
+		} while ((lockword = atomic_read(&self->rs_lock.ra_lock)) != 0);
+		_Dee_rshared_lock_waiting_end(self);
 		do {
 			if (atomic_cmpxch_explicit(&self->rs_lock.ra_lock, 0, 1, __ATOMIC_ACQUIRE, __ATOMIC_ACQUIRE))
 				goto settid;
@@ -695,7 +701,9 @@ do_infinite_timeout:
 	if (OVERFLOW_UADD(now_microseconds, timeout_nanoseconds / 1000, &then_microseconds))
 		goto do_infinite_timeout;
 do_wait_with_timeout:
+	_Dee_rshared_lock_waiting_start(self);
 	result = DeeFutex_WaitIntTimed(&self->rs_lock.ra_lock, lockword, timeout_nanoseconds);
+	_Dee_rshared_lock_waiting_end(self);
 	if unlikely(result != 0)
 		return result;
 	do {
@@ -722,19 +730,24 @@ Dee_rshared_lock_waitfor_timed(Dee_rshared_lock_t *__restrict self,
 		return 0;
 	if (timeout_nanoseconds == (uint64_t)-1) {
 do_infinite_timeout:
-		result = DeeFutex_WaitInt(&self->rs_lock.ra_lock, lockword);
-		if unlikely(result != 0)
-			return result;
-		lockword = atomic_read(&self->rs_lock.ra_lock);
-		if (lockword == 0)
-			return 0;
-		goto do_infinite_timeout;
+		_Dee_rshared_lock_waiting_start(self);
+		do {
+			result = DeeFutex_WaitInt(&self->rs_lock.ra_lock, lockword);
+			if unlikely(result != 0) {
+				_Dee_rshared_lock_waiting_end(self);
+				return result;
+			}
+		} while ((lockword = atomic_read(&self->rs_lock.ra_lock)) != 0);
+		_Dee_rshared_lock_waiting_end(self);
+		return 0;
 	}
 	now_microseconds = DeeThread_GetTimeMicroSeconds();
 	if (OVERFLOW_UADD(now_microseconds, timeout_nanoseconds / 1000, &then_microseconds))
 		goto do_infinite_timeout;
 do_wait_with_timeout:
+	_Dee_rshared_lock_waiting_start(self);
 	result = DeeFutex_WaitIntTimed(&self->rs_lock.ra_lock, lockword, timeout_nanoseconds);
+	_Dee_rshared_lock_waiting_end(self);
 	if unlikely(result != 0)
 		return result;
 	lockword = atomic_read(&self->rs_lock.ra_lock);
@@ -784,6 +797,7 @@ again_lockword_not_UINTPTR_MAX:
 	if (timeout_nanoseconds == (uint64_t)-1) {
 do_infinite_timeout:
 		do {
+			_Dee_rshared_rwlock_mark_waiting(self);
 			result = DeeFutex_WaitPtr(&self->rsrw_lock.rarw_lock.arw_lock, lockword);
 			if unlikely(result != 0)
 				return result;
@@ -794,6 +808,7 @@ do_infinite_timeout:
 	if (OVERFLOW_UADD(now_microseconds, timeout_nanoseconds / 1000, &then_microseconds))
 		goto do_infinite_timeout;
 do_wait_with_timeout:
+	_Dee_rshared_rwlock_mark_waiting(self);
 	result = DeeFutex_WaitPtrTimed(&self->rsrw_lock.rarw_lock.arw_lock,
 	                               lockword, timeout_nanoseconds);
 	if unlikely(result != 0)
@@ -838,6 +853,7 @@ again_lockword_zero:
 	if (timeout_nanoseconds == (uint64_t)-1) {
 do_infinite_timeout:
 		do {
+			_Dee_rshared_rwlock_mark_waiting(self);
 			result = DeeFutex_WaitPtr(&self->rsrw_lock.rarw_lock.arw_lock, lockword);
 			if unlikely(result != 0)
 				return result;
@@ -848,6 +864,7 @@ do_infinite_timeout:
 	if (OVERFLOW_UADD(now_microseconds, timeout_nanoseconds / 1000, &then_microseconds))
 		goto do_infinite_timeout;
 do_wait_with_timeout:
+	_Dee_rshared_rwlock_mark_waiting(self);
 	result = DeeFutex_WaitPtrTimed(&self->rsrw_lock.rarw_lock.arw_lock,
 	                               lockword, timeout_nanoseconds);
 	if unlikely(result != 0)
@@ -881,6 +898,7 @@ Dee_rshared_rwlock_waitread_timed(Dee_rshared_rwlock_t *__restrict self,
 	if (timeout_nanoseconds == (uint64_t)-1) {
 do_infinite_timeout:
 		do {
+			_Dee_rshared_rwlock_mark_waiting(self);
 			result = DeeFutex_WaitPtr(&self->rsrw_lock.rarw_lock.arw_lock, lockword);
 			if unlikely(result != 0)
 				return result;
@@ -891,6 +909,7 @@ do_infinite_timeout:
 	if (OVERFLOW_UADD(now_microseconds, timeout_nanoseconds / 1000, &then_microseconds))
 		goto do_infinite_timeout;
 do_wait_with_timeout:
+	_Dee_rshared_rwlock_mark_waiting(self);
 	result = DeeFutex_WaitPtrTimed(&self->rsrw_lock.rarw_lock.arw_lock,
 	                               lockword, timeout_nanoseconds);
 	if unlikely(result != 0)
@@ -921,6 +940,7 @@ Dee_rshared_rwlock_waitwrite_timed(Dee_rshared_rwlock_t *__restrict self,
 	if (timeout_nanoseconds == (uint64_t)-1) {
 do_infinite_timeout:
 		do {
+			_Dee_rshared_rwlock_mark_waiting(self);
 			result = DeeFutex_WaitPtr(&self->rsrw_lock.rarw_lock.arw_lock, lockword);
 			if unlikely(result != 0)
 				return result;
@@ -931,6 +951,7 @@ do_infinite_timeout:
 	if (OVERFLOW_UADD(now_microseconds, timeout_nanoseconds / 1000, &then_microseconds))
 		goto do_infinite_timeout;
 do_wait_with_timeout:
+	_Dee_rshared_rwlock_mark_waiting(self);
 	result = DeeFutex_WaitPtrTimed(&self->rsrw_lock.rarw_lock.arw_lock,
 	                               lockword, timeout_nanoseconds);
 	if unlikely(result != 0)

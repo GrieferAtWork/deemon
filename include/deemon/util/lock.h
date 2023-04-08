@@ -265,6 +265,14 @@ typedef struct {
 	Dee_atomic_lock_t s_lock;    /* Lock word (== 0: available, != 0: held) */
 	unsigned int      s_waiting; /* # of threads waiting for `s_lock' (controlled by the waiting threads themselves) */
 } Dee_shared_lock_t;
+
+#define _Dee_shared_lock_waiting_start(self) __hybrid_atomic_inc(&(self)->s_waiting, __ATOMIC_ACQUIRE)
+#define _Dee_shared_lock_waiting_end(self)   __hybrid_atomic_dec(&(self)->s_waiting, __ATOMIC_RELEASE)
+#define _Dee_shared_lock_wake(self)                             \
+	(__hybrid_atomic_load(&(self)->s_waiting, __ATOMIC_ACQUIRE) \
+	 ? DeeFutex_WakeOne(&(self)->s_lock)                        \
+	 : (void)0)
+
 #define DEE_SHARED_LOCK_INIT                 { DEE_ATOMIC_LOCK_INIT, 0 }
 #define DEE_SHARED_LOCK_INIT_ACQUIRED        { DEE_ATOMIC_LOCK_INIT_ACQUIRED, 0 }
 #define Dee_shared_lock_cinit(self)          (void)(Dee_atomic_lock_cinit(&(self)->s_lock), Dee_ASSERT((self)->s_waiting == 0))
@@ -274,10 +282,6 @@ typedef struct {
 #define Dee_shared_lock_available(self)      Dee_atomic_lock_available(&(self)->s_lock)
 #define Dee_shared_lock_acquired(self)       Dee_atomic_lock_acquired(&(self)->s_lock)
 #define Dee_shared_lock_tryacquire(self)     Dee_atomic_lock_tryacquire(&(self)->s_lock)
-#define _Dee_shared_lock_wake(self)                             \
-	(__hybrid_atomic_load(&(self)->s_waiting, __ATOMIC_ACQUIRE) \
-	 ? DeeFutex_WakeOne(&(self)->s_lock)                        \
-	 : (void)0)
 
 /* Release a shared lock. */
 #define Dee_shared_lock_release(self) \
@@ -323,6 +327,8 @@ typedef struct {
 	unsigned int        srw_waiting; /* non-zero if threads may be waiting on `srw_lock' */
 } Dee_shared_rwlock_t;
 
+#define _Dee_shared_rwlock_mark_waiting(self) \
+	__hybrid_atomic_store(&(self)->srw_waiting, 1, __ATOMIC_RELEASE)
 #define _Dee_shared_rwlock_wake(self)                                     \
 	(__hybrid_atomic_load(&(self)->srw_waiting, __ATOMIC_ACQUIRE)         \
 	 ? (__hybrid_atomic_store(&(self)->srw_waiting, 0, __ATOMIC_RELEASE), \
@@ -429,6 +435,8 @@ typedef struct {
 	uintptr_t se_tickets; /* # of tickets currently available (atomic + futex word) */
 	uintptr_t se_waiting; /* # of threads waiting for tickets to become available. */
 } Dee_semaphore_t;
+#define _Dee_semaphore_waiting_start(self) __hybrid_atomic_inc(&(self)->se_waiting, __ATOMIC_ACQUIRE)
+#define _Dee_semaphore_waiting_end(self)   __hybrid_atomic_dec(&(self)->se_waiting, __ATOMIC_RELEASE)
 
 #define DEE_SEMAPHORE_INIT(n_tickets)        { n_tickets, 0 }
 #define Dee_semaphore_init(self, n_tickets)  (void)((self)->se_tickets = n_tickets, (self)->se_waiting = 0)
@@ -476,7 +484,7 @@ DFUNDEF WUNUSED NONNULL((1)) int
 typedef struct {
 	unsigned int ev_state; /* 0: event has been triggered
 	                        * 1: event has NOT been triggered
-	                        * 2: event has NOT been triggered, and there are waiting threads */
+	                        * 2: event has NOT been triggered, and there may be waiting threads */
 } Dee_event_t;
 
 #define DEE_EVENT_INIT_SET        { 0 }
