@@ -39,7 +39,7 @@
 #include <deemon/tuple.h>
 #include <deemon/util/atomic.h>
 #include <deemon/util/cache.h>
-#include <deemon/util/recursive-rwlock.h>
+#include <deemon/util/rlock.h>
 
 #include "../runtime/runtime_error.h"
 #include "../runtime/strings.h"
@@ -117,7 +117,7 @@ typedef struct {
 	                                       * [const] Compiler options used for compiling source code. */
 	DREF DeeCompilerObject  *im_compiler; /* [0..1][(!= NULL) == (im_module.mo_root != NULL)][lock(im_lock)]
 	                                       * The compiler used for compiling source code */
-	/*ref*/ struct TPPFile   *im_basefile; /* [0..1][(!= NULL) == (im_module.mo_root != NULL)][lock(im_lock)]
+	/*ref*/ struct TPPFile  *im_basefile; /* [0..1][(!= NULL) == (im_module.mo_root != NULL)][lock(im_lock)]
 	                                       * The TPP base file that is linked against `im_stream' */
 	struct code_frame        im_frame;    /* [OVERRIDE(.cf_func, [0..1][(!= NULL) == (:im_module.mo_root != NULL)][TAG(DREF)]
 	                                       *                     [COMMENT("A function object referring to the code object used "
@@ -133,31 +133,70 @@ typedef struct {
 	                                       * [lock(im_exec_lock)]
 	                                       * Code execution frame used when items are yielded from the interactive module. */
 #ifndef CONFIG_NO_THREADS
-	recursive_rwlock_t       im_lock;     /* [ORDER(AFTER(im_exec_lock))] Lock used to synchronize compilation. */
-	recursive_rwlock_t       im_exec_lock;/* Lock used to synchronize execution. */
+	Dee_rshared_rwlock_t     im_lock;     /* [ORDER(AFTER(im_exec_lock))] Lock used to synchronize compilation. */
+	Dee_rshared_rwlock_t     im_exec_lock;/* Lock used to synchronize execution. */
 #endif /* !CONFIG_NO_THREADS */
 } InteractiveModule;
 
+#define InteractiveModule_LockReading(self)    Dee_rshared_rwlock_reading(&(self)->im_lock)
+#define InteractiveModule_LockWriting(self)    Dee_rshared_rwlock_writing(&(self)->im_lock)
+#define InteractiveModule_LockTryRead(self)    Dee_rshared_rwlock_tryread(&(self)->im_lock)
+#define InteractiveModule_LockTryWrite(self)   Dee_rshared_rwlock_trywrite(&(self)->im_lock)
+#define InteractiveModule_LockCanRead(self)    Dee_rshared_rwlock_canread(&(self)->im_lock)
+#define InteractiveModule_LockCanWrite(self)   Dee_rshared_rwlock_canwrite(&(self)->im_lock)
+#define InteractiveModule_LockWaitRead(self)   Dee_rshared_rwlock_waitread(&(self)->im_lock)
+#define InteractiveModule_LockWaitWrite(self)  Dee_rshared_rwlock_waitwrite(&(self)->im_lock)
+#define InteractiveModule_LockRead(self)       Dee_rshared_rwlock_read(&(self)->im_lock)
+#define InteractiveModule_LockReadNoInt(self)  Dee_rshared_rwlock_read_noint(&(self)->im_lock)
+#define InteractiveModule_LockWrite(self)      Dee_rshared_rwlock_write(&(self)->im_lock)
+#define InteractiveModule_LockWriteNoInt(self) Dee_rshared_rwlock_write_noint(&(self)->im_lock)
+#define InteractiveModule_LockTryUpgrade(self) Dee_rshared_rwlock_tryupgrade(&(self)->im_lock)
+#define InteractiveModule_LockUpgrade(self)    Dee_rshared_rwlock_upgrade(&(self)->im_lock)
+#define InteractiveModule_LockDowngrade(self)  Dee_rshared_rwlock_downgrade(&(self)->im_lock)
+#define InteractiveModule_LockEndWrite(self)   Dee_rshared_rwlock_endwrite(&(self)->im_lock)
+#define InteractiveModule_LockEndRead(self)    Dee_rshared_rwlock_endread(&(self)->im_lock)
+#define InteractiveModule_LockEnd(self)        Dee_rshared_rwlock_end(&(self)->im_lock)
+
+#define InteractiveModule_ExecLockReading(self)    Dee_rshared_rwlock_reading(&(self)->im_exec_lock)
+#define InteractiveModule_ExecLockWriting(self)    Dee_rshared_rwlock_writing(&(self)->im_exec_lock)
+#define InteractiveModule_ExecLockTryRead(self)    Dee_rshared_rwlock_tryread(&(self)->im_exec_lock)
+#define InteractiveModule_ExecLockTryWrite(self)   Dee_rshared_rwlock_trywrite(&(self)->im_exec_lock)
+#define InteractiveModule_ExecLockCanRead(self)    Dee_rshared_rwlock_canread(&(self)->im_exec_lock)
+#define InteractiveModule_ExecLockCanWrite(self)   Dee_rshared_rwlock_canwrite(&(self)->im_exec_lock)
+#define InteractiveModule_ExecLockWaitRead(self)   Dee_rshared_rwlock_waitread(&(self)->im_exec_lock)
+#define InteractiveModule_ExecLockWaitWrite(self)  Dee_rshared_rwlock_waitwrite(&(self)->im_exec_lock)
+#define InteractiveModule_ExecLockRead(self)       Dee_rshared_rwlock_read(&(self)->im_exec_lock)
+#define InteractiveModule_ExecLockReadNoInt(self)  Dee_rshared_rwlock_read_noint(&(self)->im_exec_lock)
+#define InteractiveModule_ExecLockWrite(self)      Dee_rshared_rwlock_write(&(self)->im_exec_lock)
+#define InteractiveModule_ExecLockWriteNoInt(self) Dee_rshared_rwlock_write_noint(&(self)->im_exec_lock)
+#define InteractiveModule_ExecLockTryUpgrade(self) Dee_rshared_rwlock_tryupgrade(&(self)->im_exec_lock)
+#define InteractiveModule_ExecLockUpgrade(self)    Dee_rshared_rwlock_upgrade(&(self)->im_exec_lock)
+#define InteractiveModule_ExecLockDowngrade(self)  Dee_rshared_rwlock_downgrade(&(self)->im_exec_lock)
+#define InteractiveModule_ExecLockEndWrite(self)   Dee_rshared_rwlock_endwrite(&(self)->im_exec_lock)
+#define InteractiveModule_ExecLockEndRead(self)    Dee_rshared_rwlock_endread(&(self)->im_exec_lock)
+#define InteractiveModule_ExecLockEnd(self)        Dee_rshared_rwlock_end(&(self)->im_exec_lock)
+
+
 
 #ifndef CONFIG_NO_THREADS
-INTERN NONNULL((1)) void DCALL
+INTERN WUNUSED NONNULL((1)) int DCALL
 interactivemodule_lockread(InteractiveModule *__restrict self) {
-	recursive_rwlock_read(&self->im_exec_lock);
+	return InteractiveModule_ExecLockRead(self);
 }
 
-INTERN NONNULL((1)) void DCALL
+INTERN WUNUSED NONNULL((1)) int DCALL
 interactivemodule_lockwrite(InteractiveModule *__restrict self) {
-	recursive_rwlock_write(&self->im_exec_lock);
+	return InteractiveModule_ExecLockWrite(self);
 }
 
 INTERN NONNULL((1)) void DCALL
 interactivemodule_lockendread(InteractiveModule *__restrict self) {
-	recursive_rwlock_endread(&self->im_exec_lock);
+	InteractiveModule_ExecLockEndRead(self);
 }
 
 INTERN NONNULL((1)) void DCALL
 interactivemodule_lockendwrite(InteractiveModule *__restrict self) {
-	recursive_rwlock_endwrite(&self->im_exec_lock);
+	InteractiveModule_ExecLockEndWrite(self);
 }
 
 LOCAL bool DCALL
@@ -175,16 +214,17 @@ is_an_imod(DeeModuleObject *__restrict self) {
 	}
 }
 
-PUBLIC NONNULL((1)) void DCALL
+PUBLIC WUNUSED NONNULL((1)) int DCALL
 DeeModule_LockSymbols(DeeModuleObject *__restrict self) {
 	if (is_an_imod(self))
-		recursive_rwlock_read(&((InteractiveModule *)self)->im_exec_lock);
+		return InteractiveModule_ExecLockRead((InteractiveModule *)self);
+	return 0;
 }
 
 PUBLIC NONNULL((1)) void DCALL
 DeeModule_UnlockSymbols(DeeModuleObject *__restrict self) {
 	if (is_an_imod(self))
-		recursive_rwlock_endread(&((InteractiveModule *)self)->im_exec_lock);
+		InteractiveModule_ExecLockEndRead((InteractiveModule *)self);
 }
 #endif /* !CONFIG_NO_THREADS */
 
@@ -295,7 +335,9 @@ imod_next(InteractiveModule *__restrict self) {
 	 * -> The function that compiles a piece of code, then feeds
 	 *    it to the interpreter as yielding code, before taking
 	 *    its return value and forwarding as an iterator-item. */
-	recursive_rwlock_write(&self->im_exec_lock);
+	if (InteractiveModule_ExecLockWrite(self))
+		return NULL;
+
 	/* Start by trying to execute code that has already been compiled. */
 do_exec_code:
 	/* TODO: Optimization: if (*self->im_frame.cf_ip == ASM_UD) { ... } */
@@ -344,7 +386,7 @@ do_exec_code:
 	if (!DeeError_Handled(ERROR_HANDLED_RESTORE))
 		goto done_exec;
 
-	recursive_rwlock_write(&self->im_lock);
+	InteractiveModule_LockWriteNoInt(self);
 	if unlikely(!self->im_compiler) {
 		result = ITER_DONE;
 		goto done_compiler;
@@ -379,8 +421,8 @@ do_exec_code:
 			result = NULL;
 		COMPILER_END();
 		/* TODO: clear compiler-related fields, thus releasing data no longer needed prematurely. */
-		recursive_rwlock_endwrite(&self->im_lock);
-		recursive_rwlock_endwrite(&self->im_exec_lock);
+		InteractiveModule_LockEndWrite(self);
+		InteractiveModule_ExecLockEndWrite(self);
 		return result;
 	} else {
 		/* Parse a statement in accordance to the interaction mode. */
@@ -749,11 +791,11 @@ done_statement_ast:
 done_compiler_end:
 	COMPILER_END();
 done_compiler:
-	recursive_rwlock_endwrite(&self->im_lock);
+	InteractiveModule_LockEndWrite(self);
 done_exec:
 	if (result == ITER_DONE)
 		goto do_exec_code;
-	recursive_rwlock_endwrite(&self->im_exec_lock);
+	InteractiveModule_ExecLockEndWrite(self);
 	return result;
 }
 
@@ -1119,11 +1161,8 @@ imod_init(InteractiveModule *__restrict self,
 	self->im_stream = source_stream;
 	Dee_Incref(source_stream);
 	self->im_mode = mode;
-
-#ifndef CONFIG_NO_THREADS
-	recursive_rwlock_init(&self->im_lock);
-	recursive_rwlock_init(&self->im_exec_lock);
-#endif /* !CONFIG_NO_THREADS */
+	Dee_rshared_rwlock_init(&self->im_lock);
+	Dee_rshared_rwlock_init(&self->im_exec_lock);
 
 	/* Setup the contents of the initial code frame. */
 	self->im_frame.cf_prev  = CODE_FRAME_NOT_EXECUTING;
@@ -1794,8 +1833,8 @@ imod_clear(InteractiveModule *__restrict self) {
 	DREF DeeCompilerObject *old_compiler;
 	/*ref*/ struct TPPFile *old_basefile;
 	struct code_frame old_frame;
-	recursive_rwlock_write(&self->im_exec_lock);
-	recursive_rwlock_write(&self->im_lock);
+	InteractiveModule_ExecLockWriteNoInt(self);
+	InteractiveModule_LockWriteNoInt(self);
 	old_stream        = self->im_stream;
 	self->im_stream   = NULL;
 	old_basefile      = self->im_basefile;
@@ -1805,7 +1844,7 @@ imod_clear(InteractiveModule *__restrict self) {
 	memcpy(&old_options, &self->im_options, sizeof(struct compiler_options));
 	bzero(&self->im_options, sizeof(struct compiler_options));
 	self->im_options.co_assembler |= ASM_FNODEC;
-	recursive_rwlock_endwrite(&self->im_lock);
+	InteractiveModule_LockEndWrite(self);
 	memcpy(&old_frame, &self->im_frame, sizeof(struct code_frame));
 	self->im_frame.cf_func    = NULL;
 	self->im_frame.cf_frame   = NULL;
@@ -1822,7 +1861,7 @@ imod_clear(InteractiveModule *__restrict self) {
 	old_globalv = self->im_module.mo_globalv;
 	self->im_module.mo_globalc = 0;
 	self->im_module.mo_globalv = NULL;
-	recursive_rwlock_endwrite(&self->im_exec_lock);
+	InteractiveModule_ExecLockEndWrite(self);
 	Dee_XDecref(old_stream);
 	Dee_XDecref(old_compiler);
 	if (old_basefile)
@@ -1844,8 +1883,8 @@ imod_clear(InteractiveModule *__restrict self) {
 
 PRIVATE NONNULL((1, 2)) void DCALL
 imod_visit(InteractiveModule *__restrict self, dvisit_t proc, void *arg) {
-	recursive_rwlock_read(&self->im_exec_lock);
-	recursive_rwlock_read(&self->im_lock);
+	InteractiveModule_ExecLockReadNoInt(self);
+	InteractiveModule_LockReadNoInt(self);
 	Dee_Visit(self->im_stream);
 	Dee_Visit(self->im_compiler);
 	if (self->im_options.co_inner) {
@@ -1854,14 +1893,14 @@ imod_visit(InteractiveModule *__restrict self, dvisit_t proc, void *arg) {
 		                    0, proc, arg);
 	}
 	visit_options(&self->im_options, proc, arg);
-	recursive_rwlock_endread(&self->im_lock);
+	InteractiveModule_LockEndRead(self);
 	/* TODO: `TPPFile_Visit(self->im_basefile)' */
 	if (self->im_module.mo_root)
 		Dee_XVisitv(self->im_frame.cf_frame, self->im_module.mo_root->co_localc);
 	Dee_Visitv(self->im_frame.cf_stack, (size_t)(self->im_frame.cf_sp - self->im_frame.cf_stack));
 	Dee_Visit(self->im_frame.cf_vargs);
 	Dee_Visit(self->im_frame.cf_func);
-	recursive_rwlock_endread(&self->im_exec_lock);
+	InteractiveModule_ExecLockEndRead(self);
 }
 
 

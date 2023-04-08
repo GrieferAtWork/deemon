@@ -35,7 +35,7 @@
 #include <deemon/system-features.h> /* memcpy(), bzero(), ... */
 #include <deemon/util/atomic.h>
 #include <deemon/util/lock.h>
-#include <deemon/util/recursive-rwlock.h>
+#include <deemon/util/rlock.h>
 
 #ifndef CONFIG_NO_DEX
 #include <deemon/dex.h>
@@ -90,20 +90,16 @@ DECL_BEGIN
 #undef CONFIG_HAVE_PENDING_GC_OBJECTS
 #endif /* CONFIG_NO_THREADS */
 
-#ifndef CONFIG_NO_THREADS
 /* _Must_ use a recursive lock for this because untracking objects
  * while they're being collected requires acquisition of the GC-lock. */
-PRIVATE recursive_rwlock_t gc_lock = RECURSIVE_RWLOCK_INIT;
-#define GCLOCK_TRYACQUIRE()   recursive_rwlock_trywrite(&gc_lock)
-#define GCLOCK_ACQUIRE()      recursive_rwlock_write(&gc_lock)
-#define GCLOCK_RELEASE()      recursive_rwlock_endwrite(&gc_lock)
-#define GCLOCK_ACQUIRE_READ() recursive_rwlock_read(&gc_lock)
-#define GCLOCK_RELEASE_READ() recursive_rwlock_endread(&gc_lock)
-#else /* !CONFIG_NO_THREADS */
-#define GCLOCK_TRYACQUIRE() 1
-#define GCLOCK_ACQUIRE()   (void)0
-#define GCLOCK_RELEASE()   (void)0
-#endif /* CONFIG_NO_THREADS */
+#ifndef CONFIG_NO_THREADS
+PRIVATE Dee_rshared_lock_t gc_lock = DEE_RSHARED_LOCK_INIT;
+#endif /* !CONFIG_NO_THREADS */
+#define GCLOCK_TRYACQUIRE()   Dee_rshared_lock_tryacquire(&gc_lock)
+#define GCLOCK_ACQUIRE()      Dee_rshared_lock_acquire_noint(&gc_lock)
+#define GCLOCK_RELEASE()      Dee_rshared_lock_release(&gc_lock)
+#define GCLOCK_ACQUIRE_READ() Dee_rshared_lock_acquire_noint(&gc_lock)
+#define GCLOCK_RELEASE_READ() Dee_rshared_lock_release(&gc_lock)
 
 #ifndef NDEBUG
 #if __SIZEOF_POINTER__ == 4

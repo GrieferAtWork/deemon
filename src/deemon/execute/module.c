@@ -670,13 +670,13 @@ module_setattr_len_impl(DeeModuleObject *__restrict self,
 
 
 #ifndef CONFIG_NO_THREADS
-INTDEF NONNULL((1)) void DCALL interactivemodule_lockread(DeeModuleObject *__restrict self);
-INTDEF NONNULL((1)) void DCALL interactivemodule_lockwrite(DeeModuleObject *__restrict self);
+INTDEF WUNUSED NONNULL((1)) int DCALL interactivemodule_lockread(DeeModuleObject *__restrict self);
+INTDEF WUNUSED NONNULL((1)) int DCALL interactivemodule_lockwrite(DeeModuleObject *__restrict self);
 INTDEF NONNULL((1)) void DCALL interactivemodule_lockendread(DeeModuleObject *__restrict self);
 INTDEF NONNULL((1)) void DCALL interactivemodule_lockendwrite(DeeModuleObject *__restrict self);
 #else /* !CONFIG_NO_THREADS */
-#define interactivemodule_lockread(self)     (void)0
-#define interactivemodule_lockwrite(self)    (void)0
+#define interactivemodule_lockread(self)     0
+#define interactivemodule_lockwrite(self)    0
 #define interactivemodule_lockendread(self)  (void)0
 #define interactivemodule_lockendwrite(self) (void)0
 #endif /* CONFIG_NO_THREADS */
@@ -689,7 +689,8 @@ DeeModule_GetAttrString(DeeModuleObject *__restrict self,
 	if (!(self->mo_flags & MODULE_FDIDLOAD)) {
 		if (DeeInteractiveModule_Check(self)) {
 			DREF DeeObject *result;
-			interactivemodule_lockread(self);
+			if unlikely(interactivemodule_lockread(self))
+				return NULL;
 			result = module_getattr_impl(self, attr_name, hash);
 			interactivemodule_lockendread(self);
 			return result;
@@ -708,7 +709,8 @@ DeeModule_GetAttrStringLen(DeeModuleObject *__restrict self,
 	if (!(self->mo_flags & MODULE_FDIDLOAD)) {
 		if (DeeInteractiveModule_Check(self)) {
 			DREF DeeObject *result;
-			interactivemodule_lockread(self);
+			if unlikely(interactivemodule_lockread(self))
+				return NULL;
 			result = module_getattr_len_impl(self, attr_name, attrlen, hash);
 			interactivemodule_lockendread(self);
 			return result;
@@ -729,7 +731,8 @@ DeeModule_BoundAttrString(DeeModuleObject *__restrict self,
 	if (!(self->mo_flags & MODULE_FDIDLOAD)) {
 		if (DeeInteractiveModule_Check(self)) {
 			int result;
-			interactivemodule_lockread(self);
+			if unlikely(interactivemodule_lockread(self))
+				return -1;
 			result = module_boundattr_impl(self, attr_name, hash);
 			interactivemodule_lockendread(self);
 			return result;
@@ -747,7 +750,8 @@ DeeModule_BoundAttrStringLen(DeeModuleObject *__restrict self,
 	if (!(self->mo_flags & MODULE_FDIDLOAD)) {
 		if (DeeInteractiveModule_Check(self)) {
 			int result;
-			interactivemodule_lockread(self);
+			if unlikely(interactivemodule_lockread(self))
+				return -1;
 			result = module_boundattr_len_impl(self, attr_name, attrlen, hash);
 			interactivemodule_lockendread(self);
 			return result;
@@ -757,14 +761,15 @@ DeeModule_BoundAttrStringLen(DeeModuleObject *__restrict self,
 	return module_boundattr_len_impl(self, attr_name, attrlen, hash);
 }
 
-INTERN WUNUSED NONNULL((1, 2)) bool DCALL
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
 DeeModule_HasAttrString(DeeModuleObject *__restrict self,
                         char const *__restrict attr_name, dhash_t hash) {
 	ASSERT_OBJECT_TYPE(self, &DeeModule_Type);
 	if (!(self->mo_flags & MODULE_FDIDLOAD)) {
 		if (DeeInteractiveModule_Check(self)) {
 			bool result;
-			interactivemodule_lockread(self);
+			if (interactivemodule_lockread(self))
+				return -1;
 			result = module_hasattr_impl(self, attr_name, hash);
 			interactivemodule_lockendread(self);
 			return result;
@@ -774,7 +779,7 @@ DeeModule_HasAttrString(DeeModuleObject *__restrict self,
 	return module_hasattr_impl(self, attr_name, hash);
 }
 
-INTERN WUNUSED NONNULL((1, 2)) bool DCALL
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
 DeeModule_HasAttrStringLen(DeeModuleObject *__restrict self,
                            char const *__restrict attr_name,
                            size_t attrlen, dhash_t hash) {
@@ -782,7 +787,8 @@ DeeModule_HasAttrStringLen(DeeModuleObject *__restrict self,
 	if (!(self->mo_flags & MODULE_FDIDLOAD)) {
 		if (DeeInteractiveModule_Check(self)) {
 			bool result;
-			interactivemodule_lockread(self);
+			if (interactivemodule_lockread(self))
+				return -1;
 			result = module_hasattr_len_impl(self, attr_name, attrlen, hash);
 			interactivemodule_lockendread(self);
 			return result;

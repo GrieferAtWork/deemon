@@ -169,7 +169,8 @@ mei_next(ModuleExportsIterator *__restrict self) {
 	DREF DeeObject *result, *result_name, *result_value;
 	DeeModuleObject *mod = self->mei_module;
 	uint16_t old_index, new_index;
-	DeeModule_LockSymbols(mod);
+	if (DeeModule_LockSymbols(mod))
+		goto err;
 again:
 	for (;;) {
 		struct module_symbol *symbol;
@@ -327,12 +328,15 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 me_size(ModuleExports *__restrict self) {
 	size_t i, total_symbols = 0;
 	DeeModuleObject *mod = self->me_module;
-	DeeModule_LockSymbols(mod);
+	if (DeeModule_LockSymbols(mod))
+		goto err;
 	for (i = 0; i <= mod->mo_bucketm; ++i)
 		if (mod->mo_bucketv[i].ss_name)
 			++total_symbols;
 	DeeModule_UnlockSymbols(mod);
 	return DeeInt_NewSize(total_symbols);
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
@@ -341,12 +345,15 @@ me_contains(ModuleExports *self, DeeObject *key) {
 	DeeModuleObject *mod = self->me_module;
 	if (!DeeString_Check(key))
 		return_false;
-	DeeModule_LockSymbols(mod);
+	if (DeeModule_LockSymbols(mod))
+		goto err;
 	result = DeeModule_GetSymbolString(mod,
 	                                   DeeString_STR(key),
 	                                   DeeString_Hash(key)) != NULL;
 	DeeModule_UnlockSymbols(mod);
 	return_bool_(result);
+err:
+	return NULL;
 }
 
 LOCAL WUNUSED DREF DeeObject *DCALL
@@ -405,20 +412,23 @@ me_get(ModuleExports *self, DeeObject *key) {
 	DeeModuleObject *mod = self->me_module;
 	struct module_symbol *symbol;
 	if (!DeeString_Check(key))
-		goto unknown_key;
-	DeeModule_LockSymbols(mod);
+		goto err_unknown_key;
+	if (DeeModule_LockSymbols(mod))
+		goto err;
 	symbol = DeeModule_GetSymbolString(mod,
 	                                   DeeString_STR(key),
 	                                   DeeString_Hash(key));
-	if unlikely(!symbol) {
-		DeeModule_UnlockSymbols(mod);
-unknown_key:
-		err_unknown_key((DeeObject *)self, key);
-		return NULL;
-	}
+	if unlikely(!symbol)
+		goto err_unknown_key_unlock;
 	result = module_my_getattr_symbol(self, mod, symbol);
 	DeeModule_UnlockSymbols(mod);
 	return result;
+err_unknown_key_unlock:
+	DeeModule_UnlockSymbols(mod);
+err_unknown_key:
+	err_unknown_key((DeeObject *)self, key);
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -431,18 +441,14 @@ me_get_f(ModuleExports *self, size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, "o|o:get", &key, &defl))
 		goto err;
 	if (!DeeString_Check(key))
-		goto unknown_key;
-	DeeModule_LockSymbols(mod);
+		goto err_unknown_key;
+	if (DeeModule_LockSymbols(mod))
+		goto err;
 	symbol = DeeModule_GetSymbolString(mod,
 	                                   DeeString_STR(key),
 	                                   DeeString_Hash(key));
-	if unlikely(!symbol) {
-		DeeModule_UnlockSymbols(mod);
-unknown_key:
-		err_unknown_key((DeeObject *)self, key);
-err:
-		return NULL;
-	}
+	if unlikely(!symbol)
+		goto err_unknown_key_unlock;
 	result = module_it_getattr_symbol(mod, symbol);
 	DeeModule_UnlockSymbols(mod);
 	if (result == ITER_DONE) {
@@ -450,6 +456,12 @@ err:
 		Dee_Incref(defl);
 	}
 	return result;
+err_unknown_key_unlock:
+	DeeModule_UnlockSymbols(mod);
+err_unknown_key:
+	err_unknown_key((DeeObject *)self, key);
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
@@ -458,20 +470,23 @@ me_del(ModuleExports *__restrict self, DeeObject *__restrict key) {
 	DeeModuleObject *mod = self->me_module;
 	struct module_symbol *symbol;
 	if (!DeeString_Check(key))
-		goto unknown_key;
-	DeeModule_LockSymbols(mod);
+		goto err_unknown_key;
+	if (DeeModule_LockSymbols(mod))
+		goto err;
 	symbol = DeeModule_GetSymbolString(mod,
 	                                   DeeString_STR(key),
 	                                   DeeString_Hash(key));
-	if unlikely(!symbol) {
-		DeeModule_UnlockSymbols(mod);
-unknown_key:
-		err_unknown_key((DeeObject *)self, key);
-		return -1;
-	}
+	if unlikely(!symbol)
+		goto err_unknown_key_unlock;
 	result = DeeModule_DelAttrSymbol(mod, symbol);
 	DeeModule_UnlockSymbols(mod);
 	return result;
+err_unknown_key_unlock:
+	DeeModule_UnlockSymbols(mod);
+err_unknown_key:
+	err_unknown_key((DeeObject *)self, key);
+err:
+	return -1;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2, 3)) int DCALL
@@ -482,20 +497,23 @@ me_set(ModuleExports *__restrict self,
 	DeeModuleObject *mod = self->me_module;
 	struct module_symbol *symbol;
 	if (!DeeString_Check(key))
-		goto unknown_key;
-	DeeModule_LockSymbols(mod);
+		goto err_unknown_key;
+	if (DeeModule_LockSymbols(mod))
+		goto err;
 	symbol = DeeModule_GetSymbolString(mod,
 	                                   DeeString_STR(key),
 	                                   DeeString_Hash(key));
-	if unlikely(!symbol) {
-		DeeModule_UnlockSymbols(mod);
-unknown_key:
-		err_unknown_key((DeeObject *)self, key);
-		return -1;
-	}
+	if unlikely(!symbol)
+		goto err_unknown_key_unlock;
 	result = DeeModule_SetAttrSymbol(mod, symbol, value);
 	DeeModule_UnlockSymbols(mod);
 	return result;
+err_unknown_key_unlock:
+	DeeModule_UnlockSymbols(mod);
+err_unknown_key:
+	err_unknown_key((DeeObject *)self, key);
+err:
+	return -1;
 }
 
 PRIVATE struct type_seq me_seq = {
@@ -638,7 +656,8 @@ mgi_next(ModuleGlobalsIterator *__restrict self) {
 	DeeModuleObject *mod = self->mgi_module;
 	DREF DeeObject *result;
 	uint16_t old_index, new_index;
-	DeeModule_LockSymbols(mod);
+	if (DeeModule_LockSymbols(mod))
+		goto err;
 again:
 	for (;;) {
 		old_index = atomic_read(&self->mgi_index);
@@ -665,6 +684,8 @@ again:
 	}
 	DeeModule_UnlockSymbols(mod);
 	return result;
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF ModuleGlobals *DCALL
@@ -774,7 +795,8 @@ mg_get(ModuleGlobals *self, DeeObject *index_ob) {
 	DeeModuleObject *mod = self->mg_module;
 	if (DeeObject_AsSize(index_ob, &index))
 		goto err;
-	DeeModule_LockSymbols(mod);
+	if (DeeModule_LockSymbols(mod))
+		goto err;
 	if (index >= mod->mo_globalc) {
 		size_t num_globals = mod->mo_globalc;
 		DeeModule_UnlockSymbols(mod);
@@ -804,7 +826,8 @@ mg_set(ModuleGlobals *self, DeeObject *index_ob, DeeObject *value) {
 	DeeModuleObject *mod = self->mg_module;
 	if (DeeObject_AsSize(index_ob, &index))
 		goto err;
-	DeeModule_LockSymbols(mod);
+	if (DeeModule_LockSymbols(mod))
+		goto err;
 	if (index >= mod->mo_globalc) {
 		size_t num_globals = mod->mo_globalc;
 		DeeModule_UnlockSymbols(mod);

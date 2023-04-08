@@ -26,12 +26,9 @@
 #include <deemon/dex.h>
 #include <deemon/object.h>
 #include <deemon/system-features.h> /* bzero(), bcmpc(), ... */
+#include <deemon/util/rlock.h>
 
 #include <hybrid/typecore.h>
-
-#ifndef CONFIG_NO_THREADS
-#include <deemon/util/recursive-rwlock.h>
-#endif /* !CONFIG_NO_THREADS */
 
 DECL_BEGIN
 
@@ -1405,7 +1402,7 @@ INTDEF void DCALL jit_state_fini(struct jit_state *__restrict self);
 struct jit_yield_function_iterator_object {
 	OBJECT_HEAD  /* GC OBJECT */
 #ifndef CONFIG_NO_THREADS
-	recursive_rwlock_t           ji_lock;  /* Lock held while executing code of this iterator. */
+	Dee_rshared_lock_t           ji_lock;  /* Lock held while executing code of this iterator. */
 #endif /* !CONFIG_NO_THREADS */
 	DREF JITYieldFunctionObject *ji_func;  /* [1..1][const] The underlying yield-function. */
 	JITLexer                     ji_lex;   /* [OVERRIDE(.jl_text, [const][== ji_func->jy_func->jf_source])]
@@ -1426,6 +1423,13 @@ struct jit_yield_function_iterator_object {
 	struct jit_state             ji_bstat; /* [const][.js_kind == JIT_STATE_KIND_SCOPE] The base-level execution state. */
 };
 
+#define JITYieldFunctionIterator_Available(self)    Dee_rshared_lock_available(&(self)->ji_lock)
+#define JITYieldFunctionIterator_Acquired(self)     Dee_rshared_lock_acquired(&(self)->ji_lock)
+#define JITYieldFunctionIterator_TryAcquire(self)   Dee_rshared_lock_tryacquire(&(self)->ji_lock)
+#define JITYieldFunctionIterator_Acquire(self)      Dee_rshared_lock_acquire(&(self)->ji_lock)
+#define JITYieldFunctionIterator_AcquireNoInt(self) Dee_rshared_lock_acquire_noint(&(self)->ji_lock)
+#define JITYieldFunctionIterator_WaitFor(self)      Dee_rshared_lock_waitfor(&(self)->ji_lock)
+#define JITYieldFunctionIterator_Release(self)      Dee_rshared_lock_release(&(self)->ji_lock)
 
 INTDEF DeeTypeObject JITYieldFunction_Type;
 INTDEF DeeTypeObject JITYieldFunctionIterator_Type;

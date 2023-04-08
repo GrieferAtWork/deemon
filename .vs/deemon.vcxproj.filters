@@ -609,9 +609,6 @@
 		<ClInclude Include="..\include\deemon\util\objectlist.h">
 			<Filter>include\util</Filter>
 		</ClInclude>
-		<ClInclude Include="..\include\deemon\util\recursive-rwlock.h">
-			<Filter>include\util</Filter>
-		</ClInclude>
 		<ClInclude Include="..\include\deemon\util\rlock-utils.h">
 			<Filter>include\util</Filter>
 		</ClInclude>

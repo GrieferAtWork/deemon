@@ -359,10 +359,13 @@ struct Dee_module_object {
 /* Lock/unlock the symbols of an interactive module object.
  * If `self' is a regular module, these are no-ops. */
 #ifndef CONFIG_NO_THREADS
-DFUNDEF NONNULL((1)) void DCALL DeeModule_LockSymbols(DeeModuleObject *__restrict self);
+DFUNDEF WUNUSED NONNULL((1)) int DCALL DeeModule_LockSymbols(DeeModuleObject *__restrict self);
 DFUNDEF NONNULL((1)) void DCALL DeeModule_UnlockSymbols(DeeModuleObject *__restrict self);
+#ifndef __NO_builtin_expect
+#define DeeModule_LockSymbols(self) __builtin_expect((DeeModule_LockSymbols)(self), 0)
+#endif /* !__NO_builtin_expect */
 #else /* !CONFIG_NO_THREADS */
-#define DeeModule_LockSymbols(self)   (void)0
+#define DeeModule_LockSymbols(self)   0
 #define DeeModule_UnlockSymbols(self) (void)0
 #endif /* CONFIG_NO_THREADS */
 
@@ -1143,8 +1146,8 @@ DeeModule_Import(/*String*/ DeeObject *__restrict module_name);
  * appropriate and returning NULL/false/-1 upon error or not knowing the given name. */
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeModule_GetAttrString(DeeModuleObject *__restrict self, char const *__restrict attr_name, Dee_hash_t hash);
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeModule_GetAttrStringLen(DeeModuleObject *__restrict self, char const *__restrict attr_name, size_t attrlen, Dee_hash_t hash);
-INTDEF WUNUSED NONNULL((1, 2)) bool DCALL DeeModule_HasAttrString(DeeModuleObject *__restrict self, char const *__restrict attr_name, Dee_hash_t hash);
-INTDEF WUNUSED NONNULL((1, 2)) bool DCALL DeeModule_HasAttrStringLen(DeeModuleObject *__restrict self, char const *__restrict attr_name, size_t attrlen, Dee_hash_t hash);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeModule_HasAttrString(DeeModuleObject *__restrict self, char const *__restrict attr_name, Dee_hash_t hash);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeModule_HasAttrStringLen(DeeModuleObject *__restrict self, char const *__restrict attr_name, size_t attrlen, Dee_hash_t hash);
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeModule_BoundAttrString(DeeModuleObject *__restrict self, char const *__restrict attr_name, Dee_hash_t hash);
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeModule_BoundAttrStringLen(DeeModuleObject *__restrict self, char const *__restrict attr_name, size_t attrlen, Dee_hash_t hash);
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeModule_DelAttrString(DeeModuleObject *__restrict self, char const *__restrict attr_name, Dee_hash_t hash);

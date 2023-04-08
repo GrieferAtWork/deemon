@@ -155,7 +155,7 @@ jy_iter(JITYieldFunction *__restrict self) {
 
 	result->ji_func = self;
 	Dee_Incref(self);
-	recursive_rwlock_init(&result->ji_lock);
+	Dee_rshared_lock_init(&result->ji_lock);
 	result->ji_lex.jl_text    = jf->jf_source;
 	result->ji_lex.jl_context = &result->ji_ctx;
 	JITLValue_Init(&result->ji_lex.jl_lvalue);
@@ -904,7 +904,8 @@ ji_next(JITYieldFunctionIterator *__restrict self) {
 	DREF DeeObject *result;
 	int error;
 	DeeThreadObject *ts = DeeThread_Self();
-	recursive_rwlock_write(&self->ji_lock);
+	if (JITYieldFunctionIterator_Acquire(self))
+		return NULL;
 	self->ji_ctx.jc_except = ts->t_exceptsz;
 	self->ji_ctx.jc_flags  = JITCONTEXT_FNORMAL;
 
@@ -1752,7 +1753,7 @@ handle_error:
 		}
 	}
 done:
-	recursive_rwlock_endwrite(&self->ji_lock);
+	JITYieldFunctionIterator_Release(self);
 	ASSERTF(result ? ts->t_exceptsz == self->ji_ctx.jc_except + 0
 	               : ts->t_exceptsz == self->ji_ctx.jc_except + 1,
 	        "ts->t_exceptsz         = %" PRFu16 "\n"
@@ -1838,7 +1839,7 @@ PRIVATE NONNULL((1, 2)) void DCALL
 ji_visit(JITYieldFunctionIterator *__restrict self, dvisit_t proc, void *arg) {
 	JITFunctionObject *jf = self->ji_func->jy_func;
 	JITObjectTable *tab;
-	recursive_rwlock_read(&self->ji_lock);
+	JITYieldFunctionIterator_AcquireNoInt(self); /* Read lock would be enough here... */
 	ASSERT(!jf->jf_globals || self->ji_ctx.jc_globals == jf->jf_globals);
 	/* Destroy any remaining L-value expressions. */
 	JITLValue_Visit(&self->ji_lex.jl_lvalue, proc, arg);
@@ -1854,7 +1855,7 @@ ji_visit(JITYieldFunctionIterator *__restrict self, dvisit_t proc, void *arg) {
 	if (self->ji_ctx.jc_globals != jf->jf_globals)
 		Dee_Visit(self->ji_ctx.jc_globals);
 	Dee_Visit(self->ji_func);
-	recursive_rwlock_endread(&self->ji_lock);
+	JITYieldFunctionIterator_Release(self);
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF JITFunction *DCALL
