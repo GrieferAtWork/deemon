@@ -23,87 +23,123 @@
 #include "../api.h"
 
 /*
- * Dee_atomic_lock_t: Atomic lock (sched_yield() until available; no interrupt checks)
- * Dee_shared_lock_t: Shared lock (blocking wait; w/ interrupt checks)
+ * Dee_atomic_lock_t:   Atomic lock (sched_yield() until available; no interrupt checks)
+ * Dee_shared_lock_t:   Shared lock (blocking wait; w/ interrupt checks)
  * Dee_atomic_rwlock_t: Like Dee_atomic_lock_t, but allows for read- and write-locks
  * Dee_shared_rwlock_t: Like Dee_shared_lock_t, but allows for read- and write-locks
+ * Dee_semaphore_t:     Ticket-based consumer/producer synchronization (blocking wait; w/ interrupt checks)
+ * Dee_event_t:         Trigger-once event barrier (blocking wait; w/ interrupt checks)
  */
 
 #ifdef CONFIG_NO_THREADS
 DECL_BEGIN
 
 typedef int Dee_atomic_lock_t;
-#define DEE_ATOMIC_LOCK_INIT             0
-#define Dee_atomic_lock_cinit(self)      (void)0
-#define Dee_atomic_lock_init(self)       (void)0
-#define Dee_atomic_lock_available(x)     1
-#define Dee_atomic_lock_acquired(x)      1
-#define Dee_atomic_lock_tryacquire(self) 1
-#define Dee_atomic_lock_acquire(self)    (void)0
-#define Dee_atomic_lock_waitfor(self)    (void)0
-#define Dee_atomic_lock_release(self)    (void)0
+#define DEE_ATOMIC_LOCK_INIT                  0
+#define DEE_ATOMIC_LOCK_INIT_ACQUIRED         0
+#define Dee_atomic_lock_init(self)            (void)0
+#define Dee_atomic_lock_init_acquired(self)   (void)0
+#define Dee_atomic_lock_cinit(self)           (void)0
+#define Dee_atomic_lock_cinit_acquired(self)  (void)0
+#define Dee_atomic_lock_available(self)       1
+#define Dee_atomic_lock_acquired(self)        1
+#define Dee_atomic_lock_tryacquire(self)      1
+#define Dee_atomic_lock_acquire(self)         (void)0
+#define Dee_atomic_lock_waitfor(self)         (void)0
+#define Dee_atomic_lock_release(self)         (void)0
+#define _Dee_atomic_lock_release_NDEBUG(self) (void)0
 
 typedef int Dee_atomic_rwlock_t;
-#define DEE_ATOMIC_RWLOCK_INIT             0
-#define Dee_atomic_rwlock_cinit(self)      (void)0
-#define Dee_atomic_rwlock_init(self)       (void)0
-#define Dee_atomic_rwlock_reading(x)       1
-#define Dee_atomic_rwlock_writing(x)       1
-#define Dee_atomic_rwlock_tryread(self)    1
-#define Dee_atomic_rwlock_trywrite(self)   1
-#define Dee_atomic_rwlock_canread(self)    1
-#define Dee_atomic_rwlock_canwrite(self)   1
-#define Dee_atomic_rwlock_waitread(self)   1
-#define Dee_atomic_rwlock_waitwrite(self)  1
-#define Dee_atomic_rwlock_read(self)       (void)0
-#define Dee_atomic_rwlock_write(self)      (void)0
-#define Dee_atomic_rwlock_tryupgrade(self) 1
-#define Dee_atomic_rwlock_upgrade(self)    1
-#define Dee_atomic_rwlock_downgrade(self)  (void)0
-#define Dee_atomic_rwlock_endwrite(self)   (void)0
-#define Dee_atomic_rwlock_endread(self)    (void)0
-#define Dee_atomic_rwlock_end(self)        (void)0
+#define DEE_ATOMIC_RWLOCK_MAX_READERS              1
+#define DEE_ATOMIC_RWLOCK_INIT                     0
+#define DEE_ATOMIC_RWLOCK_INIT_READ(n)             0
+#define DEE_ATOMIC_RWLOCK_INIT_WRITE               0
+#define Dee_atomic_rwlock_cinit(self)              (void)0
+#define Dee_atomic_rwlock_cinit_read(self, n)      (void)0
+#define Dee_atomic_rwlock_cinit_write(self)        (void)0
+#define Dee_atomic_rwlock_init(self)               (void)0
+#define Dee_atomic_rwlock_init_read(self, n)       (void)0
+#define Dee_atomic_rwlock_init_write(self)         (void)0
+#define Dee_atomic_rwlock_reading(self)            1
+#define Dee_atomic_rwlock_writing(self)            1
+#define Dee_atomic_rwlock_tryread(self)            1
+#define Dee_atomic_rwlock_trywrite(self)           1
+#define Dee_atomic_rwlock_canread(self)            1
+#define Dee_atomic_rwlock_canwrite(self)           1
+#define Dee_atomic_rwlock_canendread(self)         1
+#define Dee_atomic_rwlock_canendwrite(self)        1
+#define Dee_atomic_rwlock_canend(self)             1
+#define Dee_atomic_rwlock_waitread(self)           (void)0
+#define Dee_atomic_rwlock_waitwrite(self)          (void)0
+#define Dee_atomic_rwlock_read(self)               (void)0
+#define Dee_atomic_rwlock_write(self)              (void)0
+#define Dee_atomic_rwlock_tryupgrade(self)         1
+#define Dee_atomic_rwlock_upgrade(self)            1
+#define Dee_atomic_rwlock_downgrade(self)          (void)0
+#define _Dee_atomic_rwlock_downgrade_NDEBUG(self)  (void)0
+#define Dee_atomic_rwlock_endwrite(self)           (void)0
+#define Dee_atomic_rwlock_endread(self)            (void)0
+#define Dee_atomic_rwlock_end(self)                (void)0
+#define Dee_atomic_rwlock_endread_ex(self)         1
+#define Dee_atomic_rwlock_end_ex(self)             1
+#define _Dee_atomic_rwlock_endwrite_NDEBUG(self)   (void)0
+#define _Dee_atomic_rwlock_endread_NDEBUG(self)    (void)0
+#define _Dee_atomic_rwlock_end_NDEBUG(self)        (void)0
+#define _Dee_atomic_rwlock_endread_ex_NDEBUG(self) 1
+#define _Dee_atomic_rwlock_end_ex_NDEBUG(self)     1
 
 typedef int Dee_shared_lock_t;
 #define DEE_SHARED_LOCK_INIT                                     0
-#define DEE_SHARED_LOCK_INIT_LOCKED                              0
+#define DEE_SHARED_LOCK_INIT_ACQUIRED                            0
 #define Dee_shared_lock_cinit(self)                              (void)0
 #define Dee_shared_lock_init(self)                               (void)0
-#define Dee_shared_lock_cinit_locked(self)                       (void)0
-#define Dee_shared_lock_init_locked(self)                        (void)0
+#define Dee_shared_lock_cinit_acquired(self)                     (void)0
+#define Dee_shared_lock_init_acquired(self)                      (void)0
 #define Dee_shared_lock_available(self)                          1
 #define Dee_shared_lock_acquired(self)                           1
 #define Dee_shared_lock_tryacquire(self)                         1
 #define Dee_shared_lock_release(self)                            (void)0
+#define _Dee_shared_lock_release_NDEBUG(self)                    (void)0
 #define Dee_shared_lock_acquire(self)                            0
 #define Dee_shared_lock_waitfor(self)                            0
 #define Dee_shared_lock_acquire_timed(self, timeout_nanoseconds) 0
 #define Dee_shared_lock_waitfor_timed(self, timeout_nanoseconds) 0
-#define Dee_shared_lock_acquire(self)                            0
-#define Dee_shared_lock_waitfor(self)                            0
 
 typedef int Dee_shared_rwlock_t;
+#define DEE_SHARED_RWLOCK_MAX_READERS                                1
 #define DEE_SHARED_RWLOCK_INIT                                       0
-#define DEE_SHARED_RWLOCK_INIT_READ                                  0
+#define DEE_SHARED_RWLOCK_INIT_READ(n)                               0
 #define DEE_SHARED_RWLOCK_INIT_WRITE                                 0
 #define Dee_shared_rwlock_init(self)                                 (void)0
-#define Dee_shared_rwlock_init_read(self)                            (void)0
+#define Dee_shared_rwlock_init_read(self, n)                         (void)0
 #define Dee_shared_rwlock_init_write(self)                           (void)0
 #define Dee_shared_rwlock_cinit(self)                                (void)0
 #define Dee_shared_rwlock_cinit_read(self)                           (void)0
 #define Dee_shared_rwlock_cinit_write(self)                          (void)0
 #define Dee_shared_rwlock_reading(self)                              1
 #define Dee_shared_rwlock_writing(self)                              1
-#define Dee_shared_rwlock_tryread(self)                              1
-#define Dee_shared_rwlock_trywrite(self)                             1
 #define Dee_shared_rwlock_canread(self)                              1
 #define Dee_shared_rwlock_canwrite(self)                             1
+#define Dee_shared_rwlock_canendread(self)                           1
+#define Dee_shared_rwlock_canendwrite(self)                          1
+#define Dee_shared_rwlock_canend(self)                               1
 #define Dee_shared_rwlock_tryupgrade(self)                           1
-#define Dee_shared_rwlock_upgrade(self)                              1
+#define Dee_shared_rwlock_trywrite(self)                             1
+#define Dee_shared_rwlock_tryread(self)                              1
+#define _Dee_shared_rwlock_downgrade_NDEBUG(self)                    (void)0
 #define Dee_shared_rwlock_downgrade(self)                            (void)0
+#define Dee_shared_rwlock_upgrade(self)                              1
+#define _Dee_shared_rwlock_upgrade_NDEBUG(self)                      1
 #define Dee_shared_rwlock_endread(self)                              (void)0
 #define Dee_shared_rwlock_endwrite(self)                             (void)0
 #define Dee_shared_rwlock_end(self)                                  (void)0
+#define _Dee_shared_rwlock_endread_NDEBUG(self)                      (void)0
+#define _Dee_shared_rwlock_endwrite_NDEBUG(self)                     (void)0
+#define _Dee_shared_rwlock_end_NDEBUG(self)                          (void)0
+#define Dee_shared_rwlock_endread_ex(self)                           1
+#define Dee_shared_rwlock_end_ex(self)                               1
+#define _Dee_shared_rwlock_endread_ex_NDEBUG(self)                   1
+#define _Dee_shared_rwlock_end_ex_NDEBUG(self)                       1
 #define Dee_shared_rwlock_read(self)                                 0
 #define Dee_shared_rwlock_write(self)                                0
 #define Dee_shared_rwlock_waitread(self)                             0
@@ -127,12 +163,27 @@ typedef int Dee_semaphore_t;
 #define Dee_semaphore_acquire(self)                            0
 #define Dee_semaphore_acquire_timed(self, timeout_nanoseconds) 0
 
-#define DeeLock_Lock2(lock_a, trylock_a, unlock_a, \
-                      lock_b, trylock_b, unlock_b) \
+typedef int Dee_event_t;
+#define DEE_EVENT_INIT_SET                                 0
+#define DEE_EVENT_INIT                                     0
+#define Dee_event_init_set(self)                           (void)0
+#define Dee_event_init(self)                               (void)0
+#define Dee_event_cinit_set(self)                          (void)0
+#define Dee_event_cinit(self)                              (void)0
+#define Dee_event_get(self)                                1
+#define Dee_event_set(self)                                (void)0
+#define Dee_event_clear(self)                              (void)0
+#define Dee_event_set_ex(self)                             1
+#define Dee_event_clear_ex(self)                           1
+#define Dee_event_waitfor(self)                            0
+#define Dee_event_waitfor_timed(self, timeout_nanoseconds) 0
+
+#define DeeLock_Acquire2(lock_a, trylock_a, unlock_a, \
+                         lock_b, trylock_b, unlock_b) \
 	(void)0
-#define DeeLock_Lock3(lock_a, trylock_a, unlock_a, \
-                      lock_b, trylock_b, unlock_b, \
-                      lock_c, trylock_c, unlock_c) \
+#define DeeLock_Acquire3(lock_a, trylock_a, unlock_a, \
+                         lock_b, trylock_b, unlock_b, \
+                         lock_c, trylock_c, unlock_c) \
 	(void)0
 
 DECL_END
@@ -420,7 +471,7 @@ DFUNDEF WUNUSED NONNULL((1)) int
 
 
 /************************************************************************/
-/* Shared semaphore (scheduler-level blocking)                          */
+/* Shared event (scheduler-level blocking)                              */
 /************************************************************************/
 typedef struct {
 	unsigned int ev_state; /* 0: event has been triggered
@@ -435,12 +486,14 @@ typedef struct {
 #define Dee_event_cinit_set(self) (void)(Dee_ASSERT((self)->ev_state == 0))
 #define Dee_event_cinit(self)     (void)(Dee_ASSERT((self)->ev_state == 0), (self)->ev_state = 1)
 #define Dee_event_get(self)       (__hybrid_atomic_load(&(self)->ev_state, __ATOMIC_ACQUIRE) == 0)
-#define Dee_event_set(self)                                          \
+#define Dee_event_set(self)       (void)Dee_event_set_ex(self)
+#define Dee_event_clear(self)     (void)Dee_event_clear_ex(self)
+#define Dee_event_set_ex(self)                                       \
 	(__hybrid_atomic_xch(&(self)->ev_state, 0, __ATOMIC_SEQ_CST) > 1 \
-	 ? DeeFutex_WakeAll(&(self)->ev_state)                           \
-	 : (void)0)
-#define Dee_event_clear(self) \
-	(void)__hybrid_atomic_cmpxch(&(self)->ev_state, 0, 1, __ATOMIC_SEQ_CST, __ATOMIC_SEQ_CST)
+	 ? (DeeFutex_WakeAll(&(self)->ev_state), 1)                      \
+	 : 0)
+#define Dee_event_clear_ex(self) \
+	__hybrid_atomic_cmpxch(&(self)->ev_state, 0, 1, __ATOMIC_SEQ_CST, __ATOMIC_SEQ_CST)
 
 /* Blocking wait for an event to become set.
  * @return: 1 : Timeout expired. (`Dee_event_waitfor_timed' only)
@@ -456,61 +509,61 @@ DECL_END
 
 /* Helper macros to safely (i.e. without any chance of dead-locking
  * (so-long as locks are distinct)) acquire multiple locks at once. */
-#define DeeLock_Lock2(lock_a, trylock_a, unlock_a, \
-                      lock_b, trylock_b, unlock_b) \
-	do {                                           \
-		lock_a;                                    \
-		if likely(trylock_b)                       \
-			break;                                 \
-		unlock_a;                                  \
-		lock_b;                                    \
-		if likely(trylock_a)                       \
-			break;                                 \
-		unlock_b;                                  \
+#define DeeLock_Acquire2(lock_a, trylock_a, unlock_a, \
+                         lock_b, trylock_b, unlock_b) \
+	do {                                              \
+		lock_a;                                       \
+		if likely(trylock_b)                          \
+			break;                                    \
+		unlock_a;                                     \
+		lock_b;                                       \
+		if likely(trylock_a)                          \
+			break;                                    \
+		unlock_b;                                     \
 	}	__WHILE1
-#define DeeLock_Lock3(lock_a, trylock_a, unlock_a,  \
-                      lock_b, trylock_b, unlock_b,  \
-                      lock_c, trylock_c, unlock_c)  \
-	do {                                            \
-		DeeLock_Lock2(lock_a, trylock_a, unlock_a,  \
-		              lock_b, trylock_b, unlock_b); \
-		if likely(trylock_c)                        \
-			break;                                  \
-		unlock_b;                                   \
-		unlock_a;                                   \
-		lock_c;                                     \
-		if unlikely(!(trylock_b)) {                 \
-			unlock_c;                               \
-			continue;                               \
-		}                                           \
-		if likely(trylock_a)                        \
-			break;                                  \
-		unlock_b;                                   \
-		unlock_c;                                   \
+#define DeeLock_Acquire3(lock_a, trylock_a, unlock_a,  \
+                         lock_b, trylock_b, unlock_b,  \
+                         lock_c, trylock_c, unlock_c)  \
+	do {                                               \
+		DeeLock_Acquire2(lock_a, trylock_a, unlock_a,  \
+		                 lock_b, trylock_b, unlock_b); \
+		if likely(trylock_c)                           \
+			break;                                     \
+		unlock_b;                                      \
+		unlock_a;                                      \
+		lock_c;                                        \
+		if unlikely(!(trylock_b)) {                    \
+			unlock_c;                                  \
+			continue;                                  \
+		}                                              \
+		if likely(trylock_a)                           \
+			break;                                     \
+		unlock_b;                                      \
+		unlock_c;                                      \
 	}	__WHILE1
 #endif /* !CONFIG_NO_THREADS */
 
 /* Helpers to (safely) acquire multiple atomic [rw]locks at the same time. */
-#define Dee_atomic_lock_acquire_2(a, b)                                                                  \
-	DeeLock_Lock2(Dee_atomic_lock_acquire(a), Dee_atomic_lock_tryacquire(a), Dee_atomic_lock_release(a), \
-	              Dee_atomic_lock_acquire(b), Dee_atomic_lock_tryacquire(b), Dee_atomic_lock_release(b))
-#define Dee_atomic_rwlock_read_2(a, b)                                                                   \
-	DeeLock_Lock2(Dee_atomic_rwlock_read(a), Dee_atomic_rwlock_tryread(a), Dee_atomic_rwlock_endread(a), \
-	              Dee_atomic_rwlock_read(b), Dee_atomic_rwlock_tryread(b), Dee_atomic_rwlock_endread(b))
-#define Dee_atomic_rwlock_write_2(a, b)                                                                     \
-	DeeLock_Lock2(Dee_atomic_rwlock_write(a), Dee_atomic_rwlock_trywrite(a), Dee_atomic_rwlock_endwrite(a), \
-	              Dee_atomic_rwlock_write(b), Dee_atomic_rwlock_trywrite(b), Dee_atomic_rwlock_endwrite(b))
-#define Dee_atomic_lock_acquire_3(a, b, c)                                                               \
-	DeeLock_Lock3(Dee_atomic_lock_acquire(a), Dee_atomic_lock_tryacquire(a), Dee_atomic_lock_release(a), \
-	              Dee_atomic_lock_acquire(b), Dee_atomic_lock_tryacquire(b), Dee_atomic_lock_release(b), \
-	              Dee_atomic_lock_acquire(c), Dee_atomic_lock_tryacquire(c), Dee_atomic_lock_release(c))
-#define Dee_atomic_rwlock_read_3(a, b, c)                                                                \
-	DeeLock_Lock3(Dee_atomic_rwlock_read(a), Dee_atomic_rwlock_tryread(a), Dee_atomic_rwlock_endread(a), \
-	              Dee_atomic_rwlock_read(b), Dee_atomic_rwlock_tryread(b), Dee_atomic_rwlock_endread(b), \
-	              Dee_atomic_rwlock_read(c), Dee_atomic_rwlock_tryread(c), Dee_atomic_rwlock_endread(c))
-#define Dee_atomic_rwlock_write_3(a, b, c)                                                                  \
-	DeeLock_Lock3(Dee_atomic_rwlock_write(a), Dee_atomic_rwlock_trywrite(a), Dee_atomic_rwlock_endwrite(a), \
-	              Dee_atomic_rwlock_write(b), Dee_atomic_rwlock_trywrite(b), Dee_atomic_rwlock_endwrite(b), \
-	              Dee_atomic_rwlock_write(c), Dee_atomic_rwlock_trywrite(c), Dee_atomic_rwlock_endwrite(c))
+#define Dee_atomic_lock_acquire_2(a, b)                                                                     \
+	DeeLock_Acquire2(Dee_atomic_lock_acquire(a), Dee_atomic_lock_tryacquire(a), Dee_atomic_lock_release(a), \
+	                 Dee_atomic_lock_acquire(b), Dee_atomic_lock_tryacquire(b), Dee_atomic_lock_release(b))
+#define Dee_atomic_rwlock_read_2(a, b)                                                                      \
+	DeeLock_Acquire2(Dee_atomic_rwlock_read(a), Dee_atomic_rwlock_tryread(a), Dee_atomic_rwlock_endread(a), \
+	                 Dee_atomic_rwlock_read(b), Dee_atomic_rwlock_tryread(b), Dee_atomic_rwlock_endread(b))
+#define Dee_atomic_rwlock_write_2(a, b)                                                                        \
+	DeeLock_Acquire2(Dee_atomic_rwlock_write(a), Dee_atomic_rwlock_trywrite(a), Dee_atomic_rwlock_endwrite(a), \
+	                 Dee_atomic_rwlock_write(b), Dee_atomic_rwlock_trywrite(b), Dee_atomic_rwlock_endwrite(b))
+#define Dee_atomic_lock_acquire_3(a, b, c)                                                                  \
+	DeeLock_Acquire3(Dee_atomic_lock_acquire(a), Dee_atomic_lock_tryacquire(a), Dee_atomic_lock_release(a), \
+	                 Dee_atomic_lock_acquire(b), Dee_atomic_lock_tryacquire(b), Dee_atomic_lock_release(b), \
+	                 Dee_atomic_lock_acquire(c), Dee_atomic_lock_tryacquire(c), Dee_atomic_lock_release(c))
+#define Dee_atomic_rwlock_read_3(a, b, c)                                                                   \
+	DeeLock_Acquire3(Dee_atomic_rwlock_read(a), Dee_atomic_rwlock_tryread(a), Dee_atomic_rwlock_endread(a), \
+	                 Dee_atomic_rwlock_read(b), Dee_atomic_rwlock_tryread(b), Dee_atomic_rwlock_endread(b), \
+	                 Dee_atomic_rwlock_read(c), Dee_atomic_rwlock_tryread(c), Dee_atomic_rwlock_endread(c))
+#define Dee_atomic_rwlock_write_3(a, b, c)                                                                     \
+	DeeLock_Acquire3(Dee_atomic_rwlock_write(a), Dee_atomic_rwlock_trywrite(a), Dee_atomic_rwlock_endwrite(a), \
+	                 Dee_atomic_rwlock_write(b), Dee_atomic_rwlock_trywrite(b), Dee_atomic_rwlock_endwrite(b), \
+	                 Dee_atomic_rwlock_write(c), Dee_atomic_rwlock_trywrite(c), Dee_atomic_rwlock_endwrite(c))
 
 #endif /* !GUARD_DEEMON_UTIL_LOCK_H */

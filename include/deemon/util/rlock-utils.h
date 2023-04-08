@@ -23,12 +23,18 @@
 #include "../api.h"
 
 #ifdef CONFIG_NO_THREADS
-DECL_BEGIN
-
-/* TODO */
-
-DECL_END
-
+#define Dee_ratomic_lock_acquire_p(self, err_label)                                               (void)0
+#define Dee_ratomic_lock_waitfor_p(self, err_label)                                               (void)0
+#define Dee_ratomic_lock_acquire_timed_p(self, timeout_nanoseconds, err_label, timeout_label)     (void)0
+#define Dee_ratomic_lock_waitfor_timed_p(self, timeout_nanoseconds, err_label, timeout_label)     (void)0
+#define Dee_ratomic_rwlock_read_p(self, err_label)                                                (void)0
+#define Dee_ratomic_rwlock_write_p(self, err_label)                                               (void)0
+#define Dee_ratomic_rwlock_waitread_p(self, err_label)                                            (void)0
+#define Dee_ratomic_rwlock_waitwrite_p(self, err_label)                                           (void)0
+#define Dee_ratomic_rwlock_read_timed_p(self, timeout_nanoseconds, err_label, timeout_label)      (void)0
+#define Dee_ratomic_rwlock_write_timed_p(self, timeout_nanoseconds, err_label, timeout_label)     (void)0
+#define Dee_ratomic_rwlock_waitread_timed_p(self, timeout_nanoseconds, err_label, timeout_label)  (void)0
+#define Dee_ratomic_rwlock_waitwrite_timed_p(self, timeout_nanoseconds, err_label, timeout_label) (void)0
 #else /* CONFIG_NO_THREADS */
 
 #include "../thread.h"
@@ -122,15 +128,6 @@ err:
 		if unlikely(_Dee_ratomic_lock_acquire_p_impl(self)) \
 			goto err_label;                                 \
 	}	__WHILE0
-#define Dee_ratomic_lock_acquire_timed_p(self, timeout_nanoseconds, err_label, timeout_label) \
-	do {                                                                                      \
-		int _status = _Dee_ratomic_lock_acquire_timed_p_impl(self, timeout_nanoseconds);      \
-		if unlikely(_status != 0) {                                                           \
-			if unlikely(_status < 0)                                                          \
-				goto err_label;                                                               \
-			goto timeout_label;                                                               \
-		}                                                                                     \
-	}	__WHILE0
 #define Dee_ratomic_lock_waitfor_p(self, err_label)                                 \
 	do {                                                                            \
 		if (__hybrid_atomic_load(&(self)->ra_lock, __ATOMIC_ACQUIRE) != 0 &&        \
@@ -141,6 +138,15 @@ err:
 				__hybrid_yield();                                                   \
 			}                                                                       \
 		}                                                                           \
+	}	__WHILE0
+#define Dee_ratomic_lock_acquire_timed_p(self, timeout_nanoseconds, err_label, timeout_label) \
+	do {                                                                                      \
+		int _status = _Dee_ratomic_lock_acquire_timed_p_impl(self, timeout_nanoseconds);      \
+		if unlikely(_status != 0) {                                                           \
+			if unlikely(_status < 0)                                                          \
+				goto err_label;                                                               \
+			goto timeout_label;                                                               \
+		}                                                                                     \
 	}	__WHILE0
 #define Dee_ratomic_lock_waitfor_timed_p(self, timeout_nanoseconds, err_label, timeout_label) \
 	do {                                                                                      \

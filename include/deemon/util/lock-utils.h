@@ -23,12 +23,18 @@
 #include "../api.h"
 
 #ifdef CONFIG_NO_THREADS
-DECL_BEGIN
-
-/* TODO */
-
-DECL_END
-
+#define Dee_atomic_lock_acquire_p(self, err_label)                                               (void)0
+#define Dee_atomic_lock_waitfor_p(self, err_label)                                               (void)0
+#define Dee_atomic_lock_acquire_timed_p(self, timeout_nanoseconds, err_label, timeout_label)     (void)0
+#define Dee_atomic_lock_waitfor_timed_p(self, timeout_nanoseconds, err_label, timeout_label)     (void)0
+#define Dee_atomic_rwlock_read_p(self, err_label)                                                (void)0
+#define Dee_atomic_rwlock_write_p(self, err_label)                                               (void)0
+#define Dee_atomic_rwlock_waitread_p(self, err_label)                                            (void)0
+#define Dee_atomic_rwlock_waitwrite_p(self, err_label)                                           (void)0
+#define Dee_atomic_rwlock_read_timed_p(self, timeout_nanoseconds, err_label, timeout_label)      (void)0
+#define Dee_atomic_rwlock_write_timed_p(self, timeout_nanoseconds, err_label, timeout_label)     (void)0
+#define Dee_atomic_rwlock_waitread_timed_p(self, timeout_nanoseconds, err_label, timeout_label)  (void)0
+#define Dee_atomic_rwlock_waitwrite_timed_p(self, timeout_nanoseconds, err_label, timeout_label) (void)0
 #else /* CONFIG_NO_THREADS */
 
 #include "../thread.h"
