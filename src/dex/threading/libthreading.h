@@ -35,20 +35,20 @@ INTDEF DeeTypeObject DeeRAtomicLock_Type;
 INTDEF DeeTypeObject DeeRSharedLock_Type;
 
 INTDEF DeeTypeObject DeeRWLock_Type;
-INTDEF DeeTypeObject DeeRWLockSharedLock_Type;
-INTDEF DeeTypeObject DeeRWLockExclusiveLock_Type;
+INTDEF DeeTypeObject DeeRWLockReadLock_Type;
+INTDEF DeeTypeObject DeeRWLockWriteLock_Type;
 INTDEF DeeTypeObject DeeAtomicRWLock_Type;
-INTDEF DeeTypeObject DeeAtomicRWLockSharedLock_Type;
-INTDEF DeeTypeObject DeeAtomicRWLockExclusiveLock_Type;
+INTDEF DeeTypeObject DeeAtomicRWLockReadLock_Type;
+INTDEF DeeTypeObject DeeAtomicRWLockWriteLock_Type;
 INTDEF DeeTypeObject DeeSharedRWLock_Type;
-INTDEF DeeTypeObject DeeSharedRWLockSharedLock_Type;
-INTDEF DeeTypeObject DeeSharedRWLockExclusiveLock_Type;
+INTDEF DeeTypeObject DeeSharedRWLockReadLock_Type;
+INTDEF DeeTypeObject DeeSharedRWLockWriteLock_Type;
 INTDEF DeeTypeObject DeeRAtomicRWLock_Type;
-INTDEF DeeTypeObject DeeRAtomicRWLockSharedLock_Type;
-INTDEF DeeTypeObject DeeRAtomicRWLockExclusiveLock_Type;
+INTDEF DeeTypeObject DeeRAtomicRWLockReadLock_Type;
+INTDEF DeeTypeObject DeeRAtomicRWLockWriteLock_Type;
 INTDEF DeeTypeObject DeeRSharedRWLock_Type;
-INTDEF DeeTypeObject DeeRSharedRWLockSharedLock_Type;
-INTDEF DeeTypeObject DeeRSharedRWLockExclusiveLock_Type;
+INTDEF DeeTypeObject DeeRSharedRWLockReadLock_Type;
+INTDEF DeeTypeObject DeeRSharedRWLockWriteLock_Type;
 
 INTDEF DeeTypeObject DeeSemaphore_Type;
 
@@ -62,7 +62,7 @@ INTDEF DeeTypeObject DeeEvent_Type;
  * >> local a = AtomicLock();
  * >> local b = SharedLock();
  * >> local c = SharedRWLock();
- * >> with (all(a, b, c.exclusive)) {
+ * >> with (all(a, b, c.writelock)) {
  * >>     ... // At this point, all 3 locks are held (and were acquired in a safe manner)
  * >> }
  */

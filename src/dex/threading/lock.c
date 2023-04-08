@@ -203,8 +203,8 @@ local STRINGS = {
 	"timedwaitwrite",
 	"canread",
 	"canwrite",
-	"exclusive",
-	"shared",
+	"readlock",
+	"writelock",
 	"tryupgrade",
 	"upgrade",
 	"downgrade",
@@ -239,8 +239,8 @@ PRIVATE DEFINE_STRING_EX(str_timedwaitread, "timedwaitread", 0xfee13f70, 0x1c54d
 PRIVATE DEFINE_STRING_EX(str_timedwaitwrite, "timedwaitwrite", 0x683b59e9, 0x75ce39f41579afec);
 PRIVATE DEFINE_STRING_EX(str_canread, "canread", 0xa7dcc052, 0xf575d512b203f6ce);
 PRIVATE DEFINE_STRING_EX(str_canwrite, "canwrite", 0x6dee47e, 0xe7d41485f26ddd04);
-PRIVATE DEFINE_STRING_EX(str_exclusive, "exclusive", 0x4df8c743, 0xc4bc49ba4e9b74b);
-PRIVATE DEFINE_STRING_EX(str_shared, "shared", 0x15563460, 0x25b1ae5177c3628b);
+PRIVATE DEFINE_STRING_EX(str_readlock, "readlock", 0x683410eb, 0x385a4ec1a5f8ad29);
+PRIVATE DEFINE_STRING_EX(str_writelock, "writelock", 0xb24b92d9, 0xc033e9b77132dacf);
 PRIVATE DEFINE_STRING_EX(str_tryupgrade, "tryupgrade", 0xa9586b25, 0xbd25f6075bfb97b6);
 PRIVATE DEFINE_STRING_EX(str_upgrade, "upgrade", 0xe72664e6, 0xd934e23ca6727afa);
 PRIVATE DEFINE_STRING_EX(str_downgrade, "downgrade", 0x70347eef, 0x5a7fee27c4b1e0f);
@@ -269,8 +269,8 @@ PRIVATE DEFINE_STRING_EX(str_end, "end", 0x37fb4a05, 0x6de935c204dc3d01);
 #define STR_timedwaitwrite DeeString_STR(&str_timedwaitwrite)
 #define STR_canread        DeeString_STR(&str_canread)
 #define STR_canwrite       DeeString_STR(&str_canwrite)
-#define STR_exclusive      DeeString_STR(&str_exclusive)
-#define STR_shared         DeeString_STR(&str_shared)
+#define STR_readlock       DeeString_STR(&str_readlock)
+#define STR_writelock      DeeString_STR(&str_writelock)
 #define STR_tryupgrade     DeeString_STR(&str_tryupgrade)
 #define STR_upgrade        DeeString_STR(&str_upgrade)
 #define STR_downgrade      DeeString_STR(&str_downgrade)
@@ -320,113 +320,113 @@ DOC_DEF(doc_lock_acquired,
 /* Pre-defined doc strings for rwlock-like objects */
 DOC_DEF(doc_rwlock_tryread,
         "->?Dbool\n"
-        "Try to acquire a shared lock to @this.\n"
-        "Same as ${this.shared.tryacquire()}");
+        "Try to acquire a shared (read) lock to @this.\n"
+        "Same as ${this.readlock.tryacquire()}");
 DOC_DEF(doc_rwlock_trywrite,
         "->?Dbool\n"
-        "Try to acquire an exclusive lock to @this.\n"
-        "Same as ${this.exclusive.tryacquire()}");
+        "Try to acquire an exclusive (write) lock to @this.\n"
+        "Same as ${this.writelock.tryacquire()}");
 DOC_DEF(doc_rwlock_read,
         "()\n"
         "@interrupt\n"
-        "Acquire a shared lock to @this, blocking until that becomes possible.\n"
-        "Same as ${this.shared.tryacquire()}");
+        "Acquire a shared (read) lock to @this, blocking until that becomes possible.\n"
+        "Same as ${this.readlock.tryacquire()}");
 DOC_DEF(doc_rwlock_timedread,
         "(timeout_nanoseconds:?Dint)->?Dbool\n"
         "@interrupt\n"
         "Same as ?#read, returning !t on success, but block for at "
         /**/ "most @timeout_nanoseconds. Once that amount of time has elapsed, "
-        /**/ "stop trying to acquire a shared lock and fail by returning !f instead.\n"
-        "Same as ${this.shared.timedacquire(timeout_nanoseconds)}");
+        /**/ "stop trying to acquire a shared (read) lock and fail by returning !f instead.\n"
+        "Same as ${this.readlock.timedacquire(timeout_nanoseconds)}");
 DOC_DEF(doc_rwlock_write,
         "()\n"
         "@interrupt\n"
-        "Acquire an exclusive lock to @this, blocking until that becomes possible.\n"
-        "Same as ${this.exclusive.tryacquire()}");
+        "Acquire an exclusive (write) lock to @this, blocking until that becomes possible.\n"
+        "Same as ${this.writelock.tryacquire()}");
 DOC_DEF(doc_rwlock_timedwrite,
         "(timeout_nanoseconds:?Dint)->?Dbool\n"
         "@interrupt\n"
         "Same as ?#write, returning !t on success, but block for at "
         /**/ "most @timeout_nanoseconds. Once that amount of time has elapsed, "
-        /**/ "stop trying to acquire an exclusive lock and fail by returning !f instead.\n"
-        "Same as ${this.exclusive.timedacquire(timeout_nanoseconds)}");
+        /**/ "stop trying to acquire an exclusive (write) lock and fail by returning !f instead.\n"
+        "Same as ${this.writelock.timedacquire(timeout_nanoseconds)}");
 DOC_DEF(doc_rwlock_waitread,
         "()\n"
         "@interrupt\n"
-        "Wait until a shared lock can be acquired without blocking\n"
-        "Note that by the time this function returns, trying to acquire a shared "
-        /**/ "lock might already block once again.\n"
-        "Same as ${this.shared.waitfor()}");
+        "Wait until a shared (read) lock can be acquired without blocking\n"
+        "Note that by the time this function returns, trying to acquire a "
+        /**/ "shared (read) lock might already block once again.\n"
+        "Same as ${this.readlock.waitfor()}");
 DOC_DEF(doc_rwlock_timedwaitread,
         "(timeout_nanoseconds:?Dint)->?Dbool\n"
         "@interrupt\n"
         "Same as ?#waitread, returning !t on success, but block for at "
         /**/ "most @timeout_nanoseconds. Once that amount of time has elapsed, "
-        /**/ "stop trying to wait for a shared lock to become available, and "
+        /**/ "stop trying to wait for a shared (read) lock to become available, and "
         /**/ "fail by returning !f instead.\n"
-        "Same as ${this.shared.timedwaitfor(timeout_nanoseconds)}");
+        "Same as ${this.readlock.timedwaitfor(timeout_nanoseconds)}");
 DOC_DEF(doc_rwlock_waitwrite,
         "()\n"
         "@interrupt\n"
-        "Wait until an exclusive lock can be acquired without blocking\n"
-        "Note that by the time this function returns, trying to acquire an exclusive "
+        "Wait until an exclusive (write) lock can be acquired without blocking\n"
+        "Note that by the time this function returns, trying to acquire an exclusive (write) "
         /**/ "lock might already block once again.\n"
-        "Same as ${this.exclusive.waitfor()}");
+        "Same as ${this.writelock.waitfor()}");
 DOC_DEF(doc_rwlock_timedwaitwrite,
         "(timeout_nanoseconds:?Dint)->?Dbool\n"
         "@interrupt\n"
         "Same as ?#waitwrite, returning !t on success, but block for at "
         /**/ "most @timeout_nanoseconds. Once that amount of time has elapsed, "
-        /**/ "stop trying to wait for an exclusive lock to become available, and "
+        /**/ "stop trying to wait for an exclusive (write) lock to become available, and "
         /**/ "fail by returning !f instead.\n"
-        "Same as ${this.exclusive.timedwaitfor(timeout_nanoseconds)}");
+        "Same as ${this.writelock.timedwaitfor(timeout_nanoseconds)}");
 DOC_DEF(doc_rwlock_endread,
         "()\n"
-        "@throws ValueError No shared lock is currently held\n"
-        "Release a shared lock from @this, previously acquired by ?#read or some other function.\n"
-        "Same as ${this.shared.release()}");
+        "@throws ValueError No shared (read) lock is currently held\n"
+        "Release a shared (read) lock from @this, previously acquired by ?#read or some other function.\n"
+        "Same as ${this.readlock.release()}");
 DOC_DEF(doc_rwlock_endwrite,
         "()\n"
-        "@throws ValueError No exclusive lock is currently held\n"
-        "Release an exclusive lock from @this, previously acquired by ?#write or some other function.\n"
-        "Same as ${this.exclusive.release()}");
+        "@throws ValueError No exclusive (write) lock is currently held\n"
+        "Release an exclusive (write) lock from @this, previously acquired by ?#write or some other function.\n"
+        "Same as ${this.writelock.release()}");
 DOC_DEF(doc_rwlock_end,
         "()\n"
         "@throws ValueError No lock of any kind is currently held\n"
-        "Release either an exclusive, or a shared lock from @this");
+        "Release either an exclusive (write), or a shared (read) lock from @this");
 DOC_DEF(doc_rwlock_tryupgrade,
         "->?DBool\n"
-        "Try to upgrade a shared lock (s.a. ?#read) into an exclusive lock (s.a. ?#write)\n"
-        "If the lock was upgraded, return !t. Otherwise, the shared lock is kept, and !f is returned.");
+        "Try to upgrade a shared (read) lock (s.a. ?#read) into an exclusive (write) lock (s.a. ?#write)\n"
+        "If the lock was upgraded, return !t. Otherwise, the shared (read) lock is kept, and !f is returned.");
 DOC_DEF(doc_rwlock_upgrade,
         "->?DBool\n"
         "@interrupt\n"
-        "@throws ValueError Not holding a shared lock at the moment\n"
-        "@return true Lock upgrade could be performed atomically (without dropping the shared lock temporarily)\n"
-        "@return false Lock upgrade was performed by temporarily dropping the shared lock, before acquiring an exclusive lock\n"
-        "Upgrade a shared lock into an exclusive lock (if an interrupt error is thrown, the shared lock was released)");
+        "@throws ValueError Not holding a shared (read) lock at the moment\n"
+        "@return true Lock upgrade could be performed atomically (without dropping the shared (read) lock temporarily)\n"
+        "@return false Lock upgrade was performed by temporarily dropping the shared (read) lock, before acquiring an exclusive (write) lock\n"
+        "Upgrade a shared (read) lock into an exclusive (write) lock (if an interrupt error is thrown, the shared (read) lock was released)");
 DOC_DEF(doc_rwlock_downgrade,
         "()\n"
-        "@throws ValueError Not holding an exclusive lock at the moment\n"
-        "Downgrade an exclusive lock into a shared lock, but maintain some kind of lock at every point in time");
+        "@throws ValueError Not holding an exclusive (write) lock at the moment\n"
+        "Downgrade an exclusive (write) lock into a shared (read) lock, but maintain some kind of lock at every point in time");
 DOC_DEF(doc_rwlock_reading,
         "->?Dbool\n"
-        "Returns !t if either a shared- or an exclusive lock is being held");
+        "Returns !t if either a shared- (read) or an exclusive (write) lock is being held");
 DOC_DEF(doc_rwlock_writing,
         "->?Dbool\n"
-        "Returns !t if some thread is holding an exclusive lock");
+        "Returns !t if some thread is holding an exclusive (write) lock");
 DOC_DEF(doc_rwlock_canread,
         "->?Dbool\n"
-        "Returns !t so-long as no-one is holding an exclusive lock (inverse of ?#writing)");
+        "Returns !t so-long as no-one is holding an exclusive (write) lock (inverse of ?#writing)");
 DOC_DEF(doc_rwlock_canwrite,
         "->?Dbool\n"
-        "Returns !t so-long as no shared- and no exclusive locks are being held (inverse of ?#reading)");
-DOC_DEF(doc_rwlock_shared,
-        "->?GRWLockSharedLock\n"
+        "Returns !t so-long as no shared- (read) and no exclusive (write) locks are being held (inverse of ?#reading)");
+DOC_DEF(doc_rwlock_readlock,
+        "->?GRWLockReadLock\n"
         "Return a ?GLock-compatible wrapper object around @this read/write-lock "
         /**/ "that can be used to acquire a shared (read) locks");
-DOC_DEF(doc_rwlock_exclusive,
-        "->?GRWLockExclusiveLock\n"
+DOC_DEF(doc_rwlock_writelock,
+        "->?GRWLockWriteLock\n"
         "Return a ?GLock-compatible wrapper object around @this read/write-lock "
         /**/ "that can be used to acquire an exclusive (write) locks");
 
@@ -1161,27 +1161,27 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeGenericRWLockProxyObject *DCALL
-rwlock_shared_get(DeeObject *__restrict self) {
+rwlock_readlock_get(DeeObject *__restrict self) {
 	DREF DeeGenericRWLockProxyObject *result;
 	result = DeeObject_MALLOC(DeeGenericRWLockProxyObject);
 	if unlikely(!result)
 		goto done;
 	result->grwl_lock = self;
 	Dee_Incref(self);
-	DeeObject_Init(result, &DeeRWLockSharedLock_Type);
+	DeeObject_Init(result, &DeeRWLockReadLock_Type);
 done:
 	return result;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeGenericRWLockProxyObject *DCALL
-rwlock_exclusive_get(DeeObject *__restrict self) {
+rwlock_writelock_get(DeeObject *__restrict self) {
 	DREF DeeGenericRWLockProxyObject *result;
 	result = DeeObject_MALLOC(DeeGenericRWLockProxyObject);
 	if unlikely(!result)
 		goto done;
 	result->grwl_lock = self;
 	Dee_Incref(self);
-	DeeObject_Init(result, &DeeRWLockExclusiveLock_Type);
+	DeeObject_Init(result, &DeeRWLockWriteLock_Type);
 done:
 	return result;
 }
@@ -1203,8 +1203,8 @@ PRIVATE struct type_method rwlock_methods[] = {
 PRIVATE struct type_getset rwlock_getsets[] = {
 	TYPE_GETTER(STR_canread, &rwlock_canread_get, DOC_GET(doc_rwlock_canread)),
 	TYPE_GETTER(STR_canwrite, &rwlock_canwrite_get, DOC_GET(doc_rwlock_canwrite)),
-	TYPE_GETTER(STR_shared, &rwlock_shared_get, DOC_GET(doc_rwlock_shared)),
-	TYPE_GETTER(STR_exclusive, &rwlock_exclusive_get, DOC_GET(doc_rwlock_exclusive)),
+	TYPE_GETTER(STR_readlock, &rwlock_readlock_get, DOC_GET(doc_rwlock_readlock)),
+	TYPE_GETTER(STR_writelock, &rwlock_writelock_get, DOC_GET(doc_rwlock_writelock)),
 	TYPE_GETSET_END
 };
 
@@ -1238,8 +1238,8 @@ INTERN DeeTypeObject DeeRWLock_Type = {
 	                         /**/ "function timedwaitwrite(timeout_nanoseconds: int): bool;\n"
 	                         /**/ "property canread: bool = { get(): bool; };\n"
 	                         /**/ "property canwrite: bool = { get(): bool; };\n"
-	                         /**/ "property shared: RWLockSharedLock = { get(): RWLockSharedLock; };\n"
-	                         /**/ "property exclusive: RWLockExclusiveLock = { get(): RWLockExclusiveLock; };"
+	                         /**/ "property readlock: RWLockReadLock = { get(): RWLockReadLock; };\n"
+	                         /**/ "property writelock: RWLockWriteLock = { get(): RWLockWriteLock; };"
 	                         "}"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FABSTRACT,
 	/* .tp_weakrefs = */ 0,
@@ -1285,9 +1285,9 @@ INTERN DeeTypeObject DeeRWLock_Type = {
 
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
-rwlock_shared_init(DeeGenericRWLockProxyObject *__restrict self,
-                   size_t argc, DeeObject *const *argv) {
-	if (DeeArg_Unpack(argc, argv, "o:RWLockSharedLock", &self->grwl_lock))
+rwlock_readlock_init(DeeGenericRWLockProxyObject *__restrict self,
+                     size_t argc, DeeObject *const *argv) {
+	if (DeeArg_Unpack(argc, argv, "o:RWLockReadLock", &self->grwl_lock))
 		goto err;
 	if (DeeObject_AssertType(self->grwl_lock, &DeeLock_Type))
 		goto err;
@@ -1298,9 +1298,9 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
-rwlock_exclusive_init(DeeGenericRWLockProxyObject *__restrict self,
+rwlock_writelock_init(DeeGenericRWLockProxyObject *__restrict self,
                       size_t argc, DeeObject *const *argv) {
-	if (DeeArg_Unpack(argc, argv, "o:RWLockExclusiveLock", &self->grwl_lock))
+	if (DeeArg_Unpack(argc, argv, "o:RWLockWriteLock", &self->grwl_lock))
 		goto err;
 	if (DeeObject_AssertType(self->grwl_lock, &DeeLock_Type))
 		goto err;
@@ -1326,39 +1326,39 @@ PRIVATE struct type_member rwlock_proxy_members[] = {
 	TYPE_MEMBER_END
 };
 
-#define rwlock_shared_fini       rwlock_proxy_fini
-#define rwlock_shared_visit      rwlock_proxy_visit
-#define rwlock_shared_members    rwlock_proxy_members
-#define rwlock_exclusive_fini    rwlock_proxy_fini
-#define rwlock_exclusive_visit   rwlock_proxy_visit
-#define rwlock_exclusive_members rwlock_proxy_members
+#define rwlock_readlock_fini     rwlock_proxy_fini
+#define rwlock_readlock_visit    rwlock_proxy_visit
+#define rwlock_readlock_members  rwlock_proxy_members
+#define rwlock_writelock_fini    rwlock_proxy_fini
+#define rwlock_writelock_visit   rwlock_proxy_visit
+#define rwlock_writelock_members rwlock_proxy_members
 
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
-rwlock_shared_print(DeeGenericRWLockProxyObject *__restrict self,
-                    dformatprinter printer, void *arg) {
+rwlock_readlock_print(DeeGenericRWLockProxyObject *__restrict self,
+                      dformatprinter printer, void *arg) {
 	return DeeFormat_Printf(printer, arg, "<Shared Lock for %k>", self->grwl_lock);
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
-rwlock_exclusive_print(DeeGenericRWLockProxyObject *__restrict self,
+rwlock_writelock_print(DeeGenericRWLockProxyObject *__restrict self,
                        dformatprinter printer, void *arg) {
 	return DeeFormat_Printf(printer, arg, "<Exclusive Lock for %k>", self->grwl_lock);
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
-rwlock_shared_printrepr(DeeGenericRWLockProxyObject *__restrict self,
-                        dformatprinter printer, void *arg) {
-	return DeeFormat_Printf(printer, arg, "%r.shared", self->grwl_lock);
+rwlock_readlock_printrepr(DeeGenericRWLockProxyObject *__restrict self,
+                          dformatprinter printer, void *arg) {
+	return DeeFormat_Printf(printer, arg, "%r.readlock", self->grwl_lock);
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
-rwlock_exclusive_printrepr(DeeGenericRWLockProxyObject *__restrict self,
+rwlock_writelock_printrepr(DeeGenericRWLockProxyObject *__restrict self,
                            dformatprinter printer, void *arg) {
-	return DeeFormat_Printf(printer, arg, "%r.exclusive", self->grwl_lock);
+	return DeeFormat_Printf(printer, arg, "%r.writelock", self->grwl_lock);
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
-rwlock_shared_enter(DeeGenericRWLockProxyObject *__restrict self) {
+rwlock_readlock_enter(DeeGenericRWLockProxyObject *__restrict self) {
 	DREF DeeObject *temp;
 	temp = DeeObject_CallAttr(self->grwl_lock, (DeeObject *)&str_read, 0, NULL);
 	if unlikely(!temp)
@@ -1370,7 +1370,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
-rwlock_shared_leave(DeeGenericRWLockProxyObject *__restrict self) {
+rwlock_readlock_leave(DeeGenericRWLockProxyObject *__restrict self) {
 	DREF DeeObject *temp;
 	temp = DeeObject_CallAttr(self->grwl_lock, (DeeObject *)&str_endread, 0, NULL);
 	if unlikely(!temp)
@@ -1382,7 +1382,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
-rwlock_exclusive_enter(DeeGenericRWLockProxyObject *__restrict self) {
+rwlock_writelock_enter(DeeGenericRWLockProxyObject *__restrict self) {
 	DREF DeeObject *temp;
 	temp = DeeObject_CallAttr(self->grwl_lock, (DeeObject *)&str_write, 0, NULL);
 	if unlikely(!temp)
@@ -1394,7 +1394,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
-rwlock_exclusive_leave(DeeGenericRWLockProxyObject *__restrict self) {
+rwlock_writelock_leave(DeeGenericRWLockProxyObject *__restrict self) {
 	DREF DeeObject *temp;
 	temp = DeeObject_CallAttr(self->grwl_lock, (DeeObject *)&str_endwrite, 0, NULL);
 	if unlikely(!temp)
@@ -1406,145 +1406,145 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-rwlock_shared_tryacquire(DeeGenericRWLockProxyObject *self,
-                         size_t argc, DeeObject *const *argv) {
+rwlock_readlock_tryacquire(DeeGenericRWLockProxyObject *self,
+                           size_t argc, DeeObject *const *argv) {
 	return DeeObject_CallAttr(self->grwl_lock, (DeeObject *)&str_tryread, argc, argv);
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-rwlock_exclusive_tryacquire(DeeGenericRWLockProxyObject *self,
+rwlock_writelock_tryacquire(DeeGenericRWLockProxyObject *self,
                             size_t argc, DeeObject *const *argv) {
 	return DeeObject_CallAttr(self->grwl_lock, (DeeObject *)&str_trywrite, argc, argv);
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-rwlock_shared_acquire(DeeGenericRWLockProxyObject *self,
-                      size_t argc, DeeObject *const *argv) {
+rwlock_readlock_acquire(DeeGenericRWLockProxyObject *self,
+                        size_t argc, DeeObject *const *argv) {
 	return DeeObject_CallAttr(self->grwl_lock, (DeeObject *)&str_read, argc, argv);
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-rwlock_exclusive_acquire(DeeGenericRWLockProxyObject *self,
+rwlock_writelock_acquire(DeeGenericRWLockProxyObject *self,
                          size_t argc, DeeObject *const *argv) {
 	return DeeObject_CallAttr(self->grwl_lock, (DeeObject *)&str_write, argc, argv);
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-rwlock_shared_release(DeeGenericRWLockProxyObject *self,
-                      size_t argc, DeeObject *const *argv) {
+rwlock_readlock_release(DeeGenericRWLockProxyObject *self,
+                        size_t argc, DeeObject *const *argv) {
 	return DeeObject_CallAttr(self->grwl_lock, (DeeObject *)&str_endread, argc, argv);
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-rwlock_exclusive_release(DeeGenericRWLockProxyObject *self,
+rwlock_writelock_release(DeeGenericRWLockProxyObject *self,
                          size_t argc, DeeObject *const *argv) {
 	return DeeObject_CallAttr(self->grwl_lock, (DeeObject *)&str_endwrite, argc, argv);
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-rwlock_shared_timedacquire(DeeGenericRWLockProxyObject *self,
-                           size_t argc, DeeObject *const *argv) {
+rwlock_readlock_timedacquire(DeeGenericRWLockProxyObject *self,
+                             size_t argc, DeeObject *const *argv) {
 	return DeeObject_CallAttr(self->grwl_lock, (DeeObject *)&str_timedread, argc, argv);
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-rwlock_exclusive_timedacquire(DeeGenericRWLockProxyObject *self,
+rwlock_writelock_timedacquire(DeeGenericRWLockProxyObject *self,
                               size_t argc, DeeObject *const *argv) {
 	return DeeObject_CallAttr(self->grwl_lock, (DeeObject *)&str_timedwrite, argc, argv);
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-rwlock_shared_waitfor(DeeGenericRWLockProxyObject *self,
-                      size_t argc, DeeObject *const *argv) {
+rwlock_readlock_waitfor(DeeGenericRWLockProxyObject *self,
+                        size_t argc, DeeObject *const *argv) {
 	return DeeObject_CallAttr(self->grwl_lock, (DeeObject *)&str_waitread, argc, argv);
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-rwlock_exclusive_waitfor(DeeGenericRWLockProxyObject *self,
+rwlock_writelock_waitfor(DeeGenericRWLockProxyObject *self,
                          size_t argc, DeeObject *const *argv) {
 	return DeeObject_CallAttr(self->grwl_lock, (DeeObject *)&str_waitwrite, argc, argv);
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-rwlock_shared_timedwaitfor(DeeGenericRWLockProxyObject *self,
-                           size_t argc, DeeObject *const *argv) {
+rwlock_readlock_timedwaitfor(DeeGenericRWLockProxyObject *self,
+                             size_t argc, DeeObject *const *argv) {
 	return DeeObject_CallAttr(self->grwl_lock, (DeeObject *)&str_timedwaitread, argc, argv);
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-rwlock_exclusive_timedwaitfor(DeeGenericRWLockProxyObject *self,
+rwlock_writelock_timedwaitfor(DeeGenericRWLockProxyObject *self,
                               size_t argc, DeeObject *const *argv) {
 	return DeeObject_CallAttr(self->grwl_lock, (DeeObject *)&str_timedwaitwrite, argc, argv);
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-rwlock_shared_available_get(DeeGenericRWLockProxyObject *__restrict self) {
+rwlock_readlock_available_get(DeeGenericRWLockProxyObject *__restrict self) {
 	return DeeObject_GetAttr(self->grwl_lock, (DeeObject *)&str_canread);
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-rwlock_exclusive_available_get(DeeGenericRWLockProxyObject *__restrict self) {
+rwlock_writelock_available_get(DeeGenericRWLockProxyObject *__restrict self) {
 	return DeeObject_GetAttr(self->grwl_lock, (DeeObject *)&str_canwrite);
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-rwlock_shared_acquired_get(DeeGenericRWLockProxyObject *__restrict self) {
+rwlock_readlock_acquired_get(DeeGenericRWLockProxyObject *__restrict self) {
 	return DeeObject_GetAttr(self->grwl_lock, (DeeObject *)&str_reading);
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-rwlock_exclusive_acquired_get(DeeGenericRWLockProxyObject *__restrict self) {
+rwlock_writelock_acquired_get(DeeGenericRWLockProxyObject *__restrict self) {
 	return DeeObject_GetAttr(self->grwl_lock, (DeeObject *)&str_writing);
 }
 
 
 
-PRIVATE struct type_with rwlock_shared_with = {
-	/* .tp_enter = */ (int (DCALL *)(DeeObject *__restrict))&rwlock_shared_enter,
-	/* .tp_leave = */ (int (DCALL *)(DeeObject *__restrict))&rwlock_shared_leave
+PRIVATE struct type_with rwlock_readlock_with = {
+	/* .tp_enter = */ (int (DCALL *)(DeeObject *__restrict))&rwlock_readlock_enter,
+	/* .tp_leave = */ (int (DCALL *)(DeeObject *__restrict))&rwlock_readlock_leave
 };
 
-PRIVATE struct type_with rwlock_exclusive_with = {
-	/* .tp_enter = */ (int (DCALL *)(DeeObject *__restrict))&rwlock_exclusive_enter,
-	/* .tp_leave = */ (int (DCALL *)(DeeObject *__restrict))&rwlock_exclusive_leave
+PRIVATE struct type_with rwlock_writelock_with = {
+	/* .tp_enter = */ (int (DCALL *)(DeeObject *__restrict))&rwlock_writelock_enter,
+	/* .tp_leave = */ (int (DCALL *)(DeeObject *__restrict))&rwlock_writelock_leave
 };
 
-PRIVATE struct type_method rwlock_shared_methods[] = {
-	TYPE_METHOD(STR_tryacquire, &rwlock_shared_tryacquire, DOC_GET(doc_lock_tryacquire)),
-	TYPE_METHOD(STR_acquire, &rwlock_shared_acquire, DOC_GET(doc_lock_acquire)),
-	TYPE_METHOD(STR_release, &rwlock_shared_release, DOC_GET(doc_lock_release)),
-	TYPE_METHOD(STR_timedacquire, &rwlock_shared_timedacquire, DOC_GET(doc_lock_timedacquire)),
-	TYPE_METHOD(STR_waitfor, &rwlock_shared_waitfor, DOC_GET(doc_lock_waitfor)),
-	TYPE_METHOD(STR_timedwaitfor, &rwlock_shared_timedwaitfor, DOC_GET(doc_lock_timedwaitfor)),
+PRIVATE struct type_method rwlock_readlock_methods[] = {
+	TYPE_METHOD(STR_tryacquire, &rwlock_readlock_tryacquire, DOC_GET(doc_lock_tryacquire)),
+	TYPE_METHOD(STR_acquire, &rwlock_readlock_acquire, DOC_GET(doc_lock_acquire)),
+	TYPE_METHOD(STR_release, &rwlock_readlock_release, DOC_GET(doc_lock_release)),
+	TYPE_METHOD(STR_timedacquire, &rwlock_readlock_timedacquire, DOC_GET(doc_lock_timedacquire)),
+	TYPE_METHOD(STR_waitfor, &rwlock_readlock_waitfor, DOC_GET(doc_lock_waitfor)),
+	TYPE_METHOD(STR_timedwaitfor, &rwlock_readlock_timedwaitfor, DOC_GET(doc_lock_timedwaitfor)),
 	TYPE_METHOD_END
 };
 
-PRIVATE struct type_method rwlock_exclusive_methods[] = {
-	TYPE_METHOD(STR_tryacquire, &rwlock_exclusive_tryacquire, DOC_GET(doc_lock_tryacquire)),
-	TYPE_METHOD(STR_acquire, &rwlock_exclusive_acquire, DOC_GET(doc_lock_acquire)),
-	TYPE_METHOD(STR_release, &rwlock_exclusive_release, DOC_GET(doc_lock_release)),
-	TYPE_METHOD(STR_timedacquire, &rwlock_exclusive_timedacquire, DOC_GET(doc_lock_timedacquire)),
-	TYPE_METHOD(STR_waitfor, &rwlock_exclusive_waitfor, DOC_GET(doc_lock_waitfor)),
-	TYPE_METHOD(STR_timedwaitfor, &rwlock_exclusive_timedwaitfor, DOC_GET(doc_lock_timedwaitfor)),
+PRIVATE struct type_method rwlock_writelock_methods[] = {
+	TYPE_METHOD(STR_tryacquire, &rwlock_writelock_tryacquire, DOC_GET(doc_lock_tryacquire)),
+	TYPE_METHOD(STR_acquire, &rwlock_writelock_acquire, DOC_GET(doc_lock_acquire)),
+	TYPE_METHOD(STR_release, &rwlock_writelock_release, DOC_GET(doc_lock_release)),
+	TYPE_METHOD(STR_timedacquire, &rwlock_writelock_timedacquire, DOC_GET(doc_lock_timedacquire)),
+	TYPE_METHOD(STR_waitfor, &rwlock_writelock_waitfor, DOC_GET(doc_lock_waitfor)),
+	TYPE_METHOD(STR_timedwaitfor, &rwlock_writelock_timedwaitfor, DOC_GET(doc_lock_timedwaitfor)),
 	TYPE_METHOD_END
 };
 
-PRIVATE struct type_getset rwlock_shared_getsets[] = {
-	TYPE_GETTER(STR_available, &rwlock_shared_available_get, DOC_GET(doc_lock_available)),
-	TYPE_GETTER(STR_acquired, &rwlock_shared_acquired_get, DOC_GET(doc_lock_acquired)),
+PRIVATE struct type_getset rwlock_readlock_getsets[] = {
+	TYPE_GETTER(STR_available, &rwlock_readlock_available_get, DOC_GET(doc_lock_available)),
+	TYPE_GETTER(STR_acquired, &rwlock_readlock_acquired_get, DOC_GET(doc_lock_acquired)),
 	TYPE_GETSET_END
 };
 
-PRIVATE struct type_getset rwlock_exclusive_getsets[] = {
-	TYPE_GETTER(STR_available, &rwlock_exclusive_available_get, DOC_GET(doc_lock_available)),
-	TYPE_GETTER(STR_acquired, &rwlock_exclusive_acquired_get, DOC_GET(doc_lock_acquired)),
+PRIVATE struct type_getset rwlock_writelock_getsets[] = {
+	TYPE_GETTER(STR_available, &rwlock_writelock_available_get, DOC_GET(doc_lock_available)),
+	TYPE_GETTER(STR_acquired, &rwlock_writelock_acquired_get, DOC_GET(doc_lock_acquired)),
 	TYPE_GETSET_END
 };
 
-INTERN DeeTypeObject DeeRWLockSharedLock_Type = {
+INTERN DeeTypeObject DeeRWLockReadLock_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
-	/* .tp_name     = */ "RWLockSharedLock",
-	/* .tp_doc      = */ DOC("Wrapper for a ?GRWLock's shared set of locking functions\n"
+	/* .tp_name     = */ "RWLockReadLock",
+	/* .tp_doc      = */ DOC("Wrapper for a ?GRWLock's shared (read) set of locking functions\n"
 	                         "\n"
 	                         "(lock:?GRWLock)"),
 	/* .tp_flags    = */ TP_FNORMAL,
@@ -1557,11 +1557,11 @@ INTERN DeeTypeObject DeeRWLockSharedLock_Type = {
 				/* .tp_ctor      = */ (dfunptr_t)NULL,
 				/* .tp_copy_ctor = */ (dfunptr_t)NULL,
 				/* .tp_deep_ctor = */ (dfunptr_t)NULL,
-				/* .tp_any_ctor  = */ (dfunptr_t)&rwlock_shared_init,
+				/* .tp_any_ctor  = */ (dfunptr_t)&rwlock_readlock_init,
 				TYPE_FIXED_ALLOCATOR(DeeGenericRWLockProxyObject)
 			}
 		},
-		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&rwlock_shared_fini,
+		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&rwlock_readlock_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL
 	},
@@ -1569,31 +1569,31 @@ INTERN DeeTypeObject DeeRWLockSharedLock_Type = {
 		/* .tp_str       = */ NULL,
 		/* .tp_repr      = */ NULL,
 		/* .tp_bool      = */ NULL,
-		/* .tp_print     = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&rwlock_shared_print,
-		/* .tp_printrepr = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&rwlock_shared_printrepr
+		/* .tp_print     = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&rwlock_readlock_print,
+		/* .tp_printrepr = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&rwlock_readlock_printrepr
 	},
 	/* .tp_call          = */ NULL,
-	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, Dee_visit_t, void *))&rwlock_shared_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, Dee_visit_t, void *))&rwlock_readlock_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ NULL,
 	/* .tp_seq           = */ NULL,
 	/* .tp_iter_next     = */ NULL,
 	/* .tp_attr          = */ NULL,
-	/* .tp_with          = */ &rwlock_shared_with,
+	/* .tp_with          = */ &rwlock_readlock_with,
 	/* .tp_buffer        = */ NULL,
-	/* .tp_methods       = */ rwlock_shared_methods,
-	/* .tp_getsets       = */ rwlock_shared_getsets,
-	/* .tp_members       = */ rwlock_shared_members,
+	/* .tp_methods       = */ rwlock_readlock_methods,
+	/* .tp_getsets       = */ rwlock_readlock_getsets,
+	/* .tp_members       = */ rwlock_readlock_members,
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,
 	/* .tp_class_members = */ NULL
 };
 
-INTERN DeeTypeObject DeeRWLockExclusiveLock_Type = {
+INTERN DeeTypeObject DeeRWLockWriteLock_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
-	/* .tp_name     = */ "RWLockExclusiveLock",
-	/* .tp_doc      = */ DOC("Wrapper for a ?GRWLock's exclusive set of locking functions\n"
+	/* .tp_name     = */ "RWLockWriteLock",
+	/* .tp_doc      = */ DOC("Wrapper for a ?GRWLock's exclusive (write) set of locking functions\n"
 	                         "\n"
 	                         "(lock:?GRWLock)"),
 	/* .tp_flags    = */ TP_FNORMAL,
@@ -1606,11 +1606,11 @@ INTERN DeeTypeObject DeeRWLockExclusiveLock_Type = {
 				/* .tp_ctor      = */ (dfunptr_t)NULL,
 				/* .tp_copy_ctor = */ (dfunptr_t)NULL,
 				/* .tp_deep_ctor = */ (dfunptr_t)NULL,
-				/* .tp_any_ctor  = */ (dfunptr_t)&rwlock_exclusive_init,
+				/* .tp_any_ctor  = */ (dfunptr_t)&rwlock_writelock_init,
 				TYPE_FIXED_ALLOCATOR(DeeGenericRWLockProxyObject)
 			}
 		},
-		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&rwlock_exclusive_fini,
+		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&rwlock_writelock_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL
 	},
@@ -1618,22 +1618,22 @@ INTERN DeeTypeObject DeeRWLockExclusiveLock_Type = {
 		/* .tp_str       = */ NULL,
 		/* .tp_repr      = */ NULL,
 		/* .tp_bool      = */ NULL,
-		/* .tp_print     = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&rwlock_exclusive_print,
-		/* .tp_printrepr = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&rwlock_exclusive_printrepr
+		/* .tp_print     = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&rwlock_writelock_print,
+		/* .tp_printrepr = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&rwlock_writelock_printrepr
 	},
 	/* .tp_call          = */ NULL,
-	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, Dee_visit_t, void *))&rwlock_exclusive_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, Dee_visit_t, void *))&rwlock_writelock_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ NULL,
 	/* .tp_seq           = */ NULL,
 	/* .tp_iter_next     = */ NULL,
 	/* .tp_attr          = */ NULL,
-	/* .tp_with          = */ &rwlock_exclusive_with,
+	/* .tp_with          = */ &rwlock_writelock_with,
 	/* .tp_buffer        = */ NULL,
-	/* .tp_methods       = */ rwlock_exclusive_methods,
-	/* .tp_getsets       = */ rwlock_exclusive_getsets,
-	/* .tp_members       = */ rwlock_exclusive_members,
+	/* .tp_methods       = */ rwlock_writelock_methods,
+	/* .tp_getsets       = */ rwlock_writelock_getsets,
+	/* .tp_members       = */ rwlock_writelock_members,
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,
 	/* .tp_class_members = */ NULL

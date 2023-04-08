@@ -59,6 +59,8 @@ function testLock(lock: Lock, isReadLockOrRecursive: bool = false) {
 
 function testRWLock(lock: RWLock, isRecursive: bool = false) {
 	assert lock is RWLock;
+	assert lock.readlock is RWLockReadLock;
+	assert lock.writelock is RWLockWriteLock;
 
 	assert !lock.reading;
 	assert !lock.writing;
@@ -167,7 +169,7 @@ function testRWLock(lock: RWLock, isRecursive: bool = false) {
 	assert lock.canread;
 	assert lock.canwrite;
 
-	with (lock.shared) {
+	with (lock.readlock) {
 		assert lock.reading;
 		assert !lock.writing;
 		assert lock.canread;
@@ -178,7 +180,7 @@ function testRWLock(lock: RWLock, isRecursive: bool = false) {
 	assert lock.canread;
 	assert lock.canwrite;
 
-	with (lock.exclusive) {
+	with (lock.writelock) {
 		assert lock.reading;
 		assert lock.writing;
 		assert isRecursive ? lock.canread : !lock.canread;
@@ -189,8 +191,8 @@ function testRWLock(lock: RWLock, isRecursive: bool = false) {
 	assert lock.canread;
 	assert lock.canwrite;
 
-	testLock(lock.shared, isReadLockOrRecursive: true);
-	testLock(lock.exclusive, isReadLockOrRecursive: isRecursive);
+	testLock(lock.readlock, isReadLockOrRecursive: true);
+	testLock(lock.writelock, isReadLockOrRecursive: isRecursive);
 }
 
 testLock(AtomicLock());
