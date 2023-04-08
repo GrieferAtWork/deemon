@@ -31,7 +31,7 @@
 #include "object.h"
 
 #ifndef CONFIG_NO_THREADS
-#include "util/recursive-rwlock.h"
+#include "util/rlock.h"
 #include "util/lock.h"
 #endif /* !CONFIG_NO_THREADS */
 
@@ -934,11 +934,28 @@ struct Dee_yield_function_iterator_object {
 	                                        * [.cf_this == yi_func->yf_this || NULL]
 	                                        * Execution frame of this iterator. */
 #ifndef CONFIG_NO_THREADS
-	Dee_recursive_rwlock_t       yi_lock;  /* Lock held while executing the frame of this iterator.
+	Dee_ratomic_rwlock_t         yi_lock;  /* Lock held while executing the frame of this iterator.
 	                                        * NOTE: This lock needs to be recursive to allow for
 	                                        *       GC-visit/frame-copy while the frame is executing. */
 #endif /* !CONFIG_NO_THREADS */
 };
+
+#define DeeYieldFunctionIterator_LockReading(self)    Dee_ratomic_rwlock_reading(&(self)->yi_lock)
+#define DeeYieldFunctionIterator_LockWriting(self)    Dee_ratomic_rwlock_writing(&(self)->yi_lock)
+#define DeeYieldFunctionIterator_LockTryRead(self)    Dee_ratomic_rwlock_tryread(&(self)->yi_lock)
+#define DeeYieldFunctionIterator_LockTryWrite(self)   Dee_ratomic_rwlock_trywrite(&(self)->yi_lock)
+#define DeeYieldFunctionIterator_LockCanRead(self)    Dee_ratomic_rwlock_canread(&(self)->yi_lock)
+#define DeeYieldFunctionIterator_LockCanWrite(self)   Dee_ratomic_rwlock_canwrite(&(self)->yi_lock)
+#define DeeYieldFunctionIterator_LockWaitRead(self)   Dee_ratomic_rwlock_waitread(&(self)->yi_lock)
+#define DeeYieldFunctionIterator_LockWaitWrite(self)  Dee_ratomic_rwlock_waitwrite(&(self)->yi_lock)
+#define DeeYieldFunctionIterator_LockRead(self)       Dee_ratomic_rwlock_read(&(self)->yi_lock)
+#define DeeYieldFunctionIterator_LockWrite(self)      Dee_ratomic_rwlock_write(&(self)->yi_lock)
+#define DeeYieldFunctionIterator_LockTryUpgrade(self) Dee_ratomic_rwlock_tryupgrade(&(self)->yi_lock)
+#define DeeYieldFunctionIterator_LockUpgrade(self)    Dee_ratomic_rwlock_upgrade(&(self)->yi_lock)
+#define DeeYieldFunctionIterator_LockDowngrade(self)  Dee_ratomic_rwlock_downgrade(&(self)->yi_lock)
+#define DeeYieldFunctionIterator_LockEndWrite(self)   Dee_ratomic_rwlock_endwrite(&(self)->yi_lock)
+#define DeeYieldFunctionIterator_LockEndRead(self)    Dee_ratomic_rwlock_endread(&(self)->yi_lock)
+#define DeeYieldFunctionIterator_LockEnd(self)        Dee_ratomic_rwlock_end(&(self)->yi_lock)
 
 DDATDEF DeeTypeObject DeeFunction_Type;              /* foo; */
 DDATDEF DeeTypeObject DeeYieldFunction_Type;         /* foo(); */

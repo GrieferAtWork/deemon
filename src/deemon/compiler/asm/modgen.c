@@ -49,9 +49,7 @@ INTERN WUNUSED NONNULL((1, 2)) int DCALL
 module_compile(DeeModuleObject *__restrict mod,
                DeeCodeObject *__restrict root_code,
                uint16_t flags) {
-#ifndef CONFIG_NO_THREADS
-	ASSERT(recursive_rwlock_writing(&DeeCompiler_Lock));
-#endif /* !CONFIG_NO_THREADS */
+	ASSERT(DeeCompiler_LockWriting());
 	ASSERT_OBJECT(root_code);
 	ASSERT(DeeCode_Check(root_code));
 	ASSERT_OBJECT_TYPE((DeeObject *)current_rootscope, &DeeRootScope_Type);

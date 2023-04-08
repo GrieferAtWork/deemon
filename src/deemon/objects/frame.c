@@ -48,40 +48,40 @@ DECL_BEGIN
 typedef DeeFrameObject Frame;
 
 #ifndef CONFIG_NO_THREADS
-#define PLOCK_READ(x)                                              \
-	((x)->f_plock ? ((x)->f_flags & DEEFRAME_FRECLOCK              \
-	                 ? (void)recursive_rwlock_read((x)->f_prlock)  \
-	                 : (void)Dee_atomic_rwlock_read((x)->f_plock)) \
+#define PLOCK_READ(x)                                               \
+	((x)->f_plock ? ((x)->f_flags & DEEFRAME_FRECLOCK               \
+	                 ? (void)Dee_ratomic_rwlock_read((x)->f_prlock) \
+	                 : (void)Dee_atomic_rwlock_read((x)->f_plock))  \
 	              : (void)0)
-#define PLOCK_TRYREAD(x)                                        \
-	((x)->f_plock ? ((x)->f_flags & DEEFRAME_FRECLOCK           \
-	                 ? recursive_rwlock_tryread((x)->f_prlock)  \
-	                 : Dee_atomic_rwlock_tryread((x)->f_plock)) \
+#define PLOCK_TRYREAD(x)                                         \
+	((x)->f_plock ? ((x)->f_flags & DEEFRAME_FRECLOCK            \
+	                 ? Dee_ratomic_rwlock_tryread((x)->f_prlock) \
+	                 : Dee_atomic_rwlock_tryread((x)->f_plock))  \
 	              : true)
-#define PLOCK_WRITE(x)                                                  \
-	((x)->f_flags & DEEFRAME_FWRITABLE                                  \
-	 ? ((x)->f_plock ? ((x)->f_flags & DEEFRAME_FRECLOCK                \
-	                    ? (recursive_rwlock_write((x)->f_prlock), true) \
-	                    : (Dee_atomic_rwlock_write((x)->f_plock)),      \
-	                    true)                                           \
-	                 : true)                                            \
+#define PLOCK_WRITE(x)                                                    \
+	((x)->f_flags & DEEFRAME_FWRITABLE                                    \
+	 ? ((x)->f_plock ? ((x)->f_flags & DEEFRAME_FRECLOCK                  \
+	                    ? (Dee_ratomic_rwlock_write((x)->f_prlock), true) \
+	                    : (Dee_atomic_rwlock_write((x)->f_plock)),        \
+	                    true)                                             \
+	                 : true)                                              \
 	 : false)
-#define PLOCK_TRYWRITE(x)                                           \
-	((x)->f_flags & DEEFRAME_FWRITABLE                              \
-	 ? ((x)->f_plock ? ((x)->f_flags & DEEFRAME_FRECLOCK            \
-	                    ? recursive_rwlock_trywrite((x)->f_prlock)  \
-	                    : Dee_atomic_rwlock_trywrite((x)->f_plock)) \
-	                 : true)                                        \
+#define PLOCK_TRYWRITE(x)                                            \
+	((x)->f_flags & DEEFRAME_FWRITABLE                               \
+	 ? ((x)->f_plock ? ((x)->f_flags & DEEFRAME_FRECLOCK             \
+	                    ? Dee_ratomic_rwlock_trywrite((x)->f_prlock) \
+	                    : Dee_atomic_rwlock_trywrite((x)->f_plock))  \
+	                 : true)                                         \
 	 : false)
-#define PLOCK_ENDREAD(x)                                              \
-	((x)->f_plock ? ((x)->f_flags & DEEFRAME_FRECLOCK                 \
-	                 ? (void)recursive_rwlock_endread((x)->f_prlock)  \
-	                 : (void)Dee_atomic_rwlock_endread((x)->f_plock)) \
-	              : (void)0)
-#define PLOCK_ENDWRITE(x)                                              \
+#define PLOCK_ENDREAD(x)                                               \
 	((x)->f_plock ? ((x)->f_flags & DEEFRAME_FRECLOCK                  \
-	                 ? (void)recursive_rwlock_endwrite((x)->f_prlock)  \
-	                 : (void)Dee_atomic_rwlock_endwrite((x)->f_plock)) \
+	                 ? (void)Dee_ratomic_rwlock_endread((x)->f_prlock) \
+	                 : (void)Dee_atomic_rwlock_endread((x)->f_plock))  \
+	              : (void)0)
+#define PLOCK_ENDWRITE(x)                                               \
+	((x)->f_plock ? ((x)->f_flags & DEEFRAME_FRECLOCK                   \
+	                 ? (void)Dee_ratomic_rwlock_endwrite((x)->f_prlock) \
+	                 : (void)Dee_atomic_rwlock_endwrite((x)->f_plock))  \
 	              : (void)0)
 #else /* !CONFIG_NO_THREADS */
 #define PLOCK_READ(x)     (void)0

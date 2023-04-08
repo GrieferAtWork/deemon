@@ -20,19 +20,29 @@
 #ifdef __INTELLISENSE__
 #include "futex.c"
 //#define DEFINE_DeeFutex_Wait32
-#define DEFINE_DeeFutex_Wait64
+//#define DEFINE_DeeFutex_Wait64
 //#define DEFINE_DeeFutex_Wait32Timed
 //#define DEFINE_DeeFutex_Wait64Timed
+//#define DEFINE_DeeFutex_Wait32NoInt
+#define DEFINE_DeeFutex_Wait64NoInt
+//#define DEFINE_DeeFutex_Wait32NoIntTimed
+//#define DEFINE_DeeFutex_Wait64NoIntTimed
 #endif /* __INTELLISENSE__ */
 
 DECL_BEGIN
 
-#if (defined(DEFINE_DeeFutex_Wait32) + defined(DEFINE_DeeFutex_Wait64) + \
-     defined(DEFINE_DeeFutex_Wait32Timed) + defined(DEFINE_DeeFutex_Wait64Timed)) != 1
+#if (defined(DEFINE_DeeFutex_Wait32) +           \
+     defined(DEFINE_DeeFutex_Wait64) +           \
+     defined(DEFINE_DeeFutex_Wait32Timed) +      \
+     defined(DEFINE_DeeFutex_Wait64Timed) +      \
+     defined(DEFINE_DeeFutex_Wait32NoInt) +      \
+     defined(DEFINE_DeeFutex_Wait64NoInt) +      \
+     defined(DEFINE_DeeFutex_Wait32NoIntTimed) + \
+     defined(DEFINE_DeeFutex_Wait64NoIntTimed)) != 1
 #error "Must #define exactly one of these macros"
 #endif /* ... */
 
-#ifdef DEFINE_DeeFutex_Wait32
+#if defined(DEFINE_DeeFutex_Wait32)
 #define LOCAL_sizeof_expected 4
 #define LOCAL_DeeFutex_WaitX  DeeFutex_Wait32
 #elif defined(DEFINE_DeeFutex_Wait64)
@@ -40,12 +50,30 @@ DECL_BEGIN
 #define LOCAL_DeeFutex_WaitX  DeeFutex_Wait64
 #elif defined(DEFINE_DeeFutex_Wait32Timed)
 #define LOCAL_sizeof_expected 4
+#define LOCAL_DeeFutex_WaitX  DeeFutex_Wait32Timed
 #define LOCAL_HAVE_timeout_nanoseconds
-#define LOCAL_DeeFutex_WaitX DeeFutex_Wait32Timed
+#elif defined(DEFINE_DeeFutex_Wait64Timed)
+#define LOCAL_sizeof_expected 8
+#define LOCAL_DeeFutex_WaitX  DeeFutex_Wait64Timed
+#define LOCAL_HAVE_timeout_nanoseconds
+#elif defined(DEFINE_DeeFutex_Wait32NoInt)
+#define LOCAL_sizeof_expected 4
+#define LOCAL_DeeFutex_WaitX  DeeFutex_Wait32NoInt
+#define LOCAL_IS_NO_INTERRUPT
+#elif defined(DEFINE_DeeFutex_Wait64NoInt)
+#define LOCAL_sizeof_expected 8
+#define LOCAL_DeeFutex_WaitX  DeeFutex_Wait64NoInt
+#define LOCAL_IS_NO_INTERRUPT
+#elif defined(DEFINE_DeeFutex_Wait32NoIntTimed)
+#define LOCAL_sizeof_expected 4
+#define LOCAL_DeeFutex_WaitX  DeeFutex_Wait32NoIntTimed
+#define LOCAL_HAVE_timeout_nanoseconds
+#define LOCAL_IS_NO_INTERRUPT
 #else /* ... */
 #define LOCAL_sizeof_expected 8
+#define LOCAL_DeeFutex_WaitX  DeeFutex_Wait64NoIntTimed
 #define LOCAL_HAVE_timeout_nanoseconds
-#define LOCAL_DeeFutex_WaitX DeeFutex_Wait64Timed
+#define LOCAL_IS_NO_INTERRUPT
 #endif /* !... */
 
 #if LOCAL_sizeof_expected == 4
@@ -66,7 +94,12 @@ DECL_BEGIN
  * @return: 1 : [DeeFutex_Wait32Timed] The given `timeout_nanoseconds' expired.
  * @return: 0 : Success (someone called `DeeFutex_Wake*(addr)', or `*addr != expected', or spurious wake-up)
  * @return: -1: Error (an error was thrown) */
+#if defined(LOCAL_IS_NO_INTERRUPT) && !defined(LOCAL_HAVE_timeout_nanoseconds)
+#define LOCAL_return_type_is_void
+PUBLIC WUNUSED NONNULL((1)) void
+#else /* LOCAL_IS_NO_INTERRUPT */
 PUBLIC WUNUSED NONNULL((1)) int
+#endif /* !LOCAL_IS_NO_INTERRUPT */
 (DCALL LOCAL_DeeFutex_WaitX)(void *addr,
                              LOCAL_expected_t expected
 #ifdef LOCAL_HAVE_timeout_nanoseconds
@@ -74,6 +107,18 @@ PUBLIC WUNUSED NONNULL((1)) int
 #endif /* LOCAL_HAVE_timeout_nanoseconds */
                              )
 {
+#ifdef LOCAL_return_type_is_void
+#define LOCAL_return_0           return
+#define LOCAL_return_error(expr) return
+#else /* LOCAL_return_type_is_void */
+#define LOCAL_return_0 return 0
+#ifdef LOCAL_IS_NO_INTERRUPT
+#define LOCAL_return_error(expr) return 0
+#else /* LOCAL_IS_NO_INTERRUPT */
+#define LOCAL_return_error(expr) return expr
+#endif /* !LOCAL_IS_NO_INTERRUPT */
+#endif /* !LOCAL_return_type_is_void */
+
 #define LOCAL_should_wait() (*(LOCAL_expected_t const *)addr == expected)
 #ifdef DeeFutex_USE_stub
 
@@ -86,7 +131,7 @@ PUBLIC WUNUSED NONNULL((1)) int
 #ifdef LOCAL_HAVE_timeout_nanoseconds
 	(void)timeout_nanoseconds;
 #endif /* LOCAL_HAVE_timeout_nanoseconds */
-	return 0;
+	LOCAL_return_0;
 
 #elif defined(DeeFutex_USE_yield)
 
@@ -98,10 +143,15 @@ PUBLIC WUNUSED NONNULL((1)) int
 #ifdef LOCAL_HAVE_timeout_nanoseconds
 	(void)timeout_nanoseconds;
 #endif /* LOCAL_HAVE_timeout_nanoseconds */
+#ifdef LOCAL_IS_NO_INTERRUPT
+	SCHED_YIELD();
+	LOCAL_return_0;
+#else /* LOCAL_IS_NO_INTERRUPT */
 	int result = DeeThread_CheckInterrupt();
 	if likely(result == 0)
 		SCHED_YIELD();
 	return result;
+#endif /* !LOCAL_IS_NO_INTERRUPT */
 
 #elif (defined(DeeFutex_USE_os_futex) || \
        (defined(DeeFutex_USE_os_futex_32_only) && LOCAL_sizeof_expected == 4))
@@ -116,11 +166,13 @@ again_futex_wait:
 	os_futex_wait_begin(addr) {
 
 		/* Check for interrupts _while_ our thread is registered as being inside of a futex operation. */
+#ifndef LOCAL_IS_NO_INTERRUPT
 		if (DeeThread_CheckInterrupt()) {
 			os_futex_wait_break();
 			(void)os_futex_wakeall(addr);
 			return -1;
 		}
+#endif /* !LOCAL_IS_NO_INTERRUPT */
 		
 		/* Do the actual futex operation */
 #ifdef LOCAL_HAVE_timeout_nanoseconds
@@ -140,14 +192,22 @@ again_futex_wait:
 			return 1;
 		});
 #endif /* LOCAL_HAVE_timeout_nanoseconds */
+#ifdef LOCAL_IS_NO_INTERRUPT
+		DeeSystem_IF_E1(error, ENOMEM, {
+			if (Dee_TryCollectMemory(1))
+				goto again_futex_wait;
+			LOCAL_return_0;
+		});
+#else /* LOCAL_IS_NO_INTERRUPT */
 		DeeSystem_IF_E1(error, ENOMEM, {
 			if (Dee_CollectMemory(1))
 				goto again_futex_wait;
-			return -1;
+			LOCAL_return_error(-1);
 		});
-		return DeeUnixSystem_ThrowErrorf(NULL, error, "Futex wait operation failed");
+#endif /* !LOCAL_IS_NO_INTERRUPT */
+		LOCAL_return_error(DeeUnixSystem_ThrowErrorf(NULL, error, "Futex wait operation failed"));
 	}
-	return 0;
+	LOCAL_return_0;
 
 #elif defined(DeeFutex_USE_WaitOnAddress_OR_CONDITION_VARIABLE_AND_SRWLOCK_OR_CreateSemaphoreW)
 
@@ -175,11 +235,13 @@ again_switch_nt_futex_implementation:
 again_futex_wait:
 		os_futex_wait_begin(addr) {
 			/* Check for interrupts _while_ our thread is registered as being inside of a futex operation. */
+#ifndef LOCAL_IS_NO_INTERRUPT
 			if (DeeThread_CheckInterrupt()) {
 				os_futex_wait_break();
 				(void)WakeByAddressAll(addr);
 				return -1;
 			}
+#endif /* !LOCAL_IS_NO_INTERRUPT */
 		
 			bOK = WaitOnAddress(addr, &expected, LOCAL_sizeof_expected, LOCAL_dwTimeout);
 		}
@@ -193,13 +255,19 @@ again_futex_wait:
 			if (DeeNTSystem_IsIntr(dwError))
 				goto again_futex_wait;
 			if (DeeNTSystem_IsBadAllocError(dwError)) {
+#ifdef LOCAL_IS_NO_INTERRUPT
+				if (Dee_TryCollectMemory(1))
+					goto again_futex_wait;
+				LOCAL_return_0;
+#else /* LOCAL_IS_NO_INTERRUPT */
 				if (Dee_CollectMemory(1))
 					goto again_futex_wait;
-				return -1;
+				LOCAL_return_error(-1);
+#endif /* !LOCAL_IS_NO_INTERRUPT */
 			}
-			return DeeNTSystem_ThrowErrorf(NULL, dwError, "WaitOnAddress failed");
+			LOCAL_return_error(DeeNTSystem_ThrowErrorf(NULL, dwError, "WaitOnAddress failed"));
 		}
-		return 0;
+		LOCAL_return_0;
 	}	break;
 
 	case NT_FUTEX_IMPLEMENTATION_COND_AND_CRIT: {
@@ -207,24 +275,28 @@ again_futex_wait:
 		DREF struct futex_controller *ctrl;
 		ctrl = futex_ataddr_create((uintptr_t)addr);
 		if unlikely(!ctrl)
-			return -1;
+			LOCAL_return_error(-1);
 
 again_call_AcquireSRWLockShared:
 		AcquireSRWLockShared(&ctrl->fc_nt_cond_crit.cc_lock);
+
 		/* Check for interrupts _while_ we're holding the SRW-lock */
+#ifndef LOCAL_IS_NO_INTERRUPT
 		if (DeeThread_CheckInterrupt()) {
 			ReleaseSRWLockShared(&ctrl->fc_nt_cond_crit.cc_lock);
 			WakeAllConditionVariable(&ctrl->fc_nt_cond_crit.cc_cond);
 			futex_controller_decref(ctrl);
 			return -1;
 		}
+#endif /* !LOCAL_IS_NO_INTERRUPT */
 
 		/* Check the condition which we're supposed to wait on. */
 		if (!LOCAL_should_wait()) {
 			ReleaseSRWLockShared(&ctrl->fc_nt_cond_crit.cc_lock);
 			futex_controller_decref(ctrl);
-			return 0;
+			LOCAL_return_0;
 		}
+
 #ifndef CONDITION_VARIABLE_LOCKMODE_SHARED
 #define CONDITION_VARIABLE_LOCKMODE_SHARED 0x1
 #endif /* !CONDITION_VARIABLE_LOCKMODE_SHARED */
@@ -247,16 +319,21 @@ again_call_AcquireSRWLockShared:
 				goto again_call_AcquireSRWLockShared;
 			}
 			if (DeeNTSystem_IsBadAllocError(dwError)) {
+#ifdef LOCAL_IS_NO_INTERRUPT
+				if (Dee_TryCollectMemory(1))
+					goto again_call_AcquireSRWLockShared;
+#else /* LOCAL_IS_NO_INTERRUPT */
 				if (Dee_CollectMemory(1))
 					goto again_call_AcquireSRWLockShared;
+#endif /* !LOCAL_IS_NO_INTERRUPT */
 				futex_controller_decref(ctrl);
-				return -1;
+				LOCAL_return_error(-1);
 			}
 			futex_controller_decref(ctrl);
-			return DeeNTSystem_ThrowErrorf(NULL, dwError, "SleepConditionVariableSRW failed");
+			LOCAL_return_error(DeeNTSystem_ThrowErrorf(NULL, dwError, "SleepConditionVariableSRW failed"));
 		}
 		futex_controller_decref(ctrl);
-		return 0;
+		LOCAL_return_0;
 	}	break;
 
 	case NT_FUTEX_IMPLEMENTATION_SEMAPHORE: {
@@ -264,22 +341,24 @@ again_call_AcquireSRWLockShared:
 		DREF struct futex_controller *ctrl;
 		ctrl = futex_ataddr_create((uintptr_t)addr);
 		if unlikely(!ctrl)
-			return -1;
+			LOCAL_return_error(-1);
 again_call_inc_dwThreads:
 		atomic_inc(&ctrl->fc_nt_sem.sm_dwThreads);
 
 		/* Check for interrupts _while_ we're registered as a receiver */
+#ifndef LOCAL_IS_NO_INTERRUPT
 		if (DeeThread_CheckInterrupt()) {
 			atomic_dec(&ctrl->fc_nt_sem.sm_dwThreads);
 			futex_controller_decref(ctrl);
 			return -1;
 		}
+#endif /* !LOCAL_IS_NO_INTERRUPT */
 
 		/* Check the condition which we're supposed to wait on. */
 		if (!LOCAL_should_wait()) {
 			atomic_dec(&ctrl->fc_nt_sem.sm_dwThreads);
 			futex_controller_decref(ctrl);
-			return 0;
+			LOCAL_return_0;
 		}
 		dwWaitStatus = WaitForSingleObjectEx(ctrl->fc_nt_sem.sm_hSemaphore,
 		                                     LOCAL_dwTimeout, TRUE);
@@ -304,20 +383,25 @@ again_call_inc_dwThreads:
 				goto again_call_inc_dwThreads;
 			}
 			if (DeeNTSystem_IsBadAllocError(dwError)) {
+#ifdef LOCAL_IS_NO_INTERRUPT
+				if (Dee_TryCollectMemory(1))
+					goto again_call_inc_dwThreads;
+#else /* LOCAL_IS_NO_INTERRUPT */
 				if (Dee_CollectMemory(1))
 					goto again_call_inc_dwThreads;
+#endif /* !LOCAL_IS_NO_INTERRUPT */
 				futex_controller_decref(ctrl);
-				return -1;
+				LOCAL_return_error(-1);
 			}
 			futex_controller_decref(ctrl);
-			return DeeNTSystem_ThrowErrorf(NULL, dwError, "WaitForSingleObjectEx failed");
+			LOCAL_return_error(DeeNTSystem_ThrowErrorf(NULL, dwError, "WaitForSingleObjectEx failed"));
 		}	break;
 
 		default:
 			break;
 		}
 		futex_controller_decref(ctrl);
-		return 0;
+		LOCAL_return_0;
 	}	break;
 
 	default: __builtin_unreachable();
@@ -346,7 +430,7 @@ again_call_inc_dwThreads:
 	DREF struct futex_controller *ctrl;
 	ctrl = futex_ataddr_create((uintptr_t)addr);
 	if unlikely(!ctrl)
-		return -1;
+		LOCAL_return_error(-1);
 
 #ifdef DeeFutex_USE_os_futex_32_only
 #if defined(EINTR) || defined(ENOMEM)
@@ -363,16 +447,18 @@ again_read_ctrl_word:
 	 * sender incrementing `fc_word')! */
 
 	/* Check for interrupts _while_ our thread is registered as being inside of a futex operation. */
+#ifndef LOCAL_IS_NO_INTERRUPT
 	if (DeeThread_CheckInterrupt()) {
 		(void)os_futex_wakeall(&ctrl->fc_word);
 		futex_controller_decref(ctrl);
 		return -1;
 	}
+#endif /* !LOCAL_IS_NO_INTERRUPT */
 
 	/* Check if we're actually supposed to wait */
 	if (!LOCAL_should_wait()) {
 		futex_controller_decref(ctrl);
-		return 0;
+		LOCAL_return_0;
 	}
 	
 	/* Do the actual futex operation */
@@ -395,14 +481,23 @@ again_read_ctrl_word:
 			return 1;
 		});
 #endif /* LOCAL_HAVE_timeout_nanoseconds */
+#ifdef LOCAL_IS_NO_INTERRUPT
+		DeeSystem_IF_E1(error, ENOMEM, {
+			if (Dee_TryCollectMemory(1))
+				goto again_read_ctrl_word;
+			futex_controller_decref(ctrl);
+			LOCAL_return_error(-1);
+		});
+#else /* LOCAL_IS_NO_INTERRUPT */
 		DeeSystem_IF_E1(error, ENOMEM, {
 			if (Dee_CollectMemory(1))
 				goto again_read_ctrl_word;
 			futex_controller_decref(ctrl);
-			return -1;
+			LOCAL_return_error(-1);
 		});
+#endif /* !LOCAL_IS_NO_INTERRUPT */
 		futex_controller_decref(ctrl);
-		return DeeUnixSystem_ThrowErrorf(NULL, error, "Futex wait operation failed");
+		LOCAL_return_error(DeeUnixSystem_ThrowErrorf(NULL, error, "Futex wait operation failed"));
 	}
 #endif /* DeeFutex_USE_os_futex_32_only */
 
@@ -413,17 +508,19 @@ again_pthread_mutex_lock:
 	(void)pthread_mutex_lock(&ctrl->fc_mutx);
 
 	/* Check for interrupts _while_ we're holding a lock to `fc_mutx'. */
+#ifndef LOCAL_IS_NO_INTERRUPT
 	if (DeeThread_CheckInterrupt()) {
 		(void)pthread_mutex_unlock(&ctrl->fc_mutx);
 		(void)pthread_cond_broadcast(&ctrl->fc_cond);
 		futex_controller_decref(ctrl);
 		return -1;
 	}
+#endif /* !LOCAL_IS_NO_INTERRUPT */
 
 	/* Check if we're actually supposed to wait */
 	if (!LOCAL_should_wait()) {
 		futex_controller_decref(ctrl);
-		return 0;
+		LOCAL_return_0;
 	}
 	
 #ifdef LOCAL_HAVE_timeout_nanoseconds
@@ -486,14 +583,23 @@ again_pthread_mutex_lock:
 			return 1;
 		});
 #endif /* LOCAL_HAVE_timeout_nanoseconds */
+#ifdef LOCAL_IS_NO_INTERRUPT
+		DeeSystem_IF_E1(error, ENOMEM, {
+			if (Dee_TryCollectMemory(1))
+				goto again_pthread_mutex_lock;
+			futex_controller_decref(ctrl);
+			LOCAL_return_error(-1);
+		});
+#else /* LOCAL_IS_NO_INTERRUPT */
 		DeeSystem_IF_E1(error, ENOMEM, {
 			if (Dee_CollectMemory(1))
 				goto again_pthread_mutex_lock;
 			futex_controller_decref(ctrl);
-			return -1;
+			LOCAL_return_error(-1);
 		});
+#endif /* !LOCAL_IS_NO_INTERRUPT */
 		futex_controller_decref(ctrl);
-		return DeeUnixSystem_ThrowErrorf(NULL, error, "pthread_cond_wait failed");
+		LOCAL_return_error(DeeUnixSystem_ThrowErrorf(NULL, error, "pthread_cond_wait failed"));
 	}
 #endif /* DeeFutex_USE_pthread_cond_t_AND_pthread_mutex_t */
 
@@ -504,17 +610,19 @@ again_mtx_lock:
 	(void)mtx_lock(&ctrl->fc_mutx);
 
 	/* Check for interrupts _while_ we're holding a lock to `fc_mutx'. */
+#ifndef LOCAL_IS_NO_INTERRUPT
 	if (DeeThread_CheckInterrupt()) {
 		(void)mtx_unlock(&ctrl->fc_mutx);
 		(void)cnd_broadcast(&ctrl->fc_cond);
 		futex_controller_decref(ctrl);
 		return -1;
 	}
+#endif /* !LOCAL_IS_NO_INTERRUPT */
 
 	/* Check if we're actually supposed to wait */
 	if (!LOCAL_should_wait()) {
 		futex_controller_decref(ctrl);
-		return 0;
+		LOCAL_return_0;
 	}
 	
 #ifdef LOCAL_HAVE_timeout_nanoseconds
@@ -583,10 +691,15 @@ again_mtx_lock:
 #endif /* LOCAL_HAVE_timeout_nanoseconds */
 #ifdef CONFIG_HAVE_thrd_nomem
 		if (error == thrd_nomem) {
+#ifdef LOCAL_IS_NO_INTERRUPT
+			if (Dee_TryCollectMemory(1))
+				goto again_mtx_lock;
+#else /* LOCAL_IS_NO_INTERRUPT */
 			if (Dee_CollectMemory(1))
 				goto again_mtx_lock;
+#endif /* !LOCAL_IS_NO_INTERRUPT */
 			futex_controller_decref(ctrl);
-			return -1;
+			LOCAL_return_error(-1);
 		}
 #endif /* CONFIG_HAVE_thrd_nomem */
 #ifdef CONFIG_HAVE_thrd_error
@@ -601,7 +714,7 @@ again_mtx_lock:
 				if (Dee_CollectMemory(1))
 					goto again_mtx_lock;
 				futex_controller_decref(ctrl);
-				return -1;
+				LOCAL_return_error(-1);
 			}
 #endif /* ENOMEM */
 		} else
@@ -614,7 +727,7 @@ again_mtx_lock:
 #endif /* !EINVAL */
 		}
 		futex_controller_decref(ctrl);
-		return DeeUnixSystem_ThrowErrorf(NULL, error, "cnd_wait failed");
+		LOCAL_return_error(DeeUnixSystem_ThrowErrorf(NULL, error, "cnd_wait failed"));
 	}
 #endif /* DeeFutex_USE_cnd_t_AND_mtx_t */
 
@@ -625,17 +738,19 @@ again_inc_n_threads:
 	atomic_inc(&ctrl->fc_n_threads);
 
 	/* Check for interrupts _while_ we're registered as a receiver */
+#ifndef LOCAL_IS_NO_INTERRUPT
 	if (DeeThread_CheckInterrupt()) {
 		atomic_dec(&ctrl->fc_n_threads);
 		futex_controller_decref(ctrl);
 		return -1;
 	}
+#endif /* !LOCAL_IS_NO_INTERRUPT */
 
 	/* Check the condition which we're supposed to wait on. */
 	if (!LOCAL_should_wait()) {
 		atomic_dec(&ctrl->fc_n_threads);
 		futex_controller_decref(ctrl);
-		return 0;
+		LOCAL_return_0;
 	}
 
 #ifdef LOCAL_HAVE_timeout_nanoseconds
@@ -695,36 +810,53 @@ again_inc_n_threads:
 			return 1;
 		});
 #endif /* LOCAL_HAVE_timeout_nanoseconds */
+#ifdef LOCAL_IS_NO_INTERRUPT
+		DeeSystem_IF_E1(error, ENOMEM, {
+			if (Dee_TryCollectMemory(1))
+				goto again_inc_n_threads;
+			futex_controller_decref(ctrl);
+			LOCAL_return_error(-1);
+		});
+#else /* LOCAL_IS_NO_INTERRUPT */
 		DeeSystem_IF_E1(error, ENOMEM, {
 			if (Dee_CollectMemory(1))
 				goto again_inc_n_threads;
 			futex_controller_decref(ctrl);
-			return -1;
+			LOCAL_return_error(-1);
 		});
+#endif /* !LOCAL_IS_NO_INTERRUPT */
 		futex_controller_decref(ctrl);
-		return DeeUnixSystem_ThrowErrorf(NULL, error, "sem_wait failed");
+		LOCAL_return_error(DeeUnixSystem_ThrowErrorf(NULL, error, "sem_wait failed"));
 	}
 #endif /* DeeFutex_USE_sem_t */
 
 	/* Cleanup and indicate to our caller that we received a wake-up */
 	futex_controller_decref(ctrl);
-	return 0;
+	LOCAL_return_0;
 #else /* ... */
 #error "Invalid configuration"
 #endif /* !... */
+#undef LOCAL_return_0
+#undef LOCAL_return_error
 #undef LOCAL_should_wait
 }
 
+#undef LOCAL_return_type_is_void
 #undef LOCAL_os_futex_waitX_timed
 #undef LOCAL_os_futex_waitX
 #undef LOCAL_expected_t
 #undef LOCAL_DeeFutex_WaitX
 #undef LOCAL_HAVE_timeout_nanoseconds
 #undef LOCAL_sizeof_expected
+#undef LOCAL_IS_NO_INTERRUPT
 
 DECL_END
 
-#undef DEFINE_DeeFutex_Wait32
-#undef DEFINE_DeeFutex_Wait64
-#undef DEFINE_DeeFutex_Wait32Timed
+#undef DEFINE_DeeFutex_Wait64NoIntTimed
+#undef DEFINE_DeeFutex_Wait32NoIntTimed
+#undef DEFINE_DeeFutex_Wait64NoInt
+#undef DEFINE_DeeFutex_Wait32NoInt
 #undef DEFINE_DeeFutex_Wait64Timed
+#undef DEFINE_DeeFutex_Wait32Timed
+#undef DEFINE_DeeFutex_Wait64
+#undef DEFINE_DeeFutex_Wait32

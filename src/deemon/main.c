@@ -2663,7 +2663,7 @@ operation_mode_format(int argc, char **argv) {
 	 * scripts from spawning new threads and having those threads
 	 * tinker with the compiler while the main thread is trying to
 	 * format the original source file. */
-	recursive_rwlock_write(&DeeCompiler_Lock);
+	DeeCompiler_LockWriteNoInt();
 
 	/* Go over all input files and format them individually. */
 	for (i = 0; i < argc; ++i) {
@@ -2683,10 +2683,10 @@ operation_mode_format(int argc, char **argv) {
 		if (dchdir_and_format_source_files(filename))
 			goto err;
 	}
-	recursive_rwlock_endwrite(&DeeCompiler_Lock);
+	DeeCompiler_LockEndWrite();
 	return 0;
 err:
-	recursive_rwlock_endwrite(&DeeCompiler_Lock);
+	DeeCompiler_LockEndWrite();
 	return -1;
 }
 

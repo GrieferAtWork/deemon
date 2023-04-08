@@ -77,12 +77,41 @@ DFUNDEF WUNUSED NONNULL((1)) int
 #define DeeFutex_WaitPtrTimed DeeFutex_Wait32Timed
 #endif /* __SIZEOF_POINTER__ < 8 */
 
+
+/* Same as above, but don't check for interrupts (WARNING: Don't abuse this,
+ * and don't expose this to user-code. If this is abused, CTRL+C may not be
+ * able to kill deemon!)
+ * @return: 1 : Timeout expired (`*Timed' only)
+ * @return: 0 : Success (`*Timed' only) */
+DFUNDEF WUNUSED NONNULL((1)) void
+(DCALL DeeFutex_Wait32NoInt)(void *addr, uint32_t expected);
+DFUNDEF WUNUSED NONNULL((1)) int
+(DCALL DeeFutex_Wait32NoIntTimed)(void *addr, uint32_t expected,
+                                  uint64_t timeout_nanoseconds);
+#if __SIZEOF_POINTER__ >= 8
+/* Same as above, but do a 64-bit equals-comparison test. */
+DFUNDEF WUNUSED NONNULL((1)) void
+(DCALL DeeFutex_Wait64NoInt)(void *addr, uint64_t expected);
+DFUNDEF WUNUSED NONNULL((1)) int
+(DCALL DeeFutex_Wait64NoIntTimed)(void *addr, uint64_t expected,
+                                  uint64_t timeout_nanoseconds);
+#define DeeFutex_WaitPtrNoInt      DeeFutex_Wait64NoInt
+#define DeeFutex_WaitPtrNoIntTimed DeeFutex_Wait64NoIntTimed
+#else /* __SIZEOF_POINTER__ >= 8 */
+#define DeeFutex_WaitPtrNoInt      DeeFutex_Wait32NoInt
+#define DeeFutex_WaitPtrNoIntTimed DeeFutex_Wait32NoIntTimed
+#endif /* __SIZEOF_POINTER__ < 8 */
+
 #if __SIZEOF_INT__ <= 4
-#define DeeFutex_WaitInt      DeeFutex_Wait32
-#define DeeFutex_WaitIntTimed DeeFutex_Wait32Timed
+#define DeeFutex_WaitInt           DeeFutex_Wait32
+#define DeeFutex_WaitIntTimed      DeeFutex_Wait32Timed
+#define DeeFutex_WaitIntNoInt      DeeFutex_Wait32NoInt
+#define DeeFutex_WaitIntNoIntTimed DeeFutex_Wait32NoIntTimed
 #else /* __SIZEOF_INT__ <= 4 */
-#define DeeFutex_WaitInt      DeeFutex_Wait64
-#define DeeFutex_WaitIntTimed DeeFutex_Wait64Timed
+#define DeeFutex_WaitInt           DeeFutex_Wait64
+#define DeeFutex_WaitIntTimed      DeeFutex_Wait64Timed
+#define DeeFutex_WaitIntNoInt      DeeFutex_Wait64NoInt
+#define DeeFutex_WaitIntNoIntTimed DeeFutex_Wait64NoIntTimed
 #endif /* __SIZEOF_INT__ > 4 */
 
 DECL_END

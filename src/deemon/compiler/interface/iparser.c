@@ -52,7 +52,8 @@ PRIVATE struct keyword lookupmode_kwlist[] = { K(lookupmode), KEND };
 		DREF DeeObject *result = NULL;                                         \
 		DeeCompilerAstObject *head;                                            \
 		DREF struct ast *result_ast;                                           \
-		COMPILER_BEGIN(self->cw_compiler);                                     \
+		if (COMPILER_BEGIN(self->cw_compiler))                                 \
+			return NULL;                                                       \
 		if (DeeArg_UnpackKw(argc, argv, kw, suffix_kwlist, "o:" #name, &head)) \
 			goto done;                                                         \
 		if (DeeObject_AssertTypeExact(head, &DeeCompilerAst_Type))             \
@@ -94,7 +95,8 @@ PRIVATE struct keyword lookupmode_kwlist[] = { K(lookupmode), KEND };
 		unsigned int lookup_mode;                                                             \
 		DeeObject *lookup_mode_ob = Dee_EmptyString;                                          \
 		uint16_t old_exceptsz;                                                                \
-		COMPILER_BEGIN(self->cw_compiler);                                                    \
+		if (COMPILER_BEGIN(self->cw_compiler))                                                \
+			return NULL;                                                                      \
 		if (DeeArg_UnpackKw(argc, argv, kw, lookupmode_kwlist, "|o:" #name, &lookup_mode_ob)) \
 			goto done;                                                                        \
 		if unlikely(get_scope_lookupmode(lookup_mode_ob, &lookup_mode))                       \
@@ -162,7 +164,8 @@ parser_parse_stmt(DeeCompilerWrapperObject *self, size_t argc,
 	DREF struct ast *result_ast;
 	uint16_t old_exceptsz;
 	PRIVATE struct keyword kwlist[] = { K(nonblocking), KEND };
-	COMPILER_BEGIN(self->cw_compiler);
+	if (COMPILER_BEGIN(self->cw_compiler))
+		return NULL;
 	if (DeeArg_UnpackKw(argc, argv, kw, kwlist, "|b:parse_stmt", &nonblocking))
 		goto done;
 	old_exceptsz = DeeThread_Self()->t_exceptsz;
@@ -190,7 +193,8 @@ parser_parse_allstmt(DeeCompilerWrapperObject *self, size_t argc,
 	tok_t end_token = TOK_EOF;
 	uint16_t old_exceptsz;
 	PRIVATE struct keyword kwlist[] = { K(end), KEND };
-	COMPILER_BEGIN(self->cw_compiler);
+	if (COMPILER_BEGIN(self->cw_compiler))
+		return NULL;
 	if (DeeArg_UnpackKw(argc, argv, kw, kwlist, "|o:parse_allstmt", &end))
 		goto done;
 	if (end != Dee_EmptyString) {
@@ -349,7 +353,8 @@ PRIVATE struct type_method tpconst parser_methods[] = {
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 parser_getlfstmt(DeeCompilerWrapperObject *__restrict self) {
 	DREF DeeObject *result;
-	COMPILER_BEGIN(self->cw_compiler);
+	if (COMPILER_BEGIN(self->cw_compiler))
+		return NULL;
 	result = DeeBool_For(parser_flags & PARSE_FLFSTMT);
 	Dee_Incref(result);
 	COMPILER_END();
@@ -362,7 +367,8 @@ parser_setlfstmt(DeeCompilerWrapperObject *self,
 	int newval = DeeObject_Bool(value);
 	if unlikely(newval < 0)
 		goto err;
-	COMPILER_BEGIN(self->cw_compiler);
+	if (COMPILER_BEGIN(self->cw_compiler))
+		goto err;
 	if (newval) {
 		parser_flags |= PARSE_FLFSTMT;
 	} else {

@@ -33,7 +33,7 @@
 #include <deemon/string.h>
 #include <deemon/system-features.h> /* memcpy(), ... */
 #include <deemon/tuple.h>
-#include <deemon/util/recursive-rwlock.h>
+#include <deemon/util/rlock.h>
 
 #include "../runtime/strings.h"
 
@@ -46,7 +46,7 @@ DECL_BEGIN
 #endif /* NDEBUG */
 
 #ifndef CONFIG_NO_THREADS
-PUBLIC recursive_rwlock_t DeeCompiler_Lock = RECURSIVE_RWLOCK_INIT;
+PUBLIC Dee_rshared_rwlock_t DeeCompiler_Lock = DEE_RSHARED_RWLOCK_INIT;
 #endif /* !CONFIG_NO_THREADS */
 
 PUBLIC struct weakref DeeCompiler_Active   = WEAKREF_INIT;
@@ -80,9 +80,7 @@ PRIVATE void *DCALL memxch(void *a, void *b, size_t num_bytes) {
 /* compiler --> GLOBAL */
 PRIVATE NONNULL((1)) void DCALL
 load_compiler(DeeCompilerObject *__restrict compiler) {
-#ifndef CONFIG_NO_THREADS
-	ASSERT(recursive_rwlock_writing(&DeeCompiler_Lock));
-#endif /* !CONFIG_NO_THREADS */
+	ASSERT(DeeCompiler_LockWriting());
 	current_scope = compiler->cp_scope;
 	ASSERT_OBJECT(current_scope);
 	current_basescope = current_scope->s_base;
@@ -104,9 +102,7 @@ load_compiler(DeeCompilerObject *__restrict compiler) {
 /* GLOBAL --> compiler */
 PRIVATE NONNULL((1)) void DCALL
 save_compiler(DeeCompilerObject *__restrict compiler) {
-#ifndef CONFIG_NO_THREADS
-	ASSERT(recursive_rwlock_writing(&DeeCompiler_Lock));
-#endif /* !CONFIG_NO_THREADS */
+	ASSERT(DeeCompiler_LockWriting());
 	ASSERT_OBJECT(current_scope);
 	ASSERT_OBJECT((DeeObject *)current_basescope);
 	ASSERT_OBJECT((DeeObject *)current_rootscope);
@@ -133,9 +129,7 @@ save_compiler(DeeCompilerObject *__restrict compiler) {
 PUBLIC DREF DeeCompilerObject *DeeCompiler_Current = NULL;
 PUBLIC NONNULL((1)) void DCALL
 DeeCompiler_Begin(DREF DeeCompilerObject *__restrict compiler) {
-#ifndef CONFIG_NO_THREADS
-	ASSERT(recursive_rwlock_writing(&DeeCompiler_Lock));
-#endif /* !CONFIG_NO_THREADS */
+	ASSERT(DeeCompiler_LockWriting());
 	ASSERT(DeeCompiler_Check(compiler));
 	if (DeeCompiler_Current != compiler) {
 		ASSERTF(compiler->cp_recursion == 0,
@@ -171,9 +165,7 @@ do_load_compiler:
 PUBLIC void DCALL
 DeeCompiler_End(void) {
 	DeeCompilerObject *curr;
-#ifndef CONFIG_NO_THREADS
-	ASSERT(recursive_rwlock_writing(&DeeCompiler_Lock));
-#endif /* !CONFIG_NO_THREADS */
+	ASSERT(DeeCompiler_LockWriting());
 	curr = DeeCompiler_Current;
 	ASSERT(curr != NULL);
 	ASSERT(compiler_loaded == curr);
@@ -205,7 +197,7 @@ DeeCompiler_End(void) {
 PUBLIC NONNULL((1)) void DCALL
 DeeCompiler_Unload(DREF DeeCompilerObject *__restrict compiler) {
 	ASSERT(DeeCompiler_Check(compiler));
-	recursive_rwlock_write(&DeeCompiler_Lock);
+	DeeCompiler_LockWriteNoInt();
 	ASSERT(compiler != DeeCompiler_Current);
 	ASSERT(compiler->cp_recursion == 0);
 	if (compiler_loaded == compiler) {
@@ -215,7 +207,7 @@ DeeCompiler_Unload(DREF DeeCompilerObject *__restrict compiler) {
 		 *       may have already cleared this reference. */
 		Dee_weakref_clear(&DeeCompiler_Active);
 	}
-	recursive_rwlock_endwrite(&DeeCompiler_Lock);
+	DeeCompiler_LockEndWrite();
 }
 
 
@@ -285,10 +277,10 @@ compiler_fini(DeeCompilerObject *__restrict self) {
 
 	if (self->cp_tags.at_anno.an_annov) {
 		if unlikely(self->cp_tags.at_anno.an_annoc) {
-			recursive_rwlock_write(&DeeCompiler_Lock);
+			DeeCompiler_LockWriteNoInt();
 			while (self->cp_tags.at_anno.an_annoc--)
 				ast_decref(self->cp_tags.at_anno.an_annov[self->cp_tags.at_anno.an_annoc].aa_func);
-			recursive_rwlock_endwrite(&DeeCompiler_Lock);
+			DeeCompiler_LockEndWrite();
 		}
 		Dee_Free(self->cp_tags.at_anno.an_annov);
 		self->cp_tags.at_anno.an_annoa = 0;

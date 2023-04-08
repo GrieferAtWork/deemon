@@ -50,9 +50,9 @@ DeeCompilerItem_Fini(CompilerItem *__restrict self) {
 	Dee_Decref(com);
 #else /* CONFIG_NO_THREADS */
 	if unlikely(!Dee_DecrefIfNotOne(com)) {
-		recursive_rwlock_write(&DeeCompiler_Lock);
+		DeeCompiler_LockWriteNoInt();
 		Dee_Decref(com);
-		recursive_rwlock_endwrite(&DeeCompiler_Lock);
+		DeeCompiler_LockEndWrite();
 	}
 #endif /* !CONFIG_NO_THREADS */
 }
@@ -72,17 +72,17 @@ DeeCompilerObjItem_Fini(CompilerItem *__restrict self) {
 	LIST_REMOVE(self, ci_link);
 	--com->cp_items.cis_size;
 	Dee_compiler_items_lock_endwrite(&com->cp_items);
-	COMPILER_BEGIN(com);
+	COMPILER_BEGIN_NOINT(com);
 	ASSERT_OBJECT((DeeObject *)self->ci_value);
 	Dee_Decref((DeeObject *)self->ci_value);
 	DeeCompiler_End();
 	Dee_Decref_unlikely(com);
-	recursive_rwlock_endwrite(&DeeCompiler_Lock);
+	DeeCompiler_LockEndWrite();
 }
 
 INTERN NONNULL((1, 2)) void DCALL
 DeeCompilerObjItem_Visit(CompilerItem *__restrict self, dvisit_t proc, void *arg) {
-	COMPILER_BEGIN(self->ci_compiler);
+	COMPILER_BEGIN_NOINT(self->ci_compiler);
 	Dee_Visit(self->ci_compiler);
 	Dee_Visit((DeeObject *)self->ci_value);
 	COMPILER_END();
@@ -266,7 +266,7 @@ get_compiler_item_impl(DeeTypeObject *__restrict type,
 	DeeCompilerObject *self = DeeCompiler_Current;
 	ASSERT_OBJECT_TYPE(type, &DeeType_Type);
 	ASSERT(!(type->tp_flags & TP_FVARIABLE));
-	ASSERT(recursive_rwlock_reading(&DeeCompiler_Lock));
+	ASSERT(DeeCompiler_LockReading());
 again:
 	Dee_compiler_items_lock_read(&self->cp_items);
 	if (self->cp_items.cis_list) {
@@ -401,7 +401,7 @@ INTERN bool DCALL DeeCompiler_DelItem(void *value) {
 	DeeCompilerObject *com = DeeCompiler_Current;
 	if (!com)
 		return false;
-	ASSERT(recursive_rwlock_reading(&DeeCompiler_Lock));
+	ASSERT(DeeCompiler_LockReading());
 	Dee_compiler_items_lock_write(&com->cp_items);
 	if unlikely(!com->cp_items.cis_list) {
 		Dee_compiler_items_lock_endwrite(&com->cp_items);
@@ -450,7 +450,7 @@ DeeCompiler_DelItemType(DeeTypeObject *__restrict type) {
 		break;
 	}
 #endif /* !NDEBUG */
-	ASSERT(recursive_rwlock_reading(&DeeCompiler_Lock));
+	ASSERT(DeeCompiler_LockReading());
 	if (!com)
 		return false;
 	Dee_compiler_items_lock_write(&com->cp_items);
@@ -486,7 +486,7 @@ INTERN ATTR_COLD NONNULL((1)) int
 INTERN WUNUSED NONNULL((1)) void *DCALL
 DeeCompilerItem_GetValue(DeeObject *__restrict self) {
 	void *result;
-	ASSERT(recursive_rwlock_reading(&DeeCompiler_Lock));
+	ASSERT(DeeCompiler_LockReading());
 	ASSERT(DeeCompiler_Current == ((DeeCompilerItemObject *)self)->ci_compiler);
 	result = ((DeeCompilerItemObject *)self)->ci_value;
 	if unlikely(!result)

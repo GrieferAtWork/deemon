@@ -270,18 +270,22 @@ DeeModule_LoadSourceStreamEx(DeeModuleObject *__restrict self,
 	compiler_flags = COMPILER_FNORMAL;
 	if (options)
 		compiler_flags = options->co_compiler;
+
 	/* Create a new compiler for the module. */
 	compiler = DeeCompiler_New((DeeObject *)self, compiler_flags);
 	if unlikely(!compiler)
 		goto err;
+
 	/* Start working with this compiler. */
-	COMPILER_BEGIN(compiler);
+	if (COMPILER_BEGIN(compiler))
+		goto err_compiler_not_locked;
 	base_file = TPPFile_OpenStream((stream_t)input_file,
 	                               input_pathname
 	                               ? DeeString_STR(input_pathname)
 	                               : "");
 	if unlikely(!base_file)
 		goto err_compiler;
+
 	/* Set the starting-line offset. */
 	if (TPPFile_SetStartingLineAndColumn(base_file, start_line, start_col)) {
 		TPPFile_Decref(base_file);
@@ -305,6 +309,7 @@ DeeModule_LoadSourceStreamEx(DeeModuleObject *__restrict self,
 		base_file->f_textfile.f_usedname = used_name; /* Inherit */
 	}
 	ASSERT(!current_basescope->bs_name);
+
 	/* Set the name of the current base-scope, which
 	 * describes the function of the module's root code. */
 	if (options && options->co_rootname) {
@@ -336,7 +341,7 @@ DeeModule_LoadSourceStreamEx(DeeModuleObject *__restrict self,
 			if unlikely(result < 0) {
 				DeeCompiler_End();
 				Dee_Decref(compiler);
-				recursive_rwlock_endwrite(&DeeCompiler_Lock);
+				DeeCompiler_LockEndWrite();
 				return result;
 			}
 		}
@@ -426,16 +431,19 @@ DeeModule_LoadSourceStreamEx(DeeModuleObject *__restrict self,
 
 	DeeCompiler_End();
 	Dee_Decref(compiler);
-	recursive_rwlock_endwrite(&DeeCompiler_Lock);
+	DeeCompiler_LockEndWrite();
 	return result;
 err_compiler_ast:
 	ast_decref(code);
 err_compiler:
 	DeeCompiler_End();
 	Dee_Decref(compiler);
-	recursive_rwlock_endwrite(&DeeCompiler_Lock);
+	DeeCompiler_LockEndWrite();
 err:
 	return -1;
+err_compiler_not_locked:
+	Dee_Decref(compiler);
+	goto err;
 }
 
 /* Load the given module from a filestream opened for a source file.
@@ -2910,6 +2918,7 @@ DeeExec_CompileModuleStream(DeeObject *source_stream,
 	DREF DeeCompilerObject *compiler;
 	DREF struct ast *code;
 	uint16_t assembler_flags, result_globala;
+
 	/* Create a new module. */
 	if (!module_name) {
 		if (source_pathname) {
@@ -2946,6 +2955,7 @@ DeeExec_CompileModuleStream(DeeObject *source_stream,
 	} else {
 		Dee_Incref(module_name);
 	}
+
 	/* Create the new module. */
 	result = DeeGCObject_CALLOC(DeeModuleObject);
 	if unlikely(!result)
@@ -2964,13 +2974,15 @@ DeeExec_CompileModuleStream(DeeObject *source_stream,
 	                           options ? options->co_compiler : COMPILER_FNORMAL);
 	if unlikely(!compiler)
 		goto err_r;
-	COMPILER_BEGIN(compiler);
+	if (COMPILER_BEGIN(compiler))
+		goto err_r_compiler_not_locked;
 	base_file = TPPFile_OpenStream((stream_t)source_stream,
 	                               source_pathname
 	                               ? DeeString_STR(source_pathname)
 	                               : "");
 	if unlikely(!base_file)
 		goto err_r_compiler;
+
 	/* Set the starting-line offset. */
 	if (TPPFile_SetStartingLineAndColumn(base_file, start_line, start_col)) {
 		TPPFile_Decref(base_file);
@@ -3210,6 +3222,7 @@ err_r_compiler_code:
 	ast_xdecref(code);
 err_r_compiler:
 	COMPILER_END();
+err_r_compiler_not_locked:
 	Dee_Decref(compiler);
 err_r:
 	atomic_and(&result->mo_flags, ~(MODULE_FLOADING));

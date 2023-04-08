@@ -242,6 +242,8 @@ EXPORTS
 	DeeFunction_GetInfo@8=_DeeFunction_GetInfo@8
 	DeeFunction_New@12=_DeeFunction_New@12
 	DeeFutex_Wait32@8=_DeeFutex_Wait32@8
+	DeeFutex_Wait32NoInt@8=_DeeFutex_Wait32NoInt@8
+	DeeFutex_Wait32NoIntTimed@16=_DeeFutex_Wait32NoIntTimed@16
 	DeeFutex_Wait32Timed@16=_DeeFutex_Wait32Timed@16
 	DeeFutex_WakeAll@4=_DeeFutex_WakeAll@4
 	DeeFutex_WakeOne@4=_DeeFutex_WakeOne@4

@@ -45,18 +45,24 @@
 DECL_BEGIN
 
 typedef DeeFileBufferObject Buffer;
-#define buf_reading(x)       recursive_rwlock_reading(&((Buffer *)(x))->fb_lock)
-#define buf_writing(x)       recursive_rwlock_writing(&((Buffer *)(x))->fb_lock)
-#define buf_tryread(self)    recursive_rwlock_tryread(&((Buffer *)(self))->fb_lock)
-#define buf_trywrite(self)   recursive_rwlock_trywrite(&((Buffer *)(self))->fb_lock)
-#define buf_read(self)       recursive_rwlock_read(&((Buffer *)(self))->fb_lock)
-#define buf_write(self)      recursive_rwlock_write(&((Buffer *)(self))->fb_lock)
-#define buf_tryupgrade(self) recursive_rwlock_tryupgrade(&((Buffer *)(self))->fb_lock)
-#define buf_upgrade(self)    recursive_rwlock_upgrade(&((Buffer *)(self))->fb_lock)
-#define buf_downgrade(self)  recursive_rwlock_downgrade(&((Buffer *)(self))->fb_lock)
-#define buf_endwrite(self)   recursive_rwlock_endwrite(&((Buffer *)(self))->fb_lock)
-#define buf_endread(self)    recursive_rwlock_endread(&((Buffer *)(self))->fb_lock)
-#define buf_end(self)        recursive_rwlock_end(&((Buffer *)(self))->fb_lock)
+#define buffer_lock_reading     DeeFileBuffer_LockReading
+#define buffer_lock_writing     DeeFileBuffer_LockWriting
+#define buffer_lock_tryread     DeeFileBuffer_LockTryRead
+#define buffer_lock_trywrite    DeeFileBuffer_LockTryWrite
+#define buffer_lock_canread     DeeFileBuffer_LockCanRead
+#define buffer_lock_canwrite    DeeFileBuffer_LockCanWrite
+#define buffer_lock_waitread    DeeFileBuffer_LockWaitRead
+#define buffer_lock_waitwrite   DeeFileBuffer_LockWaitWrite
+#define buffer_lock_read        DeeFileBuffer_LockRead
+#define buffer_lock_read_noint  DeeFileBuffer_LockReadNoInt
+#define buffer_lock_write       DeeFileBuffer_LockWrite
+#define buffer_lock_write_noint DeeFileBuffer_LockWriteNoInt
+#define buffer_lock_tryupgrade  DeeFileBuffer_LockTryUpgrade
+#define buffer_lock_upgrade     DeeFileBuffer_LockUpgrade
+#define buffer_lock_downgrade   DeeFileBuffer_LockDowngrade
+#define buffer_lock_endwrite    DeeFileBuffer_LockEndWrite
+#define buffer_lock_endread     DeeFileBuffer_LockEndRead
+#define buffer_lock_end         DeeFileBuffer_LockEnd
 
 
 
@@ -124,10 +130,11 @@ PRIVATE void atexit_flushall(void) {
 		buffer_ttys_lock_release();
 		if (!buffer)
 			break;
+
 		/* Synchronize this buffer. */
-		buf_write(buffer);
+		buffer_lock_write_noint(buffer);
 		error = buffer_sync_nolock(buffer, BUFFER_SYNC_FNORMAL);
-		buf_endwrite(buffer);
+		buffer_lock_endwrite(buffer);
 		if unlikely(error) {
 			DeeError_Print("Failed to synchronize tty during exit\n",
 			               ERROR_PRINT_HANDLEINTR);
@@ -192,10 +199,13 @@ buffer_init(Buffer *__restrict self,
 #if 1 /* Unwind recursive buffers. */
 	if (DeeObject_InstanceOf(file, (DeeTypeObject *)&DeeFileBuffer_Type)) {
 		DeeObject *base_file;
-		buf_write(file);
+		if (buffer_lock_write((Buffer *)file)) {
+			Dee_Free(self->fb_base);
+			goto err;
+		}
 		base_file = ((Buffer *)file)->fb_file;
 		Dee_XIncref(base_file);
-		buf_endwrite(file);
+		buffer_lock_endwrite((Buffer *)file);
 		/* Use the original buffer-file if available. */
 		if (base_file)
 			file = base_file;
@@ -204,7 +214,7 @@ buffer_init(Buffer *__restrict self,
 	{
 		Dee_Incref(file);
 	}
-	recursive_rwlock_init(&self->fb_lock);
+	Dee_rshared_rwlock_init(&self->fb_lock);
 	self->fb_file            = file;
 	self->fb_ptr             = self->fb_base;
 	self->fb_cnt             = 0;
@@ -335,7 +345,8 @@ DeeFileBuffer_SetMode(DeeObject *__restrict self,
 	       (mode & ~(FILE_BUFFER_FSYNC)) == FILE_BUFFER_MODE_AUTO ||
 	       mode == FILE_BUFFER_MODE_KEEP);
 	ASSERT_OBJECT_TYPE(self, (DeeTypeObject *)&DeeFileBuffer_Type);
-	buf_write(me);
+	if (buffer_lock_write(me))
+		return -1;
 	result = buffer_sync_nolock(me, BUFFER_SYNC_FERROR_IF_CLOSED);
 	if unlikely(result)
 		goto done;
@@ -388,7 +399,7 @@ DeeFileBuffer_SetMode(DeeObject *__restrict self,
 	}
 	me->fb_chng = me->fb_base;
 done:
-	buf_endwrite(me);
+	buffer_lock_endwrite(me);
 	return result;
 err_cannot_resize:
 err:
@@ -419,11 +430,12 @@ PUBLIC WUNUSED int DCALL DeeFileBuffer_SyncTTYs(void) {
 		 *        to acquire the same object-semantic lock twice here. If 2 threads try
 		 *        to do this at the same time, 2 buffers locks will already be held, and
 		 *        neither thread will be able to acquire the other thread's lock here! */
-		buf_write(buffer);
+		if (buffer_lock_write(buffer))
+			return -1;
 		COMPILER_BARRIER();
 		result = buffer_sync_nolock(buffer, BUFFER_SYNC_FNORMAL);
 		COMPILER_BARRIER();
-		buf_endwrite(buffer);
+		buffer_lock_endwrite(buffer);
 		Dee_Decref(buffer);
 		if unlikely(result)
 			break;
@@ -1215,10 +1227,13 @@ buffer_read(Buffer *__restrict self,
             void *__restrict buffer,
             size_t bufsize, dioflag_t flags) {
 	size_t result;
-	buf_write(self);
+	if (buffer_lock_write(self))
+		goto err;
 	result = buffer_read_nolock(self, (uint8_t *)buffer, bufsize, flags);
-	buf_endwrite(self);
+	buffer_lock_endwrite(self);
 	return result;
+err:
+	return (size_t)-1;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) size_t DCALL
@@ -1226,56 +1241,74 @@ buffer_write(Buffer *__restrict self,
              void const *__restrict buffer,
              size_t bufsize, dioflag_t flags) {
 	size_t result;
-	buf_write(self);
+	if (buffer_lock_write(self))
+		goto err;
 	result = buffer_write_nolock(self, (uint8_t const *)buffer, bufsize, flags);
-	buf_endwrite(self);
+	buffer_lock_endwrite(self);
 	return result;
+err:
+	return (size_t)-1;
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 buffer_sync(Buffer *__restrict self) {
 	int result;
-	buf_write(self);
+	if (buffer_lock_write(self))
+		goto err;
 	result = buffer_sync_nolock(self, BUFFER_SYNC_FERROR_IF_CLOSED);
-	buf_endwrite(self);
+	buffer_lock_endwrite(self);
 	return result;
+err:
+	return -1;
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 buffer_getc(Buffer *__restrict self, dioflag_t flags) {
 	int result;
-	buf_write(self);
+	if (buffer_lock_write(self))
+		goto err;
 	result = buffer_getc_nolock(self, flags);
-	buf_endwrite(self);
+	buffer_lock_endwrite(self);
 	return result;
+err:
+	return GETC_ERR;
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 buffer_ungetc(Buffer *__restrict self, int ch) {
 	int result;
-	buf_write(self);
+	if (buffer_lock_write(self))
+		goto err;
 	result = buffer_ungetc_nolock(self, ch);
-	buf_endwrite(self);
+	buffer_lock_endwrite(self);
 	return result;
+err:
+	return GETC_ERR;
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 buffer_trunc(Buffer *__restrict self, dpos_t new_size) {
 	int result;
-	buf_write(self);
+	if (buffer_lock_write(self))
+		goto err;
 	result = buffer_trunc_nolock(self, new_size);
-	buf_endwrite(self);
+	buffer_lock_endwrite(self);
 	return result;
+err:
+	return -1;
 }
 
 PRIVATE dpos_t DCALL
 buffer_seek(Buffer *__restrict self,
             doff_t off, int whence) {
 	dpos_t result;
-	buf_write(self);
+	if (buffer_lock_write(self))
+		goto err;
 	result = buffer_seek_nolock(self, off, whence);
-	buf_endwrite(self);
+	buffer_lock_endwrite(self);
 	return result;
+err:
+	return (dpos_t)-1;
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
@@ -1283,9 +1316,10 @@ buffer_close(Buffer *__restrict self) {
 	DREF DeeObject *file;
 	uint8_t *buffer;
 	uint16_t flags;
-	buf_write(self);
-	if unlikely(buffer_sync_nolock(self, BUFFER_SYNC_FERROR_IF_CLOSED))
+	if (buffer_lock_write(self))
 		goto err;
+	if unlikely(buffer_sync_nolock(self, BUFFER_SYNC_FERROR_IF_CLOSED))
+		goto err_unlock;
 	file   = self->fb_file;
 	buffer = self->fb_base;
 	flags  = self->fb_flag;
@@ -1293,7 +1327,7 @@ buffer_close(Buffer *__restrict self) {
 	/* Close the underlying file when that flag is set. */
 	if ((flags & FILE_BUFFER_FCLOFILE) &&
 	    DeeFile_Close(file))
-		goto err;
+		goto err_unlock;
 
 	self->fb_file = NULL;
 
@@ -1313,13 +1347,14 @@ buffer_close(Buffer *__restrict self) {
 	self->fb_flag = FILE_BUFFER_FNORMAL | (flags & FILE_BUFFER_FREADING);
 	self->fb_fpos = 0;
 	buffer_deltty(self);
-	buf_endwrite(self);
+	buffer_lock_endwrite(self);
 
 	Dee_XDecref(file); /* May already be NULL due to recursive callbacks. */
 	Dee_Free(buffer);
 	return 0;
+err_unlock:
+	buffer_lock_endwrite(self);
 err:
-	buf_endwrite(self);
 	return -1;
 }
 
@@ -1346,15 +1381,16 @@ buffer_print(Buffer *__restrict self, dformatprinter printer, void * arg) {
 	char const *mode;
 	DREF DeeObject *inner_file;
 	uint16_t buffer_flags;
-	buf_read(self);
+	if (buffer_lock_read(self))
+		goto err;
 	inner_file = self->fb_file;
 	if (inner_file == NULL) {
-		buf_endread(self);
+		buffer_lock_endread(self);
 		return DeeFormat_PRINT(printer, arg, "<Buffer (closed)>");
 	}
 	buffer_flags = self->fb_flag;
 	Dee_Incref(inner_file);
-	buf_endread(self);
+	buffer_lock_endread(self);
 	if (buffer_flags & FILE_BUFFER_FLNBUF) {
 		mode = "Line";
 	} else if (buffer_flags & FILE_BUFFER_FNODYNSCALE) {
@@ -1369,6 +1405,8 @@ buffer_print(Buffer *__restrict self, dformatprinter printer, void * arg) {
 	                          mode, inner_file);
 	Dee_Decref(inner_file);
 	return result;
+err:
+	return -1;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
@@ -1378,16 +1416,17 @@ buffer_printrepr(Buffer *__restrict self, dformatprinter printer, void * arg) {
 	DREF DeeObject *inner_file;
 	uint16_t buffer_flags;
 	size_t buffer_size;
-	buf_read(self);
+	if (buffer_lock_read(self))
+		goto err;
 	inner_file = self->fb_file;
 	if (inner_file == NULL) {
-		buf_endread(self);
+		buffer_lock_endread(self);
 		return DeeFormat_PRINT(printer, arg, "File.Buffer()<.closed>");
 	}
 	buffer_flags = self->fb_flag;
 	buffer_size  = self->fb_size;
 	Dee_Incref(inner_file);
-	buf_endread(self);
+	buffer_lock_endread(self);
 
 	/* Re-construct the buffer mode string. */
 	mode_iter = mode;
@@ -1413,6 +1452,8 @@ buffer_printrepr(Buffer *__restrict self, dformatprinter printer, void * arg) {
 	                          inner_file, mode_iter, buffer_size);
 	Dee_Decref(inner_file);
 	return result;
+err:
+	return -1;
 }
 
 
@@ -1543,29 +1584,30 @@ buffer_fini(Buffer *__restrict self) {
 
 PRIVATE NONNULL((1, 2)) void DCALL
 buffer_visit(Buffer *__restrict self, dvisit_t proc, void *arg) {
-	buf_write(self);
+	buffer_lock_write_noint(self);
 	Dee_XVisit(self->fb_file);
-	buf_endwrite(self);
+	buffer_lock_endwrite(self);
 }
 
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 buffer_size(Buffer *self, size_t argc, DeeObject *const *argv) {
 	DREF DeeObject *file, *result;
-	buf_write(self);
+	if (buffer_lock_write(self))
+		goto err;
 	file = self->fb_file;
 	if unlikely(!file)
 		goto err_closed_unlock;
 	Dee_Incref(file);
-	buf_endwrite(self);
+	buffer_lock_endwrite(self);
 	/* Forward the to contained file. */
 	result = DeeObject_CallAttr(file, (DeeObject *)&str_size, argc, argv);
 	Dee_Decref(file);
 	return result;
 err_closed_unlock:
-	buf_endwrite(self);
+	buffer_lock_endwrite(self);
 	err_buffer_closed();
-/*err:*/
+err:
 	return NULL;
 }
 
@@ -1573,20 +1615,21 @@ err_closed_unlock:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 buffer_getsysfd(Buffer *__restrict self) {
 	DREF DeeObject *file, *result;
-	buf_read(self);
+	if (buffer_lock_read(self))
+		goto err;
 	file = self->fb_file;
 	if unlikely(!file)
 		goto err_closed_unlock;
 	Dee_Incref(file);
-	buf_endread(self);
+	buffer_lock_endread(self);
 	/* Forward the to contained file. */
 	result = DeeObject_GetAttr(file, (DeeObject *)&str_getsysfd);
 	Dee_Decref(file);
 	return result;
 err_closed_unlock:
-	buf_endread(self);
+	buffer_lock_endread(self);
 	err_buffer_closed();
-/*err:*/
+err:
 	return NULL;
 }
 #endif /* DeeSysFD_GETSET */
@@ -1594,10 +1637,11 @@ err_closed_unlock:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 buffer_isatty(Buffer *__restrict self) {
 	int error;
-	buf_write(self);
+	if (buffer_lock_write(self))
+		goto err;
 	/* Determine if the buffer points to a TTY. */
 	error = buffer_determine_isatty(self);
-	buf_endwrite(self);
+	buffer_lock_endwrite(self);
 	if unlikely(error)
 		goto err;
 	return_bool(self->fb_flag & FILE_BUFFER_FISATTY);
@@ -1610,12 +1654,13 @@ buffer_flush(Buffer *self, size_t argc, DeeObject *const *argv) {
 	int error;
 	if (DeeArg_Unpack(argc, argv, ":flush"))
 		goto err;
-	buf_write(self);
+	if (buffer_lock_write(self))
+		goto err;
 	/* Synchronize the buffer, but don't synchronize its file. */
 	error = buffer_sync_nolock(self,
 	                           BUFFER_SYNC_FERROR_IF_CLOSED |
 	                           BUFFER_SYNC_FNOSYNC_FILE);
-	buf_endwrite(self);
+	buffer_lock_endwrite(self);
 	if unlikely(error)
 		goto err;
 	return_bool(self->fb_flag & FILE_BUFFER_FISATTY);
@@ -1721,37 +1766,39 @@ PRIVATE struct type_method tpconst buffer_methods[] = {
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 buffer_filename(Buffer *__restrict self) {
 	DREF DeeObject *file, *result;
-	buf_write(self);
+	if (buffer_lock_write(self))
+		goto err;
 	file = self->fb_file;
 	if unlikely(!file)
 		goto err_closed_unlock;
 	Dee_Incref(file);
-	buf_endwrite(self);
+	buffer_lock_endwrite(self);
 	/* Forward the to contained file. */
 	result = DeeObject_GetAttr(file, (DeeObject *)&str_filename);
 	Dee_Decref(file);
 	return result;
 err_closed_unlock:
-	buf_endwrite(self);
+	buffer_lock_endwrite(self);
 	err_buffer_closed();
-/*err:*/
+err:
 	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 buffer_getfile(Buffer *__restrict self) {
 	DREF DeeObject *result;
-	buf_write(self);
+	if (buffer_lock_write(self))
+		goto err;
 	result = self->fb_file;
 	if unlikely(!result)
 		goto err_closed_unlock;
 	Dee_Incref(result);
-	buf_endwrite(self);
+	buffer_lock_endwrite(self);
 	return result;
 err_closed_unlock:
-	buf_endwrite(self);
+	buffer_lock_endwrite(self);
 	err_buffer_closed();
-/*err:*/
+err:
 	return NULL;
 }
 

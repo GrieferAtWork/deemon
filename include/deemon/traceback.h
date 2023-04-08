@@ -28,7 +28,7 @@
 #include "code.h"
 #include "object.h"
 #include "util/lock.h"
-#include "util/recursive-rwlock.h"
+#include "util/rlock.h"
 
 DECL_BEGIN
 
@@ -121,7 +121,7 @@ struct frame_object {
 	union {
 		Dee_atomic_rwlock_t    *f_plock;  /* [0..1][valid_if(!DEEFRAME_FRECLOCK)][const]
 		                                   * Lock that must be acquired when accessing the frame. */
-		Dee_recursive_rwlock_t *f_prlock; /* [1..1][valid_if(DEEFRAME_FRECLOCK)][const]
+		Dee_ratomic_rwlock_t   *f_prlock; /* [1..1][valid_if(DEEFRAME_FRECLOCK)][const]
 		                                   * Lock that must be acquired when accessing the frame. */
 	}
 #ifndef __COMPILER_HAVE_TRANSPARENT_UNION

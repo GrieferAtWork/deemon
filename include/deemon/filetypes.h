@@ -28,7 +28,7 @@
 
 #ifndef CONFIG_NO_THREADS
 #include "util/lock.h"
-#include "util/recursive-rwlock.h"
+#include "util/rlock.h"
 #endif /* !CONFIG_NO_THREADS */
 
 DECL_BEGIN
@@ -105,8 +105,7 @@ struct Dee_file_buffer_link {
 struct Dee_file_buffer_object {
 	Dee_FILE_OBJECT_HEAD
 #ifndef CONFIG_NO_THREADS
-	/* TODO: This lock right here should be shared (i.e.: preemptive) */
-	Dee_recursive_rwlock_t      fb_lock;  /* Lock for synchronizing access to the buffer. */
+	Dee_rshared_rwlock_t        fb_lock;  /* Lock for synchronizing access to the buffer. */
 #endif /* !CONFIG_NO_THREADS */
 	DREF DeeObject             *fb_file;  /* [0..1][lock(fb_lock)] The file referenced by this buffer.
 	                                       * NOTE: Set to `NULL' when the buffer is closed. */
@@ -133,6 +132,26 @@ struct Dee_file_buffer_object {
 	Dee_pos_t                   fb_fpos;  /* The current (assumed) position within `fb_file'. */
 	uint16_t                    fb_flag;  /* [lock(fb_lock)] The current state of the buffer (Set of `FILE_BUFFER_F*'). */
 };
+
+#define DeeFileBuffer_LockReading(self)    Dee_rshared_rwlock_reading(&(self)->fb_lock)
+#define DeeFileBuffer_LockWriting(self)    Dee_rshared_rwlock_writing(&(self)->fb_lock)
+#define DeeFileBuffer_LockTryRead(self)    Dee_rshared_rwlock_tryread(&(self)->fb_lock)
+#define DeeFileBuffer_LockTryWrite(self)   Dee_rshared_rwlock_trywrite(&(self)->fb_lock)
+#define DeeFileBuffer_LockCanRead(self)    Dee_rshared_rwlock_canread(&(self)->fb_lock)
+#define DeeFileBuffer_LockCanWrite(self)   Dee_rshared_rwlock_canwrite(&(self)->fb_lock)
+#define DeeFileBuffer_LockWaitRead(self)   Dee_rshared_rwlock_waitread(&(self)->fb_lock)
+#define DeeFileBuffer_LockWaitWrite(self)  Dee_rshared_rwlock_waitwrite(&(self)->fb_lock)
+#define DeeFileBuffer_LockRead(self)       Dee_rshared_rwlock_read(&(self)->fb_lock)
+#define DeeFileBuffer_LockReadNoInt(self)  Dee_rshared_rwlock_read_noint(&(self)->fb_lock)
+#define DeeFileBuffer_LockWrite(self)      Dee_rshared_rwlock_write(&(self)->fb_lock)
+#define DeeFileBuffer_LockWriteNoInt(self) Dee_rshared_rwlock_write_noint(&(self)->fb_lock)
+#define DeeFileBuffer_LockTryUpgrade(self) Dee_rshared_rwlock_tryupgrade(&(self)->fb_lock)
+#define DeeFileBuffer_LockUpgrade(self)    Dee_rshared_rwlock_upgrade(&(self)->fb_lock)
+#define DeeFileBuffer_LockDowngrade(self)  Dee_rshared_rwlock_downgrade(&(self)->fb_lock)
+#define DeeFileBuffer_LockEndWrite(self)   Dee_rshared_rwlock_endwrite(&(self)->fb_lock)
+#define DeeFileBuffer_LockEndRead(self)    Dee_rshared_rwlock_endread(&(self)->fb_lock)
+#define DeeFileBuffer_LockEnd(self)        Dee_rshared_rwlock_end(&(self)->fb_lock)
+
 
 #define Dee_FILE_BUFFER_FNORMAL     0x0000 /* Normal buffer flags. */
 #define Dee_FILE_BUFFER_FREADONLY   0x0001 /* The buffer can only be used for reading. */

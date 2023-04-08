@@ -105,6 +105,8 @@
 #include <deemon/traceback.h>
 #include <deemon/tuple.h>
 #include <deemon/util/atomic.h>
+#include <deemon/util/lock.h>
+#include <deemon/util/rlock.h>
 
 #include <hybrid/overflow.h>
 #include <hybrid/sched/yield.h>
@@ -673,10 +675,17 @@ do_resume_thread(DeeThreadObject *__restrict self) {
 }
 
 /* This lock needs to be recursive so that `destroy_thread_self()'
- * can old onto it while cleaning out its members.
- * Additionally, this lock is held whenever
- * any thread has suspended some other thread. */
-PRIVATE DEFINE_RECURSIVE_RWLOCK(globthread_lock);
+ * can old onto it while cleaning out its members. Additionally,
+ * this lock is held whenever any thread has suspended some other
+ * thread. */
+PRIVATE Dee_rshared_lock_t globthread_lock = DEE_RSHARED_LOCK_INIT;
+#define globthread_lock_available()     Dee_rshared_lock_available(&globthread_lock)
+#define globthread_lock_acquired()      Dee_rshared_lock_acquired(&globthread_lock)
+#define globthread_lock_tryacquire()    Dee_rshared_lock_tryacquire(&globthread_lock)
+#define globthread_lock_acquire()       Dee_rshared_lock_acquire(&globthread_lock)
+#define globthread_lock_acquire_noint() Dee_rshared_lock_acquire_noint(&globthread_lock)
+#define globthread_lock_waitfor()       Dee_rshared_lock_waitfor(&globthread_lock)
+#define globthread_lock_release()       Dee_rshared_lock_release(&globthread_lock)
 
 
 
@@ -697,21 +706,25 @@ PRIVATE DEFINE_RECURSIVE_RWLOCK(globthread_lock);
  * NOTE: This function (`DeeThread_Suspend') synchronously waits for the thread to
  *       actually become suspended, meaning that once it returns, the caller is allowed
  *       to assume that the given thread is no longer capable of executing instructions. */
-PUBLIC NONNULL((1)) void DCALL
+PUBLIC WUNUSED NONNULL((1)) int DCALL
 DeeThread_Suspend(DeeThreadObject *__restrict self) {
 	/* Similar to `DeeThread_SuspendAll()', keep a lock
 	 * to `globthread_lock' while suspending other others.
 	 * That way, only a single thread can ever suspend any
 	 * others and we prevent the race condition arising from
 	 * 2 threads attempting to suspend each other. */
-	recursive_rwlock_write(&globthread_lock);
+	if (globthread_lock_acquire())
+		goto err;
 	do_suspend_thread(self);
+	return 0;
+err:
+	return -1;
 }
 
 PUBLIC NONNULL((1)) void DCALL
 DeeThread_Resume(DeeThreadObject *__restrict self) {
 	do_resume_thread(self);
-	recursive_rwlock_endwrite(&globthread_lock);
+	globthread_lock_release();
 }
 
 /* Safely suspend/resume all threads but the calling.
@@ -744,27 +757,32 @@ DeeThread_Resume(DeeThreadObject *__restrict self) {
  *        be used to enumerate all the threads that have been suspended using
  *        the macro `DeeThread_FOREACH()'
  *        Note however that this list is in no particular order
- *        and also contains the calling thread among all the others. */
-PUBLIC WUNUSED ATTR_RETNONNULL DeeThreadObject *DCALL DeeThread_SuspendAll(void) {
+ *        and also contains the calling thread among all the others.
+ * @return: * :   Start of thread list
+ * @return: NULL: An error was thrown */
+PUBLIC WUNUSED DeeThreadObject *DCALL DeeThread_SuspendAll(void) {
 	/* Acquire the calling thread's context (this
 	 * ensures that the caller is tracked and identifiable) */
 	DeeThreadObject *iter, *ts = DeeThread_Self();
-	/* NOTE: Acquire (and keep) a write-lock to ensure that only
+
+	/* NOTE: Acquire (and keep) a lock to ensure that only
 	 *       a single thread is ever able to suspend all others. */
-	recursive_rwlock_write(&globthread_lock);
+	if (globthread_lock_acquire())
+		return NULL;
 	iter = &DeeThread_Main;
 	do {
 		/* Suspend all threads but the caller. */
 		if (iter != ts)
 			do_suspend_thread(iter);
 	} while ((iter = iter->t_globalnext) != NULL);
+
 	/* Expose the global thread list to allow the caller to enumerate it. */
 	return &DeeThread_Main;
 }
 
 PUBLIC void DCALL DeeThread_ResumeAll(void) {
 	DeeThreadObject *iter, *ts;
-	ASSERT(recursive_rwlock_writing(&globthread_lock));
+	ASSERT(globthread_lock_acquired());
 	ts   = DeeThread_Self();
 	iter = &DeeThread_Main;
 	do {
@@ -772,28 +790,29 @@ PUBLIC void DCALL DeeThread_ResumeAll(void) {
 		if (iter != ts)
 			do_resume_thread(iter);
 	} while ((iter = iter->t_globalnext) != NULL);
-	/* Release the write-lock acquired in `DeeThread_SuspendAll()' */
-	recursive_rwlock_endwrite(&globthread_lock);
+
+	/* Release the lock acquired in `DeeThread_SuspendAll()' */
+	globthread_lock_release();
 }
 
 PRIVATE NONNULL((1)) void DCALL
 add_running_thread(DeeThreadObject *__restrict thread) {
 	thread->t_globlpself = &DeeThread_Main.t_globalnext;
-	recursive_rwlock_write(&globthread_lock);
+	globthread_lock_acquire_noint();
 	if ((thread->t_globalnext = DeeThread_Main.t_globalnext) != NULL)
 		thread->t_globalnext->t_globlpself = &thread->t_globalnext;
 	DeeThread_Main.t_globalnext = thread;
-	recursive_rwlock_endwrite(&globthread_lock);
+	globthread_lock_release();
 }
 
 PRIVATE NONNULL((1)) void DCALL
 del_running_thread(DeeThreadObject *__restrict thread) {
-	recursive_rwlock_write(&globthread_lock);
+	globthread_lock_acquire_noint();
 	if (thread->t_globlpself) {
 		if ((*thread->t_globlpself = thread->t_globalnext) != NULL)
 			thread->t_globalnext->t_globlpself = thread->t_globlpself;
 	}
-	recursive_rwlock_endwrite(&globthread_lock);
+	globthread_lock_release();
 }
 
 /* Join all threads that are still running
@@ -804,7 +823,7 @@ PUBLIC WUNUSED bool (DCALL DeeThread_JoinAll)(void) {
 	bool interrupt_phase = true;
 	bool result          = false;
 again:
-	recursive_rwlock_write(&globthread_lock);
+	globthread_lock_acquire_noint();
 again_locked:
 	iter = DeeThread_Main.t_globalnext;
 	while (iter) {
@@ -840,7 +859,7 @@ handle_iter:
 			iter->t_globalnext = NULL;
 		}
 	}
-	recursive_rwlock_endwrite(&globthread_lock);
+	globthread_lock_release();
 
 	/* When no more threads are left, then we are done! */
 	if (!iter)
@@ -971,7 +990,7 @@ destroy_thread_self(DREF DeeThreadObject *__restrict self) {
 
 	/* Drop a reference from `self' while also
 	 * switching the thread's state to being terminated. */
-	recursive_rwlock_write(&globthread_lock);
+	globthread_lock_acquire_noint();
 	if (self->t_globlpself) {
 		if ((*self->t_globlpself = self->t_globalnext) != NULL)
 			self->t_globalnext->t_globlpself = self->t_globlpself;
@@ -1053,7 +1072,7 @@ destroy_thread_self(DREF DeeThreadObject *__restrict self) {
 	}
 	/* WARNING: Once we release this lock, the main thread is allowed to assume that we no longer exist.
 	 *          With that in mind, _ALL_ cleanup _MUST_ be done before this point! */
-	recursive_rwlock_endwrite(&globthread_lock);
+	globthread_lock_release();
 }
 
 #ifndef __NO_ATTR_THREAD
@@ -4230,12 +4249,14 @@ DeeThread_Trace(/*Thread*/ DeeObject *__restrict self) {
 			                self);
 			goto err;
 		}
+
 		/* Must suspend and capture this thread. */
 		for (;;) {
 			uint16_t traceback_size = atomic_read(&me->t_execsz);
 			uint16_t traceback_used;
 			DeeTracebackObject *result;
 			struct localheap heap;
+
 			/* Always return an empty traceback for terminated threads. */
 			if (me->t_state & THREAD_STATE_TERMINATED)
 				traceback_size = 0;
@@ -4243,11 +4264,13 @@ DeeThread_Trace(/*Thread*/ DeeObject *__restrict self) {
 			                                                  traceback_size * sizeof(struct code_frame));
 			if unlikely(!result)
 				goto err;
+
 			/* Special (and simple) case: No frames to collect. */
 			if (!traceback_size) {
 				traceback_used = 0;
 				goto done_traceback;
 			}
+
 			/* Initializer the local heap buffer used to trace local variables. */
 			localheap_init(&heap, traceback_size * (32 * sizeof(void *)));
 
@@ -4256,10 +4279,13 @@ suspend_me:
 			bzeroc(result->tb_frames,
 			       traceback_size,
 			       sizeof(struct code_frame));
+
 			/* This is where it gets dangerous: Suspend the thread and collect information! */
 			COMPILER_BARRIER();
-			DeeThread_Suspend(me);
+			if unlikely(DeeThread_Suspend(me))
+				goto err_free_result;
 			COMPILER_BARRIER();
+
 			traceback_used = me->t_execsz;
 			if (traceback_used > traceback_size) {
 				DeeTracebackObject *new_result;
@@ -4267,6 +4293,7 @@ suspend_me:
 				COMPILER_BARRIER();
 				DeeThread_Resume(me);
 				COMPILER_BARRIER();
+
 				traceback_size = traceback_used;
 				new_result = (DeeTracebackObject *)DeeGCObject_Realloc(result, offsetof(DeeTracebackObject, tb_frames) +
 				                                                               traceback_size * sizeof(struct code_frame));
@@ -4275,6 +4302,7 @@ suspend_me:
 				result = new_result;
 				goto suspend_me;
 			}
+
 			if (!thread_collect_traceback(me, result->tb_frames, &heap)) {
 				/* The thread is in an inconsistent state. - Resume it and preempt a bit. */
 				clear_frames(traceback_used, result->tb_frames);
@@ -4286,6 +4314,7 @@ suspend_me:
 					goto err_free_result;
 				goto suspend_me;
 			}
+
 			/* Either we've managed to capture a consistent traceback,
 			 * or there wasn't enough heap memory to do so. */
 			if unlikely(heap.lh_req > heap.lh_total) {
@@ -4327,13 +4356,14 @@ suspend_me:
 			/* With dynamic memory duplicated, free the temporary (local) heap. */
 			Dee_Free(heap.lh_base);
 
-done_traceback:
 			/* Initialize remaining members of the traceback. */
+done_traceback:
 			Dee_Incref(me); /* Reference stored in `tb_thread' */
 			result->tb_thread = me;
 			Dee_atomic_lock_init(&result->tb_lock);
 			result->tb_numframes = traceback_used;
 			DeeObject_Init(result, &DeeTraceback_Type);
+
 			/* Tracebacks are GC objects, so we need to start tracking it here. */
 			DeeGC_Track((DeeObject *)result);
 			Dee_CHECKMEMORY();

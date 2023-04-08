@@ -24,8 +24,8 @@
 #include "../object.h"
 
 #ifndef CONFIG_NO_THREADS
-#include "../util/recursive-rwlock.h"
 #include "../util/lock.h"
+#include "../util/rlock.h"
 #endif /* !CONFIG_NO_THREADS */
 
 #ifdef CONFIG_BUILDING_DEEMON
@@ -202,10 +202,27 @@ DeeCompiler_New(DeeObject *__restrict module, uint16_t flags);
 
 
 #ifndef CONFIG_NO_THREADS
-/* Lock held whenever the compiler is being used.
- * TODO: Use some blocking lock for this. - Don't use a spinlock. */
-DDATDEF Dee_recursive_rwlock_t DeeCompiler_Lock;
+/* Lock held whenever the compiler is being used. */
+DDATDEF Dee_rshared_rwlock_t DeeCompiler_Lock;
 #endif /* !CONFIG_NO_THREADS */
+#define DeeCompiler_LockReading()    Dee_rshared_rwlock_reading(&DeeCompiler_Lock)
+#define DeeCompiler_LockWriting()    Dee_rshared_rwlock_writing(&DeeCompiler_Lock)
+#define DeeCompiler_LockTryRead()    Dee_rshared_rwlock_tryread(&DeeCompiler_Lock)
+#define DeeCompiler_LockTryWrite()   Dee_rshared_rwlock_trywrite(&DeeCompiler_Lock)
+#define DeeCompiler_LockCanRead()    Dee_rshared_rwlock_canread(&DeeCompiler_Lock)
+#define DeeCompiler_LockCanWrite()   Dee_rshared_rwlock_canwrite(&DeeCompiler_Lock)
+#define DeeCompiler_LockWaitRead()   Dee_rshared_rwlock_waitread(&DeeCompiler_Lock)
+#define DeeCompiler_LockWaitWrite()  Dee_rshared_rwlock_waitwrite(&DeeCompiler_Lock)
+#define DeeCompiler_LockRead()       Dee_rshared_rwlock_read(&DeeCompiler_Lock)
+#define DeeCompiler_LockReadNoInt()  Dee_rshared_rwlock_read_noint(&DeeCompiler_Lock)
+#define DeeCompiler_LockWrite()      Dee_rshared_rwlock_write(&DeeCompiler_Lock)
+#define DeeCompiler_LockWriteNoInt() Dee_rshared_rwlock_write_noint(&DeeCompiler_Lock)
+#define DeeCompiler_LockTryUpgrade() Dee_rshared_rwlock_tryupgrade(&DeeCompiler_Lock)
+#define DeeCompiler_LockUpgrade()    Dee_rshared_rwlock_upgrade(&DeeCompiler_Lock)
+#define DeeCompiler_LockDowngrade()  Dee_rshared_rwlock_downgrade(&DeeCompiler_Lock)
+#define DeeCompiler_LockEndWrite()   Dee_rshared_rwlock_endwrite(&DeeCompiler_Lock)
+#define DeeCompiler_LockEndRead()    Dee_rshared_rwlock_endread(&DeeCompiler_Lock)
+#define DeeCompiler_LockEnd()        Dee_rshared_rwlock_end(&DeeCompiler_Lock)
 
 /* A weak reference to the compiler associated with
  * the currently active global compiler context.
@@ -252,19 +269,14 @@ DFUNDEF void DCALL DeeCompiler_End(void);
  *        when calling this function! */
 DFUNDEF NONNULL((1)) void DCALL
 DeeCompiler_Unload(DREF DeeCompilerObject *__restrict compiler);
-
-#ifdef CONFIG_NO_THREADS
-#define Dee_COMPILER_BEGIN(c) DeeCompiler_Begin(c)
-#define Dee_COMPILER_END()    DeeCompiler_End()
-#else /* CONFIG_NO_THREADS */
-#define Dee_COMPILER_BEGIN(c) (recursive_rwlock_write(&DeeCompiler_Lock), DeeCompiler_Begin(c))
-#define Dee_COMPILER_END()    (DeeCompiler_End(), recursive_rwlock_endwrite(&DeeCompiler_Lock))
-#endif /* !CONFIG_NO_THREADS */
-
+#define Dee_COMPILER_BEGIN_NOINT(c) (DeeCompiler_LockWriteNoInt(), DeeCompiler_Begin(c))
+#define Dee_COMPILER_BEGIN(c)       (DeeCompiler_LockWrite() ? -1 : (DeeCompiler_Begin(c), 0))
+#define Dee_COMPILER_END()          (DeeCompiler_End(), DeeCompiler_LockEndWrite())
 
 #ifdef DEE_SOURCE
-#define COMPILER_BEGIN Dee_COMPILER_BEGIN
-#define COMPILER_END   Dee_COMPILER_END
+#define COMPILER_BEGIN_NOINT Dee_COMPILER_BEGIN_NOINT
+#define COMPILER_BEGIN       Dee_COMPILER_BEGIN
+#define COMPILER_END         Dee_COMPILER_END
 #endif /* DEE_SOURCE */
 
 

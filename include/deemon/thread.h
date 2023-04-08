@@ -510,8 +510,10 @@ INTDEF WUNUSED NONNULL((1)) int
  *          method. If you need to suspend more, use `DeeThread_SuspendAll()' instead!
  * NOTE: This function (`DeeThread_Suspend') synchronously waits for the thread to
  *       actually become suspended, meaning that once it returns, the caller is allowed
- *       to assume that the given thread is no longer capable of executing instructions. */
-DFUNDEF NONNULL((1)) void DCALL DeeThread_Suspend(DeeThreadObject *__restrict self);
+ *       to assume that the given thread is no longer capable of executing instructions.
+ * @return: 0 : Success
+ * @return: -1: An error was thrown */
+DFUNDEF WUNUSED NONNULL((1)) int DCALL DeeThread_Suspend(DeeThreadObject *__restrict self);
 DFUNDEF NONNULL((1)) void DCALL DeeThread_Resume(DeeThreadObject *__restrict self);
 
 /* Safely suspend/resume all threads but the calling.
@@ -544,8 +546,10 @@ DFUNDEF NONNULL((1)) void DCALL DeeThread_Resume(DeeThreadObject *__restrict sel
  *        be used to enumerate all the threads that have been suspended using
  *        the macro `DeeThread_FOREACH()'
  *        Note however that this list is in no particular order
- *        and also contains the calling thread among all the others. */
-DFUNDEF WUNUSED ATTR_RETNONNULL DeeThreadObject *DCALL DeeThread_SuspendAll(void);
+ *        and also contains the calling thread among all the others.
+ * @return: * :   Start of thread list
+ * @return: NULL: An error was thrown */
+DFUNDEF WUNUSED DeeThreadObject *DCALL DeeThread_SuspendAll(void);
 DFUNDEF void DCALL DeeThread_ResumeAll(void);
 #define DeeThread_FOREACH(x) for (; (x); (x) = (x)->t_globalnext)
 
@@ -641,8 +645,8 @@ DDATDEF struct Dee_tls_callback_hooks _DeeThread_TlsCallbacks;
 #else /* !CONFIG_NO_THREADS */
 
 /* Stub macros for functions not available without thread-support. */
-#define DeeThread_CheckInterrupt()       0
-#define DeeThread_Suspend(self)    (void)0
+#define DeeThread_CheckInterrupt() 0
+#define DeeThread_Suspend(self)    0
 #define DeeThread_Resume(self)     (void)0
 #define DeeThread_SuspendAll()     (void)0
 #define DeeThread_ResumeAll()      (void)0

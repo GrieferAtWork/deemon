@@ -668,8 +668,9 @@ check_other_threads:
 		/* Check for interrupts. */
 		if (DeeThread_CheckInterruptSelf(caller))
 			goto err;
-		COMPILER_BARRIER();
 		threads = DeeThread_SuspendAll();
+		if unlikely(!threads)
+			goto err;
 		DeeThread_FOREACH(threads) {
 			int temp;
 			if (threads == caller)

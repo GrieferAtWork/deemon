@@ -369,7 +369,8 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 keyword_str(DeeCompilerItemObject *__restrict self) {
 	DREF DeeObject *result = NULL;
 	struct TPPKeyword *item;
-	COMPILER_BEGIN(self->ci_compiler);
+	if (COMPILER_BEGIN(self->ci_compiler))
+		return NULL;
 	item = DeeCompilerItem_VALUE(self, struct TPPKeyword);
 	if likely(item)
 		result = DeeString_NewUtf8(item->k_name, item->k_size, STRING_ERROR_FIGNORE);
@@ -382,7 +383,8 @@ keyword_print(DeeCompilerItemObject *__restrict self,
               dformatprinter printer, void *arg) {
 	dssize_t result = -1;
 	struct TPPKeyword *item;
-	COMPILER_BEGIN(self->ci_compiler);
+	if (COMPILER_BEGIN(self->ci_compiler))
+		return -1;
 	item = DeeCompilerItem_VALUE(self, struct TPPKeyword);
 	if likely(item)
 		result = DeeFormat_Print(printer, arg, item->k_name, item->k_size);
@@ -394,7 +396,8 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 keyword_hash(DeeCompilerItemObject *__restrict self) {
 	DREF DeeObject *result = NULL;
 	struct TPPKeyword *item;
-	COMPILER_BEGIN(self->ci_compiler);
+	if (COMPILER_BEGIN(self->ci_compiler))
+		return NULL;
 	item = DeeCompilerItem_VALUE(self, struct TPPKeyword);
 	if likely(item)
 		result = DeeInt_NewSize(item->k_hash);
@@ -406,7 +409,8 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 keyword_macrofile(DeeCompilerItemObject *__restrict self) {
 	DREF DeeObject *result = NULL;
 	struct TPPKeyword *item;
-	COMPILER_BEGIN(self->ci_compiler);
+	if (COMPILER_BEGIN(self->ci_compiler))
+		return NULL;
 	item = DeeCompilerItem_VALUE(self, struct TPPKeyword);
 	if likely(item) {
 		if (!item->k_macro) {
@@ -424,7 +428,8 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 keyword_oldmacrofile(DeeCompilerItemObject *__restrict self) {
 	DREF DeeObject *result = NULL;
 	struct TPPKeyword *item;
-	COMPILER_BEGIN(self->ci_compiler);
+	if (COMPILER_BEGIN(self->ci_compiler))
+		return NULL;
 	item = DeeCompilerItem_VALUE(self, struct TPPKeyword);
 	if likely(item) {
 		if (!item->k_rare || !item->k_rare->kr_oldmacro) {
@@ -442,7 +447,8 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 keyword_defmacrofile(DeeCompilerItemObject *__restrict self) {
 	DREF DeeObject *result = NULL;
 	struct TPPKeyword *item;
-	COMPILER_BEGIN(self->ci_compiler);
+	if (COMPILER_BEGIN(self->ci_compiler))
+		return NULL;
 	item = DeeCompilerItem_VALUE(self, struct TPPKeyword);
 	if likely(item) {
 		if (!item->k_rare || !item->k_rare->kr_defmacro) {
@@ -460,7 +466,8 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 keyword_cachedfile(DeeCompilerItemObject *__restrict self) {
 	DREF DeeObject *result = NULL;
 	struct TPPKeyword *item;
-	COMPILER_BEGIN(self->ci_compiler);
+	if (COMPILER_BEGIN(self->ci_compiler))
+		return NULL;
 	item = DeeCompilerItem_VALUE(self, struct TPPKeyword);
 	if likely(item) {
 		if (!item->k_rare || !item->k_rare->kr_file) {
@@ -478,7 +485,8 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 keyword_id(DeeCompilerItemObject *__restrict self) {
 	DREF DeeObject *result = NULL;
 	struct TPPKeyword *item;
-	COMPILER_BEGIN(self->ci_compiler);
+	if (COMPILER_BEGIN(self->ci_compiler))
+		return NULL;
 	item = DeeCompilerItem_VALUE(self, struct TPPKeyword);
 	if likely(item)
 		result = DeeInt_NewUInt(item->k_id);
@@ -491,7 +499,8 @@ keyword_id(DeeCompilerItemObject *__restrict self) {
 	keyword_get_##name(DeeCompilerItemObject *__restrict self) {                                                      \
 		DREF DeeObject *result = NULL;                                                                                \
 		struct TPPKeyword *item;                                                                                      \
-		COMPILER_BEGIN(self->ci_compiler);                                                                            \
+		if (COMPILER_BEGIN(self->ci_compiler))                                                                        \
+			return NULL;                                                                                              \
 		item = DeeCompilerItem_VALUE(self, struct TPPKeyword);                                                        \
 		if likely(item) {                                                                                             \
 			uint32_t flags = TPPKeyword_GetFlags(item, 0);                                                            \
@@ -505,7 +514,8 @@ keyword_id(DeeCompilerItemObject *__restrict self) {
 	keyword_del_##name(DeeCompilerItemObject *__restrict self) {                                                      \
 		int result = -1;                                                                                              \
 		struct TPPKeyword *item;                                                                                      \
-		COMPILER_BEGIN(self->ci_compiler);                                                                            \
+		if (COMPILER_BEGIN(self->ci_compiler))                                                                        \
+			return -1;                                                                                                \
 		item = DeeCompilerItem_VALUE(self, struct TPPKeyword);                                                        \
 		if likely(item) {                                                                                             \
 			uint32_t flags = TPPKeyword_GetFlags(item, 0);                                                            \
@@ -531,7 +541,8 @@ keyword_id(DeeCompilerItemObject *__restrict self) {
 			goto done;                                                                                                \
 		if (!newval)                                                                                                  \
 			return keyword_del_##name(self);                                                                          \
-		COMPILER_BEGIN(self->ci_compiler);                                                                            \
+		if (COMPILER_BEGIN(self->ci_compiler))                                                                        \
+			return -1;                                                                                                \
 		item = DeeCompilerItem_VALUE(self, struct TPPKeyword);                                                        \
 		if likely(item) {                                                                                             \
 			uint32_t flags = TPPKeyword_GetFlags(item, 0);                                                            \
@@ -563,7 +574,8 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 keyword_get_counter(DeeCompilerItemObject *__restrict self) {
 	DREF DeeObject *result = NULL;
 	struct TPPKeyword *item;
-	COMPILER_BEGIN(self->ci_compiler);
+	if (COMPILER_BEGIN(self->ci_compiler))
+		return NULL;
 	item = DeeCompilerItem_VALUE(self, struct TPPKeyword);
 	if likely(item) {
 		if (item->k_rare) {
@@ -581,7 +593,8 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 keyword_del_counter(DeeCompilerItemObject *__restrict self) {
 	int result = -1;
 	struct TPPKeyword *item;
-	COMPILER_BEGIN(self->ci_compiler);
+	if (COMPILER_BEGIN(self->ci_compiler))
+		return -1;
 	item = DeeCompilerItem_VALUE(self, struct TPPKeyword);
 	if likely(item) {
 		if (item->k_rare)
@@ -600,7 +613,8 @@ keyword_set_counter(DeeCompilerItemObject *__restrict self,
 	int64_t newval;
 	if (DeeObject_AsInt64(value, &newval))
 		goto done;
-	COMPILER_BEGIN(self->ci_compiler);
+	if (COMPILER_BEGIN(self->ci_compiler))
+		return -1;
 	item = DeeCompilerItem_VALUE(self, struct TPPKeyword);
 	if likely(item) {
 		if (item->k_rare) {
@@ -622,7 +636,8 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 keyword_get_uservalue(DeeCompilerItemObject *__restrict self) {
 	DREF DeeObject *result = NULL;
 	struct TPPKeyword *item;
-	COMPILER_BEGIN(self->ci_compiler);
+	if (COMPILER_BEGIN(self->ci_compiler))
+		return NULL;
 	item = DeeCompilerItem_VALUE(self, struct TPPKeyword);
 	if likely(item) {
 		if (item->k_rare) {
@@ -640,7 +655,8 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 keyword_del_uservalue(DeeCompilerItemObject *__restrict self) {
 	int result = -1;
 	struct TPPKeyword *item;
-	COMPILER_BEGIN(self->ci_compiler);
+	if (COMPILER_BEGIN(self->ci_compiler))
+		return -1;
 	item = DeeCompilerItem_VALUE(self, struct TPPKeyword);
 	if likely(item) {
 		if (item->k_rare)
@@ -659,7 +675,8 @@ keyword_set_uservalue(DeeCompilerItemObject *__restrict self,
 	uintptr_t newval;
 	if (DeeObject_AsUIntptr(value, &newval))
 		goto done;
-	COMPILER_BEGIN(self->ci_compiler);
+	if (COMPILER_BEGIN(self->ci_compiler))
+		return -1;
 	item = DeeCompilerItem_VALUE(self, struct TPPKeyword);
 	if likely(item) {
 		if (item->k_rare) {
@@ -873,7 +890,8 @@ lexer_get_token(DeeCompilerWrapperObject *__restrict self) {
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 lexer_get_file(DeeCompilerWrapperObject *__restrict self) {
 	DREF DeeObject *result;
-	COMPILER_BEGIN(self->cw_compiler);
+	if (COMPILER_BEGIN(self->cw_compiler))
+		return NULL;
 	if (TPPLexer_Current->l_token.t_file == &TPPFile_Empty) {
 		result = Dee_None;
 		Dee_Incref(Dee_None);
@@ -888,7 +906,8 @@ INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 lexer_get_textfile(DeeCompilerWrapperObject *__restrict self) {
 	DREF DeeObject *result;
 	struct TPPFile *file;
-	COMPILER_BEGIN(self->cw_compiler);
+	if (COMPILER_BEGIN(self->cw_compiler))
+		return NULL;
 	file = TPPLexer_Textfile();
 	if (file == &TPPFile_Empty) {
 		result = Dee_None;
@@ -904,7 +923,8 @@ INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 lexer_get_basefile(DeeCompilerWrapperObject *__restrict self) {
 	DREF DeeObject *result;
 	struct TPPFile *file;
-	COMPILER_BEGIN(self->cw_compiler);
+	if (COMPILER_BEGIN(self->cw_compiler))
+		return NULL;
 	file = TPPLexer_Basefile();
 	if (file == &TPPFile_Empty) {
 		result = Dee_None;
@@ -921,7 +941,8 @@ lexer_get_textposition(DeeCompilerWrapperObject *__restrict self) {
 	DREF DeeObject *result;
 	DREF DeeObject *file_ob;
 	struct TPPFile *file;
-	COMPILER_BEGIN(self->cw_compiler);
+	if (COMPILER_BEGIN(self->cw_compiler))
+		return NULL;
 	file = TPPLexer_Current->l_token.t_file;
 	if (file == &TPPFile_Empty) {
 is_empty_file:
@@ -956,7 +977,8 @@ lexer_get_textendposition(DeeCompilerWrapperObject *__restrict self) {
 	DREF DeeObject *result;
 	DREF DeeObject *file_ob;
 	struct TPPFile *file;
-	COMPILER_BEGIN(self->cw_compiler);
+	if (COMPILER_BEGIN(self->cw_compiler))
+		return NULL;
 	file = TPPLexer_Current->l_token.t_file;
 	if (file == &TPPFile_Empty) {
 is_empty_file:
@@ -991,7 +1013,8 @@ lexer_get_tokenposition(DeeCompilerWrapperObject *__restrict self) {
 	DREF DeeObject *result;
 	DREF DeeObject *file_ob;
 	struct TPPFile *file;
-	COMPILER_BEGIN(self->cw_compiler);
+	if (COMPILER_BEGIN(self->cw_compiler))
+		return NULL;
 	file = TPPLexer_Current->l_token.t_file;
 	if (file == &TPPFile_Empty) {
 		result = Dee_None;
@@ -1016,7 +1039,8 @@ lexer_get_tokenendposition(DeeCompilerWrapperObject *__restrict self) {
 	DREF DeeObject *result;
 	DREF DeeObject *file_ob;
 	struct TPPFile *file;
-	COMPILER_BEGIN(self->cw_compiler);
+	if (COMPILER_BEGIN(self->cw_compiler))
+		return NULL;
 	file = TPPLexer_Current->l_token.t_file;
 	if (file == &TPPFile_Empty) {
 		result = Dee_None;
@@ -1039,7 +1063,8 @@ lexer_get_tokenendposition(DeeCompilerWrapperObject *__restrict self) {
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 lexer_get_atstartofline(DeeCompilerWrapperObject *__restrict self) {
 	int result;
-	COMPILER_BEGIN(self->cw_compiler);
+	if (COMPILER_BEGIN(self->cw_compiler))
+		return NULL;
 	result = TPPLexer_AtStartOfLine();
 	COMPILER_END();
 	return_bool_(result);
@@ -1049,7 +1074,8 @@ lexer_get_atstartofline(DeeCompilerWrapperObject *__restrict self) {
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 lexer_get_flags(DeeCompilerWrapperObject *__restrict self) {
 	DREF DeeObject *result;
-	COMPILER_BEGIN(self->cw_compiler);
+	if (COMPILER_BEGIN(self->cw_compiler))
+		return NULL;
 	result = DeeInt_NewU32(TPPLexer_Current->l_flags & ~TPPLEXER_FLAG_MERGEMASK);
 	COMPILER_END();
 	return result;
@@ -1061,7 +1087,8 @@ lexer_set_flags(DeeCompilerWrapperObject *__restrict self,
 	uint32_t new_flags;
 	if (DeeObject_AsUInt32(value, &new_flags))
 		goto err;
-	COMPILER_BEGIN(self->cw_compiler);
+	if (COMPILER_BEGIN(self->cw_compiler))
+		return -1;
 	TPPLexer_Current->l_flags &= TPPLEXER_FLAG_MERGEMASK;
 	TPPLexer_Current->l_flags |= new_flags & ~TPPLEXER_FLAG_MERGEMASK;
 	COMPILER_END();
@@ -1074,7 +1101,8 @@ err:
 	INTERN WUNUSED WUNUSED NONNULL((1)) DREF DeeObject *DCALL          \
 	lexer_get_##name(DeeCompilerWrapperObject *__restrict self) {      \
 		DREF DeeObject *result;                                        \
-		COMPILER_BEGIN(self->cw_compiler);                             \
+		if (COMPILER_BEGIN(self->cw_compiler))                         \
+			return NULL;                                               \
 		result = DeeBool_For((TPPLexer_Current->l_flags & flag) != 0); \
 		Dee_Incref(result);                                            \
 		COMPILER_END();                                                \
@@ -1082,7 +1110,8 @@ err:
 	}                                                                  \
 	INTERN WUNUSED WUNUSED NONNULL((1)) int DCALL                      \
 	lexer_del_##name(DeeCompilerWrapperObject *__restrict self) {      \
-		COMPILER_BEGIN(self->cw_compiler);                             \
+		if (COMPILER_BEGIN(self->cw_compiler))                         \
+			return -1;                                                 \
 		TPPLexer_Current->l_flags &= ~flag;                            \
 		COMPILER_END();                                                \
 		return 0;                                                      \
@@ -1093,7 +1122,8 @@ err:
 		int newval = DeeObject_Bool(value);                            \
 		if unlikely(newval < 0)                                        \
 			return -1;                                                 \
-		COMPILER_BEGIN(self->cw_compiler);                             \
+		if (COMPILER_BEGIN(self->cw_compiler))                         \
+			return -1;                                                 \
 		if (newval) {                                                  \
 			TPPLexer_Current->l_flags |= flag;                         \
 		} else {                                                       \
@@ -1134,7 +1164,8 @@ DEFINE_LEXER_FLAG_FUNCTIONS(eofonparen, TPPLEXER_FLAG_EOF_ON_PAREN)
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 lexer_get_eofparen(DeeCompilerWrapperObject *__restrict self) {
 	DREF DeeObject *result;
-	COMPILER_BEGIN(self->cw_compiler);
+	if (COMPILER_BEGIN(self->cw_compiler))
+		return NULL;
 	result = DeeInt_NewSize(TPPLexer_Current->l_eof_paren);
 	COMPILER_END();
 	return result;
@@ -1142,7 +1173,8 @@ lexer_get_eofparen(DeeCompilerWrapperObject *__restrict self) {
 
 INTERN WUNUSED NONNULL((1)) int DCALL
 lexer_del_eofparen(DeeCompilerWrapperObject *__restrict self) {
-	COMPILER_BEGIN(self->cw_compiler);
+	if (COMPILER_BEGIN(self->cw_compiler))
+		return -1;
 	TPPLexer_Current->l_eof_paren = 0;
 	COMPILER_END();
 	return 0;
@@ -1154,7 +1186,8 @@ lexer_set_eofparen(DeeCompilerWrapperObject *__restrict self,
 	size_t new_eofparen;
 	if (DeeObject_AsSize(value, &new_eofparen))
 		goto err;
-	COMPILER_BEGIN(self->cw_compiler);
+	if (COMPILER_BEGIN(self->cw_compiler))
+		return -1;
 	TPPLexer_Current->l_eof_paren = new_eofparen;
 	COMPILER_END();
 	return 0;
@@ -1165,7 +1198,8 @@ err:
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 lexer_get_eobfile(DeeCompilerWrapperObject *__restrict self) {
 	DREF DeeObject *result;
-	COMPILER_BEGIN(self->cw_compiler);
+	if (COMPILER_BEGIN(self->cw_compiler))
+		return NULL;
 	result = DeeCompiler_GetFile(TPPLexer_Current->l_eob_file);
 	COMPILER_END();
 	return result;
@@ -1173,7 +1207,8 @@ lexer_get_eobfile(DeeCompilerWrapperObject *__restrict self) {
 
 INTERN WUNUSED NONNULL((1)) int DCALL
 lexer_del_eobfile(DeeCompilerWrapperObject *__restrict self) {
-	COMPILER_BEGIN(self->cw_compiler);
+	if (COMPILER_BEGIN(self->cw_compiler))
+		return -1;
 	TPPLexer_Current->l_eob_file = NULL;
 	COMPILER_END();
 	return 0;
@@ -1194,7 +1229,8 @@ lexer_set_eobfile(DeeCompilerWrapperObject *__restrict self,
 	if (DeeNone_Check(value))
 		return lexer_del_eobfile(self);
 	result = -1;
-	COMPILER_BEGIN(self->cw_compiler);
+	if (COMPILER_BEGIN(self->cw_compiler))
+		return -1;
 	if (!DeeObject_InstanceOf(value, &DeeCompilerFile_Type)) {
 		DeeObject_TypeAssertFailed(value, &DeeCompilerFile_Type);
 	} else if (((DeeCompilerItemObject *)value)->ci_compiler != self->cw_compiler) {
@@ -1213,7 +1249,8 @@ lexer_set_eobfile(DeeCompilerWrapperObject *__restrict self,
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 lexer_get_eoffile(DeeCompilerWrapperObject *__restrict self) {
 	DREF DeeObject *result;
-	COMPILER_BEGIN(self->cw_compiler);
+	if (COMPILER_BEGIN(self->cw_compiler))
+		return NULL;
 	result = DeeCompiler_GetFile(TPPLexer_Current->l_eof_file);
 	COMPILER_END();
 	return result;
@@ -1221,7 +1258,8 @@ lexer_get_eoffile(DeeCompilerWrapperObject *__restrict self) {
 
 INTERN WUNUSED NONNULL((1)) int DCALL
 lexer_del_eoffile(DeeCompilerWrapperObject *__restrict self) {
-	COMPILER_BEGIN(self->cw_compiler);
+	if (COMPILER_BEGIN(self->cw_compiler))
+		return -1;
 	TPPLexer_Current->l_eof_file = NULL;
 	COMPILER_END();
 	return 0;
@@ -1235,7 +1273,8 @@ lexer_set_eoffile(DeeCompilerWrapperObject *__restrict self,
 	if (DeeNone_Check(value))
 		return lexer_del_eoffile(self);
 	result = -1;
-	COMPILER_BEGIN(self->cw_compiler);
+	if (COMPILER_BEGIN(self->cw_compiler))
+		return -1;
 	if (!DeeObject_InstanceOf(value, &DeeCompilerFile_Type)) {
 		DeeObject_TypeAssertFailed(value, &DeeCompilerFile_Type);
 	} else if (((DeeCompilerItemObject *)value)->ci_compiler != self->cw_compiler) {
@@ -1255,7 +1294,8 @@ lexer_set_eoffile(DeeCompilerWrapperObject *__restrict self,
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 lexer_get_macrolimit(DeeCompilerWrapperObject *__restrict self) {
 	DREF DeeObject *result;
-	COMPILER_BEGIN(self->cw_compiler);
+	if (COMPILER_BEGIN(self->cw_compiler))
+		return NULL;
 	result = DeeInt_NewSize(TPPLexer_Current->l_limit_mrec);
 	COMPILER_END();
 	return result;
@@ -1263,7 +1303,8 @@ lexer_get_macrolimit(DeeCompilerWrapperObject *__restrict self) {
 
 INTERN WUNUSED NONNULL((1)) int DCALL
 lexer_del_macrolimit(DeeCompilerWrapperObject *__restrict self) {
-	COMPILER_BEGIN(self->cw_compiler);
+	if (COMPILER_BEGIN(self->cw_compiler))
+		return -1;
 	TPPLexer_Current->l_limit_mrec = TPPLEXER_DEFAULT_LIMIT_MREC;
 	COMPILER_END();
 	return 0;
@@ -1275,7 +1316,8 @@ lexer_set_macrolimit(DeeCompilerWrapperObject *__restrict self,
 	size_t new_macrolimit;
 	if (DeeObject_AsSize(value, &new_macrolimit))
 		goto err;
-	COMPILER_BEGIN(self->cw_compiler);
+	if (COMPILER_BEGIN(self->cw_compiler))
+		return -1;
 	TPPLexer_Current->l_limit_mrec = new_macrolimit;
 	COMPILER_END();
 	return 0;
@@ -1286,7 +1328,8 @@ err:
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 lexer_get_includelimit(DeeCompilerWrapperObject *__restrict self) {
 	DREF DeeObject *result;
-	COMPILER_BEGIN(self->cw_compiler);
+	if (COMPILER_BEGIN(self->cw_compiler))
+		return NULL;
 	result = DeeInt_NewSize(TPPLexer_Current->l_limit_incl);
 	COMPILER_END();
 	return result;
@@ -1294,7 +1337,8 @@ lexer_get_includelimit(DeeCompilerWrapperObject *__restrict self) {
 
 INTERN WUNUSED NONNULL((1)) int DCALL
 lexer_del_includelimit(DeeCompilerWrapperObject *__restrict self) {
-	COMPILER_BEGIN(self->cw_compiler);
+	if (COMPILER_BEGIN(self->cw_compiler))
+		return -1;
 	TPPLexer_Current->l_limit_incl = TPPLEXER_DEFAULT_LIMIT_INCL;
 	COMPILER_END();
 	return 0;
@@ -1306,7 +1350,8 @@ lexer_set_includelimit(DeeCompilerWrapperObject *__restrict self,
 	size_t new_includelimit;
 	if (DeeObject_AsSize(value, &new_includelimit))
 		goto err;
-	COMPILER_BEGIN(self->cw_compiler);
+	if (COMPILER_BEGIN(self->cw_compiler))
+		return -1;
 	TPPLexer_Current->l_limit_incl = new_includelimit;
 	COMPILER_END();
 	return 0;
@@ -1317,7 +1362,8 @@ err:
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 lexer_get_warningcount(DeeCompilerWrapperObject *__restrict self) {
 	DREF DeeObject *result;
-	COMPILER_BEGIN(self->cw_compiler);
+	if (COMPILER_BEGIN(self->cw_compiler))
+		return NULL;
 	result = DeeInt_NewSize(TPPLexer_Current->l_warncount);
 	COMPILER_END();
 	return result;
@@ -1325,7 +1371,8 @@ lexer_get_warningcount(DeeCompilerWrapperObject *__restrict self) {
 
 INTERN WUNUSED NONNULL((1)) int DCALL
 lexer_del_warningcount(DeeCompilerWrapperObject *__restrict self) {
-	COMPILER_BEGIN(self->cw_compiler);
+	if (COMPILER_BEGIN(self->cw_compiler))
+		return -1;
 	TPPLexer_Current->l_warncount = 0;
 	COMPILER_END();
 	return 0;
@@ -1337,7 +1384,8 @@ lexer_set_warningcount(DeeCompilerWrapperObject *__restrict self,
 	size_t new_warningcount;
 	if (DeeObject_AsSize(value, &new_warningcount))
 		goto err;
-	COMPILER_BEGIN(self->cw_compiler);
+	if (COMPILER_BEGIN(self->cw_compiler))
+		return -1;
 	TPPLexer_Current->l_warncount = new_warningcount;
 	COMPILER_END();
 	return 0;
@@ -1348,7 +1396,8 @@ err:
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 lexer_get_errorcount(DeeCompilerWrapperObject *__restrict self) {
 	DREF DeeObject *result;
-	COMPILER_BEGIN(self->cw_compiler);
+	if (COMPILER_BEGIN(self->cw_compiler))
+		return NULL;
 	result = DeeInt_NewSize(TPPLexer_Current->l_errorcount);
 	COMPILER_END();
 	return result;
@@ -1356,7 +1405,8 @@ lexer_get_errorcount(DeeCompilerWrapperObject *__restrict self) {
 
 INTERN WUNUSED NONNULL((1)) int DCALL
 lexer_del_errorcount(DeeCompilerWrapperObject *__restrict self) {
-	COMPILER_BEGIN(self->cw_compiler);
+	if (COMPILER_BEGIN(self->cw_compiler))
+		return -1;
 	TPPLexer_Current->l_errorcount = 0;
 	COMPILER_END();
 	return 0;
@@ -1368,7 +1418,8 @@ lexer_set_errorcount(DeeCompilerWrapperObject *__restrict self,
 	size_t new_errorcount;
 	if (DeeObject_AsSize(value, &new_errorcount))
 		goto err;
-	COMPILER_BEGIN(self->cw_compiler);
+	if (COMPILER_BEGIN(self->cw_compiler))
+		return -1;
 	TPPLexer_Current->l_errorcount = new_errorcount;
 	COMPILER_END();
 	return 0;
@@ -1379,7 +1430,8 @@ err:
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 lexer_get_maxerrors(DeeCompilerWrapperObject *__restrict self) {
 	DREF DeeObject *result;
-	COMPILER_BEGIN(self->cw_compiler);
+	if (COMPILER_BEGIN(self->cw_compiler))
+		return NULL;
 	result = DeeInt_NewSize(TPPLexer_Current->l_maxerrors);
 	COMPILER_END();
 	return result;
@@ -1387,7 +1439,8 @@ lexer_get_maxerrors(DeeCompilerWrapperObject *__restrict self) {
 
 INTERN WUNUSED NONNULL((1)) int DCALL
 lexer_del_maxerrors(DeeCompilerWrapperObject *__restrict self) {
-	COMPILER_BEGIN(self->cw_compiler);
+	if (COMPILER_BEGIN(self->cw_compiler))
+		return -1;
 	TPPLexer_Current->l_maxerrors = TPPLEXER_DEFAULT_LIMIT_ECNT;
 	COMPILER_END();
 	return 0;
@@ -1399,7 +1452,8 @@ lexer_set_maxerrors(DeeCompilerWrapperObject *__restrict self,
 	size_t new_maxerrors;
 	if (DeeObject_AsSize(value, &new_maxerrors))
 		goto err;
-	COMPILER_BEGIN(self->cw_compiler);
+	if (COMPILER_BEGIN(self->cw_compiler))
+		return -1;
 	TPPLexer_Current->l_maxerrors = new_maxerrors;
 	COMPILER_END();
 	return 0;
@@ -1410,7 +1464,8 @@ err:
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 lexer_get_tabsize(DeeCompilerWrapperObject *__restrict self) {
 	DREF DeeObject *result;
-	COMPILER_BEGIN(self->cw_compiler);
+	if (COMPILER_BEGIN(self->cw_compiler))
+		return NULL;
 	result = DeeInt_NewSize(TPPLexer_Current->l_tabsize);
 	COMPILER_END();
 	return result;
@@ -1418,7 +1473,8 @@ lexer_get_tabsize(DeeCompilerWrapperObject *__restrict self) {
 
 INTERN WUNUSED NONNULL((1)) int DCALL
 lexer_del_tabsize(DeeCompilerWrapperObject *__restrict self) {
-	COMPILER_BEGIN(self->cw_compiler);
+	if (COMPILER_BEGIN(self->cw_compiler))
+		return -1;
 	TPPLexer_Current->l_tabsize = TPPLEXER_DEFAULT_TABSIZE;
 	COMPILER_END();
 	return 0;
@@ -1430,7 +1486,8 @@ lexer_set_tabsize(DeeCompilerWrapperObject *__restrict self,
 	size_t new_tabsize;
 	if (DeeObject_AsSize(value, &new_tabsize))
 		goto err;
-	COMPILER_BEGIN(self->cw_compiler);
+	if (COMPILER_BEGIN(self->cw_compiler))
+		return -1;
 	TPPLexer_Current->l_tabsize = new_tabsize;
 	COMPILER_END();
 	return 0;
@@ -1441,7 +1498,8 @@ err:
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 lexer_get_counter(DeeCompilerWrapperObject *__restrict self) {
 	DREF DeeObject *result;
-	COMPILER_BEGIN(self->cw_compiler);
+	if (COMPILER_BEGIN(self->cw_compiler))
+		return NULL;
 	result = DeeInt_NewS64(TPPLexer_Current->l_counter);
 	COMPILER_END();
 	return result;
@@ -1449,7 +1507,8 @@ lexer_get_counter(DeeCompilerWrapperObject *__restrict self) {
 
 INTERN WUNUSED NONNULL((1)) int DCALL
 lexer_del_counter(DeeCompilerWrapperObject *__restrict self) {
-	COMPILER_BEGIN(self->cw_compiler);
+	if (COMPILER_BEGIN(self->cw_compiler))
+		return -1;
 	TPPLexer_Current->l_counter = TPPLEXER_DEFAULT_TABSIZE;
 	COMPILER_END();
 	return 0;
@@ -1461,7 +1520,8 @@ lexer_set_counter(DeeCompilerWrapperObject *__restrict self,
 	int64_t new_counter;
 	if (DeeObject_AsInt64(value, &new_counter))
 		goto err;
-	COMPILER_BEGIN(self->cw_compiler);
+	if (COMPILER_BEGIN(self->cw_compiler))
+		return -1;
 	TPPLexer_Current->l_counter = new_counter;
 	COMPILER_END();
 	return 0;
@@ -1892,7 +1952,8 @@ lexer_include(DeeCompilerWrapperObject *self, size_t argc, DeeObject *const *arg
 		stream = arg;
 		Dee_Incref(stream);
 	}
-	COMPILER_BEGIN(self->cw_compiler);
+	if (COMPILER_BEGIN(self->cw_compiler))
+		return NULL;
 	file = TPPFile_OpenStream((stream_t)stream,
 	                          DeeString_STR(filename));
 	if unlikely(!file) {
@@ -1920,7 +1981,8 @@ lexer_nextraw(DeeCompilerWrapperObject *self, size_t argc, DeeObject *const *arg
 	if (DeeArg_Unpack(argc, argv, ":nextraw"))
 		goto err;
 	old_exceptsz = DeeThread_Self()->t_exceptsz;
-	COMPILER_BEGIN(self->cw_compiler);
+	if (COMPILER_BEGIN(self->cw_compiler))
+		return NULL;
 	result = TPPLexer_YieldRaw();
 	COMPILER_END();
 	if unlikely(result < 0 && old_exceptsz != DeeThread_Self()->t_exceptsz)
@@ -1937,7 +1999,8 @@ lexer_nextpp(DeeCompilerWrapperObject *self, size_t argc, DeeObject *const *argv
 	if (DeeArg_Unpack(argc, argv, ":nextpp"))
 		goto err;
 	old_exceptsz = DeeThread_Self()->t_exceptsz;
-	COMPILER_BEGIN(self->cw_compiler);
+	if (COMPILER_BEGIN(self->cw_compiler))
+		return NULL;
 	result = TPPLexer_YieldPP();
 	COMPILER_END();
 	if unlikely(result < 0 && old_exceptsz != DeeThread_Self()->t_exceptsz)
@@ -1954,7 +2017,8 @@ lexer_next(DeeCompilerWrapperObject *self, size_t argc, DeeObject *const *argv) 
 	if (DeeArg_Unpack(argc, argv, ":next"))
 		goto err;
 	old_exceptsz = DeeThread_Self()->t_exceptsz;
-	COMPILER_BEGIN(self->cw_compiler);
+	if (COMPILER_BEGIN(self->cw_compiler))
+		return NULL;
 	result = TPPLexer_Yield();
 	COMPILER_END();
 	if unlikely(result < 0 && old_exceptsz != DeeThread_Self()->t_exceptsz)
@@ -1971,7 +2035,8 @@ lexer_nextraw_nb(DeeCompilerWrapperObject *self, size_t argc, DeeObject *const *
 	if (DeeArg_Unpack(argc, argv, ":nextraw_nb"))
 		goto err;
 	old_exceptsz = DeeThread_Self()->t_exceptsz;
-	COMPILER_BEGIN(self->cw_compiler);
+	if (COMPILER_BEGIN(self->cw_compiler))
+		return NULL;
 	result = TPPLexer_YieldRawNB();
 	COMPILER_END();
 	if unlikely(result < 0 && old_exceptsz != DeeThread_Self()->t_exceptsz)
@@ -1988,7 +2053,8 @@ lexer_nextpp_nb(DeeCompilerWrapperObject *self, size_t argc, DeeObject *const *a
 	if (DeeArg_Unpack(argc, argv, ":nextpp_nb"))
 		goto err;
 	old_exceptsz = DeeThread_Self()->t_exceptsz;
-	COMPILER_BEGIN(self->cw_compiler);
+	if (COMPILER_BEGIN(self->cw_compiler))
+		return NULL;
 	result = TPPLexer_YieldPPNB();
 	COMPILER_END();
 	if unlikely(result < 0 && old_exceptsz != DeeThread_Self()->t_exceptsz)
@@ -2005,7 +2071,8 @@ lexer_next_nb(DeeCompilerWrapperObject *self, size_t argc, DeeObject *const *arg
 	if (DeeArg_Unpack(argc, argv, ":next_nb"))
 		goto err;
 	old_exceptsz = DeeThread_Self()->t_exceptsz;
-	COMPILER_BEGIN(self->cw_compiler);
+	if (COMPILER_BEGIN(self->cw_compiler))
+		return NULL;
 	result = TPPLexer_YieldNB();
 	COMPILER_END();
 	if unlikely(result < 0 && old_exceptsz != DeeThread_Self()->t_exceptsz)
@@ -2020,7 +2087,8 @@ lexer_seterr(DeeCompilerWrapperObject *self, size_t argc, DeeObject *const *argv
 	int result;
 	if (DeeArg_Unpack(argc, argv, ":seterr"))
 		goto err;
-	COMPILER_BEGIN(self->cw_compiler);
+	if (COMPILER_BEGIN(self->cw_compiler))
+		return NULL;
 	result = TPPLexer_SetErr();
 	COMPILER_END();
 	return_bool_(result != 0);
@@ -2033,7 +2101,8 @@ lexer_unseterr(DeeCompilerWrapperObject *self, size_t argc, DeeObject *const *ar
 	int result;
 	if (DeeArg_Unpack(argc, argv, ":unseterr"))
 		goto err;
-	COMPILER_BEGIN(self->cw_compiler);
+	if (COMPILER_BEGIN(self->cw_compiler))
+		return NULL;
 	result = TPPLexer_UnsetErr();
 	COMPILER_END();
 	return_bool_(result != 0);
@@ -2046,7 +2115,8 @@ lexer_popfile(DeeCompilerWrapperObject *self, size_t argc, DeeObject *const *arg
 	bool result;
 	if (DeeArg_Unpack(argc, argv, ":popfile"))
 		goto err;
-	COMPILER_BEGIN(self->cw_compiler);
+	if (COMPILER_BEGIN(self->cw_compiler))
+		return NULL;
 	result = TPPLexer_Current->l_token.t_file != &TPPFile_Empty;
 	if (result)
 		TPPLexer_PopFile();
@@ -2078,7 +2148,8 @@ lexer_getkwd(DeeCompilerWrapperObject *self, size_t argc,
 	name_utf8 = DeeString_AsUtf8(name);
 	if unlikely(!name_utf8)
 		goto err;
-	COMPILER_BEGIN(self->cw_compiler);
+	if (COMPILER_BEGIN(self->cw_compiler))
+		return NULL;
 	kwd = TPPLexer_LookupKeyword(name_utf8,
 	                             WSTR_LENGTH(name_utf8),
 	                             create);
@@ -2118,7 +2189,8 @@ lexer_getxkwd(DeeCompilerWrapperObject *self, size_t argc,
 	name_utf8 = DeeString_AsUtf8(name);
 	if unlikely(!name_utf8)
 		goto err;
-	COMPILER_BEGIN(self->cw_compiler);
+	if (COMPILER_BEGIN(self->cw_compiler))
+		return NULL;
 	kwd = TPPLexer_LookupEscapedKeyword(name_utf8,
 	                                    WSTR_LENGTH(name_utf8),
 	                                    create);
@@ -2150,7 +2222,8 @@ lexer_getkwdid(DeeCompilerWrapperObject *self, size_t argc, DeeObject *const *ar
 	struct TPPKeyword *kwd;
 	if (DeeArg_Unpack(argc, argv, "u:getkwdid", &id))
 		goto err;
-	COMPILER_BEGIN(self->cw_compiler);
+	if (COMPILER_BEGIN(self->cw_compiler))
+		return NULL;
 	kwd = TPPLexer_LookupKeywordID((tok_t)id);
 	if unlikely(!kwd) {
 		result = Dee_None;
@@ -2178,7 +2251,8 @@ lexer_undef(DeeCompilerWrapperObject *self, size_t argc, DeeObject *const *argv)
 	if unlikely(!utf8_name)
 		goto err;
 	old_exceptsz = DeeThread_Self()->t_exceptsz;
-	COMPILER_BEGIN(self->cw_compiler);
+	if (COMPILER_BEGIN(self->cw_compiler))
+		return NULL;
 	error = TPPLexer_Undef(utf8_name, WSTR_LENGTH(utf8_name));
 	COMPILER_END();
 	if unlikely(old_exceptsz != DeeThread_Self()->t_exceptsz)
@@ -2210,7 +2284,8 @@ lexer_define(DeeCompilerWrapperObject *self, size_t argc,
 	if unlikely(!utf8_value)
 		goto err;
 	old_exceptsz = DeeThread_Self()->t_exceptsz;
-	COMPILER_BEGIN(self->cw_compiler);
+	if (COMPILER_BEGIN(self->cw_compiler))
+		return NULL;
 	error = TPPLexer_Define(utf8_name, WSTR_LENGTH(utf8_name),
 	                        utf8_value, WSTR_LENGTH(utf8_value),
 	                        builtin ? TPPLEXER_DEFINE_FLAG_BUILTIN : TPPLEXER_DEFINE_FLAG_NONE);
@@ -2244,7 +2319,8 @@ lexer_addassert(DeeCompilerWrapperObject *self, size_t argc,
 	if unlikely(!utf8_value)
 		goto err;
 	old_exceptsz = DeeThread_Self()->t_exceptsz;
-	COMPILER_BEGIN(self->cw_compiler);
+	if (COMPILER_BEGIN(self->cw_compiler))
+		return NULL;
 	error = TPPLexer_AddAssert(utf8_name, WSTR_LENGTH(utf8_name),
 	                           utf8_value, WSTR_LENGTH(utf8_value));
 	COMPILER_END();
@@ -2277,7 +2353,8 @@ lexer_delassert(DeeCompilerWrapperObject *self, size_t argc,
 			goto err;
 	}
 	old_exceptsz = DeeThread_Self()->t_exceptsz;
-	COMPILER_BEGIN(self->cw_compiler);
+	if (COMPILER_BEGIN(self->cw_compiler))
+		return NULL;
 	error = TPPLexer_DelAssert(utf8_name, WSTR_LENGTH(utf8_name),
 	                           utf8_value, utf8_value ? WSTR_LENGTH(utf8_value) : 0);
 	COMPILER_END();
@@ -2424,7 +2501,8 @@ lexer_keywords_getitem(DeeCompilerWrapperObject *self,
 	struct TPPKeyword *kwd;
 	if (DeeObject_AssertTypeExact(name, &DeeString_Type))
 		goto err;
-	COMPILER_BEGIN(self->cw_compiler);
+	if (COMPILER_BEGIN(self->cw_compiler))
+		return NULL;
 	kwd = TPPLexer_LookupKeyword(DeeString_STR(name),
 	                             DeeString_SIZE(name),
 	                             1);
@@ -2601,7 +2679,8 @@ lexer_syspaths_push(DeeCompilerWrapperObject *self, size_t argc, DeeObject *cons
 	int result;
 	if (DeeArg_Unpack(argc, argv, ":push"))
 		goto err;
-	COMPILER_BEGIN(self->cw_compiler);
+	if (COMPILER_BEGIN(self->cw_compiler))
+		return NULL;
 	result = TPPLexer_PushInclude();
 	COMPILER_END();
 	if unlikely(!result)
@@ -2616,7 +2695,8 @@ lexer_syspaths_pop(DeeCompilerWrapperObject *self, size_t argc, DeeObject *const
 	int result;
 	if (DeeArg_Unpack(argc, argv, ":pop"))
 		goto err;
-	COMPILER_BEGIN(self->cw_compiler);
+	if (COMPILER_BEGIN(self->cw_compiler))
+		return NULL;
 	result = TPPLexer_PopInclude();
 	COMPILER_END();
 	return_bool_(result != 0);
@@ -2640,7 +2720,8 @@ lexer_syspaths_insert(DeeCompilerWrapperObject *self, size_t argc, DeeObject *co
 	if unlikely(!copy)
 		goto err;
 	memcpyc(copy, path, WSTR_LENGTH(path), sizeof(char));
-	COMPILER_BEGIN(self->cw_compiler);
+	if (COMPILER_BEGIN(self->cw_compiler))
+		return NULL;
 	result = TPPLexer_AddIncludePath(copy, WSTR_LENGTH(path));
 	COMPILER_END();
 	Dee_Free(copy);
@@ -2667,7 +2748,8 @@ lexer_syspaths_remove(DeeCompilerWrapperObject *self, size_t argc, DeeObject *co
 	if unlikely(!copy)
 		goto err;
 	memcpyc(copy, path, WSTR_LENGTH(path), sizeof(char));
-	COMPILER_BEGIN(self->cw_compiler);
+	if (COMPILER_BEGIN(self->cw_compiler))
+		return NULL;
 	result = TPPLexer_DelIncludePath(copy, WSTR_LENGTH(path));
 	COMPILER_END();
 	Dee_Free(copy);
@@ -2697,7 +2779,8 @@ PRIVATE struct type_method tpconst lexer_syspaths_methods[] = {
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 lexer_syspaths_size(DeeCompilerWrapperObject *__restrict self) {
 	DREF DeeObject *result;
-	COMPILER_BEGIN(self->cw_compiler);
+	if (COMPILER_BEGIN(self->cw_compiler))
+		return NULL;
 	result = DeeInt_NewSize(TPPLexer_Current->l_syspaths.il_pathc);
 	COMPILER_END();
 	return result;
@@ -2710,7 +2793,8 @@ lexer_syspaths_getitem(DeeCompilerWrapperObject *self,
 	size_t i;
 	if (DeeObject_AsSize(index, &i))
 		goto err;
-	COMPILER_BEGIN(self->cw_compiler);
+	if (COMPILER_BEGIN(self->cw_compiler))
+		return NULL;
 	if (i >= TPPLexer_Current->l_syspaths.il_pathc) {
 		err_index_out_of_bounds((DeeObject *)self, i, TPPLexer_Current->l_syspaths.il_pathc);
 		result = NULL;
@@ -2834,7 +2918,8 @@ INTERN DeeTypeObject DeeCompilerLexerIfdef_Type = {
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 token_bool(DeeCompilerWrapperObject *__restrict self) {
 	int result;
-	COMPILER_BEGIN(self->cw_compiler);
+	if (COMPILER_BEGIN(self->cw_compiler))
+		return -1;
 	result = TPPLexer_Global.l_token.t_id > 0;
 	COMPILER_END();
 	return result;
@@ -2851,7 +2936,8 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 token_text(DeeCompilerWrapperObject *__restrict self) {
 	ptrdiff_t error;
 	struct unicode_printer printer = UNICODE_PRINTER_INIT;
-	COMPILER_BEGIN(self->cw_compiler);
+	if (COMPILER_BEGIN(self->cw_compiler))
+		return NULL;
 	error = TPP_PrintToken(&unicode_printer_tppappend, &printer);
 	COMPILER_END();
 	if unlikely(error)
@@ -2873,7 +2959,8 @@ PRIVATE ptrdiff_t
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 token_str(DeeCompilerWrapperObject *__restrict self) {
 	DREF DeeObject *result;
-	COMPILER_BEGIN(self->cw_compiler);
+	if (COMPILER_BEGIN(self->cw_compiler))
+		return NULL;
 	result = get_token_name(tok, token.t_kwd);
 	if unlikely(result == ITER_DONE)
 		result = DeeString_Chr((uint32_t)tok); /* Shouldn't normally happen (but may after a partial reset) */
@@ -2885,7 +2972,8 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 token_repr(DeeCompilerWrapperObject *__restrict self) {
 	ptrdiff_t error;
 	struct unicode_printer printer = UNICODE_PRINTER_INIT;
-	COMPILER_BEGIN(self->cw_compiler);
+	if (COMPILER_BEGIN(self->cw_compiler))
+		return NULL;
 	if unlikely(unicode_printer_putc(&printer, '\"'))
 		goto err;
 	error = TPP_PrintToken(&unicode_printer_tppappend_escape, &printer);
@@ -2904,7 +2992,8 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 token_rawtext(DeeCompilerWrapperObject *__restrict self) {
 	DREF DeeObject *result;
-	COMPILER_BEGIN(self->cw_compiler);
+	if (COMPILER_BEGIN(self->cw_compiler))
+		return NULL;
 	result = DeeString_NewUtf8(TPPLexer_Current->l_token.t_begin,
 	                           (size_t)(TPPLexer_Current->l_token.t_end -
 	                                    TPPLexer_Current->l_token.t_begin),
@@ -2916,7 +3005,8 @@ token_rawtext(DeeCompilerWrapperObject *__restrict self) {
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 token_id(DeeCompilerWrapperObject *__restrict self) {
 	DREF DeeObject *result = NULL;
-	COMPILER_BEGIN(self->cw_compiler);
+	if (COMPILER_BEGIN(self->cw_compiler))
+		return NULL;
 	result = DeeInt_NewInt(TPPLexer_Current->l_token.t_id);
 	COMPILER_END();
 	return result;
@@ -2924,7 +3014,8 @@ token_id(DeeCompilerWrapperObject *__restrict self) {
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 token_delid(DeeCompilerWrapperObject *__restrict self) {
-	COMPILER_BEGIN(self->cw_compiler);
+	if (COMPILER_BEGIN(self->cw_compiler))
+		return -1;
 	TPPLexer_Current->l_token.t_id = 0;
 	COMPILER_END();
 	return 0;
@@ -2936,7 +3027,8 @@ token_setid(DeeCompilerWrapperObject *__restrict self,
 	int new_id;
 	if (DeeObject_AsInt(value, &new_id))
 		goto err;
-	COMPILER_BEGIN(self->cw_compiler);
+	if (COMPILER_BEGIN(self->cw_compiler))
+		return -1;
 	TPPLexer_Current->l_token.t_id = new_id;
 	COMPILER_END();
 	return 0;
@@ -2947,7 +3039,8 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 token_num(DeeCompilerWrapperObject *__restrict self) {
 	DREF DeeObject *result = NULL;
-	COMPILER_BEGIN(self->cw_compiler);
+	if (COMPILER_BEGIN(self->cw_compiler))
+		return NULL;
 	result = DeeInt_NewULong(TPPLexer_Current->l_token.t_num);
 	COMPILER_END();
 	return result;
@@ -2955,7 +3048,8 @@ token_num(DeeCompilerWrapperObject *__restrict self) {
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 token_delnum(DeeCompilerWrapperObject *__restrict self) {
-	COMPILER_BEGIN(self->cw_compiler);
+	if (COMPILER_BEGIN(self->cw_compiler))
+		return -1;
 	TPPLexer_Current->l_token.t_num = 0;
 	COMPILER_END();
 	return 0;
@@ -2967,7 +3061,8 @@ token_setnum(DeeCompilerWrapperObject *__restrict self,
 	unsigned long new_num;
 	if (DeeObject_AsULong(value, &new_num))
 		goto err;
-	COMPILER_BEGIN(self->cw_compiler);
+	if (COMPILER_BEGIN(self->cw_compiler))
+		return -1;
 	TPPLexer_Current->l_token.t_num = new_num;
 	COMPILER_END();
 	return 0;
@@ -2978,7 +3073,8 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 token_keyword(DeeCompilerWrapperObject *__restrict self) {
 	DREF DeeObject *result = NULL;
-	COMPILER_BEGIN(self->cw_compiler);
+	if (COMPILER_BEGIN(self->cw_compiler))
+		return NULL;
 	if (TPP_ISKEYWORD(TPPLexer_Current->l_token.t_id)) {
 		result = DeeCompiler_GetKeyword(TPPLexer_Current->l_token.t_kwd);
 	} else {
@@ -2994,7 +3090,8 @@ token_setkeyword(DeeCompilerWrapperObject *__restrict self,
                  DeeObject *__restrict value) {
 	struct TPPKeyword *kwd;
 	int result = -1;
-	COMPILER_BEGIN(self->cw_compiler);
+	if (COMPILER_BEGIN(self->cw_compiler))
+		return -1;
 	if (!DeeObject_InstanceOf(value, &DeeCompilerKeyword_Type)) {
 		DeeObject_TypeAssertFailed(value, &DeeCompilerKeyword_Type);
 	} else if (((DeeCompilerItemObject *)value)->ci_compiler != self->cw_compiler) {
@@ -3057,7 +3154,8 @@ lexer_token_decodestring(DeeCompilerWrapperObject *self, size_t argc, DeeObject 
 	struct unicode_printer printer = UNICODE_PRINTER_INIT;
 	if (DeeArg_Unpack(argc, argv, ":decodestring"))
 		goto err;
-	COMPILER_BEGIN(self->cw_compiler);
+	if (COMPILER_BEGIN(self->cw_compiler))
+		return NULL;
 	if (TPPLexer_Current->l_token.t_id != TOK_STRING ||
 	    (tok == TOK_CHAR && !HAS(EXT_CHARACTER_LITERALS))) {
 		error = DeeError_Throwf(&DeeError_ValueError,
@@ -3080,7 +3178,8 @@ lexer_token_decodeinteger(DeeCompilerWrapperObject *self, size_t argc, DeeObject
 	bool warnchar          = true;
 	if (DeeArg_Unpack(argc, argv, "|b:decodeinteger", &warnchar))
 		goto done2;
-	COMPILER_BEGIN(self->cw_compiler);
+	if (COMPILER_BEGIN(self->cw_compiler))
+		return NULL;
 	if (TPPLexer_Current->l_token.t_id == TOK_INT) {
 		result = DeeInt_FromString(token.t_begin, (size_t)(token.t_end - token.t_begin),
 		                           DEEINT_STRING(0, DEEINT_STRING_FESCAPED));
@@ -3120,7 +3219,8 @@ PRIVATE struct type_method tpconst lexer_token_methods[] = {
 PRIVATE WUNUSED NONNULL((1)) dhash_t DCALL
 token_hash(DeeCompilerWrapperObject *__restrict self) {
 	dhash_t result;
-	COMPILER_BEGIN(self->cw_compiler);
+	if (COMPILER_BEGIN(self->cw_compiler))
+		return NULL;
 	result = get_token_namehash(tok, token.t_kwd);
 	COMPILER_END();
 	return result;
@@ -3137,7 +3237,8 @@ token_eq(DeeCompilerWrapperObject *self,
 	other_utf8 = DeeString_AsUtf8(other);
 	if unlikely(!other_utf8)
 		goto err;
-	COMPILER_BEGIN(self->cw_compiler);
+	if (COMPILER_BEGIN(self->cw_compiler))
+		return NULL;
 	other_id = get_token_from_str(other_utf8, false);
 	result   = tok == other_id;
 	COMPILER_END();
@@ -3157,7 +3258,8 @@ token_ne(DeeCompilerWrapperObject *self,
 	other_utf8 = DeeString_AsUtf8(other);
 	if unlikely(!other_utf8)
 		goto err;
-	COMPILER_BEGIN(self->cw_compiler);
+	if (COMPILER_BEGIN(self->cw_compiler))
+		return NULL;
 	other_id = get_token_from_str(other_utf8, false);
 	result   = tok != other_id;
 	COMPILER_END();
@@ -3280,7 +3382,8 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 file_str(DeeCompilerItemObject *__restrict self) {
 	struct TPPFile *file;
 	DREF DeeObject *result = NULL;
-	COMPILER_BEGIN(self->ci_compiler);
+	if (COMPILER_BEGIN(self->ci_compiler))
+		return NULL;
 	file = DeeCompilerItem_VALUE(self, struct TPPFile);
 	if likely(file) {
 		result = DeeString_Newf("<file %$q>",
@@ -3296,7 +3399,8 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 file_istext(DeeCompilerItemObject *__restrict self) {
 	struct TPPFile *file;
 	DREF DeeObject *result = NULL;
-	COMPILER_BEGIN(self->ci_compiler);
+	if (COMPILER_BEGIN(self->ci_compiler))
+		return NULL;
 	file = DeeCompilerItem_VALUE(self, struct TPPFile);
 	if likely(file) {
 		result = DeeBool_For(file->f_kind == TPPFILE_KIND_TEXT);
@@ -3310,7 +3414,8 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 file_ismacro(DeeCompilerItemObject *__restrict self) {
 	struct TPPFile *file;
 	DREF DeeObject *result = NULL;
-	COMPILER_BEGIN(self->ci_compiler);
+	if (COMPILER_BEGIN(self->ci_compiler))
+		return NULL;
 	file = DeeCompilerItem_VALUE(self, struct TPPFile);
 	if likely(file) {
 		result = DeeBool_For(file->f_kind == TPPFILE_KIND_MACRO);
@@ -3324,7 +3429,8 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 file_isexpand(DeeCompilerItemObject *__restrict self) {
 	struct TPPFile *file;
 	DREF DeeObject *result = NULL;
-	COMPILER_BEGIN(self->ci_compiler);
+	if (COMPILER_BEGIN(self->ci_compiler))
+		return NULL;
 	file = DeeCompilerItem_VALUE(self, struct TPPFile);
 	if likely(file) {
 		result = DeeBool_For(file->f_kind == TPPFILE_KIND_EXPLICIT);
@@ -3338,7 +3444,8 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 file_origin(DeeCompilerItemObject *__restrict self) {
 	struct TPPFile *file;
 	DREF DeeObject *result = NULL;
-	COMPILER_BEGIN(self->ci_compiler);
+	if (COMPILER_BEGIN(self->ci_compiler))
+		return NULL;
 	file = DeeCompilerItem_VALUE(self, struct TPPFile);
 	if likely(file) {
 		if (!file->f_prev || file->f_prev == &TPPFile_Empty) {
@@ -3356,7 +3463,8 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 file_alltext(DeeCompilerItemObject *__restrict self) {
 	struct TPPFile *file;
 	DREF DeeObject *result = NULL;
-	COMPILER_BEGIN(self->ci_compiler);
+	if (COMPILER_BEGIN(self->ci_compiler))
+		return NULL;
 	file = DeeCompilerItem_VALUE(self, struct TPPFile);
 	if likely(file) {
 		result = DeeString_NewUtf8(file->f_begin,
@@ -3371,7 +3479,8 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 file_nexttext(DeeCompilerItemObject *__restrict self) {
 	struct TPPFile *file;
 	DREF DeeObject *result = NULL;
-	COMPILER_BEGIN(self->ci_compiler);
+	if (COMPILER_BEGIN(self->ci_compiler))
+		return NULL;
 	file = DeeCompilerItem_VALUE(self, struct TPPFile);
 	if likely(file) {
 		result = DeeString_NewUtf8(file->f_pos,
@@ -3386,7 +3495,8 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 file_position(DeeCompilerItemObject *__restrict self) {
 	struct TPPFile *file;
 	DREF DeeObject *result = NULL;
-	COMPILER_BEGIN(self->ci_compiler);
+	if (COMPILER_BEGIN(self->ci_compiler))
+		return NULL;
 	file = DeeCompilerItem_VALUE(self, struct TPPFile);
 	if likely(file) {
 		struct TPPLCInfo lc;
@@ -3401,7 +3511,8 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 file_filename(DeeCompilerItemObject *__restrict self) {
 	struct TPPFile *file;
 	DREF DeeObject *result = NULL;
-	COMPILER_BEGIN(self->ci_compiler);
+	if (COMPILER_BEGIN(self->ci_compiler))
+		return NULL;
 	file = DeeCompilerItem_VALUE(self, struct TPPFile);
 	if likely(file) {
 		char const *filename;
@@ -3445,7 +3556,8 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 file_delfilename(DeeCompilerItemObject *__restrict self) {
 	struct TPPFile *file;
 	int result = -1;
-	COMPILER_BEGIN(self->ci_compiler);
+	if (COMPILER_BEGIN(self->ci_compiler))
+		return -1;
 	file = DeeCompilerItem_VALUE(self, struct TPPFile);
 	if likely(file) {
 		if (file->f_kind != TPPFILE_KIND_TEXT) {
@@ -3473,7 +3585,8 @@ file_setfilename(DeeCompilerItemObject *__restrict self,
 	utf8 = DeeString_AsUtf8(value);
 	if unlikely(!utf8)
 		goto done;
-	COMPILER_BEGIN(self->ci_compiler);
+	if (COMPILER_BEGIN(self->ci_compiler))
+		return -1;
 	file = DeeCompilerItem_VALUE(self, struct TPPFile);
 	if likely(file) {
 		if (file->f_kind != TPPFILE_KIND_TEXT) {
@@ -3498,7 +3611,8 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 file_realfilename(DeeCompilerItemObject *__restrict self) {
 	struct TPPFile *file;
 	DREF DeeObject *result = NULL;
-	COMPILER_BEGIN(self->ci_compiler);
+	if (COMPILER_BEGIN(self->ci_compiler))
+		return NULL;
 	file = DeeCompilerItem_VALUE(self, struct TPPFile);
 	if likely(file) {
 		char const *filename;
@@ -3514,7 +3628,8 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 file_name(DeeCompilerItemObject *__restrict self) {
 	struct TPPFile *file;
 	DREF DeeObject *result = NULL;
-	COMPILER_BEGIN(self->ci_compiler);
+	if (COMPILER_BEGIN(self->ci_compiler))
+		return NULL;
 	file = DeeCompilerItem_VALUE(self, struct TPPFile);
 	if likely(file) {
 		result = DeeString_NewUtf8(file->f_name,
@@ -3529,7 +3644,8 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 file_lineoffset(DeeCompilerItemObject *__restrict self) {
 	struct TPPFile *file;
 	DREF DeeObject *result = NULL;
-	COMPILER_BEGIN(self->ci_compiler);
+	if (COMPILER_BEGIN(self->ci_compiler))
+		return NULL;
 	file = DeeCompilerItem_VALUE(self, struct TPPFile);
 	if likely(file) {
 		if (file->f_kind != TPPFILE_KIND_TEXT) {
@@ -3546,7 +3662,8 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 file_dellineoffset(DeeCompilerItemObject *__restrict self) {
 	struct TPPFile *file;
 	int result = -1;
-	COMPILER_BEGIN(self->ci_compiler);
+	if (COMPILER_BEGIN(self->ci_compiler))
+		return -1;
 	file = DeeCompilerItem_VALUE(self, struct TPPFile);
 	if likely(file) {
 		if (file->f_kind != TPPFILE_KIND_TEXT) {
@@ -3567,7 +3684,8 @@ file_setlineoffset(DeeCompilerItemObject *__restrict self,
 	int result = -1, new_value;
 	if (DeeObject_AsInt(value, &new_value))
 		goto done;
-	COMPILER_BEGIN(self->ci_compiler);
+	if (COMPILER_BEGIN(self->ci_compiler))
+		return -1;
 	file = DeeCompilerItem_VALUE(self, struct TPPFile);
 	if likely(file) {
 		if (file->f_kind != TPPFILE_KIND_TEXT) {
@@ -3586,7 +3704,8 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 file_stream(DeeCompilerItemObject *__restrict self) {
 	struct TPPFile *file;
 	DREF DeeObject *result = NULL;
-	COMPILER_BEGIN(self->ci_compiler);
+	if (COMPILER_BEGIN(self->ci_compiler))
+		return NULL;
 	file = DeeCompilerItem_VALUE(self, struct TPPFile);
 	if likely(file) {
 		if (file->f_kind != TPPFILE_KIND_TEXT) {
@@ -3610,7 +3729,8 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 file_getguard(DeeCompilerItemObject *__restrict self) {
 	struct TPPFile *file;
 	DREF DeeObject *result = NULL;
-	COMPILER_BEGIN(self->ci_compiler);
+	if (COMPILER_BEGIN(self->ci_compiler))
+		return NULL;
 	file = DeeCompilerItem_VALUE(self, struct TPPFile);
 	if likely(file) {
 		if (file->f_kind != TPPFILE_KIND_TEXT) {
@@ -3630,7 +3750,8 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 file_delguard(DeeCompilerItemObject *__restrict self) {
 	struct TPPFile *file;
 	int result = -1;
-	COMPILER_BEGIN(self->ci_compiler);
+	if (COMPILER_BEGIN(self->ci_compiler))
+		return -1;
 	file = DeeCompilerItem_VALUE(self, struct TPPFile);
 	if likely(file) {
 		if (file->f_kind != TPPFILE_KIND_TEXT) {
@@ -3653,7 +3774,8 @@ file_setguard(DeeCompilerItemObject *__restrict self,
 	if (DeeNone_Check(value))
 		return file_delguard(self);
 	result = -1;
-	COMPILER_BEGIN(self->ci_compiler);
+	if (COMPILER_BEGIN(self->ci_compiler))
+		return -1;
 	if (!DeeObject_InstanceOf(value, &DeeCompilerKeyword_Type)) {
 		DeeObject_TypeAssertFailed(value, &DeeCompilerKeyword_Type);
 	} else if (((DeeCompilerItemObject *)value)->ci_compiler != self->ci_compiler) {
@@ -3681,7 +3803,8 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 file_getnewguard(DeeCompilerItemObject *__restrict self) {
 	struct TPPFile *file;
 	DREF DeeObject *result = NULL;
-	COMPILER_BEGIN(self->ci_compiler);
+	if (COMPILER_BEGIN(self->ci_compiler))
+		return NULL;
 	file = DeeCompilerItem_VALUE(self, struct TPPFile);
 	if likely(file) {
 		if (file->f_kind != TPPFILE_KIND_TEXT) {
@@ -3701,7 +3824,8 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 file_delnewguard(DeeCompilerItemObject *__restrict self) {
 	struct TPPFile *file;
 	int result = -1;
-	COMPILER_BEGIN(self->ci_compiler);
+	if (COMPILER_BEGIN(self->ci_compiler))
+		return -1;
 	file = DeeCompilerItem_VALUE(self, struct TPPFile);
 	if likely(file) {
 		if (file->f_kind != TPPFILE_KIND_TEXT) {
@@ -3724,7 +3848,8 @@ file_setnewguard(DeeCompilerItemObject *__restrict self,
 	if (DeeNone_Check(value))
 		return file_delguard(self);
 	result = -1;
-	COMPILER_BEGIN(self->ci_compiler);
+	if (COMPILER_BEGIN(self->ci_compiler))
+		return -1;
 	if (!DeeObject_InstanceOf(value, &DeeCompilerKeyword_Type)) {
 		DeeObject_TypeAssertFailed(value, &DeeCompilerKeyword_Type);
 	} else if (((DeeCompilerItemObject *)value)->ci_compiler != self->ci_compiler) {
@@ -3752,7 +3877,8 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 file_includecount(DeeCompilerItemObject *__restrict self) {
 	struct TPPFile *file;
 	DREF DeeObject *result = NULL;
-	COMPILER_BEGIN(self->ci_compiler);
+	if (COMPILER_BEGIN(self->ci_compiler))
+		return NULL;
 	file = DeeCompilerItem_VALUE(self, struct TPPFile);
 	if likely(file) {
 		if (file->f_kind != TPPFILE_KIND_TEXT) {
@@ -3772,7 +3898,8 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 file_readcount(DeeCompilerItemObject *__restrict self) {
 	struct TPPFile *file;
 	DREF DeeObject *result = NULL;
-	COMPILER_BEGIN(self->ci_compiler);
+	if (COMPILER_BEGIN(self->ci_compiler))
+		return NULL;
 	file = DeeCompilerItem_VALUE(self, struct TPPFile);
 	if likely(file) {
 		if (file->f_kind != TPPFILE_KIND_TEXT) {
@@ -3789,7 +3916,8 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 file_getdisallowguard(DeeCompilerItemObject *__restrict self) {
 	struct TPPFile *file;
 	DREF DeeObject *result = NULL;
-	COMPILER_BEGIN(self->ci_compiler);
+	if (COMPILER_BEGIN(self->ci_compiler))
+		return NULL;
 	file = DeeCompilerItem_VALUE(self, struct TPPFile);
 	if likely(file) {
 		if (file->f_kind != TPPFILE_KIND_TEXT) {
@@ -3807,7 +3935,8 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 file_deldisallowguard(DeeCompilerItemObject *__restrict self) {
 	struct TPPFile *file;
 	int result = -1;
-	COMPILER_BEGIN(self->ci_compiler);
+	if (COMPILER_BEGIN(self->ci_compiler))
+		return -1;
 	file = DeeCompilerItem_VALUE(self, struct TPPFile);
 	if likely(file) {
 		if (file->f_kind != TPPFILE_KIND_TEXT) {
@@ -3830,7 +3959,8 @@ file_setdisallowguard(DeeCompilerItemObject *__restrict self,
 	newval = DeeObject_Bool(value);
 	if unlikely(newval < 0)
 		goto done;
-	COMPILER_BEGIN(self->ci_compiler);
+	if (COMPILER_BEGIN(self->ci_compiler))
+		return -1;
 	file = DeeCompilerItem_VALUE(self, struct TPPFile);
 	if likely(file) {
 		if (file->f_kind != TPPFILE_KIND_TEXT) {
@@ -3853,7 +3983,8 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 file_getissystemheader(DeeCompilerItemObject *__restrict self) {
 	struct TPPFile *file;
 	DREF DeeObject *result = NULL;
-	COMPILER_BEGIN(self->ci_compiler);
+	if (COMPILER_BEGIN(self->ci_compiler))
+		return NULL;
 	file = DeeCompilerItem_VALUE(self, struct TPPFile);
 	if likely(file) {
 		if (file->f_kind != TPPFILE_KIND_TEXT) {
@@ -3871,7 +4002,8 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 file_delissystemheader(DeeCompilerItemObject *__restrict self) {
 	struct TPPFile *file;
 	int result = -1;
-	COMPILER_BEGIN(self->ci_compiler);
+	if (COMPILER_BEGIN(self->ci_compiler))
+		return -1;
 	file = DeeCompilerItem_VALUE(self, struct TPPFile);
 	if likely(file) {
 		if (file->f_kind != TPPFILE_KIND_TEXT) {
@@ -3894,7 +4026,8 @@ file_setissystemheader(DeeCompilerItemObject *__restrict self,
 	newval = DeeObject_Bool(value);
 	if unlikely(newval < 0)
 		goto done;
-	COMPILER_BEGIN(self->ci_compiler);
+	if (COMPILER_BEGIN(self->ci_compiler))
+		return -1;
 	file = DeeCompilerItem_VALUE(self, struct TPPFile);
 	if likely(file) {
 		if (file->f_kind != TPPFILE_KIND_TEXT) {
@@ -3917,7 +4050,8 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 file_getnonblocking(DeeCompilerItemObject *__restrict self) {
 	struct TPPFile *file;
 	DREF DeeObject *result = NULL;
-	COMPILER_BEGIN(self->ci_compiler);
+	if (COMPILER_BEGIN(self->ci_compiler))
+		return NULL;
 	file = DeeCompilerItem_VALUE(self, struct TPPFile);
 	if likely(file) {
 		if (file->f_kind != TPPFILE_KIND_TEXT) {
@@ -3935,7 +4069,8 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 file_delnonblocking(DeeCompilerItemObject *__restrict self) {
 	struct TPPFile *file;
 	int result = -1;
-	COMPILER_BEGIN(self->ci_compiler);
+	if (COMPILER_BEGIN(self->ci_compiler))
+		return -1;
 	file = DeeCompilerItem_VALUE(self, struct TPPFile);
 	if likely(file) {
 		if (file->f_kind != TPPFILE_KIND_TEXT) {
@@ -3958,7 +4093,8 @@ file_setnonblocking(DeeCompilerItemObject *__restrict self,
 	newval = DeeObject_Bool(value);
 	if unlikely(newval < 0)
 		goto done;
-	COMPILER_BEGIN(self->ci_compiler);
+	if (COMPILER_BEGIN(self->ci_compiler))
+		return -1;
 	file = DeeCompilerItem_VALUE(self, struct TPPFile);
 	if likely(file) {
 		if (file->f_kind != TPPFILE_KIND_TEXT) {
@@ -3981,7 +4117,8 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 file_isfunctionmacro(DeeCompilerItemObject *__restrict self) {
 	struct TPPFile *file;
 	DREF DeeObject *result = NULL;
-	COMPILER_BEGIN(self->ci_compiler);
+	if (COMPILER_BEGIN(self->ci_compiler))
+		return NULL;
 	file = DeeCompilerItem_VALUE(self, struct TPPFile);
 	if likely(file) {
 		result = DeeBool_For(file->f_kind == TPPFILE_KIND_MACRO &&
@@ -3996,7 +4133,8 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 file_iskeywordmacro(DeeCompilerItemObject *__restrict self) {
 	struct TPPFile *file;
 	DREF DeeObject *result = NULL;
-	COMPILER_BEGIN(self->ci_compiler);
+	if (COMPILER_BEGIN(self->ci_compiler))
+		return NULL;
 	file = DeeCompilerItem_VALUE(self, struct TPPFile);
 	if likely(file) {
 		result = DeeBool_For(file->f_kind == TPPFILE_KIND_MACRO &&
@@ -4011,7 +4149,8 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 file_definitionsfile(DeeCompilerItemObject *__restrict self) {
 	struct TPPFile *file;
 	DREF DeeObject *result = NULL;
-	COMPILER_BEGIN(self->ci_compiler);
+	if (COMPILER_BEGIN(self->ci_compiler))
+		return NULL;
 	file = DeeCompilerItem_VALUE(self, struct TPPFile);
 	if likely(file) {
 		if (file->f_kind != TPPFILE_KIND_MACRO) {
@@ -4031,7 +4170,8 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 file_definitionsposition(DeeCompilerItemObject *__restrict self) {
 	struct TPPFile *file;
 	DREF DeeObject *result = NULL;
-	COMPILER_BEGIN(self->ci_compiler);
+	if (COMPILER_BEGIN(self->ci_compiler))
+		return NULL;
 	file = DeeCompilerItem_VALUE(self, struct TPPFile);
 	if likely(file) {
 		if (file->f_kind != TPPFILE_KIND_MACRO) {
@@ -4053,7 +4193,8 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 file_previousdefinition(DeeCompilerItemObject *__restrict self) {
 	struct TPPFile *file;
 	DREF DeeObject *result = NULL;
-	COMPILER_BEGIN(self->ci_compiler);
+	if (COMPILER_BEGIN(self->ci_compiler))
+		return NULL;
 	file = DeeCompilerItem_VALUE(self, struct TPPFile);
 	if likely(file) {
 		if (file->f_kind != TPPFILE_KIND_MACRO) {
@@ -4073,7 +4214,8 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 file_pushcount(DeeCompilerItemObject *__restrict self) {
 	struct TPPFile *file;
 	DREF DeeObject *result = NULL;
-	COMPILER_BEGIN(self->ci_compiler);
+	if (COMPILER_BEGIN(self->ci_compiler))
+		return NULL;
 	file = DeeCompilerItem_VALUE(self, struct TPPFile);
 	if likely(file) {
 		if (file->f_kind != TPPFILE_KIND_MACRO) {
@@ -4090,7 +4232,8 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 file_keywordexpandorigin(DeeCompilerItemObject *__restrict self) {
 	struct TPPFile *file;
 	DREF DeeObject *result = NULL;
-	COMPILER_BEGIN(self->ci_compiler);
+	if (COMPILER_BEGIN(self->ci_compiler))
+		return NULL;
 	file = DeeCompilerItem_VALUE(self, struct TPPFile);
 	if likely(file) {
 		if (file->f_kind != TPPFILE_KIND_MACRO ||
@@ -4108,7 +4251,8 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 file_isvariadicmacro(DeeCompilerItemObject *__restrict self) {
 	struct TPPFile *file;
 	DREF DeeObject *result = NULL;
-	COMPILER_BEGIN(self->ci_compiler);
+	if (COMPILER_BEGIN(self->ci_compiler))
+		return NULL;
 	file = DeeCompilerItem_VALUE(self, struct TPPFile);
 	if likely(file) {
 		result = DeeBool_For(file->f_kind == TPPFILE_KIND_MACRO &&
@@ -4124,7 +4268,8 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 file_getallowselfexpansion(DeeCompilerItemObject *__restrict self) {
 	struct TPPFile *file;
 	DREF DeeObject *result = NULL;
-	COMPILER_BEGIN(self->ci_compiler);
+	if (COMPILER_BEGIN(self->ci_compiler))
+		return NULL;
 	file = DeeCompilerItem_VALUE(self, struct TPPFile);
 	if likely(file) {
 		if (file->f_kind != TPPFILE_KIND_MACRO ||
@@ -4143,7 +4288,8 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 file_delallowselfexpansion(DeeCompilerItemObject *__restrict self) {
 	struct TPPFile *file;
 	int result = -1;
-	COMPILER_BEGIN(self->ci_compiler);
+	if (COMPILER_BEGIN(self->ci_compiler))
+		return -1;
 	file = DeeCompilerItem_VALUE(self, struct TPPFile);
 	if likely(file) {
 		if (file->f_kind != TPPFILE_KIND_MACRO ||
@@ -4165,7 +4311,8 @@ file_setallowselfexpansion(DeeCompilerItemObject *__restrict self,
 	newval = DeeObject_Bool(value);
 	if unlikely(newval < 0)
 		goto done;
-	COMPILER_BEGIN(self->ci_compiler);
+	if (COMPILER_BEGIN(self->ci_compiler))
+		return -1;
 	file = DeeCompilerItem_VALUE(self, struct TPPFile);
 	if likely(file) {
 		if (file->f_kind != TPPFILE_KIND_MACRO ||
@@ -4187,7 +4334,8 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 file_getkeepargumentspace(DeeCompilerItemObject *__restrict self) {
 	struct TPPFile *file;
 	DREF DeeObject *result = NULL;
-	COMPILER_BEGIN(self->ci_compiler);
+	if (COMPILER_BEGIN(self->ci_compiler))
+		return NULL;
 	file = DeeCompilerItem_VALUE(self, struct TPPFile);
 	if likely(file) {
 		if (file->f_kind != TPPFILE_KIND_MACRO ||
@@ -4206,7 +4354,8 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 file_delkeepargumentspace(DeeCompilerItemObject *__restrict self) {
 	struct TPPFile *file;
 	int result = -1;
-	COMPILER_BEGIN(self->ci_compiler);
+	if (COMPILER_BEGIN(self->ci_compiler))
+		return -1;
 	file = DeeCompilerItem_VALUE(self, struct TPPFile);
 	if likely(file) {
 		if (file->f_kind != TPPFILE_KIND_MACRO ||
@@ -4228,7 +4377,8 @@ file_setkeepargumentspace(DeeCompilerItemObject *__restrict self,
 	newval = DeeObject_Bool(value);
 	if unlikely(newval < 0)
 		goto done;
-	COMPILER_BEGIN(self->ci_compiler);
+	if (COMPILER_BEGIN(self->ci_compiler))
+		return -1;
 	file = DeeCompilerItem_VALUE(self, struct TPPFile);
 	if likely(file) {
 		if (file->f_kind != TPPFILE_KIND_MACRO ||
@@ -4250,7 +4400,8 @@ file_getfunctionmacrovariant(DeeCompilerItemObject *__restrict self) {
 	struct TPPFile *file;
 	uint32_t variant;
 	DREF DeeObject *result = NULL;
-	COMPILER_BEGIN(self->ci_compiler);
+	if (COMPILER_BEGIN(self->ci_compiler))
+		return NULL;
 	file = DeeCompilerItem_VALUE(self, struct TPPFile);
 	if likely(file) {
 		if (file->f_kind != TPPFILE_KIND_MACRO ||
@@ -4302,7 +4453,8 @@ file_setfunctionmacrovariant(DeeCompilerItemObject *__restrict self,
 		goto done;
 	}
 
-	COMPILER_BEGIN(self->ci_compiler);
+	if (COMPILER_BEGIN(self->ci_compiler))
+		return -1;
 	file = DeeCompilerItem_VALUE(self, struct TPPFile);
 	if likely(file) {
 		if (file->f_kind != TPPFILE_KIND_MACRO ||
@@ -4322,7 +4474,8 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 file_functionmacroargc(DeeCompilerItemObject *__restrict self) {
 	struct TPPFile *file;
 	DREF DeeObject *result = NULL;
-	COMPILER_BEGIN(self->ci_compiler);
+	if (COMPILER_BEGIN(self->ci_compiler))
+		return NULL;
 	file = DeeCompilerItem_VALUE(self, struct TPPFile);
 	if likely(file) {
 		if (file->f_kind != TPPFILE_KIND_MACRO ||
@@ -4340,7 +4493,8 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 file_functionmacroexpansions(DeeCompilerItemObject *__restrict self) {
 	struct TPPFile *file;
 	DREF DeeObject *result = NULL;
-	COMPILER_BEGIN(self->ci_compiler);
+	if (COMPILER_BEGIN(self->ci_compiler))
+		return NULL;
 	file = DeeCompilerItem_VALUE(self, struct TPPFile);
 	if likely(file) {
 		if (file->f_kind != TPPFILE_KIND_MACRO ||
@@ -4583,7 +4737,8 @@ file_nextchunk(DeeCompilerItemObject *self, size_t argc,
 		flags |= TPPFILE_NEXTCHUNK_FLAG_BINARY;
 	if (nonblocking)
 		flags |= TPPFILE_NEXTCHUNK_FLAG_NOBLCK;
-	COMPILER_BEGIN(self->ci_compiler);
+	if (COMPILER_BEGIN(self->ci_compiler))
+		return NULL;
 	file = DeeCompilerItem_VALUE(self, struct TPPFile);
 	if likely(file) {
 		error = TPPFile_NextChunk(file, flags);

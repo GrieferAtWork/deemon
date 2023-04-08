@@ -575,7 +575,7 @@ scope_fini(DeeScopeObject *__restrict self) {
 PRIVATE NONNULL((1, 2)) void DCALL
 scope_visit(DeeScopeObject *__restrict self, dvisit_t proc, void *arg) {
 	struct symbol **biter, **bend, *iter;
-	recursive_rwlock_read(&DeeCompiler_Lock);
+	DeeCompiler_LockReadNoInt();
 	biter = self->s_map;
 	bend  = biter + self->s_mapa;
 	for (; biter < bend; ++biter) {
@@ -591,7 +591,7 @@ scope_visit(DeeScopeObject *__restrict self, dvisit_t proc, void *arg) {
 		iter = iter->s_next;
 	}
 	Dee_XVisit(self->s_prev);
-	recursive_rwlock_endread(&DeeCompiler_Lock);
+	DeeCompiler_LockEndRead();
 }
 
 INTERN DeeTypeObject DeeScope_Type = {
@@ -749,13 +749,13 @@ base_scope_fini(DeeBaseScopeObject *__restrict self) {
 PRIVATE NONNULL((1, 2)) void DCALL
 base_scope_visit(DeeBaseScopeObject *__restrict self,
                  dvisit_t proc, void *arg) {
-	recursive_rwlock_read(&DeeCompiler_Lock);
+	DeeCompiler_LockReadNoInt();
 	ASSERT(self->bs_argc_max >= self->bs_argc_min);
 	visit_switch_cases(self->bs_swcase, proc, arg);
 	Dee_XVisitv(self->bs_default,
 	            self->bs_argc_max -
 	            self->bs_argc_min);
-	recursive_rwlock_endread(&DeeCompiler_Lock);
+	DeeCompiler_LockEndRead();
 }
 
 INTERN DeeTypeObject DeeBaseScope_Type = {
@@ -870,12 +870,12 @@ PRIVATE NONNULL((1, 2)) void DCALL
 root_scope_visit(DeeRootScopeObject *__restrict self,
                  dvisit_t proc, void *arg) {
 	size_t i;
-	recursive_rwlock_read(&DeeCompiler_Lock);
+	DeeCompiler_LockReadNoInt();
 	Dee_Visit(self->rs_module);
 	Dee_XVisit(self->rs_code);
 	for (i = 0; i < self->rs_importc; ++i)
 		Dee_Visit(self->rs_importv[i]);
-	recursive_rwlock_endread(&DeeCompiler_Lock);
+	DeeCompiler_LockEndRead();
 }
 
 INTERN DeeTypeObject DeeRootScope_Type = {

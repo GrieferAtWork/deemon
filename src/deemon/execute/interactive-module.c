@@ -37,9 +37,9 @@
 #include <deemon/system.h>          /* DeeSystem_SEP */
 #include <deemon/traceback.h>
 #include <deemon/tuple.h>
+#include <deemon/util/atomic.h>
 #include <deemon/util/cache.h>
 #include <deemon/util/recursive-rwlock.h>
-#include <deemon/util/atomic.h>
 
 #include "../runtime/runtime_error.h"
 #include "../runtime/strings.h"
@@ -354,8 +354,11 @@ do_exec_code:
 	ASSERT(self->im_stream);
 	ASSERT(self->im_module.mo_root);
 
-	/* Active the context of the interactive module's compiler. */
-	COMPILER_BEGIN(self->im_compiler);
+	/* Activate the context of the interactive module's compiler. */
+	if (COMPILER_BEGIN(self->im_compiler)) {
+		result = NULL;
+		goto done_compiler;
+	}
 
 	if (token.t_file == &TPPFile_Empty) {
 		/* Push the source-stream file back onto the TPP include stack.
@@ -1257,7 +1260,8 @@ do_create_base_name:
 		if (self->im_module.mo_globalc || self->im_options.co_setup) {
 			/* NOTE: Sadly we must switch compiler context here,
 			 *       just so we can use `TPPLexer_LookupKeyword()' */
-			COMPILER_BEGIN(self->im_compiler);
+			if (COMPILER_BEGIN(self->im_compiler))
+				goto err_basefile;
 			if (self->im_options.co_setup) {
 				int error;
 				error = (*self->im_options.co_setup)(self->im_options.co_setup_arg);

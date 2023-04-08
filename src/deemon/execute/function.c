@@ -984,7 +984,7 @@ yfi_init(YFIterator *__restrict self,
 	self->yi_frame.cf_this  = yield_function->yf_this;
 	Dee_XIncref(self->yi_frame.cf_this);
 	self->yi_frame.cf_stacksz = 0;
-	recursive_rwlock_init(&self->yi_lock);
+	Dee_ratomic_rwlock_init(&self->yi_lock);
 	return 0;
 err_r_base:
 	Dee_Decref(self->yi_frame.cf_func);
@@ -1332,11 +1332,11 @@ yfi_visit(YFIterator *__restrict self,
           dvisit_t proc, void *arg) {
 	if (self->yi_frame.cf_prev != CODE_FRAME_NOT_EXECUTING)
 		return; /* Can't visit a frame that is current executing. */
-	recursive_rwlock_write(&self->yi_lock);
+	DeeYieldFunctionIterator_LockWrite(self);
 #ifndef CONFIG_NO_THREADS
 	COMPILER_READ_BARRIER();
 	if (self->yi_frame.cf_prev != CODE_FRAME_NOT_EXECUTING) {
-		recursive_rwlock_endwrite(&self->yi_lock);
+		DeeYieldFunctionIterator_LockEndWrite(self);
 		return; /* See above... */
 	}
 #endif /* !CONFIG_NO_THREADS */
@@ -1359,7 +1359,7 @@ yfi_visit(YFIterator *__restrict self,
 		while (stacksize--)
 			Dee_Visit(stack[stacksize]);
 	}
-	recursive_rwlock_endwrite(&self->yi_lock);
+	DeeYieldFunctionIterator_LockEndWrite(self);
 }
 
 PRIVATE NONNULL((1)) void DCALL
@@ -1369,12 +1369,12 @@ yfi_clear(YFIterator *__restrict self) {
 	DeeObject **locals;
 	size_t numlocals = 0;
 	bool heap_stack  = false;
-	recursive_rwlock_write(&self->yi_lock);
+	DeeYieldFunctionIterator_LockWrite(self);
 	/* Execute established finally handlers. */
 	yfi_run_finally(self);
 	if unlikely(self->yi_frame.cf_prev != CODE_FRAME_NOT_EXECUTING) {
 		/* Can't clear a frame currently being executed. */
-		recursive_rwlock_endwrite(&self->yi_lock);
+		DeeYieldFunctionIterator_LockEndWrite(self);
 		return;
 	}
 	obj[0] = (DeeObject *)self->yi_func;
@@ -1401,7 +1401,7 @@ yfi_clear(YFIterator *__restrict self) {
 	self->yi_frame.cf_stack = NULL;
 	self->yi_frame.cf_sp    = NULL;
 	self->yi_frame.cf_ip    = NULL;
-	recursive_rwlock_endwrite(&self->yi_lock);
+	DeeYieldFunctionIterator_LockEndWrite(self);
 	Dee_XDecref(obj[0]);
 	Dee_XDecref(obj[1]);
 	Dee_XDecref(obj[2]);
@@ -1421,7 +1421,7 @@ yfi_clear(YFIterator *__restrict self) {
 PRIVATE NONNULL((1)) DREF DeeObject *DCALL
 yfi_iter_next(YFIterator *__restrict self) {
 	DREF DeeObject *result;
-	recursive_rwlock_write(&self->yi_lock);
+	DeeYieldFunctionIterator_LockWrite(self);
 	if unlikely(!self->yi_func) {
 		/* Special case: Always be indicative of an exhausted iterator
 		 * when default-constructed, or after being cleared. */
@@ -1455,7 +1455,7 @@ yfi_iter_next(YFIterator *__restrict self) {
 		}
 	}
 done:
-	recursive_rwlock_endwrite(&self->yi_lock);
+	DeeYieldFunctionIterator_LockEndWrite(self);
 	return result;
 }
 
@@ -1539,7 +1539,8 @@ yfi_copy(YFIterator *__restrict self,
 	DeeCodeObject *code;
 	size_t stack_size;
 again:
-	recursive_rwlock_write(&other->yi_lock);
+	DeeYieldFunctionIterator_LockWrite(other);
+
 	/* Make sure that the function is actually copyable. */
 	code = NULL;
 	if (other->yi_frame.cf_func) {
@@ -1548,7 +1549,7 @@ again:
 			char *function_name;
 			Dee_Incref(code);
 			function_name = DeeCode_NAME(code);
-			recursive_rwlock_endwrite(&other->yi_lock);
+			DeeYieldFunctionIterator_LockEndWrite(other);
 			if (!function_name)
 				function_name = "?";
 			DeeError_Throwf(&DeeError_ValueError, "Function `%s' is not copyable", function_name);
@@ -1557,8 +1558,10 @@ again:
 		}
 	}
 	self->yi_func = other->yi_func;
+
 	/* Copy over frame data. */
 	memcpy(&self->yi_frame, &other->yi_frame, sizeof(struct code_frame));
+
 	/* In case the other frame is currently executing, mark ours as not. */
 	self->yi_frame.cf_prev = CODE_FRAME_NOT_EXECUTING;
 	if (code) {
@@ -1576,6 +1579,7 @@ again:
 		self->yi_frame.cf_frame = (DREF DeeObject **)Dee_TryMalloc(code->co_framesize);
 		if unlikely(!self->yi_frame.cf_frame)
 			goto nomem_stack;
+
 		/* Copy local variables. */
 		Dee_Movrefv(self->yi_frame.cf_frame,
 		            other->yi_frame.cf_frame,
@@ -1610,8 +1614,8 @@ again:
 	Dee_XIncref(self->yi_frame.cf_this);
 	Dee_XIncref(self->yi_frame.cf_vargs);
 
-	recursive_rwlock_endwrite(&other->yi_lock);
-	recursive_rwlock_init(&self->yi_lock);
+	DeeYieldFunctionIterator_LockEndWrite(other);
+	Dee_ratomic_rwlock_init(&self->yi_lock);
 	if (code) {
 		DeeObject *this_arg;
 		DeeObject *varargs;
@@ -1662,7 +1666,7 @@ nomem_stack:
 		Dee_Free(vector);
 	}
 nomem:
-	recursive_rwlock_endwrite(&other->yi_lock);
+	DeeYieldFunctionIterator_LockEndWrite(other);
 	if (Dee_CollectMemory(1))
 		goto again;
 	return -1;
@@ -1672,10 +1676,10 @@ nomem:
 PRIVATE WUNUSED NONNULL((1)) DREF YFunction *DCALL
 yfi_getyfunc(YFIterator *__restrict self) {
 	DREF YFunction *result;
-	recursive_rwlock_read(&self->yi_lock);
+	DeeYieldFunctionIterator_LockRead(self);
 	result = self->yi_func;
 	Dee_XIncref(result);
-	recursive_rwlock_endread(&self->yi_lock);
+	DeeYieldFunctionIterator_LockEndRead(self);
 	if unlikely(!result)
 		err_unbound_attribute(&DeeYieldFunctionIterator_Type, STR_seq);
 	return result;
@@ -1685,12 +1689,12 @@ yfi_getyfunc(YFIterator *__restrict self) {
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 yfi_getthis(YFIterator *__restrict self) {
 	DREF DeeObject *result;
-	recursive_rwlock_read(&self->yi_lock);
+	DeeYieldFunctionIterator_LockRead(self);
 	result = self->yi_frame.cf_this;
 	if (!(self->yi_frame.cf_flags & CODE_FTHISCALL))
 		result = NULL;
 	Dee_XIncref(result);
-	recursive_rwlock_endread(&self->yi_lock);
+	DeeYieldFunctionIterator_LockEndRead(self);
 	if unlikely(!result)
 		err_unbound_attribute(&DeeYieldFunctionIterator_Type, "__this__");
 	return result;
@@ -1709,30 +1713,30 @@ yfi_getframe(YFIterator *__restrict self) {
 PRIVATE WUNUSED NONNULL((1)) DREF Function *DCALL
 yfi_getfunc(YFIterator *__restrict self) {
 	DREF Function *result;
-	recursive_rwlock_write(&self->yi_lock);
+	DeeYieldFunctionIterator_LockWrite(self);
 	if unlikely(!self->yi_func) {
-		recursive_rwlock_endwrite(&self->yi_lock);
+		DeeYieldFunctionIterator_LockEndWrite(self);
 		err_unbound_attribute(&DeeYieldFunctionIterator_Type, "__func__");
 		return NULL;
 	}
 	result = self->yi_func->yf_func;
 	Dee_Incref(result);
-	recursive_rwlock_endwrite(&self->yi_lock);
+	DeeYieldFunctionIterator_LockEndWrite(self);
 	return result;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeCodeObject *DCALL
 yfi_getcode(YFIterator *__restrict self) {
 	DREF DeeCodeObject *result;
-	recursive_rwlock_write(&self->yi_lock);
+	DeeYieldFunctionIterator_LockWrite(self);
 	if unlikely(!self->yi_func) {
-		recursive_rwlock_endwrite(&self->yi_lock);
+		DeeYieldFunctionIterator_LockEndWrite(self);
 		err_unbound_attribute(&DeeYieldFunctionIterator_Type, "__code__");
 		return NULL;
 	}
 	result = self->yi_func->yf_func->fo_code;
 	Dee_Incref(result);
-	recursive_rwlock_endwrite(&self->yi_lock);
+	DeeYieldFunctionIterator_LockEndWrite(self);
 	return result;
 }
 
@@ -1740,15 +1744,15 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 yfi_getrefs(YFIterator *__restrict self) {
 	DREF DeeObject *result;
 	DREF Function *func;
-	recursive_rwlock_write(&self->yi_lock);
+	DeeYieldFunctionIterator_LockWrite(self);
 	if unlikely(!self->yi_func) {
-		recursive_rwlock_endwrite(&self->yi_lock);
+		DeeYieldFunctionIterator_LockEndWrite(self);
 		err_unbound_attribute(&DeeYieldFunctionIterator_Type, "__refs__");
 		return NULL;
 	}
 	func = self->yi_func->yf_func;
 	Dee_Incref(func);
-	recursive_rwlock_endwrite(&self->yi_lock);
+	DeeYieldFunctionIterator_LockEndWrite(self);
 	result = function_get_refs(func);
 	Dee_Decref(func);
 	return result;
@@ -1758,15 +1762,15 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 yfi_getkwds(YFIterator *__restrict self) {
 	DREF DeeObject *result;
 	DREF Function *func;
-	recursive_rwlock_write(&self->yi_lock);
+	DeeYieldFunctionIterator_LockWrite(self);
 	if unlikely(!self->yi_func) {
-		recursive_rwlock_endwrite(&self->yi_lock);
+		DeeYieldFunctionIterator_LockEndWrite(self);
 		err_unbound_attribute(&DeeYieldFunctionIterator_Type, STR___kwds__);
 		return NULL;
 	}
 	func = self->yi_func->yf_func;
 	Dee_Incref(func);
-	recursive_rwlock_endwrite(&self->yi_lock);
+	DeeYieldFunctionIterator_LockEndWrite(self);
 	result = function_get_kwds(func);
 	Dee_Decref(func);
 	return result;
@@ -1775,15 +1779,15 @@ yfi_getkwds(YFIterator *__restrict self) {
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 yfi_getargs(YFIterator *__restrict self) {
 	DREF DeeObject *result;
-	recursive_rwlock_write(&self->yi_lock);
+	DeeYieldFunctionIterator_LockWrite(self);
 	if unlikely(!self->yi_func) {
-		recursive_rwlock_endwrite(&self->yi_lock);
+		DeeYieldFunctionIterator_LockEndWrite(self);
 		err_unbound_attribute(&DeeYieldFunctionIterator_Type, "__args__");
 		return NULL;
 	}
 	result = (DeeObject *)self->yi_func->yf_args;
 	Dee_Incref(result);
-	recursive_rwlock_endwrite(&self->yi_lock);
+	DeeYieldFunctionIterator_LockEndWrite(self);
 	return result;
 }
 
@@ -1791,15 +1795,15 @@ PRIVATE WUNUSED NONNULL((1, 2)) DREF YFunction *DCALL
 yfi_get_func_reference(YFIterator *__restrict self,
                        char const *__restrict attr_name) {
 	DREF YFunction *result;
-	recursive_rwlock_write(&self->yi_lock);
+	DeeYieldFunctionIterator_LockWrite(self);
 	if unlikely(!self->yi_func) {
-		recursive_rwlock_endwrite(&self->yi_lock);
+		DeeYieldFunctionIterator_LockEndWrite(self);
 		err_unbound_attribute(&DeeYieldFunctionIterator_Type, attr_name);
 		return NULL;
 	}
 	result = self->yi_func;
 	Dee_Incref(result);
-	recursive_rwlock_endwrite(&self->yi_lock);
+	DeeYieldFunctionIterator_LockEndWrite(self);
 	return result;
 }
 

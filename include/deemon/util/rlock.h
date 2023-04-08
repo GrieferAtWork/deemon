@@ -262,6 +262,40 @@ typedef struct {
 #define Dee_rshared_lock_tryacquire(self) Dee_ratomic_lock_tryacquire(&(self)->rs_lock)
 #define _Dee_rshared_lock_wakeone(self)   (void)(__hybrid_atomic_load(&(self)->rs_waiting, __ATOMIC_ACQUIRE) && (DeeFutex_WakeOne(&(self)->rs_lock.ra_lock), 1))
 
+/* Block until successfully acquired a recursive shared lock. */
+LOCAL NONNULL((1)) int DCALL
+Dee_rshared_lock_acquire_noint(Dee_rshared_lock_t *__restrict self) {
+	unsigned int lockword;
+	lockword = __hybrid_atomic_load(&self->rs_lock.ra_lock, __ATOMIC_ACQUIRE);
+	if (lockword == 0) {
+		if (!__hybrid_atomic_cmpxch(&self->rs_lock.ra_lock, 0, 1, __ATOMIC_ACQUIRE, __ATOMIC_ACQUIRE))
+			goto waitfor;
+settid:
+		self->rs_lock.ra_tid = __hybrid_gettid();
+		return 0;
+	}
+	if (__hybrid_gettid_iscaller(self->rs_lock.ra_tid)) {
+		__hybrid_atomic_inc(&self->rs_lock.ra_lock, __ATOMIC_ACQUIRE);
+		return 0;
+	}
+waitfor:
+	DeeFutex_WaitIntNoInt(&self->rs_lock.ra_lock, lockword);
+	if (__hybrid_atomic_cmpxch(&self->rs_lock.ra_lock, 0, 1, __ATOMIC_ACQUIRE, __ATOMIC_ACQUIRE))
+		goto settid;
+	goto waitfor;
+}
+
+LOCAL NONNULL((1)) void DCALL
+Dee_rshared_lock_waitfor_noint(Dee_rshared_lock_t *__restrict self) {
+	unsigned int lockword;
+	if (__hybrid_atomic_load(&self->rs_lock.ra_lock, __ATOMIC_ACQUIRE) == 0)
+		return;
+	if (__hybrid_gettid_iscaller(self->rs_lock.ra_tid))
+		return;
+	while ((lockword = __hybrid_atomic_load(&self->rs_lock.ra_lock, __ATOMIC_ACQUIRE)) != 0)
+		DeeFutex_WaitIntNoInt(&self->rs_lock.ra_lock, lockword);
+}
+
 /* Block until successfully acquired a recursive shared lock.
  * @return: 0 : Success.
  * @return: -1: An exception was thrown. */
@@ -742,6 +776,60 @@ typedef struct {
 #define Dee_rshared_rwlock_endwrite(self)            (void)Dee_rshared_rwlock_endwrite_ex(self)
 #define _Dee_rshared_rwlock_endwrite_ex_NDEBUG(self) (_Dee_ratomic_rwlock_endwrite_ex_NDEBUG(&(self)->rsrw_lock) && (_Dee_rshared_rwlock_wake(self), 1))
 #define _Dee_rshared_rwlock_endwrite_NDEBUG(self)    (void)_Dee_rshared_rwlock_endwrite_ex_NDEBUG(self)
+
+/* Acquire a read-lock to `self' */
+LOCAL NONNULL((1)) void DCALL
+Dee_rshared_rwlock_read_noint(Dee_rshared_rwlock_t *__restrict self) {
+	uintptr_t lockword;
+again:
+	lockword = __hybrid_atomic_load(&self->rsrw_lock.rarw_lock.arw_lock, __ATOMIC_ACQUIRE);
+	if (lockword != (uintptr_t)-1) {
+again_lockword_not_UINTPTR_MAX:
+		Dee_ASSERTF(lockword != (uintptr_t)-2, "Too many read-locks");
+		if (__hybrid_atomic_cmpxch_weak(&self->rsrw_lock.rarw_lock.arw_lock,
+		                                lockword, lockword + 1,
+		                                __ATOMIC_ACQUIRE, __ATOMIC_ACQUIRE))
+			return;
+		goto again;
+	}
+	if (__hybrid_gettid_iscaller(self->rsrw_lock.rarw_tid)) {
+		/* Special case for read-after-write */
+		++self->rsrw_lock.rarw_nwrite;
+		return;
+	}
+	do {
+		DeeFutex_WaitPtrNoInt(&self->rsrw_lock.rarw_lock.arw_lock, lockword);
+	} while ((lockword = __hybrid_atomic_load(&self->rsrw_lock.rarw_lock.arw_lock,
+	                                          __ATOMIC_ACQUIRE)) == (uintptr_t)-1);
+	goto again_lockword_not_UINTPTR_MAX;
+}
+
+/* Acquire a write-lock to `self' */
+LOCAL NONNULL((1)) void DCALL
+Dee_rshared_rwlock_write_noint(Dee_rshared_rwlock_t *__restrict self) {
+	uintptr_t lockword;
+again:
+	lockword = __hybrid_atomic_load(&self->rsrw_lock.rarw_lock.arw_lock, __ATOMIC_ACQUIRE);
+	if (lockword == 0) {
+again_lockword_zero:
+		if (!__hybrid_atomic_cmpxch_weak(&self->rsrw_lock.rarw_lock.arw_lock, 0, (uintptr_t)-1,
+		                                 __ATOMIC_ACQUIRE, __ATOMIC_ACQUIRE))
+			goto again;
+		self->rsrw_lock.rarw_tid = __hybrid_gettid();
+		return;
+	}
+	if (lockword == (uintptr_t)-1) {
+		if (__hybrid_gettid_iscaller(self->rsrw_lock.rarw_tid)) {
+			++self->rsrw_lock.rarw_nwrite;
+			return;
+		}
+	}
+	do {
+		DeeFutex_WaitPtrNoInt(&self->rsrw_lock.rarw_lock.arw_lock, lockword);
+	} while ((lockword = __hybrid_atomic_load(&self->rsrw_lock.rarw_lock.arw_lock,
+	                                          __ATOMIC_ACQUIRE)) != 0);
+	goto again_lockword_zero;
+}
 
 /* Acquire a read-lock to `self' */
 LOCAL WUNUSED NONNULL((1)) int DCALL

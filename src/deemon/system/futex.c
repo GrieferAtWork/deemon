@@ -1031,11 +1031,19 @@ DECL_END
 #include "futex-wait.c.inl"
 #define DEFINE_DeeFutex_Wait32Timed
 #include "futex-wait.c.inl"
+#define DEFINE_DeeFutex_Wait32NoInt
+#include "futex-wait.c.inl"
+#define DEFINE_DeeFutex_Wait32NoIntTimed
+#include "futex-wait.c.inl"
 
 #if __SIZEOF_POINTER__ >= 8
 #define DEFINE_DeeFutex_Wait64
 #include "futex-wait.c.inl"
 #define DEFINE_DeeFutex_Wait64Timed
+#include "futex-wait.c.inl"
+#define DEFINE_DeeFutex_Wait64NoInt
+#include "futex-wait.c.inl"
+#define DEFINE_DeeFutex_Wait64NoIntTimed
 #include "futex-wait.c.inl"
 #endif /* __SIZEOF_POINTER__ >= 8 */
 #endif /* !__INTELLISENSE__ */

@@ -70,9 +70,7 @@ DECLARE_STRUCT_CACHE(sym, struct symbol)
 PRIVATE WUNUSED DREF struct ast *DCALL
 ast_dbgnew(char const *file, int line) {
 	DREF struct ast *result = ast_dbgalloc(file, line);
-#ifndef CONFIG_NO_THREADS
-	ASSERT(recursive_rwlock_reading(&DeeCompiler_Lock));
-#endif /* !CONFIG_NO_THREADS */
+	ASSERT(DeeCompiler_LockReading());
 	if likely(result) {
 #ifdef CONFIG_AST_IS_STRUCT
 		result->a_refcnt = 1;
@@ -89,7 +87,7 @@ ast_dbgnew(char const *file, int line) {
 INTERN WUNUSED DREF struct ast *DCALL ast_new(void) {
 	DREF struct ast *result = ast_alloc();
 #ifndef CONFIG_NO_THREADS
-	ASSERT(recursive_rwlock_reading(&DeeCompiler_Lock));
+	ASSERT(DeeCompiler_LockReading());
 #endif /* !CONFIG_NO_THREADS */
 	if likely(result) {
 		DeeObject_Init(result, &DeeAst_Type);
@@ -1221,7 +1219,7 @@ INTERN NONNULL((1)) void DCALL ast_destroy(struct ast *__restrict self)
 PRIVATE NONNULL((1)) void DCALL ast_fini(struct ast *__restrict self)
 #endif /* !CONFIG_AST_IS_STRUCT */
 {
-	ASSERT(recursive_rwlock_reading(&DeeCompiler_Lock));
+	ASSERT(DeeCompiler_LockReading());
 	DeeCompiler_DelItem(self);
 	if (self->a_ddi.l_file)
 		TPPFile_Decref(self->a_ddi.l_file);

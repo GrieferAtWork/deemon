@@ -139,7 +139,8 @@ get_scope_lookupmode(DeeObject *__restrict value,
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 scope_getbase(DeeCompilerScopeObject *__restrict self) {
 	DREF DeeObject *result;
-	COMPILER_BEGIN(self->ci_compiler);
+	if (COMPILER_BEGIN(self->ci_compiler))
+		return NULL;
 	result = DeeCompiler_GetScope((DeeScopeObject *)self->ci_value->s_base);
 	COMPILER_END();
 	return result;
@@ -148,7 +149,8 @@ scope_getbase(DeeCompilerScopeObject *__restrict self) {
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 scope_getprev(DeeCompilerScopeObject *__restrict self) {
 	DREF DeeObject *result;
-	COMPILER_BEGIN(self->ci_compiler);
+	if (COMPILER_BEGIN(self->ci_compiler))
+		return NULL;
 	if (!self->ci_value->s_prev) {
 		result = Dee_None;
 		Dee_Incref(result);
@@ -202,7 +204,8 @@ scope_print(DeeCompilerScopeObject *__restrict self,
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 scope_bool(DeeCompilerScopeObject *__restrict self) {
 	int result;
-	COMPILER_BEGIN(self->ci_compiler);
+	if (COMPILER_BEGIN(self->ci_compiler))
+		return -1;
 	result = self->ci_value->s_mapc != 0;
 	COMPILER_END();
 	return result;
@@ -218,7 +221,8 @@ scope_iter(DeeCompilerScopeObject *__restrict self) {
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 scope_size(DeeCompilerScopeObject *__restrict self) {
 	DREF DeeObject *result;
-	COMPILER_BEGIN(self->ci_compiler);
+	if (COMPILER_BEGIN(self->ci_compiler))
+		return NULL;
 	result = DeeInt_NewSize(self->ci_value->s_mapc);
 	COMPILER_END();
 	return result;
@@ -228,7 +232,8 @@ PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 scope_contains(DeeCompilerScopeObject *self,
                DeeObject *elem) {
 	DREF DeeObject *result;
-	COMPILER_BEGIN(self->ci_compiler);
+	if (COMPILER_BEGIN(self->ci_compiler))
+		return NULL;
 	if (DeeObject_InstanceOfExact(elem, &DeeCompilerSymbol_Type)) {
 		result = DeeBool_For((((DeeCompilerSymbolObject *)elem)->ci_compiler == self->ci_compiler &&
 		                      ((DeeCompilerSymbolObject *)elem)->ci_value != NULL &&
@@ -259,7 +264,8 @@ scope_getitem(DeeCompilerScopeObject *self, DeeObject *elem) {
 	utf8 = DeeString_AsUtf8(elem);
 	if unlikely(!utf8)
 		goto err;
-	COMPILER_BEGIN(self->ci_compiler);
+	if (COMPILER_BEGIN(self->ci_compiler))
+		return NULL;
 	sym = scope_lookup_str(self->ci_value, utf8, WSTR_LENGTH(utf8));
 	if unlikely(!sym) {
 		err_item_not_found((DeeObject *)self, elem);
@@ -284,7 +290,8 @@ scope_delitem(DeeCompilerScopeObject *__restrict self,
 	utf8 = DeeString_AsUtf8(elem);
 	if unlikely(!utf8)
 		goto err;
-	COMPILER_BEGIN(self->ci_compiler);
+	if (COMPILER_BEGIN(self->ci_compiler))
+		return -1;
 	sym = scope_lookup_str(self->ci_value, utf8, WSTR_LENGTH(utf8));
 	if unlikely(!sym) {
 		err_item_not_found((DeeObject *)self, elem);
@@ -321,7 +328,8 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 scope_newanon(DeeCompilerScopeObject *self, size_t argc, DeeObject *const *argv) {
 	DREF DeeObject *result = NULL;
 	struct symbol *sym;
-	COMPILER_BEGIN(self->ci_compiler);
+	if (COMPILER_BEGIN(self->ci_compiler))
+		return NULL;
 	if (DeeArg_Unpack(argc, argv, ":newanon"))
 		goto done;
 	sym = new_unnamed_symbol_in_scope(self->ci_value);
@@ -345,7 +353,8 @@ scope_newlocal(DeeCompilerScopeObject *self, size_t argc,
 	bool requirenew = true;
 	char *name_utf8;
 	PRIVATE struct keyword kwlist[] = { K(name), K(requirenew), K(loc), KEND };
-	COMPILER_BEGIN(self->ci_compiler);
+	if (COMPILER_BEGIN(self->ci_compiler))
+		return NULL;
 	if (DeeArg_UnpackKw(argc, argv, kw, kwlist, "o|bo:newlocal", &name, &requirenew, &loc))
 		goto done;
 	if (DeeObject_AssertTypeExact(name, &DeeString_Type))
