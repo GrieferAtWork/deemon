@@ -36,6 +36,7 @@
 	</ItemGroup>
 	<ItemGroup>
 		<ClInclude Include="..\..\src\dex\threading\libthreading.h" />
+		<ClInclude Include="..\..\src\dex\threading\lock.c.inl" />
 	</ItemGroup>
 	<ItemGroup>
 		<ClCompile Include="..\..\src\dex\threading\libthreading.c" />

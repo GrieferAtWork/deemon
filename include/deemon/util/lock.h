@@ -294,6 +294,7 @@ typedef struct {
 #define Dee_shared_rwlock_canwrite(self)     Dee_atomic_rwlock_canwrite(&(self)->srw_lock)
 #define Dee_shared_rwlock_canendread(self)   Dee_atomic_rwlock_canendread(&(self)->srw_lock)
 #define Dee_shared_rwlock_canendwrite(self)  Dee_atomic_rwlock_canendwrite(&(self)->srw_lock)
+#define Dee_shared_rwlock_canend(self)       Dee_atomic_rwlock_canend(&(self)->srw_lock)
 #define Dee_shared_rwlock_tryupgrade(self)   Dee_atomic_rwlock_tryupgrade(&(self)->srw_lock)
 #define Dee_shared_rwlock_trywrite(self)     Dee_atomic_rwlock_trywrite(&(self)->srw_lock)
 #define Dee_shared_rwlock_tryread(self)      Dee_atomic_rwlock_tryread(&(self)->srw_lock)

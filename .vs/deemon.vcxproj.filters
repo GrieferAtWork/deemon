@@ -600,6 +600,9 @@
 		<ClInclude Include="..\include\deemon\util\futex.h">
 			<Filter>include\util</Filter>
 		</ClInclude>
+		<ClInclude Include="..\include\deemon\util\lock-utils.h">
+			<Filter>include\util</Filter>
+		</ClInclude>
 		<ClInclude Include="..\include\deemon\util\lock.h">
 			<Filter>include\util</Filter>
 		</ClInclude>
@@ -607,6 +610,9 @@
 			<Filter>include\util</Filter>
 		</ClInclude>
 		<ClInclude Include="..\include\deemon\util\recursive-rwlock.h">
+			<Filter>include\util</Filter>
+		</ClInclude>
+		<ClInclude Include="..\include\deemon\util\rlock-utils.h">
 			<Filter>include\util</Filter>
 		</ClInclude>
 		<ClInclude Include="..\include\deemon\util\rlock.h">
