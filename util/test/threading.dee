@@ -80,131 +80,367 @@ function testRWLock(lock: RWLock, isRecursive: bool = false) {
 	assert !lock.reading;
 	assert !lock.writing;
 	assert lock.canread;
+	assert lock.timedwaitread(0);
 	assert lock.canwrite;
+	assert lock.timedwaitwrite(0);
 
-	assert lock.tryread();
+	assert lock.timedread(0); /* read=0 -> read=1 */
 	assert lock.reading;
 	assert !lock.writing;
 	assert lock.canread;
+	assert lock.timedwaitread(0);
 	assert !lock.canwrite;
+	assert !lock.timedwaitwrite(0);
 
-	assert lock.tryread();
+	lock.endread(); /* read=1 -> read=0 */
+	assert !lock.reading;
+	assert !lock.writing;
+	assert lock.canread;
+	assert lock.timedwaitread(0);
+	assert lock.canwrite;
+	assert lock.timedwaitwrite(0);
+
+	assert lock.tryread(); /* read=0 -> read=1 */
 	assert lock.reading;
 	assert !lock.writing;
 	assert lock.canread;
+	assert lock.timedwaitread(0);
 	assert !lock.canwrite;
+	assert !lock.timedwaitwrite(0);
+
+	assert lock.tryread(); /* read=1 -> read=2 */
+	assert lock.reading;
+	assert !lock.writing;
+	assert lock.canread;
+	assert lock.timedwaitread(0);
+	assert !lock.canwrite;
+	assert !lock.timedwaitwrite(0);
 
 	assert !lock.tryupgrade();
 	assert lock.reading;
 	assert !lock.writing;
 	assert lock.canread;
+	assert lock.timedwaitread(0);
 	assert !lock.canwrite;
+	assert !lock.timedwaitwrite(0);
 
-	lock.endread();
+	lock.endread(); /* read=2 -> read=1 */
 	assert lock.reading;
 	assert !lock.writing;
 	assert lock.canread;
+	assert lock.timedwaitread(0);
 	assert !lock.canwrite;
+	assert !lock.timedwaitwrite(0);
 
-	lock.endread();
+	lock.read(); /* read=1 -> read=2 */
+	assert lock.reading;
+	assert !lock.writing;
+	assert lock.canread;
+	assert lock.timedwaitread(0);
+	assert !lock.canwrite;
+	assert !lock.timedwaitwrite(0);
+
+	lock.endread(); /* read=2 -> read=1 */
+	assert lock.reading;
+	assert !lock.writing;
+	assert lock.canread;
+	assert lock.timedwaitread(0);
+	assert !lock.canwrite;
+	assert !lock.timedwaitwrite(0);
+
+	assert lock.timedread(0); /* read=1 -> read=2 */
+	assert lock.reading;
+	assert !lock.writing;
+	assert lock.canread;
+	assert lock.timedwaitread(0);
+	assert !lock.canwrite;
+	assert !lock.timedwaitwrite(0);
+
+	lock.endread(); /* read=2 -> read=1 */
+	assert lock.reading;
+	assert !lock.writing;
+	assert lock.canread;
+	assert lock.timedwaitread(0);
+	assert !lock.canwrite;
+	assert !lock.timedwaitwrite(0);
+
+	lock.endread(); /* read=1 -> read=0 */
 	assert !lock.reading;
 	assert !lock.writing;
 	assert lock.canread;
+	assert lock.timedwaitread(0);
 	assert lock.canwrite;
+	assert lock.timedwaitwrite(0);
 
-	lock.read();
+	lock.read(); /* read=0 -> read=1 */
 	assert lock.reading;
 	assert !lock.writing;
 	assert lock.canread;
+	assert lock.timedwaitread(0);
 	assert !lock.canwrite;
+	assert !lock.timedwaitwrite(0);
 
-	assert lock.tryupgrade();
+	assert lock.tryupgrade(); /* read=1 -> write */
 	assert lock.reading;
 	assert lock.writing;
 	assert isRecursive ? lock.canread : !lock.canread;
+	assert isRecursive ? lock.timedwaitread(0) : !lock.timedwaitread(0);
 	assert isRecursive ? lock.canwrite : !lock.canwrite;
+	assert isRecursive ? lock.timedwaitwrite(0) : !lock.timedwaitwrite(0);
 
-	lock.downgrade();
+	lock.downgrade(); /* write -> read=1 */
 	assert lock.reading;
 	assert !lock.writing;
 	assert lock.canread;
+	assert lock.timedwaitread(0);
 	assert !lock.canwrite;
+	assert !lock.timedwaitwrite(0);
 
-	assert lock.upgrade();
+	assert lock.upgrade(); /* read=1 -> write */
 	assert lock.reading;
 	assert lock.writing;
 	assert isRecursive ? lock.canread : !lock.canread;
+	assert isRecursive ? lock.timedwaitread(0) : !lock.timedwaitread(0);
 	assert isRecursive ? lock.canwrite : !lock.canwrite;
+	assert isRecursive ? lock.timedwaitwrite(0) : !lock.timedwaitwrite(0);
 
-	lock.downgrade();
+	lock.downgrade(); /* write -> read=1 */
 	assert lock.reading;
 	assert !lock.writing;
 	assert lock.canread;
+	assert lock.timedwaitread(0);
 	assert !lock.canwrite;
+	assert !lock.timedwaitwrite(0);
 
-	lock.endread();
+	lock.endread(); /* read=1 -> read=0 */
 	assert !lock.reading;
 	assert !lock.writing;
 	assert lock.canread;
+	assert lock.timedwaitread(0);
 	assert lock.canwrite;
+	assert lock.timedwaitwrite(0);
 
-	assert lock.trywrite();
+	assert lock.trywrite(); /* read=0 -> write */
 	assert lock.reading;
 	assert lock.writing;
 	assert isRecursive ? lock.canread : !lock.canread;
+	assert isRecursive ? lock.timedwaitread(0) : !lock.timedwaitread(0);
 	assert isRecursive ? lock.canwrite : !lock.canwrite;
+	assert isRecursive ? lock.timedwaitwrite(0) : !lock.timedwaitwrite(0);
 
-	lock.endwrite();
+	lock.endwrite(); /* write -> read=0 */
 	assert !lock.reading;
 	assert !lock.writing;
 	assert lock.canread;
+	assert lock.timedwaitread(0);
 	assert lock.canwrite;
+	assert lock.timedwaitwrite(0);
 
-	lock.read();
+	lock.read(); /* read=0 -> read=1 */
 	assert lock.reading;
 	assert !lock.writing;
 	assert lock.canread;
+	assert lock.timedwaitread(0);
 	assert !lock.canwrite;
+	assert !lock.timedwaitwrite(0);
 
-	lock.end();
+	lock.end(); /* read=1 -> read=0 */
 	assert !lock.reading;
 	assert !lock.writing;
 	assert lock.canread;
+	assert lock.timedwaitread(0);
 	assert lock.canwrite;
+	assert lock.timedwaitwrite(0);
 
-	lock.write();
+	lock.write(); /* read=0 -> write */
 	assert lock.reading;
 	assert lock.writing;
 	assert isRecursive ? lock.canread : !lock.canread;
+	assert isRecursive ? lock.timedwaitread(0) : !lock.timedwaitread(0);
 	assert isRecursive ? lock.canwrite : !lock.canwrite;
+	assert isRecursive ? lock.timedwaitwrite(0) : !lock.timedwaitwrite(0);
 
-	lock.end();
+	lock.end(); /* write -> read=0 */
 	assert !lock.reading;
 	assert !lock.writing;
 	assert lock.canread;
+	assert lock.timedwaitread(0);
 	assert lock.canwrite;
+	assert lock.timedwaitwrite(0);
+
+	assert lock.timedwrite(0); /* read=0 -> write */
+	assert lock.reading;
+	assert lock.writing;
+	assert isRecursive ? lock.canread : !lock.canread;
+	assert isRecursive ? lock.timedwaitread(0) : !lock.timedwaitread(0);
+	assert isRecursive ? lock.canwrite : !lock.canwrite;
+	assert isRecursive ? lock.timedwaitwrite(0) : !lock.timedwaitwrite(0);
+
+	lock.endwrite(); /* write -> read=0 */
+	assert !lock.reading;
+	assert !lock.writing;
+	assert lock.canread;
+	assert lock.timedwaitread(0);
+	assert lock.canwrite;
+	assert lock.timedwaitwrite(0);
 
 	with (lock.readlock) {
 		assert lock.reading;
 		assert !lock.writing;
 		assert lock.canread;
+		assert lock.timedwaitread(0);
 		assert !lock.canwrite;
+		assert !lock.timedwaitwrite(0);
 	}
 	assert !lock.reading;
 	assert !lock.writing;
 	assert lock.canread;
+	assert lock.timedwaitread(0);
 	assert lock.canwrite;
+	assert lock.timedwaitwrite(0);
+
+	with (lock.readlock) {
+		assert lock.reading;
+		assert !lock.writing;
+		assert lock.canread;
+		assert lock.timedwaitread(0);
+		assert !lock.canwrite;
+		assert !lock.timedwaitwrite(0);
+		/* Read-locks must always allow for recursion */
+		with (lock.readlock) {
+			assert lock.reading;
+			assert !lock.writing;
+			assert lock.canread;
+			assert lock.timedwaitread(0);
+			assert !lock.canwrite;
+			assert !lock.timedwaitwrite(0);
+		}
+		assert lock.reading;
+		assert !lock.writing;
+		assert lock.canread;
+		assert lock.timedwaitread(0);
+		assert !lock.canwrite;
+		assert !lock.timedwaitwrite(0);
+	}
+	assert !lock.reading;
+	assert !lock.writing;
+	assert lock.canread;
+	assert lock.timedwaitread(0);
+	assert lock.canwrite;
+	assert lock.timedwaitwrite(0);
 
 	with (lock.writelock) {
+		assert !lock.tryupgrade(), "write-lock can't be upgraded";
 		assert lock.reading;
 		assert lock.writing;
 		assert isRecursive ? lock.canread : !lock.canread;
+		assert isRecursive ? lock.timedwaitread(0) : !lock.timedwaitread(0);
 		assert isRecursive ? lock.canwrite : !lock.canwrite;
+		assert isRecursive ? lock.timedwaitwrite(0) : !lock.timedwaitwrite(0);
 	}
 	assert !lock.reading;
 	assert !lock.writing;
 	assert lock.canread;
+	assert lock.timedwaitread(0);
 	assert lock.canwrite;
+	assert lock.timedwaitwrite(0);
+
+	/* Recursive RWLocks must allow for read-after-write */
+	if (isRecursive) {
+		with (lock.writelock) {
+			assert lock.reading;
+			assert lock.writing;
+			assert lock.canread;
+			assert lock.timedwaitread(0);
+			assert lock.canwrite;
+			assert lock.timedwaitwrite(0);
+			with (lock.readlock) {
+				assert lock.reading;
+				assert lock.writing;
+				assert lock.canread;
+				assert lock.timedwaitread(0);
+				assert lock.canwrite;
+				assert lock.timedwaitwrite(0);
+				assert !lock.tryupgrade(), "write-lock can't be upgraded";
+			}
+
+			with (lock.writelock) { /* Write-locks are recursive here! */
+				assert lock.reading;
+				assert lock.writing;
+				assert lock.canread;
+				assert lock.timedwaitread(0);
+				assert lock.canwrite;
+				assert lock.timedwaitwrite(0);
+			}
+
+			lock.read(); /* Read-after-write must behave the same as write-after-write */
+			assert lock.reading;
+			assert lock.writing;
+			assert lock.canread;
+			assert lock.timedwaitread(0);
+			assert lock.canwrite;
+			assert lock.timedwaitwrite(0);
+			lock.endread();
+
+			lock.write();
+			assert lock.reading;
+			assert lock.writing;
+			assert lock.canread;
+			assert lock.timedwaitread(0);
+			assert lock.canwrite;
+			assert lock.timedwaitwrite(0);
+			lock.endwrite();
+
+			lock.timedread(0);
+			assert lock.reading;
+			assert lock.writing;
+			assert lock.canread;
+			assert lock.timedwaitread(0);
+			assert lock.canwrite;
+			assert lock.timedwaitwrite(0);
+			lock.endread();
+
+			lock.timedwrite(0);
+			assert lock.reading;
+			assert lock.writing;
+			assert lock.canread;
+			assert lock.timedwaitread(0);
+			assert lock.canwrite;
+			assert lock.timedwaitwrite(0);
+			lock.endwrite();
+
+			lock.read();
+			assert lock.reading;
+			assert lock.writing;
+			assert lock.canread;
+			assert lock.timedwaitread(0);
+			assert lock.canwrite;
+			assert lock.timedwaitwrite(0);
+			lock.end();
+
+			lock.write();
+			assert lock.reading;
+			assert lock.writing;
+			assert lock.canread;
+			assert lock.timedwaitread(0);
+			assert lock.canwrite;
+			assert lock.timedwaitwrite(0);
+			lock.end();
+
+			assert lock.reading;
+			assert lock.writing;
+			assert lock.canread;
+			assert lock.timedwaitread(0);
+			assert lock.canwrite;
+			assert lock.timedwaitwrite(0);
+		}
+		assert !lock.reading;
+		assert !lock.writing;
+		assert lock.canread;
+		assert lock.timedwaitread(0);
+		assert lock.canwrite;
+		assert lock.timedwaitwrite(0);
+	}
 
 	testLock(lock.readlock, isReadLockOrRecursive: true);
 	testLock(lock.writelock, isReadLockOrRecursive: isRecursive);

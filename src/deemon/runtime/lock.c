@@ -876,11 +876,8 @@ Dee_rshared_rwlock_waitread_timed(Dee_rshared_rwlock_t *__restrict self,
 	lockword = atomic_read(&self->rsrw_lock.rarw_lock.arw_lock);
 	if (lockword != (uintptr_t)-1)
 		return 0;
-	if (__hybrid_gettid_iscaller(self->rsrw_lock.rarw_tid)) {
-		/* Special case for read-after-write */
-		++self->rsrw_lock.rarw_nwrite;
-		return 0;
-	}
+	if (__hybrid_gettid_iscaller(self->rsrw_lock.rarw_tid))
+		return 0; /* Special case for read-after-write */
 	if (timeout_nanoseconds == (uint64_t)-1) {
 do_infinite_timeout:
 		do {

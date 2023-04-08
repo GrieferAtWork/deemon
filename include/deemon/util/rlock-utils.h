@@ -181,17 +181,16 @@ _Dee_ratomic_rwlock_read_p_impl(Dee_ratomic_rwlock_t *__restrict self) {
 	uintptr_t lockword;
 again:
 	lockword = __hybrid_atomic_load(&self->rarw_lock.arw_lock, __ATOMIC_ACQUIRE);
-	if (lockword == 0) {
-		if (!__hybrid_atomic_cmpxch_weak(&self->rarw_lock.arw_lock, 0, 1,
+	if (lockword != (uintptr_t)-1) {
+		if (!__hybrid_atomic_cmpxch_weak(&self->rarw_lock.arw_lock,
+		                                 lockword, lockword + 1,
 		                                 __ATOMIC_ACQUIRE, __ATOMIC_ACQUIRE))
 			goto again;
 		return 0;
 	}
-	if (lockword == (uintptr_t)-1) {
-		if (__hybrid_gettid_iscaller(self->rarw_tid)) {
-			++self->rarw_nwrite; /* read-after-write */
-			return 0;
-		}
+	if (__hybrid_gettid_iscaller(self->rarw_tid)) {
+		++self->rarw_nwrite; /* read-after-write */
+		return 0;
 	}
 	do {
 		if (DeeThread_CheckInterrupt())
@@ -263,17 +262,16 @@ _Dee_ratomic_rwlock_read_timed_p_impl(Dee_ratomic_rwlock_t *__restrict self,
 	uintptr_t lockword;
 again:
 	lockword = __hybrid_atomic_load(&self->rarw_lock.arw_lock, __ATOMIC_ACQUIRE);
-	if (lockword == 0) {
-		if (!__hybrid_atomic_cmpxch_weak(&self->rarw_lock.arw_lock, 0, 1,
+	if (lockword != (uintptr_t)-1) {
+		if (!__hybrid_atomic_cmpxch_weak(&self->rarw_lock.arw_lock,
+		                                 lockword, lockword + 1,
 		                                 __ATOMIC_ACQUIRE, __ATOMIC_ACQUIRE))
 			goto again;
 		return 0;
 	}
-	if (lockword == (uintptr_t)-1) {
-		if (__hybrid_gettid_iscaller(self->rarw_tid)) {
-			++self->rarw_nwrite; /* read-after-write */
-			return 0;
-		}
+	if (__hybrid_gettid_iscaller(self->rarw_tid)) {
+		++self->rarw_nwrite; /* read-after-write */
+		return 0;
 	}
 	if (timeout_nanoseconds == (uint64_t)-1) {
 do_infinite_timeout:
