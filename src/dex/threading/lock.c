@@ -31,7 +31,11 @@
 #include <deemon/int.h>
 #include <deemon/none.h>
 #include <deemon/object.h>
+#include <deemon/objmethod.h>
+#include <deemon/seq.h>
 #include <deemon/string.h>
+#include <deemon/system-features.h> /* memset(), ... */
+#include <deemon/tuple.h>
 #include <deemon/util/atomic.h>
 #include <deemon/util/lock.h>
 #include <deemon/util/rlock.h>
@@ -45,6 +49,19 @@
 #include "libthreading.h"
 
 DECL_BEGIN
+
+#ifndef NDEBUG
+#define DBG_memset (void)memset
+#else /* !NDEBUG */
+#define DBG_memset(dst, byte, n_bytes) (void)0
+#endif /* NDEBUG */
+
+#define DO(err, expr)                    \
+	do {                                 \
+		if unlikely((temp = (expr)) < 0) \
+			goto err;                    \
+		result += temp;                  \
+	}	__WHILE0
 
 #if __SIZEOF_POINTER__ >= 8
 #define POINTER_BITS 64
@@ -448,7 +465,7 @@ lock_ctor(DeeObject *__restrict self) {
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
-lock_enter(DeeObject *__restrict self) {
+lock_do_acquire(DeeObject *__restrict self) {
 	DeeObject *result;
 	result = DeeObject_CallAttr(self, (DeeObject *)&str_acquire, 0, NULL);
 	Dee_XDecref(result);
@@ -456,7 +473,7 @@ lock_enter(DeeObject *__restrict self) {
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
-lock_leave(DeeObject *__restrict self) {
+lock_do_release(DeeObject *__restrict self) {
 	DeeObject *result;
 	result = DeeObject_CallAttr(self, (DeeObject *)&str_release, 0, NULL);
 	Dee_XDecref(result);
@@ -464,7 +481,7 @@ lock_leave(DeeObject *__restrict self) {
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
-lock_tryenter(DeeObject *__restrict self) {
+lock_do_tryacquire(DeeObject *__restrict self) {
 	int result;
 	DeeObject *result_ob;
 	result_ob = DeeObject_CallAttr(self, (DeeObject *)&str_tryacquire, 0, NULL);
@@ -478,8 +495,8 @@ err:
 }
 
 PRIVATE struct type_with lock_with = {
-	/* .tp_enter = */ (int (DCALL *)(DeeObject *__restrict))&lock_enter,
-	/* .tp_leave = */ (int (DCALL *)(DeeObject *__restrict))&lock_leave
+	/* .tp_enter = */ (int (DCALL *)(DeeObject *__restrict))&lock_do_acquire,
+	/* .tp_leave = */ (int (DCALL *)(DeeObject *__restrict))&lock_do_release
 };
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -487,7 +504,7 @@ lock_acquire(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, ":acquire"))
 		goto err;
 	for (;;) {
-		int error = lock_tryenter(self);
+		int error = lock_do_tryacquire(self);
 		if unlikely(error < 0)
 			goto err;
 		if (error)
@@ -508,7 +525,7 @@ lock_timedacquire(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	uint64_t now_microseconds, then_microseconds;
 	if (DeeArg_Unpack(argc, argv, UNPu64 ":timedacquire", &timeout_nanoseconds))
 		goto err;
-	error = lock_tryenter(self);
+	error = lock_do_tryacquire(self);
 	if unlikely(error < 0)
 		goto err;
 	if (error)
@@ -526,7 +543,7 @@ do_infinite_timeout:
 	if (OVERFLOW_UADD(now_microseconds, timeout_nanoseconds / 1000, &then_microseconds))
 		goto do_infinite_timeout;
 do_wait_with_timeout:
-	error = lock_tryenter(self);
+	error = lock_do_tryacquire(self);
 	if unlikely(error < 0)
 		goto err;
 	if (error)
@@ -1333,25 +1350,25 @@ PRIVATE struct type_member rwlock_proxy_members[] = {
 #define rwlock_writelock_visit   rwlock_proxy_visit
 #define rwlock_writelock_members rwlock_proxy_members
 
-PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
 rwlock_readlock_print(DeeGenericRWLockProxyObject *__restrict self,
                       dformatprinter printer, void *arg) {
 	return DeeFormat_Printf(printer, arg, "<Shared Lock for %k>", self->grwl_lock);
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
 rwlock_writelock_print(DeeGenericRWLockProxyObject *__restrict self,
                        dformatprinter printer, void *arg) {
 	return DeeFormat_Printf(printer, arg, "<Exclusive Lock for %k>", self->grwl_lock);
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
 rwlock_readlock_printrepr(DeeGenericRWLockProxyObject *__restrict self,
                           dformatprinter printer, void *arg) {
 	return DeeFormat_Printf(printer, arg, "%r.readlock", self->grwl_lock);
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
 rwlock_writelock_printrepr(DeeGenericRWLockProxyObject *__restrict self,
                            dformatprinter printer, void *arg) {
 	return DeeFormat_Printf(printer, arg, "%r.writelock", self->grwl_lock);
@@ -1569,8 +1586,8 @@ INTERN DeeTypeObject DeeRWLockReadLock_Type = {
 		/* .tp_str       = */ NULL,
 		/* .tp_repr      = */ NULL,
 		/* .tp_bool      = */ NULL,
-		/* .tp_print     = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&rwlock_readlock_print,
-		/* .tp_printrepr = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&rwlock_readlock_printrepr
+		/* .tp_print     = */ (dssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&rwlock_readlock_print,
+		/* .tp_printrepr = */ (dssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&rwlock_readlock_printrepr
 	},
 	/* .tp_call          = */ NULL,
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, Dee_visit_t, void *))&rwlock_readlock_visit,
@@ -1618,8 +1635,8 @@ INTERN DeeTypeObject DeeRWLockWriteLock_Type = {
 		/* .tp_str       = */ NULL,
 		/* .tp_repr      = */ NULL,
 		/* .tp_bool      = */ NULL,
-		/* .tp_print     = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&rwlock_writelock_print,
-		/* .tp_printrepr = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&rwlock_writelock_printrepr
+		/* .tp_print     = */ (dssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&rwlock_writelock_print,
+		/* .tp_printrepr = */ (dssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&rwlock_writelock_printrepr
 	},
 	/* .tp_call          = */ NULL,
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, Dee_visit_t, void *))&rwlock_writelock_visit,
@@ -1663,7 +1680,7 @@ err:
 	return -1;
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
 semaphore_printrepr(DeeSemaphoreObject *__restrict self,
                     dformatprinter printer, void *arg) {
 	uintptr_t tickets = atomic_read(&self->sem_semaphore.se_tickets);
@@ -1874,7 +1891,7 @@ INTERN DeeTypeObject DeeSemaphore_Type = {
 		/* .tp_repr      = */ NULL,
 		/* .tp_bool      = */ NULL,
 		/* .tp_print     = */ NULL,
-		/* .tp_printrepr = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&semaphore_printrepr
+		/* .tp_printrepr = */ (dssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&semaphore_printrepr
 	},
 	/* .tp_call          = */ NULL,
 	/* .tp_visit         = */ NULL,
@@ -1903,7 +1920,7 @@ INTERN DeeTypeObject DeeSemaphore_Type = {
 
 
 /************************************************************************/
-/* Event                                                            */
+/* Event                                                                */
 /************************************************************************/
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
@@ -1923,7 +1940,7 @@ err:
 	return -1;
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
 event_printrepr(DeeEventObject *__restrict self,
                 dformatprinter printer, void *arg) {
 	bool isset = Dee_event_get(&self->e_event);
@@ -2051,7 +2068,7 @@ INTERN DeeTypeObject DeeEvent_Type = {
 		/* .tp_repr      = */ NULL,
 		/* .tp_bool      = */ NULL,
 		/* .tp_print     = */ NULL,
-		/* .tp_printrepr = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&event_printrepr
+		/* .tp_printrepr = */ (dssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&event_printrepr
 	},
 	/* .tp_call          = */ NULL,
 	/* .tp_visit         = */ NULL,
@@ -2065,6 +2082,808 @@ INTERN DeeTypeObject DeeEvent_Type = {
 	/* .tp_buffer        = */ NULL,
 	/* .tp_methods       = */ event_methods,
 	/* .tp_getsets       = */ event_getsets,
+	/* .tp_members       = */ NULL,
+	/* .tp_class_methods = */ NULL,
+	/* .tp_class_getsets = */ NULL,
+	/* .tp_class_members = */ NULL
+};
+
+
+
+
+
+
+
+
+
+/************************************************************************/
+/* Lock Union                                                           */
+/************************************************************************/
+typedef struct {
+	OBJECT_HEAD
+	size_t                                    lu_size;  /* [const][!= 0] # of locks. */
+	COMPILER_FLEXIBLE_ARRAY(DREF DeeObject *, lu_elem); /* [1..1][const][lu_size] Managed locks. */
+} LockUnion;
+#define LockUnion_Alloc(size) \
+	(LockUnion *)DeeObject_Malloc(offsetof(LockUnion, lu_elem) + ((size) * sizeof(DREF DeeObject *)))
+#define LockUnion_Realloc(ptr, size) \
+	(LockUnion *)DeeObject_Realloc(ptr, offsetof(LockUnion, lu_elem) + ((size) * sizeof(DREF DeeObject *)))
+#define LockUnion_TryRealloc(ptr, size) \
+	(LockUnion *)DeeObject_TryRealloc(ptr, offsetof(LockUnion, lu_elem) + ((size) * sizeof(DREF DeeObject *)))
+#define LockUnion_Free(ptr) DeeObject_Free(ptr)
+
+struct lock_union_allocator {
+	size_t     lua_alloc; /* # of allocated lock items */
+	LockUnion *lua_union; /* [1..1] Produced lock union */
+};
+
+PRIVATE ATTR_COLD int DCALL err_empty_lock_union(void) {
+	return DeeError_Throwf(&DeeError_ValueError, "Lock unions cannot be empty");
+}
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+lock_union_allocator_init(struct lock_union_allocator *__restrict self,
+                          size_t hint) {
+	Dee_ASSERT(hint != 0);
+	self->lua_union = LockUnion_Alloc(hint);
+	if unlikely(!self->lua_union)
+		goto err;
+	self->lua_union->lu_size = 0;
+	self->lua_alloc           = hint;
+	return 0;
+err:
+	return -1;
+}
+
+PRIVATE WUNUSED NONNULL((1)) void DCALL
+lock_union_allocator_fini(struct lock_union_allocator *__restrict self) {
+	Dee_Decrefv_unlikely(self->lua_union->lu_elem,
+	                     self->lua_union->lu_size);
+	LockUnion_Free(self->lua_union);
+}
+
+PRIVATE ATTR_RETNONNULL WUNUSED NONNULL((1)) DREF LockUnion *DCALL
+lock_union_allocator_pack(struct lock_union_allocator *__restrict self) {
+	DREF LockUnion *result = self->lua_union;
+	ASSERT(result->lu_size != 0);
+	ASSERT(result->lu_size <= self->lua_alloc);
+	if (result->lu_size < self->lua_alloc) {
+		result = LockUnion_TryRealloc(result, result->lu_size);
+		if unlikely(!result)
+			result = self->lua_union;
+	}
+	DeeObject_Init(result, &DeeLockUnion_Type);
+	DBG_memset(self, 0xcc, sizeof(*self));
+	return result;
+}
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+lock_union_allocator_append(struct lock_union_allocator *__restrict self,
+                            DeeObject *__restrict lock);
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+lock_union_allocator_append_vector(struct lock_union_allocator *__restrict self,
+                                   size_t lock_c, DeeObject *const *lock_v);
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+lock_union_allocator_append(struct lock_union_allocator *__restrict self,
+                            DeeObject *__restrict lock) {
+	/* Special case for recursive lock unions (which aren't allowed and are inlined) */
+	if (DeeObject_InstanceOfExact(lock, &DeeLockUnion_Type)) {
+		LockUnion *un = (LockUnion *)lock;
+		return lock_union_allocator_append_vector(self, un->lu_size, un->lu_elem);
+	}
+	ASSERT(self->lua_union->lu_size <= self->lua_alloc);
+	if unlikely(self->lua_union->lu_size >= self->lua_alloc) {
+		DREF LockUnion *new_union;
+		size_t new_alloc = self->lua_alloc * 2;
+		ASSERT(new_alloc > self->lua_alloc);
+		new_union = LockUnion_TryRealloc(self->lua_union, new_alloc);
+		if unlikely(!new_union) {
+			new_alloc = self->lua_alloc + 1;
+			new_union = LockUnion_Realloc(self->lua_union, new_alloc);
+			if unlikely(!new_union)
+				goto err;
+		}
+		self->lua_union = new_union;
+		self->lua_alloc = new_alloc;
+	}
+
+	/* Append the new lock to the vector used by the union */
+	self->lua_union->lu_elem[self->lua_union->lu_size++] = lock;
+	Dee_Incref(lock);
+	return 0;
+err:
+	return -1;
+}
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+lock_union_allocator_append_vector(struct lock_union_allocator *__restrict self,
+                                   size_t lock_c, DeeObject *const *lock_v) {
+	size_t i;
+	for (i = 0; i < lock_c; ++i) {
+		if unlikely(lock_union_allocator_append(self, lock_v[i]))
+			goto err;
+	}
+	return 0;
+err:
+	return -1;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF LockUnion *DCALL
+LockUnion_FromVector(size_t argc, DeeObject *const *argv) {
+	struct lock_union_allocator alloc;
+	if unlikely(argc == 0) {
+		err_empty_lock_union();
+		goto err;
+	}
+	if unlikely(lock_union_allocator_init(&alloc, argc))
+		goto err;
+	if unlikely(lock_union_allocator_append_vector(&alloc, argc, argv))
+		goto err_alloc;
+	return lock_union_allocator_pack(&alloc);
+err_alloc:
+	lock_union_allocator_fini(&alloc);
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+libthreading_lockunion_all_f(size_t argc, DeeObject *const *argv) {
+	if (argc == 1) /* Special case for when only a single lock was specified */
+		return_reference_(argv[0]);
+	return (DREF DeeObject *)LockUnion_FromVector(argc, argv);
+}
+
+INTDEF DeeCMethodObject libthreading_lockunion_all;
+INTERN DEFINE_CMETHOD(libthreading_lockunion_all, &libthreading_lockunion_all_f);
+
+PRIVATE WUNUSED NONNULL((1)) DREF LockUnion *DCALL
+LockUnion_FromIterator(DeeObject *__restrict iter) {
+	DREF DeeObject *elem;
+	struct lock_union_allocator alloc;
+	if unlikely(lock_union_allocator_init(&alloc, 8))
+		goto err;
+	while (ITER_ISOK(elem = DeeObject_IterNext(iter))) {
+		if unlikely(lock_union_allocator_append(&alloc, elem))
+			goto err_alloc_elem;
+	}
+	if unlikely(!elem)
+		goto err_alloc;
+	if unlikely(alloc.lua_union->lu_size == 0) {
+		err_empty_lock_union();
+		goto err_alloc;
+	}
+	return lock_union_allocator_pack(&alloc);
+err_alloc_elem:
+	Dee_Decref(elem);
+err_alloc:
+	lock_union_allocator_fini(&alloc);
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF LockUnion *DCALL
+LockUnion_FromFastSequence(DeeObject *__restrict seq, size_t size) {
+	size_t i;
+	struct lock_union_allocator alloc;
+	if unlikely(size == 0) {
+		err_empty_lock_union();
+		goto err;
+	}
+	if unlikely(lock_union_allocator_init(&alloc, size))
+		goto err;
+	for (i = 0; i < size; ++i) {
+		int temp;
+		DREF DeeObject *lock;
+		lock = DeeFastSeq_GetItem(seq, i);
+		if unlikely(!lock)
+			goto err_alloc;
+		temp = lock_union_allocator_append(&alloc, lock);
+		Dee_Decref(lock);
+		if unlikely(temp)
+			goto err_alloc;
+	}
+	return lock_union_allocator_pack(&alloc);
+err_alloc:
+	lock_union_allocator_fini(&alloc);
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF LockUnion *DCALL
+LockUnion_FromSequence(DeeObject *__restrict seq) {
+	DREF LockUnion *result;
+	DREF DeeObject *iter;
+	size_t fast_size;
+	if (DeeTuple_Check(seq))
+		return LockUnion_FromVector(DeeTuple_SIZE(seq), DeeTuple_ELEM(seq));
+	fast_size = DeeFastSeq_GetSize(seq);
+	if (fast_size != DEE_FASTSEQ_NOTFAST)
+		return LockUnion_FromFastSequence(seq, fast_size);
+	iter = DeeObject_IterSelf(seq);
+	if unlikely(!iter)
+		goto err;
+	result = LockUnion_FromIterator(iter);
+	Dee_Decref(iter);
+	return result;
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED DREF LockUnion *DCALL
+lock_union_init(size_t argc, DeeObject *const *argv) {
+	DeeObject *seq;
+	if (DeeArg_Unpack(argc, argv, "o:LockUnion", &seq))
+		goto err;
+	return LockUnion_FromSequence(seq);
+err:
+	return NULL;
+}
+
+PRIVATE NONNULL((1)) void DCALL
+lock_union_fini(LockUnion *__restrict self) {
+	Dee_Decrefv(self->lu_elem, self->lu_size);
+}
+
+PRIVATE NONNULL((1, 2)) void DCALL
+lock_union_visit(LockUnion *__restrict self, dvisit_t proc, void *arg) {
+	Dee_Visitv(self->lu_elem, self->lu_size);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
+lock_union_print(LockUnion *__restrict self, dformatprinter printer, void *arg) {
+	size_t i;
+	dssize_t temp, result;
+	result = DeeFormat_PRINT(printer, arg, "<Lock-union for <");
+	if unlikely(result < 0)
+		goto done;
+	for (i = 0; i < self->lu_size; ++i) {
+		if (i != 0)
+			DO(err, DeeFormat_PRINT(printer, arg, ", "));
+		DO(err, DeeFormat_PrintObject(printer, arg, self->lu_elem[i]));
+	}
+	DO(err, DeeFormat_PRINT(printer, arg, ">>"));
+done:
+	return result;
+err:
+	return temp;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
+lock_union_printrepr(LockUnion *__restrict self, dformatprinter printer, void *arg) {
+	size_t i;
+	dssize_t temp, result;
+	result = DeeFormat_PRINT(printer, arg, "LockUnion({ ");
+	if unlikely(result < 0)
+		goto done;
+	for (i = 0; i < self->lu_size; ++i) {
+		if (i != 0)
+			DO(err, DeeFormat_PRINT(printer, arg, ", "));
+		DO(err, DeeFormat_PrintObjectRepr(printer, arg, self->lu_elem[i]));
+	}
+	DO(err, DeeFormat_PRINT(printer, arg, " })"));
+done:
+	return result;
+err:
+	return temp;
+}
+
+PRIVATE NONNULL((1)) void DCALL
+lock_do_release_nx(DeeObject *__restrict self) {
+	if unlikely(lock_do_release(self))
+		DeeError_Print("Failed to release lock after acquire error\n", ERROR_PRINT_DOHANDLE);
+}
+
+PRIVATE NONNULL((1)) void DCALL
+lock_union_leave_nx_count(LockUnion *__restrict self, size_t count) {
+	ASSERT(count <= self->lu_size);
+	while (count) {
+		--count;
+		lock_do_release_nx(self->lu_elem[count]);
+	}
+}
+
+PRIVATE NONNULL((1)) int DCALL
+lock_union_leave_x1_count(LockUnion *__restrict self, size_t count) {
+	ASSERT(count <= self->lu_size);
+	while (count) {
+		--count;
+		if unlikely(lock_do_release(self->lu_elem[0]))
+			goto err_count;
+	}
+	return 0;
+err_count:
+	lock_union_leave_nx_count(self, count);
+	return -1;
+}
+
+PRIVATE NONNULL((1)) int DCALL
+lock_union_leave_x1_count_except(LockUnion *__restrict self,
+                                 size_t count, size_t except_i) {
+	ASSERT(count <= self->lu_size);
+	while (count) {
+		--count;
+		if (count != except_i) {
+			if unlikely(lock_do_release(self->lu_elem[0]))
+				goto err_count;
+		}
+	}
+	return 0;
+err_count:
+	lock_union_leave_nx_count(self, count);
+	return -1;
+}
+
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+lock_union_do_acquire(LockUnion *__restrict self) {
+	size_t i = 1;
+	if unlikely(lock_do_acquire(self->lu_elem[0]))
+		goto err;
+	for (; i < self->lu_size; ++i) {
+		int ok = lock_do_tryacquire(self->lu_elem[i]);
+		if (ok < 0)
+			goto err_release;
+		if (ok == 0) {
+			size_t already_holding;
+			if unlikely(lock_union_leave_x1_count(self, i))
+				goto err;
+blocking_acquire_lock_i:
+			ok = lock_do_acquire(self->lu_elem[i]);
+			if unlikely(ok < 0)
+				goto err;
+			already_holding = i;
+			for (i = 0; i < self->lu_size; ++i) {
+				if (i == already_holding)
+					continue;
+				ok = lock_do_tryacquire(self->lu_elem[i]);
+				if (ok < 0) {
+					lock_union_leave_nx_count(self, i);
+					ASSERT(already_holding != i);
+					if (already_holding >= i)
+						lock_do_release_nx(self->lu_elem[already_holding]);
+					goto err;
+				}
+				if (ok == 0) {
+					lock_union_leave_nx_count(self, i);
+					ASSERT(already_holding != i);
+					if (already_holding >= i)
+						lock_do_release_nx(self->lu_elem[already_holding]);
+					goto blocking_acquire_lock_i;
+				}
+			}
+			break;
+		}
+	}
+	return 0;
+err_release:
+	lock_union_leave_nx_count(self, i);
+err:
+	return -1;
+}
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+lock_union_do_waitfor(LockUnion *__restrict self) {
+	size_t i = 0;
+	do {
+		DREF DeeObject *result;
+		result = DeeObject_CallAttr(self->lu_elem[i], (DeeObject *)&str_waitfor, 0, NULL);
+		if unlikely(!result)
+			goto err;
+		Dee_Decref(result);
+	} while (++i < self->lu_size);
+	return 0;
+err:
+	return -1;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+lock_union_do_available_or_acquired(LockUnion *__restrict self,
+                                    DeeObject *__restrict attr_name) {
+	size_t i = 0;
+	do {
+		int status;
+		DREF DeeObject *result;
+		result = DeeObject_GetAttr(self->lu_elem[i], attr_name);
+		if unlikely(!result)
+			goto err;
+		status = DeeObject_Bool(result);
+		Dee_Decref(result);
+		if unlikely(status < 0)
+			goto err;
+		if (!status)
+			return 0;
+	} while (++i < self->lu_size);
+	return 1;
+err:
+	return -1;
+}
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+lock_do_timedacquire(DeeObject *__restrict self, uint64_t timeout_nanoseconds) {
+	int status;
+	DeeObject *result;
+	result = DeeObject_CallAttrf(self, (DeeObject *)&str_timedacquire,
+	                             PCKu64, timeout_nanoseconds);
+	if unlikely(result == NULL)
+		goto err;
+	status = DeeObject_Bool(result);
+	Dee_Decref(result);
+	if unlikely(status >= 0)
+		status = status ? 0 : 1;
+	return status;
+err:
+	return -1;
+}
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+lock_do_timedwaitfor(DeeObject *__restrict self, uint64_t timeout_nanoseconds) {
+	int status;
+	DeeObject *result;
+	result = DeeObject_CallAttrf(self, (DeeObject *)&str_timedwaitfor,
+	                             PCKu64, timeout_nanoseconds);
+	if unlikely(result == NULL)
+		goto err;
+	status = DeeObject_Bool(result);
+	Dee_Decref(result);
+	if unlikely(status >= 0)
+		status = status ? 0 : 1;
+	return status;
+err:
+	return -1;
+}
+
+
+/* Try to acquire all locks except for the lock at index `already_holding'.
+ * @return: 1:  Success
+ * @return: 0:  Failure
+ * @return: -1: Error */
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+lock_union_tryacquire_except(LockUnion *__restrict self,
+                             size_t already_holding) {
+	size_t i;
+	for (i = 0; i < self->lu_size; ++i) {
+		int error;
+		if (i == already_holding)
+			continue;
+		error = lock_do_tryacquire(self->lu_elem[i]);
+		if (error > 0)
+			continue; /* Success */
+		if unlikely(error < 0) {
+			lock_union_leave_nx_count(self, i);
+			return error;
+		}
+		/* Acquire failed (release all already-acquired locks) */
+		return lock_union_leave_x1_count_except(self, i, already_holding);
+	}
+	return 1;
+}
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+lock_union_do_acquire_timed(LockUnion *__restrict self,
+                            uint64_t timeout_nanoseconds) {
+	int ok;
+	size_t i;
+	uint64_t now_microseconds, then_microseconds;
+	if (timeout_nanoseconds == (uint64_t)-1) {
+do_infinite_timeout:
+		return lock_union_do_acquire(self);
+	}
+	now_microseconds = DeeThread_GetTimeMicroSeconds();
+	if (OVERFLOW_UADD(now_microseconds, timeout_nanoseconds / 1000, &then_microseconds))
+		goto do_infinite_timeout;
+	ok = lock_do_timedacquire(self->lu_elem[0], timeout_nanoseconds);
+	if (ok != 0)
+		return ok; /* Error or timeout */
+	now_microseconds = DeeThread_GetTimeMicroSeconds();
+	if (OVERFLOW_USUB(then_microseconds, now_microseconds, &timeout_nanoseconds)) {
+		/* Timeout */
+		if (self->lu_size == 1)
+			return 0;
+		ok = lock_union_tryacquire_except(self, 0);
+		if unlikely(ok < 0) {
+			lock_do_release_nx(self->lu_elem[0]);
+			goto err;
+		}
+		if (ok > 0)
+			return 0; /* Able to acquire all remaining locks without blocking */
+		if unlikely(lock_do_release(self->lu_elem[0]))
+			goto err;
+		return 1;
+	}
+	timeout_nanoseconds *= 1000;
+
+	/* First lock has been acquired -> now to acquire the rest of them! */
+	for (i = 1; i < self->lu_size; ++i) {
+		ok = lock_do_tryacquire(self->lu_elem[i]);
+		if (ok < 0)
+			goto err_release;
+		if (ok == 0) {
+			size_t already_holding;
+			if unlikely(lock_union_leave_x1_count(self, i))
+				goto err;
+blocking_acquire_lock_i:
+			ok = lock_do_timedacquire(self->lu_elem[i], timeout_nanoseconds);
+			if (ok != 0)
+				return ok; /* Error or timeout */
+			now_microseconds = DeeThread_GetTimeMicroSeconds();
+			if (OVERFLOW_USUB(then_microseconds, now_microseconds, &timeout_nanoseconds)) {
+				/* Timeout */
+				ok = lock_union_tryacquire_except(self, i);
+				if unlikely(ok < 0) {
+					lock_do_release_nx(self->lu_elem[i]);
+					goto err;
+				}
+				if (ok > 0)
+					return 0; /* Able to acquire all remaining locks without blocking */
+				if unlikely(lock_do_release(self->lu_elem[i]))
+					goto err;
+				return 1;
+			}
+			timeout_nanoseconds *= 1000;
+			already_holding = i;
+			for (i = 0; i < self->lu_size; ++i) {
+				if (i == already_holding)
+					continue;
+				ok = lock_do_tryacquire(self->lu_elem[i]);
+				if (ok < 0) {
+					lock_union_leave_nx_count(self, i);
+					ASSERT(already_holding != i);
+					if (already_holding >= i)
+						lock_do_release_nx(self->lu_elem[already_holding]);
+					goto err;
+				}
+				if (ok == 0) {
+					lock_union_leave_nx_count(self, i);
+					ASSERT(already_holding != i);
+					if (already_holding >= i)
+						lock_do_release_nx(self->lu_elem[already_holding]);
+					goto blocking_acquire_lock_i;
+				}
+			}
+			break;
+		}
+	}
+	return 0;
+err_release:
+	lock_union_leave_nx_count(self, i);
+err:
+	return -1;
+}
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+lock_union_do_waitfor_timed(LockUnion *__restrict self,
+                            uint64_t timeout_nanoseconds) {
+	int ok;
+	size_t i;
+	uint64_t now_microseconds, then_microseconds;
+	if (timeout_nanoseconds == (uint64_t)-1) {
+do_infinite_timeout:
+		return lock_union_do_waitfor(self);
+	}
+	now_microseconds = DeeThread_GetTimeMicroSeconds();
+	if (OVERFLOW_UADD(now_microseconds, timeout_nanoseconds / 1000, &then_microseconds))
+		goto do_infinite_timeout;
+	for (i = 0; i < self->lu_size; ++i) {
+		ok = lock_do_timedwaitfor(self->lu_elem[i], timeout_nanoseconds);
+		if (ok != 0)
+			return ok; /* Error or timeout */
+		now_microseconds = DeeThread_GetTimeMicroSeconds();
+		if (OVERFLOW_USUB(then_microseconds, now_microseconds, &timeout_nanoseconds)) {
+			/* Timeout */
+			if (self->lu_size == 1)
+				return 0;
+			return 1;
+		}
+		timeout_nanoseconds *= 1000;
+	}
+	return 0;
+}
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+lock_union_do_release(LockUnion *__restrict self) {
+	size_t i = self->lu_size;
+	ASSERT(i != 0);
+	do {
+		--i;
+		if unlikely(lock_do_release(self->lu_elem[i]))
+			goto err_i;
+	} while (i);
+	return 0;
+err_i:
+	/* Still have to release all other locks, but
+	 * discard all exceptions that those might throw. */
+	lock_union_leave_nx_count(self, i);
+	return -1;
+}
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+lock_union_do_tryacquire(LockUnion *__restrict self) {
+	size_t i = 0;
+	for (; i < self->lu_size; ++i) {
+		int ok = lock_do_tryacquire(self->lu_elem[i]);
+		if (ok < 0)
+			goto err_release;
+		if (ok == 0)
+			return lock_union_leave_x1_count(self, i);
+	}
+	return 1;
+err_release:
+	lock_union_leave_nx_count(self, i);
+/*err:*/
+	return -1;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+lock_union_tryacquire(LockUnion *__restrict self,
+                      size_t argc, DeeObject *const *argv) {
+	int error;
+	if (DeeArg_Unpack(argc, argv, ":tryacquire"))
+		goto err;
+	error = lock_union_do_tryacquire(self);
+	if unlikely(error < 0)
+		goto err;
+	return_bool(error != 0);
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+lock_union_acquire(LockUnion *__restrict self,
+                   size_t argc, DeeObject *const *argv) {
+	if (DeeArg_Unpack(argc, argv, ":acquire"))
+		goto err;
+	if unlikely(lock_union_do_acquire(self))
+		goto err;
+	return_none;
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+lock_union_release(LockUnion *__restrict self,
+                   size_t argc, DeeObject *const *argv) {
+	if (DeeArg_Unpack(argc, argv, ":release"))
+		goto err;
+	if unlikely(lock_union_do_release(self))
+		goto err;
+	return_none;
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+lock_union_timedacquire(LockUnion *__restrict self,
+                        size_t argc, DeeObject *const *argv) {
+	int error;
+	uint64_t timeout_nanoseconds;
+	if (DeeArg_Unpack(argc, argv, UNPu64 ":timedacquire", &timeout_nanoseconds))
+		goto err;
+	error = lock_union_do_acquire_timed(self, timeout_nanoseconds);
+	if unlikely(error < 0)
+		goto err;
+	return_bool(error == 0);
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+lock_union_waitfor(LockUnion *__restrict self,
+                   size_t argc, DeeObject *const *argv) {
+	if (DeeArg_Unpack(argc, argv, ":waitfor"))
+		goto err;
+	if unlikely(lock_union_do_waitfor(self))
+		goto err;
+	return_none;
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+lock_union_timedwaitfor(LockUnion *__restrict self,
+                        size_t argc, DeeObject *const *argv) {
+	int error;
+	uint64_t timeout_nanoseconds;
+	if (DeeArg_Unpack(argc, argv, UNPu64 ":timedwaitfor", &timeout_nanoseconds))
+		goto err;
+	error = lock_union_do_waitfor_timed(self, timeout_nanoseconds);
+	if unlikely(error < 0)
+		goto err;
+	return_bool(error == 0);
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+lock_union_available_get(LockUnion *__restrict self) {
+	int status = lock_union_do_available_or_acquired(self, (DeeObject *)&str_available);
+	if unlikely(status < 0)
+		goto err;
+	return_bool(status != 0);
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+lock_union_acquired_get(LockUnion *__restrict self) {
+	int status = lock_union_do_available_or_acquired(self, (DeeObject *)&str_acquired);
+	if unlikely(status < 0)
+		goto err;
+	return_bool(status != 0);
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+lock_union_locks_get(LockUnion *__restrict self) {
+	return DeeRefVector_NewReadonly((DeeObject *)self, self->lu_size, self->lu_elem);
+}
+
+PRIVATE struct type_with lock_union_with = {
+	/* .tp_enter = */ (int (DCALL *)(DeeObject *__restrict))&lock_union_do_acquire,
+	/* .tp_leave = */ (int (DCALL *)(DeeObject *__restrict))&lock_union_do_release
+};
+
+PRIVATE struct type_method lock_union_methods[] = {
+	TYPE_METHOD(STR_tryacquire, &lock_union_tryacquire, DOC_GET(doc_lock_tryacquire)),
+	TYPE_METHOD(STR_acquire, &lock_union_acquire, DOC_GET(doc_lock_acquire)),
+	TYPE_METHOD(STR_release, &lock_union_release, DOC_GET(doc_lock_release)),
+	TYPE_METHOD(STR_timedacquire, &lock_union_timedacquire, DOC_GET(doc_lock_timedacquire)),
+	TYPE_METHOD(STR_waitfor, &lock_union_waitfor, DOC_GET(doc_lock_waitfor)),
+	TYPE_METHOD(STR_timedwaitfor, &lock_union_timedwaitfor, DOC_GET(doc_lock_timedwaitfor)),
+	TYPE_METHOD_END
+};
+
+PRIVATE struct type_getset lock_union_getsets[] = {
+	TYPE_GETTER(STR_available, &lock_union_available_get, DOC_GET(doc_lock_available)),
+	TYPE_GETTER(STR_acquired, &lock_union_acquired_get, DOC_GET(doc_lock_acquired)),
+	TYPE_GETTER("__locks__", &lock_union_locks_get,
+	            "->?S?GLock\n"
+	            "Returns the sequence of locks that are acquired/released by @this ?."),
+	TYPE_GETSET_END
+};
+
+INTERN DeeTypeObject DeeLockUnion_Type = {
+	OBJECT_HEAD_INIT(&DeeType_Type),
+	/* .tp_name     = */ "LockUnion",
+	/* .tp_doc      = */ DOC("(locks:?S?GLock)"),
+	/* .tp_flags    = */ TP_FNORMAL | TP_FVARIABLE | TP_FFINAL,
+	/* .tp_weakrefs = */ 0,
+	/* .tp_features = */ TF_NONE,
+	/* .tp_base     = */ &DeeLock_Type,
+	/* .tp_init = */ {
+		{
+			/* .tp_var = */ {
+				/* .tp_ctor      = */ (dfunptr_t)NULL,
+				/* .tp_copy_ctor = */ (dfunptr_t)NULL,
+				/* .tp_deep_ctor = */ (dfunptr_t)NULL,
+				/* .tp_any_ctor  = */ (dfunptr_t)&lock_union_init,
+				/* .tp_free      = */ (dfunptr_t)NULL
+			}
+		},
+		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&lock_union_fini,
+		/* .tp_assign      = */ NULL,
+		/* .tp_move_assign = */ NULL
+	},
+	/* .tp_cast = */ {
+		/* .tp_str       = */ NULL,
+		/* .tp_repr      = */ NULL,
+		/* .tp_bool      = */ NULL,
+		/* .tp_print     = */ (dssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&lock_union_print,
+		/* .tp_printrepr = */ (dssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&lock_union_printrepr
+	},
+	/* .tp_call          = */ NULL,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&lock_union_visit,
+	/* .tp_gc            = */ NULL,
+	/* .tp_math          = */ NULL,
+	/* .tp_cmp           = */ NULL,
+	/* .tp_seq           = */ NULL,
+	/* .tp_iter_next     = */ NULL,
+	/* .tp_attr          = */ NULL,
+	/* .tp_with          = */ &lock_union_with,
+	/* .tp_buffer        = */ NULL,
+	/* .tp_methods       = */ lock_union_methods,
+	/* .tp_getsets       = */ lock_union_getsets,
 	/* .tp_members       = */ NULL,
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,

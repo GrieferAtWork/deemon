@@ -1581,8 +1581,7 @@ PRIVATE struct type_member tpconst tuple_class_members[] = {
 };
 
 INTERN NONNULL((1, 2)) void DCALL
-tuple_visit(Tuple *__restrict self,
-            dvisit_t proc, void *arg) {
+tuple_visit(Tuple *__restrict self, dvisit_t proc, void *arg) {
 	Dee_Visitv(DeeTuple_ELEM(self),
 	           DeeTuple_SIZE(self));
 }

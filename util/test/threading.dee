@@ -22,39 +22,45 @@
 import * from threading;
 import * from deemon;
 
-function testLock(lock: Lock, isReadLockOrRecursive: bool = false) {
+function testLock(lock: Lock,
+		testLocks: {Lock...} = none,
+		isReadLockOrRecursive: bool = false) {
+	if (testLocks is none)
+		testLocks = {lock};
+#define testLocks_all(attr) (testLocks.each.attr && ...)
+#define testLocks_any(attr) (testLocks.each.attr || ...)
 	assert lock is Lock;
-	assert lock.available;
-	assert !lock.acquired;
+	assert testLocks_all(available);
+	assert !testLocks_any(acquired);
 
 	assert lock.tryacquire();
-	assert isReadLockOrRecursive ? lock.available : !lock.available;
-	assert lock.acquired;
+	assert isReadLockOrRecursive ? testLocks_all(available) : !testLocks_any(available);
+	assert testLocks_all(acquired);
 
 	lock.release();
-	assert lock.available;
-	assert !lock.acquired;
+	assert testLocks_all(available);
+	assert !testLocks_any(acquired);
 
 	lock.acquire();
-	assert isReadLockOrRecursive ? lock.available : !lock.available;
-	assert lock.acquired;
+	assert isReadLockOrRecursive ? testLocks_all(available) : !testLocks_any(available);
+	assert testLocks_all(acquired);
 	lock.release();
-	assert lock.available;
-	assert !lock.acquired;
+	assert testLocks_all(available);
+	assert !testLocks_any(acquired);
 
 	assert lock.timedacquire(0);
-	assert isReadLockOrRecursive ? lock.available : !lock.available;
-	assert lock.acquired;
+	assert isReadLockOrRecursive ? testLocks_all(available) : !testLocks_any(available);
+	assert testLocks_all(acquired);
 	lock.release();
-	assert lock.available;
-	assert !lock.acquired;
+	assert testLocks_all(available);
+	assert !testLocks_any(acquired);
 
 	with (lock) {
-		assert isReadLockOrRecursive ? lock.available : !lock.available;
-		assert lock.acquired;
+		assert isReadLockOrRecursive ? testLocks_all(available) : !testLocks_any(available);
+		assert testLocks_all(acquired);
 	}
-	assert lock.available;
-	assert !lock.acquired;
+	assert testLocks_all(available);
+	assert !testLocks_any(acquired);
 }
 
 function testRWLock(lock: RWLock, isRecursive: bool = false) {
@@ -193,6 +199,8 @@ function testRWLock(lock: RWLock, isRecursive: bool = false) {
 
 	testLock(lock.readlock, isReadLockOrRecursive: true);
 	testLock(lock.writelock, isReadLockOrRecursive: isRecursive);
+	testLock(all(lock.readlock), isReadLockOrRecursive: true);
+	testLock(all(lock.writelock), isReadLockOrRecursive: isRecursive);
 }
 
 testLock(AtomicLock());
@@ -200,11 +208,34 @@ testLock(SharedLock());
 testLock(RAtomicLock(), isReadLockOrRecursive: true);
 testLock(RSharedLock(), isReadLockOrRecursive: true);
 testLock(Semaphore(1));
+testLock(all(AtomicLock()));
+testLock(all(SharedLock()));
+testLock(all(RAtomicLock()), isReadLockOrRecursive: true);
+testLock(all(RSharedLock()), isReadLockOrRecursive: true);
+testLock(all(Semaphore(1)));
 testRWLock(AtomicRWLock());
 testRWLock(SharedRWLock());
 testRWLock(RAtomicRWLock(), isRecursive: true);
 testRWLock(RSharedRWLock(), isRecursive: true);
 
+/* Test `LockUnion()' with multiple locks (and
+ * assert that it correctly affects referenced
+ * locks) */
+for (local locks: {
+	{ AtomicLock(), AtomicLock() },
+	{ AtomicLock(), SharedLock() },
+}) {
+	testLock(all(locks...));
+	testLock(all(locks...), testLocks: locks);
+	testLock(LockUnion(locks));
+	testLock(LockUnion(locks), testLocks: locks);
+	local allLock = all(locks...);
+	assert allLock is LockUnion;
+	testLock(allLock, testLocks: { allLock, locks... });
+}
+
+
+assert LockUnion.derivedfrom(Lock);
 assert SharedLock.derivedfrom(AtomicLock);
 assert RSharedLock.derivedfrom(RAtomicLock);
 assert SharedRWLock.derivedfrom(AtomicRWLock);

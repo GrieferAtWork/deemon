@@ -34,6 +34,7 @@ INTDEF DeeTypeObject DeeRLock_Type;
 INTDEF DeeTypeObject DeeRAtomicLock_Type;
 INTDEF DeeTypeObject DeeRSharedLock_Type;
 
+/* RWLock objects */
 INTDEF DeeTypeObject DeeRWLock_Type;
 INTDEF DeeTypeObject DeeRWLockReadLock_Type;
 INTDEF DeeTypeObject DeeRWLockWriteLock_Type;
@@ -50,22 +51,24 @@ INTDEF DeeTypeObject DeeRSharedRWLock_Type;
 INTDEF DeeTypeObject DeeRSharedRWLockReadLock_Type;
 INTDEF DeeTypeObject DeeRSharedRWLockWriteLock_Type;
 
+/* Semaphore */
 INTDEF DeeTypeObject DeeSemaphore_Type;
 
+/* Event */
 INTDEF DeeTypeObject DeeEvent_Type;
 
-/* TODO: all(args...: Lock): Lock
- *       Proxy lock which can be used to acquire multiple locks at the same time,
- *       without running the risk of a dead-lock (assuming that the caller isn't
- *       already holding at least one of the given locks)
+/* >> all(args...: Lock): Lock
+ * Proxy lock which can be used to acquire multiple locks at the same time,
+ * without running the risk of a dead-lock (assuming that the caller isn't
+ * already holding at least one of the given locks)
  *
  * >> local a = AtomicLock();
  * >> local b = SharedLock();
  * >> local c = SharedRWLock();
  * >> with (all(a, b, c.writelock)) {
  * >>     ... // At this point, all 3 locks are held (and were acquired in a safe manner)
- * >> }
- */
+ * >> } */
+INTDEF DeeTypeObject DeeLockUnion_Type;
 
 
 #ifndef CONFIG_NO_THREADS
@@ -75,15 +78,18 @@ struct tls_descriptor {
 	 * `libthreading' has been loaded. */
 	size_t                                    td_size;  /* The amount of TLS instances allocated for this thread. */
 	COMPILER_FLEXIBLE_ARRAY(DREF DeeObject *, td_elem); /* [0..1][td_size] Vector of TLS instances allocated for this thread.
-	                                                     *  NOTE: Individual items are set to ITER_DONE if the user
-	                                                     *        deletes the following their factory initialization.
-	                                                     *        NULL-values however are lazily allocated by the factory. */
+	                                                     * NOTE: Individual items are set to ITER_DONE if the user
+	                                                     *       deletes the following their factory initialization.
+	                                                     *       NULL-values however are lazily allocated by the factory. */
 };
 
 
 /* TLS controller callbacks for libthreading's TLS implementation. */
-INTDEF NONNULL((1)) void DCALL thread_tls_fini(struct tls_descriptor *__restrict data);
-INTDEF NONNULL((1, 2)) void DCALL thread_tls_visit(struct tls_descriptor *__restrict data, dvisit_t proc, void *arg);
+INTDEF NONNULL((1)) void DCALL
+thread_tls_fini(struct tls_descriptor *__restrict data);
+INTDEF NONNULL((1, 2)) void DCALL
+thread_tls_visit(struct tls_descriptor *__restrict data,
+                 dvisit_t proc, void *arg);
 
 #endif /* !CONFIG_NO_THREADS */
 

@@ -26,10 +26,12 @@
 
 #include <deemon/api.h>
 #include <deemon/dex.h>
+#include <deemon/objmethod.h>
 #include <deemon/thread.h>
 
 DECL_BEGIN
 
+INTDEF DeeCMethodObject libthreading_lockunion_all;
 
 PRIVATE struct dex_symbol symbols[] = {
 	/* Normal locks */
@@ -47,6 +49,18 @@ PRIVATE struct dex_symbol symbols[] = {
 	{ "SharedRWLock", (DeeObject *)&DeeSharedRWLock_Type },
 	{ "RAtomicRWLock", (DeeObject *)&DeeRAtomicRWLock_Type },
 	{ "RSharedRWLock", (DeeObject *)&DeeRSharedRWLock_Type },
+
+	/* LockUnion */
+	{ "LockUnion", (DeeObject *)&DeeLockUnion_Type },
+	{ "all", (DeeObject *)&libthreading_lockunion_all, MODSYM_FNORMAL,
+	  DOC("(locks!:?GLock)->?GLock\n"
+	      "@throws ValueError No @locks specified (a lock union must contain at least 1 lock)\n"
+	      "Return a lock union for all of the given @locks, or re-returns ${locks.first} when "
+	      /**/ "only a single lock was given\n"
+	      "Lock unions can be used to (safely) acquire multiple locks at the same time, whilst "
+	      /**/ "ensuring that doing so doesn't result in a dead-lock (as would normally be the "
+	      /**/ "case when 2 threads acquire multiple locks at the same time, but not in the same "
+	      /**/ "order)") },
 
 	/* Semaphore */
 	{ "Semaphore", (DeeObject *)&DeeSemaphore_Type },
