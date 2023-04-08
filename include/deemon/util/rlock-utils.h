@@ -383,10 +383,8 @@ _Dee_ratomic_rwlock_waitwrite_timed_p_impl(Dee_ratomic_rwlock_t *__restrict self
 	if (lockword == 0)
 		return 0;
 	if (lockword == (uintptr_t)-1) {
-		if (__hybrid_gettid_iscaller(self->rarw_tid)) {
-			++self->rarw_nwrite;
+		if (__hybrid_gettid_iscaller(self->rarw_tid))
 			return 0;
-		}
 	}
 	if (timeout_nanoseconds == (uint64_t)-1) {
 do_infinite_timeout:

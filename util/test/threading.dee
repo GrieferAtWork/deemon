@@ -31,35 +31,44 @@ function testLock(lock: Lock,
 #define testLocks_any(attr) (testLocks.each.attr || ...)
 	assert lock is Lock;
 	assert testLocks_all(available);
+	assert lock.timedwaitfor(0);
 	assert !testLocks_any(acquired);
 
 	assert lock.tryacquire();
 	assert isReadLockOrRecursive ? testLocks_all(available) : !testLocks_any(available);
+	assert isReadLockOrRecursive ? lock.timedwaitfor(0) : !lock.timedwaitfor(0);
 	assert testLocks_all(acquired);
 
 	lock.release();
 	assert testLocks_all(available);
+	assert lock.timedwaitfor(0);
 	assert !testLocks_any(acquired);
 
 	lock.acquire();
 	assert isReadLockOrRecursive ? testLocks_all(available) : !testLocks_any(available);
+	assert isReadLockOrRecursive ? lock.timedwaitfor(0) : !lock.timedwaitfor(0);
 	assert testLocks_all(acquired);
 	lock.release();
 	assert testLocks_all(available);
+	assert lock.timedwaitfor(0);
 	assert !testLocks_any(acquired);
 
 	assert lock.timedacquire(0);
 	assert isReadLockOrRecursive ? testLocks_all(available) : !testLocks_any(available);
+	assert isReadLockOrRecursive ? lock.timedwaitfor(0) : !lock.timedwaitfor(0);
 	assert testLocks_all(acquired);
 	lock.release();
 	assert testLocks_all(available);
+	assert lock.timedwaitfor(0);
 	assert !testLocks_any(acquired);
 
 	with (lock) {
 		assert isReadLockOrRecursive ? testLocks_all(available) : !testLocks_any(available);
+		assert isReadLockOrRecursive ? lock.timedwaitfor(0) : !lock.timedwaitfor(0);
 		assert testLocks_all(acquired);
 	}
 	assert testLocks_all(available);
+	assert lock.timedwaitfor(0);
 	assert !testLocks_any(acquired);
 }
 
@@ -234,11 +243,19 @@ for (local locks: {
 	testLock(allLock, testLocks: { allLock, locks... });
 }
 
-
+/* Assert that built-in lock types are derived from each other in a proper manner. */
 assert LockUnion.derivedfrom(Lock);
+assert AtomicLock.derivedfrom(Lock);
+assert SharedLock.derivedfrom(Lock);
 assert SharedLock.derivedfrom(AtomicLock);
+assert RAtomicLock.derivedfrom(Lock);
+assert RSharedLock.derivedfrom(Lock);
 assert RSharedLock.derivedfrom(RAtomicLock);
+assert AtomicRWLock.derivedfrom(RWLock);
+assert SharedRWLock.derivedfrom(RWLock);
 assert SharedRWLock.derivedfrom(AtomicRWLock);
+assert RAtomicRWLock.derivedfrom(RWLock);
+assert RSharedRWLock.derivedfrom(RWLock);
 assert RSharedRWLock.derivedfrom(RAtomicRWLock);
 
 

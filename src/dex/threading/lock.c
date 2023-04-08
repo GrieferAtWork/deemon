@@ -328,7 +328,8 @@ DOC_DEF(doc_lock_timedwaitfor,
         /**/ "by returning !f instead.");
 DOC_DEF(doc_lock_available,
         "->?Dbool\n"
-        "Check if @this lock could currently be acquired without blocking");
+        "Check if @this lock could currently be acquired without blocking\n"
+        "Same as ${this.timedwaitfor(0)}");
 DOC_DEF(doc_lock_acquired,
         "->?Dbool\n"
         "Check if @this lock is currently being held");
@@ -434,10 +435,12 @@ DOC_DEF(doc_rwlock_writing,
         "Returns !t if some thread is holding an exclusive (write) lock");
 DOC_DEF(doc_rwlock_canread,
         "->?Dbool\n"
-        "Returns !t so-long as no-one is holding an exclusive (write) lock (inverse of ?#writing)");
+        "Returns !t so-long as no-one is holding an exclusive (write) lock (inverse of ?#writing)\n"
+        "Same as ${this.timedwaitread(0)}");
 DOC_DEF(doc_rwlock_canwrite,
         "->?Dbool\n"
-        "Returns !t so-long as no shared- (read) and no exclusive (write) locks are being held (inverse of ?#reading)");
+        "Returns !t so-long as no shared- (read) and no exclusive (write) locks are being held (inverse of ?#reading)\n"
+        "Same as ${this.timedwaitwrite(0)}");
 DOC_DEF(doc_rwlock_readlock,
         "->?GRWLockReadLock\n"
         "Return a ?GLock-compatible wrapper object around @this read/write-lock "
@@ -2479,12 +2482,13 @@ err:
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 lock_union_do_available_or_acquired(LockUnion *__restrict self,
-                                    DeeObject *__restrict attr_name) {
-	size_t i = 0;
+                                    DeeObject *__restrict attr_name,
+                                    size_t start_index) {
+	ASSERT(start_index < self->lu_size);
 	do {
 		int status;
 		DREF DeeObject *result;
-		result = DeeObject_GetAttr(self->lu_elem[i], attr_name);
+		result = DeeObject_GetAttr(self->lu_elem[start_index], attr_name);
 		if unlikely(!result)
 			goto err;
 		status = DeeObject_Bool(result);
@@ -2493,7 +2497,8 @@ lock_union_do_available_or_acquired(LockUnion *__restrict self,
 			goto err;
 		if (!status)
 			return 0;
-	} while (++i < self->lu_size);
+		++start_index;
+	} while (start_index < self->lu_size);
 	return 1;
 err:
 	return -1;
@@ -2671,9 +2676,14 @@ do_infinite_timeout:
 		now_microseconds = DeeThread_GetTimeMicroSeconds();
 		if (OVERFLOW_USUB(then_microseconds, now_microseconds, &timeout_nanoseconds)) {
 			/* Timeout */
-			if (self->lu_size == 1)
+			ASSERT(i <= self->lu_size - 1);
+			if (i >= self->lu_size - 1)
 				return 0;
-			return 1;
+			/* Check if all other locks are currently available. */
+			ok = lock_union_do_available_or_acquired(self, (DeeObject *)&str_available, i + 1);
+			if (ok > 0)
+				ok = ok ? 0 : 1;
+			return ok;
 		}
 		timeout_nanoseconds *= 1000;
 	}
@@ -2796,7 +2806,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 lock_union_available_get(LockUnion *__restrict self) {
-	int status = lock_union_do_available_or_acquired(self, (DeeObject *)&str_available);
+	int status = lock_union_do_available_or_acquired(self, (DeeObject *)&str_available, 0);
 	if unlikely(status < 0)
 		goto err;
 	return_bool(status != 0);
@@ -2806,7 +2816,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 lock_union_acquired_get(LockUnion *__restrict self) {
-	int status = lock_union_do_available_or_acquired(self, (DeeObject *)&str_acquired);
+	int status = lock_union_do_available_or_acquired(self, (DeeObject *)&str_acquired, 0);
 	if unlikely(status < 0)
 		goto err;
 	return_bool(status != 0);
