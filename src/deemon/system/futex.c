@@ -90,15 +90,25 @@
 #define os_futex_wakeall(addr) linux_futex(addr, FUTEX_WAKE, (uint32_t)-1, NULL, NULL, 0)
 #endif /* ... */
 
-#if __SIZEOF_POINTER__ == 4 && defined(CONFIG_HAVE_futex_waitwhile) && defined(CONFIG_HAVE_futex_timedwaitwhile)
+#if (__SIZEOF_POINTER__ == 4 && defined(CONFIG_HAVE_futex_waitwhile) && \
+     (defined(CONFIG_HAVE_futex_timedwaitwhile64) || defined(CONFIG_HAVE_futex_timedwaitwhile)))
 #define os_futex_wait32(uaddr, expected) futex_waitwhile((lfutex_t *)(uaddr), expected)
 #define os_futex_wait32_timed            os_futex_wait32_timed
 LOCAL int DCALL os_futex_wait32_timed(void *uaddr, uint32_t expected,
-                                     uint64_t timeout_nanoseconds) {
+                                      uint64_t timeout_nanoseconds) {
+#ifdef CONFIG_HAVE_futex_timedwaitwhile64
+	struct timespec64 ts;
+	ts.tv_sec  = timeout_nanoseconds / UINT32_C(1000000000);
+	ts.tv_nsec = timeout_nanoseconds % UINT32_C(1000000000);
+	return futex_timedwaitwhile64(uaddr, expected, &ts);
+#else /* CONFIG_HAVE_futex_timedwaitwhile64 */
 	struct timespec ts;
+	if (sizeof(ts.tv_sec) < 4 && timeout_nanoseconds == (uint64_t)-1)
+		return os_futex_wait32(uaddr, expected);
 	ts.tv_sec  = timeout_nanoseconds / UINT32_C(1000000000);
 	ts.tv_nsec = timeout_nanoseconds % UINT32_C(1000000000);
 	return futex_timedwaitwhile(uaddr, expected, &ts);
+#endif /* !CONFIG_HAVE_futex_timedwaitwhile64 */
 }
 #elif defined(linux_futex) && defined(FUTEX_WAIT) && __SIZEOF_INT__ == 4
 #define os_futex_wait32(uaddr, expected) \
@@ -115,7 +125,7 @@ struct _dee_timespec32 {
 };
 #define os_futex_wait32_timed os_futex_wait32_timed
 LOCAL int DCALL os_futex_wait32_timed(void *uaddr, uint32_t expected,
-                                     uint64_t timeout_nanoseconds) {
+                                      uint64_t timeout_nanoseconds) {
 	struct _dee_timespec32 ts;
 	if (sizeof(ts.tv_sec) < 4 && timeout_nanoseconds == (uint64_t)-1)
 		return os_futex_wait32(uaddr, expected);
@@ -123,21 +133,29 @@ LOCAL int DCALL os_futex_wait32_timed(void *uaddr, uint32_t expected,
 	ts.tv_nsec = timeout_nanoseconds % UINT32_C(1000000000);
 	return linux_futex(uaddr, FUTEX_WAIT, expected, &ts, NULL, 0);
 }
-#endif /* linux_futex && FUTEX_WAIT && __SIZEOF_INT__ == 4 */
+#endif /* ... */
 
-#if __SIZEOF_POINTER__ == 8 && defined(CONFIG_HAVE_futex_waitwhile) && defined(CONFIG_HAVE_futex_timedwaitwhile)
+#if (__SIZEOF_POINTER__ == 8 && defined(CONFIG_HAVE_futex_waitwhile) && \
+     (defined(CONFIG_HAVE_futex_timedwaitwhile64) || defined(CONFIG_HAVE_futex_timedwaitwhile)))
 #define os_futex_wait64(uaddr, expected) futex_waitwhile((lfutex_t *)(uaddr), expected)
 #define os_futex_wait64_timed            os_futex_wait64_timed
 LOCAL int DCALL os_futex_wait64_timed(void *uaddr, uint64_t expected,
                                       uint64_t timeout_nanoseconds) {
+#ifdef CONFIG_HAVE_futex_timedwaitwhile64
+	struct timespec64 ts;
+	ts.tv_sec  = timeout_nanoseconds / UINT32_C(1000000000);
+	ts.tv_nsec = timeout_nanoseconds % UINT32_C(1000000000);
+	return futex_timedwaitwhile64(uaddr, expected, &ts);
+#else /* CONFIG_HAVE_futex_timedwaitwhile64 */
 	struct timespec ts;
 	if (sizeof(ts.tv_sec) < 4 && timeout_nanoseconds == (uint64_t)-1)
 		return os_futex_wait64(uaddr, expected);
 	ts.tv_sec  = timeout_nanoseconds / UINT32_C(1000000000);
 	ts.tv_nsec = timeout_nanoseconds % UINT32_C(1000000000);
 	return futex_timedwaitwhile(uaddr, expected, &ts);
+#endif /* !CONFIG_HAVE_futex_timedwaitwhile64 */
 }
-#endif /* __SIZEOF_POINTER__ == 8 && CONFIG_HAVE_futex_waitwhile && CONFIG_HAVE_futex_timedwaitwhile */
+#endif /* ... */
 
 
 /************************************************************************/
@@ -238,7 +256,7 @@ LOCAL int DCALL os_futex_wait64_timed(void *uaddr, uint64_t expected,
 /* Figure out how we want to implement the deemon Futex API.
  *
  * NOTE: All implementations except for `DeeFutex_USE_os_futex'
- *       use dynamically allocated structures and a hash-table
+ *       use dynamically allocated structures and a binary tree
  *       to translate wake/wait-addresses into those structures.
  */
 #undef DeeFutex_USE_os_futex
@@ -273,7 +291,7 @@ LOCAL int DCALL os_futex_wait64_timed(void *uaddr, uint64_t expected,
 #define DeeFutex_USE_os_futex_32_only
 #elif defined(CONFIG_HOST_WINDOWS)
 /* Windows 8+:     WaitOnAddress is pretty much the same as SYS_futex(2)
- * Windows Vista+: SRWLOCK + CRITICAL_SECTION (same as `pthread_cond_t' + `pthread_mutex_t')
+ * Windows Vista+: SRWLOCK + CONDITION_VARIABLE (same as `pthread_cond_t' + `pthread_mutex_t')
  * Windows XP+:    CreateSemaphoreW (same as `sem_t') */
 #define DeeFutex_USE_WaitOnAddress_OR_CONDITION_VARIABLE_AND_SRWLOCK_OR_CreateSemaphoreW
 #elif defined(__CYGWIN__) && 0
@@ -281,21 +299,24 @@ LOCAL int DCALL os_futex_wait64_timed(void *uaddr, uint64_t expected,
 #define DeeFutex_USE_WaitOnAddress_OR_CONDITION_VARIABLE_AND_SRWLOCK_OR_CreateSemaphoreW
 #elif defined(CONFIG_HAVE_pthread_cond_t) && defined(CONFIG_HAVE_pthread_mutex_t)
 /* Waiting is implemented by blocking on a condition-variable.
- * Should-wait checking is done while holding a mutex.
- * Wake-up happen while holding a lock to that same mutex. */
+ * Should-wait checking is done while holding a mutex. */
 #define DeeFutex_USE_pthread_cond_t_AND_pthread_mutex_t
 #elif (defined(CONFIG_HAVE_cnd_t) && defined(CONFIG_HAVE_mtx_t) && \
        defined(CONFIG_HAVE_thrd_success) && defined(CONFIG_HAVE_thrd_timedout))
+/* Same as `DeeFutex_USE_pthread_cond_t_AND_pthread_mutex_t', but using the STDC API. */
 #define DeeFutex_USE_cnd_t_AND_mtx_t
 #elif defined(CONFIG_HAVE_sem_t)
 /* Use a semaphore to keep track of how many threads are blocking as an
- * upper count-limit, we can implement WakeOne as sem_wake*1, and WakeAll
+ * upper count-limit. We then implement WakeOne as sem_wake*1, and WakeAll
  * as sem_wake*numWaitingThreads.
  * - This doesn't race so-long as blocking threads re-check the wait condition one last
  *   time _after_ `++numWaitingThreads', since in that case it will be guarantied that
  *   the blocking thread will be woken in case of a WakeAll()
- * - The situation where more threads are woken that are actually waiting is OK, since
- *   that case will simply be handled as sporadic wake-ups the next time a wait happens */
+ * - The situation where more threads are woken than are actually waiting is OK, since
+ *   that case will simply be handled as sporadic wake-ups the next time a wait happens
+ *   All-too-many sporadic wake-ups should never happen, since any extra wake-ups will
+ *   just go away when the futex controller is destroyed and re-initialized (which then
+ *   happens whenever no-one is waiting on some given address anymore) */
 #define DeeFutex_USE_sem_t
 #else /* ... */
 /* The stub implementation does nothing on wake,
@@ -351,13 +372,13 @@ DECL_BEGIN
 struct futex_controller;
 SLIST_HEAD(futex_controller_slist, futex_controller);
 struct futex_controller {
+	uintptr_t fc_refcnt; /* [lock(ATOMIC)] Reference counter for the controller. */
+	uintptr_t fc_addr;   /* [const] Futex address. */
 	union {
 		SLIST_ENTRY(futex_controller)   fc_free; /* Link in list of free futex controllers. */
 		LLRBTREE_NODE(futex_controller) fc_node; /* Node in tree of futex controllers. */
 	};
-	uintptr_t fc_addr;   /* [const] Futex address. */
 	bool      fc_isred;  /* Status bit indicating of this being a "red" node. */
-	uintptr_t fc_refcnt; /* [lock(ATOMIC)] Reference counter for the controller. */
 
 	/* OS-specific futex control data. */
 #ifdef DeeFutex_USE_os_futex_32_only
@@ -365,7 +386,7 @@ struct futex_controller {
 #elif defined(DeeFutex_USE_WaitOnAddress_OR_CONDITION_VARIABLE_AND_SRWLOCK_OR_CreateSemaphoreW)
 	union {
 		struct {
-			SRWLOCK            cc_lock; /* Lock (only ever used in its exclusive-mode) */
+			SRWLOCK            cc_lock; /* Lock */
 			CONDITION_VARIABLE cc_cond; /* Condition variable */
 		} fc_nt_cond_crit; /* NT_FUTEX_IMPLEMENTATION_COND_AND_CRIT */
 
@@ -927,6 +948,9 @@ futex_controller_wakeall(struct futex_controller *__restrict self) {
 	switch (nt_futex_implementation) {
 
 	case NT_FUTEX_IMPLEMENTATION_COND_AND_CRIT:
+		/* Need an exclusive lock here to ensure that no thread that is about to
+		 * wait for the mutex is still busy checking if it *should* wait (or if
+		 * it has pending interrupts) */
 		AcquireSRWLockExclusive(&self->fc_nt_cond_crit.cc_lock);
 		WakeAllConditionVariable(&self->fc_nt_cond_crit.cc_cond);
 		ReleaseSRWLockExclusive(&self->fc_nt_cond_crit.cc_lock);
@@ -942,9 +966,18 @@ futex_controller_wakeall(struct futex_controller *__restrict self) {
 	default: __builtin_unreachable();
 	}
 #elif defined(DeeFutex_USE_pthread_cond_t_AND_pthread_mutex_t)
+	/* Need to lock the mutex to inter-lock with a thread that
+	 * might still be checking the should-wait-condition (iow:
+	 * need to make sure that everyone is truly waiting, and
+	 * not still busy checking if they *should* wait) */
+	(void)pthread_mutex_lock(&self->fc_mutx);
 	(void)pthread_cond_broadcast(&self->fc_cond);
+	(void)pthread_mutex_unlock(&self->fc_mutx);
 #elif defined(DeeFutex_USE_cnd_t_AND_mtx_t)
+	/* *ditto* for stdc-based mutex/condition-variable implementation */
+	(void)mtx_lock(&self->fc_mutx);
 	(void)cnd_broadcast(&self->fc_cond);
+	(void)mtx_unlock(&self->fc_mutx);
 #elif defined(DeeFutex_USE_sem_t)
 	size_t n_threads;
 	n_threads = atomic_read(&self->fc_n_threads);
@@ -989,7 +1022,9 @@ DeeFutex_WakeGlobal(DeeThreadObject *thread) {
 		return;
 
 	case NT_FUTEX_IMPLEMENTATION_WAITONADDRESS:
-		/* If the WaitOnAddress implementation is selected, futex controllers below go completely unused */
+		/* If the WaitOnAddress implementation is selected, futex controllers
+		 * below go completely unused. Instead, we must search for the thread
+		 * in question within the global wait-list. */
 		os_futex_wait_list_wakethread(thread);
 		return;
 
@@ -997,6 +1032,10 @@ DeeFutex_WakeGlobal(DeeThreadObject *thread) {
 	}
 #else /* DeeFutex_USE_WaitOnAddress_OR_CONDITION_VARIABLE_AND_SRWLOCK_OR_CreateSemaphoreW */
 	os_futex_wait_list_wakethread(thread);
+	/* Fallthru to the futex-tree method. When `DeeFutex_USE_os_futex_32_only'
+	 * is selected, we can have both wait lists, **as well as** futex controllers,
+	 * where the wait list is used for 32-bit futex operations, and controllers
+	 * are used for 64-bit futex operations. */
 #endif /* !DeeFutex_USE_WaitOnAddress_OR_CONDITION_VARIABLE_AND_SRWLOCK_OR_CreateSemaphoreW */
 #endif /* DeeFutex_USES_OS_FUTEX_WAIT_LIST */
 

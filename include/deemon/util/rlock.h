@@ -251,7 +251,7 @@ Dee_ratomic_lock_waitfor(Dee_ratomic_lock_t *__restrict self) {
 /************************************************************************/
 typedef struct {
 	Dee_ratomic_lock_t rs_lock;    /* Underlying atomic lock */
-	unsigned int       rs_waiting; /* non-zero if threads may be waiting on `rs_lock' */
+	unsigned int       rs_waiting; /* # of threads waiting for `rs_lock' (controlled by the waiting threads themselves) */
 } Dee_rshared_lock_t;
 
 #define DEE_RSHARED_LOCK_INIT             { DEE_RATOMIC_LOCK_INIT, 0 }
@@ -264,7 +264,7 @@ typedef struct {
 
 /* Block until successfully acquired a recursive shared lock. */
 LOCAL NONNULL((1)) int DCALL
-Dee_rshared_lock_acquire_noint(Dee_rshared_lock_t *__restrict self) {
+Dee_rshared_lock_acquire_noint(Dee_rshared_lock_t *__restrict self) { /* TODO: Don't define this function inline */
 	unsigned int lockword;
 	lockword = __hybrid_atomic_load(&self->rs_lock.ra_lock, __ATOMIC_ACQUIRE);
 	if (lockword == 0) {
@@ -300,7 +300,7 @@ Dee_rshared_lock_waitfor_noint(Dee_rshared_lock_t *__restrict self) {
  * @return: 0 : Success.
  * @return: -1: An exception was thrown. */
 LOCAL WUNUSED NONNULL((1)) int DCALL
-Dee_rshared_lock_acquire(Dee_rshared_lock_t *__restrict self) {
+Dee_rshared_lock_acquire(Dee_rshared_lock_t *__restrict self) { /* TODO: Don't define this function inline */
 	int result;
 	unsigned int lockword;
 	lockword = __hybrid_atomic_load(&self->rs_lock.ra_lock, __ATOMIC_ACQUIRE);
@@ -779,7 +779,7 @@ typedef struct {
 
 /* Acquire a read-lock to `self' */
 LOCAL NONNULL((1)) void DCALL
-Dee_rshared_rwlock_read_noint(Dee_rshared_rwlock_t *__restrict self) {
+Dee_rshared_rwlock_read_noint(Dee_rshared_rwlock_t *__restrict self) { /* TODO: Don't define this function inline */
 	uintptr_t lockword;
 again:
 	lockword = __hybrid_atomic_load(&self->rsrw_lock.rarw_lock.arw_lock, __ATOMIC_ACQUIRE);
@@ -806,7 +806,7 @@ again_lockword_not_UINTPTR_MAX:
 
 /* Acquire a write-lock to `self' */
 LOCAL NONNULL((1)) void DCALL
-Dee_rshared_rwlock_write_noint(Dee_rshared_rwlock_t *__restrict self) {
+Dee_rshared_rwlock_write_noint(Dee_rshared_rwlock_t *__restrict self) { /* TODO: Don't define this function inline */
 	uintptr_t lockword;
 again:
 	lockword = __hybrid_atomic_load(&self->rsrw_lock.rarw_lock.arw_lock, __ATOMIC_ACQUIRE);
@@ -833,7 +833,7 @@ again_lockword_zero:
 
 /* Acquire a read-lock to `self' */
 LOCAL WUNUSED NONNULL((1)) int DCALL
-Dee_rshared_rwlock_read(Dee_rshared_rwlock_t *__restrict self) {
+Dee_rshared_rwlock_read(Dee_rshared_rwlock_t *__restrict self) { /* TODO: Don't define this function inline */
 	uintptr_t lockword;
 again:
 	lockword = __hybrid_atomic_load(&self->rsrw_lock.rarw_lock.arw_lock, __ATOMIC_ACQUIRE);
@@ -862,7 +862,7 @@ again_lockword_not_UINTPTR_MAX:
 
 /* Acquire a write-lock to `self' */
 LOCAL WUNUSED NONNULL((1)) int DCALL
-Dee_rshared_rwlock_write(Dee_rshared_rwlock_t *__restrict self) {
+Dee_rshared_rwlock_write(Dee_rshared_rwlock_t *__restrict self) { /* TODO: Don't define this function inline */
 	uintptr_t lockword;
 again:
 	lockword = __hybrid_atomic_load(&self->rsrw_lock.rarw_lock.arw_lock, __ATOMIC_ACQUIRE);
@@ -949,7 +949,7 @@ Dee_rshared_rwlock_waitwrite_timed(Dee_rshared_rwlock_t *__restrict self,
 /* Release a read-lock */
 #define Dee_rshared_rwlock_endread (void)Dee_rshared_rwlock_endread_ex
 LOCAL NONNULL((1)) bool DCALL
-Dee_rshared_rwlock_endread_ex(Dee_rshared_rwlock_t *__restrict self) {
+Dee_rshared_rwlock_endread_ex(Dee_rshared_rwlock_t *__restrict self) { /* TODO: Don't define this function inline */
 	uintptr_t lockword;
 	lockword = __hybrid_atomic_load(&self->rsrw_lock.rarw_lock.arw_lock, __ATOMIC_ACQUIRE);
 	if (lockword == (uintptr_t)-1) {

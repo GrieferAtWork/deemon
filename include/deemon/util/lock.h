@@ -263,7 +263,7 @@ typedef struct atomic_rwlock Dee_atomic_rwlock_t;
 /************************************************************************/
 typedef struct {
 	Dee_atomic_lock_t s_lock;    /* Lock word (== 0: available, != 0: held) */
-	unsigned int      s_waiting; /* # of waiting threads */
+	unsigned int      s_waiting; /* # of threads waiting for `s_lock' (controlled by the waiting threads themselves) */
 } Dee_shared_lock_t;
 #define DEE_SHARED_LOCK_INIT                 { DEE_ATOMIC_LOCK_INIT, 0 }
 #define DEE_SHARED_LOCK_INIT_ACQUIRED        { DEE_ATOMIC_LOCK_INIT_ACQUIRED, 0 }

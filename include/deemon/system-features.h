@@ -879,6 +879,7 @@ func("futex_wake", "defined(CONFIG_HAVE_KOS_FUTEX_H)", test: 'extern lfutex_t ft
 func("futex_wakeall", "defined(CONFIG_HAVE_KOS_FUTEX_H)", test: 'extern lfutex_t ftx; return futex_wakeall(&ftx);');
 func("futex_waitwhile", "defined(CONFIG_HAVE_KOS_FUTEX_H)", test: 'extern lfutex_t ftx, val; return futex_waitwhile(&ftx, val);');
 func("futex_timedwaitwhile", "defined(CONFIG_HAVE_KOS_FUTEX_H)", test: 'extern lfutex_t ftx, val; extern struct timespec ts; return futex_timedwaitwhile(&ftx, val, &ts);');
+func("futex_timedwaitwhile64", "defined(CONFIG_HAVE_KOS_FUTEX_H)", test: 'extern lfutex_t ftx, val; extern struct timespec64 ts; return futex_timedwaitwhile64(&ftx, val, &ts);');
 
 func("abort", "defined(CONFIG_HAVE_STDLIB_H) && " + addparen(stdc), test: "abort();");
 func("strerror", "defined(CONFIG_HAVE_STRING_H) && " + addparen(stdc), test: "char *p = strerror(1); return p != NULL;");
@@ -6746,6 +6747,14 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
       (defined(futex_timedwaitwhile) || defined(__futex_timedwaitwhile_defined) || \
        defined(CONFIG_HAVE_KOS_FUTEX_H))
 #define CONFIG_HAVE_futex_timedwaitwhile
+#endif
+
+#ifdef CONFIG_NO_futex_timedwaitwhile64
+#undef CONFIG_HAVE_futex_timedwaitwhile64
+#elif !defined(CONFIG_HAVE_futex_timedwaitwhile64) && \
+      (defined(futex_timedwaitwhile64) || defined(__futex_timedwaitwhile64_defined) || \
+       defined(CONFIG_HAVE_KOS_FUTEX_H))
+#define CONFIG_HAVE_futex_timedwaitwhile64
 #endif
 
 #ifdef CONFIG_NO_abort
