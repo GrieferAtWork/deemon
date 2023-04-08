@@ -453,15 +453,14 @@ testLock(SharedLock());
 testLock(RAtomicLock(), isReadLockOrRecursive: true);
 testLock(RSharedLock(), isReadLockOrRecursive: true);
 testLock(Semaphore(1));
-testLock(all(AtomicLock()));
-testLock(all(SharedLock()));
-testLock(all(RAtomicLock()), isReadLockOrRecursive: true);
-testLock(all(RSharedLock()), isReadLockOrRecursive: true);
-testLock(all(Semaphore(1)));
 testRWLock(AtomicRWLock());
 testRWLock(SharedRWLock());
 testRWLock(RAtomicRWLock(), isRecursive: true);
 testRWLock(RSharedRWLock(), isRecursive: true);
+
+local lock = AtomicLock();
+assert all(lock) === lock,
+	"When given a single argument, `threading.all' should re-return that argument";
 
 /* Test `LockUnion()' with multiple locks (and
  * assert that it correctly affects referenced
