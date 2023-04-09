@@ -972,13 +972,29 @@ decl_ast_parse_unary_head(struct decl_ast *__restrict self) {
 	switch (tok) {
 
 	case KWD___asm:
-	case KWD___asm__:
+	case KWD___asm__: {
+		bool has_paren;
 		if unlikely(yield() < 0)
 			goto err;
 		old_flags = TPPLexer_Current->l_flags;
 		TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTLF;
-		if (skip('(', W_EXPECTED_LPAREN_AFTER_ASM)) /* TODO: support for "pack" */
-			goto err_flags;
+		if (tok == '(') {
+			has_paren = true;
+			if unlikely(yield() < 0)
+				goto err_flags;
+		} else if (tok == KWD_pack) {
+			if unlikely(yield() < 0)
+				goto err_flags;
+			has_paren = tok == '(';
+			if (has_paren) {
+				if unlikely(yield() < 0)
+					goto err_flags;
+			}
+		} else {
+			if (WARN(W_EXPECTED_LPAREN_AFTER_ASM))
+				goto err_flags;
+			has_paren = false;
+		}
 		/* Custom, user-defined encoding:
 		 * >> function foo(a: __asm__("?Dobject")) {
 		 * >>     ...
@@ -997,9 +1013,11 @@ decl_ast_parse_unary_head(struct decl_ast *__restrict self) {
 			self->da_type = DAST_NONE;
 		}
 		TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
-		if (skip(')', W_EXPECTED_RPAREN_AFTER_ASM))
-			goto err_r;
-		break;
+		if (has_paren) {
+			if (skip(')', W_EXPECTED_RPAREN_AFTER_ASM))
+				goto err_r;
+		}
+	}	break;
 
 	case KWD_none:
 		/* None-type. */
@@ -1049,28 +1067,38 @@ err_type_expr:
 	}	break;
 #endif
 
-	 /* TODO: support for "pack"
-	  * >> local x: pack int, int, string;
-	  * >> local y: (int, int, string);    // Same as this
-	  */
-
+	case KWD_pack:
+		/* support for "pack"
+		 * >> local x: pack int, int, string;
+		 * >> local y: (int, int, string); // Same as this */
 	case '(': {
 		int error;
 		size_t elema, elemc;
 		struct decl_ast *elemv;
+		bool has_pack, has_paren;
+		has_paren = tok == '(';
+		has_pack  = tok != '(';
+
 		/* Tuple type declaration. */
 		old_flags = TPPLexer_Current->l_flags;
 		TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTLF;
 		if unlikely(yield() < 0)
 			goto err_flags;
+		if (!has_paren && tok == '(') {
+			has_paren = true;
+			if unlikely(yield() < 0)
+				goto err_flags;
+		}
+
 		error = decl_ast_parse(self);
 		if unlikely(error)
 			goto err_flags;
+
 		/* This also functions as regular parenthesis, just like in
 		 * normal expressions, where `()' is the empty tuple, `(foo)'
 		 * is regular parenthesis, `(foo,)' is a 1-element tuple, and
 		 * `(foo, bar)' and `(foo, bar,)' are 2-element tuples. */
-		if (tok == ')') {
+		if (tok == ')' && !has_pack) {
 			/* Simple parenthesis. */
 			if unlikely(yield() < 0)
 				goto err_r_flags;
@@ -1081,7 +1109,7 @@ err_type_expr:
 		if unlikely(!elemv)
 			goto err_r_flags;
 		memcpy(&elemv[0], self, sizeof(struct decl_ast));
-		if (tok == ',')
+		if (tok == ',') {
 			for (;;) {
 				if unlikely(yield() < 0)
 					goto err_elemv;
@@ -1109,6 +1137,7 @@ err_type_expr:
 					elemv = new_elemv;
 				}
 			}
+		}
 		if (elema != elemc) {
 			struct decl_ast *new_elemv;
 			new_elemv = (struct decl_ast *)Dee_TryReallocc(elemv, elemc,
@@ -1117,10 +1146,13 @@ err_type_expr:
 				elemv = new_elemv;
 		}
 		TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
-		if (skip(')', W_EXPECTED_RPAREN_AFTER_TUPLE)) {
-			old_flags = 0;
-			goto err_elemv;
+		if (has_paren) {
+			if (skip(')', W_EXPECTED_RPAREN_AFTER_TUPLE)) {
+				old_flags = 0;
+				goto err_elemv;
+			}
 		}
+
 		/* Fill in the resulting AST representation as a TUPLE-ast */
 		self->da_type          = DAST_TUPLE;
 		self->da_flag          = DAST_FNORMAL;
@@ -1189,13 +1221,30 @@ err_elemv_0:
 
 	case KWD___nth: {
 		DREF struct ast *nth_expr;
+		bool has_paren;
+
 		/* N'th symbol compatibility. */
 		if unlikely(yield() < 0)
 			goto err;
 		old_flags = TPPLexer_Current->l_flags;
 		TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTLF;
-		if (skip('(', W_EXPECTED_LPAREN_AFTER_NTH)) /* TODO: support for "pack" */
-			goto err_flags;
+		if (tok == '(') {
+			has_paren = true;
+			if unlikely(yield() < 0)
+				goto err_flags;
+		} else if (tok == KWD_pack) {
+			if unlikely(yield() < 0)
+				goto err_flags;
+			has_paren = tok == '(';
+			if (has_paren) {
+				if unlikely(yield() < 0)
+					goto err_flags;
+			}
+		} else {
+			if (WARN(W_EXPECTED_LPAREN_AFTER_NTH))
+				goto err_flags;
+			has_paren = false;
+		}
 		nth_expr = ast_parse_expr(LOOKUP_SYM_NORMAL);
 		if unlikely(!nth_expr)
 			goto err_flags;
@@ -1211,8 +1260,10 @@ err_nth:
 		if (nth_expr->a_type != AST_CONSTEXPR &&
 		    WARN(W_EXPECTED_CONSTANT_AFTER_NTH))
 			goto err_nth;
-		if (skip(')', W_EXPECTED_RPAREN_AFTER_NTH))
-			goto err_nth;
+		if (has_paren) {
+			if (skip(')', W_EXPECTED_RPAREN_AFTER_NTH))
+				goto err_nth;
+		}
 		if (TPP_ISKEYWORD(tok)) {
 			unsigned int nth_symbol = 0;
 			struct symbol *sym;
