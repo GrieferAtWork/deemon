@@ -48,10 +48,10 @@ global class point {
 	}
 
 	operator str(): string {
-		return "({}, {})".format({ x, y });
+		return f"({x}, {y})";
 	}
 	operator repr(): string {
-		return "point({!r}, {!r})".format({ x, y });
+		return f"point({repr x}, {repr y})";
 	}
 
 	operator + (other: point) -> point(x + other.x, y + other.y);
@@ -81,7 +81,7 @@ global class rect {
 
 	@[gatw.doc("()")]
 	@[gatw.doc("(min:?Gpoint,max:?Gpoint)")]
-	@[gatw.doc("(xmin:?Dnumeric,xmax:?Dnumeric,ymin:?Dnumeric,ymax:?Dnumeric)")]
+	@[gatw.doc("(xmin:?DNumeric,xmax:?DNumeric,ymin:?DNumeric,ymax:?DNumeric)")]
 	this(args...) {
 		switch (#args) {
 		case 0:
@@ -113,9 +113,7 @@ global class rect {
 			ymax = args[3];
 			break;
 		default:
-			throw TypeError(
-				"rect() expected 0, 2 or 4 arguments when {} were given"
-				.format({ #args }));
+			throw TypeError(f"rect() expected 0, 2 or 4 arguments when {#args} were given");
 		}
 	}
 
@@ -182,10 +180,10 @@ global class rect {
 	}
 
 	operator str(): string {
-		return "(({}, {}), ({}, {}))".format({ xmin, ymin, xmax, ymax });
+		return f"(({xmin}, {ymin}), ({xmax}, {ymax}))";
 	}
 	operator repr(): string {
-		return "rect(point({!r}, {}), point({!r}, {!r}))".format({ xmin, ymin, xmax, ymax });
+		return f"rect(point({repr xmin}, {repr ymin}), point({repr xmax}, {repr ymax}))";
 	}
 	operator + (other: rect | point): rect {
 		if (other is rect) {
@@ -275,11 +273,3 @@ global class rect {
 	}
 
 }
-
-
-
-
-
-
-
-

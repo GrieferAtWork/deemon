@@ -337,7 +337,7 @@ local __objects = deemon.List {
 	/* 0x0113 */ rt.SeqIntRangeIterator, /* DeeRangeUInt16Iterator_Type */
 	/* 0x0114 */ rt.SeqIntRangeIterator, /* DeeRangeUInt32Iterator_Type */
 	/* 0x0115 */ rt.SeqIntRangeIterator, /* DeeRangeUInt64Iterator_Type */
-	/* 0x0116 */ rt.SeqIntRangeIterator, /* DeeGenericRangeIterator_Type */
+	/* 0x0116 */ rt.SeqRangeIterator,    /* DeeGenericRangeIterator_Type */
 	/* 0x0117 */ deemon.Sequence.range,
 	/* 0x0118 */ deemon.Object.id,
 	/* 0x0119 */ math.sin,            /* __builtin_sin */

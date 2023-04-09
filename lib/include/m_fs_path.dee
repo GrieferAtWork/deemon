@@ -35,4 +35,3 @@ function expandvars(path) -> fs.expand(path, "vV");
 global SEP = fs.SEP;
 global ALTSEP = fs.ALTSEP;
 global DELIM = fs.DELIM;
-

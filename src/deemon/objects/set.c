@@ -44,16 +44,16 @@ DECL_BEGIN
 
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeSet_Invert(DeeObject *__restrict self) {
-	DREF DeeInverseSetObject *result;
+	DREF DeeSetInversionObject *result;
 	/* Just re-return the original set. */
-	if (DeeInverseSet_CheckExact(self))
-		return_reference(DeeInverseSet_SET(self));
+	if (DeeSetInversion_CheckExact(self))
+		return_reference(DeeSetInversion_GetSet(self));
 	/* Construct a new inverse-set wrapper. */
-	result = DeeObject_MALLOC(DeeInverseSetObject);
+	result = DeeObject_MALLOC(DeeSetInversionObject);
 	if unlikely(!result)
 		goto done;
-	DeeObject_Init(result, &DeeInverseSet_Type);
-	result->is_set = self;
+	DeeObject_Init(result, &DeeSetInversion_Type);
+	result->si_set = self;
 	Dee_Incref(self);
 done:
 	return (DREF DeeObject *)result;
@@ -62,49 +62,50 @@ done:
 
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
-invset_ctor(DeeInverseSetObject *__restrict self) {
-	self->is_set = Dee_EmptySet;
+invset_ctor(DeeSetInversionObject *__restrict self) {
+	self->si_set = Dee_EmptySet;
 	Dee_Incref(Dee_EmptySet);
 	return 0;
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
-invset_init(DeeInverseSetObject *__restrict self,
+invset_init(DeeSetInversionObject *__restrict self,
             size_t argc, DeeObject *const *argv) {
-	self->is_set = Dee_EmptySet;
-	if (DeeArg_Unpack(argc, argv, "|o:_InverseSet", &self->is_set))
+	self->si_set = Dee_EmptySet;
+	if (DeeArg_Unpack(argc, argv, "|o:_InverseSet", &self->si_set))
 		goto err;
-	Dee_Incref(self->is_set);
+	Dee_Incref(self->si_set);
 	return 0;
 err:
 	return -1;
 }
 
 PRIVATE NONNULL((1)) void DCALL
-invset_fini(DeeInverseSetObject *__restrict self) {
-	Dee_Decref(self->is_set);
+invset_fini(DeeSetInversionObject *__restrict self) {
+	Dee_Decref(self->si_set);
 }
 
 PRIVATE NONNULL((1, 2)) void DCALL
-invset_visit(DeeInverseSetObject *__restrict self, dvisit_t proc, void *arg) {
-	Dee_Visit(self->is_set);
+invset_visit(DeeSetInversionObject *__restrict self, dvisit_t proc, void *arg) {
+	Dee_Visit(self->si_set);
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
-invset_printrepr(DeeInverseSetObject *__restrict self,
+invset_printrepr(DeeSetInversionObject *__restrict self,
                  dformatprinter printer, void *arg) {
-	return DeeFormat_Printf(printer, arg, "~%r", self->is_set);
+	return DeeFormat_Printf(printer, arg, "~%r", self->si_set);
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-invset_iterself(DeeInverseSetObject *__restrict self) {
+invset_iterself(DeeSetInversionObject *__restrict self) {
+	/* Sorry, but it's impossible to enumerate a set containing (almost) everything */
 	err_unimplemented_operator(Dee_TYPE(self), OPERATOR_ITERSELF);
 	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-invset_tpcontains(DeeInverseSetObject *self, DeeObject *key) {
-	int result = DeeObject_Contains(self->is_set, key);
+invset_tpcontains(DeeSetInversionObject *self, DeeObject *key) {
+	int result = DeeObject_Contains(self->si_set, key);
 	if unlikely(result < 0)
 		goto err;
 	return_bool_(!result);
@@ -136,12 +137,12 @@ PRIVATE struct type_getset tpconst invset_class_getsets[] = {
 };
 
 PRIVATE struct type_member tpconst invset_members[] = {
-	TYPE_MEMBER_FIELD_DOC("__blacklist__", STRUCT_OBJECT, offsetof(DeeInverseSetObject, is_set), "->?DSet"),
+	TYPE_MEMBER_FIELD_DOC("__blacklist__", STRUCT_OBJECT, offsetof(DeeSetInversionObject, si_set), "->?DSet"),
 	TYPE_MEMBER_END
 };
 
 
-PUBLIC DeeTypeObject DeeInverseSet_Type = {
+PUBLIC DeeTypeObject DeeSetInversion_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_InverseSet",
 	/* .tp_doc      = */ DOC("()\n"
@@ -157,7 +158,7 @@ PUBLIC DeeTypeObject DeeInverseSet_Type = {
 				/* .tp_copy_ctor = */ (dfunptr_t)NULL,
 				/* .tp_deep_ctor = */ (dfunptr_t)NULL,
 				/* .tp_any_ctor  = */ (dfunptr_t)&invset_init,
-				TYPE_FIXED_ALLOCATOR(DeeInverseSetObject)
+				TYPE_FIXED_ALLOCATOR(DeeSetInversionObject)
 			}
 		},
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&invset_fini,
@@ -229,12 +230,12 @@ err:
 
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 DeeSet_IsSubSet(DeeObject *lhs, DeeObject *rhs) {
-	if (DeeInverseSet_CheckExact(lhs)) {
+	if (DeeSetInversion_CheckExact(lhs)) {
 		/* An inverse set can only ever be the sub-set of another inverse set. */
-		if (!DeeInverseSet_CheckExact(rhs))
+		if (!DeeSetInversion_CheckExact(rhs))
 			return 0;
-		return DeeSet_IsSubSet(DeeInverseSet_SET(rhs),
-		                       DeeInverseSet_SET(lhs));
+		return DeeSet_IsSubSet(DeeSetInversion_GetSet(rhs),
+		                       DeeSetInversion_GetSet(lhs));
 	} else {
 		dssize_t result = set_issubset_impl(lhs, rhs);
 		return unlikely(result == -2)
@@ -247,12 +248,12 @@ DeeSet_IsSubSet(DeeObject *lhs, DeeObject *rhs) {
 
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 DeeSet_IsTrueSubSet(DeeObject *lhs, DeeObject *rhs) {
-	if (DeeInverseSet_CheckExact(lhs)) {
+	if (DeeSetInversion_CheckExact(lhs)) {
 		/* An inverse set can only ever be the sub-set of another inverse set. */
-		if (!DeeInverseSet_CheckExact(rhs))
+		if (!DeeSetInversion_CheckExact(rhs))
 			return 0;
-		return DeeSet_IsTrueSubSet(DeeInverseSet_SET(rhs),
-		                           DeeInverseSet_SET(lhs));
+		return DeeSet_IsTrueSubSet(DeeSetInversion_GetSet(rhs),
+		                           DeeSetInversion_GetSet(lhs));
 	} else {
 		dssize_t result;
 		size_t rhs_size;
@@ -263,7 +264,7 @@ DeeSet_IsTrueSubSet(DeeObject *lhs, DeeObject *rhs) {
 			return 0;
 		/* Check the size of `rhs' to make sure
 		 * it contains more elements than `lhs' */
-		if (DeeInverseSet_CheckExact(rhs))
+		if (DeeSetInversion_CheckExact(rhs))
 			return 1; /* Inverse sets have an infinite size. */
 		rhs_size = DeeObject_Size(rhs);
 		if unlikely(rhs_size == (size_t)-1)
@@ -278,14 +279,14 @@ INTERN WUNUSED NONNULL((1, 2)) int DCALL
 DeeSet_IsSameSet(DeeObject *lhs, DeeObject *rhs) {
 	dssize_t result;
 	size_t rhs_size;
-	if (DeeInverseSet_CheckExact(lhs)) {
+	if (DeeSetInversion_CheckExact(lhs)) {
 		/* An inverse set can never equal a non-inverse set. */
-		if (!DeeInverseSet_CheckExact(rhs))
+		if (!DeeSetInversion_CheckExact(rhs))
 			return 0;
-		lhs = DeeInverseSet_SET(lhs);
-		rhs = DeeInverseSet_SET(rhs);
+		lhs = DeeSetInversion_GetSet(lhs);
+		rhs = DeeSetInversion_GetSet(rhs);
 	}
-	if (DeeInverseSet_CheckExact(rhs))
+	if (DeeSetInversion_CheckExact(rhs))
 		return 0; /* A regular set can never match an inverse set. */
 	result = set_issubset_impl(lhs, rhs);
 	if unlikely(result == -2)
@@ -306,15 +307,15 @@ INTERN WUNUSED NONNULL((1, 2)) int DCALL
 DeeSet_IsDisjoint(DeeObject *lhs, DeeObject *rhs) {
 	DREF DeeObject *iter, *item;
 	int result = 1;
-	if (DeeInverseSet_CheckExact(lhs)) {
+	if (DeeSetInversion_CheckExact(lhs)) {
 		/* 2 inverse sets can never be disjoint, because there's
 		 * always an imaginary object that is shared by both. */
-		if (DeeInverseSet_CheckExact(rhs))
+		if (DeeSetInversion_CheckExact(rhs))
 			return 0;
 		/* If all elements from `rhs' are black-listed, then
 		 * our inverse set is disjoint from it, meaning that
 		 * `rhs' is a subset of our black-list. */
-		return DeeSet_IsSubSet(rhs, DeeInverseSet_SET(lhs));
+		return DeeSet_IsSubSet(rhs, DeeSetInversion_GetSet(lhs));
 	}
 	/* Verify that no items from `lhs' appear in `rhs' */
 	iter = DeeObject_IterSelf(lhs);

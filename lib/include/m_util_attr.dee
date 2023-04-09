@@ -25,13 +25,16 @@ final global ENUM_ATTR_FLAG_PERMISSION_SET = 4;
 
 @@You really don't want to use this one any more...
 @@The reworked version is soooo much better!
-final function enumattr(self, callback: Callable from deemon) {
+function enumattr(self, callback: Callable from deemon) {
 	import deemon_enumattr = enumattr from deemon;
 	for (local attr: deemon_enumattr(self)) {
 		local flags = ENUM_ATTR_FLAG_NONE;
-		if (attr.canget) flags |= ENUM_ATTR_FLAG_PERMISSION_GET;
-		if (attr.candel) flags |= ENUM_ATTR_FLAG_PERMISSION_DEL;
-		if (attr.canset) flags |= ENUM_ATTR_FLAG_PERMISSION_SET;
+		if (attr.canget)
+			flags |= ENUM_ATTR_FLAG_PERMISSION_GET;
+		if (attr.candel)
+			flags |= ENUM_ATTR_FLAG_PERMISSION_DEL;
+		if (attr.canset)
+			flags |= ENUM_ATTR_FLAG_PERMISSION_SET;
 		callback(attr.decl, self, attr.name, flags, attr.attrtype);
 	}
 }

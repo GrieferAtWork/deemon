@@ -240,6 +240,7 @@ read_from_iter:
 	if unlikely(result != ITER_DONE) {
 		if (result) {
 			int temp;
+
 			/* Check if the found item is also part of the second set.
 			 * If it is, don't yield it now, but yield it later, as
 			 * part of the enumeration of the second set. */
@@ -274,6 +275,7 @@ read_from_iter:
 	if unlikely(!result)
 		goto done;
 	SetUnionIterator_LockWrite(self);
+
 	/* Check for another race condition. */
 	if unlikely(self->sui_iter != iter) {
 		SetUnionIterator_LockEndWrite(self);
@@ -614,6 +616,7 @@ su_contains(SetUnion *self, DeeObject *item) {
 	if (temp)
 		goto done;
 	Dee_Decref(result);
+
 	/* Check the second set, and forward the return value. */
 	result = DeeObject_ContainsObject(self->su_b, item);
 done:
@@ -748,6 +751,7 @@ read_from_iter:
 	if unlikely(!result)
 		goto done;
 	SetSymmetricDifferenceIterator_LockWrite(self);
+
 	/* Check for another race condition. */
 	if unlikely(self->ssd_iter != iter) {
 		SetSymmetricDifferenceIterator_LockEndWrite(self);
@@ -1037,6 +1041,7 @@ again:
 	result = DeeObject_IterNext(self->sii_iter);
 	if (!ITER_ISOK(result))
 		goto done;
+
 	/* Check if contained in the second set. */
 	temp = DeeObject_Contains(self->sii_other, result);
 	if (temp <= 0) {
@@ -1181,6 +1186,7 @@ si_contains(SetIntersection *self, DeeObject *item) {
 	if (!temp)
 		goto done;
 	Dee_Decref(result);
+
 	/* Check the second set, and forward the return value. */
 	result = DeeObject_ContainsObject(self->si_b, item);
 done:
@@ -1376,6 +1382,7 @@ err_r:
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 sd_contains(SetDifference *self, DeeObject *item) {
 	int temp;
+
 	/* Check the primary set for the object. */
 	temp = DeeObject_Contains(self->sd_a, item);
 	if (temp <= 0) {
@@ -1383,6 +1390,7 @@ sd_contains(SetDifference *self, DeeObject *item) {
 			goto err;
 		return_false;
 	}
+
 	/* The object is apart of the primary set.
 	 * -> Return true if it's not apart of the secondary set.
 	 * -> Return false otherwise. */
@@ -1459,15 +1467,14 @@ INTERN DeeTypeObject SetDifference_Type = {
 
 
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-DeeSet_Union(DeeObject *lhs,
-             DeeObject *rhs) {
+DeeSet_Union(DeeObject *lhs, DeeObject *rhs) {
 	DREF DeeObject *result, *temp;
-	if (DeeInverseSet_CheckExact(lhs)) {
-		if (!DeeInverseSet_CheckExact(rhs)) {
+	if (DeeSetInversion_CheckExact(lhs)) {
+		if (!DeeSetInversion_CheckExact(rhs)) {
 			/* Special case: `~a | b' --> `~(a & ~b)' */
 			if unlikely((rhs = DeeSet_Invert(rhs)) == NULL)
 				goto err;
-			temp = DeeSet_Intersection(DeeInverseSet_SET(lhs), rhs);
+			temp = DeeSet_Intersection(DeeSetInversion_GetSet(lhs), rhs);
 			Dee_Decref(rhs);
 			if unlikely(!temp)
 				goto err;
@@ -1475,20 +1482,21 @@ DeeSet_Union(DeeObject *lhs,
 			Dee_Decref(temp);
 			goto done;
 		}
+
 		/* Special case: `~a | ~b' --> `~(a & b)' */
-		temp = DeeSet_Intersection(DeeInverseSet_SET(lhs),
-		                           DeeInverseSet_SET(rhs));
+		temp = DeeSet_Intersection(DeeSetInversion_GetSet(lhs),
+		                           DeeSetInversion_GetSet(rhs));
 		if unlikely(!temp)
 			goto err;
 		result = DeeSet_Invert(temp);
 		Dee_Decref(temp);
 		goto done;
 	}
-	if (DeeInverseSet_CheckExact(rhs)) {
+	if (DeeSetInversion_CheckExact(rhs)) {
 		/* Special case: `a | ~b' --> `~(b & ~a)' */
 		if unlikely((lhs = DeeSet_Invert(lhs)) == NULL)
 			goto err;
-		temp = DeeSet_Intersection(DeeInverseSet_SET(rhs), lhs);
+		temp = DeeSet_Intersection(DeeSetInversion_GetSet(rhs), lhs);
 		Dee_Decref(lhs);
 		if unlikely(!temp)
 			goto err;
@@ -1500,6 +1508,7 @@ DeeSet_Union(DeeObject *lhs,
 		return_reference_(rhs);
 	if (DeeSet_CheckEmpty(rhs))
 		return_reference_(lhs);
+
 	/* Construct a set-union wrapper. */
 	result = (DREF DeeObject *)DeeObject_MALLOC(SetUnion);
 	if unlikely(!result)
@@ -1518,17 +1527,18 @@ err:
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 DeeSet_Intersection(DeeObject *lhs, DeeObject *rhs) {
 	DREF DeeObject *result, *temp;
-	if (DeeInverseSet_CheckExact(lhs)) {
-		if (DeeInverseSet_CheckExact(rhs)) {
+	if (DeeSetInversion_CheckExact(lhs)) {
+		if (DeeSetInversion_CheckExact(rhs)) {
 			/* Special case: `~a & ~b' -> `~(a | b)' */
-			temp = DeeSet_Intersection(DeeInverseSet_SET(lhs),
-			                           DeeInverseSet_SET(rhs));
+			temp = DeeSet_Intersection(DeeSetInversion_GetSet(lhs),
+			                           DeeSetInversion_GetSet(rhs));
 			if unlikely(!temp)
 				goto err;
 			result = DeeSet_Invert(temp);
 			Dee_Decref(temp);
 			goto done;
 		}
+
 		/* Special case: `~a & b' -> `b & ~a' */
 		temp = lhs;
 		lhs  = rhs;
@@ -1536,11 +1546,12 @@ DeeSet_Intersection(DeeObject *lhs, DeeObject *rhs) {
 	}
 	if (DeeSet_CheckEmpty(lhs) || DeeSet_CheckEmpty(rhs))
 		return_reference_(Dee_EmptySet);
+
 	/* Construct a set-intersection wrapper. */
 	result = (DREF DeeObject *)DeeObject_MALLOC(SetIntersection);
 	if unlikely(!result)
 		goto done;
-	ASSERT(!DeeInverseSet_CheckExact(lhs));
+	ASSERT(!DeeSetInversion_CheckExact(lhs));
 	((SetIntersection *)result)->si_a = lhs;
 	((SetIntersection *)result)->si_b = rhs;
 	Dee_Incref(lhs);
@@ -1555,9 +1566,9 @@ err:
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 DeeSet_Difference(DeeObject *lhs, DeeObject *rhs) {
 	DREF DeeObject *result, *temp;
-	if (DeeInverseSet_CheckExact(lhs)) {
+	if (DeeSetInversion_CheckExact(lhs)) {
 		/* Special case: `~a - b' -> `~(a | b)' */
-		temp = DeeSet_Union(DeeInverseSet_SET(lhs), rhs);
+		temp = DeeSet_Union(DeeSetInversion_GetSet(lhs), rhs);
 		if unlikely(!temp)
 			goto err;
 		result = DeeSet_Invert(temp);
@@ -1568,11 +1579,12 @@ DeeSet_Difference(DeeObject *lhs, DeeObject *rhs) {
 		return_reference_(Dee_EmptySet);
 	if (DeeSet_CheckEmpty(rhs))
 		return_reference_(lhs);
+
 	/* Construct a set-difference wrapper. */
 	result = (DREF DeeObject *)DeeObject_MALLOC(SetDifference);
 	if unlikely(!result)
 		goto done;
-	ASSERT(!DeeInverseSet_CheckExact(lhs));
+	ASSERT(!DeeSetInversion_CheckExact(lhs));
 	((SetDifference *)result)->sd_a = lhs;
 	((SetDifference *)result)->sd_b = rhs;
 	Dee_Incref(lhs);
@@ -1591,11 +1603,12 @@ DeeSet_SymmetricDifference(DeeObject *lhs, DeeObject *rhs) {
 		return_reference_(rhs);
 	if (DeeSet_CheckEmpty(rhs))
 		return_reference_(lhs);
+
 	/* Construct a set-symmetric-difference wrapper. */
 	result = DeeObject_MALLOC(SetSymmetricDifference);
 	if unlikely(!result)
 		goto done;
-	ASSERT(!DeeInverseSet_CheckExact(lhs));
+	ASSERT(!DeeSetInversion_CheckExact(lhs));
 	result->ssd_a = lhs;
 	result->ssd_b = rhs;
 	Dee_Incref(lhs);

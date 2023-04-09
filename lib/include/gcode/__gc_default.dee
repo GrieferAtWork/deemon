@@ -20,22 +20,22 @@
 #pragma once
 #include "../__stddef.dee"
 
-/* I don't expect anyone to remember gcode, but
- * the files in this folder implement what little
- * of a standard library gcode actually had to offer. */
-
-/* Looking back, gcode isn't really something I'm too proud of,
- * but it was still a part of my learning process and when
+/* I don't expect anyone to remember gcode, but the files in
+ * this folder implement what little of a standard library
+ * gcode actually had to offer.
+ *
+ * Looking back, gcode isn't really something I'm too proud
+ * of, but it was still a part of my learning process and when
  * compared to what deemon is today, I think I've learned quite
- * a lot since then. */
-
-/* So embracing that past and considering the fact that gcode
+ * a lot since then.
+ *
+ * So embracing that past and considering the fact that gcode
  * is kind of the spiritual ancestor to deemon, I decided to
- * include this kind-of backwards compatibility library. */
-
-/* Of course there are some things we can't replicate
- * (like the wheird way assignment worked). But we're
- * not trying to go back. This is just for fun! */
+ * include this kind-of backwards compatibility library.
+ *
+ * Of course there are some things we can't replicate (like
+ * the weird way assignment worked). But we're not trying to
+ * go back. This is just for fun! */
 
 #pragma push_macro(undef, "from", "import")
 from "ctypes" import

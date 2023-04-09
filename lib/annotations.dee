@@ -310,7 +310,3 @@ do_del_total:
  *       types and try to overload depending on the argument types
  *       being passed.
  */
-
-
-
-

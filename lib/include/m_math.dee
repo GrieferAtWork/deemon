@@ -58,17 +58,17 @@ final global hypot = math.hypot;
 final global erf = math.erf;
 final global tgamma = math.tgamma;
 final global lgamma = math.lgamma;
-final function ceilf(x) -> (float)util.ceil(x);
-final function floorf(x) -> (float)util.floor(x);
-final function roundf(x) -> (float)util.round(x);
-final function truncf(x) -> (float)(int)x;
+function ceilf(x) -> (float)util.ceil(x);
+function floorf(x) -> (float)util.floor(x);
+function roundf(x) -> (float)util.round(x);
+function truncf(x) -> (float)(int)x;
 final global i32round = util.round;
 final global i64round = util.round;
 final global lround = util.round;
 final global llround = util.round;
 final global fmod = math.fmod;
 #if 1
-final function rint(x) -> (float)util.round(x);
+function rint(x) -> (float)util.round(x);
 final global i32rint = util.round;
 final global i64rint = util.round;
 final global lrint = util.round;
@@ -76,10 +76,10 @@ final global llrint = util.round;
 final global nearbyint = util.round;
 #else
 final global rint = math.rint;
-final function i32rint(x) -> (int)math.rint(x);
-final function i64rint(x) -> (int)math.rint(x);
-final function lrint(x) -> (int)math.rint(x);
-final function llrint(x) -> (int)math.rint(x);
+function i32rint(x) -> (int)math.rint(x);
+function i64rint(x) -> (int)math.rint(x);
+function lrint(x) -> (int)math.rint(x);
+function llrint(x) -> (int)math.rint(x);
 final global nearbyint = math.nearbyint;
 #endif
 final global remainder = math.remainder;

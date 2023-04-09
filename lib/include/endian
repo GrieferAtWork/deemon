@@ -30,23 +30,9 @@
 #	define __BIG_ENDIAN__ 1
 #endif
 
-#define __swap16_m(x) (\
-	(((x)&0x00ffui16)<<8)|\
-	(((x)&0xff00ui16)>>8))
-#define __swap32_m(x) (\
-	(((x)&0x000000ffui32)<<24)|\
-	(((x)&0x0000ff00ui32)<< 8)|\
-	(((x)&0x00ff0000ui32)>> 8)|\
-	(((x)&0xff000000ui32)>>24))
-#define __swap64_m(x) (\
-	(((x)&0x00000000000000ffui64)<<56)|\
-	(((x)&0x000000000000ff00ui64)<<40)|\
-	(((x)&0x0000000000ff0000ui64)<<24)|\
-	(((x)&0x00000000ff000000ui64)<< 8)|\
-	(((x)&0x000000ff00000000ui64)>> 8)|\
-	(((x)&0x0000ff0000000000ui64)>>24)|\
-	(((x)&0x00ff000000000000ui64)>>40)|\
-	(((x)&0xff00000000000000ui64)>>56))
+#define __swap16_m(x) (x).operator . ("swap16")
+#define __swap32_m(x) (x).operator . ("swap32")
+#define __swap64_m(x) (x).operator . ("swap64")
 
 #pragma push_macro(undef, "import", "from", "ctypes")
 from ctypes import

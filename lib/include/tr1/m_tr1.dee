@@ -61,7 +61,5 @@ class unique_iterator: Iterator {
 	}
 }
 
-
 import .m_tr1_geometry;
 global geometry = m_tr1_geometry;
-

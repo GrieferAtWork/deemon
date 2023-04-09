@@ -323,8 +323,7 @@ from ctypes import
  *       output.
  * In deemon 200+ this is no longer necessary because PWD
  * will have already been set to what the above would achieve,
- * with the following code undoing the directory change done
- * by such code.
+ * with the following code undoing that directory change.
  */
 {
 	/* Change PWD to the original PWD */

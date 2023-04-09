@@ -51,90 +51,95 @@ function bind(tp: Type, operator_function: Callable): Callable {
  * This module is _supposed_ to define symbols with those names! */
 #pragma warning("-Wno-reserved")
 
-function constructor(self, args...): none -> self.operator constructor(args...);
-function copy(self) -> copy self;
-function deepcopy(self) -> deepcopy self;
-function destructor(self): none -> self.operator destructor();
-function assign(self, other) -> self := other;
-function moveassign(self, other) -> self.operator move := (other);
-function str(self): string -> str self;
-function repr(self): string -> repr self;
-function bool(self): bool from deemon -> !!self;
-function call(self: Callable | Object, args: Tuple) -> self(args...);
-function next(self: Iterator | Object) -> self.operator next();
-function int(self: Numeric | Object): int from deemon -> self.operator int();
-function float(self): float from deemon -> self.operator float();
-function inv(self) -> ~self;
-function pos(self) -> +self;
-function neg(self) -> -self;
-function add(self, other) -> self + other;
-function sub(self, other) -> self - other;
-function mul(self, other) -> self * other;
-function div(self, other) -> self / other;
-function mod(self, other) -> self % other;
-function shl(self, other) -> self << other;
-function shr(self, other) -> self >> other;
-function and(self, other) -> self & other;
-function or(self, other) -> self | other;
-function xor(self, other) -> self ^ other;
-function pow(self, other) -> self ** other;
-function inc(self) -> self.operator ++ ();
-function dec(self) -> self.operator -- ();
-function iadd(self, other) -> self.operator += (other);
-function isub(self, other) -> self.operator -= (other);
-function imul(self, other) -> self.operator *= (other);
-function idiv(self, other) -> self.operator /= (other);
-function imod(self, other) -> self.operator %= (other);
-function ishl(self, other) -> self.operator <<= (other);
-function ishr(self, other) -> self.operator >>= (other);
-function iand(self, other) -> self.operator &= (other);
-function ior(self, other) -> self.operator |= (other);
-function ixor(self, other) -> self.operator ^= (other);
-function ipow(self, other) -> self.operator **= (other);
-function hash(self): int from deemon -> self.operator hash();
-function eq(self, other): bool from deemon | Object -> self == other;
-function ne(self, other): bool from deemon | Object -> self != other;
-function lo(self, other): bool from deemon | Object -> self < other;
-function le(self, other): bool from deemon | Object -> self <= other;
-function gr(self, other): bool from deemon | Object -> self > other;
-function ge(self, other): bool from deemon | Object -> self >= other;
-function iter(self: Sequence | Object): Iterator | Object -> self.operator iter();
-function size(self: Sequence | Object): int from deemon | Object -> #self;
-function contains(self: Sequence | Object, item): bool from deemon | Object -> item in self;
-function getitem(self: Sequence | Object, index: int from deemon | Object) -> self[index];
-function delitem(self: Sequence | Object, index: int from deemon | Object): none -> self.operator del[] (index);
-function setitem(self: Sequence | Object, index: int from deemon | Object, value): none -> self.operator [] (index, value);
-function getrange(self: Sequence | Object, begin: int from deemon | Object, end: int from deemon | Object) -> self[begin:end];
-function delrange(self: Sequence | Object, begin: int from deemon | Object, end: int from deemon | Object): none -> self.operator del[:] (begin, end);
-function setrange(self: Sequence | Object, begin: int from deemon | Object, end: int from deemon | Object, value: Sequence | Object): none -> self.operator [:] (begin, end, value);
-function getattr(self, name: string) -> self.operator . (name);
-function delattr(self, name: string): none -> self.operator del. (name);
-function setattr(self, name: string, value): none -> self.operator .= (name, value);
-function enumattr(self): {Attribute...} -> self.operator enumattr();
-function enter(self): none -> self.operator enter();
-function leave(self): none -> self.operator leave();
+/* NOTE: All of the operation functions must be declared as `varying',
+ *       since user-code is actually allowed to override these with
+ *       custom bindings.
+ * It is undefined what/where doing so would have any effect, but it's
+ * still something they're allowed to do. */
+varying function constructor(self, args...): none -> self.operator constructor(args...);
+varying function copy(self) -> copy self;
+varying function deepcopy(self) -> deepcopy self;
+varying function destructor(self): none -> self.operator destructor();
+varying function assign(self, other) -> self := other;
+varying function moveassign(self, other) -> self.operator move := (other);
+varying function str(self): string -> str self;
+varying function repr(self): string -> repr self;
+varying function bool(self): bool from deemon -> !!self;
+varying function call(self: Callable | Object, args: Tuple) -> self(args...);
+varying function next(self: Iterator | Object) -> self.operator next();
+varying function int(self: Numeric | Object): int from deemon -> self.operator int();
+varying function float(self): float from deemon -> self.operator float();
+varying function inv(self) -> ~self;
+varying function pos(self) -> +self;
+varying function neg(self) -> -self;
+varying function add(self, other) -> self + other;
+varying function sub(self, other) -> self - other;
+varying function mul(self, other) -> self * other;
+varying function div(self, other) -> self / other;
+varying function mod(self, other) -> self % other;
+varying function shl(self, other) -> self << other;
+varying function shr(self, other) -> self >> other;
+varying function and(self, other) -> self & other;
+varying function or(self, other) -> self | other;
+varying function xor(self, other) -> self ^ other;
+varying function pow(self, other) -> self ** other;
+varying function inc(self) -> self.operator ++ ();
+varying function dec(self) -> self.operator -- ();
+varying function iadd(self, other) -> self.operator += (other);
+varying function isub(self, other) -> self.operator -= (other);
+varying function imul(self, other) -> self.operator *= (other);
+varying function idiv(self, other) -> self.operator /= (other);
+varying function imod(self, other) -> self.operator %= (other);
+varying function ishl(self, other) -> self.operator <<= (other);
+varying function ishr(self, other) -> self.operator >>= (other);
+varying function iand(self, other) -> self.operator &= (other);
+varying function ior(self, other) -> self.operator |= (other);
+varying function ixor(self, other) -> self.operator ^= (other);
+varying function ipow(self, other) -> self.operator **= (other);
+varying function hash(self): int from deemon -> self.operator hash();
+varying function eq(self, other): bool from deemon | Object -> self == other;
+varying function ne(self, other): bool from deemon | Object -> self != other;
+varying function lo(self, other): bool from deemon | Object -> self < other;
+varying function le(self, other): bool from deemon | Object -> self <= other;
+varying function gr(self, other): bool from deemon | Object -> self > other;
+varying function ge(self, other): bool from deemon | Object -> self >= other;
+varying function iter(self: Sequence | Object): Iterator | Object -> self.operator iter();
+varying function size(self: Sequence | Object): int from deemon | Object -> #self;
+varying function contains(self: Sequence | Object, item): bool from deemon | Object -> item in self;
+varying function getitem(self: Sequence | Object, index: int from deemon | Object) -> self[index];
+varying function delitem(self: Sequence | Object, index: int from deemon | Object): none -> self.operator del[] (index);
+varying function setitem(self: Sequence | Object, index: int from deemon | Object, value): none -> self.operator [] (index, value);
+varying function getrange(self: Sequence | Object, begin: int from deemon | Object, end: int from deemon | Object) -> self[begin:end];
+varying function delrange(self: Sequence | Object, begin: int from deemon | Object, end: int from deemon | Object): none -> self.operator del[:] (begin, end);
+varying function setrange(self: Sequence | Object, begin: int from deemon | Object, end: int from deemon | Object, value: Sequence | Object): none -> self.operator [:] (begin, end, value);
+varying function getattr(self, name: string) -> self.operator . (name);
+varying function delattr(self, name: string): none -> self.operator del. (name);
+varying function setattr(self, name: string, value): none -> self.operator .= (name, value);
+varying function enumattr(self): {Attribute...} -> self.operator enumattr();
+varying function enter(self): none -> self.operator enter();
+varying function leave(self): none -> self.operator leave();
 @[optional.gatw.doc("(self:?DFile,max_bytes=!-1)->?Dstring")]
-function read(self, ...) -> self.operator read(...);
+varying function read(self, ...) -> self.operator read(...);
 @[optional.gatw.doc("(self:?DFile,data:?X2?DBytes?Dstring,start=!0,end=!-1)->?Dint")]
-function write(self, ...) -> self.operator write(...);
-function seek(self: File, off: int from deemon, whence: int from deemon): int from deemon -> self.operator seek(off, whence);
-function sync(self: File): none -> self.operator sync();
-function trunc(self: File, pos: int from deemon): none -> self.operator trunc(pos);
-function close(self: File): none -> self.operator close();
+varying function write(self, ...) -> self.operator write(...);
+varying function seek(self: File, off: int from deemon, whence: int from deemon): int from deemon -> self.operator seek(off, whence);
+varying function sync(self: File): none -> self.operator sync();
+varying function trunc(self: File, pos: int from deemon): none -> self.operator trunc(pos);
+varying function close(self: File): none -> self.operator close();
 @[optional.gatw.doc("(self:?DFile,pos:?Dint)->?Dstring")]
 @[optional.gatw.doc("(self:?DFile,max_bytes:?Dint,pos:?Dint)->?Dstring")]
-function pread(self, ...) -> self.operator pread(...);
+varying function pread(self, ...) -> self.operator pread(...);
 @[optional.gatw.doc("(self:?DFile,data:?X2?DBytes?Dstring,pos:?Dint)->?Dint")]
 @[optional.gatw.doc("(self:?DFile,data:?X2?DBytes?Dstring,max_bytes:?Dint,pos:?Dint)->?Dint")]
 @[optional.gatw.doc("(self:?DFile,data:?X2?DBytes?Dstring,start:?Dint,end:?Dint,pos:?Dint)->?Dint")]
-function pwrite(self, ...) -> self.operator pwrite(...);
-function getc(self: File): int from deemon -> self.operator getc();
-function ungetc(self: File, c: int from deemon): int from deemon -> self.operator ungetc(c);
-function putc(self: File, c: int from deemon): int from deemon -> self.operator putc(c);
+varying function pwrite(self, ...) -> self.operator pwrite(...);
+varying function getc(self: File): int from deemon -> self.operator getc();
+varying function ungetc(self: File, c: int from deemon): int from deemon -> self.operator ungetc(c);
+varying function putc(self: File, c: int from deemon): int from deemon -> self.operator putc(c);
 
 /* Implementation-specific functions for ambiguous operator calls.
  * An implementation is required to provide these, but have them
- * invoke the (overridable) regular operators exported from this
+ * invoke the (overrideable) regular operators exported from this
  * module. */
 
 #if __DEEMON_VARIANT__ == "gatw" && \
@@ -285,10 +290,6 @@ function __gaosa(obj, attr, opt?) {
 @@
 @@Additionally, any operator with an unknown S-name
 @@calls this function to implement its callback.
-function operator(id: int from deemon, args...) {
+varying function operator(id: int from deemon, args...) {
 	throw Error.TypeError("Cannot invoke unknown operator #%X" % id);
 }
-
-
-
-

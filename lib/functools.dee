@@ -49,9 +49,12 @@ function predlo2key(pred_lo: Callable): Callable {
 	class KeyClass {
 		private member m_self;
 		this(self) { m_self = self; }
-		operator < (other) -> pred_lo(this.m_self, other.m_self);
-		operator <= (other) -> !pred_lo(other.m_self, this.m_self);
 		operator == (other) -> !pred_lo(this.m_self, other.m_self) && !pred_lo(other.m_self, this.m_self);
+		operator != (other) -> pred_lo(this.m_self, other.m_self) || pred_lo(other.m_self, this.m_self);
+		operator <  (other) -> pred_lo(this.m_self, other.m_self);
+		operator <= (other) -> !pred_lo(other.m_self, this.m_self);
+		operator >  (other) -> pred_lo(other.m_self, this.m_self);
+		operator >= (other) -> !pred_lo(this.m_self, other.m_self);
 	}
 	return KeyClass;
 }
@@ -68,6 +71,7 @@ function predeq2key(pred_eq: Callable): Callable {
 		private member m_self;
 		this(self) { m_self = self; }
 		operator == (other) -> pred_eq(this.m_self, other.m_self);
+		operator != (other) -> !pred_eq(this.m_self, other.m_self);
 	}
 	return KeyClass;
 }
@@ -96,6 +100,3 @@ function keycombine(keys...: Callable): Callable {
 		return x;
 	};
 }
-
-
-

@@ -167,7 +167,7 @@ null_pointer:
 			if (base == pointer_base ||
 			    base == &DeeCVoid_Type ||
 			    pointer_base == &DeeCVoid_Type) {
-				/* Lvalue -> pointer (must deref) */
+				/* LValue -> Pointer (must deref) */
 				CTYPES_FAULTPROTECT(result->ptr = *(void **)((struct lvalue_object *)self)->l_ptr.ptr,
 				                    goto err);
 				return 0;
@@ -226,7 +226,7 @@ DeeObject_TryAsGenericPointer(DeeObject *self,
 		lv_base = DeeType_AsLValueType(Dee_TYPE(self))->lt_orig;
 		if (DeePointerType_Check(lv_base)) {
 			*p_pointer_base = DeeSType_AsPointerType(lv_base)->pt_orig;
-			/* Lvalue -> pointer (must deref) */
+			/* LValue -> Pointer (must deref) */
 			CTYPES_FAULTPROTECT(result->ptr = *(void **)((struct lvalue_object *)self)->l_ptr.ptr,
 			                    goto err);
 			return 0;

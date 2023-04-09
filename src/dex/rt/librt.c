@@ -1947,6 +1947,7 @@ PRIVATE struct dex_symbol symbols[] = {
 	{ "SetIntersectionIterator", (DeeObject *)&librt_get_SetIntersectionIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },               /* SetIntersectionIterator_Type */
 	{ "SetDifference", (DeeObject *)&librt_get_SetDifference, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                                   /* SetDifference_Type */
 	{ "SetDifferenceIterator", (DeeObject *)&librt_get_SetDifferenceIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                   /* SetDifferenceIterator_Type */
+	{ "SetInversion", (DeeObject *)&DeeSetInversion_Type, MODSYM_FREADONLY },
 
 	/* Internal types used to drive mapping proxies */
 	{ "MappingProxy", (DeeObject *)&librt_get_MappingProxy, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR,

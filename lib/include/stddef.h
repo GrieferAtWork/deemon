@@ -21,7 +21,7 @@
 #include "__cdefault.dee"
 
 #ifndef offsetof
-#define offsetof(t, m) size_t((t).ptr(none).deref.m.ref)
+#define offsetof(t, m) size_t((t).ptr(none).ind.m.ref)
 #endif
 
 #pragma push_macro(undef, "import", "from", "ctypes", "type", "none")

@@ -117,7 +117,7 @@ global final chattr_np = posix.chattr_np;
 @@>> print headof("bar.txt");        /* "" */
 @@>> print headof("/foo/bar.txt");   /* "/foo/" */
 @@>> print headof("C:/foo/bar.txt"); /* "C:/foo/" */
-final function headof(path: string): string {
+function headof(path: string): string {
 #ifdef __WINDOWS__
 	local pos = path.rfindany("/\\");
 	if (pos is none)
@@ -134,7 +134,7 @@ final function headof(path: string): string {
 @@>> print tailof("bar.txt");        /* "bar.txt" */
 @@>> print tailof("/foo/bar.txt");   /* "bar.txt" */
 @@>> print tailof("C:/foo/bar.txt"); /* "bar.txt" */
-final function tailof(path: string): string {
+function tailof(path: string): string {
 #ifdef __WINDOWS__
 	local pos = path.rfindany("/\\");
 	if (pos is none)
@@ -151,7 +151,7 @@ final function tailof(path: string): string {
 @@>> print fileof("bar.txt");        /* "bar" */
 @@>> print fileof("/foo/bar.txt");   /* "bar" */
 @@>> print fileof("C:/foo/bar.txt"); /* "bar" */
-final function fileof(path: string): string {
+function fileof(path: string): string {
 	local tail = tailof(path);
 	local pos = tail.rfind(".");
 	if (pos == -1)
@@ -165,7 +165,7 @@ final function fileof(path: string): string {
 @@>> print extof("bar.txt");        /* ".txt" */
 @@>> print extof("/foo/bar.txt");   /* ".txt" */
 @@>> print extof("C:/foo/bar.txt"); /* ".txt" */
-final function extof(path: string): string {
+function extof(path: string): string {
 	local pos = path.rfind(".");
 	if (pos == -1)
 		return "";
@@ -184,7 +184,7 @@ final function extof(path: string): string {
 @@>> print driveof(\"bar.txt\");        /* "\\" or "/" */
 @@>> print driveof(\"/foo/bar.txt\");   /* "\\" or "/" */
 @@>> print driveof(\"C:/foo/bar.txt\"); /* "C:/" or "/" */
-final function driveof(path: string): string {
+function driveof(path: string): string {
 #ifdef __WINDOWS__
 	local pos = path.find(":");
 	if (pos == -1)
@@ -205,7 +205,7 @@ final function driveof(path: string): string {
 @@print inctrail("");          /* "/"  or "\\" */
 @@print inctrail("/foo/bar/"); /* "/foo/bar/" */
 @@print inctrail("/foo/bar");  /* "/foo/bar/" */
-final function inctrail(path: string): string {
+function inctrail(path: string): string {
 #ifdef __WINDOWS__
 	if (!path)
 		return "\\";
@@ -224,7 +224,7 @@ final function inctrail(path: string): string {
 @@>> import exctrail from fs;
 @@>> print exctrail("/foo/bar/"); /* "/foo/bar" */
 @@>> print exctrail("/foo/bar");  /* "/foo/bar" */
-final function exctrail(path: string): string {
+function exctrail(path: string): string {
 #ifdef __WINDOWS__
 	if (!path || path.last !in "/\\")
 		return path;
@@ -252,18 +252,18 @@ final function exctrail(path: string): string {
 
 
 @@Returns @true if the given @path is considered to be absolute
-final function isabs(path: string): bool {
+function isabs(path: string): bool {
 	return _ISABS(path);
 }
 
 @@Returns the inverse of @isabs
-final function isrel(path: string): bool {
+function isrel(path: string): bool {
 	return _ISREL(path);
 }
 
 @@Returns @true if the given @s is recognized as a path separator (Usually @"/" and/or @"\\")
 @@The host's primary and secondary separator values can be read from @SEP and @ALTSEP
-final function issep(s: string): bool {
+function issep(s: string): bool {
 	return _ISSEP(s);
 }
 
@@ -279,7 +279,7 @@ final function issep(s: string): bool {
 //TODO:@@
 //TODO:@@When running on a windows host, in the event that @path is located
 //TODO:@@on a different @driveof than @cwd, @path will be re-returned as is.
-//TODO:final function relpath(path: string, pwd: string = "."): string {
+//TODO:function relpath(path: string, pwd: string = "."): string {
 //TODO:	/* Quick check: Is the given path already relative? */
 //TODO:	if (_ISREL(path)) {
 //TODO:		if (pwd == ".")
@@ -332,8 +332,6 @@ function joinpath(paths...: string): string {
 	return result;
 }
 
-
-
 class dir: Sequence {
 	@@The internal posix-DIR object.
 	private member m_dir: posix.DIR;
@@ -366,4 +364,3 @@ class query: dir {
 		}
 	}
 }
-

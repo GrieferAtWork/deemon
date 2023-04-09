@@ -63,7 +63,7 @@ struct Dee_traceback_object {
 	                                                               * [OVERRIDE([*].cf_stack, [(!= NULL) == (cf_stacksz == 0)][0..cf_stacksz][owned])]
 	                                                               * [OVERRIDE([*].cf_stacksz, [(!= 0) == (cf_sp != NULL)])] Vector of copied frames.
 	                                                               * NOTE: The stack vectors of frames are duplicated as the stack is unwound.
-	                                                               *       Frames who's stack has yet to be duplicated have a `cf_sp = cf_stack = NULL', `cf_stacksz = 0'. */
+	                                                               *       Frames whose stack has yet to be duplicated have `cf_sp = cf_stack = NULL', `cf_stacksz = 0'. */
 };
 
 #define DeeTraceback_LockAvailable(self)  Dee_atomic_lock_available(&(self)->tb_lock)

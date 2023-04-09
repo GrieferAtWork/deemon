@@ -20,7 +20,7 @@
 #pragma once
 #include "__stddef.dee"
 
-#pragma push_macro(undef, "from", "deemon", "import", "ipc")
+#pragma push_macro(undef, "from", "deemon", "import", "ipc", "class", "this", "super")
 from deemon import process_id = "int", process_return = "int";
 
 #pragma warning(push, "-Wno-quality")
@@ -47,4 +47,4 @@ class process: Process from ipc {
 		})...)
 	{}
 }
-#pragma pop_macro("from", "deemon", "import", "ipc")
+#pragma pop_macro("from", "deemon", "import", "ipc", "class", "this", "super")

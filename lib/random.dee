@@ -20,6 +20,8 @@
 import * from deemon;
 import * from errors;
 
+/* TODO: Implement a proper LCG */
+
 final local rand_map: {int...} = {
 	0x11e0ebcc, 0xa914eba6, 0xe400e438, 0xa6c4a4df,
 	0x0da46171, 0x4b9a27d1, 0x201910ae, 0x95e213cb,
@@ -96,22 +98,3 @@ class Random {
 	}
 
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

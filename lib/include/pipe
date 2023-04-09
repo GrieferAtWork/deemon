@@ -26,12 +26,12 @@
 	"return")
 
 class pipe {
-	@@A wrapper around :ipc:pipe.new for existing code that assumes
-	@@that it is possible to use :File.readline for reading from pipes
-	@@However changes in deemon's file implementation now require the
-	@@use of a buffer due to a dependency on the ungetc operator, meaning
+	@@A wrapper around @((Pipe from ipc).new) for existing code that assumes
+	@@that it is possible to use @((File from deemon).readline) for reading
+	@@from pipes. However, changes in deemon's file implementation now require
+	@@the use of a buffer due to a dependency on the `ungetc` operator, meaning
 	@@that in order to read from a pipe now, the user must wrap it within
-	@@a :File.Buffer object
+	@@a @((File from deemon).Buffer) object
 	class function new(__args...) {
 		import Pipe from ipc;
 		import File from deemon;

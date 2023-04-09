@@ -338,7 +338,7 @@ local final OPERATOR_DEFAULTS: {string: string} = {
 };
 
 local _knownIteratorSequenceTypes: {Type: string} = Dict();
-local final function getIteratorSequenceTypeDoc(typ: Type): string {
+local function getIteratorSequenceTypeDoc(typ: Type): string {
 	local result = _knownIteratorSequenceTypes.get(typ);
 	if (result is none) {
 		/* Check for a member `seq' and have the constructor
@@ -366,7 +366,7 @@ local final function getIteratorSequenceTypeDoc(typ: Type): string {
 }
 
 local _knownSequenceElementTypes: {Type: string} = Dict();
-local final function getIteratorElementTypeDoc(typ: Type): string {
+local function getIteratorElementTypeDoc(typ: Type): string {
 	local result = _knownSequenceElementTypes.get(typ);
 	if (result is none) {
 		/* (try to) Extract generic iterator element type.
@@ -393,7 +393,7 @@ local final function getIteratorElementTypeDoc(typ: Type): string {
 	return result;
 }
 
-local final function getNextTyperefStart(typeref: string, start: int): int {
+local function getNextTyperefStart(typeref: string, start: int): int {
 	assert typeref[start] == "?";
 	++start;
 	if (start >= #typeref)
@@ -439,7 +439,7 @@ local final function getNextTyperefStart(typeref: string, start: int): int {
 	return start;
 }
 
-local final function getDefaultOperatorWithType(typ: Type, name: string): string | none {
+local function getDefaultOperatorWithType(typ: Type, name: string): string | none {
 	local result = OPERATOR_DEFAULTS.get(name);
 	if (result !is none && "?*" in result) {
 		if (name == "constructor") {
@@ -4075,12 +4075,3 @@ set_is_type:
 	}
 
 }
-
-
-
-
-
-
-
-
-

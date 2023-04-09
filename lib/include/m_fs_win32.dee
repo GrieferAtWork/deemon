@@ -34,6 +34,5 @@ final global _systemwindowsdirectory = W32_IMPORT(GetSystemWindowsDirectory);
 final global _wsystemwindowsdirectory = _systemwindowsdirectory;
 final global _syswow64directory = W32_IMPORT(GetSystemWow64Directory);
 final global _wsyswow64directory = _syswow64directory;
-final global function drives() -> W32_IMPORT(GetLogicalDriveStrings)().rstrip("\0").split("\0");
+function drives() -> W32_IMPORT(GetLogicalDriveStrings)().rstrip("\0").split("\0");
 final global wdrives = drives;
-

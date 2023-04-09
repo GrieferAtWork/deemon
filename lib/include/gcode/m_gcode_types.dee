@@ -47,6 +47,3 @@ global final floatingNumbers = pack ctypes.float, ctypes.double, ctypes.ldouble;
 global final function   isSignedNum(a: Object): bool -> type a in   signedNumbers;
 global final function isUnSignedNum(a: Object): bool -> type a in unSignedNumbers;
 global final function isFloatingNum(a: Object): bool -> type a in floatingNumbers;
-
-
-

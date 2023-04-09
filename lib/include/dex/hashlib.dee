@@ -100,4 +100,3 @@ global class crc_hasher {
 }
 
 global crc = hashlib.hash;
-

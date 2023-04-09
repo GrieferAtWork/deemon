@@ -256,6 +256,3 @@ function encode(data, name: string, errors: string = "strict") {
 		return data.encode(name, errors);
 	return __encode(data, normalizeCodecName(name), errors);
 }
-
-
-

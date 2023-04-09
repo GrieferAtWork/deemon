@@ -18,7 +18,7 @@
  * 3. This notice may not be removed or altered from any source distribution. *
  */
 import util;
-import string, Sequence, Signal, Error, Object from deemon;
+import * from deemon;
 import util_attr = .m_util_attr;
 
 final global min = util.min;
@@ -28,9 +28,9 @@ final global all = util.all;
 final global any = util.any;
 final global sum = util.sum;
 final global chr = string.chr;
-final function ord(s) -> s.ord();
+function ord(s: string): int -> s.ord();
 final global sqr = util.sqr;
-final function len(seq) -> #seq;
+function len(seq: Sequence): int -> #seq;
 final global ceil = util.ceil;
 final global floor = util.floor;
 final global round = util.round;
@@ -38,23 +38,22 @@ final global range = Sequence.range;
 final global id = Object.id;
 final global zip = util.zip;
 final global enumerate = util.enumerate;
-final function swap(a, b) {
+function swap(a: Object, b: Object) {
 	local temp = copy(a);
 	a.operator move := (b);
 	b.operator move := (temp);
 }
 final global abs = util.abs;
 
-final function reduce(fun, iterable, initializer = none) {
+function reduce(fun: Callable, iterable: {Object...},
+                initializer: Object = none): Object {
 	local it = iterable.operator iter();
 	if (initializer is none) {
-		try initializer = it.operator next();
-		catch (Signal.StopIteration) {
-			// Error.TypeError
-			throw Error.TypeError(
-				"reduce() with empty Sequence and no initial value");
-		}
+		foreach (initializer: it.operator next())
+			goto got_init;
+		throw Error.TypeError("reduce() with empty Sequence and no initial value");
 	}
+got_init:
 	foreach (local x: it)
 		initializer = fun(initializer, x);
 	return initializer;

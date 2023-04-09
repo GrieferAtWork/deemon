@@ -20,7 +20,7 @@
 #pragma once
 #include "__stddef.dee"
 
-#pragma push_macro(undef, "from", "import", "final", "function", "float", "ceil", "util", "floor", "int", "round")
+#pragma push_macro(undef, "from", "import", "function", "float", "ceil", "util", "floor", "int", "round")
 from "math" import
 	__builtin_sin = "sin",
 	__builtin_cos = "cos",
@@ -92,9 +92,9 @@ from util import
 	__builtin_nearbyint = "round"
 ;
 
-final function rint(__x) -> (float from deemon)__builtin_round(__x);
-final function __builtin_ceilf(__x) -> (float from deemon)(ceil from util)(__x);
-final function __builtin_floorf(__x) -> (float from deemon)(floor from util)(__x);
-final function __builtin_truncf(__x) -> (float from deemon)(int from deemon)(__x);
-final function __builtin_roundf(__x) -> (float from deemon)(round from util)(__x);
-#pragma pop_macro("from", "import", "final", "function", "float", "ceil", "util", "floor", "int", "round")
+function rint(__x) -> (float from deemon)__builtin_round(__x);
+function __builtin_ceilf(__x) -> (float from deemon)(ceil from util)(__x);
+function __builtin_floorf(__x) -> (float from deemon)(floor from util)(__x);
+function __builtin_truncf(__x) -> (float from deemon)(int from deemon)(__x);
+function __builtin_roundf(__x) -> (float from deemon)(round from util)(__x);
+#pragma pop_macro("from", "import", "function", "float", "ceil", "util", "floor", "int", "round")

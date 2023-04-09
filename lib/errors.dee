@@ -75,4 +75,3 @@ final global			FileClosed = FSError.FileClosed;
 final global			CrossDeviceLink = FSError.CrossDeviceLink;
 final global			BusyFile = FSError.BusyFile;
 final global	AppExit = deemon.Error.AppExit;
-

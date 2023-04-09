@@ -614,7 +614,7 @@
 #define Dee_roset_item   roset_item
 #define Dee_roset_object roset_object
 
-#define Dee_inverse_set_object inverse_set_object
+#define Dee_set_inversion_object set_inversion_object
 
 #define Dee_ascii_printer   ascii_printer
 #define Dee_unicode_printer unicode_printer

@@ -27,4 +27,3 @@
 import tr1 = ".m_tr1";
 #pragma pop_macro("import")
 #endif /* !__tr1_defined */
-

@@ -20,14 +20,14 @@
 #pragma once
 #include "__stddef.dee"
 
-#pragma push_macro(undef, "final", "function", "none", "import", "ShLib", "from", "ctypes", "__stack", "local", "operator", "if", "is", "return")
-final function __builtin_extern(__f, __n, __t = none) {
+#pragma push_macro(undef, "function", "none", "import", "ShLib", "from", "ctypes", "__stack", "local", "operator", "if", "is", "return")
+function __builtin_extern(__f, __n, __t = none) {
 	import ShLib from ctypes;
 	__stack local __res = ShLib(__f).operator . (__n);
 	if (__t !is none)
 		__res = __t(__res);
 	return __res;
 }
-#pragma pop_macro("final", "function", "none", "import", "ShLib", "from", "ctypes", "__stack", "local", "operator", "if", "is", "return")
+#pragma pop_macro("function", "none", "import", "ShLib", "from", "ctypes", "__stack", "local", "operator", "if", "is", "return")
 
 
