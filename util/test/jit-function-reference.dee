@@ -1,0 +1,154 @@
+#!/usr/bin/deemon
+/* Copyright (c) 2018-2023 Griefer@Work                                       *
+ *                                                                            *
+ * This software is provided 'as-is', without any express or implied          *
+ * warranty. In no event will the authors be held liable for any damages      *
+ * arising from the use of this software.                                     *
+ *                                                                            *
+ * Permission is granted to anyone to use this software for any purpose,      *
+ * including commercial applications, and to alter it and redistribute it     *
+ * freely, subject to the following restrictions:                             *
+ *                                                                            *
+ * 1. The origin of this software must not be misrepresented; you must not    *
+ *    claim that you wrote the original software. If you use this software    *
+ *    in a product, an acknowledgement (see the following) in the product     *
+ *    documentation is required:                                              *
+ *    Portions Copyright (c) 2018-2023 Griefer@Work                           *
+ * 2. Altered source versions must be plainly marked as such, and must not be *
+ *    misrepresented as being the original software.                          *
+ * 3. This notice may not be removed or altered from any source distribution. *
+ */
+
+import * from deemon;
+
+function doExec(args..., **kwds) {
+	try {
+		return exec(args..., **kwds);
+	} catch (...) {
+		print File.stderr: "While executing:", repr args.first;
+		throw;
+	}
+}
+
+function doExecCall(args..., **kwds) {
+	try {
+		return exec(args..., **kwds)();
+	} catch (...) {
+		print File.stderr: "While executing:", repr args.first;
+		throw;
+	}
+}
+
+function doExecCall42(args..., **kwds) {
+	try {
+		local func = exec(args..., **kwds);
+		assert func() == 42;
+		assert func.__refs__ == { 42 };
+		assert func.__refsbyname__ == { "x": 42 };
+	} catch (...) {
+		print File.stderr: "While executing:", repr args.first;
+		throw;
+	}
+}
+
+function assertAlwaysCorrectlyReferenced(expr: string) {
+	/* Ensure that JIT function parses are always able to correctly identify
+	 * references made by a function to a variable declared outside of that
+	 * function. */
+	doExecCall42(f'local x = 42; function foo() \{ return {expr}; \}');
+	doExecCall42(f'local x = 42; function foo() -> {expr};');
+	doExecCall42(f'local x = 42; () -> \{ return {expr}; \};');
+	doExecCall42(f'local x = 42; () -> {expr};');
+	assert 42 == doExec(f'local x = 42; function foo() \{ return {expr}; \} foo();');
+	assert 42 == doExec(f'local x = 42; function foo() -> {expr}; foo();');
+	assert 42 == doExec(f'local x = 42; (() -> \{ return {expr}; \})();');
+	assert 42 == doExec(f'local x = 42; (() -> {expr})();');
+
+	/* Also ensure that overriding a variable locally works correctly,
+	 * and doesn't randomly end up overriding the value of the outer
+	 * variable. */
+	local globals = Dict();
+	assert 24 == doExecCall(f'local x = 42; function bar() -> x; function foo() \{ local x = 24; return {expr}; \}', globals: globals);
+	assert globals["bar"]() == 42;
+	assert 24 == doExecCall(f'local x = 42; function bar() -> x; function foo() -> (\{ local x = 24; {expr}; \});', globals: globals);
+	assert globals["bar"]() == 42;
+	assert 24 == doExecCall(f'local x = 42; function bar() -> x; () -> \{ local x = 24; return {expr}; \};', globals: globals);
+	assert globals["bar"]() == 42;
+	assert 24 == doExecCall(f'local x = 42; function bar() -> x; () -> (\{ local x = 24; {expr}; \});', globals: globals);
+	assert globals["bar"]() == 42;
+	assert 24 == doExec(f'local x = 42; function bar() -> x; function foo() \{ local x = 24; return {expr}; \} foo();', globals: globals);
+	assert globals["bar"]() == 42;
+	assert 24 == doExec(f'local x = 42; function bar() -> x; function foo() -> (\{ local x = 24; {expr}; \}); foo();', globals: globals);
+	assert globals["bar"]() == 42;
+	assert 24 == doExec(f'local x = 42; function bar() -> x; (() -> \{ local x = 24; return {expr}; \})();', globals: globals);
+	assert globals["bar"]() == 42;
+	assert 24 == doExec(f'local x = 42; function bar() -> x; (() -> (\{ local x = 24; {expr}; \}))();', globals: globals);
+	assert globals["bar"]() == 42;
+
+	/* Also ensure that all of this works with global variables. */
+	local globals = Dict();
+	assert 24 == doExecCall(f'global x = 42; function bar() -> x; function foo() \{ local x = 24; return {expr}; \}', globals: globals);
+	assert globals["bar"]() == 42;
+	assert globals["x"] == 42;
+	assert 24 == doExecCall(f'global x = 42; function bar() -> x; function foo() -> (\{ local x = 24; {expr}; \});', globals: globals);
+	assert globals["bar"]() == 42;
+	assert globals["x"] == 42;
+	assert 24 == doExecCall(f'global x = 42; function bar() -> x; () -> \{ local x = 24; return {expr}; \};', globals: globals);
+	assert globals["bar"]() == 42;
+	assert globals["x"] == 42;
+	assert 24 == doExecCall(f'global x = 42; function bar() -> x; () -> (\{ local x = 24; {expr}; \});', globals: globals);
+	assert globals["bar"]() == 42;
+	assert globals["x"] == 42;
+	assert 24 == doExec(f'global x = 42; function bar() -> x; function foo() \{ local x = 24; return {expr}; \} foo();', globals: globals);
+	assert globals["bar"]() == 42;
+	assert globals["x"] == 42;
+	assert 24 == doExec(f'global x = 42; function bar() -> x; function foo() -> (\{ local x = 24; {expr}; \}); foo();', globals: globals);
+	assert globals["bar"]() == 42;
+	assert globals["x"] == 42;
+	assert 24 == doExec(f'global x = 42; function bar() -> x; (() -> \{ local x = 24; return {expr}; \})();', globals: globals);
+	assert globals["bar"]() == 42;
+	assert globals["x"] == 42;
+	assert 24 == doExec(f'global x = 42; function bar() -> x; (() -> (\{ local x = 24; {expr}; \}))();', globals: globals);
+	assert globals["bar"]() == 42;
+	assert globals["x"] == 42;
+}
+
+function assertAlwaysCorrectlyReferenced2(expr: string) {
+	assertAlwaysCorrectlyReferenced(expr);
+	assertAlwaysCorrectlyReferenced(f'({expr})');
+	assertAlwaysCorrectlyReferenced(f'(\{ {expr}; \})');
+	assertAlwaysCorrectlyReferenced(f'(\{ ; {expr}; \})');
+	assertAlwaysCorrectlyReferenced(f'copy {expr}');
+	assertAlwaysCorrectlyReferenced(f'copy({expr})');
+	assertAlwaysCorrectlyReferenced(f'copy(\{ {expr}; \})');
+	assertAlwaysCorrectlyReferenced(f'copy(\{ ; {expr}; \})');
+}
+
+function assertAlwaysCorrectlyReferenced3(expr: string) {
+	assertAlwaysCorrectlyReferenced2(expr);
+	assertAlwaysCorrectlyReferenced2(f'{expr} + 0');
+	assertAlwaysCorrectlyReferenced2(f'0 + {expr}');
+}
+
+/* Try different complicated ways to reference a variable */
+assertAlwaysCorrectlyReferenced3(r'x');
+assertAlwaysCorrectlyReferenced3(r'1 ? x');
+assertAlwaysCorrectlyReferenced3(r'1 ? x : none');
+assertAlwaysCorrectlyReferenced3(r'0 ?: x');
+assertAlwaysCorrectlyReferenced3(r'0 ? none : x');
+assertAlwaysCorrectlyReferenced3(r'pack(x).first');
+assertAlwaysCorrectlyReferenced3(r'[x][0]');
+assertAlwaysCorrectlyReferenced3(r'[x].first');
+assertAlwaysCorrectlyReferenced3(r'({x})[0]');
+assertAlwaysCorrectlyReferenced3(r'({x}).first');
+assertAlwaysCorrectlyReferenced3(r'(x,)[0]');
+assertAlwaysCorrectlyReferenced3(r'(x,).first');
+assertAlwaysCorrectlyReferenced3(r'if (1) x');
+
+/* vvv this wouldn't work because `local x = 24; if (1) x else none'
+ *     gets compiled as "if (1) local else = x()<compiler-error-here>none".
+ *     Furthermore, since JIT executes as it compiles, we wouldn't even get
+ *     to see the compiler error, as `x()' will already fail with an error:
+ *     >> NotImplemented: Operator `int.__call__' is not implemented */
+/* assertAlwaysCorrectlyReferenced3(r'if (1) x else none'); */
+

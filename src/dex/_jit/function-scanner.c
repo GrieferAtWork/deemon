@@ -399,7 +399,7 @@ do_yield_suffix:
 		/* Check for java-style lambdas */
 		{
 			unsigned char *saved;
-			saved = self->jl_tokend;
+			saved = self->jl_tokstart;
 			JITLexer_SkipParamList(self);
 			if (self->jl_tok == TOK_ARROW) {
 				unsigned int old_flags;
@@ -421,8 +421,8 @@ do_handle_java_lambda:
 				if (JITLexer_SkipTypeAnnotation(self, false) == 0 &&
 				    self->jl_tok == TOK_ARROW)
 					goto do_handle_java_lambda;
-				JITLexer_YieldAt(self, saved);
 			}
+			JITLexer_YieldAt(self, saved);
 		}
 
 		/* Check for special case: empty tuple */

@@ -499,6 +499,7 @@ err_no_keyword_for_argument:
 	lex.jl_scandata.jl_function = result;
 	lex.jl_scandata.jl_parobtab = parent_object_table;
 	lex.jl_scandata.jl_flags    = JIT_SCANDATA_FNORMAL;
+
 	/* Scan the source code of the function for yield statements, as
 	 * well as references to symbols found outside of the function. */
 	while (lex.jl_tok) {
@@ -509,9 +510,11 @@ err_no_keyword_for_argument:
 		} else {
 			JITLexer_ScanStatement(&lex);
 		}
+
 		/* Check for scanning errors. */
 		if (lex.jl_scandata.jl_flags & JIT_SCANDATA_FERROR)
 			goto err_r;
+
 		/* Force-advance to the next token if we're hung up on the current one. */
 		if (stmt_start == lex.jl_tokstart) {
 #if 0

@@ -766,7 +766,7 @@ done_expression_nomerge:
 		} else {
 			syn_expr_expected_semi_after_expr(self);
 /*err_clear_current_only:*/
-			DECREF(current);
+			DECREF_MAYBE_LVALUE(current);
 			current = ERROR;
 		}
 	}

@@ -49,6 +49,8 @@ INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL jf_getname(JITFunction *__rest
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL jf_getdoc(JITFunction *__restrict self);
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL jf_getkwds(JITFunction *__restrict self);
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL jf_gettext(JITFunction *__restrict self);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL jf_getrefs(JITFunction *__restrict self);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL jf_getrefsbyname(JITFunction *__restrict self);
 
 
 INTERN void DCALL
@@ -246,6 +248,16 @@ jy_gettext(JITYieldFunction *__restrict self) {
 	return jf_gettext(self->jy_func);
 }
 
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+jy_getrefs(JITYieldFunction *__restrict self) {
+	return jf_getrefs(self->jy_func);
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+jy_getrefsbyname(JITYieldFunction *__restrict self) {
+	return jf_getrefsbyname(self->jy_func);
+}
+
 PRIVATE struct type_getset tpconst jy_getsets[] = {
 	TYPE_GETTER("__name__", &jy_getname,
 	            "->?X2?Dstring?N\n"
@@ -262,7 +274,12 @@ PRIVATE struct type_getset tpconst jy_getsets[] = {
 	TYPE_GETTER("__args__", &jy_getargs,
 	            "->?S?O\n"
 	            "Returns a sequence representing the positional arguments passed to the function"),
-	/* TODO: __refs__ */
+	TYPE_GETTER("__refs__", &jy_getrefs,
+	            "->?S?O\n"
+	            "Alias for ?A__refs__?GFunction though ?#__func__"),
+	TYPE_GETTER("__refsbyname__", &jy_getrefsbyname,
+	            "->?S?T2?Dstring?O\n"
+	            "Alias for ?A__refsbyname__?GFunction though ?#__func__"),
 	TYPE_GETSET_END
 };
 
@@ -1888,6 +1905,16 @@ ji_gettext(JITYieldFunctionIterator *__restrict self) {
 	return jf_gettext(self->ji_func->jy_func);
 }
 
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+ji_getrefs(JITYieldFunctionIterator *__restrict self) {
+	return jf_getrefs(self->ji_func->jy_func);
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+ji_getrefsbyname(JITYieldFunctionIterator *__restrict self) {
+	return jf_getrefsbyname(self->ji_func->jy_func);
+}
+
 
 PRIVATE struct type_getset tpconst ji_getsets[] = {
 	TYPE_GETTER("__func__", &ji_getfunc,
@@ -1908,7 +1935,12 @@ PRIVATE struct type_getset tpconst ji_getsets[] = {
 	TYPE_GETTER("__text__", &ji_gettext,
 	            "->?Dstring\n"
 	            "Alias for ?A__text__?GFunction though ?#__func__"),
-	/* TODO: __refs__ */
+	TYPE_GETTER("__refs__", &ji_getrefs,
+	            "->?S?O\n"
+	            "Alias for ?A__refs__?GFunction though ?#__func__"),
+	TYPE_GETTER("__refsbyname__", &ji_getrefsbyname,
+	            "->?S?T2?Dstring?O\n"
+	            "Alias for ?A__refsbyname__?GFunction though ?#__func__"),
 	TYPE_GETSET_END
 };
 

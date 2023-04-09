@@ -351,6 +351,7 @@ H_FUNC(If)(JITLexer *__restrict self, JIT_ARGS) {
 	ASSERT(JITLexer_ISKWD(self, "if"));
 do_if_statement:
 	JITLexer_Yield(self);
+	/* TODO: Support for `pack' */
 	if likely(self->jl_tok == '(') {
 		JITLexer_Yield(self);
 	} else {
@@ -396,8 +397,10 @@ do_if_statement:
 				if (JITLexer_ISTOK(self, "else")) {
 					JITLexer_Yield(self);
 do_else_branch:
-					if (SKIP_SECONDARY(self, pwas_expression))
-						goto err_scope_r;
+					if (SKIP_SECONDARY(self, pwas_expression)) {
+						DECREF_MAYBE_LVALUE(result);
+						goto err_scope;
+					}
 				}
 			}
 		} else
