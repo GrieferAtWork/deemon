@@ -12196,7 +12196,7 @@ err:
 }
 
 
-PUBLIC WUNUSED NONNULL((1)) dssize_t DCALL
+PUBLIC WUNUSED NONNULL((1)) size_t DCALL
 Dee_unicode_printer_memchr(struct unicode_printer *__restrict self,
                            uint32_t chr, size_t start, size_t length) {
 	union dcharptr ptr, str;
@@ -12232,12 +12232,12 @@ Dee_unicode_printer_memchr(struct unicode_printer *__restrict self,
 		result = (size_t)(ptr.cp32 - str.cp32);
 		break;
 	}
-	return (dssize_t)result;
+	return result;
 not_found:
-	return -1;
+	return (size_t)-1;
 }
 
-PUBLIC WUNUSED NONNULL((1)) dssize_t DCALL
+PUBLIC WUNUSED NONNULL((1)) size_t DCALL
 Dee_unicode_printer_memrchr(struct unicode_printer *__restrict self,
                             uint32_t chr, size_t start, size_t length) {
 	union dcharptr ptr, str;
@@ -12273,9 +12273,9 @@ Dee_unicode_printer_memrchr(struct unicode_printer *__restrict self,
 		result = (size_t)(ptr.cp32 - str.cp32);
 		break;
 	}
-	return (dssize_t)result;
+	return result;
 not_found:
-	return -1;
+	return (size_t)-1;
 }
 
 PUBLIC void (DCALL Dee_unicode_printer_memmove)(struct unicode_printer *__restrict self,

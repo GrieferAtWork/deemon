@@ -245,7 +245,7 @@ next:
 		/* Analyze the last path portion for being a special name (`.' or `..') */
 		if (flush_end[-1] == '.') {
 			if (flush_end[-2] == '.' && flush_end - 2 == flush_start) {
-				dssize_t new_end;
+				size_t new_end;
 				size_t printer_length;
 				/* Parent-directory-reference. */
 				/* Delete the last directory that was written. */
@@ -257,12 +257,12 @@ next:
 				if (UNICODE_PRINTER_GETCHAR(&printer, printer_length - 1) == DeeSystem_SEP)
 					--printer_length;
 				new_end = unicode_printer_memrchr(&printer, DeeSystem_SEP, 0, printer_length);
-				if (new_end < 0)
+				if (new_end == (size_t)-1)
 					goto do_flush_after_sep;
 				++new_end;
 				/* Truncate the valid length of the printer to after the previous slash. */
-				printer.up_length = (size_t)new_end;
-				unicode_printer_truncate(&printer, (size_t)new_end);
+				printer.up_length = new_end;
+				unicode_printer_truncate(&printer, new_end);
 				goto done_flush;
 			} else if (flush_end[-3] == DeeSystem_SEP && flush_end - 3 >= flush_start) {
 				/* Parent-directory-reference. */

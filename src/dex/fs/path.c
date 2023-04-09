@@ -1120,7 +1120,7 @@ print_env:
 					goto do_flush_after_sep;
 				if (UNICODE_PRINTER_GETCHAR(&printer, printer_length - 1) == DeeSystem_SEP)
 					--printer_length;
-				new_end = (size_t)unicode_printer_memrchr(&printer, DeeSystem_SEP, 0, printer_length);
+				new_end = unicode_printer_memrchr(&printer, DeeSystem_SEP, 0, printer_length);
 				if (new_end == (size_t)-1)
 					goto do_flush_after_sep;
 				++new_end;
