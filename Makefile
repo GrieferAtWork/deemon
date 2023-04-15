@@ -101,3 +101,7 @@ endif
 .DEFAULT_GOAL := all
 
 
+# Misc script invocations
+vs-proj:
+	./deemon util/make-vs-proj.dee
+.PHONY: vs-proj

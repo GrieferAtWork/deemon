@@ -19,12 +19,12 @@
  */
 #ifdef __INTELLISENSE__
 #include "futex.c"
-//#define DEFINE_DeeFutex_Wait32
+#define DEFINE_DeeFutex_Wait32
 //#define DEFINE_DeeFutex_Wait64
 //#define DEFINE_DeeFutex_Wait32Timed
 //#define DEFINE_DeeFutex_Wait64Timed
 //#define DEFINE_DeeFutex_Wait32NoInt
-#define DEFINE_DeeFutex_Wait64NoInt
+//#define DEFINE_DeeFutex_Wait64NoInt
 //#define DEFINE_DeeFutex_Wait32NoIntTimed
 //#define DEFINE_DeeFutex_Wait64NoIntTimed
 #endif /* __INTELLISENSE__ */
