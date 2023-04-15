@@ -657,6 +657,63 @@ do_wait_with_timeout:
 /* Recursive shared lock (scheduler-level blocking lock)                */
 /************************************************************************/
 
+/* Block until successfully acquired a recursive shared lock. (does not check for interrupts) */
+PUBLIC NONNULL((1)) void DCALL
+Dee_rshared_lock_acquire_noint(Dee_rshared_lock_t *__restrict self) {
+	unsigned int lockword;
+	lockword = atomic_read(&self->rs_lock.ra_lock);
+	if (lockword == 0) {
+		if (!atomic_cmpxch_explicit(&self->rs_lock.ra_lock, 0, 1, __ATOMIC_ACQUIRE, __ATOMIC_ACQUIRE))
+			goto waitfor;
+settid:
+		self->rs_lock.ra_tid = __hybrid_gettid();
+		return;
+	}
+	if (__hybrid_gettid_iscaller(self->rs_lock.ra_tid)) {
+		atomic_inc_explicit(&self->rs_lock.ra_lock, __ATOMIC_ACQUIRE);
+		return;
+	}
+waitfor:
+	_Dee_rshared_lock_waiting_start(self);
+	do {
+		DeeFutex_WaitIntNoInt(&self->rs_lock.ra_lock, lockword);
+	} while (!atomic_cmpxch_explicit(&self->rs_lock.ra_lock, 0, 1, __ATOMIC_ACQUIRE, __ATOMIC_ACQUIRE));
+	_Dee_rshared_lock_waiting_end(self);
+	goto settid;
+}
+
+/* Block until successfully acquired a recursive shared lock.
+ * @return: 0 : Success.
+ * @return: -1: An exception was thrown. */
+PUBLIC WUNUSED NONNULL((1)) int DCALL
+Dee_rshared_lock_acquire(Dee_rshared_lock_t *__restrict self) {
+	int result;
+	unsigned int lockword;
+	lockword = atomic_read(&self->rs_lock.ra_lock);
+	if (lockword == 0) {
+		if (!atomic_cmpxch_explicit(&self->rs_lock.ra_lock, 0, 1, __ATOMIC_ACQUIRE, __ATOMIC_ACQUIRE))
+			goto waitfor;
+settid:
+		self->rs_lock.ra_tid = __hybrid_gettid();
+		return 0;
+	}
+	if (__hybrid_gettid_iscaller(self->rs_lock.ra_tid)) {
+		atomic_inc_explicit(&self->rs_lock.ra_lock, __ATOMIC_ACQUIRE);
+		return 0;
+	}
+waitfor:
+	_Dee_rshared_lock_waiting_start(self);
+	do {
+		result = DeeFutex_WaitInt(&self->rs_lock.ra_lock, lockword);
+		if unlikely(result != 0) {
+			_Dee_rshared_lock_waiting_end(self);
+			return result;
+		}
+	} while (!atomic_cmpxch_explicit(&self->rs_lock.ra_lock, 0, 1, __ATOMIC_ACQUIRE, __ATOMIC_ACQUIRE));
+	_Dee_rshared_lock_waiting_end(self);
+	goto settid;
+}
+
 /* Block until successfully acquired a recursive shared lock.
  * @return: 1 : Timeout expired.
  * @return: 0 : Success.
@@ -664,6 +721,12 @@ do_wait_with_timeout:
 PUBLIC WUNUSED NONNULL((1)) int DCALL
 Dee_rshared_lock_acquire_timed(Dee_rshared_lock_t *__restrict self,
                                uint64_t timeout_nanoseconds) {
+#ifdef CONFIG_NO_THREADS
+	COMPILER_IMPURE();
+	(void)self;
+	(void)timeout_nanoseconds;
+	return 0;
+#else /* CONFIG_NO_THREADS */
 	int result;
 	unsigned int lockword;
 	uint64_t now_microseconds, then_microseconds;
@@ -715,11 +778,18 @@ do_wait_with_timeout:
 		return 1; /* Timeout */
 	timeout_nanoseconds *= 1000;
 	goto do_wait_with_timeout;
+#endif /* !CONFIG_NO_THREADS */
 }
 
 PUBLIC WUNUSED NONNULL((1)) int DCALL
 Dee_rshared_lock_waitfor_timed(Dee_rshared_lock_t *__restrict self,
                                uint64_t timeout_nanoseconds) {
+#ifdef CONFIG_NO_THREADS
+	COMPILER_IMPURE();
+	(void)self;
+	(void)timeout_nanoseconds;
+	return 0;
+#else /* CONFIG_NO_THREADS */
 	int result;
 	unsigned int lockword;
 	uint64_t now_microseconds, then_microseconds;
@@ -758,6 +828,7 @@ do_wait_with_timeout:
 		return 1; /* Timeout */
 	timeout_nanoseconds *= 1000;
 	goto do_wait_with_timeout;
+#endif /* !CONFIG_NO_THREADS */
 }
 
 
@@ -768,6 +839,195 @@ do_wait_with_timeout:
 /* Recursive shared rwlock (scheduler-level blocking lock)              */
 /************************************************************************/
 
+/* Release a write-lock
+ * @return: true:  All locks have now been released
+ * @return: false: You're still holding more write-locks */
+PUBLIC NONNULL((1)) bool
+(DCALL Dee_rshared_rwlock_endwrite_ex)(Dee_rshared_rwlock_t *__restrict self) {
+#ifdef CONFIG_NO_THREADS
+	COMPILER_IMPURE();
+	(void)self;
+	return true;
+#else /* CONFIG_NO_THREADS */
+	if (Dee_ratomic_rwlock_endwrite_ex(&self->rsrw_lock)) {
+		_Dee_rshared_rwlock_wake(self);
+		return true;
+	}
+	return false;
+#endif /* !CONFIG_NO_THREADS */
+}
+
+/* Release a read-lock
+ * @return: true:  All locks have now been released
+ * @return: false: You're still holding more read-locks */
+PUBLIC NONNULL((1)) bool DCALL
+Dee_rshared_rwlock_endread_ex(Dee_rshared_rwlock_t *__restrict self) {
+#ifdef CONFIG_NO_THREADS
+	COMPILER_IMPURE();
+	(void)self;
+	return true;
+#else /* CONFIG_NO_THREADS */
+	uintptr_t lockword;
+	lockword = atomic_read(&self->rsrw_lock.rarw_lock.arw_lock);
+	if (lockword == (uintptr_t)-1) {
+		Dee_ASSERTF(__hybrid_gettid_iscaller(self->rsrw_lock.rarw_tid),
+		            "You're not the write-holder, so you couldn't have done read-after-write");
+		Dee_ASSERTF(self->rsrw_lock.rarw_nwrite > 0,
+		            "No recursive write-locks, so this can't be read-after-write");
+		--self->rsrw_lock.rarw_nwrite;
+	} else {
+		Dee_ASSERTF(lockword != 0, "No lock are held");
+		lockword = atomic_fetchdec_explicit(&self->rsrw_lock.rarw_lock.arw_lock, __ATOMIC_RELEASE);
+		Dee_ASSERTF(lockword != 0, "No lock are held (race)");
+		if (lockword == 1) {
+			_Dee_rshared_rwlock_wake(self); /* Last read-lock went away */
+			return true;
+		}
+	}
+	return false;
+#endif /* !CONFIG_NO_THREADS */
+}
+
+/* Acquire a read-lock to `self' (does not check for interrupts) */
+PUBLIC NONNULL((1)) void DCALL
+Dee_rshared_rwlock_read_noint(Dee_rshared_rwlock_t *__restrict self) {
+#ifdef CONFIG_NO_THREADS
+	COMPILER_IMPURE();
+	(void)self;
+#else /* CONFIG_NO_THREADS */
+	uintptr_t lockword;
+again:
+	lockword = atomic_read(&self->rsrw_lock.rarw_lock.arw_lock);
+	if (lockword != (uintptr_t)-1) {
+again_lockword_not_UINTPTR_MAX:
+		Dee_ASSERTF(lockword != (uintptr_t)-2, "Too many read-locks");
+		if (atomic_cmpxch_weak_explicit(&self->rsrw_lock.rarw_lock.arw_lock,
+		                                lockword, lockword + 1,
+		                                __ATOMIC_ACQUIRE, __ATOMIC_ACQUIRE))
+			return;
+		goto again;
+	}
+	if (__hybrid_gettid_iscaller(self->rsrw_lock.rarw_tid)) {
+		/* Special case for read-after-write */
+		++self->rsrw_lock.rarw_nwrite;
+		return;
+	}
+	do {
+		_Dee_rshared_rwlock_mark_waiting(self);
+		DeeFutex_WaitPtrNoInt(&self->rsrw_lock.rarw_lock.arw_lock, lockword);
+	} while ((lockword = atomic_read(&self->rsrw_lock.rarw_lock.arw_lock)) == (uintptr_t)-1);
+	goto again_lockword_not_UINTPTR_MAX;
+#endif /* !CONFIG_NO_THREADS */
+}
+
+/* Acquire a write-lock to `self' (does not check for interrupts) */
+PUBLIC NONNULL((1)) void DCALL
+Dee_rshared_rwlock_write_noint(Dee_rshared_rwlock_t *__restrict self) {
+#ifdef CONFIG_NO_THREADS
+	COMPILER_IMPURE();
+	(void)self;
+#else /* CONFIG_NO_THREADS */
+	uintptr_t lockword;
+again:
+	lockword = atomic_read(&self->rsrw_lock.rarw_lock.arw_lock);
+	if (lockword == 0) {
+again_lockword_zero:
+		if (!atomic_cmpxch_weak_explicit(&self->rsrw_lock.rarw_lock.arw_lock, 0, (uintptr_t)-1,
+		                                 __ATOMIC_ACQUIRE, __ATOMIC_ACQUIRE))
+			goto again;
+		self->rsrw_lock.rarw_tid = __hybrid_gettid();
+		return;
+	}
+	if (lockword == (uintptr_t)-1) {
+		if (__hybrid_gettid_iscaller(self->rsrw_lock.rarw_tid)) {
+			++self->rsrw_lock.rarw_nwrite;
+			return;
+		}
+	}
+	do {
+		_Dee_rshared_rwlock_mark_waiting(self);
+		DeeFutex_WaitPtrNoInt(&self->rsrw_lock.rarw_lock.arw_lock, lockword);
+	} while ((lockword = atomic_read(&self->rsrw_lock.rarw_lock.arw_lock)) != 0);
+	goto again_lockword_zero;
+#endif /* !CONFIG_NO_THREADS */
+}
+
+/* Acquire a read-lock to `self'
+ * @return: 0 : Success
+ * @return: -1: An exception was thrown. */
+PUBLIC WUNUSED NONNULL((1)) int DCALL
+Dee_rshared_rwlock_read(Dee_rshared_rwlock_t *__restrict self) {
+#ifdef CONFIG_NO_THREADS
+	COMPILER_IMPURE();
+	(void)self;
+	return 0;
+#else /* CONFIG_NO_THREADS */
+	uintptr_t lockword;
+again:
+	lockword = atomic_read(&self->rsrw_lock.rarw_lock.arw_lock);
+	if (lockword != (uintptr_t)-1) {
+again_lockword_not_UINTPTR_MAX:
+		Dee_ASSERTF(lockword != (uintptr_t)-2, "Too many read-locks");
+		if (atomic_cmpxch_weak_explicit(&self->rsrw_lock.rarw_lock.arw_lock,
+		                                lockword, lockword + 1,
+		                                __ATOMIC_ACQUIRE, __ATOMIC_ACQUIRE))
+			return 0;
+		goto again;
+	}
+	if (__hybrid_gettid_iscaller(self->rsrw_lock.rarw_tid)) {
+		/* Special case for read-after-write */
+		++self->rsrw_lock.rarw_nwrite;
+		return 0;
+	}
+	do {
+		int result;
+		_Dee_rshared_rwlock_mark_waiting(self);
+		result = DeeFutex_WaitPtr(&self->rsrw_lock.rarw_lock.arw_lock, lockword);
+		if unlikely(result != 0)
+			return result;
+	} while ((lockword = atomic_read(&self->rsrw_lock.rarw_lock.arw_lock)) == (uintptr_t)-1);
+	goto again_lockword_not_UINTPTR_MAX;
+#endif /* !CONFIG_NO_THREADS */
+}
+
+/* Acquire a write-lock to `self'
+ * @return: 0 : Success
+ * @return: -1: An exception was thrown. */
+PUBLIC WUNUSED NONNULL((1)) int DCALL
+Dee_rshared_rwlock_write(Dee_rshared_rwlock_t *__restrict self) {
+#ifdef CONFIG_NO_THREADS
+	COMPILER_IMPURE();
+	(void)self;
+	return 0;
+#else /* CONFIG_NO_THREADS */
+	uintptr_t lockword;
+again:
+	lockword = atomic_read(&self->rsrw_lock.rarw_lock.arw_lock);
+	if (lockword == 0) {
+again_lockword_zero:
+		if (!atomic_cmpxch_weak_explicit(&self->rsrw_lock.rarw_lock.arw_lock, 0, (uintptr_t)-1,
+		                                 __ATOMIC_ACQUIRE, __ATOMIC_ACQUIRE))
+			goto again;
+		self->rsrw_lock.rarw_tid = __hybrid_gettid();
+		return 0;
+	}
+	if (lockword == (uintptr_t)-1) {
+		if (__hybrid_gettid_iscaller(self->rsrw_lock.rarw_tid)) {
+			++self->rsrw_lock.rarw_nwrite;
+			return 0;
+		}
+	}
+	do {
+		int result;
+		_Dee_rshared_rwlock_mark_waiting(self);
+		result = DeeFutex_WaitPtr(&self->rsrw_lock.rarw_lock.arw_lock, lockword);
+		if unlikely(result != 0)
+			return result;
+	} while ((lockword = atomic_read(&self->rsrw_lock.rarw_lock.arw_lock)) != 0);
+	goto again_lockword_zero;
+#endif /* !CONFIG_NO_THREADS */
+}
+
 /* Block until successfully acquired a recursive shared lock.
  * @return: 1 : Timeout expired.
  * @return: 0 : Success.
@@ -775,6 +1035,12 @@ do_wait_with_timeout:
 PUBLIC WUNUSED NONNULL((1)) int DCALL
 Dee_rshared_rwlock_read_timed(Dee_rshared_rwlock_t *__restrict self,
                               uint64_t timeout_nanoseconds) {
+#ifdef CONFIG_NO_THREADS
+	COMPILER_IMPURE();
+	(void)self;
+	(void)timeout_nanoseconds;
+	return 0;
+#else /* CONFIG_NO_THREADS */
 	int result;
 	uintptr_t lockword;
 	uint64_t now_microseconds, then_microseconds;
@@ -826,11 +1092,18 @@ do_wait_with_timeout:
 		return 1; /* Timeout */
 	timeout_nanoseconds *= 1000;
 	goto do_wait_with_timeout;
+#endif /* !CONFIG_NO_THREADS */
 }
 
 PUBLIC WUNUSED NONNULL((1)) int DCALL
 Dee_rshared_rwlock_write_timed(Dee_rshared_rwlock_t *__restrict self,
                                uint64_t timeout_nanoseconds) {
+#ifdef CONFIG_NO_THREADS
+	COMPILER_IMPURE();
+	(void)self;
+	(void)timeout_nanoseconds;
+	return 0;
+#else /* CONFIG_NO_THREADS */
 	int result;
 	uintptr_t lockword;
 	uint64_t now_microseconds, then_microseconds;
@@ -882,11 +1155,18 @@ do_wait_with_timeout:
 		return 1; /* Timeout */
 	timeout_nanoseconds *= 1000;
 	goto do_wait_with_timeout;
+#endif /* !CONFIG_NO_THREADS */
 }
 
 PUBLIC WUNUSED NONNULL((1)) int DCALL
 Dee_rshared_rwlock_waitread_timed(Dee_rshared_rwlock_t *__restrict self,
                                   uint64_t timeout_nanoseconds) {
+#ifdef CONFIG_NO_THREADS
+	COMPILER_IMPURE();
+	(void)self;
+	(void)timeout_nanoseconds;
+	return 0;
+#else /* CONFIG_NO_THREADS */
 	int result;
 	uintptr_t lockword;
 	uint64_t now_microseconds, then_microseconds;
@@ -922,11 +1202,18 @@ do_wait_with_timeout:
 		return 1; /* Timeout */
 	timeout_nanoseconds *= 1000;
 	goto do_wait_with_timeout;
+#endif /* !CONFIG_NO_THREADS */
 }
 
 PUBLIC WUNUSED NONNULL((1)) int DCALL
 Dee_rshared_rwlock_waitwrite_timed(Dee_rshared_rwlock_t *__restrict self,
                                    uint64_t timeout_nanoseconds) {
+#ifdef CONFIG_NO_THREADS
+	COMPILER_IMPURE();
+	(void)self;
+	(void)timeout_nanoseconds;
+	return 0;
+#else /* CONFIG_NO_THREADS */
 	int result;
 	uintptr_t lockword;
 	uint64_t now_microseconds, then_microseconds;
@@ -964,6 +1251,7 @@ do_wait_with_timeout:
 		return 1; /* Timeout */
 	timeout_nanoseconds *= 1000;
 	goto do_wait_with_timeout;
+#endif /* !CONFIG_NO_THREADS */
 }
 
 
