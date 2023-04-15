@@ -20,13 +20,14 @@
 #ifndef GUARD_DEEMON_COMPILER_ASM_GENFASTER_C
 #define GUARD_DEEMON_COMPILER_ASM_GENFASTER_C 1
 
-#include <deemon/hashset.h>
 #include <deemon/api.h>
 #include <deemon/asm.h>
 #include <deemon/compiler/assembler.h>
 #include <deemon/dict.h>
 #include <deemon/error.h>
+#include <deemon/hashset.h>
 #include <deemon/list.h>
+#include <deemon/map.h>
 #include <deemon/object.h>
 #include <deemon/rodict.h>
 #include <deemon/roset.h>
@@ -107,6 +108,31 @@ INTERN WUNUSED NONNULL((1)) int
 	return ast_genasm(self, gflags);
 }
 
+/* Same as `DeeRoSet_FromSequence()', but has special handling for when `self' is a Mapping */
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+DeeRoSet_FromSequenceOrMappingForContains(DeeObject *__restrict self) {
+	DREF DeeObject *keys, *result;
+	if (!DeeObject_InstanceOf(self, &DeeMapping_Type))
+		return DeeRoSet_FromSequence(self);
+
+	/* `x in Mapping' checks if `x' is a key.
+	 *
+	 * But if we do `x in HashSet.Frozen(Mapping)', the we'd be
+	 * checking if `x' is a tuple `(key, item)'
+	 *
+	 * As such, when checking if a key is apart of a constant
+	 * mapping, we need to construct a set of that mapping's
+	 * keys! */
+	keys = DeeObject_GetAttrString(self, "keys");
+	if unlikely(!keys)
+		goto err;
+	result = DeeRoSet_FromSequence(keys);
+	Dee_Decref_likely(keys);
+	return result;
+err:
+	return NULL;
+}
+
 INTERN WUNUSED NONNULL((1)) int
 (DCALL ast_genasm_set)(struct ast *__restrict self,
                        unsigned int gflags) {
@@ -117,7 +143,7 @@ INTERN WUNUSED NONNULL((1)) int
 		 * -> Compile it as a _RoSet object. */
 		DREF DeeObject *inner_set;
 		int result;
-		inner_set = DeeRoSet_FromSequence(self->a_constexpr);
+		inner_set = DeeRoSet_FromSequenceOrMappingForContains(self->a_constexpr);
 		if unlikely(!inner_set) {
 restore_error:
 			DeeError_Handled(ERROR_HANDLED_RESTORE);

@@ -2076,7 +2076,7 @@ push_a_if_used:
 			    (current_assembler.a_flag & (ASM_FOPTIMIZE | ASM_FOPTIMIZE_SIZE))) {
 				DREF DeeObject *push_seq;
 				int32_t cid;
-				push_seq = DeeRoSet_FromSequence(self->a_operator.o_op0->a_constexpr);
+				push_seq = DeeRoSet_FromSequenceOrMappingForContains(self->a_operator.o_op0->a_constexpr);
 				if unlikely(!push_seq) {
 					if (!DeeError_Handled(ERROR_HANDLED_RESTORE))
 						goto err;
@@ -2626,7 +2626,7 @@ do_this_as_typesym_ref:
 				    (current_assembler.a_flag & (ASM_FOPTIMIZE | ASM_FOPTIMIZE_SIZE))) {
 					DREF DeeObject *push_seq;
 					int32_t cid;
-					push_seq = DeeRoSet_FromSequence(self->a_action.a_act1->a_constexpr);
+					push_seq = DeeRoSet_FromSequenceOrMappingForContains(self->a_action.a_act1->a_constexpr);
 					if unlikely(!push_seq) {
 						if (!DeeError_Handled(ERROR_HANDLED_RESTORE))
 							goto err;

@@ -1857,6 +1857,10 @@ ast_genasm_set(struct ast *__restrict self, unsigned int gflags);
 INTDEF WUNUSED NONNULL((1)) int DCALL
 ast_genasm_set_one(struct ast *__restrict self, unsigned int gflags);
 
+/* Same as `DeeRoSet_FromSequence()', but has special handling for when `self' is a Mapping */
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+DeeRoSet_FromSequenceOrMappingForContains(DeeObject *__restrict self);
+
 /* Strip sequence-style cast expressions from `ast' and return an inner sequence.
  * If `ast' is no sequence expression, re-return it directly. */
 INTDEF WUNUSED NONNULL((1)) struct ast *DCALL ast_strip_seqcast(struct ast *__restrict self);
