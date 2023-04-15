@@ -934,6 +934,7 @@ struct Dee_yield_function_iterator_object {
 	                                        * [.cf_this == yi_func->yf_this || NULL]
 	                                        * Execution frame of this iterator. */
 #ifndef CONFIG_NO_THREADS
+	/* TODO: This lock should be `Dee_rshared_lock_t' */
 	Dee_ratomic_rwlock_t         yi_lock;  /* Lock held while executing the frame of this iterator.
 	                                        * NOTE: This lock needs to be recursive to allow for
 	                                        *       GC-visit/frame-copy while the frame is executing. */

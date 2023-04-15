@@ -941,16 +941,16 @@ PRIVATE struct type_math map_math = {
 	/* .tp_inv    = */ NULL,
 	/* .tp_pos    = */ NULL,
 	/* .tp_neg    = */ NULL,
-	/* .tp_add    = */ NULL, /* TODO: map_concat (similar to concat for sequences, but also includes map operations) */
-	/* .tp_sub    = */ NULL,
+	/* .tp_add    = */ NULL, /* TODO: &DeeMap_Union */
+	/* .tp_sub    = */ NULL, /* TODO: &DeeMap_Difference */
 	/* .tp_mul    = */ NULL,
 	/* .tp_div    = */ NULL,
 	/* .tp_mod    = */ NULL,
 	/* .tp_shl    = */ NULL,
 	/* .tp_shr    = */ NULL,
-	/* .tp_and    = */ NULL, /* TODO: &DeeMap_Share */
+	/* .tp_and    = */ NULL, /* TODO: &DeeMap_Intersection */
 	/* .tp_or     = */ NULL, /* TODO: &DeeMap_Union */
-	/* .tp_xor    = */ NULL,
+	/* .tp_xor    = */ NULL, /* TODO: &DeeMap_SymmetricDifference */
 	/* .tp_pow    = */ NULL
 };
 

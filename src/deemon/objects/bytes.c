@@ -55,6 +55,8 @@ typedef struct {
 	                          * Pointer to one byte past the end of the Bytes object being iterated. */
 } BytesIterator;
 
+#define BytesIterator_GetIter(self) atomic_read(&(self)->bi_iter)
+
 INTDEF DeeTypeObject BytesIterator_Type;
 
 
@@ -72,10 +74,11 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 bytesiter_next(BytesIterator *__restrict self) {
 	uint8_t *pos;
 	do {
-		pos = atomic_read(&self->bi_iter);
+		pos = BytesIterator_GetIter(self);
 		if (pos >= self->bi_end)
 			return ITER_DONE;
-	} while unlikely(!atomic_cmpxch_weak_or_write(&self->bi_iter, pos, pos + 1));
+	} while unlikely(!atomic_cmpxch_weak_or_write(&self->bi_iter,
+	                                              pos, pos + 1));
 	return DeeInt_NewU8(*pos);
 }
 
@@ -92,7 +95,7 @@ PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 bytesiter_copy(BytesIterator *__restrict self,
                BytesIterator *__restrict other) {
 	self->bi_bytes = other->bi_bytes;
-	self->bi_iter  = atomic_read(&other->bi_iter);
+	self->bi_iter  = BytesIterator_GetIter(other);
 	self->bi_end   = other->bi_end;
 	Dee_Incref(self->bi_bytes);
 	return 0;
@@ -124,12 +127,12 @@ err:
 	err:                                                           \
 		return NULL;                                               \
 	}
-DEFINE_BYTESITER_COMPARE(bytesiter_eq, (self->bi_bytes == other->bi_bytes && self->bi_iter == other->bi_iter));
-DEFINE_BYTESITER_COMPARE(bytesiter_ne, (self->bi_bytes != other->bi_bytes || self->bi_iter != other->bi_iter));
-DEFINE_BYTESITER_COMPARE(bytesiter_lo, (self->bi_bytes < other->bi_bytes || (self->bi_bytes == other->bi_bytes && self->bi_iter < other->bi_iter)));
-DEFINE_BYTESITER_COMPARE(bytesiter_le, (self->bi_bytes < other->bi_bytes || (self->bi_bytes == other->bi_bytes && self->bi_iter <= other->bi_iter)));
-DEFINE_BYTESITER_COMPARE(bytesiter_gr, (self->bi_bytes > other->bi_bytes || (self->bi_bytes == other->bi_bytes && self->bi_iter > other->bi_iter)));
-DEFINE_BYTESITER_COMPARE(bytesiter_ge, (self->bi_bytes > other->bi_bytes || (self->bi_bytes == other->bi_bytes && self->bi_iter >= other->bi_iter)));
+DEFINE_BYTESITER_COMPARE(bytesiter_eq, (self->bi_bytes == other->bi_bytes && BytesIterator_GetIter(self) == BytesIterator_GetIter(other)));
+DEFINE_BYTESITER_COMPARE(bytesiter_ne, (self->bi_bytes != other->bi_bytes || BytesIterator_GetIter(self) != BytesIterator_GetIter(other)));
+DEFINE_BYTESITER_COMPARE(bytesiter_lo, (self->bi_bytes < other->bi_bytes || (self->bi_bytes == other->bi_bytes && BytesIterator_GetIter(self) < BytesIterator_GetIter(other))));
+DEFINE_BYTESITER_COMPARE(bytesiter_le, (self->bi_bytes < other->bi_bytes || (self->bi_bytes == other->bi_bytes && BytesIterator_GetIter(self) <= BytesIterator_GetIter(other))));
+DEFINE_BYTESITER_COMPARE(bytesiter_gr, (self->bi_bytes > other->bi_bytes || (self->bi_bytes == other->bi_bytes && BytesIterator_GetIter(self) > BytesIterator_GetIter(other))));
+DEFINE_BYTESITER_COMPARE(bytesiter_ge, (self->bi_bytes > other->bi_bytes || (self->bi_bytes == other->bi_bytes && BytesIterator_GetIter(self) >= BytesIterator_GetIter(other))));
 #undef DEFINE_BYTESITER_COMPARE
 
 PRIVATE struct type_cmp bytesiter_cmp = {
@@ -228,6 +231,7 @@ PUBLIC WUNUSED NONNULL((1, 3)) int
 			err_invalid_unpack_size(seq, num_bytes, DeeBytes_SIZE(seq));
 			goto err;
 		}
+
 		/* Use `memmove', because `seq' may be a view of `dst' */
 		memmove(dst, DeeBytes_DATA(seq), num_bytes);
 		return 0;
@@ -239,6 +243,7 @@ PUBLIC WUNUSED NONNULL((1, 3)) int
 			err_invalid_unpack_size(seq, num_bytes, fast_size);
 			goto err;
 		}
+
 		/* Fast-sequence optimizations. */
 		for (i = 0; i < fast_size; ++i) {
 			elem = DeeFastSeq_GetItem(seq, i);
@@ -297,6 +302,7 @@ DeeBytes_FromSequence(DeeObject *__restrict seq) {
 		                                        bufsize);
 		if unlikely(!result)
 			goto err;
+
 		/* Fast-sequence optimizations. */
 		for (i = 0; i < bufsize; ++i) {
 			int error;
@@ -310,6 +316,7 @@ DeeBytes_FromSequence(DeeObject *__restrict seq) {
 		}
 		goto done;
 	}
+
 	/* Fallback: use an iterator. */
 	bufsize = 256;
 	result  = (DREF Bytes *)DeeObject_TryMalloc(offsetof(Bytes, b_data) + bufsize);
@@ -328,6 +335,7 @@ DeeBytes_FromSequence(DeeObject *__restrict seq) {
 		if (i >= bufsize) {
 			DREF Bytes *new_result;
 			size_t new_bufsize = bufsize * 2;
+
 			/* Must allocate more memory. */
 			new_result = (DREF Bytes *)DeeObject_TryRealloc(result,
 			                                                offsetof(Bytes, b_data) +
@@ -353,6 +361,7 @@ DeeBytes_FromSequence(DeeObject *__restrict seq) {
 	if unlikely(!elem)
 		goto err_r_iter;
 	Dee_Decref(iter);
+
 	/* Free unused buffer memory. */
 	if likely(i < bufsize) {
 		DREF Bytes *new_result;
@@ -1748,12 +1757,12 @@ PUBLIC DeeTypeObject DeeBytes_Type = {
 	                         "For compatibility with other sequence types, as well as the expectation "
 	                         /**/ "of a sequence-like object implementing a sequence-cast-constructor, ?. "
 	                         /**/ "objects also implement this overload\n"
-	                         "However, given the reason for the existence of a ?. object, as well as "
-	                         /**/ "the fact that a sequence object may also implement a buffer interface, which "
-	                         /**/ "the ${Bytes(ob: Object)} overload above makes use of, that overload is always "
-	                         /**/ "preferred over this one. In situations where this might cause ambiguity, "
-	                         /**/ "it is recommended that the ?#fromseq class method be used to construct the "
-	                         /**/ "?. object instead.\n"
+	                         "However, given the reason for the existence of a ?. object, as well as the "
+	                         /**/ "fact that a sequence object may also implement a buffer interface, which "
+	                         /**/ "the ${Bytes(ob: Object)} overload above makes use of, that overload is "
+	                         /**/ "always preferred over this one. In situations where this might cause "
+	                         /**/ "ambiguity, it is recommended that the ?#fromseq class method be used to "
+	                         /**/ "construct the ?. object instead.\n"
 	                         "\n"
 
 	                         "copy->\n"
@@ -1774,12 +1783,12 @@ PUBLIC DeeTypeObject DeeBytes_Type = {
 	                         "Returns a string variant of @this ?. object, interpreting each byte as "
 	                         /**/ "a unicode character from the range U+0000-U+00FF. This is identical "
 	                         /**/ "to encoding the ?. object as a latin-1 (or iso-8859-1) string\n"
-	                         "This is identical to ${this.encode(\"latin-1\")}\n"
+	                         "The returned string is equal to ${this.encode(\"latin-1\")}\n"
 	                         "\n"
 
 	                         "repr->\n"
 	                         "Returns the representation of @this ?. object in the form "
-	                         /**/ "of ${\"{!r}.bytes()\".format({ this.encode(\"latin-1\") })}\n"
+	                         /**/ "of ${f\"{repr this.encode(\"latin-1\")}.bytes()\"}\n"
 	                         "\n"
 
 	                         "contains(needle:?X3?.?Dstring?Dint)->\n"
@@ -1820,10 +1829,12 @@ PUBLIC DeeTypeObject DeeBytes_Type = {
 
 	                         "[:]=(start:?Dint,end:?Dint,data:?X3?.?Dstring?S?Dint)->\n"
 	                         "@throw BufferError @this ?. object is not writable\n"
-	                         "@throw IntegerOverflow One of the integers extracted from @data is negative, or greater than $0xff\n"
+	                         "@throw IntegerOverflow One of the integers extracted from @data is negative, "
+	                         /*                  */ "or greater than $0xff\n"
 	                         "@throw ValueError @data is a string containing characters ${> 0xff}\n"
-	                         "@throw UnpackError The length of the given sequence @data does not match the number of bytes, that is ${end-start}. "
-	                         /*              */ "If any, and how many bytes of @this ?. object were already modified is undefined\n"
+	                         "@throw UnpackError The length of the given sequence @data does not match the "
+	                         /*              */ "number of bytes, that is ${end-start}. If any, and how many "
+	                         /*              */ "bytes of @this ?. object were already modified is undefined\n"
 	                         "Assign values to a given range of bytes\n"
 	                         "You may pass ?N to fill the entire range with zero-bytes\n"
 	                         "\n"
@@ -1868,8 +1879,8 @@ PUBLIC DeeTypeObject DeeBytes_Type = {
 	                         "%(args:?DTuple)->\n"
 	                         "%(arg:?O)->\n"
 	                         "@throw UnicodeEncodeError Attempted to print a unicode character ${> 0xff}\n"
-	                         "After interpreting the bytes from @this ?. object as LATIN-1, "
-	                         /**/ "generate a printf-style format string containing only LATIN-1 characters.\n"
+	                         "After interpreting the bytes from @this ?. object as LATIN-1, generate "
+	                         /**/ "a printf-style format string containing only LATIN-1 characters.\n"
 	                         "If @arg isn't a tuple, it is packed into one and the call is identical "
 	                         /**/ "to ${this.operator % (pack(arg))}\n"
 	                         "The returned ?. object is writable"),
@@ -1941,6 +1952,7 @@ Dee_bytes_printer_pack(/*inherit(always)*/ struct bytes_printer *__restrict self
 	DREF Bytes *result = self->bp_bytes;
 	if unlikely(!result)
 		return_empty_bytes;
+
 	/* Deallocate unused memory. */
 	if likely(self->bp_length != result->b_size) {
 		DREF Bytes *reloc;
@@ -1951,6 +1963,7 @@ Dee_bytes_printer_pack(/*inherit(always)*/ struct bytes_printer *__restrict self
 			result         = reloc;
 		result->b_size = self->bp_length;
 	}
+
 	/* Do final object initialization. */
 	result->b_base           = result->b_data;
 	result->b_orig           = (DREF DeeObject *)result;
@@ -1981,6 +1994,7 @@ Dee_bytes_printer_append(struct bytes_printer *__restrict self,
 		 * >> Must be done to assure the expectation of `if(bp_length == 0) bp_bytes == NULL' */
 		if unlikely(!datalen)
 			return 0;
+
 		/* Allocate the initial bytes. */
 		alloc_size = 8;
 		while (alloc_size < datalen)
@@ -2023,6 +2037,7 @@ realloc_again:
 		self->bp_bytes = bytes;
 		bytes->b_size  = alloc_size;
 	}
+
 	/* Copy data into the dynamic bytes. */
 	memcpy(bytes->b_data + self->bp_length, data, datalen);
 	self->bp_length += datalen;
@@ -2038,6 +2053,7 @@ PUBLIC WUNUSED NONNULL((1)) int
 		self->bp_bytes->b_data[self->bp_length++] = ch;
 		goto done;
 	}
+
 	/* Fallback: go the long route. */
 	if (bytes_printer_append(self, (uint8_t *)&ch, 1) < 0)
 		goto err;
@@ -2054,6 +2070,7 @@ PUBLIC WUNUSED NONNULL((1)) dssize_t
 	buffer = bytes_printer_alloc(self, count);
 	if unlikely(!buffer)
 		goto err;
+
 	/* Simply do a memset to initialize bytes data. */
 	memset(buffer, ch, count);
 	return (dssize_t)count;
@@ -2065,6 +2082,7 @@ PUBLIC NONNULL((1)) void
 (DCALL Dee_bytes_printer_release)(struct bytes_printer *__restrict self,
                                   size_t datalen) {
 	ASSERT(self->bp_length >= datalen);
+
 	/* This's actually all that needs to be
 	 * done with the current implementation. */
 	self->bp_length -= datalen;
@@ -2080,6 +2098,7 @@ PUBLIC WUNUSED NONNULL((1)) uint8_t *
 		 * >> Must be done to assure the expectation of `if(bp_length == 0) bp_bytes == NULL' */
 		if unlikely(!datalen)
 			return 0;
+
 		/* Allocate the initial bytes. */
 		alloc_size = 8;
 		while (alloc_size < datalen)
@@ -2125,6 +2144,7 @@ realloc_again:
 		self->bp_bytes = bytes;
 		bytes->b_size  = alloc_size;
 	}
+
 	/* Append text at the end. */
 	result = bytes->b_data + self->bp_length;
 	self->bp_length += datalen;

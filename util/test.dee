@@ -23,6 +23,10 @@ import * from fs;
 import rt;
 print repr rt.argv;
 
+/* TODO: Try to run tests in parallel (output of tests can be synced
+ *       by creating a custom stdout file that does per-thread line
+ *       buffering of input text) */
+
 @@Run all tests found in the `/util/test' directory
 function runall() {
 	local path = joinpath(headof(__FILE__), "test/.*.dec");

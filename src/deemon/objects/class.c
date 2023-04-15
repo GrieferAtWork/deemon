@@ -4897,6 +4897,8 @@ bind_class_operator(DeeTypeObject *__restrict type_type,
 		wrapper = with_wrappers[operator_name - OPERATOR_WITHMIN].ow_wrapper;
 		target  = (CFUNC *)((uintptr_t)class_type->tp_with + with_wrappers[operator_name - OPERATOR_WITHMIN].ow_offset);
 	} else {
+		/* TODO: File operators. */
+
 		DeeError_Throwf(&DeeError_TypeError,
 		                "Type %q does not define an operator %#I16x",
 		                type_type->tp_name, operator_name);
@@ -4926,7 +4928,7 @@ DeeClass_New(DeeTypeObject *__restrict base,
 		result_type_type = &DeeType_Type; /* No base class. */
 	} else {
 		/* Make sure that the given base-object is actually a type. */
-		if unlikely(!DeeType_IsInherited(&DeeType_Type, (DeeTypeObject *)result_type_type)) {
+		if unlikely(!DeeType_IsInherited((DeeTypeObject *)result_type_type, &DeeType_Type)) {
 			DeeObject_TypeAssertFailed((DeeObject *)base, &DeeType_Type);
 			goto err;
 		}

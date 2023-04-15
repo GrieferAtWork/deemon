@@ -128,13 +128,15 @@ DeeSystem_DEFINE_memcasecmp(dee_memcasecmp)
 
 /* Configure libregex */
 #undef LIBREGEX_WANT_PROTOTYPES
-#define LIBREGEX_NO_RE_CODE_DISASM
-#define LIBREGEX_NO_MALLOC_USABLE_SIZE /* TODO: Support for when this _is_ actually available */
-#define LIBREGEX_NO_SYSTEM_INCLUDES
-#define LIBREGEX_DECL INTDEF
-#define LIBREGEX_DEFINE___CTYPE_C_FLAGS
-#define LIBREGEX_REGEXEC_SINGLE_CHUNK
-#define LIBREGEX_USED__re_max_failures 2000
+#ifndef CONFIG_HAVE_malloc_usable_size
+#define LIBREGEX_NO_MALLOC_USABLE_SIZE         /* Tell the library if we're unable to provide it with a working `malloc_usable_size(3)' function */
+#endif /* !CONFIG_HAVE_malloc_usable_size */
+#define LIBREGEX_NO_RE_CODE_DISASM             /* Don't need debug functions to disassemble regex byte code. */
+#define LIBREGEX_NO_SYSTEM_INCLUDES            /* We're providing all of the system includes (so don't try to include any KOS headers) */
+#define LIBREGEX_DECL                   INTDEF /* Declare the normally public API as INTERN (which we override again below) */
+#define LIBREGEX_DEFINE___CTYPE_C_FLAGS        /* Can't rely on KOS's libc's `__ctype_C_flags' */
+#define LIBREGEX_REGEXEC_SINGLE_CHUNK          /* Don't need (or want) iovec support */
+#define LIBREGEX_USED__re_max_failures  2000   /* Use a hard-coded, fixed limit on how large the on-fail stack can grow */
 
 
 /* Configure libregex syntax, and inject our `DEE_REGEX_COMPILE_*' flags. */
@@ -167,14 +169,29 @@ DeeSystem_DEFINE_memcasecmp(dee_memcasecmp)
 #define RE_SYNTAX_NO_UTF8                                      DEE_REGEX_COMPILE_NOUTF8
 #define LIBREGEX_CONSTANT__RE_SYNTAX_NO_KOS_OPS                0
 
+/* Prevent collisions with types declared by native system headers */
+#undef re_regmatch_t
+#undef re_regoff_t
+#undef re_sregoff_t
+#define re_regmatch_t _Dee_re_regmatch_t
+#define re_regoff_t   _Dee_re_regoff_t
+#define re_sregoff_t  _Dee_re_sregoff_t
+
 /* Override libregex types & constants */
-#define RE_REGOFF_UNSET ((re_regoff_t)-1)
-#define re_code DeeRegexCode
+#undef re_code
+#undef RE_REGOFF_UNSET
+#undef RE_CODE_FLAG_NORMAL
+#undef RE_CODE_FLAG_NEEDGROUPS
+#undef RE_CODE_FLAG_OPTGROUPS
+#define RE_REGOFF_UNSET         ((re_regoff_t)-1)
+#define re_code                 DeeRegexCode
 #define RE_CODE_FLAG_NORMAL     DEE_RE_CODE_FLAG_NORMAL
 #define RE_CODE_FLAG_NEEDGROUPS DEE_RE_CODE_FLAG_NEEDGROUPS
 #define RE_CODE_FLAG_OPTGROUPS  DEE_RE_CODE_FLAG_OPTGROUPS
 #define __re_code_defined
 
+#undef RE_EXEC_NOTBOL
+#undef RE_EXEC_NOTEOL
 #define RE_EXEC_NOTBOL DEE_RE_EXEC_NOTBOL
 #define RE_EXEC_NOTEOL DEE_RE_EXEC_NOTEOL
 #define __re_regmatch_t_defined
