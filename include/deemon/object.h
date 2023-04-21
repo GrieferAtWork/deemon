@@ -1688,6 +1688,10 @@ typedef WUNUSED_T NONNULL_T((1)) DREF DeeObject *(DCALL *Dee_kwobjmethod_t)(DeeO
 typedef WUNUSED_T NONNULL_T((1)) DREF DeeObject *(DCALL *Dee_getmethod_t)(DeeObject *__restrict self);
 typedef WUNUSED_T NONNULL_T((1)) int (DCALL *Dee_delmethod_t)(DeeObject *__restrict self);
 typedef WUNUSED_T NONNULL_T((1, 2)) int (DCALL *Dee_setmethod_t)(DeeObject *self, DeeObject *value);
+/* @return: 1 : Attribute is bound
+ * @return: 0 : Attribute isn't bound (reading it would throw `DeeError_UnboundAttribute')
+ * @return: -1: Some other error occurred. */
+typedef WUNUSED_T NONNULL_T((1)) int (DCALL *Dee_boundmethod_t)(DeeObject *__restrict self);
 
 #ifdef DEE_SOURCE
 typedef Dee_objmethod_t   dobjmethod_t;
@@ -1695,6 +1699,7 @@ typedef Dee_kwobjmethod_t dkwobjmethod_t;
 typedef Dee_getmethod_t   dgetmethod_t;
 typedef Dee_delmethod_t   ddelmethod_t;
 typedef Dee_setmethod_t   dsetmethod_t;
+typedef Dee_boundmethod_t dboundmethod_t;
 #endif /* DEE_SOURCE */
 
 #if defined(__INTELLISENSE__) && defined(__cplusplus)
@@ -1707,12 +1712,14 @@ Dee_objmethod_t _Dee_RequiresKwObjMethod_(decltype(nullptr));
 Dee_getmethod_t _Dee_RequiresGetMethod(decltype(nullptr));
 Dee_delmethod_t _Dee_RequiresDelMethod(decltype(nullptr));
 Dee_setmethod_t _Dee_RequiresSetMethod(decltype(nullptr));
+Dee_boundmethod_t _Dee_RequiresBoundMethod(decltype(nullptr));
 template<class _TReturn, class _TSelf> Dee_objmethod_t _Dee_RequiresObjMethod(WUNUSED_T NONNULL_T((1)) DREF _TReturn *(DCALL *_meth)(_TSelf *, size_t, DeeObject *const *));
 template<class _TReturn, class _TSelf> Dee_kwobjmethod_t _Dee_RequiresKwObjMethod(WUNUSED_T NONNULL_T((1)) DREF _TReturn *(DCALL *_meth)(_TSelf *, size_t, DeeObject *const *, /*nullable*/ DeeObject *kw));
 template<class _TReturn, class _TSelf> Dee_objmethod_t _Dee_RequiresKwObjMethod_(WUNUSED_T NONNULL_T((1)) DREF _TReturn *(DCALL *_meth)(_TSelf *, size_t, DeeObject *const *, /*nullable*/ DeeObject *kw));
 template<class _TReturn, class _TSelf> Dee_getmethod_t _Dee_RequiresGetMethod(WUNUSED_T NONNULL_T((1)) DREF _TReturn *(DCALL *_meth)(_TSelf *__restrict));
 template<class _TSelf> Dee_delmethod_t _Dee_RequiresDelMethod(WUNUSED_T NONNULL_T((1)) int (DCALL *_meth)(_TSelf *__restrict));
 template<class _TSelf, class _TArg> Dee_setmethod_t _Dee_RequiresSetMethod(WUNUSED_T NONNULL_T((1, 2)) int (DCALL *_meth)(_TSelf *, _TArg *));
+template<class _TSelf> Dee_boundmethod_t _Dee_RequiresBoundMethod(WUNUSED_T NONNULL_T((1)) int (DCALL *_meth)(_TSelf *__restrict));
 } /* namespace __intern */
 } /* extern "C++" */
 #define Dee_REQUIRES_OBJMETHOD(meth)    ((decltype(::__intern::_Dee_RequiresObjMethod(meth)))(meth))
@@ -1721,6 +1728,7 @@ template<class _TSelf, class _TArg> Dee_setmethod_t _Dee_RequiresSetMethod(WUNUS
 #define Dee_REQUIRES_GETMETHOD(meth)    ((decltype(::__intern::_Dee_RequiresGetMethod(meth)))(meth))
 #define Dee_REQUIRES_DELMETHOD(meth)    ((decltype(::__intern::_Dee_RequiresDelMethod(meth)))(meth))
 #define Dee_REQUIRES_SETMETHOD(meth)    ((decltype(::__intern::_Dee_RequiresSetMethod(meth)))(meth))
+#define Dee_REQUIRES_BOUNDMETHOD(meth)  ((decltype(::__intern::_Dee_RequiresBoundMethod(meth)))(meth))
 #else /* __INTELLISENSE__ && __cplusplus */
 #define Dee_REQUIRES_OBJMETHOD(meth)    ((Dee_objmethod_t)(meth))
 #define Dee_REQUIRES_KWOBJMETHOD(meth)  ((Dee_kwobjmethod_t)(meth))
@@ -1728,6 +1736,7 @@ template<class _TSelf, class _TArg> Dee_setmethod_t _Dee_RequiresSetMethod(WUNUS
 #define Dee_REQUIRES_GETMETHOD(meth)    ((Dee_getmethod_t)(meth))
 #define Dee_REQUIRES_DELMETHOD(meth)    ((Dee_delmethod_t)(meth))
 #define Dee_REQUIRES_SETMETHOD(meth)    ((Dee_setmethod_t)(meth))
+#define Dee_REQUIRES_BOUNDMETHOD(meth)  ((Dee_boundmethod_t)(meth))
 #endif /* !__INTELLISENSE__ || !__cplusplus */
 
 
@@ -1766,29 +1775,33 @@ struct Dee_type_method {
 #endif /* DEE_SOURCE */
 
 struct Dee_type_getset {
-	char const           *gs_name; /* [1..1][SENTINAL(NULL)] Member name. */
+	char const           *gs_name;  /* [1..1][SENTINAL(NULL)] Member name. */
 	/* Getset callbacks (NULL callbacks will result in `Error.AttributeError' being raised) */
-	Dee_getmethod_t       gs_get;  /* [0..1] Getter callback. */
-	Dee_delmethod_t       gs_del;  /* [0..1] Delete callback. */
-	Dee_setmethod_t       gs_set;  /* [0..1] Setter callback. */
-	/*utf-8*/ char const *gs_doc;  /* [0..1] Documentation string. */
+	Dee_getmethod_t       gs_get;   /* [0..1] Getter callback. */
+	Dee_delmethod_t       gs_del;   /* [0..1] Delete callback. */
+	Dee_setmethod_t       gs_set;   /* [0..1] Setter callback. */
+	Dee_boundmethod_t     gs_bound; /* [0..1] Is-bound callback. (optional; if not given, call `gs_get' and see if it throws `UnboundAttribute' or `AttributeError' / `NotImplemented') */
+	/*utf-8*/ char const *gs_doc;   /* [0..1] Documentation string. */
 };
-#define Dee_TYPE_GETSET(name, get, del, set, doc) \
-	{ name, Dee_REQUIRES_GETMETHOD(get), Dee_REQUIRES_DELMETHOD(del), Dee_REQUIRES_SETMETHOD(set), DOC(doc) }
-#define Dee_TYPE_GETSET_NODOC(name, get, del, set) \
-	{ name, Dee_REQUIRES_GETMETHOD(get), Dee_REQUIRES_DELMETHOD(del), Dee_REQUIRES_SETMETHOD(set), NULL }
-#define Dee_TYPE_GETTER(name, get, doc) \
-	{ name, Dee_REQUIRES_GETMETHOD(get), NULL, NULL, DOC(doc) }
-#define Dee_TYPE_GETTER_NODOC(name, get) \
-	{ name, Dee_REQUIRES_GETMETHOD(get), NULL, NULL, NULL }
-#define Dee_TYPE_GETSET_END \
-	{ NULL, NULL, NULL, NULL, NULL }
+#define Dee_TYPE_GETSET(name, get, del, set, doc)               { name, Dee_REQUIRES_GETMETHOD(get), Dee_REQUIRES_DELMETHOD(del), Dee_REQUIRES_SETMETHOD(set), NULL, DOC(doc) }
+#define Dee_TYPE_GETSET_NODOC(name, get, del, set)              { name, Dee_REQUIRES_GETMETHOD(get), Dee_REQUIRES_DELMETHOD(del), Dee_REQUIRES_SETMETHOD(set), NULL }
+#define Dee_TYPE_GETSET_BOUND(name, get, del, set, bound, doc)  { name, Dee_REQUIRES_GETMETHOD(get), Dee_REQUIRES_DELMETHOD(del), Dee_REQUIRES_SETMETHOD(set), Dee_REQUIRES_BOUNDMETHOD(bound), DOC(doc) }
+#define Dee_TYPE_GETSET_BOUND_NODOC(name, get, del, set, bound) { name, Dee_REQUIRES_GETMETHOD(get), Dee_REQUIRES_DELMETHOD(del), Dee_REQUIRES_SETMETHOD(set), Dee_REQUIRES_BOUNDMETHOD(bound), NULL }
+#define Dee_TYPE_GETTER(name, get, doc)                         { name, Dee_REQUIRES_GETMETHOD(get), NULL, NULL, NULL, DOC(doc) }
+#define Dee_TYPE_GETTER_NODOC(name, get)                        { name, Dee_REQUIRES_GETMETHOD(get), NULL, NULL, NULL, NULL }
+#define Dee_TYPE_GETTER_BOUND(name, get, doc)                   { name, Dee_REQUIRES_GETMETHOD(get), NULL, NULL, NULL, DOC(doc) }
+#define Dee_TYPE_GETTER_BOUND_NODOC(name, get)                  { name, Dee_REQUIRES_GETMETHOD(get), NULL, NULL, NULL, NULL }
+#define Dee_TYPE_GETSET_END                                     { NULL, NULL, NULL, NULL, NULL, NULL }
 #ifdef DEE_SOURCE
-#define TYPE_GETSET       Dee_TYPE_GETSET
-#define TYPE_GETTER       Dee_TYPE_GETTER
-#define TYPE_GETSET_NODOC Dee_TYPE_GETSET_NODOC
-#define TYPE_GETTER_NODOC Dee_TYPE_GETTER_NODOC
-#define TYPE_GETSET_END   Dee_TYPE_GETSET_END
+#define TYPE_GETSET             Dee_TYPE_GETSET
+#define TYPE_GETSET_NODOC       Dee_TYPE_GETSET_NODOC
+#define TYPE_GETSET_BOUND       Dee_TYPE_GETSET_BOUND
+#define TYPE_GETSET_BOUND_NODOC Dee_TYPE_GETSET_BOUND_NODOC
+#define TYPE_GETTER             Dee_TYPE_GETTER
+#define TYPE_GETTER_NODOC       Dee_TYPE_GETTER_NODOC
+#define TYPE_GETTER_BOUND       Dee_TYPE_GETTER_BOUND
+#define TYPE_GETTER_BOUND_NODOC Dee_TYPE_GETTER_BOUND_NODOC
+#define TYPE_GETSET_END         Dee_TYPE_GETSET_END
 #endif /* DEE_SOURCE */
 
 

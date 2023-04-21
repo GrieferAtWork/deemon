@@ -664,12 +664,12 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL tls_bool(TLS *__restrict self) {
 
 
 PRIVATE struct type_getset tpconst tls_getsets[] = {
-	TYPE_GETSET("value", &tls_getvalue, &tls_delvalue, &tls_setvalue,
-	            "@throw AttributeError The TLS variable isn't bound, or has already been unbound\n"
-	            "Read/write access to the object assigned to this TLS variable slot in the calling thread\n"
-	            "If a factory has been defined, it will be invoked upon first access, unless that access is setting the TLS value.\n"
-	            "If no factory has been defined, the TLS is initialized as unbound and any attempt "
-	            /**/ "to read or delete it will cause an :AttributeError to be thrown"),
+	TYPE_GETSET_BOUND("value", &tls_getvalue, &tls_delvalue, &tls_setvalue, &tls_bool,
+	                  "@throw AttributeError The TLS variable isn't bound, or has already been unbound\n"
+	                  "Read/write access to the object assigned to this TLS variable slot in the calling thread\n"
+	                  "If a factory has been defined, it will be invoked upon first access, unless that access is setting the TLS value.\n"
+	                  "If no factory has been defined, the TLS is initialized as unbound and any attempt "
+	                  /**/ "to read or delete it will cause an :AttributeError to be thrown"),
 	TYPE_GETSET_END
 };
 

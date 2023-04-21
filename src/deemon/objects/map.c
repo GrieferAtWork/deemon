@@ -1327,19 +1327,19 @@ err:
 PRIVATE struct type_getset tpconst map_getsets[] = {
 	TYPE_GETTER("keys", &map_keys,
 	            "->?#Keys\n"
-	            "Returns a ?DSequence that can be enumerated to view only the keys of @this Mapping"),
+	            "Returns a ?DSequence that can be enumerated to view only the keys of @this ?."),
 	TYPE_GETTER("values", &map_values,
 	            "->?#Values\n"
-	            "Returns a ?DSequence that can be enumerated to view only the values of @this Mapping"),
+	            "Returns a ?DSequence that can be enumerated to view only the values of @this ?."),
 	TYPE_GETTER("items", &map_items,
 	            "->?#Items\n"
 	            "Returns a ?DSequence that can be enumerated to view the key-item "
 	            /**/ "pairs as 2-element sequences, the same way they could be viewed "
-	            /**/ "if @this Mapping itself was being iterated\n"
+	            /**/ "if @this ?. itself was being iterated\n"
 	            "Note however that the returned ?DSequence is pure, meaning that it "
-	            /**/ "implements a index-based getitem and getrange operators, the same "
-	            /**/ "way one would expect of any regular object implementing the sequence "
-	            /**/ "protocol"),
+	            /**/ "implements a index-based getitem and getrange operators, the "
+	            /**/ "same way one would expect of any regular object implementing "
+	            /**/ "the sequence protocol"),
 	TYPE_GETTER("iterkeys", &map_iterkeys,
 	            "->?AIterator?#Keys\n"
 	            "Returns an iterator for ?#{keys}. Same as ${this.keys.operator iter()}"),
@@ -1361,7 +1361,7 @@ PRIVATE struct type_getset tpconst map_getsets[] = {
 	            "This attribute only makes sense if @this mapping behaves like ${{string: Object}}."),
 	TYPE_GETTER(STR_frozen, &DeeRoDict_FromSequence,
 	            "->?#Frozen\n"
-	            "Returns a read-only (frozen) copy of @this Mapping"),
+	            "Returns a read-only (frozen) copy of @this ?."),
 	/* TODO: keytype->?DType
 	 *       Check if the type of @this overrides the ?#KeyType class attribute.
 	 *       If so, return its value; else, return the common base-class of all
@@ -1426,7 +1426,7 @@ err:
 PRIVATE struct type_getset tpconst map_class_getsets[] = {
 	TYPE_GETTER(STR_Iterator, &map_iterator_get,
 	            "->?DType\n"
-	            "Returns the iterator class used by instances of @this Mapping type\n"
+	            "Returns the iterator class used by instances of @this ?. type\n"
 	            "This member must be overwritten by sub-classes of ?DMapping"),
 	TYPE_GETTER("Frozen", &map_frozen_get,
 	            "->?DType\n"
@@ -1474,7 +1474,7 @@ PUBLIC DeeTypeObject DeeMapping_Type = {
 
 	                         "()\n"
 	                         "A no-op default constructor that is implicitly called by sub-classes\n"
-	                         "When invoked manually, a general-purpose, empty Mapping is returned\n"
+	                         "When invoked manually, a general-purpose, empty ?. is returned\n"
 	                         "\n"
 
 	                         "repr->\n"

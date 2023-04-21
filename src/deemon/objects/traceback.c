@@ -69,7 +69,7 @@ INTERN struct empty_traceback_object empty_traceback = {
 INTERN WUNUSED NONNULL((1)) DREF DeeTracebackObject *DCALL
 DeeTraceback_New(struct thread_object *__restrict thread) {
 	DREF DeeTracebackObject *result;
-	ASSERT(thread == DeeThread_Self());
+	ASSERTF(thread == DeeThread_Self(), "Traceback for other threads must be created using `DeeThread_Trace()'");
 	result = (DREF DeeTracebackObject *)DeeGCObject_TryMalloc(offsetof(DeeTracebackObject, tb_frames) +
 	                                                          thread->t_execsz * sizeof(struct code_frame));
 	if likely(result) {
@@ -87,8 +87,10 @@ DeeTraceback_New(struct thread_object *__restrict thread) {
 			--dst;
 			ASSERT(src != NULL);
 			ASSERT(src != CODE_FRAME_NOT_EXECUTING);
+
 			/* Do a shallow memcpy of the execution frame. */
 			memcpy(dst, src, sizeof(struct code_frame));
+
 			/* Create references and duplicate local variables. */
 			ASSERT_OBJECT_TYPE(dst->cf_func, &DeeFunction_Type);
 			ASSERT_OBJECT_TYPE(dst->cf_func->fo_code, &DeeCode_Type);
@@ -125,6 +127,7 @@ DeeTraceback_New(struct thread_object *__restrict thread) {
 			Dee_XIncref(dst->cf_vargs);
 			if (ITER_ISOK(dst->cf_result))
 				Dee_Incref(dst->cf_result);
+
 			/* Duplicate local variables. */
 			dst->cf_frame = (DREF DeeObject **)Dee_TryMallocc(code->co_localc,
 			                                                  sizeof(DREF DeeObject *));
@@ -138,10 +141,12 @@ DeeTraceback_New(struct thread_object *__restrict thread) {
 					dst->cf_frame[i] = ob;
 				}
 			}
+
 			/* At this point, the contents of the stack can't be trusted. */
 			dst->cf_stack   = (DREF DeeObject **)dont_track_this; /* Save this here so that `DeeTraceback_AddFrame()' sees it. */
 			dst->cf_sp      = NULL;
 			dst->cf_stacksz = 0;
+
 			/* Continue with the next frame. */
 			src = src->cf_prev;
 		}
@@ -174,6 +179,7 @@ DeeTraceback_AddFrame(DeeTracebackObject *__restrict self,
 	ASSERT(!dst->cf_stacksz);
 	dont_track_this = (DeeObject *)dst->cf_stack;
 	dst->cf_stack   = NULL;
+
 	/* Since we can't report errors, only ~try~ to copy stacks. */
 	stacksz = (uint16_t)(frame->cf_sp - frame->cf_stack);
 	if unlikely(!stacksz)
@@ -182,6 +188,7 @@ DeeTraceback_AddFrame(DeeTracebackObject *__restrict self,
 	if likely(dst->cf_stack) {
 		dst->cf_stacksz = stacksz;
 		dst->cf_sp      = dst->cf_stack + stacksz;
+
 		/* Duplicate the stack. */
 		while (stacksz--) {
 			dst->cf_stack[stacksz] = frame->cf_stack[stacksz];
@@ -329,6 +336,7 @@ traceiter_nii_peek(TraceIterator *__restrict self) {
 	result_frame = READ_NEXT(self);
 	if unlikely(result_frame < self->ti_trace->tb_frames)
 		return ITER_DONE;
+
 	/* Create a new frame wrapper for this entry. */
 	return DeeFrame_NewReferenceWithLock((DeeObject *)self->ti_trace,
 	                                     result_frame,
@@ -500,6 +508,7 @@ traceback_visit(DeeTracebackObject *__restrict self,
 	for (; iter < end; ++iter) {
 		ASSERT_OBJECT_TYPE(iter->cf_func, &DeeFunction_Type);
 		ASSERT_OBJECT_TYPE(iter->cf_func->fo_code, &DeeCode_Type);
+
 		/* Visit local variables. */
 		if (iter->cf_frame)
 			Dee_XVisitv(iter->cf_frame, iter->cf_func->fo_code->co_localc);
@@ -623,6 +632,7 @@ clear_buffer:
 PRIVATE WUNUSED NONNULL((1)) DREF TraceIterator *DCALL
 traceback_iter(DeeTracebackObject *__restrict self) {
 	TraceIterator *result;
+
 	/* Create a new traceback iterator object. */
 	result = DeeObject_MALLOC(TraceIterator);
 	if unlikely(!result)

@@ -218,7 +218,7 @@ struct dee_kwds_mapping_object {
 	 * >>	}
 	 * >>	result = bar(argc, argv, kw);
 	 * >>	if (DeeKwdsMapping_Check(kw) &&
-	 * >>	    ((DeeKwdsMappingObject *)kw)->kmo_argv == argv + argc) {
+	 * >>	    DeeKwdsMapping_GetArgv(kw) == argv + argc) {
 	 * >>		// If we're the ones owning the keywords-mapping, we must also decref() it.
 	 * >>		DeeKwdsMapping_Decref(kw);
 	 * >>	} else {
@@ -274,6 +274,9 @@ DDATDEF DeeTypeObject DeeKwdsMapping_Type;
 #define DeeKwdsMapping_LockEndWrite(self)   Dee_atomic_rwlock_endwrite(&(self)->kmo_lock)
 #define DeeKwdsMapping_LockEndRead(self)    Dee_atomic_rwlock_endread(&(self)->kmo_lock)
 #define DeeKwdsMapping_LockEnd(self)        Dee_atomic_rwlock_end(&(self)->kmo_lock)
+
+#define DeeKwdsMapping_GetKwds(ob) (((DeeKwdsMappingObject *)Dee_REQUIRES_OBJECT(ob))->kmo_kwds)
+#define DeeKwdsMapping_GetArgv(ob) (((DeeKwdsMappingObject *)Dee_REQUIRES_OBJECT(ob))->kmo_argv)
 
 /* Construct a keywords-mapping object from a given `kwds' object,
  * as well as an argument vector that will be shared with the mapping.
@@ -352,7 +355,8 @@ DeeKwArgs_GetStringLenDef(DeeKwArgs *__restrict self, char const *__restrict nam
  * the actually mapped arguments. */
 DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeArg_GetKw(size_t *__restrict pargc, DeeObject *const *argv, DeeObject *kw);
-DFUNDEF NONNULL((3)) void DCALL DeeArg_PutKw(size_t argc, DeeObject *const *argv, DREF DeeObject *kw);
+DFUNDEF NONNULL((3)) void DCALL
+DeeArg_PutKw(size_t argc, DeeObject *const *argv, DREF DeeObject *kw);
 
 /* In a keyword-enabled function, return the argument associated with a given
  * `name', or throw a TypeError exception or return `def' if not provided. */

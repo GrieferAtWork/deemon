@@ -172,10 +172,12 @@ PUBLIC NONNULL((1, 2)) int
                          va_list args) {
 	int result;
 	DREF DeeObject *argv[1], *error_ob;
+
 	/* Create the message string. */
 	argv[0] = DeeString_VNewf(format, args);
 	if unlikely(!argv[0])
 		goto err;
+
 	/* Pack the constructor argument tuple. */
 	error_ob = DeeType_Check(tp)
 	           ? DeeObject_New(tp, 1, argv)
@@ -183,6 +185,7 @@ PUBLIC NONNULL((1, 2)) int
 	Dee_Decref(argv[0]);
 	if unlikely(!error_ob)
 		goto err;
+
 	/* Throw the new error object. */
 	result = DeeError_Throw(error_ob);
 	Dee_Decref(error_ob);

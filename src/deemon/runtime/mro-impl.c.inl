@@ -338,10 +338,14 @@ NLen(DeeType_BoundCachedAttr)(DeeTypeObject *tp_self,
 			return 1;
 
 		case MEMBERCACHE_GETSET: {
+			dboundmethod_t bound;
 			dgetmethod_t getter;
 			DREF DeeObject *temp;
+			bound  = item->mcs_getset.gs_bound;
 			getter = item->mcs_getset.gs_get;
 			MEMBERCACHE_ENDREAD(&tp_self->tp_cache);
+			if (bound)
+				return (*bound)(self);
 			if unlikely(!getter)
 				return 0;
 			temp = (*getter)(self);
@@ -412,10 +416,14 @@ NLen(DeeType_BoundCachedClassAttr)(DeeTypeObject *__restrict tp_self,
 			return 1;
 
 		case MEMBERCACHE_GETSET: {
+			dboundmethod_t bound;
 			dgetmethod_t getter;
 			DREF DeeObject *temp;
+			bound  = item->mcs_getset.gs_bound;
 			getter = item->mcs_getset.gs_get;
 			MEMBERCACHE_ENDREAD(&tp_self->tp_class_cache);
+			if (bound)
+				return (*bound)((DeeObject *)tp_self);
 			if unlikely(!getter)
 				return 0;
 			temp = (*getter)((DeeObject *)tp_self);
@@ -3947,6 +3955,8 @@ N_len(type_getset_boundattr)(struct membercache *cache, DeeTypeObject *decl,
 		if (!NAMEEQ(chain->gs_name))
 			continue;
 		membercache_addgetset(cache, decl, hash, chain);
+		if (chain->gs_bound)
+			return (*chain->gs_bound)(self);
 		if unlikely(!chain->gs_get)
 			return 0;
 		temp = (*chain->gs_get)(self);

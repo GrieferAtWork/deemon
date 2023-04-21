@@ -125,12 +125,13 @@ cell_deepload(Cell *__restrict self) {
  *        empty, whereas `DeeCell_TryGet()' will do the same, but never throw any error. */
 PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeCell_TryGet(DeeObject *__restrict self) {
+	Cell *me = (Cell *)self;
 	DREF DeeObject *result;
-	ASSERT_OBJECT_TYPE(self, &DeeCell_Type);
-	DeeCell_LockRead(self);
-	result = DeeCell_Item(self);
+	ASSERT_OBJECT_TYPE(me, &DeeCell_Type);
+	DeeCell_LockRead(me);
+	result = me->c_item;
 	Dee_XIncref(result);
-	DeeCell_LockEndRead(self);
+	DeeCell_LockEndRead(me);
 	return result;
 }
 
@@ -154,36 +155,40 @@ DeeCell_Get(DeeObject *__restrict self) {
 }
 
 /* Exchange the Cell's value.
- * NOTE: `DeeCell_XchNonNull()' will only set the new value when the old was non-NULL. */
+ * NOTE: `DeeCell_XchIfNotNull()' will only set the new value when the old was non-NULL. */
 PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeCell_Xch(DeeObject *self, DeeObject *value) {
+	Cell *me = (Cell *)self;
 	DREF DeeObject *result;
-	ASSERT_OBJECT_TYPE(self, &DeeCell_Type);
+	ASSERT_OBJECT_TYPE(me, &DeeCell_Type);
 	ASSERT_OBJECT_OPT(value);
+
 	/* Exchange the Cell's value. */
 	Dee_XIncref(value);
-	DeeCell_LockWrite(self);
-	result = DeeCell_Item(self);
-	DeeCell_Item(self) = value;
-	DeeCell_LockEndWrite(self);
+	DeeCell_LockWrite(me);
+	result = me->c_item;
+	me->c_item = value;
+	DeeCell_LockEndWrite(me);
 	return result;
 }
 
 PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-DeeCell_XchNonNull(DeeObject *self, DeeObject *value) {
+DeeCell_XchIfNotNull(DeeObject *self, DeeObject *value) {
+	Cell *me = (Cell *)self;
 	DREF DeeObject *result;
-	ASSERT_OBJECT_TYPE(self, &DeeCell_Type);
+	ASSERT_OBJECT_TYPE(me, &DeeCell_Type);
 	ASSERT_OBJECT_OPT(value);
+
 	/* Exchange the Cell's value. */
 	Dee_XIncref(value);
-	DeeCell_LockWrite(self);
-	result = DeeCell_Item(self);
+	DeeCell_LockWrite(me);
+	result = me->c_item;
 	if unlikely(!result) {
-		DeeCell_LockEndWrite(self);
+		DeeCell_LockEndWrite(me);
 		Dee_DecrefNokill(value);
 	} else {
-		DeeCell_Item(self) = value;
-		DeeCell_LockEndWrite(self);
+		me->c_item = value;
+		DeeCell_LockEndWrite(me);
 	}
 	return result;
 }
@@ -193,32 +198,37 @@ PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeCell_CmpXch(DeeObject *self,
                DeeObject *old_value,
                DeeObject *new_value) {
+	Cell *me = (Cell *)self;
 	DREF DeeObject *result;
-	ASSERT_OBJECT_TYPE(self, &DeeCell_Type);
+	ASSERT_OBJECT_TYPE(me, &DeeCell_Type);
 	ASSERT_OBJECT_OPT(old_value);
 	ASSERT_OBJECT_OPT(new_value);
-	/* Extract the Cell's value. */
-	DeeCell_LockWrite(self);
-	result = DeeCell_Item(self);
+
+	/* Compare-and-exchange the Cell's value. */
+	DeeCell_LockWrite(me);
+	result = me->c_item;
 	if (result == old_value) {
 		Dee_XIncref(new_value);
-		DeeCell_Item(self) = new_value;
+		me->c_item = new_value;
 	} else {
 		Dee_XIncref(result);
 	}
-	DeeCell_LockEndWrite(self);
+	DeeCell_LockEndWrite(me);
 	return result;
 }
 
 PUBLIC WUNUSED NONNULL((1)) int DCALL
 DeeCell_Del(DeeObject *__restrict self) {
+	Cell *me = (Cell *)self;
 	DREF DeeObject *old_value;
-	ASSERT_OBJECT_TYPE(self, &DeeCell_Type);
+	ASSERT_OBJECT_TYPE(me, &DeeCell_Type);
+
 	/* Extract the Cell's value. */
-	DeeCell_LockWrite(self);
-	old_value          = DeeCell_Item(self);
-	DeeCell_Item(self) = NULL;
-	DeeCell_LockEndWrite(self);
+	DeeCell_LockWrite(me);
+	old_value  = me->c_item;
+	me->c_item = NULL;
+	DeeCell_LockEndWrite(me);
+
 	/* Decref() the old value. */
 	Dee_XDecref(old_value);
 	return 0;
@@ -226,15 +236,18 @@ DeeCell_Del(DeeObject *__restrict self) {
 
 PUBLIC WUNUSED NONNULL((1)) int DCALL
 DeeCell_Set(DeeObject *self, DeeObject *value) {
+	Cell *me = (Cell *)self;
 	DREF DeeObject *old_value;
-	ASSERT_OBJECT_TYPE(self, &DeeCell_Type);
+	ASSERT_OBJECT_TYPE(me, &DeeCell_Type);
 	ASSERT_OBJECT(value);
 	Dee_Incref(value);
+
 	/* Exchange the Cell's value. */
-	DeeCell_LockWrite(self);
-	old_value          = DeeCell_Item(self);
-	DeeCell_Item(self) = value;
-	DeeCell_LockEndWrite(self);
+	DeeCell_LockWrite(me);
+	old_value  = me->c_item;
+	me->c_item = value;
+	DeeCell_LockEndWrite(me);
+
 	/* Decref() the old value. */
 	Dee_XDecref(old_value);
 	return 0;
@@ -270,26 +283,25 @@ cell_printrepr(Cell *__restrict self,
 	return result;
 }
 
-#define CELL_READITEM(x) atomic_read(&(x)->c_item)
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 cell_bool(Cell *__restrict self) {
-	return CELL_READITEM(self) != NULL;
+	return DeeCell_IsBound(self);
 }
 
 PRIVATE WUNUSED NONNULL((1)) dhash_t DCALL
 cell_hash(Cell *__restrict self) {
-	return DeeObject_HashGeneric(CELL_READITEM(self));
+	return DeeCell_GetHash(self);
 }
 
 
-#define DEFINE_CELL_COMPARE(name, op)                     \
-	PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL \
-	name(Cell *self, Cell *other) {                       \
-		if (DeeObject_AssertType(other, &DeeCell_Type))   \
-			return NULL;                                  \
-		return_bool(DeeObject_Id(CELL_READITEM(self)) op  \
-		            DeeObject_Id(CELL_READITEM(other)));  \
+#define DEFINE_CELL_COMPARE(name, op)                              \
+	PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL          \
+	name(Cell *self, Cell *other) {                                \
+		if (DeeObject_AssertType(other, &DeeCell_Type))            \
+			return NULL;                                           \
+		return_bool(DeeObject_Id(DeeCell_GetItemPointer(self)) op  \
+		            DeeObject_Id(DeeCell_GetItemPointer(other)));  \
 	}
 DEFINE_CELL_COMPARE(cell_eq, ==)
 DEFINE_CELL_COMPARE(cell_ne, !=)
@@ -311,9 +323,9 @@ PRIVATE struct type_cmp cell_cmp = {
 
 
 PRIVATE struct type_getset tpconst cell_getsets[] = {
-	TYPE_GETSET("value", &DeeCell_Get, &DeeCell_Del, &DeeCell_Set,
-	            "@throw UnboundAttribute Attempted to read from an empty Cell\n"
-	            "Read/write access to the underlying, contained ?O"),
+	TYPE_GETSET_BOUND("value", &DeeCell_Get, &DeeCell_Del, &DeeCell_Set, &cell_bool,
+	                  "@throw UnboundAttribute Attempted to read from an empty Cell\n"
+	                  "Read/write access to the underlying, contained ?O"),
 	TYPE_GETSET_END
 };
 
@@ -393,7 +405,7 @@ cell_xch(Cell *self, size_t argc, DeeObject *const *argv) {
 			result = def;
 		}
 	} else {
-		result = DeeCell_XchNonNull((DeeObject *)self, value);
+		result = DeeCell_XchIfNotNull((DeeObject *)self, value);
 		if (!result)
 			goto err_empty;
 	}

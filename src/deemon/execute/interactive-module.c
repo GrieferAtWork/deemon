@@ -214,15 +214,15 @@ is_an_imod(DeeModuleObject *__restrict self) {
 	}
 }
 
-PUBLIC WUNUSED NONNULL((1)) int DCALL
-DeeModule_LockSymbols(DeeModuleObject *__restrict self) {
+PUBLIC WUNUSED NONNULL((1)) int
+(DCALL DeeModule_LockSymbols)(DeeModuleObject *__restrict self) {
 	if (is_an_imod(self))
 		return InteractiveModule_ExecLockRead((InteractiveModule *)self);
 	return 0;
 }
 
-PUBLIC NONNULL((1)) void DCALL
-DeeModule_UnlockSymbols(DeeModuleObject *__restrict self) {
+PUBLIC NONNULL((1)) void
+(DCALL DeeModule_UnlockSymbols)(DeeModuleObject *__restrict self) {
 	if (is_an_imod(self))
 		InteractiveModule_ExecLockEndRead((InteractiveModule *)self);
 }

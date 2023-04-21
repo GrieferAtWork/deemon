@@ -2021,7 +2021,7 @@ do_push_module:
 					++ip.u8;
 					if (tp_shl == &file_shl) {
 						/* Special case: `fp << repr foo'
-						 * In this case, we can a special optimization
+						 * In this case, we can do a special optimization
 						 * to directly print the repr to the file. */
 						if (DeeObject_PrintRepr(TOP, (dformatprinter)&DeeFile_WriteAll, SECOND) < 0)
 							HANDLE_EXCEPT();
@@ -7022,7 +7022,7 @@ exec_except:
 			 * that causes an exception can no longer rely upon the validity
 			 * of the stack/instruction pointers it encounters on the stack.
 			 * (Well... It can read the start-ip register safely, as this
-			 *  implementation stores that one within the frame)
+			 * implementation stores that one within the frame)
 			 * Instead, we dynamically add upon tracebacks here, filling in
 			 * anything left undefined until now as the stack is unwound! */
 			ASSERT(this_thread->t_execsz);
@@ -7102,6 +7102,7 @@ stack_fault:
 			HANDLE_EXCEPT();
 		}
 		ASSERT(new_size != 0);
+
 		/* Allocate/Re-allocate the stack on the heap. */
 		if (frame->cf_stacksz) {
 			new_stack = (DeeObject **)Dee_Reallocc(frame->cf_stack,
@@ -7112,6 +7113,7 @@ stack_fault:
 		}
 		if unlikely(!new_stack)
 			HANDLE_EXCEPT();
+
 		/* Install the new stack. */
 		if (!frame->cf_stacksz) {
 			/* Copy the old contents of the stack onto the new one. */
@@ -7120,11 +7122,13 @@ stack_fault:
 			        sp - frame->cf_stack,
 			        sizeof(DeeObject *));
 		}
+
 		/* Hook the new stack. */
 		frame->cf_stacksz = new_size; /* A non-zero `cf_stacksz' value indicates a heap stack! */
 		sp                = new_stack + (sp - frame->cf_stack);
 		frame->cf_stack   = new_stack;
 		frame->cf_sp      = sp; /* Set a new frame-sp that is part of the actual stack. */
+
 		/* Try execute the current instruction again. */
 		goto next_instr;
 	}

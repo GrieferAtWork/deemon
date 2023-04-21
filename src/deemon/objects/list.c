@@ -2562,7 +2562,7 @@ list_get_first(List *__restrict me) {
 	return result;
 err_empty_endread:
 	DeeList_LockEndRead(me);
-	err_empty_sequence((DeeObject *)me);
+	err_empty_sequence((DeeObject *)me); /* TODO: Unbound attribute */
 	return NULL;
 }
 
@@ -2619,7 +2619,7 @@ list_get_last(List *__restrict me) {
 	return result;
 err_empty_endread:
 	DeeList_LockEndRead(me);
-	err_empty_sequence((DeeObject *)me);
+	err_empty_sequence((DeeObject *)me); /* TODO: Unbound attribute */
 	return NULL;
 }
 

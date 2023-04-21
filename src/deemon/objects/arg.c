@@ -1423,9 +1423,11 @@ DeeArg_GetKw(size_t *__restrict pargc,
 			return NULL;
 		}
 		*pargc -= num_keywords;
+
 		/* Turn keywords and arguments into a proper mapping-like object. */
 		return DeeKwdsMapping_New(kw, argv + *pargc);
 	}
+
 	/* `kw' already is a user-provided mapping. */
 	return_reference_(kw);
 }
@@ -1434,7 +1436,7 @@ PUBLIC NONNULL((3)) void DCALL
 DeeArg_PutKw(size_t argc, DeeObject *const *argv, DREF DeeObject *kw) {
 	ASSERT_OBJECT(kw);
 	if (DeeKwdsMapping_Check(kw) &&
-	    ((DeeKwdsMappingObject *)kw)->kmo_argv == argv + argc) {
+	    DeeKwdsMapping_GetArgv(kw) == argv + argc) {
 		/* If we're the ones owning the keywords-mapping, we must also decref() it. */
 		DeeKwdsMapping_Decref(kw);
 	} else {
