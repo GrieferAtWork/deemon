@@ -1,0 +1,46 @@
+name: C/C++ CI
+
+on:
+  push:
+    branches: [ "master" ]
+  pull_request:
+    branches: [ "master" ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v3
+      with:
+        submodules: 'true'
+
+    - name: Restore configure results
+      id: cached-configure-restore
+      uses: actions/cache/restore@v3
+      with:
+        path: |
+          include/deemon/config.h
+          config.mk
+        key: ${{ runner.os }}-configure
+
+    - name: Configure
+      if: steps.cached-configure-restore.outputs.cache-hit != 'true'
+      run: bash configure --without-libffi
+
+    - name: Save configure results
+      if: steps.cached-configure-restore.outputs.cache-hit != 'true'
+      id: cached-configure-save
+      uses: actions/cache/save@v3
+      with:
+        path: |
+          include/deemon/config.h
+          config.mk
+        key: ${{ runner.os }}-configure
+
+    - name: Make
+      run: make -j $(nproc)
+
+    - name: Test
+      run: ./deemon util/test.dee
