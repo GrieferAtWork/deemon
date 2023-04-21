@@ -2445,7 +2445,7 @@ f_libtime_milliseconds(size_t argc, DeeObject *const *argv) {
 		goto done;
 	if (DeeArg_Unpack(argc, argv, UNPu128 ":milliseconds", &result->t_nanos))
 		goto err_r;
-	__hybrid_int128_mul16(result->t_nanos, NANOSECONDS_PER_MILLISECOND);
+	__hybrid_int128_mul32(result->t_nanos, NANOSECONDS_PER_MILLISECOND);
 	result->t_typekind = TIME_TYPEKIND(TIME_TYPE_NANOSECONDS, TIME_KIND_DELTA);
 	DeeObject_Init(result, &DeeTime_Type);
 done:
@@ -2463,7 +2463,7 @@ f_libtime_seconds(size_t argc, DeeObject *const *argv) {
 		goto done;
 	if (DeeArg_Unpack(argc, argv, UNPu128 ":seconds", &result->t_nanos))
 		goto err_r;
-	__hybrid_int128_mul16(result->t_nanos, NANOSECONDS_PER_SECOND);
+	__hybrid_int128_mul32(result->t_nanos, NANOSECONDS_PER_SECOND);
 	result->t_typekind = TIME_TYPEKIND(TIME_TYPE_NANOSECONDS, TIME_KIND_DELTA);
 	DeeObject_Init(result, &DeeTime_Type);
 done:
