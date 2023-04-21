@@ -96,7 +96,7 @@ DECL_BEGIN
  * @return: -1: Error (an error was thrown) */
 #if defined(LOCAL_IS_NO_INTERRUPT) && !defined(LOCAL_HAVE_timeout_nanoseconds)
 #define LOCAL_return_type_is_void
-PUBLIC WUNUSED NONNULL((1)) void
+PUBLIC NONNULL((1)) void
 #else /* LOCAL_IS_NO_INTERRUPT */
 PUBLIC WUNUSED NONNULL((1)) int
 #endif /* !LOCAL_IS_NO_INTERRUPT */

@@ -3220,7 +3220,7 @@ PRIVATE WUNUSED NONNULL((1)) dhash_t DCALL
 token_hash(DeeCompilerWrapperObject *__restrict self) {
 	dhash_t result;
 	if (COMPILER_BEGIN(self->cw_compiler))
-		return NULL;
+		return (dhash_t)-1;
 	result = get_token_namehash(tok, token.t_kwd);
 	COMPILER_END();
 	return result;

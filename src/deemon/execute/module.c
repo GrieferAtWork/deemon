@@ -805,9 +805,11 @@ DeeModule_DelAttrString(DeeModuleObject *__restrict self,
 	if (!(self->mo_flags & MODULE_FDIDLOAD)) {
 		if (DeeInteractiveModule_Check(self)) {
 			int result;
-			interactivemodule_lockwrite(self);
-			result = module_delattr_impl(self, attr_name, hash);
-			interactivemodule_lockendwrite(self);
+			result = interactivemodule_lockwrite(self);
+			if (result == 0) {
+				result = module_delattr_impl(self, attr_name, hash);
+				interactivemodule_lockendwrite(self);
+			}
 			return result;
 		}
 		return err_module_not_loaded_attr(self,
@@ -825,9 +827,11 @@ DeeModule_DelAttrStringLen(DeeModuleObject *__restrict self,
 	if (!(self->mo_flags & MODULE_FDIDLOAD)) {
 		if (DeeInteractiveModule_Check(self)) {
 			int result;
-			interactivemodule_lockwrite(self);
-			result = module_delattr_len_impl(self, attr_name, attrlen, hash);
-			interactivemodule_lockendwrite(self);
+			result = interactivemodule_lockwrite(self);
+			if (result == 0) {
+				result = module_delattr_len_impl(self, attr_name, attrlen, hash);
+				interactivemodule_lockendwrite(self);
+			}
 			return result;
 		}
 		return err_module_not_loaded_attr_len(self,
@@ -846,9 +850,11 @@ DeeModule_SetAttrString(DeeModuleObject *self,
 	if (!(self->mo_flags & MODULE_FDIDLOAD)) {
 		if (DeeInteractiveModule_Check(self)) {
 			int result;
-			interactivemodule_lockwrite(self);
-			result = module_setattr_impl(self, attr_name, hash, value);
-			interactivemodule_lockendwrite(self);
+			result = interactivemodule_lockwrite(self);
+			if (result == 0) {
+				result = module_setattr_impl(self, attr_name, hash, value);
+				interactivemodule_lockendwrite(self);
+			}
 			return result;
 		}
 		return err_module_not_loaded_attr(self,
@@ -867,9 +873,11 @@ DeeModule_SetAttrStringLen(DeeModuleObject *self,
 	if (!(self->mo_flags & MODULE_FDIDLOAD)) {
 		if (DeeInteractiveModule_Check(self)) {
 			int result;
-			interactivemodule_lockwrite(self);
-			result = module_setattr_len_impl(self, attr_name, attrlen, hash, value);
-			interactivemodule_lockendwrite(self);
+			result = interactivemodule_lockwrite(self);
+			if (result == 0) {
+				result = module_setattr_len_impl(self, attr_name, attrlen, hash, value);
+				interactivemodule_lockendwrite(self);
+			}
 			return result;
 		}
 		return err_module_not_loaded_attr_len(self,

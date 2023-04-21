@@ -180,13 +180,13 @@ err_read_or_write_lock_not_acquired(DeeObject *__restrict self) {
 	return DeeError_Throwf(&DeeError_ValueError, "Read- or write-lock not acquired: %k", self);
 }
 
-PRIVATE ATTR_COLD NONNULL((1)) int DCALL
+PRIVATE ATTR_COLD int DCALL
 err_rwlock_with_readers_and_writers(void) {
 	return DeeError_Throwf(&DeeError_ValueError,
 	                       "Cannot initialize RWLock with both readers and writers");
 }
 
-PRIVATE ATTR_COLD NONNULL((1)) int DCALL
+PRIVATE ATTR_COLD int DCALL
 err_rwlock_too_many_readers(uintptr_t readers) {
 	return DeeError_Throwf(&DeeError_IntegerOverflow,
 	                       "Specified reader count %" PRFuPTR " is too large",
@@ -2138,7 +2138,7 @@ err:
 	return -1;
 }
 
-PRIVATE WUNUSED NONNULL((1)) void DCALL
+PRIVATE NONNULL((1)) void DCALL
 lock_union_allocator_fini(struct lock_union_allocator *__restrict self) {
 	Dee_Decrefv_unlikely(self->lua_union->lu_elem,
 	                     self->lua_union->lu_size);
@@ -2212,7 +2212,7 @@ err:
 	return -1;
 }
 
-PRIVATE WUNUSED NONNULL((1)) DREF LockUnion *DCALL
+PRIVATE WUNUSED NONNULL((2)) DREF LockUnion *DCALL
 LockUnion_FromVector(size_t argc, DeeObject *const *argv) {
 	struct lock_union_allocator alloc;
 	if unlikely(argc == 0) {
@@ -2230,7 +2230,7 @@ err:
 	return NULL;
 }
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((2)) DREF DeeObject *DCALL
 libthreading_lockunion_all_f(size_t argc, DeeObject *const *argv) {
 	if (argc == 1) /* Special case for when only a single lock was specified */
 		return_reference_(argv[0]);

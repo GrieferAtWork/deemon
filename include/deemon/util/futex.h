@@ -83,14 +83,14 @@ DFUNDEF WUNUSED NONNULL((1)) int
  * able to kill deemon!)
  * @return: 1 : Timeout expired (`*Timed' only)
  * @return: 0 : Success (`*Timed' only) */
-DFUNDEF WUNUSED NONNULL((1)) void
+DFUNDEF NONNULL((1)) void
 (DCALL DeeFutex_Wait32NoInt)(void *addr, uint32_t expected);
 DFUNDEF WUNUSED NONNULL((1)) int
 (DCALL DeeFutex_Wait32NoIntTimed)(void *addr, uint32_t expected,
                                   uint64_t timeout_nanoseconds);
 #if __SIZEOF_POINTER__ >= 8
 /* Same as above, but do a 64-bit equals-comparison test. */
-DFUNDEF WUNUSED NONNULL((1)) void
+DFUNDEF NONNULL((1)) void
 (DCALL DeeFutex_Wait64NoInt)(void *addr, uint64_t expected);
 DFUNDEF WUNUSED NONNULL((1)) int
 (DCALL DeeFutex_Wait64NoIntTimed)(void *addr, uint64_t expected,
