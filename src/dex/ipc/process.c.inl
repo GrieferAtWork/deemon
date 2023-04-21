@@ -2190,17 +2190,17 @@ ipc_unix_spawn_in_child(struct unix_spawn_args const *__restrict self) {
 	/* Load std file descriptor overrides */
 	if (self->usa_stdfds[DEE_STDIN] != STDIN_FILENO) {
 		DBG_ipc_unix_spawn_in_child_ACTION("dup2(%d, %d)\n", self->usa_stdfds[DEE_STDIN], STDIN_FILENO);
-		if unlikely(dup2(self->usa_stdfds[DEE_STDIN], STDIN_FILENO) != 0)
+		if unlikely(dup2(self->usa_stdfds[DEE_STDIN], STDIN_FILENO) < 0)
 			return;
 	}
 	if (self->usa_stdfds[DEE_STDOUT] != STDOUT_FILENO) {
 		DBG_ipc_unix_spawn_in_child_ACTION("dup2(%d, %d)\n", self->usa_stdfds[DEE_STDOUT], STDOUT_FILENO);
-		if unlikely(dup2(self->usa_stdfds[DEE_STDOUT], STDOUT_FILENO) != 0)
+		if unlikely(dup2(self->usa_stdfds[DEE_STDOUT], STDOUT_FILENO) < 0)
 			return;
 	}
 	if (self->usa_stdfds[DEE_STDERR] != STDERR_FILENO) {
 		DBG_ipc_unix_spawn_in_child_ACTION("dup2(%d, %d)\n", self->usa_stdfds[DEE_STDERR], STDERR_FILENO);
-		if unlikely(dup2(self->usa_stdfds[DEE_STDERR], STDERR_FILENO) != 0)
+		if unlikely(dup2(self->usa_stdfds[DEE_STDERR], STDERR_FILENO) < 0)
 			return;
 	}
 
