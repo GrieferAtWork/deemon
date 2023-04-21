@@ -3547,33 +3547,48 @@ interrupted_stopjoin:
 			error = ipc_joinpid(self->p_pid, p_status);
 		}
 	
+		/* From `man 2 waitid':
+		 * """
+		 * waitid(): returns 0 on success or if WNOHANG was specified
+		 * and no child(ren) specified by id has yet changed state.
+		 * """ */
+#ifdef ipc_tryjoinpid
+		if (error == 0) {
+#ifdef EAGAIN
+do_handle_EAGAIN:
+#endif /* EAGAIN */
+			/* WNOHANG -> process hasn't terminated, yet. */
+			Process_LockWrite(self);
+			self->p_state &= ~PROCESS_FLAG_JOINING;
+			Process_LockEndWrite(self);
+			if (timeout_nanoseconds != 0) {
+				uint64_t timeout_micro;
+				timeout_micro = timeout_nanoseconds;
+				timeout_micro /= 1000;
+				timeout_micro /= 2;
+				if (timeout_micro > 1000)
+					timeout_micro = 1000;
+				if (DeeThread_Sleep(1000))
+					goto err; /* Error (interrupt delivery) */
+			}
+			return 2;
+		}
+#endif /* ipc_tryjoinpid */
+
 		/* Check for error. */
 		if (error < 0) {
 			error = errno;
 #if defined(ipc_tryjoinpid) && defined(EAGAIN)
-			if (error == EAGAIN) {
-				/* WNOHANG -> process hasn't terminated, yet. */
-				if (timeout_nanoseconds != 0) {
-					uint64_t timeout_micro;
-					Process_LockWrite(self);
-					self->p_state &= ~PROCESS_FLAG_JOINING;
-					Process_LockEndWrite(self);
-					timeout_micro = timeout_nanoseconds;
-					timeout_micro /= 1000;
-					timeout_micro /= 2;
-					if (timeout_micro > 1000)
-						timeout_micro = 1000;
-					if (DeeThread_Sleep(1000))
-						goto err; /* Error (interrupt delivery) */
-				}
-				return 2;
-			}
-#endif /* EAGAIN */
+			if (error == EAGAIN)
+				goto do_handle_EAGAIN;
+#endif /* ipc_tryjoinpid && EAGAIN */
 #ifdef EINTR
 			if (error == EINTR) {
 				Process_LockWrite(self);
 				self->p_state &= ~PROCESS_FLAG_JOINING;
 				Process_LockEndWrite(self);
+				if (DeeThread_CheckInterrupt())
+					goto err;
 				return 2;
 			}
 #endif /* EINTR */
