@@ -3634,21 +3634,23 @@ process_join_impl(Process *__restrict self,
 	if (timeout_nanoseconds == 0) {
 		result = process_join_impl2(self, timeout_nanoseconds, p_status);
 	} else if (timeout_nanoseconds == (uint64_t)-1) {
+do_infinite_timeout:
 		do {
 			result = process_join_impl2(self, timeout_nanoseconds, p_status);
 		} while (result == 2);
 	} else {
-		uint64_t before = DeeThread_GetTimeMicroSeconds();
-		uint64_t after, delta, timeout_microseconds;
-		timeout_microseconds = timeout_nanoseconds / 1000;
+		uint64_t now_microseconds, then_microseconds;
+		now_microseconds = DeeThread_GetTimeMicroSeconds();
+		if (OVERFLOW_UADD(now_microseconds, timeout_nanoseconds / 1000, &then_microseconds))
+			goto do_infinite_timeout;
 		for (;;) {
 			result = process_join_impl2(self, timeout_nanoseconds, p_status);
 			if (result != 2)
 				break;
-			after = DeeThread_GetTimeMicroSeconds();
-			delta = after - before;
-			if (timeout_microseconds >= delta)
-				break;
+			now_microseconds = DeeThread_GetTimeMicroSeconds();
+			if (OVERFLOW_USUB(then_microseconds, now_microseconds, &timeout_nanoseconds))
+				return 2; /* Timeout */
+			timeout_nanoseconds *= 1000;
 		}
 	}
 	return result;
