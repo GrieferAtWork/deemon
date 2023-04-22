@@ -1,19 +1,30 @@
 # deemon - Deemon scripting language
 
-Deemon, completely rewritten with a new focus on clean, intuitive and functional language design, while still maintaining a backwards compatibility rate high enough to allow for simple porting of existing code.
-For more information on changes, fixes and improvements, see `/lib/LANGUAGE.txt`
+[![C/C++ CI](https://github.com/GrieferAtWork/deemon/actions/workflows/c-cpp.yml/badge.svg)](https://github.com/GrieferAtWork/deemon/actions/workflows/c-cpp.yml)
 
-Deemon is a C-like, interpreted, object-orient and exception-enabled scripting language, greatly inspired by python's runtime library, while sharing many syntax constructs with common languages such as C, java and javascript.
+Deemon is a scripting language with a syntax inspired by C and other languages derived by C, whilst featuring a python-like runtime.
 
-At its core, deemon is designed for sequence and string processing, being the inventor of the expand-expression (as seen in something like `x = [a...,42,b...];` which creates a new list consisting of the items from `a`, followed by `42`, then those from `b`), as well as including many language constructs useful in such situations, including `yield`-statements, lambda functions, and generator expression (such as `foo = for (local x: bar) x.strip();`, where `foo` is a sequence containing the elements of `bar` after thore were transformed with a call to a member function `strip`).
+```
+import * from deemon;
 
-Especially following this rewrite, deemon is shining more than ever when it comes to string functionality, providing *regular expression* support, as well as support for *wild cards*, alongside fully featured *unicode* integration.
+print "Deemon is totally rad, right?\n> ",;
+local l = File.stdin.readline().strip().lower();
+if (l in { "y", "yes" }) {
+	print "Thank you! :D";
+} else if (l in { "n", "no" }) {
+	print "Aww... You're hurting my feelings :(";
+} else {
+	print "Huh?";
+}
+```
 
-In other areas deemon continues to shine, being more expandable than ever with the introduction of a module-based approach to code dependencies, offering a library that comes preloaded with an `fs` module allowing for filesystem operations, or the builtin `File from deemon` type allowing for optionally buffered file or TTY I/O, across modules such as `time` for working with the gregorian calender, and `net`, which provides an object-orient model for sockets. But it doesn't just end there, as creating a new module is just as simple as putting together a small deemon script containing a couple of functions.
+Deemon is designed with the following features in mind:
+- Being portable to any Unix-like operating system (obviously including Linux), as well as Windows
+- Working with, and processing data via sequences and sequence proxies, rather than individually or by by always creating new list objects
+- Being faster than python while still offering similar runtime functionality (mainly by not having a GIL, and using static symbol resolution and a more powerful compiled bytecode, rather than having locals/globals be runtime hash-mapping)
 
-Deemon is a universally applicable language that has learned much from its past mistakes, shortcomings, as well as strengths, now allowing you to write highly efficient code, that is just as easy to read as it was to write.
 
-Code examples can be found in */util/tut*
+## Building
 
 **NOTICE**: Deemon uses git submodules (which are required to build deemon), so if you use the *download zip* function, you won't end up with everything that goes into building deemon. So in order to clone deemon in its entirety, you must clone this [git](https://git-scm.com/) through use of:
 
@@ -21,14 +32,11 @@ Code examples can be found in */util/tut*
 git clone --recursive https://github.com/GrieferAtWork/deemon.git
 ```
 
-
-
-## Building
-With visual studio
+With visual studio  
 
 - Open `/.vs/deemon.sln`
-- Select one of the MSVC build configurations
-- CTRL+SHIFT+B
+- Select your preferred build configuration and architecture
+- `CTRL+SHIFT+B`
 
 With configure  
 ```sh
@@ -42,6 +50,73 @@ Cross-compiling deemon
 make
 ```
 
+
+
+## Features
+
+### Core syntax features
+
+- Modular code design with one script able to import another script's globals
+- Sequences anywhere: anywhere expressions appear as `,`-separated lists, it's possible to use a sequence as `seq...`, causing its elements to appear as distinct elements. E.g. to concat two sequences, do `{ a..., b... }`
+- Object-oriented programming and classes
+	- Member functions and properties (getsets)
+	- Type inheritance
+	- Private and public members
+	- User-defined destructors
+	- User-definable operators
+- All of your usual C-like statements/expressions
+- Co-routines (aka. "yield"-functions)
+- Generator expressions (`x = for (local elem: y) if (elem) elem + 1;`)
+- Java-like lambda functions
+- Type annotations (`local x: {string: int} = Dict();`)
+- Exceptions and try-catch/finally
+- With-statements (`with (lock) { ... }`)
+- GCC-style statements-in-expressions (`local x = ({ local y = 10; y + 20; });`)
+- Optionally assigned variables (`local x; if (y) x = 10; print x is bound;`)
+- Default/optional/keyword arguments in functions (`function foo(x, y = 10, z?) {} foo(1, z: "Hello");`)
+- ...
+
+### Core runtime library
+
+- Full Unicode support (`assert "²".asnumeric() == 2`)
+	- Fully featured string API (for doing anything you might think of)
+	- Built-in regular expression support
+- Infinite-precision integers
+- Sequence, Set, and Map-like built-in containers
+	- Mutable/Immutable sequences (`List` / `Tuple`)
+	- Mutable/Immutable mapping (`Dict` / `Dict.Frozen`)
+	- Mutable/Immutable set (`HashSet` / `HashSet.Frozen`)
+	- Everything inherits from a common `Sequence` class providing a full-featured sequence API
+- Everything is reference-counted (automatic cleanup)
+- Modules are compiled on first use and automatically re-compiled if modified
+- Deemon scripts are compiled and executed as bytecode for better performance
+- Full multi-threading support everywhere (everything is thread-safe by default)
+	- And I mean *real* multi-threading (i.e. deemon doesn't have a GIL)
+- Floating point numbers
+- File/std I/O
+- Dynamic module imports (`local x = "deemon"; local y = import(x);`)
+
+### Extended runtime library
+- Modules are either native shared libraries (`.so` or `.dll`), or deemon scripts (`.dee`)
+- Modules for:
+	- Extra sequence types (`collections`)
+	- Interfacing with C functions and native system libraries (`ctypes`)
+	- Disassembling deemon bytecode (`disassembler`)
+	- System APIs (`fs`, `posix`, `win32`)
+	- Spawning and controlling sub-processes (`ipc`)
+	- Mathematic functions like `sin`, `cos`, etc. (`math`)
+	- Low-level networking and sockets (`net`)
+	- Extra threading functionality like locks and TLS variables (`threading`)
+	- Timestamps and time deltas (`time`)
+	- Interfacing with doc strings and other RTTI (`doc`, `doctext`, as well as `/util/doc-server.dee`)
+	- ...
+
+Code examples can be found in */util/tut*
+
+
+
+
+## Comparison with deemon100+
 
 
 ### Major improvements
@@ -91,15 +166,12 @@ make
 	- Uses a seperate JIT compiler that directly executes source text, rather than having to preprocess, parse, assembly and link, before finally executing code.
 
 
-
-
-
 ### Noteworthy changes and fixes
 
 - Inplace operators now have significantly different operation protocols than regular operators (`x += y;` is emulated as `x = x + y;` at runtime when no inplace operator exists)
 	- As a result of this, strings and other immutable types will appear as though they can be used in inplace operations, when in reality they can't.
 	- As a consequence of this, r-values (such as function return values) cannot be used in inplace operations
-- The builtin [`int`](http://localhost:8080/modules/deemon/i:int) type is now a singleton, meaning that use of integers no longer requires seemingly out of place `copy` statements when passing around integers, or having to create copies when loading them as constants.
+- The builtin [`int`](http://localhost:8080/modules/deemon/i:int) type is now a immutable, meaning that use of integers no longer requires seemingly out of place `copy` statements when passing around integers, or having to create copies when loading them as constants.
 - Classes now require the user to declare member variables (also: I actually implemented a syntax for super-initialization in constructors)
 - Introduction of new symbol classes for extern (aka. imported) and global (aka. exported) objects
 	- Global variables are created when defining a symbols without a `local` prefix in the global scope, or when explicitly prefixed with `global`
@@ -117,18 +189,12 @@ make
 - While deemon 100's compiler configuration handled pretty much any syntax problem as a warning, deemon 200 is default-configured to produce errors, thus preventing faulty code from accidentally being executed
 
 
-
-
-
 ### Noteworthy maintained features (that will stay)
 
 - Inplace source formatting `deemon -F`
 - `pack`-expressions to omit parenthesis (`foo pack 10, 20` is the same as `foo(10, 20)`)
 - A fully featured C preprocessor (it's a highly advanced version of tpp, including all of its extensions)
 - The `__nth` keyword being used to select secondary variable matches.
-
-
-
 
 
 ### Deprecated features (discouraged usage, but continued maintainance for now)
@@ -138,9 +204,6 @@ make
 - The dedicated syntax for cells (`<foo>` is deprecated and very much discouraged)
 	- Use [`Cell from deemon`](http://localhost:8080/modules/deemon/i:Cell) instead.
 	- Also note that with the introduction of global variables, cell indirection is no longer required in most cases
-
-
-
 
 
 ### Dropped features
@@ -158,9 +221,6 @@ make
 - The `operator move()` constructor has been removed, as well as the `move` keyword
 	- Note however that `operator move := ()` (move-assign) hasn't been removed
 - Removed the logical XOR operator `^^` (just cast both operands to bool, then use the regular XOR)
-
-
-
 
 
 ### Dropped features that are emulated in legacy code
