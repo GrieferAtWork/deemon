@@ -44,3 +44,21 @@ jobs:
 
     - name: Test
       run: ./deemon util/test.dee
+
+    - name: Prepare lib folder for artifact
+      run: |
+        find "lib" -name '*.dec' -delete
+        find "lib" -name '.gitignore' -delete
+        unlink lib/LANGUAGE.txt || true
+
+    - name: Save executable as artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: ${{ runner.os }}-${{ github.sha }}-build
+        if-no-files-found: ignore
+        path: |
+          include/deemon/config.h
+          config.mk
+          deemon
+          deemon.*
+          lib

@@ -7,7 +7,6 @@
 /include/deemon/config.h.old
 /asm.S
 /input.dee
-/bin/*
 /build/*
 /src/tpp/frontend.c
 /.vs/*.sdf
