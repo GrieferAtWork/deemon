@@ -210,7 +210,8 @@ createVsFile("deemon.sln", fp -> {
 		fp << 'Project("{' << DEEMON_GUID << '}") = "' << dexName << '", "dex\\' << dexName << '.vcxproj", "{' << dexGuid << '}"\r\n'
 			'	ProjectSection(ProjectDependencies) = postProject\r\n'
 			'		{' << DEEMON_CORE_GUID << '} = {' << DEEMON_CORE_GUID << '}\r\n'
-			'	EndProjectSection\r\n';
+			'	EndProjectSection\r\n'
+			'EndProject\r\n';
 	}
 
 	local globalFolders: {FsDirNode...} = Tuple({

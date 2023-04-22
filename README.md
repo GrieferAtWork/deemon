@@ -1,6 +1,6 @@
 # deemon - Deemon scripting language
 
-[![C/C++ CI](https://github.com/GrieferAtWork/deemon/actions/workflows/c-cpp.yml/badge.svg)](https://github.com/GrieferAtWork/deemon/actions/workflows/c-cpp.yml)
+[![Linux](https://github.com/GrieferAtWork/deemon/actions/workflows/linux.yml/badge.svg)](https://github.com/GrieferAtWork/deemon/actions/workflows/linux.yml) [![Windows (x32)](https://github.com/GrieferAtWork/deemon/actions/workflows/windows-x32.yml/badge.svg)](https://github.com/GrieferAtWork/deemon/actions/workflows/windows-x32.yml) [![Windows (x64)](https://github.com/GrieferAtWork/deemon/actions/workflows/windows-x64.yml/badge.svg)](https://github.com/GrieferAtWork/deemon/actions/workflows/windows-x64.yml)
 
 Deemon is a scripting language with a syntax inspired by C and other languages derived by C, whilst featuring a python-like runtime.
 

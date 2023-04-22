@@ -1,0 +1,42 @@
+name: Windows (x32)
+
+on:
+  push:
+    branches: [ "master" ]
+  pull_request:
+    branches: [ "master" ]
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v3
+      with:
+        submodules: 'true'
+
+    - name: Add MSBuild to PATH
+      uses: microsoft/setup-msbuild@v1.0.2
+
+    - name: Make
+      run: msbuild /m /p:Configuration=Debug-MSVC /p:Platform=Win32 .vs\deemon.sln
+
+    - name: Test
+      run: ${{ github.workspace }}\deemon.exe util\test.dee
+
+    - name: Prepare lib folder for artifact
+      shell: bash
+      run: |
+        find "lib" -name '*.dec' -delete
+        find "lib" -name '.gitignore' -delete
+        unlink lib/LANGUAGE.txt || true
+
+    - name: Save executable as artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: ${{ runner.os }}-${{ github.sha }}-build-x32
+        if-no-files-found: ignore
+        path: |
+          deemon.*
+          lib
