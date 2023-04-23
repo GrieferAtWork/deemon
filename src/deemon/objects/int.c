@@ -1896,6 +1896,12 @@ err_pout:
 	goto done_pout;
 }
 
+
+#undef DeeInt_Print_USES_UNICODE
+#if 0 /* When defined, `DeeInt_Print()' might print non-ascii characters */
+#define DeeInt_Print_USES_UNICODE
+#endif
+
 /* Print an integer to a given format-printer.
  * Radix must be one of `2', `4', `8', `10' or `16' and
  * if it isn't, a `NotImplemented' error is thrown.
@@ -2081,7 +2087,7 @@ err_temp:
 			goto done_buf;
 		}
 
-		/* Print the numsys prefix. */
+		/* Print the radix prefix. */
 		if (radix_and_flags & DEEINT_PRINT_FNUMSYS) {
 			if (dig_bits == 4)
 				*--iter = digit_chars[33]; /* x */
@@ -2168,36 +2174,33 @@ PUBLIC WUNUSED NONNULL((1, 2)) int DCALL
 DeeInt_TryAs16(DeeObject *__restrict self,
                int16_t *__restrict value) {
 #if DIGIT_BITS <= 16
+	DeeIntObject *me = (DeeIntObject *)self;
 	uint16_t prev, result;
 	bool negative;
 	dssize_t i;
-	ASSERT_OBJECT_TYPE_EXACT(self, &DeeInt_Type);
-	switch (DeeInt_SIZE(self)) {
-
+	ASSERT_OBJECT_TYPE_EXACT(me, &DeeInt_Type);
+	switch (me->ob_size) {
 	case 0:
 		*value = 0;
 		return 0;
-
 	case 1:
-		*value = DeeInt_DIGIT(self)[0];
+		*value = me->ob_digit[0];
 		return INT_UNSIGNED;
-
 	case -1:
-		*value = -(int16_t)DeeInt_DIGIT(self)[0];
+		*value = -(int16_t)me->ob_digit[0];
 		return INT_SIGNED;
-
 	default: break;
 	}
 	result   = 0;
 	prev     = 0;
 	negative = false;
-	i = DeeInt_SIZE(self);
+	i = me->ob_size;
 	if (i < 0) {
 		negative = true;
 		i        = -i;
 	}
 	while (--i >= 0) {
-		result = (result << DIGIT_BITS) | DeeInt_DIGIT(self)[i];
+		result = (result << DIGIT_BITS) | me->ob_digit[i];
 		if ((result >> DIGIT_BITS) != prev)
 			goto overflow;
 		prev = result;
@@ -2241,30 +2244,33 @@ overflow:
 PUBLIC WUNUSED NONNULL((1, 2)) int DCALL
 DeeInt_TryAs32(DeeObject *__restrict self,
                int32_t *__restrict value) {
+	DeeIntObject *me = (DeeIntObject *)self;
 	uint32_t prev, result;
 	bool negative;
 	dssize_t i;
-	ASSERT_OBJECT_TYPE_EXACT(self, &DeeInt_Type);
-	switch (DeeInt_SIZE(self)) {
-	case 0: *value = 0; return 0;
+	ASSERT_OBJECT_TYPE_EXACT(me, &DeeInt_Type);
+	switch (me->ob_size) {
+	case 0:
+		*value = 0;
+		return 0;
 	case 1:
-		*value = DeeInt_DIGIT(self)[0];
+		*value = me->ob_digit[0];
 		return INT_UNSIGNED;
 	case -1:
-		*value = -(int32_t)DeeInt_DIGIT(self)[0];
+		*value = -(int32_t)me->ob_digit[0];
 		return INT_SIGNED;
 	default: break;
 	}
 	result   = 0;
 	prev     = 0;
 	negative = false;
-	i = DeeInt_SIZE(self);
+	i = me->ob_size;
 	if (i < 0) {
 		negative = true;
 		i        = -i;
 	}
 	while (--i >= 0) {
-		result = (result << DIGIT_BITS) | DeeInt_DIGIT(self)[i];
+		result = (result << DIGIT_BITS) | me->ob_digit[i];
 		if ((result >> DIGIT_BITS) != prev)
 			goto overflow;
 		prev = result;
@@ -2284,36 +2290,33 @@ overflow:
 PUBLIC WUNUSED NONNULL((1, 2)) int DCALL
 DeeInt_TryAs64(DeeObject *__restrict self,
                int64_t *__restrict value) {
+	DeeIntObject *me = (DeeIntObject *)self;
 	uint64_t prev, result;
 	bool negative;
 	dssize_t i;
-	ASSERT_OBJECT_TYPE_EXACT(self, &DeeInt_Type);
-	switch (DeeInt_SIZE(self)) {
-
+	ASSERT_OBJECT_TYPE_EXACT(me, &DeeInt_Type);
+	switch (me->ob_size) {
 	case 0:
 		*value = 0;
 		return 0;
-
 	case 1:
-		*value = DeeInt_DIGIT(self)[0];
+		*value = me->ob_digit[0];
 		return INT_UNSIGNED;
-
 	case -1:
-		*value = -(int64_t)DeeInt_DIGIT(self)[0];
+		*value = -(int64_t)me->ob_digit[0];
 		return INT_SIGNED;
-
 	default: break;
 	}
 	result   = 0;
 	prev     = 0;
 	negative = false;
-	i = DeeInt_SIZE(self);
+	i = me->ob_size;
 	if (i < 0) {
 		negative = true;
 		i        = -i;
 	}
 	while (--i >= 0) {
-		result = (result << DIGIT_BITS) | DeeInt_DIGIT(self)[i];
+		result = (result << DIGIT_BITS) | me->ob_digit[i];
 		if ((result >> DIGIT_BITS) != prev)
 			goto overflow;
 		prev = result;
@@ -2333,34 +2336,31 @@ overflow:
 PUBLIC WUNUSED NONNULL((1, 2)) int DCALL
 DeeInt_TryAs128(DeeObject *__restrict self,
                 Dee_int128_t *__restrict value) {
+	DeeIntObject *me = (DeeIntObject *)self;
 	union {
 		Dee_uint128_t u;
 		Dee_int128_t  s;
 	} result;
 	bool negative;
 	dssize_t i;
-	ASSERT_OBJECT_TYPE_EXACT(self, &DeeInt_Type);
-	switch (DeeInt_SIZE(self)) {
-
+	ASSERT_OBJECT_TYPE_EXACT(me, &DeeInt_Type);
+	switch (me->ob_size) {
 	case 0:
 		__hybrid_int128_setzero(*value);
 		return 0;
-
 	case 1:
-		__hybrid_int128_vec64_significand(*value, 0) = DeeInt_DIGIT(self)[0];
+		__hybrid_int128_vec64_significand(*value, 0) = me->ob_digit[0];
 		__hybrid_int128_vec64_significand(*value, 1) = 0;
 		return INT_UNSIGNED;
-
 	case -1:
-		__hybrid_int128_vec64_significand(*value, 0) = -(sdigit)DeeInt_DIGIT(self)[0];
+		__hybrid_int128_vec64_significand(*value, 0) = -(sdigit)me->ob_digit[0];
 		__hybrid_int128_vec64_significand(*value, 1) = -1;
 		return INT_SIGNED;
-
 	default: break;
 	}
 	__hybrid_uint128_setzero(result.u);
 	negative = false;
-	i        = DeeInt_SIZE(self);
+	i = me->ob_size;
 	if (i < 0) {
 		negative = true;
 		i = -i;
@@ -2369,7 +2369,7 @@ DeeInt_TryAs128(DeeObject *__restrict self,
 		if (__hybrid_uint128_shl_DIGIT_BITS_overflows(result.u))
 			goto overflow;
 		__hybrid_uint128_shl_DIGIT_BITS(result.u);
-		__hybrid_uint128_or(result.u, DeeInt_DIGIT(self)[i]);
+		__hybrid_uint128_or(result.u, me->ob_digit[i]);
 	}
 	if (negative) {
 		static Dee_uint128_t const uint128_ill_pos =
@@ -2650,6 +2650,7 @@ PUBLIC WUNUSED NONNULL((1, 2)) int
 (DCALL DeeInt_AsBytes)(DeeObject *__restrict self,
                        void *__restrict dst, size_t length,
                        bool little_endian, bool as_signed) {
+	DeeIntObject *me = (DeeIntObject *)self;
 	uint8_t *writer;
 	twodigits temp;
 	size_t i, count, remaining;
@@ -2658,8 +2659,8 @@ PUBLIC WUNUSED NONNULL((1, 2)) int
 	uint8_t leading_byte;
 	digit last_digit;
 	unsigned int last_bits;
-	ASSERT_OBJECT_TYPE_EXACT(self, &DeeInt_Type);
-	count = (size_t)DeeInt_SIZE(self);
+	ASSERT_OBJECT_TYPE_EXACT(me, &DeeInt_Type);
+	count = (size_t)me->ob_size;
 	if unlikely(!count) {
 		/* Special case: zero. */
 		bzero(dst, length);
@@ -2667,10 +2668,10 @@ PUBLIC WUNUSED NONNULL((1, 2)) int
 	}
 	leading_byte = 0;
 	if ((dssize_t)count < 0) {
-		count        = (size_t) - (dssize_t)count;
+		count = (size_t)(-(dssize_t)count);
 		leading_byte = 0xff;
 		if unlikely(!as_signed) {
-			err_integer_overflow((DeeObject *)self, 0, false);
+			err_integer_overflow((DeeObject *)me, 0, false);
 			goto err;
 		}
 	}
@@ -2685,7 +2686,7 @@ PUBLIC WUNUSED NONNULL((1, 2)) int
 	num_bits  = 0;
 	remaining = length;
 	for (i = 0; i < count - 1; ++i) {
-		temp |= (twodigits)DeeInt_DIGIT(self)[i] << num_bits;
+		temp |= (twodigits)me->ob_digit[i] << num_bits;
 		num_bits += DIGIT_BITS;
 		while (num_bits >= 8) {
 			if (!remaining)
@@ -2699,7 +2700,7 @@ PUBLIC WUNUSED NONNULL((1, 2)) int
 		}
 	}
 	ASSERT(i == count - 1);
-	last_digit = DeeInt_DIGIT(self)[i];
+	last_digit = me->ob_digit[i];
 	last_bits  = DIGIT_BITS;
 	/* The last bit was read. - Now truncate leading zeros. */
 	while (last_bits && !(last_digit & ((digit)1 << (last_bits - 1))))
@@ -2742,7 +2743,7 @@ PUBLIC WUNUSED NONNULL((1, 2)) int
 	       leading_byte,
 	       remaining);
 #if 1
-	if (DeeInt_SIZE(self) < 0) {
+	if (me->ob_size < 0) {
 		/* The integer is negative. -> We must decrement +
 		 * invert all the integer bits that were written. */
 		size_t total_bits = num_bits + (length - remaining) * 8;
@@ -2791,7 +2792,7 @@ done_decr:
 #endif
 	return 0;
 err_overflow:
-	err_integer_overflow(self, length * 8, true);
+	err_integer_overflow((DeeObject *)me, length * 8, true);
 err:
 	return -1;
 }
@@ -3104,95 +3105,98 @@ int_hash(DeeIntObject *__restrict self) {
 
 	default: break;
 	}
-	sign = 1, x = 0;
-	if (i < 0)
-		sign = -1, i = -i;
+	sign = 1;
+	x    = 0;
+	if (i < 0) {
+		sign = -1;
+		i    = -i;
+	}
 	while (--i >= 0) {
 		x = (x << DIGIT_BITS) | (x >> ((__SIZEOF_POINTER__ * 8) - DIGIT_BITS));
-		x += self->ob_digit[i];
+		x += self->ob_digit[(size_t)i];
 	}
 	return x * sign;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-int_cmp_eq(DeeObject *self, DeeObject *some_object) {
+int_cmp_eq(DeeIntObject *self, DeeObject *some_object) {
 	dssize_t compare_value;
-	some_object = DeeObject_Int(some_object);
-	if unlikely(!some_object)
+	DREF DeeIntObject *rhs;
+	rhs = (DREF DeeIntObject *)DeeObject_Int(some_object);
+	if unlikely(!rhs)
 		goto err;
-	compare_value = int_compareint((DeeIntObject *)self,
-	                               (DeeIntObject *)some_object);
-	Dee_Decref(some_object);
+	compare_value = int_compareint(self, rhs);
+	Dee_Decref(rhs);
 	return_bool(compare_value == 0);
 err:
 	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-int_cmp_ne(DeeObject *self, DeeObject *some_object) {
+int_cmp_ne(DeeIntObject *self, DeeObject *some_object) {
 	dssize_t compare_value;
-	some_object = DeeObject_Int(some_object);
-	if unlikely(!some_object)
+	DREF DeeIntObject *rhs;
+	rhs = (DREF DeeIntObject *)DeeObject_Int(some_object);
+	if unlikely(!rhs)
 		goto err;
-	compare_value = int_compareint((DeeIntObject *)self,
-	                               (DeeIntObject *)some_object);
-	Dee_Decref(some_object);
+	compare_value = int_compareint(self, rhs);
+	Dee_Decref(rhs);
 	return_bool(compare_value != 0);
 err:
 	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-int_cmp_lo(DeeObject *self, DeeObject *some_object) {
+int_cmp_lo(DeeIntObject *self, DeeObject *some_object) {
 	dssize_t compare_value;
-	some_object = DeeObject_Int(some_object);
-	if unlikely(!some_object)
+	DREF DeeIntObject *rhs;
+	rhs = (DREF DeeIntObject *)DeeObject_Int(some_object);
+	if unlikely(!rhs)
 		goto err;
-	compare_value = int_compareint((DeeIntObject *)self,
-	                               (DeeIntObject *)some_object);
-	Dee_Decref(some_object);
+	compare_value = int_compareint(self, rhs);
+	Dee_Decref(rhs);
 	return_bool(compare_value < 0);
 err:
 	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-int_cmp_le(DeeObject *self, DeeObject *some_object) {
+int_cmp_le(DeeIntObject *self, DeeObject *some_object) {
 	dssize_t compare_value;
-	some_object = DeeObject_Int(some_object);
-	if unlikely(!some_object)
+	DREF DeeIntObject *rhs;
+	rhs = (DREF DeeIntObject *)DeeObject_Int(some_object);
+	if unlikely(!rhs)
 		goto err;
-	compare_value = int_compareint((DeeIntObject *)self,
-	                               (DeeIntObject *)some_object);
-	Dee_Decref(some_object);
+	compare_value = int_compareint(self, rhs);
+	Dee_Decref(rhs);
 	return_bool(compare_value <= 0);
 err:
 	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-int_cmp_gr(DeeObject *self, DeeObject *some_object) {
+int_cmp_gr(DeeIntObject *self, DeeObject *some_object) {
 	dssize_t compare_value;
-	some_object = DeeObject_Int(some_object);
-	if unlikely(!some_object)
+	DREF DeeIntObject *rhs;
+	rhs = (DREF DeeIntObject *)DeeObject_Int(some_object);
+	if unlikely(!rhs)
 		goto err;
-	compare_value = int_compareint((DeeIntObject *)self,
-	                               (DeeIntObject *)some_object);
-	Dee_Decref(some_object);
+	compare_value = int_compareint(self, rhs);
+	Dee_Decref(rhs);
 	return_bool(compare_value > 0);
 err:
 	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-int_cmp_ge(DeeObject *self, DeeObject *some_object) {
+int_cmp_ge(DeeIntObject *self, DeeObject *some_object) {
 	dssize_t compare_value;
-	some_object = DeeObject_Int(some_object);
-	if unlikely(!some_object)
+	DREF DeeIntObject *rhs;
+	rhs = (DREF DeeIntObject *)DeeObject_Int(some_object);
+	if unlikely(!rhs)
 		goto err;
-	compare_value = int_compareint((DeeIntObject *)self,
-	                               (DeeIntObject *)some_object);
-	Dee_Decref(some_object);
+	compare_value = int_compareint(self, rhs);
+	Dee_Decref(rhs);
 	return_bool(compare_value >= 0);
 err:
 	return NULL;
@@ -3201,27 +3205,27 @@ err:
 
 PRIVATE struct type_cmp int_cmp = {
 	/* .tp_hash = */ (dhash_t (DCALL *)(DeeObject *__restrict))&int_hash,
-	/* .tp_eq   = */ &int_cmp_eq,
-	/* .tp_ne   = */ &int_cmp_ne,
-	/* .tp_lo   = */ &int_cmp_lo,
-	/* .tp_le   = */ &int_cmp_le,
-	/* .tp_gr   = */ &int_cmp_gr,
-	/* .tp_ge   = */ &int_cmp_ge,
+	/* .tp_eq   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&int_cmp_eq,
+	/* .tp_ne   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&int_cmp_ne,
+	/* .tp_lo   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&int_cmp_lo,
+	/* .tp_le   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&int_cmp_le,
+	/* .tp_gr   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&int_cmp_gr,
+	/* .tp_ge   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&int_cmp_ge,
 };
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 int_tostr_impl(DeeIntObject *__restrict self, uint32_t flags, size_t precision) {
-#if 0 /* XXX: Locale support? And if so, enable the unicode variant here. */
+#ifdef DeeInt_Print_USES_UNICODE
 	struct unicode_printer printer = UNICODE_PRINTER_INIT;
 	if unlikely(DeeInt_Print((DeeObject *)self, flags, precision,
 	                         &unicode_printer_print,
 	                         &printer) < 0)
 		goto err_printer;
-	return unicode_printer_pack(&p);
+	return unicode_printer_pack(&printer);
 err_printer:
-	unicode_printer_fini(&p);
+	unicode_printer_fini(&printer);
 	return NULL;
-#else
+#else /* DeeInt_Print_USES_UNICODE */
 	struct ascii_printer printer = ASCII_PRINTER_INIT;
 	if unlikely(DeeInt_Print((DeeObject *)self, flags, precision,
 	                         &ascii_printer_print,
@@ -3231,7 +3235,7 @@ err_printer:
 err_printer:
 	ascii_printer_fini(&printer);
 	return NULL;
-#endif
+#endif /* !DeeInt_Print_USES_UNICODE */
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -3342,12 +3346,14 @@ int_reqbits(DeeIntObject const *__restrict self, bool is_signed) {
 		--digit_count;
 	if (!digit_count)
 		return 1; /* Special case: `0' */
+
 	/* Account for all of the digits leading up to the last one. */
 	result = (digit_count - 1) * DIGIT_BITS;
 	last_digit = self->ob_digit[digit_count - 1];
 	ASSERT(last_digit != 0);
 	if (self->ob_size < 0) {
 		++result;
+
 		/* Deal with special case: Integers that require the same number
 		 * of bits as unsigned-positive, like they do as signed-negative */
 		if (POPCOUNT(last_digit) == 1) {
@@ -3374,6 +3380,7 @@ not_a_limit_int:
 			++result;
 			last_digit >>= 1;
 		} while (last_digit);
+
 		/* When needing to represent a signed integer, we'll be
 		 * needing at least one additional, leading sign-bit. */
 		if (is_signed)
@@ -3404,6 +3411,7 @@ int_tobytes(DeeIntObject *self, size_t argc,
 		length = int_reqbits(self, is_signed);
 		if unlikely(length == (size_t)-1)
 			goto err;
+
 		/* Round up to the required number of bytes. */
 		length = (length + 7) / 8;
 	}
@@ -3427,6 +3435,7 @@ int_tobytes(DeeIntObject *self, size_t argc,
 			goto err;
 		}
 	}
+
 	/* Encode integer bytes. */
 	result = DeeBytes_NewBufferUninitialized(length);
 	if unlikely(!result)
@@ -3511,10 +3520,11 @@ PRIVATE struct type_method tpconst int_class_methods[] = {
 	TYPE_KWMETHOD("frombytes", &int_frombytes,
 	              "(data:?DBytes,byteorder:?Dstring=!N,signed=!f)->?.\n"
 	              "@param byteorder The byteorder encoding used by the returned bytes. "
-	              "One of $\"little\" (for little-endian), $\"big\" (for big-endian) "
-	              "or ?N (for host-endian)\n"
+	              /*            */ "One of $\"little\" (for little-endian), $\"big\" "
+	              /*            */ "(for big-endian) or ?N (for host-endian)\n"
 	              "@throw ValueError The given @byteorder string isn't recognized\n"
-	              "The inverse of ?#tobytes, decoding a given bytes buffer @bytes to construct an integer"),
+	              "The inverse of ?#tobytes, decoding a given bytes buffer @bytes to "
+	              /**/ "construct an integer"),
 	TYPE_METHOD_END
 };
 
@@ -3654,7 +3664,7 @@ DOC_REF(numeric_isunordered_doc);
 PRIVATE struct type_method tpconst int_methods[] = {
 	TYPE_KWMETHOD(STR_tostr, &int_tostr,
 	              "(radix=!10,precision=!0,mode=!P{})->?Dstring\n"
-	              "@param precision The minimum number of digits (excluding numsys/sign "
+	              "@param precision The minimum number of digits (excluding radix/sign "
 	              /*            */ "prefixes) to print. Padding is done using $'0'-chars.\n"
 	              "@throw ValueError The given @mode was not recognized\n"
 	              "@throw NotImplemented The given @radix cannot be represented\n"
@@ -3849,7 +3859,11 @@ PRIVATE DeeObject *const str_pNTH[3] = { (DeeObject *)&str_p1st, (DeeObject *)&s
 
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 int_get_nth(DeeIntObject *__restrict self) {
+#ifdef DeeInt_Print_USES_UNICODE
+	struct unicode_printer printer;
+#else /* DeeInt_Print_USES_UNICODE */
 	struct ascii_printer printer;
+#endif /* !DeeInt_Print_USES_UNICODE */
 	switch (self->ob_size) {
 	case -1:
 		if (self->ob_digit[0] >= 1 && self->ob_digit[0] <= 3)
@@ -3862,8 +3876,21 @@ int_get_nth(DeeIntObject *__restrict self) {
 	default:
 		break;
 	}
+#ifdef DeeInt_Print_USES_UNICODE
+	unicode_printer_init(&printer);
+	if unlikely(DeeInt_Print((DeeObject *)self, DEEINT_PRINT_DEC,
+	                         0, &unicode_printer_print, &printer) < 0)
+		goto err_printer;
+	if unlikely(unicode_printer_print(&printer, "th", 2) < 0)
+		goto err_printer;
+	return unicode_printer_pack(&printer);
+err_printer:
+	unicode_printer_fini(&printer);
+	return NULL;
+#else /* DeeInt_Print_USES_UNICODE */
 	ascii_printer_init(&printer);
-	if unlikely(DeeInt_Print((DeeObject *)self, DEEINT_PRINT_DEC, 0, &ascii_printer_print, &printer) < 0)
+	if unlikely(DeeInt_Print((DeeObject *)self, DEEINT_PRINT_DEC,
+	                         0, &ascii_printer_print, &printer) < 0)
 		goto err_printer;
 	if unlikely(ascii_printer_print(&printer, "th", 2) < 0)
 		goto err_printer;
@@ -3871,6 +3898,7 @@ int_get_nth(DeeIntObject *__restrict self) {
 err_printer:
 	ascii_printer_fini(&printer);
 	return NULL;
+#endif /* !DeeInt_Print_USES_UNICODE */
 }
 
 

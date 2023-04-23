@@ -206,10 +206,10 @@ import_module_by_name:
 				memmovedownc(last_dot, last_dot + 1,
 				             (size_t)((char *)buffer - last_dot),
 				             sizeof(char));
+
 				/* Release one character from the buffer. */
 				--buffer, --other_pathend;
 				--dec_curr->ds_iter;
-				;
 			} else {
 				for (; other_pathpart < other_pathend; ++other_pathpart, ++buffer) {
 					if ((*buffer = *other_pathpart) == DeeSystem_SEP)
@@ -225,6 +225,7 @@ import_module_by_name:
 		}
 		addr     = dec_ptr2addr(data);
 		dec_curr = SC_IMPORTS;
+
 		/* Encode the string address as a pointer. */
 		if (dec_putptr(addr))
 			goto err;
@@ -324,6 +325,7 @@ decgen_globals(DeeModuleObject *__restrict self) {
 						goto err; /* Dec_GlbSym.s_doc */
 				}
 			}
+
 			/* Dump all other symbol with for the same
 			 * address in the extended symbol table.
 			 * NOTE: To speed up this check, `first_alias' is
@@ -338,6 +340,7 @@ decgen_globals(DeeModuleObject *__restrict self) {
 					continue;
 				if (first_alias->ss_index != normali)
 					continue;
+
 				/* Found another symbol for this address.
 				 * Add it to the extended symbol table. */
 				dec_curr = exttab;
@@ -383,6 +386,7 @@ decgen_globals(DeeModuleObject *__restrict self) {
 			}
 		}
 	}
+
 	if (has_special_symbols) {
 		/* Emit special (extern) symbols */
 		dec_curr = exttab;
@@ -464,6 +468,7 @@ dec_putclassdesc(DeeClassDescriptorObject *__restrict self) {
 	uint16_t op_count  = 0;
 	size_t cattr_count = 0;
 	size_t iattr_count = 0;
+
 	/* Count the number of operators, class- and instance-attributes. */
 	for (i = 0; i <= self->cd_clsop_mask; ++i) {
 		if (self->cd_clsop_list[i].co_name == (uint16_t)-1)
@@ -498,6 +503,7 @@ dec_putclassdesc(DeeClassDescriptorObject *__restrict self) {
 #endif /* CLASS_ATTRIBUTE_FMASK > UINT8_MAX */
 		++iattr_count;
 	}
+
 	/* Check control sizes to see if we can still use the 8-bit encoding. */
 	if (self->cd_flags > UINT8_MAX || self->cd_cmemb_size > UINT8_MAX ||
 	    self->cd_imemb_size > UINT8_MAX || op_count > UINT8_MAX ||
@@ -568,6 +574,7 @@ empty_doc:
 		if (dec_putptr((uint32_t)iattr_count))
 			goto err; /* Dec_ClassDescriptor::cd_iattr_count */
 	}
+
 	/* Emit data for all the operators. */
 	for (i = 0; i <= self->cd_clsop_mask; ++i) {
 		uint16_t name, addr;
@@ -588,6 +595,7 @@ empty_doc:
 				goto err; /* Dec_ClassOperator::co_addr */
 		}
 	}
+
 	/* Emit data for class attributes. */
 	for (i = 0; i <= self->cd_cattr_mask; ++i) {
 		struct class_attribute *attr;
@@ -640,6 +648,7 @@ empty_cattr_doc:
 				goto err; /* Dec_ClassAttribute::ca_doclen */
 		}
 	}
+
 	/* Emit data for instance attributes. */
 	for (i = 0; i <= self->cd_iattr_mask; ++i) {
 		struct class_attribute *attr;
@@ -811,18 +820,25 @@ INTERN WUNUSED int (DCALL dec_putobj)(DeeObject *self) {
 	DeeTypeObject *tp_self;
 	/* Special handling for encoding various different types of objects. */
 	uint16_t builtin_id;
+
 	/* Special case: Encode a NULL object using `DTYPE_NULL' */
 	if (!self)
 		return dec_putb(DTYPE_NULL);
 
 	tp_self = Dee_TYPE(self);
+
+	/* `none' */
 	if (tp_self == &DeeNone_Type)
 		return dec_putb(DTYPE_NONE);
+
+	/* `float' */
 	if (tp_self == &DeeFloat_Type) {
 		if (dec_putb(DTYPE_IEEE754))
 			goto err;
 		return dec_putieee754(DeeFloat_VALUE(self));
 	}
+
+	/* `int' */
 	if (tp_self == &DeeInt_Type) {
 		uint8_t *buffer;
 		if (DeeInt_IsNeg(self)) {
@@ -844,6 +860,8 @@ INTERN WUNUSED int (DCALL dec_putobj)(DeeObject *self) {
 		dec_curr->ds_iter = buffer;
 		goto done;
 	}
+
+	/* `string' */
 	if (tp_self == &DeeString_Type) {
 		uint8_t *strptr;
 		uint32_t straddr;
@@ -856,9 +874,11 @@ INTERN WUNUSED int (DCALL dec_putobj)(DeeObject *self) {
 			goto err;
 		if (dec_putptr((uint32_t)WSTR_LENGTH(utf8_data)))
 			goto err;
+
 		/* Special case: an empty string doesn't have an address pointer. */
 		if (DeeString_IsEmpty(self))
 			goto done;
+
 		/* Emit the string within the string section. */
 		oldsec   = dec_curr;
 		dec_curr = SC_STRING;
@@ -869,23 +889,29 @@ INTERN WUNUSED int (DCALL dec_putobj)(DeeObject *self) {
 			goto err;
 		straddr  = dec_ptr2addr(strptr);
 		dec_curr = oldsec;
+
 		/* Emit the address of the string. */
 		if (dec_putptr(straddr))
 			goto err;
 		goto done;
 	}
+
+	/* `Tuple' */
 	if (tp_self == &DeeTuple_Type) {
 		size_t i, length = DeeTuple_SIZE(self);
 		if (dec_putb(DTYPE_TUPLE))
 			goto err;
 		if (dec_putptr((uint32_t)length))
 			goto err;
+
 		/* Encode all of the tuple's elements. */
 		for (i = 0; i < length; ++i)
 			if (dec_putobj(DeeTuple_GET(self, i)))
 				goto err;
 		goto done;
 	}
+
+	/* `List' */
 	if (tp_self == &DeeList_Type) {
 		size_t i, length;
 		if (dec_recursion_check(self))
@@ -898,15 +924,18 @@ INTERN WUNUSED int (DCALL dec_putobj)(DeeObject *self) {
 		if (dec_putptr((uint32_t)length))
 			goto err;
 		DEC_RECURSION_BEGIN(self);
+
 		/* Encode all of the list's elements. */
 		DeeList_LockRead(self);
 		for (i = 0; i < length; ++i) {
 			DREF DeeObject *obj;
 			int error;
+
 			/* Must re-validate the list's length, because it may have changed. */
 			obj = (i < DeeList_SIZE(self) ? DeeList_GET(self, i) : Dee_None);
 			Dee_Incref(obj);
 			DeeList_LockEndRead(self);
+
 			/* Emit the list item. */
 			error = dec_putobj(obj);
 			Dee_Decref(obj);
@@ -920,6 +949,8 @@ INTERN WUNUSED int (DCALL dec_putobj)(DeeObject *self) {
 		DEC_RECURSION_END();
 		goto done;
 	}
+
+	/* `HashSet' */
 	if (tp_self == &DeeHashSet_Type) {
 		size_t i, length, written;
 		DeeHashSetObject *me = (DeeHashSetObject *)self;
@@ -935,6 +966,7 @@ INTERN WUNUSED int (DCALL dec_putobj)(DeeObject *self) {
 		if (dec_putptr((uint32_t)length))
 			goto err;
 		DEC_RECURSION_BEGIN(self);
+
 		/* Encode all of the set's elements. */
 		written = 0;
 		DeeHashSet_LockRead(me);
@@ -950,6 +982,7 @@ INTERN WUNUSED int (DCALL dec_putobj)(DeeObject *self) {
 				Dee_Decref(obj);
 				break;
 			}
+
 			/* Emit the set item. */
 			error = dec_putobj(obj);
 			Dee_Decref(obj);
@@ -962,6 +995,7 @@ INTERN WUNUSED int (DCALL dec_putobj)(DeeObject *self) {
 		}
 		DeeHashSet_LockEndRead(me);
 		DEC_RECURSION_END();
+
 		/* For anything that couldn't be written, write `none' */
 		while unlikely(written < length) {
 			if (dec_putb(DTYPE_NONE))
@@ -970,6 +1004,8 @@ INTERN WUNUSED int (DCALL dec_putobj)(DeeObject *self) {
 		}
 		goto done;
 	}
+
+	/* `Dict' */
 	if (tp_self == &DeeDict_Type) {
 		size_t i, length, written;
 		DeeDictObject *me = (DeeDictObject *)self;
@@ -985,6 +1021,7 @@ INTERN WUNUSED int (DCALL dec_putobj)(DeeObject *self) {
 		if (dec_putptr((uint32_t)length))
 			goto err;
 		DEC_RECURSION_BEGIN(self);
+
 		/* Encode all of the Dict's elements. */
 		written = 0;
 		DeeDict_LockRead(me);
@@ -1004,6 +1041,7 @@ INTERN WUNUSED int (DCALL dec_putobj)(DeeObject *self) {
 				Dee_Decref(key);
 				break;
 			}
+
 			/* Emit the Dict key + value pair. */
 			error = dec_putobj(key);
 			if (!error)
@@ -1019,6 +1057,7 @@ INTERN WUNUSED int (DCALL dec_putobj)(DeeObject *self) {
 		}
 		DeeDict_LockEndRead(me);
 		DEC_RECURSION_END();
+
 		/* For anything that couldn't be written, write a `none:none' pair. */
 		while unlikely(written < length) {
 			if (dec_putb(DTYPE_NONE))
@@ -1029,6 +1068,8 @@ INTERN WUNUSED int (DCALL dec_putobj)(DeeObject *self) {
 		}
 		goto done;
 	}
+
+	/* `Dict.Frozen' */
 	if (tp_self == &DeeRoDict_Type) {
 		size_t i;
 		DeeRoDictObject *me = (DeeRoDictObject *)self;
@@ -1041,11 +1082,13 @@ INTERN WUNUSED int (DCALL dec_putobj)(DeeObject *self) {
 			goto err;
 		if (dec_putptr((uint32_t)me->rd_size))
 			goto err;
+
 		/* Encode all of the ro-Dict's elements. */
 		for (i = 0; i <= me->rd_mask; ++i) {
 			int error;
 			if (!me->rd_elem[i].di_key)
 				continue;
+
 			/* Emit the Dict key + value pair. */
 			error = dec_putobj(me->rd_elem[i].di_key);
 			if (!error)
@@ -1065,6 +1108,8 @@ INTERN WUNUSED int (DCALL dec_putobj)(DeeObject *self) {
 #endif /* !NDEBUG */
 		goto done;
 	}
+
+	/* `HashSet.Frozen' */
 	if (tp_self == &DeeRoSet_Type) {
 		size_t i;
 		DeeRoSetObject *me = (DeeRoSetObject *)self;
@@ -1096,6 +1141,8 @@ INTERN WUNUSED int (DCALL dec_putobj)(DeeObject *self) {
 #endif /* !NDEBUG */
 		goto done;
 	}
+
+	/* `Cell' */
 	if (tp_self == &DeeCell_Type) {
 		DREF DeeObject *cell_item;
 		int error;
@@ -1113,29 +1160,35 @@ INTERN WUNUSED int (DCALL dec_putobj)(DeeObject *self) {
 		Dee_XDecref(cell_item);
 		return error;
 	}
+
 	/* Emit a class descriptor. */
 	if (tp_self == &DeeClassDescriptor_Type)
 		return dec_putclassdesc((DeeClassDescriptorObject *)self);
+
 	/* Emit a keywords descriptor. */
 	if (tp_self == &DeeKwds_Type)
 		return dec_putkwds((DeeKwdsObject *)self);
+
 	/* Emit a code object. */
 	if (tp_self == &DeeCode_Type) {
 		if (dec_putb(DTYPE_CODE))
 			goto err;
 		return dec_putcode((DeeCodeObject *)self);
 	}
+
 	/* Emit a function object. */
 	if (tp_self == &DeeFunction_Type) {
+		DeeFunctionObject *me = (DeeFunctionObject *)self;
 		uint16_t i, refc;
 		if (dec_putb(DTYPE_FUNCTION))
 			goto err;
-		if (dec_putcode(((DeeFunctionObject *)self)->fo_code))
+		if (dec_putcode(me->fo_code))
 			goto err;
+
 		/* Emit referenced objects. */
-		refc = ((DeeFunctionObject *)self)->fo_code->co_refc;
+		refc = me->fo_code->co_refc;
 		for (i = 0; i < refc; ++i) {
-			if (dec_putobj(((DeeFunctionObject *)self)->fo_refv[i]))
+			if (dec_putobj(me->fo_refv[i]))
 				goto err;
 		}
 		return 0;
@@ -1145,9 +1198,9 @@ INTERN WUNUSED int (DCALL dec_putobj)(DeeObject *self) {
 	builtin_id = Dec_BuiltinID(self);
 	if unlikely(builtin_id == DEC_BUILTINID_UNKNOWN)
 		goto err_unsupported;
+
 	/* Encode a builtin object ID. */
-	if likely(DEC_BUILTINID_SETOF(builtin_id) ==
-	          current_dec.dw_objset) {
+	if likely(DEC_BUILTINID_SETOF(builtin_id) == current_dec.dw_objset) {
 		/* The object is part of the main object set
 		 * >> We can encode it as a single-byte DTYPE. */
 		if (dec_putb(DEC_BUILTINID_IDOF(builtin_id)))
@@ -1176,6 +1229,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) bool DCALL
 allow_8bit_code(DeeCodeObject *__restrict self) {
 	uint16_t i;
+
 	/* In big-file mode, we can never emit an 8-bit
 	 * image default file pointers may (will because
 	 * of the text (aka. assembly) pointer) be used. */
@@ -1206,6 +1260,7 @@ allow_8bit_code(DeeCodeObject *__restrict self) {
 		if (self->co_exceptv[i].eh_stack > UINT8_MAX)
 			goto nope;
 	}
+
 	/* Check if DDI information is located in 8-bit bounds. */
 	if (!(current_dec.dw_flags & DEC_WRITE_FNODEBUG)) {
 		if (self->co_ddi->d_ddisize > UINT16_MAX)
@@ -1246,6 +1301,7 @@ dec_do_putddi_strtab(DeeDDIObject *__restrict self,
 	}
 	for (i = 0; i < length; ++i) {
 		ddi_sec = dec_curr;
+
 		/* Emit the DDI string within the string section. */
 		dec_curr = SC_STRING;
 		str      = DeeString_STR(self->d_strtab) + vec[i];
@@ -1254,6 +1310,7 @@ dec_do_putddi_strtab(DeeDDIObject *__restrict self,
 			goto err;
 		straddr  = dec_ptr2addr(strptr);
 		dec_curr = ddi_sec;
+
 		/* Emit the string pointer within the DDI string vector. */
 		if (dec_putptr(straddr))
 			goto err;
@@ -1268,17 +1325,21 @@ PRIVATE WUNUSED NONNULL((1)) struct dec_sym *DCALL
 dec_putddi_strtab(DeeDDIObject *__restrict self,
                   uint32_t const *vec, uint32_t length) {
 	struct dec_section *result, *old_sec;
+
 	/* Create a new section within which debug data will be placed. */
 	result = dec_newsection_after(SC_DEBUG_DATA);
 	if unlikely(!result)
 		goto err;
 	old_sec  = dec_curr;
 	dec_curr = result;
+
 	/* Actually emit the debug data. */
 	if unlikely(dec_do_putddi_strtab(self, vec, length))
 		goto err;
+
 	/* Switch back to the old section. */
 	dec_curr = old_sec;
+
 	/* Return a pointer to a symbol describing the start of the sub-section. */
 	return &result->ds_start;
 err:
@@ -1309,12 +1370,13 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 dec_putddi_xdat_ptr(DeeDDIObject *__restrict ddi,
-                    struct Dee_ddi_exdat const *self,
+                    struct ddi_exdat const *self,
                     bool use_16bit) {
 	if (self && self->dx_size != 0) {
 		uint8_t *buf, *iter, *end;
 		size_t size;
 		struct dec_section *xsect, *old_sec;
+
 		/* Create a new section within which debug data will be placed. */
 		xsect = dec_newsection_after(SC_DEBUG_DATA);
 		if unlikely(!xsect)
@@ -1453,6 +1515,7 @@ INTERN WUNUSED NONNULL((1)) int
 	struct dec_sym *ddi_sym      = NULL;
 	struct dec_sym *kwd_sym      = NULL;
 	struct dec_section *code_sec = dec_curr;
+
 	/* Fill in a code object descriptor. */
 	descr.co_flags      = self->co_flags;
 	descr.co_localc     = self->co_localc;
@@ -1495,6 +1558,7 @@ INTERN WUNUSED NONNULL((1)) int
 			goto err;
 		dec_curr   = static_sec;
 		static_sym = &static_sec->ds_start; /* This is where static object data starts. */
+
 		/* Generate static object vector. */
 		if (dec_putobjv(self->co_staticc, self->co_staticv))
 			goto err;
@@ -1509,6 +1573,7 @@ INTERN WUNUSED NONNULL((1)) int
 		dec_curr   = except_sec;
 		except_sym = &except_sec->ds_start; /* This is where exception data starts. */
 		end        = (iter = self->co_exceptv) + self->co_exceptc;
+
 		/* Generate exception descriptor vector. */
 		if (use_8bit) {
 			if (dec_putb((uint8_t)self->co_exceptc))
@@ -1556,6 +1621,7 @@ INTERN WUNUSED NONNULL((1)) int
 			goto err;
 		dec_curr    = args_sec;
 		default_sym = &args_sec->ds_start; /* This is where argument data starts. */
+
 		/* Generate default argument data. */
 		if (dec_putobjv(self->co_argc_max - self->co_argc_min,
 		                (DeeObject **)self->co_defaultv))
@@ -1565,6 +1631,7 @@ INTERN WUNUSED NONNULL((1)) int
 	if (!(current_dec.dw_flags & DEC_WRITE_FNODEBUG)) {
 		/* Emit debug information if there are some */
 		DeeDDIObject *ddi = self->co_ddi;
+
 		/* Don't emit any debug information, if the DDI object doesn't have any text. */
 		if (ddi->d_ddisize ||
 		    (ddi->d_exdat && ddi->d_exdat->dx_size)) {
@@ -1575,12 +1642,14 @@ INTERN WUNUSED NONNULL((1)) int
 				goto err;
 			dec_curr = ddi_section;
 			ddi_sym  = &ddi_section->ds_start;
+
 			/* Start emitting the DDI object. */
 			if (dec_putddi_strtab_ptr(ddi,
 			                          ddi->d_strings,
 			                          ddi->d_nstring,
 			                          use_8bit))
 				goto err; /* Dec_CodeDDI.cd_strings */
+
 			/* Emit the DDI text into the debug-text section. */
 			dec_curr = SC_DEBUG_TEXT;
 			tempptr  = dec_allocstr(ddi->d_ddi, ddi->d_ddisize);
@@ -1688,11 +1757,12 @@ INTERN WUNUSED NONNULL((1)) int
 		}
 	}
 
-	dec_curr = code_sec;
 	/* Finally, emit the code object itself! */
+	dec_curr = code_sec;
 	if (use_8bit) {
 		Dec_8BitCode *pdesc8;
 		uint32_t code_addr = dec_addr;
+
 		/* Allocate and copy descriptor data. */
 		pdesc8 = (Dec_8BitCode *)dec_alloc(sizeof(Dec_8BitCode));
 		if unlikely(!pdesc8)
@@ -1746,6 +1816,7 @@ INTERN WUNUSED NONNULL((1)) int
 		if unlikely(!pdesc)
 			goto err;
 		memcpy(pdesc, &descr, sizeof(Dec_Code));
+
 		/* Create relocations. */
 		if (static_sym) {
 			if (dec_putrelat(code_addr + offsetof(Dec_Code, co_staticoff), DECREL_ABS32, static_sym))
@@ -1811,9 +1882,10 @@ INTERN WUNUSED NONNULL((1)) int
 		comtm = DeeModule_GetCTime((DeeObject *)self);
 		if unlikely(comtm == (uint64_t)-1)
 			goto err;
+
 		/* Fill in the original timestamp of when the module was compiled. */
-		header->e_timestamp_lo = HTOLE32((uint32_t)comtm);
-		header->e_timestamp_hi = HTOLE32((uint32_t)(comtm >> 32));
+		header->e_timestamp_lo = (uint32_t)HTOLE32((uint32_t)comtm);
+		header->e_timestamp_hi = (uint32_t)HTOLE32((uint32_t)(comtm >> 32));
 	}
 
 	/* Create initial relocations against other sections. */
