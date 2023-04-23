@@ -59,6 +59,10 @@
 #endif /* CONFIG_HAVE_F_GETFD */
 #endif /* !... */
 
+#ifndef UINT32_MAX
+#include <hybrid/limitcore.h>
+#define UINT32_MAX __UINT32_MAX__
+#endif /* !UINT32_MAX */
 
 DECL_BEGIN
 
@@ -92,12 +96,16 @@ pipe_new_impl(size_t pipe_size) {
 	{
 		HANDLE hReader, hWriter;
 		DBG_ALIGNMENT_DISABLE();
-		if (!CreatePipe(&hReader, &hWriter, NULL, pipe_size)) {
+#if __SIZEOF_SIZE_T__ > 4
+		if unlikely(pipe_size > UINT32_MAX)
+			pipe_size = UINT32_MAX;
+#endif /* __SIZEOF_SIZE_T__ > 4 */
+		if (!CreatePipe(&hReader, &hWriter, NULL, (uint32_t)pipe_size)) {
 			DWORD dwError = GetLastError();
 			DBG_ALIGNMENT_ENABLE();
 			DeeNTSystem_ThrowErrorf(NULL, dwError,
 			                        "Failed to create pipe (size: %" PRFu32 ")",
-			                        pipe_size);
+			                        (uint32_t)pipe_size);
 			goto err_reader_file_writer_file_result;
 		}
 		DBG_ALIGNMENT_ENABLE();
