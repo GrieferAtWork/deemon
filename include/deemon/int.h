@@ -107,9 +107,6 @@ struct Dee_int_object {
 	                                                 * The total number of digits is the absolute value of `ob_size',
 	                                                 * which is negative if the value of the integer is too. */
 };
-#define DeeInt_SIZE(x)  ((DeeIntObject *)Dee_REQUIRES_OBJECT(x))->ob_size
-#define DeeInt_DIGIT(x) ((DeeIntObject *)Dee_REQUIRES_OBJECT(x))->ob_digit
-
 
 #define DEE_PRIVATE_ABS(value)              \
 	((value) < 0                            \
@@ -416,13 +413,25 @@ DDATDEF DeeTypeObject DeeInt_Type;
 
 /* Builtin constant for special (often used) values. */
 #ifdef GUARD_DEEMON_OBJECTS_INT_C
-DDATDEF DeeIntObject  DeeInt_Zero;
-DDATDEF DeeIntObject  DeeInt_One;
-DDATDEF DeeIntObject  DeeInt_MinusOne;
+
+struct _Dee_int_0digit_object {
+	Dee_OBJECT_HEAD
+	Dee_ssize_t ob_size;
+};
+
+struct _Dee_int_1digit_object {
+	Dee_OBJECT_HEAD
+	Dee_ssize_t ob_size;
+	Dee_digit_t ob_digit[1];
+};
+
+DDATDEF struct _Dee_int_0digit_object DeeInt_Zero;
+DDATDEF struct _Dee_int_1digit_object DeeInt_One;
+DDATDEF struct _Dee_int_1digit_object DeeInt_MinusOne;
 #else /* GUARD_DEEMON_OBJECTS_INT_C */
-DDATDEF DeeObject     DeeInt_Zero;
-DDATDEF DeeObject     DeeInt_One;
-DDATDEF DeeObject     DeeInt_MinusOne;
+DDATDEF DeeObject DeeInt_Zero;
+DDATDEF DeeObject DeeInt_One;
+DDATDEF DeeObject DeeInt_MinusOne;
 #endif /* !GUARD_DEEMON_OBJECTS_INT_C */
 
 #define DeeInt_Check(x)      DeeObject_InstanceOfExact(x, &DeeInt_Type) /* `int' is final */
@@ -447,23 +456,6 @@ DFUNDEF WUNUSED DREF DeeObject *DCALL DeeInt_NewU8(uint8_t val);
 #define DeeInt_NewU8 DeeInt_NewU16
 #define DeeInt_NewS8 DeeInt_NewS16
 #endif /* DIGIT_BITS >= 16 */
-
-#define DeeInt_NewAutoFit(v)                       \
-	((v) < 0 ? ((v) >= INT8_MIN                    \
-	            ? DeeInt_NewS8((int8_t)(v))        \
-	            : (v) >= INT16_MIN                 \
-	              ? DeeInt_NewS16((int16_t)(v))    \
-	              : (v) >= INT32_MIN               \
-	                ? DeeInt_NewS32((int32_t)(v))  \
-	                : DeeInt_NewS64((int64_t)(v))) \
-	         : ((v) <= UINT8_MAX                   \
-	            ? DeeInt_NewU8((uint8_t)(v))       \
-	            : (v) <= UINT16_MAX                \
-	              ? DeeInt_NewU16((uint16_t)(v))   \
-	              : (v) <= UINT32_MAX              \
-	                ? DeeInt_NewU32((uint32_t)(v)) \
-	                : DeeInt_NewU64((uint64_t)(v))))
-
 
 /* Create an integer from signed/unsigned LEB data. */
 DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL

@@ -363,13 +363,15 @@ DeeInt_NewSleb(uint8_t const **__restrict preader) {
 				if (dst == result->ob_digit) {
 					/* Special case: INT(0) */
 					DeeInt_Free(result);
-					result = &DeeInt_Zero;
+					result = (DeeIntObject *)&DeeInt_Zero;
 					Dee_Incref(result);
 					goto done2;
 				}
+
 				/* Simple case: unused. */
 				break;
 			}
+
 			/* Less than one digit. */
 			*dst = (digit)temp;
 			if (*dst)
@@ -429,7 +431,7 @@ DeeInt_NewUleb(uint8_t const **__restrict preader) {
 				if (dst == result->ob_digit) {
 					/* Special case: INT(0) */
 					DeeInt_Free(result);
-					result = &DeeInt_Zero;
+					result = (DeeIntObject *)&DeeInt_Zero;
 					Dee_Incref(result);
 					goto done2;
 				}
@@ -3763,7 +3765,7 @@ int_get_ffs(DeeIntObject *__restrict self) {
 	if unlikely(self->ob_size < 0)
 		goto err_neg;
 	if unlikely(self->ob_size == 0)
-		return_reference_(&DeeInt_Zero);
+		return_reference_((DeeIntObject *)&DeeInt_Zero);
 	result = 1;
 	for (i = 0;; ++i) {
 		digit dig;
@@ -3804,7 +3806,7 @@ int_get_ctz(DeeIntObject *__restrict self) {
 	if unlikely(self->ob_size < 0)
 		goto err_neg;
 	if unlikely(self->ob_size == 0)
-		return_reference_(&DeeInt_Zero);
+		return_reference_((DeeIntObject *)&DeeInt_Zero);
 	result = 0;
 	for (i = 0;; ++i) {
 		digit dig;
@@ -4152,9 +4154,9 @@ PUBLIC DeeTypeObject DeeInt_Type = {
 };
 
 /* Helpful singletons for some often used integers. */
-PUBLIC DeeIntObject DeeInt_Zero     = { OBJECT_HEAD_INIT(&DeeInt_Type), 0, { 0 } };
-PUBLIC DeeIntObject DeeInt_One      = { OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 1 } };
-PUBLIC DeeIntObject DeeInt_MinusOne = { OBJECT_HEAD_INIT(&DeeInt_Type), -1, { 1 } };
+PUBLIC struct _Dee_int_0digit_object DeeInt_Zero     = { OBJECT_HEAD_INIT(&DeeInt_Type), 0 };
+PUBLIC struct _Dee_int_1digit_object DeeInt_One      = { OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 1 } };
+PUBLIC struct _Dee_int_1digit_object DeeInt_MinusOne = { OBJECT_HEAD_INIT(&DeeInt_Type), -1, { 1 } };
 
 DECL_END
 
