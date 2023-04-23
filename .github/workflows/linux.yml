@@ -39,6 +39,9 @@ jobs:
           config.mk
         key: ${{ runner.os }}-configure
 
+    - name: Bind GCC problem matcher
+      uses: ammaraskar/gcc-problem-matcher@master
+
     - name: Make
       run: make -j $(nproc)
 
