@@ -20,7 +20,7 @@ if (l in { "y", "yes" }) {
 
 Deemon is designed with the following features in mind:
 - Being portable to any Unix-like operating system (obviously including Linux), as well as Windows
-- Working with, and processing data via sequences and sequence proxies, rather than individually or by by always creating new list objects
+- Working with, and processing data via sequences and sequence proxies, rather than individually or by always creating new list objects
 - Being faster than python while still offering similar runtime functionality (mainly by not having a GIL, and using static symbol resolution and a more powerful compiled bytecode, rather than having locals/globals be runtime hash-mapping)
 
 
