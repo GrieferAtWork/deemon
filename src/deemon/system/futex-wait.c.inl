@@ -187,8 +187,13 @@ again_futex_wait:
 	if (error < 0) {
 		error = DeeSystem_GetErrno();
 		DeeSystem_IF_E1(error, EINTR, goto again_futex_wait);
+		DeeSystem_IF_E2(error, EAGAIN, EWOULDBLOCK, {
+			/* """value pointed to by uaddr was not equal to the
+			 * expected value val at the time of the call.""" */
+			LOCAL_return_0;
+		});
 #ifdef LOCAL_HAVE_timeout_nanoseconds
-		DeeSystem_IF_E3(error, ETIMEDOUT, EAGAIN, EWOULDBLOCK, {
+		DeeSystem_IF_E1(error, ETIMEDOUT, {
 			return 1;
 		});
 #endif /* LOCAL_HAVE_timeout_nanoseconds */
@@ -475,8 +480,14 @@ again_read_ctrl_word:
 			futex_controller_decref(ctrl);
 			goto again_read_ctrl_word;
 		});
+		DeeSystem_IF_E2(error, EAGAIN, EWOULDBLOCK, {
+			/* """value pointed to by uaddr was not equal to the
+			 * expected value val at the time of the call.""" */
+			futex_controller_decref(ctrl);
+			LOCAL_return_0;
+		});
 #ifdef LOCAL_HAVE_timeout_nanoseconds
-		DeeSystem_IF_E3(error, ETIMEDOUT, EAGAIN, EWOULDBLOCK, {
+		DeeSystem_IF_E1(error, ETIMEDOUT, {
 			futex_controller_decref(ctrl);
 			return 1;
 		});
