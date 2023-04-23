@@ -5,11 +5,11 @@
  *       the license that python is restricted by.
  *    >> So to simplify this whole deal: I make no claim of having invented the
  *       way that deemon's (phyton's) arbitrary-length integers are implemented,
- *       with all algorithms found in `int_logic.c' originating from phython
+ *       with all algorithms found in `int_logic.c' originating from python
  *       before being adjusted to fit deemon's runtime.
  *       To further discourage use of code found here, in favor of the original
  *       creator's work, comments have been removed.
- *       I DID NOT WRITE STUFF IN THIS FILE
+ *       I DID NOT WRITE (most) STUFF IN THIS FILE
  */
 #ifndef GUARD_DEEMON_OBJECTS_INT_LOGIC_C
 #define GUARD_DEEMON_OBJECTS_INT_LOGIC_C 1
@@ -19,6 +19,7 @@
 #include <deemon/api.h>
 #include <deemon/error.h>
 #include <deemon/int.h>
+#include <deemon/thread.h>
 #include <deemon/object.h>
 #include <deemon/system-features.h> /* memcpy(), bzero(), ... */
 
@@ -53,7 +54,13 @@ DECL_BEGIN
 	 : ((x)->ob_size == 0                             \
 	    ? (sdigit)0                                   \
 	    : (sdigit)(x)->ob_digit[0]))
-#define SIGCHECK(...) /* nothing */
+#define SIGCHECK(...)                     \
+	do {                                  \
+		if (DeeThread_CheckInterrupt()) { \
+			__VA_ARGS__;                  \
+		}                                 \
+	}	__WHILE0
+
 #define maybe_small_int(x) x
 #ifdef CONFIG_SIGNED_RIGHT_SHIFT_ZERO_FILLS
 #define ARITHMETIC_RIGHT_SHIFT(type, i, j) \
@@ -1013,7 +1020,7 @@ inplace_divrem1(digit *__restrict pout,
 PRIVATE WUNUSED NONNULL((1, 3)) DeeIntObject *DCALL
 divrem1(DeeIntObject *__restrict a, digit n, digit *prem) {
 	DeeIntObject *z;
-	dssize_t const size = ABS(a->ob_size);
+	dssize_t size = ABS(a->ob_size);
 	ASSERT(n > 0 && n <= DIGIT_MASK);
 	z = DeeInt_Alloc(size);
 	if unlikely(!z)
@@ -1041,7 +1048,7 @@ x_mul(DeeIntObject *a, DeeIntObject *b) {
 			digit *pz    = z->ob_digit + (i << 1);
 			digit *pa    = a->ob_digit + i + 1;
 			digit *paend = a->ob_digit + size_a;
-			SIGCHECK({ Dee_Decref(z); return NULL; });
+			SIGCHECK(goto err_z);
 			carry = *pz + f * f;
 			*pz++ = (digit)(carry & DIGIT_MASK);
 			carry >>= DIGIT_BITS;
@@ -1068,7 +1075,7 @@ x_mul(DeeIntObject *a, DeeIntObject *b) {
 			digit *pz    = z->ob_digit + i;
 			digit *pb    = b->ob_digit;
 			digit *pbend = b->ob_digit + size_b;
-			SIGCHECK({ Dee_Decref(z); return NULL; });
+			SIGCHECK(goto err_z);
 			while (pb < pbend) {
 				carry += *pz + *pb++ * f;
 				*pz++ = (digit)(carry & DIGIT_MASK);
@@ -1078,9 +1085,13 @@ x_mul(DeeIntObject *a, DeeIntObject *b) {
 			if (carry)
 				*pz += (digit)(carry & DIGIT_MASK);
 			ASSERT((carry >> DIGIT_BITS) == 0);
+			if (DeeThread_CheckInterrupt())
+				goto err_z;
 		}
 	}
 	return int_normalize(z);
+err_z:
+	Dee_Decref(z);
 err:
 	return NULL;
 }
@@ -1090,9 +1101,9 @@ kmul_split(DeeIntObject *n, dssize_t size,
            DREF DeeIntObject **__restrict phigh,
            DREF DeeIntObject **__restrict plow) {
 	DREF DeeIntObject *hi, *lo;
-	dssize_t const size_n = ABS(n->ob_size);
-	dssize_t size_lo      = MIN(size_n, size);
-	dssize_t size_hi      = size_n - size_lo;
+	dssize_t size_n  = ABS(n->ob_size);
+	dssize_t size_lo = MIN(size_n, size);
+	dssize_t size_hi = size_n - size_lo;
 	hi = DeeInt_Alloc(size_hi);
 	if unlikely(!hi)
 		goto err;
@@ -1224,8 +1235,9 @@ fail:
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeIntObject *DCALL
 k_lopsided_mul(DeeIntObject *a, DeeIntObject *b) {
-	dssize_t const asize = ABS(a->ob_size);
-	dssize_t nbdone, bsize     = ABS(b->ob_size);
+	dssize_t asize = ABS(a->ob_size);
+	dssize_t bsize = ABS(b->ob_size);
+	dssize_t nbdone;
 	DeeIntObject *ret, *bslice = NULL;
 	ASSERT(asize > KARATSUBA_CUTOFF);
 	ASSERT(2 * asize <= bsize);
@@ -1239,7 +1251,7 @@ k_lopsided_mul(DeeIntObject *a, DeeIntObject *b) {
 	nbdone = 0;
 	while (bsize > 0) {
 		DeeIntObject *product;
-		dssize_t const nbtouse = MIN(bsize, asize);
+		dssize_t nbtouse = MIN(bsize, asize);
 		memcpyc(bslice->ob_digit,
 		        b->ob_digit + nbdone,
 		        nbtouse, sizeof(digit));
@@ -1252,6 +1264,8 @@ k_lopsided_mul(DeeIntObject *a, DeeIntObject *b) {
 		Dee_Decref(product);
 		bsize -= nbtouse;
 		nbdone += nbtouse;
+		if (DeeThread_CheckInterrupt())
+			goto err_bslice_fail;
 	}
 	Dee_Decref(bslice);
 	return int_normalize(ret);
@@ -1302,7 +1316,9 @@ int_divrem(DeeIntObject *a,
 		err_divide_by_zero((DeeObject *)a, (DeeObject *)b);
 		goto err;
 	}
-	if (size_a < size_b || (size_a == size_b && a->ob_digit[size_a - 1] < b->ob_digit[size_b - 1])) {
+	if (size_a < size_b ||
+	    (size_a == size_b && (a->ob_digit[size_a - 1] <
+	                          b->ob_digit[size_b - 1]))) {
 		Dee_Incref(&DeeInt_Zero);
 		Dee_Incref(a);
 		*pdiv = (DeeIntObject *)&DeeInt_Zero;
@@ -1400,7 +1416,7 @@ x_divrem(DeeIntObject *v1, DeeIntObject *w1,
 	wm1 = w0[size_w - 1];
 	wm2 = w0[size_w - 2];
 	for (vk = v0 + k, ak = a->ob_digit + k; vk-- > v0;) {
-		SIGCHECK({ Dee_Decref(a); Dee_Decref(w); Dee_Decref(v); *prem = NULL; return NULL; });
+		SIGCHECK(goto err_v_w_a);
 		vtop = vk[size_w];
 		ASSERT(vtop <= wm1);
 		vv = ((twodigits)vtop << DIGIT_BITS) | vk[size_w - 1];
@@ -1436,6 +1452,8 @@ x_divrem(DeeIntObject *v1, DeeIntObject *w1,
 	Dee_Decref(v);
 	*prem = int_normalize(w);
 	return int_normalize(a);
+err_v_w_a:
+	Dee_Decref(a);
 err_v_w:
 	Dee_Decref(w);
 err_v:
@@ -1838,9 +1856,9 @@ int_pow(DeeIntObject *a, DeeObject *b_ob) {
 		for (i = 1; i < 32; ++i)
 			MULT(table[i - 1], a, table[i]);
 		for (i = b->ob_size - 1; i >= 0; --i) {
-			digit const bi = b->ob_digit[i];
+			digit bi = b->ob_digit[i];
 			for (j = DIGIT_BITS - 5; j >= 0; j -= 5) {
-				int const index = (bi >> j) & 0x1f;
+				int index = (bi >> j) & 0x1f;
 				for (k = 0; k < 5; ++k)
 					MULT(z, z, z);
 				if (index)
