@@ -495,6 +495,7 @@ extern "C++" template<class T> T ____INTELLISENSE_req_type(T x);
 #endif /* !__INTELLISENSE__ || !__cplusplus */
 
 #ifndef NDEBUG
+#define Dee_DPRINT_SET_ENABLED(is) (void)(_Dee_dprint_enabled = (is) ? 1 : 0)
 #define Dee_DPRINT(message)        (_Dee_dprint_enabled ? _Dee_dprint(message) : (void)0)
 #define Dee_DPRINTER               _Dee_dprinter
 #define Dee_DPRINTF(...)           (_Dee_dprint_enabled ? _Dee_dprintf(__VA_ARGS__) : (void)0)

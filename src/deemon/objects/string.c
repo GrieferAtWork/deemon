@@ -545,6 +545,16 @@ string_fini(String *__restrict self) {
 	}
 }
 
+LOCAL ATTR_CONST int DCALL
+fix_memcmp_return(int value) {
+	if (value < -1) {
+		value = -1;
+	} else if (value > 1) {
+		value = 1;
+	}
+	return value;
+}
+
 
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 compare_string_bytes(String *__restrict lhs,
@@ -562,7 +572,7 @@ compare_string_bytes(String *__restrict lhs,
 		/* Most simple case: compare ascii/single-byte strings. */
 		result = memcmp(lhs_str, DeeBytes_DATA(rhs), MIN(lhs_len, rhs_len));
 		if (result != 0)
-			return result;
+			return fix_memcmp_return(result);
 	} else {
 		uint8_t *rhs_str;
 		struct string_utf *lhs_utf;
@@ -621,16 +631,6 @@ DeeSystem_DEFINE_memcmpw(dee_memcmpw)
 #define memcmpl dee_memcmpl
 DeeSystem_DEFINE_memcmpl(dee_memcmpl)
 #endif /* !CONFIG_HAVE_memcmpl */
-
-LOCAL ATTR_CONST int DCALL
-fix_memcmp_return(int value) {
-	if (value < -1) {
-		value = -1;
-	} else if (value > 1) {
-		value = 1;
-	}
-	return value;
-}
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 compare_strings(String *__restrict lhs,

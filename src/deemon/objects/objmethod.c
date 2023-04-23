@@ -2379,7 +2379,9 @@ PUBLIC DeeTypeObject DeeKwCMethod_Type = {
 PRIVATE ATTR_NORETURN void DCALL
 fatal_invalid_except(DeeObject *__restrict return_value,
                      uint16_t excepted, void *callback_addr) {
-	Dee_DPRINTF("Exception depth was improperly modified:\n"
+	Dee_DPRINT_SET_ENABLED(true); /* We're about to crash, so don't hide any details */
+	Dee_DPRINTF("\n\n"
+	            "FATAL ERROR: Exception depth was improperly modified:\n"
 	            "After a return value %p from C-function %p, the exception "
 	            /**/ "depth should have been %u, but was actually %u\n"
 	            "For details, see the C documentation of `DeeCMethod_CallFunc'",

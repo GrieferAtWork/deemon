@@ -991,6 +991,16 @@ err:
 	return NULL;
 }
 
+LOCAL ATTR_CONST int DCALL
+fix_memcmp_return(int value) {
+	if (value < -1) {
+		value = -1;
+	} else if (value > 1) {
+		value = 1;
+	}
+	return value;
+}
+
 #undef memxcmp
 #define memxcmp dee_memxcmp
 LOCAL int DCALL
@@ -998,7 +1008,7 @@ dee_memxcmp(void const *a, size_t asiz,
             void const *b, size_t bsiz) {
 	int result = memcmp(a, b, MIN(asiz, bsiz));
 	if (result)
-		return result;
+		return fix_memcmp_return(result);
 	if (asiz == bsiz)
 		return 0;
 	if (asiz < bsiz)
