@@ -761,7 +761,7 @@ DeeTuple_VTryPackSymbolic(size_t n, /*inherit(on_success)*/ /*DREF*/ va_list arg
 PUBLIC WUNUSED DREF DeeObject *DCALL
 DeeTuple_VPack(size_t n, va_list args) {
 	size_t i;
-	DREF DeeObject *result;
+	DREF Tuple *result;
 	result = DeeTuple_NewUninitialized(n);
 	if unlikely(!result)
 		goto done;
@@ -772,13 +772,13 @@ DeeTuple_VPack(size_t n, va_list args) {
 		DeeTuple_SET(result, i, elem);
 	}
 done:
-	return result;
+	return (DREF DeeObject *)result;
 }
 
 PUBLIC WUNUSED DREF DeeObject *DCALL
 DeeTuple_VPackSymbolic(size_t n, /*inherit(on_success)*/ /*DREF*/ va_list args) {
 	size_t i;
-	DREF DeeObject *result;
+	DREF Tuple *result;
 	result = DeeTuple_NewUninitialized(n);
 	if unlikely(!result)
 		goto done;
@@ -788,13 +788,13 @@ DeeTuple_VPackSymbolic(size_t n, /*inherit(on_success)*/ /*DREF*/ va_list args) 
 		DeeTuple_SET(result, i, elem);
 	}
 done:
-	return result;
+	return (DREF DeeObject *)result;
 }
 
 PUBLIC WUNUSED DREF DeeObject *DCALL
 DeeTuple_VTryPack(size_t n, va_list args) {
 	size_t i;
-	DREF DeeObject *result;
+	DREF Tuple *result;
 	result = DeeTuple_TryNewUninitialized(n);
 	if unlikely(!result)
 		goto done;
@@ -805,13 +805,13 @@ DeeTuple_VTryPack(size_t n, va_list args) {
 		DeeTuple_SET(result, i, elem);
 	}
 done:
-	return result;
+	return (DREF DeeObject *)result;
 }
 
 PUBLIC WUNUSED DREF DeeObject *DCALL
 DeeTuple_VTryPackSymbolic(size_t n, /*inherit(on_success)*/ /*DREF*/ va_list args) {
 	size_t i;
-	DREF DeeObject *result;
+	DREF Tuple *result;
 	result = DeeTuple_TryNewUninitialized(n);
 	if unlikely(!result)
 		goto done;
@@ -821,7 +821,7 @@ DeeTuple_VTryPackSymbolic(size_t n, /*inherit(on_success)*/ /*DREF*/ va_list arg
 		DeeTuple_SET(result, i, elem);
 	}
 done:
-	return result;
+	return (DREF DeeObject *)result;
 }
 #endif /* !CONFIG_VA_LIST_IS_STACK_POINTER */
 
