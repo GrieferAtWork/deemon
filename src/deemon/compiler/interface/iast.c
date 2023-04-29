@@ -5164,7 +5164,7 @@ err:
 #undef print
 #undef DO
 
-PRIVATE WUNUSED NONNULL((1)) dssize_t DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
 ast_print(DeeCompilerAstObject *__restrict self,
           dformatprinter printer, void *arg) {
 	dssize_t result;
@@ -5175,9 +5175,9 @@ ast_print(DeeCompilerAstObject *__restrict self,
 	return result;
 }
 
-PRIVATE WUNUSED NONNULL((1)) dssize_t DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
 ast_printrepr(DeeCompilerAstObject *__restrict self,
-			  dformatprinter printer, void *arg) {
+              dformatprinter printer, void *arg) {
 	dssize_t result;
 	if (COMPILER_BEGIN(self->ci_compiler))
 		return -1;

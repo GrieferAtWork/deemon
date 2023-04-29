@@ -87,9 +87,6 @@ struct tls_descriptor {
 /* TLS controller callbacks for libthreading's TLS implementation. */
 INTDEF NONNULL((1)) void DCALL
 thread_tls_fini(struct tls_descriptor *__restrict data);
-INTDEF NONNULL((1, 2)) void DCALL
-thread_tls_visit(struct tls_descriptor *__restrict data,
-                 dvisit_t proc, void *arg);
 
 #endif /* !CONFIG_NO_THREADS */
 

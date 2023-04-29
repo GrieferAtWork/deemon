@@ -316,6 +316,18 @@ DFUNDEF WUNUSED NONNULL((1)) int (DCALL Dee_shared_lock_waitfor_timed)(Dee_share
 #define Dee_shared_lock_waitfor(self) (Dee_shared_lock_available(self) ? 0 : (Dee_shared_lock_waitfor)(self))
 #endif /* !__NO_builtin_expect */
 
+/* Blocking acquire/wait-for a given lock. */
+LOCAL NONNULL((1)) void DCALL
+Dee_shared_lock_acquire_noint(Dee_shared_lock_t *__restrict self) {
+	unsigned int lockword;
+	while ((lockword = __hybrid_atomic_xch(&self->s_lock.a_lock, 1, __ATOMIC_ACQUIRE)) != 0) {
+		_Dee_shared_lock_waiting_start(self);
+		DeeFutex_WaitIntNoInt(&self->s_lock, lockword);
+		_Dee_shared_lock_waiting_end(self);
+	}
+}
+
+
 
 
 

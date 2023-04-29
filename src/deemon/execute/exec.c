@@ -830,7 +830,7 @@ PRIVATE bool DCALL shutdown_globals(void) {
 	result |= DeeFile_ResetStd();
 	result |= DeeThread_ClearTls();
 #ifndef CONFIG_NO_THREADS
-	result |= DeeThread_JoinAll();
+	result |= DeeThread_InterruptAndJoinAll();
 #endif /* !CONFIG_NO_THREADS */
 #ifndef CONFIG_NO_DEX
 	result |= DeeDex_Cleanup();
@@ -861,10 +861,12 @@ INTDEF void DCALL DeeSlab_Finalize(void);
  * This does very little, as most components are designed for lazy initialization,
  * or are simply initialized statically (i.e. already come pre-initialized).
  * However, some components do require some pre-initialization, the most notable
- * here being `DeeThread_Init()', as well as allocation of the data block used by
- * the slab allocator. */
+ * here being `DeeThread_SubSystemInit()', as well as allocation of the memory
+ * block used by the slab allocator. */
 PUBLIC void DCALL Dee_Initialize(void) {
-	DeeThread_Init();
+
+	/* Initialize the thread sub-system */
+	DeeThread_SubSystemInit();
 
 	/* Reserve system memory for slab allocators. */
 #ifndef CONFIG_NO_OBJECT_SLABS
@@ -905,7 +907,7 @@ do_kill_user:
 #ifndef CONFIG_NO_THREADS
 			/* Make sure that no secondary threads could enter an
 			 * undefined state by us tinkering with their code. */
-			must_continue |= DeeThread_JoinAll();
+			must_continue |= DeeThread_InterruptAndJoinAll();
 #endif /* !CONFIG_NO_THREADS */
 
 			/* Tell the user about what's happening (stddbg is forwarded to stderr) */
@@ -994,7 +996,7 @@ do_kill_user:
 	 *     it at application exit, the kernel will just do that for
 	 *     us.
 	 *      - DeeExec_SetHome
-	 *      - DeeThread_Fini
+	 *      - DeeThread_SubSystemFini
 	 *   - Preallocated object caches:
 	 *     These are just another abstraction layer between the
 	 *     universal heap, and a very specific kind of allocation,
@@ -1013,7 +1015,7 @@ do_kill_user:
 #if !defined(NDEBUG) || defined(CONFIG_TRACE_REFCHANGES)
 	DeeExec_SetHome(NULL);
 	Dee_CHECKMEMORY();
-	DeeThread_Fini();
+	DeeThread_SubSystemFini();
 	Dee_CHECKMEMORY();
 #endif /* !NDEBUG || CONFIG_TRACE_REFCHANGES */
 #ifndef NDEBUG

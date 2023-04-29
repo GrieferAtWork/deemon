@@ -408,6 +408,7 @@ extern void (__debugbreak)(void);
 #define Dee_BREAKPOINT() XBLOCK({ __asm__ __volatile__("int {$}3" : ); (void)0; })
 #endif /* !__NO_XBLOCK */
 #else /* ... */
+#define Dee_BREAKPOINT_IS_NOOP
 #define Dee_BREAKPOINT() (void)0
 #endif /* !... */
 #endif /* !Dee_BREAKPOINT */
@@ -494,7 +495,7 @@ extern "C++" template<class T> T ____INTELLISENSE_req_type(T x);
 #define Dee_REQUIRES_TYPE(T, x) (x)
 #endif /* !__INTELLISENSE__ || !__cplusplus */
 
-#ifndef NDEBUG
+#if !defined(NDEBUG) && !defined(NDEBUG_DPRINT)
 #define Dee_DPRINT_SET_ENABLED(is) (void)(_Dee_dprint_enabled = (is) ? 1 : 0)
 #define Dee_DPRINT(message)        (_Dee_dprint_enabled ? _Dee_dprint(message) : (void)0)
 #define Dee_DPRINTER               _Dee_dprinter
@@ -505,15 +506,22 @@ DFUNDEF NONNULL((1)) void (DCALL _Dee_dprint)(char const *__restrict message);
 DFUNDEF NONNULL((1)) void (_Dee_dprintf)(char const *__restrict format, ...);
 DFUNDEF NONNULL((1)) void (DCALL _Dee_vdprintf)(char const *__restrict format, va_list args);
 DFUNDEF __SSIZE_TYPE__ (DPRINTER_CC _Dee_dprinter)(void *arg, char const *__restrict data, size_t datalen);
-#endif /* !NDEBUG */
+#endif /* !NDEBUG && !NDEBUG_DPRINT */
 
 
 #ifndef Dee_ASSERT
-#ifndef NDEBUG
+#if !defined(NDEBUG) && !defined(NDEBUG_ASSERT)
 DFUNDEF void (DCALL _DeeAssert_Fail)(char const *expr, char const *file, int line);
 DFUNDEF void (_DeeAssert_Failf)(char const *expr, char const *file, int line, char const *format, ...);
+DFUNDEF ATTR_NORETURN void (DCALL _DeeAssert_XFail)(char const *expr, char const *file, int line);
+DFUNDEF ATTR_NORETURN void (_DeeAssert_XFailf)(char const *expr, char const *file, int line, char const *format, ...);
+#ifdef Dee_BREAKPOINT_IS_NOOP
+#define Dee_ASSERT(expr)       (void)((expr) || (_DeeAssert_XFail(#expr, __FILE__, __LINE__), 0))
+#define Dee_ASSERTF(expr, ...) (void)((expr) || (_DeeAssert_XFailf(#expr, __FILE__, __LINE__, __VA_ARGS__), 0))
+#else /* Dee_BREAKPOINT_IS_NOOP */
 #define Dee_ASSERT(expr)       (void)((expr) || (_DeeAssert_Fail(#expr, __FILE__, __LINE__), Dee_BREAKPOINT(), 0))
 #define Dee_ASSERTF(expr, ...) (void)((expr) || (_DeeAssert_Failf(#expr, __FILE__, __LINE__, __VA_ARGS__), Dee_BREAKPOINT(), 0))
+#endif /* !Dee_BREAKPOINT_IS_NOOP */
 #elif !defined(__NO_builtin_assume)
 #define Dee_ASSERT(expr)       __builtin_assume(expr)
 #define Dee_ASSERTF(expr, ...) __builtin_assume(expr)
@@ -535,7 +543,8 @@ DFUNDEF void (_DeeAssert_Failf)(char const *expr, char const *file, int line, ch
 
 
 #ifndef Dee_DPRINT
-#define DEE_NO_DPRINTF             1
+#define Dee_DPRINT_IS_NOOP
+#define Dee_DPRINT_SET_ENABLED(is) (void)0
 #define Dee_DPRINT(message)        (void)0
 #define Dee_DPRINTF(...)           (void)0
 #define Dee_VDPRINTF(format, args) (void)0

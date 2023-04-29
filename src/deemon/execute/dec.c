@@ -2846,10 +2846,10 @@ DeeModule_OpenDec(DeeModuleObject *__restrict mod,
 
 	/* With all that out of the way, actually load the file. */
 	result = DecFile_Load(&file);
-#ifndef DEE_NO_DPRINTF
+#ifndef Dee_DPRINT_IS_NOOP
 	if unlikely(result > 0)
 		Dee_DPRINTF("[LD] Dec file for %r is corrupted\n", file.df_name);
-#endif /* !DEE_NO_DPRINTF */
+#endif /* !Dee_DPRINT_IS_NOOP */
 done_map_file:
 	DecFile_Fini(&file);
 done_map:

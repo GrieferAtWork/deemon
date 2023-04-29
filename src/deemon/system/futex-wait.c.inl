@@ -97,9 +97,11 @@ DECL_BEGIN
 #if defined(LOCAL_IS_NO_INTERRUPT) && !defined(LOCAL_HAVE_timeout_nanoseconds)
 #define LOCAL_return_type_is_void
 PUBLIC NONNULL((1)) void
-#else /* LOCAL_IS_NO_INTERRUPT */
+#elif defined(LOCAL_IS_NO_INTERRUPT)
+PUBLIC NONNULL((1)) int
+#else /* ... */
 PUBLIC WUNUSED NONNULL((1)) int
-#endif /* !LOCAL_IS_NO_INTERRUPT */
+#endif /* !... */
 (DCALL LOCAL_DeeFutex_WaitX)(void *addr,
                              LOCAL_expected_t expected
 #ifdef LOCAL_HAVE_timeout_nanoseconds
@@ -547,11 +549,14 @@ again_pthread_mutex_lock:
 		ts.tv_nsec = timeout_nanoseconds % NANOSECONDS_PER_SECOND;
 		error = pthread_cond_reltimedwait_np(&ctrl->fc_cond, &ctrl->fc_mutx, &ts);
 #elif defined(CONFIG_HAVE_gettimeofday64) && defined(CONFIG_HAVE_pthread_cond_timedwait64)
-		struct timespec64 ts;
-		error = gettimeofday64(NULL, &ts);
+		struct timeval64 tv;
+		error = gettimeofday64(&tv, NULL);
 		if unlikely(error != 0) {
 			error = DeeSystem_GetErrno();
 		} else {
+			struct timespec64 ts;
+			ts.tv_sec  = tv.tv_sec;
+			ts.tv_nsec = tv.tv_usec * 1000;
 			ts.tv_sec  += timeout_nanoseconds / NANOSECONDS_PER_SECOND;
 			ts.tv_nsec += timeout_nanoseconds % NANOSECONDS_PER_SECOND;
 			if (ts.tv_nsec > NANOSECONDS_PER_SECOND) {
@@ -561,11 +566,14 @@ again_pthread_mutex_lock:
 			error = pthread_cond_timedwait64(&ctrl->fc_cond, &ctrl->fc_mutx, &ts);
 		}
 #else /* ... */
-		struct timespec ts;
-		error = gettimeofday(NULL, &ts);
+		struct timeval tv;
+		error = gettimeofday(&tv, NULL);
 		if unlikely(error != 0) {
 			error = DeeSystem_GetErrno();
 		} else {
+			struct timespec ts;
+			ts.tv_sec  = tv.tv_sec;
+			ts.tv_nsec = tv.tv_usec * 1000;
 			ts.tv_sec  += timeout_nanoseconds / NANOSECONDS_PER_SECOND;
 			ts.tv_nsec += timeout_nanoseconds % NANOSECONDS_PER_SECOND;
 			if (ts.tv_nsec > NANOSECONDS_PER_SECOND) {
@@ -649,8 +657,8 @@ again_mtx_lock:
 		ts.tv_nsec = timeout_nanoseconds % NANOSECONDS_PER_SECOND;
 		error = cnd_reltimedwait_np(&ctrl->fc_cond, &ctrl->fc_mutx, &ts);
 #elif defined(CONFIG_HAVE_gettimeofday64) && defined(CONFIG_HAVE_cnd_timedwait64)
-		struct timespec64 ts;
-		error = gettimeofday64(NULL, &ts);
+		struct timeval64 tv;
+		error = gettimeofday64(&tv, NULL);
 		if unlikely(error != 0) {
 #ifdef CONFIG_HAVE_thrd_error
 			error = thrd_error;
@@ -658,6 +666,9 @@ again_mtx_lock:
 			error = thrd_success + 1;
 #endif /* !CONFIG_HAVE_thrd_error */
 		} else {
+			struct timespec64 ts;
+			ts.tv_sec  = tv.tv_sec;
+			ts.tv_nsec = tv.tv_usec * 1000;
 			ts.tv_sec  += timeout_nanoseconds / NANOSECONDS_PER_SECOND;
 			ts.tv_nsec += timeout_nanoseconds % NANOSECONDS_PER_SECOND;
 			if (ts.tv_nsec > NANOSECONDS_PER_SECOND) {
@@ -667,8 +678,8 @@ again_mtx_lock:
 			error = cnd_timedwait64(&ctrl->fc_cond, &ctrl->fc_mutx, &ts);
 		}
 #else /* ... */
-		struct timespec ts;
-		error = gettimeofday(NULL, &ts);
+		struct timeval tv;
+		error = gettimeofday(&tv, NULL);
 		if unlikely(error != 0) {
 #ifdef CONFIG_HAVE_thrd_error
 			error = thrd_error;
@@ -676,6 +687,9 @@ again_mtx_lock:
 			error = thrd_success + 1;
 #endif /* !CONFIG_HAVE_thrd_error */
 		} else {
+			struct timespec ts;
+			ts.tv_sec  = tv.tv_sec;
+			ts.tv_nsec = tv.tv_usec * 1000;
 			ts.tv_sec  += timeout_nanoseconds / NANOSECONDS_PER_SECOND;
 			ts.tv_nsec += timeout_nanoseconds % NANOSECONDS_PER_SECOND;
 			if (ts.tv_nsec > NANOSECONDS_PER_SECOND) {
@@ -777,9 +791,12 @@ again_inc_n_threads:
 		ts.tv_nsec = timeout_nanoseconds % NANOSECONDS_PER_SECOND;
 		error = sem_reltimedwait_np(&ctrl->fc_sem, &ts);
 #elif defined(CONFIG_HAVE_sem_timedwait64) && defined(CONFIG_HAVE_gettimeofday64)
-		struct timespec64 ts;
-		error = gettimeofday64(NULL, &ts);
+		struct timeval64 tv;
+		error = gettimeofday64(&tv, NULL);
 		if likely(error == 0) {
+			struct timespec64 ts;
+			ts.tv_sec  = tv.tv_sec;
+			ts.tv_nsec = tv.tv_usec * 1000;
 			ts.tv_sec  += timeout_nanoseconds / NANOSECONDS_PER_SECOND;
 			ts.tv_nsec += timeout_nanoseconds % NANOSECONDS_PER_SECOND;
 			if (ts.tv_nsec > NANOSECONDS_PER_SECOND) {
@@ -789,9 +806,12 @@ again_inc_n_threads:
 			error = sem_timedwait64(&ctrl->fc_sem, &ts);
 		}
 #else /* ... */
-		struct timespec ts;
-		error = gettimeofday(NULL, &ts);
+		struct timeval tv;
+		error = gettimeofday(&tv, NULL);
 		if likely(error == 0) {
+			struct timespec ts;
+			ts.tv_sec  = tv.tv_sec;
+			ts.tv_nsec = tv.tv_usec * 1000;
 			ts.tv_sec  += timeout_nanoseconds / NANOSECONDS_PER_SECOND;
 			ts.tv_nsec += timeout_nanoseconds % NANOSECONDS_PER_SECOND;
 			if (ts.tv_nsec > NANOSECONDS_PER_SECOND) {

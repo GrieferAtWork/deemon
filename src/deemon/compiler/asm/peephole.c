@@ -26,7 +26,7 @@
 #include <deemon/compiler/assembler.h>
 #include <deemon/file.h>
 #include <deemon/format.h>
-#include <deemon/system-features.h> /* memcpyc(), ... */
+#include <deemon/system-features.h> /* memcpyc(), abort(), ... */
 
 #include <hybrid/byteorder.h>
 #include <hybrid/byteswap.h>
@@ -236,13 +236,16 @@ validate_stack_depth(code_addr_t ip, uint16_t stacksz) {
 		if (!iter->as_used)
 			continue;
 		if unlikely(iter->as_stck != stacksz) {
-			Dee_DPRINTF("Invalid stack-depth at %.4X (expected %u, but got %u)\n"
+			Dee_DPRINT_SET_ENABLED(true);
+			Dee_DPRINTF("\n\n"
+			            "FATAL ERROR: Invalid stack-depth at %.4X (expected %u, but got %u)\n"
 			            "%s(%d) : See symbol allocated here\n",
 			            (unsigned)ip, (unsigned)iter->as_stck,
 			            (unsigned)stacksz, iter->as_file, iter->as_line);
 			print_ddi_file_and_line(sc_main.sec_begin + ip);
 			Dee_DPRINTF("See reference to nearest DDI checkpoint\n");
 			Dee_BREAKPOINT();
+			abort();
 		}
 	}
 }

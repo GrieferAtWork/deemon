@@ -2386,12 +2386,9 @@ fatal_invalid_except(DeeObject *__restrict return_value,
 	            /**/ "depth should have been %u, but was actually %u\n"
 	            "For details, see the C documentation of `DeeCMethod_CallFunc'",
 	            return_value, callback_addr, excepted, DeeThread_Self()->t_exceptsz);
+	/* TODO: Dump deemon call-stack trace. */
 	Dee_BREAKPOINT();
-#ifdef CONFIG_HAVE__Exit
-	_Exit(EXIT_FAILURE);
-#else /* CONFIG_HAVE__Exit */
 	abort();
-#endif /* !CONFIG_HAVE__Exit */
 }
 
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL

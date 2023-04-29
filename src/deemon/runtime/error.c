@@ -213,7 +213,7 @@ INTERN void DCALL
 restore_interrupt_error(DeeThreadObject *__restrict ts,
                         /*inherit*/ struct except_frame *__restrict frame) {
 	DREF DeeObject *frame_error = frame->ef_error;
-	uint16_t state;
+
 	/* Special handling for interrupt exceptions.
 	 * >> Rather than handling this now, we must instead re-schedule
 	 *    the interrupt to be executed next with max priority. */
@@ -221,15 +221,15 @@ restore_interrupt_error(DeeThreadObject *__restrict ts,
 	              sizeof(struct except_frame));
 	STATIC_ASSERT(offsetof(struct thread_interrupt, ti_intr) ==
 	              offsetof(struct except_frame, ef_error));
+
 	/* Drop a reference to the traceback. - Those don't get scheduled. */
 	if (ITER_ISOK(frame->ef_trace))
 		Dee_Decref(frame->ef_trace);
-	while (atomic_fetchor(&ts->t_state, THREAD_STATE_INTERRUPTING) &
-	       THREAD_STATE_INTERRUPTING)
-		SCHED_YIELD();
+	_DeeThread_AcquireInterrupt(ts);
 	if (ts->t_interrupt.ti_intr) {
 		struct thread_interrupt *pend;
 		pend = (struct thread_interrupt *)frame;
+
 		/* If we can safe memory doing it, relocate the
 		 * frame to best fit the pending interrupt. */
 		__STATIC_IF(sizeof(struct thread_interrupt) < sizeof(struct except_frame)) {
@@ -241,17 +241,18 @@ restore_interrupt_error(DeeThreadObject *__restrict ts,
 		ts->t_interrupt.ti_next = pend;
 		frame                   = NULL; /* Indicate that the frame is being re-used. */
 	}
+
 	/* Set the new interrupt to-be delivered next
 	 * as the interrupt error we've just handled. */
 	ts->t_interrupt.ti_intr = frame_error; /* Inherit */
+
 	/* Indicate that the signal is to-be thrown as an error, not executed as a function. */
 	ts->t_interrupt.ti_args = NULL;
+
 	/* Unset the interrupting-flag and set the interrupted-flag. */
-	do {
-		state = atomic_read(&ts->t_state);
-	} while (!atomic_cmpxch_weak(&ts->t_state, state,
-	                             (state & ~(THREAD_STATE_INTERRUPTING)) |
-	                             THREAD_STATE_INTERRUPTED));
+	atomic_or(&ts->t_state, Dee_THREAD_STATE_INTERRUPTED);
+	_DeeThread_ReleaseInterrupt(ts);
+
 	/* If the frame wasn't used, then still free it! */
 	except_frame_xfree(frame);
 }
@@ -332,7 +333,7 @@ INTDEF uint8_t keyboard_interrupt_counter;
 			if ((counter = atomic_read(&keyboard_interrupt_counter)) == 0xff)             \
 				break;                                                                    \
 		} while (!atomic_cmpxch_weak(&keyboard_interrupt_counter, counter, counter + 1)); \
-		atomic_or(&DeeThread_Main.t_state, THREAD_STATE_INTERRUPTED);                     \
+		atomic_or(&DeeThread_Main.t_state, Dee_THREAD_STATE_INTERRUPTED);                 \
 	}	__WHILE0
 
 #ifndef CONFIG_NO_THREADS
@@ -366,9 +367,7 @@ DeeError_UninstallKeyboardInterrupt(void) {
 
 PRIVATE void sigint_handler(int UNUSED(signo)) {
 	INC_KEYBOARD_INTERRUPT_COUNTER();
-#if 0 /* Not async-safe. */
 	DeeThread_Wake((DeeObject *)&DeeThread_Main);
-#endif
 }
 
 PRIVATE void (*saved_sigint_handler)(int signo) = NULL;

@@ -333,12 +333,13 @@ END(_impl_assert_failed)
 /* }; */
 
 /* struct thread_object { */
-#define t_exec          DEE_OBJECT_OFFSETOF_DATA     /* struct code_frame *t_exec; */
-#define t_except       (DEE_OBJECT_OFFSETOF_DATA+4)  /* struct except_frame *t_except; */
-#define t_exceptsz     (DEE_OBJECT_OFFSETOF_DATA+8)  /* uint16_t t_exceptsz; */
-#define t_execsz       (DEE_OBJECT_OFFSETOF_DATA+10) /* uint16_t t_execsz; */
-#define t_str_curr     (DEE_OBJECT_OFFSETOF_DATA+12) /* struct repr_frame *t_str_curr; */
-#define t_repr_curr    (DEE_OBJECT_OFFSETOF_DATA+16) /* struct repr_frame *t_repr_curr; */
+#define t_str_curr      DEE_OBJECT_OFFSETOF_DATA     /* struct Dee_repr_frame *t_str_curr; */
+#define t_repr_curr    (DEE_OBJECT_OFFSETOF_DATA+4)  /* struct Dee_repr_frame *t_repr_curr; */
+#define t_deepassoc    (DEE_OBJECT_OFFSETOF_DATA+8)  /* struct Dee_deep_assoc t_deepassoc; */
+#define t_exec         (DEE_OBJECT_OFFSETOF_DATA+24) /* struct Dee_code_frame *t_exec; */
+#define t_except       (DEE_OBJECT_OFFSETOF_DATA+28) /* struct Dee_except_frame *t_except; */
+#define t_execsz       (DEE_OBJECT_OFFSETOF_DATA+32) /* uint16_t t_execsz; */
+#define t_exceptsz     (DEE_OBJECT_OFFSETOF_DATA+34) /* uint16_t t_exceptsz; */
 /* }; */
 
 /* struct except_handler { */

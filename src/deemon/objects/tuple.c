@@ -518,6 +518,29 @@ done:
 	return result;
 }
 
+PUBLIC WUNUSED NONNULL((2)) DREF DeeObject *DCALL
+DeeTuple_TryNewVector(size_t objc, DeeObject *const *__restrict objv) {
+	DREF DeeObject *result;
+	result = DeeTuple_TryNewUninitialized(objc);
+	if unlikely(!result)
+		goto done;
+	Dee_Movrefv(DeeTuple_ELEM(result), objv, objc);
+done:
+	return result;
+}
+
+PUBLIC WUNUSED NONNULL((2)) DREF DeeObject *DCALL
+DeeTuple_TryNewVectorSymbolic(size_t objc, DeeObject *const *__restrict objv) {
+	DREF DeeObject *result;
+	result = DeeTuple_TryNewUninitialized(objc);
+	if unlikely(!result)
+		goto done;
+	memcpyc(DeeTuple_ELEM(result), objv,
+	        objc, sizeof(DREF DeeObject *));
+done:
+	return result;
+}
+
 
 /* Create a new tuple object from a sequence or iterator. */
 PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -710,6 +733,10 @@ DEFINE_PUBLIC_ALIAS(ASSEMBLY_NAME(DeeTuple_VPack, 8),
                     ASSEMBLY_NAME(DeeTuple_NewVector, 8));
 DEFINE_PUBLIC_ALIAS(ASSEMBLY_NAME(DeeTuple_VPackSymbolic, 8),
                     ASSEMBLY_NAME(DeeTuple_NewVectorSymbolic, 8));
+DEFINE_PUBLIC_ALIAS(ASSEMBLY_NAME(DeeTuple_VTryPack, 8),
+                    ASSEMBLY_NAME(DeeTuple_TryNewVector, 8));
+DEFINE_PUBLIC_ALIAS(ASSEMBLY_NAME(DeeTuple_VTryPackSymbolic, 8),
+                    ASSEMBLY_NAME(DeeTuple_TryNewVectorSymbolic, 8));
 #else /* !__NO_DEFINE_ALIAS */
 PUBLIC WUNUSED DREF DeeObject *DCALL
 DeeTuple_VPack(size_t n, va_list args) {
@@ -719,6 +746,16 @@ DeeTuple_VPack(size_t n, va_list args) {
 PUBLIC WUNUSED DREF DeeObject *DCALL
 DeeTuple_VPackSymbolic(size_t n, va_list args) {
 	return DeeTuple_NewVectorSymbolic(n, (DeeObject **)args);
+}
+
+PUBLIC WUNUSED DREF DeeObject *DCALL
+DeeTuple_VTryPack(size_t n, va_list args) {
+	return DeeTuple_TryNewVector(n, (DeeObject **)args);
+}
+
+PUBLIC WUNUSED DREF DeeObject *DCALL
+DeeTuple_VTryPackSymbolic(size_t n, va_list args) {
+	return DeeTuple_TryNewVectorSymbolic(n, (DeeObject **)args);
 }
 #endif /* __NO_DEFINE_ALIAS */
 #else /* CONFIG_VA_LIST_IS_STACK_POINTER */
@@ -754,10 +791,44 @@ DeeTuple_VPackSymbolic(size_t n, va_list args) {
 done:
 	return result;
 }
+
+PUBLIC WUNUSED DREF DeeObject *DCALL
+DeeTuple_VTryPack(size_t n, va_list args) {
+	size_t i;
+	DREF DeeObject *result;
+	result = DeeTuple_TryNewUninitialized(n);
+	if unlikely(!result)
+		goto done;
+	for (i = 0; i < n; ++i) {
+		DREF DeeObject *elem;
+		elem = va_arg(args, DeeObject *);
+		Dee_Incref(elem);
+		DeeTuple_SET(result, i, elem);
+	}
+done:
+	return result;
+}
+
+PUBLIC WUNUSED DREF DeeObject *DCALL
+DeeTuple_VTryPackSymbolic(size_t n, va_list args) {
+	size_t i;
+	DREF DeeObject *result;
+	result = DeeTuple_TryNewUninitialized(n);
+	if unlikely(!result)
+		goto done;
+	for (i = 0; i < n; ++i) {
+		DREF DeeObject *elem;
+		elem = va_arg(args, DeeObject *);
+		DeeTuple_SET(result, i, elem);
+	}
+done:
+	return result;
+}
 #endif /* !CONFIG_VA_LIST_IS_STACK_POINTER */
 
 /* Create new tuple objects. */
-PUBLIC WUNUSED DREF DeeObject *DeeTuple_Pack(size_t n, ...) {
+PUBLIC WUNUSED DREF DeeObject *
+DeeTuple_Pack(size_t n, ...) {
 	DREF DeeObject *result;
 	va_list args;
 	va_start(args, n);
@@ -766,11 +837,32 @@ PUBLIC WUNUSED DREF DeeObject *DeeTuple_Pack(size_t n, ...) {
 	return result;
 }
 
-PUBLIC WUNUSED DREF DeeObject *DeeTuple_PackSymbolic(size_t n, ...) {
+PUBLIC WUNUSED DREF DeeObject *
+DeeTuple_TryPack(size_t n, ...) {
+	DREF DeeObject *result;
+	va_list args;
+	va_start(args, n);
+	result = DeeTuple_VTryPack(n, args);
+	va_end(args);
+	return result;
+}
+
+PUBLIC WUNUSED DREF DeeObject *
+DeeTuple_PackSymbolic(size_t n, ...) {
 	DREF DeeObject *result;
 	va_list args;
 	va_start(args, n);
 	result = DeeTuple_VPackSymbolic(n, args);
+	va_end(args);
+	return result;
+}
+
+PUBLIC WUNUSED DREF DeeObject *
+DeeTuple_TryPackSymbolic(size_t n, ...) {
+	DREF DeeObject *result;
+	va_list args;
+	va_start(args, n);
+	result = DeeTuple_VTryPackSymbolic(n, args);
 	va_end(args);
 	return result;
 }

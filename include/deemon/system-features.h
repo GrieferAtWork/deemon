@@ -325,15 +325,20 @@ func("posix_spawn_file_actions_addchdir_np", "0", test: 'extern posix_spawn_file
 func("posix_spawn_file_actions_addfchdir", "0", test: 'extern posix_spawn_file_actions_t fa; return posix_spawn_file_actions_addfchdir(&fa, 99);');
 func("posix_spawn_file_actions_addfchdir_np", "0", test: 'extern posix_spawn_file_actions_t fa; return posix_spawn_file_actions_addfchdir_np(&fa, 99);');
 
-func("cwait", msvc, test: 'int st; return cwait(&st, 42, 43);');
-func("_cwait", msvc, test: 'int st; return cwait(&st, 42, 43);');
-func("wait", unix, test: 'int st; return wait(&st);');
-func("waitpid", unix, test: 'int st; return waitpid(42, &st, 0);');
+func("cwait", msvc, test: 'extern int st; return cwait(&st, 42, 43);');
+func("_cwait", msvc, test: 'extern int st; return cwait(&st, 42, 43);');
+func("wait", unix, test: 'extern int st; return wait(&st);');
+func("waitpid", unix, test: 'extern int st; return waitpid(42, &st, 0);');
 constant("WNOHANG");
-func("wait4", addparen(linux) + " || " + addparen(kos), test: 'int st; struct rusage ru; return wait4(42, &st, 0, &ru);');
-func("waitid", addparen(linux) + " || " + addparen(kos), test: 'siginfo_t si; return waitid(P_ALL, 42, &si, WEXITED);');
-func("kill", unix, test: 'pid_t pid; return kill(pid, 9);');
-func("sigprocmask", unix, test: "sigset_t os; return sigprocmask(SIG_SETMASK, NULL, &os);");
+func("wait4", addparen(linux) + " || " + addparen(kos), test: 'extern int st; extern struct rusage ru; return wait4(42, &st, 0, &ru);');
+func("waitid", addparen(linux) + " || " + addparen(kos), test: 'extern siginfo_t si; return waitid(P_ALL, 42, &si, WEXITED);');
+func("kill", unix, test: 'extern pid_t pid; return kill(pid, 9);');
+func("tgkill", "defined(CONFIG_HAVE_SIGNAL_H) && defined(__USE_GNU)", test: 'extern pid_t pid, tid; return tgkill(pid, tid, 9);');
+func("signal", "defined(CONFIG_HAVE_SIGNAL_H)", test: 'extern void my_handler(int signo); return signal(9, &my_handler) != SIG_ERR;');
+func("bsd_signal", "defined(CONFIG_HAVE_SIGNAL_H) && defined(__USE_XOPEN)", test: 'extern void my_handler(int signo); return bsd_signal(9, &my_handler) != SIG_ERR;');
+func("sysv_signal", "defined(CONFIG_HAVE_SIGNAL_H) && defined(__USE_GNU)", test: 'extern void my_handler(int signo); return sysv_signal(9, &my_handler) != SIG_ERR;');
+func("sigaction", "defined(CONFIG_HAVE_SIGNAL_H) && defined(__USE_POSIX)", test: 'extern struct sigaction act, oact; return sigaction(9, &act, &oact);');
+func("sigprocmask", unix, test: "extern sigset_t os; return sigprocmask(SIG_SETMASK, NULL, &os);");
 functest("detach(42)", kos + " && defined(__USE_KOS) && __KOS_VERSION__ >= 300");
 
 functest('system("echo hi")', stdc);
@@ -601,6 +606,7 @@ functest("time(NULL)", "defined(CONFIG_HAVE_TIME_H)");
 functest("time64(NULL)", "defined(CONFIG_HAVE_TIME_H) && defined(__USE_TIME64)");
 func("clock_gettime", "defined(CONFIG_HAVE_TIME_H) && defined(__USE_POSIX199309)", test: "struct timespec ts; return clock_gettime(0, &ts);");
 func("clock_gettime64", "defined(CONFIG_HAVE_TIME_H) && defined(__USE_POSIX199309) && defined(__USE_TIME64)", test: "struct timespec64 ts; return clock_gettime64(0, &ts);");
+constant("CLOCK_MONOTONIC", "defined(CONFIG_HAVE_TIME_H) && defined(__USE_POSIX199309)");
 constant("CLOCK_REALTIME", "defined(CONFIG_HAVE_TIME_H) && defined(__USE_POSIX199309)");
 func("gettimeofday", "defined(CONFIG_HAVE_SYS_TIME_H)", test: "struct timeval tv; return gettimeofday(&tv, NULL);");
 func("gettimeofday64", "defined(CONFIG_HAVE_SYS_TIME_H) && defined(__USE_TIME64)", test: "struct timeval64 tv; return gettimeofday64(&tv, NULL);");
@@ -835,12 +841,23 @@ func("sem_reltimedwait_np", "defined(CONFIG_HAVE_SEMAPHORE_H) && defined(__USE_X
 func("sem_reltimedwait64_np", "defined(CONFIG_HAVE_SEMAPHORE_H) && defined(__USE_XOPEN2K) && defined(__USE_TIME64)", test: "extern sem_t sem; extern struct timespec64 ts; return sem_reltimedwait64_np(&sem, &ts);");
 
 // <pthread.h>
-func("pthread_suspend", "defined(CONFIG_HAVE_PTHREAD_H) && 0", test: "extern pthread_t pt; return pthread_suspend(pt);");
-func("pthread_continue", "defined(CONFIG_HAVE_PTHREAD_H) && 0", test: "extern pthread_t pt; return pthread_continue(pt);");
-func("pthread_suspend_np", "defined(CONFIG_HAVE_PTHREAD_H) && 0", test: "extern pthread_t pt; return pthread_suspend_np(pt);");
-func("pthread_unsuspend_np", "defined(CONFIG_HAVE_PTHREAD_H) && 0", test: "extern pthread_t pt; return pthread_unsuspend_np(pt);");
-func("pthread_setname", "defined(CONFIG_HAVE_PTHREAD_H) && 0", test: 'extern pthread_t pt; return pthread_setname(pt, "foothread");');
-func("pthread_setname_np", "defined(CONFIG_HAVE_PTHREAD_H) && defined(__USE_GNU)", test: 'extern pthread_t pt; return pthread_setname_np(pt, "foothread");');
+func("pthread_create", "defined(CONFIG_HAVE_PTHREAD_H)", test: "extern pthread_t pt; extern void *my_thread_main(void *); extern void *arg; return pthread_create(&pt, NULL, &my_thread_main, arg);");
+func("pthread_join", "defined(CONFIG_HAVE_PTHREAD_H)", test: "extern pthread_t pt; void *res; return pthread_join(pt, &res);");
+func("pthread_detach", "defined(CONFIG_HAVE_PTHREAD_H)", test: "extern pthread_t pt; return pthread_detach(pt);");
+func("pthread_self", "defined(CONFIG_HAVE_PTHREAD_H)", test: "extern pthread_t pt; pt = pthread_self(); return 0;");
+func("pthread_attr_init", "defined(CONFIG_HAVE_PTHREAD_H)", test: "extern pthread_attr_t at; return pthread_attr_init(&at);");
+func("pthread_attr_destroy", "defined(CONFIG_HAVE_PTHREAD_H)", test: "extern pthread_attr_t at; return pthread_attr_destroy(&at);");
+func("pthread_gettid_np", "defined(CONFIG_HAVE_PTHREAD_H) && 0", test: "extern pthread_t pt; return pthread_gettid_np(pt) != 0;");
+func("pthread_key_create", "defined(CONFIG_HAVE_PTHREAD_H)", test: "extern pthread_key_t key; return pthread_key_create(&key, NULL);");
+func("pthread_key_delete", "defined(CONFIG_HAVE_PTHREAD_H)", test: "extern pthread_key_t key; return pthread_key_delete(key);");
+func("pthread_getspecific", "defined(CONFIG_HAVE_PTHREAD_H)", test: "extern pthread_key_t key; return pthread_getspecific(key) != NULL;");
+func("pthread_setspecific", "defined(CONFIG_HAVE_PTHREAD_H)", test: "extern pthread_key_t key; extern void *val; return pthread_setspecific(key, val);");
+func("pthread_kill", "defined(CONFIG_HAVE_SIGNAL_H) && (defined(__USE_POSIX199506) || defined(__USE_UNIX98))", test: "extern pthread_t pt; pthread_kill(pt, 9);");
+func("pthread_sigqueue", "defined(CONFIG_HAVE_SIGNAL_H) && (defined(__USE_POSIX199506) || defined(__USE_UNIX98)) && defined(__USE_GNU)", test: "extern pthread_t pt; union sigval sv; return pthread_sigqueue(pt, 9, sv);");
+feature("pthread_setname_2ARG", "defined(CONFIG_HAVE_PTHREAD_H) && 0", test: 'extern pthread_t pt; return pthread_setname(pt, "foo");');
+feature("pthread_setname_3ARG", "defined(CONFIG_HAVE_PTHREAD_H) && 0", test: 'extern pthread_t pt; return pthread_setname(pt, "foo", 3);');
+feature("pthread_setname_np_2ARG", "defined(CONFIG_HAVE_PTHREAD_H) && defined(__USE_GNU)", test: 'extern pthread_t pt; return pthread_setname_np(pt, "foo");');
+feature("pthread_setname_np_3ARG", "defined(CONFIG_HAVE_PTHREAD_H) && defined(__USE_GNU)", test: 'extern pthread_t pt; return pthread_setname_np(pt, "foo", 3);');
 func("pthread_cond_init", "defined(CONFIG_HAVE_PTHREAD_H)", test: 'extern pthread_cond_t cond; return pthread_cond_init(&cond, NULL);');
 func("pthread_cond_destroy", "defined(CONFIG_HAVE_PTHREAD_H)", test: 'extern pthread_cond_t cond; return pthread_cond_destroy(&cond);');
 func("pthread_cond_signal", "defined(CONFIG_HAVE_PTHREAD_H)", test: 'extern pthread_cond_t cond; return pthread_cond_signal(&cond);');
@@ -856,6 +873,10 @@ func("pthread_mutex_lock", "defined(CONFIG_HAVE_PTHREAD_H)", test: 'extern pthre
 func("pthread_mutex_unlock", "defined(CONFIG_HAVE_PTHREAD_H)", test: 'extern pthread_mutex_t mtx; return pthread_mutex_unlock(&mtx);');
 
 // <threads.h>
+func("thrd_create", "defined(CONFIG_HAVE_THREADS_H)", test: "extern thrd_t th; extern int my_thread_main(void *); extern void *arg; return thrd_success == thrd_create(&th, &my_thread_main, arg);");
+func("thrd_join", "defined(CONFIG_HAVE_THREADS_H)", test: "extern thrd_t th; int res; return thrd_success == thrd_join(th, &res);");
+func("thrd_detach", "defined(CONFIG_HAVE_THREADS_H)", test: "extern thrd_t th; return thrd_success == thrd_detach(th);");
+func("thrd_current", "defined(CONFIG_HAVE_THREADS_H)", test: "extern thrd_t th; th = thrd_current(); return 0;");
 func("cnd_init", "defined(CONFIG_HAVE_THREADS_H)", test: 'extern cnd_t cnd; return cnd_init(&cnd);');
 func("cnd_destroy", "defined(CONFIG_HAVE_THREADS_H)", test: 'extern cnd_t cnd; cnd_destroy(&cnd); return 0;');
 func("cnd_signal", "defined(CONFIG_HAVE_THREADS_H)", test: 'extern cnd_t cnd; return cnd_signal(&cnd);');
@@ -865,13 +886,17 @@ func("cnd_timedwait", "defined(CONFIG_HAVE_THREADS_H)", test: 'extern cnd_t cnd;
 func("cnd_timedwait64", "defined(CONFIG_HAVE_THREADS_H) && defined(__USE_TIME64)", test: 'extern cnd_t cnd; extern mtx_t mtx; extern struct timespec64 ts; return cnd_timedwait64(&cnd, &mtx, &ts);');
 func("cnd_reltimedwait_np", "defined(CONFIG_HAVE_THREADS_H)", test: 'extern cnd_t cnd; extern mtx_t mtx; extern struct timespec ts; return cnd_reltimedwait_np(&cnd, &mtx, &ts);');
 func("cnd_reltimedwait64_np", "defined(CONFIG_HAVE_THREADS_H) && defined(__USE_TIME64)", test: 'extern cnd_t cnd; extern mtx_t mtx; extern struct timespec64 ts; return cnd_reltimedwait64_np(&cnd, &mtx, &ts);');
+func("tss_create", "defined(CONFIG_HAVE_THREADS_H)", test: "extern tss_t key; return thrd_success == tss_create(&key, NULL);");
+func("tss_delete", "defined(CONFIG_HAVE_THREADS_H)", test: "extern tss_t key; tss_delete(key); return 0;");
+func("tss_get", "defined(CONFIG_HAVE_THREADS_H)", test: "extern tss_t key; return tss_get(key) != NULL;");
+func("tss_set", "defined(CONFIG_HAVE_THREADS_H)", test: "extern tss_t key; extern void *val; return tss_set(key, val);");
 constant("thrd_success");
 constant("thrd_nomem");
 constant("thrd_timedout");
 constant("thrd_error");
-func("mtx_init", "defined(CONFIG_HAVE_THREADS_H)", test: 'extern mtx_t mtx; return mtx_init(&mtx);');
+func("mtx_init", "defined(CONFIG_HAVE_THREADS_H)", test: 'extern mtx_t mtx; return thrd_success == mtx_init(&mtx, mtx_plain);');
 func("mtx_destroy", "defined(CONFIG_HAVE_THREADS_H)", test: 'extern mtx_t mtx; mtx_destroy(&mtx); return 0;');
-func("mtx_lock", "defined(CONFIG_HAVE_THREADS_H)", test: 'extern mtx_t mtx; return mtx_lock(&mtx);');
+func("mtx_lock", "defined(CONFIG_HAVE_THREADS_H)", test: 'extern mtx_t mtx; return thrd_success == mtx_lock(&mtx);');
 func("mtx_unlock", "defined(CONFIG_HAVE_THREADS_H)", test: 'extern mtx_t mtx; mtx_unlock(&mtx); return 0;');
 
 // <kos/futex.h>
@@ -2392,6 +2417,45 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
       (defined(kill) || defined(__kill_defined) || (defined(__linux__) || defined(__linux) || \
        defined(linux) || defined(__unix__) || defined(__unix) || defined(unix)))
 #define CONFIG_HAVE_kill
+#endif
+
+#ifdef CONFIG_NO_tgkill
+#undef CONFIG_HAVE_tgkill
+#elif !defined(CONFIG_HAVE_tgkill) && \
+      (defined(tgkill) || defined(__tgkill_defined) || (defined(CONFIG_HAVE_SIGNAL_H) && \
+       defined(__USE_GNU)))
+#define CONFIG_HAVE_tgkill
+#endif
+
+#ifdef CONFIG_NO_signal
+#undef CONFIG_HAVE_signal
+#elif !defined(CONFIG_HAVE_signal) && \
+      (defined(signal) || defined(__signal_defined) || defined(CONFIG_HAVE_SIGNAL_H))
+#define CONFIG_HAVE_signal
+#endif
+
+#ifdef CONFIG_NO_bsd_signal
+#undef CONFIG_HAVE_bsd_signal
+#elif !defined(CONFIG_HAVE_bsd_signal) && \
+      (defined(bsd_signal) || defined(__bsd_signal_defined) || (defined(CONFIG_HAVE_SIGNAL_H) && \
+       defined(__USE_XOPEN)))
+#define CONFIG_HAVE_bsd_signal
+#endif
+
+#ifdef CONFIG_NO_sysv_signal
+#undef CONFIG_HAVE_sysv_signal
+#elif !defined(CONFIG_HAVE_sysv_signal) && \
+      (defined(sysv_signal) || defined(__sysv_signal_defined) || (defined(CONFIG_HAVE_SIGNAL_H) && \
+       defined(__USE_GNU)))
+#define CONFIG_HAVE_sysv_signal
+#endif
+
+#ifdef CONFIG_NO_sigaction
+#undef CONFIG_HAVE_sigaction
+#elif !defined(CONFIG_HAVE_sigaction) && \
+      (defined(sigaction) || defined(__sigaction_defined) || (defined(CONFIG_HAVE_SIGNAL_H) && \
+       defined(__USE_POSIX)))
+#define CONFIG_HAVE_sigaction
 #endif
 
 #ifdef CONFIG_NO_sigprocmask
@@ -4950,6 +5014,14 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #define CONFIG_HAVE_clock_gettime64
 #endif
 
+#ifdef CONFIG_NO_CLOCK_MONOTONIC
+#undef CONFIG_HAVE_CLOCK_MONOTONIC
+#elif !defined(CONFIG_HAVE_CLOCK_MONOTONIC) && \
+      (defined(CLOCK_MONOTONIC) || defined(__CLOCK_MONOTONIC_defined) || (defined(CONFIG_HAVE_TIME_H) && \
+       defined(__USE_POSIX199309)))
+#define CONFIG_HAVE_CLOCK_MONOTONIC
+#endif
+
 #ifdef CONFIG_NO_CLOCK_REALTIME
 #undef CONFIG_HAVE_CLOCK_REALTIME
 #elif !defined(CONFIG_HAVE_CLOCK_REALTIME) && \
@@ -6448,52 +6520,131 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #define CONFIG_HAVE_sem_reltimedwait64_np
 #endif
 
-#ifdef CONFIG_NO_pthread_suspend
-#undef CONFIG_HAVE_pthread_suspend
-#elif !defined(CONFIG_HAVE_pthread_suspend) && \
-      (defined(pthread_suspend) || defined(__pthread_suspend_defined) || (defined(CONFIG_HAVE_PTHREAD_H) && \
+#ifdef CONFIG_NO_pthread_create
+#undef CONFIG_HAVE_pthread_create
+#elif !defined(CONFIG_HAVE_pthread_create) && \
+      (defined(pthread_create) || defined(__pthread_create_defined) || defined(CONFIG_HAVE_PTHREAD_H))
+#define CONFIG_HAVE_pthread_create
+#endif
+
+#ifdef CONFIG_NO_pthread_join
+#undef CONFIG_HAVE_pthread_join
+#elif !defined(CONFIG_HAVE_pthread_join) && \
+      (defined(pthread_join) || defined(__pthread_join_defined) || defined(CONFIG_HAVE_PTHREAD_H))
+#define CONFIG_HAVE_pthread_join
+#endif
+
+#ifdef CONFIG_NO_pthread_detach
+#undef CONFIG_HAVE_pthread_detach
+#elif !defined(CONFIG_HAVE_pthread_detach) && \
+      (defined(pthread_detach) || defined(__pthread_detach_defined) || defined(CONFIG_HAVE_PTHREAD_H))
+#define CONFIG_HAVE_pthread_detach
+#endif
+
+#ifdef CONFIG_NO_pthread_self
+#undef CONFIG_HAVE_pthread_self
+#elif !defined(CONFIG_HAVE_pthread_self) && \
+      (defined(pthread_self) || defined(__pthread_self_defined) || defined(CONFIG_HAVE_PTHREAD_H))
+#define CONFIG_HAVE_pthread_self
+#endif
+
+#ifdef CONFIG_NO_pthread_attr_init
+#undef CONFIG_HAVE_pthread_attr_init
+#elif !defined(CONFIG_HAVE_pthread_attr_init) && \
+      (defined(pthread_attr_init) || defined(__pthread_attr_init_defined) || defined(CONFIG_HAVE_PTHREAD_H))
+#define CONFIG_HAVE_pthread_attr_init
+#endif
+
+#ifdef CONFIG_NO_pthread_attr_destroy
+#undef CONFIG_HAVE_pthread_attr_destroy
+#elif !defined(CONFIG_HAVE_pthread_attr_destroy) && \
+      (defined(pthread_attr_destroy) || defined(__pthread_attr_destroy_defined) || \
+       defined(CONFIG_HAVE_PTHREAD_H))
+#define CONFIG_HAVE_pthread_attr_destroy
+#endif
+
+#ifdef CONFIG_NO_pthread_gettid_np
+#undef CONFIG_HAVE_pthread_gettid_np
+#elif !defined(CONFIG_HAVE_pthread_gettid_np) && \
+      (defined(pthread_gettid_np) || defined(__pthread_gettid_np_defined) || (defined(CONFIG_HAVE_PTHREAD_H) && \
        0))
-#define CONFIG_HAVE_pthread_suspend
+#define CONFIG_HAVE_pthread_gettid_np
 #endif
 
-#ifdef CONFIG_NO_pthread_continue
-#undef CONFIG_HAVE_pthread_continue
-#elif !defined(CONFIG_HAVE_pthread_continue) && \
-      (defined(pthread_continue) || defined(__pthread_continue_defined) || (defined(CONFIG_HAVE_PTHREAD_H) && \
-       0))
-#define CONFIG_HAVE_pthread_continue
+#ifdef CONFIG_NO_pthread_key_create
+#undef CONFIG_HAVE_pthread_key_create
+#elif !defined(CONFIG_HAVE_pthread_key_create) && \
+      (defined(pthread_key_create) || defined(__pthread_key_create_defined) || \
+       defined(CONFIG_HAVE_PTHREAD_H))
+#define CONFIG_HAVE_pthread_key_create
 #endif
 
-#ifdef CONFIG_NO_pthread_suspend_np
-#undef CONFIG_HAVE_pthread_suspend_np
-#elif !defined(CONFIG_HAVE_pthread_suspend_np) && \
-      (defined(pthread_suspend_np) || defined(__pthread_suspend_np_defined) || \
-       (defined(CONFIG_HAVE_PTHREAD_H) && 0))
-#define CONFIG_HAVE_pthread_suspend_np
+#ifdef CONFIG_NO_pthread_key_delete
+#undef CONFIG_HAVE_pthread_key_delete
+#elif !defined(CONFIG_HAVE_pthread_key_delete) && \
+      (defined(pthread_key_delete) || defined(__pthread_key_delete_defined) || \
+       defined(CONFIG_HAVE_PTHREAD_H))
+#define CONFIG_HAVE_pthread_key_delete
 #endif
 
-#ifdef CONFIG_NO_pthread_unsuspend_np
-#undef CONFIG_HAVE_pthread_unsuspend_np
-#elif !defined(CONFIG_HAVE_pthread_unsuspend_np) && \
-      (defined(pthread_unsuspend_np) || defined(__pthread_unsuspend_np_defined) || \
-       (defined(CONFIG_HAVE_PTHREAD_H) && 0))
-#define CONFIG_HAVE_pthread_unsuspend_np
+#ifdef CONFIG_NO_pthread_getspecific
+#undef CONFIG_HAVE_pthread_getspecific
+#elif !defined(CONFIG_HAVE_pthread_getspecific) && \
+      (defined(pthread_getspecific) || defined(__pthread_getspecific_defined) || \
+       defined(CONFIG_HAVE_PTHREAD_H))
+#define CONFIG_HAVE_pthread_getspecific
 #endif
 
-#ifdef CONFIG_NO_pthread_setname
-#undef CONFIG_HAVE_pthread_setname
-#elif !defined(CONFIG_HAVE_pthread_setname) && \
-      (defined(pthread_setname) || defined(__pthread_setname_defined) || (defined(CONFIG_HAVE_PTHREAD_H) && \
-       0))
-#define CONFIG_HAVE_pthread_setname
+#ifdef CONFIG_NO_pthread_setspecific
+#undef CONFIG_HAVE_pthread_setspecific
+#elif !defined(CONFIG_HAVE_pthread_setspecific) && \
+      (defined(pthread_setspecific) || defined(__pthread_setspecific_defined) || \
+       defined(CONFIG_HAVE_PTHREAD_H))
+#define CONFIG_HAVE_pthread_setspecific
 #endif
 
-#ifdef CONFIG_NO_pthread_setname_np
-#undef CONFIG_HAVE_pthread_setname_np
-#elif !defined(CONFIG_HAVE_pthread_setname_np) && \
-      (defined(pthread_setname_np) || defined(__pthread_setname_np_defined) || \
-       (defined(CONFIG_HAVE_PTHREAD_H) && defined(__USE_GNU)))
-#define CONFIG_HAVE_pthread_setname_np
+#ifdef CONFIG_NO_pthread_kill
+#undef CONFIG_HAVE_pthread_kill
+#elif !defined(CONFIG_HAVE_pthread_kill) && \
+      (defined(pthread_kill) || defined(__pthread_kill_defined) || (defined(CONFIG_HAVE_SIGNAL_H) && \
+       (defined(__USE_POSIX199506) || defined(__USE_UNIX98))))
+#define CONFIG_HAVE_pthread_kill
+#endif
+
+#ifdef CONFIG_NO_pthread_sigqueue
+#undef CONFIG_HAVE_pthread_sigqueue
+#elif !defined(CONFIG_HAVE_pthread_sigqueue) && \
+      (defined(pthread_sigqueue) || defined(__pthread_sigqueue_defined) || (defined(CONFIG_HAVE_SIGNAL_H) && \
+       (defined(__USE_POSIX199506) || defined(__USE_UNIX98)) && defined(__USE_GNU)))
+#define CONFIG_HAVE_pthread_sigqueue
+#endif
+
+#ifdef CONFIG_NO_pthread_setname_2ARG
+#undef CONFIG_HAVE_pthread_setname_2ARG
+#elif !defined(CONFIG_HAVE_pthread_setname_2ARG) && \
+      (defined(CONFIG_HAVE_PTHREAD_H) && 0)
+#define CONFIG_HAVE_pthread_setname_2ARG
+#endif
+
+#ifdef CONFIG_NO_pthread_setname_3ARG
+#undef CONFIG_HAVE_pthread_setname_3ARG
+#elif !defined(CONFIG_HAVE_pthread_setname_3ARG) && \
+      (defined(CONFIG_HAVE_PTHREAD_H) && 0)
+#define CONFIG_HAVE_pthread_setname_3ARG
+#endif
+
+#ifdef CONFIG_NO_pthread_setname_np_2ARG
+#undef CONFIG_HAVE_pthread_setname_np_2ARG
+#elif !defined(CONFIG_HAVE_pthread_setname_np_2ARG) && \
+      (defined(CONFIG_HAVE_PTHREAD_H) && defined(__USE_GNU))
+#define CONFIG_HAVE_pthread_setname_np_2ARG
+#endif
+
+#ifdef CONFIG_NO_pthread_setname_np_3ARG
+#undef CONFIG_HAVE_pthread_setname_np_3ARG
+#elif !defined(CONFIG_HAVE_pthread_setname_np_3ARG) && \
+      (defined(CONFIG_HAVE_PTHREAD_H) && defined(__USE_GNU))
+#define CONFIG_HAVE_pthread_setname_np_3ARG
 #endif
 
 #ifdef CONFIG_NO_pthread_cond_init
@@ -6598,6 +6749,34 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #define CONFIG_HAVE_pthread_mutex_unlock
 #endif
 
+#ifdef CONFIG_NO_thrd_create
+#undef CONFIG_HAVE_thrd_create
+#elif !defined(CONFIG_HAVE_thrd_create) && \
+      (defined(thrd_create) || defined(__thrd_create_defined) || defined(CONFIG_HAVE_THREADS_H))
+#define CONFIG_HAVE_thrd_create
+#endif
+
+#ifdef CONFIG_NO_thrd_join
+#undef CONFIG_HAVE_thrd_join
+#elif !defined(CONFIG_HAVE_thrd_join) && \
+      (defined(thrd_join) || defined(__thrd_join_defined) || defined(CONFIG_HAVE_THREADS_H))
+#define CONFIG_HAVE_thrd_join
+#endif
+
+#ifdef CONFIG_NO_thrd_detach
+#undef CONFIG_HAVE_thrd_detach
+#elif !defined(CONFIG_HAVE_thrd_detach) && \
+      (defined(thrd_detach) || defined(__thrd_detach_defined) || defined(CONFIG_HAVE_THREADS_H))
+#define CONFIG_HAVE_thrd_detach
+#endif
+
+#ifdef CONFIG_NO_thrd_current
+#undef CONFIG_HAVE_thrd_current
+#elif !defined(CONFIG_HAVE_thrd_current) && \
+      (defined(thrd_current) || defined(__thrd_current_defined) || defined(CONFIG_HAVE_THREADS_H))
+#define CONFIG_HAVE_thrd_current
+#endif
+
 #ifdef CONFIG_NO_cnd_init
 #undef CONFIG_HAVE_cnd_init
 #elif !defined(CONFIG_HAVE_cnd_init) && \
@@ -6662,6 +6841,34 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
       (defined(cnd_reltimedwait64_np) || defined(__cnd_reltimedwait64_np_defined) || \
        (defined(CONFIG_HAVE_THREADS_H) && defined(__USE_TIME64)))
 #define CONFIG_HAVE_cnd_reltimedwait64_np
+#endif
+
+#ifdef CONFIG_NO_tss_create
+#undef CONFIG_HAVE_tss_create
+#elif !defined(CONFIG_HAVE_tss_create) && \
+      (defined(tss_create) || defined(__tss_create_defined) || defined(CONFIG_HAVE_THREADS_H))
+#define CONFIG_HAVE_tss_create
+#endif
+
+#ifdef CONFIG_NO_tss_delete
+#undef CONFIG_HAVE_tss_delete
+#elif !defined(CONFIG_HAVE_tss_delete) && \
+      (defined(tss_delete) || defined(__tss_delete_defined) || defined(CONFIG_HAVE_THREADS_H))
+#define CONFIG_HAVE_tss_delete
+#endif
+
+#ifdef CONFIG_NO_tss_get
+#undef CONFIG_HAVE_tss_get
+#elif !defined(CONFIG_HAVE_tss_get) && \
+      (defined(tss_get) || defined(__tss_get_defined) || defined(CONFIG_HAVE_THREADS_H))
+#define CONFIG_HAVE_tss_get
+#endif
+
+#ifdef CONFIG_NO_tss_set
+#undef CONFIG_HAVE_tss_set
+#elif !defined(CONFIG_HAVE_tss_set) && \
+      (defined(tss_set) || defined(__tss_set_defined) || defined(CONFIG_HAVE_THREADS_H))
+#define CONFIG_HAVE_tss_set
 #endif
 
 #ifdef CONFIG_NO_thrd_success
@@ -10770,18 +10977,6 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #undef CONFIG_HAVE_pthread_unsuspend_np
 #endif /* pthread_continue + pthread_suspend */
 
-#if defined(CONFIG_HAVE_pthread_setname_np) && !defined(CONFIG_HAVE_pthread_setname)
-#define CONFIG_HAVE_pthread_setname
-#undef pthread_setname
-#define pthread_setname pthread_setname_np
-#endif /* pthread_setname = pthread_setname_np */
-
-#if defined(CONFIG_HAVE_pthread_setname) && !defined(CONFIG_HAVE_pthread_setname_np)
-#define CONFIG_HAVE_pthread_setname_np
-#undef pthread_setname_np
-#define pthread_setname_np pthread_setname
-#endif /* pthread_setname_np = pthread_setname */
-
 #if defined(CONFIG_HAVE__sys_errlist) && !defined(CONFIG_HAVE_sys_errlist)
 #define CONFIG_HAVE_sys_errlist
 #undef sys_errlist
@@ -10808,8 +11003,9 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 
 #ifndef CONFIG_HAVE_abort
 #define CONFIG_HAVE_abort
+#define CONFIG_HAVE_abort_IS_ASSERT_XFAIL
 #undef abort
-#define abort() _DeeAssert_Fail(NULL, __FILE__, __LINE__)
+#define abort() _DeeAssert_XFail(NULL, __FILE__, __LINE__)
 #endif /* !CONFIG_HAVE_abort */
 
 #if !defined(CONFIG_HAVE_pause) && defined(CONFIG_HAVE_select)
@@ -12976,7 +13172,7 @@ for (local x: [1:n+1]) {
 				DeePrivateSystem_IF_HAVE_##e4(                                  \
 					DeePrivateSystem_IF_E1(errno, e4, __VA_ARGS__),             \
 					(void)0))))
-//[[[end]]]
+/*[[[end]]]*/
 
 
 #ifdef GUARD_DEEMON_FILE_H

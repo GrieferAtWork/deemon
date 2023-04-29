@@ -1181,7 +1181,7 @@ is_nonempty:
  *     >>     ...
  *     >> }
  *   - That might seem dangerous, but consider the implications:
- *      - Assuming that the caller will continue to use `DeeThread_JoinAll()'
+ *      - Assuming that the caller will continue to use `DeeThread_InterruptAndJoinAll()'
  *        to join any new threads that may appear, we can also assume
  *        that any running user-code function will eventually return
  *        to its caller. However: any further calls to other user-code

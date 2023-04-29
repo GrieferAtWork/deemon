@@ -1745,7 +1745,7 @@ PUBLIC bool DCALL Dee_TryCollectMemory(size_t req_bytes) {
 	if (DeeGC_Collect((size_t)-1))
 		return true;
 #endif /* !NDEBUG && !__OPTIMIZE__ */
-	return false;
+	return collect_bytes != 0;
 }
 
 PUBLIC bool DCALL Dee_CollectMemory(size_t req_bytes) {
@@ -1757,7 +1757,7 @@ PUBLIC bool DCALL Dee_CollectMemory(size_t req_bytes) {
 
 
 
-#ifndef NDEBUG
+#ifndef Dee_DPRINT_IS_NOOP
 
 #ifndef CONFIG_OUTPUTDEBUGSTRINGA_DEFINED
 #define CONFIG_OUTPUTDEBUGSTRINGA_DEFINED
@@ -1802,12 +1802,12 @@ debug_printer(void *UNUSED(closure),
 	return (dssize_t)DeeFile_Write(DeeFile_DefaultStddbg, buffer, bufsize);
 #endif /* !CONFIG_HOST_WINDOWS */
 }
-#endif /* !NDEBUG */
+#endif /* !Dee_DPRINT_IS_NOOP */
 
 
-#ifdef NDEBUG
+#ifdef Dee_DPRINT_IS_NOOP
 PUBLIC int _Dee_dprint_enabled = 0;
-#else /* NDEBUG */
+#else /* Dee_DPRINT_IS_NOOP */
 PUBLIC int _Dee_dprint_enabled = 2;
 PRIVATE void DCALL determine_is_dprint_enabled(void) {
 	char *env;
@@ -1835,15 +1835,15 @@ PRIVATE void DCALL determine_is_dprint_enabled(void) {
 	}
 #endif /* !CONFIG_HOST_WINDOWS */
 }
-#endif /* !NDEBUG */
+#endif /* !Dee_DPRINT_IS_NOOP */
 
 
 
 PUBLIC NONNULL((1)) void
 (DCALL _Dee_vdprintf)(char const *__restrict format, va_list args) {
-#ifdef NDEBUG
+#ifdef Dee_DPRINT_IS_NOOP
 	Dee_vsnprintf(NULL, 0, format, args);
-#else /* NDEBUG */
+#else /* Dee_DPRINT_IS_NOOP */
 	if (_Dee_dprint_enabled == 2)
 		determine_is_dprint_enabled();
 	if (!_Dee_dprint_enabled) {
@@ -1854,14 +1854,14 @@ PUBLIC NONNULL((1)) void
 	}
 	if (DeeFormat_VPrintf(&debug_printer, NULL, format, args) < 0)
 		DeeError_Handled(ERROR_HANDLED_RESTORE);
-#endif /* !NDEBUG */
+#endif /* !Dee_DPRINT_IS_NOOP */
 }
 
 PUBLIC NONNULL((1)) void
 (DCALL _Dee_dprint)(char const *__restrict message) {
-#ifdef NDEBUG
+#ifdef Dee_DPRINT_IS_NOOP
 	(void)message;
-#else /* NDEBUG */
+#else /* Dee_DPRINT_IS_NOOP */
 	if (_Dee_dprint_enabled == 2)
 		determine_is_dprint_enabled();
 	if (!_Dee_dprint_enabled)
@@ -1874,17 +1874,17 @@ PUBLIC NONNULL((1)) void
 	if (debug_printer(NULL, message, strlen(message)) < 0)
 		DeeError_Handled(ERROR_HANDLED_RESTORE);
 #endif /* !CONFIG_HOST_WINDOWS */
-#endif /* !NDEBUG */
+#endif /* !Dee_DPRINT_IS_NOOP */
 }
 
 PUBLIC NONNULL((1)) void
 (_Dee_dprintf)(char const *__restrict format, ...) {
-#ifdef NDEBUG
+#ifdef Dee_DPRINT_IS_NOOP
 	va_list args;
 	va_start(args, format);
 	Dee_vsnprintf(NULL, 0, format, args);
 	va_end(args);
-#else /* NDEBUG */
+#else /* Dee_DPRINT_IS_NOOP */
 	va_list args;
 	if (_Dee_dprint_enabled == 2)
 		determine_is_dprint_enabled();
@@ -1898,16 +1898,16 @@ PUBLIC NONNULL((1)) void
 			DeeError_Handled(ERROR_HANDLED_RESTORE);
 	}
 	va_end(args);
-#endif /* !NDEBUG */
+#endif /* !Dee_DPRINT_IS_NOOP */
 }
 
 PUBLIC dssize_t
 (DPRINTER_CC _Dee_dprinter)(void *arg, char const *__restrict data, size_t datalen) {
-#ifdef NDEBUG
+#ifdef Dee_DPRINT_IS_NOOP
 	(void)arg;
 	(void)data;
 	return (dssize_t)datalen;
-#else /* NDEBUG */
+#else /* Dee_DPRINT_IS_NOOP */
 	dssize_t result;
 	if (_Dee_dprint_enabled == 2)
 		determine_is_dprint_enabled();
@@ -1919,23 +1919,10 @@ PUBLIC dssize_t
 		result = 0;
 	}
 	return result;
-#endif /* !NDEBUG */
+#endif /* !Dee_DPRINT_IS_NOOP */
 }
 
 
-#ifdef NDEBUG
-PUBLIC void
-(_DeeAssert_Failf)(char const *UNUSED(expr),
-                   char const *UNUSED(file),
-                   int UNUSED(line),
-                   char const *UNUSED(format), ...) {
-}
-PUBLIC void
-(DCALL _DeeAssert_Fail)(char const *UNUSED(expr),
-                        char const *UNUSED(file),
-                        int UNUSED(line)) {
-}
-#else /* NDEBUG */
 PRIVATE NONNULL((1)) void
 assert_vprintf(char const *format, va_list args) {
 	dssize_t error;
@@ -1952,20 +1939,8 @@ assert_printf(char const *format, ...) {
 	va_end(args);
 }
 
-PUBLIC void
-(_DeeAssert_Failf)(char const *expr, char const *file,
-                   int line, char const *format, ...) {
-	assert_printf("\n\n\n"
-	              "%s(%d) : Assertion failed : %s\n",
-	              file, line, expr);
-	if (format) {
-		va_list args;
-		va_start(args, format);
-		assert_vprintf(format, args);
-		va_end(args);
-		assert_printf("\n");
-	}
 #ifdef CONFIG_HOST_WINDOWS
+PRIVATE void assert_attach_debugger_loop(void) {
 	if (!IsDebuggerPresent()) {
 #if 0
 		char *env = getenv("DEEMON_SILENT");
@@ -1981,14 +1956,64 @@ PUBLIC void
 				SCHED_YIELD();
 		}
 	}
-#endif /* CONFIG_HOST_WINDOWS */
+}
+#else /* CONFIG_HOST_WINDOWS */
+#define assert_attach_debugger_loop() (void)0
+#endif /* !CONFIG_HOST_WINDOWS */
+
+PUBLIC void
+(_DeeAssert_Failf)(char const *expr, char const *file,
+                   int line, char const *format, ...) {
+	assert_printf("\n\n\n"
+	              "%s(%d) : Assertion failed : %s\n",
+	              file, line, expr);
+	if (format) {
+		va_list args;
+		va_start(args, format);
+		assert_vprintf(format, args);
+		va_end(args);
+		assert_printf("\n");
+	}
+	assert_attach_debugger_loop();
+}
+
+PUBLIC ATTR_NORETURN void
+(_DeeAssert_XFailf)(char const *expr, char const *file, int line, char const *format, ...) {
+	assert_printf("\n\n\n"
+	              "%s(%d) : Assertion failed : %s\n",
+	              file, line, expr);
+	if (format) {
+		va_list args;
+		va_start(args, format);
+		assert_vprintf(format, args);
+		va_end(args);
+		assert_printf("\n");
+	}
+	assert_attach_debugger_loop();
+#if defined(CONFIG_HAVE_abort) && !defined(CONFIG_HAVE_abort_IS_ASSERT_XFAIL)
+	abort();
+#elif defined(CONFIG_HAVE__Exit)
+	_Exit(EXIT_FAILURE);
+#else /* ... */
+	for (;;) {
+		char volatile *volatile ptr;
+		ptr  = (char volatile *)NULL;
+		*ptr = 'X';
+	}
+#endif /* !... */
 }
 
 PUBLIC void
 (DCALL _DeeAssert_Fail)(char const *expr, char const *file, int line) {
 	_DeeAssert_Failf(expr, file, line, NULL);
 }
-#endif /* !NDEBUG */
+
+PUBLIC ATTR_NORETURN void
+(DCALL _DeeAssert_XFail)(char const *expr, char const *file, int line) {
+	_DeeAssert_XFailf(expr, file, line, NULL);
+}
+
+
 
 DECL_END
 

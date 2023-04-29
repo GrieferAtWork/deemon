@@ -262,11 +262,11 @@ time_now_utc(Dee_int128_t *__restrict p_result) {
 
 #ifdef time_now_utc_USE_gettimeofday
 	{
-		struct timeval ts;
-		if likely(gettimeofday(&ts, NULL) == 0) {
-			__hybrid_int128_set(*p_result, ts.tv_sec);
+		struct timeval tv;
+		if likely(gettimeofday(&tv, NULL) == 0) {
+			__hybrid_int128_set(*p_result, tv.tv_sec);
 			__hybrid_uint128_mul32(*(Dee_uint128_t *)p_result, NANOSECONDS_PER_SECOND);
-			__hybrid_uint128_add32(*(Dee_uint128_t *)p_result, ts.tv_usec * 1000);
+			__hybrid_uint128_add32(*(Dee_uint128_t *)p_result, tv.tv_usec * 1000);
 			return;
 		}
 	}

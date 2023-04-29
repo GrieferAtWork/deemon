@@ -225,8 +225,12 @@ DeeFileBuffer_SetMode(DeeObject *__restrict self,
  * NOTE: The first time a buffered TTY device is written to, this
  *       function is added to the `atexit()' chain unless deemon
  *       was built with the `CONFIG_NO_STDLIB' option enabled.
- * NOTE: This function can be called as `(File from deemon).buffer.sync()' */
-DFUNDEF WUNUSED int DCALL DeeFileBuffer_SyncTTYs(void);
+ * NOTE: This function can be called as `(File from deemon).buffer.sync()'
+ * @return: 1 : `or_unlock_me' was non-NULL, and had to be unlocked
+ * @return: 0 : Success
+ * @return: -1: Error */
+DFUNDEF WUNUSED int DCALL
+DeeFileBuffer_SyncTTYs(DeeFileBufferObject *or_unlock_me);
 
 
 

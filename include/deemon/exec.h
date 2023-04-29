@@ -264,8 +264,8 @@ DeeExec_CompileFunctionMemoryString(/*utf-8*/ char const *__restrict data, size_
  * This does very little, as most components are designed for lazy initialization,
  * or are simply initialized statically (i.e. already come pre-initialized).
  * However, some components do require some pre-initialization, the most notable
- * here being `DeeThread_Init()', as well as allocation of the data block used by
- * the slab allocator. */
+ * here being `DeeThread_SubSystemInit()', as well as allocation of the memory
+ * block used by the slab allocator. */
 DFUNDEF void DCALL Dee_Initialize(void);
 
 /* Keep clearing global hooks while invoking the GC to
@@ -317,7 +317,7 @@ DFUNDEF size_t DCALL Dee_Shutdown(void);
  *     >>     ...
  *     >> }
  *   - That might seem dangerous, but consider the implications:
- *      - Assuming that the caller will continue to use `DeeThread_JoinAll()'
+ *      - Assuming that the caller will continue to use `DeeThread_InterruptAndJoinAll()'
  *        to join any new threads that may appear, we can also assume
  *        that any running user-code function will eventually return
  *        to its caller. However: any further calls to other user-code

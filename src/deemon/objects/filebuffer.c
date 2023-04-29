@@ -45,26 +45,6 @@
 DECL_BEGIN
 
 typedef DeeFileBufferObject Buffer;
-#define buffer_lock_reading     DeeFileBuffer_LockReading
-#define buffer_lock_writing     DeeFileBuffer_LockWriting
-#define buffer_lock_tryread     DeeFileBuffer_LockTryRead
-#define buffer_lock_trywrite    DeeFileBuffer_LockTryWrite
-#define buffer_lock_canread     DeeFileBuffer_LockCanRead
-#define buffer_lock_canwrite    DeeFileBuffer_LockCanWrite
-#define buffer_lock_waitread    DeeFileBuffer_LockWaitRead
-#define buffer_lock_waitwrite   DeeFileBuffer_LockWaitWrite
-#define buffer_lock_read        DeeFileBuffer_LockRead
-#define buffer_lock_read_noint  DeeFileBuffer_LockReadNoInt
-#define buffer_lock_write       DeeFileBuffer_LockWrite
-#define buffer_lock_write_noint DeeFileBuffer_LockWriteNoInt
-#define buffer_lock_tryupgrade  DeeFileBuffer_LockTryUpgrade
-#define buffer_lock_upgrade     DeeFileBuffer_LockUpgrade
-#define buffer_lock_downgrade   DeeFileBuffer_LockDowngrade
-#define buffer_lock_endwrite    DeeFileBuffer_LockEndWrite
-#define buffer_lock_endread     DeeFileBuffer_LockEndRead
-#define buffer_lock_end         DeeFileBuffer_LockEnd
-
-
 
 /* [0..1][lock(buffer_ttys_lock)] Chain of tty-buffers. */
 PRIVATE Buffer *buffer_ttys = NULL;
@@ -90,17 +70,23 @@ PRIVATE NONNULL((1)) void DCALL buffer_deltty(Buffer *__restrict self);
 
 PRIVATE ATTR_COLD int DCALL err_buffer_closed(void);
 
-PRIVATE WUNUSED NONNULL((1, 2)) size_t DCALL buffer_read_nolock(Buffer *__restrict self, uint8_t *__restrict buffer, size_t bufsize, dioflag_t flags);
-PRIVATE WUNUSED NONNULL((1, 2)) size_t DCALL buffer_write_nolock(Buffer *__restrict self, uint8_t const *__restrict buffer, size_t bufsize, dioflag_t flags);
-PRIVATE dpos_t DCALL buffer_seek_nolock(Buffer *__restrict self, doff_t off, int whence);
+/* Special return values for `buffer_read_or_unlock' and `buffer_write_or_unlock' */
+#define BUFFER_IO_EOF        (0)  /* End-of-file */
+#define BUFFER_IO_ERROR      (-1) /* Error (an exception was thrown) */
+#define BUFFER_IO_DID_UNLOCK (-2) /* The buffer had to be unlocked (try again) */
+#define GETC_DID_UNLOCK      (-3) /* The buffer had to be unlocked (try again) (for `buffer_getc_or_unlock') */
+PRIVATE WUNUSED NONNULL((1, 2)) size_t DCALL buffer_read_or_unlock(Buffer *__restrict self, uint8_t *__restrict buffer, size_t bufsize, dioflag_t flags);
+PRIVATE WUNUSED NONNULL((1, 2)) size_t DCALL buffer_write_or_unlock(Buffer *__restrict self, uint8_t const *__restrict buffer, size_t bufsize, dioflag_t flags);
+PRIVATE WUNUSED NONNULL((1)) dpos_t DCALL buffer_seek_or_unlock(Buffer *__restrict self, doff_t off, int whence);
+PRIVATE WUNUSED NONNULL((1)) int DCALL buffer_getc_or_unlock(Buffer *__restrict self, dioflag_t flags);
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL buffer_ungetc_nolock(Buffer *__restrict self, int ch);
+PRIVATE WUNUSED NONNULL((1)) int DCALL buffer_trunc_nolock(Buffer *__restrict self, dpos_t new_size);
 PRIVATE WUNUSED NONNULL((1)) int DCALL buffer_sync_nolock(Buffer *__restrict self, uint16_t mode);
 #define BUFFER_SYNC_FNORMAL          0x0000
 #define BUFFER_SYNC_FERROR_IF_CLOSED 0x0001 /* Throw an error if the buffer was closed. */
 #define BUFFER_SYNC_FNOSYNC_FILE     0x0002 /* Don't synchronize the underlying file, regardless of whether
                                              * or not the `FILE_BUFFER_FSYNC' flag has been set. */
-PRIVATE WUNUSED NONNULL((1)) int DCALL buffer_getc_nolock(Buffer *__restrict self, dioflag_t flags);
-PRIVATE WUNUSED NONNULL((1)) int DCALL buffer_ungetc_nolock(Buffer *__restrict self, int ch);
-PRIVATE WUNUSED NONNULL((1)) int DCALL buffer_trunc_nolock(Buffer *__restrict self, dpos_t new_size);
 
 
 #ifdef CONFIG_HAVE_atexit
@@ -132,9 +118,9 @@ PRIVATE void atexit_flushall(void) {
 			break;
 
 		/* Synchronize this buffer. */
-		buffer_lock_write_noint(buffer);
+		DeeFileBuffer_LockWriteNoInt(buffer);
 		error = buffer_sync_nolock(buffer, BUFFER_SYNC_FNORMAL);
-		buffer_lock_endwrite(buffer);
+		DeeFileBuffer_LockEndWrite(buffer);
 		if unlikely(error) {
 			DeeError_Print("Failed to synchronize tty during exit\n",
 			               ERROR_PRINT_HANDLEINTR);
@@ -199,13 +185,13 @@ buffer_init(Buffer *__restrict self,
 #if 1 /* Unwind recursive buffers. */
 	if (DeeObject_InstanceOf(file, (DeeTypeObject *)&DeeFileBuffer_Type)) {
 		DeeObject *base_file;
-		if (buffer_lock_write((Buffer *)file)) {
+		if (DeeFileBuffer_LockWrite((Buffer *)file)) {
 			Dee_Free(self->fb_base);
 			goto err;
 		}
 		base_file = ((Buffer *)file)->fb_file;
 		Dee_XIncref(base_file);
-		buffer_lock_endwrite((Buffer *)file);
+		DeeFileBuffer_LockEndWrite((Buffer *)file);
 		/* Use the original buffer-file if available. */
 		if (base_file)
 			file = base_file;
@@ -289,9 +275,7 @@ set_lfflag:
 	if unlikely(!self->fb_file)
 		goto err_closed;
 	file = self->fb_file, Dee_Incref(file);
-	COMPILER_BARRIER();
 	is_a_tty = DeeFile_IsAtty(file);
-	COMPILER_BARRIER();
 	Dee_Decref(file);
 	if unlikely(is_a_tty < 0)
 		goto err;
@@ -345,7 +329,7 @@ DeeFileBuffer_SetMode(DeeObject *__restrict self,
 	       (mode & ~(FILE_BUFFER_FSYNC)) == FILE_BUFFER_MODE_AUTO ||
 	       mode == FILE_BUFFER_MODE_KEEP);
 	ASSERT_OBJECT_TYPE(self, (DeeTypeObject *)&DeeFileBuffer_Type);
-	if (buffer_lock_write(me))
+	if (DeeFileBuffer_LockWrite(me))
 		return -1;
 	result = buffer_sync_nolock(me, BUFFER_SYNC_FERROR_IF_CLOSED);
 	if unlikely(result)
@@ -399,7 +383,7 @@ DeeFileBuffer_SetMode(DeeObject *__restrict self,
 	}
 	me->fb_chng = me->fb_base;
 done:
-	buffer_lock_endwrite(me);
+	DeeFileBuffer_LockEndWrite(me);
 	return result;
 err_cannot_resize:
 err:
@@ -412,8 +396,12 @@ err:
  * NOTE: The first time a buffered TTY device is written to, this
  *       function is added to the `atexit()' chain unless deemon
  *       was built with the `CONFIG_NO_STDLIB' option enabled.
- * NOTE: This function can be called as `(File from deemon).buffer.sync()' */
-PUBLIC WUNUSED int DCALL DeeFileBuffer_SyncTTYs(void) {
+ * NOTE: This function can be called as `(File from deemon).buffer.sync()'
+ * @return: 1 : `or_unlock_me' was non-NULL, and had to be unlocked
+ * @return: 0 : Success
+ * @return: -1: Error */
+PUBLIC WUNUSED int DCALL
+DeeFileBuffer_SyncTTYs(DeeFileBufferObject *or_unlock_me) {
 	int result = 0;
 	for (;;) {
 		DREF Buffer *buffer;
@@ -426,18 +414,42 @@ PUBLIC WUNUSED int DCALL DeeFileBuffer_SyncTTYs(void) {
 			break;
 		/* Synchronize this buffer. */
 
-		/* FIXME: This right here dead-locks with `buffer_write()', because we're trying
-		 *        to acquire the same object-semantic lock twice here. If 2 threads try
-		 *        to do this at the same time, 2 buffers locks will already be held, and
-		 *        neither thread will be able to acquire the other thread's lock here! */
-		if (buffer_lock_write(buffer))
-			return -1;
-		COMPILER_BARRIER();
-		result = buffer_sync_nolock(buffer, BUFFER_SYNC_FNORMAL);
-		COMPILER_BARRIER();
-		buffer_lock_endwrite(buffer);
+		/* Important check: if there's nothing to sync, don't even try to lock the file!
+		 * This is required to prevent a soft-lock when many threads are locking & un-
+		 * locking the same set of buffers all at once, using the `BUFFER_IO_DID_UNLOCK'
+		 * path to prevent dead-locks. In this case, we want to prevent any sort of file
+		 * locking in the case where we don't actually have to sync anything. */
+		if (atomic_read(&buffer->fb_chsz) != 0) {
+			/* Special handling is needed here because:
+			 * - A normal write-lock would dead-lock with `buffer_write()', because we're
+			 *   trying to acquire the same object-semantic lock twice here. If 2 threads
+			 *   try to do this at the same time, 2 buffers locks will already be held,
+			 *   and neither thread will be able to acquire the other thread's lock here! */
+			if (!DeeFileBuffer_LockTryWrite(buffer)) {
+				if (or_unlock_me) {
+					/* Unlock the caller-given `or_unlock_me' */
+					DeeFileBuffer_LockEnd(or_unlock_me);
+					Dee_Decref(buffer);
+	
+					/* While not holding any locks, force a sync of all TTYs */
+					result = DeeFileBuffer_SyncTTYs(NULL);
+					if (result == 0)
+						result = 1; /* Tell the caller that we lost their lock... */
+					return result;
+				} else {
+					if (DeeFileBuffer_LockWrite(buffer)) {
+						Dee_Decref(buffer);
+						return -1;
+					}
+				}
+			}
+			result = buffer_sync_nolock(buffer, BUFFER_SYNC_FNORMAL);
+			DeeFileBuffer_LockEndWrite(buffer);
+		}
+
+		/* Drop the buffer and check for error */
 		Dee_Decref(buffer);
-		if unlikely(result)
+		if unlikely(result != 0)
 			break;
 	}
 	return result;
@@ -445,9 +457,9 @@ PUBLIC WUNUSED int DCALL DeeFileBuffer_SyncTTYs(void) {
 
 
 PRIVATE WUNUSED NONNULL((1, 2)) size_t DCALL
-buffer_read_nolock(Buffer *__restrict self,
-                   uint8_t *__restrict buffer,
-                   size_t bufsize, dioflag_t flags) {
+buffer_read_or_unlock(Buffer *__restrict self,
+                      uint8_t *__restrict buffer,
+                      size_t bufsize, dioflag_t flags) {
 	size_t read_size, result = 0;
 	size_t bufavail;
 	uint16_t old_flags;
@@ -482,12 +494,10 @@ read_from_buffer:
 
 	/* The buffer is empty and must be re-filled. */
 	/* First off: Flush any changes that had been made. */
-	COMPILER_BARRIER();
 	if (buffer_sync_nolock(self, BUFFER_SYNC_FERROR_IF_CLOSED))
 		goto err;
 	if (buffer_determine_isatty(self))
 		goto err;
-	COMPILER_BARRIER();
 	self->fb_chng = self->fb_base;
 	self->fb_chsz = 0;
 
@@ -499,10 +509,13 @@ read_from_buffer:
 
 	/* If we're a TTY buffer, flush all other TTY buffers before reading. */
 	if (self->fb_flag & FILE_BUFFER_FISATTY) {
-		COMPILER_BARRIER();
-		if (DeeFileBuffer_SyncTTYs())
-			goto err;
-		COMPILER_BARRIER();
+		int error;
+		error = DeeFileBuffer_SyncTTYs(self);
+		if unlikely(error != 0) {
+			if (error < 0)
+				goto err;
+			goto did_unlock;
+		}
 		if unlikely(self->fb_cnt)
 			goto read_from_buffer;
 		if unlikely(!self->fb_file)
@@ -527,18 +540,14 @@ read_through:
 			if (next_data != self->fb_fpos) {
 				/* Seek in the underlying file to get where we need to go. */
 				dpos_t new_pos;
-				COMPILER_BARRIER();
 				new_pos = DeeFile_SetPos(file, next_data);
-				COMPILER_BARRIER();
 				Dee_Decref(file);
 				if unlikely(new_pos == (dpos_t)-1)
 					goto err;
 				self->fb_fpos = next_data;
 				goto again; /* Must start over because of recursive callbacks. */
 			}
-			COMPILER_BARRIER();
 			read_size = DeeFile_Readf(file, buffer, bufsize, flags);
-			COMPILER_BARRIER();
 			Dee_Decref(file);
 			if unlikely(read_size == (size_t)-1)
 				goto err;
@@ -597,9 +606,7 @@ read_through:
 	if (next_data != self->fb_fpos) {
 		/* Seek in the underlying file to get where we need to go. */
 		dpos_t new_pos;
-		COMPILER_BARRIER();
 		new_pos = DeeFile_SetPos(file, next_data);
-		COMPILER_BARRIER();
 		Dee_Decref(file);
 		if unlikely(new_pos == (dpos_t)-1)
 			goto err;
@@ -611,9 +618,7 @@ read_through:
 	new_buffer = self->fb_base;
 	old_flags  = self->fb_flag;
 	self->fb_flag |= FILE_BUFFER_FREADING;
-	COMPILER_BARRIER();
 	read_size = DeeFile_Readf(file, self->fb_base, self->fb_size, flags);
-	COMPILER_BARRIER();
 	Dee_Decref(file);
 	self->fb_flag &= ~FILE_BUFFER_FREADING;
 	self->fb_flag |= old_flags & FILE_BUFFER_FREADING;
@@ -632,13 +637,15 @@ done:
 err_closed:
 	err_buffer_closed();
 err:
-	return (size_t)-1;
+	return (size_t)BUFFER_IO_ERROR;
+did_unlock:
+	return (size_t)BUFFER_IO_DID_UNLOCK;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) size_t DCALL
-buffer_write_nolock(Buffer *__restrict self,
-                    uint8_t const *__restrict buffer,
-                    size_t bufsize, dioflag_t flags) {
+buffer_write_or_unlock(Buffer *__restrict self,
+                       uint8_t const *__restrict buffer,
+                       size_t bufsize, dioflag_t flags) {
 	size_t result = 0;
 	size_t new_bufsize;
 	size_t bufavail;
@@ -664,6 +671,7 @@ again:
 			goto done;
 		memcpy(self->fb_ptr, buffer, bufavail);
 		result += bufavail;
+
 		/* Update the changed file-area. */
 		if (!self->fb_chsz) {
 			self->fb_chng = self->fb_ptr;
@@ -694,14 +702,18 @@ again:
 		if ((self->fb_flag & FILE_BUFFER_FLNBUF) &&
 		    (memchr(buffer, '\n', bufsize) ||
 		     memchr(buffer, '\r', bufsize))) {
-			if ((self->fb_flag & FILE_BUFFER_FISATTY) &&
-			    DeeFileBuffer_SyncTTYs())
-				goto err;
+			if (self->fb_flag & FILE_BUFFER_FISATTY) {
+				int error = DeeFileBuffer_SyncTTYs(self);
+				if unlikely(error) {
+					if unlikely(error < 0)
+						goto err;
+					goto did_unlock;
+				}
+			}
+
 			/* Flush this file. */
-			COMPILER_BARRIER();
 			if (buffer_sync_nolock(self, BUFFER_SYNC_FERROR_IF_CLOSED))
 				goto err;
-			COMPILER_BARRIER();
 			bufsize -= bufavail;
 			if (!bufsize)
 				goto done;
@@ -714,6 +726,7 @@ again:
 			goto done;
 		buffer += bufavail;
 	}
+
 	/* No more buffer available.
 	 * Either we must flush the buffer, or we must extend it. */
 	if (self->fb_size >= FILE_BUFSIZ_MAX ||
@@ -722,13 +735,15 @@ again:
 		/* Buffer is too large or cannot be relocated.
 		 * >> Therefor, we must flush it, then try again. */
 		if (self->fb_flag & FILE_BUFFER_FISATTY) {
-			if (DeeFileBuffer_SyncTTYs())
-				goto err;
+			int error = DeeFileBuffer_SyncTTYs(self);
+			if unlikely(error) {
+				if unlikely(error < 0)
+					goto err;
+				goto did_unlock;
+			}
 		}
-		COMPILER_BARRIER();
 		if (buffer_sync_nolock(self, BUFFER_SYNC_FERROR_IF_CLOSED))
 			goto err;
-		COMPILER_BARRIER();
 		if unlikely(!self->fb_file)
 			goto err_closed;
 		self->fb_chng = self->fb_base;
@@ -740,9 +755,7 @@ again:
 do_writethrough:
 			file = self->fb_file;
 			Dee_Incref(file);
-			COMPILER_BARRIER();
 			temp = DeeFile_Writef(file, buffer, bufsize, flags);
-			COMPILER_BARRIER();
 			Dee_Decref(file);
 			if unlikely(temp == (size_t)-1)
 				goto err;
@@ -767,13 +780,16 @@ do_writethrough:
 	new_buffer = buffer_tryrealloc_nolock(self, new_bufsize);
 	if unlikely(!new_buffer) {
 		/* Buffer relocation failed. - sync() + operate in write-through mode as fallback. */
-		if ((self->fb_flag & FILE_BUFFER_FISATTY) &&
-		    DeeFileBuffer_SyncTTYs())
-			goto err;
-		COMPILER_BARRIER();
+		if (self->fb_flag & FILE_BUFFER_FISATTY) {
+			int error = DeeFileBuffer_SyncTTYs(self);
+			if unlikely(error) {
+				if unlikely(error < 0)
+					goto err;
+				goto did_unlock;
+			}
+		}
 		if (buffer_sync_nolock(self, BUFFER_SYNC_FERROR_IF_CLOSED))
 			goto err;
-		COMPILER_BARRIER();
 		if unlikely(!self->fb_file)
 			goto err_closed;
 		self->fb_chng = self->fb_base;
@@ -793,12 +809,14 @@ done:
 err_closed:
 	err_buffer_closed();
 err:
-	return (size_t)-1;
+	return (size_t)BUFFER_IO_ERROR;
+did_unlock:
+	return (size_t)BUFFER_IO_DID_UNLOCK;
 }
 
 PRIVATE dpos_t DCALL
-buffer_seek_nolock(Buffer *__restrict self,
-                   doff_t off, int whence) {
+buffer_seek_or_unlock(Buffer *__restrict self,
+                      doff_t off, int whence) {
 	dpos_t result;
 	DREF DeeObject *file;
 	if (whence == SEEK_SET || whence == SEEK_CUR) {
@@ -827,13 +845,15 @@ buffer_seek_nolock(Buffer *__restrict self,
 #if __SIZEOF_POINTER__ < 8
 		if ((new_abspos - old_abspos) >= SIZE_MAX)
 			goto full_seek;
-#endif
+#endif /* ZEOF_POINTER__ < 8 */
+
 		/* Seek-ahead-in-buffer. */
 		new_pos = self->fb_base + (size_t)(new_abspos - self->fb_fblk);
 #if __SIZEOF_POINTER__ < 8
 		if (new_pos < self->fb_base)
 			goto full_seek;
-#endif
+#endif /* __SIZEOF_POINTER__ < 8 */
+
 		/* Truncate the read buffer */
 		if (new_pos < self->fb_ptr) {
 			/* Seek below the current pointer (but we don't
@@ -854,28 +874,29 @@ buffer_seek_nolock(Buffer *__restrict self,
 full_seek:
 	if (buffer_determine_isatty(self))
 		goto err;
-	if ((self->fb_flag & FILE_BUFFER_FISATTY) &&
-	    DeeFileBuffer_SyncTTYs())
-		goto err;
+	if (self->fb_flag & FILE_BUFFER_FISATTY) {
+		int error = DeeFileBuffer_SyncTTYs(self);
+		if unlikely(error) {
+			if unlikely(error < 0)
+				goto err;
+			goto did_unlock;
+		}
+	}
 	/* Synchronize the buffer. */
-	COMPILER_BARRIER();
 	if (buffer_sync_nolock(self, BUFFER_SYNC_FERROR_IF_CLOSED))
 		goto err;
-	COMPILER_BARRIER();
 	if unlikely(!self->fb_file)
 		goto err_closed;
 	self->fb_chng = self->fb_base;
 	self->fb_chsz = 0;
 	file          = self->fb_file;
 	Dee_Incref(file);
-	COMPILER_BARRIER();
 
 	/* Do a full seek using the underlying file. */
 	result = DeeFile_Seek(file, off, whence);
 	Dee_Decref(file);
 	if unlikely(result == (dpos_t)-1)
 		goto err;
-	COMPILER_BARRIER();
 
 	/* Clear the buffer and set the new file pointer. */
 	self->fb_fblk = result;
@@ -888,7 +909,9 @@ full_seek:
 err_closed:
 	err_buffer_closed();
 err:
-	return (dpos_t)-1;
+	return (dpos_t)BUFFER_IO_ERROR;
+did_unlock:
+	return (dpos_t)BUFFER_IO_DID_UNLOCK;
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
@@ -914,25 +937,24 @@ again:
 	abs_chngpos += (self->fb_chng - self->fb_base);
 	if (abs_chngpos != self->fb_fpos) {
 		dpos_t new_pos;
+
 		/* Seek to the position where we need to change stuff. */
-		COMPILER_BARRIER();
 		new_pos = DeeFile_SetPos(file, abs_chngpos);
-		COMPILER_BARRIER();
 		Dee_Decref(file);
 		if unlikely(new_pos == (dpos_t)-1)
 			goto err;
 		self->fb_fpos = new_pos;
+
 		/* Since the buffer may have changed, we need to start over. */
 		goto again;
 	}
+
 	/* Write all changed data. */
 	old_flags = self->fb_flag;
 	self->fb_flag |= FILE_BUFFER_FREADING;
-	COMPILER_BARRIER();
 	temp = DeeFile_WriteAll(file,
 	                        self->fb_chng,
 	                        changed_size);
-	COMPILER_BARRIER();
 	self->fb_flag &= ~FILE_BUFFER_FREADING;
 	self->fb_flag |= old_flags & FILE_BUFFER_FREADING;
 	Dee_Decref(file);
@@ -954,9 +976,7 @@ again:
 			int error;
 			file = self->fb_file;
 			Dee_Incref(file);
-			COMPILER_BARRIER();
 			error = DeeFile_Sync(file);
-			COMPILER_BARRIER();
 			Dee_Decref(file);
 			if (error)
 				goto err;
@@ -971,7 +991,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
-buffer_getc_nolock(Buffer *__restrict self, dioflag_t flags) {
+buffer_getc_or_unlock(Buffer *__restrict self, dioflag_t flags) {
 	uint8_t *new_buffer;
 	size_t read_size;
 	DREF DeeObject *file;
@@ -986,14 +1006,14 @@ read_from_buffer:
 		--self->fb_cnt;
 		goto done;
 	}
+
 	/* The buffer is empty and must be re-filled. */
 	/* First off: Flush any changes that had been made. */
-	COMPILER_BARRIER();
 	if (buffer_sync_nolock(self, BUFFER_SYNC_FERROR_IF_CLOSED))
 		goto err;
-	COMPILER_BARRIER();
 	self->fb_chng = self->fb_base;
 	self->fb_chsz = 0;
+
 	/* Unlikely: But can happen due to recursive callbacks. */
 	if unlikely(self->fb_cnt)
 		goto read_from_buffer;
@@ -1004,10 +1024,13 @@ read_from_buffer:
 	if (buffer_determine_isatty(self))
 		goto err;
 	if (self->fb_flag & FILE_BUFFER_FISATTY) {
-		COMPILER_BARRIER();
-		if (DeeFileBuffer_SyncTTYs())
-			goto err;
-		COMPILER_BARRIER();
+		int error;
+		error = DeeFileBuffer_SyncTTYs(self);
+		if unlikely(error != 0) {
+			if unlikely(error < 0)
+				goto err;
+			goto did_unlock;
+		}
 		if unlikely(self->fb_cnt)
 			goto read_from_buffer;
 		if unlikely(!self->fb_file)
@@ -1029,18 +1052,14 @@ read_through:
 			if (next_data != self->fb_fpos) {
 				/* Seek in the underlying file to get where we need to go. */
 				dpos_t new_pos;
-				COMPILER_BARRIER();
 				new_pos = DeeFile_SetPos(file, next_data);
-				COMPILER_BARRIER();
 				Dee_Decref(file);
 				if unlikely(new_pos == (dpos_t)-1)
 					goto err;
 				self->fb_fpos = next_data;
 				goto again; /* Must start over because of recursive callbacks. */
 			}
-			COMPILER_BARRIER();
 			result = DeeFile_Getcf(file, flags);
-			COMPILER_BARRIER();
 			Dee_Decref(file);
 			if (result >= 0) {
 				/* Set the file and block address. */
@@ -1082,9 +1101,7 @@ read_through:
 	if (next_data != self->fb_fpos) {
 		/* Seek in the underlying file to get where we need to go. */
 		dpos_t new_pos;
-		COMPILER_BARRIER();
 		new_pos = DeeFile_SetPos(file, next_data);
-		COMPILER_BARRIER();
 		Dee_Decref(file);
 		if unlikely(new_pos == (dpos_t)-1)
 			goto err;
@@ -1096,9 +1113,7 @@ read_through:
 	new_buffer = self->fb_base;
 	old_flags  = self->fb_flag;
 	self->fb_flag |= FILE_BUFFER_FREADING;
-	COMPILER_BARRIER();
 	read_size = DeeFile_Readf(file, self->fb_base, self->fb_size, flags);
-	COMPILER_BARRIER();
 	Dee_Decref(file);
 	self->fb_flag &= ~FILE_BUFFER_FREADING;
 	self->fb_flag |= old_flags & FILE_BUFFER_FREADING;
@@ -1124,6 +1139,9 @@ err_closed:
 	err_buffer_closed();
 err:
 	result = GETC_ERR;
+	goto done;
+did_unlock:
+	result = GETC_DID_UNLOCK;
 	goto done;
 }
 
@@ -1210,9 +1228,7 @@ buffer_trunc_nolock(Buffer *__restrict self, dpos_t new_size) {
 	 * truncated, truncate the underlying file. */
 	file = self->fb_file;
 	Dee_Incref(file);
-	COMPILER_BARRIER();
 	result = DeeFile_Trunc(file, new_size);
-	COMPILER_BARRIER();
 	Dee_Decref(file);
 	return result;
 err_closed:
@@ -1227,10 +1243,12 @@ buffer_read(Buffer *__restrict self,
             void *__restrict buffer,
             size_t bufsize, dioflag_t flags) {
 	size_t result;
-	if (buffer_lock_write(self))
-		goto err;
-	result = buffer_read_nolock(self, (uint8_t *)buffer, bufsize, flags);
-	buffer_lock_endwrite(self);
+	do {
+		if (DeeFileBuffer_LockWrite(self))
+			goto err;
+		result = buffer_read_or_unlock(self, (uint8_t *)buffer, bufsize, flags);
+	} while unlikely(result == (size_t)BUFFER_IO_DID_UNLOCK);
+	DeeFileBuffer_LockEndWrite(self);
 	return result;
 err:
 	return (size_t)-1;
@@ -1241,10 +1259,12 @@ buffer_write(Buffer *__restrict self,
              void const *__restrict buffer,
              size_t bufsize, dioflag_t flags) {
 	size_t result;
-	if (buffer_lock_write(self))
-		goto err;
-	result = buffer_write_nolock(self, (uint8_t const *)buffer, bufsize, flags);
-	buffer_lock_endwrite(self);
+	do {
+		if (DeeFileBuffer_LockWrite(self))
+			goto err;
+		result = buffer_write_or_unlock(self, (uint8_t const *)buffer, bufsize, flags);
+	} while unlikely(result == (size_t)BUFFER_IO_DID_UNLOCK);
+	DeeFileBuffer_LockEndWrite(self);
 	return result;
 err:
 	return (size_t)-1;
@@ -1253,10 +1273,15 @@ err:
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 buffer_sync(Buffer *__restrict self) {
 	int result;
-	if (buffer_lock_write(self))
-		goto err;
-	result = buffer_sync_nolock(self, BUFFER_SYNC_FERROR_IF_CLOSED);
-	buffer_lock_endwrite(self);
+	/* Important check: if there's nothing to sync, don't even try to lock the file! */
+	if (atomic_read(&self->fb_chsz) == 0) {
+		result = 0;
+	} else {
+		if (DeeFileBuffer_LockWrite(self))
+			goto err;
+		result = buffer_sync_nolock(self, BUFFER_SYNC_FERROR_IF_CLOSED);
+		DeeFileBuffer_LockEndWrite(self);
+	}
 	return result;
 err:
 	return -1;
@@ -1265,10 +1290,12 @@ err:
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 buffer_getc(Buffer *__restrict self, dioflag_t flags) {
 	int result;
-	if (buffer_lock_write(self))
-		goto err;
-	result = buffer_getc_nolock(self, flags);
-	buffer_lock_endwrite(self);
+	do {
+		if (DeeFileBuffer_LockWrite(self))
+			goto err;
+		result = buffer_getc_or_unlock(self, flags);
+	} while unlikely(result == GETC_DID_UNLOCK);
+	DeeFileBuffer_LockEndWrite(self);
 	return result;
 err:
 	return GETC_ERR;
@@ -1277,10 +1304,10 @@ err:
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 buffer_ungetc(Buffer *__restrict self, int ch) {
 	int result;
-	if (buffer_lock_write(self))
+	if (DeeFileBuffer_LockWrite(self))
 		goto err;
 	result = buffer_ungetc_nolock(self, ch);
-	buffer_lock_endwrite(self);
+	DeeFileBuffer_LockEndWrite(self);
 	return result;
 err:
 	return GETC_ERR;
@@ -1289,10 +1316,10 @@ err:
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 buffer_trunc(Buffer *__restrict self, dpos_t new_size) {
 	int result;
-	if (buffer_lock_write(self))
+	if (DeeFileBuffer_LockWrite(self))
 		goto err;
 	result = buffer_trunc_nolock(self, new_size);
-	buffer_lock_endwrite(self);
+	DeeFileBuffer_LockEndWrite(self);
 	return result;
 err:
 	return -1;
@@ -1302,10 +1329,12 @@ PRIVATE dpos_t DCALL
 buffer_seek(Buffer *__restrict self,
             doff_t off, int whence) {
 	dpos_t result;
-	if (buffer_lock_write(self))
-		goto err;
-	result = buffer_seek_nolock(self, off, whence);
-	buffer_lock_endwrite(self);
+	do {
+		if (DeeFileBuffer_LockWrite(self))
+			goto err;
+		result = buffer_seek_or_unlock(self, off, whence);
+	} while unlikely(result == (dpos_t)BUFFER_IO_DID_UNLOCK);
+	DeeFileBuffer_LockEndWrite(self);
 	return result;
 err:
 	return (dpos_t)-1;
@@ -1316,7 +1345,7 @@ buffer_close(Buffer *__restrict self) {
 	DREF DeeObject *file;
 	uint8_t *buffer;
 	uint16_t flags;
-	if (buffer_lock_write(self))
+	if (DeeFileBuffer_LockWrite(self))
 		goto err;
 	if unlikely(buffer_sync_nolock(self, BUFFER_SYNC_FERROR_IF_CLOSED))
 		goto err_unlock;
@@ -1347,13 +1376,13 @@ buffer_close(Buffer *__restrict self) {
 	self->fb_flag = FILE_BUFFER_FNORMAL | (flags & FILE_BUFFER_FREADING);
 	self->fb_fpos = 0;
 	buffer_deltty(self);
-	buffer_lock_endwrite(self);
+	DeeFileBuffer_LockEndWrite(self);
 
 	Dee_XDecref(file); /* May already be NULL due to recursive callbacks. */
 	Dee_Free(buffer);
 	return 0;
 err_unlock:
-	buffer_lock_endwrite(self);
+	DeeFileBuffer_LockEndWrite(self);
 err:
 	return -1;
 }
@@ -1381,16 +1410,16 @@ buffer_print(Buffer *__restrict self, dformatprinter printer, void * arg) {
 	char const *mode;
 	DREF DeeObject *inner_file;
 	uint16_t buffer_flags;
-	if (buffer_lock_read(self))
+	if (DeeFileBuffer_LockRead(self))
 		goto err;
 	inner_file = self->fb_file;
 	if (inner_file == NULL) {
-		buffer_lock_endread(self);
+		DeeFileBuffer_LockEndRead(self);
 		return DeeFormat_PRINT(printer, arg, "<Buffer (closed)>");
 	}
 	buffer_flags = self->fb_flag;
 	Dee_Incref(inner_file);
-	buffer_lock_endread(self);
+	DeeFileBuffer_LockEndRead(self);
 	if (buffer_flags & FILE_BUFFER_FLNBUF) {
 		mode = "Line";
 	} else if (buffer_flags & FILE_BUFFER_FNODYNSCALE) {
@@ -1416,17 +1445,17 @@ buffer_printrepr(Buffer *__restrict self, dformatprinter printer, void * arg) {
 	DREF DeeObject *inner_file;
 	uint16_t buffer_flags;
 	size_t buffer_size;
-	if (buffer_lock_read(self))
+	if (DeeFileBuffer_LockRead(self))
 		goto err;
 	inner_file = self->fb_file;
 	if (inner_file == NULL) {
-		buffer_lock_endread(self);
+		DeeFileBuffer_LockEndRead(self);
 		return DeeFormat_PRINT(printer, arg, "File.Buffer()<.closed>");
 	}
 	buffer_flags = self->fb_flag;
 	buffer_size  = self->fb_size;
 	Dee_Incref(inner_file);
-	buffer_lock_endread(self);
+	DeeFileBuffer_LockEndRead(self);
 
 	/* Re-construct the buffer mode string. */
 	mode_iter = mode;
@@ -1584,28 +1613,28 @@ buffer_fini(Buffer *__restrict self) {
 
 PRIVATE NONNULL((1, 2)) void DCALL
 buffer_visit(Buffer *__restrict self, dvisit_t proc, void *arg) {
-	buffer_lock_write_noint(self);
+	DeeFileBuffer_LockWriteNoInt(self);
 	Dee_XVisit(self->fb_file);
-	buffer_lock_endwrite(self);
+	DeeFileBuffer_LockEndWrite(self);
 }
 
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 buffer_size(Buffer *self, size_t argc, DeeObject *const *argv) {
 	DREF DeeObject *file, *result;
-	if (buffer_lock_write(self))
+	if (DeeFileBuffer_LockWrite(self))
 		goto err;
 	file = self->fb_file;
 	if unlikely(!file)
 		goto err_closed_unlock;
 	Dee_Incref(file);
-	buffer_lock_endwrite(self);
+	DeeFileBuffer_LockEndWrite(self);
 	/* Forward the to contained file. */
 	result = DeeObject_CallAttr(file, (DeeObject *)&str_size, argc, argv);
 	Dee_Decref(file);
 	return result;
 err_closed_unlock:
-	buffer_lock_endwrite(self);
+	DeeFileBuffer_LockEndWrite(self);
 	err_buffer_closed();
 err:
 	return NULL;
@@ -1615,19 +1644,19 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 buffer_getsysfd(Buffer *__restrict self) {
 	DREF DeeObject *file, *result;
-	if (buffer_lock_read(self))
+	if (DeeFileBuffer_LockRead(self))
 		goto err;
 	file = self->fb_file;
 	if unlikely(!file)
 		goto err_closed_unlock;
 	Dee_Incref(file);
-	buffer_lock_endread(self);
+	DeeFileBuffer_LockEndRead(self);
 	/* Forward the to contained file. */
 	result = DeeObject_GetAttr(file, (DeeObject *)&str_getsysfd);
 	Dee_Decref(file);
 	return result;
 err_closed_unlock:
-	buffer_lock_endread(self);
+	DeeFileBuffer_LockEndRead(self);
 	err_buffer_closed();
 err:
 	return NULL;
@@ -1637,11 +1666,11 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 buffer_isatty(Buffer *__restrict self) {
 	int error;
-	if (buffer_lock_write(self))
+	if (DeeFileBuffer_LockWrite(self))
 		goto err;
 	/* Determine if the buffer points to a TTY. */
 	error = buffer_determine_isatty(self);
-	buffer_lock_endwrite(self);
+	DeeFileBuffer_LockEndWrite(self);
 	if unlikely(error)
 		goto err;
 	return_bool(self->fb_flag & FILE_BUFFER_FISATTY);
@@ -1654,13 +1683,13 @@ buffer_flush(Buffer *self, size_t argc, DeeObject *const *argv) {
 	int error;
 	if (DeeArg_Unpack(argc, argv, ":flush"))
 		goto err;
-	if (buffer_lock_write(self))
+	if (DeeFileBuffer_LockWrite(self))
 		goto err;
 	/* Synchronize the buffer, but don't synchronize its file. */
 	error = buffer_sync_nolock(self,
 	                           BUFFER_SYNC_FERROR_IF_CLOSED |
 	                           BUFFER_SYNC_FNOSYNC_FILE);
-	buffer_lock_endwrite(self);
+	DeeFileBuffer_LockEndWrite(self);
 	if unlikely(error)
 		goto err;
 	return_bool(self->fb_flag & FILE_BUFFER_FISATTY);
@@ -1766,19 +1795,19 @@ PRIVATE struct type_method tpconst buffer_methods[] = {
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 buffer_filename(Buffer *__restrict self) {
 	DREF DeeObject *file, *result;
-	if (buffer_lock_write(self))
+	if (DeeFileBuffer_LockWrite(self))
 		goto err;
 	file = self->fb_file;
 	if unlikely(!file)
 		goto err_closed_unlock;
 	Dee_Incref(file);
-	buffer_lock_endwrite(self);
+	DeeFileBuffer_LockEndWrite(self);
 	/* Forward the to contained file. */
 	result = DeeObject_GetAttr(file, (DeeObject *)&str_filename);
 	Dee_Decref(file);
 	return result;
 err_closed_unlock:
-	buffer_lock_endwrite(self);
+	DeeFileBuffer_LockEndWrite(self);
 	err_buffer_closed();
 err:
 	return NULL;
@@ -1787,16 +1816,16 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 buffer_getfile(Buffer *__restrict self) {
 	DREF DeeObject *result;
-	if (buffer_lock_write(self))
+	if (DeeFileBuffer_LockWrite(self))
 		goto err;
 	result = self->fb_file;
 	if unlikely(!result)
 		goto err_closed_unlock;
 	Dee_Incref(result);
-	buffer_lock_endwrite(self);
+	DeeFileBuffer_LockEndWrite(self);
 	return result;
 err_closed_unlock:
-	buffer_lock_endwrite(self);
+	DeeFileBuffer_LockEndWrite(self);
 	err_buffer_closed();
 err:
 	return NULL;
@@ -1833,7 +1862,7 @@ buffer_class_sync(DeeObject *UNUSED(self),
                   size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, ":sync"))
 		goto err;
-	if (DeeFileBuffer_SyncTTYs())
+	if (DeeFileBuffer_SyncTTYs(NULL) < 0)
 		goto err;
 #ifdef DEESYSTEM_FILE_USE_STDIO
 	/* When the STDIO filesystem is used, also flush its buffers.

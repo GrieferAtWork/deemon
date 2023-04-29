@@ -50,7 +50,7 @@ struct Dee_tuple_object {
 #define DeeTuple_ELEM(ob)        ((DeeTupleObject *)Dee_REQUIRES_OBJECT(ob))->t_elem
 #define DeeTuple_END(ob)         (((DeeTupleObject *)Dee_REQUIRES_OBJECT(ob))->t_elem + ((DeeTupleObject *)(ob))->t_size)
 #define DeeTuple_GET(ob, i)      ((DeeTupleObject *)Dee_REQUIRES_OBJECT(ob))->t_elem[i]
-#define DeeTuple_SET(ob, i, v)   ((DeeTupleObject *)Dee_REQUIRES_OBJECT(ob))->t_elem[i] = (v)
+#define DeeTuple_SET(ob, i, v)   (void)(((DeeTupleObject *)Dee_REQUIRES_OBJECT(ob))->t_elem[i] = (DeeObject *)Dee_REQUIRES_OBJECT(v))
 
 /* Define a statically allocated tuple:
  * >> PRIVATE DREF DeeObject *DCALL get_my_tuple(void) {
@@ -139,10 +139,16 @@ DFUNDEF WUNUSED DREF DeeObject *DeeTuple_Pack(size_t n, ...);
 DFUNDEF WUNUSED DREF DeeObject *DCALL DeeTuple_VPack(size_t n, va_list args);
 DFUNDEF WUNUSED DREF DeeObject *DeeTuple_PackSymbolic(size_t n, /*DREF*/ ...);
 DFUNDEF WUNUSED DREF DeeObject *DCALL DeeTuple_VPackSymbolic(size_t n, /*DREF*/ va_list args);
+DFUNDEF WUNUSED DREF DeeObject *DeeTuple_TryPack(size_t n, ...);
+DFUNDEF WUNUSED DREF DeeObject *DCALL DeeTuple_VTryPack(size_t n, va_list args);
+DFUNDEF WUNUSED DREF DeeObject *DeeTuple_TryPackSymbolic(size_t n, /*DREF*/ ...);
+DFUNDEF WUNUSED DREF DeeObject *DCALL DeeTuple_VTryPackSymbolic(size_t n, /*DREF*/ va_list args);
 
 /* Create a new tuple from a given vector. */
 DFUNDEF WUNUSED NONNULL((2)) DREF DeeObject *DCALL DeeTuple_NewVector(size_t objc, DeeObject *const *__restrict objv);
 DFUNDEF WUNUSED NONNULL((2)) DREF DeeObject *DCALL DeeTuple_NewVectorSymbolic(size_t objc, /*inherit(on_success)*/ DREF DeeObject *const *__restrict objv);
+DFUNDEF WUNUSED NONNULL((2)) DREF DeeObject *DCALL DeeTuple_TryNewVector(size_t objc, DeeObject *const *__restrict objv);
+DFUNDEF WUNUSED NONNULL((2)) DREF DeeObject *DCALL DeeTuple_TryNewVectorSymbolic(size_t objc, /*inherit(on_success)*/ DREF DeeObject *const *__restrict objv);
 
 /* Similar to `Dee_Packf', but parse any number of formated values and
  * put them in a tuple, essentially doing the same as `Dee_Packf' when

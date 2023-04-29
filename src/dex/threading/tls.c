@@ -47,9 +47,11 @@ DECL_BEGIN
 PRIVATE WUNUSED DREF DeeObject **DCALL
 thread_tls_get(size_t index) {
 	struct tls_descriptor *desc;
-	DeeThreadObject *caller = DeeThread_Self();
-	desc                    = (struct tls_descriptor *)caller->t_tlsdata;
+	DeeThreadObject *caller;
+	caller = DeeThread_Self();
+	desc   = (struct tls_descriptor *)caller->t_context.d_tls;
 	if unlikely(!desc || index >= desc->td_size) {
+		/* TODO: If `Dee_THREAD_STATE_TERMINATING' is set, don't allow TLS alloc! */
 		size_t old_size = desc ? desc->td_size : 0;
 		desc = (struct tls_descriptor *)Dee_Realloc(desc,
 		                                            offsetof(struct tls_descriptor, td_elem) +
@@ -66,7 +68,7 @@ thread_tls_get(size_t index) {
 		       sizeof(DREF DeeObject *));
 
 		/* Save the new descriptor. */
-		caller->t_tlsdata = (void *)desc;
+		caller->t_context.d_tls = (void *)desc;
 	}
 
 	/* Return a pointer into the descriptor. */
@@ -80,7 +82,7 @@ thread_tls_tryget(size_t index) {
 	struct tls_descriptor *desc;
 	DeeThreadObject *caller;
 	caller = DeeThread_Self();
-	desc   = (struct tls_descriptor *)caller->t_tlsdata;
+	desc   = (struct tls_descriptor *)caller->t_context.d_tls;
 	if unlikely(!desc || index >= desc->td_size)
 		goto err;
 
@@ -104,20 +106,6 @@ thread_tls_fini(struct tls_descriptor *__restrict data) {
 	}
 	Dee_Free(data);
 }
-
-INTERN NONNULL((1, 2)) void DCALL
-thread_tls_visit(struct tls_descriptor *__restrict data,
-                 dvisit_t proc, void *arg) {
-	size_t i, count = data->td_size;
-
-	/* Visit all allocated objects. */
-	for (i = 0; i < count; ++i) {
-		DREF DeeObject *ob = data->td_elem[i];
-		if (ITER_ISOK(ob))
-			Dee_Visit(ob);
-	}
-}
-
 
 /* Lock for registering TLS objects. */
 PRIVATE Dee_atomic_lock_t tls_reglock = DEE_ATOMIC_LOCK_INIT;
