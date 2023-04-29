@@ -2898,7 +2898,7 @@ err:
 
 /* Similar to `DeeExec_RunStream()', but rather than directly executing it,
  * return the module used to describe the code that is being executed, or
- * some unspecified, callable object which (when invoked) executed the given
+ * some unspecified, callable object which (when invoked) executes the given
  * input code in one way or another.
  * It is up to the implementation if an associated module should simply be
  * generated, before that module's root is returned, or if the given user-code

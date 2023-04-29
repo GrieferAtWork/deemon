@@ -473,7 +473,7 @@ cat_get_frozen(Cat *__restrict self) {
 	          result->t_size, sizeof(DREF DeeObject *)) == 0) {
 		for (i = 0; i < result->t_size; ++i)
 			Dee_DecrefNokill(result->t_elem[i]);
-		DeeTuple_FreeUninitialized((DeeObject *)result);
+		DeeTuple_FreeUninitialized(result);
 		return_reference_(self);
 	}
 
@@ -485,7 +485,7 @@ cat_get_frozen(Cat *__restrict self) {
 	return result;
 err_r_i:
 	Dee_Decrefv(result->t_elem, i);
-	DeeTuple_FreeUninitialized((DeeObject *)result);
+	DeeTuple_FreeUninitialized(result);
 err:
 	return NULL;
 }
@@ -864,7 +864,7 @@ DeeSeq_Concat(DeeObject *self, DeeObject *other) {
 			DREF DeeObject **dst;
 			size_t rhs_size;
 			rhs_size = DeeTuple_SIZE(other);
-			result = (DREF DeeTupleObject *)DeeTuple_NewUninitialized(lhs_size +
+			result = DeeTuple_NewUninitialized(lhs_size +
 			                                                          rhs_size);
 			if unlikely(!result)
 				goto err;
@@ -874,7 +874,7 @@ DeeSeq_Concat(DeeObject *self, DeeObject *other) {
 			Dee_Movrefv(dst, DeeTuple_ELEM(other), rhs_size);
 		} else {
 			DREF DeeObject **dst;
-			result = (DREF DeeTupleObject *)DeeTuple_NewUninitialized(lhs_size + 1);
+			result = DeeTuple_NewUninitialized(lhs_size + 1);
 			if unlikely(!result)
 				goto err;
 			dst = Dee_Movprefv(DeeTuple_ELEM(result), DeeTuple_ELEM(self), lhs_size);
@@ -885,7 +885,7 @@ DeeSeq_Concat(DeeObject *self, DeeObject *other) {
 		DREF DeeObject **dst;
 		size_t rhs_size;
 		rhs_size = DeeTuple_SIZE(other);
-		result = (DREF DeeTupleObject *)DeeTuple_NewUninitialized(1 + rhs_size);
+		result = DeeTuple_NewUninitialized(1 + rhs_size);
 		if unlikely(!result)
 			goto err;
 		dst    = DeeTuple_ELEM(result);

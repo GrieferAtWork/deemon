@@ -1676,11 +1676,12 @@ INTERN ATTR_COLD NONNULL((1)) int
 #endif /* posix_enumenv_USE_environ || posix_enumenv_USE_wenviron */
 
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE DREF DeeTupleObject *DCALL
 environ_iterator_next(EnvironIterator *__restrict self) {
 #if (defined(posix_enumenv_USE_GetEnvironmentStringsW) || \
      (defined(posix_enumenv_USE_environ) || defined(posix_enumenv_USE_wenviron)))
-	DREF DeeObject *result, *key, *value;
+	DREF DeeTupleObject *result;
+	DREF DeeObject *key, *value;
 	size_t key_len, value_len;
 	ENVIRON_ITERATOR_tchar *key_buf, *value_buf;
 	ENVIRON_ITERATOR_tchar *envline, *eq;
@@ -1714,7 +1715,7 @@ again:
 	{
 		environ_lock_endread();
 		DeeTuple_FreeUninitialized(result);
-		return ITER_DONE;
+		return (DREF DeeTupleObject *)ITER_DONE;
 	}
 	
 	/* Split the environ line */

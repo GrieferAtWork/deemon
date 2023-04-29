@@ -4068,7 +4068,7 @@ again:
 		/* Pack the modules into a Tuple of HANDLE objects. */
 		DWORD i;
 		DREF DeeTupleObject *result;
-		result = (DREF DeeTupleObject *)DeeTuple_NewUninitialized(cbNeededModules);
+		result = DeeTuple_NewUninitialized(cbNeededModules);
 		if unlikely(!result)
 			goto err_modules;
 		for (i = 0; i < cbNeededModules; ++i) {
@@ -4088,7 +4088,7 @@ err_modules_result:
 			Dee_Decref_likely(DeeTuple_GET(result, i));
 #endif /* !libwin32_CreateHandle_ALWAYS_RETURNS_UNIQUE_REFERENCE */
 		}
-		DeeTuple_FreeUninitialized((DREF DeeObject *)result);
+		DeeTuple_FreeUninitialized(result);
 	}
 err_modules:
 	Dee_Free(phModules);
@@ -4161,7 +4161,7 @@ again:
 		/* Pack the modules into a Tuple of HANDLE objects. */
 		DWORD i;
 		DREF DeeTupleObject *result;
-		result = (DREF DeeTupleObject *)DeeTuple_NewUninitialized(cbNeededProcesses);
+		result = DeeTuple_NewUninitialized(cbNeededProcesses);
 		if unlikely(!result)
 			goto err_modules;
 		for (i = 0; i < cbNeededProcesses; ++i) {
@@ -4175,7 +4175,7 @@ again:
 		return (DREF DeeObject *)result;
 err_pids_result:
 		Dee_Decrefv_likely(DeeTuple_ELEM(result), i);
-		DeeTuple_FreeUninitialized((DREF DeeObject *)result);
+		DeeTuple_FreeUninitialized(result);
 	}
 err_modules:
 	Dee_Free(pidProcesses);

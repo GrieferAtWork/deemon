@@ -543,7 +543,7 @@ do_string:
 	case '(': {
 		size_t i, num_args;
 		num_args = count_pack_args(format);
-		result   = DeeTuple_NewUninitialized(num_args);
+		result   = (DREF DeeObject *)DeeTuple_NewUninitialized(num_args);
 		if unlikely(!result)
 			break;
 		for (i = 0; i < num_args; ++i) {
@@ -552,7 +552,7 @@ do_string:
 			if unlikely(!elem) {
 				/* Propagate an error. */
 				Dee_Decrefv(DeeTuple_ELEM(result), i);
-				DeeTuple_FreeUninitialized(result);
+				DeeTuple_FreeUninitialized((DREF DeeTupleObject *)result);
 				result = NULL;
 				goto end;
 			}
@@ -1029,7 +1029,7 @@ again:
 PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeTuple_VNewf(char const *__restrict format, va_list args) {
 	struct va_list_struct *pargs;
-	DREF DeeObject *result;
+	DREF DeeTupleObject *result;
 	size_t i, tuple_size = count_pack_args(format);
 	pargs  = (struct va_list_struct *)VALIST_ADDR(args);
 	result = DeeTuple_NewUninitialized(tuple_size);
@@ -1043,7 +1043,7 @@ DeeTuple_VNewf(char const *__restrict format, va_list args) {
 		DeeTuple_SET(result, i, elem);
 	}
 	ASSERTF(!*format, "Invalid format: `%s'", format);
-	return result;
+	return (DREF DeeObject *)result;
 err_r:
 	Dee_Decrefv(DeeTuple_ELEM(result), i);
 	DeeTuple_FreeUninitialized(result);

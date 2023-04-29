@@ -1192,7 +1192,7 @@ int main(int argc, char *argv[]) {
 		unsigned int i;
 
 		/* Set interpreter arguments based on everything following the exec-script name. */
-		sys_argv = (DREF DeeTupleObject *)DeeTuple_NewUninitialized((size_t)argc);
+		sys_argv = DeeTuple_NewUninitialized((size_t)argc);
 		if unlikely(!sys_argv)
 			goto err;
 		for (i = 0; i < (unsigned int)argc; ++i) {
@@ -1202,7 +1202,7 @@ int main(int argc, char *argv[]) {
 			                        STRING_ERROR_FIGNORE);
 			if unlikely(!arg) {
 				Dee_Decrefv(DeeTuple_ELEM(sys_argv), i);
-				DeeTuple_FreeUninitialized((DeeObject *)sys_argv);
+				DeeTuple_FreeUninitialized(sys_argv);
 				goto err;
 			}
 			DeeTuple_SET(sys_argv, i, arg); /* Inherit */

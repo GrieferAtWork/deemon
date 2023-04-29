@@ -231,9 +231,9 @@ comiter_visit(CombinationsIterator *__restrict self, dvisit_t proc, void *arg) {
 	Dee_Visit(self->ci_combi);
 }
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeTupleObject *DCALL
 comiter_next(CombinationsIterator *__restrict self) {
-	DREF DeeObject *result;
+	DREF DeeTupleObject *result;
 	size_t *result_indices, i, comlen, seqlen;
 	comlen         = self->ci_combi->c_comlen;
 	seqlen         = self->ci_combi->c_seqlen;
@@ -253,7 +253,7 @@ comiter_next(CombinationsIterator *__restrict self) {
 	/* Signal `ITER_DONE' */
 	CombinationsIterator_LockEndWrite(self);
 	Dee_AFree(result_indices);
-	return ITER_DONE;
+	return (DREF DeeTupleObject *)ITER_DONE;
 update_indices:
 	++self->ci_indices[i];
 	for (++i; i < comlen; ++i)
@@ -617,9 +617,9 @@ INTERN DeeTypeObject SeqCombinations_Type = {
 
 
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeTupleObject *DCALL
 rcomiter_next(CombinationsIterator *__restrict self) {
-	DREF DeeObject *result;
+	DREF DeeTupleObject *result;
 	size_t *result_indices, i, comlen, seqlen, offset;
 	comlen = self->ci_combi->c_comlen;
 	seqlen = self->ci_combi->c_seqlen;
@@ -657,7 +657,7 @@ rcomiter_next(CombinationsIterator *__restrict self) {
 	/* Signal `ITER_DONE' */
 	CombinationsIterator_LockEndWrite(self);
 	Dee_AFree(result_indices);
-	return ITER_DONE;
+	return (DREF DeeTupleObject *)ITER_DONE;
 update_indices:
 	offset = self->ci_indices[i] + 1;
 	for (; i < comlen; ++i)
@@ -866,9 +866,9 @@ INTERN DeeTypeObject SeqRepeatCombinations_Type = {
 };
 
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeTupleObject *DCALL
 pmutiter_next(CombinationsIterator *__restrict self) {
-	DREF DeeObject *result;
+	DREF DeeTupleObject *result;
 	size_t *result_indices, i, comlen, seqlen;
 	comlen         = self->ci_combi->c_comlen;
 	seqlen         = self->ci_combi->c_seqlen;
@@ -885,7 +885,7 @@ pmutiter_next(CombinationsIterator *__restrict self) {
 signal_done:
 		CombinationsIterator_LockEndWrite(self);
 		Dee_AFree(result_indices);
-		return ITER_DONE;
+		return (DREF DeeTupleObject *)ITER_DONE;
 	}
 	i = comlen;
 	for (;;) {

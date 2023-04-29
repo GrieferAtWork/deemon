@@ -2662,13 +2662,13 @@ err_empty_endwrite:
 #ifdef __OPTIMIZE_SIZE__
 #define list_get_frozen DeeTuple_FromSequence
 #else /* __OPTIMIZE_SIZE__ */
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeTupleObject *DCALL
 list_get_frozen(List *__restrict me) {
-	size_t i, count;
-	DREF DeeObject *result;
+	size_t count;
+	DREF DeeTupleObject *result;
 again:
 	DeeList_LockWrite(me);
-	count = DeeList_SIZE(me);
+	count  = DeeList_SIZE(me);
 	result = DeeTuple_TryNewUninitialized(count);
 	if unlikely(!result) {
 		DeeList_LockEndWrite(me);
@@ -2677,11 +2677,8 @@ again:
 		return NULL;
 	}
 
-	/* Copy elements. */
-	memcpyc(DeeTuple_ELEM(result), DeeList_ELEM(me),
-	        count, sizeof(DREF DeeObject *));
-	for (i = 0; i < count; ++i)
-		Dee_Incref(DeeTuple_GET(result, i));
+	/* Copy elements and create new references. */
+	Dee_Movrefv(DeeTuple_ELEM(result), DeeList_ELEM(me), count);
 	DeeList_LockEndWrite(me);
 	return result;
 }
@@ -2938,7 +2935,7 @@ again:
 	DeeList_LockEndRead(self);
 
 	/* Allocate the new list */
-	result = (DeeTupleObject *)DeeTuple_NewUninitialized(objc);
+	result = DeeTuple_NewUninitialized(objc);
 	if unlikely(!result)
 		goto err_oldv_elem;
 
@@ -2948,7 +2945,7 @@ again:
 	Dee_Free(oldv);
 	return (DeeObject *)result;
 err_result:
-	DeeTuple_FreeUninitialized((DeeObject *)result);
+	DeeTuple_FreeUninitialized(result);
 err_oldv_elem:
 	Dee_Decrefv(oldv, objc);
 err_oldv:

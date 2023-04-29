@@ -3578,7 +3578,7 @@ int_divmod_f(DeeIntObject *self, size_t argc, DeeObject *const *argv) {
 	Dee_Decref(y);
 	if unlikely(error)
 		goto err;
-	result = (DREF DeeTupleObject *)DeeTuple_NewUninitialized(2);
+	result = DeeTuple_NewUninitialized(2);
 	if unlikely(!result)
 		goto err_divrem;
 	DeeTuple_SET(result, 0, (DREF DeeObject *)div); /* Inherit reference */

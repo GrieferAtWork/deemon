@@ -275,10 +275,10 @@ frame_getddi(Frame *__restrict self,
 	       : (DREF DeeCodeObject *)NULL;
 }
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeTupleObject *DCALL
 frame_getlocation(Frame *__restrict self) {
-	DREF DeeObject *result, *entry;
-	DREF DeeObject *fileob, *nameob;
+	DREF DeeTupleObject *result;
+	DREF DeeObject *entry, *fileob, *nameob;
 	DREF DeeCodeObject *code;
 	struct ddi_xregs *iter;
 	struct ddi_state state;
@@ -287,7 +287,7 @@ frame_getlocation(Frame *__restrict self) {
 	if unlikely(!code)
 		goto err;
 	if unlikely(code == (DREF DeeCodeObject *)ITER_DONE)
-		return DeeTuple_Newf("(nnnn)");
+		return (DREF DeeTupleObject *)DeeTuple_Newf("(nnnn)");
 	count = 0;
 	DDI_STATE_DO(iter, &state) {
 		++count;

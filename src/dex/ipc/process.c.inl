@@ -518,10 +518,10 @@ ipc_cmdline2argv(DeeStringObject *__restrict cmdline) {
 
 	/* Allocate a tuple buffer for the to-be returned list of string. */
 	result_alloc = 4;
-	result = (DREF DeeTupleObject *)DeeTuple_TryNewUninitialized(result_alloc);
+	result = DeeTuple_TryNewUninitialized(result_alloc);
 	if unlikely(!result) {
 		result_alloc = 1;
-		result = (DREF DeeTupleObject *)DeeTuple_TryNewUninitialized(result_alloc);
+		result = DeeTuple_TryNewUninitialized(result_alloc);
 		if unlikely(!result) {
 			result_alloc = 0;
 			result     = (DeeTupleObject *)&DeeTuple_Empty;
@@ -579,10 +579,10 @@ ipc_cmdline2argv(DeeStringObject *__restrict cmdline) {
 			size_t new_alloc = result_alloc * 2;
 			DREF DeeTupleObject *new_result;
 			ASSERT(new_alloc > result_alloc);
-			new_result = (DREF DeeTupleObject *)DeeTuple_TryResizeUninitialized((DeeObject *)result, new_alloc);
+			new_result = DeeTuple_TryResizeUninitialized(result, new_alloc);
 			if (!new_result) {
 				new_alloc  = result_alloc + 1;
-				new_result = (DREF DeeTupleObject *)DeeTuple_ResizeUninitialized((DeeObject *)result, new_alloc);
+				new_result = DeeTuple_ResizeUninitialized(result, new_alloc);
 				if unlikely(!new_result)
 					goto err_r_printer;
 			}
@@ -597,12 +597,12 @@ ipc_cmdline2argv(DeeStringObject *__restrict cmdline) {
 		DeeTuple_SET(result, result_size, arg); /* Inherit reference */
 		++result_size;
 	}
-	result = (DREF DeeTupleObject *)DeeTuple_TruncateUninitialized((DeeObject *)result, result_size);
+	result = DeeTuple_TruncateUninitialized(result, result_size);
 	return result;
 err_r_printer:
 	unicode_printer_fini(&printer);
 err_r:
-	DeeTuple_FreeUninitialized((DeeObject *)result);
+	DeeTuple_FreeUninitialized(result);
 err:
 	return NULL;
 }
@@ -4194,7 +4194,7 @@ ipc_unix_strings_from_nulterm_bytes(char const *__restrict data,
 		iter = strend(iter) + 1;
 
 	/* Package all of the strings together. */
-	result = (DREF DeeTupleObject *)DeeTuple_NewUninitialized(num_strings);
+	result = DeeTuple_NewUninitialized(num_strings);
 	if unlikely(!result)
 		goto err;
 	for (i = 0, iter = data; i < num_strings; ++i) {
@@ -4211,7 +4211,7 @@ done:
 err_result_i:
 	Dee_Decrefv(DeeTuple_ELEM(result), i);
 /*err_result:*/
-	DeeTuple_FreeUninitialized((DeeObject *)result);
+	DeeTuple_FreeUninitialized(result);
 err:
 	return NULL;
 }

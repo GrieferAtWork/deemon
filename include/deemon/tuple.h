@@ -89,28 +89,51 @@ DDATDEF DeeTypeObject DeeTuple_Type;
 
 
 /* Create new tuple objects. */
-DFUNDEF WUNUSED DREF DeeObject *DCALL
+DFUNDEF WUNUSED DREF DeeTupleObject *DCALL
 DeeTuple_NewUninitialized(size_t n);
 
 /* Same as `DeeTuple_NewUninitialized()', but
  * doesn't throw an exception when returning `NULL' */
-DFUNDEF WUNUSED DREF DeeObject *DCALL
+DFUNDEF WUNUSED DREF DeeTupleObject *DCALL
 DeeTuple_TryNewUninitialized(size_t n);
 
-DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-DeeTuple_ResizeUninitialized(/*inherit(on_success)*/ DREF DeeObject *__restrict self, size_t n);
+DFUNDEF WUNUSED NONNULL((1)) DREF DeeTupleObject *DCALL
+DeeTuple_ResizeUninitialized(/*inherit(on_success)*/ DREF DeeTupleObject *__restrict self, size_t n);
 
 /* Same as `DeeTuple_ResizeUninitialized()', but
  * doesn't throw an exception when returning `NULL' */
-DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-DeeTuple_TryResizeUninitialized(/*inherit(on_success)*/ DREF DeeObject *__restrict self, size_t n);
+DFUNDEF WUNUSED NONNULL((1)) DREF DeeTupleObject *DCALL
+DeeTuple_TryResizeUninitialized(/*inherit(on_success)*/ DREF DeeTupleObject *__restrict self, size_t n);
 
-DFUNDEF WUNUSED ATTR_RETNONNULL NONNULL((1)) DREF DeeObject *DCALL
-DeeTuple_TruncateUninitialized(/*inherit(always)*/ DREF DeeObject *__restrict self, size_t n);
+DFUNDEF WUNUSED ATTR_RETNONNULL NONNULL((1)) DREF DeeTupleObject *DCALL
+DeeTuple_TruncateUninitialized(/*inherit(always)*/ DREF DeeTupleObject *__restrict self, size_t n);
 
 DFUNDEF NONNULL((1)) void DCALL
-DeeTuple_FreeUninitialized(DREF DeeObject *__restrict self);
+DeeTuple_FreeUninitialized(DREF DeeTupleObject *__restrict self);
 
+
+/* Create a new tuple object from a sequence or iterator. */
+DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeTuple_FromSequence(DeeObject *__restrict self);
+DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeTuple_FromIterator(DeeObject *__restrict self);
+
+/* Return a new tuple object containing the types of each object of the given tuple. */
+DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeTuple_Types(DeeObject *__restrict self);
+
+/* Create new tuple objects. */
+DFUNDEF WUNUSED DREF DeeObject *DeeTuple_Pack(size_t n, ...);
+DFUNDEF WUNUSED DREF DeeObject *DCALL DeeTuple_VPack(size_t n, va_list args);
+DFUNDEF WUNUSED DREF DeeObject *DeeTuple_PackSymbolic(size_t n, /*inherit(on_success)*/ /*DREF*/ ...);
+DFUNDEF WUNUSED DREF DeeObject *DCALL DeeTuple_VPackSymbolic(size_t n, /*inherit(on_success)*/ /*DREF*/ va_list args);
+DFUNDEF WUNUSED DREF DeeObject *DeeTuple_TryPack(size_t n, ...);
+DFUNDEF WUNUSED DREF DeeObject *DCALL DeeTuple_VTryPack(size_t n, va_list args);
+DFUNDEF WUNUSED DREF DeeObject *DeeTuple_TryPackSymbolic(size_t n, /*inherit(on_success)*/ /*DREF*/ ...);
+DFUNDEF WUNUSED DREF DeeObject *DCALL DeeTuple_VTryPackSymbolic(size_t n, /*inherit(on_success)*/ /*DREF*/ va_list args);
+
+/* Create a new tuple from a given vector. */
+DFUNDEF WUNUSED NONNULL((2)) DREF DeeObject *DCALL DeeTuple_NewVector(size_t objc, DeeObject *const *__restrict objv);
+DFUNDEF WUNUSED NONNULL((2)) DREF DeeObject *DCALL DeeTuple_NewVectorSymbolic(size_t objc, /*inherit(on_success)*/ DREF DeeObject *const *__restrict objv);
+DFUNDEF WUNUSED NONNULL((2)) DREF DeeObject *DCALL DeeTuple_TryNewVector(size_t objc, DeeObject *const *__restrict objv);
+DFUNDEF WUNUSED NONNULL((2)) DREF DeeObject *DCALL DeeTuple_TryNewVectorSymbolic(size_t objc, /*inherit(on_success)*/ DREF DeeObject *const *__restrict objv);
 
 /* Decrement the reference counter of a tuple object filled with symbolic references.
  * >> If the reference counter hits ZERO(0), simply free() the tuple object
@@ -123,32 +146,12 @@ DeeTuple_FreeUninitialized(DREF DeeObject *__restrict self);
  *    to fixing incorrect reference counters of contained objects.
  *    NOTE: Doing this is still ok, because somewhere further up
  *          the call chain, a caller owns another reference to each
- *          contained object, even before we fix reference counters. */
+ *          contained object, even before we fix reference counters.
+ * Semantically speaking, you can think of this function as:
+ * >> Dee_Increfv(DeeTuple_ELEM(self), DeeTuple_SIZE(self));
+ * >> Dee_Decref(self); */
 DFUNDEF NONNULL((1)) void DCALL
 DeeTuple_DecrefSymbolic(DeeObject *__restrict self);
-
-/* Create a new tuple object from a sequence or iterator. */
-DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeTuple_FromSequence(DeeObject *__restrict self);
-DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeTuple_FromIterator(DeeObject *__restrict self);
-
-/* Return a new tuple object containing the types of each object of the given tuple. */
-DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeTuple_Types(DeeObject *__restrict self);
-
-/* Create new tuple objects. */
-DFUNDEF WUNUSED DREF DeeObject *DeeTuple_Pack(size_t n, ...);
-DFUNDEF WUNUSED DREF DeeObject *DCALL DeeTuple_VPack(size_t n, va_list args);
-DFUNDEF WUNUSED DREF DeeObject *DeeTuple_PackSymbolic(size_t n, /*DREF*/ ...);
-DFUNDEF WUNUSED DREF DeeObject *DCALL DeeTuple_VPackSymbolic(size_t n, /*DREF*/ va_list args);
-DFUNDEF WUNUSED DREF DeeObject *DeeTuple_TryPack(size_t n, ...);
-DFUNDEF WUNUSED DREF DeeObject *DCALL DeeTuple_VTryPack(size_t n, va_list args);
-DFUNDEF WUNUSED DREF DeeObject *DeeTuple_TryPackSymbolic(size_t n, /*DREF*/ ...);
-DFUNDEF WUNUSED DREF DeeObject *DCALL DeeTuple_VTryPackSymbolic(size_t n, /*DREF*/ va_list args);
-
-/* Create a new tuple from a given vector. */
-DFUNDEF WUNUSED NONNULL((2)) DREF DeeObject *DCALL DeeTuple_NewVector(size_t objc, DeeObject *const *__restrict objv);
-DFUNDEF WUNUSED NONNULL((2)) DREF DeeObject *DCALL DeeTuple_NewVectorSymbolic(size_t objc, /*inherit(on_success)*/ DREF DeeObject *const *__restrict objv);
-DFUNDEF WUNUSED NONNULL((2)) DREF DeeObject *DCALL DeeTuple_TryNewVector(size_t objc, DeeObject *const *__restrict objv);
-DFUNDEF WUNUSED NONNULL((2)) DREF DeeObject *DCALL DeeTuple_TryNewVectorSymbolic(size_t objc, /*inherit(on_success)*/ DREF DeeObject *const *__restrict objv);
 
 /* Similar to `Dee_Packf', but parse any number of formated values and
  * put them in a tuple, essentially doing the same as `Dee_Packf' when
@@ -163,31 +166,6 @@ DeeTuple_ConcatInherited(/*inherit(on_success)*/ DREF DeeObject *self, DeeObject
 DFUNDEF WUNUSED NONNULL((1, 3)) DREF DeeObject *DCALL
 DeeTuple_ExtendInherited(/*inherit(on_success)*/ DREF DeeObject *self, size_t argc,
                          /*inherit(on_success)*/ DREF DeeObject *const *argv);
-
-/* Append all elements from an iterator to a tuple.
- * @assume(DeeTuple_IsEmpty(*pself) || !DeeObject_IsShared(*pself)); */
-DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-DeeTuple_AppendIterator(/*inherit(on_success)*/ DREF DeeObject *__restrict self,
-                        DeeObject *__restrict iterator);
-DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-DeeTuple_Append(/*inherit(on_success)*/ DREF DeeObject *__restrict self,
-                DeeObject *__restrict item);
-
-#ifdef CONFIG_BUILDING_DEEMON
-/* Print all elements of the given tuple without any separators in-between
- * elements. This is equivalent to `Tuple.operator str' and is related to
- * the change introduced for handling `print("foo", "bar");'-like statements */
-INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
-DeeTuple_Print(DeeObject *__restrict self,
-               Dee_formatprinter_t printer, void *arg);
-INTDEF WUNUSED NONNULL((1, 2)) dssize_t DCALL
-DeeTuple_PrintRepr(DeeObject *__restrict self,
-                   Dee_formatprinter_t printer, void *arg);
-#else /* CONFIG_BUILDING_DEEMON */
-#define DeeTuple_Print(self, printer, arg)     DeeObject_Print(self, printer, arg)
-#define DeeTuple_PrintRepr(self, printer, arg) DeeObject_PrintRepr(self, printer, arg)
-#endif /* !CONFIG_BUILDING_DEEMON */
-
 
 DECL_END
 

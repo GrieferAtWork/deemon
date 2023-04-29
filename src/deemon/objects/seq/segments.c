@@ -113,14 +113,15 @@ segiter_visit(SegmentsIterator *__restrict self, dvisit_t proc, void *arg) {
 	Dee_Visit(self->si_iter);
 }
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeTupleObject *DCALL
 segiter_next(SegmentsIterator *__restrict self) {
-	DREF DeeObject *elem, *result;
+	DREF DeeTupleObject *result;
+	DREF DeeObject *elem;
 	size_t i;
 	/* Read the first item to check  */
 	elem = DeeObject_IterNext(self->si_iter);
 	if (!ITER_ISOK(elem))
-		return elem;
+		return (DREF DeeTupleObject *)elem;
 	result = DeeTuple_NewUninitialized(self->si_len);
 	if unlikely(!result)
 		goto err_elem;
@@ -333,10 +334,10 @@ seg_nsi_fast_getsize(Segments *__restrict self) {
 	return result;
 }
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeTupleObject *DCALL
 seg_nsi_getitem(Segments *__restrict self, size_t index) {
 	size_t i;
-	DREF DeeObject *result;
+	DREF DeeTupleObject *result;
 	size_t start = index * self->s_len;
 	size_t len   = DeeObject_Size(self->s_seq);
 	if (len == (size_t)-1)
@@ -371,7 +372,7 @@ err:
 	return NULL;
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeTupleObject *DCALL
 seg_getitem(Segments *self, DeeObject *index_ob) {
 	size_t index;
 	if (DeeObject_AsSize(index_ob, &index))

@@ -342,9 +342,9 @@ err:
 	return -1;
 }
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeTupleObject *DCALL
 ast_getmultiple(Ast *__restrict self) {
-	DREF DeeObject *result;
+	DREF DeeTupleObject *result;
 	struct ast *me;
 	if (COMPILER_BEGIN(self->ci_compiler))
 		goto err;
@@ -750,9 +750,9 @@ ast_settryguard(Ast *__restrict self,
 }
 
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeTupleObject *DCALL
 ast_gettryhandlers(Ast *__restrict self) {
-	DREF DeeObject *result;
+	DREF DeeTupleObject *result;
 	struct ast *me;
 	if (COMPILER_BEGIN(self->ci_compiler))
 		return NULL;
@@ -766,7 +766,8 @@ ast_gettryhandlers(Ast *__restrict self) {
 		if unlikely(!result)
 			goto done;
 		for (i = 0; i < me->a_try.t_catchc; ++i) {
-			DREF DeeObject *triple, *temp;
+			DREF DeeTupleObject *triple;
+			DREF DeeObject *temp;
 			triple = DeeTuple_NewUninitialized(3);
 			if unlikely(!triple)
 				goto err_r_i;

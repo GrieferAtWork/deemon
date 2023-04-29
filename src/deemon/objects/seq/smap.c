@@ -115,9 +115,9 @@ smap_nsi_nextvalue(SharedMapIterator *__restrict self) {
 	return result_value;
 }
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeTupleObject *DCALL
 smapiter_next(SharedMapIterator *__restrict self) {
-	DREF DeeObject *result;
+	DREF DeeTupleObject *result;
 	DREF DeeObject *result_key, *result_value;
 	SharedMap *map = self->smi_seq;
 	for (;;) {
@@ -126,7 +126,7 @@ smapiter_next(SharedMapIterator *__restrict self) {
 		index = atomic_read(&self->smi_index);
 		if (self->smi_index >= map->sm_length) {
 			SharedMap_LockEndRead(map);
-			return ITER_DONE;
+			return (DREF DeeTupleObject *)ITER_DONE;
 		}
 		result_key   = map->sm_vector[index].si_key;
 		result_value = map->sm_vector[index].si_value;

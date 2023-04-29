@@ -979,7 +979,7 @@ done_y1:
 							goto err_r;
 						result = tuple; /* Inherit reference. */
 					} else {
-						DREF DeeObject *tuple;
+						DREF DeeTupleObject *tuple;
 						tuple = DeeTuple_NewUninitialized(1 + DeeTuple_SIZE(merge));
 						if unlikely(!tuple) {
 							Dee_Decref(merge);
@@ -991,7 +991,7 @@ done_y1:
 						        DeeTuple_SIZE(merge),
 						        sizeof(DREF DeeObject *));
 						DeeTuple_DecrefSymbolic(merge);
-						result = tuple; /* Inherit references. */
+						result = (DREF DeeObject *)tuple; /* Inherit references. */
 					}
 #endif /* JIT_EVAL */
 				}
@@ -3692,13 +3692,33 @@ err:
 	return ERROR;
 }
 
+#ifndef DeeTuple_Append_DEFINED
+#define DeeTuple_Append_DEFINED
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeTupleObject *DCALL
+DeeTuple_Append(/*inherit(on_success)*/ DREF DeeTupleObject *__restrict self,
+                DeeObject *__restrict item) {
+	DREF DeeTupleObject *result;
+	size_t index;
+	/* Must increase the tuple's size. */
+	index  = DeeTuple_SIZE(self);
+	result = DeeTuple_ResizeUninitialized(self, index + 1);
+	if likely(result) {
+		DeeTuple_SET(result, index, item);
+		Dee_Incref(item);
+	}
+	return result;
+}
+#endif /* !DeeTuple_Append_DEFINED */
+
+
 DEFINE_SECONDARY(CommaTupleOperand) {
-	RETURN_TYPE result;
 #ifdef JIT_EVAL
-	DREF DeeObject *new_result;
-	result = Dee_EmptyTuple;
+	DREF DeeTupleObject *result;
+	DREF DeeTupleObject *new_result;
+	result = (DREF DeeTupleObject *)Dee_EmptyTuple;
 	Dee_Incref(Dee_EmptyTuple);
 #else /* JIT_EVAL */
+	RETURN_TYPE result;
 	int lhs;
 	result = 0;
 #endif /* !JIT_EVAL */
@@ -3711,7 +3731,7 @@ again:
 		/* Expand expression */
 		JITLexer_Yield(self);
 #ifdef JIT_EVAL
-		new_result = DeeTuple_ConcatInherited(result, lhs);
+		new_result = (DREF DeeTupleObject *)DeeTuple_ConcatInherited((DREF DeeObject *)result, lhs);
 		if unlikely(!new_result)
 			goto err_r_lhs;
 		result = new_result;
@@ -3753,7 +3773,7 @@ again:
 #endif /* JIT_EVAL */
 		break;
 	}
-	return result;
+	return (RETURN_TYPE)result;
 #ifdef JIT_EVAL
 err_r_lhs:
 	DECREF(lhs);

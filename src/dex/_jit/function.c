@@ -1089,7 +1089,7 @@ jf_getdoc(JITFunction *__restrict UNUSED(self)) {
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 jf_getkwds(JITFunction *__restrict self) {
 	/* TODO: Add a generic sequence proxy type for this! */
-	DREF DeeObject *result;
+	DREF DeeTupleObject *result;
 	uint16_t i;
 	result = DeeTuple_NewUninitialized(self->jf_argc_max);
 	if unlikely(!result)
@@ -1106,7 +1106,7 @@ jf_getkwds(JITFunction *__restrict self) {
 		DeeTuple_SET(result, i, name); /* Inherit reference. */
 	}
 done:
-	return result;
+	return (DREF DeeObject *)result;
 err_r_i:
 	Dee_Decrefv_likely(DeeTuple_ELEM(result), i);
 	DeeTuple_FreeUninitialized(result);
@@ -1125,7 +1125,7 @@ jf_getrefs(JITFunction *__restrict self) {
 	/* TODO: Add a generic sequence proxy type for this! */
 	size_t i, dst;
 	DREF DeeTupleObject *result;
-	result = (DREF DeeTupleObject *)DeeTuple_NewUninitialized(self->jf_refs.ot_used);
+	result = DeeTuple_NewUninitialized(self->jf_refs.ot_used);
 	if unlikely(!result)
 		goto done;
 	for (i = dst = 0; i <= self->jf_refs.ot_mask; ++i) {

@@ -582,7 +582,7 @@ proxykeys_byhash(MapProxy *self, size_t argc,
 				Dee_Decref(result);
 				Dee_Decref(key_and_value[1]);
 				/* Return the pair's first element (which is the key) */
-				result = DeeTuple_NewUninitialized(1);
+				result = (DREF DeeObject *)DeeTuple_NewUninitialized(1);
 				if unlikely(!result) {
 					Dee_Decref(key_and_value[0]);
 					goto err;

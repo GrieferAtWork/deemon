@@ -192,7 +192,7 @@ DeeExec_RunStreamString(DeeObject *source_stream, unsigned int mode,
 
 /* Similar to `DeeExec_RunStream()', but rather than directly executing it,
  * return the module used to describe the code that is being executed, or
- * some unspecified, callable object which (when invoked) executed the given
+ * some unspecified, callable object which (when invoked) executes the given
  * input code in one way or another.
  * It is up to the implementation if an associated module should simply be
  * generated, before that module's root is returned, or if the given user-code
@@ -304,7 +304,7 @@ DFUNDEF size_t DCALL Dee_Shutdown(void);
  * This is quite the simple task as a matter of fact:
  *   - We use `tp_visit' to recursively visit all GC-objects,
  *     where for every `code' object that we encounter, we
- *     simply do an ATOMIC_WRITE of the first instruction byte
+ *     simply do an `atomic_write' of the first instruction byte
  *     (unless the code is empty?), to set it to `ASM_RET_NONE'
  *   - `Code' objects are also GC objects, meaning that we can
  *     be sure that every existing piece of user-code can be

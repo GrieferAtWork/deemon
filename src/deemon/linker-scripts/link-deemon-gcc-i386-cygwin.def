@@ -830,8 +830,6 @@ EXPORTS
 	_DeeThread_Trace@4=DeeThread_Trace@4
 	_DeeThread_WaitFor@12=DeeThread_WaitFor@12
 	_DeeThread_Wake@4=DeeThread_Wake@4
-	_DeeTuple_Append@8=DeeTuple_Append@8
-	_DeeTuple_AppendIterator@8=DeeTuple_AppendIterator@8
 	_DeeTuple_ConcatInherited@8=DeeTuple_ConcatInherited@8
 	_DeeTuple_DecrefSymbolic@4=DeeTuple_DecrefSymbolic@4
 	_DeeTuple_ExtendInherited@12=DeeTuple_ExtendInherited@12

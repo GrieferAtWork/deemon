@@ -146,7 +146,8 @@ MY_FUNCTION_NAME(DeeFunctionObject *self
 	code = self->fo_code;
 #ifdef CALL_THIS
 	if unlikely(!(code->co_flags & CODE_FTHISCALL)) {
-		DREF DeeObject *packed_args;
+		DREF DeeTupleObject *packed_args;
+
 		/* Re-package the argument tuple and perform a regular call. */
 		packed_args = DeeTuple_NewUninitialized(1 + GET_ARGC());
 		if unlikely(!packed_args)
@@ -155,17 +156,16 @@ MY_FUNCTION_NAME(DeeFunctionObject *self
 		memcpyc(DeeTuple_ELEM(packed_args) + 1,
 		        GET_ARGV(), GET_ARGC(),
 		        sizeof(DeeObject *));
+
 		/* Perform a regular callback. */
 #ifdef CALL_KW
-		result = DeeFunction_CallTupleKw(self,
-		                                 packed_args,
-		                                 kw);
+		result = DeeFunction_CallTupleKw(self, (DeeObject *)packed_args, kw);
 #else /* CALL_KW */
-		result = DeeFunction_CallTuple(self,
-		                               packed_args);
+		result = DeeFunction_CallTuple(self, (DeeObject *)packed_args);
 #endif /* !CALL_KW */
+
 		/* The tuple we've created above only contained symbolic references. */
-		DeeTuple_DecrefSymbolic(packed_args);
+		DeeTuple_DecrefSymbolic((DeeObject *)packed_args);
 		return result;
 	}
 #else /* CALL_THIS */

@@ -4728,12 +4728,12 @@ err:
 	return NULL;
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeTupleObject *DCALL
 partition_pack_notfoundb(String *__restrict self,
                          uint8_t *__restrict lhs,
                          size_t lhs_length) {
 	DREF String *lhs_string;
-	DREF DeeObject *result;
+	DREF DeeTupleObject *result;
 	result = DeeTuple_NewUninitialized(3);
 	if unlikely(!result)
 		goto err;
@@ -4747,9 +4747,9 @@ partition_pack_notfoundb(String *__restrict self,
 			goto err_r;
 	}
 	Dee_Incref_n(Dee_EmptyString, 2);
-	DeeTuple_SET(result, 0, (DeeObject *)lhs_string);
-	DeeTuple_SET(result, 1, (DeeObject *)Dee_EmptyString);
-	DeeTuple_SET(result, 2, (DeeObject *)Dee_EmptyString);
+	DeeTuple_SET(result, 0, lhs_string);
+	DeeTuple_SET(result, 1, Dee_EmptyString);
+	DeeTuple_SET(result, 2, Dee_EmptyString);
 	return result;
 err_r:
 	DeeTuple_FreeUninitialized(result);
@@ -4757,12 +4757,12 @@ err:
 	return NULL;
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeTupleObject *DCALL
 partition_pack_notfoundw(String *__restrict self,
                          uint16_t *__restrict lhs,
                          size_t lhs_length) {
 	DREF String *lhs_string;
-	DREF DeeObject *result;
+	DREF DeeTupleObject *result;
 	result = DeeTuple_NewUninitialized(3);
 	if unlikely(!result)
 		goto err;
@@ -4776,9 +4776,9 @@ partition_pack_notfoundw(String *__restrict self,
 			goto err_r;
 	}
 	Dee_Incref_n(Dee_EmptyString, 2);
-	DeeTuple_SET(result, 0, (DeeObject *)lhs_string);
-	DeeTuple_SET(result, 1, (DeeObject *)Dee_EmptyString);
-	DeeTuple_SET(result, 2, (DeeObject *)Dee_EmptyString);
+	DeeTuple_SET(result, 0, lhs_string);
+	DeeTuple_SET(result, 1, Dee_EmptyString);
+	DeeTuple_SET(result, 2, Dee_EmptyString);
 	return result;
 err_r:
 	DeeTuple_FreeUninitialized(result);
@@ -4786,12 +4786,12 @@ err:
 	return NULL;
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeTupleObject *DCALL
 partition_pack_notfoundl(String *__restrict self,
                          uint32_t *__restrict lhs,
                          size_t lhs_length) {
 	DREF String *lhs_string;
-	DREF DeeObject *result;
+	DREF DeeTupleObject *result;
 	result = DeeTuple_NewUninitialized(3);
 	if unlikely(!result)
 		goto err;
@@ -4805,9 +4805,9 @@ partition_pack_notfoundl(String *__restrict self,
 			goto err_r;
 	}
 	Dee_Incref_n(Dee_EmptyString, 2);
-	DeeTuple_SET(result, 0, (DeeObject *)lhs_string);
-	DeeTuple_SET(result, 1, (DeeObject *)Dee_EmptyString);
-	DeeTuple_SET(result, 2, (DeeObject *)Dee_EmptyString);
+	DeeTuple_SET(result, 0, lhs_string);
+	DeeTuple_SET(result, 1, Dee_EmptyString);
+	DeeTuple_SET(result, 2, Dee_EmptyString);
 	return result;
 err_r:
 	DeeTuple_FreeUninitialized(result);
@@ -4815,12 +4815,12 @@ err:
 	return NULL;
 }
 
-PRIVATE WUNUSED DREF DeeObject *DCALL
+PRIVATE WUNUSED DREF DeeTupleObject *DCALL
 partition_packb(String *__restrict other,
                 uint8_t *__restrict lhs, size_t lhs_length,
                 uint8_t *__restrict ptr, size_t ptr_length) {
 	DREF String *prestr, *poststr;
-	DREF DeeObject *result;
+	DREF DeeTupleObject *result;
 	result = DeeTuple_NewUninitialized(3);
 	if unlikely(!result)
 		goto err;
@@ -4848,9 +4848,9 @@ partition_packb(String *__restrict other,
 		if unlikely(!prestr)
 			goto err_r_pre;
 	}
-	DeeTuple_SET(result, 0, (DeeObject *)prestr);
-	DeeTuple_SET(result, 1, (DeeObject *)other);
-	DeeTuple_SET(result, 2, (DeeObject *)poststr);
+	DeeTuple_SET(result, 0, prestr);
+	DeeTuple_SET(result, 1, other);
+	DeeTuple_SET(result, 2, poststr);
 	Dee_Incref(other);
 	return result;
 err_r_pre:
@@ -4861,12 +4861,12 @@ err:
 	return NULL;
 }
 
-PRIVATE WUNUSED DREF DeeObject *DCALL
+PRIVATE WUNUSED DREF DeeTupleObject *DCALL
 partition_packw(String *__restrict other,
                 uint16_t *__restrict lhs, size_t lhs_length,
                 uint16_t *__restrict ptr, size_t ptr_length) {
 	DREF String *prestr, *poststr;
-	DREF DeeObject *result;
+	DREF DeeTupleObject *result;
 	result = DeeTuple_NewUninitialized(3);
 	if unlikely(!result)
 		goto err;
@@ -4894,9 +4894,9 @@ partition_packw(String *__restrict other,
 		if unlikely(!prestr)
 			goto err_r_pre;
 	}
-	DeeTuple_SET(result, 0, (DeeObject *)prestr);
-	DeeTuple_SET(result, 1, (DeeObject *)other);
-	DeeTuple_SET(result, 2, (DeeObject *)poststr);
+	DeeTuple_SET(result, 0, prestr);
+	DeeTuple_SET(result, 1, other);
+	DeeTuple_SET(result, 2, poststr);
 	Dee_Incref(other);
 	return result;
 err_r_pre:
@@ -4907,12 +4907,12 @@ err:
 	return NULL;
 }
 
-PRIVATE WUNUSED DREF DeeObject *DCALL
+PRIVATE WUNUSED DREF DeeTupleObject *DCALL
 partition_packl(String *__restrict other,
                 uint32_t *__restrict lhs, size_t lhs_length,
                 uint32_t *__restrict ptr, size_t ptr_length) {
 	DREF String *prestr, *poststr;
-	DREF DeeObject *result;
+	DREF DeeTupleObject *result;
 	result = DeeTuple_NewUninitialized(3);
 	if unlikely(!result)
 		goto err;
@@ -4940,9 +4940,9 @@ partition_packl(String *__restrict other,
 		if unlikely(!prestr)
 			goto err_r_pre;
 	}
-	DeeTuple_SET(result, 0, (DeeObject *)prestr);
-	DeeTuple_SET(result, 1, (DeeObject *)other);
-	DeeTuple_SET(result, 2, (DeeObject *)poststr);
+	DeeTuple_SET(result, 0, prestr);
+	DeeTuple_SET(result, 1, other);
+	DeeTuple_SET(result, 2, poststr);
 	Dee_Incref(other);
 	return result;
 err_r_pre:
@@ -4953,27 +4953,27 @@ err:
 	return NULL;
 }
 
-PRIVATE WUNUSED DREF DeeObject *DCALL
+PRIVATE WUNUSED DREF DeeTupleObject *DCALL
 partition_packb_fold(uint8_t *__restrict lhs, size_t lhs_length,
                      uint8_t *__restrict mtc, size_t mtc_length,
                      uint8_t *__restrict rhs, size_t rhs_length) {
 	DREF String *temp;
-	DREF DeeObject *result;
+	DREF DeeTupleObject *result;
 	result = DeeTuple_NewUninitialized(3);
 	if unlikely(!result)
 		goto err;
 	temp = (DREF String *)DeeString_New1Byte(lhs, lhs_length);
 	if unlikely(!temp)
 		goto err_r_0;
-	DeeTuple_SET(result, 0, (DeeObject *)temp); /* Inherit reference */
+	DeeTuple_SET(result, 0, temp); /* Inherit reference */
 	temp = (DREF String *)DeeString_New1Byte(mtc, mtc_length);
 	if unlikely(!temp)
 		goto err_r_1;
-	DeeTuple_SET(result, 1, (DeeObject *)temp); /* Inherit reference */
+	DeeTuple_SET(result, 1, temp); /* Inherit reference */
 	temp = (DREF String *)DeeString_New1Byte(rhs, rhs_length);
 	if unlikely(!temp)
 		goto err_r_2;
-	DeeTuple_SET(result, 2, (DeeObject *)temp); /* Inherit reference */
+	DeeTuple_SET(result, 2, temp); /* Inherit reference */
 	return result;
 err_r_2:
 	Dee_Decref_likely(DeeTuple_GET(result, 1));
@@ -4985,27 +4985,27 @@ err:
 	return NULL;
 }
 
-PRIVATE WUNUSED DREF DeeObject *DCALL
+PRIVATE WUNUSED DREF DeeTupleObject *DCALL
 partition_packw_fold(uint16_t *__restrict lhs, size_t lhs_length,
                      uint16_t *__restrict mtc, size_t mtc_length,
                      uint16_t *__restrict rhs, size_t rhs_length) {
 	DREF String *temp;
-	DREF DeeObject *result;
+	DREF DeeTupleObject *result;
 	result = DeeTuple_NewUninitialized(3);
 	if unlikely(!result)
 		goto err;
 	temp = (DREF String *)DeeString_New2Byte(lhs, lhs_length);
 	if unlikely(!temp)
 		goto err_r_0;
-	DeeTuple_SET(result, 0, (DeeObject *)temp); /* Inherit reference */
+	DeeTuple_SET(result, 0, temp); /* Inherit reference */
 	temp = (DREF String *)DeeString_New2Byte(mtc, mtc_length);
 	if unlikely(!temp)
 		goto err_r_1;
-	DeeTuple_SET(result, 1, (DeeObject *)temp); /* Inherit reference */
+	DeeTuple_SET(result, 1, temp); /* Inherit reference */
 	temp = (DREF String *)DeeString_New2Byte(rhs, rhs_length);
 	if unlikely(!temp)
 		goto err_r_2;
-	DeeTuple_SET(result, 2, (DeeObject *)temp); /* Inherit reference */
+	DeeTuple_SET(result, 2, temp); /* Inherit reference */
 	return result;
 err_r_2:
 	Dee_Decref_likely(DeeTuple_GET(result, 1));
@@ -5017,27 +5017,27 @@ err:
 	return NULL;
 }
 
-PRIVATE WUNUSED DREF DeeObject *DCALL
+PRIVATE WUNUSED DREF DeeTupleObject *DCALL
 partition_packl_fold(uint32_t *__restrict lhs, size_t lhs_length,
                      uint32_t *__restrict mtc, size_t mtc_length,
                      uint32_t *__restrict rhs, size_t rhs_length) {
 	DREF String *temp;
-	DREF DeeObject *result;
+	DREF DeeTupleObject *result;
 	result = DeeTuple_NewUninitialized(3);
 	if unlikely(!result)
 		goto err;
 	temp = (DREF String *)DeeString_New4Byte(lhs, lhs_length);
 	if unlikely(!temp)
 		goto err_r_0;
-	DeeTuple_SET(result, 0, (DeeObject *)temp); /* Inherit reference */
+	DeeTuple_SET(result, 0, temp); /* Inherit reference */
 	temp = (DREF String *)DeeString_New4Byte(mtc, mtc_length);
 	if unlikely(!temp)
 		goto err_r_1;
-	DeeTuple_SET(result, 1, (DeeObject *)temp); /* Inherit reference */
+	DeeTuple_SET(result, 1, temp); /* Inherit reference */
 	temp = (DREF String *)DeeString_New4Byte(rhs, rhs_length);
 	if unlikely(!temp)
 		goto err_r_2;
-	DeeTuple_SET(result, 2, (DeeObject *)temp); /* Inherit reference */
+	DeeTuple_SET(result, 2, temp); /* Inherit reference */
 	return result;
 err_r_2:
 	Dee_Decref_likely(DeeTuple_GET(result, 1));
@@ -5049,7 +5049,7 @@ err:
 	return NULL;
 }
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeTupleObject *DCALL
 string_parition(String *self, size_t argc,
                 DeeObject *const *argv, DeeObject *kw) {
 	String *other;
@@ -5148,7 +5148,7 @@ err:
 	return NULL;
 }
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeTupleObject *DCALL
 string_rparition(String *self, size_t argc,
                  DeeObject *const *argv, DeeObject *kw) {
 	String *other;
@@ -5247,7 +5247,7 @@ err:
 	return NULL;
 }
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeTupleObject *DCALL
 string_caseparition(String *self, size_t argc,
                     DeeObject *const *argv, DeeObject *kw) {
 	String *other;
@@ -5352,7 +5352,7 @@ err:
 	return NULL;
 }
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeTupleObject *DCALL
 string_caserparition(String *self, size_t argc,
                      DeeObject *const *argv, DeeObject *kw) {
 	String *other;
@@ -8699,7 +8699,7 @@ string_partitionmatch(String *self, size_t argc, DeeObject *const *argv) {
 		if ((result->t_elem[2] = (DREF DeeObject *)(c)) == NULL) \
 			goto err_r_2;                                        \
 	}	__WHILE0
-	result = (DREF DeeTupleObject *)DeeTuple_NewUninitialized(3);
+	result = DeeTuple_NewUninitialized(3);
 	if unlikely(!result)
 		goto err;
 	SWITCH_SIZEOF_WIDTH(STRING_WIDTH_COMMON3(DeeString_WIDTH(self),
@@ -8827,7 +8827,7 @@ err_r_2:
 err_r_1:
 	Dee_Decref_likely(result->t_elem[0]);
 err_r_0:
-	DeeTuple_FreeUninitialized((DeeObject *)result);
+	DeeTuple_FreeUninitialized(result);
 err:
 	return NULL;
 }
@@ -8854,7 +8854,7 @@ string_rpartitionmatch(String *self, size_t argc, DeeObject *const *argv) {
 		if ((result->t_elem[2] = (DREF DeeObject *)(c)) == NULL) \
 			goto err_r_2;                                        \
 	}	__WHILE0
-	result = (DREF DeeTupleObject *)DeeTuple_NewUninitialized(3);
+	result = DeeTuple_NewUninitialized(3);
 	if unlikely(!result)
 		goto err;
 	SWITCH_SIZEOF_WIDTH(STRING_WIDTH_COMMON3(DeeString_WIDTH(self),
@@ -8982,7 +8982,7 @@ err_r_2:
 err_r_1:
 	Dee_Decref_likely(result->t_elem[0]);
 err_r_0:
-	DeeTuple_FreeUninitialized((DeeObject *)result);
+	DeeTuple_FreeUninitialized(result);
 err:
 	return NULL;
 }
@@ -9010,7 +9010,7 @@ string_casepartitionmatch(String *self, size_t argc, DeeObject *const *argv) {
 		if ((result->t_elem[2] = (DREF DeeObject *)(c)) == NULL) \
 			goto err_r_2;                                        \
 	}	__WHILE0
-	result = (DREF DeeTupleObject *)DeeTuple_NewUninitialized(3);
+	result = DeeTuple_NewUninitialized(3);
 	if unlikely(!result)
 		goto err;
 	SWITCH_SIZEOF_WIDTH(STRING_WIDTH_COMMON3(DeeString_WIDTH(self),
@@ -9144,7 +9144,7 @@ err_r_2:
 err_r_1:
 	Dee_Decref_likely(result->t_elem[0]);
 err_r_0:
-	DeeTuple_FreeUninitialized((DeeObject *)result);
+	DeeTuple_FreeUninitialized(result);
 err:
 	return NULL;
 }
@@ -9171,7 +9171,7 @@ string_caserpartitionmatch(String *self, size_t argc, DeeObject *const *argv) {
 		if ((result->t_elem[2] = (DREF DeeObject *)(c)) == NULL) \
 			goto err_r_2;                                        \
 	}	__WHILE0
-	result = (DREF DeeTupleObject *)DeeTuple_NewUninitialized(3);
+	result = DeeTuple_NewUninitialized(3);
 	if unlikely(!result)
 		goto err;
 	SWITCH_SIZEOF_WIDTH(STRING_WIDTH_COMMON3(DeeString_WIDTH(self),
@@ -9299,7 +9299,7 @@ err_r_2:
 err_r_1:
 	Dee_Decref_likely(result->t_elem[0]);
 err_r_0:
-	DeeTuple_FreeUninitialized((DeeObject *)result);
+	DeeTuple_FreeUninitialized(result);
 err:
 	return NULL;
 }
@@ -9827,16 +9827,18 @@ err:
 	return NULL;
 }
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeTupleObject *DCALL
 string_pack_utf8_partition_not_found(char const *__restrict utf8_base,
                                      size_t startoff, size_t endoff) {
-	DREF DeeObject *result;
+	DREF DeeTupleObject *result;
 	result = DeeTuple_NewUninitialized(3);
 	if unlikely(!result)
 		goto done;
 	if (startoff < endoff) {
 		DREF DeeObject *str0;
-		str0 = DeeString_NewUtf8(utf8_base + startoff, endoff - startoff, STRING_ERROR_FSTRICT);
+		str0 = DeeString_NewUtf8(utf8_base + startoff,
+		                         endoff - startoff,
+		                         STRING_ERROR_FSTRICT);
 		if unlikely(!str0)
 			goto err_r;
 		DeeTuple_SET(result, 0, str0);
@@ -9855,12 +9857,12 @@ err_r:
 	return NULL;
 }
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeTupleObject *DCALL
 string_pack_utf8_partition_found(char const *__restrict utf8_base,
                                  size_t match_startoff,
                                  size_t match_endoff,
                                  size_t str_endoff) {
-	DREF DeeObject *result;
+	DREF DeeTupleObject *result;
 	DREF DeeObject *str;
 	result = DeeTuple_NewUninitialized(3);
 	if unlikely(!result)
@@ -9889,7 +9891,7 @@ err_r_0:
 	return NULL;
 }
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeTupleObject *DCALL
 string_repartition(String *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	Dee_ssize_t result;
 	size_t match_size;
@@ -9915,7 +9917,7 @@ err:
 	return NULL;
 }
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeTupleObject *DCALL
 string_rerpartition(String *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	Dee_ssize_t result;
 	size_t match_size;

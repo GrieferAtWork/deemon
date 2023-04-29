@@ -1051,7 +1051,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 udict_popsomething(UDict *self, size_t argc, DeeObject *const *argv) {
-	DREF DeeObject *result;
+	DREF DeeTupleObject *result;
 	struct udict_item *iter;
 	if (DeeArg_Unpack(argc, argv, ":popitem"))
 		goto err;
@@ -1080,7 +1080,7 @@ udict_popsomething(UDict *self, size_t argc, DeeObject *const *argv) {
 	if (--self->ud_used <= self->ud_size / 3)
 		udict_rehash(self, -1);
 	UDict_LockEndWrite(self);
-	return result;
+	return (DREF DeeObject *)result;
 err:
 	return NULL;
 }

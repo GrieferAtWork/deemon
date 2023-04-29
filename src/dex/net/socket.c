@@ -2090,10 +2090,11 @@ err:
 	return NULL;
 }
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeTupleObject *DCALL
 socket_recvfrom(Socket *self, size_t argc, DeeObject *const *argv) {
 	DREF DeeSockAddrObject *result_addr;
-	DREF DeeObject *result_text, *result;
+	DREF DeeTupleObject *result;
+	DREF DeeObject *result_text;
 	size_t max_size;
 	uint64_t timeout;
 	int flags;
@@ -2140,15 +2141,18 @@ socket_recvfrom(Socket *self, size_t argc, DeeObject *const *argv) {
 		if (sock_getmsgflagsof(arg_2, &flags))
 			goto err;
 	}
+
 	/* Create the socket address object that's going to be returned. */
 	result_addr = DeeObject_MALLOC(DeeSockAddrObject);
 	if unlikely(!result_addr)
 		goto err;
+
 	/* Actually receive the data. */
 	result_text = DeeSocket_RecvData(self, timeout, max_size, flags,
 	                                 &result_addr->sa_addr);
 	if unlikely(!result_text)
 		goto err_addr;
+
 	/* Create a new tuple to package the 2 objects. */
 	result = DeeTuple_NewUninitialized(2);
 	if unlikely(!result)
@@ -2176,7 +2180,7 @@ err:
 	return NULL;
 }
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeTupleObject *DCALL
 socket_recvfrominto(Socket *self, size_t argc, DeeObject *const *argv) {
 	DeeBuffer buffer;
 	DeeObject *data;
@@ -2185,7 +2189,7 @@ socket_recvfrominto(Socket *self, size_t argc, DeeObject *const *argv) {
 	int flags;
 	dssize_t result_size;
 	DREF DeeSockAddrObject *result_addr;
-	DREF DeeObject *result;
+	DREF DeeTupleObject *result;
 	if (DeeArg_Unpack(argc, argv, "o|oo:recvfrominto", &data, &arg1, &arg2))
 		goto err;
 	if (!arg1) {
@@ -2212,6 +2216,7 @@ socket_recvfrominto(Socket *self, size_t argc, DeeObject *const *argv) {
 		if (sock_getmsgflagsof(arg2, &flags))
 			goto err;
 	}
+
 	/* Create the socket address object that's going to be returned. */
 	result_addr = DeeObject_MALLOC(DeeSockAddrObject);
 	if unlikely(!result_addr)
@@ -2227,6 +2232,7 @@ socket_recvfrominto(Socket *self, size_t argc, DeeObject *const *argv) {
 	DeeObject_PutBuf(data, &buffer, Dee_BUFFER_FWRITABLE);
 	if unlikely(result_size < 0)
 		goto err_addr;
+
 	/* Create a new tuple to package the 2 objects. */
 	result = DeeTuple_NewUninitialized(2);
 	if unlikely(!result)

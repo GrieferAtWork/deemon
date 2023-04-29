@@ -994,9 +994,10 @@ JITLexer_ParseCatchExprItem(JITLexer *__restrict self) {
  * Also handles multi-catch masks. */
 PRIVATE DREF DeeObject *FCALL
 JITLexer_ParseCatchExpr(JITLexer *__restrict self) {
-	DREF DeeObject *result, *next, *new_tuple;
+	DREF DeeObject *result, *next;
 	result = JITLexer_ParseCatchExprItem(self);
 	if (self->jl_tok == '|' && result) {
+		DREF DeeTupleObject *new_tuple;
 		JITLexer_Yield(self);
 		next = JITLexer_ParseCatchExprItem(self);
 		if unlikely(!next)
@@ -1006,7 +1007,7 @@ JITLexer_ParseCatchExpr(JITLexer *__restrict self) {
 			goto err_r_next;
 		DeeTuple_SET(new_tuple, 0, result); /* Inherit reference */
 		DeeTuple_SET(new_tuple, 1, next);   /* Inherit reference */
-		result = new_tuple;
+		result = (DREF DeeObject *)new_tuple;
 		while (self->jl_tok == '|') {
 			size_t length;
 			JITLexer_Yield(self);
@@ -1015,11 +1016,11 @@ JITLexer_ParseCatchExpr(JITLexer *__restrict self) {
 			if unlikely(!next)
 				goto err_r;
 			length    = DeeTuple_SIZE(result);
-			new_tuple = DeeTuple_ResizeUninitialized(result, length + 1);
+			new_tuple = DeeTuple_ResizeUninitialized((DeeTupleObject *)result, length + 1);
 			if unlikely(!new_tuple)
 				goto err_r_next;
 			DeeTuple_SET(new_tuple, length, next); /* Inherit reference */
-			result = new_tuple;
+			result = (DREF DeeObject *)new_tuple;
 		}
 	}
 	return result;

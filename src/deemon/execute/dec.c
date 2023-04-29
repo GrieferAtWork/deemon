@@ -1388,7 +1388,7 @@ err_function_code:
 		uint32_t i, length;
 		uint8_t const *end;
 		length = Dec_DecodePointer(&reader);
-		result = DeeTuple_NewUninitialized(length);
+		result = (DREF DeeObject *)DeeTuple_NewUninitialized(length);
 		if unlikely(!result)
 			goto done;
 		end = self->df_data + self->df_size;
@@ -1402,7 +1402,7 @@ err_function_code:
 			}
 			if unlikely(!ITER_ISOK(item)) {
 				Dee_Decrefv(DeeTuple_ELEM(result), i);
-				DeeTuple_FreeUninitialized(result);
+				DeeTuple_FreeUninitialized((DeeTupleObject *)result);
 				result = item;
 				goto done;
 			}

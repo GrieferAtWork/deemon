@@ -690,7 +690,7 @@ check_printseq_const:
 					}
 					if (DeeObject_IsShared(printseq->a_constexpr)) {
 						/* Must create a new tuple. */
-						DREF DeeObject *new_tuple;
+						DREF DeeTupleObject *new_tuple;
 						size_t j, len;
 						len = DeeTuple_SIZE(printseq->a_constexpr);
 						ASSERT(i < len);
@@ -711,7 +711,7 @@ check_printseq_const:
 							DeeTuple_SET(new_tuple, j, ob);
 						}
 						Dee_Decref_unlikely(printseq->a_constexpr);
-						printseq->a_constexpr = new_tuple;
+						printseq->a_constexpr = (DREF DeeObject *)new_tuple;
 					} else {
 						DeeTuple_SET(printseq->a_constexpr, i, elem_str); /* Inherit reference (x2) */
 						Dee_Decref(elem);

@@ -124,11 +124,9 @@ pack_target_tuple(struct asm_sym *__restrict sym) {
 	ri_sp = DeeRelInt_New(sym, 0, RELINT_MODE_FSTCK);
 	if unlikely(!ri_sp)
 		goto err_ip;
-	result = DeeTuple_NewUninitialized(2);
+	result = DeeTuple_PackSymbolic(2, ri_ip, ri_sp); /* Inherit references. */
 	if unlikely(!result)
 		goto err_sp;
-	DeeTuple_SET(result, 0, ri_ip); /* Inherit reference. */
-	DeeTuple_SET(result, 1, ri_sp); /* Inherit reference. */
 	return result;
 err_sp:
 	Dee_DecrefDokill(ri_sp);

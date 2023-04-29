@@ -3419,8 +3419,8 @@ thread_tryjoin(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	if unlikely(result == NULL)
 		goto err;
 	if (result != ITER_DONE)
-		return Dee_Packf("(bO)", 1, result);
-	return Dee_Packf("(bo)", 0, Dee_None);
+		return DeeTuple_Newf("bO", 1, result);
+	return DeeTuple_Newf("bo", 0, Dee_None);
 err:
 	return NULL;
 }
@@ -3435,8 +3435,8 @@ thread_timedjoin(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	if unlikely(result == NULL)
 		goto err;
 	if (result != ITER_DONE)
-		return Dee_Packf("(bO)", 1, result);
-	return Dee_Packf("(bo)", 0, Dee_None);
+		return DeeTuple_Newf("bO", 1, result);
+	return DeeTuple_Newf("bo", 0, Dee_None);
 err:
 	return NULL;
 }
@@ -3973,10 +3973,10 @@ thread_id(DeeThreadObject *__restrict self) {
 #endif /* !Dee_pid_t */
 }
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeTupleObject *DCALL
 thread_crashinfo(DeeThreadObject *__restrict self) {
-	DeeThreadObject *caller = DeeThread_Self();
 	uint16_t i, count;
+	DeeThreadObject *caller = DeeThread_Self();
 	struct except_frame *frame_iter;
 	DREF DeeTupleObject *result;
 again:
@@ -3992,9 +3992,9 @@ again:
 	if (count == 0) {
 		if (self != caller)
 			_DeeThread_ReleaseSetup(self);
-		return_empty_tuple;
+		return_reference_((DeeTupleObject *)Dee_EmptyTuple);
 	}
-	result = (DREF DeeTupleObject *)DeeTuple_TryNewUninitialized(count);
+	result = DeeTuple_TryNewUninitialized(count);
 	if unlikely(!result) {
 		if (self != caller)
 			_DeeThread_ReleaseSetup(self);
@@ -4022,9 +4022,8 @@ again:
 			if (self != caller)
 				_DeeThread_ReleaseSetup(self);
 			collect_ok = Dee_CollectMemory(DeeTuple_SIZEOF(2));
-			while (i--)
-				Dee_Decref_likely(DeeTuple_GET(result, i));
-			DeeTuple_FreeUninitialized((DeeObject *)result);
+			Dee_Decrefv_likely(DeeTuple_ELEM(result), i);
+			DeeTuple_FreeUninitialized(result);
 			if (collect_ok)
 				goto again;
 			goto err;
@@ -4034,7 +4033,7 @@ again:
 	ASSERT(frame_iter == NULL);
 	if (self != caller)
 		_DeeThread_ReleaseSetup(self);
-	return (DREF DeeObject *)result;
+	return result;
 err:
 	return NULL;
 }

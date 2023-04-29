@@ -1534,15 +1534,17 @@ DEFINE_OPERATOR(DREF DeeObject *, CallTuple,
 	if (tp_self == &DeeFunction_Type)
 		return DeeFunction_CallTuple((DeeFunctionObject *)self, args);
 	do {
-		if (tp_self->tp_call)
+		if (tp_self->tp_call) {
 			return DeeType_INVOKE_CALL(tp_self, self,
 			                           DeeTuple_SIZE(args),
 			                           DeeTuple_ELEM(args));
-		if (tp_self->tp_call_kw)
+		}
+		if (tp_self->tp_call_kw) {
 			return DeeType_INVOKE_CALLKW(tp_self, self,
 			                             DeeTuple_SIZE(args),
 			                             DeeTuple_ELEM(args),
 			                             NULL);
+		}
 	} while (type_inherit_call(tp_self));
 	err_unimplemented_operator(tp_self, OPERATOR_CALL);
 	return NULL;
@@ -1555,11 +1557,12 @@ DEFINE_OPERATOR(DREF DeeObject *, CallTupleKw,
 	if (tp_self == &DeeFunction_Type)
 		return DeeFunction_CallTupleKw((DeeFunctionObject *)self, args, kw);
 	do {
-		if (tp_self->tp_call_kw)
+		if (tp_self->tp_call_kw) {
 			return DeeType_INVOKE_CALLKW(tp_self, self,
 			                             DeeTuple_SIZE(args),
 			                             DeeTuple_ELEM(args),
 			                             kw);
+		}
 		if (tp_self->tp_call) {
 			/* Object doesn't support keyword arguments. */
 			if (kw) {
@@ -1648,7 +1651,8 @@ DeeObject_TThisCallKw(DeeTypeObject *tp_self,
 DEFINE_OPERATOR(DREF DeeObject *, ThisCall,
                 (DeeObject *self, DeeObject *this_arg,
                  size_t argc, DeeObject *const *argv)) {
-	DREF DeeObject *full_args, *result;
+	DREF DeeTupleObject *full_args;
+	DREF DeeObject *result;
 	ASSERT_OBJECT(self);
 #ifndef DEFINE_TYPED_OPERATORS
 	if (DeeSuper_Check(self)) {
@@ -1662,21 +1666,25 @@ DEFINE_OPERATOR(DREF DeeObject *, ThisCall,
 	if (GET_TP_SELF() == &DeeFunction_Type)
 		return DeeFunction_ThisCall((DeeFunctionObject *)self, this_arg, argc, argv);
 	if (GET_TP_SELF() == &DeeClsMethod_Type) {
+		DeeClsMethodObject *me = (DeeClsMethodObject *)self;
 		/* Must ensure proper typing of the this-argument. */
-		if (DeeObject_AssertType(this_arg, ((DeeClsMethodObject *)self)->cm_type))
+		if (DeeObject_AssertType(this_arg, me->cm_type))
 			goto err;
-		return (*((DeeClsMethodObject *)self)->cm_func)(this_arg, argc, argv);
+		return (*me->cm_func)(this_arg, argc, argv);
 	}
 	if (GET_TP_SELF() == &DeeKwClsMethod_Type) {
+		DeeKwClsMethodObject *me = (DeeKwClsMethodObject *)self;
 		/* Must ensure proper typing of the this-argument. */
-		if (DeeObject_AssertType(this_arg, ((DeeKwClsMethodObject *)self)->cm_type))
+		if (DeeObject_AssertType(this_arg, me->cm_type))
 			goto err;
-		return (*((DeeKwClsMethodObject *)self)->cm_func)(this_arg, argc, argv, NULL);
+		return (*me->cm_func)(this_arg, argc, argv, NULL);
 	}
+
 	/* sigh... Looks like we need to create a temporary argument tuple... */
 	full_args = DeeTuple_NewUninitialized(1 + argc);
 	if unlikely(!full_args)
 		goto err;
+
 	/* Lazily alias arguments in the `full_args' tuple. */
 	DeeTuple_SET(full_args, 0, this_arg);
 	memcpyc(&DeeTuple_ELEM(full_args)[1],
@@ -1686,11 +1694,15 @@ DEFINE_OPERATOR(DREF DeeObject *, ThisCall,
 	                         DeeTuple_SIZE(full_args),
 	                         DeeTuple_ELEM(full_args));
 #else /* DEFINE_TYPED_OPERATORS */
+	/* Using `DeeObject_CallTuple()' here would be counterproductive:
+	 * - Said function only has optimization for types which we've
+	 *   already checked for, so there's no point in trying to check
+	 *   for them a second time! */
 	result = DeeObject_Call(self,
 	                        DeeTuple_SIZE(full_args),
 	                        DeeTuple_ELEM(full_args));
 #endif /* !DEFINE_TYPED_OPERATORS */
-	DeeTuple_DecrefSymbolic(full_args);
+	DeeTuple_DecrefSymbolic((DREF DeeObject *)full_args);
 	return result;
 err:
 	return NULL;
@@ -1700,7 +1712,8 @@ DEFINE_OPERATOR(DREF DeeObject *, ThisCallKw,
                 (DeeObject *self, DeeObject *this_arg,
                  size_t argc, DeeObject *const *argv,
                  DeeObject *kw)) {
-	DREF DeeObject *full_args, *result;
+	DREF DeeTupleObject *full_args;
+	DREF DeeObject *result;
 	ASSERT_OBJECT(self);
 #ifndef DEFINE_TYPED_OPERATORS
 	if (DeeSuper_Check(self)) {
@@ -1714,14 +1727,16 @@ DEFINE_OPERATOR(DREF DeeObject *, ThisCallKw,
 	if (GET_TP_SELF() == &DeeFunction_Type)
 		return DeeFunction_ThisCallKw((DeeFunctionObject *)self, this_arg, argc, argv, kw);
 	if (GET_TP_SELF() == &DeeKwClsMethod_Type) {
+		DeeKwClsMethodObject *me = (DeeKwClsMethodObject *)self;
 		/* Must ensure proper typing of the this-argument. */
-		if (DeeObject_AssertType(this_arg, ((DeeKwClsMethodObject *)self)->cm_type))
+		if (DeeObject_AssertType(this_arg, me->cm_type))
 			goto err;
-		return (*((DeeKwClsMethodObject *)self)->cm_func)(this_arg, argc, argv, kw);
+		return (*me->cm_func)(this_arg, argc, argv, kw);
 	}
 	if (GET_TP_SELF() == &DeeClsMethod_Type) {
+		DeeClsMethodObject *me = (DeeClsMethodObject *)self;
 		/* Must ensure proper typing of the this-argument. */
-		if (DeeObject_AssertType(this_arg, ((DeeClsMethodObject *)self)->cm_type))
+		if (DeeObject_AssertType(this_arg, me->cm_type))
 			goto err;
 		if (kw) {
 			if (DeeKwds_Check(kw)) {
@@ -1736,12 +1751,14 @@ DEFINE_OPERATOR(DREF DeeObject *, ThisCallKw,
 					goto err_no_keywords;
 			}
 		}
-		return (*((DeeClsMethodObject *)self)->cm_func)(this_arg, argc, argv);
+		return (*me->cm_func)(this_arg, argc, argv);
 	}
+
 	/* sigh... Looks like we need to create a temporary argument tuple... */
 	full_args = DeeTuple_NewUninitialized(1 + argc);
 	if unlikely(!full_args)
 		goto err;
+
 	/* Lazily alias arguments in the `full_args' tuple. */
 	DeeTuple_SET(full_args, 0, this_arg);
 	memcpyc(&DeeTuple_ELEM(full_args)[1],
@@ -1752,12 +1769,16 @@ DEFINE_OPERATOR(DREF DeeObject *, ThisCallKw,
 	                           DeeTuple_ELEM(full_args),
 	                           kw);
 #else /* DEFINE_TYPED_OPERATORS */
+	/* Using `DeeObject_CallTupleKw()' here would be counterproductive:
+	 * - Said function only has optimization for types which we've
+	 *   already checked for, so there's no point in trying to check
+	 *   for them a second time! */
 	result = DeeObject_CallKw(self,
 	                          DeeTuple_SIZE(full_args),
 	                          DeeTuple_ELEM(full_args),
 	                          kw);
 #endif /* !DEFINE_TYPED_OPERATORS */
-	DeeTuple_DecrefSymbolic(full_args);
+	DeeTuple_DecrefSymbolic((DeeObject *)full_args);
 	return result;
 err_no_keywords:
 	err_keywords_not_accepted(GET_TP_SELF(), kw);

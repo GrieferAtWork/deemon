@@ -1258,7 +1258,7 @@ again:
 			Dee_Incref(key);
 			Dee_Incref(value);
 			DeeDict_LockEndRead(me);
-			match = DeeTuple_NewUninitialized(2);
+			match = (DREF DeeObject *)DeeTuple_NewUninitialized(2);
 			if unlikely(!match) {
 				Dee_Decref(key);
 				Dee_Decref(value);
@@ -1271,7 +1271,7 @@ again:
 			if (me->d_elem != vector || me->d_mask != mask ||
 			    item->di_key != key || item->di_value != value) {
 				DeeDict_LockEndRead(me);
-				Dee_DecrefDokill(match);
+				DeeTuple_FreeUninitialized((DREF DeeTupleObject *)match);
 				goto again;
 			}
 		}
@@ -1279,7 +1279,7 @@ again:
 	DeeDict_LockEndRead(me);
 	if (!match)
 		return_empty_tuple;
-	result = DeeTuple_NewUninitialized(1);
+	result = (DREF DeeObject *)DeeTuple_NewUninitialized(1);
 	if unlikely(!result)
 		goto err_match;
 	DeeTuple_SET(result, 0, match); /* Inherit reference */
@@ -1807,9 +1807,9 @@ err:
 	return NULL;
 }
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeTupleObject *DCALL
 dict_popsomething(Dict *self, size_t argc, DeeObject *const *argv) {
-	DREF DeeObject *result;
+	DREF DeeTupleObject *result;
 	struct dict_item *iter;
 	if (DeeArg_Unpack(argc, argv, ":popitem"))
 		goto err;

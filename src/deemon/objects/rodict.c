@@ -752,7 +752,7 @@ DeeRoDict_HasItemStringLen(DeeObject *__restrict self,
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeRoDict_ByHash(DeeObject *__restrict self, Dee_hash_t hash) {
 	DREF DeeObject *result;
-	DREF DeeObject *match;
+	DREF DeeTupleObject *match;
 	dhash_t i, perturb;
 	match = NULL;
 	perturb = i = DeeRoDict_HashSt(self, hash);
@@ -779,7 +779,7 @@ DeeRoDict_ByHash(DeeObject *__restrict self, Dee_hash_t hash) {
 	}
 	if (!match)
 		return_empty_tuple;
-	result = DeeTuple_NewUninitialized(1);
+	result = (DREF DeeObject *)DeeTuple_NewUninitialized(1);
 	if unlikely(!result)
 		goto err_match;
 	DeeTuple_SET(result, 0, match); /* Inherit reference */

@@ -136,7 +136,7 @@ multiple_continue_at_iter:
 				goto err;
 		} else if (self->a_flag == AST_FMULTIPLE_TUPLE ||
 		           self->a_flag == AST_FMULTIPLE_GENERIC) {
-			DREF DeeObject *new_tuple;
+			DREF DeeTupleObject *new_tuple;
 			size_t i;
 			new_tuple = DeeTuple_NewUninitialized(self->a_multiple.m_astc);
 			if unlikely(!new_tuple)
@@ -149,7 +149,7 @@ multiple_continue_at_iter:
 				ast_decref(branch);
 			}
 			Dee_Free(self->a_multiple.m_astv);
-			self->a_constexpr = new_tuple; /* Inherit reference. */
+			self->a_constexpr = (DREF DeeObject *)new_tuple; /* Inherit reference. */
 		} else if (self->a_flag == AST_FMULTIPLE_LIST) {
 			DREF DeeObject *new_list;
 			size_t i;
