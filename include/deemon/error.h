@@ -213,24 +213,25 @@ DDATDEF DeeObject DeeError_Interrupt_instance;
  * Upon success, the actual error object thrown is discarded during this process. */
 DFUNDEF WUNUSED NONNULL((1)) bool DCALL DeeError_Catch(DeeTypeObject *__restrict type);
 
-/* Throw a given object `ob' as an error.
+/* Throw a given object `error' as an error.
  * @return: -1: Always returns `-1' */
-DFUNDEF NONNULL((1)) int (DCALL DeeError_Throw)(DeeObject *__restrict ob);
+DFUNDEF ATTR_COLD NONNULL((1)) int
+(DCALL DeeError_Throw)(DeeObject *__restrict error);
 
 /* Throw a new error of type `tp', using a printf-formatted
  * message passed through `format' and varargs.
  * @return: -1: Always returns `-1'*/
-DFUNDEF NONNULL((1, 2)) int
+DFUNDEF ATTR_COLD NONNULL((1, 2)) int
 (DeeError_Throwf)(DeeTypeObject *__restrict tp,
                   char const *__restrict format, ...);
-DFUNDEF NONNULL((1, 2)) int
+DFUNDEF ATTR_COLD NONNULL((1, 2)) int
 (DCALL DeeError_VThrowf)(DeeTypeObject *__restrict tp,
                          char const *__restrict format, va_list args);
 
 #ifndef Dee_ASSUMED_VALUE_IS_NOOP
-#define DeeError_Throw(ob)                 Dee_ASSUMED_VALUE(DeeError_Throw(ob), -1)
-#define DeeError_Throwf(tp, ...)           Dee_ASSUMED_VALUE(DeeError_Throwf(tp, __VA_ARGS__), -1)
-#define DeeError_VThrowf(tp, format, args) Dee_ASSUMED_VALUE(DeeError_VThrowf(tp, format, args), -1)
+#define DeeError_Throw(error)              Dee_ASSUMED_VALUE((DeeError_Throw)(error), -1)
+#define DeeError_Throwf(tp, ...)           Dee_ASSUMED_VALUE((DeeError_Throwf)(tp, __VA_ARGS__), -1)
+#define DeeError_VThrowf(tp, format, args) Dee_ASSUMED_VALUE((DeeError_VThrowf)(tp, format, args), -1)
 #endif /* !Dee_ASSUMED_VALUE_IS_NOOP */
 
 

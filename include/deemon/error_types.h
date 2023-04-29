@@ -72,7 +72,7 @@ struct Dee_compiler_error_object {
 	int                                 ce_mode;   /* Fatality mode (One of `COMPILER_ERROR_FATALITY_*'). */
 	int                                 ce_wnum;   /* [const] The TPP-assigned warning ID of this error (One of `W_*'). */
 	struct Dee_compiler_error_loc       ce_locs;   /* [const] The parser location where the error occurred. */
-	struct Dee_compiler_error_loc      *ce_loc;    /* [1..1][const] The main compiler location (that is the first text-file that can be encountered when walking `ce_locs') */
+	struct Dee_compiler_error_loc      *ce_loc;    /* [0..1][const] The main compiler location (that is the first text-file that can be encountered when walking `ce_locs') */
 	Dee_WEAKREF(DeeCompilerErrorObject) ce_master; /* Weak reference to the master compiler error. */
 	size_t                              ce_errorc; /* [const] Number of contained compiler errors. */
 	DREF DeeCompilerErrorObject       **ce_errorv; /* [1..1][REF_IF(!= self)][const][0..ce_errorc][owned][const]

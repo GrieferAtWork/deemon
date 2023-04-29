@@ -138,14 +138,14 @@ handle_print_error:
 		DeeError_Handled(ERROR_HANDLED_RESTORE);
 }
 
-/* Throw a given object `ob' as an error.
+/* Throw a given object `error' as an error.
  * @return: -1: Always returns `-1' */
-PUBLIC NONNULL((1)) int
-(DCALL DeeError_Throw)(DeeObject *__restrict ob) {
+PUBLIC ATTR_COLD NONNULL((1)) int
+(DCALL DeeError_Throw)(DeeObject *__restrict error) {
 	struct except_frame *frame;
 	DeeThreadObject *ts = DeeThread_Self();
-	ASSERT_OBJECT(ob);
-	if (ob == (DeeObject *)&DeeError_NoMemory_instance) {
+	ASSERT_OBJECT(error);
+	if (error == (DeeObject *)&DeeError_NoMemory_instance) {
 		/* Special handling for throwing a bad-allocation error.
 		 * >> Required to prevent infinite recursion when allocating
 		 *    the exception frame for an out-of-memory error. */
@@ -156,17 +156,17 @@ PUBLIC NONNULL((1)) int
 	if unlikely(!frame)
 		goto done;
 	frame->ef_prev  = ts->t_except;
-	frame->ef_error = ob;
+	frame->ef_error = error;
 	frame->ef_trace = (DREF DeeTracebackObject *)ITER_DONE;
 	ts->t_except    = frame;
-	Dee_Incref(ob);
+	Dee_Incref(error);
 	++ts->t_exceptsz;
-	Dee_DPRINTF("[RT] Throw exception: %r (%" PRFu16 ")\n", ob, ts->t_exceptsz);
+	Dee_DPRINTF("[RT] Throw exception: %r (%" PRFu16 ")\n", error, ts->t_exceptsz);
 done:
 	return -1;
 }
 
-PUBLIC NONNULL((1, 2)) int
+PUBLIC ATTR_COLD NONNULL((1, 2)) int
 (DCALL DeeError_VThrowf)(DeeTypeObject *__restrict tp,
                          char const *__restrict format,
                          va_list args) {
@@ -197,7 +197,7 @@ err:
 /* Throw a new error of type `tp', using a printf-formatted
  * message passed through `format' and varargs.
  * @return: -1: Always returns `-1'*/
-PUBLIC NONNULL((1, 2)) int
+PUBLIC ATTR_COLD NONNULL((1, 2)) int
 (DeeError_Throwf)(DeeTypeObject *__restrict tp,
                   char const *__restrict format, ...) {
 	va_list args;
