@@ -303,6 +303,7 @@ struct Dee_thread_interrupt {
 #undef Dee_THREAD_STATE_SUSPENDED
 #undef Dee_THREAD_STATE_TERMINATED
 #undef Dee_THREAD_STATE_STARTING
+#undef Dee_THREAD_STATE_HASTHREAD
 /*#undef Dee_THREAD_STATE_STARTED*/ /* Always set */
 #endif /* !CONFIG_NO_THREADS */
 

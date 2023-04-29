@@ -228,6 +228,23 @@
 #define DeeThread_HasCrashed(self) ((self) == DeeThread_Self() && (self)->t_exceptsz > 0)
 #define DeeThread_HasStarted(self) 1
 #endif /* DeeThread_USE_SINGLE_THREADED */
+#ifndef Dee_pid_t
+#undef Dee_THREAD_STATE_HASTID
+#endif /* !Dee_pid_t */
+
+
+#undef Dee_THREAD_STATE_HASOSCTX
+#if defined(Dee_THREAD_STATE_HASTHREAD) && defined(Dee_THREAD_STATE_HASTID)
+#define Dee_THREAD_STATE_HASOSCTX (Dee_THREAD_STATE_HASTHREAD | Dee_THREAD_STATE_HASTID)
+#elif defined(Dee_THREAD_STATE_HASTHREAD)
+#define Dee_THREAD_STATE_HASOSCTX Dee_THREAD_STATE_HASTHREAD
+#elif defined(Dee_THREAD_STATE_HASTID)
+#define Dee_THREAD_STATE_HASOSCTX Dee_THREAD_STATE_HASTID
+#endif /* ... */
+#ifndef Dee_THREAD_STATE_HASOSCTX
+#undef Dee_THREAD_STATE_DETACHING
+#endif /* !Dee_THREAD_STATE_HASOSCTX */
+
 
 
 DECL_BEGIN
@@ -1279,14 +1296,8 @@ again:
 			return; /* Not allowed to detach */
 		DeeThread_Detach_system_impl(self);
 	}
-#ifdef Dee_pid_t
 	atomic_and(&self->t_state, ~(Dee_THREAD_STATE_DETACHING |
-	                             Dee_THREAD_STATE_HASTHREAD |
-	                             Dee_THREAD_STATE_HASTID));
-#else /* Dee_pid_t */
-	atomic_and(&self->t_state, ~(Dee_THREAD_STATE_DETACHING |
-	                             Dee_THREAD_STATE_HASTHREAD));
-#endif /* !Dee_pid_t */
+	                             Dee_THREAD_STATE_HASOSCTX));
 }
 #endif /* DeeThread_Detach_system_impl */
 
@@ -1913,8 +1924,7 @@ again_cleanup:
 
 	_DeeThread_AcquireDetaching(self);
 	atomic_and(&self->t_state, ~(Dee_THREAD_STATE_DETACHING |
-	                             Dee_THREAD_STATE_HASTHREAD |
-	                             Dee_THREAD_STATE_HASTID |
+	                             Dee_THREAD_STATE_HASOSCTX |
 	                             Dee_THREAD_STATE_INTERRUPTED));
 
 	/* Wake up threads that may be waiting for our thread to terminate */
@@ -2386,8 +2396,7 @@ do_cleanup_and_set_result:
 
 	_DeeThread_AcquireDetaching(&self->ot_thread);
 	atomic_and(&self->ot_thread.t_state, ~(Dee_THREAD_STATE_DETACHING |
-	                                       Dee_THREAD_STATE_HASTHREAD |
-	                                       Dee_THREAD_STATE_HASTID |
+	                                       Dee_THREAD_STATE_HASOSCTX |
 	                                       Dee_THREAD_STATE_INTERRUPTED));
 
 	/* Wake up threads that may be waiting for our thread to terminate */
@@ -2463,7 +2472,11 @@ DeeThread_Start_impl(/*inherit(on_success)*/ DREF DeeOSThreadObject *__restrict 
 	HANDLE hThread;
 again:
 	DBG_ALIGNMENT_DISABLE();
+#ifdef Dee_pid_t
 	hThread = CreateThread(NULL, 0, &DeeThread_Entry_func, self, 0, (LPDWORD)&self->ot_tid);
+#else /* Dee_pid_t */
+	hThread = CreateThread(NULL, 0, &DeeThread_Entry_func, self, 0, NULL);
+#endif /* !Dee_pid_t */
 	if likely(hThread != NULL) {
 		DBG_ALIGNMENT_ENABLE();
 		self->ot_hThread = hThread;
@@ -2869,16 +2882,24 @@ err:
  * @return: -1: An error occurred. */
 PUBLIC WUNUSED NONNULL((1)) int DCALL
 DeeThread_Detach(/*Thread*/ DeeObject *__restrict self) {
+#ifndef Dee_THREAD_STATE_HASOSCTX
+	uint32_t state;
+	DeeThreadObject *me = (DeeThreadObject *)self;
+	ASSERT_OBJECT_TYPE(me, &DeeThread_Type);
+	state = atomic_read(&me->t_state);
+	if (!(state & Dee_THREAD_STATE_UNMANAGED))
+		return 1;
+#else /* !Dee_THREAD_STATE_HASOSCTX */
 	uint32_t state;
 	DeeThreadObject *me = (DeeThreadObject *)self;
 	ASSERT_OBJECT_TYPE(me, &DeeThread_Type);
 again:
 	state = atomic_fetchor(&me->t_state, Dee_THREAD_STATE_DETACHING);
 	if (state & Dee_THREAD_STATE_DETACHING) {
-		if (!(state & Dee_THREAD_STATE_HASTHREAD))
+		if (!(state & Dee_THREAD_STATE_HASOSCTX))
 			return 1; /* Already detached, or not started */
 		if (state & Dee_THREAD_STATE_UNMANAGED)
-			goto err_cannot_detach; /* Not allowed to detach */
+			goto err_cannot_detach_unmanaged; /* Not allowed to detach unmanaged threads */
 		SCHED_YIELD();
 		goto again;
 	}
@@ -2887,26 +2908,14 @@ again:
 #ifdef DeeThread_Detach_system_impl
 	if (state & Dee_THREAD_STATE_HASTHREAD)
 		DeeThread_Detach_system_impl(me);
-#ifdef Dee_pid_t
+#endif /* DeeThread_Detach_system_impl */
 	atomic_and(&me->t_state, ~(Dee_THREAD_STATE_DETACHING |
-	                           Dee_THREAD_STATE_HASTHREAD |
-	                           Dee_THREAD_STATE_HASTID));
-#else /* Dee_pid_t */
-	atomic_and(&me->t_state, ~(Dee_THREAD_STATE_DETACHING |
-	                           Dee_THREAD_STATE_HASTHREAD));
-#endif /* !Dee_pid_t */
-#else /* DeeThread_Detach_system_impl */
-#ifdef Dee_pid_t
-	atomic_and(&me->t_state, ~(Dee_THREAD_STATE_DETACHING |
-	                           Dee_THREAD_STATE_HASTID));
-#else /* Dee_pid_t */
-	atomic_and(&me->t_state, ~(Dee_THREAD_STATE_DETACHING));
-#endif /* !Dee_pid_t */
-#endif /* !DeeThread_Detach_system_impl */
+	                           Dee_THREAD_STATE_HASOSCTX));
 	return 0;
 err_cannot_detach_and_unlock:
 	atomic_and(&me->t_state, ~Dee_THREAD_STATE_DETACHING);
-err_cannot_detach:
+err_cannot_detach_unmanaged:
+#endif /* Dee_THREAD_STATE_HASOSCTX */
 	return DeeError_Throwf(&DeeError_ValueError,
 	                       "Cannot detach unmanaged thread %k",
 	                       self);
@@ -4437,11 +4446,13 @@ thread_hascrashed(DeeThreadObject *__restrict self) {
 #endif /* !DeeThread_USE_SINGLE_THREADED */
 }
 
+#ifdef Dee_THREAD_STATE_HASOSCTX
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 thread_wasdetached(DeeThreadObject *__restrict self) {
 	uint32_t state = atomic_read(&self->t_state);
-	return_bool(!(state & Dee_THREAD_STATE_HASTHREAD));
+	return_bool(!(state & Dee_THREAD_STATE_HASOSCTX));
 }
+#endif /* Dee_THREAD_STATE_HASOSCTX */
 
 #ifndef DeeThread_USE_SINGLE_THREADED
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -4537,13 +4548,15 @@ PRIVATE struct type_getset tpconst thread_getsets[] = {
 	            "is having ?#hasterminated while errors were still active\n"
 	            "When ?t, attempting to ?#join @this thread will cause all of the "
 	            /**/ "errors to be rethrown in the calling thread as a :ThreadCrash error"),
-	TYPE_GETTER("wasdetached", &thread_wasdetached,
-	            "->?Dbool\n"
-	            "Returns ?t if @this thread has been detached, joined, or hasn't been started, yet"),
 	TYPE_GETTER("isterminating", &thread_isterminating,
 	            "->?Dbool\n"
 	            "Returns ?t if @this thread is currently being terminated, or ?#hasterminated\n"
 	            "This is similar to ?#hasterminated, but becomes !t a little bit earlier"),
+#ifdef Dee_THREAD_STATE_HASOSCTX
+	TYPE_GETTER("wasdetached", &thread_wasdetached,
+	            "->?Dbool\n"
+	            "Returns ?t if @this thread has been detached, joined, or hasn't been started, yet"),
+#endif /* Dee_THREAD_STATE_HASOSCTX */
 #ifdef DeeThread_USE_CreateThread
 	TYPE_GETTER(DeeSysFD_HANDLE_GETSET, &thread_get_osfhandle_np,
 	            "->?Dint\n"
@@ -4555,6 +4568,10 @@ PRIVATE struct type_getset tpconst thread_getsets[] = {
 PRIVATE struct type_member tpconst thread_members[] = {
 	TYPE_MEMBER_BITFIELD_DOC("wasinterrupted", STRUCT_CONST, DeeThreadObject, t_state, Dee_THREAD_STATE_INTERRUPTED,
 	                         "Returns ?t if interrupts are pending for @this thread"),
+#ifndef Dee_THREAD_STATE_HASOSCTX
+	TYPE_MEMBER_CONST_DOC("wasdetached", Dee_True,
+	                      "Returns ?t if @this thread has been detached, joined, or hasn't been started, yet"),
+#endif /* Dee_THREAD_STATE_HASOSCTX */
 #ifdef DeeThread_USE_SINGLE_THREADED
 	TYPE_MEMBER_CONST_DOC("name", Dee_None,
 	                      "->?X2?Dstring?N\n"
