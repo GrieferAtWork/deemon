@@ -2631,7 +2631,7 @@ PRIVATE struct type_method tpconst socket_methods[] = {
 	            "(how=!?rw)->?Dbool\n"
 	            "Returns ?t if @this socket has been ?#shutdown according to @how (inclusive when multiple modes are specified)\n"
 	            "See ?#shutdown for possible values that may be passed to @how"),
-	TYPE_METHOD("fileno", /* TODO: Use DeeSysFD_INT_GETSET / DeeSysFD_HANDLE_GETSET for this! */
+	TYPE_METHOD("fileno", /* TODO: Use Dee_fd_fileno_GETSET / Dee_fd_osfhandle_GETSET for this! */
 	            &socket_fileno,
 	            "->?Dint\n"
 	            "Returns the underlying file descriptor/handle associated @this socket"),

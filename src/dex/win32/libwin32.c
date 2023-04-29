@@ -25,11 +25,11 @@
 #include "libwin32.h"
 #if defined(CONFIG_HOST_WINDOWS) || defined(__DEEMON__)
 
+#include <deemon/abi/ctypes.h>
 #include <deemon/alloc.h>
 #include <deemon/arg.h>
 #include <deemon/bool.h>
 #include <deemon/bytes.h>
-#include <deemon/ctypes-abi.h>
 #include <deemon/dex.h>
 #include <deemon/error.h>
 #include <deemon/file.h>
@@ -747,7 +747,7 @@ PRIVATE struct Dee_type_math handle_math = {
 };
 
 PRIVATE struct type_member tpconst handle_members[] = {
-	TYPE_MEMBER_FIELD(DeeSysFD_HANDLE_GETSET,
+	TYPE_MEMBER_FIELD(Dee_fd_osfhandle_GETSET,
 	                  STRUCT_UINTPTR_T,
 	                  offsetof(DeeHandleObject, ho_handle)),
 	TYPE_MEMBER_END
@@ -6171,8 +6171,8 @@ PRIVATE struct dex_symbol symbols[] = {
 	LIBWIN32_GETHANDLE_DEF_DOC("Return the underlying system handle that is bound to the given object\n"
 	                           " - When ?N is given, always return ${HANDLE(0)}\n"
 	                           " - When an :int is given, return the result of ${get_osfhandle(ob)}\n"
-	                           " - When the given object has an attribute $" DeeSysFD_HANDLE_GETSET ", return ${ob." DeeSysFD_HANDLE_GETSET "}\n"
-	                           " - When the given object has an attribute $" DeeSysFD_INT_GETSET ", return ${get_osfhandle(ob." DeeSysFD_HANDLE_GETSET ")}\n"
+	                           " - When the given object has an attribute $" Dee_fd_osfhandle_GETSET ", return ${ob." Dee_fd_osfhandle_GETSET "}\n"
+	                           " - When the given object has an attribute $" Dee_fd_fileno_GETSET ", return ${get_osfhandle(ob." Dee_fd_osfhandle_GETSET ")}\n"
 	                           " - When another ?GHANDLE object is given, re-return that object\n"
 	                           "Note that these sames steps are also performed by all other functions taking ?GHANDLE input arguments")
 

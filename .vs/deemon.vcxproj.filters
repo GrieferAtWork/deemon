@@ -4,6 +4,9 @@
 		<Filter Include="include">
 			<UniqueIdentifier>{372a956e-8c03-4d55-8939-00000195F605}</UniqueIdentifier>
 		</Filter>
+		<Filter Include="include\abi">
+			<UniqueIdentifier>{372a956e-8c03-4d55-8939-00195F60F339}</UniqueIdentifier>
+		</Filter>
 		<Filter Include="include\compiler">
 			<UniqueIdentifier>{372a956e-8c03-4d55-8939-E54B7E739EFF}</UniqueIdentifier>
 		</Filter>
@@ -84,6 +87,12 @@
 		<ClInclude Include="..\LICENSE" />
 		<ClInclude Include="..\Makefile" />
 		<ClInclude Include="..\configure" />
+		<ClInclude Include="..\include\deemon\abi\ctypes.h">
+			<Filter>include\abi</Filter>
+		</ClInclude>
+		<ClInclude Include="..\include\deemon\abi\time.h">
+			<Filter>include\abi</Filter>
+		</ClInclude>
 		<ClInclude Include="..\include\deemon\alloc.h">
 			<Filter>include</Filter>
 		</ClInclude>
@@ -152,9 +161,6 @@
 		</ClInclude>
 		<ClInclude Include="..\include\deemon\compiler\traits.h">
 			<Filter>include\compiler</Filter>
-		</ClInclude>
-		<ClInclude Include="..\include\deemon\ctypes-abi.h">
-			<Filter>include</Filter>
 		</ClInclude>
 		<ClInclude Include="..\include\deemon\cxx.h">
 			<Filter>include</Filter>
@@ -577,9 +583,6 @@
 			<Filter>include</Filter>
 		</ClInclude>
 		<ClInclude Include="..\include\deemon\thread.h">
-			<Filter>include</Filter>
-		</ClInclude>
-		<ClInclude Include="..\include\deemon\time-abi.h">
 			<Filter>include</Filter>
 		</ClInclude>
 		<ClInclude Include="..\include\deemon\traceback.h">

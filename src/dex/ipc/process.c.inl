@@ -160,7 +160,7 @@
 /* TODO: Support for linux clone() with `CLONE_PIDFD' (in order to then use said pidfd to facilitate wait() operations) */
 #undef ipc_Process_USE_vfork_AND_execve
 #undef ipc_Process_USE_fork_AND_execve
-#undef ipc_Process_USE_stub
+#undef ipc_Process_USE_STUB
 #if 0
 #define ipc_Process_USE_fork_AND_execve
 #undef CONFIG_PREFER_WCHAR_FUNCTIONS
@@ -184,7 +184,7 @@
        defined(CONFIG_HAVE_close) && defined(CONFIG_HAVE_dup2))
 #define ipc_Process_USE_spawnve
 #else /* ... */
-#define ipc_Process_USE_stub
+#define ipc_Process_USE_STUB
 #endif /* !... */
 
 #ifndef CONFIG_HAVE_posix_spawnattr_init
@@ -2650,10 +2650,10 @@ return_errno:
  * @return: -1: Error */
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 process_start_impl(Process *__restrict self) {
-#ifdef ipc_Process_USE_stub
+#ifdef ipc_Process_USE_STUB
 	(void)self;
 	return ipc_unimplemented();
-#else /* ipc_Process_USE_stub */
+#else /* ipc_Process_USE_STUB */
 again:
 	Process_LockRead(self);
 	/* Check if the process had already been started, or if
@@ -3072,7 +3072,7 @@ err:
 	self->p_state &= ~PROCESS_FLAG_STARTING;
 	Process_LockEndWrite(self);
 	return -1;
-#endif /* !ipc_Process_USE_stub */
+#endif /* !ipc_Process_USE_STUB */
 }
 
 
@@ -5077,7 +5077,7 @@ PRIVATE struct type_getset tpconst process_getsets[] = {
 	            "The commandline used to package ?#argv"),
 #endif /* ipc_Process_USE_cmdline */
 #ifdef ipc_Process_USE_CreateProcessW
-	TYPE_GETTER(DeeSysFD_HANDLE_GETSET, &process_osfhandle_np, "->?Dint"),
+	TYPE_GETTER(Dee_fd_osfhandle_GETSET, &process_osfhandle_np, "->?Dint"),
 #endif /* ipc_Process_USE_CreateProcessW */
 
 	/* TODO: vvv re-implement these at a later point in time. */

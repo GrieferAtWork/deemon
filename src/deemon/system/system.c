@@ -59,11 +59,11 @@
 
 DECL_BEGIN
 
-#ifdef DeeSysFD_IS_INT
+#ifdef Dee_fd_t_IS_int
 #define Dee_PRIpSYSFD "d"
-#else /* DeeSysFD_IS_INT */
+#else /* Dee_fd_t_IS_int */
 #define Dee_PRIpSYSFD "p"
-#endif /* !DeeSysFD_IS_INT */
+#endif /* !Dee_fd_t_IS_int */
 
 #ifndef CONFIG_HAVE_memrchr
 #define CONFIG_HAVE_memrchr
@@ -363,7 +363,7 @@ err:
  * @param: include_trailing_sep: A trailing / or \\-character is also printed.
  * @return:  0: Success.
  * @return: -1: An error occurred (s.a. `DeeError_*'). */
-PUBLIC int
+PUBLIC WUNUSED NONNULL((1)) int
 (DCALL DeeSystem_PrintPwd)(struct Dee_unicode_printer *__restrict printer,
                            bool include_trailing_sep) {
 #ifdef DeeSystem_PrintPwd_USE_WINDOWS
@@ -576,14 +576,14 @@ err:
 DECL_END
 
 
-#ifdef DeeSystem_DlOpen_USE_LOADLIBRARY
+#ifdef DeeSystem_DlOpen_USE_LoadLibrary
 #ifdef _WIN32_WCE
 #undef GetProcAddress
 #define GetProcAddress GetProcAddressA
 #endif /* _WIN32_WCE */
-#endif /* DeeSystem_DlOpen_USE_LOADLIBRARY */
+#endif /* DeeSystem_DlOpen_USE_LoadLibrary */
 
-#ifdef DeeSystem_DlOpen_USE_DLFCN
+#ifdef DeeSystem_DlOpen_USE_dlopen
 #ifndef USED_DLOPEN_SCOPE
 #if defined(CONFIG_HAVE_RTLD_LOCAL)
 #define USED_DLOPEN_SCOPE RTLD_LOCAL
@@ -603,7 +603,7 @@ DECL_END
 #define USED_DLOPEN_BIND 0
 #endif
 #endif /* !USED_DLOPEN_BIND */
-#endif /* DeeSystem_DlOpen_USE_DLFCN */
+#endif /* DeeSystem_DlOpen_USE_dlopen */
 
 
 
@@ -613,9 +613,9 @@ DECL_BEGIN
  * @return: * :                      A handle for the shared library.
  * @return: NULL:                    A deemon callback failed and an error was thrown.
  * @return: DEESYSTEM_DLOPEN_FAILED: Failed to open the shared library. */
-PUBLIC WUNUSED void *DCALL
+PUBLIC WUNUSED NONNULL((1)) void *DCALL
 DeeSystem_DlOpen(/*String*/ DeeObject *__restrict filename) {
-#ifdef DeeSystem_DlOpen_USE_LOADLIBRARY
+#ifdef DeeSystem_DlOpen_USE_LoadLibrary
 	HMODULE hResult;
 	LPCWSTR lpFilename;
 	ASSERT_OBJECT_TYPE_EXACT(filename, &DeeString_Type);
@@ -670,9 +670,9 @@ again_loadlib:
 	return (void *)hResult;
 err:
 	return NULL;
-#endif /* DeeSystem_DlOpen_USE_LOADLIBRARY */
+#endif /* DeeSystem_DlOpen_USE_LoadLibrary */
 
-#if defined(DeeSystem_DlOpen_USE_DLFCN)
+#if defined(DeeSystem_DlOpen_USE_dlopen)
 	void *result;
 	char *utf8_filename;
 	ASSERT_OBJECT_TYPE_EXACT(filename, &DeeString_Type);
@@ -683,7 +683,7 @@ err:
 	return result;
 err:
 	return NULL;
-#endif /* DeeSystem_DlOpen_USE_DLFCN */
+#endif /* DeeSystem_DlOpen_USE_dlopen */
 
 #ifdef DeeSystem_DlOpen_USE_STUB
 	ASSERT_OBJECT_TYPE_EXACT(filename, &DeeString_Type);
@@ -693,9 +693,9 @@ err:
 }
 
 
-PUBLIC WUNUSED void *DCALL
+PUBLIC WUNUSED NONNULL((1)) void *DCALL
 DeeSystem_DlOpenString(/*utf-8*/ char const *filename) {
-#ifdef DeeSystem_DlOpen_USE_LOADLIBRARY
+#ifdef DeeSystem_DlOpen_USE_LoadLibrary
 	HMODULE hResult;
 	DBG_ALIGNMENT_DISABLE();
 	hResult = LoadLibraryA(filename);
@@ -713,9 +713,9 @@ DeeSystem_DlOpenString(/*utf-8*/ char const *filename) {
 	}
 done:
 	return (void *)hResult;
-#endif /* DeeSystem_DlOpen_USE_LOADLIBRARY */
+#endif /* DeeSystem_DlOpen_USE_LoadLibrary */
 
-#ifdef DeeSystem_DlOpen_USE_DLFCN
+#ifdef DeeSystem_DlOpen_USE_dlopen
 	void *result;
 	DBG_ALIGNMENT_DISABLE();
 	result = dlopen(filename,
@@ -725,7 +725,7 @@ done:
 	if unlikely(!result)
 		result = DEESYSTEM_DLOPEN_FAILED;
 	return result;
-#endif /* DeeSystem_DlOpen_USE_DLFCN */
+#endif /* DeeSystem_DlOpen_USE_dlopen */
 
 #ifdef DeeSystem_DlOpen_USE_STUB
 	(void)filename;
@@ -740,7 +740,7 @@ done:
  * @return: NULL:      A deemon callback failed and an error was thrown.
  * @return: ITER_DONE: No description is available. */
 PUBLIC WUNUSED DREF /*String*/ DeeObject *DCALL DeeSystem_DlError(void) {
-#ifdef DeeSystem_DlOpen_USE_LOADLIBRARY
+#ifdef DeeSystem_DlOpen_USE_LoadLibrary
 	DREF /*String*/ DeeObject *result;
 	DWORD dwError;
 	dwError = GetLastError();
@@ -750,9 +750,9 @@ PUBLIC WUNUSED DREF /*String*/ DeeObject *DCALL DeeSystem_DlError(void) {
 	                                   MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
 	                                   NULL);
 	return result;
-#endif /* DeeSystem_DlOpen_USE_LOADLIBRARY */
+#endif /* DeeSystem_DlOpen_USE_LoadLibrary */
 
-#ifdef DeeSystem_DlOpen_USE_DLFCN
+#ifdef DeeSystem_DlOpen_USE_dlopen
 #ifdef CONFIG_HAVE_dlerror
 	char *message;
 	DREF /*String*/ DeeObject *result;
@@ -765,11 +765,13 @@ PUBLIC WUNUSED DREF /*String*/ DeeObject *DCALL DeeSystem_DlError(void) {
 	                           STRING_ERROR_FIGNORE);
 	return result;
 #else /* CONFIG_HAVE_dlerror */
+	COMPILER_IMPURE();
 	return ITER_DONE;
 #endif /* !CONFIG_HAVE_dlerror */
-#endif /* DeeSystem_DlOpen_USE_DLFCN */
+#endif /* DeeSystem_DlOpen_USE_dlopen */
 
 #ifdef DeeSystem_DlOpen_USE_STUB
+	COMPILER_IMPURE();
 	return ITER_DONE;
 #endif /* DeeSystem_DlOpen_USE_STUB */
 }
@@ -778,43 +780,52 @@ PUBLIC WUNUSED DREF /*String*/ DeeObject *DCALL DeeSystem_DlError(void) {
 
 /* Lookup a symbol within a given shared library
  * Returns `NULL' if the symbol could not be found */
-PUBLIC WUNUSED void *DCALL
+PUBLIC WUNUSED NONNULL((2)) void *DCALL
 DeeSystem_DlSym(void *handle, char const *symbol_name) {
-#ifdef DeeSystem_DlOpen_USE_LOADLIBRARY
+#ifdef DeeSystem_DlOpen_USE_LoadLibrary
 	FARPROC result;
 	DBG_ALIGNMENT_DISABLE();
 	result = GetProcAddress((HMODULE)handle, symbol_name);
 	DBG_ALIGNMENT_ENABLE();
 	return *(void **)&result;
-#endif /* DeeSystem_DlOpen_USE_LOADLIBRARY */
-#ifdef DeeSystem_DlOpen_USE_DLFCN
+#endif /* DeeSystem_DlOpen_USE_LoadLibrary */
+
+#ifdef DeeSystem_DlOpen_USE_dlopen
 	void *result;
 	DBG_ALIGNMENT_DISABLE();
 	result = dlsym(handle, symbol_name);
 	DBG_ALIGNMENT_ENABLE();
 	return result;
-#endif /* DeeSystem_DlOpen_USE_DLFCN */
+#endif /* DeeSystem_DlOpen_USE_dlopen */
+
 #ifdef DeeSystem_DlOpen_USE_STUB
 	(void)handle;
 	(void)symbol_name;
+	COMPILER_IMPURE();
 	return NULL;
 #endif /* DeeSystem_DlOpen_USE_STUB */
 }
 
 /* Close a given shared library */
 PUBLIC void DCALL DeeSystem_DlClose(void *handle) {
-#ifdef DeeSystem_DlOpen_USE_LOADLIBRARY
+#ifdef DeeSystem_DlOpen_USE_LoadLibrary
 	DBG_ALIGNMENT_DISABLE();
 	FreeLibrary((HMODULE)handle);
 	DBG_ALIGNMENT_ENABLE();
-#endif /* DeeSystem_DlOpen_USE_LOADLIBRARY */
-#ifdef DeeSystem_DlOpen_USE_DLFCN
+#endif /* DeeSystem_DlOpen_USE_LoadLibrary */
+
+#ifdef DeeSystem_DlOpen_USE_dlopen
 #ifdef CONFIG_HAVE_dlclose
 	DBG_ALIGNMENT_DISABLE();
 	dlclose(handle);
 	DBG_ALIGNMENT_ENABLE();
 #endif /* CONFIG_HAVE_dlclose */
-#endif /* DeeSystem_DlOpen_USE_DLFCN */
+#endif /* DeeSystem_DlOpen_USE_dlopen */
+
+#ifdef DeeSystem_DlOpen_USE_STUB
+	(void)handle;
+	COMPILER_IMPURE();
+#endif /* DeeSystem_DlOpen_USE_STUB */
 }
 
 
@@ -843,53 +854,50 @@ PUBLIC void DCALL DeeSystem_DlClose(void *handle) {
 
 
 /* Figure out how to implement `DeeSystem_GetLastModified()' */
-#undef DeeSystem_GetLastModified_USE_GETFILEATTRIBUTESEX
-#undef DeeSystem_GetLastModified_USE_STAT
+#undef DeeSystem_GetLastModified_USE_GetFileAttributesExW
+#undef DeeSystem_GetLastModified_USE_stat
 #undef DeeSystem_GetLastModified_USE_STUB
 #ifdef CONFIG_HOST_WINDOWS
-#define DeeSystem_GetLastModified_USE_GETFILEATTRIBUTESEX 1
+#define DeeSystem_GetLastModified_USE_GetFileAttributesExW
 #elif defined(CONFIG_HAVE_stat) || defined(CONFIG_HAVE_stat64)
-#define DeeSystem_GetLastModified_USE_STAT 1
-#else
-#define DeeSystem_GetLastModified_USE_STUB 1
-#endif
+#define DeeSystem_GetLastModified_USE_stat
+#else /* ... */
+#define DeeSystem_GetLastModified_USE_STUB
+#endif /* !... */
 
 
 /* Figure out how to implement `DeeSystem_GetWalltime()' */
-#undef DeeSystem_GetWalltime_USE_GETSYSTEMTIMEPRECISEASFILETIME
-#undef DeeSystem_GetWalltime_USE_TIME
-#undef DeeSystem_GetWalltime_USE_STUB
-#undef DeeSystem_GetWalltime_USE_GETSYSTEMTIMEPRECISEASFILETIME
-#undef DeeSystem_GetWalltime_USE_GETTIMEOFDAY64
-#undef DeeSystem_GetWalltime_USE_GETTIMEOFDAY
-#undef DeeSystem_GetWalltime_USE_CLOCK_GETTIME64
-#undef DeeSystem_GetWalltime_USE_CLOCK_GETTIME
-#undef DeeSystem_GetWalltime_USE_TIME64
-#undef DeeSystem_GetWalltime_USE_TIME
+#undef DeeSystem_GetWalltime_USE_GetSystemTimePreciseAsFileTime_OR_GetSystemTimeAsFileTime
+#undef DeeSystem_GetWalltime_USE_gettimeofday64
+#undef DeeSystem_GetWalltime_USE_gettimeofday
+#undef DeeSystem_GetWalltime_USE_clock_gettime64
+#undef DeeSystem_GetWalltime_USE_clock_gettime
+#undef DeeSystem_GetWalltime_USE_time64
+#undef DeeSystem_GetWalltime_USE_time
 #undef DeeSystem_GetWalltime_USE_STUB
 #ifdef CONFIG_HOST_WINDOWS
-#define DeeSystem_GetWalltime_USE_GETSYSTEMTIMEPRECISEASFILETIME 1
+#define DeeSystem_GetWalltime_USE_GetSystemTimePreciseAsFileTime_OR_GetSystemTimeAsFileTime
 #elif defined(CONFIG_HAVE_gettimeofday64)
-#define DeeSystem_GetWalltime_USE_GETTIMEOFDAY64 1
+#define DeeSystem_GetWalltime_USE_gettimeofday64
 #elif defined(CONFIG_HAVE_gettimeofday)
-#define DeeSystem_GetWalltime_USE_GETTIMEOFDAY 1
+#define DeeSystem_GetWalltime_USE_gettimeofday
 #elif defined(CONFIG_HAVE_clock_gettime64) && defined(CONFIG_HAVE_CLOCK_REALTIME)
-#define DeeSystem_GetWalltime_USE_CLOCK_GETTIME64 1
+#define DeeSystem_GetWalltime_USE_clock_gettime64
 #elif defined(CONFIG_HAVE_clock_gettime) && defined(CONFIG_HAVE_CLOCK_REALTIME)
-#define DeeSystem_GetWalltime_USE_CLOCK_GETTIME 1
+#define DeeSystem_GetWalltime_USE_clock_gettime
 #elif defined(CONFIG_HAVE_time64)
-#define DeeSystem_GetWalltime_USE_TIME64 1
+#define DeeSystem_GetWalltime_USE_time64
 #elif defined(CONFIG_HAVE_time)
-#define DeeSystem_GetWalltime_USE_TIME 1
-#else
-#define DeeSystem_GetWalltime_USE_STUB 1
-#endif
+#define DeeSystem_GetWalltime_USE_time
+#else /* ... */
+#define DeeSystem_GetWalltime_USE_STUB
+#endif /* !... */
 
 
 
 
-#if (defined(DeeSystem_GetLastModified_USE_GETFILEATTRIBUTESEX) || \
-     defined(DeeSystem_GetWalltime_USE_GETSYSTEMTIMEPRECISEASFILETIME))
+#if (defined(DeeSystem_GetLastModified_USE_GetFileAttributesExW) || \
+     defined(DeeSystem_GetWalltime_USE_GetSystemTimePreciseAsFileTime_OR_GetSystemTimeAsFileTime))
 #define FILETIME_PER_SECONDS 10000000 /* 100 nanoseconds / 0.1 microseconds. */
 PRIVATE uint64_t DCALL
 nt_getunixfiletime(uint64_t filetime) {
@@ -903,14 +911,15 @@ nt_getunixfiletime(uint64_t filetime) {
 	result -= (time_year2day(1970) - time_year2day(1601)) * MICROSECONDS_PER_DAY;
 	return result;
 }
-#endif /* DeeSystem_GetLastModified_USE_GETFILEATTRIBUTESEX || DeeSystem_GetWalltime_USE_GETSYSTEMTIMEPRECISEASFILETIME */
+#endif /* ... */
 
 
 /* Return the last modified timestamp of `filename'
- * > uses the same format as `DeeSystem_GetWalltime()' */
-PUBLIC WUNUSED uint64_t DCALL
+ * > uses the same format as `DeeSystem_GetWalltime()'
+ * @return: (uint64_t)-1: An error was thrown */
+PUBLIC WUNUSED NONNULL((1)) uint64_t DCALL
 DeeSystem_GetLastModified(/*String*/ DeeObject *__restrict filename) {
-#ifdef DeeSystem_GetLastModified_USE_GETFILEATTRIBUTESEX
+#ifdef DeeSystem_GetLastModified_USE_GetFileAttributesExW
 	WIN32_FILE_ATTRIBUTE_DATA attrib;
 	LPWSTR wname;
 	wname = (LPWSTR)DeeString_AsWide(filename);
@@ -924,9 +933,9 @@ DeeSystem_GetLastModified(/*String*/ DeeObject *__restrict filename) {
 	DBG_ALIGNMENT_ENABLE();
 	return nt_getunixfiletime((uint64_t)attrib.ftLastWriteTime.dwLowDateTime |
 	                          (uint64_t)attrib.ftLastWriteTime.dwHighDateTime << 32);
-#endif /* DeeSystem_GetLastModified_USE_GETFILEATTRIBUTESEX */
+#endif /* DeeSystem_GetLastModified_USE_GetFileAttributesExW */
 
-#ifdef DeeSystem_GetLastModified_USE_STAT
+#ifdef DeeSystem_GetLastModified_USE_stat
 	uint64_t result;
 #ifdef CONFIG_HAVE_stat64
 	struct stat64 st;
@@ -959,7 +968,7 @@ DeeSystem_GetLastModified(/*String*/ DeeObject *__restrict filename) {
 #endif /* ... */
 
 	return result;
-#endif /* DeeSystem_GetLastModified_USE_STAT */
+#endif /* DeeSystem_GetLastModified_USE_stat */
 
 #ifdef DeeSystem_GetLastModified_USE_STUB
 	(void)filename;
@@ -967,7 +976,7 @@ DeeSystem_GetLastModified(/*String*/ DeeObject *__restrict filename) {
 #endif /* DeeSystem_GetLastModified_USE_STUB */
 }
 
-#ifdef DeeSystem_GetWalltime_USE_GETSYSTEMTIMEPRECISEASFILETIME
+#ifdef DeeSystem_GetWalltime_USE_GetSystemTimePreciseAsFileTime_OR_GetSystemTimeAsFileTime
 typedef void (WINAPI *LPGETSYSTEMTIMEPRECISEASFILETIME)(LPFILETIME lpSystemTimeAsFileTime);
 static LPGETSYSTEMTIMEPRECISEASFILETIME pdyn_GetSystemTimePreciseAsFileTime = NULL;
 #define GetSystemTimePreciseAsFileTime (*pdyn_GetSystemTimePreciseAsFileTime)
@@ -984,12 +993,12 @@ PRIVATE HMODULE DCALL GetKernel32Handle(void) {
 	return hKernel32;
 }
 #endif /* !DEFINED_GET_KERNEL32_HANDLE */
-#endif /* DeeSystem_GetWalltime_USE_GETSYSTEMTIMEPRECISEASFILETIME */
+#endif /* DeeSystem_GetWalltime_USE_GetSystemTimePreciseAsFileTime_OR_GetSystemTimeAsFileTime */
 
 
 /* Return the current UTC realtime in microseconds since 01-01-1970T00:00:00+00:00 */
 PUBLIC WUNUSED uint64_t DCALL DeeSystem_GetWalltime(void) {
-#ifdef DeeSystem_GetWalltime_USE_GETSYSTEMTIMEPRECISEASFILETIME
+#ifdef DeeSystem_GetWalltime_USE_GetSystemTimePreciseAsFileTime_OR_GetSystemTimeAsFileTime
 	uint64_t filetime;
 	DBG_ALIGNMENT_DISABLE();
 	if (pdyn_GetSystemTimePreciseAsFileTime == NULL) {
@@ -1011,11 +1020,9 @@ PUBLIC WUNUSED uint64_t DCALL DeeSystem_GetWalltime(void) {
 	}
 	DBG_ALIGNMENT_ENABLE();
 	return nt_getunixfiletime(filetime);
-#endif /* DeeSystem_GetWalltime_USE_GETSYSTEMTIMEPRECISEASFILETIME */
+#endif /* DeeSystem_GetWalltime_USE_GetSystemTimePreciseAsFileTime_OR_GetSystemTimeAsFileTime */
 
-	/* TODO: clock_gettime() */
-
-#ifdef DeeSystem_GetWalltime_USE_GETTIMEOFDAY64
+#ifdef DeeSystem_GetWalltime_USE_gettimeofday64
 	struct timeval64 tv;
 	DBG_ALIGNMENT_DISABLE();
 	if (gettimeofday64(&tv, NULL)) {
@@ -1024,9 +1031,9 @@ PUBLIC WUNUSED uint64_t DCALL DeeSystem_GetWalltime(void) {
 	}
 	DBG_ALIGNMENT_ENABLE();
 	return (uint64_t)tv.tv_sec * MICROSECONDS_PER_SECOND + tv.tv_usec;
-#endif /* DeeSystem_GetWalltime_USE_GETTIMEOFDAY64 */
+#endif /* DeeSystem_GetWalltime_USE_gettimeofday64 */
 
-#ifdef DeeSystem_GetWalltime_USE_GETTIMEOFDAY
+#ifdef DeeSystem_GetWalltime_USE_gettimeofday
 	struct timeval tv;
 	DBG_ALIGNMENT_DISABLE();
 	if (gettimeofday(&tv, NULL)) {
@@ -1035,9 +1042,9 @@ PUBLIC WUNUSED uint64_t DCALL DeeSystem_GetWalltime(void) {
 	}
 	DBG_ALIGNMENT_ENABLE();
 	return (uint64_t)tv.tv_sec * MICROSECONDS_PER_SECOND + tv.tv_usec;
-#endif /* DeeSystem_GetWalltime_USE_GETTIMEOFDAY */
+#endif /* DeeSystem_GetWalltime_USE_gettimeofday */
 
-#ifdef DeeSystem_GetWalltime_USE_CLOCK_GETTIME64
+#ifdef DeeSystem_GetWalltime_USE_clock_gettime64
 	struct timespec64 ts;
 	DBG_ALIGNMENT_DISABLE();
 	if (clock_gettime64(CLOCK_REALTIME, &ts)) {
@@ -1046,9 +1053,9 @@ PUBLIC WUNUSED uint64_t DCALL DeeSystem_GetWalltime(void) {
 	}
 	DBG_ALIGNMENT_ENABLE();
 	return (uint64_t)tv.tv_sec * MICROSECONDS_PER_SECOND + (tv.tv_nsec / 1000);
-#endif /* DeeSystem_GetWalltime_USE_CLOCK_GETTIME64 */
+#endif /* DeeSystem_GetWalltime_USE_clock_gettime64 */
 
-#ifdef DeeSystem_GetWalltime_USE_CLOCK_GETTIME
+#ifdef DeeSystem_GetWalltime_USE_clock_gettime
 	struct timespec ts;
 	DBG_ALIGNMENT_DISABLE();
 	if (clock_gettime(CLOCK_REALTIME, &ts)) {
@@ -1057,23 +1064,23 @@ PUBLIC WUNUSED uint64_t DCALL DeeSystem_GetWalltime(void) {
 	}
 	DBG_ALIGNMENT_ENABLE();
 	return (uint64_t)tv.tv_sec * MICROSECONDS_PER_SECOND + (tv.tv_nsec / 1000);
-#endif /* DeeSystem_GetWalltime_USE_CLOCK_GETTIME */
+#endif /* DeeSystem_GetWalltime_USE_clock_gettime */
 
-#ifdef DeeSystem_GetWalltime_USE_TIME64
+#ifdef DeeSystem_GetWalltime_USE_time64
 	time64_t now;
 	DBG_ALIGNMENT_DISABLE();
 	now = time64(NULL);
 	DBG_ALIGNMENT_ENABLE();
 	return (uint64_t)now * MICROSECONDS_PER_SECOND;
-#endif /* DeeSystem_GetWalltime_USE_TIME64 */
+#endif /* DeeSystem_GetWalltime_USE_time64 */
 
-#ifdef DeeSystem_GetWalltime_USE_TIME
+#ifdef DeeSystem_GetWalltime_USE_time
 	time_t now;
 	DBG_ALIGNMENT_DISABLE();
 	now = time(NULL);
 	DBG_ALIGNMENT_ENABLE();
 	return (uint64_t)now * MICROSECONDS_PER_SECOND;
-#endif /* DeeSystem_GetWalltime_USE_TIME */
+#endif /* DeeSystem_GetWalltime_USE_time */
 
 #ifdef DeeSystem_GetWalltime_USE_STUB
 	return 0;
@@ -1118,7 +1125,7 @@ PUBLIC WUNUSED uint64_t DCALL DeeSystem_GetWalltime(void) {
  * @return: 1 : The unlink() operation failed (only returned when `throw_exception_on_error' is `false')
  * @return: 0 : The unlink() operation was successful
  * @return: -1: An error occurred (may still be returned, even when `throw_exception_on_error' is `false') */
-PUBLIC WUNUSED int DCALL
+PUBLIC WUNUSED NONNULL((1)) int DCALL
 DeeSystem_Unlink(/*String*/ DeeObject *__restrict filename,
                  bool throw_exception_on_error) {
 #ifdef DeeSystem_Unlink_USE_DELETEFILE
@@ -1322,37 +1329,37 @@ again_deletefile:
 
 
 #ifndef GETATTR_fileno
-#if defined(DeeSysFD_GETSET) && defined(DeeSysFD_IS_FILE)
+#if defined(Dee_fd_GETSET) && defined(Dee_fd_t_IS_FILE)
 #define GETATTR_fileno(ob) DeeObject_GetAttr(ob, &str_getsysfd)
-#else /* DeeSysFD_GETSET && DeeSysFD_IS_FILE */
-#define GETATTR_fileno(ob) DeeObject_GetAttrString(ob, DeeSysFD_INT_GETSET)
-#endif /* !DeeSysFD_GETSET || !DeeSysFD_IS_FILE */
+#else /* Dee_fd_GETSET && Dee_fd_t_IS_FILE */
+#define GETATTR_fileno(ob) DeeObject_GetAttrString(ob, Dee_fd_fileno_GETSET)
+#endif /* !Dee_fd_GETSET || !Dee_fd_t_IS_FILE */
 #endif /* !GETATTR_fileno */
 
 
 /* Retrieve the unix FD associated with a given object.
  * The translation is done by performing the following:
- * >> #ifdef DeeSysFD_IS_INT
+ * >> #ifdef Dee_fd_t_IS_int
  * >> if (DeeFile_Check(ob))
  * >>     return DeeFile_GetSysFD(ob);
  * >> #endif
  * >> if (DeeInt_Check(ob))
  * >>     return DeeInt_AsInt(ob);
- * >> try return DeeObject_AsInt(DeeObject_GetAttr(ob, DeeSysFD_INT_GETSET)); catch (AttributeError);
+ * >> try return DeeObject_AsInt(DeeObject_GetAttr(ob, Dee_fd_fileno_GETSET)); catch (AttributeError);
  * >> return DeeObject_AsInt(ob);
  * @return: * : Success (the actual handle value)
  * @return: -1: Error (handle translation failed)
  *              In case the actual handle value stored inside of `ob'
  *              was `-1', then an `DeeError_FileClosed' error is thrown. */
-PUBLIC WUNUSED int DCALL
+PUBLIC WUNUSED NONNULL((1)) int DCALL
 DeeUnixSystem_GetFD(DeeObject *__restrict ob) {
 	int error, result;
 	DREF DeeObject *attr;
-#ifdef DeeSysFD_IS_INT
-	STATIC_ASSERT(DeeSysFD_INVALID == -1);
+#ifdef Dee_fd_t_IS_int
+	STATIC_ASSERT(Dee_fd_INVALID == -1);
 	if (DeeFile_Check(ob))
 		return (int)DeeFile_GetSysFD(ob);
-#endif /* DeeSysFD_IS_INT */
+#endif /* Dee_fd_t_IS_int */
 	if (DeeInt_Check(ob)) {
 		error = DeeInt_AsInt(ob, &result);
 		if unlikely(error)
@@ -1435,17 +1442,17 @@ PRIVATE ATTR_CONST size_t DCALL dee_nt_getpagesize(void) {
 
 
 #ifdef CONFIG_HOST_WINDOWS
-#define STRUCT_STAT_GETSIZE(x)  ((x).QuadPart)
-#define STRUCT_STAT_FOR_SIZE    LARGE_INTEGER
-#define FSTAT_FOR_SIZE(fd, pst) (GetFileSizeEx(fd, pst) ? 0 : -1)
+#define STRUCT_STAT_FOR_SIZE_GETSIZE(x) ((x).QuadPart)
+#define STRUCT_STAT_FOR_SIZE            LARGE_INTEGER
+#define FSTAT_FOR_SIZE(fd, pst)         (GetFileSizeEx(fd, pst) ? 0 : -1)
 #elif defined(CONFIG_HAVE_fstat64)
-#define STRUCT_STAT_GETSIZE(x) ((x).st_size)
-#define STRUCT_STAT_FOR_SIZE   struct stat64
-#define FSTAT_FOR_SIZE         fstat64
+#define STRUCT_STAT_FOR_SIZE_GETSIZE(x) ((x).st_size)
+#define STRUCT_STAT_FOR_SIZE            struct stat64
+#define FSTAT_FOR_SIZE                  fstat64
 #elif defined(CONFIG_HAVE_fstat)
-#define STRUCT_STAT_GETSIZE(x) ((x).st_size)
-#define STRUCT_STAT_FOR_SIZE   struct stat
-#define FSTAT_FOR_SIZE         fstat
+#define STRUCT_STAT_FOR_SIZE_GETSIZE(x) ((x).st_size)
+#define STRUCT_STAT_FOR_SIZE            struct stat
+#define FSTAT_FOR_SIZE                  fstat
 #endif /* ... */
 
 #undef LSEEK
@@ -1475,7 +1482,7 @@ PRIVATE ATTR_CONST size_t DCALL dee_nt_getpagesize(void) {
 
 
 /* Configure `self' as using a heap buffer */
-#ifdef DeeMapFile_IS_osmapfile
+#ifdef DeeMapFile_IS_os_mapfile
 #define DeeMapFile_SETHEAP(self) __mapfile_setheap(&(self)->dmf_map)
 #elif defined(DeeMapFile_IS_CreateFileMapping)
 #define DeeMapFile_SETHEAP(self) ((self)->_dmf_hmap = NULL)
@@ -1485,20 +1492,20 @@ PRIVATE ATTR_CONST size_t DCALL dee_nt_getpagesize(void) {
 #define DeeMapFile_SETHEAP(self) (void)0
 #endif /* !... */
 
-#ifdef DeeMapFile_IS_osmapfile
+#ifdef DeeMapFile_IS_os_mapfile
 #define DeeMapFile_SETADDR(self, p) (void)((self)->dmf_map.mf_addr = (unsigned char *)(p))
 #define DeeMapFile_SETSIZE(self, s) (void)((self)->dmf_map.mf_size = (s))
-#else /* DeeMapFile_IS_osmapfile */
+#else /* DeeMapFile_IS_os_mapfile */
 #define DeeMapFile_SETADDR(self, p) (void)((self)->dmf_addr = (void const *)(p))
 #define DeeMapFile_SETSIZE(self, s) (void)((self)->dmf_size = (s))
-#endif /* !DeeMapFile_IS_osmapfile */
+#endif /* !DeeMapFile_IS_os_mapfile */
 
 
 
 /* Finalize a given file map */
 PUBLIC NONNULL((1)) void DCALL
 DeeMapFile_Fini(struct DeeMapFile *__restrict self) {
-#ifdef DeeMapFile_IS_osmapfile
+#ifdef DeeMapFile_IS_os_mapfile
 	(void)unmapfile(&self->dmf_map);
 #elif defined(DeeMapFile_IS_CreateFileMapping)
 	if (self->_dmf_hmap != NULL) {
@@ -1506,8 +1513,7 @@ DeeMapFile_Fini(struct DeeMapFile *__restrict self) {
 		void *baseptr = (void *)((uintptr_t)self->dmf_addr & ~psm);
 		if (self->_dmf_vfre) {
 			void *vbas = (void *)(((uintptr_t)baseptr + self->dmf_size + psm) & ~psm);
-			if (!VirtualFree(vbas, self->_dmf_vfre, MEM_DECOMMIT | MEM_RELEASE))
-				Dee_DPRINTF("VirtualFree() failed: %lu", GetLastError()); /* TODO: Remove me */
+			(void)VirtualFree(vbas, self->_dmf_vfre, MEM_DECOMMIT | MEM_RELEASE);
 		}
 		(void)UnmapViewOfFile(baseptr);
 		(void)CloseHandle(self->_dmf_hmap);
@@ -1563,10 +1569,10 @@ DeeMapFile_Fini(struct DeeMapFile *__restrict self) {
  * @return:  0: Success (`self' must be deleted using `DeeMapFile_Fini(3)')
  * @return: -1: Error (an exception was thrown) */
 PUBLIC WUNUSED NONNULL((1)) int DCALL
-DeeMapFile_InitSysFd(struct DeeMapFile *__restrict self, DeeSysFD fd,
+DeeMapFile_InitSysFd(struct DeeMapFile *__restrict self, Dee_fd_t fd,
                      Dee_pos_t offset, size_t min_bytes, size_t max_bytes,
                      size_t num_trailing_nulbytes, unsigned int flags) {
-#ifdef DeeMapFile_IS_osmapfile
+#ifdef DeeMapFile_IS_os_mapfile
 	/* Special case: use `fmapfile(3)' */
 	int result;
 again:
@@ -1637,7 +1643,7 @@ again:
 #endif /* !DeeMapFile_IS_CreateFileMapping */
 			}
 		}
-		if (OVERFLOW_USUB(STRUCT_STAT_GETSIZE(st), map_offset, &map_bytes))
+		if (OVERFLOW_USUB(STRUCT_STAT_FOR_SIZE_GETSIZE(st), map_offset, &map_bytes))
 			map_bytes = 0;
 		if (map_bytes > max_bytes)
 			map_bytes = max_bytes;
@@ -1714,12 +1720,12 @@ again:
 			 *
 			 * (It would have been really nice for cygwin to simply have mmap() return
 			 * an error in this case, rather than literally creating a broken memory
-			 * mapping, but Oh well...)
+			 * mapping, but oh well...)
 			 */
 			{
 				size_t const psx = 0x10000 - 1;
 				uint64_t true_filesize_psx, true_filesize_psm;
-				true_filesize_psm = STRUCT_STAT_GETSIZE(st);
+				true_filesize_psm = STRUCT_STAT_FOR_SIZE_GETSIZE(st);
 				true_filesize_psm = (true_filesize_psm + psm) & ~psm; /* Hardware page-size-aligned true file size */
 				true_filesize_psx = (true_filesize_psm + psx) & ~psx; /* Allocation granularity-aligned true file size (read: non-sense enforced by the windows kernel) */
 				if ((map_offset + mapsize) > true_filesize_psm &&     /* Does the mapping include pages beyond the hardware end-of-file? */
@@ -1736,7 +1742,7 @@ again:
 #endif /* !... */
 
 			/*Dee_DPRINTF("mmap(%Iu, %d, %I64d) -> %p [psm: %Iu, errno:%d:%s, true_filesize: %I64u]\n",
-			            mapsize, fd, map_offset, buf, psm, errno, strerror(errno), (uint64_t)STRUCT_STAT_GETSIZE(st));*/
+			            mapsize, fd, map_offset, buf, psm, errno, strerror(errno), (uint64_t)STRUCT_STAT_FOR_SIZE_GETSIZE(st));*/
 #undef LOCAL_USED_mmap_flags
 			if likely(buf != (unsigned char *)MAP_FAILED)
 #endif /* !DeeMapFile_IS_CreateFileMapping */
@@ -2146,8 +2152,8 @@ DeeMapFile_InitFile(struct DeeMapFile *__restrict self, DeeObject *__restrict fi
 	size_t buffree;
 
 	if (DeeObject_InstanceOf(file, (DeeTypeObject *)&DeeSystemFile_Type)) {
-		DeeSysFD sfd = DeeSystemFile_Fileno(file);
-		if (sfd == DeeSysFD_INVALID)
+		Dee_fd_t sfd = DeeSystemFile_Fileno(file);
+		if (sfd == Dee_fd_INVALID)
 			return -1;
 		return DeeMapFile_InitSysFd(self, sfd,
 		                            offset, min_bytes, max_bytes,

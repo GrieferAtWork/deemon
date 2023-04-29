@@ -25,8 +25,8 @@
 #include "libposix.h"
 /**/
 
+#include <deemon/abi/time.h>
 #include <deemon/seq.h>
-#include <deemon/time-abi.h>
 #include <deemon/util/atomic.h>
 
 #include <hybrid/sync/atomic-rwlock.h>

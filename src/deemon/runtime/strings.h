@@ -228,9 +228,9 @@ for (local s: STRINGS) {
 	defString(s...);
 }
 
-print("#ifdef DeeSysFD_IS_HANDLE");
+print("#ifdef Dee_fd_t_IS_HANDLE");
 defString("str_getsysfd", "osfhandle_np");
-print("#elif defined(DeeSysFD_IS_INT)");
+print("#elif defined(Dee_fd_t_IS_int)");
 defString("str_getsysfd", "fileno_np");
 print("#endif /" "* ... *" "/");
 print;
@@ -552,10 +552,10 @@ DEF_STRING(str_fwd, "fwd", 0x4d05936a, 0x468b9d355ef7e041)
 #define STR_fwd DeeString_STR(&str_fwd)
 DEF_STRING(str_const, "const", 0x95daec48, 0x2e9cb1cd0ec552da)
 #define STR_const DeeString_STR(&str_const)
-#ifdef DeeSysFD_IS_HANDLE
+#ifdef Dee_fd_t_IS_HANDLE
 DEF_STRING(str_getsysfd, "osfhandle_np", 0x75b169b6, 0x74235841d2ace4f0)
 #define STR_getsysfd DeeString_STR(&str_getsysfd)
-#elif defined(DeeSysFD_IS_INT)
+#elif defined(Dee_fd_t_IS_int)
 DEF_STRING(str_getsysfd, "fileno_np", 0xe3e546ab, 0x38c7dbc48e44183)
 #define STR_getsysfd DeeString_STR(&str_getsysfd)
 #endif /* ... */

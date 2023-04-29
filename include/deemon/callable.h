@@ -26,11 +26,13 @@
 
 DECL_BEGIN
 
-/* `Callable from deemon' - Base class for callable wrapper types, such
- *  as objmethod, cmethod, InstanceMethod or just a plain old function. 
- *  There is no particular reason why this exists, other than to allow
- *  user-code to query for a type for that particular set of objects
- *  type simply writing `x is callable from deemon' */
+/* `Callable from deemon'
+ *
+ * Base class for callable wrapper types, such as ObjMethod, CMethod,
+ * InstanceMethod or just a plain old function. There is no particular
+ * reason why this exists, other than to allow user-code to query
+ * for a type for that particular set of objects type simply writing
+ * `x is callable from deemon' */
 DDATDEF DeeTypeObject DeeCallable_Type;
 
 DECL_END

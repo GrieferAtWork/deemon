@@ -119,8 +119,10 @@ DeeKwObjMethod_New(Dee_kwobjmethod_t func, DeeObject *__restrict self);
 
 /* Returns the name of the function bound by the given
  * `_ObjMethod', or `NULL' if the name could not be determined. */
-DFUNDEF ATTR_PURE WUNUSED NONNULL((1)) char const *DCALL DeeObjMethod_GetName(DeeObject const *__restrict self);
-DFUNDEF ATTR_PURE WUNUSED NONNULL((1)) char const *DCALL DeeObjMethod_GetDoc(DeeObject const *__restrict self);
+DFUNDEF ATTR_PURE WUNUSED NONNULL((1)) char const *DCALL
+DeeObjMethod_GetName(DeeObject const *__restrict self);
+DFUNDEF ATTR_PURE WUNUSED NONNULL((1)) char const *DCALL
+DeeObjMethod_GetDoc(DeeObject const *__restrict self);
 
 /* Returns the type that is implementing the bound method. */
 DFUNDEF ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) DeeTypeObject *DCALL
@@ -142,8 +144,8 @@ struct Dee_kwclsmethod_object {
 
 DDATDEF DeeTypeObject DeeClsMethod_Type;
 DDATDEF DeeTypeObject DeeKwClsMethod_Type;
-#define DeeClsMethod_FUNC(x)       ((DeeClsMethodObject *)Dee_REQUIRES_OBJECT(x))->cm_func
-#define DeeClsMethod_TYPE(x)       ((DeeClsMethodObject *)Dee_REQUIRES_OBJECT(x))->cm_type
+#define DeeClsMethod_FUNC(x)         ((DeeClsMethodObject *)Dee_REQUIRES_OBJECT(x))->cm_func
+#define DeeClsMethod_TYPE(x)         ((DeeClsMethodObject *)Dee_REQUIRES_OBJECT(x))->cm_type
 #define DeeClsMethod_Check(x)        DeeObject_InstanceOfExact(x, &DeeClsMethod_Type)   /* `_ClassMethod' is final. */
 #define DeeClsMethod_CheckExact(x)   DeeObject_InstanceOfExact(x, &DeeClsMethod_Type)
 #define DeeKwClsMethod_Check(x)      DeeObject_InstanceOfExact(x, &DeeKwClsMethod_Type) /* `_KwClassMethod' is final. */
@@ -200,8 +202,10 @@ DeeClsProperty_New(DeeTypeObject *__restrict type,
 
 /* Returns the name of the function bound by the given
  * `_ClassProperty', or `NULL' if the name could not be determined. */
-DFUNDEF ATTR_PURE WUNUSED NONNULL((1)) char const *DCALL DeeClsProperty_GetName(DeeObject const *__restrict self);
-DFUNDEF ATTR_PURE WUNUSED NONNULL((1)) char const *DCALL DeeClsProperty_GetDoc(DeeObject const *__restrict self);
+DFUNDEF ATTR_PURE WUNUSED NONNULL((1)) char const *DCALL
+DeeClsProperty_GetName(DeeObject const *__restrict self);
+DFUNDEF ATTR_PURE WUNUSED NONNULL((1)) char const *DCALL
+DeeClsProperty_GetDoc(DeeObject const *__restrict self);
 
 
 

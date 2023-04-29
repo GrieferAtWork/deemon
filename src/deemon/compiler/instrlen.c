@@ -1203,7 +1203,7 @@ PRIVATE uint8_t const prefix_length_f0[8] = {
 
 
 /* Return a pointer to the instruction following `pc' */
-PUBLIC ATTR_RETNONNULL WUNUSED NONNULL((1)) instruction_t *DCALL
+PUBLIC ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) instruction_t *DCALL
 DeeAsm_NextInstr(instruction_t const *__restrict pc) {
 	uint8_t length;
 again:
@@ -1234,7 +1234,7 @@ again:
 /* Skip over any prefix that may be found before an instruction (e.g. `ASM_LOCAL')
  * The returned pointer points to the first actual instruction byte.
  * When no prefix is present, simply re-return `pc' */
-PUBLIC ATTR_RETNONNULL WUNUSED NONNULL((1)) instruction_t *DCALL
+PUBLIC ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) instruction_t *DCALL
 DeeAsm_SkipPrefix(instruction_t const *__restrict pc) {
 	instruction_t inst;
 again:

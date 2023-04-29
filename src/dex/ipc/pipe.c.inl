@@ -35,14 +35,14 @@
 
 #undef ipc_Pipe_USE_CreatePipe
 #undef ipc_Pipe_USE_pipe_OR_pipe2
-#undef ipc_Pipe_USE_stub
+#undef ipc_Pipe_USE_STUB
 #ifdef DEESYSTEM_FILE_USE_WINDOWS
 #define ipc_Pipe_USE_CreatePipe
 #elif (defined(DEESYSTEM_FILE_USE_UNIX) && \
        (defined(CONFIG_HAVE_pipe2) || defined(CONFIG_HAVE_pipe)))
 #define ipc_Pipe_USE_pipe_OR_pipe2
 #else /* ... */
-#define ipc_Pipe_USE_stub
+#define ipc_Pipe_USE_STUB
 #endif /* !... */
 
 #ifdef ipc_Pipe_USE_CreatePipe
@@ -69,12 +69,12 @@ DECL_BEGIN
 
 PRIVATE WUNUSED DREF DeeTupleObject *DCALL
 pipe_new_impl(size_t pipe_size) {
-#ifdef ipc_Pipe_USE_stub
+#ifdef ipc_Pipe_USE_STUB
 	(void)pipe_size;
 #define WANT_ipc_unimplemented
 	ipc_unimplemented();
 	return NULL;
-#else /* ipc_Pipe_USE_stub */
+#else /* ipc_Pipe_USE_STUB */
 	DREF DeeSystemFileObject *reader_file;
 	DREF DeeSystemFileObject *writer_file;
 	DREF DeeTupleObject *result;
@@ -176,7 +176,7 @@ err_reader_file:
 	DeeObject_FREE(reader_file);
 err:
 	return NULL;
-#endif /* !ipc_Pipe_USE_stub */
+#endif /* !ipc_Pipe_USE_STUB */
 }
 
 

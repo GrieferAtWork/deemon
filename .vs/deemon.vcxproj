@@ -38,6 +38,8 @@
 		<ClInclude Include="..\LICENSE" />
 		<ClInclude Include="..\Makefile" />
 		<ClInclude Include="..\configure" />
+		<ClInclude Include="..\include\deemon\abi\ctypes.h" />
+		<ClInclude Include="..\include\deemon\abi\time.h" />
 		<ClInclude Include="..\include\deemon\alloc.h" />
 		<ClInclude Include="..\include\deemon\api.h" />
 		<ClInclude Include="..\include\deemon\arg.h" />
@@ -61,7 +63,6 @@
 		<ClInclude Include="..\include\deemon\compiler\symbol.h" />
 		<ClInclude Include="..\include\deemon\compiler\tpp.h" />
 		<ClInclude Include="..\include\deemon\compiler\traits.h" />
-		<ClInclude Include="..\include\deemon\ctypes-abi.h" />
 		<ClInclude Include="..\include\deemon\cxx.h" />
 		<ClInclude Include="..\include\deemon\cxx\api.h" />
 		<ClInclude Include="..\include\deemon\cxx\bool.h" />
@@ -203,7 +204,6 @@
 		<ClInclude Include="..\include\deemon\system-sjlj.h" />
 		<ClInclude Include="..\include\deemon\system.h" />
 		<ClInclude Include="..\include\deemon\thread.h" />
-		<ClInclude Include="..\include\deemon\time-abi.h" />
 		<ClInclude Include="..\include\deemon\traceback.h" />
 		<ClInclude Include="..\include\deemon\tuple.h" />
 		<ClInclude Include="..\include\deemon\util\atomic.h" />

@@ -49,7 +49,7 @@ PUBLIC NONNULL((1)) void
 (DCALL LOCAL_DeeFutex_Wake)(void *addr) {
 #ifdef DeeFutex_USE_os_futex
 	(void)LOCAL_os_futex_wake(addr);
-#elif defined(DeeFutex_USE_stub) || defined(DeeFutex_USE_yield)
+#elif defined(DeeFutex_USE_STUB) || defined(DeeFutex_USE_yield)
 	(void)addr;
 	COMPILER_IMPURE();
 #elif defined(DeeFutex_USE_WaitOnAddress_OR_CONDITION_VARIABLE_AND_SRWLOCK_OR_CreateSemaphoreW)

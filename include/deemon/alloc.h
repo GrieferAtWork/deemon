@@ -331,44 +331,49 @@ DeeObject_FreeTracker(struct Dee_object *__restrict self);
 
 #ifndef CONFIG_NO_OBJECT_SLABS
 /* Slab allocator functions.
- * These operate in increments of at least sizeof(void *), with the acutal
- * allocated size being `X * sizeof(void *)' for `X = <X>' in `DeeObject_SlabMalloc<X>'
+ *
+ * These operate in increments of at least sizeof(void *), with the acutal allocated
+ * size being `X * sizeof(void *)' for `X = <X>' in `DeeObject_SlabMalloc<X>'.
+ *
  * These allocator functions can be extremely fast, but have a fixed allocation limit.
  * They are designed to be used to speed up allocation of the many small helper objects
  * which can be found in deemon, most of which have a very short life-time, while others
  * exist for quite a while.
+ *
  * Pointers to these functions are mainly found in the `tp_alloc()' and `tp_free()'
  * fields of types. However, you shouldn't invoke these functions directly but use
  * `DeeObject_FMalloc()' and `DeeObject_FFree()', as well as their helper macros instead.
+ *
  * NOTES:
- *   - You may not pass a NULL pointer to the SlabFree() functions.
- *     Unlike regular free()-like functions, doing so is illegal.
+ * - You may not pass a NULL pointer to the SlabFree() functions.
+ *   Unlike regular free()-like functions, doing so is illegal.
  *
- *   - Due to the type-free-with-base quirk, pointers allocated by
- *     these functions can always be freed by `DeeObject_Free()',
- *     as well as any SlabFree() function with a smaller allocation
- *     size than what was used to allocate the original pointer.
- *     Doing this will not cause a memory leak, but may lead to
- *     inefficient usage of caches, as well as overall performance
- *     degradation.
- *     >> void *p = DeeObject_SlabMalloc8();
- *     >> if (p)
- *     >>     DeeObject_SlabFree4(p); // Allowed, but should not be done intentionally
- *     This again, is required because objects being revived from
- *     their destructors may lead to that object continuing to exist
- *     with another type and free-function, which is then allowed to
- *     assume a smaller object size than what was given.
+ * - Due to the type-free-with-base quirk, pointers allocated by
+ *   these functions can always be freed by `DeeObject_Free()',
+ *   as well as any SlabFree() function with a smaller allocation
+ *   size than what was used to allocate the original pointer.
+ *   Doing this will not cause a memory leak, but may lead to
+ *   inefficient usage of caches, as well as overall performance
+ *   degradation.
+ *   >> void *p = DeeObject_SlabMalloc8();
+ *   >> if (p)
+ *   >>     DeeObject_SlabFree4(p); // Allowed, but should not be done intentionally
+ *   Again: this is required because objects being revived from
+ *   their destructors may lead to that object continuing to exist
+ *   with another type and free-function, which is then allowed to
+ *   assume a smaller object size than what was given.
  *
- *   - When declaring a sub-class of some type who's destructor you have no
- *     control over, such as is the case for user-defined classes, you must
- *     not declare your type to use slab allocators when the base type used
- *     other other, custom protocol, or simply used automatic allocators.
+ * - When declaring a sub-class of some type who's destructor you have no
+ *   control over, such as is the case for user-defined classes, you must
+ *   not declare your type to use slab allocators when the base type used
+ *   some other, custom protocol, or simply used automatic allocators.
  *
- *   - Because sub-classing an instance with a user-class requires
- *     knowledge of the base-type's instance size, using slab allocators
- *     for that type means that allocations may be larger than needed, with
- *     information about that additional overhead's size then becoming lost
- *     to a user-defined sub-class, leading to an unused gap of memory. */
+ * - Because sub-classing an instance with a user-class requires
+ *   knowledge of the base-type's instance size, using slab allocators
+ *   for that type means that allocations may be larger than needed, with
+ *   information about that additional overhead's size then becoming lost
+ *   to a user-defined sub-class, leading to an unused gap of memory.
+ */
 
 
 #define DEE_PRIVATE_SLAB_INDEXOF_CALLBACK(index, size) <= size *__SIZEOF_POINTER__ ? index##u:
@@ -829,7 +834,9 @@ typedef struct {
  * When deemon has been built with `CONFIG_NO_OBJECT_SLAB_STATS',
  * this function will be significantly slower, and all max-fields
  * are set to match the cur-fields. */
-DFUNDEF size_t DCALL DeeSlab_Stat(DeeSlabStat *info, size_t bufsize);
+DFUNDEF NONNULL((1)) size_t DCALL
+DeeSlab_Stat(DeeSlabStat *info, size_t bufsize);
+
 /* Reset the slab max-statistics to the cur-values. */
 DFUNDEF void DCALL DeeSlab_ResetStat(void);
 
@@ -1260,12 +1267,14 @@ LOCAL WUNUSED void *(DCALL DeeDbg_ATryCallocHeap)(size_t s, char const *file, in
 #define Dee_ATryMalloc(s)   ((s) > DEE_AMALLOC_MAX - DEE_AMALLOC_ALIGN ? Dee_ATryMallocHeap(s) : Dee_AMallocStack(s))
 #ifdef NDEBUG
 #define Dee_AMallocStack_init(p, s) Dee_AMallocStack_init_(p)
-LOCAL WUNUSED void *(DCALL Dee_AMallocStack_init_)(void *p) {
+LOCAL WUNUSED NONNULL((1)) void *
+(DCALL Dee_AMallocStack_init_)(void *p) {
 	*(__BYTE_TYPE__ *)p = DEE_AMALLOC_KEY_ALLOCA;
 	return (__BYTE_TYPE__ *)p + DEE_AMALLOC_ALIGN;
 }
 #else /* NDEBUG */
-LOCAL WUNUSED void *(DCALL Dee_AMallocStack_init)(void *p, size_t s) {
+LOCAL WUNUSED NONNULL((1)) void *
+(DCALL Dee_AMallocStack_init)(void *p, size_t s) {
 	*(__BYTE_TYPE__ *)p = DEE_AMALLOC_KEY_ALLOCA;
 	return DEE_AMALLOC_SKEW_ALLOCA((__BYTE_TYPE__ *)p + DEE_AMALLOC_ALIGN, s);
 }
@@ -1273,7 +1282,8 @@ LOCAL WUNUSED void *(DCALL Dee_AMallocStack_init)(void *p, size_t s) {
 #define Dee_ACallocStack(s) Dee_ACallocStack_init(Dee_Alloca((s) + DEE_AMALLOC_ALIGN), (s))
 #define Dee_ACalloc(s)      ((s) > DEE_AMALLOC_MAX - DEE_AMALLOC_ALIGN ? Dee_ACallocHeap(s) : Dee_ACallocStack(s))
 #define Dee_ATryCalloc(s)   ((s) > DEE_AMALLOC_MAX - DEE_AMALLOC_ALIGN ? Dee_ATryCallocHeap(s) : Dee_ACallocStack(s))
-LOCAL WUNUSED void *(DCALL Dee_ACallocStack_init)(void *p, size_t s) {
+LOCAL WUNUSED NONNULL((1)) void *
+(DCALL Dee_ACallocStack_init)(void *p, size_t s) {
 	void *result;
 	*(__BYTE_TYPE__ *)p = DEE_AMALLOC_KEY_ALLOCA;
 	result = (__BYTE_TYPE__ *)p + DEE_AMALLOC_ALIGN;
@@ -1283,7 +1293,7 @@ LOCAL WUNUSED void *(DCALL Dee_ACallocStack_init)(void *p, size_t s) {
 
 #define Dee_AFree(p)  Dee_AFree(p)
 #define Dee_XAFree(p) Dee_XAFree(p) 
-LOCAL void (DCALL Dee_AFree)(void *p) {
+LOCAL NONNULL((1)) void (DCALL Dee_AFree)(void *p) {
 	if (DEE_AMALLOC_MUSTFREE(p))
 		Dee_Free((void *)((__BYTE_TYPE__ *)p - DEE_AMALLOC_ALIGN));
 }

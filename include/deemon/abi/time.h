@@ -17,16 +17,18 @@
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
  */
-#ifndef GUARD_DEEMON_TIME_ABI_H
-#define GUARD_DEEMON_TIME_ABI_H 1
+#ifndef GUARD_DEEMON_ABI_TIME_H
+#define GUARD_DEEMON_ABI_TIME_H 1
 
-#include "api.h"
+#include "../api.h"
+/**/
+
+#include "../format.h" /* DEE_PCKuPTR */
+#include "../module.h"
+#include "../object.h"
+/**/
 
 #include <hybrid/__unaligned.h>
-
-#include "format.h" /* DEE_PCKuPTR */
-#include "module.h"
-#include "object.h"
 
 /* Helpers for interfacing with Time-like objects, as defined by the `time' module */
 
@@ -114,4 +116,4 @@ DECL_BEGIN
 
 DECL_END
 
-#endif /* !GUARD_DEEMON_TIME_ABI_H */
+#endif /* !GUARD_DEEMON_ABI_TIME_H */

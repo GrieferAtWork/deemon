@@ -44,8 +44,8 @@
  * 
  * >> class MyClass: Base {                >> class MyClass: Base {
  * >>     this = del;                      >>     this(args...) {
- * >> }                                    >>         import Error from deemon;
- *                                         >>         throw Error.RuntimeError.NotImplemented("...");
+ * >> }                                    >>         import NotImplemented from errors;
+ *                                         >>         throw NotImplemented("...");
  *                                         >>     }
  * 
  * >> class MyClass: Base {                >> class MyClass: Base {
@@ -69,27 +69,27 @@
  *                                         >>         if (bar is bound)
  *                                         >>             this.bar = bar;
  *                                         >>     }
- *                                         >>     // NOTE: `operator repr' is only implemented if not already defined by the user
+ *                                         >>     // NOTE: `operator repr' is only implemented if not otherwise defined by the user
  *                                         >>     operator repr(): string {
  *                                         >>         File.Writer fp;
  *                                         >>         fp << "MyClass(";
  *                                         >>         local is_first = true;
- *                                         >>         if (this.foo is bound) {
+ *                                         >>         if (foo is bound) {
  *                                         >>             if (!is_first) fp << ", ";
  *                                         >>             is_first = false;
- *                                         >>             fp << "foo: " << repr this.foo;
+ *                                         >>             fp << "foo: " << repr foo;
  *                                         >>         }
- *                                         >>         if (this.bar is bound) {
+ *                                         >>         if (bar is bound) {
  *                                         >>             if (!is_first) fp << ", ";
  *                                         >>             is_first = false;
- *                                         >>             fp << "bar: " << repr this.bar;
+ *                                         >>             fp << "bar: " << repr bar;
  *                                         >>         }
  *                                         >>         fp << ")";
  *                                         >>         return fp.string;
  *                                         >>     }
  *                                         >>     ~this() {
- *                                         >>         del this.foo;
- *                                         >>         del this.bar;
+ *                                         >>         del foo;
+ *                                         >>         del bar;
  *                                         >>     }
  *                                         >> }
  *
@@ -136,8 +136,8 @@
  *  - assign, moveassign                   >>         if ((other as MyClass).foobar is bound) foobar = (other as MyClass).foobar;
  *  - hash, eq, ne, lo, le, gr, ge         >>     }
  * Also note that when providing a `copy'  >>     operator deepcopy(other) {
- * operator, it will also be invoke when   >>         // super.deepcopy(other);
- * `deepcopy' is called, after with each   >>         if (other !is MyClass)
+ * operator, it will also be invoked when  >>         // super.deepcopy(other);
+ * `deepcopy' is called, after which each  >>         if (other !is MyClass)
  * of the instance's bound members will be >>             throw Error.TypeError("...");
  * replace with a deep copy of itself.     >>         if ((other as MyClass).foo    is bound) foo    = deepcopy((other as MyClass).foo);
  *                                         >>         if ((other as MyClass).bar    is bound) bar    = deepcopy((other as MyClass).bar);
@@ -202,8 +202,8 @@
  *       much more efficiently that your destructor ever could.
  *       Also note that it does this even when you define a destructor,
  *       so no custom destructor should ever end by unbinding instance
- *       members (as a matter of fact: There should add an optimization
- *       for this...)
+ *       members (as a matter of fact: There should be an optimization
+ *       that removes meaningless unbind statements from destructors)
  */
 
 

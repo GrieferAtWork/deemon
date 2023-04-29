@@ -37,14 +37,14 @@
 
 #ifndef PATH_MAX
 #ifdef PATHMAX
-#   define PATH_MAX PATHMAX
+#define PATH_MAX PATHMAX
 #elif defined(MAX_PATH)
-#   define PATH_MAX MAX_PATH
+#define PATH_MAX MAX_PATH
 #elif defined(MAXPATH)
-#   define PATH_MAX MAXPATH
-#else
-#   define PATH_MAX 260
-#endif
+#define PATH_MAX MAXPATH
+#else /* ... */
+#define PATH_MAX 260
+#endif /* !... */
 #endif /* !PATH_MAX */
 
 DECL_BEGIN
@@ -129,18 +129,18 @@ PUBLIC ATTR_COLD NONNULL((3)) int
 
 /* Figure out how to implement `DeeUnixSystem_ReadLink()' */
 #undef DeeUnixSystem_ReadLink_USE_WINDOWS
-#undef DEEUNIXSYSTEM_READLINK_USE_FREADLINKAT
-#undef DeeUnixSystem_ReadLink_USE_READLINK
+#undef DeeUnixSystem_ReadLink_USE_freadlinkat
+#undef DeeUnixSystem_ReadLink_USE_readlink
 #undef DeeUnixSystem_ReadLink_USE_STUB
 #if defined(CONFIG_HOST_WINDOWS)
-#define DeeUnixSystem_ReadLink_USE_WINDOWS 1
+#define DeeUnixSystem_ReadLink_USE_WINDOWS
 #elif defined(CONFIG_HAVE_freadlinkat) && defined(AT_READLINK_REQSIZE) && defined(AT_FDCWD) && 0
-#define DEEUNIXSYSTEM_READLINK_USE_FREADLINKAT 1 /* TODO */
+#define DeeUnixSystem_ReadLink_USE_freadlinkat /* TODO */
 #elif defined(CONFIG_HAVE_readlink) && defined(CONFIG_HAVE_lstat)
-#define DeeUnixSystem_ReadLink_USE_READLINK 1
-#else
-#define DeeUnixSystem_ReadLink_USE_STUB 1
-#endif
+#define DeeUnixSystem_ReadLink_USE_readlink
+#else /* ... */
+#define DeeUnixSystem_ReadLink_USE_STUB
+#endif /* !... */
 
 
 /* Read the contexts of the given link.
@@ -148,7 +148,7 @@ PUBLIC ATTR_COLD NONNULL((3)) int
  * @return: 0 / * :        Success.
  * @return: -1 / NULL:     Error.
  * @return: 1 / ITER_DONE: The specified file isn't a symbolic link. */
-PUBLIC WUNUSED int DCALL
+PUBLIC WUNUSED NONNULL((1, 2)) int DCALL
 DeeUnixSystem_PrintLink(struct unicode_printer *__restrict printer,
                         /*String*/ DeeObject *__restrict filename) {
 #ifdef DeeUnixSystem_ReadLink_USE_WINDOWS
@@ -158,8 +158,8 @@ DeeUnixSystem_PrintLink(struct unicode_printer *__restrict printer,
 	return 1;
 #endif /* DeeUnixSystem_ReadLink_USE_WINDOWS */
 
-#if (defined(DEEUNIXSYSTEM_READLINK_USE_FREADLINKAT) || \
-     defined(DeeUnixSystem_ReadLink_USE_READLINK))
+#if (defined(DeeUnixSystem_ReadLink_USE_freadlinkat) || \
+     defined(DeeUnixSystem_ReadLink_USE_readlink))
 	int result;
 	char const *utf8_filename;
 	utf8_filename = DeeString_AsUtf8(filename);
@@ -169,7 +169,7 @@ DeeUnixSystem_PrintLink(struct unicode_printer *__restrict printer,
 	return result;
 err:
 	return -1;
-#endif /* DEEUNIXSYSTEM_READLINK_USE_FREADLINKAT || DeeUnixSystem_ReadLink_USE_READLINK */
+#endif /* DeeUnixSystem_ReadLink_USE_freadlinkat || DeeUnixSystem_ReadLink_USE_readlink */
 
 #ifdef DeeUnixSystem_ReadLink_USE_STUB
 	(void)printer;
@@ -178,7 +178,7 @@ err:
 #endif /* DeeUnixSystem_ReadLink_USE_STUB */
 }
 
-PUBLIC WUNUSED int DCALL
+PUBLIC WUNUSED NONNULL((1, 2)) int DCALL
 DeeUnixSystem_PrintLinkString(struct unicode_printer *__restrict printer,
                               /*utf-8*/ char const *filename) {
 #ifdef DeeUnixSystem_ReadLink_USE_WINDOWS
@@ -188,14 +188,14 @@ DeeUnixSystem_PrintLinkString(struct unicode_printer *__restrict printer,
 	return 1;
 #endif /* DeeUnixSystem_ReadLink_USE_WINDOWS */
 
-#ifdef DEEUNIXSYSTEM_READLINK_USE_FREADLINKAT
+#ifdef DeeUnixSystem_ReadLink_USE_freadlinkat
 	/* TODO */
 	(void)printer;
 	(void)filename;
 	return 1;
-#endif /* DEEUNIXSYSTEM_READLINK_USE_FREADLINKAT */
+#endif /* DeeUnixSystem_ReadLink_USE_freadlinkat */
 
-#ifdef DeeUnixSystem_ReadLink_USE_READLINK
+#ifdef DeeUnixSystem_ReadLink_USE_readlink
 	char *buffer, *new_buffer;
 	int error;
 	size_t bufsize, new_size;
@@ -248,7 +248,7 @@ err_buf:
 	unicode_printer_free_utf8(printer, buffer);
 err:
 	return -1;
-#endif /* DeeUnixSystem_ReadLink_USE_READLINK */
+#endif /* DeeUnixSystem_ReadLink_USE_readlink */
 
 #ifdef DeeUnixSystem_ReadLink_USE_STUB
 	(void)printer;
@@ -257,7 +257,7 @@ err:
 #endif /* DeeUnixSystem_ReadLink_USE_STUB */
 }
 
-PUBLIC WUNUSED DREF DeeObject *DCALL
+PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeUnixSystem_ReadLink(/*String*/ DeeObject *__restrict filename) {
 	int error;
 	struct unicode_printer printer = UNICODE_PRINTER_INIT;
@@ -270,7 +270,7 @@ DeeUnixSystem_ReadLink(/*String*/ DeeObject *__restrict filename) {
 	return NULL;
 }
 
-PUBLIC WUNUSED DREF DeeObject *DCALL
+PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeUnixSystem_ReadLinkString(/*utf-8*/ char const *filename) {
 	int error;
 	struct unicode_printer printer = UNICODE_PRINTER_INIT;
@@ -287,22 +287,22 @@ DeeUnixSystem_ReadLinkString(/*utf-8*/ char const *filename) {
 
 
 /* Figure out how to implement `DeeSystem_GetFilenameOfFD()' */
-#undef DeeSystem_PrintFilenameOfFD_USE_NT_HANDLE
-#undef DeeSystem_PrintFilenameOfFD_USE_FREALPATH
-#undef DeeSystem_PrintFilenameOfFD_USE_PROCFS
+#undef DeeSystem_PrintFilenameOfFD_USE_get_osfhandle__AND__PrintFilenameOfHandle
+#undef DeeSystem_PrintFilenameOfFD_USE_frealpath
+#undef DeeSystem_PrintFilenameOfFD_USE_readlink_procfs
 #undef DeeSystem_PrintFilenameOfFD_USE_STUB
 #if defined(CONFIG_HOST_WINDOWS) && defined(CONFIG_HAVE_get_osfhandle)
-#define DeeSystem_PrintFilenameOfFD_USE_NT_HANDLE 1
+#define DeeSystem_PrintFilenameOfFD_USE_get_osfhandle__AND__PrintFilenameOfHandle
 #elif defined(CONFIG_HAVE_frealpath)
-#define DeeSystem_PrintFilenameOfFD_USE_FREALPATH 1
+#define DeeSystem_PrintFilenameOfFD_USE_frealpath
 #elif defined(CONFIG_HAVE_frealpath4)
 #define frealpath(fd, resolved, buflen) frealpath4(fd, resolved, buflen, 0)
-#define DeeSystem_PrintFilenameOfFD_USE_FREALPATH 1
+#define DeeSystem_PrintFilenameOfFD_USE_frealpath
 #elif !defined(DeeUnixSystem_ReadLink_USE_STUB)
-#define DeeSystem_PrintFilenameOfFD_USE_PROCFS 1
-#else
-#define DeeSystem_PrintFilenameOfFD_USE_STUB 1
-#endif
+#define DeeSystem_PrintFilenameOfFD_USE_readlink_procfs
+#else /* ... */
+#define DeeSystem_PrintFilenameOfFD_USE_STUB
+#endif /* !... */
 
 /* Determine the filename from a file descriptor, as returned by `open()'
  * If the host doesn't support FD-based file descriptors, throw an error. */
@@ -318,26 +318,26 @@ err:
 }
 
 
-#ifdef DeeSystem_PrintFilenameOfFD_USE_NT_HANDLE
+#ifdef DeeSystem_PrintFilenameOfFD_USE_get_osfhandle__AND__PrintFilenameOfHandle
 PRIVATE ATTR_COLD int DCALL
 err_PrintFilenameOfFD_BADF(int fd) {
 	return DeeUnixSystem_ThrowErrorf(&DeeError_SystemError, EBADF,
 	                                 "Bad file descriptor %d", fd);
 }
-#endif /* DeeSystem_PrintFilenameOfFD_USE_NT_HANDLE */
+#endif /* DeeSystem_PrintFilenameOfFD_USE_get_osfhandle__AND__PrintFilenameOfHandle */
 
-#ifdef DeeSystem_PrintFilenameOfFD_USE_FREALPATH
+#ifdef DeeSystem_PrintFilenameOfFD_USE_frealpath
 #ifndef CONFIG_HAVE_strnlen
 #define strnlen dee_strnlen
 DeeSystem_DEFINE_strnlen(strnlen)
 #endif /* !CONFIG_HAVE_strnlen */
-#endif /* DeeSystem_PrintFilenameOfFD_USE_FREALPATH */
+#endif /* DeeSystem_PrintFilenameOfFD_USE_frealpath */
 
 /* @return: 0:  Success.
  * @return: -1: Error. */
-PUBLIC WUNUSED int DCALL
+PUBLIC WUNUSED NONNULL((1)) int DCALL
 DeeSystem_PrintFilenameOfFD(struct unicode_printer *__restrict printer, int fd) {
-#ifdef DeeSystem_PrintFilenameOfFD_USE_NT_HANDLE
+#ifdef DeeSystem_PrintFilenameOfFD_USE_get_osfhandle__AND__PrintFilenameOfHandle
 	int result;
 	HANDLE h;
 	h = (HANDLE)get_osfhandle(fd);
@@ -348,9 +348,9 @@ DeeSystem_PrintFilenameOfFD(struct unicode_printer *__restrict printer, int fd) 
 		result = DeeNTSystem_PrintFilenameOfHandle(printer, (void *)h);
 	}
 	return result;
-#endif /* DeeSystem_PrintFilenameOfFD_USE_NT_HANDLE */
+#endif /* DeeSystem_PrintFilenameOfFD_USE_get_osfhandle__AND__PrintFilenameOfHandle */
 
-#ifdef DeeSystem_PrintFilenameOfFD_USE_FREALPATH
+#ifdef DeeSystem_PrintFilenameOfFD_USE_frealpath
 	char *buf;
 	size_t buflen = PATH_MAX;
 	buf = unicode_printer_alloc_utf8(printer, PATH_MAX);
@@ -405,7 +405,7 @@ increase_buffer_size:
 #ifdef ENAMETOOLONG
 #ifndef DeeUnixSystem_ReadLink_USE_STUB
 		if (error != ENAMETOOLONG)
-#define DeeSystem_PrintFilenameOfFD_USE_PROCFS
+#define DeeSystem_PrintFilenameOfFD_USE_readlink_procfs
 #endif /* !DeeUnixSystem_ReadLink_USE_STUB */
 #endif /* ENAMETOOLONG */
 		{
@@ -414,15 +414,15 @@ increase_buffer_size:
 			                                 fd);
 		}
 	}
-#endif /* DeeSystem_PrintFilenameOfFD_USE_FREALPATH */
+#endif /* DeeSystem_PrintFilenameOfFD_USE_frealpath */
 
-#ifdef DeeSystem_PrintFilenameOfFD_USE_PROCFS
+#ifdef DeeSystem_PrintFilenameOfFD_USE_readlink_procfs
 	{
 		char buf[64];
 		Dee_sprintf(buf, "/proc/self/fd/%d", fd);
 		return DeeUnixSystem_PrintLinkString(printer, buf);
 	}
-#endif /* DeeSystem_PrintFilenameOfFD_USE_PROCFS */
+#endif /* DeeSystem_PrintFilenameOfFD_USE_readlink_procfs */
 
 #ifdef DeeSystem_PrintFilenameOfFD_USE_STUB
 	(void)printer;
@@ -431,11 +431,6 @@ increase_buffer_size:
 	                       "Unsupported function: GetFilenameOfFD");
 #endif /* DeeSystem_PrintFilenameOfFD_USE_STUB */
 }
-
-
-
-
-
 
 DECL_END
 

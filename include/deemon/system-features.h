@@ -921,6 +921,9 @@ func("dlopen", "defined(CONFIG_HAVE_DLFCN_H)", test: 'extern void *dl; dl = dlop
 func("dlclose", "defined(CONFIG_HAVE_DLFCN_H)", test: 'extern void *dl; return dlclose(dl);');
 func("dlsym", "defined(CONFIG_HAVE_DLFCN_H)", test: 'extern void *dl; void *s = dlsym(dl, "foo"); return s != NULL;');
 func("dlmodulename", "defined(CONFIG_HAVE_DLFCN_H) && defined(__USE_KOS)", test: 'extern void *dl; char const *n = dlmodulename(dl); return n != NULL;');
+func("dlgethandle", "defined(CONFIG_HAVE_DLFCN_H) && defined(__USE_KOS)", test: 'extern int x; void *dl = dlgethandle(&x, DLGETHANDLE_FNORMAL); return dl != NULL;');
+func("dl_iterate_phdr", "defined(CONFIG_HAVE_LINK_H) && defined(__ELF__)", test: 'extern int my_dl_callback(struct dl_phdr_info *, size_t, void *); extern struct dl_phdr_info info; extern struct link_map lm; return dl_iterate_phdr(&my_dl_callback, NULL) && info.dlpi_phnum && info.dlpi_addr && info.dlpi_phdr[0].p_vaddr && info.dlpi_phdr[0].p_memsz && lm.l_addr;');
+feature("dlinfo__RTLD_DI_LINKMAP", "defined(CONFIG_HAVE_DLFCN_H) && defined(RTLD_DI_LINKMAP) && (defined(__USE_GNU) || defined(__USE_NETBSD) || defined(__USE_SOLARIS))", test: 'extern void *handle; void *lm; return dlinfo(handle, RTLD_DI_LINKMAP, &lm)');
 constant("RTLD_GLOBAL");
 constant("RTLD_LOCAL");
 constant("RTLD_LAZY");
@@ -7063,6 +7066,30 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #define CONFIG_HAVE_dlmodulename
 #endif
 
+#ifdef CONFIG_NO_dlgethandle
+#undef CONFIG_HAVE_dlgethandle
+#elif !defined(CONFIG_HAVE_dlgethandle) && \
+      (defined(dlgethandle) || defined(__dlgethandle_defined) || (defined(CONFIG_HAVE_DLFCN_H) && \
+       defined(__USE_KOS)))
+#define CONFIG_HAVE_dlgethandle
+#endif
+
+#ifdef CONFIG_NO_dl_iterate_phdr
+#undef CONFIG_HAVE_dl_iterate_phdr
+#elif !defined(CONFIG_HAVE_dl_iterate_phdr) && \
+      (defined(dl_iterate_phdr) || defined(__dl_iterate_phdr_defined) || (defined(CONFIG_HAVE_LINK_H) && \
+       defined(__ELF__)))
+#define CONFIG_HAVE_dl_iterate_phdr
+#endif
+
+#ifdef CONFIG_NO_dlinfo__RTLD_DI_LINKMAP
+#undef CONFIG_HAVE_dlinfo__RTLD_DI_LINKMAP
+#elif !defined(CONFIG_HAVE_dlinfo__RTLD_DI_LINKMAP) && \
+      (defined(CONFIG_HAVE_DLFCN_H) && defined(RTLD_DI_LINKMAP) && (defined(__USE_GNU) || \
+       defined(__USE_NETBSD) || defined(__USE_SOLARIS)))
+#define CONFIG_HAVE_dlinfo__RTLD_DI_LINKMAP
+#endif
+
 #ifdef CONFIG_NO_RTLD_GLOBAL
 #undef CONFIG_HAVE_RTLD_GLOBAL
 #elif !defined(CONFIG_HAVE_RTLD_GLOBAL) && \
@@ -13176,25 +13203,25 @@ for (local x: [1:n+1]) {
 
 
 #ifdef GUARD_DEEMON_FILE_H
-#if (defined(DeeSysFD_IS_INT) && !defined(CONFIG_HAVE_close)) || \
-    (defined(DeeSysFD_IS_FILE) && !defined(CONFIG_HAVE_fclose))
-#undef DeeSysFD_Close
-#define DeeSysFD_Close(x) (void)0
+#if ((defined(Dee_fd_t_IS_int) && !defined(CONFIG_HAVE_close)) || \
+     (defined(Dee_fd_t_IS_FILE) && !defined(CONFIG_HAVE_fclose)))
+#undef Dee_fd_close
+#define Dee_fd_close(x) (void)0
 #endif /* !CONFIG_HAVE_close */
 #endif /* GUARD_DEEMON_FILE_H */
 
 
 #ifdef CONFIG_BUILDING_DEEMON
 /* Figure out how to implement the shared library system API */
-#undef DeeSystem_DlOpen_USE_LOADLIBRARY
-#undef DeeSystem_DlOpen_USE_DLFCN
+#undef DeeSystem_DlOpen_USE_LoadLibrary
+#undef DeeSystem_DlOpen_USE_dlopen
 #undef DeeSystem_DlOpen_USE_STUB
 #if defined(CONFIG_HAVE_dlopen) && defined(CONFIG_HAVE_dlsym)
-#define DeeSystem_DlOpen_USE_DLFCN 1
+#define DeeSystem_DlOpen_USE_dlopen
 #elif defined(CONFIG_HOST_WINDOWS)
-#define DeeSystem_DlOpen_USE_LOADLIBRARY 1
+#define DeeSystem_DlOpen_USE_LoadLibrary
 #else /* ... */
-#define DeeSystem_DlOpen_USE_STUB 1
+#define DeeSystem_DlOpen_USE_STUB
 #endif /* !... */
 #endif /* CONFIG_BUILDING_DEEMON */
 

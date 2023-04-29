@@ -266,9 +266,9 @@ LOCAL int DCALL os_futex_wait64_timed(void *uaddr, uint64_t expected,
 #undef DeeFutex_USE_cnd_t_AND_mtx_t
 #undef DeeFutex_USE_sem_t
 #undef DeeFutex_USE_yield
-#undef DeeFutex_USE_stub
+#undef DeeFutex_USE_STUB
 #ifdef CONFIG_NO_THREADS
-#define DeeFutex_USE_stub
+#define DeeFutex_USE_STUB
 #elif (defined(os_futex_wakeone) && defined(os_futex_wakeall) &&     \
        defined(os_futex_wait32) && defined(os_futex_wait32_timed) && \
        (__SIZEOF_POINTER__ < 8 || (defined(os_futex_wait64) && defined(os_futex_wait64_timed))))

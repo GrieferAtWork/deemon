@@ -24,6 +24,7 @@
 #include "libfs.h"
 /**/
 
+#include <deemon/abi/time.h>
 #include <deemon/alloc.h>
 #include <deemon/api.h>
 #include <deemon/arg.h>
@@ -36,7 +37,6 @@
 #include <deemon/string.h>
 #include <deemon/system-features.h> /* strend() */
 #include <deemon/system.h>
-#include <deemon/time-abi.h>
 #include <deemon/tuple.h>
 #include <deemon/util/atomic.h>
 #include <deemon/util/lock.h>

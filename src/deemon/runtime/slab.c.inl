@@ -313,7 +313,7 @@ PRIVATE size_t const default_slab_sizes[Dee_SLAB_COUNT] = {
  * When deemon has been built with `CONFIG_NO_OBJECT_SLAB_STATS',
  * this function will be significantly slower, and all max-fields
  * are set to match the cur-fields. */
-PUBLIC size_t DCALL
+PUBLIC NONNULL((1)) size_t DCALL
 DeeSlab_Stat(DeeSlabStat *info, size_t bufsize) {
 	if (bufsize >= sizeof(DeeSlabStat)) {
 		info->st_slabcount = Dee_SLAB_COUNT;

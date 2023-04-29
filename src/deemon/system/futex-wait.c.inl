@@ -122,7 +122,7 @@ PUBLIC WUNUSED NONNULL((1)) int
 #endif /* !LOCAL_return_type_is_void */
 
 #define LOCAL_should_wait() (*(LOCAL_expected_t const *)addr == expected)
-#ifdef DeeFutex_USE_stub
+#ifdef DeeFutex_USE_STUB
 
 	/************************************************************************/
 	/* STUB IMPLEMENTATION                                                  */

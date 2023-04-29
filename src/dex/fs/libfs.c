@@ -24,6 +24,7 @@
 #include "libfs.h"
 /**/
 
+#include <deemon/abi/time.h>
 #include <deemon/alloc.h>
 #include <deemon/api.h>
 #include <deemon/arg.h>
@@ -38,14 +39,13 @@
 #include <deemon/objmethod.h>
 #include <deemon/seq.h>
 #include <deemon/system.h>
-#include <deemon/time-abi.h>
 
 DECL_BEGIN
 
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 open_file_for_copy(DeeObject *__restrict name, int oflags, int mode) {
-	DeeSysFD fd;
+	Dee_fd_t fd;
 	/* Default case: The name is a string, meaning we need to open a file. */
 	if (DeeString_Check(name))
 		return DeeFile_Open(name, oflags, mode);

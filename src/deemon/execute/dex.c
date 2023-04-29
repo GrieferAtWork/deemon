@@ -32,7 +32,7 @@
 #include <deemon/file.h>
 #include <deemon/gc.h>
 #include <deemon/string.h>
-#include <deemon/system-features.h> /* DeeSystem_DlOpen_USE_LOADLIBRARY, memcpyc(), ... */
+#include <deemon/system-features.h> /* DeeSystem_DlOpen_USE_LoadLibrary, memcpyc(), ... */
 #include <deemon/system.h>          /* DeeSystem_Dl* */
 #include <deemon/tuple.h>
 #include <deemon/util/lock.h>
@@ -47,9 +47,9 @@
 
 #include "../runtime/runtime_error.h"
 
-#ifdef DeeSystem_DlOpen_USE_LOADLIBRARY
+#ifdef DeeSystem_DlOpen_USE_LoadLibrary
 #include <Windows.h>
-#endif /* DeeSystem_DlOpen_USE_LOADLIBRARY */
+#endif /* DeeSystem_DlOpen_USE_LoadLibrary */
 
 #ifdef CONFIG_HAVE_LINK_H
 #include <link.h>
@@ -577,42 +577,54 @@ PUBLIC DeeTypeObject DeeDex_Type = {
 DECL_END
 
 
-#ifdef DeeSystem_DlOpen_USE_LOADLIBRARY /* Windows */
-#define DeeModule_FromStaticPointer_USE_GETMODULEHANDLEEX 1
-#elif defined(DeeSystem_DlOpen_USE_DLFCN) && defined(CONFIG_HAVE_LINK_H) /* linux + ELF */
-#define DeeModule_FromStaticPointer_USE_DL_ITERATE_PHDR 1
-#elif defined(DeeSystem_DlOpen_USE_DLFCN) && defined(CONFIG_HAVE_KOS_DL_H) /* KOS Mk3 + ELF */
-#define DeeModule_FromStaticPointer_USE_XDLMODULE_INFO 1
-#elif defined(DeeSystem_DlOpen_USE_DLFCN) && defined(__KOS_VERSION__) && __KOS_VERSION__ >= 400
-#define DeeModule_FromStaticPointer_USE_DLGETHANDLE 1
+#ifdef DeeSystem_DlOpen_USE_LoadLibrary /* Windows */
+#define DeeModule_FromStaticPointer_USE_GetModuleHandleExW
+#elif defined(DeeSystem_DlOpen_USE_dlopen) && defined(CONFIG_HAVE_dlgethandle)
+#define DeeModule_FromStaticPointer_USE_dlgethandle /* KOSmk4 */
+#elif defined(DeeSystem_DlOpen_USE_dlopen) && defined(CONFIG_HAVE_dl_iterate_phdr)
+#define DeeModule_FromStaticPointer_USE_dl_iterate_phdr /* Linux */
+#elif (defined(DeeSystem_DlOpen_USE_dlopen) && \
+       defined(__KOS_VERSION__) && (__KOS_VERSION__ >= 300 && __KOS_VERSION__ < 400))
+#define DeeModule_FromStaticPointer_USE_xdlmodule_info /* KOSmk3 */
 #else /* XXX: Further support? */
-#define DeeModule_FromStaticPointer_USE_STUB 1
+#define DeeModule_FromStaticPointer_USE_STUB
 #endif
 
 
 DECL_BEGIN
 
-#ifdef DeeSystem_DlOpen_USE_LOADLIBRARY
+#ifdef DeeSystem_DlOpen_USE_LoadLibrary
 #ifdef _MSC_VER
 extern /*IMAGE_DOS_HEADER*/ int __ImageBase;
 #define HINST_THISCOMPONENT ((HINSTANCE)&__ImageBase)
 #else /* _MSC_VER */
 /* XXX: This only works when deemon is the primary
  *      binary, but not if it was loaded as a DLL! */
-#define HINST_THISCOMPONENT   GetModuleHandleW(NULL)
+#define HINST_THISCOMPONENT GetModuleHandleW(NULL)
 #endif /* !_MSC_VER */
-#endif /* DeeSystem_DlOpen_USE_LOADLIBRARY */
+#endif /* DeeSystem_DlOpen_USE_LoadLibrary */
 
 
 
-#ifdef DeeModule_FromStaticPointer_USE_DL_ITERATE_PHDR
+#ifdef DeeModule_FromStaticPointer_USE_dl_iterate_phdr
+
+/* Using `RTLD_DI_LINKMAP' isn't necessary on KOS */
+#ifdef __KOS__
+#undef CONFIG_HAVE_dlinfo__RTLD_DI_LINKMAP
+#endif /* __KOS__ */
+
 PRIVATE WUNUSED DREF DeeObject *DCALL
 DeeModule_FromElfLoadAddr(ElfW(Addr) addr) {
 	DeeDexObject *iter;
 	dex_lock_read();
 	for (iter = dex_chain; iter; iter = iter->d_next) {
 		struct link_map *lm;
-		lm = (struct link_map *)iter->d_handle;
+#ifdef CONFIG_HAVE_dlinfo__RTLD_DI_LINKMAP
+		if (dlinfo(iter->d_handle, RTLD_DI_LINKMAP, &lm) != 0)
+#endif /* CONFIG_HAVE_dlinfo__RTLD_DI_LINKMAP */
+		{
+			lm = (struct link_map *)iter->d_handle;
+		}
 		if (lm->l_addr != addr)
 			continue;
 		Dee_Incref((DeeModuleObject *)iter);
@@ -645,6 +657,7 @@ iter_modules_callback(struct dl_phdr_info *info,
 			continue;
 		if ((uintptr_t)data->search_ptr >= end)
 			continue;
+
 		/* Check for the special case of this being the deemon core module. */
 		if ((uintptr_t)&DeeObject_Type >= start &&
 		    (uintptr_t)&DeeObject_Type < end) {
@@ -659,7 +672,7 @@ iter_modules_callback(struct dl_phdr_info *info,
 	}
 	return 0;
 }
-#endif /* DeeModule_FromStaticPointer_USE_DL_ITERATE_PHDR */
+#endif /* DeeModule_FromStaticPointer_USE_dl_iterate_phdr */
 
 
 
@@ -679,7 +692,7 @@ iter_modules_callback(struct dl_phdr_info *info,
 PUBLIC WUNUSED DREF DeeObject *DCALL
 DeeModule_FromStaticPointer(void const *ptr) {
 
-#ifdef DeeSystem_DlOpen_USE_LOADLIBRARY
+#ifdef DeeModule_FromStaticPointer_USE_GetModuleHandleExW
 	HMODULE hTypeModule;
 	DBG_ALIGNMENT_DISABLE();
 	if (GetModuleHandleExW(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS |
@@ -691,33 +704,84 @@ DeeModule_FromStaticPointer(void const *ptr) {
 		for (iter = dex_chain; iter; iter = iter->d_next) {
 			if ((HMODULE)iter->d_handle != hTypeModule)
 				continue;
-			Dee_Incref((DeeModuleObject *)iter);
+			Dee_Incref(&iter->d_module);
 			dex_lock_endread();
-			return (DREF DeeObject *)iter;
+			return (DREF DeeObject *)&iter->d_module;
 		}
 		dex_lock_endread();
 		DBG_ALIGNMENT_DISABLE();
 		if (hTypeModule == HINST_THISCOMPONENT) {
+			DREF DeeModuleObject *result;
 			/* Type is declared as part of the builtin `deemon' module. */
 			DBG_ALIGNMENT_ENABLE();
-			Dee_Incref(&deemon_module);
-			return (DREF DeeObject *)DeeModule_GetDeemon();
+			result = DeeModule_GetDeemon();
+			Dee_Incref(result);
+			return (DREF DeeObject *)result;
 		}
 		DBG_ALIGNMENT_ENABLE();
 	}
 	return NULL;
-#endif /* DeeSystem_DlOpen_USE_LOADLIBRARY */
+#endif /* DeeModule_FromStaticPointer_USE_GetModuleHandleExW */
 
-#ifdef DeeModule_FromStaticPointer_USE_DL_ITERATE_PHDR
+#ifdef DeeModule_FromStaticPointer_USE_dl_iterate_phdr
 	struct iter_modules_data data;
 	data.search_ptr = ptr;
 	data.search_res = NULL;
 	/* Enumerate all loaded modules. */
 	dl_iterate_phdr(&iter_modules_callback, (void *)&data);
 	return data.search_res;
-#endif /* DeeModule_FromStaticPointer_USE_DL_ITERATE_PHDR */
+#endif /* DeeModule_FromStaticPointer_USE_dl_iterate_phdr */
 
-#ifdef DeeModule_FromStaticPointer_USE_XDLMODULE_INFO
+#ifdef DeeModule_FromStaticPointer_USE_dlgethandle
+	/* KOS Mk4 changed up the dynlib API somewhat, such that we
+	 * need a different way of translating module pointers.
+	 * In Mk4, this is done by:
+	 * >> #define _KOS_SOURCE 1
+	 * >> #include <dlfcn.h>
+	 * >> 
+	 * >> static int obj = 0;
+	 * >> char const *getNameOfMyModule() {
+	 * >> 	void *h;
+	 * >> 	char const *name;
+	 * >> 	h    = dlgethandle(&obj, DLGETHANDLE_FNORMAL);
+	 * >> 	name = dlmodulename(h);
+	 * >> 	return name;
+	 * >> }
+	 * WARNING: When the given `ptr' is invalid, this function
+	 *          will clobber `dlerror()'!
+	 */
+	DeeDexObject *iter;
+	void *module_handle;
+	module_handle = dlgethandle(ptr, DLGETHANDLE_FNORMAL);
+	dex_lock_read();
+	for (iter = dex_chain; iter; iter = iter->d_next) {
+		if (iter->d_handle != module_handle)
+			continue;
+		Dee_Incref((DeeModuleObject *)iter);
+		dex_lock_endread();
+		return (DREF DeeObject *)iter;
+	}
+	dex_lock_endread();
+
+	/* Check if we're dealing with the deemon core itself. */
+#ifndef __pic__
+	/* Without PIC, our binary has to be the main executable, so we
+	 * can use `dlopen(NULL)' to get the handle for our own binary. */
+	if (module_handle == dlopen(NULL, 0))
+#else /* __pic__ */
+	if (module_handle == dlgethandle((void *)&DeeModule_FromStaticPointer, DLGETHANDLE_FNORMAL))
+#endif /* !__pic__ */
+	{
+		/* It is the deemon core. */
+		DREF DeeObject *result;
+		result = (DREF DeeObject *)DeeModule_GetDeemon();
+		Dee_Incref(result);
+		return result;
+	}
+	return NULL;
+#endif /* DeeModule_FromStaticPointer_USE_dlgethandle */
+
+#ifdef DeeModule_FromStaticPointer_USE_xdlmodule_info
 	struct module_basic_info info;
 	DeeDexObject *iter;
 	dex_lock_read();
@@ -753,56 +817,7 @@ DeeModule_FromStaticPointer(void const *ptr) {
 		}
 	}
 	return NULL;
-#endif /* DeeModule_FromStaticPointer_USE_XDLMODULE_INFO */
-
-#ifdef DeeModule_FromStaticPointer_USE_DLGETHANDLE
-	/* KOS Mk4 changed up the dynlib API somewhat, such that we
-	 * need a different way of translating module pointers.
-	 * In Mk4, this is done by:
-	 * >> #define _KOS_SOURCE 1
-	 * >> #include <dlfcn.h>
-	 * >> 
-	 * >> static int obj = 0;
-	 * >> char const *getNameOfMyModule() {
-	 * >> 	void *h;
-	 * >> 	char const *name;
-	 * >> 	h    = dlgethandle(&obj, DLGETHANDLE_FNORMAL);
-	 * >> 	name = dlmodulename(h);
-	 * >> 	return name;
-	 * >> }
-	 * WARNING: When the given `ptr' is invalid, this function
-	 *          will clobber `dlerror()'!
-	 */
-	DeeDexObject *iter;
-	void *module_handle;
-	module_handle = dlgethandle(ptr, DLGETHANDLE_FNORMAL);
-	dex_lock_read();
-	for (iter = dex_chain; iter; iter = iter->d_next) {
-		if (iter->d_handle != module_handle)
-			continue;
-		Dee_Incref((DeeModuleObject *)iter);
-		dex_lock_endread();
-		return (DREF DeeObject *)iter;
-	}
-	dex_lock_endread();
-	/* Check if we're dealing with the deemon core itself. */
-#if defined(__pic__) || defined(__PIC__) || defined(__pie__) || defined(__PIE__)
-	/* `dlgetmodule(NULL)' returns the module of the calling function */
-	if (module_handle == dlgetmodule(NULL, DLGETHANDLE_FNORMAL))
-#else /* PIC... */
-	/* Without PIC, our binary has to be the main executable, so we
-	 * can use `dlopen(NULL)' to get the handle for our own binary. */
-	if (module_handle == dlopen(NULL, 0))
-#endif /* !PIC... */
-	{
-		/* It is the deemon core. */
-		DREF DeeObject *result;
-		result = (DREF DeeObject *)DeeModule_GetDeemon();
-		Dee_Incref(result);
-		return result;
-	}
-	return NULL;
-#endif /* DeeModule_FromStaticPointer_USE_DLGETHANDLE */
+#endif /* DeeModule_FromStaticPointer_USE_xdlmodule_info */
 
 #ifdef DeeModule_FromStaticPointer_USE_STUB
 	(void)ptr;
@@ -851,8 +866,10 @@ DeeModule_GetNativeSymbol(DeeObject *__restrict UNUSED(self),
  *                the caller must decide on how to handle this. */
 PUBLIC WUNUSED DREF DeeObject *DCALL
 DeeModule_FromStaticPointer(void const *UNUSED(ptr)) {
-	Dee_Incref(&deemon_module);
-	return (DREF DeeObject *)DeeModule_GetDeemon();
+	DREF DeeModuleObject *result;
+	result = DeeModule_GetDeemon();
+	Dee_Incref(result);
+	return (DREF DeeObject *)result;
 }
 
 DECL_END

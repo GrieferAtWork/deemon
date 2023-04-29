@@ -1640,7 +1640,7 @@ err:
 	return NULL;
 }
 
-#ifdef DeeSysFD_GETSET
+#ifdef Dee_fd_GETSET
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 buffer_getsysfd(Buffer *__restrict self) {
 	DREF DeeObject *file, *result;
@@ -1661,7 +1661,7 @@ err_closed_unlock:
 err:
 	return NULL;
 }
-#endif /* DeeSysFD_GETSET */
+#endif /* Dee_fd_GETSET */
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 buffer_isatty(Buffer *__restrict self) {
@@ -1833,12 +1833,12 @@ err:
 
 
 PRIVATE struct type_getset tpconst buffer_getsets[] = {
-#ifdef DeeSysFD_GETSET
+#ifdef Dee_fd_GETSET
 	TYPE_GETTER(STR_getsysfd, &buffer_getsysfd,
 	            "->?Dint\n"
-	            "@throw AttributeError The file being buffered does not implement a member function $" DeeSysFD_GETSET "\n"
-	            "Forward to the $" DeeSysFD_GETSET " getset of the file being buffered"),
-#endif /* DeeSysFD_GETSET */
+	            "@throw AttributeError The file being buffered does not implement a member function $" Dee_fd_GETSET "\n"
+	            "Forward to the $" Dee_fd_GETSET " getset of the file being buffered"),
+#endif /* Dee_fd_GETSET */
 	TYPE_GETTER("file", &buffer_getfile,
 	            "->?DFile\n"
 	            "Returns the file that is being buffered"),

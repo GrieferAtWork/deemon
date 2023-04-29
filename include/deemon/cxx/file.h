@@ -64,7 +64,7 @@ public:
 	static Ref<File> open(/*utf-8*/ char const *__restrict filename, int oflags, int mode) {
 		return inherit(DeeFile_OpenString(filename, oflags, mode));
 	}
-	static Ref<File> openfd(DeeSysFD fd, /*String*/ DeeObject *filename, int oflags, bool inherit_fd) {
+	static Ref<File> openfd(Dee_fd_t fd, /*String*/ DeeObject *filename, int oflags, bool inherit_fd) {
 		return inherit(DeeFile_OpenFd(fd, filename, oflags, inherit_fd));
 	}
 	static Ref<File> stdstream(unsigned int id) {
@@ -187,9 +187,9 @@ public:
 		return throw_if_negative(DeeFile_IsAtty(this)) != 0;
 	}
 
-	DeeSysFD fileno() {
-		DeeSysFD result = DeeFile_GetSysFD(this);
-		if (result == DeeSysFD_INVALID)
+	Dee_fd_t fileno() {
+		Dee_fd_t result = DeeFile_GetSysFD(this);
+		if (result == Dee_fd_INVALID)
 			throw_last_deemon_exception();
 		return result;
 	}

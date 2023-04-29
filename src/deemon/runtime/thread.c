@@ -519,7 +519,7 @@ do_tickcount:
 #undef DeeThread_Sleep_USE_usleep
 #undef DeeThread_Sleep_USE_select
 #undef DeeThread_Sleep_USE_pselect
-#undef DeeThread_Sleep_USE_stub
+#undef DeeThread_Sleep_USE_STUB
 #ifdef CONFIG_HOST_WINDOWS
 #define DeeThread_Sleep_USE_SleepEx
 #elif defined(CONFIG_HAVE_nanosleep64) || defined(CONFIG_HAVE_nanosleep)
@@ -531,7 +531,7 @@ do_tickcount:
 #elif defined(CONFIG_HAVE_pselect) || defined(CONFIG_HAVE_pselect64)
 #define DeeThread_Sleep_USE_pselect
 #else /* ... */
-#define DeeThread_Sleep_USE_stub
+#define DeeThread_Sleep_USE_STUB
 #endif /* !... */
 
 #ifdef DeeThread_Sleep_USE_usleep
@@ -678,14 +678,14 @@ err:
 	return -1;
 #endif /* DeeThread_Sleep_USE_pselect */
 
-#ifdef DeeThread_Sleep_USE_stub
+#ifdef DeeThread_Sleep_USE_STUB
 	if (DeeThread_CheckInterrupt())
 		goto err;
 	DeeError_Throwf(&DeeError_UnsupportedAPI,
 	                "The host does not implement a way of sleeping");
 err:
 	return -1;
-#endif /* DeeThread_Sleep_USE_stub */
+#endif /* DeeThread_Sleep_USE_STUB */
 }
 
 PUBLIC void DCALL
@@ -752,9 +752,9 @@ DeeThread_SleepNoInterrupt(uint64_t microseconds) {
 	DBG_ALIGNMENT_ENABLE();
 #endif /* DeeThread_Sleep_USE_pselect */
 
-#ifdef DeeThread_Sleep_USE_stub
+#ifdef DeeThread_Sleep_USE_STUB
 	(void)microseconds;
-#endif /* DeeThread_Sleep_USE_stub */
+#endif /* DeeThread_Sleep_USE_STUB */
 }
 
 
@@ -4480,7 +4480,7 @@ thread_get_osfhandle_np(DeeThreadObject *__restrict self) {
 	uint32_t state = atomic_read(&self->t_state);
 	if likely(state & Dee_THREAD_STATE_HASTHREAD)
 		return DeeInt_NewUIntptr((uintptr_t)hThread);
-	err_unbound_attribute(&DeeThread_Type, DeeSysFD_HANDLE_GETSET);
+	err_unbound_attribute(&DeeThread_Type, Dee_fd_osfhandle_GETSET);
 	return NULL;
 }
 #endif /* DeeThread_USE_CreateThread */
@@ -4558,7 +4558,7 @@ PRIVATE struct type_getset tpconst thread_getsets[] = {
 	            "Returns ?t if @this thread has been detached, joined, or hasn't been started, yet"),
 #endif /* Dee_THREAD_STATE_HASOSCTX */
 #ifdef DeeThread_USE_CreateThread
-	TYPE_GETTER(DeeSysFD_HANDLE_GETSET, &thread_get_osfhandle_np,
+	TYPE_GETTER(Dee_fd_osfhandle_GETSET, &thread_get_osfhandle_np,
 	            "->?Dint\n"
 	            "Returns the windows HANDLE for this thread"),
 #endif /* DeeThread_USE_CreateThread */

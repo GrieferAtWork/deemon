@@ -289,7 +289,7 @@ err_file_closed(SystemFile *__restrict self) {
 
 PRIVATE ATTR_COLD NONNULL((1)) int DCALL
 err_file_io(SystemFile *__restrict self) {
-	if (self->sf_handle == DeeSysFD_INVALID)
+	if (self->sf_handle == Dee_fd_INVALID)
 		return err_file_closed(self);
 #ifdef DEESYSTEM_FILE_USE_WINDOWS
 	return DeeNTSystem_ThrowErrorf(&DeeError_FSError,
@@ -310,7 +310,7 @@ err_file_io(SystemFile *__restrict self) {
 
 
 PUBLIC WUNUSED DREF /*SystemFile*/ DeeObject *DCALL
-DeeFile_OpenFd(DeeSysFD fd, /*String*/ DeeObject *filename,
+DeeFile_OpenFd(Dee_fd_t fd, /*String*/ DeeObject *filename,
                int oflags, bool inherit_fd) {
 #ifdef DEESYSTEM_FILE_USE_STUB
 	(void)fd;
@@ -339,7 +339,7 @@ DeeFile_OpenFd(DeeSysFD fd, /*String*/ DeeObject *filename,
 #ifdef DEESYSTEM_FILE_USE_UNIX
 	(void)oflags;
 	result->sf_handle    = fd;
-	result->sf_ownhandle = inherit_fd ? fd : (DeeSysFD)-1; /* Inherit. */
+	result->sf_ownhandle = inherit_fd ? fd : (Dee_fd_t)-1; /* Inherit. */
 	result->sf_filename  = filename;
 	Dee_XIncref(filename);
 #endif /* DEESYSTEM_FILE_USE_UNIX */
@@ -359,11 +359,11 @@ done:
 }
 
 
-INTERN WUNUSED NONNULL((1)) DeeSysFD DCALL
+INTERN WUNUSED NONNULL((1)) Dee_fd_t DCALL
 DeeSystemFile_Fileno(/*FileSystem*/ DeeObject *__restrict self) {
 #ifdef DEESYSTEM_FILE_USE_STUB
 	(void)self;
-	return (DeeSysFD)DeeError_Throwf(&DeeError_FileClosed, fs_unsupported_message);
+	return (Dee_fd_t)DeeError_Throwf(&DeeError_FileClosed, fs_unsupported_message);
 #elif defined(DEESYSTEM_FILE_USE_STDIO) && 1
 #define CONFIG_DONT_EXPOSE_FILENO
 	/* Due to the unpredictable race condition and the fact that
@@ -374,11 +374,11 @@ DeeSystemFile_Fileno(/*FileSystem*/ DeeObject *__restrict self) {
 	                "The host does not implement a safe way of using fileno()");
 	return NULL;
 #else /* ... */
-	DeeSysFD result;
+	Dee_fd_t result;
 	SystemFile *me = (SystemFile *)self;
 	ASSERT_OBJECT_TYPE((DeeObject *)me, (DeeTypeObject *)&DeeSystemFile_Type);
-	result = (DeeSysFD)me->sf_handle;
-	if (result == DeeSysFD_INVALID)
+	result = (Dee_fd_t)me->sf_handle;
+	if (result == Dee_fd_INVALID)
 		err_file_closed(me);
 	return result;
 #endif /* !... */
@@ -407,8 +407,8 @@ DeeSystemFile_Filename(/*SystemFile*/ DeeObject *__restrict self) {
 	if (result) {
 		Dee_Incref(result);
 	} else {
-		DeeSysFD hand = (DeeSysFD)me->sf_handle;
-		if unlikely(hand == DeeSysFD_INVALID) {
+		Dee_fd_t hand = (Dee_fd_t)me->sf_handle;
+		if unlikely(hand == Dee_fd_INVALID) {
 			err_file_closed(me);
 			goto done;
 		}
@@ -903,8 +903,8 @@ err:
 	if unlikely(!result)
 		goto err_fd;
 	DeeObject_Init(result, &DeeFSFile_Type);
-	result->sf_handle    = (DeeSysFD)fd;
-	result->sf_ownhandle = (DeeSysFD)fd; /* Inherit stream. */
+	result->sf_handle    = (Dee_fd_t)fd;
+	result->sf_ownhandle = (Dee_fd_t)fd; /* Inherit stream. */
 	result->sf_filename  = filename;
 	Dee_Incref(filename);
 	return (DREF DeeObject *)result;
@@ -1084,7 +1084,7 @@ PRIVATE SystemFile sysf_std[] = {
 
 #ifdef DEE_STDDBG_IS_UNIQUE
 	,
-	{ FILE_OBJECT_HEAD_INIT(&DebugFile_Type), (DeeObject *)(void *)-1, DeeSysFD_INVALID, DeeSysFD_INVALID }
+	{ FILE_OBJECT_HEAD_INIT(&DebugFile_Type), (DeeObject *)(void *)-1, Dee_fd_INVALID, Dee_fd_INVALID }
 #endif /* DEE_STDDBG_IS_UNIQUE */
 };
 
@@ -2579,7 +2579,7 @@ sysfile_putc(SystemFile *__restrict self, int ch, dioflag_t flags) {
 #ifdef DEESYSTEM_FILE_USE_WINDOWS
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 sysfile_osfhandle_np(SystemFile *__restrict self) {
-	DeeSysFD result;
+	Dee_fd_t result;
 	result = DeeSystemFile_Fileno((DeeObject *)self);
 	if unlikely(!result)
 		goto err;
@@ -2592,9 +2592,9 @@ err:
 #ifdef DEESYSTEM_FILE_USE_UNIX
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 sysfile_fileno_np(SystemFile *__restrict self) {
-	DeeSysFD result;
+	Dee_fd_t result;
 	result = DeeSystemFile_Fileno((DeeObject *)self);
-	if unlikely(result == (DeeSysFD)-1)
+	if unlikely(result == (Dee_fd_t)-1)
 		goto err;
 	return DeeInt_NewInt((int)result);
 err:
@@ -2603,11 +2603,11 @@ err:
 #endif /* DEESYSTEM_FILE_USE_UNIX */
 
 
-#undef DeeSysFD_AsUnixFd
+#undef Dee_fd_t_AsUnixFd
 #ifdef DEESYSTEM_FILE_USE_UNIX
-#define DeeSysFD_AsUnixFd(sysfd) (sysfd)
+#define Dee_fd_t_AsUnixFd(sysfd) (sysfd)
 #elif defined(CONFIG_HAVE_fileno) && defined(DEESYSTEM_FILE_USE_STDIO)
-#define DeeSysFD_AsUnixFd(sysfd) fileno(sysfd)
+#define Dee_fd_t_AsUnixFd(sysfd) fileno(sysfd)
 #endif /* ... */
 
 /* Figure out how to implement `isatty()' */
@@ -2621,11 +2621,11 @@ err:
 #define sysfile_isatty_USE_nt_sysfile_gettype
 #elif defined(DEESYSTEM_FILE_USE_STDIO) && defined(CONFIG_HAVE_fisatty)
 #define sysfile_isatty_USE_fisatty
-#elif defined(DeeSysFD_AsUnixFd) && defined(CONFIG_HAVE_isatty)
+#elif defined(Dee_fd_t_AsUnixFd) && defined(CONFIG_HAVE_isatty)
 #define sysfile_isatty_USE_isatty
 #elif defined(DEESYSTEM_FILE_USE_STDIO)
 #define sysfile_isatty_USE_isastdfile_stdio
-#elif defined(DeeSysFD_AsUnixFd) && (defined(STDIN_FILENO) || defined(STDOUT_FILENO) || defined(STDERR_FILENO))
+#elif defined(Dee_fd_t_AsUnixFd) && (defined(STDIN_FILENO) || defined(STDOUT_FILENO) || defined(STDERR_FILENO))
 #define sysfile_isatty_USE_isastdfile
 #else /* ... */
 #define sysfile_isatty_USE_return_false
@@ -2672,7 +2672,7 @@ err:
 	DeeSystem_SetErrno(ENOTTY);
 #endif /* __CYGWIN__ || __CYGWIN32__ */
 	DBG_ALIGNMENT_DISABLE();
-	result = isatty(DeeSysFD_AsUnixFd(self->sf_handle));
+	result = isatty(Dee_fd_t_AsUnixFd(self->sf_handle));
 	DBG_ALIGNMENT_ENABLE();
 	if (result)
 		return_true;
@@ -2700,15 +2700,15 @@ is_an_std_file:
 
 #ifdef sysfile_isatty_USE_isastdfile
 #ifdef STDIN_FILENO
-	if (DeeSysFD_AsUnixFd(self->sf_handle) == STDIN_FILENO)
+	if (Dee_fd_t_AsUnixFd(self->sf_handle) == STDIN_FILENO)
 		goto is_an_std_file;
 #endif /* STDIN_FILENO */
 #ifdef STDOUT_FILENO
-	if (DeeSysFD_AsUnixFd(self->sf_handle) == STDOUT_FILENO)
+	if (Dee_fd_t_AsUnixFd(self->sf_handle) == STDOUT_FILENO)
 		goto is_an_std_file;
 #endif /* STDOUT_FILENO */
 #ifdef STDERR_FILENO
-	if (DeeSysFD_AsUnixFd(self->sf_handle) == STDERR_FILENO)
+	if (Dee_fd_t_AsUnixFd(self->sf_handle) == STDERR_FILENO)
 		goto is_an_std_file;
 #endif /* STDERR_FILENO */
 	return_false;
@@ -2724,17 +2724,17 @@ is_an_std_file:
 
 
 
-#if defined(DeeSysFD_GETSET) && defined(DeeSysFD_IS_HANDLE)
+#if defined(Dee_fd_GETSET) && defined(Dee_fd_t_IS_HANDLE)
 #define STR_osfhandle_np DeeString_STR(&str_getsysfd)
-#else /* DeeSysFD_GETSET && DeeSysFD_IS_HANDLE */
-#define STR_osfhandle_np DeeSysFD_HANDLE_GETSET
-#endif /* !DeeSysFD_GETSET || !DeeSysFD_IS_HANDLE */
+#else /* Dee_fd_GETSET && Dee_fd_t_IS_HANDLE */
+#define STR_osfhandle_np Dee_fd_osfhandle_GETSET
+#endif /* !Dee_fd_GETSET || !Dee_fd_t_IS_HANDLE */
 
-#if defined(DeeSysFD_GETSET) && defined(DeeSysFD_IS_FILE)
+#if defined(Dee_fd_GETSET) && defined(Dee_fd_t_IS_FILE)
 #define STR_fileno_np DeeString_STR(&str_getsysfd)
-#else /* DeeSysFD_GETSET && DeeSysFD_IS_FILE */
-#define STR_fileno_np DeeSysFD_INT_GETSET
-#endif /* !DeeSysFD_GETSET || !DeeSysFD_IS_FILE */
+#else /* Dee_fd_GETSET && Dee_fd_t_IS_FILE */
+#define STR_fileno_np Dee_fd_fileno_GETSET
+#endif /* !Dee_fd_GETSET || !Dee_fd_t_IS_FILE */
 
 
 PRIVATE struct type_getset tpconst sysfile_getsets[] = {
@@ -2873,10 +2873,10 @@ again_dup:
 		goto err;
 #endif /* !CONFIG_HAVE_dup */
 	} else {
-		self->sf_handle    = (DeeSysFD)fd;
-		self->sf_ownhandle = (DeeSysFD)-1;
+		self->sf_handle    = (Dee_fd_t)fd;
+		self->sf_ownhandle = (Dee_fd_t)-1;
 		if (inherit)
-			self->sf_ownhandle = (DeeSysFD)fd;
+			self->sf_ownhandle = (Dee_fd_t)fd;
 	}
 	self->sf_filename = NULL;
 	return 0;

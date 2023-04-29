@@ -605,31 +605,31 @@ err_call:
 }
 
 /* Return the system file descriptor of the given file, or throw
- * an error and return `DeeSysFD_INVALID' if the file was closed,
+ * an error and return `Dee_fd_INVALID' if the file was closed,
  * or doesn't refer to a file carrying a descriptor.
- * Note that this function queries the `DeeSysFD_GETSET' attribute
- * of the given object, and always fails if `DeeSysFD_GETSET' isn't
+ * Note that this function queries the `Dee_fd_GETSET' attribute
+ * of the given object, and always fails if `Dee_fd_GETSET' isn't
  * defined for the configuration used when deemon was built.
  * NOTE: This function doesn't require that `self' actually be
  *       derived from a `deemon.File'!
  * @return: * :               The used system fD. (either a `HANDLE', `fd_t' or `FILE *')
- * @return: DeeSysFD_INVALID: An error occurred. */
-PUBLIC WUNUSED NONNULL((1)) DeeSysFD DCALL
+ * @return: Dee_fd_INVALID: An error occurred. */
+PUBLIC WUNUSED NONNULL((1)) Dee_fd_t DCALL
 DeeFile_GetSysFD(DeeObject *__restrict self) {
-#ifdef DeeSysFD_GETSET
+#ifdef Dee_fd_GETSET
 	DREF DeeObject *result_ob;
-	DeeSysFD result;
+	Dee_fd_t result;
 
 	/* Special case: If the file is a system-file,  */
 	if (DeeObject_InstanceOf(self, (DeeTypeObject *)&DeeSystemFile_Type))
 		return DeeSystemFile_Fileno(self);
 
-	/* General case: look for a `DeeSysFD_GETSET' attribute */
+	/* General case: look for a `Dee_fd_GETSET' attribute */
 	result_ob = DeeObject_GetAttr(self, (DeeObject *)&str_getsysfd);
 	if unlikely(!result_ob) {
-#if defined(DeeSysFD_IS_HANDLE) && defined(CONFIG_HAVE_get_osfhandle)
-		/* TODO: Also check for an attribute `DeeSysFD_INT_GETSET' */
-#endif /* DeeSysFD_IS_HANDLE && CONFIG_HAVE_get_osfhandle */
+#if defined(Dee_fd_t_IS_HANDLE) && defined(CONFIG_HAVE_get_osfhandle)
+		/* TODO: Also check for an attribute `Dee_fd_fileno_GETSET' */
+#endif /* Dee_fd_t_IS_HANDLE && CONFIG_HAVE_get_osfhandle */
 		goto err;
 	}
 
@@ -641,13 +641,13 @@ DeeFile_GetSysFD(DeeObject *__restrict self) {
 err_result_ob:
 	Dee_Decref(result_ob);
 err:
-	return DeeSysFD_INVALID;
-#else /* DeeSysFD_GETSET */
+	return Dee_fd_INVALID;
+#else /* Dee_fd_GETSET */
 	(void)self;
 	DeeError_Throwf(&DeeError_UnsupportedAPI,
 	                "System file descriptors cannot be bound to objects");
-	return DeeSysFD_INVALID;
-#endif /* DeeSysFD_GETSET */
+	return Dee_fd_INVALID;
+#endif /* Dee_fd_GETSET */
 }
 
 PUBLIC WUNUSED NONNULL((1)) DREF /*String*/ DeeObject *DCALL
@@ -796,7 +796,7 @@ sysfile_pread(DeeSystemFileObject *__restrict self,
               dpos_t pos, dioflag_t flags);
 
 PRIVATE WUNUSED DREF /*Bytes*/ DeeObject *DCALL
-file_read_trymap(DeeSysFD fd, size_t maxbytes,
+file_read_trymap(Dee_fd_t fd, size_t maxbytes,
                  dpos_t pos, bool readall) {
 	int error;
 	struct DeeMapFile map;

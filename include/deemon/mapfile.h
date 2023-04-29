@@ -43,32 +43,32 @@ DECL_BEGIN
  * - malloc()+read()                            (Fallback)
  */
 
-#undef DeeMapFile_IS_osmapfile         /* KOS's `struct mapfile' */
+#undef DeeMapFile_IS_os_mapfile        /* KOS's `struct mapfile' */
 #undef DeeMapFile_IS_CreateFileMapping /* Windows's `CreateFileMapping' */
 #undef DeeMapFile_IS_mmap              /* Unix's `mmap(2)' */
 #undef DeeMapFile_IS_malloc            /* Fallback-only support */
-#if (defined(DeeSysFD_IS_INT) && defined(CONFIG_HAVE_fmapfile) &&      \
+#if (defined(Dee_fd_t_IS_int) && defined(CONFIG_HAVE_fmapfile) &&      \
      defined(CONFIG_HAVE_unmapfile) && defined(FMAPFILE_READALL) &&    \
      defined(FMAPFILE_MUSTMMAP) && defined(FMAPFILE_MAPSHARED) &&      \
      defined(FMAPFILE_ATSTART) && defined(ENOMEM) && defined(EINTR) && \
      defined(EBADF) && defined(ENOTSUP))
-#define DeeMapFile_IS_osmapfile 1
-#elif (defined(DeeSysFD_IS_HANDLE) && defined(CONFIG_HOST_WINDOWS))
-#define DeeMapFile_IS_CreateFileMapping 1
+#define DeeMapFile_IS_os_mapfile
+#elif (defined(Dee_fd_t_IS_HANDLE) && defined(CONFIG_HOST_WINDOWS))
+#define DeeMapFile_IS_CreateFileMapping
 #elif ((defined(CONFIG_HAVE_fstat) || defined(CONFIG_HAVE_fstat64)) &&       \
        (defined(CONFIG_HAVE_mmap) || defined(CONFIG_HAVE_mmap64)) &&         \
        (defined(CONFIG_HAVE_lseek) || defined(CONFIG_HAVE_lseek64)) &&       \
-       defined(DeeSysFD_IS_INT) && defined(CONFIG_HAVE_munmap) &&            \
+       defined(Dee_fd_t_IS_int) && defined(CONFIG_HAVE_munmap) &&            \
        defined(CONFIG_HAVE_MAP_PRIVATE) && defined(CONFIG_HAVE_PROT_READ) && \
        defined(CONFIG_HAVE_PROT_WRITE))
-#define DeeMapFile_IS_mmap 1
+#define DeeMapFile_IS_mmap
 #else /* ... */
-#define DeeMapFile_IS_malloc 1
+#define DeeMapFile_IS_malloc
 #endif /* !... */
 
 
 struct DeeMapFile {
-#ifdef DeeMapFile_IS_osmapfile
+#ifdef DeeMapFile_IS_os_mapfile
 	struct mapfile dmf_map; /* Underlying mapfile */
 #define DeeMapFile_GetBase(self)  ((void const *)(self)->dmf_map.mf_addr)
 #define DeeMapFile_GetSize(self)  (self)->dmf_map.mf_size
@@ -139,7 +139,7 @@ DeeMapFile_Fini(struct DeeMapFile *__restrict self);
  * @return:  0: Success (`self' must be deleted using `DeeMapFile_Fini(3)')
  * @return: -1: Error (an exception was thrown) */
 DFUNDEF WUNUSED NONNULL((1)) int DCALL
-DeeMapFile_InitSysFd(struct DeeMapFile *__restrict self, DeeSysFD fd,
+DeeMapFile_InitSysFd(struct DeeMapFile *__restrict self, Dee_fd_t fd,
                      Dee_pos_t offset, size_t min_bytes, size_t max_bytes,
                      size_t num_trailing_nulbytes, unsigned int flags);
 
@@ -152,17 +152,17 @@ DeeMapFile_InitFile(struct DeeMapFile *__restrict self,
 
 /* Bits for the `flags' argument of `DeeMapFile_InitSysFd()' */
 #define DEE_MAPFILE_F_NORMAL  0
-#ifdef DeeMapFile_IS_osmapfile
+#ifdef DeeMapFile_IS_os_mapfile
 #define DEE_MAPFILE_F_READALL   FMAPFILE_READALL   /* Flag: use `preadall(3)' / `readall(3)' instead of `pread(2)' / `read(2)' */
 #define DEE_MAPFILE_F_MUSTMMAP  FMAPFILE_MUSTMMAP  /* Flag: require the use of a mmap(2) */
 #define DEE_MAPFILE_F_MAPSHARED FMAPFILE_MAPSHARED /* Flag: when using mmap, don't map as MAP_PRIVATE, but use MAP_SHARED (don't pass a non-zero `num_trailing_nulbytes' in this case!) */
 #define DEE_MAPFILE_F_ATSTART   FMAPFILE_ATSTART   /* Flag: assume that the given file's pointer is located at the file's beginning */
-#else /* DeeMapFile_IS_osmapfile */
+#else /* DeeMapFile_IS_os_mapfile */
 #define DEE_MAPFILE_F_READALL   0x0001 /* Flag: use `preadall(3)' / `readall(3)' instead of `pread(2)' / `read(2)' */
 #define DEE_MAPFILE_F_MUSTMMAP  0x0002 /* Flag: require the use of a mmap(2) */
 #define DEE_MAPFILE_F_MAPSHARED 0x0004 /* Flag: when using mmap, don't map as MAP_PRIVATE, but use MAP_SHARED (don't pass a non-zero `num_trailing_nulbytes' in this case!) */
 #define DEE_MAPFILE_F_ATSTART   0x0008 /* Flag: assume that the given file's pointer is located at the file's beginning */
-#endif /* !DeeMapFile_IS_osmapfile */
+#endif /* !DeeMapFile_IS_os_mapfile */
 #define DEE_MAPFILE_F_TRYMMAP   0x8000 /* Flag: Don't throw an exception when mmap fails, but return `1' */
 
 
@@ -175,7 +175,7 @@ typedef struct Dee_map_file_object DeeMapFileObject;
 struct Dee_map_file_object {
 	Dee_OBJECT_HEAD
 	struct DeeMapFile mf_map;   /* The file map owned by this object. */
-	size_t            mf_rsize; /* Real file mape size (including trailing NUL bytes) */
+	size_t            mf_rsize; /* Real file map size (including trailing NUL bytes) */
 };
 
 DDATDEF DeeTypeObject DeeMapFile_Type;

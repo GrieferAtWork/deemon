@@ -41,6 +41,7 @@
 #include "libfs.h"
 /**/
 
+#include <deemon/abi/time.h>
 #include <deemon/alloc.h>
 #include <deemon/api.h>
 #include <deemon/arg.h>
@@ -52,7 +53,6 @@
 #include <deemon/string.h>
 #include <deemon/system-features.h>
 #include <deemon/system.h>
-#include <deemon/time-abi.h>
 #include <deemon/util/lock.h>
 
 #include "../time/libtime.h"
