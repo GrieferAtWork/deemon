@@ -3306,7 +3306,6 @@ DDATDEF DeeObject DeeNotImplemented_Singleton;
 #endif /* !__INTELLISENSE__ */
 
 
-#if 1 /* Integer conversion with automatic operand size. */
 INTDEF ATTR_ERROR("Invalid integer size") int _Dee_invalid_integer_size(void);
 #ifndef __NO_builtin_choose_expr
 #define DeeObject_AsSINT(self, result)                                                                 \
@@ -3339,7 +3338,6 @@ INTDEF ATTR_ERROR("Invalid integer size") int _Dee_invalid_integer_size(void);
 	 sizeof(*(result)) == 16 ? DeeObject_AsUInt128(self, (Dee_uint128_t *)(result)) : \
 	                           _Dee_invalid_integer_size())
 #endif /* __NO_builtin_choose_expr */
-#endif
 
 DECL_END
 

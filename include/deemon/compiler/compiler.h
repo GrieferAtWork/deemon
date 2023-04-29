@@ -22,11 +22,8 @@
 
 #include "../api.h"
 #include "../object.h"
-
-#ifndef CONFIG_NO_THREADS
 #include "../util/lock.h"
 #include "../util/rlock.h"
-#endif /* !CONFIG_NO_THREADS */
 
 #ifdef CONFIG_BUILDING_DEEMON
 #include "ast.h"

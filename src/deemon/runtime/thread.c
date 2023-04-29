@@ -99,14 +99,14 @@
 
 
 /* Figure out how we want to implement threads. */
-#undef DeeThread_USE_NO_THREADS
+#undef DeeThread_USE_SINGLE_THREADED
 #undef DeeThread_USE_CreateThread
 #undef DeeThread_USE_pthread_create
 #undef DeeThread_USE_thrd_create
 #if 0
 /* ... */
 #elif defined(CONFIG_NO_THREADS)
-#define DeeThread_USE_NO_THREADS
+#define DeeThread_USE_SINGLE_THREADED
 #elif defined(CONFIG_HOST_WINDOWS)
 #define DeeThread_USE_CreateThread
 #elif defined(CONFIG_HAVE_pthread_create)
@@ -114,7 +114,7 @@
 #elif defined(CONFIG_HAVE_thrd_create)
 #define DeeThread_USE_thrd_create
 #else /* ... */
-#define DeeThread_USE_NO_THREADS
+#define DeeThread_USE_SINGLE_THREADED
 #endif /* !... */
 
 #ifdef DeeThread_USE_CreateThread
@@ -216,13 +216,27 @@
 #endif /* ... */
 
 
+/* Delete thread-state flags that don't make sense in the single-threaded configuration. */
+#ifdef DeeThread_USE_SINGLE_THREADED
+#undef Dee_THREAD_STATE_SUSPENDING
+#undef Dee_THREAD_STATE_SUSPENDED
+#undef Dee_THREAD_STATE_TERMINATED
+#undef Dee_THREAD_STATE_STARTING
+/*#undef Dee_THREAD_STATE_STARTED*/ /* Always set */
+#undef DeeThread_HasCrashed
+#undef DeeThread_HasStarted
+#define DeeThread_HasCrashed(self) ((self) == DeeThread_Self() && (self)->t_exceptsz > 0)
+#define DeeThread_HasStarted(self) 1
+#endif /* DeeThread_USE_SINGLE_THREADED */
+
+
 DECL_BEGIN
 
 
 /* >> Dee_pid_t DeeThread_GetCurrentTid(void); */
 #undef DeeThread_GetCurrentTid
 #ifdef Dee_pid_t
-#ifdef DeeThread_USE_CreateThread
+#ifdef CONFIG_HOST_WINDOWS
 #define DeeThread_GetCurrentTid() (Dee_pid_t)GetCurrentThreadId()
 #elif defined(CONFIG_HAVE_gettid)
 #define DeeThread_GetCurrentTid() gettid()
@@ -928,11 +942,11 @@ deepcopy_clear(DeeThreadObject *__restrict thread_self) {
 
 struct os_thread_object {
 	DeeThreadObject ot_thread;     /* Underlying thread */
-
 #ifdef Dee_pid_t
-	Dee_pid_t       ot_pid;        /* [valid_if(Dee_THREAD_STATE_HASTID)] */
+	Dee_pid_t       ot_tid;        /* [valid_if(Dee_THREAD_STATE_HASTID)] */
 #endif /* Dee_pid_t */
 
+#ifndef DeeThread_USE_SINGLE_THREADED
 	/* OS-specific thread data */
 #ifdef DeeThread_USE_CreateThread
 	HANDLE          ot_hThread;    /* [valid_if(Dee_THREAD_STATE_HASTHREAD)] */
@@ -945,14 +959,17 @@ struct os_thread_object {
 #ifdef DeeThread_USE_thrd_create
 	thrd_t          ot_thrd;       /* [valid_if(Dee_THREAD_STATE_HASTHREAD)] */
 #endif /* DeeThread_USE_thrd_create */
+#endif /* !DeeThread_USE_SINGLE_THREADED */
 };
 
 typedef struct os_thread_object DeeOSThreadObject;
 LIST_HEAD(thread_object_list, thread_object);
 #define DeeThread_AsOSThread(self) COMPILER_CONTAINER_OF(self, DeeOSThreadObject, ot_thread)
+#ifndef DeeThread_USE_SINGLE_THREADED
 #define DeeThread_GetHThread(self) DeeThread_AsOSThread(self)->ot_hThread
 #define DeeThread_GetPThread(self) DeeThread_AsOSThread(self)->ot_pthread
 #define DeeThread_GetThrd(self)    DeeThread_AsOSThread(self)->ot_thrd
+#endif /* !DeeThread_USE_SINGLE_THREADED */
 
 /* Do the necessary system calls to detach the thread's handle */
 #ifdef DeeThread_USE_CreateThread
@@ -1001,12 +1018,13 @@ PRIVATE HANDLE DCALL DeeThread_GetCurrentHThread(void) {
 
 
 /* [0..n][lock(thread_list_lock)] List of running threads, except for the main thread */
+#ifndef DeeThread_USE_SINGLE_THREADED
 #define thread_list (*(struct thread_object_list *)&DeeThread_Main.ot_thread.t_global.le_next)
+#endif /* !DeeThread_USE_SINGLE_THREADED */
 
 /* Lock for the global list of threads */
-#ifndef CONFIG_NO_THREADS
+#ifndef DeeThread_USE_SINGLE_THREADED
 PRIVATE Dee_shared_lock_t thread_list_lock = DEE_SHARED_LOCK_INIT;
-#endif /* !CONFIG_NO_THREADS */
 #define thread_list_lock_available()     Dee_shared_lock_available(&thread_list_lock)
 #define thread_list_lock_acquired()      Dee_shared_lock_acquired(&thread_list_lock)
 #define thread_list_lock_tryacquire()    Dee_shared_lock_tryacquire(&thread_list_lock)
@@ -1014,6 +1032,15 @@ PRIVATE Dee_shared_lock_t thread_list_lock = DEE_SHARED_LOCK_INIT;
 #define thread_list_lock_acquire_noint() Dee_shared_lock_acquire_noint(&thread_list_lock)
 #define thread_list_lock_waitfor()       Dee_shared_lock_waitfor(&thread_list_lock)
 #define thread_list_lock_release()       Dee_shared_lock_release(&thread_list_lock)
+#else /* !DeeThread_USE_SINGLE_THREADED */
+#define thread_list_lock_available()     true
+#define thread_list_lock_acquired()      true
+#define thread_list_lock_tryacquire()    true
+#define thread_list_lock_acquire()       0
+#define thread_list_lock_acquire_noint() (void)0
+#define thread_list_lock_waitfor()       0
+#define thread_list_lock_release()       (void)0
+#endif /* DeeThread_USE_SINGLE_THREADED */
 
 
 /* Controller for the initial/main thread object. */
@@ -1027,29 +1054,31 @@ INTERN DeeOSThreadObject DeeThread_Main = {
 		/* .t_except     = */ NULL,
 		/* .t_execsz     = */ 0,
 		/* .t_exceptsz   = */ 0,
-#ifndef CONFIG_NO_THREADS
-		/* .t_state      = */ Dee_THREAD_STATE_STARTING |
+		/* .t_state      = */ Dee_THREAD_STATE_STARTED |
 #ifdef DeeThread_HAVE_GetCurrentXThread
 		                      Dee_THREAD_STATE_HASTHREAD |
 #endif /* DeeThread_HAVE_GetCurrentXThread */
 #ifdef DeeThread_GetCurrentTid
 		                      Dee_THREAD_STATE_HASTID |
 #endif /* DeeThread_GetCurrentTid */
-		                      Dee_THREAD_STATE_STARTED,
+		                      0,
+		/* .t_interrupt  = */ { NULL, NULL, NULL },
+#ifndef CONFIG_NO_THREADS
+		/* .t_int_vers   = */ 0,
 		/* .t_global     = */ LIST_ENTRY_UNBOUND_INITIALIZER,
 		/* .t_threadname = */ (DeeStringObject *)&main_thread_name,
-		/* .t_int_vers   = */ 0,
-		/* .t_interrupt  = */ { NULL, NULL, NULL },
 		/* .t_inout      = */ { NULL },
 		/* .t_context    = */ { NULL },
 #endif /* !CONFIG_NO_THREADS */
 	},
 #ifdef Dee_pid_t
-	/* .ot_pid = */ 0,
+	/* .ot_tid = */ 0,
 #endif /* Dee_pid_t */
+#ifndef DeeThread_USE_SINGLE_THREADED
 #ifdef DeeThread_USE_CreateThread
 	/* .ot_hThread = */ INVALID_HANDLE_VALUE,
 #endif /* DeeThread_USE_CreateThread */
+#endif /* !DeeThread_USE_SINGLE_THREADED */
 };
 
 
@@ -1063,12 +1092,17 @@ INTERN DeeOSThreadObject DeeThread_Main = {
  * NOTE: This function (`DeeThread_Suspend') synchronously waits for the thread to
  *       actually become suspended, meaning that once it returns, the caller is allowed
  *       to assume that the given thread is no longer capable of executing instructions.
+ * NOTE: Trying to suspend yourself results in undefined behavior
  * @return: 1 : The specified thread could not be suspended because it has already terminated
  * @return: 0 : Success
  * @return: -1: An error was thrown */
 PUBLIC WUNUSED NONNULL((1)) int DCALL
 DeeThread_Suspend(DeeThreadObject *__restrict self) {
+#ifdef DeeThread_USE_SINGLE_THREADED
+	ASSERT(self != DeeThread_Self());
+#else /* DeeThread_USE_SINGLE_THREADED */
 	uint32_t state;
+	ASSERT(self != DeeThread_Self());
 	if (thread_list_lock_acquire())
 		goto err;
 
@@ -1076,9 +1110,11 @@ DeeThread_Suspend(DeeThreadObject *__restrict self) {
 	for (;;) {
 		state = atomic_read(&self->t_state);
 		ASSERT(!(state & Dee_THREAD_STATE_SUSPENDING));
-		if (state & Dee_THREAD_STATE_TERMINATING) {
+		if (state & (Dee_THREAD_STATE_TERMINATING | Dee_THREAD_STATE_UNMANAGED)) {
 			/* Cannot suspend a thread that is terminating. */
 			thread_list_lock_release();
+			if unlikely(state & Dee_THREAD_STATE_UNMANAGED)
+				goto err_unmanaged_thread;
 			return 1;
 		}
 		if (atomic_cmpxch_weak(&self->t_state, state,
@@ -1109,10 +1145,21 @@ err:
 	thread_list_lock_release();
 	DeeFutex_WakeAll(&self->t_state);
 	return -1;
+err_unmanaged_thread:
+#endif /* !DeeThread_USE_SINGLE_THREADED */
+	return DeeError_Throwf(&DeeError_ValueError,
+	                       "Cannot suspend unmanaged thread %k",
+	                       self);
 }
 
 PUBLIC NONNULL((1)) void DCALL
 DeeThread_Resume(DeeThreadObject *__restrict self) {
+#ifdef DeeThread_USE_SINGLE_THREADED
+	(void)self;
+	COMPILER_IMPURE();
+	Dee_Fatalf("Suspending threads is impossible, so there should "
+	           "be no situation where this function gets called.");
+#else /* DeeThread_USE_SINGLE_THREADED */
 	ASSERT(thread_list_lock_acquired());
 	ASSERT(atomic_read(&self->t_state) & Dee_THREAD_STATE_SUSPENDED);
 	ASSERT(atomic_read(&self->t_state) & Dee_THREAD_STATE_SUSPENDING);
@@ -1120,6 +1167,7 @@ DeeThread_Resume(DeeThreadObject *__restrict self) {
 	                             Dee_THREAD_STATE_WAITING));
 	thread_list_lock_release();
 	DeeFutex_WakeAll(&self->t_state);
+#endif /* !DeeThread_USE_SINGLE_THREADED */
 }
 
 /* Safely suspend/resume all threads but the calling.
@@ -1128,6 +1176,10 @@ DeeThread_Resume(DeeThreadObject *__restrict self) {
  * @return: * :   Start of thread list
  * @return: NULL: An error was thrown */
 PUBLIC WUNUSED DeeThreadObject *DCALL DeeThread_SuspendAll(void) {
+#ifdef DeeThread_USE_SINGLE_THREADED
+	COMPILER_IMPURE();
+	return &DeeThread_Main.ot_thread;
+#else /* DeeThread_USE_SINGLE_THREADED */
 	DeeThreadObject *iter, *caller = DeeThread_Self();
 
 	/* NOTE: Acquire (and keep) a lock to ensure that only
@@ -1183,9 +1235,13 @@ err:
 	} while ((iter = iter->t_global.le_next) != NULL);
 	thread_list_lock_release();
 	return NULL;
+#endif /* !DeeThread_USE_SINGLE_THREADED */
 }
 
 PUBLIC void DCALL DeeThread_ResumeAll(void) {
+#ifdef DeeThread_USE_SINGLE_THREADED
+	COMPILER_IMPURE();
+#else /* DeeThread_USE_SINGLE_THREADED */
 	DeeThreadObject *iter, *caller = DeeThread_Self();
 	ASSERT(thread_list_lock_acquired());
 	iter = &DeeThread_Main.ot_thread;
@@ -1201,6 +1257,7 @@ PUBLIC void DCALL DeeThread_ResumeAll(void) {
 
 	/* Release the lock acquired in `DeeThread_SuspendAll()' */
 	thread_list_lock_release();
+#endif /* !DeeThread_USE_SINGLE_THREADED */
 }
 
 #ifdef DeeThread_Detach_system_impl
@@ -1257,10 +1314,28 @@ DeeThread_DiscardAllInterrupts(DeeThreadObject *__restrict self) {
 }
 
 
+PRIVATE void DCALL DeeThread_Main_SetTerminating(void) {
+	if (atomic_read(&DeeThread_Main.ot_thread.t_state) & Dee_THREAD_STATE_TERMINATING)
+		return;
+	_DeeThread_AcquireInterrupt(&DeeThread_Main.ot_thread);
+	atomic_or(&DeeThread_Main.ot_thread.t_state, Dee_THREAD_STATE_TERMINATING);
+	_DeeThread_ReleaseInterrupt(&DeeThread_Main.ot_thread);
+	if (DeeThread_Main.ot_thread.t_interrupt.ti_intr != NULL) {
+		/* XXX: Maybe we should actually execute interrupts here (and discard exceptions)? */
+		DeeThread_DiscardAllInterrupts(&DeeThread_Main.ot_thread);
+	}
+	DBG_memset(&DeeThread_Main.ot_thread.t_interrupt, 0xcc,
+	           sizeof(DeeThread_Main.ot_thread.t_interrupt));
+}
+
 /* Join all threads that are still running
  * after sending an interrupt signal to each.
  * Returns true if at least one thread was joined. */
 INTERN bool DCALL DeeThread_InterruptAndJoinAll(void) {
+#ifdef DeeThread_USE_SINGLE_THREADED
+	DeeThread_Main_SetTerminating();
+	return false;
+#else /* DeeThread_USE_SINGLE_THREADED */
 	DeeThreadObject *thread;
 	bool result = false;
 again:
@@ -1300,17 +1375,7 @@ again_find_running_thread:
 			 *
 			 * Note that we only do this the first time we set TERMINATING, since after
 			 * that, the interrupt list itself becomes invalid. */
-			if (!(atomic_read(&DeeThread_Main.ot_thread.t_state) & Dee_THREAD_STATE_TERMINATING)) {
-				_DeeThread_AcquireInterrupt(&DeeThread_Main.ot_thread);
-				atomic_or(&DeeThread_Main.ot_thread.t_state, Dee_THREAD_STATE_TERMINATING);
-				_DeeThread_ReleaseInterrupt(&DeeThread_Main.ot_thread);
-				if (DeeThread_Main.ot_thread.t_interrupt.ti_intr != NULL) {
-					/* XXX: Maybe we should actually execute interrupts here (and discard exceptions)? */
-					DeeThread_DiscardAllInterrupts(&DeeThread_Main.ot_thread);
-				}
-				DBG_memset(&DeeThread_Main.ot_thread.t_interrupt, 0xcc,
-				           sizeof(DeeThread_Main.ot_thread.t_interrupt));
-			}
+			DeeThread_Main_SetTerminating();
 		}
 		return result; /* Done! */
 	}
@@ -1346,6 +1411,7 @@ again_find_running_thread:
 
 	/* Continue joining all the other threads. */
 	goto again;
+#endif /* !DeeThread_USE_SINGLE_THREADED */
 }
 
 
@@ -1375,7 +1441,7 @@ again_find_running_thread:
 #undef thread_self_tls_USE_tss_t
 #undef thread_self_tls_USE_errno_address
 #undef thread_self_tls_USE_sp_address
-#ifdef DeeThread_USE_NO_THREADS
+#ifdef DeeThread_USE_SINGLE_THREADED
 #define thread_self_tls_USE_DeeThread_Main
 #elif !defined(__NO_ATTR_THREAD)
 #define thread_self_tls_USE_ATTR_THREAD
@@ -1497,13 +1563,18 @@ PRIVATE tss_t thread_self_tls;
  * order to affiliate their thread with deemon. */
 PUBLIC WUNUSED ATTR_CONST ATTR_RETNONNULL
 DeeThreadObject *DCALL DeeThread_Self(void) {
+#ifdef thread_self_tls_USE_DeeThread_Main
+	return &DeeThread_Main.ot_thread;
+#else /* thread_self_tls_USE_DeeThread_Main */
 	DeeThreadObject *result;
 	DBG_ALIGNMENT_DISABLE();
 	result = thread_tls_get();
 	DBG_ALIGNMENT_ENABLE();
 	ASSERTF(result, "Your thread is not affiliated with deemon. You have to call `DeeThread_Accede()' first");
 	return result;
+#endif /* !thread_self_tls_USE_DeeThread_Main */
 }
+
 
 
 
@@ -1532,6 +1603,7 @@ PRIVATE void DeeThread_SporadicInterruptHandler(int signo) {
 #endif /* DeeThread_SetupSignalHandlers_USE_sysv_signal_OR_signal */
 }
 
+#ifndef DeeThread_USE_SINGLE_THREADED
 PRIVATE NONNULL((1)) void DCALL
 DeeThread_SetupSignalHandlers(struct acceded_thread_object *__restrict thread) {
 #ifdef DeeThread_SetupSignalHandlers_USE_sigaction
@@ -1567,6 +1639,7 @@ DeeThread_RestoreSignalHandlers(struct acceded_thread_object *__restrict thread)
 #endif /* !... */
 #endif /* ... */
 }
+#endif /* !DeeThread_USE_SINGLE_THREADED */
 
 PRIVATE void DCALL
 _DeeThread_SetupSignalHandlersForCurrentThread(void) {
@@ -1587,13 +1660,16 @@ _DeeThread_SetupSignalHandlersForCurrentThread(void) {
 #endif /* ... */
 }
 #else /* DeeThread_Wake_NEEDS_SIGNAL */
-#define DeeThread_SetupSignalHandlers(thread)        (void)0
-#define DeeThread_RestoreSignalHandlers(thread)      (void)0
+#ifndef DeeThread_USE_SINGLE_THREADED
+#define DeeThread_SetupSignalHandlers(thread)   (void)0
+#define DeeThread_RestoreSignalHandlers(thread) (void)0
+#endif /* !DeeThread_USE_SINGLE_THREADED */
 #define _DeeThread_SetupSignalHandlersForCurrentThread() (void)0
 #endif /* !DeeThread_Wake_NEEDS_SIGNAL */
 
 
 
+#ifndef DeeThread_USE_SINGLE_THREADED
 PRIVATE WUNUSED DREF DeeThreadObject *DCALL
 DeeThread_AllocateCurrentThread(void) {
 	DREF struct acceded_thread_object *result;
@@ -1619,7 +1695,7 @@ DeeThread_AllocateCurrentThread(void) {
 	/* Lookup descriptor numbers for the calling thread. */
 	DBG_ALIGNMENT_DISABLE();
 #ifdef DeeThread_GetCurrentTid
-	result->at_os_thread.ot_pid = DeeThread_GetCurrentTid();
+	result->at_os_thread.ot_tid = DeeThread_GetCurrentTid();
 #endif /* DeeThread_GetCurrentTid */
 #ifdef DeeThread_HAVE_GetCurrentXThread
 #ifdef DeeThread_USE_CreateThread
@@ -1644,6 +1720,7 @@ DeeThread_AllocateCurrentThread(void) {
 
 	return &result->at_os_thread.ot_thread;
 }
+#endif /* !DeeThread_USE_SINGLE_THREADED */
 
 
 /* Hand over control of the calling thread to deemon until a call is
@@ -1660,6 +1737,10 @@ DeeThread_AllocateCurrentThread(void) {
  *                Note that in this case, no exception is thrown (because none can be
  *                thrown, as the caller doesn't have a deemon thread-context) */
 PUBLIC WUNUSED DeeThreadObject *DCALL DCALL DeeThread_Accede(void) {
+#ifdef DeeThread_USE_SINGLE_THREADED
+	Dee_Fatalf("Threading support is disabled");
+	return NULL;
+#else /* DeeThread_USE_SINGLE_THREADED */
 	DeeThreadObject *result;
 
 	/* Check if the caller already has a thread context. */
@@ -1680,12 +1761,14 @@ PUBLIC WUNUSED DeeThreadObject *DCALL DCALL DeeThread_Accede(void) {
 	}
 	DeeSystemError_Pop();
 	return result;
+#endif /* !DeeThread_USE_SINGLE_THREADED */
 }
 
 
 /* Drop a reference from `self' in the context of another thread.
  * This function is called to get rid of the final reference that
  * a thread used to hold to itself */
+#ifndef DeeThread_USE_SINGLE_THREADED
 PRIVATE NONNULL((1)) void DCALL
 DeeThread_DecrefInOtherThread(DREF DeeThreadObject *self) {
 	ASSERT(self != &DeeThread_Main.ot_thread);
@@ -1720,6 +1803,7 @@ DeeThread_DecrefInOtherThread(DREF DeeThreadObject *self) {
 	atomic_or(&DeeThread_Main.ot_thread.t_state, Dee_THREAD_STATE_INTERRUPTED);
 	DeeThread_Wake((DeeObject *)&DeeThread_Main.ot_thread);
 }
+#endif /* !DeeThread_USE_SINGLE_THREADED */
 
 
 /* Secede deemon's control over the calling thread by simulating said
@@ -1734,7 +1818,13 @@ DeeThread_DecrefInOtherThread(DREF DeeThreadObject *self) {
  *                        exception is currently thrown, the thread
  *                        will have exited with that exception. Else,
  *                        the thread will simply return `Dee_None'. */
-PUBLIC void DCALL DeeThread_Secede(DREF DeeObject *thread_result) {
+PUBLIC void DCALL
+DeeThread_Secede(DREF DeeObject *thread_result) {
+#ifdef DeeThread_USE_SINGLE_THREADED
+	(void)thread_result;
+	COMPILER_IMPURE();
+	Dee_Fatalf("Threading support is disabled");
+#else /* DeeThread_USE_SINGLE_THREADED */
 	DREF DeeThreadObject *self;
 	DBG_ALIGNMENT_DISABLE();
 	self = thread_tls_get();
@@ -1852,6 +1942,7 @@ again_cleanup:
 	DBG_ALIGNMENT_DISABLE();
 	thread_tls_set(NULL);
 	DBG_ALIGNMENT_ENABLE();
+#endif /* !DeeThread_USE_SINGLE_THREADED */
 }
 
 
@@ -1871,7 +1962,7 @@ PRIVATE void DCALL _DeeThread_InitMainThread(void) {
 	/* Collect information on the main thread. */
 	DBG_ALIGNMENT_DISABLE();
 #ifdef DeeThread_GetCurrentTid
-	DeeThread_Main.ot_pid = DeeThread_GetCurrentTid();
+	DeeThread_Main.ot_tid = DeeThread_GetCurrentTid();
 #endif /* DeeThread_GetCurrentTid */
 
 #ifdef DeeThread_HAVE_GetCurrentXThread
@@ -2013,7 +2104,9 @@ again_read_state:
 	/* Check if we've been interrupted. */
 	if (!(state & Dee_THREAD_STATE_INTERRUPTED))
 		return 0;
+#ifndef DeeThread_USE_SINGLE_THREADED
 	atomic_inc(&self->t_int_vers); /* Indicate that we're checking for interrupts */
+#endif /* !DeeThread_USE_SINGLE_THREADED */
 	atomic_and(&self->t_state, ~Dee_THREAD_STATE_INTERRUPTED);
 
 	/* Someone may be waiting for us to start handling our interrupts.
@@ -2022,9 +2115,10 @@ again_read_state:
 
 	/* Preserve system errors across interrupt checks */
 	DeeSystemError_Push();
-again_check_for_interrupts:
 
 	/* Check for different types of interrupts */
+#ifndef DeeThread_USE_SINGLE_THREADED
+again_check_for_interrupts:
 	if (state & Dee_THREAD_STATE_SUSPENDING) {
 
 		/* Enter the suspend-state */
@@ -2046,10 +2140,14 @@ again_check_for_interrupts:
 		/* Check for more interrupts. */
 		goto again_check_for_interrupts;
 	}
+#endif /* !DeeThread_USE_SINGLE_THREADED */
 
 	/* The main thread must handle keyboard interrupts! */
 #ifndef CONFIG_NO_KEYBOARD_INTERRUPT
-	if (self == &DeeThread_Main.ot_thread) {
+#ifndef DeeThread_USE_SINGLE_THREADED
+	if (self == &DeeThread_Main.ot_thread)
+#endif /* !DeeThread_USE_SINGLE_THREADED */
+	{
 		for (;;) {
 			uint8_t count;
 			DeeSignalObject *keyboard_interrupt;
@@ -2142,6 +2240,7 @@ PUBLIC WUNUSED int (DCALL DeeThread_CheckInterrupt)(void) {
 }
 
 
+#ifndef DeeThread_USE_SINGLE_THREADED
 #ifdef DeeThread_USE_CreateThread
 PRIVATE DWORD WINAPI DeeThread_Entry_func(void *arg)
 #define LOCAL_thread_entry_return return 0
@@ -2162,7 +2261,7 @@ PRIVATE int DeeThread_Entry_func(void *arg)
 #undef LOCAL_thread_entry_did_set__ot_pid
 #if defined(Dee_pid_t) && defined(DeeThread_GetCurrentTid) && !defined(DeeThread_USE_CreateThread)
 #define LOCAL_thread_entry_did_set__ot_pid
-	self->ot_pid = DeeThread_GetCurrentTid();
+	self->ot_tid = DeeThread_GetCurrentTid();
 #endif /* Dee_pid_t && DeeThread_GetCurrentTid && !DeeThread_USE_CreateThread */
 
 	/* Save the thread-self object in the TLS descriptor,
@@ -2364,7 +2463,7 @@ DeeThread_Start_impl(/*inherit(on_success)*/ DREF DeeOSThreadObject *__restrict 
 	HANDLE hThread;
 again:
 	DBG_ALIGNMENT_DISABLE();
-	hThread = CreateThread(NULL, 0, &DeeThread_Entry_func, self, 0, &self->ot_pid);
+	hThread = CreateThread(NULL, 0, &DeeThread_Entry_func, self, 0, (LPDWORD)&self->ot_tid);
 	if likely(hThread != NULL) {
 		DBG_ALIGNMENT_ENABLE();
 		self->ot_hThread = hThread;
@@ -2423,12 +2522,13 @@ again:
 	                       "Failed to start thread %k", self);
 #endif /* DeeThread_USE_thrd_create */
 
-#ifdef DeeThread_USE_NO_THREADS
+#ifdef DeeThread_USE_SINGLE_THREADED
 	return DeeError_Throwf(&DeeError_UnsupportedAPI,
 	                       "Unable to start thread %k",
 	                       self);
-#endif /* DeeThread_USE_NO_THREADS */
+#endif /* DeeThread_USE_SINGLE_THREADED */
 }
+#endif /* !DeeThread_USE_SINGLE_THREADED */
 
 /* Start execution of the given thread.
  * @return: -1: An error occurred. (Always returned for `CONFIG_NO_THREADS')
@@ -2436,6 +2536,10 @@ again:
  * @return:  1: The thread had already been started. */
 PUBLIC WUNUSED NONNULL((1)) int DCALL
 DeeThread_Start(/*Thread*/ DeeObject *__restrict self) {
+#ifdef DeeThread_USE_SINGLE_THREADED
+	(void)self;
+	return 1; /* Both the main thread, as well as unmanaged threads are always already-started */
+#else /* DeeThread_USE_SINGLE_THREADED */
 	uint32_t state;
 	DeeThreadObject *caller = DeeThread_Self();
 	DeeOSThreadObject *me = DeeThread_AsOSThread((DeeThreadObject *)self);
@@ -2506,6 +2610,7 @@ err_abort:
 	_DeeThread_WakeWaiting(&me->ot_thread);
 err:
 	return -1;
+#endif /* !DeeThread_USE_SINGLE_THREADED */
 }
 
 
@@ -2524,6 +2629,11 @@ DeeFutex_WakeGlobal(DeeThreadObject *thread);
 /* Try to wake the thread. */
 PUBLIC NONNULL((1)) void DCALL
 DeeThread_Wake(/*Thread*/ DeeObject *__restrict self) {
+#ifdef DeeThread_USE_SINGLE_THREADED
+	/* No-op in all situations */
+	(void)self;
+	COMPILER_IMPURE();
+#else /* DeeThread_USE_SINGLE_THREADED */
 	uint32_t state;
 	DeeOSThreadObject *me = DeeThread_AsOSThread((DeeThreadObject *)self);
 	ASSERT_OBJECT_TYPE(&me->ot_thread, &DeeThread_Type);
@@ -2540,8 +2650,16 @@ DeeThread_Wake(/*Thread*/ DeeObject *__restrict self) {
 	/* Ensure that the thread can't be detached at the moment. */
 	for (;;) {
 		state = atomic_fetchor(&me->ot_thread.t_state, Dee_THREAD_STATE_DETACHING);
-		if (!(state & Dee_THREAD_STATE_DETACHING))
+		if (!(state & Dee_THREAD_STATE_DETACHING)) {
+			/* Must not do anything to unmanaged threads. */
+			if unlikely(state & Dee_THREAD_STATE_UNMANAGED) {
+				atomic_and(&me->ot_thread.t_state, ~Dee_THREAD_STATE_DETACHING);
+				return;
+			}
 			break;
+		}
+		if unlikely(state & Dee_THREAD_STATE_UNMANAGED)
+			return;
 		SCHED_YIELD();
 	}
 
@@ -2591,14 +2709,14 @@ DeeThread_Wake(/*Thread*/ DeeObject *__restrict self) {
 #ifdef DeeThread_Wake_USE_tgkill
 		if (state & Dee_THREAD_STATE_HASTID) {
 			DBG_ALIGNMENT_DISABLE();
-			(void)tgkill(getpid(), me->ot_pid, DeeThread_Wake_USED_SIGNAL);
+			(void)tgkill(getpid(), me->ot_tid, DeeThread_Wake_USED_SIGNAL);
 			DBG_ALIGNMENT_ENABLE();
 		}
 #endif /* DeeThread_Wake_USE_tgkill */
 #ifdef DeeThread_Wake_USE_kill
 		if (state & Dee_THREAD_STATE_HASTID) {
 			DBG_ALIGNMENT_DISABLE();
-			(void)kill(me->ot_pid, DeeThread_Wake_USED_SIGNAL);
+			(void)kill(me->ot_tid, DeeThread_Wake_USED_SIGNAL);
 			DBG_ALIGNMENT_ENABLE();
 		}
 #endif /* DeeThread_Wake_USE_kill */
@@ -2606,6 +2724,7 @@ DeeThread_Wake(/*Thread*/ DeeObject *__restrict self) {
 
 	/* Release the DETACHING lock. */
 	atomic_and(&me->ot_thread.t_state, ~Dee_THREAD_STATE_DETACHING);
+#endif /* !DeeThread_USE_SINGLE_THREADED */
 }
 
 /* Schedule an interrupt for a given thread.
@@ -2622,7 +2741,9 @@ DeeThread_Interrupt(/*Thread*/ DeeObject *self,
                     DeeObject *interrupt_main,
                     DeeObject *interrupt_args) {
 	uint32_t state;
+#ifndef DeeThread_USE_SINGLE_THREADED
 	uintptr_t version;
+#endif /* !DeeThread_USE_SINGLE_THREADED */
 	struct thread_interrupt *interrupt;
 	DeeThreadObject *caller;
 	DeeThreadObject *me;
@@ -2642,19 +2763,27 @@ again:
 		SCHED_YIELD();
 	}
 
-	/* Check if the thread has already terminated. */
-	if (state & Dee_THREAD_STATE_TERMINATING) {
+	/* Check if the thread has already terminated (or is unmanaged). */
+	if (state & (Dee_THREAD_STATE_TERMINATING | Dee_THREAD_STATE_UNMANAGED)) {
 		atomic_and(&me->t_state, ~Dee_THREAD_STATE_INTERRUPTING);
+		if unlikely(state & Dee_THREAD_STATE_UNMANAGED) {
+			DeeError_Throwf(&DeeError_ValueError, "Cannot interrupt unmanaged thread");
+			goto err;
+		}
 		goto already_terminated;
 	}
 
-	/* In order to send interrupts, you can't have any yourself. */
-	if (atomic_read(&caller->t_state) & Dee_THREAD_STATE_INTERRUPTED) {
+	/* In order to send interrupts, you can't have any yourself,
+	 * unless you're trying to send an interrupt to yourself. */
+#ifndef DeeThread_USE_SINGLE_THREADED
+	if ((atomic_read(&caller->t_state) & Dee_THREAD_STATE_INTERRUPTED) &&
+	    (caller != me)) {
 		atomic_and(&me->t_state, ~Dee_THREAD_STATE_INTERRUPTING);
 		if (DeeThread_CheckInterruptSelf(caller))
-			goto err;
+			goto err_free_interrupt;
 		goto again;
 	}
+#endif /* !DeeThread_USE_SINGLE_THREADED */
 
 	/* Schedule the interrupt as pending for the target thread. */
 	if (me->t_interrupt.ti_intr == NULL) {
@@ -2669,7 +2798,7 @@ again:
 			atomic_and(&me->t_state, ~Dee_THREAD_STATE_INTERRUPTING);
 			interrupt = Dee_thread_interrupt_alloc();
 			if unlikely(!interrupt)
-				goto err_nofree_interrupt;
+				goto err;
 			goto again;
 		}
 		prev = &me->t_interrupt;
@@ -2692,7 +2821,9 @@ again:
 	Dee_thread_interrupt_xfree(interrupt);
 
 	/* Set the INTERRUPTED flag for the target thread, and force it to wake up. */
+#ifndef DeeThread_USE_SINGLE_THREADED
 	version = atomic_read(&me->t_int_vers);
+#endif /* !DeeThread_USE_SINGLE_THREADED */
 	atomic_or(&me->t_state, Dee_THREAD_STATE_INTERRUPTED);
 
 	/* Wait for the thread to have handled its pending interrupts.
@@ -2700,29 +2831,35 @@ again:
 	 * NOTE: Because we've already created the interrupt at this
 	 *       point, we must perform this wait without doing any
 	 *       interrupt checks! */
-	for (;;) {
-		DeeThread_Wake((DeeObject *)me);
-		state = atomic_read(&me->t_state);
-		if (!(state & Dee_THREAD_STATE_INTERRUPTED))
-			break;
-		if (!(state & Dee_THREAD_STATE_WAITING)) {
-			atomic_or(&me->t_state, Dee_THREAD_STATE_WAITING);
-			state |= Dee_THREAD_STATE_WAITING;
+#ifndef DeeThread_USE_SINGLE_THREADED
+	if (me != caller) {
+		for (;;) {
+			DeeThread_Wake((DeeObject *)me);
+			state = atomic_read(&me->t_state);
+			if (!(state & Dee_THREAD_STATE_INTERRUPTED))
+				break;
+			if (!(state & Dee_THREAD_STATE_WAITING)) {
+				atomic_or(&me->t_state, Dee_THREAD_STATE_WAITING);
+				state |= Dee_THREAD_STATE_WAITING;
+			}
+	
+			/* Keep waking the thread in case it just went inside of a blocking system call. */
+			DeeFutex_Wait32NoIntTimed(&me->t_state, state, THREAD_WAKE_DELAY);
+			if (version != atomic_read(&me->t_int_vers))
+				break; /* The thread checked for interrupts in the meantime */
 		}
-
-		/* Keep waking the thread in case it just went inside of a blocking system call. */
-		DeeFutex_Wait32NoIntTimed(&me->t_state, state, THREAD_WAKE_DELAY);
-		if (version != atomic_read(&me->t_int_vers))
-			break; /* The thread checked for interrupts in the meantime */
 	}
+#endif /* !DeeThread_USE_SINGLE_THREADED */
 
 	return 0;
 already_terminated:
 	Dee_thread_interrupt_xfree(interrupt);
 	return 1;
-err:
+#ifndef DeeThread_USE_SINGLE_THREADED
+err_free_interrupt:
 	Dee_thread_interrupt_xfree(interrupt);
-err_nofree_interrupt:
+#endif /* !DeeThread_USE_SINGLE_THREADED */
+err:
 	return -1;
 }
 
@@ -2785,12 +2922,30 @@ err_cannot_detach:
 PUBLIC WUNUSED NONNULL((1)) int DCALL
 DeeThread_WaitFor(/*Thread*/ DeeObject *__restrict self,
                   uint64_t timeout_nanoseconds) {
+#ifndef DeeThread_USE_SINGLE_THREADED
 	uint32_t state;
+#endif /* !DeeThread_USE_SINGLE_THREADED */
 	DeeThreadObject *me = (DeeThreadObject *)self;
+	(void)timeout_nanoseconds;
+	if unlikely(me == DeeThread_Self()) {
+		return DeeError_Throwf(&DeeError_ValueError,
+		                       "Dead-lock detected: Thread %k tried to join itself",
+		                       me);
+	}
 
+#ifdef DeeThread_USE_SINGLE_THREADED
+	return DeeError_Throwf(&DeeError_ValueError,
+	                       "Cannot wait for unmanaged thread %k",
+	                       me);
+#else /* DeeThread_USE_SINGLE_THREADED */
 	/* Wait for the thread to terminate. */
 	state = atomic_read(&me->t_state);
 	if (!(state & Dee_THREAD_STATE_TERMINATED)) {
+		if (state & Dee_THREAD_STATE_UNMANAGED) {
+			return DeeError_Throwf(&DeeError_ValueError,
+			                       "Cannot wait for unmanaged thread %k",
+			                       me);
+		}
 		if (timeout_nanoseconds == 0)
 			goto timeout; /* Try-join */
 		if (timeout_nanoseconds == (uint64_t)-1) {
@@ -2833,8 +2988,11 @@ timeout:
 	return 1;
 err:
 	return -1;
+#endif /* !DeeThread_USE_SINGLE_THREADED */
 }
 
+
+#ifndef DeeThread_USE_SINGLE_THREADED
 PRIVATE WUNUSED NONNULL((1)) struct except_frame *DCALL
 except_frame_copy_for_rethrow_or_unlock(struct except_frame *__restrict self,
                                         DeeThreadObject *__restrict thread) {
@@ -2914,6 +3072,7 @@ DeeThread_RethrowExceptionsOrUnlock(DeeThreadObject *__restrict self) {
 	caller->t_exceptsz += self->t_exceptsz;
 	return true;
 }
+#endif /* !DeeThread_USE_SINGLE_THREADED */
 
 /* Join the given thread.
  * @return: ITER_DONE: The given timeout has expired. (never returned for `(uint64_t)-1')
@@ -2926,6 +3085,10 @@ DeeThread_RethrowExceptionsOrUnlock(DeeThreadObject *__restrict self) {
 PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeThread_Join(/*Thread*/ DeeObject *__restrict self,
                uint64_t timeout_nanoseconds) {
+#ifdef DeeThread_USE_SINGLE_THREADED
+	DeeThread_WaitFor(self, timeout_nanoseconds);
+	return NULL;
+#else /* DeeThread_USE_SINGLE_THREADED */
 	int waitfor_status;
 	DeeThreadObject *me = (DeeThreadObject *)self;
 
@@ -2957,6 +3120,7 @@ again_acquire_setup:
 	_DeeThread_ReleaseSetup(me);
 err:
 	return NULL;
+#endif /* !DeeThread_USE_SINGLE_THREADED */
 }
 
 
@@ -2970,7 +3134,7 @@ DeeThread_GetTid(/*Thread*/ DeeObject *__restrict self) {
 	DeeOSThreadObject *me = DeeThread_AsOSThread((DeeThreadObject *)self);
 
 	/* Read the PID, then check if it's still valid. */
-	result = atomic_read(&me->ot_pid);
+	result = atomic_read(&me->ot_tid);
 	state  = atomic_read(&me->ot_thread.t_state);
 	if (!(state & Dee_THREAD_STATE_HASTID))
 		result = 0;
@@ -3001,6 +3165,13 @@ INTERN bool DCALL DeeThread_ClearTls(void) {
 }
 
 
+#undef HAVE_thread_clear
+#ifdef DeeThread_USE_SINGLE_THREADED
+/* Running threads are always reachable, and thus must never be GC-cleared.
+ * And since the main thread is always running, there is no situation where
+ * a thread needs to be cleared in the single-threaded configuration. */
+#else /* DeeThread_USE_SINGLE_THREADED */
+#define HAVE_thread_clear
 PRIVATE NONNULL((1)) void DCALL
 thread_clear(DeeThreadObject *__restrict self) {
 	/* NOTE: We're allowed to assume that the thread is not running,
@@ -3040,7 +3211,7 @@ thread_clear(DeeThreadObject *__restrict self) {
 	bzero(old_objects, sizeof(old_objects));
 	_DeeThread_AcquireSetup(self);
 	state = atomic_read(&self->t_state);
-	if (state & Dee_THREAD_STATE_STARTED) {
+	if (!(state & Dee_THREAD_STATE_STARTED)) {
 		ASSERTF(state & Dee_THREAD_STATE_TERMINATED,
 		        "Running threads should be reachable and thus not be considered gc-clearable");
 		old_objects[0] = self->t_inout.io_result; /* Inherit reference */
@@ -3075,6 +3246,7 @@ thread_clear(DeeThreadObject *__restrict self) {
 		old_except = prev;
 	}
 }
+#endif /* !DeeThread_USE_SINGLE_THREADED */
 
 PRIVATE NONNULL((1, 2)) void DCALL
 thread_visit(DeeThreadObject *__restrict self, dvisit_t proc, void *arg) {
@@ -3097,6 +3269,7 @@ thread_visit(DeeThreadObject *__restrict self, dvisit_t proc, void *arg) {
 	_DeeThread_ReleaseInterrupt(self);
 
 	/* Visit runtime context. */
+#ifndef DeeThread_USE_SINGLE_THREADED
 	_DeeThread_AcquireSetup(self);
 	state = atomic_read(&self->t_state);
 	if (state & Dee_THREAD_STATE_STARTED) {
@@ -3118,6 +3291,7 @@ thread_visit(DeeThreadObject *__restrict self, dvisit_t proc, void *arg) {
 		Dee_Visit(self->t_context.d_args);
 	}
 	_DeeThread_ReleaseSetup(self);
+#endif /* !DeeThread_USE_SINGLE_THREADED */
 }
 
 PRIVATE NONNULL((1)) void DCALL
@@ -3127,6 +3301,19 @@ thread_fini(DeeThreadObject *__restrict self) {
 	ASSERT(!self->t_str_curr);
 	ASSERT(!self->t_repr_curr);
 
+#ifdef DeeThread_USE_SINGLE_THREADED
+	/* Only unmanaged threads can get here */
+	ASSERT(self->t_state & Dee_THREAD_STATE_UNMANAGED);
+#ifndef CONFIG_NO_THREADS
+	ASSERT(!LIST_ISBOUND(self, t_global));
+#endif /* !CONFIG_NO_THREADS */
+	ASSERT(self->t_deepassoc.da_used == 0);
+	ASSERT(self->t_deepassoc.da_mask == 0);
+	ASSERT(self->t_deepassoc.da_list == empty_deep_assoc);
+#ifndef CONFIG_NO_THREADS
+	ASSERT(self->t_threadname == NULL);
+#endif /* !CONFIG_NO_THREADS */
+#else /* DeeThread_USE_SINGLE_THREADED */
 	/* If the thread is still bound, then we must unlink it! */
 	if (LIST_ISBOUND(self, t_global)) {
 		thread_list_lock_acquire_noint();
@@ -3179,6 +3366,7 @@ thread_fini(DeeThreadObject *__restrict self) {
 	    !(self->t_state & Dee_THREAD_STATE_TERMINATING)) {
 		DeeThread_DiscardAllInterrupts(self);
 	}
+#endif /* !DeeThread_USE_SINGLE_THREADED */
 }
 
 
@@ -3186,7 +3374,7 @@ thread_fini(DeeThreadObject *__restrict self) {
 #ifdef Dee_pid_t
 /* Construct a new wrapper for an external reference to `thread'
  * NOTE: The given `thread' is _NOT_ inherited! */
-DFUNDEF WUNUSED DREF DeeObject *DCALL DeeThread_FromPid(Dee_pid_t pid) {
+DFUNDEF WUNUSED DREF DeeObject *DCALL DeeThread_FromPid(Dee_pid_t tid) {
 	DREF DeeOSThreadObject *result;
 	result = DeeGCObject_CALLOC(DeeOSThreadObject);
 	if unlikely(!result)
@@ -3194,7 +3382,7 @@ DFUNDEF WUNUSED DREF DeeObject *DCALL DeeThread_FromPid(Dee_pid_t pid) {
 	result->ot_thread.t_state = Dee_THREAD_STATE_STARTED |
 	                            Dee_THREAD_STATE_HASTID |
 	                            Dee_THREAD_STATE_UNMANAGED;
-	result->ot_pid = pid;
+	result->ot_tid = tid;
 	result->ot_thread.t_deepassoc.da_list = empty_deep_assoc;
 	DeeObject_Init(&result->ot_thread, &DeeThread_Type);
 	DeeGC_Track((DeeObject *)&result->ot_thread);
@@ -3210,44 +3398,97 @@ thread_print_impl(DeeThreadObject *__restrict self,
                   dformatprinter printer, void *arg,
                   bool do_repr) {
 	dssize_t temp, result = 0;
+#ifndef DeeThread_USE_SINGLE_THREADED
 	DREF DeeObject *thread_main;
 	DREF DeeTupleObject *thread_args;
-	DREF DeeObject *thread_except;
 	DREF DeeObject *thread_result;
+#endif /* !DeeThread_USE_SINGLE_THREADED */
+	DREF DeeObject *thread_except;
 	uint32_t state;
-
-	/* Figure out the current state of the thread. */
+#ifdef Dee_pid_t
+	Dee_pid_t tid;
+#endif /* Dee_pid_t */
+#ifndef DeeThread_USE_SINGLE_THREADED
 	thread_main   = NULL;
 	thread_args   = NULL;
-	thread_except = NULL;
 	thread_result = NULL;
+#endif /* !DeeThread_USE_SINGLE_THREADED */
+	thread_except = NULL;
+
+	/* Try to load the thread's PID */
+#ifdef Dee_pid_t
+	_DeeThread_AcquireDetaching(self);
+	tid   = DeeThread_AsOSThread(self)->ot_tid;
+	state = atomic_read(&self->t_state);
+	_DeeThread_ReleaseDetaching(self);
+	if (!(state & Dee_THREAD_STATE_HASTID))
+		tid = 0;
+#endif /* Dee_pid_t */
+
+	/* Figure out the current state of the thread. */
 	_DeeThread_AcquireSetup(self);
 	state = atomic_read(&self->t_state);
-	if (state & Dee_THREAD_STATE_STARTED) {
-		if (state & Dee_THREAD_STATE_TERMINATED) {
-			if (self->t_exceptsz) {
-				thread_except = self->t_except->ef_error;
-				Dee_Incref(thread_except);
-			} else {
-				thread_result = self->t_inout.io_result;
-				Dee_Incref(thread_result);
-			}
-		}
-	} else {
+#ifndef DeeThread_USE_SINGLE_THREADED
+	if (!(state & Dee_THREAD_STATE_STARTED)) {
 		thread_main = self->t_inout.io_main;
 		thread_args = self->t_context.d_args;
 		Dee_XIncref(thread_main);
 		Dee_Incref(thread_args);
+	} else
+#endif /* !DeeThread_USE_SINGLE_THREADED */
+	{
+#ifdef DeeThread_USE_SINGLE_THREADED
+		if (!(state & Dee_THREAD_STATE_UNMANAGED))
+#else /* DeeThread_USE_SINGLE_THREADED */
+		if ((state & Dee_THREAD_STATE_TERMINATED) || self == DeeThread_Self())
+#endif /* !DeeThread_USE_SINGLE_THREADED */
+		{
+			if (self->t_exceptsz) {
+				thread_except = self->t_except->ef_error;
+				Dee_Incref(thread_except);
+			}
+#ifndef DeeThread_USE_SINGLE_THREADED
+			else {
+				thread_result = self->t_inout.io_result;
+				Dee_Incref(thread_result);
+			}
+#endif /* !DeeThread_USE_SINGLE_THREADED */
+		}
 	}
 	_DeeThread_ReleaseSetup(self);
+
+
 	result = do_repr ? DeeFormat_PRINT(printer, arg, "Thread(")
 	                 : DeeFormat_PRINT(printer, arg, "<Thread ");
 	if unlikely(result < 0)
 		goto done;
+
+	/* Print TID information (if available) */
+#ifdef Dee_pid_t
+	_DeeThread_AcquireDetaching(self);
+	tid   = DeeThread_AsOSThread(self)->ot_tid;
+	state = atomic_read(&self->t_state);
+	_DeeThread_ReleaseDetaching(self);
+	if (!(state & Dee_THREAD_STATE_HASTID))
+		tid = 0;
+	if (do_repr) {
+		if (state & Dee_THREAD_STATE_UNMANAGED) {
+			DO(err, DeeFormat_Printf(printer, arg, "tid: %" PRFd64 ")", (int64_t)tid));
+			goto done;
+		}
+	} else if (tid != 0) {
+		DO(err, DeeFormat_Printf(printer, arg, " %" PRFd64, (int64_t)tid));
+	}
+#endif /* Dee_pid_t */
+
+#ifndef DeeThread_USE_SINGLE_THREADED
 	if (self->t_threadname) {
 		DO(err, do_repr ? DeeFormat_Printf(printer, arg, "name: %r, ", self->t_threadname)
-		                : DeeFormat_Printf(printer, arg, " %k, ", self->t_threadname));
-	} else if (!do_repr) {
+		                : DeeFormat_Printf(printer, arg, " %k", self->t_threadname));
+	} else
+#endif /* !DeeThread_USE_SINGLE_THREADED */
+	if (!do_repr) {
+#ifndef DeeThread_USE_SINGLE_THREADED
 		if (thread_main && DeeFunction_Check(thread_main)) {
 			/* If DDI provides, set the name of the function that's to-be executed. */
 			DeeFunctionObject *exec_function;
@@ -3258,39 +3499,54 @@ thread_print_impl(DeeThreadObject *__restrict self,
 			exec_name     = DeeCode_NAME(exec_code);
 			if (exec_name == NULL && exec_code == exec_code->co_module->mo_root)
 				exec_name = DeeString_STR(exec_code->co_module->mo_name);
-			DO(err, DeeFormat_Printf(printer, arg, " %s, ", exec_name ? exec_name : "<anonymous>"));
+			DO(err, DeeFormat_Printf(printer, arg, " %s", exec_name ? exec_name : "<anonymous>"));
 		}
+#endif /* !DeeThread_USE_SINGLE_THREADED */
 	}
 	if (!do_repr) {
 		char const *state_desc = NULL;
+#ifndef DeeThread_USE_SINGLE_THREADED
 		if (state & Dee_THREAD_STATE_TERMINATED) {
 			state_desc = thread_except ? "crashed" : "terminated";
-		} else if (state & Dee_THREAD_STATE_TERMINATING) {
+		} else
+#endif /* !DeeThread_USE_SINGLE_THREADED */
+		if (state & Dee_THREAD_STATE_TERMINATING) {
 			state_desc = "terminating";
-		} else if (state & Dee_THREAD_STATE_STARTED) {
+		} else
+#ifdef DeeThread_USE_SINGLE_THREADED
+		{
+			state_desc = "running";
+		}
+#else /* DeeThread_USE_SINGLE_THREADED */
+		if (state & Dee_THREAD_STATE_STARTED) {
 			state_desc = "running";
 		} else if (state & Dee_THREAD_STATE_STARTING) {
 			state_desc = "starting";
 		}
+#endif /* !DeeThread_USE_SINGLE_THREADED */
 		if (state_desc)
-			DO(err, DeeFormat_Printf(printer, arg, "<%s> ", state_desc));
+			DO(err, DeeFormat_Printf(printer, arg, " <%s>", state_desc));
 		DO(err, DeeFormat_PRINT(printer, arg, ">"));
+#ifndef DeeThread_USE_SINGLE_THREADED
 	} else if ((state & Dee_THREAD_STATE_TERMINATED) && thread_except) {
 		DO(err, DeeFormat_Printf(printer, arg, ")<.hascrashed:%r>", thread_except));
 	} else if ((state & Dee_THREAD_STATE_TERMINATED) && thread_result) {
 		DO(err, DeeFormat_Printf(printer, arg, ")<.hasterminated:%r>", thread_result));
-	} else if (state & Dee_THREAD_STATE_STARTED) {
-		DO(err, DeeFormat_PRINT(printer, arg, ")<.hasstarted>"));
-	} else {
+	} else if (!(state & Dee_THREAD_STATE_STARTED)) {
 		if (thread_main)
 			DO(err, DeeFormat_Printf(printer, arg, "main: %r, ", self->t_threadname));
 		DO(err, DeeFormat_Printf(printer, arg, "args: %r)", thread_args));
+#endif /* !DeeThread_USE_SINGLE_THREADED */
+	} else {
+		DO(err, DeeFormat_PRINT(printer, arg, ")<.hasstarted>"));
 	}
 done:
+#ifndef DeeThread_USE_SINGLE_THREADED
 	Dee_XDecref(thread_main);
 	Dee_XDecref(thread_args);
-	Dee_XDecref(thread_except);
 	Dee_XDecref(thread_result);
+#endif /* !DeeThread_USE_SINGLE_THREADED */
+	Dee_XDecref(thread_except);
 	return result;
 err:
 	result = temp;
@@ -3313,6 +3569,45 @@ thread_printrepr(DeeThreadObject *__restrict self,
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 thread_init(DeeThreadObject *__restrict self,
             size_t argc, DeeObject *const *argv) {
+#ifdef Dee_pid_t
+	if (argc == 1 && DeeInt_Check(argv[0])) {
+		/* Construct unmanaged thread from TID */
+		DeeOSThreadObject *me = DeeThread_AsOSThread(self);
+		me->ot_thread.t_str_curr          = NULL;
+		me->ot_thread.t_repr_curr         = NULL;
+		me->ot_thread.t_deepassoc.da_used = 0;
+		me->ot_thread.t_deepassoc.da_mask = 0;
+		me->ot_thread.t_deepassoc.da_list = empty_deep_assoc;
+		me->ot_thread.t_exec              = NULL;
+		me->ot_thread.t_except            = NULL;
+		me->ot_thread.t_execsz            = 0;
+		me->ot_thread.t_exceptsz          = 0;
+		me->ot_thread.t_state             = Dee_THREAD_STATE_STARTED | Dee_THREAD_STATE_HASTID | Dee_THREAD_STATE_UNMANAGED;
+		me->ot_thread.t_interrupt.ti_next = NULL;
+		me->ot_thread.t_interrupt.ti_intr = NULL;
+		me->ot_thread.t_interrupt.ti_args = NULL;
+#ifndef CONFIG_NO_THREADS
+		me->ot_thread.t_int_vers       = 0;
+		me->ot_thread.t_global.le_prev = NULL;
+		DBG_memset(&me->ot_thread.t_global.le_next, 0xcc, sizeof(self->t_global.le_next));
+		me->ot_thread.t_threadname = NULL;
+		DBG_memset(&me->ot_thread.t_inout, 0xcc, sizeof(me->ot_thread.t_inout));
+#endif /* !CONFIG_NO_THREADS */
+		me->ot_thread.t_context.d_tls = NULL;
+		return DeeInt_AsSINT(argv[0], &me->ot_tid);
+	}
+#endif /* Dee_pid_t */
+
+#ifdef DeeThread_USE_SINGLE_THREADED
+	(void)self;
+#ifdef Dee_pid_t
+	if (argc == 1 && DeeObject_AssertTypeExact(argv[0], &DeeInt_Type))
+		return -1;
+	return err_invalid_argc(DeeString_STR(&str_Thread), argc, 1, 1);
+#else /* Dee_pid_t */
+	return err_unimplemented_constructor(&DeeThread_Type, argc, argv);
+#endif /* !Dee_pid_t */
+#else /* DeeThread_USE_SINGLE_THREADED */
 	if unlikely(argc > 3) {
 		err_invalid_argc(DeeString_STR(&str_Thread), argc, 0, 3);
 		goto err;
@@ -3370,6 +3665,7 @@ err_main:
 	Dee_XDecref(self->t_threadname);
 err:
 	return -1;
+#endif /* !DeeThread_USE_SINGLE_THREADED */
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -3489,6 +3785,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 thread_started(DeeThreadObject *self, size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, ":started"))
 		goto err;
+	(void)self;
 	return_bool(DeeThread_HasStarted(self));
 err:
 	return NULL;
@@ -3498,6 +3795,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 thread_detached(DeeThreadObject *self, size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, ":detached"))
 		goto err;
+	(void)self;
 	return_bool(DeeThread_WasDetached(self));
 err:
 	return NULL;
@@ -3507,7 +3805,12 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 thread_terminated(DeeThreadObject *self, size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, ":terminated"))
 		goto err;
+	(void)self;
+#ifdef DeeThread_USE_SINGLE_THREADED
+	return_false;
+#else /* DeeThread_USE_SINGLE_THREADED */
 	return_bool(DeeThread_HasTerminated(self));
+#endif /* !DeeThread_USE_SINGLE_THREADED */
 err:
 	return NULL;
 }
@@ -3516,6 +3819,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 thread_interrupted(DeeThreadObject *self, size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, ":interrupted"))
 		goto err;
+	(void)self;
 	return_bool(DeeThread_WasInterrupted(self));
 err:
 	return NULL;
@@ -3525,6 +3829,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 thread_crashed(DeeThreadObject *self, size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, ":crashed"))
 		goto err;
+	(void)self;
 	return_bool(DeeThread_HasCrashed(self));
 err:
 	return NULL;
@@ -3540,26 +3845,40 @@ err_not_terminated(DeeThreadObject *__restrict self) {
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 thread_crash_error(DeeThreadObject *self, size_t argc, DeeObject *const *argv) {
+	DeeThreadObject *caller = DeeThread_Self();
 	DREF DeeObject *result;
 	if (DeeArg_Unpack(argc, argv, ":crash_error"))
 		goto err;
-	_DeeThread_AcquireSetup(self);
-	if (!DeeThread_HasTerminated(self) && self != DeeThread_Self()) {
-		_DeeThread_ReleaseSetup(self);
+	if (self != caller) {
+#ifdef DeeThread_USE_SINGLE_THREADED
 		err_not_terminated(self);
 		goto err;
+#else /* DeeThread_USE_SINGLE_THREADED */
+		_DeeThread_AcquireSetup(self);
+		if (!DeeThread_HasTerminated(self)) {
+			_DeeThread_ReleaseSetup(self);
+			err_not_terminated(self);
+			goto err;
+		}
+#endif /* !DeeThread_USE_SINGLE_THREADED */
 	}
 	ASSERT((self->t_exceptsz != 0) == (self->t_except != NULL));
 	if (self->t_exceptsz == 0) {
 		/* No active exceptions. */
-		_DeeThread_ReleaseSetup(self);
+#ifndef DeeThread_USE_SINGLE_THREADED
+		if (self != caller)
+			_DeeThread_ReleaseSetup(self);
+#endif /* !DeeThread_USE_SINGLE_THREADED */
 		err_no_active_exception();
 		goto err;
 	}
 	result = self->t_except->ef_error;
 	ASSERT_OBJECT(result);
 	Dee_Incref(result);
-	_DeeThread_ReleaseSetup(self);
+#ifndef DeeThread_USE_SINGLE_THREADED
+	if (self != caller)
+		_DeeThread_ReleaseSetup(self);
+#endif /* !DeeThread_USE_SINGLE_THREADED */
 	return result;
 err:
 	return NULL;
@@ -3572,18 +3891,25 @@ thread_crash_traceback(DeeThreadObject *self, size_t argc, DeeObject *const *arg
 	if (DeeArg_Unpack(argc, argv, ":crash_traceback"))
 		goto err;
 	if (self != caller) {
+#ifdef DeeThread_USE_SINGLE_THREADED
+		err_not_terminated(self);
+		goto err;
+#else /* DeeThread_USE_SINGLE_THREADED */
 		_DeeThread_AcquireSetup(self);
 		if (!DeeThread_HasTerminated(self)) {
 			_DeeThread_ReleaseSetup(self);
 			err_not_terminated(self);
 			goto err;
 		}
+#endif /* !DeeThread_USE_SINGLE_THREADED */
 	}
 	ASSERT((self->t_exceptsz != 0) == (self->t_except != NULL));
 	if (self->t_exceptsz == 0) {
 		/* No active exceptions. */
+#ifndef DeeThread_USE_SINGLE_THREADED
 		if (self != caller)
 			_DeeThread_ReleaseSetup(self);
+#endif /* !DeeThread_USE_SINGLE_THREADED */
 		err_no_active_exception();
 		goto err;
 	}
@@ -3594,8 +3920,10 @@ thread_crash_traceback(DeeThreadObject *self, size_t argc, DeeObject *const *arg
 		result = Dee_None;
 	ASSERT_OBJECT(result);
 	Dee_Incref(result);
+#ifndef DeeThread_USE_SINGLE_THREADED
 	if (self != caller)
 		_DeeThread_ReleaseSetup(self);
+#endif /* !DeeThread_USE_SINGLE_THREADED */
 	return result;
 err:
 	return NULL;
@@ -3712,13 +4040,6 @@ err:
 	return NULL;
 }
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-thread_current_get(DeeObject *__restrict UNUSED(self)) {
-	DeeThreadObject *result;
-	result = DeeThread_Self();
-	return_reference_((DeeObject *)result);
-}
-
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 thread_selfid(DeeObject *UNUSED(self),
@@ -3795,6 +4116,15 @@ err:
 	return NULL;
 }
 
+#ifndef DeeThread_USE_SINGLE_THREADED
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+thread_current_get(DeeObject *__restrict UNUSED(self)) {
+	DeeThreadObject *result;
+	result = DeeThread_Self();
+	return_reference_((DeeObject *)result);
+}
+
+#define HAVE_thread_class_getsets
 PRIVATE struct type_getset tpconst thread_class_getsets[] = {
 	TYPE_GETTER("current", &thread_current_get,
 	            "->?.\n"
@@ -3804,9 +4134,16 @@ PRIVATE struct type_getset tpconst thread_class_getsets[] = {
 	 *    deemon-threads; s.a. `add_running_thread()' */
 	TYPE_GETSET_END
 };
+#endif /* !DeeThread_USE_SINGLE_THREADED */
 
 PRIVATE struct type_member tpconst thread_class_members[] = {
 	TYPE_MEMBER_CONST_DOC("main", &DeeThread_Main.ot_thread, "The main (initial) thread"),
+#ifdef DeeThread_USE_SINGLE_THREADED
+	TYPE_MEMBER_CONST_DOC("current", &DeeThread_Main.ot_thread, "Returns a thread descriptor for the calling thread"),
+	TYPE_MEMBER_CONST_DOC("supported", Dee_False, "True if the implementation supports multiple threads"),
+#else /* DeeThread_USE_SINGLE_THREADED */
+	TYPE_MEMBER_CONST_DOC("supported", Dee_True, "True if the implementation supports multiple threads"),
+#endif /* !DeeThread_USE_SINGLE_THREADED */
 	TYPE_MEMBER_END
 };
 
@@ -3842,6 +4179,7 @@ PRIVATE struct type_method tpconst thread_class_methods[] = {
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 thread_callback_get(DeeThreadObject *__restrict self) {
+#ifndef DeeThread_USE_SINGLE_THREADED
 	DREF DeeObject *result = NULL;
 	_DeeThread_AcquireSetup(self);
 	if likely(!DeeThread_HasStarted(self)) {
@@ -3853,6 +4191,8 @@ thread_callback_get(DeeThreadObject *__restrict self) {
 		goto err_unbound;
 	return result;
 err_unbound:
+#endif /* !DeeThread_USE_SINGLE_THREADED */
+	(void)self;
 	err_unbound_attribute(&DeeThread_Type, "callback");
 	return NULL;
 }
@@ -3868,23 +4208,29 @@ err_cannot_set_thread_subclass_callback(DeeThreadObject *__restrict self,
 PRIVATE int DCALL
 thread_callback_set(DeeThreadObject *__restrict self,
                     DeeObject *value) {
-	DREF DeeObject *old_callback;
+	(void)value;
 	if (!DeeThread_CheckExact(self))
 		return err_cannot_set_thread_subclass_callback(self, "callback");
+#ifndef DeeThread_USE_SINGLE_THREADED
 	_DeeThread_AcquireSetup(self);
 	if unlikely(DeeThread_HasStarted(self)) {
 		_DeeThread_ReleaseSetup(self);
-		return DeeError_Throwf(&DeeError_ValueError,
-		                       "Cannot set the callback of thread "
-		                       "%k that has already been started",
-		                       self);
+		goto err_already_started;
+	} else {
+		DREF DeeObject *old_callback;
+		old_callback = self->t_inout.io_main;
+		self->t_inout.io_main = value;
+		Dee_XIncref(value);
+		_DeeThread_ReleaseSetup(self);
+		Dee_XDecref(old_callback);
 	}
-	old_callback = self->t_inout.io_main;
-	self->t_inout.io_main = value;
-	Dee_XIncref(value);
-	_DeeThread_ReleaseSetup(self);
-	Dee_XDecref(old_callback);
 	return 0;
+err_already_started:
+#endif /* !DeeThread_USE_SINGLE_THREADED */
+	return DeeError_Throwf(&DeeError_ValueError,
+	                       "Cannot set the callback of thread "
+	                       "%k that has already been started",
+	                       self);
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
@@ -3894,6 +4240,7 @@ thread_callback_del(DeeThreadObject *__restrict self) {
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeTupleObject *DCALL
 thread_callargs_get(DeeThreadObject *__restrict self) {
+#ifndef DeeThread_USE_SINGLE_THREADED
 	DREF DeeTupleObject *result = NULL;
 	_DeeThread_AcquireSetup(self);
 	if likely(!DeeThread_HasStarted(self)) {
@@ -3905,6 +4252,8 @@ thread_callargs_get(DeeThreadObject *__restrict self) {
 		goto err_unbound;
 	return result;
 err_unbound:
+#endif /* !DeeThread_USE_SINGLE_THREADED */
+	(void)self;
 	err_unbound_attribute(&DeeThread_Type, "callargs");
 	return NULL;
 }
@@ -3912,7 +4261,6 @@ err_unbound:
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 thread_callargs_set(DeeThreadObject *__restrict self,
                     DeeTupleObject *__restrict value) {
-	DREF DeeTupleObject *old_callargs;
 	if (!DeeThread_CheckExact(self))
 		return err_cannot_set_thread_subclass_callback(self, "callargs");
 
@@ -3924,20 +4272,26 @@ thread_callargs_set(DeeThreadObject *__restrict self,
 	if (DeeObject_AssertTypeExact(value, &DeeTuple_Type))
 		goto err;
 
+#ifndef DeeThread_USE_SINGLE_THREADED
 	_DeeThread_AcquireSetup(self);
 	if unlikely(DeeThread_HasStarted(self)) {
 		_DeeThread_ReleaseSetup(self);
-		return DeeError_Throwf(&DeeError_ValueError,
-		                       "Cannot set the callargs of thread "
-		                       "%k that has already been started",
-		                       self);
+		goto err_already_started;
+	} else {
+		DREF DeeTupleObject *old_callargs;
+		old_callargs = self->t_context.d_args;
+		self->t_context.d_args = value;
+		Dee_XIncref(value);
+		_DeeThread_ReleaseSetup(self);
+		Dee_XDecref(old_callargs);
 	}
-	old_callargs = self->t_context.d_args;
-	self->t_context.d_args = value;
-	Dee_XIncref(value);
-	_DeeThread_ReleaseSetup(self);
-	Dee_XDecref(old_callargs);
 	return 0;
+err_already_started:
+#endif /* !DeeThread_USE_SINGLE_THREADED */
+	DeeError_Throwf(&DeeError_ValueError,
+	                "Cannot set the callargs of thread "
+	                "%k that has already been started",
+	                self);
 err:
 	return -1;
 }
@@ -3949,12 +4303,15 @@ thread_callargs_del(DeeThreadObject *__restrict self) {
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 thread_result_get(DeeThreadObject *__restrict self) {
+#ifndef DeeThread_USE_SINGLE_THREADED
 	DREF DeeObject *result;
 	result = DeeThread_Join((DeeObject *)self, 0);
 	if (result == ITER_DONE)
 		goto err_unbound;
 	return result;
 err_unbound:
+#endif /* !DeeThread_USE_SINGLE_THREADED */
+	(void)self;
 	err_unbound_attribute(&DeeThread_Type, "result");
 	return NULL;
 }
@@ -3981,23 +4338,32 @@ thread_crashinfo(DeeThreadObject *__restrict self) {
 	DREF DeeTupleObject *result;
 again:
 	if (self != caller) {
+#ifdef DeeThread_USE_SINGLE_THREADED
+		err_not_terminated(self);
+		goto err;
+#else /* DeeThread_USE_SINGLE_THREADED */
 		_DeeThread_AcquireSetup(self);
 		if (!DeeThread_HasTerminated(self)) {
 			_DeeThread_ReleaseSetup(self);
 			err_not_terminated(self);
 			goto err;
 		}
+#endif /* !DeeThread_USE_SINGLE_THREADED */
 	}
 	count = self->t_exceptsz;
 	if (count == 0) {
+#ifndef DeeThread_USE_SINGLE_THREADED
 		if (self != caller)
 			_DeeThread_ReleaseSetup(self);
+#endif /* !DeeThread_USE_SINGLE_THREADED */
 		return_reference_((DeeTupleObject *)Dee_EmptyTuple);
 	}
 	result = DeeTuple_TryNewUninitialized(count);
 	if unlikely(!result) {
+#ifndef DeeThread_USE_SINGLE_THREADED
 		if (self != caller)
 			_DeeThread_ReleaseSetup(self);
+#endif /* !DeeThread_USE_SINGLE_THREADED */
 		if (Dee_CollectMemory(DeeTuple_SIZEOF(count)))
 			goto again;
 		goto err;
@@ -4019,8 +4385,10 @@ again:
 		pair = (DREF DeeTupleObject *)DeeTuple_TryPack(2, error, trace);
 		if unlikely(!pair) {
 			bool collect_ok;
+#ifndef DeeThread_USE_SINGLE_THREADED
 			if (self != caller)
 				_DeeThread_ReleaseSetup(self);
+#endif /* !DeeThread_USE_SINGLE_THREADED */
 			collect_ok = Dee_CollectMemory(DeeTuple_SIZEOF(2));
 			Dee_Decrefv_likely(DeeTuple_ELEM(result), i);
 			DeeTuple_FreeUninitialized(result);
@@ -4031,25 +4399,33 @@ again:
 		DeeTuple_SET(result, i, pair); /* Inherit reference */
 	}
 	ASSERT(frame_iter == NULL);
+#ifndef DeeThread_USE_SINGLE_THREADED
 	if (self != caller)
 		_DeeThread_ReleaseSetup(self);
+#endif /* !DeeThread_USE_SINGLE_THREADED */
 	return result;
 err:
 	return NULL;
 }
 
 
+#ifndef DeeThread_USE_SINGLE_THREADED
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 thread_isrunning(DeeThreadObject *__restrict self) {
 	uint32_t state = atomic_read(&self->t_state);
 	return_bool((state & (Dee_THREAD_STATE_STARTED | Dee_THREAD_STATE_TERMINATED)) == Dee_THREAD_STATE_STARTED);
 }
+#endif /* !DeeThread_USE_SINGLE_THREADED */
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 thread_hascrashed(DeeThreadObject *__restrict self) {
+#ifdef DeeThread_USE_SINGLE_THREADED
+	return_bool(atomic_read(&self->t_exceptsz) > 0);
+#else /* DeeThread_USE_SINGLE_THREADED */
 	uint32_t state = atomic_read(&self->t_state);
 	return_bool((state & Dee_THREAD_STATE_TERMINATED) &&
 	            (atomic_read(&self->t_exceptsz) > 0));
+#endif /* !DeeThread_USE_SINGLE_THREADED */
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -4058,16 +4434,23 @@ thread_wasdetached(DeeThreadObject *__restrict self) {
 	return_bool(!(state & Dee_THREAD_STATE_HASTHREAD));
 }
 
+#ifndef DeeThread_USE_SINGLE_THREADED
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 thread_isstarting(DeeThreadObject *__restrict self) {
 	uint32_t state = atomic_read(&self->t_state);
 	return_bool(state & (Dee_THREAD_STATE_STARTING | Dee_THREAD_STATE_STARTED));
 }
+#endif /* !DeeThread_USE_SINGLE_THREADED */
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 thread_isterminating(DeeThreadObject *__restrict self) {
+#ifdef DeeThread_USE_SINGLE_THREADED
+	uint32_t state = atomic_read(&self->t_state);
+	return_bool(state & Dee_THREAD_STATE_TERMINATING);
+#else /* DeeThread_USE_SINGLE_THREADED */
 	uint32_t state = atomic_read(&self->t_state);
 	return_bool(state & (Dee_THREAD_STATE_TERMINATING | Dee_THREAD_STATE_TERMINATED));
+#endif /* !DeeThread_USE_SINGLE_THREADED */
 }
 
 #ifdef DeeThread_USE_CreateThread
@@ -4130,9 +4513,15 @@ PRIVATE struct type_getset tpconst thread_getsets[] = {
 	            "@throw ValueError The thread hasn't been started yet\n"
 	            "@throw SystemError The system does not provide a way to query thread ids\n"
 	            "Returns an operating-system specific id of @this thread"),
+#ifndef DeeThread_USE_SINGLE_THREADED
 	TYPE_GETTER("isrunning", &thread_isrunning,
 	            "->?Dbool\n"
 	            "Returns ?t if @this thread is current running (i.e. ?#hasstarted, but hasn't ?#hasterminated)"),
+	TYPE_GETTER("isstarting", &thread_isstarting,
+	            "->?Dbool\n"
+	            "Returns ?t if @this thread is currently being started, or ?#hasstarted\n"
+	            "This is similar to ?#hasstarted, but becomes !t a little bit earlier"),
+#endif /* !DeeThread_USE_SINGLE_THREADED */
 	TYPE_GETTER("hascrashed", &thread_hascrashed,
 	            "->?Dbool\n"
 	            "Returns ?t if @this thread has crashed, that "
@@ -4142,10 +4531,6 @@ PRIVATE struct type_getset tpconst thread_getsets[] = {
 	TYPE_GETTER("wasdetached", &thread_wasdetached,
 	            "->?Dbool\n"
 	            "Returns ?t if @this thread has been detached, joined, or hasn't been started, yet"),
-	TYPE_GETTER("isstarting", &thread_isstarting,
-	            "->?Dbool\n"
-	            "Returns ?t if @this thread is currently being started, or ?#hasstarted\n"
-	            "This is similar to ?#hasstarted, but becomes !t a little bit earlier"),
 	TYPE_GETTER("isterminating", &thread_isterminating,
 	            "->?Dbool\n"
 	            "Returns ?t if @this thread is currently being terminated, or ?#hasterminated\n"
@@ -4159,54 +4544,86 @@ PRIVATE struct type_getset tpconst thread_getsets[] = {
 };
 
 PRIVATE struct type_member tpconst thread_members[] = {
+	TYPE_MEMBER_BITFIELD_DOC("wasinterrupted", STRUCT_CONST, DeeThreadObject, t_state, Dee_THREAD_STATE_INTERRUPTED,
+	                         "Returns ?t if interrupts are pending for @this thread"),
+#ifdef DeeThread_USE_SINGLE_THREADED
+	TYPE_MEMBER_CONST_DOC("name", Dee_None,
+	                      "->?X2?Dstring?N\n"
+	                      "The name of the thread, or ?N when none was assigned"),
+	TYPE_MEMBER_CONST_DOC("hasstarted", Dee_True,
+	                      "Returns ?t if @this thread has been started"),
+	TYPE_MEMBER_CONST_DOC("isstarting", Dee_True,
+	                      "Returns ?t if @this thread is currently being started, or ?#hasstarted\n"
+	                      "This is similar to ?#hasstarted, but becomes !t a little bit earlier"),
+	TYPE_MEMBER_CONST_DOC("isrunning", Dee_True,
+	                      "Returns ?t if @this thread is current running (i.e. ?#hasstarted, but hasn't ?#hasterminated)"),
+	TYPE_MEMBER_CONST_DOC("hasterminated", Dee_False,
+	                      "Returns ?t if @this thread has terminated"),
+	TYPE_MEMBER_CONST_DOC("available", Dee_False,
+	                      "Alias for ?#hasterminated, here for API-compatibility with ?Ethreading:Lock"),
+#else /* DeeThread_USE_SINGLE_THREADED */
 	TYPE_MEMBER_FIELD_DOC("name", STRUCT_OBJECT_OPT, offsetof(DeeThreadObject, t_threadname),
-	                      "->?Dstring\n"
+	                      "->?X2?Dstring?N\n"
 	                      "The name of the thread, or ?N when none was assigned"),
 	TYPE_MEMBER_BITFIELD_DOC("hasstarted", STRUCT_CONST, DeeThreadObject, t_state, Dee_THREAD_STATE_STARTED,
 	                         "Returns ?t if @this thread has been started"),
 	TYPE_MEMBER_BITFIELD_DOC("hasterminated", STRUCT_CONST, DeeThreadObject, t_state, Dee_THREAD_STATE_TERMINATED,
 	                         "Returns ?t if @this thread has terminated"),
-	TYPE_MEMBER_BITFIELD_DOC("wasinterrupted", STRUCT_CONST, DeeThreadObject, t_state, Dee_THREAD_STATE_INTERRUPTED,
-	                         "Returns ?t if interrupts are pending for @this thread"),
+	TYPE_MEMBER_BITFIELD_DOC("available", STRUCT_CONST, DeeThreadObject, t_state, Dee_THREAD_STATE_TERMINATED,
+	                         "Alias for ?#hasterminated, here for API-compatibility with ?Ethreading:Lock"),
+#endif /* !DeeThread_USE_SINGLE_THREADED */
 	TYPE_MEMBER_END
 };
 
 
+#ifdef HAVE_thread_clear
 PRIVATE struct type_gc tpconst thread_gc = {
 	/* .tp_clear  = */ (void (DCALL *)(DeeObject *__restrict))&thread_clear
 };
+#endif /* HAVE_thread_clear */
 
 
 PUBLIC DeeTypeObject DeeThread_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ DeeString_STR(&str_Thread),
-	/* .tp_doc      = */ DOC("The core object type for enabling parallel computation\n"
-	                         "\n"
+#ifdef CONFIG_NO_DOC
+	/* .tp_doc      = */ NULL,
+#else /* CONFIG_NO_DOC */
+	/* .tp_doc      = */ "The core object type for enabling parallel computation\n"
+	                     "\n"
 
-	                         "()\n"
-	                         "(name:?Dstring)\n"
-	                         "(main:?DCallable,args:?DTuple=!N)\n"
-	                         "(name:?Dstring,main:?DCallable,args:?DTuple=!N)\n"
-	                         "Construct a new thread that that has yet to be started.\n"
-	                         "When no @main callable has been provided, invoke a $run "
-	                         "member which must be implemented by a sub-class:\n"
-	                         "${"
-	                         /**/ "import Thread, Callable from deemon;\n"
-	                         /**/ "class MyWorker: Thread {\n"
-	                         /**/ "	private member m_jobs: {Callable...};\n"
-	                         /**/ "\\\n"
-	                         /**/ "	this(jobs: {Callable...})\n"
-	                         /**/ "		: m_jobs = jobs\n"
-	                         /**/ "	{}\n"
-	                         /**/ "\\\n"
-	                         /**/ "	@@Thread entry point\n"
-	                         /**/ "	function run() {\n"
-	                         /**/ "		for (local j: m_jobs)\n"
-	                         /**/ "			j();\n"
-	                         /**/ "		return 42;\n"
-	                         /**/ "	}\n"
-	                         /**/ "}"
-	                         "}"),
+#ifdef Dee_pid_t
+	                     "(tid:?Dint)\n"
+	                     "Construct an unmanaged thread descriptor for @tid\n"
+#endif /* Dee_pid_t */
+#ifndef DeeThread_USE_SINGLE_THREADED
+	                     "()\n"
+	                     "(name:?Dstring)\n"
+	                     "(main:?DCallable,args:?DTuple=!N)\n"
+	                     "(name:?Dstring,main:?DCallable,args:?DTuple=!N)\n"
+	                     "Construct a new thread that that has yet to be started.\n"
+	                     "When no @main callable has been provided, invoke a $run "
+	                     /**/ "member which must be implemented by a sub-class:\n"
+	                     "${"
+	                     /**/ "import Thread, Callable from deemon;\n"
+	                     /**/ "class MyWorker: Thread {\n"
+	                     /**/ "	private member m_jobs: {Callable...};\n"
+	                     /**/ "\\\n"
+	                     /**/ "	this(jobs: {Callable...})\n"
+	                     /**/ "		: m_jobs = jobs\n"
+	                     /**/ "	{}\n"
+	                     /**/ "\\\n"
+	                     /**/ "	@@Thread entry point\n"
+	                     /**/ "	function run() {\n"
+	                     /**/ "		for (local j: m_jobs)\n"
+	                     /**/ "			j();\n"
+	                     /**/ "		return 42;\n"
+	                     /**/ "	}\n"
+	                     /**/ "}"
+	                     "}"
+#endif /* !DeeThread_USE_SINGLE_THREADED */
+	                     "",
+#endif /* !CONFIG_NO_DOC */
 	/* .tp_flags    = */ TP_FNORMAL | TP_FGC | TP_FNAMEOBJECT,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
@@ -4234,7 +4651,11 @@ PUBLIC DeeTypeObject DeeThread_Type = {
 	},
 	/* .tp_call          = */ NULL,
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&thread_visit,
+#ifdef HAVE_thread_clear
 	/* .tp_gc            = */ &thread_gc,
+#else /* HAVE_thread_clear */
+	/* .tp_gc            = */ NULL,
+#endif /* !HAVE_thread_clear */
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ NULL,
 	/* .tp_seq           = */ NULL,
@@ -4246,12 +4667,16 @@ PUBLIC DeeTypeObject DeeThread_Type = {
 	/* .tp_getsets       = */ thread_getsets,
 	/* .tp_members       = */ thread_members,
 	/* .tp_class_methods = */ thread_class_methods,
+#ifdef HAVE_thread_class_getsets
 	/* .tp_class_getsets = */ thread_class_getsets,
+#else /* HAVE_thread_class_getsets */
+	/* .tp_class_getsets = */ NULL,
+#endif /* !HAVE_thread_class_getsets */
 	/* .tp_class_members = */ thread_class_members
 };
 
 
-#ifndef DeeThread_USE_NO_THREADS
+#ifndef DeeThread_USE_SINGLE_THREADED
 struct localheap {
 	size_t   lh_size;   /* Remaining heap memory */
 	size_t   lh_total;  /* Total allocated heap member. */
@@ -4338,10 +4763,8 @@ thread_collect_traceback(DeeThreadObject *__restrict self,
 		dst->cf_func = iter->cf_func;
 		Dee_Incref(dst->cf_func);
 		dst->cf_argc  = iter->cf_argc;
-		dst->cf_argv  = (DREF DeeObject **)localheap_malloc(heap, dst->cf_argc *
-		                                                         sizeof(DREF DeeObject *));
-		dst->cf_frame = (DREF DeeObject **)localheap_malloc(heap, code->co_localc *
-		                                                          sizeof(DREF DeeObject *));
+		dst->cf_argv  = (DREF DeeObject **)localheap_malloc(heap, dst->cf_argc * sizeof(DREF DeeObject *));
+		dst->cf_frame = (DREF DeeObject **)localheap_malloc(heap, code->co_localc * sizeof(DREF DeeObject *));
 		dst->cf_ip    = iter->cf_ip;
 		dst->cf_vargs = iter->cf_vargs;
 		XINCREF_IF_NONZERO(iter->cf_vargs);
@@ -4436,7 +4859,7 @@ copy_dynmem(size_t length, struct code_frame *__restrict vector) {
 err:
 	return false;
 }
-#endif /* !DeeThread_USE_NO_THREADS */
+#endif /* !DeeThread_USE_SINGLE_THREADED */
 
 
 
@@ -4448,7 +4871,11 @@ err:
 PUBLIC WUNUSED NONNULL((1)) DREF /*Traceback*/ DeeObject *DCALL
 DeeThread_Trace(/*Thread*/ DeeObject *__restrict self) {
 	DeeThreadObject *me = (DeeThreadObject *)self;
-#ifndef DeeThread_USE_NO_THREADS
+#ifdef DeeThread_USE_SINGLE_THREADED
+	/* All threads other than the caller are unmanaged, and thus have empty tracebacks. */
+	if (me != DeeThread_Self())
+		return_reference_((DeeObject *)&empty_traceback);
+#else /* DeeThread_USE_SINGLE_THREADED */
 	if (me != DeeThread_Self()) {
 		if (!(atomic_read(&me->t_state) & Dee_THREAD_STATE_STARTED)) {
 			DeeError_Throwf(&DeeError_ValueError,
@@ -4589,7 +5016,7 @@ err_free_result:
 err:
 		return NULL;
 	}
-#endif /* !DeeThread_USE_NO_THREADS */
+#endif /* !DeeThread_USE_SINGLE_THREADED */
 	return (DREF DeeObject *)DeeTraceback_New(me);
 }
 

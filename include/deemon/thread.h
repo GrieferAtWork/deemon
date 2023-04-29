@@ -213,7 +213,6 @@ INTDEF NONNULL((1)) void DCALL deepcopy_clear(DeeThreadObject *__restrict thread
 #endif /* CONFIG_BUILDING_DEEMON */
 
 
-#ifndef CONFIG_NO_THREADS
 struct Dee_thread_interrupt;
 struct Dee_thread_interrupt {
 	struct Dee_thread_interrupt  *ti_next; /* [0..1][owned] Next pending interrupt descriptor. */
@@ -232,18 +231,46 @@ struct Dee_thread_interrupt {
 /*
  * Thread state phases:
  *
+ * Startup:
  * #1: Dee_THREAD_STATE_INITIAL:      The deemon thread object was created and can be configured
  * #2: Dee_THREAD_STATE_SETUP:        By holding this bit-lock, you can configure the thread
  * #3: Dee_THREAD_STATE_STARTING:     You're inside of `DeeThread_Start()'
  * #4: Dee_THREAD_STATE_STARTED:      The thread was created and has acknowledged that it not exists
  * #5: Dee_THREAD_STATE_STARTING:     The flag by the parent thread `Dee_THREAD_STATE_STARTED' becomes set
- * #6: Dee_THREAD_STATE_INTERRUPTING: By holding this bit-lock, you can schedule interrupts for the thread
- * #7: Dee_THREAD_STATE_INTERRUPTED:  When this flag is set, the thread will check for interrupts the next
+ *
+ * Running (interrupt):
+ * #1: Dee_THREAD_STATE_INTERRUPTING: By holding this bit-lock, you can schedule interrupts for the thread
+ * #2: Dee_THREAD_STATE_INTERRUPTED:  When this flag is set, the thread will check for interrupts the next
  *                                    time it calls `DeeThread_CheckInterrupt()'. To force the thread to do
  *                                    so in the near future, use `DeeThread_Wake()'.
- * #7: Dee_THREAD_STATE_INTERRUPTED:  The thread clears 
+ * #3: Dee_THREAD_STATE_INTERRUPTED:  The thread clears this flag once interrupts were handled
  *
+ * Running (shutdown):
+ * #1: Dee_THREAD_STATE_SHUTDOWNINTR: If the main thread exits, this flag is set for all other threads,
+ *                                    alongside `Dee_THREAD_STATE_INTERRUPTED'. Together, these cause the
+ *                                    next call to `DeeThread_CheckInterrupt()' to throw `Signal.Interrupt()'
  *
+ * Running (suspend):
+ * #1: Dee_THREAD_STATE_SUSPENDING:   The thread is supposed to suspend itself. This is done during the next
+ *                                    call to `DeeThread_CheckInterrupt()', where the thread will set the
+ *                                    `Dee_THREAD_STATE_SUSPENDED' flag, and then block until said flag is
+ *                                    unset by another thread.
+ * #2: Dee_THREAD_STATE_SUSPENDED:    The thread is suspended. To resume execution, clear this flag and do
+ *                                    a futex broadcast on the thread's `t_state'-word.
+ *
+ * Termination:
+ * #1: Dee_THREAD_STATE_TERMINATING:  Set once the thread is about to terminate. Once this flag is set, it
+ *                                    becomes impossible for the thread to spawn more threads, receive extra
+ *                                    interrupts, or access TLS variables. This state is used for cleanup of
+ *                                    still-remaining interrupts, as well as TLS variables.
+ * #2: Dee_THREAD_STATE_TERMINATED:   The thread has fully terminated (`DeeThread_Join()' waits for this).
+ *
+ * Other flags:
+ * - Dee_THREAD_STATE_DETACHING: Lock-flag to ensure that `Dee_THREAD_STATE_HASTHREAD' / `Dee_THREAD_STATE_HASTID' don't change
+ * - Dee_THREAD_STATE_HASTHREAD: The thread's OS-specific descriptor is valid (s.a. `DeeOSThreadObject')
+ * - Dee_THREAD_STATE_HASTID:    The thread's OS-specific ID is valid (s.a. `DeeOSThreadObject')
+ * - Dee_THREAD_STATE_UNMANAGED: The thread isn't managed by deemon (don't destroy the OS-specific thread descriptor)
+ * - Dee_THREAD_STATE_WAITING:   Indicator that another thread is waiting for `t_state' to change
  */
 
 #define Dee_THREAD_STATE_INITIAL      0x0000 /* The initial (not-started) thread state */
@@ -270,6 +297,13 @@ struct Dee_thread_interrupt {
 #endif /* Dee_pid_t */
 #define Dee_THREAD_STATE_UNMANAGED    0x4000 /* [const] Set if the thread is unmanaged (i.e. wasn't created by `DeeThread_Start()') */
 #define Dee_THREAD_STATE_WAITING      0x8000 /* [lock(ATOMIC)] Set is there may be threads waiting for the futex at `t_state' */
+
+#ifdef CONFIG_NO_THREADS
+#undef Dee_THREAD_STATE_SUSPENDING
+#undef Dee_THREAD_STATE_SUSPENDED
+#undef Dee_THREAD_STATE_TERMINATED
+#undef Dee_THREAD_STATE_STARTING
+/*#undef Dee_THREAD_STATE_STARTED*/ /* Always set */
 #endif /* !CONFIG_NO_THREADS */
 
 struct Dee_thread_object {
@@ -300,8 +334,17 @@ struct Dee_thread_object {
 	uint16_t                       t_exceptsz;   /* [lock(PRIVATE(DeeThread_Self()))][(!= 0) == (t_except != NULL)]
 	                                              * [if(Dee_THREAD_STATE_TERMINATED, [lock(Dee_THREAD_STATE_SETUP)])]
 	                                              * The total number of currently thrown exceptions. */
-#ifndef CONFIG_NO_THREADS
 	uint32_t                       t_state;      /* The current thread's execution state (Set of `THREAD_STATE_*'). */
+	struct Dee_thread_interrupt    t_interrupt;  /* [OVERRIDE(ti_intr, [0..1])][OVERRIDE(ti_args, [== NULL || ti_intr != NULL])]
+	                                              * [lock(Dee_THREAD_STATE_INTERRUPTING)]
+	                                              * [valid_if(!Dee_THREAD_STATE_TERMINATING)]
+	                                              * Chain of pending interrupts and synchronous callbacks
+	                                              * to-be executed in the context of this thread. */
+#ifndef CONFIG_NO_THREADS
+	uintptr_t                      t_int_vers;   /* [lock(READ(ATOMIC), WRITE(PRIVATE(DeeThread_Self())))]
+	                                              * Incremented each time the thread calls `DeeThread_CheckInterrupt()' while
+	                                              * its `Dee_THREAD_STATE_INTERRUPTED' flag is set. Used in order to sync the
+	                                              * thread receiving interrupt requests by `DeeThread_Interrupt()'. */
 	struct { /* Structure that is API-compatible with `LIST_ENTRY()' */
 		struct Dee_thread_object  *le_next;
 		struct Dee_thread_object **le_prev;
@@ -309,15 +352,6 @@ struct Dee_thread_object {
 	                                              * [lock(INSERT(thread_list_lock && Dee_THREAD_STATE_STARTING))]
 	                                              * [lock(REMOVE(thread_list_lock && Dee_THREAD_STATE_TERMINATED))] */
 	DREF struct Dee_string_object *t_threadname; /* [0..1][const] The name of this thread. */
-	uintptr_t                      t_int_vers;   /* [lock(READ(ATOMIC), WRITE(PRIVATE(DeeThread_Self())))]
-	                                              * Incremented each time the thread calls `DeeThread_CheckInterrupt()' while
-	                                              * its `Dee_THREAD_STATE_INTERRUPTED' flag is set. Used in order to sync the
-	                                              * thread receiving interrupt requests by `DeeThread_Interrupt()'. */
-	struct Dee_thread_interrupt    t_interrupt;  /* [OVERRIDE(ti_intr, [0..1])][OVERRIDE(ti_args, [== NULL || ti_intr != NULL])]
-	                                              * [lock(Dee_THREAD_STATE_INTERRUPTING)]
-	                                              * [valid_if(!Dee_THREAD_STATE_TERMINATING)]
-	                                              * Chain of pending interrupts and synchronous callbacks
-	                                              * to-be executed in the context of this thread. */
 	union {
 		DREF DeeObject            *io_main;   /* [0..1][lock(Dee_THREAD_STATE_SETUP)][valid_if(!Dee_THREAD_STATE_STARTED)]
 		                                       * The callable object that is executed by this thread.
@@ -327,14 +361,16 @@ struct Dee_thread_object {
 		                                       * [valid_if(Dee_THREAD_STATE_TERMINATED && t_exceptsz == 0)]
 		                                       * Return return value (unset if the thread exits with an error) */
 	} t_inout; /* Input/output data */
+#endif /* !CONFIG_NO_THREADS */
 	union {
+#ifndef CONFIG_NO_THREADS
 		DREF struct Dee_tuple_object *d_args; /* [1..1][lock(Dee_THREAD_STATE_SETUP)][valid_if(!Dee_THREAD_STATE_STARTED)]
 		                                       * Arguments passed to the thread's main-function (`t_inout.io_main' or `Thread.current.run') */
+#endif /* !CONFIG_NO_THREADS */
 		void                         *d_tls;  /* [0..?][lock(PRIVATE(DeeThread_Self()))]
 		                                       * [valid_if(Dee_THREAD_STATE_STARTED && !Dee_THREAD_STATE_TERMINATED)]
 		                                       * Thread TLS data controller. (Set to NULL during thread creation / clear) */
 	} t_context; /* Contextual data */
-#endif /* !CONFIG_NO_THREADS */
 	/* OS-specific thread data goes here. */
 };
 
@@ -346,7 +382,7 @@ struct Dee_thread_object {
 #define DeeThread_HasTerminated(self)            0
 #define DeeThread_WasInterrupted(self)           0
 #define DeeThread_WasDetached(self)              0
-#define DeeThread_HasCrashed(self)               0
+#define DeeThread_HasCrashed(self)               ((self) == DeeThread_Self() && (self)->t_exceptsz > 0)
 #else /* CONFIG_NO_THREADS */
 #define _DeeThread__AcquireStateLock(self, flag)                                           \
 	do {                                                                                   \
@@ -363,7 +399,7 @@ struct Dee_thread_object {
 #define DeeThread_HasTerminated(self)  (__hybrid_atomic_load(&(self)->t_state, __ATOMIC_ACQUIRE) & Dee_THREAD_STATE_TERMINATED)
 #define DeeThread_WasInterrupted(self) (__hybrid_atomic_load(&(self)->t_state, __ATOMIC_ACQUIRE) & Dee_THREAD_STATE_INTERRUPTED)
 #define DeeThread_WasDetached(self)    (!(__hybrid_atomic_load(&(self)->t_state, __ATOMIC_ACQUIRE) & Dee_THREAD_STATE_HASTHREAD))
-#define DeeThread_HasCrashed(self)     (DeeThread_HasTerminated(self) && (self)->t_exceptsz > 0)
+#define DeeThread_HasCrashed(self)     ((DeeThread_HasTerminated(self) || (self) == DeeThread_Self()) && (self)->t_exceptsz > 0)
 #endif /* !CONFIG_NO_THREADS */
 
 #define _DeeThread_AcquireInterrupt(self) _DeeThread__AcquireStateLock(self, Dee_THREAD_STATE_INTERRUPTING)
@@ -485,6 +521,7 @@ INTDEF WUNUSED NONNULL((1)) int
  * NOTE: This function (`DeeThread_Suspend') synchronously waits for the thread to
  *       actually become suspended, meaning that once it returns, the caller is allowed
  *       to assume that the given thread is no longer capable of executing instructions.
+ * NOTE: Trying to suspend yourself results in undefined behavior
  * @return: 1 : The specified thread could not be suspended because it has already terminated
  * @return: 0 : Success
  * @return: -1: An error was thrown */

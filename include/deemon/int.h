@@ -619,6 +619,39 @@ DFUNDEF WUNUSED DREF DeeObject *
 #define DeeInt_TryAsUIntptr(self, val) DeeInt_TryAsU(__SIZEOF_POINTER__, self, Dee_REQUIRES_TYPE(uintptr_t *, val))
 
 
+#ifndef __NO_builtin_choose_expr
+#define DeeInt_AsSINT(self, result)                                                               \
+	__builtin_choose_expr(sizeof(*(result)) == 1,  DeeInt_AsS8(self, (int8_t *)(result)),         \
+	__builtin_choose_expr(sizeof(*(result)) == 2,  DeeInt_AsS16(self, (int16_t *)(result)),       \
+	__builtin_choose_expr(sizeof(*(result)) == 4,  DeeInt_AsS32(self, (int32_t *)(result)),       \
+	__builtin_choose_expr(sizeof(*(result)) == 8,  DeeInt_AsS64(self, (int64_t *)(result)),       \
+	__builtin_choose_expr(sizeof(*(result)) == 16, DeeInt_AsS128(self, (Dee_int128_t *)(result)), \
+	                                               _Dee_invalid_integer_size())))))
+#define DeeInt_AsUINT(self, result)                                                                \
+	__builtin_choose_expr(sizeof(*(result)) == 1,  DeeInt_AsU8(self, (uint8_t *)(result)),         \
+	__builtin_choose_expr(sizeof(*(result)) == 2,  DeeInt_AsU16(self, (uint16_t *)(result)),       \
+	__builtin_choose_expr(sizeof(*(result)) == 4,  DeeInt_AsU32(self, (uint32_t *)(result)),       \
+	__builtin_choose_expr(sizeof(*(result)) == 8,  DeeInt_AsU64(self, (uint64_t *)(result)),       \
+	__builtin_choose_expr(sizeof(*(result)) == 16, DeeInt_AsU128(self, (Dee_uint128_t *)(result)), \
+	                                               _Dee_invalid_integer_size())))))
+#else /* !__NO_builtin_choose_expr */
+#define DeeInt_AsSINT(self, result)                                            \
+	(sizeof(*(result)) == 1 ?  DeeInt_AsS8(self, (int8_t *)(result)) :         \
+	 sizeof(*(result)) == 2 ?  DeeInt_AsS16(self, (int16_t *)(result)) :       \
+	 sizeof(*(result)) == 4 ?  DeeInt_AsS32(self, (int32_t *)(result)) :       \
+	 sizeof(*(result)) == 8 ?  DeeInt_AsS64(self, (int64_t *)(result)) :       \
+	 sizeof(*(result)) == 16 ? DeeInt_AsS128(self, (Dee_int128_t *)(result)) : \
+	                           _Dee_invalid_integer_size())
+#define DeeInt_AsUINT(self, result)                                             \
+	(sizeof(*(result)) == 1 ?  DeeInt_AsU8(self, (uint8_t *)(result)) :         \
+	 sizeof(*(result)) == 2 ?  DeeInt_AsU16(self, (uint16_t *)(result)) :       \
+	 sizeof(*(result)) == 4 ?  DeeInt_AsU32(self, (uint32_t *)(result)) :       \
+	 sizeof(*(result)) == 8 ?  DeeInt_AsU64(self, (uint64_t *)(result)) :       \
+	 sizeof(*(result)) == 16 ? DeeInt_AsU128(self, (Dee_uint128_t *)(result)) : \
+	                           _Dee_invalid_integer_size())
+#endif /* __NO_builtin_choose_expr */
+
+
 
 /* Convert an integer to/from a string.
  * WARNING: The caller is responsible not to pass a radix equal to `1'.

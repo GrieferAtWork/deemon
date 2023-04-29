@@ -22,6 +22,10 @@
 import * from deemon;
 import * from ctypes;
 
+/* Only run this test if the implementation supports threading */
+if (!Thread.supported)
+	return;
+
 struct Futex {
 	.word = uintptr_t
 };

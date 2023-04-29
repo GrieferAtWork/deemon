@@ -76,26 +76,26 @@
 #define Dee_atomic_fetchnand_explicit(p, value, order) __XBLOCK({ __typeof__(*(p)) _dafne_res = *(p); *(p) = ~(*(p) & (value)); __XRETURN _dafne_res; })
 #elif defined(__cplusplus)
 extern "C++" {
-template<class T> inline WUNUSED NONNULL((1)) T
-_Dee_atomic_xch_no_threads(T *p, T value) {
+template<class T, class S> inline WUNUSED NONNULL((1)) T
+_Dee_atomic_xch_no_threads(T *p, S value) {
 	T result = *p;
 	*p = value;
 	return result;
 }
-template<class T> inline WUNUSED NONNULL((1)) T
-_Dee_atomic_fetchand_no_threads(T *p, T value) {
+template<class T, class S> inline WUNUSED NONNULL((1)) T
+_Dee_atomic_fetchand_no_threads(T *p, S value) {
 	T result = *p;
 	*p &= value;
 	return result;
 }
-template<class T> inline WUNUSED NONNULL((1)) T
-_Dee_atomic_fetchor_no_threads(T *p, T value) {
+template<class T, class S> inline WUNUSED NONNULL((1)) T
+_Dee_atomic_fetchor_no_threads(T *p, S value) {
 	T result = *p;
 	*p |= value;
 	return result;
 }
-template<class T> inline WUNUSED NONNULL((1)) T
-_Dee_atomic_fetchnand_no_threads(T *p, T value) {
+template<class T, class S> inline WUNUSED NONNULL((1)) T
+_Dee_atomic_fetchnand_no_threads(T *p, S value) {
 	T result = *p;
 	*p = ~(*p & value);
 	return result;

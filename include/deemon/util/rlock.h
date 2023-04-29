@@ -47,20 +47,24 @@ typedef int Dee_ratomic_lock_t;
 #define Dee_ratomic_lock_release_ex(self)         1
 
 typedef int Dee_rshared_lock_t;
-#define DEE_RSHARED_LOCK_INIT                                     0
-#define Dee_rshared_lock_init(self)                               (void)0
-#define Dee_rshared_lock_cinit(self)                              (void)0
-#define Dee_rshared_lock_available(self)                          1
-#define Dee_rshared_lock_acquired(self)                           1
-#define Dee_rshared_lock_tryacquire(self)                         1
-#define Dee_rshared_lock_acquire(self)                            0
-#define Dee_rshared_lock_waitfor(self)                            0
-#define Dee_rshared_lock_acquire_timed(self, timeout_nanoseconds) 0
-#define Dee_rshared_lock_waitfor_timed(self, timeout_nanoseconds) 0
-#define _Dee_rshared_lock_release_NDEBUG(self)                    (void)0
-#define _Dee_rshared_lock_release_ex_NDEBUG(self)                 1
-#define Dee_rshared_lock_release(self)                            (void)0
-#define Dee_rshared_lock_release_ex(self)                         1
+#define DEE_RSHARED_LOCK_INIT                                           0
+#define Dee_rshared_lock_init(self)                                     (void)0
+#define Dee_rshared_lock_cinit(self)                                    (void)0
+#define Dee_rshared_lock_available(self)                                1
+#define Dee_rshared_lock_acquired(self)                                 1
+#define Dee_rshared_lock_tryacquire(self)                               1
+#define Dee_rshared_lock_acquire(self)                                  0
+#define Dee_rshared_lock_acquire_noint(self)                            (void)0
+#define Dee_rshared_lock_waitfor(self)                                  0
+#define Dee_rshared_lock_waitfor_noint(self)                            (void)0
+#define Dee_rshared_lock_acquire_timed(self, timeout_nanoseconds)       0
+#define Dee_rshared_lock_acquire_noint_timed(self, timeout_nanoseconds) 0
+#define Dee_rshared_lock_waitfor_timed(self, timeout_nanoseconds)       0
+#define Dee_rshared_lock_waitfor_noint_timed(self, timeout_nanoseconds) 0
+#define _Dee_rshared_lock_release_NDEBUG(self)                          (void)0
+#define _Dee_rshared_lock_release_ex_NDEBUG(self)                       1
+#define Dee_rshared_lock_release(self)                                  (void)0
+#define Dee_rshared_lock_release_ex(self)                               1
 
 typedef int Dee_ratomic_rwlock_t;
 #define DEE_RATOMIC_RWLOCK_INIT                      0
@@ -97,42 +101,51 @@ typedef int Dee_ratomic_rwlock_t;
 #define _Dee_ratomic_rwlock_end_ex_NDEBUG(self)      1
 
 typedef int Dee_rshared_rwlock_t;
-#define DEE_RSHARED_RWLOCK_INIT                                       (void)0
-#define Dee_rshared_rwlock_init(self)                                 (void)0
-#define Dee_rshared_rwlock_cinit(self)                                (void)0
-#define Dee_rshared_rwlock_reading(self)                              1
-#define Dee_rshared_rwlock_writing(self)                              1
-#define Dee_rshared_rwlock_tryread(self)                              1
-#define Dee_rshared_rwlock_trywrite(self)                             1
-#define Dee_rshared_rwlock_canread(self)                              1
-#define Dee_rshared_rwlock_canwrite(self)                             1
-#define Dee_rshared_rwlock_canendread(self)                           1
-#define Dee_rshared_rwlock_canendwrite(self)                          1
-#define Dee_rshared_rwlock_canend(self)                               1
-#define Dee_rshared_rwlock_tryupgrade(self)                           1
-#define Dee_rshared_rwlock_downgrade(self)                            (void)0
-#define _Dee_rshared_rwlock_downgrade_NDEBUG(self)                    (void)0
-#define Dee_rshared_rwlock_endwrite_ex(self)                          1
-#define Dee_rshared_rwlock_endwrite(self)                             (void)0
-#define _Dee_rshared_rwlock_endwrite_ex_NDEBUG(self)                  1
-#define _Dee_rshared_rwlock_endwrite_NDEBUG(self)                     (void)0
-#define Dee_rshared_rwlock_endread(self)                              (void)0
-#define Dee_rshared_rwlock_endread_ex(self)                           1
-#define _Dee_rshared_rwlock_endread_NDEBUG(self)                      (void)0
-#define _Dee_rshared_rwlock_endread_ex_NDEBUG(self)                   1
-#define Dee_rshared_rwlock_end(self)                                  (void)0
-#define Dee_rshared_rwlock_end_ex(self)                               1
-#define _Dee_rshared_rwlock_end_NDEBUG(self)                          (void)0
-#define _Dee_rshared_rwlock_end_ex_NDEBUG(self)                       1
-#define Dee_rshared_rwlock_read(self)                                 0
-#define Dee_rshared_rwlock_write(self)                                0
-#define Dee_rshared_rwlock_waitread(self)                             0
-#define Dee_rshared_rwlock_waitwrite(self)                            0
-#define Dee_rshared_rwlock_read_timed(self, timeout_nanoseconds)      0
-#define Dee_rshared_rwlock_write_timed(self, timeout_nanoseconds)     0
-#define Dee_rshared_rwlock_waitread_timed(self, timeout_nanoseconds)  0
-#define Dee_rshared_rwlock_waitwrite_timed(self, timeout_nanoseconds) 0
-#define Dee_rshared_rwlock_upgrade(self)                              1
+#define DEE_RSHARED_RWLOCK_INIT                                             (void)0
+#define Dee_rshared_rwlock_init(self)                                       (void)0
+#define Dee_rshared_rwlock_cinit(self)                                      (void)0
+#define Dee_rshared_rwlock_reading(self)                                    1
+#define Dee_rshared_rwlock_writing(self)                                    1
+#define Dee_rshared_rwlock_tryread(self)                                    1
+#define Dee_rshared_rwlock_trywrite(self)                                   1
+#define Dee_rshared_rwlock_canread(self)                                    1
+#define Dee_rshared_rwlock_canwrite(self)                                   1
+#define Dee_rshared_rwlock_canendread(self)                                 1
+#define Dee_rshared_rwlock_canendwrite(self)                                1
+#define Dee_rshared_rwlock_canend(self)                                     1
+#define Dee_rshared_rwlock_tryupgrade(self)                                 1
+#define Dee_rshared_rwlock_downgrade(self)                                  (void)0
+#define _Dee_rshared_rwlock_downgrade_NDEBUG(self)                          (void)0
+#define Dee_rshared_rwlock_endwrite_ex(self)                                1
+#define Dee_rshared_rwlock_endwrite(self)                                   (void)0
+#define _Dee_rshared_rwlock_endwrite_ex_NDEBUG(self)                        1
+#define _Dee_rshared_rwlock_endwrite_NDEBUG(self)                           (void)0
+#define Dee_rshared_rwlock_endread(self)                                    (void)0
+#define Dee_rshared_rwlock_endread_ex(self)                                 1
+#define _Dee_rshared_rwlock_endread_NDEBUG(self)                            (void)0
+#define _Dee_rshared_rwlock_endread_ex_NDEBUG(self)                         1
+#define Dee_rshared_rwlock_end(self)                                        (void)0
+#define Dee_rshared_rwlock_end_ex(self)                                     1
+#define _Dee_rshared_rwlock_end_NDEBUG(self)                                (void)0
+#define _Dee_rshared_rwlock_end_ex_NDEBUG(self)                             1
+#define Dee_rshared_rwlock_read(self)                                       0
+#define Dee_rshared_rwlock_read_noint(self)                                 (void)0
+#define Dee_rshared_rwlock_write(self)                                      0
+#define Dee_rshared_rwlock_write_noint(self)                                (void)0
+#define Dee_rshared_rwlock_waitread(self)                                   0
+#define Dee_rshared_rwlock_waitread_noint(self)                             (void)0
+#define Dee_rshared_rwlock_waitwrite(self)                                  0
+#define Dee_rshared_rwlock_waitwrite_noint(self)                            (void)0
+#define Dee_rshared_rwlock_read_timed(self, timeout_nanoseconds)            0
+#define Dee_rshared_rwlock_read_noint_timed(self, timeout_nanoseconds)      0
+#define Dee_rshared_rwlock_write_timed(self, timeout_nanoseconds)           0
+#define Dee_rshared_rwlock_write_noint_timed(self, timeout_nanoseconds)     0
+#define Dee_rshared_rwlock_waitread_timed(self, timeout_nanoseconds)        0
+#define Dee_rshared_rwlock_waitread_noint_timed(self, timeout_nanoseconds)  0
+#define Dee_rshared_rwlock_waitwrite_timed(self, timeout_nanoseconds)       0
+#define Dee_rshared_rwlock_waitwrite_noint_timed(self, timeout_nanoseconds) 0
+#define Dee_rshared_rwlock_upgrade(self)                                    1
+#define Dee_rshared_rwlock_upgrade_noint(self)                              1
 
 DECL_END
 #else /* CONFIG_NO_THREADS */

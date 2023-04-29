@@ -508,13 +508,22 @@ DFUNDEF NONNULL((1)) void (DCALL _Dee_vdprintf)(char const *__restrict format, v
 DFUNDEF __SSIZE_TYPE__ (DPRINTER_CC _Dee_dprinter)(void *arg, char const *__restrict data, size_t datalen);
 #endif /* !NDEBUG && !NDEBUG_DPRINT */
 
-
-#ifndef Dee_ASSERT
-#if !defined(NDEBUG) && !defined(NDEBUG_ASSERT)
+/* Assertion handlers */
 DFUNDEF void (DCALL _DeeAssert_Fail)(char const *expr, char const *file, int line);
 DFUNDEF void (_DeeAssert_Failf)(char const *expr, char const *file, int line, char const *format, ...);
 DFUNDEF ATTR_NORETURN void (DCALL _DeeAssert_XFail)(char const *expr, char const *file, int line);
 DFUNDEF ATTR_NORETURN void (_DeeAssert_XFailf)(char const *expr, char const *file, int line, char const *format, ...);
+
+#ifdef Dee_BREAKPOINT_IS_NOOP
+#define Dee_Fatal()     _DeeAssert_XFail(NULL, __FILE__, __LINE__)
+#define Dee_Fatalf(...) _DeeAssert_XFailf(NULL, __FILE__, __LINE__, __VA_ARGS__)
+#else /* Dee_BREAKPOINT_IS_NOOP */
+#define Dee_Fatal()     (_DeeAssert_Fail(NULL, __FILE__, __LINE__), Dee_BREAKPOINT())
+#define Dee_Fatalf(...) (_DeeAssert_Failf(NULL, __FILE__, __LINE__, __VA_ARGS__), Dee_BREAKPOINT())
+#endif /* !Dee_BREAKPOINT_IS_NOOP */
+
+#ifndef Dee_ASSERT
+#if !defined(NDEBUG) && !defined(NDEBUG_ASSERT)
 #ifdef Dee_BREAKPOINT_IS_NOOP
 #define Dee_ASSERT(expr)       (void)((expr) || (_DeeAssert_XFail(#expr, __FILE__, __LINE__), 0))
 #define Dee_ASSERTF(expr, ...) (void)((expr) || (_DeeAssert_XFailf(#expr, __FILE__, __LINE__, __VA_ARGS__), 0))
