@@ -4124,11 +4124,19 @@ thread_current_get(DeeObject *__restrict UNUSED(self)) {
 	return_reference_((DeeObject *)result);
 }
 
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+thread_threaded_get(DeeObject *__restrict UNUSED(self)) {
+	return_bool(atomic_read(&DeeThread_Main.ot_thread.t_global.le_next) != NULL);
+}
+
 #define HAVE_thread_class_getsets
 PRIVATE struct type_getset tpconst thread_class_getsets[] = {
 	TYPE_GETTER("current", &thread_current_get,
 	            "->?.\n"
 	            "Returns a thread descriptor for the calling thread"),
+	TYPE_GETTER("threaded", &thread_threaded_get,
+	            "->?Dbool\n"
+	            "True if there are at least 2 running threads"),
 	/* TODO: enumerate -> {thread...} 
 	 * >> Returns a proxy sequence for enumerating all
 	 *    deemon-threads; s.a. `add_running_thread()' */
@@ -4141,6 +4149,7 @@ PRIVATE struct type_member tpconst thread_class_members[] = {
 #ifdef DeeThread_USE_SINGLE_THREADED
 	TYPE_MEMBER_CONST_DOC("current", &DeeThread_Main.ot_thread, "Returns a thread descriptor for the calling thread"),
 	TYPE_MEMBER_CONST_DOC("supported", Dee_False, "True if the implementation supports multiple threads"),
+	TYPE_MEMBER_CONST_DOC("threaded", Dee_False, "True if there are at least 2 running threads"),
 #else /* DeeThread_USE_SINGLE_THREADED */
 	TYPE_MEMBER_CONST_DOC("supported", Dee_True, "True if the implementation supports multiple threads"),
 #endif /* !DeeThread_USE_SINGLE_THREADED */
