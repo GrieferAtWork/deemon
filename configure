@@ -547,7 +547,7 @@ if ! [ -z "$TARGET_IS_AUTO" ]; then
 		CONFIG_CORE_LDFLAGS="$CONFIG_CORE_LDFLAGS -Wl,--out-implib=${BIN_PATH}/libdeemon.dll.a"
 		case "$TARGET_CPU" in
 		i?86)
-			CONFIG_CORE_LDFLAGS="$CONFIG_CORE_LDFLAGS -Wl,${SRC_ROOT}/src/deemon/linker-scripts/link-deemon-gcc.def"
+			CONFIG_CORE_LDFLAGS="$CONFIG_CORE_LDFLAGS -Wl,${SRC_ROOT}/src/deemon/linker-scripts/link-deemon-gcc-i386-cygwin.def"
 			CONFIG_CORE_LDFLAGS="$CONFIG_CORE_LDFLAGS -Wl,--stack,4194304"
 			;;
 		*x86_64* | *x86-64*)

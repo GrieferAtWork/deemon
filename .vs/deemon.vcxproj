@@ -489,8 +489,8 @@ ml64.exe /c /Cx /Fo "$(IntermediateOutputPath)\src-deemon-execute-asm-altstack.m
 			<ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release-MSVC|Win32'">true</ExcludedFromBuild>
 		</CustomBuild>
 		<None Include="..\src\deemon\execute\asm\exec.gas-386.S" />
-		<None Include="..\src\deemon\linker-scripts\link-deemon-gcc.def" />
-		<None Include="..\src\deemon\linker-scripts\link-deemon-msvc.def" />
+		<None Include="..\src\deemon\linker-scripts\link-deemon-gcc-i386-cygwin.def" />
+		<None Include="..\src\deemon\linker-scripts\link-deemon-msvc-i386-win32.def" />
 		<None Include="..\src\deemon\linker-scripts\link-deemon.dee" />
 		<None Include="..\src\deemon\objects\unicode\db\.gitignore" />
 		<None Include="..\src\deemon\objects\unicode\db\ctype.dee" />
@@ -687,7 +687,7 @@ ml64.exe /c /Cx /Fo "$(IntermediateOutputPath)\src-deemon-execute-asm-altstack.m
 			<GenerateDebugInformation>true</GenerateDebugInformation>
 			<EnableCOMDATFolding>false</EnableCOMDATFolding>
 			<StackReserveSize>4194304</StackReserveSize>
-			<ModuleDefinitionFile>..\src\deemon\linker-scripts\link-deemon-msvc.def</ModuleDefinitionFile>
+			<ModuleDefinitionFile>..\src\deemon\linker-scripts\link-deemon-msvc-i386-win32.def</ModuleDefinitionFile>
 		</Link>
 	</ItemDefinitionGroup>
 	<ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug-MSVC (NDEBUG)|x64'">
@@ -746,7 +746,7 @@ ml64.exe /c /Cx /Fo "$(IntermediateOutputPath)\src-deemon-execute-asm-altstack.m
 			<GenerateDebugInformation>true</GenerateDebugInformation>
 			<EnableCOMDATFolding>false</EnableCOMDATFolding>
 			<StackReserveSize>4194304</StackReserveSize>
-			<ModuleDefinitionFile>..\src\deemon\linker-scripts\link-deemon-msvc.def</ModuleDefinitionFile>
+			<ModuleDefinitionFile>..\src\deemon\linker-scripts\link-deemon-msvc-i386-win32.def</ModuleDefinitionFile>
 		</Link>
 	</ItemDefinitionGroup>
 	<ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug-MSVC|x64'">
@@ -803,7 +803,7 @@ ml64.exe /c /Cx /Fo "$(IntermediateOutputPath)\src-deemon-execute-asm-altstack.m
 			<GenerateDebugInformation>true</GenerateDebugInformation>
 			<EnableCOMDATFolding>true</EnableCOMDATFolding>
 			<StackReserveSize>4194304</StackReserveSize>
-			<ModuleDefinitionFile>..\src\deemon\linker-scripts\link-deemon-msvc.def</ModuleDefinitionFile>
+			<ModuleDefinitionFile>..\src\deemon\linker-scripts\link-deemon-msvc-i386-win32.def</ModuleDefinitionFile>
 		</Link>
 	</ItemDefinitionGroup>
 	<ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release-MSVC (NDEBUG)|x64'">
@@ -858,7 +858,7 @@ ml64.exe /c /Cx /Fo "$(IntermediateOutputPath)\src-deemon-execute-asm-altstack.m
 			<GenerateDebugInformation>true</GenerateDebugInformation>
 			<EnableCOMDATFolding>true</EnableCOMDATFolding>
 			<StackReserveSize>4194304</StackReserveSize>
-			<ModuleDefinitionFile>..\src\deemon\linker-scripts\link-deemon-msvc.def</ModuleDefinitionFile>
+			<ModuleDefinitionFile>..\src\deemon\linker-scripts\link-deemon-msvc-i386-win32.def</ModuleDefinitionFile>
 		</Link>
 	</ItemDefinitionGroup>
 	<ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release-MSVC|x64'">

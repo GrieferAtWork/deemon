@@ -1324,10 +1324,10 @@
 		<None Include="..\src\deemon\execute\asm\exec.gas-386.S">
 			<Filter>src\execute\asm</Filter>
 		</None>
-		<None Include="..\src\deemon\linker-scripts\link-deemon-gcc.def">
+		<None Include="..\src\deemon\linker-scripts\link-deemon-gcc-i386-cygwin.def">
 			<Filter>src\linker-scripts</Filter>
 		</None>
-		<None Include="..\src\deemon\linker-scripts\link-deemon-msvc.def">
+		<None Include="..\src\deemon\linker-scripts\link-deemon-msvc-i386-win32.def">
 			<Filter>src\linker-scripts</Filter>
 		</None>
 		<None Include="..\src\deemon\linker-scripts\link-deemon.dee">

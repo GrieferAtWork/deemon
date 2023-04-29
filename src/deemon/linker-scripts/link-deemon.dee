@@ -52,7 +52,7 @@ for (local l: r) {
 r.close();
 proc.join();
 
-local out = file.open("link-deemon-msvc.def", "w");
+local out = file.open("link-deemon-msvc-i386-win32.def", "w");
 print out: "EXPORTS";
 print out: "\t; For compatibility with GCC, export all";
 print out: "\t; stdcall symbols without a leading underscore.";
@@ -63,7 +63,7 @@ for (local name: symbols) {
 		continue;
 	print out: "\t"+name[1:]+"="+name;
 }
-local out = file.open("link-deemon-gcc.def", "w");
+local out = file.open("link-deemon-gcc-i386-cygwin.def", "w");
 print out: "EXPORTS";
 print out: "\t; For compatibility with MSVC, export all";
 print out: "\t; stdcall symbols with a leading underscore.";

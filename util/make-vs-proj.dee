@@ -115,7 +115,7 @@ global final CONFIGURATIONS: {Configuration...} = {
 };
 
 global final ARCHITECTURES: {Architecture...} = {
-	Architecture(name: "Win32", asmExt: ".ms-x86.S", StackReserveSize: 0x400000, ModuleDefinitionFile: r'src\deemon\linker-scripts\link-deemon-msvc.def'),
+	Architecture(name: "Win32", asmExt: ".ms-x86.S", StackReserveSize: 0x400000, ModuleDefinitionFile: r'src\deemon\linker-scripts\link-deemon-msvc-i386-win32.def'),
 	Architecture(name: "x64",   asmExt: ".ms-x64.S", StackReserveSize: 0x800000, mlExe: "ml64.exe"),
 };
 
