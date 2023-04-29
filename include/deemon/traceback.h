@@ -108,6 +108,10 @@ DeeTraceback_AddFrame(DeeTracebackObject *__restrict self,
  * NOTE: The given `thread' must be the caller's. */
 INTDEF WUNUSED NONNULL((1)) DREF DeeTracebackObject *DCALL
 DeeTraceback_New(struct Dee_thread_object *__restrict thread);
+
+/* Same as `DeeTraceback_New()', but throw errors when returning NULL. */
+INTDEF WUNUSED NONNULL((1)) DREF DeeTracebackObject *DCALL
+DeeTraceback_NewWithException(struct Dee_thread_object *__restrict thread);
 #endif /* CONFIG_BUILDING_DEEMON */
 
 

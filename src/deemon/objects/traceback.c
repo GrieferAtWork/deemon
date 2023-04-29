@@ -63,6 +63,20 @@ INTERN struct empty_traceback_object empty_traceback = {
 
 
 
+/* Same as `DeeTraceback_New()', but throw errors when returning NULL. */
+INTERN WUNUSED NONNULL((1)) DREF DeeTracebackObject *DCALL
+DeeTraceback_NewWithException(struct thread_object *__restrict thread) {
+	DREF DeeTracebackObject *result;
+	/* `DeeTraceback_New()' is special in that it doesn't throw exceptions.
+	 * However, we want there to be an out-of-memory exception when we're
+	 * unable to generate a traceback, so implement that behavior here. */
+	do {
+		result = DeeTraceback_New(thread);
+	} while (result == NULL && Dee_CollectMemory(1));
+	return result;
+}
+
+
 /* Try to create a new traceback, but don't throw
  * an error and return `NULL' if doing so failed.
  * NOTE: The given `thread' must be the caller's. */
@@ -460,7 +474,7 @@ INTERN DeeTypeObject DeeTracebackIterator_Type = {
 
 
 PRIVATE WUNUSED DREF DeeTracebackObject *DCALL traceback_new(void) {
-	return DeeTraceback_New(DeeThread_Self());
+	return DeeTraceback_NewWithException(DeeThread_Self());
 }
 
 PRIVATE NONNULL((1)) void DCALL
@@ -692,15 +706,16 @@ traceback_current(DeeObject *__restrict UNUSED(self)) {
 	DREF DeeThreadObject *thread;
 	DREF DeeObject *result;
 	thread = DeeThread_Self();
-	if unlikely(!thread->t_except) {
-		err_no_active_exception();
-		return NULL;
-	}
+	if unlikely(thread->t_except == NULL)
+		goto err_no_except;
 	result = (DREF DeeObject *)except_frame_gettb(thread->t_except);
-	if unlikely(!result)
+	if unlikely(result == NULL)
 		result = (DREF DeeObject *)&empty_traceback;
 	Dee_Incref(result);
 	return result;
+err_no_except:
+	err_no_active_exception();
+	return NULL;
 }
 
 PRIVATE struct type_getset tpconst traceback_class_getsets[] = {

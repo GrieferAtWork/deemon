@@ -4899,8 +4899,9 @@ DeeThread_Trace(/*Thread*/ DeeObject *__restrict self) {
 	DeeThreadObject *me = (DeeThreadObject *)self;
 #ifdef DeeThread_USE_SINGLE_THREADED
 	/* All threads other than the caller are unmanaged, and thus have empty tracebacks. */
-	if (me != DeeThread_Self())
+	if (me != DeeThread_Self()) {
 		return_reference_((DeeObject *)&empty_traceback);
+	} else
 #else /* DeeThread_USE_SINGLE_THREADED */
 	if (me != DeeThread_Self()) {
 		if (!(atomic_read(&me->t_state) & Dee_THREAD_STATE_STARTED)) {
@@ -5041,9 +5042,11 @@ err_free_result:
 		}
 err:
 		return NULL;
-	}
+	} else
 #endif /* !DeeThread_USE_SINGLE_THREADED */
-	return (DREF DeeObject *)DeeTraceback_New(me);
+	{
+		return (DREF DeeObject *)DeeTraceback_NewWithException(me);
+	}
 }
 
 
