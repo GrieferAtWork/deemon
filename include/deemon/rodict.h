@@ -77,10 +77,10 @@ DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeRoDict_FromIterator(DeeObj
 DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeRoDict_FromIteratorWithHint(DeeObject *__restrict self, size_t num_items);
 
 /* Internal functions for constructing a read-only Dict object. */
-DFUNDEF WUNUSED DREF DeeObject *DCALL DeeRoDict_New(void);
-DFUNDEF WUNUSED DREF DeeObject *DCALL DeeRoDict_NewWithHint(size_t num_items);
+DFUNDEF WUNUSED DREF DeeRoDictObject *DCALL DeeRoDict_New(void);
+DFUNDEF WUNUSED DREF DeeRoDictObject *DCALL DeeRoDict_NewWithHint(size_t num_items);
 DFUNDEF WUNUSED NONNULL((1, 2, 3)) int DCALL
-DeeRoDict_Insert(/*in|out*/ DREF DeeObject **__restrict pself,
+DeeRoDict_Insert(/*in|out*/ DREF DeeRoDictObject **__restrict pself,
                  DeeObject *key, DeeObject *value);
 
 

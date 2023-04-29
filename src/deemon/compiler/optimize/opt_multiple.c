@@ -123,7 +123,7 @@ multiple_continue_at_iter:
 				if unlikely(!cexpr)
 					goto err;
 			} else if (self->a_flag == AST_FMULTIPLE_GENERIC_KEYS) {
-				cexpr = DeeRoDict_New();
+				cexpr = (DREF DeeObject *)DeeRoDict_New();
 				if unlikely(!cexpr)
 					goto err;
 			} else {
@@ -151,7 +151,7 @@ multiple_continue_at_iter:
 			Dee_Free(self->a_multiple.m_astv);
 			self->a_constexpr = (DREF DeeObject *)new_tuple; /* Inherit reference. */
 		} else if (self->a_flag == AST_FMULTIPLE_LIST) {
-			DREF DeeObject *new_list;
+			DREF DeeListObject *new_list;
 			size_t i;
 			new_list = DeeList_NewUninitialized(self->a_multiple.m_astc);
 			if unlikely(!new_list)
@@ -165,7 +165,7 @@ multiple_continue_at_iter:
 			}
 			DeeGC_Track((DeeObject *)new_list);
 			Dee_Free(self->a_multiple.m_astv);
-			self->a_constexpr = new_list; /* Inherit reference. */
+			self->a_constexpr = (DREF DeeObject *)new_list; /* Inherit reference. */
 		} else if (self->a_flag == AST_FMULTIPLE_HASHSET) {
 			DREF DeeObject *new_set;
 			size_t i;
@@ -201,7 +201,7 @@ multiple_continue_at_iter:
 			Dee_Free(self->a_multiple.m_astv);
 			self->a_constexpr = new_dict; /* Inherit reference. */
 		} else if (self->a_flag == AST_FMULTIPLE_GENERIC_KEYS) {
-			DREF DeeObject *new_dict;
+			DREF DeeRoDictObject *new_dict;
 			size_t i, length;
 			length   = self->a_multiple.m_astc / 2;
 			new_dict = DeeRoDict_NewWithHint(length);
@@ -218,7 +218,7 @@ multiple_continue_at_iter:
 			for (i = 0; i < self->a_multiple.m_astc; ++i)
 				ast_decref(self->a_multiple.m_astv[i]);
 			Dee_Free(self->a_multiple.m_astv);
-			self->a_constexpr = new_dict; /* Inherit reference. */
+			self->a_constexpr = (DREF DeeObject *)new_dict; /* Inherit reference. */
 		} else {
 			goto after_multiple_constexpr;
 		}

@@ -81,8 +81,10 @@ struct Dee_list_object {
 DDATDEF DeeTypeObject DeeList_Type;
 
 /* Create a new list object from a vector. */
-DFUNDEF WUNUSED DREF DeeObject *DCALL DeeList_NewVector(size_t objc, DeeObject *const *objv);
-DFUNDEF WUNUSED DREF DeeObject *DCALL DeeList_NewVectorInherited(size_t objc, DREF DeeObject *const *objv);
+DFUNDEF WUNUSED DREF DeeObject *DCALL
+DeeList_NewVector(size_t objc, DeeObject *const *objv);
+DFUNDEF WUNUSED DREF DeeObject *DCALL
+DeeList_NewVectorInherited(size_t objc, /*inherit(on_success)*/ DREF DeeObject *const *objv);
 
 /* Inherit the entire vector, which must have been allocated using `Dee_Malloc()' and friends. */
 DFUNDEF WUNUSED DREF DeeObject *DCALL
@@ -99,9 +101,10 @@ DeeList_NewVectorInheritedHeap2(/*inherit(on_success)*/ DREF DeeObject **objv,
 DFUNDEF WUNUSED DREF DeeObject *DCALL DeeList_NewHint(size_t n_prealloc);
 DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeList_FromSequence(DeeObject *__restrict self);
 DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeList_FromIterator(DeeObject *__restrict self);
+
 /* WARNING: The caller must start gc-tracking the list once elements are initialized. */
-DFUNDEF WUNUSED DREF DeeObject *DCALL DeeList_NewUninitialized(size_t n_elem);
-DFUNDEF NONNULL((1)) void DCALL DeeList_FreeUninitialized(DeeObject *__restrict self);
+DFUNDEF WUNUSED DREF DeeListObject *DCALL DeeList_NewUninitialized(size_t n_elem);
+DFUNDEF NONNULL((1)) void DCALL DeeList_FreeUninitialized(DREF DeeListObject *__restrict self);
 
 #ifdef CONFIG_BUILDING_DEEMON
 /* Concat a list and some generic sequence,

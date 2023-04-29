@@ -310,7 +310,7 @@ err_cases:
 
 	{
 		size_t i;
-		DREF DeeObject *jump_table;
+		DREF DeeRoDictObject *jump_table;
 		DREF DeeObject *default_target;
 		int32_t get_cid;
 		jump_table = DeeRoDict_NewWithHint(num_constants);
@@ -343,14 +343,14 @@ err_jump_table:
 		 * >>    unpack   pop, #2                         // target.PC, target.SP
 		 * >>    jmp      pop, #pop */
 		// ...
-		if (asm_allowconst(jump_table)) {
-			jumptable_cid = asm_newconst(jump_table);
+		if (asm_allowconst((DeeObject *)jump_table)) {
+			jumptable_cid = asm_newconst((DeeObject *)jump_table);
 			if unlikely(jumptable_cid < 0)
 				goto err_jump_table;
 			if (asm_gpush_const((uint16_t)jumptable_cid))
 				goto err_jump_table;
 		} else {
-			if (asm_gpush_constexpr(jump_table))
+			if (asm_gpush_constexpr((DeeObject *)jump_table))
 				goto err_jump_table;
 		}
 		Dee_Decref_unlikely(jump_table);

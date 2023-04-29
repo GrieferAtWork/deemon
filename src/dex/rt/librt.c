@@ -1004,11 +1004,11 @@ librt_get_SeqEachCallAttrKwIterator_Type_f(size_t UNUSED(argc), DeeObject *const
 
 LOCAL WUNUSED DREF DeeObject *DCALL
 librt_get_nonempty_stub_set(void) {
-	DREF DeeObject *result;
+	DREF DeeRoSetObject *result;
 	result = DeeRoSet_NewWithHint(1);
 	if (result && DeeRoSet_Insert(&result, Dee_None))
 		Dee_Clear(result);
-	return result;
+	return (DREF DeeObject *)result;
 }
 
 

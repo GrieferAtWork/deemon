@@ -299,7 +299,7 @@ done:
 	return (DREF DeeObject *)result;
 }
 
-PUBLIC WUNUSED DREF DeeObject *DCALL
+PUBLIC WUNUSED DREF List *DCALL
 DeeList_NewUninitialized(size_t n_elem) {
 	DREF List *result;
 	result = DeeGCObject_MALLOC(List);
@@ -315,16 +315,16 @@ DeeList_NewUninitialized(size_t n_elem) {
 	Dee_atomic_rwlock_init(&result->l_lock);
 	/*DeeGC_Track((DeeObject *)result);*/ /* The caller must do this */
 done:
-	return (DREF DeeObject *)result;
+	return result;
 err_r:
 	DeeGCObject_FREE(result);
 	return NULL;
 }
 
 PUBLIC NONNULL((1)) void DCALL
-DeeList_FreeUninitialized(DeeObject *__restrict self) {
+DeeList_FreeUninitialized(DREF List *__restrict self) {
+	ASSERT_OBJECT_TYPE_EXACT(self, &DeeList_Type);
 	ASSERT(!DeeObject_IsShared(self));
-	ASSERT(Dee_TYPE(self) == &DeeList_Type);
 	Dee_DecrefNokill(&DeeList_Type);
 	Dee_Free(DeeList_ELEM(self));
 	DeeObject_FreeTracker((DeeObject *)self);
@@ -372,8 +372,8 @@ err:
 }
 
 PUBLIC WUNUSED DREF DeeObject *DCALL
-DeeList_NewVectorInherited(size_t objc, DREF DeeObject *const *objv) {
-	DREF DeeObject *result;
+DeeList_NewVectorInherited(size_t objc, /*inherit(on_success)*/ DREF DeeObject *const *objv) {
+	DREF List *result;
 	ASSERT(objv || !objc);
 	result = DeeList_NewUninitialized(objc);
 	if unlikely(!result)
@@ -383,9 +383,9 @@ DeeList_NewVectorInherited(size_t objc, DREF DeeObject *const *objv) {
 
 	/* Now that the list's been filled with data,
 	 * we can start tracking it as a GC object. */
-	DeeGC_Track(result);
+	DeeGC_Track((DeeObject *)result);
 done:
-	return result;
+	return (DREF DeeObject *)result;
 }
 
 /* Inherit the entire vector, which must have been allocated using `Dee_Malloc()' and friends. */
@@ -3996,7 +3996,7 @@ DEFINE_LIST_ITERATOR_COMPARE(li_ge,
                               LI_GETINDEX(self) >= LI_GETINDEX(other)))
 #undef DEFINE_LIST_ITERATOR_COMPARE
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeListObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF List *DCALL
 list_iterator_nii_getseq(ListIterator *__restrict self) {
 	return_reference_(self->li_list);
 }

@@ -1415,7 +1415,7 @@ err_function_code:
 		uint32_t i, length;
 		uint8_t const *end;
 		length = Dec_DecodePointer(&reader);
-		result = DeeList_NewUninitialized(length);
+		result = (DREF DeeObject *)DeeList_NewUninitialized(length);
 		if unlikely(!result)
 			goto done;
 		end = self->df_data + self->df_size;
@@ -1429,7 +1429,7 @@ err_function_code:
 			}
 			if unlikely(!ITER_ISOK(item)) {
 				Dee_Decrefv(DeeList_ELEM(result), i);
-				DeeList_FreeUninitialized(result);
+				DeeList_FreeUninitialized((DREF DeeListObject *)result);
 				result = item;
 				goto done;
 			}
@@ -1702,7 +1702,7 @@ err_function_code:
 			uint32_t num_items;
 			uint8_t const *end;
 			num_items = Dec_DecodePointer(&reader);
-			result    = DeeRoSet_NewWithHint(num_items);
+			result    = (DREF DeeObject *)DeeRoSet_NewWithHint(num_items);
 			if unlikely(!result)
 				goto done;
 			end = self->df_data + self->df_size;
@@ -1723,7 +1723,7 @@ err_function_code:
 				}
 
 				/* Insert the item into the result set. */
-				error = DeeRoSet_Insert(&result, item);
+				error = DeeRoSet_Insert((DREF DeeRoSetObject **)&result, item);
 				Dee_Decref(item);
 				if unlikely(error)
 					goto err_r;
@@ -1776,7 +1776,7 @@ err_function_code:
 			uint32_t num_items;
 			uint8_t const *end;
 			num_items = Dec_DecodePointer(&reader);
-			result    = DeeRoDict_NewWithHint(num_items);
+			result    = (DREF DeeObject *)DeeRoDict_NewWithHint(num_items);
 			if unlikely(!result)
 				goto done;
 			end = self->df_data + self->df_size;
@@ -1806,7 +1806,7 @@ err_function_code:
 					goto done;
 				}
 				/* Insert the key and item into the Dict. */
-				error = DeeRoDict_Insert(&result, key, value);
+				error = DeeRoDict_Insert((DREF DeeRoDictObject **)&result, key, value);
 				Dee_Decref(value);
 				Dee_Decref(key);
 				if unlikely(error)

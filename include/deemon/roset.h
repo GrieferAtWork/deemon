@@ -87,14 +87,14 @@ DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeRoSet_FromIterator(DeeObje
 DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeRoSet_FromIteratorWithHint(DeeObject *__restrict self, size_t num_items);
 
 /* Internal functions for constructing a read-only set object. */
-DFUNDEF WUNUSED DREF DeeObject *DCALL DeeRoSet_New(void);
-DFUNDEF WUNUSED DREF DeeObject *DCALL DeeRoSet_NewWithHint(size_t num_items);
+DFUNDEF WUNUSED DREF DeeRoSetObject *DCALL DeeRoSet_New(void);
+DFUNDEF WUNUSED DREF DeeRoSetObject *DCALL DeeRoSet_NewWithHint(size_t num_items);
 
 /* @return: 0:  Successfully inserted.
  * @return: 1:  Already exists.
  * @return: -1: An error occurred. */
 DFUNDEF WUNUSED NONNULL((1, 2)) int DCALL
-DeeRoSet_Insert(/*in|out*/ DREF DeeObject **__restrict pself,
+DeeRoSet_Insert(/*in|out*/ DREF DeeRoSetObject **__restrict pself,
                 DeeObject *__restrict key);
 
 /* Hash-iteration control. */
