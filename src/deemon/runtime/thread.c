@@ -1659,7 +1659,7 @@ DeeThread_AllocateCurrentThread(void) {
  * @return: NULL: Failed to allocate a thread controller for the caller (out-of-memory)
  *                Note that in this case, no exception is thrown (because none can be
  *                thrown, as the caller doesn't have a deemon thread-context) */
-INTDEF WUNUSED DeeThreadObject *DCALL DCALL DeeThread_Accede(void) {
+PUBLIC WUNUSED DeeThreadObject *DCALL DCALL DeeThread_Accede(void) {
 	DeeThreadObject *result;
 
 	/* Check if the caller already has a thread context. */
