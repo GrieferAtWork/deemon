@@ -3923,8 +3923,13 @@ thread_crash_traceback(DeeThreadObject *self, size_t argc, DeeObject *const *arg
 		goto err;
 	}
 	result = (DeeObject *)self->t_except->ef_trace;
-	if (result == ITER_DONE && self == caller)
-		result = (DeeObject *)except_frame_gettb(self->t_except);
+	if (result == ITER_DONE) {
+		result = NULL;
+		if (self == caller) {
+			self->t_except->ef_trace = except_frame_gettb(self->t_except);
+			result = (DeeObject *)self->t_except->ef_trace;
+		}
+	}
 	if (result == NULL)
 		result = Dee_None;
 	ASSERT_OBJECT(result);
@@ -4394,11 +4399,14 @@ again:
 		ASSERT(frame_iter != NULL);
 		error = frame_iter->ef_error;
 		trace = (DeeObject *)frame_iter->ef_trace;
-		if (trace == ITER_DONE && self == caller) {
-			frame_iter->ef_trace = except_frame_gettb(frame_iter);
-			trace = (DeeObject *)frame_iter->ef_trace;
+		if (trace == ITER_DONE) {
+			trace = NULL;
+			if (self == caller) {
+				frame_iter->ef_trace = except_frame_gettb(frame_iter);
+				trace = (DeeObject *)frame_iter->ef_trace;
+			}
 		}
-		if (!ITER_ISOK(trace))
+		if (trace == NULL)
 			trace = Dee_None;
 		pair = (DREF DeeTupleObject *)DeeTuple_TryPack(2, error, trace);
 		if unlikely(!pair) {
