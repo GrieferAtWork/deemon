@@ -813,7 +813,7 @@ EXPORTS
 	_DeeThread_Accede@0=DeeThread_Accede@0
 	_DeeThread_CheckInterrupt@0=DeeThread_CheckInterrupt@0
 	_DeeThread_Detach@4=DeeThread_Detach@4
-	_DeeThread_FromPid@4=DeeThread_FromPid@4
+	_DeeThread_FromTid@4=DeeThread_FromTid@4
 	_DeeThread_GetTid@4=DeeThread_GetTid@4
 	_DeeThread_GetTimeMicroSeconds@0=DeeThread_GetTimeMicroSeconds@0
 	_DeeThread_Interrupt@12=DeeThread_Interrupt@12

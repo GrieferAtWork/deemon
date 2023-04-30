@@ -50,7 +50,7 @@ function testStringConvert(x: int) {
 
 
 /* Make sure that we can convert back-and-forth between integers and strings. */
-for (local i: [:128]) {
+for (local i: [:256]) {
 	local limit = (1 << i) - 1;
 	for (local a: [-limit - 2: -limit + 3])
 		testStringConvert(a);

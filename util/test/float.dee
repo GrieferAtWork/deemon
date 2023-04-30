@@ -59,7 +59,7 @@ assert !float.nan.isinf;
 assert !float.nan.isnormal;
 assert !float.nan.isfinite;
 
-/* For the same of allowing type-generic code,
+/* For the reason of allowing type-generic code,
  * `int' also provides float-style attributes. */
 assert !(0).isnan;
 assert !(0).isinf;

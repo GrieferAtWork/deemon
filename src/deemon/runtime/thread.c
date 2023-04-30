@@ -3383,7 +3383,7 @@ thread_fini(DeeThreadObject *__restrict self) {
 #ifdef Dee_pid_t
 /* Construct a new wrapper for an external reference to `thread'
  * NOTE: The given `thread' is _NOT_ inherited! */
-DFUNDEF WUNUSED DREF DeeObject *DCALL DeeThread_FromPid(Dee_pid_t tid) {
+DFUNDEF WUNUSED DREF DeeObject *DCALL DeeThread_FromTid(Dee_pid_t tid) {
 	DREF DeeOSThreadObject *result;
 	result = DeeGCObject_CALLOC(DeeOSThreadObject);
 	if unlikely(!result)

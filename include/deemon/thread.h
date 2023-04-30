@@ -421,7 +421,7 @@ DDATDEF DeeTypeObject DeeThread_Type;
 /* Construct a new wrapper for an external reference to `thread'
  * NOTE: The given `thread' is _NOT_ inherited! */
 #ifdef Dee_pid_t
-DFUNDEF WUNUSED DREF DeeObject *DCALL DeeThread_FromPid(Dee_pid_t pid);
+DFUNDEF WUNUSED DREF DeeObject *DCALL DeeThread_FromTid(Dee_pid_t pid);
 #endif /* Dee_pid_t */
 #endif /* !CONFIG_NO_THREADS */
 
