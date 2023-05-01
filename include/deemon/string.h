@@ -1279,8 +1279,9 @@ LOCAL ATTR_MALLOC WUNUSED uint32_t *
 
 LOCAL WUNUSED uint16_t *
 (DCALL DeeString_Resize2ByteBuffer)(uint16_t *buffer, size_t num_chars) {
-	size_t *result = buffer ? (size_t *)buffer - 1 : NULL;
-	result         = (size_t *)Dee_Realloc(result, DeeString_SizeOf2ByteBuffer(num_chars));
+	size_t *result;
+	result = buffer ? (size_t *)buffer - 1 : NULL;
+	result = (size_t *)Dee_Realloc(result, DeeString_SizeOf2ByteBuffer(num_chars));
 	if likely(result)
 		*result++ = num_chars;
 	return (uint16_t *)result;
@@ -1288,8 +1289,9 @@ LOCAL WUNUSED uint16_t *
 
 LOCAL WUNUSED uint32_t *
 (DCALL DeeString_Resize4ByteBuffer)(uint32_t *buffer, size_t num_chars) {
-	size_t *result = buffer ? (size_t *)buffer - 1 : NULL;
-	result         = (size_t *)Dee_Realloc(result, DeeString_SizeOf4ByteBuffer(num_chars));
+	size_t *result;
+	result = buffer ? (size_t *)buffer - 1 : NULL;
+	result = (size_t *)Dee_Realloc(result, DeeString_SizeOf4ByteBuffer(num_chars));
 	if likely(result)
 		*result++ = num_chars;
 	return (uint32_t *)result;
@@ -1297,26 +1299,28 @@ LOCAL WUNUSED uint32_t *
 
 LOCAL WUNUSED uint16_t *
 (DCALL DeeString_TryResize2ByteBuffer)(uint16_t *buffer, size_t num_chars) {
-	size_t *result = buffer ? (size_t *)buffer - 1 : NULL;
-	result         = (size_t *)Dee_TryRealloc(result, DeeString_SizeOf2ByteBuffer(num_chars));
+	size_t *result;
+	result = buffer ? (size_t *)buffer - 1 : NULL;
+	result = (size_t *)Dee_TryRealloc(result, DeeString_SizeOf2ByteBuffer(num_chars));
 	if likely(result) {
 		*result++ = num_chars;
-	} else if (num_chars < Dee_WSTR_LENGTH(buffer)) {
+	} else if (buffer && num_chars < Dee_WSTR_LENGTH(buffer)) {
 		Dee_WSTR_LENGTH(buffer) = num_chars;
-		result                  = (size_t *)buffer;
+		result = (size_t *)buffer;
 	}
 	return (uint16_t *)result;
 }
 
 LOCAL WUNUSED uint32_t *
 (DCALL DeeString_TryResize4ByteBuffer)(uint32_t *buffer, size_t num_chars) {
-	size_t *result = buffer ? (size_t *)buffer - 1 : NULL;
-	result         = (size_t *)Dee_TryRealloc(result, sizeof(size_t) + (num_chars + 1) * 4);
+	size_t *result;
+	result = buffer ? (size_t *)buffer - 1 : NULL;
+	result = (size_t *)Dee_TryRealloc(result, sizeof(size_t) + (num_chars + 1) * 4);
 	if likely(result) {
 		*result++ = num_chars;
-	} else if (num_chars < Dee_WSTR_LENGTH(buffer)) {
+	} else if (buffer && num_chars < Dee_WSTR_LENGTH(buffer)) {
 		Dee_WSTR_LENGTH(buffer) = num_chars;
-		result                  = (size_t *)buffer;
+		result = (size_t *)buffer;
 	}
 	return (uint32_t *)result;
 }
@@ -1500,8 +1504,9 @@ LOCAL ATTR_MALLOC WUNUSED uint32_t *
 LOCAL WUNUSED uint16_t *
 (DCALL DeeDbgString_Resize2ByteBuffer)(uint16_t *buffer, size_t num_chars,
                                        char const *file, int line) {
-	size_t *result = buffer ? (size_t *)buffer - 1 : NULL;
-	result         = (size_t *)DeeDbg_Realloc(result, DeeString_SizeOf2ByteBuffer(num_chars), file, line);
+	size_t *result;
+	result = buffer ? (size_t *)buffer - 1 : NULL;
+	result = (size_t *)DeeDbg_Realloc(result, DeeString_SizeOf2ByteBuffer(num_chars), file, line);
 	if likely(result)
 		*result++ = num_chars;
 	return (uint16_t *)result;
@@ -1510,8 +1515,9 @@ LOCAL WUNUSED uint16_t *
 LOCAL WUNUSED uint32_t *
 (DCALL DeeDbgString_Resize4ByteBuffer)(uint32_t *buffer, size_t num_chars,
                                        char const *file, int line) {
-	size_t *result = buffer ? (size_t *)buffer - 1 : NULL;
-	result         = (size_t *)DeeDbg_Realloc(result, DeeString_SizeOf4ByteBuffer(num_chars), file, line);
+	size_t *result;
+	result = buffer ? (size_t *)buffer - 1 : NULL;
+	result = (size_t *)DeeDbg_Realloc(result, DeeString_SizeOf4ByteBuffer(num_chars), file, line);
 	if likely(result)
 		*result++ = num_chars;
 	return (uint32_t *)result;
@@ -1520,13 +1526,14 @@ LOCAL WUNUSED uint32_t *
 LOCAL WUNUSED uint16_t *
 (DCALL DeeDbgString_TryResize2ByteBuffer)(uint16_t *buffer, size_t num_chars,
                                           char const *file, int line) {
-	size_t *result = buffer ? (size_t *)buffer - 1 : NULL;
-	result         = (size_t *)DeeDbg_TryRealloc(result, DeeString_SizeOf2ByteBuffer(num_chars), file, line);
+	size_t *result;
+	result = buffer ? (size_t *)buffer - 1 : NULL;
+	result = (size_t *)DeeDbg_TryRealloc(result, DeeString_SizeOf2ByteBuffer(num_chars), file, line);
 	if likely(result) {
 		*result++ = num_chars;
-	} else if (num_chars < Dee_WSTR_LENGTH(buffer)) {
+	} else if (buffer && num_chars < Dee_WSTR_LENGTH(buffer)) {
 		Dee_WSTR_LENGTH(buffer) = num_chars;
-		result                  = (size_t *)buffer;
+		result = (size_t *)buffer;
 	}
 	return (uint16_t *)result;
 }
@@ -1534,13 +1541,14 @@ LOCAL WUNUSED uint16_t *
 LOCAL WUNUSED uint32_t *
 (DCALL DeeDbgString_TryResize4ByteBuffer)(uint32_t *buffer, size_t num_chars,
                                           char const *file, int line) {
-	size_t *result = buffer ? (size_t *)buffer - 1 : NULL;
-	result         = (size_t *)DeeDbg_TryRealloc(result, DeeString_SizeOf4ByteBuffer(num_chars), file, line);
+	size_t *result;
+	result = buffer ? (size_t *)buffer - 1 : NULL;
+	result = (size_t *)DeeDbg_TryRealloc(result, DeeString_SizeOf4ByteBuffer(num_chars), file, line);
 	if likely(result) {
 		*result++ = num_chars;
-	} else if (num_chars < Dee_WSTR_LENGTH(buffer)) {
+	} else if (buffer && num_chars < Dee_WSTR_LENGTH(buffer)) {
 		Dee_WSTR_LENGTH(buffer) = num_chars;
-		result                  = (size_t *)buffer;
+		result = (size_t *)buffer;
 	}
 	return (uint32_t *)result;
 }
@@ -2011,7 +2019,7 @@ LOCAL WUNUSED ATTR_RETNONNULL NONNULL((1)) void *
 		                                     Dee_STRING_SIZEOF_WIDTH(width),
 		                                     file, line);
 		if unlikely(!result)
-			result    = (size_t *)buffer - 1;
+			result = (size_t *)buffer - 1;
 		*result++ = num_chars;
 		return result;
 	}

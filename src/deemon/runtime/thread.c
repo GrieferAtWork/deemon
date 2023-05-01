@@ -370,7 +370,7 @@ PUBLIC WUNUSED uint64_t
 	if unlikely(!QueryPerformanceCounter((LARGE_INTEGER *)&result)) {
 do_tickcount:
 		if (!lp_GetTickCount64) {
-			*(void **)&lp_GetTickCount64 = GetProcAddress(GetModuleHandleW(wKernel32), "GetTickCount64");
+			*(FARPROC *)&lp_GetTickCount64 = GetProcAddress(GetModuleHandleW(wKernel32), "GetTickCount64");
 			if (!lp_GetTickCount64) {
 				result = (uint64_t)GetTickCount();
 				DBG_ALIGNMENT_ENABLE();

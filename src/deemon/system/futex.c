@@ -848,7 +848,7 @@ futex_controller_tryincref(struct futex_controller *__restrict self) {
 		if unlikely(refcnt == 0)
 			return false; /* It's already dead... */
 	} while (!atomic_cmpxch_weak_explicit(&self->fc_refcnt, refcnt, refcnt + 1,
-	                                      __ATOMIC_SEQ_CST, __ATOMIC_RELAXED));
+	                                      Dee_ATOMIC_SEQ_CST, Dee_ATOMIC_RELAXED));
 	return true;
 }
 

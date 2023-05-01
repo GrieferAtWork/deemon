@@ -57,7 +57,19 @@
 #include "runtime_error.h"
 #include "strings.h"
 
-/* Operator invocation. */
+/************************************************************************/
+/* Operator invocation.                                                 */
+/************************************************************************/
+
+
+/* Trace self-optimizing operator inheritance. */
+#if 1
+#define LOG_INHERIT(base, self, what)                        \
+	Dee_DPRINTF("[RT] Inherit `" what "' from %q into %q\n", \
+	            (base)->tp_name, (self)->tp_name)
+#else
+#define LOG_INHERIT(base, self, what) (void)0
+#endif
 
 DECL_BEGIN
 
@@ -76,7 +88,7 @@ DeeSystem_DEFINE_memsetp(dee_memsetp)
 #ifndef DEFINE_INTERNAL_OPERATOR
 #define DEFINE_INTERNAL_OPERATOR(return, name, args) \
 	INTERN return (DCALL DeeObject_##name)args
-#endif
+#endif /* !DEFINE_INTERNAL_OPERATOR */
 
 #ifdef DEFINE_TYPED_OPERATORS
 #define RESTRICT_IF_NOTYPE /* nothing */
@@ -316,14 +328,15 @@ INTDEF WUNUSED NONNULL((1, 2, 3)) dssize_t DCALL DeeObject_TDefaultPrintReprWith
 INTERN NONNULL((1)) bool DCALL
 type_inherit_constructors(DeeTypeObject *__restrict self) {
 	DeeTypeObject *base;
-	if (!(self->tp_flags & TP_FINHERITCTOR) ||
-	    (base = self->tp_base) == NULL)
+	if (!(self->tp_flags & TP_FINHERITCTOR))
+		return false;
+	base = self->tp_base;
+	if (base == NULL)
 		return false;
 	type_inherit_constructors(base);
 	ASSERT((base->tp_flags & TP_FVARIABLE) ==
 	       (self->tp_flags & TP_FVARIABLE));
-	Dee_DPRINTF("[RT] Inherit constructors from %q into %q\n",
-	            base->tp_name, self->tp_name);
+	LOG_INHERIT(base, self, "operator constructor");
 	if (self->tp_flags & TP_FVARIABLE) {
 		self->tp_init.tp_var.tp_ctor        = base->tp_init.tp_var.tp_ctor;
 		self->tp_init.tp_var.tp_copy_ctor   = base->tp_init.tp_var.tp_copy_ctor;
@@ -1265,11 +1278,13 @@ type_inherit_str(DeeTypeObject *__restrict self) {
 		return true;
 	}
 	base = DeeType_Base(self);
-	if (!base ||
-	    ((!base->tp_cast.tp_str || !base->tp_cast.tp_print) && !type_inherit_str(base)))
+	if (!base)
 		return false;
-	Dee_DPRINTF("[RT] Inherit `operator str' from %q into %q\n",
-	            base->tp_name, self->tp_name);
+	if (!base->tp_cast.tp_str || !base->tp_cast.tp_print) {
+		if (!type_inherit_str(base))
+			return false;
+	}
+	LOG_INHERIT(base, self, "operator str");
 	self->tp_cast.tp_str   = base->tp_cast.tp_str;
 	self->tp_cast.tp_print = base->tp_cast.tp_print;
 	return true;
@@ -1288,11 +1303,13 @@ type_inherit_repr(DeeTypeObject *__restrict self) {
 		return true;
 	}
 	base = DeeType_Base(self);
-	if (!base ||
-	    ((!base->tp_cast.tp_repr || !base->tp_cast.tp_printrepr) && !type_inherit_repr(base)))
+	if (!base)
 		return false;
-	Dee_DPRINTF("[RT] Inherit `operator repr' from %q into %q\n",
-	            base->tp_name, self->tp_name);
+	if (!base->tp_cast.tp_repr || !base->tp_cast.tp_printrepr) {
+		if (!type_inherit_repr(base))
+			return false;
+	}
+	LOG_INHERIT(base, self, "operator repr");
 	self->tp_cast.tp_repr      = base->tp_cast.tp_repr;
 	self->tp_cast.tp_printrepr = base->tp_cast.tp_printrepr;
 	return true;
@@ -1302,11 +1319,13 @@ type_inherit_repr(DeeTypeObject *__restrict self) {
 	INTERN NONNULL((1)) bool DCALL                                 \
 	name(DeeTypeObject *__restrict self) {                         \
 		DeeTypeObject *base = DeeType_Base(self);                  \
-		if (!base ||                                               \
-		    (!base->field && !name(base)))                         \
+		if (!base)                                                 \
 			return false;                                          \
-		Dee_DPRINTF("[RT] Inherit `" opname "' from %q into %q\n", \
-		            base->tp_name, self->tp_name);                 \
+		if (!base->field) {                                        \
+			if (!name(base))                                       \
+				return false;                                      \
+		}                                                          \
+		LOG_INHERIT(base, self, opname);                           \
 		self->field = base->field;                                 \
 		return true;                                               \
 	}
@@ -1314,11 +1333,13 @@ type_inherit_repr(DeeTypeObject *__restrict self) {
 	INTERN NONNULL((1)) bool DCALL                                 \
 	name(DeeTypeObject *__restrict self) {                         \
 		DeeTypeObject *base = DeeType_Base(self);                  \
-		if (!base ||                                               \
-		    (!base->field && !base->field2 && !name(base)))        \
+		if (!base)                                                 \
 			return false;                                          \
-		Dee_DPRINTF("[RT] Inherit `" opname "' from %q into %q\n", \
-		            base->tp_name, self->tp_name);                 \
+		if (!base->field && !base->field2) {                       \
+			if (!name(base))                                       \
+				return false;                                      \
+		}                                                          \
+		LOG_INHERIT(base, self, opname);                           \
 		self->field  = base->field;                                \
 		self->field2 = base->field2;                               \
 		return true;                                               \
@@ -1912,12 +1933,15 @@ INTERN NONNULL((1)) bool DCALL
 type_inherit_hash(DeeTypeObject *__restrict self) {
 	DeeTypeObject *base = DeeType_Base(self);
 	struct type_cmp *base_cmp;
-	if (!base ||
-	    (((base_cmp = base->tp_cmp) == NULL ||
-	      !base_cmp->tp_hash) &&
-	     !type_inherit_hash(base)))
+	if (!base)
 		return false;
 	base_cmp = base->tp_cmp;
+	if (base_cmp == NULL || !base_cmp->tp_hash) {
+		if (!type_inherit_hash(base))
+			return false;
+		base_cmp = base->tp_cmp;
+	}
+	LOG_INHERIT(base, self, "operator hash");
 	if (self->tp_cmp) {
 		self->tp_cmp->tp_hash = base_cmp->tp_hash;
 	} else {
@@ -2026,22 +2050,24 @@ INTERN NONNULL((1)) bool DCALL
 type_inherit_int(DeeTypeObject *__restrict self) {
 	DeeTypeObject *base = DeeType_Base(self);
 	struct type_math *base_math;
-	if (!base ||
-	    (((base_math = base->tp_math) == NULL ||
-	      (!base_math->tp_int && !base_math->tp_int32 &&
-	       !base_math->tp_int64 && !base_math->tp_double)) &&
-	     !type_inherit_int(base)))
+	if (!base)
 		return false;
-	Dee_DPRINTF("[RT] Inherit `operator int' from %q into %q\n",
-	            base->tp_name, self->tp_name);
 	base_math = base->tp_math;
-	if (!self->tp_math) {
-		self->tp_math = base_math;
-	} else {
+	if (base_math == NULL ||
+	    (!base_math->tp_int && !base_math->tp_int32 &&
+	     !base_math->tp_int64 && !base_math->tp_double)) {
+		if (!type_inherit_int(base))
+			return false;
+		base_math = base->tp_math;
+	}
+	LOG_INHERIT(base, self, "operator int");
+	if (self->tp_math != NULL) {
 		self->tp_math->tp_int32  = base_math->tp_int32;
 		self->tp_math->tp_int64  = base_math->tp_int64;
 		self->tp_math->tp_double = base_math->tp_double;
 		self->tp_math->tp_int    = base_math->tp_int;
+	} else {
+		self->tp_math = base_math;
 	}
 	return true;
 }
@@ -2681,8 +2707,9 @@ done:
 	return error;
 }
 
-PUBLIC int (DCALL DeeObject_AsInt8)(DeeObject *__restrict self,
-                                    int8_t *__restrict result) {
+PUBLIC WUNUSED NONNULL((1, 2)) int
+(DCALL DeeObject_AsInt8)(DeeObject *__restrict self,
+                         int8_t *__restrict result) {
 	int32_t val32;
 	int error = DeeObject_AsInt32(self, &val32);
 	if unlikely(error < 0)
@@ -2698,8 +2725,9 @@ done:
 	return error;
 }
 
-PUBLIC int (DCALL DeeObject_AsInt16)(DeeObject *__restrict self,
-                                     int16_t *__restrict result) {
+PUBLIC WUNUSED NONNULL((1, 2)) int
+(DCALL DeeObject_AsInt16)(DeeObject *__restrict self,
+                          int16_t *__restrict result) {
 	int32_t val32;
 	int error = DeeObject_AsInt32(self, &val32);
 	if unlikely(error < 0)
@@ -2716,8 +2744,9 @@ err:
 	return -1;
 }
 
-PUBLIC int (DCALL DeeObject_AsUInt8)(DeeObject *__restrict self,
-                                     uint8_t *__restrict result) {
+PUBLIC WUNUSED NONNULL((1, 2)) int
+(DCALL DeeObject_AsUInt8)(DeeObject *__restrict self,
+                          uint8_t *__restrict result) {
 	uint32_t val32;
 	int error = DeeObject_AsUInt32(self, &val32);
 	if unlikely(error < 0)
@@ -2733,8 +2762,9 @@ done:
 	return error;
 }
 
-PUBLIC int (DCALL DeeObject_AsUInt16)(DeeObject *__restrict self,
-                                      uint16_t *__restrict result) {
+PUBLIC WUNUSED NONNULL((1, 2)) int
+(DCALL DeeObject_AsUInt16)(DeeObject *__restrict self,
+                           uint16_t *__restrict result) {
 	uint32_t val32;
 	int error = DeeObject_AsUInt32(self, &val32);
 	if unlikely(error < 0)
@@ -2807,14 +2837,17 @@ err:
 	name(DeeTypeObject *__restrict self) {                                     \
 		struct type_math *base_math;                                           \
 		DeeTypeObject *base = DeeType_Base(self);                              \
-		if (!base ||                                                           \
-		    (((base_math = base->tp_math) == NULL ||                           \
-		      (!base_math->tp_##field &&                                       \
-		       !base_math->tp_inplace_##field)) &&                             \
-		     !name(base)))                                                     \
+		if (!base)                                                             \
 			return false;                                                      \
-		Dee_DPRINTF("[RT] Inherit `" opname "' from %q into %q\n",             \
-		            base->tp_name, self->tp_name);                             \
+		base_math = base->tp_math;                                             \
+		if (base_math == NULL ||                                               \
+		    (!base_math->tp_##field &&                                         \
+		     !base_math->tp_inplace_##field)) {                                \
+			if (!name(base))                                                   \
+				return false;                                                  \
+			base_math = base->tp_math;                                         \
+		}                                                                      \
+		LOG_INHERIT(base, self, opname);                                       \
 		if (self->tp_math) {                                                   \
 			self->tp_math->tp_##field         = base_math->tp_##field;         \
 			self->tp_math->tp_inplace_##field = base_math->tp_inplace_##field; \
@@ -2828,14 +2861,15 @@ err:
 	name(DeeTypeObject *__restrict self) {                         \
 		struct type_math *base_math;                               \
 		DeeTypeObject *base = DeeType_Base(self);                  \
-		if (!base ||                                               \
-		    (((base_math = base->tp_math) == NULL ||               \
-		      !base_math->tp_##field) &&                           \
-		     !name(base)))                                         \
+		if (!base)                                                 \
 			return false;                                          \
-		Dee_DPRINTF("[RT] Inherit `" opname "' from %q into %q\n", \
-		            base->tp_name, self->tp_name);                 \
 		base_math = base->tp_math;                                 \
+		if (base_math == NULL || !base_math->tp_##field) {         \
+			if (!name(base))                                       \
+				return false;                                      \
+			base_math = base->tp_math;                             \
+		}                                                          \
+		LOG_INHERIT(base, self, opname);                           \
 		if (self->tp_math) {                                       \
 			self->tp_math->tp_##field = base_math->tp_##field;     \
 		} else {                                                   \
@@ -2860,16 +2894,18 @@ DEFINE_TYPE_INHERIT_FUNCTION(type_inherit_pow, "operator pow", pow)
 INTERN NONNULL((1)) bool DCALL type_inherit_add(DeeTypeObject *__restrict self) {
 	struct type_math *base_math;
 	DeeTypeObject *base = DeeType_Base(self);
-	if (!base ||
-	    (((base_math = base->tp_math) == NULL ||
-	      (!base_math->tp_add && !base_math->tp_inplace_add &&
-	       !base_math->tp_sub && !base_math->tp_inplace_sub &&
-	       !base_math->tp_inc && !base_math->tp_dec)) &&
-	     !type_inherit_add(base)))
+	if (!base)
 		return false;
-	Dee_DPRINTF("[RT] Inherit `operator add' from %q into %q\n",
-	            base->tp_name, self->tp_name);
 	base_math = base->tp_math;
+	if (base_math == NULL ||
+	    (!base_math->tp_add && !base_math->tp_inplace_add &&
+	     !base_math->tp_sub && !base_math->tp_inplace_sub &&
+	     !base_math->tp_inc && !base_math->tp_dec)) {
+		if (!type_inherit_add(base))
+			return false;
+		base_math = base->tp_math;
+	}
+	LOG_INHERIT(base, self, "operator add");
 	if (self->tp_math) {
 		self->tp_math->tp_inc         = base_math->tp_inc;
 		self->tp_math->tp_dec         = base_math->tp_dec;
@@ -3423,16 +3459,18 @@ INTERN NONNULL((1)) bool DCALL
 type_inherit_compare(DeeTypeObject *__restrict self) {
 	struct type_cmp *base_cmp;
 	DeeTypeObject *base = DeeType_Base(self);
-	if (!base ||
-	    (((base_cmp = base->tp_cmp) == NULL ||
-	      (!base_cmp->tp_eq && !base_cmp->tp_ne &&
-	       !base_cmp->tp_lo && !base_cmp->tp_le &&
-	       !base_cmp->tp_gr && !base_cmp->tp_ge)) &&
-	     !type_inherit_compare(base)))
+	if (!base)
 		return false;
-	Dee_DPRINTF("[RT] Inherit `operator <compare>' from %q into %q\n",
-	            base->tp_name, self->tp_name);
 	base_cmp = base->tp_cmp;
+	if (base_cmp == NULL ||
+	    (!base_cmp->tp_eq && !base_cmp->tp_ne &&
+	     !base_cmp->tp_lo && !base_cmp->tp_le &&
+	     !base_cmp->tp_gr && !base_cmp->tp_ge)) {
+		if (!type_inherit_compare(base))
+			return false;
+		base_cmp = base->tp_cmp;
+	}
+	LOG_INHERIT(base, self, "operator <compare>");
 	if (self->tp_cmp) {
 		self->tp_cmp->tp_eq = base_cmp->tp_eq;
 		self->tp_cmp->tp_ne = base_cmp->tp_ne;
@@ -3636,44 +3674,50 @@ again:
 #endif /* !DEFINE_TYPED_OPERATORS */
 
 #ifndef DEFINE_TYPED_OPERATORS
-#define DEFINE_TYPE_INHERIT_FUNCTION(name, field)  \
-	INTERN NONNULL((1)) bool DCALL                 \
-	name(DeeTypeObject *__restrict self) {         \
-		DeeTypeObject *base = DeeType_Base(self);  \
-		struct type_seq *base_seq;                 \
-		if (!base ||                               \
-		    (((base_seq = base->tp_seq) == NULL || \
-		      (!base_seq->field)) &&               \
-		     !name(base)))                         \
-			return false;                          \
-		base_seq = base->tp_seq;                   \
-		if (self->tp_seq) {                        \
-			self->tp_seq->field = base_seq->field; \
-		} else {                                   \
-			self->tp_seq = base_seq;               \
-		}                                          \
-		return true;                               \
+#define DEFINE_TYPE_INHERIT_FUNCTION(name, opname, field)          \
+	INTERN NONNULL((1)) bool DCALL                                 \
+	name(DeeTypeObject *__restrict self) {                         \
+		DeeTypeObject *base = DeeType_Base(self);                  \
+		struct type_seq *base_seq;                                 \
+		if (!base)                                                 \
+			return false;                                          \
+		base_seq = base->tp_seq;                                   \
+		if (base_seq == NULL || !base_seq->field) {                \
+			if (!name(base))                                       \
+				return false;                                      \
+		}                                                          \
+		base_seq = base->tp_seq;                                   \
+		LOG_INHERIT(base, self, opname);                           \
+		if (self->tp_seq) {                                        \
+			self->tp_seq->field = base_seq->field;                 \
+		} else {                                                   \
+			self->tp_seq = base_seq;                               \
+		}                                                          \
+		return true;                                               \
 	}
 
 INTERN NONNULL((1)) bool DCALL
 type_inherit_iternext(DeeTypeObject *__restrict self) {
 	DeeTypeObject *base = DeeType_Base(self);
-	if (!base ||
-	    (!base->tp_iter_next &&
-	     !type_inherit_iternext(base)))
+	if (!base)
 		return false;
+	if (!base->tp_iter_next) {
+		if (!type_inherit_iternext(base))
+			return false;
+	}
+	LOG_INHERIT(base, self, "operator iternext");
 	self->tp_iter_next = base->tp_iter_next;
 	return true;
 }
-DEFINE_TYPE_INHERIT_FUNCTION(type_inherit_iterself, tp_iter_self)
-DEFINE_TYPE_INHERIT_FUNCTION(type_inherit_size, tp_size)
-DEFINE_TYPE_INHERIT_FUNCTION(type_inherit_contains, tp_contains)
-DEFINE_TYPE_INHERIT_FUNCTION(type_inherit_getitem, tp_get)
-DEFINE_TYPE_INHERIT_FUNCTION(type_inherit_delitem, tp_del)
-DEFINE_TYPE_INHERIT_FUNCTION(type_inherit_setitem, tp_set)
-DEFINE_TYPE_INHERIT_FUNCTION(type_inherit_getrange, tp_range_get)
-DEFINE_TYPE_INHERIT_FUNCTION(type_inherit_delrange, tp_range_del)
-DEFINE_TYPE_INHERIT_FUNCTION(type_inherit_setrange, tp_range_set)
+DEFINE_TYPE_INHERIT_FUNCTION(type_inherit_iterself, "operator iterself", tp_iter_self)
+DEFINE_TYPE_INHERIT_FUNCTION(type_inherit_size, "operator size", tp_size)
+DEFINE_TYPE_INHERIT_FUNCTION(type_inherit_contains, "operator contains", tp_contains)
+DEFINE_TYPE_INHERIT_FUNCTION(type_inherit_getitem, "operator getitem", tp_get)
+DEFINE_TYPE_INHERIT_FUNCTION(type_inherit_delitem, "operator delitem", tp_del)
+DEFINE_TYPE_INHERIT_FUNCTION(type_inherit_setitem, "operator setitem", tp_set)
+DEFINE_TYPE_INHERIT_FUNCTION(type_inherit_getrange, "operator getrange", tp_range_get)
+DEFINE_TYPE_INHERIT_FUNCTION(type_inherit_delrange, "operator delrange", tp_range_del)
+DEFINE_TYPE_INHERIT_FUNCTION(type_inherit_setrange, "operator setrange", tp_range_set)
 #undef DEFINE_TYPE_INHERIT_FUNCTION
 #endif /* !DEFINE_TYPED_OPERATORS */
 
@@ -5151,12 +5195,16 @@ INTERN NONNULL((1)) bool DCALL
 type_inherit_with(DeeTypeObject *__restrict self) {
 	DeeTypeObject *base = DeeType_Base(self);
 	struct type_with *base_with;
-	if (!base ||
-	    (((base_with = base->tp_with) == NULL ||
-	      (!base_with->tp_enter && !base_with->tp_leave)) &&
-	     !type_inherit_with(base)))
+	if (!base)
 		return false;
 	base_with = base->tp_with;
+	if (base_with == NULL || (base_with->tp_enter == NULL &&
+	                          base_with->tp_leave == NULL)) {
+		if (!type_inherit_with(base))
+			return false;
+		base_with = base->tp_with;
+	}
+	LOG_INHERIT(base, self, "operator <with>");
 	if unlikely(self->tp_with) {
 		self->tp_with->tp_enter = base_with->tp_enter;
 		self->tp_with->tp_leave = base_with->tp_leave;
@@ -5167,6 +5215,17 @@ type_inherit_with(DeeTypeObject *__restrict self) {
 }
 #endif /* !DEFINE_TYPED_OPERATORS */
 
+/* With-operator invocation:
+ * >> with (my_object) {
+ * >>     ...
+ * >> }
+ * Translates to:
+ * >> DeeObject_Enter(my_object);
+ * >> try {
+ * >>     ...
+ * >> } finally {
+ * >>    DeeObject_Leave(my_object);
+ * >> } */
 DEFINE_OPERATOR(int, Enter,
                (DeeObject *RESTRICT_IF_NOTYPE self)) {
 	LOAD_TP_SELF;
@@ -5205,12 +5264,15 @@ INTERN NONNULL((1)) bool DCALL
 type_inherit_buffer(DeeTypeObject *__restrict self) {
 	DeeTypeObject *base = DeeType_Base(self);
 	struct type_buffer *base_buffer;
-	if (!base ||
-	    (((base_buffer = base->tp_buffer) == NULL ||
-	      (!base_buffer->tp_getbuf)) &&
-	     !type_inherit_buffer(base)))
+	if (!base)
 		return false;
 	base_buffer = base->tp_buffer;
+	if (base_buffer == NULL || !base_buffer->tp_getbuf) {
+		if (!type_inherit_buffer(base))
+			return false;
+		base_buffer = base->tp_buffer;
+	}
+	LOG_INHERIT(base, self, "<BUFFER>");
 	if unlikely(self->tp_buffer) {
 		memcpy(self->tp_buffer, base_buffer,
 		       sizeof(struct type_buffer));
@@ -5437,19 +5499,23 @@ INTERN NONNULL((1)) bool DCALL
 type_inherit_nsi(DeeTypeObject *__restrict self) {
 	DeeTypeObject *base = DeeType_Base(self);
 	struct type_seq *base_seq;
-	if (!base ||
-	    (((base_seq = base->tp_seq) == NULL ||
-	      (base_seq->tp_nsi == NULL)) &&
-	     !type_inherit_nsi(base)))
+	if (!base)
 		return false;
+	base_seq = base->tp_seq;
+	if (base_seq == NULL || !base_seq->tp_nsi) {
+		if (!type_inherit_nsi(base))
+			return false;
+	}
 	if (self->tp_seq != NULL) /* Some other sequence interface has already been implemented! */
 		return false;
+	LOG_INHERIT(base, self, "<NSI>");
 	self->tp_seq = base->tp_seq;
 	return true;
 }
 #endif /* !DEFINE_TYPED_OPERATORS */
 
 #undef RESTRICT_IF_NOTYPE
+#undef LOG_INHERIT
 
 DECL_END
 

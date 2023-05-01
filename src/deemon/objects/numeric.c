@@ -1524,7 +1524,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 numeric_tobytes(DeeObject *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	DREF DeeObject *as_int, *result;
 	as_int = DeeObject_Int(self);
-	if unlikely(as_int)
+	if unlikely(!as_int)
 		goto err;
 	result = DeeObject_CallAttrStringKw(as_int, "tobytes", argc, argv, kw);
 	Dee_Decref(as_int);
@@ -1537,7 +1537,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 numeric_bitcount(DeeObject *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	DREF DeeObject *as_int, *result;
 	as_int = DeeObject_Int(self);
-	if unlikely(as_int)
+	if unlikely(!as_int)
 		goto err;
 	result = DeeObject_CallAttrStringKw(as_int, "bitcount", argc, argv, kw);
 	Dee_Decref(as_int);

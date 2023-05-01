@@ -1700,7 +1700,7 @@ semaphore_do_release(DeeSemaphoreObject *__restrict self, uintptr_t count) {
 			goto err_overflow;
 		if (atomic_cmpxch_weak_explicit(&self->sem_semaphore.se_tickets,
 		                                old_count, new_count,
-		                                __ATOMIC_SEQ_CST, __ATOMIC_RELAXED))
+		                                Dee_ATOMIC_SEQ_CST, Dee_ATOMIC_RELAXED))
 			break;
 	}
 	if (Dee_semaphore_haswaiting(&self->sem_semaphore)) {

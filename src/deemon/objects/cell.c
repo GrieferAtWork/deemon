@@ -185,7 +185,7 @@ DeeCell_XchIfNotNull(DeeObject *self, DeeObject *value) {
 	result = me->c_item;
 	if unlikely(!result) {
 		DeeCell_LockEndWrite(me);
-		Dee_DecrefNokill(value);
+		Dee_XDecrefNokill(value);
 	} else {
 		me->c_item = value;
 		DeeCell_LockEndWrite(me);

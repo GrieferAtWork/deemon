@@ -210,26 +210,26 @@ again:
 		goto again;
 
 	case 'o':
-		va_arg(args, DeeObject *);
+		(void)va_arg(args, DeeObject *);
 		goto again;
 
 	case 'L':
 		ASSERTF(*format == 'D', "Invalid format: `%s'", format);
-		va_arg(args, long double);
+		(void)va_arg(args, long double);
 		goto again;
 
 	case 'f':
 	case 'D':
-		va_arg(args, double); /* NOTE: C promotes `float' to double in varargs. */
+		(void)va_arg(args, double); /* NOTE: C promotes `float' to double in varargs. */
 		goto again;
 
 	case '.':
 		if (*format == '*') {
-			va_arg(args, unsigned int);
+			(void)va_arg(args, unsigned int);
 			++format;
 		} else if (*format == '?') {
 		case '$':
-			va_arg(args, size_t);
+			(void)va_arg(args, size_t);
 			++format;
 		} else {
 			while (*format >= '0' && *format <= '9')
@@ -299,26 +299,26 @@ do_int:
 			    "Invalid format: `%s'", format);
 #if __VA_SIZE < 2
 		if (length <= 1) {
-			va_arg(args, uint8_t);
+			(void)va_arg(args, uint8_t);
 		} else
 #endif /* __VA_SIZE < 2 */
 #if __VA_SIZE < 4
 		if (length <= 2) {
-			va_arg(args, uint16_t);
+			(void)va_arg(args, uint16_t);
 		} else
 #endif /* __VA_SIZE < 4 */
 #if __VA_SIZE < 8
 		if (length <= 4) {
-			va_arg(args, uint32_t);
+			(void)va_arg(args, uint32_t);
 		} else
 #endif /* __VA_SIZE < 8 */
 #if __VA_SIZE < 16
 		if (length <= 8) {
-			va_arg(args, uint64_t);
+			(void)va_arg(args, uint64_t);
 		} else
 #endif /* __VA_SIZE < 16 */
 		{
-			va_arg(args, Dee_uint128_t);
+			(void)va_arg(args, Dee_uint128_t);
 		}
 	}	goto again;
 
@@ -942,7 +942,7 @@ again:
 	case 'o':
 	case 's':
 	case 'b':
-		va_arg(pargs->vl_ap, void **);
+		(void)va_arg(pargs->vl_ap, void **);
 		break;
 
 	case 'U': /* Store a unicode string. */
@@ -951,7 +951,7 @@ again:
 		        "Invalid format: `%s'", format);
 		ASSERTF(format[2] == 's', "Invalid format: `%s'", format);
 		format += 3;
-		va_arg(pargs->vl_ap, void **);
+		(void)va_arg(pargs->vl_ap, void **);
 		break;
 
 	case '$': /* Store a string, including its length. */
@@ -963,14 +963,14 @@ again:
 		}
 		ASSERTF(*format == 's', "Invalid format: `%s'", format);
 		++format;
-		va_arg(pargs->vl_ap, size_t *);
-		va_arg(pargs->vl_ap, void **);
+		(void)va_arg(pargs->vl_ap, size_t *);
+		(void)va_arg(pargs->vl_ap, void **);
 		break;
 
 	/* Int */
 	case 'l':
 		if (*format == 's') {
-			va_arg(pargs->vl_ap, void **);
+			(void)va_arg(pargs->vl_ap, void **);
 			break;
 		}
 		ATTR_FALLTHROUGH
@@ -1010,7 +1010,7 @@ again:
 				++format;
 			++format;
 		}
-		va_arg(pargs->vl_ap, void **);
+		(void)va_arg(pargs->vl_ap, void **);
 		break;
 
 	default:

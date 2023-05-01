@@ -4229,7 +4229,7 @@ err_repeated_value:
 						Dee_Decref(start_ob);
 						goto err_repeated_value;
 					}
-					error = (*nsi->nsi_seqlike.nsi_setrange)(self, (dssize_t)start, (dssize_t)end, repeated_value);
+					error = (*seq->tp_range_set)(self, start_ob, end_ob, repeated_value);
 					Dee_Decref(end_ob);
 					Dee_Decref(start_ob);
 				}

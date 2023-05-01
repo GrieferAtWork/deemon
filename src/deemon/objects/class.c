@@ -4538,7 +4538,10 @@ instance_tdouble(DeeTypeObject *tp_self,
 	if unlikely(!func)
 		goto err;
 	value = DeeObject_ThisCall(func, self, 0, NULL);
-	if (likely(value) && DeeObject_AssertTypeExact(value, &DeeFloat_Type))
+	Dee_Decref(func);
+	if unlikely(!value)
+		goto err;
+	if (DeeObject_AssertTypeExact(value, &DeeFloat_Type))
 		goto err_r;
 	*result = DeeFloat_VALUE(value);
 	Dee_Decref(value);

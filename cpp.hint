@@ -99,6 +99,32 @@
 #define __IF0 if(0)
 #define __IF1 if(1)
 
+#define NOTHROW(x) x
+#define NOTHROW_T(x) x
+#define __NOTHROW(x) x
+#define __NOTHROW_T(x) x
+#define NOTHROW_NCX(x) x
+#define NOTHROW_NCX_T(x) x
+#define __NOTHROW_NCX(x) x
+#define __NOTHROW_NCX_T(x) x
+#define __NOTHROW_KRN(x) x
+#define NOTHROW_RPC(x) x
+#define NOTHROW_RPC_T(x) x
+#define __NOTHROW_RPC(x) x
+#define __NOTHROW_RPC_T(x) x
+#define NOTHROW_RPC_KOS(x) x
+#define NOTHROW_RPC_KOS_T(x) x
+#define __NOTHROW_RPC_KOS(x) x
+#define __NOTHROW_RPC_KOS_T(x) x
+#define NOTHROW_RPC_NOKOS(x) x
+#define NOTHROW_RPC_NOKOS_T(x) x
+#define __NOTHROW_RPC_NOKOS(x) x
+#define __NOTHROW_RPC_NOKOS_T(x) x
+#define NOTHROW_RPC_PURE(x) x
+#define NOTHROW_RPC_PURE_T(x) x
+#define __NOTHROW_RPC_PURE(x) x
+#define __NOTHROW_RPC_PURE_T(x) x
+
 #define DECL_BEGIN extern "C" {
 #define __DECL_BEGIN extern "C" {
 #define __SYSDECL_BEGIN extern "C" {
@@ -289,19 +315,40 @@
 #define STATIC_ASSERT_MSG(...)
 #define __STATIC_ASSERT_MSG(...)
 
-#define LIST_FOREACH(...) for(;;)
-#define LIST_FOREACH_P(...) for(;;)
+#define __HYBRID_Q_STRUCT struct
+#define __HYBRID_Q_CLASS class
 #define LIST_HEAD(n,t) struct n{struct t *lh_first;}
 #define LIST_HEAD_P(T) struct{T*lh_first;}
 #define LIST_ENTRY(t) struct{struct t*le_next,**le_prev;}
 #define LIST_ENTRY_P(T) struct{T*le_next,**le_prev;}
+#define __PRIVATE_FOREACH_STDFILENO(...) for(;;)
+#define LIST_FOREACH(...) for(;;)
+#define LIST_FOREACH_P(...) for(;;)
+#define LIST_FOREACH_SAFE(...) for(;;)
+#define LIST_FOREACH_SAFE_P(...) for(;;)
+#define LIST_FOREACH_FROM(...) for(;;)
+#define LIST_FOREACH_FROM_P(...) for(;;)
+#define LIST_FOREACH_FROM_SAFE(...) for(;;)
+#define LIST_FOREACH_FROM_SAFE_P(...) for(;;)
+#define LIST_P_FOREACH(...) for(;;)
+#define LIST_P_FOREACH_P(...) for(;;)
 
-#define SLIST_FOREACH(...) for(;;)
-#define SLIST_FOREACH_P(...) for(;;)
 #define SLIST_HEAD(n,t) struct n{struct t *slh_first;}
 #define SLIST_HEAD_P(T) struct{T*slh_first;}
 #define SLIST_ENTRY(t) struct{struct t*sle_next;}
 #define SLIST_ENTRY_P(T) struct{T*sle_next;}
+#define SLIST_FOREACH(...) for(;;)
+#define SLIST_FOREACH_P(...) for(;;)
+#define SLIST_FOREACH_SAFE(...) for(;;)
+#define SLIST_FOREACH_SAFE_P(...) for(;;)
+#define SLIST_FOREACH_FROM(...) for(;;)
+#define SLIST_FOREACH_FROM_P(...) for(;;)
+#define SLIST_FOREACH_FROM_SAFE(...) for(;;)
+#define SLIST_FOREACH_FROM_SAFE_P(...) for(;;)
+#define SLIST_FOREACH_PREVPTR(...) for(;;)
+#define SLIST_FOREACH_PREVPTR_P(...) for(;;)
+#define SLIST_P_FOREACH(...) for(;;)
+#define SLIST_P_FOREACH_P(...) for(;;)
 
 #define STAILQ_HEAD(n,t) struct n{struct t*stqh_first,**stqh_last;}
 #define STAILQ_ENTRY(t) struct{struct t*stqe_next;}
@@ -309,6 +356,12 @@
 #define STAILQ_ENTRY_P(T) struct{T*stqe_next;}
 #define STAILQ_FOREACH(...) for(;;)
 #define STAILQ_FOREACH_P(...) for(;;)
+#define STAILQ_FOREACH_SAFE(...) for(;;)
+#define STAILQ_FOREACH_SAFE_P(...) for(;;)
+#define STAILQ_FOREACH_FROM(...) for(;;)
+#define STAILQ_FOREACH_FROM_P(...) for(;;)
+#define STAILQ_FOREACH_FROM_SAFE(...) for(;;)
+#define STAILQ_FOREACH_FROM_SAFE_P(...) for(;;)
 
 #define SIMPLEQ_HEAD(n,t) struct n{struct t*sqh_first,**sqh_last;}
 #define SIMPLEQ_ENTRY(t) struct{struct t*sqe_next;}
@@ -316,6 +369,12 @@
 #define SIMPLEQ_ENTRY_P(T) struct{T*sqe_next;}
 #define SIMPLEQ_FOREACH(...) for(;;)
 #define SIMPLEQ_FOREACH_P(...) for(;;)
+#define SIMPLEQ_FOREACH_SAFE(...) for(;;)
+#define SIMPLEQ_FOREACH_SAFE_P(...) for(;;)
+#define SIMPLEQ_FOREACH_FROM(...) for(;;)
+#define SIMPLEQ_FOREACH_FROM_P(...) for(;;)
+#define SIMPLEQ_FOREACH_FROM_SAFE(...) for(;;)
+#define SIMPLEQ_FOREACH_FROM_SAFE_P(...) for(;;)
 
 #define _TAILQ_HEAD(n,T,q) struct n{T q*tqh_first,*q*tqh_last;}
 #define _TAILQ_ENTRY(T,q) struct{T q*tqe_next,*q*tqe_prev;}
@@ -327,6 +386,18 @@
 #define TAILQ_FOREACH_P(...) for(;;)
 #define TAILQ_FOREACH_REVERSE(...) for(;;)
 #define TAILQ_FOREACH_REVERSE_P(...) for(;;)
+#define TAILQ_FOREACH_SAFE(...) for(;;)
+#define TAILQ_FOREACH_SAFE_P(...) for(;;)
+#define TAILQ_FOREACH_REVERSE_SAFE(...) for(;;)
+#define TAILQ_FOREACH_REVERSE_SAFE_P(...) for(;;)
+#define TAILQ_FOREACH_FROM(...) for(;;)
+#define TAILQ_FOREACH_FROM_P(...) for(;;)
+#define TAILQ_FOREACH_REVERSE_FROM(...) for(;;)
+#define TAILQ_FOREACH_REVERSE_FROM_P(...) for(;;)
+#define TAILQ_FOREACH_FROM_SAFE(...) for(;;)
+#define TAILQ_FOREACH_FROM_SAFE_P(...) for(;;)
+#define TAILQ_FOREACH_REVERSE_FROM_SAFE(...) for(;;)
+#define TAILQ_FOREACH_REVERSE_FROM_SAFE_P(...) for(;;)
 
 #define CIRCLEQ_HEAD(n,t) struct n{struct t*cqh_first,*cqh_last;}
 #define CIRCLEQ_HEAD_P(T) struct{T*cqh_first,*cqh_last;}
@@ -336,6 +407,18 @@
 #define CIRCLEQ_FOREACH_P(...) for(;;)
 #define CIRCLEQ_FOREACH_REVERSE(...) for(;;)
 #define CIRCLEQ_FOREACH_REVERSE_P(...) for(;;)
+#define CIRCLEQ_FOREACH_SAFE(...) for(;;)
+#define CIRCLEQ_FOREACH_SAFE_P(...) for(;;)
+#define CIRCLEQ_FOREACH_REVERSE_SAFE(...) for(;;)
+#define CIRCLEQ_FOREACH_REVERSE_SAFE_P(...) for(;;)
+#define CIRCLEQ_FOREACH_FROM(...) for(;;)
+#define CIRCLEQ_FOREACH_FROM_P(...) for(;;)
+#define CIRCLEQ_FOREACH_REVERSE_FROM(...) for(;;)
+#define CIRCLEQ_FOREACH_REVERSE_FROM_P(...) for(;;)
+#define CIRCLEQ_FOREACH_FROM_SAFE(...) for(;;)
+#define CIRCLEQ_FOREACH_FROM_SAFE_P(...) for(;;)
+#define CIRCLEQ_FOREACH_REVERSE_FROM_SAFE(...) for(;;)
+#define CIRCLEQ_FOREACH_REVERSE_FROM_SAFE_P(...) for(;;)
 
 #define RINGQ_ENTRY(t) struct{struct t*rqe_next,*rqe_prev;}
 #define RINGQ_ENTRY_P(T) struct{T*rqe_next,*rqe_prev;}
@@ -345,6 +428,12 @@
 #define DLIST_ENTRY_P(T) struct{T*dle_next,*dle_prev;}
 #define DLIST_FOREACH(...) for(;;)
 #define DLIST_FOREACH_P(...) for(;;)
+#define DLIST_FOREACH_SAFE(...) for(;;)
+#define DLIST_FOREACH_SAFE_P(...) for(;;)
+#define DLIST_FOREACH_FROM(...) for(;;)
+#define DLIST_FOREACH_FROM_P(...) for(;;)
+#define DLIST_FOREACH_FROM_SAFE(...) for(;;)
+#define DLIST_FOREACH_FROM_SAFE_P(...) for(;;)
 
 #define LIST_TRYREMOVE_IF(...)
 #define LIST_TRYREMOVE_IF_P(...)
@@ -394,6 +483,36 @@
 #define SIMPLEQ_TRYREPLACE_P(...)
 #define SIMPLEQ_TRYREPLACE_R(...)
 #define SIMPLEQ_TRYREPLACE_R_P(...)
+
+#define RBTREE_NODE(T)                   struct{struct T*rb_par,*rb_lhs,*rb_rhs;}
+#define RBTREE_NODE_P(T)                 struct{T*rb_par,*rb_lhs,*rb_rhs;}
+#define RBTREE_NODE_WITH_KEY(T,Tkey)     struct{struct T*rb_par,*rb_lhs,*rb_rhs;Tkey rb_min,rb_max;}
+#define RBTREE_NODE_WITH_KEY_P(T,Tkey)   struct{T*rb_par,*rb_lhs,*rb_rhs;Tkey rb_min,rb_max;}
+#define LLRBTREE_NODE(T)                 struct{struct T*rb_lhs,*rb_rhs;}
+#define LLRBTREE_NODE_P(T)               struct{T*rb_lhs,*rb_rhs;}
+#define LLRBTREE_NODE_WITH_KEY(T,Tkey)   struct{struct T*rb_lhs,*rb_rhs;Tkey rb_min,rb_max;}
+#define LLRBTREE_NODE_WITH_KEY_P(T,Tkey) struct{T*rb_lhs,*rb_rhs;Tkey rb_min,rb_max;}
+#define RBTREE_ROOT(T)                   struct T*
+#define LLRBTREE_ROOT(T)                 struct T*
+
+#define RBTREE_DECL
+#define RBTREE_IMPL
+#define RBTREE_NOTHROW
+#define RBTREE_NOTHROW_U
+#define RBTREE_CC
+#define RBTREE(x) rbtree_##x
+#define RBTREE_SLOT__ARGS
+#define RBTREE_SLOT__PARAMS
+#define RBTREE_T struct my_node
+#define RBTREE_Tkey int
+#define RBTREE_DEFINE_FUNCTION(decl,attr,returnType,nothrow,cc,name,params,args) decl returnType name params
+
+#define BSEARCH(...) for(;;)
+#define BSEARCH_EX(...) for(;;)
+#define BSEARCH_RANGE(...) for(;;)
+#define BSEARCH_RANGE_EX(...) for(;;)
+#define BITSET(num_bits) struct{unsigned int _bs_bits[42];}
+#define ATOMIC_ONCE_RUN(self, ...) __VA_ARGS__
 
 #define Dee_DEFINE_OBJMETHOD(name, func, self)            DeeObjMethodObject name
 #define DEFINE_OBJMETHOD(name, func, self)                DeeObjMethodObject name
@@ -641,7 +760,7 @@
 #define Dee_weakref_object     weakref_object
 #define Dee_weakrefable_object weakrefable_object
 
-#define tpconst     const
+#define tpconst const
 #define Dee_tpconst const
 #define INTERN_TPCONST
 #define DEF_STRING(n,a,b,c) DeeStringObject n = {};
@@ -650,3 +769,7 @@
 #define DEFINE_STRING(n,a) DeeStringObject n = {}
 #define Dee_DEFINE_STRING(n,a) DeeStringObject n = {}
 
+
+#define DEFINE_OPERATOR(return, name, args) return DeeObject_##name args
+#define DEFINE_INTERNAL_OPERATOR(return, name, args) return DeeObject_##name args
+#define RESTRICT_IF_NOTYPE

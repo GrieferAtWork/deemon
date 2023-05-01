@@ -3187,8 +3187,11 @@ DFUNDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeObject_BoundAttrStringLenHash)(Dee
  * >> }
  * Translates to:
  * >> DeeObject_Enter(my_object);
- * >> ...
- * >> DeeObject_Leave(my_object); */
+ * >> try {
+ * >>     ...
+ * >> } finally {
+ * >>    DeeObject_Leave(my_object);
+ * >> } */
 DFUNDEF WUNUSED int (DCALL DeeObject_Enter)(DeeObject *__restrict self);
 DFUNDEF WUNUSED int (DCALL DeeObject_Leave)(DeeObject *__restrict self);
 

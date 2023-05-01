@@ -47,7 +47,7 @@ PUBLIC WUNUSED NONNULL((1)) int
 	return 0;
 #else /* CONFIG_NO_THREADS */
 	unsigned int lockword;
-	while ((lockword = atomic_xch_explicit(&self->s_lock.a_lock, 1, __ATOMIC_ACQUIRE)) != 0) {
+	while ((lockword = atomic_xch_explicit(&self->s_lock.a_lock, 1, Dee_ATOMIC_ACQUIRE)) != 0) {
 		int error;
 		_Dee_shared_lock_waiting_start(self);
 		error = DeeFutex_WaitInt(&self->s_lock, lockword);
@@ -99,7 +99,7 @@ PUBLIC WUNUSED NONNULL((1)) int
 #else /* CONFIG_NO_THREADS */
 	unsigned int lockword;
 again:
-	if ((lockword = atomic_xch_explicit(&self->s_lock.a_lock, 1, __ATOMIC_ACQUIRE)) != 0) {
+	if ((lockword = atomic_xch_explicit(&self->s_lock.a_lock, 1, Dee_ATOMIC_ACQUIRE)) != 0) {
 		int error;
 		uint64_t now_microseconds, then_microseconds;
 		if (timeout_nanoseconds == (uint64_t)-1) {
@@ -120,7 +120,7 @@ do_wait_with_timeout:
 		_Dee_shared_lock_waiting_end(self);
 		if unlikely(error != 0)
 			return error;
-		if ((lockword = atomic_fetchinc_explicit(&self->s_lock.a_lock, __ATOMIC_ACQUIRE)) != 0) {
+		if ((lockword = atomic_fetchinc_explicit(&self->s_lock.a_lock, Dee_ATOMIC_ACQUIRE)) != 0) {
 			now_microseconds = DeeThread_GetTimeMicroSeconds();
 			if (OVERFLOW_USUB(then_microseconds, now_microseconds, &timeout_nanoseconds))
 				return 1; /* Timeout */
@@ -220,7 +220,7 @@ PUBLIC WUNUSED NONNULL((1)) int
 		uintptr_t lockword = atomic_read(&self->srw_lock.arw_lock);
 		if (lockword == 0) {
 			if (atomic_cmpxch_explicit(&self->srw_lock.arw_lock, 0, (uintptr_t)-1,
-			                           __ATOMIC_ACQUIRE, __ATOMIC_RELAXED))
+			                           Dee_ATOMIC_ACQUIRE, Dee_ATOMIC_RELAXED))
 				break;
 		} else {
 			int error;
@@ -326,7 +326,7 @@ PUBLIC WUNUSED NONNULL((1)) int
 		uintptr_t lockword = atomic_read(&self->srw_lock.arw_lock);
 		if (lockword == 0) {
 			if (atomic_cmpxch_explicit(&self->srw_lock.arw_lock, 0, (uintptr_t)-1,
-			                           __ATOMIC_ACQUIRE, __ATOMIC_RELAXED))
+			                           Dee_ATOMIC_ACQUIRE, Dee_ATOMIC_RELAXED))
 				break;
 		} else {
 			uint64_t now_microseconds, then_microseconds;
@@ -346,7 +346,7 @@ do_wait_with_timeout:
 			lockword = atomic_read(&self->srw_lock.arw_lock);
 			if (lockword == 0 &&
 			    atomic_cmpxch_explicit(&self->srw_lock.arw_lock, 0, (uintptr_t)-1,
-			                           __ATOMIC_ACQUIRE, __ATOMIC_RELAXED))
+			                           Dee_ATOMIC_ACQUIRE, Dee_ATOMIC_RELAXED))
 				break;
 			now_microseconds = DeeThread_GetTimeMicroSeconds();
 			if (OVERFLOW_USUB(then_microseconds, now_microseconds, &timeout_nanoseconds))
@@ -537,7 +537,7 @@ again_read_tickets:
 			return result;
 		}
 	} while (!atomic_cmpxch_weak_explicit(&self->se_tickets, temp, temp - 1,
-	                                      __ATOMIC_ACQUIRE, __ATOMIC_RELAXED));
+	                                      Dee_ATOMIC_ACQUIRE, Dee_ATOMIC_RELAXED));
 	return 0;
 #endif /* !CONFIG_NO_THREADS */
 }
@@ -663,21 +663,21 @@ Dee_rshared_lock_acquire_noint(Dee_rshared_lock_t *__restrict self) {
 	unsigned int lockword;
 	lockword = atomic_read(&self->rs_lock.ra_lock);
 	if (lockword == 0) {
-		if (!atomic_cmpxch_explicit(&self->rs_lock.ra_lock, 0, 1, __ATOMIC_ACQUIRE, __ATOMIC_ACQUIRE))
+		if (!atomic_cmpxch_explicit(&self->rs_lock.ra_lock, 0, 1, Dee_ATOMIC_ACQUIRE, Dee_ATOMIC_ACQUIRE))
 			goto waitfor;
 settid:
 		self->rs_lock.ra_tid = __hybrid_gettid();
 		return;
 	}
 	if (__hybrid_gettid_iscaller(self->rs_lock.ra_tid)) {
-		atomic_inc_explicit(&self->rs_lock.ra_lock, __ATOMIC_ACQUIRE);
+		atomic_inc_explicit(&self->rs_lock.ra_lock, Dee_ATOMIC_ACQUIRE);
 		return;
 	}
 waitfor:
 	_Dee_rshared_lock_waiting_start(self);
 	do {
 		DeeFutex_WaitIntNoInt(&self->rs_lock.ra_lock, lockword);
-	} while (!atomic_cmpxch_explicit(&self->rs_lock.ra_lock, 0, 1, __ATOMIC_ACQUIRE, __ATOMIC_ACQUIRE));
+	} while (!atomic_cmpxch_explicit(&self->rs_lock.ra_lock, 0, 1, Dee_ATOMIC_ACQUIRE, Dee_ATOMIC_ACQUIRE));
 	_Dee_rshared_lock_waiting_end(self);
 	goto settid;
 }
@@ -691,14 +691,14 @@ Dee_rshared_lock_acquire(Dee_rshared_lock_t *__restrict self) {
 	unsigned int lockword;
 	lockword = atomic_read(&self->rs_lock.ra_lock);
 	if (lockword == 0) {
-		if (!atomic_cmpxch_explicit(&self->rs_lock.ra_lock, 0, 1, __ATOMIC_ACQUIRE, __ATOMIC_ACQUIRE))
+		if (!atomic_cmpxch_explicit(&self->rs_lock.ra_lock, 0, 1, Dee_ATOMIC_ACQUIRE, Dee_ATOMIC_ACQUIRE))
 			goto waitfor;
 settid:
 		self->rs_lock.ra_tid = __hybrid_gettid();
 		return 0;
 	}
 	if (__hybrid_gettid_iscaller(self->rs_lock.ra_tid)) {
-		atomic_inc_explicit(&self->rs_lock.ra_lock, __ATOMIC_ACQUIRE);
+		atomic_inc_explicit(&self->rs_lock.ra_lock, Dee_ATOMIC_ACQUIRE);
 		return 0;
 	}
 waitfor:
@@ -709,7 +709,7 @@ waitfor:
 			_Dee_rshared_lock_waiting_end(self);
 			return result;
 		}
-	} while (!atomic_cmpxch_explicit(&self->rs_lock.ra_lock, 0, 1, __ATOMIC_ACQUIRE, __ATOMIC_ACQUIRE));
+	} while (!atomic_cmpxch_explicit(&self->rs_lock.ra_lock, 0, 1, Dee_ATOMIC_ACQUIRE, Dee_ATOMIC_ACQUIRE));
 	_Dee_rshared_lock_waiting_end(self);
 	goto settid;
 }
@@ -732,14 +732,14 @@ Dee_rshared_lock_acquire_timed(Dee_rshared_lock_t *__restrict self,
 	uint64_t now_microseconds, then_microseconds;
 	lockword = atomic_read(&self->rs_lock.ra_lock);
 	if (lockword == 0) {
-		if (!atomic_cmpxch_explicit(&self->rs_lock.ra_lock, 0, 1, __ATOMIC_ACQUIRE, __ATOMIC_ACQUIRE))
+		if (!atomic_cmpxch_explicit(&self->rs_lock.ra_lock, 0, 1, Dee_ATOMIC_ACQUIRE, Dee_ATOMIC_ACQUIRE))
 			goto waitfor;
 settid:
 		self->rs_lock.ra_tid = __hybrid_gettid();
 		return 0;
 	}
 	if (__hybrid_gettid_iscaller(self->rs_lock.ra_tid)) {
-		atomic_inc_explicit(&self->rs_lock.ra_lock, __ATOMIC_ACQUIRE);
+		atomic_inc_explicit(&self->rs_lock.ra_lock, Dee_ATOMIC_ACQUIRE);
 		return 0;
 	}
 waitfor:
@@ -755,7 +755,7 @@ do_infinite_timeout:
 		} while ((lockword = atomic_read(&self->rs_lock.ra_lock)) != 0);
 		_Dee_rshared_lock_waiting_end(self);
 		do {
-			if (atomic_cmpxch_explicit(&self->rs_lock.ra_lock, 0, 1, __ATOMIC_ACQUIRE, __ATOMIC_ACQUIRE))
+			if (atomic_cmpxch_explicit(&self->rs_lock.ra_lock, 0, 1, Dee_ATOMIC_ACQUIRE, Dee_ATOMIC_ACQUIRE))
 				goto settid;
 		} while ((lockword = atomic_read(&self->rs_lock.ra_lock)) == 0);
 		goto do_infinite_timeout;
@@ -770,7 +770,7 @@ do_wait_with_timeout:
 	if unlikely(result != 0)
 		return result;
 	do {
-		if (atomic_cmpxch_explicit(&self->rs_lock.ra_lock, 0, 1, __ATOMIC_ACQUIRE, __ATOMIC_ACQUIRE))
+		if (atomic_cmpxch_explicit(&self->rs_lock.ra_lock, 0, 1, Dee_ATOMIC_ACQUIRE, Dee_ATOMIC_ACQUIRE))
 			goto settid;
 	} while ((lockword = atomic_read(&self->rs_lock.ra_lock)) == 0);
 	now_microseconds = DeeThread_GetTimeMicroSeconds();
@@ -877,7 +877,7 @@ Dee_rshared_rwlock_endread_ex(Dee_rshared_rwlock_t *__restrict self) {
 		--self->rsrw_lock.rarw_nwrite;
 	} else {
 		Dee_ASSERTF(lockword != 0, "No lock are held");
-		lockword = atomic_fetchdec_explicit(&self->rsrw_lock.rarw_lock.arw_lock, __ATOMIC_RELEASE);
+		lockword = atomic_fetchdec_explicit(&self->rsrw_lock.rarw_lock.arw_lock, Dee_ATOMIC_RELEASE);
 		Dee_ASSERTF(lockword != 0, "No lock are held (race)");
 		if (lockword == 1) {
 			_Dee_rshared_rwlock_wake(self); /* Last read-lock went away */
@@ -903,7 +903,7 @@ again_lockword_not_UINTPTR_MAX:
 		Dee_ASSERTF(lockword != (uintptr_t)-2, "Too many read-locks");
 		if (atomic_cmpxch_weak_explicit(&self->rsrw_lock.rarw_lock.arw_lock,
 		                                lockword, lockword + 1,
-		                                __ATOMIC_ACQUIRE, __ATOMIC_ACQUIRE))
+		                                Dee_ATOMIC_ACQUIRE, Dee_ATOMIC_ACQUIRE))
 			return;
 		goto again;
 	}
@@ -933,7 +933,7 @@ again:
 	if (lockword == 0) {
 again_lockword_zero:
 		if (!atomic_cmpxch_weak_explicit(&self->rsrw_lock.rarw_lock.arw_lock, 0, (uintptr_t)-1,
-		                                 __ATOMIC_ACQUIRE, __ATOMIC_ACQUIRE))
+		                                 Dee_ATOMIC_ACQUIRE, Dee_ATOMIC_ACQUIRE))
 			goto again;
 		self->rsrw_lock.rarw_tid = __hybrid_gettid();
 		return;
@@ -970,7 +970,7 @@ again_lockword_not_UINTPTR_MAX:
 		Dee_ASSERTF(lockword != (uintptr_t)-2, "Too many read-locks");
 		if (atomic_cmpxch_weak_explicit(&self->rsrw_lock.rarw_lock.arw_lock,
 		                                lockword, lockword + 1,
-		                                __ATOMIC_ACQUIRE, __ATOMIC_ACQUIRE))
+		                                Dee_ATOMIC_ACQUIRE, Dee_ATOMIC_ACQUIRE))
 			return 0;
 		goto again;
 	}
@@ -1006,7 +1006,7 @@ again:
 	if (lockword == 0) {
 again_lockword_zero:
 		if (!atomic_cmpxch_weak_explicit(&self->rsrw_lock.rarw_lock.arw_lock, 0, (uintptr_t)-1,
-		                                 __ATOMIC_ACQUIRE, __ATOMIC_ACQUIRE))
+		                                 Dee_ATOMIC_ACQUIRE, Dee_ATOMIC_ACQUIRE))
 			goto again;
 		self->rsrw_lock.rarw_tid = __hybrid_gettid();
 		return 0;
@@ -1051,7 +1051,7 @@ again_lockword_not_UINTPTR_MAX:
 		Dee_ASSERTF(lockword != (uintptr_t)-2, "Too many read-locks");
 		if (atomic_cmpxch_weak_explicit(&self->rsrw_lock.rarw_lock.arw_lock,
 		                                lockword, lockword + 1,
-		                                __ATOMIC_ACQUIRE, __ATOMIC_ACQUIRE))
+		                                Dee_ATOMIC_ACQUIRE, Dee_ATOMIC_ACQUIRE))
 			return 0;
 		goto again;
 	}
@@ -1084,7 +1084,7 @@ do_wait_with_timeout:
 		Dee_ASSERTF(lockword != (uintptr_t)-2, "Too many read-locks");
 		if (atomic_cmpxch_weak_explicit(&self->rsrw_lock.rarw_lock.arw_lock,
 		                                lockword, lockword + 1,
-		                                __ATOMIC_ACQUIRE, __ATOMIC_ACQUIRE))
+		                                Dee_ATOMIC_ACQUIRE, Dee_ATOMIC_ACQUIRE))
 			return 0;
 	}
 	now_microseconds = DeeThread_GetTimeMicroSeconds();
@@ -1112,7 +1112,7 @@ again:
 	if (lockword == 0) {
 again_lockword_zero:
 		if (!atomic_cmpxch_weak_explicit(&self->rsrw_lock.rarw_lock.arw_lock, 0, (uintptr_t)-1,
-		                                 __ATOMIC_ACQUIRE, __ATOMIC_ACQUIRE))
+		                                 Dee_ATOMIC_ACQUIRE, Dee_ATOMIC_ACQUIRE))
 			goto again;
 		self->rsrw_lock.rarw_tid = __hybrid_gettid();
 		return 0;
@@ -1145,7 +1145,7 @@ do_wait_with_timeout:
 	lockword = atomic_read(&self->rsrw_lock.rarw_lock.arw_lock);
 	if (lockword == 0) {
 		if (atomic_cmpxch_weak_explicit(&self->rsrw_lock.rarw_lock.arw_lock, 0, (uintptr_t)-1,
-		                                __ATOMIC_ACQUIRE, __ATOMIC_ACQUIRE)) {
+		                                Dee_ATOMIC_ACQUIRE, Dee_ATOMIC_ACQUIRE)) {
 			self->rsrw_lock.rarw_tid = __hybrid_gettid();
 			return 0;
 		}
