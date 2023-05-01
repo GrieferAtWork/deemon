@@ -32,7 +32,7 @@
 #ifdef CONFIG_NO_THREADS
 DECL_BEGIN
 
-typedef int Dee_ratomic_lock_t;
+typedef char Dee_ratomic_lock_t;
 #define DEE_RATOMIC_LOCK_INIT                     0
 #define Dee_ratomic_lock_init(self)               (void)0
 #define Dee_ratomic_lock_cinit(self)              (void)0
@@ -46,7 +46,7 @@ typedef int Dee_ratomic_lock_t;
 #define Dee_ratomic_lock_release(self)            (void)0
 #define Dee_ratomic_lock_release_ex(self)         1
 
-typedef int Dee_rshared_lock_t;
+typedef char Dee_rshared_lock_t;
 #define DEE_RSHARED_LOCK_INIT                                           0
 #define Dee_rshared_lock_init(self)                                     (void)0
 #define Dee_rshared_lock_cinit(self)                                    (void)0
@@ -66,7 +66,7 @@ typedef int Dee_rshared_lock_t;
 #define Dee_rshared_lock_release(self)                                  (void)0
 #define Dee_rshared_lock_release_ex(self)                               1
 
-typedef int Dee_ratomic_rwlock_t;
+typedef char Dee_ratomic_rwlock_t;
 #define DEE_RATOMIC_RWLOCK_INIT                      0
 #define Dee_ratomic_rwlock_init(self)                (void)0
 #define Dee_ratomic_rwlock_cinit(self)               (void)0
@@ -100,8 +100,8 @@ typedef int Dee_ratomic_rwlock_t;
 #define _Dee_ratomic_rwlock_end_NDEBUG(self)         (void)0
 #define _Dee_ratomic_rwlock_end_ex_NDEBUG(self)      1
 
-typedef int Dee_rshared_rwlock_t;
-#define DEE_RSHARED_RWLOCK_INIT                                             (void)0
+typedef char Dee_rshared_rwlock_t;
+#define DEE_RSHARED_RWLOCK_INIT                                             0
 #define Dee_rshared_rwlock_init(self)                                       (void)0
 #define Dee_rshared_rwlock_cinit(self)                                      (void)0
 #define Dee_rshared_rwlock_reading(self)                                    1

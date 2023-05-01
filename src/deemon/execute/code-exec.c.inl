@@ -918,37 +918,6 @@ inc_execsz_start:
 		++this_thread->t_execsz;
 	}
 
-
-
-#ifndef CONFIG_NO_THREADS
-#ifdef EXEC_FAST
-	/* Don't allow the compiler to move the frame-linking code below this point. */
-	COMPILER_WRITE_BARRIER();
-
-	if unlikely(code->co_flags & CODE_FASSEMBLY) {
-		/* Highly unlikely case:
-		 *   There is a chance that our execution got suspended when
-		 *   another thread was setting the assembly flag just now.
-		 *   Yet whilst it was doing this, suspending us in the process,
-		 *   our execution path had just tested the assembly flag and
-		 *   seen that it wasn't set, deciding to go ahead and execute
-		 *   the code object in fast-mode.
-		 *   However in the time it took for us to register our code-frame,
-		 *   another set went ahead and set the assembly flag after failing
-		 *   to find any other thread actively executing said code object.
-		 *   (as usually indicated by the code object being apart of the
-		 *   frame-stack of another thread, which it hadn't yet become
-		 *   apart of in our thread).
-		 *   Therefor, now that the assembly flag has been set, we must
-		 *   remove our frame and switch to safe-mode. */
-		this_thread->t_exec = frame->cf_prev;
-		--this_thread->t_execsz;
-		frame->cf_prev = CODE_FRAME_NOT_EXECUTING;
-		return DeeCode_ExecFrameSafe(frame);
-	}
-#endif /* EXEC_FAST */
-#endif /* !CONFIG_NO_THREADS */
-
 	ip.ptr = frame->cf_ip;
 	sp     = frame->cf_sp;
 	ASSERT(ip.ptr >= code->co_code &&
@@ -1259,11 +1228,10 @@ do_push_bnd_local:
 			POPREF();
 			if (!temp) {
 jump_16:
-#ifndef CONFIG_NO_THREADS
-				if ((int16_t)imm_val < 0 &&
-				    DeeThread_CheckInterruptSelf(this_thread))
-					HANDLE_EXCEPT();
-#endif /* !CONFIG_NO_THREADS */
+				if ((int16_t)imm_val < 0) {
+					if (DeeThread_CheckInterruptSelf(this_thread))
+						HANDLE_EXCEPT();
+				}
 				ip.ptr += (int16_t)imm_val;
 #ifdef EXEC_SAFE
 				goto assert_ip_bounds;
@@ -1287,11 +1255,11 @@ jump_16:
 		}
 
 		TARGETSimm16(ASM_JMP, -0, +0) {
-#ifndef CONFIG_NO_THREADS
-			if ((int16_t)imm_val < 0 &&
-			    DeeThread_CheckInterruptSelf(this_thread))
-				HANDLE_EXCEPT();
-#endif /* !CONFIG_NO_THREADS */
+			if ((int16_t)imm_val < 0) {
+				if (DeeThread_CheckInterruptSelf(this_thread))
+					HANDLE_EXCEPT();
+			}
+
 			/* Adjust the instruction pointer accordingly. */
 			ip.ptr += (int16_t)imm_val;
 #ifdef EXEC_SAFE
@@ -1340,11 +1308,10 @@ assert_ip_bounds:
 			        (unsigned int)absip);
 #endif /* !EXEC_SAFE */
 			new_ip = code->co_code + absip;
-#ifndef CONFIG_NO_THREADS
-			if (new_ip < ip.ptr &&
-			    DeeThread_CheckInterruptSelf(this_thread))
-				HANDLE_EXCEPT();
-#endif /* !CONFIG_NO_THREADS */
+			if (new_ip < ip.ptr) {
+				if (DeeThread_CheckInterruptSelf(this_thread))
+					HANDLE_EXCEPT();
+			}
 			ip.ptr = new_ip;
 			DISPATCH();
 		}
@@ -1750,21 +1717,11 @@ do_push_arg:
 					varkwds = construct_varkwds_mapping();
 					if unlikely(!varkwds)
 						HANDLE_EXCEPT();
-#ifdef CONFIG_NO_THREADS
-					oldval = frame->cf_kw->fk_varkwds;
-					if unlikely(oldval) {
-						VARKWDS_DECREF(varkwds);
-						varkwds = oldval;
-					} else {
-						frame->cf_kw->fk_varkwds = varkwds;
-					}
-#else /* CONFIG_NO_THREADS */
 					oldval = atomic_cmpxch_val(&frame->cf_kw->fk_varkwds, NULL, varkwds);
 					if unlikely(oldval) {
 						VARKWDS_DECREF(varkwds);
 						varkwds = oldval;
 					}
-#endif /* !CONFIG_NO_THREADS */
 				}
 			} else {
 				varkwds = Dee_EmptyMapping;
@@ -2664,7 +2621,7 @@ do_print_c:
 			stream = DeeFile_GetStd(DEE_STDOUT);
 			if unlikely(!stream)
 				HANDLE_EXCEPT();
-#if defined(EXEC_SAFE) && !defined(CONFIG_NO_THREADS)
+#ifdef EXEC_SAFE
 			{
 				DREF DeeObject *print_object;
 				CONST_LOCKREAD();
@@ -2674,9 +2631,9 @@ do_print_c:
 				error = DeeFile_PrintObject(stream, print_object);
 				Dee_Decref(print_object);
 			}
-#else /* EXEC_SAFE && !CONFIG_NO_THREADS */
+#else /* EXEC_SAFE */
 			error = DeeFile_PrintObject(stream, CONSTimm);
-#endif /* !EXEC_SAFE || CONFIG_NO_THREADS */
+#endif /* !EXEC_SAFE */
 			Dee_Decref(stream);
 			if unlikely(error)
 				HANDLE_EXCEPT();
@@ -2692,7 +2649,7 @@ do_print_c_sp:
 			stream = DeeFile_GetStd(DEE_STDOUT);
 			if unlikely(!stream)
 				HANDLE_EXCEPT();
-#if defined(EXEC_SAFE) && !defined(CONFIG_NO_THREADS)
+#ifdef EXEC_SAFE
 			{
 				DREF DeeObject *print_object;
 				CONST_LOCKREAD();
@@ -2702,9 +2659,9 @@ do_print_c_sp:
 				error = DeeFile_PrintObjectSp(stream, print_object);
 				Dee_Decref(print_object);
 			}
-#else /* EXEC_SAFE && !CONFIG_NO_THREADS */
+#else /* EXEC_SAFE */
 			error = DeeFile_PrintObjectSp(stream, CONSTimm);
-#endif /* !EXEC_SAFE || CONFIG_NO_THREADS */
+#endif /* !EXEC_SAFE */
 			Dee_Decref(stream);
 			if unlikely(error)
 				HANDLE_EXCEPT();
@@ -2720,7 +2677,7 @@ do_print_c_nl:
 			stream = DeeFile_GetStd(DEE_STDOUT);
 			if unlikely(!stream)
 				HANDLE_EXCEPT();
-#if defined(EXEC_SAFE) && !defined(CONFIG_NO_THREADS)
+#ifdef EXEC_SAFE
 			{
 				DREF DeeObject *print_object;
 				CONST_LOCKREAD();
@@ -2730,9 +2687,9 @@ do_print_c_nl:
 				error = DeeFile_PrintObjectNl(stream, print_object);
 				Dee_Decref(print_object);
 			}
-#else /* EXEC_SAFE && !CONFIG_NO_THREADS */
+#else /* EXEC_SAFE */
 			error = DeeFile_PrintObjectNl(stream, CONSTimm);
-#endif /* !EXEC_SAFE || CONFIG_NO_THREADS */
+#endif /* !EXEC_SAFE */
 			Dee_Decref(stream);
 			if unlikely(error)
 				HANDLE_EXCEPT();
@@ -2743,7 +2700,7 @@ do_print_c_nl:
 			imm_val = READ_imm8();
 do_fprint_c:
 			ASSERT_CONSTimm();
-#if defined(EXEC_SAFE) && !defined(CONFIG_NO_THREADS)
+#ifdef EXEC_SAFE
 			{
 				DREF DeeObject *print_object;
 				int error;
@@ -2756,10 +2713,10 @@ do_fprint_c:
 				if unlikely(error)
 					HANDLE_EXCEPT();
 			}
-#else /* EXEC_SAFE && !CONFIG_NO_THREADS */
+#else /* EXEC_SAFE */
 			if unlikely(DeeFile_PrintObject(TOP, CONSTimm))
 				HANDLE_EXCEPT();
-#endif /* !EXEC_SAFE || CONFIG_NO_THREADS */
+#endif /* !EXEC_SAFE */
 			DISPATCH();
 		}
 
@@ -2767,7 +2724,7 @@ do_fprint_c:
 			imm_val = READ_imm8();
 do_fprint_c_sp:
 			ASSERT_CONSTimm();
-#if defined(EXEC_SAFE) && !defined(CONFIG_NO_THREADS)
+#ifdef EXEC_SAFE
 			{
 				DREF DeeObject *print_object;
 				int error;
@@ -2780,10 +2737,10 @@ do_fprint_c_sp:
 				if unlikely(error)
 					HANDLE_EXCEPT();
 			}
-#else /* EXEC_SAFE && !CONFIG_NO_THREADS */
+#else /* EXEC_SAFE */
 			if unlikely(DeeFile_PrintObjectSp(TOP, CONSTimm))
 				HANDLE_EXCEPT();
-#endif /* !EXEC_SAFE || CONFIG_NO_THREADS */
+#endif /* !EXEC_SAFE */
 			DISPATCH();
 		}
 
@@ -2791,7 +2748,7 @@ do_fprint_c_sp:
 			imm_val = READ_imm8();
 do_fprint_c_nl:
 			ASSERT_CONSTimm();
-#if defined(EXEC_SAFE) && !defined(CONFIG_NO_THREADS)
+#ifdef EXEC_SAFE
 			{
 				DREF DeeObject *print_object;
 				int error;
@@ -2804,10 +2761,10 @@ do_fprint_c_nl:
 				if unlikely(error)
 					HANDLE_EXCEPT();
 			}
-#else /* EXEC_SAFE && !CONFIG_NO_THREADS */
+#else /* EXEC_SAFE */
 			if unlikely(DeeFile_PrintObjectNl(TOP, CONSTimm))
 				HANDLE_EXCEPT();
-#endif /* !EXEC_SAFE || CONFIG_NO_THREADS */
+#endif /* !EXEC_SAFE */
 			DISPATCH();
 		}
 
@@ -2920,7 +2877,7 @@ do_fprint_c_nl:
 do_contains_c:
 			ASSERT_USAGE(-1, +1);
 			ASSERT_CONSTimm();
-#if defined(EXEC_SAFE) && !defined(CONFIG_NO_THREADS)
+#ifdef EXEC_SAFE
 			{
 				DREF DeeObject *constant_set;
 				CONST_LOCKREAD();
@@ -2930,9 +2887,9 @@ do_contains_c:
 				value = DeeObject_ContainsObject(constant_set, TOP);
 				Dee_Decref(constant_set);
 			}
-#else /* EXEC_SAFE && !CONFIG_NO_THREADS */
+#else /* EXEC_SAFE */
 			value = DeeObject_ContainsObject(CONSTimm, TOP);
-#endif /* !EXEC_SAFE || CONFIG_NO_THREADS */
+#endif /* !EXEC_SAFE */
 			if unlikely(!value)
 				HANDLE_EXCEPT();
 			Dee_Decref(TOP);
@@ -2967,7 +2924,7 @@ do_contains_c:
 do_getitem_c:
 			ASSERT_USAGE(-1, +1);
 			ASSERT_CONSTimm();
-#if defined(EXEC_SAFE) && !defined(CONFIG_NO_THREADS)
+#ifdef EXEC_SAFE
 			{
 				DREF DeeObject *index_object;
 				CONST_LOCKREAD();
@@ -2977,9 +2934,9 @@ do_getitem_c:
 				value = DeeObject_GetItem(TOP, index_object);
 				Dee_Decref(index_object);
 			}
-#else /* EXEC_SAFE && !CONFIG_NO_THREADS */
+#else /* EXEC_SAFE */
 			value = DeeObject_GetItem(TOP, CONSTimm);
-#endif /* !EXEC_SAFE || CONFIG_NO_THREADS */
+#endif /* !EXEC_SAFE */
 			if unlikely(!value)
 				HANDLE_EXCEPT();
 			Dee_Decref(TOP);
@@ -3008,7 +2965,7 @@ do_getitem_c:
 			imm_val = READ_imm8();
 do_setitem_c:
 			ASSERT_CONSTimm();
-#if defined(EXEC_SAFE) && !defined(CONFIG_NO_THREADS)
+#ifdef EXEC_SAFE
 			{
 				DREF DeeObject *index_object;
 				int error;
@@ -3021,10 +2978,10 @@ do_setitem_c:
 				if unlikely(error)
 					HANDLE_EXCEPT();
 			}
-#else /* EXEC_SAFE && !CONFIG_NO_THREADS */
+#else /* EXEC_SAFE */
 			if (DeeObject_SetItem(SECOND, CONSTimm, FIRST))
 				HANDLE_EXCEPT();
-#endif /* !EXEC_SAFE || CONFIG_NO_THREADS */
+#endif /* !EXEC_SAFE */
 			POPREF();
 			POPREF();
 			DISPATCH();
@@ -3890,7 +3847,7 @@ do_call_local:
 			imm_val = READ_imm8();
 do_getattr_c:
 			ASSERT_CONSTimm();
-#if defined(EXEC_SAFE) && !defined(CONFIG_NO_THREADS)
+#ifdef EXEC_SAFE
 			{
 				DREF DeeObject *imm_name;
 				CONST_LOCKREAD();
@@ -3904,10 +3861,10 @@ do_getattr_c:
 				getattr_result = DeeObject_GetAttr(TOP, imm_name);
 				Dee_Decref(imm_name);
 			}
-#else /* EXEC_SAFE && !CONFIG_NO_THREADS */
+#else /* EXEC_SAFE */
 			ASSERT_STRING(CONSTimm);
 			getattr_result = DeeObject_GetAttr(TOP, CONSTimm);
-#endif /* !EXEC_SAFE || CONFIG_NO_THREADS */
+#endif /* !EXEC_SAFE */
 			if unlikely(!getattr_result)
 				HANDLE_EXCEPT();
 			Dee_Decref(TOP);
@@ -3920,7 +3877,7 @@ do_getattr_c:
 			imm_val = READ_imm8();
 do_delattr_c:
 			ASSERT_CONSTimm();
-#if defined(EXEC_SAFE) && !defined(CONFIG_NO_THREADS)
+#ifdef EXEC_SAFE
 			{
 				DREF DeeObject *imm_name;
 				CONST_LOCKREAD();
@@ -3934,10 +3891,10 @@ do_delattr_c:
 				error = DeeObject_DelAttr(TOP, imm_name);
 				Dee_Decref(imm_name);
 			}
-#else /* EXEC_SAFE && !CONFIG_NO_THREADS */
+#else /* EXEC_SAFE */
 			ASSERT_STRING(CONSTimm);
 			error = DeeObject_DelAttr(TOP, CONSTimm);
-#endif /* !EXEC_SAFE || CONFIG_NO_THREADS */
+#endif /* !EXEC_SAFE */
 			if unlikely(error < 0)
 				HANDLE_EXCEPT();
 			POPREF();
@@ -3949,7 +3906,7 @@ do_delattr_c:
 			imm_val = READ_imm8();
 do_setattr_c:
 			ASSERT_CONSTimm();
-#if defined(EXEC_SAFE) && !defined(CONFIG_NO_THREADS)
+#ifdef EXEC_SAFE
 			{
 				DREF DeeObject *imm_name;
 				CONST_LOCKREAD();
@@ -3963,10 +3920,10 @@ do_setattr_c:
 				error = DeeObject_SetAttr(SECOND, imm_name, FIRST);
 				Dee_Decref(imm_name);
 			}
-#else /* EXEC_SAFE && !CONFIG_NO_THREADS */
+#else /* EXEC_SAFE */
 			ASSERT_STRING(CONSTimm);
 			error = DeeObject_SetAttr(SECOND, CONSTimm, FIRST);
-#endif /* !EXEC_SAFE || CONFIG_NO_THREADS */
+#endif /* !EXEC_SAFE */
 			if unlikely(error < 0)
 				HANDLE_EXCEPT();
 			POPREF();
@@ -3980,7 +3937,7 @@ do_setattr_c:
 do_getattr_this_c:
 			ASSERT_CONSTimm();
 			ASSERT_THISCALL();
-#if defined(EXEC_SAFE) && !defined(CONFIG_NO_THREADS)
+#ifdef EXEC_SAFE
 			{
 				DREF DeeObject *imm_name;
 				CONST_LOCKREAD();
@@ -3994,10 +3951,10 @@ do_getattr_this_c:
 				getattr_result = DeeObject_GetAttr(THIS, imm_name);
 				Dee_Decref(imm_name);
 			}
-#else /* EXEC_SAFE && !CONFIG_NO_THREADS */
+#else /* EXEC_SAFE */
 			ASSERT_STRING(CONSTimm);
 			getattr_result = DeeObject_GetAttr(THIS, CONSTimm);
-#endif /* !EXEC_SAFE || CONFIG_NO_THREADS */
+#endif /* !EXEC_SAFE */
 			if unlikely(!getattr_result)
 				HANDLE_EXCEPT();
 			PUSH(getattr_result); /* Inherit reference. */
@@ -4010,7 +3967,7 @@ do_getattr_this_c:
 do_delattr_this_c:
 			ASSERT_CONSTimm();
 			ASSERT_THISCALL();
-#if defined(EXEC_SAFE) && !defined(CONFIG_NO_THREADS)
+#ifdef EXEC_SAFE
 			{
 				DREF DeeObject *imm_name;
 				CONST_LOCKREAD();
@@ -4024,10 +3981,10 @@ do_delattr_this_c:
 				error = DeeObject_DelAttr(THIS, imm_name);
 				Dee_Decref(imm_name);
 			}
-#else /* EXEC_SAFE && !CONFIG_NO_THREADS */
+#else /* EXEC_SAFE */
 			ASSERT_STRING(CONSTimm);
 			error = DeeObject_DelAttr(THIS, CONSTimm);
-#endif /* !EXEC_SAFE || CONFIG_NO_THREADS */
+#endif /* !EXEC_SAFE */
 			if unlikely(error < 0)
 				HANDLE_EXCEPT();
 			DISPATCH();
@@ -4039,7 +3996,7 @@ do_delattr_this_c:
 do_setattr_this_c:
 			ASSERT_CONSTimm();
 			ASSERT_THISCALL();
-#if defined(EXEC_SAFE) && !defined(CONFIG_NO_THREADS)
+#ifdef EXEC_SAFE
 			{
 				DREF DeeObject *imm_name;
 				CONST_LOCKREAD();
@@ -4053,10 +4010,10 @@ do_setattr_this_c:
 				error = DeeObject_SetAttr(THIS, imm_name, TOP);
 				Dee_Decref(imm_name);
 			}
-#else /* EXEC_SAFE && !CONFIG_NO_THREADS */
+#else /* EXEC_SAFE */
 			ASSERT_STRING(CONSTimm);
 			error = DeeObject_SetAttr(THIS, CONSTimm, TOP);
-#endif /* !EXEC_SAFE || CONFIG_NO_THREADS */
+#endif /* !EXEC_SAFE */
 			if unlikely(error < 0)
 				HANDLE_EXCEPT();
 			POPREF();
@@ -4137,11 +4094,10 @@ do_setattr_this_c:
 				RAW_TARGET(ASM32_JMP) {
 					int32_t disp32;
 					disp32 = READ_Simm32();
-#ifndef CONFIG_NO_THREADS
-					if (disp32 < 0 &&
-					    DeeThread_CheckInterruptSelf(this_thread))
-						HANDLE_EXCEPT();
-#endif /* !CONFIG_NO_THREADS */
+					if (disp32 < 0) {
+						if (DeeThread_CheckInterruptSelf(this_thread))
+							HANDLE_EXCEPT();
+					}
 					ip.ptr += disp32;
 #ifdef EXEC_SAFE
 					goto assert_ip_bounds;
@@ -4175,11 +4131,10 @@ do_setattr_this_c:
 					ASSERT(absstk <= STACKSIZE);
 #endif /* !EXEC_SAFE */
 					new_ip = code->co_code + absip;
-#ifndef CONFIG_NO_THREADS
-					if (new_ip < ip.ptr &&
-					    DeeThread_CheckInterruptSelf(this_thread))
-						HANDLE_EXCEPT();
-#endif /* !CONFIG_NO_THREADS */
+					if (new_ip < ip.ptr) {
+						if (DeeThread_CheckInterruptSelf(this_thread))
+							HANDLE_EXCEPT();
+					}
 					stksz = (uint16_t)(sp - frame->cf_stack);
 					if (absstk > stksz) {
 						absstk -= stksz;
@@ -5210,21 +5165,11 @@ do_pack_dict:
 							value = construct_varkwds_mapping();
 							if unlikely(!value)
 								HANDLE_EXCEPT();
-#ifdef CONFIG_NO_THREADS
-							oldval = frame->cf_kw->fk_varkwds;
-							if unlikely(oldval) {
-								VARKWDS_DECREF(value);
-								value = oldval;
-							} else {
-								frame->cf_kw->fk_varkwds = value;
-							}
-#else /* CONFIG_NO_THREADS */
 							oldval = atomic_cmpxch_val(&frame->cf_kw->fk_varkwds, NULL, value);
 							if unlikely(oldval) {
 								VARKWDS_DECREF(value);
 								value = oldval;
 							}
-#endif /* !CONFIG_NO_THREADS */
 						}
 						temp = DeeObject_Bool(value);
 						if unlikely(temp < 0)
@@ -5466,11 +5411,10 @@ prefix_jf_16:
 					if unlikely(temp < 0)
 						HANDLE_EXCEPT();
 					if (!temp) {
-#ifndef CONFIG_NO_THREADS
-						if ((int16_t)imm_val < 0 &&
-						    DeeThread_CheckInterruptSelf(this_thread))
-							HANDLE_EXCEPT();
-#endif /* !CONFIG_NO_THREADS */
+						if ((int16_t)imm_val < 0) {
+							if (DeeThread_CheckInterruptSelf(this_thread))
+								HANDLE_EXCEPT();
+						}
 						ip.ptr += (int16_t)imm_val;
 #ifdef EXEC_SAFE
 						goto assert_ip_bounds;
@@ -5501,11 +5445,10 @@ prefix_jt_16:
 					if unlikely(temp < 0)
 						HANDLE_EXCEPT();
 					if (temp) {
-#ifndef CONFIG_NO_THREADS
-						if ((int16_t)imm_val < 0 &&
-						    DeeThread_CheckInterruptSelf(this_thread))
-							HANDLE_EXCEPT();
-#endif /* !CONFIG_NO_THREADS */
+						if ((int16_t)imm_val < 0) {
+							if (DeeThread_CheckInterruptSelf(this_thread))
+								HANDLE_EXCEPT();
+						}
 						ip.ptr += (int16_t)imm_val;
 #ifdef EXEC_SAFE
 						goto assert_ip_bounds;
@@ -6657,21 +6600,11 @@ do_prefix_push_arg:
 							varkwds = construct_varkwds_mapping();
 							if unlikely(!varkwds)
 								HANDLE_EXCEPT();
-#ifdef CONFIG_NO_THREADS
-							oldval = frame->cf_kw->fk_varkwds;
-							if unlikely(oldval) {
-								VARKWDS_DECREF(varkwds);
-								varkwds = oldval;
-							} else {
-								frame->cf_kw->fk_varkwds = varkwds;
-							}
-#else /* CONFIG_NO_THREADS */
 							oldval = atomic_cmpxch_val(&frame->cf_kw->fk_varkwds, NULL, varkwds);
 							if unlikely(oldval) {
 								VARKWDS_DECREF(varkwds);
 								varkwds = oldval;
 							}
-#endif /* !CONFIG_NO_THREADS */
 						}
 					} else {
 						varkwds = Dee_EmptyMapping;
@@ -7062,12 +6995,11 @@ exec_except:
 			ASSERT(current_except->eh_stack ==
 			       (uint16_t)(sp - frame->cf_stack));
 		}
-#ifndef CONFIG_NO_THREADS
+
 		/* With the new PC address active, check for interrupts to prevent
 		 * potential loop constructs using exceptions of all things... */
 		if (DeeThread_CheckInterruptSelf(this_thread))
 			goto handle_except;
-#endif /* !CONFIG_NO_THREADS */
 
 		/* Continue execution within this exception handler. */
 		goto next_instr;

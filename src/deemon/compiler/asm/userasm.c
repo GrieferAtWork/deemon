@@ -536,7 +536,7 @@ compatible_operand(struct asm_invoke_operand   const *__restrict iop,
 	if (imm_rel == ASM_OVERLOAD_FSTKDSP)
 		imm_val = -imm_val;
 #endif
-	switch (UNALIGNED_GET16(&oop->aoo_class) & (OPERAND_CLASS_FMASK | OPERAND_CLASS_FSTACKFLAG)) {
+	switch (UNALIGNED_GET16(&oop->aoo_class) & OPERAND_CLASS_FMASK) {
 
 	case OPERAND_CLASS_VARARGS:
 		if ((iop->io_class & OPERAND_CLASS_FMASK) == OPERAND_CLASS_VARARGS)

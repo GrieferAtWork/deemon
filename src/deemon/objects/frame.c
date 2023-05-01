@@ -95,18 +95,10 @@ typedef DeeFrameObject Frame;
 /* Construct a frame object owned by `owner'
  * The intended use of this is for tracebacks and yield_function-iterators.
  * @param: flags: Set of `DEEFRAME_F*' */
-#ifndef CONFIG_NO_THREADS
 PUBLIC WUNUSED NONNULL((2)) DREF DeeObject *
 (DCALL DeeFrame_NewReferenceWithLock)(DeeObject *owner,
                                       struct code_frame *__restrict frame,
-                                      uint16_t flags, void *lock)
-#else /* !CONFIG_NO_THREADS */
-PUBLIC WUNUSED NONNULL((2)) DREF DeeObject *
-(DCALL DeeFrame_NewReference)(DeeObject *owner,
-                              struct code_frame *__restrict frame,
-                              uint16_t flags)
-#endif /* CONFIG_NO_THREADS */
-{
+                                      uint16_t flags, void *lock) {
 	DREF Frame *result;
 	ASSERT_OBJECT_OPT(owner);
 	result = DeeObject_MALLOC(Frame);
@@ -118,7 +110,9 @@ PUBLIC WUNUSED NONNULL((2)) DREF DeeObject *
 	Dee_atomic_rwlock_init(&result->f_lock);
 #ifndef CONFIG_NO_THREADS
 	result->f_plock = (Dee_atomic_rwlock_t *)lock;
-#endif /* !CONFIG_NO_THREADS */
+#else /* !CONFIG_NO_THREADS */
+	(void)lock; /* Unused... */
+#endif /* CONFIG_NO_THREADS */
 	Dee_XIncref(owner);
 	DeeObject_Init(result, &DeeFrame_Type);
 done:

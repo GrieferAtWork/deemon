@@ -1483,7 +1483,7 @@ again:
 			goto again;
 		temp = nt_write_utf8_to_console(self, with_pending, pending_count + bufsize);
 		if unlikely(temp == (size_t)-1) {
-			atomic_cmpxch(&self->sf_pendingc, 0, pending_count);
+			atomic_cmpxch(&self->sf_pendingc, 0, (unsigned char)pending_count);
 			goto err;
 		}
 		pending_count += bufsize;
@@ -1494,7 +1494,7 @@ again:
 			return nt_append_pending_utf8(self, with_pending + temp, pending_count);
 	} else {
 		memcpyc(self->sf_pending, buffer, bufsize, sizeof(unsigned char));
-		if unlikely(!atomic_cmpxch_weak_or_write(&self->sf_pendingc, 0, bufsize))
+		if unlikely(!atomic_cmpxch_weak_or_write(&self->sf_pendingc, 0, (unsigned char)bufsize))
 			goto again;
 	}
 	return 0;

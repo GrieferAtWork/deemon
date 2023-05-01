@@ -668,9 +668,11 @@ check_other_threads:
 		/* Check for interrupts. */
 		if (DeeThread_CheckInterruptSelf(caller))
 			goto err;
+#define WANT_err
 		threads = DeeThread_SuspendAll();
 		if unlikely(!threads)
 			goto err;
+#define WANT_err
 		DeeThread_FOREACH(threads) {
 			int temp;
 			if (threads == caller)
@@ -690,7 +692,8 @@ check_other_threads:
 				/* Unclear. - Wait for the thread to turn its stack consistent, then try again. */
 				if (DeeThread_CheckInterruptSelf(caller))
 					goto err;
-				DeeThread_SleepNoInterrupt(100);
+#define WANT_err
+				DeeThread_SleepNoInt(100);
 				goto check_other_threads;
 			}
 
@@ -718,7 +721,10 @@ already_executing:
 	                "Cannot set assembly mode for code "
 	                "object %k while it is being executed",
 	                self);
+#ifdef WANT_err
+#undef WANT_err
 err:
+#endif /* WANT_err */
 	return -1;
 }
 

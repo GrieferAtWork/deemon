@@ -250,7 +250,7 @@ again:
 		for (i = 0; i < length; ++i)
 			result[i] = data[i];
 		result[length] = 0;
-		if likely(atomic_cmpxch(&utf->u_data[STRING_WIDTH_2BYTE], NULL, result)) {
+		if likely(atomic_cmpxch(&utf->u_data[STRING_WIDTH_2BYTE], NULL, (size_t *)result)) {
 			Dee_UntrackAlloc((size_t *)result - 1);
 			return result;
 		}

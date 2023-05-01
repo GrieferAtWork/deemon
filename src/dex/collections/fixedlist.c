@@ -1138,7 +1138,7 @@ INTERN DeeTypeObject FixedList_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "FixedList",
 	/* .tp_doc      = */ DOC("A mutable, but fixed-length sequence type, functioning as "
-	                         "a sort-of hybrid between :deemon.List and :deemon.tuple\n"
+	                         "a sort-of hybrid between ?DList and ?DTuple\n"
 	                         "\n"
 
 	                         "()\n"

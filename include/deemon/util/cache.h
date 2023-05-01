@@ -361,8 +361,8 @@ struct Dee_cache_object {
 	INTERN void DCALL name##_tp_free(void *__restrict ob) {                          \
 		name##_free((ALLOC_TYPE *)ob);                                               \
 	}                                                                                \
-	INTERN void *DCALL name##_tp_alloc(void) {                                         \
-		return (void *)(name##_alloc)();                                               \
+	INTERN void *DCALL name##_tp_alloc(void) {                                       \
+		return (void *)(name##_alloc)();                                             \
 	}
 #endif /* CONFIG_NO_THREADS */
 

@@ -417,13 +417,11 @@ DDATDEF DeeTypeObject DeeThread_Type;
 #define DeeThread_Check(ob)      DeeObject_InstanceOf(ob, &DeeThread_Type)
 #define DeeThread_CheckExact(ob) DeeObject_InstanceOfExact(ob, &DeeThread_Type)
 
-#ifndef CONFIG_NO_THREADS
 /* Construct a new wrapper for an external reference to `thread'
  * NOTE: The given `thread' is _NOT_ inherited! */
 #ifdef Dee_pid_t
 DFUNDEF WUNUSED DREF DeeObject *DCALL DeeThread_FromTid(Dee_pid_t pid);
 #endif /* Dee_pid_t */
-#endif /* !CONFIG_NO_THREADS */
 
 
 /* Start execution of the given thread.
@@ -541,7 +539,7 @@ DFUNDEF void DCALL DeeThread_ResumeAll(void);
 
 /* Sleep for the specified number of microseconds (1/1000000 seconds). */
 DFUNDEF WUNUSED int (DCALL DeeThread_Sleep)(uint64_t microseconds);
-DFUNDEF void (DCALL DeeThread_SleepNoInterrupt)(uint64_t microseconds);
+DFUNDEF void (DCALL DeeThread_SleepNoInt)(uint64_t microseconds);
 
 /* Get the current time (offset from some undefined point) in microseconds. */
 DFUNDEF WUNUSED uint64_t (DCALL DeeThread_GetTimeMicroSeconds)(void);

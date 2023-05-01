@@ -45,7 +45,7 @@ DECL_BEGIN
 #define DBG_memset(dst, byte, n_bytes) (void)0
 #endif /* NDEBUG */
 
-#ifndef CONFIG_NO_THREADS
+#if !defined(CONFIG_NO_THREADS) || 1 /* Always needs to be defined for binary compat */
 PUBLIC Dee_rshared_rwlock_t DeeCompiler_Lock = DEE_RSHARED_RWLOCK_INIT;
 #endif /* !CONFIG_NO_THREADS */
 

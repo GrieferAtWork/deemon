@@ -38,9 +38,9 @@
 #define Dee_atomic_cmpxch_explicit(p, old_value, new_value, succ_order, fail_order) \
 	(*(p) == (old_value) ? (*(p) = (new_value), 1) : 0)
 #define Dee_atomic_cmpxch_val_explicit(p, old_value, new_value, succ_order, fail_order) \
-	(*(p) == (old_value) ? (*(p) = (new_value)) : *(p))
-#define Dee_atomic_fetchinc_explicit(p, order)         (*(p)++)
-#define Dee_atomic_fetchdec_explicit(p, order)         (*(p)--)
+	(*(p) == (old_value) ? (*(p) = (new_value), (old_value)) : *(p))
+#define Dee_atomic_fetchinc_explicit(p, order)         ((*(p))++)
+#define Dee_atomic_fetchdec_explicit(p, order)         ((*(p))--)
 #define Dee_atomic_fetchadd_explicit(p, value, order)  ((*(p) += (value)) - (value))
 #define Dee_atomic_fetchsub_explicit(p, value, order)  ((*(p) -= (value)) + (value))
 #define Dee_atomic_fetchxor_explicit(p, value, order)  ((*(p) ^= (value)) ^ (value))
@@ -79,25 +79,25 @@ extern "C++" {
 template<class T, class S> inline WUNUSED NONNULL((1)) T
 _Dee_atomic_xch_no_threads(T *p, S value) {
 	T result = *p;
-	*p = value;
+	*p = (T)value;
 	return result;
 }
 template<class T, class S> inline WUNUSED NONNULL((1)) T
 _Dee_atomic_fetchand_no_threads(T *p, S value) {
 	T result = *p;
-	*p &= value;
+	*p &= (T)value;
 	return result;
 }
 template<class T, class S> inline WUNUSED NONNULL((1)) T
 _Dee_atomic_fetchor_no_threads(T *p, S value) {
 	T result = *p;
-	*p |= value;
+	*p |= (T)value;
 	return result;
 }
 template<class T, class S> inline WUNUSED NONNULL((1)) T
 _Dee_atomic_fetchnand_no_threads(T *p, S value) {
 	T result = *p;
-	*p = ~(*p & value);
+	*p = ~(*p & (T)value);
 	return result;
 }
 } /* extern "C++" */

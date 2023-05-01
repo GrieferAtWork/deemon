@@ -1555,19 +1555,19 @@ struct Dee_type_math {
 	WUNUSED_T NONNULL_T((1, 2)) DREF DeeObject *(DCALL *tp_pow)(DeeObject *self, DeeObject *some_object);
 
 	/* Inplace operators (Optional; Implemented using functions above when not available) */
-	WUNUSED_T NONNULL_T((1)) int (DCALL *tp_inc)(DeeObject **__restrict pself);
-	WUNUSED_T NONNULL_T((1)) int (DCALL *tp_dec)(DeeObject **__restrict pself);
-	WUNUSED_T NONNULL_T((1, 2)) int (DCALL *tp_inplace_add)(DeeObject **__restrict pself, DeeObject *some_object);
-	WUNUSED_T NONNULL_T((1, 2)) int (DCALL *tp_inplace_sub)(DeeObject **__restrict pself, DeeObject *some_object);
-	WUNUSED_T NONNULL_T((1, 2)) int (DCALL *tp_inplace_mul)(DeeObject **__restrict pself, DeeObject *some_object);
-	WUNUSED_T NONNULL_T((1, 2)) int (DCALL *tp_inplace_div)(DeeObject **__restrict pself, DeeObject *some_object);
-	WUNUSED_T NONNULL_T((1, 2)) int (DCALL *tp_inplace_mod)(DeeObject **__restrict pself, DeeObject *some_object);
-	WUNUSED_T NONNULL_T((1, 2)) int (DCALL *tp_inplace_shl)(DeeObject **__restrict pself, DeeObject *some_object);
-	WUNUSED_T NONNULL_T((1, 2)) int (DCALL *tp_inplace_shr)(DeeObject **__restrict pself, DeeObject *some_object);
-	WUNUSED_T NONNULL_T((1, 2)) int (DCALL *tp_inplace_and)(DeeObject **__restrict pself, DeeObject *some_object);
-	WUNUSED_T NONNULL_T((1, 2)) int (DCALL *tp_inplace_or)(DeeObject **__restrict pself, DeeObject *some_object);
-	WUNUSED_T NONNULL_T((1, 2)) int (DCALL *tp_inplace_xor)(DeeObject **__restrict pself, DeeObject *some_object);
-	WUNUSED_T NONNULL_T((1, 2)) int (DCALL *tp_inplace_pow)(DeeObject **__restrict pself, DeeObject *some_object);
+	WUNUSED_T NONNULL_T((1)) int (DCALL *tp_inc)(DeeObject **__restrict p_self);
+	WUNUSED_T NONNULL_T((1)) int (DCALL *tp_dec)(DeeObject **__restrict p_self);
+	WUNUSED_T NONNULL_T((1, 2)) int (DCALL *tp_inplace_add)(DeeObject **__restrict p_self, DeeObject *some_object);
+	WUNUSED_T NONNULL_T((1, 2)) int (DCALL *tp_inplace_sub)(DeeObject **__restrict p_self, DeeObject *some_object);
+	WUNUSED_T NONNULL_T((1, 2)) int (DCALL *tp_inplace_mul)(DeeObject **__restrict p_self, DeeObject *some_object);
+	WUNUSED_T NONNULL_T((1, 2)) int (DCALL *tp_inplace_div)(DeeObject **__restrict p_self, DeeObject *some_object);
+	WUNUSED_T NONNULL_T((1, 2)) int (DCALL *tp_inplace_mod)(DeeObject **__restrict p_self, DeeObject *some_object);
+	WUNUSED_T NONNULL_T((1, 2)) int (DCALL *tp_inplace_shl)(DeeObject **__restrict p_self, DeeObject *some_object);
+	WUNUSED_T NONNULL_T((1, 2)) int (DCALL *tp_inplace_shr)(DeeObject **__restrict p_self, DeeObject *some_object);
+	WUNUSED_T NONNULL_T((1, 2)) int (DCALL *tp_inplace_and)(DeeObject **__restrict p_self, DeeObject *some_object);
+	WUNUSED_T NONNULL_T((1, 2)) int (DCALL *tp_inplace_or)(DeeObject **__restrict p_self, DeeObject *some_object);
+	WUNUSED_T NONNULL_T((1, 2)) int (DCALL *tp_inplace_xor)(DeeObject **__restrict p_self, DeeObject *some_object);
+	WUNUSED_T NONNULL_T((1, 2)) int (DCALL *tp_inplace_pow)(DeeObject **__restrict p_self, DeeObject *some_object);
 };
 
 struct Dee_type_cmp {
@@ -2231,7 +2231,7 @@ struct Dee_membercache {
 #define OPTYPE_BINARY         0x002  /* `...(DeeObject *self, DeeObject *other);' */
 #define OPTYPE_TRINARY        0x003  /* `...(DeeObject *self, DeeObject *a, DeeObject *b);' */
 #define OPTYPE_QUAD           0x004  /* `...(DeeObject *self, DeeObject *a, DeeObject *b, DeeObject *c);' */
-#define OPTYPE_INPLACE        0x008  /* FLAG: [override] The first argument is actually `DeeObject **__restrict pself'. */
+#define OPTYPE_INPLACE        0x008  /* FLAG: [override] The first argument is actually `DeeObject **__restrict p_self'. */
 #define OPTYPE_VARIABLE       0x080  /* FLAG: User-code can invoke the operator with a variable number of arguments passed through the last operand. */
 #define OPTYPE_ROBJECT        0x000  /* FLAG: The operator returns `DREF DeeObject *'. */
 #define OPTYPE_RINT32         0x010  /* FLAG: The operator returns `int32_t'. */
@@ -2340,12 +2340,12 @@ DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeObject_InvokeOperator(DeeObject *self, uint16_t name,
                          size_t argc, DeeObject *const *argv);
 DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-DeeObject_PInvokeOperator(DeeObject **__restrict pself, uint16_t name,
+DeeObject_PInvokeOperator(DeeObject **__restrict p_self, uint16_t name,
                           size_t argc, DeeObject *const *argv);
 #define DeeObject_InvokeOperatorTuple(self, name, args) \
 	DeeObject_InvokeOperator(self, name, DeeTuple_SIZE(args), DeeTuple_ELEM(args))
-#define DeeObject_PInvokeOperatorTuple(pself, name, args) \
-	DeeObject_PInvokeOperator(pself, name, DeeTuple_SIZE(args), DeeTuple_ELEM(args))
+#define DeeObject_PInvokeOperatorTuple(p_self, name, args) \
+	DeeObject_PInvokeOperator(p_self, name, DeeTuple_SIZE(args), DeeTuple_ELEM(args))
 
 
 
@@ -2694,11 +2694,11 @@ DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeObject_VNewf(DeeTypeObj
 /* Object copy/assign operator invocation. */
 DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeObject_Copy(DeeObject *__restrict self);
 DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeObject_DeepCopy(DeeObject *__restrict self);
-DFUNDEF WUNUSED NONNULL((1)) int DCALL DeeObject_InplaceDeepCopy(/*in|out*/ DREF DeeObject **__restrict pself);
-#define DeeObject_XInplaceDeepCopy(pself) (!*(pself) ? 0 : DeeObject_InplaceDeepCopy(pself))
+DFUNDEF WUNUSED NONNULL((1)) int DCALL DeeObject_InplaceDeepCopy(/*in|out*/ DREF DeeObject **__restrict p_self);
+#define DeeObject_XInplaceDeepCopy(p_self) (!*(p_self) ? 0 : DeeObject_InplaceDeepCopy(p_self))
 #ifndef CONFIG_NO_THREADS
 /* A helper functions to acquire the proper read/write locks on a given
- * Dee_atomic_rwlock_t when accessing memory pointed to by the given `*pself'.
+ * Dee_atomic_rwlock_t when accessing memory pointed to by the given `*p_self'.
  *
  * This is highly useful due to the fact that practically the only place where
  * `DeeObject_InplaceDeepCopy()' might ever be encountered, is in tp_deepload
@@ -2708,24 +2708,24 @@ DFUNDEF WUNUSED NONNULL((1)) int DCALL DeeObject_InplaceDeepCopy(/*in|out*/ DREF
  * order to safely replace the field with a deepcopy (the safe order of
  * operations that is then performed by this helper):
  * >> DREF DeeObject *temp, *copy;
- * >> Dee_atomic_rwlock_read(plock);
- * >> temp = *pself;
+ * >> Dee_atomic_rwlock_read(p_lock);
+ * >> temp = *p_self;
  * >> #if IS_XDEEPCOPY
  * >> if (!temp) {
- * >>     Dee_atomic_rwlock_endread(plock);
+ * >>     Dee_atomic_rwlock_endread(p_lock);
  * >>     return 0;
  * >> }
  * >> #endif // IS_XDEEPCOPY
  * >> Dee_Incref(temp);
- * >> Dee_atomic_rwlock_endread(plock);
+ * >> Dee_atomic_rwlock_endread(p_lock);
  * >> copy = DeeObject_DeepCopy(temp);
  * >> Dee_Decref(temp);
  * >> if unlikely(!copy)
  * >>    return -1;
- * >> Dee_atomic_rwlock_write(plock);
- * >> temp   = *pself; // Inherit
- * >> *pself = copy;   // Inherit
- * >> Dee_atomic_rwlock_endwrite(plock);
+ * >> Dee_atomic_rwlock_write(p_lock);
+ * >> temp   = *p_self; // Inherit
+ * >> *p_self = copy;   // Inherit
+ * >> Dee_atomic_rwlock_endwrite(p_lock);
  * >> #if IS_XDEEPCOPY
  * >> Dee_XDecref(temp);
  * >> #else // IS_XDEEPCOPY
@@ -2733,11 +2733,11 @@ DFUNDEF WUNUSED NONNULL((1)) int DCALL DeeObject_InplaceDeepCopy(/*in|out*/ DREF
  * >> #endif // !IS_XDEEPCOPY
  * >> return 0;
  */
-DFUNDEF WUNUSED NONNULL((1, 2)) int DCALL DeeObject_InplaceDeepCopyWithLock(/*in|out*/ DREF DeeObject **__restrict pself, Dee_atomic_rwlock_t *__restrict plock);
-DFUNDEF WUNUSED NONNULL((1, 2)) int DCALL DeeObject_XInplaceDeepCopyWithLock(/*in|out*/ DREF DeeObject **__restrict pself, Dee_atomic_rwlock_t *__restrict plock);
+DFUNDEF WUNUSED NONNULL((1, 2)) int DCALL DeeObject_InplaceDeepCopyWithLock(/*in|out*/ DREF DeeObject **__restrict p_self, Dee_atomic_rwlock_t *__restrict p_lock);
+DFUNDEF WUNUSED NONNULL((1, 2)) int DCALL DeeObject_XInplaceDeepCopyWithLock(/*in|out*/ DREF DeeObject **__restrict p_self, Dee_atomic_rwlock_t *__restrict p_lock);
 #else /* !CONFIG_NO_THREADS */
-#define DeeObject_InplaceDeepCopyWithLock(pself, plock)  DeeObject_InplaceDeepCopy(pself)
-#define DeeObject_XInplaceDeepCopyWithLock(pself, plock) DeeObject_XInplaceDeepCopy(pself)
+#define DeeObject_InplaceDeepCopyWithLock(p_self, p_lock)  DeeObject_InplaceDeepCopy(p_self)
+#define DeeObject_XInplaceDeepCopyWithLock(p_self, p_lock) DeeObject_XInplaceDeepCopy(p_self)
 #endif /* CONFIG_NO_THREADS */
 
 DFUNDEF WUNUSED NONNULL((1, 2)) int DCALL DeeObject_Assign(DeeObject *self, DeeObject *some_object);
@@ -2882,31 +2882,31 @@ DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *(DCALL DeeObject_Xor)(DeeObject 
 DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *(DCALL DeeObject_Pow)(DeeObject *self, DeeObject *some_object);
 
 /* Inplace math operator invocation.
- * NOTE: For the duration of the call, `*pself' must not be changed by outside sources.
+ * NOTE: For the duration of the call, `*p_self' must not be changed by outside sources.
  *       Because of this, pointers to external, global, or static variables must be passed
  *       indirectly, though local or stack variables can be passed directly (as they are
  *       private to their stack-frame and cannot be changed through outside interference,
  *       aside of debuggers which know to look out for manipulating operands of inplace
  *       instructions)
- * >> Because these functions will inherit a reference to `IN(*pself)' upon success, it is
+ * >> Because these functions will inherit a reference to `IN(*p_self)' upon success, it is
  *    possible for the implementation to check for otherwise immutable objects to be modified
- *    in-line (when `DeeObject_IsShared(IN(*pself))' is false), thus allowing an invocation
+ *    in-line (when `DeeObject_IsShared(IN(*p_self))' is false), thus allowing an invocation
  *    such as `DeeObject_Inc(&my_int)' to potentially be completed without having to allocate
  *    a new integer object (though only in case `my_int' isn't being shared, and incrementing
  *    wouldn't overflow within the available number of digits) */
-DFUNDEF WUNUSED NONNULL((1)) int (DCALL DeeObject_Inc)(DREF DeeObject **__restrict pself);
-DFUNDEF WUNUSED NONNULL((1)) int (DCALL DeeObject_Dec)(DREF DeeObject **__restrict pself);
-DFUNDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeObject_InplaceAdd)(DREF DeeObject **__restrict pself, DeeObject *some_object);
-DFUNDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeObject_InplaceSub)(DREF DeeObject **__restrict pself, DeeObject *some_object);
-DFUNDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeObject_InplaceMul)(DREF DeeObject **__restrict pself, DeeObject *some_object);
-DFUNDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeObject_InplaceDiv)(DREF DeeObject **__restrict pself, DeeObject *some_object);
-DFUNDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeObject_InplaceMod)(DREF DeeObject **__restrict pself, DeeObject *some_object);
-DFUNDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeObject_InplaceShl)(DREF DeeObject **__restrict pself, DeeObject *some_object);
-DFUNDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeObject_InplaceShr)(DREF DeeObject **__restrict pself, DeeObject *some_object);
-DFUNDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeObject_InplaceAnd)(DREF DeeObject **__restrict pself, DeeObject *some_object);
-DFUNDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeObject_InplaceOr)(DREF DeeObject **__restrict pself, DeeObject *some_object);
-DFUNDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeObject_InplaceXor)(DREF DeeObject **__restrict pself, DeeObject *some_object);
-DFUNDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeObject_InplacePow)(DREF DeeObject **__restrict pself, DeeObject *some_object);
+DFUNDEF WUNUSED NONNULL((1)) int (DCALL DeeObject_Inc)(DREF DeeObject **__restrict p_self);
+DFUNDEF WUNUSED NONNULL((1)) int (DCALL DeeObject_Dec)(DREF DeeObject **__restrict p_self);
+DFUNDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeObject_InplaceAdd)(DREF DeeObject **__restrict p_self, DeeObject *some_object);
+DFUNDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeObject_InplaceSub)(DREF DeeObject **__restrict p_self, DeeObject *some_object);
+DFUNDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeObject_InplaceMul)(DREF DeeObject **__restrict p_self, DeeObject *some_object);
+DFUNDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeObject_InplaceDiv)(DREF DeeObject **__restrict p_self, DeeObject *some_object);
+DFUNDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeObject_InplaceMod)(DREF DeeObject **__restrict p_self, DeeObject *some_object);
+DFUNDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeObject_InplaceShl)(DREF DeeObject **__restrict p_self, DeeObject *some_object);
+DFUNDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeObject_InplaceShr)(DREF DeeObject **__restrict p_self, DeeObject *some_object);
+DFUNDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeObject_InplaceAnd)(DREF DeeObject **__restrict p_self, DeeObject *some_object);
+DFUNDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeObject_InplaceOr)(DREF DeeObject **__restrict p_self, DeeObject *some_object);
+DFUNDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeObject_InplaceXor)(DREF DeeObject **__restrict p_self, DeeObject *some_object);
+DFUNDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeObject_InplacePow)(DREF DeeObject **__restrict p_self, DeeObject *some_object);
 
 /* Math operations with C (aka. host) integer operand. */
 DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *(DCALL DeeObject_AddS8)(DeeObject *__restrict self, int8_t val);
@@ -2921,18 +2921,18 @@ DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *(DCALL DeeObject_ShrInt)(DeeObject 
 DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *(DCALL DeeObject_AndInt)(DeeObject *__restrict self, uint32_t val);
 DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *(DCALL DeeObject_OrInt)(DeeObject *__restrict self, uint32_t val);
 DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *(DCALL DeeObject_XorInt)(DeeObject *__restrict self, uint32_t val);
-DFUNDEF WUNUSED NONNULL((1)) int (DCALL DeeObject_InplaceAddS8)(DREF DeeObject **__restrict pself, int8_t val);
-DFUNDEF WUNUSED NONNULL((1)) int (DCALL DeeObject_InplaceSubS8)(DREF DeeObject **__restrict pself, int8_t val);
-DFUNDEF WUNUSED NONNULL((1)) int (DCALL DeeObject_InplaceAddInt)(DREF DeeObject **__restrict pself, uint32_t val);
-DFUNDEF WUNUSED NONNULL((1)) int (DCALL DeeObject_InplaceSubInt)(DREF DeeObject **__restrict pself, uint32_t val);
-DFUNDEF WUNUSED NONNULL((1)) int (DCALL DeeObject_InplaceMulInt)(DREF DeeObject **__restrict pself, int8_t val);
-DFUNDEF WUNUSED NONNULL((1)) int (DCALL DeeObject_InplaceDivInt)(DREF DeeObject **__restrict pself, int8_t val);
-DFUNDEF WUNUSED NONNULL((1)) int (DCALL DeeObject_InplaceModInt)(DREF DeeObject **__restrict pself, int8_t val);
-DFUNDEF WUNUSED NONNULL((1)) int (DCALL DeeObject_InplaceShlInt)(DREF DeeObject **__restrict pself, uint8_t val);
-DFUNDEF WUNUSED NONNULL((1)) int (DCALL DeeObject_InplaceShrInt)(DREF DeeObject **__restrict pself, uint8_t val);
-DFUNDEF WUNUSED NONNULL((1)) int (DCALL DeeObject_InplaceAndInt)(DREF DeeObject **__restrict pself, uint32_t val);
-DFUNDEF WUNUSED NONNULL((1)) int (DCALL DeeObject_InplaceOrInt)(DREF DeeObject **__restrict pself, uint32_t val);
-DFUNDEF WUNUSED NONNULL((1)) int (DCALL DeeObject_InplaceXorInt)(DREF DeeObject **__restrict pself, uint32_t val);
+DFUNDEF WUNUSED NONNULL((1)) int (DCALL DeeObject_InplaceAddS8)(DREF DeeObject **__restrict p_self, int8_t val);
+DFUNDEF WUNUSED NONNULL((1)) int (DCALL DeeObject_InplaceSubS8)(DREF DeeObject **__restrict p_self, int8_t val);
+DFUNDEF WUNUSED NONNULL((1)) int (DCALL DeeObject_InplaceAddInt)(DREF DeeObject **__restrict p_self, uint32_t val);
+DFUNDEF WUNUSED NONNULL((1)) int (DCALL DeeObject_InplaceSubInt)(DREF DeeObject **__restrict p_self, uint32_t val);
+DFUNDEF WUNUSED NONNULL((1)) int (DCALL DeeObject_InplaceMulInt)(DREF DeeObject **__restrict p_self, int8_t val);
+DFUNDEF WUNUSED NONNULL((1)) int (DCALL DeeObject_InplaceDivInt)(DREF DeeObject **__restrict p_self, int8_t val);
+DFUNDEF WUNUSED NONNULL((1)) int (DCALL DeeObject_InplaceModInt)(DREF DeeObject **__restrict p_self, int8_t val);
+DFUNDEF WUNUSED NONNULL((1)) int (DCALL DeeObject_InplaceShlInt)(DREF DeeObject **__restrict p_self, uint8_t val);
+DFUNDEF WUNUSED NONNULL((1)) int (DCALL DeeObject_InplaceShrInt)(DREF DeeObject **__restrict p_self, uint8_t val);
+DFUNDEF WUNUSED NONNULL((1)) int (DCALL DeeObject_InplaceAndInt)(DREF DeeObject **__restrict p_self, uint32_t val);
+DFUNDEF WUNUSED NONNULL((1)) int (DCALL DeeObject_InplaceOrInt)(DREF DeeObject **__restrict p_self, uint32_t val);
+DFUNDEF WUNUSED NONNULL((1)) int (DCALL DeeObject_InplaceXorInt)(DREF DeeObject **__restrict p_self, uint32_t val);
 
 
 /* Comparison operator invocation.
@@ -3237,7 +3237,7 @@ DDATDEF DeeObject DeeNotImplemented_Singleton;
 
 #ifndef __INTELLISENSE__
 #ifndef __NO_builtin_expect
-#define DeeObject_InplaceDeepCopy(pself)                               __builtin_expect(DeeObject_InplaceDeepCopy(pself), 0)
+#define DeeObject_InplaceDeepCopy(p_self)                              __builtin_expect(DeeObject_InplaceDeepCopy(p_self), 0)
 #define DeeObject_Assign(self, some_object)                            __builtin_expect(DeeObject_Assign(self, some_object), 0)
 #define DeeObject_MoveAssign(self, other)                              __builtin_expect(DeeObject_MoveAssign(self, other), 0)
 #define DeeObject_AsInt8(self, result)                                 __builtin_expect(DeeObject_AsInt8(self, result), 0)
@@ -3249,19 +3249,19 @@ DDATDEF DeeObject DeeNotImplemented_Singleton;
 #define DeeObject_AsUInt32(self, result)                               __builtin_expect(DeeObject_AsUInt32(self, result), 0)
 #define DeeObject_AsUInt64(self, result)                               __builtin_expect(DeeObject_AsUInt64(self, result), 0)
 #define DeeObject_AsDouble(self, result)                               __builtin_expect(DeeObject_AsDouble(self, result), 0)
-#define DeeObject_Inc(pself)                                           __builtin_expect(DeeObject_Inc(pself), 0)
-#define DeeObject_Dec(pself)                                           __builtin_expect(DeeObject_Dec(pself), 0)
-#define DeeObject_InplaceAdd(pself, some_object)                       __builtin_expect(DeeObject_InplaceAdd(pself, some_object), 0)
-#define DeeObject_InplaceSub(pself, some_object)                       __builtin_expect(DeeObject_InplaceSub(pself, some_object), 0)
-#define DeeObject_InplaceMul(pself, some_object)                       __builtin_expect(DeeObject_InplaceMul(pself, some_object), 0)
-#define DeeObject_InplaceDiv(pself, some_object)                       __builtin_expect(DeeObject_InplaceDiv(pself, some_object), 0)
-#define DeeObject_InplaceMod(pself, some_object)                       __builtin_expect(DeeObject_InplaceMod(pself, some_object), 0)
-#define DeeObject_InplaceShl(pself, some_object)                       __builtin_expect(DeeObject_InplaceShl(pself, some_object), 0)
-#define DeeObject_InplaceShr(pself, some_object)                       __builtin_expect(DeeObject_InplaceShr(pself, some_object), 0)
-#define DeeObject_InplaceAnd(pself, some_object)                       __builtin_expect(DeeObject_InplaceAnd(pself, some_object), 0)
-#define DeeObject_InplaceOr(pself, some_object)                        __builtin_expect(DeeObject_InplaceOr(pself, some_object), 0)
-#define DeeObject_InplaceXor(pself, some_object)                       __builtin_expect(DeeObject_InplaceXor(pself, some_object), 0)
-#define DeeObject_InplacePow(pself, some_object)                       __builtin_expect(DeeObject_InplacePow(pself, some_object), 0)
+#define DeeObject_Inc(p_self)                                          __builtin_expect(DeeObject_Inc(p_self), 0)
+#define DeeObject_Dec(p_self)                                          __builtin_expect(DeeObject_Dec(p_self), 0)
+#define DeeObject_InplaceAdd(p_self, some_object)                      __builtin_expect(DeeObject_InplaceAdd(p_self, some_object), 0)
+#define DeeObject_InplaceSub(p_self, some_object)                      __builtin_expect(DeeObject_InplaceSub(p_self, some_object), 0)
+#define DeeObject_InplaceMul(p_self, some_object)                      __builtin_expect(DeeObject_InplaceMul(p_self, some_object), 0)
+#define DeeObject_InplaceDiv(p_self, some_object)                      __builtin_expect(DeeObject_InplaceDiv(p_self, some_object), 0)
+#define DeeObject_InplaceMod(p_self, some_object)                      __builtin_expect(DeeObject_InplaceMod(p_self, some_object), 0)
+#define DeeObject_InplaceShl(p_self, some_object)                      __builtin_expect(DeeObject_InplaceShl(p_self, some_object), 0)
+#define DeeObject_InplaceShr(p_self, some_object)                      __builtin_expect(DeeObject_InplaceShr(p_self, some_object), 0)
+#define DeeObject_InplaceAnd(p_self, some_object)                      __builtin_expect(DeeObject_InplaceAnd(p_self, some_object), 0)
+#define DeeObject_InplaceOr(p_self, some_object)                       __builtin_expect(DeeObject_InplaceOr(p_self, some_object), 0)
+#define DeeObject_InplaceXor(p_self, some_object)                      __builtin_expect(DeeObject_InplaceXor(p_self, some_object), 0)
+#define DeeObject_InplacePow(p_self, some_object)                      __builtin_expect(DeeObject_InplacePow(p_self, some_object), 0)
 #define DeeObject_DelItem(self, index)                                 __builtin_expect(DeeObject_DelItem(self, index), 0)
 #define DeeObject_DelItemIndex(self, index)                            __builtin_expect(DeeObject_DelItemIndex(self, index), 0)
 #define DeeObject_DelItemString(self, key, hash)                       __builtin_expect(DeeObject_DelItemString(self, key, hash), 0)

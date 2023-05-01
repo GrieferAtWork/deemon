@@ -595,17 +595,6 @@ IF_USE_CFI(.cfi_def_cfa_register %ebp)
 .Linc_execsz_start:
 	incw   t_execsz(%eax)
 
-#ifndef CONFIG_NO_THREADS
-	/* Re-check the CODE_FASSEMBLY flag.
-	 * This needs to be done due to a race condition between the
-	 * caller testing the assembly flag and us actually registering
-	 * the execution frame. */
-	LOAD_CODE(%ecx)
-	testl  $(CODE_FASSEMBLY), co_flags(CODE_OR_ECX)
-	/* ASSUME(EAX == L_THIS_THREAD) */
-	jnz   .execute_in_safe_mode
-#endif
-
 .disp: /* DISPATCH() */
 #ifndef NDEBUG
 	leal   (0-co_code)(PC), %eax
@@ -771,54 +760,6 @@ IF_USE_CFI(.cfi_def_cfa_register %ebp)
 
 	ret
 END(DEECODE_EXECFRAMEFAST)
-
-
-IF_USE_CFI(.cfi_restore_state)
-IF_USE_CFI(.cfi_remember_state)
-
-#ifndef CONFIG_NO_THREADS
-.execute_in_safe_mode:
-	/* ASSUME(EAX == L_THIS_THREAD) */
-	movl  FRAME_PREV, %ecx
-	movl  %ecx, t_exec(%eax) /* this_thread->t_exec = frame->cf_prev */
-	decw  t_execsz(%eax)
-	movl  $(CODE_FRAME_NOT_EXECUTING), FRAME_PREV
-#ifdef CODE_IS_REGISTER
-	addl   $(LMEM), %esp
-	IF_USE_CFI(.cfi_adjust_cfa_offset -LMEM)
-	popl   %ebp
-	IF_USE_CFI(.cfi_adjust_cfa_offset -4)
-	IF_USE_CFI(.cfi_restore %ebp)
-#elif !defined(NDEBUG)
-	leal   LMEM(%esp), %edx
-	ASSERT_EQUAL(%edx, %ebp)
-	movl   %edx, %esp
-	IF_USE_CFI(.cfi_def_cfa %esp, 24)
-	leave
-	IF_USE_CFI(.cfi_adjust_cfa_offset -4)
-	addl   $4, %esp
-	IF_USE_CFI(.cfi_adjust_cfa_offset -4)
-#endif /* !CODE_IS_REGISTER */
-	movl   FRAME, %ecx /* Save the frame pointer back into the first argument */
-	popl   %edi
-	IF_USE_CFI(.cfi_restore %edi)
-	IF_USE_CFI(.cfi_adjust_cfa_offset -4)
-	popl   %esi
-	IF_USE_CFI(.cfi_restore %esi)
-	IF_USE_CFI(.cfi_adjust_cfa_offset -4)
-	popl   %ebx
-	IF_USE_CFI(.cfi_restore %ebx)
-	IF_USE_CFI(.cfi_adjust_cfa_offset -4)
-	/* Indicate that the stack hasn't been allocated dynamically. */
-	movl   $0, cf_stacksz(%ecx)
-	/* At this point, the caller's return address is saved  */
-#ifdef CONFIG_HOST_WINDOWS
-	jmp    @DeeCode_ExecFrameSafe@4
-#else
-	jmp    fSYM(DeeCode_ExecFrameSafe,4)
-#endif
-#endif
-
 IF_USE_CFI(.cfi_restore_state)
 
 
@@ -940,9 +881,9 @@ IF_USE_CFI(.cfi_restore_state)
 	ARCH_YIELD
 	jmp    996b
 997:
-#else
+#else /* ARCH_YIELD */
 	jnz    996b
-#endif
+#endif /* !ARCH_YIELD */
 .endm
 
 /* WARNING: Clobber: \clobber, %eax */
@@ -954,9 +895,9 @@ IF_USE_CFI(.cfi_restore_state)
 	ARCH_YIELD
 	jmp    996b
 997:
-#else
+#else /* ARCH_YIELD */
 	jnz    996b
-#endif
+#endif /* !ARCH_YIELD */
 .endm
 
 .macro rwlock_endread self
@@ -1205,14 +1146,10 @@ run_except_handler_in_edx_handled:
 	/* Pre-handle the exception. */
 	pushl  %edx
 	ADJUST_CFA_OFFSET(4)
-#ifdef CONFIG_NO_THREADS
-	call   fSYM(DeeError_HandledNoSMP,0)
-#else
 	pushl  $(ERROR_HANDLED_INTERRUPT)
 	ADJUST_CFA_OFFSET(4)
 	call   fSYM(DeeError_Handled,4)
 	ADJUST_CFA_OFFSET(-4)
-#endif
 	popl   %edx
 	ADJUST_CFA_OFFSET(-4)
 run_except_handler_in_edx:
@@ -1222,16 +1159,16 @@ run_except_handler_in_edx:
 #ifdef CODE_IS_REGISTER
 	leal   co_code(CODE),    PC
 	addl   eh_addr(%edx),    PC /* ip = code->co_code + eh_addr; */
-#else
+#else /* CODE_IS_REGISTER */
 	movl   L_CODE,           PC
 	addl   $(co_code),       PC
 	addl   eh_addr(%edx),    PC /* ip = code->co_code + eh_addr; */
-#endif
+#endif /* !CODE_IS_REGISTER */
 #ifndef NDEBUG
 	LOAD_CODE(%eax)
 	movl   co_codebytes(CODE_OR_EAX), %eax
 	ASSERT_BELOW(eh_addr(%edx),%eax) /* ASSERT(eh_addr < %eax); */
-#endif
+#endif /* !NDEBUG */
 	/* Figure out in what manner we need to adjust the stack. */
 	movl   SP,             %ecx
 	subl   FRAME_STACK,    %ecx
@@ -1261,9 +1198,9 @@ run_except_handler_in_edx:
 .text
 stack_overflow:
 #ifdef CONFIG_HAVE_EXEC_ALTSTACK
-#if (DEE_EXEC_ALTSTACK_PERIOD & (DEE_EXEC_ALTSTACK_PERIOD-1)) != 0
+#if (DEE_EXEC_ALTSTACK_PERIOD & (DEE_EXEC_ALTSTACK_PERIOD - 1)) != 0
 #error "`DEE_EXEC_ALTSTACK_PERIOD' must be a power-of-2"
-#endif
+#endif /* (DEE_EXEC_ALTSTACK_PERIOD & (DEE_EXEC_ALTSTACK_PERIOD - 1)) != 0 */
 	andw   $(DEE_EXEC_ALTSTACK_PERIOD-1), %cx
 	cmpw   $(DEE_EXEC_ALTSTACK_PERIOD-1), %cx
 	jne    1f /* if (!IS_ALTSTACK_PERIOD(this_thread->t_execsz)) goto 1f; */
@@ -1272,7 +1209,7 @@ stack_overflow:
 	movl   FRAME_PREV, %edx
 	movl   %edx, t_exec(%eax) /* this_thread->t_exec = frame->cf_prev; */
 1:
-#endif
+#endif /* CONFIG_HAVE_EXEC_ALTSTACK */
 	pushl  $99b
 	ADJUST_CFA_OFFSET(4)
 	pushl  $(SYM(DeeError_StackOverflow))
@@ -1307,7 +1244,7 @@ exec_on_altstack:
 	IF_USE_CFI(.cfi_adjust_cfa_offset -4)
 	addl   $4, %esp
 	IF_USE_CFI(.cfi_adjust_cfa_offset -4)
-#endif
+#endif /* ... */
 	popl   %edi
 	IF_USE_CFI(.cfi_adjust_cfa_offset -4)
 	IF_USE_CFI(.cfi_same_value %edi)
@@ -1449,16 +1386,12 @@ target_endcatch:
 	jbe    1f
 	assert_failed() /* ASSERT_FAIL: `except_recursion <= this_thread->t_exceptsz' */
 1:
-#endif
+#endif /* !NDEBUG */
 	je    .disp /* nothing left to handle. */
-#ifdef CONFIG_NO_THREADS
-	call   fSYM(DeeError_HandledNoSMP,0)
-#else
 	pushl  $(ERROR_HANDLED_INTERRUPT)
 	ADJUST_CFA_OFFSET(4)
 	call   fSYM(DeeError_Handled,4)
 	ADJUST_CFA_OFFSET(-4)
-#endif
 	jmp    .disp
 target_endcatch_n:
 	lodsb  /* EAX = nth_except */
@@ -1624,9 +1557,7 @@ target_jf:
 	jz     1f /* if (bool != 0) DISPATCH() */
 	sp_popref %ecx /* POPREF() */
 	jmp    .disp
-1:
-#ifndef CONFIG_NO_THREADS
-	cmpl   $0, %edx
+1:	cmpl   $0, %edx
 	jge    1f
 	pushl  %edx
 	ADJUST_CFA_OFFSET(4)
@@ -1640,7 +1571,6 @@ target_jf:
 	popl   %edx
 	ADJUST_CFA_OFFSET(-4)
 1:
-#endif
 	addl   %edx, PC /* ip += Simm8/16 */
 	sp_popref %ecx /* POPREF() */
 #ifndef NDEBUG
@@ -1682,9 +1612,7 @@ target_jt:
 	jnz    1f /* if (bool == 0) DISPATCH() */
 	sp_popref %ecx /* POPREF() */
 	jmp    .disp
-1:
-#ifndef CONFIG_NO_THREADS
-	cmpl   $0, %edx
+1:	cmpl   $0, %edx
 	jge    1f
 	pushl  %edx
 	ADJUST_CFA_OFFSET(4)
@@ -1697,9 +1625,7 @@ target_jt:
 	jnz   .except_x4
 	popl   %edx
 	ADJUST_CFA_OFFSET(-4)
-1:
-#endif
-	addl   %edx, PC /* ip += Simm8/16 */
+1:	addl   %edx, PC /* ip += Simm8/16 */
 	sp_popref %ecx /* POPREF() */
 	jmp    .disp_checkip
 
@@ -1801,7 +1727,6 @@ prefix_target_jt:
 
 target32_jmp:
 	lodsl
-#ifndef CONFIG_NO_THREADS
 	cmpl   $0, %eax
 	jge    1f
 	pushl  %eax
@@ -1815,9 +1740,7 @@ target32_jmp:
 	jnz   .except_x4
 	popl   %eax
 	ADJUST_CFA_OFFSET(-4)
-1:
-#endif
-	addl   %eax, PC /* ip += Simm32 */
+1:	addl   %eax, PC /* ip += Simm32 */
 #ifndef NDEBUG
 	jno   .disp_checkip
 	assert_failed() /* ASSERTION_FAILED: `ip += Simm32' did overflow. */
@@ -1826,7 +1749,6 @@ target32_jmp:
 target_jmp16:
 	lodsw
 	movswl %ax, %eax
-#ifndef CONFIG_NO_THREADS
 	cmpl   $0, %eax
 	jge    1f
 	pushl  %eax
@@ -1840,14 +1762,11 @@ target_jmp16:
 	jnz   .except_x4
 	popl   %eax
 	ADJUST_CFA_OFFSET(-4)
-1:
-#endif
-	addl   %eax, PC /* ip += Simm16 */
+1:	addl   %eax, PC /* ip += Simm16 */
 	jmp    .disp_checkip
 target_jmp:
 	lodsb
 	movsbl %al, %eax
-#ifndef CONFIG_NO_THREADS
 	cmpl   $0, %eax
 	jge    1f
 	pushl  %eax
@@ -1861,9 +1780,7 @@ target_jmp:
 	jnz   .except_x4
 	popl   %eax
 	ADJUST_CFA_OFFSET(-4)
-1:
-#endif
-	addl   %eax, PC /* ip += Simm8 */
+1:	addl   %eax, PC /* ip += Simm8 */
 	jmp    .disp_checkip
 
 
@@ -1905,9 +1822,7 @@ target_foreach:
 	/* Leave the iterator and push the element. */
 	sp_push %eax
 	jmp    .disp
-2:
-#ifndef CONFIG_NO_THREADS
-	cmpl   $0, %edx
+2:	cmpl   $0, %edx
 	jge    1f
 	pushl  %edx
 	ADJUST_CFA_OFFSET(4)
@@ -1920,9 +1835,7 @@ target_foreach:
 	jnz   .except_x4
 	popl   %edx
 	ADJUST_CFA_OFFSET(-4)
-1:
-#endif
-	addl   %edx, PC /* ip += Simm8/16 */
+1:	addl   %edx, PC /* ip += Simm8/16 */
 	sp_popref %eax
 	jmp    .disp_checkip
 
@@ -1945,24 +1858,14 @@ target_jmp_pop:
 	ADJUST_CFA_OFFSET(-4)
 .jmp_abs_edx:
 	/* At this point, the absolute PC is stored in EDX */
-#ifdef CONFIG_NO_THREADS
-#ifdef CODE_IS_REGISTER
-	leal   co_code(CODE), PC
-	addl   %edx,          PC
-#else
-	movl   L_CODE,   PC
-	addl   $co_code, PC
-	addl   %edx,     PC
-#endif
-#else
 #ifdef CODE_IS_REGISTER
 	leal   co_code(CODE), %eax
 	addl   %edx,          %eax
-#else
+#else /* CODE_IS_REGISTER */
 	movl   L_CODE,   %eax
 	addl   $co_code, %eax
 	addl   %edx,     %eax
-#endif
+#endif /* !CODE_IS_REGISTER */
 	cmpl   PC, %eax
 	jge    1f
 	pushl  %eax
@@ -1977,7 +1880,6 @@ target_jmp_pop:
 	popl   %eax
 	ADJUST_CFA_OFFSET(-4)
 1:	movl   %eax,     PC
-#endif
 	jmp    .disp_checkip
 
 target_jmp_pop_pop:

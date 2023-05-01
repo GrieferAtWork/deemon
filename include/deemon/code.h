@@ -29,11 +29,8 @@
 
 #include "gc.h"
 #include "object.h"
-
-#ifndef CONFIG_NO_THREADS
-#include "util/rlock.h"
 #include "util/lock.h"
-#endif /* !CONFIG_NO_THREADS */
+#include "util/rlock.h"
 
 DECL_BEGIN
 

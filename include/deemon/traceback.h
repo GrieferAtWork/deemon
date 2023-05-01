@@ -182,21 +182,16 @@ DDATDEF DeeTypeObject DeeFrame_Type;
 /* Construct a frame object owned by `owner'
  * The intended use of this is for tracebacks and yield_function-iterators.
  * @param: flags: Set of `DEEFRAME_F*' */
-#ifndef CONFIG_NO_THREADS
 DFUNDEF WUNUSED NONNULL((2)) DREF DeeObject *
 (DCALL DeeFrame_NewReferenceWithLock)(DeeObject *owner,
                                       struct Dee_code_frame *__restrict frame,
                                       uint16_t flags, void *lock);
+#ifdef CONFIG_NO_THREADS
+#define DeeFrame_NewReferenceWithLock(owner, frame, flags, lock) \
+	DeeFrame_NewReferenceWithLock(owner, frame, flags, NULL)
+#endif /* CONFIG_NO_THREADS */
 #define DeeFrame_NewReference(owner, frame, flags) \
 	DeeFrame_NewReferenceWithLock(owner, frame, flags, NULL)
-#else /* !CONFIG_NO_THREADS */
-DFUNDEF WUNUSED NONNULL((2)) DREF DeeObject *
-(DCALL DeeFrame_NewReference)(DeeObject *owner,
-                              struct Dee_code_frame *__restrict frame,
-                              uint16_t flags);
-#define DeeFrame_NewReferenceWithLock(owner, frame, flags, lock) \
-	DeeFrame_NewReference(owner, frame, flags)
-#endif /* CONFIG_NO_THREADS */
 
 /* Construct a shared frame object, which can be manually
  * invalidated once the caller calls `DeeFrame_DecrefShared()'.

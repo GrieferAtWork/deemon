@@ -940,6 +940,9 @@ begin_init:
 
 	if (flags & MODULE_FINITIALIZING) {
 		/* Module is already being loaded. */
+#ifdef CONFIG_NO_THREADS
+		return 1;
+#else /* CONFIG_NO_THREADS */
 		while ((flags = atomic_read(&me->mo_flags),
 		        (flags & (MODULE_FINITIALIZING | MODULE_FDIDINIT)) ==
 		        MODULE_FINITIALIZING)) {
@@ -960,10 +963,13 @@ begin_init:
 		if (flags & MODULE_FDIDINIT)
 			return 0;
 		goto begin_init;
+#endif /* !CONFIG_NO_THREADS */
 	}
 
 	/* Setup the module to indicate that we're the ones loading it. */
+#ifndef CONFIG_NO_THREADS
 	me->mo_loader = caller;
+#endif /* !CONFIG_NO_THREADS */
 
 	/* FIXME: Technically, we'd need to acquire a global lock at this point
 	 *        and only call `init_function' while hold it in a non-sharing

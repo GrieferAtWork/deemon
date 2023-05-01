@@ -206,19 +206,19 @@ INTDEF WUNUSED NONNULL((1, 2, 3)) dssize_t DCALL DeeObject_TDefaultPrintReprWith
 #define DeeType_INVOKE_OR(tp_self, self, other)                    ((tp_self)->tp_math->tp_or == &instance_or ? instance_tor(tp_self, self, other) : (*(tp_self)->tp_math->tp_or)(self, other))
 #define DeeType_INVOKE_XOR(tp_self, self, other)                   ((tp_self)->tp_math->tp_xor == &instance_xor ? instance_txor(tp_self, self, other) : (*(tp_self)->tp_math->tp_xor)(self, other))
 #define DeeType_INVOKE_POW(tp_self, self, other)                   ((tp_self)->tp_math->tp_pow == &instance_pow ? instance_tpow(tp_self, self, other) : (*(tp_self)->tp_math->tp_pow)(self, other))
-#define DeeType_INVOKE_INC(tp_self, pself)                         ((tp_self)->tp_math->tp_inc == &instance_inc ? instance_tinc(tp_self, pself) : (*(tp_self)->tp_math->tp_inc)(pself))
-#define DeeType_INVOKE_DEC(tp_self, pself)                         ((tp_self)->tp_math->tp_dec == &instance_dec ? instance_tdec(tp_self, pself) : (*(tp_self)->tp_math->tp_dec)(pself))
-#define DeeType_INVOKE_IADD(tp_self, pself, other)                 ((tp_self)->tp_math->tp_inplace_add == &instance_iadd ? instance_tiadd(tp_self, pself, other) : (*(tp_self)->tp_math->tp_inplace_add)(pself, other))
-#define DeeType_INVOKE_ISUB(tp_self, pself, other)                 ((tp_self)->tp_math->tp_inplace_sub == &instance_isub ? instance_tisub(tp_self, pself, other) : (*(tp_self)->tp_math->tp_inplace_sub)(pself, other))
-#define DeeType_INVOKE_IMUL(tp_self, pself, other)                 ((tp_self)->tp_math->tp_inplace_mul == &instance_imul ? instance_timul(tp_self, pself, other) : (*(tp_self)->tp_math->tp_inplace_mul)(pself, other))
-#define DeeType_INVOKE_IDIV(tp_self, pself, other)                 ((tp_self)->tp_math->tp_inplace_div == &instance_idiv ? instance_tidiv(tp_self, pself, other) : (*(tp_self)->tp_math->tp_inplace_div)(pself, other))
-#define DeeType_INVOKE_IMOD(tp_self, pself, other)                 ((tp_self)->tp_math->tp_inplace_mod == &instance_imod ? instance_timod(tp_self, pself, other) : (*(tp_self)->tp_math->tp_inplace_mod)(pself, other))
-#define DeeType_INVOKE_ISHL(tp_self, pself, other)                 ((tp_self)->tp_math->tp_inplace_shl == &instance_ishl ? instance_tishl(tp_self, pself, other) : (*(tp_self)->tp_math->tp_inplace_shl)(pself, other))
-#define DeeType_INVOKE_ISHR(tp_self, pself, other)                 ((tp_self)->tp_math->tp_inplace_shr == &instance_ishr ? instance_tishr(tp_self, pself, other) : (*(tp_self)->tp_math->tp_inplace_shr)(pself, other))
-#define DeeType_INVOKE_IAND(tp_self, pself, other)                 ((tp_self)->tp_math->tp_inplace_and == &instance_iand ? instance_tiand(tp_self, pself, other) : (*(tp_self)->tp_math->tp_inplace_and)(pself, other))
-#define DeeType_INVOKE_IOR(tp_self, pself, other)                  ((tp_self)->tp_math->tp_inplace_or == &instance_ior ? instance_tior(tp_self, pself, other) : (*(tp_self)->tp_math->tp_inplace_or)(pself, other))
-#define DeeType_INVOKE_IXOR(tp_self, pself, other)                 ((tp_self)->tp_math->tp_inplace_xor == &instance_ixor ? instance_tixor(tp_self, pself, other) : (*(tp_self)->tp_math->tp_inplace_xor)(pself, other))
-#define DeeType_INVOKE_IPOW(tp_self, pself, other)                 ((tp_self)->tp_math->tp_inplace_pow == &instance_ipow ? instance_tipow(tp_self, pself, other) : (*(tp_self)->tp_math->tp_inplace_pow)(pself, other))
+#define DeeType_INVOKE_INC(tp_self, p_self)                        ((tp_self)->tp_math->tp_inc == &instance_inc ? instance_tinc(tp_self, p_self) : (*(tp_self)->tp_math->tp_inc)(p_self))
+#define DeeType_INVOKE_DEC(tp_self, p_self)                        ((tp_self)->tp_math->tp_dec == &instance_dec ? instance_tdec(tp_self, p_self) : (*(tp_self)->tp_math->tp_dec)(p_self))
+#define DeeType_INVOKE_IADD(tp_self, p_self, other)                ((tp_self)->tp_math->tp_inplace_add == &instance_iadd ? instance_tiadd(tp_self, p_self, other) : (*(tp_self)->tp_math->tp_inplace_add)(p_self, other))
+#define DeeType_INVOKE_ISUB(tp_self, p_self, other)                ((tp_self)->tp_math->tp_inplace_sub == &instance_isub ? instance_tisub(tp_self, p_self, other) : (*(tp_self)->tp_math->tp_inplace_sub)(p_self, other))
+#define DeeType_INVOKE_IMUL(tp_self, p_self, other)                ((tp_self)->tp_math->tp_inplace_mul == &instance_imul ? instance_timul(tp_self, p_self, other) : (*(tp_self)->tp_math->tp_inplace_mul)(p_self, other))
+#define DeeType_INVOKE_IDIV(tp_self, p_self, other)                ((tp_self)->tp_math->tp_inplace_div == &instance_idiv ? instance_tidiv(tp_self, p_self, other) : (*(tp_self)->tp_math->tp_inplace_div)(p_self, other))
+#define DeeType_INVOKE_IMOD(tp_self, p_self, other)                ((tp_self)->tp_math->tp_inplace_mod == &instance_imod ? instance_timod(tp_self, p_self, other) : (*(tp_self)->tp_math->tp_inplace_mod)(p_self, other))
+#define DeeType_INVOKE_ISHL(tp_self, p_self, other)                ((tp_self)->tp_math->tp_inplace_shl == &instance_ishl ? instance_tishl(tp_self, p_self, other) : (*(tp_self)->tp_math->tp_inplace_shl)(p_self, other))
+#define DeeType_INVOKE_ISHR(tp_self, p_self, other)                ((tp_self)->tp_math->tp_inplace_shr == &instance_ishr ? instance_tishr(tp_self, p_self, other) : (*(tp_self)->tp_math->tp_inplace_shr)(p_self, other))
+#define DeeType_INVOKE_IAND(tp_self, p_self, other)                ((tp_self)->tp_math->tp_inplace_and == &instance_iand ? instance_tiand(tp_self, p_self, other) : (*(tp_self)->tp_math->tp_inplace_and)(p_self, other))
+#define DeeType_INVOKE_IOR(tp_self, p_self, other)                 ((tp_self)->tp_math->tp_inplace_or == &instance_ior ? instance_tior(tp_self, p_self, other) : (*(tp_self)->tp_math->tp_inplace_or)(p_self, other))
+#define DeeType_INVOKE_IXOR(tp_self, p_self, other)                ((tp_self)->tp_math->tp_inplace_xor == &instance_ixor ? instance_tixor(tp_self, p_self, other) : (*(tp_self)->tp_math->tp_inplace_xor)(p_self, other))
+#define DeeType_INVOKE_IPOW(tp_self, p_self, other)                ((tp_self)->tp_math->tp_inplace_pow == &instance_ipow ? instance_tipow(tp_self, p_self, other) : (*(tp_self)->tp_math->tp_inplace_pow)(p_self, other))
 #define DeeType_INVOKE_HASH(tp_self, self)                         ((tp_self)->tp_cmp->tp_hash == &instance_hash ? instance_thash(tp_self, self) : (tp_self)->tp_cmp->tp_hash == &instance_builtin_hash ? instance_builtin_thash(tp_self, self) : (*(tp_self)->tp_cmp->tp_hash)(self))
 #define DeeType_INVOKE_EQ(tp_self, self, other)                    ((tp_self)->tp_cmp->tp_eq == &instance_eq ? instance_teq(tp_self, self, other) : (tp_self)->tp_cmp->tp_eq == &instance_builtin_eq ? instance_builtin_teq(tp_self, self, other) : (*(tp_self)->tp_cmp->tp_eq)(self, other))
 #define DeeType_INVOKE_NE(tp_self, self, other)                    ((tp_self)->tp_cmp->tp_ne == &instance_ne ? instance_tne(tp_self, self, other) : (tp_self)->tp_cmp->tp_ne == &instance_builtin_ne ? instance_builtin_tne(tp_self, self, other) : (*(tp_self)->tp_cmp->tp_ne)(self, other))
@@ -269,19 +269,19 @@ INTDEF WUNUSED NONNULL((1, 2, 3)) dssize_t DCALL DeeObject_TDefaultPrintReprWith
 #define DeeType_INVOKE_OR(tp_self, self, other)                    (*(tp_self)->tp_math->tp_or)(self, other)
 #define DeeType_INVOKE_XOR(tp_self, self, other)                   (*(tp_self)->tp_math->tp_xor)(self, other)
 #define DeeType_INVOKE_POW(tp_self, self, other)                   (*(tp_self)->tp_math->tp_pow)(self, other)
-#define DeeType_INVOKE_INC(tp_self, pself)                         (*(tp_self)->tp_math->tp_inc)(pself)
-#define DeeType_INVOKE_DEC(tp_self, pself)                         (*(tp_self)->tp_math->tp_dec)(pself)
-#define DeeType_INVOKE_IADD(tp_self, pself, other)                 (*(tp_self)->tp_math->tp_inplace_add)(pself, other)
-#define DeeType_INVOKE_ISUB(tp_self, pself, other)                 (*(tp_self)->tp_math->tp_inplace_sub)(pself, other)
-#define DeeType_INVOKE_IMUL(tp_self, pself, other)                 (*(tp_self)->tp_math->tp_inplace_mul)(pself, other)
-#define DeeType_INVOKE_IDIV(tp_self, pself, other)                 (*(tp_self)->tp_math->tp_inplace_div)(pself, other)
-#define DeeType_INVOKE_IMOD(tp_self, pself, other)                 (*(tp_self)->tp_math->tp_inplace_mod)(pself, other)
-#define DeeType_INVOKE_ISHL(tp_self, pself, other)                 (*(tp_self)->tp_math->tp_inplace_shl)(pself, other)
-#define DeeType_INVOKE_ISHR(tp_self, pself, other)                 (*(tp_self)->tp_math->tp_inplace_shr)(pself, other)
-#define DeeType_INVOKE_IAND(tp_self, pself, other)                 (*(tp_self)->tp_math->tp_inplace_and)(pself, other)
-#define DeeType_INVOKE_IOR(tp_self, pself, other)                  (*(tp_self)->tp_math->tp_inplace_or)(pself, other)
-#define DeeType_INVOKE_IXOR(tp_self, pself, other)                 (*(tp_self)->tp_math->tp_inplace_xor)(pself, other)
-#define DeeType_INVOKE_IPOW(tp_self, pself, other)                 (*(tp_self)->tp_math->tp_inplace_pow)(pself, other)
+#define DeeType_INVOKE_INC(tp_self, p_self)                        (*(tp_self)->tp_math->tp_inc)(p_self)
+#define DeeType_INVOKE_DEC(tp_self, p_self)                        (*(tp_self)->tp_math->tp_dec)(p_self)
+#define DeeType_INVOKE_IADD(tp_self, p_self, other)                (*(tp_self)->tp_math->tp_inplace_add)(p_self, other)
+#define DeeType_INVOKE_ISUB(tp_self, p_self, other)                (*(tp_self)->tp_math->tp_inplace_sub)(p_self, other)
+#define DeeType_INVOKE_IMUL(tp_self, p_self, other)                (*(tp_self)->tp_math->tp_inplace_mul)(p_self, other)
+#define DeeType_INVOKE_IDIV(tp_self, p_self, other)                (*(tp_self)->tp_math->tp_inplace_div)(p_self, other)
+#define DeeType_INVOKE_IMOD(tp_self, p_self, other)                (*(tp_self)->tp_math->tp_inplace_mod)(p_self, other)
+#define DeeType_INVOKE_ISHL(tp_self, p_self, other)                (*(tp_self)->tp_math->tp_inplace_shl)(p_self, other)
+#define DeeType_INVOKE_ISHR(tp_self, p_self, other)                (*(tp_self)->tp_math->tp_inplace_shr)(p_self, other)
+#define DeeType_INVOKE_IAND(tp_self, p_self, other)                (*(tp_self)->tp_math->tp_inplace_and)(p_self, other)
+#define DeeType_INVOKE_IOR(tp_self, p_self, other)                 (*(tp_self)->tp_math->tp_inplace_or)(p_self, other)
+#define DeeType_INVOKE_IXOR(tp_self, p_self, other)                (*(tp_self)->tp_math->tp_inplace_xor)(p_self, other)
+#define DeeType_INVOKE_IPOW(tp_self, p_self, other)                (*(tp_self)->tp_math->tp_inplace_pow)(p_self, other)
 #define DeeType_INVOKE_HASH(tp_self, self)                         (*(tp_self)->tp_cmp->tp_hash)(self)
 #define DeeType_INVOKE_EQ(tp_self, self, other)                    (*(tp_self)->tp_cmp->tp_eq)(self, other)
 #define DeeType_INVOKE_NE(tp_self, self, other)                    (*(tp_self)->tp_cmp->tp_ne)(self, other)
@@ -792,7 +792,7 @@ DeeObject_Newf(DeeTypeObject *object_type,
 
 #ifdef DEFINE_TYPED_OPERATORS
 #define LOAD_TP_SELF   ASSERT_OBJECT_TYPE_A(self, tp_self)
-#define LOAD_TP_SELFP  ASSERT_OBJECT_TYPE_A(*pself, tp_self)
+#define LOAD_TP_SELFP  ASSERT_OBJECT_TYPE_A(*p_self, tp_self)
 #define LOAD_ITER      DeeTypeObject *iter = tp_self
 #define LOAD_ITERP     DeeTypeObject *iter = tp_self
 #define GET_TP_SELF()  tp_self
@@ -802,16 +802,16 @@ DeeObject_Newf(DeeTypeObject *object_type,
                        ASSERT_OBJECT(self);    \
                        tp_self = Dee_TYPE(self)
 #define LOAD_TP_SELFP  DeeTypeObject *tp_self; \
-                       ASSERT_OBJECT(*pself);  \
-                       tp_self = Dee_TYPE(*pself)
+                       ASSERT_OBJECT(*p_self); \
+                       tp_self = Dee_TYPE(*p_self)
 #define LOAD_ITER      DeeTypeObject *iter; \
                        ASSERT_OBJECT(self); \
                        iter = Dee_TYPE(self)
-#define LOAD_ITERP     DeeTypeObject *iter;   \
-                       ASSERT_OBJECT(*pself); \
-                       iter = Dee_TYPE(*pself)
+#define LOAD_ITERP     DeeTypeObject *iter;    \
+                       ASSERT_OBJECT(*p_self); \
+                       iter = Dee_TYPE(*p_self)
 #define GET_TP_SELF()  Dee_TYPE(self)
-#define GET_TP_PSELF() Dee_TYPE(*pself)
+#define GET_TP_PSELF() Dee_TYPE(*p_self)
 #endif /* !DEFINE_TYPED_OPERATORS */
 
 
@@ -1049,31 +1049,31 @@ err_object_type:
 
 #ifndef DEFINE_TYPED_OPERATORS
 PUBLIC WUNUSED NONNULL((1)) int
-(DCALL DeeObject_InplaceDeepCopy)(DREF DeeObject **__restrict pself) {
+(DCALL DeeObject_InplaceDeepCopy)(DREF DeeObject **__restrict p_self) {
 	DeeObject *objcopy, *old_object;
-	old_object = *pself;
+	old_object = *p_self;
 	ASSERT_OBJECT(old_object);
 	objcopy = DeeObject_DeepCopy(old_object);
 	if unlikely(!objcopy)
 		goto err;
 	Dee_Decref(old_object);
-	*pself = objcopy;
+	*p_self = objcopy;
 	return 0;
 err:
 	return -1;
 }
 
-#ifndef CONFIG_NO_THREADS
-PUBLIC WUNUSED NONNULL((1, 2)) int DCALL
-DeeObject_InplaceDeepCopyWithLock(DREF DeeObject **__restrict pself,
-                                  Dee_atomic_rwlock_t *__restrict plock) {
+PUBLIC WUNUSED NONNULL((1, 2)) int
+(DCALL DeeObject_InplaceDeepCopyWithLock)(DREF DeeObject **__restrict p_self,
+                                          Dee_atomic_rwlock_t *__restrict p_lock) {
 	DREF DeeObject *temp, *copy;
+	(void)p_lock;
 
 	/* Step #1: Extract the existing object. */
-	Dee_atomic_rwlock_read(plock);
-	temp = *pself;
+	Dee_atomic_rwlock_read(p_lock);
+	temp = *p_self;
 	Dee_Incref(temp);
-	Dee_atomic_rwlock_endread(plock);
+	Dee_atomic_rwlock_endread(p_lock);
 
 	/* Step #2: Create a deep copy for it. */
 	copy = DeeObject_DeepCopy(temp);
@@ -1082,30 +1082,31 @@ DeeObject_InplaceDeepCopyWithLock(DREF DeeObject **__restrict pself,
 		goto err;
 
 	/* Step #3: Write back the newly created deep copy. */
-	Dee_atomic_rwlock_write(plock);
-	temp   = *pself; /* Inherit */
-	*pself = copy;   /* Inherit */
-	Dee_atomic_rwlock_endwrite(plock);
+	Dee_atomic_rwlock_write(p_lock);
+	temp   = *p_self; /* Inherit */
+	*p_self = copy;   /* Inherit */
+	Dee_atomic_rwlock_endwrite(p_lock);
 	Dee_Decref(temp);
 	return 0;
 err:
 	return -1;
 }
 
-PUBLIC WUNUSED NONNULL((1, 2)) int DCALL
-DeeObject_XInplaceDeepCopyWithLock(DREF DeeObject **__restrict pself,
-                                   Dee_atomic_rwlock_t *__restrict plock) {
+PUBLIC WUNUSED NONNULL((1, 2)) int
+(DCALL DeeObject_XInplaceDeepCopyWithLock)(DREF DeeObject **__restrict p_self,
+                                           Dee_atomic_rwlock_t *__restrict p_lock) {
 	DREF DeeObject *temp, *copy;
+	(void)p_lock;
 
 	/* Step #1: Extract the existing object. */
-	Dee_atomic_rwlock_read(plock);
-	temp = *pself;
+	Dee_atomic_rwlock_read(p_lock);
+	temp = *p_self;
 	if (!temp) {
-		Dee_atomic_rwlock_endread(plock);
+		Dee_atomic_rwlock_endread(p_lock);
 		goto done;
 	}
 	Dee_Incref(temp);
-	Dee_atomic_rwlock_endread(plock);
+	Dee_atomic_rwlock_endread(p_lock);
 
 	/* Step #2: Create a deep copy for it. */
 	copy = DeeObject_DeepCopy(temp);
@@ -1114,17 +1115,16 @@ DeeObject_XInplaceDeepCopyWithLock(DREF DeeObject **__restrict pself,
 		goto err;
 
 	/* Step #3: Write back the newly created deep copy. */
-	Dee_atomic_rwlock_write(plock);
-	temp   = *pself; /* Inherit */
-	*pself = copy;   /* Inherit */
-	Dee_atomic_rwlock_endwrite(plock);
+	Dee_atomic_rwlock_write(p_lock);
+	temp   = *p_self; /* Inherit */
+	*p_self = copy;   /* Inherit */
+	Dee_atomic_rwlock_endwrite(p_lock);
 	Dee_XDecref(temp);
 done:
 	return 0;
 err:
 	return -1;
 }
-#endif
 #endif /* !DEFINE_TYPED_OPERATORS */
 
 DEFINE_OPERATOR(int, Assign, (DeeObject *self, DeeObject *some_object)) {
@@ -3228,33 +3228,33 @@ err:
 #undef COPY_SELF
 
 
-DEFINE_OPERATOR(int, Inc, (DeeObject **__restrict pself)) {
+DEFINE_OPERATOR(int, Inc, (DeeObject **__restrict p_self)) {
 	LOAD_TP_SELFP;
 	do {
 		struct type_math *math;
 		if ((math = tp_self->tp_math) != NULL) {
 			if (math->tp_inc)
-				return DeeType_INVOKE_INC(tp_self, pself);
+				return DeeType_INVOKE_INC(tp_self, p_self);
 			if (math->tp_inplace_add)
-				return DeeType_INVOKE_IADD(tp_self, pself, &DeeInt_One);
+				return DeeType_INVOKE_IADD(tp_self, p_self, &DeeInt_One);
 			if (math->tp_add) {
 				DREF DeeObject *temp;
-				temp = DeeType_INVOKE_ADD(tp_self, *pself, &DeeInt_One);
+				temp = DeeType_INVOKE_ADD(tp_self, *p_self, &DeeInt_One);
 				if unlikely(!temp)
 					goto err;
-				Dee_Decref(*pself);
-				*pself = temp;
+				Dee_Decref(*p_self);
+				*p_self = temp;
 				return 0;
 			}
 			if (math->tp_inplace_sub)
-				return DeeType_INVOKE_ISUB(tp_self, pself, &DeeInt_MinusOne);
+				return DeeType_INVOKE_ISUB(tp_self, p_self, &DeeInt_MinusOne);
 			if (math->tp_sub) {
 				DREF DeeObject *temp;
-				temp = DeeType_INVOKE_SUB(tp_self, *pself, &DeeInt_MinusOne);
+				temp = DeeType_INVOKE_SUB(tp_self, *p_self, &DeeInt_MinusOne);
 				if unlikely(!temp)
 					goto err;
-				Dee_Decref(*pself);
-				*pself = temp;
+				Dee_Decref(*p_self);
+				*p_self = temp;
 				return 0;
 			}
 			if (math->tp_dec)
@@ -3266,33 +3266,33 @@ err:
 	return -1;
 }
 
-DEFINE_OPERATOR(int, Dec, (DeeObject **__restrict pself)) {
+DEFINE_OPERATOR(int, Dec, (DeeObject **__restrict p_self)) {
 	LOAD_TP_SELFP;
 	do {
 		struct type_math *math;
 		if ((math = tp_self->tp_math) != NULL) {
 			if (math->tp_dec)
-				return DeeType_INVOKE_DEC(tp_self, pself);
+				return DeeType_INVOKE_DEC(tp_self, p_self);
 			if (math->tp_inplace_sub)
-				return DeeType_INVOKE_ISUB(tp_self, pself, &DeeInt_One);
+				return DeeType_INVOKE_ISUB(tp_self, p_self, &DeeInt_One);
 			if (math->tp_sub) {
 				DREF DeeObject *temp;
-				temp = DeeType_INVOKE_SUB(tp_self, *pself, &DeeInt_One);
+				temp = DeeType_INVOKE_SUB(tp_self, *p_self, &DeeInt_One);
 				if unlikely(!temp)
 					goto err;
-				Dee_Decref(*pself);
-				*pself = temp;
+				Dee_Decref(*p_self);
+				*p_self = temp;
 				return 0;
 			}
 			if (math->tp_inplace_add)
-				return DeeType_INVOKE_IADD(tp_self, pself, &DeeInt_MinusOne);
+				return DeeType_INVOKE_IADD(tp_self, p_self, &DeeInt_MinusOne);
 			if (math->tp_add) {
 				DREF DeeObject *temp;
-				temp = DeeType_INVOKE_ADD(tp_self, *pself, &DeeInt_MinusOne);
+				temp = DeeType_INVOKE_ADD(tp_self, *p_self, &DeeInt_MinusOne);
 				if unlikely(!temp)
 					goto err;
-				Dee_Decref(*pself);
-				*pself = temp;
+				Dee_Decref(*p_self);
+				*p_self = temp;
 				return 0;
 			}
 			if (math->tp_inc)
@@ -3304,29 +3304,29 @@ err:
 	return -1;
 }
 
-#define DEFINE_MATH_INPLACE_OPERATOR2(name, xxx, operator_name, invoke, invoke_inplace)  \
-	DEFINE_OPERATOR(int, name, (DeeObject **__restrict pself, DeeObject *some_object)) { \
-		LOAD_TP_SELFP;                                                                   \
-		ASSERT_OBJECT(some_object);                                                      \
-		do {                                                                             \
-			if (tp_self->tp_math) {                                                      \
-				if (tp_self->tp_math->tp_inplace_##xxx) {                                \
-					return invoke_inplace(tp_self, pself, some_object);                  \
-				}                                                                        \
-				if (tp_self->tp_math->tp_##xxx) {                                        \
-					DREF DeeObject *temp;                                                \
-					temp = invoke(tp_self, *pself, some_object);                         \
-					if unlikely(!temp)                                                   \
-						goto err;                                                        \
-					Dee_Decref(*pself);                                                  \
-					*pself = temp;                                                       \
-					return 0;                                                            \
-				}                                                                        \
-			}                                                                            \
-		} while (type_inherit_##xxx(tp_self));                                           \
-		err_unimplemented_operator(tp_self, operator_name);                              \
-	err:                                                                                 \
-		return -1;                                                                       \
+#define DEFINE_MATH_INPLACE_OPERATOR2(name, xxx, operator_name, invoke, invoke_inplace)   \
+	DEFINE_OPERATOR(int, name, (DeeObject **__restrict p_self, DeeObject *some_object)) { \
+		LOAD_TP_SELFP;                                                                    \
+		ASSERT_OBJECT(some_object);                                                       \
+		do {                                                                              \
+			if (tp_self->tp_math) {                                                       \
+				if (tp_self->tp_math->tp_inplace_##xxx) {                                 \
+					return invoke_inplace(tp_self, p_self, some_object);                  \
+				}                                                                         \
+				if (tp_self->tp_math->tp_##xxx) {                                         \
+					DREF DeeObject *temp;                                                 \
+					temp = invoke(tp_self, *p_self, some_object);                         \
+					if unlikely(!temp)                                                    \
+						goto err;                                                         \
+					Dee_Decref(*p_self);                                                  \
+					*p_self = temp;                                                       \
+					return 0;                                                             \
+				}                                                                         \
+			}                                                                             \
+		} while (type_inherit_##xxx(tp_self));                                            \
+		err_unimplemented_operator(tp_self, operator_name);                               \
+	err:                                                                                  \
+		return -1;                                                                        \
 	}
 DEFINE_MATH_INPLACE_OPERATOR2(InplaceMul, mul, OPERATOR_INPLACE_MUL, DeeType_INVOKE_MUL, DeeType_INVOKE_IMUL)
 DEFINE_MATH_INPLACE_OPERATOR2(InplaceDiv, div, OPERATOR_INPLACE_DIV, DeeType_INVOKE_DIV, DeeType_INVOKE_IDIV)
@@ -3339,21 +3339,21 @@ DEFINE_MATH_INPLACE_OPERATOR2(InplaceXor, xor, OPERATOR_INPLACE_XOR, DeeType_INV
 DEFINE_MATH_INPLACE_OPERATOR2(InplacePow, pow, OPERATOR_INPLACE_POW, DeeType_INVOKE_POW, DeeType_INVOKE_IPOW)
 
 DEFINE_OPERATOR(int, InplaceAdd,
-                (DeeObject **__restrict pself, DeeObject *some_object)) {
+                (DeeObject **__restrict p_self, DeeObject *some_object)) {
 	LOAD_TP_SELFP;
 	ASSERT_OBJECT(some_object);
 	do {
 		struct type_math *math = tp_self->tp_math;
 		if (math) {
 			if (math->tp_inplace_add)
-				return DeeType_INVOKE_IADD(tp_self, pself, some_object);
+				return DeeType_INVOKE_IADD(tp_self, p_self, some_object);
 			if (math->tp_add) {
 				DREF DeeObject *temp;
-				temp = DeeType_INVOKE_ADD(tp_self, *pself, some_object);
+				temp = DeeType_INVOKE_ADD(tp_self, *p_self, some_object);
 				if unlikely(!temp)
 					goto err;
-				Dee_Decref(*pself);
-				*pself = temp;
+				Dee_Decref(*p_self);
+				*p_self = temp;
 				return 0;
 			}
 			if (math->tp_sub)
@@ -3371,21 +3371,21 @@ err:
 	return -1;
 }
 DEFINE_OPERATOR(int, InplaceSub,
-                (DeeObject **__restrict pself, DeeObject *some_object)) {
+                (DeeObject **__restrict p_self, DeeObject *some_object)) {
 	LOAD_TP_SELFP;
 	ASSERT_OBJECT(some_object);
 	do {
 		struct type_math *math = tp_self->tp_math;
 		if (math) {
 			if (math->tp_inplace_sub)
-				return DeeType_INVOKE_ISUB(tp_self, pself, some_object);
+				return DeeType_INVOKE_ISUB(tp_self, p_self, some_object);
 			if (math->tp_sub) {
 				DREF DeeObject *temp;
-				temp = DeeType_INVOKE_SUB(tp_self, *pself, some_object);
+				temp = DeeType_INVOKE_SUB(tp_self, *p_self, some_object);
 				if unlikely(!temp)
 					goto err;
-				Dee_Decref(*pself);
-				*pself = temp;
+				Dee_Decref(*p_self);
+				*p_self = temp;
 				return 0;
 			}
 			if (math->tp_add)
@@ -3408,14 +3408,14 @@ err:
 #ifndef DEFINE_TYPED_OPERATORS
 #define DEFINE_MATH_INPLACE_INT_OPERATOR(DeeObject_InplaceXXX, reg, DeeInt_NewXXX, intX_t, operator_name) \
 	PUBLIC int DCALL                                                                                      \
-	DeeObject_InplaceXXX(DREF DeeObject **__restrict pself, intX_t val) {                                 \
+	DeeObject_InplaceXXX(DREF DeeObject **__restrict p_self, intX_t val) {                                 \
 		DREF DeeObject *temp;                                                                             \
 		int result;                                                                                       \
 		/* TODO: Optimization for `int' */                                                                \
 		temp = DeeInt_NewXXX(val);                                                                        \
 		if unlikely(!temp)                                                                                \
 			goto err;                                                                                     \
-		result = reg(pself, temp);                                                                        \
+		result = reg(p_self, temp);                                                                        \
 		Dee_Decref(temp);                                                                                 \
 		return result;                                                                                    \
 	err:                                                                                                  \

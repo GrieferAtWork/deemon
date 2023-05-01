@@ -207,7 +207,10 @@ intcache_clear(size_t max_clear) {
 		}
 		if (result >= max_clear)
 			break;
-	next_set:;
+#ifndef CONFIG_NO_THREADS
+next_set:
+		;
+#endif /* !CONFIG_NO_THREADS */
 	}
 	return result;
 }
@@ -238,7 +241,9 @@ DeeInt_Free(DeeIntObject *__restrict self) {
 		}
 		free_int_set_release(set);
 	}
+#ifndef CONFIG_NO_THREADS
 do_free:
+#endif /* !CONFIG_NO_THREADS */
 	DeeObject_Free(self);
 }
 
@@ -272,7 +277,9 @@ DeeInt_Alloc_dbg(size_t n_digits, char const *file, int line)
 		}
 		free_int_set_release(set);
 	}
+#ifndef CONFIG_NO_THREADS
 do_alloc:
+#endif /* !CONFIG_NO_THREADS */
 #ifdef NDEBUG
 	result = (DREF DeeIntObject *)DeeObject_Malloc(offsetof(DeeIntObject, ob_digit) +
 	                                               n_digits * sizeof(digit));

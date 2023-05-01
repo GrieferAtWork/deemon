@@ -256,11 +256,9 @@ err:
 }
 
 
-#ifndef CONFIG_NO_THREADS
 INTERN void DCALL
 restore_interrupt_error(DeeThreadObject *__restrict ts,
                         /*inherit*/ struct except_frame *__restrict frame);
-#endif /* !CONFIG_NO_THREADS */
 
 
 INTERN int DCALL parser_rethrow(bool must_fail) {
@@ -416,15 +414,12 @@ err_handle_all_but_last:
 		iter = *piter;
 		ASSERT(iter != NULL);
 		*piter = iter->ef_prev;
-#ifndef CONFIG_NO_THREADS
 		if (DeeObject_IsInterrupt(iter->ef_error)) {
 			/* Restore interrupts. */
 			if (ITER_ISOK(iter->ef_trace))
 				Dee_Decref(iter->ef_trace);
 			restore_interrupt_error(caller, iter);
-		} else
-#endif /* !CONFIG_NO_THREADS */
-		{
+		} else {
 			DeeError_Display(NULL, iter->ef_error,
 			                 (DeeObject *)except_frame_gettb(iter));
 			if (ITER_ISOK(iter->ef_trace))

@@ -45,12 +45,7 @@
 
 DECL_BEGIN
 
-#ifndef CONFIG_NO_THREADS
 INTDEF DeeThreadObject DeeThread_Main;
-#else /* CONFIG_NO_THREADS */
-DATDEF DeeThreadObject DeeThread_Main;
-#endif /* !CONFIG_NO_THREADS */
-
 INTERN struct empty_traceback_object empty_traceback = {
 	OBJECT_HEAD_INIT(&DeeTraceback_Type),
 	/* .tb_thread    = */ &DeeThread_Main,

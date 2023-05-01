@@ -22,8 +22,8 @@
 #define DEE_SOURCE
 //#define DEFINE_DeeAtomicLock_Type__AND__DeeAtomicRWLock_Type
 //#define DEFINE_DeeSharedLock_Type__AND__DeeSharedRWLock_Type
-#define DEFINE_RDeeAtomicLock_Type__AND__DeeRAtomicRWLock_Type
-//#define DEFINE_RDeeSharedLock_Type__AND__DeeRSharedRWLock_Type
+//#define DEFINE_RDeeAtomicLock_Type__AND__DeeRAtomicRWLock_Type
+#define DEFINE_RDeeSharedLock_Type__AND__DeeRSharedRWLock_Type
 #endif /* __INTELLISENSE__ */
 
 #include <deemon/alloc.h>
@@ -84,10 +84,14 @@ DECL_BEGIN
 #define LOCAL_S_MaybeRecursiveR ""
 #endif /* !LOCAL_IS_RECURSIVE */
 
-#define LOCAL_S_Lock                LOCAL_S_MaybeRecursiveR LOCAL_S_Atomic_or_Shared "Lock"
-#define LOCAL_S_RWLock              LOCAL_S_MaybeRecursiveR LOCAL_S_Atomic_or_Shared "RWLock"
-#define LOCAL_S_RWLockReadLock    "_" LOCAL_S_MaybeRecursiveR LOCAL_S_Atomic_or_Shared "RWLockReadLock"
+#define LOCAL_S_Lock            LOCAL_S_MaybeRecursiveR LOCAL_S_Atomic_or_Shared "Lock"
+#define LOCAL_S_RWLock          LOCAL_S_MaybeRecursiveR LOCAL_S_Atomic_or_Shared "RWLock"
+#define LOCAL_S_RWLockReadLock  "_" LOCAL_S_MaybeRecursiveR LOCAL_S_Atomic_or_Shared "RWLockReadLock"
 #define LOCAL_S_RWLockWriteLock "_" LOCAL_S_MaybeRecursiveR LOCAL_S_Atomic_or_Shared "RWLockWriteLock"
+
+#if !defined(LOCAL_IS_SHARED) && defined(CONFIG_NO_THREADS)
+#define LOCAL_IS_ATOMIC_AS_SHARED
+#endif /* !LOCAL_IS_SHARED && CONFIG_NO_THREADS */
 
 /* Select C-level API for Lock-type */
 #ifdef LOCAL_IS_SHARED
@@ -497,15 +501,188 @@ DECL_BEGIN
 #define LOCAL_rwlockapi_readlock_getsets        LOCAL_rwlockapi_func(readlock_getsets)
 #define LOCAL_rwlockapi_writelock_getsets       LOCAL_rwlockapi_func(writelock_getsets)
 
+/* Alias atomic type operators/functions for shared operators/functions */
+/*[[[deemon
+import * from deemon;
+local names_lockapi = [];
+local names_rwlockapi = [];
+for (local line: File.open(__FILE__)) {
+	local name_lockapi   = try line.rescanf(r"#define LOCAL_lockapi_[^ ]* +LOCAL_lockapi_func\(([^)]+)\)")[0] catch (...) none;
+	local name_rwlockapi = try line.rescanf(r"#define LOCAL_rwlockapi_[^ ]* +LOCAL_rwlockapi_func\(([^)]+)\)")[0] catch (...) none;
+	if (name_lockapi !is none)
+		names_lockapi.append(name_lockapi);
+	if (name_rwlockapi !is none)
+		names_rwlockapi.append(name_rwlockapi);
+}
+for (local name: { "init_kw", "printrepr", "readlock_init", "writelock_init" }) {
+	names_lockapi.remove(name);
+	names_rwlockapi.remove(name);
+}
+print("#ifdef LOCAL_IS_ATOMIC_AS_SHARED");
+print("#ifndef DEEMON_LIBTHREADING_LOCKS_ATOMIC_AS_SHARED_DEFINED");
+print("#define DEEMON_LIBTHREADING_LOCKS_ATOMIC_AS_SHARED_DEFINED");
+for (local name: names_lockapi) {
+	print("#define datomic_lock_", name, " dshared_lock_", name);
+	print("#define dratomic_lock_", name, " drshared_lock_", name);
+}
+for (local name: names_rwlockapi) {
+	print("#define datomic_rwlock_", name, " dshared_rwlock_", name);
+	print("#define dratomic_rwlock_", name, " drshared_rwlock_", name);
+}
+print("#endif /" "* !DEEMON_LIBTHREADING_LOCKS_ATOMIC_AS_SHARED_DEFINED *" "/");
+print("#endif /" "* LOCAL_IS_ATOMIC_AS_SHARED *" "/");
+]]]*/
+#ifdef LOCAL_IS_ATOMIC_AS_SHARED
+#ifndef DEEMON_LIBTHREADING_LOCKS_ATOMIC_AS_SHARED_DEFINED
+#define DEEMON_LIBTHREADING_LOCKS_ATOMIC_AS_SHARED_DEFINED
+#define datomic_lock_ctr dshared_lock_ctr
+#define dratomic_lock_ctr drshared_lock_ctr
+#define datomic_lock_enter dshared_lock_enter
+#define dratomic_lock_enter drshared_lock_enter
+#define datomic_lock_leave dshared_lock_leave
+#define dratomic_lock_leave drshared_lock_leave
+#define datomic_lock_with dshared_lock_with
+#define dratomic_lock_with drshared_lock_with
+#define datomic_lock_tryacquire dshared_lock_tryacquire
+#define dratomic_lock_tryacquire drshared_lock_tryacquire
+#define datomic_lock_acquire dshared_lock_acquire
+#define dratomic_lock_acquire drshared_lock_acquire
+#define datomic_lock_timedacquire dshared_lock_timedacquire
+#define dratomic_lock_timedacquire drshared_lock_timedacquire
+#define datomic_lock_do_waitfor dshared_lock_do_waitfor
+#define dratomic_lock_do_waitfor drshared_lock_do_waitfor
+#define datomic_lock_waitfor dshared_lock_waitfor
+#define dratomic_lock_waitfor drshared_lock_waitfor
+#define datomic_lock_timedwaitfor dshared_lock_timedwaitfor
+#define dratomic_lock_timedwaitfor drshared_lock_timedwaitfor
+#define datomic_lock_release dshared_lock_release
+#define dratomic_lock_release drshared_lock_release
+#define datomic_lock_available_get dshared_lock_available_get
+#define dratomic_lock_available_get drshared_lock_available_get
+#define datomic_lock_acquired_get dshared_lock_acquired_get
+#define dratomic_lock_acquired_get drshared_lock_acquired_get
+#define datomic_lock_methods dshared_lock_methods
+#define dratomic_lock_methods drshared_lock_methods
+#define datomic_lock_getsets dshared_lock_getsets
+#define dratomic_lock_getsets drshared_lock_getsets
+#define datomic_lock_members dshared_lock_members
+#define dratomic_lock_members drshared_lock_members
+#define datomic_rwlock_ctor dshared_rwlock_ctor
+#define dratomic_rwlock_ctor drshared_rwlock_ctor
+#define datomic_rwlock_tryread dshared_rwlock_tryread
+#define dratomic_rwlock_tryread drshared_rwlock_tryread
+#define datomic_rwlock_trywrite dshared_rwlock_trywrite
+#define dratomic_rwlock_trywrite drshared_rwlock_trywrite
+#define datomic_rwlock_tryupgrade dshared_rwlock_tryupgrade
+#define dratomic_rwlock_tryupgrade drshared_rwlock_tryupgrade
+#define datomic_rwlock_endread dshared_rwlock_endread
+#define dratomic_rwlock_endread drshared_rwlock_endread
+#define datomic_rwlock_endwrite dshared_rwlock_endwrite
+#define dratomic_rwlock_endwrite drshared_rwlock_endwrite
+#define datomic_rwlock_downgrade dshared_rwlock_downgrade
+#define dratomic_rwlock_downgrade drshared_rwlock_downgrade
+#define datomic_rwlock_read dshared_rwlock_read
+#define dratomic_rwlock_read drshared_rwlock_read
+#define datomic_rwlock_write dshared_rwlock_write
+#define dratomic_rwlock_write drshared_rwlock_write
+#define datomic_rwlock_end dshared_rwlock_end
+#define dratomic_rwlock_end drshared_rwlock_end
+#define datomic_rwlock_upgrade dshared_rwlock_upgrade
+#define dratomic_rwlock_upgrade drshared_rwlock_upgrade
+#define datomic_rwlock_timedread dshared_rwlock_timedread
+#define dratomic_rwlock_timedread drshared_rwlock_timedread
+#define datomic_rwlock_timedwrite dshared_rwlock_timedwrite
+#define dratomic_rwlock_timedwrite drshared_rwlock_timedwrite
+#define datomic_rwlock_waitread dshared_rwlock_waitread
+#define dratomic_rwlock_waitread drshared_rwlock_waitread
+#define datomic_rwlock_waitwrite dshared_rwlock_waitwrite
+#define dratomic_rwlock_waitwrite drshared_rwlock_waitwrite
+#define datomic_rwlock_timedwaitread dshared_rwlock_timedwaitread
+#define dratomic_rwlock_timedwaitread drshared_rwlock_timedwaitread
+#define datomic_rwlock_timedwaitwrite dshared_rwlock_timedwaitwrite
+#define dratomic_rwlock_timedwaitwrite drshared_rwlock_timedwaitwrite
+#define datomic_rwlock_canread_get dshared_rwlock_canread_get
+#define dratomic_rwlock_canread_get drshared_rwlock_canread_get
+#define datomic_rwlock_canwrite_get dshared_rwlock_canwrite_get
+#define dratomic_rwlock_canwrite_get drshared_rwlock_canwrite_get
+#define datomic_rwlock_reading_get dshared_rwlock_reading_get
+#define dratomic_rwlock_reading_get drshared_rwlock_reading_get
+#define datomic_rwlock_writing_get dshared_rwlock_writing_get
+#define dratomic_rwlock_writing_get drshared_rwlock_writing_get
+#define datomic_rwlock_readlock_get dshared_rwlock_readlock_get
+#define dratomic_rwlock_readlock_get drshared_rwlock_readlock_get
+#define datomic_rwlock_writelock_get dshared_rwlock_writelock_get
+#define dratomic_rwlock_writelock_get drshared_rwlock_writelock_get
+#define datomic_rwlock_methods dshared_rwlock_methods
+#define dratomic_rwlock_methods drshared_rwlock_methods
+#define datomic_rwlock_getsets dshared_rwlock_getsets
+#define dratomic_rwlock_getsets drshared_rwlock_getsets
+#define datomic_rwlock_readlock_enter dshared_rwlock_readlock_enter
+#define dratomic_rwlock_readlock_enter drshared_rwlock_readlock_enter
+#define datomic_rwlock_writelock_enter dshared_rwlock_writelock_enter
+#define dratomic_rwlock_writelock_enter drshared_rwlock_writelock_enter
+#define datomic_rwlock_readlock_leave dshared_rwlock_readlock_leave
+#define dratomic_rwlock_readlock_leave drshared_rwlock_readlock_leave
+#define datomic_rwlock_writelock_leave dshared_rwlock_writelock_leave
+#define dratomic_rwlock_writelock_leave drshared_rwlock_writelock_leave
+#define datomic_rwlock_readlock_tryacquire dshared_rwlock_readlock_tryacquire
+#define dratomic_rwlock_readlock_tryacquire drshared_rwlock_readlock_tryacquire
+#define datomic_rwlock_writelock_tryacquire dshared_rwlock_writelock_tryacquire
+#define dratomic_rwlock_writelock_tryacquire drshared_rwlock_writelock_tryacquire
+#define datomic_rwlock_readlock_acquire dshared_rwlock_readlock_acquire
+#define dratomic_rwlock_readlock_acquire drshared_rwlock_readlock_acquire
+#define datomic_rwlock_writelock_acquire dshared_rwlock_writelock_acquire
+#define dratomic_rwlock_writelock_acquire drshared_rwlock_writelock_acquire
+#define datomic_rwlock_readlock_release dshared_rwlock_readlock_release
+#define dratomic_rwlock_readlock_release drshared_rwlock_readlock_release
+#define datomic_rwlock_writelock_release dshared_rwlock_writelock_release
+#define dratomic_rwlock_writelock_release drshared_rwlock_writelock_release
+#define datomic_rwlock_readlock_timedacquire dshared_rwlock_readlock_timedacquire
+#define dratomic_rwlock_readlock_timedacquire drshared_rwlock_readlock_timedacquire
+#define datomic_rwlock_writelock_timedacquire dshared_rwlock_writelock_timedacquire
+#define dratomic_rwlock_writelock_timedacquire drshared_rwlock_writelock_timedacquire
+#define datomic_rwlock_readlock_waitfor dshared_rwlock_readlock_waitfor
+#define dratomic_rwlock_readlock_waitfor drshared_rwlock_readlock_waitfor
+#define datomic_rwlock_writelock_waitfor dshared_rwlock_writelock_waitfor
+#define dratomic_rwlock_writelock_waitfor drshared_rwlock_writelock_waitfor
+#define datomic_rwlock_readlock_timedwaitfor dshared_rwlock_readlock_timedwaitfor
+#define dratomic_rwlock_readlock_timedwaitfor drshared_rwlock_readlock_timedwaitfor
+#define datomic_rwlock_writelock_timedwaitfor dshared_rwlock_writelock_timedwaitfor
+#define dratomic_rwlock_writelock_timedwaitfor drshared_rwlock_writelock_timedwaitfor
+#define datomic_rwlock_readlock_available_get dshared_rwlock_readlock_available_get
+#define dratomic_rwlock_readlock_available_get drshared_rwlock_readlock_available_get
+#define datomic_rwlock_writelock_available_get dshared_rwlock_writelock_available_get
+#define dratomic_rwlock_writelock_available_get drshared_rwlock_writelock_available_get
+#define datomic_rwlock_readlock_acquired_get dshared_rwlock_readlock_acquired_get
+#define dratomic_rwlock_readlock_acquired_get drshared_rwlock_readlock_acquired_get
+#define datomic_rwlock_writelock_acquired_get dshared_rwlock_writelock_acquired_get
+#define dratomic_rwlock_writelock_acquired_get drshared_rwlock_writelock_acquired_get
+#define datomic_rwlock_readlock_with dshared_rwlock_readlock_with
+#define dratomic_rwlock_readlock_with drshared_rwlock_readlock_with
+#define datomic_rwlock_writelock_with dshared_rwlock_writelock_with
+#define dratomic_rwlock_writelock_with drshared_rwlock_writelock_with
+#define datomic_rwlock_readlock_methods dshared_rwlock_readlock_methods
+#define dratomic_rwlock_readlock_methods drshared_rwlock_readlock_methods
+#define datomic_rwlock_writelock_methods dshared_rwlock_writelock_methods
+#define dratomic_rwlock_writelock_methods drshared_rwlock_writelock_methods
+#define datomic_rwlock_readlock_getsets dshared_rwlock_readlock_getsets
+#define dratomic_rwlock_readlock_getsets drshared_rwlock_readlock_getsets
+#define datomic_rwlock_writelock_getsets dshared_rwlock_writelock_getsets
+#define dratomic_rwlock_writelock_getsets drshared_rwlock_writelock_getsets
+#endif /* !DEEMON_LIBTHREADING_LOCKS_ATOMIC_AS_SHARED_DEFINED */
+#endif /* LOCAL_IS_ATOMIC_AS_SHARED */
+/*[[[end]]]*/
 
 /************************************************************************/
 /* Lock                                                                 */
 /************************************************************************/
+#ifndef LOCAL_IS_ATOMIC_AS_SHARED
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 LOCAL_lockapi_ctor(LOCAL_DeeLockObject *__restrict self) {
 	LOCAL_lock_init(&self->l_lock);
 	return 0;
 }
+#endif /* !LOCAL_IS_ATOMIC_AS_SHARED */
 
 #ifdef LOCAL_lock_init_acquired
 #ifndef DEFINED_lock_init_acquired_kwlist
@@ -548,6 +725,7 @@ LOCAL_lockapi_printrepr(LOCAL_DeeLockObject *__restrict self,
 #endif /* !LOCAL_lock_init_kw */
 }
 
+#ifndef LOCAL_IS_ATOMIC_AS_SHARED
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 LOCAL_lockapi_enter(LOCAL_DeeLockObject *__restrict self) {
 	LOCAL_lock_acquire_p(&self->l_lock, err);
@@ -655,11 +833,19 @@ PRIVATE struct type_method LOCAL_lockapi_methods[] = {
 	TYPE_METHOD(STR_timedwaitfor, &LOCAL_lockapi_timedwaitfor, DOC_GET(doc_lock_timedwaitfor)),
 	TYPE_METHOD_END
 };
+#endif /* !LOCAL_IS_ATOMIC_AS_SHARED */
 
 #ifdef LOCAL_IS_RECURSIVE
 #undef LOCAL_lockapi_members
 #else /* LOCAL_IS_RECURSIVE */
+#ifndef LOCAL_IS_ATOMIC_AS_SHARED
 PRIVATE struct type_member LOCAL_lockapi_members[] = {
+#ifdef CONFIG_NO_THREADS
+	TYPE_MEMBER_FIELD_DOC(STR_acquired,
+	                      STRUCT_CONST | STRUCT_ATOMIC | STRUCT_BOOL(1),
+	                      offsetof(LOCAL_DeeLockObject, l_lock),
+	                      DOC_GET(doc_lock_acquired)),
+#else /* CONFIG_NO_THREADS */
 #ifdef LOCAL_IS_SHARED
 	TYPE_MEMBER_FIELD_DOC(STR_acquired,
 	                      STRUCT_CONST | STRUCT_ATOMIC | STRUCT_BOOL(__SIZEOF_ATOMIC_LOCK),
@@ -671,20 +857,25 @@ PRIVATE struct type_member LOCAL_lockapi_members[] = {
 	                      offsetof(LOCAL_DeeLockObject, l_lock.a_lock),
 	                      DOC_GET(doc_lock_acquired)),
 #endif /* !LOCAL_IS_SHARED */
+#endif /* !CONFIG_NO_THREADS */
 	TYPE_MEMBER_END
 };
+#endif /* !LOCAL_IS_ATOMIC_AS_SHARED */
 #endif /* !LOCAL_IS_RECURSIVE */
 
 #ifdef LOCAL_lockapi_members
 #undef LOCAL_lockapi_acquired_get
 #else /* LOCAL_lockapi_members */
+#ifndef LOCAL_IS_ATOMIC_AS_SHARED
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 LOCAL_lockapi_acquired_get(LOCAL_DeeLockObject *self) {
 	return_bool(LOCAL_lock_acquired(&self->l_lock));
 }
+#endif /* !LOCAL_IS_ATOMIC_AS_SHARED */
 #endif /* !LOCAL_lockapi_members */
 
 
+#ifndef LOCAL_IS_ATOMIC_AS_SHARED
 PRIVATE struct type_getset LOCAL_lockapi_getsets[] = {
 	TYPE_GETTER(STR_available, &LOCAL_lockapi_available_get, DOC_GET(doc_lock_available)),
 #ifdef LOCAL_lockapi_acquired_get
@@ -692,6 +883,7 @@ PRIVATE struct type_getset LOCAL_lockapi_getsets[] = {
 #endif /* LOCAL_lockapi_acquired_get */
 	TYPE_GETSET_END
 };
+#endif /* !LOCAL_IS_ATOMIC_AS_SHARED */
 
 
 INTERN DeeTypeObject LOCAL_DeeLock_Type = {
@@ -773,11 +965,13 @@ INTERN DeeTypeObject LOCAL_DeeLock_Type = {
 /************************************************************************/
 /* RWLock                                                               */
 /************************************************************************/
+#ifndef LOCAL_IS_ATOMIC_AS_SHARED
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 LOCAL_rwlockapi_ctor(LOCAL_DeeRWLockObject *__restrict self) {
 	LOCAL_rwlock_init(&self->rwl_lock);
 	return 0;
 }
+#endif /* !LOCAL_IS_ATOMIC_AS_SHARED */
 
 #ifndef DEFINED_rwlock_init_readers_writing_kwlist
 #define DEFINED_rwlock_init_readers_writing_kwlist
@@ -820,7 +1014,9 @@ PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 LOCAL_rwlockapi_printrepr(LOCAL_DeeRWLockObject *__restrict self,
                           dformatprinter printer, void *arg) {
 #ifdef LOCAL_rwlockapi_init_kw
-#ifdef LOCAL_IS_SHARED
+#ifdef CONFIG_NO_THREADS
+	uintptr_t status = atomic_read(&self->rwl_lock);
+#elif defined(LOCAL_IS_SHARED)
 	uintptr_t status = atomic_read(&self->rwl_lock.srw_lock.arw_lock);
 #else /* LOCAL_IS_SHARED */
 	uintptr_t status = atomic_read(&self->rwl_lock.arw_lock);
@@ -838,6 +1034,7 @@ LOCAL_rwlockapi_printrepr(LOCAL_DeeRWLockObject *__restrict self,
 #endif /* !LOCAL_rwlockapi_init_kw */
 }
 
+#ifndef LOCAL_IS_ATOMIC_AS_SHARED
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 LOCAL_rwlockapi_tryread(LOCAL_DeeRWLockObject *self, size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, ":tryread"))
@@ -1105,6 +1302,7 @@ PRIVATE struct type_getset LOCAL_rwlockapi_getsets[] = {
 	TYPE_GETTER(STR_writelock, &LOCAL_rwlockapi_writelock_get, DOC_GET(doc_rwlock_writelock)),
 	TYPE_GETSET_END
 };
+#endif /* !LOCAL_IS_ATOMIC_AS_SHARED */
 
 INTERN DeeTypeObject LOCAL_DeeRWLock_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
@@ -1174,7 +1372,7 @@ INTERN DeeTypeObject LOCAL_DeeRWLock_Type = {
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 LOCAL_rwlockapi_readlock_init(DeeGenericRWLockProxyObject *__restrict self,
-                            size_t argc, DeeObject *const *argv) {
+                              size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, "o:" LOCAL_S_RWLockReadLock, &self->grwl_lock))
 		goto err;
 	if (DeeObject_AssertType(self->grwl_lock, &LOCAL_DeeRWLock_Type))
@@ -1198,6 +1396,7 @@ err:
 	return -1;
 }
 
+#ifndef LOCAL_IS_ATOMIC_AS_SHARED
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 LOCAL_rwlockapi_readlock_enter(DeeGenericRWLockProxyObject *__restrict self) {
 	LOCAL_DeeRWLockObject *rwlock = (LOCAL_DeeRWLockObject *)self->grwl_lock;
@@ -1387,6 +1586,7 @@ PRIVATE struct type_getset LOCAL_rwlockapi_writelock_getsets[] = {
 	TYPE_GETTER(STR_acquired, &LOCAL_rwlockapi_writelock_acquired_get, DOC_GET(doc_lock_acquired)),
 	TYPE_GETSET_END
 };
+#endif /* !LOCAL_IS_ATOMIC_AS_SHARED */
 
 INTERN DeeTypeObject LOCAL_DeeRWLockReadLock_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
@@ -1477,6 +1677,8 @@ INTERN DeeTypeObject LOCAL_DeeRWLockWriteLock_Type = {
 	/* .tp_class_members = */ NULL
 };
 
+
+#undef LOCAL_IS_ATOMIC_AS_SHARED
 
 #undef LOCAL_S_Atomic_or_Shared
 #undef LOCAL_S_MaybeRecursiveR

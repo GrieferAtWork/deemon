@@ -226,7 +226,20 @@ PUBLIC NONNULL((1)) void
 	if (is_an_imod(self))
 		InteractiveModule_ExecLockEndRead((InteractiveModule *)self);
 }
-#endif /* !CONFIG_NO_THREADS */
+#else /* !CONFIG_NO_THREADS */
+PUBLIC WUNUSED NONNULL((1)) int
+(DCALL DeeModule_LockSymbols)(DeeModuleObject *__restrict self) {
+	COMPILER_IMPURE();
+	(void)self;
+	return 0;
+}
+
+PUBLIC NONNULL((1)) void
+(DCALL DeeModule_UnlockSymbols)(DeeModuleObject *__restrict self) {
+	COMPILER_IMPURE();
+	(void)self;
+}
+#endif /* CONFIG_NO_THREADS */
 
 
 typedef struct {

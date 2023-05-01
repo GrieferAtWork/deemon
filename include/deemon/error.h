@@ -250,14 +250,9 @@ DeeError_CurrentIs(DeeTypeObject *__restrict tp);
  * @return: false: No error was thrown. */
 DFUNDEF bool DCALL
 DeeError_Print(char const *reason, unsigned int handle_errors);
-
 #define Dee_ERROR_PRINT_DONTHANDLE 0 /* Don't handle errors (only print them) */
 #define Dee_ERROR_PRINT_DOHANDLE   1 /* Handle errors with `ERROR_HANDLED_RESTORE' */
-#ifdef CONFIG_NO_THREADS
-#define Dee_ERROR_PRINT_HANDLEINTR Dee_ERROR_PRINT_DOHANDLE
-#else /* CONFIG_NO_THREADS */
 #define Dee_ERROR_PRINT_HANDLEINTR 2 /* Handle errors with `ERROR_HANDLED_INTERRUPT' */
-#endif /* !CONFIG_NO_THREADS */
 
 /* Display (print to stderr) an error, as well as an optional traceback. */
 DFUNDEF NONNULL((2)) void DCALL
@@ -269,12 +264,7 @@ DeeError_Display(char const *reason,
  * @param: mode:   One of `ERROR_HANDLED_*'
  * @return: true:  The current error was handled.
  * @return: false: No error could be handled. */
-#ifdef CONFIG_NO_THREADS
-DFUNDEF bool (DCALL DeeError_HandledNoSMP)(void);
-#define DeeError_Handled(mode) DeeError_HandledNoSMP()
-#else /* CONFIG_NO_THREADS */
 DFUNDEF bool (DCALL DeeError_Handled)(unsigned int mode);
-#endif /* !CONFIG_NO_THREADS */
 #define Dee_ERROR_HANDLED_NORMAL    0x0000 /* Only handle non-interrupt exceptions (return `false' if the current error is an interrupt). */
 #define Dee_ERROR_HANDLED_RESTORE   0x0001 /* Handle non-interrupt exceptions normally, and re-schedule interrupt exceptions
                                             * to-be delivered once again the next time `DeeThread_CheckInterrupt()' is called. */

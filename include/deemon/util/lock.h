@@ -34,7 +34,7 @@
 #ifdef CONFIG_NO_THREADS
 DECL_BEGIN
 
-typedef int Dee_atomic_lock_t;
+typedef char Dee_atomic_lock_t;
 #define DEE_ATOMIC_LOCK_INIT                  0
 #define DEE_ATOMIC_LOCK_INIT_ACQUIRED         0
 #define Dee_atomic_lock_init(self)            (void)0
@@ -49,7 +49,7 @@ typedef int Dee_atomic_lock_t;
 #define Dee_atomic_lock_release(self)         (void)0
 #define _Dee_atomic_lock_release_NDEBUG(self) (void)0
 
-typedef int Dee_atomic_rwlock_t;
+typedef char Dee_atomic_rwlock_t;
 #define DEE_ATOMIC_RWLOCK_MAX_READERS              1
 #define DEE_ATOMIC_RWLOCK_INIT                     0
 #define DEE_ATOMIC_RWLOCK_INIT_READ(n)             0
@@ -88,7 +88,7 @@ typedef int Dee_atomic_rwlock_t;
 #define _Dee_atomic_rwlock_endread_ex_NDEBUG(self) 1
 #define _Dee_atomic_rwlock_end_ex_NDEBUG(self)     1
 
-typedef int Dee_shared_lock_t;
+typedef char Dee_shared_lock_t;
 #define DEE_SHARED_LOCK_INIT                                           0
 #define DEE_SHARED_LOCK_INIT_ACQUIRED                                  0
 #define Dee_shared_lock_cinit(self)                                    (void)0
@@ -109,7 +109,7 @@ typedef int Dee_shared_lock_t;
 #define Dee_shared_lock_waitfor_timed(self, timeout_nanoseconds)       0
 #define Dee_shared_lock_waitfor_noint_timed(self, timeout_nanoseconds) 0
 
-typedef int Dee_shared_rwlock_t;
+typedef char Dee_shared_rwlock_t;
 #define DEE_SHARED_RWLOCK_MAX_READERS                                      1
 #define DEE_SHARED_RWLOCK_INIT                                             0
 #define DEE_SHARED_RWLOCK_INIT_READ(n)                                     0
@@ -163,7 +163,7 @@ typedef int Dee_shared_rwlock_t;
 #define Dee_shared_rwlock_waitwrite_timed(self, timeout_nanoseconds)       0
 #define Dee_shared_rwlock_waitwrite_noint_timed(self, timeout_nanoseconds) 0
 
-typedef int Dee_semaphore_t;
+typedef char Dee_semaphore_t;
 #define DEE_SEMAPHORE_INIT(n_tickets)                                0
 #define Dee_semaphore_init(self, n_tickets)                          (void)0
 #define Dee_semaphore_cinit(self, n_tickets)                         (void)0
@@ -181,7 +181,7 @@ typedef int Dee_semaphore_t;
 #define Dee_semaphore_acquire_noint(self)                            (void)0
 #define Dee_semaphore_acquire_noint_timed(self, timeout_nanoseconds) 0
 
-typedef int Dee_event_t;
+typedef char Dee_event_t;
 #define DEE_EVENT_INIT_SET                                       0
 #define DEE_EVENT_INIT                                           0
 #define Dee_event_init_set(self)                                 (void)0
@@ -464,8 +464,8 @@ DFUNDEF WUNUSED NONNULL((1)) int (DCALL Dee_shared_rwlock_waitwrite_timed)(Dee_s
 /* Shared semaphore (scheduler-level blocking)                          */
 /************************************************************************/
 typedef struct {
-	uintptr_t se_tickets; /* # of tickets currently available (atomic + futex word) */
-	uintptr_t se_waiting; /* # of threads waiting for tickets to become available. */
+	size_t se_tickets; /* # of tickets currently available (atomic + futex word) */
+	size_t se_waiting; /* # of threads waiting for tickets to become available. */
 } Dee_semaphore_t;
 #define _Dee_semaphore_waiting_start(self) __hybrid_atomic_inc(&(self)->se_waiting, __ATOMIC_ACQUIRE)
 #define _Dee_semaphore_waiting_end(self)   __hybrid_atomic_dec(&(self)->se_waiting, __ATOMIC_RELEASE)
@@ -482,7 +482,7 @@ typedef struct {
 #define Dee_semaphore_tryacquire Dee_semaphore_tryacquire
 LOCAL WUNUSED ATTR_INOUT(1) bool
 (DCALL Dee_semaphore_tryacquire)(Dee_semaphore_t *__restrict self) {
-	uintptr_t temp;
+	size_t temp;
 	do {
 		temp = __hybrid_atomic_load(&self->se_tickets, __ATOMIC_ACQUIRE);
 		if (temp == 0)

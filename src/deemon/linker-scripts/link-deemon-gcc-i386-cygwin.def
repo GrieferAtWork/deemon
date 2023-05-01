@@ -823,7 +823,7 @@ EXPORTS
 	_DeeThread_Secede@4=DeeThread_Secede@4
 	_DeeThread_Self@0=DeeThread_Self@0
 	_DeeThread_Sleep@8=DeeThread_Sleep@8
-	_DeeThread_SleepNoInterrupt@8=DeeThread_SleepNoInterrupt@8
+	_DeeThread_SleepNoInt@8=DeeThread_SleepNoInt@8
 	_DeeThread_Start@4=DeeThread_Start@4
 	_DeeThread_Suspend@4=DeeThread_Suspend@4
 	_DeeThread_SuspendAll@0=DeeThread_SuspendAll@0

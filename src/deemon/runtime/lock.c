@@ -526,7 +526,7 @@ PUBLIC WUNUSED NONNULL((1)) int
 	(void)self;
 	return 0;
 #else /* CONFIG_NO_THREADS */
-	uintptr_t temp;
+	size_t temp;
 	do {
 again_read_tickets:
 		temp = atomic_read(&self->se_tickets);
@@ -658,8 +658,12 @@ do_wait_with_timeout:
 /************************************************************************/
 
 /* Block until successfully acquired a recursive shared lock. (does not check for interrupts) */
-PUBLIC NONNULL((1)) void DCALL
-Dee_rshared_lock_acquire_noint(Dee_rshared_lock_t *__restrict self) {
+PUBLIC NONNULL((1)) void
+(DCALL Dee_rshared_lock_acquire_noint)(Dee_rshared_lock_t *__restrict self) {
+#ifdef CONFIG_NO_THREADS
+	COMPILER_IMPURE();
+	(void)self;
+#else /* CONFIG_NO_THREADS */
 	unsigned int lockword;
 	lockword = atomic_read(&self->rs_lock.ra_lock);
 	if (lockword == 0) {
@@ -680,13 +684,19 @@ waitfor:
 	} while (!atomic_cmpxch_explicit(&self->rs_lock.ra_lock, 0, 1, Dee_ATOMIC_ACQUIRE, Dee_ATOMIC_ACQUIRE));
 	_Dee_rshared_lock_waiting_end(self);
 	goto settid;
+#endif /* !CONFIG_NO_THREADS */
 }
 
 /* Block until successfully acquired a recursive shared lock.
  * @return: 0 : Success.
  * @return: -1: An exception was thrown. */
-PUBLIC WUNUSED NONNULL((1)) int DCALL
-Dee_rshared_lock_acquire(Dee_rshared_lock_t *__restrict self) {
+PUBLIC WUNUSED NONNULL((1)) int
+(DCALL Dee_rshared_lock_acquire)(Dee_rshared_lock_t *__restrict self) {
+#ifdef CONFIG_NO_THREADS
+	COMPILER_IMPURE();
+	(void)self;
+	return 0;
+#else /* CONFIG_NO_THREADS */
 	int result;
 	unsigned int lockword;
 	lockword = atomic_read(&self->rs_lock.ra_lock);
@@ -712,15 +722,16 @@ waitfor:
 	} while (!atomic_cmpxch_explicit(&self->rs_lock.ra_lock, 0, 1, Dee_ATOMIC_ACQUIRE, Dee_ATOMIC_ACQUIRE));
 	_Dee_rshared_lock_waiting_end(self);
 	goto settid;
+#endif /* !CONFIG_NO_THREADS */
 }
 
 /* Block until successfully acquired a recursive shared lock.
  * @return: 1 : Timeout expired.
  * @return: 0 : Success.
  * @return: -1: An exception was thrown. */
-PUBLIC WUNUSED NONNULL((1)) int DCALL
-Dee_rshared_lock_acquire_timed(Dee_rshared_lock_t *__restrict self,
-                               uint64_t timeout_nanoseconds) {
+PUBLIC WUNUSED NONNULL((1)) int
+(DCALL Dee_rshared_lock_acquire_timed)(Dee_rshared_lock_t *__restrict self,
+                                       uint64_t timeout_nanoseconds) {
 #ifdef CONFIG_NO_THREADS
 	COMPILER_IMPURE();
 	(void)self;
@@ -781,9 +792,9 @@ do_wait_with_timeout:
 #endif /* !CONFIG_NO_THREADS */
 }
 
-PUBLIC WUNUSED NONNULL((1)) int DCALL
-Dee_rshared_lock_waitfor_timed(Dee_rshared_lock_t *__restrict self,
-                               uint64_t timeout_nanoseconds) {
+PUBLIC WUNUSED NONNULL((1)) int
+(DCALL Dee_rshared_lock_waitfor_timed)(Dee_rshared_lock_t *__restrict self,
+                                       uint64_t timeout_nanoseconds) {
 #ifdef CONFIG_NO_THREADS
 	COMPILER_IMPURE();
 	(void)self;
@@ -860,8 +871,8 @@ PUBLIC NONNULL((1)) bool
 /* Release a read-lock
  * @return: true:  All locks have now been released
  * @return: false: You're still holding more read-locks */
-PUBLIC NONNULL((1)) bool DCALL
-Dee_rshared_rwlock_endread_ex(Dee_rshared_rwlock_t *__restrict self) {
+PUBLIC NONNULL((1)) bool
+(DCALL Dee_rshared_rwlock_endread_ex)(Dee_rshared_rwlock_t *__restrict self) {
 #ifdef CONFIG_NO_THREADS
 	COMPILER_IMPURE();
 	(void)self;
@@ -889,8 +900,8 @@ Dee_rshared_rwlock_endread_ex(Dee_rshared_rwlock_t *__restrict self) {
 }
 
 /* Acquire a read-lock to `self' (does not check for interrupts) */
-PUBLIC NONNULL((1)) void DCALL
-Dee_rshared_rwlock_read_noint(Dee_rshared_rwlock_t *__restrict self) {
+PUBLIC NONNULL((1)) void
+(DCALL Dee_rshared_rwlock_read_noint)(Dee_rshared_rwlock_t *__restrict self) {
 #ifdef CONFIG_NO_THREADS
 	COMPILER_IMPURE();
 	(void)self;
@@ -921,8 +932,8 @@ again_lockword_not_UINTPTR_MAX:
 }
 
 /* Acquire a write-lock to `self' (does not check for interrupts) */
-PUBLIC NONNULL((1)) void DCALL
-Dee_rshared_rwlock_write_noint(Dee_rshared_rwlock_t *__restrict self) {
+PUBLIC NONNULL((1)) void
+(DCALL Dee_rshared_rwlock_write_noint)(Dee_rshared_rwlock_t *__restrict self) {
 #ifdef CONFIG_NO_THREADS
 	COMPILER_IMPURE();
 	(void)self;
@@ -955,8 +966,8 @@ again_lockword_zero:
 /* Acquire a read-lock to `self'
  * @return: 0 : Success
  * @return: -1: An exception was thrown. */
-PUBLIC WUNUSED NONNULL((1)) int DCALL
-Dee_rshared_rwlock_read(Dee_rshared_rwlock_t *__restrict self) {
+PUBLIC WUNUSED NONNULL((1)) int
+(DCALL Dee_rshared_rwlock_read)(Dee_rshared_rwlock_t *__restrict self) {
 #ifdef CONFIG_NO_THREADS
 	COMPILER_IMPURE();
 	(void)self;
@@ -993,8 +1004,8 @@ again_lockword_not_UINTPTR_MAX:
 /* Acquire a write-lock to `self'
  * @return: 0 : Success
  * @return: -1: An exception was thrown. */
-PUBLIC WUNUSED NONNULL((1)) int DCALL
-Dee_rshared_rwlock_write(Dee_rshared_rwlock_t *__restrict self) {
+PUBLIC WUNUSED NONNULL((1)) int
+(DCALL Dee_rshared_rwlock_write)(Dee_rshared_rwlock_t *__restrict self) {
 #ifdef CONFIG_NO_THREADS
 	COMPILER_IMPURE();
 	(void)self;
@@ -1032,9 +1043,9 @@ again_lockword_zero:
  * @return: 1 : Timeout expired.
  * @return: 0 : Success.
  * @return: -1: An exception was thrown. */
-PUBLIC WUNUSED NONNULL((1)) int DCALL
-Dee_rshared_rwlock_read_timed(Dee_rshared_rwlock_t *__restrict self,
-                              uint64_t timeout_nanoseconds) {
+PUBLIC WUNUSED NONNULL((1)) int
+(DCALL Dee_rshared_rwlock_read_timed)(Dee_rshared_rwlock_t *__restrict self,
+                                      uint64_t timeout_nanoseconds) {
 #ifdef CONFIG_NO_THREADS
 	COMPILER_IMPURE();
 	(void)self;
@@ -1095,9 +1106,9 @@ do_wait_with_timeout:
 #endif /* !CONFIG_NO_THREADS */
 }
 
-PUBLIC WUNUSED NONNULL((1)) int DCALL
-Dee_rshared_rwlock_write_timed(Dee_rshared_rwlock_t *__restrict self,
-                               uint64_t timeout_nanoseconds) {
+PUBLIC WUNUSED NONNULL((1)) int
+(DCALL Dee_rshared_rwlock_write_timed)(Dee_rshared_rwlock_t *__restrict self,
+                                       uint64_t timeout_nanoseconds) {
 #ifdef CONFIG_NO_THREADS
 	COMPILER_IMPURE();
 	(void)self;
@@ -1158,9 +1169,9 @@ do_wait_with_timeout:
 #endif /* !CONFIG_NO_THREADS */
 }
 
-PUBLIC WUNUSED NONNULL((1)) int DCALL
-Dee_rshared_rwlock_waitread_timed(Dee_rshared_rwlock_t *__restrict self,
-                                  uint64_t timeout_nanoseconds) {
+PUBLIC WUNUSED NONNULL((1)) int
+(DCALL Dee_rshared_rwlock_waitread_timed)(Dee_rshared_rwlock_t *__restrict self,
+                                          uint64_t timeout_nanoseconds) {
 #ifdef CONFIG_NO_THREADS
 	COMPILER_IMPURE();
 	(void)self;
@@ -1205,9 +1216,9 @@ do_wait_with_timeout:
 #endif /* !CONFIG_NO_THREADS */
 }
 
-PUBLIC WUNUSED NONNULL((1)) int DCALL
-Dee_rshared_rwlock_waitwrite_timed(Dee_rshared_rwlock_t *__restrict self,
-                                   uint64_t timeout_nanoseconds) {
+PUBLIC WUNUSED NONNULL((1)) int
+(DCALL Dee_rshared_rwlock_waitwrite_timed)(Dee_rshared_rwlock_t *__restrict self,
+                                           uint64_t timeout_nanoseconds) {
 #ifdef CONFIG_NO_THREADS
 	COMPILER_IMPURE();
 	(void)self;

@@ -36,9 +36,7 @@
 #include <deemon/util/atomic.h>
 #include <deemon/util/lock.h>
 
-#ifndef CONFIG_NO_THREADS
 #include <hybrid/sched/yield.h>
-#endif /* !CONFIG_NO_THREADS */
 
 #ifndef CONFIG_NO_STDLIB
 #include <deemon/tuple.h>
@@ -769,25 +767,6 @@ PRIVATE DREF DeeTupleObject *usercode_argv = (DREF DeeTupleObject *)Dee_EmptyTup
  * invoked using the Argv tuple modifiable using this pair of functions.
  * The deemon launcher should call `Dee_SetArgv()' to set the original argument tuple.
  * NOTE: By default, an empty tuple is set for argv. */
-#ifdef CONFIG_NO_THREADS
-PUBLIC ATTR_RETNONNULL /*Tuple*/ DREF DeeObject *DCALL Dee_GetArgv(void) {
-	DREF DeeTupleObject *result;
-	result = usercode_argv;
-	Dee_Incref(result);
-	ASSERT_OBJECT_TYPE_EXACT(result, &DeeTuple_Type);
-	return (DREF DeeObject *)result;
-}
-
-PUBLIC NONNULL((1)) void DCALL
-Dee_SetArgv(/*Tuple*/ DeeObject *__restrict argv) {
-	DREF DeeTupleObject *old_argv;
-	ASSERT_OBJECT_TYPE_EXACT(argv, &DeeTuple_Type);
-	Dee_Incref(argv);
-	old_argv      = usercode_argv;
-	usercode_argv = argv;
-	Dee_Decref(old_argv);
-}
-#else /* CONFIG_NO_THREADS */
 PUBLIC WUNUSED ATTR_RETNONNULL /*Tuple*/ DREF DeeObject *DCALL Dee_GetArgv(void) {
 	DREF DeeTupleObject *result;
 	for (;;) {
@@ -814,10 +793,10 @@ Dee_SetArgv(/*Tuple*/ DeeObject *__restrict argv) {
 				break;
 			SCHED_YIELD();
 		}
-	} while (!atomic_cmpxch_weak_or_write(&usercode_argv, old_argv, argv));
+	} while (!atomic_cmpxch_weak_or_write(&usercode_argv, old_argv,
+	                                      (DeeTupleObject *)argv));
 	Dee_Decref(old_argv);
 }
-#endif /* !CONFIG_NO_THREADS */
 
 INTDEF bool DCALL libcodecs_shutdown(void);
 INTDEF bool DCALL clear_jit_cache(void);

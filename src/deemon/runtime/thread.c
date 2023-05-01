@@ -689,7 +689,7 @@ err:
 }
 
 PUBLIC void DCALL
-DeeThread_SleepNoInterrupt(uint64_t microseconds) {
+DeeThread_SleepNoInt(uint64_t microseconds) {
 #ifdef DeeThread_Sleep_USE_SleepEx
 	SleepEx((DWORD)(microseconds / 1000), TRUE);
 #endif /* DeeThread_Sleep_USE_SleepEx */
@@ -3379,7 +3379,6 @@ thread_fini(DeeThreadObject *__restrict self) {
 }
 
 
-#ifndef CONFIG_NO_THREADS
 #ifdef Dee_pid_t
 /* Construct a new wrapper for an external reference to `thread'
  * NOTE: The given `thread' is _NOT_ inherited! */
@@ -3400,7 +3399,6 @@ err:
 	return NULL;
 }
 #endif /* Dee_pid_t */
-#endif /* !CONFIG_NO_THREADS */
 
 PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
 thread_print_impl(DeeThreadObject *__restrict self,

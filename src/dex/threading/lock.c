@@ -35,8 +35,10 @@
 #include <deemon/seq.h>
 #include <deemon/string.h>
 #include <deemon/system-features.h> /* memset(), ... */
+#include <deemon/thread.h>
 #include <deemon/tuple.h>
 #include <deemon/util/atomic.h>
+#include <deemon/util/futex.h>
 #include <deemon/util/lock.h>
 #include <deemon/util/rlock.h>
 
@@ -47,6 +49,11 @@
 #include <stddef.h>
 
 #include "libthreading.h"
+
+#ifdef CONFIG_NO_THREADS
+/* Override the lock-API to emulate semantically correct LOCK functions. */
+#include "lock-no-threads.c.inl"
+#endif /* CONFIG_NO_THREADS */
 
 DECL_BEGIN
 
@@ -75,73 +82,62 @@ DECL_BEGIN
 
 typedef struct {
 	OBJECT_HEAD
-#ifndef CONFIG_NO_THREADS
-	Dee_atomic_lock_t l_lock; /* Managed lock */
-#endif /* !CONFIG_NO_THREADS */
-} DeeAtomicLockObject;
-
-typedef struct {
-	OBJECT_HEAD
-#ifndef CONFIG_NO_THREADS
 	Dee_shared_lock_t l_lock; /* Managed lock */
-#endif /* !CONFIG_NO_THREADS */
 } DeeSharedLockObject;
 
 typedef struct {
 	OBJECT_HEAD
-#ifndef CONFIG_NO_THREADS
-	Dee_atomic_rwlock_t rwl_lock; /* Managed lock */
-#endif /* !CONFIG_NO_THREADS */
-} DeeAtomicRWLockObject;
-
-typedef struct {
-	OBJECT_HEAD
-#ifndef CONFIG_NO_THREADS
 	Dee_shared_rwlock_t rwl_lock; /* Managed lock */
-#endif /* !CONFIG_NO_THREADS */
 } DeeSharedRWLockObject;
 
 typedef struct {
 	OBJECT_HEAD
-#ifndef CONFIG_NO_THREADS
-	Dee_ratomic_lock_t l_lock; /* Managed lock */
-#endif /* !CONFIG_NO_THREADS */
-} DeeRAtomicLockObject;
-
-typedef struct {
-	OBJECT_HEAD
-#ifndef CONFIG_NO_THREADS
 	Dee_rshared_lock_t l_lock; /* Managed lock */
-#endif /* !CONFIG_NO_THREADS */
 } DeeRSharedLockObject;
 
 typedef struct {
 	OBJECT_HEAD
-#ifndef CONFIG_NO_THREADS
-	Dee_ratomic_rwlock_t rwl_lock; /* Managed lock */
-#endif /* !CONFIG_NO_THREADS */
-} DeeRAtomicRWLockObject;
-
-typedef struct {
-	OBJECT_HEAD
-#ifndef CONFIG_NO_THREADS
 	Dee_rshared_rwlock_t rwl_lock; /* Managed lock */
-#endif /* !CONFIG_NO_THREADS */
 } DeeRSharedRWLockObject;
 
 typedef struct {
 	OBJECT_HEAD
-#ifndef CONFIG_NO_THREADS
 	Dee_semaphore_t sem_semaphore; /* Managed semaphore */
-#endif /* !CONFIG_NO_THREADS */
 } DeeSemaphoreObject;
 
 typedef struct {
 	OBJECT_HEAD
-#ifndef CONFIG_NO_THREADS
 	Dee_event_t e_event; /* Managed event */
-#endif /* !CONFIG_NO_THREADS */
 } DeeEventObject;
+
+#ifdef CONFIG_NO_THREADS
+#define DeeAtomicLockObject    DeeSharedLockObject
+#define DeeAtomicRWLockObject  DeeSharedRWLockObject
+#define DeeRAtomicLockObject   DeeRSharedLockObject
+#define DeeRAtomicRWLockObject DeeRSharedRWLockObject
+#else /* CONFIG_NO_THREADS */
+typedef struct {
+	OBJECT_HEAD
+	Dee_atomic_lock_t l_lock; /* Managed lock */
+} DeeAtomicLockObject;
+
+typedef struct {
+	OBJECT_HEAD
+	Dee_atomic_rwlock_t rwl_lock; /* Managed lock */
+} DeeAtomicRWLockObject;
+
+typedef struct {
+	OBJECT_HEAD
+	Dee_ratomic_lock_t l_lock; /* Managed lock */
+} DeeRAtomicLockObject;
+
+typedef struct {
+	OBJECT_HEAD
+	Dee_ratomic_rwlock_t rwl_lock; /* Managed lock */
+} DeeRAtomicRWLockObject;
+#endif /* !CONFIG_NO_THREADS */
+
+
 
 typedef struct {
 	OBJECT_HEAD
@@ -154,10 +150,12 @@ typedef struct {
 #define ASSERT_BINARY_COMPATIBLE_FIELDS(T1, f1, T2, f2)          \
 	STATIC_ASSERT(sizeof_field(T1, f1) == sizeof_field(T2, f2)); \
 	STATIC_ASSERT(offsetof(T1, f1) == offsetof(T2, f2))
+#ifndef CONFIG_NO_THREADS
 ASSERT_BINARY_COMPATIBLE_FIELDS(DeeAtomicLockObject, l_lock, DeeSharedLockObject, l_lock.s_lock);
 ASSERT_BINARY_COMPATIBLE_FIELDS(DeeAtomicRWLockObject, rwl_lock, DeeSharedRWLockObject, rwl_lock.srw_lock);
 ASSERT_BINARY_COMPATIBLE_FIELDS(DeeRAtomicLockObject, l_lock, DeeRSharedLockObject, l_lock.rs_lock);
 ASSERT_BINARY_COMPATIBLE_FIELDS(DeeRAtomicRWLockObject, rwl_lock, DeeRSharedRWLockObject, rwl_lock.rsrw_lock);
+#endif /* !CONFIG_NO_THREADS */
 #undef ASSERT_BINARY_COMPATIBLE_FIELDS
 
 PRIVATE ATTR_COLD NONNULL((1)) int DCALL
@@ -2904,13 +2902,16 @@ DECL_END
 
 /* Define generic lock types */
 #ifndef __INTELLISENSE__
-#define DEFINE_DeeAtomicLock_Type__AND__DeeAtomicRWLock_Type
-#include "lock.c.inl"
+/* NOTE: Under `CONFIG_NO_THREADS', shared types _must_ come first! */
 #define DEFINE_DeeSharedLock_Type__AND__DeeSharedRWLock_Type
 #include "lock.c.inl"
-#define DEFINE_RDeeAtomicLock_Type__AND__DeeRAtomicRWLock_Type
-#include "lock.c.inl"
 #define DEFINE_RDeeSharedLock_Type__AND__DeeRSharedRWLock_Type
+#include "lock.c.inl"
+/**/
+
+#define DEFINE_DeeAtomicLock_Type__AND__DeeAtomicRWLock_Type
+#include "lock.c.inl"
+#define DEFINE_RDeeAtomicLock_Type__AND__DeeRAtomicRWLock_Type
 #include "lock.c.inl"
 #endif /* !__INTELLISENSE__ */
 

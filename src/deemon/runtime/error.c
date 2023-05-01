@@ -72,11 +72,8 @@ DeeError_Print(char const *reason, unsigned int handle_errors) {
 	if unlikely(!thread_self->t_except)
 		return false;
 	error_ob = thread_self->t_except->ef_error;
-#ifndef CONFIG_NO_THREADS
 	if (handle_errors != ERROR_PRINT_DOHANDLE ||
-	    !DeeType_IsInterrupt(Dee_TYPE(error_ob)))
-#endif /* !CONFIG_NO_THREADS */
-	{
+	    !DeeType_IsInterrupt(Dee_TYPE(error_ob))) {
 		DeeError_Display(reason, error_ob,
 		                 (DeeObject *)except_frame_gettb(thread_self->t_except));
 	}
@@ -208,7 +205,6 @@ PUBLIC ATTR_COLD NONNULL((1, 2)) int
 	return result;
 }
 
-#ifndef CONFIG_NO_THREADS
 INTERN void DCALL
 restore_interrupt_error(DeeThreadObject *__restrict ts,
                         /*inherit*/ struct except_frame *__restrict frame) {
@@ -256,18 +252,12 @@ restore_interrupt_error(DeeThreadObject *__restrict ts,
 	/* If the frame wasn't used, then still free it! */
 	except_frame_xfree(frame);
 }
-#endif /* !CONFIG_NO_THREADS */
 
 /* Handle the current error, discarding it in the process.
  * @param: mode:   One of `ERROR_HANDLED_*'
  * @return: true:  The current error was handled.
  * @return: false: No error could be handled. */
-#ifdef CONFIG_NO_THREADS
-PUBLIC bool (DCALL DeeError_HandledNoSMP)(void)
-#else /* CONFIG_NO_THREADS */
-PUBLIC bool (DCALL DeeError_Handled)(unsigned int mode)
-#endif /* !CONFIG_NO_THREADS */
-{
+PUBLIC bool (DCALL DeeError_Handled)(unsigned int mode) {
 	struct except_frame *frame;
 	DeeThreadObject *ts = DeeThread_Self();
 	ASSERT((ts->t_except != NULL) == (ts->t_exceptsz != 0));
@@ -275,7 +265,6 @@ PUBLIC bool (DCALL DeeError_Handled)(unsigned int mode)
 		return false;
 	ts->t_except = frame->ef_prev;
 	--ts->t_exceptsz;
-#ifndef CONFIG_NO_THREADS
 	if (mode != ERROR_HANDLED_INTERRUPT &&
 	    DeeType_IsInterrupt(Dee_TYPE(frame->ef_error))) {
 		if (mode != ERROR_HANDLED_RESTORE) {
@@ -288,7 +277,7 @@ PUBLIC bool (DCALL DeeError_Handled)(unsigned int mode)
 		restore_interrupt_error(ts, frame);
 		return true;
 	}
-#endif /* !CONFIG_NO_THREADS */
+
 	Dee_Decref(frame->ef_error);
 	if (ITER_ISOK(frame->ef_trace))
 		Dee_Decref(frame->ef_trace);
@@ -316,14 +305,7 @@ PUBLIC WUNUSED NONNULL((1)) bool DCALL DeeError_CurrentIs(DeeTypeObject *__restr
 
 /* Install the keyboard interrupt handler. */
 #ifndef CONFIG_NO_KEYBOARD_INTERRUPT
-#ifdef CONFIG_NO_THREADS
-INTERN void DCALL DeeError_InstallKeyboardInterrupt(void) {
-	/* XXX: Without interrupts, how can we do this? */
-}
-INTERN void DCALL DeeError_UninstallKeyboardInterrupt(void) {
-	/* XXX: Without interrupts, how can we do this? */
-}
-#else /* CONFIG_NO_THREADS */
+INTDEF DeeThreadObject DeeThread_Main;
 INTDEF uint8_t keyboard_interrupt_counter;
 
 #define INC_KEYBOARD_INTERRUPT_COUNTER()                                                  \
@@ -336,11 +318,6 @@ INTDEF uint8_t keyboard_interrupt_counter;
 		atomic_or(&DeeThread_Main.t_state, Dee_THREAD_STATE_INTERRUPTED);                 \
 	}	__WHILE0
 
-#ifndef CONFIG_NO_THREADS
-INTDEF DeeThreadObject DeeThread_Main;
-#else /* CONFIG_NO_THREADS */
-DATDEF DeeThreadObject DeeThread_Main;
-#endif /* !CONFIG_NO_THREADS */
 
 #ifdef CONFIG_HOST_WINDOWS
 PRIVATE BOOL WINAPI
@@ -392,7 +369,6 @@ DeeError_UninstallKeyboardInterrupt(void) {
 }
 
 #endif /* !... */
-#endif /* !CONFIG_NO_THREADS */
 #endif /* !CONFIG_NO_KEYBOARD_INTERRUPT */
 
 

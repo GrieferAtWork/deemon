@@ -492,33 +492,33 @@ typedef struct dir_object DeeDirObject;
 
 struct dir_iterator_object {
 	OBJECT_HEAD
-	DREF DeeObject     *odi_path;     /* [1..1][const] String, File, or int */
-	DREF DeeObject     *odi_pathstr;  /* [0..1][lock(WRITE_ONCE)] String */
-	bool                odi_skipdots; /* [const] When true, skip '.' and '..' entries. */
+	DREF DeeObject       *odi_path;     /* [1..1][const] String, File, or int */
+	DREF DeeStringObject *odi_pathstr;  /* [0..1][lock(WRITE_ONCE)] String */
+	bool                  odi_skipdots; /* [const] When true, skip '.' and '..' entries. */
 #ifdef posix_opendir_USE_FindFirstFileExW
-	bool                odi_first;    /* [lock(odi_lock)] When true, we're at the first entry. */
-	HANDLE              odi_hnd;      /* [0..1|NULL(INVALID_HANDLE_VALUE)][lock(odi_lock)]
-	                                   * The iteration handle or INVALID_HANDLE_VALUE when exhausted. */
-	WIN32_FIND_DATAW    odi_data;     /* [lock(odi_lock)][valid_if(odi_hnd != INVALID_HANDLE_VALUE)]
-	                                   * The file data for the next matching entry. */
+	bool                  odi_first;    /* [lock(odi_lock)] When true, we're at the first entry. */
+	HANDLE                odi_hnd;      /* [0..1|NULL(INVALID_HANDLE_VALUE)][lock(odi_lock)]
+	                                     * The iteration handle or INVALID_HANDLE_VALUE when exhausted. */
+	WIN32_FIND_DATAW      odi_data;     /* [lock(odi_lock)][valid_if(odi_hnd != INVALID_HANDLE_VALUE)]
+	                                     * The file data for the next matching entry. */
 #ifndef CONFIG_NO_THREADS
-	Dee_atomic_rwlock_t odi_lock;     /* Lock for the above fields. */
+	Dee_atomic_rwlock_t   odi_lock;     /* Lock for the above fields. */
 #define dir_iterator_object_HAVE_odi_lock
 #endif /* !CONFIG_NO_THREADS */
 #endif /* posix_opendir_USE_FindFirstFileExW */
 
 #ifdef posix_opendir_USE_opendir
-	struct DIR_dirent  *odi_ent;      /* [0..1] Last-read directory entry (or `NULL' for end-of-directory) */
-	DIR                *odi_dir;      /* [1..1][const] The directory access stream. */
+	struct DIR_dirent    *odi_ent;      /* [0..1] Last-read directory entry (or `NULL' for end-of-directory) */
+	DIR                  *odi_dir;      /* [1..1][const] The directory access stream. */
 #ifndef CONFIG_NO_THREADS
-	Dee_atomic_rwlock_t odi_lock;     /* Lock for the above fields. */
+	Dee_atomic_rwlock_t   odi_lock;     /* Lock for the above fields. */
 #define dir_iterator_object_HAVE_odi_lock
 #endif /* !CONFIG_NO_THREADS */
 #endif /* ... */
 
 #ifdef posix_opendir_NEED_STAT_EXTENSION
-	bool                odi_stvalid;  /* [lock(odi_lock)] Set to true if `odi_st' has been loaded. */
-	DIR_struct_stat     odi_st;       /* [lock(odi_lock)] Additional stat information (lazily loaded). */
+	bool                  odi_stvalid;  /* [lock(odi_lock)] Set to true if `odi_st' has been loaded. */
+	DIR_struct_stat       odi_st;       /* [lock(odi_lock)] Additional stat information (lazily loaded). */
 #endif /* posix_opendir_NEED_STAT_EXTENSION */
 };
 
@@ -1159,7 +1159,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeStringObject *DCALL
 diriter_getpathstr(DeeDirIteratorObject *__restrict self) {
 	DREF DeeStringObject *result;
 again:
-	result = (DREF DeeStringObject *)self->odi_pathstr;
+	result = self->odi_pathstr;
 	if (result == NULL) {
 		result = diriter_makepathstr(self);
 		/* Remember the full path string. */
