@@ -702,7 +702,7 @@ PRIVATE struct type_getset tpconst keyword_getsets[] = {
 	TYPE_GETTER("name", &keyword_str,
 	            "->?Dstring\n"
 	            "Returns the name of @this keyword. Same as ?#{op:str}"),
-	TYPE_GETTER("hash", &keyword_hash,
+	TYPE_GETTER(STR_hash, &keyword_hash,
 	            "->?Dint\n"
 	            "Returns the hash of @this keyword"),
 	TYPE_GETTER("macrofile", &keyword_macrofile,

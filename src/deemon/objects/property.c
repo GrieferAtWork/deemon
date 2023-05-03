@@ -137,12 +137,12 @@ property_visit(Property *__restrict self, dvisit_t proc, void *arg) {
 PRIVATE WUNUSED NONNULL((1)) dhash_t DCALL
 property_hash(Property *__restrict self) {
 	dhash_t result = 0;
-	if (self->p_get)
-		result ^= DeeObject_Hash(self->p_get);
-	if (self->p_del)
-		result ^= DeeObject_Hash(self->p_del);
-	if (self->p_set)
-		result ^= DeeObject_Hash(self->p_set);
+	if (self->p_get != NULL)
+		result = Dee_HashCombine(result, DeeObject_Hash(self->p_get));
+	if (self->p_del != NULL)
+		result = Dee_HashCombine(result, DeeObject_Hash(self->p_del));
+	if (self->p_set != NULL)
+		result = Dee_HashCombine(result, DeeObject_Hash(self->p_set));
 	return result;
 }
 

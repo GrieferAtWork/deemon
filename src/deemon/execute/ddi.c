@@ -32,6 +32,8 @@
 
 #include <hybrid/minmax.h>
 
+#include <stddef.h>
+
 DECL_BEGIN
 
 
@@ -653,15 +655,18 @@ PRIVATE WUNUSED DREF DeeDDIObject *DCALL ddi_ctor(void) {
 PRIVATE WUNUSED NONNULL((1)) dhash_t DCALL
 ddi_hash(DeeDDIObject *__restrict self) {
 	dhash_t result;
-	uint16_t i;
-	result = self->d_ddisize;
-	result ^= *(uint32_t *)&self->d_nstring;
-	for (i = 0; i < self->d_nstring; ++i)
-		result ^= self->d_strings[i];
-	result ^= DeeString_Hash((DeeObject *)self->d_strtab);
-	result ^= Dee_HashPtr(&self->d_start, self->d_ddisize + sizeof(struct ddi_regs));
-	if (self->d_exdat)
-		result ^= Dee_HashPtr(self->d_exdat->dx_data, self->d_exdat->dx_size);
+	result = Dee_HashPtr(&self->d_ddisize,
+	                     self->d_ddisize +
+	                     (offsetof(DeeDDIObject, d_ddi) -
+	                      offsetof(DeeDDIObject, d_ddisize)));
+	result = Dee_HashCombine(result, Dee_HashPtr(self->d_strings,
+	                                             self->d_nstring *
+	                                             sizeof(*self->d_strings)));
+	result = Dee_HashCombine(result, DeeString_Hash((DeeObject *)self->d_strtab));
+	if (self->d_exdat != NULL) {
+		result = Dee_HashCombine(result, Dee_HashPtr(self->d_exdat->dx_data,
+		                                             self->d_exdat->dx_size));
+	}
 	return result;
 }
 

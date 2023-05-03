@@ -850,6 +850,24 @@ err:
 	return temp;
 }
 
+PRIVATE WUNUSED NONNULL((1)) dhash_t DCALL
+rodict_hash(RoDict *__restrict self) {
+	size_t i;
+	dhash_t result = DEE_HASHOF_EMPTY_SEQUENCE;
+	for (i = 0; i <= self->rd_mask; ++i) {
+		if (!self->rd_elem[i].di_key)
+			continue;
+		/* Note that we still combine the hashes for the key and value,
+		 * thus not only mirroring the behavior of hash of the item (that
+		 * is the tuple `(key, value)', including the order between the
+		 * key and value within the hash, so that swapping the key and
+		 * value would produce a different hash) */
+		result ^= Dee_HashCombine(DeeObject_Hash(self->rd_elem[i].di_key),
+		                          DeeObject_Hash(self->rd_elem[i].di_value));
+	}
+	return result;
+}
+
 PRIVATE WUNUSED NONNULL((1)) size_t DCALL
 rodict_nsi_getsize(RoDict *__restrict self) {
 	ASSERT(self->rd_size != (size_t)-2);
@@ -870,6 +888,16 @@ PRIVATE struct type_nsi tpconst rodict_nsi = {
 	}
 };
 
+
+PRIVATE struct type_cmp rodict_cmp = {
+	/* .tp_hash = */ (dhash_t (DCALL *)(DeeObject *__restrict))&rodict_hash,
+	/* .tp_eq   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))NULL, // TODO: &rodict_eq,
+	/* .tp_ne   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))NULL, // TODO: &rodict_ne,
+	/* .tp_lo   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))NULL, // TODO: &rodict_lo,
+	/* .tp_le   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))NULL, // TODO: &rodict_le,
+	/* .tp_gr   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))NULL, // TODO: &rodict_gr,
+	/* .tp_ge   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))NULL, // TODO: &rodict_ge,
+};
 
 PRIVATE struct type_seq rodict_seq = {
 	/* .tp_iter_self = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&rodict_iter,
@@ -1039,7 +1067,7 @@ PUBLIC DeeTypeObject DeeRoDict_Type = {
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&rodict_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
-	/* .tp_cmp           = */ NULL,
+	/* .tp_cmp           = */ &rodict_cmp,
 	/* .tp_seq           = */ &rodict_seq,
 	/* .tp_iter_next     = */ NULL,
 	/* .tp_attr          = */ NULL,

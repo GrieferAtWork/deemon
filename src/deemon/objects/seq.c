@@ -795,6 +795,36 @@ DeeSeq_Compare(DeeObject *lhs, DeeObject *rhs) {
 	return result;
 }
 
+PRIVATE WUNUSED NONNULL((1)) dhash_t DCALL
+seq_hash(DeeObject *__restrict self) {
+	dhash_t result;
+	DREF DeeObject *iter, *elem;
+	iter = DeeObject_IterSelf(self);
+	if unlikely(!iter)
+		goto err;
+	elem = DeeObject_IterNext(iter);
+	if (!ITER_ISOK(elem)) {
+		Dee_Decref(iter);
+		if (!elem)
+			goto err;
+		return 0; /* Empty sequence hash */
+	}
+	result = DeeObject_Hash(elem);
+	Dee_Decref(elem);
+	while (ITER_ISOK(elem = DeeObject_IterNext(iter))) {
+		result = Dee_HashCombine(result, DeeObject_Hash(elem));
+		Dee_Decref(elem);
+	}
+	Dee_Decref(iter);
+	if unlikely(!elem)
+		goto err;
+	return result;
+err:
+	DeeError_Print("Unhandled error in `Set.operator hash'\n",
+	               ERROR_PRINT_DOHANDLE);
+	return DeeObject_HashGeneric(self);
+}
+
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 seq_eq(DeeObject *self, DeeObject *other) {
 	int result = DeeSeq_Eq(self, other);
@@ -856,7 +886,7 @@ err:
 }
 
 PRIVATE struct type_cmp seq_cmp = {
-	/* .tp_hash = */ NULL,
+	/* .tp_hash = */ &seq_hash,
 	/* .tp_eq   = */ &seq_eq,
 	/* .tp_ne   = */ &seq_ne,
 	/* .tp_lo   = */ &seq_lo,

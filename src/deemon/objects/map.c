@@ -1018,9 +1018,31 @@ err:
 }
 
 
+PRIVATE WUNUSED NONNULL((1)) dhash_t DCALL
+map_hash(DeeObject *__restrict self) {
+	dhash_t result = DEE_HASHOF_EMPTY_SEQUENCE;
+	DREF DeeObject *iter, *elem;
+	iter = DeeObject_IterSelf(self);
+	if unlikely(!iter)
+		goto err;
+	while (ITER_ISOK(elem = DeeObject_IterNext(iter))) {
+		/* Note how we don't use `Dee_HashCombine()' here!
+		 * That become order doesn't matter for mappings. */
+		result ^= DeeObject_Hash(elem);
+		Dee_Decref(elem);
+	}
+	Dee_Decref(iter);
+	if unlikely(!elem)
+		goto err;
+	return result;
+err:
+	DeeError_Print("Unhandled error in `Mapping.operator hash'\n",
+	               ERROR_PRINT_DOHANDLE);
+	return DeeObject_HashGeneric(self);
+}
+
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-map_eq(DeeObject *self,
-       DeeObject *other) {
+map_eq(DeeObject *self, DeeObject *other) {
 	int error = map_eq_impl(self, other);
 	if unlikely(error < 0)
 		goto err;
@@ -1030,8 +1052,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-map_ne(DeeObject *self,
-       DeeObject *other) {
+map_ne(DeeObject *self, DeeObject *other) {
 	int error = map_eq_impl(self, other);
 	if unlikely(error < 0)
 		goto err;
@@ -1041,13 +1062,13 @@ err:
 }
 
 PRIVATE struct type_cmp map_cmp = {
-	/* .tp_hash = */ NULL,
+	/* .tp_hash = */ &map_hash,
 	/* .tp_eq   = */ &map_eq,
 	/* .tp_ne   = */ &map_ne,
-	/* .tp_lo   = */ NULL, /* XXX: Sub-set */
-	/* .tp_le   = */ NULL, /* XXX: Sub-set, or same */
-	/* .tp_gr   = */ NULL, /* XXX: Super-set */
-	/* .tp_ge   = */ NULL, /* XXX: Super-set, or same */
+	/* .tp_lo   = */ NULL, /* TODO: Sub-set */
+	/* .tp_le   = */ NULL, /* TODO: Sub-set, or same */
+	/* .tp_gr   = */ NULL, /* TODO: Super-set */
+	/* .tp_ge   = */ NULL, /* TODO: Super-set, or same */
 };
 
 

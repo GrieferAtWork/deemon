@@ -19,7 +19,7 @@
  */
 
 import * from deemon;
-import * from hashlib;
+import hash from hashlib;
 
 function check_crc(name: string, check: int) {
 	local res = hash(name, "123456789");

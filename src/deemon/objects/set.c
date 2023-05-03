@@ -42,12 +42,108 @@
 DECL_BEGIN
 
 
+PRIVATE WUNUSED NONNULL((1)) dhash_t DCALL
+set_hash(DeeObject *__restrict self) {
+	dhash_t result = DEE_HASHOF_EMPTY_SEQUENCE;
+	DREF DeeObject *iter, *elem;
+	iter = DeeObject_IterSelf(self);
+	if unlikely(!iter)
+		goto err;
+	while (ITER_ISOK(elem = DeeObject_IterNext(iter))) {
+		/* Note how we don't use `Dee_HashCombine()' here!
+		 * That become order doesn't matter for sets. */
+		result ^= DeeObject_Hash(elem);
+		Dee_Decref(elem);
+	}
+	Dee_Decref(iter);
+	if unlikely(!elem)
+		goto err;
+	return result;
+err:
+	DeeError_Print("Unhandled error in `Set.operator hash'\n",
+	               ERROR_PRINT_DOHANDLE);
+	return DeeObject_HashGeneric(self);
+}
+
+PRIVATE WUNUSED NONNULL((1)) dhash_t DCALL
+invset_hash(DeeObject *__restrict self) {
+	return ~set_hash(self); /* Return the inverse hash (we're an inverse set after all ;) ) */
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+set_eq(DeeObject *self, DeeObject *some_object) {
+	int result;
+	result = DeeSet_IsSameSet(self, some_object);
+	if unlikely(result < 0)
+		goto err;
+	return_bool_(result);
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+set_ne(DeeObject *self, DeeObject *some_object) {
+	int result;
+	result = DeeSet_IsSameSet(self, some_object);
+	if unlikely(result < 0)
+		goto err;
+	return_bool_(!result);
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+set_lo(DeeObject *self, DeeObject *some_object) {
+	int result;
+	result = DeeSet_IsTrueSubSet(self, some_object);
+	if unlikely(result < 0)
+		goto err;
+	return_bool_(result);
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+set_le(DeeObject *self, DeeObject *some_object) {
+	int result;
+	result = DeeSet_IsSubSet(self, some_object);
+	if unlikely(result < 0)
+		goto err;
+	return_bool_(result);
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+set_gr(DeeObject *self, DeeObject *some_object) {
+	int result;
+	result = DeeSet_IsTrueSubSet(some_object, self);
+	if unlikely(result < 0)
+		goto err;
+	return_bool_(result);
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+set_ge(DeeObject *self, DeeObject *some_object) {
+	int result;
+	result = DeeSet_IsSubSet(self, some_object);
+	if unlikely(result < 0)
+		goto err;
+	return_bool_(result);
+err:
+	return NULL;
+}
+
+
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeSet_Invert(DeeObject *__restrict self) {
 	DREF DeeSetInversionObject *result;
 	/* Just re-return the original set. */
 	if (DeeSetInversion_CheckExact(self))
 		return_reference(DeeSetInversion_GetSet(self));
+
 	/* Construct a new inverse-set wrapper. */
 	result = DeeObject_MALLOC(DeeSetInversionObject);
 	if unlikely(!result)
@@ -141,6 +237,55 @@ PRIVATE struct type_member tpconst invset_members[] = {
 	TYPE_MEMBER_END
 };
 
+PRIVATE struct type_cmp invset_cmp = {
+		/* .tp_hash = */ (dhash_t (DCALL *)(DeeObject *__restrict))&invset_hash,
+		/* .tp_eq   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&set_eq,
+		/* .tp_ne   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&set_ne,
+		/* .tp_lo   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&set_lo,
+		/* .tp_le   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&set_le,
+		/* .tp_gr   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&set_gr,
+		/* .tp_ge   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&set_ge,
+};
+
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+invset_getset(DeeSetInversionObject *__restrict self) {
+	return_reference_(self->si_set);
+}
+
+PRIVATE struct type_math invset_math = {
+	/* .tp_int32       = */ NULL,
+	/* .tp_int64       = */ NULL,
+	/* .tp_double      = */ NULL,
+	/* .tp_int         = */ NULL,
+	/* .tp_inv         = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&invset_getset,
+	/* .tp_pos         = */ NULL,
+	/* .tp_neg         = */ NULL,
+	/* .tp_add         = */ &DeeSet_Union,
+	/* .tp_sub         = */ &DeeSet_Difference,
+	/* .tp_mul         = */ NULL,
+	/* .tp_div         = */ NULL,
+	/* .tp_mod         = */ NULL,
+	/* .tp_shl         = */ NULL,
+	/* .tp_shr         = */ NULL,
+	/* .tp_and         = */ &DeeSet_Intersection,
+	/* .tp_or          = */ &DeeSet_Union,
+	/* .tp_xor         = */ &DeeSet_SymmetricDifference,
+	/* .tp_pow         = */ NULL,
+	/* .tp_inc         = */ NULL,
+	/* .tp_dec         = */ NULL,
+	/* .tp_inplace_add = */ NULL,
+	/* .tp_inplace_sub = */ NULL,
+	/* .tp_inplace_mul = */ NULL,
+	/* .tp_inplace_div = */ NULL,
+	/* .tp_inplace_mod = */ NULL,
+	/* .tp_inplace_shl = */ NULL,
+	/* .tp_inplace_shr = */ NULL,
+	/* .tp_inplace_and = */ NULL,
+	/* .tp_inplace_or  = */ NULL,
+	/* .tp_inplace_xor = */ NULL,
+	/* .tp_inplace_pow = */ NULL,
+};
 
 PUBLIC DeeTypeObject DeeSetInversion_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
@@ -175,8 +320,8 @@ PUBLIC DeeTypeObject DeeSetInversion_Type = {
 	/* .tp_call          = */ NULL,
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&invset_visit,
 	/* .tp_gc            = */ NULL,
-	/* .tp_math          = */ NULL,
-	/* .tp_cmp           = */ NULL,
+	/* .tp_math          = */ &invset_math,
+	/* .tp_cmp           = */ &invset_cmp,
 	/* .tp_seq           = */ &invset_seq,
 	/* .tp_iter_next     = */ NULL,
 	/* .tp_attr          = */ NULL,
@@ -670,82 +815,16 @@ PRIVATE struct type_getset tpconst set_class_getsets[] = {
 };
 
 
-PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-set_eq(DeeObject *self, DeeObject *some_object) {
-	int result;
-	result = DeeSet_IsSameSet(self, some_object);
-	if unlikely(result < 0)
-		goto err;
-	return_bool_(result);
-err:
-	return NULL;
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-set_ne(DeeObject *self, DeeObject *some_object) {
-	int result;
-	result = DeeSet_IsSameSet(self, some_object);
-	if unlikely(result < 0)
-		goto err;
-	return_bool_(!result);
-err:
-	return NULL;
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-set_lo(DeeObject *self, DeeObject *some_object) {
-	int result;
-	result = DeeSet_IsTrueSubSet(self, some_object);
-	if unlikely(result < 0)
-		goto err;
-	return_bool_(result);
-err:
-	return NULL;
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-set_le(DeeObject *self, DeeObject *some_object) {
-	int result;
-	result = DeeSet_IsSubSet(self, some_object);
-	if unlikely(result < 0)
-		goto err;
-	return_bool_(result);
-err:
-	return NULL;
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-set_gr(DeeObject *self, DeeObject *some_object) {
-	int result;
-	result = DeeSet_IsTrueSubSet(some_object, self);
-	if unlikely(result < 0)
-		goto err;
-	return_bool_(result);
-err:
-	return NULL;
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-set_ge(DeeObject *self, DeeObject *some_object) {
-	int result;
-	result = DeeSet_IsSubSet(self, some_object);
-	if unlikely(result < 0)
-		goto err;
-	return_bool_(result);
-err:
-	return NULL;
-}
-
-
 PRIVATE struct type_cmp set_cmp = {
-		/* .tp_hash = */ (dhash_t (DCALL *)(DeeObject *__restrict))NULL,
-		/* .tp_eq   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&set_eq,
-		/* .tp_ne   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&set_ne,
-		/* .tp_lo   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&set_lo,
-		/* .tp_le   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&set_le,
-		/* .tp_gr   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&set_gr,
-		/* .tp_ge   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&set_ge,
+	/* .tp_hash = */ (dhash_t (DCALL *)(DeeObject *__restrict))&set_hash,
+	/* .tp_eq   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&set_eq,
+	/* .tp_ne   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&set_ne,
+	/* .tp_lo   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&set_lo,
+	/* .tp_le   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&set_le,
+	/* .tp_gr   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&set_gr,
+	/* .tp_ge   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&set_ge,
 };
+
 
 INTDEF WUNUSED DREF DeeObject *DCALL new_empty_sequence_iterator(void);
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL

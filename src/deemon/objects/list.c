@@ -3642,6 +3642,34 @@ DeeList_CompareS(List *lhs, DeeObject *rhs) {
 	return result;
 }
 
+PRIVATE WUNUSED NONNULL((1)) dhash_t DCALL
+list_hash(List *__restrict self) {
+	size_t i;
+	dhash_t result;
+	DREF DeeObject *elem;
+	DeeList_LockRead(self);
+	if unlikely(!self->l_list.ol_elemc) {
+		DeeList_LockEndRead(self);
+		return DEE_HASHOF_EMPTY_SEQUENCE;
+	}
+	elem = self->l_list.ol_elemv[0];
+	Dee_Incref(elem);
+	DeeList_LockEndRead(self);
+	result = DeeObject_Hash(elem);
+	Dee_Decref(elem);
+	DeeList_LockRead(self);
+	for (i = 1; i < self->l_list.ol_elemc; ++i) {
+		elem = self->l_list.ol_elemv[i];
+		Dee_Incref(elem);
+		DeeList_LockEndRead(self);
+		result = Dee_HashCombine(result, DeeObject_Hash(elem));
+		Dee_Decref(elem);
+		DeeList_LockRead(self);
+	}
+	DeeList_LockEndRead(self);
+	return result;
+}
+
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 list_eq(List *me, DeeObject *other) {
 	int result = DeeList_EqS(me, other);
@@ -3705,7 +3733,7 @@ err:
 
 
 PRIVATE struct type_cmp list_cmp = {
-	/* .tp_hash = */ NULL,
+	/* .tp_hash = */ (dhash_t (DCALL *)(DeeObject *__restrict))&list_hash,
 	/* .tp_eq   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&list_eq,
 	/* .tp_ne   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&list_ne,
 	/* .tp_lo   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&list_lo,

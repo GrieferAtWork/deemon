@@ -74,15 +74,15 @@ attr_visit(Attr *__restrict self, dvisit_t proc, void *arg) {
 PRIVATE WUNUSED NONNULL((1)) dhash_t DCALL
 attr_hash(Attr *__restrict self) {
 	dhash_t result;
-	result = (DeeObject_Hash(self->a_info.a_decl) ^
-	          Dee_HashPointer(self->a_info.a_attrtype) ^
-	          self->a_info.a_perm);
+	result = self->a_info.a_perm;
+	result = Dee_HashCombine(result, DeeObject_Hash(self->a_info.a_decl));
+	result = Dee_HashCombine(result, Dee_HashPointer(self->a_info.a_attrtype));
 	if (self->a_info.a_perm & ATTR_NAMEOBJ) {
-		result ^= DeeString_Hash((DeeObject *)COMPILER_CONTAINER_OF(self->a_name,
-		                                                            DeeStringObject,
-		                                                            s_str));
+		DeeStringObject *string;
+		string = COMPILER_CONTAINER_OF(self->a_name, DeeStringObject, s_str);
+		result = Dee_HashCombine(result, DeeString_Hash((DeeObject *)string));
 	} else {
-		result ^= Dee_HashStr(self->a_name);
+		result = Dee_HashCombine(result, Dee_HashStr(self->a_name));
 	}
 	return result;
 }

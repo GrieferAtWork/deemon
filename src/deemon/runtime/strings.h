@@ -97,6 +97,7 @@ local STRINGS = {
 	"strict",
 	"replace",
 	"ignore",
+	"ignore",
 	"posix",
 	"environ",
 	"get",
@@ -104,6 +105,7 @@ local STRINGS = {
 	"enumattr",
 	"gc",
 	"import",
+	"hash",
 	"exec",
 	"isatty",
 	"isfloat",
@@ -354,6 +356,8 @@ DEF_STRING(str_gc, "gc", 0x73e7fc4c, 0x5369f38dbb7cb94e)
 #define STR_gc DeeString_STR(&str_gc)
 DEF_STRING(str_import, "import", 0x1a3f5a1f, 0x5a525def3865fbed)
 #define STR_import DeeString_STR(&str_import)
+DEF_STRING(str_hash, "hash", 0x56c454fb, 0x4436b8a58bf97c51)
+#define STR_hash DeeString_STR(&str_hash)
 DEF_STRING(str_exec, "exec", 0x6b42be28, 0x2efd876517f0e883)
 #define STR_exec DeeString_STR(&str_exec)
 DEF_STRING(str_isatty, "isatty", 0xab82818e, 0x66fe4c97c9502a99)

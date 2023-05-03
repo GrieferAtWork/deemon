@@ -1054,27 +1054,21 @@ PRIVATE struct type_gc tpconst code_gc = {
 PRIVATE WUNUSED NONNULL((1)) dhash_t DCALL
 code_hash(DeeCodeObject *__restrict self) {
 	dhash_t result;
-	result = self->co_flags;
-	result ^= self->co_localc;
-	result ^= self->co_staticc;
-	result ^= self->co_refc;
-	result ^= self->co_exceptc;
-	result ^= self->co_argc_min;
-	result ^= self->co_argc_max;
-	result ^= self->co_framesize;
-	result ^= self->co_codebytes;
+	result = Dee_HashPtr(DeeObject_DATA(self),
+	                     COMPILER_OFFSETAFTER(DeeCodeObject, co_codebytes) -
+	                     sizeof(DeeObject));
 	if (self->co_module)
-		result ^= DeeObject_Hash((DeeObject *)self->co_module);
+		result = Dee_HashCombine(result, DeeObject_Hash((DeeObject *)self->co_module));
 	if (self->co_keywords) {
 		uint16_t i;
 		for (i = 0; i < self->co_argc_max; ++i)
-			result ^= DeeString_Hash((DeeObject *)self->co_keywords[i]);
+			result = Dee_HashCombine(result, DeeString_Hash((DeeObject *)self->co_keywords[i]));
 	}
 	if (self->co_defaultv) {
 		uint16_t i;
 		for (i = 0; i < (self->co_argc_max - self->co_argc_min); ++i) {
 			if ((DeeObject *)self->co_defaultv[i])
-				result ^= DeeObject_Hash((DeeObject *)self->co_defaultv[i]);
+				result = Dee_HashCombine(result, DeeObject_Hash((DeeObject *)self->co_defaultv[i]));
 		}
 	}
 	if (self->co_staticv) {
@@ -1085,24 +1079,24 @@ code_hash(DeeCodeObject *__restrict self) {
 			ob = self->co_staticv[i];
 			Dee_Incref(ob);
 			DeeCode_StaticLockEndRead(self);
-			result ^= DeeObject_Hash(ob);
+			result = Dee_HashCombine(result, DeeObject_Hash(ob));
 			Dee_Decref(ob);
 		}
 	}
 	if (self->co_exceptv) {
 		uint16_t i;
 		for (i = 0; i < self->co_exceptc; ++i) {
-			result ^= self->co_exceptv[i].eh_start;
-			result ^= self->co_exceptv[i].eh_end;
-			result ^= self->co_exceptv[i].eh_addr;
-			result ^= self->co_exceptv[i].eh_stack;
-			result ^= self->co_exceptv[i].eh_flags;
+			dhash_t spec;
+			spec = Dee_HashPtr(&self->co_exceptv[i].eh_start,
+			                   sizeof(struct except_handler) -
+			                   COMPILER_OFFSETAFTER(struct except_handler, eh_start));
+			result = Dee_HashCombine(result, spec);
 			if (self->co_exceptv[i].eh_mask)
-				result ^= DeeObject_Hash((DeeObject *)self->co_exceptv[i].eh_mask);
+				result = Dee_HashCombine(result, DeeObject_Hash((DeeObject *)self->co_exceptv[i].eh_mask));
 		}
 	}
-	result ^= DeeObject_Hash((DeeObject *)self->co_ddi);
-	result ^= Dee_HashPtr(self->co_code, self->co_codebytes);
+	result = Dee_HashCombine(result, DeeObject_Hash((DeeObject *)self->co_ddi));
+	result = Dee_HashCombine(result, Dee_HashPtr(self->co_code, self->co_codebytes));
 	return result;
 }
 

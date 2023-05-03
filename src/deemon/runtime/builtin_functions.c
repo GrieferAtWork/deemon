@@ -176,6 +176,14 @@ err:
 INTERN DEFINE_KWCMETHOD(builtin_import, &f_builtin_import);
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
+f_builtin_hash(size_t argc, DeeObject *const *argv) {
+	dssize_t result = DeeObject_Hashv(argc, argv);
+	return DeeInt_NewHash(result);
+}
+
+INTERN DEFINE_CMETHOD(builtin_hash, &f_builtin_hash);
+
+PRIVATE WUNUSED DREF DeeObject *DCALL
 builtin_exec_fallback(size_t argc,
                       DeeObject *const *argv,
                       DeeObject *kw) {

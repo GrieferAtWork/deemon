@@ -147,6 +147,7 @@ INTDEF DeeCMethodObject builtin_boundattr;
 INTDEF DeeCMethodObject builtin_bounditem;
 INTDEF DeeKwCMethodObject builtin_compare;
 INTDEF DeeKwCMethodObject builtin_import;
+INTDEF DeeKwCMethodObject builtin_hash;
 INTDEF DeeKwCMethodObject builtin_exec;
 
 DECL_END
@@ -216,6 +217,20 @@ BUILTIN_DOC(import, &builtin_import, MODSYM_FNORMAL,
             "@throw ValueError The given @module_name is invalid\n"
             "@throw FileNotFound The named @module_name could not be found\n"
             "@return The ?DModule associated with the given @module_name")
+
+
+/* Load a module, given its name.
+ * >> import(module_name: string, base?: Module) -> string;
+ * NOTE: This is what `import' links against when
+ *       as a stand-alone within an expression. */
+BUILTIN_DOC(hash, &builtin_hash, MODSYM_FREADONLY | MODSYM_FCONSTEXPR,
+            "(objects!)->?Dint\n"
+            "Combine the hashes of a given set of objects in a way that also "
+            /**/ "tries to preserve the order in which objects are being hashed.\n"
+            "For example, ${hash(\"foo\", \"bar\")} may return a different hash "
+            /**/ "value than ${hash(\"bar\", \"foo\")}.\n"
+            "If you wish to combine hashes such that element ordering doesn't play any "
+            /**/ "role, you can just do ${\"bar\".operator hash() ^ \"foo\".operator hash()}")
 
 
 /* TODO: Add more options to this function */

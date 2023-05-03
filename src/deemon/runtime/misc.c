@@ -91,6 +91,20 @@ DECL_BEGIN
 
 
 
+/* Combine 2 hash values into 1, while losing
+ * as little entropy from either as possible. */
+PUBLIC ATTR_CONST WUNUSED dhash_t
+(FCALL Dee_HashCombine)(dhash_t a, dhash_t b) {
+	/* Take from https://stackoverflow.com/a/27952689/3296587 */
+#if __SIZEOF_POINTER__ >= 8
+	a ^= b + UINT64_C(0x517cc1b727220a95) + (a << 6) + (a >> 2);
+#else /* __SIZEOF_POINTER__ >= 8 */
+	a ^= b + UINT32_C(0x9e3779b9) + (a << 6) + (a >> 2);
+#endif /* __SIZEOF_POINTER__ < 8 */
+	return a;
+}
+
+
 #if _Dee_HashSelect(1, 2) == 1
 // This Hash function is based on code from here:
 // https://en.wikipedia.org/wiki/MurmurHash

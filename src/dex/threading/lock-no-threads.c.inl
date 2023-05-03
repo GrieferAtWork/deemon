@@ -21,6 +21,8 @@
 #define GUARD_DEEMON_RUNTIME_LOCK_NO_THREADS_C_INL
 
 #include <deemon/api.h>
+#include <deemon/error.h>
+#include <deemon/thread.h>
 #include <deemon/util/lock.h>
 #include <deemon/util/rlock.h>
 

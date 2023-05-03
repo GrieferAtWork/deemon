@@ -3513,8 +3513,8 @@ instance_builtin_thash(DeeTypeObject *tp_self,
 	struct instance_desc *instance;
 	DREF DeeObject *member;
 	dhash_t result = 0;
-	desc           = DeeClass_DESC(tp_self);
-	instance       = DeeInstance_DESC(desc, self);
+	desc     = DeeClass_DESC(tp_self);
+	instance = DeeInstance_DESC(desc, self);
 	Dee_instance_desc_lock_read(instance);
 	for (i = 0; i < desc->cd_desc->cd_imemb_size; ++i) {
 		member = instance->id_vtab[i];
@@ -3522,7 +3522,7 @@ instance_builtin_thash(DeeTypeObject *tp_self,
 			continue;
 		Dee_Incref(member);
 		Dee_instance_desc_lock_endread(instance);
-		result ^= DeeObject_Hash(member);
+		result = Dee_HashCombine(result, DeeObject_Hash(member));
 		Dee_Decref(member);
 		Dee_instance_desc_lock_read(instance);
 	}
@@ -3951,13 +3951,13 @@ err:
 INTERN WUNUSED NONNULL((1)) dhash_t DCALL
 instance_builtin_hash(DeeObject *__restrict self) {
 	DeeTypeObject *tp_self = Dee_TYPE(self);
-	dhash_t result         = 0;
+	dhash_t result = Dee_HashPointer(tp_self);
 	do {
-		result ^= instance_builtin_thash(tp_self, self);
+		result = Dee_HashCombine(result, instance_builtin_thash(tp_self, self));
 	} while ((tp_self = DeeType_Base(tp_self)) != NULL &&
 	         DeeType_IsClass(tp_self));
-	if (tp_self)
-		result ^= DeeObject_THash(tp_self, self);
+	if (tp_self != NULL)
+		result = Dee_HashCombine(result, DeeObject_THash(tp_self, self));
 	return result;
 }
 

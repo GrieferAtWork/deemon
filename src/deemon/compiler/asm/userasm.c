@@ -797,17 +797,20 @@ retry:
 		    !!(iter->ao_flags & ASM_OVERLOAD_FPREFIX))
 			continue;
 #endif /* (INVOKE_FPUSH != ASM_OVERLOAD_FPUSH) || (INVOKE_FPREFIX != ASM_OVERLOAD_FPREFIX) */
+
 		/* Make sure that read-only prefix operands can only
 		 * be used with read-only prefix instructions. */
 		if (!(iter->ao_flags & ASM_OVERLOAD_FPREFIX_RO) &&
 		    (invoc->ai_flags & INVOKE_FPREFIX_RO))
 			continue;
+
 		/* If the overload is only applicable to yielding/non-yielding
 		 * functions, validate that we match that requirement. */
 		if ((iter->ao_flags & (ASM_OVERLOAD_FRET | ASM_OVERLOAD_FYLD)) &&
 		    !!(iter->ao_flags & ASM_OVERLOAD_FYLD) !=
 		    !!(current_basescope->bs_flags & CODE_FYIELDING))
 			continue;
+
 		/* Match operands against each other. */
 		for (i = 0; i < iter->ao_opcount; ++i) {
 			if (!compatible_operand(&invoc->ai_ops[i], &iter->ao_ops[i],
@@ -815,12 +818,15 @@ retry:
 				goto next_overload;
 		}
 		goto got_overload;
-	next_overload:;
+next_overload:
+		;
 	}
+
 /*check_stackabs_translated:*/
 	if (!stackabs_translated) {
 		uint16_t immediate_stackdepth;
 		stackabs_translated = true;
+
 		/* Translate absolute stack addresses in operands:
 		 * >> add top, #1
 		 * Translate to this when the previous stack-alignment was `#2'
@@ -853,375 +859,386 @@ err_no_overload:
 	                instr->am_name, asm_invocation_tostring(invoc, instr));
 err:
 	return -1;
-got_overload: {
-	/* Got the overload that should be printed.
-	 * Now to generate the assembly and update the assembler state. */
-	code_addr_t instr_start = asm_ip();
-	uint16_t old_sp, sp_add, sp_sub;
-	instruction_t *instr_end;
-	bool emit_sym16 = false; /* Emit symbols as 16-bit operands */
-	bool emit_imm16 = false; /* Emit integers as 16-bit operands */
-	/* Special case: discard emission of DELOP instructions. */
-	if (((instruction_t)iter->ao_instr) == ASM_DELOP)
-		goto done;
+	{
+		code_addr_t instr_start;
+		uint16_t old_sp, sp_add, sp_sub;
+		instruction_t *instr_end;
+		bool emit_sym16; /* Emit symbols as 16-bit operands */
+		bool emit_imm16; /* Emit integers as 16-bit operands */
 
-	if ((current_userasm.ua_flags & AST_FASSEMBLY_VOLATILE) &&
-	    (current_assembler.a_flag & ASM_FPEEPHOLE)) {
-		/* Create a fake symbol to prevent peephole
-		 * optimization from tinkering with the generated code. */
-		struct asm_sym *volatile_sym = asm_newsym();
-		if unlikely(!volatile_sym)
-			goto err;
-		asm_defsym(volatile_sym);
-		++volatile_sym->as_used; /* Intentionally left dangling. */
-	}
-	/* Emit a prefix. */
-	if (invoc->ai_flags & INVOKE_FPREFIX) {
-		bool is_extended = false;
-		if (invoc->ai_prefix != ASM_EXTERN)
-			invoc->ai_prefix_id2 = 0;
-		/* Check if the prefix needs to be extended. */
-		if (invoc->ai_prefix_id1 > UINT8_MAX ||
-		    invoc->ai_prefix_id2 > UINT8_MAX) {
-			is_extended = true;
-			if (asm_put(ASM_EXTENDED1))
+		/* Got the overload that should be printed.
+		 * Now to generate the assembly and update the assembler state. */
+got_overload:
+		instr_start = asm_ip();
+		emit_sym16  = false; /* Emit symbols as 16-bit operands */
+		emit_imm16  = false; /* Emit integers as 16-bit operands */
+
+		/* Special case: discard emission of DELOP instructions. */
+		if (((instruction_t)iter->ao_instr) == ASM_DELOP)
+			goto done;
+
+		if ((current_userasm.ua_flags & AST_FASSEMBLY_VOLATILE) &&
+		    (current_assembler.a_flag & ASM_FPEEPHOLE)) {
+			/* Create a fake symbol to prevent peephole
+			 * optimization from tinkering with the generated code. */
+			struct asm_sym *volatile_sym = asm_newsym();
+			if unlikely(!volatile_sym)
 				goto err;
+			asm_defsym(volatile_sym);
+			++volatile_sym->as_used; /* Intentionally left dangling. */
 		}
-		if (asm_put(invoc->ai_prefix))
-			goto err;
-		if (is_extended) {
-			if (asm_put_data16(invoc->ai_prefix_id1))
-				goto err;
-			if (invoc->ai_prefix == ASM_EXTERN) {
-				if (asm_put_data16(invoc->ai_prefix_id2))
-					goto err;
-			}
-		} else {
-			if (asm_put_data8((uint8_t)invoc->ai_prefix_id1))
-				goto err;
-			if (invoc->ai_prefix == ASM_EXTERN) {
-				if (asm_put_data8((uint8_t)invoc->ai_prefix_id2))
-					goto err;
-			}
-		}
-	} else {
-		/* Emit prefix operands. */
-		for (i = 0; i < iter->ao_opcount; ++i) {
-			if ((UNALIGNED_GET16(&iter->ao_ops[i].aoo_class) & OPERAND_CLASS_FMASK) != OPERAND_CLASS_PREFIX)
-				continue;
-			switch (invoc->ai_ops[i].io_class & OPERAND_CLASS_FMASK) {
 
-			case OPERAND_CLASS_POP:
-			case OPERAND_CLASS_TOP:
-			case OPERAND_CLASS_POP_OR_TOP:
-				/* stack top: ... */
-				invoc->ai_ops[i].io_intexpr.ie_val = current_assembler.a_stackcur - 1;
-				ATTR_FALLTHROUGH
-			case OPERAND_CLASS_SDISP8:
-			case OPERAND_CLASS_SDISP16:
-			case OPERAND_CLASS_SDISP32:
-			case OPERAND_CLASS_DISP8:
-			case OPERAND_CLASS_DISP16:
-			case OPERAND_CLASS_DISP32:
-			case OPERAND_CLASS_DISP_EQ_N2:
-			case OPERAND_CLASS_DISP_EQ_N1:
-			case OPERAND_CLASS_DISP_EQ_0:
-			case OPERAND_CLASS_DISP_EQ_1:
-			case OPERAND_CLASS_DISP_EQ_2:
-			case OPERAND_CLASS_DISP8_HALF:
-			case OPERAND_CLASS_DISP16_HALF:
-				if (invoc->ai_ops[i].io_intexpr.ie_val > UINT8_MAX) {
-					if (asm_put(ASM_EXTENDED1))
-						goto err;
-					if (asm_putimm16(ASM_STACK, (uint16_t)invoc->ai_ops[i].io_intexpr.ie_val))
-						goto err;
-				} else {
-					if (asm_putimm8(ASM_STACK, (uint8_t)invoc->ai_ops[i].io_intexpr.ie_val))
-						goto err;
-				}
-				break;
+		/* Emit a prefix. */
+		if (invoc->ai_flags & INVOKE_FPREFIX) {
+			bool is_extended = false;
+			if (invoc->ai_prefix != ASM_EXTERN)
+				invoc->ai_prefix_id2 = 0;
 
-			case OPERAND_CLASS_CONST:
-			case OPERAND_CLASS_STATIC:
-				if (invoc->ai_ops[i].io_symid > UINT8_MAX) {
-					if (asm_put(ASM_EXTENDED1))
-						goto err;
-					if (asm_putimm16(ASM_STATIC, invoc->ai_ops[i].io_symid))
-						goto err;
-				} else {
-					if (asm_putimm8(ASM_STATIC, (uint8_t)invoc->ai_ops[i].io_symid))
-						goto err;
-				}
-				break;
-
-			case OPERAND_CLASS_EXTERN:
-				if (invoc->ai_ops[i].io_extern.io_modid > UINT8_MAX ||
-				    invoc->ai_ops[i].io_extern.io_symid > UINT8_MAX) {
-					if (asm_put(ASM_EXTENDED1))
-						goto err;
-					if (asm_putimm16(ASM_EXTERN, invoc->ai_ops[i].io_extern.io_modid))
-						goto err;
-					if (asm_put_data16(invoc->ai_ops[i].io_extern.io_symid))
-						goto err;
-				} else {
-					if (asm_putimm8(ASM_EXTERN, (uint8_t)invoc->ai_ops[i].io_extern.io_modid))
-						goto err;
-					if (asm_put_data8((uint8_t)invoc->ai_ops[i].io_extern.io_symid))
-						goto err;
-				}
-				break;
-
-			case OPERAND_CLASS_GLOBAL:
-				if (invoc->ai_ops[i].io_symid > UINT8_MAX) {
-					if (asm_put(ASM_EXTENDED1))
-						goto err;
-					if (asm_putimm16(ASM_GLOBAL, invoc->ai_ops[i].io_symid))
-						goto err;
-				} else {
-					if (asm_putimm8(ASM_GLOBAL, (uint8_t)invoc->ai_ops[i].io_symid))
-						goto err;
-				}
-				break;
-
-			case OPERAND_CLASS_LOCAL:
-				if (invoc->ai_ops[i].io_symid > UINT8_MAX) {
-					if (asm_put(ASM_EXTENDED1))
-						goto err;
-					if (asm_putimm16(ASM_LOCAL, invoc->ai_ops[i].io_symid))
-						goto err;
-				} else {
-					if (asm_putimm8(ASM_LOCAL, (uint8_t)invoc->ai_ops[i].io_symid))
-						goto err;
-				}
-				break;
-
-			default: __builtin_unreachable();
-			}
-		}
-	}
-
-	/* Check if the instruction must be prefixed by F0 */
-	for (i = 0; i < iter->ao_opcount; ++i) {
-		switch (UNALIGNED_GET16(&iter->ao_ops[i].aoo_class) & OPERAND_CLASS_FMASK) {
-
-		case OPERAND_CLASS_EXTERN: /* `extern <io_modid>:<io_symid>' */
-			if (invoc->ai_ops[i].io_extern.io_modid > UINT8_MAX)
-				goto do_emit_f0_prefix;
-			ATTR_FALLTHROUGH
-		case OPERAND_CLASS_REF:
-		case OPERAND_CLASS_ARG:
-		case OPERAND_CLASS_CONST:
-		case OPERAND_CLASS_STATIC:
-		case OPERAND_CLASS_MODULE:
-		case OPERAND_CLASS_GLOBAL:
-		case OPERAND_CLASS_LOCAL:
-			if (invoc->ai_ops[i].io_symid <= UINT8_MAX)
-				break;
-do_emit_f0_prefix:
-			if (!(iter->ao_flags & ASM_OVERLOAD_F16BIT)) {
+			/* Check if the prefix needs to be extended. */
+			if (invoc->ai_prefix_id1 > UINT8_MAX ||
+			    invoc->ai_prefix_id2 > UINT8_MAX) {
+				is_extended = true;
 				if (asm_put(ASM_EXTENDED1))
 					goto err;
 			}
-			emit_sym16 = true;
-			emit_imm16 = !!(iter->ao_flags & ASM_OVERLOAD_FF0_IMM);
-			goto do_emit_instruction;
-
-		default:
-			/* Check if a constant-encoded immediate operand needs extension. */
-			if (current_assembler.a_constc > UINT8_MAX &&
-			    (iter->ao_flags & ASM_OVERLOAD_FCONSTIMM) &&
-			    OPERAND_CLASS_ISDISP(UNALIGNED_GET16(&iter->ao_ops[i].aoo_class)))
-				goto do_emit_f0_prefix;
-			break;
-		}
-	}
-	if (iter->ao_flags & ASM_OVERLOAD_F16BIT)
-		emit_sym16 = true;
-
-	/* Now emit the instruction itself. */
-do_emit_instruction:
-	if ((iter->ao_instr & 0xff00) &&
-	    asm_put((instruction_t)(iter->ao_instr >> 8)))
-		goto err;
-	if (asm_put((instruction_t)iter->ao_instr))
-		goto err;
-
-	/* Now emit operands in ascending order. */
-	for (i = 0; i < iter->ao_opcount; ++i) {
-		tint_t imm_val;
-		struct asm_sym *imm_sym;
-		uint16_t imm_rel;
-		imm_val = invoc->ai_ops[i].io_intexpr.ie_val;
-		imm_sym = invoc->ai_ops[i].io_intexpr.ie_sym;
-		imm_rel = invoc->ai_ops[i].io_intexpr.ie_rel;
-		if (imm_rel == (uint16_t)-1) {
-			imm_rel = iter->ao_flags;
-		} else if (iter->ao_flags & ASM_OVERLOAD_FREL_DSPBIT) {
-			/* Toggle the relative displacement bit. */
-			imm_rel ^= ASM_OVERLOAD_FREL_DSPBIT;
-		}
-		switch (UNALIGNED_GET16(&iter->ao_ops[i].aoo_class) &
-		        (OPERAND_CLASS_FSPADD | OPERAND_CLASS_FSPSUB)) {
-
-		case OPERAND_CLASS_FSPADD: /* `SP + imm' */
-			imm_val -= current_assembler.a_stackcur;
-			break;
-
-		case OPERAND_CLASS_FSPSUB: /* `SP - imm' */
-			imm_val = current_assembler.a_stackcur - imm_val;
-			break;
-
-		case OPERAND_CLASS_FSUBSP: /* `imm - SP' */
-			imm_val += current_assembler.a_stackcur;
-			break;
-
-		default: break;
-		}
-		imm_val += iter->ao_ops[i].aoo_disp;
-#if 0
-		/* Relative stack displacements work in reverse. */
-		if (imm_rel == ASM_OVERLOAD_FSTKDSP)
-			imm_val = -imm_val;
-#endif
-		if ((iter->ao_flags & ASM_OVERLOAD_FCONSTIMM) &&
-		    OPERAND_CLASS_ISDISP(UNALIGNED_GET16(&iter->ao_ops[i].aoo_class))) {
-			int32_t cid;
-			/* Encode as a relocation-enabled integer constant. */
-			switch (imm_rel & ASM_OVERLOAD_FRELMSK) {
-
-			case ASM_OVERLOAD_FRELABS:
-				break;
-
-			case ASM_OVERLOAD_FRELDSP:
-				imm_val -= asm_ip();
-				break;
-
-			case ASM_OVERLOAD_FSTKABS:
-				break;
-
-			case ASM_OVERLOAD_FSTKDSP:
-				imm_val = -imm_val;
-				break;
-
-			default: __builtin_unreachable();
+			if (asm_put(invoc->ai_prefix))
+				goto err;
+			if (is_extended) {
+				if (asm_put_data16(invoc->ai_prefix_id1))
+					goto err;
+				if (invoc->ai_prefix == ASM_EXTERN) {
+					if (asm_put_data16(invoc->ai_prefix_id2))
+						goto err;
+				}
+			} else {
+				if (asm_put_data8((uint8_t)invoc->ai_prefix_id1))
+					goto err;
+				if (invoc->ai_prefix == ASM_EXTERN) {
+					if (asm_put_data8((uint8_t)invoc->ai_prefix_id2))
+						goto err;
+				}
 			}
-			cid = asm_newrelint(imm_sym, imm_val,
-			                    imm_rel & ASM_OVERLOAD_FREL_STKBIT
-			                    ? RELINT_MODE_FSTCK
-			                    : RELINT_MODE_FADDR);
-			if unlikely(cid < 0)
-				goto err;
-			if (emit_sym16 ? asm_put_data16((uint16_t)cid)
-			               : asm_put_data8((uint8_t)cid))
-				goto err;
 		} else {
+			/* Emit prefix operands. */
+			for (i = 0; i < iter->ao_opcount; ++i) {
+				if ((UNALIGNED_GET16(&iter->ao_ops[i].aoo_class) & OPERAND_CLASS_FMASK) != OPERAND_CLASS_PREFIX)
+					continue;
+				switch (invoc->ai_ops[i].io_class & OPERAND_CLASS_FMASK) {
+
+				case OPERAND_CLASS_POP:
+				case OPERAND_CLASS_TOP:
+				case OPERAND_CLASS_POP_OR_TOP:
+					/* stack top: ... */
+					invoc->ai_ops[i].io_intexpr.ie_val = current_assembler.a_stackcur - 1;
+					ATTR_FALLTHROUGH
+				case OPERAND_CLASS_SDISP8:
+				case OPERAND_CLASS_SDISP16:
+				case OPERAND_CLASS_SDISP32:
+				case OPERAND_CLASS_DISP8:
+				case OPERAND_CLASS_DISP16:
+				case OPERAND_CLASS_DISP32:
+				case OPERAND_CLASS_DISP_EQ_N2:
+				case OPERAND_CLASS_DISP_EQ_N1:
+				case OPERAND_CLASS_DISP_EQ_0:
+				case OPERAND_CLASS_DISP_EQ_1:
+				case OPERAND_CLASS_DISP_EQ_2:
+				case OPERAND_CLASS_DISP8_HALF:
+				case OPERAND_CLASS_DISP16_HALF:
+					if (invoc->ai_ops[i].io_intexpr.ie_val > UINT8_MAX) {
+						if (asm_put(ASM_EXTENDED1))
+							goto err;
+						if (asm_putimm16(ASM_STACK, (uint16_t)invoc->ai_ops[i].io_intexpr.ie_val))
+							goto err;
+					} else {
+						if (asm_putimm8(ASM_STACK, (uint8_t)invoc->ai_ops[i].io_intexpr.ie_val))
+							goto err;
+					}
+					break;
+
+				case OPERAND_CLASS_CONST:
+				case OPERAND_CLASS_STATIC:
+					if (invoc->ai_ops[i].io_symid > UINT8_MAX) {
+						if (asm_put(ASM_EXTENDED1))
+							goto err;
+						if (asm_putimm16(ASM_STATIC, invoc->ai_ops[i].io_symid))
+							goto err;
+					} else {
+						if (asm_putimm8(ASM_STATIC, (uint8_t)invoc->ai_ops[i].io_symid))
+							goto err;
+					}
+					break;
+
+				case OPERAND_CLASS_EXTERN:
+					if (invoc->ai_ops[i].io_extern.io_modid > UINT8_MAX ||
+					    invoc->ai_ops[i].io_extern.io_symid > UINT8_MAX) {
+						if (asm_put(ASM_EXTENDED1))
+							goto err;
+						if (asm_putimm16(ASM_EXTERN, invoc->ai_ops[i].io_extern.io_modid))
+							goto err;
+						if (asm_put_data16(invoc->ai_ops[i].io_extern.io_symid))
+							goto err;
+					} else {
+						if (asm_putimm8(ASM_EXTERN, (uint8_t)invoc->ai_ops[i].io_extern.io_modid))
+							goto err;
+						if (asm_put_data8((uint8_t)invoc->ai_ops[i].io_extern.io_symid))
+							goto err;
+					}
+					break;
+
+				case OPERAND_CLASS_GLOBAL:
+					if (invoc->ai_ops[i].io_symid > UINT8_MAX) {
+						if (asm_put(ASM_EXTENDED1))
+							goto err;
+						if (asm_putimm16(ASM_GLOBAL, invoc->ai_ops[i].io_symid))
+							goto err;
+					} else {
+						if (asm_putimm8(ASM_GLOBAL, (uint8_t)invoc->ai_ops[i].io_symid))
+							goto err;
+					}
+					break;
+
+				case OPERAND_CLASS_LOCAL:
+					if (invoc->ai_ops[i].io_symid > UINT8_MAX) {
+						if (asm_put(ASM_EXTENDED1))
+							goto err;
+						if (asm_putimm16(ASM_LOCAL, invoc->ai_ops[i].io_symid))
+							goto err;
+					} else {
+						if (asm_putimm8(ASM_LOCAL, (uint8_t)invoc->ai_ops[i].io_symid))
+							goto err;
+					}
+					break;
+
+				default: __builtin_unreachable();
+				}
+			}
+		}
+
+		/* Check if the instruction must be prefixed by F0 */
+		for (i = 0; i < iter->ao_opcount; ++i) {
 			switch (UNALIGNED_GET16(&iter->ao_ops[i].aoo_class) & OPERAND_CLASS_FMASK) {
 
-				/* Symbol operands. */
-			case OPERAND_CLASS_EXTERN:
-				if (emit_sym16 ? asm_put_data16((uint16_t)invoc->ai_ops[i].io_extern.io_modid)
-				               : asm_put_data8((uint8_t)invoc->ai_ops[i].io_extern.io_modid))
-					goto err;
+			case OPERAND_CLASS_EXTERN: /* `extern <io_modid>:<io_symid>' */
+				if (invoc->ai_ops[i].io_extern.io_modid > UINT8_MAX)
+					goto do_emit_f0_prefix;
 				ATTR_FALLTHROUGH
 			case OPERAND_CLASS_REF:
+			case OPERAND_CLASS_ARG:
 			case OPERAND_CLASS_CONST:
 			case OPERAND_CLASS_STATIC:
 			case OPERAND_CLASS_MODULE:
 			case OPERAND_CLASS_GLOBAL:
 			case OPERAND_CLASS_LOCAL:
-			case OPERAND_CLASS_ARG:
-/*do_emit_symid_816:*/
-				if (emit_sym16 ? asm_put_data16((uint16_t)invoc->ai_ops[i].io_symid)
-				               : asm_put_data8((uint8_t)invoc->ai_ops[i].io_symid))
-					goto err;
-				break;
-
-				/* Immediate operands (of any kind). */
-			case OPERAND_CLASS_SDISP8:
-			case OPERAND_CLASS_DISP8:
-				if (!emit_imm16) {
-					if (imm_sym && asm_putrel_f(imm_rel, imm_sym, 8))
-						goto err;
-					if (asm_put_data8((uint8_t)imm_val))
-						goto err;
+				if (invoc->ai_ops[i].io_symid <= UINT8_MAX)
 					break;
-				}
-				ATTR_FALLTHROUGH
-			case OPERAND_CLASS_SDISP16:
-			case OPERAND_CLASS_DISP16:
-				if (imm_sym && asm_putrel_f(imm_rel, imm_sym, 16))
-					goto err;
-				if (asm_put_data16((uint16_t)imm_val))
-					goto err;
-				break;
-
-			case OPERAND_CLASS_SDISP32:
-			case OPERAND_CLASS_DISP32:
-				if (imm_sym && asm_putrel_f(imm_rel, imm_sym, 32))
-					goto err;
-				if (asm_put_data32((uint32_t)imm_val))
-					goto err;
-				break;
-
-			case OPERAND_CLASS_DISP8_HALF:
-				if (!emit_imm16) {
-					ASSERTF(!imm_sym, "DISP8_HALF cannot be used with symbols");
-					if (asm_put_data8((uint8_t)((uint16_t)imm_val >> 1)))
+do_emit_f0_prefix:
+				if (!(iter->ao_flags & ASM_OVERLOAD_F16BIT)) {
+					if (asm_put(ASM_EXTENDED1))
 						goto err;
-					break;
 				}
-				ATTR_FALLTHROUGH
-			case OPERAND_CLASS_DISP16_HALF:
-				ASSERTF(!imm_sym, "DISP16_HALF cannot be used with symbols");
-				if (asm_put_data16((uint16_t)((uint32_t)imm_val >> 1)))
-					goto err;
+				emit_sym16 = true;
+				emit_imm16 = !!(iter->ao_flags & ASM_OVERLOAD_FF0_IMM);
+				goto do_emit_instruction;
+
+			default:
+				/* Check if a constant-encoded immediate operand needs extension. */
+				if (current_assembler.a_constc > UINT8_MAX &&
+				    (iter->ao_flags & ASM_OVERLOAD_FCONSTIMM) &&
+				    OPERAND_CLASS_ISDISP(UNALIGNED_GET16(&iter->ao_ops[i].aoo_class)))
+					goto do_emit_f0_prefix;
+				break;
+			}
+		}
+		if (iter->ao_flags & ASM_OVERLOAD_F16BIT)
+			emit_sym16 = true;
+
+		/* Now emit the instruction itself. */
+do_emit_instruction:
+		if ((iter->ao_instr & 0xff00) &&
+		    asm_put((instruction_t)(iter->ao_instr >> 8)))
+			goto err;
+		if (asm_put((instruction_t)iter->ao_instr))
+			goto err;
+
+		/* Now emit operands in ascending order. */
+		for (i = 0; i < iter->ao_opcount; ++i) {
+			tint_t imm_val;
+			struct asm_sym *imm_sym;
+			uint16_t imm_rel;
+			imm_val = invoc->ai_ops[i].io_intexpr.ie_val;
+			imm_sym = invoc->ai_ops[i].io_intexpr.ie_sym;
+			imm_rel = invoc->ai_ops[i].io_intexpr.ie_rel;
+			if (imm_rel == (uint16_t)-1) {
+				imm_rel = iter->ao_flags;
+			} else if (iter->ao_flags & ASM_OVERLOAD_FREL_DSPBIT) {
+				/* Toggle the relative displacement bit. */
+				imm_rel ^= ASM_OVERLOAD_FREL_DSPBIT;
+			}
+			switch (UNALIGNED_GET16(&iter->ao_ops[i].aoo_class) &
+			        (OPERAND_CLASS_FSPADD | OPERAND_CLASS_FSPSUB)) {
+
+			case OPERAND_CLASS_FSPADD: /* `SP + imm' */
+				imm_val -= current_assembler.a_stackcur;
+				break;
+
+			case OPERAND_CLASS_FSPSUB: /* `SP - imm' */
+				imm_val = current_assembler.a_stackcur - imm_val;
+				break;
+
+			case OPERAND_CLASS_FSUBSP: /* `imm - SP' */
+				imm_val += current_assembler.a_stackcur;
 				break;
 
 			default: break;
 			}
+			imm_val += iter->ao_ops[i].aoo_disp;
+#if 0
+			/* Relative stack displacements work in reverse. */
+			if (imm_rel == ASM_OVERLOAD_FSTKDSP)
+				imm_val = -imm_val;
+#endif
+			if ((iter->ao_flags & ASM_OVERLOAD_FCONSTIMM) &&
+			    OPERAND_CLASS_ISDISP(UNALIGNED_GET16(&iter->ao_ops[i].aoo_class))) {
+				int32_t cid;
+				/* Encode as a relocation-enabled integer constant. */
+				switch (imm_rel & ASM_OVERLOAD_FRELMSK) {
+
+				case ASM_OVERLOAD_FRELABS:
+					break;
+
+				case ASM_OVERLOAD_FRELDSP:
+					imm_val -= asm_ip();
+					break;
+
+				case ASM_OVERLOAD_FSTKABS:
+					break;
+
+				case ASM_OVERLOAD_FSTKDSP:
+					imm_val = -imm_val;
+					break;
+
+				default: __builtin_unreachable();
+				}
+				cid = asm_newrelint(imm_sym, imm_val,
+				                    imm_rel & ASM_OVERLOAD_FREL_STKBIT
+				                    ? RELINT_MODE_FSTCK
+				                    : RELINT_MODE_FADDR);
+				if unlikely(cid < 0)
+					goto err;
+				if (emit_sym16 ? asm_put_data16((uint16_t)cid)
+				               : asm_put_data8((uint8_t)cid))
+					goto err;
+			} else {
+				switch (UNALIGNED_GET16(&iter->ao_ops[i].aoo_class) & OPERAND_CLASS_FMASK) {
+
+					/* Symbol operands. */
+				case OPERAND_CLASS_EXTERN:
+					if (emit_sym16 ? asm_put_data16((uint16_t)invoc->ai_ops[i].io_extern.io_modid)
+					               : asm_put_data8((uint8_t)invoc->ai_ops[i].io_extern.io_modid))
+						goto err;
+					ATTR_FALLTHROUGH
+				case OPERAND_CLASS_REF:
+				case OPERAND_CLASS_CONST:
+				case OPERAND_CLASS_STATIC:
+				case OPERAND_CLASS_MODULE:
+				case OPERAND_CLASS_GLOBAL:
+				case OPERAND_CLASS_LOCAL:
+				case OPERAND_CLASS_ARG:
+					/*do_emit_symid_816:*/
+					if (emit_sym16 ? asm_put_data16((uint16_t)invoc->ai_ops[i].io_symid)
+					               : asm_put_data8((uint8_t)invoc->ai_ops[i].io_symid))
+						goto err;
+					break;
+
+					/* Immediate operands (of any kind). */
+				case OPERAND_CLASS_SDISP8:
+				case OPERAND_CLASS_DISP8:
+					if (!emit_imm16) {
+						if (imm_sym && asm_putrel_f(imm_rel, imm_sym, 8))
+							goto err;
+						if (asm_put_data8((uint8_t)imm_val))
+							goto err;
+						break;
+					}
+					ATTR_FALLTHROUGH
+				case OPERAND_CLASS_SDISP16:
+				case OPERAND_CLASS_DISP16:
+					if (imm_sym && asm_putrel_f(imm_rel, imm_sym, 16))
+						goto err;
+					if (asm_put_data16((uint16_t)imm_val))
+						goto err;
+					break;
+
+				case OPERAND_CLASS_SDISP32:
+				case OPERAND_CLASS_DISP32:
+					if (imm_sym && asm_putrel_f(imm_rel, imm_sym, 32))
+						goto err;
+					if (asm_put_data32((uint32_t)imm_val))
+						goto err;
+					break;
+
+				case OPERAND_CLASS_DISP8_HALF:
+					if (!emit_imm16) {
+						ASSERTF(!imm_sym, "DISP8_HALF cannot be used with symbols");
+						if (asm_put_data8((uint8_t)((uint16_t)imm_val >> 1)))
+							goto err;
+						break;
+					}
+					ATTR_FALLTHROUGH
+				case OPERAND_CLASS_DISP16_HALF:
+					ASSERTF(!imm_sym, "DISP16_HALF cannot be used with symbols");
+					if (asm_put_data16((uint16_t)((uint32_t)imm_val >> 1)))
+						goto err;
+					break;
+
+				default: break;
+				}
+			}
+		}
+
+		/* Save the last-written instruction. */
+/*done_instruction:*/
+		current_userasm.ua_lasti = iter->ao_instr;
+
+		/* Finally, update the stack effect. */
+		old_sp    = current_assembler.a_stackcur;
+		instr_end = DeeAsm_NextInstrEf(current_assembler.a_curr->sec_begin + instr_start,
+		                               &current_assembler.a_stackcur, &sp_add, &sp_sub);
+		ASSERTF(instr_end == current_assembler.a_curr->sec_iter,
+		        "Generated instruction does not terminate properly");
+		if (current_userasm.ua_mode & USER_ASM_FSTKINV && (sp_add || sp_sub)) {
+			DeeError_Throwf(&DeeError_CompilerError,
+			                "Instruction `%s' with stack effect used while the stack is in an undefined state",
+			                instr->am_name);
+			goto err;
+		}
+
+		if unlikely(sp_sub > old_sp) {
+			/* Negative stack offset? */
+#if 1
+			DeeError_Throwf(&DeeError_CompilerError,
+			                "Negative stack effect during `%s' instruction",
+			                instr->am_name);
+			goto err;
+#else
+			/* Peephole optimization would not be able to deal with this... */
+			current_assembler.a_flag &= ~ASM_FPEEPHOLE;
+#endif
+		}
+
+		/* Update stack requirements. */
+		if (current_assembler.a_stackmax < current_assembler.a_stackcur)
+			current_assembler.a_stackmax = current_assembler.a_stackcur;
+
+		/* Enter undefined-stack mode if adjstack is used with a relocatable symbol. */
+		if ((iter->ao_instr & 0xff) == ASM_ADJSTACK &&
+		    invoc->ai_ops[0].io_intexpr.ie_sym != NULL) {
+#if 1 /* Disable peephole, because who knows what the user might do to define this symbol... */
+			current_assembler.a_flag &= ~ASM_FPEEPHOLE;
+#endif
+			current_userasm.ua_mode |= USER_ASM_FSTKINV;
 		}
 	}
-/*done_instruction:*/
-	/* Save the last-written instruction. */
-	current_userasm.ua_lasti = iter->ao_instr;
-
-	/* Finally, update the stack effect. */
-	old_sp    = current_assembler.a_stackcur;
-	instr_end = DeeAsm_NextInstrEf(current_assembler.a_curr->sec_begin + instr_start,
-	                             &current_assembler.a_stackcur, &sp_add, &sp_sub);
-	ASSERTF(instr_end == current_assembler.a_curr->sec_iter,
-	        "Generated instruction does not terminate properly");
-	if (current_userasm.ua_mode & USER_ASM_FSTKINV && (sp_add || sp_sub)) {
-		DeeError_Throwf(&DeeError_CompilerError,
-		                "Instruction `%s' with stack effect used while the stack is in an undefined state",
-		                instr->am_name);
-		goto err;
-	}
-
-	if unlikely(sp_sub > old_sp) {
-		/* Negative stack offset? */
-#if 1
-		DeeError_Throwf(&DeeError_CompilerError,
-		                "Negative stack effect during `%s' instruction",
-		                instr->am_name);
-		goto err;
-#else
-		/* Peephole optimization would not be able to deal with this... */
-		current_assembler.a_flag &= ~ASM_FPEEPHOLE;
-#endif
-	}
-	/* Update stack requirements. */
-	if (current_assembler.a_stackmax < current_assembler.a_stackcur)
-		current_assembler.a_stackmax = current_assembler.a_stackcur;
-	/* Enter undefined-stack mode if adjstack is used with a relocatable symbol. */
-	if ((iter->ao_instr & 0xff) == ASM_ADJSTACK &&
-	    invoc->ai_ops[0].io_intexpr.ie_sym != NULL) {
-#if 1 /* Disable peephole, because who knows what the user might do to define this symbol... */
-		current_assembler.a_flag &= ~ASM_FPEEPHOLE;
-#endif
-		current_userasm.ua_mode |= USER_ASM_FSTKINV;
-	}
-}
 
 	/* Make sure to always set the assembly flag
 	 * for code objects containing user-assembly. */
@@ -1367,6 +1384,7 @@ unknown_encoding:
 		                &option);
 		goto err;
 	}
+
 	/* Check for format end. */
 	if (!*format) {
 		if (option)
@@ -1378,6 +1396,7 @@ unknown_encoding:
 		                format_start);
 		goto err;
 	}
+
 	/* Extend the active option. */
 	option <<= 8;
 	option |= (uint8_t)*format++;
@@ -1428,6 +1447,7 @@ abs_stack_any:
 		/* Stack operand. */
 		if (mode == OPTION_MODE_UNDEF)
 			goto err_undefined_mode;
+
 		/* Must pop the operand if it isn't input-only. */
 		if (mode != OPTION_MODE_INPUT)
 			cleanup->cm_kind = CLEANUP_MODE_FSTACK;
@@ -1534,6 +1554,7 @@ abs_stack_any:
 			if (self->a_type != AST_SYM)
 				goto next_option;
 			sym = SYMBOL_UNWIND_ALIAS(self->a_sym);
+
 			/* Check for may-reference, thus allowing anything that ~could~ be referenced. */
 			if (!SYMBOL_MAY_REFERENCE(sym))
 				goto next_option;
@@ -1810,6 +1831,7 @@ write_regular_local:
 					goto next_option;
 				goto err;
 			}
+
 			/* Push all the elements of the sequence. */
 			length = 0;
 			while (ITER_ISOK(elem = DeeObject_IterNext(iter))) {
@@ -2292,6 +2314,7 @@ ast_genasm_userasm(struct ast *__restrict self) {
 	if (self->a_flag & AST_FASSEMBLY_FORMAT) {
 		struct assembly_formatter formatter;
 		DREF DeeStringObject **dst;
+
 		/* Setup the formatter for user-assembly text. */
 		formatter.af_ast     = self;
 		formatter.af_opreprv = (DREF DeeStringObject **)Dee_Callocc(self->a_assembly.as_opc,
@@ -2299,11 +2322,13 @@ ast_genasm_userasm(struct ast *__restrict self) {
 		if unlikely(!formatter.af_opreprv)
 			goto err;
 		ascii_printer_init(&formatter.af_printer);
+
 		/* Generate text representations of assembly operands. */
 		dst         = formatter.af_opreprv;
 		iter        = self->a_assembly.as_opv;
 		count       = self->a_assembly.as_num_o;
 		cleanup_dst = cleanup_actions;
+
 		/* Format output operands. */
 		for (; count; --count, ++dst, ++iter, ++cleanup_dst) {
 			*dst = (DREF DeeStringObject *)get_assembly_formatter_oprepr(iter->ao_expr,
@@ -2313,6 +2338,7 @@ ast_genasm_userasm(struct ast *__restrict self) {
 			if unlikely(!*dst)
 				goto err_formatter;
 		}
+
 		/* Format output operands. */
 		count = self->a_assembly.as_num_i;
 		for (; count; --count, ++dst, ++iter, ++cleanup_dst) {
@@ -2323,6 +2349,7 @@ ast_genasm_userasm(struct ast *__restrict self) {
 			if unlikely(!*dst)
 				goto err_formatter;
 		}
+
 		/* Format label operands. */
 		count = self->a_assembly.as_num_l;
 		for (i = 0; i < count; ++i, ++dst) {
@@ -2342,6 +2369,7 @@ err_formatter:
 		assembly_formatter_fini(&formatter);
 		goto err;
 	}
+
 	/* Must still evaluate operands, even when not formatting the text.
 	 * NOTE: Usually, there shouldn't be any operands, as their presence
 	 *       requires formatting to be enabled by default, but the specs
@@ -2350,6 +2378,7 @@ err_formatter:
 	cleanup_dst = cleanup_actions;
 	iter        = self->a_assembly.as_opv;
 	count       = self->a_assembly.as_num_o;
+
 	/* Format output operands. */
 	for (; count; --count, ++iter, ++cleanup_dst) {
 		DREF DeeStringObject *temp;
@@ -2362,6 +2391,7 @@ err_formatter:
 		Dee_Decref(temp);
 	}
 	count = self->a_assembly.as_num_i;
+
 	/* Format input operands. */
 	for (; count; --count, ++iter, ++cleanup_dst) {
 		DREF DeeStringObject *temp;
@@ -2373,6 +2403,7 @@ err_formatter:
 			goto err;
 		Dee_Decref(temp);
 	}
+
 	/* Emit debug information for user-assembly. */
 	if (asm_putddi(self))
 		goto err;
@@ -2383,8 +2414,10 @@ create_assembly_file:
 	assembly_file = TPPFile_NewExplicitInherited(assembly_text);
 	if unlikely(!assembly_file)
 		goto err_text;
+
 	/* Push out assembly file. */
 	TPPLexer_PushFileInherited(assembly_file);
+
 	/* Configure the lexer so that it will not attempt to pop our file, or
 	 * even try to read more data from it (considering it isn't a stream). */
 	old_eob                      = TPPLexer_Current->l_eob_file;
@@ -2428,15 +2461,17 @@ create_assembly_file:
 	/* Actually parse user-assembly. */
 	BEGIN_PARSER_CALLBACK();
 	{
-		struct asm_sec *old_section;
 		/* Configure to use user-labels defined through operands. */
+		struct asm_sec *old_section;
 		uint16_t old_flags        = current_userasm.ua_flags;
 		DeeScopeObject *old_scope = current_scope;
+
 		/* Re-activate the scope of this branch. */
 		current_scope = self->a_scope;
 		ASSERT(current_basescope == current_scope->s_base);
 		ASSERT(current_rootscope == current_basescope->bs_root);
 		current_userasm.ua_flags = self->a_flag;
+
 		/* Save the old current-section. */
 		old_section = current_assembler.a_curr;
 		{
@@ -2457,6 +2492,7 @@ create_assembly_file:
 			current_userasm.ua_labelc = old_user_label_c;
 			current_userasm.ua_labelv = old_user_label_v;
 		}
+
 		/* Emit one last symbol to prevent peephole at the end
 		 * of user-assembly when the `volatile' bit is set. */
 		if ((current_userasm.ua_flags & AST_FASSEMBLY_VOLATILE) &&
@@ -2496,8 +2532,10 @@ create_assembly_file:
 	       TPPLexer_GetFile() != old_eob &&
 	       TPPLexer_GetFile() != &TPPFile_Empty)
 		TPPLexer_PopFile();
+
 	/* Restore the old end-of-block file. */
 	TPPLexer_Current->l_eob_file = old_eob;
+
 	/* Pop our assembly file. */
 	if (TPPLexer_GetFile() == assembly_file)
 		TPPLexer_PopFile();
@@ -2541,6 +2579,7 @@ create_assembly_file:
 				uint16_t expected = current_assembler.a_stackcur - 1;
 				if (asm_gpop_expr(operand))
 					goto err;
+
 				/* Account of stack-slot re-use in stack displacement mode. */
 				ASSERT(current_assembler.a_stackcur == expected ||
 				       current_assembler.a_flag & ASM_FSTACKDISP);

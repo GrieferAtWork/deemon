@@ -2957,6 +2957,7 @@ PUBLIC WUNUSED DREF DeeObject *
 					goto done_decr;
 				result->ob_digit[digit_index] &= DIGIT_MASK;
 			}
+
 			/* Decrement the remaining number of bits. */
 			if (!num_bits)
 				num_bits = DIGIT_BITS;
@@ -2967,6 +2968,7 @@ done_decr:
 			/* With the decrement complete, we must now invert all bits. */
 			for (digit_index = 0; digit_index < total_digits; ++digit_index)
 				result->ob_digit[digit_index] ^= DIGIT_MASK;
+
 			/* Mask non-set bits of the most significant digit. */
 			result->ob_digit[total_digits - 1] &= ((digit)1 << num_bits) - 1;
 		}
@@ -3120,10 +3122,11 @@ int_hash(DeeIntObject *__restrict self) {
 		sign = -1;
 		i    = -i;
 	}
-	while (--i >= 0) {
+	do {
+		--i;
 		x = (x << DIGIT_BITS) | (x >> ((__SIZEOF_POINTER__ * 8) - DIGIT_BITS));
 		x += self->ob_digit[(size_t)i];
-	}
+	} while ((size_t)i);
 	return x * sign;
 }
 

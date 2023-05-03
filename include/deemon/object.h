@@ -162,11 +162,22 @@ DFUNDEF ATTR_PURE WUNUSED ATTR_IN(1) Dee_hash_t (DCALL Dee_HashCaseStr)(char con
 #define Dee_HashCaseStr(str) Dee_HashCasePtr(str, strlen(str))
 #endif /* !__INTELLISENSE__ */
 
+/* Combine 2 hash values into 1, while losing
+ * as little entropy from either as possible. */
+DFUNDEF ATTR_CONST WUNUSED Dee_hash_t
+(FCALL Dee_HashCombine)(Dee_hash_t a, Dee_hash_t b);
+
 #if __SIZEOF_POINTER__ <= 4
 #define _Dee_HashSelect(hash32, hash64) hash32
 #else /* __SIZEOF_POINTER__ <= 4 */
 #define _Dee_HashSelect(hash32, hash64) hash64
 #endif /* __SIZEOF_POINTER__ > 4 */
+
+/* This is the special hash we assign to empty sequences.
+ *
+ * It doesn't *have* to be zero; it could be anything. But
+ * thinking about it, only zero *really* makes sense... */
+#define DEE_HASHOF_EMPTY_SEQUENCE 0
 
 
 
@@ -2792,7 +2803,7 @@ DFUNDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL DeeObject_ThisCallTuple
 
 /* Generate and return the hash of a given object. */
 DFUNDEF WUNUSED /*ATTR_PURE*/ NONNULL((1)) Dee_hash_t (DCALL DeeObject_Hash)(DeeObject *__restrict self);
-DFUNDEF WUNUSED /*ATTR_PURE*/ NONNULL((1)) Dee_hash_t (DCALL DeeObject_Hashv)(DeeObject *const *__restrict object_vector, size_t object_count);
+DFUNDEF WUNUSED /*ATTR_PURE*/ NONNULL((1)) Dee_hash_t (DCALL DeeObject_Hashv)(size_t object_count, DeeObject *const *__restrict object_vector);
 
 /* GC operator invocation. */
 DFUNDEF NONNULL((1, 2)) void (DCALL DeeObject_Visit)(DeeObject *__restrict self, Dee_visit_t proc, void *arg);

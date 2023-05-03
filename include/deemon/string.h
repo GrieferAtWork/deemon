@@ -960,9 +960,9 @@ DeeString_NewAutoWithHash(/*unsigned*/ char const *__restrict str, Dee_hash_t ha
 	DeeObject *result;
 	result = DeeString_IsObject(str);
 	if (result) {
-		Dee_hash_t str_hash = ((DeeStringObject const *)result)->s_hash;
-		if (str_hash != hash) {
-			if (str_hash != DEE_STRING_HASH_UNSET)
+		Dee_hash_t hashof_str = ((DeeStringObject const *)result)->s_hash;
+		if (hashof_str != hash) {
+			if (hashof_str != DEE_STRING_HASH_UNSET)
 				goto return_new_string;
 			((DeeStringObject *)result)->s_hash = hash;
 		}

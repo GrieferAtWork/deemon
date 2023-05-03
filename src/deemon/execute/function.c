@@ -698,11 +698,9 @@ function_printrepr(Function *__restrict self,
 
 PRIVATE WUNUSED NONNULL((1)) dhash_t DCALL
 function_hash(Function *__restrict self) {
-	uint16_t i;
 	dhash_t result;
 	result = DeeObject_Hash((DeeObject *)self->fo_code);
-	for (i = 0; i < self->fo_code->co_refc; ++i)
-		result ^= DeeObject_Hash(self->fo_refv[i]);
+	result = Dee_HashCombine(result, DeeObject_Hashv(self->fo_code->co_refc, self->fo_refv));
 	return result;
 }
 
@@ -1025,9 +1023,9 @@ PRIVATE WUNUSED NONNULL((1)) dhash_t DCALL
 yf_hash(DeeYieldFunctionObject *__restrict self) {
 	dhash_t result;
 	result = DeeObject_HashGeneric(self->yf_func);
-	result ^= DeeObject_Hash((DeeObject *)self->yf_args);
+	result = Dee_HashCombine(result, DeeObject_Hash((DeeObject *)self->yf_args));
 	if (self->yf_this)
-		result ^= DeeObject_Hash((DeeObject *)self->yf_this);
+		result = Dee_HashCombine(result, DeeObject_Hash((DeeObject *)self->yf_this));
 	return result;
 }
 
@@ -1228,39 +1226,43 @@ PUBLIC DeeTypeObject DeeYieldFunction_Type = {
 PRIVATE NONNULL((1)) void DCALL
 yfi_run_finally(YFIterator *__restrict self) {
 	DeeCodeObject *code;
-	code_addr_t ipaddr;
+	code_addr_t ip_addr;
 	struct except_handler *iter, *begin;
 	if unlikely(!self->yi_func)
 		return;
+
 	/* Recursively execute all finally-handlers that
 	 * protect the current PC until none are left. */
 	code = self->yi_frame.cf_func->fo_code;
 	if unlikely(!code)
 		return;
 	ASSERT_OBJECT_TYPE(code, &DeeCode_Type);
+
 	/* Simple case: without any finally handlers, we've got nothing to do. */
 	if (!(code->co_flags & CODE_FFINALLY))
 		return;
 exec_finally:
 	begin = code->co_exceptv;
 	iter  = begin + code->co_exceptc;
+
 	/* NOTE: The frame-PC is allowed to equal the end of the
 	 *       associated code object, because it contains the
 	 *       address of the next instruction to-be executed.
-	 *       Similarly, range checks of handlers are adjusted, too.
-	 */
+	 * Similarly, range checks of handlers are adjusted, too. */
 	ASSERT(self->yi_frame.cf_ip >= code->co_code &&
 	       self->yi_frame.cf_ip <= code->co_code + code->co_codebytes);
-	ipaddr = (code_addr_t)(self->yi_frame.cf_ip - code->co_code);
+	ip_addr = (code_addr_t)(self->yi_frame.cf_ip - code->co_code);
 	while (iter > begin) {
 		DREF DeeObject *result, **req_sp;
 		--iter;
 		if (!(iter->eh_flags & EXCEPTION_HANDLER_FFINALLY))
 			continue;
-		if (!(ipaddr > iter->eh_start && ipaddr <= iter->eh_end))
+		if (!(ip_addr > iter->eh_start && ip_addr <= iter->eh_end))
 			continue;
+
 		/* Execute this finally-handler. */
 		self->yi_frame.cf_ip = code->co_code + iter->eh_addr;
+
 		/* Must adjust the stack to match the requirements of the handler. */
 		req_sp = self->yi_frame.cf_stack + iter->eh_stack;
 		if (self->yi_frame.cf_sp != req_sp) {
@@ -1274,8 +1276,10 @@ exec_finally:
 				++self->yi_frame.cf_sp;
 			}
 		}
+
 		/* We must somehow indicate to code-exec to stop when an
 		 * `ASM_ENDFINALLY' instruction is hit.
+		 *
 		 * Normally, this is done when the return value has been
 		 * assigned, so we simply fake that by pre-assigning `none'. */
 		self->yi_frame.cf_result = Dee_None;
@@ -1288,7 +1292,8 @@ exec_finally:
 			result = DeeCode_ExecFrameFast(&self->yi_frame);
 		}
 		if likely(result) {
-			Dee_Decref(result); /* Most likely, this is `none' */
+			/* Most likely, this is still the `none' from above */
+			Dee_Decref(result);
 		} else {
 			DeeError_Print("Unhandled exception in YieldFunction.Iterator destructor\n",
 			               ERROR_PRINT_DOHANDLE);
@@ -1299,8 +1304,8 @@ exec_finally:
 
 PRIVATE NONNULL((1)) void DCALL
 yfi_dtor(YFIterator *__restrict self) {
-	size_t stacksize;
 	size_t numlocals = 0;
+
 	/* Execute established finally handlers. */
 	yfi_run_finally(self);
 	ASSERT(self->yi_frame.cf_prev == CODE_FRAME_NOT_EXECUTING);
@@ -1310,17 +1315,18 @@ yfi_dtor(YFIterator *__restrict self) {
 	ASSERT_OBJECT_OPT(self->yi_frame.cf_this);
 	if (self->yi_frame.cf_func)
 		numlocals = self->yi_frame.cf_func->fo_code->co_localc;
-	stacksize = self->yi_frame.cf_sp - self->yi_frame.cf_stack;
 	Dee_XDecref(self->yi_func);
 	Dee_XDecref(self->yi_frame.cf_func);
 	Dee_XDecref(self->yi_frame.cf_this);
 	Dee_XDecref(self->yi_frame.cf_vargs);
+
 	/* Clear local objects. */
-	while (numlocals--)
-		Dee_XDecref(self->yi_frame.cf_frame[numlocals]);
+	Dee_XDecrefv(self->yi_frame.cf_frame, numlocals);
+
 	/* Clear objects from the stack. */
-	while (stacksize--)
-		Dee_Decref(self->yi_frame.cf_stack[stacksize]);
+	Dee_Decrefv(self->yi_frame.cf_stack,
+	            (size_t)(self->yi_frame.cf_sp -
+	                     self->yi_frame.cf_stack));
 	if (self->yi_frame.cf_stacksz)
 		Dee_Free(self->yi_frame.cf_stack);
 	Dee_Free(self->yi_frame.cf_frame);
@@ -1343,22 +1349,18 @@ yfi_visit(YFIterator *__restrict self,
 	Dee_XVisit(self->yi_func);
 	Dee_XVisit(self->yi_frame.cf_this);
 	Dee_XVisit(self->yi_frame.cf_vargs);
+
 	/* Visit local variables. */
 	if (self->yi_frame.cf_func) {
-		DeeObject **locals = self->yi_frame.cf_frame;
-		size_t numlocals   = self->yi_frame.cf_func->fo_code->co_localc;
 		Dee_Visit(self->yi_frame.cf_func);
-		while (numlocals--)
-			Dee_XVisit(locals[numlocals]);
+		Dee_XVisitv(self->yi_frame.cf_frame,
+		            self->yi_frame.cf_func->fo_code->co_localc);
 	}
+
 	/* Visit stack objects. */
-	{
-		size_t stacksize = (size_t)(self->yi_frame.cf_sp -
-		                            self->yi_frame.cf_stack);
-		DeeObject **stack = self->yi_frame.cf_stack;
-		while (stacksize--)
-			Dee_Visit(stack[stacksize]);
-	}
+	Dee_Visitv(self->yi_frame.cf_stack,
+	           (size_t)(self->yi_frame.cf_sp -
+	                    self->yi_frame.cf_stack));
 	DeeYieldFunctionIterator_LockEndWrite(self);
 }
 

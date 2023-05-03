@@ -87,6 +87,10 @@ assert((try (assert(false),) catch (AssertionError) "here") == "here");
 	local map_reprs = {
 		'{ "foo": "bar", 11: 22 }',
 		'{ 11: 22, "foo": "bar" }',
+		'Dict { "foo": "bar", 11: 22 }',
+		'Dict { 11: 22, "foo": "bar" }',
+		'Dict({ "foo": "bar", 11: 22 })',
+		'Dict({ 11: 22, "foo": "bar" })',
 	};
 	local seq_reprs = {
 		'{ ["foo", "bar"], [11, 22] }',

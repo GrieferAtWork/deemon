@@ -344,12 +344,12 @@ again:
 		COMPILER_READ_BARRIER();
 		index = atomic_read(&self->blvk_load);
 		while (index < self->blvk_ckwc) {
-			dhash_t str_hash;
+			dhash_t hashof_str;
 			str = self->blvk_ckwv[index++];
 
 			/* Remember the string by caching it within out hash-vector. */
-			str_hash = DeeString_Hash((DeeObject *)str);
-			i = perturb = str_hash & self->blvk_mask;
+			hashof_str = DeeString_Hash((DeeObject *)str);
+			i = perturb = hashof_str & self->blvk_mask;
 			for (;; BlackListVarkwds_BLCKNEXT(i, perturb)) {
 				BlackListVarkwdsEntry *ent;
 				ent = &self->blvk_blck[i & self->blvk_mask];
@@ -360,7 +360,7 @@ again:
 			}
 
 			/* Check if this one's our's, and stop loading if it is. */
-			if (str_hash == hash &&
+			if (hashof_str == hash &&
 			    DeeString_SIZE(str) == DeeString_SIZE(name) &&
 			    bcmpc(DeeString_STR(str), DeeString_STR(name),
 			          DeeString_SIZE(name), sizeof(char)) == 0) {
@@ -402,12 +402,12 @@ again:
 		COMPILER_READ_BARRIER();
 		index = atomic_read(&self->blvk_load);
 		while (index < self->blvk_ckwc) {
-			dhash_t str_hash;
+			dhash_t hashof_str;
 			str = self->blvk_ckwv[index++];
 
 			/* Remember the string by caching it within out hash-vector. */
-			str_hash = DeeString_Hash((DeeObject *)str);
-			i = perturb = str_hash & self->blvk_mask;
+			hashof_str = DeeString_Hash((DeeObject *)str);
+			i = perturb = hashof_str & self->blvk_mask;
 			for (;; BlackListVarkwds_BLCKNEXT(i, perturb)) {
 				BlackListVarkwdsEntry *ent;
 				ent = &self->blvk_blck[i & self->blvk_mask];
@@ -418,7 +418,7 @@ again:
 			}
 
 			/* Check if this one's our's, and stop loading if it is. */
-			if (str_hash == hash &&
+			if (hashof_str == hash &&
 			    strcmp(DeeString_STR(str), name) == 0) {
 				self->blvk_load = index;
 				BlackListVarkwds_LockEndWrite(self);
@@ -457,12 +457,12 @@ again:
 		COMPILER_READ_BARRIER();
 		index = atomic_read(&self->blvk_load);
 		while (index < self->blvk_ckwc) {
-			dhash_t str_hash;
+			dhash_t hashof_str;
 			str = self->blvk_ckwv[index++];
 
 			/* Remember the string by caching it within out hash-vector. */
-			str_hash = DeeString_Hash((DeeObject *)str);
-			i = perturb = str_hash & self->blvk_mask;
+			hashof_str = DeeString_Hash((DeeObject *)str);
+			i = perturb = hashof_str & self->blvk_mask;
 			for (;; BlackListVarkwds_BLCKNEXT(i, perturb)) {
 				BlackListVarkwdsEntry *ent;
 				ent = &self->blvk_blck[i & self->blvk_mask];
@@ -473,7 +473,7 @@ again:
 			}
 
 			/* Check if this one's our's, and stop loading if it is. */
-			if (str_hash == hash && DeeString_SIZE(str) == namesize &&
+			if (hashof_str == hash && DeeString_SIZE(str) == namesize &&
 			    bcmpc(DeeString_STR(str), name, namesize, sizeof(char)) == 0) {
 				self->blvk_load = index;
 				BlackListVarkwds_LockEndWrite(self);
@@ -1261,11 +1261,11 @@ again:
 		COMPILER_READ_BARRIER();
 		index = atomic_read(&self->blm_load);
 		while (index < self->blm_ckwc) {
-			dhash_t str_hash;
+			dhash_t hashof_str;
 			str = self->blm_ckwv[index++];
 			/* Remember the string by caching it within out hash-vector. */
-			str_hash = DeeString_Hash((DeeObject *)str);
-			i = perturb = str_hash & self->blm_mask;
+			hashof_str = DeeString_Hash((DeeObject *)str);
+			i = perturb = hashof_str & self->blm_mask;
 			for (;; BlackListMapping_BLCKNEXT(i, perturb)) {
 				BlackListVarkwdsEntry *ent;
 				ent = &self->blm_blck[i & self->blm_mask];
@@ -1276,7 +1276,7 @@ again:
 			}
 
 			/* Check if this one's our's, and stop loading if it is. */
-			if (str_hash == hash &&
+			if (hashof_str == hash &&
 			    DeeString_SIZE(str) == DeeString_SIZE(name) &&
 			    bcmpc(DeeString_STR(str), DeeString_STR(name),
 			          DeeString_SIZE(name), sizeof(char)) == 0) {
@@ -1318,11 +1318,11 @@ again:
 		COMPILER_READ_BARRIER();
 		index = atomic_read(&self->blm_load);
 		while (index < self->blm_ckwc) {
-			dhash_t str_hash;
+			dhash_t hashof_str;
 			str = self->blm_ckwv[index++];
 			/* Remember the string by caching it within out hash-vector. */
-			str_hash = DeeString_Hash((DeeObject *)str);
-			i = perturb = str_hash & self->blm_mask;
+			hashof_str = DeeString_Hash((DeeObject *)str);
+			i = perturb = hashof_str & self->blm_mask;
 			for (;; BlackListMapping_BLCKNEXT(i, perturb)) {
 				BlackListVarkwdsEntry *ent;
 				ent = &self->blm_blck[i & self->blm_mask];
@@ -1332,7 +1332,7 @@ again:
 				break;
 			}
 			/* Check if this one's our's, and stop loading if it is. */
-			if (str_hash == hash &&
+			if (hashof_str == hash &&
 			    strcmp(DeeString_STR(str), name) == 0) {
 				self->blm_load = index;
 				BlackListMapping_LockEndWrite(self);
@@ -1371,12 +1371,12 @@ again:
 		COMPILER_READ_BARRIER();
 		index = atomic_read(&self->blm_load);
 		while (index < self->blm_ckwc) {
-			dhash_t str_hash;
+			dhash_t hashof_str;
 			str = self->blm_ckwv[index++];
 
 			/* Remember the string by caching it within out hash-vector. */
-			str_hash = DeeString_Hash((DeeObject *)str);
-			i = perturb = str_hash & self->blm_mask;
+			hashof_str = DeeString_Hash((DeeObject *)str);
+			i = perturb = hashof_str & self->blm_mask;
 			for (;; BlackListMapping_BLCKNEXT(i, perturb)) {
 				BlackListVarkwdsEntry *ent;
 				ent = &self->blm_blck[i & self->blm_mask];
@@ -1387,7 +1387,7 @@ again:
 			}
 
 			/* Check if this one's our's, and stop loading if it is. */
-			if (str_hash == hash && DeeString_SIZE(str) == namesize &&
+			if (hashof_str == hash && DeeString_SIZE(str) == namesize &&
 			    bcmpc(DeeString_STR(str), name, namesize, sizeof(char)) == 0) {
 				self->blm_load = index;
 				BlackListMapping_LockEndWrite(self);

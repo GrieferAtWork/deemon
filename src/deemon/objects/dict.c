@@ -1674,30 +1674,17 @@ PRIVATE struct type_nsi tpconst dict_nsi = {
 	}
 };
 
-PRIVATE struct type_seq dict_seq = {
-	/* .tp_iter_self = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&dict_iter,
-	/* .tp_size      = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&dict_size,
-	/* .tp_contains  = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&dict_contains,
-	/* .tp_get       = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&dict_getitem,
-	/* .tp_del       = */ (int (DCALL *)(DeeObject *, DeeObject *))&dict_delitem,
-	/* .tp_set       = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *))&dict_setitem,
-	/* .tp_range_get = */ NULL,
-	/* .tp_range_del = */ NULL,
-	/* .tp_range_set = */ NULL,
-	/* .tp_nsi       = */ &dict_nsi
-};
-
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 dict_repr(Dict *__restrict self) {
-	struct unicode_printer p;
 	dssize_t error;
+	struct unicode_printer p;
 	struct dict_item *iter, *end;
-	bool is_first;
 	struct dict_item *vector;
 	size_t mask;
+	bool is_first;
 again:
 	unicode_printer_init(&p);
-	if (UNICODE_PRINTER_PRINT(&p, "{ ") < 0)
+	if (UNICODE_PRINTER_PRINT(&p, "Dict({ ") < 0)
 		goto err;
 	is_first = true;
 	DeeDict_LockRead(self);
@@ -1706,10 +1693,9 @@ again:
 	end    = (iter = vector) + (mask + 1);
 	for (; iter < end; ++iter) {
 		DREF DeeObject *key, *value;
-		if (iter->di_key == NULL ||
-		    iter->di_key == dummy)
+		key = iter->di_key;
+		if (key == NULL || key == dummy)
 			continue;
-		key   = iter->di_key;
 		value = iter->di_value;
 		Dee_Incref(key);
 		Dee_Incref(value);
@@ -1722,14 +1708,14 @@ again:
 			goto err;
 		is_first = false;
 		DeeDict_LockRead(self);
-		if (self->d_elem != vector ||
-		    self->d_mask != mask)
+		if unlikely(self->d_elem != vector ||
+		            self->d_mask != mask)
 			goto restart;
 	}
 	DeeDict_LockEndRead(self);
-	if unlikely((is_first ? unicode_printer_putascii(&p, '}')
-		                   : UNICODE_PRINTER_PRINT(&p, " }")) < 0)
-	goto err;
+	if unlikely((is_first ? UNICODE_PRINTER_PRINT(&p, "})")
+	                      : UNICODE_PRINTER_PRINT(&p, " })")) < 0)
+		goto err;
 	return unicode_printer_pack(&p);
 restart:
 	DeeDict_LockEndRead(self);
@@ -1740,6 +1726,129 @@ err:
 	return NULL;
 }
 
+PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
+dict_printrepr(Dict *__restrict self,
+               dformatprinter printer, void *arg) {
+	dssize_t temp, result;
+	struct dict_item *iter, *end;
+	struct dict_item *vector;
+	size_t mask;
+	bool is_first;
+	result = DeeFormat_PRINT(printer, arg, "Dict({ ");
+	if unlikely(result < 0)
+		goto done;
+	is_first = true;
+	DeeDict_LockRead(self);
+	vector = self->d_elem;
+	mask   = self->d_mask;
+	end    = (iter = vector) + (mask + 1);
+	for (; iter < end; ++iter) {
+		DREF DeeObject *key, *value;
+		key = iter->di_key;
+		if (key == NULL || key == dummy)
+			continue;
+		value = iter->di_value;
+		Dee_Incref(key);
+		Dee_Incref(value);
+		DeeDict_LockEndRead(self);
+		/* Print this key/value pair. */
+		if (!is_first) {
+			temp = DeeFormat_PRINT(printer, arg, ", ");
+			if unlikely(temp < 0) {
+				Dee_Decref(value);
+				Dee_Decref(key);
+				goto err;
+			}
+			result += temp;
+		}
+		temp = DeeFormat_Printf(printer, arg, "%r: %r", key, value);
+		Dee_Decref(value);
+		Dee_Decref(key);
+		if unlikely(temp < 0)
+			goto err;
+		is_first = false;
+		DeeDict_LockRead(self);
+		if unlikely(self->d_elem != vector ||
+		            self->d_mask != mask) {
+			DeeDict_LockEndRead(self);
+			temp = DeeFormat_PRINT(printer, arg, ", <Dict changed while being iterated>");
+			if (temp < 0)
+				goto err;
+			result += temp;
+			goto stop_after_changed;
+		}
+	}
+	DeeDict_LockEndRead(self);
+stop_after_changed:
+	temp = is_first ? DeeFormat_PRINT(printer, arg, "})")
+	                : DeeFormat_PRINT(printer, arg, " })");
+	if (temp < 0)
+		goto err;
+	result += temp;
+done:
+	return result;
+err:
+	return temp;
+}
+
+PRIVATE WUNUSED NONNULL((1)) dhash_t DCALL
+dict_hash(Dict *__restrict self) {
+	dhash_t result;
+	struct dict_item *iter, *end;
+	struct dict_item *vector;
+	size_t mask;
+again:
+	result = DEE_HASHOF_EMPTY_SEQUENCE;
+	DeeDict_LockRead(self);
+	vector = self->d_elem;
+	mask   = self->d_mask;
+	end    = (iter = vector) + (mask + 1);
+	for (; iter < end; ++iter) {
+		DREF DeeObject *key, *value;
+		key = iter->di_key;
+		if (key == NULL || key == dummy)
+			continue;
+		value = iter->di_value;
+		Dee_Incref(key);
+		Dee_Incref(value);
+		DeeDict_LockEndRead(self);
+		result ^= Dee_HashCombine(DeeObject_Hash(key),
+		                          DeeObject_Hash(value));
+		Dee_Decref(value);
+		Dee_Decref(key);
+		DeeDict_LockRead(self);
+		if unlikely(self->d_elem != vector ||
+		            self->d_mask != mask) {
+			DeeDict_LockEndRead(self);
+			goto again;
+		}
+	}
+	DeeDict_LockEndRead(self);
+	return result;
+}
+
+PRIVATE struct type_cmp dict_cmp = {
+	/* .tp_hash = */ (dhash_t (DCALL *)(DeeObject *__restrict))&dict_hash,
+	/* .tp_eq   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))NULL, // TODO: &dict_eq,
+	/* .tp_ne   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))NULL, // TODO: &dict_ne,
+	/* .tp_lo   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))NULL, // TODO: &dict_lo,
+	/* .tp_le   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))NULL, // TODO: &dict_le,
+	/* .tp_gr   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))NULL, // TODO: &dict_gr,
+	/* .tp_ge   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))NULL, // TODO: &dict_ge,
+};
+
+PRIVATE struct type_seq dict_seq = {
+	/* .tp_iter_self = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&dict_iter,
+	/* .tp_size      = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&dict_size,
+	/* .tp_contains  = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&dict_contains,
+	/* .tp_get       = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&dict_getitem,
+	/* .tp_del       = */ (int (DCALL *)(DeeObject *, DeeObject *))&dict_delitem,
+	/* .tp_set       = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *))&dict_setitem,
+	/* .tp_range_get = */ NULL,
+	/* .tp_range_del = */ NULL,
+	/* .tp_range_set = */ NULL,
+	/* .tp_nsi       = */ &dict_nsi
+};
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 dict_bool(Dict *__restrict self) {
@@ -2028,9 +2137,12 @@ PRIVATE struct type_method tpconst dict_methods[] = {
 };
 
 #ifndef CONFIG_NO_DEEMON_100_COMPAT
-INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL set_get_maxloadfactor(DeeObject *__restrict self);
-INTDEF WUNUSED NONNULL((1)) int DCALL set_del_maxloadfactor(DeeObject *__restrict self);
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL set_set_maxloadfactor(DeeObject *__restrict self, DeeObject *__restrict value);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+deprecated_d100_get_maxloadfactor(DeeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1)) int DCALL
+deprecated_d100_del_maxloadfactor(DeeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL
+deprecated_d100_set_maxloadfactor(DeeObject *self, DeeObject *value);
 #endif /* !CONFIG_NO_DEEMON_100_COMPAT */
 
 INTDEF struct type_getset tpconst dict_getsets[];
@@ -2049,9 +2161,9 @@ INTERN_TPCONST struct type_getset tpconst dict_getsets[] = {
 	            "Returns a read-only (frozen) copy of @this ?."),
 #ifndef CONFIG_NO_DEEMON_100_COMPAT
 	TYPE_GETSET("max_load_factor",
-	            &set_get_maxloadfactor,
-	            &set_del_maxloadfactor,
-	            &set_set_maxloadfactor,
+	            &deprecated_d100_get_maxloadfactor,
+	            &deprecated_d100_del_maxloadfactor,
+	            &deprecated_d100_set_maxloadfactor,
 	            "->?Dfloat\n"
 	            "Deprecated. Always returns ${1.0}, with del/set being ignored"),
 #endif /* !CONFIG_NO_DEEMON_100_COMPAT */
@@ -2110,15 +2222,17 @@ PUBLIC DeeTypeObject DeeDict_Type = {
 		/* .tp_deepload    = */ (int (DCALL *)(DeeObject *__restrict))&dict_deepload
 	},
 	/* .tp_cast = */ {
-		/* .tp_str  = */ NULL,
-		/* .tp_repr = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&dict_repr,
-		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&dict_bool
+		/* .tp_str       = */ NULL,
+		/* .tp_repr      = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&dict_repr,
+		/* .tp_bool      = */ (int (DCALL *)(DeeObject *__restrict))&dict_bool,
+		/* .tp_print     = */ NULL,
+		/* .tp_printrepr = */ (dssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&dict_printrepr
 	},
 	/* .tp_call          = */ NULL,
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&dict_visit,
 	/* .tp_gc            = */ &dict_gc,
 	/* .tp_math          = */ NULL,
-	/* .tp_cmp           = */ NULL,
+	/* .tp_cmp           = */ &dict_cmp,
 	/* .tp_seq           = */ &dict_seq,
 	/* .tp_iter_next     = */ NULL,
 	/* .tp_attr          = */ NULL,

@@ -1954,6 +1954,15 @@ type_inherit_hash(DeeTypeObject *__restrict self) {
 
 WUNUSED /*ATTR_PURE*/
 DEFINE_OPERATOR(dhash_t, Hash, (DeeObject *RESTRICT_IF_NOTYPE self)) {
+	/* TODO: Just like with `DeeObject_Str()', this function must guard against
+	 *       recursive objects, which are currently able to crash deemon:
+	 * >> class Foo {
+	 * >>     public member me;
+	 * >> }
+	 * >>
+	 * >> local x = Foo();
+	 * >> x.me = x;
+	 * >> print x.operator hash(); */
 	LOAD_TP_SELF;
 	do {
 		if (tp_self->tp_cmp && tp_self->tp_cmp->tp_hash)
@@ -1963,13 +1972,27 @@ DEFINE_OPERATOR(dhash_t, Hash, (DeeObject *RESTRICT_IF_NOTYPE self)) {
 }
 
 #ifndef DEFINE_TYPED_OPERATORS
-PUBLIC WUNUSED /*ATTR_PURE*/ NONNULL((1)) Dee_hash_t
-(DCALL DeeObject_Hashv)(DeeObject *const *__restrict object_vector,
-                        size_t object_count) {
+PUBLIC WUNUSED /*ATTR_PURE*/ NONNULL((1)) dhash_t
+(DCALL DeeObject_Hashv)(size_t object_count,
+                        DeeObject *const *__restrict object_vector) {
 	size_t i;
-	Dee_hash_t result = 0;
-	for (i = 0; i < object_count; ++i) {
-		result ^= DeeObject_Hash(object_vector[i]);
+	dhash_t result;
+	/* Check for special case: no objects, i.e.: an empty sequence */
+	if unlikely(!object_count)
+		return DEE_HASHOF_EMPTY_SEQUENCE;
+
+	/* Important: when only a single object is given, our
+	 * return value must be equal to `DeeObject_Hash()'.
+	 *
+	 * This is required so that:
+	 * >> import hash from deemon;
+	 * >> assert hash(42) == (42).operator hash();
+	 * >> assert hash(42) == (42); */
+	result = DeeObject_Hash(object_vector[0]);
+	for (i = 1; i < object_count; ++i) {
+		dhash_t item;
+		item   = DeeObject_Hash(object_vector[i]);
+		result = Dee_HashCombine(result, item);
 	}
 	return result;
 }
