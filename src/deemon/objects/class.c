@@ -4280,24 +4280,24 @@ DEFINE_QUADARY_INSTANCE_WRAPPER_FUNCTION_INT(instance_tsetrange, instance_setran
 #define DEFINE_UNARY_INPLACE_INSTANCE_WRAPPER_FUNCTION(instance_txxx, instance_xxx, op) \
 	INTERN WUNUSED NONNULL((1, 2)) int DCALL                                            \
 	instance_txxx(DeeTypeObject *tp_self,                                               \
-	              DeeObject **__restrict pself) {                                       \
+	              DeeObject **__restrict p_self) {                                      \
 		DREF DeeObject *func, *result;                                                  \
 		func = DeeClass_GetOperator(tp_self, op);                                       \
 		if unlikely(!func)                                                              \
 			goto err;                                                                   \
-		result = DeeObject_ThisCall(func, *pself, 0, NULL);                             \
+		result = DeeObject_ThisCall(func, *p_self, 0, NULL);                            \
 		Dee_Decref(func);                                                               \
 		if unlikely(!result)                                                            \
 			goto err;                                                                   \
-		Dee_Decref(*pself);                                                             \
-		*pself = result;                                                                \
+		Dee_Decref(*p_self);                                                            \
+		*p_self = result;                                                               \
 		return 0;                                                                       \
 	err:                                                                                \
 		return -1;                                                                      \
 	}                                                                                   \
 	INTERN WUNUSED NONNULL((1)) int DCALL                                               \
-	instance_xxx(DeeObject **__restrict pself) {                                        \
-		return instance_txxx(Dee_TYPE(*pself), pself);                                  \
+	instance_xxx(DeeObject **__restrict p_self) {                                       \
+		return instance_txxx(Dee_TYPE(*p_self), p_self);                                \
 	}
 DEFINE_UNARY_INPLACE_INSTANCE_WRAPPER_FUNCTION(instance_tinc, instance_inc, OPERATOR_INC)
 DEFINE_UNARY_INPLACE_INSTANCE_WRAPPER_FUNCTION(instance_tdec, instance_dec, OPERATOR_DEC)
@@ -4306,25 +4306,25 @@ DEFINE_UNARY_INPLACE_INSTANCE_WRAPPER_FUNCTION(instance_tdec, instance_dec, OPER
 #define DEFINE_BINARY_INPLACE_INSTANCE_WRAPPER_FUNCTION(instance_txxx, instance_xxx, op) \
 	INTERN WUNUSED NONNULL((1, 2, 3)) int DCALL                                          \
 	instance_txxx(DeeTypeObject *tp_self,                                                \
-	              DeeObject **__restrict pself,                                          \
+	              DeeObject **__restrict p_self,                                         \
 	              DeeObject *other) {                                                    \
 		DREF DeeObject *func, *result;                                                   \
 		func = DeeClass_GetOperator(tp_self, op);                                        \
 		if unlikely(!func)                                                               \
 			goto err;                                                                    \
-		result = DeeObject_ThisCall(func, *pself, 1, (DeeObject **)&other);              \
+		result = DeeObject_ThisCall(func, *p_self, 1, (DeeObject **)&other);             \
 		Dee_Decref(func);                                                                \
 		if unlikely(!result)                                                             \
 			goto err;                                                                    \
-		Dee_Decref(*pself);                                                              \
-		*pself = result;                                                                 \
+		Dee_Decref(*p_self);                                                             \
+		*p_self = result;                                                                \
 		return 0;                                                                        \
 	err:                                                                                 \
 		return -1;                                                                       \
 	}                                                                                    \
 	INTERN WUNUSED NONNULL((1, 2)) int DCALL                                             \
-	instance_xxx(DeeObject **__restrict pself, DeeObject *other) {                       \
-		return instance_txxx(Dee_TYPE(*pself), pself, other);                            \
+	instance_xxx(DeeObject **__restrict p_self, DeeObject *other) {                      \
+		return instance_txxx(Dee_TYPE(*p_self), p_self, other);                          \
 	}
 DEFINE_BINARY_INPLACE_INSTANCE_WRAPPER_FUNCTION(instance_tiadd, instance_iadd, OPERATOR_ADD)
 DEFINE_BINARY_INPLACE_INSTANCE_WRAPPER_FUNCTION(instance_tisub, instance_isub, OPERATOR_SUB)

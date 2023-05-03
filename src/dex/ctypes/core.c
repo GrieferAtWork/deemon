@@ -901,15 +901,15 @@ struct_assign(DeeObject *self, DeeObject *some_object) {
 	}
 #define DEFINE_UNARY_INPLACE_STRUCT_OPERATOR(Treturn, struct_xxx, DeeStruct_Xxx) \
 	PRIVATE WUNUSED NONNULL((1)) Treturn DCALL                                   \
-	struct_xxx(DeeObject **__restrict pself) {                                   \
-		DeeObject *self = *pself;                                                \
+	struct_xxx(DeeObject **__restrict p_self) {                                  \
+		DeeObject *self = *p_self;                                               \
 		return DeeStruct_Xxx(DeeType_AsSType(Dee_TYPE(self)),                    \
 		                     DeeStruct_Data(self));                              \
 	}
 #define DEFINE_BINARY_INPLACE_STRUCT_OPERATOR(Treturn, struct_xxx, DeeStruct_Xxx) \
 	PRIVATE WUNUSED NONNULL((1, 2)) Treturn DCALL                                 \
-	struct_xxx(DeeObject **__restrict pself, DeeObject *other) {                  \
-		DeeObject *self = *pself;                                                 \
+	struct_xxx(DeeObject **__restrict p_self, DeeObject *other) {                 \
+		DeeObject *self = *p_self;                                                \
 		return DeeStruct_Xxx(DeeType_AsSType(Dee_TYPE(self)),                     \
 		                     DeeStruct_Data(self), other);                        \
 	}

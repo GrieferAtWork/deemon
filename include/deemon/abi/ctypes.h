@@ -54,13 +54,13 @@ DeeCTypes_CreateVoidPointer(void *address) {
  * @return:  0: Success.
  * @return: -1: Error. */
 LOCAL WUNUSED NONNULL((1, 2)) int DCALL
-DeeCTypes_GetPointer(DeeObject *__restrict self, void **paddress) {
+DeeCTypes_GetPointer(DeeObject *__restrict self, void **p_address) {
 	int result;
 	DREF DeeObject *ptr;
 	ptr = DeeObject_GetAttrString(self, "__ptr__");
 	if unlikely(!ptr)
 		goto err;
-	result = DeeObject_AsUIntptr(ptr, (uintptr_t *)paddress);
+	result = DeeObject_AsUIntptr(ptr, (uintptr_t *)p_address);
 	Dee_Decref(ptr);
 	return result;
 err:

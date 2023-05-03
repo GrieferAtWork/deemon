@@ -26,7 +26,7 @@
 #include <deemon/thread.h>
 
 #ifdef JIT_HYBRID
-#define JIT_ARGS       unsigned int *pwas_expression
+#define JIT_ARGS       unsigned int *p_was_expression
 #ifdef JIT_EVAL
 #define EVAL_PRIMARY   JITLexer_EvalHybrid
 #define EVAL_SECONDARY JITLexer_EvalHybridSecondary
@@ -43,16 +43,16 @@
 #else /* JIT_HYBRID */
 #define JIT_ARGS     bool is_statement
 #ifdef JIT_EVAL
-#define EVAL_PRIMARY(self, pwas_expression)   (is_statement ? JITLexer_EvalStatement(self) : JITLexer_EvalExpression(self, JITLEXER_EVAL_FNORMAL))
-#define EVAL_SECONDARY(self, pwas_expression) (is_statement ? JITLexer_EvalStatement(self) : JITLexer_EvalExpression(self, JITLEXER_EVAL_FNORMAL))
+#define EVAL_PRIMARY(self, p_was_expression)   (is_statement ? JITLexer_EvalStatement(self) : JITLexer_EvalExpression(self, JITLEXER_EVAL_FNORMAL))
+#define EVAL_SECONDARY(self, p_was_expression) (is_statement ? JITLexer_EvalStatement(self) : JITLexer_EvalExpression(self, JITLEXER_EVAL_FNORMAL))
 #define H_FUNC(x)                             JITLexer_Eval##x
 #else /* JIT_EVAL */
-#define EVAL_PRIMARY(self, pwas_expression)   (is_statement ? JITLexer_SkipStatement(self) : JITLexer_SkipExpression(self, JITLEXER_EVAL_FNORMAL))
-#define EVAL_SECONDARY(self, pwas_expression) (is_statement ? JITLexer_SkipStatement(self) : JITLexer_SkipExpression(self, JITLEXER_EVAL_FNORMAL))
+#define EVAL_PRIMARY(self, p_was_expression)   (is_statement ? JITLexer_SkipStatement(self) : JITLexer_SkipExpression(self, JITLEXER_EVAL_FNORMAL))
+#define EVAL_SECONDARY(self, p_was_expression) (is_statement ? JITLexer_SkipStatement(self) : JITLexer_SkipExpression(self, JITLEXER_EVAL_FNORMAL))
 #define H_FUNC(x)                             JITLexer_Skip##x
 #endif /* !JIT_EVAL */
-#define SKIP_PRIMARY(self, pwas_expression)   (is_statement ? JITLexer_SkipStatement(self) : JITLexer_SkipExpression(self, JITLEXER_EVAL_FNORMAL))
-#define SKIP_SECONDARY(self, pwas_expression) (is_statement ? JITLexer_SkipStatement(self) : JITLexer_SkipExpression(self, JITLEXER_EVAL_FNORMAL))
+#define SKIP_PRIMARY(self, p_was_expression)   (is_statement ? JITLexer_SkipStatement(self) : JITLexer_SkipExpression(self, JITLEXER_EVAL_FNORMAL))
+#define SKIP_SECONDARY(self, p_was_expression) (is_statement ? JITLexer_SkipStatement(self) : JITLexer_SkipExpression(self, JITLEXER_EVAL_FNORMAL))
 #define IF_HYBRID(...)  /* nothing */
 #define IF_NHYBRID(...) __VA_ARGS__
 #endif /* !JIT_HYBRID */
@@ -260,13 +260,13 @@ err_handle_catch_except:
 					/* A new exception was thrown on-top of ours. (we must still handle our old one) */
 					{
 						uint16_t ind = ts->t_exceptsz - old_except;
-						struct except_frame *exc, **pexc;
-						exc = *(pexc = &ts->t_except);
+						struct except_frame *exc, **p_exc;
+						exc = *(p_exc = &ts->t_except);
 						while (ind--) {
-							pexc = &exc->ef_prev;
-							exc  = *pexc;
+							p_exc = &exc->ef_prev;
+							exc  = *p_exc;
 						}
-						*pexc = exc->ef_prev;
+						*p_exc = exc->ef_prev;
 						--ts->t_exceptsz;
 						/* Destroy the frame in question. */
 						if (ITER_ISOK(exc->ef_trace))
@@ -329,7 +329,7 @@ err_handle_catch_except:
 		}
 	}
 #endif /* !JIT_EVAL */
-	IF_HYBRID(if (pwas_expression) *pwas_expression = was_expression;)
+	IF_HYBRID(if (p_was_expression) *p_was_expression = was_expression;)
 	return result;
 #ifdef JIT_EVAL
 err_popscope:
@@ -386,7 +386,7 @@ do_if_statement:
 			goto err_scope_r;
 		Dee_Decref(result);
 		if (b) {
-			result = EVAL_PRIMARY(self, pwas_expression);
+			result = EVAL_PRIMARY(self, p_was_expression);
 			if unlikely(!result)
 				goto err_scope;
 			if (self->jl_tok == JIT_KEYWORD) {
@@ -397,7 +397,7 @@ do_if_statement:
 				if (JITLexer_ISTOK(self, "else")) {
 					JITLexer_Yield(self);
 do_else_branch:
-					if (SKIP_SECONDARY(self, pwas_expression)) {
+					if (SKIP_SECONDARY(self, p_was_expression)) {
 						DECREF_MAYBE_LVALUE(result);
 						goto err_scope;
 					}
@@ -406,14 +406,14 @@ do_else_branch:
 		} else
 #endif /* JIT_EVAL */
 		{
-			if (SKIP_PRIMARY(self, pwas_expression))
+			if (SKIP_PRIMARY(self, p_was_expression))
 				goto err_scope;
 			if (self->jl_tok == JIT_KEYWORD) {
 				if (JITLexer_ISTOK(self, "elif"))
 					goto do_if_statement;
 				if (JITLexer_ISTOK(self, "else")) {
 					JITLexer_Yield(self);
-					result = EVAL_SECONDARY(self, pwas_expression);
+					result = EVAL_SECONDARY(self, p_was_expression);
 					/*if (ISERR(result)) goto err;*/
 					goto if_done;
 				}
@@ -445,7 +445,7 @@ INTERN RETURN_TYPE FCALL
 H_FUNC(Del)(JITLexer *__restrict self, JIT_ARGS) {
 	ASSERT(JITLexer_ISKWD(self, "del"));
 #ifdef JIT_HYBRID
-	(void)pwas_expression;
+	(void)p_was_expression;
 #else /* JIT_HYBRID */
 	(void)is_statement;
 #endif /* !JIT_HYBRID */
@@ -459,8 +459,8 @@ H_FUNC(For)(JITLexer *__restrict self, JIT_ARGS) {
 	RETURN_TYPE result;
 	ASSERT(JITLexer_ISKWD(self, "for"));
 #ifdef JIT_HYBRID
-	if (pwas_expression)
-		*pwas_expression = AST_PARSE_WASEXPR_NO;
+	if (p_was_expression)
+		*p_was_expression = AST_PARSE_WASEXPR_NO;
 	/* XXX: Differentiate between expressions and statements */
 	result = FUNC(For)(self, true);
 #else /* JIT_HYBRID */
@@ -745,8 +745,8 @@ H_FUNC(Foreach)(JITLexer *__restrict self, JIT_ARGS) {
 	RETURN_TYPE result;
 	ASSERT(JITLexer_ISKWD(self, "foreach"));
 #ifdef JIT_HYBRID
-	if (pwas_expression)
-		*pwas_expression = AST_PARSE_WASEXPR_NO;
+	if (p_was_expression)
+		*p_was_expression = AST_PARSE_WASEXPR_NO;
 	/* XXX: Differentiate between expressions and statements */
 	result = FUNC(Foreach)(self, true);
 #else /* JIT_HYBRID */
@@ -890,8 +890,8 @@ H_FUNC(While)(JITLexer *__restrict self, JIT_ARGS) {
 	RETURN_TYPE result;
 	ASSERT(JITLexer_ISKWD(self, "while"));
 #ifdef JIT_HYBRID
-	if (pwas_expression)
-		*pwas_expression = AST_PARSE_WASEXPR_NO;
+	if (p_was_expression)
+		*p_was_expression = AST_PARSE_WASEXPR_NO;
 	/* XXX: Differentiate between expressions and statements */
 	result = FUNC(While)(self, true);
 #else /* JIT_HYBRID */
@@ -1024,8 +1024,8 @@ H_FUNC(Do)(JITLexer *__restrict self, JIT_ARGS) {
 	RETURN_TYPE result;
 	ASSERT(JITLexer_ISKWD(self, "do"));
 #ifdef JIT_HYBRID
-	if (pwas_expression)
-		*pwas_expression = AST_PARSE_WASEXPR_NO;
+	if (p_was_expression)
+		*p_was_expression = AST_PARSE_WASEXPR_NO;
 	/* XXX: Differentiate between expressions and statements */
 	result = FUNC(Do)(self, true);
 #else /* JIT_HYBRID */
@@ -1201,7 +1201,7 @@ H_FUNC(With)(JITLexer *__restrict self, JIT_ARGS) {
 	if (DeeObject_Enter(with_obj))
 		goto err_with_obj;
 #endif /* JIT_EVAL */
-	result = EVAL_PRIMARY(self, pwas_expression);
+	result = EVAL_PRIMARY(self, p_was_expression);
 #ifdef JIT_EVAL
 	/* Always leave the with-object.
 	 * WARNING: This operation may cause a secondary exception to
@@ -1226,7 +1226,7 @@ INTERN RETURN_TYPE FCALL
 H_FUNC(Assert)(JITLexer *__restrict self, JIT_ARGS) {
 	ASSERT(JITLexer_ISKWD(self, "assert"));
 #ifdef JIT_HYBRID
-	(void)pwas_expression;
+	(void)p_was_expression;
 #else /* JIT_HYBRID */
 	(void)is_statement;
 #endif /* !JIT_HYBRID */
@@ -1249,7 +1249,7 @@ H_FUNC(Import)(JITLexer *__restrict self, bool is_from_import)
 #ifdef JIT_HYBRID
 	if (!is_from_import) {
 		JITLexer_Yield(self);
-		*pwas_expression = AST_PARSE_WASEXPR_YES;
+		*p_was_expression = AST_PARSE_WASEXPR_YES;
 #ifdef JIT_EVAL
 		result = DeeObject_GetAttrString((DeeObject *)DeeModule_GetDeemon(), "import");
 #else /* JIT_EVAL */
@@ -1261,7 +1261,7 @@ H_FUNC(Import)(JITLexer *__restrict self, bool is_from_import)
 	/* TODO: Import statements */
 	(void)is_from_import;
 #ifdef JIT_HYBRID
-	(void)pwas_expression;
+	(void)p_was_expression;
 #endif /* JIT_HYBRID */
 	DERROR_NOTIMPLEMENTED();
 	result = ERROR;

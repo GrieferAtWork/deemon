@@ -212,13 +212,13 @@ DeeSystem_DEFINE_memrmeml(dee_memrmeml, memrchrl, MEMEQL)
 #define memcaserchrl(haystack, needle, haystack_length) dee_memcaserchrl(haystack, needle, haystack_length)
 
 #ifdef __INTELLISENSE__
-#define DEFINE_FOLD_COMPARE(name, T)               \
-	PRIVATE size_t DCALL                           \
-	name(T const *__restrict data, size_t datalen, \
+#define DEFINE_FOLD_COMPARE(name, T)                            \
+	PRIVATE WUNUSED ATTR_INS(1, 2) ATTR_OUTS(3, 4) size_t DCALL \
+	name(T const *__restrict data, size_t datalen,              \
 	     uint32_t fold[UNICODE_FOLDED_MAX], size_t fold_len);
 #else /* __INTELLISENSE__ */
 #define DEFINE_FOLD_COMPARE(name, T)                                             \
-	PRIVATE size_t DCALL                                                         \
+	PRIVATE WUNUSED ATTR_INS(1, 2) ATTR_OUTS(3, 4) size_t DCALL                  \
 	name(T const *__restrict data, size_t datalen,                               \
 	     uint32_t fold[UNICODE_FOLDED_MAX], size_t fold_len) {                   \
 		uint32_t buf[UNICODE_FOLDED_MAX];                                        \
@@ -365,7 +365,7 @@ DEFINE_FOLD_COMPARE(dee_foldcmpl, uint32_t)
 
 
 #define DEFINE_MEMCASECHR(name, rname, T, dee_foldcmp)             \
-	LOCAL T *DCALL                                                 \
+	LOCAL ATTR_PURE WUNUSED ATTR_INS(1, 3) T *DCALL                \
 	name(T const *__restrict haystack,                             \
 	     T needle, size_t haystack_length) {                       \
 		uint32_t fold[UNICODE_FOLDED_MAX];                         \
@@ -376,7 +376,7 @@ DEFINE_FOLD_COMPARE(dee_foldcmpl, uint32_t)
 		}                                                          \
 		return NULL;                                               \
 	}                                                              \
-	LOCAL T *DCALL                                                 \
+	LOCAL ATTR_PURE WUNUSED ATTR_INS(1, 3) T *DCALL                \
 	rname(T const *__restrict haystack,                            \
 	      T needle, size_t haystack_length) {                      \
 		T *iter = (T *)haystack + haystack_length;                 \
@@ -396,15 +396,15 @@ DEFINE_MEMCASECHR(dee_memcasechrw, dee_memcaserchrw, uint16_t, dee_foldcmpw)
 DEFINE_MEMCASECHR(dee_memcasechrl, dee_memcaserchrl, uint32_t, dee_foldcmpl)
 #undef DEFINE_MEMCASECHR
 
-#define DEFINE_UNICODE_ISOLDREADER_API(name, T)                                      \
+#define DEFINE_UNICODE_ISOLDREADER_API(name, T)                                     \
 	struct name {                                                                   \
 		T const *uf_dataptr;                                                        \
-		size_t uf_datalen;                                                          \
+		size_t   uf_datalen;                                                        \
 		uint32_t uf_buf[UNICODE_FOLDED_MAX];                                        \
-		uint8_t uf_len;                                                             \
-		uint8_t uf_idx;                                                             \
+		uint8_t  uf_len;                                                            \
+		uint8_t  uf_idx;                                                            \
 	};                                                                              \
-	LOCAL uint32_t DCALL                                                            \
+	LOCAL WUNUSED ATTR_INOUT(1) uint32_t DCALL                                      \
 	name##_getc(struct name *__restrict self) {                                     \
 		if (self->uf_idx < self->uf_len)                                            \
 			return self->uf_buf[self->uf_idx++];                                    \
@@ -415,7 +415,7 @@ DEFINE_MEMCASECHR(dee_memcasechrl, dee_memcaserchrl, uint32_t, dee_foldcmpl)
 		--self->uf_datalen;                                                         \
 		return self->uf_buf[0];                                                     \
 	}                                                                               \
-	LOCAL uint32_t DCALL                                                            \
+	LOCAL WUNUSED ATTR_INOUT(1) uint32_t DCALL                                      \
 	name##_getc_back(struct name *__restrict self) {                                \
 		if (self->uf_idx < self->uf_len)                                            \
 			return self->uf_buf[--self->uf_len];                                    \
@@ -578,13 +578,13 @@ DEFINE_MEMCASEENDSWITH(dee_memcaseendswithl, uint32_t)
 	LOCAL T *DCALL                                                                              \
 	name(T const *__restrict haystack, size_t haystack_length,                                  \
 	     T const *__restrict needle, size_t needle_length,                                      \
-	     size_t *pmatch_length) {                                                               \
+	     size_t *p_match_length) {                                                              \
 		for (; haystack_length; --haystack_length, ++haystack) {                                \
 			size_t match_length;                                                                \
 			match_length = MEMCASESTARTSWITH(haystack, haystack_length, needle, needle_length); \
 			if (match_length) {                                                                 \
-				if (pmatch_length)                                                              \
-					*pmatch_length = match_length;                                              \
+				if (p_match_length)                                                             \
+					*p_match_length = match_length;                                             \
 				return (T *)haystack;                                                           \
 			}                                                                                   \
 		}                                                                                       \
@@ -593,13 +593,13 @@ DEFINE_MEMCASEENDSWITH(dee_memcaseendswithl, uint32_t)
 	LOCAL T *DCALL                                                                              \
 	rname(T const *__restrict haystack, size_t haystack_length,                                 \
 	      T const *__restrict needle, size_t needle_length,                                     \
-	      size_t *pmatch_length) {                                                              \
+	      size_t *p_match_length) {                                                             \
 		for (; haystack_length; --haystack_length) {                                            \
 			size_t match_length;                                                                \
 			match_length = MEMCASEENDSWITH(haystack, haystack_length, needle, needle_length);   \
 			if (match_length) {                                                                 \
-				if (pmatch_length)                                                              \
-					*pmatch_length = match_length;                                              \
+				if (p_match_length)                                                             \
+					*p_match_length = match_length;                                             \
 				return (T *)haystack + haystack_length - match_length;                          \
 			}                                                                                   \
 		}                                                                                       \
@@ -624,7 +624,7 @@ DEFINE_MEMCASEMEM(dee_memcasememl, dee_memcasermeml, uint32_t, MEMCASESTARTSWITH
 
 #undef memcasecmpb
 #define memcasecmpb dee_memcasecmpb
-LOCAL int DCALL
+LOCAL ATTR_PURE WUNUSED ATTR_INS(1, 2) ATTR_INS(3, 4) int DCALL
 dee_memcasecmpb(uint8_t const *a, size_t a_size,
                 uint8_t const *b, size_t b_size) {
 	unicode_foldreader(uint8_t) a_reader;
@@ -649,26 +649,23 @@ dee_memcasecmpb(uint8_t const *a, size_t a_size,
 /* ASCII case-insensitive functions (for `Bytes'). */
 #undef memasciicaseeq
 #define memasciicaseeq dee_memasciicaseeq
-LOCAL bool DCALL
-dee_memasciicaseeq(uint8_t const *a, uint8_t const *b, size_t s) {
-	while (s--) {
-		uint8_t lhs = *a;
-		uint8_t rhs = *b;
+LOCAL ATTR_PURE WUNUSED ATTR_INS(1, 3) ATTR_INS(2, 3) bool DCALL
+dee_memasciicaseeq(uint8_t const *a, uint8_t const *b, size_t num_bytes) {
+	for (; num_bytes; --num_bytes, ++a, ++b) {
+		uint8_t lhs = *a, rhs = *b;
 		if (lhs != rhs) {
 			lhs = (uint8_t)tolower(lhs);
 			rhs = (uint8_t)tolower(rhs);
 			if (lhs != rhs)
 				return false;
 		}
-		++a;
-		++b;
 	}
 	return true;
 }
 
 #undef memasciicasechr
 #define memasciicasechr dee_memasciicasechr
-LOCAL uint8_t *DCALL
+LOCAL ATTR_PURE WUNUSED ATTR_INS(1, 3) uint8_t *DCALL
 dee_memasciicasechr(uint8_t const *__restrict haystack,
                     uint8_t needle, size_t haystack_length) {
 	needle = (uint8_t)tolower(needle);
@@ -682,11 +679,12 @@ dee_memasciicasechr(uint8_t const *__restrict haystack,
 
 #undef memasciicaserchr
 #define memasciicaserchr dee_memasciicaserchr
-LOCAL uint8_t *DCALL
+LOCAL ATTR_PURE WUNUSED ATTR_INS(1, 3) uint8_t *DCALL
 dee_memasciicaserchr(uint8_t const *__restrict haystack,
                      uint8_t needle, size_t haystack_length) {
-	uint8_t *iter = (uint8_t *)haystack + haystack_length;
-	needle        = (uint8_t)tolower(needle);
+	uint8_t *iter;
+	iter   = (uint8_t *)haystack + haystack_length;
+	needle = (uint8_t)tolower(needle);
 	while (iter > (uint8_t *)haystack) {
 		--iter;
 		if ((uint8_t)tolower(*iter) == needle)
@@ -697,11 +695,10 @@ dee_memasciicaserchr(uint8_t const *__restrict haystack,
 
 #undef memasciicasemem
 #define memasciicasemem dee_memasciicasemem
-LOCAL uint8_t *DCALL
+LOCAL ATTR_PURE WUNUSED ATTR_INS(1, 2) ATTR_INS(3, 4) uint8_t *DCALL
 dee_memasciicasemem(uint8_t const *haystack, size_t haystack_length,
                     uint8_t const *needle, size_t needle_length) {
-	uint8_t *candidate;
-	uint8_t marker;
+	uint8_t *candidate, marker;
 	if unlikely(!needle_length || needle_length > haystack_length)
 		return NULL;
 	haystack_length -= needle_length - 1;
@@ -718,11 +715,10 @@ dee_memasciicasemem(uint8_t const *haystack, size_t haystack_length,
 
 #undef memasciicasermem
 #define memasciicasermem dee_memasciicasermem
-LOCAL uint8_t *DCALL
+LOCAL ATTR_PURE WUNUSED ATTR_INS(1, 2) ATTR_INS(3, 4) uint8_t *DCALL
 dee_memasciicasermem(uint8_t const *haystack, size_t haystack_length,
                      uint8_t const *needle, size_t needle_length) {
-	uint8_t *candidate;
-	uint8_t marker;
+	uint8_t *candidate, marker;
 	if unlikely(!needle_length || needle_length > haystack_length)
 		return NULL;
 	marker = (uint8_t)tolower(*needle);
@@ -739,18 +735,16 @@ dee_memasciicasermem(uint8_t const *haystack, size_t haystack_length,
 
 #undef memasciicasecmp
 #define memasciicasecmp dee_memasciicasecmp
-LOCAL int dee_memasciicasecmp(uint8_t const *a, uint8_t const *b, size_t s) {
-	while (s--) {
-		uint8_t lhs = *a;
-		uint8_t rhs = *b;
+LOCAL ATTR_PURE WUNUSED ATTR_INS(1, 3) ATTR_INS(2, 3) int
+dee_memasciicasecmp(uint8_t const *a, uint8_t const *b, size_t num_bytes) {
+	for (; num_bytes; --num_bytes, ++a, ++b) {
+		uint8_t lhs = *a, rhs = *b;
 		if (lhs != rhs) {
 			lhs = (uint8_t)tolower(lhs);
 			rhs = (uint8_t)tolower(rhs);
 			if (lhs != rhs)
 				return (int)lhs - (int)rhs;
 		}
-		++a;
-		++b;
 	}
 	return 0;
 }
@@ -759,7 +753,8 @@ LOCAL int dee_memasciicasecmp(uint8_t const *a, uint8_t const *b, size_t s) {
 
 
 #define STRCASEEQ(a, b) dee_strcaseeq(a, b)
-LOCAL bool DCALL dee_strcaseeq(char const *a, char const *b) {
+LOCAL ATTR_PURE WUNUSED NONNULL((1, 2)) bool DCALL
+dee_strcaseeq(char const *a, char const *b) {
 	while (*a && tolower(*a) == tolower(*b)) {
 		++a;
 		++b;
@@ -769,12 +764,16 @@ LOCAL bool DCALL dee_strcaseeq(char const *a, char const *b) {
 
 #undef asciicaseeq
 #define asciicaseeq dee_asciicaseeq
-LOCAL bool DCALL dee_asciicaseeq(char const *a, char const *b, size_t length) {
-	while (length--) {
-		if (tolower(*a) != tolower(*b))
-			return false;
-		++a;
-		++b;
+LOCAL ATTR_PURE WUNUSED ATTR_INS(1, 3) ATTR_INS(2, 3) bool DCALL
+dee_asciicaseeq(char const *a, char const *b, size_t num_chars) {
+	for (; num_chars; --num_chars, ++a, ++b) {
+		char ca = *a, cb = *b;
+		if (ca != cb) {
+			ca = (char)(unsigned char)tolower((unsigned char)ca);
+			cb = (char)(unsigned char)tolower((unsigned char)cb);
+			if (ca != cb)
+				return false;
+		}
 	}
 	return true;
 }
@@ -801,10 +800,11 @@ LOCAL bool DCALL dee_asciicaseeq(char const *a, char const *b, size_t length) {
 		for (i = 0; i < blen; ++i)                             \
 			v0[i] = i;                                         \
 		for (i = 0; i < alen; ++i) {                           \
-			T a_value = transform(a[i]);                       \
-			v1[0]     = i + 1;                                 \
+			T a_value;                                         \
+			a_value = transform(a[i]);                         \
+			v1[0]   = i + 1;                                   \
 			for (j = 0; j < blen; ++j) {                       \
-				cost = (a_value == transform(b[j])) ? 0u : 1u; \
+				cost = (a_value == transform(b[j])) ? 0 : 1;   \
 				cost += v0[j];                                 \
 				temp = v1[j] + 1;                              \
 				if (temp < cost)                               \
@@ -1014,42 +1014,42 @@ DEFINE_VERSION_COMPARE_FUNCTION(dee_strcaseverscmpl, uint32_t, int32_t, DeeUni_T
 		}                                                            \
 		return scan_str;                                             \
 	}
-#define DEFINE_CASEFIND_MATCH_FUNCTION(name, T, memcasemem, MEMCASESTARTSWITH)          \
-	PRIVATE T *DCALL                                                                    \
-	name(T *__restrict scan_str, size_t scan_size,                                      \
-	     T *__restrict open_str, size_t open_size,                                      \
-	     T *__restrict clos_str, size_t clos_size,                                      \
-	     size_t *pmatch_length) {                                                       \
-		size_t recursion = 0;                                                           \
-		if unlikely(!clos_size)                                                         \
-			return NULL;                                                                \
-		if unlikely(!open_size)                                                         \
-			return memcasemem(scan_str, scan_size, clos_str, clos_size, pmatch_length); \
-		while (scan_size) {                                                             \
-			size_t length;                                                              \
-			length = MEMCASESTARTSWITH(scan_str, scan_size, clos_str, clos_size);       \
-			if (length) {                                                               \
-				if (!recursion) {                                                       \
-					if (pmatch_length)                                                  \
-						*pmatch_length = length;                                        \
-					return scan_str;                                                    \
-				}                                                                       \
-				--recursion;                                                            \
-				scan_str += length;                                                     \
-				scan_size -= length;                                                    \
-				continue;                                                               \
-			}                                                                           \
-			length = MEMCASESTARTSWITH(scan_str, scan_size, open_str, open_size);       \
-			if (length) {                                                               \
-				++recursion;                                                            \
-				scan_str += length;                                                     \
-				scan_size -= length;                                                    \
-				continue;                                                               \
-			}                                                                           \
-			++scan_str;                                                                 \
-			--scan_size;                                                                \
-		}                                                                               \
-		return NULL;                                                                    \
+#define DEFINE_CASEFIND_MATCH_FUNCTION(name, T, memcasemem, MEMCASESTARTSWITH)           \
+	PRIVATE T *DCALL                                                                     \
+	name(T *__restrict scan_str, size_t scan_size,                                       \
+	     T *__restrict open_str, size_t open_size,                                       \
+	     T *__restrict clos_str, size_t clos_size,                                       \
+	     size_t *p_match_length) {                                                       \
+		size_t recursion = 0;                                                            \
+		if unlikely(!clos_size)                                                          \
+			return NULL;                                                                 \
+		if unlikely(!open_size)                                                          \
+			return memcasemem(scan_str, scan_size, clos_str, clos_size, p_match_length); \
+		while (scan_size) {                                                              \
+			size_t length;                                                               \
+			length = MEMCASESTARTSWITH(scan_str, scan_size, clos_str, clos_size);        \
+			if (length) {                                                                \
+				if (!recursion) {                                                        \
+					if (p_match_length)                                                  \
+						*p_match_length = length;                                        \
+					return scan_str;                                                     \
+				}                                                                        \
+				--recursion;                                                             \
+				scan_str += length;                                                      \
+				scan_size -= length;                                                     \
+				continue;                                                                \
+			}                                                                            \
+			length = MEMCASESTARTSWITH(scan_str, scan_size, open_str, open_size);        \
+			if (length) {                                                                \
+				++recursion;                                                             \
+				scan_str += length;                                                      \
+				scan_size -= length;                                                     \
+				continue;                                                                \
+			}                                                                            \
+			++scan_str;                                                                  \
+			--scan_size;                                                                 \
+		}                                                                                \
+		return NULL;                                                                     \
 	}
 #undef find_asciicasematchb
 #undef find_matchb
@@ -1109,39 +1109,39 @@ DEFINE_CASEFIND_MATCH_FUNCTION(dee_find_casematchl, uint32_t, memcasememl, MEMCA
 		}                                                             \
 		return scan_str;                                              \
 	}
-#define DEFINE_CASERFIND_MATCH_FUNCTION(name, T, memcasermem, MEMCASEENDSWITH)           \
-	PRIVATE T *DCALL                                                                     \
-	name(T *__restrict scan_str, size_t scan_size,                                       \
-	     T *__restrict open_str, size_t open_size,                                       \
-	     T *__restrict clos_str, size_t clos_size,                                       \
-	     size_t *pmatch_length) {                                                        \
-		size_t recursion = 0;                                                            \
-		if unlikely(!open_size)                                                          \
-			return NULL;                                                                 \
-		if unlikely(!clos_size)                                                          \
-			return memcasermem(scan_str, scan_size, open_str, open_size, pmatch_length); \
-		while (scan_size) {                                                              \
-			size_t length;                                                               \
-			length = MEMCASEENDSWITH(scan_str, scan_size, open_str, open_size);          \
-			if (length) {                                                                \
-				scan_size -= length;                                                     \
-				if (!recursion) {                                                        \
-					if (pmatch_length)                                                   \
-						*pmatch_length = length;                                         \
-					return scan_str + scan_size;                                         \
-				}                                                                        \
-				--recursion;                                                             \
-				continue;                                                                \
-			}                                                                            \
-			length = MEMCASEENDSWITH(scan_str, scan_size, clos_str, clos_size);          \
-			if (length) {                                                                \
-				++recursion;                                                             \
-				scan_size -= length;                                                     \
-				continue;                                                                \
-			}                                                                            \
-			--scan_size;                                                                 \
-		}                                                                                \
-		return NULL;                                                                     \
+#define DEFINE_CASERFIND_MATCH_FUNCTION(name, T, memcasermem, MEMCASEENDSWITH)            \
+	PRIVATE T *DCALL                                                                      \
+	name(T *__restrict scan_str, size_t scan_size,                                        \
+	     T *__restrict open_str, size_t open_size,                                        \
+	     T *__restrict clos_str, size_t clos_size,                                        \
+	     size_t *p_match_length) {                                                        \
+		size_t recursion = 0;                                                             \
+		if unlikely(!open_size)                                                           \
+			return NULL;                                                                  \
+		if unlikely(!clos_size)                                                           \
+			return memcasermem(scan_str, scan_size, open_str, open_size, p_match_length); \
+		while (scan_size) {                                                               \
+			size_t length;                                                                \
+			length = MEMCASEENDSWITH(scan_str, scan_size, open_str, open_size);           \
+			if (length) {                                                                 \
+				scan_size -= length;                                                      \
+				if (!recursion) {                                                         \
+					if (p_match_length)                                                   \
+						*p_match_length = length;                                         \
+					return scan_str + scan_size;                                          \
+				}                                                                         \
+				--recursion;                                                              \
+				continue;                                                                 \
+			}                                                                             \
+			length = MEMCASEENDSWITH(scan_str, scan_size, clos_str, clos_size);           \
+			if (length) {                                                                 \
+				++recursion;                                                              \
+				scan_size -= length;                                                      \
+				continue;                                                                 \
+			}                                                                             \
+			--scan_size;                                                                  \
+		}                                                                                 \
+		return NULL;                                                                      \
 	}
 #undef rfind_asciicasematchb
 #undef rfind_matchb
@@ -1215,7 +1215,7 @@ typedef DeeStringObject String;
 
 #undef mempfilb
 #define mempfilb dee_mempfilb
-PRIVATE uint8_t *DCALL
+PRIVATE ATTR_OUTS(1, 2) ATTR_INS(3, 4) uint8_t *DCALL
 dee_mempfilb(uint8_t *__restrict dst, size_t num_bytes,
              uint8_t const *__restrict src, size_t src_bytes) {
 	ASSERT(src_bytes != 0);
@@ -1233,7 +1233,7 @@ dee_mempfilb(uint8_t *__restrict dst, size_t num_bytes,
 
 #undef mempfilw
 #define mempfilw dee_mempfilw
-PRIVATE uint16_t *DCALL
+PRIVATE ATTR_OUTS(1, 2) ATTR_INS(3, 4) uint16_t *DCALL
 dee_mempfilw(uint16_t *__restrict dst, size_t num_words,
              uint16_t const *__restrict src, size_t src_words) {
 	ASSERT(src_words != 0);
@@ -1251,7 +1251,7 @@ dee_mempfilw(uint16_t *__restrict dst, size_t num_words,
 
 #undef mempfill
 #define mempfill dee_mempfill
-PRIVATE uint32_t *DCALL
+PRIVATE ATTR_OUTS(1, 2) ATTR_INS(3, 4) uint32_t *DCALL
 dee_mempfill(uint32_t *__restrict dst, size_t num_dwords,
              uint32_t const *__restrict src, size_t src_dwords) {
 	ASSERT(src_dwords != 0);

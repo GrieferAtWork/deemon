@@ -51,9 +51,9 @@ DECL_BEGIN
 
 /* UTF-8 helper API */
 DDATDEF uint8_t const Dee_utf8_sequence_len[256];
-DFUNDEF NONNULL((1, 2)) uint32_t (DCALL Dee_utf8_readchar)(char const **__restrict piter, char const *end);
-DFUNDEF NONNULL((1)) uint32_t (DCALL Dee_utf8_readchar_u)(char const **__restrict piter);
-DFUNDEF NONNULL((1)) uint32_t (DCALL Dee_utf8_readchar_rev)(char const **__restrict pend, char const *begin);
+DFUNDEF NONNULL((1, 2)) uint32_t (DCALL Dee_utf8_readchar)(char const **__restrict p_iter, char const *end);
+DFUNDEF NONNULL((1)) uint32_t (DCALL Dee_utf8_readchar_u)(char const **__restrict p_iter);
+DFUNDEF NONNULL((1)) uint32_t (DCALL Dee_utf8_readchar_rev)(char const **__restrict p_end, char const *begin);
 DFUNDEF WUNUSED NONNULL((1)) char *(DCALL Dee_utf8_writechar)(char *__restrict buffer, uint32_t ch); /* Up to `UTF8_CUR_MBLEN' bytes may be used in `buffer' */
 #define Dee_UTF8_MAX_MBLEN  8 /* The max length of a UTF-8 multi-byte sequence (100% future-proof, as this is the theoretical limit) */
 #define Dee_UTF8_CUR_MBLEN  7 /* Enough for any 32-bit unicode character ordinal */

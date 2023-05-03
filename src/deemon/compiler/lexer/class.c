@@ -495,22 +495,22 @@ err:
  * id, as well as creating symbols in the associated member tables and
  * the current scope that can be used to access the member.
  * HINT: This function also deals with accessing properties.
- * WARNING: Once done, the caller is required to increment `**ppusage_counter'
+ * WARNING: Once done, the caller is required to increment `**pp_usage_counter'
  *          by the number of slots that are then being used by the member.
- * @param: name:            The name of the member that should be added.
- * @param: is_class_member: `true', if the member should be added as a class-member.
- * @param: flags:           Set of `CLASS_ATTRIBUTE_F*'.
- * @param: ppusage_counter: Filled with a pointer to the usage-counter which must be increment
- *                          by however-many consecutive VTABLE slots will be used by the member.
- * @return: * :             A new symbol classified as `SYM_CLASS_MEMBER' that is now stored in the caller's scope.
- *                          The symbol has already been fully initialized, including the `sym_member.sym_member'
- *                          field which contains the member descriptor apart of the either the `cm_cmem' or `cm_imem' table. */
+ * @param: name:             The name of the member that should be added.
+ * @param: is_class_member:  `true', if the member should be added as a class-member.
+ * @param: flags:            Set of `CLASS_ATTRIBUTE_F*'.
+ * @param: pp_usage_counter: Filled with a pointer to the usage-counter which must be increment
+ *                           by however-many consecutive VTABLE slots will be used by the member.
+ * @return: * :              A new symbol classified as `SYM_CLASS_MEMBER' that is now stored in the caller's scope.
+ *                           The symbol has already been fully initialized, including the `sym_member.sym_member'
+ *                           field which contains the member descriptor apart of the either the `cm_cmem' or `cm_imem' table. */
 PRIVATE WUNUSED NONNULL((1, 2, 5, 6)) struct symbol *DCALL
 class_maker_addmember(struct class_maker *__restrict self,
                       struct TPPKeyword *__restrict name,
                       bool is_class_member,
                       uint16_t flags,
-                      uint16_t **__restrict ppusage_counter,
+                      uint16_t **__restrict pp_usage_counter,
                       struct ast_loc *__restrict loc
 #ifdef CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION
                       , struct decl_ast *decl
@@ -575,12 +575,12 @@ class_maker_addmember(struct class_maker *__restrict self,
 	 *       in the class member vector must obvious count to its usage,
 	 *       rather than their own. */
 	if ((flags & CLASS_ATTRIBUTE_FCLASSMEM) || is_class_member) {
-		*ppusage_counter = &self->cm_desc->cd_cmemb_size;
+		*pp_usage_counter = &self->cm_desc->cd_cmemb_size;
 	} else {
-		*ppusage_counter = &self->cm_desc->cd_imemb_size;
+		*pp_usage_counter = &self->cm_desc->cd_imemb_size;
 	}
 	{
-		size_t addr = **ppusage_counter;
+		size_t addr = **pp_usage_counter;
 		/* -2 because 2 == 3-1 and 3 is the max number of slots required for a property */
 		if unlikely(addr > UINT16_MAX - 2) {
 			PERRAT(loc, W_TOO_MANY_CLASS_MEMBER,
@@ -1630,7 +1630,7 @@ use_object_base:
 		int member_class;
 		uint16_t member_flags;
 		bool is_class_member;
-		uint16_t *pusage_counter;
+		uint16_t *p_usage_counter;
 		struct ast_loc loc;
 		bool modifiers_encountered;
 next_member:
@@ -2391,7 +2391,7 @@ err_ctor_expr:
 				                           member_name,
 				                           is_class_member,
 				                           member_flags,
-				                           &pusage_counter,
+				                           &p_usage_counter,
 				                           &loc
 #ifdef CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION
 				                           ,
@@ -2402,7 +2402,7 @@ err_ctor_expr:
 #ifdef CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION
 				decl_ast_fini(&decl);
 #endif /* CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION */
-				++*pusage_counter;
+				++*p_usage_counter;
 				if unlikely(yield_semicolon() < 0)
 					goto err;
 				break;
@@ -2433,7 +2433,7 @@ err_ctor_expr:
 					                                      member_name,
 					                                      is_class_member,
 					                                      member_flags,
-					                                      &pusage_counter,
+					                                      &p_usage_counter,
 					                                      &loc
 #ifdef CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION
 					                                      ,
@@ -2458,9 +2458,9 @@ err_ctor_expr:
 						/* Optimization: when no delete or setting callback
 						 *               was given, mark the symbol as read-only. */
 						member_symbol->s_attr.a_attr->ca_flag |= CLASS_ATTRIBUTE_FREADONLY;
-						*pusage_counter += 1;
+						*p_usage_counter += 1;
 					} else {
-						*pusage_counter += CLASS_GETSET_COUNT;
+						*p_usage_counter += CLASS_GETSET_COUNT;
 					}
 
 					/* Load the base address of the property. */
@@ -2496,7 +2496,7 @@ err_property:
 				                                      member_name,
 				                                      is_class_member,
 				                                      member_flags,
-				                                      &pusage_counter,
+				                                      &p_usage_counter,
 				                                      &loc
 #ifdef CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION
 				                                      ,
@@ -2530,7 +2530,7 @@ err_property:
 					goto err;
 
 				/* Increment the usage-counter to consume the member slot. */
-				++*pusage_counter;
+				++*p_usage_counter;
 				if unlikely(likely(is_semicolon())
 				            ? (yield_semicolon() < 0)
 				            : WARN(W_EXPECTED_SEMICOLON_AFTER_EXPRESSION))
@@ -2562,7 +2562,7 @@ err_property:
 				                                      member_name,
 				                                      is_class_member,
 				                                      member_flags,
-				                                      &pusage_counter,
+				                                      &p_usage_counter,
 				                                      &loc,
 				                                      NULL);
 				if unlikely(!member_symbol)
@@ -2623,7 +2623,7 @@ err_property:
 			                                      member_name,
 			                                      is_class_member,
 			                                      member_flags,
-			                                      &pusage_counter,
+			                                      &p_usage_counter,
 			                                      &loc);
 			if unlikely(!member_symbol)
 				goto err;
@@ -2650,7 +2650,7 @@ err_property:
 			ast_decref(init_ast);
 			if unlikely(error)
 				goto err;
-			++*pusage_counter;
+			++*p_usage_counter;
 check_need_semi:
 			if (need_semi) {
 do_yield_semicolon:

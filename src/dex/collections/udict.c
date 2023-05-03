@@ -872,16 +872,16 @@ again_locked:
 }
 
 
-#define SETITEM_SETOLD 0 /* if_exists: *pold_value = GET_OLD_VALUE(); SET_OLD_ITEM(); return 1;
+#define SETITEM_SETOLD 0 /* if_exists: *p_old_value = GET_OLD_VALUE(); SET_OLD_ITEM(); return 1;
                           * else:      return 0; */
-#define SETITEM_SETNEW 1 /* if_exists: *pold_value = GET_OLD_VALUE(); return 1;
+#define SETITEM_SETNEW 1 /* if_exists: *p_old_value = GET_OLD_VALUE(); return 1;
                           * else:      ADD_NEW_ITEM(); return 0; */
 PRIVATE WUNUSED NONNULL((1, 2, 3)) int DCALL
 udict_setitem_ex(UDict *self,
                  DeeObject *key,
                  DeeObject *value,
                  unsigned int mode,
-                 DREF DeeObject **pold_value) {
+                 DREF DeeObject **p_old_value) {
 	struct udict_item *first_dummy;
 	dhash_t i, perturb, hash = UHASH(key);
 again:
@@ -909,16 +909,16 @@ again_locked:
 				Dee_Incref(value);
 				item->di_value = value;
 				UDict_LockEndWrite(self);
-				if (pold_value) {
-					*pold_value = item_value; /* Inherit reference */
+				if (p_old_value) {
+					*p_old_value = item_value; /* Inherit reference */
 				} else {
 					Dee_Decref(item_value);
 				}
 			} else {
-				if (pold_value) {
+				if (p_old_value) {
 					item_value = item->di_value;
 					Dee_Incref(item_value);
-					*pold_value = item_value;
+					*p_old_value = item_value;
 				}
 				UDict_LockEndWrite(self);
 			}
@@ -979,15 +979,15 @@ err:
 
 PRIVATE WUNUSED NONNULL((1, 2, 3)) int DCALL
 udict_nsi_updateold(UDict *self, DeeObject *key,
-                    DeeObject *value, DREF DeeObject **poldvalue) {
-	return udict_setitem_ex(self, key, value, SETITEM_SETOLD, poldvalue);
+                    DeeObject *value, DREF DeeObject **p_oldvalue) {
+	return udict_setitem_ex(self, key, value, SETITEM_SETOLD, p_oldvalue);
 }
 
 PRIVATE WUNUSED NONNULL((1, 2, 3)) int DCALL
 udict_nsi_insertnew(UDict *self, DeeObject *key,
-                    DeeObject *value, DREF DeeObject **poldvalue) {
+                    DeeObject *value, DREF DeeObject **p_oldvalue) {
 	int error;
-	error = udict_setitem_ex(self, key, value, SETITEM_SETNEW, poldvalue);
+	error = udict_setitem_ex(self, key, value, SETITEM_SETNEW, p_oldvalue);
 	if unlikely(error < 0)
 		goto err;
 	return !error;
@@ -1613,6 +1613,7 @@ urodict_rehash(DREF URoDict *__restrict self,
 			if (!item->di_key)
 				break;
 		}
+
 		/* Copy the old item into the new slot. */
 		memcpy(item, &self->urd_elem[i], sizeof(struct udict_item));
 	}
@@ -1623,7 +1624,7 @@ done:
 
 PRIVATE void DCALL
 urodict_insert(DREF URoDict *__restrict self, size_t mask,
-               size_t *__restrict pelemcount,
+               size_t *__restrict p_elemcount,
                /*inherit(always)*/ DREF DeeObject *__restrict key,
                /*inherit(always)*/ DREF DeeObject *__restrict value) {
 	size_t i, perturb, hash;
@@ -1636,22 +1637,24 @@ urodict_insert(DREF URoDict *__restrict self, size_t mask,
 			break;
 		if (!USAME(item->di_key, key))
 			continue;
+
 		/* It _is_ the same key! (override it...) */
-		--*pelemcount;
+		--*p_elemcount;
 		Dee_Decref(item->di_key);
 		Dee_Decref(item->di_value);
 		break;
 	}
+
 	/* Fill in the item. */
-	++*pelemcount;
+	++*p_elemcount;
 	item->di_key   = key;   /* Inherit reference. */
 	item->di_value = value; /* Inherit reference. */
 }
 
 PRIVATE WUNUSED NONNULL((1, 2, 3)) int DCALL
-URoDict_Insert(DREF URoDict **__restrict pself,
+URoDict_Insert(DREF URoDict **__restrict p_self,
                DeeObject *key, DeeObject *value) {
-	URoDict *self = *pself;
+	URoDict *self = *p_self;
 	if unlikely(self->urd_size * 2 > self->urd_mask) {
 		size_t old_size = self->urd_size;
 		size_t new_mask = (self->urd_mask << 1) | 1;
@@ -1661,6 +1664,7 @@ URoDict_Insert(DREF URoDict **__restrict pself,
 		self->urd_mask = new_mask;
 		self->urd_size = old_size; /* `urd_size' is not saved by `rehash()' */
 	}
+
 	/* Insert the new key/value-pair into the Dict. */
 	Dee_Incref(key);
 	Dee_Incref(value);

@@ -895,7 +895,7 @@ DeeTuple_DecrefSymbolic(DeeObject *__restrict self) {
 }
 
 /* Append all elements from an iterator to a tuple.
- * @assume(DeeTuple_IsEmpty(*pself) || !DeeObject_IsShared(*pself)); */
+ * @assume(DeeTuple_IsEmpty(self) || !DeeObject_IsShared(self)); */
 PRIVATE WUNUSED NONNULL((1, 2)) DREF Tuple *DCALL
 DeeTuple_Unshared_AppendIterator(/*inherit(on_success)*/ DREF Tuple *__restrict self,
                                  DeeObject *__restrict iterator) {

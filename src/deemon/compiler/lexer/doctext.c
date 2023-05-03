@@ -447,13 +447,13 @@ err:
 }
 
 /* Find # of leading whitespace characters of the line containing the
- * least of them, and return that number while also updating `*ptext'
+ * least of them, and return that number while also updating `*p_text'
  * to point to the start (before potential leading whitespace) of the
  * first line that contains anything other than only whitespace. */
 PRIVATE NONNULL((1, 2)) size_t DCALL
-find_least_indentation_and_strip_empty_leading_lines(/*utf-8*/ char const **__restrict ptext,
+find_least_indentation_and_strip_empty_leading_lines(/*utf-8*/ char const **__restrict p_text,
                                                      /*utf-8*/ char const *end) {
-	char const *text = *ptext;
+	char const *text = *p_text;
 	size_t min_line_leading_spaces = (size_t)-1;
 	size_t current_line_leading_spaces = 0;
 	for (;;) {
@@ -461,7 +461,7 @@ find_least_indentation_and_strip_empty_leading_lines(/*utf-8*/ char const **__re
 		ch = utf8_readchar((char const **)&text, end);
 		if (DeeUni_IsLF(ch)) {
 			if (min_line_leading_spaces == (size_t)-1)
-				*ptext = text; /* Skip an empty leading line */
+				*p_text = text; /* Skip an empty leading line */
 			current_line_leading_spaces = 0;
 			continue;
 		}

@@ -92,7 +92,7 @@ PRIVATE struct msg_desc const sock_msg_names[] = {
  * send/recv flags, or the flags as an integer object. */
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 sock_getmsgflagsof(DeeObject *__restrict name,
-                   int *__restrict presult) {
+                   int *__restrict p_result) {
 	if (DeeString_Check(name)) {
 		int result = 0;
 		char *iter = DeeString_STR(name);
@@ -139,10 +139,10 @@ next_part:
 			if (*iter)
 				++iter;
 		}
-		*presult = result;
+		*p_result = result;
 		return 0;
 	}
-	return DeeObject_AsInt(name, presult);
+	return DeeObject_AsInt(name, p_result);
 }
 
 INTERN WUNUSED DREF DeeObject *DCALL sock_getmsgflagsnameorid(int flags) {
@@ -353,7 +353,7 @@ sock_gettypename(int value) {
 }
 
 INTERN WUNUSED NONNULL((1, 2)) bool DCALL
-sock_getafvalue(char const *__restrict name, int *__restrict presult) {
+sock_getafvalue(char const *__restrict name, int *__restrict p_result) {
 	struct af_desc const *iter = sock_af_names;
 	size_t name_len;
 	if (MEMCASEEQ(name, "AF_", 3 * sizeof(char)))
@@ -362,14 +362,14 @@ sock_getafvalue(char const *__restrict name, int *__restrict presult) {
 	for (; iter < COMPILER_ENDOF(sock_af_names); ++iter) {
 		if (!MEMCASEEQ(iter->ad_name, name, name_len * sizeof(char)))
 			continue;
-		*presult = iter->ad_value;
+		*p_result = iter->ad_value;
 		return true;
 	}
 	return false;
 }
 
 INTERN WUNUSED NONNULL((1, 2)) bool DCALL
-sock_gettypevalue(char const *__restrict name, int *__restrict presult) {
+sock_gettypevalue(char const *__restrict name, int *__restrict p_result) {
 	struct type_desc const *iter = sock_type_names;
 	size_t name_len;
 	if (MEMCASEEQ(name, "SOCK_", 5 * sizeof(char)))
@@ -378,7 +378,7 @@ sock_gettypevalue(char const *__restrict name, int *__restrict presult) {
 	for (; iter < COMPILER_ENDOF(sock_type_names); ++iter) {
 		if (!MEMCASEEQ(iter->td_name, name, name_len * sizeof(char)))
 			continue;
-		*presult = iter->td_value;
+		*p_result = iter->td_value;
 		return true;
 	}
 	return false;
@@ -446,13 +446,13 @@ again:
 
 INTERN WUNUSED NONNULL((1, 2)) bool DCALL
 sock_getprotovalue(char const *__restrict name,
-                   int *__restrict presult) {
+                   int *__restrict p_result) {
 	struct protoent *ent;
 again:
 	sysdb_lock_write();
 	ent = getprotobyname(name);
 	if (ent) {
-		*presult = ent->p_proto;
+		*p_result = ent->p_proto;
 		sysdb_lock_endwrite();
 		return true;
 	}
@@ -474,56 +474,56 @@ again:
 
 
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
-sock_getafof(DeeObject *__restrict name, int *__restrict presult) {
+sock_getafof(DeeObject *__restrict name, int *__restrict p_result) {
 	if (DeeNone_Check(name)) {
-		*presult = AF_AUTO;
+		*p_result = AF_AUTO;
 		return 0;
 	}
 	if (DeeString_Check(name)) {
-		if unlikely(!sock_getafvalue(DeeString_STR(name), presult)) {
+		if unlikely(!sock_getafvalue(DeeString_STR(name), p_result)) {
 			return DeeError_Throwf(&DeeError_NoSupport,
 			                       "Unknown address family %r",
 			                       name);
 		}
 		return 0;
 	}
-	return DeeObject_AsInt(name, presult);
+	return DeeObject_AsInt(name, p_result);
 }
 
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
-sock_gettypeof(DeeObject *__restrict name, int *__restrict presult) {
+sock_gettypeof(DeeObject *__restrict name, int *__restrict p_result) {
 	if (DeeNone_Check(name)) {
-		*presult = SOCK_STREAM;
+		*p_result = SOCK_STREAM;
 		return 0;
 	}
 	if (DeeString_Check(name)) {
-		if unlikely(!sock_gettypevalue(DeeString_STR(name), presult)) {
+		if unlikely(!sock_gettypevalue(DeeString_STR(name), p_result)) {
 			return DeeError_Throwf(&DeeError_NoSupport,
 			                       "Unknown socket type %r",
 			                       name);
 		}
 		return 0;
 	}
-	return DeeObject_AsInt(name, presult);
+	return DeeObject_AsInt(name, p_result);
 }
 
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
-sock_getprotoof(DeeObject *__restrict name, int *__restrict presult) {
+sock_getprotoof(DeeObject *__restrict name, int *__restrict p_result) {
 #if 0 /* None already evaluates to int(0) */
 	if (DeeNone_Check(name)) {
-		*presult = 0;
+		*p_result = 0;
 		return 0; /* Default/unused protocol */
 	}
 #endif
 	if (DeeString_Check(name)) {
-		if unlikely(!sock_getprotovalue(DeeString_STR(name), presult)) {
+		if unlikely(!sock_getprotovalue(DeeString_STR(name), p_result)) {
 			return DeeError_Throwf(&DeeError_NoSupport,
 			                       "Unknown protocol name %r",
 			                       name);
 		}
 		return 0;
 	}
-	return DeeObject_AsInt(name, presult);
+	return DeeObject_AsInt(name, p_result);
 }
 
 INTERN WUNUSED DREF DeeObject *DCALL
@@ -577,7 +577,7 @@ PRIVATE struct shutdown_option const shutdown_options[] = {
 
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 get_shutdown_mode(char const *__restrict mode,
-                  int *__restrict presult) {
+                  int *__restrict p_result) {
 	char const *used_mode = mode;
 	size_t mode_length;
 	struct shutdown_option const *iter;
@@ -596,7 +596,7 @@ get_shutdown_mode(char const *__restrict mode,
 	for (; iter < COMPILER_ENDOF(shutdown_options); ++iter) {
 		if (!MEMCASEEQ(iter->so_nam, mode, mode_length * sizeof(char)))
 			continue;
-		*presult = iter->so_opt;
+		*p_result = iter->so_opt;
 		return 0;
 	}
 	return DeeError_Throwf(&DeeError_ValueError,
@@ -606,10 +606,10 @@ get_shutdown_mode(char const *__restrict mode,
 
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 get_shutdown_modeof(DeeObject *__restrict mode,
-                    int *__restrict presult) {
+                    int *__restrict p_result) {
 	if (DeeString_Check(mode))
-		return get_shutdown_mode(DeeString_STR(mode), presult);
-	return DeeObject_AsInt(mode, presult);
+		return get_shutdown_mode(DeeString_STR(mode), p_result);
+	return DeeObject_AsInt(mode, p_result);
 }
 
 
@@ -872,7 +872,7 @@ err:
 
 PRIVATE int DCALL
 get_port_name(char const *__restrict port, size_t port_length,
-              uint16_t *__restrict presult) {
+              uint16_t *__restrict p_result) {
 	char const *iter = port;
 	uint16_t new_result, result = 0;
 	if unlikely(!port_length)
@@ -887,7 +887,7 @@ get_port_name(char const *__restrict port, size_t port_length,
 			goto invalid_port;
 		result = new_result;
 	} while (--port_length);
-	*presult = result;
+	*p_result = result;
 	return 0;
 invalid_port:
 	return DeeError_Throwf(&DeeError_ValueError,

@@ -2065,10 +2065,10 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
-fix_relint(DeeObject **__restrict pobj) {
+fix_relint(DeeObject **__restrict p_obj) {
 	tint_t value;
 	DREF DeeObject *intob;
-	DeeRelIntObject *relint = (DeeRelIntObject *)*pobj;
+	DeeRelIntObject *relint = (DeeRelIntObject *)*p_obj;
 	ASSERT(!DeeObject_IsShared(relint));
 	ASSERT(relint->ri_sym);
 	ASSERT(ASM_SYM_DEFINED(relint->ri_sym));
@@ -2082,7 +2082,7 @@ fix_relint(DeeObject **__restrict pobj) {
 	if unlikely(!intob)
 		goto err;
 	/* Replace the constant slot with this value. */
-	*pobj = (DREF DeeObject *)intob; /* Inherit reference (x2) */
+	*p_obj = (DREF DeeObject *)intob; /* Inherit reference (x2) */
 	Dee_DecrefDokill(relint);
 	return 0;
 err:
@@ -2090,14 +2090,14 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
-fix_relint_r(DeeObject **__restrict pobj) {
-	DeeObject *obj = *pobj;
+fix_relint_r(DeeObject **__restrict p_obj) {
+	DeeObject *obj = *p_obj;
 	if (DeeObject_IsShared(obj)) {
 		ASSERT(!DeeObject_InstanceOfExact(obj, &DeeRelInt_Type));
 		return 0;
 	}
 	if (DeeObject_InstanceOfExact(obj, &DeeRelInt_Type))
-		return fix_relint(pobj);
+		return fix_relint(p_obj);
 	if (DeeTuple_Check(obj)) {
 		/* Tuples can also appear as part of jump-tables. */
 		size_t i;
@@ -3514,8 +3514,8 @@ err:
 
 INTERN WUNUSED NONNULL((1, 4, 5)) DREF DeeCodeObject *DCALL
 code_compile(struct ast *__restrict code_ast, uint16_t flags,
-             bool first_function, uint16_t *__restrict prefc,
-             /*out:inherit*/ struct asm_symbol_ref **__restrict prefv) {
+             bool first_function, uint16_t *__restrict p_refc,
+             /*out:inherit*/ struct asm_symbol_ref **__restrict p_refv) {
 	struct assembler old_assembler;
 	DREF DeeCodeObject *result;
 
@@ -3536,8 +3536,9 @@ code_compile(struct ast *__restrict code_ast, uint16_t flags,
 	if (result) {
 		ASSERT(!current_assembler.a_argrefc);
 		/* Return information about the required references to the caller. */
-		*prefc = current_assembler.a_refc;
-		*prefv = current_assembler.a_refv;
+		*p_refc = current_assembler.a_refc;
+		*p_refv = current_assembler.a_refv;
+
 		/* Steal the vector. */
 		current_assembler.a_refv = NULL;
 		current_assembler.a_refc = 0;
@@ -3554,17 +3555,17 @@ code_compile(struct ast *__restrict code_ast, uint16_t flags,
 
 INTERN WUNUSED NONNULL((1, 3, 4, 5, 6)) DREF DeeCodeObject *DCALL
 code_compile_argrefs(struct ast *__restrict code_ast, uint16_t flags,
-                     uint16_t *__restrict prefc, /*out:inherit*/ struct asm_symbol_ref **__restrict prefv,
-                     uint16_t *__restrict pargc, /*out:inherit*/ struct symbol ***__restrict pargv) {
+                     uint16_t *__restrict p_refc, /*out:inherit*/ struct asm_symbol_ref **__restrict p_refv,
+                     uint16_t *__restrict p_argc, /*out:inherit*/ struct symbol ***__restrict p_argv) {
 	struct assembler old_assembler;
 	DREF DeeCodeObject *result;
 
 	/* Check if the function even qualifies for argrefs. */
 	if unlikely(current_basescope->bs_argc_min < current_basescope->bs_argc_max ||
 	            (current_basescope->bs_flags & CODE_FVARARGS)) {
-		*pargc = 0;
-		*pargv = NULL;
-		return code_compile(code_ast, flags, false, prefc, prefv);
+		*p_argc = 0;
+		*p_argv = NULL;
+		return code_compile(code_ast, flags, false, p_refc, p_refv);
 	}
 	ASSERT(current_basescope->bs_varargs == NULL);
 
@@ -3621,10 +3622,10 @@ code_compile_argrefs(struct ast *__restrict code_ast, uint16_t flags,
 				Dee_Incref_n(Dee_EmptyString, current_assembler.a_argrefc);
 		}
 		/* Return information about the required references to the caller. */
-		*prefc = current_assembler.a_refc;
-		*prefv = current_assembler.a_refv;
-		*pargc = current_assembler.a_argrefc;
-		*pargv = current_assembler.a_argrefv;
+		*p_refc = current_assembler.a_refc;
+		*p_refv = current_assembler.a_refv;
+		*p_argc = current_assembler.a_argrefc;
+		*p_argv = current_assembler.a_argrefv;
 		/* Steal the vector. */
 		current_assembler.a_refv    = NULL;
 		current_assembler.a_refc    = 0;

@@ -348,7 +348,7 @@ PRIVATE struct type_getset tpconst attr_getsets[] = {
 
 LOCAL WUNUSED NONNULL((1, 2)) int DCALL
 string_to_attrflags(char const *__restrict str,
-                    uint16_t *__restrict presult) {
+                    uint16_t *__restrict p_result) {
 	while (*str) {
 		char ch = *str++;
 		unsigned int i;
@@ -360,7 +360,7 @@ string_to_attrflags(char const *__restrict str,
 				goto err;
 			}
 		}
-		*presult |= (uint16_t)1 << i;
+		*p_result |= (uint16_t)1 << i;
 	}
 	return 0;
 err:
@@ -1227,13 +1227,13 @@ done:
 	DeeEnumAttrIterator_LockRelease(self);
 	return result;
 #else /* CONFIG_LONGJMP_ENUMATTR */
-	DREF Attr **presult;
+	DREF Attr **p_result;
 	do {
-		presult = atomic_read(&self->ei_iter);
-		if (presult == self->ei_end)
+		p_result = atomic_read(&self->ei_iter);
+		if (p_result == self->ei_end)
 			return (DREF Attr *)ITER_DONE;
-	} while unlikely(!atomic_cmpxch_weak(&self->ei_iter, presult, presult + 1));
-	return_reference_(*presult);
+	} while unlikely(!atomic_cmpxch_weak(&self->ei_iter, p_result, p_result + 1));
+	return_reference_(*p_result);
 #endif /* !CONFIG_LONGJMP_ENUMATTR */
 }
 

@@ -773,7 +773,7 @@ err:
 /* Unpack and validate a sequence `{(string, ast, ast)...} handlers' */
 INTERN WUNUSED NONNULL((1, 2, 3)) struct catch_expr *DCALL
 unpack_catch_expressions(DeeObject *__restrict handlers,
-                         size_t *__restrict pcatch_c,
+                         size_t *__restrict p_catch_c,
                          DeeBaseScopeObject *__restrict base_scope) {
 	struct catch_expr *catch_v;
 	size_t catch_c, catch_a, i;
@@ -845,7 +845,7 @@ err_fast:
 			catch_v = new_catch_v;
 	}
 done:
-	*pcatch_c = catch_c;
+	*p_catch_c = catch_c;
 	return catch_v;
 err_catch_elem:
 	Dee_Decref(elem);
@@ -910,7 +910,7 @@ done:
 /* Parse the flags for a loop-ast from a string (:rt:Compiler.makeloop) */
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 parse_loop_flags(char const *__restrict flags,
-                 uint16_t *__restrict presult) {
+                 uint16_t *__restrict p_result) {
 	char const *next_flag;
 	size_t flag_length;
 	while (*flags) {
@@ -926,11 +926,11 @@ parse_loop_flags(char const *__restrict flags,
 		if (flag_length) {
 #define IS_FLAG(x) (flag_length == COMPILER_STRLEN(x) && bcmpc(flags, x, COMPILER_STRLEN(x), sizeof(char)) == 0)
 			if (IS_FLAG("foreach")) {
-				*presult |= AST_FLOOP_FOREACH;
+				*p_result |= AST_FLOOP_FOREACH;
 			} else if (IS_FLAG("postcond")) {
-				*presult |= AST_FLOOP_POSTCOND;
+				*p_result |= AST_FLOOP_POSTCOND;
 			} else if (IS_FLAG("unlikely")) {
-				*presult |= AST_FLOOP_UNLIKELY;
+				*p_result |= AST_FLOOP_UNLIKELY;
 			} else {
 				return DeeError_Throwf(&DeeError_ValueError,
 				                       "Unknown loop flag %$q",
@@ -1088,7 +1088,7 @@ done:
 /* Parse the flags for a conditional-ast from a string (:rt:Compiler.makeconditional) */
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 parse_conditional_flags(char const *__restrict flags,
-                        uint16_t *__restrict presult) {
+                        uint16_t *__restrict p_result) {
 	char const *next_flag;
 	size_t flag_length;
 	while (*flags) {
@@ -1104,11 +1104,11 @@ parse_conditional_flags(char const *__restrict flags,
 		if (flag_length) {
 #define IS_FLAG_S(len, s) (flag_length == (len) && bcmpc(flags, s, len, sizeof(char)) == 0)
 			if (IS_FLAG_S(4, STR_bool)) {
-				*presult |= AST_FCOND_BOOL;
+				*p_result |= AST_FCOND_BOOL;
 			} else if (IS_FLAG_S(6, "likely")) {
-				*presult |= AST_FCOND_LIKELY;
+				*p_result |= AST_FCOND_LIKELY;
 			} else if (IS_FLAG_S(8, "unlikely")) {
-				*presult |= AST_FCOND_UNLIKELY;
+				*p_result |= AST_FCOND_UNLIKELY;
 			} else {
 				return DeeError_Throwf(&DeeError_ValueError,
 				                       "Unknown conditional flag %$q",
@@ -1362,11 +1362,11 @@ done:
 
 /* Parse the operator name and determine its ID. */
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
-get_operator_id(DeeObject *__restrict opid, uint16_t *__restrict presult) {
+get_operator_id(DeeObject *__restrict opid, uint16_t *__restrict p_result) {
 	if (DeeString_Check(opid)) {
 		char *name = DeeString_STR(opid);
-		*presult   = Dee_OperatorFromName(NULL, name);
-		if (*presult != (uint16_t)-1)
+		*p_result   = Dee_OperatorFromName(NULL, name);
+		if (*p_result != (uint16_t)-1)
 			return 0;
 		/* Resolve special operator names. */
 		switch (name[0]) {
@@ -1374,13 +1374,13 @@ get_operator_id(DeeObject *__restrict opid, uint16_t *__restrict presult) {
 		case '+':
 			if (name[1])
 				goto unknown_str;
-			*presult = AST_OPERATOR_POS_OR_ADD;
+			*p_result = AST_OPERATOR_POS_OR_ADD;
 			break;
 
 		case '-':
 			if (name[1])
 				goto unknown_str;
-			*presult = AST_OPERATOR_NEG_OR_SUB;
+			*p_result = AST_OPERATOR_NEG_OR_SUB;
 			break;
 
 		case '[':
@@ -1389,20 +1389,20 @@ get_operator_id(DeeObject *__restrict opid, uint16_t *__restrict presult) {
 					goto unknown_str;
 				if (name[3])
 					goto unknown_str;
-				*presult = AST_OPERATOR_GETRANGE_OR_SETRANGE;
+				*p_result = AST_OPERATOR_GETRANGE_OR_SETRANGE;
 			} else {
 				if (name[1] != ']')
 					goto unknown_str;
 				if (name[2])
 					goto unknown_str;
-				*presult = AST_OPERATOR_GETITEM_OR_SETITEM;
+				*p_result = AST_OPERATOR_GETITEM_OR_SETITEM;
 			}
 			break;
 
 		case '.':
 			if (name[1])
 				goto unknown_str;
-			*presult = AST_OPERATOR_GETATTR_OR_SETATTR;
+			*p_result = AST_OPERATOR_GETATTR_OR_SETATTR;
 			break;
 
 		default:
@@ -1413,7 +1413,7 @@ unknown_str:
 		}
 		return 0;
 	}
-	return DeeObject_AsUInt16(opid, presult);
+	return DeeObject_AsUInt16(opid, p_result);
 }
 
 
@@ -1470,7 +1470,7 @@ done:
 /* Parse the flags for an operator-ast from a string (:rt:Compiler.makeoperator) */
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 parse_operator_flags(char const *__restrict flags,
-                     uint16_t *__restrict presult) {
+                     uint16_t *__restrict p_result) {
 	char const *next_flag;
 	size_t flag_length;
 	while (*flags) {
@@ -1486,13 +1486,13 @@ parse_operator_flags(char const *__restrict flags,
 		if (flag_length) {
 #define IS_FLAG(x) (flag_length == COMPILER_STRLEN(x) && bcmpc(flags, x, COMPILER_STRLEN(x), sizeof(char)) == 0)
 			if (IS_FLAG("post")) {
-				*presult |= AST_OPERATOR_FPOSTOP;
+				*p_result |= AST_OPERATOR_FPOSTOP;
 			} else if (IS_FLAG("varargs")) {
-				*presult |= AST_OPERATOR_FVARARGS;
+				*p_result |= AST_OPERATOR_FVARARGS;
 			} else if (IS_FLAG("maybeprefix")) {
-				*presult |= AST_OPERATOR_FMAYBEPFX;
+				*p_result |= AST_OPERATOR_FMAYBEPFX;
 			} else if (IS_FLAG("dontoptimize")) {
-				*presult |= AST_OPERATOR_FDONTOPT;
+				*p_result |= AST_OPERATOR_FDONTOPT;
 			} else {
 				return DeeError_Throwf(&DeeError_ValueError,
 				                       "Unknown operator flag %$q",

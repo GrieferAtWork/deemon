@@ -53,63 +53,63 @@ INTERN_CONST DeeStringObject *tpconst rt_operator_names[1 + (AST_OPERATOR_MAX - 
 };
 
 PRIVATE WUNUSED NONNULL((1)) bool DCALL
-convert_operator_name(uint16_t *__restrict pname, size_t argc) {
+convert_operator_name(uint16_t *__restrict p_name, size_t argc) {
 	/* Convert an operator name based on the provided number of arguments. */
-	if (*pname >= AST_OPERATOR_MIN &&
-	    *pname <= AST_OPERATOR_MAX) {
-		switch (*pname) {
+	if (*p_name >= AST_OPERATOR_MIN &&
+	    *p_name <= AST_OPERATOR_MAX) {
+		switch (*p_name) {
 
 		case AST_OPERATOR_POS_OR_ADD:
 			if (argc == 1) {
-				*pname = OPERATOR_POS;
+				*p_name = OPERATOR_POS;
 				goto ok;
 			}
 			if (argc == 2) {
-				*pname = OPERATOR_ADD;
+				*p_name = OPERATOR_ADD;
 				goto ok;
 			}
 			break;
 
 		case AST_OPERATOR_NEG_OR_SUB:
 			if (argc == 1) {
-				*pname = OPERATOR_NEG;
+				*p_name = OPERATOR_NEG;
 				goto ok;
 			}
 			if (argc == 2) {
-				*pname = OPERATOR_SUB;
+				*p_name = OPERATOR_SUB;
 				goto ok;
 			}
 			break;
 
 		case AST_OPERATOR_GETITEM_OR_SETITEM:
 			if (argc == 2) {
-				*pname = OPERATOR_GETITEM;
+				*p_name = OPERATOR_GETITEM;
 				goto ok;
 			}
 			if (argc == 3) {
-				*pname = OPERATOR_SETITEM;
+				*p_name = OPERATOR_SETITEM;
 				goto ok;
 			}
 			break;
 
 		case AST_OPERATOR_GETRANGE_OR_SETRANGE:
 			if (argc == 3) {
-				*pname = OPERATOR_GETRANGE;
+				*p_name = OPERATOR_GETRANGE;
 				goto ok;
 			}
 			if (argc == 4) {
-				*pname = OPERATOR_SETRANGE;
+				*p_name = OPERATOR_SETRANGE;
 				goto ok;
 			}
 			break;
 
 		case AST_OPERATOR_GETATTR_OR_SETATTR:
 			if (argc == 2) {
-				*pname = OPERATOR_GETATTR;
+				*p_name = OPERATOR_GETATTR;
 				goto ok;
 			}
 			if (argc == 3) {
-				*pname = OPERATOR_SETATTR;
+				*p_name = OPERATOR_SETATTR;
 				goto ok;
 			}
 			break;

@@ -50,7 +50,7 @@ err_flags:
 
 /* @param: mode: Set of `AST_COMMA_*' - What is allowed and when should we pack values. */
 INTERN WUNUSED DREF struct ast *FCALL
-ast_parse_statement_or_expression(unsigned int *pwas_expression) {
+ast_parse_statement_or_expression(unsigned int *p_was_expression) {
 	DREF struct ast *result;
 	unsigned int was_expression;
 	switch (tok) {
@@ -67,35 +67,35 @@ ast_parse_statement_or_expression(unsigned int *pwas_expression) {
 			if (token_num != token.t_num)
 				was_expression = AST_PARSE_WASEXPR_YES;
 		}
-		if (pwas_expression)
-			*pwas_expression = was_expression;
+		if (p_was_expression)
+			*p_was_expression = was_expression;
 		break;
 
 	case KWD_try:
-		result = ast_parse_try_hybrid(pwas_expression);
+		result = ast_parse_try_hybrid(p_was_expression);
 		break;
 
 	case KWD_if:
-		result = ast_parse_if_hybrid(pwas_expression);
+		result = ast_parse_if_hybrid(p_was_expression);
 		break;
 
 	case KWD_with:
-		result = ast_parse_with_hybrid(pwas_expression);
+		result = ast_parse_with_hybrid(p_was_expression);
 		break;
 
 	case KWD_assert:
-		result = ast_parse_assert_hybrid(pwas_expression);
+		result = ast_parse_assert_hybrid(p_was_expression);
 		break;
 
 	case KWD_import:
-		result = ast_parse_import_hybrid(pwas_expression);
+		result = ast_parse_import_hybrid(p_was_expression);
 		break;
 
 	case KWD_for:
 	case KWD_foreach:
 	case KWD_do:
 	case KWD_while:
-		result = ast_parse_loopexpr_hybrid(pwas_expression);
+		result = ast_parse_loopexpr_hybrid(p_was_expression);
 		break;
 
 	case KWD_from:
@@ -115,8 +115,8 @@ ast_parse_statement_or_expression(unsigned int *pwas_expression) {
 	case '@':
 	case ';':
 		result = ast_parse_statement(false);
-		if (pwas_expression)
-			*pwas_expression = AST_PARSE_WASEXPR_NO;
+		if (p_was_expression)
+			*p_was_expression = AST_PARSE_WASEXPR_NO;
 		break;
 
 	default: {
@@ -135,17 +135,17 @@ ast_parse_statement_or_expression(unsigned int *pwas_expression) {
 		if (tok == ';' && (comma_mode & AST_COMMA_OUT_FNEEDSEMI)) {
 			if unlikely(yield() < 0)
 				goto err_r;
-			if (pwas_expression)
-				*pwas_expression = AST_PARSE_WASEXPR_NO;
+			if (p_was_expression)
+				*p_was_expression = AST_PARSE_WASEXPR_NO;
 		} else if (old_varc != current_scope->s_mapc) {
 			if ((comma_mode & AST_COMMA_OUT_FNEEDSEMI) &&
 			    WARN(W_EXPECTED_SEMICOLON_AFTER_EXPRESSION))
 				goto err;
-			if (pwas_expression)
-				*pwas_expression = AST_PARSE_WASEXPR_NO;
+			if (p_was_expression)
+				*p_was_expression = AST_PARSE_WASEXPR_NO;
 		} else {
-			if (pwas_expression)
-				*pwas_expression = AST_PARSE_WASEXPR_YES;
+			if (p_was_expression)
+				*p_was_expression = AST_PARSE_WASEXPR_YES;
 		}
 	}	break;
 
@@ -162,7 +162,7 @@ err:
 
 /* Same as `ast_parse_try_hybrid' but for if statements / expressions. */
 INTERN WUNUSED DREF struct ast *FCALL
-ast_parse_if_hybrid(unsigned int *pwas_expression) {
+ast_parse_if_hybrid(unsigned int *p_was_expression) {
 	DREF struct ast *tt_branch;
 	DREF struct ast *ff_branch;
 	DREF struct ast *result, *merge;
@@ -212,8 +212,8 @@ do_else_branch:
 	ast_xdecref(ff_branch);
 	ast_xdecref(tt_branch);
 	ast_xdecref(result);
-	if (pwas_expression)
-		*pwas_expression = was_expression;
+	if (p_was_expression)
+		*p_was_expression = was_expression;
 	return merge;
 err_tt:
 	ast_xdecref(tt_branch);
@@ -230,7 +230,7 @@ err:
 
 /* Parse a statement or a brace-expression, with the current token being a `{' */
 INTERN WUNUSED DREF struct ast *FCALL
-ast_parse_statement_or_braces(unsigned int *pwas_expression) {
+ast_parse_statement_or_braces(unsigned int *p_was_expression) {
 	DREF struct ast *result, **new_elemv;
 	DREF struct ast *remainder;
 	struct ast_loc loc;
@@ -248,8 +248,8 @@ ast_parse_statement_or_braces(unsigned int *pwas_expression) {
 			goto err;
 		if unlikely(yield() < 0)
 			goto err_r;
-		if (pwas_expression)
-			*pwas_expression = AST_PARSE_WASEXPR_MAYBE;
+		if (p_was_expression)
+			*p_was_expression = AST_PARSE_WASEXPR_MAYBE;
 		break;
 
 	case '.':
@@ -258,8 +258,8 @@ ast_parse_statement_or_braces(unsigned int *pwas_expression) {
 			goto err;
 		if (skip('}', W_EXPECTED_RBRACE_AFTER_BRACEINIT))
 			goto err_r;
-		if (pwas_expression)
-			*pwas_expression = AST_PARSE_WASEXPR_YES;
+		if (p_was_expression)
+			*p_was_expression = AST_PARSE_WASEXPR_YES;
 		break;
 
 
@@ -298,8 +298,8 @@ parse_remainder_after_comma_popscope:
 				result = ast_setddi(remainder, &loc);
 				if (skip('}', W_EXPECTED_RBRACE_AFTER_BRACEINIT))
 					goto err_r;
-				if (pwas_expression)
-					*pwas_expression = AST_PARSE_WASEXPR_YES;
+				if (p_was_expression)
+					*p_was_expression = AST_PARSE_WASEXPR_YES;
 				break;
 			}
 			if likely(tok == '}') {
@@ -432,8 +432,8 @@ is_a_statement:
 		if (skip('}', W_EXPECTED_RBRACE_AFTER_LBRACE))
 			goto err_r;
 		scope_pop();
-		if (pwas_expression)
-			*pwas_expression = AST_PARSE_WASEXPR_NO;
+		if (p_was_expression)
+			*p_was_expression = AST_PARSE_WASEXPR_NO;
 		break;
 
 	default: {
@@ -471,8 +471,8 @@ is_a_statement:
 					goto err;
 parse_remainder_after_rbrace_popscope:
 				scope_pop();
-				if (pwas_expression)
-					*pwas_expression = AST_PARSE_WASEXPR_YES;
+				if (p_was_expression)
+					*p_was_expression = AST_PARSE_WASEXPR_YES;
 				break;
 			}
 			if (tok == ':' && result->a_multiple.m_astc == 1) {
@@ -493,8 +493,8 @@ parse_remainder_after_colon_popscope:
 				result = ast_setddi(remainder, &loc);
 				if (skip('}', W_EXPECTED_RBRACE_AFTER_BRACEINIT))
 					goto err_r;
-				if (pwas_expression)
-					*pwas_expression = AST_PARSE_WASEXPR_YES;
+				if (p_was_expression)
+					*p_was_expression = AST_PARSE_WASEXPR_YES;
 				break;
 			}
 		}
@@ -556,8 +556,8 @@ parse_remainder_after_statement:
 				goto err_r;
 		}
 		scope_pop();
-		if (pwas_expression)
-			*pwas_expression = AST_PARSE_WASEXPR_NO;
+		if (p_was_expression)
+			*p_was_expression = AST_PARSE_WASEXPR_NO;
 	}	break;
 	}
 	return result;

@@ -236,7 +236,7 @@ typedef Dee_ssize_t re_sregoff_t;
 #undef unicode_readutf8_n
 #define unicode_readutf8_n Dee_utf8_readchar
 #undef unicode_readutf8_rev
-#define unicode_readutf8_rev(ptext) Dee_utf8_readchar_rev(ptext, (char const *)0)
+#define unicode_readutf8_rev(p_text) Dee_utf8_readchar_rev(p_text, (char const *)0)
 #undef unicode_readutf8_rev_n
 #define unicode_readutf8_rev_n Dee_utf8_readchar_rev
 #undef unicode_writeutf8

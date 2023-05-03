@@ -1701,13 +1701,13 @@ service_exception_handlers:
 									/* A new exception was thrown on-top of ours. (we must still handle our old one) */
 									{
 										uint16_t ind = ts->t_exceptsz - old_except_sz;
-										struct except_frame *exc, **pexc;
-										exc = *(pexc = &ts->t_except);
+										struct except_frame *exc, **p_exc;
+										exc = *(p_exc = &ts->t_except);
 										while (ind--) {
-											pexc = &exc->ef_prev;
-											exc  = *pexc;
+											p_exc = &exc->ef_prev;
+											exc  = *p_exc;
 										}
-										*pexc = exc->ef_prev;
+										*p_exc = exc->ef_prev;
 										--ts->t_exceptsz;
 										/* Destroy the frame in question. */
 										if (ITER_ISOK(exc->ef_trace))

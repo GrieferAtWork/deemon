@@ -700,25 +700,29 @@ DecFile_Init(DecFile *__restrict self,
              struct module_object *__restrict module,
              struct string_object *__restrict dec_pathname,
              struct compiler_options *options);
-PRIVATE NONNULL((1)) void DCALL DecFile_Fini(DecFile *__restrict self);
+PRIVATE NONNULL((1)) void DCALL
+DecFile_Fini(DecFile *__restrict self);
 
 /* Return a string for the entire strtab of a given DEC-file.
  * Upon error, NULL is returned.
  * NOTE: The return value is _NOT_ a reference! */
-PRIVATE WUNUSED NONNULL((1)) DeeObject *DCALL DecFile_Strtab(DecFile *__restrict self);
+PRIVATE WUNUSED NONNULL((1)) DeeObject *DCALL
+DecFile_Strtab(DecFile *__restrict self);
 
 /* Check if a given DEC file is up to date, or if it must not be loaded.
  * because it a dependency has changed since it was created.
  * @return:  0: The file is up-to-date.
  * @return:  1: The file is not up-to-date.
  * @return: -1: An error occurred. */
-PRIVATE WUNUSED NONNULL((1)) int DCALL DecFile_IsUpToDate(DecFile *__restrict self);
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+DecFile_IsUpToDate(DecFile *__restrict self);
 
 /* Load a given DEC file and fill in the given `module'.
  * @return:  0: Successfully loaded the given DEC file.
  * @return:  1: The DEC file has been corrupted or is out of date.
  * @return: -1: An error occurred. */
-PRIVATE WUNUSED NONNULL((1)) int DCALL DecFile_Load(DecFile *__restrict self);
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+DecFile_Load(DecFile *__restrict self);
 
 /* Return the last-modified time (in microseconds since 01-01-1970).
  * For this purpose, an internal cache is kept that is consulted
@@ -727,7 +731,8 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL DecFile_Load(DecFile *__restrict self);
  * @return: * :           Last-modified time (in microseconds since 01-01-1970).
  * @return: 0 :           The given file could not be found.
  * @return: (uint64_t)-1: The lookup failed and an error was thrown. */
-PRIVATE WUNUSED NONNULL((1)) uint64_t DCALL DecTime_Lookup(DeeObject *__restrict filename);
+PRIVATE WUNUSED NONNULL((1)) uint64_t DCALL
+DecTime_Lookup(DeeObject *__restrict filename);
 
 /* DEC loader implementation. */
 
@@ -736,17 +741,17 @@ PRIVATE WUNUSED NONNULL((1)) uint64_t DCALL DecTime_Lookup(DeeObject *__restrict
  * @return: ITER_DONE: The DEC file has been corrupted. */
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 DecFile_LoadObject(DecFile *__restrict self,
-                   uint8_t const **__restrict preader);
+                   uint8_t const **__restrict p_reader);
 
 /* @param: allow_dtype_null: When true, individual vector elements are allowed
  *                           to be `NULL' as the result of `DTYPE_NULL'
- * @return: * :              Newly heap-allocated vector of objects (length is stored in `*pcount').
+ * @return: * :              Newly heap-allocated vector of objects (length is stored in `*p_count').
  * @return: NULL:            An error occurred.
  * @return: ITER_DONE:       The DEC file has been corrupted. */
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject **DCALL
 DecFile_LoadObjectVector(DecFile *__restrict self,
-                         uint16_t *__restrict pcount,
-                         uint8_t const **__restrict preader,
+                         uint16_t *__restrict p_count,
+                         uint8_t const **__restrict p_reader,
                          bool allow_dtype_null);
 
 /* @return: * :        New reference to a code object.
@@ -754,7 +759,7 @@ DecFile_LoadObjectVector(DecFile *__restrict self,
  * @return: ITER_DONE: The DEC file has been corrupted. */
 PRIVATE WUNUSED NONNULL((1, 2)) DREF struct code_object *DCALL
 DecFile_LoadCode(DecFile *__restrict self,
-                 uint8_t const **__restrict preader);
+                 uint8_t const **__restrict p_reader);
 
 /* @return: * :        New reference to a ddi object.
  * @return: NULL:      An error occurred.
@@ -1289,11 +1294,11 @@ INTDEF struct class_attribute empty_class_attributes[];
  * @return: ITER_DONE: The DEC file has been corrupted. */
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 DecFile_LoadObject(DecFile *__restrict self,
-                   uint8_t const **__restrict preader) {
+                   uint8_t const **__restrict p_reader) {
 	DREF DeeObject *result = ITER_DONE;
 	uint8_t const *reader;
 	uint8_t opcode;
-	reader = *preader;
+	reader = *p_reader;
 	opcode = *reader++;
 	switch (opcode) {
 
@@ -2065,7 +2070,7 @@ err_function_code:
 		break;
 	}
 done:
-	*preader = reader;
+	*p_reader = reader;
 	return result;
 err_r:
 	Dee_Decref(result);
@@ -2082,21 +2087,21 @@ corrupt:
 
 /* @param: allow_dtype_null: When true, individual vector elements are allowed
  *                           to be `NULL' as the result of `DTYPE_NULL'
- * @return: * :              Newly heap-allocated vector of objects (length is stored in `*pcount').
+ * @return: * :              Newly heap-allocated vector of objects (length is stored in `*p_count').
  * @return: NULL:            An error occurred.
  * @return: ITER_DONE:       The DEC file has been corrupted. */
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject **DCALL
 DecFile_LoadObjectVector(DecFile *__restrict self,
-                         uint16_t *__restrict pcount,
-                         uint8_t const **__restrict preader,
+                         uint16_t *__restrict p_count,
+                         uint8_t const **__restrict p_reader,
                          bool allow_dtype_null) {
 	DREF DeeObject **result;
-	uint8_t const *reader = *preader;
+	uint8_t const *reader = *p_reader;
 	uint8_t const *end    = self->df_base + self->df_size;
 	uint16_t i, count;
 	void *new_result;
-	count   = UNALIGNED_GETLE16(reader);
-	*pcount = count;
+	count    = UNALIGNED_GETLE16(reader);
+	*p_count = count;
 	reader += 2;
 	result = (DREF DeeObject **)Dee_Mallocc(count, sizeof(DREF DeeObject *));
 	if unlikely(!result)
@@ -2118,24 +2123,24 @@ DecFile_LoadObjectVector(DecFile *__restrict self,
 read_failed:
 				Dee_Decrefv(result, i);
 				Dee_Free(result);
-				*preader = reader;
+				*p_reader = reader;
 				return (DREF DeeObject **)new_result;
 			}
 		}
 	}
-	*preader = reader;
+	*p_reader = reader;
 	return result;
 err:
 	return NULL;
 }
 
-#define decode_uleb(pptr) Dec_DecodePointer(pptr)
+#define decode_uleb(p_ptr) Dec_DecodePointer(p_ptr)
 
 LOCAL int32_t DCALL
-decode_sleb(uint8_t const **__restrict pptr) {
+decode_sleb(uint8_t const **__restrict p_ptr) {
 	int32_t result;
 	uint8_t byte;
-	uint8_t const *ptr = *pptr;
+	uint8_t const *ptr = *p_ptr;
 	uint8_t num_bits;
 	bool is_neg;
 	byte     = *ptr++;
@@ -2147,7 +2152,7 @@ decode_sleb(uint8_t const **__restrict pptr) {
 		result |= (byte & 0x7f) << num_bits;
 		num_bits += 7;
 	}
-	*pptr = ptr;
+	*p_ptr = ptr;
 	if (is_neg)
 		result = -result;
 	return result;
@@ -2349,10 +2354,10 @@ handle_map_error:
  * @return: ITER_DONE: The DEC file has been corrupted. */
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeCodeObject *DCALL
 DecFile_LoadCode(DecFile *__restrict self,
-                 uint8_t const **__restrict preader) {
+                 uint8_t const **__restrict p_reader) {
 	DREF DeeCodeObject *result;
 	Dec_Code header;
-	uint8_t const *reader = *preader, *end;
+	uint8_t const *reader = *p_reader, *end;
 	result = (DREF DeeCodeObject *)ITER_DONE;
 	end    = self->df_base + self->df_size;
 	header.co_flags = UNALIGNED_GETLE16(reader), reader += 2;
@@ -2684,7 +2689,7 @@ err_kwds_i:
 	DeeObject_Init(result, &DeeCode_Type);
 	DeeGC_Track((DeeObject *)result);
 done:
-	*preader = reader;
+	*p_reader = reader;
 	return result;
 err_r_ddi:
 	Dee_Decref(result->co_ddi);
@@ -2986,7 +2991,7 @@ DecTime_ClearCache(size_t UNUSED(max_clear)) {
 
 PRIVATE WUNUSED NONNULL((1, 2)) bool DCALL
 mtime_cache_lookup(DeeObject *__restrict path,
-                   uint64_t *__restrict presult) {
+                   uint64_t *__restrict p_result) {
 	bool result = false;
 	dhash_t i, perturb;
 	dhash_t hash = fs_hashobj(path);
@@ -3001,7 +3006,7 @@ mtime_cache_lookup(DeeObject *__restrict path,
 		if (!DeeString_EqualsSTR(item->me_file, path))
 			continue; /* Differing strings. */
 		/* Found it! */
-		*presult = item->me_mtim;
+		*p_result = item->me_mtim;
 		result   = true;
 		break;
 	}

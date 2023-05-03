@@ -63,10 +63,10 @@ get_generic_attribute(DeeTypeObject *__restrict tp_self,
                       DeeObject *__restrict name);
 
 
-PRIVATE int DCALL iterator_inc(DeeObject **__restrict pself);
-PRIVATE int DCALL iterator_dec(DeeObject **__restrict pself);
-PRIVATE int DCALL iterator_inplace_add(DeeObject **__restrict pself, DeeObject *countob);
-PRIVATE int DCALL iterator_inplace_sub(DeeObject **__restrict pself, DeeObject *countob);
+PRIVATE int DCALL iterator_inc(DeeObject **__restrict p_self);
+PRIVATE int DCALL iterator_dec(DeeObject **__restrict p_self);
+PRIVATE int DCALL iterator_inplace_add(DeeObject **__restrict p_self, DeeObject *countob);
+PRIVATE int DCALL iterator_inplace_sub(DeeObject **__restrict p_self, DeeObject *countob);
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL iterator_add(DeeObject *self, DeeObject *countob);
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL iterator_sub(DeeObject *self, DeeObject *countob);
 
@@ -2228,27 +2228,27 @@ PRIVATE struct type_getset tpconst iterator_getsets[] = {
 };
 
 PRIVATE int DCALL
-iterator_inc(DeeObject **__restrict pself) {
+iterator_inc(DeeObject **__restrict p_self) {
 	/* Simply advance the Iterator. */
-	return iterator_do_advance(*pself, 1, &DeeInt_One, &DeeInt_MinusOne);
+	return iterator_do_advance(*p_self, 1, &DeeInt_One, &DeeInt_MinusOne);
 }
 
 PRIVATE int DCALL
-iterator_dec(DeeObject **__restrict pself) {
+iterator_dec(DeeObject **__restrict p_self) {
 	/* Simply revert the Iterator. */
-	return iterator_do_revert(*pself, 1, &DeeInt_One, &DeeInt_MinusOne);
+	return iterator_do_revert(*p_self, 1, &DeeInt_One, &DeeInt_MinusOne);
 }
 
 PRIVATE int DCALL
-iterator_inplace_add(DeeObject **__restrict pself,
+iterator_inplace_add(DeeObject **__restrict p_self,
                      DeeObject *countob) {
 	dssize_t count;
 	/* Increment the Iterator by `count.operator int()' */
 	if (DeeObject_AsSSize(countob, &count))
 		goto err;
 	if unlikely((unlikely(count < 0)
-	             ? iterator_do_revert(*pself, (size_t)-count, NULL, countob)
-	             : (count > 0) ? iterator_do_advance(*pself, (size_t)count, countob, NULL)
+	             ? iterator_do_revert(*p_self, (size_t)-count, NULL, countob)
+	             : (count > 0) ? iterator_do_advance(*p_self, (size_t)count, countob, NULL)
 	                           : 0) < 0)
 		goto err;
 	return 0;
@@ -2257,15 +2257,15 @@ err:
 }
 
 PRIVATE int DCALL
-iterator_inplace_sub(DeeObject **__restrict pself,
+iterator_inplace_sub(DeeObject **__restrict p_self,
                      DeeObject *countob) {
 	dssize_t count;
 	/* Increment the Iterator by `count.operator int()' */
 	if (DeeObject_AsSSize(countob, &count))
 		goto err;
 	if unlikely((unlikely(count < 0)
-	             ? iterator_do_advance(*pself, (size_t)-count, NULL, countob)
-	             : (count > 0) ? iterator_do_revert(*pself, (size_t)count, countob, NULL)
+	             ? iterator_do_advance(*p_self, (size_t)-count, NULL, countob)
+	             : (count > 0) ? iterator_do_revert(*p_self, (size_t)count, countob, NULL)
 	                           : 0) < 0)
 		goto err;
 	return 0;

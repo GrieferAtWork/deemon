@@ -773,3 +773,76 @@
 #define DEFINE_OPERATOR(return, name, args) return DeeObject_##name args
 #define DEFINE_INTERNAL_OPERATOR(return, name, args) return DeeObject_##name args
 #define RESTRICT_IF_NOTYPE
+
+#define __BOOL             bool
+#define __LONGLONG         long long
+#define __ULONGLONG        unsigned long long
+#define __LONGDOUBLE       long double
+#define __INT8_TYPE__      int8_t
+#define __UINT8_TYPE__     uint8_t
+#define __INT16_TYPE__     int16_t
+#define __UINT16_TYPE__    uint16_t
+#define __INT32_TYPE__     int32_t
+#define __UINT32_TYPE__    uint32_t
+#define __INT64_TYPE__     int64_t
+#define __UINT64_TYPE__    uint64_t
+#define __SIZE_TYPE__      size_t
+#define __PTRDIFF_TYPE__   ptrdiff_t
+#define __SSIZE_TYPE__     ssize_t
+#define __INTPTR_TYPE__    intptr_t
+#define __UINTPTR_TYPE__   uintptr_t
+#define __BYTE_TYPE__      byte_t
+#define __REGISTER_TYPE__  register_t
+#define __SREGISTER_TYPE__ sregister_t
+#define __TYPEFOR_INTIB1   int8_t
+#define __TYPEFOR_UINTIB1  uint8_t
+#define __TYPEFOR_INTIB2   int16_t
+#define __TYPEFOR_UINTIB2  uint16_t
+#define __TYPEFOR_INTIB4   int32_t
+#define __TYPEFOR_UINTIB4  uint32_t
+#define __TYPEFOR_INTIB8   int64_t
+#define __TYPEFOR_UINTIB8  uint64_t
+#define __CHAR8_TYPE__        char
+#define __INT_LEAST8_TYPE__   int_least8_t
+#define __UINT_LEAST8_TYPE__  uint_least8_t
+#define __INT_LEAST16_TYPE__  int_least16_t
+#define __UINT_LEAST16_TYPE__ uint_least16_t
+#define __INT_LEAST32_TYPE__  int_least32_t
+#define __UINT_LEAST32_TYPE__ uint_least32_t
+#define __INT_LEAST64_TYPE__  int_least64_t
+#define __UINT_LEAST64_TYPE__ uint_least64_t
+#define __INT_FAST8_TYPE__    int_fast8_t
+#define __UINT_FAST8_TYPE__   uint_fast8_t
+#define __INT_FAST16_TYPE__   int_fast16_t
+#define __UINT_FAST16_TYPE__  uint_fast16_t
+#define __INT_FAST32_TYPE__   int_fast32_t
+#define __UINT_FAST32_TYPE__  uint_fast32_t
+#define __INT_FAST64_TYPE__   int_fast64_t
+#define __UINT_FAST64_TYPE__  uint_fast64_t
+#define __INTMAX_TYPE__       intmax_t
+#define __UINTMAX_TYPE__      uintmax_t
+#define __INTPTR_HALF_TYPE__  intptr_half_t
+#define __UINTPTR_HALF_TYPE__ uintptr_half_t
+#define __LONGPTR_TYPE__      longptr_t
+#define __ULONGPTR_TYPE__     ulongptr_t
+#define __REGISTER_TYPE__     ulongptr_t
+#define __SREGISTER_TYPE__    longptr_t
+#define __BYTE_TYPE__         byte_t
+#define __SBYTE_TYPE__        sbyte_t
+#define __WCHAR_TYPE__        wchar_t
+#define __CHAR16_TYPE__       char16_t
+#define __CHAR32_TYPE__       char32_t
+#define __WCHAR16_TYPE__      char16_t
+#define __WCHAR32_TYPE__      char32_t
+#define __WINT_TYPE__         wint_t
+#define __SIG_ATOMIC_TYPE__   sig_atomic_t
+#define __INTSIZE_TYPE__      size_t
+#define __INTSSIZE_TYPE__     ssize_t
+#define __LONGSIZE_TYPE__     size_t
+#define __LONGSSIZE_TYPE__    ssize_t
+#define __LONG32_TYPE__       long32_t
+#define __ULONG32_TYPE__      ulong32_t
+#define __LONG64_TYPE__       long64_t
+#define __ULONG64_TYPE__      ulong64_t
+#define __builtin_va_list     va_list
+#define __SHIFT_TYPE__        shift_t

@@ -226,14 +226,14 @@ INTDEF ATTR_COLD NONNULL((2, 3)) int DCALL nt_ErrPathCrossDev2(DWORD dwError, De
 INTDEF ATTR_COLD NONNULL((2)) int DCALL nt_ErrRmDir(DWORD dwError, DeeObject *__restrict path);
 INTDEF ATTR_COLD NONNULL((2)) int DCALL nt_ErrUnlink(DWORD dwError, DeeObject *__restrict path);
 
-/* @return:  0: Successfully written the handle to `phandle'
- * @return:  1: Successfully written the handle to `phandle',
+/* @return:  0: Successfully written the handle to `p_handle'
+ * @return:  1: Successfully written the handle to `p_handle',
  *              but the caller must CloseHandle() it when they are done
  * @return: -1: An error occurred. */
 #undef WANT_DEEOBJECT_ASPATHHANDLEWITHWRITEATTRIBUTES
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL
 DeeObject_AsPathHandleWithWriteAttributes(DeeObject *__restrict path,
-                                          HANDLE *__restrict phandle);
+                                          HANDLE *__restrict p_handle);
 
 /* Convert a given object into a windows FILETIME timestamp */
 #undef WANT_DEEOBJECT_ASFILETIME
@@ -266,7 +266,7 @@ nt_GetFileAttributesEx(DeeObject *__restrict lpFileName,
 #undef WANT_NT_GETFILEATTRIBUTES
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL
 nt_GetFileAttributes(DeeObject *__restrict lpFileName,
-                     DWORD *__restrict presult);
+                     DWORD *__restrict p_result);
 
 /* Work around a problem with long path names.
  * @return:  0: Successfully set attributes.
@@ -2682,24 +2682,24 @@ err:
 /************************************************************************/
 
 #ifdef WANT_DEEOBJECT_ASPATHHANDLEWITHWRITEATTRIBUTES
-/* @return:  0: Successfully written the handle to `phandle'
- * @return:  1: Successfully written the handle to `phandle',
+/* @return:  0: Successfully written the handle to `p_handle'
+ * @return:  1: Successfully written the handle to `p_handle',
  *              but the caller must CloseHandle() it when they are done
  * @return: -1: An error occurred. */
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 DeeObject_AsPathHandleWithWriteAttributes(DeeObject *__restrict path,
-                                          HANDLE *__restrict phandle) {
+                                          HANDLE *__restrict p_handle) {
 	int result;
 	if (DeeString_Check(path)) {
 again:
-		*phandle = DeeNTSystem_CreateFileNoATime(path,
+		*p_handle = DeeNTSystem_CreateFileNoATime(path,
 		                                         FILE_WRITE_ATTRIBUTES,
 		                                         FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
 		                                         NULL,
 		                                         OPEN_EXISTING,
 		                                         FILE_ATTRIBUTE_NORMAL | FILE_FLAG_BACKUP_SEMANTICS,
 		                                         NULL);
-		if (*phandle == INVALID_HANDLE_VALUE) {
+		if (*p_handle == INVALID_HANDLE_VALUE) {
 			DWORD dwError;
 			DBG_ALIGNMENT_DISABLE();
 			dwError = GetLastError();
@@ -2723,13 +2723,13 @@ again:
 			}
 			goto err;
 		}
-		if (*phandle == NULL)
+		if (*p_handle == NULL)
 			goto err;
 		return 1;
 	}
 	/* Load the file number of a file stream. */
-	*phandle = DeeNTSystem_GetHandle(path);
-	if (*phandle != INVALID_HANDLE_VALUE)
+	*p_handle = DeeNTSystem_GetHandle(path);
+	if (*p_handle != INVALID_HANDLE_VALUE)
 		return 0;
 	if (!DeeError_Catch(&DeeError_AttributeError) &&
 	    !DeeError_Catch(&DeeError_NotImplemented))
@@ -2738,7 +2738,7 @@ again:
 	path = DeeFile_Filename(path);
 	if unlikely(!path)
 		goto err;
-	result = DeeObject_AsPathHandleWithWriteAttributes(path, phandle);
+	result = DeeObject_AsPathHandleWithWriteAttributes(path, p_handle);
 	Dee_Decref(path);
 	return result;
 err:

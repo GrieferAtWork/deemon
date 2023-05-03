@@ -80,7 +80,7 @@ DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeRoDict_FromIteratorWithHin
 DFUNDEF WUNUSED DREF DeeRoDictObject *DCALL DeeRoDict_New(void);
 DFUNDEF WUNUSED DREF DeeRoDictObject *DCALL DeeRoDict_NewWithHint(size_t num_items);
 DFUNDEF WUNUSED NONNULL((1, 2, 3)) int DCALL
-DeeRoDict_Insert(/*in|out*/ DREF DeeRoDictObject **__restrict pself,
+DeeRoDict_Insert(/*in|out*/ DREF DeeRoDictObject **__restrict p_self,
                  DeeObject *key, DeeObject *value);
 
 

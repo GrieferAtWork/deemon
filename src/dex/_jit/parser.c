@@ -774,17 +774,17 @@ err_trace:
 
 
 /* Parse a module name, either writing it to `*printer' (if non-NULL),
- * or storing the name's start and end pointers in `*pname_start' and
- * `*pname_end'
+ * or storing the name's start and end pointers in `*p_name_start' and
+ * `*p_name_end'
  * @return:  1: Successfully parsed the module name and stored it in `*printer'
  *              In this case, this function will have also initialized `*printer'
- * @return:  0: Successfully parsed the module name and stored it in `*pname_start' / `*pname_end'
+ * @return:  0: Successfully parsed the module name and stored it in `*p_name_start' / `*p_name_end'
  * @return: -1: An error occurred. */
 INTERN int FCALL
 JITLexer_ParseModuleName(JITLexer *__restrict self,
                          struct unicode_printer *printer,
-                         /*utf-8*/ unsigned char **pname_start,
-                         /*utf-8*/ unsigned char **pname_end) {
+                         /*utf-8*/ unsigned char **p_name_start,
+                         /*utf-8*/ unsigned char **p_name_end) {
 	int error;
 	/* Optimization for simple/inline module names, such that we
 	 * don't have to actually copy the module name at this point! */
@@ -814,10 +814,10 @@ JITLexer_ParseModuleName(JITLexer *__restrict self,
 				}
 			}
 		}
-		if (pname_start)
-			*pname_start = start;
-		if (pname_end)
-			*pname_end = end;
+		if (p_name_start)
+			*p_name_start = start;
+		if (p_name_end)
+			*p_name_end = end;
 		/* Check if the keyword following the simple module
 		 * name is something that would belong to our name. */
 		JITLexer_YieldAt(self, end);
@@ -906,33 +906,33 @@ err:
  */
 INTERN int DCALL
 JITLexer_ParseLookupMode(JITLexer *__restrict self,
-                         unsigned int *__restrict pmode) {
+                         unsigned int *__restrict p_mode) {
 next_modifier:
 	if (self->jl_tok == JIT_KEYWORD) {
 		if (JITLexer_ISTOK(self, "local")) {
-			*pmode &= ~LOOKUP_SYM_VMASK;
-			*pmode |= LOOKUP_SYM_VLOCAL;
+			*p_mode &= ~LOOKUP_SYM_VMASK;
+			*p_mode |= LOOKUP_SYM_VLOCAL;
 continue_modifier:
 			JITLexer_Yield(self);
 			goto next_modifier;
 		}
 		if (JITLexer_ISTOK(self, "global")) {
-			*pmode &= ~LOOKUP_SYM_VMASK;
-			*pmode |= LOOKUP_SYM_VGLOBAL;
+			*p_mode &= ~LOOKUP_SYM_VMASK;
+			*p_mode |= LOOKUP_SYM_VGLOBAL;
 			goto continue_modifier;
 		}
 		if (JITLexer_ISTOK(self, "static")) {
-			*pmode &= ~LOOKUP_SYM_STACK;
-			*pmode |= LOOKUP_SYM_STATIC;
+			*p_mode &= ~LOOKUP_SYM_STACK;
+			*p_mode |= LOOKUP_SYM_STATIC;
 			goto continue_modifier;
 		}
 		if (JITLexer_ISTOK(self, "__stack")) {
-			*pmode &= ~LOOKUP_SYM_STATIC;
-			*pmode |= LOOKUP_SYM_STACK;
+			*p_mode &= ~LOOKUP_SYM_STATIC;
+			*p_mode |= LOOKUP_SYM_STACK;
 			goto continue_modifier;
 		}
 		if (JITLexer_ISTOK(self, "final")) {
-			*pmode |= LOOKUP_SYM_FINAL;
+			*p_mode |= LOOKUP_SYM_FINAL;
 			goto continue_modifier;
 		}
 	}
@@ -1040,21 +1040,21 @@ err_r:
  */
 INTERN int FCALL
 JITLexer_ParseCatchMask(JITLexer *__restrict self,
-                        DREF DeeObject **__restrict ptypemask,
-                        char const **__restrict psymbol_name,
-                        size_t *__restrict psymbol_size) {
+                        DREF DeeObject **__restrict p_typemask,
+                        char const **__restrict p_symbol_name,
+                        size_t *__restrict p_symbol_size) {
 	if (self->jl_tok == TOK_DOTS) {
 		/* >> catch (...) */
 		/* >> catch (...var)  (This syntax is allowed, but is rarely ever used;
 		 *                     code usually uses `catch (var...)' instead) */
 		JITLexer_Yield(self);
-		*ptypemask    = NULL;
-		*psymbol_name = NULL;
-		*psymbol_size = 0;
+		*p_typemask    = NULL;
+		*p_symbol_name = NULL;
+		*p_symbol_size = 0;
 		if (self->jl_tok == JIT_KEYWORD) {
 			/* Specify the catch symbol! */
-			*psymbol_name = JITLexer_TokPtr(self);
-			*psymbol_size = JITLexer_TokLen(self);
+			*p_symbol_name = JITLexer_TokPtr(self);
+			*p_symbol_size = JITLexer_TokLen(self);
 			JITLexer_Yield(self);
 		}
 	} else {
@@ -1064,20 +1064,20 @@ JITLexer_ParseCatchMask(JITLexer *__restrict self,
 			JITLexer_Yield(self);
 			if (self->jl_tok == TOK_DOTS) {
 				/* `catch (e...)' (catch all into `e') */
-				*ptypemask    = NULL;
-				*psymbol_name = (char *)start;
-				*psymbol_size = (size_t)(end - start);
+				*p_typemask    = NULL;
+				*p_symbol_name = (char *)start;
+				*p_symbol_size = (size_t)(end - start);
 				JITLexer_Yield(self);
 				goto done_skip_rparen;
 			}
 			JITLexer_YieldAt(self, start);
 		}
 		/* Parse the catch expression. */
-		*ptypemask = JITLexer_ParseCatchExpr(self);
-		if unlikely(!*ptypemask)
+		*p_typemask = JITLexer_ParseCatchExpr(self);
+		if unlikely(!*p_typemask)
 			goto err;
-		*psymbol_name = NULL;
-		*psymbol_size = 0;
+		*p_symbol_name = NULL;
+		*p_symbol_size = 0;
 		/* Check for an `as foo' suffix. */
 		if (self->jl_tok == JIT_KEYWORD) {
 			/* the `as' is optional */
@@ -1088,8 +1088,8 @@ JITLexer_ParseCatchMask(JITLexer *__restrict self,
 					goto err_mask;
 				}
 			}
-			*psymbol_name = JITLexer_TokPtr(self);
-			*psymbol_size = JITLexer_TokLen(self);
+			*p_symbol_name = JITLexer_TokPtr(self);
+			*p_symbol_size = JITLexer_TokLen(self);
 			JITLexer_Yield(self);
 		}
 	}
@@ -1101,7 +1101,7 @@ done_skip_rparen:
 	JITLexer_Yield(self);
 	return 0;
 err_mask:
-	Dee_XDecref(*ptypemask);
+	Dee_XDecref(*p_typemask);
 err:
 	return -1;
 }

@@ -558,7 +558,7 @@ DeeSType_CFunction(DeeSTypeObject *__restrict return_type,
 #else /* CONFIG_NO_CFUNCTION */
 	dhash_t hash;
 	DREF DeeCFunctionTypeObject *result, *new_result;
-	DREF struct cfunction_type_list *pbucket;
+	DREF struct cfunction_type_list *bucket;
 	ASSERT_OBJECT_TYPE(DeeSType_AsObject(return_type), &DeeSType_Type);
 	DeeSType_CacheLockRead(return_type);
 	ASSERT(!return_type->st_cfunction.sf_size ||
@@ -625,8 +625,8 @@ register_type:
 	}
 
 	/* Insert the new cfunction type into the hash-map. */
-	pbucket = &return_type->st_cfunction.sf_list[hash & return_type->st_cfunction.sf_mask];
-	LIST_INSERT_HEAD(pbucket, result, ft_chain); /* Weak reference. */
+	bucket = &return_type->st_cfunction.sf_list[hash & return_type->st_cfunction.sf_mask];
+	LIST_INSERT_HEAD(bucket, result, ft_chain); /* Weak reference. */
 	DeeSType_CacheLockEndWrite(return_type);
 done:
 	return result;

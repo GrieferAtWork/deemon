@@ -39,8 +39,8 @@ INTDEF DeeStringObject *tpconst rt_operator_names[1 + (AST_OPERATOR_MAX - AST_OP
  * @return: -1: An error occurred. */
 PRIVATE WUNUSED NONNULL((1, 2, 3, 4)) int DCALL
 bind_module_symbol(DeeModuleObject *__restrict module,
-                   uint16_t *__restrict pmodid,
-                   uint16_t *__restrict psymid,
+                   uint16_t *__restrict p_modid,
+                   uint16_t *__restrict p_symid,
                    char const *__restrict symbol_name) {
 	struct module_symbol *symbol;
 	int32_t temp;
@@ -58,8 +58,8 @@ bind_module_symbol(DeeModuleObject *__restrict module,
 	temp = asm_newmodule(module);
 	if unlikely(temp < 0)
 		goto err;
-	*pmodid = (uint16_t)temp;
-	*psymid = symbol->ss_index;
+	*p_modid = (uint16_t)temp;
+	*p_symid = symbol->ss_index;
 	return 0;
 err:
 	return -1;

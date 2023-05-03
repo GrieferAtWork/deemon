@@ -236,8 +236,8 @@ frame_print(Frame *__restrict self,
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeCodeObject *DCALL
 frame_getddi(Frame *__restrict self,
              struct ddi_state *__restrict state,
-             code_addr_t *pstartip,
-             code_addr_t *pendip,
+             code_addr_t *p_startip,
+             code_addr_t *p_endip,
              unsigned int flags) {
 	uint8_t *result;
 	code_addr_t startip;
@@ -254,11 +254,11 @@ frame_getddi(Frame *__restrict self,
 	                        code->co_code);
 	PLOCK_ENDREAD(self);
 	DeeFrame_LockEndRead(self);
-	if (pstartip)
-		*pstartip = startip;
+	if (p_startip)
+		*p_startip = startip;
 	result = DeeCode_FindDDI((DeeObject *)code,
 	                         state,
-	                         pendip,
+	                         p_endip,
 	                         startip,
 	                         flags);
 	if (DDI_ISOK(result))

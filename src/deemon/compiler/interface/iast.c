@@ -3075,21 +3075,21 @@ print_enter_scope(DeeScopeObject *caller_scope,
                   DeeScopeObject *__restrict child_scope,
                   dformatprinter printer, void *arg,
                   bool is_expression,
-                  size_t *__restrict pindent,
-                  bool *__restrict pis_scope) {
+                  size_t *__restrict p_indent,
+                  bool *__restrict p_is_scope) {
 	dssize_t temp, result = 0;
 	if (child_scope == caller_scope)
 		return 0;
 	if (is_expression) {
 		PRINT("({\n");
-		++*pindent;
-		*pis_scope = true;
+		++*p_indent;
+		*p_is_scope = true;
 	} else if (caller_scope) {
 		PRINT("{\n");
-		++*pindent;
-		*pis_scope = true;
+		++*p_indent;
+		*p_is_scope = true;
 	}
-	DO(DeeFormat_Repeat(printer, arg, '\t', *pindent));
+	DO(DeeFormat_Repeat(printer, arg, '\t', *p_indent));
 	for (; child_scope && child_scope != caller_scope; child_scope = child_scope->s_prev) {
 		size_t i;
 		struct symbol *sym;
@@ -3156,7 +3156,7 @@ print_symbol_name:
 				default: break;
 				}
 				PRINT(";\n");
-				DO(DeeFormat_Repeat(printer, arg, '\t', *pindent));
+				DO(DeeFormat_Repeat(printer, arg, '\t', *p_indent));
 			}
 		}
 	}

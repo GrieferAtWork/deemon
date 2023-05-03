@@ -142,8 +142,8 @@ public:
 	void trunc(Dee_pos_t size) {
 		throw_if_nonzero(DeeFile_Trunc(this, size));
 	}
-	void trunc(Dee_pos_t *psize) {
-		throw_if_nonzero(DeeFile_TruncHere(this, psize));
+	void trunc(Dee_pos_t *p_size) {
+		throw_if_nonzero(DeeFile_TruncHere(this, p_size));
 	}
 	void close() {
 		throw_if_nonzero(DeeFile_Close(this));

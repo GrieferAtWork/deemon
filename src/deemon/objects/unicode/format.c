@@ -56,10 +56,10 @@ error_unused_format_string(char *start, char *end) {
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
 Formatter_GetUnaryArg(struct formatter *__restrict self,
-                      char **__restrict pfmt_start,
+                      char **__restrict p_fmt_start,
                       bool do_eval) {
 	/* TODO: Unicode support */
-	char *fmt_start = *pfmt_start;
+	char *fmt_start = *p_fmt_start;
 	char ch         = *fmt_start;
 	DREF DeeObject *result;
 	if (DeeUni_IsSymStrt(ch)) {
@@ -160,15 +160,15 @@ do_variable_length_index:
 			goto err;
 		}
 	}
-	*pfmt_start = fmt_start;
+	*p_fmt_start = fmt_start;
 	return result;
 err:
 	return NULL;
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
-Formatter_GetUnaryIndex(char **__restrict pfmt_start) {
-	char *fmt_start = *pfmt_start;
+Formatter_GetUnaryIndex(char **__restrict p_fmt_start) {
+	char *fmt_start = *p_fmt_start;
 	char ch         = *fmt_start;
 	DREF DeeObject *result;
 	if (DeeUni_IsSymStrt(ch)) {
@@ -199,15 +199,15 @@ Formatter_GetUnaryIndex(char **__restrict pfmt_start) {
 		                (size_t)(end - fmt_start), fmt_start);
 		goto err;
 	}
-	*pfmt_start = fmt_start;
+	*p_fmt_start = fmt_start;
 	return result;
 err:
 	return NULL;
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
-Formatter_GetUnaryKey(char **__restrict pfmt_start) {
-	char *fmt_start = *pfmt_start;
+Formatter_GetUnaryKey(char **__restrict p_fmt_start) {
+	char *fmt_start = *p_fmt_start;
 	char ch         = *fmt_start;
 	DREF DeeObject *result;
 	if (DeeUni_IsSymStrt(ch)) {
@@ -228,7 +228,7 @@ Formatter_GetUnaryKey(char **__restrict pfmt_start) {
 		                fmt_start);
 		goto err;
 	}
-	*pfmt_start = fmt_start;
+	*p_fmt_start = fmt_start;
 	return result;
 err:
 	return NULL;
@@ -236,13 +236,13 @@ err:
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
 Formatter_GetOne(struct formatter *__restrict self,
-                 char **__restrict pfmt_start,
+                 char **__restrict p_fmt_start,
                  bool do_eval);
 PRIVATE WUNUSED DREF DeeObject *DCALL
 Formatter_GetValue(struct formatter *__restrict self,
-                   char **__restrict pfmt_start,
+                   char **__restrict p_fmt_start,
                    bool do_eval) {
-	char *fmt_end, *fmt_start = *pfmt_start;
+	char *fmt_end, *fmt_start = *p_fmt_start;
 	DREF DeeObject *result;
 	unsigned int recursion;
 	ASSERT(*fmt_start == '{');
@@ -269,7 +269,7 @@ Formatter_GetValue(struct formatter *__restrict self,
 
 	if (*fmt_end == '}')
 		++fmt_end;
-	*pfmt_start = fmt_end;
+	*p_fmt_start = fmt_end;
 	return result;
 err:
 	return NULL;
@@ -277,11 +277,11 @@ err:
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
 Formatter_GetExpr(struct formatter *__restrict self,
-                  char **__restrict pfmt_start,
+                  char **__restrict p_fmt_start,
                   bool do_eval) {
-	return **pfmt_start == '{'
-	       ? Formatter_GetValue(self, pfmt_start, do_eval)
-	       : Formatter_GetUnaryIndex(pfmt_start);
+	return **p_fmt_start == '{'
+	       ? Formatter_GetValue(self, p_fmt_start, do_eval)
+	       : Formatter_GetUnaryIndex(p_fmt_start);
 }
 
 struct object_vector {
@@ -354,16 +354,16 @@ object_vector_fini(struct object_vector *__restrict self) {
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
 Formatter_GetOne(struct formatter *__restrict self,
-                 char **__restrict pfmt_start,
+                 char **__restrict p_fmt_start,
                  bool do_eval) {
 	char *fmt_start;
 	DREF DeeObject *result, *new_result;
 #ifdef CONFIG_ALLOW_SPACE_IN_FORMAT_EXPRESSION
 	ASSERT(!DeeUni_IsSpace('\0'));
 #endif /* CONFIG_ALLOW_SPACE_IN_FORMAT_EXPRESSION */
-	if (**pfmt_start == '(') {
+	if (**p_fmt_start == '(') {
 		/* Parenthesis around main argument. */
-		fmt_start = *pfmt_start;
+		fmt_start = *p_fmt_start;
 		++fmt_start; /* Skip `(' */
 #ifdef CONFIG_ALLOW_SPACE_IN_FORMAT_EXPRESSION
 		while (DeeUni_IsSpace(*fmt_start))
@@ -380,10 +380,10 @@ Formatter_GetOne(struct formatter *__restrict self,
 		}
 		++fmt_start; /* Skip `)' */
 	} else {
-		result = Formatter_GetUnaryArg(self, pfmt_start, do_eval);
+		result = Formatter_GetUnaryArg(self, p_fmt_start, do_eval);
 		if unlikely(!result)
 			goto err;
-		fmt_start = *pfmt_start;
+		fmt_start = *p_fmt_start;
 	}
 next_suffix:
 	/* Deal with item suffix modifiers (`foo[bar]', `foo(bar)', `foo.bar') */
@@ -677,7 +677,7 @@ parse_second_argument:
 	default: break;
 	}
 
-	*pfmt_start = fmt_start;
+	*p_fmt_start = fmt_start;
 	return result;
 err_r:
 	Dee_Decref(result);

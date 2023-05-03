@@ -315,9 +315,9 @@ DEFINE_SEQ_EACH_TRINARY(se_getrange, OPERATOR_GETRANGE)
 
 #define DEFINE_SEQ_EACH_UNARY_INPLACE(name, func)          \
 	PRIVATE NONNULL((1)) int DCALL                         \
-	name(SeqEachBase **__restrict pself) {                 \
+	name(SeqEachBase **__restrict p_self) {                \
 		size_t i, size;                                    \
-		DeeObject *seq = (*pself)->se_seq;                 \
+		DeeObject *seq = (*p_self)->se_seq;                \
 		DREF DeeObject *elem;                              \
 		size = DeeObject_Size(seq);                        \
 		if unlikely(size == (size_t)-1)                    \
@@ -342,33 +342,33 @@ DEFINE_SEQ_EACH_TRINARY(se_getrange, OPERATOR_GETRANGE)
 		return -1;                                         \
 	}
 
-#define DEFINE_SEQ_EACH_BINARY_INPLACE(name, func)           \
-	PRIVATE NONNULL((1, 2)) int DCALL                        \
-	name(SeqEachBase **__restrict pself, DeeObject *other) { \
-		size_t i, size;                                      \
-		DeeObject *seq = (*pself)->se_seq;                   \
-		DREF DeeObject *elem;                                \
-		size = DeeObject_Size(seq);                          \
-		if unlikely(size == (size_t)-1)                      \
-			goto err;                                        \
-		for (i = 0; i < size; ++i) {                         \
-			elem = DeeObject_GetItemIndex(seq, i);           \
-			if unlikely(!elem) {                             \
-				if (DeeError_Catch(&DeeError_UnboundItem))   \
-					continue;                                \
-				goto err;                                    \
-			}                                                \
-			if (func(&elem, other))                          \
-				goto err_elem;                               \
-			if (DeeObject_SetItemIndex(seq, i, elem))        \
-				goto err_elem;                               \
-			Dee_Decref(elem);                                \
-		}                                                    \
-		return 0;                                            \
-	err_elem:                                                \
-		Dee_Decref(elem);                                    \
-	err:                                                     \
-		return -1;                                           \
+#define DEFINE_SEQ_EACH_BINARY_INPLACE(name, func)            \
+	PRIVATE NONNULL((1, 2)) int DCALL                         \
+	name(SeqEachBase **__restrict p_self, DeeObject *other) { \
+		size_t i, size;                                       \
+		DeeObject *seq = (*p_self)->se_seq;                   \
+		DREF DeeObject *elem;                                 \
+		size = DeeObject_Size(seq);                           \
+		if unlikely(size == (size_t)-1)                       \
+			goto err;                                         \
+		for (i = 0; i < size; ++i) {                          \
+			elem = DeeObject_GetItemIndex(seq, i);            \
+			if unlikely(!elem) {                              \
+				if (DeeError_Catch(&DeeError_UnboundItem))    \
+					continue;                                 \
+				goto err;                                     \
+			}                                                 \
+			if (func(&elem, other))                           \
+				goto err_elem;                                \
+			if (DeeObject_SetItemIndex(seq, i, elem))         \
+				goto err_elem;                                \
+			Dee_Decref(elem);                                 \
+		}                                                     \
+		return 0;                                             \
+	err_elem:                                                 \
+		Dee_Decref(elem);                                     \
+	err:                                                      \
+		return -1;                                            \
 	}
 DEFINE_SEQ_EACH_UNARY_INPLACE(se_inc, DeeObject_Inc)
 DEFINE_SEQ_EACH_UNARY_INPLACE(se_dec, DeeObject_Dec)
@@ -837,7 +837,7 @@ DEFINE_SEW_BINARY(sew_ge, OPERATOR_GE)
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
 seo_getitem_for_inplace(SeqEachOperator *__restrict self,
-                        DREF DeeObject **__restrict pbaseelem,
+                        DREF DeeObject **__restrict p_baseelem,
                         size_t index, uint16_t operator_name) {
 	DREF DeeObject *result, *baseelem;
 	baseelem = DeeObject_GetItemIndex(self->se_seq, index);
@@ -872,7 +872,7 @@ seo_getitem_for_inplace(SeqEachOperator *__restrict self,
 	}
 	if unlikely(!result)
 		goto err_baseelem;
-	*pbaseelem = baseelem;
+	*p_baseelem = baseelem;
 	return result;
 err_noimp:
 	err_unimplemented_operator(&SeqEachOperator_Type, operator_name);
@@ -912,9 +912,9 @@ seo_setitem_for_inplace(SeqEachOperator *self,
 
 #define DEFINE_SEO_UNARY_INPLACE(name, func, op)                   \
 	PRIVATE NONNULL((1)) int DCALL                                 \
-	name(SeqEachOperator **__restrict pself) {                     \
+	name(SeqEachOperator **__restrict p_self) {                    \
 		size_t i, size;                                            \
-		SeqEachOperator *seq = *pself;                             \
+		SeqEachOperator *seq = *p_self;                            \
 		DREF DeeObject *elem, *baseelem;                           \
 		size = DeeObject_Size(seq->se_seq);                        \
 		if unlikely(size == (size_t)-1)                            \
@@ -943,9 +943,9 @@ seo_setitem_for_inplace(SeqEachOperator *self,
 
 #define DEFINE_SEO_BINARY_INPLACE(name, func, op)                  \
 	PRIVATE NONNULL((1, 2)) int DCALL                              \
-	name(SeqEachOperator **__restrict pself, DeeObject *other) {   \
+	name(SeqEachOperator **__restrict p_self, DeeObject *other) {  \
 		size_t i, size;                                            \
-		SeqEachOperator *seq = *pself;                             \
+		SeqEachOperator *seq = *p_self;                            \
 		DREF DeeObject *elem, *baseelem;                           \
 		size = DeeObject_Size(seq->se_seq);                        \
 		if unlikely(size == (size_t)-1)                            \

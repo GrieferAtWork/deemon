@@ -1089,7 +1089,7 @@ code_hash(DeeCodeObject *__restrict self) {
 			dhash_t spec;
 			spec = Dee_HashPtr(&self->co_exceptv[i].eh_start,
 			                   sizeof(struct except_handler) -
-			                   COMPILER_OFFSETAFTER(struct except_handler, eh_start));
+			                   offsetof(struct except_handler, eh_start));
 			result = Dee_HashCombine(result, spec);
 			if (self->co_exceptv[i].eh_mask)
 				result = Dee_HashCombine(result, DeeObject_Hash((DeeObject *)self->co_exceptv[i].eh_mask));

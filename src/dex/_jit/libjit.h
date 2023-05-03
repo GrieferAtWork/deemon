@@ -873,7 +873,7 @@ INTDEF WUNUSED DREF DeeObject *FCALL JITLexer_EvalCommaDictOperand(JITLexer *__r
 INTDEF int FCALL JITLexer_SkipCommaDictOperand(JITLexer *__restrict self, unsigned int flags);
 
 /* Evaluate/skip an argument list, including keyword labels */
-INTDEF WUNUSED DREF DeeObject *FCALL JITLexer_EvalArgumentList(JITLexer *__restrict self, DREF DeeObject **__restrict pkwds);
+INTDEF WUNUSED DREF DeeObject *FCALL JITLexer_EvalArgumentList(JITLexer *__restrict self, DREF DeeObject **__restrict p_kwds);
 INTDEF int FCALL JITLexer_SkipArgumentList(JITLexer *__restrict self);
 
 /* Evaluate a keyword label list and return a valid mapping for keywords to values.
@@ -902,13 +902,13 @@ INTDEF WUNUSED DREF /*Module*/ DeeObject *FCALL JITLexer_EvalModule(JITLexer *__
  * >> foo, bar = 10;          // (foo, (bar = 10));
  * >> { 10 }                  // (List { 10 }); // When `AST_COMMA_ALLOWBRACE' is set
  * >> { "foo": 10 }           // (Dict { "foo": 10 }); // When `AST_COMMA_ALLOWBRACE' is set
- * @param: mode:      Set of `AST_COMMA_*'     - What is allowed and when should we pack values.
- * @param: seq_type:  The type of sequence to generate (one of `DeeTuple_Type' or `DeeList_Type')
- *                    When `NULL', evaluate to the last comma-expression.
- * @param: pout_mode: When non-NULL, instead of parsing a `;' when required,
- *                    set to `AST_COMMA_OUT_FNEEDSEMI' indicative of this. */
-INTDEF WUNUSED DREF DeeObject *DCALL JITLexer_EvalComma(JITLexer *__restrict self, uint16_t mode, DeeTypeObject *seq_type, uint16_t *pout_mode);
-INTDEF int DCALL JITLexer_SkipComma(JITLexer *__restrict self, uint16_t mode, uint16_t *pout_mode);
+ * @param: mode:       Set of `AST_COMMA_*'     - What is allowed and when should we pack values.
+ * @param: seq_type:   The type of sequence to generate (one of `DeeTuple_Type' or `DeeList_Type')
+ *                     When `NULL', evaluate to the last comma-expression.
+ * @param: p_out_mode: When non-NULL, instead of parsing a `;' when required,
+ *                     set to `AST_COMMA_OUT_FNEEDSEMI' indicative of this. */
+INTDEF WUNUSED DREF DeeObject *DCALL JITLexer_EvalComma(JITLexer *__restrict self, uint16_t mode, DeeTypeObject *seq_type, uint16_t *p_out_mode);
+INTDEF int DCALL JITLexer_SkipComma(JITLexer *__restrict self, uint16_t mode, uint16_t *p_out_mode);
 
 #define AST_COMMA_NORMAL        0x0000
 #define AST_COMMA_FORCEMULTIPLE 0x0001 /* Always pack objects according to `flags' */
@@ -930,17 +930,17 @@ INTDEF int DCALL JITLexer_SkipComma(JITLexer *__restrict self, uint16_t mode, ui
 
 
 /* Parse a module name, either writing it to `*printer' (if non-NULL),
- * or storing the name's start and end pointers in `*pname_start' and
- * `*pname_end'
+ * or storing the name's start and end pointers in `*p_name_start' and
+ * `*p_name_end'
  * @return:  1: Successfully parsed the module name and stored it in `*printer'
  *              In this case, this function will have also initialized `*printer'
- * @return:  0: Successfully parsed the module name and stored it in `*pname_start' / `*pname_end'
+ * @return:  0: Successfully parsed the module name and stored it in `*p_name_start' / `*p_name_end'
  * @return: -1: An error occurred. */
 INTDEF int FCALL
 JITLexer_ParseModuleName(JITLexer *__restrict self,
                          struct unicode_printer *printer,
-                         /*utf-8*/ unsigned char **pname_start,
-                         /*utf-8*/ unsigned char **pname_end);
+                         /*utf-8*/ unsigned char **p_name_start,
+                         /*utf-8*/ unsigned char **p_name_end);
 
 /* Parse lookup mode modifiers:
  * >> local x = 42;
@@ -948,7 +948,7 @@ JITLexer_ParseModuleName(JITLexer *__restrict self,
  */
 INTDEF int DCALL
 JITLexer_ParseLookupMode(JITLexer *__restrict self,
-                         unsigned int *__restrict pmode);
+                         unsigned int *__restrict p_mode);
 
 
 /* Parse or skip a template string. */
@@ -1035,7 +1035,7 @@ INTDEF int FCALL JITLexer_SkipTypeAnnotation(JITLexer *__restrict self, bool thr
  * >> } catch (string as s) {
  *             ^            ^
  * >> }
- * @param: ptypemask: Filled with one of:
+ * @param: p_typemask: Filled with one of:
  *                      - NULL:           No mask was given (all objects can be caught)
  *                      - DeeTupleObject: A tuple of types that should be caught
  *                      - DeeTypeObject:  The single type that should be caught
@@ -1045,9 +1045,9 @@ INTDEF int FCALL JITLexer_SkipTypeAnnotation(JITLexer *__restrict self, bool thr
  */
 INTDEF int FCALL
 JITLexer_ParseCatchMask(JITLexer *__restrict self,
-                        DREF DeeObject **__restrict ptypemask,
-                        char const **__restrict psymbol_name,
-                        size_t *__restrict psymbol_size);
+                        DREF DeeObject **__restrict p_typemask,
+                        char const **__restrict p_symbol_name,
+                        size_t *__restrict p_symbol_size);
 
 /* Check if `thrown_object' can be caught with `typemask'
  * NOTE: Assumes that interrupt catches are allowed.
@@ -1060,8 +1060,8 @@ JIT_IsCatchable(DeeObject *thrown_object,
                 DeeObject *typemask);
 
 /* Hybrid parsing functions. */
-INTDEF WUNUSED DREF DeeObject *FCALL JITLexer_EvalStatementOrBraces(JITLexer *__restrict self, unsigned int *pwas_expression);
-INTDEF int FCALL JITLexer_SkipStatementOrBraces(JITLexer *__restrict self, unsigned int *pwas_expression);
+INTDEF WUNUSED DREF DeeObject *FCALL JITLexer_EvalStatementOrBraces(JITLexer *__restrict self, unsigned int *p_was_expression);
+INTDEF int FCALL JITLexer_SkipStatementOrBraces(JITLexer *__restrict self, unsigned int *p_was_expression);
 
 /* Starting immediately after a `{' token, parse the items of the brace
  * initializer / expression, before returning ontop of the `}' token. */
@@ -1070,47 +1070,47 @@ INTDEF int FCALL JITLexer_SkipBraceItems(JITLexer *__restrict self);
 
 /* Parse a statement/expression or automatically parse either.
  * @param: kind:            One of `AST_PARSE_WASEXPR_*'
- * @param: pwas_expression: [OUT] One of `AST_PARSE_WASEXPR_*' */
+ * @param: p_was_expression: [OUT] One of `AST_PARSE_WASEXPR_*' */
 INTDEF WUNUSED DREF DeeObject *FCALL JITLexer_EvalTry(JITLexer *__restrict self, bool is_statement);
-INTDEF WUNUSED DREF DeeObject *FCALL JITLexer_EvalTryHybrid(JITLexer *__restrict self, unsigned int *pwas_expression);
+INTDEF WUNUSED DREF DeeObject *FCALL JITLexer_EvalTryHybrid(JITLexer *__restrict self, unsigned int *p_was_expression);
 INTDEF int FCALL JITLexer_SkipTry(JITLexer *__restrict self, bool is_statement);
-INTDEF int FCALL JITLexer_SkipTryHybrid(JITLexer *__restrict self, unsigned int *pwas_expression);
+INTDEF int FCALL JITLexer_SkipTryHybrid(JITLexer *__restrict self, unsigned int *p_was_expression);
 INTDEF WUNUSED DREF DeeObject *FCALL JITLexer_EvalDel(JITLexer *__restrict self, bool is_statement);
-INTDEF WUNUSED DREF DeeObject *FCALL JITLexer_EvalDelHybrid(JITLexer *__restrict self, unsigned int *pwas_expression);
+INTDEF WUNUSED DREF DeeObject *FCALL JITLexer_EvalDelHybrid(JITLexer *__restrict self, unsigned int *p_was_expression);
 INTDEF int FCALL JITLexer_SkipDel(JITLexer *__restrict self, bool is_statement);
-INTDEF int FCALL JITLexer_SkipDelHybrid(JITLexer *__restrict self, unsigned int *pwas_expression);
+INTDEF int FCALL JITLexer_SkipDelHybrid(JITLexer *__restrict self, unsigned int *p_was_expression);
 INTDEF WUNUSED DREF DeeObject *FCALL JITLexer_EvalIf(JITLexer *__restrict self, bool is_statement);
-INTDEF WUNUSED DREF DeeObject *FCALL JITLexer_EvalIfHybrid(JITLexer *__restrict self, unsigned int *pwas_expression);
+INTDEF WUNUSED DREF DeeObject *FCALL JITLexer_EvalIfHybrid(JITLexer *__restrict self, unsigned int *p_was_expression);
 INTDEF int FCALL JITLexer_SkipIf(JITLexer *__restrict self, bool is_statement);
-INTDEF int FCALL JITLexer_SkipIfHybrid(JITLexer *__restrict self, unsigned int *pwas_expression);
+INTDEF int FCALL JITLexer_SkipIfHybrid(JITLexer *__restrict self, unsigned int *p_was_expression);
 INTDEF WUNUSED DREF DeeObject *FCALL JITLexer_EvalFor(JITLexer *__restrict self, bool is_statement);
-INTDEF WUNUSED DREF DeeObject *FCALL JITLexer_EvalForHybrid(JITLexer *__restrict self, unsigned int *pwas_expression);
+INTDEF WUNUSED DREF DeeObject *FCALL JITLexer_EvalForHybrid(JITLexer *__restrict self, unsigned int *p_was_expression);
 INTDEF int FCALL JITLexer_SkipFor(JITLexer *__restrict self, bool is_statement);
-INTDEF int FCALL JITLexer_SkipForHybrid(JITLexer *__restrict self, unsigned int *pwas_expression);
+INTDEF int FCALL JITLexer_SkipForHybrid(JITLexer *__restrict self, unsigned int *p_was_expression);
 INTDEF WUNUSED DREF DeeObject *FCALL JITLexer_EvalForeach(JITLexer *__restrict self, bool is_statement);
-INTDEF WUNUSED DREF DeeObject *FCALL JITLexer_EvalForeachHybrid(JITLexer *__restrict self, unsigned int *pwas_expression);
+INTDEF WUNUSED DREF DeeObject *FCALL JITLexer_EvalForeachHybrid(JITLexer *__restrict self, unsigned int *p_was_expression);
 INTDEF int FCALL JITLexer_SkipForeach(JITLexer *__restrict self, bool is_statement);
-INTDEF int FCALL JITLexer_SkipForeachHybrid(JITLexer *__restrict self, unsigned int *pwas_expression);
+INTDEF int FCALL JITLexer_SkipForeachHybrid(JITLexer *__restrict self, unsigned int *p_was_expression);
 INTDEF WUNUSED DREF DeeObject *FCALL JITLexer_EvalWhile(JITLexer *__restrict self, bool is_statement);
-INTDEF WUNUSED DREF DeeObject *FCALL JITLexer_EvalWhileHybrid(JITLexer *__restrict self, unsigned int *pwas_expression);
+INTDEF WUNUSED DREF DeeObject *FCALL JITLexer_EvalWhileHybrid(JITLexer *__restrict self, unsigned int *p_was_expression);
 INTDEF int FCALL JITLexer_SkipWhile(JITLexer *__restrict self, bool is_statement);
-INTDEF int FCALL JITLexer_SkipWhileHybrid(JITLexer *__restrict self, unsigned int *pwas_expression);
+INTDEF int FCALL JITLexer_SkipWhileHybrid(JITLexer *__restrict self, unsigned int *p_was_expression);
 INTDEF WUNUSED DREF DeeObject *FCALL JITLexer_EvalDo(JITLexer *__restrict self, bool is_statement);
-INTDEF WUNUSED DREF DeeObject *FCALL JITLexer_EvalDoHybrid(JITLexer *__restrict self, unsigned int *pwas_expression);
+INTDEF WUNUSED DREF DeeObject *FCALL JITLexer_EvalDoHybrid(JITLexer *__restrict self, unsigned int *p_was_expression);
 INTDEF int FCALL JITLexer_SkipDo(JITLexer *__restrict self, bool is_statement);
-INTDEF int FCALL JITLexer_SkipDoHybrid(JITLexer *__restrict self, unsigned int *pwas_expression);
+INTDEF int FCALL JITLexer_SkipDoHybrid(JITLexer *__restrict self, unsigned int *p_was_expression);
 INTDEF WUNUSED DREF DeeObject *FCALL JITLexer_EvalWith(JITLexer *__restrict self, bool is_statement);
-INTDEF WUNUSED DREF DeeObject *FCALL JITLexer_EvalWithHybrid(JITLexer *__restrict self, unsigned int *pwas_expression);
+INTDEF WUNUSED DREF DeeObject *FCALL JITLexer_EvalWithHybrid(JITLexer *__restrict self, unsigned int *p_was_expression);
 INTDEF int FCALL JITLexer_SkipWith(JITLexer *__restrict self, bool is_statement);
-INTDEF int FCALL JITLexer_SkipWithHybrid(JITLexer *__restrict self, unsigned int *pwas_expression);
+INTDEF int FCALL JITLexer_SkipWithHybrid(JITLexer *__restrict self, unsigned int *p_was_expression);
 INTDEF WUNUSED DREF DeeObject *FCALL JITLexer_EvalAssert(JITLexer *__restrict self, bool is_statement);
-INTDEF WUNUSED DREF DeeObject *FCALL JITLexer_EvalAssertHybrid(JITLexer *__restrict self, unsigned int *pwas_expression);
+INTDEF WUNUSED DREF DeeObject *FCALL JITLexer_EvalAssertHybrid(JITLexer *__restrict self, unsigned int *p_was_expression);
 INTDEF int FCALL JITLexer_SkipAssert(JITLexer *__restrict self, bool is_statement);
-INTDEF int FCALL JITLexer_SkipAssertHybrid(JITLexer *__restrict self, unsigned int *pwas_expression);
+INTDEF int FCALL JITLexer_SkipAssertHybrid(JITLexer *__restrict self, unsigned int *p_was_expression);
 INTDEF WUNUSED DREF DeeObject *FCALL JITLexer_EvalImport(JITLexer *__restrict self, bool is_from_import);
-INTDEF WUNUSED DREF DeeObject *FCALL JITLexer_EvalImportHybrid(JITLexer *__restrict self, bool is_from_import, unsigned int *pwas_expression);
+INTDEF WUNUSED DREF DeeObject *FCALL JITLexer_EvalImportHybrid(JITLexer *__restrict self, bool is_from_import, unsigned int *p_was_expression);
 INTDEF int FCALL JITLexer_SkipImport(JITLexer *__restrict self, bool is_from_import);
-INTDEF int FCALL JITLexer_SkipImportHybrid(JITLexer *__restrict self, bool is_from_import, unsigned int *pwas_expression);
+INTDEF int FCALL JITLexer_SkipImportHybrid(JITLexer *__restrict self, bool is_from_import, unsigned int *p_was_expression);
 
 /* Parse a class declaration, and return the produced class type.
  * Parsing starts after the `class' (or `class final'), meaning
@@ -1123,12 +1123,12 @@ INTDEF WUNUSED DREF DeeTypeObject *FCALL JITLexer_EvalClass(JITLexer *__restrict
 INTDEF int FCALL JITLexer_SkipClass(JITLexer *__restrict self);
 
 
-/* @param: pwas_expression: When non-NULL, set to one of `AST_PARSE_WASEXPR_*' */
-INTDEF WUNUSED DREF DeeObject *FCALL JITLexer_EvalHybrid(JITLexer *__restrict self, unsigned int *pwas_expression);
-INTDEF int FCALL JITLexer_SkipHybrid(JITLexer *__restrict self, unsigned int *pwas_expression);
+/* @param: p_was_expression: When non-NULL, set to one of `AST_PARSE_WASEXPR_*' */
+INTDEF WUNUSED DREF DeeObject *FCALL JITLexer_EvalHybrid(JITLexer *__restrict self, unsigned int *p_was_expression);
+INTDEF int FCALL JITLexer_SkipHybrid(JITLexer *__restrict self, unsigned int *p_was_expression);
 
 /* Same as `JITLexer_SkipHybrid()', but the current token is `{', and a trailing `;' should _NOT_ be consumed */
-INTDEF int FCALL JITLexer_SkipHybridAtBrace(JITLexer *__restrict self, unsigned int *pwas_expression);
+INTDEF int FCALL JITLexer_SkipHybridAtBrace(JITLexer *__restrict self, unsigned int *p_was_expression);
 
 #define AST_PARSE_WASEXPR_NO     0 /* It's a statement. */
 #define AST_PARSE_WASEXPR_YES    1 /* It's an expression for sure. */
@@ -1137,12 +1137,12 @@ INTDEF int FCALL JITLexer_SkipHybridAtBrace(JITLexer *__restrict self, unsigned 
 
 LOCAL WUNUSED DREF DeeObject *FCALL
 JITLexer_EvalHybridSecondary(JITLexer *__restrict self,
-                             unsigned int *pwas_expression) {
+                             unsigned int *p_was_expression) {
 	DREF DeeObject *result;
-	if unlikely(!pwas_expression) {
-		result = JITLexer_EvalHybrid(self, pwas_expression);
+	if unlikely(!p_was_expression) {
+		result = JITLexer_EvalHybrid(self, p_was_expression);
 	} else {
-		switch (*pwas_expression) {
+		switch (*p_was_expression) {
 
 		case AST_PARSE_WASEXPR_NO:
 			result = JITLexer_EvalStatement(self);
@@ -1153,7 +1153,7 @@ JITLexer_EvalHybridSecondary(JITLexer *__restrict self,
 			break;
 
 		case AST_PARSE_WASEXPR_MAYBE:
-			result = JITLexer_EvalHybrid(self, pwas_expression);
+			result = JITLexer_EvalHybrid(self, p_was_expression);
 			break;
 
 		default: __builtin_unreachable();
@@ -1164,12 +1164,12 @@ JITLexer_EvalHybridSecondary(JITLexer *__restrict self,
 
 LOCAL int FCALL
 JITLexer_SkipHybridSecondary(JITLexer *__restrict self,
-                             unsigned int *pwas_expression) {
+                             unsigned int *p_was_expression) {
 	int result;
-	if unlikely(!pwas_expression) {
-		result = JITLexer_SkipHybrid(self, pwas_expression);
+	if unlikely(!p_was_expression) {
+		result = JITLexer_SkipHybrid(self, p_was_expression);
 	} else {
-		switch (*pwas_expression) {
+		switch (*p_was_expression) {
 
 		case AST_PARSE_WASEXPR_NO:
 			result = JITLexer_SkipStatement(self);
@@ -1180,7 +1180,7 @@ JITLexer_SkipHybridSecondary(JITLexer *__restrict self,
 			break;
 
 		case AST_PARSE_WASEXPR_MAYBE:
-			result = JITLexer_SkipHybrid(self, pwas_expression);
+			result = JITLexer_SkipHybrid(self, p_was_expression);
 			break;
 
 		default: __builtin_unreachable();

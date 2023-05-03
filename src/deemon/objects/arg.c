@@ -321,18 +321,18 @@ done:
  * NOTE: The keywords argument index is set to the old number of
  *       keywords that had already been defined previously. */
 INTERN WUNUSED NONNULL((1, 2)) int
-(DCALL DeeKwds_AppendStr)(DREF DeeObject **__restrict pself,
+(DCALL DeeKwds_AppendStr)(DREF DeeObject **__restrict p_self,
                           char const *__restrict name,
                           size_t name_len, dhash_t hash) {
 	dhash_t i, perturb;
 	struct kwds_entry *entry;
-	DREF Kwds *self = (DREF Kwds *)*pself;
+	DREF Kwds *self = (DREF Kwds *)*p_self;
 	if (self->kw_size * 2 > self->kw_mask) {
 		/* Must allocate a larger map. */
 		self = kwds_rehash(self);
 		if unlikely(!self)
 			goto err;
-		*pself = (DREF DeeObject *)self;
+		*p_self = (DREF DeeObject *)self;
 	}
 	ASSERT(self->kw_size < self->kw_mask);
 	perturb = i = hash & self->kw_mask;
@@ -356,18 +356,18 @@ err:
  * NOTE: The keywords argument index is set to the old number of
  *       keywords that had already been defined previously. */
 INTERN WUNUSED NONNULL((1, 2)) int
-(DCALL DeeKwds_Append)(DREF DeeObject **__restrict pself,
+(DCALL DeeKwds_Append)(DREF DeeObject **__restrict p_self,
                        DeeObject *__restrict name) {
 	dhash_t i, perturb, hash;
 	struct kwds_entry *entry;
-	DREF Kwds *self = (DREF Kwds *)*pself;
+	DREF Kwds *self = (DREF Kwds *)*p_self;
 	ASSERT_OBJECT_TYPE_EXACT(name, &DeeString_Type);
 	if (self->kw_size * 2 > self->kw_mask) {
 		/* Must allocate a larger map. */
 		self = kwds_rehash(self);
 		if unlikely(!self)
 			goto err;
-		*pself = (DREF DeeObject *)self;
+		*p_self = (DREF DeeObject *)self;
 	}
 	ASSERT(self->kw_size < self->kw_mask);
 	hash    = DeeString_Hash(name);
@@ -1409,7 +1409,7 @@ no_such_key:
  * high-level {(string, Object)...}-like mapping that is bound to
  * the actually mapped arguments. */
 PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-DeeArg_GetKw(size_t *__restrict pargc,
+DeeArg_GetKw(size_t *__restrict p_argc,
              DeeObject *const *argv,
              DeeObject *kw) {
 	if (!kw)
@@ -1417,15 +1417,15 @@ DeeArg_GetKw(size_t *__restrict pargc,
 	if (DeeKwds_Check(kw)) {
 		size_t num_keywords;
 		num_keywords = DeeKwds_SIZE(kw);
-		if unlikely(num_keywords > *pargc) {
+		if unlikely(num_keywords > *p_argc) {
 			/* Argument list is too short of the given keywords */
-			err_keywords_bad_for_argc(*pargc, num_keywords);
+			err_keywords_bad_for_argc(*p_argc, num_keywords);
 			return NULL;
 		}
-		*pargc -= num_keywords;
+		*p_argc -= num_keywords;
 
 		/* Turn keywords and arguments into a proper mapping-like object. */
-		return DeeKwdsMapping_New(kw, argv + *pargc);
+		return DeeKwdsMapping_New(kw, argv + *p_argc);
 	}
 
 	/* `kw' already is a user-provided mapping. */
@@ -1449,7 +1449,7 @@ DeeArg_PutKw(size_t argc, DeeObject *const *argv, DREF DeeObject *kw) {
  * @return: 0 : Success
  * @return: -1: An error was thrown */
 PUBLIC WUNUSED NONNULL((1, 2)) int
-(DCALL DeeKwArgs_Init)(DeeKwArgs *__restrict self, size_t *__restrict pargc,
+(DCALL DeeKwArgs_Init)(DeeKwArgs *__restrict self, size_t *__restrict p_argc,
                        DeeObject *const *argv, DeeObject *kw) {
 	self->kwa_kwused = 0;
 	if (!kw) {
@@ -1459,12 +1459,12 @@ PUBLIC WUNUSED NONNULL((1, 2)) int
 	}
 	if (DeeKwds_Check(kw)) {
 		size_t num_keywords = DeeKwds_SIZE(kw);
-		if unlikely(num_keywords > *pargc) {
+		if unlikely(num_keywords > *p_argc) {
 			/* Argument list is too short of the given keywords */
-			return err_keywords_bad_for_argc(*pargc, num_keywords);
+			return err_keywords_bad_for_argc(*p_argc, num_keywords);
 		}
-		*pargc -= num_keywords;
-		self->kwa_kwargv = argv + *pargc;
+		*p_argc -= num_keywords;
+		self->kwa_kwargv = argv + *p_argc;
 	} else {
 		self->kwa_kwargv = NULL;
 	}
@@ -1477,7 +1477,7 @@ PUBLIC WUNUSED NONNULL((1, 2)) int
  * to ensure that `kwa_kw' doesn't contain any unused keyword
  * arguments.
  * @return: 0 : Success
- * @param: positional_argc: The value of `*pargc' after `DeeKwArgs_Init()' returned.
+ * @param: positional_argc: The value of `*p_argc' after `DeeKwArgs_Init()' returned.
  * @return: -1: An error was thrown */
 PUBLIC WUNUSED NONNULL((1)) int
 (DCALL DeeKwArgs_Done)(DeeKwArgs *__restrict self,

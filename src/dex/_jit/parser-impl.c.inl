@@ -378,14 +378,14 @@ err:
 
 INTERN RETURN_TYPE FCALL
 #ifdef JIT_EVAL
-JITLexer_EvalArgumentList(JITLexer *__restrict self, DREF DeeObject **__restrict pkwds)
+JITLexer_EvalArgumentList(JITLexer *__restrict self, DREF DeeObject **__restrict p_kwds)
 #else /* JIT_EVAL */
 JITLexer_SkipArgumentList(JITLexer *__restrict self)
 #endif /* !JIT_EVAL */
 {
 	RETURN_TYPE result;
 #ifdef JIT_EVAL
-	*pkwds = NULL;
+	*p_kwds = NULL;
 	result = JITLexer_EvalComma(self,
 	                            AST_COMMA_FORCEMULTIPLE |
 	                            AST_COMMA_ALLOWKWDLIST,
@@ -395,8 +395,8 @@ JITLexer_SkipArgumentList(JITLexer *__restrict self)
 	if (self->jl_tok == TOK_POW) {
 		JITLexer_Yield(self);
 		/* Parse the keyword invocation AST. */
-		*pkwds = JITLexer_EvalExpression(self, JITLEXER_EVAL_FNORMAL);
-		if unlikely(!*pkwds)
+		*p_kwds = JITLexer_EvalExpression(self, JITLEXER_EVAL_FNORMAL);
+		if unlikely(!*p_kwds)
 			goto err_r;
 	} else if (self->jl_tok == JIT_KEYWORD) {
 		unsigned char *name = self->jl_tokstart;
@@ -407,8 +407,8 @@ JITLexer_SkipArgumentList(JITLexer *__restrict self)
 			goto done;
 		}
 		JITLexer_Yield(self);
-		*pkwds = JITLexer_EvalKeywordLabelList(self, (char const *)name, size);
-		if unlikely(!*pkwds)
+		*p_kwds = JITLexer_EvalKeywordLabelList(self, (char const *)name, size);
+		if unlikely(!*p_kwds)
 			goto err_r;
 	}
 #else /* JIT_EVAL */

@@ -459,9 +459,9 @@ DFUNDEF WUNUSED DREF DeeObject *DCALL DeeInt_NewU8(uint8_t val);
 
 /* Create an integer from signed/unsigned LEB data. */
 DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-DeeInt_NewSleb(uint8_t const **__restrict preader);
+DeeInt_NewSleb(uint8_t const **__restrict p_reader);
 DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-DeeInt_NewUleb(uint8_t const **__restrict preader);
+DeeInt_NewUleb(uint8_t const **__restrict p_reader);
 
 /* Write the value of an integer as signed/unsigned LEB data.
  * NOTE: When writing ULEB data, the caller is responsible to ensure that `self' is positive. */

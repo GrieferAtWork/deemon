@@ -112,7 +112,7 @@ err:
 
 /* Same as `ast_parse_try_hybrid' but for assert statements / expressions. */
 INTERN WUNUSED DREF struct ast *FCALL
-ast_parse_assert_hybrid(unsigned int *pwas_expression) {
+ast_parse_assert_hybrid(unsigned int *p_was_expression) {
 	DREF struct ast *result, *message, *merge;
 #ifndef CONFIG_ASSERT_DDI_USES_EXPRESSION
 	struct ast_loc loc;
@@ -144,8 +144,8 @@ ast_parse_assert_hybrid(unsigned int *pwas_expression) {
 				result = merge;
 			}
 		}
-		if (pwas_expression)
-			*pwas_expression = AST_PARSE_WASEXPR_MAYBE;
+		if (p_was_expression)
+			*p_was_expression = AST_PARSE_WASEXPR_MAYBE;
 	} else {
 		result = ast_parse_expr(LOOKUP_SYM_NORMAL);
 		if unlikely(!result)
@@ -157,8 +157,8 @@ ast_parse_assert_hybrid(unsigned int *pwas_expression) {
 			if unlikely(!message)
 				goto err_r;
 		}
-		if (pwas_expression)
-			*pwas_expression = AST_PARSE_WASEXPR_NO;
+		if (p_was_expression)
+			*p_was_expression = AST_PARSE_WASEXPR_NO;
 	}
 	/* Create the assert branch. */
 	merge = ast_setddi(message ? ast_action2(AST_FACTION_ASSERT_M, result, message)

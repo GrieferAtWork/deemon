@@ -585,7 +585,7 @@ nt_GetFileAttributesEx(DeeObject *__restrict lpFileName,
  * @return:  1: The system call failed (s.a. `GetLastError()') */
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL
 nt_GetFileAttributes(DeeObject *__restrict lpFileName,
-                     DWORD *__restrict presult);
+                     DWORD *__restrict p_result);
 
 /* Work around a problem with long path names.
  * @return:  0: Successfully set attributes.

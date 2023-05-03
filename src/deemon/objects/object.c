@@ -2867,83 +2867,83 @@ done_temp:
 
 PRIVATE int DCALL
 unpack_init_info(DeeObject *__restrict info,
-                 DREF DeeObject **__restrict pinit_fields,
-                 DREF DeeObject **__restrict pinit_args,
-                 DREF DeeObject **__restrict pinit_kw) {
+                 DREF DeeObject **__restrict p_init_fields,
+                 DREF DeeObject **__restrict p_init_args,
+                 DREF DeeObject **__restrict p_init_kw) {
 	DREF DeeObject *iterator;
 	DREF DeeObject *sentinal;
 	if likely(DeeTuple_Check(info)) {
 		switch (DeeTuple_SIZE(info)) {
 
 		case 1:
-			*pinit_fields = DeeTuple_GET(info, 0);
-			if (DeeNone_Check(*pinit_fields))
-				*pinit_fields = NULL;
-			*pinit_args = Dee_EmptyTuple;
-			*pinit_kw   = NULL;
+			*p_init_fields = DeeTuple_GET(info, 0);
+			if (DeeNone_Check(*p_init_fields))
+				*p_init_fields = NULL;
+			*p_init_args = Dee_EmptyTuple;
+			*p_init_kw   = NULL;
 			break;
 
 		case 2:
-			*pinit_fields = DeeTuple_GET(info, 0);
-			*pinit_args   = DeeTuple_GET(info, 1);
-			if (DeeNone_Check(*pinit_fields))
-				*pinit_fields = NULL;
-			if (DeeNone_Check(*pinit_args))
-				*pinit_args = Dee_EmptyTuple;
-			*pinit_kw = NULL;
+			*p_init_fields = DeeTuple_GET(info, 0);
+			*p_init_args   = DeeTuple_GET(info, 1);
+			if (DeeNone_Check(*p_init_fields))
+				*p_init_fields = NULL;
+			if (DeeNone_Check(*p_init_args))
+				*p_init_args = Dee_EmptyTuple;
+			*p_init_kw = NULL;
 			break;
 
 		case 3:
-			*pinit_fields = DeeTuple_GET(info, 0);
-			*pinit_args   = DeeTuple_GET(info, 1);
-			*pinit_kw     = DeeTuple_GET(info, 2);
-			if (DeeNone_Check(*pinit_fields))
-				*pinit_fields = NULL;
-			if (DeeNone_Check(*pinit_args))
-				*pinit_args = Dee_EmptyTuple;
-			if (DeeNone_Check(*pinit_kw))
-				*pinit_kw = NULL;
+			*p_init_fields = DeeTuple_GET(info, 0);
+			*p_init_args   = DeeTuple_GET(info, 1);
+			*p_init_kw     = DeeTuple_GET(info, 2);
+			if (DeeNone_Check(*p_init_fields))
+				*p_init_fields = NULL;
+			if (DeeNone_Check(*p_init_args))
+				*p_init_args = Dee_EmptyTuple;
+			if (DeeNone_Check(*p_init_kw))
+				*p_init_kw = NULL;
 			break;
 
 		default:
 			return err_invalid_unpack_size_minmax(info, 1, 3, DeeTuple_SIZE(info));
 		}
-		if (DeeObject_AssertTypeExact(*pinit_args, &DeeTuple_Type))
+		if (DeeObject_AssertTypeExact(*p_init_args, &DeeTuple_Type))
 			goto err;
-		Dee_XIncref(*pinit_fields);
-		Dee_Incref(*pinit_args);
-		Dee_XIncref(*pinit_kw);
+		Dee_XIncref(*p_init_fields);
+		Dee_Incref(*p_init_args);
+		Dee_XIncref(*p_init_kw);
 	} else {
 		size_t fast_size;
 		/* Use the fast-sequence interface. */
 		fast_size = DeeFastSeq_GetSize(info);
 		if (fast_size != DEE_FASTSEQ_NOTFAST) {
 			if (fast_size == 1) {
-				*pinit_fields = DeeFastSeq_GetItem(info, 0);
-				if unlikely(!*pinit_fields)
+				*p_init_fields = DeeFastSeq_GetItem(info, 0);
+				if unlikely(!*p_init_fields)
 					goto err;
-				*pinit_args = Dee_EmptyTuple;
+				*p_init_args = Dee_EmptyTuple;
 				Dee_Incref(Dee_EmptyTuple);
 				goto done_iterator_data;
 			}
 			if (fast_size == 2) {
-				*pinit_fields = DeeFastSeq_GetItem(info, 0);
-				if unlikely(!*pinit_fields)
+				*p_init_fields = DeeFastSeq_GetItem(info, 0);
+				if unlikely(!*p_init_fields)
 					goto err;
-				*pinit_args = DeeFastSeq_GetItem(info, 1);
-				if unlikely(!*pinit_args)
+				*p_init_args = DeeFastSeq_GetItem(info, 1);
+				if unlikely(!*p_init_args)
 					goto err_fields;
 				goto done_iterator_data;
 			}
 			if (fast_size == 3) {
-				*pinit_fields = DeeFastSeq_GetItem(info, 0);
-				if unlikely(!*pinit_fields)
+				*p_init_fields = DeeFastSeq_GetItem(info, 0);
+				if unlikely(!*p_init_fields)
 					goto err;
-				*pinit_args = DeeFastSeq_GetItem(info, 1);
-				if unlikely(!*pinit_args)
+				*p_init_args = DeeFastSeq_GetItem(info, 1);
+				if unlikely(!*p_init_args)
 					goto err_fields;
-				*pinit_kw = DeeFastSeq_GetItem(info, 2);
-				if unlikely(!*pinit_kw)
+				*p_init_kw = DeeFastSeq_GetItem(info, 2);
+				if unlikely(!*p_init_kw)
 					goto err_args;
 				goto done_iterator_data;
 			}
@@ -2953,28 +2953,28 @@ unpack_init_info(DeeObject *__restrict info,
 		iterator = DeeObject_IterSelf(info);
 		if unlikely(!iterator)
 			goto err;
-		*pinit_fields = DeeObject_IterNext(iterator);
-		if unlikely(!ITER_ISOK(*pinit_fields)) {
-			if (*pinit_fields)
+		*p_init_fields = DeeObject_IterNext(iterator);
+		if unlikely(!ITER_ISOK(*p_init_fields)) {
+			if (*p_init_fields)
 				err_invalid_unpack_size_minmax(info, 1, 3, 0);
 			Dee_Decref(iterator);
 			goto err;
 		}
-		*pinit_args = DeeObject_IterNext(iterator);
-		if (*pinit_args == ITER_DONE) {
-			*pinit_args = Dee_EmptyTuple;
-			*pinit_kw   = NULL;
+		*p_init_args = DeeObject_IterNext(iterator);
+		if (*p_init_args == ITER_DONE) {
+			*p_init_args = Dee_EmptyTuple;
+			*p_init_kw   = NULL;
 			Dee_Incref(Dee_EmptyTuple);
 			goto done_iterator;
 		}
-		if unlikely(!*pinit_args) {
+		if unlikely(!*p_init_args) {
 			Dee_Decref(iterator);
 			goto err_fields;
 		}
-		*pinit_kw = DeeObject_IterNext(iterator);
-		if (*pinit_kw == ITER_DONE) {
-			*pinit_kw = NULL;
-		} else if (!*pinit_kw) {
+		*p_init_kw = DeeObject_IterNext(iterator);
+		if (*p_init_kw == ITER_DONE) {
+			*p_init_kw = NULL;
+		} else if (!*p_init_kw) {
 			Dee_Decref(iterator);
 			goto err_args;
 		}
@@ -2984,33 +2984,33 @@ unpack_init_info(DeeObject *__restrict info,
 				Dee_Decref(sentinal);
 				err_invalid_unpack_iter_size_minmax(info, iterator, 1, 3);
 			}
-			Dee_XDecref(*pinit_kw);
+			Dee_XDecref(*p_init_kw);
 			Dee_Decref(iterator);
 			goto err_args;
 		}
 done_iterator:
 		Dee_Decref(iterator);
 done_iterator_data:
-		if (DeeNone_Check(*pinit_fields))
-			Dee_Clear(*pinit_fields);
-		if (DeeNone_Check(*pinit_args)) {
+		if (DeeNone_Check(*p_init_fields))
+			Dee_Clear(*p_init_fields);
+		if (DeeNone_Check(*p_init_args)) {
 			Dee_Decref(Dee_None);
-			*pinit_args = Dee_EmptyTuple;
+			*p_init_args = Dee_EmptyTuple;
 			Dee_Incref(Dee_EmptyTuple);
 		} else {
-			if (DeeObject_AssertTypeExact(*pinit_args, &DeeTuple_Type))
+			if (DeeObject_AssertTypeExact(*p_init_args, &DeeTuple_Type))
 				goto err_kw;
 		}
-		if (*pinit_kw && DeeNone_Check(*pinit_kw))
-			Dee_Clear(*pinit_kw);
+		if (*p_init_kw && DeeNone_Check(*p_init_kw))
+			Dee_Clear(*p_init_kw);
 	}
 	return 0;
 err_kw:
-	Dee_XDecref(*pinit_kw);
+	Dee_XDecref(*p_init_kw);
 err_args:
-	Dee_Decref(*pinit_args);
+	Dee_Decref(*p_init_args);
 err_fields:
-	Dee_XDecref(*pinit_fields);
+	Dee_XDecref(*p_init_fields);
 err:
 	return -1;
 }

@@ -76,7 +76,7 @@ INTDEF NONNULL((1)) void DCALL DeeInt_Free(DeeIntObject *__restrict self);
 
 INTDEF WUNUSED NONNULL((1)) DREF DeeIntObject *DCALL int_copy(DeeIntObject const *__restrict self);
 INTDEF WUNUSED NONNULL((1)) DREF DeeIntObject *DCALL int_normalize(/*inherit(always)*/ DREF DeeIntObject *__restrict v);
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL int_divmod(DeeIntObject *a, DeeIntObject *b, DeeIntObject **pdiv, DeeIntObject **prem);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL int_divmod(DeeIntObject *a, DeeIntObject *b, DeeIntObject **p_div, DeeIntObject **p_rem);
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL int_add(DeeIntObject *a, DeeObject *b);
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL int_sub(DeeIntObject *a, DeeObject *b);
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL int_mul(DeeIntObject *a, DeeObject *b);
@@ -91,8 +91,8 @@ INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL int_xor(DeeIntObject *a, De
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL int_or(DeeIntObject *a, DeeObject *b);
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL int_pow(DeeIntObject *a, DeeObject *b);
 
-INTDEF WUNUSED NONNULL((1)) int DCALL int_inc(DREF DeeIntObject **__restrict pself);
-INTDEF WUNUSED NONNULL((1)) int DCALL int_dec(DREF DeeIntObject **__restrict pself);
+INTDEF WUNUSED NONNULL((1)) int DCALL int_inc(DREF DeeIntObject **__restrict p_self);
+INTDEF WUNUSED NONNULL((1)) int DCALL int_dec(DREF DeeIntObject **__restrict p_self);
 
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeInt_AddSDigit(DeeIntObject *__restrict a, sdigit b);
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeInt_SubSDigit(DeeIntObject *__restrict a, sdigit b);

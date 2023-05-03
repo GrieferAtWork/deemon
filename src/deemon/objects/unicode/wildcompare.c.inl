@@ -32,7 +32,7 @@
 #endif /* !T */
 
 #ifdef CASEFOLD
-PRIVATE int DCALL
+PRIVATE ATTR_INOUT(1) ATTR_INOUT(2) int DCALL
 dee_wildcompare(unicode_foldreader(T) *string,
                 unicode_foldreader(T) *pattern) {
 	uint32_t pattern_ch, ch;
@@ -86,7 +86,7 @@ dee_wildcompare(unicode_foldreader(T) *string,
 
 #else /* CASEFOLD */
 
-PRIVATE Treturn DCALL
+PRIVATE ATTR_PURE WUNUSED ATTR_INS(1, 2) ATTR_INS(3, 4) Treturn DCALL
 dee_wildcompare(T const *string, size_t string_length,
                 T const *pattern, size_t pattern_length) {
 	T card_post;

@@ -183,13 +183,13 @@ ast_parse_import_single_sym(struct TPPKeyword *__restrict import_name);
  * >> foo, bar = 10;          // (foo, (bar = 10));
  * >> { 10 }                  // (List { 10 }); // When `AST_COMMA_ALLOWBRACE' is set
  * >> { "foo": 10 }           // (Dict { "foo": 10 }); // When `AST_COMMA_ALLOWBRACE' is set
- * @param: mode:      Set of `AST_COMMA_*'     - What is allowed and when should we pack values.
- * @param: flags:     Set of `AST_FMULTIPLE_*' - How should multiple values be packaged.
- * @param: pout_mode: When non-NULL, instead of parsing a `;' when required,
- *                    set to `AST_COMMA_OUT_FNEEDSEMI' indicative of this. */
+ * @param: mode:       Set of `AST_COMMA_*'     - What is allowed and when should we pack values.
+ * @param: flags:      Set of `AST_FMULTIPLE_*' - How should multiple values be packaged.
+ * @param: p_out_mode: When non-NULL, instead of parsing a `;' when required,
+ *                     set to `AST_COMMA_OUT_FNEEDSEMI' indicative of this. */
 INTDEF WUNUSED DREF struct ast *DCALL
 ast_parse_comma(uint16_t mode, uint16_t flags,
-                uint16_t *pout_mode);
+                uint16_t *p_out_mode);
 #define AST_COMMA_NORMAL        0x0000
 #define AST_COMMA_FORCEMULTIPLE 0x0001 /* Always pack objects according to `flags' */
 #define AST_COMMA_STRICTCOMMA   0x0002 /* Strictly enforce the rule of a `,' being followed by another expression.
@@ -210,12 +210,12 @@ ast_parse_comma(uint16_t mode, uint16_t flags,
 
 /* Parse an argument list using `ast_parse_comma',
  * and (if present) also parse a trailing keyword label list, which is then saved as a
- * constant ast and returned through `*pkeyword_labels'.
- * If no keyword labels are present, `*pkeyword_labels' is filled in as `NULL'
+ * constant ast and returned through `*p_keyword_labels'.
+ * If no keyword labels are present, `*p_keyword_labels' is filled in as `NULL'
  * @param: mode: Set of `AST_COMMA_*' - What is allowed and when should we pack values. */
 INTDEF WUNUSED NONNULL((2)) DREF struct ast *DCALL
 ast_parse_argument_list(uint16_t mode,
-                        DREF struct ast **__restrict pkeyword_labels);
+                        /*out*/ DREF struct ast **__restrict p_keyword_labels);
 
 
 /* Parse lookup mode modifiers:
@@ -223,7 +223,7 @@ ast_parse_argument_list(uint16_t mode,
  *    ^     ^
  */
 INTDEF WUNUSED NONNULL((1)) int DCALL
-ast_parse_lookup_mode(unsigned int *__restrict pmode);
+ast_parse_lookup_mode(unsigned int *__restrict p_mode);
 
 /* Return 1 if the current token may be the begin of an expression.
  * @return: 1:  Yes
@@ -319,23 +319,23 @@ ast_parse_loopexpr(void);
  *       not some wrapper that assigns it to a symbol using `AST_STORE'. */
 #ifdef CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION
 INTDEF WUNUSED DREF struct ast *DCALL
-ast_parse_function(struct TPPKeyword *name, bool *pneed_semi,
+ast_parse_function(struct TPPKeyword *name, bool *p_need_semi,
                    bool allow_missing_params, struct ast_loc *name_loc,
                    struct decl_ast *decl);
 INTDEF WUNUSED DREF struct ast *DCALL
-ast_parse_function_noscope(struct TPPKeyword *name, bool *pneed_semi,
+ast_parse_function_noscope(struct TPPKeyword *name, bool *p_need_semi,
                            bool allow_missing_params, struct ast_loc *name_loc,
                            struct decl_ast *decl);
 #else /* CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION */
 INTDEF WUNUSED DREF struct ast *DCALL
-ast_parse_function(struct TPPKeyword *name, bool *pneed_semi,
+ast_parse_function(struct TPPKeyword *name, bool *p_need_semi,
                    bool allow_missing_params, struct ast_loc *name_loc);
 INTDEF WUNUSED DREF struct ast *DCALL
-ast_parse_function_noscope(struct TPPKeyword *name, bool *pneed_semi,
+ast_parse_function_noscope(struct TPPKeyword *name, bool *p_need_semi,
                            bool allow_missing_params, struct ast_loc *name_loc);
 #endif /* !CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION */
 INTDEF WUNUSED DREF struct ast *DCALL
-ast_parse_function_noscope_noargs(bool *pneed_semi);
+ast_parse_function_noscope_noargs(bool *p_need_semi);
 
 #ifdef CONFIG_LANGUAGE_HAVE_JAVA_LAMBDAS
 /* Parse a java-style lambda. */
@@ -399,13 +399,13 @@ ast_parse_class(uint16_t class_flags, struct TPPKeyword *name,
  * NOTE: Any of the given pointers may be filled with NULL if that AST is not present,
  *       unless the loop is actually a foreach-loop, in which case they _must_ always
  *       be present.
- * WARNING: The caller is responsible for wrapping `*piter_or_next' in an `__iterself__()'
+ * WARNING: The caller is responsible for wrapping `*p_iter_or_next' in an `__iterself__()'
  *          operator call when `AST_FLOOP_FOREACH' is part of the return mask, unless they wish
  *          to enumerate an iterator itself (which is possible using the `__foreach' statement). */
 INTDEF WUNUSED NONNULL((1, 2, 3)) int32_t DCALL
-ast_parse_for_head(DREF struct ast **__restrict pinit,
-                   DREF struct ast **__restrict pelem_or_cond,
-                   DREF struct ast **__restrict piter_or_next);
+ast_parse_for_head(DREF struct ast **__restrict p_init,
+                   DREF struct ast **__restrict p_elem_or_cond,
+                   DREF struct ast **__restrict p_iter_or_next);
 
 /* Parse an assertion statement. (must be started ontop of the `assert' keyword) */
 INTDEF WUNUSED DREF struct ast *FCALL
@@ -433,17 +433,17 @@ ast_parse_cast(struct ast *__restrict typeexpr);
 #define AST_PARSE_WASEXPR_YES    1 /* It's an expression for sure. */
 #define AST_PARSE_WASEXPR_MAYBE  2 /* It could either be an expression, or a statement. */
 
-/* @param: pwas_expression: When non-NULL, set to one of `AST_PARSE_WASEXPR_*' */
+/* @param: p_was_expression: When non-NULL, set to one of `AST_PARSE_WASEXPR_*' */
 INTERN WUNUSED DREF struct ast *FCALL
-ast_parse_statement_or_expression(unsigned int *pwas_expression);
+ast_parse_statement_or_expression(unsigned int *p_was_expression);
 
 /* Parse a primary and second expression in hybrid mode. */
-#define ast_parse_hybrid_primary(pwas_expression) \
-	ast_parse_statement_or_expression(pwas_expression)
+#define ast_parse_hybrid_primary(p_was_expression) \
+	ast_parse_statement_or_expression(p_was_expression)
 LOCAL WUNUSED NONNULL((1)) DREF struct ast *FCALL
-ast_parse_hybrid_secondary(unsigned int *__restrict pwas_expression) {
+ast_parse_hybrid_secondary(unsigned int *__restrict p_was_expression) {
 	DREF struct ast *result;
-	switch (*pwas_expression) {
+	switch (*p_was_expression) {
 	case AST_PARSE_WASEXPR_NO:
 		result = ast_parse_statement(false);
 		break;
@@ -451,7 +451,7 @@ ast_parse_hybrid_secondary(unsigned int *__restrict pwas_expression) {
 		result = ast_parse_expr(LOOKUP_SYM_NORMAL);
 		break;
 	case AST_PARSE_WASEXPR_MAYBE:
-		result = ast_parse_statement_or_expression(pwas_expression);
+		result = ast_parse_statement_or_expression(p_was_expression);
 		break;
 	default: __builtin_unreachable();
 	}
@@ -463,32 +463,32 @@ ast_parse_hybrid_secondary(unsigned int *__restrict pwas_expression) {
 
 /* Parse a statement or a brace-expression, with the current token being a `{' */
 INTDEF WUNUSED DREF struct ast *FCALL
-ast_parse_statement_or_braces(unsigned int *pwas_expression);
+ast_parse_statement_or_braces(unsigned int *p_was_expression);
 
 /* With the current token being `try', parse the construct and
  * try to figure out if it's a statement or an expression. */
 INTERN WUNUSED DREF struct ast *FCALL
-ast_parse_try_hybrid(unsigned int *pwas_expression);
+ast_parse_try_hybrid(unsigned int *p_was_expression);
 
 /* Same as `ast_parse_try_hybrid' but for if statements / expressions. */
 INTERN WUNUSED DREF struct ast *FCALL
-ast_parse_if_hybrid(unsigned int *pwas_expression);
+ast_parse_if_hybrid(unsigned int *p_was_expression);
 
 /* Same as `ast_parse_try_hybrid' but for with statements / expressions. */
 INTERN WUNUSED DREF struct ast *FCALL
-ast_parse_with_hybrid(unsigned int *pwas_expression);
+ast_parse_with_hybrid(unsigned int *p_was_expression);
 
 /* Same as `ast_parse_try_hybrid' but for assert statements / expressions. */
 INTERN WUNUSED DREF struct ast *FCALL
-ast_parse_assert_hybrid(unsigned int *pwas_expression);
+ast_parse_assert_hybrid(unsigned int *p_was_expression);
 
 /* Same as `ast_parse_try_hybrid' but for import statements / expressions. */
 INTERN WUNUSED DREF struct ast *FCALL
-ast_parse_import_hybrid(unsigned int *pwas_expression);
+ast_parse_import_hybrid(unsigned int *p_was_expression);
 
 /* Same as `ast_parse_try_hybrid' but for loopexpr statements / expressions. */
 INTDEF WUNUSED DREF struct ast *FCALL
-ast_parse_loopexpr_hybrid(unsigned int *pwas_expression);
+ast_parse_loopexpr_hybrid(unsigned int *p_was_expression);
 
 
 

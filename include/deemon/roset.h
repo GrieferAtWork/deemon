@@ -94,7 +94,7 @@ DFUNDEF WUNUSED DREF DeeRoSetObject *DCALL DeeRoSet_NewWithHint(size_t num_items
  * @return: 1:  Already exists.
  * @return: -1: An error occurred. */
 DFUNDEF WUNUSED NONNULL((1, 2)) int DCALL
-DeeRoSet_Insert(/*in|out*/ DREF DeeRoSetObject **__restrict pself,
+DeeRoSet_Insert(/*in|out*/ DREF DeeRoSetObject **__restrict p_self,
                 DeeObject *__restrict key);
 
 /* Hash-iteration control. */

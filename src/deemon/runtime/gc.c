@@ -121,16 +121,16 @@ PRIVATE void DCALL gc_pending_service(void) {
 	struct gc_head *chain;
 	chain = atomic_xch(&gc_pending, NULL);
 	if (chain) {
-		struct gc_head *next, **pself;
-		pself = &gc_root;
+		struct gc_head *next, **p_self;
+		p_self = &gc_root;
 		for (next = chain;;) {
-			next->gc_pself = pself;
-			pself = &next->gc_next;
-			next  = *pself;
+			next->gc_pself = p_self;
+			p_self = &next->gc_next;
+			next   = *p_self;
 			if (!next)
 				break;
 		}
-		next = COMPILER_CONTAINER_OF(pself, struct gc_head, gc_next); /* last */
+		next = COMPILER_CONTAINER_OF(p_self, struct gc_head, gc_next); /* last */
 		ASSERT(next->gc_next == NULL);
 		ASSERT(chain->gc_pself == &gc_root);
 		/* Append the old GC chain */
@@ -816,12 +816,12 @@ found_chain_link:
 
 PRIVATE size_t DCALL
 gc_trydestroy(struct gc_head *__restrict head,
-              struct gc_dep **__restrict pdep_buffer,
-              size_t *__restrict pdep_mask
+              struct gc_dep **__restrict p_dep_buffer,
+              size_t *__restrict p_dep_mask
 #ifdef CONFIG_GC_TRACK_LEAFS
               ,
-              struct gc_leaf **__restrict pleaf_buffer,
-              size_t *__restrict pleaf_mask
+              struct gc_leaf **__restrict p_leaf_buffer,
+              size_t *__restrict p_leaf_mask
 #endif /* CONFIG_GC_TRACK_LEAFS */
               ) {
 	/* Step #1: Collect all objects reachable from `head' that eventually loop
@@ -843,8 +843,8 @@ gc_trydestroy(struct gc_head *__restrict head,
 	struct gc_dep *init_dep;
 	DeeObject *ob;
 	visit.vd_deps.gd_cnt  = 1;
-	visit.vd_deps.gd_vec  = *pdep_buffer;
-	visit.vd_deps.gd_msk  = *pdep_mask;
+	visit.vd_deps.gd_vec  = *p_dep_buffer;
+	visit.vd_deps.gd_msk  = *p_dep_mask;
 	visit.vd_deps.gd_err  = false;
 	visit.vd_chain        = NULL;
 	bzeroc(visit.vd_deps.gd_vec,
@@ -852,8 +852,8 @@ gc_trydestroy(struct gc_head *__restrict head,
 	       sizeof(struct gc_dep));
 #ifdef CONFIG_GC_TRACK_LEAFS
 	visit.vd_leafs.gl_cnt = 0;
-	visit.vd_leafs.gl_vec = *pleaf_buffer;
-	visit.vd_leafs.gl_msk = *pleaf_mask;
+	visit.vd_leafs.gl_vec = *p_leaf_buffer;
+	visit.vd_leafs.gl_msk = *p_leaf_mask;
 	bzeroc(visit.vd_leafs.gl_vec,
 	       visit.vd_leafs.gl_msk + 1,
 	       sizeof(struct gc_leaf));
@@ -862,6 +862,7 @@ gc_trydestroy(struct gc_head *__restrict head,
 	/* Add the initial dependency, that is the object being collected itself. */
 	init_dep            = &visit.vd_deps.gd_vec[VD_HASHOF(&visit.vd_deps, &head->gc_object)];
 	init_dep->gd_object = &head->gc_object;
+
 	/* Capture + incref the given object's reference counter. */
 	for (;;) {
 		init_dep->gd_extern = atomic_read(&head->gc_object.ob_refcnt);
@@ -872,6 +873,7 @@ gc_trydestroy(struct gc_head *__restrict head,
 		                                init_dep->gd_extern + 1))
 			break;
 	}
+
 	/* Recursively visit our initial dependency. */
 	DeeObject_Visit(&head->gc_object, (dvisit_t)&visit_object, &visit);
 
@@ -987,11 +989,11 @@ gc_trydestroy(struct gc_head *__restrict head,
 			++result;
 	}
 out:
-	*pdep_buffer  = visit.vd_deps.gd_vec;
-	*pdep_mask    = visit.vd_deps.gd_msk;
+	*p_dep_buffer  = visit.vd_deps.gd_vec;
+	*p_dep_mask    = visit.vd_deps.gd_msk;
 #ifdef CONFIG_GC_TRACK_LEAFS
-	*pleaf_buffer = visit.vd_leafs.gl_vec;
-	*pleaf_mask   = visit.vd_leafs.gl_msk;
+	*p_leaf_buffer = visit.vd_leafs.gl_vec;
+	*p_leaf_mask   = visit.vd_leafs.gl_msk;
 #endif /* CONFIG_GC_TRACK_LEAFS */
 	return result;
 done:

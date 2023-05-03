@@ -351,8 +351,8 @@ DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 Dee_VPackf(char const *__restrict format, va_list args);
 
 DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-Dee_VPPackf(char const **__restrict pformat,
-            struct va_list_struct *__restrict pargs);
+Dee_VPPackf(char const **__restrict p_format,
+            struct va_list_struct *__restrict p_args);
 
 DFUNDEF NONNULL((1)) void DCALL
 Dee_VPPackf_Cleanup(char const *__restrict format, va_list args);
@@ -520,8 +520,8 @@ DFUNDEF WUNUSED NONNULL((1, 2)) int
 (DCALL Dee_VUnpackf)(DeeObject *__restrict self, char const *__restrict format, va_list args);
 DFUNDEF WUNUSED NONNULL((1, 2, 3)) int
 (DCALL Dee_VPUnpackf)(DeeObject *__restrict self,
-                      char const **__restrict pformat,
-                      struct va_list_struct *__restrict pargs);
+                      char const **__restrict p_format,
+                      struct va_list_struct *__restrict p_args);
 
 
 /* Both of these functions return a pointer to the target address where
@@ -546,9 +546,9 @@ Dee_vsnprintf(char *__restrict buffer, size_t bufsize,
 
 #ifndef __INTELLISENSE__
 #ifndef __NO_builtin_expect
-#define Dee_Unpackf(self, ...)              __builtin_expect(Dee_Unpackf(self, __VA_ARGS__), 0)
-#define Dee_VUnpackf(self, format, args)    __builtin_expect(Dee_VUnpackf(self, format, args), 0)
-#define Dee_VPUnpackf(self, pformat, pargs) __builtin_expect(Dee_VPUnpackf(self, pformat, pargs), 0)
+#define Dee_Unpackf(self, ...)                __builtin_expect(Dee_Unpackf(self, __VA_ARGS__), 0)
+#define Dee_VUnpackf(self, format, args)      __builtin_expect(Dee_VUnpackf(self, format, args), 0)
+#define Dee_VPUnpackf(self, p_format, p_args) __builtin_expect(Dee_VPUnpackf(self, p_format, p_args), 0)
 #endif /* !__NO_builtin_expect */
 #endif /* !__INTELLISENSE__ */
 

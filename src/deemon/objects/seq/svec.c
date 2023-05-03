@@ -76,17 +76,17 @@ rveciter_visit(RefVectorIterator *__restrict self, dvisit_t proc, void *arg) {
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 rveciter_next(RefVectorIterator *__restrict self) {
-	DREF DeeObject **presult, *result;
+	DREF DeeObject **p_result, *result;
 	RefVector *vector = self->rvi_vector;
 	for (;;) {
 		do {
-			presult = atomic_read(&self->rvi_pos);
-			if (presult >= vector->rv_vector + vector->rv_length)
+			p_result = atomic_read(&self->rvi_pos);
+			if (p_result >= vector->rv_vector + vector->rv_length)
 				return ITER_DONE;
-		} while (!atomic_cmpxch_weak_or_write(&self->rvi_pos, presult, presult + 1));
+		} while (!atomic_cmpxch_weak_or_write(&self->rvi_pos, p_result, p_result + 1));
 
 		RefVector_XLockRead(vector);
-		result = *presult;
+		result = *p_result;
 		Dee_XIncref(result);
 		RefVector_XLockEndRead(vector);
 		/* Skip NULL entries. */

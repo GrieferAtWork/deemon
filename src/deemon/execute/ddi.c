@@ -38,10 +38,10 @@ DECL_BEGIN
 
 
 PRIVATE NONNULL((1)) int DCALL
-get_sleb(uint8_t **__restrict pip) {
+get_sleb(uint8_t **__restrict p_ip) {
 	int result, is_neg;
 	uint8_t *ip, byte, num_bits;
-	ip       = *pip;
+	ip       = *p_ip;
 	byte     = *ip++;
 	num_bits = 6;
 	is_neg   = (byte & 0x40);
@@ -53,42 +53,42 @@ get_sleb(uint8_t **__restrict pip) {
 	}
 	if (is_neg)
 		result = -result;
-	*pip = ip;
+	*p_ip = ip;
 	return result;
 }
 
 PRIVATE NONNULL((1)) unsigned int DCALL
-get_uleb(uint8_t **__restrict pip) {
+get_uleb(uint8_t **__restrict p_ip) {
 	unsigned int result;
 	uint8_t *ip, byte, num_bits;
 	result   = 0;
-	ip       = *pip;
+	ip       = *p_ip;
 	num_bits = 0;
 	do {
 		byte = *ip++;
 		result |= (byte & 0x7f) << num_bits;
 		num_bits += 7;
 	} while (byte & 0x80);
-	*pip = ip;
+	*p_ip = ip;
 	return result;
 }
 
 PUBLIC WUNUSED NONNULL((1, 2)) uint8_t *DCALL
 Dee_ddi_next_simple(uint8_t *__restrict ip,
-                    code_addr_t *__restrict puip) {
-	code_addr_t uip = *puip;
+                    code_addr_t *__restrict p_uip) {
+	code_addr_t uip = *p_uip;
 	for (;;) {
 		uint8_t op = *ip++;
 		switch (op) {
 
 		case DDI_STOP:
-			*puip = uip;
+			*p_uip = uip;
 			return DDI_NEXT_DONE; /* End of DDI stream. */
 
 		case DDI_ADDUIP:
 			++uip;
 			uip += get_uleb((uint8_t **)&ip);
-			*puip = uip;
+			*p_uip = uip;
 			return ip; /* Checkpoint. */
 
 		case DDI_ADDLNO:
@@ -115,7 +115,7 @@ Dee_ddi_next_simple(uint8_t *__restrict ip,
 
 		default:
 			uip += DDI_GENERIC_IP(op);
-			*puip = uip;
+			*p_uip = uip;
 			return ip; /* Checkpoint. */
 		}
 	}

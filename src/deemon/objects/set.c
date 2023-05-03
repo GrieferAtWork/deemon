@@ -574,8 +574,9 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-set_inplace_sub(DeeObject **__restrict pself, DeeObject *items) {
-	DeeObject *self = *pself;
+set_inplace_sub(DeeObject **__restrict p_self,
+                DeeObject *items) {
+	DeeObject *self = *p_self;
 	size_t i, size;
 	DREF DeeObject *remove_func, *callback_result, *remove_args[1];
 	remove_func = DeeObject_GetAttr(self, (DeeObject *)&str_remove);
@@ -621,13 +622,14 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-set_inplace_mul(DeeObject **__restrict pself, DeeObject *count) {
+set_inplace_mul(DeeObject **__restrict p_self,
+                DeeObject *count) {
 	size_t count_integer;
 	if (DeeObject_AsSize(count, &count_integer))
 		goto err;
 	if (count_integer == 0) {
 		DREF DeeObject *callback_result;
-		callback_result = DeeObject_CallAttr(*pself, (DeeObject *)&str_clear, 0, NULL);
+		callback_result = DeeObject_CallAttr(*p_self, (DeeObject *)&str_clear, 0, NULL);
 		if unlikely(!callback_result)
 			goto err;
 		Dee_Decref(callback_result);
@@ -638,8 +640,9 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-set_inplace_intersection(DeeObject **__restrict pself, DeeObject *items) {
-	DeeObject *self = *pself;
+set_inplace_intersection(DeeObject **__restrict p_self,
+                         DeeObject *items) {
+	DeeObject *self = *p_self;
 	int result;
 	DREF DeeObject *new_self;
 	new_self = DeeObject_And(self, items);
@@ -653,9 +656,10 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-set_inplace_union(DeeObject **__restrict pself, DeeObject *items) {
+set_inplace_union(DeeObject **__restrict p_self,
+                  DeeObject *items) {
 	DREF DeeObject *callback_result;
-	callback_result = DeeObject_CallAttr(*pself,
+	callback_result = DeeObject_CallAttr(*p_self,
 	                                     (DeeObject *)&str_insertall,
 	                                     1,
 	                                     (DeeObject **)&items);
@@ -668,8 +672,9 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-set_inplace_symmetric_difference(DeeObject **__restrict pself, DeeObject *items) {
-	DeeObject *self = *pself;
+set_inplace_symmetric_difference(DeeObject **__restrict p_self,
+                                 DeeObject *items) {
+	DeeObject *self = *p_self;
 	int result;
 	DREF DeeObject *new_self;
 	new_self = DeeObject_Xor(self, items);

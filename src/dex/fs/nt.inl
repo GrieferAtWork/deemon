@@ -213,15 +213,15 @@ err:
  * @return:  1: The system call failed (s.a. `GetLastError()') */
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 nt_GetFileAttributes(DeeObject *__restrict lpFileName,
-                     DWORD *__restrict presult) {
+                     DWORD *__restrict p_result) {
 	LPWSTR wname;
 	DWORD dwError;
 	wname = (LPWSTR)DeeString_AsWide(lpFileName);
 	if unlikely(!wname)
 		goto err;
 	DBG_ALIGNMENT_DISABLE();
-	*presult = GetFileAttributesW(wname);
-	if ((*presult == INVALID_FILE_ATTRIBUTES) && DeeNTSystem_IsUncError(GetLastError())) {
+	*p_result = GetFileAttributesW(wname);
+	if ((*p_result == INVALID_FILE_ATTRIBUTES) && DeeNTSystem_IsUncError(GetLastError())) {
 		DBG_ALIGNMENT_ENABLE();
 		lpFileName = DeeNTSystem_FixUncPath(lpFileName);
 		if unlikely(!lpFileName)
@@ -232,7 +232,7 @@ nt_GetFileAttributes(DeeObject *__restrict lpFileName,
 			goto err;
 		}
 		DBG_ALIGNMENT_DISABLE();
-		*presult = GetFileAttributesW(wname);
+		*p_result = GetFileAttributesW(wname);
 		dwError  = GetLastError();
 		DBG_ALIGNMENT_ENABLE();
 		Dee_Decref(lpFileName);
@@ -241,7 +241,7 @@ nt_GetFileAttributes(DeeObject *__restrict lpFileName,
 		DBG_ALIGNMENT_ENABLE();
 	}
 	DBG_ALIGNMENT_ENABLE();
-	return *presult == INVALID_FILE_ATTRIBUTES;
+	return *p_result == INVALID_FILE_ATTRIBUTES;
 err:
 	return -1;
 }

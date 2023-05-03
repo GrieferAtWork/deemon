@@ -70,10 +70,10 @@ INTDEF WUNUSED NONNULL((1, 2)) int DCALL asm_check_thiscall(struct symbol *__res
 
 PRIVATE WUNUSED DREF DeeCodeObject *DCALL
 ast_assemble_function_refargs(struct ast *__restrict function_ast,
-                              uint16_t *__restrict prefc,
-                              struct asm_symbol_ref **__restrict prefv,
-                              uint16_t *__restrict pargc,
-                              /*out:inherit*/ struct symbol ***__restrict pargv) {
+                              uint16_t *__restrict p_refc,
+                              struct asm_symbol_ref **__restrict p_refv,
+                              uint16_t *__restrict p_argc,
+                              /*out:inherit*/ struct symbol ***__restrict p_argv) {
 	DREF DeeCodeObject *result;
 	DeeScopeObject *prev_scope;
 	ASSERT(function_ast->a_type == AST_FUNCTION);
@@ -105,8 +105,8 @@ ast_assemble_function_refargs(struct ast *__restrict function_ast,
 	                              | ASM_FREDUCEREFS
 #endif
 	                              ,
-	                              prefc, prefv,
-	                              pargc, pargv);
+	                              p_refc, p_refv,
+	                              p_argc, p_argv);
 	/* Now that the code has been generated, it's time to
 	 * register it as a constant variable of our own code. */
 	current_basescope = prev_scope->s_base;

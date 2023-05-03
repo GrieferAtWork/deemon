@@ -442,18 +442,18 @@ struct Dee_type_nsi {
 			WUNUSED_T NONNULL_T((1, 2, 3)) DREF DeeObject *(DCALL *nsi_setdefault)(DeeObject *self, DeeObject *key, DeeObject *defl);
 
 			/* Update an existing mapping element
-			 * @param: poldvalue: When non-NULL, store a reference to the old item here.
+			 * @param: p_oldvalue: When non-NULL, store a reference to the old item here.
 			 * @return: 1:  The existing key was updated.
-			 * @return: 0: `key' doesn't exist. (*poldvalue is left unchanged)
+			 * @return: 0: `key' doesn't exist. (*p_oldvalue is left unchanged)
 			 * @return: -1: Error. */
-			WUNUSED_T NONNULL_T((1, 2, 3)) int             (DCALL *nsi_updateold)(DeeObject *self, DeeObject *key, DeeObject *value, DREF DeeObject **poldvalue);
+			WUNUSED_T NONNULL_T((1, 2, 3)) int             (DCALL *nsi_updateold)(DeeObject *self, DeeObject *key, DeeObject *value, DREF DeeObject **p_oldvalue);
 
 			/* Insert a new mapping element, but don't change a pre-existing one
-			 * @param: poldvalue: When non-NULL, store a reference to the old item here.
+			 * @param: p_oldvalue: When non-NULL, store a reference to the old item here.
 			 * @return: 1:  A new element was inserted.
-			 * @return: 0: `key' doesn't exist. (*poldvalue is left unchanged)
+			 * @return: 0: `key' doesn't exist. (*p_oldvalue is left unchanged)
 			 * @return: -1: Error. */
-			WUNUSED_T NONNULL_T((1, 2, 3)) int             (DCALL *nsi_insertnew)(DeeObject *self, DeeObject *key, DeeObject *value, DREF DeeObject **poldvalue);
+			WUNUSED_T NONNULL_T((1, 2, 3)) int             (DCALL *nsi_insertnew)(DeeObject *self, DeeObject *key, DeeObject *value, DREF DeeObject **p_oldvalue);
 		}                   nsi_maplike;
 
 		struct { /* TYPE_SEQX_CLASS_SET */
@@ -518,8 +518,8 @@ INTDEF WUNUSED NONNULL((1, 3)) int DCALL DeeSeq_Insert(DeeObject *self, size_t i
 INTDEF WUNUSED NONNULL((1, 3)) int DCALL DeeSeq_InsertAll(DeeObject *self, size_t index, DeeObject *values);
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeSeq_Append(DeeObject *self, DeeObject *value);
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeSeq_Extend(DeeObject *self, DeeObject *values);
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeSeq_InplaceExtend(DREF DeeObject **__restrict pself, DeeObject *values);
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeSeq_InplaceRepeat(DREF DeeObject **__restrict pself, DeeObject *count);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeSeq_InplaceExtend(DREF DeeObject **__restrict p_self, DeeObject *values);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeSeq_InplaceRepeat(DREF DeeObject **__restrict p_self, DeeObject *count);
 INTDEF WUNUSED NONNULL((1)) size_t DCALL DeeSeq_Erase(DeeObject *__restrict self, size_t index, size_t count);
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeSeq_PopItem(DeeObject *__restrict self, Dee_ssize_t index);
 INTDEF WUNUSED NONNULL((1, 4)) int DCALL DeeSeq_Remove(DeeObject *self, size_t start, size_t end, DeeObject *elem, DeeObject *key);

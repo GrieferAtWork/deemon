@@ -346,10 +346,10 @@ done:
 }
 
 PUBLIC WUNUSED NONNULL((1, 2)) int DCALL
-DeeRoSet_Insert(/*in|out*/ DREF RoSet **__restrict pself,
+DeeRoSet_Insert(/*in|out*/ DREF RoSet **__restrict p_self,
                 DeeObject *__restrict key) {
 	int error;
-	DREF RoSet *me = *pself;
+	DREF RoSet *me = *p_self;
 	ASSERT_OBJECT_TYPE_EXACT(me, &DeeRoSet_Type);
 	ASSERT(!DeeObject_IsShared(me));
 	ASSERT(key != (DeeObject *)me);
@@ -361,7 +361,7 @@ DeeRoSet_Insert(/*in|out*/ DREF RoSet **__restrict pself,
 			goto err;
 		me->rs_mask = new_mask;
 		me->rs_size = old_size; /* `rs_size' is not saved by `rehash()' */
-		*pself = me;
+		*p_self = me;
 	}
 	/* Insert the new key/value-pair into the set. */
 	Dee_Incref(key);

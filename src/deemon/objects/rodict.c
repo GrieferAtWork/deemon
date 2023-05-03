@@ -341,7 +341,7 @@ done:
 /* NOTE: _Always_ inherits references to `key' and `value' */
 PRIVATE int DCALL
 insert(DREF RoDict *__restrict self, size_t mask,
-       size_t *__restrict pelemcount,
+       size_t *__restrict p_elemcount,
        /*inherit(always)*/ DREF DeeObject *__restrict key,
        /*inherit(always)*/ DREF DeeObject *__restrict value) {
 	size_t i, perturb, hash;
@@ -355,20 +355,23 @@ insert(DREF RoDict *__restrict self, size_t mask,
 			break;
 		if (item->di_hash != hash)
 			continue;
+
 		/* Same hash. -> Check if it's also the same key. */
 		error = DeeObject_CompareEq(key, item->di_key);
 		if unlikely(error < 0)
 			goto err;
 		if (!error)
 			continue; /* Not the same key. */
+
 		/* It _is_ the same key! (override it...) */
-		--*pelemcount;
+		--*p_elemcount;
 		Dee_Decref(item->di_key);
 		Dee_Decref(item->di_value);
 		break;
 	}
+
 	/* Fill in the item. */
-	++*pelemcount;
+	++*p_elemcount;
 	item->di_hash  = hash;
 	item->di_key   = key;   /* Inherit reference. */
 	item->di_value = value; /* Inherit reference. */
@@ -411,9 +414,9 @@ done:
 }
 
 PUBLIC WUNUSED NONNULL((1, 2, 3)) int DCALL
-DeeRoDict_Insert(/*in|out*/ DREF RoDict **__restrict pself,
+DeeRoDict_Insert(/*in|out*/ DREF RoDict **__restrict p_self,
                  DeeObject *key, DeeObject *value) {
-	DREF RoDict *me = *pself;
+	DREF RoDict *me = *p_self;
 	ASSERT_OBJECT_TYPE_EXACT(me, &DeeRoDict_Type);
 	ASSERT(!DeeObject_IsShared(me));
 	ASSERT(key != (DeeObject *)me);
@@ -426,7 +429,7 @@ DeeRoDict_Insert(/*in|out*/ DREF RoDict **__restrict pself,
 			goto err;
 		me->rd_mask = new_mask;
 		me->rd_size = old_size; /* `rd_size' is not saved by `rehash()' */
-		*pself = me;
+		*p_self = me;
 	}
 
 	/* Insert the new key/value-pair into the RoDict. */

@@ -112,7 +112,7 @@ env_next(Env *__restrict self) {
 	unsigned int my_version;
 	DREF DeeObject *result_tuple;
 	DREF DeeObject *name, *value;
-	char **presult, *result, *valstart;
+	char **p_result, *result, *valstart;
 	Dee_atomic_rwlock_read(&env_lock);
 	/* Check environment version number. */
 	if ((my_version = self->e_version) != env_version) {
@@ -121,11 +121,11 @@ iter_done:
 		return ITER_DONE;
 	}
 	do {
-		presult = atomic_read(&self->e_iter);
-		if (!*presult)
+		p_result = atomic_read(&self->e_iter);
+		if (!*p_result)
 			goto iter_done;
-	} while (atomic_cmpxch_weak_or_write(&self->e_iter, presult, presult + 1));
-	result   = *presult;
+	} while (atomic_cmpxch_weak_or_write(&self->e_iter, p_result, p_result + 1));
+	result   = *p_result;
 	valstart = strrchr(result, '=');
 	if (!valstart)
 		valstart = strend(result);
@@ -178,7 +178,7 @@ INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 enviterator_next_key(DeeObject *__restrict self) {
 	unsigned int my_version;
 	DREF DeeObject *name;
-	char **presult, *result, *valstart;
+	char **p_result, *result, *valstart;
 	Env *me = (Env *)self;
 	Dee_atomic_rwlock_read(&env_lock);
 	/* Check environment version number. */
@@ -188,11 +188,11 @@ iter_done:
 		return ITER_DONE;
 	}
 	do {
-		presult = atomic_read(&me->e_iter);
-		if (!*presult)
+		p_result = atomic_read(&me->e_iter);
+		if (!*p_result)
 			goto iter_done;
-	} while (atomic_cmpxch_weak_or_write(&me->e_iter, presult, presult + 1));
-	result   = *presult;
+	} while (atomic_cmpxch_weak_or_write(&me->e_iter, p_result, p_result + 1));
+	result   = *p_result;
 	valstart = strrchr(result, '=');
 	if (!valstart) {
 		valstart = strend(result);
@@ -222,7 +222,7 @@ INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 enviterator_next_value(DeeObject *__restrict self) {
 	unsigned int my_version;
 	DREF DeeObject *value;
-	char **presult, *result, *valstart;
+	char **p_result, *result, *valstart;
 	Env *me = (Env *)self;
 	Dee_atomic_rwlock_read(&env_lock);
 	/* Check environment version number. */
@@ -232,11 +232,11 @@ iter_done:
 		return ITER_DONE;
 	}
 	do {
-		presult = atomic_read(&me->e_iter);
-		if (!*presult)
+		p_result = atomic_read(&me->e_iter);
+		if (!*p_result)
 			goto iter_done;
-	} while (atomic_cmpxch_weak_or_write(&me->e_iter, presult, presult + 1));
-	result   = *presult;
+	} while (atomic_cmpxch_weak_or_write(&me->e_iter, p_result, p_result + 1));
+	result   = *p_result;
 	valstart = strrchr(result, '=');
 	if (!valstart) {
 		value = Dee_EmptyString;

@@ -1467,65 +1467,65 @@ err:
 }
 
 #ifdef __OPTIMIZE_SIZE__
-#define get_sequence_find_args(name, argc, argv, pelem, pkey, pstart, pend) \
-	get_sequence_find_args_kw(name, argc, argv, NULL, pelem, pkey, pstart, pend)
+#define get_sequence_find_args(name, argc, argv, p_elem, p_key, p_start, p_end) \
+	get_sequence_find_args_kw(name, argc, argv, NULL, p_elem, p_key, p_start, p_end)
 #else /* __OPTIMIZE_SIZE__ */
 PRIVATE WUNUSED NONNULL((1, 4, 5, 6, 7)) int DCALL
 get_sequence_find_args(char const *__restrict name,
                        size_t argc, DeeObject *const *argv,
-                       DeeObject **__restrict pelem,
-                       DeeObject **__restrict pkey,
-                       size_t *__restrict pstart,
-                       size_t *__restrict pend) {
+                       DeeObject **__restrict p_elem,
+                       DeeObject **__restrict p_key,
+                       size_t *__restrict p_start,
+                       size_t *__restrict p_end) {
 	switch (argc) {
 
 	case 1:
-		*pelem  = argv[0];
-		*pkey   = NULL;
-		*pstart = 0;
-		*pend   = (size_t)-1;
+		*p_elem  = argv[0];
+		*p_key   = NULL;
+		*p_start = 0;
+		*p_end   = (size_t)-1;
 		break;
 
 	case 2:
 		if (DeeInt_Check(argv[1])) {
-			if (DeeObject_AsSSize(argv[1], (dssize_t *)pstart))
+			if (DeeObject_AsSSize(argv[1], (dssize_t *)p_start))
 				goto err;
-			*pkey = NULL;
+			*p_key = NULL;
 		} else {
-			*pkey   = argv[1];
-			*pstart = 0;
-			if (DeeNone_Check(*pkey))
-				*pkey = NULL;
+			*p_key   = argv[1];
+			*p_start = 0;
+			if (DeeNone_Check(*p_key))
+				*p_key = NULL;
 		}
-		*pelem = argv[0];
-		*pend  = (size_t)-1;
+		*p_elem = argv[0];
+		*p_end  = (size_t)-1;
 		break;
 
 	case 3:
-		if (DeeObject_AsSSize(argv[1], (dssize_t *)pstart))
+		if (DeeObject_AsSSize(argv[1], (dssize_t *)p_start))
 			goto err;
 		if (DeeInt_Check(argv[2])) {
-			if (DeeObject_AsSSize(argv[2], (dssize_t *)pend))
+			if (DeeObject_AsSSize(argv[2], (dssize_t *)p_end))
 				goto err;
-			*pkey = NULL;
+			*p_key = NULL;
 		} else {
-			*pkey = argv[2];
-			*pend = (size_t)-1;
-			if (DeeNone_Check(*pkey))
-				*pkey = NULL;
+			*p_key = argv[2];
+			*p_end = (size_t)-1;
+			if (DeeNone_Check(*p_key))
+				*p_key = NULL;
 		}
-		*pelem = argv[0];
+		*p_elem = argv[0];
 		break;
 
 	case 4:
-		if (DeeObject_AsSSize(argv[1], (dssize_t *)pstart))
+		if (DeeObject_AsSSize(argv[1], (dssize_t *)p_start))
 			goto err;
-		if (DeeObject_AsSSize(argv[2], (dssize_t *)pend))
+		if (DeeObject_AsSSize(argv[2], (dssize_t *)p_end))
 			goto err;
-		*pelem = argv[0];
-		*pkey  = argv[3];
-		if (DeeNone_Check(*pkey))
-			*pkey = NULL;
+		*p_elem = argv[0];
+		*p_key  = argv[3];
+		if (DeeNone_Check(*p_key))
+			*p_key = NULL;
 		break;
 
 	default:
@@ -1544,18 +1544,18 @@ err:
 PRIVATE WUNUSED NONNULL((1, 5, 6, 7, 8)) int DCALL
 get_sequence_find_args_kw(char const *__restrict name,
                           size_t argc, DeeObject *const *argv, DeeObject *kw,
-                          DeeObject **__restrict pelem,
-                          DeeObject **__restrict pkey,
-                          size_t *__restrict pstart,
-                          size_t *__restrict pend) {
+                          DeeObject **__restrict p_elem,
+                          DeeObject **__restrict p_key,
+                          size_t *__restrict p_start,
+                          size_t *__restrict p_end) {
 	DREF DeeObject *temp;
 	DeeKwArgs kwargs;
 #ifndef __OPTIMIZE_SIZE__
 	if (!kw) {
 		/* Fastpass */
 		return get_sequence_find_args(name, argc, argv,
-		                              pelem, pkey,
-		                              pstart, pend);
+		                              p_elem, p_key,
+		                              p_start, p_end);
 	}
 #endif /* !__OPTIMIZE_SIZE__ */
 	if (DeeKwArgs_Init(&kwargs, &argc, argv, kw))
@@ -1563,78 +1563,78 @@ get_sequence_find_args_kw(char const *__restrict name,
 	switch (argc) {
 
 	case 0:
-		if unlikely((*pelem = DeeKwArgs_GetString(&kwargs, "elem")) == NULL)
+		if unlikely((*p_elem = DeeKwArgs_GetString(&kwargs, "elem")) == NULL)
 			goto err;
-		Dee_DecrefNokill(*pelem); /* FIXME: This can break for custom mapping types! */
+		Dee_DecrefNokill(*p_elem); /* FIXME: This can break for custom mapping types! */
 check_kw_start_end_key:
 		if unlikely((temp = DeeKwArgs_GetStringDef(&kwargs, "start", &DeeInt_Zero)) == NULL)
 			goto err;
-		if (DeeObject_AsSSize(temp, (dssize_t *)pstart))
+		if (DeeObject_AsSSize(temp, (dssize_t *)p_start))
 			goto err_temp;
 		Dee_Decref(temp);
 check_kw_end_key:
 		if unlikely((temp = DeeKwArgs_GetStringDef(&kwargs, "end", &DeeInt_MinusOne)) == NULL)
 			goto err;
-		if (DeeObject_AsSSize(temp, (dssize_t *)pend))
+		if (DeeObject_AsSSize(temp, (dssize_t *)p_end))
 			goto err_temp;
 		Dee_Decref(temp);
 /*check_kw_key:*/
-		if unlikely((*pkey = DeeKwArgs_GetStringDef(&kwargs, "key", Dee_None)) == NULL)
+		if unlikely((*p_key = DeeKwArgs_GetStringDef(&kwargs, "key", Dee_None)) == NULL)
 			goto err;
-		if (DeeNone_Check(*pkey)) {
+		if (DeeNone_Check(*p_key)) {
 			Dee_DecrefNokill(Dee_None);
-			*pkey = NULL;
+			*p_key = NULL;
 		} else {
-			Dee_DecrefNokill(*pkey); /* FIXME: This can break for custom mapping types! */
+			Dee_DecrefNokill(*p_key); /* FIXME: This can break for custom mapping types! */
 		}
 		break;
 
 	case 1:
-		*pelem = argv[0];
+		*p_elem = argv[0];
 		goto check_kw_start_end_key;
 
 	case 2:
-		*pelem = argv[0];
+		*p_elem = argv[0];
 		if (DeeInt_Check(argv[1])) {
-			if (DeeObject_AsSSize(argv[1], (dssize_t *)pstart))
+			if (DeeObject_AsSSize(argv[1], (dssize_t *)p_start))
 				goto err;
 			goto check_kw_end_key;
 		}
-		*pkey   = argv[1];
-		*pstart = 0;
-		if (DeeNone_Check(*pkey))
-			*pkey = NULL;
+		*p_key   = argv[1];
+		*p_start = 0;
+		if (DeeNone_Check(*p_key))
+			*p_key = NULL;
 check_kw_end:
 		if unlikely((temp = DeeKwArgs_GetStringDef(&kwargs, "end", &DeeInt_MinusOne)) == NULL)
 			goto err;
-		if (DeeObject_AsSSize(temp, (dssize_t *)pend))
+		if (DeeObject_AsSSize(temp, (dssize_t *)p_end))
 			goto err_temp;
 		Dee_Decref(temp);
 		break;
 
 	case 3:
-		*pelem = argv[0];
-		if (DeeObject_AsSSize(argv[1], (dssize_t *)pstart))
+		*p_elem = argv[0];
+		if (DeeObject_AsSSize(argv[1], (dssize_t *)p_start))
 			goto err;
 		if (DeeInt_Check(argv[2])) {
-			if (DeeObject_AsSSize(argv[2], (dssize_t *)pend))
+			if (DeeObject_AsSSize(argv[2], (dssize_t *)p_end))
 				goto err;
 			goto check_kw_end_key;
 		}
-		*pkey = argv[2];
-		if (DeeNone_Check(*pkey))
-			*pkey = NULL;
+		*p_key = argv[2];
+		if (DeeNone_Check(*p_key))
+			*p_key = NULL;
 		goto check_kw_end;
 
 	case 4:
-		if (DeeObject_AsSSize(argv[1], (dssize_t *)pstart))
+		if (DeeObject_AsSSize(argv[1], (dssize_t *)p_start))
 			goto err;
-		if (DeeObject_AsSSize(argv[2], (dssize_t *)pend))
+		if (DeeObject_AsSSize(argv[2], (dssize_t *)p_end))
 			goto err;
-		*pelem = argv[0];
-		*pkey  = argv[3];
-		if (DeeNone_Check(*pkey))
-			*pkey = NULL;
+		*p_elem = argv[0];
+		*p_key  = argv[3];
+		if (DeeNone_Check(*p_key))
+			*p_key = NULL;
 		break;
 
 	default:
@@ -1655,11 +1655,11 @@ err:
 PRIVATE WUNUSED NONNULL((1, 5, 6, 7, 8, 9)) int DCALL
 get_sequence_find_defl_args_kw(char const *__restrict name,
                                size_t argc, DeeObject *const *argv, DeeObject *kw,
-                               DeeObject **__restrict pelem,
-                               DeeObject **__restrict pkey,
-                               size_t *__restrict pstart,
-                               size_t *__restrict pend,
-                               DeeObject **__restrict pdefl) {
+                               DeeObject **__restrict p_elem,
+                               DeeObject **__restrict p_key,
+                               size_t *__restrict p_start,
+                               size_t *__restrict p_end,
+                               DeeObject **__restrict p_defl) {
 	DREF DeeObject *temp;
 	DeeKwArgs kwargs;
 	if (DeeKwArgs_Init(&kwargs, &argc, argv, kw))
@@ -1667,104 +1667,104 @@ get_sequence_find_defl_args_kw(char const *__restrict name,
 	switch (argc) {
 
 	case 0:
-		if unlikely((*pelem = DeeKwArgs_GetString(&kwargs, "elem")) == NULL)
+		if unlikely((*p_elem = DeeKwArgs_GetString(&kwargs, "elem")) == NULL)
 			goto err;
-		Dee_DecrefNokill(*pelem); /* FIXME: This can break for custom mapping types! */
+		Dee_DecrefNokill(*p_elem); /* FIXME: This can break for custom mapping types! */
 check_kw_start_end_key_defl:
 		if unlikely((temp = DeeKwArgs_GetStringDef(&kwargs, "start", &DeeInt_Zero)) == NULL)
 			goto err;
-		if (DeeObject_AsSSize(temp, (dssize_t *)pstart))
+		if (DeeObject_AsSSize(temp, (dssize_t *)p_start))
 			goto err_temp;
 		Dee_Decref(temp);
 check_kw_end_key_defl:
 		if unlikely((temp = DeeKwArgs_GetStringDef(&kwargs, "end", &DeeInt_MinusOne)) == NULL)
 			goto err;
-		if (DeeObject_AsSSize(temp, (dssize_t *)pend))
+		if (DeeObject_AsSSize(temp, (dssize_t *)p_end))
 			goto err_temp;
 		Dee_Decref(temp);
 /*check_kw_key_defl:*/
-		if unlikely((*pkey = DeeKwArgs_GetStringDef(&kwargs, "key", Dee_None)) == NULL)
+		if unlikely((*p_key = DeeKwArgs_GetStringDef(&kwargs, "key", Dee_None)) == NULL)
 			goto err;
-		if (DeeNone_Check(*pkey)) {
+		if (DeeNone_Check(*p_key)) {
 			Dee_DecrefNokill(Dee_None);
-			*pkey = NULL;
+			*p_key = NULL;
 		} else {
-			Dee_DecrefNokill(*pkey); /* FIXME: This can break for custom mapping types! */
+			Dee_DecrefNokill(*p_key); /* FIXME: This can break for custom mapping types! */
 		}
 check_kw_defl:
-		if unlikely((*pdefl = DeeKwArgs_GetStringDef(&kwargs, "defl", ITER_DONE)) == NULL)
+		if unlikely((*p_defl = DeeKwArgs_GetStringDef(&kwargs, "defl", ITER_DONE)) == NULL)
 			goto err;
-		if (*pdefl == ITER_DONE) {
-			*pdefl = NULL;
+		if (*p_defl == ITER_DONE) {
+			*p_defl = NULL;
 		} else {
-			Dee_DecrefNokill(*pdefl); /* FIXME: This can break for custom mapping types! */
+			Dee_DecrefNokill(*p_defl); /* FIXME: This can break for custom mapping types! */
 		}
 		break;
 
 	case 1:
-		*pelem = argv[0];
+		*p_elem = argv[0];
 		goto check_kw_start_end_key_defl;
 
 	case 2:
-		*pelem = argv[0];
+		*p_elem = argv[0];
 		if (DeeInt_Check(argv[1])) {
-			if (DeeObject_AsSSize(argv[1], (dssize_t *)pstart))
+			if (DeeObject_AsSSize(argv[1], (dssize_t *)p_start))
 				goto err;
 			goto check_kw_end_key_defl;
 		}
-		*pkey   = argv[1];
-		*pstart = 0;
-		if (DeeNone_Check(*pkey))
-			*pkey = NULL;
+		*p_key   = argv[1];
+		*p_start = 0;
+		if (DeeNone_Check(*p_key))
+			*p_key = NULL;
 check_kw_end_defl:
 		if unlikely((temp = DeeKwArgs_GetStringDef(&kwargs, "end", &DeeInt_MinusOne)) == NULL)
 			goto err;
-		if (DeeObject_AsSSize(temp, (dssize_t *)pend))
+		if (DeeObject_AsSSize(temp, (dssize_t *)p_end))
 			goto err_temp;
 		Dee_Decref(temp);
 		goto check_kw_defl;
 
 	case 3:
-		*pelem = argv[0];
+		*p_elem = argv[0];
 		if (!DeeInt_Check(argv[1])) {
 			/* (elem,key:?DCallable=!N,defl?) */
-			*pkey  = argv[1];
-			*pdefl = argv[2];
+			*p_key  = argv[1];
+			*p_defl = argv[2];
 			break;
 		}
-		if (DeeObject_AsSSize(argv[1], (dssize_t *)pstart))
+		if (DeeObject_AsSSize(argv[1], (dssize_t *)p_start))
 			goto err;
 		if (DeeInt_Check(argv[2])) {
-			if (DeeObject_AsSSize(argv[2], (dssize_t *)pend))
+			if (DeeObject_AsSSize(argv[2], (dssize_t *)p_end))
 				goto err;
 			goto check_kw_end_key_defl;
 		}
-		*pkey = argv[2];
-		if (DeeNone_Check(*pkey))
-			*pkey = NULL;
+		*p_key = argv[2];
+		if (DeeNone_Check(*p_key))
+			*p_key = NULL;
 		goto check_kw_end_defl;
 
 	case 4:
-		if (DeeObject_AsSSize(argv[1], (dssize_t *)pstart))
+		if (DeeObject_AsSSize(argv[1], (dssize_t *)p_start))
 			goto err;
-		if (DeeObject_AsSSize(argv[2], (dssize_t *)pend))
+		if (DeeObject_AsSSize(argv[2], (dssize_t *)p_end))
 			goto err;
-		*pelem = argv[0];
-		*pkey  = argv[3];
-		if (DeeNone_Check(*pkey))
-			*pkey = NULL;
+		*p_elem = argv[0];
+		*p_key  = argv[3];
+		if (DeeNone_Check(*p_key))
+			*p_key = NULL;
 		goto check_kw_defl;
 
 	case 5:
-		if (DeeObject_AsSSize(argv[1], (dssize_t *)pstart))
+		if (DeeObject_AsSSize(argv[1], (dssize_t *)p_start))
 			goto err;
-		if (DeeObject_AsSSize(argv[2], (dssize_t *)pend))
+		if (DeeObject_AsSSize(argv[2], (dssize_t *)p_end))
 			goto err;
-		*pelem = argv[0];
-		*pkey  = argv[3];
-		if (DeeNone_Check(*pkey))
-			*pkey = NULL;
-		*pdefl = argv[4];
+		*p_elem = argv[0];
+		*p_key  = argv[3];
+		if (DeeNone_Check(*p_key))
+			*p_key = NULL;
+		*p_defl = argv[4];
 		break;
 
 	default:

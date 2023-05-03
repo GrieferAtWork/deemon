@@ -174,28 +174,28 @@ struct base_scope_object;
 /* Unpack and validate a sequence `{(string, ast, ast)...} handlers' */
 INTDEF WUNUSED NONNULL((1, 2, 3)) struct catch_expr *DCALL
 unpack_catch_expressions(DeeObject *__restrict handlers,
-                         size_t *__restrict pcatch_c,
+                         size_t *__restrict p_catch_c,
                          struct base_scope_object *__restrict base_scope);
 
 /* Parse the flags for a loop-ast from a string (:rt:Compiler.makeloop) */
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL
 parse_loop_flags(char const *__restrict flags,
-                 uint16_t *__restrict presult);
+                 uint16_t *__restrict p_result);
 
 /* Parse the flags for a conditional-ast from a string (:rt:Compiler.makeconditional) */
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL
 parse_conditional_flags(char const *__restrict flags,
-                        uint16_t *__restrict presult);
+                        uint16_t *__restrict p_result);
 
 /* Parse the flags for an operator-ast from a string (:rt:Compiler.makeoperator) */
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL
 parse_operator_flags(char const *__restrict flags,
-                     uint16_t *__restrict presult);
+                     uint16_t *__restrict p_result);
 
 /* Parse the operator name and determine its ID. */
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL
 get_operator_id(DeeObject *__restrict opid,
-                uint16_t *__restrict presult);
+                uint16_t *__restrict p_result);
 
 INTDEF WUNUSED NONNULL((1)) int32_t DCALL
 get_action_by_name(char const *__restrict name);

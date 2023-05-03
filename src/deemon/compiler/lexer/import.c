@@ -1056,7 +1056,7 @@ err:
 
 /* Same as `ast_parse_try_hybrid' but for import statements / expressions. */
 INTERN WUNUSED DREF struct ast *FCALL
-ast_parse_import_hybrid(unsigned int *pwas_expression) {
+ast_parse_import_hybrid(unsigned int *p_was_expression) {
 	DREF struct ast *result;
 	struct ast_loc import_loc;
 	ASSERT(tok == KWD_import);
@@ -1072,16 +1072,16 @@ ast_parse_import_hybrid(unsigned int *pwas_expression) {
 		if unlikely(!result)
 			goto err;
 		result = ast_parse_postexpr(result);
-		if (pwas_expression)
-			*pwas_expression = AST_PARSE_WASEXPR_YES;
+		if (p_was_expression)
+			*p_was_expression = AST_PARSE_WASEXPR_YES;
 	} else {
 		result = ast_setddi(ast_constexpr(Dee_None), &import_loc);
 		if unlikely(!result)
 			goto err;
 		if unlikely(ast_parse_post_import())
 			goto err_r;
-		if (pwas_expression)
-			*pwas_expression = AST_PARSE_WASEXPR_NO;
+		if (p_was_expression)
+			*p_was_expression = AST_PARSE_WASEXPR_NO;
 	}
 	return result;
 err_r:

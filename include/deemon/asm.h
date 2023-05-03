@@ -1634,7 +1634,7 @@ DeeAsm_SkipPrefix(instruction_t const *__restrict pc);
  * WARNING: This also goes for instructions that always take a branch! */
 DFUNDEF ATTR_RETNONNULL NONNULL((1, 2)) instruction_t *DCALL
 DeeAsm_NextInstrSp(instruction_t const *__restrict pc,
-                   /*in|out*/ uint16_t *__restrict pstacksz);
+                   /*in|out*/ uint16_t *__restrict p_stacksz);
 
 /* Same as `DeeAsm_NextInstr', but also returns the effective stack effect (sub/add) of the instruction.
  * This function is used by the peephole optimizer to trace usage of objects stored on the stack.
@@ -1645,13 +1645,13 @@ DeeAsm_NextInstrSp(instruction_t const *__restrict pc,
  *   - Since some instructions exist who's stack-effect depends on parameters
  *     on known at runtime (e.g.: ASM_POP_POP), those instructions have an effective
  *     stack-effect of 0, which sub/add effect addends that maximize the potential
- *     influence (e.g.: `ASM_POP_POP': `*psp_sub = (*psp_sub = *pstacksz)+2, *pstacksz -= 2;')
- *   - Before returning, `*pstacksz' will be adjusted to `(OLD(*pstacksz) - *psp_sub) + *psp_add' */
+ *     influence (e.g.: `ASM_POP_POP': `*p_sp_sub = (*p_sp_sub = *p_stacksz)+2, *p_stacksz -= 2;')
+ *   - Before returning, `*p_stacksz' will be adjusted to `(OLD(*p_stacksz) - *p_sp_sub) + *p_sp_add' */
 DFUNDEF ATTR_RETNONNULL NONNULL((1, 2, 3, 4)) instruction_t *DCALL
 DeeAsm_NextInstrEf(instruction_t const *__restrict pc,
-                   /*in|out*/ uint16_t *__restrict pstacksz,
-                   /*out*/ uint16_t *__restrict psp_add,
-                   /*out*/ uint16_t *__restrict psp_sub);
+                   /*in|out*/ uint16_t *__restrict p_stacksz,
+                   /*out*/ uint16_t *__restrict p_sp_add,
+                   /*out*/ uint16_t *__restrict p_sp_sub);
 
 
 /* Check if the given instruction returns abnormally (that is: doesn't

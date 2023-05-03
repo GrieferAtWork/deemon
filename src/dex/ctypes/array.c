@@ -817,7 +817,7 @@ INTDEF WUNUSED NONNULL((1)) DREF DeeArrayTypeObject *DCALL
 DeeSType_Array(DeeSTypeObject *__restrict self,
                size_t num_items) {
 	DREF DeeArrayTypeObject *result, *new_result;
-	DREF struct array_type_list *pbucket;
+	DREF struct array_type_list *bucket;
 	ASSERT_OBJECT_TYPE(DeeSType_AsType(self), &DeeSType_Type);
 	DeeSType_CacheLockRead(self);
 	ASSERT(!self->st_array.sa_size ||
@@ -877,8 +877,8 @@ register_type:
 	}
 
 	/* Insert the new array type into the hash-map. */
-	pbucket = &self->st_array.sa_list[num_items & self->st_array.sa_mask];
-	LIST_INSERT_HEAD(pbucket, result, at_chain); /* Weak reference. */
+	bucket = &self->st_array.sa_list[num_items & self->st_array.sa_mask];
+	LIST_INSERT_HEAD(bucket, result, at_chain); /* Weak reference. */
 	DeeSType_CacheLockEndWrite(self);
 done:
 	return result;

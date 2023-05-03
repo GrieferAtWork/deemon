@@ -369,7 +369,7 @@ super_pow(Super *self, DeeObject *some_object) {
 
 
 #define INVOKE_INPLACE_OPERATOR(callback)                         \
-	Super *self = *pself;                                         \
+	Super *self = *p_self;                                        \
 	int error;                                                    \
 	DREF DeeObject *value = self->s_self;                         \
 	Dee_Incref(value);                                            \
@@ -390,83 +390,83 @@ super_pow(Super *self, DeeObject *some_object) {
 		Dee_Decref(value);                                        \
 		if unlikely(!self)                                        \
 			return -1;                                            \
-		Dee_Decref(*pself); /* Drop the old self-value. */        \
-		*pself = self;      /* Inherit reference. */              \
+		Dee_Decref(*p_self); /* Drop the old self-value. */       \
+		*p_self = self;      /* Inherit reference. */             \
 	}                                                             \
 	return 0
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
-super_inc(Super **__restrict pself) {
+super_inc(Super **__restrict p_self) {
 	INVOKE_INPLACE_OPERATOR(DeeObject_TInc(self->s_type, &value));
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
-super_dec(Super **__restrict pself) {
+super_dec(Super **__restrict p_self) {
 	INVOKE_INPLACE_OPERATOR(DeeObject_TDec(self->s_type, &value));
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-super_inplace_add(Super **__restrict pself,
+super_inplace_add(Super **__restrict p_self,
                   DeeObject *some_object) {
 	INVOKE_INPLACE_OPERATOR(DeeObject_TInplaceAdd(self->s_type, &value, some_object));
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-super_inplace_sub(Super **__restrict pself,
+super_inplace_sub(Super **__restrict p_self,
                   DeeObject *some_object) {
 	INVOKE_INPLACE_OPERATOR(DeeObject_TInplaceSub(self->s_type, &value, some_object));
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-super_inplace_mul(Super **__restrict pself,
+super_inplace_mul(Super **__restrict p_self,
                   DeeObject *some_object) {
 	INVOKE_INPLACE_OPERATOR(DeeObject_TInplaceMul(self->s_type, &value, some_object));
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-super_inplace_div(Super **__restrict pself,
+super_inplace_div(Super **__restrict p_self,
                   DeeObject *some_object) {
 	INVOKE_INPLACE_OPERATOR(DeeObject_TInplaceDiv(self->s_type, &value, some_object));
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-super_inplace_mod(Super **__restrict pself,
+super_inplace_mod(Super **__restrict p_self,
                   DeeObject *some_object) {
 	INVOKE_INPLACE_OPERATOR(DeeObject_TInplaceMod(self->s_type, &value, some_object));
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-super_inplace_shl(Super **__restrict pself,
+super_inplace_shl(Super **__restrict p_self,
                   DeeObject *some_object) {
 	INVOKE_INPLACE_OPERATOR(DeeObject_TInplaceShl(self->s_type, &value, some_object));
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-super_inplace_shr(Super **__restrict pself,
+super_inplace_shr(Super **__restrict p_self,
                   DeeObject *some_object) {
 	INVOKE_INPLACE_OPERATOR(DeeObject_TInplaceShr(self->s_type, &value, some_object));
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-super_inplace_and(Super **__restrict pself,
+super_inplace_and(Super **__restrict p_self,
                   DeeObject *some_object) {
 	INVOKE_INPLACE_OPERATOR(DeeObject_TInplaceAnd(self->s_type, &value, some_object));
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-super_inplace_or(Super **__restrict pself,
+super_inplace_or(Super **__restrict p_self,
                  DeeObject *some_object) {
 	INVOKE_INPLACE_OPERATOR(DeeObject_TInplaceOr(self->s_type, &value, some_object));
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-super_inplace_xor(Super **__restrict pself,
+super_inplace_xor(Super **__restrict p_self,
                   DeeObject *some_object) {
 	INVOKE_INPLACE_OPERATOR(DeeObject_TInplaceXor(self->s_type, &value, some_object));
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-super_inplace_pow(Super **__restrict pself,
+super_inplace_pow(Super **__restrict p_self,
                   DeeObject *some_object) {
 	INVOKE_INPLACE_OPERATOR(DeeObject_TInplacePow(self->s_type, &value, some_object));
 }

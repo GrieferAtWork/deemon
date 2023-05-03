@@ -99,8 +99,8 @@ struct ddi_gen_state {
 };
 
 PRIVATE WUNUSED NONNULL((1, 2)) int32_t DCALL
-find_or_alloc_offset(uint32_t **__restrict pvector,
-                     uint32_t *__restrict psize,
+find_or_alloc_offset(uint32_t **__restrict p_vector,
+                     uint32_t *__restrict p_size,
                      uint32_t offset_value,
                      uint32_t max_size) {
 	/* Search for `offset_value' in the given vector and return its index.
@@ -108,8 +108,8 @@ find_or_alloc_offset(uint32_t **__restrict pvector,
 	 * exceed a size of `max_size'.
 	 * If the size limit cannot be sustained, raise a Compiler Error.
 	 * Upon failure, return -1. Upon success return the index of `offset_value' */
-	uint32_t *vector = *pvector, *iter, *end;
-	uint32_t size    = *psize;
+	uint32_t *vector = *p_vector, *iter, *end;
+	uint32_t size    = *p_size;
 	end              = (iter = vector) + size;
 	for (; iter < end; ++iter) {
 		if (*iter == offset_value)
@@ -126,8 +126,8 @@ find_or_alloc_offset(uint32_t **__restrict pvector,
 	if unlikely(!vector)
 		goto err;
 	vector[size] = offset_value;
-	*pvector     = vector;
-	*psize       = size + 1;
+	*p_vector    = vector;
+	*p_size      = size + 1;
 	return size;
 err:
 	return -1;

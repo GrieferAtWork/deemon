@@ -79,12 +79,12 @@ next_instr(instruction_t *__restrict iter) {
 }
 
 LOCAL instruction_t *DCALL
-next_instr_sp(instruction_t *__restrict iter, uint16_t *__restrict pstacksz) {
+next_instr_sp(instruction_t *__restrict iter, uint16_t *__restrict p_stacksz) {
 #if 1
-	return DeeAsm_NextInstrSp(iter, pstacksz);
+	return DeeAsm_NextInstrSp(iter, p_stacksz);
 #else
 	do {
-		iter = DeeAsm_NextInstrSp(iter, pstacksz);
+		iter = DeeAsm_NextInstrSp(iter, p_stacksz);
 	} while (*iter == ASM_DELOP);
 	return iter;
 #endif
@@ -144,7 +144,7 @@ delete_assembly(code_addr_t begin, code_size_t size) {
 /* Follow a jump instruction */
 LOCAL ATTR_RETNONNULL instruction_t *DCALL
 follow_jmp(instruction_t *__restrict jmp,
-           struct asm_rel **prel) {
+           struct asm_rel **p_rel) {
 	struct asm_rel *rel;
 	code_addr_t rel_addr;
 	code_addr_t result_addr;
@@ -173,11 +173,11 @@ follow_jmp(instruction_t *__restrict jmp,
 		ASSERT(rel->ar_sym);
 		ASSERT(ASM_SYM_DEFINED(rel->ar_sym));
 		result_addr += rel->ar_sym->as_addr;
-		if (prel)
-			*prel = rel;
+		if (p_rel)
+			*p_rel = rel;
 	} else {
-		if (prel)
-			*prel = NULL;
+		if (p_rel)
+			*p_rel = NULL;
 	}
 	return sc_main.sec_begin + result_addr;
 }

@@ -610,13 +610,13 @@ INTDEF WUNUSED DREF DeeObject *DCALL sock_gettypename(int value); /* @return: IT
 INTDEF WUNUSED DREF DeeObject *DCALL sock_getprotoname(int value); /* @return: ITER_DONE: Not found. @return: NULL: Error. */
 INTDEF WUNUSED NONNULL((1, 2)) bool DCALL
 sock_getafvalue(char const *__restrict name,
-                int *__restrict presult);
+                int *__restrict p_result);
 INTDEF WUNUSED NONNULL((1, 2)) bool DCALL
 sock_gettypevalue(char const *__restrict name,
-                  int *__restrict presult);
+                  int *__restrict p_result);
 INTDEF WUNUSED NONNULL((1, 2)) bool DCALL
 sock_getprotovalue(char const *__restrict name,
-                   int *__restrict presult);
+                   int *__restrict p_result);
 
 /* Same as the functions above, but return an int-object for
  * `value' when the database doesn't recognize the value. */
@@ -632,18 +632,18 @@ INTDEF WUNUSED DREF DeeObject *DCALL sock_getprotonameorid(int value);
  *    - sock_getprotoof: 0 */
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL
 sock_getafof(DeeObject *__restrict name,
-             int *__restrict presult);
+             int *__restrict p_result);
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL
 sock_gettypeof(DeeObject *__restrict name,
-               int *__restrict presult);
+               int *__restrict p_result);
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL
 sock_getprotoof(DeeObject *__restrict name,
-                int *__restrict presult);
+                int *__restrict p_result);
 
 
 /* Translate the MSG_* flags used by send/recv functions. */
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL
-sock_getmsgflagsof(DeeObject *__restrict name, int *__restrict presult);
+sock_getmsgflagsof(DeeObject *__restrict name, int *__restrict p_result);
 INTDEF WUNUSED DREF DeeObject *DCALL
 sock_getmsgflagsnameorid(int flags);
 
@@ -766,7 +766,7 @@ DeeSocket_RecvData(DeeSocketObject *__restrict self,
 /* Convert a given object to message flags (Set of `MSG_*') */
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL
 sock_getmsgflagsof(DeeObject *__restrict name,
-                  int *__restrict presult);
+                  int *__restrict p_result);
 INTDEF WUNUSED DREF DeeObject *DCALL
 sock_getmsgflagsnameorid(int flags);
 
@@ -790,12 +790,12 @@ sock_getmsgflagsnameorid(int flags);
  * When the given mode is not recognized, an
  * `Error.ValueError' is thrown and -1 is returned. */
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL
-get_shutdown_mode(char const *__restrict mode, int *__restrict presult);
+get_shutdown_mode(char const *__restrict mode, int *__restrict p_result);
 
 /* Same as `get_shutdown_mode', but interpret strings
  * and convert everything else to an integer. */
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL
-get_shutdown_modeof(DeeObject *__restrict mode, int *__restrict presult);
+get_shutdown_modeof(DeeObject *__restrict mode, int *__restrict p_result);
 
 
 

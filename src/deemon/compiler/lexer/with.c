@@ -181,7 +181,7 @@ err_scope_r:
 
 /* Same as `ast_parse_try_hybrid' but for with statements / expressions. */
 INTERN WUNUSED DREF struct ast *FCALL
-ast_parse_with_hybrid(unsigned int *pwas_expression) {
+ast_parse_with_hybrid(unsigned int *p_was_expression) {
 	struct ast_loc loc;
 	struct symbol *expression_sym;
 	DREF struct ast *result, *other, *merge;
@@ -245,7 +245,7 @@ ast_parse_with_hybrid(unsigned int *pwas_expression) {
 	result_v[1] = merge; /* Inherit. */
 
 	/* Finally, parse the content of the wrapped try-statement. */
-	result = ast_parse_statement_or_expression(pwas_expression);
+	result = ast_parse_statement_or_expression(p_was_expression);
 	if unlikely(!result)
 		goto err_result_v_1;
 

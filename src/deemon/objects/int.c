@@ -333,8 +333,8 @@ DeeInt_Alloc_dbg(size_t n_digits, char const *file, int line)
 
 /* Create an integer from signed/unsigned LEB data. */
 PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-DeeInt_NewSleb(uint8_t const **__restrict preader) {
-	uint8_t const *reader = *preader;
+DeeInt_NewSleb(uint8_t const **__restrict p_reader) {
+	uint8_t const *reader = *p_reader;
 	DREF DeeIntObject *result;
 	digit *dst;
 	twodigits temp;
@@ -348,7 +348,7 @@ DeeInt_NewSleb(uint8_t const **__restrict preader) {
 	if unlikely(!result)
 		goto done;
 	/* Read the integer. */
-	reader   = *preader;
+	reader   = *p_reader;
 	dst      = result->ob_digit;
 	num_bits = 6;
 	temp     = *reader++ & 0x3f;
@@ -388,18 +388,18 @@ DeeInt_NewSleb(uint8_t const **__restrict preader) {
 	}
 	result->ob_size = (size_t)(dst - result->ob_digit);
 	/* Check the sign bit. */
-	if (**preader & 0x40)
+	if (**p_reader & 0x40)
 		result->ob_size = -result->ob_size;
 done2:
 	/* Save the new read position. */
-	*preader = reader;
+	*p_reader = reader;
 done:
 	return (DREF DeeObject *)result;
 }
 
 PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-DeeInt_NewUleb(uint8_t const **__restrict preader) {
-	uint8_t const *reader = *preader;
+DeeInt_NewUleb(uint8_t const **__restrict p_reader) {
+	uint8_t const *reader = *p_reader;
 	DREF DeeIntObject *result;
 	digit *dst;
 	twodigits temp;
@@ -413,12 +413,12 @@ DeeInt_NewUleb(uint8_t const **__restrict preader) {
 	if unlikely(!result)
 		goto done;
 	/* Read the integer. */
-	reader   = *preader;
+	reader   = *p_reader;
 	num_bits = 0, temp = 0;
 	dst = result->ob_digit;
 	for (;;) {
 		while (num_bits < DIGIT_BITS &&
-		       (reader == *preader || (reader[-1] & 0x80))) {
+		       (reader == *p_reader || (reader[-1] & 0x80))) {
 			/* Set the top-most 7 bits. */
 			temp |= (twodigits)(*reader & 0x7f) << num_bits;
 			num_bits += 7;
@@ -455,7 +455,7 @@ DeeInt_NewUleb(uint8_t const **__restrict preader) {
 	result->ob_size = (size_t)(dst - result->ob_digit);
 done2:
 	/* Save the new read position. */
-	*preader = reader;
+	*p_reader = reader;
 done:
 	return (DREF DeeObject *)result;
 }

@@ -6537,7 +6537,7 @@ target_breakpoint:
 	jl     do_breakpoint_except /* if (eax < TRIGGER_BREAKPOINT_MIN) ... */
 	cmpl   $(TRIGGER_BREAKPOINT_MAX), %eax
 	jg     do_breakpoint_continue /* if (eax > TRIGGER_BREAKPOINT_MAX) ... */
-	jmp   *debug_break_jmptab-(TRIGGER_BREAKPOINT_MIN*4)(,%eax,4)
+	jmp    *debug_break_jmptab-(TRIGGER_BREAKPOINT_MIN*4)(,%eax,4)
 .data
 debug_break_jmptab:
 	.long do_breakpoint_except_exit
@@ -6611,7 +6611,7 @@ do_breakpoint_exit_nofin:
 	movl   $(SYM(DeeNone_Singleton)), FRAME_RESULT
 	incref_addr SYM(DeeNone_Singleton)
 2:	cmpl   $(TRIGGER_BREAKPOINT_EXIT_NOFIN), %eax
-	je    .end_without_finally
+	je     .end_without_finally
 	jmp    .end_return
 
 /* Storage class prefix opcodes. */
@@ -6619,24 +6619,24 @@ do_breakpoint_exit_nofin:
 prefix_invop = invop
 
 target16_extern:
-	addl  $4, PC /* Skip the prefix operand. */
-	lodsb /* Load the instruction being prefixed. */
-	jmp   *prefix_inst_table(,%eax,4)
+	addl   $4, PC /* Skip the prefix operand. */
+	lodsb  /* Load the instruction being prefixed. */
+	jmp    *prefix_inst_table(,%eax,4)
 target_extern:
 target16_stack:
 target16_static:
 target16_global:
 target16_local:
-	addl  $2, PC /* Skip the prefix operand. */
-	lodsb /* Load the instruction being prefixed. */
-	jmp   *prefix_inst_table(,%eax,4)
+	addl   $2, PC /* Skip the prefix operand. */
+	lodsb  /* Load the instruction being prefixed. */
+	jmp    *prefix_inst_table(,%eax,4)
 target_stack:
 target_static:
 target_global:
 target_local:
-	incl  PC /* Skip the prefix operand. */
-	lodsb /* Load the instruction being prefixed. */
-	jmp   *prefix_inst_table(,%eax,4)
+	incl   PC /* Skip the prefix operand. */
+	lodsb  /* Load the instruction being prefixed. */
+	jmp    *prefix_inst_table(,%eax,4)
 
 /* ============ Prefixed instruction targets ============ */
 
@@ -6655,7 +6655,7 @@ prefix_target_\name:
 	testl  %eax, %eax
 	jnz    .except_decref_pop
 	sp_popref %eax
-	popl    %edx
+	popl   %edx
 	ADJUST_CFA_OFFSET(-4)
 	jmp    set_prefix_object
 .endm

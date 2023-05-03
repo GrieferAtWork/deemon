@@ -353,9 +353,9 @@ err:
 
 /* Same as `ast_parse_try_hybrid' but for loopexpr statements / expressions. */
 INTERN WUNUSED DREF struct ast *FCALL
-ast_parse_loopexpr_hybrid(unsigned int *pwas_expression) {
+ast_parse_loopexpr_hybrid(unsigned int *p_was_expression) {
 	/* TODO */
-	*pwas_expression = AST_PARSE_WASEXPR_NO;
+	*p_was_expression = AST_PARSE_WASEXPR_NO;
 	return ast_parse_statement(false);
 }
 

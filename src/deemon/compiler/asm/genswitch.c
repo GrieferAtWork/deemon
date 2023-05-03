@@ -171,7 +171,7 @@ nope:
 INTERN WUNUSED NONNULL((1)) int DCALL
 ast_genasm_switch(struct ast *__restrict self) {
 	struct asm_sym *old_break, *switch_break;
-	struct text_label *constant_cases, **pcases, *cases;
+	struct text_label *constant_cases, **p_cases, *cases;
 	struct asm_sym *default_sym;
 	size_t num_constants;
 	uint16_t old_finflag;
@@ -215,9 +215,9 @@ ast_genasm_switch(struct ast *__restrict self) {
 	 * text to compare cases that cannot be determined at compile-time
 	 * at runtime. */
 	constant_cases = NULL, num_constants = 0;
-	pcases = &self->a_switch.s_cases;
-	temp   = 0;
-	while ((cases = *pcases) != NULL) {
+	p_cases = &self->a_switch.s_cases;
+	temp    = 0;
+	while ((cases = *p_cases) != NULL) {
 		struct asm_sym *case_sym;
 		ASSERT_AST(cases->tl_expr);
 		/* Allocate the symbol for every case (We'll need them all
@@ -239,7 +239,7 @@ ast_genasm_switch(struct ast *__restrict self) {
 			 * NOTE: Technically, we're reversing the order of constant expressions
 			 *       here, but that's OK, considering they don't actually have any
 			 *       side-effects. */
-			*pcases = cases->tl_next;
+			*p_cases = cases->tl_next;
 			++num_constants;
 			cases->tl_next = constant_cases;
 			constant_cases = cases;
@@ -257,14 +257,14 @@ ast_genasm_switch(struct ast *__restrict self) {
 				goto err_cases;
 		}
 continue_next_case:
-		pcases = &cases->tl_next;
+		p_cases = &cases->tl_next;
 		continue;
 err_cases:
 		temp = -1;
 		goto continue_next_case;
 	}
 	/* Re-append all of the constant cases at the end of the linked list of cases. */
-	*pcases = constant_cases;
+	*p_cases = constant_cases;
 	ASSERT((constant_cases != NULL) ==
 	       (num_constants != 0));
 	/* Check if something went wrong during creation of runtime cases. */

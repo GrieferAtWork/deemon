@@ -311,7 +311,7 @@ err:
 /* With the current token being `try', parse the construct and
  * try to figure out if it's a statement or an expression. */
 INTERN WUNUSED DREF struct ast *FCALL
-ast_parse_try_hybrid(unsigned int *pwas_expression) {
+ast_parse_try_hybrid(unsigned int *p_was_expression) {
 	DREF struct ast *result, *merge;
 	struct ast_loc loc;
 	size_t catcha, catchc;
@@ -484,8 +484,8 @@ end_catch_handler:
 	if unlikely(unlikely(!catchc) &&
 	            WARN(W_EXPECTED_CATCH_OR_FINALLY_AFTER_TRY))
 		goto err_r;
-	if (pwas_expression)
-		*pwas_expression = was_expression;
+	if (p_was_expression)
+		*p_was_expression = was_expression;
 	return result;
 err_try_flags:
 	TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;

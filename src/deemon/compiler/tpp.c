@@ -617,7 +617,7 @@ PRIVATE char const include_prefix[] = "include/";
 INTERN WUNUSED NONNULL((2)) struct TPPFile *DCALL
 tpp_unknown_file(int mode, char *__restrict filename,
                  size_t filename_size,
-                 struct TPPKeyword **pkeyword_entry) {
+                 struct TPPKeyword **p_keyword_entry) {
 	DeeStringObject *buffer, *new_buffer;
 	size_t buflen;
 	DeeObject *libpath;
@@ -778,8 +778,8 @@ tpp_unknown_file(int mode, char *__restrict filename,
 				goto err_r;
 			}
 #endif /* HAVE_CALLBACK_NEW_TEXTFILE */
-			if (pkeyword_entry)
-				*pkeyword_entry = keyword_entry;
+			if (p_keyword_entry)
+				*p_keyword_entry = keyword_entry;
 			return result;
 		}
 		DeeList_LockRead(libpath);

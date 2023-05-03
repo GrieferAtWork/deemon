@@ -54,7 +54,7 @@ DECL_BEGIN
 #ifdef DEFINE_GETATTR
 PRIVATE WUNUSED DREF DeeObject *DCALL
 F(getitem_for_inplace)(STRUCT_TYPE *__restrict self,
-                       DREF DeeObject **__restrict pbaseelem,
+                       DREF DeeObject **__restrict p_baseelem,
                        size_t index) {
 	DREF DeeObject *result, *baseelem;
 	baseelem = DeeObject_GetItemIndex(self->se_seq, index);
@@ -68,7 +68,7 @@ F(getitem_for_inplace)(STRUCT_TYPE *__restrict self,
 #endif /* !DEFINE_GETATTR */
 	if unlikely(!result)
 		goto err_baseelem;
-	*pbaseelem = baseelem;
+	*p_baseelem = baseelem;
 	return result;
 err_baseelem:
 	Dee_Decref(baseelem);
@@ -86,9 +86,9 @@ err:
 
 #define DEFINE_SEA_UNARY_INPLACE(name, func, op)              \
 	PRIVATE int DCALL                                         \
-	name(STRUCT_TYPE **__restrict pself) {                    \
+	name(STRUCT_TYPE **__restrict p_self) {                   \
 		size_t i, size;                                       \
-		STRUCT_TYPE *seq = *pself;                            \
+		STRUCT_TYPE *seq = *p_self;                           \
 		DREF DeeObject *elem, *baseelem;                      \
 		size = DeeObject_Size(seq->se_seq);                   \
 		if unlikely(size == (size_t)-1)                       \
@@ -115,35 +115,35 @@ err:
 		return -1;                                            \
 	}
 
-#define DEFINE_SEA_BINARY_INPLACE(name, func, op)                       \
-	PRIVATE int DCALL                                                   \
-	name(STRUCT_TYPE **__restrict pself, DeeObject *__restrict other) { \
-		size_t i, size;                                                 \
-		STRUCT_TYPE *seq = *pself;                                      \
-		DREF DeeObject *elem, *baseelem;                                \
-		size = DeeObject_Size(seq->se_seq);                             \
-		if unlikely(size == (size_t)-1)                                 \
-			goto err;                                                   \
-		for (i = 0; i < size; ++i) {                                    \
-			elem = F(getitem_for_inplace)(seq, &baseelem, i);           \
-			if unlikely(!elem) {                                        \
-				if (DeeError_Catch(&DeeError_UnboundItem))              \
-					continue;                                           \
-				goto err;                                               \
-			}                                                           \
-			if (func(&elem, other))                                     \
-				goto err_elem;                                          \
-			if (F(setitem_for_inplace)(seq, baseelem, elem))            \
-				goto err_elem;                                          \
-			Dee_Decref(baseelem);                                       \
-			Dee_Decref(elem);                                           \
-		}                                                               \
-		return 0;                                                       \
-	err_elem:                                                           \
-		Dee_Decref(baseelem);                                           \
-		Dee_Decref(elem);                                               \
-	err:                                                                \
-		return -1;                                                      \
+#define DEFINE_SEA_BINARY_INPLACE(name, func, op)             \
+	PRIVATE int DCALL                                         \
+	name(STRUCT_TYPE **__restrict p_self, DeeObject *other) { \
+		size_t i, size;                                       \
+		STRUCT_TYPE *seq = *p_self;                           \
+		DREF DeeObject *elem, *baseelem;                      \
+		size = DeeObject_Size(seq->se_seq);                   \
+		if unlikely(size == (size_t)-1)                       \
+			goto err;                                         \
+		for (i = 0; i < size; ++i) {                          \
+			elem = F(getitem_for_inplace)(seq, &baseelem, i); \
+			if unlikely(!elem) {                              \
+				if (DeeError_Catch(&DeeError_UnboundItem))    \
+					continue;                                 \
+				goto err;                                     \
+			}                                                 \
+			if (func(&elem, other))                           \
+				goto err_elem;                                \
+			if (F(setitem_for_inplace)(seq, baseelem, elem))  \
+				goto err_elem;                                \
+			Dee_Decref(baseelem);                             \
+			Dee_Decref(elem);                                 \
+		}                                                     \
+		return 0;                                             \
+	err_elem:                                                 \
+		Dee_Decref(baseelem);                                 \
+		Dee_Decref(elem);                                     \
+	err:                                                      \
+		return -1;                                            \
 	}
 
 DEFINE_SEA_UNARY_INPLACE(F(inc), DeeObject_Inc, OPERATOR_INC)

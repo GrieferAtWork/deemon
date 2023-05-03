@@ -65,7 +65,7 @@ PRIVATE struct disasm_flag const disasm_flags[] = {
 
 PRIVATE int DCALL
 parse_asm_flags(char *__restrict str,
-                unsigned int *__restrict presult) {
+                unsigned int *__restrict p_result) {
 	unsigned int i;
 	for (;;) {
 		char *flag_start = str;
@@ -92,9 +92,9 @@ parse_asm_flags(char *__restrict str,
 						continue;
 					/* Found it! (update the resulting set of flags) */
 					if (remove_flag ^ disasm_flags[i].invert) {
-						*presult &= ~disasm_flags[i].flag;
+						*p_result &= ~disasm_flags[i].flag;
 					} else {
-						*presult |= disasm_flags[i].flag;
+						*p_result |= disasm_flags[i].flag;
 					}
 					goto next_opt;
 				}

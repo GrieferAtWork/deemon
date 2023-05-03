@@ -2085,8 +2085,9 @@ err:
 
 
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
-DeeSeq_InplaceExtend(DREF DeeObject **__restrict pself, DeeObject *values) {
-	DeeObject *self = *pself;
+DeeSeq_InplaceExtend(DREF DeeObject **__restrict p_self,
+                     DeeObject *values) {
+	DeeObject *self = *p_self;
 	int result;
 	DeeTypeObject *tp_self = Dee_TYPE(self);
 	DREF DeeObject *new_self;
@@ -2267,7 +2268,7 @@ err_insert_function:
 			if unlikely(!new_self)
 				goto err;
 			Dee_Decref(self);
-			*pself = new_self;
+			*p_self = new_self;
 			return 0;
 		}
 		if ((tp_self = DeeType_Base(tp_self)) == NULL)
@@ -2279,7 +2280,7 @@ set_new_self:
 	if unlikely(!new_self)
 		goto err;
 	Dee_Decref(self);
-	*pself = new_self;
+	*p_self = new_self;
 	return 0;
 err_attr:
 	if (DeeError_Catch(&DeeError_NotImplemented) ||
@@ -2294,8 +2295,9 @@ err:
 }
 
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
-DeeSeq_InplaceRepeat(DREF DeeObject **__restrict pself, DeeObject *count) {
-	DeeObject *self = *pself;
+DeeSeq_InplaceRepeat(DREF DeeObject **__restrict p_self,
+                     DeeObject *count) {
+	DeeObject *self = *p_self;
 	int result;
 	DeeTypeObject *tp_self = Dee_TYPE(self);
 	DREF DeeObject *new_self;
@@ -2331,7 +2333,7 @@ DeeSeq_InplaceRepeat(DREF DeeObject **__restrict pself, DeeObject *count) {
 			if unlikely(!new_self)
 				goto err;
 			Dee_Decref(self);
-			*pself = new_self;
+			*p_self = new_self;
 			return 0;
 		}
 		if ((tp_self = DeeType_Base(tp_self)) == NULL)
@@ -2343,7 +2345,7 @@ DeeSeq_InplaceRepeat(DREF DeeObject **__restrict pself, DeeObject *count) {
 	if unlikely(!new_self)
 		goto err;
 	Dee_Decref(self);
-	*pself = new_self;
+	*p_self = new_self;
 	return 0;
 err:
 	return -1;

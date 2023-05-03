@@ -140,14 +140,14 @@ done:
 
 
 INTERN int DCALL
-cmd_parse(int    *__restrict pargc,
-          char ***__restrict pargv,
+cmd_parse(int    *__restrict p_argc,
+          char ***__restrict p_argv,
           struct cmd_option const *__restrict options,
           bool exec_all) {
 	struct cmd_option const *opt;
 	int result  = 0;
-	int argc    = *pargc;
-	char **argv = *pargv;
+	int argc    = *p_argc;
+	char **argv = *p_argv;
 	for (;;) {
 		char *cmd, *arg = NULL;
 		uint16_t long_flags;
@@ -362,8 +362,8 @@ has_opt:
 			goto done;
 	}
 done:
-	*pargc = argc;
-	*pargv = argv;
+	*p_argc = argc;
+	*p_argv = argv;
 	return result;
 err:
 	result = -1;

@@ -159,7 +159,7 @@ DeeFile_Write(DeeObject *__restrict self,
 }
 
 PUBLIC WUNUSED NONNULL((1)) int DCALL
-DeeFile_TruncHere(DeeObject *__restrict self, dpos_t *psize) {
+DeeFile_TruncHere(DeeObject *__restrict self, dpos_t *p_size) {
 	DeeTypeObject *tp_self = Dee_TYPE(self);
 	if (tp_self == &DeeSuper_Type) {
 		tp_self = DeeSuper_TYPE(self);
@@ -179,8 +179,8 @@ DeeFile_TruncHere(DeeObject *__restrict self, dpos_t *psize) {
 			} else {
 				result = (*((DeeFileTypeObject *)tp_self)->ft_trunc)((DeeFileObject *)self, trunc_pos);
 			}
-			if (psize)
-				*psize = trunc_pos;
+			if (p_size)
+				*p_size = trunc_pos;
 			return result;
 		}
 		/* TODO: Make use of operator inheritance. */

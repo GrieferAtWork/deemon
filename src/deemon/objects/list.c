@@ -3247,9 +3247,9 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-list_inplace_add(List **__restrict pself,
+list_inplace_add(List **__restrict p_self,
                  DeeObject *other) {
-	return DeeList_AppendSequence((DeeObject *)*pself, other);
+	return DeeList_AppendSequence((DeeObject *)*p_self, other);
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF List *DCALL
@@ -3306,9 +3306,9 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-list_inplace_mul(List **__restrict pself,
+list_inplace_mul(List **__restrict p_self,
                  DeeObject *other) {
-	List *me = *pself;
+	List *me = *p_self;
 	DREF DeeObject **elemv, **dst;
 	size_t i, my_length, result_length, multiplier;
 	if (DeeObject_AsSize(other, &multiplier))

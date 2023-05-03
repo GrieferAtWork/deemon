@@ -104,7 +104,7 @@ nt_GetFileAttributesEx(DeeObject *__restrict lpFileName,
  * @return:  1: The system call failed (s.a. `GetLastError()') */
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL
 nt_GetFileAttributes(DeeObject *__restrict lpFileName,
-                     DWORD *__restrict presult);
+                     DWORD *__restrict p_result);
 
 /* Work around a problem with long path names.
  * @return:  0: Successfully set attributes.
@@ -1177,8 +1177,8 @@ user_fini(struct user_object *__restrict self) {
 
 PRIVATE WUNUSED NONNULL((1, 2, 3)) int DCALL
 user_get_name_and_domain(struct user_object *__restrict self,
-                         LPWSTR *__restrict pname,
-                         LPWSTR *__restrict pdomain,
+                         LPWSTR *__restrict p_name,
+                         LPWSTR *__restrict p_domain,
                          PSID_NAME_USE peUse) {
 	LPWSTR wNameBuffer;
 	DWORD wNameBufSize = 64 + 1;
@@ -1222,8 +1222,8 @@ user_get_name_and_domain(struct user_object *__restrict self,
 		wDomainBufSize = (DWORD)wcsnlen(wDomainBuffer, wDomainBufSize);
 	wNameBuffer   = DeeString_TruncateWideBuffer(wNameBuffer, wNameBufSize);
 	wDomainBuffer = DeeString_TruncateWideBuffer(wDomainBuffer, wDomainBufSize);
-	*pname        = wNameBuffer;
-	*pdomain      = wDomainBuffer;
+	*p_name       = wNameBuffer;
+	*p_domain     = wDomainBuffer;
 	return 0;
 err_domain_buffer:
 	DeeString_FreeWideBuffer(wDomainBuffer);

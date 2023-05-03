@@ -2636,10 +2636,10 @@ utf8_getchar16(uint8_t const *__restrict base, uint8_t seqlen) {
 }
 
 PUBLIC NONNULL((1, 2)) uint32_t DCALL
-Dee_utf8_readchar(char const **__restrict piter,
+Dee_utf8_readchar(char const **__restrict p_iter,
                   char const *end) {
 	uint32_t result;
-	char const *iter = *piter;
+	char const *iter = *p_iter;
 	if (iter >= end)
 		return 0;
 	result = (uint8_t)*iter++;
@@ -2718,14 +2718,14 @@ Dee_utf8_readchar(char const **__restrict piter,
 		default: __builtin_unreachable();
 		}
 	}
-	*piter = iter;
+	*p_iter = iter;
 	return result;
 }
 
 PUBLIC NONNULL((1)) uint32_t DCALL
-Dee_utf8_readchar_u(char const **__restrict piter) {
+Dee_utf8_readchar_u(char const **__restrict p_iter) {
 	uint32_t result;
-	char const *iter = *piter;
+	char const *iter = *p_iter;
 	result           = (uint8_t)*iter++;
 	if (result >= 0xc0) {
 		uint8_t len;
@@ -2800,15 +2800,15 @@ Dee_utf8_readchar_u(char const **__restrict piter) {
 		default: __builtin_unreachable();
 		}
 	}
-	*piter = iter;
+	*p_iter = iter;
 	return result;
 }
 
 PUBLIC NONNULL((1)) uint32_t DCALL
-Dee_utf8_readchar_rev(char const **__restrict pend,
+Dee_utf8_readchar_rev(char const **__restrict p_end,
                       char const *begin) {
 	uint32_t result;
-	char const *end = *pend;
+	char const *end = *p_end;
 	uint8_t seqlen  = 1;
 	if (end <= begin)
 		return 0;
@@ -2817,7 +2817,7 @@ Dee_utf8_readchar_rev(char const **__restrict pend,
 	       seqlen < 8)
 		++seqlen;
 	result = utf8_getchar((uint8_t *)end, seqlen);
-	*pend  = end;
+	*p_end  = end;
 	return result;
 }
 

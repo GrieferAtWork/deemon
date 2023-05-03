@@ -145,34 +145,34 @@ err:
 }
 
 INTERN WUNUSED NONNULL((1)) int DCALL
-ast_parse_lookup_mode(unsigned int *__restrict pmode) {
+ast_parse_lookup_mode(unsigned int *__restrict p_mode) {
 next_modifier:
 	switch (tok) {
 
 	case KWD_final:
-		if (*pmode & LOOKUP_SYM_FINAL &&
+		if (*p_mode & LOOKUP_SYM_FINAL &&
 		    WARN(W_VARIABLE_MODIFIER_DUPLICATED))
 			goto err;
-		*pmode |= LOOKUP_SYM_FINAL;
+		*p_mode |= LOOKUP_SYM_FINAL;
 		goto continue_modifier;
 
 	case KWD_varying:
-		if (*pmode & LOOKUP_SYM_VARYING &&
+		if (*p_mode & LOOKUP_SYM_VARYING &&
 		    WARN(W_VARIABLE_MODIFIER_DUPLICATED))
 			goto err;
-		*pmode |= LOOKUP_SYM_VARYING;
+		*p_mode |= LOOKUP_SYM_VARYING;
 		goto continue_modifier;
 
 	case KWD_local:
-		if (*pmode & LOOKUP_SYM_VLOCAL &&
+		if (*p_mode & LOOKUP_SYM_VLOCAL &&
 		    WARN(W_VARIABLE_MODIFIER_DUPLICATED))
 			goto err;
-		if (*pmode & LOOKUP_SYM_VGLOBAL) {
+		if (*p_mode & LOOKUP_SYM_VGLOBAL) {
 			if (WARN(W_VARIABLE_MODIFIER_INCOMPATIBLE, STR_global))
 				goto err;
-			*pmode &= ~LOOKUP_SYM_VGLOBAL;
+			*p_mode &= ~LOOKUP_SYM_VGLOBAL;
 		}
-		*pmode |= LOOKUP_SYM_VLOCAL;
+		*p_mode |= LOOKUP_SYM_VLOCAL;
 continue_modifier:
 		if unlikely(yield() < 0)
 			goto err;
@@ -184,44 +184,44 @@ continue_modifier:
 			goto err;
 		ATTR_FALLTHROUGH
 	case KWD_global:
-		if (*pmode & LOOKUP_SYM_VGLOBAL &&
+		if (*p_mode & LOOKUP_SYM_VGLOBAL &&
 		    WARN(W_VARIABLE_MODIFIER_DUPLICATED))
 			goto err;
-		if (*pmode & LOOKUP_SYM_VLOCAL) {
+		if (*p_mode & LOOKUP_SYM_VLOCAL) {
 			if (WARN(W_VARIABLE_MODIFIER_INCOMPATIBLE, STR_local))
 				goto err;
-			*pmode &= ~LOOKUP_SYM_VLOCAL;
+			*p_mode &= ~LOOKUP_SYM_VLOCAL;
 		}
-		*pmode |= LOOKUP_SYM_VGLOBAL;
+		*p_mode |= LOOKUP_SYM_VGLOBAL;
 		goto continue_modifier;
 
 	case KWD_static:
-		if (*pmode & LOOKUP_SYM_STATIC &&
+		if (*p_mode & LOOKUP_SYM_STATIC &&
 		    WARN(W_VARIABLE_MODIFIER_DUPLICATED))
 			goto err;
-		if (*pmode & LOOKUP_SYM_STACK) {
+		if (*p_mode & LOOKUP_SYM_STACK) {
 			if (WARN(W_VARIABLE_MODIFIER_INCOMPATIBLE, "__stack"))
 				goto err;
-			*pmode &= ~LOOKUP_SYM_STACK;
+			*p_mode &= ~LOOKUP_SYM_STACK;
 		}
-		*pmode |= LOOKUP_SYM_STATIC;
+		*p_mode |= LOOKUP_SYM_STATIC;
 		goto continue_modifier;
 
 	case KWD___stack:
-		if (*pmode & LOOKUP_SYM_STACK &&
+		if (*p_mode & LOOKUP_SYM_STACK &&
 		    WARN(W_VARIABLE_MODIFIER_DUPLICATED))
 			goto err;
-		if (*pmode & LOOKUP_SYM_STATIC) {
+		if (*p_mode & LOOKUP_SYM_STATIC) {
 			if (WARN(W_VARIABLE_MODIFIER_INCOMPATIBLE, STR_static))
 				goto err;
-			*pmode &= ~LOOKUP_SYM_STATIC;
+			*p_mode &= ~LOOKUP_SYM_STATIC;
 		}
-		*pmode |= LOOKUP_SYM_STACK;
+		*p_mode |= LOOKUP_SYM_STACK;
 		goto continue_modifier;
 
 	default: break;
 	}
-	if ((*pmode & (LOOKUP_SYM_VARYING | LOOKUP_SYM_FINAL)) == LOOKUP_SYM_VARYING &&
+	if ((*p_mode & (LOOKUP_SYM_VARYING | LOOKUP_SYM_FINAL)) == LOOKUP_SYM_VARYING &&
 	    /* We do explicitly accept code like:
 	     * >> varying function foo() { ... }
 	     * to indicate that the symbol `foo' may be re-assigned at a later point
@@ -237,8 +237,20 @@ err:
 }
 
 
+/* Parse a comma-separated list of expressions,
+ * as well as assignment/inplace expressions.
+ * >> foo = 42;               // (foo = (42));
+ * >> foo += 42;              // (foo += (42));
+ * >> foo, bar = (10, 20)...; // (foo, bar = (10, 20)...);
+ * >> foo, bar = 10;          // (foo, (bar = 10));
+ * >> { 10 }                  // (List { 10 }); // When `AST_COMMA_ALLOWBRACE' is set
+ * >> { "foo": 10 }           // (Dict { "foo": 10 }); // When `AST_COMMA_ALLOWBRACE' is set
+ * @param: mode:       Set of `AST_COMMA_*'     - What is allowed and when should we pack values.
+ * @param: flags:      Set of `AST_FMULTIPLE_*' - How should multiple values be packaged.
+ * @param: p_out_mode: When non-NULL, instead of parsing a `;' when required,
+ *                     set to `AST_COMMA_OUT_FNEEDSEMI' indicative of this. */
 INTERN WUNUSED DREF struct ast *DCALL
-ast_parse_comma(uint16_t mode, uint16_t flags, uint16_t *pout_mode) {
+ast_parse_comma(uint16_t mode, uint16_t flags, uint16_t *p_out_mode) {
 #ifdef CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION
 	struct decl_ast decl;
 #endif /* CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION */
@@ -935,9 +947,9 @@ done_expression:
 		}
 	}
 done_expression_nomerge:
-	if (pout_mode) {
+	if (p_out_mode) {
 		if (need_semi)
-			*pout_mode |= AST_COMMA_OUT_FNEEDSEMI;
+			*p_out_mode |= AST_COMMA_OUT_FNEEDSEMI;
 	} else if (need_semi && (mode & AST_COMMA_PARSESEMI)) {
 		/* Consume a `;' token as part of the expression. */
 		if likely(tok == ';' || tok == '\n') {

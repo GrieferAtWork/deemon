@@ -1475,16 +1475,16 @@ err:
 }
 
 
-#define SETITEM_SETOLD 0 /* if_exists: *pold_value = GET_OLD_VALUE(); SET_OLD_ITEM(); return 1;
+#define SETITEM_SETOLD 0 /* if_exists: *p_old_value = GET_OLD_VALUE(); SET_OLD_ITEM(); return 1;
                           * else:      return 0; */
-#define SETITEM_SETNEW 1 /* if_exists: *pold_value = GET_OLD_VALUE(); return 1;
+#define SETITEM_SETNEW 1 /* if_exists: *p_old_value = GET_OLD_VALUE(); return 1;
                           * else:      ADD_NEW_ITEM(); return 0; */
 PRIVATE WUNUSED NONNULL((1, 2, 3)) int DCALL
 dict_setitem_ex(Dict *self,
                 DeeObject *key,
                 DeeObject *value,
                 unsigned int mode,
-                DREF DeeObject **pold_value) {
+                DREF DeeObject **p_old_value) {
 	size_t mask;
 	struct dict_item *vector;
 	int error;
@@ -1537,8 +1537,8 @@ again:
 				item->di_key   = key;
 				item->di_value = value;
 				DeeDict_LockEndWrite(self);
-				if (pold_value) {
-					*pold_value = item_value; /* Inherit reference */
+				if (p_old_value) {
+					*p_old_value = item_value; /* Inherit reference */
 				} else {
 					Dee_Decref(item_value);
 				}
@@ -1549,10 +1549,10 @@ again:
 				    self->d_mask != mask ||
 				    item->di_key != item_key)
 					goto again;
-				if (pold_value) {
+				if (p_old_value) {
 					item_value = item->di_value;
 					Dee_Incref(item_value);
-					*pold_value = item_value;
+					*p_old_value = item_value;
 				}
 				DeeDict_LockEndRead(self);
 			}
@@ -1642,15 +1642,15 @@ err:
 
 PRIVATE WUNUSED NONNULL((1, 2, 3)) int DCALL
 dict_nsi_updateold(Dict *self, DeeObject *key,
-                   DeeObject *value, DREF DeeObject **poldvalue) {
-	return dict_setitem_ex(self, key, value, SETITEM_SETOLD, poldvalue);
+                   DeeObject *value, DREF DeeObject **p_oldvalue) {
+	return dict_setitem_ex(self, key, value, SETITEM_SETOLD, p_oldvalue);
 }
 
 PRIVATE WUNUSED NONNULL((1, 2, 3)) int DCALL
 dict_nsi_insertnew(Dict *self, DeeObject *key,
-                   DeeObject *value, DREF DeeObject **poldvalue) {
+                   DeeObject *value, DREF DeeObject **p_oldvalue) {
 	int error;
-	error = dict_setitem_ex(self, key, value, SETITEM_SETNEW, poldvalue);
+	error = dict_setitem_ex(self, key, value, SETITEM_SETNEW, p_oldvalue);
 	if unlikely(error < 0)
 		goto err;
 	return !error;

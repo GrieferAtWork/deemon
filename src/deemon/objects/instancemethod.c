@@ -198,8 +198,8 @@ INTDEF NONNULL((1, 2)) void DCALL super_visit(DeeSuperObject *__restrict self, d
 
 PRIVATE WUNUSED NONNULL((1)) struct class_attribute *DCALL
 instancemethod_getattr(InstanceMethod *__restrict self,
-                       uint16_t *pgetset_index,
-                       DeeTypeObject **pdecl_type) {
+                       uint16_t *p_getset_index,
+                       DeeTypeObject **p_decl_type) {
 	struct class_attribute *result;
 	DeeTypeObject *tp_iter;
 	tp_iter = Dee_TYPE(self->im_this);
@@ -230,16 +230,16 @@ instancemethod_getattr(InstanceMethod *__restrict self,
 				if (result->ca_flag & CLASS_ATTRIBUTE_FGETSET) {
 					if (addr >= result->ca_addr + CLASS_GETSET_COUNT)
 						continue;
-					if (pgetset_index)
-						*pgetset_index = (uint16_t)(addr - result->ca_addr);
+					if (p_getset_index)
+						*p_getset_index = (uint16_t)(addr - result->ca_addr);
 				} else {
 					if (addr > result->ca_addr)
 						continue;
-					if (pgetset_index)
-						*pgetset_index = 0;
+					if (p_getset_index)
+						*p_getset_index = 0;
 				}
-				if (pdecl_type)
-					*pdecl_type = tp_iter;
+				if (p_decl_type)
+					*p_decl_type = tp_iter;
 				return result;
 			}
 			Dee_class_desc_lock_read(my_class);

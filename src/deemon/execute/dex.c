@@ -236,14 +236,14 @@ err:
  *       minimum, any code making using of this function should contain
  *       a fallback that calls a global symbol of the module, rather
  *       than a native symbol:
- * >> static int (*padd)(int x, int y) = NULL;
- * >> if (!padd)
- * >>     *(void **)&padd = DeeModule_GetNativeSymbol(IMPORTED_MODULE, "add");
+ * >> static int (*p_add)(int x, int y) = NULL;
+ * >> if (!p_add)
+ * >>     *(void **)&p_add = DeeModule_GetNativeSymbol(IMPORTED_MODULE, "add");
  * >> // Fallback: Invoke a member attribute `add' if the native symbol doesn't exist.
- * >> if (!padd)
+ * >> if (!p_add)
  * >>     return DeeObject_CallAttrStringf(IMPORTED_MODULE, "add", "dd", x, y);
  * >> // Invoke the native symbol.
- * >> return DeeInt_New((*padd)(x, y)); */
+ * >> return DeeInt_New((*p_add)(x, y)); */
 PUBLIC WUNUSED NONNULL((1, 2)) void *DCALL
 DeeModule_GetNativeSymbol(DeeObject *__restrict self,
                           char const *__restrict name) {
@@ -839,12 +839,12 @@ DECL_BEGIN
  *       minimum, any code making using of this function should contain
  *       a fallback that calls a global symbol of the module, rather
  *       than a native symbol:
- * >> static int (*padd)(int x, int y) = NULL;
- * >> if (!padd) *(void **)&padd = DeeModule_GetNativeSymbol(IMPORTED_MODULE, "add");
+ * >> static int (*p_add)(int x, int y) = NULL;
+ * >> if (!p_add) *(void **)&p_add = DeeModule_GetNativeSymbol(IMPORTED_MODULE, "add");
  * >> // Fallback: Invoke a member attribute `add' if the native symbol doesn't exist.
- * >> if (!padd) return DeeObject_CallAttrStringf(IMPORTED_MODULE, "add", "dd", x, y);
+ * >> if (!p_add) return DeeObject_CallAttrStringf(IMPORTED_MODULE, "add", "dd", x, y);
  * >> // Invoke the native symbol.
- * >> return DeeInt_New((*padd)(x, y)); */
+ * >> return DeeInt_New((*p_add)(x, y)); */
 PUBLIC WUNUSED NONNULL((1, 2)) void *DCALL
 DeeModule_GetNativeSymbol(DeeObject *__restrict UNUSED(self),
                           char const *__restrict UNUSED(name)) {

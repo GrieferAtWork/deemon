@@ -123,15 +123,15 @@ err:
 
 INTERN int DCALL
 get_scope_lookupmode(DeeObject *__restrict value,
-                     unsigned int *__restrict presult) {
+                     unsigned int *__restrict p_result) {
 	if (value == Dee_EmptyString) {
-		*presult = 0;
+		*p_result = 0;
 		return 0;
 	}
 	if (DeeString_Check(value)) {
 		/* TODO */
 	}
-	return DeeObject_AsUInt(value, presult);
+	return DeeObject_AsUInt(value, p_result);
 }
 
 

@@ -1287,132 +1287,132 @@ DeeAsm_IsNoreturn(uint16_t instr, uint16_t code_flags) {
 
 PUBLIC ATTR_RETNONNULL NONNULL((1, 2)) instruction_t *DCALL
 DeeAsm_NextInstrSp(instruction_t const *__restrict pc,
-                   uint16_t *__restrict pstacksz) {
+                   uint16_t *__restrict p_stacksz) {
 	uint16_t sp_add, sp_sub;
-	return DeeAsm_NextInstrEf(pc, pstacksz, &sp_add, &sp_sub);
+	return DeeAsm_NextInstrEf(pc, p_stacksz, &sp_add, &sp_sub);
 }
 
 PUBLIC ATTR_RETNONNULL NONNULL((1, 2, 3, 4)) instruction_t *DCALL
 DeeAsm_NextInstrEf(instruction_t const *__restrict pc,
-                   uint16_t *__restrict pstacksz,
-                   uint16_t *__restrict psp_add,
-                   uint16_t *__restrict psp_sub) {
+                   uint16_t *__restrict p_stacksz,
+                   uint16_t *__restrict p_sp_add,
+                   uint16_t *__restrict p_sp_sub) {
 	instruction_t op = *pc;
 	instruction_t const *prefix_ip;
 	uint16_t prefix_stack_sub;
 #ifndef NDEBUG
-	uint16_t old_stacksz = *pstacksz;
+	uint16_t old_stacksz = *p_stacksz;
 #endif /* !NDEBUG */
 	switch (op) {
 
 	case ASM_ADJSTACK: {
 		int8_t effect;
 		effect = (int8_t)(UNALIGNED_GETLE8(pc + 1));
-		*pstacksz += effect;
+		*p_stacksz += effect;
 		if (effect >= 0) {
-			*psp_add = (uint16_t)effect;
-			*psp_sub = 0;
+			*p_sp_add = (uint16_t)effect;
+			*p_sp_sub = 0;
 		} else {
-			*psp_add = 0;
-			*psp_sub = (uint16_t)-effect;
+			*p_sp_add = 0;
+			*p_sp_sub = (uint16_t)-effect;
 		}
 	}	break;
 
 	case ASM_LROT:
 	case ASM_RROT:
-		*psp_sub = (uint16_t)(UNALIGNED_GETLE8(pc + 1) + 3);
-		*psp_add = *psp_sub;
+		*p_sp_sub = (uint16_t)(UNALIGNED_GETLE8(pc + 1) + 3);
+		*p_sp_add = *p_sp_sub;
 		break;
 
 	case ASM_DUP_N:
-		*psp_sub = (uint16_t)(UNALIGNED_GETLE8(pc + 1) + 2);
-		*psp_add = *psp_sub + 1;
-		*pstacksz += 1;
+		*p_sp_sub = (uint16_t)(UNALIGNED_GETLE8(pc + 1) + 2);
+		*p_sp_add = *p_sp_sub + 1;
+		*p_stacksz += 1;
 		break;
 
 	case ASM_POP_N:
-		*psp_add = (uint16_t)(UNALIGNED_GETLE8(pc + 1) + 1);
-		*psp_sub = *psp_add + 1;
-		*pstacksz -= 1;
+		*p_sp_add = (uint16_t)(UNALIGNED_GETLE8(pc + 1) + 1);
+		*p_sp_sub = *p_sp_add + 1;
+		*p_stacksz -= 1;
 		break;
 
 	case ASM_PACK_TUPLE:
 	case ASM_PACK_LIST:
-		*psp_add = 1;
-		*psp_sub = UNALIGNED_GETLE8(pc + 1);
-		*pstacksz -= UNALIGNED_GETLE8(pc + 1);
-		++*pstacksz;
+		*p_sp_add = 1;
+		*p_sp_sub = UNALIGNED_GETLE8(pc + 1);
+		*p_stacksz -= UNALIGNED_GETLE8(pc + 1);
+		++*p_stacksz;
 		break;
 
 	case ASM_CALL:
 	case ASM_CALL_KW:
 	case ASM_EXTEND:
-		*psp_add = 1;
-		*psp_sub = 1 + UNALIGNED_GETLE8(pc + 1);
-		*pstacksz -= UNALIGNED_GETLE8(pc + 1);
+		*p_sp_add = 1;
+		*p_sp_sub = 1 + UNALIGNED_GETLE8(pc + 1);
+		*p_stacksz -= UNALIGNED_GETLE8(pc + 1);
 		break;
 
 	case ASM_CALLCMEMBER_THIS_R:
-		*psp_add = 1;
-		*psp_sub = UNALIGNED_GETLE8(pc + 3);
-		*pstacksz -= UNALIGNED_GETLE8(pc + 3);
-		++*pstacksz;
+		*p_sp_add = 1;
+		*p_sp_sub = UNALIGNED_GETLE8(pc + 3);
+		*p_stacksz -= UNALIGNED_GETLE8(pc + 3);
+		++*p_stacksz;
 		break;
 
 	case ASM_UNPACK:
-		*psp_sub = 1;
-		*psp_add = UNALIGNED_GETLE8(pc + 1);
-		*pstacksz += UNALIGNED_GETLE8(pc + 1);
-		--*pstacksz;
+		*p_sp_sub = 1;
+		*p_sp_add = UNALIGNED_GETLE8(pc + 1);
+		*p_stacksz += UNALIGNED_GETLE8(pc + 1);
+		--*p_stacksz;
 		break;
 
 	case ASM_FUNCTION_C_16:
-		*psp_add = 1;
-		*psp_sub = 1 + UNALIGNED_GETLE16(pc + 2);
-		*pstacksz -= (*psp_sub - 1);
+		*p_sp_add = 1;
+		*p_sp_sub = 1 + UNALIGNED_GETLE16(pc + 2);
+		*p_stacksz -= (*p_sp_sub - 1);
 		break;
 
 	case ASM_CALLATTR:
-		*psp_add = 1;
-		*psp_sub = 2 + UNALIGNED_GETLE8(pc + 1);
-		*pstacksz -= 1 + UNALIGNED_GETLE8(pc + 1);
+		*p_sp_add = 1;
+		*p_sp_sub = 2 + UNALIGNED_GETLE8(pc + 1);
+		*p_stacksz -= 1 + UNALIGNED_GETLE8(pc + 1);
 		break;
 
 	case ASM_CALLATTR_C_KW:
 	case ASM_FUNCTION_C:
 	case ASM_CALLATTR_C:
 	case ASM_CALLATTR_C_SEQ:
-		*psp_add = 1;
-		*psp_sub = 1 + UNALIGNED_GETLE8(pc + 2);
-		*pstacksz -= (*psp_sub - 1);
+		*p_sp_add = 1;
+		*p_sp_sub = 1 + UNALIGNED_GETLE8(pc + 2);
+		*p_stacksz -= (*p_sp_sub - 1);
 		break;
 
 	case ASM_CALLATTR_C_MAP:
-		*psp_add = 1;
-		*psp_sub = 1 + (uint16_t)(UNALIGNED_GETLE8(pc + 2) * 2);
-		*pstacksz -= (*psp_sub - 1);
+		*p_sp_add = 1;
+		*p_sp_sub = 1 + (uint16_t)(UNALIGNED_GETLE8(pc + 2) * 2);
+		*p_stacksz -= (*p_sp_sub - 1);
 		break;
 
 	case ASM_CALLATTR_THIS_C:
 	case ASM_CALL_GLOBAL:
 	case ASM_CALL_LOCAL:
-		*psp_add = 1;
-		*psp_sub = UNALIGNED_GETLE8(pc + 2);
-		*pstacksz -= UNALIGNED_GETLE8(pc + 2);
-		*pstacksz += 1;
+		*p_sp_add = 1;
+		*p_sp_sub = UNALIGNED_GETLE8(pc + 2);
+		*p_stacksz -= UNALIGNED_GETLE8(pc + 2);
+		*p_stacksz += 1;
 		break;
 
 	case ASM_CALL_EXTERN:
-		*psp_add = 1;
-		*psp_sub = UNALIGNED_GETLE8(pc + 3);
-		*pstacksz -= UNALIGNED_GETLE8(pc + 3);
-		*pstacksz += 1;
+		*p_sp_add = 1;
+		*p_sp_sub = UNALIGNED_GETLE8(pc + 3);
+		*p_stacksz -= UNALIGNED_GETLE8(pc + 3);
+		*p_stacksz += 1;
 		break;
 
 	case ASM_OPERATOR:
-		*psp_add = 1;
-		*psp_sub = 1 + UNALIGNED_GETLE8(pc + 2);
-		*pstacksz -= UNALIGNED_GETLE8(pc + 2);
+		*p_sp_add = 1;
+		*p_sp_sub = 1 + UNALIGNED_GETLE8(pc + 2);
+		*p_stacksz -= UNALIGNED_GETLE8(pc + 2);
 		break;
 
 	case ASM_EXTENDED1:
@@ -1422,162 +1422,162 @@ DeeAsm_NextInstrEf(instruction_t const *__restrict pc,
 		case ASM16_ADJSTACK & 0xff: {
 			int16_t effect;
 			effect = (int16_t)UNALIGNED_GETLE16(pc + 2);
-			*pstacksz += effect;
+			*p_stacksz += effect;
 			if (effect >= 0) {
-				*psp_add = (uint16_t)effect;
-				*psp_sub = 0;
+				*p_sp_add = (uint16_t)effect;
+				*p_sp_sub = 0;
 			} else {
-				*psp_add = 0;
-				*psp_sub = (uint16_t)-effect;
+				*p_sp_add = 0;
+				*p_sp_sub = (uint16_t)-effect;
 			}
 		}	break;
 
 		case ASM16_LROT & 0xff:
 		case ASM16_RROT & 0xff:
-			*psp_add = *psp_sub = (uint16_t)(UNALIGNED_GETLE16(pc + 2) + 3);
+			*p_sp_add = *p_sp_sub = (uint16_t)(UNALIGNED_GETLE16(pc + 2) + 3);
 			break;
 
 		case ASM16_DUP_N & 0xff:
-			*psp_sub = (uint16_t)(UNALIGNED_GETLE16(pc + 2) + 2);
-			*psp_add = *psp_sub + 1;
-			*pstacksz += 1;
+			*p_sp_sub = (uint16_t)(UNALIGNED_GETLE16(pc + 2) + 2);
+			*p_sp_add = *p_sp_sub + 1;
+			*p_stacksz += 1;
 			break;
 
 		case ASM16_POP_N & 0xff:
-			*psp_add = (uint16_t)(UNALIGNED_GETLE16(pc + 2) + 1);
-			*psp_sub = *psp_add + 1;
-			*pstacksz -= 1;
+			*p_sp_add = (uint16_t)(UNALIGNED_GETLE16(pc + 2) + 1);
+			*p_sp_sub = *p_sp_add + 1;
+			*p_stacksz -= 1;
 			break;
 
 		case ASM16_PACK_TUPLE & 0xff:
 		case ASM16_PACK_LIST & 0xff:
 		case ASM16_PACK_HASHSET & 0xff:
-			*psp_add = 1;
-			*psp_sub = UNALIGNED_GETLE16(pc + 2);
-			*pstacksz -= *psp_sub;
-			*pstacksz += 1;
+			*p_sp_add = 1;
+			*p_sp_sub = UNALIGNED_GETLE16(pc + 2);
+			*p_stacksz -= *p_sp_sub;
+			*p_stacksz += 1;
 			break;
 
 		case ASM16_UNPACK & 0xff:
-			*psp_sub = 1;
-			*psp_add = UNALIGNED_GETLE16(pc + 2);
-			*pstacksz += *psp_add;
-			*pstacksz -= 1;
+			*p_sp_sub = 1;
+			*p_sp_add = UNALIGNED_GETLE16(pc + 2);
+			*p_stacksz += *p_sp_add;
+			*p_stacksz -= 1;
 			break;
 
 		case ASM16_FUNCTION_C & 0xff:
-			*psp_add = 1;
-			*psp_sub = 1 + UNALIGNED_GETLE8(pc + 4);
-			*pstacksz -= UNALIGNED_GETLE8(pc + 4);
+			*p_sp_add = 1;
+			*p_sp_sub = 1 + UNALIGNED_GETLE8(pc + 4);
+			*p_stacksz -= UNALIGNED_GETLE8(pc + 4);
 			break;
 
 		case ASM16_FUNCTION_C_16 & 0xff:
-			*psp_add = 1;
-			*psp_sub = 1 + UNALIGNED_GETLE16(pc + 4);
-			*pstacksz -= (*psp_sub - 1);
+			*p_sp_add = 1;
+			*p_sp_sub = 1 + UNALIGNED_GETLE16(pc + 4);
+			*p_stacksz -= (*p_sp_sub - 1);
 			break;
 
 		case ASM_CALLATTR_KWDS & 0xff:
-			*psp_add = 1;
-			*psp_sub = 3 + UNALIGNED_GETLE8(pc + 2);
-			*pstacksz -= 2 + UNALIGNED_GETLE8(pc + 2);
+			*p_sp_add = 1;
+			*p_sp_sub = 3 + UNALIGNED_GETLE8(pc + 2);
+			*p_stacksz -= 2 + UNALIGNED_GETLE8(pc + 2);
 			break;
 
 		case ASM16_CALLATTR_C_KW & 0xff:
 		case ASM16_CALLATTR_C & 0xff:
 		case ASM16_CALLATTR_C_SEQ & 0xff:
-			*psp_add = 1;
-			*psp_sub = 1 + UNALIGNED_GETLE8(pc + 4);
-			*pstacksz -= UNALIGNED_GETLE8(pc + 4);
+			*p_sp_add = 1;
+			*p_sp_sub = 1 + UNALIGNED_GETLE8(pc + 4);
+			*p_stacksz -= UNALIGNED_GETLE8(pc + 4);
 			break;
 
 		case ASM16_CALLATTR_C_MAP & 0xff:
-			*psp_add = 1;
-			*psp_sub = 1 + (uint16_t)(UNALIGNED_GETLE8(pc + 4) * 2);
-			*pstacksz -= UNALIGNED_GETLE8(pc + 4);
+			*p_sp_add = 1;
+			*p_sp_sub = 1 + (uint16_t)(UNALIGNED_GETLE8(pc + 4) * 2);
+			*p_stacksz -= UNALIGNED_GETLE8(pc + 4);
 			break;
 
 		case ASM16_CALLATTR_THIS_C & 0xff:
 		case ASM16_CALL_GLOBAL & 0xff:
 		case ASM16_CALL_LOCAL & 0xff:
-			*psp_add = 1;
-			*psp_sub = UNALIGNED_GETLE8(pc + 4);
-			*pstacksz -= UNALIGNED_GETLE8(pc + 4);
-			*pstacksz += 1;
+			*p_sp_add = 1;
+			*p_sp_sub = UNALIGNED_GETLE8(pc + 4);
+			*p_stacksz -= UNALIGNED_GETLE8(pc + 4);
+			*p_stacksz += 1;
 			break;
 
 		case ASM16_CALL_EXTERN & 0xff:
-			*psp_add = 1;
-			*psp_sub = UNALIGNED_GETLE8(pc + 6);
-			*pstacksz -= UNALIGNED_GETLE8(pc + 6);
-			*pstacksz += 1;
+			*p_sp_add = 1;
+			*p_sp_sub = UNALIGNED_GETLE8(pc + 6);
+			*p_stacksz -= UNALIGNED_GETLE8(pc + 6);
+			*p_stacksz += 1;
 			break;
 
 		case ASM16_CALL_KW & 0xff:
 		case ASM_CALL_SEQ & 0xff:
-			*psp_add = 1;
-			*psp_sub = 1 + UNALIGNED_GETLE8(pc + 2);
-			*pstacksz -= UNALIGNED_GETLE8(pc + 2);
+			*p_sp_add = 1;
+			*p_sp_sub = 1 + UNALIGNED_GETLE8(pc + 2);
+			*p_stacksz -= UNALIGNED_GETLE8(pc + 2);
 			break;
 
 		case ASM16_CALLCMEMBER_THIS_R & 0xff:
-			*psp_add = 1;
-			*psp_sub = UNALIGNED_GETLE8(pc + 6);
-			*pstacksz -= UNALIGNED_GETLE8(pc + 6);
-			++*pstacksz;
+			*p_sp_add = 1;
+			*p_sp_sub = UNALIGNED_GETLE8(pc + 6);
+			*p_stacksz -= UNALIGNED_GETLE8(pc + 6);
+			++*p_stacksz;
 			break;
 
 		case ASM_CALL_MAP & 0xff:
-			*psp_add = 1;
-			*psp_sub = 1 + ((uint16_t)UNALIGNED_GETLE8(pc + 2) * 2);
-			*pstacksz -= ((uint16_t)UNALIGNED_GETLE8(pc + 2) * 2);
+			*p_sp_add = 1;
+			*p_sp_sub = 1 + ((uint16_t)UNALIGNED_GETLE8(pc + 2) * 2);
+			*p_stacksz -= ((uint16_t)UNALIGNED_GETLE8(pc + 2) * 2);
 			break;
 
 		case ASM16_OPERATOR & 0xff:
-			*psp_add = 1;
-			*psp_sub = 1 + UNALIGNED_GETLE8(pc + 4);
-			*pstacksz -= UNALIGNED_GETLE8(pc + 4);
+			*p_sp_add = 1;
+			*p_sp_sub = 1 + UNALIGNED_GETLE8(pc + 4);
+			*p_stacksz -= UNALIGNED_GETLE8(pc + 4);
 			break;
 
 		case ASM_PACK_HASHSET & 0xff:
-			*psp_add = 1;
-			*psp_sub = UNALIGNED_GETLE8(pc + 2);
-			*pstacksz -= UNALIGNED_GETLE8(pc + 2);
-			*pstacksz += 1;
+			*p_sp_add = 1;
+			*p_sp_sub = UNALIGNED_GETLE8(pc + 2);
+			*p_stacksz -= UNALIGNED_GETLE8(pc + 2);
+			*p_stacksz += 1;
 			break;
 
 		case ASM_PACK_DICT & 0xff:
-			*psp_add = 1;
-			*psp_sub = UNALIGNED_GETLE8(pc + 2) * 2;
-			*pstacksz -= UNALIGNED_GETLE8(pc + 2) * 2;
-			*pstacksz += 1;
+			*p_sp_add = 1;
+			*p_sp_sub = UNALIGNED_GETLE8(pc + 2) * 2;
+			*p_stacksz -= UNALIGNED_GETLE8(pc + 2) * 2;
+			*p_stacksz += 1;
 			break;
 
 		case ASM16_PACK_DICT & 0xff:
-			*psp_add = 1;
-			*psp_sub = UNALIGNED_GETLE16(pc + 2) * 2;
-			*pstacksz -= *psp_sub;
-			*pstacksz += 1;
+			*p_sp_add = 1;
+			*p_sp_sub = UNALIGNED_GETLE16(pc + 2) * 2;
+			*p_stacksz -= *p_sp_sub;
+			*p_stacksz += 1;
 			break;
 
 		case ASM_VARARGS_UNPACK & 0xff:
-			*psp_add = UNALIGNED_GETLE8(pc + 2);
-			*psp_sub = 0;
-			*pstacksz += *psp_add;
+			*p_sp_add = UNALIGNED_GETLE8(pc + 2);
+			*p_sp_sub = 0;
+			*p_stacksz += *p_sp_add;
 			break;
 
 		case ASM_SUPERCALLATTR_THIS_RC & 0xff:
-			*psp_add = 1;
-			*psp_sub = UNALIGNED_GETLE8(pc + 4);
-			*pstacksz += 1;
-			*pstacksz -= *psp_sub;
+			*p_sp_add = 1;
+			*p_sp_sub = UNALIGNED_GETLE8(pc + 4);
+			*p_stacksz += 1;
+			*p_stacksz -= *p_sp_sub;
 			break;
 
 		case ASM16_SUPERCALLATTR_THIS_RC & 0xff:
-			*psp_add = 1;
-			*psp_sub = UNALIGNED_GETLE8(pc + 6);
-			*pstacksz += 1;
-			*pstacksz -= *psp_sub;
+			*p_sp_add = 1;
+			*p_sp_sub = UNALIGNED_GETLE8(pc + 6);
+			*p_stacksz += 1;
+			*p_stacksz -= *p_sp_sub;
 			break;
 
 		case ASM16_STACK & 0xff: {
@@ -1585,7 +1585,7 @@ DeeAsm_NextInstrEf(instruction_t const *__restrict pc,
 			prefix_ip = pc + 4;
 			sp_addr   = UNALIGNED_GETLE16(pc + 2);
 			/* Calculate the relative stack effect for addressing this stack slot. */
-			prefix_stack_sub = (*pstacksz - sp_addr);
+			prefix_stack_sub = (*p_stacksz - sp_addr);
 			goto do_prefix;
 		}
 
@@ -1600,9 +1600,9 @@ DeeAsm_NextInstrEf(instruction_t const *__restrict pc,
 			goto do_prefix_nosp;
 
 		default:
-			*psp_sub = STACK_EFFECT_DOWN(stack_effect_f0[op]);
-			*psp_add = STACK_EFFECT_UP(stack_effect_f0[op]);
-			*pstacksz += STACK_EFFECT_SUM(stack_effect_f0[op]);
+			*p_sp_sub = STACK_EFFECT_DOWN(stack_effect_f0[op]);
+			*p_sp_add = STACK_EFFECT_UP(stack_effect_f0[op]);
+			*p_stacksz += STACK_EFFECT_SUM(stack_effect_f0[op]);
 			break;
 		}
 		break;
@@ -1612,7 +1612,7 @@ DeeAsm_NextInstrEf(instruction_t const *__restrict pc,
 		prefix_ip = pc + 2;
 		sp_addr   = UNALIGNED_GETLE8(pc + 1);
 		/* Calculate the relative stack effect for addressing this stack slot. */
-		prefix_stack_sub = (*pstacksz - sp_addr);
+		prefix_stack_sub = (*p_stacksz - sp_addr);
 		goto do_prefix;
 	}
 
@@ -1641,62 +1641,62 @@ do_prefix:
 		case ASM_OR:
 		case ASM_XOR:
 		case ASM_POW:
-			*psp_add = 0;
-			*psp_sub = 1;
-			--*pstacksz; /* Inplace arithmetic. e.g.: `local @foo add pop' */
+			*p_sp_add = 0;
+			*p_sp_sub = 1;
+			--*p_stacksz; /* Inplace arithmetic. e.g.: `local @foo add pop' */
 			break;
 
 		case ASM_SWAP:
-			*psp_add = 1;
-			*psp_sub = 1;
+			*p_sp_add = 1;
+			*p_sp_sub = 1;
 			break;
 
 		case ASM_LROT:
 		case ASM_RROT:
-			*psp_add = prefix_ip[1];
-			*psp_sub = *psp_add;
+			*p_sp_add = prefix_ip[1];
+			*p_sp_sub = *p_sp_add;
 			break;
 
 		case ASM_DUP:
 		case ASM_POP:
-			*psp_add = 1;
-			*psp_sub = 1;
+			*p_sp_add = 1;
+			*p_sp_sub = 1;
 			break;
 
 		case ASM_DUP_N:
 		case ASM_POP_N:
-			*psp_add = UNALIGNED_GETLE8(prefix_ip + 1);
-			*psp_sub = *psp_add;
+			*p_sp_add = UNALIGNED_GETLE8(prefix_ip + 1);
+			*p_sp_sub = *p_sp_add;
 			break;
 
 		case ASM_OPERATOR:
-			*psp_add = 1;
-			*psp_sub = UNALIGNED_GETLE8(prefix_ip + 2);
-			*pstacksz -= *psp_sub;
-			*pstacksz += 1;
+			*p_sp_add = 1;
+			*p_sp_sub = UNALIGNED_GETLE8(prefix_ip + 2);
+			*p_stacksz -= *p_sp_sub;
+			*p_stacksz += 1;
 			break;
 
 		case ASM_OPERATOR_TUPLE:
-			*psp_add = 1;
-			*psp_sub = 1;
+			*p_sp_add = 1;
+			*p_sp_sub = 1;
 			break;
 
 		case ASM_FUNCTION_C:
-			*psp_add = 0;
-			*psp_sub = 1 + UNALIGNED_GETLE8(prefix_ip + 2);
-			*pstacksz -= 1 + UNALIGNED_GETLE8(prefix_ip + 2);
+			*p_sp_add = 0;
+			*p_sp_sub = 1 + UNALIGNED_GETLE8(prefix_ip + 2);
+			*p_stacksz -= 1 + UNALIGNED_GETLE8(prefix_ip + 2);
 			break;
 
 		case ASM_FUNCTION_C_16:
-			*psp_add = 0;
-			*psp_sub = 1 + UNALIGNED_GETLE16(prefix_ip + 2);
-			*pstacksz -= *psp_sub;
+			*p_sp_add = 0;
+			*p_sp_sub = 1 + UNALIGNED_GETLE16(prefix_ip + 2);
+			*p_stacksz -= *p_sp_sub;
 			break;
 
 		case ASM_UNPACK:
-			*psp_add = UNALIGNED_GETLE8(prefix_ip + 1);
-			*psp_sub = 0;
-			*pstacksz += *psp_add;
+			*p_sp_add = UNALIGNED_GETLE8(prefix_ip + 1);
+			*p_sp_sub = 0;
+			*p_stacksz += *p_sp_add;
 			break;
 
 		case ASM_EXTENDED1:
@@ -1704,77 +1704,77 @@ do_prefix:
 			switch (op) {
 
 			case ASM16_OPERATOR & 0xff:
-				*psp_add = 1;
-				*psp_sub = 1 + UNALIGNED_GETLE8(prefix_ip + 4);
-				*pstacksz -= UNALIGNED_GETLE8(prefix_ip + 4);
+				*p_sp_add = 1;
+				*p_sp_sub = 1 + UNALIGNED_GETLE8(prefix_ip + 4);
+				*p_stacksz -= UNALIGNED_GETLE8(prefix_ip + 4);
 				break;
 
 			case ASM16_FUNCTION_C & 0xff:
-				*psp_add = 0;
-				*psp_sub = 1 + UNALIGNED_GETLE8(prefix_ip + 4);
-				*pstacksz -= 1 + UNALIGNED_GETLE8(prefix_ip + 4);
+				*p_sp_add = 0;
+				*p_sp_sub = 1 + UNALIGNED_GETLE8(prefix_ip + 4);
+				*p_stacksz -= 1 + UNALIGNED_GETLE8(prefix_ip + 4);
 				break;
 
 			case ASM16_FUNCTION_C_16 & 0xff:
-				*psp_add = 0;
-				*psp_sub = 1 + UNALIGNED_GETLE16(prefix_ip + 4);
-				*pstacksz -= *psp_sub;
+				*p_sp_add = 0;
+				*p_sp_sub = 1 + UNALIGNED_GETLE16(prefix_ip + 4);
+				*p_stacksz -= *p_sp_sub;
 				break;
 
 			case ASM_INCPOST & 0xff:
 			case ASM_DECPOST & 0xff:
-				*psp_add = 1;
-				*psp_sub = 0;
-				*pstacksz += 1;
+				*p_sp_add = 1;
+				*p_sp_sub = 0;
+				*p_stacksz += 1;
 				break;
 
 			case ASM16_LROT & 0xff:
 			case ASM16_RROT & 0xff:
-				*psp_add = UNALIGNED_GETLE16(prefix_ip + 2);
-				*psp_sub = *psp_add;
+				*p_sp_add = UNALIGNED_GETLE16(prefix_ip + 2);
+				*p_sp_sub = *p_sp_add;
 				break;
 
 			case ASM16_DUP_N & 0xff:
 			case ASM16_POP_N & 0xff:
-				*psp_add = UNALIGNED_GETLE16(prefix_ip + 2);
-				*psp_sub = *psp_add;
+				*p_sp_add = UNALIGNED_GETLE16(prefix_ip + 2);
+				*p_sp_sub = *p_sp_add;
 				break;
 
 			case ASM16_UNPACK & 0xff:
-				*psp_add = UNALIGNED_GETLE16(prefix_ip + 2);
-				*psp_sub = 0;
-				*pstacksz += *psp_add;
+				*p_sp_add = UNALIGNED_GETLE16(prefix_ip + 2);
+				*p_sp_sub = 0;
+				*p_stacksz += *p_sp_add;
 				break;
 
 			default:
-				*psp_add = 0;
-				*psp_sub = 0;
+				*p_sp_add = 0;
+				*p_sp_sub = 0;
 				break;
 			}
 			break;
 
 		default:
-			*psp_add = 0;
-			*psp_sub = 0;
+			*p_sp_add = 0;
+			*p_sp_sub = 0;
 			break;
 		}
 		/* Adjust the add/sub pair to take a stack prefix into account. */
-		if (prefix_stack_sub > *psp_sub) {
-			*psp_add += (prefix_stack_sub - *psp_sub);
-			*psp_sub = prefix_stack_sub;
+		if (prefix_stack_sub > *p_sp_sub) {
+			*p_sp_add += (prefix_stack_sub - *p_sp_sub);
+			*p_sp_sub = prefix_stack_sub;
 		}
 		break;
 
 	default:
-		*psp_sub = STACK_EFFECT_DOWN(stack_effect[op]);
-		*psp_add = STACK_EFFECT_UP(stack_effect[op]);
-		*pstacksz += STACK_EFFECT_SUM(stack_effect[op]);
+		*p_sp_sub = STACK_EFFECT_DOWN(stack_effect[op]);
+		*p_sp_add = STACK_EFFECT_UP(stack_effect[op]);
+		*p_stacksz += STACK_EFFECT_SUM(stack_effect[op]);
 		break;
 	}
 
 #ifndef NDEBUG
 	/* Make sure that the stack was adjusted properly. */
-	ASSERT(*pstacksz == (uint16_t)((old_stacksz - *psp_sub) + *psp_add));
+	ASSERT(*p_stacksz == (uint16_t)((old_stacksz - *p_sp_sub) + *p_sp_add));
 #endif /* !NDEBUG */
 	return DeeAsm_NextInstr(pc);
 }

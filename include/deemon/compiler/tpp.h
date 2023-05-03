@@ -104,7 +104,7 @@ struct TPPKeyword;
 INTDEF WUNUSED NONNULL((2)) struct TPPFile *DCALL
 tpp_unknown_file(int mode, char *__restrict filename,
                  size_t filename_size,
-                 struct TPPKeyword **pkeyword_entry);
+                 struct TPPKeyword **p_keyword_entry);
 
 /* TPP isn't exported by deemon, so we configure it to only be used internally. */
 #define TPP_assert                              Dee_ASSERT

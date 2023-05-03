@@ -1809,14 +1809,14 @@ struct instruction_effect {
 };
 
 /* Decode the effect of an instruction found at `ip', store
- * that effect in `*effect' (when non-NULL), update `*pstacksz'
+ * that effect in `*effect' (when non-NULL), update `*p_stacksz'
  * in accordance to the instruction's stack-effect, and finally
  * return a pointer to the end of the decoded instruction (which
  * is usually a pointer to the next instruction, should there be one)
  * @param: code_flags: Set of `CODE_F*' */
 DFUNDEF ATTR_RETNONNULL WUNUSED NONNULL((1, 2)) instruction_t *DCALL
 DeeInstruction_Decode(instruction_t const *__restrict ip,
-                      uint16_t *__restrict pstacksz,
+                      uint16_t *__restrict p_stacksz,
                       uint16_t code_flags,
                       struct instruction_effect *effect);
 #endif
@@ -1881,13 +1881,13 @@ INTDEF WUNUSED DREF DeeDDIObject *DCALL ddi_compile(void);
  *                         When set, don't propagate reference scopes normally
  *                         required to allow for recursive assembly and inter-
  *                         text-segment symbol referencing.
- * @param: prefc: The amount of required references to create a function object.
- * @param: prefv: Upon success, a vector of symbols that must passed to the
+ * @param: p_refc: The amount of required references to create a function object.
+ * @param: p_refv: Upon success, a vector of symbols that must passed to the
  *                code object when a function is being created. */
 INTDEF WUNUSED NONNULL((1, 4, 5)) DREF DeeCodeObject *DCALL
 code_compile(struct ast *__restrict code_ast, uint16_t flags,
-             bool first_function, uint16_t *__restrict prefc,
-             /*out:inherit*/ struct asm_symbol_ref **__restrict prefv);
+             bool first_function, uint16_t *__restrict p_refc,
+             /*out:inherit*/ struct asm_symbol_ref **__restrict p_refv);
 
 /* Similar to `code_compile()', however instructs the assembly to try to use
  * anonymous arguments in order to compile the code, meaning that rather than
@@ -1901,18 +1901,18 @@ code_compile(struct ast *__restrict code_ast, uint16_t flags,
  * NOTE: Because it's unfeasible to enforce the use of arguments instead of
  *       references for all places where references may be used, an argrefs
  *       code object may still make use of regular references, which is why
- *       there are still `prefc' and `prefv' arguments.
+ *       there are still `p_refc' and `p_refv' arguments.
  *       The main culprit here is user-defined assembly, which may require
  *       the creation of references.
- * @param: pargv: Filled with a pointer to the a vector of extended symbols
- *                that must be passed to the function during invocation,
- *                following the regular argument list.
- *                Upon success, the caller must `Dee_Free()' this vector.
- * @param: pargc: Same as `pargv', but filled with the number of reference-arguments. */
+ * @param: p_argv: Filled with a pointer to the a vector of extended symbols
+ *                 that must be passed to the function during invocation,
+ *                 following the regular argument list.
+ *                 Upon success, the caller must `Dee_Free()' this vector.
+ * @param: p_argc: Same as `p_argv', but filled with the number of reference-arguments. */
 INTDEF WUNUSED NONNULL((1, 3, 4, 5, 6)) DREF DeeCodeObject *DCALL
 code_compile_argrefs(struct ast *__restrict code_ast, uint16_t flags,
-                     uint16_t *__restrict prefc, /*out:inherit*/ struct asm_symbol_ref **__restrict prefv,
-                     uint16_t *__restrict pargc, /*out:inherit*/ struct symbol ***__restrict pargv);
+                     uint16_t *__restrict p_refc, /*out:inherit*/ struct asm_symbol_ref **__restrict p_refv,
+                     uint16_t *__restrict p_argc, /*out:inherit*/ struct symbol ***__restrict p_argv);
 
 
 

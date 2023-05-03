@@ -1489,12 +1489,12 @@ err:
 }
 
 LOCAL WUNUSED NONNULL((1)) int DCALL
-inplace_deepcopy_noarg(DREF DeeObject **__restrict pob,
+inplace_deepcopy_noarg(DREF DeeObject **__restrict p_ob,
                        size_t argc1, DeeObject *const *argv1,
                        size_t argc2, DeeObject *const *argv2) {
 	size_t i;
-	DREF DeeObject *ob = *pob;
-	/* Check if `*pob' is apart of the argument
+	DREF DeeObject *ob = *p_ob;
+	/* Check if `*p_ob' is apart of the argument
 	 * tuple, and don't copy it if it is.
 	 * We take special care not to copy objects that were loaded
 	 * from arguments/references, as those are intended to be shared.
@@ -1532,7 +1532,7 @@ inplace_deepcopy_noarg(DREF DeeObject **__restrict pob,
 			return 0;
 	}
 	/* Create an inplace deep-copy of this object. */
-	return DeeObject_InplaceDeepCopy(pob);
+	return DeeObject_InplaceDeepCopy(p_ob);
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL

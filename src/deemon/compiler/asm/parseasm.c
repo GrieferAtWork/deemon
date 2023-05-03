@@ -190,7 +190,7 @@ not_a_label:
 
 INTERN WUNUSED NONNULL((1)) struct asm_sym *FCALL
 uasm_symbol(struct TPPKeyword *__restrict name) {
-	struct asm_sym *result, **presult;
+	struct asm_sym *result, **p_result;
 	if (symtab.st_alloc) {
 		/* Search for the symbol. */
 		result = symtab.st_map[name->k_id % symtab.st_alloc];
@@ -205,11 +205,11 @@ uasm_symbol(struct TPPKeyword *__restrict name) {
 	result = asm_newsym();
 	if unlikely(!result)
 		goto err;
-	presult          = &symtab.st_map[name->k_id % symtab.st_alloc];
+	p_result         = &symtab.st_map[name->k_id % symtab.st_alloc];
 	result->as_uname = name;
-	result->as_uhnxt = *presult;
+	result->as_uhnxt = *p_result;
 	result->as_uprev = NULL;
-	*presult         = result;
+	*p_result        = result;
 done:
 	return result;
 err:
@@ -220,11 +220,11 @@ err:
 INTERN WUNUSED NONNULL((1)) struct asm_sym *FCALL
 uasm_fbsymbol(struct TPPKeyword *__restrict name,
               bool return_back_symbol) {
-	struct asm_sym *result, **presult;
+	struct asm_sym *result, **p_result;
 	if (symtab.st_alloc) {
 		/* Search for the symbol. */
-		presult = &symtab.st_map[name->k_id % symtab.st_alloc];
-		while ((result = *presult) != NULL) {
+		p_result = &symtab.st_map[name->k_id % symtab.st_alloc];
+		while ((result = *p_result) != NULL) {
 			if (result->as_uname == name) {
 				if (!return_back_symbol) {
 					/* Forward reference (if it was already defined, replace the symbol with a copy) */
@@ -238,7 +238,7 @@ uasm_fbsymbol(struct TPPKeyword *__restrict name,
 						new_result->as_uprev = result;
 						new_result->as_uhnxt = result->as_uhnxt;
 						result->as_uhnxt     = NULL;
-						*presult             = new_result;
+						*p_result             = new_result;
 						result               = new_result;
 					}
 				} else {
@@ -249,7 +249,7 @@ uasm_fbsymbol(struct TPPKeyword *__restrict name,
 				}
 				goto done;
 			}
-			presult = &result->as_uhnxt;
+			p_result = &result->as_uhnxt;
 		}
 	}
 	if unlikely(return_back_symbol) {
@@ -268,11 +268,11 @@ uasm_fbsymbol(struct TPPKeyword *__restrict name,
 	result = asm_newsym();
 	if unlikely(!result)
 		goto err;
-	presult          = &symtab.st_map[name->k_id % symtab.st_alloc];
+	p_result         = &symtab.st_map[name->k_id % symtab.st_alloc];
 	result->as_uname = name;
-	result->as_uhnxt = *presult;
+	result->as_uhnxt = *p_result;
 	result->as_uprev = NULL;
-	*presult         = result;
+	*p_result        = result;
 done:
 	return result;
 err:
@@ -281,11 +281,11 @@ err:
 
 INTERN WUNUSED NONNULL((1)) struct asm_sym *FCALL
 uasm_fbsymbol_def(struct TPPKeyword *__restrict name) {
-	struct asm_sym *result, **presult;
+	struct asm_sym *result, **p_result;
 	if (symtab.st_alloc) {
 		/* Search for the symbol. */
-		presult = &symtab.st_map[name->k_id % symtab.st_alloc];
-		while ((result = *presult) != NULL) {
+		p_result = &symtab.st_map[name->k_id % symtab.st_alloc];
+		while ((result = *p_result) != NULL) {
 			if (result->as_uname == name) {
 				/* If the symbol has already been defined, create a new one. */
 				if (ASM_SYM_DEFINED(result)) {
@@ -298,12 +298,12 @@ uasm_fbsymbol_def(struct TPPKeyword *__restrict name) {
 					new_result->as_uprev = result;
 					new_result->as_uhnxt = result->as_uhnxt;
 					result->as_uhnxt     = NULL;
-					*presult             = new_result;
+					*p_result             = new_result;
 					result               = new_result;
 				}
 				goto done;
 			}
-			presult = &result->as_uhnxt;
+			p_result = &result->as_uhnxt;
 		}
 	}
 	/* Create a new symbol. */
@@ -313,11 +313,11 @@ uasm_fbsymbol_def(struct TPPKeyword *__restrict name) {
 	result = asm_newsym();
 	if unlikely(!result)
 		goto err;
-	presult          = &symtab.st_map[name->k_id % symtab.st_alloc];
+	p_result         = &symtab.st_map[name->k_id % symtab.st_alloc];
 	result->as_uname = name;
-	result->as_uhnxt = *presult;
+	result->as_uhnxt = *p_result;
 	result->as_uprev = NULL;
-	*presult         = result;
+	*p_result        = result;
 done:
 	return result;
 err:

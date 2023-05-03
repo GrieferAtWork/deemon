@@ -100,9 +100,9 @@ struct cmd_option {
 
 /* Parse commandline options:
  * >> cmd_parse(["-foo", "-bar", "source.dee", "bar"])
- *    Execute commands `foo' and `bar', leave `*pargc' and `*pargv' as `["source.dee", "bar"]'
+ *    Execute commands `foo' and `bar', leave `*p_argc' and `*p_argv' as `["source.dee", "bar"]'
  * >> cmd_parse(["-foo", "-bar", "--", "-source.dee", "bar"])
- *    Execute commands `foo' and `bar', leave `*pargc' and `*pargv' as `["-source.dee", "bar"]'
+ *    Execute commands `foo' and `bar', leave `*p_argc' and `*p_argv' as `["-source.dee", "bar"]'
  * @param: exec_all:     When true, always execute all given arguments as commands,
  *                       allowing the leading dhash to be omitted.
  *                       Otherwise, arguments are parsed as shown in the previous example.
@@ -112,8 +112,8 @@ struct cmd_option {
  * NOTE: Options are always searched in ascending order, meaning that lower
  *       indices have a greater priority and may out-weigh greater indices. */
 INTDEF int DCALL
-cmd_parse(int    *__restrict pargc,
-          char ***__restrict pargv,
+cmd_parse(int    *__restrict p_argc,
+          char ***__restrict p_argv,
           struct cmd_option const *__restrict options,
           bool exec_all);
 

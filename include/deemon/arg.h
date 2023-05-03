@@ -162,11 +162,11 @@ DeeKwds_NewWithHint(size_t num_items);
  * NOTE: The keywords argument index is set to the old number of
  *       keywords that had already been defined previously. */
 INTDEF WUNUSED NONNULL((1, 2)) int
-(DCALL DeeKwds_AppendStr)(DREF DeeObject **__restrict pself,
+(DCALL DeeKwds_AppendStr)(DREF DeeObject **__restrict p_self,
                           char const *__restrict name,
                           size_t name_len, Dee_hash_t hash);
 INTDEF WUNUSED NONNULL((1, 2)) int
-(DCALL DeeKwds_Append)(DREF DeeObject **__restrict pself,
+(DCALL DeeKwds_Append)(DREF DeeObject **__restrict p_self,
                        DeeObject *__restrict name);
 
 /* Return the keyword-entry associated with `keyword_index'
@@ -176,10 +176,10 @@ DeeKwds_GetByIndex(DeeObject *__restrict self, size_t keyword_index);
 
 #ifndef __INTELLISENSE__
 #ifndef __NO_builtin_expect
-#define DeeKwds_AppendStr(pself, name, name_len, hash) \
-	__builtin_expect(DeeKwds_AppendStr(pself, name, name_len, hash), 0)
-#define DeeKwds_Append(pself, name) \
-	__builtin_expect(DeeKwds_Append(pself, name), 0)
+#define DeeKwds_AppendStr(p_self, name, name_len, hash) \
+	__builtin_expect(DeeKwds_AppendStr(p_self, name, name_len, hash), 0)
+#define DeeKwds_Append(p_self, name) \
+	__builtin_expect(DeeKwds_Append(p_self, name), 0)
 #endif /* !__NO_builtin_expect */
 #endif /* !__INTELLISENSE__ */
 #endif /* CONFIG_BUILDING_DEEMON */
@@ -317,14 +317,14 @@ struct dee_kwargs {
  * @return: 0 : Success
  * @return: -1: An error was thrown */
 DFUNDEF WUNUSED NONNULL((1, 2)) int DCALL
-DeeKwArgs_Init(DeeKwArgs *__restrict self, size_t *__restrict pargc,
+DeeKwArgs_Init(DeeKwArgs *__restrict self, size_t *__restrict p_argc,
                DeeObject *const *argv, DeeObject *kw);
 
 /* Indicate that you're doing loading arguments from `self'.
  * This function asserts that `kwa_kwused == #kwa_kw' so-as
  * to ensure that `kwa_kw' doesn't contain any unused keyword
  * arguments.
- * @param: positional_argc: The value of `*pargc' after `DeeKwArgs_Init()' returned.
+ * @param: positional_argc: The value of `*p_argc' after `DeeKwArgs_Init()' returned.
  * @return: 0 : Success
  * @return: -1: An error was thrown */
 DFUNDEF WUNUSED NONNULL((1)) int DCALL
@@ -354,7 +354,7 @@ DeeKwArgs_GetStringLenDef(DeeKwArgs *__restrict self, char const *__restrict nam
  * high-level {(string, Object)...}-like mapping that is bound to
  * the actually mapped arguments. */
 DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-DeeArg_GetKw(size_t *__restrict pargc, DeeObject *const *argv, DeeObject *kw);
+DeeArg_GetKw(size_t *__restrict p_argc, DeeObject *const *argv, DeeObject *kw);
 DFUNDEF NONNULL((3)) void DCALL
 DeeArg_PutKw(size_t argc, DeeObject *const *argv, DREF DeeObject *kw);
 
@@ -415,7 +415,7 @@ DeeArg_VUnpackKw(size_t argc, DeeObject *const *argv,
 
 #ifndef __INTELLISENSE__
 #ifndef __NO_builtin_expect
-#define DeeKwArgs_Init(self, pargc, argv, kw)                  __builtin_expect(DeeKwArgs_Init(self, pargc, argv, kw), 0)
+#define DeeKwArgs_Init(self, p_argc, argv, kw)                 __builtin_expect(DeeKwArgs_Init(self, p_argc, argv, kw), 0)
 #define DeeKwArgs_Done(self, positional_argc, function_name)   __builtin_expect(DeeKwArgs_Done(self, positional_argc, function_name), 0)
 #define DeeArg_UnpackKw(argc, argv, kw, kwlist, ...)           __builtin_expect(DeeArg_UnpackKw(argc, argv, kw, kwlist, __VA_ARGS__), 0)
 #define DeeArg_VUnpackKw(argc, argv, kw, kwlist, format, args) __builtin_expect(DeeArg_VUnpackKw(argc, argv, kw, kwlist, format, args), 0)

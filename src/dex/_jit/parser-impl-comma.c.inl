@@ -29,11 +29,11 @@ DECL_BEGIN
 INTERN WUNUSED DREF DeeObject *DCALL
 JITLexer_EvalComma(JITLexer *__restrict self, uint16_t mode,
                    DeeTypeObject *seq_type,
-                   uint16_t *pout_mode)
+                   uint16_t *p_out_mode)
 #else /* JIT_EVAL */
 INTERN int DCALL
 JITLexer_SkipComma(JITLexer *__restrict self, uint16_t mode,
-                   uint16_t *pout_mode)
+                   uint16_t *p_out_mode)
 #endif /* !JIT_EVAL */
 {
 	RETURN_TYPE current;
@@ -405,8 +405,8 @@ err_currrent_var_symbol:
 	if (self->jl_tok == TOK_DOTS) {
 		/* Expand expression (append everything from `current' to the resulting expression) */
 		JITLexer_Yield(self);
-		if (pout_mode)
-			*pout_mode |= AST_COMMA_OUT_FMULTIPLE;
+		if (p_out_mode)
+			*p_out_mode |= AST_COMMA_OUT_FMULTIPLE;
 #ifdef JIT_EVAL
 		LOAD_LVALUE(current, err);
 		if (expr_comma.ll_size) {
@@ -432,8 +432,8 @@ err_currrent_var_symbol:
 			if (!JITLexer_MaybeExpressionBegin((JITLexer *)&smlex))
 				goto done_expression;
 		}
-		if (pout_mode)
-			*pout_mode |= AST_COMMA_OUT_FMULTIPLE;
+		if (p_out_mode)
+			*p_out_mode |= AST_COMMA_OUT_FMULTIPLE;
 
 			/* Append to the current comma-sequence. */
 #ifdef JIT_EVAL
@@ -509,7 +509,7 @@ continue_at_comma:
 		/* TODO: Add support for applying annotations here! */
 		{
 			uint16_t store_source_mode;
-			/* Must pass a pointer for pout_mode, since this call might
+			/* Must pass a pointer for p_out_mode, since this call might
 			 * otherwise try to consume a trailing ';'-character. */
 #ifdef JIT_EVAL
 			store_source = JITLexer_EvalComma(self,
@@ -539,8 +539,8 @@ err_current_lvalue:
 		 * >> a, b, c = get_value();    // >> (a, b, (c = get_value())); */
 		if (self->jl_tok == TOK_DOTS) {
 			/* Append the last expression (in the example above, that is `c') */
-			if (pout_mode)
-				*pout_mode |= AST_COMMA_OUT_FMULTIPLE;
+			if (p_out_mode)
+				*p_out_mode |= AST_COMMA_OUT_FMULTIPLE;
 			JITLexer_Yield(self);
 #ifdef JIT_EVAL
 			if (current == JIT_LVALUE) {
@@ -674,8 +674,8 @@ continue_expression_after_dots:
 				Dee_Decref(current);
 set_multiple_and_continue_at_comma:
 #endif /* JIT_EVAL */
-				if (pout_mode)
-					*pout_mode |= AST_COMMA_OUT_FMULTIPLE;
+				if (p_out_mode)
+					*p_out_mode |= AST_COMMA_OUT_FMULTIPLE;
 				goto continue_at_comma;
 			} else {
 				memcpy(&smlex, self, sizeof(JITSmallLexer));
@@ -688,8 +688,8 @@ set_multiple_and_continue_at_comma:
 					Dee_Decref(current);
 set_multiple_and_continue_at_comma_continue:
 #endif /* JIT_EVAL */
-					if (pout_mode)
-						*pout_mode |= AST_COMMA_OUT_FMULTIPLE;
+					if (p_out_mode)
+						*p_out_mode |= AST_COMMA_OUT_FMULTIPLE;
 					goto continue_at_comma;
 				}
 			}
@@ -756,9 +756,9 @@ done_expression:
 #endif /* JIT_EVAL */
 
 done_expression_nomerge:
-	if (pout_mode) {
+	if (p_out_mode) {
 		if (need_semi)
-			*pout_mode |= AST_COMMA_OUT_FNEEDSEMI;
+			*p_out_mode |= AST_COMMA_OUT_FNEEDSEMI;
 	} else if (need_semi) {
 		/* Consume a `;' token as part of the expression. */
 		if likely(self->jl_tok == ';') {

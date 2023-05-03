@@ -72,13 +72,13 @@ err:
  * NOTE: Any of the given pointers may be filled with NULL if that AST is not present,
  *       unless the loop is actually a foreach-loop, in which case they _must_ always
  *       be present.
- * WARNING: The caller is responsible for wrapping `*piter_or_next' in an `__iterself__()'
+ * WARNING: The caller is responsible for wrapping `*p_iter_or_next' in an `__iterself__()'
  *          operator call when `AST_FLOOP_FOREACH' is part of the return mask, unless they wish
  *          to enumerate an iterator itself (which is possible using the `__foreach' statement). */
 INTERN WUNUSED NONNULL((1, 2, 3)) int32_t DCALL
-ast_parse_for_head(DREF struct ast **__restrict pinit,
-                   DREF struct ast **__restrict pelem_or_cond,
-                   DREF struct ast **__restrict piter_or_next) {
+ast_parse_for_head(DREF struct ast **__restrict p_init,
+                   DREF struct ast **__restrict p_elem_or_cond,
+                   DREF struct ast **__restrict p_iter_or_next) {
 	int32_t result                = AST_FLOOP_NORMAL;
 	DREF struct ast *init         = NULL;
 	DREF struct ast *elem_or_cond = NULL;
@@ -119,9 +119,9 @@ ast_parse_for_head(DREF struct ast **__restrict pinit,
 			goto err;
 	}
 done:
-	*pinit         = init;
-	*pelem_or_cond = elem_or_cond;
-	*piter_or_next = iter_or_next;
+	*p_init         = init;
+	*p_elem_or_cond = elem_or_cond;
+	*p_iter_or_next = iter_or_next;
 	return result;
 err:
 	ast_xdecref(init);

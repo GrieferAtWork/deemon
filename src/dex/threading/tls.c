@@ -257,11 +257,11 @@ PRIVATE ATTR_COLD int DCALL err_tls_unbound(void) {
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 tls_getvalue(TLS *__restrict self) {
-	DREF DeeObject **presult, *result;
-	presult = thread_tls_get(self->t_index);
-	if unlikely(!presult)
+	DREF DeeObject **p_result, *result;
+	p_result = thread_tls_get(self->t_index);
+	if unlikely(!p_result)
 		goto err;
-	result = *presult;
+	result = *p_result;
 	if unlikely(result == ITER_DONE) {
 		err_tls_unbound();
 		goto err;
@@ -273,7 +273,7 @@ tls_getvalue(TLS *__restrict self) {
 		goto err;
 	} else if (DeeNone_Check(self->t_factory)) {
 		Dee_Incref_n(Dee_None, 2);
-		result = *presult = Dee_None; /* Save and return `none'. */
+		result = *p_result = Dee_None; /* Save and return `none'. */
 	} else {
 		/* Invoke the factory. */
 		result = DeeObject_Call(self->t_factory, 0, NULL);
@@ -282,10 +282,10 @@ tls_getvalue(TLS *__restrict self) {
 
 		/* Must re-retrieve the TLS pointer in case the factory
 		 * did some other TLS manipulations that changed the vector. */
-		presult = thread_tls_get(self->t_index);
-		ASSERTF(presult, "Since we've already allocated this index "
+		p_result = thread_tls_get(self->t_index);
+		ASSERTF(p_result, "Since we've already allocated this index "
 		                 "before, it should have already existed");
-		if unlikely(*presult) {
+		if unlikely(*p_result) {
 			/* Highly unlikely: The factory called the TLS recursively
 			 *                  but actually returned a value in some
 			 *                  inner callback.
@@ -294,7 +294,7 @@ tls_getvalue(TLS *__restrict self) {
 			 *                  of keeping things consistent, don't overwrite
 			 *                  the existing value, but drop the new and
 			 *                  re-use the existing one. */
-			DREF DeeObject *new_result = *presult;
+			DREF DeeObject *new_result = *p_result;
 
 			/* Extract the existing value first, in case the decref()
 			 * on the factory return value changes it again... */
@@ -305,7 +305,7 @@ tls_getvalue(TLS *__restrict self) {
 		} else {
 			/* Save the factory return value in the TLS variable slot. */
 			Dee_Incref(result);
-			*presult = result; /* Inherit reference. */
+			*p_result = result; /* Inherit reference. */
 		}
 	}
 	return result;

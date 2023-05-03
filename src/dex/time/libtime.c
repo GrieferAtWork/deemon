@@ -1650,33 +1650,33 @@ int128_overflow(Dee_int128_t const *__restrict value,
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 time_int64(DeeTimeObject *__restrict self,
-           int64_t *__restrict presult) {
+           int64_t *__restrict p_result) {
 	Dee_int128_t result;
 	DeeTime_AsNano(self, &result);
 	if unlikely(!__hybrid_int128_is64bit(result)) {
 		if (__hybrid_uint128_is64bit(*(Dee_uint128_t const *)&result)) {
-			*(uint64_t *)presult = __hybrid_uint128_get64(*(Dee_uint128_t const *)&result);
+			*(uint64_t *)p_result = __hybrid_uint128_get64(*(Dee_uint128_t const *)&result);
 			return INT_SIGNED;
 		}
 		return int128_overflow(&result, 64);
 	}
-	*presult = __hybrid_int128_get64(result);
+	*p_result = __hybrid_int128_get64(result);
 	return INT_SIGNED;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 time_int32(DeeTimeObject *__restrict self,
-           int32_t *__restrict presult) {
+           int32_t *__restrict p_result) {
 	Dee_int128_t result;
 	DeeTime_AsNano(self, &result);
 	if unlikely(!__hybrid_int128_is32bit(result)) {
 		if (__hybrid_uint128_is32bit(*(Dee_uint128_t const *)&result)) {
-			*(uint32_t *)presult = __hybrid_uint128_get32(*(Dee_uint128_t const *)&result);
+			*(uint32_t *)p_result = __hybrid_uint128_get32(*(Dee_uint128_t const *)&result);
 			return INT_SIGNED;
 		}
 		return int128_overflow(&result, 32);
 	}
-	*presult = __hybrid_int128_get32(result);
+	*p_result = __hybrid_int128_get32(result);
 	return INT_SIGNED;
 }
 

@@ -98,11 +98,12 @@ err:
 	return NULL;
 }
 
-PRIVATE WUNUSED NONNULL((1)) int DCALL resize_argument_list(uint16_t *__restrict parga) {
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+resize_argument_list(uint16_t *__restrict p_arga) {
 	struct symbol **new_symv;
-	ASSERT(current_basescope->bs_argc <= *parga);
-	if (current_basescope->bs_argc >= *parga) {
-		uint16_t new_arga = *parga * 2;
+	ASSERT(current_basescope->bs_argc <= *p_arga);
+	if (current_basescope->bs_argc >= *p_arga) {
+		uint16_t new_arga = *p_arga * 2;
 		if (!new_arga)
 			new_arga = 2;
 do_realloc_symv:
@@ -118,18 +119,20 @@ do_realloc_symv:
 			return -1;
 		}
 		current_basescope->bs_argv = new_symv;
-		*parga                     = new_arga;
+		*p_arga                    = new_arga;
 	}
 	return 0;
 }
 
-PRIVATE WUNUSED NONNULL((1)) int DCALL resize_default_list(uint16_t *__restrict pdefaulta) {
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+resize_default_list(uint16_t *__restrict p_defaulta) {
 	DREF DeeObject **new_defaultv;
 	uint16_t defaultc;
-	defaultc = (size_t)(current_basescope->bs_argc_max - current_basescope->bs_argc_min);
-	ASSERT(defaultc <= *pdefaulta);
-	if (defaultc >= *pdefaulta) {
-		uint16_t new_defaulta = *pdefaulta * 2;
+	defaultc = (size_t)(current_basescope->bs_argc_max -
+	                    current_basescope->bs_argc_min);
+	ASSERT(defaultc <= *p_defaulta);
+	if (defaultc >= *p_defaulta) {
+		uint16_t new_defaulta = *p_defaulta * 2;
 		if (!new_defaulta)
 			new_defaulta = 2;
 do_realloc_symv:
@@ -145,7 +148,7 @@ do_realloc_symv:
 			return -1;
 		}
 		current_basescope->bs_default = new_defaultv;
-		*pdefaulta                    = new_defaulta;
+		*p_defaulta                   = new_defaulta;
 	}
 	return 0;
 }
@@ -481,7 +484,7 @@ err:
 }
 
 INTERN WUNUSED DREF struct ast *DCALL
-ast_parse_function(struct TPPKeyword *name, bool *pneed_semi,
+ast_parse_function(struct TPPKeyword *name, bool *p_need_semi,
                    bool allow_missing_params,
                    struct ast_loc *name_loc
 #ifdef CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION
@@ -495,7 +498,7 @@ ast_parse_function(struct TPPKeyword *name, bool *pneed_semi,
 	if unlikely(basescope_push())
 		goto err_anno;
 	current_basescope->bs_flags |= current_tags.at_code_flags;
-	result = ast_parse_function_noscope(name, pneed_semi, allow_missing_params, name_loc
+	result = ast_parse_function_noscope(name, p_need_semi, allow_missing_params, name_loc
 #ifdef CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION
 	                                    ,
 	                                    decl
@@ -512,7 +515,7 @@ err_anno:
 
 INTERN WUNUSED DREF struct ast *DCALL
 ast_parse_function_noscope(struct TPPKeyword *name,
-                           bool *pneed_semi,
+                           bool *p_need_semi,
                            bool allow_missing_params,
                            struct ast_loc *name_loc
 #ifdef CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION
@@ -605,8 +608,8 @@ ast_parse_function_noscope(struct TPPKeyword *name,
 		         : (current_basescope->bs_cflags |= BASESCOPE_FRETURN, ast_return(code));
 		ast_decref(code);
 		code = ast_setddi(result, &arrow_loc);
-		if (pneed_semi)
-			*pneed_semi = true;
+		if (p_need_semi)
+			*p_need_semi = true;
 	} else if (tok == '{') {
 		struct ast_loc brace_loc;
 		loc_here(&brace_loc);
@@ -620,8 +623,8 @@ ast_parse_function_noscope(struct TPPKeyword *name,
 		TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
 		if (skip('}', W_EXPECTED_RBRACE_AFTER_FUNCTION))
 			goto err_xcode_decl;
-		if (pneed_semi)
-			*pneed_semi = false;
+		if (p_need_semi)
+			*p_need_semi = false;
 	} else {
 		/* Missing function body (this was allowed in deemon 100+, where
 		 * this was interpreted the same way an `{ }'-like empty body would
@@ -646,8 +649,8 @@ ast_parse_function_noscope(struct TPPKeyword *name,
 		if (WARN(W_EXPECTED_LBRACE_AFTER_FUNCTION))
 			goto err;
 		code = ast_multiple(AST_FMULTIPLE_KEEPLAST, 0, NULL);
-		if (pneed_semi)
-			*pneed_semi = true;
+		if (p_need_semi)
+			*p_need_semi = true;
 	}
 	if unlikely(!code)
 		goto err_decl;
@@ -695,7 +698,7 @@ err:
 }
 
 INTERN WUNUSED DREF struct ast *DCALL
-ast_parse_function_noscope_noargs(bool *pneed_semi) {
+ast_parse_function_noscope_noargs(bool *p_need_semi) {
 	uint32_t old_flags;
 	DREF struct ast *result, *code;
 	if (tok == TOK_ARROW) {
@@ -712,8 +715,8 @@ ast_parse_function_noscope_noargs(bool *pneed_semi) {
 		         : (current_basescope->bs_cflags |= BASESCOPE_FRETURN, ast_return(code));
 		ast_decref(code);
 		code = ast_setddi(result, &arrow_loc);
-		if (pneed_semi)
-			*pneed_semi = true;
+		if (p_need_semi)
+			*p_need_semi = true;
 	} else if (tok == '{') {
 		struct ast_loc brace_loc;
 		loc_here(&brace_loc);
@@ -727,8 +730,8 @@ ast_parse_function_noscope_noargs(bool *pneed_semi) {
 		TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
 		if (skip('}', W_EXPECTED_RBRACE_AFTER_FUNCTION))
 			goto err_xcode;
-		if (pneed_semi)
-			*pneed_semi = false;
+		if (p_need_semi)
+			*p_need_semi = false;
 	} else {
 		/* Missing function body (this was allowed in deemon 100+, where
 		 * this was interpreted the same way an `{ }'-like empty body would
@@ -736,8 +739,8 @@ ast_parse_function_noscope_noargs(bool *pneed_semi) {
 		if (WARN(W_EXPECTED_LBRACE_AFTER_FUNCTION))
 			goto err;
 		code = ast_multiple(AST_FMULTIPLE_KEEPLAST, 0, NULL);
-		if (pneed_semi)
-			*pneed_semi = true;
+		if (p_need_semi)
+			*p_need_semi = true;
 	}
 	if unlikely(!code)
 		goto err;

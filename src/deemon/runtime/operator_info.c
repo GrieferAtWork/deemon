@@ -589,7 +589,7 @@ Dee_OperatorInfo(DeeTypeObject *typetype, uint16_t id) {
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-invoke_operator(DeeObject *self, DeeObject **pself,
+invoke_operator(DeeObject *self, DeeObject **p_self,
                 uint16_t name, size_t argc, DeeObject *const *argv) {
 	DeeObject *other;
 	ASSERT_OBJECT(self);
@@ -762,119 +762,119 @@ invoke_operator(DeeObject *self, DeeObject **pself,
 		return DeeObject_Pow(self, other);
 
 	case OPERATOR_INC:
-		if unlikely(!pself)
+		if unlikely(!p_self)
 			goto requires_inplace;
 		if (DeeArg_Unpack(argc, argv, ":__inc__"))
 			goto err;
-		if (DeeObject_Inc(pself))
+		if (DeeObject_Inc(p_self))
 			goto err;
 		goto return_self;
 
 	case OPERATOR_DEC:
-		if unlikely(!pself)
+		if unlikely(!p_self)
 			goto requires_inplace;
 		if (DeeArg_Unpack(argc, argv, ":__dec__"))
 			goto err;
-		if (DeeObject_Dec(pself))
+		if (DeeObject_Dec(p_self))
 			goto err;
 		goto return_self;
 
 	case OPERATOR_INPLACE_ADD:
-		if unlikely(!pself)
+		if unlikely(!p_self)
 			goto requires_inplace;
 		if (DeeArg_Unpack(argc, argv, "o:__iadd__", &other))
 			goto err;
-		if (DeeObject_InplaceAdd(pself, other))
+		if (DeeObject_InplaceAdd(p_self, other))
 			goto err;
 		goto return_self;
 
 	case OPERATOR_INPLACE_SUB:
-		if unlikely(!pself)
+		if unlikely(!p_self)
 			goto requires_inplace;
 		if (DeeArg_Unpack(argc, argv, "o:__isub__", &other))
 			goto err;
-		if (DeeObject_InplaceSub(pself, other))
+		if (DeeObject_InplaceSub(p_self, other))
 			goto err;
 		goto return_self;
 
 	case OPERATOR_INPLACE_MUL:
-		if unlikely(!pself)
+		if unlikely(!p_self)
 			goto requires_inplace;
 		if (DeeArg_Unpack(argc, argv, "o:__imul__", &other))
 			goto err;
-		if (DeeObject_InplaceMul(pself, other))
+		if (DeeObject_InplaceMul(p_self, other))
 			goto err;
 		goto return_self;
 
 	case OPERATOR_INPLACE_DIV:
-		if unlikely(!pself)
+		if unlikely(!p_self)
 			goto requires_inplace;
 		if (DeeArg_Unpack(argc, argv, "o:__idiv__", &other))
 			goto err;
-		if (DeeObject_InplaceDiv(pself, other))
+		if (DeeObject_InplaceDiv(p_self, other))
 			goto err;
 		goto return_self;
 
 	case OPERATOR_INPLACE_MOD:
-		if unlikely(!pself)
+		if unlikely(!p_self)
 			goto requires_inplace;
 		if (DeeArg_Unpack(argc, argv, "o:__imod__", &other))
 			goto err;
-		if (DeeObject_InplaceMod(pself, other))
+		if (DeeObject_InplaceMod(p_self, other))
 			goto err;
 		goto return_self;
 
 	case OPERATOR_INPLACE_SHL:
-		if unlikely(!pself)
+		if unlikely(!p_self)
 			goto requires_inplace;
 		if (DeeArg_Unpack(argc, argv, "o:__ishl__", &other))
 			goto err;
-		if (DeeObject_InplaceShl(pself, other))
+		if (DeeObject_InplaceShl(p_self, other))
 			goto err;
 		goto return_self;
 
 	case OPERATOR_INPLACE_SHR:
-		if unlikely(!pself)
+		if unlikely(!p_self)
 			goto requires_inplace;
 		if (DeeArg_Unpack(argc, argv, "o:__ishr__", &other))
 			goto err;
-		if (DeeObject_InplaceShr(pself, other))
+		if (DeeObject_InplaceShr(p_self, other))
 			goto err;
 		goto return_self;
 
 	case OPERATOR_INPLACE_AND:
-		if unlikely(!pself)
+		if unlikely(!p_self)
 			goto requires_inplace;
 		if (DeeArg_Unpack(argc, argv, "o:__iand__", &other))
 			goto err;
-		if (DeeObject_InplaceAnd(pself, other))
+		if (DeeObject_InplaceAnd(p_self, other))
 			goto err;
 		goto return_self;
 
 	case OPERATOR_INPLACE_OR:
-		if unlikely(!pself)
+		if unlikely(!p_self)
 			goto requires_inplace;
 		if (DeeArg_Unpack(argc, argv, "o:__ior__", &other))
 			goto err;
-		if (DeeObject_InplaceOr(pself, other))
+		if (DeeObject_InplaceOr(p_self, other))
 			goto err;
 		goto return_self;
 
 	case OPERATOR_INPLACE_XOR:
-		if unlikely(!pself)
+		if unlikely(!p_self)
 			goto requires_inplace;
 		if (DeeArg_Unpack(argc, argv, "o:__ixor__", &other))
 			goto err;
-		if (DeeObject_InplaceXor(pself, other))
+		if (DeeObject_InplaceXor(p_self, other))
 			goto err;
 		goto return_self;
 
 	case OPERATOR_INPLACE_POW:
-		if unlikely(!pself)
+		if unlikely(!p_self)
 			goto requires_inplace;
 		if (DeeArg_Unpack(argc, argv, "o:__ipow__", &other))
 			goto err;
-		if (DeeObject_InplacePow(pself, other))
+		if (DeeObject_InplacePow(p_self, other))
 			goto err;
 		goto return_self;
 
@@ -1346,7 +1346,7 @@ invoke_operator(DeeObject *self, DeeObject **pself,
 				goto special_operator;
 			if (info->oi_private)
 				goto private_operator;
-			if (info->oi_type & OPTYPE_INPLACE && !pself)
+			if (info->oi_type & OPTYPE_INPLACE && !p_self)
 				goto requires_inplace;
 		}
 		DeeError_Throwf(&DeeError_TypeError,
@@ -1418,9 +1418,9 @@ DeeObject_InvokeOperator(DeeObject *self, uint16_t name,
 }
 
 PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-DeeObject_PInvokeOperator(DeeObject **__restrict pself, uint16_t name,
+DeeObject_PInvokeOperator(DeeObject **__restrict p_self, uint16_t name,
                           size_t argc, DeeObject *const *argv) {
-	return invoke_operator(*pself, pself, name, argc, argv);
+	return invoke_operator(*p_self, p_self, name, argc, argv);
 }
 
 

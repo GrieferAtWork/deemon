@@ -960,6 +960,8 @@ functest('strverscmp("foo", "bar")', "defined(__USE_GNU)");
 functest('strfry((char *)"foo")', "defined(__USE_GNU)");
 functest('memfrob((char *)"foo", 3)', "defined(__USE_GNU)");
 
+func("bcopy", "defined(CONFIG_HAVE_STRINGS_H)", test: "extern void *a; extern void const *b; bcopy(b, a, 16); return 0;");
+
 func("bzero", "defined(CONFIG_HAVE_STRINGS_H)", test: "extern void *a; bzero(a, 42); return 0;");
 func("bzerow", "defined(CONFIG_HAVE_STRINGS_H) && defined(__USE_STRING_BWLQ)", test: "extern void *a; bzerow(a, 42); return 0;");
 func("bzerol", "defined(CONFIG_HAVE_STRINGS_H) && defined(__USE_STRING_BWLQ)", test: "extern void *a; bzerol(a, 42); return 0;");
@@ -7311,6 +7313,13 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #define CONFIG_HAVE_memfrob
 #endif
 
+#ifdef CONFIG_NO_bcopy
+#undef CONFIG_HAVE_bcopy
+#elif !defined(CONFIG_HAVE_bcopy) && \
+      (defined(bcopy) || defined(__bcopy_defined) || defined(CONFIG_HAVE_STRINGS_H))
+#define CONFIG_HAVE_bcopy
+#endif
+
 #ifdef CONFIG_NO_bzero
 #undef CONFIG_HAVE_bzero
 #elif !defined(CONFIG_HAVE_bzero) && \
@@ -11229,18 +11238,22 @@ DECL_END
 
 #ifndef CONFIG_HAVE_memcpy
 #define CONFIG_HAVE_memcpy
-DECL_BEGIN
 #undef memcpy
+#ifdef CONFIG_HAVE_bcopy
+#define memcpy(dst, src, num_bytes) (bcopy(src, dst, num_bytes), (void *)(dst))
+#else /* CONFIG_HAVE_bcopy */
+DECL_BEGIN
 #define memcpy dee_memcpy
-LOCAL WUNUSED NONNULL((1, 2)) void *
+LOCAL WUNUSED ATTR_OUTS(1, 3) ATTR_INS(2, 3) void *
 dee_memcpy(void *__restrict dst, void const *__restrict src, size_t num_bytes) {
-	uint8_t *pdst = (uint8_t *)dst;
-	uint8_t const *psrc = (uint8_t const *)src;
+	uint8_t *dst_p = (uint8_t *)dst;
+	uint8_t const *src_p = (uint8_t const *)src;
 	while (num_bytes--)
-		*pdst++ = *psrc++;
+		*dst_p++ = *src_p++;
 	return dst;
 }
 DECL_END
+#endif /* !CONFIG_HAVE_bcopy */
 #endif /* !CONFIG_HAVE_memcpy */
 
 #ifndef CONFIG_HAVE_memset
@@ -11248,11 +11261,11 @@ DECL_END
 DECL_BEGIN
 #undef memset
 #define memset dee_memset
-LOCAL WUNUSED NONNULL((1)) void *
+LOCAL WUNUSED ATTR_OUTS(1, 3) void *
 dee_memset(void *__restrict dst, int byte, size_t num_bytes) {
-	uint8_t *pdst = (uint8_t *)dst;
+	uint8_t *dst_p = (uint8_t *)dst;
 	while (num_bytes--)
-		*pdst++ = (uint8_t)(unsigned int)byte;
+		*dst_p++ = (uint8_t)(unsigned int)byte;
 	return dst;
 }
 DECL_END
@@ -11263,20 +11276,20 @@ DECL_END
 DECL_BEGIN
 #undef memmove
 #define memmove dee_memmove
-LOCAL WUNUSED NONNULL((1, 2)) void *
+LOCAL WUNUSED ATTR_OUTS(1, 3) ATTR_INS(2, 3) void *
 dee_memmove(void *dst, void const *src, size_t num_bytes) {
-	uint8_t *pdst;
-	uint8_t const *psrc;
+	uint8_t *dst_p;
+	uint8_t const *src_p;
 	if (dst <= src) {
-		pdst = (uint8_t *)dst;
-		psrc = (uint8_t const *)src;
+		dst_p = (uint8_t *)dst;
+		src_p = (uint8_t const *)src;
 		while (num_bytes--)
-			*pdst++ = *psrc++;
+			*dst_p++ = *src_p++;
 	} else {
-		pdst = (uint8_t *)dst + num_bytes;
-		psrc = (uint8_t const *)src + num_bytes;
+		dst_p = (uint8_t *)dst + num_bytes;
+		src_p = (uint8_t const *)src + num_bytes;
 		while (num_bytes--)
-			*--pdst = *--psrc;
+			*--dst_p = *--src_p;
 	}
 	return dst;
 }
@@ -11284,21 +11297,21 @@ DECL_END
 #endif /* !CONFIG_HAVE_memmove */
 
 
-#define _DeeSystem_DEFINE_memccpyT(rT, T, Tneedle, name)    \
-	LOCAL ATTR_PURE WUNUSED rT *                            \
-	name(void *__restrict dst, void const *__restrict src,  \
-	     Tneedle needle, size_t num_bytes) {                \
-		T *pdst = (T *)dst;                                 \
-		T const *psrc = (T const *)src;                     \
-		while (num_bytes--) {                               \
-			if ((*pdst++ = *psrc++) == (T)needle)           \
-				return pdst; /* Yes: +1 past the needle. */ \
-		}                                                   \
-		return NULL;                                        \
+#define _DeeSystem_DEFINE_memccpyT(rT, T, Tneedle, name)        \
+	LOCAL ATTR_PURE WUNUSED ATTR_OUTS(1, 4) ATTR_INS(2, 4) rT * \
+	name(void *__restrict dst, void const *__restrict src,      \
+	     Tneedle needle, size_t num_bytes) {                    \
+		T *dst_p = (T *)dst;                                    \
+		T const *src_p = (T const *)src;                        \
+		while (num_bytes--) {                                   \
+			if ((*dst_p++ = *src_p++) == (T)needle)             \
+				return dst_p; /* Yes: +1 past the needle. */    \
+		}                                                       \
+		return NULL;                                            \
 	}
 
 #define _DeeSystem_DEFINE_memchrT(rT, T, Tneedle, name)   \
-	LOCAL ATTR_PURE WUNUSED NONNULL((1)) rT *             \
+	LOCAL ATTR_PURE WUNUSED ATTR_INS(1, 3) rT *           \
 	name(void const *__restrict p, Tneedle c, size_t n) { \
 		T const *hay_iter = (T const *)p;                 \
 		for (; n--; ++hay_iter) {                         \
@@ -11309,7 +11322,7 @@ DECL_END
 	}
 
 #define _DeeSystem_DEFINE_memrchrT(rT, T, Tneedle, name)  \
-	LOCAL ATTR_PURE WUNUSED NONNULL((1)) rT *             \
+	LOCAL ATTR_PURE WUNUSED ATTR_INS(1, 3) rT *           \
 	name(void const *__restrict p, Tneedle c, size_t n) { \
 		T const *iter = (T const *)p + n;                 \
 		while (iter != (T const *)p) {                    \
@@ -11319,18 +11332,18 @@ DECL_END
 		return NULL;                                      \
 	}
 
-#define _DeeSystem_DEFINE_memcmpT(T, name)            \
-	LOCAL ATTR_PURE WUNUSED NONNULL((1, 2)) int       \
-	name(void const *s1, void const *s2, size_t n) {  \
-		T const *p1 = (T const *)s1;                  \
-		T const *p2 = (T const *)s2;                  \
-		while (n--) {                                 \
-			T v1, v2;                                 \
-			if ((v1 = *p1++) != (v2 = *p2++)) {       \
-				return v1 < v2 ? -1 : 1;              \
-			}                                         \
-		}                                             \
-		return 0;                                     \
+#define _DeeSystem_DEFINE_memcmpT(T, name)                    \
+	LOCAL ATTR_PURE WUNUSED ATTR_INS(1, 3) ATTR_INS(2, 3) int \
+	name(void const *s1, void const *s2, size_t n) {          \
+		T const *p1 = (T const *)s1;                          \
+		T const *p2 = (T const *)s2;                          \
+		while (n--) {                                         \
+			T v1, v2;                                         \
+			if ((v1 = *p1++) != (v2 = *p2++)) {               \
+				return v1 < v2 ? -1 : 1;                      \
+			}                                                 \
+		}                                                     \
+		return 0;                                             \
 	}
 
 #define _DeeSystem_DEFINE_strcmpT(T, unsignedT, name)        \
@@ -11475,7 +11488,7 @@ DECL_END
 #endif /* !CONFIG_HAVE_memcmp */
 
 #define _DeeSystem_DEFINE_memmemT(rT, T, memchr, memeq, name)                          \
-	LOCAL ATTR_PURE WUNUSED rT *                                                       \
+	LOCAL ATTR_PURE WUNUSED ATTR_INS(1, 2) ATTR_INS(3, 4) rT *                         \
 	name(void const *__restrict haystack, size_t haystack_length,                      \
 	     void const *__restrict needle, size_t needle_length) {                        \
 		T *candidate;                                                                  \
@@ -11494,9 +11507,9 @@ DECL_END
 	}
 
 #define _DeeSystem_DEFINE_memrmemT(rT, T, memrchr, memeq, name)                    \
-	LOCAL ATTR_PURE WUNUSED rT *                                                   \
+	LOCAL ATTR_PURE WUNUSED ATTR_INS(1, 2) ATTR_INS(3, 4) rT *                     \
 	name(void const *__restrict haystack, size_t haystack_length,                  \
-	               void const *__restrict needle, size_t needle_length) {          \
+	     void const *__restrict needle, size_t needle_length) {                    \
 		void const *candidate;                                                     \
 		T marker;                                                                  \
 		if unlikely(!needle_length || needle_length > haystack_length)             \
@@ -11511,12 +11524,12 @@ DECL_END
 		return NULL;                                                               \
 	}
 
-#define DeeSystem_DEFINE_memmem(name) _DeeSystem_DEFINE_memmemT(void, uint8_t, memchr, 0 == memcmp, name)
+#define DeeSystem_DEFINE_memmem(name) _DeeSystem_DEFINE_memmemT(void, uint8_t, memchr, 0 == bcmp, name)
 #define DeeSystem_DEFINE_memmemw(name, memchrw, memeqw) _DeeSystem_DEFINE_memmemT(uint16_t, uint16_t, memchrw, memeqw, name)
 #define DeeSystem_DEFINE_memmeml(name, memchrl, memeql) _DeeSystem_DEFINE_memmemT(uint32_t, uint32_t, memchrl, memeql, name)
 #define DeeSystem_DEFINE_memmemq(name, memchrq, memeqq) _DeeSystem_DEFINE_memmemT(uint64_t, uint64_t, memchrq, memeqq, name)
 
-#define DeeSystem_DEFINE_memrmem(name) _DeeSystem_DEFINE_memrmemT(void, uint8_t, memrchr, 0 == memcmp, name)
+#define DeeSystem_DEFINE_memrmem(name) _DeeSystem_DEFINE_memrmemT(void, uint8_t, memrchr, 0 == bcmp, name)
 #define DeeSystem_DEFINE_memrmemw(name, memrchrw, memeqw) _DeeSystem_DEFINE_memrmemT(uint16_t, uint16_t, memrchrw, memeqw, name)
 #define DeeSystem_DEFINE_memrmeml(name, memrchrl, memeql) _DeeSystem_DEFINE_memrmemT(uint32_t, uint32_t, memrchrl, memeql, name)
 #define DeeSystem_DEFINE_memrmemq(name, memrchrq, memeqq) _DeeSystem_DEFINE_memrmemT(uint64_t, uint64_t, memrchrq, memeqq, name)
@@ -11671,7 +11684,7 @@ DECL_END
 	}
 
 #define DeeSystem_DEFINE_memcasemem(name)                                               \
-	LOCAL ATTR_PURE WUNUSED void *                                                      \
+	LOCAL ATTR_PURE WUNUSED ATTR_INS(1, 2) ATTR_INS(3, 4) void *                        \
 	name(void const *__restrict haystack, size_t haystack_len,                          \
 	     void const *__restrict needle, size_t needle_len) {                            \
 		void const *candidate;                                                          \
@@ -11692,16 +11705,17 @@ DECL_END
 	}
 
 
-#define DeeSystem_DEFINE_memrev(name)                  \
-	LOCAL void *name(void *__restrict buf, size_t n) { \
-		uint8_t *iter, *end;                           \
-		end = (iter = (uint8_t *)buf) + n;             \
-		while (iter < end) {                           \
-			uint8_t temp = *iter;                      \
-			*iter++      = *--end;                     \
-			*end         = temp;                       \
-		}                                              \
-		return buf;                                    \
+#define DeeSystem_DEFINE_memrev(name)      \
+	LOCAL ATTR_INOUTS(1, 2) void *         \
+	name(void *__restrict buf, size_t n) { \
+		uint8_t *iter, *end;               \
+		end = (iter = (uint8_t *)buf) + n; \
+		while (iter < end) {               \
+			uint8_t temp = *iter;          \
+			*iter++      = *--end;         \
+			*end         = temp;           \
+		}                                  \
+		return buf;                        \
 	}
 
 #define DeeSystem_DEFINE_memxrchr(name)               \
@@ -11760,7 +11774,7 @@ DECL_END
 		}                                                                                      \
 		return NULL;                                                                           \
 	}                                                                                          \
-	LOCAL ATTR_PURE WUNUSED void *                                                             \
+	LOCAL ATTR_PURE WUNUSED ATTR_INS(1, 2) ATTR_INS(3, 4) void *                               \
 	name(void const *__restrict haystack, size_t haystack_len,                                 \
 	     void const *__restrict needle, size_t needle_len) {                                   \
 		void const *candidate;                                                                 \
@@ -11805,40 +11819,42 @@ DECL_END
 		}                                                                           \
 	}
 
-#define _DeeSystem_DEFINE_memsetT(T, name)                \
-	LOCAL void *name(void *__restrict p, T c, size_t n) { \
-		T *dst = (T *)p;                                  \
-		while (n--)                                       \
-			*dst++ = c;                                   \
-		return p;                                         \
+#define _DeeSystem_DEFINE_memsetT(T, name)    \
+	LOCAL ATTR_OUTS(1, 3) void *              \
+	name(void *__restrict p, T c, size_t n) { \
+		T *dst = (T *)p;                      \
+		for (; n; --n, ++dst)                 \
+			*dst = c;                         \
+		return p;                             \
 	}
 #define DeeSystem_DEFINE_memsetw(name) _DeeSystem_DEFINE_memsetT(uint16_t, name)
 #define DeeSystem_DEFINE_memsetl(name) _DeeSystem_DEFINE_memsetT(uint32_t, name)
 #define DeeSystem_DEFINE_memsetq(name) _DeeSystem_DEFINE_memsetT(uint64_t, name)
 
-#define _DeeSystem_DEFINE_mempsetT(T, name)               \
-	LOCAL void *name(void *__restrict p, T c, size_t n) { \
-		T *dst = (T *)p;                                  \
-		while (n--)                                       \
-			*dst++ = c;                                   \
-		return dst;                                       \
+#define _DeeSystem_DEFINE_mempsetT(T, name)   \
+	LOCAL ATTR_OUTS(1, 3) void *              \
+	name(void *__restrict p, T c, size_t n) { \
+		T *dst = (T *)p;                      \
+		for (; n; --n, ++dst)                 \
+			*dst = c;                         \
+		return dst;                           \
 	}
 #define DeeSystem_DEFINE_mempsetw(name) _DeeSystem_DEFINE_mempsetT(uint16_t, name)
 #define DeeSystem_DEFINE_mempsetl(name) _DeeSystem_DEFINE_mempsetT(uint32_t, name)
 #define DeeSystem_DEFINE_mempsetq(name) _DeeSystem_DEFINE_mempsetT(uint64_t, name)
 
 
-#ifdef NDEBUG
+#if defined(NDEBUG) || defined(NDEBUG_MEMMOVE)
 #define DeeSytemAssert_MemmoveUp(dst, src, elem_count, elem_size)   (void)0
 #define DeeSytemAssert_MemmoveDown(dst, src, elem_count, elem_size) (void)0
-#else /* NDEBUG */
+#else /* NDEBUG || NDEBUG_MEMMOVE */
 #define DeeSytemAssert_MemmoveUp(dst, src, elem_count, elem_size)                \
 	Dee_ASSERTF((dst) >= (src), "memmoveupc(%p, %p, %Iu, %Iu): Wrong direction", \
 	            (void *)(dst), (void *)(src), (size_t)(elem_count), (size_t)(elem_size))
 #define DeeSytemAssert_MemmoveDown(dst, src, elem_count, elem_size)                \
 	Dee_ASSERTF((dst) <= (src), "memmovedownc(%p, %p, %Iu, %Iu): Wrong direction", \
 	            (void *)(dst), (void *)(src), (size_t)(elem_count), (size_t)(elem_size))
-#endif /* !NDEBUG */
+#endif /* !NDEBUG && !NDEBUG_MEMMOVE */
 
 
 #ifndef CONFIG_HAVE_memmoveup

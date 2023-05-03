@@ -842,15 +842,15 @@ visit_options(struct compiler_options *__restrict self, dvisit_t proc, void *arg
 
 
 PRIVATE int DCALL
-copy_options_chain(struct compiler_options_mapping **proot,
-                   struct compiler_options_mapping **presult,
+copy_options_chain(struct compiler_options_mapping **p_root,
+                   struct compiler_options_mapping **p_result,
                    struct compiler_options *__restrict source) {
 	struct compiler_options_mapping *iter;
-	iter = *proot;
+	iter = *p_root;
 	/* Search for a pre-existing mapping for `source' */
 	for (; iter; iter = (struct compiler_options_mapping *)iter->com_opt.co_inner) {
 		if (iter->com_map == source) {
-			*presult = iter;
+			*p_result = iter;
 			return 0;
 		}
 	}
@@ -862,15 +862,15 @@ copy_options_chain(struct compiler_options_mapping **proot,
 	iter->com_opt.co_inner = NULL;
 	iter->com_map          = source;
 	/* Save the result. */
-	*presult = iter;
+	*p_result = iter;
 	COMPILER_WRITE_BARRIER();
 	if (source->co_inner) {
 		/* Copy inner set of options. */
-		if (copy_options_chain(proot,
+		if (copy_options_chain(p_root,
 		                       (struct compiler_options_mapping **)&iter->com_opt.co_inner,
 		                       source->co_inner)) {
 			/* Undo the copy */
-			*presult = NULL;
+			*p_result = NULL;
 			Dee_Free(iter);
 			goto err;
 		}

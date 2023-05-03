@@ -278,7 +278,7 @@ DFUNDEF WUNUSED NONNULL((1)) Dee_pos_t DCALL DeeFile_Seek(DeeObject *__restrict 
 #define DeeFile_SetPos(self, pos) DeeFile_Seek(self, (Dee_pos_t)(pos), SEEK_SET)
 DFUNDEF WUNUSED NONNULL((1)) int DCALL DeeFile_Sync(DeeObject *__restrict self);
 DFUNDEF WUNUSED NONNULL((1)) int DCALL DeeFile_Trunc(DeeObject *__restrict self, Dee_pos_t size);
-DFUNDEF WUNUSED NONNULL((1)) int DCALL DeeFile_TruncHere(DeeObject *__restrict self, Dee_pos_t *psize);
+DFUNDEF WUNUSED NONNULL((1)) int DCALL DeeFile_TruncHere(DeeObject *__restrict self, Dee_pos_t *p_size);
 DFUNDEF WUNUSED NONNULL((1)) int DCALL DeeFile_Close(DeeObject *__restrict self);
 DFUNDEF WUNUSED NONNULL((1)) int DCALL DeeFile_Getc(DeeObject *__restrict self); /* @return: GETC_ERR: Error */
 DFUNDEF WUNUSED NONNULL((1)) int DCALL DeeFile_Getcf(DeeObject *__restrict self, Dee_ioflag_t flags); /* @return: GETC_ERR: Error */

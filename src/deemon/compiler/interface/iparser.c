@@ -39,7 +39,7 @@ DECL_BEGIN
 
 INTDEF int DCALL
 get_scope_lookupmode(DeeObject *__restrict value,
-                     unsigned int *__restrict presult);
+                     unsigned int *__restrict p_result);
 
 
 PRIVATE struct keyword suffix_kwlist[] = { K(head), KEND };

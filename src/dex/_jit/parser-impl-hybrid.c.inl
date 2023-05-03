@@ -25,7 +25,7 @@ DECL_BEGIN
 
 INTERN RETURN_TYPE FCALL
 FUNC(StatementOrBraces)(JITLexer *__restrict self,
-                        unsigned int *pwas_expression) {
+                        unsigned int *p_was_expression) {
 	RETURN_TYPE result;
 	unsigned int was_expression;
 	ASSERT(self->jl_tok == '{');
@@ -37,8 +37,8 @@ FUNC(StatementOrBraces)(JITLexer *__restrict self,
 		result = IFELSE(Dee_EmptySeq, 0);
 		IF_EVAL(Dee_Incref(Dee_EmptySeq));
 		JITLexer_Yield(self);
-		if (pwas_expression)
-			*pwas_expression = AST_PARSE_WASEXPR_MAYBE;
+		if (p_was_expression)
+			*p_was_expression = AST_PARSE_WASEXPR_MAYBE;
 		break;
 
 	case '.':
@@ -52,8 +52,8 @@ err_rbrace_missing:
 			syn_brace_expected_rbrace(self);
 			goto err_r;
 		}
-		if (pwas_expression)
-			*pwas_expression = AST_PARSE_WASEXPR_YES;
+		if (p_was_expression)
+			*p_was_expression = AST_PARSE_WASEXPR_YES;
 		break;
 
 	case '{': /* Recursion! */
@@ -88,8 +88,8 @@ parse_remainder_after_comma_popscope:
 				} else {
 					goto err_rbrace_missing;
 				}
-				if (pwas_expression)
-					*pwas_expression = AST_PARSE_WASEXPR_YES;
+				if (p_was_expression)
+					*p_was_expression = AST_PARSE_WASEXPR_YES;
 				break;
 			}
 			if likely(self->jl_tok == '}') {
@@ -285,8 +285,8 @@ is_a_statement:
 			goto err;
 		LOAD_LVALUE(result, err_popscope);
 		IF_EVAL(JITContext_PopScope(self->jl_context));
-		if (pwas_expression)
-			*pwas_expression = AST_PARSE_WASEXPR_NO;
+		if (p_was_expression)
+			*p_was_expression = AST_PARSE_WASEXPR_NO;
 		break;
 
 	default: {
@@ -341,8 +341,8 @@ default_case:
 parse_remainder_after_rbrace_popscope:
 				LOAD_LVALUE(result, err_popscope);
 				IF_EVAL(JITContext_PopScope(self->jl_context));
-				if (pwas_expression)
-					*pwas_expression = AST_PARSE_WASEXPR_YES;
+				if (p_was_expression)
+					*p_was_expression = AST_PARSE_WASEXPR_YES;
 				break;
 			}
 			if (self->jl_tok == ':' &&
@@ -357,8 +357,8 @@ parse_remainder_after_colon_popscope:
 				if unlikely(self->jl_tok != '}')
 					goto err_rbrace_missing;
 				JITLexer_Yield(self);
-				if (pwas_expression)
-					*pwas_expression = AST_PARSE_WASEXPR_YES;
+				if (p_was_expression)
+					*p_was_expression = AST_PARSE_WASEXPR_YES;
 				break;
 			}
 		}
@@ -404,8 +404,8 @@ parse_remainder_after_statement:
 		}
 		LOAD_LVALUE(result, err_popscope);
 		IF_EVAL(JITContext_PopScope(self->jl_context));
-		if (pwas_expression)
-			*pwas_expression = AST_PARSE_WASEXPR_NO;
+		if (p_was_expression)
+			*p_was_expression = AST_PARSE_WASEXPR_NO;
 	}	break;
 	}
 	return result;
@@ -427,7 +427,7 @@ err:
  * is `{', and a trailing `;' should _NOT_ be consumed */
 INTERN RETURN_TYPE FCALL
 FUNC(HybridAtBrace)(JITLexer *__restrict self,
-                    unsigned int *pwas_expression) {
+                    unsigned int *p_was_expression) {
 	unsigned int was_expression;
 	RETURN_TYPE result;
 	result = FUNC(StatementOrBraces)(self, &was_expression);
@@ -449,8 +449,8 @@ FUNC(HybridAtBrace)(JITLexer *__restrict self,
 		JITLexer_Yield(self);
 		was_expression = AST_PARSE_WASEXPR_NO;
 	}*/
-	if (pwas_expression)
-		*pwas_expression = was_expression;
+	if (p_was_expression)
+		*p_was_expression = was_expression;
 	return result;
 err:
 	return ERROR;
@@ -460,7 +460,7 @@ err:
 
 INTERN RETURN_TYPE FCALL
 FUNC(Hybrid)(JITLexer *__restrict self,
-             unsigned int *pwas_expression) {
+             unsigned int *p_was_expression) {
 	unsigned int was_expression;
 	RETURN_TYPE result;
 	switch (self->jl_tok) {
@@ -486,16 +486,16 @@ check_semi_after_expression:
 			JITLexer_Yield(self);
 			was_expression = AST_PARSE_WASEXPR_NO;
 		}
-		if (pwas_expression)
-			*pwas_expression = was_expression;
+		if (p_was_expression)
+			*p_was_expression = was_expression;
 		break;
 
 	case '@':
 	case ';':
 is_a_statement:
 		result = FUNC(Statement)(self);
-		if (pwas_expression)
-			*pwas_expression = AST_PARSE_WASEXPR_NO;
+		if (p_was_expression)
+			*p_was_expression = AST_PARSE_WASEXPR_NO;
 		break;
 
 	case JIT_KEYWORD: {
@@ -647,8 +647,8 @@ default_case:
 			goto err;
 		if (self->jl_tok == ';' && (comma_mode & AST_COMMA_OUT_FNEEDSEMI)) {
 			JITLexer_Yield(self);
-			if (pwas_expression)
-				*pwas_expression = AST_PARSE_WASEXPR_NO;
+			if (p_was_expression)
+				*p_was_expression = AST_PARSE_WASEXPR_NO;
 #ifdef JIT_EVAL
 		} else if (old_tab != JITContext_GetROLocals(self->jl_context) ||
 		           (old_tab && old_varc != old_tab->ot_size)) {
@@ -660,15 +660,15 @@ default_case:
 				syn_expr_expected_semi_after_expr(self);
 				goto err;
 			}
-			if (pwas_expression)
-				*pwas_expression = AST_PARSE_WASEXPR_NO;
+			if (p_was_expression)
+				*p_was_expression = AST_PARSE_WASEXPR_NO;
 #endif /* JIT_EVAL */
 		} else if (comma_mode & AST_COMMA_OUT_FNEEDSEMI) {
-			if (pwas_expression)
-				*pwas_expression = AST_PARSE_WASEXPR_YES;
+			if (p_was_expression)
+				*p_was_expression = AST_PARSE_WASEXPR_YES;
 		} else {
-			if (pwas_expression)
-				*pwas_expression = AST_PARSE_WASEXPR_MAYBE;
+			if (p_was_expression)
+				*p_was_expression = AST_PARSE_WASEXPR_MAYBE;
 		}
 	}	break;
 

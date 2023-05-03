@@ -266,7 +266,7 @@ do_iter:
 	result = DeeObject_IterNext(iter);
 	Dee_Decref(iter);
 	if (!ITER_ISOK(result)) {
-		DeeObject *const *pnext;
+		DeeObject *const *p_next;
 		if unlikely(!result)
 			goto err;
 		CatIterator_LockWrite(self);
@@ -278,10 +278,10 @@ do_iter:
 		}
 
 		/* Load the next sequence. */
-		pnext = self->cti_pseq + 1;
-		ASSERT(pnext > DeeTuple_ELEM(self->cti_cat));
-		ASSERT(pnext <= DeeTuple_ELEM(self->cti_cat) + DeeTuple_SIZE(self->cti_cat));
-		if unlikely(pnext == (DeeTuple_ELEM(self->cti_cat) +
+		p_next = self->cti_pseq + 1;
+		ASSERT(p_next > DeeTuple_ELEM(self->cti_cat));
+		ASSERT(p_next <= DeeTuple_ELEM(self->cti_cat) + DeeTuple_SIZE(self->cti_cat));
+		if unlikely(p_next == (DeeTuple_ELEM(self->cti_cat) +
 		                      DeeTuple_SIZE(self->cti_cat))) {
 			/* Fully exhausted. */
 			CatIterator_LockEndWrite(self);
@@ -290,21 +290,21 @@ do_iter:
 		CatIterator_LockEndWrite(self);
 
 		/* Create an iterator for this sequence. */
-		iter = DeeObject_IterSelf(*pnext);
+		iter = DeeObject_IterSelf(*p_next);
 		if unlikely(!iter)
 			goto err;
 		CatIterator_LockWrite(self);
 		COMPILER_READ_BARRIER();
 
 		/* Check if the sequence was changed by someone else. */
-		if (self->cti_pseq != pnext - 1) {
+		if (self->cti_pseq != p_next - 1) {
 			CatIterator_LockEndWrite(self);
 			Dee_Decref(iter);
 			goto again_locked;
 		}
 
 		/* Update the current sequence pointer. */
-		self->cti_pseq = pnext;
+		self->cti_pseq = p_next;
 
 		/* Store our new iterator, replacing the previous one. */
 		result       = self->cti_curr;

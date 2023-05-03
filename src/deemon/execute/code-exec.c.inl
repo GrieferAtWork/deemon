@@ -1441,14 +1441,14 @@ do_operator_tuple:
 
 
 		TARGET(ASM_DEL_GLOBAL, -0, +0) {
-			DeeObject **pobject, *del_object;
+			DeeObject **p_object, *del_object;
 			imm_val = READ_imm8();
 do_del_global:
 			ASSERT_GLOBALimm();
 			GLOBAL_LOCKWRITE();
-			pobject    = &GLOBALimm;
-			del_object = *pobject;
-			*pobject   = NULL;
+			p_object   = &GLOBALimm;
+			del_object = *p_object;
+			*p_object  = NULL;
 			GLOBAL_LOCKENDWRITE();
 			if unlikely(!del_object)
 				goto err_unbound_global;
@@ -1457,14 +1457,14 @@ do_del_global:
 		}
 
 		TARGET(ASM_DEL_LOCAL, -0, +0) {
-			DeeObject **plocal;
+			DeeObject **p_local;
 			imm_val = READ_imm8();
 do_del_local:
 			ASSERT_LOCALimm();
-			plocal = &LOCALimm;
-			if unlikely(!*plocal)
+			p_local = &LOCALimm;
+			if unlikely(!*p_local)
 				goto err_unbound_local;
-			Dee_Clear(*plocal);
+			Dee_Clear(*p_local);
 			DISPATCH();
 		}
 
@@ -1509,10 +1509,10 @@ do_del_local:
 
 		RAW_TARGET(ASM_DUP_N) {
 			uint8_t offset = READ_imm8();
-			DREF DeeObject **pslot;
+			DREF DeeObject **p_slot;
 			ASSERT_USAGE(-((int)offset + 2), +((int)offset + 3));
-			pslot = sp - (offset + 2);
-			PUSHREF(*pslot);
+			p_slot = sp - (offset + 2);
+			PUSHREF(*p_slot);
 			DISPATCH();
 		}
 
@@ -1523,12 +1523,12 @@ do_del_local:
 
 		RAW_TARGET(ASM_POP_N) {
 			DREF DeeObject *old_object;
-			DREF DeeObject **pslot;
+			DREF DeeObject **p_slot;
 			uint8_t offset = READ_imm8();
 			ASSERT_USAGE(-((int)offset + 2), +((int)offset + 1));
-			pslot      = sp - (offset + 2);
-			old_object = *pslot;
-			*pslot     = POP();
+			p_slot     = sp - (offset + 2);
+			old_object = *p_slot;
+			*p_slot    = POP();
 			Dee_Decref(old_object);
 			DISPATCH();
 		}
@@ -1609,29 +1609,29 @@ do_pop_static:
 		}
 
 		TARGET(ASM_POP_EXTERN, -1, +0) {
-			DeeObject *old_value, **pglobl;
+			DeeObject *old_value, **p_extern;
 			imm_val  = READ_imm8();
 			imm_val2 = READ_imm8();
 do_pop_extern:
 			ASSERT_EXTERNimm();
 			EXTERN_LOCKWRITE();
-			pglobl    = &EXTERNimm;
-			old_value = *pglobl;
-			*pglobl   = POP();
+			p_extern  = &EXTERNimm;
+			old_value = *p_extern;
+			*p_extern = POP();
 			EXTERN_LOCKENDWRITE();
 			Dee_XDecref(old_value);
 			DISPATCH();
 		}
 
 		TARGET(ASM_POP_GLOBAL, -1, +0) {
-			DeeObject *old_value, **pglobl;
+			DeeObject *old_value, **p_global;
 			imm_val = READ_imm8();
 do_pop_global:
 			ASSERT_GLOBALimm();
 			GLOBAL_LOCKWRITE();
-			pglobl    = &GLOBALimm;
-			old_value = *pglobl;
-			*pglobl   = POP();
+			p_global    = &GLOBALimm;
+			old_value = *p_global;
+			*p_global   = POP();
 			GLOBAL_LOCKENDWRITE();
 			Dee_XDecref(old_value);
 			DISPATCH();
@@ -4035,20 +4035,24 @@ do_setattr_this_c:
 				TARGET(ASM_ENDCATCH_N, -0, +0) {
 					uint8_t nth_except = READ_imm8();
 					if (this_thread->t_exceptsz > except_recursion + nth_except + 1) {
-						struct except_frame **pexcept_frame, *except_frame;
+						struct except_frame **p_except_frame, *except_frame;
+
 						/* We're allowed to handle the `nth_except' exception. */
-						pexcept_frame = &this_thread->t_except;
+						p_except_frame = &this_thread->t_except;
 						do {
-							except_frame = *pexcept_frame;
+							except_frame = *p_except_frame;
 							ASSERT(except_frame != NULL);
-							pexcept_frame = &except_frame->ef_prev;
+							p_except_frame = &except_frame->ef_prev;
 						} while (nth_except--);
+
 						/* Load the except_frame that we're supposed to get rid of. */
-						except_frame = *pexcept_frame;
+						except_frame = *p_except_frame;
 						ASSERT(except_frame != NULL);
+
 						/* Remove the exception frame from its chain. */
-						*pexcept_frame = except_frame->ef_prev;
+						*p_except_frame = except_frame->ef_prev;
 						--this_thread->t_exceptsz;
+
 						/* Destroy the except_frame in question. */
 						if (ITER_ISOK(except_frame->ef_trace))
 							Dee_Decref(except_frame->ef_trace);
@@ -4060,9 +4064,11 @@ do_setattr_this_c:
 
 				TARGET(ASM_ENDFINALLY_N, -0, +0) {
 					uint8_t min_except = READ_imm8();
+
 					/* If a return value has been assigned, stop execution. */
 					if (frame->cf_result != NULL)
 						goto end_return;
+
 					/* Check for errors, but only handle them if there are more than `min_except+1'. */
 					if (this_thread->t_exceptsz > except_recursion + min_except + 1)
 						HANDLE_EXCEPT();
@@ -4352,10 +4358,10 @@ do_setattr_this_c:
 
 				RAW_TARGET(ASM16_DUP_N) {
 					uint16_t offset = READ_imm16();
-					DREF DeeObject **pslot;
+					DREF DeeObject **p_slot;
 					ASSERT_USAGE(-((int)offset + 2), +((int)offset + 3));
-					pslot = sp - (offset + 2);
-					PUSHREF(*pslot);
+					p_slot = sp - (offset + 2);
+					PUSHREF(*p_slot);
 					DISPATCH();
 					DISPATCH();
 				}
@@ -4363,11 +4369,11 @@ do_setattr_this_c:
 				RAW_TARGET(ASM16_POP_N) {
 					DREF DeeObject *old_object;
 					uint16_t offset = READ_imm16();
-					DREF DeeObject **pslot;
+					DREF DeeObject **p_slot;
 					ASSERT_USAGE(-((int)offset + 2), +((int)offset + 1));
-					pslot      = sp - (offset + 2);
-					old_object = *pslot;
-					*pslot     = TOP;
+					p_slot     = sp - (offset + 2);
+					old_object = *p_slot;
+					*p_slot    = TOP;
 					Dee_Decref(old_object);
 					(void)POP();
 					DISPATCH();
@@ -6332,15 +6338,15 @@ prefix_do_unpack:
 
 						PREFIX_TARGET(ASM16_POP_N) {
 							DREF DeeObject *value, *old_value;
-							DREF DeeObject **pslot;
+							DREF DeeObject **p_slot;
 							uint16_t offset = READ_imm16();
 							ASSERT_USAGE(-((int)offset + 2), +((int)offset + 2));
 							value = get_prefix_object();
 							if unlikely(!value)
 								HANDLE_EXCEPT();
-							pslot     = sp - (offset + 2);
-							old_value = *pslot;
-							*pslot    = value; /* Inherit reference. */
+							p_slot    = sp - (offset + 2);
+							old_value = *p_slot;
+							*p_slot   = value; /* Inherit reference. */
 							Dee_Decref(old_value);
 							DISPATCH();
 						}
@@ -6445,7 +6451,7 @@ do_prefix_pop_static:
 				}
 
 				PREFIX_TARGET(ASM_POP_EXTERN) {
-					DeeObject *old_value, **pglobl;
+					DeeObject *old_value, **p_extern;
 					DREF DeeObject *value;
 					imm_val  = READ_imm8();
 					imm_val2 = READ_imm8();
@@ -6455,16 +6461,16 @@ do_prefix_pop_extern:
 					if unlikely(!value)
 						HANDLE_EXCEPT();
 					EXTERN_LOCKWRITE();
-					pglobl    = &EXTERNimm;
-					old_value = *pglobl;
-					*pglobl   = value; /* Inherit reference. */
+					p_extern  = &EXTERNimm;
+					old_value = *p_extern;
+					*p_extern = value; /* Inherit reference. */
 					EXTERN_LOCKENDWRITE();
 					Dee_XDecref(old_value);
 					DISPATCH();
 				}
 
 				PREFIX_TARGET(ASM_POP_GLOBAL) {
-					DeeObject *old_value, **pglobl;
+					DeeObject *old_value, **p_global;
 					DREF DeeObject *value;
 					imm_val = READ_imm8();
 do_prefix_pop_global:
@@ -6473,9 +6479,9 @@ do_prefix_pop_global:
 					if unlikely(!value)
 						HANDLE_EXCEPT();
 					GLOBAL_LOCKWRITE();
-					pglobl    = &GLOBALimm;
-					old_value = *pglobl;
-					*pglobl   = value; /* Inherit reference. */
+					p_global    = &GLOBALimm;
+					old_value = *p_global;
+					*p_global   = value; /* Inherit reference. */
 					GLOBAL_LOCKENDWRITE();
 					Dee_XDecref(old_value);
 					DISPATCH();
@@ -6725,15 +6731,15 @@ do_prefix_push_local:
 
 				PREFIX_TARGET(ASM_POP_N) {
 					DREF DeeObject *value, *old_value;
-					DREF DeeObject **pslot;
+					DREF DeeObject **p_slot;
 					uint8_t offset = READ_imm8();
 					ASSERT_USAGE(-((int)offset + 2), +((int)offset + 2));
 					value = get_prefix_object();
 					if unlikely(!value)
 						HANDLE_EXCEPT();
-					pslot     = sp - (offset + 2);
-					old_value = *pslot;
-					*pslot    = value; /* Inherit reference. */
+					p_slot    = sp - (offset + 2);
+					old_value = *p_slot;
+					*p_slot   = value; /* Inherit reference. */
 					Dee_Decref(old_value);
 					DISPATCH();
 				}

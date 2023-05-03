@@ -262,7 +262,7 @@ restore_interrupt_error(DeeThreadObject *__restrict ts,
 
 
 INTERN int DCALL parser_rethrow(bool must_fail) {
-	struct except_frame **piter, *iter;
+	struct except_frame **p_iter, *iter;
 	uint16_t num_errors;
 	DeeThreadObject *caller = DeeThread_Self();
 	ASSERTF(caller->t_exceptsz >= current_parser_errors.pe_except,
@@ -273,9 +273,9 @@ INTERN int DCALL parser_rethrow(bool must_fail) {
 		 * We must analyze them and capture any compiler error.
 		 * All other errors we must ignore during this first pass. */
 		num_errors = caller->t_exceptsz - current_parser_errors.pe_except;
-		piter      = &caller->t_except;
+		p_iter     = &caller->t_except;
 		while (num_errors--) {
-			iter = *piter;
+			iter = *p_iter;
 			ASSERT(iter != NULL);
 			if (DeeObject_InstanceOf(iter->ef_error, &DeeError_CompilerError)) {
 				/* This one's a compiler error. */
@@ -288,14 +288,14 @@ INTERN int DCALL parser_rethrow(bool must_fail) {
 				/* If no master error has been set yet, use this one. */
 				if (!current_parser_errors.pe_master)
 					current_parser_errors.pe_master = (DeeCompilerErrorObject *)iter->ef_error;
-				*piter = iter->ef_prev;
+				*p_iter = iter->ef_prev;
 				if (ITER_ISOK(iter->ef_trace))
 					Dee_Decref(iter->ef_trace);
 				--caller->t_exceptsz;
 				except_frame_free(iter);
 				continue;
 			}
-			piter = &iter->ef_prev;
+			p_iter = &iter->ef_prev;
 		}
 		ASSERT(caller->t_exceptsz >= current_parser_errors.pe_except);
 		if (caller->t_exceptsz != current_parser_errors.pe_except) {
@@ -408,12 +408,12 @@ err_handle_all_but_last:
 	num_errors -= current_parser_errors.pe_except;
 	ASSERT(num_errors != 0);
 	ASSERT(caller->t_except != NULL);
-	piter = &caller->t_except->ef_prev;
+	p_iter = &caller->t_except->ef_prev;
 	/* Display any additional errors. */
 	while (num_errors--) {
-		iter = *piter;
+		iter = *p_iter;
 		ASSERT(iter != NULL);
-		*piter = iter->ef_prev;
+		*p_iter = iter->ef_prev;
 		if (DeeObject_IsInterrupt(iter->ef_error)) {
 			/* Restore interrupts. */
 			if (ITER_ISOK(iter->ef_trace))
@@ -451,7 +451,7 @@ PRIVATE int const tpp_warning_mode_matrix[3] = {
 PRIVATE int DCALL
 capture_compiler_location(struct TPPFile *__restrict file,
                           struct compiler_error_loc *__restrict result,
-                          struct compiler_error_loc **__restrict pmain_loc) {
+                          struct compiler_error_loc **__restrict p_main_loc) {
 #if 1 /* ORDER: low --> high */
 	struct compiler_error_loc *extension;
 	struct compiler_error_loc *start = result;
@@ -478,8 +478,8 @@ capture_compiler_location(struct TPPFile *__restrict file,
 		if (!TPPFile_Copyname(file))
 			goto err;
 		/* The first text file is the main location. */
-		if (file->f_kind == TPPFILE_KIND_TEXT && !*pmain_loc)
-			*pmain_loc = result;
+		if (file->f_kind == TPPFILE_KIND_TEXT && !*p_main_loc)
+			*p_main_loc = result;
 		if (!file->f_prev)
 			break;
 		file = file->f_prev;
@@ -513,8 +513,8 @@ err:
 	/* Pre-initialize the prev-pointer to NULL. */
 	result->cl_prev = NULL;
 	/* The first text file that is encountered is the main location. */
-	if (file->f_kind == TPPFILE_KIND_TEXT && !*pmain_loc)
-		*pmain_loc = result;
+	if (file->f_kind == TPPFILE_KIND_TEXT && !*p_main_loc)
+		*p_main_loc = result;
 	/* NOTE: Generate a traceback not just for macro invocations,
 	 *       but for the entirety of the #include-stack also! */
 	if (file->f_prev) {
@@ -529,7 +529,7 @@ err:
 			extension = (struct compiler_error_loc *)Dee_Malloc(sizeof(struct compiler_error_loc));
 			if unlikely(!extension)
 				goto err;
-			if unlikely(capture_compiler_location(next_file, extension, pmain_loc)) {
+			if unlikely(capture_compiler_location(next_file, extension, p_main_loc)) {
 				Dee_Free(extension);
 				goto err;
 			}

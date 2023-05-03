@@ -661,13 +661,13 @@ err:
 }
 
 INTERN WUNUSED NONNULL((1)) int DCALL
-int_inc(DREF DeeIntObject **__restrict pself) {
-	DREF DeeIntObject *z, *a = *pself;
+int_inc(DREF DeeIntObject **__restrict p_self) {
+	DREF DeeIntObject *z, *a = *p_self;
 	if (!DeeObject_IsShared(a)) {
 		size_t i;
 		/* Try to do the increment in-line, thus not having to allocate a new integer. */
 		if unlikely(a->ob_size == 0) {
-			*pself = (DeeIntObject *)&DeeInt_One;
+			*p_self = (DeeIntObject *)&DeeInt_One;
 			Dee_Incref(&DeeInt_One);
 			Dee_DecrefDokill(a);
 			goto done2;
@@ -696,7 +696,7 @@ int_inc(DREF DeeIntObject **__restrict pself) {
 				}
 				if (oldval == 1 && a->ob_size == -1) {
 					ASSERT(i == 0);
-					*pself = (DeeIntObject *)&DeeInt_Zero;
+					*p_self = (DeeIntObject *)&DeeInt_Zero;
 					Dee_Incref(&DeeInt_Zero);
 					Dee_DecrefDokill(a);
 					goto done2;
@@ -705,7 +705,7 @@ int_inc(DREF DeeIntObject **__restrict pself) {
 				goto done2;
 			}
 		}
-		*pself = z; /* Inherit reference. */
+		*p_self = z; /* Inherit reference. */
 		Dee_DecrefDokill(a);
 		goto done2;
 	}
@@ -721,7 +721,7 @@ int_inc(DREF DeeIntObject **__restrict pself) {
 done:
 	if unlikely(!z)
 		goto err;
-	*pself = z; /* Inherit reference. */
+	*p_self = z; /* Inherit reference. */
 	Dee_Decref(a);
 done2:
 	return 0;
@@ -730,13 +730,13 @@ err:
 }
 
 INTERN WUNUSED NONNULL((1)) int DCALL
-int_dec(DREF DeeIntObject **__restrict pself) {
-	DREF DeeIntObject *z, *a = *pself;
+int_dec(DREF DeeIntObject **__restrict p_self) {
+	DREF DeeIntObject *z, *a = *p_self;
 	if (!DeeObject_IsShared(a)) {
 		size_t i;
 		/* Try to do the decrement in-line, thus not having to allocate a new integer. */
 		if unlikely(a->ob_size == 0) {
-			*pself = (DeeIntObject *)&DeeInt_MinusOne;
+			*p_self = (DeeIntObject *)&DeeInt_MinusOne;
 			Dee_Incref(&DeeInt_MinusOne);
 			Dee_DecrefDokill(a);
 			goto done2;
@@ -752,7 +752,7 @@ int_dec(DREF DeeIntObject **__restrict pself) {
 				}
 				if (oldval == 1 && a->ob_size == 1) {
 					ASSERT(i == 0);
-					*pself = (DeeIntObject *)&DeeInt_Zero;
+					*p_self = (DeeIntObject *)&DeeInt_Zero;
 					Dee_Incref(&DeeInt_Zero);
 					Dee_DecrefDokill(a);
 					goto done2;
@@ -774,7 +774,7 @@ int_dec(DREF DeeIntObject **__restrict pself) {
 			bzeroc(z->ob_digit, a_digits, sizeof(digit));
 			z->ob_digit[a_digits] = 1;
 		}
-		*pself = z; /* Inherit reference. */
+		*p_self = z; /* Inherit reference. */
 		Dee_DecrefDokill(a);
 		goto done2;
 	}
@@ -792,7 +792,7 @@ int_dec(DREF DeeIntObject **__restrict pself) {
 done:
 	if unlikely(!z)
 		goto err;
-	*pself = z; /* Inherit reference. */
+	*p_self = z; /* Inherit reference. */
 	Dee_Decref(a);
 done2:
 	return 0;
@@ -1018,14 +1018,14 @@ inplace_divrem1(digit *__restrict pout,
 }
 
 PRIVATE WUNUSED NONNULL((1, 3)) DeeIntObject *DCALL
-divrem1(DeeIntObject *__restrict a, digit n, digit *prem) {
+divrem1(DeeIntObject *__restrict a, digit n, digit *p_rem) {
 	DeeIntObject *z;
 	dssize_t size = ABS(a->ob_size);
 	ASSERT(n > 0 && n <= DIGIT_MASK);
 	z = DeeInt_Alloc(size);
 	if unlikely(!z)
 		goto err;
-	*prem = inplace_divrem1(z->ob_digit, a->ob_digit, size, n);
+	*p_rem = inplace_divrem1(z->ob_digit, a->ob_digit, size, n);
 	return int_normalize(z);
 err:
 	return NULL;
@@ -1302,13 +1302,13 @@ err:
 
 PRIVATE WUNUSED NONNULL((1, 2, 3)) DeeIntObject *DCALL
 x_divrem(DeeIntObject *v1, DeeIntObject *w1,
-         DeeIntObject **__restrict prem);
+         DeeIntObject **__restrict p_rem);
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 int_divrem(DeeIntObject *a,
            DeeIntObject *b,
-           DeeIntObject **pdiv,
-           DeeIntObject **prem) {
+           DeeIntObject **p_div,
+           DeeIntObject **p_rem) {
 	DREF DeeIntObject *z;
 	dssize_t size_a = ABS(a->ob_size);
 	dssize_t size_b = ABS(b->ob_size);
@@ -1321,8 +1321,8 @@ int_divrem(DeeIntObject *a,
 	                          b->ob_digit[size_b - 1]))) {
 		Dee_Incref(&DeeInt_Zero);
 		Dee_Incref(a);
-		*pdiv = (DeeIntObject *)&DeeInt_Zero;
-		*prem = (DeeIntObject *)a;
+		*p_div = (DeeIntObject *)&DeeInt_Zero;
+		*p_rem = (DeeIntObject *)a;
 		return 0;
 	}
 	if (size_b == 1) {
@@ -1330,11 +1330,11 @@ int_divrem(DeeIntObject *a,
 		z = divrem1(a, b->ob_digit[0], &rem);
 		if unlikely(!z)
 			goto err;
-		*prem = (DeeIntObject *)DeeInt_NewDigit(rem);
-		if unlikely(!*prem)
+		*p_rem = (DeeIntObject *)DeeInt_NewDigit(rem);
+		if unlikely(!*p_rem)
 			goto err_z;
 	} else {
-		z = x_divrem(a, b, prem);
+		z = x_divrem(a, b, p_rem);
 		if unlikely(!z)
 			goto err;
 	}
@@ -1345,17 +1345,17 @@ int_divrem(DeeIntObject *a,
 			goto err_prem;
 		z = (DREF DeeIntObject *)temp;
 	}
-	if (a->ob_size < 0 && (*prem)->ob_size != 0) {
-		DREF DeeObject *temp = int_neg(*prem);
-		Dee_Decref(*prem);
-		*prem = (DeeIntObject *)temp;
+	if (a->ob_size < 0 && (*p_rem)->ob_size != 0) {
+		DREF DeeObject *temp = int_neg(*p_rem);
+		Dee_Decref(*p_rem);
+		*p_rem = (DeeIntObject *)temp;
 		if unlikely(!temp)
 			goto err_z;
 	}
-	*pdiv = maybe_small_int(z);
+	*p_div = maybe_small_int(z);
 	return 0;
 err_prem:
-	Dee_Clear(*prem);
+	Dee_Clear(*p_rem);
 	goto err;
 err_z:
 	Dee_Decref(z);
@@ -1381,7 +1381,7 @@ LOCAL ATTR_CONST WUNUSED int DCALL bits_in_digit(digit d) {
 
 PRIVATE WUNUSED NONNULL((1, 2, 3)) DeeIntObject *DCALL
 x_divrem(DeeIntObject *v1, DeeIntObject *w1,
-         DeeIntObject **__restrict prem) {
+         DeeIntObject **__restrict p_rem) {
 	DeeIntObject *v, *w, *a;
 	dssize_t i, k, size_v, size_w;
 	digit wm1, wm2, carry, q, r, vtop, *v0, *vk, *w0, *ak;
@@ -1450,7 +1450,7 @@ x_divrem(DeeIntObject *v1, DeeIntObject *w1,
 	carry = v_rshift(w0, v0, size_w, d);
 	ASSERT(carry == 0);
 	Dee_Decref(v);
-	*prem = int_normalize(w);
+	*p_rem = int_normalize(w);
 	return int_normalize(a);
 err_v_w_a:
 	Dee_Decref(a);
@@ -1459,7 +1459,7 @@ err_v_w:
 err_v:
 	Dee_Decref(v);
 err:
-	*prem = NULL;
+	*p_rem = NULL;
 	return NULL;
 }
 
@@ -1467,8 +1467,8 @@ err:
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 int_divmod(DeeIntObject *v,
            DeeIntObject *w,
-           DREF DeeIntObject **pdiv,
-           DREF DeeIntObject **pmod) {
+           DREF DeeIntObject **p_div,
+           DREF DeeIntObject **p_mod) {
 	DREF DeeIntObject *div, *mod;
 	if (int_divrem(v, w, &div, &mod) < 0)
 		goto err;
@@ -1486,13 +1486,13 @@ int_divmod(DeeIntObject *v,
 		Dee_Decref(div);
 		div = temp;
 	}
-	if (pdiv != NULL) {
-		*pdiv = div;
+	if (p_div != NULL) {
+		*p_div = div;
 	} else {
 		Dee_Decref(div);
 	}
-	if (pmod != NULL) {
-		*pmod = mod;
+	if (p_mod != NULL) {
+		*p_mod = mod;
 	} else {
 		Dee_Decref(mod);
 	}

@@ -338,7 +338,7 @@ Dee_ddi_state_fini(struct Dee_ddi_state *__restrict self);
  * @return: DDI_NEXT_DONE:    The DDI information stream has ended after `DDI_STOP' was read. */
 DFUNDEF WUNUSED NONNULL((1, 2)) uint8_t *DCALL
 Dee_ddi_next_simple(uint8_t *__restrict ip,
-                    Dee_code_addr_t *__restrict puip);
+                    Dee_code_addr_t *__restrict p_uip);
 DFUNDEF WUNUSED NONNULL((1, 2)) uint8_t *DCALL
 Dee_ddi_next_regs(uint8_t *__restrict ip,
                   struct Dee_ddi_regs *__restrict regs);

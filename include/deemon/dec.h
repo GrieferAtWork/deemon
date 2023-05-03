@@ -453,8 +453,8 @@ typedef struct ATTR_PACKED {
  * HINT: The DEC pointer encoding format is
  *       identical to ULEB encoding used by DDI. */
 LOCAL NONNULL((1)) uint32_t DCALL
-Dec_DecodePointer(uint8_t const **__restrict pptr) {
-	uint8_t const *ptr = *pptr;
+Dec_DecodePointer(uint8_t const **__restrict p_ptr) {
+	uint8_t const *ptr = *p_ptr;
 	uint32_t result = 0;
 	uint8_t byte, num_bits = 0;
 	do {
@@ -462,7 +462,7 @@ Dec_DecodePointer(uint8_t const **__restrict pptr) {
 		result |= (byte & 0x7f) << num_bits;
 		num_bits += 7;
 	} while (byte & 0x80);
-	*pptr = ptr;
+	*p_ptr = ptr;
 	return result;
 }
 

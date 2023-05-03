@@ -1705,16 +1705,18 @@ get_local_symbol(struct TPPKeyword *__restrict name) {
 
 INTERN NONNULL((1)) void DCALL
 del_local_symbol(struct symbol *__restrict sym) {
-	struct symbol **pbucket, *bucket;
+	struct symbol **p_bucket, *bucket;
 	ASSERT(sym->s_name != &TPPKeyword_Empty);
 	ASSERT(sym->s_scope->s_mapa != 0);
-	pbucket = &sym->s_scope->s_map[sym->s_name->k_id % sym->s_scope->s_mapa];
-	while ((bucket = *pbucket, bucket && bucket != sym))
-		pbucket = &bucket->s_next;
+	p_bucket = &sym->s_scope->s_map[sym->s_name->k_id % sym->s_scope->s_mapa];
+	while ((bucket = *p_bucket, bucket && bucket != sym))
+		p_bucket = &bucket->s_next;
 	if (!bucket)
 		return; /* Shouldn't happen, but ignore (could happen if the symbol is deleted twice) */
+
 	/* Unlink the symbol from the bucket list. */
-	*pbucket = sym->s_next;
+	*p_bucket = sym->s_next;
+
 	/* Add the symbol to the chain of deleted (anonymous) symbols. */
 	sym->s_next         = sym->s_scope->s_del;
 	sym->s_scope->s_del = sym;
@@ -1792,7 +1794,7 @@ rehash_realloc:
 
 INTERN WUNUSED NONNULL((1)) struct text_label *DCALL
 lookup_label(struct TPPKeyword *__restrict name) {
-	struct text_label *result, **presult;
+	struct text_label *result, **p_result;
 	if likely(current_basescope->bs_lbla) {
 		result = current_basescope->bs_lbl[name->k_id % current_basescope->bs_lbla];
 		while (result) {
@@ -1806,15 +1808,15 @@ lookup_label(struct TPPKeyword *__restrict name) {
 			goto err;
 	}
 	ASSERT(current_basescope->bs_lbla);
-	presult = &current_basescope->bs_lbl[name->k_id % current_basescope->bs_lbla];
-	result  = lbl_alloc();
+	p_result = &current_basescope->bs_lbl[name->k_id % current_basescope->bs_lbla];
+	result   = lbl_alloc();
 	if unlikely(!result)
 		goto err;
-	result->tl_next = *presult;
+	result->tl_next = *p_result;
 	result->tl_name = name;
 	result->tl_asym = NULL;
 	result->tl_goto = 0;
-	*presult        = result;
+	*p_result       = result;
 	return result;
 err:
 	return NULL;

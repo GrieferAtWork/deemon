@@ -540,7 +540,7 @@ PRIVATE struct seqops seqops_info[4] = {
 
 /* @param: type: One of `AST_FMULTIPLE_*' */
 PRIVATE int DCALL pack_sequence(uint16_t type, uint16_t num_args) {
-	uint16_t(*popcode)[2], op;
+	uint16_t (*p_opcode)[2], op;
 	ASSERT(type != AST_FMULTIPLE_KEEPLAST);
 	if (AST_FMULTIPLE_ISDICT(type)) {
 		/* Special case: Dict. */
@@ -549,15 +549,15 @@ PRIVATE int DCALL pack_sequence(uint16_t type, uint16_t num_args) {
 		num_args /= 2;
 		asm_subsp(num_args); /* Adjust for the second half. */
 	}
-	popcode = &seqops_info[type & 3].so_pck;
+	p_opcode = &seqops_info[type & 3].so_pck;
 	if (num_args > UINT8_MAX) {
-		op = (*popcode)[1];
+		op = (*p_opcode)[1];
 		if (op & 0xff00 && asm_put((op & 0xff00) >> 8))
 			goto err;
 		if (asm_putimm16(op & 0xff, num_args))
 			goto err;
 	} else {
-		op = (*popcode)[0];
+		op = (*p_opcode)[0];
 		if (op & 0xff00 && asm_put((op & 0xff00) >> 8))
 			goto err;
 		if (asm_putimm8(op & 0xff, (uint8_t)num_args))

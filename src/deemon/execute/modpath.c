@@ -2761,7 +2761,7 @@ module_import_symbol(DeeModuleObject *__restrict self,
                      DeeStringObject *__restrict name,
                      DeeObject *__restrict value,
                      unsigned int mode,
-                     uint16_t *__restrict pglobala) {
+                     uint16_t *__restrict p_globala) {
 	if (!(mode & DEE_EXEC_RUNMODE_FDEFAULTS_ARE_GLOBALS)) {
 		struct TPPKeyword *kwd;
 		struct symbol *sym;
@@ -2799,9 +2799,9 @@ module_import_symbol(DeeModuleObject *__restrict self,
 		if (self->mo_globalc / 2 >= current_rootscope->rs_bucketm &&
 		    module_rehash_globals())
 			goto err;
-		if (self->mo_globalc >= *pglobala) {
+		if (self->mo_globalc >= *p_globala) {
 			DREF DeeObject **new_globalv;
-			uint16_t new_globala = *pglobala * 2;
+			uint16_t new_globala = *p_globala * 2;
 			if (!new_globala)
 				new_globala = 2;
 			ASSERT(new_globala > self->mo_globalc);
@@ -2817,7 +2817,7 @@ module_import_symbol(DeeModuleObject *__restrict self,
 					goto err;
 			}
 			self->mo_globalv = new_globalv;
-			*pglobala        = new_globala;
+			*p_globala       = new_globala;
 		}
 
 		/* Append the symbol initializer */
@@ -2852,7 +2852,7 @@ PRIVATE int DCALL
 module_import_symbol_pair(DeeModuleObject *__restrict self,
                           DeeObject *__restrict symbol_pair,
                           unsigned int mode,
-                          uint16_t *__restrict pglobala) {
+                          uint16_t *__restrict p_globala) {
 	DREF DeeObject *key_and_value[2];
 	int result;
 	if (DeeObject_Unpack(symbol_pair, 2, key_and_value))
@@ -2864,7 +2864,7 @@ module_import_symbol_pair(DeeModuleObject *__restrict self,
 		                              (DeeStringObject *)key_and_value[0],
 		                              key_and_value[1],
 		                              mode,
-		                              pglobala);
+		                              p_globala);
 	}
 	Dee_Decref(key_and_value[1]);
 	Dee_Decref(key_and_value[0]);
@@ -2877,14 +2877,14 @@ PRIVATE int DCALL
 module_import_symbols(DeeModuleObject *__restrict self,
                       DeeObject *__restrict default_symbols,
                       unsigned int mode,
-                      uint16_t *__restrict pglobala) {
+                      uint16_t *__restrict p_globala) {
 	DREF DeeObject *iterator, *elem;
 	int temp;
 	iterator = DeeObject_IterSelf(default_symbols);
 	if unlikely(!iterator)
 		goto err;
 	while (ITER_ISOK(elem = DeeObject_IterNext(iterator))) {
-		temp = module_import_symbol_pair(self, elem, mode, pglobala);
+		temp = module_import_symbol_pair(self, elem, mode, p_globala);
 		Dee_Decref(elem);
 		if unlikely(temp)
 			goto err;

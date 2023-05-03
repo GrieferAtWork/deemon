@@ -1001,11 +1001,11 @@ FORCELOCAL WUNUSED void *DCALL DeeDbg_AllocaCleanup(void *ptr) {
 DECL_BEGIN
 #undef memset
 #define memset dee_memset
-LOCAL WUNUSED NONNULL((1)) void *
+LOCAL WUNUSED ATTR_OUTS(1, 3) void *
 dee_memset(void *__restrict dst, int byte, size_t num_bytes) {
-	uint8_t *pdst = (uint8_t *)dst;
+	uint8_t *dst_p = (uint8_t *)dst;
 	while (num_bytes--)
-		*pdst++ = (uint8_t)(unsigned int)byte;
+		*dst_p++ = (uint8_t)(unsigned int)byte;
 	return dst;
 }
 DECL_END
