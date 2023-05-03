@@ -1972,7 +1972,7 @@ DEFINE_OPERATOR(dhash_t, Hash, (DeeObject *RESTRICT_IF_NOTYPE self)) {
 }
 
 #ifndef DEFINE_TYPED_OPERATORS
-PUBLIC WUNUSED /*ATTR_PURE*/ NONNULL((1)) dhash_t
+PUBLIC WUNUSED /*ATTR_PURE*/ ATTR_INS(2, 1) dhash_t
 (DCALL DeeObject_Hashv)(size_t object_count,
                         DeeObject *const *__restrict object_vector) {
 	size_t i;

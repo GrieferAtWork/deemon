@@ -2803,7 +2803,7 @@ DFUNDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL DeeObject_ThisCallTuple
 
 /* Generate and return the hash of a given object. */
 DFUNDEF WUNUSED /*ATTR_PURE*/ NONNULL((1)) Dee_hash_t (DCALL DeeObject_Hash)(DeeObject *__restrict self);
-DFUNDEF WUNUSED /*ATTR_PURE*/ NONNULL((1)) Dee_hash_t (DCALL DeeObject_Hashv)(size_t object_count, DeeObject *const *__restrict object_vector);
+DFUNDEF WUNUSED /*ATTR_PURE*/ ATTR_INS(2, 1) Dee_hash_t (DCALL DeeObject_Hashv)(size_t object_count, DeeObject *const *__restrict object_vector);
 
 /* GC operator invocation. */
 DFUNDEF NONNULL((1, 2)) void (DCALL DeeObject_Visit)(DeeObject *__restrict self, Dee_visit_t proc, void *arg);
