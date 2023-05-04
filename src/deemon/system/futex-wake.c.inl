@@ -37,11 +37,21 @@ DECL_BEGIN
 #define LOCAL_DeeFutex_Wake DeeFutex_WakeAll
 #endif /* !DEFINE_DeeFutex_WakeOne */
 
+/* Select local wake-up functions */
 #ifdef LOCAL_IS_ONE
-#define LOCAL_os_futex_wake os_futex_wakeone
+#define LOCAL_os_futex_wake         os_futex_wakeone
+#define LOCAL_pthread_cond_signal   pthread_cond_signal
+#define LOCAL_cnd_signal            cnd_signal
+#define LOCAL_WakeByAddress         WakeByAddressSingle
+#define LOCAL_WakeConditionVariable WakeConditionVariable
 #else /* LOCAL_IS_ONE */
-#define LOCAL_os_futex_wake os_futex_wakeall
+#define LOCAL_os_futex_wake         os_futex_wakeall
+#define LOCAL_pthread_cond_signal   pthread_cond_broadcast
+#define LOCAL_cnd_signal            cnd_broadcast
+#define LOCAL_WakeByAddress         WakeByAddressAll
+#define LOCAL_WakeConditionVariable WakeAllConditionVariable
 #endif /* !LOCAL_IS_ONE */
+
 
 
 /* Wake up 1, or all waiting threads at a given address. */
@@ -60,11 +70,7 @@ PUBLIC NONNULL((1)) void
 		return; /* Not initialized -> no-one can be waiting *anywhere* */
 
 	case NT_FUTEX_IMPLEMENTATION_WAITONADDRESS:
-#ifdef LOCAL_IS_ONE
-		WakeByAddressSingle(addr);
-#else /* LOCAL_IS_ONE */
-		WakeByAddressAll(addr);
-#endif /* !LOCAL_IS_ONE */
+		LOCAL_WakeByAddress(addr);
 		return;
 
 	case NT_FUTEX_IMPLEMENTATION_COND_AND_CRIT: {
@@ -76,11 +82,7 @@ PUBLIC NONNULL((1)) void
 		 * the point where it checks if it should wait, and actually
 		 * starts waiting */
 		AcquireSRWLockExclusive(&ctrl->fc_nt_cond_crit.cc_lock);
-#ifdef LOCAL_IS_ONE
-		WakeConditionVariable(&ctrl->fc_nt_cond_crit.cc_cond);
-#else /* LOCAL_IS_ONE */
-		WakeAllConditionVariable(&ctrl->fc_nt_cond_crit.cc_cond);
-#endif /* !LOCAL_IS_ONE */
+		LOCAL_WakeConditionVariable(&ctrl->fc_nt_cond_crit.cc_cond);
 		ReleaseSRWLockExclusive(&ctrl->fc_nt_cond_crit.cc_lock);
 	}	break;
 
@@ -137,11 +139,7 @@ PUBLIC NONNULL((1)) void
 	 * the point where it checks if it should wait, and actually
 	 * starts waiting */
 	(void)pthread_mutex_lock(&ctrl->fc_mutx);
-#ifdef LOCAL_IS_ONE
-	(void)pthread_cond_signal(&ctrl->fc_cond);
-#else /* LOCAL_IS_ONE */
-	(void)pthread_cond_broadcast(&ctrl->fc_cond);
-#endif /* !LOCAL_IS_ONE */
+	(void)LOCAL_pthread_cond_signal(&ctrl->fc_cond);
 	(void)pthread_mutex_unlock(&ctrl->fc_mutx);
 
 #elif defined(DeeFutex_USE_cnd_t_AND_mtx_t)
@@ -150,11 +148,7 @@ PUBLIC NONNULL((1)) void
 	 * the point where it checks if it should wait, and actually
 	 * starts waiting */
 	(void)mtx_lock(&ctrl->fc_mutx);
-#ifdef LOCAL_IS_ONE
-	(void)cnd_signal(&ctrl->fc_cond);
-#else /* LOCAL_IS_ONE */
-	(void)cnd_broadcast(&ctrl->fc_cond);
-#endif /* !LOCAL_IS_ONE */
+	(void)LOCAL_cnd_signal(&ctrl->fc_cond);
 	(void)mtx_unlock(&ctrl->fc_mutx);
 #elif defined(DeeFutex_USE_sem_t)
 	{
@@ -178,6 +172,11 @@ PUBLIC NONNULL((1)) void
 }
 
 #undef LOCAL_os_futex_wake
+#undef LOCAL_pthread_cond_signal
+#undef LOCAL_cnd_signal
+#undef LOCAL_WakeByAddress
+#undef LOCAL_WakeConditionVariable
+
 #undef LOCAL_IS_ALL
 #undef LOCAL_IS_ONE
 #undef LOCAL_DeeFutex_Wake
