@@ -158,10 +158,28 @@ PUBLIC NONNULL((1)) void
 		if (n_threads > 0)
 			(void)sem_post(&ctrl->fc_sem);
 #else /* LOCAL_IS_ONE */
+		/* We have to wake at least `n_threads' that may be waiting.
+		 * We don't have to worry about any extra threads that might
+		 * appear while we're waking existing threads, since this is
+		 * only about waking threads that were there at the time of
+		 * the signal being delivered.
+		 * 
+		 * We also don't have to worry about any extra pending thread
+		 * wake-ups remaining after we're doing waking threads, since
+		 * 1: Futex controllers are constantly finalized and thrown
+		 *    away, so extra pending tickets in the semaphore will
+		 *    probably just get reset
+		 * 2: Those tickets that don't get reset will just result in
+		 *    some receiving thread to be woken up sporadically,
+		 *    which is also fine. */
+#ifdef CONFIG_HAVE_sem_post_multiple
+		(void)sem_post_multiple(&ctrl->fc_sem, n_threads);
+#else /* CONFIG_HAVE_sem_post_multiple */
 		while (n_threads > 0) {
 			(void)sem_post(&ctrl->fc_sem);
 			--n_threads;
 		}
+#endif /* !CONFIG_HAVE_sem_post_multiple */
 #endif /* !LOCAL_IS_ONE */
 	}
 #endif /* ... */

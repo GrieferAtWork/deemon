@@ -715,7 +715,7 @@ futex_controller_do_destroy(struct futex_controller *__restrict self) {
 	(void)cnd_destroy(&self->fc_cond);
 #elif defined(DeeFutex_USE_sem_t)
 #ifdef CONFIG_HAVE_sem_destroy
-	sem_destroy(&self->fc_sem);
+	(void)sem_destroy(&self->fc_sem);
 #endif /* CONFIG_HAVE_sem_destroy */
 #endif /* ... */
 

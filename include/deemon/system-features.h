@@ -835,6 +835,7 @@ func("sem_destroy", "defined(CONFIG_HAVE_SEMAPHORE_H)", test: "extern sem_t sem;
 func("sem_wait", "defined(CONFIG_HAVE_SEMAPHORE_H)", test: "extern sem_t sem; return sem_wait(&sem);");
 func("sem_trywait", "defined(CONFIG_HAVE_SEMAPHORE_H)", test: "extern sem_t sem; return sem_trywait(&sem);");
 func("sem_post", "defined(CONFIG_HAVE_SEMAPHORE_H)", test: "extern sem_t sem; return sem_post(&sem);");
+func("sem_post_multiple", "defined(CONFIG_HAVE_SEMAPHORE_H) && 0", test: "extern sem_t sem; return sem_post_multiple(&sem, 42);");
 func("sem_timedwait", "defined(CONFIG_HAVE_SEMAPHORE_H) && defined(__USE_XOPEN2K)", test: "extern sem_t sem; extern struct timespec ts; return sem_timedwait(&sem, &ts);");
 func("sem_timedwait64", "defined(CONFIG_HAVE_SEMAPHORE_H) && defined(__USE_XOPEN2K) && defined(__USE_TIME64)", test: "extern sem_t sem; extern struct timespec64 ts; return sem_timedwait64(&sem, &ts);");
 func("sem_reltimedwait_np", "defined(CONFIG_HAVE_SEMAPHORE_H) && defined(__USE_XOPEN2K)", test: "extern sem_t sem; extern struct timespec ts; return sem_reltimedwait_np(&sem, &ts);");
@@ -6491,6 +6492,14 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif !defined(CONFIG_HAVE_sem_post) && \
       (defined(sem_post) || defined(__sem_post_defined) || defined(CONFIG_HAVE_SEMAPHORE_H))
 #define CONFIG_HAVE_sem_post
+#endif
+
+#ifdef CONFIG_NO_sem_post_multiple
+#undef CONFIG_HAVE_sem_post_multiple
+#elif !defined(CONFIG_HAVE_sem_post_multiple) && \
+      (defined(sem_post_multiple) || defined(__sem_post_multiple_defined) || (defined(CONFIG_HAVE_SEMAPHORE_H) && \
+       0))
+#define CONFIG_HAVE_sem_post_multiple
 #endif
 
 #ifdef CONFIG_NO_sem_timedwait
