@@ -532,6 +532,7 @@ again_pthread_mutex_lock:
 
 	/* Check if we're actually supposed to wait */
 	if (!LOCAL_should_wait()) {
+		(void)pthread_mutex_unlock(&ctrl->fc_mutx);
 		futex_controller_decref(ctrl);
 		LOCAL_return_0;
 	}
@@ -640,6 +641,7 @@ again_mtx_lock:
 
 	/* Check if we're actually supposed to wait */
 	if (!LOCAL_should_wait()) {
+		(void)mtx_unlock(&ctrl->fc_mutx);
 		futex_controller_decref(ctrl);
 		LOCAL_return_0;
 	}
