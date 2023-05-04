@@ -71,6 +71,10 @@ PUBLIC NONNULL((1)) void
 		ctrl = futex_ataddr_get((uintptr_t)addr);
 		if (!ctrl)
 			return; /* No-one is waiting here... */
+
+		/* Must lock the mutex to ensure that no thread is between
+		 * the point where it checks if it should wait, and actually
+		 * starts waiting */
 		AcquireSRWLockExclusive(&ctrl->fc_nt_cond_crit.cc_lock);
 #ifdef LOCAL_IS_ONE
 		WakeConditionVariable(&ctrl->fc_nt_cond_crit.cc_cond);
@@ -128,17 +132,30 @@ PUBLIC NONNULL((1)) void
 	atomic_inc(&ctrl->fc_word);
 	(void)LOCAL_os_futex_wake(&ctrl->fc_word);
 #elif defined(DeeFutex_USE_pthread_cond_t_AND_pthread_mutex_t)
+
+	/* Must lock the mutex to ensure that no thread is between
+	 * the point where it checks if it should wait, and actually
+	 * starts waiting */
+	(void)pthread_mutex_lock(&ctrl->fc_mutx);
 #ifdef LOCAL_IS_ONE
 	(void)pthread_cond_signal(&ctrl->fc_cond);
 #else /* LOCAL_IS_ONE */
 	(void)pthread_cond_broadcast(&ctrl->fc_cond);
 #endif /* !LOCAL_IS_ONE */
+	(void)pthread_mutex_unlock(&ctrl->fc_mutx);
+
 #elif defined(DeeFutex_USE_cnd_t_AND_mtx_t)
+
+	/* Must lock the mutex to ensure that no thread is between
+	 * the point where it checks if it should wait, and actually
+	 * starts waiting */
+	(void)mtx_lock(&ctrl->fc_mutx);
 #ifdef LOCAL_IS_ONE
 	(void)cnd_signal(&ctrl->fc_cond);
 #else /* LOCAL_IS_ONE */
 	(void)cnd_broadcast(&ctrl->fc_cond);
 #endif /* !LOCAL_IS_ONE */
+	(void)mtx_unlock(&ctrl->fc_mutx);
 #elif defined(DeeFutex_USE_sem_t)
 	{
 		size_t n_threads;
