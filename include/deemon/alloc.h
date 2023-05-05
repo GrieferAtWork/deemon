@@ -247,19 +247,27 @@ DFUNDEF ATTR_COLD int (DCALL Dee_BadAlloc)(size_t req_bytes);
 #ifndef CONFIG_NO_OBJECT_SLABS
 DFUNDEF void (DCALL DeeObject_Free)(void *ptr);
 DFUNDEF void (DCALL DeeDbgObject_Free)(void *ptr, char const *file, int line);
+DFUNDEF void *(DCALL DeeDbgObject_UntrackAlloc)(void *ptr, char const *file, int line);
 #ifndef NDEBUG
-#define DeeObject_Free(ptr)                DeeDbgObject_Free(ptr, __FILE__, __LINE__)
+#define DeeObject_Free(ptr)         DeeDbgObject_Free(ptr, __FILE__, __LINE__)
+#define DeeObject_UntrackAlloc(ptr) DeeDbgObject_UntrackAlloc(ptr, __FILE__, __LINE__)
 #else /* !NDEBUG */
-#define DeeDbgObject_Free(ptr, file, line) DeeObject_Free(ptr)
+#define DeeDbgObject_Free(ptr, file, line)         DeeObject_Free(ptr)
+#define DeeDbgObject_UntrackAlloc(ptr, file, line) (ptr)
+#define DeeObject_UntrackAlloc(ptr)                (ptr)
 #endif /* NDEBUG */
 #else /* !CONFIG_NO_OBJECT_SLABS */
-#define DeeObject_Free    Dee_Free
-#define DeeDbgObject_Free DeeDbg_Free
+#define DeeObject_Free            Dee_Free
+#define DeeDbgObject_Free         DeeDbg_Free
+#define DeeObject_UntrackAlloc    Dee_UntrackAlloc
+#define DeeDbgObject_UntrackAlloc DeeDbg_UntrackAlloc
 #endif /* CONFIG_NO_OBJECT_SLABS */
 #else /* __CC__ */
 #ifdef CONFIG_NO_OBJECT_SLABS
-#define DeeObject_Free    Dee_Free
-#define DeeDbgObject_Free DeeDbg_Free
+#define DeeObject_Free            Dee_Free
+#define DeeDbgObject_Free         DeeDbg_Free
+#define DeeObject_UntrackAlloc    Dee_UntrackAlloc
+#define DeeDbgObject_UntrackAlloc DeeDbg_UntrackAlloc
 #endif /* CONFIG_NO_OBJECT_SLABS */
 #endif /* !__CC__ */
 

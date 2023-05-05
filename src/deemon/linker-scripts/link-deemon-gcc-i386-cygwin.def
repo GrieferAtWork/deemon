@@ -101,6 +101,7 @@ EXPORTS
 	_DeeDbgGCObject_TryMalloc@12=DeeDbgGCObject_TryMalloc@12
 	_DeeDbgGCObject_TryRealloc@16=DeeDbgGCObject_TryRealloc@16
 	_DeeDbgObject_Free@12=DeeDbgObject_Free@12
+	_DeeDbgObject_UntrackAlloc@12=DeeDbgObject_UntrackAlloc@12
 	_DeeDbgSlab_Calloc10@8=DeeDbgSlab_Calloc10@8
 	_DeeDbgSlab_Calloc4@8=DeeDbgSlab_Calloc4@8
 	_DeeDbgSlab_Calloc5@8=DeeDbgSlab_Calloc5@8

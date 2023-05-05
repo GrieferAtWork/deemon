@@ -586,7 +586,6 @@ PUBLIC void (DCALL FUNC(DeeSlab_Free))(void *ptr) {
 }
 
 #undef DeeDbgSlab_Free
-INTDEF DREF DeeStringObject *latin1_chars[256];
 PUBLIC void (DCALL FUNC(DeeDbgSlab_Free))(void *ptr,
                                           char const *file, int line) {
 	if (IS_SLAB_POINTER(ptr)) {
@@ -680,6 +679,14 @@ PUBLIC void (DCALL DeeDbgObject_Free)(void *ptr, char const *file, int line) {
 	(FUNC(DeeDbgSlab_Free))(ptr, file, line);
 }
 #endif /* __NO_DEFINE_ALIAS */
+
+PUBLIC void *(DCALL DeeDbgObject_UntrackAlloc)(void *ptr, char const *file, int line) {
+	if (IS_SLAB_POINTER(ptr)) {
+		return ptr; /* nothing */
+	} else {
+		return (DeeDbg_UntrackAlloc)(ptr, file, line);
+	}
+}
 #else /* !MY_SLAB_IS_DISABLED */
 #ifndef __NO_DEFINE_ALIAS
 DEFINE_PUBLIC_ALIAS(ASSEMBLY_NAME(DeeObject_Free, 4),
@@ -688,11 +695,15 @@ DEFINE_PUBLIC_ALIAS(ASSEMBLY_NAME(DeeDbgObject_Free, 12),
                     ASSEMBLY_NAME(DeeDbg_Free, 12));
 #else /* !__NO_DEFINE_ALIAS */
 PUBLIC void (DCALL DeeObject_Free)(void *ptr) {
-	Dee_Free(ptr);
+	(Dee_Free)(ptr);
 }
 
 PUBLIC void (DCALL DeeDbgObject_Free)(void *ptr, char const *file, int line) {
-	DeeDbg_Free(ptr, file, line);
+	(DeeDbg_Free)(ptr, file, line);
+}
+
+PUBLIC void *(DCALL DeeDbgObject_UntrackAlloc)(void *ptr, char const *file, int line) {
+	return (DeeDbg_UntrackAlloc)(ptr, file, line);
 }
 #endif /* __NO_DEFINE_ALIAS */
 #endif /* MY_SLAB_IS_DISABLED */

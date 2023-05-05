@@ -441,7 +441,7 @@ struct Dee_string_utf {
 #define Dee_string_utf_alloc()      DeeObject_MALLOC(struct Dee_string_utf)
 #define Dee_string_utf_tryalloc()   DeeObject_TRYMALLOC(struct Dee_string_utf)
 #define Dee_string_utf_free(ptr)    DeeObject_FFree(ptr, sizeof(struct Dee_string_utf))
-#define Dee_string_utf_untrack(ptr) (void)0
+#define Dee_string_utf_untrack(ptr) DeeObject_UntrackAlloc(ptr)
 #else
 #define Dee_string_utf_alloc()      ((struct Dee_string_utf *)Dee_Malloc(sizeof(struct Dee_string_utf)))
 #define Dee_string_utf_tryalloc()   ((struct Dee_string_utf *)Dee_TryMalloc(sizeof(struct Dee_string_utf)))
