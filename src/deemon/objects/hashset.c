@@ -1667,7 +1667,6 @@ hashset_printrepr(HashSet *__restrict self,
 		if unlikely(temp < 0)
 			goto err;
 		result += temp;
-		Dee_Decref(key);
 		is_first = false;
 		DeeHashSet_LockRead(self);
 		if unlikely(self->hs_elem != vector ||
