@@ -725,7 +725,7 @@ jf_call_kw(JITFunction *self, size_t argc,
 	 *       must be loaded, rather than the function loading itself! */
 	if (self->jf_selfarg != (size_t)-1) {
 		ASSERT(base_locals.ot_list[self->jf_selfarg].oe_value == NULL);
-		base_locals.ot_list[self->jf_selfarg].oe_value = (DREF DeeObject *)self;
+		base_locals.ot_list[self->jf_selfarg].oe_value = (DeeObject *)self; /* Incref'd later */
 	}
 
 	if (kw) {
@@ -762,7 +762,6 @@ jf_call_kw(JITFunction *self, size_t argc,
 				varargs = DeeTuple_NewVector(num_varargs, argv + num_positional);
 				if unlikely(!varargs)
 					goto err_base_locals;
-				base_locals.ot_list[self->jf_varargs].oe_value = varargs;
 				for (i = 0; i < num_positional; ++i)
 					base_locals.ot_list[self->jf_argv[i]].oe_value = argv[i];
 				for (i = 0; i <= base_locals.ot_mask; ++i) {
@@ -770,6 +769,8 @@ jf_call_kw(JITFunction *self, size_t argc,
 						continue;
 					Dee_XIncref(base_locals.ot_list[i].oe_value);
 				}
+				ASSERT(base_locals.ot_list[self->jf_varargs].oe_value == NULL);
+				base_locals.ot_list[self->jf_varargs].oe_value = varargs; /* Inherit reference */
 				goto done_args;
 			}
 
