@@ -433,7 +433,7 @@ DeeThread_Start(/*Thread*/ DeeObject *__restrict self);
 
 /* Schedule an interrupt for a given thread.
  * Interrupts are received when a thread calls `DeeThread_CheckInterrupt()'.
- * NOTE: Interrupts are delivered in order of being received.
+ * NOTE: Interrupts are received in order of being sent.
  * NOTE: When `interrupt_args' is non-NULL, rather than throwing the given
  *      `interrupt_main' as an error upon arrival, it is invoked
  *       using `operator ()' with `interrupt_args' (which must be a tuple).
@@ -445,7 +445,11 @@ DeeThread_Interrupt(/*Thread*/ DeeObject *self,
                     DeeObject *interrupt_main,
                     DeeObject *interrupt_args);
 
-/* Try to wake the thread. */
+/* Try to wake the thread. This will:
+ * - Interrupt a currently running, blocking system call (unless
+ *   that call is specifically being made as non-blocking)
+ * - Force the thread to return from a call to `DeeFutex_Wait*'
+ * - Cause the thread to soon call `DeeThread_CheckInterrupt()' */
 DFUNDEF NONNULL((1)) void DCALL
 DeeThread_Wake(/*Thread*/ DeeObject *__restrict self);
 
