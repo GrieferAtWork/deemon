@@ -2077,23 +2077,23 @@ PRIVATE struct type_getset tpconst time_getsets[] = {
 	            "->?GTime\n"
 	            "@throw ValueError (get-only) @this ?. object isn't a timestamp (s.a. ?#istimestamp)\n"
 	            "Read/write the time portion of @this time object, that is everything below the "
-	            "day-threshold, including ?#hour, ?#minute, ?#second, ?#millisecond and ?#microsecond\n"
+	            /**/ "day-threshold, including ?#hour, ?#minute, ?#second, ?#millisecond and ?#microsecond\n"
 	            "When setting, the passed objected is interpreted as an integer describing the "
-	            "number of microsecond since the day began"),
+	            /**/ "number of microsecond since the day began"),
 	TYPE_GETSET("datepart", &time_datepart_get, &time_datepart_del, &time_datepart_set,
 	            "->?GTime\n"
 	            "@throw ValueError (get-only) @this ?. object isn't a timestamp (s.a. ?#istimestamp)\n"
 	            "@throw ValueError Attempted to assign a time value with a non-zero ?#timepart\n"
 	            "Read/write the date portion of @this time object, that is everything "
-	            "above the day-threshold, including ?#mday, ?#month and ?#year\n"
+	            /**/ "above the day-threshold, including ?#mday, ?#month and ?#year\n"
 	            "When setting, the passed objected is interpreted as an integer "
-	            "describing the number of microsecond since #C{01-01-0000}"),
+	            /**/ "describing the number of microsecond since #C{01-01-0000}"),
 
 	TYPE_GETTER("isdst", &time_isdst,
 	            "->?Dbool\n"
 	            "Returns ?t if DaylightSavingsTime is in active at @this time\n"
 	            "Note that this implementation does not perform any special "
-	            "handling no matter if daylight savings is active or not"),
+	            /**/ "handling no matter if daylight savings is active or not"),
 	TYPE_GETSET_END
 };
 
@@ -2679,8 +2679,8 @@ f_libtime_makedate(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 		KEND
 	};
 	__hybrid_int128_setzero(year);
-	__hybrid_int128_setzero(month);
-	__hybrid_int128_setzero(day);
+	__hybrid_int128_setone(month);
+	__hybrid_int128_setone(day);
 	if (DeeArg_UnpackKw(argc, argv, kw, kwlist, "|" UNPd128 UNPd128 UNPd128 ":makedate",
 	                    &year, &month, &day))
 		goto err;
@@ -2886,7 +2886,7 @@ PRIVATE struct type_method tpconst time_class_methods[] = {
 	              "(hour=!0,minute=!0,second=!0,nanosecond=!0)->?.\n"
 	              "Deprecated. Use ?Gmaketime instead"),
 	TYPE_KWMETHOD("date", &time_class_makedate,
-	              "(year=!0,month=!0,day=!0)->?.\n"
+	              "(year=!0,month=!1,day=!1)->?.\n"
 	              "Deprecated. Use ?Gmakedate instead"),
 	TYPE_METHOD("from_time_t", &time_class_from_time_t,
 	            "(time_t_value:?Dint)->?.\n"
@@ -3311,7 +3311,7 @@ INTERN DeeTypeObject DeeTime_Type = {
 	                         "When both singular, and plural arguments are given, the constructed time "
 	                         /**/ "object is a ?#istimestamp equal to that described by the singular "
 	                         /**/ "arguments, and off-set by what is specified by the plural arguments\n"
-	                         "When no arguments are specific, a zero-delta is returned\n"
+	                         "When no arguments are specific, a zero-delta is constructed\n"
 
 	                         "\n"
 	                         "int->\n"
@@ -3322,9 +3322,9 @@ INTERN DeeTypeObject DeeTime_Type = {
 	                         "\n"
 	                         "str->\n"
 	                         "Returns value of @this time object when it was constructed to "
-	                         "represent an explicit view (such as through use of ?Gdays, "
-	                         "or through a sub-view such as ?#days), or return the time "
-	                         "represented in a human-readable fashion\n"
+	                         /**/ "represent an explicit view (such as through use of ?Gdays, "
+	                         /**/ "or through a sub-view such as ?#days), or return the time "
+	                         /**/ "represented in a human-readable fashion\n"
 
 	                         "\n"
 	                         "repr->\n"
@@ -3333,10 +3333,10 @@ INTERN DeeTypeObject DeeTime_Type = {
 	                         "\n"
 	                         "int->\n"
 	                         "Returns the value of @this time object as the number of nanoseconds since #C{01-01-0000} "
-	                         "for timestamps (s.a. ?#istimestamp), or the number of delta-nanoseconds for delta time "
-	                         "objects (s.a. ?#isdelta).\n"
+	                         /**/ "for timestamps (s.a. ?#istimestamp), or the number of delta-nanoseconds for delta time "
+	                         /**/ "objects (s.a. ?#isdelta).\n"
 	                         "This operator allows time objects to be passed to system functions that take "
-	                         "integer timeouts in nanoseconds, such as :Thread.sleep or ?Aaccept?Enet:socket."
+	                         /**/ "integer timeouts in nanoseconds, such as :Thread.sleep or ?Aaccept?Enet:socket."
 
 	                         "\n"
 	                         "-(other:?.)->?.\n"
@@ -3454,10 +3454,10 @@ PRIVATE struct dex_symbol symbols[] = {
 	{ "Time", (DeeObject *)&DeeTime_Type, MODSYM_FNORMAL },
 	{ "gmtime", (DeeObject *)&libtime_gmtime, MODSYM_FNORMAL,
 	  DOC("->?GTime\n"
-	      "Returns the current time in UTC") },
+	      "Returns the current time in UTC (s.a. ?Glocaltime)") },
 	{ "localtime", (DeeObject *)&libtime_localtime, MODSYM_FNORMAL,
 	  DOC("->?GTime\n"
-	      "Returns the current time in UTC") },
+	      "Returns the current time in the host's local timezone (s.a. ?Ggmtime)") },
 	{ "tick", (DeeObject *)&libtime_tick, MODSYM_FNORMAL,
 	  DOC("->?GTime\n"
 	      "Returns the current tick suitable for high-precision timings.\n"
@@ -3472,7 +3472,7 @@ PRIVATE struct dex_symbol symbols[] = {
 	      /**/ "Time(hour: hour, minute: minute, second: second, nanosecond: nanosecond);"
 	      "}") },
 	{ "makedate", (DeeObject *)&libtime_makedate, MODSYM_FNORMAL,
-	  DOC("(year=!0,month=!0,day=!0)->?GTime\n"
+	  DOC("(year=!0,month=!1,day=!1)->?GTime\n"
 	      "Construct a new ?GTime object using the given arguments for the "
 	      "post-day portion, while filling in the remainder as all zeroes:\n"
 	      "${"
@@ -3481,14 +3481,18 @@ PRIVATE struct dex_symbol symbols[] = {
 	      "}") },
 
 	/* Export various functions for constructing time deltas.
-	 * NOTE: These functions are highly useful for specifying timeouts:
+	 * NOTE: These functions are highly useful for specifying timeouts,
+	 *       and are actually the only portable way of specifying them,
+	 *       as it is implementation-specific what's the time resolution
+	 *       that's used by functions accepting timeouts (in the GATW
+	 *       implementation it's nanoseconds, but that wasn't always the
+	 *       case):
 	 * >> import seconds from time;
 	 * >> import Thread from deemon;
 	 * >> 
 	 * >> begin "Begin waiting for 2 seconds";
 	 * >> Thread.sleep(seconds(2));
 	 * >> begin "Done waiting";
-	 * >> 
 	 */
 #define DEFINE_DELTA_CALLBACK(name)                        \
 	{ #name, (DeeObject *)&libtime_##name, MODSYM_FNORMAL, \

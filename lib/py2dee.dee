@@ -24,7 +24,7 @@
  * features can't be converted seamlessly (such as classes which
  * aren't being converted at all at the moment)
  * Even though python and deemon have fairly comparable ABIs when it
- * comes to who one can interact with language-level components, there
+ * comes to how one can interact with language-level components, there
  * are a couple of situations in which converting code requires more
  * than a couple of syntax changes and the addition of braces:
  *   - Deemon is designed to use static symbol resolution/binding,
@@ -32,22 +32,22 @@
  *     This applies to everything from module exports to local variables.
  *     This decision was made intentionally in deemon, as static symbol
  *     resolution allows for guarantied O(1) lookup of symbols at runtime,
- *     which is something that python can't guarantie
+ *     which is something that python can't guaranty
  *   - Deemon is strongly scoped, where-as python isn't
- *     For this purpose, this converter will declare all used local variables
- *     at the start of the associated function, thus allowing the deemon
- *     compiler to correctly bind them.
+ *     For this purpose, this converter will declare all used local
+ *     variables at the start of the associated function, thus allowing
+ *     the deemon compiler to correctly bind them.
  *     However, this easily clobbers the symbol namespace of functions
  *     when viewed within a debugger or IDE, not only preventing symbol
- *     scoping from having any effect, nor allowing the compiler to re-use
- *     memory locations for local variables.
+ *     scoping from having any effect, nor allowing the compiler to
+ *     easily re-use memory locations for local variables.
  *   - Since v200, deemon classes follow a static-member-model wherein
  *     class members must be declared as such, where-as in python the
  *     general rule-of-thumb is to simply store an attribute value, at
  *     which point missing members are automatically created.
  *     For classes without base this can easily be emulated by extending
- *     the compatibility class `OldUserClass from rt.d200', however if a base
- *     class is present, this becomes impossible.
+ *     the compatibility class `OldUserClass from rt.d200', however if a
+ *     base class is present, this becomes impossible.
  *   - Deemon does not allow for multiple-inheritance, where-as python does.
  *   - Deemon has support for private/public symbols in classes.
  *     In python, this is usually expressed by member names starting
