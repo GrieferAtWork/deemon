@@ -57,24 +57,6 @@
 	typedef int PP_CAT2(static_assert_, __LINE__)[(expr) ? 1 : -1]
 #endif /* !STATIC_ASSERT */
 
-
-#ifndef __SIZEOF_CHAR__
-#define __SIZEOF_CHAR__  1
-#endif /* !__SIZEOF_CHAR__ */
-#ifndef __SIZEOF_SHORT__
-#define __SIZEOF_SHORT__ 2
-#endif /* !__SIZEOF_SHORT__ */
-#ifndef __SIZEOF_INT__
-#define __SIZEOF_INT__   4
-#endif /* !__SIZEOF_INT__ */
-#ifndef __SIZEOF_LONG__
-#ifdef CONFIG_HOST_WINDOWS
-#define __SIZEOF_LONG__  4
-#else /* CONFIG_HOST_WINDOWS */
-#define __SIZEOF_LONG__  __SIZEOF_POINTER__
-#endif /* !CONFIG_HOST_WINDOWS */
-#endif /* !__SIZEOF_LONG__ */
-
 DECL_BEGIN
 
 #undef byte_t
@@ -93,36 +75,36 @@ STATIC_ASSERT(sizeof(short) == __SIZEOF_SHORT__);
 STATIC_ASSERT(sizeof(long) == __SIZEOF_LONG__);
 
 
-#define VA_SIZE  __SIZEOF_INT__
+#define VA_SIZE __SIZEOF_INT__
 
 
 #if VA_SIZE >= 8
-#   define LENGTH_I128 0x51
-#   define LENGTH_I64  0x40
-#   define LENGTH_I32  0x30
-#   define LENGTH_I16  0x20
-#   define LENGTH_I8   0x10
+#define LENGTH_I128 0x51
+#define LENGTH_I64  0x40
+#define LENGTH_I32  0x30
+#define LENGTH_I16  0x20
+#define LENGTH_I8   0x10
 #elif VA_SIZE >= 4
-#   define LENGTH_I128 0x52
-#   define LENGTH_I64  0x41
-#   define LENGTH_I32  0x30
-#   define LENGTH_I16  0x20
-#   define LENGTH_I8   0x10
+#define LENGTH_I128 0x52
+#define LENGTH_I64  0x41
+#define LENGTH_I32  0x30
+#define LENGTH_I16  0x20
+#define LENGTH_I8   0x10
 #elif VA_SIZE >= 2
-#   define LENGTH_I128 0x53
-#   define LENGTH_I64  0x42
-#   define LENGTH_I32  0x31
-#   define LENGTH_I16  0x20
-#   define LENGTH_I8   0x10
+#define LENGTH_I128 0x53
+#define LENGTH_I64  0x42
+#define LENGTH_I32  0x31
+#define LENGTH_I16  0x20
+#define LENGTH_I8   0x10
 #elif VA_SIZE >= 1
-#   define LENGTH_I128 0x54
-#   define LENGTH_I64  0x43
-#   define LENGTH_I32  0x32
-#   define LENGTH_I16  0x21
-#   define LENGTH_I8   0x10
-#else
-#   error "Error: Unsupported `VA_SIZE'"
-#endif
+#define LENGTH_I128 0x54
+#define LENGTH_I64  0x43
+#define LENGTH_I32  0x32
+#define LENGTH_I16  0x21
+#define LENGTH_I8   0x10
+#else /* VA_SIZE >= ... */
+#error "Error: Unsupported `VA_SIZE'"
+#endif /* VA_SIZE < ... */
 
 #define LENGTH_VASIZEOF(x) ((x)&0xf)
 #define LENGTH_IXSIZEOF(x) ((x)&0xf0)
@@ -135,12 +117,12 @@ STATIC_ASSERT(sizeof(long) == __SIZEOF_LONG__);
 #define LENGTH_SIZE PP_CAT2(LENGTH_I, PP_MUL8(__SIZEOF_POINTER__))
 #define LENGTH_HH   PP_CAT2(LENGTH_I, PP_MUL8(__SIZEOF_CHAR__))
 #define LENGTH_H    PP_CAT2(LENGTH_I, PP_MUL8(__SIZEOF_SHORT__))
-#define LENGTH_l   (PP_CAT2(LENGTH_I, PP_MUL8(__SIZEOF_LONG__)) | 0x100)
+#define LENGTH_l    (PP_CAT2(LENGTH_I, PP_MUL8(__SIZEOF_LONG__)) | 0x100)
 #ifdef __SIZEOF_LONG_LONG__
 #define LENGTH_LL   PP_CAT2(LENGTH_I, PP_MUL8(__SIZEOF_LONG_LONG__))
-#else
+#else /* __SIZEOF_LONG_LONG__ */
 #define LENGTH_LL   LENGTH_I64
-#endif
+#endif /* !__SIZEOF_LONG_LONG__ */
 
 
 

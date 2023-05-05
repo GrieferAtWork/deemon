@@ -1174,20 +1174,20 @@ struct nt2errno_ent {
 };
 
 #if defined(__CYGWIN32__) && !defined(__CYGWIN__)
-#define __CYGWIN__  __CYGWIN32__
+#define __CYGWIN__ __CYGWIN32__
 #endif /* __CYGWIN32__ && !__CYGWIN__ */
 
 #ifdef _MSC_VER
-#define NT2ERRNO_PREFER_MSVC 1
+#define NT2ERRNO_PREFER_MSVC
 #elif defined(__CYGWIN__)
 #undef NT2ERRNO_PREFER_MSVC
 #elif 1 /* Fallback */
 #undef NT2ERRNO_PREFER_MSVC
 #else
-#define NT2ERRNO_PREFER_MSVC 1
+#define NT2ERRNO_PREFER_MSVC
 #endif
-#define NT2ERRNO_SRC_CYGWIN 1 /* Include cygwin-specific translations */
-#define NT2ERRNO_SRC_MSVC   1 /* Include msvc-specific translations */
+#define NT2ERRNO_SRC_CYGWIN /* Include cygwin-specific translations */
+#define NT2ERRNO_SRC_MSVC   /* Include msvc-specific translations */
 
 PRIVATE struct nt2errno_ent const nt2errno[] = {
 
