@@ -501,6 +501,12 @@ PRIVATE WUNUSED DREF ReSubBytes *DCALL rsb_ctor(void) {
 	return result;
 }
 
+#define rsb_fini rss_fini
+PRIVATE NONNULL((1)) void DCALL
+rss_fini(ReSubStrings *__restrict self) {
+	Dee_Decref(self->rss_baseown);
+}
+
 #define rsb_bool rss_bool
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 rss_bool(ReSubStrings *__restrict self) {
@@ -765,7 +771,7 @@ INTERN DeeTypeObject ReSubStrings_Type = {
 				/* .tp_free      = */ (dfunptr_t)NULL
 			}
 		},
-		/* .tp_dtor        = */ NULL,
+		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&rss_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL
 	},
@@ -810,7 +816,7 @@ INTERN DeeTypeObject ReSubBytes_Type = {
 				/* .tp_free      = */ (dfunptr_t)NULL
 			}
 		},
-		/* .tp_dtor        = */ NULL,
+		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&rsb_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL
 	},
