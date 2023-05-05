@@ -39,7 +39,7 @@ INTDEF int DCALL none_i2(void *UNUSED(a), void *UNUSED(b));
  * InstanceMethod or just a plain old function. There is no particular
  * reason why this exists, other than to allow user-code to query
  * for a type for that particular set of objects type simply writing
- * `x is callable from deemon' */
+ * `x is Callable from deemon' */
 PUBLIC DeeTypeObject DeeCallable_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ DeeString_STR(&str_Callable),
