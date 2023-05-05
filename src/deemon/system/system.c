@@ -1513,7 +1513,7 @@ DeeMapFile_Fini(struct DeeMapFile *__restrict self) {
 		void *baseptr = (void *)((uintptr_t)self->dmf_addr & ~psm);
 		if (self->_dmf_vfre) {
 			void *vbas = (void *)(((uintptr_t)baseptr + self->dmf_size + psm) & ~psm);
-			(void)VirtualFree(vbas, self->_dmf_vfre, MEM_DECOMMIT | MEM_RELEASE);
+			(void)VirtualFree(vbas, /*self->_dmf_vfre*/ 0, MEM_RELEASE);
 		}
 		(void)UnmapViewOfFile(baseptr);
 		(void)CloseHandle(self->_dmf_hmap);

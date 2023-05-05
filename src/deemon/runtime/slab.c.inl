@@ -342,7 +342,7 @@ INTERN void DCALL DeeSlab_Finalize(void) {
 		return;
 #ifdef USE_WINDOWS_VIRTUALALLOC
 	VirtualFree((LPVOID)slab_config.sc_heap_start,
-	            (SIZE_T)(slab_config.sc_heap_end - slab_config.sc_heap_start),
+	            /*(SIZE_T)(slab_config.sc_heap_end - slab_config.sc_heap_start)*/ 0,
 	            MEM_DECOMMIT);
 #elif defined(USE_UNIX_MMAP)
 	munmap((void *)slab_config.sc_heap_start,

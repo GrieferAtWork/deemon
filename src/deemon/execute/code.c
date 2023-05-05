@@ -254,7 +254,7 @@ LOCAL void *DCALL tryalloc_altstack(void) {
 
 STACK_ALLOCATOR_DECL void DCALL free_altstack(void *stack) {
 #ifdef EXEC_ALTSTACK_ALLOC_USE_VIRTUALALLOC
-	(void)VirtualFree(stack, DEE_EXEC_ALTSTACK_SIZE, MEM_RELEASE);
+	(void)VirtualFree(stack, /*DEE_EXEC_ALTSTACK_SIZE*/ 0, MEM_RELEASE);
 #endif /* EXEC_ALTSTACK_ALLOC_USE_VIRTUALALLOC */
 
 #ifdef EXEC_ALTSTACK_ALLOC_USE_MMAP
