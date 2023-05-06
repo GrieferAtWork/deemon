@@ -1102,7 +1102,7 @@
                                       * exception will be printed and discarded when the function
                                       * returns, causing it to still fail with the primary exception. */
 #define ASM_ENDFINALLY_N      0xf007 /* [3][-0,+0] `end finally, #<imm8>+1'               - Same as `end finally', but only do so if the number of raised exceptions is `> #<imm8>+1'
-                                      *                                                    `end finally, #0' should be encoded the same as `end finally'
+                                      *                                                     `end finally, #0' should be encoded the same as `end finally'
                                       * >> IF IS_BOUND(REG_RESULT) THEN
                                       * >>     RETURN();
                                       * >> FI
@@ -1112,7 +1112,7 @@
 #define ASM16_CALL_KW         0xf008 /* [5][-1-n,+1] `call top, #<imm8>, const <imm16>'   - Similar to `ASM_CALL', but also pass a keywords mapping from `<imm16>' */
 #define ASM16_CALL_TUPLE_KW   0xf009 /* [4][-2,+1]   `call top, pop..., const <imm16>'    - Similar to `ASM_CALL_TUPLE', but also pass a keywords mapping from `<imm16>' */
 /*      ASM_                  0xf00a  *               --------                            - ------------------ */
-#define ASM16_PUSH_BND_ARG    0xf00b /* [4][-0,+1]   `push bound arg <imm8>'              - Check if the argument variable indexed by `<imm16>' is bound, pushing true/false indicative of that state. */
+#define ASM16_PUSH_BND_ARG    0xf00b /* [4][-0,+1]   `push bound arg <imm16>'             - Check if the argument variable indexed by `<imm16>' is bound, pushing true/false indicative of that state. */
 #define ASM16_PUSH_BND_EXTERN 0xf00c /* [6][-0,+1]   `push bound extern <imm16>:<imm16>'  - Check if the extern variable indexed by `<imm16>:<imm16>' is bound, pushing true/false indicative of that state. */
 /*      ASM_                  0xf00d  *               --------                            - ------------------ */
 #define ASM16_PUSH_BND_GLOBAL 0xf00e /* [4][-0,+1]   `push bound global <imm16>'          - Check if the global variable indexed by `<imm16>' is bound, pushing true/false indicative of that state. */
@@ -1156,8 +1156,8 @@
                                       * [5][-n,+1]   `PREFIX: push op $<imm16>, #<imm8>' */
 #define ASM16_OPERATOR_TUPLE  0xf01a /* [4][-2,+1]   `op top, $<imm16>, pop'              - Same as `ASM_OPERATOR_TUPLE', but can be used to invoke extended operator codes.
                                       * [4][-1,+1]   `PREFIX: push op $<imm16>, pop' */
-#define ASM_CALL_SEQ          0xf01b /* [3][-1-n,+1] `call top, [#<imm8>]'                - Similar to `ASM_CALL', but pass arguments packaged in some implementation-specific sequence type as a single argument. Used to implement range-initializers. */
-#define ASM_CALL_MAP          0xf01c /* [3][-1-n,+1] `call top, {#<imm8>*2}'              - Similar to `ASM_CALL', but pass arguments packaged in some implementation-specific Dict-style sequence type as a single argument. Used to implement range-initializers. */
+#define ASM_CALL_SEQ          0xf01b /* [3][-1-n,+1] `call top, [#<imm8>]'                - Similar to `ASM_CALL', but pass arguments packaged in some implementation-specific sequence type as a single argument. Used to implement sequence-initializers. */
+#define ASM_CALL_MAP          0xf01c /* [3][-1-n,+1] `call top, {#<imm8>*2}'              - Similar to `ASM_CALL', but pass arguments packaged in some implementation-specific Dict-style sequence type as a single argument. Used to implement mapping-initializers. */
 #define ASM_THISCALL_TUPLE    0xf01d /* [2][-3,+1]   `call top, pop, pop...'              - Perform a this-call (which is the equivalent of inserting `pop' before `pop...', then using the result as argument list).
                                       * >> Object args    = POP();
                                       * >> Object thisarg = POP();

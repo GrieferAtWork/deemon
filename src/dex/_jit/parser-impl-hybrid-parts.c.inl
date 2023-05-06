@@ -977,6 +977,7 @@ do_check_while_condition:
 			JITLexer_Yield(self);
 			goto do_eval_while_loop;
 		}
+
 		/* Stop looping and jump to the end of the while-block. */
 		if likely(block_end) {
 			self->jl_tokend = block_end;
@@ -1035,6 +1036,7 @@ H_FUNC(Do)(JITLexer *__restrict self, JIT_ARGS) {
 		int temp;
 		unsigned char *block_start;
 		block_start = self->jl_tokstart;
+
 		/* Parse the block for the first time. */
 do_parse_block:
 		result = JITLexer_EvalStatement(self);
@@ -1177,31 +1179,46 @@ H_FUNC(With)(JITLexer *__restrict self, JIT_ARGS) {
 	ASSERT(JITLexer_ISKWD(self, "with"));
 	JITLexer_Yield(self);
 	if likely(self->jl_tok == '(') {
+consume_lparen:
 		JITLexer_Yield(self);
+#ifdef JIT_EVAL
+		with_obj = JITLexer_EvalRValue(self);
+		if unlikely(!with_obj)
+			goto err;
+#else /* JIT_EVAL */
+		result = JITLexer_SkipRValue(self);
+		if unlikely(result)
+			goto err;
+#endif /* !JIT_EVAL */
+		if likely(self->jl_tok == ')') {
+			JITLexer_Yield(self);
+		} else {
+			syn_with_expected_rparen_after_with(self);
+			goto err_with_obj;
+		}
+	} else if (JITLexer_ISKWD(self, "pack")) {
+		JITLexer_Yield(self);
+		if (self->jl_tok == '(')
+			goto consume_lparen;
+#ifdef JIT_EVAL
+		with_obj = JITLexer_EvalRValue(self);
+		if unlikely(!with_obj)
+			goto err;
+#else /* JIT_EVAL */
+		result = JITLexer_SkipRValue(self);
+		if unlikely(result)
+			goto err;
+#endif /* !JIT_EVAL */
 	} else {
 		syn_with_expected_lparen_after_with(self);
 		goto err;
-	}
-#ifdef JIT_EVAL
-	with_obj = JITLexer_EvalRValue(self);
-	if unlikely(!with_obj)
-		goto err;
-#else /* JIT_EVAL */
-	result = JITLexer_SkipRValue(self);
-	if unlikely(result)
-		goto err;
-#endif /* !JIT_EVAL */
-	if likely(self->jl_tok == ')') {
-		JITLexer_Yield(self);
-	} else {
-		syn_with_expected_rparen_after_with(self);
-		goto err_with_obj;
 	}
 #ifdef JIT_EVAL
 	if (DeeObject_Enter(with_obj))
 		goto err_with_obj;
 #endif /* JIT_EVAL */
 	result = EVAL_PRIMARY(self, p_was_expression);
+
 #ifdef JIT_EVAL
 	/* Always leave the with-object.
 	 * WARNING: This operation may cause a secondary exception to

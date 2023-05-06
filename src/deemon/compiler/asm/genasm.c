@@ -731,6 +731,7 @@ done_fake_none:
 		if (self->a_conditional.c_tt &&
 		    self->a_conditional.c_ff) {
 			unsigned int cond_flags = ASM_G_FPUSHRES | ASM_G_FLAZYBOOL;
+
 			/* If the condition expression is re-used, we can't
 			 * have it auto-optimize itself into a boolean value
 			 * if the caller expects the real expression value. */
@@ -740,6 +741,7 @@ done_fake_none:
 				cond_flags &= ~ASM_G_FLAZYBOOL;
 			if (ast_genasm(condition, cond_flags))
 				goto err;
+
 			/* Branch with specific code for both paths. */
 			if (self->a_conditional.c_tt == self->a_conditional.c_cond ||
 			    self->a_conditional.c_ff == self->a_conditional.c_cond) {
@@ -757,11 +759,12 @@ done_fake_none:
 						goto err;
 					invert_condition = false;
 				}
+
 				/*     push <cond>
-				 *    [dup]
+				 *     [dup]
 				 *     jt   pop, 1f  # Inverted by `invert_condition ^ (ast->a_conditional.c_ff == ast->a_conditional.c_cond)'
-				 *    [pop]
-				 *    [push] <false-branch> / <true-branch>
+				 *     [pop]
+				 *     [push] <false-branch> / <true-branch>
 				 *1:   */
 				cond_end = asm_newsym();
 				if unlikely(!cond_end)
@@ -773,13 +776,13 @@ done_fake_none:
 				if (self->a_flag & (AST_FCOND_LIKELY | AST_FCOND_UNLIKELY) &&
 				    current_assembler.a_curr != &current_assembler.a_sect[SECTION_COLD]) {
 					/*     push <cond>
-					 *    [dup]
+					 *     [dup]
 					 *     jf   pop, .cold.1f  # Inverted by `invert_condition ^ (ast->a_conditional.c_ff == ast->a_conditional.c_cond)'
 					 *2:
 					 *
 					 *.cold.1:
 					 *     pop
-					 *    [push] <false-branch> / <true-branch>
+					 *     [push] <false-branch> / <true-branch>
 					 *     jmp   2b */
 					struct asm_sym *cold_entry = asm_newsym();
 					struct asm_sec *prev_section;
@@ -866,6 +869,7 @@ done_fake_none:
 					goto err;
 				if (!likely_is_bool && unlikely_is_bool && asm_gbool(false))
 					goto err;
+
 				/* Pre-adjust the stack for anything the other branch may do. */
 				if (current_assembler.a_flag & ASM_FSTACKDISP &&
 				    asm_gsetstack_s(text_return))
@@ -883,6 +887,7 @@ done_fake_none:
 					goto err;
 				if (likely_is_bool && !unlikely_is_bool && asm_gbool(false))
 					goto err;
+
 				/* Return to regular text. */
 				if (asm_gjmp(ASM_JMP, text_return))
 					goto err;
@@ -894,9 +899,9 @@ done_fake_none:
 			} else {
 				/*     push <cond>
 				 *     jf   pop, 1f  # Inverted by `invert_condition'
-				 *    [push] <true-branch>
+				 *     [push] <true-branch>
 				 *     jmp  pop, 2f
-				 *1:  [push] <false-branch>
+				 *1:   [push] <false-branch>
 				 *2:   */
 				struct asm_sym *ff_enter = asm_newsym();
 				struct asm_sym *ff_leave = asm_newsym();
@@ -951,9 +956,10 @@ done_fake_none:
 						goto err;
 					goto done;
 				}
+
 				/* Special case: The only existing branch is a duplicate of the condition. */
 				/*    push <cond>
-				 *   [bool]
+				 *    [bool]
 				 *    dup
 				 *    jf   pop, 1f  # Inverted by `existing_branch == ast->a_conditional.c_ff'
 				 *    pop
@@ -973,6 +979,7 @@ done_fake_none:
 
 				if (asm_gdup())
 					goto err;
+
 				/* Do a bit of hacking to prevent creation of a pointless relocation. */
 				if (asm_putimm8(invert_condition
 				                ? ASM_JT
@@ -1061,12 +1068,13 @@ done_fake_none:
 #if AST_FBOOL_NEGATE == 1
 		instr = ASM_BOOL ^ (self->a_flag & AST_FBOOL_NEGATE);
 #else /* AST_FBOOL_NEGATE == 1 */
-		instr   = ASM_BOOL ^ (instruction_t) !!(self->a_flag & AST_FBOOL_NEGATE);
+		instr = ASM_BOOL ^ (instruction_t) !!(self->a_flag & AST_FBOOL_NEGATE);
 #endif /* AST_FBOOL_NEGATE != 1 */
 		if (ast_genasm(self->a_bool,
 		               ASM_G_FLAZYBOOL |
 		               ASM_G_FPUSHRES))
 			goto err;
+
 		/* If the result won't be used, no need to do any inversion.
 		 * However, we must still invoke the bool operator of the
 		 * top-object, just in case doing so has any side-effects. */
@@ -1093,6 +1101,7 @@ done_fake_none:
 		} else {
 			/* TODO: Don't generate any code for constant expressions
 			 *       when their enumeration doesn't have any side-effects! */
+
 			/* If the result isn't being used, follow the regular comma-rule
 			 * to generate expected assembly for code like this:
 			 * >> foo()...;
@@ -1102,6 +1111,7 @@ done_fake_none:
 			struct asm_sym *loop, *stop;
 			if (ast_genasm(self->a_expand, ASM_G_FPUSHRES))
 				goto err;
+
 			/* Generate code to enumerate the sequence */
 			if (asm_putddi(self))
 				goto err;
@@ -1157,8 +1167,10 @@ done_fake_none:
 
 	case AST_OPERATOR: {
 		uint16_t operator_name;
+
 		/* Probably one of the most important AST types: The operator AST. */
 		operator_name = self->a_flag;
+
 		/* Special case: The arguments of the operator are variadic. */
 		if unlikely(self->a_operator.o_exflag & AST_OPERATOR_FVARARGS) {
 			struct symbol *prefix_symbol;
@@ -1177,6 +1189,7 @@ varop_without_prefix:
 					goto err;
 				prefix_symbol = NULL;
 			}
+
 			/* Compile operand tuple or push an empty one. */
 			if (self->a_operator.o_op1) {
 				if (ast_genasm_one(self->a_operator.o_op1, ASM_G_FPUSHRES))
@@ -1245,6 +1258,7 @@ pop_unused:
 							goto err;
 						goto done;
 					}
+
 					/* Lookup a varargs-argument by index. */
 					if (self->a_operator.o_op1->a_type == AST_CONSTEXPR &&
 					    DeeInt_Check(self->a_operator.o_op1->a_constexpr) &&
@@ -1268,6 +1282,7 @@ pop_unused:
 			if (self->a_operator.o_op1->a_type != AST_CONSTEXPR)
 				break;
 			index = self->a_operator.o_op1->a_constexpr;
+
 			/* Special optimizations for integer indices. */
 			if (DeeInt_Check(index) &&
 			    DeeInt_TryAsS32(index, &temp) &&
@@ -1280,6 +1295,7 @@ pop_unused:
 					goto err;
 				goto pop_unused;
 			}
+
 			/* Special optimizations for constant indices. */
 			if (asm_allowconst(index)) {
 				temp = asm_newconst(index);
@@ -1392,7 +1408,6 @@ pop_unused:
 				goto err;
 			goto pop_unused;
 		}
-
 
 		case OPERATOR_SETITEM:
 			if unlikely(!self->a_operator.o_op2)
