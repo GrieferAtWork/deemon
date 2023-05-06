@@ -305,6 +305,25 @@ END(_impl_assert_failed)
 #define tp_weakrefs           18 /* uint16_t tp_weakrefs; */
 #define tp_features           20 /* uint32_t tp_features; */
 #define tp_base               24 /* DeeTypeObject *tp_base; */
+#define tp_init               28 /* struct Dee_type_constructor tp_init; */
+#define tp_cast               72 /* struct Dee_type_cast tp_cast; */
+#define tp_call               92 /* DREF DeeObject *(DCALL *tp_call)(DeeObject *self, size_t argc, DeeObject *const *argv); */
+#define tp_visit              96 /* void (DCALL *tp_visit)(DeeObject *__restrict self, Dee_visit_t proc, void *arg); */
+#define tp_gc                100 /* struct Dee_type_gc tpconst *tp_gc; */
+#define tp_math              104 /* struct Dee_type_math *tp_math; */
+#define tp_cmp               108 /* struct Dee_type_cmp *tp_cmp; */
+#define tp_seq               112 /* struct Dee_type_seq *tp_seq; */
+#define tp_iter_next         116 /* DREF DeeObject *(DCALL *tp_iter_next)(DeeObject *__restrict self); */
+#define tp_attr              120 /* struct Dee_type_attr tpconst *tp_attr; */
+#define tp_with              124 /* struct Dee_type_with *tp_with; */
+#define tp_buffer            128 /* struct Dee_type_buffer *tp_buffer; */
+#define tp_methods           132 /* struct Dee_type_method tpconst *tp_methods; */
+#define tp_getsets           136 /* struct Dee_type_getset tpconst *tp_getsets; */
+#define tp_members           140 /* struct Dee_type_member tpconst *tp_members; */
+#define tp_class_methods     144 /* struct Dee_type_method tpconst *tp_class_methods; */
+#define tp_class_getsets     148 /* struct Dee_type_getset tpconst *tp_class_getsets; */
+#define tp_class_members     152 /* struct Dee_type_member tpconst *tp_class_members; */
+#define tp_call_kw           156 /* DREF DeeObject *(DCALL *tp_call_kw)(DeeObject *self, size_t argc, DeeObject *const *argv, DeeObject *kw) */
 /* ... */
 /* }; */
 
