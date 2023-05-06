@@ -602,6 +602,20 @@
 #define DEFINE_FUNCTION_NOREFS(name, ...)     DeeFunctionObject name
 #define Dee_DEFINE_FUNCTION_NOREFS(name, ...) DeeFunctionObject name
 
+#define Dee_CASE_WIDTH_1BYTE case 1
+#define CASE_WIDTH_1BYTE case 1
+#define Dee_CASE_WIDTH_2BYTE case 2
+#define CASE_WIDTH_2BYTE case 2
+#define Dee_CASE_WIDTH_4BYTE case 4
+#define CASE_WIDTH_4BYTE case 4
+#define Dee_SWITCH_SIZEOF_WIDTH(...) for(;;)
+#define SWITCH_SIZEOF_WIDTH(...) for(;;)
+#define DeeString_Foreach(...)
+#define DEFINE_STRING_TRAIT(name,function,test_ch) DeeObject *string_##name(String *self, size_t argc, DeeObject *const *argv);
+#define DEFINE_ANY_STRING_TRAIT(name,function) DeeObject *string_##name(String *self, size_t argc, DeeObject *const *argv, DeeObject *kw);
+#define DEFINE_BYTES_TRAIT(name,function,test_ch) DeeObject *bytes_##name(Bytes *self, size_t argc, DeeObject *const *argv);
+#define DEFINE_ANY_BYTES_TRAIT(name,function) DeeObject *bytes_##name(Bytes *self, size_t argc, DeeObject *const *argv, DeeObject *kw);
+
 #define Dee_weakref          weakref
 #define Dee_object           object_
 #define Dee_type_object      type_object
