@@ -824,6 +824,9 @@
 		<ClCompile Include="..\src\deemon\compiler\asm\genoperator_func.c">
 			<Filter>src\compiler\asm</Filter>
 		</ClCompile>
+		<ClCompile Include="..\src\deemon\compiler\asm\genprint.c">
+			<Filter>src\compiler\asm</Filter>
+		</ClCompile>
 		<ClCompile Include="..\src\deemon\compiler\asm\genstore.c">
 			<Filter>src\compiler\asm</Filter>
 		</ClCompile>

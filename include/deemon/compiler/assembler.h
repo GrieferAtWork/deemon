@@ -1996,6 +1996,28 @@ INTDEF WUNUSED NONNULL((1, 3)) int
                       unsigned int gflags);
 
 
+/* Available print modes. */
+#define PRINT_MODE_NORMAL (ASM_PRINT - ASM_PRINT)    /* Mode: print. */
+#define PRINT_MODE_SP     (ASM_PRINT_SP - ASM_PRINT) /* Mode: print, followed by a space. */
+#define PRINT_MODE_NL     (ASM_PRINT_NL - ASM_PRINT) /* Mode: print, followed by a new-line. */
+#define PRINT_MODE_FILE   (ASM_FPRINT - ASM_PRINT)   /* FLAG: Print to a file. */
+#define PRINT_MODE_ALL    (ASM_PRINTALL - ASM_PRINT) /* FLAG: Print elements from a sequence. */
+
+/* Generate code for the expression `print print_expression...;'
+ * @param: mode: The print mode. NOTE: When `PRINT_MODE_FILE' is set,
+ *               then the caller must first push the file to print to. */
+INTDEF WUNUSED NONNULL((2, 3)) int DCALL
+ast_genprint(instruction_t mode,
+             struct ast *print_expression,
+             struct ast *ddi_ast);
+
+/* Same as `ast_genprint()', but print the repr of `print_expression' */
+INTDEF WUNUSED NONNULL((2, 3)) int DCALL
+ast_genprint_repr(instruction_t mode,
+                  struct ast *print_expression,
+                  struct ast *ddi_ast);
+
+
 #ifndef __INTELLISENSE__
 #ifndef __NO_builtin_expect
 #ifdef NDEBUG

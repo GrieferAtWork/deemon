@@ -207,295 +207,6 @@ INTERN_CONST uint8_t const operator_opcount_table[OPERATOR_USERCOUNT] = {
 };
 
 
-/* Given an AST_MULTIPLE:AST_FMULTIPLE_KEEPLAST, recursively unwrap
- * it and generate assembly for all unused operands before returning
- * the actually effective AST (without generating assembly for _it_) */
-PRIVATE struct ast *DCALL
-ast_unwrap_effective(struct ast *__restrict self) {
-	while (self->a_type == AST_MULTIPLE &&
-	       self->a_flag == AST_FMULTIPLE_KEEPLAST &&
-	       self->a_multiple.m_astc != 0 &&
-	       self->a_scope == current_assembler.a_scope) {
-		size_t i, count;
-		struct ast **vector;
-		vector = self->a_multiple.m_astv;
-		count  = self->a_multiple.m_astc - 1;
-		for (i = 0; i < count; ++i) {
-			if (ast_genasm(vector[i], ASM_G_FNORMAL))
-				goto err;
-		}
-		ASSERT(i == count);
-		self = vector[i];
-	}
-	return self;
-err:
-	return NULL;
-}
-
-
-#define PRINT_MODE_NORMAL (ASM_PRINT - ASM_PRINT)    /* Mode: print. */
-#define PRINT_MODE_SP     (ASM_PRINT_SP - ASM_PRINT) /* Mode: print, followed by a space. */
-#define PRINT_MODE_NL     (ASM_PRINT_NL - ASM_PRINT) /* Mode: print, followed by a new-line. */
-#define PRINT_MODE_FILE   (ASM_FPRINT - ASM_PRINT)   /* FLAG: Print to a file. */
-#define PRINT_MODE_ALL    (ASM_PRINTALL - ASM_PRINT) /* FLAG: Print elements from a sequence. */
-
-/* Ensure that we can directly encode print modes in instructions. */
-STATIC_ASSERT(ASM_PRINT + (PRINT_MODE_NORMAL) == ASM_PRINT);
-STATIC_ASSERT(ASM_PRINT + (PRINT_MODE_SP) == ASM_PRINT_SP);
-STATIC_ASSERT(ASM_PRINT + (PRINT_MODE_NL) == ASM_PRINT_NL);
-STATIC_ASSERT(ASM_PRINT + (PRINT_MODE_NORMAL | PRINT_MODE_FILE) == ASM_FPRINT);
-STATIC_ASSERT(ASM_PRINT + (PRINT_MODE_SP | PRINT_MODE_FILE) == ASM_FPRINT_SP);
-STATIC_ASSERT(ASM_PRINT + (PRINT_MODE_NL | PRINT_MODE_FILE) == ASM_FPRINT_NL);
-STATIC_ASSERT(ASM_PRINT + (PRINT_MODE_NORMAL | PRINT_MODE_ALL) == ASM_PRINTALL);
-STATIC_ASSERT(ASM_PRINT + (PRINT_MODE_SP | PRINT_MODE_ALL) == ASM_PRINTALL_SP);
-STATIC_ASSERT(ASM_PRINT + (PRINT_MODE_NL | PRINT_MODE_ALL) == ASM_PRINTALL_NL);
-STATIC_ASSERT(ASM_PRINT + (PRINT_MODE_NORMAL | PRINT_MODE_FILE | PRINT_MODE_ALL) == ASM_FPRINTALL);
-STATIC_ASSERT(ASM_PRINT + (PRINT_MODE_SP | PRINT_MODE_FILE | PRINT_MODE_ALL) == ASM_FPRINTALL_SP);
-STATIC_ASSERT(ASM_PRINT + (PRINT_MODE_NL | PRINT_MODE_FILE | PRINT_MODE_ALL) == ASM_FPRINTALL_NL);
-STATIC_ASSERT(ASM_PRINTNL + (PRINT_MODE_FILE) == ASM_FPRINTNL);
-STATIC_ASSERT(ASM_PRINT_C + (PRINT_MODE_NORMAL) == ASM_PRINT_C);
-STATIC_ASSERT(ASM_PRINT_C + (PRINT_MODE_SP) == ASM_PRINT_C_SP);
-STATIC_ASSERT(ASM_PRINT_C + (PRINT_MODE_NL) == ASM_PRINT_C_NL);
-STATIC_ASSERT(ASM_PRINT_C + (PRINT_MODE_NORMAL | PRINT_MODE_FILE) == ASM_FPRINT_C);
-STATIC_ASSERT(ASM_PRINT_C + (PRINT_MODE_SP | PRINT_MODE_FILE) == ASM_FPRINT_C_SP);
-STATIC_ASSERT(ASM_PRINT_C + (PRINT_MODE_NL | PRINT_MODE_FILE) == ASM_FPRINT_C_NL);
-STATIC_ASSERT(ASM16_PRINT_C + (PRINT_MODE_NORMAL) == ASM16_PRINT_C);
-STATIC_ASSERT(ASM16_PRINT_C + (PRINT_MODE_SP) == ASM16_PRINT_C_SP);
-STATIC_ASSERT(ASM16_PRINT_C + (PRINT_MODE_NL) == ASM16_PRINT_C_NL);
-STATIC_ASSERT(ASM16_PRINT_C + (PRINT_MODE_NORMAL | PRINT_MODE_FILE) == ASM16_FPRINT_C);
-STATIC_ASSERT(ASM16_PRINT_C + (PRINT_MODE_SP | PRINT_MODE_FILE) == ASM16_FPRINT_C_SP);
-STATIC_ASSERT(ASM16_PRINT_C + (PRINT_MODE_NL | PRINT_MODE_FILE) == ASM16_FPRINT_C_NL);
-
-PRIVATE ATTR_PURE WUNUSED NONNULL((1)) bool DCALL
-constexpr_is_empty_string(DeeObject *__restrict self) {
-	if (DeeString_Check(self) && DeeString_IsEmpty(self))
-		goto yes;
-	if (DeeBytes_Check(self) && DeeBytes_IsEmpty(self))
-		goto yes;
-	if (self == Dee_EmptyTuple)
-		goto yes;
-	return false;
-yes:
-	return true;
-}
-
-PRIVATE ATTR_PURE WUNUSED NONNULL((1)) bool DCALL
-ast_is_empty_string(struct ast *__restrict self) {
-	while (self->a_type == AST_MULTIPLE &&
-	       self->a_flag == AST_FMULTIPLE_KEEPLAST) {
-		if (!self->a_multiple.m_astc)
-			return false; /* This would be `none' */
-		self = self->a_multiple.m_astv[self->a_multiple.m_astc - 1];
-	}
-	if (self->a_type == AST_CONSTEXPR)
-		return constexpr_is_empty_string(self->a_constexpr);
-	if (self->a_type == AST_MULTIPLE) {
-		if (self->a_flag == AST_FMULTIPLE_TUPLE) {
-			size_t i;
-			for (i = 0; i < self->a_multiple.m_astc; ++i) {
-				if (!ast_is_empty_string(self->a_multiple.m_astv[i]))
-					return false;
-			}
-			return true;
-		}
-	}
-	return false;
-}
-
-PRIVATE int DCALL
-ast_genprint_emptystring(instruction_t mode,
-                         struct ast *__restrict ddi_ast) {
-	int32_t empty_cid;
-	/* Just print an empty line. */
-	if ((mode & ~(PRINT_MODE_FILE | PRINT_MODE_ALL)) == PRINT_MODE_NL) {
-		if (asm_putddi(ddi_ast))
-			goto err;
-		return asm_put((instruction_t)(ASM_PRINTNL + (mode & PRINT_MODE_FILE)));
-	}
-	/* Nothing needs to be printed _at_ _all_. */
-	if ((mode & ~(PRINT_MODE_FILE | PRINT_MODE_ALL)) == PRINT_MODE_NORMAL)
-		return 0;
-	/* Print whitespace. */
-	empty_cid = asm_newconst(Dee_EmptyString);
-	if unlikely(empty_cid < 0)
-		goto err;
-	if (asm_putddi(ddi_ast))
-		goto err;
-	return asm_gprint_const((uint16_t)empty_cid);
-err:
-	return -1;
-}
-
-/* Generate code for the expression `print print_expression...;'
- * @param: mode: The print mode. NOTE: When `PRINT_MODE_FILE' is set,
- *               then the caller must first push the file to print to. */
-PRIVATE int DCALL
-ast_genprint(instruction_t mode,
-             struct ast *__restrict print_expression,
-             struct ast *__restrict ddi_ast) {
-	print_expression = ast_unwrap_effective(print_expression);
-	if unlikely(!print_expression)
-		goto err;
-	if (mode & PRINT_MODE_ALL) {
-		if (print_expression->a_type == AST_MULTIPLE &&
-		    print_expression->a_flag != AST_FMULTIPLE_KEEPLAST) {
-			struct ast **iter, **end;
-			/* Special optimization for printing an expanded, multi-branch.
-			 * This is actually the most likely case, because something like
-			 * `print "Hello World";' is actually encoded as `print pack("Hello World")...;' */
-			end = (iter = print_expression->a_multiple.m_astv) +
-			      print_expression->a_multiple.m_astc;
-			if (iter == end) {
-empty_operand:
-				return ast_genprint_emptystring(mode, ddi_ast);
-			}
-			/* Print each expression individually. */
-			for (; iter < end; ++iter) {
-				instruction_t item_mode;
-				item_mode = PRINT_MODE_SP | (mode & PRINT_MODE_FILE);
-				if (iter == end - 1)
-					item_mode = (mode & ~PRINT_MODE_ALL);
-				if unlikely(ast_genprint(item_mode, *iter, ddi_ast))
-					goto err;
-			}
-			return 0;
-#if 1
-		} else if (print_expression->a_type == AST_CONSTEXPR) {
-			DREF DeeObject *items, **iter, **end;
-			items = DeeTuple_FromSequence(print_expression->a_constexpr);
-			if unlikely(!items) {
-				DeeError_Handled(ERROR_HANDLED_RESTORE);
-				goto fallback;
-			}
-			if (DeeTuple_IsEmpty(items)) {
-				Dee_Decref(items);
-				goto empty_operand;
-			}
-			/* Print each expression individually. */
-			end = (iter = DeeTuple_ELEM(items)) + DeeTuple_SIZE(items);
-			for (; iter < end; ++iter) {
-				instruction_t item_mode;
-				int32_t const_cid;
-				DeeObject *elem;
-				item_mode = PRINT_MODE_SP | (mode & PRINT_MODE_FILE);
-				elem = *iter;
-				if (iter == end - 1)
-					item_mode = (mode & ~PRINT_MODE_ALL);
-				/* Check if the operand is allowed to appear in constants. */
-				if ((current_assembler.a_flag & ASM_FOPTIMIZE) &&
-				    constexpr_is_empty_string(elem)) {
-					if (ast_genprint_emptystring(item_mode, ddi_ast))
-						goto err_items;
-				} else if (!asm_allowconst(elem)) {
-					if (asm_gpush_constexpr(elem))
-						goto err_items;
-					if (asm_putddi(ddi_ast))
-						goto err;
-					if unlikely(asm_put(ASM_PRINT + item_mode))
-						goto err_items;
-					asm_decsp();
-				} else {
-					const_cid = asm_newconst(elem);
-					if unlikely(const_cid < 0)
-						goto err_items;
-					if (asm_putddi(ddi_ast))
-						goto err;
-					if (asm_put816(ASM_PRINT_C + item_mode, (uint16_t)const_cid))
-						goto err_items;
-				}
-			}
-			Dee_Decref(items);
-			return 0;
-err_items:
-			Dee_Decref(items);
-			goto err;
-#endif
-		}
-	} else if (print_expression->a_type == AST_CONSTEXPR) {
-		/* Special case: Print what essentially boils down to being an empty string. */
-		if (current_assembler.a_flag & ASM_FOPTIMIZE) {
-			if (constexpr_is_empty_string(print_expression->a_constexpr))
-				goto empty_operand;
-		}
-		/* Special instructions exist for direct printing of constants. */
-		if (asm_allowconst(print_expression->a_constexpr)) {
-			int32_t const_cid;
-			const_cid = asm_newconst(print_expression->a_constexpr);
-			if unlikely(const_cid < 0)
-				goto err;
-			if (asm_putddi(ddi_ast))
-				goto err;
-			return asm_put816(ASM_PRINT_C + mode, (uint16_t)const_cid);
-		}
-	}
-fallback:
-	/* Fallback: Compile the print expression, then print it as an expanded sequence. */
-	if (print_expression->a_type == AST_EXPAND && !(mode & PRINT_MODE_ALL)) {
-		if (ast_genasm(print_expression->a_expand, ASM_G_FPUSHRES))
-			goto err;
-		if (asm_putddi(ddi_ast))
-			goto err;
-		if (asm_put(ASM_PRINTALL + mode))
-			goto err;
-	} else if ((current_assembler.a_flag & ASM_FOPTIMIZE) &&
-	           print_expression->a_type == AST_MULTIPLE &&
-	           print_expression->a_flag == AST_FMULTIPLE_TUPLE) {
-		/* Printing a Tuple expression is the same as printing
-		 * each if its elements without any separators.
-		 * >> print("foo", "bar", 42); // Prints "foobar42\n"
-		 * >> print "foo", "bar", 42;  // Prints "foo bar 42\n"
-		 * Instead of generating a Tuple object here, we can
-		 * instead directly go through the tuple elements and
-		 * print them individually. */
-		size_t i, cnt;
-		cnt = print_expression->a_multiple.m_astc;
-		/* Trim trailing empty-string-expressions now so that we're
-		 * properly optimizing assembly generated by code such as:
-		 * >> print(foo, "");
-		 * ASM:
-		 * >> push  @foo
-		 * >> print pop, nl
-		 * Without this optimization, this would generate as:
-		 * ASM:
-		 * >> push  @foo
-		 * >> print pop
-		 * >> print nl  // Because of the empty string (""), this wasn't merged
-		 * NOTE: Non-trailing empty strings don't need to be optimized away here! */
-		while (cnt && ast_is_empty_string(print_expression->a_multiple.m_astv[cnt - 1]))
-			--cnt;
-		if (!cnt)
-			goto empty_operand; /* Special case: `print()'; */
-		for (i = 0; i < cnt; ++i) {
-			instruction_t elem_mode;
-			elem_mode = mode;
-			if (i < cnt - 1)
-				elem_mode &= ~(PRINT_MODE_SP | PRINT_MODE_NL);
-			if unlikely(ast_genprint(elem_mode,
-			                         print_expression->a_multiple.m_astv[i],
-			                         ddi_ast))
-				goto err;
-		}
-		return 0;
-	} else if ((current_assembler.a_flag & ASM_FOPTIMIZE) &&
-	           print_expression->a_type == AST_OPERATOR &&
-	           print_expression->a_flag == OPERATOR_STR) {
-		/* `print str(x);' is the same as `print x;'. */
-		return ast_genprint(mode, print_expression->a_operator.o_op0, ddi_ast);
-	} else {
-		if (ast_genasm(print_expression, ASM_G_FPUSHRES))
-			goto err;
-		if (asm_putddi(ddi_ast))
-			goto err;
-		if (asm_put(ASM_PRINT + mode))
-			goto err;
-	}
-	asm_decsp(); /* Consume the print expression. */
-	return 0;
-err:
-	return -1;
-}
-
-
 INTERN WUNUSED NONNULL((1, 2)) struct module_symbol *DCALL
 get_module_symbol(DeeModuleObject *__restrict module,
                   DeeStringObject *__restrict name) {
@@ -2513,7 +2224,8 @@ do_this_as_typesym_ref:
 				if unlikely(ast_genprint(PRINT_MODE_NORMAL + PRINT_MODE_FILE + PRINT_MODE_ALL,
 				                         self->a_action.a_act1, self))
 					goto err;
-			}	goto pop_unused;
+				goto pop_unused;
+			}
 
 			ACTION(AST_FACTION_FPRINTLN) {
 				if (ast_genasm(self->a_action.a_act0, ASM_G_FPUSHRES))
@@ -2521,7 +2233,8 @@ do_this_as_typesym_ref:
 				if unlikely(ast_genprint(PRINT_MODE_NL + PRINT_MODE_FILE + PRINT_MODE_ALL,
 				                         self->a_action.a_act1, self))
 					goto err;
-			}	goto pop_unused;
+				goto pop_unused;
+			}
 
 			ACTION(AST_FACTION_RANGE) {
 				if (self->a_action.a_act0->a_type == AST_CONSTEXPR) {
@@ -2672,7 +2385,8 @@ action_in_without_const:
 							goto err;
 					}
 				}
-			}	goto pop_unused;
+				goto pop_unused;
+			}
 
 			ACTION(AST_FACTION_MIN) {
 				if (ast_genasm(self->a_action.a_act0, ASM_G_FPUSHRES))
@@ -2681,7 +2395,8 @@ action_in_without_const:
 					goto err;
 				if (asm_greduce_min())
 					goto err;
-			}	goto pop_unused;
+				goto pop_unused;
+			}
 
 			ACTION(AST_FACTION_MAX) {
 				if (ast_genasm(self->a_action.a_act0, ASM_G_FPUSHRES))
@@ -2690,7 +2405,8 @@ action_in_without_const:
 					goto err;
 				if (asm_greduce_max())
 					goto err;
-			}	goto pop_unused;
+				goto pop_unused;
+			}
 
 			ACTION(AST_FACTION_SUM) {
 				if (ast_genasm(self->a_action.a_act0, ASM_G_FPUSHRES))
@@ -2699,7 +2415,8 @@ action_in_without_const:
 					goto err;
 				if (asm_greduce_sum())
 					goto err;
-			}	goto pop_unused;
+				goto pop_unused;
+			}
 
 			ACTION(AST_FACTION_ANY) {
 				if (ast_genasm(self->a_action.a_act0, ASM_G_FPUSHRES))
@@ -2708,7 +2425,8 @@ action_in_without_const:
 					goto err;
 				if (asm_greduce_any())
 					goto err;
-			}	goto pop_unused;
+				goto pop_unused;
+			}
 
 			ACTION(AST_FACTION_ALL) {
 				if (ast_genasm(self->a_action.a_act0, ASM_G_FPUSHRES))
@@ -2717,7 +2435,8 @@ action_in_without_const:
 					goto err;
 				if (asm_greduce_all())
 					goto err;
-			}	goto pop_unused;
+				goto pop_unused;
+			}
 
 			ACTION(AST_FACTION_STORE) {
 				if unlikely(asm_gstore(self->a_action.a_act0,
@@ -2742,7 +2461,8 @@ action_in_without_const:
 					goto err;
 				if (asm_gbounditem())
 					goto err;
-			}	goto pop_unused;
+				goto pop_unused;
+			}
 
 			ACTION(AST_FACTION_CALL_KW) {
 				/* Call with keyword list. */
@@ -2777,7 +2497,8 @@ action_in_without_const:
 					if (asm_gsameobj())
 						goto err;
 				}
-			}	goto pop_unused;
+				goto pop_unused;
+			}
 
 			ACTION(AST_FACTION_DIFFOBJ) {
 				if (ast_genasm(self->a_action.a_act0, PUSH_RESULT))
@@ -2790,7 +2511,8 @@ action_in_without_const:
 					if (asm_gdiffobj())
 						goto err;
 				}
-			}	goto pop_unused;
+				goto pop_unused;
+			}
 
 #undef ACTION
 		default:

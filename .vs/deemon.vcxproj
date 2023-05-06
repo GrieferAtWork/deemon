@@ -285,6 +285,7 @@
 		<ClCompile Include="..\src\deemon\compiler\asm\geninplace.c" />
 		<ClCompile Include="..\src\deemon\compiler\asm\genloop.c" />
 		<ClCompile Include="..\src\deemon\compiler\asm\genoperator_func.c" />
+		<ClCompile Include="..\src\deemon\compiler\asm\genprint.c" />
 		<ClCompile Include="..\src\deemon\compiler\asm\genstore.c" />
 		<ClCompile Include="..\src\deemon\compiler\asm\genswitch.c" />
 		<ClCompile Include="..\src\deemon\compiler\asm\gentry.c" />

@@ -266,17 +266,21 @@ INTERN WUNUSED NONNULL((1)) int
 	struct asm_sym *sym;
 	struct ddi_checkpoint *ddi;
 	ASSERT_AST(self);
+
 	/* Check for simple case: DDI is disabled. */
 	if (current_assembler.a_flag & ASM_FNODDI)
 		goto done;
+
 	/* Check if there even is DDI information to save. */
 	if (!self->a_ddi.l_file)
 		goto done;
+
 	/* Discard redundant debug information early on to save on memory. */
 	if (current_assembler.a_ddi.da_slast == current_assembler.a_curr &&
 	    current_assembler.a_ddi.da_last == asm_ip())
 		goto done;
-		/* Allocate a symbol and DDI checkpoint. */
+
+	/* Allocate a symbol and DDI checkpoint. */
 #ifdef NDEBUG
 	sym = asm_newsym();
 	if unlikely(!sym)
@@ -292,6 +296,7 @@ INTERN WUNUSED NONNULL((1)) int
 	if unlikely(!ddi)
 		goto err;
 #endif /* !NDEBUG */
+
 	/* Simply define the symbol at the current text position.
 	 * NOTE: Its actual address may change during later assembly phases. */
 	asm_defsym(sym);
@@ -299,6 +304,7 @@ INTERN WUNUSED NONNULL((1)) int
 	++sym->as_used; /* Track use of this symbol by DDI information. */
 	ddi->dc_loc = self->a_ddi;
 	ddi->dc_sp  = current_assembler.a_stackcur;
+
 	/* Save the current text position to discard early uses of the same checkpoint. */
 	current_assembler.a_ddi.da_last  = sym->as_used;
 	current_assembler.a_ddi.da_slast = current_assembler.a_curr;
