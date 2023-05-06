@@ -833,14 +833,32 @@ err_foreach_elem:
 		struct text_label *switch_cases;
 		struct text_label *switch_default;
 		DREF struct ast *switch_block;
+		bool has_paren;
+
 		/* Switch statement. */
 		loc_here(&loc);
 		if unlikely(yield() < 0)
 			goto err;
 		old_flags = TPPLexer_Current->l_flags;
 		TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTLF;
-		if (skip('(', W_EXPECTED_LPAREN_AFTER_SWITCH))
-			goto err_flags;
+		if (tok == '(') {
+			has_paren = true;
+			if unlikely(yield() < 0)
+				goto err_flags;
+		} else if (tok == KWD_pack) {
+			if unlikely(yield() < 0)
+				goto err_flags;
+			has_paren = tok == '(';
+			if (has_paren) {
+				if unlikely(yield() < 0)
+					goto err_flags;
+			}
+		} else {
+			if (WARN(W_EXPECTED_LPAREN_AFTER_SWITCH))
+				goto err_flags;
+			has_paren = false;
+		}
+
 		/* Parse the switch-expression (NOTE: Allow variable declarations). */
 		result = ast_parse_comma(AST_COMMA_NORMAL |
 		                         AST_COMMA_ALLOWVARDECLS,
@@ -849,8 +867,10 @@ err_foreach_elem:
 		if unlikely(!result)
 			goto err_flags;
 		TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
-		if (skip(')', W_EXPECTED_RPAREN_AFTER_SWITCH))
-			goto err_r;
+		if (has_paren) {
+			if (skip(')', W_EXPECTED_RPAREN_AFTER_SWITCH))
+				goto err_r;
+		}
 
 		/* Setup + activate switch-mode. */
 		old_scope_flags = current_basescope->bs_cflags;
