@@ -690,6 +690,14 @@ ast_genprint_repr(instruction_t mode,
 	 * references to AST objects, nor does it modify them in any way. */
 	struct ast repr_ast;
 	DBG_memset(&repr_ast, 0xcc, sizeof(repr_ast));
+#ifdef CONFIG_AST_IS_STRUCT
+	repr_ast.a_refcnt = 1;
+#else /* !CONFIG_AST_IS_STRUCT */
+	repr_ast.ob_refcnt = 1;
+	repr_ast.ob_type   = &DeeAst_Type;
+#endif /* !CONFIG_AST_IS_STRUCT */
+	repr_ast.a_ddi               = print_expression->a_ddi;
+	repr_ast.a_scope             = print_expression->a_scope;
 	repr_ast.a_type              = AST_OPERATOR;
 	repr_ast.a_flag              = OPERATOR_REPR;
 	repr_ast.a_operator.o_op0    = print_expression;
