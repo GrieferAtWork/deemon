@@ -27,6 +27,7 @@
 #include <deemon/code.h>
 #include <deemon/compiler/assembler.h>
 #include <deemon/compiler/ast.h>
+#include <deemon/compiler/optimize.h>
 #include <deemon/error.h>
 #include <deemon/objmethod.h>
 #include <deemon/string.h>
@@ -643,7 +644,19 @@ fallback:
 					return ast_genprint_string_format(mode, format_str, format_argc, format_argv, ddi_ast);
 				}	break;
 
-				/* TODO: Optimize `print "foo" + bar' into `print("foo", bar)' */
+				case OPERATOR_ADD: {
+					/* Optimize `print "foo" + bar' into `print("foo", bar)' */
+					instruction_t lhs_mode, rhs_mode;
+					if (!print_expression->a_operator.o_op1)
+						break;
+					if (ast_predict_type(print_expression->a_operator.o_op0) != &DeeString_Type)
+						break;
+					lhs_mode = mode & ~(PRINT_MODE_SP | PRINT_MODE_NL);
+					rhs_mode = mode;
+					if (ast_genprint(lhs_mode, print_expression->a_operator.o_op0, ddi_ast))
+						goto err;
+					return ast_genprint(rhs_mode, print_expression->a_operator.o_op1, ddi_ast);
+				}	break;
 
 				default: break;
 				}

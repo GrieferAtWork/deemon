@@ -22,12 +22,14 @@
 
 #include <deemon/api.h>
 #include <deemon/bool.h>
+#include <deemon/bytes.h>
 #include <deemon/callable.h>
 #include <deemon/cell.h>
 #include <deemon/compiler/ast.h>
 #include <deemon/compiler/optimize.h>
 #include <deemon/dict.h>
 #include <deemon/error.h>
+#include <deemon/float.h>
 #include <deemon/hashset.h>
 #include <deemon/int.h>
 #include <deemon/list.h>
@@ -321,26 +323,53 @@ ast_predict_type_ex(struct ast *__restrict self, unsigned int flags) {
 				return &DeeNone_Type;
 		}	break;
 
-		case OPERATOR_INV:
+		case OPERATOR_ADD: {
+			DeeTypeObject *predict;
+			predict = ast_predict_type_ex(self->a_operator.o_op0, flags);
+			if (predict == &DeeNone_Type || /* Always re-returns itself */
+			    predict == &DeeInt_Type ||  /* int_add */
+#ifdef CONFIG_HAVE_FPU
+			    predict == &DeeFloat_Type || /* float_add */
+#endif /* CONFIG_HAVE_FPU */
+			    predict == &DeeString_Type || /* string_cat */
+			    predict == &DeeBytes_Type ||  /* bytes_add */
+			    predict == &DeeList_Type ||   /* list_add */
+			    predict == &DeeTuple_Type     /* tuple_concat */
+			) {
+				return predict;
+			}
+		}	break;
+
 		case OPERATOR_POS:
 		case OPERATOR_NEG:
-		case OPERATOR_ADD:
 		case OPERATOR_SUB:
 		case OPERATOR_MUL:
 		case OPERATOR_DIV:
+		case OPERATOR_POW: {
+			DeeTypeObject *predict;
+			predict = ast_predict_type_ex(self->a_operator.o_op0, flags);
+			if (predict == &DeeNone_Type ||
+#ifdef CONFIG_HAVE_FPU
+			    predict == &DeeFloat_Type ||
+#endif /* CONFIG_HAVE_FPU */
+			    predict == &DeeInt_Type) {
+				return predict;
+			}
+		}	break;
+
+		case OPERATOR_INV:
 		case OPERATOR_MOD:
 		case OPERATOR_SHL:
 		case OPERATOR_SHR:
 		case OPERATOR_AND:
 		case OPERATOR_OR:
-		case OPERATOR_XOR:
-		case OPERATOR_POW: {
+		case OPERATOR_XOR: {
 			DeeTypeObject *predict;
 			predict = ast_predict_type_ex(self->a_operator.o_op0, flags);
-			if (predict == &DeeInt_Type)
-				return &DeeInt_Type;
-			if (predict == &DeeNone_Type)
-				return &DeeNone_Type;
+			if (predict == &DeeNone_Type ||
+			    predict == &DeeInt_Type) {
+				return predict;
+			}
 		}	break;
 
 		case OPERATOR_ASSIGN:
