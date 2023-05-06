@@ -198,6 +198,25 @@ PRIVATE WUNUSED NONNULL((1, 2)) int
 	ASSERTF(!str_scope->bs_varargs, "Then why is `str_scope->bs_argc == 0'?");
 	ASSERTF(!str_scope->bs_varkwds, "Then why is `str_scope->bs_argc == 0'?");
 	ASSERTF(str_scope->bs_this, "Then why is `str_scope->bs_flags & CODE_FTHISCALL'?");
+
+	/* TODO: Don't require there to be a single return statement.
+	 * Just replace all return statements with prints:
+	 * >> operator str() {
+	 * >>     if (a)
+	 * >>         return "A";
+	 * >>     if (b)
+	 * >>         return "B";
+	 * >>     return "C";
+	 * >> }
+	 * into:
+	 * >> operator str(fp) {
+	 * >>     if (a)
+	 * >>         { print fp: "A",; return; }
+	 * >>     if (b)
+	 * >>         { print fp: "B",; return; }
+	 * >>     print fp: "C",;
+	 * >> }
+	 */
 	str_code = str_func->a_function.f_code;
 	while (str_code->a_type == AST_MULTIPLE) {
 		if (str_code->a_multiple.m_astc == 0)

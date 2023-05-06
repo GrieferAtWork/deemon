@@ -313,7 +313,7 @@ again_optimize_arg_at_index_i:
 				++optimizer_count;
 			}
 		}
-		if (ast_isconstexpr(arg)) {
+		if (arg->a_type == AST_CONSTEXPR) {
 			/* from: >> local foo = "value = {}, {}".format({ 42, bar });
 			 * to:   >> local foo = "value = 42, {}".format({ bar }); */
 			char const *format_utf8;
@@ -642,8 +642,8 @@ do_generic:
 			struct ast *base = self->a_operator.o_op0->a_operator.o_op0;
 			struct ast *name = self->a_operator.o_op0->a_operator.o_op1;
 			struct ast *args = self->a_operator.o_op1;
-			if (ast_isconstexpr(name) && DeeString_Check(name->a_constexpr)) {
-				if (ast_isconstexpr(base) && DeeString_Check(base->a_constexpr) &&
+			if (name->a_type == AST_CONSTEXPR && DeeString_Check(name->a_constexpr)) {
+				if (base->a_type == AST_CONSTEXPR && DeeString_Check(base->a_constexpr) &&
 				    args->a_type == AST_MULTIPLE && args->a_flag == AST_FMULTIPLE_TUPLE &&
 				    args->a_multiple.m_astc == 1 &&
 				    args->a_multiple.m_astv[0]->a_type == AST_MULTIPLE &&
@@ -659,7 +659,7 @@ do_generic:
 						goto done;
 				}
 			}
-		} else if (ast_isconstexpr(self->a_operator.o_op0) &&
+		} else if (self->a_operator.o_op0->a_type == AST_CONSTEXPR &&
 		           (DeeObjMethod_Check(self->a_operator.o_op0->a_constexpr) ||
 		            DeeKwObjMethod_Check(self->a_operator.o_op0->a_constexpr))) {
 			struct ast *args = self->a_operator.o_op1;

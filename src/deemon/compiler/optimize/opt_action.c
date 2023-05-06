@@ -26,12 +26,15 @@
 #include <deemon/compiler/optimize.h>
 #include <deemon/dec.h>
 #include <deemon/error.h>
+#include <deemon/module.h>
 #include <deemon/none.h>
 #include <deemon/object.h>
 #include <deemon/seq.h>
 #include <deemon/super.h>
 #include <deemon/system-features.h> /* memmovedownc() */
 #include <deemon/tuple.h>
+
+#include "../../runtime/builtin.h"
 
 DECL_BEGIN
 
@@ -627,6 +630,33 @@ action_set_expr_result:
 		printseq = self->a_action.a_act1;
 		if (ast_optimize(stack, self->a_action.a_act0, true))
 			goto err;
+
+		/* Optimize:
+		 * >> print File.stdout: "Foo";
+		 * Into:
+		 * >> print "Foo"; */
+		if (self->a_action.a_act0->a_type == AST_OPERATOR &&
+		    self->a_action.a_act0->a_operator.o_op1 &&
+		    self->a_action.a_act0->a_operator.o_op1->a_type == AST_CONSTEXPR &&
+		    DeeString_Check(self->a_action.a_act0->a_operator.o_op1->a_constexpr) &&
+		    DeeString_EQUALS_ASCII(self->a_action.a_act0->a_operator.o_op1->a_constexpr, "stdout")) {
+			struct ast *base = self->a_action.a_act0->a_operator.o_op0;
+			if (ast_isconstexpr(base, (DeeObject *)&DeeFile_Type) ||
+			    ast_is_deemon_symbol(base, id_File)) {
+				OPTIMIZE_VERBOSE("Optimize `print File.stdout: ...' -> `print ...'\n");
+				++optimizer_count;
+				ast_decref(self->a_action.a_act0);
+				self->a_action.a_act0 = self->a_action.a_act1;
+				self->a_action.a_act1 = NULL;
+				if (self->a_flag == AST_FACTION_FPRINT) {
+					self->a_flag = AST_FACTION_PRINT;
+				} else {
+					ASSERT(self->a_flag == AST_FACTION_FPRINTLN);
+					self->a_flag = AST_FACTION_PRINTLN;
+				}
+				printseq = self->a_action.a_act0;
+			}
+		}
 		__IF0 {
 	case AST_FACTION_PRINT:
 	case AST_FACTION_PRINTLN:

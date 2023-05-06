@@ -595,7 +595,6 @@ struct ast {
 };
 
 /* Helper macros to identify asts */
-#define ast_isconstexpr(self) ((self)->a_type == AST_CONSTEXPR)
 #define ast_isoperator1(self, op)                                                            \
 	((self)->a_type == AST_OPERATOR && (self)->a_flag == (op) && (self)->a_operator.o_op0 && \
 	 !((self)->a_operator.o_exflag & (AST_OPERATOR_FVARARGS | AST_OPERATOR_FPOSTOP)))
@@ -609,6 +608,13 @@ struct ast {
 	((self)->a_type == AST_OPERATOR && (self)->a_flag == (op) && (self)->a_operator.o_op3 && \
 	 !((self)->a_operator.o_exflag & (AST_OPERATOR_FVARARGS | AST_OPERATOR_FPOSTOP)))
 
+
+#define ast_isconstexpr(self, v) ((self)->a_constexpr == (DeeObject *)Dee_REQUIRES_OBJECT(v))
+#define ast_is_deemon_symbol(self, symbol_id)              \
+	((self)->a_type == AST_SYM &&                          \
+	 (self)->a_sym->s_type == SYMBOL_TYPE_EXTERN &&        \
+	 (self)->a_sym->s_extern.e_module == &deemon_module && \
+	 (self)->a_sym->s_extern.e_symbol->ss_index == (symbol_id))
 
 
 
