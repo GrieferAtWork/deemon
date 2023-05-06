@@ -109,15 +109,18 @@ PRIVATE int DCALL
 ast_genprint_emptystring(instruction_t mode,
                          struct ast *__restrict ddi_ast) {
 	int32_t empty_cid;
+
 	/* Just print an empty line. */
 	if ((mode & ~(PRINT_MODE_FILE | PRINT_MODE_ALL)) == PRINT_MODE_NL) {
 		if (asm_putddi(ddi_ast))
 			goto err;
 		return asm_put((instruction_t)(ASM_PRINTNL + (mode & PRINT_MODE_FILE)));
 	}
+
 	/* Nothing needs to be printed _at_ _all_. */
 	if ((mode & ~(PRINT_MODE_FILE | PRINT_MODE_ALL)) == PRINT_MODE_NORMAL)
 		return 0;
+
 	/* Print whitespace. */
 	empty_cid = asm_newconst(Dee_EmptyString);
 	if unlikely(empty_cid < 0)
@@ -490,7 +493,8 @@ err_items:
 			if (constexpr_is_empty_string(print_expression->a_constexpr))
 				goto empty_operand;
 		}
-		/* Special instructions exist for direct printing of constants. */
+
+		/* Special instructions exist for directly printing constants. */
 		if (asm_allowconst(print_expression->a_constexpr)) {
 			int32_t const_cid;
 			const_cid = asm_newconst(print_expression->a_constexpr);

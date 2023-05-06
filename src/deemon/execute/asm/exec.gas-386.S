@@ -277,6 +277,27 @@ END(_impl_assert_failed)
 #define DEE_OBJECT_OFFSETOF_DATA    8
 
 
+/* struct type_math { */
+#define tp_int32  0
+#define tp_int64  4
+#define tp_double 8
+#define tp_int    12
+#define tp_inv    16
+#define tp_pos    20
+#define tp_neg    24
+#define tp_add    28
+#define tp_sub    32
+#define tp_mul    36
+#define tp_div    40
+#define tp_mod    44
+#define tp_shl    48
+#define tp_shr    52
+#define tp_and    56
+#define tp_or     60
+#define tp_xor    64
+#define tp_pow    68
+/* }; */
+
 /* struct type_object { */
 #define tp_name                8 /* char *tp_name; */
 #define tp_doc                12 /* char *tp_doc; */
@@ -284,7 +305,6 @@ END(_impl_assert_failed)
 #define tp_weakrefs           18 /* uint16_t tp_weakrefs; */
 #define tp_features           20 /* uint32_t tp_features; */
 #define tp_base               24 /* DeeTypeObject *tp_base; */
-
 /* ... */
 /* }; */
 
@@ -3710,9 +3730,9 @@ target_extend:
 	call   \function
 	ADJUST_CFA_OFFSET(-4)
 	testl  %eax, %eax
-	jz     .except /* Check for errors. */
+	jz     .except   /* Check for errors. */
 	xchgl  TOP, %eax /* Store EAX in TOP. */
-	decref %eax /* Drop a reference from the old object in TOP. */
+	decref %eax      /* Drop a reference from the old object in TOP. */
 	jmp    .disp
 .endm
 .macro define_binary_op, target, function
@@ -3724,10 +3744,10 @@ target_extend:
 	call   \function
 	ADJUST_CFA_OFFSET(-8)
 	testl  %eax, %eax
-	jz     .except /* Check for errors. */
+	jz     .except   /* Check for errors. */
 	sp_popref %ecx, 1, 0, 0 /* Preserve EAX */
 	xchgl  TOP, %eax /* Store EAX in TOP. */
-	decref %eax /* Drop a reference from the old object in TOP. */
+	decref %eax      /* Drop a reference from the old object in TOP. */
 	jmp    .disp
 .endm
 
@@ -3737,7 +3757,6 @@ define_unary_op target_cast_list, fSYM(DeeList_FromSequence,4)
 define_unary_op target_cast_hashset, fSYM(DeeHashSet_FromSequence,4)
 define_unary_op target_cast_dict, fSYM(DeeDict_FromSequence,4)
 define_unary_op target_str, fSYM(DeeObject_Str,4)
-define_unary_op target_repr, fSYM(DeeObject_Repr,4)
 define_unary_op target_copy, fSYM(DeeObject_Copy,4)
 define_unary_op target_deepcopy, fSYM(DeeObject_DeepCopy,4)
 define_binary_op target_cmp_eq, fSYM(DeeObject_CompareEqObject,8)
@@ -3746,6 +3765,111 @@ define_binary_op target_cmp_lo, fSYM(DeeObject_CompareLoObject,8)
 define_binary_op target_cmp_le, fSYM(DeeObject_CompareLeObject,8)
 define_binary_op target_cmp_gr, fSYM(DeeObject_CompareGrObject,8)
 define_binary_op target_cmp_ge, fSYM(DeeObject_CompareGeObject,8)
+
+
+target_repr:
+	/* Must check if the next instruction is one of:
+	 * - ASM_SHL:
+	 *   If the SECOND operand implements `file_shl',
+	 *   must `DeeObject_PrintRepr()' into said file
+	 * - ASM_PRINT, ASM_PRINT_SP, ASM_PRINT_NL:
+	 *   Must use `DeeFile_PrintObjectRepr'
+	 * - ASM_FPRINT, ASM_FPRINT_SP, ASM_FPRINT_NL:
+	 *   Must use `DeeFile_PrintObjectRepr'
+	 */
+	lodsb
+	jmpl   *repr_inst_table(,%eax,4)
+repr_invop: /* Every instruction byte without a custom repr target goes here */
+	decl   %esi /* Execute the next instruction as its own thing. */
+	pushl  TOP
+	ADJUST_CFA_OFFSET(4)
+	call   fSYM(DeeObject_Repr,4)
+	ADJUST_CFA_OFFSET(-4)
+	testl  %eax, %eax
+	jz     .except   /* Check for errors. */
+	xchgl  TOP, %eax /* Store EAX in TOP. */
+	decref %eax      /* Drop a reference from the old object in TOP. */
+	jmp    .disp
+
+repr_target_shl:
+	movl   SECOND, %eax
+	movl   ob_type(%eax), %eax
+1:	movl   tp_math(%eax), %ecx
+	testl  %ecx, %ecx
+	jz     2f
+	movl   tp_shl(%ecx), %ecx
+	cmpl   $(fSYM(file_shl,8)), %ecx
+	je     3f /* Yes: this object _does_ use the file-shl operator. */
+	testl  %ecx, %ecx
+	jnz    repr_invop /* Object implements a different shl-operator */
+	/* Try the next base-class */
+2:	movl   tp_base(%eax), %eax
+	testl  %eax, %eax
+	jz     repr_invop /* No affiliation with `file_shl' */
+	jmp    1b
+3:	/* Yes: must do special handling for `(SECOND as File) << repr TOP' */
+	pushl  SECOND
+	ADJUST_CFA_OFFSET(4)
+	pushl  $(fSYM(DeeFile_WriteAll,12))
+	ADJUST_CFA_OFFSET(4)
+	pushl  TOP
+	ADJUST_CFA_OFFSET(4)
+	call   fSYM(DeeObject_PrintRepr,12)
+	ADJUST_CFA_OFFSET(-12)
+	cmpl   $0, %eax
+	jl     .except
+	sp_popref %eax       /* Pop the TOP operand */
+	jmp    .disp
+
+.macro define_repr_target_print target, function
+\target:
+	pushl  $(DEE_STDOUT)
+	ADJUST_CFA_OFFSET(4)
+	call   fSYM(DeeFile_GetStd,4)
+	ADJUST_CFA_OFFSET(-4)
+	testl  %eax, %eax
+	jz     .except
+	pushl  %eax /* backup */
+	ADJUST_CFA_OFFSET(4)
+	pushl  TOP
+	ADJUST_CFA_OFFSET(4)
+	pushl  %eax
+	ADJUST_CFA_OFFSET(4)
+	call   \function
+	ADJUST_CFA_OFFSET(-8)
+	testl  %eax, %eax
+	jnz    .except_decref_pop /* Check for errors. */
+	popl   %eax
+	ADJUST_CFA_OFFSET(-4)
+	decref %eax  /* DeeFile_Stdout */
+	sp_popref %eax
+	jmp    .disp
+.endm
+
+.macro define_repr_target_fprint target, function
+\target:
+	pushl  TOP
+	ADJUST_CFA_OFFSET(4)
+	pushl  SECOND
+	ADJUST_CFA_OFFSET(4)
+	call   \function
+	ADJUST_CFA_OFFSET(-8)
+	testl  %eax, %eax
+	jnz    .except /* Check for errors. */
+	sp_popref %eax
+	jmp    .disp
+.endm
+
+define_repr_target_print repr_target_print fSYM(DeeFile_PrintObjectRepr,8)
+define_repr_target_print repr_target_print_sp fSYM(DeeFile_PrintObjectReprSp,8)
+define_repr_target_print repr_target_print_nl fSYM(DeeFile_PrintObjectReprNl,8)
+
+define_repr_target_fprint repr_target_fprint fSYM(DeeFile_PrintObjectRepr,8)
+define_repr_target_fprint repr_target_fprint_sp fSYM(DeeFile_PrintObjectReprSp,8)
+define_repr_target_fprint repr_target_fprint_nl fSYM(DeeFile_PrintObjectReprNl,8)
+
+
+
 
 /* Same object / different object comparisons. */
 target_cmp_so:
@@ -8179,6 +8303,7 @@ function print_ifndef(prefix, codes) {
 //print_ifndef("", codes_f0);
 print_ifndef("prefix_", codes);
 print_ifndef("prefix_", codes_f0);
+print_ifndef("repr_", codes);
 
 print "inst_table:";
 print_targets("", codes);
@@ -8195,6 +8320,10 @@ print "END(prefix_inst_table)";
 print "prefix_inst_table_f0:";
 print_targets("prefix_", codes_f0);
 print "END(prefix_inst_table_f0)";
+
+print "repr_inst_table:";
+print_targets("repr_", codes);
+print "END(repr_inst_table)";
 
 ]]]*/
 .ifndef prefix_target_ret_none
@@ -9262,6 +9391,654 @@ prefix_target16_global = prefix_invop
 .ifndef prefix_target16_local
 prefix_target16_local = prefix_invop
 .endif
+.ifndef repr_target_ret_none
+repr_target_ret_none = repr_invop
+.endif
+.ifndef repr_target_ret
+repr_target_ret = repr_invop
+.endif
+.ifndef repr_target_yieldall
+repr_target_yieldall = repr_invop
+.endif
+.ifndef repr_target_throw
+repr_target_throw = repr_invop
+.endif
+.ifndef repr_target_rethrow
+repr_target_rethrow = repr_invop
+.endif
+.ifndef repr_target_setret
+repr_target_setret = repr_invop
+.endif
+.ifndef repr_target_endcatch
+repr_target_endcatch = repr_invop
+.endif
+.ifndef repr_target_endfinally
+repr_target_endfinally = repr_invop
+.endif
+.ifndef repr_target_call_kw
+repr_target_call_kw = repr_invop
+.endif
+.ifndef repr_target_call_tuple_kw
+repr_target_call_tuple_kw = repr_invop
+.endif
+.ifndef repr_target_push_bnd_arg
+repr_target_push_bnd_arg = repr_invop
+.endif
+.ifndef repr_target_push_bnd_extern
+repr_target_push_bnd_extern = repr_invop
+.endif
+.ifndef repr_target_push_bnd_global
+repr_target_push_bnd_global = repr_invop
+.endif
+.ifndef repr_target_push_bnd_local
+repr_target_push_bnd_local = repr_invop
+.endif
+.ifndef repr_target_jf
+repr_target_jf = repr_invop
+.endif
+.ifndef repr_target_jf16
+repr_target_jf16 = repr_invop
+.endif
+.ifndef repr_target_jt
+repr_target_jt = repr_invop
+.endif
+.ifndef repr_target_jt16
+repr_target_jt16 = repr_invop
+.endif
+.ifndef repr_target_jmp
+repr_target_jmp = repr_invop
+.endif
+.ifndef repr_target_jmp16
+repr_target_jmp16 = repr_invop
+.endif
+.ifndef repr_target_foreach
+repr_target_foreach = repr_invop
+.endif
+.ifndef repr_target_foreach16
+repr_target_foreach16 = repr_invop
+.endif
+.ifndef repr_target_jmp_pop
+repr_target_jmp_pop = repr_invop
+.endif
+.ifndef repr_target_operator
+repr_target_operator = repr_invop
+.endif
+.ifndef repr_target_operator_tuple
+repr_target_operator_tuple = repr_invop
+.endif
+.ifndef repr_target_call
+repr_target_call = repr_invop
+.endif
+.ifndef repr_target_call_tuple
+repr_target_call_tuple = repr_invop
+.endif
+.ifndef repr_target_del_global
+repr_target_del_global = repr_invop
+.endif
+.ifndef repr_target_del_local
+repr_target_del_local = repr_invop
+.endif
+.ifndef repr_target_swap
+repr_target_swap = repr_invop
+.endif
+.ifndef repr_target_lrot
+repr_target_lrot = repr_invop
+.endif
+.ifndef repr_target_rrot
+repr_target_rrot = repr_invop
+.endif
+.ifndef repr_target_dup
+repr_target_dup = repr_invop
+.endif
+.ifndef repr_target_dup_n
+repr_target_dup_n = repr_invop
+.endif
+.ifndef repr_target_pop
+repr_target_pop = repr_invop
+.endif
+.ifndef repr_target_pop_n
+repr_target_pop_n = repr_invop
+.endif
+.ifndef repr_target_adjstack
+repr_target_adjstack = repr_invop
+.endif
+.ifndef repr_target_super
+repr_target_super = repr_invop
+.endif
+.ifndef repr_target_super_this_r
+repr_target_super_this_r = repr_invop
+.endif
+.ifndef repr_target_pop_static
+repr_target_pop_static = repr_invop
+.endif
+.ifndef repr_target_pop_extern
+repr_target_pop_extern = repr_invop
+.endif
+.ifndef repr_target_pop_global
+repr_target_pop_global = repr_invop
+.endif
+.ifndef repr_target_pop_local
+repr_target_pop_local = repr_invop
+.endif
+.ifndef repr_target_push_none
+repr_target_push_none = repr_invop
+.endif
+.ifndef repr_target_push_varargs
+repr_target_push_varargs = repr_invop
+.endif
+.ifndef repr_target_push_varkwds
+repr_target_push_varkwds = repr_invop
+.endif
+.ifndef repr_target_push_module
+repr_target_push_module = repr_invop
+.endif
+.ifndef repr_target_push_arg
+repr_target_push_arg = repr_invop
+.endif
+.ifndef repr_target_push_const
+repr_target_push_const = repr_invop
+.endif
+.ifndef repr_target_push_ref
+repr_target_push_ref = repr_invop
+.endif
+.ifndef repr_target_push_static
+repr_target_push_static = repr_invop
+.endif
+.ifndef repr_target_push_extern
+repr_target_push_extern = repr_invop
+.endif
+.ifndef repr_target_push_global
+repr_target_push_global = repr_invop
+.endif
+.ifndef repr_target_push_local
+repr_target_push_local = repr_invop
+.endif
+.ifndef repr_target_cast_tuple
+repr_target_cast_tuple = repr_invop
+.endif
+.ifndef repr_target_cast_list
+repr_target_cast_list = repr_invop
+.endif
+.ifndef repr_target_pack_tuple
+repr_target_pack_tuple = repr_invop
+.endif
+.ifndef repr_target_pack_list
+repr_target_pack_list = repr_invop
+.endif
+.ifndef repr_target_unpack
+repr_target_unpack = repr_invop
+.endif
+.ifndef repr_target_concat
+repr_target_concat = repr_invop
+.endif
+.ifndef repr_target_extend
+repr_target_extend = repr_invop
+.endif
+.ifndef repr_target_typeof
+repr_target_typeof = repr_invop
+.endif
+.ifndef repr_target_classof
+repr_target_classof = repr_invop
+.endif
+.ifndef repr_target_superof
+repr_target_superof = repr_invop
+.endif
+.ifndef repr_target_instanceof
+repr_target_instanceof = repr_invop
+.endif
+.ifndef repr_target_str
+repr_target_str = repr_invop
+.endif
+.ifndef repr_target_repr
+repr_target_repr = repr_invop
+.endif
+.ifndef repr_target_bool
+repr_target_bool = repr_invop
+.endif
+.ifndef repr_target_not
+repr_target_not = repr_invop
+.endif
+.ifndef repr_target_assign
+repr_target_assign = repr_invop
+.endif
+.ifndef repr_target_move_assign
+repr_target_move_assign = repr_invop
+.endif
+.ifndef repr_target_copy
+repr_target_copy = repr_invop
+.endif
+.ifndef repr_target_deepcopy
+repr_target_deepcopy = repr_invop
+.endif
+.ifndef repr_target_getattr
+repr_target_getattr = repr_invop
+.endif
+.ifndef repr_target_delattr
+repr_target_delattr = repr_invop
+.endif
+.ifndef repr_target_setattr
+repr_target_setattr = repr_invop
+.endif
+.ifndef repr_target_boundattr
+repr_target_boundattr = repr_invop
+.endif
+.ifndef repr_target_getattr_c
+repr_target_getattr_c = repr_invop
+.endif
+.ifndef repr_target_delattr_c
+repr_target_delattr_c = repr_invop
+.endif
+.ifndef repr_target_setattr_c
+repr_target_setattr_c = repr_invop
+.endif
+.ifndef repr_target_getattr_this_c
+repr_target_getattr_this_c = repr_invop
+.endif
+.ifndef repr_target_delattr_this_c
+repr_target_delattr_this_c = repr_invop
+.endif
+.ifndef repr_target_setattr_this_c
+repr_target_setattr_this_c = repr_invop
+.endif
+.ifndef repr_target_cmp_eq
+repr_target_cmp_eq = repr_invop
+.endif
+.ifndef repr_target_cmp_ne
+repr_target_cmp_ne = repr_invop
+.endif
+.ifndef repr_target_cmp_ge
+repr_target_cmp_ge = repr_invop
+.endif
+.ifndef repr_target_cmp_lo
+repr_target_cmp_lo = repr_invop
+.endif
+.ifndef repr_target_cmp_le
+repr_target_cmp_le = repr_invop
+.endif
+.ifndef repr_target_cmp_gr
+repr_target_cmp_gr = repr_invop
+.endif
+.ifndef repr_target_class_c
+repr_target_class_c = repr_invop
+.endif
+.ifndef repr_target_class_gc
+repr_target_class_gc = repr_invop
+.endif
+.ifndef repr_target_class_ec
+repr_target_class_ec = repr_invop
+.endif
+.ifndef repr_target_defcmember
+repr_target_defcmember = repr_invop
+.endif
+.ifndef repr_target_getcmember_r
+repr_target_getcmember_r = repr_invop
+.endif
+.ifndef repr_target_callcmember_this_r
+repr_target_callcmember_this_r = repr_invop
+.endif
+.ifndef repr_target_function_c
+repr_target_function_c = repr_invop
+.endif
+.ifndef repr_target_function_c_16
+repr_target_function_c_16 = repr_invop
+.endif
+.ifndef repr_target_cast_int
+repr_target_cast_int = repr_invop
+.endif
+.ifndef repr_target_inv
+repr_target_inv = repr_invop
+.endif
+.ifndef repr_target_pos
+repr_target_pos = repr_invop
+.endif
+.ifndef repr_target_neg
+repr_target_neg = repr_invop
+.endif
+.ifndef repr_target_add
+repr_target_add = repr_invop
+.endif
+.ifndef repr_target_sub
+repr_target_sub = repr_invop
+.endif
+.ifndef repr_target_mul
+repr_target_mul = repr_invop
+.endif
+.ifndef repr_target_div
+repr_target_div = repr_invop
+.endif
+.ifndef repr_target_mod
+repr_target_mod = repr_invop
+.endif
+.ifndef repr_target_shl
+repr_target_shl = repr_invop
+.endif
+.ifndef repr_target_shr
+repr_target_shr = repr_invop
+.endif
+.ifndef repr_target_and
+repr_target_and = repr_invop
+.endif
+.ifndef repr_target_or
+repr_target_or = repr_invop
+.endif
+.ifndef repr_target_xor
+repr_target_xor = repr_invop
+.endif
+.ifndef repr_target_pow
+repr_target_pow = repr_invop
+.endif
+.ifndef repr_target_inc
+repr_target_inc = repr_invop
+.endif
+.ifndef repr_target_dec
+repr_target_dec = repr_invop
+.endif
+.ifndef repr_target_add_simm8
+repr_target_add_simm8 = repr_invop
+.endif
+.ifndef repr_target_add_imm32
+repr_target_add_imm32 = repr_invop
+.endif
+.ifndef repr_target_sub_simm8
+repr_target_sub_simm8 = repr_invop
+.endif
+.ifndef repr_target_sub_imm32
+repr_target_sub_imm32 = repr_invop
+.endif
+.ifndef repr_target_mul_simm8
+repr_target_mul_simm8 = repr_invop
+.endif
+.ifndef repr_target_div_simm8
+repr_target_div_simm8 = repr_invop
+.endif
+.ifndef repr_target_mod_simm8
+repr_target_mod_simm8 = repr_invop
+.endif
+.ifndef repr_target_shl_imm8
+repr_target_shl_imm8 = repr_invop
+.endif
+.ifndef repr_target_shr_imm8
+repr_target_shr_imm8 = repr_invop
+.endif
+.ifndef repr_target_and_imm32
+repr_target_and_imm32 = repr_invop
+.endif
+.ifndef repr_target_or_imm32
+repr_target_or_imm32 = repr_invop
+.endif
+.ifndef repr_target_xor_imm32
+repr_target_xor_imm32 = repr_invop
+.endif
+.ifndef repr_target_isnone
+repr_target_isnone = repr_invop
+.endif
+.ifndef repr_target_delop
+repr_target_delop = repr_invop
+.endif
+.ifndef repr_target_nop
+repr_target_nop = repr_invop
+.endif
+.ifndef repr_target_print
+repr_target_print = repr_invop
+.endif
+.ifndef repr_target_print_sp
+repr_target_print_sp = repr_invop
+.endif
+.ifndef repr_target_print_nl
+repr_target_print_nl = repr_invop
+.endif
+.ifndef repr_target_printnl
+repr_target_printnl = repr_invop
+.endif
+.ifndef repr_target_printall
+repr_target_printall = repr_invop
+.endif
+.ifndef repr_target_printall_sp
+repr_target_printall_sp = repr_invop
+.endif
+.ifndef repr_target_printall_nl
+repr_target_printall_nl = repr_invop
+.endif
+.ifndef repr_target_fprint
+repr_target_fprint = repr_invop
+.endif
+.ifndef repr_target_fprint_sp
+repr_target_fprint_sp = repr_invop
+.endif
+.ifndef repr_target_fprint_nl
+repr_target_fprint_nl = repr_invop
+.endif
+.ifndef repr_target_fprintnl
+repr_target_fprintnl = repr_invop
+.endif
+.ifndef repr_target_fprintall
+repr_target_fprintall = repr_invop
+.endif
+.ifndef repr_target_fprintall_sp
+repr_target_fprintall_sp = repr_invop
+.endif
+.ifndef repr_target_fprintall_nl
+repr_target_fprintall_nl = repr_invop
+.endif
+.ifndef repr_target_print_c
+repr_target_print_c = repr_invop
+.endif
+.ifndef repr_target_print_c_sp
+repr_target_print_c_sp = repr_invop
+.endif
+.ifndef repr_target_print_c_nl
+repr_target_print_c_nl = repr_invop
+.endif
+.ifndef repr_target_range_0_i16
+repr_target_range_0_i16 = repr_invop
+.endif
+.ifndef repr_target_enter
+repr_target_enter = repr_invop
+.endif
+.ifndef repr_target_leave
+repr_target_leave = repr_invop
+.endif
+.ifndef repr_target_fprint_c
+repr_target_fprint_c = repr_invop
+.endif
+.ifndef repr_target_fprint_c_sp
+repr_target_fprint_c_sp = repr_invop
+.endif
+.ifndef repr_target_fprint_c_nl
+repr_target_fprint_c_nl = repr_invop
+.endif
+.ifndef repr_target_range
+repr_target_range = repr_invop
+.endif
+.ifndef repr_target_range_def
+repr_target_range_def = repr_invop
+.endif
+.ifndef repr_target_range_step
+repr_target_range_step = repr_invop
+.endif
+.ifndef repr_target_range_step_def
+repr_target_range_step_def = repr_invop
+.endif
+.ifndef repr_target_contains
+repr_target_contains = repr_invop
+.endif
+.ifndef repr_target_contains_c
+repr_target_contains_c = repr_invop
+.endif
+.ifndef repr_target_getitem
+repr_target_getitem = repr_invop
+.endif
+.ifndef repr_target_getitem_i
+repr_target_getitem_i = repr_invop
+.endif
+.ifndef repr_target_getitem_c
+repr_target_getitem_c = repr_invop
+.endif
+.ifndef repr_target_getsize
+repr_target_getsize = repr_invop
+.endif
+.ifndef repr_target_setitem
+repr_target_setitem = repr_invop
+.endif
+.ifndef repr_target_setitem_i
+repr_target_setitem_i = repr_invop
+.endif
+.ifndef repr_target_setitem_c
+repr_target_setitem_c = repr_invop
+.endif
+.ifndef repr_target_iterself
+repr_target_iterself = repr_invop
+.endif
+.ifndef repr_target_delitem
+repr_target_delitem = repr_invop
+.endif
+.ifndef repr_target_getrange
+repr_target_getrange = repr_invop
+.endif
+.ifndef repr_target_getrange_pn
+repr_target_getrange_pn = repr_invop
+.endif
+.ifndef repr_target_getrange_np
+repr_target_getrange_np = repr_invop
+.endif
+.ifndef repr_target_getrange_pi
+repr_target_getrange_pi = repr_invop
+.endif
+.ifndef repr_target_getrange_ip
+repr_target_getrange_ip = repr_invop
+.endif
+.ifndef repr_target_getrange_ni
+repr_target_getrange_ni = repr_invop
+.endif
+.ifndef repr_target_getrange_in
+repr_target_getrange_in = repr_invop
+.endif
+.ifndef repr_target_getrange_ii
+repr_target_getrange_ii = repr_invop
+.endif
+.ifndef repr_target_delrange
+repr_target_delrange = repr_invop
+.endif
+.ifndef repr_target_setrange
+repr_target_setrange = repr_invop
+.endif
+.ifndef repr_target_setrange_pn
+repr_target_setrange_pn = repr_invop
+.endif
+.ifndef repr_target_setrange_np
+repr_target_setrange_np = repr_invop
+.endif
+.ifndef repr_target_setrange_pi
+repr_target_setrange_pi = repr_invop
+.endif
+.ifndef repr_target_setrange_ip
+repr_target_setrange_ip = repr_invop
+.endif
+.ifndef repr_target_setrange_ni
+repr_target_setrange_ni = repr_invop
+.endif
+.ifndef repr_target_setrange_in
+repr_target_setrange_in = repr_invop
+.endif
+.ifndef repr_target_setrange_ii
+repr_target_setrange_ii = repr_invop
+.endif
+.ifndef repr_target_breakpoint
+repr_target_breakpoint = repr_invop
+.endif
+.ifndef repr_target_ud
+repr_target_ud = repr_invop
+.endif
+.ifndef repr_target_callattr_c_kw
+repr_target_callattr_c_kw = repr_invop
+.endif
+.ifndef repr_target_callattr_c_tuple_kw
+repr_target_callattr_c_tuple_kw = repr_invop
+.endif
+.ifndef repr_target_callattr
+repr_target_callattr = repr_invop
+.endif
+.ifndef repr_target_callattr_tuple
+repr_target_callattr_tuple = repr_invop
+.endif
+.ifndef repr_target_callattr_c
+repr_target_callattr_c = repr_invop
+.endif
+.ifndef repr_target_callattr_c_tuple
+repr_target_callattr_c_tuple = repr_invop
+.endif
+.ifndef repr_target_callattr_this_c
+repr_target_callattr_this_c = repr_invop
+.endif
+.ifndef repr_target_callattr_this_c_tuple
+repr_target_callattr_this_c_tuple = repr_invop
+.endif
+.ifndef repr_target_callattr_c_seq
+repr_target_callattr_c_seq = repr_invop
+.endif
+.ifndef repr_target_callattr_c_map
+repr_target_callattr_c_map = repr_invop
+.endif
+.ifndef repr_target_getmember_this_r
+repr_target_getmember_this_r = repr_invop
+.endif
+.ifndef repr_target_delmember_this_r
+repr_target_delmember_this_r = repr_invop
+.endif
+.ifndef repr_target_setmember_this_r
+repr_target_setmember_this_r = repr_invop
+.endif
+.ifndef repr_target_boundmember_this_r
+repr_target_boundmember_this_r = repr_invop
+.endif
+.ifndef repr_target_call_extern
+repr_target_call_extern = repr_invop
+.endif
+.ifndef repr_target_call_global
+repr_target_call_global = repr_invop
+.endif
+.ifndef repr_target_call_local
+repr_target_call_local = repr_invop
+.endif
+.ifndef repr_target_extended1
+repr_target_extended1 = repr_invop
+.endif
+.ifndef repr_target_reserved1
+repr_target_reserved1 = repr_invop
+.endif
+.ifndef repr_target_reserved2
+repr_target_reserved2 = repr_invop
+.endif
+.ifndef repr_target_reserved3
+repr_target_reserved3 = repr_invop
+.endif
+.ifndef repr_target_reserved4
+repr_target_reserved4 = repr_invop
+.endif
+.ifndef repr_target_reserved5
+repr_target_reserved5 = repr_invop
+.endif
+.ifndef repr_target_reserved6
+repr_target_reserved6 = repr_invop
+.endif
+.ifndef repr_target_reserved7
+repr_target_reserved7 = repr_invop
+.endif
+.ifndef repr_target_stack
+repr_target_stack = repr_invop
+.endif
+.ifndef repr_target_static
+repr_target_static = repr_invop
+.endif
+.ifndef repr_target_extern
+repr_target_extern = repr_invop
+.endif
+.ifndef repr_target_global
+repr_target_global = repr_invop
+.endif
+.ifndef repr_target_local
+repr_target_local = repr_invop
+.endif
 inst_table:
 	.long target_ret_none                /* 0x00 : `ret' */
 	.long target_ret                     /* 0x01 : `ret pop' */
@@ -10294,6 +11071,264 @@ prefix_inst_table_f0:
 	.long prefix_target16_global                /* 0xfe : `global <imm16>' */
 	.long prefix_target16_local                 /* 0xff : `local  <imm16>' */
 END(prefix_inst_table_f0)
+repr_inst_table:
+	.long repr_target_ret_none                /* 0x00 : `ret' */
+	.long repr_target_ret                     /* 0x01 : `ret pop' */
+	.long repr_target_yieldall                /* 0x02 : `yield foreach, pop' */
+	.long repr_target_throw                   /* 0x03 : `throw pop' */
+	.long repr_target_rethrow                 /* 0x04 : `throw except' */
+	.long repr_target_setret                  /* 0x05 : `setret pop' */
+	.long repr_target_endcatch                /* 0x06 : `end catch' */
+	.long repr_target_endfinally              /* 0x07 : `end finally' */
+	.long repr_target_call_kw                 /* 0x08 : `call top, #<imm8>, const <imm8>' */
+	.long repr_target_call_tuple_kw           /* 0x09 : `call top, pop..., const <imm8>' */
+	.long repr_invop
+	.long repr_target_push_bnd_arg            /* 0x0b : `push bound arg <imm8>' */
+	.long repr_target_push_bnd_extern         /* 0x0c : `push bound extern <imm8>:<imm8>' */
+	.long repr_invop
+	.long repr_target_push_bnd_global         /* 0x0e : `push bound global <imm8>' */
+	.long repr_target_push_bnd_local          /* 0x0f : `push bound local <imm8>' */
+	.long repr_target_jf                      /* 0x10 : `jf pop, <Sdisp8>' */
+	.long repr_target_jf16                    /* 0x11 : `jf pop, <Sdisp16>' */
+	.long repr_target_jt                      /* 0x12 : `jt pop, <Sdisp8>' */
+	.long repr_target_jt16                    /* 0x13 : `jt pop, <Sdisp16>' */
+	.long repr_target_jmp                     /* 0x14 : `jmp <Sdisp8>' */
+	.long repr_target_jmp16                   /* 0x15 : `jmp <Sdisp16>' */
+	.long repr_target_foreach                 /* 0x16 : `foreach top, <Sdisp8>' */
+	.long repr_target_foreach16               /* 0x17 : `foreach top, <Sdisp16>' */
+	.long repr_target_jmp_pop                 /* 0x18 : `jmp pop' */
+	.long repr_target_operator                /* 0x19 : `op top, $<imm8>, #<imm8>' */
+	.long repr_target_operator_tuple          /* 0x1a : `op top, $<imm8>, pop...' */
+	.long repr_target_call                    /* 0x1b : `call top, #<imm8>' */
+	.long repr_target_call_tuple              /* 0x1c : `call top, pop...' */
+	.long repr_invop
+	.long repr_target_del_global              /* 0x1e : `del global <imm8>' */
+	.long repr_target_del_local               /* 0x1f : `del local <imm8>' */
+	.long repr_target_swap                    /* 0x20 : `swap' */
+	.long repr_target_lrot                    /* 0x21 : `lrot #<imm8>+3' */
+	.long repr_target_rrot                    /* 0x22 : `rrot #<imm8>+3' */
+	.long repr_target_dup                     /* 0x23 : `dup' */
+	.long repr_target_dup_n                   /* 0x24 : `dup #SP - <imm8> - 2' */
+	.long repr_target_pop                     /* 0x25 : `pop' */
+	.long repr_target_pop_n                   /* 0x26 : `pop #SP - <imm8> - 2' */
+	.long repr_target_adjstack                /* 0x27 : `adjstack #SP +/- <Simm8>' */
+	.long repr_target_super                   /* 0x28 : `super top, pop' */
+	.long repr_target_super_this_r            /* 0x29 : `push super this, ref <imm8>' */
+	.long repr_invop
+	.long repr_target_pop_static              /* 0x2b : `pop static <imm8>' */
+	.long repr_target_pop_extern              /* 0x2c : `pop extern <imm8>:<imm8>' */
+	.long repr_invop
+	.long repr_target_pop_global              /* 0x2e : `pop global <imm8>' */
+	.long repr_target_pop_local               /* 0x2f : `pop local <imm8>' */
+	.long repr_invop
+	.long repr_invop
+	.long repr_invop
+	.long repr_target_push_none               /* 0x33 : `push none' */
+	.long repr_target_push_varargs            /* 0x34 : `push varargs' */
+	.long repr_target_push_varkwds            /* 0x35 : `push varkwds' */
+	.long repr_target_push_module             /* 0x36 : `push module <imm8>' */
+	.long repr_target_push_arg                /* 0x37 : `push arg <imm8>' */
+	.long repr_target_push_const              /* 0x38 : `push const <imm8>' */
+	.long repr_target_push_ref                /* 0x39 : `push ref <imm8>' */
+	.long repr_invop
+	.long repr_target_push_static             /* 0x3b : `push static <imm8>' */
+	.long repr_target_push_extern             /* 0x3c : `push extern <imm8>:<imm8>' */
+	.long repr_invop
+	.long repr_target_push_global             /* 0x3e : `push global <imm8>' */
+	.long repr_target_push_local              /* 0x3f : `push local <imm8>' */
+	.long repr_target_cast_tuple              /* 0x40 : `cast top, Tuple' */
+	.long repr_target_cast_list               /* 0x41 : `cast top, List' */
+	.long repr_target_pack_tuple              /* 0x42 : `push pack Tuple, #<imm8>' */
+	.long repr_target_pack_list               /* 0x43 : `push pack List, #<imm8>' */
+	.long repr_invop
+	.long repr_invop
+	.long repr_target_unpack                  /* 0x46 : `unpack pop, #<imm8>' */
+	.long repr_target_concat                  /* 0x47 : `concat top, pop' */
+	.long repr_target_extend                  /* 0x48 : `extend top, #<imm8>' */
+	.long repr_target_typeof                  /* 0x49 : `typeof top' */
+	.long repr_target_classof                 /* 0x4a : `classof top' */
+	.long repr_target_superof                 /* 0x4b : `superof top' */
+	.long repr_target_instanceof              /* 0x4c : `instanceof top, pop' */
+	.long repr_target_str                     /* 0x4d : `str top' */
+	.long repr_target_repr                    /* 0x4e : `repr top' */
+	.long repr_invop
+	.long repr_target_bool                    /* 0x50 : `bool top' */
+	.long repr_target_not                     /* 0x51 : `not top' */
+	.long repr_target_assign                  /* 0x52 : `assign pop, pop' */
+	.long repr_target_move_assign             /* 0x53 : `assign move, pop, pop' */
+	.long repr_target_copy                    /* 0x54 : `copy top' */
+	.long repr_target_deepcopy                /* 0x55 : `deepcopy top' */
+	.long repr_target_getattr                 /* 0x56 : `getattr top, pop' */
+	.long repr_target_delattr                 /* 0x57 : `delattr pop, pop' */
+	.long repr_target_setattr                 /* 0x58 : `setattr pop, pop, pop' */
+	.long repr_target_boundattr               /* 0x59 : `boundattr top, pop' */
+	.long repr_target_getattr_c               /* 0x5a : `getattr top, const <imm8>' */
+	.long repr_target_delattr_c               /* 0x5b : `delattr pop, const <imm8>' */
+	.long repr_target_setattr_c               /* 0x5c : `setattr pop, const <imm8>, pop' */
+	.long repr_target_getattr_this_c          /* 0x5d : `push getattr this, const <imm8>' */
+	.long repr_target_delattr_this_c          /* 0x5e : `delattr this, const <imm8>' */
+	.long repr_target_setattr_this_c          /* 0x5f : `setattr this, const <imm8>, pop' */
+	.long repr_target_cmp_eq                  /* 0x60 : `cmp eq, top, pop' */
+	.long repr_target_cmp_ne                  /* 0x61 : `cmp ne, top, pop' */
+	.long repr_target_cmp_ge                  /* 0x62 : `cmp ge, top, pop' */
+	.long repr_target_cmp_lo                  /* 0x63 : `cmp lo, top, pop' */
+	.long repr_target_cmp_le                  /* 0x64 : `cmp le, top, pop' */
+	.long repr_target_cmp_gr                  /* 0x65 : `cmp gr, top, pop' */
+	.long repr_target_class_c                 /* 0x66 : `class top, const <imm8>' */
+	.long repr_target_class_gc                /* 0x67 : `push class global <imm8>, const <imm8>' */
+	.long repr_target_class_ec                /* 0x68 : `push class extern <imm8>:<imm8>, const <imm8>' */
+	.long repr_target_defcmember              /* 0x69 : `defcmember top, $<imm8>, pop' */
+	.long repr_target_getcmember_r            /* 0x6a : `push getcmember ref <imm8>, $<imm8>' */
+	.long repr_target_callcmember_this_r      /* 0x6b : `push callcmember this, ref <imm8>, $<imm8>, #<imm8>' */
+	.long repr_invop
+	.long repr_invop
+	.long repr_target_function_c              /* 0x6e : `push function const <imm8>, #<imm8>+1' */
+	.long repr_target_function_c_16           /* 0x6f : `push function const <imm8>, #<imm16>+1' */
+	.long repr_target_cast_int                /* 0x70 : `cast top, int' */
+	.long repr_target_inv                     /* 0x71 : `inv top' */
+	.long repr_target_pos                     /* 0x72 : `pos top' */
+	.long repr_target_neg                     /* 0x73 : `neg top' */
+	.long repr_target_add                     /* 0x74 : `add top, pop' */
+	.long repr_target_sub                     /* 0x75 : `sub top, pop' */
+	.long repr_target_mul                     /* 0x76 : `mul top, pop' */
+	.long repr_target_div                     /* 0x77 : `div top, pop' */
+	.long repr_target_mod                     /* 0x78 : `mod top, pop' */
+	.long repr_target_shl                     /* 0x79 : `shl top, pop' */
+	.long repr_target_shr                     /* 0x7a : `shr top, pop' */
+	.long repr_target_and                     /* 0x7b : `and top, pop' */
+	.long repr_target_or                      /* 0x7c : `or top, pop' */
+	.long repr_target_xor                     /* 0x7d : `xor top, pop' */
+	.long repr_target_pow                     /* 0x7e : `pow top, pop' */
+	.long repr_target_inc                     /* 0x7f : `inc' */
+	.long repr_target_dec                     /* 0x80 : `dec' */
+	.long repr_target_add_simm8               /* 0x81 : `add top, $<Simm8>' */
+	.long repr_target_add_imm32               /* 0x82 : `add top, $<imm32>' */
+	.long repr_target_sub_simm8               /* 0x83 : `sub top, $<Simm8>' */
+	.long repr_target_sub_imm32               /* 0x84 : `sub top, $<imm32>' */
+	.long repr_target_mul_simm8               /* 0x85 : `mul top, $<Simm8>' */
+	.long repr_target_div_simm8               /* 0x86 : `div top, $<Simm8>' */
+	.long repr_target_mod_simm8               /* 0x87 : `mod top, $<Simm8>' */
+	.long repr_target_shl_imm8                /* 0x88 : `shl top, $<imm8>' */
+	.long repr_target_shr_imm8                /* 0x89 : `shr top, $<imm8>' */
+	.long repr_target_and_imm32               /* 0x8a : `and top, $<imm32>' */
+	.long repr_target_or_imm32                /* 0x8b : `or top, $<imm32>' */
+	.long repr_target_xor_imm32               /* 0x8c : `xor top, $<imm32>' */
+	.long repr_target_isnone                  /* 0x8d : `instanceof top, none' */
+	.long repr_invop
+	.long repr_target_delop                   /* 0x8f : `-' */
+	.long repr_target_nop                     /* 0x90 : `nop' */
+	.long repr_target_print                   /* 0x91 : `print pop' */
+	.long repr_target_print_sp                /* 0x92 : `print pop, sp' */
+	.long repr_target_print_nl                /* 0x93 : `print pop, nl' */
+	.long repr_target_printnl                 /* 0x94 : `print nl' */
+	.long repr_target_printall                /* 0x95 : `print pop...' */
+	.long repr_target_printall_sp             /* 0x96 : `print pop..., sp' */
+	.long repr_target_printall_nl             /* 0x97 : `print pop..., nl' */
+	.long repr_invop
+	.long repr_target_fprint                  /* 0x99 : `print top, pop' */
+	.long repr_target_fprint_sp               /* 0x9a : `print top, pop, sp' */
+	.long repr_target_fprint_nl               /* 0x9b : `print top, pop, nl' */
+	.long repr_target_fprintnl                /* 0x9c : `print top, nl' */
+	.long repr_target_fprintall               /* 0x9d : `print top, pop...' */
+	.long repr_target_fprintall_sp            /* 0x9e : `print top, pop..., sp' */
+	.long repr_target_fprintall_nl            /* 0x9f : `print top, pop..., nl' */
+	.long repr_invop
+	.long repr_target_print_c                 /* 0xa1 : `print const <imm8>' */
+	.long repr_target_print_c_sp              /* 0xa2 : `print const <imm8>, sp' */
+	.long repr_target_print_c_nl              /* 0xa3 : `print const <imm8>, nl' */
+	.long repr_target_range_0_i16             /* 0xa4 : `push range $0, $<imm16>' */
+	.long repr_invop
+	.long repr_target_enter                   /* 0xa6 : `enter top' */
+	.long repr_target_leave                   /* 0xa7 : `leave pop' */
+	.long repr_invop
+	.long repr_target_fprint_c                /* 0xa9 : `print top, const <imm8>' */
+	.long repr_target_fprint_c_sp             /* 0xaa : `print top, const <imm8>, sp' */
+	.long repr_target_fprint_c_nl             /* 0xab : `print top, const <imm8>, nl' */
+	.long repr_target_range                   /* 0xac : `range top, pop' */
+	.long repr_target_range_def               /* 0xad : `push range default, pop' */
+	.long repr_target_range_step              /* 0xae : `range top, pop, pop' */
+	.long repr_target_range_step_def          /* 0xaf : `push range default, pop, pop' */
+	.long repr_target_contains                /* 0xb0 : `contains top, pop' */
+	.long repr_target_contains_c              /* 0xb1 : `push contains const <imm8>, pop' */
+	.long repr_target_getitem                 /* 0xb2 : `getitem top, pop' */
+	.long repr_target_getitem_i               /* 0xb3 : `getitem top, $<Simm16>' */
+	.long repr_target_getitem_c               /* 0xb4 : `getitem top, const <imm8>' */
+	.long repr_target_getsize                 /* 0xb5 : `getsize top' */
+	.long repr_target_setitem                 /* 0xb6 : `setitem pop, pop, pop' */
+	.long repr_target_setitem_i               /* 0xb7 : `setitem pop, $<Simm16>, pop' */
+	.long repr_target_setitem_c               /* 0xb8 : `setitem pop, const <imm8>, pop' */
+	.long repr_target_iterself                /* 0xb9 : `iterself top' */
+	.long repr_target_delitem                 /* 0xba : `delitem pop, pop' */
+	.long repr_target_getrange                /* 0xbb : `getrange top, pop, pop' */
+	.long repr_target_getrange_pn             /* 0xbc : `getrange top, pop, none' */
+	.long repr_target_getrange_np             /* 0xbd : `getrange top, none, pop' */
+	.long repr_target_getrange_pi             /* 0xbe : `getrange top, pop, $<Simm16>' */
+	.long repr_target_getrange_ip             /* 0xbf : `getrange top, $<Simm16>, pop' */
+	.long repr_target_getrange_ni             /* 0xc0 : `getrange top, none, $<Simm16>' */
+	.long repr_target_getrange_in             /* 0xc1 : `getrange top, $<Simm16>, none' */
+	.long repr_target_getrange_ii             /* 0xc2 : `getrange top, $<Simm16>, $<Simm16>' */
+	.long repr_target_delrange                /* 0xc3 : `delrange pop, pop, pop' */
+	.long repr_target_setrange                /* 0xc4 : `setrange pop, pop, pop, pop' */
+	.long repr_target_setrange_pn             /* 0xc5 : `setrange pop, pop, none, pop' */
+	.long repr_target_setrange_np             /* 0xc6 : `setrange pop, none, pop, pop' */
+	.long repr_target_setrange_pi             /* 0xc7 : `setrange pop, pop, $<Simm16>, pop' */
+	.long repr_target_setrange_ip             /* 0xc8 : `setrange pop, $<Simm16>, pop, pop' */
+	.long repr_target_setrange_ni             /* 0xc9 : `setrange pop, none, $<Simm16>, pop' */
+	.long repr_target_setrange_in             /* 0xca : `setrange pop, $<Simm16>, none, pop' */
+	.long repr_target_setrange_ii             /* 0xcb : `setrange pop, $<Simm16>, $<Simm16>, pop' */
+	.long repr_target_breakpoint              /* 0xcc : `debug break' */
+	.long repr_target_ud                      /* 0xcd : `ud' */
+	.long repr_target_callattr_c_kw           /* 0xce : `callattr top, const <imm8>, #<imm8>, const <imm8>' */
+	.long repr_target_callattr_c_tuple_kw     /* 0xcf : `callattr top, const <imm8>, pop..., const <imm8>' */
+	.long repr_target_callattr                /* 0xd0 : `callattr top, pop, #<imm8>' */
+	.long repr_target_callattr_tuple          /* 0xd1 : `callattr top, pop, pop...' */
+	.long repr_target_callattr_c              /* 0xd2 : `callattr top, const <imm8>, #<imm8>' */
+	.long repr_target_callattr_c_tuple        /* 0xd3 : `callattr top, const <imm8>, pop...' */
+	.long repr_target_callattr_this_c         /* 0xd4 : `push callattr this, const <imm8>, #<imm8>' */
+	.long repr_target_callattr_this_c_tuple   /* 0xd5 : `push callattr this, const <imm8>, pop...' */
+	.long repr_target_callattr_c_seq          /* 0xd6 : `callattr top, const <imm8>, [#<imm8>]' */
+	.long repr_target_callattr_c_map          /* 0xd7 : `callattr top, const <imm8>, {#<imm8>*2}' */
+	.long repr_invop
+	.long repr_target_getmember_this_r        /* 0xd9 : `push getmember this, ref <imm8>, $<imm8>' */
+	.long repr_target_delmember_this_r        /* 0xda : `delmember this, ref <imm8>, $<imm8>' */
+	.long repr_target_setmember_this_r        /* 0xdb : `setmember this, ref <imm8>, $<imm8>, pop' */
+	.long repr_target_boundmember_this_r      /* 0xdc : `push boundmember this, ref <imm8>, $<imm8>' */
+	.long repr_target_call_extern             /* 0xdd : `push call extern <imm8>:<imm8>, #<imm8>' */
+	.long repr_target_call_global             /* 0xde : `push call global <imm8>, #<imm8>' */
+	.long repr_target_call_local              /* 0xdf : `push call local <imm8>, #<imm8>' */
+	.long repr_invop
+	.long repr_invop
+	.long repr_invop
+	.long repr_invop
+	.long repr_invop
+	.long repr_invop
+	.long repr_invop
+	.long repr_invop
+	.long repr_invop
+	.long repr_invop
+	.long repr_invop
+	.long repr_invop
+	.long repr_invop
+	.long repr_invop
+	.long repr_invop
+	.long repr_invop
+	.long repr_target_extended1               /* 0xf0 : `-' */
+	.long repr_target_reserved1               /* 0xf1 : `-' */
+	.long repr_target_reserved2               /* 0xf2 : `-' */
+	.long repr_target_reserved3               /* 0xf3 : `-' */
+	.long repr_target_reserved4               /* 0xf4 : `-' */
+	.long repr_target_reserved5               /* 0xf5 : `-' */
+	.long repr_target_reserved6               /* 0xf6 : `-' */
+	.long repr_target_reserved7               /* 0xf7 : `-' */
+	.long repr_invop
+	.long repr_invop
+	.long repr_target_stack                   /* 0xfa : `stack #<imm8>' */
+	.long repr_target_static                  /* 0xfb : `static <imm8>' */
+	.long repr_target_extern                  /* 0xfc : `extern <imm8>:<imm8>' */
+	.long repr_invop
+	.long repr_target_global                  /* 0xfe : `global <imm8>' */
+	.long repr_target_local                   /* 0xff : `local <imm8>' */
+END(repr_inst_table)
 //[[[end]]]
 
 

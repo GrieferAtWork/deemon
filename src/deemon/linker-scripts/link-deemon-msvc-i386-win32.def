@@ -203,6 +203,9 @@ EXPORTS
 	DeeFile_PrintNl@4=_DeeFile_PrintNl@4
 	DeeFile_PrintObject@8=_DeeFile_PrintObject@8
 	DeeFile_PrintObjectNl@8=_DeeFile_PrintObjectNl@8
+	DeeFile_PrintObjectRepr@8=_DeeFile_PrintObjectRepr@8
+	DeeFile_PrintObjectReprNl@8=_DeeFile_PrintObjectReprNl@8
+	DeeFile_PrintObjectReprSp@8=_DeeFile_PrintObjectReprSp@8
 	DeeFile_PrintObjectSp@8=_DeeFile_PrintObjectSp@8
 	DeeFile_Putc@8=_DeeFile_Putc@8
 	DeeFile_Putcf@12=_DeeFile_Putcf@12

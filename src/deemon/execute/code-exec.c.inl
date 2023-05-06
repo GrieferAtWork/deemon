@@ -1962,8 +1962,10 @@ do_push_module:
 
 		TARGET(ASM_REPR, -1, +1) {
 			DREF DeeObject *temp;
-#if 1
-			if (*ip.u8 == ASM_SHL) {
+			switch (*ip.u8) {
+
+			/* Required handling for object repr streaming into a file via `<<' */
+			case ASM_SHL: {
 				DeeTypeObject *tp_temp = Dee_TYPE(SECOND);
 				for (;;) {
 					DREF DeeObject *other;
@@ -1997,8 +1999,61 @@ do_push_module:
 					TOP = other;
 					DISPATCH();
 				}
+			}	break;
+
+			/* Required handling for object repr streaming to stdout */
+			case ASM_PRINT:
+			case ASM_PRINT_SP:
+			case ASM_PRINT_NL: {
+				DREF DeeObject *stream;
+				int error;
+				stream = DeeFile_GetStd(DEE_STDOUT);
+				if unlikely(!stream)
+					HANDLE_EXCEPT();
+				switch (*ip.u8++) {
+				case ASM_PRINT:
+					error = DeeFile_PrintObjectRepr(stream, TOP);
+					break;
+				case ASM_PRINT_SP:
+					error = DeeFile_PrintObjectReprSp(stream, TOP);
+					break;
+				case ASM_PRINT_NL:
+					error = DeeFile_PrintObjectReprNl(stream, TOP);
+					break;
+				default: __builtin_unreachable();
+				}
+				Dee_Decref(stream);
+				if unlikely(error)
+					HANDLE_EXCEPT();
+				POPREF();
+				DISPATCH();
 			}
-#endif
+
+			/* Required handling for object repr streaming to a custom file */
+			case ASM_FPRINT:
+			case ASM_FPRINT_SP:
+			case ASM_FPRINT_NL: {
+				int error;
+				switch (*ip.u8++) {
+				case ASM_PRINT:
+					error = DeeFile_PrintObjectRepr(SECOND, TOP);
+					break;
+				case ASM_PRINT_SP:
+					error = DeeFile_PrintObjectReprSp(SECOND, TOP);
+					break;
+				case ASM_PRINT_NL:
+					error = DeeFile_PrintObjectReprNl(SECOND, TOP);
+					break;
+				default: __builtin_unreachable();
+				}
+				if unlikely(error)
+					HANDLE_EXCEPT();
+				POPREF();
+				DISPATCH();
+			}
+
+			default: break;
+			}
 			temp = DeeObject_Repr(TOP);
 			if unlikely(!temp)
 				HANDLE_EXCEPT();

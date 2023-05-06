@@ -364,6 +364,9 @@ DFUNDEF WUNUSED NONNULL((1)) int DCALL DeeFile_PrintNl(DeeObject *__restrict sel
 DFUNDEF WUNUSED NONNULL((1, 2)) int DCALL DeeFile_PrintObject(DeeObject *self, DeeObject *ob);
 DFUNDEF WUNUSED NONNULL((1, 2)) int DCALL DeeFile_PrintObjectSp(DeeObject *self, DeeObject *ob);
 DFUNDEF WUNUSED NONNULL((1, 2)) int DCALL DeeFile_PrintObjectNl(DeeObject *self, DeeObject *ob);
+DFUNDEF WUNUSED NONNULL((1, 2)) int DCALL DeeFile_PrintObjectRepr(DeeObject *self, DeeObject *ob);
+DFUNDEF WUNUSED NONNULL((1, 2)) int DCALL DeeFile_PrintObjectReprSp(DeeObject *self, DeeObject *ob);
+DFUNDEF WUNUSED NONNULL((1, 2)) int DCALL DeeFile_PrintObjectReprNl(DeeObject *self, DeeObject *ob);
 DFUNDEF WUNUSED NONNULL((1, 2)) int DCALL DeeFile_PrintAll(DeeObject *self, DeeObject *ob);
 DFUNDEF WUNUSED NONNULL((1, 2)) int DCALL DeeFile_PrintAllSp(DeeObject *self, DeeObject *ob);
 DFUNDEF WUNUSED NONNULL((1, 2)) int DCALL DeeFile_PrintAllNl(DeeObject *self, DeeObject *ob);

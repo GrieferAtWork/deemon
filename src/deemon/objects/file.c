@@ -1008,6 +1008,8 @@ DeeFile_PrintNl(DeeObject *__restrict self) {
 
 #define print_ob_str(self, ob) \
 	DeeObject_Print(ob, (dformatprinter)&DeeFile_WriteAll, self)
+#define print_ob_repr(self, ob) \
+	DeeObject_PrintRepr(ob, (dformatprinter)&DeeFile_WriteAll, self)
 
 
 PUBLIC WUNUSED NONNULL((1, 2)) int DCALL
@@ -1034,6 +1036,36 @@ PUBLIC WUNUSED NONNULL((1, 2)) int DCALL
 DeeFile_PrintObjectNl(DeeObject *self,
                       DeeObject *ob) {
 	if unlikely(print_ob_str(self, ob) < 0)
+		goto err;
+	return DeeFile_PrintNl(self);
+err:
+	return -1;
+}
+
+PUBLIC WUNUSED NONNULL((1, 2)) int DCALL
+DeeFile_PrintObjectRepr(DeeObject *self,
+                        DeeObject *ob) {
+	if unlikely(print_ob_repr(self, ob) < 0)
+		goto err;
+	return 0;
+err:
+	return -1;
+}
+
+PUBLIC WUNUSED NONNULL((1, 2)) int DCALL
+DeeFile_PrintObjectReprSp(DeeObject *self,
+                          DeeObject *ob) {
+	if unlikely(print_ob_repr(self, ob) < 0)
+		goto err;
+	return print_sp(self);
+err:
+	return -1;
+}
+
+PUBLIC WUNUSED NONNULL((1, 2)) int DCALL
+DeeFile_PrintObjectReprNl(DeeObject *self,
+                          DeeObject *ob) {
+	if unlikely(print_ob_repr(self, ob) < 0)
 		goto err;
 	return DeeFile_PrintNl(self);
 err:
