@@ -47,6 +47,7 @@ DECL_BEGIN
 typedef DeeMemoryFileObject MemoryFile;
 typedef DeeFileReaderObject Reader;
 typedef DeeFileWriterObject Writer;
+typedef DeeFilePrinterObject Printer;
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 mf_init(MemoryFile *__restrict self) {
@@ -749,14 +750,16 @@ PUBLIC DeeFileTypeObject DeeFileReader_Type = {
 
 /* Open a new file stream for reading memory from `data...+=data_size'
  * This stream assumes that data is immutable, and owned by `data_owner'.
+ *
  * The best example for a type that fits these requirements is `string'
  * This function greatly differs from `DeeFile_OpenRoMemory()', in that
  * the referenced data is shared with an explicit object, rather that
  * being held using a ticket-system, where the caller must manually
  * inform the memory stream when data is supposed to get released.
- * However, the end result of both mechanisms is the same, in that
- * the stream indirectly referenced a given data-block, rather than
- * having to keep its own copy of some potentially humongous memory block. */
+ *
+ * However, the end result of both mechanisms is the same, in that the
+ * stream indirectly references a given data-block, rather than having
+ * to keep its own copy of some potentially humongous memory block. */
 PUBLIC WUNUSED NONNULL((1, 2)) DREF /*File*/ DeeObject *DCALL
 DeeFile_OpenObjectMemory(DeeObject *__restrict data_owner,
                          void const *data, size_t data_size) {
@@ -921,7 +924,7 @@ again:
 			}
 			result->s_str[result->s_len] = 0;
 		} else {
-			/* The string is already being shared, meaning that the must have already been flushed. */
+			/* The string is already being shared, meaning that it must have already been flushed. */
 			ASSERT(me->w_printer.up_length == result->s_len);
 		}
 	} else if (me->w_string) {
@@ -956,7 +959,6 @@ again:
 	Dee_Incref(result);
 	DeeFileWriter_LockEndRead(me);
 	ASSERT(DeeString_STR(result)[DeeString_SIZE(result)] == 0);
-
 	return (DREF DeeObject *)result;
 err_collect:
 	DeeFileWriter_LockEndRead(me);
@@ -1042,10 +1044,11 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 writer_sizeof(Writer *self) {
 	size_t result;
 	DeeFileWriter_LockRead(self);
-	result = sizeof(Writer) + (self->w_printer.up_buffer
-	                           ? ((WSTR_LENGTH(self->w_printer.up_buffer) + 1) *
-	                              STRING_SIZEOF_WIDTH(self->w_printer.up_flags & UNICODE_PRINTER_FWIDTH))
-	                           : 0);
+	result = sizeof(Writer) +
+	         (self->w_printer.up_buffer
+	          ? ((WSTR_LENGTH(self->w_printer.up_buffer) + 1) *
+	             STRING_SIZEOF_WIDTH(self->w_printer.up_flags & UNICODE_PRINTER_FWIDTH))
+	          : 0);
 	DeeFileWriter_LockEndRead(self);
 	return DeeInt_NewSize(result);
 }
@@ -1285,6 +1288,7 @@ writer_tryappendch(Writer *__restrict self, uint32_t ch) {
 		}
 		goto ok;
 	}
+
 	/* Append to an existing buffer, possibly up-casting that buffer to a greater magnitude. */
 	avail   = WSTR_LENGTH(self->w_printer.up_buffer);
 	written = self->w_printer.up_length;
@@ -1479,6 +1483,7 @@ again:
 				memcpyl(buffer_copy, self->w_printer.up_buffer, length);
 				self->w_printer.up_buffer = buffer_copy; /* Inherit data */
 			}
+
 			/* Drop our reference to the pre-packed string. */
 			self->w_string = NULL;
 			DeeFileWriter_LockEndWrite(self);
@@ -1489,6 +1494,7 @@ again:
 			 * and keep on appending to the pre-generated multi-byte buffer. */
 			struct string_utf *utf = wstr->s_data;
 			ASSERT(utf != NULL);
+
 			/* WARNING: Just string UTF finalizer that doesn't free width data for `width' */
 			if (width == STRING_WIDTH_2BYTE && utf->u_data[STRING_WIDTH_4BYTE]) {
 				Dee_Free((size_t *)utf->u_data[STRING_WIDTH_4BYTE] - 1);
@@ -1537,6 +1543,7 @@ again:
 			goto again;
 		}
 	}
+
 	/* At this point, we know that the buffer has been locked, and that
 	 * the pre-written string has been unshared. - Now we can actually
 	 * get to work and start appending the new content! */
@@ -1553,6 +1560,7 @@ again:
 			self->w_printer.up_flags += (uint8_t)bufsize << UNICODE_PRINTER_FPENDING_SHFT;
 			goto done_unlock;
 		}
+
 		/* Complete the sequence, and append the character. */
 		tempptr = (uint8_t *)mempcpy(full_sequence, self->w_printer.up_pend, gotlen);
 		memcpy(tempptr, buffer, missing);
@@ -1570,6 +1578,7 @@ again:
 		end = (flush_start = iter = (uint8_t *)buffer) + bufsize;
 		while (iter < end) {
 			uint8_t seqlen;
+
 			/* Search for UTF-8 byte sequences */
 			if (*iter < 0xc0) {
 				++iter;
@@ -1584,6 +1593,7 @@ again:
 					goto again;
 				goto err;
 			}
+
 			/* Goto a multi-byte sequence. */
 			seqlen = utf8_sequence_len[*iter];
 			if (seqlen > (size_t)(end - iter)) {
@@ -1593,6 +1603,7 @@ again:
 				memcpy(self->w_printer.up_pend, iter, seqlen);
 				goto done_unlock;
 			}
+
 			/* The full sequence has been given! */
 			if (!writer_tryappendch(self, utf8_getchar(iter, seqlen))) {
 				DeeFileWriter_LockEndWrite(self);
@@ -1605,6 +1616,7 @@ again:
 			iter += seqlen;
 			flush_start = iter;
 		}
+
 		/* Flush the remainder. */
 		if (flush_start < end &&
 		    !writer_tryappend8(self, flush_start, (size_t)(end - flush_start))) {
@@ -1696,6 +1708,160 @@ done:
 
 
 
+
+
+
+/************************************************************************/
+/* FILE PRINTER                                                         */
+/************************************************************************/
+
+PRIVATE WUNUSED NONNULL((1, 2)) size_t DCALL
+printer_write(Printer *__restrict self,
+              uint8_t const *__restrict buffer,
+              size_t bufsize, dioflag_t UNUSED(flags)) {
+	dssize_t status;
+	if (DeeFilePrinter_LockRead(self))
+		goto err;
+	if unlikely(!self->fp_printer) {
+		/* Printer was already closed */
+		DeeFilePrinter_LockEndRead(self);
+		goto err_closed;
+	}
+	/* Write to the underlying printer. */
+	status = (*self->fp_printer)(self->fp_arg, (char const *)buffer, bufsize);
+	if likely(status > 0)
+		atomic_add(&self->fp_result, (size_t)status);
+	DeeFilePrinter_LockEndRead(self);
+	if unlikely(status < 0)
+		goto err;
+	return bufsize;
+err_closed:
+	err_file_closed();
+err:
+	return (size_t)-1;
+}
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+printer_close(Printer *__restrict self) {
+	if (DeeFilePrinter_LockWrite(self))
+		goto err;
+	if unlikely(self->fp_printer == NULL) {
+		DeeFilePrinter_LockEndWrite(self);
+		goto err_closed;
+	}
+	self->fp_printer = NULL;
+	DeeFilePrinter_LockEndWrite(self);
+	return 0;
+err_closed:
+	err_file_closed();
+err:
+	return -1;
+}
+
+PUBLIC DeeFileTypeObject DeeFilePrinter_Type = {
+	/* .ft_base = */ {
+		OBJECT_HEAD_INIT(&DeeFileType_Type),
+		/* .tp_name     = */ "_FilePrinter",
+		/* .tp_doc      = */ NULL,
+		/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
+		/* .tp_weakrefs = */ 0,
+		/* .tp_features = */ TF_HASFILEOPS,
+		/* .tp_base     = */ (DeeTypeObject *)&DeeFile_Type,
+		/* .tp_init = */ {
+			{
+				/* .tp_alloc = */ {
+					/* .tp_ctor      = */ (dfunptr_t)NULL,
+					/* .tp_copy_ctor = */ (dfunptr_t)NULL,
+					/* .tp_deep_ctor = */ (dfunptr_t)NULL,
+					/* .tp_any_ctor  = */ (dfunptr_t)NULL,
+					TYPE_FIXED_ALLOCATOR(Printer)
+				}
+			},
+			/* .tp_dtor        = */ NULL,
+			/* .tp_assign      = */ NULL,
+			/* .tp_move_assign = */ NULL
+		},
+		/* .tp_cast = */ {
+			/* .tp_str  = */ NULL,
+			/* .tp_repr = */ NULL,
+			/* .tp_bool = */ NULL
+		},
+		/* .tp_call          = */ NULL,
+		/* .tp_visit         = */ NULL,
+		/* .tp_gc            = */ NULL,
+		/* .tp_math          = */ NULL,
+		/* .tp_cmp           = */ NULL,
+		/* .tp_seq           = */ NULL,
+		/* .tp_iter_next     = */ NULL,
+		/* .tp_attr          = */ NULL,
+		/* .tp_with          = */ NULL,
+		/* .tp_buffer        = */ NULL,
+		/* .tp_methods       = */ NULL,
+		/* .tp_getsets       = */ NULL,
+		/* .tp_members       = */ NULL,
+		/* .tp_class_methods = */ NULL,
+		/* .tp_class_getsets = */ NULL,
+		/* .tp_class_members = */ NULL
+	},
+	/* .ft_read   = */ NULL,
+	/* .ft_write  = */ (size_t (DCALL *)(DeeFileObject *__restrict, void const *__restrict, size_t, dioflag_t))&printer_write,
+	/* .ft_seek   = */ NULL,
+	/* .ft_sync   = */ NULL,
+	/* .ft_trunc  = */ NULL,
+	/* .ft_close  = */ (int (DCALL *)(DeeFileObject *__restrict))&printer_close,
+	/* .ft_pread  = */ NULL,
+	/* .ft_pwrite = */ NULL,
+	/* .ft_getc   = */ NULL,
+	/* .ft_ungetc = */ NULL,
+	/* .ft_putc   = */ NULL
+};
+
+/* Construct a new printer-wrapper for `printer' and `arg' */
+PUBLIC WUNUSED NONNULL((1)) DREF /*FilePrinter*/ DeeObject *DCALL
+DeeFile_OpenPrinter(Dee_formatprinter_t printer, void *arg) {
+	DREF Printer *result;
+	result = DeeObject_MALLOC(Printer);
+	if unlikely(!result)
+		goto done;
+	result->fp_printer = printer;
+	result->fp_arg     = arg;
+	result->fp_result  = 0;
+	Dee_shared_rwlock_init(&result->fp_lock);
+	DeeObject_Init(result, &DeeFilePrinter_Type);
+done:
+	return (DREF DeeObject *)result;
+}
+
+/* Drop the primary reference from `self'.
+ *
+ * This function tries to destroy `self', but if that fails (because
+ * the object is still being shared), it will acquire a write-lock to
+ * `self' (without serving interrupts), and then proceed to delete
+ * the linked printer.
+ * 
+ * @return: * : The total sum of return values of the underlying printer. */
+PUBLIC NONNULL((1)) size_t DCALL
+DeeFile_ClosePrinter(/*inherit(always)*/ DREF /*FilePrinter*/ DeeObject *__restrict self) {
+	DREF Printer *me = (DREF Printer *)self;
+	size_t result    = atomic_read(&me->fp_result);
+	ASSERT_OBJECT_TYPE_EXACT((DeeObject *)me, (DeeTypeObject *)&DeeFilePrinter_Type);
+	if (!Dee_DecrefIfOne(me)) {
+		DeeFilePrinter_LockWriteNoInt(me);
+		me->fp_printer = NULL;
+		result = me->fp_result;
+		DeeFilePrinter_LockEndWrite(me);
+		Dee_Decref_unlikely(me);
+	}
+	return result;
+}
+
+
+
+
+
+
+
+
 /************************************************************************/
 /* MMAP API                                                             */
 /************************************************************************/
@@ -1733,8 +1899,6 @@ mapfile_init_kw(DeeMapFileObject *__restrict self, size_t argc,
 	}
 
 	/* Construct the mapfile. */
-	/* TODO: Use DeeNTSystem_GetHandle() + DeeMapFile_InitSysFd(); */
-	/* TODO: Use DeeUnixSystem_GetFD() + DeeMapFile_InitSysFd(); */
 	if unlikely(DeeMapFile_InitFile(&self->mf_map, fd,
 	                                offset, minbytes, maxbytes,
 	                                nulbytes, mapflags))

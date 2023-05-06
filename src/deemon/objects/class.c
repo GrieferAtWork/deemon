@@ -26,6 +26,8 @@
 #include <deemon/bool.h>
 #include <deemon/class.h>
 #include <deemon/error.h>
+#include <deemon/file.h>
+#include <deemon/filetypes.h>
 #include <deemon/float.h>
 #include <deemon/gc.h>
 #include <deemon/int.h>
@@ -4387,23 +4389,6 @@ instance_repr(DeeObject *__restrict self) {
 }
 
 
-/* TODO: Add a way for user-code to define the str-operator as:
- * >> import * from deemon;
- * >> class MyClass1 {
- * >>     operator str(fp: File) {
- * >>         fp << "MyClass1.str";
- * >>     }
- * >> };
- * >> class MyClass2 {
- * >>     operator str(): string {
- * >>         return "MyClass2.str";
- * >>     }
- * >> };
- * >> print MyClass1();     // "MyClass1.str"
- * >> print MyClass2();     // "MyClass2.str"
- * >> print str MyClass1(); // "MyClass1.str"
- * >> print str MyClass2(); // "MyClass2.str"
- */
 INTERN WUNUSED NONNULL((1, 2, 3)) dssize_t DCALL
 instance_tprint(DeeTypeObject *tp_self, DeeObject *__restrict self,
                 dformatprinter printer, void *arg) {
@@ -4444,6 +4429,144 @@ INTERN WUNUSED NONNULL((1, 2)) dssize_t DCALL
 instance_printrepr(DeeObject *__restrict self,
                    dformatprinter printer, void *arg) {
 	return instance_tprintrepr(Dee_TYPE(self), self, printer, arg);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+instance_call_with_file_writer(DeeObject *self, DeeObject *func) {
+	DREF DeeObject *result, *status;
+	DREF DeeObject *writer = DeeFile_OpenWriter();
+	if unlikely(!writer)
+		goto err;
+	status = DeeObject_ThisCall(func, self, 1, &writer);
+	if unlikely(!status)
+		goto err_writer;
+	Dee_Decref(status);
+	result = DeeFileWriter_GetString(writer);
+	Dee_Decref(writer);
+	return result;
+err_writer:
+	Dee_Decref(writer);
+err:
+	return NULL;
+}
+
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+instance_tstr_by_print(DeeTypeObject *tp_self, DeeObject *__restrict self) {
+	DREF DeeObject *func, *result;
+	func = DeeClass_GetOperator(tp_self, CLASS_OPERATOR_PRINT);
+	if unlikely(!func)
+		goto err;
+	result = instance_call_with_file_writer(self, func);
+	Dee_Decref(func);
+	return result;
+err:
+	return NULL;
+}
+
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+instance_str_by_print(DeeObject *__restrict self) {
+	return instance_tstr_by_print(Dee_TYPE(self), self);
+}
+
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+instance_trepr_by_print(DeeTypeObject *tp_self, DeeObject *__restrict self) {
+	DREF DeeObject *func, *result;
+	func = DeeClass_GetOperator(tp_self, CLASS_OPERATOR_PRINTREPR);
+	if unlikely(!func)
+		goto err;
+	result = instance_call_with_file_writer(self, func);
+	Dee_Decref(func);
+	return result;
+err:
+	return NULL;
+}
+
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+instance_repr_by_print(DeeObject *__restrict self) {
+	return instance_trepr_by_print(Dee_TYPE(self), self);
+}
+
+
+PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
+instance_call_with_file_printer(DeeObject *self, DeeObject *func,
+                                dformatprinter printer, void *arg) {
+	DREF DeeObject *status;
+	DREF DeeObject *printer_file;
+	if (printer == (dformatprinter)&DeeFile_WriteAll) {
+		status = DeeObject_ThisCall(func, self, 1, (DeeObject **)&arg);
+		if unlikely(!status)
+			goto err;
+		Dee_Decref(status);
+		/* XXX: Returning `0' here is technically wrong; we'd need to
+		 *      return the total sum of bytes written to file, but then
+		 *      again: this should also be good enough (and the specs
+		 *      require us to pass along the original file in this case)
+		 * >> import * from deemon;
+		 * >> class MyClass {
+		 * >>     operator str(fp: File) {
+		 * >>         assert fp === File.stdout;
+		 * >>         fp << "Hello!";
+		 * >>     }
+		 * >> }
+		 * >> print MyClass();
+		 */
+		return 0;
+	}
+
+	printer_file = DeeFile_OpenPrinter(printer, arg);
+	if unlikely(!printer_file)
+		goto err;
+	status = DeeObject_ThisCall(func, self, 1, &printer_file);
+	if unlikely(!status)
+		goto err_printer_file;
+	Dee_Decref(status);
+	return (dssize_t)DeeFile_ClosePrinter(printer_file);
+err_printer_file:
+	Dee_Decref(printer_file);
+err:
+	return -1;
+}
+
+INTERN WUNUSED NONNULL((1, 2, 3)) dssize_t DCALL
+instance_tprint_by_print(DeeTypeObject *tp_self, DeeObject *__restrict self,
+                         dformatprinter printer, void *arg) {
+	dssize_t result;
+	DREF DeeObject *func;
+	func = DeeClass_GetOperator(tp_self, CLASS_OPERATOR_PRINT);
+	if unlikely(!func)
+		goto err;
+	result = instance_call_with_file_printer(self, func, printer, arg);
+	Dee_Decref(func);
+	return result;
+err:
+	return -1;
+}
+
+INTERN WUNUSED NONNULL((1, 2)) dssize_t DCALL
+instance_print_by_print(DeeObject *__restrict self,
+                        dformatprinter printer, void *arg) {
+	return instance_tprint_by_print(Dee_TYPE(self), self, printer, arg);
+}
+
+INTERN WUNUSED NONNULL((1, 2, 3)) dssize_t DCALL
+instance_tprintrepr_by_print(DeeTypeObject *tp_self, DeeObject *__restrict self,
+                             dformatprinter printer, void *arg) {
+	dssize_t result;
+	DREF DeeObject *func;
+	func = DeeClass_GetOperator(tp_self, CLASS_OPERATOR_PRINTREPR);
+	if unlikely(!func)
+		goto err;
+	result = instance_call_with_file_printer(self, func, printer, arg);
+	Dee_Decref(func);
+	return result;
+err:
+	return -1;
+}
+
+INTERN WUNUSED NONNULL((1, 2)) dssize_t DCALL
+instance_printrepr_by_print(DeeObject *__restrict self,
+                            dformatprinter printer, void *arg) {
+	return instance_tprintrepr_by_print(Dee_TYPE(self), self, printer, arg);
 }
 
 
@@ -5099,6 +5222,30 @@ err_custom_allocator:
 				result->tp_math->tp_int32 = &instance_int32;
 				result->tp_math->tp_int64 = &instance_int64;
 				result->tp_math->tp_int   = &instance_int;
+				break;
+
+			case OPERATOR_STR:
+				result->tp_cast.tp_str = &instance_str;
+				if (result->tp_cast.tp_print == NULL)
+					result->tp_cast.tp_print = &instance_print;
+				break;
+
+			case CLASS_OPERATOR_PRINT:
+				result->tp_cast.tp_print = &instance_print_by_print;
+				if (result->tp_cast.tp_str == NULL)
+					result->tp_cast.tp_str = &instance_str_by_print;
+				break;
+
+			case OPERATOR_REPR:
+				result->tp_cast.tp_repr = &instance_repr;
+				if (result->tp_cast.tp_printrepr == NULL)
+					result->tp_cast.tp_printrepr = &instance_printrepr;
+				break;
+
+			case CLASS_OPERATOR_PRINTREPR:
+				result->tp_cast.tp_printrepr = &instance_printrepr_by_print;
+				if (result->tp_cast.tp_repr == NULL)
+					result->tp_cast.tp_repr = &instance_repr_by_print;
 				break;
 
 			case OPERATOR_DEEPCOPY:

@@ -37,6 +37,7 @@ DECL_BEGIN
 #define Dee_memory_file_object         memory_file_object
 #define Dee_file_reader_object         file_reader_object
 #define Dee_file_writer_object         file_writer_object
+#define Dee_file_printer_object        file_printer_object
 #define FILE_BUFFER_FNORMAL            Dee_FILE_BUFFER_FNORMAL
 #define FILE_BUFFER_FREADONLY          Dee_FILE_BUFFER_FREADONLY
 #define FILE_BUFFER_FNODYNSCALE        Dee_FILE_BUFFER_FNODYNSCALE
@@ -63,6 +64,7 @@ typedef struct Dee_file_buffer_object DeeFileBufferObject;
 typedef struct Dee_memory_file_object DeeMemoryFileObject;
 typedef struct Dee_file_reader_object DeeFileReaderObject;
 typedef struct Dee_file_writer_object DeeFileWriterObject;
+typedef struct Dee_file_printer_object DeeFilePrinterObject;
 
 
 struct Dee_system_file_object {
@@ -314,14 +316,16 @@ DDATDEF DeeFileTypeObject DeeFileReader_Type; /* File.Reader */
 
 /* Open a new file stream for reading memory from `data...+=data_size'
  * This stream assumes that data is immutable, and owned by `data_owner'.
+ *
  * The best example for a type that fits these requirements is `string'
  * This function greatly differs from `DeeFile_OpenRoMemory()', in that
  * the referenced data is shared with an explicit object, rather that
  * being held using a ticket-system, where the caller must manually
  * inform the memory stream when data is supposed to get released.
- * However, the end result of both mechanisms is the same, in that
- * the stream indirectly referenced a given data-block, rather than
- * having to keep its own copy of some potentially humongous memory block. */
+ *
+ * However, the end result of both mechanisms is the same, in that the
+ * stream indirectly references a given data-block, rather than having
+ * to keep its own copy of some potentially humongous memory block. */
 DFUNDEF WUNUSED NONNULL((1, 2)) DREF /*File*/ DeeObject *DCALL
 DeeFile_OpenObjectMemory(DeeObject *__restrict data_owner,
                          void const *data, size_t data_size);
@@ -368,6 +372,60 @@ DFUNDEF WUNUSED DREF /*File*/ DeeObject *DCALL DeeFile_OpenWriter(void);
 /* Returns the current string written by the writer. */
 DFUNDEF WUNUSED NONNULL((1)) DREF /*string*/ DeeObject *DCALL
 DeeFileWriter_GetString(DeeObject *__restrict self);
+/* TODO: DeeFileWriter_GetBytes  (returns raw bytes that have been written to the file)
+ * Yes: that will require a full re-write of `File.Writer()', since currently some
+ *      of the byte-information outside the ASCII range is lost during the act of
+ *      interpreting input a UTF-8 */
+
+
+
+ /* DeeFilePrinter_Type (wrapper around `Dee_formatprinter_t') */
+struct Dee_file_printer_object {
+	Dee_FILE_OBJECT_HEAD
+	Dee_formatprinter_t fp_printer; /* [0..1][lock(fp_lock)] Output printer. (must hold a read-lock when printing) */
+	void               *fp_arg;     /* [?..?][valid_if(fp_printer)] Cookie for `fp_printer' */
+	size_t              fp_result;  /* [lock(fp_lock && ATOMIC)][const_if(fp_printer == NULL)]
+	                                 * Sum of positive return values of `fp_printer' */
+#ifndef CONFIG_NO_THREADS
+	Dee_shared_rwlock_t fp_lock;    /* Lock used for closing a file-printer. */
+#endif /* !CONFIG_NO_THREADS */
+};
+
+#define DeeFilePrinter_LockReading(self)    Dee_shared_rwlock_reading(&(self)->fp_lock)
+#define DeeFilePrinter_LockWriting(self)    Dee_shared_rwlock_writing(&(self)->fp_lock)
+#define DeeFilePrinter_LockTryRead(self)    Dee_shared_rwlock_tryread(&(self)->fp_lock)
+#define DeeFilePrinter_LockTryWrite(self)   Dee_shared_rwlock_trywrite(&(self)->fp_lock)
+#define DeeFilePrinter_LockCanRead(self)    Dee_shared_rwlock_canread(&(self)->fp_lock)
+#define DeeFilePrinter_LockCanWrite(self)   Dee_shared_rwlock_canwrite(&(self)->fp_lock)
+#define DeeFilePrinter_LockWaitRead(self)   Dee_shared_rwlock_waitread(&(self)->fp_lock)
+#define DeeFilePrinter_LockWaitWrite(self)  Dee_shared_rwlock_waitwrite(&(self)->fp_lock)
+#define DeeFilePrinter_LockRead(self)       Dee_shared_rwlock_read(&(self)->fp_lock)
+#define DeeFilePrinter_LockWrite(self)      Dee_shared_rwlock_write(&(self)->fp_lock)
+#define DeeFilePrinter_LockWriteNoInt(self) Dee_shared_rwlock_write_noint(&(self)->fp_lock)
+#define DeeFilePrinter_LockTryUpgrade(self) Dee_shared_rwlock_tryupgrade(&(self)->fp_lock)
+#define DeeFilePrinter_LockUpgrade(self)    Dee_shared_rwlock_upgrade(&(self)->fp_lock)
+#define DeeFilePrinter_LockDowngrade(self)  Dee_shared_rwlock_downgrade(&(self)->fp_lock)
+#define DeeFilePrinter_LockEndWrite(self)   Dee_shared_rwlock_endwrite(&(self)->fp_lock)
+#define DeeFilePrinter_LockEndRead(self)    Dee_shared_rwlock_endread(&(self)->fp_lock)
+#define DeeFilePrinter_LockEnd(self)        Dee_shared_rwlock_end(&(self)->fp_lock)
+
+DDATDEF DeeFileTypeObject DeeFilePrinter_Type;
+
+/* Construct a new printer-wrapper for `printer' and `arg' */
+DFUNDEF WUNUSED NONNULL((1)) DREF /*FilePrinter*/ DeeObject *DCALL
+DeeFile_OpenPrinter(Dee_formatprinter_t printer, void *arg);
+
+/* Drop the primary reference from `self'.
+ *
+ * This function tries to destroy `self', but if that fails (because
+ * the object is still being shared), it will acquire a write-lock to
+ * `self' (without serving interrupts), and then proceed to delete
+ * the linked printer.
+ * 
+ * @return: * : The total sum of return values of the underlying printer. */
+DFUNDEF NONNULL((1)) size_t DCALL
+DeeFile_ClosePrinter(/*inherit(always)*/ DREF /*FilePrinter*/ DeeObject *__restrict self);
+
 
 
 DECL_END

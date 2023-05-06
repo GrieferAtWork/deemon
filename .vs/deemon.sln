@@ -342,6 +342,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{2360741E-F
 		..\util\test\forward-class-symbols.dee = ..\util\test\forward-class-symbols.dee
 		..\util\test\function-keywords.dee = ..\util\test\function-keywords.dee
 		..\util\test\futex.dee = ..\util\test\futex.dee
+		..\util\test\hash.dee = ..\util\test\hash.dee
 		..\util\test\hashlib.dee = ..\util\test\hashlib.dee
 		..\util\test\implicit-local-conversion.dee = ..\util\test\implicit-local-conversion.dee
 		..\util\test\import-lib.dee = ..\util\test\import-lib.dee

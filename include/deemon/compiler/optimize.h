@@ -262,6 +262,7 @@ INTDEF WUNUSED NONNULL((1, 2)) int (DCALL ast_optimize_conditional)(struct ast_o
 INTDEF WUNUSED NONNULL((1, 2)) int (DCALL ast_optimize_loop)(struct ast_optimize_stack *__restrict stack, struct ast *__restrict self, bool result_used);
 INTDEF WUNUSED NONNULL((1, 2)) int (DCALL ast_optimize_try)(struct ast_optimize_stack *__restrict stack, struct ast *__restrict self, bool result_used);
 INTDEF WUNUSED NONNULL((1, 2)) int (DCALL ast_optimize_switch)(struct ast_optimize_stack *__restrict stack, struct ast *__restrict self, bool result_used);
+INTDEF WUNUSED NONNULL((1, 2)) int (DCALL ast_optimize_class)(struct ast_optimize_stack *__restrict stack, struct ast *__restrict self, bool result_used);
 
 INTDEF uint16_t optimizer_flags;        /* Set of `OPTIMIZE_F*' */
 INTDEF uint16_t optimizer_unwind_limit; /* The max amount of times that a loop may be unwound. */
@@ -326,6 +327,10 @@ ast_contains_goto(struct ast *__restrict self, uint16_t consider_loopctl);
 #define AST_CONTAINS_GOTO_CONSIDER_CONTINUE 0x01
 #define AST_CONTAINS_GOTO_CONSIDER_BREAK    0x02
 #define AST_CONTAINS_GOTO_CONSIDER_ALL      0xff
+
+/* Check if a given ast `self' contains a return-statement. */
+INTDEF WUNUSED NONNULL((1)) bool DCALL
+ast_contains_return(struct ast *__restrict self);
 
 
 /* Checks if a branch _NEVER_ returns normally (e.g. `yield' can return normally; `return' can't)

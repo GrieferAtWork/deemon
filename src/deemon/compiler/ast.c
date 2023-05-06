@@ -352,7 +352,7 @@ DEFINE_AST_GENERATOR(, ast_multiple,
 	 * -> ... Because they're literally no-ops that would otherwise
 	 *        confuse the optimizer into not detecting constant
 	 *        expressions, as well as special behavior surrounding
-	 *       `AST_EXPAND' expressions not being triggered. */
+	 *        `AST_EXPAND' expressions not being triggered. */
 	if unlikely(exprc == 1 && flags == AST_FMULTIPLE_KEEPLAST &&
 	            current_scope == exprv[0]->a_scope) {
 		result = exprv[0]; /* Inherit reference. */
@@ -360,6 +360,7 @@ got_result:
 		Dee_Free(exprv); /* We're supposed to ~inherit~ this on success. (So we simply discard it). */
 		return result;
 	}
+
 	/* Prevent some more ambiguity when ZERO(0) expressions were passed. */
 	if unlikely(exprc == 0) {
 		if (flags == AST_FMULTIPLE_KEEPLAST) {

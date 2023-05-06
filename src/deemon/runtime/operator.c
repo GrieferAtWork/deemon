@@ -169,19 +169,28 @@ INTDEF WUNUSED NONNULL((1, 2, 3)) dssize_t DCALL DeeObject_TDefaultPrintReprWith
 #ifdef DEFINE_TYPED_OPERATORS
 #define DeeType_INVOKE_ASSIGN(tp_self, self, other)                ((tp_self)->tp_init.tp_assign == &instance_assign ? instance_tassign(tp_self, self, other) : (*(tp_self)->tp_init.tp_assign)(self, other))
 #define DeeType_INVOKE_MOVEASSIGN(tp_self, self, other)            ((tp_self)->tp_init.tp_move_assign == &instance_moveassign ? instance_tmoveassign(tp_self, self, other) : (*(tp_self)->tp_init.tp_move_assign)(self, other))
-#define DeeType_INVOKE_STR(tp_self, self)                          ((tp_self)->tp_cast.tp_str == &DeeObject_DefaultStrWithPrint ? DeeObject_TDefaultStrWithPrint(tp_self, self) : (tp_self)->tp_cast.tp_str == &instance_str ? instance_tstr(tp_self, self) : (*(tp_self)->tp_cast.tp_str)(self))
-#define DeeType_INVOKE_PRINT(tp_self, self, printer, arg)          ((tp_self)->tp_cast.tp_print == &DeeObject_DefaultPrintWithStr ? DeeObject_TDefaultPrintWithStr(tp_self, self, printer, arg) : (tp_self)->tp_cast.tp_print == &instance_print ? instance_tprint(tp_self, self, printer, arg) : (*(tp_self)->tp_cast.tp_print)(self, printer, arg))
+#define DeeType_INVOKE_STR(tp_self, self)                          ((tp_self)->tp_cast.tp_str == &DeeObject_DefaultStrWithPrint ? DeeObject_TDefaultStrWithPrint(tp_self, self) : \
+                                                                    (tp_self)->tp_cast.tp_str == &instance_str ? instance_tstr(tp_self, self) : \
+                                                                    (tp_self)->tp_cast.tp_str == &instance_str_by_print ? instance_tstr_by_print(tp_self, self) : \
+                                                                    (*(tp_self)->tp_cast.tp_str)(self))
+#define DeeType_INVOKE_PRINT(tp_self, self, printer, arg)          ((tp_self)->tp_cast.tp_print == &DeeObject_DefaultPrintWithStr ? DeeObject_TDefaultPrintWithStr(tp_self, self, printer, arg) : \
+                                                                    (tp_self)->tp_cast.tp_print == &instance_print ? instance_tprint(tp_self, self, printer, arg) : \
+                                                                    (tp_self)->tp_cast.tp_print == &instance_print_by_print ? instance_tprint_by_print(tp_self, self, printer, arg) : \
+                                                                    (*(tp_self)->tp_cast.tp_print)(self, printer, arg))
 #define DeeType_INVOKE_REPR(tp_self, self)                         ((tp_self)->tp_cast.tp_repr == &DeeObject_DefaultReprWithPrintRepr ? DeeObject_TDefaultReprWithPrintRepr(tp_self, self) : \
                                                                     (tp_self)->tp_cast.tp_repr == &instance_repr ? instance_trepr(tp_self, self) : \
+                                                                    (tp_self)->tp_cast.tp_repr == &instance_repr_by_print ? instance_trepr_by_print(tp_self, self) : \
                                                                     (*(tp_self)->tp_cast.tp_repr)(self))
 #ifdef CLASS_TP_FAUTOINIT
 #define DeeType_INVOKE_PRINTREPR(tp_self, self, printer, arg)      ((tp_self)->tp_cast.tp_printrepr == &DeeObject_DefaultPrintReprWithRepr ? DeeObject_TDefaultPrintReprWithRepr(tp_self, self, printer, arg) : \
                                                                     (tp_self)->tp_cast.tp_printrepr == &instance_printrepr ? instance_tprintrepr(tp_self, self, printer, arg) : \
+                                                                    (tp_self)->tp_cast.tp_printrepr == &instance_printrepr_by_print ? instance_tprintrepr_by_print(tp_self, self, printer, arg) : \
                                                                     (tp_self)->tp_cast.tp_printrepr == &instance_builtin_auto_printrepr ? instance_builtin_auto_tprintrepr(tp_self, self, printer, arg) : \
                                                                     (*(tp_self)->tp_cast.tp_printrepr)(self, printer, arg))
 #else /* CLASS_TP_FAUTOINIT */
 #define DeeType_INVOKE_PRINTREPR(tp_self, self, printer, arg)      ((tp_self)->tp_cast.tp_printrepr == &DeeObject_DefaultPrintReprWithRepr ? DeeObject_TDefaultPrintReprWithRepr(tp_self, self, printer, arg) : \
                                                                     (tp_self)->tp_cast.tp_printrepr == &instance_printrepr ? instance_tprintrepr(tp_self, self, printer, arg) : \
+                                                                    (tp_self)->tp_cast.tp_printrepr == &instance_printrepr_by_print ? instance_tprintrepr_by_print(tp_self, self, printer, arg) : \
                                                                     (*(tp_self)->tp_cast.tp_printrepr)(self, printer, arg))
 #endif /* !CLASS_TP_FAUTOINIT */
 #define DeeType_INVOKE_BOOL(tp_self, self)                         ((tp_self)->tp_cast.tp_bool == &instance_bool ? instance_tbool(tp_self, self) : (*(tp_self)->tp_cast.tp_bool)(self))

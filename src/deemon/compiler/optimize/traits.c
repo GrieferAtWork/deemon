@@ -1492,6 +1492,167 @@ yes:
 	return true;
 }
 
+
+/* Check if a given ast `self' contains a return-statement. */
+INTERN WUNUSED NONNULL((1)) bool DCALL
+ast_contains_return(struct ast *__restrict self) {
+	switch (self->a_type) {
+
+	case AST_CONSTEXPR:
+	case AST_SYM:
+	case AST_UNBIND:
+	case AST_BOUND:
+	case AST_FUNCTION:
+	case AST_LOOPCTL:
+no:
+		return false;
+
+	case AST_MULTIPLE: {
+		size_t i;
+		for (i = 0; i < self->a_multiple.m_astc; ++i) {
+			if (ast_contains_return(self->a_multiple.m_astv[i]))
+				goto yes;
+		}
+		goto no;
+	}
+
+	case AST_RETURN:
+		return true;
+
+	case AST_YIELD:
+	case AST_THROW:
+	case AST_BOOL:
+	case AST_EXPAND:
+	case AST_OPERATOR_FUNC:
+		if (!self->a_return)
+			goto no;
+		return ast_contains_return(self->a_return);
+
+	case AST_TRY: {
+		size_t i;
+		if (ast_contains_return(self->a_try.t_guard))
+			goto yes;
+		for (i = 0; i < self->a_try.t_catchc; ++i) {
+			if (self->a_try.t_catchv[i].ce_mask &&
+			    ast_contains_return(self->a_try.t_catchv[i].ce_mask))
+				goto yes;
+			if (ast_contains_return(self->a_try.t_catchv[i].ce_code))
+				goto yes;
+		}
+		goto no;
+	}	break;
+
+	case AST_LOOP:
+		if (self->a_loop.l_cond &&
+		    ast_contains_return(self->a_loop.l_cond))
+			goto yes;
+		if (self->a_loop.l_next &&
+		    ast_contains_return(self->a_loop.l_next))
+			goto yes;
+		if (self->a_loop.l_loop &&
+		    ast_contains_return(self->a_loop.l_loop))
+			goto yes;
+		goto no;
+
+	case AST_CONDITIONAL:
+		if (ast_contains_return(self->a_conditional.c_cond))
+			goto yes;
+		if (self->a_conditional.c_tt &&
+		    self->a_conditional.c_tt != self->a_conditional.c_cond &&
+		    ast_contains_return(self->a_conditional.c_tt))
+			goto yes;
+		if (self->a_conditional.c_ff &&
+		    self->a_conditional.c_ff != self->a_conditional.c_cond &&
+		    ast_contains_return(self->a_conditional.c_ff))
+			goto yes;
+		goto no;
+
+	case AST_OPERATOR:
+		if (self->a_operator.o_op0) {
+			if (ast_contains_return(self->a_operator.o_op0))
+				goto yes;
+			if (self->a_operator.o_op1) {
+				if (ast_contains_return(self->a_operator.o_op1))
+					goto yes;
+				if (self->a_operator.o_op2) {
+					if (ast_contains_return(self->a_operator.o_op2))
+						goto yes;
+					if (self->a_operator.o_op3) {
+						if (ast_contains_return(self->a_operator.o_op3))
+							goto yes;
+					}
+				}
+			}
+		}
+		goto no;
+
+	case AST_ACTION:
+		switch (AST_FACTION_ARGC_GT(self->a_flag)) {
+
+		case 3:
+			if (ast_contains_return(self->a_action.a_act0))
+				goto yes;
+			ATTR_FALLTHROUGH
+		case 2:
+			if (ast_contains_return(self->a_action.a_act0))
+				goto yes;
+			ATTR_FALLTHROUGH
+		case 1:
+			if (ast_contains_return(self->a_action.a_act0))
+				goto yes;
+			ATTR_FALLTHROUGH
+		default: break;
+		}
+		goto no;
+
+	case AST_CLASS: {
+		size_t i;
+		if (self->a_class.c_base &&
+		    ast_contains_return(self->a_class.c_base))
+			goto yes;
+		if (ast_contains_return(self->a_class.c_desc))
+			goto yes;
+		for (i = 0; i < self->a_class.c_memberc; ++i) {
+			if (ast_contains_return(self->a_class.c_memberv[i].cm_ast))
+				goto yes;
+		}
+	}	goto no;
+
+	case AST_SWITCH: {
+		struct text_label *iter;
+		if (ast_contains_return(self->a_switch.s_expr))
+			goto yes;
+		if (ast_contains_return(self->a_switch.s_block))
+			goto yes;
+		/* Don't forget to check the case expressions, too. */
+		iter = self->a_switch.s_cases;
+		for (; iter; iter = iter->tl_next) {
+			if (ast_contains_return(iter->tl_expr))
+				goto yes;
+		}
+	}	goto no;
+
+	case AST_ASSEMBLY: {
+		size_t i;
+		if (self->a_flag & AST_FASSEMBLY_NORETURN)
+			goto yes;
+
+		/* Check user-assembly operands. */
+		for (i = 0; i < self->a_assembly.as_num_i + self->a_assembly.as_num_i; ++i) {
+			if (ast_contains_return(self->a_assembly.as_opv[i].ao_expr))
+				goto yes;
+		}
+	}	goto no;
+
+	default: break;
+	}
+	/* fallback: Any branch we don't recognize may point to a GOTO branch.
+	 *        -> While we should be able to recognize everything, we still
+	 *           got to be as future-proof as possible! */
+yes:
+	return true;
+}
+
 DECL_END
 
 #endif /* !GUARD_DEEMON_COMPILER_OPTIMIZE_TRAITS_C */

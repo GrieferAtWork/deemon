@@ -1830,10 +1830,38 @@ define_operator:
 			}
 			ast_annotations_get(&annotations);
 			if (tok == '=') {
-				if ((operator_name >= AST_OPERATOR_MIN &&
-				     operator_name <= AST_OPERATOR_MAX) &&
-				    WARN(W_AMBIGUOUS_OPERATOR_ASSIGNMENT))
-					goto err_anno;
+				if (operator_name >= AST_OPERATOR_MIN &&
+				    operator_name <= AST_OPERATOR_MAX_FOR_CLASS) {
+					if (WARN(W_AMBIGUOUS_OPERATOR_ASSIGNMENT))
+						goto err_anno;
+					switch (operator_name) {
+					case AST_OPERATOR_POS_OR_ADD:
+						operator_name = OPERATOR_ADD;
+						break;
+					case AST_OPERATOR_NEG_OR_SUB:
+						operator_name = OPERATOR_SUB;
+						break;
+					case AST_OPERATOR_GETITEM_OR_SETITEM:
+						operator_name = OPERATOR_GETITEM;
+						break;
+					case AST_OPERATOR_GETRANGE_OR_SETRANGE:
+						operator_name = OPERATOR_GETRANGE;
+						break;
+					case AST_OPERATOR_GETATTR_OR_SETATTR:
+						operator_name = OPERATOR_GETATTR;
+						break;
+					case AST_OPERATOR_FOR:
+						operator_name = OPERATOR_ITERSELF;
+						break;
+					case AST_OPERATOR_STR_OR_PRINT:
+						operator_name = OPERATOR_STR;
+						break;
+					case AST_OPERATOR_REPR_OR_PRINTREPR:
+						operator_name = OPERATOR_REPR;
+						break;
+					default: break;
+					}
+				}
 
 				/* Operator callback assignment. */
 				if unlikely(yield() < 0)
@@ -1993,7 +2021,7 @@ got_operator_ast:
 			ASSERT(operator_ast->a_type == AST_FUNCTION);
 			ASSERT(operator_ast->a_function.f_scope);
 			if (operator_name >= AST_OPERATOR_MIN &&
-			    operator_name <= AST_OPERATOR_MAX) {
+			    operator_name <= AST_OPERATOR_MAX_FOR_CLASS) {
 				/* Special case: determine the actual operator from
 				 *               the argument count of the function. */
 				uint16_t argc = operator_ast->a_function.f_scope->bs_argc_min;
@@ -2027,6 +2055,18 @@ got_operator_ast:
 					operator_name = argc == 1
 					                ? OPERATOR_GETATTR
 					                : OPERATOR_SETATTR;
+					break;
+
+				case AST_OPERATOR_STR_OR_PRINT:
+					operator_name = argc == 1
+					                ? CLASS_OPERATOR_PRINT
+					                : OPERATOR_STR;
+					break;
+
+				case AST_OPERATOR_REPR_OR_PRINTREPR:
+					operator_name = argc == 1
+					                ? CLASS_OPERATOR_PRINTREPR
+					                : OPERATOR_REPR;
 					break;
 
 				default: break;

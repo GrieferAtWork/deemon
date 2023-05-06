@@ -2126,16 +2126,16 @@ do_print_adjstack:
 	}	break;
 
 	case ASM16_OPERATOR: {
-		struct opinfo const *info;
+		char const *operator_name;
 		imm = READ_imm16(iter);
 		goto do_print_operator;
 	case ASM_OPERATOR:
 		imm = READ_imm8(iter);
 do_print_operator:
-		info = Dee_OperatorInfo(NULL, (uint16_t)imm);
-		if (info) {
+		operator_name = libdisasm_get_operator_sname((uint16_t)imm);
+		if (operator_name) {
 			printf("__%s__, " PREFIX_STACKEFFECT "%" PRFu8,
-			       info->oi_sname, READ_imm8(iter));
+			       operator_name, READ_imm8(iter));
 		} else {
 			printf("%" PRFu16 ", " PREFIX_STACKEFFECT "%" PRFu8,
 			       imm, READ_imm8(iter));
@@ -2143,15 +2143,15 @@ do_print_operator:
 	}	break;
 
 	case ASM16_OPERATOR_TUPLE: {
-		struct opinfo const *info;
+		char const *operator_name;
 		imm = READ_imm16(iter);
 		goto do_print_operator_tuple;
 	case ASM_OPERATOR_TUPLE:
 		imm = READ_imm8(iter);
 do_print_operator_tuple:
-		info = Dee_OperatorInfo(NULL, (uint16_t)imm);
-		if (info) {
-			printf("__%s__, pop", info->oi_sname);
+		operator_name = libdisasm_get_operator_sname((uint16_t)imm);
+		if (operator_name) {
+			printf("__%s__, pop", operator_name);
 		} else {
 			printf("%" PRFu16 ", pop", imm);
 		}

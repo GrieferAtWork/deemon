@@ -173,6 +173,7 @@ EXPORTS
 	_DeeFileBuffer_SyncTTYs@4=DeeFileBuffer_SyncTTYs@4
 	_DeeFileWriter_GetString@4=DeeFileWriter_GetString@4
 	_DeeFile_Close@4=DeeFile_Close@4
+	_DeeFile_ClosePrinter@4=DeeFile_ClosePrinter@4
 	_DeeFile_DefaultStd@4=DeeFile_DefaultStd@4
 	_DeeFile_Filename@4=DeeFile_Filename@4
 	_DeeFile_GetSize@4=DeeFile_GetSize@4
@@ -185,6 +186,7 @@ EXPORTS
 	_DeeFile_OpenFd@16=DeeFile_OpenFd@16
 	_DeeFile_OpenObjectBuffer@12=DeeFile_OpenObjectBuffer@12
 	_DeeFile_OpenObjectMemory@12=DeeFile_OpenObjectMemory@12
+	_DeeFile_OpenPrinter@8=DeeFile_OpenPrinter@8
 	_DeeFile_OpenRoMemory@8=DeeFile_OpenRoMemory@8
 	_DeeFile_OpenString@12=DeeFile_OpenString@12
 	_DeeFile_OpenWriter@0=DeeFile_OpenWriter@0

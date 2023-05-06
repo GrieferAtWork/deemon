@@ -334,6 +334,7 @@
 		<ClCompile Include="..\src\deemon\compiler\optimize\assumes.c" />
 		<ClCompile Include="..\src\deemon\compiler\optimize\constant_traits.c" />
 		<ClCompile Include="..\src\deemon\compiler\optimize\opt_action.c" />
+		<ClCompile Include="..\src\deemon\compiler\optimize\opt_class.c" />
 		<ClCompile Include="..\src\deemon\compiler\optimize\opt_conditional.c" />
 		<ClCompile Include="..\src\deemon\compiler\optimize\opt_loop.c" />
 		<ClCompile Include="..\src\deemon\compiler\optimize\opt_multiple.c" />

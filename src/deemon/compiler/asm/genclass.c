@@ -84,6 +84,7 @@ INTERN WUNUSED NONNULL((1)) int
 		if (asm_gclass())
 			goto err;
 	}
+
 	/* At this point, the new class type has already been created.
 	 * Now to store it in its own symbol, before moving on to
 	 * initialize all of the members saved within the class
@@ -102,6 +103,7 @@ INTERN WUNUSED NONNULL((1)) int
 				goto err;
 		}
 	}
+
 	/* Now move on to initialize all of the members. */
 	for (i = 0; i < class_ast->a_class.c_memberc; ++i) {
 		struct class_member *member;
@@ -118,6 +120,7 @@ INTERN WUNUSED NONNULL((1)) int
 				goto err;
 		}
 	}
+
 	/* And that's already it! - The new class is complete. */
 	if (!(gflags & ASM_G_FPUSHRES) && asm_gpop())
 		goto err;

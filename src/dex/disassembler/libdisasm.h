@@ -90,6 +90,12 @@ libdisasm_printcode(dformatprinter printer, void *arg,
 #define PCODE_FNOADDRESS    0x4000 /* FLAG: Do not print instruction addresses. */
 #define PCODE_FNOBYTES      0x8000 /* FLAG: Do not include raw text bytes in output. */
 
+
+/* Return the S-name (e.g. `add') of an operator.
+ * Returns `NULL' when the name cannot be determined. */
+INTDEF WUNUSED char const *DCALL
+libdisasm_get_operator_sname(uint16_t operator_id);
+
 DECL_END
 
 #endif /* !GUARD_DEX_FS_LIBDISASM_H */

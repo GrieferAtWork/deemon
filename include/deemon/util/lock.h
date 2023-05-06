@@ -457,6 +457,49 @@ DFUNDEF WUNUSED NONNULL((1)) int (DCALL Dee_shared_rwlock_waitwrite_timed)(Dee_s
 #define Dee_shared_rwlock_waitwrite(self) (Dee_shared_rwlock_canwrite(self) ? 0 : (Dee_shared_rwlock_waitwrite)(self))
 #endif /* !__NO_builtin_expect */
 
+/* Blocking acquire/wait-for a given lock without blocking */
+LOCAL NONNULL((1)) void
+(DCALL Dee_shared_rwlock_read_noint)(Dee_shared_rwlock_t *__restrict self) {
+	while (!Dee_shared_rwlock_tryread(self)) {
+		_Dee_shared_rwlock_mark_waiting(self);
+		DeeFutex_WaitPtrNoInt(&self->srw_lock.arw_lock, (uintptr_t)-1);
+	}
+}
+
+LOCAL NONNULL((1)) void
+(DCALL Dee_shared_rwlock_write_noint)(Dee_shared_rwlock_t *__restrict self) {
+	for (;;) {
+		uintptr_t lockword = __hybrid_atomic_load(&self->srw_lock.arw_lock, __ATOMIC_ACQUIRE);
+		if (lockword == 0) {
+			if (__hybrid_atomic_cmpxch(&self->srw_lock.arw_lock, 0, (uintptr_t)-1,
+			                           __ATOMIC_ACQUIRE, __ATOMIC_RELAXED))
+				break;
+		} else {
+			_Dee_shared_rwlock_mark_waiting(self);
+			DeeFutex_WaitPtrNoInt(&self->srw_lock.arw_lock, lockword);
+		}
+	}
+}
+
+LOCAL NONNULL((1)) void
+(DCALL Dee_shared_rwlock_waitread_noint)(Dee_shared_rwlock_t *__restrict self) {
+	while (!Dee_shared_rwlock_canread(self)) {
+		_Dee_shared_rwlock_mark_waiting(self);
+		DeeFutex_WaitPtrNoInt(&self->srw_lock.arw_lock, (uintptr_t)-1);
+	}
+}
+
+LOCAL NONNULL((1)) void
+(DCALL Dee_shared_rwlock_waitwrite_noint)(Dee_shared_rwlock_t *__restrict self) {
+	for (;;) {
+		uintptr_t lockword = __hybrid_atomic_load(&self->srw_lock.arw_lock, __ATOMIC_ACQUIRE);
+		if (lockword == 0)
+			break;
+		_Dee_shared_rwlock_mark_waiting(self);
+		DeeFutex_WaitPtrNoInt(&self->srw_lock.arw_lock, lockword);
+	}
+}
+
 
 
 

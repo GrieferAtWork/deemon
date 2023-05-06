@@ -522,6 +522,34 @@ err:
 	return temp;
 }
 
+/* Return the S-name (e.g. `add') of an operator.
+ * Returns `NULL' when the name cannot be determined. */
+INTERN WUNUSED char const *DCALL
+libdisasm_get_operator_sname(uint16_t operator_id) {
+	char const *result;
+	struct opinfo const *info;
+	info = Dee_OperatorInfo(NULL, operator_id);
+	if (info) {
+		result = info->oi_sname;
+	} else {
+		result = NULL;
+		switch (operator_id) {
+		case CLASS_OPERATOR_SUPERARGS:
+			result = "superargs";
+			break;
+		case CLASS_OPERATOR_PRINT:
+			result = "print";
+			break;
+		case CLASS_OPERATOR_PRINTREPR:
+			result = "printrepr";
+			break;
+		default: break;
+		}
+	}
+	return result;
+}
+
+
 INTERN dssize_t DCALL
 libdisasm_printclass(dformatprinter printer, void *arg,
                      DeeClassDescriptorObject *__restrict self,
@@ -552,24 +580,19 @@ libdisasm_printclass(dformatprinter printer, void *arg,
 	{
 		bool has_operators = false;
 		for (i = 0; i <= self->cd_clsop_mask; ++i) {
-			struct opinfo const *info;
-			if (self->cd_clsop_list[i].co_name == (uint16_t)-1)
+			uint16_t op_name = self->cd_clsop_list[i].co_name;
+			char const *op_name_str;
+			if (op_name == (uint16_t)-1)
 				continue;
 			if (!has_operators) {
 				INVOKE(DeeFormat_Printf(printer, arg, "%s    operators = {\n", line_prefix));
 				has_operators = true;
 			}
-			info = Dee_OperatorInfo(NULL, self->cd_clsop_list[i].co_name);
-			if (info) {
-				INVOKE(DeeFormat_Printf(printer, arg, "%s        %s = %" PRFu16 "\n",
-				                        line_prefix, info->oi_sname,
-				                        self->cd_clsop_list[i].co_addr));
-			} else {
-				INVOKE(DeeFormat_Printf(printer, arg, "%s        %#" PRFx16 " = %" PRFu16 "\n",
-				                        line_prefix,
-				                        self->cd_clsop_list[i].co_name,
-				                        self->cd_clsop_list[i].co_addr));
-			}
+			op_name_str = libdisasm_get_operator_sname(op_name);
+			INVOKE(op_name_str ? DeeFormat_Printf(printer, arg, "%s        %s = %" PRFu16 "\n",
+			                                      line_prefix, op_name_str, self->cd_clsop_list[i].co_addr)
+			                   : DeeFormat_Printf(printer, arg, "%s        %#" PRFx16 " = %" PRFu16 "\n",
+			                                      line_prefix, op_name, self->cd_clsop_list[i].co_addr));
 		}
 		if (has_operators)
 			INVOKE(DeeFormat_Printf(printer, arg, "%s    }\n", line_prefix));

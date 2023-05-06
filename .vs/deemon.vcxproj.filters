@@ -971,6 +971,9 @@
 		<ClCompile Include="..\src\deemon\compiler\optimize\opt_action.c">
 			<Filter>src\compiler\optimize</Filter>
 		</ClCompile>
+		<ClCompile Include="..\src\deemon\compiler\optimize\opt_class.c">
+			<Filter>src\compiler\optimize</Filter>
+		</ClCompile>
 		<ClCompile Include="..\src\deemon\compiler\optimize\opt_conditional.c">
 			<Filter>src\compiler\optimize</Filter>
 		</ClCompile>

@@ -287,6 +287,9 @@ ast_parse_operator_name(uint16_t features);
 
 /* Special class operators. */
 #define AST_OPERATOR_FOR                  0xf005 /* `for' */
+#define AST_OPERATOR_STR_OR_PRINT         0xf006 /* `str' */
+#define AST_OPERATOR_REPR_OR_PRINTREPR    0xf007 /* `repr' */
+#define AST_OPERATOR_MAX_FOR_CLASS        0xf007
 
 /* Build a call to an operator, given the operator's name and arguments.
  * @param: name:  One of `OPERATOR_*' or `AST_OPERATOR_*'

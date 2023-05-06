@@ -324,18 +324,8 @@ again:
 	case AST_SWITCH:
 		return ast_optimize_switch(stack, self, result_used);
 
-	case AST_CLASS: {
-		size_t i;
-		if (self->a_class.c_base &&
-		    ast_optimize(stack, self->a_class.c_base, true))
-			goto err;
-		if (ast_optimize(stack, self->a_class.c_desc, true))
-			goto err;
-		for (i = 0; i < self->a_class.c_memberc; ++i) {
-			if (ast_optimize(stack, self->a_class.c_memberv[i].cm_ast, true))
-				goto err;
-		}
-	}	break;
+	case AST_CLASS:
+		return ast_optimize_class(stack, self, result_used);
 
 	case AST_ASSEMBLY: {
 		struct asm_operand *iter, *end;

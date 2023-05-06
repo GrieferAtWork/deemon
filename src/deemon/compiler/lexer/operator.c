@@ -136,19 +136,23 @@ ast_build_operator(uint16_t name, uint16_t flags,
 		switch (argc) {
 
 		case 1:
-			return ast_operator1(name, flags, args->a_multiple.m_astv[0]);
+			return ast_operator1(name, flags,
+			                     args->a_multiple.m_astv[0]);
 
 		case 2:
-			return ast_operator2(name, flags, args->a_multiple.m_astv[0],
+			return ast_operator2(name, flags,
+			                     args->a_multiple.m_astv[0],
 			                     args->a_multiple.m_astv[1]);
 
 		case 3:
-			return ast_operator3(name, flags, args->a_multiple.m_astv[0],
+			return ast_operator3(name, flags,
+			                     args->a_multiple.m_astv[0],
 			                     args->a_multiple.m_astv[1],
 			                     args->a_multiple.m_astv[2]);
 
 		case 4:
-			return ast_operator4(name, flags, args->a_multiple.m_astv[0],
+			return ast_operator4(name, flags,
+			                     args->a_multiple.m_astv[0],
 			                     args->a_multiple.m_astv[1],
 			                     args->a_multiple.m_astv[2],
 			                     args->a_multiple.m_astv[3]);
@@ -161,8 +165,9 @@ ast_build_operator(uint16_t name, uint16_t flags,
 		/* Another special case: The argument AST is a constant-expression tuple. */
 		size_t argc = DeeTuple_SIZE(args->a_constexpr);
 		if likely(argc < 4 && argc != 0) {
-			DeeObject *tuple        = args->a_constexpr;
-			DREF struct ast *result = NULL, *argv[4] = { NULL, NULL, NULL, NULL };
+			DeeObject *tuple         = args->a_constexpr;
+			DREF struct ast *result  = NULL;
+			DREF struct ast *argv[4] = { NULL, NULL, NULL, NULL };
 			if (!convert_operator_name(&name, argc))
 				goto do_generic;
 			if (argc >= 4 && (argv[3] = ast_constexpr(DeeTuple_GET(tuple, 3))) == NULL)
@@ -230,6 +235,7 @@ do_generic:
 err:
 		return NULL;
 	}
+
 	/* Encode a regular, old varargs operator. */
 	return ast_operator1(name, flags | AST_OPERATOR_FVARARGS, args);
 }
@@ -486,10 +492,6 @@ ast_parse_operator_name(uint16_t features) {
 		result = OPERATOR_DEC;
 		goto done_y1;
 
-	case KWD_repr:
-		result = OPERATOR_REPR;
-		goto done_y1;
-
 	case TOK_EQUAL:
 		result = OPERATOR_EQ;
 		goto done_y1;
@@ -579,7 +581,19 @@ parse_string:
 			goto err;
 		ATTR_FALLTHROUGH
 	case KWD_str:
+		if (features & P_OPERATOR_FCLASS) {
+			result = AST_OPERATOR_STR_OR_PRINT;
+			goto done_y1;
+		}
 		result = OPERATOR_STR;
+		goto done_y1;
+
+	case KWD_repr:
+		if (features & P_OPERATOR_FCLASS) {
+			result = AST_OPERATOR_REPR_OR_PRINTREPR;
+			goto done_y1;
+		}
+		result = OPERATOR_REPR;
 		goto done_y1;
 
 	case '[':
@@ -645,11 +659,18 @@ parse_string:
 		}
 		goto done;
 
+	case KWD_for:
+		if (features & P_OPERATOR_FCLASS) {
+			result = AST_OPERATOR_FOR;
+			goto done_y1;
+		}
+		goto default_case;
+
 	default: {
 		char const *name_begin;
 		size_t name_size;
 		uint32_t name;
-	default_case:
+default_case:
 		if (!TPP_ISKEYWORD(tok))
 			goto unknown;
 		name_begin = token.t_kwd->k_name;
@@ -659,6 +680,7 @@ parse_string:
 		 * ever get used, the overhead of manually checking for them is
 		 * smaller, causing me to opt for this route instead. */
 		switch (name_size) {
+
 		case 3:
 		case 4:
 			name = UNALIGNED_GET32(name_begin);
@@ -676,10 +698,6 @@ parse_string:
 				result = OPERATOR_ITERSELF;
 				goto done_y1;
 			}
-			if (name == ENCODE_INT32('f', 'o', 'r', 0) && (features & P_OPERATOR_FCLASS)) {
-				result = AST_OPERATOR_FOR;
-				goto done_y1;
-			}
 			if (name == ENCODE_INT32('m', 'o', 'v', 'e')) {
 				if unlikely(yield() < 0)
 					goto err;
@@ -695,6 +713,7 @@ parse_string:
 				goto done_y1;
 			}
 			break;
+
 #ifndef __OPTIMIZE_SIZE__
 		case 5:
 			name = UNALIGNED_GET32(name_begin);
@@ -707,6 +726,7 @@ parse_string:
 				goto done_y1;
 			}
 			break;
+
 		case 8:
 			if (UNALIGNED_GET32(name_begin + 0) == ENCODE_INT32('c', 'o', 'n', 't') &&
 			    UNALIGNED_GET32(name_begin + 4) == ENCODE_INT32('a', 'i', 'n', 's')) {
@@ -714,6 +734,7 @@ parse_string:
 				goto done_y1;
 			}
 			break;
+
 		case 10:
 			if (UNALIGNED_GET32(name_begin + 0) == ENCODE_INT32('d', 'e', 's', 't') &&
 			    UNALIGNED_GET32(name_begin + 4) == ENCODE_INT32('r', 'u', 'c', 't') &&
@@ -722,6 +743,7 @@ parse_string:
 				goto done_y1;
 			}
 			break;
+
 		case 11:
 			if (UNALIGNED_GET32(name_begin + 0) == ENCODE_INT32('c', 'o', 'n', 's') &&
 			    UNALIGNED_GET32(name_begin + 4) == ENCODE_INT32('t', 'r', 'u', 'c') &&
@@ -731,6 +753,7 @@ parse_string:
 			}
 			break;
 #endif /* !__OPTIMIZE_SIZE__ */
+
 		default: break;
 		}
 		while (name_size && *name_begin == '_')
