@@ -360,7 +360,7 @@ DECL_BEGIN
 
 /* Figure out if we need the OS futex wait list. */
 #undef DeeFutex_USES_OS_FUTEX_WAIT_LIST
-#if (defined(DeeFutex_USE_os_futex_32_only) || \
+#if (defined(DeeFutex_USE_os_futex_32_only) || defined(DeeFutex_USE_os_futex) || \
      defined(DeeFutex_USE_WaitOnAddress_OR_CONDITION_VARIABLE_AND_SRWLOCK_OR_CreateSemaphoreW))
 #define DeeFutex_USES_OS_FUTEX_WAIT_LIST
 #endif /* ... */
