@@ -978,23 +978,9 @@ decl_ast_parse_unary_head(struct decl_ast *__restrict self) {
 			goto err;
 		old_flags = TPPLexer_Current->l_flags;
 		TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTLF;
-		if (tok == '(') {
-			has_paren = true;
-			if unlikely(yield() < 0)
-				goto err_flags;
-		} else if (tok == KWD_pack) {
-			if unlikely(yield() < 0)
-				goto err_flags;
-			has_paren = tok == '(';
-			if (has_paren) {
-				if unlikely(yield() < 0)
-					goto err_flags;
-			}
-		} else {
-			if (WARN(W_EXPECTED_LPAREN_AFTER_ASM))
-				goto err_flags;
-			has_paren = false;
-		}
+		if (paren_begin(&has_paren, W_EXPECTED_LPAREN_AFTER_ASM))
+			goto err_flags;
+
 		/* Custom, user-defined encoding:
 		 * >> function foo(a: __asm__("?Dobject")) {
 		 * >>     ...
@@ -1013,10 +999,8 @@ decl_ast_parse_unary_head(struct decl_ast *__restrict self) {
 			self->da_type = DAST_NONE;
 		}
 		TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
-		if (has_paren) {
-			if (skip(')', W_EXPECTED_RPAREN_AFTER_ASM))
-				goto err_r;
-		}
+		if (paren_end(has_paren, W_EXPECTED_RPAREN_AFTER_ASM))
+			goto err_r;
 	}	break;
 
 	case KWD_none:
@@ -1228,23 +1212,8 @@ err_elemv_0:
 			goto err;
 		old_flags = TPPLexer_Current->l_flags;
 		TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTLF;
-		if (tok == '(') {
-			has_paren = true;
-			if unlikely(yield() < 0)
-				goto err_flags;
-		} else if (tok == KWD_pack) {
-			if unlikely(yield() < 0)
-				goto err_flags;
-			has_paren = tok == '(';
-			if (has_paren) {
-				if unlikely(yield() < 0)
-					goto err_flags;
-			}
-		} else {
-			if (WARN(W_EXPECTED_LPAREN_AFTER_NTH))
-				goto err_flags;
-			has_paren = false;
-		}
+		if (paren_begin(&has_paren, W_EXPECTED_LPAREN_AFTER_NTH))
+			goto err_flags;
 		nth_expr = ast_parse_expr(LOOKUP_SYM_NORMAL);
 		if unlikely(!nth_expr)
 			goto err_flags;
@@ -1260,10 +1229,8 @@ err_nth:
 		if (nth_expr->a_type != AST_CONSTEXPR &&
 		    WARN(W_EXPECTED_CONSTANT_AFTER_NTH))
 			goto err_nth;
-		if (has_paren) {
-			if (skip(')', W_EXPECTED_RPAREN_AFTER_NTH))
-				goto err_nth;
-		}
+		if (paren_end(has_paren, W_EXPECTED_RPAREN_AFTER_NTH))
+			goto err_nth;
 		if (TPP_ISKEYWORD(tok)) {
 			unsigned int nth_symbol = 0;
 			struct symbol *sym;

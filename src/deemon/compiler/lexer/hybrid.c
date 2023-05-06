@@ -170,19 +170,20 @@ ast_parse_if_hybrid(unsigned int *p_was_expression) {
 	struct ast_loc loc;
 	uint32_t old_flags;
 	unsigned int was_expression;
+	bool has_paren;
 	expect = current_tags.at_expect;
 	loc_here(&loc);
 	if unlikely(yield() < 0)
 		goto err;
 	old_flags = TPPLexer_Current->l_flags;
 	TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTLF;
-	if (skip('(', W_EXPECTED_LPAREN_AFTER_IF))
+	if (paren_begin(&has_paren, W_EXPECTED_LPAREN_AFTER_IF))
 		goto err_flags;
 	result = ast_parse_expr(LOOKUP_SYM_NORMAL);
 	TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
 	if unlikely(!result)
 		goto err;
-	if (skip(')', W_EXPECTED_RPAREN_AFTER_IF))
+	if (paren_end(has_paren, W_EXPECTED_RPAREN_AFTER_IF))
 		goto err;
 	tt_branch      = NULL;
 	was_expression = AST_PARSE_WASEXPR_MAYBE;

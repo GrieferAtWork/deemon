@@ -1074,31 +1074,14 @@ parse_constructor_initializers(struct class_maker *__restrict self) {
 			bool has_paren;
 			old_flags = TPPLexer_Current->l_flags;
 			TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTLF;
-			if (tok == KWD_pack) {
-				struct ast_loc packloc;
-				loc_here(&packloc);
-				if unlikely(yield() < 0)
-					goto err_flags;
-				if unlikely(tok != '(' && parser_warn_pack_used(&packloc))
-					goto err_flags;
-				has_paren = false;
-				temp = maybe_expression_begin();
-				if (temp <= 0) {
-					if unlikely(temp < 0)
-						goto err_flags;
-					goto done_superargs;
-				}
-			} else {
-				if (skip('(', W_EXPECTED_LPAREN_AFTER_SUPER_INIT))
-					goto err_flags;
-				has_paren = true;
-				if (tok == ')') {
-					/* Empty super-args argument list.
-					 * Since this is what the runtime will do by default in any case,
-					 * there's no point in us not simply optimizing for this case already
-					 * by just not generating a superargs operator. */
-					goto done_superargs;
-				}
+			if (paren_begin(&has_paren, W_EXPECTED_LPAREN_AFTER_SUPER_INIT))
+				goto err_flags;
+			if (has_paren && tok == ')') {
+				/* Empty super-args argument list.
+				 * Since this is what the runtime will do by default in any case,
+				 * there's no point in us not simply optimizing for this case already
+				 * by just not generating a superargs operator. */
+				goto done_superargs;
 			}
 			basescope_pop(); /* Pop the constructor scope. */
 			if unlikely(basescope_push())
@@ -1156,10 +1139,8 @@ err_flags_superargs_superkwds:
 				goto err_flags;
 done_superargs:
 			TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
-			if (has_paren) {
-				if (skip(')', W_EXPECTED_RPAREN_AFTER_SUPER_INIT))
-					goto err;
-			}
+			if (paren_end(has_paren, W_EXPECTED_RPAREN_AFTER_SUPER_INIT))
+				goto err;
 		} else {
 			struct symbol *init_symbol;
 			DREF struct ast *initializer_ast, *store_ast, *symbol_ast;

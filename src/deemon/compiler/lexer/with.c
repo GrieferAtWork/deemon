@@ -71,24 +71,8 @@ ast_parse_with(bool is_statement, bool allow_nonblock) {
 		goto err;
 	old_flags = TPPLexer_Current->l_flags;
 	TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTLF;
-
-	if (tok == '(') {
-		has_paren = true;
-		if unlikely(yield() < 0)
-			goto err_scope_flags;
-	} else if (tok == KWD_pack) {
-		if unlikely(yield() < 0)
-			goto err_scope_flags;
-		has_paren = tok == '(';
-		if (has_paren) {
-			if unlikely(yield() < 0)
-				goto err_scope_flags;
-		}
-	} else {
-		if (WARN(W_EXPECTED_LPARENT_AFTER_WITH))
-			goto err_scope_flags;
-		has_paren = false;
-	}
+	if (paren_begin(&has_paren, W_EXPECTED_LPARENT_AFTER_WITH))
+		goto err_scope_flags;
 
 	/* Parse the expression for the with.
 	 * NOTE: We always allow the user to declare variables in here,
@@ -100,10 +84,8 @@ ast_parse_with(bool is_statement, bool allow_nonblock) {
 	if unlikely(!result)
 		goto err_scope_flags;
 	TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
-	if (has_paren) {
-		if (skip(')', W_EXPECTED_RPARENT_AFTER_WITH))
-			goto err_scope_r;
-	}
+	if (paren_end(has_paren, W_EXPECTED_RPARENT_AFTER_WITH))
+		goto err_scope_r;
 
 	/* Create the symbol that's going to contain the with-expression. */
 	expression_sym = new_unnamed_symbol();
@@ -222,24 +204,8 @@ ast_parse_with_hybrid(unsigned int *p_was_expression) {
 		goto err;
 	old_flags = TPPLexer_Current->l_flags;
 	TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTLF;
-
-	if (tok == '(') {
-		has_paren = true;
-		if unlikely(yield() < 0)
-			goto err_scope_flags;
-	} else if (tok == KWD_pack) {
-		if unlikely(yield() < 0)
-			goto err_scope_flags;
-		has_paren = tok == '(';
-		if (has_paren) {
-			if unlikely(yield() < 0)
-				goto err_scope_flags;
-		}
-	} else {
-		if (WARN(W_EXPECTED_LPARENT_AFTER_WITH))
-			goto err_scope_flags;
-		has_paren = false;
-	}
+	if (paren_begin(&has_paren, W_EXPECTED_LPARENT_AFTER_WITH))
+		goto err_scope_flags;
 
 	/* Parse the expression for the with.
 	 * NOTE: We always allow the user to declare variables in here,
@@ -251,17 +217,17 @@ ast_parse_with_hybrid(unsigned int *p_was_expression) {
 	if unlikely(!result)
 		goto err_scope_flags;
 	TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
-	if (has_paren) {
-		if (skip(')', W_EXPECTED_RPARENT_AFTER_WITH))
-			goto err_scope_r;
-	}
+	if (paren_end(has_paren, W_EXPECTED_RPARENT_AFTER_WITH))
+		goto err_scope_r;
 
 	/* Create the symbol that's going to contain the with-expression. */
 	expression_sym = new_unnamed_symbol();
 	if unlikely(!expression_sym)
 		goto err_scope_r;
-	/* Use s stack variable. */
+
+	/* Use a stack variable. */
 	expression_sym->s_type = SYMBOL_TYPE_STACK;
+
 	/* Generate the store expression. */
 	other = ast_setddi(ast_sym(expression_sym), &loc);
 	if unlikely(!other)
@@ -272,6 +238,7 @@ ast_parse_with_hybrid(unsigned int *p_was_expression) {
 	if unlikely(!merge)
 		goto err_scope;
 	result = merge;
+
 	/* At this point, we've written the expression into a
 	 * symbol, which we can access normally from now on. */
 	/* Create a vector that's going to be used for the AST_MULTIPLE:
@@ -300,6 +267,7 @@ ast_parse_with_hybrid(unsigned int *p_was_expression) {
 	merge = ast_setddi(ast_sym(expression_sym), &loc);
 	if unlikely(!merge)
 		goto err_result_v_1_r;
+
 	/* Invoke the leave operator on the symbol. */
 	other = ast_operator1(OPERATOR_LEAVE, AST_OPERATOR_FNORMAL, merge);
 	ast_decref(merge);

@@ -265,6 +265,8 @@ again:
 		DREF struct ast *tt_branch;
 		DREF struct ast *ff_branch;
 		uint16_t expect;
+		bool has_paren;
+
 		/* If-statement. */
 		loc_here(&loc);
 		expect = current_tags.at_expect;
@@ -274,7 +276,7 @@ again:
 			goto err;
 		old_flags = TPPLexer_Current->l_flags;
 		TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTLF;
-		if (skip('(', W_EXPECTED_LPAREN_AFTER_IF))
+		if (paren_begin(&has_paren, W_EXPECTED_LPAREN_AFTER_IF))
 			goto err_flags;
 		result = ast_parse_comma(AST_COMMA_NORMAL |
 		                         AST_COMMA_ALLOWVARDECLS,
@@ -283,7 +285,7 @@ again:
 		if unlikely(!result)
 			goto err_flags;
 		TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
-		if (skip(')', W_EXPECTED_RPAREN_AFTER_IF))
+		if (paren_end(has_paren, W_EXPECTED_RPAREN_AFTER_IF))
 			goto err_r;
 		tt_branch = ast_parse_statement(false);
 		if unlikely(!tt_branch)
@@ -517,12 +519,13 @@ do_else_branch:
 		DREF struct ast *loop;
 		int32_t type;
 		bool has_scope;
+		bool has_paren;
 		loc_here(&loc);
 		if unlikely(yield() < 0)
 			goto err;
 		old_flags = TPPLexer_Current->l_flags;
 		TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTLF;
-		if (skip('(', W_EXPECTED_LPAREN_AFTER_FOR))
+		if (paren_begin(&has_paren, W_EXPECTED_LPAREN_AFTER_FOR))
 			goto err_flags;
 		has_scope = false;
 		if (tok != ';') {
@@ -546,7 +549,7 @@ do_else_branch:
 			ast_decref(iter_or_next);
 			iter_or_next = merge;
 		}
-		if (skip(')', W_EXPECTED_RPAREN_AFTER_FOR))
+		if (paren_end(has_paren, W_EXPECTED_RPAREN_AFTER_FOR))
 			goto err_loop;
 
 		loop = ast_parse_statement(allow_nonblock);
@@ -597,12 +600,13 @@ err_loop:
 		DREF struct ast *foreach_elem;
 		DREF struct ast *foreach_iter;
 		DREF struct ast *foreach_loop;
+		bool has_paren;
 		loc_here(&loc);
 		if unlikely(yield() < 0)
 			goto err;
 		old_flags = TPPLexer_Current->l_flags;
 		TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTLF;
-		if (skip('(', W_EXPECTED_LPAREN_AFTER_FOR))
+		if (paren_begin(&has_paren, W_EXPECTED_LPAREN_AFTER_FOR))
 			goto err_flags;
 		if unlikely(scope_push())
 			goto err_flags;
@@ -617,7 +621,7 @@ err_loop:
 		if unlikely(!foreach_iter)
 			goto err_foreach_elem;
 		TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
-		if (skip(')', W_EXPECTED_RPAREN_AFTER_FOR))
+		if (paren_end(has_paren, W_EXPECTED_RPAREN_AFTER_FOR))
 			goto err_foreach_iter;
 		foreach_loop = ast_parse_statement(allow_nonblock);
 		if unlikely(!foreach_loop)
@@ -651,12 +655,14 @@ err_foreach_elem:
 
 	case KWD_do: {
 		DREF struct ast *cond;
+		bool has_paren;
 		loc_here(&loc);
 		if unlikely(yield() < 0)
 			goto err;
 		result = ast_parse_statement(false);
 		if unlikely(!result)
 			goto err;
+
 		/* Allow tags before the `while' keyword (forward-compatibility...) */
 		if unlikely(ast_tags_clear())
 			goto err_r;
@@ -670,11 +676,11 @@ err_foreach_elem:
 			goto err_r;
 		old_flags = TPPLexer_Current->l_flags;
 		TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTLF;
-		if (skip('(', W_EXPECTED_LPAREN_AFTER_WHILE))
+		if (paren_begin(&has_paren, W_EXPECTED_LPAREN_AFTER_WHILE))
 			goto err_r_flags;
 		cond = ast_parse_expr(LOOKUP_SYM_NORMAL);
 		TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
-		if (skip(')', W_EXPECTED_RPAREN_AFTER_WHILE))
+		if (paren_end(has_paren, W_EXPECTED_RPAREN_AFTER_WHILE))
 			goto err_r;
 		merge = ast_setddi(ast_loop(AST_FLOOP_POSTCOND, cond, NULL, result), &loc);
 		ast_decref(result);
@@ -690,6 +696,7 @@ err_foreach_elem:
 
 	case KWD_while: {
 		DREF struct ast *loop;
+		bool has_paren;
 		loc_here(&loc);
 		if unlikely(scope_push() < 0)
 			goto err;
@@ -697,7 +704,7 @@ err_foreach_elem:
 			goto err;
 		old_flags = TPPLexer_Current->l_flags;
 		TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTLF;
-		if (skip('(', W_EXPECTED_LPAREN_AFTER_WHILE))
+		if (paren_begin(&has_paren, W_EXPECTED_LPAREN_AFTER_WHILE))
 			goto err_flags;
 		result = ast_parse_comma(AST_COMMA_NORMAL |
 		                         AST_COMMA_ALLOWVARDECLS,
@@ -706,7 +713,7 @@ err_foreach_elem:
 		if unlikely(!result)
 			goto err_flags;
 		TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
-		if (skip(')', W_EXPECTED_RPAREN_AFTER_WHILE))
+		if (paren_end(has_paren, W_EXPECTED_RPAREN_AFTER_WHILE))
 			goto err_r;
 		loop = ast_parse_statement(allow_nonblock);
 		if unlikely(!loop)
@@ -764,19 +771,28 @@ err_foreach_elem:
 		loc_here(&loc);
 		if unlikely(yield() < 0)
 			goto err;
-		if (tok == '(') {
+		if (tok == '(' || tok == KWD_pack) {
+			bool has_paren;
 			/* Del with parenthesis (like in expressions)
 			 * For that reason, don't allow allow the actual symbols being removed, either. */
 			old_flags = TPPLexer_Current->l_flags;
 			TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTLF;
+			has_paren = tok == '(';
 			if unlikely(yield() < 0)
 				goto err_flags;
+			if (!has_paren && tok == '(') {
+				has_paren = true;
+				if unlikely(yield() < 0)
+					goto err_flags;
+			}
 			result = ast_parse_del(LOOKUP_SYM_NORMAL);
 			if unlikely(!result)
 				goto err_flags;
 			TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
-			if (skip(')', W_EXPECTED_RPAREN_AFTER_DEL))
-				goto err_r;
+			if (has_paren) {
+				if (skip(')', W_EXPECTED_RPAREN_AFTER_DEL))
+					goto err_r;
+			}
 		} else {
 			result = ast_parse_del(LOOKUP_SYM_ALLOWDECL);
 			if unlikely(!result)
@@ -841,23 +857,8 @@ err_foreach_elem:
 			goto err;
 		old_flags = TPPLexer_Current->l_flags;
 		TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTLF;
-		if (tok == '(') {
-			has_paren = true;
-			if unlikely(yield() < 0)
-				goto err_flags;
-		} else if (tok == KWD_pack) {
-			if unlikely(yield() < 0)
-				goto err_flags;
-			has_paren = tok == '(';
-			if (has_paren) {
-				if unlikely(yield() < 0)
-					goto err_flags;
-			}
-		} else {
-			if (WARN(W_EXPECTED_LPAREN_AFTER_SWITCH))
-				goto err_flags;
-			has_paren = false;
-		}
+		if (paren_begin(&has_paren, W_EXPECTED_LPAREN_AFTER_SWITCH))
+			goto err_flags;
 
 		/* Parse the switch-expression (NOTE: Allow variable declarations). */
 		result = ast_parse_comma(AST_COMMA_NORMAL |
@@ -867,10 +868,8 @@ err_foreach_elem:
 		if unlikely(!result)
 			goto err_flags;
 		TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
-		if (has_paren) {
-			if (skip(')', W_EXPECTED_RPAREN_AFTER_SWITCH))
-				goto err_r;
-		}
+		if (paren_end(has_paren, W_EXPECTED_RPAREN_AFTER_SWITCH))
+			goto err_r;
 
 		/* Setup + activate switch-mode. */
 		old_scope_flags = current_basescope->bs_cflags;

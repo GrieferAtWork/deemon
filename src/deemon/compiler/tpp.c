@@ -813,6 +813,37 @@ err_r:
 }
 
 
+
+INTERN WUNUSED NONNULL((1)) int FCALL
+_parser_paren_begin(bool *__restrict p_has_paren, int wnum) {
+	ASSERT(tok != '(');
+	if (tok == KWD_pack) {
+		struct ast_loc packloc;
+		loc_here(&packloc);
+		if unlikely(yield() < 0)
+			goto err;
+		*p_has_paren = tok == '(';
+		if (*p_has_paren) {
+			if unlikely(yield() < 0)
+				goto err;
+		} else {
+			/* Warn about of use of `pack' (if done so outside
+			 * of a macro, and only if not followed by a `(') */
+			if unlikely(parser_warn_pack_used(&packloc))
+				goto err;
+		}
+	} else {
+		if unlikely(WARN(wnum))
+			goto err;
+		*p_has_paren = false;
+	}
+	return 0;
+err:
+	return -1;
+}
+
+
+
 DECL_END
 
 #endif /* !GUARD_DEEMON_COMPILER_TPP_C */

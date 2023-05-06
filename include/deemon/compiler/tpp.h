@@ -283,6 +283,15 @@ int skip(tok_t expected_tok, int wnum, ...);
 #define TPP_BREAKF()      TPPLexer_Current->l_flags = _old_flags
 #define TPP_POPF()        TPPLexer_Current->l_flags = _old_flags; }	__WHILE0
 
+INTDEF WUNUSED NONNULL((1)) int FCALL
+_parser_paren_begin(bool *__restrict p_has_paren, int wnum);
+#define paren_begin(p_has_paren, W_EXPECTED_LPAREN)   \
+	(likely(tok == '(')                               \
+	 ? (*(p_has_paren) = true, unlikely(yield() < 0)) \
+	 : unlikely(_parser_paren_begin(p_has_paren, W_EXPECTED_LPAREN)))
+#define paren_end(has_paren, W_EXPECTED_RPAREN) \
+	(likely(has_paren) && skip(')', W_EXPECTED_RPAREN))
+
 
 #ifndef __INTELLISENSE__
 #ifndef __NO_builtin_expect

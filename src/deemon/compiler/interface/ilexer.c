@@ -4398,7 +4398,6 @@ done:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 file_getfunctionmacrovariant(DeeCompilerItemObject *__restrict self) {
 	struct TPPFile *file;
-	uint32_t variant;
 	DREF DeeObject *result = NULL;
 	if (COMPILER_BEGIN(self->ci_compiler))
 		return NULL;
@@ -4408,8 +4407,26 @@ file_getfunctionmacrovariant(DeeCompilerItemObject *__restrict self) {
 		    !(file->f_macro.m_flags & TPP_MACROFILE_KIND_FUNCTION)) {
 			err_not_a_functionmacrofile(file);
 		} else {
-			variant = file->f_macro.m_flags & TPP_MACROFILE_MASK_FUNC_STARTCH;
-			result  = DeeString_Chr((uint8_t)(variant == TPP_MACROFILE_FUNC_START_LANGLE ? '<' : variant == TPP_MACROFILE_FUNC_START_LBRACE ? '{' : variant == TPP_MACROFILE_FUNC_START_LBRACKET ? '[' : '('));
+			char ch;
+			switch (file->f_macro.m_flags & TPP_MACROFILE_MASK_FUNC_STARTCH) {
+
+			case TPP_MACROFILE_FUNC_START_LANGLE: 
+				ch = '<';
+				break;
+
+			case TPP_MACROFILE_FUNC_START_LBRACE:
+				ch = '{';
+				break;
+
+			case TPP_MACROFILE_FUNC_START_LBRACKET:
+				ch = '[';
+				break;
+
+			default:
+				ch = '(';
+				break;
+			}
+			result = DeeString_Chr((uint8_t)ch);
 		}
 	}
 	COMPILER_END();

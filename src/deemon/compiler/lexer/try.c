@@ -177,11 +177,12 @@ do_realloc_catchv:
 			if unlikely(!handler->ce_code)
 				goto err_try;
 		} else {
+			bool has_paren;
 			bool is_new_scope = false;
 			struct symbol *guard_symbol;
 			old_flags = TPPLexer_Current->l_flags;
 			TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTLF;
-			if (skip('(', W_EXPECTED_LPAREN_AFTER_CATCH))
+			if (paren_begin(&has_paren, W_EXPECTED_LPAREN_AFTER_CATCH))
 				goto err_try_flags;
 			if (tok == TOK_DOTS) {
 				if unlikely(yield() < 0)
@@ -262,7 +263,7 @@ parse_catch_symbol:
 			}
 end_catch_handler:
 			TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
-			if (skip(')', W_EXPECTED_RPAREN_AFTER_CATCH))
+			if (paren_end(has_paren, W_EXPECTED_RPAREN_AFTER_CATCH))
 				goto err_try;
 			handler->ce_code = is_statement
 			                   ? ast_parse_statement(false)
@@ -372,11 +373,12 @@ do_realloc_catchv:
 			if unlikely(!handler->ce_code)
 				goto err_try;
 		} else {
+			bool has_paren;
 			bool is_new_scope = false;
 			struct symbol *guard_symbol;
 			old_flags = TPPLexer_Current->l_flags;
 			TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTLF;
-			if (skip('(', W_EXPECTED_LPAREN_AFTER_CATCH))
+			if (paren_begin(&has_paren, W_EXPECTED_LPAREN_AFTER_CATCH))
 				goto err_try_flags;
 			if (tok == TOK_DOTS) {
 				if unlikely(yield() < 0)
@@ -457,7 +459,7 @@ parse_catch_symbol:
 			}
 end_catch_handler:
 			TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
-			if (skip(')', W_EXPECTED_RPAREN_AFTER_CATCH))
+			if (paren_end(has_paren, W_EXPECTED_RPAREN_AFTER_CATCH))
 				goto err_try;
 			handler->ce_code = ast_parse_hybrid_secondary(&was_expression);
 			if unlikely(!handler->ce_code)
@@ -467,6 +469,7 @@ end_catch_handler:
 		}
 		++catchc;
 	}
+
 	/* Clear unused buffer memory. */
 	if (catchc != catcha) {
 		handler = (struct catch_expr *)Dee_TryReallocc(catchv, catchc,
@@ -474,12 +477,14 @@ end_catch_handler:
 		if likely(handler)
 			catchv = handler;
 	}
+
 	/* Create the new try-AST. */
 	merge = ast_setddi(ast_try(result, catchc, catchv), &loc);
 	if unlikely(!merge)
 		goto err_try;
 	ast_decref(result);
 	result = merge;
+
 	/* Warn if we didn't parse any handlers. */
 	if unlikely(unlikely(!catchc) &&
 	            WARN(W_EXPECTED_CATCH_OR_FINALLY_AFTER_TRY))

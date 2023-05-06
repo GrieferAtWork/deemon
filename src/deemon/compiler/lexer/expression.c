@@ -914,19 +914,20 @@ do_empty_cell:
 		DREF struct ast *tt_branch;
 		DREF struct ast *ff_branch;
 		uint16_t expect;
+		bool has_paren;
 		expect = current_tags.at_expect;
 		loc_here(&loc);
 		if unlikely(yield() < 0)
 			goto err;
 		old_flags = TPPLexer_Current->l_flags;
 		TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTLF;
-		if (skip('(', W_EXPECTED_LPAREN_AFTER_IF))
+		if (paren_begin(&has_paren, W_EXPECTED_LPAREN_AFTER_IF))
 			goto err_flags;
 		result = ast_parse_expr(LOOKUP_SYM_SECONDARY);
 		TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
 		if unlikely(!result)
 			goto err;
-		if (skip(')', W_EXPECTED_RPAREN_AFTER_IF))
+		if (paren_end(has_paren, W_EXPECTED_RPAREN_AFTER_IF))
 			goto err;
 		tt_branch = NULL;
 		if (tok != KWD_else && tok != KWD_elif) {
@@ -1305,22 +1306,24 @@ err_restore_pos:
 			goto err_r;
 		break;
 
-	case KWD_del:
+	case KWD_del: {
+		bool has_paren;
+
 		/* Delete expression. */
 		loc_here(&loc);
 		if unlikely(yield() < 0)
 			goto err;
 		old_flags = TPPLexer_Current->l_flags;
 		TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTLF;
-		if (skip('(', W_EXPECTED_LPAREN_AFTER_DEL))
+		if (paren_begin(&has_paren, W_EXPECTED_LPAREN_AFTER_DEL))
 			goto err_flags;
 		result = ast_putddi(ast_parse_del(lookup_mode & ~PARSE_UNARY_DISALLOW_CASTS), &loc);
 		if unlikely(!result)
 			goto err_flags;
 		TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
-		if (skip(')', W_EXPECTED_RPAREN_AFTER_DEL))
+		if (paren_end(has_paren, W_EXPECTED_RPAREN_AFTER_DEL))
 			goto err_r;
-		break;
+	}	break;
 
 	case KWD_with:
 		result = ast_parse_with(false, false);
@@ -1534,12 +1537,13 @@ err_begin_expr:
 			goto err_r;
 	}	break;
 
-	case KWD___nth:
+	case KWD___nth: {
+		bool has_paren;
 		if unlikely(yield() < 0)
 			goto err;
 		old_flags = TPPLexer_Current->l_flags;
 		TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTLF;
-		if (skip('(', W_EXPECTED_LPAREN_AFTER_NTH))
+		if (paren_begin(&has_paren, W_EXPECTED_LPAREN_AFTER_NTH))
 			goto err_flags;
 		result = ast_parse_expr(LOOKUP_SYM_SECONDARY);
 		if unlikely(!result)
@@ -1553,7 +1557,7 @@ err_begin_expr:
 		if (result->a_type != AST_CONSTEXPR &&
 		    WARN(W_EXPECTED_CONSTANT_AFTER_NTH))
 			goto err_r;
-		if (skip(')', W_EXPECTED_RPAREN_AFTER_NTH))
+		if (paren_end(has_paren, W_EXPECTED_RPAREN_AFTER_NTH))
 			goto err_r;
 		if (TPP_ISKEYWORD(tok)) {
 			unsigned int nth_symbol = 0;
@@ -1582,7 +1586,7 @@ err_begin_expr:
 			if (WARN(W_EXPECTED_KEYWORD_AFTER_NTH))
 				goto err_r;
 		}
-		break;
+	}	break;
 
 	case TOK_COLON_COLON:
 		if (WARN(W_DEPRECATED_GLOBAL_PREFIX))

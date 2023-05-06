@@ -163,6 +163,7 @@ asm_parse_operands(struct operand_list *__restrict list,
 			operand->ao_label = label_value;
 			operand->ao_type  = NULL;
 		} else {
+			bool has_paren;
 			if (tok == TOK_STRING ||
 			    (tok == TOK_CHAR && !HAS(EXT_CHARACTER_LITERALS))) {
 				operand_type = TPPLexer_ParseString();
@@ -173,28 +174,13 @@ asm_parse_operands(struct operand_list *__restrict list,
 					goto err;
 				operand_type = TPPString_NewEmpty();
 			}
-			if (tok == KWD_pack) {
-				struct ast_loc packloc;
-				loc_here(&packloc);
-				if unlikely(yield() < 0)
-					goto err_type;
-				if (tok == '(')
-					goto with_paren;
-				if unlikely(parser_warn_pack_used(&packloc))
-					goto err_type;
-				operand_value = ast_parse_expr(LOOKUP_SYM_NORMAL);
-				if unlikely(!operand_value)
-					goto err_type;
-			} else {
-with_paren:
-				if (skip('(', W_EXPECTED_LPAREN_BEFORE_OPERAND_VALUE))
-					goto err_type;
-				operand_value = ast_parse_expr(LOOKUP_SYM_NORMAL);
-				if unlikely(!operand_value)
-					goto err_type;
-				if (skip(')', W_EXPECTED_RPAREN_AFTER_OPERAND_VALUE))
-					goto err_value;
-			}
+			if (paren_begin(&has_paren, W_EXPECTED_LPAREN_BEFORE_OPERAND_VALUE))
+				goto err_type;
+			operand_value = ast_parse_expr(LOOKUP_SYM_NORMAL);
+			if unlikely(!operand_value)
+				goto err_type;
+			if (paren_end(has_paren, W_EXPECTED_RPAREN_AFTER_OPERAND_VALUE))
+				goto err_value;
 			operand = operand_list_add(list, type);
 			if unlikely(!operand)
 				goto err_value;
@@ -425,9 +411,14 @@ PRIVATE /*REF*/ struct TPPString *DCALL parse_brace_text(void) {
 		if unlikely(yield() < 0)
 			goto err_printer;
 		switch (tok) {
-		case 0: goto done;
-		case '(': ++paren_recursion; goto default_case;
-		case ')': --paren_recursion; goto default_case;
+		case 0:
+			goto done;
+		case '(':
+			++paren_recursion;
+			goto default_case;
+		case ')':
+			--paren_recursion;
+			goto default_case;
 		case '[':
 			if (paren_recursion == 0)
 				++bracket_recursion;
@@ -565,22 +556,8 @@ yield_prefix:
 	}
 	old_flags = TPPLexer_Current->l_flags;
 	TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTLF;
-	if (tok == KWD_pack) {
-		struct ast_loc packloc;
-		loc_here(&packloc);
-		if unlikely(yield() < 0)
-			goto err_flags;
-		if (tok == '(')
-			goto with_paren;
-		if unlikely(parser_warn_pack_used(&packloc))
-			goto err_flags;
-		has_paren = false;
-	} else {
-with_paren:
-		if (skip('(', W_EXPECTED_LPAREN_AFTER_ASM))
-			goto err_flags;
-		has_paren = true;
-	}
+	if (paren_begin(&has_paren, W_EXPECTED_LPAREN_AFTER_ASM))
+		goto err_flags;
 	loc_here(&loc); /* Use the assembly text for DDI information. */
 	if (tok == TOK_STRING ||
 	    (tok == TOK_CHAR && !HAS(EXT_CHARACTER_LITERALS))) {
@@ -678,10 +655,8 @@ with_paren:
 		}
 	}
 	TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
-	if (has_paren) {
-		if (skip(')', W_EXPECTED_RPAREN_AFTER_ASM))
-			goto err_text;
-	}
+	if (paren_end(has_paren, W_EXPECTED_RPAREN_AFTER_ASM))
+		goto err_text;
 	ASSERT(operands.ol_c ==
 	       operands.ol_count[OPERAND_TYPE_OUTPUT] +
 	       operands.ol_count[OPERAND_TYPE_INPUT] +
