@@ -202,7 +202,7 @@ PRIVATE WUNUSED NONNULL((1, 2)) int
 	while (str_code->a_type == AST_MULTIPLE) {
 		if (str_code->a_multiple.m_astc == 0)
 			goto done;
-		for (i = 0; i < str_code->a_multiple.m_astc - 2; ++i) {
+		for (i = 0; i < str_code->a_multiple.m_astc - 1; ++i) {
 			if (ast_contains_return(str_code->a_multiple.m_astv[i]))
 				goto done;
 		}
@@ -215,6 +215,8 @@ PRIVATE WUNUSED NONNULL((1, 2)) int
 	str_return_expr = str_code->a_return;
 	if (str_return_expr->a_type == AST_CONSTEXPR)
 		goto done; /* Don't try to optimize away constant expression strings */
+	if (ast_contains_return(str_return_expr))
+		goto done;
 
 	/* Get a symbol which is going to become the `fp' argument. */
 	fp_arg = new_unnamed_symbol_in_scope(&str_scope->bs_scope);

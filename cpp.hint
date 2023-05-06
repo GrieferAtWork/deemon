@@ -782,6 +782,7 @@
 #define Dee_DEFINE_STRING_EX(n,a,b,c) DeeStringObject n = {}
 #define DEFINE_STRING(n,a) DeeStringObject n = {}
 #define Dee_DEFINE_STRING(n,a) DeeStringObject n = {}
+#define ACTION(...)
 
 
 #define DEFINE_OPERATOR(return, name, args) return DeeObject_##name args
