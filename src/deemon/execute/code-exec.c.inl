@@ -108,7 +108,7 @@ INTDEF WUNUSED DREF DeeObject *(DCALL DeeObject_TCallAttr)(DeeTypeObject *__rest
 #define construct_varkwds_mapping() \
 	construct_varkwds_mapping_impl(code, frame)
 #ifndef CONSTRUCT_VARKWDS_MAPPING_IMPL_DEFINED
-#define CONSTRUCT_VARKWDS_MAPPING_IMPL_DEFINED 1
+#define CONSTRUCT_VARKWDS_MAPPING_IMPL_DEFINED
 PRIVATE WUNUSED DREF DeeObject *ATTR_FASTCALL
 construct_varkwds_mapping_impl(DeeCodeObject *__restrict code,
                                struct code_frame *__restrict frame) {

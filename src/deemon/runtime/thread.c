@@ -32,6 +32,7 @@
 #include <deemon/none.h>
 #include <deemon/object.h>
 #include <deemon/string.h>
+#include <deemon/stringutils.h>
 #include <deemon/system-error.h>
 #include <deemon/system-features.h>
 #include <deemon/system.h>
@@ -266,17 +267,16 @@ DECL_BEGIN
 #endif /* ... */
 #endif /* Dee_pid_t */
 
-/* >> void DeeThread_SetName(char const *name); */
-#if defined(DeeThread_USE_CreateThread) && defined(_MSC_VER)
+#if defined(CONFIG_HOST_WINDOWS) && defined(_MSC_VER)
 #ifdef _PREFAST_
 #pragma warning(push)
 #pragma warning(disable: 6320)
 #pragma warning(disable: 6322)
 #endif /* _PREFAST_ */
 #pragma pack(push, 8)
-#define DeeThread_SetName DeeThread_SetName
+#define DeeThread_SetName__406D1388 DeeThread_SetName__406D1388
 PRIVATE NONNULL((1)) void DCALL
-DeeThread_SetName(char const *__restrict name) {
+DeeThread_SetName__406D1388(char const *__restrict name) {
 	typedef struct THREADNAME_INFO {
 		DWORD dwType;     // Must be 0x1000.
 		LPCSTR szName;    // Pointer to name (in user addr space).
@@ -301,6 +301,76 @@ DeeThread_SetName(char const *__restrict name) {
 #ifdef _PREFAST_
 #pragma warning(pop)
 #endif /* _PREFAST_ */
+#endif /* CONFIG_HOST_WINDOWS && _MSC_VER */
+
+/* >> void DeeThread_SetName(char const *name); */
+#ifdef CONFIG_HOST_WINDOWS
+PRIVATE WUNUSED NONNULL((1)) uint16_t *DCALL
+try_utf8_to_wide(char const *__restrict name) {
+	uint16_t *result, *dst;
+	size_t namelen;
+	uint32_t ch;
+	namelen = strlen(name);
+	result  = (uint16_t *)Dee_TryMallocc(namelen + 1, sizeof(uint16_t));
+	if unlikely(!result)
+		return NULL;
+	dst = result;
+	while ((ch = Dee_utf8_readchar_u((char const **)&name)) != 0) {
+		if likely(ch <= 0xffff && (ch < 0xd800 || ch > 0xdfff)) {
+			*dst++ = (uint16_t)ch;
+		} else {
+			ch -= 0x10000;
+			*dst++ = 0xd800 + (uint16_t)(ch >> 10);
+			*dst++ = 0xdc00 + (uint16_t)(ch & 0x3ff);
+		}
+	}
+	*dst = (uint16_t)'\0';
+	return result;
+}
+
+PRIVATE NONNULL((1)) bool DCALL
+DeeThread_SetName__SetThreadDescription(char const *__restrict name) {
+	typedef HRESULT (WINAPI *LPSETTHREADDESCRIPTION)(HANDLE hThread, PCWSTR lpThreadDescription);
+	PRIVATE WCHAR const wKernelBase_dll[] = { 'K', 'e', 'r', 'n', 'e', 'l', 'B', 'a', 's', 'e', '.', 'd', 'l', 'l', 0 };
+	PRIVATE LPSETTHREADDESCRIPTION pdyn_SetThreadDescription = NULL;
+	PRIVATE HMODULE hm = NULL;
+	HRESULT hr;
+	PWSTR lpwName;
+	if (!ITER_ISOK(hm)) {
+		if (hm == (HMODULE)ITER_DONE)
+			return false;
+		hm = LoadLibraryW(wKernelBase_dll);
+		if (hm == NULL) {
+			hm = (HMODULE)ITER_DONE;
+			return false;
+		}
+		pdyn_SetThreadDescription = (LPSETTHREADDESCRIPTION)GetProcAddress(hm, "SetThreadDescription");
+		if (!pdyn_SetThreadDescription) {
+			HMODULE lib = hm;
+			COMPILER_BARRIER();
+			hm = (HMODULE)ITER_DONE;
+			COMPILER_BARRIER();
+			(void)FreeLibrary(lib);
+			return false;
+		}
+	}
+	lpwName = (PWSTR)try_utf8_to_wide(name);
+	if unlikely(!lpwName)
+		return false;
+	hr = (*pdyn_SetThreadDescription)(GetCurrentThread(), lpwName);
+	Dee_Free(lpwName);
+	return !FAILED(hr);
+}
+
+#define DeeThread_SetName DeeThread_SetName
+PRIVATE NONNULL((1)) void DCALL
+DeeThread_SetName(char const *__restrict name) {
+	if (!DeeThread_SetName__SetThreadDescription(name)) {
+#ifdef DeeThread_SetName__406D1388
+		DeeThread_SetName__406D1388(name);
+#endif /* DeeThread_SetName__406D1388 */
+	}
+}
 #elif defined(DeeThread_USE_pthread_create) && defined(CONFIG_HAVE_pthread_self) && defined(CONFIG_HAVE_pthread_setname_np_2ARG)
 #define DeeThread_SetName(name) (void)pthread_setname_np(pthread_self(), name)
 #elif defined(DeeThread_USE_pthread_create) && defined(CONFIG_HAVE_pthread_self) && defined(CONFIG_HAVE_pthread_setname_np_23RG)
