@@ -27,7 +27,7 @@
 #include <deemon/object.h>
 #include <deemon/string.h>
 #include <deemon/system-features.h> /* memrchr(), qsort(), bzero(), ... */
-#include <deemon/system.h>          /* DEE_SYSTEM_PATH_ACCEPTS_BACKSLASH */
+#include <deemon/system.h>          /* DeeSystem_BaseName() */
 #include <deemon/util/bytewriter.h>
 
 #include <hybrid/byteorder.h>
@@ -384,29 +384,20 @@ INTERN WUNUSED DREF DeeDDIObject *DCALL ddi_compile(void) {
 				uint32_t path_offset, file_offset;
 				int32_t temp;
 				filename   = (char *)TPPFile_Filename(new_state.tpp_file, &length);
-				file_begin = (char *)memrchr(filename, '/', length);
-#ifdef DEE_SYSTEM_PATH_ACCEPTS_BACKSLASH
-				{
-					char *file_begin2;
-					file_begin2 = (char *)memrchr(filename, '\\', length);
-					ASSERT(NULL == 0); /* The following expression assumes this... */
-					if (!file_begin || file_begin2 > file_begin)
-						file_begin = file_begin2;
-				}
-#endif /* DEE_SYSTEM_PATH_ACCEPTS_BACKSLASH */
-				if (file_begin) {
+				file_begin = (char *)DeeSystem_BaseName(filename, length);
+				if (file_begin > filename) {
 					char *tab_str, backup;
-					tab_str = ascii_printer_allocstr(&strtab, file_begin + 1,
+					tab_str = ascii_printer_allocstr(&strtab, file_begin,
 					                                 (size_t)(length - (file_begin - filename)) + 1);
 					if unlikely(!tab_str)
 						goto err_result_printer;
 					file_offset = (uint32_t)(tab_str - strtab.ap_string->s_str);
 					/* Now to allocate the path. */
-					backup        = file_begin[0];
-					file_begin[0] = '\0'; /* TPP allocates these dynamically to we can cheat a bit... */
+					backup         = file_begin[-1];
+					file_begin[-1] = '\0'; /* TPP allocates these dynamically to we can cheat a bit... */
 					tab_str = ascii_printer_allocstr(&strtab, filename,
-					                                 (size_t)(file_begin - filename) + 1);
-					file_begin[0] = backup;
+					                                 (size_t)(file_begin - filename));
+					file_begin[-1] = backup;
 					if unlikely(!tab_str)
 						goto err_result_printer;
 					path_offset = (uint32_t)(tab_str - strtab.ap_string->s_str);

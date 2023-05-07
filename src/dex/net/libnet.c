@@ -32,6 +32,7 @@
 #include <deemon/int.h>
 #include <deemon/notify.h>
 #include <deemon/objmethod.h>
+#include <deemon/system-features.h>
 
 #include <hybrid/byteswap.h>
 
@@ -290,7 +291,7 @@ libnet_init(DeeDexObject *__restrict UNUSED(self)) {
 	DBG_ALIGNMENT_ENABLE();
 	if unlikely(error != 0)
 		return DeeError_Throwf(&DeeError_NetError, "WSAStartup() : %lu", error);
-#else /* CONFIG_HOST_WINDOWS */
+#elif defined(CONFIG_HAVE_signal) && defined(SIGPIPE)
 	/* SIGPIPE is generated when a remote socket is closed. */
 	void (*handler)(int);
 	DBG_ALIGNMENT_DISABLE();
@@ -300,7 +301,7 @@ libnet_init(DeeDexObject *__restrict UNUSED(self)) {
 	if (handler != SIG_DFL)
 		signal(SIGPIPE, handler);
 	DBG_ALIGNMENT_ENABLE();
-#endif /* !CONFIG_HOST_WINDOWS */
+#endif /* ... */
 	return 0;
 }
 

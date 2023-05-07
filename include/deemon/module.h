@@ -29,6 +29,7 @@
 #include <stddef.h>
 
 #include "object.h"
+#include "system.h" /* DEE_SYSTEM_FS_ICASE */
 #include "util/lock.h"
 
 #ifdef CONFIG_BUILDING_DEEMON
@@ -287,53 +288,53 @@ INTDEF WUNUSED DREF struct Dee_string_object *DCALL module_symbol_getdocobj(stru
 struct Dee_module_object {
 	/* WARNING: Changes must be mirrored in `/src/deemon/execute/asm/exec.gas-386.S' */
 	Dee_OBJECT_HEAD /* GC Object. */
-	DREF struct Dee_string_object *mo_name;     /* [1..1][const] Name of this module (e.g.: `foo'). */
-	LIST_ENTRY(Dee_module_object)  mo_link;     /* [0..1][lock(INTERN(modules_lock))] Link into module file hash-table.*/
-	DREF struct Dee_string_object *mo_path;     /* [0..1][lock(MODULE_FLOADING)][const_if(MODULE_FDIDLOAD)] The absolute filename of this module's source file. */
-#ifdef CONFIG_HOST_WINDOWS
-	Dee_hash_t                     mo_pathhash; /* The case-insensitive hash for `mo_path' */
-#endif /* CONFIG_HOST_WINDOWS */
-	LIST_ENTRY(Dee_module_object)  mo_globlink; /* [0..1][lock(INTERN(modules_glob_lock))] Link into global module hash-table.*/
-	uint16_t                       mo_importc;  /* [lock(MODULE_FLOADING)][const_if(MODULE_FDIDLOAD)] The total number of other modules imported by this one. */
-	uint16_t                       mo_globalc;  /* [lock(MODULE_FLOADING)][const_if(MODULE_FDIDLOAD)] The total number of global symbols slots provided by this module. */
-	uint16_t                       mo_flags;    /* [const] Module flags (Set of `MODULE_F*') */
-	uint16_t                       mo_bucketm;  /* [lock(MODULE_FLOADING)][const_if(MODULE_FDIDLOAD)] Mask that should be applied to hash values before indexing `mo_bucketv'. */
-	struct Dee_module_symbol      *mo_bucketv;  /* [1..mo_bucketm+1][owned_if(!= empty_module_buckets)][const]
-	                                             * Hash-vector for translating a string into a `uint16_t' index for `mo_globalv'.
-	                                             * This is where module symbol names are stored and also used to
-	                                             * implement symbol access by name at runtime. */
+	DREF struct Dee_string_object *mo_name;      /* [1..1][const] Name of this module (e.g.: `foo'). */
+	LIST_ENTRY(Dee_module_object)  mo_link;      /* [0..1][lock(INTERN(modules_lock))] Link into module file hash-table.*/
+	DREF struct Dee_string_object *mo_path;      /* [0..1][lock(MODULE_FLOADING)][const_if(MODULE_FDIDLOAD)] The absolute filename of this module's source file. */
+#ifdef DEE_SYSTEM_FS_ICASE
+	Dee_hash_t                     mo_pathihash; /* The case-insensitive hash for `mo_path' */
+#endif /* DEE_SYSTEM_FS_ICASE */
+	LIST_ENTRY(Dee_module_object)  mo_globlink;  /* [0..1][lock(INTERN(modules_glob_lock))] Link into global module hash-table.*/
+	uint16_t                       mo_importc;   /* [lock(MODULE_FLOADING)][const_if(MODULE_FDIDLOAD)] The total number of other modules imported by this one. */
+	uint16_t                       mo_globalc;   /* [lock(MODULE_FLOADING)][const_if(MODULE_FDIDLOAD)] The total number of global symbols slots provided by this module. */
+	uint16_t                       mo_flags;     /* [const] Module flags (Set of `MODULE_F*') */
+	uint16_t                       mo_bucketm;   /* [lock(MODULE_FLOADING)][const_if(MODULE_FDIDLOAD)] Mask that should be applied to hash values before indexing `mo_bucketv'. */
+	struct Dee_module_symbol      *mo_bucketv;   /* [1..mo_bucketm+1][owned_if(!= empty_module_buckets)][const]
+	                                              * Hash-vector for translating a string into a `uint16_t' index for `mo_globalv'.
+	                                              * This is where module symbol names are stored and also used to
+	                                              * implement symbol access by name at runtime. */
 #define Dee_MODULE_HASHST(self, hash)  ((hash) & ((DeeModuleObject *)Dee_REQUIRES_OBJECT(self))->mo_bucketm)
 #define Dee_MODULE_HASHNX(hs, perturb) (void)((hs) = ((hs) << 2) + (hs) + (perturb) + 1, (perturb) >>= 5) /* This `5' is tunable. */
 #define Dee_MODULE_HASHIT(self, i)     (((DeeModuleObject *)Dee_REQUIRES_OBJECT(self))->mo_bucketv + ((i) & ((DeeModuleObject *)(self))->mo_bucketm))
-	DREF DeeModuleObject   *const *mo_importv;  /* [1..1][const_if(MODULE_FDIDLOAD)][0..rs_importc][lock(MODULE_FLOADING)][const_if(MODULE_FDIDLOAD)][owned] Vector of other modules imported by this one. */
-	DREF DeeObject               **mo_globalv;  /* [0..1][lock(mo_lock)][0..mo_globalc][valid_if(MODULE_FDIDLOAD)][owned] Vector of module-private global variables. */
-	DREF struct Dee_code_object   *mo_root;     /* [0..1][lock(mo_lock)][const_if(MODULE_FDIDLOAD)] Root code object (Also used as constructor).
-	                                             * HINT: Other code objects are addressed through constant/static variables.
-	                                             * HINT: When this field has been assigned a non-NULL value, it can be assumed that `MODULE_FDIDLOAD' has been set! */
+	DREF DeeModuleObject   *const *mo_importv;   /* [1..1][const_if(MODULE_FDIDLOAD)][0..rs_importc][lock(MODULE_FLOADING)][const_if(MODULE_FDIDLOAD)][owned] Vector of other modules imported by this one. */
+	DREF DeeObject               **mo_globalv;   /* [0..1][lock(mo_lock)][0..mo_globalc][valid_if(MODULE_FDIDLOAD)][owned] Vector of module-private global variables. */
+	DREF struct Dee_code_object   *mo_root;      /* [0..1][lock(mo_lock)][const_if(MODULE_FDIDLOAD)] Root code object (Also used as constructor).
+	                                              * HINT: Other code objects are addressed through constant/static variables.
+	                                              * HINT: When this field has been assigned a non-NULL value, it can be assumed that `MODULE_FDIDLOAD' has been set! */
 #ifndef CONFIG_NO_THREADS
-	Dee_atomic_rwlock_t            mo_lock;     /* Lock for this module. */
-	struct Dee_thread_object      *mo_loader;   /* [?..1][valid_if((MODULE_FLOADING && !MODULE_FDIDLOAD) ||
-	                                             *                 (MODULE_FINITIALIZING && !MODULE_FDIDINIT))]
-	                                             * The thread currently loading/initializing this module.
-	                                             * This is used to prevent a deadlock upon load recursion,
-	                                             * but will allow for waiting when the load is done by
-	                                             * another thread.
-	                                             * WARNING: It may however deadlock when 2 threads try to
-	                                             *          load/initialize modules when interlocked with
-	                                             *          each other... ('Don't know how I could prevent
-	                                             *          this short of putting a big 'ol lock around
-	                                             *          everything that may initialize a module, when
-	                                             *          doing so would kind-of defeat the purpose of
-	                                             *          making everything thread-safe...)
-	                                             *     XXX: The lock would have to be re-entrant & global and
-	                                             *          be held during `DeeObject_Call(init_function, 0, NULL)'
-	                                             *          inside of `DeeModule_RunInit()' */
+	Dee_atomic_rwlock_t            mo_lock;      /* Lock for this module. */
+	struct Dee_thread_object      *mo_loader;    /* [?..1][valid_if((MODULE_FLOADING && !MODULE_FDIDLOAD) ||
+	                                              *                 (MODULE_FINITIALIZING && !MODULE_FDIDINIT))]
+	                                              * The thread currently loading/initializing this module.
+	                                              * This is used to prevent a deadlock upon load recursion,
+	                                              * but will allow for waiting when the load is done by
+	                                              * another thread.
+	                                              * WARNING: It may however deadlock when 2 threads try to
+	                                              *          load/initialize modules when interlocked with
+	                                              *          each other... ('Don't know how I could prevent
+	                                              *          this short of putting a big 'ol lock around
+	                                              *          everything that may initialize a module, when
+	                                              *          doing so would kind-of defeat the purpose of
+	                                              *          making everything thread-safe...)
+	                                              *     XXX: The lock would have to be re-entrant & global and
+	                                              *          be held during `DeeObject_Call(init_function, 0, NULL)'
+	                                              *          inside of `DeeModule_RunInit()' */
 #endif /* !CONFIG_NO_THREADS */
 #ifndef CONFIG_NO_DEC
-	uint64_t                       mo_ctime;    /* [valid_if(MODULE_FDIDLOAD && MODULE_FHASCTIME)]
-	                                             * Time (in milliseconds since 01-01-1970)
-	                                             * when compilation of the module finished.
-	                                             * NOTE: Never equal to (uint64_t)-1 */
+	uint64_t                       mo_ctime;     /* [valid_if(MODULE_FDIDLOAD && MODULE_FHASCTIME)]
+	                                              * Time (in milliseconds since 01-01-1970)
+	                                              * when compilation of the module finished.
+	                                              * NOTE: Never equal to (uint64_t)-1 */
 #endif /* !CONFIG_NO_DEC */
 	Dee_WEAKREF_SUPPORT
 };
@@ -1056,11 +1057,7 @@ DeeModule_OpenRelativeString(/*utf-8*/ char const *__restrict module_name, size_
  * >> TRY_LOAD_DEC_FILE(joinpath(module_path, "." + module_name + ".dec"));
  * >>#endif // !CONFIG_NO_DEC
  * >>#ifndef CONFIG_NO_DEX
- * >>#ifdef CONFIG_HOST_WINDOWS
- * >> TRY_LOAD_DEX_LIBRARY(joinpath(module_path, module_name + ".dll"));
- * >>#else
- * >> TRY_LOAD_DEX_LIBRARY(joinpath(module_path, module_name + ".so"));
- * >>#endif
+ * >> TRY_LOAD_DEX_LIBRARY(joinpath(module_path, module_name + DeeSystem_SOEXT));
  * >>#endif // !CONFIG_NO_DEX
  * >> TRY_LOAD_SOURCE_FILE(joinpath(module_path, module_name + ".dee"));
  * EXAMPLES:

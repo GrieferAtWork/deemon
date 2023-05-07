@@ -73,13 +73,16 @@ DFUNDEF void DCALL DeeExec_SetHome(/*String*/ DeeObject *new_home);
  *          the first encouter of a -L option will call `DeeModule_GetPath()'
  *          before pre-pending the following string at the front of the list,
  *          following other -L paths prepended before then.
- * >> fs.environ.get("DEEMON_PATH", "").split(fs.DELIM)...;
- * >> fs.joinpath(DeeExec_GetHome(), "lib")
+ * >> posix.environ.get("DEEMON_PATH", "").split(posix.FS_DELIM)...;
+ * >> posix.joinpath(DeeExec_GetHome(), "lib")
  *
  * This list is also used to locate system-include paths for the preprocessor,
  * in that every entry that is a string is an include-path after appending "/include":
- * >> function get_include_paths() { for (local x: DeeModule_Path) if (x is string) yield x.rstrip("/")+"/include"; }
- */
+ * >> function get_include_paths(): {string...} {
+ * >>     for (local x: DeeModule_Path)
+ * >>         if (x is string)
+ * >>             yield f"{x.rstrip("/")}/include";
+ * >> } */
 DDATDEF struct Dee_list_object DeeModule_Path;
 DFUNDEF void DCALL DeeModule_InitPath(void);
 #define DeeModule_FiniPath() DeeList_Clear((DeeObject *)&DeeModule_Path)

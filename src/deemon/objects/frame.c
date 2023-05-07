@@ -32,6 +32,8 @@
 #include <deemon/object.h>
 #include <deemon/seq.h>
 #include <deemon/string.h>
+#include <deemon/system-features.h> /* strchr() */
+#include <deemon/system.h>          /* DeeSystem_ALTSEP */
 #include <deemon/thread.h>
 #include <deemon/traceback.h>
 #include <deemon/tuple.h>
@@ -133,12 +135,37 @@ DeeFrame_DecrefShared(DREF DeeObject *__restrict self) {
 
 
 
-#ifdef CONFIG_HOST_WINDOWS
-#define TRACEBACK_SLASH(path, file) (strchr(path, '\\') || strchr(file, '\\') ? "\\" : "/")
-#else /* CONFIG_HOST_WINDOWS */
-#define TRACEBACK_SLASH(path, file) "/"
-#define TRACEBACK_SLASH_S           "/"
-#endif /* !CONFIG_HOST_WINDOWS */
+#ifdef DeeSystem_ALTSEP
+PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1, 2)) char const *DCALL
+get_relevant_slash(char const *path, char const *file) {
+	char path_slash = 0;
+	char file_slash = 0;
+	for (; *path; ++path) {
+		if (DeeSystem_IsSep(*path))
+			path_slash = *path;
+	}
+	for (; *file; ++file) {
+		if (DeeSystem_IsSep(*file)) {
+			file_slash = *file;
+			break;
+		}
+	}
+	if (!path_slash && !file_slash)
+		goto return_sep;
+	if (path_slash == DeeSystem_SEP)
+		goto return_sep;
+	if (file_slash == DeeSystem_SEP)
+		goto return_sep;
+/*return_altsep:*/
+	return DeeSystem_ALTSEP_S;
+return_sep:
+	return DeeSystem_SEP_S;
+}
+#define TRACEBACK_SLASH(path, file) get_relevant_slash(path, file)
+#else /* DeeSystem_ALTSEP */
+#define TRACEBACK_SLASH(path, file) DeeSystem_SEP_S
+#define TRACEBACK_SLASH_S           DeeSystem_SEP_S
+#endif /* !DeeSystem_ALTSEP */
 
 INTERN WUNUSED NONNULL((1, 3)) dssize_t DCALL
 print_ddi(dformatprinter printer, void *arg,

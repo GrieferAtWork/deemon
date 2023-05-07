@@ -108,13 +108,13 @@ INTDEF struct module_symbol empty_module_buckets[];
 #define ISSEP DeeSystem_IsSep
 #define ISABS DeeSystem_IsAbs
 
-#ifdef DEE_SYSTEM_FS_NOCASE
+#ifdef DEE_SYSTEM_FS_ICASE
 #ifndef CONFIG_HAVE_memcasecmp
 #define CONFIG_HAVE_memcasecmp
 #define memcasecmp dee_memcasecmp
 DeeSystem_DEFINE_memcasecmp(dee_memcasecmp)
 #endif /* !CONFIG_HAVE_memcasecmp */
-#endif /* DEE_SYSTEM_FS_NOCASE */
+#endif /* DEE_SYSTEM_FS_ICASE */
 
 #ifndef CONFIG_HAVE_memrchr
 #define CONFIG_HAVE_memrchr
@@ -123,21 +123,16 @@ DeeSystem_DEFINE_memrchr(dee_memrchr)
 #endif /* !CONFIG_HAVE_memrchr */
 
 
-#ifdef DEE_SYSTEM_FS_NOCASE
+#ifdef DEE_SYSTEM_FS_ICASE
 #define fs_memcmp                        memcasecmp
 #define fs_bcmp                          memcasecmp
 #define fs_hashobj(ob)                   DeeString_HashCase((DeeObject *)Dee_REQUIRES_OBJECT(ob))
 #define fs_hashstr(s)                    Dee_HashCaseStr(s)
 #define fs_hashutf8(s, n)                Dee_HashCaseUtf8(s, n)
 #define fs_hashmodname_equals(mod, hash) 1
-#ifdef CONFIG_HOST_WINDOWS
-#define fs_hashmodpath(mod)              ((mod)->mo_pathhash)
-#define fs_hashmodpath_equals(mod, hash) ((mod)->mo_pathhash == (hash))
-#else /* CONFIG_HOST_WINDOWS */
-#define fs_hashmodpath(mod)              DeeString_HashCase((DeeObject *)(mod)->mo_path)
-#define fs_hashmodpath_equals(mod, hash) 1
-#endif /* !CONFIG_HOST_WINDOWS */
-#else /* DEE_SYSTEM_FS_NOCASE */
+#define fs_hashmodpath(mod)              ((mod)->mo_pathihash)
+#define fs_hashmodpath_equals(mod, hash) ((mod)->mo_pathihash == (hash))
+#else /* DEE_SYSTEM_FS_ICASE */
 #define fs_memcmp                        memcmp
 #define fs_bcmp                          bcmp
 #define fs_hashobj(ob)                   DeeString_Hash((DeeObject *)Dee_REQUIRES_OBJECT(ob))
@@ -146,7 +141,7 @@ DeeSystem_DEFINE_memrchr(dee_memrchr)
 #define fs_hashmodpath(mod)              DeeString_HASH((DeeObject *)(mod)->mo_path)
 #define fs_hashmodname_equals(mod, hash) (DeeString_HASH((mod)->mo_name) == (hash))
 #define fs_hashmodpath_equals(mod, hash) (DeeString_HASH((mod)->mo_path) == (hash))
-#endif /* !DEE_SYSTEM_FS_NOCASE */
+#endif /* !DEE_SYSTEM_FS_ICASE */
 
 #define DeeString_FS_EQUALS_STR(lhs, rhs)            \
 	(DeeString_SIZE(lhs) == DeeString_SIZE(rhs) &&   \
@@ -836,18 +831,10 @@ got_result_modulepath:
 		name = DeeString_AsUtf8(source_pathname);
 		if unlikely(!name)
 			goto err_modulepath_inputstream;
-		size     = WSTR_LENGTH(name);
-		name_end = name + size;
-#ifdef CONFIG_HOST_WINDOWS
-		name_start = name_end;
-		while (name_start > name && !ISSEP(name_start[-1]))
-			--name_start;
-#else /* CONFIG_HOST_WINDOWS */
-		name_start = (char *)memrchr(name, SEP, size);
-		if (!name_start)
-			name_start = name - 1;
-		++name_start;
-#endif /* !CONFIG_HOST_WINDOWS */
+		size      = WSTR_LENGTH(name);
+		name_end  = name + size;
+		name_start = (char *)DeeSystem_BaseName(name, size);
+
 		/* Get rid of a file extension in the module name. */
 		while (name_end > name_start && name_end[-1] != '.')
 			--name_end;
@@ -870,11 +857,12 @@ got_result_modulepath:
 
 	/* Register the module in the filesystem & global cache. */
 	result->mo_path = module_path_ob; /* Inherit reference. */
-#ifdef CONFIG_HOST_WINDOWS
-	result->mo_pathhash = hash;
-#endif /* CONFIG_HOST_WINDOWS */
+#ifdef DEE_SYSTEM_FS_ICASE
+	result->mo_pathihash = hash;
+#endif /* DEE_SYSTEM_FS_ICASE */
 	result->mo_flags |= MODULE_FLOADING;
 	COMPILER_WRITE_BARRIER();
+
 	/* Cache the new module as part of the filesystem
 	 * module cache, as well as the global module cache. */
 	if (module_global_name) {
@@ -901,10 +889,12 @@ set_file_module_global:
 			result = existing_module;
 			goto try_load_module_after_failure;
 		}
+
 		/* Add the module to the file-cache. */
 		if ((modules_c >= modules_a && !rehash_file_modules()) ||
 		    (modules_glob_c >= modules_glob_a && !rehash_glob_modules())) {
 			modules_lock_endwrite();
+
 			/* Try to collect some memory, then try again. */
 			if (Dee_CollectMemory(1))
 				goto set_file_module_global;
@@ -929,9 +919,11 @@ try_load_module_after_failure:
 				goto load_module_after_failure;
 			goto got_result;
 		}
+
 		/* Add the module to the file-cache. */
 		if unlikely(!add_file_module(result)) {
 			modules_lock_endwrite();
+
 			/* Try to collect some memory, then try again. */
 			if (Dee_CollectMemory(1))
 				goto set_file_module;
@@ -940,6 +932,7 @@ try_load_module_after_failure:
 		}
 		modules_lock_endwrite();
 	}
+
 load_module_after_failure:
 	/* Actually load the module from its source stream. */
 	{
@@ -1025,17 +1018,8 @@ DeeModule_OpenSourceStream(DeeObject *source_stream,
 			size_t size = DeeString_SIZE(source_pathname);
 			char *name_end, *name_start;
 			DREF DeeObject *name_object;
-			name_end = name + size;
-#ifdef CONFIG_HOST_WINDOWS
-			name_start = name_end;
-			while (name_start > name && !ISSEP(name_start[-1]))
-				--name_start;
-#else /* CONFIG_HOST_WINDOWS */
-			name_start = (char *)memrchr(name, SEP, size);
-			if (!name_start)
-				name_start = name - 1;
-			++name_start;
-#endif /* !CONFIG_HOST_WINDOWS */
+			name_end   = name + size;
+			name_start = (char *)DeeSystem_BaseName(name, size);
 
 			/* Get rid of a file extension in the module name. */
 			while (name_end > name_start && name_end[-1] != '.')
@@ -1356,8 +1340,8 @@ DeeModule_GetString(/*utf-8*/ char const *__restrict module_name,
 #define Dee_MODULE_OPENINPATH_FTHROWERROR  0x0002 /* Throw an error if the module isn't found. */
 
 
-#define SHEXT DeeSystem_SHEXT
-#define SHLEN COMPILER_STRLEN(DeeSystem_SHEXT)
+#define SHEXT DeeSystem_SOEXT
+#define SHLEN COMPILER_STRLEN(DeeSystem_SOEXT)
 
 
 PRIVATE WUNUSED DREF DeeModuleObject *DCALL
@@ -1599,12 +1583,12 @@ err_buf_name_dec_stream:
 				}
 				Dee_Decref_unlikely(module_name_ob);
 				result->mo_path = module_path_ob; /* Inherit reference. */
-#ifdef CONFIG_HOST_WINDOWS
-				result->mo_pathhash = hash;
-#else /* CONFIG_HOST_WINDOWS */
+#ifdef DEE_SYSTEM_FS_ICASE
+				result->mo_pathihash = hash;
+#else /* DEE_SYSTEM_FS_ICASE */
 				ASSERT(DeeString_Hash((DeeObject *)module_path_ob) == hash);
 				DeeString_HASH(module_path_ob) = hash;
-#endif /* !CONFIG_HOST_WINDOWS */
+#endif /* !DEE_SYSTEM_FS_ICASE */
 
 				result->mo_flags |= MODULE_FLOADING;
 				COMPILER_WRITE_BARRIER();
@@ -1718,10 +1702,10 @@ load_module_after_dec_failure:
 	module_path_ob = (DREF DeeStringObject *)DeeString_NewUtf8(buf, len, STRING_ERROR_FSTRICT);
 	if unlikely(!module_path_ob)
 		goto err_buf;
-#ifndef CONFIG_HOST_WINDOWS
+#ifndef DEE_SYSTEM_FS_ICASE
 	ASSERT(fs_hashutf8(buf, len) == hash);
 	DeeString_HASH(module_path_ob) = hash;
-#endif /* !CONFIG_HOST_WINDOWS */
+#endif /* !DEE_SYSTEM_FS_ICASE */
 #else /* CONFIG_NO_DEX */
 	/* Try to load the module from a DEX extension. */
 	ASSERT(dst[module_namesize + 0] == '.');
@@ -1761,10 +1745,10 @@ load_module_after_dec_failure:
 			module_path_ob = (DREF DeeStringObject *)DeeString_NewUtf8(buf, len, STRING_ERROR_FSTRICT);
 			if unlikely(!module_path_ob)
 				goto err_buf;
-#ifndef CONFIG_HOST_WINDOWS
+#ifndef DEE_SYSTEM_FS_ICASE
 			ASSERT(fs_hashutf8(buf, len) == hash);
 			DeeString_HASH(module_path_ob) = hash;
-#endif /* !CONFIG_HOST_WINDOWS */
+#endif /* !DEE_SYSTEM_FS_ICASE */
 		} else {
 			int error;
 			DeeModuleObject *existing_module;
@@ -1782,12 +1766,12 @@ load_module_after_dec_failure:
 			}
 			Dee_Decref_unlikely(module_name_ob);
 			result->mo_path = module_path_ob; /* Inherit reference. */
-#ifdef CONFIG_HOST_WINDOWS
-			result->mo_pathhash = hash;
-#else /* CONFIG_HOST_WINDOWS */
+#ifdef DEE_SYSTEM_FS_ICASE
+			result->mo_pathihash = hash;
+#else /* DEE_SYSTEM_FS_ICASE */
 			/* Load the updated path hash (and also force the hash to be pre-cached) */
 			hash = fs_hashobj(module_path_ob);
-#endif /* !CONFIG_HOST_WINDOWS */
+#endif /* !DEE_SYSTEM_FS_ICASE */
 			result->mo_flags |= MODULE_FLOADING;
 			COMPILER_WRITE_BARRIER();
 
@@ -1896,12 +1880,12 @@ load_module_after_dex_failure:
 		}
 		Dee_Decref_unlikely(module_name_ob);
 		result->mo_path = module_path_ob; /* Inherit reference. */
-#ifdef CONFIG_HOST_WINDOWS
-		result->mo_pathhash = hash;
-#else /* CONFIG_HOST_WINDOWS */
+#ifdef DEE_SYSTEM_FS_ICASE
+		result->mo_pathihash = hash;
+#else /* DEE_SYSTEM_FS_ICASE */
 		ASSERT(DeeString_HASHOK(module_path_ob));
 		ASSERT(DeeString_HASH(module_path_ob) == hash);
-#endif /* !CONFIG_HOST_WINDOWS */
+#endif /* !DEE_SYSTEM_FS_ICASE */
 		result->mo_flags |= MODULE_FLOADING;
 		COMPILER_WRITE_BARRIER();
 
@@ -2080,11 +2064,7 @@ DeeModule_SubOpenInPathAbs(/*utf-8*/ char const *__restrict module_path, size_t 
  * >> TRY_LOAD_DEC_FILE(joinpath(module_path, "." + module_name + ".dec"));
  * >>#endif // !CONFIG_NO_DEC
  * >>#ifndef CONFIG_NO_DEX
- * >>#ifdef CONFIG_HOST_WINDOWS
- * >> TRY_LOAD_DEX_LIBRARY(joinpath(module_path, module_name + ".dll"));
- * >>#else
- * >> TRY_LOAD_DEX_LIBRARY(joinpath(module_path, module_name + ".so"));
- * >>#endif
+ * >> TRY_LOAD_DEX_LIBRARY(joinpath(module_path, module_name + DeeSystem_SOEXT));
  * >>#endif // !CONFIG_NO_DEX
  * >> TRY_LOAD_SOURCE_FILE(joinpath(module_path, module_name + ".dee"));
  * EXAMPLES:
@@ -2105,12 +2085,7 @@ DeeModule_OpenInPath(/*utf-8*/ char const *__restrict module_path, size_t module
                      DeeObject *module_global_name,
                      struct compiler_options *options,
                      unsigned int mode) {
-#ifdef CONFIG_HOST_WINDOWS
-	if unlikely(module_pathsize < 2 || module_path[1] != ':')
-#else /* CONFIG_HOST_WINDOWS */
-	if unlikely(!module_pathsize || !DeeSystem_IsAbs(module_path))
-#endif /* !CONFIG_HOST_WINDOWS */
-	{
+	if unlikely(!DeeSystem_IsAbsN(module_path, module_pathsize)) {
 		/* Must make the given module path absolute. */
 		DREF DeeStringObject *abs_path; /*utf-8*/
 		char *abs_utf8;
@@ -2925,17 +2900,8 @@ DeeExec_CompileModuleStream(DeeObject *source_stream,
 			char *name  = DeeString_STR(source_pathname);
 			size_t size = DeeString_SIZE(source_pathname);
 			char *name_end, *name_start;
-			name_end = name + size;
-#ifdef CONFIG_HOST_WINDOWS
-			name_start = name_end;
-			while (name_start > name && !ISSEP(name_start[-1]))
-				--name_start;
-#else /* CONFIG_HOST_WINDOWS */
-			name_start = (char *)memrchr(name, SEP, size);
-			if (!name_start)
-				name_start = name - 1;
-			++name_start;
-#endif /* !CONFIG_HOST_WINDOWS */
+			name_end   = name + size;
+			name_start = (char *)DeeSystem_BaseName(name, size);
 
 			/* Get rid of a file extension in the module name. */
 			while (name_end > name_start && name_end[-1] != '.')
@@ -3247,13 +3213,16 @@ err:
  *          the first encouter of a -L option will call `DeeModule_GetPath()'
  *          before pre-pending the following string at the front of the list,
  *          following other -L paths prepended before then.
- * >> fs.environ.get("DEEMON_PATH", "").split(fs.DELIM)...;
- * >> fs.joinpath(DeeExec_GetHome(), "lib")
+ * >> posix.environ.get("DEEMON_PATH", "").split(posix.FS_DELIM)...;
+ * >> posix.joinpath(DeeExec_GetHome(), "lib")
  *
  * This list is also used to locate system-include paths for the preprocessor,
  * in that every entry that is a string is an include-path after appending "/include":
- * >> function get_include_paths() { for (local x: DeeModule_Path) if (x is string) yield x.rstrip("/")+"/include"; }
- */
+ * >> function get_include_paths(): {string...} {
+ * >>     for (local x: DeeModule_Path)
+ * >>         if (x is string)
+ * >>             yield f"{x.rstrip("/")}/include";
+ * >> } */
 PUBLIC DeeListObject DeeModule_Path = {
 	OBJECT_HEAD_INIT(&DeeList_Type),
 	/* .l_list = */ DEE_OBJECTLIST_INIT
@@ -3263,29 +3232,25 @@ PUBLIC DeeListObject DeeModule_Path = {
 #endif /* !CONFIG_NO_THREADS */
 };
 
-#ifdef CONFIG_HOST_WINDOWS
-#define DELIM ';'
-#else /* CONFIG_HOST_WINDOWS */
-#define DELIM ':'
-#endif /* !CONFIG_HOST_WINDOWS */
-
 
 
 /* Figure out how to implement `get_default_home()' */
 #undef get_default_home_USE_CONFIG_DEEMON_HOME
-#undef get_default_home_USE_GETMODULEFILENAME
-#undef get_default_home_USE_READLINK_PROC_SELF_EXE
+#undef get_default_home_USE_GetModuleFileNameW
+#undef get_default_home_USE_readlink_proc_self_exe
 #ifdef CONFIG_DEEMON_HOME
-#define get_default_home_USE_CONFIG_DEEMON_HOME 1
+#define get_default_home_USE_CONFIG_DEEMON_HOME
 #elif defined(CONFIG_HAVE_dlmodulename) && defined(CONFIG_HAVE_dlopen)
-#define get_default_home_USE_DLMODULENAME 1
+#define get_default_home_USE_dlmodulename
 #elif defined(CONFIG_HOST_WINDOWS)
-#define get_default_home_USE_GETMODULEFILENAME 1
+#define get_default_home_USE_GetModuleFileNameW
 #elif defined(CONFIG_HOST_UNIX)
-#define get_default_home_USE_READLINK_PROC_SELF_EXE 1
-#endif
+#define get_default_home_USE_readlink_proc_self_exe
+#else /* ... */
+#define get_default_home_USE_readlink_proc_self_exe
+#endif /* !... */
 
-#ifdef get_default_home_USE_DLMODULENAME
+#ifdef get_default_home_USE_dlmodulename
 #ifndef DLOPEN_NULL_FLAGS
 #if defined(CONFIG_HAVE_RTLD_GLOBAL)
 #define DLOPEN_NULL_FLAGS RTLD_GLOBAL
@@ -3295,7 +3260,7 @@ PUBLIC DeeListObject DeeModule_Path = {
 #define DLOPEN_NULL_FLAGS 0
 #endif /* !... */
 #endif /* !DLOPEN_NULL_FLAGS */
-#endif /* get_default_home_USE_DLMODULENAME */
+#endif /* get_default_home_USE_dlmodulename */
 
 
 #ifdef get_default_home_USE_CONFIG_DEEMON_HOME
@@ -3338,7 +3303,7 @@ PRIVATE WUNUSED DREF /*String*/ DeeStringObject *DCALL get_default_home(void) {
 	return_reference_((DeeStringObject *)&default_deemon_home);
 #endif /* get_default_home_USE_CONFIG_DEEMON_HOME */
 
-#ifdef get_default_home_USE_GETMODULEFILENAME
+#ifdef get_default_home_USE_GetModuleFileNameW
 	{
 		DREF DeeStringObject *result;
 		DWORD dwBufSize = PATH_MAX, dwError;
@@ -3402,9 +3367,9 @@ do_increase_buffer:
 		Dee_Decref(result);
 		return new_result;
 	}
-#endif /* get_default_home_USE_GETMODULEFILENAME */
+#endif /* get_default_home_USE_GetModuleFileNameW */
 
-#ifdef get_default_home_USE_DLMODULENAME
+#ifdef get_default_home_USE_dlmodulename
 	{
 		size_t length;
 		/* dlopen(NULL)   -> Return a handle to the primary binary
@@ -3432,9 +3397,9 @@ do_increase_buffer:
 		                                                 length,
 		                                                 STRING_ERROR_FIGNORE);
 	}
-#endif /* get_default_home_USE_DLMODULENAME */
+#endif /* get_default_home_USE_dlmodulename */
 
-#ifdef get_default_home_USE_READLINK_PROC_SELF_EXE
+#ifdef get_default_home_USE_readlink_proc_self_exe
 	size_t length;
 	int error;
 	struct unicode_printer printer = UNICODE_PRINTER_INIT;
@@ -3461,7 +3426,7 @@ bad_path:
 err_printer:
 	unicode_printer_fini(&printer);
 	return NULL;
-#endif /* get_default_home_USE_READLINK_PROC_SELF_EXE */
+#endif /* get_default_home_USE_readlink_proc_self_exe */
 
 #ifndef get_default_home_NO_FALLBACK
 fallback:
@@ -3584,7 +3549,7 @@ PRIVATE void DCALL do_init_module_path(void) {
 		if (path) {
 			while (*path) {
 				/* Split the module path. */
-				char *next_path = strchr(path, DELIM);
+				char *next_path = strchr(path, DeeSystem_DELIM);
 				if (next_path) {
 					path_part = DeeString_NewUtf8(path,
 					                              (size_t)(next_path - path),

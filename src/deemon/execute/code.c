@@ -68,20 +68,20 @@
 #endif /* !__USER_LABEL_PREFIX__ */
 
 
-#undef EXEC_ALTSTACK_ALLOC_USE_VIRTUALALLOC
-#undef EXEC_ALTSTACK_ALLOC_USE_MMAP
-#undef EXEC_ALTSTACK_ALLOC_USE_MALLOC
+#undef EXEC_ALTSTACK_ALLOC_USE_VirtualAlloc
+#undef EXEC_ALTSTACK_ALLOC_USE_mmap
+#undef EXEC_ALTSTACK_ALLOC_USE_malloc
 #undef EXEC_ALTSTACK_ALLOC_USE_STUB
 #ifdef CONFIG_HOST_WINDOWS
-#define EXEC_ALTSTACK_ALLOC_USE_VIRTUALALLOC 1
+#define EXEC_ALTSTACK_ALLOC_USE_VirtualAlloc
 #elif (defined(CONFIG_HAVE_mmap) || defined(CONFIG_HAVE_mmap64)) && \
       (defined(CONFIG_HAVE_MAP_ANONYMOUS) || defined(CONFIG_HAVE_open))
-#define EXEC_ALTSTACK_ALLOC_USE_MMAP 1
+#define EXEC_ALTSTACK_ALLOC_USE_mmap
 #elif 1
-#define EXEC_ALTSTACK_ALLOC_USE_MALLOC 1
-#else
-#define EXEC_ALTSTACK_ALLOC_USE_STUB 1
-#endif
+#define EXEC_ALTSTACK_ALLOC_USE_malloc
+#else /* ... */
+#define EXEC_ALTSTACK_ALLOC_USE_STUB
+#endif /* !... */
 
 
 /* Figure out how we're going to implement the inline assembly portion. */
@@ -90,32 +90,32 @@
 #undef EXEC_ALTSTACK_ASM_USE_MSVC
 #undef EXEC_ALTSTACK_ASM_USE_STUB
 #if defined(EXEC_ALTSTACK_ALLOC_USE_STUB)
-#define EXEC_ALTSTACK_ASM_USE_STUB 1
+#define EXEC_ALTSTACK_ASM_USE_STUB
 #elif defined(_MSC_VER) && defined(__x86_64__)
-#define EXEC_ALTSTACK_ASM_USE_EXTERNAL 1 /* The x86_64+msvc version is implemented in `asm/altstack.ms-x64.S' */
+#define EXEC_ALTSTACK_ASM_USE_EXTERNAL /* The x86_64+msvc version is implemented in `asm/altstack.ms-x64.S' */
 #elif defined(__COMPILER_HAVE_GCC_ASM) && \
      (defined(__x86_64__) || defined(__i386__))
-#define EXEC_ALTSTACK_ASM_USE_GCC 1
+#define EXEC_ALTSTACK_ASM_USE_GCC
 #elif defined(_MSC_VER) && defined(__i386__)
-#define EXEC_ALTSTACK_ASM_USE_MSVC 1
-#else
-#define EXEC_ALTSTACK_ASM_USE_STUB 1
-#endif
+#define EXEC_ALTSTACK_ASM_USE_MSVC
+#else /* ... */
+#define EXEC_ALTSTACK_ASM_USE_STUB
+#endif /* !... */
 
 /* If we can't implement the assembly, no need to implement the allocators. */
 #ifdef EXEC_ALTSTACK_ASM_USE_STUB
-#undef EXEC_ALTSTACK_ALLOC_USE_VIRTUALALLOC
-#undef EXEC_ALTSTACK_ALLOC_USE_MMAP
-#undef EXEC_ALTSTACK_ALLOC_USE_MALLOC
+#undef EXEC_ALTSTACK_ALLOC_USE_VirtualAlloc
+#undef EXEC_ALTSTACK_ALLOC_USE_mmap
+#undef EXEC_ALTSTACK_ALLOC_USE_malloc
 #undef EXEC_ALTSTACK_ALLOC_USE_STUB
-#define EXEC_ALTSTACK_ALLOC_USE_STUB 1
+#define EXEC_ALTSTACK_ALLOC_USE_STUB
 #endif /* EXEC_ALTSTACK_ASM_USE_STUB */
 
 
-#ifdef EXEC_ALTSTACK_ALLOC_USE_VIRTUALALLOC
+#ifdef EXEC_ALTSTACK_ALLOC_USE_VirtualAlloc
 #include <Windows.h>
 #undef THIS
-#endif /* !EXEC_ALTSTACK_ALLOC_USE_VIRTUALALLOC */
+#endif /* !EXEC_ALTSTACK_ALLOC_USE_VirtualAlloc */
 
 
 /* When the exec-altstack functions are defined externally, we need
@@ -129,7 +129,7 @@
 
 
 /* Substitute some features. */
-#ifdef EXEC_ALTSTACK_ALLOC_USE_MMAP
+#ifdef EXEC_ALTSTACK_ALLOC_USE_mmap
 
 #ifndef CONFIG_HAVE_MAP_PRIVATE
 #define CONFIG_HAVE_MAP_PRIVATE
@@ -182,7 +182,7 @@
 #define MMAP_STACK_FLAGS MAP_GROWSUP
 #endif /* !__ARCH_STACK_GROWS_DOWNWARDS */
 
-#endif /* EXEC_ALTSTACK_ALLOC_USE_MMAP */
+#endif /* EXEC_ALTSTACK_ALLOC_USE_mmap */
 
 
 
@@ -194,29 +194,29 @@ DECL_BEGIN
 #ifndef EXEC_ALTSTACK_ALLOC_USE_STUB
 
 /* Figure out the error return value for `[try]alloc_altstack()' */
-#ifdef EXEC_ALTSTACK_ALLOC_USE_VIRTUALALLOC
+#ifdef EXEC_ALTSTACK_ALLOC_USE_VirtualAlloc
 #define ALTSTACK_ALLOC_FAILED NULL
-#elif defined(EXEC_ALTSTACK_ALLOC_USE_MMAP)
+#elif defined(EXEC_ALTSTACK_ALLOC_USE_mmap)
 #ifdef MAP_FAILED
 #define ALTSTACK_ALLOC_FAILED MAP_FAILED
 #else /* MAP_FAILED */
 #define ALTSTACK_ALLOC_FAILED ((void *)(uintptr_t)-1)
 #endif /* !MAP_FAILED */
-#elif defined(EXEC_ALTSTACK_ALLOC_USE_MALLOC)
+#elif defined(EXEC_ALTSTACK_ALLOC_USE_malloc)
 #define ALTSTACK_ALLOC_FAILED NULL
 #else /* ... */
 #define ALTSTACK_ALLOC_FAILED NULL
 #endif /* !... */
 
 LOCAL void *DCALL tryalloc_altstack(void) {
-#ifdef EXEC_ALTSTACK_ALLOC_USE_VIRTUALALLOC
+#ifdef EXEC_ALTSTACK_ALLOC_USE_VirtualAlloc
 	return VirtualAlloc(NULL,
 	                    DEE_EXEC_ALTSTACK_SIZE,
 	                    MEM_COMMIT | MEM_RESERVE,
 	                    PAGE_READWRITE);
-#endif /* EXEC_ALTSTACK_ALLOC_USE_VIRTUALALLOC */
+#endif /* EXEC_ALTSTACK_ALLOC_USE_VirtualAlloc */
 
-#ifdef EXEC_ALTSTACK_ALLOC_USE_MMAP
+#ifdef EXEC_ALTSTACK_ALLOC_USE_mmap
 #ifdef MAP_ANONYMOUS
 	return mmap(NULL,
 	            DEE_EXEC_ALTSTACK_SIZE,
@@ -241,11 +241,11 @@ LOCAL void *DCALL tryalloc_altstack(void) {
 #endif /* CONFIG_HAVE_close */
 	return result;
 #endif /* !MAP_ANONYMOUS */
-#endif /* EXEC_ALTSTACK_ALLOC_USE_MMAP */
+#endif /* EXEC_ALTSTACK_ALLOC_USE_mmap */
 
-#ifdef EXEC_ALTSTACK_ALLOC_USE_MALLOC
+#ifdef EXEC_ALTSTACK_ALLOC_USE_malloc
 	return Dee_TryMalloc(DEE_EXEC_ALTSTACK_SIZE);
-#endif /* EXEC_ALTSTACK_ALLOC_USE_MALLOC */
+#endif /* EXEC_ALTSTACK_ALLOC_USE_malloc */
 
 #ifdef EXEC_ALTSTACK_ALLOC_USE_STUB
 	return ALTSTACK_ALLOC_FAILED;
@@ -253,21 +253,21 @@ LOCAL void *DCALL tryalloc_altstack(void) {
 }
 
 STACK_ALLOCATOR_DECL void DCALL free_altstack(void *stack) {
-#ifdef EXEC_ALTSTACK_ALLOC_USE_VIRTUALALLOC
+#ifdef EXEC_ALTSTACK_ALLOC_USE_VirtualAlloc
 	(void)VirtualFree(stack, /*DEE_EXEC_ALTSTACK_SIZE*/ 0, MEM_RELEASE);
-#endif /* EXEC_ALTSTACK_ALLOC_USE_VIRTUALALLOC */
+#endif /* EXEC_ALTSTACK_ALLOC_USE_VirtualAlloc */
 
-#ifdef EXEC_ALTSTACK_ALLOC_USE_MMAP
+#ifdef EXEC_ALTSTACK_ALLOC_USE_mmap
 #ifdef CONFIG_HAVE_munmap
 	(void)munmap(stack, DEE_EXEC_ALTSTACK_SIZE);
 #else /* CONFIG_HAVE_munmap */
 	(void)stack;
 #endif /* !CONFIG_HAVE_munmap */
-#endif /* EXEC_ALTSTACK_ALLOC_USE_MMAP */
+#endif /* EXEC_ALTSTACK_ALLOC_USE_mmap */
 
-#ifdef EXEC_ALTSTACK_ALLOC_USE_MALLOC
+#ifdef EXEC_ALTSTACK_ALLOC_USE_malloc
 	Dee_Free(stack);
-#endif /* EXEC_ALTSTACK_ALLOC_USE_MALLOC */
+#endif /* EXEC_ALTSTACK_ALLOC_USE_malloc */
 
 #ifdef EXEC_ALTSTACK_ALLOC_USE_STUB
 	(void)stack;

@@ -79,7 +79,7 @@ DECL_BEGIN
 DeeSystem_DEFINE_memrchr(dee_memrchr)
 #endif /* !CONFIG_HAVE_memrchr */
 
-#ifdef DEE_SYSTEM_FS_NOCASE
+#ifdef DEE_SYSTEM_FS_ICASE
 #ifndef CONFIG_HAVE_memcasecmp
 #define CONFIG_HAVE_memcasecmp
 #define memcasecmp dee_memcasecmp
@@ -88,11 +88,11 @@ DeeSystem_DEFINE_memcasecmp(dee_memcasecmp)
 #define fs_memcmp      memcasecmp
 #define fs_bcmp        memcasecmp
 #define fs_hashobj(ob) DeeString_HashCase((DeeObject *)Dee_REQUIRES_OBJECT(ob))
-#else /* DEE_SYSTEM_FS_NOCASE */
+#else /* DEE_SYSTEM_FS_ICASE */
 #define fs_memcmp      memcmp
 #define fs_bcmp        bcmp
 #define fs_hashobj(ob) DeeString_Hash((DeeObject *)Dee_REQUIRES_OBJECT(ob))
-#endif /* !DEE_SYSTEM_FS_NOCASE */
+#endif /* !DEE_SYSTEM_FS_ICASE */
 
 
 
@@ -2896,17 +2896,17 @@ done:
 struct mtime_entry {
 	DREF DeeStringObject *me_file; /* [0..1] Absolute, normalized filename.
 	                                *  NOTE: When NULL, then this entry is unused. */
-#ifdef DEE_SYSTEM_FS_NOCASE
+#ifdef DEE_SYSTEM_FS_ICASE
 	dhash_t               me_casehash; /* Case-insensitive hash for `me_file' */
-#endif /* DEE_SYSTEM_FS_NOCASE */
+#endif /* DEE_SYSTEM_FS_ICASE */
 	uint64_t              me_mtim; /* Last-modified time of `me_file' */
 };
 
-#ifdef DEE_SYSTEM_FS_NOCASE
+#ifdef DEE_SYSTEM_FS_ICASE
 #define MTIME_ENTRY_HASH(x) ((x)->me_casehash)
-#else /* DEE_SYSTEM_FS_NOCASE */
+#else /* DEE_SYSTEM_FS_ICASE */
 #define MTIME_ENTRY_HASH(x) DeeString_HASH((x)->me_file)
-#endif /* !DEE_SYSTEM_FS_NOCASE */
+#endif /* !DEE_SYSTEM_FS_ICASE */
 
 struct mtime_cache {
 	size_t              mc_size; /* [lock(mc_lock)] Amount of cache entries currently in use. */
@@ -3075,9 +3075,9 @@ again:
 
 			/* Not found. - Use this empty slot. */
 			item->me_file = (DREF DeeStringObject *)path;
-#ifdef DEE_SYSTEM_FS_NOCASE
+#ifdef DEE_SYSTEM_FS_ICASE
 			item->me_casehash = hash;
-#endif /* DEE_SYSTEM_FS_NOCASE */
+#endif /* DEE_SYSTEM_FS_ICASE */
 			item->me_mtim = value;
 			Dee_Incref(path);
 			++mtime_cache.mc_size;

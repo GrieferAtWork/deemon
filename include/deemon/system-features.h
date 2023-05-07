@@ -9685,7 +9685,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #else /* CONFIG_HOST_WINDOWS */
 #define CONFIG_PREFER_CHAR_FUNCTIONS
 #endif /* !CONFIG_HOST_WINDOWS */
-#endif
+#endif /* ... */
 
 
 #if 1

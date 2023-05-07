@@ -151,10 +151,12 @@ __TIME__ "|"
 __DATE__ "|"
 #endif /* __DATE__ */
 #ifdef CONFIG_HOST_UNIX
-"posix|"
+"unix|"
 #elif defined(CONFIG_HOST_WINDOWS)
 "windows|"
-#endif
+#else /* ... */
+"unknown-os|"
+#endif /* !... */
 #ifdef CONFIG_HAVE_EXEC_ASM
 "asm|"
 #endif /* CONFIG_HAVE_EXEC_ASM */
@@ -170,13 +172,17 @@ __DATE__ "|"
 "i386|"
 #elif defined(__arm__)
 "arm|"
-#endif
+#else /* ... */
+"unknown-cpu|"
+#endif /* !... */
 #if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
 "little-endian"
 #elif __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
 "big-endian"
+#elif __BYTE_ORDER__ == __ORDER_PDP_ENDIAN__
+"pdp-endian"
 #else
-PP_STR(__BYTE_ORDER__) "-endian"
+"unknown-endian"
 #endif
 "]\n"
 "deemon    version "

@@ -2311,11 +2311,11 @@ PRIVATE struct dex_symbol symbols[] = {
 	        "A special filename accepted by ?Gopen to return a handle to ?Astderr?DFile") },)
 
 	/* Allow user-code to  */
-#ifdef DEE_SYSTEM_FS_NOCASE
+#ifdef DEE_SYSTEM_FS_ICASE
 #define posix_FS_ICASE (*Dee_True)
-#else /* DEE_SYSTEM_FS_NOCASE */
+#else /* DEE_SYSTEM_FS_ICASE */
 #define posix_FS_ICASE (*Dee_False)
-#endif /* !DEE_SYSTEM_FS_NOCASE */
+#endif /* !DEE_SYSTEM_FS_ICASE */
 	{ "FS_ICASE", (DeeObject *)&posix_FS_ICASE, MODSYM_FNORMAL | MODSYM_FREADONLY | MODSYM_FCONSTEXPR,
 	  DOC("Evaluations to true if the host has a case-insensitive file-system") },
 

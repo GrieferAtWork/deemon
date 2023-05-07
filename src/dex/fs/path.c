@@ -36,13 +36,7 @@
 
 DECL_BEGIN
 
-#if 1
 #define DeeSystem_IsAbsString(x) DeeSystem_IsAbs(DeeString_STR(x))
-#elif defined(CONFIG_HOST_WINDOWS)
-#define DeeSystem_IsAbsString(x) (DeeString_WLEN(x) >= 2 && DeeString_GetChar(x, 1) == ':')
-#else /* ... */
-#define DeeSystem_IsAbsString(x) (DeeString_WLEN(x) >= 1 && DeeString_GetChar(x, 0) == '/')
-#endif /* !... */
 
 
 #ifndef CONFIG_HAVE_memrchr
@@ -55,15 +49,13 @@ fs_pathhead(DeeObject *__restrict path) {
 	char *tailsep;
 	ASSERT_OBJECT_TYPE_EXACT(path, &DeeString_Type);
 	/* TODO: Unicode support */
-	tailsep = (char *)memrchr(DeeString_STR(path), '/',
-	                          DeeString_SIZE(path) *
-	                          sizeof(char));
-#ifdef DEE_SYSTEM_PATH_ACCEPTS_BACKSLASH
+	tailsep = (char *)memrchr(DeeString_STR(path), DeeSystem_SEP,
+	                          DeeString_SIZE(path) * sizeof(char));
+#ifdef DeeSystem_ALTSEP
 	{
 		char *tailsep2;
-		tailsep2 = (char *)memrchr(DeeString_STR(path), '\\',
-		                           DeeString_SIZE(path) *
-		                           sizeof(char));
+		tailsep2 = (char *)memrchr(DeeString_STR(path), DeeSystem_ALTSEP,
+		                           DeeString_SIZE(path) * sizeof(char));
 		if (!tailsep) {
 			tailsep = tailsep2;
 		} else if (tailsep2) {
@@ -71,7 +63,7 @@ fs_pathhead(DeeObject *__restrict path) {
 				tailsep = tailsep2;
 		}
 	}
-#endif /* DEE_SYSTEM_PATH_ACCEPTS_BACKSLASH */
+#endif /* DeeSystem_ALTSEP */
 	if (!tailsep)
 		return_empty_string;
 	return DeeString_NewSized(DeeString_STR(path),
@@ -83,15 +75,13 @@ fs_pathtail(DeeObject *__restrict path) {
 	char *tailsep;
 	ASSERT_OBJECT_TYPE_EXACT(path, &DeeString_Type);
 	/* TODO: Unicode support */
-	tailsep = (char *)memrchr(DeeString_STR(path), '/',
-	                          DeeString_SIZE(path) *
-	                          sizeof(char));
-#ifdef DEE_SYSTEM_PATH_ACCEPTS_BACKSLASH
+	tailsep = (char *)memrchr(DeeString_STR(path), DeeSystem_SEP,
+	                          DeeString_SIZE(path) * sizeof(char));
+#ifdef DeeSystem_ALTSEP
 	{
 		char *tailsep2;
-		tailsep2 = (char *)memrchr(DeeString_STR(path), '\\',
-		                           DeeString_SIZE(path) *
-		                           sizeof(char));
+		tailsep2 = (char *)memrchr(DeeString_STR(path), DeeSystem_ALTSEP,
+		                           DeeString_SIZE(path) * sizeof(char));
 		if (!tailsep) {
 			tailsep = tailsep2;
 		} else if (tailsep2) {
@@ -99,7 +89,7 @@ fs_pathtail(DeeObject *__restrict path) {
 				tailsep = tailsep2;
 		}
 	}
-#endif /* DEE_SYSTEM_PATH_ACCEPTS_BACKSLASH */
+#endif /* DeeSystem_ALTSEP */
 	if (!tailsep)
 		return_reference_(path);
 	++tailsep;
@@ -113,15 +103,13 @@ fs_pathfile(DeeObject *__restrict path) {
 	size_t tailsize;
 	ASSERT_OBJECT_TYPE_EXACT(path, &DeeString_Type);
 	/* TODO: Unicode support */
-	tailsep = (char *)memrchr(DeeString_STR(path), '/',
-	                          DeeString_SIZE(path) *
-	                          sizeof(char));
-#ifdef DEE_SYSTEM_PATH_ACCEPTS_BACKSLASH
+	tailsep = (char *)memrchr(DeeString_STR(path), DeeSystem_SEP,
+	                          DeeString_SIZE(path) * sizeof(char));
+#ifdef DeeSystem_ALTSEP
 	{
 		char *tailsep2;
-		tailsep2 = (char *)memrchr(DeeString_STR(path), '\\',
-		                           DeeString_SIZE(path) *
-		                           sizeof(char));
+		tailsep2 = (char *)memrchr(DeeString_STR(path), DeeSystem_ALTSEP,
+		                           DeeString_SIZE(path) * sizeof(char));
 		if (!tailsep) {
 			tailsep = tailsep2;
 		} else if (tailsep2) {
@@ -129,7 +117,7 @@ fs_pathfile(DeeObject *__restrict path) {
 				tailsep = tailsep2;
 		}
 	}
-#endif /* !DEE_SYSTEM_PATH_ACCEPTS_BACKSLASH */
+#endif /* !DeeSystem_ALTSEP */
 	if (tailsep) {
 		++tailsep;
 	} else {
@@ -552,10 +540,10 @@ fs_pathrel(DeeObject *__restrict path, DeeObject *pwd) {
 	for (;;) {
 		a = utf8_readchar((char const **)&pth_iter, pth_end);
 		b = utf8_readchar((char const **)&pwd_iter, pwd_end);
-#ifdef DEE_SYSTEM_FS_NOCASE
+#ifdef DEE_SYSTEM_FS_ICASE
 		a = DeeUni_ToUpper(a);
 		b = DeeUni_ToUpper(b);
-#endif /* DEE_SYSTEM_FS_NOCASE */
+#endif /* DEE_SYSTEM_FS_ICASE */
 		if (DeeSystem_IsSep(a)) {
 			/* Align differing space in `b' */
 			while (DeeUni_IsSpace(b)) {
@@ -1207,7 +1195,7 @@ done:
 #ifdef CONFIG_UNICODE_PRINTER_MUSTFINI_IF_EMPTY
 			unicode_printer_fini(&printer);
 #endif /* CONFIG_UNICODE_PRINTER_MUSTFINI_IF_EMPTY */
-#ifdef DEE_SYSTEM_FS_NOCASE
+#ifdef DEE_SYSTEM_FS_ICASE
 			if (options & FS_EXPAND_FCASE) {
 				/* Check for lowercase characters. */
 				iter = begin = DeeString_AsUtf8(path);
@@ -1222,7 +1210,7 @@ done:
 return_upper:
 				return DeeObject_CallAttrString(path, "upper", 0, NULL);
 			}
-#endif /* DEE_SYSTEM_FS_NOCASE */
+#endif /* DEE_SYSTEM_FS_ICASE */
 			return_reference_(path);
 		}
 		/* Actually print the remainder. */
@@ -1241,7 +1229,7 @@ return_upper:
 		Dee_Decref(path);
 		path = new_path;
 	}
-#ifdef DEE_SYSTEM_FS_NOCASE
+#ifdef DEE_SYSTEM_FS_ICASE
 	if ((options & FS_EXPAND_FCASE) && path) {
 		DREF DeeObject *result;
 		/* Convert everything to upper-case. */
@@ -1249,7 +1237,7 @@ return_upper:
 		Dee_Decref(path);
 		return result;
 	}
-#endif /* DEE_SYSTEM_FS_NOCASE */
+#endif /* DEE_SYSTEM_FS_ICASE */
 	return path;
 err:
 	unicode_printer_fini(&printer);

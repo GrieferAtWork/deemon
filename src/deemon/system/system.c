@@ -36,6 +36,7 @@
 
 #include <hybrid/host.h>
 #include <hybrid/overflow.h>
+#include <hybrid/typecore.h>
 
 #ifdef CONFIG_HOST_WINDOWS
 #include <Windows.h>
@@ -59,6 +60,9 @@
 
 DECL_BEGIN
 
+#undef byte_t
+#define byte_t __BYTE_TYPE__
+
 #ifdef Dee_fd_t_IS_int
 #define Dee_PRIpSYSFD "d"
 #else /* Dee_fd_t_IS_int */
@@ -73,33 +77,33 @@ DeeSystem_DEFINE_memrchr(dee_memrchr)
 
 
 /* Figure out how to implement `DeeSystem_PrintPwd()' */
-#undef DeeSystem_PrintPwd_USE_WINDOWS
-#undef DeeSystem_PrintPwd_USE_WGETCWD
-#undef DeeSystem_PrintPwd_USE_GETCWD
-#undef DeeSystem_PrintPwd_USE_GETENV
+#undef DeeSystem_PrintPwd_USE_GetCurrentDirectoryW
+#undef DeeSystem_PrintPwd_USE_wgetcwd
+#undef DeeSystem_PrintPwd_USE_getcwd
+#undef DeeSystem_PrintPwd_USE_getenv
 #undef DeeSystem_PrintPwd_USE_DOT
 #if defined(CONFIG_HOST_WINDOWS)
-#define DeeSystem_PrintPwd_USE_WINDOWS 1
+#define DeeSystem_PrintPwd_USE_GetCurrentDirectoryW
 #elif defined(CONFIG_HAVE_wgetcwd) && defined(CONFIG_PREFER_WCHAR_FUNCTIONS)
-#define DeeSystem_PrintPwd_USE_WGETCWD 1
+#define DeeSystem_PrintPwd_USE_wgetcwd
 #elif defined(CONFIG_HAVE_getcwd)
-#define DeeSystem_PrintPwd_USE_GETCWD 1
+#define DeeSystem_PrintPwd_USE_getcwd
 #elif defined(CONFIG_HAVE_wgetcwd)
-#define DeeSystem_PrintPwd_USE_WGETCWD 1
+#define DeeSystem_PrintPwd_USE_wgetcwd
 #elif defined(CONFIG_HAVE_getenv)
-#define DeeSystem_PrintPwd_USE_GETENV 1
-#elif
-#define DeeSystem_PrintPwd_USE_DOT 1
-#endif
+#define DeeSystem_PrintPwd_USE_getenv
+#elif /* ... */
+#define DeeSystem_PrintPwd_USE_DOT
+#endif /* !... */
 
-#ifdef DeeSystem_PrintPwd_USE_WGETCWD
+#ifdef DeeSystem_PrintPwd_USE_wgetcwd
 #ifndef CONFIG_HAVE_wcslen
-#define wcslen          dee_wcslen
+#define wcslen dee_wcslen
 DeeSystem_DEFINE_wcslen(dee_wcslen)
 #endif /* !CONFIG_HAVE_wcslen */
-#endif /* DeeSystem_PrintPwd_USE_WGETCWD */
+#endif /* DeeSystem_PrintPwd_USE_wgetcwd */
 
-#ifdef DeeSystem_PrintPwd_USE_WINDOWS
+#ifdef DeeSystem_PrintPwd_USE_GetCurrentDirectoryW
 PRIVATE ATTR_COLD int DCALL nt_err_getcwd(DWORD dwError) {
 	if (DeeNTSystem_IsAccessDeniedError(dwError)) {
 		return DeeNTSystem_ThrowErrorf(&DeeError_FileAccessError, dwError,
@@ -112,7 +116,7 @@ PRIVATE ATTR_COLD int DCALL nt_err_getcwd(DWORD dwError) {
 	return DeeNTSystem_ThrowErrorf(&DeeError_FSError, dwError,
 	                               "Failed to retrieve the current working directory");
 }
-#endif /* DeeSystem_PrintPwd_USE_WINDOWS */
+#endif /* DeeSystem_PrintPwd_USE_GetCurrentDirectoryW */
 
 
 
@@ -185,20 +189,24 @@ DeeSystem_MakeAbsolute(/*String*/ DeeObject *__restrict filename) {
 		break;
 	}
 #endif /* CONFIG_HOST_WINDOWS */
+
 	/* Strip leading space. */
 	begin = utf8_skipspace(begin, end);
 	if (!DeeSystem_IsAbs(begin)) {
 		/* Print the current working directory when the given path isn't absolute. */
 		if unlikely(DeeSystem_PrintPwd(&printer, true) < 0)
 			goto err;
-#ifdef CONFIG_HOST_WINDOWS
+
 		/* Handle drive-relative paths. */
+#ifdef DEE_SYSTEM_FS_DRIVES
 		if (DeeSystem_IsSep(begin[0]) && UNICODE_PRINTER_LENGTH(&printer)) {
 			size_t index = 0;
+
 			/* This sep must exist because it was printed by `DeeSystem_PrintPwd()' */
 			while ((++index, UNICODE_PRINTER_GETCHAR(&printer, index - 1) != DeeSystem_SEP))
 				;
 			unicode_printer_truncate(&printer, index);
+
 			/* Strip leading slashes. */
 			for (;;) {
 				begin = utf8_skipspace(begin, end);
@@ -209,7 +217,7 @@ DeeSystem_MakeAbsolute(/*String*/ DeeObject *__restrict filename) {
 				++begin;
 			}
 		}
-#endif /* CONFIG_HOST_WINDOWS */
+#endif /* DEE_SYSTEM_FS_DRIVES */
 	}
 	iter = flush_start = begin;
 	ASSERTF(*end == '\0',
@@ -232,6 +240,7 @@ next:
 		char const *sep_loc;
 		bool did_print_sep;
 		sep_loc = flush_end = iter - 1;
+
 		/* Skip multiple slashes and whitespace following a path separator. */
 		for (;;) {
 			iter = utf8_skipspace(iter, end);
@@ -242,12 +251,14 @@ next:
 			++iter;
 		}
 		flush_end = utf8_skipspace_rev(flush_end, flush_start);
+
 		/* Analyze the last path portion for being a special name (`.' or `..') */
 		if (flush_end[-1] == '.') {
 			if (flush_end[-2] == '.' && flush_end - 2 == flush_start) {
 				size_t new_end;
 				size_t printer_length;
 				/* Parent-directory-reference. */
+
 				/* Delete the last directory that was written. */
 				if (!printer.up_buffer)
 					goto do_flush_after_sep;
@@ -260,6 +271,7 @@ next:
 				if (new_end == (size_t)-1)
 					goto do_flush_after_sep;
 				++new_end;
+
 				/* Truncate the valid length of the printer to after the previous slash. */
 				printer.up_length = new_end;
 				unicode_printer_truncate(&printer, new_end);
@@ -290,18 +302,18 @@ done_flush:
 do_flush_after_sep:
 		/* Check if we need to fix anything */
 		if (flush_end == iter - 1
-#ifdef CONFIG_HOST_WINDOWS
+#ifdef DeeSystem_ALTSEP
 		    && (*sep_loc == DeeSystem_SEP || iter == end + 1)
-#endif /* CONFIG_HOST_WINDOWS */
+#endif /* DeeSystem_ALTSEP */
 		    ) {
 			goto done_flush_nostart;
 		}
 		/* If we can already include a slash in this part, do so. */
 		did_print_sep = false;
 		if (sep_loc == flush_end
-#ifdef CONFIG_HOST_WINDOWS
+#ifdef DeeSystem_ALTSEP
 		    && (*sep_loc == DeeSystem_SEP)
-#endif /* !CONFIG_HOST_WINDOWS */
+#endif /* !DeeSystem_ALTSEP */
 		    ) {
 			++flush_end;
 			did_print_sep = true;
@@ -315,9 +327,9 @@ do_flush_after_sep:
 		if (did_print_sep) {
 			/* The slash has already been been printed: `foo/ bar' */
 		} else if (sep_loc == iter - 1
-#ifdef CONFIG_HOST_WINDOWS
+#ifdef DeeSystem_ALTSEP
 		         && (!*sep_loc || *sep_loc == DeeSystem_SEP)
-#endif /* !CONFIG_HOST_WINDOWS */
+#endif /* !DeeSystem_ALTSEP */
 		         ) {
 			--flush_start; /* The slash will be printed as part of the next flush: `foo /bar' */
 		} else {
@@ -366,7 +378,7 @@ err:
 PUBLIC WUNUSED NONNULL((1)) int
 (DCALL DeeSystem_PrintPwd)(struct Dee_unicode_printer *__restrict printer,
                            bool include_trailing_sep) {
-#ifdef DeeSystem_PrintPwd_USE_WINDOWS
+#ifdef DeeSystem_PrintPwd_USE_GetCurrentDirectoryW
 	LPWSTR buffer;
 	DWORD new_bufsize, bufsize = PATH_MAX;
 	buffer = unicode_printer_alloc_wchar(printer, bufsize);
@@ -432,15 +444,15 @@ err_release:
 	unicode_printer_free_wchar(printer, buffer);
 err:
 	return -1;
-#endif /* DeeSystem_PrintPwd_USE_WINDOWS */
+#endif /* DeeSystem_PrintPwd_USE_GetCurrentDirectoryW */
 
-#if (defined(DeeSystem_PrintPwd_USE_WGETCWD) || \
-     defined(DeeSystem_PrintPwd_USE_GETCWD))
-#ifdef DeeSystem_PrintPwd_USE_WGETCWD
+#if (defined(DeeSystem_PrintPwd_USE_wgetcwd) || \
+     defined(DeeSystem_PrintPwd_USE_getcwd))
+#ifdef DeeSystem_PrintPwd_USE_wgetcwd
 #define IFELSE_WCHAR(wc, c) wc
-#else /* DeeSystem_PrintPwd_USE_WGETCWD */
+#else /* DeeSystem_PrintPwd_USE_wgetcwd */
 #define IFELSE_WCHAR(wc, c) c
-#endif /* !DeeSystem_PrintPwd_USE_WGETCWD */
+#endif /* !DeeSystem_PrintPwd_USE_wgetcwd */
 	IFELSE_WCHAR(dwchar_t, char) *buffer, *new_buffer;
 	size_t bufsize = PATH_MAX, buflen;
 	buffer = IFELSE_WCHAR(unicode_printer_alloc_wchar(printer, bufsize),
@@ -525,9 +537,9 @@ err_release:
 err:
 	return -1;
 #undef IFELSE_WCHAR
-#endif /* DeeSystem_PrintPwd_USE_WGETCWD || DeeSystem_PrintPwd_USE_GETCWD */
+#endif /* DeeSystem_PrintPwd_USE_wgetcwd || DeeSystem_PrintPwd_USE_getcwd */
 
-#ifdef DeeSystem_PrintPwd_USE_GETENV
+#ifdef DeeSystem_PrintPwd_USE_getenv
 	size_t pwdlen;
 	char const *pwd;
 	DBG_ALIGNMENT_DISABLE();
@@ -560,7 +572,7 @@ err:
 	return 0;
 err:
 	return -1;
-#endif /* DeeSystem_PrintPwd_USE_GETENV */
+#endif /* DeeSystem_PrintPwd_USE_getenv */
 
 #ifdef DeeSystem_PrintPwd_USE_DOT
 	dssize_t error;
@@ -573,9 +585,53 @@ err:
 #endif /* DeeSystem_PrintPwd_USE_DOT */
 }
 
-DECL_END
 
 
+
+
+/************************************************************************/
+/* MISC. UTILS                                                          */
+/************************************************************************/
+
+#if !defined(DeeSystem_ALTSEP) || (DeeSystem_ALTSEP == DeeSystem_SEP)
+#ifndef CONFIG_HAVE_memrend
+#define CONFIG_HAVE_memrend
+#undef memrend
+#define memrend dee_memrend
+DeeSystem_DEFINE_memrend(dee_memrend)
+#endif /* !CONFIG_HAVE_memrend */
+#endif /* !DeeSystem_ALTSEP || (DeeSystem_ALTSEP == DeeSystem_SEP) */
+
+
+/* Returns the filename-portion of a given `path'
+ * >> print DeeSystem_BaseName(r"/foo/bar/file.txt");   // "file.txt"
+ * >> print DeeSystem_BaseName(r"file.txt");            // "file.txt"
+ * >> print DeeSystem_BaseName(r"E:\path\to\file.txt"); // "file.txt"  (Windows-only)
+ * 
+ * This function returns a pointer to 1 character past the
+ * last `DeeSystem_SEP' or `DeeSystem_ALTSEP' in `path', or
+ * just re-returns `path' when no such character exists. */
+PUBLIC ATTR_PURE ATTR_RETNONNULL WUNUSED ATTR_INS(1, 2) char const *
+(FCALL DeeSystem_BaseName)(char const *__restrict path, size_t pathlen) {
+#if defined(DeeSystem_ALTSEP) && (DeeSystem_ALTSEP != DeeSystem_SEP)
+	char const *result = path + pathlen;
+	while (result > path && !DeeSystem_IsSep(result[-1]))
+		--result;
+	return result;
+#else /* DeeSystem_ALTSEP && (DeeSystem_ALTSEP != DeeSystem_SEP) */
+	char const *result;
+	result = (char *)((byte_t *)memrend(path, DeeSystem_SEP, pathlen) + 1);
+	return result;
+#endif /* !DeeSystem_ALTSEP || (DeeSystem_ALTSEP == DeeSystem_SEP) */
+}
+
+
+
+
+
+/************************************************************************/
+/* DLFCN API                                                            */
+/************************************************************************/
 #ifdef DeeSystem_DlOpen_USE_LoadLibrary
 #ifdef _WIN32_WCE
 #undef GetProcAddress
@@ -589,9 +645,9 @@ DECL_END
 #define USED_DLOPEN_SCOPE RTLD_LOCAL
 #elif defined(CONFIG_HAVE_RTLD_GLOBAL)
 #define USED_DLOPEN_SCOPE RTLD_GLOBAL
-#else
+#else /* ... */
 #define USED_DLOPEN_SCOPE 0
-#endif
+#endif /* !... */
 #endif /* !USED_DLOPEN_SCOPE */
 
 #ifndef USED_DLOPEN_BIND
@@ -599,15 +655,11 @@ DECL_END
 #define USED_DLOPEN_BIND RTLD_LAZY
 #elif defined(CONFIG_HAVE_RTLD_NOW)
 #define USED_DLOPEN_BIND RTLD_NOW
-#else
+#else /* ... */
 #define USED_DLOPEN_BIND 0
-#endif
+#endif /* !... */
 #endif /* !USED_DLOPEN_BIND */
 #endif /* DeeSystem_DlOpen_USE_dlopen */
-
-
-
-DECL_BEGIN
 
 /* Open a shared library
  * @return: * :                      A handle for the shared library.
@@ -1091,29 +1143,29 @@ PUBLIC WUNUSED uint64_t DCALL DeeSystem_GetWalltime(void) {
 
 
 /* Figure out how to implement `DeeSystem_Unlink()' */
-#undef DeeSystem_Unlink_USE_DELETEFILE
-#undef DeeSystem_Unlink_WUNLINK
-#undef DeeSystem_Unlink_UNLINK
-#undef DeeSystem_Unlink_WREMOVE
-#undef DeeSystem_Unlink_REMOVE
+#undef DeeSystem_Unlink_USE_DeleteFileW
+#undef DeeSystem_Unlink_USE_wunlink
+#undef DeeSystem_Unlink_USE_unlink
+#undef DeeSystem_Unlink_USE_wremove
+#undef DeeSystem_Unlink_USE_remove
 #undef DeeSystem_Unlink_STUB
 #if defined(CONFIG_HOST_WINDOWS)
-#define DeeSystem_Unlink_USE_DELETEFILE 1
+#define DeeSystem_Unlink_USE_DeleteFileW
 #elif defined(CONFIG_HAVE_wunlink) && defined(CONFIG_PREFER_WCHAR_FUNCTIONS)
-#define DeeSystem_Unlink_WUNLINK 1
+#define DeeSystem_Unlink_USE_wunlink
 #elif defined(CONFIG_HAVE_unlink)
-#define DeeSystem_Unlink_UNLINK 1
+#define DeeSystem_Unlink_USE_unlink
 #elif defined(CONFIG_HAVE_wunlink)
-#define DeeSystem_Unlink_WUNLINK 1
+#define DeeSystem_Unlink_USE_wunlink
 #elif defined(CONFIG_HAVE_wremove) && defined(CONFIG_PREFER_WCHAR_FUNCTIONS)
-#define DeeSystem_Unlink_WREMOVE 1
+#define DeeSystem_Unlink_USE_wremove
 #elif defined(CONFIG_HAVE_remove)
-#define DeeSystem_Unlink_REMOVE 1
+#define DeeSystem_Unlink_USE_remove
 #elif defined(CONFIG_HAVE_wremove)
-#define DeeSystem_Unlink_WREMOVE 1
-#else
-#define DeeSystem_Unlink_STUB 1
-#endif
+#define DeeSystem_Unlink_USE_wremove
+#else /* ... */
+#define DeeSystem_Unlink_STUB
+#endif /* !... */
 
 
 
@@ -1128,7 +1180,7 @@ PUBLIC WUNUSED uint64_t DCALL DeeSystem_GetWalltime(void) {
 PUBLIC WUNUSED NONNULL((1)) int DCALL
 DeeSystem_Unlink(/*String*/ DeeObject *__restrict filename,
                  bool throw_exception_on_error) {
-#ifdef DeeSystem_Unlink_USE_DELETEFILE
+#ifdef DeeSystem_Unlink_USE_DeleteFileW
 	DWORD dwError;
 	LPWSTR wname;
 	ASSERT_OBJECT_TYPE_EXACT(filename, &DeeString_Type);
@@ -1192,11 +1244,11 @@ again_deletefile2:
 	                        filename);
 err:
 	return -1;
-#endif /* DeeSystem_Unlink_USE_DELETEFILE */
+#endif /* DeeSystem_Unlink_USE_DeleteFileW */
 
-#if (defined(DeeSystem_Unlink_WUNLINK) || defined(DeeSystem_Unlink_WREMOVE) || \
-     defined(DeeSystem_Unlink_UNLINK) || defined(DeeSystem_Unlink_REMOVE))
-#if defined(DeeSystem_Unlink_WUNLINK) || defined(DeeSystem_Unlink_WREMOVE)
+#if (defined(DeeSystem_Unlink_USE_wunlink) || defined(DeeSystem_Unlink_USE_wremove) || \
+     defined(DeeSystem_Unlink_USE_unlink) || defined(DeeSystem_Unlink_USE_remove))
+#if defined(DeeSystem_Unlink_USE_wunlink) || defined(DeeSystem_Unlink_USE_wremove)
 	dwchar_t *wname;
 	ASSERT_OBJECT_TYPE_EXACT(filename, &DeeString_Type);
 	wname = DeeString_AsWide(filename);
@@ -1219,37 +1271,37 @@ err:
 #if defined(CONFIG_HAVE_errno) && defined(EINTR)
 again_deletefile:
 #endif /* CONFIG_HAVE_errno && EINTR */
-#ifdef DeeSystem_Unlink_WUNLINK
+#ifdef DeeSystem_Unlink_USE_wunlink
 	if (wunlink(wname))
 		return 0;
-#else /* DeeSystem_Unlink_WUNLINK */
+#else /* DeeSystem_Unlink_USE_wunlink */
 	if (wremove(wname))
 		return 0;
-#endif /* !DeeSystem_Unlink_WUNLINK */
+#endif /* !DeeSystem_Unlink_USE_wunlink */
 #if defined(CONFIG_HAVE_errno) && defined(EINTR)
 	if (DeeSystem_GetErrno() == EINTR) {
 		if (DeeThread_CheckInterrupt()) {
 			/* Try hard to delete the file... (even after an interrupt) */
-#ifdef DeeSystem_Unlink_WUNLINK
+#ifdef DeeSystem_Unlink_USE_wunlink
 			wunlink(wname);
-#else /* DeeSystem_Unlink_WUNLINK */
+#else /* DeeSystem_Unlink_USE_wunlink */
 			wremove(wname);
-#endif /* !DeeSystem_Unlink_WUNLINK */
+#endif /* !DeeSystem_Unlink_USE_wunlink */
 			return -1;
 		}
 		goto again_deletefile;
 	}
 #endif /* CONFIG_HAVE_errno && EINTR */
-#endif /* DeeSystem_Unlink_WUNLINK || DeeSystem_Unlink_WREMOVE */
+#endif /* DeeSystem_Unlink_USE_wunlink || DeeSystem_Unlink_USE_wremove */
 
-#if defined(DeeSystem_Unlink_UNLINK) || defined(DeeSystem_Unlink_REMOVE)
+#if defined(DeeSystem_Unlink_USE_unlink) || defined(DeeSystem_Unlink_USE_remove)
 	char const *utf8_name;
 	ASSERT_OBJECT_TYPE_EXACT(filename, &DeeString_Type);
 	utf8_name = DeeString_AsUtf8(filename);
 	if unlikely(!utf8_name) {
 		/* Since unlink() is a cleanup operation,
 		 * try hard to comply, even after an error! */
-#ifdef DeeSystem_Unlink_UNLINK
+#ifdef DeeSystem_Unlink_USE_unlink
 		if (unlink(DeeString_STR(filename)))
 #else /* CONFIG_HAVE_unlink */
 		if (remove(DeeString_STR(filename)))
@@ -1263,28 +1315,28 @@ again_deletefile:
 #if defined(CONFIG_HAVE_errno) && defined(EINTR)
 again_deletefile:
 #endif /* CONFIG_HAVE_errno && EINTR */
-#ifdef DeeSystem_Unlink_UNLINK
+#ifdef DeeSystem_Unlink_USE_unlink
 	if (unlink(utf8_name))
 		return 0;
-#else /* DeeSystem_Unlink_UNLINK */
+#else /* DeeSystem_Unlink_USE_unlink */
 	if (remove(utf8_name))
 		return 0;
-#endif /* !DeeSystem_Unlink_UNLINK */
+#endif /* !DeeSystem_Unlink_USE_unlink */
 #if defined(CONFIG_HAVE_errno) && defined(EINTR)
 	if (DeeSystem_GetErrno() == EINTR) {
 		if (DeeThread_CheckInterrupt()) {
 			/* Try hard to delete the file... (even after an interrupt) */
-#ifdef DeeSystem_Unlink_UNLINK
+#ifdef DeeSystem_Unlink_USE_unlink
 			unlink(utf8_name);
-#else /* DeeSystem_Unlink_UNLINK */
+#else /* DeeSystem_Unlink_USE_unlink */
 			remove(utf8_name);
-#endif /* !DeeSystem_Unlink_UNLINK */
+#endif /* !DeeSystem_Unlink_USE_unlink */
 			return -1;
 		}
 		goto again_deletefile;
 	}
 #endif /* CONFIG_HAVE_errno && EINTR */
-#endif /* DeeSystem_Unlink_WUNLINK || DeeSystem_Unlink_WREMOVE */
+#endif /* DeeSystem_Unlink_USE_wunlink || DeeSystem_Unlink_USE_wremove */
 	/* Can't delete the file, no matter what I try...  :( */
 	if (!throw_exception_on_error)
 		return 1;
@@ -1310,17 +1362,16 @@ again_deletefile:
 		                          filename);
 	}
 	return -1;
-#endif /* DeeSystem_Unlink_WUNLINK || DeeSystem_Unlink_WREMOVE || \
-          DeeSystem_Unlink_UNLINK || DeeSystem_Unlink_REMOVE */
+#endif /* DeeSystem_Unlink_USE_wunlink || DeeSystem_Unlink_USE_wremove || \
+          DeeSystem_Unlink_USE_unlink || DeeSystem_Unlink_USE_remove */
 
 #ifdef DeeSystem_Unlink_STUB
 	if (!throw_exception_on_error)
 		return 1;
-	DeeUnixSystem_ThrowErrorf(&DeeError_SystemError,
-	                          DeeSystem_GetErrno(),
-	                          "Failed to delete file %r",
-	                          filename);
-	return -1;
+	return DeeUnixSystem_ThrowErrorf(&DeeError_SystemError,
+	                                 DeeSystem_GetErrno(),
+	                                 "Failed to delete file %r",
+	                                 filename);
 #endif /* DeeSystem_Unlink_STUB */
 
 }
@@ -2115,22 +2166,33 @@ system_err_buf:
 		int error;
 system_err_buf:
 		error = DeeSystem_GetErrno();
-		if (error == ENOMEM && Dee_CollectMemory(1)) {
-			offset = orig_offset;
-			goto again;
-		} else if (error == EINTR) {
-			if (DeeThread_CheckInterrupt() == 0) {
+#ifdef ENOMEM
+		if (error == ENOMEM) {
+			if (Dee_CollectMemory(1)) {
 				offset = orig_offset;
 				goto again;
 			}
-		} else if (error == EBADF) {
+			goto err_buf;
+		}
+#endif /* ENOMEM */
+#ifdef EINTR
+		if (error == EINTR) {
+			if (DeeThread_CheckInterrupt())
+				goto err_buf;
+			offset = orig_offset;
+			goto again;
+		}
+#endif /* EINTR */
+#ifdef EBADF
+		if (error == EBADF) {
 			DeeError_Throwf(&DeeError_FileClosed,
 			                "File descriptor %d was closed",
 			                fd);
-		} else {
-			DeeUnixSystem_ThrowErrorf(&DeeError_SystemError, error,
-			                          "Failed to map file %d", fd);
+			goto err_buf;
 		}
+#endif /* EBADF */
+		DeeUnixSystem_ThrowErrorf(&DeeError_SystemError, error,
+		                          "Failed to map file %d", fd);
 #endif /* !CONFIG_HOST_WINDOWS */
 	}
 err_buf:

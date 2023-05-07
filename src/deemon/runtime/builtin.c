@@ -90,9 +90,9 @@ INTERN struct static_module_struct deemon_module_head = {
 		/* .mo_name      = */ (DREF DeeStringObject *)&str_deemon,
 		/* .mo_link      = */ LIST_ENTRY_UNBOUND_INITIALIZER,
 		/* .mo_path      = */ NULL,
-#ifdef CONFIG_HOST_WINDOWS
-		/* .mo_pathhash  = */ 0,
-#endif /* CONFIG_HOST_WINDOWS */
+#ifdef DEE_SYSTEM_FS_ICASE
+		/* .mo_pathihash = */ 0,
+#endif /* DEE_SYSTEM_FS_ICASE */
 		/* .mo_globlink  = */ LIST_ENTRY_UNBOUND_INITIALIZER,
 		/* .mo_importc   = */ 0,
 		/* .mo_globalc   = */ num_builtins_obj,

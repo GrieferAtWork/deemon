@@ -567,11 +567,11 @@ dee_basename(char const *filename) {
 	/* >> char *slash = strrchr(filename, '/');
 	 * >> return slash ? slash + 1 : (char *)filename; */
 	char *result, *iter = (char *)filename;
-#ifdef CONFIG_HOST_WINDOWS
+#ifdef DEE_SYSTEM_FS_DRIVES
 	/* Skip drive letter. */
 	if (isalpha(iter[0]) && iter[1] == ':')
 		iter += 2;
-#endif /* CONFIG_HOST_WINDOWS */
+#endif /* DEE_SYSTEM_FS_DRIVES */
 	result = iter;
 	for (;;) {
 		char ch = *iter++;

@@ -59,21 +59,21 @@ PUBLIC ATTR_COLD NONNULL((3)) int
 	int result;
 	if (!tp) {
 		/* Automatically determine the error type to-be thrown. */
-		DeeSystem_IF_E1(errno_value, ENOENT,                      { tp = &DeeError_FileNotFound; goto got_tp; });
-		DeeSystem_IF_E1(errno_value, EEXIST,                      { tp = &DeeError_FileExists; goto got_tp; });
-		DeeSystem_IF_E1(errno_value, EBADF,                       { tp = &DeeError_FileClosed; goto got_tp; });
-		DeeSystem_IF_E1(errno_value, EACCES,                      { tp = &DeeError_FileAccessError; goto got_tp; });
-		DeeSystem_IF_E1(errno_value, ENOMEM,                      { tp = &DeeError_NoMemory; goto got_tp; });
+		DeeSystem_IF_E1(errno_value, ENOENT, /*                */ { tp = &DeeError_FileNotFound; goto got_tp; });
+		DeeSystem_IF_E1(errno_value, EEXIST, /*                */ { tp = &DeeError_FileExists; goto got_tp; });
+		DeeSystem_IF_E1(errno_value, EBADF, /*                 */ { tp = &DeeError_FileClosed; goto got_tp; });
+		DeeSystem_IF_E1(errno_value, EACCES, /*                */ { tp = &DeeError_FileAccessError; goto got_tp; });
+		DeeSystem_IF_E1(errno_value, ENOMEM, /*                */ { tp = &DeeError_NoMemory; goto got_tp; });
 		DeeSystem_IF_E3(errno_value, ENOSYS, ENOTSUP, EOPNOTSUPP, { tp = &DeeError_UnsupportedAPI; goto got_tp; });
-		DeeSystem_IF_E1(errno_value, EINVAL,                      { tp = &DeeError_ValueError; goto got_tp; });
-		DeeSystem_IF_E2(errno_value, EROFS, ETXTBSY,              { tp = &DeeError_ReadOnlyFile; goto got_tp; });
-		DeeSystem_IF_E1(errno_value, EFBIG,                       { tp = &DeeError_IntegerOverflow; goto got_tp; });
-		DeeSystem_IF_E1(errno_value, EINTR,                       { tp = &DeeError_Interrupt; goto got_tp; });
-		DeeSystem_IF_E1(errno_value, EBUSY,                       { tp = &DeeError_BusyFile; goto got_tp; });
-		DeeSystem_IF_E1(errno_value, ENOTDIR,                     { tp = &DeeError_NoDirectory; goto got_tp; });
-		DeeSystem_IF_E1(errno_value, ENOTEMPTY,                   { tp = &DeeError_DirectoryNotEmpty; goto got_tp; });
-		DeeSystem_IF_E1(errno_value, EXDEV,                       { tp = &DeeError_CrossDeviceLink; goto got_tp; });
-		DeeSystem_IF_E1(errno_value, ENOLINK,                     { tp = &DeeError_NoSymlink; goto got_tp; });
+		DeeSystem_IF_E1(errno_value, EINVAL, /*                */ { tp = &DeeError_ValueError; goto got_tp; });
+		DeeSystem_IF_E2(errno_value, EROFS, ETXTBSY, /*        */ { tp = &DeeError_ReadOnlyFile; goto got_tp; });
+		DeeSystem_IF_E1(errno_value, EFBIG, /*                 */ { tp = &DeeError_IntegerOverflow; goto got_tp; });
+		DeeSystem_IF_E1(errno_value, EINTR, /*                 */ { tp = &DeeError_Interrupt; goto got_tp; });
+		DeeSystem_IF_E1(errno_value, EBUSY, /*                 */ { tp = &DeeError_BusyFile; goto got_tp; });
+		DeeSystem_IF_E1(errno_value, ENOTDIR, /*               */ { tp = &DeeError_NoDirectory; goto got_tp; });
+		DeeSystem_IF_E1(errno_value, ENOTEMPTY, /*             */ { tp = &DeeError_DirectoryNotEmpty; goto got_tp; });
+		DeeSystem_IF_E1(errno_value, EXDEV, /*                 */ { tp = &DeeError_CrossDeviceLink; goto got_tp; });
+		DeeSystem_IF_E1(errno_value, ENOLINK, /*               */ { tp = &DeeError_NoSymlink; goto got_tp; });
 		/* Fallback: Just use a SystemError */
 		tp = &DeeError_SystemError;
 		goto got_tp;

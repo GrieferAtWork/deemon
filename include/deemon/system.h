@@ -26,6 +26,17 @@
 
 #include "object.h"
 
+#ifdef CONFIG_NO_STRING_H
+#undef CONFIG_HAVE_STRING_H
+#elif !defined(CONFIG_HAVE_STRING_H) && \
+      (defined(__NO_has_include) || __has_include(<string.h>))
+#define CONFIG_HAVE_STRING_H
+#endif
+
+#ifdef CONFIG_HAVE_STRING_H
+#include <string.h>
+#endif /* CONFIG_HAVE_STRING_H */
+
 DECL_BEGIN
 
 #ifdef CONFIG_HOST_WINDOWS
@@ -45,42 +56,67 @@ struct Dee_unicode_printer;
 
 
 #ifdef CONFIG_HOST_WINDOWS
-#define DEE_SYSTEM_PATH_ACCEPTS_BACKSLASH
-#define DEE_SYSTEM_FS_NOCASE
+#define DEE_SYSTEM_FS_ICASE
 #define DEE_SYSTEM_FS_DRIVES
-#define DeeSystem_DELIM    ';'
-#define DeeSystem_DELIM_S  ";"
-#define DeeSystem_SEP      '\\'
-#define DeeSystem_SEP_S    "\\"
-#define DeeSystem_ALTSEP   '/'
-#define DeeSystem_ALTSEP_S "/"
-#define DeeSystem_IsSep(x) ((x) == '\\' || (x) == '/')
-#define DeeSystem_IsAbs(x) ((x)[0] && ((x)[1] == ':' || ((x)[0] == '\\' && (x)[1] == '\\')))
+#define DeeSystem_DELIM        ';'
+#define DeeSystem_DELIM_S      ";"
+#define DeeSystem_SEP          '\\'
+#define DeeSystem_SEP_S        "\\"
+#define DeeSystem_ALTSEP       '/'
+#define DeeSystem_ALTSEP_S     "/"
+#define DeeSystem_IsSep(x)     ((x) == '\\' || (x) == '/')
+#define DeeSystem_IsAbs(x)     ((x)[0] && ((x)[1] == ':' || ((x)[0] == '\\' && (x)[1] == '\\')))
+#define DeeSystem_IsAbsN(x, n) ((n) >= 2 && ((x)[1] == ':' || ((x)[0] == '\\' && (x)[1] == '\\')))
 #undef DEE_SYSTEM_IS_ABS_CHECKS_LEADING_SLASHES
 #elif defined(__CYGWIN__) || defined(__CYGWIN32__)
 /* Cygwin paths also accept r'\' as alias for r'/' */
-#undef DEE_SYSTEM_FS_NOCASE
-#define DEE_SYSTEM_PATH_ACCEPTS_BACKSLASH
-#define DeeSystem_DELIM    ':'
-#define DeeSystem_DELIM_S  ":"
-#define DeeSystem_SEP      '/'
-#define DeeSystem_SEP_S    "/"
-#define DeeSystem_ALTSEP   '\\'
-#define DeeSystem_ALTSEP_S "\\"
-#define DeeSystem_IsSep(x) ((x) == '\\' || (x) == '/')
-#define DeeSystem_IsAbs(x) ((x)[0] == '/') /* Absolute paths still require a leading '/'! */
+#undef DEE_SYSTEM_FS_ICASE
+#define DeeSystem_DELIM        ':'
+#define DeeSystem_DELIM_S      ":"
+#define DeeSystem_SEP          '/'
+#define DeeSystem_SEP_S        "/"
+#define DeeSystem_ALTSEP       '\\'
+#define DeeSystem_ALTSEP_S     "\\"
+#define DeeSystem_IsSep(x)     ((x) == '\\' || (x) == '/')
+#define DeeSystem_IsAbs(x)     ((x)[0] == '/') /* Absolute paths still require a leading '/'! */
+#define DeeSystem_IsAbsN(x, n) ((n) >= 1 && (x)[0] == '/')
 #define DEE_SYSTEM_IS_ABS_CHECKS_LEADING_SLASHES
-#else /* CONFIG_HOST_WINDOWS */
-#undef DEE_SYSTEM_FS_NOCASE
-#undef DEE_SYSTEM_PATH_ACCEPTS_BACKSLASH
-#define DeeSystem_DELIM    ':'
-#define DeeSystem_DELIM_S  ":"
-#define DeeSystem_SEP      '/'
-#define DeeSystem_SEP_S    "/"
-#define DeeSystem_IsSep(x) ((x) == '/')
-#define DeeSystem_IsAbs(x) ((x)[0] == '/')
+#else /* ... */
+#undef DEE_SYSTEM_FS_ICASE
+#define DeeSystem_DELIM        ':'
+#define DeeSystem_DELIM_S      ":"
+#define DeeSystem_SEP          '/'
+#define DeeSystem_SEP_S        "/"
+#define DeeSystem_IsSep(x)     ((x) == '/')
+#define DeeSystem_IsAbs(x)     ((x)[0] == '/')
+#define DeeSystem_IsAbsN(x, n) ((n) >= 1 && (x)[0] == '/')
 #define DEE_SYSTEM_IS_ABS_CHECKS_LEADING_SLASHES
-#endif /* !CONFIG_HOST_WINDOWS */
+#endif /* !... */
+
+/* Returns the filename-portion of a given `path'
+ * >> print DeeSystem_BaseName(r"/foo/bar/file.txt");   // "file.txt"
+ * >> print DeeSystem_BaseName(r"file.txt");            // "file.txt"
+ * >> print DeeSystem_BaseName(r"E:\path\to\file.txt"); // "file.txt"  (Windows-only)
+ * 
+ * This function returns a pointer to 1 character past the
+ * last `DeeSystem_SEP' or `DeeSystem_ALTSEP' in `path', or
+ * just re-returns `path' when no such character exists. */
+DFUNDEF ATTR_PURE ATTR_RETNONNULL WUNUSED ATTR_INS(1, 2) char const *
+(FCALL DeeSystem_BaseName)(char const *__restrict path, size_t pathlen);
+
+#ifdef CONFIG_NO_memrend
+#undef CONFIG_HAVE_memrend
+#elif !defined(CONFIG_HAVE_memrend) && \
+      (defined(memrend) || defined(__memrend_defined) || defined(__USE_KOS))
+#define CONFIG_HAVE_memrend
+#endif
+
+#if !defined(DeeSystem_ALTSEP) && !defined(__OPTIMIZE_SIZE__) && defined(CONFIG_HAVE_memrend)
+#define DeeSystem_BaseName(path, pathlen) \
+	((char const *)((__BYTE_TYPE__ *)memrend(path, DeeSystem_SEP, (pathlen) * sizeof(char)) + 1))
+#endif /* !DeeSystem_ALTSEP && !__OPTIMIZE_SIZE__ && CONFIG_HAVE_memrend */
+
+
 
 /* Print the current working directory to the given `printer'
  * @param: include_trailing_sep: A trailing / or \\-character is also printed.
@@ -323,13 +359,13 @@ DFUNDEF ATTR_COLD NONNULL((2)) int (DCALL DeeNTSystem_VThrowLastErrorf)(DeeTypeO
 
 /* Required file extension for shared libraries. */
 #ifdef CONFIG_SHLIB_EXTENSION
-#define DeeSystem_SHEXT CONFIG_SHLIB_EXTENSION
+#define DeeSystem_SOEXT CONFIG_SHLIB_EXTENSION
 #elif defined(CONFIG_HOST_WINDOWS)
-#define DeeSystem_SHEXT ".dll"
+#define DeeSystem_SOEXT ".dll"
 #elif defined(CONFIG_HOST_UNIX)
-#define DeeSystem_SHEXT ".so"
+#define DeeSystem_SOEXT ".so"
 #else /* ... */
-#define DeeSystem_SHEXT ".so" /* ??? */
+#define DeeSystem_SOEXT ".so" /* ??? */
 #endif /* !... */
 
 /* Open a shared library

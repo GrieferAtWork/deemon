@@ -1633,7 +1633,8 @@ PRIVATE struct type_cmp module_cmp = {
 PUBLIC DeeTypeObject DeeModule_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ DeeString_STR(&str_Module),
-	/* .tp_doc      = */ NULL,
+	/* .tp_doc      = */ DOC("str->\n"
+	                         "Returns the name of the module"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FGC | TP_FNAMEOBJECT,
 	/* .tp_weakrefs = */ WEAKREF_SUPPORT_ADDR(DeeModuleObject),
 	/* .tp_features = */ TF_NONE,
@@ -1687,9 +1688,9 @@ INTERN struct static_module_struct empty_module_head = {
 		/* .mo_name      = */ (DeeStringObject *)Dee_EmptyString,
 		/* .mo_link      = */ LIST_ENTRY_UNBOUND_INITIALIZER,
 		/* .mo_path      = */ NULL,
-#ifdef CONFIG_HOST_WINDOWS
-		/* .mo_pathhash  = */ 0,
-#endif /* CONFIG_HOST_WINDOWS */
+#ifdef DEE_SYSTEM_FS_ICASE
+		/* .mo_pathihash  = */ 0,
+#endif /* DEE_SYSTEM_FS_ICASE */
 		/* .mo_globlink  = */ LIST_ENTRY_UNBOUND_INITIALIZER,
 		/* .mo_importc   = */ 0,
 		/* .mo_globalc   = */ 0,

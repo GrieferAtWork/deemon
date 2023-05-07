@@ -29,56 +29,56 @@
  *   - _doserrno
  *   - GetLastError()
  */
-#undef DeeSystemError_HAVE_GETLASTERROR
-#undef DeeSystemError_HAVE_ERRNO
-#undef DeeSystemError_HAVE_DOSERRNO
+#undef DeeSystemError_HAVE_GetLastError
+#undef DeeSystemError_HAVE_errno
+#undef DeeSystemError_HAVE_doserrno
 #ifdef CONFIG_HOST_WINDOWS
-#define DeeSystemError_HAVE_GETLASTERROR 1
+#define DeeSystemError_HAVE_GetLastError
 #endif /* CONFIG_HOST_WINDOWS */
 #ifdef CONFIG_HAVE_errno
-#define DeeSystemError_HAVE_ERRNO 1
+#define DeeSystemError_HAVE_errno
 #endif /* CONFIG_HAVE_errno */
 #ifdef CONFIG_HAVE_doserrno
-#define DeeSystemError_HAVE_DOSERRNO 1
+#define DeeSystemError_HAVE_doserrno
 #endif /* CONFIG_HAVE_doserrno */
 
-#ifdef DeeSystemError_HAVE_GETLASTERROR
+#ifdef DeeSystemError_HAVE_GetLastError
 #include <Windows.h>
-#endif /* DeeSystemError_HAVE_GETLASTERROR */
+#endif /* DeeSystemError_HAVE_GetLastError */
 
 DECL_BEGIN
 
 #undef DeeSystemError_HAVE_ANY
 typedef struct {
-#ifdef DeeSystemError_HAVE_GETLASTERROR
+#ifdef DeeSystemError_HAVE_GetLastError
 #define DeeSystemError_HAVE_ANY 1
 	DWORD  se_GetLastError; /* Saved `errno' value */
 #define _DeeSystemError_SAVE_GETLASTERROR(st) ((st).se_GetLastError = GetLastError())
 #define _DeeSystemError_LOAD_GETLASTERROR(st) (SetLastError((st).se_GetLastError))
-#else /* DeeSystemError_HAVE_GETLASTERROR */
+#else /* DeeSystemError_HAVE_GetLastError */
 #define _DeeSystemError_SAVE_GETLASTERROR(st) (void)0
 #define _DeeSystemError_LOAD_GETLASTERROR(st) (void)0
-#endif /* !DeeSystemError_HAVE_GETLASTERROR */
+#endif /* !DeeSystemError_HAVE_GetLastError */
 
-#ifdef DeeSystemError_HAVE_ERRNO
+#ifdef DeeSystemError_HAVE_errno
 #define DeeSystemError_HAVE_ANY 1
 	int    se_errno;        /* Saved `errno' value */
 #define _DeeSystemError_SAVE_ERRNO(st) ((st).se_errno = DeeSystem_GetErrno())
 #define _DeeSystemError_LOAD_ERRNO(st) (DeeSystem_SetErrno((st).se_errno))
-#else /* DeeSystemError_HAVE_ERRNO */
+#else /* DeeSystemError_HAVE_errno */
 #define _DeeSystemError_SAVE_ERRNO(st) (void)0
 #define _DeeSystemError_LOAD_ERRNO(st) (void)0
-#endif /* !DeeSystemError_HAVE_ERRNO */
+#endif /* !DeeSystemError_HAVE_errno */
 
-#ifdef DeeSystemError_HAVE_DOSERRNO
+#ifdef DeeSystemError_HAVE_doserrno
 #define DeeSystemError_HAVE_ANY 1
 	int    se_doserrno;     /* Saved `doserrno' value */
 #define _DeeSystemError_SAVE_DOSERRNO(st) ((st).se_doserrno = doserrno)
 #define _DeeSystemError_LOAD_DOSERRNO(st) (doserrno = (st).se_doserrno)
-#else /* DeeSystemError_HAVE_DOSERRNO */
+#else /* DeeSystemError_HAVE_doserrno */
 #define _DeeSystemError_SAVE_DOSERRNO(st) (void)0
 #define _DeeSystemError_LOAD_DOSERRNO(st) (void)0
-#endif /* !DeeSystemError_HAVE_DOSERRNO */
+#endif /* !DeeSystemError_HAVE_doserrno */
 
 #ifndef DeeSystemError_HAVE_ANY
 	int _se_placeholder;

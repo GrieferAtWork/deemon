@@ -544,10 +544,10 @@ posix_path_relpath_f(DeeObject *__restrict path, DeeObject *pwd) {
 	for (;;) {
 		a = utf8_readchar((char const **)&pth_iter, pth_end);
 		b = utf8_readchar((char const **)&pwd_iter, pwd_end);
-#ifdef DEE_SYSTEM_FS_NOCASE
+#ifdef DEE_SYSTEM_FS_ICASE
 		a = DeeUni_ToUpper(a);
 		b = DeeUni_ToUpper(b);
-#endif /* DEE_SYSTEM_FS_NOCASE */
+#endif /* DEE_SYSTEM_FS_ICASE */
 		if (DeeSystem_IsSep(a)) {
 			/* Align differing space in `b' */
 			while (DeeUni_IsSpace(b)) {

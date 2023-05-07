@@ -31,17 +31,17 @@
 #include <deemon/string.h>
 #include <deemon/stringutils.h>
 #include <deemon/system-features.h> /* memrchr(), memcpy(), ... */
-#include <deemon/system.h>          /* DEE_SYSTEM_PATH_ACCEPTS_BACKSLASH */
+#include <deemon/system.h>          /* DeeSystem_BaseName() */
 
 #include "../../runtime/strings.h"
 
 DECL_BEGIN
 
-#ifndef CONFIG_HAVE_memrchr
-#define CONFIG_HAVE_memrchr
-#define memrchr dee_memrchr
-DeeSystem_DEFINE_memrchr(dee_memrchr)
-#endif /* !CONFIG_HAVE_memrchr */
+#ifndef CONFIG_HAVE_memrend
+#define CONFIG_HAVE_memrend
+#define memrend dee_memrend
+DeeSystem_DEFINE_memrend(dee_memrend)
+#endif /* !CONFIG_HAVE_memrend */
 
 INTERN struct compiler_options *inner_compiler_options = NULL;
 
@@ -60,34 +60,20 @@ import_module_by_name(DeeStringObject *__restrict module_name,
 	DREF DeeModuleObject *result;
 	if (module_name->s_str[0] == '.') {
 		char const *filename;
-		size_t filename_length;
+		size_t name_size;
 		if (module_name->s_len == 1) {
 			/* Special case: Import your own module. */
 			return_reference_(current_rootscope->rs_module);
 		}
-		filename = TPPFile_RealFilename(token.t_file, &filename_length);
+		filename = TPPFile_RealFilename(token.t_file, &name_size);
 		if likely(filename) {
-			char *path_start; /* Relative module import. */
-			path_start = (char *)memrchr(filename, '/', filename_length);
-#ifdef DEE_SYSTEM_PATH_ACCEPTS_BACKSLASH
-			{
-				char *path_start2;
-				path_start2 = (char *)memrchr(filename, '\\', filename_length);
-				ASSERT(NULL == 0); /* The following expression assumes this... */
-				if (!path_start || path_start2 > path_start)
-					path_start = path_start2;
-			}
-#endif /* DEE_SYSTEM_PATH_ACCEPTS_BACKSLASH */
-			if (path_start) {
-				++path_start;
-			} else {
-				path_start = (char *)filename;
-			}
-			filename_length = (size_t)(path_start - filename);
+			char const *name_base; /* Relative module import. */
+			name_base = DeeSystem_BaseName(filename, name_size);
+			name_size = (size_t)(name_base - filename);
 
 			/* Interpret the module name relative to the path of the current source file. */
 			result = (DREF DeeModuleObject *)DeeModule_OpenRelative((DeeObject *)module_name,
-			                                                        filename, filename_length,
+			                                                        filename, name_size,
 			                                                        inner_compiler_options,
 			                                                        false);
 			goto module_opened;
@@ -260,14 +246,17 @@ ast_parse_import_single_sym(struct TPPKeyword *__restrict import_name) {
 	DREF DeeModuleObject *mod;
 	struct symbol *extern_symbol;
 	struct module_symbol *modsym;
+
 	/* Parse the name of the module from which to import a symbol. */
 	mod = parse_module_byname(true);
 	if unlikely(!mod)
 		goto err;
+
 	/* We've got the module. - Now just create an anonymous symbol. */
 	extern_symbol = new_unnamed_symbol();
 	if unlikely(!extern_symbol)
 		goto err_module;
+
 	/* Lookup the symbol which we're importing. */
 	modsym = import_module_symbol(mod, import_name);
 	if unlikely(!modsym) {
@@ -325,12 +314,7 @@ get_module_symbol_name(DeeStringObject *__restrict module_name, bool is_module) 
 	utf8_repr = DeeString_AsUtf8((DeeObject *)module_name);
 	if unlikely(!utf8_repr)
 		goto err;
-	symbol_start = (char *)memrchr(utf8_repr, '.', WSTR_LENGTH(utf8_repr));
-	if (!symbol_start) {
-		symbol_start = utf8_repr;
-	} else {
-		++symbol_start;
-	}
+	symbol_start  = (char *)memrend(utf8_repr, '.', WSTR_LENGTH(utf8_repr)) + 1;
 	symbol_length = (size_t)((utf8_repr + WSTR_LENGTH(utf8_repr)) - symbol_start);
 
 	/* Make sure that the symbol name is valid. */

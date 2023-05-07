@@ -53,7 +53,7 @@
 #undef CONFIG_STAT_CTIME_IS_ACTUALLY_BIRTHTIME
 #if (defined(_WIN32) || defined(__WIN32__)) && !defined(__CYGWIN__)
 #define CONFIG_STAT_CTIME_IS_ACTUALLY_BIRTHTIME
-#endif
+#endif /* ... */
 
 #define DEFAULT_BLOCKSIZE 512
 #define DEFAULT_BLOCKS_FROM_FILESIZE(fz) \
