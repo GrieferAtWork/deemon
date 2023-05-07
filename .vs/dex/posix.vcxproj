@@ -43,7 +43,6 @@
 		<ClInclude Include="..\..\src\dex\posix\p-exit.c.inl" />
 		<ClInclude Include="..\..\src\dex\posix\p-fd.c.inl" />
 		<ClInclude Include="..\..\src\dex\posix\p-fs-deprecated.c.inl" />
-		<ClInclude Include="..\..\src\dex\posix\p-fs.c.inl" />
 		<ClInclude Include="..\..\src\dex\posix\p-mkdir.c.inl" />
 		<ClInclude Include="..\..\src\dex\posix\p-ondemand.c.inl" />
 		<ClInclude Include="..\..\src\dex\posix\p-open.c.inl" />
@@ -54,6 +53,7 @@
 		<ClInclude Include="..\..\src\dex\posix\p-readlink.c.inl" />
 		<ClInclude Include="..\..\src\dex\posix\p-readwrite.c.inl" />
 		<ClInclude Include="..\..\src\dex\posix\p-realpath.c.inl" />
+		<ClInclude Include="..\..\src\dex\posix\p-remove.c.inl" />
 		<ClInclude Include="..\..\src\dex\posix\p-rename.c.inl" />
 		<ClInclude Include="..\..\src\dex\posix\p-sched.c.inl" />
 		<ClInclude Include="..\..\src\dex\posix\p-stat.c.inl" />

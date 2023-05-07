@@ -32,7 +32,6 @@
 #include "p-errno.c.inl"
 #include "p-exit.c.inl"
 #include "p-fd.c.inl"
-#include "p-fs.c.inl"
 #include "p-mkdir.c.inl"
 #include "p-open.c.inl"
 #include "p-opendir.c.inl"
@@ -40,6 +39,7 @@
 #include "p-readlink.c.inl"
 #include "p-readwrite.c.inl"
 #include "p-realpath.c.inl"
+#include "p-remove.c.inl"
 #include "p-rename.c.inl"
 #include "p-sched.c.inl"
 #include "p-stat.c.inl"
@@ -108,7 +108,7 @@ libposix_get_dfd_filename(int dfd, /*utf-8*/ char const *filename, int atflags) 
 	(void)dfd;
 	(void)filename;
 	(void)atflags;
-	/* TODO: `joinpath(frealpath(dfd), filename)' */
+	/* TODO: Don't try to use this function (it's gonna get removed) -- use `posix_dfd_abspath()' instead! */
 	DeeError_NOTIMPLEMENTED();
 	return NULL;
 }

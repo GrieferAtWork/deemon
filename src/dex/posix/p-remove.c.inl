@@ -17,8 +17,8 @@
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
  */
-#ifndef GUARD_DEX_POSIX_P_FS_C_INL
-#define GUARD_DEX_POSIX_P_FS_C_INL 1
+#ifndef GUARD_DEX_POSIX_P_REMOVE_C_INL
+#define GUARD_DEX_POSIX_P_REMOVE_C_INL 1
 #define CONFIG_BUILDING_LIBPOSIX
 #define DEE_SOURCE
 
@@ -26,6 +26,7 @@
 
 DECL_BEGIN
 
+/* Figure out how to implement `unlink()' */
 #undef posix_unlink_USE_nt_DeleteFile
 #undef posix_unlink_USE_unlink
 #undef posix_unlink_USE_wunlink
@@ -42,6 +43,8 @@ DECL_BEGIN
 #define posix_unlink_USE_STUB
 #endif /* !... */
 
+
+/* Figure out how to implement `rmdir()' */
 #undef posix_rmdir_USE_nt_RemoveDirectory
 #undef posix_rmdir_USE_rmdir
 #undef posix_rmdir_USE_wrmdir
@@ -58,6 +61,8 @@ DECL_BEGIN
 #define posix_rmdir_USE_STUB
 #endif /* !... */
 
+
+/* Figure out how to implement `remove()' */
 #undef posix_remove_USE_nt_DeleteFile_AND_nt_RemoveDirectory
 #undef posix_remove_USE_remove
 #undef posix_remove_USE_wremove
@@ -92,6 +97,8 @@ DECL_BEGIN
 #define posix_remove_USE_STUB
 #endif /* !... */
 
+
+/* Figure out how to implement `unlinkat()' */
 #undef posix_unlinkat_USE_posix_unlink
 #undef posix_unlinkat_USE_unlinkat
 #undef posix_unlinkat_USE_STUB
@@ -106,6 +113,8 @@ DECL_BEGIN
 #define posix_unlinkat_USE_STUB
 #endif /* ... */
 
+
+/* Figure out how to implement `rmdirat()' */
 #undef posix_rmdirat_USE_posix_rmdir
 #undef posix_rmdirat_USE_rmdirat
 #undef posix_rmdirat_USE_STUB
@@ -118,6 +127,8 @@ DECL_BEGIN
 #define posix_rmdirat_USE_STUB
 #endif /* ... */
 
+
+/* Figure out how to implement `removeat()' */
 #undef posix_removeat_USE_posix_remove
 #undef posix_removeat_USE_removeat
 #undef posix_removeat_USE_STUB
@@ -791,4 +802,4 @@ err:
 
 DECL_END
 
-#endif /* !GUARD_DEX_POSIX_P_FS_C_INL */
+#endif /* !GUARD_DEX_POSIX_P_REMOVE_C_INL */
