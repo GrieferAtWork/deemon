@@ -247,7 +247,7 @@ print "#undef NEXT_LARGER";
 #define NEXT_LARGER 2
 #endif /* DeeSlab_HasSize(2) */
 #undef NEXT_LARGER
-//[[[end]]]
+/*[[[end]]]*/
 #endif /* __INTELLISENSE__ */
 
 #ifndef NO_OBJECT_SLABS

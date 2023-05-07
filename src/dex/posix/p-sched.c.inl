@@ -94,7 +94,7 @@ err:
 	return NULL;
 }
 FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_system_f_impl(dwchar_t const *command)
-//[[[end]]]
+/*[[[end]]]*/
 #endif /* posix_system_USE_wsystem || posix_system_USE_fork_AND_wexec */
 #if (!defined(posix_system_USE_wsystem) && !defined(posix_system_USE_fork_AND_wexec)) || defined(__DEEMON__)
 /*[[[deemon import("rt.gen.dexutils").gw("system", "command:c:char[]->?Dint", libname: "posix"); ]]]*/
@@ -122,7 +122,7 @@ err:
 	return NULL;
 }
 FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_system_f_impl(/*utf-8*/ char const *command)
-//[[[end]]]
+/*[[[end]]]*/
 #endif /* !posix_system_USE_wsystem && !posix_system_USE_fork_AND_wexec */
 {
 #if (defined(posix_system_USE_wsystem) || \
@@ -234,7 +234,7 @@ err:
 	return NULL;
 }
 FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_sched_yield_f_impl(void)
-//[[[end]]]
+/*[[[end]]]*/
 {
 	SCHED_YIELD();
 	return_none;
@@ -261,7 +261,7 @@ err:
 	return NULL;
 }
 FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_getpid_f_impl(void)
-//[[[end]]]
+/*[[[end]]]*/
 {
 #ifdef posix_getpid_USE_getpid
 	int result;

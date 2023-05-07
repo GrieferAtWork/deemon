@@ -400,7 +400,7 @@ print "/" "**" "/";
 	POSIX_ECOUNT_DEF \
 	POSIX_EMAX_DEF \
 /**/
-//[[[end]]]
+/*[[[end]]]*/
 
 #ifdef STRUNCATE
 #define IS_ERRNONAME_FIRSTCHAR(ch) ((ch) == 'E' || (ch) == 'S')

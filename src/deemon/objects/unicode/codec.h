@@ -504,7 +504,7 @@ print "#endif";
 	} \
 }
 #endif
-//[[[end]]]
+/*[[[end]]]*/
 
 
 DECL_END

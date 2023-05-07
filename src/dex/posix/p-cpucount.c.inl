@@ -70,7 +70,7 @@ err:
 	return NULL;
 }
 FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_cpu_count_f_impl(void)
-//[[[end]]]
+/*[[[end]]]*/
 {
 	/* Implementation variants taken from here:
 	 * https://stackoverflow.com/questions/150355/programmatically-find-the-number-of-cores-on-a-machine */

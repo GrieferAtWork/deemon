@@ -525,7 +525,7 @@ for (local i: [:256]) {
 	0,
 	0,
 	0,
-//[[[end]]]
+/*[[[end]]]*/
 };
 
 /* clang-format off */

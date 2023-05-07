@@ -88,7 +88,7 @@ err:
 	return NULL;
 }
 FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_fchownat_f_impl(int dfd, /*utf-8*/ char const *filename, DeeObject *owner, DeeObject *group, int atflags)
-//[[[end]]]
+/*[[[end]]]*/
 {
 #ifdef CONFIG_HAVE_fchownat
 	uid_t owner_uid;
@@ -197,7 +197,7 @@ err:
 	return NULL;
 }
 FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_fchmodat_f_impl(int dfd, /*utf-8*/ char const *filename, unsigned int mode, int atflags)
-//[[[end]]]
+/*[[[end]]]*/
 {
 #ifdef CONFIG_HAVE_fchmodat
 	int result;

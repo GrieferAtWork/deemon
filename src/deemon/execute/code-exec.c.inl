@@ -859,7 +859,7 @@ DeeCode_ExecFrameSafe(struct code_frame *__restrict frame)
 	 */
 	DREF DeeObject *prefix_ob;
 #define USING_PREFIX_OBJECT /* nothing */
-#define NEED_UNIVERSAL_PREFIX_OB_WORKAROUND 1
+#define NEED_UNIVERSAL_PREFIX_OB_WORKAROUND
 #else /* _MSC_VER */
 #define USING_PREFIX_OBJECT DREF DeeObject *prefix_ob;
 #endif /* !_MSC_VER */

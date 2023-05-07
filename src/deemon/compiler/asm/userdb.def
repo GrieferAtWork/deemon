@@ -183,7 +183,7 @@ for (local x: names) {
 #define IMM_EQ_0        OPERAND_CLASS_IMM_EQ_0
 #define IMM_EQ_N1       OPERAND_CLASS_IMM_EQ_N1
 #define IMM_EQ_N2       OPERAND_CLASS_IMM_EQ_N2
-//[[[end]]]
+/*[[[end]]]*/
 
 #undef FF0
 
@@ -1286,7 +1286,7 @@ for (local x: names) {
 #undef FBRACKETFLAG
 #undef FIMMVAL
 #undef FMASK
-//[[[end]]]
+/*[[[end]]]*/
 
 #undef FSTKDSP
 #undef FSTKABS

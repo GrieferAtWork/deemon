@@ -63,7 +63,7 @@ print "/" "**" "/";
 	POSIX_SEEK_HOLE_DEF \
 	POSIX_SEEK_DATA_DEF \
 /**/
-//[[[end]]]
+/*[[[end]]]*/
 
 
 
@@ -364,7 +364,7 @@ err:
 	return NULL;
 }
 FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_lseek_f_impl(int fd, int64_t offset, int whence)
-//[[[end]]]
+/*[[[end]]]*/
 #endif /* posix_lseek_IS64 */
 #if !defined(posix_lseek_IS64) || defined(__DEEMON__)
 /*[[[deemon import("rt.gen.dexutils").gw("lseek", "fd:unix:fd,offset:I32d,whence:d->?Dint", libname: "posix"); ]]]*/
@@ -392,7 +392,7 @@ err:
 	return NULL;
 }
 FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_lseek_f_impl(int fd, int32_t offset, int whence)
-//[[[end]]]
+/*[[[end]]]*/
 #endif /* !posix_lseek_IS64 */
 {
 #if defined(posix_lseek_USE_lseek) || defined(posix_lseek_USE_lseek64)
@@ -699,7 +699,7 @@ err:
 	return NULL;
 }
 FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_write_f_impl(int fd, DeeObject *buf, size_t count)
-//[[[end]]]
+/*[[[end]]]*/
 {
 #ifdef posix_write_USE_write
 	DeeBuffer buffer;

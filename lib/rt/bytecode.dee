@@ -391,7 +391,7 @@ final global ASM16_STATIC = 0xf0fb;
 final global ASM16_EXTERN = 0xf0fc;
 final global ASM16_GLOBAL = 0xf0fe;
 final global ASM16_LOCAL = 0xf0ff;
-//[[[end]]]
+/*[[[end]]]*/
 
 
 

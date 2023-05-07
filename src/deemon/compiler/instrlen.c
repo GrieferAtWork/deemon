@@ -1177,7 +1177,7 @@ PRIVATE uint8_t const stack_effect_f0[256] = {
 	/* 0xfe */ STACK_EFFECT_UNDEF, /* --- */
 	/* 0xff */ STACK_EFFECT_UNDEF, /* --- */
 };
-//[[[end]]]
+/*[[[end]]]*/
 
 PRIVATE uint8_t const prefix_length[8] = {
 	/* [0xf8       - ASM_PREFIXMIN] */ 1,

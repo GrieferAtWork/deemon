@@ -69,7 +69,7 @@ err:
 	return NULL;
 }
 FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_sync_f_impl(void)
-//[[[end]]]
+/*[[[end]]]*/
 {
 #ifdef CONFIG_HAVE_sync
 	sync();
@@ -112,7 +112,7 @@ err:
 	return NULL;
 }
 FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_fsync_f_impl(int fd)
-//[[[end]]]
+/*[[[end]]]*/
 {
 #ifdef posix_fsync_USE_fsync
 	int result;
@@ -173,7 +173,7 @@ err:
 	return NULL;
 }
 FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_fdatasync_f_impl(int fd)
-//[[[end]]]
+/*[[[end]]]*/
 {
 #ifdef posix_fdatasync_USE_fdatasync
 	int result;

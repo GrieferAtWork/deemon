@@ -57,7 +57,7 @@ print "/" "**" "/";
 	POSIX_EXIT_SUCCESS_DEF \
 	POSIX_EXIT_FAILURE_DEF \
 /**/
-//[[[end]]]
+/*[[[end]]]*/
 
 
 
@@ -86,7 +86,7 @@ err:
 	return NULL;
 }
 FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_atexit_f_impl(DeeObject *callback, DeeObject *args)
-//[[[end]]]
+/*[[[end]]]*/
 {
 	if (DeeObject_AssertTypeExact(args, &DeeTuple_Type))
 		goto err;
@@ -124,7 +124,7 @@ err:
 	return NULL;
 }
 FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_exit_f_impl(int exitcode)
-//[[[end]]]
+/*[[[end]]]*/
 {
 	Dee_Exit(exitcode, true);
 	return NULL;
@@ -157,7 +157,7 @@ err:
 	return NULL;
 }
 FORCELOCAL WUNUSED DREF DeeObject *DCALL posix__Exit_f_impl(int exitcode)
-//[[[end]]]
+/*[[[end]]]*/
 {
 	Dee_Exit(exitcode, false);
 	return NULL;
@@ -185,7 +185,7 @@ err:
 	return NULL;
 }
 FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_abort_f_impl(void)
-//[[[end]]]
+/*[[[end]]]*/
 {
 	Dee_Exit(EXIT_FAILURE, false);
 	return NULL;

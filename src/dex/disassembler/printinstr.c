@@ -693,7 +693,7 @@ PRIVATE char const mnemonic_names_f0[256][32] = {
 	/* 0xf0fe */ "global ", /* `ASM16_GLOBAL' */
 	/* 0xf0ff */ "local  ", /* `ASM16_LOCAL' */
 };
-//[[[end]]]
+/*[[[end]]]*/
 
 
 PRIVATE dssize_t DCALL

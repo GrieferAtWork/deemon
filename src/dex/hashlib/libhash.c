@@ -2137,7 +2137,7 @@ PRIVATE struct dhashalgo const *const dhash_algorithms[] = {
 	&dhash_crc_64__iso.ha_base,
 	NULL
 };
-//[[[end]]]
+/*[[[end]]]*/
 
 /* Execute the given hash algorithm to hash `data...+=datasize'
  * When given, `start' is used as the initial hash value (which

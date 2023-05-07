@@ -1318,7 +1318,7 @@ for (local x: names)
 	gi("S_" + x, "STAT_" + x);
 ]]]*/
 #include "p-stat-constants.def"
-//[[[end]]]
+/*[[[end]]]*/
 
 
 

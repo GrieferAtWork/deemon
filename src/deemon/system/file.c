@@ -365,7 +365,6 @@ DeeSystemFile_Fileno(/*FileSystem*/ DeeObject *__restrict self) {
 	(void)self;
 	return (Dee_fd_t)DeeError_Throwf(&DeeError_FileClosed, fs_unsupported_message);
 #elif defined(DEESYSTEM_FILE_USE_STDIO) && 1
-#define CONFIG_DONT_EXPOSE_FILENO
 	/* Due to the unpredictable race condition and the fact that
 	 * it's up to the kernel to deal with closed file descriptors,
 	 * we could never safely expose the underlying FILE * to the

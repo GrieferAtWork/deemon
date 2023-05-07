@@ -576,4 +576,4 @@ static void *const f0_targets[256] = {
 	/* 0xfe */ &&target_ASM16_GLOBAL,
 	/* 0xff */ &&target_ASM16_LOCAL,
 };
-//[[[end]]]
+/*[[[end]]]*/

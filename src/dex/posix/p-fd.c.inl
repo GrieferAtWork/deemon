@@ -59,7 +59,7 @@ print "/" "**" "/";
 	POSIX_STDOUT_FILENO_DEF \
 	POSIX_STDERR_FILENO_DEF \
 /**/
-//[[[end]]]
+/*[[[end]]]*/
 
 
 /* Figure out how to implement `isatty()' */
@@ -166,7 +166,7 @@ err:
 	return NULL;
 }
 FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_isatty_f_impl(int fd)
-//[[[end]]]
+/*[[[end]]]*/
 {
 #ifdef posix_isatty_USE_isatty
 	int result;
@@ -230,7 +230,7 @@ err:
 	return NULL;
 }
 FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_umask_f_impl(int mask)
-//[[[end]]]
+/*[[[end]]]*/
 {
 #ifdef posix_umask_USE_umask
 	DREF DeeObject *result;
@@ -285,7 +285,7 @@ err:
 	return NULL;
 }
 FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_dup_f_impl(int fd)
-//[[[end]]]
+/*[[[end]]]*/
 {
 #ifdef posix_dup_USE_dup
 	int result;
@@ -350,7 +350,7 @@ err:
 	return NULL;
 }
 FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_dup2_f_impl(int oldfd, int newfd)
-//[[[end]]]
+/*[[[end]]]*/
 {
 #ifdef posix_dup2_USE_dup2
 	int result;
@@ -418,7 +418,7 @@ err:
 	return NULL;
 }
 FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_dup3_f_impl(int oldfd, int newfd, int oflags)
-//[[[end]]]
+/*[[[end]]]*/
 {
 
 #if (defined(posix_dup3_USE_dup3) ||       \
@@ -600,7 +600,7 @@ err:
 	return NULL;
 }
 FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_close_f_impl(int fd)
-//[[[end]]]
+/*[[[end]]]*/
 {
 #ifdef posix_close_USE_close
 	int error;

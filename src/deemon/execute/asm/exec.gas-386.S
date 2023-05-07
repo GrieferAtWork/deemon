@@ -11348,7 +11348,7 @@ repr_inst_table:
 	.long repr_target_global                  /* 0xfe : `global <imm8>' */
 	.long repr_target_local                   /* 0xff : `local <imm8>' */
 END(repr_inst_table)
-//[[[end]]]
+/*[[[end]]]*/
 
 
 #endif /* CONFIG_HAVE_EXEC_ASM */

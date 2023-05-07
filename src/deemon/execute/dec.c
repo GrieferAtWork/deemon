@@ -600,7 +600,7 @@ PRIVATE DeeObject *buitlin_set0[DTYPE_BUILTIN_NUM] = {
 	/* 0xee */ NULL,
 	/* 0xef */ NULL,
 };
-//[[[end]]]
+/*[[[end]]]*/
 
 
 /* Return the ID of a given object.

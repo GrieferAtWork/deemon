@@ -79,7 +79,7 @@ err:
 	return NULL;
 }
 FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_truncate_f_impl(dwchar_t const *filename, int64_t len)
-//[[[end]]]
+/*[[[end]]]*/
 #endif /* posix_truncate_USE_wtruncate64 || posix_truncate_USE_wopen_AND_ftruncate64 */
 #if (!(defined(posix_truncate_USE_wtruncate64) || defined(posix_truncate_USE_wopen_AND_ftruncate64)) && \
       (defined(posix_truncate_USE_wtruncate) || defined(posix_truncate_USE_wopen_AND_ftruncate))) || defined(__DEEMON__)
@@ -109,7 +109,7 @@ err:
 	return NULL;
 }
 FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_truncate_f_impl(dwchar_t const *filename, int32_t len)
-//[[[end]]]
+/*[[[end]]]*/
 #endif /* posix_truncate_USE_wtruncate || posix_truncate_USE_wopen_AND_ftruncate */
 #if (!(defined(posix_truncate_USE_wtruncate64) || defined(posix_truncate_USE_wopen_AND_ftruncate64) || \
        defined(posix_truncate_USE_wtruncate) || defined(posix_truncate_USE_wopen_AND_ftruncate)) && \
@@ -140,7 +140,7 @@ err:
 	return NULL;
 }
 FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_truncate_f_impl(/*utf-8*/ char const *filename, int64_t len)
-//[[[end]]]
+/*[[[end]]]*/
 #endif /* posix_truncate_USE_truncate64 || posix_truncate_USE_open_AND_ftruncate64 */
 #if (!(defined(posix_truncate_USE_wtruncate64) || defined(posix_truncate_USE_wopen_AND_ftruncate64) || \
        defined(posix_truncate_USE_wtruncate) || defined(posix_truncate_USE_wopen_AND_ftruncate) || \
@@ -171,7 +171,7 @@ err:
 	return NULL;
 }
 FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_truncate_f_impl(/*utf-8*/ char const *filename, int32_t len)
-//[[[end]]]
+/*[[[end]]]*/
 #endif /* posix_truncate_USE_truncate || TRUNCATE_IMPL_WOPEN_TRUNCATE */
 {
 #ifdef posix_truncate_USE_STUB
@@ -277,7 +277,7 @@ err:
 	return NULL;
 }
 FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_ftruncate_f_impl(int fd, int64_t len)
-//[[[end]]]
+/*[[[end]]]*/
 #endif /* CONFIG_HAVE_ftruncate64 */
 #if !defined(CONFIG_HAVE_ftruncate64) || defined(__DEEMON__)
 /*[[[deemon import("rt.gen.dexutils").gw("ftruncate", "fd:unix:fd,len:I32d", libname: "posix"); ]]]*/
@@ -304,7 +304,7 @@ err:
 	return NULL;
 }
 FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_ftruncate_f_impl(int fd, int32_t len)
-//[[[end]]]
+/*[[[end]]]*/
 #endif /* !CONFIG_HAVE_ftruncate64 */
 {
 #if defined(CONFIG_HAVE_ftruncate) || defined(CONFIG_HAVE_ftruncate64)
