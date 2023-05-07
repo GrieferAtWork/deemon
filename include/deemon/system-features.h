@@ -11798,9 +11798,13 @@ DECL_END
 	name(void const *p, int byte, size_t num_bytes) { \
 		uint8_t *haystack = (uint8_t *)p;             \
 		haystack += num_bytes;                        \
-		while (num_bytes--) {                         \
-			if (*--haystack == (uint8_t)byte)         \
+		for (;;) {                                    \
+			--haystack;                               \
+			if unlikely(!num_bytes)                   \
 				break;                                \
+			if unlikely(*haystack == (uint8_t)byte)   \
+				break;                                \
+			--num_bytes;                              \
 		}                                             \
 		return haystack;                              \
 	}
