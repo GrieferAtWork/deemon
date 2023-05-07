@@ -223,6 +223,13 @@ print "/" "**" "/";
 #define POSIX_CREAT_DEFAULT_FLAGS (O_BINARY)
 #endif /* CONFIG_HAVE_O_BINARY */
 
+#undef POSIX_CREAT_OFLAGS
+#if defined(CONFIG_HAVE_O_CREAT) && defined(CONFIG_HAVE_O_TRUNC) && defined(CONFIG_HAVE_O_WRONLY)
+#define POSIX_CREAT_OFLAGS (O_CREAT | O_WRONLY | O_TRUNC)
+#elif defined(CONFIG_HAVE_O_CREAT) && defined(CONFIG_HAVE_O_TRUNC) && defined(CONFIG_HAVE_O_WRONLY)
+#define POSIX_CREAT_OFLAGS (O_CREAT | O_RDWR | O_TRUNC)
+#endif /* ... */
+
 
 
 
@@ -244,6 +251,7 @@ print "/" "**" "/";
 /* Figure out how to implement `creat()' */
 #undef posix_creat_USE_wcreat
 #undef posix_creat_USE_creat
+#undef posix_creat_USE_open
 #undef posix_creat_USE_STUB
 #if (defined(CONFIG_HAVE_wcreat) || defined(CONFIG_HAVE_wcreat64)) && defined(CONFIG_PREFER_WCHAR_FUNCTIONS)
 #define posix_creat_USE_wcreat
@@ -251,13 +259,11 @@ print "/" "**" "/";
 #define posix_creat_USE_creat
 #elif defined(CONFIG_HAVE_wcreat) || defined(CONFIG_HAVE_wcreat64)
 #define posix_creat_USE_wcreat
+#elif !defined(posix_open_USE_STUB) && defined(POSIX_CREAT_OFLAGS)
+#define posix_creat_USE_open
 #else /* ... */
 #define posix_creat_USE_STUB
 #endif /* !... */
-#if !(defined(O_CREAT) && (defined(O_WRONLY) || defined(O_RDWR)) && defined(O_TRUNC)) || \
-      defined(posix_open_USE_STUB)
-#undef POSIX_CREAT_DEFAULT_FLAGS
-#endif /* ... */
 
 
 
@@ -266,9 +272,8 @@ print "/" "**" "/";
 /* open()                                                               */
 /************************************************************************/
 
-#if defined(posix_open_USE_wopen) || defined(__DEEMON__)
-/*[[[deemon import("rt.gen.dexutils").gw("_open", "filename:c:wchar_t[],oflags:u,mode:u=0644->?Dint", libname: "posix"); ]]]*/
-FORCELOCAL WUNUSED DREF DeeObject *DCALL posix__open_f_impl(dwchar_t const *filename, unsigned int oflags, unsigned int mode);
+/*[[[deemon import("rt.gen.dexutils").gw("_open", "filename:?Dstring,oflags:u,mode:u=0644->?Dint", libname: "posix"); ]]]*/
+FORCELOCAL WUNUSED DREF DeeObject *DCALL posix__open_f_impl(DeeObject *filename, unsigned int oflags, unsigned int mode);
 PRIVATE WUNUSED DREF DeeObject *DCALL posix__open_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define POSIX__OPEN_DEF { "_open", (DeeObject *)&posix__open, MODSYM_FNORMAL, DOC("(filename:?Dstring,oflags:?Dint,mode:?Dint=!0644)->?Dint") },
 #define POSIX__OPEN_DEF_DOC(doc) { "_open", (DeeObject *)&posix__open, MODSYM_FNORMAL, DOC("(filename:?Dstring,oflags:?Dint,mode:?Dint=!0644)->?Dint\n" doc) },
@@ -278,96 +283,68 @@ PRIVATE DEFINE_KWCMETHOD(posix__open, &posix__open_f);
 PRIVATE DEFINE_KWLIST(posix_kwds_filename_oflags_mode, { K(filename), K(oflags), K(mode), KEND });
 #endif /* !POSIX_KWDS_FILENAME_OFLAGS_MODE_DEFINED */
 PRIVATE WUNUSED DREF DeeObject *DCALL posix__open_f(size_t argc, DeeObject *const *argv, DeeObject *kw) {
-	dwchar_t const *filename_str;
-	DeeStringObject *filename;
+	DeeObject *filename;
 	unsigned int oflags;
 	unsigned int mode = 0644;
 	if (DeeArg_UnpackKw(argc, argv, kw, posix_kwds_filename_oflags_mode, "ou|u:_open", &filename, &oflags, &mode))
 		goto err;
-	if (DeeObject_AssertTypeExact(filename, &DeeString_Type))
-		goto err;
-	filename_str = (dwchar_t const *)DeeString_AsWide((DeeObject *)filename);
-	if unlikely(!filename_str)
-		goto err;
-	return posix__open_f_impl(filename_str, oflags, mode);
+	return posix__open_f_impl(filename, oflags, mode);
 err:
 	return NULL;
 }
-FORCELOCAL WUNUSED DREF DeeObject *DCALL posix__open_f_impl(dwchar_t const *filename, unsigned int oflags, unsigned int mode)
+FORCELOCAL WUNUSED DREF DeeObject *DCALL posix__open_f_impl(DeeObject *filename, unsigned int oflags, unsigned int mode)
 /*[[[end]]]*/
-#endif /* posix_open_USE_wopen */
-#if defined(posix_open_USE_open) || defined(__DEEMON__)
-/*[[[deemon import("rt.gen.dexutils").gw("_open", "filename:c:char[],oflags:u,mode:u=0644->?Dint", libname: "posix"); ]]]*/
-FORCELOCAL WUNUSED DREF DeeObject *DCALL posix__open_f_impl(/*utf-8*/ char const *filename, unsigned int oflags, unsigned int mode);
-PRIVATE WUNUSED DREF DeeObject *DCALL posix__open_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
-#define POSIX__OPEN_DEF { "_open", (DeeObject *)&posix__open, MODSYM_FNORMAL, DOC("(filename:?Dstring,oflags:?Dint,mode:?Dint=!0644)->?Dint") },
-#define POSIX__OPEN_DEF_DOC(doc) { "_open", (DeeObject *)&posix__open, MODSYM_FNORMAL, DOC("(filename:?Dstring,oflags:?Dint,mode:?Dint=!0644)->?Dint\n" doc) },
-PRIVATE DEFINE_KWCMETHOD(posix__open, &posix__open_f);
-#ifndef POSIX_KWDS_FILENAME_OFLAGS_MODE_DEFINED
-#define POSIX_KWDS_FILENAME_OFLAGS_MODE_DEFINED
-PRIVATE DEFINE_KWLIST(posix_kwds_filename_oflags_mode, { K(filename), K(oflags), K(mode), KEND });
-#endif /* !POSIX_KWDS_FILENAME_OFLAGS_MODE_DEFINED */
-PRIVATE WUNUSED DREF DeeObject *DCALL posix__open_f(size_t argc, DeeObject *const *argv, DeeObject *kw) {
-	/*utf-8*/ char const *filename_str;
-	DeeStringObject *filename;
-	unsigned int oflags;
-	unsigned int mode = 0644;
-	if (DeeArg_UnpackKw(argc, argv, kw, posix_kwds_filename_oflags_mode, "ou|u:_open", &filename, &oflags, &mode))
-		goto err;
-	if (DeeObject_AssertTypeExact(filename, &DeeString_Type))
-		goto err;
-	filename_str = DeeString_AsUtf8((DeeObject *)filename);
-	if unlikely(!filename_str)
-		goto err;
-	return posix__open_f_impl(filename_str, oflags, mode);
-err:
-	return NULL;
-}
-FORCELOCAL WUNUSED DREF DeeObject *DCALL posix__open_f_impl(/*utf-8*/ char const *filename, unsigned int oflags, unsigned int mode)
-/*[[[end]]]*/
-#endif /* posix_open_USE_open */
 {
 #if defined(posix_open_USE_wopen) || defined(posix_open_USE_open)
 	int result;
 EINTR_LABEL(again)
-	DBG_ALIGNMENT_DISABLE();
+
 #ifdef posix_open_USE_wopen
-#define OPEN_PRINTF_FILENAME "%lq"
+	{
+		dwchar_t const *wide_filename;
+		wide_filename = DeeString_AsWide(filename);
+		if unlikely(!wide_filename)
+			goto err;
+		DBG_ALIGNMENT_DISABLE();
 #ifdef CONFIG_HAVE_wopen64
-	result = wopen64(filename, (int)oflags, (int)mode);
+		result = wopen64(wide_filename, (int)oflags, (int)mode);
 #else /* CONFIG_HAVE_wopen64 */
-	result = wopen(filename, (int)oflags, (int)mode);
+		result = wopen(wide_filename, (int)oflags, (int)mode);
 #endif /* !CONFIG_HAVE_wopen64 */
+	}
 #endif /* posix_open_USE_wopen */
 
 #ifdef posix_open_USE_open
-#define OPEN_PRINTF_FILENAME "%q"
+	{
+		char const *utf8_filename;
+		utf8_filename = DeeString_AsUtf8(filename);
+		if unlikely(!utf8_filename)
+			goto err;
+		DBG_ALIGNMENT_DISABLE();
 #ifdef CONFIG_HAVE_open64
-	result = open64(filename, (int)oflags, (int)mode);
+		result = open64(utf8_filename, (int)oflags, (int)mode);
 #else /* CONFIG_HAVE_open64 */
-	result = open(filename, (int)oflags, (int)mode);
+		result = open(utf8_filename, (int)oflags, (int)mode);
 #endif /* !CONFIG_HAVE_open64 */
+	}
 #endif /* posix_open_USE_open */
 
 	DBG_ALIGNMENT_ENABLE();
 	if (result < 0) {
 		result = DeeSystem_GetErrno();
 		EINTR_HANDLE(result, again, err)
-		HANDLE_ENOENT_ENOTDIR(result, err, "File or directory " OPEN_PRINTF_FILENAME " could not be found", filename)
-		HANDLE_EEXIST_IF(result, oflags & OPEN_FEXCL, err, "File " OPEN_PRINTF_FILENAME " already exists", filename)
-		HANDLE_EACCES(result, err, "Failed to access " OPEN_PRINTF_FILENAME, filename)
-		HANDLE_ENXIO_EISDIR(result, err, "Cannot open directory " OPEN_PRINTF_FILENAME " for writing", filename)
-		HANDLE_EROFS_ETXTBSY(result, err, "Read-only file " OPEN_PRINTF_FILENAME, filename)
+		HANDLE_ENOENT_ENOTDIR(result, err, "File or directory %r could not be found", filename)
+		HANDLE_EEXIST_IF(result, oflags & OPEN_FEXCL, err, "File %r already exists", filename)
+		HANDLE_EACCES(result, err, "Failed to access %r", filename)
+		HANDLE_ENXIO_EISDIR(result, err, "Cannot open directory %r for writing", filename)
+		HANDLE_EROFS_ETXTBSY(result, err, "Read-only file %r", filename)
 		HANDLE_ENOSYS(result, err, "open")
-		DeeUnixSystem_ThrowErrorf(&DeeError_FSError, result,
-		                          "Failed to open " OPEN_PRINTF_FILENAME,
-		                          filename);
+		DeeUnixSystem_ThrowErrorf(&DeeError_FSError, result, "Failed to open %r", filename);
 		goto err;
 	}
 	return DeeInt_NewUInt((unsigned int)result);
 err:
 	return NULL;
-#undef OPEN_PRINTF_FILENAME
 #endif /* posix_open_USE_wopen || posix_open_USE_open */
 
 #ifdef posix_open_USE_STUB
@@ -380,9 +357,8 @@ err:
 #endif /* posix_open_USE_STUB */
 }
 
-#if defined(posix_open_USE_wopen) || defined(__DEEMON__)
-/*[[[deemon import("rt.gen.dexutils").gw("open", "filename:c:wchar_t[],oflags:u,mode:u=0644->?Dint", libname: "posix"); ]]]*/
-FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_open_f_impl(dwchar_t const *filename, unsigned int oflags, unsigned int mode);
+/*[[[deemon import("rt.gen.dexutils").gw("open", "filename:?Dstring,oflags:u,mode:u=0644->?Dint", libname: "posix"); ]]]*/
+FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_open_f_impl(DeeObject *filename, unsigned int oflags, unsigned int mode);
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_open_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define POSIX_OPEN_DEF { "open", (DeeObject *)&posix_open, MODSYM_FNORMAL, DOC("(filename:?Dstring,oflags:?Dint,mode:?Dint=!0644)->?Dint") },
 #define POSIX_OPEN_DEF_DOC(doc) { "open", (DeeObject *)&posix_open, MODSYM_FNORMAL, DOC("(filename:?Dstring,oflags:?Dint,mode:?Dint=!0644)->?Dint\n" doc) },
@@ -392,54 +368,17 @@ PRIVATE DEFINE_KWCMETHOD(posix_open, &posix_open_f);
 PRIVATE DEFINE_KWLIST(posix_kwds_filename_oflags_mode, { K(filename), K(oflags), K(mode), KEND });
 #endif /* !POSIX_KWDS_FILENAME_OFLAGS_MODE_DEFINED */
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_open_f(size_t argc, DeeObject *const *argv, DeeObject *kw) {
-	dwchar_t const *filename_str;
-	DeeStringObject *filename;
+	DeeObject *filename;
 	unsigned int oflags;
 	unsigned int mode = 0644;
 	if (DeeArg_UnpackKw(argc, argv, kw, posix_kwds_filename_oflags_mode, "ou|u:open", &filename, &oflags, &mode))
 		goto err;
-	if (DeeObject_AssertTypeExact(filename, &DeeString_Type))
-		goto err;
-	filename_str = (dwchar_t const *)DeeString_AsWide((DeeObject *)filename);
-	if unlikely(!filename_str)
-		goto err;
-	return posix_open_f_impl(filename_str, oflags, mode);
+	return posix_open_f_impl(filename, oflags, mode);
 err:
 	return NULL;
 }
-FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_open_f_impl(dwchar_t const *filename, unsigned int oflags, unsigned int mode)
+FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_open_f_impl(DeeObject *filename, unsigned int oflags, unsigned int mode)
 /*[[[end]]]*/
-#endif /* posix_open_USE_wopen */
-#if defined(posix_open_USE_open) || defined(__DEEMON__)
-/*[[[deemon import("rt.gen.dexutils").gw("open", "filename:c:char[],oflags:u,mode:u=0644->?Dint", libname: "posix"); ]]]*/
-FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_open_f_impl(/*utf-8*/ char const *filename, unsigned int oflags, unsigned int mode);
-PRIVATE WUNUSED DREF DeeObject *DCALL posix_open_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
-#define POSIX_OPEN_DEF { "open", (DeeObject *)&posix_open, MODSYM_FNORMAL, DOC("(filename:?Dstring,oflags:?Dint,mode:?Dint=!0644)->?Dint") },
-#define POSIX_OPEN_DEF_DOC(doc) { "open", (DeeObject *)&posix_open, MODSYM_FNORMAL, DOC("(filename:?Dstring,oflags:?Dint,mode:?Dint=!0644)->?Dint\n" doc) },
-PRIVATE DEFINE_KWCMETHOD(posix_open, &posix_open_f);
-#ifndef POSIX_KWDS_FILENAME_OFLAGS_MODE_DEFINED
-#define POSIX_KWDS_FILENAME_OFLAGS_MODE_DEFINED
-PRIVATE DEFINE_KWLIST(posix_kwds_filename_oflags_mode, { K(filename), K(oflags), K(mode), KEND });
-#endif /* !POSIX_KWDS_FILENAME_OFLAGS_MODE_DEFINED */
-PRIVATE WUNUSED DREF DeeObject *DCALL posix_open_f(size_t argc, DeeObject *const *argv, DeeObject *kw) {
-	/*utf-8*/ char const *filename_str;
-	DeeStringObject *filename;
-	unsigned int oflags;
-	unsigned int mode = 0644;
-	if (DeeArg_UnpackKw(argc, argv, kw, posix_kwds_filename_oflags_mode, "ou|u:open", &filename, &oflags, &mode))
-		goto err;
-	if (DeeObject_AssertTypeExact(filename, &DeeString_Type))
-		goto err;
-	filename_str = DeeString_AsUtf8((DeeObject *)filename);
-	if unlikely(!filename_str)
-		goto err;
-	return posix_open_f_impl(filename_str, oflags, mode);
-err:
-	return NULL;
-}
-FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_open_f_impl(/*utf-8*/ char const *filename, unsigned int oflags, unsigned int mode)
-/*[[[end]]]*/
-#endif /* posix_open_USE_open */
 {
 #ifdef POSIX_OPEN_DEFAULT_FLAGS
 	oflags |= POSIX_OPEN_DEFAULT_FLAGS;
@@ -454,9 +393,8 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_open_f_impl(/*utf-8*/ char const 
 /* creat()                                                              */
 /************************************************************************/
 
-#if defined(posix_creat_USE_wcreat) || defined(__DEEMON__)
-/*[[[deemon import("rt.gen.dexutils").gw("_creat", "filename:c:wchar_t[],mode:u=0644->?Dint", libname: "posix"); ]]]*/
-FORCELOCAL WUNUSED DREF DeeObject *DCALL posix__creat_f_impl(dwchar_t const *filename, unsigned int mode);
+/*[[[deemon import("rt.gen.dexutils").gw("_creat", "filename:?Dstring,mode:u=0644->?Dint", libname: "posix"); ]]]*/
+FORCELOCAL WUNUSED DREF DeeObject *DCALL posix__creat_f_impl(DeeObject *filename, unsigned int mode);
 PRIVATE WUNUSED DREF DeeObject *DCALL posix__creat_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define POSIX__CREAT_DEF { "_creat", (DeeObject *)&posix__creat, MODSYM_FNORMAL, DOC("(filename:?Dstring,mode:?Dint=!0644)->?Dint") },
 #define POSIX__CREAT_DEF_DOC(doc) { "_creat", (DeeObject *)&posix__creat, MODSYM_FNORMAL, DOC("(filename:?Dstring,mode:?Dint=!0644)->?Dint\n" doc) },
@@ -466,52 +404,16 @@ PRIVATE DEFINE_KWCMETHOD(posix__creat, &posix__creat_f);
 PRIVATE DEFINE_KWLIST(posix_kwds_filename_mode, { K(filename), K(mode), KEND });
 #endif /* !POSIX_KWDS_FILENAME_MODE_DEFINED */
 PRIVATE WUNUSED DREF DeeObject *DCALL posix__creat_f(size_t argc, DeeObject *const *argv, DeeObject *kw) {
-	dwchar_t const *filename_str;
-	DeeStringObject *filename;
+	DeeObject *filename;
 	unsigned int mode = 0644;
 	if (DeeArg_UnpackKw(argc, argv, kw, posix_kwds_filename_mode, "o|u:_creat", &filename, &mode))
 		goto err;
-	if (DeeObject_AssertTypeExact(filename, &DeeString_Type))
-		goto err;
-	filename_str = (dwchar_t const *)DeeString_AsWide((DeeObject *)filename);
-	if unlikely(!filename_str)
-		goto err;
-	return posix__creat_f_impl(filename_str, mode);
+	return posix__creat_f_impl(filename, mode);
 err:
 	return NULL;
 }
-FORCELOCAL WUNUSED DREF DeeObject *DCALL posix__creat_f_impl(dwchar_t const *filename, unsigned int mode)
+FORCELOCAL WUNUSED DREF DeeObject *DCALL posix__creat_f_impl(DeeObject *filename, unsigned int mode)
 /*[[[end]]]*/
-#endif /* posix_creat_USE_wcreat */
-#if defined(posix_creat_USE_creat) || defined(__DEEMON__)
-/*[[[deemon import("rt.gen.dexutils").gw("_creat", "filename:c:char[],mode:u=0644->?Dint", libname: "posix"); ]]]*/
-FORCELOCAL WUNUSED DREF DeeObject *DCALL posix__creat_f_impl(/*utf-8*/ char const *filename, unsigned int mode);
-PRIVATE WUNUSED DREF DeeObject *DCALL posix__creat_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
-#define POSIX__CREAT_DEF { "_creat", (DeeObject *)&posix__creat, MODSYM_FNORMAL, DOC("(filename:?Dstring,mode:?Dint=!0644)->?Dint") },
-#define POSIX__CREAT_DEF_DOC(doc) { "_creat", (DeeObject *)&posix__creat, MODSYM_FNORMAL, DOC("(filename:?Dstring,mode:?Dint=!0644)->?Dint\n" doc) },
-PRIVATE DEFINE_KWCMETHOD(posix__creat, &posix__creat_f);
-#ifndef POSIX_KWDS_FILENAME_MODE_DEFINED
-#define POSIX_KWDS_FILENAME_MODE_DEFINED
-PRIVATE DEFINE_KWLIST(posix_kwds_filename_mode, { K(filename), K(mode), KEND });
-#endif /* !POSIX_KWDS_FILENAME_MODE_DEFINED */
-PRIVATE WUNUSED DREF DeeObject *DCALL posix__creat_f(size_t argc, DeeObject *const *argv, DeeObject *kw) {
-	/*utf-8*/ char const *filename_str;
-	DeeStringObject *filename;
-	unsigned int mode = 0644;
-	if (DeeArg_UnpackKw(argc, argv, kw, posix_kwds_filename_mode, "o|u:_creat", &filename, &mode))
-		goto err;
-	if (DeeObject_AssertTypeExact(filename, &DeeString_Type))
-		goto err;
-	filename_str = DeeString_AsUtf8((DeeObject *)filename);
-	if unlikely(!filename_str)
-		goto err;
-	return posix__creat_f_impl(filename_str, mode);
-err:
-	return NULL;
-}
-FORCELOCAL WUNUSED DREF DeeObject *DCALL posix__creat_f_impl(/*utf-8*/ char const *filename, unsigned int mode)
-/*[[[end]]]*/
-#endif /* posix_creat_USE_creat */
 {
 #if defined(posix_creat_USE_wcreat) || defined(posix_creat_USE_creat)
 	int result;
@@ -519,42 +421,55 @@ EINTR_LABEL(again)
 	DBG_ALIGNMENT_DISABLE();
 
 #ifdef posix_creat_USE_wcreat
-#define CREAT_PRINTF_FILENAME "%lq"
+	{
+		dwchar_t const *wide_filename;
+		wide_filename = DeeString_AsWide(filename);
+		if unlikely(!wide_filename)
+			goto err;
+		DBG_ALIGNMENT_DISABLE();
 #ifdef CONFIG_HAVE_wcreat64
-	result = wcreat64(filename, (int)mode);
-#else /* CONFIG_HAVE_wcreat64 */
-	result = wcreat(filename, (int)mode);
+		result = wcreat64(wide_filename, (int)mode);
+#else  /* CONFIG_HAVE_wcreat64 */
+		result = wcreat(wide_filename, (int)mode);
 #endif /* !CONFIG_HAVE_wcreat64 */
+	}
 #endif /* posix_creat_USE_wcreat */
 
 #ifdef posix_creat_USE_creat
-#define CREAT_PRINTF_FILENAME "%q"
+	{
+		char const *utf8_filename;
+		utf8_filename = DeeString_AsUtf8(filename);
+		if unlikely(!utf8_filename)
+			goto err;
+		DBG_ALIGNMENT_DISABLE();
 #ifdef CONFIG_HAVE_creat64
-	result = creat64(filename, (int)mode);
-#else /* CONFIG_HAVE_creat64 */
-	result = creat(filename, (int)mode);
+		result = creat64(utf8_filename, (int)mode);
+#else  /* CONFIG_HAVE_creat64 */
+		result = creat(utf8_filename, (int)mode);
 #endif /* !CONFIG_HAVE_creat64 */
+	}
 #endif /* posix_creat_USE_creat */
 
 	DBG_ALIGNMENT_ENABLE();
 	if (result < 0) {
 		result = DeeSystem_GetErrno();
 		EINTR_HANDLE(result, again, err)
-		HANDLE_ENOENT_ENOTDIR(result, err, "File or directory " CREAT_PRINTF_FILENAME " could not be found", filename)
-		HANDLE_EACCES(result, err, "Failed to access " CREAT_PRINTF_FILENAME, filename)
-		HANDLE_ENXIO_EISDIR(result, err, "Cannot open directory " CREAT_PRINTF_FILENAME " for writing", filename)
-		HANDLE_EROFS_ETXTBSY(result, err, "Read-only file " CREAT_PRINTF_FILENAME, filename)
+		HANDLE_ENOENT_ENOTDIR(result, err, "File or directory %r could not be found", filename)
+		HANDLE_EACCES(result, err, "Failed to access %r", filename)
+		HANDLE_ENXIO_EISDIR(result, err, "Cannot open directory %r for writing", filename)
+		HANDLE_EROFS_ETXTBSY(result, err, "Read-only file %r", filename)
 		HANDLE_ENOSYS(result, err, "creat")
-		DeeUnixSystem_ThrowErrorf(&DeeError_FSError, result,
-		                          "Failed to open " CREAT_PRINTF_FILENAME,
-		                          filename);
+		DeeUnixSystem_ThrowErrorf(&DeeError_FSError, result, "Failed to open %r", filename);
 		goto err;
 	}
 	return DeeInt_NewUInt((unsigned int)result);
 err:
 	return NULL;
-#undef CREAT_PRINTF_FILENAME
 #endif /* posix_creat_USE_wcreat || posix_creat_USE_creat */
+
+#ifdef posix_creat_USE_open
+	return posix__open_f_impl(filename, POSIX_CREAT_OFLAGS, mode);
+#endif /* posix_creat_USE_open */
 
 #ifdef posix_creat_USE_STUB
 #define NEED_posix_err_unsupported
@@ -565,9 +480,8 @@ err:
 #endif /* posix_creat_USE_STUB */
 }
 
-#if defined(posix_creat_USE_wcreat) || defined(__DEEMON__)
-/*[[[deemon import("rt.gen.dexutils").gw("creat", "filename:c:wchar_t[],mode:u=0644->?Dint", libname: "posix"); ]]]*/
-FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_creat_f_impl(dwchar_t const *filename, unsigned int mode);
+/*[[[deemon import("rt.gen.dexutils").gw("creat", "filename:?Dstring,mode:u=0644->?Dint", libname: "posix"); ]]]*/
+FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_creat_f_impl(DeeObject *filename, unsigned int mode);
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_creat_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define POSIX_CREAT_DEF { "creat", (DeeObject *)&posix_creat, MODSYM_FNORMAL, DOC("(filename:?Dstring,mode:?Dint=!0644)->?Dint") },
 #define POSIX_CREAT_DEF_DOC(doc) { "creat", (DeeObject *)&posix_creat, MODSYM_FNORMAL, DOC("(filename:?Dstring,mode:?Dint=!0644)->?Dint\n" doc) },
@@ -577,66 +491,28 @@ PRIVATE DEFINE_KWCMETHOD(posix_creat, &posix_creat_f);
 PRIVATE DEFINE_KWLIST(posix_kwds_filename_mode, { K(filename), K(mode), KEND });
 #endif /* !POSIX_KWDS_FILENAME_MODE_DEFINED */
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_creat_f(size_t argc, DeeObject *const *argv, DeeObject *kw) {
-	dwchar_t const *filename_str;
-	DeeStringObject *filename;
+	DeeObject *filename;
 	unsigned int mode = 0644;
 	if (DeeArg_UnpackKw(argc, argv, kw, posix_kwds_filename_mode, "o|u:creat", &filename, &mode))
 		goto err;
-	if (DeeObject_AssertTypeExact(filename, &DeeString_Type))
-		goto err;
-	filename_str = (dwchar_t const *)DeeString_AsWide((DeeObject *)filename);
-	if unlikely(!filename_str)
-		goto err;
-	return posix_creat_f_impl(filename_str, mode);
+	return posix_creat_f_impl(filename, mode);
 err:
 	return NULL;
 }
-FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_creat_f_impl(dwchar_t const *filename, unsigned int mode)
+FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_creat_f_impl(DeeObject *filename, unsigned int mode)
 /*[[[end]]]*/
-#endif /* posix_creat_USE_wcreat */
-#if defined(posix_creat_USE_creat) || defined(__DEEMON__)
-/*[[[deemon import("rt.gen.dexutils").gw("creat", "filename:c:char[],mode:u=0644->?Dint", libname: "posix"); ]]]*/
-FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_creat_f_impl(/*utf-8*/ char const *filename, unsigned int mode);
-PRIVATE WUNUSED DREF DeeObject *DCALL posix_creat_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
-#define POSIX_CREAT_DEF { "creat", (DeeObject *)&posix_creat, MODSYM_FNORMAL, DOC("(filename:?Dstring,mode:?Dint=!0644)->?Dint") },
-#define POSIX_CREAT_DEF_DOC(doc) { "creat", (DeeObject *)&posix_creat, MODSYM_FNORMAL, DOC("(filename:?Dstring,mode:?Dint=!0644)->?Dint\n" doc) },
-PRIVATE DEFINE_KWCMETHOD(posix_creat, &posix_creat_f);
-#ifndef POSIX_KWDS_FILENAME_MODE_DEFINED
-#define POSIX_KWDS_FILENAME_MODE_DEFINED
-PRIVATE DEFINE_KWLIST(posix_kwds_filename_mode, { K(filename), K(mode), KEND });
-#endif /* !POSIX_KWDS_FILENAME_MODE_DEFINED */
-PRIVATE WUNUSED DREF DeeObject *DCALL posix_creat_f(size_t argc, DeeObject *const *argv, DeeObject *kw) {
-	/*utf-8*/ char const *filename_str;
-	DeeStringObject *filename;
-	unsigned int mode = 0644;
-	if (DeeArg_UnpackKw(argc, argv, kw, posix_kwds_filename_mode, "o|u:creat", &filename, &mode))
-		goto err;
-	if (DeeObject_AssertTypeExact(filename, &DeeString_Type))
-		goto err;
-	filename_str = DeeString_AsUtf8((DeeObject *)filename);
-	if unlikely(!filename_str)
-		goto err;
-	return posix_creat_f_impl(filename_str, mode);
-err:
-	return NULL;
-}
-FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_creat_f_impl(/*utf-8*/ char const *filename, unsigned int mode)
-/*[[[end]]]*/
-#endif /* posix_creat_USE_creat */
 {
-#ifdef POSIX_CREAT_DEFAULT_FLAGS
+#if defined(POSIX_CREAT_OFLAGS) && defined(POSIX_CREAT_DEFAULT_FLAGS)
 	return posix__open_f_impl(filename,
-#ifdef O_WRONLY
-	                          POSIX_CREAT_DEFAULT_FLAGS | O_CREAT | O_WRONLY | O_TRUNC
-#else  /* O_WRONLY */
-	                          POSIX_CREAT_DEFAULT_FLAGS | O_CREAT | O_RDWR | O_TRUNC
-#endif /* !O_WRONLY */
-	                          ,
+	                          POSIX_CREAT_OFLAGS |
+	                          POSIX_CREAT_DEFAULT_FLAGS,
 	                          mode);
-#else /* POSIX_CREAT_DEFAULT_FLAGS */
+#else /* POSIX_CREAT_OFLAGS && POSIX_CREAT_DEFAULT_FLAGS */
 	return posix__creat_f_impl(filename, mode);
-#endif /* !POSIX_CREAT_DEFAULT_FLAGS */
+#endif /* !POSIX_CREAT_OFLAGS || !POSIX_CREAT_DEFAULT_FLAGS */
 }
+
+
 
 DECL_END
 
