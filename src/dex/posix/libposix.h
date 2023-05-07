@@ -500,12 +500,14 @@ INTDEF ATTR_COLD NONNULL((2)) int DCALL err_unix_rmdir(int errno_value, DeeObjec
 INTDEF ATTR_COLD NONNULL((2)) int DCALL err_unix_mkdir(int errno_value, DeeObject *__restrict path, unsigned int mode);
 INTDEF ATTR_COLD NONNULL((2, 3)) int DCALL err_unix_rename(int errno_value, DeeObject *existing_path, DeeObject *new_path);
 INTDEF ATTR_COLD NONNULL((2, 3)) int DCALL err_unix_link(int errno_value, DeeObject *existing_path, DeeObject *new_path);
+INTDEF ATTR_COLD NONNULL((2, 3)) int DCALL err_unix_symlink(int errno_value, DeeObject *text, DeeObject *path);
 INTDEF ATTR_COLD NONNULL((2)) int DCALL err_unix_remove_unsupported(int errno_value, DeeObject *__restrict path);
 INTDEF ATTR_COLD NONNULL((2)) int DCALL err_unix_unlink_unsupported(int errno_value, DeeObject *__restrict path);
 INTDEF ATTR_COLD NONNULL((2)) int DCALL err_unix_rmdir_unsupported(int errno_value, DeeObject *__restrict path);
 INTDEF ATTR_COLD NONNULL((2)) int DCALL err_unix_mkdir_unsupported(int errno_value, DeeObject *__restrict path, unsigned int mode);
 INTDEF ATTR_COLD NONNULL((2, 3)) int DCALL err_unix_rename_unsupported(int errno_value, DeeObject *existing_path, DeeObject *new_path);
 INTDEF ATTR_COLD NONNULL((2, 3)) int DCALL err_unix_link_unsupported(int errno_value, DeeObject *existing_path, DeeObject *new_path);
+INTDEF ATTR_COLD NONNULL((2, 3)) int DCALL err_unix_symlink_unsupported(int errno_value, DeeObject *text, DeeObject *path);
 INTDEF ATTR_COLD NONNULL((2)) int DCALL err_unix_path_not_dir(int errno_value, DeeObject *__restrict path);
 INTDEF ATTR_COLD NONNULL((2, 3)) int DCALL err_unix_path_not_dir2(int errno_value, DeeObject *existing_path, DeeObject *new_path);
 INTDEF ATTR_COLD NONNULL((2)) int DCALL err_unix_path_not_found(int errno_value, DeeObject *__restrict path);
@@ -534,11 +536,13 @@ INTDEF ATTR_COLD NONNULL((2)) int DCALL err_nt_rmdir(DWORD dwError, DeeObject *_
 INTDEF ATTR_COLD NONNULL((2)) int DCALL err_nt_mkdir(DWORD dwError, DeeObject *__restrict path, unsigned int mode);
 INTDEF ATTR_COLD NONNULL((2, 3)) int DCALL err_nt_rename(DWORD dwError, DeeObject *existing_path, DeeObject *new_path);
 INTDEF ATTR_COLD NONNULL((2, 3)) int DCALL err_nt_link(DWORD dwError, DeeObject *existing_path, DeeObject *new_path);
+INTDEF ATTR_COLD NONNULL((2, 3)) int DCALL err_nt_symlink(DWORD dwError, DeeObject *text, DeeObject *path);
 INTDEF ATTR_COLD NONNULL((2)) int DCALL err_nt_unlink_unsupported(DWORD dwError, DeeObject *__restrict path);
 INTDEF ATTR_COLD NONNULL((2)) int DCALL err_nt_rmdir_unsupported(DWORD dwError, DeeObject *__restrict path);
 INTDEF ATTR_COLD NONNULL((2)) int DCALL err_nt_mkdir_unsupported(DWORD dwError, DeeObject *__restrict path, unsigned int mode);
 INTDEF ATTR_COLD NONNULL((2, 3)) int DCALL err_nt_rename_unsupported(DWORD dwError, DeeObject *existing_path, DeeObject *new_path);
 INTDEF ATTR_COLD NONNULL((2, 3)) int DCALL err_nt_link_unsupported(DWORD dwError, DeeObject *existing_path, DeeObject *new_path);
+INTDEF ATTR_COLD NONNULL((2, 3)) int DCALL err_nt_symlink_unsupported(DWORD dwError, DeeObject *text, DeeObject *path);
 INTDEF ATTR_COLD NONNULL((2)) int DCALL err_nt_path_not_dir(DWORD dwError, DeeObject *__restrict path);
 INTDEF ATTR_COLD NONNULL((2, 3)) int DCALL err_nt_path_not_dir2(DWORD dwError, DeeObject *existing_path, DeeObject *new_path);
 INTDEF ATTR_COLD NONNULL((2)) int DCALL err_nt_path_not_found(DWORD dwError, DeeObject *__restrict path);
@@ -628,8 +632,8 @@ nt_DeleteFile(DeeObject *__restrict lpFileName);
  * @return: -1: A deemon callback failed and an error was thrown.
  * @return:  1: The system call failed (s.a. `GetLastError()') */
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL
-nt_MoveFileEx(DeeObject *__restrict lpExistingFileName,
-              DeeObject *__restrict lpNewFileName,
+nt_MoveFileEx(DeeObject *lpExistingFileName,
+              DeeObject *lpNewFileName,
               DWORD dwFlags);
 
 /* Work around a problem with long path names.
@@ -637,18 +641,26 @@ nt_MoveFileEx(DeeObject *__restrict lpExistingFileName,
  * @return: -1: A deemon callback failed and an error was thrown.
  * @return:  1: The system call failed (s.a. `GetLastError()') */
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL
-nt_CreateHardLink(DeeObject *__restrict lpFileName,
-                  DeeObject *__restrict lpExistingFileName,
+nt_CreateHardLink(DeeObject *lpFileName,
+                  DeeObject *lpExistingFileName,
                   LPSECURITY_ATTRIBUTES lpSecurityAttributes);
 
 /* Work around a problem with long path names.
  * @return:  0: Successfully created the symlink.
  * @return: -1: A deemon callback failed and an error was thrown.
  * @return:  1: The system call failed (s.a. `GetLastError()') */
-INTDEF int DCALL
-nt_CreateSymbolicLink(DeeObject *__restrict lpSymlinkFileName,
-                      DeeObject *__restrict lpTargetFileName,
+INTDEF NONNULL((1, 2)) int DCALL
+nt_CreateSymbolicLink(DeeObject *lpSymlinkFileName,
+                      DeeObject *lpTargetFileName,
                       DWORD dwFlags);
+
+/* Same as `nt_CreateSymbolicLink()', but automatically determine proper `dwFlags'
+ * @return:  0: Successfully created the symlink.
+ * @return: -1: A deemon callback failed and an error was thrown.
+ * @return:  1: The system call failed (s.a. `GetLastError()') */
+INTDEF NONNULL((1, 2)) int DCALL
+nt_CreateSymbolicLinkAuto(DeeObject *lpSymlinkFileName,
+                          DeeObject *lpTargetFileName);
 
 #endif /* CONFIG_HOST_WINDOWS */
 /************************************************************************/

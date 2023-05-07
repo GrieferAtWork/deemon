@@ -43,6 +43,7 @@
 #include "p-rename.c.inl"
 #include "p-sched.c.inl"
 #include "p-stat.c.inl"
+#include "p-symlink.c.inl"
 #include "p-sync.c.inl"
 #include "p-truncate.c.inl"
 
@@ -102,7 +103,7 @@ INTERN DEFINE_DeeTime_NewFILETIME(get_time_module);
 
 #if defined(NEED_libposix_get_dfd_filename) || defined(__INTELLISENSE__)
 #undef NEED_libposix_get_dfd_filename
-INTERN WUNUSED DREF /*String*/ DeeObject *DCALL
+INTERN WUNUSED DREF /*String*/ DeeObject *DCALL /* TODO: REMOVE ME */
 libposix_get_dfd_filename(int dfd, /*utf-8*/ char const *filename, int atflags) {
 	(void)dfd;
 	(void)filename;
@@ -210,12 +211,15 @@ local ALL_STUBS = {
 	("posix_fchdirat_USE_STUB", { "fchdirat" }),
 	("posix_unlink_USE_STUB", { "unlink" }),
 	("posix_rmdir_USE_STUB", { "rmdir" }),
-	("posix_mkdir_USE_STUB", { "mkdir" }),
 	("posix_remove_USE_STUB", { "remove" }),
 	("posix_unlinkat_USE_STUB", { "unlinkat" }),
 	("posix_rmdirat_USE_STUB", { "rmdirat" }),
+	("posix_mkdir_USE_STUB", { "mkdir" }),
 	("posix_mkdirat_USE_STUB", { "mkdirat" }),
 	("posix_fmkdirat_USE_STUB", { "fmkdirat" }),
+	("posix_symlink_USE_STUB", { "symlink" }),
+	("posix_symlinkat_USE_STUB", { "symlinkat" }),
+	("posix_fsymlinkat_USE_STUB", { "fsymlinkat" }),
 	("posix_removeat_USE_STUB", { "removeat" }),
 	("posix_readlink_USE_STUB", { "readlink" }),
 	("posix_freadlink_USE_STUB", { "freadlink" }),
@@ -541,6 +545,13 @@ print("#endif /" "* POSIX_STUBS_TOTLEN == 0 *" "/");
 #define len_posix_frename_USE_STUB /* nothing */
 #define str_posix_frename_USE_STUB /* nothing */
 #endif /* !posix_frename_USE_STUB */
+#ifdef posix_fsymlinkat_USE_STUB
+#define len_posix_fsymlinkat_USE_STUB +11
+#define str_posix_fsymlinkat_USE_STUB 'f', 's', 'y', 'm', 'l', 'i', 'n', 'k', 'a', 't', '\0',
+#else /* posix_fsymlinkat_USE_STUB */
+#define len_posix_fsymlinkat_USE_STUB /* nothing */
+#define str_posix_fsymlinkat_USE_STUB /* nothing */
+#endif /* !posix_fsymlinkat_USE_STUB */
 #ifdef posix_fsync_USE_STUB
 #define len_posix_fsync_USE_STUB +6
 #define str_posix_fsync_USE_STUB 'f', 's', 'y', 'n', 'c', '\0',
@@ -926,6 +937,20 @@ print("#endif /" "* POSIX_STUBS_TOTLEN == 0 *" "/");
 #define len_posix_strerrorname_USE_STUB /* nothing */
 #define str_posix_strerrorname_USE_STUB /* nothing */
 #endif /* !posix_strerrorname_USE_STUB */
+#ifdef posix_symlink_USE_STUB
+#define len_posix_symlink_USE_STUB +8
+#define str_posix_symlink_USE_STUB 's', 'y', 'm', 'l', 'i', 'n', 'k', '\0',
+#else /* posix_symlink_USE_STUB */
+#define len_posix_symlink_USE_STUB /* nothing */
+#define str_posix_symlink_USE_STUB /* nothing */
+#endif /* !posix_symlink_USE_STUB */
+#ifdef posix_symlinkat_USE_STUB
+#define len_posix_symlinkat_USE_STUB +10
+#define str_posix_symlinkat_USE_STUB 's', 'y', 'm', 'l', 'i', 'n', 'k', 'a', 't', '\0',
+#else /* posix_symlinkat_USE_STUB */
+#define len_posix_symlinkat_USE_STUB /* nothing */
+#define str_posix_symlinkat_USE_STUB /* nothing */
+#endif /* !posix_symlinkat_USE_STUB */
 #ifdef posix_system_USE_STUB
 #define len_posix_system_USE_STUB +7
 #define str_posix_system_USE_STUB 's', 'y', 's', 't', 'e', 'm', '\0',
@@ -1029,6 +1054,7 @@ print("#endif /" "* POSIX_STUBS_TOTLEN == 0 *" "/");
 	len_posix_fmkdirat_USE_STUB \
 	len_posix_freadlink_USE_STUB \
 	len_posix_frename_USE_STUB \
+	len_posix_fsymlinkat_USE_STUB \
 	len_posix_fsync_USE_STUB \
 	len_posix_ftruncate_USE_STUB \
 	len_posix_getenv_USE_STUB \
@@ -1084,6 +1110,8 @@ print("#endif /" "* POSIX_STUBS_TOTLEN == 0 *" "/");
 	len_posix_stat_issock_IS_STUB \
 	len_posix_strerror_USE_STUB \
 	len_posix_strerrorname_USE_STUB \
+	len_posix_symlink_USE_STUB \
+	len_posix_symlinkat_USE_STUB \
 	len_posix_system_USE_STUB \
 	len_posix_truncate_USE_STUB \
 	len_posix_umask_USE_STUB \
@@ -1146,6 +1174,7 @@ PRIVATE struct {
 		str_posix_fmkdirat_USE_STUB
 		str_posix_freadlink_USE_STUB
 		str_posix_frename_USE_STUB
+		str_posix_fsymlinkat_USE_STUB
 		str_posix_fsync_USE_STUB
 		str_posix_ftruncate_USE_STUB
 		str_posix_getenv_USE_STUB
@@ -1201,6 +1230,8 @@ PRIVATE struct {
 		str_posix_stat_issock_IS_STUB
 		str_posix_strerror_USE_STUB
 		str_posix_strerrorname_USE_STUB
+		str_posix_symlink_USE_STUB
+		str_posix_symlinkat_USE_STUB
 		str_posix_system_USE_STUB
 		str_posix_truncate_USE_STUB
 		str_posix_umask_USE_STUB
@@ -1799,18 +1830,6 @@ PRIVATE struct dex_symbol symbols[] = {
 	                       /*               */ "operations mode, preventing the deletion of existing files\n"
 	                       "@throw SystemError Failed to unlink the given file @file for some reason\n"
 	                       "Remove a non-directory filesystem object named @file"))
-	D(POSIX_MKDIR_DEF_DOC("@interrupt\n"
-	                      "@throw FileNotFound One or more of @path's parents do not exist\n"
-	                      "@throw NoDirectory A part of the given @path is not a directory\n"
-	                      "@throw FileExists The given @path already exists\n"
-	                      "@throw ValueError The given @permissions are malformed or not recognized\n"
-	                      "@throw FileAccessError The current user does not have permissions to "
-	                      /*                  */ "create a new directory within the folder of @path\n"
-	                      "@throw ReadOnlyFile The filesystem or device hosting the directory of "
-	                      /*               */ "@path is in read-only operations mode, preventing the "
-	                      /*               */ "creation of new directories\n"
-	                      "@throw SystemError Failed to create a directory for some reason\n"
-	                      "Create a new directory named @path"))
 	D(POSIX_RMDIR_DEF_DOC("@interrupt\n"
 	                      "@throw FileNotFound The given @path does not exist\n"
 	                      "@throw NoDirectory A part of the given @path is not a directory\n"
@@ -1845,6 +1864,18 @@ PRIVATE struct dex_symbol symbols[] = {
 	                         "@throw SystemError Failed to unlink the given file @dfd:@file for some reason\n"
 	                         "@param atflags Set of ?GAT_REMOVEDIR, ?GAT_REMOVEREG\n"
 	                         "Remove a filesystem object named @dfd:@file"))
+	D(POSIX_MKDIR_DEF_DOC("@interrupt\n"
+	                      "@throw FileNotFound One or more of @path's parents do not exist\n"
+	                      "@throw NoDirectory A part of the given @path is not a directory\n"
+	                      "@throw FileExists The given @path already exists\n"
+	                      "@throw ValueError The given @permissions are malformed or not recognized\n"
+	                      "@throw FileAccessError The current user does not have permissions to "
+	                      /*                  */ "create a new directory within the folder of @path\n"
+	                      "@throw ReadOnlyFile The filesystem or device hosting the directory of "
+	                      /*               */ "@path is in read-only operations mode, preventing the "
+	                      /*               */ "creation of new directories\n"
+	                      "@throw SystemError Failed to create a directory for some reason\n"
+	                      "Create a new directory named @path"))
 	D(POSIX_MKDIRAT_DEF_DOC("@interrupt\n"
 	                        "@throw FileNotFound One or more of @dfd:@path's parents do not exist\n"
 	                        "@throw NoDirectory A part of the given @dfd:@path is not a directory\n"
@@ -1871,6 +1902,83 @@ PRIVATE struct dex_symbol symbols[] = {
 	                         "@throw SystemError Failed to create a directory for some reason\n"
 	                         "@throw FileClosed The given @dfd was closed\n"
 	                         "Create a new directory named @dfd:@path"))
+	D(POSIX_SYMLINK_DEF_DOC("@interrupt\n"
+	                        "@throw FileExists A file or directory named @path already exists\n"
+	                        "@throw FileNotFound A parent directory of @path does not exist\n"
+	                        "@throw NoDirectory A part of the given @path is not a directory\n"
+	                        "@throw UnsupportedAPI The underlying filesystem does not support symbolic links\n"
+	                        "@throw FileAccessError The current user does not have permissions to access the "
+	                        /*                  */ "directory containing the non-existant file @path for writing\n"
+	                        "@throw ReadOnlyFile The filesystem or device hosting the directory "
+	                        /*               */ "containing the non-existant object @path is "
+	                        /*               */ "in read-only operations mode, preventing the "
+	                        /*               */ "creation of new symbolic links\n"
+	                        "@throw SystemError Failed to create a symbolic link under @path for some reason\n"
+	                        "Symbolic links are filesystem redirection points which you can think of as "
+	                        /**/ "keyword-style macros that exist in directories. When addressed, simply imagine "
+	                        /**/ "their name being replaced with @text, at which point the resulting path "
+	                        "is then re-evaluated:\n"
+	                        "${"
+	                        /**/ "import symlink from fs;\n"
+	                        /**/ "import File from deemon;\n"
+	                        /**/ "symlink(\"../foo\", \"/path/to/link\");\n"
+	                        /**/ "/* \"/path/to/[link]/file.txt\" */\n"
+	                        /**/ "/* \"/path/to/[../foo]/file.txt\" */\n"
+	                        /**/ "/* \"/path/foo/file.txt\" */\n"
+	                        /**/ "File.open(\"/path/to/link/file.txt\");"
+	                        "}"))
+	D(POSIX_SYMLINKAT_DEF_DOC("@interrupt\n"
+	                          "@throw FileExists A file or directory named @dfd:@path already exists\n"
+	                          "@throw FileNotFound A parent directory of @dfd:@path does not exist\n"
+	                          "@throw NoDirectory A part of the given @dfd:@path is not a directory\n"
+	                          "@throw UnsupportedAPI The underlying filesystem does not support symbolic links\n"
+	                          "@throw FileAccessError The current user does not have permissions to access the "
+	                          /*                  */ "directory containing the non-existant file @dfd:@path for writing\n"
+	                          "@throw ReadOnlyFile The filesystem or device hosting the directory "
+	                          /*               */ "containing the non-existant object @dfd:@path is "
+	                          /*               */ "in read-only operations mode, preventing the "
+	                          /*               */ "creation of new symbolic links\n"
+	                          "@throw SystemError Failed to create a symbolic link under @dfd:@path for some reason\n"
+	                          "@throw FileClosed The given @dfd was closed\n"
+	                          "Symbolic links are filesystem redirection points which you can think of as "
+	                          /**/ "keyword-style macros that exist in directories. When addressed, simply imagine "
+	                          /**/ "their name being replaced with @text, at which point the resulting path "
+	                          "is then re-evaluated:\n"
+	                          "${"
+	                          /**/ "import symlink from fs;\n"
+	                          /**/ "import File from deemon;\n"
+	                          /**/ "symlink(\"../foo\", \"/path/to/link\");\n"
+	                          /**/ "/* \"/path/to/[link]/file.txt\" */\n"
+	                          /**/ "/* \"/path/to/[../foo]/file.txt\" */\n"
+	                          /**/ "/* \"/path/foo/file.txt\" */\n"
+	                          /**/ "File.open(\"/path/to/link/file.txt\");"
+	                          "}"))
+	D(POSIX_FSYMLINKAT_DEF_DOC("@interrupt\n"
+	                           "@throw FileExists A file or directory named @dfd:@path already exists\n"
+	                           "@throw FileNotFound A parent directory of @dfd:@path does not exist\n"
+	                           "@throw NoDirectory A part of the given @dfd:@path is not a directory\n"
+	                           "@throw UnsupportedAPI The underlying filesystem does not support symbolic links\n"
+	                           "@throw FileAccessError The current user does not have permissions to access the "
+	                           /*                  */ "directory containing the non-existant file @dfd:@path for writing\n"
+	                           "@throw ReadOnlyFile The filesystem or device hosting the directory "
+	                           /*               */ "containing the non-existant object @dfd:@path is "
+	                           /*               */ "in read-only operations mode, preventing the "
+	                           /*               */ "creation of new symbolic links\n"
+	                           "@throw SystemError Failed to create a symbolic link under @dfd:@path for some reason\n"
+	                           "@throw FileClosed The given @dfd was closed\n"
+	                           "Symbolic links are filesystem redirection points which you can think of as "
+	                           /**/ "keyword-style macros that exist in directories. When addressed, simply imagine "
+	                           /**/ "their name being replaced with @text, at which point the resulting path "
+	                           "is then re-evaluated:\n"
+	                           "${"
+	                           /**/ "import symlink from fs;\n"
+	                           /**/ "import File from deemon;\n"
+	                           /**/ "symlink(\"../foo\", \"/path/to/link\");\n"
+	                           /**/ "/* \"/path/to/[link]/file.txt\" */\n"
+	                           /**/ "/* \"/path/to/[../foo]/file.txt\" */\n"
+	                           /**/ "/* \"/path/foo/file.txt\" */\n"
+	                           /**/ "File.open(\"/path/to/link/file.txt\");"
+	                           "}"))
 	D(POSIX_RMDIRAT_DEF_DOC("@interrupt\n"
 	                        "@throw FileNotFound The given @dfd:@path does not exist\n"
 	                        "@throw NoDirectory A part of the given @dfd:@path is not a directory\n"
@@ -2064,7 +2172,6 @@ PRIVATE struct dex_symbol symbols[] = {
 	DEFINE_LIBFS_ALIAS_S(lchmod, "(path:?Dstring,mode:?X2?Dstring?Dint)\n")
 	DEFINE_LIBFS_ALIAS_S(chown, "(path:?Dstring,user:?X3?Efs:User?Dstring?Dint,group:?X3?Efs:Group?Dstring?Dint)\n")
 	DEFINE_LIBFS_ALIAS_S(lchown, "(path:?Dstring,user:?X3?Efs:User?Dstring?Dint,group:?X3?Efs:Group?Dstring?Dint)\n")
-	DEFINE_LIBFS_ALIAS_S(symlink, "(linktext:?Dstring,linkname:?Dstring)\n")
 	DEFINE_LIBFS_ALIAS_S_ALT("fchmod", chmod, "(fp:?DFile,mode:?X2?Dstring?Dint)\n"
 	                                          "(fd:?Dint,mode:?X2?Dstring?Dint)\n")
 	DEFINE_LIBFS_ALIAS_S_ALT("fchown", chown, "(fp:?DFile,user:?X3?Efs:User?Dstring?Dint,group:?X3?Efs:Group?Dstring?Dint)\n"

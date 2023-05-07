@@ -629,36 +629,42 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix__openat_f_impl(DeeObject *dfd, De
 	if (!DeeString_Check(dfd)) {
 		int result;
 		int os_dfd;
+#ifdef posix_openat_USE_wopenat
+		dwchar_t const *wide_filename;
+#endif /* posix_openat_USE_wopenat */
+#ifdef posix_openat_USE_openat
+		char const *utf8_filename;
+#endif /* posix_openat_USE_openat */
 		os_dfd = DeeUnixSystem_GetFD(dfd);
 		if unlikely(os_dfd == -1)
 			goto err;
-EINTR_LABEL(again)
-
 #ifdef posix_openat_USE_wopenat
-		{
-			dwchar_t const *wide_filename;
-			wide_filename = DeeString_AsWide(filename);
-			if unlikely(!wide_filename)
-				goto err;
-			DBG_ALIGNMENT_DISABLE();
-			result = wopenat(os_dfd, wide_filename, (int)oflags, (int)mode);
-		}
+		wide_filename = DeeString_AsWide(filename);
+		if unlikely(!wide_filename)
+			goto err;
 #endif /* posix_openat_USE_wopenat */
-
 #ifdef posix_openat_USE_openat
-		{
-			char const *utf8_filename;
-			utf8_filename = DeeString_AsUtf8(filename);
-			if unlikely(!utf8_filename)
-				goto err;
-			DBG_ALIGNMENT_DISABLE();
-			result = openat(os_dfd, utf8_filename, (int)oflags, (int)mode);
-		}
+		utf8_filename = DeeString_AsUtf8(filename);
+		if unlikely(!utf8_filename)
+			goto err;
 #endif /* posix_openat_USE_openat */
 
-		DBG_ALIGNMENT_ENABLE();
-		if (result >= 0)
+EINTR_ENOMEM_LABEL(again)
+		DBG_ALIGNMENT_DISABLE();
+#ifdef posix_openat_USE_wopenat
+		result = wopenat(os_dfd, wide_filename, (int)oflags, (int)mode);
+#endif /* posix_openat_USE_wopenat */
+#ifdef posix_openat_USE_openat
+		result = openat(os_dfd, utf8_filename, (int)oflags, (int)mode);
+#endif /* posix_openat_USE_openat */
+		if (result >= 0) {
+			DBG_ALIGNMENT_ENABLE();
 			return DeeInt_NewUInt((unsigned int)result);
+		}
+		result = DeeSystem_GetErrno();
+		DBG_ALIGNMENT_ENABLE();
+		EINTR_HANDLE(result, again, err);
+		ENOMEM_HANDLE(result, again, err);
 		/* Fallthru to fallback path below */
 	}
 #endif /* posix_openat_USE_wopenat || posix_openat_USE_openat */

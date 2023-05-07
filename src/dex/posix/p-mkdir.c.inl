@@ -266,7 +266,7 @@ EINTR_ENOMEM_LABEL(again)
 		error = wmkdirat(os_dfd, wide_path, mode);
 #elif defined(posix_fmkdirat_USE_fmkdirat)
 		error = fmkdirat(os_dfd, utf8_path, mode, atflags);
-#elif defined(posix_fmkdirat_USE_mkdirat))
+#elif defined(posix_fmkdirat_USE_mkdirat)
 		error = mkdirat(os_dfd, utf8_path, mode);
 #endif /* ... */
 		if likely(error == 0) {
@@ -293,8 +293,10 @@ err:
 
 #ifdef posix_fmkdirat_USE_STUB
 #define NEED_posix_err_unsupported
+	(void)dfd;
 	(void)path;
 	(void)mode;
+	(void)atflags;
 	posix_err_unsupported("fmkdirat");
 	return NULL;
 #endif /* posix_fmkdirat_USE_STUB */
@@ -334,6 +336,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_mkdirat_f_impl(DeeObject *dfd, De
 
 #ifdef posix_mkdirat_USE_STUB
 #define NEED_posix_err_unsupported
+	(void)dfd;
 	(void)path;
 	(void)mode;
 	posix_err_unsupported("mkdirat");

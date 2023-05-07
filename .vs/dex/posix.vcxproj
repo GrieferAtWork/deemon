@@ -57,6 +57,7 @@
 		<ClInclude Include="..\..\src\dex\posix\p-rename.c.inl" />
 		<ClInclude Include="..\..\src\dex\posix\p-sched.c.inl" />
 		<ClInclude Include="..\..\src\dex\posix\p-stat.c.inl" />
+		<ClInclude Include="..\..\src\dex\posix\p-symlink.c.inl" />
 		<ClInclude Include="..\..\src\dex\posix\p-sync.c.inl" />
 		<ClInclude Include="..\..\src\dex\posix\p-truncate.c.inl" />
 	</ItemGroup>

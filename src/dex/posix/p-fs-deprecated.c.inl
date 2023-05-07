@@ -30,7 +30,6 @@ DECL_BEGIN
 #undef lchmod
 #undef chown
 #undef lchown
-#undef symlink
 
 #define DEFINE_LIBFS_FORWARD_WRAPPER(name, symbol_name)                                \
 	PRIVATE DEFINE_STRING(libposix_libfs_name_##name, symbol_name);                    \
@@ -45,7 +44,6 @@ DEFINE_LIBFS_FORWARD_WRAPPER_S(chmod)
 DEFINE_LIBFS_FORWARD_WRAPPER_S(lchmod)
 DEFINE_LIBFS_FORWARD_WRAPPER_S(chown)
 DEFINE_LIBFS_FORWARD_WRAPPER_S(lchown)
-DEFINE_LIBFS_FORWARD_WRAPPER_S(symlink)
 #undef DEFINE_LIBFS_FORWARD_WRAPPER_S
 #undef DEFINE_LIBFS_FORWARD_WRAPPER
 

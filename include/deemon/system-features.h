@@ -614,6 +614,13 @@ func("utimensat64", "defined(CONFIG_HAVE_SYS_STAT_H) && defined(__USE_ATFILE) &&
 func("futimens", "defined(CONFIG_HAVE_SYS_STAT_H) && defined(__USE_XOPEN2K8)", test: 'struct timespec ts[2]; ts[0].tv_sec = 0; ts[0].tv_nsec = 0; ts[1] = ts[0]; return futimens(1, ts);');
 func("futimens64", "defined(CONFIG_HAVE_SYS_STAT_H) && defined(__USE_XOPEN2K8) && defined(__USE_TIME64)", test: 'struct timespec64 ts[2]; ts[0].tv_sec = 0; ts[0].tv_nsec = 0; ts[1] = ts[0]; return futimens64(1, ts);');
 
+functest('symlink("foo", "bar")', "defined(CONFIG_HAVE_UNISTD_H) && (defined(__USE_XOPEN_EXTENDED) || defined(__USE_XOPEN2K))");
+functest('symlinkat("foo", AT_FDCWD, "bar")', "defined(CONFIG_HAVE_UNISTD_H) && defined(__USE_ATFILE)");
+functest('fsymlinkat("foo", AT_FDCWD, "bar", 0)', "defined(CONFIG_HAVE_UNISTD_H) && defined(__USE_ATFILE) && defined(__USE_KOS)");
+func("wsymlink", test: "wchar_t c[] = { 'f', 'o', 'o', 0 }; return wsymlink(c, c);");
+func("wsymlinkat", test: "wchar_t c[] = { 'f', 'o', 'o', 0 }; return wsymlinkat(c, AT_FDCWD, c);");
+func("wfsymlinkat", test: "wchar_t c[] = { 'f', 'o', 'o', 0 }; return wfsymlinkat(c, AT_FDCWD, c, 0);");
+
 functest("time(NULL)", "defined(CONFIG_HAVE_TIME_H)");
 functest("time64(NULL)", "defined(CONFIG_HAVE_TIME_H) && defined(__USE_TIME64)");
 func("clock_gettime", "defined(CONFIG_HAVE_TIME_H) && defined(__USE_POSIX199309)", test: "struct timespec ts; return clock_gettime(0, &ts);");
@@ -5072,6 +5079,51 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
       (defined(futimens64) || defined(__futimens64_defined) || (defined(CONFIG_HAVE_SYS_STAT_H) && \
        defined(__USE_XOPEN2K8) && defined(__USE_TIME64)))
 #define CONFIG_HAVE_futimens64
+#endif
+
+#ifdef CONFIG_NO_symlink
+#undef CONFIG_HAVE_symlink
+#elif !defined(CONFIG_HAVE_symlink) && \
+      (defined(symlink) || defined(__symlink_defined) || (defined(CONFIG_HAVE_UNISTD_H) && \
+       (defined(__USE_XOPEN_EXTENDED) || defined(__USE_XOPEN2K))))
+#define CONFIG_HAVE_symlink
+#endif
+
+#ifdef CONFIG_NO_symlinkat
+#undef CONFIG_HAVE_symlinkat
+#elif !defined(CONFIG_HAVE_symlinkat) && \
+      (defined(symlinkat) || defined(__symlinkat_defined) || (defined(CONFIG_HAVE_UNISTD_H) && \
+       defined(__USE_ATFILE)))
+#define CONFIG_HAVE_symlinkat
+#endif
+
+#ifdef CONFIG_NO_fsymlinkat
+#undef CONFIG_HAVE_fsymlinkat
+#elif !defined(CONFIG_HAVE_fsymlinkat) && \
+      (defined(fsymlinkat) || defined(__fsymlinkat_defined) || (defined(CONFIG_HAVE_UNISTD_H) && \
+       defined(__USE_ATFILE) && defined(__USE_KOS)))
+#define CONFIG_HAVE_fsymlinkat
+#endif
+
+#ifdef CONFIG_NO_wsymlink
+#undef CONFIG_HAVE_wsymlink
+#elif !defined(CONFIG_HAVE_wsymlink) && \
+      (defined(wsymlink) || defined(__wsymlink_defined))
+#define CONFIG_HAVE_wsymlink
+#endif
+
+#ifdef CONFIG_NO_wsymlinkat
+#undef CONFIG_HAVE_wsymlinkat
+#elif !defined(CONFIG_HAVE_wsymlinkat) && \
+      (defined(wsymlinkat) || defined(__wsymlinkat_defined))
+#define CONFIG_HAVE_wsymlinkat
+#endif
+
+#ifdef CONFIG_NO_wfsymlinkat
+#undef CONFIG_HAVE_wfsymlinkat
+#elif !defined(CONFIG_HAVE_wfsymlinkat) && \
+      (defined(wfsymlinkat) || defined(__wfsymlinkat_defined))
+#define CONFIG_HAVE_wfsymlinkat
 #endif
 
 #ifdef CONFIG_NO_time
@@ -10175,6 +10227,30 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #undef wmkdir
 #define wmkdir(path, mode) wmkdirat(AT_FDCWD, path, mode)
 #endif /* wmkdir = wmkdirat */
+
+#if !defined(CONFIG_HAVE_symlinkat) && defined(CONFIG_HAVE_fsymlinkat)
+#define CONFIG_HAVE_symlinkat
+#undef symlinkat
+#define symlinkat(text, dfd, path) fsymlinkat(text, dfd, path, 0)
+#endif /* symlinkat = fsymlinkat */
+
+#if !defined(CONFIG_HAVE_wsymlinkat) && defined(CONFIG_HAVE_wfsymlinkat)
+#define CONFIG_HAVE_wsymlinkat
+#undef wsymlinkat
+#define wsymlinkat(text, dfd, path) wfsymlinkat(text, dfd, path, 0)
+#endif /* wsymlinkat = wfsymlinkat */
+
+#if !defined(CONFIG_HAVE_symlink) && defined(CONFIG_HAVE_symlinkat) && defined(CONFIG_HAVE_AT_FDCWD)
+#define CONFIG_HAVE_symlink
+#undef symlink
+#define symlink(text, path) symlinkat(text, AT_FDCWD, path)
+#endif /* symlink = symlinkat */
+
+#if !defined(CONFIG_HAVE_wsymlink) && defined(CONFIG_HAVE_wsymlinkat) && defined(CONFIG_HAVE_AT_FDCWD)
+#define CONFIG_HAVE_wsymlink
+#undef wsymlink
+#define wsymlink(text, path) wsymlinkat(text, AT_FDCWD, path)
+#endif /* wsymlink = wsymlinkat */
 
 #if defined(CONFIG_HAVE__mkdir) && !defined(CONFIG_HAVE_mkdir)
 #define CONFIG_HAVE_mkdir

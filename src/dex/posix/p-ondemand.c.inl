@@ -25,6 +25,7 @@
 #include "libposix.h"
 
 #ifdef __INTELLISENSE__
+#include "p-path.c.inl"
 #include "p-stat.c.inl"
 
 #define NEED_err_unix_chdir
@@ -38,7 +39,9 @@
 #define NEED_err_unix_rename
 #define NEED_err_nt_rename
 #define NEED_err_unix_link
+#define NEED_err_unix_symlink
 #define NEED_err_nt_link
+#define NEED_err_nt_symlink
 #define NEED_err_unix_remove_unsupported
 #define NEED_err_unix_unlink_unsupported
 #define NEED_err_nt_unlink_unsupported
@@ -49,7 +52,9 @@
 #define NEED_err_unix_rename_unsupported
 #define NEED_err_nt_rename_unsupported
 #define NEED_err_unix_link_unsupported
+#define NEED_err_unix_symlink_unsupported
 #define NEED_err_nt_link_unsupported
+#define NEED_err_nt_symlink_unsupported
 #define NEED_err_unix_path_not_dir
 #define NEED_err_nt_path_not_dir
 #define NEED_err_unix_path_not_dir2
@@ -103,6 +108,7 @@
 #define NEED_nt_DeleteFile
 #define NEED_nt_MoveFileEx
 #define NEED_nt_CreateHardLink
+#define NEED_nt_CreateSymbolicLinkAuto
 #define NEED_nt_CreateSymbolicLink
 #define NEED_posix_dfd_abspath
 #define NEED_posix_fd_abspath
@@ -171,7 +177,7 @@ typedef struct _DEE_REPARSE_DATA_BUFFER {
 
 /* Read the contents of a symbolic link
  * @param: path: Only used for error messages */
-INTDEF WUNUSED NONNULL((2)) DREF DeeObject *DCALL
+INTERN WUNUSED NONNULL((2)) DREF DeeObject *DCALL
 nt_FReadLink(HANDLE hLinkFile, DeeObject *__restrict path) {
 #define READLINK_INITIAL_BUFFER 300
 	DEE_PREPARSE_DATA_BUFFER buffer;
@@ -354,7 +360,7 @@ err:
 
 #ifdef NEED_err_unix_chdir
 #undef NEED_err_unix_chdir
-INTDEF ATTR_COLD NONNULL((2)) int DCALL
+INTERN ATTR_COLD NONNULL((2)) int DCALL
 err_unix_chdir(int errno_value, DeeObject *__restrict path) {
 #ifdef EACCES
 	if (errno_value == EACCES) {
@@ -533,7 +539,7 @@ err_unix_unlink(int errno_value, DeeObject *__restrict path) {
 
 #ifdef NEED_err_nt_unlink
 #undef NEED_err_nt_unlink
-INTDEF ATTR_COLD NONNULL((2)) int DCALL
+INTERN ATTR_COLD NONNULL((2)) int DCALL
 err_nt_unlink(DWORD dwError, DeeObject *__restrict path) {
 	if (dwError == ERROR_ACCESS_DENIED) {
 		DWORD dwAttributes;
@@ -570,7 +576,7 @@ err_nt_unlink(DWORD dwError, DeeObject *__restrict path) {
 
 #ifdef NEED_err_unix_rmdir
 #undef NEED_err_unix_rmdir
-INTDEF ATTR_COLD NONNULL((2)) int DCALL
+INTERN ATTR_COLD NONNULL((2)) int DCALL
 err_unix_rmdir(int errno_value, DeeObject *__restrict path) {
 #ifdef EACCES
 	if (errno_value == EACCES)
@@ -678,7 +684,7 @@ err_unix_mkdir(int errno_value, DeeObject *__restrict path, unsigned int mode) {
 
 #ifdef NEED_err_nt_rmdir
 #undef NEED_err_nt_rmdir
-INTDEF ATTR_COLD NONNULL((2)) int DCALL
+INTERN ATTR_COLD NONNULL((2)) int DCALL
 err_nt_rmdir(DWORD dwError, DeeObject *__restrict path) {
 #define NEED_err_nt_path_not_empty
 	if (DeeNTSystem_IsNotEmpty(dwError))
@@ -706,7 +712,7 @@ err_nt_rmdir(DWORD dwError, DeeObject *__restrict path) {
 
 #ifdef NEED_err_nt_mkdir
 #undef NEED_err_nt_mkdir
-INTDEF ATTR_COLD NONNULL((2)) int DCALL
+INTERN ATTR_COLD NONNULL((2)) int DCALL
 err_nt_mkdir(DWORD dwError, DeeObject *__restrict path, unsigned int mode) {
 	if (DeeNTSystem_IsAccessDeniedError(dwError))
 		return err_nt_path_not_writable(dwError, path);
@@ -728,10 +734,8 @@ err_nt_mkdir(DWORD dwError, DeeObject *__restrict path, unsigned int mode) {
 
 #ifdef NEED_err_unix_rename
 #undef NEED_err_unix_rename
-INTDEF ATTR_COLD NONNULL((2, 3)) int DCALL
-err_unix_rename(int errno_value,
-                DeeObject *existing_path,
-                DeeObject *new_path) {
+INTERN ATTR_COLD NONNULL((2, 3)) int DCALL
+err_unix_rename(int errno_value, DeeObject *existing_path, DeeObject *new_path) {
 #ifdef EACCES
 #define NEED_err_unix_path_readonly2
 	if (errno_value == EACCES)
@@ -857,9 +861,7 @@ err_unix_rename(int errno_value,
 #ifdef NEED_err_nt_rename
 #undef NEED_err_nt_rename
 INTERN ATTR_COLD NONNULL((2)) int DCALL
-err_nt_rename(DWORD dwError,
-              DeeObject *existing_path,
-              DeeObject *new_path) {
+err_nt_rename(DWORD dwError, DeeObject *existing_path, DeeObject *new_path) {
 #define NEED_err_nt_path_no_access2
 	if (DeeNTSystem_IsAccessDeniedError(dwError))
 		return err_nt_path_no_access2(dwError, existing_path, new_path);
@@ -892,10 +894,8 @@ err_nt_rename(DWORD dwError,
 
 #ifdef NEED_err_unix_link
 #undef NEED_err_unix_link
-INTDEF ATTR_COLD NONNULL((2, 3)) int DCALL
-err_unix_link(int errno_value,
-                DeeObject *existing_path,
-                DeeObject *new_path) {
+INTERN ATTR_COLD NONNULL((2, 3)) int DCALL
+err_unix_link(int errno_value, DeeObject *existing_path, DeeObject *new_path) {
 #ifdef EACCES
 #define NEED_err_unix_path_readonly2
 	if (errno_value == EACCES)
@@ -932,12 +932,50 @@ err_unix_link(int errno_value,
 }
 #endif /* NEED_err_unix_link */
 
+#ifdef NEED_err_unix_symlink
+#undef NEED_err_unix_symlink
+INTERN ATTR_COLD NONNULL((2, 3)) int DCALL
+err_unix_symlink(int errno_value, DeeObject *text, DeeObject *path) {
+#ifdef EACCES
+	if (errno_value == EACCES)
+		return err_unix_path_readonly(errno_value, path);
+#define NEED_err_unix_path_readonly
+#endif /* EACCES */
+#ifdef EEXIST
+	if (errno_value == EEXIST)
+		return err_unix_path_exists(errno_value, path);
+#define NEED_err_unix_path_exists
+#endif /* EEXIST */
+#ifdef ENOENT
+	if (errno_value == ENOENT)
+		return err_unix_path_not_found(errno_value, path);
+#define NEED_err_unix_path_not_found
+#endif /* ENOENT */
+#ifdef ENOTDIR
+	if (errno_value == ENOTDIR)
+		return err_unix_path_not_dir(errno_value, path);
+#define NEED_err_unix_path_not_dir
+#endif /* ENOTDIR */
+#ifdef EPERM
+	if (errno_value == EPERM)
+		return err_unix_symlink_unsupported(errno_value, text, path);
+#define NEED_err_unix_symlink_unsupported
+#endif /* EPERM */
+#ifdef EROFS
+	if (errno_value == EROFS)
+		return err_unix_path_readonly(errno_value, path);
+#define NEED_err_unix_path_readonly
+#endif /* EROFS */
+	return DeeUnixSystem_ThrowErrorf(&DeeError_FSError, errno_value,
+	                                 "Failed to create a symbolic link %r at %r",
+	                                 text, path);
+}
+#endif /* NEED_err_unix_symlink */
+
 #ifdef NEED_err_nt_link
 #undef NEED_err_nt_link
-INTERN ATTR_COLD NONNULL((2)) int DCALL
-err_nt_link(DWORD dwError,
-              DeeObject *existing_path,
-              DeeObject *new_path) {
+INTERN ATTR_COLD NONNULL((2, 3)) int DCALL
+err_nt_link(DWORD dwError, DeeObject *existing_path, DeeObject *new_path) {
 #define NEED_err_nt_path_no_access2
 	if (DeeNTSystem_IsAccessDeniedError(dwError))
 		return err_nt_path_no_access2(dwError, existing_path, new_path);
@@ -958,6 +996,31 @@ err_nt_link(DWORD dwError,
 	                               existing_path, new_path);
 }
 #endif /* NEED_err_nt_link */
+
+#ifdef NEED_err_nt_symlink
+#undef NEED_err_nt_symlink
+INTERN ATTR_COLD NONNULL((2, 3)) int DCALL
+err_nt_symlink(DWORD dwError, DeeObject *text, DeeObject *path) {
+	if (DeeNTSystem_IsAccessDeniedError(dwError))
+		return err_nt_path_readonly(dwError, path);
+#define NEED_err_nt_path_readonly
+	if (DeeNTSystem_IsExists(dwError))
+		return err_nt_path_exists(dwError, path);
+#define NEED_err_nt_path_exists
+	if (DeeNTSystem_IsFileNotFoundError(dwError))
+		return err_nt_path_not_found(dwError, path);
+#define NEED_err_nt_path_not_found
+	if (DeeNTSystem_IsNotDir(dwError))
+		return err_nt_path_not_dir(dwError, path);
+#define NEED_err_nt_path_not_dir
+	if (DeeNTSystem_IsUnsupportedError(dwError))
+		return err_nt_symlink_unsupported(dwError, text, path);
+#define NEED_err_nt_symlink_unsupported
+	return DeeNTSystem_ThrowErrorf(&DeeError_FSError, dwError,
+	                               "Failed to create a symbolic link %r at %r",
+	                               text, path);
+}
+#endif /* NEED_err_nt_symlink */
 
 #ifdef NEED_err_unix_remove_unsupported
 #undef NEED_err_unix_remove_unsupported
@@ -994,7 +1057,7 @@ err_nt_unlink_unsupported(DWORD dwError, DeeObject *__restrict path) {
 
 #ifdef NEED_err_unix_rmdir_unsupported
 #undef NEED_err_unix_rmdir_unsupported
-INTDEF ATTR_COLD NONNULL((2)) int DCALL
+INTERN ATTR_COLD NONNULL((2)) int DCALL
 err_unix_rmdir_unsupported(int errno_value, DeeObject *__restrict path) {
 	return DeeUnixSystem_ThrowErrorf(&DeeError_UnsupportedAPI, errno_value,
 	                                 "The filesystem hosting the path %r does "
@@ -1005,7 +1068,7 @@ err_unix_rmdir_unsupported(int errno_value, DeeObject *__restrict path) {
 
 #ifdef NEED_err_unix_mkdir_unsupported
 #undef NEED_err_unix_mkdir_unsupported
-INTDEF ATTR_COLD NONNULL((2)) int DCALL
+INTERN ATTR_COLD NONNULL((2)) int DCALL
 err_unix_mkdir_unsupported(int errno_value, DeeObject *__restrict path, unsigned int mode) {
 	return DeeUnixSystem_ThrowErrorf(&DeeError_UnsupportedAPI, errno_value,
 	                                 "The filesystem hosting the path %r does not "
@@ -1016,7 +1079,7 @@ err_unix_mkdir_unsupported(int errno_value, DeeObject *__restrict path, unsigned
 
 #ifdef NEED_err_nt_rmdir_unsupported
 #undef NEED_err_nt_rmdir_unsupported
-INTDEF ATTR_COLD NONNULL((2)) int DCALL
+INTERN ATTR_COLD NONNULL((2)) int DCALL
 err_nt_rmdir_unsupported(DWORD dwError, DeeObject *__restrict path) {
 	return DeeNTSystem_ThrowErrorf(&DeeError_UnsupportedAPI, dwError,
 	                               "The filesystem hosting the path %r does "
@@ -1027,7 +1090,7 @@ err_nt_rmdir_unsupported(DWORD dwError, DeeObject *__restrict path) {
 
 #ifdef NEED_err_nt_mkdir_unsupported
 #undef NEED_err_nt_mkdir_unsupported
-INTDEF ATTR_COLD NONNULL((2)) int DCALL
+INTERN ATTR_COLD NONNULL((2)) int DCALL
 err_nt_mkdir_unsupported(DWORD dwError, DeeObject *__restrict path, unsigned int mode) {
 	return DeeNTSystem_ThrowErrorf(&DeeError_UnsupportedAPI, dwError,
 	                               "The filesystem hosting the path %r does not "
@@ -1069,6 +1132,17 @@ err_unix_link_unsupported(int errno_value, DeeObject *existing_path, DeeObject *
 }
 #endif /* NEED_err_unix_link_unsupported */
 
+#ifdef NEED_err_unix_symlink_unsupported
+#undef NEED_err_unix_symlink_unsupported
+INTERN ATTR_COLD NONNULL((2, 3)) int DCALL
+err_unix_symlink_unsupported(int errno_value, DeeObject *text, DeeObject *path) {
+	return DeeUnixSystem_ThrowErrorf(&DeeError_UnsupportedAPI, errno_value,
+	                                 "The filesystem hosting the path %r does not "
+	                                 "support creation of symbolic link with text %r",
+	                                 path, text);
+}
+#endif /* NEED_err_unix_symlink_unsupported */
+
 #ifdef NEED_err_nt_link_unsupported
 #undef NEED_err_nt_link_unsupported
 INTERN ATTR_COLD NONNULL((2, 3)) int DCALL
@@ -1079,6 +1153,17 @@ err_nt_link_unsupported(DWORD dwError, DeeObject *existing_path, DeeObject *new_
 	                               existing_path, new_path);
 }
 #endif /* NEED_err_nt_link_unsupported */
+
+#ifdef NEED_err_nt_symlink_unsupported
+#undef NEED_err_nt_symlink_unsupported
+INTERN ATTR_COLD NONNULL((2, 3)) int DCALL
+err_nt_symlink_unsupported(DWORD dwError, DeeObject *text, DeeObject *path) {
+	return DeeNTSystem_ThrowErrorf(&DeeError_UnsupportedAPI, dwError,
+	                               "The filesystem hosting the path %r does not "
+	                               "support creation of symbolic link with text %r",
+	                               path, text);
+}
+#endif /* NEED_err_nt_symlink_unsupported */
 
 #ifdef NEED_err_unix_path_not_dir
 #undef NEED_err_unix_path_not_dir
@@ -1143,9 +1228,7 @@ err_nt_path_not_found(DWORD dwError, DeeObject *__restrict path) {
 #ifdef NEED_err_unix_path_not_found2
 #undef NEED_err_unix_path_not_found2
 INTERN ATTR_COLD NONNULL((2, 3)) int DCALL
-err_unix_path_not_found2(int errno_value,
-                         DeeObject *existing_path,
-                         DeeObject *new_path) {
+err_unix_path_not_found2(int errno_value, DeeObject *existing_path, DeeObject *new_path) {
 	return DeeUnixSystem_ThrowErrorf(&DeeError_FileNotFound, errno_value,
 	                                 "Path %r or %r could not be found",
 	                                 existing_path, new_path);
@@ -1155,9 +1238,7 @@ err_unix_path_not_found2(int errno_value,
 #ifdef NEED_err_nt_path_not_found2
 #undef NEED_err_nt_path_not_found2
 INTERN ATTR_COLD NONNULL((2, 3)) int DCALL
-err_nt_path_not_found2(DWORD dwError,
-                       DeeObject *existing_path,
-                       DeeObject *new_path) {
+err_nt_path_not_found2(DWORD dwError, DeeObject *existing_path, DeeObject *new_path) {
 	return DeeNTSystem_ThrowErrorf(&DeeError_FileNotFound, dwError,
 	                               "Path %r or %r could not be found",
 	                               existing_path, new_path);
@@ -1187,9 +1268,7 @@ err_nt_path_no_access(DWORD dwError, DeeObject *__restrict path) {
 #ifdef NEED_err_unix_path_no_access2
 #undef NEED_err_unix_path_no_access2
 INTERN ATTR_COLD NONNULL((2, 3)) int DCALL
-err_unix_path_no_access2(int errno_value,
-                         DeeObject *existing_path,
-                         DeeObject *new_path) {
+err_unix_path_no_access2(int errno_value, DeeObject *existing_path, DeeObject *new_path) {
 	return DeeUnixSystem_ThrowErrorf(&DeeError_FileAccessError, errno_value,
 	                                 "Access to %r or %r has not been granted",
 	                                 existing_path, new_path);
@@ -1199,9 +1278,7 @@ err_unix_path_no_access2(int errno_value,
 #ifdef NEED_err_nt_path_no_access2
 #undef NEED_err_nt_path_no_access2
 INTERN ATTR_COLD NONNULL((2, 3)) int DCALL
-err_nt_path_no_access2(DWORD dwError,
-                       DeeObject *existing_path,
-                       DeeObject *new_path) {
+err_nt_path_no_access2(DWORD dwError, DeeObject *existing_path, DeeObject *new_path) {
 	return DeeNTSystem_ThrowErrorf(&DeeError_FileAccessError, dwError,
 	                               "Access to %r or %r has not been granted",
 	                               existing_path, new_path);
@@ -1290,10 +1367,8 @@ err_nt_path_is_dir(DWORD dwError, DeeObject *__restrict path) {
 
 #ifdef NEED_err_unix_path_readonly2
 #undef NEED_err_unix_path_readonly2
-INTDEF ATTR_COLD NONNULL((2, 3)) int DCALL
-err_unix_path_readonly2(int errno_value,
-                        DeeObject *existing_path,
-                        DeeObject *new_path) {
+INTERN ATTR_COLD NONNULL((2, 3)) int DCALL
+err_unix_path_readonly2(int errno_value, DeeObject *existing_path, DeeObject *new_path) {
 	return DeeUnixSystem_ThrowErrorf(&DeeError_FileNotFound, errno_value,
 	                                 "Path %r or %r could not be found",
 	                                 existing_path, new_path);
@@ -1495,9 +1570,7 @@ err_unix_path_cross_dev2(int errno_value,
 #ifdef NEED_err_nt_path_cross_dev2
 #undef NEED_err_nt_path_cross_dev2
 INTERN ATTR_COLD NONNULL((2, 3)) int DCALL
-err_nt_path_cross_dev2(DWORD dwError,
-                       DeeObject *existing_path,
-                       DeeObject *new_path) {
+err_nt_path_cross_dev2(DWORD dwError, DeeObject *existing_path, DeeObject *new_path) {
 	return DeeNTSystem_ThrowErrorf(&DeeError_CrossDeviceLink, dwError,
 	                               "Paths %r and %r are not apart of the same filesystem",
 	                               existing_path, new_path);
@@ -1633,6 +1706,143 @@ err:
 	return -1;
 }
 #endif /* NEED_nt_SetCurrentDirectory */
+
+
+#ifdef NEED_nt_CreateSymbolicLinkAuto
+#undef NEED_nt_CreateSymbolicLinkAuto
+
+#ifndef SYMBOLIC_LINK_FLAG_DIRECTORY
+#define SYMBOLIC_LINK_FLAG_DIRECTORY 0x1
+#endif /* !SYMBOLIC_LINK_FLAG_DIRECTORY */
+
+#ifndef SYMBOLIC_LINK_FLAG_ALLOW_UNPRIVILEGED_CREATE
+#define SYMBOLIC_LINK_FLAG_ALLOW_UNPRIVILEGED_CREATE 0x2
+#endif /* !SYMBOLIC_LINK_FLAG_ALLOW_UNPRIVILEGED_CREATE */
+
+PRIVATE DWORD nt_symlink_dwSymlinkAdditionalFlags = SYMBOLIC_LINK_FLAG_ALLOW_UNPRIVILEGED_CREATE;
+PRIVATE BOOL nt_symlink_bHoldingSymlinkPriv       = FALSE;
+
+/* Used to determined `SYMBOLIC_LINK_FLAG_DIRECTORY':
+ * >> local abs_lpTargetFileName = lpTargetFileName;
+ * >> if (!posix.isabs(lpTargetFileName))
+ * >>     abs_lpTargetFileName = posix.abspath(lpTargetFileName, posix.headof(lpSymlinkFileName));
+ * >> if (posix.stat.isdir(abs_lpTargetFileName))
+ * >>     dwFlags |= SYMBOLIC_LINK_FLAG_DIRECTORY;
+ * @return: 1 : Is a directory
+ * @return: 0 : Not a directory (or file doesn't exist)
+ * @return: -1: Error */
+PRIVATE NONNULL((1, 2)) int DCALL
+nt_CreateSymbolicLinkAuto_isdir(DeeObject *lpSymlinkFileName,
+                                DeeObject *lpTargetFileName) {
+	int attribute_error;
+	DWORD dwTargetAttributes;
+	if (!DeeString_IsAbsPath(lpTargetFileName)) {
+		DREF DeeObject *filename_path, *target_abspath;
+		filename_path = posix_path_headof_f(lpSymlinkFileName);
+		if unlikely(!filename_path)
+			goto err;
+		target_abspath = posix_path_abspath_f(lpTargetFileName, filename_path);
+		Dee_Decref(filename_path);
+		if unlikely(!target_abspath)
+			goto err;
+		attribute_error = nt_GetFileAttributes(target_abspath, &dwTargetAttributes);
+		Dee_Decref(target_abspath);
+	} else {
+		attribute_error = nt_GetFileAttributes(lpTargetFileName, &dwTargetAttributes);
+	}
+#define NEED_nt_GetFileAttributes
+	if unlikely(attribute_error < 0)
+		goto err;
+	if (attribute_error == 0 && (dwTargetAttributes & FILE_ATTRIBUTE_DIRECTORY))
+		return 1; /* It's a directory, all right! */
+	return 0; /* Default: not a directory */
+err:
+	return -1;
+}
+
+PRIVATE WCHAR const str_SeCreateSymbolicLinkPrivilege[] = {
+	'S', 'e', 'C', 'r', 'e', 'a', 't', 'e', 'S', 'y', 'm', 'b', 'o', 'l', 'i',
+	'c', 'L', 'i', 'n', 'k', 'P', 'r', 'i', 'v', 'i', 'l', 'e', 'g', 'e', 0
+};
+
+PRIVATE BOOL DCALL nt_AcquirePrivilege(LPCWSTR lpName) {
+	HANDLE tok, hProcess;
+	LUID luid;
+	TOKEN_PRIVILEGES tok_priv;
+	DWORD error;
+	hProcess = GetCurrentProcess();
+	if unlikely(!OpenProcessToken(hProcess, TOKEN_ADJUST_PRIVILEGES, &tok))
+		goto fail;
+	if unlikely(!LookupPrivilegeValueW(NULL, lpName, &luid))
+		goto fail;
+	tok_priv.PrivilegeCount           = 1;
+	tok_priv.Privileges[0].Luid       = luid;
+	tok_priv.Privileges[0].Attributes = SE_PRIVILEGE_ENABLED;
+	if unlikely(!AdjustTokenPrivileges(tok, FALSE, &tok_priv, 0, NULL, NULL))
+		return FALSE;
+	error = GetLastError();
+	SetLastError(0);
+	return unlikely(error == ERROR_NOT_ALL_ASSIGNED) ? 0 : 1;
+fail:
+	return FALSE;
+}
+
+/* Same as `nt_CreateSymbolicLink()', but automatically determine proper `dwFlags'
+ * @return:  0: Successfully created the symlink.
+ * @return: -1: A deemon callback failed and an error was thrown.
+ * @return:  1: The system call failed (s.a. `GetLastError()') */
+INTERN NONNULL((1, 2)) int DCALL
+nt_CreateSymbolicLinkAuto(DeeObject *lpSymlinkFileName,
+                          DeeObject *lpTargetFileName) {
+	int error;
+	DWORD dwFlags;
+	dwFlags = atomic_read(&nt_symlink_dwSymlinkAdditionalFlags);
+
+	/* Figure out of the target is a directory. */
+	error = nt_CreateSymbolicLinkAuto_isdir(lpSymlinkFileName, lpTargetFileName);
+	if unlikely(error < 0)
+		goto err;
+	if (error > 0)
+		dwFlags |= SYMBOLIC_LINK_FLAG_DIRECTORY;
+again:
+	error = nt_CreateSymbolicLink(lpSymlinkFileName, lpTargetFileName, dwFlags);
+#define NEED_nt_CreateSymbolicLink
+	if (error > 1) {
+		/* Check if we might be able to fix this error. */
+		DWORD dwError;
+		DBG_ALIGNMENT_DISABLE();
+		dwError = GetLastError();
+		DBG_ALIGNMENT_ENABLE();
+		if (error == ERROR_INVALID_PARAMETER && (dwFlags & SYMBOLIC_LINK_FLAG_ALLOW_UNPRIVILEGED_CREATE)) {
+			/* Older versions of windows didn't accept this flag. */
+			atomic_and(&nt_symlink_dwSymlinkAdditionalFlags, ~SYMBOLIC_LINK_FLAG_ALLOW_UNPRIVILEGED_CREATE);
+			dwFlags &= ~SYMBOLIC_LINK_FLAG_ALLOW_UNPRIVILEGED_CREATE;
+			goto again;
+		}
+
+		/* Try to acquire the ~privilege~ to create symbolic links. */
+		if (error == ERROR_PRIVILEGE_NOT_HELD) {
+			if (!nt_symlink_bHoldingSymlinkPriv) {
+				DBG_ALIGNMENT_DISABLE();
+				if (nt_AcquirePrivilege(str_SeCreateSymbolicLinkPrivilege)) {
+					DBG_ALIGNMENT_ENABLE();
+					nt_symlink_bHoldingSymlinkPriv = TRUE;
+					goto again;
+				}
+				DBG_ALIGNMENT_ENABLE();
+			}
+
+			/* May as well not exist at all... */
+			return DeeNTSystem_ThrowErrorf(&DeeError_UnsupportedAPI, dwError,
+			                               "The operating system has restricted "
+			                               "access to symlink functionality");
+		}
+	}
+	return error;
+err:
+	return -1;
+}
+#endif /* NEED_nt_CreateSymbolicLinkAuto */
 
 
 #ifdef NEED_nt_GetFileAttributesEx
@@ -1813,7 +2023,7 @@ err:
  * @return:  0: Successfully removed the given directory.
  * @return: -1: A deemon callback failed and an error was thrown.
  * @return:  1: The system call failed (s.a. `GetLastError()') */
-INTDEF WUNUSED NONNULL((1)) int DCALL
+INTERN WUNUSED NONNULL((1)) int DCALL
 nt_RemoveDirectory(DeeObject *__restrict lpPathName) {
 	LPWSTR lpwName;
 	BOOL bOK;
@@ -1855,7 +2065,7 @@ err:
  * @return:  0: Successfully removed the given directory.
  * @return: -1: A deemon callback failed and an error was thrown.
  * @return:  1: The system call failed (s.a. `GetLastError()') */
-INTDEF WUNUSED NONNULL((1)) int DCALL
+INTERN WUNUSED NONNULL((1)) int DCALL
 nt_DeleteFile(DeeObject *__restrict lpFileName) {
 	LPWSTR lpwName;
 	BOOL bOK;
@@ -1898,8 +2108,8 @@ err:
  * @return: -1: A deemon callback failed and an error was thrown.
  * @return:  1: The system call failed (s.a. `GetLastError()') */
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
-nt_MoveFileEx(DeeObject *__restrict lpExistingFileName,
-              DeeObject *__restrict lpNewFileName,
+nt_MoveFileEx(DeeObject *lpExistingFileName,
+              DeeObject *lpNewFileName,
               DWORD dwFlags) {
 	LPWSTR lpwExistingFileName;
 	LPWSTR lpwNewFileName;
@@ -1956,8 +2166,8 @@ err:
  * @return: -1: A deemon callback failed and an error was thrown.
  * @return:  1: The system call failed (s.a. `GetLastError()') */
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
-nt_CreateHardLink(DeeObject *__restrict lpFileName,
-                  DeeObject *__restrict lpExistingFileName,
+nt_CreateHardLink(DeeObject *lpFileName,
+                  DeeObject *lpExistingFileName,
                   LPSECURITY_ATTRIBUTES lpSecurityAttributes) {
 	LPWSTR lpwFileName, lpwExistingFileName;
 	BOOL bOK;
@@ -2024,9 +2234,9 @@ PRIVATE WCHAR const wKernel32[] = { 'K', 'E', 'R', 'N', 'E', 'L', '3', '2', 0 };
  * @return:  0: Successfully created the symlink.
  * @return: -1: A deemon callback failed and an error was thrown.
  * @return:  1: The system call failed (s.a. `GetLastError()') */
-INTERN int DCALL
-nt_CreateSymbolicLink(DeeObject *__restrict lpSymlinkFileName,
-                      DeeObject *__restrict lpTargetFileName,
+INTERN NONNULL((1, 2)) int DCALL
+nt_CreateSymbolicLink(DeeObject *lpSymlinkFileName,
+                      DeeObject *lpTargetFileName,
                       DWORD dwFlags) {
 	LPWSTR lpwSymlinkFileName;
 	LPWSTR lpwTargetFileName;
@@ -2061,28 +2271,38 @@ nt_CreateSymbolicLink(DeeObject *__restrict lpSymlinkFileName,
 		lpSymlinkFileName = DeeNTSystem_FixUncPath(lpSymlinkFileName);
 		if unlikely(!lpSymlinkFileName)
 			goto err;
-		lpTargetFileName = DeeNTSystem_FixUncPath(lpTargetFileName);
-		if unlikely(!lpTargetFileName)
-			goto err_filename;
 		lpwSymlinkFileName = (LPWSTR)DeeString_AsWide(lpSymlinkFileName);
 		if unlikely(!lpwSymlinkFileName)
-			goto err_existing;
-		lpwTargetFileName = (LPWSTR)DeeString_AsWide(lpTargetFileName);
-		if unlikely(!lpwTargetFileName)
-			goto err_existing;
+			goto err_filename;
+
 		/* Invoke the system call once again. */
 		DBG_ALIGNMENT_DISABLE();
 		bOK     = (*lpCallback)(lpwSymlinkFileName, lpwTargetFileName, dwFlags);
 		dwError = GetLastError();
 		DBG_ALIGNMENT_ENABLE();
-		Dee_Decref(lpTargetFileName);
+
+		if (!bOK && DeeNTSystem_IsUncError(GetLastError())) {
+			lpTargetFileName = DeeNTSystem_FixUncPath(lpTargetFileName);
+			if unlikely(!lpTargetFileName)
+				goto err_filename;
+			lpwTargetFileName = (LPWSTR)DeeString_AsWide(lpTargetFileName);
+			if unlikely(!lpwTargetFileName)
+				goto err_existing;
+
+			/* Invoke the system call once again. */
+			DBG_ALIGNMENT_DISABLE();
+			bOK     = (*lpCallback)(lpwSymlinkFileName, lpwTargetFileName, dwFlags);
+			dwError = GetLastError();
+			DBG_ALIGNMENT_ENABLE();
+			Dee_Decref(lpTargetFileName);
+		}
 		Dee_Decref(lpSymlinkFileName);
 		DBG_ALIGNMENT_DISABLE();
 		SetLastError(dwError);
 		DBG_ALIGNMENT_ENABLE();
 	}
 	DBG_ALIGNMENT_ENABLE();
-	return !bOK;
+	return bOK ? 0 : 1;
 err_existing:
 	Dee_Decref(lpTargetFileName);
 err_filename:
@@ -2238,7 +2458,7 @@ err:
 FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_getcwd_f_impl(void);
 #endif /* __INTELLISENSE__ */
 
-INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 posix_fd_abspath(DeeObject *__restrict fd) {
 	if (DeeFile_Check(fd)) {
 		DREF DeeObject *result;
