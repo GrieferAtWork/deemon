@@ -907,7 +907,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_GetHandle_f_impl(HANDLE hHandl
 PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_GetHandle_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define LIBWIN32_GETHANDLE_DEF { "GetHandle", (DeeObject *)&libwin32_GetHandle, MODSYM_FNORMAL, DOC("(hHandle:?X3?Dint?DFile?Ewin32:HANDLE)->?GHANDLE") },
 #define LIBWIN32_GETHANDLE_DEF_DOC(doc) { "GetHandle", (DeeObject *)&libwin32_GetHandle, MODSYM_FNORMAL, DOC("(hHandle:?X3?Dint?DFile?Ewin32:HANDLE)->?GHANDLE\n" doc) },
-PRIVATE DEFINE_KWCMETHOD(libwin32_GetHandle, libwin32_GetHandle_f);
+PRIVATE DEFINE_KWCMETHOD(libwin32_GetHandle, &libwin32_GetHandle_f);
 #ifndef LIBWIN32_KWDS_HHANDLE_DEFINED
 #define LIBWIN32_KWDS_HHANDLE_DEFINED
 PRIVATE DEFINE_KWLIST(libwin32_kwds_hHandle, { K(hHandle), KEND });
@@ -953,7 +953,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_SetLastError_f_impl(DWORD dwEr
 PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_SetLastError_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define LIBWIN32_SETLASTERROR_DEF { "SetLastError", (DeeObject *)&libwin32_SetLastError, MODSYM_FNORMAL, DOC("(dwErrCode:?Dint)") },
 #define LIBWIN32_SETLASTERROR_DEF_DOC(doc) { "SetLastError", (DeeObject *)&libwin32_SetLastError, MODSYM_FNORMAL, DOC("(dwErrCode:?Dint)\n" doc) },
-PRIVATE DEFINE_KWCMETHOD(libwin32_SetLastError, libwin32_SetLastError_f);
+PRIVATE DEFINE_KWCMETHOD(libwin32_SetLastError, &libwin32_SetLastError_f);
 #ifndef LIBWIN32_KWDS_DWERRCODE_DEFINED
 #define LIBWIN32_KWDS_DWERRCODE_DEFINED
 PRIVATE DEFINE_KWLIST(libwin32_kwds_dwErrCode, { K(dwErrCode), KEND });
@@ -978,7 +978,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_CloseHandle_f_impl(HANDLE hObj
 PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_CloseHandle_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define LIBWIN32_CLOSEHANDLE_DEF { "CloseHandle", (DeeObject *)&libwin32_CloseHandle, MODSYM_FNORMAL, DOC("(hObject:?X3?Dint?DFile?Ewin32:HANDLE)") },
 #define LIBWIN32_CLOSEHANDLE_DEF_DOC(doc) { "CloseHandle", (DeeObject *)&libwin32_CloseHandle, MODSYM_FNORMAL, DOC("(hObject:?X3?Dint?DFile?Ewin32:HANDLE)\n" doc) },
-PRIVATE DEFINE_KWCMETHOD(libwin32_CloseHandle, libwin32_CloseHandle_f);
+PRIVATE DEFINE_KWCMETHOD(libwin32_CloseHandle, &libwin32_CloseHandle_f);
 #ifndef LIBWIN32_KWDS_HOBJECT_DEFINED
 #define LIBWIN32_KWDS_HOBJECT_DEFINED
 PRIVATE DEFINE_KWLIST(libwin32_kwds_hObject, { K(hObject), KEND });
@@ -1033,7 +1033,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_DuplicateHandle_f_impl(HANDLE 
 PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_DuplicateHandle_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define LIBWIN32_DUPLICATEHANDLE_DEF { "DuplicateHandle", (DeeObject *)&libwin32_DuplicateHandle, MODSYM_FNORMAL, DOC("(hSourceProcessHandle:?X3?Dint?DFile?Ewin32:HANDLE,hSourceHandle:?X3?Dint?DFile?Ewin32:HANDLE,hTargetProcessHandle:?X3?Dint?DFile?Ewin32:HANDLE,dwDesiredAccess:?Dint=!0,bInheritHandle:?Dbool=!t,dwOptions:?Dint=!GDUPLICATE_SAME_ACCESS)->?GHANDLE") },
 #define LIBWIN32_DUPLICATEHANDLE_DEF_DOC(doc) { "DuplicateHandle", (DeeObject *)&libwin32_DuplicateHandle, MODSYM_FNORMAL, DOC("(hSourceProcessHandle:?X3?Dint?DFile?Ewin32:HANDLE,hSourceHandle:?X3?Dint?DFile?Ewin32:HANDLE,hTargetProcessHandle:?X3?Dint?DFile?Ewin32:HANDLE,dwDesiredAccess:?Dint=!0,bInheritHandle:?Dbool=!t,dwOptions:?Dint=!GDUPLICATE_SAME_ACCESS)->?GHANDLE\n" doc) },
-PRIVATE DEFINE_KWCMETHOD(libwin32_DuplicateHandle, libwin32_DuplicateHandle_f);
+PRIVATE DEFINE_KWCMETHOD(libwin32_DuplicateHandle, &libwin32_DuplicateHandle_f);
 #ifndef LIBWIN32_KWDS_HSOURCEPROCESSHANDLE_HSOURCEHANDLE_HTARGETPROCESSHANDLE_DWDESIREDACCESS_BINHERITHANDLE_DWOPTIONS_DEFINED
 #define LIBWIN32_KWDS_HSOURCEPROCESSHANDLE_HSOURCEHANDLE_HTARGETPROCESSHANDLE_DWDESIREDACCESS_BINHERITHANDLE_DWOPTIONS_DEFINED
 PRIVATE DEFINE_KWLIST(libwin32_kwds_hSourceProcessHandle_hSourceHandle_hTargetProcessHandle_dwDesiredAccess_bInheritHandle_dwOptions, { K(hSourceProcessHandle), K(hSourceHandle), K(hTargetProcessHandle), K(dwDesiredAccess), K(bInheritHandle), K(dwOptions), KEND });
@@ -1117,7 +1117,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_CreateFile_f_impl(DeeObject *l
 PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_CreateFile_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define LIBWIN32_CREATEFILE_DEF { "CreateFile", (DeeObject *)&libwin32_CreateFile, MODSYM_FNORMAL, DOC("(lpFileName,dwDesiredAccess:?Dint=!GFILE_GENERIC_READ,dwShareMode:?Dint=FILE_SHARE_READ|FILE_SHARE_WRITE|FILE_SHARE_DELETE,lpSecurityAttributes?:?GSECURITY_ATTRIBUTES,dwCreationDisposition:?Dint=!GOPEN_EXISTING,dwFlagsAndAttributes:?Dint=!GFILE_ATTRIBUTE_NORMAL,hTemplateFile:?X3?Dint?DFile?Ewin32:HANDLE=!0)->?GHANDLE") },
 #define LIBWIN32_CREATEFILE_DEF_DOC(doc) { "CreateFile", (DeeObject *)&libwin32_CreateFile, MODSYM_FNORMAL, DOC("(lpFileName,dwDesiredAccess:?Dint=!GFILE_GENERIC_READ,dwShareMode:?Dint=FILE_SHARE_READ|FILE_SHARE_WRITE|FILE_SHARE_DELETE,lpSecurityAttributes?:?GSECURITY_ATTRIBUTES,dwCreationDisposition:?Dint=!GOPEN_EXISTING,dwFlagsAndAttributes:?Dint=!GFILE_ATTRIBUTE_NORMAL,hTemplateFile:?X3?Dint?DFile?Ewin32:HANDLE=!0)->?GHANDLE\n" doc) },
-PRIVATE DEFINE_KWCMETHOD(libwin32_CreateFile, libwin32_CreateFile_f);
+PRIVATE DEFINE_KWCMETHOD(libwin32_CreateFile, &libwin32_CreateFile_f);
 #ifndef LIBWIN32_KWDS_LPFILENAME_DWDESIREDACCESS_DWSHAREMODE_LPSECURITYATTRIBUTES_DWCREATIONDISPOSITION_DWFLAGSANDATTRIBUTES_HTEMPLATEFILE_DEFINED
 #define LIBWIN32_KWDS_LPFILENAME_DWDESIREDACCESS_DWSHAREMODE_LPSECURITYATTRIBUTES_DWCREATIONDISPOSITION_DWFLAGSANDATTRIBUTES_HTEMPLATEFILE_DEFINED
 PRIVATE DEFINE_KWLIST(libwin32_kwds_lpFileName_dwDesiredAccess_dwShareMode_lpSecurityAttributes_dwCreationDisposition_dwFlagsAndAttributes_hTemplateFile, { K(lpFileName), K(dwDesiredAccess), K(dwShareMode), K(lpSecurityAttributes), K(dwCreationDisposition), K(dwFlagsAndAttributes), K(hTemplateFile), KEND });
@@ -1191,7 +1191,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_WriteFile_f_impl(HANDLE hFile,
 PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_WriteFile_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define LIBWIN32_WRITEFILE_DEF { "WriteFile", (DeeObject *)&libwin32_WriteFile, MODSYM_FNORMAL, DOC("(hFile:?X3?Dint?DFile?Ewin32:HANDLE,lpBuffer:?DBytes,lpOverlapped?:?GOVERLAPPED)->?Dint") },
 #define LIBWIN32_WRITEFILE_DEF_DOC(doc) { "WriteFile", (DeeObject *)&libwin32_WriteFile, MODSYM_FNORMAL, DOC("(hFile:?X3?Dint?DFile?Ewin32:HANDLE,lpBuffer:?DBytes,lpOverlapped?:?GOVERLAPPED)->?Dint\n" doc) },
-PRIVATE DEFINE_KWCMETHOD(libwin32_WriteFile, libwin32_WriteFile_f);
+PRIVATE DEFINE_KWCMETHOD(libwin32_WriteFile, &libwin32_WriteFile_f);
 #ifndef LIBWIN32_KWDS_HFILE_LPBUFFER_LPOVERLAPPED_DEFINED
 #define LIBWIN32_KWDS_HFILE_LPBUFFER_LPOVERLAPPED_DEFINED
 PRIVATE DEFINE_KWLIST(libwin32_kwds_hFile_lpBuffer_lpOverlapped, { K(hFile), K(lpBuffer), K(lpOverlapped), KEND });
@@ -1256,7 +1256,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_ReadFile_f_impl(HANDLE hFile, 
 PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_ReadFile_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define LIBWIN32_READFILE_DEF { "ReadFile", (DeeObject *)&libwin32_ReadFile, MODSYM_FNORMAL, DOC("(hFile:?X3?Dint?DFile?Ewin32:HANDLE,lpBuffer:?DBytes,lpOverlapped?:?GOVERLAPPED)->?Dint") },
 #define LIBWIN32_READFILE_DEF_DOC(doc) { "ReadFile", (DeeObject *)&libwin32_ReadFile, MODSYM_FNORMAL, DOC("(hFile:?X3?Dint?DFile?Ewin32:HANDLE,lpBuffer:?DBytes,lpOverlapped?:?GOVERLAPPED)->?Dint\n" doc) },
-PRIVATE DEFINE_KWCMETHOD(libwin32_ReadFile, libwin32_ReadFile_f);
+PRIVATE DEFINE_KWCMETHOD(libwin32_ReadFile, &libwin32_ReadFile_f);
 #ifndef LIBWIN32_KWDS_HFILE_LPBUFFER_LPOVERLAPPED_DEFINED
 #define LIBWIN32_KWDS_HFILE_LPBUFFER_LPOVERLAPPED_DEFINED
 PRIVATE DEFINE_KWLIST(libwin32_kwds_hFile_lpBuffer_lpOverlapped, { K(hFile), K(lpBuffer), K(lpOverlapped), KEND });
@@ -1315,7 +1315,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_CreateDirectory_f_impl(LPCWSTR
 PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_CreateDirectory_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define LIBWIN32_CREATEDIRECTORY_DEF { "CreateDirectory", (DeeObject *)&libwin32_CreateDirectory, MODSYM_FNORMAL, DOC("(lpPathName:?Dstring,lpSecurityAttributes?:?GSECURITY_ATTRIBUTES)") },
 #define LIBWIN32_CREATEDIRECTORY_DEF_DOC(doc) { "CreateDirectory", (DeeObject *)&libwin32_CreateDirectory, MODSYM_FNORMAL, DOC("(lpPathName:?Dstring,lpSecurityAttributes?:?GSECURITY_ATTRIBUTES)\n" doc) },
-PRIVATE DEFINE_KWCMETHOD(libwin32_CreateDirectory, libwin32_CreateDirectory_f);
+PRIVATE DEFINE_KWCMETHOD(libwin32_CreateDirectory, &libwin32_CreateDirectory_f);
 #ifndef LIBWIN32_KWDS_LPPATHNAME_LPSECURITYATTRIBUTES_DEFINED
 #define LIBWIN32_KWDS_LPPATHNAME_LPSECURITYATTRIBUTES_DEFINED
 PRIVATE DEFINE_KWLIST(libwin32_kwds_lpPathName_lpSecurityAttributes, { K(lpPathName), K(lpSecurityAttributes), KEND });
@@ -1367,7 +1367,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_RemoveDirectory_f_impl(LPCWSTR
 PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_RemoveDirectory_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define LIBWIN32_REMOVEDIRECTORY_DEF { "RemoveDirectory", (DeeObject *)&libwin32_RemoveDirectory, MODSYM_FNORMAL, DOC("(lpPathName:?Dstring)") },
 #define LIBWIN32_REMOVEDIRECTORY_DEF_DOC(doc) { "RemoveDirectory", (DeeObject *)&libwin32_RemoveDirectory, MODSYM_FNORMAL, DOC("(lpPathName:?Dstring)\n" doc) },
-PRIVATE DEFINE_KWCMETHOD(libwin32_RemoveDirectory, libwin32_RemoveDirectory_f);
+PRIVATE DEFINE_KWCMETHOD(libwin32_RemoveDirectory, &libwin32_RemoveDirectory_f);
 #ifndef LIBWIN32_KWDS_LPPATHNAME_DEFINED
 #define LIBWIN32_KWDS_LPPATHNAME_DEFINED
 PRIVATE DEFINE_KWLIST(libwin32_kwds_lpPathName, { K(lpPathName), KEND });
@@ -1417,7 +1417,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_DeleteFile_f_impl(LPCWSTR lpFi
 PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_DeleteFile_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define LIBWIN32_DELETEFILE_DEF { "DeleteFile", (DeeObject *)&libwin32_DeleteFile, MODSYM_FNORMAL, DOC("(lpFileName:?Dstring)") },
 #define LIBWIN32_DELETEFILE_DEF_DOC(doc) { "DeleteFile", (DeeObject *)&libwin32_DeleteFile, MODSYM_FNORMAL, DOC("(lpFileName:?Dstring)\n" doc) },
-PRIVATE DEFINE_KWCMETHOD(libwin32_DeleteFile, libwin32_DeleteFile_f);
+PRIVATE DEFINE_KWCMETHOD(libwin32_DeleteFile, &libwin32_DeleteFile_f);
 #ifndef LIBWIN32_KWDS_LPFILENAME_DEFINED
 #define LIBWIN32_KWDS_LPFILENAME_DEFINED
 PRIVATE DEFINE_KWLIST(libwin32_kwds_lpFileName, { K(lpFileName), KEND });
@@ -1467,7 +1467,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_SetEndOfFile_f_impl(HANDLE hFi
 PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_SetEndOfFile_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define LIBWIN32_SETENDOFFILE_DEF { "SetEndOfFile", (DeeObject *)&libwin32_SetEndOfFile, MODSYM_FNORMAL, DOC("(hFile:?X3?Dint?DFile?Ewin32:HANDLE)") },
 #define LIBWIN32_SETENDOFFILE_DEF_DOC(doc) { "SetEndOfFile", (DeeObject *)&libwin32_SetEndOfFile, MODSYM_FNORMAL, DOC("(hFile:?X3?Dint?DFile?Ewin32:HANDLE)\n" doc) },
-PRIVATE DEFINE_KWCMETHOD(libwin32_SetEndOfFile, libwin32_SetEndOfFile_f);
+PRIVATE DEFINE_KWCMETHOD(libwin32_SetEndOfFile, &libwin32_SetEndOfFile_f);
 #ifndef LIBWIN32_KWDS_HFILE_DEFINED
 #define LIBWIN32_KWDS_HFILE_DEFINED
 PRIVATE DEFINE_KWLIST(libwin32_kwds_hFile, { K(hFile), KEND });
@@ -1514,7 +1514,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_SetFileAttributesW_f_impl(LPCW
 PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_SetFileAttributesW_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define LIBWIN32_SETFILEATTRIBUTESW_DEF { "SetFileAttributesW", (DeeObject *)&libwin32_SetFileAttributesW, MODSYM_FNORMAL, DOC("(lpFileName:?Dstring,dwFileAttributes:?Dint)") },
 #define LIBWIN32_SETFILEATTRIBUTESW_DEF_DOC(doc) { "SetFileAttributesW", (DeeObject *)&libwin32_SetFileAttributesW, MODSYM_FNORMAL, DOC("(lpFileName:?Dstring,dwFileAttributes:?Dint)\n" doc) },
-PRIVATE DEFINE_KWCMETHOD(libwin32_SetFileAttributesW, libwin32_SetFileAttributesW_f);
+PRIVATE DEFINE_KWCMETHOD(libwin32_SetFileAttributesW, &libwin32_SetFileAttributesW_f);
 #ifndef LIBWIN32_KWDS_LPFILENAME_DWFILEATTRIBUTES_DEFINED
 #define LIBWIN32_KWDS_LPFILENAME_DWFILEATTRIBUTES_DEFINED
 PRIVATE DEFINE_KWLIST(libwin32_kwds_lpFileName_dwFileAttributes, { K(lpFileName), K(dwFileAttributes), KEND });
@@ -1566,7 +1566,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_SetFilePointer_f_impl(HANDLE h
 PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_SetFilePointer_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define LIBWIN32_SETFILEPOINTER_DEF { "SetFilePointer", (DeeObject *)&libwin32_SetFilePointer, MODSYM_FNORMAL, DOC("(hFile:?X3?Dint?DFile?Ewin32:HANDLE,lDistanceToMove:?Dint,dwMoveMethod:?Dint=!GFILE_BEGIN)->?Dint") },
 #define LIBWIN32_SETFILEPOINTER_DEF_DOC(doc) { "SetFilePointer", (DeeObject *)&libwin32_SetFilePointer, MODSYM_FNORMAL, DOC("(hFile:?X3?Dint?DFile?Ewin32:HANDLE,lDistanceToMove:?Dint,dwMoveMethod:?Dint=!GFILE_BEGIN)->?Dint\n" doc) },
-PRIVATE DEFINE_KWCMETHOD(libwin32_SetFilePointer, libwin32_SetFilePointer_f);
+PRIVATE DEFINE_KWCMETHOD(libwin32_SetFilePointer, &libwin32_SetFilePointer_f);
 #ifndef LIBWIN32_KWDS_HFILE_LDISTANCETOMOVE_DWMOVEMETHOD_DEFINED
 #define LIBWIN32_KWDS_HFILE_LDISTANCETOMOVE_DWMOVEMETHOD_DEFINED
 PRIVATE DEFINE_KWLIST(libwin32_kwds_hFile_lDistanceToMove_dwMoveMethod, { K(hFile), K(lDistanceToMove), K(dwMoveMethod), KEND });
@@ -1632,7 +1632,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_GetFileTime_f_impl(HANDLE hFil
 PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_GetFileTime_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define LIBWIN32_GETFILETIME_DEF { "GetFileTime", (DeeObject *)&libwin32_GetFileTime, MODSYM_FNORMAL, DOC("(hFile:?X3?Dint?DFile?Ewin32:HANDLE)->?T3?Dint?Dint?Dint") },
 #define LIBWIN32_GETFILETIME_DEF_DOC(doc) { "GetFileTime", (DeeObject *)&libwin32_GetFileTime, MODSYM_FNORMAL, DOC("(hFile:?X3?Dint?DFile?Ewin32:HANDLE)->?T3?Dint?Dint?Dint\n" doc) },
-PRIVATE DEFINE_KWCMETHOD(libwin32_GetFileTime, libwin32_GetFileTime_f);
+PRIVATE DEFINE_KWCMETHOD(libwin32_GetFileTime, &libwin32_GetFileTime_f);
 #ifndef LIBWIN32_KWDS_HFILE_DEFINED
 #define LIBWIN32_KWDS_HFILE_DEFINED
 PRIVATE DEFINE_KWLIST(libwin32_kwds_hFile, { K(hFile), KEND });
@@ -1690,7 +1690,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_SetFileTime_f_impl(HANDLE hFil
 PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_SetFileTime_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define LIBWIN32_SETFILETIME_DEF { "SetFileTime", (DeeObject *)&libwin32_SetFileTime, MODSYM_FNORMAL, DOC("(hFile:?X3?Dint?DFile?Ewin32:HANDLE,lpCreationTime?:?Dint,lpLastAccessTime?:?Dint,lpLastWriteTime?:?Dint)") },
 #define LIBWIN32_SETFILETIME_DEF_DOC(doc) { "SetFileTime", (DeeObject *)&libwin32_SetFileTime, MODSYM_FNORMAL, DOC("(hFile:?X3?Dint?DFile?Ewin32:HANDLE,lpCreationTime?:?Dint,lpLastAccessTime?:?Dint,lpLastWriteTime?:?Dint)\n" doc) },
-PRIVATE DEFINE_KWCMETHOD(libwin32_SetFileTime, libwin32_SetFileTime_f);
+PRIVATE DEFINE_KWCMETHOD(libwin32_SetFileTime, &libwin32_SetFileTime_f);
 #ifndef LIBWIN32_KWDS_HFILE_LPCREATIONTIME_LPLASTACCESSTIME_LPLASTWRITETIME_DEFINED
 #define LIBWIN32_KWDS_HFILE_LPCREATIONTIME_LPLASTACCESSTIME_LPLASTWRITETIME_DEFINED
 PRIVATE DEFINE_KWLIST(libwin32_kwds_hFile_lpCreationTime_lpLastAccessTime_lpLastWriteTime, { K(hFile), K(lpCreationTime), K(lpLastAccessTime), K(lpLastWriteTime), KEND });
@@ -1754,7 +1754,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_SetFileValidData_f_impl(HANDLE
 PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_SetFileValidData_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define LIBWIN32_SETFILEVALIDDATA_DEF { "SetFileValidData", (DeeObject *)&libwin32_SetFileValidData, MODSYM_FNORMAL, DOC("(hFile:?X3?Dint?DFile?Ewin32:HANDLE,ValidDataLength:?Dint)") },
 #define LIBWIN32_SETFILEVALIDDATA_DEF_DOC(doc) { "SetFileValidData", (DeeObject *)&libwin32_SetFileValidData, MODSYM_FNORMAL, DOC("(hFile:?X3?Dint?DFile?Ewin32:HANDLE,ValidDataLength:?Dint)\n" doc) },
-PRIVATE DEFINE_KWCMETHOD(libwin32_SetFileValidData, libwin32_SetFileValidData_f);
+PRIVATE DEFINE_KWCMETHOD(libwin32_SetFileValidData, &libwin32_SetFileValidData_f);
 #ifndef LIBWIN32_KWDS_HFILE_VALIDDATALENGTH_DEFINED
 #define LIBWIN32_KWDS_HFILE_VALIDDATALENGTH_DEFINED
 PRIVATE DEFINE_KWLIST(libwin32_kwds_hFile_ValidDataLength, { K(hFile), K(ValidDataLength), KEND });
@@ -1931,7 +1931,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_SetDllDirectory_f_impl(LPCWSTR
 PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_SetDllDirectory_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define LIBWIN32_SETDLLDIRECTORY_DEF { "SetDllDirectory", (DeeObject *)&libwin32_SetDllDirectory, MODSYM_FNORMAL, DOC("(lpPathName:?Dstring)") },
 #define LIBWIN32_SETDLLDIRECTORY_DEF_DOC(doc) { "SetDllDirectory", (DeeObject *)&libwin32_SetDllDirectory, MODSYM_FNORMAL, DOC("(lpPathName:?Dstring)\n" doc) },
-PRIVATE DEFINE_KWCMETHOD(libwin32_SetDllDirectory, libwin32_SetDllDirectory_f);
+PRIVATE DEFINE_KWCMETHOD(libwin32_SetDllDirectory, &libwin32_SetDllDirectory_f);
 #ifndef LIBWIN32_KWDS_LPPATHNAME_DEFINED
 #define LIBWIN32_KWDS_LPPATHNAME_DEFINED
 PRIVATE DEFINE_KWLIST(libwin32_kwds_lpPathName, { K(lpPathName), KEND });
@@ -1998,7 +1998,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_GetDiskFreeSpace_f_impl(LPCWST
 PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_GetDiskFreeSpace_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define LIBWIN32_GETDISKFREESPACE_DEF { "GetDiskFreeSpace", (DeeObject *)&libwin32_GetDiskFreeSpace, MODSYM_FNORMAL, DOC("(lpRootPathName:?Dstring)->?T4?Dint?Dint?Dint?Dint") },
 #define LIBWIN32_GETDISKFREESPACE_DEF_DOC(doc) { "GetDiskFreeSpace", (DeeObject *)&libwin32_GetDiskFreeSpace, MODSYM_FNORMAL, DOC("(lpRootPathName:?Dstring)->?T4?Dint?Dint?Dint?Dint\n" doc) },
-PRIVATE DEFINE_KWCMETHOD(libwin32_GetDiskFreeSpace, libwin32_GetDiskFreeSpace_f);
+PRIVATE DEFINE_KWCMETHOD(libwin32_GetDiskFreeSpace, &libwin32_GetDiskFreeSpace_f);
 #ifndef LIBWIN32_KWDS_LPROOTPATHNAME_DEFINED
 #define LIBWIN32_KWDS_LPROOTPATHNAME_DEFINED
 PRIVATE DEFINE_KWLIST(libwin32_kwds_lpRootPathName, { K(lpRootPathName), KEND });
@@ -2062,7 +2062,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_GetDiskFreeSpaceEx_f_impl(LPCW
 PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_GetDiskFreeSpaceEx_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define LIBWIN32_GETDISKFREESPACEEX_DEF { "GetDiskFreeSpaceEx", (DeeObject *)&libwin32_GetDiskFreeSpaceEx, MODSYM_FNORMAL, DOC("(lpDirectoryName:?Dstring)->?T3?Dint?Dint?Dint") },
 #define LIBWIN32_GETDISKFREESPACEEX_DEF_DOC(doc) { "GetDiskFreeSpaceEx", (DeeObject *)&libwin32_GetDiskFreeSpaceEx, MODSYM_FNORMAL, DOC("(lpDirectoryName:?Dstring)->?T3?Dint?Dint?Dint\n" doc) },
-PRIVATE DEFINE_KWCMETHOD(libwin32_GetDiskFreeSpaceEx, libwin32_GetDiskFreeSpaceEx_f);
+PRIVATE DEFINE_KWCMETHOD(libwin32_GetDiskFreeSpaceEx, &libwin32_GetDiskFreeSpaceEx_f);
 #ifndef LIBWIN32_KWDS_LPDIRECTORYNAME_DEFINED
 #define LIBWIN32_KWDS_LPDIRECTORYNAME_DEFINED
 PRIVATE DEFINE_KWLIST(libwin32_kwds_lpDirectoryName, { K(lpDirectoryName), KEND });
@@ -2122,7 +2122,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_GetDriveType_f_impl(LPCWSTR lp
 PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_GetDriveType_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define LIBWIN32_GETDRIVETYPE_DEF { "GetDriveType", (DeeObject *)&libwin32_GetDriveType, MODSYM_FNORMAL, DOC("(lpRootPathName:?Dstring)->?Dint") },
 #define LIBWIN32_GETDRIVETYPE_DEF_DOC(doc) { "GetDriveType", (DeeObject *)&libwin32_GetDriveType, MODSYM_FNORMAL, DOC("(lpRootPathName:?Dstring)->?Dint\n" doc) },
-PRIVATE DEFINE_KWCMETHOD(libwin32_GetDriveType, libwin32_GetDriveType_f);
+PRIVATE DEFINE_KWCMETHOD(libwin32_GetDriveType, &libwin32_GetDriveType_f);
 #ifndef LIBWIN32_KWDS_LPROOTPATHNAME_DEFINED
 #define LIBWIN32_KWDS_LPROOTPATHNAME_DEFINED
 PRIVATE DEFINE_KWLIST(libwin32_kwds_lpRootPathName, { K(lpRootPathName), KEND });
@@ -2179,7 +2179,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_GetModuleFileName_f_impl(HANDL
 PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_GetModuleFileName_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define LIBWIN32_GETMODULEFILENAME_DEF { "GetModuleFileName", (DeeObject *)&libwin32_GetModuleFileName, MODSYM_FNORMAL, DOC("(hModule:?X3?Dint?DFile?Ewin32:HANDLE)->?Dstring") },
 #define LIBWIN32_GETMODULEFILENAME_DEF_DOC(doc) { "GetModuleFileName", (DeeObject *)&libwin32_GetModuleFileName, MODSYM_FNORMAL, DOC("(hModule:?X3?Dint?DFile?Ewin32:HANDLE)->?Dstring\n" doc) },
-PRIVATE DEFINE_KWCMETHOD(libwin32_GetModuleFileName, libwin32_GetModuleFileName_f);
+PRIVATE DEFINE_KWCMETHOD(libwin32_GetModuleFileName, &libwin32_GetModuleFileName_f);
 #ifndef LIBWIN32_KWDS_HMODULE_DEFINED
 #define LIBWIN32_KWDS_HMODULE_DEFINED
 PRIVATE DEFINE_KWLIST(libwin32_kwds_hModule, { K(hModule), KEND });
@@ -2585,7 +2585,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_QueryDosDevice_f_impl(LPCWSTR 
 PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_QueryDosDevice_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define LIBWIN32_QUERYDOSDEVICE_DEF { "QueryDosDevice", (DeeObject *)&libwin32_QueryDosDevice, MODSYM_FNORMAL, DOC("(lpDeviceName:?Dstring)->?S?Dstring") },
 #define LIBWIN32_QUERYDOSDEVICE_DEF_DOC(doc) { "QueryDosDevice", (DeeObject *)&libwin32_QueryDosDevice, MODSYM_FNORMAL, DOC("(lpDeviceName:?Dstring)->?S?Dstring\n" doc) },
-PRIVATE DEFINE_KWCMETHOD(libwin32_QueryDosDevice, libwin32_QueryDosDevice_f);
+PRIVATE DEFINE_KWCMETHOD(libwin32_QueryDosDevice, &libwin32_QueryDosDevice_f);
 #ifndef LIBWIN32_KWDS_LPDEVICENAME_DEFINED
 #define LIBWIN32_KWDS_LPDEVICENAME_DEFINED
 PRIVATE DEFINE_KWLIST(libwin32_kwds_lpDeviceName, { K(lpDeviceName), KEND });
@@ -2668,7 +2668,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_GetFileType_f_impl(HANDLE hFil
 PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_GetFileType_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define LIBWIN32_GETFILETYPE_DEF { "GetFileType", (DeeObject *)&libwin32_GetFileType, MODSYM_FNORMAL, DOC("(hFile:?X3?Dint?DFile?Ewin32:HANDLE)->?Dint") },
 #define LIBWIN32_GETFILETYPE_DEF_DOC(doc) { "GetFileType", (DeeObject *)&libwin32_GetFileType, MODSYM_FNORMAL, DOC("(hFile:?X3?Dint?DFile?Ewin32:HANDLE)->?Dint\n" doc) },
-PRIVATE DEFINE_KWCMETHOD(libwin32_GetFileType, libwin32_GetFileType_f);
+PRIVATE DEFINE_KWCMETHOD(libwin32_GetFileType, &libwin32_GetFileType_f);
 #ifndef LIBWIN32_KWDS_HFILE_DEFINED
 #define LIBWIN32_KWDS_HFILE_DEFINED
 PRIVATE DEFINE_KWLIST(libwin32_kwds_hFile, { K(hFile), KEND });
@@ -2717,7 +2717,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_GetFileSize_f_impl(HANDLE hFil
 PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_GetFileSize_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define LIBWIN32_GETFILESIZE_DEF { "GetFileSize", (DeeObject *)&libwin32_GetFileSize, MODSYM_FNORMAL, DOC("(hFile:?X3?Dint?DFile?Ewin32:HANDLE)->?Dint") },
 #define LIBWIN32_GETFILESIZE_DEF_DOC(doc) { "GetFileSize", (DeeObject *)&libwin32_GetFileSize, MODSYM_FNORMAL, DOC("(hFile:?X3?Dint?DFile?Ewin32:HANDLE)->?Dint\n" doc) },
-PRIVATE DEFINE_KWCMETHOD(libwin32_GetFileSize, libwin32_GetFileSize_f);
+PRIVATE DEFINE_KWCMETHOD(libwin32_GetFileSize, &libwin32_GetFileSize_f);
 #ifndef LIBWIN32_KWDS_HFILE_DEFINED
 #define LIBWIN32_KWDS_HFILE_DEFINED
 PRIVATE DEFINE_KWLIST(libwin32_kwds_hFile, { K(hFile), KEND });
@@ -2766,7 +2766,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_GetFileAttributes_f_impl(LPCWS
 PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_GetFileAttributes_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define LIBWIN32_GETFILEATTRIBUTES_DEF { "GetFileAttributes", (DeeObject *)&libwin32_GetFileAttributes, MODSYM_FNORMAL, DOC("(lpFileName:?Dstring)->?Dint") },
 #define LIBWIN32_GETFILEATTRIBUTES_DEF_DOC(doc) { "GetFileAttributes", (DeeObject *)&libwin32_GetFileAttributes, MODSYM_FNORMAL, DOC("(lpFileName:?Dstring)->?Dint\n" doc) },
-PRIVATE DEFINE_KWCMETHOD(libwin32_GetFileAttributes, libwin32_GetFileAttributes_f);
+PRIVATE DEFINE_KWCMETHOD(libwin32_GetFileAttributes, &libwin32_GetFileAttributes_f);
 #ifndef LIBWIN32_KWDS_LPFILENAME_DEFINED
 #define LIBWIN32_KWDS_LPFILENAME_DEFINED
 PRIVATE DEFINE_KWLIST(libwin32_kwds_lpFileName, { K(lpFileName), KEND });
@@ -2817,7 +2817,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_SetFileAttributes_f_impl(LPCWS
 PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_SetFileAttributes_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define LIBWIN32_SETFILEATTRIBUTES_DEF { "SetFileAttributes", (DeeObject *)&libwin32_SetFileAttributes, MODSYM_FNORMAL, DOC("(lpFileName:?Dstring,dwFileAttributes:?Dint)") },
 #define LIBWIN32_SETFILEATTRIBUTES_DEF_DOC(doc) { "SetFileAttributes", (DeeObject *)&libwin32_SetFileAttributes, MODSYM_FNORMAL, DOC("(lpFileName:?Dstring,dwFileAttributes:?Dint)\n" doc) },
-PRIVATE DEFINE_KWCMETHOD(libwin32_SetFileAttributes, libwin32_SetFileAttributes_f);
+PRIVATE DEFINE_KWCMETHOD(libwin32_SetFileAttributes, &libwin32_SetFileAttributes_f);
 #ifndef LIBWIN32_KWDS_LPFILENAME_DWFILEATTRIBUTES_DEFINED
 #define LIBWIN32_KWDS_LPFILENAME_DWFILEATTRIBUTES_DEFINED
 PRIVATE DEFINE_KWLIST(libwin32_kwds_lpFileName_dwFileAttributes, { K(lpFileName), K(dwFileAttributes), KEND });
@@ -2871,7 +2871,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_GetCompressedFileSize_f_impl(L
 PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_GetCompressedFileSize_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define LIBWIN32_GETCOMPRESSEDFILESIZE_DEF { "GetCompressedFileSize", (DeeObject *)&libwin32_GetCompressedFileSize, MODSYM_FNORMAL, DOC("(lpFileName:?Dstring)->?Dint") },
 #define LIBWIN32_GETCOMPRESSEDFILESIZE_DEF_DOC(doc) { "GetCompressedFileSize", (DeeObject *)&libwin32_GetCompressedFileSize, MODSYM_FNORMAL, DOC("(lpFileName:?Dstring)->?Dint\n" doc) },
-PRIVATE DEFINE_KWCMETHOD(libwin32_GetCompressedFileSize, libwin32_GetCompressedFileSize_f);
+PRIVATE DEFINE_KWCMETHOD(libwin32_GetCompressedFileSize, &libwin32_GetCompressedFileSize_f);
 #ifndef LIBWIN32_KWDS_LPFILENAME_DEFINED
 #define LIBWIN32_KWDS_LPFILENAME_DEFINED
 PRIVATE DEFINE_KWLIST(libwin32_kwds_lpFileName, { K(lpFileName), KEND });
@@ -2924,7 +2924,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_FlushFileBuffers_f_impl(HANDLE
 PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_FlushFileBuffers_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define LIBWIN32_FLUSHFILEBUFFERS_DEF { "FlushFileBuffers", (DeeObject *)&libwin32_FlushFileBuffers, MODSYM_FNORMAL, DOC("(hFile:?X3?Dint?DFile?Ewin32:HANDLE)") },
 #define LIBWIN32_FLUSHFILEBUFFERS_DEF_DOC(doc) { "FlushFileBuffers", (DeeObject *)&libwin32_FlushFileBuffers, MODSYM_FNORMAL, DOC("(hFile:?X3?Dint?DFile?Ewin32:HANDLE)\n" doc) },
-PRIVATE DEFINE_KWCMETHOD(libwin32_FlushFileBuffers, libwin32_FlushFileBuffers_f);
+PRIVATE DEFINE_KWCMETHOD(libwin32_FlushFileBuffers, &libwin32_FlushFileBuffers_f);
 #ifndef LIBWIN32_KWDS_HFILE_DEFINED
 #define LIBWIN32_KWDS_HFILE_DEFINED
 PRIVATE DEFINE_KWLIST(libwin32_kwds_hFile, { K(hFile), KEND });
@@ -2973,7 +2973,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_GetFinalPathNameByHandle_f_imp
 PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_GetFinalPathNameByHandle_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define LIBWIN32_GETFINALPATHNAMEBYHANDLE_DEF { "GetFinalPathNameByHandle", (DeeObject *)&libwin32_GetFinalPathNameByHandle, MODSYM_FNORMAL, DOC("(hFile:?X3?Dint?DFile?Ewin32:HANDLE,dwFlags:?Dint=!0)->?Dstring") },
 #define LIBWIN32_GETFINALPATHNAMEBYHANDLE_DEF_DOC(doc) { "GetFinalPathNameByHandle", (DeeObject *)&libwin32_GetFinalPathNameByHandle, MODSYM_FNORMAL, DOC("(hFile:?X3?Dint?DFile?Ewin32:HANDLE,dwFlags:?Dint=!0)->?Dstring\n" doc) },
-PRIVATE DEFINE_KWCMETHOD(libwin32_GetFinalPathNameByHandle, libwin32_GetFinalPathNameByHandle_f);
+PRIVATE DEFINE_KWCMETHOD(libwin32_GetFinalPathNameByHandle, &libwin32_GetFinalPathNameByHandle_f);
 #ifndef LIBWIN32_KWDS_HFILE_DWFLAGS_DEFINED
 #define LIBWIN32_KWDS_HFILE_DWFLAGS_DEFINED
 PRIVATE DEFINE_KWLIST(libwin32_kwds_hFile_dwFlags, { K(hFile), K(dwFlags), KEND });
@@ -3027,7 +3027,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_GetFilenameOfHandle_f_impl(HAN
 PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_GetFilenameOfHandle_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define LIBWIN32_GETFILENAMEOFHANDLE_DEF { "GetFilenameOfHandle", (DeeObject *)&libwin32_GetFilenameOfHandle, MODSYM_FNORMAL, DOC("(hFile:?X3?Dint?DFile?Ewin32:HANDLE)->?Dstring") },
 #define LIBWIN32_GETFILENAMEOFHANDLE_DEF_DOC(doc) { "GetFilenameOfHandle", (DeeObject *)&libwin32_GetFilenameOfHandle, MODSYM_FNORMAL, DOC("(hFile:?X3?Dint?DFile?Ewin32:HANDLE)->?Dstring\n" doc) },
-PRIVATE DEFINE_KWCMETHOD(libwin32_GetFilenameOfHandle, libwin32_GetFilenameOfHandle_f);
+PRIVATE DEFINE_KWCMETHOD(libwin32_GetFilenameOfHandle, &libwin32_GetFilenameOfHandle_f);
 #ifndef LIBWIN32_KWDS_HFILE_DEFINED
 #define LIBWIN32_KWDS_HFILE_DEFINED
 PRIVATE DEFINE_KWLIST(libwin32_kwds_hFile, { K(hFile), KEND });
@@ -3062,7 +3062,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_FormatErrorMessage_f_impl(DWOR
 PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_FormatErrorMessage_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define LIBWIN32_FORMATERRORMESSAGE_DEF { "FormatErrorMessage", (DeeObject *)&libwin32_FormatErrorMessage, MODSYM_FNORMAL, DOC("(dwError:?Dint)->?Dstring") },
 #define LIBWIN32_FORMATERRORMESSAGE_DEF_DOC(doc) { "FormatErrorMessage", (DeeObject *)&libwin32_FormatErrorMessage, MODSYM_FNORMAL, DOC("(dwError:?Dint)->?Dstring\n" doc) },
-PRIVATE DEFINE_KWCMETHOD(libwin32_FormatErrorMessage, libwin32_FormatErrorMessage_f);
+PRIVATE DEFINE_KWCMETHOD(libwin32_FormatErrorMessage, &libwin32_FormatErrorMessage_f);
 #ifndef LIBWIN32_KWDS_DWERROR_DEFINED
 #define LIBWIN32_KWDS_DWERROR_DEFINED
 PRIVATE DEFINE_KWLIST(libwin32_kwds_dwError, { K(dwError), KEND });
@@ -3094,7 +3094,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_GetMappedFileName_f_impl(HANDL
 PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_GetMappedFileName_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define LIBWIN32_GETMAPPEDFILENAME_DEF { "GetMappedFileName", (DeeObject *)&libwin32_GetMappedFileName, MODSYM_FNORMAL, DOC("(hProcess:?X3?Dint?DFile?Ewin32:HANDLE,lpv:?Aptr?Ectypes:void)->?Dstring") },
 #define LIBWIN32_GETMAPPEDFILENAME_DEF_DOC(doc) { "GetMappedFileName", (DeeObject *)&libwin32_GetMappedFileName, MODSYM_FNORMAL, DOC("(hProcess:?X3?Dint?DFile?Ewin32:HANDLE,lpv:?Aptr?Ectypes:void)->?Dstring\n" doc) },
-PRIVATE DEFINE_KWCMETHOD(libwin32_GetMappedFileName, libwin32_GetMappedFileName_f);
+PRIVATE DEFINE_KWCMETHOD(libwin32_GetMappedFileName, &libwin32_GetMappedFileName_f);
 #ifndef LIBWIN32_KWDS_HPROCESS_LPV_DEFINED
 #define LIBWIN32_KWDS_HPROCESS_LPV_DEFINED
 PRIVATE DEFINE_KWLIST(libwin32_kwds_hProcess_lpv, { K(hProcess), K(lpv), KEND });
@@ -3150,7 +3150,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_MapViewOfFile_f_impl(HANDLE hF
 PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_MapViewOfFile_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define LIBWIN32_MAPVIEWOFFILE_DEF { "MapViewOfFile", (DeeObject *)&libwin32_MapViewOfFile, MODSYM_FNORMAL, DOC("(hFileMappingObject:?X3?Dint?DFile?Ewin32:HANDLE,dwDesiredAccess:?Dint=!GFILE_MAP_READ,dwFileOffset:?Dint=!0,dwNumberOfBytesToMap:?Dint=!0)->?Aptr?Ectypes:void") },
 #define LIBWIN32_MAPVIEWOFFILE_DEF_DOC(doc) { "MapViewOfFile", (DeeObject *)&libwin32_MapViewOfFile, MODSYM_FNORMAL, DOC("(hFileMappingObject:?X3?Dint?DFile?Ewin32:HANDLE,dwDesiredAccess:?Dint=!GFILE_MAP_READ,dwFileOffset:?Dint=!0,dwNumberOfBytesToMap:?Dint=!0)->?Aptr?Ectypes:void\n" doc) },
-PRIVATE DEFINE_KWCMETHOD(libwin32_MapViewOfFile, libwin32_MapViewOfFile_f);
+PRIVATE DEFINE_KWCMETHOD(libwin32_MapViewOfFile, &libwin32_MapViewOfFile_f);
 #ifndef LIBWIN32_KWDS_HFILEMAPPINGOBJECT_DWDESIREDACCESS_DWFILEOFFSET_DWNUMBEROFBYTESTOMAP_DEFINED
 #define LIBWIN32_KWDS_HFILEMAPPINGOBJECT_DWDESIREDACCESS_DWFILEOFFSET_DWNUMBEROFBYTESTOMAP_DEFINED
 PRIVATE DEFINE_KWLIST(libwin32_kwds_hFileMappingObject_dwDesiredAccess_dwFileOffset_dwNumberOfBytesToMap, { K(hFileMappingObject), K(dwDesiredAccess), K(dwFileOffset), K(dwNumberOfBytesToMap), KEND });
@@ -3218,7 +3218,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_UnmapViewOfFile_f_impl(void *l
 PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_UnmapViewOfFile_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define LIBWIN32_UNMAPVIEWOFFILE_DEF { "UnmapViewOfFile", (DeeObject *)&libwin32_UnmapViewOfFile, MODSYM_FNORMAL, DOC("(lpBaseAddress:?Aptr?Ectypes:void)") },
 #define LIBWIN32_UNMAPVIEWOFFILE_DEF_DOC(doc) { "UnmapViewOfFile", (DeeObject *)&libwin32_UnmapViewOfFile, MODSYM_FNORMAL, DOC("(lpBaseAddress:?Aptr?Ectypes:void)\n" doc) },
-PRIVATE DEFINE_KWCMETHOD(libwin32_UnmapViewOfFile, libwin32_UnmapViewOfFile_f);
+PRIVATE DEFINE_KWCMETHOD(libwin32_UnmapViewOfFile, &libwin32_UnmapViewOfFile_f);
 #ifndef LIBWIN32_KWDS_LPBASEADDRESS_DEFINED
 #define LIBWIN32_KWDS_LPBASEADDRESS_DEFINED
 PRIVATE DEFINE_KWLIST(libwin32_kwds_lpBaseAddress, { K(lpBaseAddress), KEND });
@@ -3273,7 +3273,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_CreateFileMapping_f_impl(HANDL
 PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_CreateFileMapping_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define LIBWIN32_CREATEFILEMAPPING_DEF { "CreateFileMapping", (DeeObject *)&libwin32_CreateFileMapping, MODSYM_FNORMAL, DOC("(hFile:?X3?Dint?DFile?Ewin32:HANDLE,lpFileMappingAttributes?:?GSECURITY_ATTRIBUTES,flProtect:?Dint=!GPAGE_READONLY,dwMaximumSize:?Dint=!0,lpName?:?Dstring)->?GHANDLE") },
 #define LIBWIN32_CREATEFILEMAPPING_DEF_DOC(doc) { "CreateFileMapping", (DeeObject *)&libwin32_CreateFileMapping, MODSYM_FNORMAL, DOC("(hFile:?X3?Dint?DFile?Ewin32:HANDLE,lpFileMappingAttributes?:?GSECURITY_ATTRIBUTES,flProtect:?Dint=!GPAGE_READONLY,dwMaximumSize:?Dint=!0,lpName?:?Dstring)->?GHANDLE\n" doc) },
-PRIVATE DEFINE_KWCMETHOD(libwin32_CreateFileMapping, libwin32_CreateFileMapping_f);
+PRIVATE DEFINE_KWCMETHOD(libwin32_CreateFileMapping, &libwin32_CreateFileMapping_f);
 #ifndef LIBWIN32_KWDS_HFILE_LPFILEMAPPINGATTRIBUTES_FLPROTECT_DWMAXIMUMSIZE_LPNAME_DEFINED
 #define LIBWIN32_KWDS_HFILE_LPFILEMAPPINGATTRIBUTES_FLPROTECT_DWMAXIMUMSIZE_LPNAME_DEFINED
 PRIVATE DEFINE_KWLIST(libwin32_kwds_hFile_lpFileMappingAttributes_flProtect_dwMaximumSize_lpName, { K(hFile), K(lpFileMappingAttributes), K(flProtect), K(dwMaximumSize), K(lpName), KEND });
@@ -3451,7 +3451,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_GetStdHandle_f_impl(int32_t nS
 PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_GetStdHandle_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define LIBWIN32_GETSTDHANDLE_DEF { "GetStdHandle", (DeeObject *)&libwin32_GetStdHandle, MODSYM_FNORMAL, DOC("(nStdHandle:?Dint)->?GHANDLE") },
 #define LIBWIN32_GETSTDHANDLE_DEF_DOC(doc) { "GetStdHandle", (DeeObject *)&libwin32_GetStdHandle, MODSYM_FNORMAL, DOC("(nStdHandle:?Dint)->?GHANDLE\n" doc) },
-PRIVATE DEFINE_KWCMETHOD(libwin32_GetStdHandle, libwin32_GetStdHandle_f);
+PRIVATE DEFINE_KWCMETHOD(libwin32_GetStdHandle, &libwin32_GetStdHandle_f);
 #ifndef LIBWIN32_KWDS_NSTDHANDLE_DEFINED
 #define LIBWIN32_KWDS_NSTDHANDLE_DEFINED
 PRIVATE DEFINE_KWLIST(libwin32_kwds_nStdHandle, { K(nStdHandle), KEND });
@@ -3510,7 +3510,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_SetStdHandle_f_impl(DWORD nStd
 PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_SetStdHandle_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define LIBWIN32_SETSTDHANDLE_DEF { "SetStdHandle", (DeeObject *)&libwin32_SetStdHandle, MODSYM_FNORMAL, DOC("(nStdHandle:?Dint,hHandle:?X3?Dint?DFile?Ewin32:HANDLE)") },
 #define LIBWIN32_SETSTDHANDLE_DEF_DOC(doc) { "SetStdHandle", (DeeObject *)&libwin32_SetStdHandle, MODSYM_FNORMAL, DOC("(nStdHandle:?Dint,hHandle:?X3?Dint?DFile?Ewin32:HANDLE)\n" doc) },
-PRIVATE DEFINE_KWCMETHOD(libwin32_SetStdHandle, libwin32_SetStdHandle_f);
+PRIVATE DEFINE_KWCMETHOD(libwin32_SetStdHandle, &libwin32_SetStdHandle_f);
 #ifndef LIBWIN32_KWDS_NSTDHANDLE_HHANDLE_DEFINED
 #define LIBWIN32_KWDS_NSTDHANDLE_HHANDLE_DEFINED
 PRIVATE DEFINE_KWLIST(libwin32_kwds_nStdHandle_hHandle, { K(nStdHandle), K(hHandle), KEND });
@@ -3572,7 +3572,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_CreateNamedPipe_f_impl(LPCWSTR
 PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_CreateNamedPipe_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define LIBWIN32_CREATENAMEDPIPE_DEF { "CreateNamedPipe", (DeeObject *)&libwin32_CreateNamedPipe, MODSYM_FNORMAL, DOC("(lpName:?Dstring,dwOpenMode:?Dint=!GPIPE_ACCESS_DUPLEX,dwPipeMode:?Dint=PIPE_TYPE_BYTE|PIPE_READMODE_BYTE,nMaxInstances:?Dint=!GPIPE_UNLIMITED_INSTANCES,nOutBufferSize:?Dint=!65536,nInBufferSize:?Dint=!65536,nDefaultTimeOut:?Dint=!0,lpSecurityAttributes?:?GSECURITY_ATTRIBUTES)->?GHANDLE") },
 #define LIBWIN32_CREATENAMEDPIPE_DEF_DOC(doc) { "CreateNamedPipe", (DeeObject *)&libwin32_CreateNamedPipe, MODSYM_FNORMAL, DOC("(lpName:?Dstring,dwOpenMode:?Dint=!GPIPE_ACCESS_DUPLEX,dwPipeMode:?Dint=PIPE_TYPE_BYTE|PIPE_READMODE_BYTE,nMaxInstances:?Dint=!GPIPE_UNLIMITED_INSTANCES,nOutBufferSize:?Dint=!65536,nInBufferSize:?Dint=!65536,nDefaultTimeOut:?Dint=!0,lpSecurityAttributes?:?GSECURITY_ATTRIBUTES)->?GHANDLE\n" doc) },
-PRIVATE DEFINE_KWCMETHOD(libwin32_CreateNamedPipe, libwin32_CreateNamedPipe_f);
+PRIVATE DEFINE_KWCMETHOD(libwin32_CreateNamedPipe, &libwin32_CreateNamedPipe_f);
 #ifndef LIBWIN32_KWDS_LPNAME_DWOPENMODE_DWPIPEMODE_NMAXINSTANCES_NOUTBUFFERSIZE_NINBUFFERSIZE_NDEFAULTTIMEOUT_LPSECURITYATTRIBUTES_DEFINED
 #define LIBWIN32_KWDS_LPNAME_DWOPENMODE_DWPIPEMODE_NMAXINSTANCES_NOUTBUFFERSIZE_NINBUFFERSIZE_NDEFAULTTIMEOUT_LPSECURITYATTRIBUTES_DEFINED
 PRIVATE DEFINE_KWLIST(libwin32_kwds_lpName_dwOpenMode_dwPipeMode_nMaxInstances_nOutBufferSize_nInBufferSize_nDefaultTimeOut_lpSecurityAttributes, { K(lpName), K(dwOpenMode), K(dwPipeMode), K(nMaxInstances), K(nOutBufferSize), K(nInBufferSize), K(nDefaultTimeOut), K(lpSecurityAttributes), KEND });
@@ -3648,7 +3648,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_ConnectNamedPipe_f_impl(HANDLE
 PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_ConnectNamedPipe_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define LIBWIN32_CONNECTNAMEDPIPE_DEF { "ConnectNamedPipe", (DeeObject *)&libwin32_ConnectNamedPipe, MODSYM_FNORMAL, DOC("(hNamedPipe:?X3?Dint?DFile?Ewin32:HANDLE,lpOverlapped?:?GOVERLAPPED)") },
 #define LIBWIN32_CONNECTNAMEDPIPE_DEF_DOC(doc) { "ConnectNamedPipe", (DeeObject *)&libwin32_ConnectNamedPipe, MODSYM_FNORMAL, DOC("(hNamedPipe:?X3?Dint?DFile?Ewin32:HANDLE,lpOverlapped?:?GOVERLAPPED)\n" doc) },
-PRIVATE DEFINE_KWCMETHOD(libwin32_ConnectNamedPipe, libwin32_ConnectNamedPipe_f);
+PRIVATE DEFINE_KWCMETHOD(libwin32_ConnectNamedPipe, &libwin32_ConnectNamedPipe_f);
 #ifndef LIBWIN32_KWDS_HNAMEDPIPE_LPOVERLAPPED_DEFINED
 #define LIBWIN32_KWDS_HNAMEDPIPE_LPOVERLAPPED_DEFINED
 PRIVATE DEFINE_KWLIST(libwin32_kwds_hNamedPipe_lpOverlapped, { K(hNamedPipe), K(lpOverlapped), KEND });
@@ -3701,7 +3701,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_WaitNamedPipe_f_impl(LPCWSTR l
 PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_WaitNamedPipe_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define LIBWIN32_WAITNAMEDPIPE_DEF { "WaitNamedPipe", (DeeObject *)&libwin32_WaitNamedPipe, MODSYM_FNORMAL, DOC("(lpNamedPipeName:?Dstring,nTimeOut:?Dint=!GNMPWAIT_WAIT_FOREVER)") },
 #define LIBWIN32_WAITNAMEDPIPE_DEF_DOC(doc) { "WaitNamedPipe", (DeeObject *)&libwin32_WaitNamedPipe, MODSYM_FNORMAL, DOC("(lpNamedPipeName:?Dstring,nTimeOut:?Dint=!GNMPWAIT_WAIT_FOREVER)\n" doc) },
-PRIVATE DEFINE_KWCMETHOD(libwin32_WaitNamedPipe, libwin32_WaitNamedPipe_f);
+PRIVATE DEFINE_KWCMETHOD(libwin32_WaitNamedPipe, &libwin32_WaitNamedPipe_f);
 #ifndef LIBWIN32_KWDS_LPNAMEDPIPENAME_NTIMEOUT_DEFINED
 #define LIBWIN32_KWDS_LPNAMEDPIPENAME_NTIMEOUT_DEFINED
 PRIVATE DEFINE_KWLIST(libwin32_kwds_lpNamedPipeName_nTimeOut, { K(lpNamedPipeName), K(nTimeOut), KEND });
@@ -3793,7 +3793,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_OpenProcess_f_impl(DWORD dwDes
 PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_OpenProcess_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define LIBWIN32_OPENPROCESS_DEF { "OpenProcess", (DeeObject *)&libwin32_OpenProcess, MODSYM_FNORMAL, DOC("(dwDesiredAccess:?Dint,bInheritHandle:?Dbool,dwProcessId:?Dint)->?GHANDLE") },
 #define LIBWIN32_OPENPROCESS_DEF_DOC(doc) { "OpenProcess", (DeeObject *)&libwin32_OpenProcess, MODSYM_FNORMAL, DOC("(dwDesiredAccess:?Dint,bInheritHandle:?Dbool,dwProcessId:?Dint)->?GHANDLE\n" doc) },
-PRIVATE DEFINE_KWCMETHOD(libwin32_OpenProcess, libwin32_OpenProcess_f);
+PRIVATE DEFINE_KWCMETHOD(libwin32_OpenProcess, &libwin32_OpenProcess_f);
 #ifndef LIBWIN32_KWDS_DWDESIREDACCESS_BINHERITHANDLE_DWPROCESSID_DEFINED
 #define LIBWIN32_KWDS_DWDESIREDACCESS_BINHERITHANDLE_DWPROCESSID_DEFINED
 PRIVATE DEFINE_KWLIST(libwin32_kwds_dwDesiredAccess_bInheritHandle_dwProcessId, { K(dwDesiredAccess), K(bInheritHandle), K(dwProcessId), KEND });
@@ -3859,7 +3859,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_GetExitCodeProcess_f_impl(HAND
 PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_GetExitCodeProcess_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define LIBWIN32_GETEXITCODEPROCESS_DEF { "GetExitCodeProcess", (DeeObject *)&libwin32_GetExitCodeProcess, MODSYM_FNORMAL, DOC("(hProcess:?X3?Dint?DFile?Ewin32:HANDLE)->?Dint") },
 #define LIBWIN32_GETEXITCODEPROCESS_DEF_DOC(doc) { "GetExitCodeProcess", (DeeObject *)&libwin32_GetExitCodeProcess, MODSYM_FNORMAL, DOC("(hProcess:?X3?Dint?DFile?Ewin32:HANDLE)->?Dint\n" doc) },
-PRIVATE DEFINE_KWCMETHOD(libwin32_GetExitCodeProcess, libwin32_GetExitCodeProcess_f);
+PRIVATE DEFINE_KWCMETHOD(libwin32_GetExitCodeProcess, &libwin32_GetExitCodeProcess_f);
 #ifndef LIBWIN32_KWDS_HPROCESS_DEFINED
 #define LIBWIN32_KWDS_HPROCESS_DEFINED
 PRIVATE DEFINE_KWLIST(libwin32_kwds_hProcess, { K(hProcess), KEND });
@@ -3998,7 +3998,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_EnumProcessModules_f_impl(HAND
 PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_EnumProcessModules_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define LIBWIN32_ENUMPROCESSMODULES_DEF { "EnumProcessModules", (DeeObject *)&libwin32_EnumProcessModules, MODSYM_FNORMAL, DOC("(hProcess:?X3?Dint?DFile?Ewin32:HANDLE,dwFilterFlag:?Dint=!GLIST_MODULES_DEFAULT)->?S?GHANDLE") },
 #define LIBWIN32_ENUMPROCESSMODULES_DEF_DOC(doc) { "EnumProcessModules", (DeeObject *)&libwin32_EnumProcessModules, MODSYM_FNORMAL, DOC("(hProcess:?X3?Dint?DFile?Ewin32:HANDLE,dwFilterFlag:?Dint=!GLIST_MODULES_DEFAULT)->?S?GHANDLE\n" doc) },
-PRIVATE DEFINE_KWCMETHOD(libwin32_EnumProcessModules, libwin32_EnumProcessModules_f);
+PRIVATE DEFINE_KWCMETHOD(libwin32_EnumProcessModules, &libwin32_EnumProcessModules_f);
 #ifndef LIBWIN32_KWDS_HPROCESS_DWFILTERFLAG_DEFINED
 #define LIBWIN32_KWDS_HPROCESS_DWFILTERFLAG_DEFINED
 PRIVATE DEFINE_KWLIST(libwin32_kwds_hProcess_dwFilterFlag, { K(hProcess), K(dwFilterFlag), KEND });
@@ -4192,7 +4192,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_GetProcessImageFileName_f_impl
 PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_GetProcessImageFileName_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define LIBWIN32_GETPROCESSIMAGEFILENAME_DEF { "GetProcessImageFileName", (DeeObject *)&libwin32_GetProcessImageFileName, MODSYM_FNORMAL, DOC("(hProcess:?X3?Dint?DFile?Ewin32:HANDLE)->?Dstring") },
 #define LIBWIN32_GETPROCESSIMAGEFILENAME_DEF_DOC(doc) { "GetProcessImageFileName", (DeeObject *)&libwin32_GetProcessImageFileName, MODSYM_FNORMAL, DOC("(hProcess:?X3?Dint?DFile?Ewin32:HANDLE)->?Dstring\n" doc) },
-PRIVATE DEFINE_KWCMETHOD(libwin32_GetProcessImageFileName, libwin32_GetProcessImageFileName_f);
+PRIVATE DEFINE_KWCMETHOD(libwin32_GetProcessImageFileName, &libwin32_GetProcessImageFileName_f);
 #ifndef LIBWIN32_KWDS_HPROCESS_DEFINED
 #define LIBWIN32_KWDS_HPROCESS_DEFINED
 PRIVATE DEFINE_KWLIST(libwin32_kwds_hProcess, { K(hProcess), KEND });
@@ -4263,7 +4263,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_GetModuleBaseName_f_impl(HANDL
 PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_GetModuleBaseName_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define LIBWIN32_GETMODULEBASENAME_DEF { "GetModuleBaseName", (DeeObject *)&libwin32_GetModuleBaseName, MODSYM_FNORMAL, DOC("(hProcess:?X3?Dint?DFile?Ewin32:HANDLE,hModule:?X3?Dint?DFile?Ewin32:HANDLE)->?Dstring") },
 #define LIBWIN32_GETMODULEBASENAME_DEF_DOC(doc) { "GetModuleBaseName", (DeeObject *)&libwin32_GetModuleBaseName, MODSYM_FNORMAL, DOC("(hProcess:?X3?Dint?DFile?Ewin32:HANDLE,hModule:?X3?Dint?DFile?Ewin32:HANDLE)->?Dstring\n" doc) },
-PRIVATE DEFINE_KWCMETHOD(libwin32_GetModuleBaseName, libwin32_GetModuleBaseName_f);
+PRIVATE DEFINE_KWCMETHOD(libwin32_GetModuleBaseName, &libwin32_GetModuleBaseName_f);
 #ifndef LIBWIN32_KWDS_HPROCESS_HMODULE_DEFINED
 #define LIBWIN32_KWDS_HPROCESS_HMODULE_DEFINED
 PRIVATE DEFINE_KWLIST(libwin32_kwds_hProcess_hModule, { K(hProcess), K(hModule), KEND });
@@ -4338,7 +4338,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_GetModuleFileNameEx_f_impl(HAN
 PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_GetModuleFileNameEx_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define LIBWIN32_GETMODULEFILENAMEEX_DEF { "GetModuleFileNameEx", (DeeObject *)&libwin32_GetModuleFileNameEx, MODSYM_FNORMAL, DOC("(hProcess:?X3?Dint?DFile?Ewin32:HANDLE,hModule:?X3?Dint?DFile?Ewin32:HANDLE)->?Dstring") },
 #define LIBWIN32_GETMODULEFILENAMEEX_DEF_DOC(doc) { "GetModuleFileNameEx", (DeeObject *)&libwin32_GetModuleFileNameEx, MODSYM_FNORMAL, DOC("(hProcess:?X3?Dint?DFile?Ewin32:HANDLE,hModule:?X3?Dint?DFile?Ewin32:HANDLE)->?Dstring\n" doc) },
-PRIVATE DEFINE_KWCMETHOD(libwin32_GetModuleFileNameEx, libwin32_GetModuleFileNameEx_f);
+PRIVATE DEFINE_KWCMETHOD(libwin32_GetModuleFileNameEx, &libwin32_GetModuleFileNameEx_f);
 #ifndef LIBWIN32_KWDS_HPROCESS_HMODULE_DEFINED
 #define LIBWIN32_KWDS_HPROCESS_HMODULE_DEFINED
 PRIVATE DEFINE_KWLIST(libwin32_kwds_hProcess_hModule, { K(hProcess), K(hModule), KEND });
@@ -4412,7 +4412,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_TerminateProcess_f_impl(HANDLE
 PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_TerminateProcess_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define LIBWIN32_TERMINATEPROCESS_DEF { "TerminateProcess", (DeeObject *)&libwin32_TerminateProcess, MODSYM_FNORMAL, DOC("(hProcess:?X3?Dint?DFile?Ewin32:HANDLE,uExitCode:?Dint)") },
 #define LIBWIN32_TERMINATEPROCESS_DEF_DOC(doc) { "TerminateProcess", (DeeObject *)&libwin32_TerminateProcess, MODSYM_FNORMAL, DOC("(hProcess:?X3?Dint?DFile?Ewin32:HANDLE,uExitCode:?Dint)\n" doc) },
-PRIVATE DEFINE_KWCMETHOD(libwin32_TerminateProcess, libwin32_TerminateProcess_f);
+PRIVATE DEFINE_KWCMETHOD(libwin32_TerminateProcess, &libwin32_TerminateProcess_f);
 #ifndef LIBWIN32_KWDS_HPROCESS_UEXITCODE_DEFINED
 #define LIBWIN32_KWDS_HPROCESS_UEXITCODE_DEFINED
 PRIVATE DEFINE_KWLIST(libwin32_kwds_hProcess_uExitCode, { K(hProcess), K(uExitCode), KEND });
@@ -4464,7 +4464,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_TerminateThread_f_impl(HANDLE 
 PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_TerminateThread_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define LIBWIN32_TERMINATETHREAD_DEF { "TerminateThread", (DeeObject *)&libwin32_TerminateThread, MODSYM_FNORMAL, DOC("(hThread:?X3?Dint?DFile?Ewin32:HANDLE,dwExitCode:?Dint)") },
 #define LIBWIN32_TERMINATETHREAD_DEF_DOC(doc) { "TerminateThread", (DeeObject *)&libwin32_TerminateThread, MODSYM_FNORMAL, DOC("(hThread:?X3?Dint?DFile?Ewin32:HANDLE,dwExitCode:?Dint)\n" doc) },
-PRIVATE DEFINE_KWCMETHOD(libwin32_TerminateThread, libwin32_TerminateThread_f);
+PRIVATE DEFINE_KWCMETHOD(libwin32_TerminateThread, &libwin32_TerminateThread_f);
 #ifndef LIBWIN32_KWDS_HTHREAD_DWEXITCODE_DEFINED
 #define LIBWIN32_KWDS_HTHREAD_DWEXITCODE_DEFINED
 PRIVATE DEFINE_KWLIST(libwin32_kwds_hThread_dwExitCode, { K(hThread), K(dwExitCode), KEND });
@@ -4515,7 +4515,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_SuspendThread_f_impl(HANDLE hT
 PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_SuspendThread_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define LIBWIN32_SUSPENDTHREAD_DEF { "SuspendThread", (DeeObject *)&libwin32_SuspendThread, MODSYM_FNORMAL, DOC("(hThread:?X3?Dint?DFile?Ewin32:HANDLE)->?Dint") },
 #define LIBWIN32_SUSPENDTHREAD_DEF_DOC(doc) { "SuspendThread", (DeeObject *)&libwin32_SuspendThread, MODSYM_FNORMAL, DOC("(hThread:?X3?Dint?DFile?Ewin32:HANDLE)->?Dint\n" doc) },
-PRIVATE DEFINE_KWCMETHOD(libwin32_SuspendThread, libwin32_SuspendThread_f);
+PRIVATE DEFINE_KWCMETHOD(libwin32_SuspendThread, &libwin32_SuspendThread_f);
 #ifndef LIBWIN32_KWDS_HTHREAD_DEFINED
 #define LIBWIN32_KWDS_HTHREAD_DEFINED
 PRIVATE DEFINE_KWLIST(libwin32_kwds_hThread, { K(hThread), KEND });
@@ -4565,7 +4565,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_ResumeThread_f_impl(HANDLE hTh
 PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_ResumeThread_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define LIBWIN32_RESUMETHREAD_DEF { "ResumeThread", (DeeObject *)&libwin32_ResumeThread, MODSYM_FNORMAL, DOC("(hThread:?X3?Dint?DFile?Ewin32:HANDLE)->?Dint") },
 #define LIBWIN32_RESUMETHREAD_DEF_DOC(doc) { "ResumeThread", (DeeObject *)&libwin32_ResumeThread, MODSYM_FNORMAL, DOC("(hThread:?X3?Dint?DFile?Ewin32:HANDLE)->?Dint\n" doc) },
-PRIVATE DEFINE_KWCMETHOD(libwin32_ResumeThread, libwin32_ResumeThread_f);
+PRIVATE DEFINE_KWCMETHOD(libwin32_ResumeThread, &libwin32_ResumeThread_f);
 #ifndef LIBWIN32_KWDS_HTHREAD_DEFINED
 #define LIBWIN32_KWDS_HTHREAD_DEFINED
 PRIVATE DEFINE_KWLIST(libwin32_kwds_hThread, { K(hThread), KEND });
@@ -4695,7 +4695,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_NtQueryInformationProcess_f_im
 PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_NtQueryInformationProcess_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define LIBWIN32_NTQUERYINFORMATIONPROCESS_DEF { "NtQueryInformationProcess", (DeeObject *)&libwin32_NtQueryInformationProcess, MODSYM_FNORMAL, DOC("(ProcessHandle:?X3?Dint?DFile?Ewin32:HANDLE,ProcessInformationClass:?Dint,ProcessInformationLength:?Dint=!64)->?DBytes") },
 #define LIBWIN32_NTQUERYINFORMATIONPROCESS_DEF_DOC(doc) { "NtQueryInformationProcess", (DeeObject *)&libwin32_NtQueryInformationProcess, MODSYM_FNORMAL, DOC("(ProcessHandle:?X3?Dint?DFile?Ewin32:HANDLE,ProcessInformationClass:?Dint,ProcessInformationLength:?Dint=!64)->?DBytes\n" doc) },
-PRIVATE DEFINE_KWCMETHOD(libwin32_NtQueryInformationProcess, libwin32_NtQueryInformationProcess_f);
+PRIVATE DEFINE_KWCMETHOD(libwin32_NtQueryInformationProcess, &libwin32_NtQueryInformationProcess_f);
 #ifndef LIBWIN32_KWDS_PROCESSHANDLE_PROCESSINFORMATIONCLASS_PROCESSINFORMATIONLENGTH_DEFINED
 #define LIBWIN32_KWDS_PROCESSHANDLE_PROCESSINFORMATIONCLASS_PROCESSINFORMATIONLENGTH_DEFINED
 PRIVATE DEFINE_KWLIST(libwin32_kwds_ProcessHandle_ProcessInformationClass_ProcessInformationLength, { K(ProcessHandle), K(ProcessInformationClass), K(ProcessInformationLength), KEND });
@@ -4787,7 +4787,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_NtWow64QueryInformationProcess
 PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_NtWow64QueryInformationProcess64_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define LIBWIN32_NTWOW64QUERYINFORMATIONPROCESS64_DEF { "NtWow64QueryInformationProcess64", (DeeObject *)&libwin32_NtWow64QueryInformationProcess64, MODSYM_FNORMAL, DOC("(ProcessHandle:?X3?Dint?DFile?Ewin32:HANDLE,ProcessInformationClass:?Dint,ProcessInformationLength:?Dint=!64)->?DBytes") },
 #define LIBWIN32_NTWOW64QUERYINFORMATIONPROCESS64_DEF_DOC(doc) { "NtWow64QueryInformationProcess64", (DeeObject *)&libwin32_NtWow64QueryInformationProcess64, MODSYM_FNORMAL, DOC("(ProcessHandle:?X3?Dint?DFile?Ewin32:HANDLE,ProcessInformationClass:?Dint,ProcessInformationLength:?Dint=!64)->?DBytes\n" doc) },
-PRIVATE DEFINE_KWCMETHOD(libwin32_NtWow64QueryInformationProcess64, libwin32_NtWow64QueryInformationProcess64_f);
+PRIVATE DEFINE_KWCMETHOD(libwin32_NtWow64QueryInformationProcess64, &libwin32_NtWow64QueryInformationProcess64_f);
 #ifndef LIBWIN32_KWDS_PROCESSHANDLE_PROCESSINFORMATIONCLASS_PROCESSINFORMATIONLENGTH_DEFINED
 #define LIBWIN32_KWDS_PROCESSHANDLE_PROCESSINFORMATIONCLASS_PROCESSINFORMATIONLENGTH_DEFINED
 PRIVATE DEFINE_KWLIST(libwin32_kwds_ProcessHandle_ProcessInformationClass_ProcessInformationLength, { K(ProcessHandle), K(ProcessInformationClass), K(ProcessInformationLength), KEND });
@@ -4879,7 +4879,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_ReadProcessMemory_f_impl(HANDL
 PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_ReadProcessMemory_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define LIBWIN32_READPROCESSMEMORY_DEF { "ReadProcessMemory", (DeeObject *)&libwin32_ReadProcessMemory, MODSYM_FNORMAL, DOC("(hProcess:?X3?Dint?DFile?Ewin32:HANDLE,lpBaseAddress:?Dint,nSize:?Dint)->?DBytes") },
 #define LIBWIN32_READPROCESSMEMORY_DEF_DOC(doc) { "ReadProcessMemory", (DeeObject *)&libwin32_ReadProcessMemory, MODSYM_FNORMAL, DOC("(hProcess:?X3?Dint?DFile?Ewin32:HANDLE,lpBaseAddress:?Dint,nSize:?Dint)->?DBytes\n" doc) },
-PRIVATE DEFINE_KWCMETHOD(libwin32_ReadProcessMemory, libwin32_ReadProcessMemory_f);
+PRIVATE DEFINE_KWCMETHOD(libwin32_ReadProcessMemory, &libwin32_ReadProcessMemory_f);
 #ifndef LIBWIN32_KWDS_HPROCESS_LPBASEADDRESS_NSIZE_DEFINED
 #define LIBWIN32_KWDS_HPROCESS_LPBASEADDRESS_NSIZE_DEFINED
 PRIVATE DEFINE_KWLIST(libwin32_kwds_hProcess_lpBaseAddress_nSize, { K(hProcess), K(lpBaseAddress), K(nSize), KEND });
@@ -4947,7 +4947,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_NtWow64ReadVirtualMemory64_f_i
 PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_NtWow64ReadVirtualMemory64_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define LIBWIN32_NTWOW64READVIRTUALMEMORY64_DEF { "NtWow64ReadVirtualMemory64", (DeeObject *)&libwin32_NtWow64ReadVirtualMemory64, MODSYM_FNORMAL, DOC("(hProcess:?X3?Dint?DFile?Ewin32:HANDLE,lpBaseAddress:?Dint,nSize:?Dint)->?DBytes") },
 #define LIBWIN32_NTWOW64READVIRTUALMEMORY64_DEF_DOC(doc) { "NtWow64ReadVirtualMemory64", (DeeObject *)&libwin32_NtWow64ReadVirtualMemory64, MODSYM_FNORMAL, DOC("(hProcess:?X3?Dint?DFile?Ewin32:HANDLE,lpBaseAddress:?Dint,nSize:?Dint)->?DBytes\n" doc) },
-PRIVATE DEFINE_KWCMETHOD(libwin32_NtWow64ReadVirtualMemory64, libwin32_NtWow64ReadVirtualMemory64_f);
+PRIVATE DEFINE_KWCMETHOD(libwin32_NtWow64ReadVirtualMemory64, &libwin32_NtWow64ReadVirtualMemory64_f);
 #ifndef LIBWIN32_KWDS_HPROCESS_LPBASEADDRESS_NSIZE_DEFINED
 #define LIBWIN32_KWDS_HPROCESS_LPBASEADDRESS_NSIZE_DEFINED
 PRIVATE DEFINE_KWLIST(libwin32_kwds_hProcess_lpBaseAddress_nSize, { K(hProcess), K(lpBaseAddress), K(nSize), KEND });
@@ -5024,7 +5024,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_WriteProcessMemory_f_impl(HAND
 PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_WriteProcessMemory_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define LIBWIN32_WRITEPROCESSMEMORY_DEF { "WriteProcessMemory", (DeeObject *)&libwin32_WriteProcessMemory, MODSYM_FNORMAL, DOC("(hProcess:?X3?Dint?DFile?Ewin32:HANDLE,lpBaseAddress:?Dint,lpBuffer:?DBytes)->?Dint") },
 #define LIBWIN32_WRITEPROCESSMEMORY_DEF_DOC(doc) { "WriteProcessMemory", (DeeObject *)&libwin32_WriteProcessMemory, MODSYM_FNORMAL, DOC("(hProcess:?X3?Dint?DFile?Ewin32:HANDLE,lpBaseAddress:?Dint,lpBuffer:?DBytes)->?Dint\n" doc) },
-PRIVATE DEFINE_KWCMETHOD(libwin32_WriteProcessMemory, libwin32_WriteProcessMemory_f);
+PRIVATE DEFINE_KWCMETHOD(libwin32_WriteProcessMemory, &libwin32_WriteProcessMemory_f);
 #ifndef LIBWIN32_KWDS_HPROCESS_LPBASEADDRESS_LPBUFFER_DEFINED
 #define LIBWIN32_KWDS_HPROCESS_LPBASEADDRESS_LPBUFFER_DEFINED
 PRIVATE DEFINE_KWLIST(libwin32_kwds_hProcess_lpBaseAddress_lpBuffer, { K(hProcess), K(lpBaseAddress), K(lpBuffer), KEND });
@@ -5088,7 +5088,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_NtWow64WriteVirtualMemory64_f_
 PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_NtWow64WriteVirtualMemory64_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define LIBWIN32_NTWOW64WRITEVIRTUALMEMORY64_DEF { "NtWow64WriteVirtualMemory64", (DeeObject *)&libwin32_NtWow64WriteVirtualMemory64, MODSYM_FNORMAL, DOC("(hProcess:?X3?Dint?DFile?Ewin32:HANDLE,lpBaseAddress:?Dint,lpBuffer:?DBytes)->?Dint") },
 #define LIBWIN32_NTWOW64WRITEVIRTUALMEMORY64_DEF_DOC(doc) { "NtWow64WriteVirtualMemory64", (DeeObject *)&libwin32_NtWow64WriteVirtualMemory64, MODSYM_FNORMAL, DOC("(hProcess:?X3?Dint?DFile?Ewin32:HANDLE,lpBaseAddress:?Dint,lpBuffer:?DBytes)->?Dint\n" doc) },
-PRIVATE DEFINE_KWCMETHOD(libwin32_NtWow64WriteVirtualMemory64, libwin32_NtWow64WriteVirtualMemory64_f);
+PRIVATE DEFINE_KWCMETHOD(libwin32_NtWow64WriteVirtualMemory64, &libwin32_NtWow64WriteVirtualMemory64_f);
 #ifndef LIBWIN32_KWDS_HPROCESS_LPBASEADDRESS_LPBUFFER_DEFINED
 #define LIBWIN32_KWDS_HPROCESS_LPBASEADDRESS_LPBUFFER_DEFINED
 PRIVATE DEFINE_KWLIST(libwin32_kwds_hProcess_lpBaseAddress_lpBuffer, { K(hProcess), K(lpBaseAddress), K(lpBuffer), KEND });
@@ -5160,7 +5160,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_WaitForSingleObject_f_impl(HAN
 PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_WaitForSingleObject_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define LIBWIN32_WAITFORSINGLEOBJECT_DEF { "WaitForSingleObject", (DeeObject *)&libwin32_WaitForSingleObject, MODSYM_FNORMAL, DOC("(hHandle:?X3?Dint?DFile?Ewin32:HANDLE,dwMilliseconds:?Dint=!GINFINITE)->?Dint") },
 #define LIBWIN32_WAITFORSINGLEOBJECT_DEF_DOC(doc) { "WaitForSingleObject", (DeeObject *)&libwin32_WaitForSingleObject, MODSYM_FNORMAL, DOC("(hHandle:?X3?Dint?DFile?Ewin32:HANDLE,dwMilliseconds:?Dint=!GINFINITE)->?Dint\n" doc) },
-PRIVATE DEFINE_KWCMETHOD(libwin32_WaitForSingleObject, libwin32_WaitForSingleObject_f);
+PRIVATE DEFINE_KWCMETHOD(libwin32_WaitForSingleObject, &libwin32_WaitForSingleObject_f);
 #ifndef LIBWIN32_KWDS_HHANDLE_DWMILLISECONDS_DEFINED
 #define LIBWIN32_KWDS_HHANDLE_DWMILLISECONDS_DEFINED
 PRIVATE DEFINE_KWLIST(libwin32_kwds_hHandle_dwMilliseconds, { K(hHandle), K(dwMilliseconds), KEND });
@@ -5216,7 +5216,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_WaitForMultipleObjects_f_impl(
 PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_WaitForMultipleObjects_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define LIBWIN32_WAITFORMULTIPLEOBJECTS_DEF { "WaitForMultipleObjects", (DeeObject *)&libwin32_WaitForMultipleObjects, MODSYM_FNORMAL, DOC("(lpHandles:?S?O,bWaitAll:?Dbool,dwMilliseconds:?Dint=!GINFINITE)->?Dint") },
 #define LIBWIN32_WAITFORMULTIPLEOBJECTS_DEF_DOC(doc) { "WaitForMultipleObjects", (DeeObject *)&libwin32_WaitForMultipleObjects, MODSYM_FNORMAL, DOC("(lpHandles:?S?O,bWaitAll:?Dbool,dwMilliseconds:?Dint=!GINFINITE)->?Dint\n" doc) },
-PRIVATE DEFINE_KWCMETHOD(libwin32_WaitForMultipleObjects, libwin32_WaitForMultipleObjects_f);
+PRIVATE DEFINE_KWCMETHOD(libwin32_WaitForMultipleObjects, &libwin32_WaitForMultipleObjects_f);
 #ifndef LIBWIN32_KWDS_LPHANDLES_BWAITALL_DWMILLISECONDS_DEFINED
 #define LIBWIN32_KWDS_LPHANDLES_BWAITALL_DWMILLISECONDS_DEFINED
 PRIVATE DEFINE_KWLIST(libwin32_kwds_lpHandles_bWaitAll_dwMilliseconds, { K(lpHandles), K(bWaitAll), K(dwMilliseconds), KEND });
@@ -5295,7 +5295,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_SignalObjectAndWait_f_impl(HAN
 PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_SignalObjectAndWait_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define LIBWIN32_SIGNALOBJECTANDWAIT_DEF { "SignalObjectAndWait", (DeeObject *)&libwin32_SignalObjectAndWait, MODSYM_FNORMAL, DOC("(hObjectToSignal:?X3?Dint?DFile?Ewin32:HANDLE,hObjectToWaitOn:?X3?Dint?DFile?Ewin32:HANDLE,dwMilliseconds:?Dint=!GINFINITE)->?Dint") },
 #define LIBWIN32_SIGNALOBJECTANDWAIT_DEF_DOC(doc) { "SignalObjectAndWait", (DeeObject *)&libwin32_SignalObjectAndWait, MODSYM_FNORMAL, DOC("(hObjectToSignal:?X3?Dint?DFile?Ewin32:HANDLE,hObjectToWaitOn:?X3?Dint?DFile?Ewin32:HANDLE,dwMilliseconds:?Dint=!GINFINITE)->?Dint\n" doc) },
-PRIVATE DEFINE_KWCMETHOD(libwin32_SignalObjectAndWait, libwin32_SignalObjectAndWait_f);
+PRIVATE DEFINE_KWCMETHOD(libwin32_SignalObjectAndWait, &libwin32_SignalObjectAndWait_f);
 #ifndef LIBWIN32_KWDS_HOBJECTTOSIGNAL_HOBJECTTOWAITON_DWMILLISECONDS_DEFINED
 #define LIBWIN32_KWDS_HOBJECTTOSIGNAL_HOBJECTTOWAITON_DWMILLISECONDS_DEFINED
 PRIVATE DEFINE_KWLIST(libwin32_kwds_hObjectToSignal_hObjectToWaitOn_dwMilliseconds, { K(hObjectToSignal), K(hObjectToWaitOn), K(dwMilliseconds), KEND });
@@ -5355,7 +5355,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_Sleep_f_impl(DWORD dwMilliseco
 PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_Sleep_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define LIBWIN32_SLEEP_DEF { "Sleep", (DeeObject *)&libwin32_Sleep, MODSYM_FNORMAL, DOC("(dwMilliseconds:?Dint)") },
 #define LIBWIN32_SLEEP_DEF_DOC(doc) { "Sleep", (DeeObject *)&libwin32_Sleep, MODSYM_FNORMAL, DOC("(dwMilliseconds:?Dint)\n" doc) },
-PRIVATE DEFINE_KWCMETHOD(libwin32_Sleep, libwin32_Sleep_f);
+PRIVATE DEFINE_KWCMETHOD(libwin32_Sleep, &libwin32_Sleep_f);
 #ifndef LIBWIN32_KWDS_DWMILLISECONDS_DEFINED
 #define LIBWIN32_KWDS_DWMILLISECONDS_DEFINED
 PRIVATE DEFINE_KWLIST(libwin32_kwds_dwMilliseconds, { K(dwMilliseconds), KEND });
@@ -5397,7 +5397,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_CreateEvent_f_impl(DeeObject *
 PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_CreateEvent_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define LIBWIN32_CREATEEVENT_DEF { "CreateEvent", (DeeObject *)&libwin32_CreateEvent, MODSYM_FNORMAL, DOC("(lpEventAttributes?:?GSECURITY_ATTRIBUTES,bManualReset:?Dbool=!f,bInitialState:?Dbool=!f,lpName?:?Dstring)->?GHANDLE") },
 #define LIBWIN32_CREATEEVENT_DEF_DOC(doc) { "CreateEvent", (DeeObject *)&libwin32_CreateEvent, MODSYM_FNORMAL, DOC("(lpEventAttributes?:?GSECURITY_ATTRIBUTES,bManualReset:?Dbool=!f,bInitialState:?Dbool=!f,lpName?:?Dstring)->?GHANDLE\n" doc) },
-PRIVATE DEFINE_KWCMETHOD(libwin32_CreateEvent, libwin32_CreateEvent_f);
+PRIVATE DEFINE_KWCMETHOD(libwin32_CreateEvent, &libwin32_CreateEvent_f);
 #ifndef LIBWIN32_KWDS_LPEVENTATTRIBUTES_BMANUALRESET_BINITIALSTATE_LPNAME_DEFINED
 #define LIBWIN32_KWDS_LPEVENTATTRIBUTES_BMANUALRESET_BINITIALSTATE_LPNAME_DEFINED
 PRIVATE DEFINE_KWLIST(libwin32_kwds_lpEventAttributes_bManualReset_bInitialState_lpName, { K(lpEventAttributes), K(bManualReset), K(bInitialState), K(lpName), KEND });
@@ -5462,7 +5462,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_OpenEvent_f_impl(DWORD dwDesir
 PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_OpenEvent_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define LIBWIN32_OPENEVENT_DEF { "OpenEvent", (DeeObject *)&libwin32_OpenEvent, MODSYM_FNORMAL, DOC("(dwDesiredAccess:?Dint,bInheritHandle:?Dbool,lpName:?Dstring)->?GHANDLE") },
 #define LIBWIN32_OPENEVENT_DEF_DOC(doc) { "OpenEvent", (DeeObject *)&libwin32_OpenEvent, MODSYM_FNORMAL, DOC("(dwDesiredAccess:?Dint,bInheritHandle:?Dbool,lpName:?Dstring)->?GHANDLE\n" doc) },
-PRIVATE DEFINE_KWCMETHOD(libwin32_OpenEvent, libwin32_OpenEvent_f);
+PRIVATE DEFINE_KWCMETHOD(libwin32_OpenEvent, &libwin32_OpenEvent_f);
 #ifndef LIBWIN32_KWDS_DWDESIREDACCESS_BINHERITHANDLE_LPNAME_DEFINED
 #define LIBWIN32_KWDS_DWDESIREDACCESS_BINHERITHANDLE_LPNAME_DEFINED
 PRIVATE DEFINE_KWLIST(libwin32_kwds_dwDesiredAccess_bInheritHandle_lpName, { K(dwDesiredAccess), K(bInheritHandle), K(lpName), KEND });
@@ -5522,7 +5522,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_ResetEvent_f_impl(HANDLE hEven
 PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_ResetEvent_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define LIBWIN32_RESETEVENT_DEF { "ResetEvent", (DeeObject *)&libwin32_ResetEvent, MODSYM_FNORMAL, DOC("(hEvent:?X3?Dint?DFile?Ewin32:HANDLE)") },
 #define LIBWIN32_RESETEVENT_DEF_DOC(doc) { "ResetEvent", (DeeObject *)&libwin32_ResetEvent, MODSYM_FNORMAL, DOC("(hEvent:?X3?Dint?DFile?Ewin32:HANDLE)\n" doc) },
-PRIVATE DEFINE_KWCMETHOD(libwin32_ResetEvent, libwin32_ResetEvent_f);
+PRIVATE DEFINE_KWCMETHOD(libwin32_ResetEvent, &libwin32_ResetEvent_f);
 #ifndef LIBWIN32_KWDS_HEVENT_DEFINED
 #define LIBWIN32_KWDS_HEVENT_DEFINED
 PRIVATE DEFINE_KWLIST(libwin32_kwds_hEvent, { K(hEvent), KEND });
@@ -5573,7 +5573,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_SetEvent_f_impl(HANDLE hEvent)
 PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_SetEvent_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define LIBWIN32_SETEVENT_DEF { "SetEvent", (DeeObject *)&libwin32_SetEvent, MODSYM_FNORMAL, DOC("(hEvent:?X3?Dint?DFile?Ewin32:HANDLE)") },
 #define LIBWIN32_SETEVENT_DEF_DOC(doc) { "SetEvent", (DeeObject *)&libwin32_SetEvent, MODSYM_FNORMAL, DOC("(hEvent:?X3?Dint?DFile?Ewin32:HANDLE)\n" doc) },
-PRIVATE DEFINE_KWCMETHOD(libwin32_SetEvent, libwin32_SetEvent_f);
+PRIVATE DEFINE_KWCMETHOD(libwin32_SetEvent, &libwin32_SetEvent_f);
 #ifndef LIBWIN32_KWDS_HEVENT_DEFINED
 #define LIBWIN32_KWDS_HEVENT_DEFINED
 PRIVATE DEFINE_KWLIST(libwin32_kwds_hEvent, { K(hEvent), KEND });
@@ -5625,7 +5625,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_CreateMutex_f_impl(DeeObject *
 PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_CreateMutex_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define LIBWIN32_CREATEMUTEX_DEF { "CreateMutex", (DeeObject *)&libwin32_CreateMutex, MODSYM_FNORMAL, DOC("(lpMutexAttributes?:?GSECURITY_ATTRIBUTES,bInitialOwner:?Dbool=!f,lpName?:?Dstring)->?GHANDLE") },
 #define LIBWIN32_CREATEMUTEX_DEF_DOC(doc) { "CreateMutex", (DeeObject *)&libwin32_CreateMutex, MODSYM_FNORMAL, DOC("(lpMutexAttributes?:?GSECURITY_ATTRIBUTES,bInitialOwner:?Dbool=!f,lpName?:?Dstring)->?GHANDLE\n" doc) },
-PRIVATE DEFINE_KWCMETHOD(libwin32_CreateMutex, libwin32_CreateMutex_f);
+PRIVATE DEFINE_KWCMETHOD(libwin32_CreateMutex, &libwin32_CreateMutex_f);
 #ifndef LIBWIN32_KWDS_LPMUTEXATTRIBUTES_BINITIALOWNER_LPNAME_DEFINED
 #define LIBWIN32_KWDS_LPMUTEXATTRIBUTES_BINITIALOWNER_LPNAME_DEFINED
 PRIVATE DEFINE_KWLIST(libwin32_kwds_lpMutexAttributes_bInitialOwner_lpName, { K(lpMutexAttributes), K(bInitialOwner), K(lpName), KEND });
@@ -5689,7 +5689,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_OpenMutex_f_impl(DWORD dwDesir
 PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_OpenMutex_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define LIBWIN32_OPENMUTEX_DEF { "OpenMutex", (DeeObject *)&libwin32_OpenMutex, MODSYM_FNORMAL, DOC("(dwDesiredAccess:?Dint,bInheritHandle:?Dbool,lpName:?Dstring)->?GHANDLE") },
 #define LIBWIN32_OPENMUTEX_DEF_DOC(doc) { "OpenMutex", (DeeObject *)&libwin32_OpenMutex, MODSYM_FNORMAL, DOC("(dwDesiredAccess:?Dint,bInheritHandle:?Dbool,lpName:?Dstring)->?GHANDLE\n" doc) },
-PRIVATE DEFINE_KWCMETHOD(libwin32_OpenMutex, libwin32_OpenMutex_f);
+PRIVATE DEFINE_KWCMETHOD(libwin32_OpenMutex, &libwin32_OpenMutex_f);
 #ifndef LIBWIN32_KWDS_DWDESIREDACCESS_BINHERITHANDLE_LPNAME_DEFINED
 #define LIBWIN32_KWDS_DWDESIREDACCESS_BINHERITHANDLE_LPNAME_DEFINED
 PRIVATE DEFINE_KWLIST(libwin32_kwds_dwDesiredAccess_bInheritHandle_lpName, { K(dwDesiredAccess), K(bInheritHandle), K(lpName), KEND });
@@ -5748,7 +5748,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_ReleaseMutex_f_impl(HANDLE hMu
 PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_ReleaseMutex_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define LIBWIN32_RELEASEMUTEX_DEF { "ReleaseMutex", (DeeObject *)&libwin32_ReleaseMutex, MODSYM_FNORMAL, DOC("(hMutex:?X3?Dint?DFile?Ewin32:HANDLE)") },
 #define LIBWIN32_RELEASEMUTEX_DEF_DOC(doc) { "ReleaseMutex", (DeeObject *)&libwin32_ReleaseMutex, MODSYM_FNORMAL, DOC("(hMutex:?X3?Dint?DFile?Ewin32:HANDLE)\n" doc) },
-PRIVATE DEFINE_KWCMETHOD(libwin32_ReleaseMutex, libwin32_ReleaseMutex_f);
+PRIVATE DEFINE_KWCMETHOD(libwin32_ReleaseMutex, &libwin32_ReleaseMutex_f);
 #ifndef LIBWIN32_KWDS_HMUTEX_DEFINED
 #define LIBWIN32_KWDS_HMUTEX_DEFINED
 PRIVATE DEFINE_KWLIST(libwin32_kwds_hMutex, { K(hMutex), KEND });
@@ -5801,7 +5801,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_CreateSemaphore_f_impl(DeeObje
 PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_CreateSemaphore_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define LIBWIN32_CREATESEMAPHORE_DEF { "CreateSemaphore", (DeeObject *)&libwin32_CreateSemaphore, MODSYM_FNORMAL, DOC("(lpSemaphoreAttributes?:?GSECURITY_ATTRIBUTES,lInitialCount:?Dint=!0,lMaximumCount:?Dint=!0x10000,lpName?:?Dstring)->?GHANDLE") },
 #define LIBWIN32_CREATESEMAPHORE_DEF_DOC(doc) { "CreateSemaphore", (DeeObject *)&libwin32_CreateSemaphore, MODSYM_FNORMAL, DOC("(lpSemaphoreAttributes?:?GSECURITY_ATTRIBUTES,lInitialCount:?Dint=!0,lMaximumCount:?Dint=!0x10000,lpName?:?Dstring)->?GHANDLE\n" doc) },
-PRIVATE DEFINE_KWCMETHOD(libwin32_CreateSemaphore, libwin32_CreateSemaphore_f);
+PRIVATE DEFINE_KWCMETHOD(libwin32_CreateSemaphore, &libwin32_CreateSemaphore_f);
 #ifndef LIBWIN32_KWDS_LPSEMAPHOREATTRIBUTES_LINITIALCOUNT_LMAXIMUMCOUNT_LPNAME_DEFINED
 #define LIBWIN32_KWDS_LPSEMAPHOREATTRIBUTES_LINITIALCOUNT_LMAXIMUMCOUNT_LPNAME_DEFINED
 PRIVATE DEFINE_KWLIST(libwin32_kwds_lpSemaphoreAttributes_lInitialCount_lMaximumCount_lpName, { K(lpSemaphoreAttributes), K(lInitialCount), K(lMaximumCount), K(lpName), KEND });
@@ -5869,7 +5869,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_OpenSemaphore_f_impl(DWORD dwD
 PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_OpenSemaphore_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define LIBWIN32_OPENSEMAPHORE_DEF { "OpenSemaphore", (DeeObject *)&libwin32_OpenSemaphore, MODSYM_FNORMAL, DOC("(dwDesiredAccess:?Dint,bInheritHandle:?Dbool,lpName:?Dstring)->?GHANDLE") },
 #define LIBWIN32_OPENSEMAPHORE_DEF_DOC(doc) { "OpenSemaphore", (DeeObject *)&libwin32_OpenSemaphore, MODSYM_FNORMAL, DOC("(dwDesiredAccess:?Dint,bInheritHandle:?Dbool,lpName:?Dstring)->?GHANDLE\n" doc) },
-PRIVATE DEFINE_KWCMETHOD(libwin32_OpenSemaphore, libwin32_OpenSemaphore_f);
+PRIVATE DEFINE_KWCMETHOD(libwin32_OpenSemaphore, &libwin32_OpenSemaphore_f);
 #ifndef LIBWIN32_KWDS_DWDESIREDACCESS_BINHERITHANDLE_LPNAME_DEFINED
 #define LIBWIN32_KWDS_DWDESIREDACCESS_BINHERITHANDLE_LPNAME_DEFINED
 PRIVATE DEFINE_KWLIST(libwin32_kwds_dwDesiredAccess_bInheritHandle_lpName, { K(dwDesiredAccess), K(bInheritHandle), K(lpName), KEND });
@@ -5929,7 +5929,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_ReleaseSemaphore_f_impl(HANDLE
 PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_ReleaseSemaphore_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define LIBWIN32_RELEASESEMAPHORE_DEF { "ReleaseSemaphore", (DeeObject *)&libwin32_ReleaseSemaphore, MODSYM_FNORMAL, DOC("(hSemaphore:?X3?Dint?DFile?Ewin32:HANDLE,lReleaseCount:?Dint=!1)->?Dint") },
 #define LIBWIN32_RELEASESEMAPHORE_DEF_DOC(doc) { "ReleaseSemaphore", (DeeObject *)&libwin32_ReleaseSemaphore, MODSYM_FNORMAL, DOC("(hSemaphore:?X3?Dint?DFile?Ewin32:HANDLE,lReleaseCount:?Dint=!1)->?Dint\n" doc) },
-PRIVATE DEFINE_KWCMETHOD(libwin32_ReleaseSemaphore, libwin32_ReleaseSemaphore_f);
+PRIVATE DEFINE_KWCMETHOD(libwin32_ReleaseSemaphore, &libwin32_ReleaseSemaphore_f);
 #ifndef LIBWIN32_KWDS_HSEMAPHORE_LRELEASECOUNT_DEFINED
 #define LIBWIN32_KWDS_HSEMAPHORE_LRELEASECOUNT_DEFINED
 PRIVATE DEFINE_KWLIST(libwin32_kwds_hSemaphore_lReleaseCount, { K(hSemaphore), K(lReleaseCount), KEND });
@@ -5983,7 +5983,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_CreateWaitableTimer_f_impl(Dee
 PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_CreateWaitableTimer_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define LIBWIN32_CREATEWAITABLETIMER_DEF { "CreateWaitableTimer", (DeeObject *)&libwin32_CreateWaitableTimer, MODSYM_FNORMAL, DOC("(lpTimerAttributes?:?GSECURITY_ATTRIBUTES,bManualReset:?Dbool=!f,lpTimerName?:?Dstring)->?GHANDLE") },
 #define LIBWIN32_CREATEWAITABLETIMER_DEF_DOC(doc) { "CreateWaitableTimer", (DeeObject *)&libwin32_CreateWaitableTimer, MODSYM_FNORMAL, DOC("(lpTimerAttributes?:?GSECURITY_ATTRIBUTES,bManualReset:?Dbool=!f,lpTimerName?:?Dstring)->?GHANDLE\n" doc) },
-PRIVATE DEFINE_KWCMETHOD(libwin32_CreateWaitableTimer, libwin32_CreateWaitableTimer_f);
+PRIVATE DEFINE_KWCMETHOD(libwin32_CreateWaitableTimer, &libwin32_CreateWaitableTimer_f);
 #ifndef LIBWIN32_KWDS_LPTIMERATTRIBUTES_BMANUALRESET_LPTIMERNAME_DEFINED
 #define LIBWIN32_KWDS_LPTIMERATTRIBUTES_BMANUALRESET_LPTIMERNAME_DEFINED
 PRIVATE DEFINE_KWLIST(libwin32_kwds_lpTimerAttributes_bManualReset_lpTimerName, { K(lpTimerAttributes), K(bManualReset), K(lpTimerName), KEND });
@@ -6049,7 +6049,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_OpenWaitableTimer_f_impl(DWORD
 PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_OpenWaitableTimer_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define LIBWIN32_OPENWAITABLETIMER_DEF { "OpenWaitableTimer", (DeeObject *)&libwin32_OpenWaitableTimer, MODSYM_FNORMAL, DOC("(dwDesiredAccess:?Dint,bInheritHandle:?Dbool,lpName:?Dstring)->?GHANDLE") },
 #define LIBWIN32_OPENWAITABLETIMER_DEF_DOC(doc) { "OpenWaitableTimer", (DeeObject *)&libwin32_OpenWaitableTimer, MODSYM_FNORMAL, DOC("(dwDesiredAccess:?Dint,bInheritHandle:?Dbool,lpName:?Dstring)->?GHANDLE\n" doc) },
-PRIVATE DEFINE_KWCMETHOD(libwin32_OpenWaitableTimer, libwin32_OpenWaitableTimer_f);
+PRIVATE DEFINE_KWCMETHOD(libwin32_OpenWaitableTimer, &libwin32_OpenWaitableTimer_f);
 #ifndef LIBWIN32_KWDS_DWDESIREDACCESS_BINHERITHANDLE_LPNAME_DEFINED
 #define LIBWIN32_KWDS_DWDESIREDACCESS_BINHERITHANDLE_LPNAME_DEFINED
 PRIVATE DEFINE_KWLIST(libwin32_kwds_dwDesiredAccess_bInheritHandle_lpName, { K(dwDesiredAccess), K(bInheritHandle), K(lpName), KEND });
@@ -6109,7 +6109,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_CancelWaitableTimer_f_impl(HAN
 PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_CancelWaitableTimer_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define LIBWIN32_CANCELWAITABLETIMER_DEF { "CancelWaitableTimer", (DeeObject *)&libwin32_CancelWaitableTimer, MODSYM_FNORMAL, DOC("(hTimer:?X3?Dint?DFile?Ewin32:HANDLE)") },
 #define LIBWIN32_CANCELWAITABLETIMER_DEF_DOC(doc) { "CancelWaitableTimer", (DeeObject *)&libwin32_CancelWaitableTimer, MODSYM_FNORMAL, DOC("(hTimer:?X3?Dint?DFile?Ewin32:HANDLE)\n" doc) },
-PRIVATE DEFINE_KWCMETHOD(libwin32_CancelWaitableTimer, libwin32_CancelWaitableTimer_f);
+PRIVATE DEFINE_KWCMETHOD(libwin32_CancelWaitableTimer, &libwin32_CancelWaitableTimer_f);
 #ifndef LIBWIN32_KWDS_HTIMER_DEFINED
 #define LIBWIN32_KWDS_HTIMER_DEFINED
 PRIVATE DEFINE_KWLIST(libwin32_kwds_hTimer, { K(hTimer), KEND });

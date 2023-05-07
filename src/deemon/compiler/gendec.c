@@ -65,11 +65,11 @@ DECL_BEGIN
 #define SC_STRING     (&current_dec.dw_sec_defl[DEC_SECTION_STRING])
 
 
-#ifdef DEE_SYSTEM_NOCASE_FS
+#ifdef DEE_SYSTEM_FS_NOCASE
 #define PATH_CASECMP(var, lower_ch) ((var) == (lower_ch) || (var) == ((lower_ch) - 'a' + 'A'))
-#else /* DEE_SYSTEM_NOCASE_FS */
+#else /* DEE_SYSTEM_FS_NOCASE */
 #define PATH_CASECMP(var, lower_ch) ((var) == (lower_ch))
-#endif /* !DEE_SYSTEM_NOCASE_FS */
+#endif /* !DEE_SYSTEM_FS_NOCASE */
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 decgen_imports(DeeModuleObject *__restrict self) {
@@ -135,15 +135,15 @@ import_module_by_name:
 			other_pathpart = other_pathstr;
 			while (self_pathpart < self_pathend &&
 			       other_pathpart < other_pathend) {
-#ifdef DEE_SYSTEM_NOCASE_FS
+#ifdef DEE_SYSTEM_FS_NOCASE
 				/* Do a case-insensitive match on windows. */
 				if (DeeUni_ToLower(*self_pathpart) !=
 				    DeeUni_ToLower(*other_pathpart))
 					break;
-#else /* DEE_SYSTEM_NOCASE_FS */
+#else /* DEE_SYSTEM_FS_NOCASE */
 				if (*self_pathpart != *other_pathpart)
 					break;
-#endif /* !DEE_SYSTEM_NOCASE_FS */
+#endif /* !DEE_SYSTEM_FS_NOCASE */
 				++self_pathpart;
 				++other_pathpart;
 				if (self_pathpart[-1] == DeeSystem_SEP) {

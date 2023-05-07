@@ -78,7 +78,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_readlink_f_impl(DeeObject *file);
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_readlink_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define POSIX_READLINK_DEF { "readlink", (DeeObject *)&posix_readlink, MODSYM_FNORMAL, DOC("(file:?Dstring)->?Dstring") },
 #define POSIX_READLINK_DEF_DOC(doc) { "readlink", (DeeObject *)&posix_readlink, MODSYM_FNORMAL, DOC("(file:?Dstring)->?Dstring\n" doc) },
-PRIVATE DEFINE_KWCMETHOD(posix_readlink, posix_readlink_f);
+PRIVATE DEFINE_KWCMETHOD(posix_readlink, &posix_readlink_f);
 #ifndef POSIX_KWDS_FILE_DEFINED
 #define POSIX_KWDS_FILE_DEFINED
 PRIVATE DEFINE_KWLIST(posix_kwds_file, { K(file), KEND });
@@ -296,7 +296,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_freadlink_f_impl(DeeObject *fd);
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_freadlink_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define POSIX_FREADLINK_DEF { "freadlink", (DeeObject *)&posix_freadlink, MODSYM_FNORMAL, DOC("(fd:?X2?DFile?Dint)->?Dstring") },
 #define POSIX_FREADLINK_DEF_DOC(doc) { "freadlink", (DeeObject *)&posix_freadlink, MODSYM_FNORMAL, DOC("(fd:?X2?DFile?Dint)->?Dstring\n" doc) },
-PRIVATE DEFINE_KWCMETHOD(posix_freadlink, posix_freadlink_f);
+PRIVATE DEFINE_KWCMETHOD(posix_freadlink, &posix_freadlink_f);
 #ifndef POSIX_KWDS_FD_DEFINED
 #define POSIX_KWDS_FD_DEFINED
 PRIVATE DEFINE_KWLIST(posix_kwds_fd, { K(fd), KEND });
@@ -364,7 +364,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_readlinkat_f_impl(DeeObject *dfd,
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_readlinkat_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define POSIX_READLINKAT_DEF { "readlinkat", (DeeObject *)&posix_readlinkat, MODSYM_FNORMAL, DOC("(dfd:?X3?DFile?Dint?Dstring,file:?Dstring,atflags:?Dint=!0)->?Dstring") },
 #define POSIX_READLINKAT_DEF_DOC(doc) { "readlinkat", (DeeObject *)&posix_readlinkat, MODSYM_FNORMAL, DOC("(dfd:?X3?DFile?Dint?Dstring,file:?Dstring,atflags:?Dint=!0)->?Dstring\n" doc) },
-PRIVATE DEFINE_KWCMETHOD(posix_readlinkat, posix_readlinkat_f);
+PRIVATE DEFINE_KWCMETHOD(posix_readlinkat, &posix_readlinkat_f);
 #ifndef POSIX_KWDS_DFD_FILE_ATFLAGS_DEFINED
 #define POSIX_KWDS_DFD_FILE_ATFLAGS_DEFINED
 PRIVATE DEFINE_KWLIST(posix_kwds_dfd_file_atflags, { K(dfd), K(file), K(atflags), KEND });

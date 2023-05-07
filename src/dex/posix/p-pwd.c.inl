@@ -322,7 +322,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_chdir_f_impl(DeeObject *path);
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_chdir_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define POSIX_CHDIR_DEF { "chdir", (DeeObject *)&posix_chdir, MODSYM_FNORMAL, DOC("(path:?Dstring)") },
 #define POSIX_CHDIR_DEF_DOC(doc) { "chdir", (DeeObject *)&posix_chdir, MODSYM_FNORMAL, DOC("(path:?Dstring)\n" doc) },
-PRIVATE DEFINE_KWCMETHOD(posix_chdir, posix_chdir_f);
+PRIVATE DEFINE_KWCMETHOD(posix_chdir, &posix_chdir_f);
 #ifndef POSIX_KWDS_PATH_DEFINED
 #define POSIX_KWDS_PATH_DEFINED
 PRIVATE DEFINE_KWLIST(posix_kwds_path, { K(path), KEND });
@@ -443,7 +443,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_fchdir_f_impl(DeeObject *fd);
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_fchdir_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define POSIX_FCHDIR_DEF { "fchdir", (DeeObject *)&posix_fchdir, MODSYM_FNORMAL, DOC("(fd:?X2?DFile?Dint)") },
 #define POSIX_FCHDIR_DEF_DOC(doc) { "fchdir", (DeeObject *)&posix_fchdir, MODSYM_FNORMAL, DOC("(fd:?X2?DFile?Dint)\n" doc) },
-PRIVATE DEFINE_KWCMETHOD(posix_fchdir, posix_fchdir_f);
+PRIVATE DEFINE_KWCMETHOD(posix_fchdir, &posix_fchdir_f);
 #ifndef POSIX_KWDS_FD_DEFINED
 #define POSIX_KWDS_FD_DEFINED
 PRIVATE DEFINE_KWLIST(posix_kwds_fd, { K(fd), KEND });
@@ -513,7 +513,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_fchdirat_f_impl(DeeObject *dfd, D
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_fchdirat_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define POSIX_FCHDIRAT_DEF { "fchdirat", (DeeObject *)&posix_fchdirat, MODSYM_FNORMAL, DOC("(dfd:?X3?DFile?Dint?Dstring,path:?Dstring,atflags:?Dint=!0)") },
 #define POSIX_FCHDIRAT_DEF_DOC(doc) { "fchdirat", (DeeObject *)&posix_fchdirat, MODSYM_FNORMAL, DOC("(dfd:?X3?DFile?Dint?Dstring,path:?Dstring,atflags:?Dint=!0)\n" doc) },
-PRIVATE DEFINE_KWCMETHOD(posix_fchdirat, posix_fchdirat_f);
+PRIVATE DEFINE_KWCMETHOD(posix_fchdirat, &posix_fchdirat_f);
 #ifndef POSIX_KWDS_DFD_PATH_ATFLAGS_DEFINED
 #define POSIX_KWDS_DFD_PATH_ATFLAGS_DEFINED
 PRIVATE DEFINE_KWLIST(posix_kwds_dfd_path_atflags, { K(dfd), K(path), K(atflags), KEND });

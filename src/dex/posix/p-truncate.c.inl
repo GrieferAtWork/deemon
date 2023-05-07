@@ -58,7 +58,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_truncate_f_impl(dwchar_t const *f
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_truncate_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define POSIX_TRUNCATE_DEF { "truncate", (DeeObject *)&posix_truncate, MODSYM_FNORMAL, DOC("(filename:?Dstring,len:?Dint)") },
 #define POSIX_TRUNCATE_DEF_DOC(doc) { "truncate", (DeeObject *)&posix_truncate, MODSYM_FNORMAL, DOC("(filename:?Dstring,len:?Dint)\n" doc) },
-PRIVATE DEFINE_KWCMETHOD(posix_truncate, posix_truncate_f);
+PRIVATE DEFINE_KWCMETHOD(posix_truncate, &posix_truncate_f);
 #ifndef POSIX_KWDS_FILENAME_LEN_DEFINED
 #define POSIX_KWDS_FILENAME_LEN_DEFINED
 PRIVATE DEFINE_KWLIST(posix_kwds_filename_len, { K(filename), K(len), KEND });
@@ -88,7 +88,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_truncate_f_impl(dwchar_t const *f
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_truncate_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define POSIX_TRUNCATE_DEF { "truncate", (DeeObject *)&posix_truncate, MODSYM_FNORMAL, DOC("(filename:?Dstring,len:?Dint)") },
 #define POSIX_TRUNCATE_DEF_DOC(doc) { "truncate", (DeeObject *)&posix_truncate, MODSYM_FNORMAL, DOC("(filename:?Dstring,len:?Dint)\n" doc) },
-PRIVATE DEFINE_KWCMETHOD(posix_truncate, posix_truncate_f);
+PRIVATE DEFINE_KWCMETHOD(posix_truncate, &posix_truncate_f);
 #ifndef POSIX_KWDS_FILENAME_LEN_DEFINED
 #define POSIX_KWDS_FILENAME_LEN_DEFINED
 PRIVATE DEFINE_KWLIST(posix_kwds_filename_len, { K(filename), K(len), KEND });
@@ -119,7 +119,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_truncate_f_impl(/*utf-8*/ char co
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_truncate_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define POSIX_TRUNCATE_DEF { "truncate", (DeeObject *)&posix_truncate, MODSYM_FNORMAL, DOC("(filename:?Dstring,len:?Dint)") },
 #define POSIX_TRUNCATE_DEF_DOC(doc) { "truncate", (DeeObject *)&posix_truncate, MODSYM_FNORMAL, DOC("(filename:?Dstring,len:?Dint)\n" doc) },
-PRIVATE DEFINE_KWCMETHOD(posix_truncate, posix_truncate_f);
+PRIVATE DEFINE_KWCMETHOD(posix_truncate, &posix_truncate_f);
 #ifndef POSIX_KWDS_FILENAME_LEN_DEFINED
 #define POSIX_KWDS_FILENAME_LEN_DEFINED
 PRIVATE DEFINE_KWLIST(posix_kwds_filename_len, { K(filename), K(len), KEND });
@@ -150,7 +150,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_truncate_f_impl(/*utf-8*/ char co
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_truncate_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define POSIX_TRUNCATE_DEF { "truncate", (DeeObject *)&posix_truncate, MODSYM_FNORMAL, DOC("(filename:?Dstring,len:?Dint)") },
 #define POSIX_TRUNCATE_DEF_DOC(doc) { "truncate", (DeeObject *)&posix_truncate, MODSYM_FNORMAL, DOC("(filename:?Dstring,len:?Dint)\n" doc) },
-PRIVATE DEFINE_KWCMETHOD(posix_truncate, posix_truncate_f);
+PRIVATE DEFINE_KWCMETHOD(posix_truncate, &posix_truncate_f);
 #ifndef POSIX_KWDS_FILENAME_LEN_DEFINED
 #define POSIX_KWDS_FILENAME_LEN_DEFINED
 PRIVATE DEFINE_KWLIST(posix_kwds_filename_len, { K(filename), K(len), KEND });
@@ -258,7 +258,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_ftruncate_f_impl(int fd, int64_t 
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_ftruncate_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define POSIX_FTRUNCATE_DEF { "ftruncate", (DeeObject *)&posix_ftruncate, MODSYM_FNORMAL, DOC("(fd:?X2?Dint?DFile,len:?Dint)") },
 #define POSIX_FTRUNCATE_DEF_DOC(doc) { "ftruncate", (DeeObject *)&posix_ftruncate, MODSYM_FNORMAL, DOC("(fd:?X2?Dint?DFile,len:?Dint)\n" doc) },
-PRIVATE DEFINE_KWCMETHOD(posix_ftruncate, posix_ftruncate_f);
+PRIVATE DEFINE_KWCMETHOD(posix_ftruncate, &posix_ftruncate_f);
 #ifndef POSIX_KWDS_FD_LEN_DEFINED
 #define POSIX_KWDS_FD_LEN_DEFINED
 PRIVATE DEFINE_KWLIST(posix_kwds_fd_len, { K(fd), K(len), KEND });
@@ -285,7 +285,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_ftruncate_f_impl(int fd, int32_t 
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_ftruncate_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define POSIX_FTRUNCATE_DEF { "ftruncate", (DeeObject *)&posix_ftruncate, MODSYM_FNORMAL, DOC("(fd:?X2?Dint?DFile,len:?Dint)") },
 #define POSIX_FTRUNCATE_DEF_DOC(doc) { "ftruncate", (DeeObject *)&posix_ftruncate, MODSYM_FNORMAL, DOC("(fd:?X2?Dint?DFile,len:?Dint)\n" doc) },
-PRIVATE DEFINE_KWCMETHOD(posix_ftruncate, posix_ftruncate_f);
+PRIVATE DEFINE_KWCMETHOD(posix_ftruncate, &posix_ftruncate_f);
 #ifndef POSIX_KWDS_FD_LEN_DEFINED
 #define POSIX_KWDS_FD_LEN_DEFINED
 PRIVATE DEFINE_KWLIST(posix_kwds_fd_len, { K(fd), K(len), KEND });

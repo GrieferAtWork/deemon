@@ -108,13 +108,13 @@ INTDEF struct module_symbol empty_module_buckets[];
 #define ISSEP DeeSystem_IsSep
 #define ISABS DeeSystem_IsAbs
 
-#ifdef DEE_SYSTEM_NOCASE_FS
+#ifdef DEE_SYSTEM_FS_NOCASE
 #ifndef CONFIG_HAVE_memcasecmp
 #define CONFIG_HAVE_memcasecmp
 #define memcasecmp dee_memcasecmp
 DeeSystem_DEFINE_memcasecmp(dee_memcasecmp)
 #endif /* !CONFIG_HAVE_memcasecmp */
-#endif /* DEE_SYSTEM_NOCASE_FS */
+#endif /* DEE_SYSTEM_FS_NOCASE */
 
 #ifndef CONFIG_HAVE_memrchr
 #define CONFIG_HAVE_memrchr
@@ -123,7 +123,7 @@ DeeSystem_DEFINE_memrchr(dee_memrchr)
 #endif /* !CONFIG_HAVE_memrchr */
 
 
-#ifdef DEE_SYSTEM_NOCASE_FS
+#ifdef DEE_SYSTEM_FS_NOCASE
 #define fs_memcmp                        memcasecmp
 #define fs_bcmp                          memcasecmp
 #define fs_hashobj(ob)                   DeeString_HashCase((DeeObject *)Dee_REQUIRES_OBJECT(ob))
@@ -137,7 +137,7 @@ DeeSystem_DEFINE_memrchr(dee_memrchr)
 #define fs_hashmodpath(mod)              DeeString_HashCase((DeeObject *)(mod)->mo_path)
 #define fs_hashmodpath_equals(mod, hash) 1
 #endif /* !CONFIG_HOST_WINDOWS */
-#else /* DEE_SYSTEM_NOCASE_FS */
+#else /* DEE_SYSTEM_FS_NOCASE */
 #define fs_memcmp                        memcmp
 #define fs_bcmp                          bcmp
 #define fs_hashobj(ob)                   DeeString_Hash((DeeObject *)Dee_REQUIRES_OBJECT(ob))
@@ -146,7 +146,7 @@ DeeSystem_DEFINE_memrchr(dee_memrchr)
 #define fs_hashmodpath(mod)              DeeString_HASH((DeeObject *)(mod)->mo_path)
 #define fs_hashmodname_equals(mod, hash) (DeeString_HASH((mod)->mo_name) == (hash))
 #define fs_hashmodpath_equals(mod, hash) (DeeString_HASH((mod)->mo_path) == (hash))
-#endif /* !DEE_SYSTEM_NOCASE_FS */
+#endif /* !DEE_SYSTEM_FS_NOCASE */
 
 #define DeeString_FS_EQUALS_STR(lhs, rhs)            \
 	(DeeString_SIZE(lhs) == DeeString_SIZE(rhs) &&   \

@@ -48,6 +48,9 @@
 /**/
 #include "p-pwd.c.inl" /* This one has to come after "p-environ.c.inl" */
 
+/**/
+#include "p-path.c.inl" /* This one has to come after "p-pwd.c.inl" */
+
 /* Include p-ondemand.c.inl last, since it defined functions on-demand */
 #include "p-ondemand.c.inl"
 
@@ -1292,6 +1295,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL pst_ctor(void) {
 #endif /* POSIX_STUBS_TOTLEN == 0 */
 
 
+/* TODO: GET RID OF THIS DEPENDENCY! */
 PRIVATE char const *import_table[] = {
 	/* NOTE: Indices in this table must match those used by `*_MODULE' macros! */
 	"fs", /* #define FS_MODULE   DEX.d_imports[0] */
@@ -1994,7 +1998,7 @@ PRIVATE struct dex_symbol symbols[] = {
 	D(POSIX_ATEXIT_DEF_DOC("Register a callback to-be invoked before ?Gexit (Same as :AppExit.atexit)"))
 	D(POSIX_EXIT_DEF_DOC("Terminate execution of deemon after invoking ?Gatexit callbacks\n"
 	                     "Termination is done using the C $exit or $_Exit functions, if available. However if these "
-	                     "functions are not provided by the host, an :AppExit error is thrown instead\n"
+	                     /**/ "functions are not provided by the host, an :AppExit error is thrown instead\n"
 	                     "When no @exitcode is given, the host's default default value of ?GEXIT_FAILURE, or $1 is used\n"
 	                     "This function never returns normally"))
 	D(POSIX__EXIT_DEF_DOC("Terminate execution of deemon without invoking ?Gatexit callbacks (s.a. ?Gexit)"))
@@ -2026,6 +2030,97 @@ PRIVATE struct dex_symbol symbols[] = {
 	                             /**/ "associated with a given @errnum (which defaults to ?Gerrno), "
 	                             /**/ "return the name (e.g. $\"ENOENT\") of the error as a string\n"
 	                             "If the given error number is not recognized, return ?N instead"))
+
+	/* Path utilities */
+	D(POSIX_HEADOF_DEF_DOC("@return The head of a path, that is the directory without the filename\n"
+	                       "${"
+	                       /**/ "import headof from posix;\n"
+	                       /**/ "print headof(\"bar.txt\");        /* \"\" */\n"
+	                       /**/ "print headof(\"/foo/bar.txt\");   /* \"/foo/\" */\n"
+	                       /**/ "print headof(\"C:/foo/bar.txt\"); /* \"C:/foo/\" */"
+	                       "}"))
+	D(POSIX_TAILOF_DEF_DOC("@return The tail of a path, that is the filename + extension\n"
+	                       "${"
+	                       /**/ "import tailof from posix;\n"
+	                       /**/ "print tailof(\"bar.txt\");        /* \"bar.txt\" */\n"
+	                       /**/ "print tailof(\"/foo/bar.txt\");   /* \"bar.txt\" */\n"
+	                       /**/ "print tailof(\"C:/foo/bar.txt\"); /* \"bar.txt\" */"
+	                       "}"))
+	D(POSIX_DRIVEOF_DEF_DOC("@return The drive portion of an absolute path on windows, or $\"/\" on other platforms\n"
+	                        "${"
+	                        /**/ "import driveof from posix;\n"
+	                        /**/ "print driveof(\"bar.txt\");        /* \"\" or \"/\" */\n"
+	                        /**/ "print driveof(\"/foo/bar.txt\");   /* \"\" or \"/\" */\n"
+	                        /**/ "print driveof(\"C:/foo/bar.txt\"); /* \"C:/\" or \"/\" */"
+	                        "}"))
+	D(POSIX_INCTRAIL_DEF_DOC("@return The path with a trailing slash included\n"
+	                         "${"
+	                         /**/ "import inctrail from posix;\n"
+	                         /**/ "print inctrail(\"/\");         /* \"/\" */\n"
+	                         /**/ "print inctrail(\"/foo/bar/\"); /* \"/foo/bar/\" */\n"
+	                         /**/ "print inctrail(\"/foo/bar\");  /* \"/foo/bar/\" */"
+	                         "}"))
+	D(POSIX_EXCTRAIL_DEF_DOC("@return The path with a trailing slash excluded\n"
+	                         "${"
+	                         /**/ "import exctrail from posix;\n"
+	                         /**/ "print exctrail(\"/foo/bar/\"); /* \"/foo/bar\" */\n"
+	                         /**/ "print exctrail(\"/foo/bar\");  /* \"/foo/bar\" */"
+	                         "}"))
+	D(POSIX_ABSPATH_DEF_DOC("Makes @path an absolute path, using @pwd as the base point for the relative disposition\n"
+	                        "If @path was already relative to begin with, it is forced to become relative "
+	                        /**/ "as the result of calling ?Grelpath with it and the return value of ?Ggetcwd\n"
+	                        "If @pwd is relative, if will be forced to become absolute as the result of calling "
+	                        /**/ "?Gabspath with @pwd as first and the return value of ?Ggetcwd as second argument\n"
+	                        "${"
+	                        /**/ "import abspath from posix;\n"
+	                        /**/ "print abspath(\"../you/Downloads\", \"/home/me\"); /* \"/home/you/Downloads\" */"
+	                        "}"))
+	D(POSIX_RELPATH_DEF_DOC("Creates a relative path leading to @path and originating from @pwd\n"
+	                        "If @path was already relative to begin with, it is forced to become absolute "
+	                        /**/ "as the result of calling ?Gabspath with it and the return value of ?Ggetcwd\n"
+	                        "If @pwd is relative, if will be forced into an absolute path as the "
+	                        /**/ "result of calling ?Gabspath with it and the return value of ?Ggetcwd\n"
+	                        "When running on a windows host, in the event that @path is located on a "
+	                        /**/ "different ?Gdriveof than @pwd, @path will be re-returned as is"))
+	D(POSIX_ISABS_DEF_DOC("Returns ?t if the given @path is considered to be absolute"))
+	D(POSIX_ISREL_DEF_DOC("Returns the inverse of ?Gisabs"))
+	D(POSIX_ISSEP_DEF_DOC("Returns ?t if the given @str is recognized as a path "
+	                      /**/ "separator (Usually $\"/\" and/or $\"\\\")\n"
+	                      "The host's primary and secondary separator "
+	                      /**/ "values can be read from ?GSEP and ?GALTSEP"))
+	D(POSIX_JOINPATH_DEF_DOC("Joins all @paths passed through varargs to generate a full path. "
+	                         "For this purpose, all path elements are joined with ?GSEP, "
+	                         "after removal of additional slashes and spaces surrounding the given @paths"))
+	D({ "SEP", (DeeObject *)&posix_SEP, MODSYM_FNORMAL,
+	    DOC("->?Dstring\n"
+	        "The host's primary path separator. On windows that is "
+	        /**/ "$\"\\\" while on most other hosts it is $\"/\"\n"
+	        "If supported by the host, an alternative separator can be read from ?GALTSEP\n"
+	        "Additionally, a string can be testing for being a separator by calling ?Gissep") },)
+	D({ "ALTSEP", (DeeObject *)&posix_ALTSEP, MODSYM_FNORMAL,
+	    DOC("->?Dstring\n"
+	        "The alternative path separator or an alias for ?GSEP "
+	        /**/ "if the host only supports a single type of separator") },)
+	D({ "DELIM", (DeeObject *)&posix_DELIM, MODSYM_FNORMAL,
+	    DOC("->?Dstring\n"
+	        "A string used to delimit individual paths in path-listings often "
+	        /**/ "found in environment variables, most notably ${environ[\"PATH\"]}") },)
+	D({ "DEV_NULL", (DeeObject *)&posix_DEV_NULL, MODSYM_FNORMAL,
+	    DOC("->?Dstring\n"
+	        "A special filename accepted by ?Gopen to return a data sink") },)
+	D({ "DEV_TTY", (DeeObject *)&posix_DEV_TTY, MODSYM_FNORMAL,
+	    DOC("->?Dstring\n"
+	        "A special filename accepted by ?Gopen to return a "
+	        /**/ "handle to the calling process's controlling terminal") },)
+	D({ "DEV_STDIN", (DeeObject *)&posix_DEV_STDIN, MODSYM_FNORMAL,
+	    DOC("->?Dstring\n"
+	        "A special filename accepted by ?Gopen to return a handle to ?Astdin?DFile") },)
+	D({ "DEV_STDOUT", (DeeObject *)&posix_DEV_STDOUT, MODSYM_FNORMAL,
+	    DOC("->?Dstring\n"
+	        "A special filename accepted by ?Gopen to return a handle to ?Astdout?DFile") },)
+	D({ "DEV_STDERR", (DeeObject *)&posix_DEV_STDERR, MODSYM_FNORMAL,
+	    DOC("->?Dstring\n"
+	        "A special filename accepted by ?Gopen to return a handle to ?Astderr?DFile") },)
 
 	{ NULL }
 };

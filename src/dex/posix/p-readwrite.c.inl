@@ -344,7 +344,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_lseek_f_impl(int fd, int64_t offs
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_lseek_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define POSIX_LSEEK_DEF { "lseek", (DeeObject *)&posix_lseek, MODSYM_FNORMAL, DOC("(fd:?X2?Dint?DFile,offset:?Dint,whence:?Dint)->?Dint") },
 #define POSIX_LSEEK_DEF_DOC(doc) { "lseek", (DeeObject *)&posix_lseek, MODSYM_FNORMAL, DOC("(fd:?X2?Dint?DFile,offset:?Dint,whence:?Dint)->?Dint\n" doc) },
-PRIVATE DEFINE_KWCMETHOD(posix_lseek, posix_lseek_f);
+PRIVATE DEFINE_KWCMETHOD(posix_lseek, &posix_lseek_f);
 #ifndef POSIX_KWDS_FD_OFFSET_WHENCE_DEFINED
 #define POSIX_KWDS_FD_OFFSET_WHENCE_DEFINED
 PRIVATE DEFINE_KWLIST(posix_kwds_fd_offset_whence, { K(fd), K(offset), K(whence), KEND });
@@ -372,7 +372,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_lseek_f_impl(int fd, int32_t offs
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_lseek_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define POSIX_LSEEK_DEF { "lseek", (DeeObject *)&posix_lseek, MODSYM_FNORMAL, DOC("(fd:?X2?Dint?DFile,offset:?Dint,whence:?Dint)->?Dint") },
 #define POSIX_LSEEK_DEF_DOC(doc) { "lseek", (DeeObject *)&posix_lseek, MODSYM_FNORMAL, DOC("(fd:?X2?Dint?DFile,offset:?Dint,whence:?Dint)->?Dint\n" doc) },
-PRIVATE DEFINE_KWCMETHOD(posix_lseek, posix_lseek_f);
+PRIVATE DEFINE_KWCMETHOD(posix_lseek, &posix_lseek_f);
 #ifndef POSIX_KWDS_FD_OFFSET_WHENCE_DEFINED
 #define POSIX_KWDS_FD_OFFSET_WHENCE_DEFINED
 PRIVATE DEFINE_KWLIST(posix_kwds_fd_offset_whence, { K(fd), K(offset), K(whence), KEND });
@@ -679,7 +679,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_write_f_impl(int fd, DeeObject *b
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_write_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define POSIX_WRITE_DEF { "write", (DeeObject *)&posix_write, MODSYM_FNORMAL, DOC("(fd:?X2?Dint?DFile,buf:?DBytes,count:?Dint=!-1)->?Dint") },
 #define POSIX_WRITE_DEF_DOC(doc) { "write", (DeeObject *)&posix_write, MODSYM_FNORMAL, DOC("(fd:?X2?Dint?DFile,buf:?DBytes,count:?Dint=!-1)->?Dint\n" doc) },
-PRIVATE DEFINE_KWCMETHOD(posix_write, posix_write_f);
+PRIVATE DEFINE_KWCMETHOD(posix_write, &posix_write_f);
 #ifndef POSIX_KWDS_FD_BUF_COUNT_DEFINED
 #define POSIX_KWDS_FD_BUF_COUNT_DEFINED
 PRIVATE DEFINE_KWLIST(posix_kwds_fd_buf_count, { K(fd), K(buf), K(count), KEND });

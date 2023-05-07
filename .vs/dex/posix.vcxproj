@@ -47,6 +47,7 @@
 		<ClInclude Include="..\..\src\dex\posix\p-ondemand.c.inl" />
 		<ClInclude Include="..\..\src\dex\posix\p-open.c.inl" />
 		<ClInclude Include="..\..\src\dex\posix\p-opendir.c.inl" />
+		<ClInclude Include="..\..\src\dex\posix\p-path.c.inl" />
 		<ClInclude Include="..\..\src\dex\posix\p-pipe.c.inl" />
 		<ClInclude Include="..\..\src\dex\posix\p-pwd.c.inl" />
 		<ClInclude Include="..\..\src\dex\posix\p-readlink.c.inl" />

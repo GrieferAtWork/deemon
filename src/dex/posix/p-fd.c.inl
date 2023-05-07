@@ -148,7 +148,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_isatty_f_impl(int fd);
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_isatty_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define POSIX_ISATTY_DEF { "isatty", (DeeObject *)&posix_isatty, MODSYM_FNORMAL, DOC("(fd:?X2?Dint?DFile)->?Dbool") },
 #define POSIX_ISATTY_DEF_DOC(doc) { "isatty", (DeeObject *)&posix_isatty, MODSYM_FNORMAL, DOC("(fd:?X2?Dint?DFile)->?Dbool\n" doc) },
-PRIVATE DEFINE_KWCMETHOD(posix_isatty, posix_isatty_f);
+PRIVATE DEFINE_KWCMETHOD(posix_isatty, &posix_isatty_f);
 #ifndef POSIX_KWDS_FD_DEFINED
 #define POSIX_KWDS_FD_DEFINED
 PRIVATE DEFINE_KWLIST(posix_kwds_fd, { K(fd), KEND });
@@ -216,7 +216,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_umask_f_impl(int mask);
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_umask_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define POSIX_UMASK_DEF { "umask", (DeeObject *)&posix_umask, MODSYM_FNORMAL, DOC("(mask:?Dint)->?Dint") },
 #define POSIX_UMASK_DEF_DOC(doc) { "umask", (DeeObject *)&posix_umask, MODSYM_FNORMAL, DOC("(mask:?Dint)->?Dint\n" doc) },
-PRIVATE DEFINE_KWCMETHOD(posix_umask, posix_umask_f);
+PRIVATE DEFINE_KWCMETHOD(posix_umask, &posix_umask_f);
 #ifndef POSIX_KWDS_MASK_DEFINED
 #define POSIX_KWDS_MASK_DEFINED
 PRIVATE DEFINE_KWLIST(posix_kwds_mask, { K(mask), KEND });
@@ -267,7 +267,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_dup_f_impl(int fd);
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_dup_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define POSIX_DUP_DEF { "dup", (DeeObject *)&posix_dup, MODSYM_FNORMAL, DOC("(fd:?X2?Dint?DFile)->?Dint") },
 #define POSIX_DUP_DEF_DOC(doc) { "dup", (DeeObject *)&posix_dup, MODSYM_FNORMAL, DOC("(fd:?X2?Dint?DFile)->?Dint\n" doc) },
-PRIVATE DEFINE_KWCMETHOD(posix_dup, posix_dup_f);
+PRIVATE DEFINE_KWCMETHOD(posix_dup, &posix_dup_f);
 #ifndef POSIX_KWDS_FD_DEFINED
 #define POSIX_KWDS_FD_DEFINED
 PRIVATE DEFINE_KWLIST(posix_kwds_fd, { K(fd), KEND });
@@ -327,7 +327,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_dup2_f_impl(int oldfd, int newfd)
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_dup2_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define POSIX_DUP2_DEF { "dup2", (DeeObject *)&posix_dup2, MODSYM_FNORMAL, DOC("(oldfd:?X2?Dint?DFile,newfd:?X2?Dint?DFile)->?Dint") },
 #define POSIX_DUP2_DEF_DOC(doc) { "dup2", (DeeObject *)&posix_dup2, MODSYM_FNORMAL, DOC("(oldfd:?X2?Dint?DFile,newfd:?X2?Dint?DFile)->?Dint\n" doc) },
-PRIVATE DEFINE_KWCMETHOD(posix_dup2, posix_dup2_f);
+PRIVATE DEFINE_KWCMETHOD(posix_dup2, &posix_dup2_f);
 #ifndef POSIX_KWDS_OLDFD_NEWFD_DEFINED
 #define POSIX_KWDS_OLDFD_NEWFD_DEFINED
 PRIVATE DEFINE_KWLIST(posix_kwds_oldfd_newfd, { K(oldfd), K(newfd), KEND });
@@ -394,7 +394,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_dup3_f_impl(int oldfd, int newfd,
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_dup3_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define POSIX_DUP3_DEF { "dup3", (DeeObject *)&posix_dup3, MODSYM_FNORMAL, DOC("(oldfd:?X2?Dint?DFile,newfd:?X2?Dint?DFile,oflags:?Dint)->?Dint") },
 #define POSIX_DUP3_DEF_DOC(doc) { "dup3", (DeeObject *)&posix_dup3, MODSYM_FNORMAL, DOC("(oldfd:?X2?Dint?DFile,newfd:?X2?Dint?DFile,oflags:?Dint)->?Dint\n" doc) },
-PRIVATE DEFINE_KWCMETHOD(posix_dup3, posix_dup3_f);
+PRIVATE DEFINE_KWCMETHOD(posix_dup3, &posix_dup3_f);
 #ifndef POSIX_KWDS_OLDFD_NEWFD_OFLAGS_DEFINED
 #define POSIX_KWDS_OLDFD_NEWFD_OFLAGS_DEFINED
 PRIVATE DEFINE_KWLIST(posix_kwds_oldfd_newfd_oflags, { K(oldfd), K(newfd), K(oflags), KEND });
@@ -582,7 +582,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_close_f_impl(int fd);
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_close_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define POSIX_CLOSE_DEF { "close", (DeeObject *)&posix_close, MODSYM_FNORMAL, DOC("(fd:?X2?Dint?DFile)") },
 #define POSIX_CLOSE_DEF_DOC(doc) { "close", (DeeObject *)&posix_close, MODSYM_FNORMAL, DOC("(fd:?X2?Dint?DFile)\n" doc) },
-PRIVATE DEFINE_KWCMETHOD(posix_close, posix_close_f);
+PRIVATE DEFINE_KWCMETHOD(posix_close, &posix_close_f);
 #ifndef POSIX_KWDS_FD_DEFINED
 #define POSIX_KWDS_FD_DEFINED
 PRIVATE DEFINE_KWLIST(posix_kwds_fd, { K(fd), KEND });

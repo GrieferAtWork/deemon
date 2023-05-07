@@ -46,7 +46,8 @@ struct Dee_unicode_printer;
 
 #ifdef CONFIG_HOST_WINDOWS
 #define DEE_SYSTEM_PATH_ACCEPTS_BACKSLASH
-#define DEE_SYSTEM_NOCASE_FS
+#define DEE_SYSTEM_FS_NOCASE
+#define DEE_SYSTEM_FS_DRIVES
 #define DeeSystem_DELIM    ';'
 #define DeeSystem_DELIM_S  ";"
 #define DeeSystem_SEP      '\\'
@@ -58,7 +59,7 @@ struct Dee_unicode_printer;
 #undef DEE_SYSTEM_IS_ABS_CHECKS_LEADING_SLASHES
 #elif defined(__CYGWIN__) || defined(__CYGWIN32__)
 /* Cygwin paths also accept r'\' as alias for r'/' */
-#undef DEE_SYSTEM_NOCASE_FS
+#undef DEE_SYSTEM_FS_NOCASE
 #define DEE_SYSTEM_PATH_ACCEPTS_BACKSLASH
 #define DeeSystem_DELIM    ':'
 #define DeeSystem_DELIM_S  ":"
@@ -70,7 +71,7 @@ struct Dee_unicode_printer;
 #define DeeSystem_IsAbs(x) ((x)[0] == '/') /* Absolute paths still require a leading '/'! */
 #define DEE_SYSTEM_IS_ABS_CHECKS_LEADING_SLASHES
 #else /* CONFIG_HOST_WINDOWS */
-#undef DEE_SYSTEM_NOCASE_FS
+#undef DEE_SYSTEM_FS_NOCASE
 #undef DEE_SYSTEM_PATH_ACCEPTS_BACKSLASH
 #define DeeSystem_DELIM    ':'
 #define DeeSystem_DELIM_S  ":"

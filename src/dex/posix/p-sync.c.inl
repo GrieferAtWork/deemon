@@ -94,7 +94,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_fsync_f_impl(int fd);
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_fsync_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define POSIX_FSYNC_DEF { "fsync", (DeeObject *)&posix_fsync, MODSYM_FNORMAL, DOC("(fd:?X2?Dint?DFile)") },
 #define POSIX_FSYNC_DEF_DOC(doc) { "fsync", (DeeObject *)&posix_fsync, MODSYM_FNORMAL, DOC("(fd:?X2?Dint?DFile)\n" doc) },
-PRIVATE DEFINE_KWCMETHOD(posix_fsync, posix_fsync_f);
+PRIVATE DEFINE_KWCMETHOD(posix_fsync, &posix_fsync_f);
 #ifndef POSIX_KWDS_FD_DEFINED
 #define POSIX_KWDS_FD_DEFINED
 PRIVATE DEFINE_KWLIST(posix_kwds_fd, { K(fd), KEND });
@@ -155,7 +155,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_fdatasync_f_impl(int fd);
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_fdatasync_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define POSIX_FDATASYNC_DEF { "fdatasync", (DeeObject *)&posix_fdatasync, MODSYM_FNORMAL, DOC("(fd:?X2?Dint?DFile)") },
 #define POSIX_FDATASYNC_DEF_DOC(doc) { "fdatasync", (DeeObject *)&posix_fdatasync, MODSYM_FNORMAL, DOC("(fd:?X2?Dint?DFile)\n" doc) },
-PRIVATE DEFINE_KWCMETHOD(posix_fdatasync, posix_fdatasync_f);
+PRIVATE DEFINE_KWCMETHOD(posix_fdatasync, &posix_fdatasync_f);
 #ifndef POSIX_KWDS_FD_DEFINED
 #define POSIX_KWDS_FD_DEFINED
 PRIVATE DEFINE_KWLIST(posix_kwds_fd, { K(fd), KEND });

@@ -105,45 +105,17 @@ global final fixunc_np = posix.fixunc_np;
 global final chattr_np = posix.chattr_np;
 #endif /* __WINDOWS__ */
 
-#ifdef __WINDOWS__
-#define _PREFERRED_SLASH(path) ("\\/"["/" in (path)])
-#else /* __WINDOWS__ */
-#define _PREFERRED_SLASH(path) "/"
-#endif /* !__WINDOWS__ */
-
-
-@@@return: The head of a path, that is the directory without the filename
-@@>> import headof from fs;
-@@>> print headof("bar.txt");        /* "" */
-@@>> print headof("/foo/bar.txt");   /* "/foo/" */
-@@>> print headof("C:/foo/bar.txt"); /* "C:/foo/" */
-function headof(path: string): string {
-#ifdef __WINDOWS__
-	local pos = path.rfindany("/\\");
-	if (pos is none)
-		return "";
-#else /* __WINDOWS__ */
-	local pos = path.rfind("/");
-#endif /* !__WINDOWS__ */
-	return path[:pos+1];
-}
-
-
-@@@return: The tail of a path, that is the filename + extension
-@@>> import tailof from fs;
-@@>> print tailof("bar.txt");        /* "bar.txt" */
-@@>> print tailof("/foo/bar.txt");   /* "bar.txt" */
-@@>> print tailof("C:/foo/bar.txt"); /* "bar.txt" */
-function tailof(path: string): string {
-#ifdef __WINDOWS__
-	local pos = path.rfindany("/\\");
-	if (pos is none)
-		return path;
-#else /* __WINDOWS__ */
-	local pos = path.rfind("/");
-#endif /* !__WINDOWS__ */
-	return path[pos+1:];
-}
+global final headof = posix.headof;
+global final tailof = posix.tailof;
+global final driveof = posix.driveof;
+global final inctrail = posix.inctrail;
+global final exctrail = posix.exctrail;
+global final isabs = posix.isabs;
+global final isrel = posix.isrel;
+global final issep = posix.issep;
+global final relpath = posix.relpath;
+global final abspath = posix.abspath;
+global final joinpath = posix.joinpath;
 
 @@@return: The file portion of a path, excluding the file extension
 @@>> import fileof from fs;
@@ -179,158 +151,7 @@ function extof(path: string): string {
 	return result;
 }
 
-@@@return The drive portion of an absolute path on windows, or @"/" on other platforms
-@@>> import driveof from fs;
-@@>> print driveof(\"bar.txt\");        /* "\\" or "/" */
-@@>> print driveof(\"/foo/bar.txt\");   /* "\\" or "/" */
-@@>> print driveof(\"C:/foo/bar.txt\"); /* "C:/" or "/" */
-function driveof(path: string): string {
-#ifdef __WINDOWS__
-	local pos = path.find(":");
-	if (pos == -1)
-		return "\\";
-	++pos;
-	local result = path[:pos];
-	if ("/" in result || "\\" in result)
-		return "\\";
-	/* Include a trailing slash */
-	return result + _PREFERRED_SLASH(path);
-#else /* __WINDOWS__ */
-	return "/";
-#endif /* !__WINDOWS__ */
-}
-
-@@@return The path with a trailing slash included
-@@import inctrail from fs;
-@@print inctrail("");          /* "/"  or "\\" */
-@@print inctrail("/foo/bar/"); /* "/foo/bar/" */
-@@print inctrail("/foo/bar");  /* "/foo/bar/" */
-function inctrail(path: string): string {
-#ifdef __WINDOWS__
-	if (!path)
-		return "\\";
-	if (path.last in "/\\")
-		return path;
-	return path + _PREFERRED_SLASH(path);
-#else /* __WINDOWS__ */
-	if (path.endswith("/"))
-		return path;
-	return path + "/";
-#endif /* !__WINDOWS__ */
-}
-
-
-@@@return The path with a trailing slash excluded
-@@>> import exctrail from fs;
-@@>> print exctrail("/foo/bar/"); /* "/foo/bar" */
-@@>> print exctrail("/foo/bar");  /* "/foo/bar" */
-function exctrail(path: string): string {
-#ifdef __WINDOWS__
-	if (!path || path.last !in "/\\")
-		return path;
-	return path[:-1];
-#else /* __WINDOWS__ */
-	if (path.endswith("/"))
-		return path[:-1];
-	return path;
-#endif /* !__WINDOWS__ */
-}
-
-#ifdef __WINDOWS__
-#define _ISABS(path) (#(path) >= 2 && (path)[1] == ":")
-#define _ISREL(path) (#(path) < 2 || (path)[1] != ":")
-#define _ISSEP(ch)   ((ch) in "\\/")
-#define _SEP         "\\"
-#define _SEPS        "\\/"
-#else /* __WINDOWS__ */
-#define _ISABS(path) (path).startswith("/")
-#define _ISREL(path) (!(path).startswith("/"))
-#define _ISSEP(ch)   ((ch) == "/")
-#define _SEP         "/"
-#define _SEPS        "/"
-#endif /* !__WINDOWS__ */
-
-
-@@Returns @true if the given @path is considered to be absolute
-function isabs(path: string): bool {
-	return _ISABS(path);
-}
-
-@@Returns the inverse of @isabs
-function isrel(path: string): bool {
-	return _ISREL(path);
-}
-
-@@Returns @true if the given @s is recognized as a path separator (Usually @"/" and/or @"\\")
-@@The host's primary and secondary separator values can be read from @SEP and @ALTSEP
-function issep(s: string): bool {
-	return _ISSEP(s);
-}
-
-
-//TODO:@@@interrupt
-//TODO:@@Creates a relative path leading to @path and originating from @cwd
-//TODO:@@
-//TODO:@@If @path was already relative to begin with, it is forced to become absolute
-//TODO:@@as the result of calling @abspath with it and the return value of @getcwd
-//TODO:@@
-//TODO:@@If @cwd is relative, if will be forced into an absolute path as the
-//TODO:@@result of calling @abspath with it and the return value of @getcwd
-//TODO:@@
-//TODO:@@When running on a windows host, in the event that @path is located
-//TODO:@@on a different @driveof than @cwd, @path will be re-returned as is.
-//TODO:function relpath(path: string, pwd: string = "."): string {
-//TODO:	/* Quick check: Is the given path already relative? */
-//TODO:	if (_ISREL(path)) {
-//TODO:		if (pwd == ".")
-//TODO:			return path;
-//TODO:		path = abspath(path);
-//TODO:	}
-//TODO:	/* If the given `pwd' isn't absolute, make it using the real PWD. */
-//TODO:	if (pwd == ".") {
-//TODO:		pwd = posix.getcwd();
-//TODO:	} else if (_ISREL(pwd)) {
-//TODO:		pwd = abspath(pwd);
-//TODO:	}
-//TODO:	/* TODO */
-//TODO:}
-
-//TODO: abspath
 //TODO: expand
-
-function joinpath(paths...: string): string {
-	File.Writer result;
-	local isFirst = true;
-#ifdef __WINDOWS__
-	local anyContainsFwdSlash = false;
-#endif /* __WINDOWS__ */
-	for (local path: paths) {
-#ifdef __WINDOWS__
-		if (!anyContainsFwdSlash)
-			anyContainsFwdSlash = "/" in path;
-#endif /* __WINDOWS__ */
-		if (isFirst) {
-			path = path.rstrip(_SEPS);
-			if (!path)
-				continue;
-		} else {
-			path = path.strip(_SEPS);
-			if (!path)
-				continue;
-			result << _SEP;
-		}
-		isFirst = false;
-		result << path;
-	}
-	result = result.string;
-	if (!result)
-		result = ".";
-#ifdef __WINDOWS__
-	if (anyContainsFwdSlash)
-		result = result.replace("\\", "/");
-#endif /* __WINDOWS__ */
-	return result;
-}
 
 class dir: Sequence {
 	@@The internal posix-DIR object.

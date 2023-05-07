@@ -74,7 +74,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_system_f_impl(dwchar_t const *com
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_system_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define POSIX_SYSTEM_DEF { "system", (DeeObject *)&posix_system, MODSYM_FNORMAL, DOC("(command:?Dstring)->?Dint") },
 #define POSIX_SYSTEM_DEF_DOC(doc) { "system", (DeeObject *)&posix_system, MODSYM_FNORMAL, DOC("(command:?Dstring)->?Dint\n" doc) },
-PRIVATE DEFINE_KWCMETHOD(posix_system, posix_system_f);
+PRIVATE DEFINE_KWCMETHOD(posix_system, &posix_system_f);
 #ifndef POSIX_KWDS_COMMAND_DEFINED
 #define POSIX_KWDS_COMMAND_DEFINED
 PRIVATE DEFINE_KWLIST(posix_kwds_command, { K(command), KEND });
@@ -102,7 +102,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_system_f_impl(/*utf-8*/ char cons
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_system_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define POSIX_SYSTEM_DEF { "system", (DeeObject *)&posix_system, MODSYM_FNORMAL, DOC("(command:?Dstring)->?Dint") },
 #define POSIX_SYSTEM_DEF_DOC(doc) { "system", (DeeObject *)&posix_system, MODSYM_FNORMAL, DOC("(command:?Dstring)->?Dint\n" doc) },
-PRIVATE DEFINE_KWCMETHOD(posix_system, posix_system_f);
+PRIVATE DEFINE_KWCMETHOD(posix_system, &posix_system_f);
 #ifndef POSIX_KWDS_COMMAND_DEFINED
 #define POSIX_KWDS_COMMAND_DEFINED
 PRIVATE DEFINE_KWLIST(posix_kwds_command, { K(command), KEND });

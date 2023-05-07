@@ -64,7 +64,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_fchownat_f_impl(int dfd, /*utf-8*
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_fchownat_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define POSIX_FCHOWNAT_DEF { "fchownat", (DeeObject *)&posix_fchownat, MODSYM_FNORMAL, DOC("(dfd:?Dint,filename:?Dstring,owner:?X3?Efs:User?Dstring?Dint,group:?X3?Efs:Group?Dstring?Dint,atflags:?Dint)->?Dint") },
 #define POSIX_FCHOWNAT_DEF_DOC(doc) { "fchownat", (DeeObject *)&posix_fchownat, MODSYM_FNORMAL, DOC("(dfd:?Dint,filename:?Dstring,owner:?X3?Efs:User?Dstring?Dint,group:?X3?Efs:Group?Dstring?Dint,atflags:?Dint)->?Dint\n" doc) },
-PRIVATE DEFINE_KWCMETHOD(posix_fchownat, posix_fchownat_f);
+PRIVATE DEFINE_KWCMETHOD(posix_fchownat, &posix_fchownat_f);
 #ifndef POSIX_KWDS_DFD_FILENAME_OWNER_GROUP_ATFLAGS_DEFINED
 #define POSIX_KWDS_DFD_FILENAME_OWNER_GROUP_ATFLAGS_DEFINED
 PRIVATE DEFINE_KWLIST(posix_kwds_dfd_filename_owner_group_atflags, { K(dfd), K(filename), K(owner), K(group), K(atflags), KEND });
@@ -174,7 +174,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_fchmodat_f_impl(int dfd, /*utf-8*
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_fchmodat_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define POSIX_FCHMODAT_DEF { "fchmodat", (DeeObject *)&posix_fchmodat, MODSYM_FNORMAL, DOC("(dfd:?Dint,filename:?Dstring,mode:?Dint,atflags:?Dint)->?Dint") },
 #define POSIX_FCHMODAT_DEF_DOC(doc) { "fchmodat", (DeeObject *)&posix_fchmodat, MODSYM_FNORMAL, DOC("(dfd:?Dint,filename:?Dstring,mode:?Dint,atflags:?Dint)->?Dint\n" doc) },
-PRIVATE DEFINE_KWCMETHOD(posix_fchmodat, posix_fchmodat_f);
+PRIVATE DEFINE_KWCMETHOD(posix_fchmodat, &posix_fchmodat_f);
 #ifndef POSIX_KWDS_DFD_FILENAME_MODE_ATFLAGS_DEFINED
 #define POSIX_KWDS_DFD_FILENAME_MODE_ATFLAGS_DEFINED
 PRIVATE DEFINE_KWLIST(posix_kwds_dfd_filename_mode_atflags, { K(dfd), K(filename), K(mode), K(atflags), KEND });

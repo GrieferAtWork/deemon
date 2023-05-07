@@ -552,10 +552,10 @@ fs_pathrel(DeeObject *__restrict path, DeeObject *pwd) {
 	for (;;) {
 		a = utf8_readchar((char const **)&pth_iter, pth_end);
 		b = utf8_readchar((char const **)&pwd_iter, pwd_end);
-#ifdef DEE_SYSTEM_NOCASE_FS
+#ifdef DEE_SYSTEM_FS_NOCASE
 		a = DeeUni_ToUpper(a);
 		b = DeeUni_ToUpper(b);
-#endif /* DEE_SYSTEM_NOCASE_FS */
+#endif /* DEE_SYSTEM_FS_NOCASE */
 		if (DeeSystem_IsSep(a)) {
 			/* Align differing space in `b' */
 			while (DeeUni_IsSpace(b)) {
@@ -1207,7 +1207,7 @@ done:
 #ifdef CONFIG_UNICODE_PRINTER_MUSTFINI_IF_EMPTY
 			unicode_printer_fini(&printer);
 #endif /* CONFIG_UNICODE_PRINTER_MUSTFINI_IF_EMPTY */
-#ifdef DEE_SYSTEM_NOCASE_FS
+#ifdef DEE_SYSTEM_FS_NOCASE
 			if (options & FS_EXPAND_FCASE) {
 				/* Check for lowercase characters. */
 				iter = begin = DeeString_AsUtf8(path);
@@ -1222,7 +1222,7 @@ done:
 return_upper:
 				return DeeObject_CallAttrString(path, "upper", 0, NULL);
 			}
-#endif /* DEE_SYSTEM_NOCASE_FS */
+#endif /* DEE_SYSTEM_FS_NOCASE */
 			return_reference_(path);
 		}
 		/* Actually print the remainder. */
@@ -1241,7 +1241,7 @@ return_upper:
 		Dee_Decref(path);
 		path = new_path;
 	}
-#ifdef DEE_SYSTEM_NOCASE_FS
+#ifdef DEE_SYSTEM_FS_NOCASE
 	if ((options & FS_EXPAND_FCASE) && path) {
 		DREF DeeObject *result;
 		/* Convert everything to upper-case. */
@@ -1249,7 +1249,7 @@ return_upper:
 		Dee_Decref(path);
 		return result;
 	}
-#endif /* DEE_SYSTEM_NOCASE_FS */
+#endif /* DEE_SYSTEM_FS_NOCASE */
 	return path;
 err:
 	unicode_printer_fini(&printer);

@@ -197,7 +197,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_pipe2_f_impl(int oflags);
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_pipe2_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define POSIX_PIPE2_DEF { "pipe2", (DeeObject *)&posix_pipe2, MODSYM_FNORMAL, DOC("(oflags:?Dint)->?T2?Dint?Dint") },
 #define POSIX_PIPE2_DEF_DOC(doc) { "pipe2", (DeeObject *)&posix_pipe2, MODSYM_FNORMAL, DOC("(oflags:?Dint)->?T2?Dint?Dint\n" doc) },
-PRIVATE DEFINE_KWCMETHOD(posix_pipe2, posix_pipe2_f);
+PRIVATE DEFINE_KWCMETHOD(posix_pipe2, &posix_pipe2_f);
 #ifndef POSIX_KWDS_OFLAGS_DEFINED
 #define POSIX_KWDS_OFLAGS_DEFINED
 PRIVATE DEFINE_KWLIST(posix_kwds_oflags, { K(oflags), KEND });

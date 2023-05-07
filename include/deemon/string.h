@@ -1004,11 +1004,12 @@ DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeString_NewUtf8(/*utf-8*/ char const *__restrict str,
                   size_t length, unsigned int error_mode);
 
-/* Given a string `self' that has previously been allocated as a
- * byte-buffer string (such as `DeeString_NewSized()'), convert
+/* Given a string `self' that has previously been allocated as a byte-buffer
+ * string (such as `DeeString_NewSized()' or `DeeString_NewBuffer()'), convert
  * it into a UTF-8 string, using the byte-buffer data as UTF-8 text.
- * This function _always_ inherits a reference to `self', and will
- * return `NULL' on error. */
+ *
+ * This function _always_ inherits a reference to `self', and will return
+ * `NULL' on error. */
 DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeString_SetUtf8(/*inherit(always)*/ DREF DeeObject *__restrict self,
                   unsigned int error_mode);

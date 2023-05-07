@@ -71,7 +71,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_atexit_f_impl(DeeObject *callback
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_atexit_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define POSIX_ATEXIT_DEF { "atexit", (DeeObject *)&posix_atexit, MODSYM_FNORMAL, DOC("(callback:?DCallable,args:?DTuple=!T0)") },
 #define POSIX_ATEXIT_DEF_DOC(doc) { "atexit", (DeeObject *)&posix_atexit, MODSYM_FNORMAL, DOC("(callback:?DCallable,args:?DTuple=!T0)\n" doc) },
-PRIVATE DEFINE_KWCMETHOD(posix_atexit, posix_atexit_f);
+PRIVATE DEFINE_KWCMETHOD(posix_atexit, &posix_atexit_f);
 #ifndef POSIX_KWDS_CALLBACK_ARGS_DEFINED
 #define POSIX_KWDS_CALLBACK_ARGS_DEFINED
 PRIVATE DEFINE_KWLIST(posix_kwds_callback_args, { K(callback), K(args), KEND });
@@ -110,7 +110,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_exit_f_impl(int exitcode);
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_exit_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define POSIX_EXIT_DEF { "exit", (DeeObject *)&posix_exit, MODSYM_FNORMAL, DOC("(exitcode:?Dint)") },
 #define POSIX_EXIT_DEF_DOC(doc) { "exit", (DeeObject *)&posix_exit, MODSYM_FNORMAL, DOC("(exitcode:?Dint)\n" doc) },
-PRIVATE DEFINE_KWCMETHOD(posix_exit, posix_exit_f);
+PRIVATE DEFINE_KWCMETHOD(posix_exit, &posix_exit_f);
 #ifndef POSIX_KWDS_EXITCODE_DEFINED
 #define POSIX_KWDS_EXITCODE_DEFINED
 PRIVATE DEFINE_KWLIST(posix_kwds_exitcode, { K(exitcode), KEND });
@@ -143,7 +143,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix__Exit_f_impl(int exitcode);
 PRIVATE WUNUSED DREF DeeObject *DCALL posix__Exit_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define POSIX__EXIT_DEF { "_Exit", (DeeObject *)&posix__Exit, MODSYM_FNORMAL, DOC("(exitcode:?Dint)") },
 #define POSIX__EXIT_DEF_DOC(doc) { "_Exit", (DeeObject *)&posix__Exit, MODSYM_FNORMAL, DOC("(exitcode:?Dint)\n" doc) },
-PRIVATE DEFINE_KWCMETHOD(posix__Exit, posix__Exit_f);
+PRIVATE DEFINE_KWCMETHOD(posix__Exit, &posix__Exit_f);
 #ifndef POSIX_KWDS_EXITCODE_DEFINED
 #define POSIX_KWDS_EXITCODE_DEFINED
 PRIVATE DEFINE_KWLIST(posix_kwds_exitcode, { K(exitcode), KEND });
