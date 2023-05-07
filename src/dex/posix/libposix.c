@@ -217,9 +217,9 @@ local ALL_STUBS = {
 	("posix_mkdir_USE_STUB", { "mkdir" }),
 	("posix_mkdirat_USE_STUB", { "mkdirat" }),
 	("posix_fmkdirat_USE_STUB", { "fmkdirat" }),
-	("posix_symlink_USE_STUB", { "symlink" }),
-	("posix_symlinkat_USE_STUB", { "symlinkat" }),
-	("posix_fsymlinkat_USE_STUB", { "fsymlinkat" }),
+	("posix_symlink_USE_STUB", { "symlink", "_symlink" }),
+	("posix_symlinkat_USE_STUB", { "symlinkat", "_symlinkat" }),
+	("posix_fsymlinkat_USE_STUB", { "fsymlinkat", "_fsymlinkat" }),
 	("posix_removeat_USE_STUB", { "removeat" }),
 	("posix_readlink_USE_STUB", { "readlink" }),
 	("posix_freadlink_USE_STUB", { "freadlink" }),
@@ -546,8 +546,8 @@ print("#endif /" "* POSIX_STUBS_TOTLEN == 0 *" "/");
 #define str_posix_frename_USE_STUB /* nothing */
 #endif /* !posix_frename_USE_STUB */
 #ifdef posix_fsymlinkat_USE_STUB
-#define len_posix_fsymlinkat_USE_STUB +11
-#define str_posix_fsymlinkat_USE_STUB 'f', 's', 'y', 'm', 'l', 'i', 'n', 'k', 'a', 't', '\0',
+#define len_posix_fsymlinkat_USE_STUB +23
+#define str_posix_fsymlinkat_USE_STUB 'f', 's', 'y', 'm', 'l', 'i', 'n', 'k', 'a', 't', '\0', '_', 'f', 's', 'y', 'm', 'l', 'i', 'n', 'k', 'a', 't', '\0',
 #else /* posix_fsymlinkat_USE_STUB */
 #define len_posix_fsymlinkat_USE_STUB /* nothing */
 #define str_posix_fsymlinkat_USE_STUB /* nothing */
@@ -938,15 +938,15 @@ print("#endif /" "* POSIX_STUBS_TOTLEN == 0 *" "/");
 #define str_posix_strerrorname_USE_STUB /* nothing */
 #endif /* !posix_strerrorname_USE_STUB */
 #ifdef posix_symlink_USE_STUB
-#define len_posix_symlink_USE_STUB +8
-#define str_posix_symlink_USE_STUB 's', 'y', 'm', 'l', 'i', 'n', 'k', '\0',
+#define len_posix_symlink_USE_STUB +17
+#define str_posix_symlink_USE_STUB 's', 'y', 'm', 'l', 'i', 'n', 'k', '\0', '_', 's', 'y', 'm', 'l', 'i', 'n', 'k', '\0',
 #else /* posix_symlink_USE_STUB */
 #define len_posix_symlink_USE_STUB /* nothing */
 #define str_posix_symlink_USE_STUB /* nothing */
 #endif /* !posix_symlink_USE_STUB */
 #ifdef posix_symlinkat_USE_STUB
-#define len_posix_symlinkat_USE_STUB +10
-#define str_posix_symlinkat_USE_STUB 's', 'y', 'm', 'l', 'i', 'n', 'k', 'a', 't', '\0',
+#define len_posix_symlinkat_USE_STUB +21
+#define str_posix_symlinkat_USE_STUB 's', 'y', 'm', 'l', 'i', 'n', 'k', 'a', 't', '\0', '_', 's', 'y', 'm', 'l', 'i', 'n', 'k', 'a', 't', '\0',
 #else /* posix_symlinkat_USE_STUB */
 #define len_posix_symlinkat_USE_STUB /* nothing */
 #define str_posix_symlinkat_USE_STUB /* nothing */
@@ -1979,6 +1979,9 @@ PRIVATE struct dex_symbol symbols[] = {
 	                           /**/ "/* \"/path/foo/file.txt\" */\n"
 	                           /**/ "File.open(\"/path/to/link/file.txt\");"
 	                           "}"))
+	D(POSIX__SYMLINK_DEF_DOC("Same as ?Gsymlink, but don't perform any OS-specific transformations on @text"))
+	D(POSIX__SYMLINKAT_DEF_DOC("Same as ?Gsymlinkat, but don't perform any OS-specific transformations on @text"))
+	D(POSIX__FSYMLINKAT_DEF_DOC("Same as ?Gfsymlinkat, but don't perform any OS-specific transformations on @text"))
 	D(POSIX_RMDIRAT_DEF_DOC("@interrupt\n"
 	                        "@throw FileNotFound The given @dfd:@path does not exist\n"
 	                        "@throw NoDirectory A part of the given @dfd:@path is not a directory\n"

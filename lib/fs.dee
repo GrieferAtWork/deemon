@@ -95,7 +95,11 @@ global final remove = posix.remove;
 global final rename = posix.rename;
 global final copyfile = posix.copyfile;
 global final link = posix.link;
-global final symlink = posix.symlink;
+function symlink(text: string, path: string, format_target: bool = true) {
+	return format_target
+		? posix.symlink(text, path)
+		: posix._symlink(text, path);
+}
 global final readlink = posix.readlink;
 
 global final headof = posix.headof;
