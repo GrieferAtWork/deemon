@@ -207,28 +207,100 @@ print "/" "**" "/";
 	POSIX_OPEN_O_NOINHERIT_ALIAS_DEF \
 	POSIX_OPEN_O_NDELAY_ALIAS_DEF
 
+
+/* Posix default flags. */
+#ifdef CONFIG_HAVE_O_BINARY
+#define POSIX_OPT_O_BINARY O_BINARY
+#else /* CONFIG_HAVE_O_BINARY */
+#define POSIX_OPT_O_BINARY 0
+#endif /* !CONFIG_HAVE_O_BINARY */
+#ifdef CONFIG_HAVE_O_OBTAIN_DIR
+#define POSIX_OPT_O_OBTAIN_DIR O_OBTAIN_DIR
+#else /* CONFIG_HAVE_O_OBTAIN_DIR */
+#define POSIX_OPT_O_OBTAIN_DIR 0
+#endif /* !CONFIG_HAVE_O_OBTAIN_DIR */
+#ifdef CONFIG_HAVE_O_LARGEFILE
+#define POSIX_OPT_O_LARGEFILE O_LARGEFILE
+#else /* CONFIG_HAVE_O_LARGEFILE */
+#define POSIX_OPT_O_LARGEFILE 0
+#endif /* !CONFIG_HAVE_O_LARGEFILE */
+
 /* Flags that are automatically passed by `open()' (but not by `_open()'). */
 #undef POSIX_OPEN_DEFAULT_FLAGS
-#if defined(CONFIG_HAVE_O_BINARY) && defined(CONFIG_HAVE_O_OBTAIN_DIR)
-#define POSIX_OPEN_DEFAULT_FLAGS (O_BINARY | O_OBTAIN_DIR)
-#elif defined(CONFIG_HAVE_O_BINARY)
-#define POSIX_OPEN_DEFAULT_FLAGS (O_BINARY)
-#elif defined(CONFIG_HAVE_O_OBTAIN_DIR)
-#define POSIX_OPEN_DEFAULT_FLAGS (O_OBTAIN_DIR)
-#endif /* ... */
+#if POSIX_OPT_O_BINARY || POSIX_OPT_O_LARGEFILE || POSIX_OPT_O_OBTAIN_DIR
+#define POSIX_OPEN_DEFAULT_FLAGS (POSIX_OPT_O_BINARY | POSIX_OPT_O_LARGEFILE | POSIX_OPT_O_OBTAIN_DIR)
+#endif /* POSIX_OPT_O_BINARY || POSIX_OPT_O_LARGEFILE || POSIX_OPT_O_OBTAIN_DIR */
 
 /* Flags that are automatically passed by `creat()' (but not by `_creat()'). */
 #undef POSIX_CREAT_DEFAULT_FLAGS
-#if defined(CONFIG_HAVE_O_BINARY)
-#define POSIX_CREAT_DEFAULT_FLAGS (O_BINARY)
-#endif /* CONFIG_HAVE_O_BINARY */
+#if POSIX_OPT_O_BINARY || POSIX_OPT_O_LARGEFILE
+#define POSIX_CREAT_DEFAULT_FLAGS (POSIX_OPT_O_BINARY | POSIX_OPT_O_LARGEFILE)
+#endif /* POSIX_OPT_O_BINARY || POSIX_OPT_O_LARGEFILE */
 
 #undef POSIX_CREAT_OFLAGS
-#if defined(CONFIG_HAVE_O_CREAT) && defined(CONFIG_HAVE_O_TRUNC) && defined(CONFIG_HAVE_O_WRONLY)
-#define POSIX_CREAT_OFLAGS (O_CREAT | O_WRONLY | O_TRUNC)
+#if defined(CONFIG_HAVE_O_CREAT) && defined(CONFIG_HAVE_O_TRUNC) && defined(CONFIG_HAVE_O_RDWR)
+#define POSIX_CREAT_OFLAGS (O_CREAT | O_TRUNC | O_RDWR)
 #elif defined(CONFIG_HAVE_O_CREAT) && defined(CONFIG_HAVE_O_TRUNC) && defined(CONFIG_HAVE_O_WRONLY)
-#define POSIX_CREAT_OFLAGS (O_CREAT | O_RDWR | O_TRUNC)
+#define POSIX_CREAT_OFLAGS (O_CREAT | O_TRUNC | O_WRONLY)
 #endif /* ... */
+
+
+/* Re-link system functions to try and use 64-bit variants (if available) */
+/*[[[deemon
+local functions = {
+	"open",
+	"openat",
+	"creat",
+	"wopen",
+	"wopenat",
+	"wcreat",
+};
+for (local f: functions) {
+	print("#ifdef CONFIG_HAVE_", f, "64");
+	print("#undef CONFIG_HAVE_", f);
+	print("#define CONFIG_HAVE_", f);
+	print("#undef ", f);
+	print("#define ", f, " ", f, "64");
+	print("#endif /" "* CONFIG_HAVE_", f, "64 *" "/");
+}
+]]]*/
+#ifdef CONFIG_HAVE_open64
+#undef CONFIG_HAVE_open
+#define CONFIG_HAVE_open
+#undef open
+#define open open64
+#endif /* CONFIG_HAVE_open64 */
+#ifdef CONFIG_HAVE_openat64
+#undef CONFIG_HAVE_openat
+#define CONFIG_HAVE_openat
+#undef openat
+#define openat openat64
+#endif /* CONFIG_HAVE_openat64 */
+#ifdef CONFIG_HAVE_creat64
+#undef CONFIG_HAVE_creat
+#define CONFIG_HAVE_creat
+#undef creat
+#define creat creat64
+#endif /* CONFIG_HAVE_creat64 */
+#ifdef CONFIG_HAVE_wopen64
+#undef CONFIG_HAVE_wopen
+#define CONFIG_HAVE_wopen
+#undef wopen
+#define wopen wopen64
+#endif /* CONFIG_HAVE_wopen64 */
+#ifdef CONFIG_HAVE_wopenat64
+#undef CONFIG_HAVE_wopenat
+#define CONFIG_HAVE_wopenat
+#undef wopenat
+#define wopenat wopenat64
+#endif /* CONFIG_HAVE_wopenat64 */
+#ifdef CONFIG_HAVE_wcreat64
+#undef CONFIG_HAVE_wcreat
+#define CONFIG_HAVE_wcreat
+#undef wcreat
+#define wcreat wcreat64
+#endif /* CONFIG_HAVE_wcreat64 */
+/*[[[end]]]*/
 
 
 
@@ -238,11 +310,11 @@ print "/" "**" "/";
 #undef posix_open_USE_wopen
 #undef posix_open_USE_open
 #undef posix_open_USE_STUB
-#if (defined(CONFIG_HAVE_wopen) || defined(CONFIG_HAVE_wopen64)) && defined(CONFIG_PREFER_WCHAR_FUNCTIONS)
+#if defined(CONFIG_HAVE_wopen) && defined(CONFIG_PREFER_WCHAR_FUNCTIONS)
 #define posix_open_USE_wopen
-#elif defined(CONFIG_HAVE_open) || defined(CONFIG_HAVE_open64)
+#elif defined(CONFIG_HAVE_open)
 #define posix_open_USE_open
-#elif defined(CONFIG_HAVE_wopen) || defined(CONFIG_HAVE_wopen64)
+#elif defined(CONFIG_HAVE_wopen)
 #define posix_open_USE_wopen
 #else /* ... */
 #define posix_open_USE_STUB
@@ -253,11 +325,11 @@ print "/" "**" "/";
 #undef posix_creat_USE_creat
 #undef posix_creat_USE_open
 #undef posix_creat_USE_STUB
-#if (defined(CONFIG_HAVE_wcreat) || defined(CONFIG_HAVE_wcreat64)) && defined(CONFIG_PREFER_WCHAR_FUNCTIONS)
+#if defined(CONFIG_HAVE_wcreat) && defined(CONFIG_PREFER_WCHAR_FUNCTIONS)
 #define posix_creat_USE_wcreat
-#elif defined(CONFIG_HAVE_creat) || defined(CONFIG_HAVE_creat64)
+#elif defined(CONFIG_HAVE_creat)
 #define posix_creat_USE_creat
-#elif defined(CONFIG_HAVE_wcreat) || defined(CONFIG_HAVE_wcreat64)
+#elif defined(CONFIG_HAVE_wcreat)
 #define posix_creat_USE_wcreat
 #elif !defined(posix_open_USE_STUB) && defined(POSIX_CREAT_OFLAGS)
 #define posix_creat_USE_open
@@ -306,11 +378,7 @@ EINTR_LABEL(again)
 		if unlikely(!wide_filename)
 			goto err;
 		DBG_ALIGNMENT_DISABLE();
-#ifdef CONFIG_HAVE_wopen64
-		result = wopen64(wide_filename, (int)oflags, (int)mode);
-#else /* CONFIG_HAVE_wopen64 */
 		result = wopen(wide_filename, (int)oflags, (int)mode);
-#endif /* !CONFIG_HAVE_wopen64 */
 	}
 #endif /* posix_open_USE_wopen */
 
@@ -321,11 +389,7 @@ EINTR_LABEL(again)
 		if unlikely(!utf8_filename)
 			goto err;
 		DBG_ALIGNMENT_DISABLE();
-#ifdef CONFIG_HAVE_open64
-		result = open64(utf8_filename, (int)oflags, (int)mode);
-#else /* CONFIG_HAVE_open64 */
 		result = open(utf8_filename, (int)oflags, (int)mode);
-#endif /* !CONFIG_HAVE_open64 */
 	}
 #endif /* posix_open_USE_open */
 
@@ -427,11 +491,7 @@ EINTR_LABEL(again)
 		if unlikely(!wide_filename)
 			goto err;
 		DBG_ALIGNMENT_DISABLE();
-#ifdef CONFIG_HAVE_wcreat64
-		result = wcreat64(wide_filename, (int)mode);
-#else  /* CONFIG_HAVE_wcreat64 */
 		result = wcreat(wide_filename, (int)mode);
-#endif /* !CONFIG_HAVE_wcreat64 */
 	}
 #endif /* posix_creat_USE_wcreat */
 
@@ -442,11 +502,7 @@ EINTR_LABEL(again)
 		if unlikely(!utf8_filename)
 			goto err;
 		DBG_ALIGNMENT_DISABLE();
-#ifdef CONFIG_HAVE_creat64
-		result = creat64(utf8_filename, (int)mode);
-#else  /* CONFIG_HAVE_creat64 */
 		result = creat(utf8_filename, (int)mode);
-#endif /* !CONFIG_HAVE_creat64 */
 	}
 #endif /* posix_creat_USE_creat */
 
@@ -510,6 +566,152 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_creat_f_impl(DeeObject *filename,
 #else /* POSIX_CREAT_OFLAGS && POSIX_CREAT_DEFAULT_FLAGS */
 	return posix__creat_f_impl(filename, mode);
 #endif /* !POSIX_CREAT_OFLAGS || !POSIX_CREAT_DEFAULT_FLAGS */
+}
+
+
+
+
+
+
+/* Figure out how to implement `openat()' */
+#undef posix_openat_USE_wopenat
+#undef posix_openat_USE_openat
+#undef posix_openat_USE_posix_open
+#undef posix_openat_USE_STUB
+#if defined(CONFIG_HAVE_wopenat) && defined(CONFIG_PREFER_WCHAR_FUNCTIONS)
+#define posix_openat_USE_wopenat
+#define posix_openat_USE_posix_open
+#elif defined(CONFIG_HAVE_openat)
+#define posix_openat_USE_openat
+#define posix_openat_USE_posix_open
+#elif defined(CONFIG_HAVE_wopenat)
+#define posix_openat_USE_wopenat
+#define posix_openat_USE_posix_open
+#elif !defined(posix_open_USE_STUB)
+#define posix_openat_USE_posix_open
+#else /* ... */
+#define posix_openat_USE_STUB
+#endif /* !... */
+
+
+/************************************************************************/
+/* openat()                                                             */
+/************************************************************************/
+
+/*[[[deemon import("rt.gen.dexutils").gw("_openat", "dfd:?X3?DFile?Dint?Dstring,filename:?Dstring,oflags:u,mode:u=0644->?Dint", libname: "posix"); ]]]*/
+FORCELOCAL WUNUSED DREF DeeObject *DCALL posix__openat_f_impl(DeeObject *dfd, DeeObject *filename, unsigned int oflags, unsigned int mode);
+PRIVATE WUNUSED DREF DeeObject *DCALL posix__openat_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
+#define POSIX__OPENAT_DEF { "_openat", (DeeObject *)&posix__openat, MODSYM_FNORMAL, DOC("(dfd:?X3?DFile?Dint?Dstring,filename:?Dstring,oflags:?Dint,mode:?Dint=!0644)->?Dint") },
+#define POSIX__OPENAT_DEF_DOC(doc) { "_openat", (DeeObject *)&posix__openat, MODSYM_FNORMAL, DOC("(dfd:?X3?DFile?Dint?Dstring,filename:?Dstring,oflags:?Dint,mode:?Dint=!0644)->?Dint\n" doc) },
+PRIVATE DEFINE_KWCMETHOD(posix__openat, &posix__openat_f);
+#ifndef POSIX_KWDS_DFD_FILENAME_OFLAGS_MODE_DEFINED
+#define POSIX_KWDS_DFD_FILENAME_OFLAGS_MODE_DEFINED
+PRIVATE DEFINE_KWLIST(posix_kwds_dfd_filename_oflags_mode, { K(dfd), K(filename), K(oflags), K(mode), KEND });
+#endif /* !POSIX_KWDS_DFD_FILENAME_OFLAGS_MODE_DEFINED */
+PRIVATE WUNUSED DREF DeeObject *DCALL posix__openat_f(size_t argc, DeeObject *const *argv, DeeObject *kw) {
+	DeeObject *dfd;
+	DeeObject *filename;
+	unsigned int oflags;
+	unsigned int mode = 0644;
+	if (DeeArg_UnpackKw(argc, argv, kw, posix_kwds_dfd_filename_oflags_mode, "oou|u:_openat", &dfd, &filename, &oflags, &mode))
+		goto err;
+	return posix__openat_f_impl(dfd, filename, oflags, mode);
+err:
+	return NULL;
+}
+FORCELOCAL WUNUSED DREF DeeObject *DCALL posix__openat_f_impl(DeeObject *dfd, DeeObject *filename, unsigned int oflags, unsigned int mode)
+/*[[[end]]]*/
+{
+#ifdef posix_openat_USE_posix_open
+	DREF DeeObject *abspath, *result;
+
+#if defined(posix_openat_USE_wopenat) || defined(posix_openat_USE_openat)
+	if (!DeeString_Check(dfd)) {
+		int result;
+		int os_dfd;
+		os_dfd = DeeUnixSystem_GetFD(dfd);
+		if unlikely(os_dfd == -1)
+			goto err;
+EINTR_LABEL(again)
+
+#ifdef posix_openat_USE_wopenat
+		{
+			dwchar_t const *wide_filename;
+			wide_filename = DeeString_AsWide(filename);
+			if unlikely(!wide_filename)
+				goto err;
+			DBG_ALIGNMENT_DISABLE();
+			result = wopenat(os_dfd, wide_filename, (int)oflags, (int)mode);
+		}
+#endif /* posix_openat_USE_wopenat */
+
+#ifdef posix_openat_USE_openat
+		{
+			char const *utf8_filename;
+			utf8_filename = DeeString_AsUtf8(filename);
+			if unlikely(!utf8_filename)
+				goto err;
+			DBG_ALIGNMENT_DISABLE();
+			result = openat(os_dfd, utf8_filename, (int)oflags, (int)mode);
+		}
+#endif /* posix_openat_USE_openat */
+
+		DBG_ALIGNMENT_ENABLE();
+		if (result >= 0)
+			return DeeInt_NewUInt((unsigned int)result);
+		/* Fallthru to fallback path below */
+	}
+#endif /* posix_openat_USE_wopenat || posix_openat_USE_openat */
+#define NEED_posix_dfd_abspath
+	abspath = posix_dfd_abspath(dfd, filename, POSIX_DFD_ABSPATH_ATFLAGS_FROM_OFLAGS(oflags));
+	if unlikely(!abspath)
+		goto err;
+	result = posix__open_f_impl(abspath, oflags, mode);
+	Dee_Decref(abspath);
+	return result;
+err:
+	return NULL;
+#endif /* posix_openat_USE_posix_open */
+
+#ifdef posix_openat_USE_STUB
+#define NEED_posix_err_unsupported
+	(void)dfd;
+	(void)filename;
+	(void)oflags;
+	(void)mode;
+	posix_err_unsupported("openat");
+	return NULL;
+#endif /* posix_openat_USE_STUB */
+}
+
+/*[[[deemon import("rt.gen.dexutils").gw("openat", "dfd:?X3?DFile?Dint?Dstring,filename:?Dstring,oflags:u,mode:u=0644->?Dint", libname: "posix"); ]]]*/
+FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_openat_f_impl(DeeObject *dfd, DeeObject *filename, unsigned int oflags, unsigned int mode);
+PRIVATE WUNUSED DREF DeeObject *DCALL posix_openat_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
+#define POSIX_OPENAT_DEF { "openat", (DeeObject *)&posix_openat, MODSYM_FNORMAL, DOC("(dfd:?X3?DFile?Dint?Dstring,filename:?Dstring,oflags:?Dint,mode:?Dint=!0644)->?Dint") },
+#define POSIX_OPENAT_DEF_DOC(doc) { "openat", (DeeObject *)&posix_openat, MODSYM_FNORMAL, DOC("(dfd:?X3?DFile?Dint?Dstring,filename:?Dstring,oflags:?Dint,mode:?Dint=!0644)->?Dint\n" doc) },
+PRIVATE DEFINE_KWCMETHOD(posix_openat, &posix_openat_f);
+#ifndef POSIX_KWDS_DFD_FILENAME_OFLAGS_MODE_DEFINED
+#define POSIX_KWDS_DFD_FILENAME_OFLAGS_MODE_DEFINED
+PRIVATE DEFINE_KWLIST(posix_kwds_dfd_filename_oflags_mode, { K(dfd), K(filename), K(oflags), K(mode), KEND });
+#endif /* !POSIX_KWDS_DFD_FILENAME_OFLAGS_MODE_DEFINED */
+PRIVATE WUNUSED DREF DeeObject *DCALL posix_openat_f(size_t argc, DeeObject *const *argv, DeeObject *kw) {
+	DeeObject *dfd;
+	DeeObject *filename;
+	unsigned int oflags;
+	unsigned int mode = 0644;
+	if (DeeArg_UnpackKw(argc, argv, kw, posix_kwds_dfd_filename_oflags_mode, "oou|u:openat", &dfd, &filename, &oflags, &mode))
+		goto err;
+	return posix_openat_f_impl(dfd, filename, oflags, mode);
+err:
+	return NULL;
+}
+FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_openat_f_impl(DeeObject *dfd, DeeObject *filename, unsigned int oflags, unsigned int mode)
+/*[[[end]]]*/
+{
+#ifdef POSIX_OPEN_DEFAULT_FLAGS
+	oflags |= POSIX_OPEN_DEFAULT_FLAGS;
+#endif /* POSIX_OPEN_DEFAULT_FLAGS */
+	return posix__openat_f_impl(dfd, filename, oflags, mode);
 }
 
 

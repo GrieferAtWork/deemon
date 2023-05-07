@@ -349,10 +349,20 @@ functest('creat("foo.txt", 0644)', unix);
 functest('_creat("foo.txt", 0644)', msvc);
 func("_wcreat", "defined(_WIO_DEFINED) || " + addparen(msvc), test: "wchar_t s[] = { 'a', 0 }; return _wcreat(s, 0644);");
 
-functest('open("foo.txt", O_RDONLY)', unix);
-functest('_open("foo.txt", O_RDONLY)', msvc);
-func("_wopen", "defined(_WIO_DEFINED) || " + addparen(msvc), test: "wchar_t s[] = { 'a', 0 }; return _wopen(s, O_RDONLY);");
-functest('open64("foo.txt", O_RDONLY)', "defined(__USE_LARGEFILE64)");
+functest('open("foo.txt", O_RDONLY, 0)', unix);
+functest('_open("foo.txt", O_RDONLY, 0)', msvc);
+functest('open64("foo.txt", O_RDONLY, 0)', "defined(CONFIG_HAVE_FCNTL_H) && defined(__USE_LARGEFILE64)");
+functest('_open64("foo.txt", O_RDONLY, 0)', "0");
+func("wopen", "0", test: "wchar_t s[] = { 'a', 0 }; return wopen(s, O_RDONLY, 0);");
+func("_wopen", "defined(_WIO_DEFINED) || " + addparen(msvc), test: "wchar_t s[] = { 'a', 0 }; return _wopen(s, O_RDONLY, 0);");
+func("wopen64", "0", test: "wchar_t s[] = { 'a', 0 }; return wopen64(s, O_RDONLY, 0);");
+func("_wopen64", "0", test: "wchar_t s[] = { 'a', 0 }; return _wopen64(s, O_RDONLY, 0);");
+
+functest('openat(42, "foo.txt", O_RDONLY, 0)', "defined(CONFIG_HAVE_FCNTL_H) && defined(__USE_ATFILE)");
+functest('openat64(42, "foo.txt", O_RDONLY, 0)', "defined(CONFIG_HAVE_FCNTL_H) && defined(__USE_ATFILE) && defined(__USE_LARGEFILE64)");
+func("wopenat", "0", test: "wchar_t s[] = { 'a', 0 }; return wopenat(42, s, O_RDONLY, 0);");
+func("wopenat64", "0", test: "wchar_t s[] = { 'a', 0 }; return wopenat64(42, s, O_RDONLY, 0);");
+
 functest("fcntl(42, 7) && fcntl(42, 7, 21)", "(defined(CONFIG_HAVE_FCNTL_H) || defined(CONFIG_HAVE_SYS_FCNTL_H)) && " + addparen(unix));
 functest("ioctl(42, 7) && ioctl(42, 7, (void *)0)", "(defined(CONFIG_HAVE_IOCTL_H) || defined(CONFIG_HAVE_SYS_IOCTL_H)) && " + addparen(unix));
 
@@ -2539,6 +2549,28 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #define CONFIG_HAVE__open
 #endif
 
+#ifdef CONFIG_NO_open64
+#undef CONFIG_HAVE_open64
+#elif !defined(CONFIG_HAVE_open64) && \
+      (defined(open64) || defined(__open64_defined) || (defined(CONFIG_HAVE_FCNTL_H) && \
+       defined(__USE_LARGEFILE64)))
+#define CONFIG_HAVE_open64
+#endif
+
+#ifdef CONFIG_NO__open64
+#undef CONFIG_HAVE__open64
+#elif !defined(CONFIG_HAVE__open64) && \
+      (defined(_open64) || defined(___open64_defined))
+#define CONFIG_HAVE__open64
+#endif
+
+#ifdef CONFIG_NO_wopen
+#undef CONFIG_HAVE_wopen
+#elif !defined(CONFIG_HAVE_wopen) && \
+      (defined(wopen) || defined(__wopen_defined))
+#define CONFIG_HAVE_wopen
+#endif
+
 #ifdef CONFIG_NO__wopen
 #undef CONFIG_HAVE__wopen
 #elif !defined(CONFIG_HAVE__wopen) && \
@@ -2547,11 +2579,48 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #define CONFIG_HAVE__wopen
 #endif
 
-#ifdef CONFIG_NO_open64
-#undef CONFIG_HAVE_open64
-#elif !defined(CONFIG_HAVE_open64) && \
-      (defined(open64) || defined(__open64_defined) || defined(__USE_LARGEFILE64))
-#define CONFIG_HAVE_open64
+#ifdef CONFIG_NO_wopen64
+#undef CONFIG_HAVE_wopen64
+#elif !defined(CONFIG_HAVE_wopen64) && \
+      (defined(wopen64) || defined(__wopen64_defined))
+#define CONFIG_HAVE_wopen64
+#endif
+
+#ifdef CONFIG_NO__wopen64
+#undef CONFIG_HAVE__wopen64
+#elif !defined(CONFIG_HAVE__wopen64) && \
+      (defined(_wopen64) || defined(___wopen64_defined))
+#define CONFIG_HAVE__wopen64
+#endif
+
+#ifdef CONFIG_NO_openat
+#undef CONFIG_HAVE_openat
+#elif !defined(CONFIG_HAVE_openat) && \
+      (defined(openat) || defined(__openat_defined) || (defined(CONFIG_HAVE_FCNTL_H) && \
+       defined(__USE_ATFILE)))
+#define CONFIG_HAVE_openat
+#endif
+
+#ifdef CONFIG_NO_openat64
+#undef CONFIG_HAVE_openat64
+#elif !defined(CONFIG_HAVE_openat64) && \
+      (defined(openat64) || defined(__openat64_defined) || (defined(CONFIG_HAVE_FCNTL_H) && \
+       defined(__USE_ATFILE) && defined(__USE_LARGEFILE64)))
+#define CONFIG_HAVE_openat64
+#endif
+
+#ifdef CONFIG_NO_wopenat
+#undef CONFIG_HAVE_wopenat
+#elif !defined(CONFIG_HAVE_wopenat) && \
+      (defined(wopenat) || defined(__wopenat_defined))
+#define CONFIG_HAVE_wopenat
+#endif
+
+#ifdef CONFIG_NO_wopenat64
+#undef CONFIG_HAVE_wopenat64
+#elif !defined(CONFIG_HAVE_wopenat64) && \
+      (defined(wopenat64) || defined(__wopenat64_defined))
+#define CONFIG_HAVE_wopenat64
 #endif
 
 #ifdef CONFIG_NO_fcntl

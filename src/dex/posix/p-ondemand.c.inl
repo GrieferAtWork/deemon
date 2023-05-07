@@ -2051,20 +2051,24 @@ posix_dfd_abspath(DeeObject *dfd, DeeObject *path, unsigned int atflags) {
 			Dee_Decref(dfd_filename);
 		}
 
+#ifndef CONFIG_HAVE_AT_FDCWD
+		/* OS doesn't support AT_FDCWD --> check if `dfd' is our custom replacement. */
+		if (DeeInt_Check(dfd)) {
+			int dfd_intval;
+			if (DeeInt_TryAsInt(dfd, &dfd_intval)) {
+				if (dfd_intval == AT_FDCWD) {
+					/* Caller made an explicit request for the path to be relative! */
+					unicode_printer_fini(&printer);
+					return_reference_(path);
+				}
+			}
+		}
+#endif /* !CONFIG_HAVE_AT_FDCWD */
+
 #ifdef CONFIG_HOST_WINDOWS
 		{
 			int error;
 			HANDLE hDfd;
-			if (DeeInt_Check(dfd)) {
-				int dfd_intval;
-				if (DeeInt_TryAsInt(dfd, &dfd_intval)) {
-					if (dfd_intval == AT_FDCWD) {
-						/* Caller made an explicit request for the path to be relative! */
-						unicode_printer_fini(&printer);
-						return_reference_(path);
-					}
-				}
-			}
 			hDfd = (HANDLE)DeeNTSystem_GetHandle(dfd);
 			if unlikely(hDfd == INVALID_HANDLE_VALUE)
 				goto err_printer;
@@ -2146,6 +2150,11 @@ err:
 
 #ifdef NEED_posix_fd_abspath
 #undef NEED_posix_fd_abspath
+
+#ifdef __INTELLISENSE__ /* Defined in "p-pwd.c.inl" */
+FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_getcwd_f_impl(void);
+#endif /* __INTELLISENSE__ */
+
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 posix_fd_abspath(DeeObject *__restrict fd) {
 	if (DeeFile_Check(fd)) {
@@ -2155,6 +2164,19 @@ posix_fd_abspath(DeeObject *__restrict fd) {
 			return result;
 		Dee_Decref(result);
 	}
+
+#ifndef CONFIG_HAVE_AT_FDCWD
+	/* OS doesn't support AT_FDCWD --> check if `fd' is our custom replacement. */
+	if (DeeInt_Check(fd)) {
+		int fd_intval;
+		if (DeeInt_TryAsInt(fd, &fd_intval)) {
+			if (fd_intval == AT_FDCWD) {
+				/* Caller explicitly wants the current working directory. */
+				return posix_getcwd_f_impl();
+			}
+		}
+	}
+#endif /* !CONFIG_HAVE_AT_FDCWD */
 
 	{
 #ifdef CONFIG_HOST_WINDOWS

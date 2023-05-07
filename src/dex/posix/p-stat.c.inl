@@ -1087,11 +1087,11 @@ err:
 	return NULL;
 }
 
-/*[[[deemon import("rt.gen.dexutils").gw("fstatat", "dfd:?X2?DFile?Dint,path:?Dstring,atflags:c:uint=0->?Gstat", libname: "posix"); ]]]*/
+/*[[[deemon import("rt.gen.dexutils").gw("fstatat", "dfd:?X3?DFile?Dint?Dstring,path:?Dstring,atflags:c:uint=0->?Gstat", libname: "posix"); ]]]*/
 FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_fstatat_f_impl(DeeObject *dfd, DeeObject *path, unsigned int atflags);
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_fstatat_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
-#define POSIX_FSTATAT_DEF { "fstatat", (DeeObject *)&posix_fstatat, MODSYM_FNORMAL, DOC("(dfd:?X2?DFile?Dint,path:?Dstring,atflags:?Dint=!0)->?Gstat") },
-#define POSIX_FSTATAT_DEF_DOC(doc) { "fstatat", (DeeObject *)&posix_fstatat, MODSYM_FNORMAL, DOC("(dfd:?X2?DFile?Dint,path:?Dstring,atflags:?Dint=!0)->?Gstat\n" doc) },
+#define POSIX_FSTATAT_DEF { "fstatat", (DeeObject *)&posix_fstatat, MODSYM_FNORMAL, DOC("(dfd:?X3?DFile?Dint?Dstring,path:?Dstring,atflags:?Dint=!0)->?Gstat") },
+#define POSIX_FSTATAT_DEF_DOC(doc) { "fstatat", (DeeObject *)&posix_fstatat, MODSYM_FNORMAL, DOC("(dfd:?X3?DFile?Dint?Dstring,path:?Dstring,atflags:?Dint=!0)->?Gstat\n" doc) },
 PRIVATE DEFINE_KWCMETHOD(posix_fstatat, &posix_fstatat_f);
 #ifndef POSIX_KWDS_DFD_PATH_ATFLAGS_DEFINED
 #define POSIX_KWDS_DFD_PATH_ATFLAGS_DEFINED
@@ -1111,10 +1111,6 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_fstatat_f_impl(DeeObject *dfd, De
 /*[[[end]]]*/
 {
 	DREF DeeStatObject *result;
-	if unlikely(DeeString_Check(dfd)) {
-		DeeObject_TypeAssertFailed(dfd, &DeeInt_Type);
-		goto err;
-	}
 #ifdef posix_stat_HAVE_lstat
 	if (atflags & ~AT_SYMLINK_NOFOLLOW)
 #else /* posix_stat_HAVE_lstat */
@@ -2533,7 +2529,7 @@ PRIVATE struct type_method tpconst stat_class_methods[] = {
 	            "(path:?Dstring,atflags=!0)\n"
 	            "(fp:?DFile)\n"
 	            "(fd:?Dint)\n"
-	            "(dfd:?X2?DFile?Dint,path:?Dstring,atflags=!0)\n"
+	            "(dfd:?X3?DFile?Dint?Dstring,path:?Dstring,atflags=!0)\n"
 	            "@interrupt\n"
 	            "Taking the same arguments as the constructor of ?Gstat, "
 	            /**/ "check if the referred file exists, or if the given "
@@ -2543,7 +2539,7 @@ PRIVATE struct type_method tpconst stat_class_methods[] = {
 	            "(path:?Dstring,atflags=!0)\n"
 	            "(fp:?DFile)\n"
 	            "(fd:?Dint)\n"
-	            "(dfd:?X2?DFile?Dint,path:?Dstring,atflags=!0)\n"
+	            "(dfd:?X3?DFile?Dint?Dstring,path:?Dstring,atflags=!0)\n"
 	            "@interrupt\n"
 	            "Taking the same arguments as the constructor of ?Gstat, "
 	            /**/ "check if the passed parameters refer to an existing directory"),
@@ -2552,7 +2548,7 @@ PRIVATE struct type_method tpconst stat_class_methods[] = {
 	            "(path:?Dstring,atflags=!0)\n"
 	            "(fp:?DFile)\n"
 	            "(fd:?Dint)\n"
-	            "(dfd:?X2?DFile?Dint,path:?Dstring,atflags=!0)\n"
+	            "(dfd:?X3?DFile?Dint?Dstring,path:?Dstring,atflags=!0)\n"
 	            "@interrupt\n"
 	            "Taking the same arguments as the constructor of ?Gstat, "
 	            /**/ "check if the passed parameters refer to an existing character-device"),
@@ -2561,7 +2557,7 @@ PRIVATE struct type_method tpconst stat_class_methods[] = {
 	            "(path:?Dstring,atflags=!0)\n"
 	            "(fp:?DFile)\n"
 	            "(fd:?Dint)\n"
-	            "(dfd:?X2?DFile?Dint,path:?Dstring,atflags=!0)\n"
+	            "(dfd:?X3?DFile?Dint?Dstring,path:?Dstring,atflags=!0)\n"
 	            "@interrupt\n"
 	            "Taking the same arguments as the constructor of ?Gstat, "
 	            /**/ "check if the passed parameters refer to an existing block-device"),
@@ -2570,7 +2566,7 @@ PRIVATE struct type_method tpconst stat_class_methods[] = {
 	            "(path:?Dstring,atflags=!0)\n"
 	            "(fp:?DFile)\n"
 	            "(fd:?Dint)\n"
-	            "(dfd:?X2?DFile?Dint,path:?Dstring,atflags=!0)\n"
+	            "(dfd:?X3?DFile?Dint?Dstring,path:?Dstring,atflags=!0)\n"
 	            "@interrupt\n"
 	            "Taking the same arguments as the constructor of ?Gstat, "
 	            /**/ "check if the passed parameters refer to an existing character- or block-device"),
@@ -2579,7 +2575,7 @@ PRIVATE struct type_method tpconst stat_class_methods[] = {
 	            "(path:?Dstring,atflags=!0)\n"
 	            "(fp:?DFile)\n"
 	            "(fd:?Dint)\n"
-	            "(dfd:?X2?DFile?Dint,path:?Dstring,atflags=!0)\n"
+	            "(dfd:?X3?DFile?Dint?Dstring,path:?Dstring,atflags=!0)\n"
 	            "@interrupt\n"
 	            "Taking the same arguments as the constructor of ?Gstat, "
 	            /**/ "check if the passed parameters refer to an existing regular file"),
@@ -2588,7 +2584,7 @@ PRIVATE struct type_method tpconst stat_class_methods[] = {
 	            "(path:?Dstring,atflags=!0)\n"
 	            "(fp:?DFile)\n"
 	            "(fd:?Dint)\n"
-	            "(dfd:?X2?DFile?Dint,path:?Dstring,atflags=!0)\n"
+	            "(dfd:?X3?DFile?Dint?Dstring,path:?Dstring,atflags=!0)\n"
 	            "@interrupt\n"
 	            "Taking the same arguments as the constructor of ?Gstat, "
 	            /**/ "check if the passed parameters refer to an existing pipe"),
@@ -2597,7 +2593,7 @@ PRIVATE struct type_method tpconst stat_class_methods[] = {
 	            "(path:?Dstring,atflags=!0)\n"
 	            "(fp:?DFile)\n"
 	            "(fd:?Dint)\n"
-	            "(dfd:?X2?DFile?Dint,path:?Dstring,atflags=!0)\n"
+	            "(dfd:?X3?DFile?Dint?Dstring,path:?Dstring,atflags=!0)\n"
 	            "@interrupt\n"
 	            "Taking the same arguments as the constructor of ?Gstat, "
 	            /**/ "check if the passed parameters refer to an existing symbolic link"),
@@ -2606,7 +2602,7 @@ PRIVATE struct type_method tpconst stat_class_methods[] = {
 	            "(path:?Dstring,atflags=!0)\n"
 	            "(fp:?DFile)\n"
 	            "(fd:?Dint)\n"
-	            "(dfd:?X2?DFile?Dint,path:?Dstring,atflags=!0)\n"
+	            "(dfd:?X3?DFile?Dint?Dstring,path:?Dstring,atflags=!0)\n"
 	            "@interrupt\n"
 	            "Taking the same arguments as the constructor of ?Gstat, "
 	            /**/ "check if the passed parameters refer to an existing socket"),
@@ -2615,7 +2611,7 @@ PRIVATE struct type_method tpconst stat_class_methods[] = {
 	            "(path:?Dstring,atflags=!0)\n"
 	            "(fp:?DFile)\n"
 	            "(fd:?Dint)\n"
-	            "(dfd:?X2?DFile?Dint,path:?Dstring,atflags=!0)\n"
+	            "(dfd:?X3?DFile?Dint?Dstring,path:?Dstring,atflags=!0)\n"
 	            "@interrupt\n"
 	            "Taking the same arguments as the constructor of "
 	            /**/ "?Gstat, check if the passed parameters refer to a hidden file. "
@@ -2627,7 +2623,7 @@ PRIVATE struct type_method tpconst stat_class_methods[] = {
 	            "(path:?Dstring,atflags=!0)\n"
 	            "(fp:?DFile)\n"
 	            "(fd:?Dint)\n"
-	            "(dfd:?X2?DFile?Dint,path:?Dstring,atflags=!0)\n"
+	            "(dfd:?X3?DFile?Dint?Dstring,path:?Dstring,atflags=!0)\n"
 	            "@interrupt\n"
 	            "Taking the same arguments as the constructor of ?Gstat, "
 	            /**/ "check if the passed parameters refer to an executable file. "
@@ -2794,7 +2790,7 @@ INTERN DeeTypeObject DeeStat_Type = {
 	/* .tp_doc      = */ DOC("(path:?Dstring,atflags=!0)\n"
 	                         "(fp:?DFile)\n"
 	                         "(fd:?Dint)\n"
-	                         "(dfd:?X2?DFile?Dint,path:?Dstring,atflags=!0)\n"
+	                         "(dfd:?X3?DFile?Dint?Dstring,path:?Dstring,atflags=!0)\n"
 	                         "@interrupt\n"
 	                         "@throw FileNotFound The given @path or @fp could not be found\n"
 	                         "@throw SystemError Failed to query file information for some reason\n"
@@ -2856,7 +2852,7 @@ INTERN DeeTypeObject DeeLStat_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "lstat",
 	/* .tp_doc      = */ DOC("(path:?Dstring)\n"
-	                         "(dfd:?X2?DFile?Dint,path:?Dstring)\n"
+	                         "(dfd:?X3?DFile?Dint?Dstring,path:?Dstring)\n"
 	                         "@interrupt\n"
 	                         "@throw FileNotFound The given @path or @fp could not be found\n"
 	                         "@throw SystemError Failed to query file information for some reason\n"

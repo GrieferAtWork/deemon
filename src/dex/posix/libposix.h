@@ -486,6 +486,8 @@ err_unknown_env_var(DeeObject *__restrict name);
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 posix_dfd_abspath(DeeObject *dfd, DeeObject *path, unsigned int atflags);
 #define POSIX_DFD_ABSPATH_ATFLAGS_MASK 0 /* Bitset atflags supported by `posix_dfd_abspath' */
+#define POSIX_DFD_ABSPATH_ATFLAGS_FROM_OFLAGS(x) (0)
+
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 posix_fd_abspath(DeeObject *__restrict fd);
 

@@ -131,6 +131,7 @@ local ALL_STUBS = {
 	("posix_strerrorname_USE_STUB", { "strerrorname" }),
 	("posix_open_USE_STUB",         { "open", "_open" }),
 	("posix_creat_USE_STUB",        { "creat", "_creat" }),
+	("posix_openat_USE_STUB",       { "openat", "_openat" }),
 	("posix_close_USE_STUB",        { "close" }),
 	("posix_isatty_USE_STUB",       { "isatty" }),
 	("posix_umask_USE_STUB",        { "umask" }),
@@ -606,6 +607,13 @@ print("#endif /" "* POSIX_STUBS_TOTLEN == 0 *" "/");
 #define len_posix_open_USE_STUB /* nothing */
 #define str_posix_open_USE_STUB /* nothing */
 #endif /* !posix_open_USE_STUB */
+#ifdef posix_openat_USE_STUB
+#define len_posix_openat_USE_STUB +15
+#define str_posix_openat_USE_STUB 'o', 'p', 'e', 'n', 'a', 't', '\0', '_', 'o', 'p', 'e', 'n', 'a', 't', '\0',
+#else /* posix_openat_USE_STUB */
+#define len_posix_openat_USE_STUB /* nothing */
+#define str_posix_openat_USE_STUB /* nothing */
+#endif /* !posix_openat_USE_STUB */
 #ifdef posix_opendir_USE_STUB
 #define len_posix_opendir_USE_STUB +29
 #define str_posix_opendir_USE_STUB 'd', 'i', 'r', 'e', 'n', 't', '\0', 'D', 'I', 'R', '\0', 'o', 'p', 'e', 'n', 'd', 'i', 'r', '\0', 'f', 'd', 'o', 'p', 'e', 'n', 'd', 'i', 'r', '\0',
@@ -1006,6 +1014,7 @@ print("#endif /" "* POSIX_STUBS_TOTLEN == 0 *" "/");
 	len_posix_lseek_USE_STUB \
 	len_posix_lstat_USE_STUB \
 	len_posix_open_USE_STUB \
+	len_posix_openat_USE_STUB \
 	len_posix_opendir_USE_STUB \
 	len_posix_pipe2_USE_STUB \
 	len_posix_pipe_USE_STUB \
@@ -1119,6 +1128,7 @@ PRIVATE struct {
 		str_posix_lseek_USE_STUB
 		str_posix_lstat_USE_STUB
 		str_posix_open_USE_STUB
+		str_posix_openat_USE_STUB
 		str_posix_opendir_USE_STUB
 		str_posix_pipe2_USE_STUB
 		str_posix_pipe_USE_STUB
@@ -1442,6 +1452,8 @@ PRIVATE struct dex_symbol symbols[] = {
 	D(POSIX_CREAT_DEF_DOC("Create a new file (same as ${open(filename, O_CREAT | O_WRONLY | O_TRUNC, mode)})"))
 	D(POSIX__CREAT_DEF_DOC("Same as ?Gcreat, but on systems that define ?GO_BINARY, that flag is also passed "
 	                       "via the internal @oflags list eventually passed to ?Gopen (or rather ?G_open)"))
+	D(POSIX_OPENAT_DEF_DOC("Same as ?Gopen, but allows the path to be specified as @dfd:@filename"))
+	D(POSIX__OPENAT_DEF_DOC("Same as ?G_open, but allows the path to be specified as @dfd:@filename"))
 	D(POSIX_READ_DEF_DOC("Read up to @count bytes into @buf\n"
 	                     "When @buf is given, return the actual number of read bytes. "
 	                     "Otherwise, read into a new :Bytes object that is then returned"))
