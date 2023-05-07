@@ -2330,7 +2330,7 @@ posix_dfd_abspath(DeeObject *dfd, DeeObject *path, unsigned int atflags) {
 	}
 
 	/* Check if `path' is absolute. - If it is, then we must use _it_ */
-	if (DeeSystem_IsAbs(DeeString_STR(path)))
+	if (DeeString_IsAbsPath(path))
 		return_reference_(path);
 
 	/* Must combine `dfd' with `path' */
@@ -2345,7 +2345,7 @@ posix_dfd_abspath(DeeObject *dfd, DeeObject *path, unsigned int atflags) {
 			dfd_filename = DeeFile_Filename(dfd);
 			if unlikely(!dfd_filename)
 				goto err_printer;
-			if (DeeSystem_IsAbs(DeeString_STR(dfd_filename))) {
+			if (DeeString_IsAbsPath(dfd_filename)) {
 				if unlikely(unicode_printer_printstring(&printer, dfd_filename) < 0)
 					goto err_printer;
 				Dee_Decref(dfd_filename);
@@ -2463,7 +2463,9 @@ posix_fd_abspath(DeeObject *__restrict fd) {
 	if (DeeFile_Check(fd)) {
 		DREF DeeObject *result;
 		result = DeeFile_Filename(fd);
-		if (!result || DeeSystem_IsAbs(DeeString_STR(result)))
+		if unlikely(!result)
+			goto err;
+		if (DeeString_IsAbsPath(result))
 			return result;
 		Dee_Decref(result);
 	}
@@ -2485,15 +2487,17 @@ posix_fd_abspath(DeeObject *__restrict fd) {
 #ifdef CONFIG_HOST_WINDOWS
 		HANDLE hFd = (HANDLE)DeeNTSystem_GetHandle(fd);
 		if unlikely(hFd == INVALID_HANDLE_VALUE)
-			return NULL;
+			goto err;
 		return DeeNTSystem_GetFilenameOfHandle(hFd);
 #else /* CONFIG_HOST_WINDOWS */
 		int os_fd = DeeUnixSystem_GetFD(fd);
 		if unlikely(os_fd == -1)
-			return NULL;
+			goto err;
 		return DeeSystem_GetFilenameOfFD(os_fd);
 #endif /* !CONFIG_HOST_WINDOWS */
 	}
+err:
+	return NULL;
 }
 #endif /* NEED_posix_fd_abspath */
 

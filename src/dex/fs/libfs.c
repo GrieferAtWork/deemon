@@ -1043,6 +1043,11 @@ PRIVATE DEFINE_CMETHOD(libfs_S_ISSOCK, &f_libfs_S_ISSOCK);
 
 
 PRIVATE struct dex_symbol symbols[] = {
+	/* TODO: DON'T ADD NEW FUNCTIONS TO THIS DEX -- IT IS SCHEDULED FOR REMOVAL!!!
+	 * Instead:
+	 * - New filesystem functions should be added to `posix'
+	 * - This dex is going to be replaced by a user-code module of the same name
+	 */
 	{ "stat", (DeeObject *)&DeeStat_Type, MODSYM_FNORMAL },
 	{ "lstat", (DeeObject *)&DeeLStat_Type, MODSYM_FNORMAL },
 	{ "User", (DeeObject *)&DeeUser_Type, MODSYM_FNORMAL },

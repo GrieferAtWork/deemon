@@ -21,27 +21,12 @@
 import * from deemon;
 import posix;
 
-#ifdef __WINDOWS__
-global final SEP        = "\\";
-global final ALTSEP     = "/";
-global final DELIM      = ";";
-global final DEV_NULL   = "NUL";
-global final DEV_TTY    = "CON";
-global final DEV_STDIN  = "stdIN$";
-global final DEV_STDOUT = "stdOUT$";
-global final DEV_STDERR = "stdERR$";
-#else /* __WINDOWS__ */
-global final SEP        = "/";
-global final ALTSEP     = "/";
-global final DELIM      = ":";
-global final DEV_NULL   = "/dev/null";
-global final DEV_TTY    = "/dev/tty";
-global final DEV_STDIN  = "/dev/stdin";
-global final DEV_STDOUT = "/dev/stdout";
-global final DEV_STDERR = "/dev/stderr";
-#endif /* !__WINDOWS__ */
+global final stat = posix.stat;
+global final lstat = posix.lstat;
+//global final User = posix.User; ???
+//global final Group = posix.Group; ???
 
-/* Exceptions. (deprecated) */
+/* Exceptions. (deprecated; use the symbols from `errors` instead) */
 global final NoDirectory = Error.SystemError.FSError.FileNotFound.NoDirectory;
 global final IsDirectory = Error.SystemError.FSError.FileExists.IsDirectory;
 global final CrossDevice = Error.SystemError.FSError.CrossDeviceLink;
@@ -49,17 +34,56 @@ global final NotEmpty = Error.SystemError.FSError.FileExists.DirectoryNotEmpty;
 global final BusyFile = Error.SystemError.FSError.BusyFile;
 global final NoLink = Error.SystemError.FSError.FileNotFound.NoSymlink;
 
-/* Functions from posix. */
-global final stat = posix.stat;
-global final lstat = posix.lstat;
-//global final User = posix.User; ???
-//global final Group = posix.Group; ???
+class dir: Sequence {
+	@@The internal posix-DIR object.
+	private member m_dir: posix.DIR;
+
+	@@@interrupt
+	@@Construct a sequence for enumerating the contents of a directory
+	this(path: string)
+		: m_dir(posix.DIR(path))
+	{}
+
+	@@Enumerate the names of the files within the given directory
+	public operator for(): {string...} {
+		for (local ent: m_dir)
+			yield ent.d_name;
+	}
+}
+
+class query: dir {
+	@@The wildcard-enabled pattern with which to filter files
+	private member m_pattern: posix.DIR;
+
+	@@@interrupt
+	@@Construct a directory query that yields the names of all filesystem
+	@@objects addressed by the given wildcard-enabled @pattern string
+	this(pattern: string)
+		: super(posix.headof(pattern))
+		, m_pattern(posix.tailof(pattern))
+	{}
+
+	@@Enumerate the names of the files within the given directory
+	public operator for(): {string...} {
+		for (local filename: super) {
+			if (posix.FS_ICASE) {
+				if (filename.casewmatch(m_pattern))
+					yield filename;
+			} else {
+				if (filename.wmatch(m_pattern))
+					yield filename;
+			}
+		}
+	}
+}
+
+
 global final environ = posix.environ;
 global final gettmp = posix.gettmp;
 global final getcwd = posix.getcwd;
 global final gethostname = posix.gethostname;
 global final chdir = posix.chdir;
-global final chtime = posix.chtime;
+global final chtime = posix.chtime; // TODO: Implement in terms of utime() (once that function is available)
 global final chmod = posix.chmod;
 global final lchmod = posix.lchmod;
 global final chown = posix.chown;
@@ -73,6 +97,58 @@ global final copyfile = posix.copyfile;
 global final link = posix.link;
 global final symlink = posix.symlink;
 global final readlink = posix.readlink;
+
+global final headof = posix.headof;
+global final tailof = posix.tailof;
+
+@@@return: The file portion of a path, excluding the file extension
+@@>> import fileof from fs;
+@@>> print fileof("bar");            /* "bar" */
+@@>> print fileof("bar.txt");        /* "bar" */
+@@>> print fileof("/foo/bar.txt");   /* "bar" */
+@@>> print fileof("C:/foo/bar.txt"); /* "bar" */
+function fileof(path: string): string {
+	local tail = posix.tailof(path);
+	local pos = tail.rfind(".");
+	if (pos == -1)
+		return tail;
+	return tail[:pos];
+}
+
+@@@return: The extension of a path, including the leading @"." character
+@@>> import extof from fs;
+@@>> print extof("bar");            /* "" */
+@@>> print extof("bar.txt");        /* ".txt" */
+@@>> print extof("/foo/bar.txt");   /* ".txt" */
+@@>> print extof("C:/foo/bar.txt"); /* ".txt" */
+function extof(path: string): string {
+	local tail = posix.tailof(path);
+	local pos = tail.rfind(".");
+	if (pos == -1)
+		return "";
+	return tail[pos:];
+}
+
+global final driveof = posix.driveof;
+global final inctrail = posix.inctrail;
+global final exctrail = posix.exctrail;
+global final abspath = posix.abspath;
+global final relpath = posix.relpath;
+global final isabs = posix.isabs;
+global final isrel = posix.isrel;
+global final issep = posix.issep;
+global final joinpath = posix.joinpath;
+//TODO: expand
+
+global final SEP = posix.FS_SEP;
+global final ALTSEP = posix.FS_ALTSEP;
+global final DELIM = posix.FS_DELIM;
+global final DEV_NULL = posix.DEV_NULL;
+global final DEV_TTY = posix.DEV_TTY;
+global final DEV_STDIN = posix.DEV_STDIN;
+global final DEV_STDOUT = posix.DEV_STDOUT;
+global final DEV_STDERR = posix.DEV_STDERR;
+
 global final S_IFMT = posix.S_IFMT;
 global final S_IFDIR = posix.S_IFDIR;
 global final S_IFCHR = posix.S_IFCHR;
@@ -93,6 +169,7 @@ global final S_IXGRP = posix.S_IXGRP;
 global final S_IROTH = posix.S_IROTH;
 global final S_IWOTH = posix.S_IWOTH;
 global final S_IXOTH = posix.S_IXOTH;
+
 global final S_ISDIR = posix.S_ISDIR;
 global final S_ISCHR = posix.S_ISCHR;
 global final S_ISBLK = posix.S_ISBLK;
@@ -100,88 +177,8 @@ global final S_ISREG = posix.S_ISREG;
 global final S_ISFIFO = posix.S_ISFIFO;
 global final S_ISLNK = posix.S_ISLNK;
 global final S_ISSOCK = posix.S_ISSOCK;
+
 #ifdef __WINDOWS__
 global final fixunc_np = posix.fixunc_np;
 global final chattr_np = posix.chattr_np;
 #endif /* __WINDOWS__ */
-
-global final headof = posix.headof;
-global final tailof = posix.tailof;
-global final driveof = posix.driveof;
-global final inctrail = posix.inctrail;
-global final exctrail = posix.exctrail;
-global final isabs = posix.isabs;
-global final isrel = posix.isrel;
-global final issep = posix.issep;
-global final relpath = posix.relpath;
-global final abspath = posix.abspath;
-global final joinpath = posix.joinpath;
-
-@@@return: The file portion of a path, excluding the file extension
-@@>> import fileof from fs;
-@@>> print fileof("bar");            /* "bar" */
-@@>> print fileof("bar.txt");        /* "bar" */
-@@>> print fileof("/foo/bar.txt");   /* "bar" */
-@@>> print fileof("C:/foo/bar.txt"); /* "bar" */
-function fileof(path: string): string {
-	local tail = tailof(path);
-	local pos = tail.rfind(".");
-	if (pos == -1)
-		return tail;
-	return tail[:pos];
-}
-
-@@@return: The extension of a path, including the leading @"." character
-@@>> import extof from fs;
-@@>> print extof("bar");            /* "" */
-@@>> print extof("bar.txt");        /* ".txt" */
-@@>> print extof("/foo/bar.txt");   /* ".txt" */
-@@>> print extof("C:/foo/bar.txt"); /* ".txt" */
-function extof(path: string): string {
-	local pos = path.rfind(".");
-	if (pos == -1)
-		return "";
-	local result = path[pos:];
-	if ("/" in result)
-		return "";
-#ifdef __WINDOWS__
-	if ("\\" in result)
-		return "";
-#endif /* __WINDOWS__ */
-	return result;
-}
-
-//TODO: expand
-
-class dir: Sequence {
-	@@The internal posix-DIR object.
-	private member m_dir: posix.DIR;
-
-	@@@interrupt
-	@@Construct a sequence for enumerating the contents of a directory
-	this(path: string): m_dir(posix.DIR(path)) {}
-
-	@@Enumerate the names of the files within the given directory
-	public operator for(): {string...} {
-		for (local ent: m_dir)
-			yield ent.d_name;
-	}
-}
-
-class query: dir {
-	@@The wildcard-enabled pattern with which to filter files
-	private member m_pattern: posix.DIR;
-
-	@@@interrupt
-	@@Construct a directory query that yields the names of all filesystem
-	@@objects addressed by the given wildcard-enabled @pattern string
-	this(pattern: string): super(headof(pattern)), m_pattern(tailof(pattern)) {}
-
-	@@Enumerate the names of the files within the given directory
-	public operator for(): {string...} {
-		for (local filename: this as dir) {
-			if (filename.wmatch(m_pattern))
-				yield filename;
-		}
-	}
-}

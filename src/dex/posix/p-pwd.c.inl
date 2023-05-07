@@ -340,6 +340,8 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_chdir_f_impl(DeeObject *path)
 {
 #ifdef posix_chdir_USE_nt_SetCurrentDirectory
 	int result;
+	if (DeeObject_AssertTypeExact(path, &DeeString_Type))
+		goto err;
 again:
 #define NEED_nt_SetCurrentDirectory
 	result = nt_SetCurrentDirectory(path);
@@ -399,24 +401,34 @@ err:
 #if defined(posix_chdir_USE_chdir) || defined(posix_chdir_USE_wchdir)
 #ifdef posix_chdir_USE_chdir
 	char *utf8_path;
+#endif /* posix_chdir_USE_chdir */
+#ifdef posix_chdir_USE_wchdir
+	dwchar_t *wide_path;
+#endif /* ..posix_chdir_USE_wchdir */
+
+	if (DeeObject_AssertTypeExact(path, &DeeString_Type))
+		goto err;
+#ifdef posix_chdir_USE_chdir
 	utf8_path = DeeString_AsUtf8(path);
 	if unlikely(!utf8_path)
 		goto err;
-#elif defined(posix_chdir_USE_wchdir)
-	dwchar_t *wide_path;
+#endif /* posix_chdir_USE_chdir */
+#ifdef posix_chdir_USE_wchdir
 	wide_path = DeeString_AsWide(path);
 	if unlikely(!wide_path)
 		goto err;
-#endif /* ... */
-EINTR_LABEL(again)
+#endif /* posix_chdir_USE_wchdir */
+
+EINTR_ENOMEM_LABEL(again)
 #ifdef posix_chdir_USE_chdir
 	if unlikely(chdir(utf8_path) != 0)
 #elif defined(posix_chdir_USE_wchdir)
-	if (wchdir(wide_path) != 0)
+	if unlikely(wchdir(wide_path) != 0)
 #endif /* ... */
 	{
 		int error = DeeSystem_GetErrno();
 		EINTR_HANDLE(error, again, err);
+		ENOMEM_HANDLE(error, again, err);
 #define NEED_err_unix_chdir
 		err_unix_chdir(error, path);
 		goto err;
@@ -469,8 +481,8 @@ EINTR_LABEL(again)
 		EINTR_HANDLE(error, again, err);
 #ifdef EBADF
 		if (error == EBADF) {
-#define NEED_err_unix_handle_closed
 			err_unix_handle_closed(error, fd);
+#define NEED_err_unix_handle_closed
 			goto err;
 		}
 #endif /* EBADF */

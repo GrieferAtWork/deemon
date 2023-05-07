@@ -2159,17 +2159,18 @@ PRIVATE struct dex_symbol symbols[] = {
 	/* Forward-aliases to `libfs' */
 #define DEFINE_LIBFS_ALIAS_ALT(altname, name, libfs_name, proto)                           \
 	D({ altname, (DeeObject *)&libposix_getfs_##name, MODSYM_FPROPERTY | MODSYM_FREADONLY, \
-	    DOC(proto "Alias for ?Efs:" libfs_name) }, )
+	    DOC(proto "Alias for ?Efs:" libfs_name " that has yet to be ported to posix") }, )
 #define DEFINE_LIBFS_ALIAS_S_ALT(altname, name, proto)                            \
 	D({ altname,                                                                  \
 	    (DeeObject *)&libposix_getfs_##name, MODSYM_FPROPERTY | MODSYM_FREADONLY, \
-	    DOC(proto "Alias for ?Efs:" #name) }, )
+	    DOC(proto "Alias for ?Efs:" #name " that has yet to be ported to posix") }, )
 #define DEFINE_LIBFS_ALIAS(name, libfs_name, proto) \
 	DEFINE_LIBFS_ALIAS_ALT(#name, name, libfs_name, proto)
 #define DEFINE_LIBFS_ALIAS_S(name, proto) \
 	DEFINE_LIBFS_ALIAS_S_ALT(DeeString_STR(&libposix_libfs_name_##name), name, proto)
 	DEFINE_LIBFS_ALIAS_S(chmod, "(path:?Dstring,mode:?X2?Dstring?Dint)\n")
 	DEFINE_LIBFS_ALIAS_S(lchmod, "(path:?Dstring,mode:?X2?Dstring?Dint)\n")
+	DEFINE_LIBFS_ALIAS_S(copyfile, "(existing_file:?X3?Dstring?DFile?Dint,new_file:?X3?Dstring?DFile?Dint,progress:?DCallable=!N)\n")
 	DEFINE_LIBFS_ALIAS_S(chown, "(path:?Dstring,user:?X3?Efs:User?Dstring?Dint,group:?X3?Efs:Group?Dstring?Dint)\n")
 	DEFINE_LIBFS_ALIAS_S(lchown, "(path:?Dstring,user:?X3?Efs:User?Dstring?Dint,group:?X3?Efs:Group?Dstring?Dint)\n")
 	DEFINE_LIBFS_ALIAS_S_ALT("fchmod", chmod, "(fp:?DFile,mode:?X2?Dstring?Dint)\n"
@@ -2278,17 +2279,17 @@ PRIVATE struct dex_symbol symbols[] = {
 	D(POSIX_JOINPATH_DEF_DOC("Joins all @paths passed through varargs to generate a full path. "
 	                         "For this purpose, all path elements are joined with ?GSEP, "
 	                         "after removal of additional slashes and spaces surrounding the given @paths"))
-	D({ "SEP", (DeeObject *)&posix_SEP, MODSYM_FNORMAL,
+	D({ "FS_SEP", (DeeObject *)&posix_FS_SEP, MODSYM_FNORMAL,
 	    DOC("->?Dstring\n"
 	        "The host's primary path separator. On windows that is "
 	        /**/ "$\"\\\" while on most other hosts it is $\"/\"\n"
 	        "If supported by the host, an alternative separator can be read from ?GALTSEP\n"
 	        "Additionally, a string can be testing for being a separator by calling ?Gissep") },)
-	D({ "ALTSEP", (DeeObject *)&posix_ALTSEP, MODSYM_FNORMAL,
+	D({ "FS_ALTSEP", (DeeObject *)&posix_FS_ALTSEP, MODSYM_FNORMAL,
 	    DOC("->?Dstring\n"
 	        "The alternative path separator or an alias for ?GSEP "
 	        /**/ "if the host only supports a single type of separator") },)
-	D({ "DELIM", (DeeObject *)&posix_DELIM, MODSYM_FNORMAL,
+	D({ "FS_DELIM", (DeeObject *)&posix_FS_DELIM, MODSYM_FNORMAL,
 	    DOC("->?Dstring\n"
 	        "A string used to delimit individual paths in path-listings often "
 	        /**/ "found in environment variables, most notably ${environ[\"PATH\"]}") },)
@@ -2308,6 +2309,15 @@ PRIVATE struct dex_symbol symbols[] = {
 	D({ "DEV_STDERR", (DeeObject *)&posix_DEV_STDERR, MODSYM_FNORMAL,
 	    DOC("->?Dstring\n"
 	        "A special filename accepted by ?Gopen to return a handle to ?Astderr?DFile") },)
+
+	/* Allow user-code to  */
+#ifdef DEE_SYSTEM_FS_NOCASE
+#define posix_FS_ICASE (*Dee_True)
+#else /* DEE_SYSTEM_FS_NOCASE */
+#define posix_FS_ICASE (*Dee_False)
+#endif /* !DEE_SYSTEM_FS_NOCASE */
+	{ "FS_ICASE", (DeeObject *)&posix_FS_ICASE, MODSYM_FNORMAL | MODSYM_FREADONLY | MODSYM_FCONSTEXPR,
+	  DOC("Evaluations to true if the host has a case-insensitive file-system") },
 
 	{ NULL }
 };

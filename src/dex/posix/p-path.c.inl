@@ -56,12 +56,12 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix_path_joinpath_f(size_t pathc, DeeObj
 #define DeeString_IsAbsPath(self) DeeSystem_IsAbs(DeeString_STR(self))
 
 PRIVATE DEFINE_STRING(str_single_dot, ".");
-PRIVATE DEFINE_STRING(posix_DELIM, DeeSystem_DELIM_S);
-PRIVATE DEFINE_STRING(posix_SEP, DeeSystem_SEP_S);
+PRIVATE DEFINE_STRING(posix_FS_DELIM, DeeSystem_DELIM_S);
+PRIVATE DEFINE_STRING(posix_FS_SEP, DeeSystem_SEP_S);
 #ifdef DeeSystem_ALTSEP_S
-PRIVATE DEFINE_STRING(posix_ALTSEP, DeeSystem_ALTSEP_S);
+PRIVATE DEFINE_STRING(posix_FS_ALTSEP, DeeSystem_ALTSEP_S);
 #else /* DeeSystem_ALTSEP_S */
-#define posix_ALTSEP posix_SEP
+#define posix_FS_ALTSEP posix_FS_SEP
 #endif /* !DeeSystem_ALTSEP_S */
 
 
@@ -169,7 +169,7 @@ err:
 #else /* DEE_SYSTEM_FS_DRIVES */
 	ASSERT_OBJECT_TYPE_EXACT(path, &DeeString_Type);
 	(void)path;
-	return_reference_((DeeObject *)&posix_SEP);
+	return_reference_((DeeObject *)&posix_FS_SEP);
 #endif /* !DEE_SYSTEM_FS_DRIVES */
 }
 
@@ -180,7 +180,7 @@ posix_path_inctrail_f(DeeObject *__restrict path) {
 	ASSERT_OBJECT_TYPE_EXACT(path, &DeeString_Type);
 	wlength = DeeString_WLEN(path);
 	if unlikely(!wlength)
-		return_reference_((DeeObject *)&posix_SEP);
+		return_reference_((DeeObject *)&posix_FS_SEP);
 	endch = DeeString_GetChar(path, wlength - 1);
 	if (DeeSystem_IsSep(endch))
 		return_reference_(path);
@@ -193,9 +193,9 @@ posix_path_inctrail_f(DeeObject *__restrict path) {
 	 * For this, we can always just search the STR-repr of the string. */
 	if (memchr(DeeString_STR(path), DeeSystem_ALTSEP, DeeString_SIZE(path) * sizeof(char)) != NULL &&
 	    memchr(DeeString_STR(path), DeeSystem_SEP, DeeString_SIZE(path) * sizeof(char)) == NULL)
-		return DeeObject_Add(path, (DeeObject *)&posix_ALTSEP);
+		return DeeObject_Add(path, (DeeObject *)&posix_FS_ALTSEP);
 #endif /* DeeSystem_ALTSEP */
-	return DeeObject_Add(path, (DeeObject *)&posix_SEP);
+	return DeeObject_Add(path, (DeeObject *)&posix_FS_SEP);
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
