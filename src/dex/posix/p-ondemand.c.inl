@@ -32,7 +32,9 @@
 #define NEED_err_unix_unlink
 #define NEED_err_nt_unlink
 #define NEED_err_unix_rmdir
+#define NEED_err_unix_mkdir
 #define NEED_err_nt_rmdir
+#define NEED_err_nt_mkdir
 #define NEED_err_unix_rename
 #define NEED_err_nt_rename
 #define NEED_err_unix_link
@@ -41,7 +43,9 @@
 #define NEED_err_unix_unlink_unsupported
 #define NEED_err_nt_unlink_unsupported
 #define NEED_err_unix_rmdir_unsupported
+#define NEED_err_unix_mkdir_unsupported
 #define NEED_err_nt_rmdir_unsupported
+#define NEED_err_nt_mkdir_unsupported
 #define NEED_err_unix_rename_unsupported
 #define NEED_err_nt_rename_unsupported
 #define NEED_err_unix_link_unsupported
@@ -569,35 +573,35 @@ err_nt_unlink(DWORD dwError, DeeObject *__restrict path) {
 INTDEF ATTR_COLD NONNULL((2)) int DCALL
 err_unix_rmdir(int errno_value, DeeObject *__restrict path) {
 #ifdef EACCES
-#define NEED_err_unix_path_not_writable
 	if (errno_value == EACCES)
 		return err_unix_path_not_writable(errno_value, path);
+#define NEED_err_unix_path_not_writable
 #endif /* EACCES */
 #if defined(EBUSY) || defined(EINVAL)
-#define NEED_err_unix_path_busy
 	DeeSystem_IF_E2(errno_value, EBUSY, EINVAL, {
 		return err_unix_path_busy(errno_value, path);
 	});
+#define NEED_err_unix_path_busy
 #endif /* EBUSY || EINVAL */
 #ifdef ENOENT
-#define NEED_err_unix_path_not_found
 	if (errno_value == ENOENT)
 		return err_unix_path_not_found(errno_value, path);
+#define NEED_err_unix_path_not_found
 #endif /* ENOENT */
 #ifdef ENOTDIR
-#define NEED_err_unix_path_not_dir
 	if (errno_value == ENOTDIR)
 		return err_unix_path_not_dir(errno_value, path);
+#define NEED_err_unix_path_not_dir
 #endif /* ENOTDIR */
 #ifdef ENOTEMPTY
-#define NEED_err_unix_path_not_empty
 	if (errno_value == ENOTEMPTY)
 		return err_unix_path_not_empty(errno_value, path);
+#define NEED_err_unix_path_not_empty
 #endif /* ENOTEMPTY */
 #ifdef EROFS
-#define NEED_err_unix_path_readonly
 	if (errno_value == EROFS)
 		return err_unix_path_readonly(errno_value, path);
+#define NEED_err_unix_path_readonly
 #endif /* EROFS */
 #ifdef EPERM
 	if (errno_value == EPERM) {
@@ -627,8 +631,8 @@ err_unix_rmdir(int errno_value, DeeObject *__restrict path) {
 			DBG_ALIGNMENT_ENABLE();
 		}
 #endif /* posix_stat_USED_STRUCT_STAT */
-#define NEED_err_unix_rmdir_unsupported
 		return err_unix_rmdir_unsupported(errno_value, path);
+#define NEED_err_unix_rmdir_unsupported
 	}
 #endif /* EPERM */
 	return DeeUnixSystem_ThrowErrorf(&DeeError_FSError, errno_value,
@@ -636,6 +640,41 @@ err_unix_rmdir(int errno_value, DeeObject *__restrict path) {
 	                                 path);
 }
 #endif /* NEED_err_unix_rmdir */
+
+#ifdef NEED_err_unix_mkdir
+#undef NEED_err_unix_mkdir
+INTERN ATTR_COLD NONNULL((2)) int DCALL
+err_unix_mkdir(int errno_value, DeeObject *__restrict path, unsigned int mode) {
+#ifdef EACCES
+	if (errno_value == EACCES)
+		return err_unix_path_not_writable(errno_value, path);
+#define NEED_err_unix_path_not_writable
+#endif /* EACCES */
+#ifdef EEXIST
+	if (errno_value == EEXIST)
+		return err_unix_path_exists(errno_value, path);
+#define NEED_err_unix_path_exists
+#endif /* EEXIST */
+#ifdef ENOTDIR
+	if (errno_value == ENOTDIR)
+		return err_unix_path_not_dir(errno_value, path);
+#define NEED_err_unix_path_not_dir
+#endif /* ENOTDIR */
+#ifdef EROFS
+	if (errno_value == EROFS)
+		return err_unix_path_readonly(errno_value, path);
+#define NEED_err_unix_path_readonly
+#endif /* EROFS */
+#ifdef EPERM
+	if (errno_value == EPERM)
+		return err_unix_mkdir_unsupported(errno_value, path, mode);
+#define NEED_err_unix_mkdir_unsupported
+#endif /* EPERM */
+	return DeeUnixSystem_ThrowErrorf(&DeeError_FSError, errno_value,
+	                                 "Failed to create directory %r with mode %#x",
+	                                 path, mode);
+}
+#endif /* NEED_err_unix_mkdir */
 
 #ifdef NEED_err_nt_rmdir
 #undef NEED_err_nt_rmdir
@@ -664,6 +703,28 @@ err_nt_rmdir(DWORD dwError, DeeObject *__restrict path) {
 	                               path);
 }
 #endif /* NEED_err_nt_rmdir */
+
+#ifdef NEED_err_nt_mkdir
+#undef NEED_err_nt_mkdir
+INTDEF ATTR_COLD NONNULL((2)) int DCALL
+err_nt_mkdir(DWORD dwError, DeeObject *__restrict path, unsigned int mode) {
+	if (DeeNTSystem_IsAccessDeniedError(dwError))
+		return err_nt_path_not_writable(dwError, path);
+#define NEED_err_nt_path_not_writable
+	if (DeeNTSystem_IsExists(dwError))
+		return err_nt_path_exists(dwError, path);
+#define NEED_err_nt_path_exists
+	if (DeeNTSystem_IsNotDir(dwError))
+		return err_nt_path_not_dir(dwError, path);
+#define NEED_err_nt_path_not_dir
+	if (DeeNTSystem_IsUnsupportedError(dwError))
+		return err_nt_mkdir_unsupported(dwError, path, mode);
+#define NEED_err_nt_mkdir_unsupported
+	return DeeNTSystem_ThrowErrorf(&DeeError_FSError, dwError,
+	                               "Failed to create directory %r with mode %#x",
+	                               path, mode);
+}
+#endif /* NEED_err_nt_mkdir */
 
 #ifdef NEED_err_unix_rename
 #undef NEED_err_unix_rename
@@ -942,6 +1003,17 @@ err_unix_rmdir_unsupported(int errno_value, DeeObject *__restrict path) {
 }
 #endif /* NEED_err_unix_rmdir_unsupported */
 
+#ifdef NEED_err_unix_mkdir_unsupported
+#undef NEED_err_unix_mkdir_unsupported
+INTDEF ATTR_COLD NONNULL((2)) int DCALL
+err_unix_mkdir_unsupported(int errno_value, DeeObject *__restrict path, unsigned int mode) {
+	return DeeUnixSystem_ThrowErrorf(&DeeError_UnsupportedAPI, errno_value,
+	                                 "The filesystem hosting the path %r does not "
+	                                 "support the creation of directories with mode %#x",
+	                                 path, mode);
+}
+#endif /* NEED_err_unix_mkdir_unsupported */
+
 #ifdef NEED_err_nt_rmdir_unsupported
 #undef NEED_err_nt_rmdir_unsupported
 INTDEF ATTR_COLD NONNULL((2)) int DCALL
@@ -952,6 +1024,17 @@ err_nt_rmdir_unsupported(DWORD dwError, DeeObject *__restrict path) {
 	                               path);
 }
 #endif /* NEED_err_nt_rmdir_unsupported */
+
+#ifdef NEED_err_nt_mkdir_unsupported
+#undef NEED_err_nt_mkdir_unsupported
+INTDEF ATTR_COLD NONNULL((2)) int DCALL
+err_nt_mkdir_unsupported(DWORD dwError, DeeObject *__restrict path, unsigned int mode) {
+	return DeeNTSystem_ThrowErrorf(&DeeError_UnsupportedAPI, dwError,
+	                               "The filesystem hosting the path %r does not "
+	                               "support the creation of directories with mode %#x",
+	                               path, mode);
+}
+#endif /* NEED_err_nt_mkdir_unsupported */
 
 #ifdef NEED_err_unix_rename_unsupported
 #undef NEED_err_unix_rename_unsupported

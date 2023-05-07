@@ -662,8 +662,8 @@ EINTR_LABEL(again)
 		/* Fallthru to fallback path below */
 	}
 #endif /* posix_openat_USE_wopenat || posix_openat_USE_openat */
-#define NEED_posix_dfd_abspath
 	abspath = posix_dfd_abspath(dfd, filename, POSIX_DFD_ABSPATH_ATFLAGS_FROM_OFLAGS(oflags));
+#define NEED_posix_dfd_abspath
 	if unlikely(!abspath)
 		goto err;
 	result = posix__open_f_impl(abspath, oflags, mode);

@@ -231,7 +231,7 @@ err:
 	if unlikely(!wide_file)
 		goto err;
 #endif /* ... */
-EINTR_LABEL(again)
+EINTR_ENOMEM_LABEL(again)
 #ifdef posix_unlink_USE_unlink
 	if unlikely(unlink(utf8_file) != 0)
 #elif defined(posix_unlink_USE_wunlink)
@@ -240,6 +240,7 @@ EINTR_LABEL(again)
 	{
 		int error = DeeSystem_GetErrno();
 		EINTR_HANDLE(error, again, err);
+		ENOMEM_HANDLE(error, again, err);
 #define NEED_err_unix_unlink
 		err_unix_unlink(error, file);
 		goto err;
@@ -293,7 +294,7 @@ again:
 	if unlikely(error < 0)
 		goto err;
 	DBG_ALIGNMENT_DISABLE();
-	dwError = (int)GetLastError();
+	dwError = GetLastError();
 	DBG_ALIGNMENT_ENABLE();
 	if (DeeNTSystem_IsIntr(dwError)) {
 		if (DeeThread_CheckInterrupt())
@@ -303,6 +304,7 @@ again:
 	if (DeeNTSystem_IsBadAllocError(dwError)) {
 		if (Dee_CollectMemory(1))
 			goto again;
+		goto err;
 	}
 #define NEED_err_nt_rmdir
 	err_nt_rmdir(dwError, path);
@@ -322,7 +324,7 @@ err:
 	if unlikely(!wide_path)
 		goto err;
 #endif /* ... */
-EINTR_LABEL(again)
+EINTR_ENOMEM_LABEL(again)
 #ifdef posix_rmdir_USE_rmdir
 	if unlikely(rmdir(utf8_path) != 0)
 #elif defined(posix_rmdir_USE_wrmdir)
@@ -331,6 +333,7 @@ EINTR_LABEL(again)
 	{
 		int error = DeeSystem_GetErrno();
 		EINTR_HANDLE(error, again, err);
+		ENOMEM_HANDLE(error, again, err);
 #define NEED_err_unix_rmdir
 		err_unix_rmdir(error, path);
 		goto err;
@@ -440,7 +443,7 @@ err:
 	if unlikely(!wide_path)
 		goto err;
 #endif /* ... */
-EINTR_LABEL(again)
+EINTR_ENOMEM_LABEL(again)
 #ifdef posix_remove_USE_remove
 	if unlikely(remove(utf8_path) != 0)
 #elif defined(posix_remove_USE_wremove)
@@ -449,6 +452,7 @@ EINTR_LABEL(again)
 	{
 		int error = DeeSystem_GetErrno();
 		EINTR_HANDLE(error, again, err);
+		ENOMEM_HANDLE(error, again, err);
 #define NEED_err_unix_remove
 		err_unix_remove(error, path);
 		goto err;
@@ -488,9 +492,7 @@ err:
 		goto err;
 #endif /* posix_remove_COMBINATION_NEEDS_UTF8 */
 
-#if defined(ENOMEM) || defined(EINTR)
-again:
-#endif /* ENOMEM || EINTR */
+EINTR_ENOMEM_LABEL(again)
 	DBG_ALIGNMENT_DISABLE();
 #if defined(posix_remove_USE_wunlink_AND_wrmdir) || defined(posix_remove_USE_wunlink_AND_rmdir)
 	error = wunlink(wide_path);
@@ -501,11 +503,7 @@ again:
 	if (error) {
 		error = DeeSystem_GetErrno();
 		EINTR_HANDLE(error, again, err);
-		DeeSystem_IF_E1(error, ENOMEM, {
-			if (Dee_CollectMemory(1))
-				goto again;
-			goto err;
-		});
+		ENOMEM_HANDLE(error, again, err);
 #if defined(EISDIR) || defined(EPERM)
 #if defined(EISDIR) && defined(EPERM)
 		if (error == EISDIR || error == EPERM)
@@ -527,11 +525,7 @@ again:
 				return_none;
 			error = DeeSystem_GetErrno();
 			EINTR_HANDLE(error, again, err);
-			DeeSystem_IF_E1(error, ENOMEM, {
-				if (Dee_CollectMemory(1))
-					goto again;
-				goto err;
-			});
+			ENOMEM_HANDLE(error, again, err);
 #define NEED_err_unix_rmdir
 			err_unix_rmdir(error, path);
 		} else {
@@ -547,16 +541,14 @@ again:
 #else /* posix_remove_USE_wunlink_AND_wrmdir || posix_remove_USE_unlink_AND_wrmdir */
 		error = rmdir(utf8_path);
 #endif /* !posix_remove_USE_wunlink_AND_wrmdir && !posix_remove_USE_unlink_AND_wrmdir */
-		DBG_ALIGNMENT_ENABLE();
-		if likely(!error)
+		if likely(error == 0) {
+			DBG_ALIGNMENT_ENABLE();
 			return_none;
+		}
 		error = DeeSystem_GetErrno();
+		DBG_ALIGNMENT_ENABLE();
 		EINTR_HANDLE(error, again, err);
-		DeeSystem_IF_E1(error, ENOMEM, {
-			if (Dee_CollectMemory(1))
-				goto again;
-			goto err;
-		});
+		ENOMEM_HANDLE(error, again, err);
 #define NEED_err_unix_rmdir
 		err_unix_rmdir(error, path);
 #endif /* !EISDIR && !EPERM */
@@ -603,6 +595,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_unlinkat_f_impl(DeeObject *dfd, D
 	DREF DeeObject *absfile, *result;
 #ifdef posix_unlinkat_USE_unlinkat
 	if (!DeeString_Check(dfd) && DeeString_Check(file)) {
+		int error;
 		int os_dfd = DeeUnixSystem_GetFD(dfd);
 		char *utf8_file;
 		if unlikely(os_dfd == -1)
@@ -610,10 +603,17 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_unlinkat_f_impl(DeeObject *dfd, D
 		utf8_file = DeeString_AsUtf8(file);
 		if unlikely(!utf8_file)
 			goto err;
-EINTR_LABEL(again)
-		if (unlinkat(os_dfd, utf8_file, atflags) == 0)
+EINTR_ENOMEM_LABEL(again)
+		DBG_ALIGNMENT_DISABLE();
+		error = unlinkat(os_dfd, utf8_file, atflags);
+		if likely(error == 0) {
+			DBG_ALIGNMENT_ENABLE();
 			return_none;
-		EINTR_HANDLE(DeeSystem_GetErrno(), again, err);
+		}
+		error = DeeSystem_GetErrno();
+		DBG_ALIGNMENT_ENABLE();
+		EINTR_HANDLE(error, again, err);
+		ENOMEM_HANDLE(error, again, err);
 		/* fallthru to the fallback path below */
 	}
 #endif /* posix_unlinkat_USE_unlinkat */
@@ -673,6 +673,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_removeat_f_impl(DeeObject *dfd, D
 	DREF DeeObject *abspath, *result;
 #ifdef posix_removeat_USE_removeat
 	if (!DeeString_Check(dfd) && DeeString_Check(path)) {
+		int error;
 		int os_dfd = DeeUnixSystem_GetFD(dfd);
 		char *utf8_path;
 		if unlikely(os_dfd == -1)
@@ -680,10 +681,17 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_removeat_f_impl(DeeObject *dfd, D
 		utf8_path = DeeString_AsUtf8(path);
 		if unlikely(!utf8_path)
 			goto err;
-EINTR_LABEL(again)
-		if (removeat(os_dfd, utf8_path, atflags) == 0)
+EINTR_ENOMEM_LABEL(again)
+		DBG_ALIGNMENT_DISABLE();
+		error = removeat(os_dfd, utf8_path, atflags);
+		if likely(error == 0) {
+			DBG_ALIGNMENT_ENABLE();
 			return_none;
-		EINTR_HANDLE(DeeSystem_GetErrno(), again, err);
+		}
+		error = DeeSystem_GetErrno();
+		DBG_ALIGNMENT_ENABLE();
+		EINTR_HANDLE(error, again, err);
+		ENOMEM_HANDLE(error, again, err);
 		/* fallthru to the fallback path below */
 	}
 #endif /* posix_removeat_USE_removeat */
@@ -737,6 +745,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_rmdirat_f_impl(DeeObject *dfd, De
 	DREF DeeObject *abspath, *result;
 #ifdef posix_rmdirat_USE_rmdirat
 	if (!DeeString_Check(dfd) && DeeString_Check(path)) {
+		int error;
 		int os_dfd = DeeUnixSystem_GetFD(dfd);
 		char *utf8_path;
 		if unlikely(os_dfd == -1)
@@ -744,10 +753,17 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_rmdirat_f_impl(DeeObject *dfd, De
 		utf8_path = DeeString_AsUtf8(path);
 		if unlikely(!utf8_path)
 			goto err;
-EINTR_LABEL(again)
-		if (rmdirat(os_dfd, utf8_path, atflags) == 0)
+EINTR_ENOMEM_LABEL(again)
+		DBG_ALIGNMENT_DISABLE();
+		error = rmdirat(os_dfd, utf8_path, atflags);
+		if likely(error == 0) {
+			DBG_ALIGNMENT_ENABLE();
 			return_none;
-		EINTR_HANDLE(DeeSystem_GetErrno(), again, err);
+		}
+		error = DeeSystem_GetErrno();
+		DBG_ALIGNMENT_ENABLE();
+		EINTR_HANDLE(error, again, err);
+		ENOMEM_HANDLE(error, again, err);
 		/* fallthru to the fallback path below */
 	}
 #endif /* posix_rmdirat_USE_rmdirat */

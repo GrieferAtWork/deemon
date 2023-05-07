@@ -44,6 +44,7 @@
 		<ClInclude Include="..\..\src\dex\posix\p-fd.c.inl" />
 		<ClInclude Include="..\..\src\dex\posix\p-fs-deprecated.c.inl" />
 		<ClInclude Include="..\..\src\dex\posix\p-fs.c.inl" />
+		<ClInclude Include="..\..\src\dex\posix\p-mkdir.c.inl" />
 		<ClInclude Include="..\..\src\dex\posix\p-ondemand.c.inl" />
 		<ClInclude Include="..\..\src\dex\posix\p-open.c.inl" />
 		<ClInclude Include="..\..\src\dex\posix\p-opendir.c.inl" />

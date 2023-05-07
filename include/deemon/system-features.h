@@ -603,6 +603,8 @@ functest('lchmod("foo", 0666)', "defined(CONFIG_HAVE_SYS_STAT_H) && defined(__US
 functest('fchmodat(AT_FDCWD, "foo", 0666, 0)', "defined(CONFIG_HAVE_SYS_STAT_H) && defined(__USE_ATFILE)");
 functest('mkdirat(AT_FDCWD, "foo", 0755)', "defined(CONFIG_HAVE_SYS_STAT_H) && defined(__USE_ATFILE)");
 functest('fmkdirat(AT_FDCWD, "foo", 0755, 0)', "defined(CONFIG_HAVE_SYS_STAT_H) && defined(__USE_KOS) && defined(__USE_ATFILE)");
+func("wmkdirat", test: "wchar_t c[] = { 'f', 'o', 'o', 0 }; return wmkdirat(AT_FDCWD, c, 0755);");
+func("wfmkdirat", test: "wchar_t c[] = { 'f', 'o', 'o', 0 }; return wfmkdirat(AT_FDCWD, c, 0755, 0);");
 functest('mkfifoat(AT_FDCWD, "foo", 0666)', "defined(CONFIG_HAVE_SYS_STAT_H) && defined(__USE_ATFILE)");
 functest('fchmod(1, 0644)', "defined(CONFIG_HAVE_SYS_STAT_H) && defined(__USE_POSIX)");
 functest('mknod("foo", 0644, (dev_t)123)', "defined(CONFIG_HAVE_SYS_STAT_H) && (defined(__USE_MISC) || defined(__USE_XOPEN_EXTENDED))");
@@ -4992,6 +4994,20 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
       (defined(fmkdirat) || defined(__fmkdirat_defined) || (defined(CONFIG_HAVE_SYS_STAT_H) && \
        defined(__USE_KOS) && defined(__USE_ATFILE)))
 #define CONFIG_HAVE_fmkdirat
+#endif
+
+#ifdef CONFIG_NO_wmkdirat
+#undef CONFIG_HAVE_wmkdirat
+#elif !defined(CONFIG_HAVE_wmkdirat) && \
+      (defined(wmkdirat) || defined(__wmkdirat_defined))
+#define CONFIG_HAVE_wmkdirat
+#endif
+
+#ifdef CONFIG_NO_wfmkdirat
+#undef CONFIG_HAVE_wfmkdirat
+#elif !defined(CONFIG_HAVE_wfmkdirat) && \
+      (defined(wfmkdirat) || defined(__wfmkdirat_defined))
+#define CONFIG_HAVE_wfmkdirat
 #endif
 
 #ifdef CONFIG_NO_mkfifoat
@@ -10135,6 +10151,30 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #undef pipe
 #define pipe(fds) _pipe(fds, 4096, O_BINARY)
 #endif /* pipe = _pipe */
+
+#if !defined(CONFIG_HAVE_mkdirat) && defined(CONFIG_HAVE_fmkdirat)
+#define CONFIG_HAVE_mkdirat
+#undef mkdirat
+#define mkdirat(dfd, path, mode) fmkdirat(dfd, path, mode, 0)
+#endif /* mkdirat = fmkdirat */
+
+#if !defined(CONFIG_HAVE_wmkdirat) && defined(CONFIG_HAVE_wfmkdirat)
+#define CONFIG_HAVE_wmkdirat
+#undef wmkdirat
+#define wmkdirat(dfd, path, mode) wfmkdirat(dfd, path, mode, 0)
+#endif /* wmkdirat = wfmkdirat */
+
+#if !defined(CONFIG_HAVE_mkdir) && defined(CONFIG_HAVE_mkdirat) && defined(CONFIG_HAVE_AT_FDCWD)
+#define CONFIG_HAVE_mkdir
+#undef mkdir
+#define mkdir(path, mode) mkdirat(AT_FDCWD, path, mode)
+#endif /* mkdir = mkdirat */
+
+#if !defined(CONFIG_HAVE_wmkdir) && defined(CONFIG_HAVE_wmkdirat) && defined(CONFIG_HAVE_AT_FDCWD)
+#define CONFIG_HAVE_wmkdir
+#undef wmkdir
+#define wmkdir(path, mode) wmkdirat(AT_FDCWD, path, mode)
+#endif /* wmkdir = wmkdirat */
 
 #if defined(CONFIG_HAVE__mkdir) && !defined(CONFIG_HAVE_mkdir)
 #define CONFIG_HAVE_mkdir

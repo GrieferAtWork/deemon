@@ -33,6 +33,7 @@
 #include "p-exit.c.inl"
 #include "p-fd.c.inl"
 #include "p-fs.c.inl"
+#include "p-mkdir.c.inl"
 #include "p-open.c.inl"
 #include "p-opendir.c.inl"
 #include "p-pipe.c.inl"
@@ -209,9 +210,12 @@ local ALL_STUBS = {
 	("posix_fchdirat_USE_STUB", { "fchdirat" }),
 	("posix_unlink_USE_STUB", { "unlink" }),
 	("posix_rmdir_USE_STUB", { "rmdir" }),
+	("posix_mkdir_USE_STUB", { "mkdir" }),
 	("posix_remove_USE_STUB", { "remove" }),
 	("posix_unlinkat_USE_STUB", { "unlinkat" }),
 	("posix_rmdirat_USE_STUB", { "rmdirat" }),
+	("posix_mkdirat_USE_STUB", { "mkdirat" }),
+	("posix_fmkdirat_USE_STUB", { "fmkdirat" }),
 	("posix_removeat_USE_STUB", { "removeat" }),
 	("posix_readlink_USE_STUB", { "readlink" }),
 	("posix_freadlink_USE_STUB", { "freadlink" }),
@@ -516,6 +520,13 @@ print("#endif /" "* POSIX_STUBS_TOTLEN == 0 *" "/");
 #define len_posix_flink_USE_STUB /* nothing */
 #define str_posix_flink_USE_STUB /* nothing */
 #endif /* !posix_flink_USE_STUB */
+#ifdef posix_fmkdirat_USE_STUB
+#define len_posix_fmkdirat_USE_STUB +9
+#define str_posix_fmkdirat_USE_STUB 'f', 'm', 'k', 'd', 'i', 'r', 'a', 't', '\0',
+#else /* posix_fmkdirat_USE_STUB */
+#define len_posix_fmkdirat_USE_STUB /* nothing */
+#define str_posix_fmkdirat_USE_STUB /* nothing */
+#endif /* !posix_fmkdirat_USE_STUB */
 #ifdef posix_freadlink_USE_STUB
 #define len_posix_freadlink_USE_STUB +10
 #define str_posix_freadlink_USE_STUB 'f', 'r', 'e', 'a', 'd', 'l', 'i', 'n', 'k', '\0',
@@ -600,6 +611,20 @@ print("#endif /" "* POSIX_STUBS_TOTLEN == 0 *" "/");
 #define len_posix_lstat_USE_STUB /* nothing */
 #define str_posix_lstat_USE_STUB /* nothing */
 #endif /* !posix_lstat_USE_STUB */
+#ifdef posix_mkdir_USE_STUB
+#define len_posix_mkdir_USE_STUB +6
+#define str_posix_mkdir_USE_STUB 'm', 'k', 'd', 'i', 'r', '\0',
+#else /* posix_mkdir_USE_STUB */
+#define len_posix_mkdir_USE_STUB /* nothing */
+#define str_posix_mkdir_USE_STUB /* nothing */
+#endif /* !posix_mkdir_USE_STUB */
+#ifdef posix_mkdirat_USE_STUB
+#define len_posix_mkdirat_USE_STUB +8
+#define str_posix_mkdirat_USE_STUB 'm', 'k', 'd', 'i', 'r', 'a', 't', '\0',
+#else /* posix_mkdirat_USE_STUB */
+#define len_posix_mkdirat_USE_STUB /* nothing */
+#define str_posix_mkdirat_USE_STUB /* nothing */
+#endif /* !posix_mkdirat_USE_STUB */
 #ifdef posix_open_USE_STUB
 #define len_posix_open_USE_STUB +11
 #define str_posix_open_USE_STUB 'o', 'p', 'e', 'n', '\0', '_', 'o', 'p', 'e', 'n', '\0',
@@ -1001,6 +1026,7 @@ print("#endif /" "* POSIX_STUBS_TOTLEN == 0 *" "/");
 	len_posix_fchdirat_USE_STUB \
 	len_posix_fdatasync_USE_STUB \
 	len_posix_flink_USE_STUB \
+	len_posix_fmkdirat_USE_STUB \
 	len_posix_freadlink_USE_STUB \
 	len_posix_frename_USE_STUB \
 	len_posix_fsync_USE_STUB \
@@ -1013,6 +1039,8 @@ print("#endif /" "* POSIX_STUBS_TOTLEN == 0 *" "/");
 	len_posix_linkat_USE_STUB \
 	len_posix_lseek_USE_STUB \
 	len_posix_lstat_USE_STUB \
+	len_posix_mkdir_USE_STUB \
+	len_posix_mkdirat_USE_STUB \
 	len_posix_open_USE_STUB \
 	len_posix_openat_USE_STUB \
 	len_posix_opendir_USE_STUB \
@@ -1115,6 +1143,7 @@ PRIVATE struct {
 		str_posix_fchdirat_USE_STUB
 		str_posix_fdatasync_USE_STUB
 		str_posix_flink_USE_STUB
+		str_posix_fmkdirat_USE_STUB
 		str_posix_freadlink_USE_STUB
 		str_posix_frename_USE_STUB
 		str_posix_fsync_USE_STUB
@@ -1127,6 +1156,8 @@ PRIVATE struct {
 		str_posix_linkat_USE_STUB
 		str_posix_lseek_USE_STUB
 		str_posix_lstat_USE_STUB
+		str_posix_mkdir_USE_STUB
+		str_posix_mkdirat_USE_STUB
 		str_posix_open_USE_STUB
 		str_posix_openat_USE_STUB
 		str_posix_opendir_USE_STUB
@@ -1768,6 +1799,18 @@ PRIVATE struct dex_symbol symbols[] = {
 	                       /*               */ "operations mode, preventing the deletion of existing files\n"
 	                       "@throw SystemError Failed to unlink the given file @file for some reason\n"
 	                       "Remove a non-directory filesystem object named @file"))
+	D(POSIX_MKDIR_DEF_DOC("@interrupt\n"
+	                      "@throw FileNotFound One or more of @path's parents do not exist\n"
+	                      "@throw NoDirectory A part of the given @path is not a directory\n"
+	                      "@throw FileExists The given @path already exists\n"
+	                      "@throw ValueError The given @permissions are malformed or not recognized\n"
+	                      "@throw FileAccessError The current user does not have permissions to "
+	                      /*                  */ "create a new directory within the folder of @path\n"
+	                      "@throw ReadOnlyFile The filesystem or device hosting the directory of "
+	                      /*               */ "@path is in read-only operations mode, preventing the "
+	                      /*               */ "creation of new directories\n"
+	                      "@throw SystemError Failed to create a directory for some reason\n"
+	                      "Create a new directory named @path"))
 	D(POSIX_RMDIR_DEF_DOC("@interrupt\n"
 	                      "@throw FileNotFound The given @path does not exist\n"
 	                      "@throw NoDirectory A part of the given @path is not a directory\n"
@@ -1802,6 +1845,32 @@ PRIVATE struct dex_symbol symbols[] = {
 	                         "@throw SystemError Failed to unlink the given file @dfd:@file for some reason\n"
 	                         "@param atflags Set of ?GAT_REMOVEDIR, ?GAT_REMOVEREG\n"
 	                         "Remove a filesystem object named @dfd:@file"))
+	D(POSIX_MKDIRAT_DEF_DOC("@interrupt\n"
+	                        "@throw FileNotFound One or more of @dfd:@path's parents do not exist\n"
+	                        "@throw NoDirectory A part of the given @dfd:@path is not a directory\n"
+	                        "@throw FileExists The given @dfd:@path already exists\n"
+	                        "@throw ValueError The given @permissions are malformed or not recognized\n"
+	                        "@throw FileAccessError The current user does not have permissions to "
+	                        /*                  */ "create a new directory within the folder of @dfd:@path\n"
+	                        "@throw ReadOnlyFile The filesystem or device hosting the directory of "
+	                        /*               */ "@dfd:@path is in read-only operations mode, preventing the "
+	                        /*               */ "creation of new directories\n"
+	                        "@throw SystemError Failed to create a directory for some reason\n"
+	                        "@throw FileClosed The given @dfd was closed\n"
+	                        "Create a new directory named @dfd:@path"))
+	D(POSIX_FMKDIRAT_DEF_DOC("@interrupt\n"
+	                         "@throw FileNotFound One or more of @dfd:@path's parents do not exist\n"
+	                         "@throw NoDirectory A part of the given @dfd:@path is not a directory\n"
+	                         "@throw FileExists The given @dfd:@path already exists\n"
+	                         "@throw ValueError The given @permissions are malformed or not recognized\n"
+	                         "@throw FileAccessError The current user does not have permissions to "
+	                         /*                  */ "create a new directory within the folder of @dfd:@path\n"
+	                         "@throw ReadOnlyFile The filesystem or device hosting the directory of "
+	                         /*               */ "@dfd:@path is in read-only operations mode, preventing the "
+	                         /*               */ "creation of new directories\n"
+	                         "@throw SystemError Failed to create a directory for some reason\n"
+	                         "@throw FileClosed The given @dfd was closed\n"
+	                         "Create a new directory named @dfd:@path"))
 	D(POSIX_RMDIRAT_DEF_DOC("@interrupt\n"
 	                        "@throw FileNotFound The given @dfd:@path does not exist\n"
 	                        "@throw NoDirectory A part of the given @dfd:@path is not a directory\n"
@@ -1812,7 +1881,7 @@ PRIVATE struct dex_symbol symbols[] = {
 	                        "@throw FileAccessError The current user does not have permissions to remove the directory described by @dfd:@path\n"
 	                        "@throw ReadOnlyFile The filesystem or device hosting the directory of @dfd:@path is in read-only "
 	                        /*               */ "operations mode, preventing the deletion of existing directories\n"
-	                        "@throw FileClosed The given @fd was closed\n"
+	                        "@throw FileClosed The given @dfd was closed\n"
 	                        "@throw SystemError Failed to delete the directory @dfd:@path for some reason\n"
 	                        "Remove a directory named @dfd:@path"))
 	D(POSIX_REMOVEAT_DEF_DOC("@interrupt\n"
@@ -1995,7 +2064,6 @@ PRIVATE struct dex_symbol symbols[] = {
 	DEFINE_LIBFS_ALIAS_S(lchmod, "(path:?Dstring,mode:?X2?Dstring?Dint)\n")
 	DEFINE_LIBFS_ALIAS_S(chown, "(path:?Dstring,user:?X3?Efs:User?Dstring?Dint,group:?X3?Efs:Group?Dstring?Dint)\n")
 	DEFINE_LIBFS_ALIAS_S(lchown, "(path:?Dstring,user:?X3?Efs:User?Dstring?Dint,group:?X3?Efs:Group?Dstring?Dint)\n")
-	DEFINE_LIBFS_ALIAS_S(mkdir, "(path:?Dstring,permissions:?X2?Dstring?Dint=!N)\n")
 	DEFINE_LIBFS_ALIAS_S(symlink, "(linktext:?Dstring,linkname:?Dstring)\n")
 	DEFINE_LIBFS_ALIAS_S_ALT("fchmod", chmod, "(fp:?DFile,mode:?X2?Dstring?Dint)\n"
 	                                          "(fd:?Dint,mode:?X2?Dstring?Dint)\n")
