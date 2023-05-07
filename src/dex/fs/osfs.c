@@ -2376,15 +2376,15 @@ cygwin_symlink_utf8:
 	switch (buffer->ReparseTag) {
 
 	case IO_REPARSE_TAG_SYMLINK:
-		linkstr_begin = buffer->SymbolicLinkReparseBuffer.PathBuffer;
-		linkstr_end = (linkstr_begin + (buffer->SymbolicLinkReparseBuffer.SubstituteNameOffset / sizeof(WCHAR))) +
-		              (buffer->SymbolicLinkReparseBuffer.SubstituteNameLength / sizeof(WCHAR));
+		linkstr_begin = (LPWSTR)((PBYTE)buffer->SymbolicLinkReparseBuffer.PathBuffer +
+		                         /*  */ buffer->SymbolicLinkReparseBuffer.SubstituteNameOffset);
+		linkstr_end = (LPWSTR)((PBYTE)linkstr_begin + buffer->SymbolicLinkReparseBuffer.SubstituteNameLength);
 		break;
 
 	case IO_REPARSE_TAG_MOUNT_POINT:
-		linkstr_begin = buffer->MountPointReparseBuffer.PathBuffer;
-		linkstr_end = (linkstr_begin + (buffer->MountPointReparseBuffer.SubstituteNameOffset / sizeof(WCHAR))) +
-		              (buffer->MountPointReparseBuffer.SubstituteNameLength / sizeof(WCHAR));
+		linkstr_begin = (LPWSTR)((PBYTE)buffer->MountPointReparseBuffer.PathBuffer +
+		                         /*  */ buffer->MountPointReparseBuffer.SubstituteNameOffset);
+		linkstr_end = (LPWSTR)((PBYTE)linkstr_begin + buffer->MountPointReparseBuffer.SubstituteNameLength);
 		break;
 
 	case IO_REPARSE_TAG_LX_SYMLINK: {
