@@ -814,6 +814,19 @@ err_r:
 
 
 
+
+/* Warn about use of `pack' (but only if we're not currently inside of a macro) */
+INTERN WUNUSED int DCALL
+parser_warn_pack_used(struct ast_loc *loc) {
+	struct TPPFile *file = token.t_file;
+	if (loc && loc->l_file)
+		file = loc->l_file;
+	if (file->f_kind != TPPFILE_KIND_TEXT)
+		return 0; /* Only warn inside of regular files */
+	return WARNAT(loc, W_PACKED_USED_OUTSIDE_OF_MACRO);
+
+}
+
 INTERN WUNUSED NONNULL((1)) int FCALL
 _parser_paren_begin(bool *__restrict p_has_paren, int wnum) {
 	ASSERT(tok != '(');
@@ -827,7 +840,7 @@ _parser_paren_begin(bool *__restrict p_has_paren, int wnum) {
 			if unlikely(yield() < 0)
 				goto err;
 		} else {
-			/* Warn about of use of `pack' (if done so outside
+			/* Warn about use of `pack' (if done so outside
 			 * of a macro, and only if not followed by a `(') */
 			if unlikely(parser_warn_pack_used(&packloc))
 				goto err;
