@@ -984,25 +984,25 @@ FORCELOCAL WUNUSED void *DCALL DeeDbg_AllocaCleanup(void *ptr) {
 
 /* A hybrid between alloca and malloc, using alloca for
  * small allocations, but malloc() for larger ones.
- * NOTE: In all cases, 'Dee_AFree()' should be used to clean up a
- *       pointer previously allocated using 'Dee_AMalloc()' and
+ * NOTE: In all cases, 'Dee_Freea()' should be used to clean up a
+ *       pointer previously allocated using 'Dee_Malloca()' and
  *       friends. */
 #if !defined(Dee_Alloca) || !defined(NO_DBG_ALIGNMENT)
-#define Dee_AMalloc(s)    Dee_Malloc(s)
-#define Dee_ACalloc(s)    Dee_Calloc(s)
-#define Dee_ATryMalloc(s) Dee_TryMalloc(s)
-#define Dee_ATryCalloc(s) Dee_TryCalloc(s)
-#define Dee_AFree(p)      Dee_Free(p)
-#define Dee_XAFree(p)     Dee_Free(p)
+#define Dee_Malloca(s)    Dee_Malloc(s)
+#define Dee_Calloca(s)    Dee_Calloc(s)
+#define Dee_TryMalloca(s) Dee_TryMalloc(s)
+#define Dee_TryCalloca(s) Dee_TryCalloc(s)
+#define Dee_Freea(p)      Dee_Free(p)
+#define Dee_XFreea(p)     Dee_Free(p)
 #else /* !Dee_Alloca || !NO_DBG_ALIGNMENT */
 
 #ifdef __SIZEOF_POINTER__
-/* WARNING: This makes amalloc() unsuitable for floating point allocations. */
-#define DEE_AMALLOC_ALIGN    __SIZEOF_POINTER__
+/* WARNING: This makes Dee_Malloca() unsuitable for floating point allocations. */
+#define DEE_MALLOCA_ALIGN __SIZEOF_POINTER__
 #else /* __SIZEOF_POINTER__ */
-#define DEE_AMALLOC_ALIGN    8
+#define DEE_MALLOCA_ALIGN 8
 #endif /* !__SIZEOF_POINTER__ */
-#define DEE_AMALLOC_MAX      512
+#define DEE_MALLOCA_MAX   512
 
 #ifndef CONFIG_HAVE_memset
 #define CONFIG_HAVE_memset
@@ -1028,355 +1028,355 @@ DECL_END
 
 
 #ifdef NDEBUG
-#define DEE_AMALLOC_KEY_ALLOCA        0
-#define DEE_AMALLOC_KEY_MALLOC        1
-#define DEE_AMALLOC_SKEW_ALLOCA(p, s) (p)
-#define DEE_AMALLOC_GETKEY(p)         ((__BYTE_TYPE__ *)(p))[-DEE_AMALLOC_ALIGN]
-#define DEE_AMALLOC_MUSTFREE(p)       (DEE_AMALLOC_GETKEY(p) != DEE_AMALLOC_KEY_ALLOCA)
+#define DEE_MALLOCA_KEY_ALLOCA        0
+#define DEE_MALLOCA_KEY_MALLOC        1
+#define DEE_MALLOCA_SKEW_ALLOCA(p, s) (p)
+#define DEE_MALLOCA_GETKEY(p)         ((__BYTE_TYPE__ *)(p))[-DEE_MALLOCA_ALIGN]
+#define DEE_MALLOCA_MUSTFREE(p)       (DEE_MALLOCA_GETKEY(p) != DEE_MALLOCA_KEY_ALLOCA)
 #else /* NDEBUG */
-#define DEE_AMALLOC_KEY_ALLOCA  0x7c
-#define DEE_AMALLOC_KEY_MALLOC  0xb3
-#define DEE_AMALLOC_GETKEY(p)   ((__BYTE_TYPE__ *)(p))[-DEE_AMALLOC_ALIGN]
-#define DEE_AMALLOC_MUSTFREE(p)                                    \
-	(Dee_ASSERT(DEE_AMALLOC_GETKEY(p) == DEE_AMALLOC_KEY_ALLOCA || \
-	            DEE_AMALLOC_GETKEY(p) == DEE_AMALLOC_KEY_MALLOC),  \
-	 DEE_AMALLOC_GETKEY(p) == DEE_AMALLOC_KEY_MALLOC)
-#define DEE_AMALLOC_SKEW_ALLOCA(p, s) memset(p, 0xcd, s)
+#define DEE_MALLOCA_KEY_ALLOCA 0x7c
+#define DEE_MALLOCA_KEY_MALLOC 0xb3
+#define DEE_MALLOCA_GETKEY(p)  ((__BYTE_TYPE__ *)(p))[-DEE_MALLOCA_ALIGN]
+#define DEE_MALLOCA_MUSTFREE(p)                                    \
+	(Dee_ASSERT(DEE_MALLOCA_GETKEY(p) == DEE_MALLOCA_KEY_ALLOCA || \
+	            DEE_MALLOCA_GETKEY(p) == DEE_MALLOCA_KEY_MALLOC),  \
+	 DEE_MALLOCA_GETKEY(p) == DEE_MALLOCA_KEY_MALLOC)
+#define DEE_MALLOCA_SKEW_ALLOCA(p, s) memset(p, 0xcd, s)
 #endif /* !NDEBUG */
 #ifndef __NO_XBLOCK
-#define Dee_AMallocStack(s)                                            \
+#define Dee_MallocaStack(s)                                            \
 	XBLOCK({                                                           \
-		size_t const _s_     = (s) + DEE_AMALLOC_ALIGN;                \
+		size_t const _s_     = (s) + DEE_MALLOCA_ALIGN;                \
 		__BYTE_TYPE__ *_res_ = (__BYTE_TYPE__ *)Dee_Alloca(_s_);       \
-		*_res_               = DEE_AMALLOC_KEY_ALLOCA;                 \
-		_res_ += DEE_AMALLOC_ALIGN;                                    \
-		(void)DEE_AMALLOC_SKEW_ALLOCA(_res_, _s_ - DEE_AMALLOC_ALIGN); \
+		*_res_               = DEE_MALLOCA_KEY_ALLOCA;                 \
+		_res_ += DEE_MALLOCA_ALIGN;                                    \
+		(void)DEE_MALLOCA_SKEW_ALLOCA(_res_, _s_ - DEE_MALLOCA_ALIGN); \
 		XRETURN((void *)_res_);                                        \
 	})
-#define Dee_AMallocHeap(s)                                       \
+#define Dee_MallocaHeap(s)                                       \
 	XBLOCK({                                                     \
-		size_t const _s_     = (s) + DEE_AMALLOC_ALIGN;          \
+		size_t const _s_     = (s) + DEE_MALLOCA_ALIGN;          \
 		__BYTE_TYPE__ *_res_ = (__BYTE_TYPE__ *)Dee_Malloc(_s_); \
 		if (_res_)                                               \
-			*_res_ = DEE_AMALLOC_KEY_MALLOC;                     \
-		_res_ += DEE_AMALLOC_ALIGN;                              \
+			*_res_ = DEE_MALLOCA_KEY_MALLOC;                     \
+		_res_ += DEE_MALLOCA_ALIGN;                              \
 		XRETURN((void *)_res_);                                  \
 	})
-#define Dee_ATryMallocHeap(s)                                       \
+#define Dee_TryMallocaHeap(s)                                       \
 	XBLOCK({                                                        \
-		size_t const _s_     = (s) + DEE_AMALLOC_ALIGN;             \
+		size_t const _s_     = (s) + DEE_MALLOCA_ALIGN;             \
 		__BYTE_TYPE__ *_res_ = (__BYTE_TYPE__ *)Dee_TryMalloc(_s_); \
 		if (_res_)                                                  \
-			*_res_ = DEE_AMALLOC_KEY_MALLOC;                        \
-		_res_ += DEE_AMALLOC_ALIGN;                                 \
+			*_res_ = DEE_MALLOCA_KEY_MALLOC;                        \
+		_res_ += DEE_MALLOCA_ALIGN;                                 \
 		XRETURN((void *)_res_);                                     \
 	})
-#define Dee_AMalloc(s)                                                     \
+#define Dee_Malloca(s)                                                     \
 	XBLOCK({                                                               \
-		size_t const _s_ = (s) + DEE_AMALLOC_ALIGN;                        \
+		size_t const _s_ = (s) + DEE_MALLOCA_ALIGN;                        \
 		__BYTE_TYPE__ *_res_;                                              \
-		if (_s_ > DEE_AMALLOC_MAX) {                                       \
+		if (_s_ > DEE_MALLOCA_MAX) {                                       \
 			_res_ = (__BYTE_TYPE__ *)Dee_Malloc(_s_);                      \
 			if (_res_) {                                                   \
-				*_res_ = DEE_AMALLOC_KEY_MALLOC;                           \
-				_res_ += DEE_AMALLOC_ALIGN;                                \
+				*_res_ = DEE_MALLOCA_KEY_MALLOC;                           \
+				_res_ += DEE_MALLOCA_ALIGN;                                \
 			}                                                              \
 		} else {                                                           \
 			_res_  = (__BYTE_TYPE__ *)Dee_Alloca(_s_);                     \
-			*_res_ = DEE_AMALLOC_KEY_ALLOCA;                               \
-			_res_ += DEE_AMALLOC_ALIGN;                                    \
-			(void)DEE_AMALLOC_SKEW_ALLOCA(_res_, _s_ - DEE_AMALLOC_ALIGN); \
+			*_res_ = DEE_MALLOCA_KEY_ALLOCA;                               \
+			_res_ += DEE_MALLOCA_ALIGN;                                    \
+			(void)DEE_MALLOCA_SKEW_ALLOCA(_res_, _s_ - DEE_MALLOCA_ALIGN); \
 		}                                                                  \
 		XRETURN((void *)_res_);                                            \
 	})
-#define Dee_ATryMalloc(s)                                                  \
+#define Dee_TryMalloca(s)                                                  \
 	XBLOCK({                                                               \
-		size_t const _s_ = (s) + DEE_AMALLOC_ALIGN;                        \
+		size_t const _s_ = (s) + DEE_MALLOCA_ALIGN;                        \
 		__BYTE_TYPE__ *_res_;                                              \
-		if (_s_ > DEE_AMALLOC_MAX) {                                       \
+		if (_s_ > DEE_MALLOCA_MAX) {                                       \
 			_res_ = (__BYTE_TYPE__ *)Dee_TryMalloc(_s_);                   \
 			if (_res_) {                                                   \
-				*_res_ = DEE_AMALLOC_KEY_MALLOC;                           \
-				_res_ += DEE_AMALLOC_ALIGN;                                \
+				*_res_ = DEE_MALLOCA_KEY_MALLOC;                           \
+				_res_ += DEE_MALLOCA_ALIGN;                                \
 			}                                                              \
 		} else {                                                           \
 			_res_  = (__BYTE_TYPE__ *)Dee_Alloca(_s_);                     \
-			*_res_ = DEE_AMALLOC_KEY_ALLOCA;                               \
-			_res_ += DEE_AMALLOC_ALIGN;                                    \
-			(void)DEE_AMALLOC_SKEW_ALLOCA(_res_, _s_ - DEE_AMALLOC_ALIGN); \
+			*_res_ = DEE_MALLOCA_KEY_ALLOCA;                               \
+			_res_ += DEE_MALLOCA_ALIGN;                                    \
+			(void)DEE_MALLOCA_SKEW_ALLOCA(_res_, _s_ - DEE_MALLOCA_ALIGN); \
 		}                                                                  \
 		XRETURN((void *)_res_);                                            \
 	})
-#define Dee_ACallocStack(s)                                      \
+#define Dee_CallocaStack(s)                                      \
 	XBLOCK({                                                     \
-		size_t const _s_     = (s) + DEE_AMALLOC_ALIGN;          \
+		size_t const _s_     = (s) + DEE_MALLOCA_ALIGN;          \
 		__BYTE_TYPE__ *_res_ = (__BYTE_TYPE__ *)Dee_Alloca(_s_); \
-		*_res_               = DEE_AMALLOC_KEY_ALLOCA;           \
-		_res_ += DEE_AMALLOC_ALIGN;                              \
-		bzero(_res_, _s_ - DEE_AMALLOC_ALIGN);                   \
+		*_res_               = DEE_MALLOCA_KEY_ALLOCA;           \
+		_res_ += DEE_MALLOCA_ALIGN;                              \
+		bzero(_res_, _s_ - DEE_MALLOCA_ALIGN);                   \
 		XRETURN((void *)_res_);                                  \
 	})
-#define Dee_ACallocHeap(s)                                       \
+#define Dee_CallocaHeap(s)                                       \
 	XBLOCK({                                                     \
-		size_t const _s_     = (s) + DEE_AMALLOC_ALIGN;          \
+		size_t const _s_     = (s) + DEE_MALLOCA_ALIGN;          \
 		__BYTE_TYPE__ *_res_ = (__BYTE_TYPE__ *)Dee_Calloc(_s_); \
 		if (_res_) {                                             \
-			*_res_ = DEE_AMALLOC_KEY_MALLOC;                     \
-			_res_ += DEE_AMALLOC_ALIGN;                          \
+			*_res_ = DEE_MALLOCA_KEY_MALLOC;                     \
+			_res_ += DEE_MALLOCA_ALIGN;                          \
 		}                                                        \
 		XRETURN((void *)_res_);                                  \
 	})
-#define Dee_ATryCallocHeap(s)                                       \
+#define Dee_TryCallocaHeap(s)                                       \
 	XBLOCK({                                                        \
-		size_t const _s_     = (s) + DEE_AMALLOC_ALIGN;             \
+		size_t const _s_     = (s) + DEE_MALLOCA_ALIGN;             \
 		__BYTE_TYPE__ *_res_ = (__BYTE_TYPE__ *)Dee_TryCalloc(_s_); \
 		if (_res_) {                                                \
-			*_res_ = DEE_AMALLOC_KEY_MALLOC;                        \
-			_res_ += DEE_AMALLOC_ALIGN;                             \
+			*_res_ = DEE_MALLOCA_KEY_MALLOC;                        \
+			_res_ += DEE_MALLOCA_ALIGN;                             \
 		}                                                           \
 		XRETURN((void *)_res_);                                     \
 	})
-#define Dee_ACalloc(s)                                 \
+#define Dee_Calloca(s)                                 \
 	XBLOCK({                                           \
-		size_t const _s_ = (s) + DEE_AMALLOC_ALIGN;    \
+		size_t const _s_ = (s) + DEE_MALLOCA_ALIGN;    \
 		__BYTE_TYPE__ *_res_;                          \
-		if (_s_ > DEE_AMALLOC_MAX) {                   \
+		if (_s_ > DEE_MALLOCA_MAX) {                   \
 			_res_ = (__BYTE_TYPE__ *)Dee_Calloc(_s_);  \
 			if (_res_) {                               \
-				*_res_ = DEE_AMALLOC_KEY_MALLOC;       \
-				_res_ += DEE_AMALLOC_ALIGN;            \
+				*_res_ = DEE_MALLOCA_KEY_MALLOC;       \
+				_res_ += DEE_MALLOCA_ALIGN;            \
 			}                                          \
 		} else {                                       \
 			_res_  = (__BYTE_TYPE__ *)Dee_Alloca(_s_); \
-			*_res_ = DEE_AMALLOC_KEY_ALLOCA;           \
-			_res_ += DEE_AMALLOC_ALIGN;                \
-			bzero(_res_, _s_ - DEE_AMALLOC_ALIGN);     \
+			*_res_ = DEE_MALLOCA_KEY_ALLOCA;           \
+			_res_ += DEE_MALLOCA_ALIGN;                \
+			bzero(_res_, _s_ - DEE_MALLOCA_ALIGN);     \
 		}                                              \
 		XRETURN((void *)_res_);                        \
 	})
-#define Dee_ATryCalloc(s)                                \
+#define Dee_TryCalloca(s)                                \
 	XBLOCK({                                             \
-		size_t const _s_ = (s) + DEE_AMALLOC_ALIGN;      \
+		size_t const _s_ = (s) + DEE_MALLOCA_ALIGN;      \
 		__BYTE_TYPE__ *_res_;                            \
-		if (_s_ > DEE_AMALLOC_MAX) {                     \
+		if (_s_ > DEE_MALLOCA_MAX) {                     \
 			_res_ = (__BYTE_TYPE__ *)Dee_TryCalloc(_s_); \
 			if (_res_) {                                 \
-				*_res_ = DEE_AMALLOC_KEY_MALLOC;         \
-				_res_ += DEE_AMALLOC_ALIGN;              \
+				*_res_ = DEE_MALLOCA_KEY_MALLOC;         \
+				_res_ += DEE_MALLOCA_ALIGN;              \
 			}                                            \
 		} else {                                         \
 			_res_  = (__BYTE_TYPE__ *)Dee_Alloca(_s_);   \
-			*_res_ = DEE_AMALLOC_KEY_ALLOCA;             \
-			_res_ += DEE_AMALLOC_ALIGN;                  \
-			bzero(_res_, _s_ - DEE_AMALLOC_ALIGN);       \
+			*_res_ = DEE_MALLOCA_KEY_ALLOCA;             \
+			_res_ += DEE_MALLOCA_ALIGN;                  \
+			bzero(_res_, _s_ - DEE_MALLOCA_ALIGN);       \
 		}                                                \
 		XRETURN((void *)_res_);                          \
 	})
-#define Dee_AFree(p)                                                      \
+#define Dee_Freea(p)                                                      \
 	XBLOCK({                                                              \
 		void *const _p_ = (p);                                            \
-		if (DEE_AMALLOC_MUSTFREE(_p_))                                    \
-			Dee_Free((void *)((__BYTE_TYPE__ *)_p_ - DEE_AMALLOC_ALIGN)); \
+		if (DEE_MALLOCA_MUSTFREE(_p_))                                    \
+			Dee_Free((void *)((__BYTE_TYPE__ *)_p_ - DEE_MALLOCA_ALIGN)); \
 		(void)0;                                                          \
 	})
-#define Dee_XAFree(p)                                                     \
+#define Dee_XFreea(p)                                                     \
 	XBLOCK({                                                              \
 		void *const _p_ = (p);                                            \
-		if (_p_ && DEE_AMALLOC_MUSTFREE(_p_))                             \
-			Dee_Free((void *)((__BYTE_TYPE__ *)_p_ - DEE_AMALLOC_ALIGN)); \
+		if (_p_ && DEE_MALLOCA_MUSTFREE(_p_))                             \
+			Dee_Free((void *)((__BYTE_TYPE__ *)_p_ - DEE_MALLOCA_ALIGN)); \
 		(void)0;                                                          \
 	})
 #else /* !__NO_XBLOCK */
 #ifdef NDEBUG
-#define Dee_AMallocHeap(s)  Dee_AMallocHeap(s)
-LOCAL void *(DCALL Dee_AMallocHeap)(size_t s) {
+#define Dee_MallocaHeap(s)  Dee_MallocaHeap(s)
+LOCAL void *(DCALL Dee_MallocaHeap)(size_t s) {
 	__BYTE_TYPE__ *res;
-	res = (__BYTE_TYPE__ *)Dee_Malloc(s + DEE_AMALLOC_ALIGN);
+	res = (__BYTE_TYPE__ *)Dee_Malloc(s + DEE_MALLOCA_ALIGN);
 	if likely(res) {
-		*res = DEE_AMALLOC_KEY_MALLOC;
-		res += DEE_AMALLOC_ALIGN;
+		*res = DEE_MALLOCA_KEY_MALLOC;
+		res += DEE_MALLOCA_ALIGN;
 	}
 	return (void *)res;
 }
-#define Dee_ATryMallocHeap(s)  Dee_ATryMallocHeap(s)
-LOCAL void *(DCALL Dee_ATryMallocHeap)(size_t s) {
+#define Dee_TryMallocaHeap(s)  Dee_TryMallocaHeap(s)
+LOCAL void *(DCALL Dee_TryMallocaHeap)(size_t s) {
 	__BYTE_TYPE__ *res;
-	res = (__BYTE_TYPE__ *)Dee_TryMalloc(s + DEE_AMALLOC_ALIGN);
+	res = (__BYTE_TYPE__ *)Dee_TryMalloc(s + DEE_MALLOCA_ALIGN);
 	if likely(res) {
-		*res = DEE_AMALLOC_KEY_MALLOC;
-		res += DEE_AMALLOC_ALIGN;
+		*res = DEE_MALLOCA_KEY_MALLOC;
+		res += DEE_MALLOCA_ALIGN;
 	}
 	return (void *)res;
 }
-#define Dee_ACallocHeap(s)  Dee_ACallocHeap(s)
-LOCAL void *(DCALL Dee_ACallocHeap)(size_t s) {
+#define Dee_CallocaHeap(s)  Dee_CallocaHeap(s)
+LOCAL void *(DCALL Dee_CallocaHeap)(size_t s) {
 	__BYTE_TYPE__ *res;
-	res = (__BYTE_TYPE__ *)Dee_Calloc(s + DEE_AMALLOC_ALIGN);
+	res = (__BYTE_TYPE__ *)Dee_Calloc(s + DEE_MALLOCA_ALIGN);
 	if likely(res) {
-		*res = DEE_AMALLOC_KEY_MALLOC;
-		res += DEE_AMALLOC_ALIGN;
+		*res = DEE_MALLOCA_KEY_MALLOC;
+		res += DEE_MALLOCA_ALIGN;
 	}
 	return (void *)res;
 }
-#define Dee_ATryCallocHeap(s)  Dee_ATryCallocHeap(s)
-LOCAL void *(DCALL Dee_ATryCallocHeap)(size_t s) {
+#define Dee_TryCallocaHeap(s)  Dee_TryCallocaHeap(s)
+LOCAL void *(DCALL Dee_TryCallocaHeap)(size_t s) {
 	__BYTE_TYPE__ *res;
-	res = (__BYTE_TYPE__ *)Dee_TryCalloc(s + DEE_AMALLOC_ALIGN);
+	res = (__BYTE_TYPE__ *)Dee_TryCalloc(s + DEE_MALLOCA_ALIGN);
 	if likely(res) {
-		*res = DEE_AMALLOC_KEY_MALLOC;
-		res += DEE_AMALLOC_ALIGN;
+		*res = DEE_MALLOCA_KEY_MALLOC;
+		res += DEE_MALLOCA_ALIGN;
 	}
 	return (void *)res;
 }
 #else /* NDEBUG */
-#define Dee_AMallocHeap(s) DeeDbg_AMallocHeap(s, __FILE__, __LINE__)
+#define Dee_MallocaHeap(s) DeeDbg_AMallocHeap(s, __FILE__, __LINE__)
 LOCAL WUNUSED void *(DCALL DeeDbg_AMallocHeap)(size_t s, char const *file, int line) {
 	__BYTE_TYPE__ *res;
-	res = (__BYTE_TYPE__ *)DeeDbg_Malloc(s + DEE_AMALLOC_ALIGN, file, line);
+	res = (__BYTE_TYPE__ *)DeeDbg_Malloc(s + DEE_MALLOCA_ALIGN, file, line);
 	if likely(res) {
-		*res = DEE_AMALLOC_KEY_MALLOC;
-		res += DEE_AMALLOC_ALIGN;
+		*res = DEE_MALLOCA_KEY_MALLOC;
+		res += DEE_MALLOCA_ALIGN;
 	}
 	return (void *)res;
 }
-#define Dee_ATryMallocHeap(s) DeeDbg_ATryMallocHeap(s, __FILE__, __LINE__)
+#define Dee_TryMallocaHeap(s) DeeDbg_ATryMallocHeap(s, __FILE__, __LINE__)
 LOCAL WUNUSED void *(DCALL DeeDbg_ATryMallocHeap)(size_t s, char const *file, int line) {
 	__BYTE_TYPE__ *res;
-	res = (__BYTE_TYPE__ *)DeeDbg_TryMalloc(s + DEE_AMALLOC_ALIGN, file, line);
+	res = (__BYTE_TYPE__ *)DeeDbg_TryMalloc(s + DEE_MALLOCA_ALIGN, file, line);
 	if likely(res) {
-		*res = DEE_AMALLOC_KEY_MALLOC;
-		res += DEE_AMALLOC_ALIGN;
+		*res = DEE_MALLOCA_KEY_MALLOC;
+		res += DEE_MALLOCA_ALIGN;
 	}
 	return (void *)res;
 }
-#define Dee_ACallocHeap(s) DeeDbg_ACallocHeap(s, __FILE__, __LINE__)
+#define Dee_CallocaHeap(s) DeeDbg_ACallocHeap(s, __FILE__, __LINE__)
 LOCAL WUNUSED void *(DCALL DeeDbg_ACallocHeap)(size_t s, char const *file, int line) {
 	__BYTE_TYPE__ *res;
-	res = (__BYTE_TYPE__ *)DeeDbg_Calloc(s + DEE_AMALLOC_ALIGN, file, line);
+	res = (__BYTE_TYPE__ *)DeeDbg_Calloc(s + DEE_MALLOCA_ALIGN, file, line);
 	if likely(res) {
-		*res = DEE_AMALLOC_KEY_MALLOC;
-		res += DEE_AMALLOC_ALIGN;
+		*res = DEE_MALLOCA_KEY_MALLOC;
+		res += DEE_MALLOCA_ALIGN;
 	}
 	return (void *)res;
 }
-#define Dee_ATryCallocHeap(s) DeeDbg_ATryCallocHeap(s, __FILE__, __LINE__)
+#define Dee_TryCallocaHeap(s) DeeDbg_ATryCallocHeap(s, __FILE__, __LINE__)
 LOCAL WUNUSED void *(DCALL DeeDbg_ATryCallocHeap)(size_t s, char const *file, int line) {
 	__BYTE_TYPE__ *res;
-	res = (__BYTE_TYPE__ *)DeeDbg_TryCalloc(s + DEE_AMALLOC_ALIGN, file, line);
+	res = (__BYTE_TYPE__ *)DeeDbg_TryCalloc(s + DEE_MALLOCA_ALIGN, file, line);
 	if likely(res) {
-		*res = DEE_AMALLOC_KEY_MALLOC;
-		res += DEE_AMALLOC_ALIGN;
+		*res = DEE_MALLOCA_KEY_MALLOC;
+		res += DEE_MALLOCA_ALIGN;
 	}
 	return (void *)res;
 }
 #endif /* !NDEBUG */
-#define Dee_AMallocStack(s) Dee_AMallocStack_init(Dee_Alloca((s) + DEE_AMALLOC_ALIGN), (s))
-#define Dee_AMalloc(s)      ((s) > DEE_AMALLOC_MAX - DEE_AMALLOC_ALIGN ? Dee_AMallocHeap(s) : Dee_AMallocStack(s))
-#define Dee_ATryMalloc(s)   ((s) > DEE_AMALLOC_MAX - DEE_AMALLOC_ALIGN ? Dee_ATryMallocHeap(s) : Dee_AMallocStack(s))
+#define Dee_MallocaStack(s) Dee_MallocaStack_init(Dee_Alloca((s) + DEE_MALLOCA_ALIGN), (s))
+#define Dee_Malloca(s)      ((s) > DEE_MALLOCA_MAX - DEE_MALLOCA_ALIGN ? Dee_MallocaHeap(s) : Dee_MallocaStack(s))
+#define Dee_TryMalloca(s)   ((s) > DEE_MALLOCA_MAX - DEE_MALLOCA_ALIGN ? Dee_TryMallocaHeap(s) : Dee_MallocaStack(s))
 #ifdef NDEBUG
-#define Dee_AMallocStack_init(p, s) Dee_AMallocStack_init_(p)
+#define Dee_MallocaStack_init(p, s) Dee_MallocaStack_init_(p)
 LOCAL WUNUSED NONNULL((1)) void *
-(DCALL Dee_AMallocStack_init_)(void *p) {
-	*(__BYTE_TYPE__ *)p = DEE_AMALLOC_KEY_ALLOCA;
-	return (__BYTE_TYPE__ *)p + DEE_AMALLOC_ALIGN;
+(DCALL Dee_MallocaStack_init_)(void *p) {
+	*(__BYTE_TYPE__ *)p = DEE_MALLOCA_KEY_ALLOCA;
+	return (__BYTE_TYPE__ *)p + DEE_MALLOCA_ALIGN;
 }
 #else /* NDEBUG */
 LOCAL WUNUSED NONNULL((1)) void *
-(DCALL Dee_AMallocStack_init)(void *p, size_t s) {
-	*(__BYTE_TYPE__ *)p = DEE_AMALLOC_KEY_ALLOCA;
-	return DEE_AMALLOC_SKEW_ALLOCA((__BYTE_TYPE__ *)p + DEE_AMALLOC_ALIGN, s);
+(DCALL Dee_MallocaStack_init)(void *p, size_t s) {
+	*(__BYTE_TYPE__ *)p = DEE_MALLOCA_KEY_ALLOCA;
+	return DEE_MALLOCA_SKEW_ALLOCA((__BYTE_TYPE__ *)p + DEE_MALLOCA_ALIGN, s);
 }
 #endif /* !NDEBUG */
-#define Dee_ACallocStack(s) Dee_ACallocStack_init(Dee_Alloca((s) + DEE_AMALLOC_ALIGN), (s))
-#define Dee_ACalloc(s)      ((s) > DEE_AMALLOC_MAX - DEE_AMALLOC_ALIGN ? Dee_ACallocHeap(s) : Dee_ACallocStack(s))
-#define Dee_ATryCalloc(s)   ((s) > DEE_AMALLOC_MAX - DEE_AMALLOC_ALIGN ? Dee_ATryCallocHeap(s) : Dee_ACallocStack(s))
+#define Dee_CallocaStack(s) Dee_CallocaStack_init(Dee_Alloca((s) + DEE_MALLOCA_ALIGN), (s))
+#define Dee_Calloca(s)      ((s) > DEE_MALLOCA_MAX - DEE_MALLOCA_ALIGN ? Dee_CallocaHeap(s) : Dee_CallocaStack(s))
+#define Dee_TryCalloca(s)   ((s) > DEE_MALLOCA_MAX - DEE_MALLOCA_ALIGN ? Dee_TryCallocaHeap(s) : Dee_CallocaStack(s))
 LOCAL WUNUSED NONNULL((1)) void *
-(DCALL Dee_ACallocStack_init)(void *p, size_t s) {
+(DCALL Dee_CallocaStack_init)(void *p, size_t s) {
 	void *result;
-	*(__BYTE_TYPE__ *)p = DEE_AMALLOC_KEY_ALLOCA;
-	result = (__BYTE_TYPE__ *)p + DEE_AMALLOC_ALIGN;
+	*(__BYTE_TYPE__ *)p = DEE_MALLOCA_KEY_ALLOCA;
+	result = (__BYTE_TYPE__ *)p + DEE_MALLOCA_ALIGN;
 	bzero(result, s);
 	return result;
 }
 
-#define Dee_AFree(p)  Dee_AFree(p)
-#define Dee_XAFree(p) Dee_XAFree(p) 
-LOCAL NONNULL((1)) void (DCALL Dee_AFree)(void *p) {
-	if (DEE_AMALLOC_MUSTFREE(p))
-		Dee_Free((void *)((__BYTE_TYPE__ *)p - DEE_AMALLOC_ALIGN));
+#define Dee_Freea(p)  Dee_Freea(p)
+#define Dee_XFreea(p) Dee_XFreea(p) 
+LOCAL NONNULL((1)) void (DCALL Dee_Freea)(void *p) {
+	if (DEE_MALLOCA_MUSTFREE(p))
+		Dee_Free((void *)((__BYTE_TYPE__ *)p - DEE_MALLOCA_ALIGN));
 }
 
-LOCAL void (DCALL Dee_XAFree)(void *p) {
-	if (p && DEE_AMALLOC_MUSTFREE(p))
-		Dee_Free((void *)((__BYTE_TYPE__ *)p - DEE_AMALLOC_ALIGN));
+LOCAL void (DCALL Dee_XFreea)(void *p) {
+	if (p && DEE_MALLOCA_MUSTFREE(p))
+		Dee_Free((void *)((__BYTE_TYPE__ *)p - DEE_MALLOCA_ALIGN));
 }
 #endif /* __NO_XBLOCK */
 
-#define Dee_AMallocNoFail(p, s)                                \
+#define Dee_MallocaNoFail(p, s)                                \
 	do {                                                       \
-		size_t const _s_ = (s) + DEE_AMALLOC_ALIGN;            \
-		if (_s_ > DEE_AMALLOC_MAX &&                           \
+		size_t const _s_ = (s) + DEE_MALLOCA_ALIGN;            \
+		if (_s_ > DEE_MALLOCA_MAX &&                           \
 		    (*(void **)&(p) = Dee_Malloc(_s_)) != __NULLPTR) { \
-			*(__BYTE_TYPE__ *)(p) = DEE_AMALLOC_KEY_MALLOC;    \
-			*(__BYTE_TYPE__ **)&(p) += DEE_AMALLOC_ALIGN;      \
+			*(__BYTE_TYPE__ *)(p) = DEE_MALLOCA_KEY_MALLOC;    \
+			*(__BYTE_TYPE__ **)&(p) += DEE_MALLOCA_ALIGN;      \
 		} else {                                               \
 			*(void **)&(p)        = Dee_Alloca(_s_);           \
-			*(__BYTE_TYPE__ *)(p) = DEE_AMALLOC_KEY_ALLOCA;    \
-			*(__BYTE_TYPE__ **)&(p) += DEE_AMALLOC_ALIGN;      \
-			bzero((void *)(p), _s_ - DEE_AMALLOC_ALIGN);       \
+			*(__BYTE_TYPE__ *)(p) = DEE_MALLOCA_KEY_ALLOCA;    \
+			*(__BYTE_TYPE__ **)&(p) += DEE_MALLOCA_ALIGN;      \
+			bzero((void *)(p), _s_ - DEE_MALLOCA_ALIGN);       \
 		}                                                      \
 	}	__WHILE0
-#define Dee_ATryMallocNoFail(p, s)                                \
+#define Dee_TryMallocaNoFail(p, s)                                \
 	do {                                                          \
-		size_t const _s_ = (s) + DEE_AMALLOC_ALIGN;               \
-		if (_s_ > DEE_AMALLOC_MAX &&                              \
+		size_t const _s_ = (s) + DEE_MALLOCA_ALIGN;               \
+		if (_s_ > DEE_MALLOCA_MAX &&                              \
 		    (*(void **)&(p) = Dee_TryMalloc(_s_)) != __NULLPTR) { \
-			*(__BYTE_TYPE__ *)(p) = DEE_AMALLOC_KEY_MALLOC;       \
-			*(__BYTE_TYPE__ **)&(p) += DEE_AMALLOC_ALIGN;         \
+			*(__BYTE_TYPE__ *)(p) = DEE_MALLOCA_KEY_MALLOC;       \
+			*(__BYTE_TYPE__ **)&(p) += DEE_MALLOCA_ALIGN;         \
 		} else {                                                  \
 			*(void **)&(p)        = Dee_Alloca(_s_);              \
-			*(__BYTE_TYPE__ *)(p) = DEE_AMALLOC_KEY_ALLOCA;       \
-			*(__BYTE_TYPE__ **)&(p) += DEE_AMALLOC_ALIGN;         \
-			bzero((void *)(p), _s_ - DEE_AMALLOC_ALIGN);          \
+			*(__BYTE_TYPE__ *)(p) = DEE_MALLOCA_KEY_ALLOCA;       \
+			*(__BYTE_TYPE__ **)&(p) += DEE_MALLOCA_ALIGN;         \
+			bzero((void *)(p), _s_ - DEE_MALLOCA_ALIGN);          \
 		}                                                         \
 	}	__WHILE0
-#define Dee_ACallocNoFail(p, s)                                                  \
+#define Dee_CallocaNoFail(p, s)                                                  \
 	do {                                                                         \
-		size_t const _s_ = (s) + DEE_AMALLOC_ALIGN;                              \
-		if (_s_ > DEE_AMALLOC_MAX &&                                             \
+		size_t const _s_ = (s) + DEE_MALLOCA_ALIGN;                              \
+		if (_s_ > DEE_MALLOCA_MAX &&                                             \
 		    (*(void **)&(p) = Dee_Calloc(_s_)) != __NULLPTR) {                   \
-			*(__BYTE_TYPE__ *)(p) = DEE_AMALLOC_KEY_MALLOC;                      \
-			*(__BYTE_TYPE__ **)&(p) += DEE_AMALLOC_ALIGN;                        \
+			*(__BYTE_TYPE__ *)(p) = DEE_MALLOCA_KEY_MALLOC;                      \
+			*(__BYTE_TYPE__ **)&(p) += DEE_MALLOCA_ALIGN;                        \
 		} else {                                                                 \
 			*(void **)&(p)        = Dee_Alloca(_s_);                             \
-			*(__BYTE_TYPE__ *)(p) = DEE_AMALLOC_KEY_ALLOCA;                      \
-			*(__BYTE_TYPE__ **)&(p) += DEE_AMALLOC_ALIGN;                        \
-			(void)DEE_AMALLOC_SKEW_ALLOCA((void *)(p), _s_ - DEE_AMALLOC_ALIGN); \
+			*(__BYTE_TYPE__ *)(p) = DEE_MALLOCA_KEY_ALLOCA;                      \
+			*(__BYTE_TYPE__ **)&(p) += DEE_MALLOCA_ALIGN;                        \
+			(void)DEE_MALLOCA_SKEW_ALLOCA((void *)(p), _s_ - DEE_MALLOCA_ALIGN); \
 		}                                                                        \
 	}	__WHILE0
-#define Dee_ATryCallocNoFail(p, s)                                               \
+#define Dee_TryCallocaNoFail(p, s)                                               \
 	do {                                                                         \
-		size_t const _s_ = (s) + DEE_AMALLOC_ALIGN;                              \
-		if (_s_ > DEE_AMALLOC_MAX &&                                             \
+		size_t const _s_ = (s) + DEE_MALLOCA_ALIGN;                              \
+		if (_s_ > DEE_MALLOCA_MAX &&                                             \
 		    (*(void **)&(p) = Dee_TryCalloc(_s_)) != __NULLPTR) {                \
-			*(__BYTE_TYPE__ *)(p) = DEE_AMALLOC_KEY_MALLOC;                      \
-			*(__BYTE_TYPE__ **)&(p) += DEE_AMALLOC_ALIGN;                        \
+			*(__BYTE_TYPE__ *)(p) = DEE_MALLOCA_KEY_MALLOC;                      \
+			*(__BYTE_TYPE__ **)&(p) += DEE_MALLOCA_ALIGN;                        \
 		} else {                                                                 \
 			*(void **)&(p)        = Dee_Alloca(_s_);                             \
-			*(__BYTE_TYPE__ *)(p) = DEE_AMALLOC_KEY_ALLOCA;                      \
-			*(__BYTE_TYPE__ **)&(p) += DEE_AMALLOC_ALIGN;                        \
-			(void)DEE_AMALLOC_SKEW_ALLOCA((void *)(p), _s_ - DEE_AMALLOC_ALIGN); \
+			*(__BYTE_TYPE__ *)(p) = DEE_MALLOCA_KEY_ALLOCA;                      \
+			*(__BYTE_TYPE__ **)&(p) += DEE_MALLOCA_ALIGN;                        \
+			(void)DEE_MALLOCA_SKEW_ALLOCA((void *)(p), _s_ - DEE_MALLOCA_ALIGN); \
 		}                                                                        \
 	}	__WHILE0
 #endif /* Dee_Alloca && NO_DBG_ALIGNMENT */
 
-#ifdef Dee_AMallocNoFail
-#define Dee_AMallocNoFailc(p, elem_count, elem_size) Dee_AMallocNoFail(p, (elem_count) * (elem_size))
-#endif /* Dee_AMallocNoFail */
-#define Dee_AMallocc(elem_count, elem_size)    Dee_AMalloc((elem_count) * (elem_size))
-#define Dee_ACallocc(elem_count, elem_size)    Dee_ACalloc((elem_count) * (elem_size))
-#define Dee_ATryMallocc(elem_count, elem_size) Dee_ATryMalloc((elem_count) * (elem_size))
-#define Dee_ATryCallocc(elem_count, elem_size) Dee_ATryCalloc((elem_count) * (elem_size))
+#ifdef Dee_MallocaNoFail
+#define Dee_MallocaNoFailc(p, elem_count, elem_size) Dee_MallocaNoFail(p, (elem_count) * (elem_size))
+#endif /* Dee_MallocaNoFail */
+#define Dee_Mallocac(elem_count, elem_size)    Dee_Malloca((elem_count) * (elem_size))
+#define Dee_Callocac(elem_count, elem_size)    Dee_Calloca((elem_count) * (elem_size))
+#define Dee_TryMallocac(elem_count, elem_size) Dee_TryMalloca((elem_count) * (elem_size))
+#define Dee_TryCallocac(elem_count, elem_size) Dee_TryCalloca((elem_count) * (elem_size))
 
 #endif /* __CC__ */
 

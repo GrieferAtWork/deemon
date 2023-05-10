@@ -2719,7 +2719,7 @@ again:
 		 * function is allowed to (and does) modify it. - So if we were to pass
 		 * the string's original buffer, we would accidentally inplace-modify
 		 * that string. */
-		lpwCmdLineCopy = (LPWSTR)Dee_AMallocc(WSTR_LENGTH(lpwCmdLine) + 1, sizeof(WCHAR));
+		lpwCmdLineCopy = (LPWSTR)Dee_Mallocac(WSTR_LENGTH(lpwCmdLine) + 1, sizeof(WCHAR));
 		if unlikely(!lpwCmdLineCopy)
 			goto err_exe_str;
 		memcpyc(lpwCmdLineCopy, lpwCmdLine, WSTR_LENGTH(lpwCmdLine) + 1, sizeof(WCHAR));
@@ -2865,7 +2865,7 @@ err_exe_str_lpwCmdLineCopy_pwd_str_env_str:
 err_exe_str_lpwCmdLineCopy_pwd_str:
 			Dee_XDecref(pwd_str);
 err_exe_str_lpwCmdLineCopy:
-			Dee_AFree(lpwCmdLineCopy);
+			Dee_Freea(lpwCmdLineCopy);
 err_exe_str:
 			Dee_Decref(exe_str);
 			goto err;
@@ -2876,7 +2876,7 @@ process_created_ok:
 		Dee_XDecrefv(stdfd_files, COMPILER_LENOF(stdfd_files));
 		Dee_XDecref(env_str);
 		Dee_XDecref(pwd_str);
-		Dee_AFree(lpwCmdLineCopy);
+		Dee_Freea(lpwCmdLineCopy);
 		Dee_Decref(exe_str);
 
 		/* Close our handle to the process's main thread. */

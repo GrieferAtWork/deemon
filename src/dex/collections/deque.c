@@ -471,7 +471,7 @@ again:
 	result = self->d_size - (size_t)index;
 	if (result > num_items)
 		result = num_items;
-	pop_objv = (DREF DeeObject **)Dee_ATryMalloc(result * sizeof(DREF DeeObject *));
+	pop_objv = (DREF DeeObject **)Dee_TryMalloca(result * sizeof(DREF DeeObject *));
 	if unlikely(!pop_objv) {
 		Deque_LockEndWrite(self);
 		if (Dee_CollectMemory(result * sizeof(DREF DeeObject *)))
@@ -490,7 +490,7 @@ again:
 	Deque_LockEndWrite(self);
 	/* Drop references to popped objects. */
 	Dee_Decrefv(pop_objv, result);
-	Dee_AFree(pop_objv);
+	Dee_Freea(pop_objv);
 	return (dssize_t)result;
 }
 

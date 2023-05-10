@@ -3954,7 +3954,7 @@ PRIVATE FARPROC DCALL libwin32_GetPsAPIProc(char const *__restrict name) {
 		size_t namelen;
 		DWORD dwError;
 		namelen  = strlen(name);
-		namebuf = (char *)Dee_AMallocc(3 + namelen + 1, sizeof(char));
+		namebuf = (char *)Dee_Mallocac(3 + namelen + 1, sizeof(char));
 		if unlikely(!namebuf)
 			goto done;
 		namebuf[0] = 'K';
@@ -3965,13 +3965,13 @@ PRIVATE FARPROC DCALL libwin32_GetPsAPIProc(char const *__restrict name) {
 		pResult = GetProcAddress(hMod, namebuf);
 		DBG_ALIGNMENT_ENABLE();
 		if (pResult) {
-			Dee_AFree(namebuf);
+			Dee_Freea(namebuf);
 			goto done;
 		}
 		DBG_ALIGNMENT_DISABLE();
 		dwError = GetLastError();
 		DBG_ALIGNMENT_ENABLE();
-		Dee_AFree(namebuf);
+		Dee_Freea(namebuf);
 		DeeNTSystem_ThrowErrorf(NULL, dwError,
 		                        "Failed to locate symbol %q in \"psapi.dll\" or \"K32%#q\" in \"kernel32.dll\"",
 		                        name, name);

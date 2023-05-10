@@ -158,7 +158,7 @@ textjumps_add(struct textjumps *__restrict self,
 			code_addr_t addr_max = MAX(origin, target);
 			uint8_t *used_levels;
 			size_t i;
-			used_levels = (uint8_t *)Dee_ACalloc((self->tj_max + 7) / 8);
+			used_levels = (uint8_t *)Dee_Calloca((self->tj_max + 7) / 8);
 			if unlikely(!used_levels)
 				goto err;
 			for (i = 0; i < self->tj_cnt; ++i) {
@@ -180,7 +180,7 @@ textjumps_add(struct textjumps *__restrict self,
 				if (!(used_levels[i / 8] & (1 << (i % 8))))
 					break;
 			}
-			Dee_AFree(used_levels);
+			Dee_Freea(used_levels);
 			if (self->tj_max < i + 1)
 				self->tj_max = i + 1;
 			self->tj_vec[index].tj_level = (uint16_t)i;
@@ -359,9 +359,9 @@ textjumps_print(dformatprinter printer, void *arg,
 		return 0;
 	line_length = self->tj_max ? self->tj_max * 2 - 1 : 0;
 #if DIRECTIVE_DEDENT_WIDTH == 0
-	lines = (unsigned char *)Dee_AMallocc(line_length + 4, sizeof(unsigned char));
+	lines = (unsigned char *)Dee_Mallocac(line_length + 4, sizeof(unsigned char));
 #else /* DIRECTIVE_DEDENT_WIDTH == 0 */
-	lines = (unsigned char *)Dee_AMallocc(line_length + 3, sizeof(unsigned char));
+	lines = (unsigned char *)Dee_Mallocac(line_length + 3, sizeof(unsigned char));
 #endif /* DIRECTIVE_DEDENT_WIDTH != 0 */
 	if unlikely(!lines)
 		goto err;
@@ -457,7 +457,7 @@ textjumps_print(dformatprinter printer, void *arg,
 	print((char *)lines, line_length);
 #endif /* !HAVE_PRINT_BOX */
 done:
-	Dee_AFree(lines);
+	Dee_Freea(lines);
 	return result;
 fail_with_temp_err_lines:
 	result = temp;

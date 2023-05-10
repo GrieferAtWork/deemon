@@ -64,7 +64,7 @@ class_descriptor_rename_operator(DeeClassDescriptorObject *__restrict self,
 	       slot <= self->cd_clsop_list + self->cd_clsop_mask);
 	ASSERT(slot->co_name != new_name);
 	mask      = self->cd_clsop_mask;
-	new_table = (struct class_operator *)Dee_AMallocc(mask + 1, sizeof(struct class_operator));
+	new_table = (struct class_operator *)Dee_Mallocac(mask + 1, sizeof(struct class_operator));
 	if unlikely(!new_table)
 		goto err;
 
@@ -95,7 +95,7 @@ class_descriptor_rename_operator(DeeClassDescriptorObject *__restrict self,
 	ASSERT(self->cd_clsop_list != empty_class_operators);
 	memcpyc(self->cd_clsop_list, new_table,
 	        mask + 1, sizeof(struct class_operator));
-	Dee_AFree(new_table);
+	Dee_Freea(new_table);
 	return 0;
 err:
 	return -1;

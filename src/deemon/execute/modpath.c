@@ -1372,7 +1372,7 @@ DeeModule_OpenInPathAbs(/*utf-8*/ char const *__restrict module_path, size_t mod
 #else /* ... */
 		buf_alloc = module_pathsize + 1 + module_namesize + 4 + 1;
 #endif /* !... */
-		buf = (char *)Dee_AMallocc(buf_alloc, sizeof(char));
+		buf = (char *)Dee_Mallocac(buf_alloc, sizeof(char));
 	}
 	if unlikely(!buf)
 		goto err;
@@ -1969,7 +1969,7 @@ load_module_after_src_failure:
 		/*goto got_result;*/
 	}
 got_result:
-	Dee_AFree(buf);
+	Dee_Freea(buf);
 	return result;
 /*
 err_buf_module_name_r:
@@ -1985,7 +1985,7 @@ err_buf_module_path:
 err_buf_r:
 	Dee_Decref_unlikely(result);
 err_buf:
-	Dee_AFree(buf);
+	Dee_Freea(buf);
 err:
 	return NULL;
 }

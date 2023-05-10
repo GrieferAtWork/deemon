@@ -1483,7 +1483,7 @@ query_iter(Dir *__restrict self) {
 			char *temp_filename;
 			int old_errno;
 			size_t temp_filesize = (size_t)(query_start - query_str);
-			temp_filename        = (char *)Dee_AMallocc(temp_filesize + 1, sizeof(char));
+			temp_filename        = (char *)Dee_Mallocac(temp_filesize + 1, sizeof(char));
 			if unlikely(!temp_filename)
 				goto err_r;
 			/* Override the '/' to terminate the string. */
@@ -1492,7 +1492,7 @@ query_iter(Dir *__restrict self) {
 			result->q_iter.di_hnd = opendir(temp_filename);
 			/* Free the temporary buffer, but preserve errno. */
 			old_errno = errno;
-			Dee_AFree(temp_filename);
+			Dee_Freea(temp_filename);
 			errno = old_errno;
 			DBG_ALIGNMENT_ENABLE();
 		} else {

@@ -951,7 +951,7 @@ display_help_single(dformatprinter printer, void *arg,
 		char *buf, *dst;
 		int result;
 		prefix_length = strlen(prefix);
-		buf = (char *)Dee_AMallocc(prefix_length + 3 + COMPILER_LENOF(option->co_shortnam),
+		buf = (char *)Dee_Mallocac(prefix_length + 3 + COMPILER_LENOF(option->co_shortnam),
 		                           sizeof(char));
 		if unlikely(!buf)
 			goto err;
@@ -962,7 +962,7 @@ display_help_single(dformatprinter printer, void *arg,
 		*dst++ = ',';
 		*dst++ = '\0';
 		result = display_help_group(printer, arg, option->co_group, buf);
-		Dee_AFree(buf);
+		Dee_Freea(buf);
 		return result;
 	}
 	return display_help(printer, arg, option,
@@ -992,7 +992,7 @@ display_help_query(dformatprinter printer, void *arg,
 				char *buf, *dst;
 				size_t prefix_length = strlen(prefix);
 				int result;
-				buf = (char *)Dee_AMallocc(prefix_length + 3 + COMPILER_LENOF(group->co_shortnam),
+				buf = (char *)Dee_Mallocac(prefix_length + 3 + COMPILER_LENOF(group->co_shortnam),
 				                           sizeof(char));
 				if unlikely(!buf)
 					goto err;
@@ -1003,7 +1003,7 @@ display_help_query(dformatprinter printer, void *arg,
 				*dst++ = ',';
 				*dst++ = '\0';
 				result = display_help_query(printer, arg, group->co_group, comma + 1, buf);
-				Dee_AFree(buf);
+				Dee_Freea(buf);
 				return result;
 			}
 		}
@@ -2630,7 +2630,7 @@ dchdir_and_format_source_files(char *__restrict filename) {
 				/* Re-use the given filename as buffer. */
 				buffer = filename;
 			} else {
-				buffer = (char *)Dee_AMallocc(req_bufsize + 1, sizeof(char));
+				buffer = (char *)Dee_Mallocac(req_bufsize + 1, sizeof(char));
 				if unlikely(!buffer)
 					goto err;
 			}
@@ -2647,7 +2647,7 @@ dchdir_and_format_source_files(char *__restrict filename) {
 			*iter = '\0';
 			(void)os_trychdir(buffer);
 			if (buffer != filename)
-				Dee_AFree(buffer);
+				Dee_Freea(buffer);
 			return result;
 		}
 		--path_end;

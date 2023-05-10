@@ -789,12 +789,12 @@ dee_asciicaseeq(char const *a, char const *b, size_t num_chars) {
 			return blen;                                       \
 		if unlikely(!blen)                                     \
 			return alen;                                       \
-		v0 = (size_t *)Dee_AMallocc(blen + 1, sizeof(size_t)); \
+		v0 = (size_t *)Dee_Mallocac(blen + 1, sizeof(size_t)); \
 		if unlikely(!v0)                                       \
 			return -1;                                         \
-		v1 = (size_t *)Dee_AMallocc(blen + 1, sizeof(size_t)); \
+		v1 = (size_t *)Dee_Mallocac(blen + 1, sizeof(size_t)); \
 		if unlikely(!v1) {                                     \
-			Dee_AFree(v0);                                     \
+			Dee_Freea(v0);                                     \
 			return -1;                                         \
 		}                                                      \
 		for (i = 0; i < blen; ++i)                             \
@@ -817,8 +817,8 @@ dee_asciicaseeq(char const *a, char const *b, size_t num_chars) {
 			memcpyc(v0, v1, blen, sizeof(size_t));             \
 		}                                                      \
 		temp = v1[blen];                                       \
-		Dee_AFree(v0);                                         \
-		Dee_AFree(v1);                                         \
+		Dee_Freea(v0);                                         \
+		Dee_Freea(v1);                                         \
 		if (temp > SSIZE_MAX)                                  \
 			temp = SSIZE_MAX;                                  \
 		return temp;                                           \
@@ -851,12 +851,12 @@ DEFINE_FUZZY_COMPARE_FUNCTION(dee_fuzzy_asciicasecompareb, uint8_t, (uint8_t)tol
 			return folded_blen;                                                  \
 		if unlikely(!folded_blen)                                                \
 			return folded_alen;                                                  \
-		v0 = (size_t *)Dee_AMallocc(folded_blen + 1, sizeof(size_t));            \
+		v0 = (size_t *)Dee_Mallocac(folded_blen + 1, sizeof(size_t));            \
 		if unlikely(!v0)                                                         \
 			return -1;                                                           \
-		v1 = (size_t *)Dee_AMallocc(folded_blen + 1, sizeof(size_t));            \
+		v1 = (size_t *)Dee_Mallocac(folded_blen + 1, sizeof(size_t));            \
 		if unlikely(!v1) {                                                       \
-			Dee_AFree(v0);                                                       \
+			Dee_Freea(v0);                                                       \
 			return -1;                                                           \
 		}                                                                        \
 		for (i = 0; i < folded_blen; ++i)                                        \
@@ -882,8 +882,8 @@ DEFINE_FUZZY_COMPARE_FUNCTION(dee_fuzzy_asciicasecompareb, uint8_t, (uint8_t)tol
 		}                                                                        \
 		ASSERT(unicode_foldreader_empty(a_reader));                              \
 		temp = v1[folded_blen];                                                  \
-		Dee_AFree(v0);                                                           \
-		Dee_AFree(v1);                                                           \
+		Dee_Freea(v0);                                                           \
+		Dee_Freea(v1);                                                           \
 		if (temp > SSIZE_MAX)                                                    \
 			temp = SSIZE_MAX;                                                    \
 		return temp;                                                             \

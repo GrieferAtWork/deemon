@@ -237,7 +237,7 @@ comiter_next(CombinationsIterator *__restrict self) {
 	size_t *result_indices, i, comlen, seqlen;
 	comlen         = self->ci_combi->c_comlen;
 	seqlen         = self->ci_combi->c_seqlen;
-	result_indices = (size_t *)Dee_AMallocc(comlen, sizeof(size_t));
+	result_indices = (size_t *)Dee_Mallocac(comlen, sizeof(size_t));
 	if unlikely(!result_indices)
 		goto err;
 	CombinationsIterator_LockWrite(self);
@@ -252,7 +252,7 @@ comiter_next(CombinationsIterator *__restrict self) {
 	}
 	/* Signal `ITER_DONE' */
 	CombinationsIterator_LockEndWrite(self);
-	Dee_AFree(result_indices);
+	Dee_Freea(result_indices);
 	return (DREF DeeTupleObject *)ITER_DONE;
 update_indices:
 	++self->ci_indices[i];
@@ -275,13 +275,13 @@ copy_indices:
 			goto err_indices_r;
 		DeeTuple_SET(result, i, temp); /* Inherit reference. */
 	}
-	Dee_AFree(result_indices);
+	Dee_Freea(result_indices);
 	return result;
 err_indices_r:
 	Dee_Decrefv(DeeTuple_ELEM(result), i);
 	DeeTuple_FreeUninitialized(result);
 err_indices:
-	Dee_AFree(result_indices);
+	Dee_Freea(result_indices);
 err:
 	return NULL;
 }
@@ -645,7 +645,7 @@ rcomiter_next(CombinationsIterator *__restrict self) {
 			return result;
 		}
 	}
-	result_indices = (size_t *)Dee_AMallocc(comlen, sizeof(size_t));
+	result_indices = (size_t *)Dee_Mallocac(comlen, sizeof(size_t));
 	if unlikely(!result_indices)
 		goto err;
 	CombinationsIterator_LockWrite(self);
@@ -656,7 +656,7 @@ rcomiter_next(CombinationsIterator *__restrict self) {
 	}
 	/* Signal `ITER_DONE' */
 	CombinationsIterator_LockEndWrite(self);
-	Dee_AFree(result_indices);
+	Dee_Freea(result_indices);
 	return (DREF DeeTupleObject *)ITER_DONE;
 update_indices:
 	offset = self->ci_indices[i] + 1;
@@ -686,13 +686,13 @@ update_indices:
 set_temp:
 		DeeTuple_SET(result, i, temp); /* Inherit reference. */
 	}
-	Dee_AFree(result_indices);
+	Dee_Freea(result_indices);
 	return result;
 err_indices_r:
 	Dee_Decrefv(DeeTuple_ELEM(result), i);
 	DeeTuple_FreeUninitialized(result);
 err_indices:
-	Dee_AFree(result_indices);
+	Dee_Freea(result_indices);
 err:
 	return NULL;
 }
@@ -872,7 +872,7 @@ pmutiter_next(CombinationsIterator *__restrict self) {
 	size_t *result_indices, i, comlen, seqlen;
 	comlen         = self->ci_combi->c_comlen;
 	seqlen         = self->ci_combi->c_seqlen;
-	result_indices = (size_t *)Dee_AMallocc(comlen, sizeof(size_t));
+	result_indices = (size_t *)Dee_Mallocac(comlen, sizeof(size_t));
 	if unlikely(!result_indices)
 		goto err;
 	CombinationsIterator_LockWrite(self);
@@ -884,7 +884,7 @@ pmutiter_next(CombinationsIterator *__restrict self) {
 		/* Signal `ITER_DONE' */
 signal_done:
 		CombinationsIterator_LockEndWrite(self);
-		Dee_AFree(result_indices);
+		Dee_Freea(result_indices);
 		return (DREF DeeTupleObject *)ITER_DONE;
 	}
 	i = comlen;
@@ -926,13 +926,13 @@ copy_indices:
 			goto err_indices_r;
 		DeeTuple_SET(result, i, temp); /* Inherit reference. */
 	}
-	Dee_AFree(result_indices);
+	Dee_Freea(result_indices);
 	return result;
 err_indices_r:
 	Dee_Decrefv(DeeTuple_ELEM(result), i);
 	DeeTuple_FreeUninitialized(result);
 err_indices:
-	Dee_AFree(result_indices);
+	Dee_Freea(result_indices);
 err:
 	return NULL;
 }

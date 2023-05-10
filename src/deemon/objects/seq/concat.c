@@ -646,14 +646,14 @@ cat_nsi_rfind(Cat *__restrict self,
 			temp = DeeSeq_RFind(DeeTuple_GET(self, seq_min), start, end, keyed_search_item, key);
 			goto check_final_temp_from_first;
 		}
-		seq_lengths = (size_t *)Dee_AMallocc(seq_max - seq_min, sizeof(size_t));
+		seq_lengths = (size_t *)Dee_Mallocac(seq_max - seq_min, sizeof(size_t));
 		if unlikely(!seq_lengths)
 			goto err;
 		seq_lengths[0]   = temp; /* Remember the length of the first sequence. */
 		i                = seq_min + 1;
 		effective_length = temp;
 	} else {
-		seq_lengths = (size_t *)Dee_AMallocc(seq_max, sizeof(size_t));
+		seq_lengths = (size_t *)Dee_Mallocac(seq_max, sizeof(size_t));
 		if unlikely(!seq_lengths)
 			goto err;
 		i                = seq_min;
@@ -684,7 +684,7 @@ check_temp_for_errors:
 	if unlikely(temp == (size_t)-2)
 		goto err;
 	if (temp != (size_t)-1) {
-		Dee_AFree(seq_lengths);
+		Dee_Freea(seq_lengths);
 		if (OVERFLOW_UADD(temp, start_offset, &temp))
 			goto index_overflow;
 		if ((seq_max - seq_min) >= 2) {
@@ -702,7 +702,7 @@ check_temp_for_errors:
 		goto check_temp_for_errors;
 	}
 	ASSERT(seq_min + 1 == seq_max);
-	Dee_AFree(seq_lengths);
+	Dee_Freea(seq_lengths);
 	/* Search the first sequence. */
 	temp = DeeSeq_RFind(DeeTuple_GET(self, seq_min),
 	                    start, (size_t)-1, keyed_search_item, key);
@@ -721,7 +721,7 @@ index_overflow:
 	err_integer_overflow_i(sizeof(size_t) * 8, true);
 	goto err;
 err_seqlen:
-	Dee_AFree(seq_lengths);
+	Dee_Freea(seq_lengths);
 err:
 	return (size_t)-2;
 }

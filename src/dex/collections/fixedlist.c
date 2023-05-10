@@ -315,7 +315,7 @@ PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 fl_assign(FixedList *__restrict self, DeeObject *__restrict other) {
 	DREF DeeObject **items, *temp;
 	size_t i;
-	items = (DREF DeeObject **)Dee_AMallocc(self->fl_size,
+	items = (DREF DeeObject **)Dee_Mallocac(self->fl_size,
 	                                        sizeof(DREF DeeObject *));
 	if unlikely(!items)
 		goto err;
@@ -331,10 +331,10 @@ fl_assign(FixedList *__restrict self, DeeObject *__restrict other) {
 	FixedList_LockEndWrite(self);
 	/* Drop references to all of the old items. */
 	Dee_XDecrefv(items, self->fl_size);
-	Dee_AFree(items);
+	Dee_Freea(items);
 	return 0;
 err_items:
-	Dee_AFree(items);
+	Dee_Freea(items);
 err:
 	return -1;
 }
@@ -351,7 +351,7 @@ fl_moveassign(FixedList *__restrict self,
 		                       "when one containing %" PRFuSIZ " was given",
 		                       self->fl_size, self->fl_size > 1 ? "s" : "", other->fl_size);
 	}
-	items = (DREF DeeObject **)Dee_AMallocc(self->fl_size,
+	items = (DREF DeeObject **)Dee_Mallocac(self->fl_size,
 	                                        sizeof(DREF DeeObject *));
 	if unlikely(!items)
 		goto err;
@@ -377,11 +377,11 @@ write_self_again:
 
 	/* Drop references to all of the old items. */
 	Dee_XDecrefv(items, self->fl_size);
-	Dee_AFree(items);
+	Dee_Freea(items);
 	return 0;
 /*
 err_items:
-	Dee_AFree(items);*/
+	Dee_Freea(items);*/
 err:
 	return -1;
 }
@@ -700,7 +700,7 @@ fl_nsi_delrange(FixedList *__restrict self, dssize_t start, dssize_t end) {
 	if ((size_t)end > self->fl_size)
 		end = (dssize_t)self->fl_size;
 	count      = (size_t)end - (size_t)start;
-	values_buf = (DREF DeeObject **)Dee_AMallocc(count, sizeof(DREF DeeObject *));
+	values_buf = (DREF DeeObject **)Dee_Mallocac(count, sizeof(DREF DeeObject *));
 	if unlikely(!values_buf)
 		goto err;
 	FixedList_LockWrite(self);
@@ -713,7 +713,7 @@ fl_nsi_delrange(FixedList *__restrict self, dssize_t start, dssize_t end) {
 	}
 	FixedList_LockEndWrite(self);
 	Dee_XDecrefv(values_buf, count);
-	Dee_AFree(values_buf);
+	Dee_Freea(values_buf);
 	return 0;
 err:
 	return -1;
@@ -732,7 +732,7 @@ fl_nsi_setrange(FixedList *self, dssize_t start, dssize_t end, DeeObject *values
 	if ((size_t)end > self->fl_size)
 		end = (dssize_t)self->fl_size;
 	count      = (size_t)end - (size_t)start;
-	values_buf = (DREF DeeObject **)Dee_AMallocc(count, sizeof(DREF DeeObject *));
+	values_buf = (DREF DeeObject **)Dee_Mallocac(count, sizeof(DREF DeeObject *));
 	if unlikely(!values_buf)
 		goto err;
 	if (DeeObject_UnpackWithUnbound(values, count, values_buf))
@@ -748,10 +748,10 @@ fl_nsi_setrange(FixedList *self, dssize_t start, dssize_t end, DeeObject *values
 	}
 	FixedList_LockEndWrite(self);
 	Dee_XDecrefv(values_buf, count);
-	Dee_AFree(values_buf);
+	Dee_Freea(values_buf);
 	return 0;
 err_values_buf:
-	Dee_AFree(values_buf);
+	Dee_Freea(values_buf);
 err:
 	return -1;
 }

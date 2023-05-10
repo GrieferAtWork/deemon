@@ -305,7 +305,7 @@ has_opt:
 				if (*iter == ',' && iter[-1] != '\\')
 					++sub_argc;
 			}
-			sub_argv = (char **)Dee_AMallocc((unsigned int)sub_argc, sizeof(char *));
+			sub_argv = (char **)Dee_Mallocac((unsigned int)sub_argc, sizeof(char *));
 			if unlikely(!sub_argv)
 				goto err;
 			argend             = iter;
@@ -335,7 +335,7 @@ has_opt:
 			sub_argv_mirror = sub_argv;
 			result = cmd_parse(&sub_argc, &sub_argv_mirror,
 			                   opt->co_group, true);
-			Dee_AFree(sub_argv);
+			Dee_Freea(sub_argv);
 		} else {
 			/* Check if an absent argument is acceptable by the command. */
 			if (!arg && (opt->co_flags & (CMD_FARG | CMD_FARGOPT)) == (CMD_FARG)) {

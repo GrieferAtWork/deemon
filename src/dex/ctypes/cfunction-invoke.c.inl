@@ -73,9 +73,9 @@ cfunction_call(DeeCFunctionTypeObject *__restrict tp_self,
 #endif /* VARARGS */
 
 #ifdef VARARGS
-	wbuf = Dee_AMalloc(tp_self->ft_wsize + va_data_size);
+	wbuf = Dee_Malloca(tp_self->ft_wsize + va_data_size);
 #else /* VARARGS */
-	wbuf = Dee_AMalloc(tp_self->ft_wsize);
+	wbuf = Dee_Malloca(tp_self->ft_wsize);
 #endif /* !VARARGS */
 	if unlikely(!wbuf)
 		goto err;
@@ -382,7 +382,7 @@ def_var_data:
 	}
 #undef ret_mem
 done_wbuf:
-	Dee_AFree(wbuf);
+	Dee_Freea(wbuf);
 done:
 	return result;
 err_wbuf:

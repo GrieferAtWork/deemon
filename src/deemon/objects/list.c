@@ -633,7 +633,7 @@ again:
 	delete_count = count;
 	if (index + count > me->l_list.ol_elemc)
 		delete_count = me->l_list.ol_elemc - index;
-	delobv = (DREF DeeObject **)Dee_ATryMalloc(delete_count * sizeof(DREF DeeObject *));
+	delobv = (DREF DeeObject **)Dee_TryMalloca(delete_count * sizeof(DREF DeeObject *));
 	if unlikely(!delobv) {
 		DeeList_LockEndWrite(me);
 		if (!Dee_CollectMemory(delete_count * sizeof(DREF DeeObject *)))
@@ -651,7 +651,7 @@ again:
 	             sizeof(DREF DeeObject *));
 	DeeList_LockEndWrite(me);
 	Dee_Decrefv(delobv, count);
-	Dee_AFree(delobv);
+	Dee_Freea(delobv);
 	ASSERT(count != (size_t)-1);
 	return count;
 }
@@ -1668,7 +1668,7 @@ again:
 	if ((size_t)start_index >= (size_t)end_index)
 		goto done_noop;
 	count  = (size_t)end_index - (size_t)start_index;
-	delobv = (DREF DeeObject **)Dee_ATryMalloc((size_t)count *
+	delobv = (DREF DeeObject **)Dee_TryMalloca((size_t)count *
 	                                           sizeof(DREF DeeObject *));
 	if unlikely(!delobv) {
 		DeeList_LockEndWrite(me);
@@ -1691,7 +1691,7 @@ again:
 	Dee_Decrefv(delobv, count);
 
 	/* Free the temporary del-item vector. */
-	Dee_AFree(delobv);
+	Dee_Freea(delobv);
 done:
 	return 0;
 err:
@@ -1718,7 +1718,7 @@ again:
 	if ((size_t)start_index >= DeeList_SIZE(me))
 		goto done_noop;
 	count  = DeeList_SIZE(me) - (size_t)start_index;
-	delobv = (DREF DeeObject **)Dee_ATryMalloc((size_t)count *
+	delobv = (DREF DeeObject **)Dee_TryMalloca((size_t)count *
 	                                           sizeof(DREF DeeObject *));
 	if unlikely(!delobv) {
 		DeeList_LockEndWrite(me);
@@ -1737,7 +1737,7 @@ again:
 	Dee_Decrefv(delobv, count);
 
 	/* Free the temporary del-item vector. */
-	Dee_AFree(delobv);
+	Dee_Freea(delobv);
 done:
 	return 0;
 err:
@@ -1816,7 +1816,7 @@ again:
 		me->l_list.ol_elemc += insert_count;
 		DeeList_LockEndWrite(me);
 	} else {
-		delobv = (DREF DeeObject **)Dee_ATryMalloc(delete_count *
+		delobv = (DREF DeeObject **)Dee_TryMalloca(delete_count *
 		                                           sizeof(DREF DeeObject *));
 		if unlikely(!delobv) {
 			DeeList_LockEndWrite(me);
@@ -1848,7 +1848,7 @@ again:
 		Dee_Decrefv(delobv, delete_count);
 
 		/* Free the temporary del-item vector. */
-		Dee_AFree(delobv);
+		Dee_Freea(delobv);
 	}
 	return 0;
 err:
@@ -1919,7 +1919,7 @@ again:
 		me->l_list.ol_elemc += insert_count;
 		DeeList_LockEndWrite(me);
 	} else {
-		delobv = (DREF DeeObject **)Dee_ATryMalloc(delete_count *
+		delobv = (DREF DeeObject **)Dee_TryMalloca(delete_count *
 		                                           sizeof(DREF DeeObject *));
 		if unlikely(!delobv) {
 			DeeList_LockEndWrite(me);
@@ -1943,7 +1943,7 @@ again:
 		Dee_Decrefv(delobv, delete_count);
 
 		/* Free the temporary del-item vector. */
-		Dee_AFree(delobv);
+		Dee_Freea(delobv);
 	}
 	return 0;
 err:
@@ -2048,7 +2048,7 @@ again:
 		DeeList_LockEndWrite(me);
 		Dee_Free(insertv);
 	} else {
-		delobv = (DREF DeeObject **)Dee_ATryMalloc(delete_count *
+		delobv = (DREF DeeObject **)Dee_TryMalloca(delete_count *
 		                                           sizeof(DREF DeeObject *));
 		if unlikely(!delobv) {
 			DeeList_LockEndWrite(me);
@@ -2081,7 +2081,7 @@ again:
 		Dee_Decrefv(delobv, delete_count);
 
 		/* Free the temporary del-item vector. */
-		Dee_AFree(delobv);
+		Dee_Freea(delobv);
 	}
 done:
 	return 0;
@@ -2183,7 +2183,7 @@ again:
 		DeeList_LockEndWrite(me);
 		Dee_Free(insertv);
 	} else {
-		delobv = (DREF DeeObject **)Dee_ATryMalloc(delete_count *
+		delobv = (DREF DeeObject **)Dee_TryMalloca(delete_count *
 		                                           sizeof(DREF DeeObject *));
 		if unlikely(!delobv) {
 			DeeList_LockEndWrite(me);
@@ -2208,7 +2208,7 @@ again:
 		Dee_Decrefv(delobv, delete_count);
 
 		/* Free the temporary del-item vector. */
-		Dee_AFree(delobv);
+		Dee_Freea(delobv);
 	}
 done:
 	return 0;
@@ -3058,7 +3058,7 @@ again:
 		DREF DeeObject **old_obj;
 		size_t num_del;
 		num_del = me->l_list.ol_elemc - new_elemc;
-		old_obj = (DREF DeeObject **)Dee_ATryMalloc(num_del * sizeof(DREF DeeObject *));
+		old_obj = (DREF DeeObject **)Dee_TryMalloca(num_del * sizeof(DREF DeeObject *));
 		if unlikely(!old_obj) {
 			DeeList_LockEndWrite(me);
 			if (Dee_CollectMemory(new_elemc * sizeof(DREF DeeObject *)))
@@ -3072,7 +3072,7 @@ again:
 
 		/* Drop references from all objects that were deleted. */
 		Dee_Decrefv(old_obj, num_del);
-		Dee_AFree(old_obj);
+		Dee_Freea(old_obj);
 	}
 	return_none;
 err:

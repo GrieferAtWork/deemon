@@ -825,7 +825,7 @@ directory_open(DeeDirIteratorObject *__restrict self,
 		goto err;
 	/* Append the `\\*' to the given path and fix forward-slashes. */
 	wname_length = WSTR_LENGTH(wname);
-	wpattern     = (LPWSTR)Dee_AMalloc(8 + wname_length * 2);
+	wpattern     = (LPWSTR)Dee_Malloca(8 + wname_length * 2);
 	if unlikely(!wpattern)
 		goto err;
 	for (i = 0; i < wname_length; ++i) {
@@ -850,7 +850,7 @@ directory_open(DeeDirIteratorObject *__restrict self,
 	self->odi_hnd = FindFirstFileExW(wpattern, FindExInfoBasic, &self->odi_data,
 	                                FindExSearchNameMatch, NULL, 0);
 	DBG_ALIGNMENT_ENABLE();
-	Dee_AFree(wpattern);
+	Dee_Freea(wpattern);
 	self->odi_first = true;
 	if unlikely(self->odi_hnd == INVALID_HANDLE_VALUE) {
 		DWORD dwError;

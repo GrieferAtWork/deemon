@@ -258,16 +258,16 @@ DeeModule_GetNativeSymbol(DeeObject *__restrict self,
 		/* Try again after inserting an underscore. */
 		char *temp_name;
 		size_t namelen = strlen(name);
-#ifdef Dee_AMallocNoFailc
-		Dee_AMallocNoFailc(temp_name, namelen + 6, sizeof(char));
-#else /* Dee_AMallocNoFailc */
-		temp_name = (char *)Dee_AMallocc(namelen + 6, sizeof(char));
+#ifdef Dee_MallocaNoFailc
+		Dee_MallocaNoFailc(temp_name, namelen + 6, sizeof(char));
+#else /* Dee_MallocaNoFailc */
+		temp_name = (char *)Dee_Mallocac(namelen + 6, sizeof(char));
 		if unlikely(!temp_name) {
 			DeeError_Handled(Dee_ERROR_HANDLED_RESTORE);
 			return NULL; /* ... Technically not correct, but if memory has gotten
 			              *     this low, that's the last or the user's problems. */
 		}
-#endif /* !Dee_AMallocNoFailc */
+#endif /* !Dee_MallocaNoFailc */
 		memcpyc(temp_name + 1, name, namelen + 1, sizeof(char));
 		temp_name[0] = '_';
 		result = DeeSystem_DlSym(me->d_handle, temp_name);
@@ -288,7 +288,7 @@ DeeModule_GetNativeSymbol(DeeObject *__restrict self,
 					break;
 			}
 		}
-		Dee_AFree(temp_name);
+		Dee_Freea(temp_name);
 
 #else /* NEED_DeeModule_GetNativeSymbol_AT_SUFFIX */
 		/* Try again after inserting an underscore. */
@@ -302,22 +302,22 @@ DeeModule_GetNativeSymbol(DeeObject *__restrict self,
 		{
 			char *temp_name;
 			size_t namelen = strlen(name);
-#ifdef Dee_AMallocNoFailc
-			Dee_AMallocNoFailc(temp_name, namelen + 2, sizeof(char));
-#else /* Dee_AMallocNoFailc */
-			temp_name = (char *)Dee_AMallocc(namelen + 2, sizeof(char));
+#ifdef Dee_MallocaNoFailc
+			Dee_MallocaNoFailc(temp_name, namelen + 2, sizeof(char));
+#else /* Dee_MallocaNoFailc */
+			temp_name = (char *)Dee_Mallocac(namelen + 2, sizeof(char));
 			if unlikely(!temp_name) {
 				DeeError_Handled(Dee_ERROR_HANDLED_RESTORE);
 				return NULL; /* ... Technically not correct, but if memory has gotten
 				              *     this low, that's the last or the user's problems. */
 			}
-#endif /* !Dee_AMallocNoFailc */
+#endif /* !Dee_MallocaNoFailc */
 			memcpyc(temp_name + 1, name,
 			        namelen + 1,
 			        sizeof(char));
 			temp_name[0] = '_';
 			result = DeeSystem_DlSym(me->d_handle, temp_name);
-			Dee_AFree(temp_name);
+			Dee_Freea(temp_name);
 		}
 #endif /* !NEED_DeeModule_GetNativeSymbol_AT_SUFFIX */
 	}

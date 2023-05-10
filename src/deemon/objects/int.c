@@ -1753,7 +1753,7 @@ err:
 		return -1;
 	}
 	size = 1 + size_a * DIGIT_BITS / (3 * DeeInt_DECIMAL_SHIFT);
-	pout = (digit *)Dee_AMallocc(size, sizeof(digit));
+	pout = (digit *)Dee_Mallocac(size, sizeof(digit));
 	if (!pout)
 		goto err;
 	pin  = self->ob_digit;
@@ -1782,7 +1782,7 @@ err:
 	if (flags & DEEINT_PRINT_FSEPS) {
 		/* Allocate a string target buffer. */
 		bufsize += bufsize / DECIMAL_THOUSANDS_GROUPINGS;
-		buf = (char *)Dee_AMallocc(bufsize, sizeof(char));
+		buf = (char *)Dee_Mallocac(bufsize, sizeof(char));
 		if unlikely(!buf)
 			goto err_pout;
 		iter = buf + bufsize;
@@ -1807,7 +1807,7 @@ err:
 		} while (rem != 0);
 	} else {
 		/* Allocate a string target buffer. */
-		buf = (char *)Dee_AMallocc(bufsize, sizeof(char));
+		buf = (char *)Dee_Mallocac(bufsize, sizeof(char));
 		if unlikely(!buf)
 			goto err_pout;
 		iter = buf + bufsize;
@@ -1893,9 +1893,9 @@ do_normal_pad:
 		result = (*printer)(arg, iter, intlen);
 	}
 done_buf:
-	Dee_AFree(buf);
+	Dee_Freea(buf);
 done_pout:
-	Dee_AFree(pout);
+	Dee_Freea(pout);
 	return result;
 err_temp:
 	result = temp;
@@ -1959,7 +1959,7 @@ do_print:
 		if ((dssize_t)num_digits <= 0) {
 			if (!num_digits) {
 				bufsize = 4;
-				buf     = (char *)Dee_AMallocc(bufsize, sizeof(char));
+				buf     = (char *)Dee_Mallocac(bufsize, sizeof(char));
 				if unlikely(!buf)
 					goto err;
 				iter    = buf + bufsize;
@@ -1973,7 +1973,7 @@ do_print:
 		if (radix_and_flags & DEEINT_PRINT_FSEPS)
 			bufsize += bufsize / NON_DECIMAL_THOUSANDS_GROUPINGS;
 		bufsize += 4;
-		buf = (char *)Dee_AMallocc(bufsize, sizeof(char));
+		buf = (char *)Dee_Mallocac(bufsize, sizeof(char));
 		if unlikely(!buf)
 			goto err;
 		iter     = buf + bufsize;
@@ -2116,7 +2116,7 @@ err_temp:
 		intlen = (size_t)((buf + bufsize) - iter);
 		result = (*printer)(arg, iter, intlen);
 done_buf:
-		Dee_AFree(buf);
+		Dee_Freea(buf);
 		return result;
 	}	break;
 

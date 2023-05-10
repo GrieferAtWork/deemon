@@ -1545,7 +1545,7 @@ typedef struct _CrtMemBlockHeader {
 } _CrtMemBlockHeader;
 
 #define pbData(pblock) ((unsigned char *)((_CrtMemBlockHeader *)pblock + 1))
-#define pHdr(pbData) (((_CrtMemBlockHeader *)pbData) - 1)
+#define pHdr(pbData)   (((_CrtMemBlockHeader *)pbData) - 1)
 
 #define IGNORE_REQ  0L              /* Request number for ignore block */
 #define IGNORE_LINE 0xFEDCBABC      /* Line number for ignore block */
@@ -1592,7 +1592,7 @@ do_unhook(_CrtMemBlockHeader *__restrict hdr) {
 	hdr->lRequest                           = IGNORE_REQ;
 }
 
-#define DEEDBG_UNTRACKALLOC_DEFINED 1
+#define DeeDbg_UntrackAlloc_DEFINED
 PUBLIC void *
 (DCALL DeeDbg_UntrackAlloc)(void *ptr, char const *file, int line) {
 	(void)file;
@@ -1674,12 +1674,12 @@ PUBLIC void
 }
 #endif /* !HAVE_DEEDBG_MALLOC */
 
-#ifndef DEEDBG_UNTRACKALLOC_DEFINED
+#ifndef DeeDbg_UntrackAlloc_DEFINED
 PUBLIC void *
 (DCALL DeeDbg_UntrackAlloc)(void *ptr, char const *UNUSED(file), int UNUSED(line)) {
 	return ptr;
 }
-#endif /* !DEEDBG_UNTRACKALLOC_DEFINED */
+#endif /* !DeeDbg_UntrackAlloc_DEFINED */
 
 
 

@@ -1780,7 +1780,7 @@ PRIVATE BOOL DCALL nt_AcquirePrivilege(LPCWSTR lpName) {
 	tok_priv.Privileges[0].Luid       = luid;
 	tok_priv.Privileges[0].Attributes = SE_PRIVILEGE_ENABLED;
 	if unlikely(!AdjustTokenPrivileges(tok, FALSE, &tok_priv, 0, NULL, NULL))
-		return FALSE;
+		goto fail;
 	error = GetLastError();
 	SetLastError(0);
 	return unlikely(error == ERROR_NOT_ALL_ASSIGNED) ? 0 : 1;

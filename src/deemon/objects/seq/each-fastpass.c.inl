@@ -409,7 +409,7 @@ F(printrepr)(STRUCT_TYPE *__restrict self,
 		full_suffix_len = strlen(each_suffix);
 		full_suffix_len += 1; /* "." */
 		full_suffix_len += WSTR_LENGTH(attr_utf8);
-		full_suffix = (char *)Dee_AMallocc(full_suffix_len, sizeof(char));
+		full_suffix = (char *)Dee_Mallocac(full_suffix_len, sizeof(char));
 		if unlikely(!full_suffix)
 			return -1;
 		p = (char *)mempcpyc(full_suffix, each_suffix, strlen(each_suffix), sizeof(char));
@@ -427,7 +427,7 @@ F(printrepr)(STRUCT_TYPE *__restrict self,
 			                                     NULL, 0, full_suffix, full_suffix_len);
 			DeeTuple_DecrefSymbolic(argv[0]);
 		}
-		Dee_AFree(full_suffix);
+		Dee_Freea(full_suffix);
 		return result;
 	}
 #else /* ... */

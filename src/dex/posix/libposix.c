@@ -1902,6 +1902,9 @@ PRIVATE struct dex_symbol symbols[] = {
 	                         "@throw SystemError Failed to create a directory for some reason\n"
 	                         "@throw FileClosed The given @dfd was closed\n"
 	                         "Create a new directory named @dfd:@path"))
+	/* TODO: mkdir_p() -- Same as `mkdir()', but:
+	 * - Also create missing parent directories
+	 * - Ignore directory-already-exists errors (but only if the already-existing thing *actually* is a directory) */
 	D(POSIX_SYMLINK_DEF_DOC("@interrupt\n"
 	                        "@throw FileExists A file or directory named @path already exists\n"
 	                        "@throw FileNotFound A parent directory of @path does not exist\n"

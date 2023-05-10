@@ -2657,7 +2657,7 @@ dir_iter(Dir *__restrict self) {
 		goto err_r;
 	/* Append the `\\*' to the given path and fix forward-slashes. */
 	wname_length = WSTR_LENGTH(wname);
-	wpattern     = (LPWSTR)Dee_AMalloc(8 + wname_length * 2);
+	wpattern     = (LPWSTR)Dee_Malloca(8 + wname_length * 2);
 	if unlikely(!wpattern)
 		goto err_r;
 	for (i = 0; i < wname_length; ++i) {
@@ -2682,7 +2682,7 @@ dir_iter(Dir *__restrict self) {
 	result->di_hnd = FindFirstFileExW(wpattern, FindExInfoBasic, &result->di_data,
 	                                 FindExSearchNameMatch, NULL, 0);
 	DBG_ALIGNMENT_ENABLE();
-	Dee_AFree(wpattern);
+	Dee_Freea(wpattern);
 	if unlikely(result->di_hnd == INVALID_HANDLE_VALUE) {
 		DWORD dwError;
 		DBG_ALIGNMENT_DISABLE();
@@ -3082,7 +3082,7 @@ again_wname:
 	/* Set up the wildcard patter string pointer
 	 * of the resulting query iterator. */
 	result->q_wild = wname + wname_length;
-	wpattern       = (LPWSTR)Dee_AMalloc(8 + wname_length * 2);
+	wpattern       = (LPWSTR)Dee_Malloca(8 + wname_length * 2);
 	if unlikely(!wpattern)
 		goto err_r;
 	for (i = 0; i < wname_length; ++i) {
@@ -3107,7 +3107,7 @@ again_wname:
 	                                        &result->q_iter.di_data,
 	                                        FindExSearchNameMatch, NULL, 0);
 	DBG_ALIGNMENT_ENABLE();
-	Dee_AFree(wpattern);
+	Dee_Freea(wpattern);
 	if unlikely(result->q_iter.di_hnd == INVALID_HANDLE_VALUE) {
 		DWORD dwError;
 		DBG_ALIGNMENT_DISABLE();
