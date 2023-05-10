@@ -36,6 +36,7 @@ jobs:
         unlink lib/LANGUAGE.txt || true
 
     - name: Save executable as artifact
+      if: success() || failure()
       uses: actions/upload-artifact@v3
       with:
         name: ${{ runner.os }}-${{ github.sha }}-build-x64
