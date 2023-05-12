@@ -213,46 +213,46 @@ local __objects = deemon.List {
 	/* 0x0097 */ rt.Compiler.Symbol, /* DeeLocalVar_Type */
 	/* 0x0098 */ rt.Compiler.Lexer, /* DeeLexer_Type */
 	/* 0x0099 */ rt.Compiler.Ast, /* DeeSAst_Type */
-	/* 0x009a */ fs.getcwd,
-	/* 0x009b */ fs.chdir,
+	/* 0x009a */ posix.getcwd,
+	/* 0x009b */ posix.chdir,
 	/* 0x009c */ () -> fs.User.home,
-	/* 0x009d */ () -> fs.environ,
-	/* 0x009e */ x -> fs.environ[x],
-	/* 0x009f */ x -> x in fs.environ,
-	/* 0x00a0 */ x -> fs.environ.operator del[](x),
-	/* 0x00a1 */ (x, y) -> fs.environ.operator [](x, y),
-	/* 0x00a2 */ fs.headof,
-	/* 0x00a3 */ fs.tailof,
+	/* 0x009d */ () -> posix.environ,
+	/* 0x009e */ x -> posix.environ[x],
+	/* 0x009f */ x -> x in posix.environ,
+	/* 0x00a0 */ x -> posix.environ.operator del[](x),
+	/* 0x00a1 */ (x, y) -> posix.environ.operator [](x, y),
+	/* 0x00a2 */ posix.headof,
+	/* 0x00a3 */ posix.tailof,
 	/* 0x00a4 */ fs.fileof,
 	/* 0x00a5 */ fs.extof,
-	/* 0x00a6 */ fs.driveof,
-	/* 0x00a7 */ fs.inctrail,
-	/* 0x00a8 */ fs.exctrail,
-	/* 0x00a9 */ fs.abspath,
-	/* 0x00aa */ fs.relpath,
-	/* 0x00ab */ fs.joinpath,
+	/* 0x00a6 */ posix.driveof,
+	/* 0x00a7 */ posix.inctrail,
+	/* 0x00a8 */ posix.exctrail,
+	/* 0x00a9 */ posix.abspath,
+	/* 0x00aa */ posix.relpath,
+	/* 0x00ab */ posix.joinpath,
 	/* 0x00ac */ x -> fs.expand(x, "h"),
 	/* 0x00ad */ x -> fs.expand(x, "vV"),
-	/* 0x00ae */ path -> fs.stat(path).st_atime,
-	/* 0x00af */ path -> fs.stat(path).st_mtime,
-	/* 0x00b0 */ path -> fs.stat(path).st_ctime,
-	/* 0x00b1 */ path -> { local st = fs.stat(path); return (st.st_atime, st.st_ctime, st.st_mtime); },
-	/* 0x00b2 */ fs.isabs,
-	/* 0x00b3 */ fs.stat.isreg,
-	/* 0x00b4 */ fs.stat.isdir,
-	/* 0x00b5 */ fs.stat.islnk,
-	/* 0x00b6 */ path -> { path = fs.inctrail(fs.expand(path, "pc")); return fs.driveof(path) == path; },
-	/* 0x00b7 */ path -> { path = fs.inctrail(fs.expand(path, "pc")); return fs.driveof(path) == path; },
-	/* 0x00b8 */ fs.stat.ishidden,
-	/* 0x00b9 */ fs.stat.exists,
-	/* 0x00ba */ fs.remove,
-	/* 0x00bb */ fs.unlink,
-	/* 0x00bc */ fs.mkdir,
-	/* 0x00bd */ fs.rmdir,
-	/* 0x00be */ fs.copyfile,
-	/* 0x00bf */ fs.rename,
-	/* 0x00c0 */ fs.symlink,
-	/* 0x00c1 */ fs.readlink,
+	/* 0x00ae */ path -> posix.stat(path).st_atime,
+	/* 0x00af */ path -> posix.stat(path).st_mtime,
+	/* 0x00b0 */ path -> posix.stat(path).st_birthtime,
+	/* 0x00b1 */ path -> { local st = posix.stat(path); return (st.st_atime, st.st_birthtime, st.st_mtime); },
+	/* 0x00b2 */ posix.isabs,
+	/* 0x00b3 */ posix.stat.isreg,
+	/* 0x00b4 */ posix.stat.isdir,
+	/* 0x00b5 */ posix.stat.islnk,
+	/* 0x00b6 */ path -> { path = posix.inctrail(fs.expand(path, "pc")); return posix.driveof(path) == path; },
+	/* 0x00b7 */ path -> { path = posix.inctrail(fs.expand(path, "pc")); return posix.driveof(path) == path; },
+	/* 0x00b8 */ posix.stat.ishidden,
+	/* 0x00b9 */ posix.stat.exists,
+	/* 0x00ba */ posix.remove,
+	/* 0x00bb */ posix.unlink,
+	/* 0x00bc */ posix.mkdir,
+	/* 0x00bd */ posix.rmdir,
+	/* 0x00be */ posix.copyfile,
+	/* 0x00bf */ posix.rename,
+	/* 0x00c0 */ posix.symlink,
+	/* 0x00c1 */ posix.readlink,
 	/* 0x00c2 */ (expr, msg) -> { deemon.__assert(msg); },
 	/* 0x00c3 */ fs.dir, /* __builtin_fs_opendir */
 	/* 0x00c4 */ fs.dir.Iterator,
@@ -290,13 +290,13 @@ local __objects = deemon.List {
 	/* 0x00e4 */ ipc.Pipe.Writer,
 	/* 0x00e5 */ deemon.Error.RuntimeError.SegFault,
 	/* 0x00e6 */ deemon.gc.collect, /* __builtin_gc_collect_now */
-	/* 0x00e7 */ fs.stat.isexe,
+	/* 0x00e7 */ posix.stat.isexe,
 	/* 0x00e8 */ ctypes.strdup,
 	/* 0x00e9 */ ctypes.strdup, /* strndup  (`ctypes.strdup' is overloaded to implement this as well) */
 	/* 0x00ea */ ctypes.strncat,
 	/* 0x00eb */ fs.query,
 	/* 0x00ec */ fs.query.Iterator,
-	/* 0x00ed */ fs.link,
+	/* 0x00ed */ posix.link,
 	/* 0x00ee */ W32_IMPORT(GetModuleFileName), /* __builtin_fs_win32modulename */
 	/* 0x00ef */ posix.exit,
 	/* 0x00f0 */ posix._Exit,
@@ -415,7 +415,7 @@ local __objects = deemon.List {
 	/* 0x0161 */ compat_sys.argv,
 	/* 0x0162 */ W32_IMPORT(GetDllDirectory), /* __builtin_fs_win32dlldirectory */
 	/* 0x0163 */ W32_IMPORT(GetSystemDirectory), /* __builtin_fs_win32systemdirectory */
-	/* 0x0164 */ fs.gettmp,
+	/* 0x0164 */ posix.gettmp,
 	/* 0x0165 */ W32_IMPORT(GetWindowsDirectory), /* __builtin_fs_win32windowsdirectory */
 	/* 0x0166 */ W32_IMPORT(GetSystemWindowsDirectory), /* __builtin_fs_win32systemwindowsdirectory */
 	/* 0x0167 */ W32_IMPORT(GetSystemWow64Directory), /* __builtin_fs_win32syswow64directory */
@@ -425,10 +425,10 @@ local __objects = deemon.List {
 	/* 0x016b */ deemon.Error.ValueError.ArithmeticError.DivideByZero,
 	/* 0x016c */ deemon.Iterator, /* DeeGenericSequenceIterator_Type */
 	/* 0x016d */ deemon.Error.SystemError.FSError.FileNotFound,
-	/* 0x016e */ fs.stat.ischr,
-	/* 0x016f */ fs.stat.isblk,
-	/* 0x0170 */ fs.stat.isfifo,
-	/* 0x0171 */ fs.stat.issock,
+	/* 0x016e */ posix.stat.ischr,
+	/* 0x016f */ posix.stat.isblk,
+	/* 0x0170 */ posix.stat.isfifo,
+	/* 0x0171 */ posix.stat.issock,
 	/* 0x0172 */ deemon.InstanceMethod,
 	/* 0x0173 */ rt.makeclass, /* __builtin_class */
 	/* 0x0174 */ deemon.Error.ThreadCrash,
@@ -465,13 +465,13 @@ local __objects = deemon.List {
 	/* 0x0193 */ rt.StringIterator, /* DeeUtf32StringIterator_Type */
 	/* 0x0194 */ "", /* _Dee_EmptyUtf32String */
 	/* 0x0195 */ () -> fs.User.name,
-	/* 0x0196 */ fs.gethostname,
+	/* 0x0196 */ posix.gethostname,
 	/* 0x0197 */ () -> fs.User.name, /* DeeBuiltinFunction___builtin_fs_wuser */
-	/* 0x0198 */ fs.gethostname, /* DeeBuiltinFunction___builtin_fs_whost */
-	/* 0x0199 */ fs.getcwd, /* DeeBuiltinFunction___builtin_fs_wgetcwd */
-	/* 0x019a */ fs.gettmp, /* DeeBuiltinFunction___builtin_fs_wgettmp */
+	/* 0x0198 */ posix.gethostname, /* DeeBuiltinFunction___builtin_fs_whost */
+	/* 0x0199 */ posix.getcwd, /* DeeBuiltinFunction___builtin_fs_wgetcwd */
+	/* 0x019a */ posix.gettmp, /* DeeBuiltinFunction___builtin_fs_wgettmp */
 	/* 0x019b */ (...) -> fs.User(...).home, /* DeeBuiltinFunction___builtin_fs_wgethome */
-	/* 0x019c */ () -> fs.environ, /* DeeBuiltinFunction___builtin_fs_wlistenv */
+	/* 0x019c */ () -> posix.environ, /* DeeBuiltinFunction___builtin_fs_wlistenv */
 	/* 0x019d */ W32_IMPORT(GetModuleFileName), /* DeeBuiltinFunction___builtin_fs_win32wmodulename */
 	/* 0x019e */ W32_IMPORT(GetDllDirectory), /* DeeBuiltinFunction___builtin_fs_win32wdlldirectory */
 	/* 0x019f */ W32_IMPORT(GetSystemDirectory), /* DeeBuiltinFunction___builtin_fs_win32wsystemdirectory */
@@ -512,10 +512,10 @@ local __objects = deemon.List {
 	/* 0x01c2 */ deemon.Sequence.sorted,
 	/* 0x01c3 */ deemon.Sequence.segments,
 	/* 0x01c4 */ deemon.Cell,
-	/* 0x01c5 */ fs.chmod,
-	/* 0x01c6 */ path -> fs.stat(path).st_mode,
-	/* 0x01c7 */ fs.chown,
-	/* 0x01c8 */ path -> { __stack local st = fs.stat(path); return (st.st_uid, st.st_gid); },
+	/* 0x01c5 */ posix.chmod,
+	/* 0x01c6 */ path -> posix.stat(path).st_mode,
+	/* 0x01c7 */ posix.chown,
+	/* 0x01c8 */ path -> { __stack local st = posix.stat(path); return (st.st_uid, st.st_gid); },
 	/* 0x01c9 */ fs.User, /* DeeBuiltinFunction___builtin_fs_uidof */
 	/* 0x01ca */ fs.Group, /* DeeBuiltinFunction___builtin_fs_gidof */
 	/* 0x01cb */ (uid: fs.User | deemon.Object) -> { if (uid !is fs.User) uid = fs.User(uid); return uid.name; },
