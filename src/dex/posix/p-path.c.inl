@@ -65,32 +65,16 @@ PRIVATE DEFINE_STRING(posix_FS_ALTSEP, DeeSystem_ALTSEP_S);
 #endif /* !DeeSystem_ALTSEP_S */
 
 
-#ifndef CONFIG_HAVE_memrchr
-#define memrchr dee_memrchr
-DeeSystem_DEFINE_memrchr(dee_memrchr)
-#endif /* !CONFIG_HAVE_memrchr */
-
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 posix_path_headof_f(DeeObject *__restrict path) {
-	char *tailsep, *pathstr;
+	char const *tailsep, *pathstr;
 	ASSERT_OBJECT_TYPE_EXACT(path, &DeeString_Type);
 	pathstr = DeeString_AsUtf8(path);
 	if unlikely(!pathstr)
 		goto err;
-	tailsep = (char *)memrchr(pathstr, DeeSystem_SEP, WSTR_LENGTH(pathstr) * sizeof(char));
-#ifdef DeeSystem_ALTSEP
-	{
-		char *tailsep2;
-		tailsep2 = (char *)memrchr(pathstr, DeeSystem_ALTSEP, WSTR_LENGTH(pathstr) * sizeof(char));
-		if (!tailsep) {
-			tailsep = tailsep2;
-		} else if (tailsep2) {
-			if (tailsep < tailsep2)
-				tailsep = tailsep2;
-		}
-	}
-#endif /* DeeSystem_ALTSEP */
-	if (tailsep == NULL)
+	tailsep = DeeSystem_BaseName(pathstr, WSTR_LENGTH(pathstr));
+	ASSERT(tailsep >= pathstr);
+	if (tailsep <= pathstr)
 		return_empty_string;
 	++tailsep;
 	return DeeString_NewUtf8(pathstr,
@@ -102,25 +86,14 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 posix_path_tailof_f(DeeObject *__restrict path) {
-	char *tailsep, *pathstr;
+	char const *tailsep, *pathstr;
 	ASSERT_OBJECT_TYPE_EXACT(path, &DeeString_Type);
 	pathstr = DeeString_AsUtf8(path);
 	if unlikely(!pathstr)
 		goto err;
-	tailsep = (char *)memrchr(pathstr, DeeSystem_SEP, WSTR_LENGTH(pathstr) * sizeof(char));
-#ifdef DeeSystem_ALTSEP
-	{
-		char *tailsep2;
-		tailsep2 = (char *)memrchr(pathstr, DeeSystem_ALTSEP, WSTR_LENGTH(pathstr) * sizeof(char));
-		if (!tailsep) {
-			tailsep = tailsep2;
-		} else if (tailsep2) {
-			if (tailsep < tailsep2)
-				tailsep = tailsep2;
-		}
-	}
-#endif /* DeeSystem_ALTSEP */
-	if (tailsep == NULL)
+	tailsep = DeeSystem_BaseName(pathstr, WSTR_LENGTH(pathstr));
+	ASSERT(tailsep >= pathstr);
+	if (tailsep <= pathstr)
 		return_reference_(path);
 	++tailsep;
 	return DeeString_NewUtf8(tailsep,
@@ -133,7 +106,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 posix_path_driveof_f(DeeObject *__restrict path) {
 #ifdef DEE_SYSTEM_FS_DRIVES
-	char *pathstr, *iter, *end;
+	char const *pathstr, *iter, *end;
 	DREF DeeObject *result;
 	ASSERT_OBJECT_TYPE_EXACT(path, &DeeString_Type);
 	pathstr = DeeString_AsUtf8(path);
@@ -240,10 +213,10 @@ posix_path_exctrail_f(DeeObject *__restrict path) {
  *              |
  *              +- return
  */
-PRIVATE /*utf-8*/ char *DCALL
-find_last_path_segment(/*utf-8*/ char *__restrict pth_begin,
-                       /*utf-8*/ char *__restrict pth_end) {
-	char *next;
+PRIVATE WUNUSED NONNULL((1, 2)) /*utf-8*/ char const *DCALL
+find_last_path_segment(/*utf-8*/ char const *pth_begin,
+                       /*utf-8*/ char const *pth_end) {
+	char const *next;
 	uint32_t ch;
 	int name_state;
 	size_t count = 0;
@@ -348,9 +321,9 @@ posix_path_abspath_f(DeeObject *__restrict path, DeeObject *pwd) {
 	}
 	{
 		uint32_t ch;
-		char *next;
-		char *pwd_base, *pwd_begin, *pwd_end;
-		char *pth_base, *pth_begin, *pth_end;
+		char const *next;
+		char const *pwd_base, *pwd_begin, *pwd_end;
+		char const *pth_base, *pth_begin, *pth_end;
 		pwd_base = DeeString_AsUtf8(pwd);
 		if unlikely(!pwd_base)
 			goto err_pwd;
@@ -500,11 +473,13 @@ PRIVATE WUNUSED DREF DeeObject *DCALL
 posix_path_relpath_f(DeeObject *__restrict path, DeeObject *pwd) {
 	DREF DeeObject *result;
 	size_t uprefs, pth_length;
-	char *pth_begin, *pth_iter, *pth_end, *dst, *next;
-	char *pwd_begin, *pwd_iter, *pwd_end;
+	char *dst;
+	char const *next;
+	char const *pth_begin, *pth_iter, *pth_end;
+	char const *pwd_begin, *pwd_iter, *pwd_end;
 	uint32_t a, b;
 #ifdef DEE_SYSTEM_FS_DRIVES
-	char *pth_base;
+	char const *pth_base;
 #endif /* DEE_SYSTEM_FS_DRIVES */
 	bool is_nonempty_segment;
 	ASSERT_OBJECT_TYPE_EXACT(path, &DeeString_Type);
@@ -768,7 +743,7 @@ continue_uprefs_normal:
 					 * The two brackets denote the portions of the input `path' that
 					 * had to be retrieved retroactively. */
 #ifndef DEE_SYSTEM_FS_DRIVES
-					char *pth_base;
+					char const *pth_base;
 					pth_base = DeeString_AsUtf8(path);
 					if unlikely(!pth_base)
 						goto err;
