@@ -55,17 +55,20 @@ DECL_BEGIN
  * Example usage:
  * >> // function my_function(int a, int b, int c = 5) -> int;
  * >> // @return: * : The sum of `a', `b' and `c'
- * >> PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
- * >> my_function(DeeObject *UNUSED(self),
- * >>             size_t argc, DeeObject *const *argv) {
+ * >> PRIVATE WUNUSED ATTR_INS(2, 1) NONNULL((1)) DREF DeeObject *DCALL
+ * >> my_function(DeeObject *UNUSED(self), size_t argc, DeeObject *const *argv) {
  * >>     int a, b, c = 5;
  * >>     if (DeeArg_Unpack(argc, argv, "dd|d:my_function", &a, &b, &c))
  * >>         return NULL;
  * >>     return DeeInt_NewInt(a + b + c);
  * >> }
  */
-DFUNDEF WUNUSED NONNULL((3)) int DeeArg_Unpack(size_t argc, /*nonnull_if(argc != 0)*/ DeeObject *const *argv, char const *__restrict format, ...);
-DFUNDEF WUNUSED NONNULL((3)) int DCALL DeeArg_VUnpack(size_t argc, /*nonnull_if(argc != 0)*/ DeeObject *const *argv, char const *__restrict format, va_list args);
+DFUNDEF WUNUSED ATTR_INS(2, 1) NONNULL((3)) int
+DeeArg_Unpack(size_t argc, /*nonnull_if(argc != 0)*/ DeeObject *const *argv,
+              char const *__restrict format, ...);
+DFUNDEF WUNUSED ATTR_INS(2, 1) NONNULL((3)) int DCALL
+DeeArg_VUnpack(size_t argc, /*nonnull_if(argc != 0)*/ DeeObject *const *argv,
+               char const *__restrict format, va_list args);
 
 #ifndef __INTELLISENSE__
 #ifndef __NO_builtin_expect
@@ -404,11 +407,11 @@ struct dee_keyword {
  *    finally using `DeeObject_Size()' to see how many keyword-arguments
  *    were given by the keyword-list, and throwing an error if more were
  *    given than what was actually used. */
-DFUNDEF WUNUSED NONNULL((4, 5)) int
+DFUNDEF WUNUSED ATTR_INS(1, 2) NONNULL((4, 5)) int
 DeeArg_UnpackKw(size_t argc, DeeObject *const *argv,
                 DeeObject *kw, struct dee_keyword *__restrict kwlist,
                 char const *__restrict format, ...);
-DFUNDEF WUNUSED NONNULL((4, 5)) int DCALL
+DFUNDEF WUNUSED ATTR_INS(1, 2) NONNULL((4, 5)) int DCALL
 DeeArg_VUnpackKw(size_t argc, DeeObject *const *argv,
                  DeeObject *kw, struct dee_keyword *__restrict kwlist,
                  char const *__restrict format, va_list args);

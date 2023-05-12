@@ -84,7 +84,7 @@ err_r:
 	return NULL;
 }
 
-#define SLABSTAT_DATASIZE(x)                    \
+#define SLABSTAT_DATASIZE(x)           \
 	(offsetof(DeeSlabStat, st_slabs) + \
 	 ((x)->st_stat.st_slabcount * sizeof(DeeSlabInfo)))
 
@@ -98,7 +98,7 @@ ss_hash(SlabStatObject *__restrict self) {
 	name(SlabStatObject *self, SlabStatObject *other) {                                     \
 		if (DeeObject_AssertTypeExact(other, &SlabStat_Type))                               \
 			return NULL;                                                                    \
-		if (SLABSTAT_DATASIZE(self) != SLABSTAT_DATASIZE(other))                            \
+		if unlikely(SLABSTAT_DATASIZE(self) != SLABSTAT_DATASIZE(other))                    \
 			return_diff_size;                                                               \
 		return_bool(memcmp(&self->st_stat, &other->st_stat, SLABSTAT_DATASIZE(self)) op 0); \
 	}

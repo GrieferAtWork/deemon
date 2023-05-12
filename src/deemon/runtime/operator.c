@@ -458,7 +458,7 @@ err_object_type:
 	goto err;
 }
 
-PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+PUBLIC WUNUSED ATTR_INS(3, 2) NONNULL((1)) DREF DeeObject *DCALL
 DeeObject_New(DeeTypeObject *object_type, size_t argc, DeeObject *const *argv) {
 	DREF DeeObject *result;
 	ASSERT_OBJECT(object_type);
@@ -553,7 +553,7 @@ err_object_type:
 	goto err;
 }
 
-PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+PUBLIC WUNUSED ATTR_INS(3, 2) NONNULL((1)) DREF DeeObject *DCALL
 DeeObject_NewKw(DeeTypeObject *object_type, size_t argc,
                 DeeObject *const *argv, DeeObject *kw) {
 	DREF DeeObject *result;
@@ -2301,7 +2301,7 @@ err:
 
 
 #ifndef DEFINE_TYPED_OPERATORS
-PUBLIC WUNUSED NONNULL((1, 2)) int
+PUBLIC WUNUSED ATTR_OUT(2) NONNULL((1)) int
 (DCALL DeeObject_AsUInt32)(DeeObject *__restrict self,
                            uint32_t *__restrict result) {
 	int error;
@@ -2372,7 +2372,7 @@ err:
 	return -1;
 }
 
-PUBLIC WUNUSED NONNULL((1, 2)) int
+PUBLIC WUNUSED ATTR_OUT(2) NONNULL((1)) int
 (DCALL DeeObject_AsInt32)(DeeObject *__restrict self,
                           int32_t *__restrict result) {
 	int error;
@@ -2449,7 +2449,7 @@ err:
 	return -1;
 }
 
-PUBLIC WUNUSED NONNULL((1, 2)) int
+PUBLIC WUNUSED ATTR_OUT(2) NONNULL((1)) int
 (DCALL DeeObject_AsUInt64)(DeeObject *__restrict self,
                            uint64_t *__restrict result) {
 	int error;
@@ -2514,7 +2514,7 @@ err:
 	return -1;
 }
 
-PUBLIC WUNUSED NONNULL((1, 2)) int
+PUBLIC WUNUSED ATTR_OUT(2) NONNULL((1)) int
 (DCALL DeeObject_AsInt64)(DeeObject *__restrict self,
                           int64_t *__restrict result) {
 	int error;
@@ -2575,7 +2575,7 @@ err:
 	return -1;
 }
 
-PUBLIC WUNUSED NONNULL((1, 2)) int
+PUBLIC WUNUSED ATTR_OUT(2) NONNULL((1)) int
 (DCALL DeeObject_AsInt128)(DeeObject *__restrict self,
                            Dee_int128_t *__restrict result) {
 	int error = DeeObject_GetInt128(self, result);
@@ -2596,7 +2596,7 @@ PUBLIC WUNUSED NONNULL((1, 2)) int
 	return error;
 }
 
-PUBLIC WUNUSED NONNULL((1, 2)) int
+PUBLIC WUNUSED ATTR_OUT(2) NONNULL((1)) int
 (DCALL DeeObject_AsUInt128)(DeeObject *__restrict self,
                             Dee_uint128_t *__restrict result) {
 	int error = DeeObject_GetInt128(self, (Dee_int128_t *)result);
@@ -2679,7 +2679,7 @@ type_get_int_caster(DeeTypeObject *__restrict start) {
 	return start;
 }
 
-PUBLIC WUNUSED NONNULL((1, 2)) int DCALL
+PUBLIC WUNUSED ATTR_OUT(2) NONNULL((1)) int DCALL
 DeeObject_GetInt8(DeeObject *__restrict self,
                   int8_t *__restrict result) {
 	int32_t val32;
@@ -2709,7 +2709,7 @@ done:
 	return error;
 }
 
-PUBLIC WUNUSED NONNULL((1, 2)) int DCALL
+PUBLIC WUNUSED ATTR_OUT(2) NONNULL((1)) int DCALL
 DeeObject_GetInt16(DeeObject *__restrict self,
                    int16_t *__restrict result) {
 	int32_t val32;
@@ -2739,7 +2739,7 @@ done:
 	return error;
 }
 
-PUBLIC WUNUSED NONNULL((1, 2)) int
+PUBLIC WUNUSED ATTR_OUT(2) NONNULL((1)) int
 (DCALL DeeObject_AsInt8)(DeeObject *__restrict self,
                          int8_t *__restrict result) {
 	int32_t val32;
@@ -2757,7 +2757,7 @@ done:
 	return error;
 }
 
-PUBLIC WUNUSED NONNULL((1, 2)) int
+PUBLIC WUNUSED ATTR_OUT(2) NONNULL((1)) int
 (DCALL DeeObject_AsInt16)(DeeObject *__restrict self,
                           int16_t *__restrict result) {
 	int32_t val32;
@@ -2776,7 +2776,7 @@ err:
 	return -1;
 }
 
-PUBLIC WUNUSED NONNULL((1, 2)) int
+PUBLIC WUNUSED ATTR_OUT(2) NONNULL((1)) int
 (DCALL DeeObject_AsUInt8)(DeeObject *__restrict self,
                           uint8_t *__restrict result) {
 	uint32_t val32;
@@ -2794,7 +2794,7 @@ done:
 	return error;
 }
 
-PUBLIC WUNUSED NONNULL((1, 2)) int
+PUBLIC WUNUSED ATTR_OUT(2) NONNULL((1)) int
 (DCALL DeeObject_AsUInt16)(DeeObject *__restrict self,
                            uint16_t *__restrict result) {
 	uint32_t val32;

@@ -132,7 +132,7 @@ done:
 	return result;
 }
 
-PRIVATE size_t DCALL
+PRIVATE WUNUSED NONNULL((1)) size_t DCALL
 count_unpack_args(char const **__restrict p_format) {
 	size_t result      = 0;
 	char const *format = *p_format;
@@ -913,7 +913,7 @@ err:
 }
 
 
-PRIVATE char const *DCALL
+PRIVATE ATTR_RETNONNULL WUNUSED NONNULL((1, 2)) char const *DCALL
 Dee_VPUnpackfSkip(char const *__restrict format,
                   struct va_list_struct *__restrict p_args) {
 again:
@@ -1072,7 +1072,7 @@ err:
  * >>     return DeeInt_NewInt(a + b + c);
  * >> }
  */
-PUBLIC WUNUSED NONNULL((3)) int
+PUBLIC WUNUSED ATTR_INS(2, 1) NONNULL((3)) int
 (DCALL DeeArg_VUnpack)(size_t argc, /*nonnull_if(argc != 0)*/ DeeObject *const *argv,
                        char const *__restrict format, va_list args) {
 	char const *fmt_start;
@@ -1120,7 +1120,7 @@ invalid_argc:
 	return -1;
 }
 
-PUBLIC WUNUSED NONNULL((3)) int
+PUBLIC WUNUSED ATTR_INS(2, 1) NONNULL((3)) int
 (DeeArg_Unpack)(size_t argc, /*nonnull_if(argc != 0)*/ DeeObject *const *argv,
                 char const *__restrict format, ...) {
 	int result;
@@ -1132,7 +1132,7 @@ PUBLIC WUNUSED NONNULL((3)) int
 }
 
 
-LOCAL size_t DCALL
+LOCAL NONNULL((1, 2)) size_t DCALL
 kwds_findstr(DeeKwdsObject *__restrict self,
              char const *__restrict name,
              dhash_t hash) {
@@ -1152,7 +1152,7 @@ kwds_findstr(DeeKwdsObject *__restrict self,
 	return (size_t)-1;
 }
 
-PUBLIC WUNUSED NONNULL((4, 5)) int
+PUBLIC WUNUSED ATTR_INS(2, 1) NONNULL((4, 5)) int
 (DCALL DeeArg_VUnpackKw)(size_t argc, DeeObject *const *argv,
                          DeeObject *kw, struct keyword *__restrict kwlist,
                          char const *__restrict format, va_list args) {
@@ -1172,6 +1172,7 @@ PUBLIC WUNUSED NONNULL((4, 5)) int
 		kw_argc = ((DeeKwdsObject *)kw)->kw_size;
 		if unlikely(kw_argc > argc)
 			return err_keywords_bad_for_argc(argc, kw_argc);
+
 		/* Parse all argument not passed through keywords. */
 		pos_argc = argc - kw_argc;
 		while (pos_argc--) {
@@ -1189,6 +1190,7 @@ PUBLIC WUNUSED NONNULL((4, 5)) int
 			ASSERTF(kwlist->k_name, "Keyword list too short");
 			++kwlist;
 		}
+
 		/* All remaining arguments are passed through
 		 * keywords found in `kwlist .. kwlist + x'. */
 		for (;;) {
@@ -1211,6 +1213,7 @@ PUBLIC WUNUSED NONNULL((4, 5)) int
 				}
 				break;
 			}
+
 			/* Find the matching positional argument. */
 			ASSERTF(kwlist->k_name, "Keyword list too short");
 			keyword_hash = kwlist->k_hash;
@@ -1242,6 +1245,7 @@ PUBLIC WUNUSED NONNULL((4, 5)) int
 					                                   argc_min,
 					                                   argc_max);
 				}
+
 				/* The argument is optional, but not given. -> So just skip this one! */
 				format = Dee_VPUnpackfSkip(format, p_args);
 			} else {
@@ -1255,6 +1259,7 @@ PUBLIC WUNUSED NONNULL((4, 5)) int
 					if (is_optional ||
 					    (*format == '|' || *format == ':' || *format == '\0'))
 						break;
+
 					/* TODO: This can also happen when:
 					 * >> function foo(x, bar);
 					 * >> foo(x: 10, baz: 20);
@@ -1268,6 +1273,7 @@ PUBLIC WUNUSED NONNULL((4, 5)) int
 		}
 		return 0; /* Done! */
 	}
+
 	/* Keyword arguments are given, but aren't a `DeeKwds_Type' object.
 	 * In this situation, we're supposed to interpret them as a mapping-like object!
 	 * But first off: parse all the positional argument! */
@@ -1286,6 +1292,7 @@ PUBLIC WUNUSED NONNULL((4, 5)) int
 		ASSERTF(kwlist->k_name, "Keyword list too short");
 		++kwlist;
 	}
+
 	/* Now with positional arguments out of the way, move on to the named arguments. */
 	kw_argc = 0;
 	for (;;) {
@@ -1299,6 +1306,7 @@ PUBLIC WUNUSED NONNULL((4, 5)) int
 			ASSERTF(!kwlist->k_name, "Keyword list too long");
 			break; /* End of argument list. */
 		}
+
 		/* Find the matching positional argument. */
 		ASSERTF(kwlist->k_name, "Keyword list too short");
 		keyword_hash = kwlist->k_hash;
@@ -1331,6 +1339,7 @@ PUBLIC WUNUSED NONNULL((4, 5)) int
 				                                   argc_min,
 				                                   argc_max);
 			}
+
 			/* The argument is optional, but not given. -> So just skip this one! */
 			format = Dee_VPUnpackfSkip(format, p_args);
 		} else {
@@ -1343,6 +1352,7 @@ PUBLIC WUNUSED NONNULL((4, 5)) int
 		}
 		++kwlist;
 	}
+
 	/* Make sure that the argument list doesn't contain argument that went unused. */
 	{
 		size_t kw_size = DeeObject_Size(kw);
@@ -1372,7 +1382,7 @@ err:
 	return -1;
 }
 
-PUBLIC WUNUSED NONNULL((4, 5)) int
+PUBLIC WUNUSED ATTR_INS(2, 1) NONNULL((4, 5)) int
 (DeeArg_UnpackKw)(size_t argc, DeeObject *const *argv,
                   DeeObject *kw, struct keyword *__restrict kwlist,
                   char const *__restrict format, ...) {

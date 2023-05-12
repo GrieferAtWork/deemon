@@ -588,7 +588,7 @@ Dee_OperatorInfo(DeeTypeObject *typetype, uint16_t id) {
 	return NULL;
 }
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+PRIVATE WUNUSED ATTR_INS(5, 4) NONNULL((1)) DREF DeeObject *DCALL
 invoke_operator(DeeObject *self, DeeObject **p_self,
                 uint16_t name, size_t argc, DeeObject *const *argv) {
 	DeeObject *other;
@@ -1411,13 +1411,13 @@ return_self:
  *        can be, with the addition of allowing inplace operators to be executed.
  *        Attempting to execute an inplace operator using `DeeObject_InvokeOperator()'
  *        will cause an `Error.TypeError' to be thrown. */
-PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+PUBLIC WUNUSED ATTR_INS(4, 3) NONNULL((1)) DREF DeeObject *DCALL
 DeeObject_InvokeOperator(DeeObject *self, uint16_t name,
                          size_t argc, DeeObject *const *argv) {
 	return invoke_operator(self, NULL, name, argc, argv);
 }
 
-PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+PUBLIC WUNUSED ATTR_INS(4, 3) NONNULL((1)) DREF DeeObject *DCALL
 DeeObject_PInvokeOperator(DeeObject **__restrict p_self, uint16_t name,
                           size_t argc, DeeObject *const *argv) {
 	return invoke_operator(*p_self, p_self, name, argc, argv);

@@ -1500,25 +1500,26 @@ PRIVATE struct dex_symbol symbols[] = {
 	  DOC("->?S?Dstring\n"
 	      "List of the names of all of the functions that are implemented as stubs\n"
 	      "The names contained within this list are identical to the names of the "
-	      "resp. symbols exported by this module. e.g. ${'open' in posix.stubs} would "
-	      "mean that ?Gopen will unconditionally throw :{UnsupportedAPI}. Other functions "
-	      "may behave differently and always behave as no-ops, but the general behavior "
-	      "is that the function will simply be implemented as a stub") },
+	      /**/ "resp. symbols exported by this module. e.g. ${'open' in posix.stubs} would "
+	      /**/ "mean that ?Gopen will unconditionally throw :{UnsupportedAPI}. Other functions "
+	      /**/ "may behave differently and always behave as no-ops, but the general behavior "
+	      /**/ "is that the function will simply be implemented as a stub") },
 
 	/* File control */
 	D(POSIX_OPEN_DEF_DOC("Open a given @filename using @oflags (a set of ${O_*} flags), and @mode (describing "
-	                     "the posix permissions to apply to a newly created file when ?GO_CREAT is given)"))
-	D(POSIX__OPEN_DEF_DOC("Same as ?Gopen, but whereas ?Gopen will automatically set the ?GO_OBTAIN_DIR and ?GO_BINARY "
-	                      "flags on platforms that define them in order to better standartize behavior of that "
-	                      "function on those system, this function (?G_open) will not make any changes to the given @oflags"))
+	                     /**/ "the posix permissions to apply to a newly created file when ?GO_CREAT is given)"))
+	D(POSIX__OPEN_DEF_DOC("Same as ?Gopen, but whereas ?Gopen will automatically set the ?GO_OBTAIN_DIR and "
+	                      /**/ "?GO_BINARY flags on platforms that define them in order to better standartize "
+	                      /**/ "behavior of that function on those system, this function (?G_open) will not "
+	                      /**/ "make any changes to the given @oflags"))
 	D(POSIX_CREAT_DEF_DOC("Create a new file (same as ${open(filename, O_CREAT | O_WRONLY | O_TRUNC, mode)})"))
 	D(POSIX__CREAT_DEF_DOC("Same as ?Gcreat, but on systems that define ?GO_BINARY, that flag is also passed "
-	                       "via the internal @oflags list eventually passed to ?Gopen (or rather ?G_open)"))
+	                       /**/ "via the internal @oflags list eventually passed to ?Gopen (or rather ?G_open)"))
 	D(POSIX_OPENAT_DEF_DOC("Same as ?Gopen, but allows the path to be specified as @dfd:@filename"))
 	D(POSIX__OPENAT_DEF_DOC("Same as ?G_open, but allows the path to be specified as @dfd:@filename"))
 	D(POSIX_READ_DEF_DOC("Read up to @count bytes into @buf\n"
 	                     "When @buf is given, return the actual number of read bytes. "
-	                     "Otherwise, read into a new :Bytes object that is then returned"))
+	                     /**/ "Otherwise, read into a new :Bytes object that is then returned"))
 	D(POSIX_WRITE_DEF_DOC("Write up to @count bytes from @buf, returning the actual number of bytes written"))
 	D(POSIX_LSEEK_DEF)
 	D(POSIX_FSYNC_DEF)

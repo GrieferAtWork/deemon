@@ -934,26 +934,26 @@ DFUNDEF WUNUSED NONNULL((1)) bool DCALL Dee_DecrefWasOk_traced(DeeObject *__rest
 
 /* Increment the reference counter of every object from `object_vector...+=object_count'
  * @return: * : Always re-returns the pointer to `object_vector' */
-DFUNDEF ATTR_RETNONNULL NONNULL((1)) DREF DeeObject **
+DFUNDEF ATTR_RETNONNULL ATTR_INS(1, 2) DREF DeeObject **
 (DCALL Dee_Increfv)(DeeObject *const *__restrict object_vector,
                     size_t object_count);
 
 /* Decrement the reference counter of every object from `object_vector...+=object_count'
  * @return: * : Always re-returns the pointer to `object_vector' */
-DFUNDEF ATTR_RETNONNULL NONNULL((1)) DeeObject **
+DFUNDEF ATTR_RETNONNULL ATTR_INS(1, 2) DeeObject **
 (DCALL Dee_Decrefv)(DREF DeeObject *const *__restrict object_vector,
                     size_t object_count);
 
 /* Copy object pointers from `src' to `dst' and increment
  * the reference counter of every object that got copied.
  * @return: * : Always re-returns the pointer to `dst' */
-DFUNDEF ATTR_RETNONNULL NONNULL((1, 2)) DREF DeeObject **
+DFUNDEF ATTR_RETNONNULL ATTR_OUTS(1, 3) ATTR_INS(2, 3) DREF DeeObject **
 (DCALL Dee_Movrefv)(/*out:ref*/ DeeObject **__restrict dst,
                     /*in*/ DeeObject *const *__restrict src,
                     size_t object_count);
 
 
-LOCAL ATTR_RETNONNULL NONNULL((1)) DREF DeeObject **
+LOCAL ATTR_RETNONNULL ATTR_INS(1, 2) DREF DeeObject **
 (DCALL Dee_XIncrefv)(DeeObject * /*nullable*/ const *__restrict object_vector,
                      size_t object_count) {
 	while (object_count--) {
@@ -964,7 +964,7 @@ LOCAL ATTR_RETNONNULL NONNULL((1)) DREF DeeObject **
 	return (DREF DeeObject **)object_vector;
 }
 
-LOCAL ATTR_RETNONNULL NONNULL((1)) DREF DeeObject **
+LOCAL ATTR_RETNONNULL ATTR_INS(1, 2) DREF DeeObject **
 (DCALL Dee_XDecrefv)(DeeObject * /*nullable*/ const *__restrict object_vector,
                      size_t object_count) {
 	size_t i;
@@ -976,7 +976,7 @@ LOCAL ATTR_RETNONNULL NONNULL((1)) DREF DeeObject **
 	return (DREF DeeObject **)object_vector;
 }
 
-LOCAL ATTR_RETNONNULL NONNULL((1, 2)) DREF DeeObject **
+LOCAL ATTR_RETNONNULL ATTR_OUTS(1, 3) ATTR_INS(2, 3) DREF DeeObject **
 (DCALL Dee_XMovrefv)(/*out:ref*/ DeeObject * /*nullable*/ *__restrict dst,
                      /*in*/ DeeObject * /*nullable*/ const *__restrict src,
                      size_t object_count) {
@@ -1007,7 +1007,7 @@ LOCAL ATTR_RETNONNULL NONNULL((1, 2)) DREF DeeObject **
 #elif defined(CONFIG_INLINE_INCREFV)
 #define Dee_Increfv_untraced(object_vector, object_count) \
 	Dee_Increfv_untraced((DeeObject **)(object_vector), object_count)
-LOCAL ATTR_RETNONNULL NONNULL((1)) DREF DeeObject **
+LOCAL ATTR_RETNONNULL ATTR_INS(1, 2) DREF DeeObject **
 (DCALL Dee_Increfv_untraced)(DeeObject *const *__restrict object_vector,
                              size_t object_count) {
 	size_t i;
@@ -1021,7 +1021,7 @@ LOCAL ATTR_RETNONNULL NONNULL((1)) DREF DeeObject **
 
 #define Dee_Decrefv_untraced(object_vector, object_count) \
 	Dee_Decrefv_untraced((DREF DeeObject *const *)(object_vector), object_count)
-LOCAL ATTR_RETNONNULL NONNULL((1)) DeeObject **
+LOCAL ATTR_RETNONNULL ATTR_INS(1, 2) DeeObject **
 (DCALL Dee_Decrefv_untraced)(DREF DeeObject *const *__restrict object_vector,
                              size_t object_count) {
 	while (object_count--) {
@@ -1034,7 +1034,7 @@ LOCAL ATTR_RETNONNULL NONNULL((1)) DeeObject **
 
 #define Dee_Movrefv_untraced(dst, src, object_count) \
 	Dee_Movrefv_untraced((DeeObject **)(dst), (DeeObject *const *)(src), object_count)
-LOCAL ATTR_RETNONNULL NONNULL((1, 2)) DREF DeeObject **
+LOCAL ATTR_RETNONNULL ATTR_OUTS(1, 3) ATTR_INS(2, 3) DREF DeeObject **
 (DCALL Dee_Movrefv_untraced)(/*out:ref*/ DeeObject **__restrict dst,
                              /*in*/ DeeObject *const *__restrict src,
                              size_t object_count) {
@@ -1067,16 +1067,16 @@ LOCAL ATTR_RETNONNULL NONNULL((1, 2)) DREF DeeObject **
 
 
 #ifdef CONFIG_TRACE_REFCHANGES
-DFUNDEF ATTR_RETNONNULL NONNULL((1)) DREF DeeObject **(DCALL Dee_Increfv_traced)(DeeObject *const *__restrict object_vector, size_t object_count, char const *file, int line);
-DFUNDEF ATTR_RETNONNULL NONNULL((1)) DeeObject **(DCALL Dee_Decrefv_traced)(DREF DeeObject *const *__restrict object_vector, size_t object_count, char const *file, int line);
-DFUNDEF ATTR_RETNONNULL NONNULL((1, 2)) DREF DeeObject **(DCALL Dee_Movrefv_traced)(/*out:ref*/ DeeObject **__restrict dst, /*in*/ DeeObject *const *__restrict src, size_t object_count, char const *file, int line);
+DFUNDEF ATTR_RETNONNULL ATTR_INS(1, 2) DREF DeeObject **(DCALL Dee_Increfv_traced)(DeeObject *const *__restrict object_vector, size_t object_count, char const *file, int line);
+DFUNDEF ATTR_RETNONNULL ATTR_INS(1, 2) DeeObject **(DCALL Dee_Decrefv_traced)(DREF DeeObject *const *__restrict object_vector, size_t object_count, char const *file, int line);
+DFUNDEF ATTR_RETNONNULL ATTR_OUTS(1, 3) ATTR_INS(2, 3) DREF DeeObject **(DCALL Dee_Movrefv_traced)(/*out:ref*/ DeeObject **__restrict dst, /*in*/ DeeObject *const *__restrict src, size_t object_count, char const *file, int line);
 #define Dee_Increfv(object_vector, object_count) Dee_Increfv_traced((DeeObject *const *)(object_vector), object_count, __FILE__, __LINE__)
 #define Dee_Decrefv(object_vector, object_count) Dee_Decrefv_traced((DeeObject *const *)(object_vector), object_count, __FILE__, __LINE__)
 #define Dee_Movrefv(dst, src, object_count)      Dee_Movrefv_traced((DeeObject **)(dst), (DeeObject *const *)(src), object_count, __FILE__, __LINE__)
 
 #define Dee_XIncrefv_traced(object_vector, object_count, file, line) \
 	Dee_XIncrefv_traced((DeeObject **)(object_vector), object_count, file, line)
-LOCAL ATTR_RETNONNULL NONNULL((1)) DREF DeeObject **
+LOCAL ATTR_RETNONNULL ATTR_INS(1, 2) DREF DeeObject **
 (DCALL Dee_XIncrefv_traced)(DeeObject *const *__restrict object_vector,
                             size_t object_count, char const *file, int line) {
 	size_t i;
@@ -1090,9 +1090,9 @@ LOCAL ATTR_RETNONNULL NONNULL((1)) DREF DeeObject **
 
 #define Dee_XDecrefv_traced(object_vector, object_count, file, line) \
 	Dee_XDecrefv_traced((DREF DeeObject *const *)(object_vector), object_count, file, line)
-LOCAL ATTR_RETNONNULL NONNULL((1)) DeeObject **
+LOCAL ATTR_RETNONNULL ATTR_INS(1, 2) DeeObject **
 (DCALL Dee_XDecrefv_traced)(DREF DeeObject *const *__restrict object_vector,
-                             size_t object_count, char const *file, int line) {
+                            size_t object_count, char const *file, int line) {
 	while (object_count--) {
 		DREF DeeObject *ob;
 		ob = object_vector[object_count];
@@ -1103,10 +1103,10 @@ LOCAL ATTR_RETNONNULL NONNULL((1)) DeeObject **
 
 #define Dee_XMovrefv_traced(dst, src, object_count, file, line) \
 	Dee_XMovrefv_traced((DeeObject **)(dst), (DeeObject *const *)(src), object_count, file, line)
-LOCAL ATTR_RETNONNULL NONNULL((1, 2)) DREF DeeObject **
+LOCAL ATTR_RETNONNULL ATTR_OUTS(1, 3) ATTR_INS(2, 3) DREF DeeObject **
 (DCALL Dee_XMovrefv_traced)(/*out:ref*/ DeeObject **__restrict dst,
-                             /*in*/ DeeObject *const *__restrict src,
-                             size_t object_count, char const *file, int line) {
+                            /*in*/ DeeObject *const *__restrict src,
+                            size_t object_count, char const *file, int line) {
 	size_t i;
 	for (i = 0; i < object_count; ++i) {
 		DREF DeeObject *ob;
@@ -1293,10 +1293,10 @@ struct Dee_type_constructor {
 		} _tp_init_;
 
 		struct {
-			WUNUSED_T NONNULL_T((1))    int (DCALL *tp_ctor)(DeeObject *__restrict self);
-			WUNUSED_T NONNULL_T((1, 2)) int (DCALL *tp_copy_ctor)(DeeObject *__restrict self, DeeObject *__restrict other);
-			WUNUSED_T NONNULL_T((1, 2)) int (DCALL *tp_deep_ctor)(DeeObject *__restrict self, DeeObject *__restrict other);
-			WUNUSED_T NONNULL_T((1))    int (DCALL *tp_any_ctor)(DeeObject *__restrict self, size_t argc, DeeObject *const *argv);
+			WUNUSED_T NONNULL_T((1))                  int (DCALL *tp_ctor)(DeeObject *__restrict self);
+			WUNUSED_T NONNULL_T((1, 2))               int (DCALL *tp_copy_ctor)(DeeObject *__restrict self, DeeObject *__restrict other);
+			WUNUSED_T NONNULL_T((1, 2))               int (DCALL *tp_deep_ctor)(DeeObject *__restrict self, DeeObject *__restrict other);
+			WUNUSED_T NONNULL_T((1)) ATTR_INS_T(3, 2) int (DCALL *tp_any_ctor)(DeeObject *__restrict self, size_t argc, DeeObject *const *argv);
 			/* WARNING: A situation can arise in which the `tp_free'
 			 *          operator of a base-class is used instead of
 			 *          the one accompanying `tp_alloc()'.
@@ -1315,7 +1315,7 @@ struct Dee_type_constructor {
 			;
 			/* WARNING: `tp_any_ctor_kw' may be invoked with `argc == 0 && kw == NULL',
 			 *           even when `tp_ctor' has been defined as non-NULL! */
-			WUNUSED_T NONNULL_T((1))
+			WUNUSED_T NONNULL_T((1)) ATTR_INS_T(3, 2)
 			int (DCALL *tp_any_ctor_kw)(DeeObject *__restrict self, size_t argc,
 			                            DeeObject *const *argv, DeeObject *kw);
 		} tp_alloc; /* [valid_if(!TP_FVARIABLE)] */
@@ -1334,15 +1334,15 @@ struct Dee_type_constructor {
 			 *   returns a regular structured object containing a copy of the data
 			 *   that was pointed-to by the l-value.
 			 */
-			WUNUSED_T                DREF DeeObject *(DCALL *tp_ctor)(void);
-			WUNUSED_T NONNULL_T((1)) DREF DeeObject *(DCALL *tp_copy_ctor)(DeeObject *__restrict other);
-			WUNUSED_T NONNULL_T((1)) DREF DeeObject *(DCALL *tp_deep_ctor)(DeeObject *__restrict other);
-			WUNUSED_T                DREF DeeObject *(DCALL *tp_any_ctor)(size_t argc, DeeObject *const *argv);
-			          NONNULL_T((1)) void            (DCALL *tp_free)(void *__restrict ob);
+			WUNUSED_T                  DREF DeeObject *(DCALL *tp_ctor)(void);
+			WUNUSED_T NONNULL_T((1))   DREF DeeObject *(DCALL *tp_copy_ctor)(DeeObject *__restrict other);
+			WUNUSED_T NONNULL_T((1))   DREF DeeObject *(DCALL *tp_deep_ctor)(DeeObject *__restrict other);
+			WUNUSED_T ATTR_INS_T(2, 1) DREF DeeObject *(DCALL *tp_any_ctor)(size_t argc, DeeObject *const *argv);
+			          NONNULL_T((1))   void            (DCALL *tp_free)(void *__restrict ob);
 			struct { Dee_funptr_t tp_pad; } tp_pad; /* ... */
 			/* WARNING: `tp_any_ctor_kw' may be invoked with `argc == 0 && kw == NULL',
 			 *          even when `tp_ctor' or `tp_any_ctor' has been defined as non-NULL! */
-			WUNUSED_T DREF DeeObject *(DCALL *tp_any_ctor_kw)(size_t argc, DeeObject *const *argv, DeeObject *kw);
+			WUNUSED_T ATTR_INS_T(2, 1) DREF DeeObject *(DCALL *tp_any_ctor_kw)(size_t argc, DeeObject *const *argv, DeeObject *kw);
 		} tp_var; /* [valid_if(TP_FVARIABLE)] */
 	}
 #ifndef __COMPILER_HAVE_TRANSPARENT_UNION
@@ -1473,9 +1473,9 @@ struct Dee_type_gc {
 	 *    │                                                          │
 	 *    └──────────────────────────────────────────────────────────┘
 	 *
-	 * This might seem simple at first, but depending on the order with which the GC
-	 * chooses to deal with this cycle determines if the destructor can even function
-	 * properly:
+	 * This might seem simple at first, but the order with which the GC
+	 * chooses to deal with this cycle determines if the destructor can
+	 * even function properly:
 	 *   - As you can see, it uses a member variable `m_value', meaning that
 	 *     if we were to clear the instance `x' first, it would fail with an
 	 *     attribute error, so `x' is a bad idea
@@ -1494,7 +1494,7 @@ struct Dee_type_gc {
 	 *     the `MyClass' type and break member lookup.
 	 *   - Yes, it would. But that's where `tp_pclear()' comes into play,
 	 *     which we can then use to only clear instances of `Dee_GC_PRIORITY_MODULE'
-	 *    (which might cause problems with dynamically imported modules, but we
+	 *     (which might cause problems with dynamically imported modules, but we
 	 *     won't bother with that, considering how that would cause a priority
 	 *     logic loop when `module >before> instance >before> module').
 	 *     And after we've done that, we'll move on to clear the next lower
@@ -1581,6 +1581,7 @@ struct Dee_type_math {
 	WUNUSED_T NONNULL_T((1, 2)) int (DCALL *tp_inplace_pow)(DeeObject **__restrict p_self, DeeObject *some_object);
 };
 
+struct Dee_type_nii;
 struct Dee_type_cmp {
 	/* Compare operators. */
 	WUNUSED_T NONNULL_T((1))    Dee_hash_t      (DCALL *tp_hash)(DeeObject *__restrict self);
@@ -1600,6 +1601,7 @@ struct Dee_type_cmp {
 };
 
 
+struct Dee_type_nsi;
 struct Dee_type_seq {
 	/* Sequence operators. */
 	WUNUSED_T NONNULL_T((1))          DREF DeeObject *(DCALL *tp_iter_self)(DeeObject *__restrict self);
@@ -1694,8 +1696,8 @@ struct Dee_type_buffer {
  * @param: argv:  [1..1][const][0..argc] Arguments.
  * @return: * :   The function return value.
  * @return: NULL: An error occurred. */
-typedef WUNUSED_T NONNULL_T((1)) DREF DeeObject *(DCALL *Dee_objmethod_t)(DeeObject *self, size_t argc, DeeObject *const *argv);
-typedef WUNUSED_T NONNULL_T((1)) DREF DeeObject *(DCALL *Dee_kwobjmethod_t)(DeeObject *self, size_t argc, DeeObject *const *argv, /*nullable*/ DeeObject *kw);
+typedef WUNUSED_T ATTR_INS_T(3, 2) NONNULL_T((1)) DREF DeeObject *(DCALL *Dee_objmethod_t)(DeeObject *self, size_t argc, DeeObject *const *argv);
+typedef WUNUSED_T ATTR_INS_T(3, 2) NONNULL_T((1)) DREF DeeObject *(DCALL *Dee_kwobjmethod_t)(DeeObject *self, size_t argc, DeeObject *const *argv, /*nullable*/ DeeObject *kw);
 typedef WUNUSED_T NONNULL_T((1)) DREF DeeObject *(DCALL *Dee_getmethod_t)(DeeObject *__restrict self);
 typedef WUNUSED_T NONNULL_T((1)) int (DCALL *Dee_delmethod_t)(DeeObject *__restrict self);
 typedef WUNUSED_T NONNULL_T((1, 2)) int (DCALL *Dee_setmethod_t)(DeeObject *self, DeeObject *value);
@@ -2347,10 +2349,10 @@ Dee_OperatorFromNameLen(DeeTypeObject *typetype,
  *        can be, with the addition of allowing inplace operators to be executed.
  *        Attempting to execute an inplace operator using `DeeObject_InvokeOperator()'
  *        will cause an `Error.TypeError' to be thrown. */
-DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+DFUNDEF WUNUSED ATTR_INS(4, 3) NONNULL((1)) DREF DeeObject *DCALL
 DeeObject_InvokeOperator(DeeObject *self, uint16_t name,
                          size_t argc, DeeObject *const *argv);
-DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+DFUNDEF WUNUSED ATTR_INS(4, 3) NONNULL((1)) DREF DeeObject *DCALL
 DeeObject_PInvokeOperator(DeeObject **__restrict p_self, uint16_t name,
                           size_t argc, DeeObject *const *argv);
 #define DeeObject_InvokeOperatorTuple(self, name, args) \
@@ -2454,7 +2456,7 @@ struct Dee_type_object {
 	                                                  * NOTE: When the `TP_FINHERITCTOR' flag is set, then this field must be non-NULL. */
 	struct Dee_type_constructor         tp_init;     /* Constructor/destructor operators. */
 	struct Dee_type_cast                tp_cast;     /* Type casting operators. */
-	WUNUSED_T NONNULL_T((1))
+	WUNUSED_T ATTR_INS_T(3, 2) NONNULL_T((1))
 	DREF DeeObject             *(DCALL *tp_call)(DeeObject *self, size_t argc, DeeObject *const *argv);
 	NONNULL_T((1, 2)) void      (DCALL *tp_visit)(DeeObject *__restrict self, Dee_visit_t proc, void *arg); /* Visit all reachable, referenced (DREF) objected. */
 	/* NOTE: Anything used by `type_inherit_*' can't be made `Dee_tpconst' here! */
@@ -2475,7 +2477,7 @@ struct Dee_type_object {
 	struct Dee_type_getset Dee_tpconst *tp_class_getsets; /* [0..1] Class getsets. */
 	struct Dee_type_member Dee_tpconst *tp_class_members; /* [0..1] Class members (usually constants). */
 	/* [0..1] Same as `tp_call', but using keywords. */
-	WUNUSED_T NONNULL_T((1))
+	WUNUSED_T ATTR_INS_T(3, 2) NONNULL_T((1))
 	DREF DeeObject *(DCALL *tp_call_kw)(DeeObject *self, size_t argc,
 	                                    DeeObject *const *argv, DeeObject *kw);
 	/* Lazily-filled hash-table of instance members.
@@ -2593,10 +2595,10 @@ INTDEF NONNULL((1)) bool DCALL type_inherit_buffer(DeeTypeObject *__restrict sel
  * @return:  1 / false / Dee_ITER_DONE: Not found. */
 DFUNDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL DeeObject_TGenericGetAttrString(DeeTypeObject *tp_self, DeeObject *self, char const *__restrict attr, Dee_hash_t hash);
 DFUNDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL DeeObject_TGenericGetAttrStringLen(DeeTypeObject *tp_self, DeeObject *self, char const *__restrict attr, size_t attrlen, Dee_hash_t hash);
-DFUNDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL DeeObject_TGenericCallAttrString(DeeTypeObject *tp_self, DeeObject *self, char const *__restrict attr, Dee_hash_t hash, size_t argc, DeeObject *const *argv);
-DFUNDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL DeeObject_TGenericCallAttrStringLen(DeeTypeObject *tp_self, DeeObject *self, char const *__restrict attr, size_t attrlen, Dee_hash_t hash, size_t argc, DeeObject *const *argv);
-DFUNDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL DeeObject_TGenericCallAttrStringKw(DeeTypeObject *tp_self, DeeObject *self, char const *__restrict attr, Dee_hash_t hash, size_t argc, DeeObject *const *argv, DeeObject *kw);
-DFUNDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL DeeObject_TGenericCallAttrStringLenKw(DeeTypeObject *tp_self, DeeObject *self, char const *__restrict attr, size_t attrlen, Dee_hash_t hash, size_t argc, DeeObject *const *argv, DeeObject *kw);
+DFUNDEF WUNUSED NONNULL((1, 2, 3)) ATTR_INS(6, 5) DREF DeeObject *DCALL DeeObject_TGenericCallAttrString(DeeTypeObject *tp_self, DeeObject *self, char const *__restrict attr, Dee_hash_t hash, size_t argc, DeeObject *const *argv);
+DFUNDEF WUNUSED NONNULL((1, 2, 3)) ATTR_INS(7, 6) DREF DeeObject *DCALL DeeObject_TGenericCallAttrStringLen(DeeTypeObject *tp_self, DeeObject *self, char const *__restrict attr, size_t attrlen, Dee_hash_t hash, size_t argc, DeeObject *const *argv);
+DFUNDEF WUNUSED NONNULL((1, 2, 3)) ATTR_INS(6, 5) DREF DeeObject *DCALL DeeObject_TGenericCallAttrStringKw(DeeTypeObject *tp_self, DeeObject *self, char const *__restrict attr, Dee_hash_t hash, size_t argc, DeeObject *const *argv, DeeObject *kw);
+DFUNDEF WUNUSED NONNULL((1, 2, 3)) ATTR_INS(7, 6) DREF DeeObject *DCALL DeeObject_TGenericCallAttrStringLenKw(DeeTypeObject *tp_self, DeeObject *self, char const *__restrict attr, size_t attrlen, Dee_hash_t hash, size_t argc, DeeObject *const *argv, DeeObject *kw);
 DFUNDEF WUNUSED NONNULL((1, 2, 3)) int DCALL DeeObject_TGenericDelAttrString(DeeTypeObject *tp_self, DeeObject *self, char const *__restrict attr, Dee_hash_t hash);
 DFUNDEF WUNUSED NONNULL((1, 2, 3)) int DCALL DeeObject_TGenericDelAttrStringLen(DeeTypeObject *tp_self, DeeObject *self, char const *__restrict attr, size_t attrlen, Dee_hash_t hash);
 DFUNDEF WUNUSED NONNULL((1, 2, 3, 5)) int DCALL DeeObject_TGenericSetAttrString(DeeTypeObject *tp_self, DeeObject *self, char const *__restrict attr, Dee_hash_t hash, DeeObject *value);
@@ -2695,8 +2697,8 @@ DeeType_GetModule(DeeTypeObject *__restrict self);
 
 /* Object creation (constructor invocation). */
 DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeObject_NewDefault(DeeTypeObject *__restrict object_type);
-DFUNDEF WUNUSED NONNULL((1, 3)) DREF DeeObject *DCALL DeeObject_New(DeeTypeObject *object_type, size_t argc, DeeObject *const *argv);
-DFUNDEF WUNUSED NONNULL((1, 3)) DREF DeeObject *DCALL DeeObject_NewKw(DeeTypeObject *object_type, size_t argc, DeeObject *const *argv, DeeObject *kw);
+DFUNDEF WUNUSED ATTR_INS(3, 2) NONNULL((1, 3)) DREF DeeObject *DCALL DeeObject_New(DeeTypeObject *object_type, size_t argc, DeeObject *const *argv);
+DFUNDEF WUNUSED ATTR_INS(3, 2) NONNULL((1, 3)) DREF DeeObject *DCALL DeeObject_NewKw(DeeTypeObject *object_type, size_t argc, DeeObject *const *argv, DeeObject *kw);
 DFUNDEF ATTR_SENTINEL WUNUSED NONNULL((1)) DREF DeeObject *DeeObject_NewPack(DeeTypeObject *object_type, size_t argc, ...);
 DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeObject_VNewPack(DeeTypeObject *object_type, size_t argc, va_list args);
 DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DeeObject_Newf(DeeTypeObject *object_type, char const *__restrict format, ...);
@@ -2760,10 +2762,10 @@ DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeObject_Repr(DeeObject *__r
 DFUNDEF WUNUSED NONNULL((1)) int DCALL DeeObject_Bool(DeeObject *__restrict self);
 
 /* Object call operator invocation. */
-DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeObject_Call(DeeObject *self, size_t argc, DeeObject *const *argv);
-DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeObject_CallKw(DeeObject *self, size_t argc, DeeObject *const *argv, DeeObject *kw);
-DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeObject_ThisCall(DeeObject *self, DeeObject *this_arg, size_t argc, DeeObject *const *argv);
-DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeObject_ThisCallKw(DeeObject *self, DeeObject *this_arg, size_t argc, DeeObject *const *argv, DeeObject *kw);
+DFUNDEF WUNUSED ATTR_INS(3, 2) NONNULL((1)) DREF DeeObject *DCALL DeeObject_Call(DeeObject *self, size_t argc, DeeObject *const *argv);
+DFUNDEF WUNUSED ATTR_INS(3, 2) NONNULL((1)) DREF DeeObject *DCALL DeeObject_CallKw(DeeObject *self, size_t argc, DeeObject *const *argv, DeeObject *kw);
+DFUNDEF WUNUSED ATTR_INS(4, 3) NONNULL((1, 2)) DREF DeeObject *DCALL DeeObject_ThisCall(DeeObject *self, DeeObject *this_arg, size_t argc, DeeObject *const *argv);
+DFUNDEF WUNUSED ATTR_INS(4, 3) NONNULL((1, 2)) DREF DeeObject *DCALL DeeObject_ThisCallKw(DeeObject *self, DeeObject *this_arg, size_t argc, DeeObject *const *argv, DeeObject *kw);
 DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DeeObject_CallPack(DeeObject *self, size_t argc, ...);
 DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeObject_VCallPack(DeeObject *self, size_t argc, va_list args);
 DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DeeObject_Callf(DeeObject *self, char const *__restrict format, ...);
@@ -2814,24 +2816,24 @@ DFUNDEF NONNULL((1)) void (DCALL DeeObject_PClear)(DeeObject *__restrict self, u
  * @return: INT_SIGNED:   The value stored in `result' must be interpreted as signed.
  * @return: INT_UNSIGNED: The value stored in `result' must be interpreted as unsigned.
  * @return: -1:           An error occurred. */
-DFUNDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeObject_GetInt8)(DeeObject *__restrict self, int8_t *__restrict result);
-DFUNDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeObject_GetInt16)(DeeObject *__restrict self, int16_t *__restrict result);
-DFUNDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeObject_GetInt32)(DeeObject *__restrict self, int32_t *__restrict result);
-DFUNDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeObject_GetInt64)(DeeObject *__restrict self, int64_t *__restrict result);
-DFUNDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeObject_GetInt128)(DeeObject *__restrict self, Dee_int128_t *__restrict result);
+DFUNDEF WUNUSED ATTR_OUT(2) NONNULL((1)) int (DCALL DeeObject_GetInt8)(DeeObject *__restrict self, int8_t *__restrict result);
+DFUNDEF WUNUSED ATTR_OUT(2) NONNULL((1)) int (DCALL DeeObject_GetInt16)(DeeObject *__restrict self, int16_t *__restrict result);
+DFUNDEF WUNUSED ATTR_OUT(2) NONNULL((1)) int (DCALL DeeObject_GetInt32)(DeeObject *__restrict self, int32_t *__restrict result);
+DFUNDEF WUNUSED ATTR_OUT(2) NONNULL((1)) int (DCALL DeeObject_GetInt64)(DeeObject *__restrict self, int64_t *__restrict result);
+DFUNDEF WUNUSED ATTR_OUT(2) NONNULL((1)) int (DCALL DeeObject_GetInt128)(DeeObject *__restrict self, Dee_int128_t *__restrict result);
 
 /* Integral/Floating-point conversion operator invocation. */
-DFUNDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeObject_AsInt8)(DeeObject *__restrict self, int8_t *__restrict result);
-DFUNDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeObject_AsInt16)(DeeObject *__restrict self, int16_t *__restrict result);
-DFUNDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeObject_AsInt32)(DeeObject *__restrict self, int32_t *__restrict result);
-DFUNDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeObject_AsInt64)(DeeObject *__restrict self, int64_t *__restrict result);
-DFUNDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeObject_AsInt128)(DeeObject *__restrict self, Dee_int128_t *__restrict result);
-DFUNDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeObject_AsUInt8)(DeeObject *__restrict self, uint8_t *__restrict result);
-DFUNDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeObject_AsUInt16)(DeeObject *__restrict self, uint16_t *__restrict result);
-DFUNDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeObject_AsUInt32)(DeeObject *__restrict self, uint32_t *__restrict result);
-DFUNDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeObject_AsUInt64)(DeeObject *__restrict self, uint64_t *__restrict result);
-DFUNDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeObject_AsUInt128)(DeeObject *__restrict self, Dee_uint128_t *__restrict result);
-DFUNDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeObject_AsDouble)(DeeObject *__restrict self, double *__restrict result);
+DFUNDEF WUNUSED ATTR_OUT(2) NONNULL((1)) int (DCALL DeeObject_AsInt8)(DeeObject *__restrict self, int8_t *__restrict result);
+DFUNDEF WUNUSED ATTR_OUT(2) NONNULL((1)) int (DCALL DeeObject_AsInt16)(DeeObject *__restrict self, int16_t *__restrict result);
+DFUNDEF WUNUSED ATTR_OUT(2) NONNULL((1)) int (DCALL DeeObject_AsInt32)(DeeObject *__restrict self, int32_t *__restrict result);
+DFUNDEF WUNUSED ATTR_OUT(2) NONNULL((1)) int (DCALL DeeObject_AsInt64)(DeeObject *__restrict self, int64_t *__restrict result);
+DFUNDEF WUNUSED ATTR_OUT(2) NONNULL((1)) int (DCALL DeeObject_AsInt128)(DeeObject *__restrict self, Dee_int128_t *__restrict result);
+DFUNDEF WUNUSED ATTR_OUT(2) NONNULL((1)) int (DCALL DeeObject_AsUInt8)(DeeObject *__restrict self, uint8_t *__restrict result);
+DFUNDEF WUNUSED ATTR_OUT(2) NONNULL((1)) int (DCALL DeeObject_AsUInt16)(DeeObject *__restrict self, uint16_t *__restrict result);
+DFUNDEF WUNUSED ATTR_OUT(2) NONNULL((1)) int (DCALL DeeObject_AsUInt32)(DeeObject *__restrict self, uint32_t *__restrict result);
+DFUNDEF WUNUSED ATTR_OUT(2) NONNULL((1)) int (DCALL DeeObject_AsUInt64)(DeeObject *__restrict self, uint64_t *__restrict result);
+DFUNDEF WUNUSED ATTR_OUT(2) NONNULL((1)) int (DCALL DeeObject_AsUInt128)(DeeObject *__restrict self, Dee_uint128_t *__restrict result);
+DFUNDEF WUNUSED ATTR_OUT(2) NONNULL((1)) int (DCALL DeeObject_AsDouble)(DeeObject *__restrict self, double *__restrict result);
 
 /* Cast-to-integer conversion operator invocation. */
 DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *(DCALL DeeObject_Int)(DeeObject *__restrict self);
@@ -3131,26 +3133,26 @@ DFUNDEF WUNUSED NONNULL((1, 2, 4)) int (DCALL DeeObject_SetAttrStringHash)(DeeOb
 DFUNDEF WUNUSED NONNULL((1, 2, 5)) int (DCALL DeeObject_SetAttrStringLenHash)(DeeObject *self, char const *__restrict attr_name, size_t attrlen, Dee_hash_t hash, DeeObject *value);
 #define DeeObject_SetAttrStringLen(self, attr_name, attrlen, value) DeeObject_SetAttrStringLenHash(self, attr_name, attrlen, Dee_HashPtr(attr_name, attrlen), value)
 DFUNDEF WUNUSED NONNULL((1, 2, 3)) Dee_ssize_t (DCALL DeeObject_EnumAttr)(DeeTypeObject *tp_self, DeeObject *self, Dee_enum_t proc, void *arg);
-DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *(DCALL DeeObject_CallAttr)(DeeObject *self, /*String*/ DeeObject *attr_name, size_t argc, DeeObject *const *argv);
-DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *(DCALL DeeObject_CallAttrKw)(DeeObject *self, /*String*/ DeeObject *attr_name, size_t argc, DeeObject *const *argv, DeeObject *kw);
+DFUNDEF WUNUSED ATTR_INS(4, 3) NONNULL((1, 2)) DREF DeeObject *(DCALL DeeObject_CallAttr)(DeeObject *self, /*String*/ DeeObject *attr_name, size_t argc, DeeObject *const *argv);
+DFUNDEF WUNUSED ATTR_INS(4, 3) NONNULL((1, 2)) DREF DeeObject *(DCALL DeeObject_CallAttrKw)(DeeObject *self, /*String*/ DeeObject *attr_name, size_t argc, DeeObject *const *argv, DeeObject *kw);
 DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *(DeeObject_CallAttrPack)(DeeObject *self, /*String*/ DeeObject *attr_name, size_t argc, ...);
 DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *(DCALL DeeObject_VCallAttrPack)(DeeObject *self, /*String*/ DeeObject *attr_name, size_t argc, va_list args);
 DFUNDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DeeObject_CallAttrf)(DeeObject *self, /*String*/ DeeObject *attr_name, char const *__restrict format, ...);
 DFUNDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeObject_VCallAttrf)(DeeObject *self, /*String*/ DeeObject *attr_name, char const *__restrict format, va_list args);
-DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *(DCALL DeeObject_CallAttrString)(DeeObject *self, char const *__restrict attr_name, size_t argc, DeeObject *const *argv);
+DFUNDEF WUNUSED ATTR_INS(4, 3) NONNULL((1, 2)) DREF DeeObject *(DCALL DeeObject_CallAttrString)(DeeObject *self, char const *__restrict attr_name, size_t argc, DeeObject *const *argv);
 DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *(DeeObject_CallAttrStringPack)(DeeObject *self, char const *__restrict attr_name, size_t argc, ...);
 DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *(DCALL DeeObject_VCallAttrStringPack)(DeeObject *self, char const *__restrict attr_name, size_t argc, va_list args);
 DFUNDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DeeObject_CallAttrStringf)(DeeObject *self, char const *__restrict attr_name, char const *__restrict format, ...);
 DFUNDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeObject_VCallAttrStringf)(DeeObject *self, char const *__restrict attr_name, char const *__restrict format, va_list args);
-DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *(DCALL DeeObject_CallAttrStringKw)(DeeObject *self, char const *__restrict attr_name, size_t argc, DeeObject *const *argv, DeeObject *kw);
-DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *(DCALL DeeObject_CallAttrStringHashKw)(DeeObject *self, char const *__restrict attr_name, Dee_hash_t hash, size_t argc, DeeObject *const *argv, DeeObject *kw);
-DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *(DCALL DeeObject_CallAttrStringLenHashKw)(DeeObject *self, char const *__restrict attr_name, size_t attrlen, Dee_hash_t hash, size_t argc, DeeObject *const *argv, DeeObject *kw);
+DFUNDEF WUNUSED ATTR_INS(4, 3) NONNULL((1, 2)) DREF DeeObject *(DCALL DeeObject_CallAttrStringKw)(DeeObject *self, char const *__restrict attr_name, size_t argc, DeeObject *const *argv, DeeObject *kw);
+DFUNDEF WUNUSED ATTR_INS(5, 4) NONNULL((1, 2)) DREF DeeObject *(DCALL DeeObject_CallAttrStringHashKw)(DeeObject *self, char const *__restrict attr_name, Dee_hash_t hash, size_t argc, DeeObject *const *argv, DeeObject *kw);
+DFUNDEF WUNUSED ATTR_INS(6, 5) NONNULL((1, 2)) DREF DeeObject *(DCALL DeeObject_CallAttrStringLenHashKw)(DeeObject *self, char const *__restrict attr_name, size_t attrlen, Dee_hash_t hash, size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define DeeObject_CallAttrStringLen(self, attr_name, attrlen, argc, argv)       DeeObject_CallAttrStringLenHash(self, attr_name, attrlen, Dee_HashPtr(attr_name, attrlen), argc, argv)
 #define DeeObject_CallAttrStringLenPack(self, attr_name, attrlen, ...)          DeeObject_CallAttrStringLenHashPack(self, attr_name, attrlen, Dee_HashPtr(attr_name, attrlen), __VA_ARGS__)
 #define DeeObject_VCallAttrStringLenPack(self, attr_name, attrlen, argc, args)  DeeObject_VCallAttrStringLenHashPack(self, attr_name, attrlen, Dee_HashPtr(attr_name, attrlen), argc, args)
 #define DeeObject_CallAttrStringLenKw(self, attr_name, attrlen, argc, argv, kw) DeeObject_CallAttrStringLenHashKw(self, attr_name, attrlen, Dee_HashPtr(attr_name, attrlen), argc, argv, kw)
-DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *(DCALL DeeObject_CallAttrStringHash)(DeeObject *self, char const *__restrict attr_name, Dee_hash_t hash, size_t argc, DeeObject *const *argv);
-DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *(DCALL DeeObject_CallAttrStringLenHash)(DeeObject *self, char const *__restrict attr_name, size_t attrlen, Dee_hash_t hash, size_t argc, DeeObject *const *argv);
+DFUNDEF WUNUSED ATTR_INS(5, 4) NONNULL((1, 2)) DREF DeeObject *(DCALL DeeObject_CallAttrStringHash)(DeeObject *self, char const *__restrict attr_name, Dee_hash_t hash, size_t argc, DeeObject *const *argv);
+DFUNDEF WUNUSED ATTR_INS(6, 5) NONNULL((1, 2)) DREF DeeObject *(DCALL DeeObject_CallAttrStringLenHash)(DeeObject *self, char const *__restrict attr_name, size_t attrlen, Dee_hash_t hash, size_t argc, DeeObject *const *argv);
 DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *(DeeObject_CallAttrStringHashPack)(DeeObject *self, char const *__restrict attr_name, Dee_hash_t hash, size_t argc, ...);
 DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *(DeeObject_CallAttrStringLenHashPack)(DeeObject *self, char const *__restrict attr_name, size_t attrlen, Dee_hash_t hash, size_t argc, ...);
 DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *(DCALL DeeObject_VCallAttrStringHashPack)(DeeObject *self, char const *__restrict attr_name, Dee_hash_t hash, size_t argc, va_list args);

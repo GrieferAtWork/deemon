@@ -4271,7 +4271,7 @@ type_setattr(DeeObject *self, DeeObject *name, DeeObject *value) {
 	                             value);
 }
 
-INTERN WUNUSED DREF DeeObject *DCALL
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 type_callattr(DeeObject *self, DeeObject *name,
               size_t argc, DeeObject *const *argv) {
 	return DeeType_CallAttrString((DeeTypeObject *)self,
@@ -4280,7 +4280,7 @@ type_callattr(DeeObject *self, DeeObject *name,
 	                              argc, argv);
 }
 
-INTERN WUNUSED DREF DeeObject *DCALL
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 type_callattr_kw(DeeObject *self, DeeObject *name,
                  size_t argc, DeeObject *const *argv,
                  DeeObject *kw) {
@@ -4752,7 +4752,7 @@ Dee_DecrefWasOk_traced(DeeObject *__restrict ob,
 	return false;
 }
 
-PUBLIC ATTR_RETNONNULL NONNULL((1)) DREF DeeObject **
+PUBLIC ATTR_RETNONNULL ATTR_INS(1, 2) DREF DeeObject **
 (DCALL Dee_Increfv_traced)(DeeObject *const *__restrict object_vector,
                            size_t object_count, char const *file, int line) {
 	size_t i;
@@ -4763,7 +4763,7 @@ PUBLIC ATTR_RETNONNULL NONNULL((1)) DREF DeeObject **
 	}
 	return (DREF DeeObject **)object_vector;
 }
-PUBLIC ATTR_RETNONNULL NONNULL((1)) DeeObject **
+PUBLIC ATTR_RETNONNULL ATTR_INS(1, 2) DeeObject **
 (DCALL Dee_Decrefv_traced)(DREF DeeObject *const *__restrict object_vector,
                            size_t object_count, char const *file, int line) {
 	while (object_count--) {
@@ -4773,7 +4773,7 @@ PUBLIC ATTR_RETNONNULL NONNULL((1)) DeeObject **
 	}
 	return (DREF DeeObject **)object_vector;
 }
-PUBLIC ATTR_RETNONNULL NONNULL((1, 2)) DREF DeeObject **
+PUBLIC ATTR_RETNONNULL ATTR_OUTS(1, 3) ATTR_INS(2, 3) DREF DeeObject **
 (DCALL Dee_Movrefv_traced)(/*out:ref*/ DeeObject **__restrict dst,
                            /*in*/ DeeObject *const *__restrict src,
                            size_t object_count, char const *file, int line) {
@@ -4883,7 +4883,7 @@ PUBLIC WUNUSED NONNULL((1)) bool
 	return Dee_DecrefWasOk(ob);
 }
 
-PUBLIC ATTR_RETNONNULL NONNULL((1)) DREF DeeObject **
+PUBLIC ATTR_RETNONNULL ATTR_INS(1, 2) DREF DeeObject **
 (DCALL Dee_Increfv_traced)(DeeObject *const *__restrict object_vector,
                            size_t object_count,
                            char const *file, int line) {
@@ -4903,7 +4903,8 @@ PUBLIC ATTR_RETNONNULL NONNULL((1)) DREF DeeObject **
 	return (DREF DeeObject **)object_vector;
 #endif /* !CONFIG_NO_BADREFCNT_CHECKS */
 }
-PUBLIC ATTR_RETNONNULL NONNULL((1)) DeeObject **
+
+PUBLIC ATTR_RETNONNULL ATTR_INS(1, 2) DeeObject **
 (DCALL Dee_Decrefv_traced)(DREF DeeObject *const *__restrict object_vector,
                            size_t object_count,
                            char const *file, int line) {
@@ -4920,7 +4921,8 @@ PUBLIC ATTR_RETNONNULL NONNULL((1)) DeeObject **
 	return (DREF DeeObject **)object_vector;
 #endif /* !CONFIG_NO_BADREFCNT_CHECKS */
 }
-PUBLIC ATTR_RETNONNULL NONNULL((1, 2)) DREF DeeObject **
+
+PUBLIC ATTR_RETNONNULL ATTR_OUTS(1, 3) ATTR_INS(2, 3) DREF DeeObject **
 (DCALL Dee_Movrefv_traced)(/*out:ref*/ DeeObject **__restrict dst,
                            /*in*/ DeeObject *const *__restrict src,
                            size_t object_count,
@@ -5005,7 +5007,7 @@ PUBLIC WUNUSED NONNULL((1)) bool
 
 /* Increment the reference counter of every object from `object_vector...+=object_count'
  * @return: * : Always re-returns the pointer to `object_vector' */
-PUBLIC ATTR_RETNONNULL NONNULL((1)) DREF DeeObject **
+PUBLIC ATTR_RETNONNULL ATTR_INS(1, 2) DREF DeeObject **
 (DCALL Dee_Increfv)(DeeObject *const *__restrict object_vector,
                     size_t object_count) {
 	while (object_count--) {
@@ -5018,7 +5020,7 @@ PUBLIC ATTR_RETNONNULL NONNULL((1)) DREF DeeObject **
 
 /* Decrement the reference counter of every object from `object_vector...+=object_count'
  * @return: * : Always re-returns the pointer to `object_vector' */
-PUBLIC ATTR_RETNONNULL NONNULL((1)) DeeObject **
+PUBLIC ATTR_RETNONNULL ATTR_INS(1, 2) DeeObject **
 (DCALL Dee_Decrefv)(DREF DeeObject *const *__restrict object_vector,
                     size_t object_count) {
 	size_t i;
@@ -5033,7 +5035,7 @@ PUBLIC ATTR_RETNONNULL NONNULL((1)) DeeObject **
 /* Copy object pointers from `src' to `dst' and increment
  * the reference counter of every object that got copied.
  * @return: * : Always re-returns the pointer to `dst' */
-PUBLIC ATTR_RETNONNULL NONNULL((1, 2)) DREF DeeObject **
+PUBLIC ATTR_RETNONNULL ATTR_OUTS(1, 3) ATTR_INS(2, 3) DREF DeeObject **
 (DCALL Dee_Movrefv)(/*out:ref*/ DeeObject **__restrict dst,
                     /*in*/ DeeObject *const *__restrict src,
                     size_t object_count) {

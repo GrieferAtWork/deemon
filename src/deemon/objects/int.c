@@ -2140,7 +2140,7 @@ err:
  *       values, however in deemon's C api, we must limit ourself
  *       to only a set number of bits.
  * @return: One of `INT_*' (See above) */
-PUBLIC WUNUSED NONNULL((1, 2)) int DCALL
+PUBLIC WUNUSED ATTR_OUT(2) NONNULL((1)) int DCALL
 DeeInt_TryAs8(DeeObject *__restrict self,
               int8_t *__restrict value) {
 	int result;
@@ -2179,7 +2179,7 @@ DeeInt_TryAs8(DeeObject *__restrict self,
 	return result;
 }
 
-PUBLIC WUNUSED NONNULL((1, 2)) int DCALL
+PUBLIC WUNUSED ATTR_OUT(2) NONNULL((1)) int DCALL
 DeeInt_TryAs16(DeeObject *__restrict self,
                int16_t *__restrict value) {
 #if DIGIT_BITS <= 16
@@ -2250,7 +2250,7 @@ overflow:
 #endif /* DIGIT_BITS > 16 */
 }
 
-PUBLIC WUNUSED NONNULL((1, 2)) int DCALL
+PUBLIC WUNUSED ATTR_OUT(2) NONNULL((1)) int DCALL
 DeeInt_TryAs32(DeeObject *__restrict self,
                int32_t *__restrict value) {
 	DeeIntObject *me = (DeeIntObject *)self;
@@ -2296,7 +2296,7 @@ overflow:
 	return negative ? INT_NEG_OVERFLOW : INT_POS_OVERFLOW;
 }
 
-PUBLIC WUNUSED NONNULL((1, 2)) int DCALL
+PUBLIC WUNUSED ATTR_OUT(2) NONNULL((1)) int DCALL
 DeeInt_TryAs64(DeeObject *__restrict self,
                int64_t *__restrict value) {
 	DeeIntObject *me = (DeeIntObject *)self;
@@ -2342,7 +2342,7 @@ overflow:
 	return negative ? INT_NEG_OVERFLOW : INT_POS_OVERFLOW;
 }
 
-PUBLIC WUNUSED NONNULL((1, 2)) int DCALL
+PUBLIC WUNUSED ATTR_OUT(2) NONNULL((1)) int DCALL
 DeeInt_TryAs128(DeeObject *__restrict self,
                 Dee_int128_t *__restrict value) {
 	DeeIntObject *me = (DeeIntObject *)self;
@@ -2397,7 +2397,7 @@ overflow:
 }
 
 /* Similar to the functions above, but explicitly require signed/unsigned 32/64-bit values. */
-PUBLIC WUNUSED NONNULL((1, 2)) bool
+PUBLIC WUNUSED ATTR_OUT(2) NONNULL((1)) bool
 (DCALL DeeInt_TryAsS8)(DeeObject *__restrict self,
                        int8_t *__restrict value) {
 	int error = DeeInt_TryAs8(self, value);
@@ -2407,7 +2407,7 @@ PUBLIC WUNUSED NONNULL((1, 2)) bool
 	        error != INT_NEG_OVERFLOW);
 }
 
-PUBLIC WUNUSED NONNULL((1, 2)) bool
+PUBLIC WUNUSED ATTR_OUT(2) NONNULL((1)) bool
 (DCALL DeeInt_TryAsS16)(DeeObject *__restrict self,
                         int16_t *__restrict value) {
 	int error = DeeInt_TryAs16(self, value);
@@ -2417,7 +2417,7 @@ PUBLIC WUNUSED NONNULL((1, 2)) bool
 	        error != INT_NEG_OVERFLOW);
 }
 
-PUBLIC WUNUSED NONNULL((1, 2)) bool
+PUBLIC WUNUSED ATTR_OUT(2) NONNULL((1)) bool
 (DCALL DeeInt_TryAsS32)(DeeObject *__restrict self,
                         int32_t *__restrict value) {
 	int error = DeeInt_TryAs32(self, value);
@@ -2427,7 +2427,7 @@ PUBLIC WUNUSED NONNULL((1, 2)) bool
 	        error != INT_NEG_OVERFLOW);
 }
 
-PUBLIC WUNUSED NONNULL((1, 2)) bool
+PUBLIC WUNUSED ATTR_OUT(2) NONNULL((1)) bool
 (DCALL DeeInt_TryAsS64)(DeeObject *__restrict self,
                         int64_t *__restrict value) {
 	int error = DeeInt_TryAs64(self, value);
@@ -2437,7 +2437,7 @@ PUBLIC WUNUSED NONNULL((1, 2)) bool
 	        error != INT_NEG_OVERFLOW);
 }
 
-PUBLIC WUNUSED NONNULL((1, 2)) bool
+PUBLIC WUNUSED ATTR_OUT(2) NONNULL((1)) bool
 (DCALL DeeInt_TryAsS128)(DeeObject *__restrict self,
                          Dee_int128_t *__restrict value) {
 	int error = DeeInt_TryAs128(self, value);
@@ -2447,7 +2447,7 @@ PUBLIC WUNUSED NONNULL((1, 2)) bool
 	        error != INT_NEG_OVERFLOW);
 }
 
-PUBLIC WUNUSED NONNULL((1, 2)) bool
+PUBLIC WUNUSED ATTR_OUT(2) NONNULL((1)) bool
 (DCALL DeeInt_TryAsU8)(DeeObject *__restrict self,
                        uint8_t *__restrict value) {
 	int error = DeeInt_TryAs8(self, (int8_t *)value);
@@ -2457,7 +2457,7 @@ PUBLIC WUNUSED NONNULL((1, 2)) bool
 	        error != INT_NEG_OVERFLOW);
 }
 
-PUBLIC WUNUSED NONNULL((1, 2)) bool
+PUBLIC WUNUSED ATTR_OUT(2) NONNULL((1)) bool
 (DCALL DeeInt_TryAsU16)(DeeObject *__restrict self,
                         uint16_t *__restrict value) {
 	int error = DeeInt_TryAs16(self, (int16_t *)value);
@@ -2467,7 +2467,7 @@ PUBLIC WUNUSED NONNULL((1, 2)) bool
 	        error != INT_NEG_OVERFLOW);
 }
 
-PUBLIC WUNUSED NONNULL((1, 2)) bool
+PUBLIC WUNUSED ATTR_OUT(2) NONNULL((1)) bool
 (DCALL DeeInt_TryAsU32)(DeeObject *__restrict self,
                         uint32_t *__restrict value) {
 	int error = DeeInt_TryAs32(self, (int32_t *)value);
@@ -2477,7 +2477,7 @@ PUBLIC WUNUSED NONNULL((1, 2)) bool
 	        error != INT_NEG_OVERFLOW);
 }
 
-PUBLIC WUNUSED NONNULL((1, 2)) bool
+PUBLIC WUNUSED ATTR_OUT(2) NONNULL((1)) bool
 (DCALL DeeInt_TryAsU64)(DeeObject *__restrict self,
                         uint64_t *__restrict value) {
 	int error = DeeInt_TryAs64(self, (int64_t *)value);
@@ -2487,7 +2487,7 @@ PUBLIC WUNUSED NONNULL((1, 2)) bool
 	        error != INT_NEG_OVERFLOW);
 }
 
-PUBLIC WUNUSED NONNULL((1, 2)) bool
+PUBLIC WUNUSED ATTR_OUT(2) NONNULL((1)) bool
 (DCALL DeeInt_TryAsU128)(DeeObject *__restrict self,
                          Dee_uint128_t *__restrict value) {
 	int error = DeeInt_TryAs128(self, (Dee_int128_t *)value);
@@ -2500,7 +2500,7 @@ PUBLIC WUNUSED NONNULL((1, 2)) bool
 
 /* Same as the functions above, but raise an `Error.ValueError.ArithmeticError.IntegerOverflow'
  * for `INT_POS_OVERFLOW' and `INT_NEG_OVERFLOW' and returns -1. */
-PUBLIC WUNUSED NONNULL((1, 2)) int
+PUBLIC WUNUSED ATTR_OUT(2) NONNULL((1)) int
 (DCALL DeeInt_As8)(DeeObject *__restrict self, int8_t *__restrict value) {
 	int result = DeeInt_TryAs8(self, value);
 	if (result == INT_POS_OVERFLOW || result == INT_NEG_OVERFLOW)
@@ -2510,7 +2510,7 @@ err_overflow:
 	return err_integer_overflow(self, 8, result == INT_POS_OVERFLOW);
 }
 
-PUBLIC WUNUSED NONNULL((1, 2)) int
+PUBLIC WUNUSED ATTR_OUT(2) NONNULL((1)) int
 (DCALL DeeInt_As16)(DeeObject *__restrict self, int16_t *__restrict value) {
 	int result = DeeInt_TryAs16(self, value);
 	if (result == INT_POS_OVERFLOW || result == INT_NEG_OVERFLOW)
@@ -2520,7 +2520,7 @@ err_overflow:
 	return err_integer_overflow(self, 16, result == INT_POS_OVERFLOW);
 }
 
-PUBLIC WUNUSED NONNULL((1, 2)) int
+PUBLIC WUNUSED ATTR_OUT(2) NONNULL((1)) int
 (DCALL DeeInt_As32)(DeeObject *__restrict self, int32_t *__restrict value) {
 	int result = DeeInt_TryAs32(self, value);
 	if (result == INT_POS_OVERFLOW || result == INT_NEG_OVERFLOW)
@@ -2530,7 +2530,7 @@ err_overflow:
 	return err_integer_overflow(self, 32, result == INT_POS_OVERFLOW);
 }
 
-PUBLIC WUNUSED NONNULL((1, 2)) int
+PUBLIC WUNUSED ATTR_OUT(2) NONNULL((1)) int
 (DCALL DeeInt_As64)(DeeObject *__restrict self, int64_t *__restrict value) {
 	int result = DeeInt_TryAs64(self, value);
 	if (result == INT_POS_OVERFLOW || result == INT_NEG_OVERFLOW)
@@ -2540,7 +2540,7 @@ err_overflow:
 	return err_integer_overflow(self, 64, result == INT_POS_OVERFLOW);
 }
 
-PUBLIC WUNUSED NONNULL((1, 2)) int
+PUBLIC WUNUSED ATTR_OUT(2) NONNULL((1)) int
 (DCALL DeeInt_As128)(DeeObject *__restrict self, Dee_int128_t *__restrict value) {
 	int result = DeeInt_TryAs128(self, value);
 	if (result == INT_POS_OVERFLOW || result == INT_NEG_OVERFLOW)
@@ -2553,7 +2553,7 @@ err_overflow:
 /* Read the signed/unsigned values from the given integer.
  * @return: 0:  Successfully read the value.
  * @return: -1: An error occurred (Integer overflow). */
-PUBLIC WUNUSED NONNULL((1, 2)) int
+PUBLIC WUNUSED ATTR_OUT(2) NONNULL((1)) int
 (DCALL DeeInt_AsS8)(DeeObject *__restrict self, int8_t *__restrict value) {
 	int error = DeeInt_As8(self, value);
 	if (error == INT_UNSIGNED && *value < 0)
@@ -2563,7 +2563,7 @@ err_overflow:
 	return err_integer_overflow(self, 8, true);
 }
 
-PUBLIC WUNUSED NONNULL((1, 2)) int
+PUBLIC WUNUSED ATTR_OUT(2) NONNULL((1)) int
 (DCALL DeeInt_AsS16)(DeeObject *__restrict self, int16_t *__restrict value) {
 	int error = DeeInt_As16(self, value);
 	if (error == INT_UNSIGNED && *value < 0)
@@ -2573,7 +2573,7 @@ err_overflow:
 	return err_integer_overflow(self, 16, true);
 }
 
-PUBLIC WUNUSED NONNULL((1, 2)) int
+PUBLIC WUNUSED ATTR_OUT(2) NONNULL((1)) int
 (DCALL DeeInt_AsS32)(DeeObject *__restrict self, int32_t *__restrict value) {
 	int error = DeeInt_As32(self, value);
 	if (error == INT_UNSIGNED && *value < 0)
@@ -2583,7 +2583,7 @@ err_overflow:
 	return err_integer_overflow(self, 32, true);
 }
 
-PUBLIC WUNUSED NONNULL((1, 2)) int
+PUBLIC WUNUSED ATTR_OUT(2) NONNULL((1)) int
 (DCALL DeeInt_AsS64)(DeeObject *__restrict self, int64_t *__restrict value) {
 	int error = DeeInt_As64(self, value);
 	if (error == INT_UNSIGNED && *value < 0)
@@ -2593,7 +2593,7 @@ err_overflow:
 	return err_integer_overflow(self, 64, true);
 }
 
-PUBLIC WUNUSED NONNULL((1, 2)) int
+PUBLIC WUNUSED ATTR_OUT(2) NONNULL((1)) int
 (DCALL DeeInt_AsS128)(DeeObject *__restrict self, Dee_int128_t *__restrict value) {
 	int error = DeeInt_As128(self, value);
 	if (error == INT_UNSIGNED && __hybrid_int128_isneg(*value))
@@ -2603,7 +2603,7 @@ err_overflow:
 	return err_integer_overflow(self, 128, true);
 }
 
-PUBLIC WUNUSED NONNULL((1, 2)) int
+PUBLIC WUNUSED ATTR_OUT(2) NONNULL((1)) int
 (DCALL DeeInt_AsU8)(DeeObject *__restrict self, uint8_t *__restrict value) {
 	int error = DeeInt_As8(self, (int8_t *)value);
 	if (error == INT_SIGNED && *(int8_t const *)value < 0)
@@ -2613,7 +2613,7 @@ err_overflow:
 	return err_integer_overflow(self, 8, false);
 }
 
-PUBLIC WUNUSED NONNULL((1, 2)) int
+PUBLIC WUNUSED ATTR_OUT(2) NONNULL((1)) int
 (DCALL DeeInt_AsU16)(DeeObject *__restrict self, uint16_t *__restrict value) {
 	int error = DeeInt_As16(self, (int16_t *)value);
 	if (error == INT_SIGNED && *(int16_t const *)value < 0)
@@ -2623,7 +2623,7 @@ err_overflow:
 	return err_integer_overflow(self, 16, false);
 }
 
-PUBLIC WUNUSED NONNULL((1, 2)) int
+PUBLIC WUNUSED ATTR_OUT(2) NONNULL((1)) int
 (DCALL DeeInt_AsU32)(DeeObject *__restrict self, uint32_t *__restrict value) {
 	int error = DeeInt_As32(self, (int32_t *)value);
 	if (error == INT_SIGNED && *(int32_t const *)value < 0)
@@ -2633,7 +2633,7 @@ err_overflow:
 	return err_integer_overflow(self, 32, false);
 }
 
-PUBLIC WUNUSED NONNULL((1, 2)) int
+PUBLIC WUNUSED ATTR_OUT(2) NONNULL((1)) int
 (DCALL DeeInt_AsU64)(DeeObject *__restrict self, uint64_t *__restrict value) {
 	int error = DeeInt_As64(self, (int64_t *)value);
 	if (error == INT_SIGNED && *(int64_t const *)value < 0)
@@ -2643,7 +2643,7 @@ err_overflow:
 	return err_integer_overflow(self, 64, false);
 }
 
-PUBLIC WUNUSED NONNULL((1, 2)) int
+PUBLIC WUNUSED ATTR_OUT(2) NONNULL((1)) int
 (DCALL DeeInt_AsU128)(DeeObject *__restrict self, Dee_uint128_t *__restrict value) {
 	int error = DeeInt_As128(self, (Dee_int128_t *)value);
 	if (error == INT_SIGNED && __hybrid_int128_isneg(*(Dee_int128_t const *)value))

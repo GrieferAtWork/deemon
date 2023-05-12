@@ -44,8 +44,8 @@
 DECL_BEGIN
 
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL type_getattr(DeeObject *self, DeeObject *name);
-INTDEF WUNUSED DREF DeeObject *DCALL type_callattr(DeeObject *self, DeeObject *name, size_t argc, DeeObject *const *argv);
-INTDEF WUNUSED DREF DeeObject *DCALL type_callattr_kw(DeeObject *self, DeeObject *name, size_t argc, DeeObject *const *argv, DeeObject *kw);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL type_callattr(DeeObject *self, DeeObject *name, size_t argc, DeeObject *const *argv);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL type_callattr_kw(DeeObject *self, DeeObject *name, size_t argc, DeeObject *const *argv, DeeObject *kw);
 #ifdef CONFIG_CALLTUPLE_OPTIMIZATIONS
 #define type_callattr_tuple(self, name, args)        type_callattr(self, name, DeeTuple_SIZE(args), DeeTuple_ELEM(args))
 #define type_callattr_tuple_kw(self, name, args, kw) type_callattr_kw(self, name, DeeTuple_SIZE(args), DeeTuple_ELEM(args), kw)
@@ -467,7 +467,7 @@ is_bound:
 	return 1;
 }
 
-PUBLIC WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
+PUBLIC WUNUSED ATTR_INS(6, 5) NONNULL((1, 2, 3)) DREF DeeObject *DCALL
 DeeObject_TGenericCallAttrString(DeeTypeObject *tp_self, DeeObject *self,
                                  char const *__restrict name, dhash_t hash,
                                  size_t argc, DeeObject *const *argv) {
@@ -502,7 +502,7 @@ done:
 	return result;
 }
 
-PUBLIC WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
+PUBLIC WUNUSED ATTR_INS(7, 6) NONNULL((1, 2, 3)) DREF DeeObject *DCALL
 DeeObject_TGenericCallAttrStringLen(DeeTypeObject *tp_self, DeeObject *self,
                                     char const *__restrict name, size_t namelen,
                                     dhash_t hash, size_t argc, DeeObject *const *argv) {
@@ -537,7 +537,7 @@ done:
 	return result;
 }
 
-PUBLIC WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
+PUBLIC WUNUSED ATTR_INS(6, 5) NONNULL((1, 2, 3)) DREF DeeObject *DCALL
 DeeObject_TGenericCallAttrStringKw(DeeTypeObject *tp_self, DeeObject *self,
                                    char const *__restrict name, dhash_t hash,
                                    size_t argc, DeeObject *const *argv,
@@ -573,7 +573,7 @@ done:
 	return result;
 }
 
-PUBLIC WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
+PUBLIC WUNUSED ATTR_INS(7, 6) NONNULL((1, 2, 3)) DREF DeeObject *DCALL
 DeeObject_TGenericCallAttrStringLenKw(DeeTypeObject *tp_self, DeeObject *self,
                                       char const *__restrict name, size_t namelen,
                                       dhash_t hash, size_t argc, DeeObject *const *argv,
@@ -2620,7 +2620,7 @@ err:
 }
 
 
-PUBLIC WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+PUBLIC WUNUSED ATTR_INS(4, 3) NONNULL((1, 2)) DREF DeeObject *DCALL
 DeeObject_CallAttrKw(DeeObject *self, /*String*/ DeeObject *attr_name,
                      size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	DREF DeeObject *result;
@@ -2707,7 +2707,7 @@ done:
 	return result;
 }
 
-PUBLIC WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+PUBLIC WUNUSED ATTR_INS(4, 3) NONNULL((1, 2)) DREF DeeObject *DCALL
 DeeObject_CallAttrStringHashKw(DeeObject *self,
                                char const *__restrict attr_name, dhash_t hash,
                                size_t argc, DeeObject *const *argv, DeeObject *kw) {
@@ -2800,7 +2800,7 @@ done:
 	return result;
 }
 
-PUBLIC WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+PUBLIC WUNUSED ATTR_INS(6, 5) NONNULL((1, 2)) DREF DeeObject *DCALL
 DeeObject_CallAttrStringLenHashKw(DeeObject *self,
                                   char const *__restrict attr_name,
                                   size_t attrlen, dhash_t hash,
@@ -3577,7 +3577,7 @@ err_noaccess:
 }
 
 
-PUBLIC WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+PUBLIC WUNUSED ATTR_INS(5, 4) NONNULL((1, 2)) DREF DeeObject *DCALL
 DeeObject_CallAttrStringHash(DeeObject *self,
                              char const *__restrict attr_name, dhash_t hash,
                              size_t argc, DeeObject *const *argv) {
@@ -3668,7 +3668,7 @@ done:
 	return result;
 }
 
-PUBLIC WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+PUBLIC WUNUSED ATTR_INS(6, 5) NONNULL((1, 2)) DREF DeeObject *DCALL
 DeeObject_CallAttrStringLenHash(DeeObject *self,
                                 char const *__restrict attr_name,
                                 size_t attrlen, dhash_t hash,
@@ -3793,14 +3793,14 @@ PUBLIC WUNUSED NONNULL((1, 2, 3)) int
 	return DeeObject_SetAttrStringHash(self, attr_name, Dee_HashStr(attr_name), value);
 }
 
-PUBLIC WUNUSED NONNULL((1, 2)) DREF DeeObject *
+PUBLIC WUNUSED ATTR_INS(4, 3) NONNULL((1, 2)) DREF DeeObject *
 (DCALL DeeObject_CallAttrString)(DeeObject *self,
                                  char const *__restrict attr_name,
                                  size_t argc, DeeObject *const *argv) {
 	return DeeObject_CallAttrStringHash(self, attr_name, Dee_HashStr(attr_name), argc, argv);
 }
 
-PUBLIC WUNUSED NONNULL((1, 2)) DREF DeeObject *
+PUBLIC WUNUSED ATTR_INS(4, 3) NONNULL((1, 2)) DREF DeeObject *
 (DCALL DeeObject_CallAttrStringKw)(DeeObject *self, char const *__restrict attr_name,
                                    size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	return DeeObject_CallAttrStringHashKw(self, attr_name, Dee_HashStr(attr_name), argc, argv, kw);
