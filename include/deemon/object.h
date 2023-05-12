@@ -2816,11 +2816,11 @@ DFUNDEF NONNULL((1)) void (DCALL DeeObject_PClear)(DeeObject *__restrict self, u
  * @return: INT_SIGNED:   The value stored in `result' must be interpreted as signed.
  * @return: INT_UNSIGNED: The value stored in `result' must be interpreted as unsigned.
  * @return: -1:           An error occurred. */
-DFUNDEF WUNUSED ATTR_OUT(2) NONNULL((1)) int (DCALL DeeObject_GetInt8)(DeeObject *__restrict self, int8_t *__restrict result);
-DFUNDEF WUNUSED ATTR_OUT(2) NONNULL((1)) int (DCALL DeeObject_GetInt16)(DeeObject *__restrict self, int16_t *__restrict result);
-DFUNDEF WUNUSED ATTR_OUT(2) NONNULL((1)) int (DCALL DeeObject_GetInt32)(DeeObject *__restrict self, int32_t *__restrict result);
-DFUNDEF WUNUSED ATTR_OUT(2) NONNULL((1)) int (DCALL DeeObject_GetInt64)(DeeObject *__restrict self, int64_t *__restrict result);
-DFUNDEF WUNUSED ATTR_OUT(2) NONNULL((1)) int (DCALL DeeObject_GetInt128)(DeeObject *__restrict self, Dee_int128_t *__restrict result);
+DFUNDEF WUNUSED ATTR_OUT(2) NONNULL((1)) int (DCALL DeeObject_Get8Bit)(DeeObject *__restrict self, int8_t *__restrict result);
+DFUNDEF WUNUSED ATTR_OUT(2) NONNULL((1)) int (DCALL DeeObject_Get16Bit)(DeeObject *__restrict self, int16_t *__restrict result);
+DFUNDEF WUNUSED ATTR_OUT(2) NONNULL((1)) int (DCALL DeeObject_Get32Bit)(DeeObject *__restrict self, int32_t *__restrict result);
+DFUNDEF WUNUSED ATTR_OUT(2) NONNULL((1)) int (DCALL DeeObject_Get64Bit)(DeeObject *__restrict self, int64_t *__restrict result);
+DFUNDEF WUNUSED ATTR_OUT(2) NONNULL((1)) int (DCALL DeeObject_Get128Bit)(DeeObject *__restrict self, Dee_int128_t *__restrict result);
 
 /* Integral/Floating-point conversion operator invocation. */
 DFUNDEF WUNUSED ATTR_OUT(2) NONNULL((1)) int (DCALL DeeObject_AsInt8)(DeeObject *__restrict self, int8_t *__restrict result);
@@ -3324,14 +3324,14 @@ DDATDEF DeeObject DeeNotImplemented_Singleton;
 
 INTDEF ATTR_ERROR("Invalid integer size") int _Dee_invalid_integer_size(void);
 #ifndef __NO_builtin_choose_expr
-#define DeeObject_AsSINT(self, result)                                                                 \
+#define DeeObject_AsIntX(self, result)                                                                 \
 	__builtin_choose_expr(sizeof(*(result)) == 1,  DeeObject_AsInt8(self, (int8_t *)(result)),         \
 	__builtin_choose_expr(sizeof(*(result)) == 2,  DeeObject_AsInt16(self, (int16_t *)(result)),       \
 	__builtin_choose_expr(sizeof(*(result)) == 4,  DeeObject_AsInt32(self, (int32_t *)(result)),       \
 	__builtin_choose_expr(sizeof(*(result)) == 8,  DeeObject_AsInt64(self, (int64_t *)(result)),       \
 	__builtin_choose_expr(sizeof(*(result)) == 16, DeeObject_AsInt128(self, (Dee_int128_t *)(result)), \
 	                                               _Dee_invalid_integer_size())))))
-#define DeeObject_AsUINT(self, result)                                                                   \
+#define DeeObject_AsUIntX(self, result)                                                                  \
 	__builtin_choose_expr(sizeof(*(result)) == 1,  DeeObject_AsUInt8(self, (uint8_t *)(result)),         \
 	__builtin_choose_expr(sizeof(*(result)) == 2,  DeeObject_AsUInt16(self, (uint16_t *)(result)),       \
 	__builtin_choose_expr(sizeof(*(result)) == 4,  DeeObject_AsUInt32(self, (uint32_t *)(result)),       \
@@ -3339,14 +3339,14 @@ INTDEF ATTR_ERROR("Invalid integer size") int _Dee_invalid_integer_size(void);
 	__builtin_choose_expr(sizeof(*(result)) == 16, DeeObject_AsUInt128(self, (Dee_uint128_t *)(result)), \
 	                                               _Dee_invalid_integer_size())))))
 #else /* !__NO_builtin_choose_expr */
-#define DeeObject_AsSINT(self, result)                                              \
+#define DeeObject_AsIntX(self, result)                                              \
 	(sizeof(*(result)) == 1 ?  DeeObject_AsInt8(self, (int8_t *)(result)) :         \
 	 sizeof(*(result)) == 2 ?  DeeObject_AsInt16(self, (int16_t *)(result)) :       \
 	 sizeof(*(result)) == 4 ?  DeeObject_AsInt32(self, (int32_t *)(result)) :       \
 	 sizeof(*(result)) == 8 ?  DeeObject_AsInt64(self, (int64_t *)(result)) :       \
 	 sizeof(*(result)) == 16 ? DeeObject_AsInt128(self, (Dee_int128_t *)(result)) : \
 	                           _Dee_invalid_integer_size())
-#define DeeObject_AsUINT(self, result)                                                \
+#define DeeObject_AsUIntX(self, result)                                               \
 	(sizeof(*(result)) == 1 ?  DeeObject_AsUInt8(self, (uint8_t *)(result)) :         \
 	 sizeof(*(result)) == 2 ?  DeeObject_AsUInt16(self, (uint16_t *)(result)) :       \
 	 sizeof(*(result)) == 4 ?  DeeObject_AsUInt32(self, (uint32_t *)(result)) :       \

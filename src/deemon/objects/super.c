@@ -277,13 +277,13 @@ super_hash(Super *__restrict self) {
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 super_int32(Super *__restrict self,
             int32_t *__restrict result) {
-	return DeeObject_TGetInt32(self->s_type, self->s_self, result);
+	return DeeObject_TGet32Bit(self->s_type, self->s_self, result);
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 super_int64(Super *__restrict self,
             int64_t *__restrict result) {
-	return DeeObject_TGetInt64(self->s_type, self->s_self, result);
+	return DeeObject_TGet64Bit(self->s_type, self->s_self, result);
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL

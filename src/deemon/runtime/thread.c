@@ -3675,7 +3675,7 @@ thread_init(DeeThreadObject *__restrict self,
 		DBG_memset(&me->ot_thread.t_inout, 0xcc, sizeof(me->ot_thread.t_inout));
 #endif /* !CONFIG_NO_THREADS */
 		me->ot_thread.t_context.d_tls = NULL;
-		return DeeInt_AsSINT(argv[0], &me->ot_tid);
+		return DeeInt_AsIntX(argv[0], &me->ot_tid);
 	}
 #endif /* Dee_pid_t */
 

@@ -92,25 +92,25 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_fchownat_f_impl(int dfd, /*utf-8*
 	gid_t group_gid;
 	int result;
 	if (DeeInt_Check(owner)) {
-		if (DeeObject_AsUINT(owner, &owner_uid))
+		if (DeeObject_AsUIntX(owner, &owner_uid))
 			goto err;
 	} else {
 		owner = DeeObject_CallAttrString(FS_MODULE, "User", 1, (DeeObject **)&owner);
 		if unlikely(!owner)
 			goto err;
-		result = DeeObject_AsUINT(owner, &owner_uid);
+		result = DeeObject_AsUIntX(owner, &owner_uid);
 		Dee_Decref(owner);
 		if unlikely(result)
 			goto err;
 	}
 	if (DeeInt_Check(group)) {
-		if (DeeObject_AsUINT(group, &group_gid))
+		if (DeeObject_AsUIntX(group, &group_gid))
 			goto err;
 	} else {
 		group = DeeObject_CallAttrString(FS_MODULE, "Group", 1, (DeeObject **)&group);
 		if unlikely(!group)
 			goto err;
-		result = DeeObject_AsUINT(group, &group_gid);
+		result = DeeObject_AsUIntX(group, &group_gid);
 		Dee_Decref(group);
 		if unlikely(result)
 			goto err;

@@ -143,58 +143,58 @@ public:
 	}
 public:
 	/* Integer conversion */
-	Object &cgetval(char &value) {
+	int_ &cgetval(char &value) {
 		throw_if_nonzero(DeeInt_AsChar(this, &value));
 		return *this;
 	}
-	Object &cgetval(signed char &value) {
+	int_ &cgetval(signed char &value) {
 		throw_if_nonzero(DeeInt_AsSChar(this, &value));
 		return *this;
 	}
-	Object &cgetval(unsigned char &value) {
+	int_ &cgetval(unsigned char &value) {
 		throw_if_nonzero(DeeInt_AsUChar(this, &value));
 		return *this;
 	}
-	Object &cgetval(short &value) {
+	int_ &cgetval(short &value) {
 		throw_if_nonzero(DeeInt_AsShort(this, &value));
 		return *this;
 	}
-	Object &cgetval(unsigned short &value) {
+	int_ &cgetval(unsigned short &value) {
 		throw_if_nonzero(DeeInt_AsUShort(this, &value));
 		return *this;
 	}
-	Object &cgetval(int &value) {
+	int_ &cgetval(int &value) {
 		throw_if_nonzero(DeeInt_AsInt(this, &value));
 		return *this;
 	}
-	Object &cgetval(unsigned int &value) {
+	int_ &cgetval(unsigned int &value) {
 		throw_if_nonzero(DeeInt_AsUInt(this, &value));
 		return *this;
 	}
-	Object &cgetval(long &value) {
+	int_ &cgetval(long &value) {
 		throw_if_nonzero(DeeInt_AsLong(this, &value));
 		return *this;
 	}
-	Object &cgetval(unsigned long &value) {
+	int_ &cgetval(unsigned long &value) {
 		throw_if_nonzero(DeeInt_AsULong(this, &value));
 		return *this;
 	}
 #ifdef __COMPILER_HAVE_LONGLONG
-	Object &cgetval(__LONGLONG &value) {
+	int_ &cgetval(__LONGLONG &value) {
 		throw_if_nonzero(DeeInt_AsLLong(this, &value));
 		return *this;
 	}
-	Object &cgetval(__ULONGLONG &value) {
+	int_ &cgetval(__ULONGLONG &value) {
 		throw_if_nonzero(DeeInt_AsULLong(this, &value));
 		return *this;
 	}
 #endif /* __COMPILER_HAVE_LONGLONG */
-	Object &cgetval(Dee_int128_t &value) {
-		throw_if_nonzero(DeeInt_AsS128(this, &value));
+	int_ &cgetval(Dee_int128_t &value) {
+		throw_if_nonzero(DeeInt_AsInt128(this, &value));
 		return *this;
 	}
-	Object &cgetval(Dee_uint128_t &value) {
-		throw_if_nonzero(DeeInt_AsU128(this, &value));
+	int_ &cgetval(Dee_uint128_t &value) {
+		throw_if_nonzero(DeeInt_AsUInt128(this, &value));
 		return *this;
 	}
 

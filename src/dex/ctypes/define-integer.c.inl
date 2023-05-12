@@ -773,7 +773,7 @@ F(int_shl)(DeeSTypeObject *__restrict UNUSED(tp_self), T *self,
 	T value;
 	__SHIFT_TYPE__ other_value;
 	CTYPES_FAULTPROTECT(value = GET(self), goto err);
-	if (DeeObject_AsUINT(some_object, &other_value))
+	if (DeeObject_AsUIntX(some_object, &other_value))
 		goto err;
 #if SIZEOF == 16
 	HYBRID128_(shl)(value, other_value);
@@ -791,7 +791,7 @@ F(int_shr)(DeeSTypeObject *__restrict UNUSED(tp_self), T *self,
 	T value;
 	__SHIFT_TYPE__ other_value;
 	CTYPES_FAULTPROTECT(value = GET(self), goto err);
-	if (DeeObject_AsUINT(some_object, &other_value))
+	if (DeeObject_AsUIntX(some_object, &other_value))
 		goto err;
 #if SIZEOF == 16
 	HYBRID128_(shr)(value, other_value);
@@ -1008,7 +1008,7 @@ PRIVATE WUNUSED NONNULL((1, 3)) int DCALL
 F(int_inplace_shl)(DeeSTypeObject *__restrict UNUSED(tp_self), T *self,
                    DeeObject *__restrict some_object) {
 	__SHIFT_TYPE__ other_value;
-	if (DeeObject_AsUINT(some_object, &other_value))
+	if (DeeObject_AsUIntX(some_object, &other_value))
 		goto err;
 #if SIZEOF == 16
 	CTYPES_FAULTPROTECT({
@@ -1028,7 +1028,7 @@ PRIVATE WUNUSED NONNULL((1, 3)) int DCALL
 F(int_inplace_shr)(DeeSTypeObject *__restrict UNUSED(tp_self), T *self,
                    DeeObject *__restrict some_object) {
 	__SHIFT_TYPE__ other_value;
-	if (DeeObject_AsUINT(some_object, &other_value))
+	if (DeeObject_AsUIntX(some_object, &other_value))
 		goto err;
 #if SIZEOF == 16
 	CTYPES_FAULTPROTECT({

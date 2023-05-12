@@ -1215,7 +1215,7 @@ do_translate_operand_ast(struct asm_invoke_operand *__restrict result,
 		if (!DeeInt_Check(constval))
 			goto allocate_constant;
 		/* Special handling for integer constant expressions. */
-		if (!DeeInt_TryAsS64(constval, &result->io_intexpr.ie_val))
+		if (!DeeInt_TryAsInt64(constval, &result->io_intexpr.ie_val))
 			goto allocate_constant;
 		result->io_intexpr.ie_sym = NULL;
 		result->io_intexpr.ie_rel = (uint16_t)-1;

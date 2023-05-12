@@ -756,7 +756,7 @@ process_init(Process *__restrict self,
 	} else {
 		/* Caller wants to open a process, given its PID. */
 #ifdef ipc_Process_pid_t
-		if unlikely(DeeObject_AsUINT(exe_or_cmdline_or_pid, &self->p_pid))
+		if unlikely(DeeObject_AsUIntX(exe_or_cmdline_or_pid, &self->p_pid))
 			goto err;
 		Dee_atomic_rwlock_init(&self->p_lock);
 		self->p_exe = NULL;

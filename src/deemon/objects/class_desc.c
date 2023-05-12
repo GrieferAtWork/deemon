@@ -1368,7 +1368,7 @@ class_attribute_init(struct class_attribute *__restrict self,
 	/* ?T3?Dint?Dstring?Dstring */
 	/* ?T3?Dint?Dint?Dstring */
 	if (DeeInt_Check(data)) {
-		if (DeeInt_AsU16(data, &self->ca_addr))
+		if (DeeInt_AsUInt16(data, &self->ca_addr))
 			goto err;
 		self->ca_doc  = NULL;
 		self->ca_flag = CLASS_ATTRIBUTE_FPUBLIC;

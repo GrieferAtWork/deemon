@@ -1542,9 +1542,9 @@ do_generic_string_2:
 		case 2:
 			bzero(&self->sa_nl, sizeof(struct sockaddr_nl));
 			self->sa_nl.nl_family = AF_NETLINK;
-			if (DeeObject_AsUINT(argv[0], &self->sa_nl.nl_pid))
+			if (DeeObject_AsUIntX(argv[0], &self->sa_nl.nl_pid))
 				goto err;
-			if (DeeObject_AsUINT(argv[1], &self->sa_nl.nl_groups))
+			if (DeeObject_AsUIntX(argv[1], &self->sa_nl.nl_groups))
 				goto err;
 			break;
 
@@ -1575,7 +1575,7 @@ do_generic_string_2:
 			self->bt_l2.l2_family = AF_BLUETOOTH;
 			if (DeeObject_AssertTypeExact(argv[0], &DeeString_Type))
 				goto err;
-			if (DeeObject_AsUINT(argv[1], &self->bt_l2.l2_psm))
+			if (DeeObject_AsUIntX(argv[1], &self->bt_l2.l2_psm))
 				goto err;
 			if unlikely(priv_stobdaddr(DeeString_STR(argv[0]), &self->bt_l2.l2_bdaddr))
 				goto err;
@@ -1594,7 +1594,7 @@ do_generic_string_2:
 			self->bt_rc.rc_family = AF_BLUETOOTH;
 			if (DeeObject_AssertTypeExact(argv[0], &DeeString_Type))
 				goto err;
-			if (DeeObject_AsUINT(argv[1], &self->bt_rc.rc_channel))
+			if (DeeObject_AsUIntX(argv[1], &self->bt_rc.rc_channel))
 				goto err;
 			if unlikely(priv_stobdaddr(DeeString_STR(argv[0]), &self->bt_rc.rc_bdaddr))
 				goto err;
@@ -1617,7 +1617,7 @@ do_generic_string_2:
 			if unlikely(priv_stobdaddr(DeeString_StR(argv[0]), &self->bt_hci.hci_bdaddr))
 				goto err;
 #else /* __NetBSD__ || __DragonFly__ */
-			if (DeeObject_AsUINT(argv[0], &self->bt_hci.hci_dev))
+			if (DeeObject_AsUIntX(argv[0], &self->bt_hci.hci_dev))
 				goto err;
 #endif /* !__NetBSD__ && !__DragonFly__ */
 		}	break;

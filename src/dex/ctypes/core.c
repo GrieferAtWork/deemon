@@ -106,7 +106,7 @@ null_pointer:
 	/* int(0) also counts as a NULL-pointer. */
 	if (DeeInt_Check(self)) {
 		uint32_t val;
-		if (DeeInt_TryAsU32(self, &val) && val == 0)
+		if (DeeInt_TryAsUInt32(self, &val) && val == 0)
 			goto null_pointer;
 		goto nope;
 	}

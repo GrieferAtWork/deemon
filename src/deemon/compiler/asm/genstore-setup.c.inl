@@ -246,7 +246,7 @@ INTERN WUNUSED NONNULL((1)) int
 				int32_t int_index;
 				/* Special optimizations for constant indices. */
 				if (DeeInt_Check(index->a_constexpr) &&
-				    DeeInt_TryAsS32(index->a_constexpr, &int_index) &&
+				    DeeInt_TryAsInt32(index->a_constexpr, &int_index) &&
 				    int_index >= INT16_MIN && int_index <= INT16_MAX) {
 #ifdef LEAVE
 					if (asm_putddi(self))
@@ -317,7 +317,7 @@ INTERN WUNUSED NONNULL((1)) int
 					/* Optimization: `setrange pop, none, [pop | $<Simm16>], pop' */
 					if (end->a_type == AST_CONSTEXPR &&
 					    DeeInt_Check(end->a_constexpr) &&
-					    DeeInt_TryAsS32(end->a_constexpr, &index) &&
+					    DeeInt_TryAsInt32(end->a_constexpr, &index) &&
 					    index >= INT16_MIN && index <= INT16_MAX) {
 						/* `setrange pop, none, $<Simm16>, pop' */
 #ifdef LEAVE
@@ -353,7 +353,7 @@ INTERN WUNUSED NONNULL((1)) int
 					goto done;
 				}
 				if (DeeInt_Check(begin_index) &&
-				    DeeInt_TryAsS32(begin_index, &index) &&
+				    DeeInt_TryAsInt32(begin_index, &index) &&
 				    index >= INT16_MIN && index <= INT16_MAX) {
 					if (end->a_type == AST_CONSTEXPR) {
 						int32_t index2;
@@ -375,7 +375,7 @@ INTERN WUNUSED NONNULL((1)) int
 							goto done;
 						}
 						if (DeeInt_Check(end_index) &&
-						    DeeInt_TryAsS32(end_index, &index2) &&
+						    DeeInt_TryAsInt32(end_index, &index2) &&
 						    index2 >= INT16_MIN && index2 <= INT16_MAX) {
 							/* `setrange pop, $<Simm16>, $<Simm16>, pop' */
 #ifdef LEAVE
@@ -433,7 +433,7 @@ INTERN WUNUSED NONNULL((1)) int
 					goto done;
 				}
 				if (DeeInt_Check(end_index) &&
-				    DeeInt_TryAsS32(end_index, &index) &&
+				    DeeInt_TryAsInt32(end_index, &index) &&
 				    index >= INT16_MIN && index <= INT16_MAX) {
 					/* `setrange pop, pop, $<Simm16>, pop' */
 #ifdef ENTER

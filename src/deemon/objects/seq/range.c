@@ -1675,11 +1675,11 @@ DeeRange_New(DeeObject *begin,
 	{
 		dssize_t i_begin, i_end, i_step;
 		if (DeeInt_Check(begin) && DeeInt_Check(end) &&
-		    DeeInt_TryAsSSize(begin, &i_begin) &&
-		    DeeInt_TryAsSSize(end, &i_end)) {
+		    DeeInt_TryAsIntSize(begin, &i_begin) &&
+		    DeeInt_TryAsIntSize(end, &i_end)) {
 			i_step = 1;
 			if (step) {
-				if (!DeeInt_Check(step) || !DeeInt_TryAsSSize(step, &i_step))
+				if (!DeeInt_Check(step) || !DeeInt_TryAsIntSize(step, &i_step))
 					goto do_object_range;
 				if unlikely(!step) {
 					if (i_begin >= i_end)

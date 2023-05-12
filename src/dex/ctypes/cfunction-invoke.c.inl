@@ -255,28 +255,28 @@ cfunction_call(DeeCFunctionTypeObject *__restrict tp_self,
 			} else if (dee_va_type == &DeeInt_Type) {
 				/* int (core type) --> int / unsigned int (limited) */
 #if __SIZEOF_INT__ == 4
-				if (DeeInt_TryAsS32(dee_va_arg, &iter->s32)) {
+				if (DeeInt_TryAsInt32(dee_va_arg, &iter->s32)) {
 					*dee_va_ffi_types = &ffi_type_sint;
 				} else {
-					if (DeeInt_AsU32(dee_va_arg, &iter->u32))
+					if (DeeInt_AsUInt32(dee_va_arg, &iter->u32))
 						goto err_wbuf;
 					*dee_va_ffi_types = &ffi_type_uint;
 				}
 #elif __SIZEOF_INT__ == 8
-				if (DeeInt_TryAsS64(dee_va_arg, &iter->s64)) {
+				if (DeeInt_TryAsInt64(dee_va_arg, &iter->s64)) {
 					*dee_va_ffi_types = &ffi_type_sint;
 				} else {
-					if (DeeInt_AsU64(dee_va_arg, &iter->u64))
+					if (DeeInt_AsUInt64(dee_va_arg, &iter->u64))
 						goto err_wbuf;
 					*dee_va_ffi_types = &ffi_type_uint;
 				}
 #elif __SIZEOF_INT__ <= 4
 				int32_t temp;
-				if (DeeInt_TryAsS32(dee_va_arg, &temp)) {
+				if (DeeInt_TryAsInt32(dee_va_arg, &temp)) {
 					iter->i           = (int)temp;
 					*dee_va_ffi_types = &ffi_type_sint;
 				} else {
-					if (DeeInt_TryAsU32(dee_va_arg, (uint32_t *)&temp))
+					if (DeeInt_TryAsUInt32(dee_va_arg, (uint32_t *)&temp))
 						goto err_wbuf;
 					iter->u           = (unsigned int)*(uint32_t *)&temp;
 					*dee_va_ffi_types = &ffi_type_uint;

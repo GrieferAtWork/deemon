@@ -281,7 +281,7 @@ ast_gen_setitem_inplace(struct ast *__restrict base,
 		/* Special case: The index is constant. */
 		if (DeeInt_Check(index->a_constexpr)) {
 			int32_t int_index;
-			if (DeeInt_TryAsS32(index->a_constexpr, &int_index) &&
+			if (DeeInt_TryAsInt32(index->a_constexpr, &int_index) &&
 			    int_index >= INT16_MIN && int_index <= INT16_MAX) {
 				if (ast_genasm(base, ASM_G_FPUSHRES))
 					goto err; /* base */
@@ -447,7 +447,7 @@ ast_gen_setrange_inplace(struct ast *__restrict base,
 			if (end->a_type == AST_CONSTEXPR) {
 				int32_t end_index;
 				if (DeeInt_Check(end->a_constexpr) &&
-				    DeeInt_TryAsS32(end->a_constexpr, &end_index) &&
+				    DeeInt_TryAsInt32(end->a_constexpr, &end_index) &&
 				    end_index >= INT16_MIN && end_index <= INT16_MAX) {
 					/* <base>[none:43] += operand; (Uses `asm_ggetrange_ni') */
 					if (ast_genasm(base, ASM_G_FPUSHRES))
@@ -547,7 +547,7 @@ ast_gen_setrange_inplace(struct ast *__restrict base,
 			goto done;
 		} else if (DeeInt_Check(start->a_constexpr)) {
 			int32_t start_index;
-			if (DeeInt_TryAsS32(start->a_constexpr, &start_index) &&
+			if (DeeInt_TryAsInt32(start->a_constexpr, &start_index) &&
 			    start_index >= INT16_MIN && start_index <= INT16_MAX) {
 				if (end->a_type == AST_CONSTEXPR) {
 					int32_t end_index;
@@ -596,7 +596,7 @@ ast_gen_setrange_inplace(struct ast *__restrict base,
 							goto err; /* . */
 						goto done;
 					} else if (DeeInt_Check(end->a_constexpr) &&
-					           DeeInt_TryAsS32(end->a_constexpr, &end_index) &&
+					           DeeInt_TryAsInt32(end->a_constexpr, &end_index) &&
 					           end_index >= INT16_MIN && end_index <= INT16_MAX) {
 						/* <base>[42:43] += operand; (Uses `asm_ggetrange_ii') */
 						if (ast_genasm(base, ASM_G_FPUSHRES))
@@ -752,7 +752,7 @@ ast_gen_setrange_inplace(struct ast *__restrict base,
 				goto err; /* . */
 			goto done;
 		} else if (DeeInt_Check(end->a_constexpr) &&
-		           DeeInt_TryAsS32(end->a_constexpr, &end_index) &&
+		           DeeInt_TryAsInt32(end->a_constexpr, &end_index) &&
 		           end_index >= INT16_MIN && end_index <= INT16_MAX) {
 			/* <base>[start:42] += operand; (Uses `asm_ggetrange_pi') */
 			if (ast_genasm(base, ASM_G_FPUSHRES))

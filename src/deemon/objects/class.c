@@ -4629,7 +4629,7 @@ instance_tint32(DeeTypeObject *tp_self,
 	intval = instance_tint(tp_self, self);
 	if unlikely(!intval)
 		goto err;
-	error = DeeInt_As32(intval, result);
+	error = DeeInt_Get32Bit(intval, result);
 	Dee_Decref(intval);
 	return error;
 err:
@@ -4645,7 +4645,7 @@ instance_tint64(DeeTypeObject *tp_self,
 	intval = instance_tint(tp_self, self);
 	if unlikely(!intval)
 		goto err;
-	error = DeeInt_As64(intval, result);
+	error = DeeInt_Get64Bit(intval, result);
 	Dee_Decref(intval);
 	return error;
 err:

@@ -726,7 +726,7 @@ libdisasm_printconst(dformatprinter printer, void *arg,
 			result += temp;
 			numsys = 16;
 			if (((DeeIntObject *)constval)->ob_size < 0 ||
-			    (DeeInt_TryAsU32(constval, &value) && value <= UINT16_MAX))
+			    (DeeInt_TryAsUInt32(constval, &value) && value <= UINT16_MAX))
 				numsys = 10;
 			temp = DeeInt_Print(constval,
 			                    DEEINT_PRINT(numsys, DEEINT_PRINT_FNUMSYS),

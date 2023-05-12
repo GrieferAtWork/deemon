@@ -106,19 +106,19 @@ get_atomic_operand(DeeObject *value, DeeSTypeObject *ob_ptr_orig,
 	switch (ob_ptr_orig->st_sizeof) {
 
 	case 1:
-		error = DeeObject_GetInt8(value, &result->ao_s8);
+		error = DeeObject_Get8Bit(value, &result->ao_s8);
 		break;
 
 	case 2:
-		error = DeeObject_GetInt16(value, &result->ao_s16);
+		error = DeeObject_Get16Bit(value, &result->ao_s16);
 		break;
 
 	case 4:
-		error = DeeObject_GetInt32(value, &result->ao_s32);
+		error = DeeObject_Get32Bit(value, &result->ao_s32);
 		break;
 
 	case 8:
-		error = DeeObject_GetInt64(value, &result->ao_s64);
+		error = DeeObject_Get64Bit(value, &result->ao_s64);
 		break;
 
 	default:

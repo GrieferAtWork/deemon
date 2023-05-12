@@ -2107,7 +2107,7 @@ type_inherit_int(DeeTypeObject *__restrict self) {
 
 
 
-DEFINE_OPERATOR(int, GetInt32,
+DEFINE_OPERATOR(int, Get32Bit,
                 (DeeObject *RESTRICT_IF_NOTYPE self,
                  int32_t *__restrict result)) {
 	int error;
@@ -2151,7 +2151,7 @@ DEFINE_OPERATOR(int, GetInt32,
 				intob = DeeType_INVOKE_INT(tp_self, self);
 				if unlikely(!intob)
 					goto err;
-				error = DeeInt_As32(intob, result);
+				error = DeeInt_Get32Bit(intob, result);
 				Dee_Decref(intob);
 				return error;
 			}
@@ -2178,7 +2178,7 @@ err:
 	return -1;
 }
 
-DEFINE_OPERATOR(int, GetInt64,
+DEFINE_OPERATOR(int, Get64Bit,
                 (DeeObject *RESTRICT_IF_NOTYPE self,
                  int64_t *__restrict result)) {
 	int error;
@@ -2205,7 +2205,7 @@ DEFINE_OPERATOR(int, GetInt64,
 				intob = DeeType_INVOKE_INT(tp_self, self);
 				if unlikely(!intob)
 					goto err;
-				error = DeeInt_As64(intob, result);
+				error = DeeInt_Get64Bit(intob, result);
 				Dee_Decref(intob);
 				return error;
 			}
@@ -2233,13 +2233,13 @@ err:
 }
 
 #ifndef DEFINE_TYPED_OPERATORS
-DEFINE_OPERATOR(int, GetInt128,
+DEFINE_OPERATOR(int, Get128Bit,
                 (DeeObject *RESTRICT_IF_NOTYPE self,
                  Dee_int128_t *__restrict result)) {
 	int error;
 	LOAD_TP_SELF;
 	if (tp_self == &DeeInt_Type)
-		return DeeInt_As128(self, result);
+		return DeeInt_Get128Bit(self, result);
 	do {
 		if (tp_self->tp_math) {
 			if (tp_self->tp_math->tp_int) {
@@ -2248,7 +2248,7 @@ DEFINE_OPERATOR(int, GetInt128,
 				intob = DeeType_INVOKE_INT(tp_self, self);
 				if unlikely(!intob)
 					goto err;
-				error = DeeInt_As128(intob, result);
+				error = DeeInt_Get128Bit(intob, result);
 				Dee_Decref(intob);
 				return error;
 			}
@@ -2349,7 +2349,7 @@ return_trunc64:
 				intob = DeeType_INVOKE_INT(tp_self, self);
 				if unlikely(!intob)
 					goto err;
-				error = DeeInt_AsU32(intob, result);
+				error = DeeInt_AsUInt32(intob, result);
 				Dee_Decref(intob);
 				return error;
 			}
@@ -2423,7 +2423,7 @@ return_trunc64:
 				intob = DeeType_INVOKE_INT(tp_self, self);
 				if unlikely(!intob)
 					goto err;
-				error = DeeInt_AsS32(intob, result);
+				error = DeeInt_AsInt32(intob, result);
 				Dee_Decref(intob);
 				return error;
 			}
@@ -2491,7 +2491,7 @@ neg_overflow:
 				intob = DeeType_INVOKE_INT(tp_self, self);
 				if unlikely(!intob)
 					goto err;
-				error = DeeInt_AsU64(intob, result);
+				error = DeeInt_AsUInt64(intob, result);
 				Dee_Decref(intob);
 				return error;
 			}
@@ -2552,7 +2552,7 @@ PUBLIC WUNUSED ATTR_OUT(2) NONNULL((1)) int
 				intob = DeeType_INVOKE_INT(tp_self, self);
 				if unlikely(!intob)
 					goto err;
-				error = DeeInt_AsS64(intob, result);
+				error = DeeInt_AsInt64(intob, result);
 				Dee_Decref(intob);
 				return error;
 			}
@@ -2578,7 +2578,7 @@ err:
 PUBLIC WUNUSED ATTR_OUT(2) NONNULL((1)) int
 (DCALL DeeObject_AsInt128)(DeeObject *__restrict self,
                            Dee_int128_t *__restrict result) {
-	int error = DeeObject_GetInt128(self, result);
+	int error = DeeObject_Get128Bit(self, result);
 	if (error == INT_UNSIGNED) {
 		if (__hybrid_int128_isneg(*result))
 			return err_integer_overflow(self, 128, true);
@@ -2599,7 +2599,7 @@ PUBLIC WUNUSED ATTR_OUT(2) NONNULL((1)) int
 PUBLIC WUNUSED ATTR_OUT(2) NONNULL((1)) int
 (DCALL DeeObject_AsUInt128)(DeeObject *__restrict self,
                             Dee_uint128_t *__restrict result) {
-	int error = DeeObject_GetInt128(self, (Dee_int128_t *)result);
+	int error = DeeObject_Get128Bit(self, (Dee_int128_t *)result);
 	if (error == INT_SIGNED) {
 		if (__hybrid_int128_isneg(*(Dee_int128_t *)result))
 			return err_integer_overflow(self, 128, false);
@@ -2654,7 +2654,7 @@ DEFINE_OPERATOR(int, AsDouble,
 				temp_int = DeeType_INVOKE_INT(tp_self, self);
 				if unlikely(!temp_int)
 					goto err;
-				error = DeeInt_As64(temp_int, &res.res64);
+				error = DeeInt_Get64Bit(temp_int, &res.res64);
 				Dee_Decref(temp_int);
 				if (error == INT_UNSIGNED) {
 					*result = (double)(uint64_t)res.res64;
@@ -2680,10 +2680,10 @@ type_get_int_caster(DeeTypeObject *__restrict start) {
 }
 
 PUBLIC WUNUSED ATTR_OUT(2) NONNULL((1)) int DCALL
-DeeObject_GetInt8(DeeObject *__restrict self,
+DeeObject_Get8Bit(DeeObject *__restrict self,
                   int8_t *__restrict result) {
 	int32_t val32;
-	int error = DeeObject_GetInt32(self, &val32);
+	int error = DeeObject_Get32Bit(self, &val32);
 	if unlikely(error < 0)
 		goto done;
 	if (error == INT_SIGNED) {
@@ -2710,10 +2710,10 @@ done:
 }
 
 PUBLIC WUNUSED ATTR_OUT(2) NONNULL((1)) int DCALL
-DeeObject_GetInt16(DeeObject *__restrict self,
+DeeObject_Get16Bit(DeeObject *__restrict self,
                    int16_t *__restrict result) {
 	int32_t val32;
-	int error = DeeObject_GetInt32(self, &val32);
+	int error = DeeObject_Get32Bit(self, &val32);
 	if unlikely(error < 0)
 		goto done;
 	if (error == INT_SIGNED) {

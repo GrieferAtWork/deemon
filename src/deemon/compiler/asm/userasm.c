@@ -1737,7 +1737,7 @@ write_regular_local:
 			goto next_option;
 		if (!DeeInt_Check(self->a_constexpr))
 			goto next_option;
-		if (!DeeInt_TryAsU32(self->a_constexpr, &value))
+		if (!DeeInt_TryAsUInt32(self->a_constexpr, &value))
 			goto next_option;
 		if (value != 0)
 			goto next_option;
@@ -1886,7 +1886,7 @@ write_regular_local:
 			goto next_option;
 		if (!DeeInt_Check(self->a_constexpr))
 			goto next_option;
-		if (!DeeInt_TryAsS64(self->a_constexpr, &intval))
+		if (!DeeInt_TryAsInt64(self->a_constexpr, &intval))
 			goto next_option;
 		if (intval < intmin || intval > intmax)
 			goto next_option;
@@ -1915,7 +1915,7 @@ write_regular_local:
 			goto next_option;
 		if (!DeeInt_Check(self->a_constexpr))
 			goto next_option;
-		if (!DeeInt_TryAsU64(self->a_constexpr, &intval))
+		if (!DeeInt_TryAsUInt64(self->a_constexpr, &intval))
 			goto next_option;
 		if (intval > intmax)
 			goto next_option;

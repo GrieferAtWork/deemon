@@ -141,7 +141,7 @@ try_get_integer_as_u16(DeeObject *__restrict self,
                        uint16_t *__restrict result) {
 	if (DeeInt_Check(self)) {
 		uint32_t val;
-		if (!DeeInt_TryAsU32(self, &val))
+		if (!DeeInt_TryAsUInt32(self, &val))
 			goto nope;
 		if (val > UINT16_MAX)
 			goto nope;
