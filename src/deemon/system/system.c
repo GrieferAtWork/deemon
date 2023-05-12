@@ -133,16 +133,20 @@ DeeSystem_MakeAbsolute(/*String*/ DeeObject *__restrict filename) {
 #ifdef CONFIG_HOST_WINDOWS
 	/* Don't modify special filenames such as `CON' or `NUL' */
 	switch ((size_t)(end - begin)) {
-#define eqnocase(a, b) ((a) == (b) || (a) == ((b) + ('A' - 'a')))
+#ifdef DEE_SYSTEM_FS_ICASE
+#define eqfscase(a, b) ((a) == (b) || (a) == ((b) - ('A' - 'a')))
+#else /* DEE_SYSTEM_FS_ICASE */
+#define eqfscase(a, b) ((a) == (b))
+#endif /* !DEE_SYSTEM_FS_ICASE */
 
 	case 3:
-		if (eqnocase(begin[0], 'n') && eqnocase(begin[1], 'u') && eqnocase(begin[2], 'l'))
+		if (eqfscase(begin[0], 'N') && eqfscase(begin[1], 'U') && eqfscase(begin[2], 'L'))
 			goto return_unmodified; /* NUL */
-		if (eqnocase(begin[0], 'c') && eqnocase(begin[1], 'o') && eqnocase(begin[2], 'n'))
+		if (eqfscase(begin[0], 'C') && eqfscase(begin[1], 'O') && eqfscase(begin[2], 'N'))
 			goto return_unmodified; /* CON */
-		if (eqnocase(begin[0], 'p') && eqnocase(begin[1], 'r') && eqnocase(begin[2], 'n'))
+		if (eqfscase(begin[0], 'P') && eqfscase(begin[1], 'R') && eqfscase(begin[2], 'N'))
 			goto return_unmodified; /* PRN */
-		if (eqnocase(begin[0], 'a') && eqnocase(begin[1], 'u') && eqnocase(begin[2], 'x'))
+		if (eqfscase(begin[0], 'A') && eqfscase(begin[1], 'U') && eqfscase(begin[2], 'X'))
 			goto return_unmodified; /* AUX */
 		break;
 
@@ -150,41 +154,41 @@ DeeSystem_MakeAbsolute(/*String*/ DeeObject *__restrict filename) {
 		/* COM1, COM2, COM3, COM4, COM5, COM6, COM7, COM8, COM9,
 		 * LPT1, LPT2, LPT3, LPT4, LPT5, LPT6, LPT7, LPT8, LPT9 */
 		if (begin[3] >= '1' && begin[3] <= '9' &&
-		    ((eqnocase(begin[0], 'c') && eqnocase(begin[1], 'o') && eqnocase(begin[1], 'm')) ||
-		     (eqnocase(begin[0], 'l') && eqnocase(begin[1], 'p') && eqnocase(begin[1], 't'))))
+		    ((eqfscase(begin[0], 'C') && eqfscase(begin[1], 'O') && eqfscase(begin[1], 'M')) ||
+		     (eqfscase(begin[0], 'L') && eqfscase(begin[1], 'P') && eqfscase(begin[1], 'T'))))
 			goto return_unmodified;
 		break;
 
 	case 6:
-		if (eqnocase(begin[3], 'i') && eqnocase(begin[4], 'n') && begin[5] == '$') {
-			if (eqnocase(begin[0], 'c') && eqnocase(begin[1], 'o') && eqnocase(begin[2], 'n'))
+		if (eqfscase(begin[3], 'I') && eqfscase(begin[4], 'N') && begin[5] == '$') {
+			if (eqfscase(begin[0], 'C') && eqfscase(begin[1], 'O') && eqfscase(begin[2], 'N'))
 				goto return_unmodified; /* CONIN$ */
 #ifdef CONFIG_WANT_WINDOWS_STD_FILES
-			if (eqnocase(begin[0], 's') && eqnocase(begin[1], 't') && eqnocase(begin[2], 'd'))
+			if (eqfscase(begin[0], 'S') && eqfscase(begin[1], 'T') && eqfscase(begin[2], 'D'))
 				goto return_unmodified; /* STDIN$ */
 #endif /* CONFIG_WANT_WINDOWS_STD_FILES */
 		}
 		break;
 
 	case 7:
-		if (eqnocase(begin[3], 'o') && eqnocase(begin[4], 'u') &&
-		    eqnocase(begin[5], 't') && begin[6] == '$') {
-			if (eqnocase(begin[0], 'c') && eqnocase(begin[1], 'o') && eqnocase(begin[2], 'n'))
+		if (eqfscase(begin[3], 'O') && eqfscase(begin[4], 'U') &&
+		    eqfscase(begin[5], 'T') && begin[6] == '$') {
+			if (eqfscase(begin[0], 'C') && eqfscase(begin[1], 'O') && eqfscase(begin[2], 'N'))
 				goto return_unmodified; /* CONOUT$ */
 #ifdef CONFIG_WANT_WINDOWS_STD_FILES
-			if (eqnocase(begin[0], 's') && eqnocase(begin[1], 't') && eqnocase(begin[2], 'd'))
+			if (eqfscase(begin[0], 'S') && eqfscase(begin[1], 'T') && eqfscase(begin[2], 'D'))
 				goto return_unmodified; /* STDOUT$ */
 #endif /* CONFIG_WANT_WINDOWS_STD_FILES */
 		}
 #ifdef CONFIG_WANT_WINDOWS_STD_FILES
-		if (eqnocase(begin[0], 's') && eqnocase(begin[1], 't') && eqnocase(begin[2], 'd') &&
-		    eqnocase(begin[3], 'e') && eqnocase(begin[4], 'r') && eqnocase(begin[5], 'r') &&
+		if (eqfscase(begin[0], 'S') && eqfscase(begin[1], 'T') && eqfscase(begin[2], 'D') &&
+		    eqfscase(begin[3], 'E') && eqfscase(begin[4], 'R') && eqfscase(begin[5], 'R') &&
 		    begin[6] == '$')
 			goto return_unmodified; /* STDERR$ */
 #endif /* CONFIG_WANT_WINDOWS_STD_FILES */
 		break;
 
-#undef eqnocase
+#undef eqfscase
 	default:
 		break;
 	}

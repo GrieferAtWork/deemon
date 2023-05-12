@@ -295,8 +295,13 @@ posix_path_abspath_f(DeeObject *__restrict path, DeeObject *pwd) {
 	/* Quick check: If the given path already is absolute,
 	 *              then we've got nothing to do. */
 	if (DeeString_IsAbsPath(path)) {
-		if (!pwd)
+		if (!pwd) {
+#ifdef CONFIG_HOST_WINDOWS
+return_unmodified:
+#endif /* CONFIG_HOST_WINDOWS */
 			return_reference_(path);
+		}
+
 		/* If a custom PWD is given, then we have to do this double-callback. */
 		path = posix_path_relpath_f(path, NULL);
 		if unlikely(!path)
@@ -306,6 +311,76 @@ posix_path_abspath_f(DeeObject *__restrict path, DeeObject *pwd) {
 		Dee_Decref(path);
 		return result;
 	}
+
+#ifdef CONFIG_HOST_WINDOWS
+	/* Don't modify special filenames such as `CON' or `NUL' */
+	{
+		char const *path_str;
+		size_t path_len;
+		path_str = DeeString_STR(path);
+		path_len = DeeString_SIZE(path);
+		switch (path_len) {
+#ifdef DEE_SYSTEM_FS_ICASE
+#define eqfscase(a, b) ((a) == (b) || (a) == ((b) - ('A' - 'a')))
+#else /* DEE_SYSTEM_FS_ICASE */
+#define eqfscase(a, b) ((a) == (b))
+#endif /* !DEE_SYSTEM_FS_ICASE */
+	
+		case 3:
+			if (eqfscase(path_str[0], 'N') && eqfscase(path_str[1], 'U') && eqfscase(path_str[2], 'L'))
+				goto return_unmodified; /* NUL */
+			if (eqfscase(path_str[0], 'C') && eqfscase(path_str[1], 'O') && eqfscase(path_str[2], 'N'))
+				goto return_unmodified; /* CON */
+			if (eqfscase(path_str[0], 'P') && eqfscase(path_str[1], 'R') && eqfscase(path_str[2], 'N'))
+				goto return_unmodified; /* PRN */
+			if (eqfscase(path_str[0], 'A') && eqfscase(path_str[1], 'U') && eqfscase(path_str[2], 'X'))
+				goto return_unmodified; /* AUX */
+			break;
+	
+		case 4:
+			/* COM1, COM2, COM3, COM4, COM5, COM6, COM7, COM8, COM9,
+			 * LPT1, LPT2, LPT3, LPT4, LPT5, LPT6, LPT7, LPT8, LPT9 */
+			if (path_str[3] >= '1' && path_str[3] <= '9' &&
+			    ((eqfscase(path_str[0], 'C') && eqfscase(path_str[1], 'O') && eqfscase(path_str[1], 'M')) ||
+			     (eqfscase(path_str[0], 'L') && eqfscase(path_str[1], 'P') && eqfscase(path_str[1], 'T'))))
+				goto return_unmodified;
+			break;
+	
+		case 6:
+			if (eqfscase(path_str[3], 'I') && eqfscase(path_str[4], 'N') && path_str[5] == '$') {
+				if (eqfscase(path_str[0], 'C') && eqfscase(path_str[1], 'O') && eqfscase(path_str[2], 'N'))
+					goto return_unmodified; /* CONIN$ */
+#ifdef CONFIG_WANT_WINDOWS_STD_FILES
+				if (eqfscase(path_str[0], 'S') && eqfscase(path_str[1], 'T') && eqfscase(path_str[2], 'D'))
+					goto return_unmodified; /* STDIN$ */
+#endif /* CONFIG_WANT_WINDOWS_STD_FILES */
+			}
+			break;
+	
+		case 7:
+			if (eqfscase(path_str[3], 'O') && eqfscase(path_str[4], 'U') &&
+			    eqfscase(path_str[5], 'T') && path_str[6] == '$') {
+				if (eqfscase(path_str[0], 'C') && eqfscase(path_str[1], 'O') && eqfscase(path_str[2], 'N'))
+					goto return_unmodified; /* CONOUT$ */
+#ifdef CONFIG_WANT_WINDOWS_STD_FILES
+				if (eqfscase(path_str[0], 'S') && eqfscase(path_str[1], 'T') && eqfscase(path_str[2], 'D'))
+					goto return_unmodified; /* STDOUT$ */
+#endif /* CONFIG_WANT_WINDOWS_STD_FILES */
+			}
+#ifdef CONFIG_WANT_WINDOWS_STD_FILES
+			if (eqfscase(path_str[0], 'S') && eqfscase(path_str[1], 'T') && eqfscase(path_str[2], 'D') &&
+			    eqfscase(path_str[3], 'E') && eqfscase(path_str[4], 'R') && eqfscase(path_str[5], 'R') &&
+			    path_str[6] == '$')
+				goto return_unmodified; /* STDERR$ */
+#endif /* CONFIG_WANT_WINDOWS_STD_FILES */
+			break;
+	
+#undef eqfscase
+		default:
+			break;
+		}
+	}
+#endif /* CONFIG_HOST_WINDOWS */
 
 	/* If the given `pwd' isn't absolute, make it using the real PWD. */
 	if (pwd && !DeeString_IsAbsPath(pwd)) {
