@@ -26,7 +26,7 @@
 #include <deemon/error.h>
 #include <deemon/object.h>
 #include <deemon/string.h>
-#include <deemon/system-features.h> /* memrchr(), qsort(), bzero(), ... */
+#include <deemon/system-features.h> /* qsort(), bzero(), ... */
 #include <deemon/system.h>          /* DeeSystem_BaseName() */
 #include <deemon/util/bytewriter.h>
 
@@ -34,12 +34,6 @@
 #include <hybrid/byteswap.h>
 
 DECL_BEGIN
-
-#ifndef CONFIG_HAVE_memrchr
-#define CONFIG_HAVE_memrchr
-#define memrchr dee_memrchr
-DeeSystem_DEFINE_memrchr(dee_memrchr)
-#endif /* !CONFIG_HAVE_memrchr */
 
 #ifndef CONFIG_HAVE_qsort
 #define CONFIG_HAVE_qsort

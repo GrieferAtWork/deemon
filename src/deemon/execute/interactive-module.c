@@ -52,15 +52,6 @@ DECL_BEGIN
 #define DBG_memset(dst, byte, n_bytes) (void)0
 #endif /* NDEBUG */
 
-#ifndef DeeSystem_ALTSEP
-#ifndef CONFIG_HAVE_memrchr
-#define CONFIG_HAVE_memrchr
-#define memrchr dee_memrchr
-DeeSystem_DEFINE_memrchr(dee_memrchr)
-#endif /* !CONFIG_HAVE_memrchr */
-#endif /* !DeeSystem_ALTSEP */
-
-
 
 DECLARE_STRUCT_CACHE(sym, struct symbol)
 #ifndef NDEBUG
@@ -1099,20 +1090,16 @@ imod_init(InteractiveModule *__restrict self,
 	/* Determine the module's name. */
 	if (!module_name) {
 		if (source_pathname) {
-			char *name  = DeeString_STR(source_pathname);
-			size_t size = DeeString_SIZE(source_pathname);
-			char *name_end, *name_start;
-			name_end = name + size;
-#ifdef DeeSystem_ALTSEP
-			name_start = name_end;
-			while (name_start > name && !DeeSystem_IsSep(name_start[-1]))
-				--name_start;
-#else /* DeeSystem_ALTSEP */
-			name_start = (char *)memrchr(name, DeeSystem_SEP, size);
-			if (!name_start)
-				name_start = name - 1;
-			++name_start;
-#endif /* !DeeSystem_ALTSEP */
+			char const *name;
+			size_t size;
+			char const *name_end, *name_start;
+			name = DeeString_AsUtf8(source_pathname);
+			if unlikely(!name)
+				goto err_options;
+			size       = WSTR_LENGTH(name);
+			name_end   = name + size;
+			name_start = DeeSystem_BaseName(name, size);
+
 			/* Get rid of a file extension in the module name. */
 			while (name_end > name_start && name_end[-1] != '.')
 				--name_end;
@@ -1120,7 +1107,8 @@ imod_init(InteractiveModule *__restrict self,
 				--name_end;
 			if (name_end == name_start)
 				name_end = name + size;
-			module_name = DeeString_NewSized(name_start, (size_t)(name_end - name_start));
+			module_name = DeeString_NewUtf8(name_start, (size_t)(name_end - name_start),
+			                                STRING_ERROR_FIGNORE);
 			if unlikely(!module_name)
 				goto err_options;
 			self->im_module.mo_name = (DREF struct string_object *)module_name; /* Inherit reference */
@@ -1132,6 +1120,7 @@ imod_init(InteractiveModule *__restrict self,
 		Dee_Incref(module_name);
 		self->im_module.mo_name = (DREF struct string_object *)module_name;
 	}
+
 	/* Fill in the module's path name. */
 	ASSERT_OBJECT_TYPE_EXACT_OPT(source_pathname, &DeeString_Type);
 	Dee_XIncref(source_pathname);

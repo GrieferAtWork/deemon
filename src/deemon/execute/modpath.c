@@ -116,12 +116,6 @@ DeeSystem_DEFINE_memcasecmp(dee_memcasecmp)
 #endif /* !CONFIG_HAVE_memcasecmp */
 #endif /* DEE_SYSTEM_FS_ICASE */
 
-#ifndef CONFIG_HAVE_memrchr
-#define CONFIG_HAVE_memrchr
-#define memrchr dee_memrchr
-DeeSystem_DEFINE_memrchr(dee_memrchr)
-#endif /* !CONFIG_HAVE_memrchr */
-
 
 #ifdef DEE_SYSTEM_FS_ICASE
 #define fs_memcmp                        memcasecmp

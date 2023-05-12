@@ -34,7 +34,7 @@
 #include <deemon/module.h>
 #include <deemon/object.h>
 #include <deemon/string.h>
-#include <deemon/system-features.h> /* memrchr(), memmem(), bzero(), ... */
+#include <deemon/system-features.h> /* memmem(), bzero(), ... */
 #include <deemon/system.h>          /* DeeSystem_SEP, DeeSystem_Unlink() */
 
 #include <hybrid/byteorder.h>
@@ -43,12 +43,6 @@
 #include <hybrid/wordbits.h>
 
 DECL_BEGIN
-
-#ifndef CONFIG_HAVE_memrchr
-#define CONFIG_HAVE_memrchr
-#define memrchr dee_memrchr
-DeeSystem_DEFINE_memrchr(dee_memrchr)
-#endif /* !CONFIG_HAVE_memrchr */
 
 #ifndef CONFIG_HAVE_memmem
 #define memmem dee_memmem
@@ -730,13 +724,9 @@ INTERN WUNUSED NONNULL((1)) int
 			goto err;
 		{
 			size_t pathlen;
-			char *dst, *dec_filestart;
-			dec_filestart = (char *)memrchr(dec_filestr, DeeSystem_SEP, dec_filelen);
-			if (dec_filestart) {
-				++dec_filestart;
-			} else {
-				dec_filestart = dec_filestr;
-			}
+			char *dst;
+			char const *dec_filestart;
+			dec_filestart = DeeSystem_BaseName(dec_filestr, dec_filelen);
 			pathlen = (size_t)(dec_filestart - dec_filestr);
 			dst     = DeeString_STR(dec_filename);
 			dst     = (char *)mempcpyc(dst, dec_filestr, pathlen, sizeof(char));
