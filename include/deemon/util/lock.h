@@ -89,114 +89,105 @@ typedef char Dee_atomic_rwlock_t;
 #define _Dee_atomic_rwlock_end_ex_NDEBUG(self)     1
 
 typedef char Dee_shared_lock_t;
-#define DEE_SHARED_LOCK_INIT                                           0
-#define DEE_SHARED_LOCK_INIT_ACQUIRED                                  0
-#define Dee_shared_lock_cinit(self)                                    (void)0
-#define Dee_shared_lock_init(self)                                     (void)0
-#define Dee_shared_lock_cinit_acquired(self)                           (void)0
-#define Dee_shared_lock_init_acquired(self)                            (void)0
-#define Dee_shared_lock_available(self)                                1
-#define Dee_shared_lock_acquired(self)                                 1
-#define Dee_shared_lock_tryacquire(self)                               1
-#define Dee_shared_lock_release(self)                                  (void)0
-#define _Dee_shared_lock_release_NDEBUG(self)                          (void)0
-#define Dee_shared_lock_acquire(self)                                  0
-#define Dee_shared_lock_acquire_noint(self)                            (void)0
-#define Dee_shared_lock_waitfor(self)                                  0
-#define Dee_shared_lock_waitfor_noint(self)                            (void)0
-#define Dee_shared_lock_acquire_timed(self, timeout_nanoseconds)       0
-#define Dee_shared_lock_acquire_noint_timed(self, timeout_nanoseconds) 0
-#define Dee_shared_lock_waitfor_timed(self, timeout_nanoseconds)       0
-#define Dee_shared_lock_waitfor_noint_timed(self, timeout_nanoseconds) 0
+#define DEE_SHARED_LOCK_INIT                                     0
+#define DEE_SHARED_LOCK_INIT_ACQUIRED                            0
+#define Dee_shared_lock_cinit(self)                              (void)0
+#define Dee_shared_lock_init(self)                               (void)0
+#define Dee_shared_lock_cinit_acquired(self)                     (void)0
+#define Dee_shared_lock_init_acquired(self)                      (void)0
+#define Dee_shared_lock_available(self)                          1
+#define Dee_shared_lock_acquired(self)                           1
+#define Dee_shared_lock_tryacquire(self)                         1
+#define Dee_shared_lock_release(self)                            (void)0
+#define _Dee_shared_lock_release_NDEBUG(self)                    (void)0
+#define Dee_shared_lock_acquire(self)                            0
+#define Dee_shared_lock_acquire_noint(self)                      (void)0
+#define Dee_shared_lock_waitfor(self)                            0
+#define Dee_shared_lock_waitfor_noint(self)                      (void)0
+#define Dee_shared_lock_acquire_timed(self, timeout_nanoseconds) 0
+#define Dee_shared_lock_waitfor_timed(self, timeout_nanoseconds) 0
 
 typedef char Dee_shared_rwlock_t;
-#define DEE_SHARED_RWLOCK_MAX_READERS                                      1
-#define DEE_SHARED_RWLOCK_INIT                                             0
-#define DEE_SHARED_RWLOCK_INIT_READ(n)                                     0
-#define DEE_SHARED_RWLOCK_INIT_WRITE                                       0
-#define Dee_shared_rwlock_init(self)                                       (void)0
-#define Dee_shared_rwlock_init_read(self, n)                               (void)0
-#define Dee_shared_rwlock_init_write(self)                                 (void)0
-#define Dee_shared_rwlock_cinit(self)                                      (void)0
-#define Dee_shared_rwlock_cinit_read(self)                                 (void)0
-#define Dee_shared_rwlock_cinit_write(self)                                (void)0
-#define Dee_shared_rwlock_reading(self)                                    1
-#define Dee_shared_rwlock_writing(self)                                    1
-#define Dee_shared_rwlock_canread(self)                                    1
-#define Dee_shared_rwlock_canwrite(self)                                   1
-#define Dee_shared_rwlock_canendread(self)                                 1
-#define Dee_shared_rwlock_canendwrite(self)                                1
-#define Dee_shared_rwlock_canend(self)                                     1
-#define Dee_shared_rwlock_tryupgrade(self)                                 1
-#define Dee_shared_rwlock_trywrite(self)                                   1
-#define Dee_shared_rwlock_tryread(self)                                    1
-#define _Dee_shared_rwlock_downgrade_NDEBUG(self)                          (void)0
-#define Dee_shared_rwlock_downgrade(self)                                  (void)0
-#define Dee_shared_rwlock_upgrade(self)                                    1
-#define Dee_shared_rwlock_upgrade_noint(self)                              1
-#define _Dee_shared_rwlock_upgrade_NDEBUG(self)                            1
-#define _Dee_shared_rwlock_upgrade_noint_NDEBUG(self)                      1
-#define Dee_shared_rwlock_endread(self)                                    (void)0
-#define Dee_shared_rwlock_endwrite(self)                                   (void)0
-#define Dee_shared_rwlock_end(self)                                        (void)0
-#define _Dee_shared_rwlock_endread_NDEBUG(self)                            (void)0
-#define _Dee_shared_rwlock_endwrite_NDEBUG(self)                           (void)0
-#define _Dee_shared_rwlock_end_NDEBUG(self)                                (void)0
-#define Dee_shared_rwlock_endread_ex(self)                                 1
-#define Dee_shared_rwlock_end_ex(self)                                     1
-#define _Dee_shared_rwlock_endread_ex_NDEBUG(self)                         1
-#define _Dee_shared_rwlock_end_ex_NDEBUG(self)                             1
-#define Dee_shared_rwlock_read(self)                                       0
-#define Dee_shared_rwlock_read_noint(self)                                 (void)0
-#define Dee_shared_rwlock_write(self)                                      0
-#define Dee_shared_rwlock_write_noint(self)                                (void)0
-#define Dee_shared_rwlock_waitread(self)                                   0
-#define Dee_shared_rwlock_waitread_noint(self)                             (void)0
-#define Dee_shared_rwlock_waitwrite(self)                                  0
-#define Dee_shared_rwlock_waitwrite_noint(self)                            (void)0
-#define Dee_shared_rwlock_read_timed(self, timeout_nanoseconds)            0
-#define Dee_shared_rwlock_read_noint_timed(self, timeout_nanoseconds)      0
-#define Dee_shared_rwlock_write_timed(self, timeout_nanoseconds)           0
-#define Dee_shared_rwlock_write_noint_timed(self, timeout_nanoseconds)     0
-#define Dee_shared_rwlock_waitread_timed(self, timeout_nanoseconds)        0
-#define Dee_shared_rwlock_waitread_noint_timed(self, timeout_nanoseconds)  0
-#define Dee_shared_rwlock_waitwrite_timed(self, timeout_nanoseconds)       0
-#define Dee_shared_rwlock_waitwrite_noint_timed(self, timeout_nanoseconds) 0
+#define DEE_SHARED_RWLOCK_MAX_READERS                                1
+#define DEE_SHARED_RWLOCK_INIT                                       0
+#define DEE_SHARED_RWLOCK_INIT_READ(n)                               0
+#define DEE_SHARED_RWLOCK_INIT_WRITE                                 0
+#define Dee_shared_rwlock_init(self)                                 (void)0
+#define Dee_shared_rwlock_init_read(self, n)                         (void)0
+#define Dee_shared_rwlock_init_write(self)                           (void)0
+#define Dee_shared_rwlock_cinit(self)                                (void)0
+#define Dee_shared_rwlock_cinit_read(self)                           (void)0
+#define Dee_shared_rwlock_cinit_write(self)                          (void)0
+#define Dee_shared_rwlock_reading(self)                              1
+#define Dee_shared_rwlock_writing(self)                              1
+#define Dee_shared_rwlock_canread(self)                              1
+#define Dee_shared_rwlock_canwrite(self)                             1
+#define Dee_shared_rwlock_canendread(self)                           1
+#define Dee_shared_rwlock_canendwrite(self)                          1
+#define Dee_shared_rwlock_canend(self)                               1
+#define Dee_shared_rwlock_tryupgrade(self)                           1
+#define Dee_shared_rwlock_trywrite(self)                             1
+#define Dee_shared_rwlock_tryread(self)                              1
+#define _Dee_shared_rwlock_downgrade_NDEBUG(self)                    (void)0
+#define Dee_shared_rwlock_downgrade(self)                            (void)0
+#define Dee_shared_rwlock_upgrade(self)                              1
+#define Dee_shared_rwlock_upgrade_noint(self)                        1
+#define _Dee_shared_rwlock_upgrade_NDEBUG(self)                      1
+#define _Dee_shared_rwlock_upgrade_noint_NDEBUG(self)                1
+#define Dee_shared_rwlock_endread(self)                              (void)0
+#define Dee_shared_rwlock_endwrite(self)                             (void)0
+#define Dee_shared_rwlock_end(self)                                  (void)0
+#define _Dee_shared_rwlock_endread_NDEBUG(self)                      (void)0
+#define _Dee_shared_rwlock_endwrite_NDEBUG(self)                     (void)0
+#define _Dee_shared_rwlock_end_NDEBUG(self)                          (void)0
+#define Dee_shared_rwlock_endread_ex(self)                           1
+#define Dee_shared_rwlock_end_ex(self)                               1
+#define _Dee_shared_rwlock_endread_ex_NDEBUG(self)                   1
+#define _Dee_shared_rwlock_end_ex_NDEBUG(self)                       1
+#define Dee_shared_rwlock_read(self)                                 0
+#define Dee_shared_rwlock_read_noint(self)                           (void)0
+#define Dee_shared_rwlock_write(self)                                0
+#define Dee_shared_rwlock_write_noint(self)                          (void)0
+#define Dee_shared_rwlock_waitread(self)                             0
+#define Dee_shared_rwlock_waitread_noint(self)                       (void)0
+#define Dee_shared_rwlock_waitwrite(self)                            0
+#define Dee_shared_rwlock_waitwrite_noint(self)                      (void)0
+#define Dee_shared_rwlock_read_timed(self, timeout_nanoseconds)      0
+#define Dee_shared_rwlock_write_timed(self, timeout_nanoseconds)     0
+#define Dee_shared_rwlock_waitread_timed(self, timeout_nanoseconds)  0
+#define Dee_shared_rwlock_waitwrite_timed(self, timeout_nanoseconds) 0
 
 typedef char Dee_semaphore_t;
-#define DEE_SEMAPHORE_INIT(n_tickets)                                0
-#define Dee_semaphore_init(self, n_tickets)                          (void)0
-#define Dee_semaphore_cinit(self, n_tickets)                         (void)0
-#define Dee_semaphore_haswaiting(self)                               0
-#define Dee_semaphore_hastickets(self)                               1
-#define Dee_semaphore_gettickets(self)                               1
-#define Dee_semaphore_release(self, count)                           (void)0
-#define Dee_semaphore_tryacquire(self)                               1
-#define Dee_semaphore_waitfor(self)                                  0
-#define Dee_semaphore_waitfor_timed(self, timeout_nanoseconds)       0
-#define Dee_semaphore_acquire(self)                                  0
-#define Dee_semaphore_acquire_timed(self, timeout_nanoseconds)       0
-#define Dee_semaphore_waitfor_noint(self)                            (void)0
-#define Dee_semaphore_waitfor_noint_timed(self, timeout_nanoseconds) 0
-#define Dee_semaphore_acquire_noint(self)                            (void)0
-#define Dee_semaphore_acquire_noint_timed(self, timeout_nanoseconds) 0
+#define DEE_SEMAPHORE_INIT(n_tickets)                          0
+#define Dee_semaphore_init(self, n_tickets)                    (void)0
+#define Dee_semaphore_cinit(self, n_tickets)                   (void)0
+#define Dee_semaphore_haswaiting(self)                         0
+#define Dee_semaphore_hastickets(self)                         1
+#define Dee_semaphore_gettickets(self)                         1
+#define Dee_semaphore_release(self, count)                     (void)0
+#define Dee_semaphore_tryacquire(self)                         1
+#define Dee_semaphore_waitfor(self)                            0
+#define Dee_semaphore_waitfor_timed(self, timeout_nanoseconds) 0
+#define Dee_semaphore_acquire(self)                            0
+#define Dee_semaphore_acquire_timed(self, timeout_nanoseconds) 0
+#define Dee_semaphore_waitfor_noint(self)                      (void)0
+#define Dee_semaphore_acquire_noint(self)                      (void)0
 
 typedef char Dee_event_t;
-#define DEE_EVENT_INIT_SET                                       0
-#define DEE_EVENT_INIT                                           0
-#define Dee_event_init_set(self)                                 (void)0
-#define Dee_event_init(self)                                     (void)0
-#define Dee_event_cinit_set(self)                                (void)0
-#define Dee_event_cinit(self)                                    (void)0
-#define Dee_event_get(self)                                      1
-#define Dee_event_set(self)                                      (void)0
-#define Dee_event_clear(self)                                    (void)0
-#define Dee_event_set_ex(self)                                   1
-#define Dee_event_clear_ex(self)                                 1
-#define Dee_event_waitfor(self)                                  0
-#define Dee_event_waitfor_timed(self, timeout_nanoseconds)       0
-#define Dee_event_waitfor_noint(self)                            (void)0
-#define Dee_event_waitfor_noint_timed(self, timeout_nanoseconds) 0
+#define DEE_EVENT_INIT_SET                                 0
+#define DEE_EVENT_INIT                                     0
+#define Dee_event_init_set(self)                           (void)0
+#define Dee_event_init(self)                               (void)0
+#define Dee_event_cinit_set(self)                          (void)0
+#define Dee_event_cinit(self)                              (void)0
+#define Dee_event_get(self)                                1
+#define Dee_event_set(self)                                (void)0
+#define Dee_event_clear(self)                              (void)0
+#define Dee_event_set_ex(self)                             1
+#define Dee_event_clear_ex(self)                           1
+#define Dee_event_waitfor(self)                            0
+#define Dee_event_waitfor_timed(self, timeout_nanoseconds) 0
+#define Dee_event_waitfor_noint(self)                      (void)0
 
 #define DeeLock_Acquire2(lock_a, trylock_a, unlock_a, \
                          lock_b, trylock_b, unlock_b) \
@@ -336,13 +327,23 @@ DFUNDEF WUNUSED NONNULL((1)) int (DCALL Dee_shared_lock_waitfor_timed)(Dee_share
 #define Dee_shared_lock_waitfor(self) (Dee_shared_lock_available(self) ? 0 : (Dee_shared_lock_waitfor)(self))
 #endif /* !__NO_builtin_expect */
 
-/* Blocking acquire/wait-for a given lock. */
+/* Blocking acquire/wait-for a given lock. (does not check for interrupts) */
 LOCAL NONNULL((1)) void DCALL
 Dee_shared_lock_acquire_noint(Dee_shared_lock_t *__restrict self) {
 	unsigned int lockword;
 	while ((lockword = __hybrid_atomic_xch(&self->s_lock.a_lock, 1, __ATOMIC_ACQUIRE)) != 0) {
 		_Dee_shared_lock_waiting_start(self);
 		DeeFutex_WaitIntNoInt(&self->s_lock, lockword);
+		_Dee_shared_lock_waiting_end(self);
+	}
+}
+
+LOCAL NONNULL((1)) void DCALL
+Dee_shared_lock_waitfor_noint(Dee_shared_lock_t *__restrict self) {
+	unsigned int lockword;
+	while ((lockword = __hybrid_atomic_load(&self->s_lock.a_lock, __ATOMIC_ACQUIRE)) != 0) {
+		_Dee_shared_lock_waiting_start(self);
+		DeeFutex_WaitIntNoInt(&self->s_lock.a_lock, lockword);
 		_Dee_shared_lock_waiting_end(self);
 	}
 }
@@ -550,6 +551,33 @@ DFUNDEF WUNUSED NONNULL((1)) int
 (DCALL Dee_semaphore_acquire_timed)(Dee_semaphore_t *__restrict self,
                                     uint64_t timeout_nanoseconds);
 
+/* Blocking acquire a semaphore ticket, or wait for one
+ * to become available. (does not check for interrupts) */
+LOCAL NONNULL((1)) void DCALL
+Dee_semaphore_waitfor_noint(Dee_semaphore_t *__restrict self) {
+	while (!Dee_semaphore_hastickets(self)) {
+		_Dee_semaphore_waiting_start(self);
+		DeeFutex_WaitPtrNoInt(&self->se_tickets, 0);
+		_Dee_semaphore_waiting_end(self);
+	}
+}
+
+LOCAL NONNULL((1)) void DCALL
+Dee_semaphore_acquire_noint(Dee_semaphore_t *__restrict self) {
+	size_t temp;
+	do {
+again_read_tickets:
+		temp = __hybrid_atomic_load(&self->se_tickets, __ATOMIC_ACQUIRE);
+		if (temp == 0) {
+			_Dee_semaphore_waiting_start(self);
+			DeeFutex_WaitPtrNoInt(&self->se_tickets, 0);
+			_Dee_semaphore_waiting_end(self);
+			goto again_read_tickets;
+		}
+	} while (!__hybrid_atomic_cmpxch_weak(&self->se_tickets, temp, temp - 1,
+	                                      __ATOMIC_ACQUIRE, __ATOMIC_RELAXED));
+}
+
 
 
 
@@ -587,6 +615,18 @@ DFUNDEF WUNUSED NONNULL((1)) int
 DFUNDEF WUNUSED NONNULL((1)) int
 (DCALL Dee_event_waitfor_timed)(Dee_event_t *__restrict self,
                                 uint64_t timeout_nanoseconds);
+
+/* Blocking wait for an event to become set. (does not check for interrupts) */
+LOCAL NONNULL((1)) void DCALL
+Dee_event_waitfor_noint(Dee_event_t *__restrict self) {
+	if (Dee_event_get(self))
+		return;
+	__hybrid_atomic_cmpxch(&self->ev_state, 1, 2,
+	                       __ATOMIC_SEQ_CST, __ATOMIC_SEQ_CST);
+	do {
+		DeeFutex_WaitIntNoInt(&self->ev_state, 2);
+	} while (!Dee_event_get(self));
+}
 
 DECL_END
 
