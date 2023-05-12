@@ -512,8 +512,24 @@ posix_path_relpath_f(DeeObject *__restrict path, DeeObject *pwd) {
 	/* Quick check: If the given path isn't absolute,
 	 *              then we've got nothing to do. */
 	if (!DeeString_IsAbsPath(path)) {
-		if (!pwd)
-			return_reference_(path);
+		if (!pwd) {
+#ifdef DEE_SYSTEM_FS_DRIVES
+			/* If the given path is drive-relative, then we still want to
+			 * turn it into a normal (PWD-relative) path:
+			 * >> chdir(r"D:\path\to\my\folder");
+			 * >> print relpath(r"\foo.txt"); // "..\..\..\..\foo.txt"
+			 *
+			 * Also: without this check, we'd have different behavior for:
+			 * >> print relpath(r"\foo.txt");      // "\foo.txt"
+			 * >> print relpath(r"\foo.txt", "."); // "..\..\..\..\foo.txt"
+			 */
+			if (!DeeSystem_IsSep(DeeString_STR(path)[0]))
+#endif /* DEE_SYSTEM_FS_DRIVES */
+			{
+				return_reference_(path);
+			}
+		}
+
 		/* If a custom PWD is given, then we have to do this double-callback. */
 		path = posix_path_abspath_f(path, NULL);
 		if unlikely(!path)
