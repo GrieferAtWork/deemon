@@ -1939,14 +1939,14 @@ DeeNTSystem_CreateFile(/*String*/ DeeObject *__restrict lpFileName,
 	LPWSTR lpwName;
 	ASSERT_OBJECT_TYPE_EXACT(lpFileName, &DeeString_Type);
 #ifdef CONFIG_WANT_WINDOWS_STD_FILES
-#define eqnocase(a, b_lower) ((a) == (b_lower) || (a) == ((b_lower) + ('A' - 'a')))
+#define eqnocase(a, b_upper) ((a) == (b_upper) || (a) == ((b_upper) - ('A' - 'a')))
 	if (DeeString_SIZE(lpFileName) >= 6 &&
-	    eqnocase(DeeString_STR(lpFileName)[0], 's') &&
-	    eqnocase(DeeString_STR(lpFileName)[1], 't') &&
-	    eqnocase(DeeString_STR(lpFileName)[2], 'd')) {
+	    eqnocase(DeeString_STR(lpFileName)[0], 'S') &&
+	    eqnocase(DeeString_STR(lpFileName)[1], 'T') &&
+	    eqnocase(DeeString_STR(lpFileName)[2], 'D')) {
 		if (DeeString_SIZE(lpFileName) == 6 &&
-		    eqnocase(DeeString_STR(lpFileName)[3], 'i') &&
-		    eqnocase(DeeString_STR(lpFileName)[4], 'n') &&
+		    eqnocase(DeeString_STR(lpFileName)[3], 'I') &&
+		    eqnocase(DeeString_STR(lpFileName)[4], 'N') &&
 		    DeeString_STR(lpFileName)[5] == '$') {
 			hResult = GetStdHandle(STD_INPUT_HANDLE);
 do_copy_and_return_hResult:
@@ -1960,15 +1960,15 @@ do_copy_and_return_hResult:
 		}
 		if (DeeString_SIZE(lpFileName) == 7 &&
 		    DeeString_STR(lpFileName)[6] == '$') {
-			if (eqnocase(DeeString_STR(lpFileName)[3], 'o') &&
-			    eqnocase(DeeString_STR(lpFileName)[4], 'u') &&
-			    eqnocase(DeeString_STR(lpFileName)[5], 't')) {
+			if (eqnocase(DeeString_STR(lpFileName)[3], 'O') &&
+			    eqnocase(DeeString_STR(lpFileName)[4], 'U') &&
+			    eqnocase(DeeString_STR(lpFileName)[5], 'T')) {
 				hResult = GetStdHandle(STD_OUTPUT_HANDLE);
 				goto do_copy_and_return_hResult;
 			}
-			if (eqnocase(DeeString_STR(lpFileName)[3], 'e') &&
-			    eqnocase(DeeString_STR(lpFileName)[4], 'r') &&
-			    eqnocase(DeeString_STR(lpFileName)[5], 'r')) {
+			if (eqnocase(DeeString_STR(lpFileName)[3], 'E') &&
+			    eqnocase(DeeString_STR(lpFileName)[4], 'R') &&
+			    eqnocase(DeeString_STR(lpFileName)[5], 'R')) {
 				hResult = GetStdHandle(STD_ERROR_HANDLE);
 				goto do_copy_and_return_hResult;
 			}
@@ -2063,10 +2063,14 @@ DeeNTSystem_CreateFileNoATime(/*String*/ DeeObject *__restrict lpFileName,
 		DBG_ALIGNMENT_DISABLE();
 		bResult = SetFileTime((HANDLE)hResult, NULL, &ftLastAccessed, NULL);
 		DBG_ALIGNMENT_ENABLE();
+#ifdef Dee_DPRINT_IS_NOOP
+		(void)bResult;
+#else /* Dee_DPRINT_IS_NOOP */
 		if (!bResult) {
 			DWORD dwError = GetLastError();
 			Dee_DPRINTF("DeeNTSystem_CreateFileNoATime: SetFileTime: GetLastError: %lu\n", dwError);
 		}
+#endif /* !Dee_DPRINT_IS_NOOP */
 	}
 	return hResult;
 }

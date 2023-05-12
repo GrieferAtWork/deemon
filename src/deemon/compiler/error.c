@@ -41,6 +41,11 @@
 
 DECL_BEGIN
 
+#undef assert
+#undef assertf
+#define assert           Dee_ASSERT
+#define assertf(expr, f) Dee_ASSERT(expr)
+
 INTERN struct parser_errors current_parser_errors;
 
 INTDEF char const *TPPCALL find_most_likely_warning(char const *__restrict name);

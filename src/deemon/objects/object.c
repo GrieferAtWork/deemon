@@ -4930,6 +4930,7 @@ PUBLIC ATTR_RETNONNULL ATTR_OUTS(1, 3) ATTR_INS(2, 3) DREF DeeObject **
 #ifdef CONFIG_NO_BADREFCNT_CHECKS
 	(void)file;
 	(void)file;
+	(void)line;
 	return Dee_Movrefv(dst, src, object_count);
 #else /* CONFIG_NO_BADREFCNT_CHECKS */
 	size_t i;

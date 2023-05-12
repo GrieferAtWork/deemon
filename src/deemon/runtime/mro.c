@@ -213,7 +213,7 @@ membercache_rehash(struct membercache *__restrict self) {
 		dhash_t i, perturb;                                                                   \
 		struct membercache_slot *item;                                                        \
 		MEMBERCACHE_TRYWRITE_OR_RETURN(self);                                                 \
-	again:                                                                                    \
+again:                                                                                        \
 		if (!self->mc_table)                                                                  \
 			goto rehash_initial;                                                              \
 		/* Re-check that the named attribute isn't already in-cache. */                       \
@@ -232,7 +232,7 @@ membercache_rehash(struct membercache *__restrict self) {
 			return;                                                                           \
 		}                                                                                     \
 		if (self->mc_size + 1 >= self->mc_mask) {                                             \
-		rehash_initial:                                                                       \
+rehash_initial:                                                                               \
 			if (membercache_rehash(self))                                                     \
 				goto again;                                                                   \
 			goto done; /* Well... We couldn't rehash the cache so we can't add this entry. */ \
@@ -245,7 +245,7 @@ membercache_rehash(struct membercache *__restrict self) {
 		/* Try to keep the table vector big at least twice as big as the element count. */    \
 		if (self->mc_size * 2 > self->mc_mask)                                                \
 			membercache_rehash(self);                                                         \
-	done:                                                                                     \
+done:                                                                                         \
 		MEMBERCACHE_ENDWRITE(self);                                                           \
 	}
 

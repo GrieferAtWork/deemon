@@ -51,6 +51,10 @@
 #include <Windows.h>
 #endif /* CONFIG_HOST_WINDOWS */
 
+#ifdef CONFIG_HAVE_CRTDBG_H
+#include <crtdbg.h>
+#endif /* CONFIG_HAVE_CRTDBG_H */
+
 #include "cmdline.h"
 #include "runtime/runtime_error.h"
 
@@ -1128,8 +1132,10 @@ int main(int argc, char *argv[]) {
 	 * message box being displayed on-screen, rather than the normal, expected
 	 * `errno=EBADFD' -> `throw FileClosed()' exception dispatching. */
 	_set_invalid_parameter_handler((_invalid_parameter_handler)&noop_invalid_parameter_handler);
+#ifdef CONFIG_HAVE_CRTDBG_H
 	_CrtSetReportMode(_CRT_ASSERT, _CRTDBG_MODE_FILE | _CRTDBG_MODE_DEBUG);
 	_CrtSetReportFile(_CRT_ASSERT, _CRTDBG_HFILE_ERROR);
+#endif /* CONFIG_HAVE_CRTDBG_H */
 #endif /* _MSC_VER */
 
 	DBG_ALIGNMENT_ENABLE();

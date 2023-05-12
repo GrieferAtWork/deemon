@@ -35,13 +35,13 @@
 #include <deemon/util/lock.h>
 
 #include <hybrid/overflow.h>
+#include <hybrid/sched/yield.h>
 
 #ifndef CONFIG_NO_DEC
 #include <deemon/dec.h>
 #endif /* !CONFIG_NO_DEC */
 
 #ifndef NDEBUG
-#include <hybrid/sched/yield.h>
 #ifndef CONFIG_HOST_WINDOWS
 #include <deemon/file.h>
 #else /* !CONFIG_HOST_WINDOWS */
@@ -1954,6 +1954,12 @@ assert_printf(char const *format, ...) {
 }
 
 #ifdef CONFIG_HOST_WINDOWS
+#ifndef CONFIG_OUTPUTDEBUGSTRINGA_DEFINED
+#define CONFIG_OUTPUTDEBUGSTRINGA_DEFINED
+extern ATTR_DLLIMPORT void ATTR_STDCALL OutputDebugStringA(char const *lpOutputString);
+extern ATTR_DLLIMPORT int ATTR_STDCALL IsDebuggerPresent(void);
+#endif /* !CONFIG_OUTPUTDEBUGSTRINGA_DEFINED */
+
 PRIVATE void assert_attach_debugger_loop(void) {
 	if (!IsDebuggerPresent()) {
 #if 0

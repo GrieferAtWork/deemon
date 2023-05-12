@@ -94,9 +94,9 @@ stderr_printer(void *__restrict self,
 	size_t result;
 	DREF DeeObject *deemon_stderr;
 	(void)self;
-#ifdef CONFIG_HOST_WINDOWS
+#if defined(CONFIG_HOST_WINDOWS) && !defined(Dee_DPRINT_IS_NOOP)
 	Dee_DPRINTER(self, data, datalen);
-#endif /* CONFIG_HOST_WINDOWS */
+#endif /* CONFIG_HOST_WINDOWS && !Dee_DPRINT_IS_NOOP */
 	deemon_stderr = DeeFile_GetStd(DEE_STDERR);
 	if likely(deemon_stderr) {
 		result = DeeFile_WriteAll(deemon_stderr, data, datalen);

@@ -1426,27 +1426,37 @@ DFUNDEF void
 	}                                                                                                                       \
 	PUBLIC ATTR_MALLOC WUNUSED void *DCALL                                                                                  \
 	DeeDbgGCObject_SlabMalloc##size(char const *file, int line) {                                                           \
+		(void)file;                                                                                                         \
+		(void)line;                                                                                                         \
 		return gc_initob(DeeSlab_Invoke(DeeDbgObject_SlabMalloc, DEE_GC_HEAD_SIZE + size * sizeof(void *), (file, line),    \
 		                                (DeeDbgObject_Malloc)(DEE_GC_HEAD_SIZE + size * sizeof(void *), file, line)));      \
 	}                                                                                                                       \
 	PUBLIC ATTR_MALLOC WUNUSED void *DCALL                                                                                  \
 	DeeDbgGCObject_SlabCalloc##size(char const *file, int line) {                                                           \
+		(void)file;                                                                                                         \
+		(void)line;                                                                                                         \
 		return gc_initob(DeeSlab_Invoke(DeeDbgObject_SlabCalloc, DEE_GC_HEAD_SIZE + size * sizeof(void *), (file, line),    \
 		                                (DeeDbgObject_Calloc)(DEE_GC_HEAD_SIZE + size * sizeof(void *), file, line)));      \
 	}                                                                                                                       \
 	PUBLIC ATTR_MALLOC WUNUSED void *DCALL                                                                                  \
 	DeeDbgGCObject_SlabTryMalloc##size(char const *file, int line) {                                                        \
+		(void)file;                                                                                                         \
+		(void)line;                                                                                                         \
 		return gc_initob(DeeSlab_Invoke(DeeDbgObject_SlabTryMalloc, DEE_GC_HEAD_SIZE + size * sizeof(void *), (file, line), \
 		                                (DeeDbgObject_TryMalloc)(DEE_GC_HEAD_SIZE + size * sizeof(void *), file, line)));   \
 	}                                                                                                                       \
 	PUBLIC ATTR_MALLOC WUNUSED void *DCALL                                                                                  \
 	DeeDbgGCObject_SlabTryCalloc##size(char const *file, int line) {                                                        \
+		(void)file;                                                                                                         \
+		(void)line;                                                                                                         \
 		return gc_initob(DeeSlab_Invoke(DeeDbgObject_SlabTryCalloc, DEE_GC_HEAD_SIZE + size * sizeof(void *), (file, line), \
 		                                (DeeDbgObject_TryCalloc)(DEE_GC_HEAD_SIZE + size * sizeof(void *), file, line)));   \
 	}                                                                                                                       \
 	PUBLIC NONNULL((1)) void DCALL                                                                                          \
 	DeeDbgGCObject_SlabFree##size(void *__restrict ptr, char const *file, int line) {                                       \
 		ASSERT_UNTRACKED(ptr);                                                                                              \
+		(void)file;                                                                                                         \
+		(void)line;                                                                                                         \
 		DeeSlab_Invoke(DeeDbgObject_SlabFree, DEE_GC_HEAD_SIZE + size * sizeof(void *),                                     \
 		               (DeeGC_Head((DeeObject *)ptr), file, line),                                                          \
 		               (DeeDbgObject_Free)(DeeGC_Head((DeeObject *)ptr), file, line));                                      \
