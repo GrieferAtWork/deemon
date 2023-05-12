@@ -318,6 +318,7 @@ posix_path_abspath_f(DeeObject *__restrict path, DeeObject *pwd) {
 	DREF DeeObject *result;
 	ASSERT_OBJECT_TYPE_EXACT(path, &DeeString_Type);
 	ASSERT_OBJECT_TYPE_EXACT_OPT(pwd, &DeeString_Type);
+
 	/* Quick check: If the given path already is absolute,
 	 *              then we've got nothing to do. */
 	if (DeeString_IsAbsPath(path)) {
@@ -332,6 +333,7 @@ posix_path_abspath_f(DeeObject *__restrict path, DeeObject *pwd) {
 		Dee_Decref(path);
 		return result;
 	}
+
 	/* If the given `pwd' isn't absolute, make it using the real PWD. */
 	if (pwd && !DeeString_IsAbsPath(pwd)) {
 		pwd = posix_path_abspath_f(pwd, NULL);
@@ -357,6 +359,7 @@ posix_path_abspath_f(DeeObject *__restrict path, DeeObject *pwd) {
 			goto err_pwd;
 		pwd_end = (pwd_begin = pwd_base) + WSTR_LENGTH(pwd_base);
 		pth_end = (pth_begin = pth_base) + WSTR_LENGTH(pth_base);
+
 		/* Trim the given PWD and PATH strings. */
 		while (pth_end > pth_begin) {
 			next = pth_end;
@@ -365,6 +368,29 @@ posix_path_abspath_f(DeeObject *__restrict path, DeeObject *pwd) {
 				break;
 			pth_end = next;
 		}
+
+		/* Special case: drive-relative paths. */
+#ifdef DEE_SYSTEM_FS_DRIVES
+		if (pth_begin < pth_end && DeeSystem_IsSep(*pth_begin)) {
+			char *dst;
+			size_t pth_len;
+			size_t pwd_drive_len;
+			char const *pwd_drive_end = pwd_begin;
+			while (pwd_drive_end < pwd_end && !DeeSystem_IsSep(*pwd_drive_end))
+				++pwd_drive_end;
+			pwd_drive_len = (size_t)(pwd_drive_end - pwd_begin);
+			pth_len       = (size_t)(pth_end - pth_begin);
+			result = DeeString_NewBuffer(pwd_drive_len + pth_len);
+			if unlikely(!result)
+				goto err_pwd;
+			dst = DeeString_STR(result);
+			dst = (char *)mempcpyc(dst, pwd_begin, pwd_drive_len, sizeof(char));
+			memcpyc(dst, pth_begin, pth_len, sizeof(char));
+			result = DeeString_SetUtf8(result, STRING_ERROR_FIGNORE);
+			goto done_decref_pwd;
+		}
+#endif /* DEE_SYSTEM_FS_DRIVES */
+
 		while (pth_begin < pth_end) {
 			next = pth_begin;
 			ch   = utf8_readchar((char const **)&next, pth_end);
@@ -380,6 +406,7 @@ again_trip_paths:
 				break;
 			pwd_end = next;
 		}
+
 		/* Check for leading parent-/current-folder references in `pth_begin' */
 		if (*pth_begin == '.') {
 			bool is_parent_ref;
@@ -387,6 +414,7 @@ again_trip_paths:
 			is_parent_ref = *next == '.';
 			if (is_parent_ref)
 				++next;
+
 			/* Check if this segment really only contains 1/2 dots. */
 			while (next < pth_end) {
 				ch = utf8_readchar((char const **)&next, pth_end);
@@ -395,6 +423,7 @@ again_trip_paths:
 				if (!DeeUni_IsSpace(ch))
 					goto done_merge_paths;
 			}
+
 			/* This is a special-reference segment! (skip all additional slashes/spaces) */
 			pth_begin = next;
 			while (pth_begin < pth_end) {
@@ -410,6 +439,7 @@ again_trip_paths:
 			}
 			goto again_trip_paths;
 		}
+
 done_merge_paths:
 		/* Special optimizations when one part wasn't used at all.
 		 * Also: Special handling when one of the 2 paths has gotten empty! */
@@ -436,7 +466,7 @@ done_merge_paths:
 			char *dst;
 			size_t pth_length = (size_t)(pth_end - pth_begin);
 			size_t pwd_length = (size_t)(pwd_end - pwd_begin);
-			result            = DeeString_NewBuffer(pwd_length + 1 + pth_length);
+			result = DeeString_NewBuffer(pwd_length + 1 + pth_length);
 			if unlikely(!result)
 				goto err_pwd;
 			dst = DeeString_STR(result);
@@ -446,6 +476,9 @@ done_merge_paths:
 			result = DeeString_SetUtf8(result, STRING_ERROR_FIGNORE);
 		}
 	}
+#ifdef DEE_SYSTEM_FS_DRIVES
+done_decref_pwd:
+#endif /* DEE_SYSTEM_FS_DRIVES */
 	Dee_Decref(pwd);
 	return result;
 err_pwd:
