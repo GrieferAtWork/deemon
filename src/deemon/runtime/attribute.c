@@ -2707,7 +2707,7 @@ done:
 	return result;
 }
 
-PUBLIC WUNUSED ATTR_INS(4, 3) NONNULL((1, 2)) DREF DeeObject *DCALL
+PUBLIC WUNUSED ATTR_INS(5, 4) NONNULL((1, 2)) DREF DeeObject *DCALL
 DeeObject_CallAttrStringHashKw(DeeObject *self,
                                char const *__restrict attr_name, dhash_t hash,
                                size_t argc, DeeObject *const *argv, DeeObject *kw) {

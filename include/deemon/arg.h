@@ -407,11 +407,11 @@ struct dee_keyword {
  *    finally using `DeeObject_Size()' to see how many keyword-arguments
  *    were given by the keyword-list, and throwing an error if more were
  *    given than what was actually used. */
-DFUNDEF WUNUSED ATTR_INS(1, 2) NONNULL((4, 5)) int
+DFUNDEF WUNUSED ATTR_INS(2, 1) NONNULL((4, 5)) int
 DeeArg_UnpackKw(size_t argc, DeeObject *const *argv,
                 DeeObject *kw, struct dee_keyword *__restrict kwlist,
                 char const *__restrict format, ...);
-DFUNDEF WUNUSED ATTR_INS(1, 2) NONNULL((4, 5)) int DCALL
+DFUNDEF WUNUSED ATTR_INS(2, 1) NONNULL((4, 5)) int DCALL
 DeeArg_VUnpackKw(size_t argc, DeeObject *const *argv,
                  DeeObject *kw, struct dee_keyword *__restrict kwlist,
                  char const *__restrict format, va_list args);
