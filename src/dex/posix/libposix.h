@@ -286,13 +286,13 @@ libposix_get_dfd_filename(int dfd, /*utf-8*/ char const *filename, int atflags);
 #define STAT_IFLNK 0120000 /* Symbolic link. */
 #endif /* !... */
 #ifdef S_IFSOCK
-#define STAT_IFSOCK S_IFSOC
-#elif defined(__S_IFSOC)
-#define STAT_IFSOCK __S_IFSOC
-#elif defined(_S_IFSOC)
-#define STAT_IFSOCK _S_IFSOC
-#elif defined(_IFSOC)
-#define STAT_IFSOCK _IFSOC
+#define STAT_IFSOCK S_IFSOCK
+#elif defined(__S_IFSOCK)
+#define STAT_IFSOCK __S_IFSOCK
+#elif defined(_S_IFSOCK)
+#define STAT_IFSOCK _S_IFSOCK
+#elif defined(_IFSOCK)
+#define STAT_IFSOCK _IFSOCK
 #else /* ... */
 #define STAT_IFSOCK 0140000 /* Socket. */
 #endif /* !... */
