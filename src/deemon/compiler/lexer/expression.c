@@ -689,7 +689,7 @@ create_constexpr:
 			goto err;
 		if (WARN(W_DEPRECATED_CHARACTER_INT))
 			goto err;
-		resval = DeeInt_NewS64(value);
+		resval = DeeInt_NewInt64(value);
 		goto create_constexpr;
 	}	break;
 

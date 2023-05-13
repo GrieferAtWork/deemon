@@ -945,7 +945,7 @@ err:
 FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_GetLastError_f_impl(void)
 /*[[[end]]]*/
 {
-	return DeeInt_NewU32((uint32_t)GetLastError());
+	return DeeInt_NewUInt32((uint32_t)GetLastError());
 }
 
 /*[[[deemon import("rt.gen.dexutils").gw("SetLastError", "dwErrCode:nt:DWORD"); ]]]*/
@@ -1237,7 +1237,7 @@ again:
 		RETURN_ERROR(dwError, "Failed to write to file %p", hFile);
 	}
 	DBG_ALIGNMENT_ENABLE();
-	result = DeeInt_NewU32((uint32_t)dwNumberOfBytesWritten);
+	result = DeeInt_NewUInt32((uint32_t)dwNumberOfBytesWritten);
 	DeeObject_PutBuf(lpBuffer, &buffer, Dee_BUFFER_FREADONLY);
 	return result;
 err:
@@ -1302,7 +1302,7 @@ again:
 		RETURN_ERROR(dwError, "Failed to read from file %p", hFile);
 	}
 	DBG_ALIGNMENT_ENABLE();
-	result = DeeInt_NewU32((uint32_t)dwNumberOfBytesRead);
+	result = DeeInt_NewUInt32((uint32_t)dwNumberOfBytesRead);
 	DeeObject_PutBuf(lpBuffer, &buffer, Dee_BUFFER_FWRITABLE);
 	return result;
 err:
@@ -1614,7 +1614,7 @@ again:
 		}
 	}
 	DBG_ALIGNMENT_ENABLE();
-	return DeeInt_NewU64((uint64_t)(uint32_t)lDistanceToMoveHigh << 32 |
+	return DeeInt_NewUInt64((uint64_t)(uint32_t)lDistanceToMoveHigh << 32 |
 	                     (uint64_t)(uint32_t)dwResult);
 err:
 	return NULL;
@@ -2704,7 +2704,7 @@ again:
 			RETURN_ERROR(dwError, "Failed to determine the typing of handle %p", hFile);
 	}
 	DBG_ALIGNMENT_ENABLE();
-	return DeeInt_NewU32((uint32_t)dwType);
+	return DeeInt_NewUInt32((uint32_t)dwType);
 err:
 	return NULL;
 }
@@ -2753,7 +2753,7 @@ again:
 			RETURN_ERROR(dwError, "Failed to determine the size of file %p", hFile);
 	}
 	DBG_ALIGNMENT_ENABLE();
-	return DeeInt_NewU64((uint64_t)dwSizeLow |
+	return DeeInt_NewUInt64((uint64_t)dwSizeLow |
 	                     (uint64_t)dwSizeHigh << 32);
 err:
 	return NULL;
@@ -2805,7 +2805,7 @@ again:
 			RETURN_ERROR(dwError, "Failed to determine the attributes of %lq", lpFileName);
 	}
 	DBG_ALIGNMENT_ENABLE();
-	return DeeInt_NewU32((uint32_t)dwResult);
+	return DeeInt_NewUInt32((uint32_t)dwResult);
 err:
 	return NULL;
 }
@@ -2911,7 +2911,7 @@ again:
 	} else {
 		DBG_ALIGNMENT_ENABLE();
 	}
-	return DeeInt_NewU64((uint64_t)dwSizeLow |
+	return DeeInt_NewUInt64((uint64_t)dwSizeLow |
 	                     (uint64_t)dwSizeHigh << 32);
 err:
 	return NULL;
@@ -3416,7 +3416,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_GetCurrentProcessId_f_impl(voi
 	DBG_ALIGNMENT_DISABLE();
 	dwCurrentProcessId = GetCurrentProcessId();
 	DBG_ALIGNMENT_ENABLE();
-	return DeeInt_NewU32(dwCurrentProcessId);
+	return DeeInt_NewUInt32(dwCurrentProcessId);
 }
 
 
@@ -3441,7 +3441,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_GetCurrentThreadId_f_impl(void
 	DBG_ALIGNMENT_DISABLE();
 	dwCurrentThreadId = GetCurrentThreadId();
 	DBG_ALIGNMENT_ENABLE();
-	return DeeInt_NewU32(dwCurrentThreadId);
+	return DeeInt_NewUInt32(dwCurrentThreadId);
 }
 
 
@@ -3897,7 +3897,7 @@ again:
 		             hProcess);
 	}
 	DBG_ALIGNMENT_ENABLE();
-	return DeeInt_NewU32(dwExitCode);
+	return DeeInt_NewUInt32(dwExitCode);
 err:
 	return NULL;
 }
@@ -4166,7 +4166,7 @@ again:
 			goto err_modules;
 		for (i = 0; i < cbNeededProcesses; ++i) {
 			DREF DeeObject *pid_obj;
-			pid_obj = DeeInt_NewU32(pidProcesses[i]);
+			pid_obj = DeeInt_NewUInt32(pidProcesses[i]);
 			if unlikely(!pid_obj)
 				goto err_pids_result;
 			DeeTuple_SET(result, i, pid_obj);
@@ -4552,7 +4552,7 @@ again:
 		             hThread);
 	}
 	DBG_ALIGNMENT_ENABLE();
-	return DeeInt_NewU32(dwResult);
+	return DeeInt_NewUInt32(dwResult);
 err:
 	return NULL;
 }
@@ -4602,7 +4602,7 @@ again:
 		             hThread);
 	}
 	DBG_ALIGNMENT_ENABLE();
-	return DeeInt_NewU32(dwResult);
+	return DeeInt_NewUInt32(dwResult);
 err:
 	return NULL;
 }
@@ -5143,7 +5143,7 @@ again:
 	}
 	DBG_ALIGNMENT_ENABLE();
 	DeeObject_PutBuf(lpBuffer, &buf, Dee_BUFFER_FREADONLY);
-	return DeeInt_NewU64(szNumberOfBytesWritten);
+	return DeeInt_NewUInt64(szNumberOfBytesWritten);
 err_buf:
 	DeeObject_PutBuf(lpBuffer, &buf, Dee_BUFFER_FREADONLY);
 err:
@@ -5201,7 +5201,7 @@ check_interrupt:
 		             hHandle, dwMilliseconds);
 	}
 	DBG_ALIGNMENT_ENABLE();
-	return DeeInt_NewU32(dwResult);
+	return DeeInt_NewUInt32(dwResult);
 err:
 	return NULL;
 }
@@ -5278,7 +5278,7 @@ check_interrupt:
 		             nCount, (unsigned int)bWaitAll, dwMilliseconds);
 	}
 	DBG_ALIGNMENT_ENABLE();
-	return DeeInt_NewU32(dwResult);
+	return DeeInt_NewUInt32(dwResult);
 err_handles:
 	Dee_Free(pHandles.v);
 err:
@@ -5343,7 +5343,7 @@ check_interrupt:
 		             hObjectToSignal, hObjectToWaitOn, dwMilliseconds);
 	}
 	DBG_ALIGNMENT_ENABLE();
-	return DeeInt_NewU32(dwResult);
+	return DeeInt_NewUInt32(dwResult);
 err:
 	return NULL;
 }
@@ -5968,7 +5968,7 @@ again:
 		             hSemaphore);
 	}
 	DBG_ALIGNMENT_ENABLE();
-	return DeeInt_NewU32(lPreviousCount);
+	return DeeInt_NewUInt32(lPreviousCount);
 err:
 	return NULL;
 }

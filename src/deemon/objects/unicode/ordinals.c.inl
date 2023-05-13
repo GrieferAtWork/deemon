@@ -132,13 +132,13 @@ stringordinalsiter_next(StringOrdinalsIterator *__restrict self) {
 	SWITCH_SIZEOF_WIDTH(self->soi_width) {
 
 	CASE_WIDTH_1BYTE:
-		return DeeInt_NewU8(*pchar.cp8);
+		return DeeInt_NewUInt8(*pchar.cp8);
 
 	CASE_WIDTH_2BYTE:
-		return DeeInt_NewU16(*pchar.cp16);
+		return DeeInt_NewUInt16(*pchar.cp16);
 
 	CASE_WIDTH_4BYTE:
-		return DeeInt_NewU32(*pchar.cp32);
+		return DeeInt_NewUInt32(*pchar.cp32);
 	}
 }
 
@@ -274,7 +274,7 @@ stringordinals_get(StringOrdinals *self,
 		                        WSTR_LENGTH(self->so_ptr.ptr));
 		goto err;
 	}
-	return DeeInt_NewU32(STRING_WIDTH_GETCHAR(self->so_width,
+	return DeeInt_NewUInt32(STRING_WIDTH_GETCHAR(self->so_width,
 	                                          self->so_ptr.ptr,
 	                                          index));
 err:

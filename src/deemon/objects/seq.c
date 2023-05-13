@@ -197,12 +197,12 @@ PRIVATE /*WUNUSED*/ NONNULL((1)) int DCALL
 seqiterator_ctor(SeqIterator *__restrict self) {
 	self->si_getitem = &seq_getitem;
 	self->si_seq     = Dee_EmptySeq;
-	self->si_index   = &DeeInt_Zero;
-	self->si_size    = &DeeInt_Zero;
+	self->si_index   = DeeInt_Zero;
+	self->si_size    = DeeInt_Zero;
 	Dee_atomic_rwlock_init(&self->si_lock);
 	Dee_Incref(Dee_EmptySeq);
-	Dee_Incref(&DeeInt_Zero);
-	Dee_Incref(&DeeInt_Zero);
+	Dee_Incref(DeeInt_Zero);
+	Dee_Incref(DeeInt_Zero);
 	return 0;
 }
 
@@ -345,7 +345,7 @@ err_old_index:
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 seqiterator_init(SeqIterator *__restrict self, size_t argc, DeeObject *const *argv) {
 	DeeTypeObject *tp_iter;
-	self->si_index = &DeeInt_Zero;
+	self->si_index = DeeInt_Zero;
 	if (DeeArg_Unpack(argc, argv, "o|o:_GenericIterator", &self->si_seq, &self->si_index))
 		goto err;
 	if (DeeObject_AssertTypeExact(self->si_index, &DeeInt_Type))
@@ -417,10 +417,10 @@ seqiterator_index_get(SeqIterator *__restrict self) {
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 seqiterator_index_del(SeqIterator *__restrict self) {
 	DREF DeeObject *old_ob;
-	Dee_Incref(&DeeInt_Zero);
+	Dee_Incref(DeeInt_Zero);
 	SeqIterator_LockWrite(self);
 	old_ob         = self->si_index;
-	self->si_index = &DeeInt_Zero;
+	self->si_index = DeeInt_Zero;
 	SeqIterator_LockEndWrite(self);
 	Dee_Decref(old_ob);
 	return 0;
@@ -574,8 +574,8 @@ seq_iterself(DeeObject *__restrict self) {
 					goto err;
 				}
 				/* Assign the initial Iterator index. */
-				result->si_index = &DeeInt_Zero;
-				Dee_Incref(&DeeInt_Zero);
+				result->si_index = DeeInt_Zero;
+				Dee_Incref(DeeInt_Zero);
 				/* Save a reference to the associated Sequence. */
 				result->si_seq = self;
 				Dee_Incref(self);
@@ -1567,13 +1567,13 @@ get_sequence_find_args_kw(char const *__restrict name,
 			goto err;
 		Dee_DecrefNokill(*p_elem); /* FIXME: This can break for custom mapping types! */
 check_kw_start_end_key:
-		if unlikely((temp = DeeKwArgs_GetStringDef(&kwargs, "start", &DeeInt_Zero)) == NULL)
+		if unlikely((temp = DeeKwArgs_GetStringDef(&kwargs, "start", DeeInt_Zero)) == NULL)
 			goto err;
 		if (DeeObject_AsSSize(temp, (dssize_t *)p_start))
 			goto err_temp;
 		Dee_Decref(temp);
 check_kw_end_key:
-		if unlikely((temp = DeeKwArgs_GetStringDef(&kwargs, "end", &DeeInt_MinusOne)) == NULL)
+		if unlikely((temp = DeeKwArgs_GetStringDef(&kwargs, "end", DeeInt_MinusOne)) == NULL)
 			goto err;
 		if (DeeObject_AsSSize(temp, (dssize_t *)p_end))
 			goto err_temp;
@@ -1605,7 +1605,7 @@ check_kw_end_key:
 		if (DeeNone_Check(*p_key))
 			*p_key = NULL;
 check_kw_end:
-		if unlikely((temp = DeeKwArgs_GetStringDef(&kwargs, "end", &DeeInt_MinusOne)) == NULL)
+		if unlikely((temp = DeeKwArgs_GetStringDef(&kwargs, "end", DeeInt_MinusOne)) == NULL)
 			goto err;
 		if (DeeObject_AsSSize(temp, (dssize_t *)p_end))
 			goto err_temp;
@@ -1671,13 +1671,13 @@ get_sequence_find_defl_args_kw(char const *__restrict name,
 			goto err;
 		Dee_DecrefNokill(*p_elem); /* FIXME: This can break for custom mapping types! */
 check_kw_start_end_key_defl:
-		if unlikely((temp = DeeKwArgs_GetStringDef(&kwargs, "start", &DeeInt_Zero)) == NULL)
+		if unlikely((temp = DeeKwArgs_GetStringDef(&kwargs, "start", DeeInt_Zero)) == NULL)
 			goto err;
 		if (DeeObject_AsSSize(temp, (dssize_t *)p_start))
 			goto err_temp;
 		Dee_Decref(temp);
 check_kw_end_key_defl:
-		if unlikely((temp = DeeKwArgs_GetStringDef(&kwargs, "end", &DeeInt_MinusOne)) == NULL)
+		if unlikely((temp = DeeKwArgs_GetStringDef(&kwargs, "end", DeeInt_MinusOne)) == NULL)
 			goto err;
 		if (DeeObject_AsSSize(temp, (dssize_t *)p_end))
 			goto err_temp;
@@ -1717,7 +1717,7 @@ check_kw_defl:
 		if (DeeNone_Check(*p_key))
 			*p_key = NULL;
 check_kw_end_defl:
-		if unlikely((temp = DeeKwArgs_GetStringDef(&kwargs, "end", &DeeInt_MinusOne)) == NULL)
+		if unlikely((temp = DeeKwArgs_GetStringDef(&kwargs, "end", DeeInt_MinusOne)) == NULL)
 			goto err;
 		if (DeeObject_AsSSize(temp, (dssize_t *)p_end))
 			goto err_temp;
@@ -1798,7 +1798,7 @@ seq_find(DeeObject *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
 		if unlikely(result == (size_t)-2)
 			goto err;
 		if unlikely(result == (size_t)-1)
-			return_reference_(&DeeInt_MinusOne);
+			return_reference_(DeeInt_MinusOne);
 	}
 	return DeeInt_NewSize(result);
 err:
@@ -1824,7 +1824,7 @@ seq_rfind(DeeObject *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
 		if unlikely(result == (size_t)-2)
 			goto err;
 		if unlikely(result == (size_t)-1)
-			return_reference_(&DeeInt_MinusOne);
+			return_reference_(DeeInt_MinusOne);
 	}
 	return DeeInt_NewSize(result);
 err:
@@ -2056,7 +2056,7 @@ seq_popfront(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	DeeObject *args[1], *result;
 	if (DeeArg_Unpack(argc, argv, ":popfront"))
 		goto err;
-	args[0] = &DeeInt_Zero;
+	args[0] = DeeInt_Zero;
 	result  = DeeObject_CallAttr(self, (DeeObject *)&str_pop, 1, args);
 	if unlikely(!result && DeeError_Catch(&DeeError_IndexError))
 		err_empty_sequence(self);
@@ -2070,7 +2070,7 @@ seq_popback(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	DeeObject *args[1], *result;
 	if (DeeArg_Unpack(argc, argv, ":popback"))
 		goto err;
-	args[0] = &DeeInt_MinusOne;
+	args[0] = DeeInt_MinusOne;
 	result  = DeeObject_CallAttr(self, (DeeObject *)&str_pop, 1, args);
 	if unlikely(!result && DeeError_Catch(&DeeError_IndexError))
 		err_empty_sequence(self);
@@ -2084,7 +2084,7 @@ seq_pushfront(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	DeeObject *args[2];
 	if (DeeArg_Unpack(argc, argv, "o:pushfront", &args[1]))
 		goto err;
-	args[0] = &DeeInt_Zero;
+	args[0] = DeeInt_Zero;
 	return DeeObject_CallAttr(self, (DeeObject *)&str_insert, 2, args);
 err:
 	return NULL;
@@ -2231,7 +2231,7 @@ seq_resize(DeeObject *self, size_t argc,
 			goto err;
 		if (newsize < oldsize) {
 			result = DeeObject_CallAttrf(self, (DeeObject *)&str_erase,
-			                             PCKuSIZ "o", newsize, &DeeInt_MinusOne);
+			                             PCKuSIZ "o", newsize, DeeInt_MinusOne);
 		} else if (newsize > oldsize) {
 			DREF DeeObject *seq_extension;
 			seq_extension = DeeSeq_RepeatItem(filler, newsize - oldsize);

@@ -2827,8 +2827,8 @@ DEFINE_OPERATOR(DREF DeeObject *, Int, (DeeObject *RESTRICT_IF_NOTYPE self)) {
 				if unlikely(error < 0)
 					goto err;
 				if (error == INT_SIGNED)
-					return DeeInt_NewS64(val64);
-				return DeeInt_NewU64((uint64_t)val64);
+					return DeeInt_NewInt64(val64);
+				return DeeInt_NewUInt64((uint64_t)val64);
 			}
 			if (tp_self->tp_math->tp_int32) {
 				int32_t val32;
@@ -2837,8 +2837,8 @@ DEFINE_OPERATOR(DREF DeeObject *, Int, (DeeObject *RESTRICT_IF_NOTYPE self)) {
 				if unlikely(error < 0)
 					goto err;
 				if (error == INT_SIGNED)
-					return DeeInt_NewS32(val32);
-				return DeeInt_NewU32((uint32_t)val32);
+					return DeeInt_NewInt32(val32);
+				return DeeInt_NewUInt32((uint32_t)val32);
 			}
 			if (tp_self->tp_math->tp_double) {
 				int error;
@@ -2852,7 +2852,7 @@ DEFINE_OPERATOR(DREF DeeObject *, Int, (DeeObject *RESTRICT_IF_NOTYPE self)) {
 						goto err;
 					}
 				}
-				return DeeInt_NewS64((int64_t)resflt);
+				return DeeInt_NewInt64((int64_t)resflt);
 			}
 		}
 	} while (type_inherit_int(tp_self));
@@ -3084,7 +3084,7 @@ DeeObject_AddS8(DeeObject *__restrict self, int8_t val) {
 	/* Optimization for `int' */
 	if (DeeInt_Check(self))
 		return DeeInt_AddSDigit((DeeIntObject *)self, val);
-	val_ob = DeeInt_NewS8(val);
+	val_ob = DeeInt_NewInt8(val);
 	if unlikely(!val_ob)
 		goto err;
 	result = DeeObject_Add(self, val_ob);
@@ -3100,7 +3100,7 @@ DeeObject_SubS8(DeeObject *__restrict self, int8_t val) {
 	/* Optimization for `int' */
 	if (DeeInt_Check(self))
 		return DeeInt_SubSDigit((DeeIntObject *)self, val);
-	val_ob = DeeInt_NewS8(val);
+	val_ob = DeeInt_NewInt8(val);
 	if unlikely(!val_ob)
 		goto err;
 	result = DeeObject_Sub(self, val_ob);
@@ -3116,7 +3116,7 @@ DeeObject_AddInt(DeeObject *__restrict self, uint32_t val) {
 	/* Optimization for `int' */
 	if (DeeInt_Check(self))
 		return DeeInt_AddU32((DeeIntObject *)self, val);
-	val_ob = DeeInt_NewU32(val);
+	val_ob = DeeInt_NewUInt32(val);
 	if unlikely(!val_ob)
 		goto err;
 	result = DeeObject_Add(self, val_ob);
@@ -3132,7 +3132,7 @@ DeeObject_SubInt(DeeObject *__restrict self, uint32_t val) {
 	/* Optimization for `int' */
 	if (DeeInt_Check(self))
 		return DeeInt_SubU32((DeeIntObject *)self, val);
-	val_ob = DeeInt_NewU32(val);
+	val_ob = DeeInt_NewUInt32(val);
 	if unlikely(!val_ob)
 		goto err;
 	result = DeeObject_Sub(self, val_ob);
@@ -3146,7 +3146,7 @@ PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeObject_MulInt(DeeObject *__restrict self, int8_t val) {
 	DREF DeeObject *val_ob, *result;
 	/* TODO: Optimization for `int' */
-	val_ob = DeeInt_NewS8(val);
+	val_ob = DeeInt_NewInt8(val);
 	if unlikely(!val_ob)
 		goto err;
 	result = DeeObject_Mul(self, val_ob);
@@ -3160,7 +3160,7 @@ PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeObject_DivInt(DeeObject *__restrict self, int8_t val) {
 	DREF DeeObject *val_ob, *result;
 	/* TODO: Optimization for `int' */
-	val_ob = DeeInt_NewS8(val);
+	val_ob = DeeInt_NewInt8(val);
 	if unlikely(!val_ob)
 		goto err;
 	result = DeeObject_Div(self, val_ob);
@@ -3174,7 +3174,7 @@ PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeObject_ModInt(DeeObject *__restrict self, int8_t val) {
 	DREF DeeObject *val_ob, *result;
 	/* TODO: Optimization for `int' */
-	val_ob = DeeInt_NewS8(val);
+	val_ob = DeeInt_NewInt8(val);
 	if unlikely(!val_ob)
 		goto err;
 	result = DeeObject_Mod(self, val_ob);
@@ -3188,7 +3188,7 @@ PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeObject_ShlInt(DeeObject *__restrict self, uint8_t val) {
 	DREF DeeObject *val_ob, *result;
 	/* TODO: Optimization for `int' */
-	val_ob = DeeInt_NewU8(val);
+	val_ob = DeeInt_NewUInt8(val);
 	if unlikely(!val_ob)
 		goto err;
 	result = DeeObject_Shl(self, val_ob);
@@ -3202,7 +3202,7 @@ PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeObject_ShrInt(DeeObject *__restrict self, uint8_t val) {
 	DREF DeeObject *val_ob, *result;
 	/* TODO: Optimization for `int' */
-	val_ob = DeeInt_NewU8(val);
+	val_ob = DeeInt_NewUInt8(val);
 	if unlikely(!val_ob)
 		goto err;
 	result = DeeObject_Shr(self, val_ob);
@@ -3216,7 +3216,7 @@ PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeObject_AndInt(DeeObject *__restrict self, uint32_t val) {
 	DREF DeeObject *val_ob, *result;
 	/* TODO: Optimization for `int' */
-	val_ob = DeeInt_NewU32(val);
+	val_ob = DeeInt_NewUInt32(val);
 	if unlikely(!val_ob)
 		goto err;
 	result = DeeObject_And(self, val_ob);
@@ -3230,7 +3230,7 @@ PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeObject_OrInt(DeeObject *__restrict self, uint32_t val) {
 	DREF DeeObject *val_ob, *result;
 	/* TODO: Optimization for `int' */
-	val_ob = DeeInt_NewU32(val);
+	val_ob = DeeInt_NewUInt32(val);
 	if unlikely(!val_ob)
 		goto err;
 	result = DeeObject_Or(self, val_ob);
@@ -3244,7 +3244,7 @@ PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeObject_XorInt(DeeObject *__restrict self, uint32_t val) {
 	DREF DeeObject *val_ob, *result;
 	/* TODO: Optimization for `int' */
-	val_ob = DeeInt_NewU32(val);
+	val_ob = DeeInt_NewUInt32(val);
 	if unlikely(!val_ob)
 		goto err;
 	result = DeeObject_Xor(self, val_ob);
@@ -3268,10 +3268,10 @@ DEFINE_OPERATOR(int, Inc, (DeeObject **__restrict p_self)) {
 			if (math->tp_inc)
 				return DeeType_INVOKE_INC(tp_self, p_self);
 			if (math->tp_inplace_add)
-				return DeeType_INVOKE_IADD(tp_self, p_self, &DeeInt_One);
+				return DeeType_INVOKE_IADD(tp_self, p_self, DeeInt_One);
 			if (math->tp_add) {
 				DREF DeeObject *temp;
-				temp = DeeType_INVOKE_ADD(tp_self, *p_self, &DeeInt_One);
+				temp = DeeType_INVOKE_ADD(tp_self, *p_self, DeeInt_One);
 				if unlikely(!temp)
 					goto err;
 				Dee_Decref(*p_self);
@@ -3279,10 +3279,10 @@ DEFINE_OPERATOR(int, Inc, (DeeObject **__restrict p_self)) {
 				return 0;
 			}
 			if (math->tp_inplace_sub)
-				return DeeType_INVOKE_ISUB(tp_self, p_self, &DeeInt_MinusOne);
+				return DeeType_INVOKE_ISUB(tp_self, p_self, DeeInt_MinusOne);
 			if (math->tp_sub) {
 				DREF DeeObject *temp;
-				temp = DeeType_INVOKE_SUB(tp_self, *p_self, &DeeInt_MinusOne);
+				temp = DeeType_INVOKE_SUB(tp_self, *p_self, DeeInt_MinusOne);
 				if unlikely(!temp)
 					goto err;
 				Dee_Decref(*p_self);
@@ -3306,10 +3306,10 @@ DEFINE_OPERATOR(int, Dec, (DeeObject **__restrict p_self)) {
 			if (math->tp_dec)
 				return DeeType_INVOKE_DEC(tp_self, p_self);
 			if (math->tp_inplace_sub)
-				return DeeType_INVOKE_ISUB(tp_self, p_self, &DeeInt_One);
+				return DeeType_INVOKE_ISUB(tp_self, p_self, DeeInt_One);
 			if (math->tp_sub) {
 				DREF DeeObject *temp;
-				temp = DeeType_INVOKE_SUB(tp_self, *p_self, &DeeInt_One);
+				temp = DeeType_INVOKE_SUB(tp_self, *p_self, DeeInt_One);
 				if unlikely(!temp)
 					goto err;
 				Dee_Decref(*p_self);
@@ -3317,10 +3317,10 @@ DEFINE_OPERATOR(int, Dec, (DeeObject **__restrict p_self)) {
 				return 0;
 			}
 			if (math->tp_inplace_add)
-				return DeeType_INVOKE_IADD(tp_self, p_self, &DeeInt_MinusOne);
+				return DeeType_INVOKE_IADD(tp_self, p_self, DeeInt_MinusOne);
 			if (math->tp_add) {
 				DREF DeeObject *temp;
-				temp = DeeType_INVOKE_ADD(tp_self, *p_self, &DeeInt_MinusOne);
+				temp = DeeType_INVOKE_ADD(tp_self, *p_self, DeeInt_MinusOne);
 				if unlikely(!temp)
 					goto err;
 				Dee_Decref(*p_self);
@@ -3453,18 +3453,18 @@ err:
 	err:                                                                                                  \
 		return -1;                                                                                        \
 	}
-DEFINE_MATH_INPLACE_INT_OPERATOR(DeeObject_InplaceAddS8, DeeObject_InplaceAdd, DeeInt_NewS8, int8_t, OPERATOR_INPLACE_ADD)
-DEFINE_MATH_INPLACE_INT_OPERATOR(DeeObject_InplaceSubS8, DeeObject_InplaceSub, DeeInt_NewS8, int8_t, OPERATOR_INPLACE_SUB)
-DEFINE_MATH_INPLACE_INT_OPERATOR(DeeObject_InplaceAddInt, DeeObject_InplaceAdd, DeeInt_NewU32, uint32_t, OPERATOR_INPLACE_ADD)
-DEFINE_MATH_INPLACE_INT_OPERATOR(DeeObject_InplaceSubInt, DeeObject_InplaceSub, DeeInt_NewU32, uint32_t, OPERATOR_INPLACE_SUB)
-DEFINE_MATH_INPLACE_INT_OPERATOR(DeeObject_InplaceMulInt, DeeObject_InplaceMul, DeeInt_NewS8, int8_t, OPERATOR_INPLACE_MUL)
-DEFINE_MATH_INPLACE_INT_OPERATOR(DeeObject_InplaceDivInt, DeeObject_InplaceDiv, DeeInt_NewS8, int8_t, OPERATOR_INPLACE_DIV)
-DEFINE_MATH_INPLACE_INT_OPERATOR(DeeObject_InplaceModInt, DeeObject_InplaceMod, DeeInt_NewS8, int8_t, OPERATOR_INPLACE_MOD)
-DEFINE_MATH_INPLACE_INT_OPERATOR(DeeObject_InplaceShlInt, DeeObject_InplaceShl, DeeInt_NewU8, uint8_t, OPERATOR_INPLACE_SHL)
-DEFINE_MATH_INPLACE_INT_OPERATOR(DeeObject_InplaceShrInt, DeeObject_InplaceShr, DeeInt_NewU8, uint8_t, OPERATOR_INPLACE_SHR)
-DEFINE_MATH_INPLACE_INT_OPERATOR(DeeObject_InplaceAndInt, DeeObject_InplaceAnd, DeeInt_NewU32, uint32_t, OPERATOR_INPLACE_AND)
-DEFINE_MATH_INPLACE_INT_OPERATOR(DeeObject_InplaceOrInt, DeeObject_InplaceOr, DeeInt_NewU32, uint32_t, OPERATOR_INPLACE_OR)
-DEFINE_MATH_INPLACE_INT_OPERATOR(DeeObject_InplaceXorInt, DeeObject_InplaceXor, DeeInt_NewU32, uint32_t, OPERATOR_INPLACE_XOR)
+DEFINE_MATH_INPLACE_INT_OPERATOR(DeeObject_InplaceAddS8, DeeObject_InplaceAdd, DeeInt_NewInt8, int8_t, OPERATOR_INPLACE_ADD)
+DEFINE_MATH_INPLACE_INT_OPERATOR(DeeObject_InplaceSubS8, DeeObject_InplaceSub, DeeInt_NewInt8, int8_t, OPERATOR_INPLACE_SUB)
+DEFINE_MATH_INPLACE_INT_OPERATOR(DeeObject_InplaceAddInt, DeeObject_InplaceAdd, DeeInt_NewUInt32, uint32_t, OPERATOR_INPLACE_ADD)
+DEFINE_MATH_INPLACE_INT_OPERATOR(DeeObject_InplaceSubInt, DeeObject_InplaceSub, DeeInt_NewUInt32, uint32_t, OPERATOR_INPLACE_SUB)
+DEFINE_MATH_INPLACE_INT_OPERATOR(DeeObject_InplaceMulInt, DeeObject_InplaceMul, DeeInt_NewInt8, int8_t, OPERATOR_INPLACE_MUL)
+DEFINE_MATH_INPLACE_INT_OPERATOR(DeeObject_InplaceDivInt, DeeObject_InplaceDiv, DeeInt_NewInt8, int8_t, OPERATOR_INPLACE_DIV)
+DEFINE_MATH_INPLACE_INT_OPERATOR(DeeObject_InplaceModInt, DeeObject_InplaceMod, DeeInt_NewInt8, int8_t, OPERATOR_INPLACE_MOD)
+DEFINE_MATH_INPLACE_INT_OPERATOR(DeeObject_InplaceShlInt, DeeObject_InplaceShl, DeeInt_NewUInt8, uint8_t, OPERATOR_INPLACE_SHL)
+DEFINE_MATH_INPLACE_INT_OPERATOR(DeeObject_InplaceShrInt, DeeObject_InplaceShr, DeeInt_NewUInt8, uint8_t, OPERATOR_INPLACE_SHR)
+DEFINE_MATH_INPLACE_INT_OPERATOR(DeeObject_InplaceAndInt, DeeObject_InplaceAnd, DeeInt_NewUInt32, uint32_t, OPERATOR_INPLACE_AND)
+DEFINE_MATH_INPLACE_INT_OPERATOR(DeeObject_InplaceOrInt, DeeObject_InplaceOr, DeeInt_NewUInt32, uint32_t, OPERATOR_INPLACE_OR)
+DEFINE_MATH_INPLACE_INT_OPERATOR(DeeObject_InplaceXorInt, DeeObject_InplaceXor, DeeInt_NewUInt32, uint32_t, OPERATOR_INPLACE_XOR)
 #undef DEFINE_MATH_INPLACE_INT_OPERATOR
 #endif /* !DEFINE_TYPED_OPERATORS */
 

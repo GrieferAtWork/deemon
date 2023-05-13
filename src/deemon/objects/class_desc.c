@@ -142,7 +142,7 @@ coti_next_key(ClassOperatorTableIterator *__restrict self) {
 	info = Dee_OperatorInfo(NULL, ent->co_name);
 	if (info)
 		return DeeString_New(info->oi_sname);
-	return DeeInt_NewU16(ent->co_name);
+	return DeeInt_NewUInt16(ent->co_name);
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -151,7 +151,7 @@ coti_next_value(ClassOperatorTableIterator *__restrict self) {
 	ent = coti_next_ent(self);
 	if (!ent)
 		return ITER_DONE;
-	return DeeInt_NewU16(ent->co_addr);
+	return DeeInt_NewUInt16(ent->co_addr);
 }
 
 PRIVATE NONNULL((1)) void DCALL
@@ -339,7 +339,7 @@ cot_getitemdef(ClassOperatorTable *__restrict self,
 			break;
 		if (op->co_name != opname)
 			continue;
-		return DeeInt_NewU16(op->co_addr);
+		return DeeInt_NewUInt16(op->co_addr);
 	}
 nope:
 	if (defl != ITER_DONE)
@@ -717,7 +717,7 @@ ca_getdoc(ClassAttribute *__restrict self) {
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 ca_getaddr(ClassAttribute *__restrict self) {
-	return DeeInt_NewU16(self->ca_attr->ca_addr);
+	return DeeInt_NewUInt16(self->ca_attr->ca_addr);
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -2046,7 +2046,7 @@ ot_nsi_getsize(ObjectTable *__restrict self) {
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 ot_size(ObjectTable *__restrict self) {
-	return DeeInt_NewU16(self->ot_size);
+	return DeeInt_NewUInt16(self->ot_size);
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL

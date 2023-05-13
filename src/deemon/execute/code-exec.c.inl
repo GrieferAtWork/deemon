@@ -2837,7 +2837,7 @@ do_fprint_c_nl:
 
 		TARGET(ASM_RANGE, -2, +1) {
 			DREF DeeObject *range_object;
-			range_object = DeeRange_New(DeeNone_Check(SECOND) ? &DeeInt_Zero : SECOND,
+			range_object = DeeRange_New(DeeNone_Check(SECOND) ? DeeInt_Zero : SECOND,
 			                            FIRST, NULL);
 			if unlikely(!range_object)
 				HANDLE_EXCEPT();
@@ -2863,7 +2863,7 @@ do_fprint_c_nl:
 
 		TARGET(ASM_RANGE_STEP, -3, +1) {
 			DREF DeeObject *range_object;
-			range_object = DeeRange_New(DeeNone_Check(THIRD) ? &DeeInt_Zero : THIRD, SECOND,
+			range_object = DeeRange_New(DeeNone_Check(THIRD) ? DeeInt_Zero : THIRD, SECOND,
 			                            DeeNone_Check(FIRST) ? NULL : FIRST);
 			if unlikely(!range_object)
 				HANDLE_EXCEPT();
@@ -4733,7 +4733,7 @@ do_setattr_this_c:
 						 *               Therefor, we must create an object-style
 						 *               range in order to prevent the potential 
 						 *               overflow. */
-						DREF DeeObject *ob_end = DeeInt_NewU32(range_end);
+						DREF DeeObject *ob_end = DeeInt_NewUInt32(range_end);
 						if unlikely(!ob_end)
 							HANDLE_EXCEPT();
 #if 1 /* Both versions will result in the same behavior, but this        \
@@ -4742,9 +4742,9 @@ do_setattr_this_c:
        * that `tp_inc()' would otherwise have to be substitued with      \
        * a call to `tp_add()' using `DeeInt_One' during every iteration. \
        * By passing `DeeInt_One' now, we can skip those checks later! */
-						range_object = DeeRange_New(&DeeInt_Zero, ob_end, &DeeInt_One);
+						range_object = DeeRange_New(DeeInt_Zero, ob_end, DeeInt_One);
 #else
-						range_object = DeeRange_New(&DeeInt_Zero, ob_end, NULL);
+						range_object = DeeRange_New(DeeInt_Zero, ob_end, NULL);
 #endif
 						Dee_Decref(ob_end);
 					} else
@@ -5251,7 +5251,7 @@ do_pack_dict:
 					ASSERT(code->co_flags & CODE_FVARARGS);
 #endif /* !EXEC_SAFE */
 					if (frame->cf_argc <= code->co_argc_max) {
-						varsize = &DeeInt_Zero;
+						varsize = DeeInt_Zero;
 						Dee_Incref(varsize);
 					} else {
 						varsize = DeeInt_NewSize((size_t)(frame->cf_argc - code->co_argc_max));

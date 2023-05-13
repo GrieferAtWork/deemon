@@ -137,7 +137,7 @@ none_iternext(DeeObject *__restrict UNUSED(self)) {
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 none_int(DeeObject *__restrict UNUSED(self)) {
-	return_reference_(&DeeInt_Zero);
+	return_reference_(DeeInt_Zero);
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL

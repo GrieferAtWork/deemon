@@ -292,7 +292,7 @@ DeeSeq_Front(DeeObject *__restrict self) {
 				return result;
 			}
 			if (has_noninherited_getitem(tp_self, seq)) {
-				result = (*seq->tp_get)(self, &DeeInt_Zero);
+				result = (*seq->tp_get)(self, DeeInt_Zero);
 				if unlikely(!result) {
 					if (DeeError_Catch(&DeeError_IndexError))
 						goto err_empty;
@@ -1044,7 +1044,7 @@ check:
 				return error;
 			}
 			if (has_noninherited_getitem(tp_self, seq)) {
-				result = (*seq->tp_get)(self, &DeeInt_Zero);
+				result = (*seq->tp_get)(self, DeeInt_Zero);
 				if unlikely(!result) {
 					if (DeeError_Catch(&DeeError_IndexError))
 						goto err_empty;

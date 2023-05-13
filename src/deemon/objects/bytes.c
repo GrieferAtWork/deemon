@@ -79,7 +79,7 @@ bytesiter_next(BytesIterator *__restrict self) {
 			return ITER_DONE;
 	} while unlikely(!atomic_cmpxch_weak_or_write(&self->bi_iter,
 	                                              pos, pos + 1));
-	return DeeInt_NewU8(*pos);
+	return DeeInt_NewUInt8(*pos);
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
@@ -825,7 +825,7 @@ bytes_getitem(Bytes *self, DeeObject *index) {
 		err_index_out_of_bounds((DeeObject *)self, i, DeeBytes_SIZE(self));
 		goto err;
 	}
-	return DeeInt_NewU8(DeeBytes_DATA(self)[i]);
+	return DeeInt_NewUInt8(DeeBytes_DATA(self)[i]);
 err:
 	return NULL;
 }
@@ -1195,7 +1195,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 bytes_nsi_getitem(Bytes *__restrict self, size_t index) {
 	if unlikely(index >= DeeBytes_SIZE(self))
 		goto err_bounds;
-	return DeeInt_NewU8(DeeBytes_DATA(self)[index]);
+	return DeeInt_NewUInt8(DeeBytes_DATA(self)[index]);
 err_bounds:
 	err_index_out_of_bounds((DeeObject *)self, index, DeeBytes_SIZE(self));
 	return NULL;
@@ -1332,7 +1332,7 @@ bytes_nsi_xch(Bytes *self, size_t index, DeeObject *value) {
 	if unlikely(!DeeBytes_WRITABLE(self))
 		goto err_readonly;
 	result = atomic_xch(&DeeBytes_DATA(self)[index], val);
-	return DeeInt_NewU8(result);
+	return DeeInt_NewUInt8(result);
 err_readonly:
 	err_bytes_not_writable((DeeObject *)self);
 err:
@@ -1403,7 +1403,7 @@ bytes_getfirst(Bytes *__restrict self) {
 		err_empty_sequence((DeeObject *)self);
 		return NULL;
 	}
-	return DeeInt_NewU8(DeeBytes_DATA(self)[0]);
+	return DeeInt_NewUInt8(DeeBytes_DATA(self)[0]);
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
@@ -1432,7 +1432,7 @@ bytes_getlast(Bytes *__restrict self) {
 		err_empty_sequence((DeeObject *)self);
 		return NULL;
 	}
-	return DeeInt_NewU8(DeeBytes_DATA(self)[DeeBytes_SIZE(self) - 1]);
+	return DeeInt_NewUInt8(DeeBytes_DATA(self)[DeeBytes_SIZE(self) - 1]);
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL

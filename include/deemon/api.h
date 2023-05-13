@@ -279,6 +279,18 @@ DECL_BEGIN
 #endif /* __OPTIMIZE_SIZE__ */
 #endif /* !CONFIG_[NO_]NOBASE_OPTIMIZED_CLASS_OPERATORS */
 
+#if (!defined(CONFIG_STRING_LATIN1_STATIC) && \
+     !defined(CONFIG_STRING_LATIN1_CACHED) && \
+     !defined(CONFIG_STRING_LATIN1_NORMAL))
+#if defined(__OPTIMIZE_SIZE__) && defined(__OPTIMIZE__)
+#define CONFIG_STRING_LATIN1_CACHED /* Latin-1 characters are created dynamically, but then cached */
+#elif defined(__OPTIMIZE_SIZE__)
+#define CONFIG_STRING_LATIN1_NORMAL /* Latin-1 characters are created dynamically */
+#else /* ... */
+#define CONFIG_STRING_LATIN1_STATIC /* Statically define all latin-1 characters */
+#endif /* !... */
+#endif /* !CONFIG_STRING_LATIN1_... */
+
 
 /* Configure option:
  *     CONFIG_DEFAULT_MESSAGE_FORMAT_(MSVC|GCC)

@@ -116,7 +116,7 @@ bytes_find(Bytes *self, size_t argc,
 		                            needle.n_size);
 	}
 	if (!result)
-		return_reference_(&DeeInt_MinusOne);
+		return_reference_(DeeInt_MinusOne);
 	return DeeInt_NewSize((size_t)(result - DeeBytes_DATA(self)));
 err:
 	return NULL;
@@ -183,7 +183,7 @@ bytes_rfind(Bytes *self, size_t argc,
 		                             needle.n_size);
 	}
 	if (!result)
-		return_reference_(&DeeInt_MinusOne);
+		return_reference_(DeeInt_MinusOne);
 	return DeeInt_NewSize((size_t)(result - DeeBytes_DATA(self)));
 err:
 	return NULL;
@@ -1329,7 +1329,7 @@ bytes_ord(Bytes *self, size_t argc, DeeObject *const *argv) {
 		err_expected_single_character_string((DeeObject *)self);
 		goto err;
 	}
-	return DeeInt_NewU8(DeeBytes_DATA(self)[index]);
+	return DeeInt_NewUInt8(DeeBytes_DATA(self)[index]);
 err:
 	return NULL;
 }
@@ -1620,7 +1620,7 @@ bytes_asdigit(Bytes *self, size_t argc, DeeObject *const *argv) {
 	}
 	digit = DeeUni_AsDigitVal(ch);
 	if likely(digit < 10)
-		return DeeInt_NewU8(digit);
+		return DeeInt_NewUInt8(digit);
 	if (defl)
 		return_reference_(defl);
 	DeeError_Throwf(&DeeError_ValueError,
@@ -1654,7 +1654,7 @@ bytes_asxdigit(Bytes *self, size_t argc, DeeObject *const *argv) {
 	}
 	digit = DeeUni_AsDigitVal(ch);
 	if likely(digit != 0xff)
-		return DeeInt_NewU8(digit);
+		return DeeInt_NewUInt8(digit);
 	if (defl)
 		return_reference_(defl);
 	DeeError_Throwf(&DeeError_ValueError,
@@ -2926,11 +2926,11 @@ bytes_compare(Bytes *self, size_t argc, DeeObject *const *argv) {
 	if (args.lhs_len < args.rhs_len) {
 		result = memcmp(args.lhs_ptr, args.rhs_ptr, args.lhs_len);
 		if (result == 0)
-			return_reference_(&DeeInt_MinusOne);
+			return_reference_(DeeInt_MinusOne);
 	} else if (args.lhs_len > args.rhs_len) {
 		result = memcmp(args.lhs_ptr, args.rhs_ptr, args.rhs_len);
 		if (result == 0)
-			return_reference_(&DeeInt_One);
+			return_reference_(DeeInt_One);
 	} else {
 		result = memcmp(args.lhs_ptr, args.rhs_ptr, args.lhs_len);
 	}
@@ -2947,7 +2947,7 @@ bytes_vercompare(Bytes *self, size_t argc, DeeObject *const *argv) {
 		goto err;
 	result = strverscmpb(args.lhs_ptr, args.lhs_len,
 	                     args.rhs_ptr, args.lhs_len);
-	return DeeInt_NewS8(result);
+	return DeeInt_NewInt8(result);
 err:
 	return NULL;
 }
@@ -3002,11 +3002,11 @@ bytes_casecompare(Bytes *self, size_t argc, DeeObject *const *argv) {
 	if (args.lhs_len < args.rhs_len) {
 		result = memasciicasecmp(args.lhs_ptr, args.rhs_ptr, args.lhs_len);
 		if (result == 0)
-			return_reference_(&DeeInt_MinusOne);
+			return_reference_(DeeInt_MinusOne);
 	} else if (args.lhs_len > args.rhs_len) {
 		result = memasciicasecmp(args.lhs_ptr, args.rhs_ptr, args.rhs_len);
 		if (result == 0)
-			return_reference_(&DeeInt_One);
+			return_reference_(DeeInt_One);
 	} else {
 		result = memasciicasecmp(args.lhs_ptr, args.rhs_ptr, args.lhs_len);
 	}
@@ -3023,7 +3023,7 @@ bytes_casevercompare(Bytes *self, size_t argc, DeeObject *const *argv) {
 		goto err;
 	result = strcaseverscmpb(args.lhs_ptr, args.lhs_len, /* TODO: ASCII variant */
 	                         args.rhs_ptr, args.lhs_len);
-	return DeeInt_NewS8(result);
+	return DeeInt_NewInt8(result);
 err:
 	return NULL;
 }
@@ -3595,7 +3595,7 @@ bytes_findmatch(Bytes *self, size_t argc, DeeObject *const *argv) {
 		goto err_not_found;
 	return DeeInt_NewSize((size_t)(ptr - scan_str));
 err_not_found:
-	return_reference_(&DeeInt_MinusOne);
+	return_reference_(DeeInt_MinusOne);
 err:
 	return NULL;
 }
@@ -3626,7 +3626,7 @@ bytes_rfindmatch(Bytes *self, size_t argc, DeeObject *const *argv) {
 		goto err_not_found;
 	return DeeInt_NewSize((size_t)(ptr - scan_str));
 err_not_found:
-	return_reference_(&DeeInt_MinusOne);
+	return_reference_(DeeInt_MinusOne);
 err:
 	return NULL;
 }

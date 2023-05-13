@@ -916,7 +916,7 @@ code_get_operator(DeeCodeObject *__restrict self) {
 	Dee_XDecref(info.fi_doc);
 	if (info.fi_opname == (uint16_t)-1)
 		return_none;
-	return DeeInt_NewU16(info.fi_opname);
+	return DeeInt_NewUInt16(info.fi_opname);
 err:
 	return NULL;
 }
@@ -936,7 +936,7 @@ code_get_operatorname(DeeCodeObject *__restrict self) {
 	op = Dee_OperatorInfo(Dee_TYPE(info.fi_type), info.fi_opname);
 	Dee_XDecref(info.fi_type);
 	if (!op)
-		return DeeInt_NewU16(info.fi_opname);
+		return DeeInt_NewUInt16(info.fi_opname);
 	return DeeString_New(op->oi_sname);
 err:
 	return NULL;
@@ -952,7 +952,7 @@ code_get_property(DeeCodeObject *__restrict self) {
 	Dee_XDecref(info.fi_type);
 	if (info.fi_getset == (uint16_t)-1)
 		return_none;
-	return DeeInt_NewU16(info.fi_getset);
+	return DeeInt_NewUInt16(info.fi_getset);
 err:
 	return NULL;
 }

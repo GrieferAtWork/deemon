@@ -1894,12 +1894,12 @@ PRIVATE struct type_getset tpconst file_class_getsets[] = {
 
 
 #if SEEK_SET == 0
-#define file_SEEK_SET DeeInt_Zero
+#define file_SEEK_SET (*DeeInt_Zero)
 #else /* SEEK_SET == 0 */
 PRIVATE DEFINE_UINT32(file_SEEK_SET, SEEK_SET);
 #endif /* SEEK_SET != 0 */
 #if SEEK_CUR == 1
-#define file_SEEK_CUR DeeInt_One
+#define file_SEEK_CUR (*DeeInt_One)
 #else /* SEEK_CUR == 1 */
 PRIVATE DEFINE_UINT32(file_SEEK_CUR, SEEK_CUR);
 #endif /* SEEK_CUR != 1 */
@@ -2156,7 +2156,7 @@ got_whence:
 	result = DeeFile_Seek(self, seek_off, whence);
 	if unlikely(result == (dpos_t)-1)
 		goto err;
-	return DeeInt_NewU64(result);
+	return DeeInt_NewUInt64(result);
 err:
 	return NULL;
 }
@@ -2169,7 +2169,7 @@ file_tell(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	result = DeeFile_Tell(self);
 	if unlikely(result == (dpos_t)-1)
 		goto err;
-	return DeeInt_NewU64(result);
+	return DeeInt_NewUInt64(result);
 err:
 	return NULL;
 }
@@ -2200,7 +2200,7 @@ file_trunc(DeeObject *self, size_t argc, DeeObject *const *argv) {
 			goto err;
 	}
 	/* Return the position where we've truncated the file. */
-	return DeeInt_NewU64(trunc_pos);
+	return DeeInt_NewUInt64(trunc_pos);
 err:
 	return NULL;
 }
@@ -2296,7 +2296,7 @@ file_size(DeeObject *self, size_t argc, DeeObject *const *argv) {
 					goto err;
 
 				/* Return the size of the file. */
-				return DeeInt_NewU64((uint64_t)filesize);
+				return DeeInt_NewUInt64((uint64_t)filesize);
 			}
 		}
 		/* TODO: Make use of operator inheritance. */
@@ -2568,7 +2568,7 @@ file_pos_get(DeeFileObject *__restrict self) {
 	result = DeeFile_Tell((DeeObject *)self);
 	if unlikely(result == (dpos_t)-1)
 		goto err;
-	return DeeInt_NewU64(result);
+	return DeeInt_NewUInt64(result);
 err:
 	return NULL;
 }

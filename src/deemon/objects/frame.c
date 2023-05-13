@@ -521,7 +521,7 @@ frame_getpc(Frame *__restrict self) {
 	                   self->f_frame->cf_func->fo_code->co_code);
 	PLOCK_ENDREAD(self);
 	DeeFrame_LockEndRead(self);
-	return DeeInt_NewU32(pc);
+	return DeeInt_NewUInt32(pc);
 err_df:
 	DeeFrame_LockEndRead(self);
 	err_dead_frame(self);
@@ -612,7 +612,7 @@ frame_getsp_obj(Frame *__restrict self) {
 		goto err_df;
 	if unlikely(result == -1)
 		goto err_unknown;
-	return DeeInt_NewU16((uint16_t)result);
+	return DeeInt_NewUInt16((uint16_t)result);
 err_unknown:
 	DeeError_Throwf(&DeeError_ValueError,
 	                "Stack depth is unknown");

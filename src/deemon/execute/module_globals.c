@@ -785,7 +785,7 @@ done:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 mg_size(ModuleGlobals *__restrict self) {
-	return DeeInt_NewU16(atomic_read(&self->mg_module->mo_globalc));
+	return DeeInt_NewUInt16(atomic_read(&self->mg_module->mo_globalc));
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL

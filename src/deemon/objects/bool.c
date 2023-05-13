@@ -106,7 +106,7 @@ bool_double(DeeObject *__restrict self,
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 bool_int(DeeObject *__restrict self) {
-	return_reference(DeeBool_IsTrue(self) ? &DeeInt_One : &DeeInt_Zero);
+	return_reference(DeeBool_IsTrue(self) ? DeeInt_One : DeeInt_Zero);
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL

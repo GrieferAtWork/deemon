@@ -635,22 +635,22 @@ DeeSystem_DEFINE_wcslen(dee_wcslen)
 #define TYPEOF_struct_dirent_d_type uint8_t
 #define UNP_struct_dirent_d_type    UNPu8
 #define DEFINE_D_TYPE_CONSTANT      DEFINE_INT15
-#define DeeInt_New_D_TYPE           DeeInt_NewU8
+#define DeeInt_New_D_TYPE           DeeInt_NewUInt8
 #elif defined(CONFIG_HAVE_struct_dirent_d_type_size_2)
 #define TYPEOF_struct_dirent_d_type uint16_t
 #define UNP_struct_dirent_d_type    UNPu16
 #define DEFINE_D_TYPE_CONSTANT      DEFINE_INT16
-#define DeeInt_New_D_TYPE           DeeInt_NewU16
+#define DeeInt_New_D_TYPE           DeeInt_NewUInt16
 #elif defined(CONFIG_HAVE_struct_dirent_d_type_size_4)
 #define TYPEOF_struct_dirent_d_type uint32_t
 #define UNP_struct_dirent_d_type    UNPu32
 #define DEFINE_D_TYPE_CONSTANT      DEFINE_INT32
-#define DeeInt_New_D_TYPE           DeeInt_NewU32
+#define DeeInt_New_D_TYPE           DeeInt_NewUInt32
 #else /* ... */
 #define TYPEOF_struct_dirent_d_type uint64_t
 #define UNP_struct_dirent_d_type    UNPu64
 #define DEFINE_D_TYPE_CONSTANT      DEFINE_INT64
-#define DeeInt_New_D_TYPE           DeeInt_NewU64
+#define DeeInt_New_D_TYPE           DeeInt_NewUInt64
 #endif /* !... */
 
 /* Define the DT_* constants for export. */
@@ -1379,7 +1379,7 @@ diriter_get_d_ino(DeeDirIteratorObject *__restrict self) {
 	if (self->odi_hnd != INVALID_HANDLE_VALUE) {
 		if unlikely(diriter_loadstat(self))
 			return NULL;
-		return DeeInt_NewU64(((uint64_t)self->odi_st.nFileIndexLow) |
+		return DeeInt_NewUInt64(((uint64_t)self->odi_st.nFileIndexLow) |
 		                     ((uint64_t)self->odi_st.nFileIndexHigh << 32));
 	}
 #elif (defined(posix_opendir_USE_opendir) &&        \
@@ -1489,7 +1489,7 @@ diriter_get_d_dev(DeeDirIteratorObject *__restrict self) {
 		if unlikely(diriter_loadstat(self))
 			goto err;
 #define NEED_err
-		return DeeInt_NewU32((uint32_t)self->odi_st.dwVolumeSerialNumber);
+		return DeeInt_NewUInt32((uint32_t)self->odi_st.dwVolumeSerialNumber);
 	}
 #elif defined(posix_opendir_NEED_STAT_EXTENSION) && defined(DIR_stat_HAVE_st_dev)
 	if (self->odi_ent != NULL) {
@@ -1529,7 +1529,7 @@ diriter_get_d_mode(DeeDirIteratorObject *__restrict self) {
 		} else {
 			result |= STAT_IFREG;
 		}
-		return DeeInt_NewU32(result);
+		return DeeInt_NewUInt32(result);
 	}
 #elif defined(posix_opendir_NEED_STAT_EXTENSION) && defined(DIR_stat_HAVE_st_mode)
 	if (self->odi_ent != NULL) {
@@ -1557,7 +1557,7 @@ diriter_get_d_nlink(DeeDirIteratorObject *__restrict self) {
 		if unlikely(diriter_loadstat(self))
 			goto err;
 #define NEED_err
-		return DeeInt_NewU32((uint32_t)self->odi_st.nNumberOfLinks);
+		return DeeInt_NewUInt32((uint32_t)self->odi_st.nNumberOfLinks);
 	}
 #elif defined(posix_opendir_NEED_STAT_EXTENSION) && defined(DIR_stat_HAVE_st_nlink)
 	if (self->odi_ent != NULL) {
@@ -1667,7 +1667,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 diriter_get_d_size(DeeDirIteratorObject *__restrict self) {
 #ifdef posix_opendir_USE_FindFirstFileExW
 	if (self->odi_hnd != INVALID_HANDLE_VALUE) {
-		return DeeInt_NewU64(((uint64_t)self->odi_data.nFileSizeHigh << 32) |
+		return DeeInt_NewUInt64(((uint64_t)self->odi_data.nFileSizeHigh << 32) |
 		                     ((uint64_t)self->odi_data.nFileSizeLow));
 	}
 #elif defined(posix_opendir_NEED_STAT_EXTENSION) && defined(DIR_stat_HAVE_st_size)
@@ -1696,7 +1696,7 @@ diriter_get_d_blocks(DeeDirIteratorObject *__restrict self) {
 	if (self->odi_hnd != INVALID_HANDLE_VALUE) {
 		uint64_t result = ((uint64_t)self->odi_data.nFileSizeHigh << 32) |
 		                  ((uint64_t)self->odi_data.nFileSizeLow);
-		return DeeInt_NewU64(DEFAULT_BLOCKS_FROM_FILESIZE(result));
+		return DeeInt_NewUInt64(DEFAULT_BLOCKS_FROM_FILESIZE(result));
 	}
 #elif defined(posix_opendir_NEED_STAT_EXTENSION) && (defined(DIR_stat_HAVE_st_blocks) || defined(DIR_stat_HAVE_st_size))
 	if (self->odi_ent != NULL) {
@@ -1726,7 +1726,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 diriter_get_d_blksize(DeeDirIteratorObject *__restrict self) {
 #ifdef posix_opendir_USE_FindFirstFileExW
 	if (self->odi_hnd != INVALID_HANDLE_VALUE) {
-		return DeeInt_NewU16(DEFAULT_BLOCKSIZE);
+		return DeeInt_NewUInt16(DEFAULT_BLOCKSIZE);
 	}
 #elif (defined(posix_opendir_NEED_STAT_EXTENSION) && \
        (defined(DIR_stat_HAVE_st_blksize) || !defined(diriter_get_d_blocks_IS_STUB)))
@@ -1737,7 +1737,7 @@ diriter_get_d_blksize(DeeDirIteratorObject *__restrict self) {
 #define NEED_err
 		return DeeInt_NEWU(self->odi_st.st_blksize);
 #else /* DIR_stat_HAVE_st_blksize */
-		return DeeInt_NewU16(DEFAULT_BLOCKSIZE);
+		return DeeInt_NewUInt16(DEFAULT_BLOCKSIZE);
 #endif /* !DIR_stat_HAVE_st_blksize */
 	}
 #else /* ... */

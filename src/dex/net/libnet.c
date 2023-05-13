@@ -146,7 +146,7 @@ lib_ntoh16_f(size_t argc, DeeObject *const *argv) {
 	uint16_t i;
 	if (DeeArg_Unpack(argc, argv, UNPu16 ":ntoh16", &i))
 		goto err;
-	return DeeInt_NewU16(BETOH16(i));
+	return DeeInt_NewUInt16(BETOH16(i));
 err:
 	return NULL;
 }
@@ -156,7 +156,7 @@ lib_ntoh32_f(size_t argc, DeeObject *const *argv) {
 	uint32_t i;
 	if (DeeArg_Unpack(argc, argv, UNPu32 ":ntoh32", &i))
 		goto err;
-	return DeeInt_NewU32(BETOH32(i));
+	return DeeInt_NewUInt32(BETOH32(i));
 err:
 	return NULL;
 }
@@ -166,7 +166,7 @@ lib_ntoh64_f(size_t argc, DeeObject *const *argv) {
 	uint64_t i;
 	if (DeeArg_Unpack(argc, argv, UNPu64 ":ntoh64", &i))
 		goto err;
-	return DeeInt_NewU64(BETOH64(i));
+	return DeeInt_NewUInt64(BETOH64(i));
 err:
 	return NULL;
 }
@@ -176,7 +176,7 @@ lib_hton16_f(size_t argc, DeeObject *const *argv) {
 	uint16_t i;
 	if (DeeArg_Unpack(argc, argv, UNPu16 ":hton16", &i))
 		goto err;
-	return DeeInt_NewU16(HTOBE16(i));
+	return DeeInt_NewUInt16(HTOBE16(i));
 err:
 	return NULL;
 }
@@ -186,7 +186,7 @@ lib_hton32_f(size_t argc, DeeObject *const *argv) {
 	uint32_t i;
 	if (DeeArg_Unpack(argc, argv, UNPu32 ":hton32", &i))
 		goto err;
-	return DeeInt_NewU32(HTOBE32(i));
+	return DeeInt_NewUInt32(HTOBE32(i));
 err:
 	return NULL;
 }
@@ -196,7 +196,7 @@ lib_hton64_f(size_t argc, DeeObject *const *argv) {
 	uint64_t i;
 	if (DeeArg_Unpack(argc, argv, UNPu64 ":hton64", &i))
 		goto err;
-	return DeeInt_NewU64(HTOBE64(i));
+	return DeeInt_NewUInt64(HTOBE64(i));
 err:
 	return NULL;
 }

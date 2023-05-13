@@ -608,34 +608,34 @@ handle_null_ob:
 		return DeeFloat_New((double)FIELD(long double));
 
 	CASE(STRUCT_INT8):
-		return DeeInt_NewS8(FIELD(int8_t));
+		return DeeInt_NewInt8(FIELD(int8_t));
 
 	CASE(STRUCT_UNSIGNED | STRUCT_INT8):
-		return DeeInt_NewU8(FIELD(uint8_t));
+		return DeeInt_NewUInt8(FIELD(uint8_t));
 
 	CASE(STRUCT_INT16):
-		return DeeInt_NewS16(FIELD(int16_t));
+		return DeeInt_NewInt16(FIELD(int16_t));
 
 	CASE(STRUCT_UNSIGNED | STRUCT_INT16):
-		return DeeInt_NewU16(FIELD(uint16_t));
+		return DeeInt_NewUInt16(FIELD(uint16_t));
 
 	CASE(STRUCT_INT32):
-		return DeeInt_NewS32(FIELD(int32_t));
+		return DeeInt_NewInt32(FIELD(int32_t));
 
 	CASE(STRUCT_UNSIGNED | STRUCT_INT32):
-		return DeeInt_NewU32(FIELD(uint32_t));
+		return DeeInt_NewUInt32(FIELD(uint32_t));
 
 	CASE(STRUCT_INT64):
-		return DeeInt_NewS64(FIELD(int64_t));
+		return DeeInt_NewInt64(FIELD(int64_t));
 
 	CASE(STRUCT_UNSIGNED | STRUCT_INT64):
-		return DeeInt_NewU64(FIELD(uint64_t));
+		return DeeInt_NewUInt64(FIELD(uint64_t));
 
 	CASE(STRUCT_INT128):
-		return DeeInt_NewS128(FIELD(Dee_int128_t));
+		return DeeInt_NewInt128(FIELD(Dee_int128_t));
 
 	CASE(STRUCT_UNSIGNED | STRUCT_INT128):
-		return DeeInt_NewU128(FIELD(Dee_uint128_t));
+		return DeeInt_NewUInt128(FIELD(Dee_uint128_t));
 
 #undef CASE
 	default: break;

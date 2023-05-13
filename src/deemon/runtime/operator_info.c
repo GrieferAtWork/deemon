@@ -1099,7 +1099,7 @@ invoke_operator(DeeObject *self, DeeObject **p_self,
 						buf_end = buf.bb_size;
 					if (buf_begin >= buf_end) {
 						DeeObject_PutBuf(data, &buf, Dee_BUFFER_FWRITABLE);
-						return_reference_(&DeeInt_Zero);
+						return_reference_(DeeInt_Zero);
 					}
 					result = DeeFile_Read(self, (uint8_t *)buf.bb_base + buf_begin, buf_end - buf_begin);
 					DeeObject_PutBuf(data, &buf, Dee_BUFFER_FWRITABLE);
@@ -1139,7 +1139,7 @@ invoke_operator(DeeObject *self, DeeObject **p_self,
 						buf_end = buf.bb_size;
 					if (buf_begin >= buf_end) {
 						DeeObject_PutBuf(data, &buf, Dee_BUFFER_FREADONLY);
-						return_reference_(&DeeInt_Zero);
+						return_reference_(DeeInt_Zero);
 					}
 					result = DeeFile_Write(self, (uint8_t *)buf.bb_base + buf_begin, buf_end - buf_begin);
 					DeeObject_PutBuf(data, &buf, Dee_BUFFER_FREADONLY);
@@ -1159,7 +1159,7 @@ invoke_operator(DeeObject *self, DeeObject **p_self,
 					result = DeeFile_Seek(self, off, whence);
 					if unlikely(result == (dpos_t)-1)
 						goto err;
-					return DeeInt_NewU64(result);
+					return DeeInt_NewUInt64(result);
 				}	break;
 
 					/* >> operator __sync__(); */
@@ -1189,7 +1189,7 @@ invoke_operator(DeeObject *self, DeeObject **p_self,
 						dpos_t length;
 						if (DeeFile_TruncHere(self, &length))
 							goto err;
-						return DeeInt_NewU64(length);
+						return DeeInt_NewUInt64(length);
 					}
 				}	break;
 
@@ -1252,7 +1252,7 @@ invoke_operator(DeeObject *self, DeeObject **p_self,
 						end = buf.bb_size;
 					if (start >= end) {
 						DeeObject_PutBuf(a, &buf, Dee_BUFFER_FWRITABLE);
-						return_reference_(&DeeInt_Zero);
+						return_reference_(DeeInt_Zero);
 					}
 					result = DeeFile_PRead(self, (uint8_t *)buf.bb_base + start, end - start, pos);
 					DeeObject_PutBuf(a, &buf, Dee_BUFFER_FWRITABLE);
@@ -1300,7 +1300,7 @@ invoke_operator(DeeObject *self, DeeObject **p_self,
 						end = buf.bb_size;
 					if (start >= end) {
 						DeeObject_PutBuf(a, &buf, Dee_BUFFER_FREADONLY);
-						return_reference_(&DeeInt_Zero);
+						return_reference_(DeeInt_Zero);
 					}
 					result = DeeFile_PWrite(self, (uint8_t *)buf.bb_base + start, end - start, pos);
 					DeeObject_PutBuf(a, &buf, Dee_BUFFER_FREADONLY);
@@ -2016,7 +2016,7 @@ toi_next(TypeOperatorsIterator *__restrict self) {
 	}
 	if (self->to_name && *info->oi_sname)
 		return DeeString_New(info->oi_sname);
-	return DeeInt_NewU16(result);
+	return DeeInt_NewUInt16(result);
 }
 
 

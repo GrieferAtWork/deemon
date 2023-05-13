@@ -2164,7 +2164,7 @@ dhashalgo_exec(struct dhashalgo const *__restrict self,
 		}
 		state  = (*me->ha_base.ha_hash8)(me, state, data, datasize);
 		state ^= me->ha_outmod;
-		result = DeeInt_NewU8(state);
+		result = DeeInt_NewUInt8(state);
 	}	break;
 
 	case 2: {
@@ -2180,7 +2180,7 @@ dhashalgo_exec(struct dhashalgo const *__restrict self,
 		}
 		state  = (*me->ha_base.ha_hash16)(me, state, data, datasize);
 		state ^= me->ha_outmod;
-		result = DeeInt_NewU16(state);
+		result = DeeInt_NewUInt16(state);
 	}	break;
 
 	case 4: {
@@ -2196,7 +2196,7 @@ dhashalgo_exec(struct dhashalgo const *__restrict self,
 		}
 		state  = (*me->ha_base.ha_hash32)(me, state, data, datasize);
 		state ^= me->ha_outmod;
-		result = DeeInt_NewU32(state);
+		result = DeeInt_NewUInt32(state);
 	}	break;
 
 	case 8: {
@@ -2212,7 +2212,7 @@ dhashalgo_exec(struct dhashalgo const *__restrict self,
 		}
 		state  = (*me->ha_base.ha_hash64)(me, state, data, datasize);
 		state ^= me->ha_outmod;
-		result = DeeInt_NewU64(state);
+		result = DeeInt_NewUInt64(state);
 	}	break;
 
 	default: {

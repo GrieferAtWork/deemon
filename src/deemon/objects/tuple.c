@@ -107,7 +107,7 @@ struct tuple_cache {
 PRIVATE struct tuple_cache cache[CONFIG_TUPLE_CACHE_MAXCOUNT] = { {} };
 
 INTERN size_t DCALL
-tuplecache_clear(size_t max_clear) {
+Dee_tuplecache_clearall(size_t max_clear) {
 	size_t result = 0;
 	struct tuple_cache *iter;
 	for (iter = cache; iter < COMPILER_ENDOF(cache); ++iter) {
@@ -132,7 +132,7 @@ tuplecache_clear(size_t max_clear) {
 #else /* CONFIG_TUPLE_CACHE_MAXCOUNT */
 
 INTERN size_t DCALL
-tuplecache_clear(size_t UNUSED(max_clear)) {
+Dee_tuplecache_clearall(size_t UNUSED(max_clear)) {
 	return 0;
 }
 

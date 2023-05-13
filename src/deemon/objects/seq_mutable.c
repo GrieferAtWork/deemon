@@ -2837,7 +2837,7 @@ err_index_ob:
 do_erase_func_i:
 						if unlikely(result < 0)
 							goto err_index_ob;
-						callback_result = DeeObject_CallPack(erase_func, 2, index_ob, &DeeInt_One);
+						callback_result = DeeObject_CallPack(erase_func, 2, index_ob, DeeInt_One);
 						if unlikely(!callback_result)
 							goto err_index_ob;
 						Dee_Decref(callback_result);
@@ -3132,7 +3132,7 @@ err_index_ob:
 do_erase_func_i:
 							if unlikely(result < 0)
 								goto err_index_ob;
-							callback_result = DeeObject_CallPack(erase_func, 2, index_ob, &DeeInt_One);
+							callback_result = DeeObject_CallPack(erase_func, 2, index_ob, DeeInt_One);
 							if unlikely(!callback_result)
 								goto err_index_ob;
 							Dee_Decref(callback_result);
@@ -3707,7 +3707,7 @@ err_index_ob_key:
 						if (error != 0) {
 							if unlikely(error < 0)
 								goto err_index_ob_key;
-							callback_result = DeeObject_CallPack(erase_func, 2, index_ob, &DeeInt_One);
+							callback_result = DeeObject_CallPack(erase_func, 2, index_ob, DeeInt_One);
 							if unlikely(!callback_result)
 								goto err_index_ob_key;
 							Dee_Decref(callback_result);
@@ -3738,7 +3738,7 @@ err_index_ob:
 						if (error != 0) {
 							if unlikely(error < 0)
 								goto err_index_ob;
-							callback_result = DeeObject_CallPack(erase_func, 2, index_ob, &DeeInt_One);
+							callback_result = DeeObject_CallPack(erase_func, 2, index_ob, DeeInt_One);
 							if unlikely(!callback_result)
 								goto err_index_ob;
 							Dee_Decref(callback_result);
@@ -4092,7 +4092,7 @@ err_index_ob:
 					if (error != 0) {
 						if unlikely(error < 0)
 							goto err_index_ob;
-						callback_result = DeeObject_CallPack(erase_func, 2, index_ob, &DeeInt_One);
+						callback_result = DeeObject_CallPack(erase_func, 2, index_ob, DeeInt_One);
 						if unlikely(!callback_result)
 							goto err_index_ob;
 						Dee_Decref(callback_result);

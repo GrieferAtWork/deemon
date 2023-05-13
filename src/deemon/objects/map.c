@@ -629,8 +629,8 @@ proxykeys_byhash(MapProxy *self, size_t argc,
 			each->so_opname    = OPERATOR_GETITEM;
 			each->so_opargc    = 1;
 			each->se_seq       = result; /* inherit reference */
-			each->so_opargv[0] = &DeeInt_Zero;
-			Dee_Incref(&DeeInt_Zero);
+			each->so_opargv[0] = DeeInt_Zero;
+			Dee_Incref(DeeInt_Zero);
 			DeeObject_Init(each, &SeqEachOperator_Type);
 			/* Wrap the each-operator in a super-view for sequences, thus preventing
 			 * the caller from accidentally extending the each-expression any further. */

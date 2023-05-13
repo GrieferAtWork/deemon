@@ -19,6 +19,9 @@
  */
 
 #pragma once
+/* Don't re-configure if we've been included as part of a #include-directive
+ * that was encountered while parsing text *outside* of a format-script. */
+#if !defined(__FORMAT__) || defined(__FORMAT_SCRIPT__)
 
 /* The entire include-system should no longer be used by new code.
  * Instead, the `import'-statement should be used.
@@ -292,7 +295,6 @@ from ctypes import
 
 
 
-
 /* HINT: `__FORMAT__' -- Defined for code parsed by `deemon -F' (including scripts)
  * HINT: `__FORMAT_SCRIPT__' -- Defined for scripts found in comments by `deemon -F' */
 #if defined(__FORMAT__) && defined(__FORMAT_SCRIPT__)
@@ -337,5 +339,4 @@ from ctypes import
 
 
 
-
-
+#endif /* !__FORMAT__ || __FORMAT_SCRIPT__ */

@@ -213,7 +213,7 @@ ast_gettypeid(Ast *__restrict self) {
 		result = atomic_read(&self->ci_value->a_type);
 	} while unlikely(result >= COMPILER_LENOF(ast_names));
 #endif /* !CONFIG_NO_THREADS */
-	return DeeInt_NewU16(result);
+	return DeeInt_NewUInt16(result);
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -2199,7 +2199,7 @@ get_operator_name(uint16_t opid) {
 	}
 	info = Dee_OperatorInfo(NULL, opid);
 	if unlikely(!info)
-		return DeeInt_NewU16(opid);
+		return DeeInt_NewUInt16(opid);
 	return DeeString_New(info->oi_sname);
 }
 
@@ -2863,8 +2863,9 @@ ast_getactionname(Ast *__restrict self) {
 		err_invalid_ast_type(self, AST_ACTION);
 		result = NULL;
 	} else {
-		char const *name = get_action_name(me->a_flag);
-		result           = name ? DeeString_New(name) : DeeInt_NewU16(me->a_flag);
+		char const *name;
+		name   = get_action_name(me->a_flag);
+		result = name ? DeeString_New(name) : DeeInt_NewUInt16(me->a_flag);
 	}
 	COMPILER_END();
 	return result;

@@ -93,7 +93,7 @@ librt_getstacklimit_f(size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, ":getstacklimit"))
 		goto err;
 	result = atomic_read(&DeeExec_StackLimit);
-	return DeeInt_NewU16(result);
+	return DeeInt_NewUInt16(result);
 err:
 	return NULL;
 }
@@ -104,7 +104,7 @@ librt_setstacklimit_f(size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, "|" UNPu16 ":setstacklimit", &newval))
 		goto err;
 	result = atomic_xch(&DeeExec_StackLimit, newval);
-	return DeeInt_NewU16(result);
+	return DeeInt_NewUInt16(result);
 err:
 	return NULL;
 }
@@ -527,7 +527,7 @@ librt_get_MappingItems_impl_f(void) {
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
 librt_get_MappingHashFilter_impl_f(void) {
-	DeeObject *argv[] = { &DeeInt_Zero };
+	DeeObject *argv[] = { DeeInt_Zero };
 	return get_type_of(DeeObject_CallAttrString(Dee_EmptyMapping, "byhash", 1, argv));
 }
 
@@ -612,7 +612,7 @@ librt_get_sequence_mutation_type(char const *__restrict name) {
 	DREF DeeObject *ob, *result = NULL;
 	ob = DeeTuple_Pack(2, Dee_None, Dee_None);
 	if likely(ob) {
-		DeeObject *argv[] = { &DeeInt_One };
+		DeeObject *argv[] = { DeeInt_One };
 		result            = get_type_of(DeeObject_CallAttrString(ob, name, 1, argv));
 		Dee_Decref(ob);
 	}
@@ -621,7 +621,7 @@ librt_get_sequence_mutation_type(char const *__restrict name) {
 
 LOCAL WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 librt_get_string_mutation_type(char const *__restrict name) {
-	DeeObject *argv[] = { &DeeInt_One };
+	DeeObject *argv[] = { DeeInt_One };
 	return get_type_of(DeeObject_CallAttrString((DeeObject *)&str_Iterator, name, 1, argv));
 }
 
@@ -711,7 +711,7 @@ librt_get_SeqFilter_impl_f(void) {
 
 LOCAL WUNUSED DREF DeeObject *DCALL
 librt_get_SeqHashFilter_impl_f(void) {
-	DeeObject *argv[] = { &DeeInt_Zero };
+	DeeObject *argv[] = { DeeInt_Zero };
 	return get_type_of(DeeObject_CallAttrString(Dee_EmptySeq, "byhash", 1, argv));
 }
 
@@ -753,7 +753,7 @@ librt_get_SeqLocatorIterator_f(size_t UNUSED(argc), DeeObject *const *UNUSED(arg
 
 LOCAL WUNUSED DREF DeeObject *DCALL
 librt_get_SeqSubRange_impl_f(void) {
-	return get_type_of(DeeObject_GetRange(Dee_EmptySeq, &DeeInt_Zero, &DeeInt_One));
+	return get_type_of(DeeObject_GetRange(Dee_EmptySeq, DeeInt_Zero, DeeInt_One));
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
@@ -768,7 +768,7 @@ librt_get_SeqSubRangeIterator_f(size_t UNUSED(argc), DeeObject *const *UNUSED(ar
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
 librt_get_SeqSubRangeN_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
-	return get_type_of(DeeObject_GetRange(Dee_EmptySeq, &DeeInt_One, Dee_None));
+	return get_type_of(DeeObject_GetRange(Dee_EmptySeq, DeeInt_One, Dee_None));
 }
 
 LOCAL WUNUSED DREF DeeObject *DCALL
@@ -819,7 +819,7 @@ librt_get_SeqIntRangeIterator_f(size_t UNUSED(argc), DeeObject *const *UNUSED(ar
 
 LOCAL WUNUSED DREF DeeObject *DCALL
 librt_get_SeqRepeat_impl_f(void) {
-	DeeObject *argv[] = { Dee_EmptySeq, &DeeInt_One };
+	DeeObject *argv[] = { Dee_EmptySeq, DeeInt_One };
 	return get_type_of(DeeObject_CallAttrString((DeeObject *)&DeeSeq_Type, "repeatseq", 2, argv));
 }
 
@@ -835,7 +835,7 @@ librt_get_SeqRepeatIterator_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv
 
 LOCAL WUNUSED DREF DeeObject *DCALL
 librt_get_SeqItemRepeat_impl_f(void) {
-	DeeObject *argv[] = { Dee_None, &DeeInt_One };
+	DeeObject *argv[] = { Dee_None, DeeInt_One };
 	return get_type_of(DeeObject_CallAttrString((DeeObject *)&DeeSeq_Type, "repeat", 2, argv));
 }
 
@@ -1230,7 +1230,7 @@ librt_get_ModuleGlobalsIterator_f(size_t UNUSED(argc), DeeObject *const *UNUSED(
 PRIVATE DEFINE_BYTES(small_bytes, Dee_BUFFER_FREADONLY, 1, { 0 });
 LOCAL WUNUSED DREF DeeObject *DCALL
 librt_get_BytesFind_impl_f(void) {
-	DeeObject *argv[] = { &DeeInt_Zero };
+	DeeObject *argv[] = { DeeInt_Zero };
 	return get_type_of(DeeObject_CallAttrString((DeeObject *)&small_bytes, "findall", 1, argv));
 }
 
@@ -1246,7 +1246,7 @@ librt_get_BytesFindIterator_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv
 
 LOCAL WUNUSED DREF DeeObject *DCALL
 librt_get_BytesCaseFind_impl_f(void) {
-	DeeObject *argv[] = { &DeeInt_Zero };
+	DeeObject *argv[] = { DeeInt_Zero };
 	return get_type_of(DeeObject_CallAttrString((DeeObject *)&small_bytes, "casefindall", 1, argv));
 }
 
@@ -1262,7 +1262,7 @@ librt_get_BytesCaseFindIterator_f(size_t UNUSED(argc), DeeObject *const *UNUSED(
 
 LOCAL WUNUSED DREF DeeObject *DCALL
 librt_get_BytesSegments_impl_f(void) {
-	DeeObject *argv[] = { &DeeInt_One };
+	DeeObject *argv[] = { DeeInt_One };
 	return get_type_of(DeeObject_CallAttrString((DeeObject *)&small_bytes, "segments", 1, argv));
 }
 
@@ -1278,7 +1278,7 @@ librt_get_BytesSegmentsIterator_f(size_t UNUSED(argc), DeeObject *const *UNUSED(
 
 LOCAL WUNUSED DREF DeeObject *DCALL
 librt_get_BytesSplit_impl_f(void) {
-	DeeObject *argv[] = { &DeeInt_Zero };
+	DeeObject *argv[] = { DeeInt_Zero };
 	return get_type_of(DeeObject_CallAttrString((DeeObject *)&small_bytes, "split", 1, argv));
 }
 
@@ -1294,7 +1294,7 @@ librt_get_BytesSplitIterator_f(size_t UNUSED(argc), DeeObject *const *UNUSED(arg
 
 LOCAL WUNUSED DREF DeeObject *DCALL
 librt_get_BytesCaseSplit_impl_f(void) {
-	DeeObject *argv[] = { &DeeInt_Zero };
+	DeeObject *argv[] = { DeeInt_Zero };
 	return get_type_of(DeeObject_CallAttrString((DeeObject *)&small_bytes, "casesplit", 1, argv));
 }
 
@@ -2192,9 +2192,9 @@ PRIVATE struct dex_symbol symbols[] = {
 	{ "Tuple_empty", (DeeObject *)Dee_EmptyTuple, MODSYM_FREADONLY, DOC("The empty tuple singleton $\"\"") },
 	{ "String_empty", (DeeObject *)Dee_EmptyString, MODSYM_FREADONLY, DOC("The empty string singleton $\"\"") },
 	{ "Bytes_empty", (DeeObject *)Dee_EmptyBytes, MODSYM_FREADONLY, DOC("The empty bytes singleton ${\"\".bytes()}") },
-	{ "Int_0", (DeeObject *)&DeeInt_Zero, MODSYM_FREADONLY, DOC("The integer constant $0") },
-	{ "Int_1", (DeeObject *)&DeeInt_One, MODSYM_FREADONLY, DOC("The integer constant $1") },
-	{ "Int_m1", (DeeObject *)&DeeInt_MinusOne, MODSYM_FREADONLY, DOC("The integer constant ${-1}") },
+	{ "Int_0", DeeInt_Zero, MODSYM_FREADONLY, DOC("The integer constant $0") },
+	{ "Int_1", DeeInt_One, MODSYM_FREADONLY, DOC("The integer constant $1") },
+	{ "Int_m1", DeeInt_MinusOne, MODSYM_FREADONLY, DOC("The integer constant ${-1}") },
 	{ "Code_empty", (DeeObject *)&librt_get_Code_empty, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR,
 	  DOC("->?GCode\n"
 	      "Special instance of ?GCode that immediatly returns ?N") }, /* empty_code_head.c_code */

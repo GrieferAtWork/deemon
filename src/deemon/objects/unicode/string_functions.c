@@ -1466,7 +1466,7 @@ string_ord(String *self, size_t argc, DeeObject *const *argv) {
 		err_expected_single_character_string((DeeObject *)self);
 		goto err;
 	}
-	return DeeInt_NewU32(DeeString_GetChar((DeeObject *)self, index));
+	return DeeInt_NewUInt32(DeeString_GetChar((DeeObject *)self, index));
 err:
 	return NULL;
 }
@@ -1618,8 +1618,8 @@ string_asdigit(String *self, size_t argc, DeeObject *const *argv) {
 	if (!(trt->ut_flags & UNICODE_ISDIGIT))
 		goto err_not_numeric;
 	if likely(trt->ut_digit_idx < Dee_UNICODE_DIGIT_IDENTITY_COUNT)
-		return DeeInt_NewU8(trt->ut_digit_idx);
-	return DeeInt_NewU64(DeeUni_GetNumericIdx64(trt->ut_digit_idx));
+		return DeeInt_NewUInt8(trt->ut_digit_idx);
+	return DeeInt_NewUInt64(DeeUni_GetNumericIdx64(trt->ut_digit_idx));
 err_not_numeric:
 	if (defl)
 		return_reference_(defl);
@@ -1657,8 +1657,8 @@ string_asxdigit(String *self, size_t argc, DeeObject *const *argv) {
 	if (!(trt->ut_flags & UNICODE_ISXDIGIT))
 		goto err_not_numeric;
 	if likely(trt->ut_digit_idx < Dee_UNICODE_DIGIT_IDENTITY_COUNT)
-		return DeeInt_NewU8(trt->ut_digit_idx);
-	return DeeInt_NewU64(DeeUni_GetNumericIdx64(trt->ut_digit_idx));
+		return DeeInt_NewUInt8(trt->ut_digit_idx);
+	return DeeInt_NewUInt64(DeeUni_GetNumericIdx64(trt->ut_digit_idx));
 err_not_numeric:
 	if (defl)
 		return_reference_(defl);
@@ -1697,10 +1697,10 @@ string_asnumeric(String *self, size_t argc, DeeObject *const *argv) {
 	if (!(trt->ut_flags & UNICODE_ISNUMERIC))
 		goto err_not_numeric;
 	if likely(trt->ut_digit_idx < Dee_UNICODE_DIGIT_IDENTITY_COUNT)
-		return DeeInt_NewU8(trt->ut_digit_idx);
+		return DeeInt_NewUInt8(trt->ut_digit_idx);
 	floatval = DeeUni_GetNumericIdxD(trt->ut_digit_idx);
 	if ((double)(uint64_t)floatval == floatval)
-		return DeeInt_NewU64(DeeUni_GetNumericIdx64(trt->ut_digit_idx));
+		return DeeInt_NewUInt64(DeeUni_GetNumericIdx64(trt->ut_digit_idx));
 	return DeeFloat_New(floatval);
 err_not_numeric:
 	if (defl)
@@ -2004,7 +2004,7 @@ string_find(String *self, size_t argc,
 	}
 	return DeeInt_NewSize(result);
 not_found:
-	return_reference_(&DeeInt_MinusOne);
+	return_reference_(DeeInt_MinusOne);
 err:
 	return NULL;
 }
@@ -2087,7 +2087,7 @@ string_rfind(String *self, size_t argc,
 	}
 	return DeeInt_NewSize(result);
 not_found:
-	return_reference_(&DeeInt_MinusOne);
+	return_reference_(DeeInt_MinusOne);
 err:
 	return NULL;
 }
@@ -6562,7 +6562,7 @@ string_vercompare(String *self, size_t argc, DeeObject *const *argv) {
 		                     ot_str.cp32, ot_len);
 		break;
 	}
-	return DeeInt_NewS32(result);
+	return DeeInt_NewInt32(result);
 err:
 	return NULL;
 }
@@ -6661,7 +6661,7 @@ string_casevercompare(String *self, size_t argc, DeeObject *const *argv) {
 		                         ot_str.cp32, ot_len);
 		break;
 	}
-	return DeeInt_NewS32(result);
+	return DeeInt_NewInt32(result);
 err:
 	return NULL;
 }
@@ -7467,7 +7467,7 @@ string_wildcompare(String *self, size_t argc, DeeObject *const *argv) {
 		                      ot_str.cp32, ot_len);
 		break;
 	}
-	return DeeInt_NewS64(result);
+	return DeeInt_NewInt64(result);
 err:
 	return NULL;
 }
@@ -7673,7 +7673,7 @@ string_casewildcompare(String *self, size_t argc, DeeObject *const *argv) {
 		result = wildcasecomparel(&my_reader.l, &ot_reader.l);
 		break;
 	}
-	return DeeInt_NewS64(result);
+	return DeeInt_NewInt64(result);
 err:
 	return NULL;
 }
@@ -7988,7 +7988,7 @@ string_findmatch(String *self, size_t argc, DeeObject *const *argv) {
 	}
 	return DeeInt_NewSize(result);
 err_not_found:
-	return_reference_(&DeeInt_MinusOne);
+	return_reference_(DeeInt_MinusOne);
 err:
 	return NULL;
 }
@@ -8376,7 +8376,7 @@ string_rfindmatch(String *self, size_t argc, DeeObject *const *argv) {
 	}
 	return DeeInt_NewSize(result);
 err_not_found:
-	return_reference_(&DeeInt_MinusOne);
+	return_reference_(DeeInt_MinusOne);
 err:
 	return NULL;
 }

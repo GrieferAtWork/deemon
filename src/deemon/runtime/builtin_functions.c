@@ -131,20 +131,10 @@ f_builtin_compare(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	if (DeeArg_UnpackKw(argc, argv, kw, kwlist, "oo:compare", &lhs, &rhs))
 		goto err;
 	diff = DeeObject_Compare(lhs, rhs);
-	switch (diff) {
-	case -2:
+	if unlikely(diff == -2)
 		goto err;
-	case -1:
-		result = &DeeInt_MinusOne;
-		break;
-	case 0:
-		result = &DeeInt_Zero;
-		break;
-	case 1:
-		result = &DeeInt_One;
-		break;
-	default: __builtin_unreachable();
-	}
+	ASSERT(diff == -1 || diff == 0 || diff == 1);
+	result = DeeInt_FromSign(diff);
 	return_reference_(result);
 err:
 	return NULL;

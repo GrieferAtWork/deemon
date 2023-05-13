@@ -2059,7 +2059,7 @@ asm_newrelint(struct asm_sym *sym,
 	if likely(sym) {
 		obj = DeeRelInt_New(sym, addend, mode);
 	} else {
-		obj = DeeInt_NewS64(addend);
+		obj = DeeInt_NewInt64(addend);
 	}
 	if unlikely(!obj)
 		goto err;
@@ -2084,7 +2084,7 @@ fix_relint(DeeObject **__restrict p_obj) {
 	} else {
 		value += relint->ri_sym->as_stck;
 	}
-	intob = DeeInt_NewS64(value);
+	intob = DeeInt_NewInt64(value);
 	if unlikely(!intob)
 		goto err;
 	/* Replace the constant slot with this value. */

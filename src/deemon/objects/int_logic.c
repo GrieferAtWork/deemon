@@ -34,9 +34,9 @@ DECL_BEGIN
 #define FIVEARY_CUTOFF           8
 
 #if DIGIT_BITS <= 31
-#define DeeInt_NewMedian(x) DeeInt_NewS32(x)
+#define DeeInt_NewMedian(x) DeeInt_NewInt32(x)
 #else /* DIGIT_BITS <= 31 */
-#define DeeInt_NewMedian(x) DeeInt_NewS64(x)
+#define DeeInt_NewMedian(x) DeeInt_NewInt64(x)
 #endif /* DIGIT_BITS > 31 */
 
 
@@ -145,7 +145,7 @@ x_sub(DeeIntObject *a, DeeIntObject *b) {
 		while (--i >= 0 && a->ob_digit[i] == b->ob_digit[i])
 			;
 		if (i < 0)
-			return_reference_((DeeIntObject *)&DeeInt_Zero);
+			return_reference_((DeeIntObject *)DeeInt_Zero);
 		if (a->ob_digit[i] < b->ob_digit[i]) {
 			DeeIntObject *temp;
 			sign = -1;
@@ -307,8 +307,8 @@ x_add_int3(DeeIntObject *__restrict a, uint32_t b) {
 		uint64_t a_value;
 		a_value = a->ob_digit[0] | (a->ob_digit[1] << DIGIT_BITS);
 		if (a->ob_size < 0)
-			return (DREF DeeIntObject *)DeeInt_NewS64((-(int64_t)a_value) + (int64_t)b);
-		return (DREF DeeIntObject *)DeeInt_NewU64(a_value + b);
+			return (DREF DeeIntObject *)DeeInt_NewInt64((-(int64_t)a_value) + (int64_t)b);
+		return (DREF DeeIntObject *)DeeInt_NewUInt64(a_value + b);
 	}
 	ASSERT(size_a >= 3);
 	z = DeeInt_Alloc(size_a + 1);
@@ -388,14 +388,14 @@ x_sub_revint3(uint32_t a, DeeIntObject *__restrict b) {
 		b_value <<= DIGIT_BITS;
 		b_value |= b->ob_digit[0];
 		if (a == b_value)
-			return_reference_((DeeIntObject *)&DeeInt_Zero);
+			return_reference_((DeeIntObject *)DeeInt_Zero);
 		if (a < b_value) {
-			z = (DeeIntObject *)DeeInt_NewU64(b_value - a);
+			z = (DeeIntObject *)DeeInt_NewUInt64(b_value - a);
 			if (z)
 				z->ob_size = -z->ob_size;
 			return z;
 		}
-		return (DeeIntObject *)DeeInt_NewU64(a - b_value);
+		return (DeeIntObject *)DeeInt_NewUInt64(a - b_value);
 	}
 	ASSERT(size_b == 2);
 	z = DeeInt_Alloc(3);
@@ -460,7 +460,7 @@ x_sub_int2(DeeIntObject *__restrict a, twodigits b) {
 		a_value <<= DIGIT_BITS;
 		a_value |= a->ob_digit[0];
 		if (a_value == b)
-			return_reference_((DeeIntObject *)&DeeInt_Zero);
+			return_reference_((DeeIntObject *)DeeInt_Zero);
 		if (a_value < b) {
 			b -= a_value;
 			if (b <= DIGIT_MASK) {
@@ -539,7 +539,7 @@ x_sub_int3(DeeIntObject *__restrict a, uint32_t b) {
 		a_value <<= DIGIT_BITS;
 		a_value |= a->ob_digit[0];
 		if (a_value == b)
-			return_reference_((DeeIntObject *)&DeeInt_Zero);
+			return_reference_((DeeIntObject *)DeeInt_Zero);
 		if (a_value < b) {
 			b -= (uint32_t)a_value;
 			if (b <= DIGIT_MASK) {
@@ -633,7 +633,7 @@ x_sub_revint2(twodigits a, DeeIntObject *__restrict b) {
 	ASSERT(2 == size_b);
 	if ((a & DIGIT_MASK) == b->ob_digit[0]) {
 		if (((a >> DIGIT_BITS) & DIGIT_MASK) == b->ob_digit[1])
-			return_reference_((DeeIntObject *)&DeeInt_Zero);
+			return_reference_((DeeIntObject *)DeeInt_Zero);
 		if (((a >> DIGIT_BITS) & DIGIT_MASK) < b->ob_digit[1])
 			goto do_reverse;
 	} else if ((a & DIGIT_MASK) < b->ob_digit[0]) {
@@ -667,8 +667,8 @@ int_inc(DREF DeeIntObject **__restrict p_self) {
 		size_t i;
 		/* Try to do the increment in-line, thus not having to allocate a new integer. */
 		if unlikely(a->ob_size == 0) {
-			*p_self = (DeeIntObject *)&DeeInt_One;
-			Dee_Incref(&DeeInt_One);
+			*p_self = (DeeIntObject *)DeeInt_One;
+			Dee_Incref(DeeInt_One);
 			Dee_DecrefDokill(a);
 			goto done2;
 		}
@@ -696,8 +696,8 @@ int_inc(DREF DeeIntObject **__restrict p_self) {
 				}
 				if (oldval == 1 && a->ob_size == -1) {
 					ASSERT(i == 0);
-					*p_self = (DeeIntObject *)&DeeInt_Zero;
-					Dee_Incref(&DeeInt_Zero);
+					*p_self = (DeeIntObject *)DeeInt_Zero;
+					Dee_Incref(DeeInt_Zero);
 					Dee_DecrefDokill(a);
 					goto done2;
 				}
@@ -736,8 +736,8 @@ int_dec(DREF DeeIntObject **__restrict p_self) {
 		size_t i;
 		/* Try to do the decrement in-line, thus not having to allocate a new integer. */
 		if unlikely(a->ob_size == 0) {
-			*p_self = (DeeIntObject *)&DeeInt_MinusOne;
-			Dee_Incref(&DeeInt_MinusOne);
+			*p_self = (DeeIntObject *)DeeInt_MinusOne;
+			Dee_Incref(DeeInt_MinusOne);
 			Dee_DecrefDokill(a);
 			goto done2;
 		}
@@ -752,8 +752,8 @@ int_dec(DREF DeeIntObject **__restrict p_self) {
 				}
 				if (oldval == 1 && a->ob_size == 1) {
 					ASSERT(i == 0);
-					*p_self = (DeeIntObject *)&DeeInt_Zero;
-					Dee_Incref(&DeeInt_Zero);
+					*p_self = (DeeIntObject *)DeeInt_Zero;
+					Dee_Incref(DeeInt_Zero);
 					Dee_DecrefDokill(a);
 					goto done2;
 				}
@@ -829,7 +829,7 @@ DeeInt_AddU32(DeeIntObject *__restrict a, uint32_t b) {
 	if (!b)
 		return_reference_((DREF DeeObject *)a);
 	if (ABS(a->ob_size) <= 1)
-		return DeeInt_NewS64((int64_t)MEDIUM_VALUE(a) + (int64_t)b);
+		return DeeInt_NewInt64((int64_t)MEDIUM_VALUE(a) + (int64_t)b);
 	if (a->ob_size < 0) {
 		if (b <= DIGIT_MASK) {
 			z = x_sub_revint((digit)b, a);
@@ -889,7 +889,7 @@ INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeInt_SubU32(DeeIntObject *__restrict a, uint32_t b) {
 	DeeIntObject *z;
 	if (ABS(a->ob_size) <= 1)
-		return DeeInt_NewS64((int64_t)MEDIUM_VALUE(a) - (int64_t)b);
+		return DeeInt_NewInt64((int64_t)MEDIUM_VALUE(a) - (int64_t)b);
 	if (a->ob_size < 0) {
 		if (b <= DIGIT_MASK) {
 			z = x_add_int(a, (digit)b);
@@ -1139,7 +1139,7 @@ k_mul(DeeIntObject *a, DeeIntObject *b) {
 	i = a == b ? KARATSUBA_SQUARE_CUTOFF : KARATSUBA_CUTOFF;
 	if (asize <= i) {
 		if (asize == 0)
-			return_reference_((DeeIntObject *)&DeeInt_Zero);
+			return_reference_((DeeIntObject *)DeeInt_Zero);
 		return x_mul(a, b);
 	}
 	if (2 * asize <= bsize)
@@ -1319,9 +1319,9 @@ int_divrem(DeeIntObject *a,
 	if (size_a < size_b ||
 	    (size_a == size_b && (a->ob_digit[size_a - 1] <
 	                          b->ob_digit[size_b - 1]))) {
-		Dee_Incref(&DeeInt_Zero);
+		Dee_Incref(DeeInt_Zero);
 		Dee_Incref(a);
-		*p_div = (DeeIntObject *)&DeeInt_Zero;
+		*p_div = (DeeIntObject *)DeeInt_Zero;
 		*p_rem = (DeeIntObject *)a;
 		return 0;
 	}
@@ -1480,7 +1480,7 @@ int_divmod(DeeIntObject *v,
 		mod = temp;
 		if unlikely(!mod)
 			goto err_div;
-		temp = (DeeIntObject *)int_sub(div, (DeeObject *)&DeeInt_One);
+		temp = (DeeIntObject *)int_sub(div, DeeInt_One);
 		if unlikely(!temp)
 			goto err_div_mod;
 		Dee_Decref(div);
@@ -1538,7 +1538,7 @@ int_inv(DeeIntObject *v) {
 	DeeIntObject *x;
 	if (ABS(v->ob_size) <= 1)
 		return DeeInt_NewMedian(-(MEDIUM_VALUE(v) + 1));
-	x = (DeeIntObject *)int_add(v, (DeeObject *)&DeeInt_One);
+	x = (DeeIntObject *)int_add(v, DeeInt_One);
 	if unlikely(!x)
 		goto err;
 	x->ob_size = -x->ob_size;
@@ -1584,7 +1584,7 @@ int_shr(DeeIntObject *a, DeeObject *b) {
 		wordshift = shiftby / DIGIT_BITS;
 		newsize   = ABS(a->ob_size) - wordshift;
 		if (newsize <= 0)
-			return_reference_((DeeObject *)&DeeInt_Zero);
+			return_reference_(DeeInt_Zero);
 		loshift = shiftby % DIGIT_BITS;
 		hishift = DIGIT_BITS - loshift;
 		lomask  = ((digit)1 << hishift) - 1;
@@ -1829,7 +1829,7 @@ int_pow(DeeIntObject *a, DeeObject *b_ob) {
 		goto err;
 #endif
 	}
-	z = (DeeIntObject *)&DeeInt_One;
+	z = (DeeIntObject *)DeeInt_One;
 	Dee_Incref(z);
 #define MULT(x, y, result)                                   \
 	do {                                                     \

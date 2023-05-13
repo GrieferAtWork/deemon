@@ -1159,7 +1159,7 @@ stat_get_dev(DeeStatObject *__restrict self) {
 		err_stat_no_dev_info();
 		return NULL;
 	}
-	return DeeInt_NewU32((uint32_t)self->so_stat.st_info.dwVolumeSerialNumber);
+	return DeeInt_NewUInt32((uint32_t)self->so_stat.st_info.dwVolumeSerialNumber);
 #elif defined(posix_stat_HAVE_st_dev)
 	return DeeInt_NEWU(self->so_stat.st_info.st_dev);
 #else /* ... */
@@ -1179,7 +1179,7 @@ stat_get_ino(DeeStatObject *__restrict self) {
 		err_stat_no_ino_info();
 		return NULL;
 	}
-	return DeeInt_NewU64(((uint64_t)self->so_stat.st_info.nFileIndexHigh << 32) |
+	return DeeInt_NewUInt64(((uint64_t)self->so_stat.st_info.nFileIndexHigh << 32) |
 	                     ((uint64_t)self->so_stat.st_info.nFileIndexLow));
 #elif defined(posix_stat_HAVE_st_ino)
 	return DeeInt_NEWU(self->so_stat.st_info.st_ino);
@@ -1229,7 +1229,7 @@ stat_get_mode(DeeStatObject *__restrict self) {
 		}
 		break;
 	}
-	return DeeInt_NewU32(result);
+	return DeeInt_NewUInt32(result);
 #elif defined(posix_stat_HAVE_st_mode)
 	return DeeInt_NEWU(self->so_stat.st_info.st_mode);
 #else /* ... */
@@ -1246,7 +1246,7 @@ stat_get_nlink(DeeStatObject *__restrict self) {
 #ifdef posix_stat_USE_WINDOWS
 	if unlikely(self->so_stat.st_valid & NT_STAT_FNONLINK)
 		goto err_nolink;
-	return DeeInt_NewU32(self->so_stat.st_info.nNumberOfLinks);
+	return DeeInt_NewUInt32(self->so_stat.st_info.nNumberOfLinks);
 err_nolink:
 #define NEED_err_stat_no_link_info
 	err_stat_no_link_info();
@@ -1338,7 +1338,7 @@ stat_get_size(DeeStatObject *__restrict self) {
 #ifdef posix_stat_USE_WINDOWS
 	if unlikely(self->so_stat.st_valid & NT_STAT_FNOSIZE)
 		goto err_nosize;
-	return DeeInt_NewU64(((uint64_t)self->so_stat.st_info.nFileSizeHigh << 32) |
+	return DeeInt_NewUInt64(((uint64_t)self->so_stat.st_info.nFileSizeHigh << 32) |
 	                     ((uint64_t)self->so_stat.st_info.nFileSizeLow));
 err_nosize:
 #define NEED_err_stat_no_size_info
@@ -1370,7 +1370,7 @@ err_nosize:
 #endif /* CONFIG_HAVE_ferror */
 	}
 #ifdef CONFIG_HAVE_ftello64
-	return DeeInt_NewU64((uint64_t)ftello64(self->so_stat.st_file));
+	return DeeInt_NewUInt64((uint64_t)ftello64(self->so_stat.st_file));
 #elif defined(CONFIG_HAVE_ftello)
 	return DeeInt_NewUIntptr((uintptr_t)ftello(self->so_stat.st_file));
 #else /* ... */
@@ -1399,7 +1399,7 @@ stat_get_blocks(DeeStatObject *__restrict self) {
 		goto err_nosize;
 	size = ((uint64_t)self->so_stat.st_info.nFileSizeHigh << 32) |
 	       ((uint64_t)self->so_stat.st_info.nFileSizeLow);
-	return DeeInt_NewU64(DEFAULT_BLOCKS_FROM_FILESIZE(size));
+	return DeeInt_NewUInt64(DEFAULT_BLOCKS_FROM_FILESIZE(size));
 err_nosize:
 #define NEED_err_stat_no_blocks_info
 	err_stat_no_blocks_info();
@@ -1432,7 +1432,7 @@ err_nosize:
 #endif /* CONFIG_HAVE_ferror */
 	}
 #ifdef CONFIG_HAVE_ftello64
-	return DeeInt_NewU64(DEFAULT_BLOCKS_FROM_FILESIZE((uint64_t)ftello64(self->so_stat.st_file)));
+	return DeeInt_NewUInt64(DEFAULT_BLOCKS_FROM_FILESIZE((uint64_t)ftello64(self->so_stat.st_file)));
 #elif defined(CONFIG_HAVE_ftello)
 	return DeeInt_NewUIntptr(DEFAULT_BLOCKS_FROM_FILESIZE((uintptr_t)ftello(self->so_stat.st_file)));
 #else /* ... */
@@ -1457,12 +1457,12 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 stat_get_blksize(DeeStatObject *__restrict self) {
 #ifdef posix_stat_USE_WINDOWS
 	(void)self;
-	return DeeInt_NewU16(DEFAULT_BLOCKSIZE);
+	return DeeInt_NewUInt16(DEFAULT_BLOCKSIZE);
 #elif defined(posix_stat_HAVE_st_blksize)
 	return DeeInt_NEWU(self->so_stat.st_info.st_blksize);
 #elif !defined(posix_stat_get_blocks_IS_STUB)
 	(void)self;
-	return DeeInt_NewU16(DEFAULT_BLOCKSIZE);
+	return DeeInt_NewUInt16(DEFAULT_BLOCKSIZE);
 #else /* ... */
 #define posix_stat_get_blksize_IS_STUB
 	(void)self;
@@ -1729,7 +1729,7 @@ stat_issock(DeeStatObject *__restrict self) {
 #define HAVE_stat_getntattr_np
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 stat_getntattr_np(DeeStatObject *__restrict self) {
-	return DeeInt_NewU32(self->so_stat.st_info.dwFileAttributes);
+	return DeeInt_NewUInt32(self->so_stat.st_info.dwFileAttributes);
 }
 
 #define HAVE_stat_getnttype_np
@@ -1738,7 +1738,7 @@ stat_getnttype_np(DeeStatObject *__restrict self) {
 	DWORD result = stat_get_nttype(&self->so_stat, false);
 	if unlikely(result == FILE_TYPE_UNKNOWN)
 		goto err;
-	return DeeInt_NewU32(result);
+	return DeeInt_NewUInt32(result);
 err:
 	return NULL;
 }

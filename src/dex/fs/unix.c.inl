@@ -610,24 +610,24 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 stat_get_dev(DeeStatObject *__restrict self) {
 	__STATIC_IF(sizeof(self->st_stat.st_dev) <= 4) {
-		return DeeInt_NewU32((uint32_t)self->st_stat.st_dev);
+		return DeeInt_NewUInt32((uint32_t)self->st_stat.st_dev);
 	}
 	__STATIC_ELSE(sizeof(self->st_stat.st_dev) <= 4) {
-		return DeeInt_NewU64((uint64_t)self->st_stat.st_dev);
+		return DeeInt_NewUInt64((uint64_t)self->st_stat.st_dev);
 	}
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 stat_get_ino(DeeStatObject *__restrict self) {
 	__STATIC_IF(sizeof(self->st_stat.st_ino) <= 2) {
-		return DeeInt_NewU16((uint16_t)self->st_stat.st_ino);
+		return DeeInt_NewUInt16((uint16_t)self->st_stat.st_ino);
 	}
 	__STATIC_ELSE(sizeof(self->st_stat.st_ino) <= 2) {
 		__STATIC_IF(sizeof(self->st_stat.st_ino) <= 4) {
-			return DeeInt_NewU32((uint32_t)self->st_stat.st_ino);
+			return DeeInt_NewUInt32((uint32_t)self->st_stat.st_ino);
 		}
 		__STATIC_ELSE(sizeof(self->st_stat.st_ino) <= 4) {
-			return DeeInt_NewU64((uint64_t)self->st_stat.st_ino);
+			return DeeInt_NewUInt64((uint64_t)self->st_stat.st_ino);
 		}
 	}
 }
@@ -635,24 +635,24 @@ stat_get_ino(DeeStatObject *__restrict self) {
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 stat_get_mode(DeeStatObject *__restrict self) {
 	__STATIC_IF(sizeof(self->st_stat.st_mode) <= 2) {
-		return DeeInt_NewU16((uint16_t)self->st_stat.st_mode);
+		return DeeInt_NewUInt16((uint16_t)self->st_stat.st_mode);
 	}
 	__STATIC_ELSE(sizeof(self->st_stat.st_mode) <= 2) {
-		return DeeInt_NewU32((uint32_t)self->st_stat.st_mode);
+		return DeeInt_NewUInt32((uint32_t)self->st_stat.st_mode);
 	}
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 stat_get_nlink(DeeStatObject *__restrict self) {
 	__STATIC_IF(sizeof(self->st_stat.st_nlink) <= 2) {
-		return DeeInt_NewU16((uint16_t)self->st_stat.st_nlink);
+		return DeeInt_NewUInt16((uint16_t)self->st_stat.st_nlink);
 	}
 	__STATIC_ELSE(sizeof(self->st_stat.st_nlink) <= 2) {
 		__STATIC_IF(sizeof(self->st_stat.st_nlink) <= 4) {
-			return DeeInt_NewU32((uint32_t)self->st_stat.st_nlink);
+			return DeeInt_NewUInt32((uint32_t)self->st_stat.st_nlink);
 		}
 		__STATIC_ELSE(sizeof(self->st_stat.st_nlink) <= 4) {
-			return DeeInt_NewU64((uint64_t)self->st_stat.st_nlink);
+			return DeeInt_NewUInt64((uint64_t)self->st_stat.st_nlink);
 		}
 	}
 }
@@ -660,20 +660,20 @@ stat_get_nlink(DeeStatObject *__restrict self) {
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 stat_get_rdev(DeeStatObject *__restrict self) {
 	__STATIC_IF(sizeof(self->st_stat.st_rdev) <= 4) {
-		return DeeInt_NewU32((uint32_t)self->st_stat.st_rdev);
+		return DeeInt_NewUInt32((uint32_t)self->st_stat.st_rdev);
 	}
 	__STATIC_ELSE(sizeof(self->st_stat.st_rdev) <= 4) {
-		return DeeInt_NewU64((uint64_t)self->st_stat.st_rdev);
+		return DeeInt_NewUInt64((uint64_t)self->st_stat.st_rdev);
 	}
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 stat_get_size(DeeStatObject *__restrict self) {
 	__STATIC_IF(sizeof(self->st_stat.st_size) <= 4) {
-		return DeeInt_NewU32((uint32_t)self->st_stat.st_size);
+		return DeeInt_NewUInt32((uint32_t)self->st_stat.st_size);
 	}
 	__STATIC_ELSE(sizeof(self->st_stat.st_size) <= 4) {
-		return DeeInt_NewU64((uint64_t)self->st_stat.st_size);
+		return DeeInt_NewUInt64((uint64_t)self->st_stat.st_size);
 	}
 }
 

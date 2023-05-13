@@ -79,43 +79,43 @@ public:
 
 public:
 	static WUNUSED Ref<int_> zero() {
-		return nonnull(&DeeInt_Zero);
+		return nonnull(DeeInt_Zero);
 	}
 	static WUNUSED Ref<int_> one() {
-		return nonnull(&DeeInt_One);
+		return nonnull(DeeInt_One);
 	}
 	static WUNUSED Ref<int_> minus_one() {
-		return nonnull(&DeeInt_MinusOne);
+		return nonnull(DeeInt_MinusOne);
 	}
 	static WUNUSED Ref<int_> of(__INT8_TYPE__ value) {
-		return inherit(DeeInt_NewS8(value));
+		return inherit(DeeInt_NewInt8(value));
 	}
 	static WUNUSED Ref<int_> of(__INT16_TYPE__ value) {
-		return inherit(DeeInt_NewS16(value));
+		return inherit(DeeInt_NewInt16(value));
 	}
 	static WUNUSED Ref<int_> of(__INT32_TYPE__ value) {
-		return inherit(DeeInt_NewS32(value));
+		return inherit(DeeInt_NewInt32(value));
 	}
 	static WUNUSED Ref<int_> of(__INT64_TYPE__ value) {
-		return inherit(DeeInt_NewS64(value));
+		return inherit(DeeInt_NewInt64(value));
 	}
 	static WUNUSED Ref<int_> of(Dee_int128_t value) {
-		return inherit(DeeInt_NewS128(value));
+		return inherit(DeeInt_NewInt128(value));
 	}
 	static WUNUSED Ref<int_> of(__UINT8_TYPE__ value) {
-		return inherit(DeeInt_NewU8(value));
+		return inherit(DeeInt_NewUInt8(value));
 	}
 	static WUNUSED Ref<int_> of(__UINT16_TYPE__ value) {
-		return inherit(DeeInt_NewU16(value));
+		return inherit(DeeInt_NewUInt16(value));
 	}
 	static WUNUSED Ref<int_> of(__UINT32_TYPE__ value) {
-		return inherit(DeeInt_NewU32(value));
+		return inherit(DeeInt_NewUInt32(value));
 	}
 	static WUNUSED Ref<int_> of(__UINT64_TYPE__ value) {
-		return inherit(DeeInt_NewU64(value));
+		return inherit(DeeInt_NewUInt64(value));
 	}
 	static WUNUSED Ref<int_> of(Dee_uint128_t value) {
-		return inherit(DeeInt_NewU128(value));
+		return inherit(DeeInt_NewUInt128(value));
 	}
 #ifdef __FIFTHINT_TYPE__
 	static WUNUSED Ref<int_> of(__FIFTHINT_TYPE__ value) {
@@ -851,34 +851,34 @@ public:
 };
 
 inline WUNUSED Ref<int_> of(__INT8_TYPE__ value) {
-	return inherit(DeeInt_NewS8(value));
+	return inherit(DeeInt_NewInt8(value));
 }
 inline WUNUSED Ref<int_> of(__INT16_TYPE__ value) {
-	return inherit(DeeInt_NewS16(value));
+	return inherit(DeeInt_NewInt16(value));
 }
 inline WUNUSED Ref<int_> of(__INT32_TYPE__ value) {
-	return inherit(DeeInt_NewS32(value));
+	return inherit(DeeInt_NewInt32(value));
 }
 inline WUNUSED Ref<int_> of(__INT64_TYPE__ value) {
-	return inherit(DeeInt_NewS64(value));
+	return inherit(DeeInt_NewInt64(value));
 }
 inline WUNUSED Ref<int_> of(Dee_int128_t value) {
-	return inherit(DeeInt_NewS128(value));
+	return inherit(DeeInt_NewInt128(value));
 }
 inline WUNUSED Ref<int_> of(__UINT8_TYPE__ value) {
-	return inherit(DeeInt_NewU8(value));
+	return inherit(DeeInt_NewUInt8(value));
 }
 inline WUNUSED Ref<int_> of(__UINT16_TYPE__ value) {
-	return inherit(DeeInt_NewU16(value));
+	return inherit(DeeInt_NewUInt16(value));
 }
 inline WUNUSED Ref<int_> of(__UINT32_TYPE__ value) {
-	return inherit(DeeInt_NewU32(value));
+	return inherit(DeeInt_NewUInt32(value));
 }
 inline WUNUSED Ref<int_> of(__UINT64_TYPE__ value) {
-	return inherit(DeeInt_NewU64(value));
+	return inherit(DeeInt_NewUInt64(value));
 }
 inline WUNUSED Ref<int_> of(Dee_uint128_t value) {
-	return inherit(DeeInt_NewU128(value));
+	return inherit(DeeInt_NewUInt128(value));
 }
 #ifdef __FIFTHINT_TYPE__
 inline WUNUSED Ref<int_> of(__FIFTHINT_TYPE__ value) {

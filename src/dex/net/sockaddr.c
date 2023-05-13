@@ -531,7 +531,7 @@ sock_getafnameorid(int value) {
 	DREF DeeObject *result;
 	result = sock_getafname(value);
 	if (result == ITER_DONE)
-		result = DeeInt_NewS32((int32_t)value);
+		result = DeeInt_NewInt32((int32_t)value);
 	return result;
 }
 
@@ -1727,14 +1727,14 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 sockaddr_inet_host(DeeSockAddrObject *__restrict self) {
 	if (self->sa_addr.sa.sa_family != AF_INET)
 		return err_no_such_attribute(self, "inet_host");
-	return DeeInt_NewU32(NTOH32(self->sa_addr.sa_inet.sin_addr.s_addr));
+	return DeeInt_NewUInt32(NTOH32(self->sa_addr.sa_inet.sin_addr.s_addr));
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 sockaddr_inet_port(DeeSockAddrObject *__restrict self) {
 	if (self->sa_addr.sa.sa_family != AF_INET)
 		return err_no_such_attribute(self, "inet_port");
-	return DeeInt_NewU16(NTOH16(self->sa_addr.sa_inet.sin_port));
+	return DeeInt_NewUInt16(NTOH16(self->sa_addr.sa_inet.sin_port));
 }
 #endif /* AF_INET */
 
@@ -1743,28 +1743,28 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 sockaddr_inet6_port(DeeSockAddrObject *__restrict self) {
 	if (self->sa_addr.sa.sa_family != AF_INET6)
 		return err_no_such_attribute(self, "inet6_port");
-	return DeeInt_NewU16(NTOH16(self->sa_addr.sa_inet6.sin6_port));
+	return DeeInt_NewUInt16(NTOH16(self->sa_addr.sa_inet6.sin6_port));
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 sockaddr_inet6_host(DeeSockAddrObject *__restrict self) {
 	if (self->sa_addr.sa.sa_family != AF_INET6)
 		return err_no_such_attribute(self, "inet6_host");
-	return DeeInt_NewU128(*(Dee_uint128_t *)&self->sa_addr.sa_inet6.sin6_addr);
+	return DeeInt_NewUInt128(*(Dee_uint128_t *)&self->sa_addr.sa_inet6.sin6_addr);
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 sockaddr_inet6_flowinfo(DeeSockAddrObject *__restrict self) {
 	if (self->sa_addr.sa.sa_family != AF_INET6)
 		return err_no_such_attribute(self, "inet6_flowinfo");
-	return DeeInt_NewU32(self->sa_addr.sa_inet6.sin6_flowinfo);
+	return DeeInt_NewUInt32(self->sa_addr.sa_inet6.sin6_flowinfo);
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 sockaddr_inet6_scope_id(DeeSockAddrObject *__restrict self) {
 	if (self->sa_addr.sa.sa_family != AF_INET6)
 		return err_no_such_attribute(self, "inet6_scope_id");
-	return DeeInt_NewU32(self->sa_addr.sa_inet6.sin6_scope_id);
+	return DeeInt_NewUInt32(self->sa_addr.sa_inet6.sin6_scope_id);
 }
 #endif /* AF_INET6 */
 

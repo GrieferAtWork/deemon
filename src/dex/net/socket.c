@@ -2241,9 +2241,9 @@ socket_recvfrominto(Socket *self, size_t argc, DeeObject *const *argv) {
 		/* A somewhat different story: must return (none, "") */
 		DeeObject_FREE(result_addr);
 		DeeTuple_SET(result, 0, Dee_None);
-		DeeTuple_SET(result, 1, (DeeObject *)&DeeInt_Zero);
+		DeeTuple_SET(result, 1, DeeInt_Zero);
 		Dee_Incref(Dee_None);
-		Dee_Incref(&DeeInt_Zero);
+		Dee_Incref(DeeInt_Zero);
 	} else {
 		DREF DeeObject *result_size_ob;
 		result_size_ob = DeeInt_NewSize((size_t)result_size);

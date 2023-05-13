@@ -59,7 +59,7 @@ numeric_ass8(DeeObject *__restrict self) {
 	int8_t result;
 	if (DeeObject_AsInt8(self, &result))
 		goto err;
-	return DeeInt_NewS8(result);
+	return DeeInt_NewInt8(result);
 err:
 	return NULL;
 }
@@ -69,7 +69,7 @@ numeric_ass16(DeeObject *__restrict self) {
 	int16_t result;
 	if (DeeObject_AsInt16(self, &result))
 		goto err;
-	return DeeInt_NewS16(result);
+	return DeeInt_NewInt16(result);
 err:
 	return NULL;
 }
@@ -79,7 +79,7 @@ numeric_ass32(DeeObject *__restrict self) {
 	int32_t result;
 	if (DeeObject_AsInt32(self, &result))
 		goto err;
-	return DeeInt_NewS32(result);
+	return DeeInt_NewInt32(result);
 err:
 	return NULL;
 }
@@ -89,7 +89,7 @@ numeric_ass64(DeeObject *__restrict self) {
 	int64_t result;
 	if (DeeObject_AsInt64(self, &result))
 		goto err;
-	return DeeInt_NewS64(result);
+	return DeeInt_NewInt64(result);
 err:
 	return NULL;
 }
@@ -99,7 +99,7 @@ numeric_ass128(DeeObject *__restrict self) {
 	Dee_int128_t result;
 	if (DeeObject_AsInt128(self, &result))
 		goto err;
-	return DeeInt_NewS128(result);
+	return DeeInt_NewInt128(result);
 err:
 	return NULL;
 }
@@ -109,7 +109,7 @@ numeric_asu8(DeeObject *__restrict self) {
 	uint8_t result;
 	if (DeeObject_AsUInt8(self, &result))
 		goto err;
-	return DeeInt_NewU8(result);
+	return DeeInt_NewUInt8(result);
 err:
 	return NULL;
 }
@@ -119,7 +119,7 @@ numeric_asu16(DeeObject *__restrict self) {
 	uint16_t result;
 	if (DeeObject_AsUInt16(self, &result))
 		goto err;
-	return DeeInt_NewU16(result);
+	return DeeInt_NewUInt16(result);
 err:
 	return NULL;
 }
@@ -129,7 +129,7 @@ numeric_asu32(DeeObject *__restrict self) {
 	uint32_t result;
 	if (DeeObject_AsUInt32(self, &result))
 		goto err;
-	return DeeInt_NewU32(result);
+	return DeeInt_NewUInt32(result);
 err:
 	return NULL;
 }
@@ -139,7 +139,7 @@ numeric_asu64(DeeObject *__restrict self) {
 	uint64_t result;
 	if (DeeObject_AsUInt64(self, &result))
 		goto err;
-	return DeeInt_NewU64(result);
+	return DeeInt_NewUInt64(result);
 err:
 	return NULL;
 }
@@ -149,7 +149,7 @@ numeric_asu128(DeeObject *__restrict self) {
 	Dee_uint128_t result;
 	if (DeeObject_AsUInt128(self, &result))
 		goto err;
-	return DeeInt_NewU128(result);
+	return DeeInt_NewUInt128(result);
 err:
 	return NULL;
 }
@@ -159,7 +159,7 @@ numeric_signed8(DeeObject *__restrict self) {
 	int8_t result;
 	if unlikely(DeeObject_Get8Bit(self, &result) < 0)
 		goto err;
-	return DeeInt_NewS8(result);
+	return DeeInt_NewInt8(result);
 err:
 	return NULL;
 }
@@ -169,7 +169,7 @@ numeric_unsigned8(DeeObject *__restrict self) {
 	uint8_t result;
 	if unlikely(DeeObject_Get8Bit(self, (int8_t *)&result) < 0)
 		goto err;
-	return DeeInt_NewU8(result);
+	return DeeInt_NewUInt8(result);
 err:
 	return NULL;
 }
@@ -179,7 +179,7 @@ numeric_signed16(DeeObject *__restrict self) {
 	int16_t result;
 	if unlikely(DeeObject_Get16Bit(self, &result) < 0)
 		goto err;
-	return DeeInt_NewS16(result);
+	return DeeInt_NewInt16(result);
 err:
 	return NULL;
 }
@@ -189,7 +189,7 @@ numeric_unsigned16(DeeObject *__restrict self) {
 	uint16_t result;
 	if unlikely(DeeObject_Get16Bit(self, (int16_t *)&result) < 0)
 		goto err;
-	return DeeInt_NewU16(result);
+	return DeeInt_NewUInt16(result);
 err:
 	return NULL;
 }
@@ -199,7 +199,7 @@ numeric_signed32(DeeObject *__restrict self) {
 	int32_t result;
 	if unlikely(DeeObject_Get32Bit(self, &result) < 0)
 		goto err;
-	return DeeInt_NewS32(result);
+	return DeeInt_NewInt32(result);
 err:
 	return NULL;
 }
@@ -209,7 +209,7 @@ numeric_unsigned32(DeeObject *__restrict self) {
 	uint32_t result;
 	if unlikely(DeeObject_Get32Bit(self, (int32_t *)&result) < 0)
 		goto err;
-	return DeeInt_NewU32(result);
+	return DeeInt_NewUInt32(result);
 err:
 	return NULL;
 }
@@ -219,7 +219,7 @@ numeric_signed64(DeeObject *__restrict self) {
 	int64_t result;
 	if unlikely(DeeObject_Get64Bit(self, &result) < 0)
 		goto err;
-	return DeeInt_NewS64(result);
+	return DeeInt_NewInt64(result);
 err:
 	return NULL;
 }
@@ -229,7 +229,7 @@ numeric_unsigned64(DeeObject *__restrict self) {
 	uint64_t result;
 	if unlikely(DeeObject_Get64Bit(self, (int64_t *)&result) < 0)
 		goto err;
-	return DeeInt_NewU64(result);
+	return DeeInt_NewUInt64(result);
 err:
 	return NULL;
 }
@@ -239,7 +239,7 @@ numeric_signed128(DeeObject *__restrict self) {
 	Dee_int128_t result;
 	if unlikely(DeeObject_Get128Bit(self, &result) < 0)
 		goto err;
-	return DeeInt_NewS128(result);
+	return DeeInt_NewInt128(result);
 err:
 	return NULL;
 }
@@ -249,7 +249,7 @@ numeric_unsigned128(DeeObject *__restrict self) {
 	Dee_uint128_t result;
 	if unlikely(DeeObject_Get128Bit(self, (Dee_int128_t *)&result) < 0)
 		goto err;
-	return DeeInt_NewU128(result);
+	return DeeInt_NewUInt128(result);
 err:
 	return NULL;
 }
@@ -259,7 +259,7 @@ numeric_swap16(DeeObject *__restrict self) {
 	uint16_t result;
 	if unlikely(DeeObject_Get16Bit(self, (int16_t *)&result) < 0)
 		goto err;
-	return DeeInt_NewU16(BSWAP16(result));
+	return DeeInt_NewUInt16(BSWAP16(result));
 err:
 	return NULL;
 }
@@ -269,7 +269,7 @@ numeric_swap32(DeeObject *__restrict self) {
 	uint32_t result;
 	if unlikely(DeeObject_Get32Bit(self, (int32_t *)&result) < 0)
 		goto err;
-	return DeeInt_NewU32(BSWAP32(result));
+	return DeeInt_NewUInt32(BSWAP32(result));
 err:
 	return NULL;
 }
@@ -279,7 +279,7 @@ numeric_swap64(DeeObject *__restrict self) {
 	uint64_t result;
 	if unlikely(DeeObject_Get64Bit(self, (int64_t *)&result) < 0)
 		goto err;
-	return DeeInt_NewU64(BSWAP64(result));
+	return DeeInt_NewUInt64(BSWAP64(result));
 err:
 	return NULL;
 }
@@ -290,7 +290,7 @@ numeric_swap128(DeeObject *__restrict self) {
 	if unlikely(DeeObject_Get128Bit(self, (Dee_int128_t *)&result) < 0)
 		goto err;
 	__hybrid_uint128_bswap(result);
-	return DeeInt_NewU128(result);
+	return DeeInt_NewUInt128(result);
 err:
 	return NULL;
 }
@@ -300,7 +300,7 @@ numeric_sswap16(DeeObject *__restrict self) {
 	uint16_t result;
 	if unlikely(DeeObject_Get16Bit(self, (int16_t *)&result) < 0)
 		goto err;
-	return DeeInt_NewS16((int16_t)BSWAP16(result));
+	return DeeInt_NewInt16((int16_t)BSWAP16(result));
 err:
 	return NULL;
 }
@@ -310,7 +310,7 @@ numeric_sswap32(DeeObject *__restrict self) {
 	uint32_t result;
 	if unlikely(DeeObject_Get32Bit(self, (int32_t *)&result) < 0)
 		goto err;
-	return DeeInt_NewS32((int64_t)BSWAP32(result));
+	return DeeInt_NewInt32((int64_t)BSWAP32(result));
 err:
 	return NULL;
 }
@@ -320,7 +320,7 @@ numeric_sswap64(DeeObject *__restrict self) {
 	uint64_t result;
 	if unlikely(DeeObject_Get64Bit(self, (int64_t *)&result) < 0)
 		goto err;
-	return DeeInt_NewS64((int64_t)BSWAP64(result));
+	return DeeInt_NewInt64((int64_t)BSWAP64(result));
 err:
 	return NULL;
 }
@@ -331,7 +331,7 @@ numeric_sswap128(DeeObject *__restrict self) {
 	if unlikely(DeeObject_Get128Bit(self, (Dee_int128_t *)&result) < 0)
 		goto err;
 	__hybrid_int128_bswap(result);
-	return DeeInt_NewS128(result);
+	return DeeInt_NewInt128(result);
 err:
 	return NULL;
 }
@@ -459,7 +459,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 numeric_get_abs(DeeObject *__restrict self) {
 	int isneg;
-	isneg = DeeObject_CompareLo(self, &DeeInt_Zero);
+	isneg = DeeObject_CompareLo(self, DeeInt_Zero);
 	if unlikely(isneg < 0)
 		goto err;
 	return isneg ? DeeObject_Neg(self)
@@ -612,7 +612,7 @@ numeric_get_floor(DeeObject *__restrict self) {
 
 	/* >> if (this < 0)
 	 * >>     --res; */
-	error = DeeObject_CompareLo(self, &DeeInt_Zero);
+	error = DeeObject_CompareLo(self, DeeInt_Zero);
 	if unlikely(error < 0)
 		goto err_res;
 	if (error) {
@@ -660,7 +660,7 @@ numeric_get_ceil(DeeObject *__restrict self) {
 
 	/* >> if (this > 0)
 	 * >>     ++res; */
-	error = DeeObject_CompareGr(self, &DeeInt_Zero);
+	error = DeeObject_CompareGr(self, DeeInt_Zero);
 	if unlikely(error < 0)
 		goto err_res;
 	if (error) {
@@ -709,7 +709,7 @@ numeric_get_round(DeeObject *__restrict self) {
 	}
 
 	/* >> if (this > 0) { ... */
-	error = DeeObject_CompareGr(self, &DeeInt_Zero);
+	error = DeeObject_CompareGr(self, DeeInt_Zero);
 	if unlikely(error < 0)
 		goto err_res;
 	if (error) {
@@ -1485,7 +1485,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 numeric_hex(DeeObject *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	DeeObject *args[3];
 	args[0] = (DeeObject *)&int_16;
-	args[1] = (DeeObject *)&DeeInt_Zero;
+	args[1] = DeeInt_Zero;
 	args[2] = (DeeObject *)&str_pound;
 	if (DeeArg_UnpackKw(argc, argv, kw, precision_kwlist, "|o:hex", &args[1]))
 		goto err;
@@ -1498,7 +1498,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 numeric_bin(DeeObject *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	DeeObject *args[3];
 	args[0] = (DeeObject *)&int_2;
-	args[1] = (DeeObject *)&DeeInt_Zero;
+	args[1] = DeeInt_Zero;
 	args[2] = (DeeObject *)&str_pound;
 	if (DeeArg_UnpackKw(argc, argv, kw, precision_kwlist, "|o:bin", &args[1]))
 		goto err;
@@ -1511,7 +1511,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 numeric_oct(DeeObject *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	DeeObject *args[3];
 	args[0] = (DeeObject *)&int_8;
-	args[1] = (DeeObject *)&DeeInt_Zero;
+	args[1] = DeeInt_Zero;
 	args[2] = (DeeObject *)&str_pound;
 	if (DeeArg_UnpackKw(argc, argv, kw, precision_kwlist, "|o:oct", &args[1]))
 		goto err;
@@ -1662,7 +1662,7 @@ numeric_nextafter(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	if unlikely(error < 0)
 		goto err;
 	if (error)
-		return DeeObject_Sub(self, (DeeObject *)&DeeInt_One);
+		return DeeObject_Sub(self, DeeInt_One);
 
 	/* >> if (this < y)
 	 * >>     return this + 1; */
@@ -1670,7 +1670,7 @@ numeric_nextafter(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	if unlikely(error < 0)
 		goto err;
 	if (error)
-		return DeeObject_Add(self, (DeeObject *)&DeeInt_One);
+		return DeeObject_Add(self, DeeInt_One);
 
 	/* >> return this; */
 	return_reference_(self);

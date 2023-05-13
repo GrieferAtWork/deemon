@@ -409,53 +409,54 @@ struct Dee_int_object {
 #endif /* DEE_SOURCE */
 
 
+/* Check if a given object is an `int'-object */
+#define DeeInt_Check(x)      DeeObject_InstanceOfExact(x, &DeeInt_Type) /* `int' is final */
+#define DeeInt_CheckExact(x) DeeObject_InstanceOfExact(x, &DeeInt_Type)
 DDATDEF DeeTypeObject DeeInt_Type;
 
+
 /* Builtin constant for special (often used) values. */
-#ifdef GUARD_DEEMON_OBJECTS_INT_C
-
-struct _Dee_int_0digit_object {
-	Dee_OBJECT_HEAD
-	Dee_ssize_t ob_size;
-};
-
 struct _Dee_int_1digit_object {
 	Dee_OBJECT_HEAD
 	Dee_ssize_t ob_size;
 	Dee_digit_t ob_digit[1];
+
+	/* Pad to whole pointers. */
+#if __SIZEOF_POINTER__ == 4 && Dee_DIGIT_BITS == 15
+	uint16_t _ob_pad;
+#elif __SIZEOF_POINTER__ == 8 && Dee_DIGIT_BITS == 30
+	uint32_t _ob_pad;
+#elif __SIZEOF_POINTER__ == 8 && Dee_DIGIT_BITS == 15
+	uint16_t _ob_pad[3];
+#endif /* ... */
 };
 
-DDATDEF struct _Dee_int_0digit_object DeeInt_Zero;
-DDATDEF struct _Dee_int_1digit_object DeeInt_One;
-DDATDEF struct _Dee_int_1digit_object DeeInt_MinusOne;
-#else /* GUARD_DEEMON_OBJECTS_INT_C */
-DDATDEF DeeObject DeeInt_Zero;
-DDATDEF DeeObject DeeInt_One;
-DDATDEF DeeObject DeeInt_MinusOne;
-#endif /* !GUARD_DEEMON_OBJECTS_INT_C */
+DDATDEF struct _Dee_int_1digit_object DeeInt_MinusOne_Zero_One[3];
+#define DeeInt_MinusOne ((DeeObject *)&DeeInt_MinusOne_Zero_One[0])
+#define DeeInt_Zero     ((DeeObject *)&DeeInt_MinusOne_Zero_One[1])
+#define DeeInt_One      ((DeeObject *)&DeeInt_MinusOne_Zero_One[2])
 
-#define DeeInt_Check(x)      DeeObject_InstanceOfExact(x, &DeeInt_Type) /* `int' is final */
-#define DeeInt_CheckExact(x) DeeObject_InstanceOfExact(x, &DeeInt_Type)
+/* Return an integer object for the values `-1', `0' and `1' */
+#define DeeInt_FromSign(sign) ((DeeObject *)&DeeInt_MinusOne_Zero_One[(unsigned int)((sign) + 1)])
+
+/* Return an integer object for small values */
+#define DeeInt_ForSmallInt(val) ((DeeObject *)&DeeInt_MinusOne_Zero_One[(unsigned int)((val) + 1)])
+#define DeeInt_IsSmallInt(val)  ((val) >= -1 && (val) <= 1)
 
 
 
 
 /* Integer object creation. */
-DFUNDEF WUNUSED DREF DeeObject *DCALL DeeInt_NewS16(int16_t val);
-DFUNDEF WUNUSED DREF DeeObject *DCALL DeeInt_NewS32(int32_t val);
-DFUNDEF WUNUSED DREF DeeObject *DCALL DeeInt_NewS64(int64_t val);
-DFUNDEF WUNUSED DREF DeeObject *DCALL DeeInt_NewU16(uint16_t val);
-DFUNDEF WUNUSED DREF DeeObject *DCALL DeeInt_NewU32(uint32_t val);
-DFUNDEF WUNUSED DREF DeeObject *DCALL DeeInt_NewU64(uint64_t val);
-DFUNDEF WUNUSED DREF DeeObject *DCALL DeeInt_NewS128(Dee_int128_t val);
-DFUNDEF WUNUSED DREF DeeObject *DCALL DeeInt_NewU128(Dee_uint128_t val);
-#if DIGIT_BITS < 16
-DFUNDEF WUNUSED DREF DeeObject *DCALL DeeInt_NewS8(int8_t val);
-DFUNDEF WUNUSED DREF DeeObject *DCALL DeeInt_NewU8(uint8_t val);
-#else /* DIGIT_BITS < 16 */
-#define DeeInt_NewU8 DeeInt_NewU16
-#define DeeInt_NewS8 DeeInt_NewS16
-#endif /* DIGIT_BITS >= 16 */
+DFUNDEF WUNUSED DREF DeeObject *DCALL DeeInt_NewInt8(int8_t val);
+DFUNDEF WUNUSED DREF DeeObject *DCALL DeeInt_NewUInt8(uint8_t val);
+DFUNDEF WUNUSED DREF DeeObject *DCALL DeeInt_NewInt16(int16_t val);
+DFUNDEF WUNUSED DREF DeeObject *DCALL DeeInt_NewInt32(int32_t val);
+DFUNDEF WUNUSED DREF DeeObject *DCALL DeeInt_NewInt64(int64_t val);
+DFUNDEF WUNUSED DREF DeeObject *DCALL DeeInt_NewUInt16(uint16_t val);
+DFUNDEF WUNUSED DREF DeeObject *DCALL DeeInt_NewUInt32(uint32_t val);
+DFUNDEF WUNUSED DREF DeeObject *DCALL DeeInt_NewUInt64(uint64_t val);
+DFUNDEF WUNUSED DREF DeeObject *DCALL DeeInt_NewInt128(Dee_int128_t val);
+DFUNDEF WUNUSED DREF DeeObject *DCALL DeeInt_NewUInt128(Dee_uint128_t val);
 
 /* Create an integer from signed/unsigned LEB data. */
 DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -772,84 +773,84 @@ DeeInt_Print(DeeObject *__restrict self, uint32_t radix_and_flags,
 	DeeInt_Print(self, DEEINT_PRINT_DEC, 0, printer, arg)
 
 
-#define DEE_PRIVATE_NEWINT_1      DeeInt_NewS8
-#define DEE_PRIVATE_NEWINT_2      DeeInt_NewS16
-#define DEE_PRIVATE_NEWINT_4      DeeInt_NewS32
-#define DEE_PRIVATE_NEWINT_8      DeeInt_NewS64
-#define DEE_PRIVATE_NEWINT_16     DeeInt_NewS128
-#define DEE_PRIVATE_NEWUINT_1     DeeInt_NewU8
-#define DEE_PRIVATE_NEWUINT_2     DeeInt_NewU16
-#define DEE_PRIVATE_NEWUINT_4     DeeInt_NewU32
-#define DEE_PRIVATE_NEWUINT_8     DeeInt_NewU64
-#define DEE_PRIVATE_NEWUINT_16    DeeInt_NewU128
+#define DEE_PRIVATE_NEWINT_1      DeeInt_NewInt8
+#define DEE_PRIVATE_NEWINT_2      DeeInt_NewInt16
+#define DEE_PRIVATE_NEWINT_4      DeeInt_NewInt32
+#define DEE_PRIVATE_NEWINT_8      DeeInt_NewInt64
+#define DEE_PRIVATE_NEWINT_16     DeeInt_NewInt128
+#define DEE_PRIVATE_NEWUINT_1     DeeInt_NewUInt8
+#define DEE_PRIVATE_NEWUINT_2     DeeInt_NewUInt16
+#define DEE_PRIVATE_NEWUINT_4     DeeInt_NewUInt32
+#define DEE_PRIVATE_NEWUINT_8     DeeInt_NewUInt64
+#define DEE_PRIVATE_NEWUINT_16    DeeInt_NewUInt128
 #define DEE_PRIVATE_NEWINT(size)  DEE_PRIVATE_NEWINT_##size
 #define DEE_PRIVATE_NEWUINT(size) DEE_PRIVATE_NEWUINT_##size
 
 /* Create a new integer object by looking at sizeof(v). */
 #ifdef __NO_builtin_choose_expr
 #define DeeInt_NEWS(value)                                  \
-	(sizeof(value) <= 1 ? DeeInt_NewS8((int8_t)(value)) :   \
-	 sizeof(value) <= 2 ? DeeInt_NewS16((int16_t)(value)) : \
-	 sizeof(value) <= 4 ? DeeInt_NewS32((int32_t)(value)) : \
-	                      DeeInt_NewS64((int64_t)(value)))
+	(sizeof(value) <= 1 ? DeeInt_NewInt8((int8_t)(value)) :   \
+	 sizeof(value) <= 2 ? DeeInt_NewInt16((int16_t)(value)) : \
+	 sizeof(value) <= 4 ? DeeInt_NewInt32((int32_t)(value)) : \
+	                      DeeInt_NewInt64((int64_t)(value)))
 #define DeeInt_NEWU(value)                                   \
-	(sizeof(value) <= 1 ? DeeInt_NewU8((uint8_t)(value)) :   \
-	 sizeof(value) <= 2 ? DeeInt_NewU16((uint16_t)(value)) : \
-	 sizeof(value) <= 4 ? DeeInt_NewU32((uint32_t)(value)) : \
-	                      DeeInt_NewU64((uint64_t)(value)))
+	(sizeof(value) <= 1 ? DeeInt_NewUInt8((uint8_t)(value)) :   \
+	 sizeof(value) <= 2 ? DeeInt_NewUInt16((uint16_t)(value)) : \
+	 sizeof(value) <= 4 ? DeeInt_NewUInt32((uint32_t)(value)) : \
+	                      DeeInt_NewUInt64((uint64_t)(value)))
 #else /* __NO_builtin_choose_expr */
-#define DeeInt_NEWS(value)                                                      \
-	__builtin_choose_expr(sizeof(value) <= 1, DeeInt_NewS8((int8_t)(value)),    \
-	__builtin_choose_expr(sizeof(value) <= 2, DeeInt_NewS16((int16_t)(value)),  \
-	__builtin_choose_expr(sizeof(value) <= 4, DeeInt_NewS32((int32_t)(value)),  \
-	                                          DeeInt_NewS64((int64_t)(value)))))
-#define DeeInt_NEWU(value)                                                       \
-	__builtin_choose_expr(sizeof(value) <= 1, DeeInt_NewU8((uint8_t)(value)),    \
-	__builtin_choose_expr(sizeof(value) <= 2, DeeInt_NewU16((uint16_t)(value)),  \
-	__builtin_choose_expr(sizeof(value) <= 4, DeeInt_NewU32((uint32_t)(value)),  \
-	                                          DeeInt_NewU64((uint64_t)(value)))))
+#define DeeInt_NEWS(value)                                                        \
+	__builtin_choose_expr(sizeof(value) <= 1, DeeInt_NewInt8((int8_t)(value)),    \
+	__builtin_choose_expr(sizeof(value) <= 2, DeeInt_NewInt16((int16_t)(value)),  \
+	__builtin_choose_expr(sizeof(value) <= 4, DeeInt_NewInt32((int32_t)(value)),  \
+	                                          DeeInt_NewInt64((int64_t)(value)))))
+#define DeeInt_NEWU(value)                                                          \
+	__builtin_choose_expr(sizeof(value) <= 1, DeeInt_NewUInt8((uint8_t)(value)),    \
+	__builtin_choose_expr(sizeof(value) <= 2, DeeInt_NewUInt16((uint16_t)(value)),  \
+	__builtin_choose_expr(sizeof(value) <= 4, DeeInt_NewUInt32((uint32_t)(value)),  \
+	                                          DeeInt_NewUInt64((uint64_t)(value)))))
 #endif /* !__NO_builtin_choose_expr */
 
 
 
 /* Create a new integer object with an input integral value `val' of `size' bytes. */
-#define DeeInt_New(size, val)  DEE_PRIVATE_NEWINT(size)(val)
-#define DeeInt_Newu(size, val) DEE_PRIVATE_NEWUINT(size)(val)
+#define DeeInt_NewIntN(size, val)  DEE_PRIVATE_NEWINT(size)(val)
+#define DeeInt_NewUIntN(size, val) DEE_PRIVATE_NEWUINT(size)(val)
 
 #ifndef __CHAR_UNSIGNED__
-#define DeeInt_NewChar(val)    DeeInt_New(__SIZEOF_CHAR__, val)
+#define DeeInt_NewChar(val)    DeeInt_NewIntN(__SIZEOF_CHAR__, val)
 #else /* !__CHAR_UNSIGNED__ */
-#define DeeInt_NewChar(val)    DeeInt_Newu(__SIZEOF_CHAR__, val)
+#define DeeInt_NewChar(val)    DeeInt_NewUIntN(__SIZEOF_CHAR__, val)
 #endif /* __CHAR_UNSIGNED__ */
-#define DeeInt_NewSChar(val)   DeeInt_New(__SIZEOF_CHAR__, val)
-#define DeeInt_NewUChar(val)   DeeInt_Newu(__SIZEOF_CHAR__, val)
-#define DeeInt_NewShort(val)   DeeInt_New(__SIZEOF_SHORT__, val)
-#define DeeInt_NewUShort(val)  DeeInt_Newu(__SIZEOF_SHORT__, val)
-#define DeeInt_NewInt(val)     DeeInt_New(__SIZEOF_INT__, val)
-#define DeeInt_NewUInt(val)    DeeInt_Newu(__SIZEOF_INT__, val)
-#define DeeInt_NewLong(val)    DeeInt_New(__SIZEOF_LONG__, val)
-#define DeeInt_NewULong(val)   DeeInt_Newu(__SIZEOF_LONG__, val)
+#define DeeInt_NewSChar(val)   DeeInt_NewIntN(__SIZEOF_CHAR__, val)
+#define DeeInt_NewUChar(val)   DeeInt_NewUIntN(__SIZEOF_CHAR__, val)
+#define DeeInt_NewShort(val)   DeeInt_NewIntN(__SIZEOF_SHORT__, val)
+#define DeeInt_NewUShort(val)  DeeInt_NewUIntN(__SIZEOF_SHORT__, val)
+#define DeeInt_NewInt(val)     DeeInt_NewIntN(__SIZEOF_INT__, val)
+#define DeeInt_NewUInt(val)    DeeInt_NewUIntN(__SIZEOF_INT__, val)
+#define DeeInt_NewLong(val)    DeeInt_NewIntN(__SIZEOF_LONG__, val)
+#define DeeInt_NewULong(val)   DeeInt_NewUIntN(__SIZEOF_LONG__, val)
 #ifdef __COMPILER_HAVE_LONGLONG
-#define DeeInt_NewLLong(val)   DeeInt_New(__SIZEOF_LONG_LONG__, val)
-#define DeeInt_NewULLong(val)  DeeInt_Newu(__SIZEOF_LONG_LONG__, val)
+#define DeeInt_NewLLong(val)   DeeInt_NewIntN(__SIZEOF_LONG_LONG__, val)
+#define DeeInt_NewULLong(val)  DeeInt_NewUIntN(__SIZEOF_LONG_LONG__, val)
 #endif /* __COMPILER_HAVE_LONGLONG */
-#define DeeInt_NewSize(val)    DeeInt_Newu(__SIZEOF_SIZE_T__, val)
-#define DeeInt_NewHash(val)    DeeInt_Newu(__SIZEOF_POINTER__, val)
-#define DeeInt_NewSSize(val)   DeeInt_New(__SIZEOF_SIZE_T__, val)
-#define DeeInt_NewPtrdiff(val) DeeInt_New(__SIZEOF_PTRDIFF_T__, val)
-#define DeeInt_NewIntptr(val)  DeeInt_New(__SIZEOF_POINTER__, val)
-#define DeeInt_NewUIntptr(val) DeeInt_Newu(__SIZEOF_POINTER__, val)
+#define DeeInt_NewSize(val)    DeeInt_NewUIntN(__SIZEOF_SIZE_T__, val)
+#define DeeInt_NewHash(val)    DeeInt_NewUIntN(__SIZEOF_POINTER__, val)
+#define DeeInt_NewSSize(val)   DeeInt_NewIntN(__SIZEOF_SIZE_T__, val)
+#define DeeInt_NewPtrdiff(val) DeeInt_NewIntN(__SIZEOF_PTRDIFF_T__, val)
+#define DeeInt_NewIntptr(val)  DeeInt_NewIntN(__SIZEOF_POINTER__, val)
+#define DeeInt_NewUIntptr(val) DeeInt_NewUIntN(__SIZEOF_POINTER__, val)
 
 #if DIGIT_BITS == 30
-#define DeeInt_NewDigit(val)       DeeInt_Newu(4, val)
-#define DeeInt_NewSDigit(val)      DeeInt_New(4, val)
-#define DeeInt_NewTwoDigits(val)   DeeInt_Newu(8, val)
-#define DeeInt_NewSTwoDigits(val)  DeeInt_New(8, val)
+#define DeeInt_NewDigit(val)      DeeInt_NewUIntN(4, val)
+#define DeeInt_NewSDigit(val)     DeeInt_NewIntN(4, val)
+#define DeeInt_NewTwoDigits(val)  DeeInt_NewUIntN(8, val)
+#define DeeInt_NewSTwoDigits(val) DeeInt_NewIntN(8, val)
 #else /* DIGIT_BITS == 30 */
-#define DeeInt_NewDigit(val)       DeeInt_Newu(2, val)
-#define DeeInt_NewSDigit(val)      DeeInt_New(2, val)
-#define DeeInt_NewTwoDigits(val)   DeeInt_Newu(4, val)
-#define DeeInt_NewSTwoDigits(val)  DeeInt_New(4, val)
+#define DeeInt_NewDigit(val)      DeeInt_NewUIntN(2, val)
+#define DeeInt_NewSDigit(val)     DeeInt_NewIntN(2, val)
+#define DeeInt_NewTwoDigits(val)  DeeInt_NewUIntN(4, val)
+#define DeeInt_NewSTwoDigits(val) DeeInt_NewIntN(4, val)
 #endif /* DIGIT_BITS != 30 */
 
 #ifndef __INTELLISENSE__

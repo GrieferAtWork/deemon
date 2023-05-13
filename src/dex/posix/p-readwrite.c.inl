@@ -247,7 +247,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix_read_f(size_t argc, DeeObject *const
 #ifndef posix_read_USE_STUB
 	int fd_fd;
 	DeeObject *fd;
-	DeeObject *buf_or_count = &DeeInt_MinusOne;
+	DeeObject *buf_or_count = DeeInt_MinusOne;
 	size_t count = (size_t)-1;
 	dssize_t error;
 	if (DeeArg_Unpack(argc, argv, "o|o" UNPdSIZ ":read", &fd, &buf_or_count, &count))
@@ -418,7 +418,7 @@ EINTR_LABEL(again)
 		                          "Failed to seek %d", fd);
 		goto err;
 	}
-	return DeeInt_NewS64(result);
+	return DeeInt_NewInt64(result);
 err:
 	return NULL;
 #endif /* posix_lseek_USE_lseek || posix_lseek_USE_lseek64 */

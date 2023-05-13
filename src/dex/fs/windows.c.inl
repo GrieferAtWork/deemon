@@ -1758,7 +1758,7 @@ stat_get_dev(DeeStatObject *__restrict self) {
 		err_no_dev_info();
 		return NULL;
 	}
-	return DeeInt_NewU32((uint32_t)self->st_stat.s_info.dwVolumeSerialNumber);
+	return DeeInt_NewUInt32((uint32_t)self->st_stat.s_info.dwVolumeSerialNumber);
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -1767,7 +1767,7 @@ stat_get_ino(DeeStatObject *__restrict self) {
 		err_no_ino_info();
 		return NULL;
 	}
-	return DeeInt_NewU64(((uint64_t)self->st_stat.s_info.nFileIndexHigh << 32) |
+	return DeeInt_NewUInt64(((uint64_t)self->st_stat.s_info.nFileIndexHigh << 32) |
 	                     ((uint64_t)self->st_stat.s_info.nFileIndexLow));
 }
 
@@ -1809,14 +1809,14 @@ stat_get_mode(DeeStatObject *__restrict self) {
 		}
 		break;
 	}
-	return DeeInt_NewU32(result);
+	return DeeInt_NewUInt32(result);
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 stat_get_nlink(DeeStatObject *__restrict self) {
 	if unlikely(self->st_stat.s_valid & STAT_FNONLINK)
 		goto err_nolink;
-	return DeeInt_NewU32(self->st_stat.s_info.nNumberOfLinks);
+	return DeeInt_NewUInt32(self->st_stat.s_info.nNumberOfLinks);
 err_nolink:
 	err_no_link_info();
 	return NULL;
@@ -1852,7 +1852,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 stat_get_size(DeeStatObject *__restrict self) {
 	if unlikely(self->st_stat.s_valid & STAT_FNOSIZE)
 		goto err_nosize;
-	return DeeInt_NewU64(((uint64_t)self->st_stat.s_info.nFileSizeHigh << 32) |
+	return DeeInt_NewUInt64(((uint64_t)self->st_stat.s_info.nFileSizeHigh << 32) |
 	                     ((uint64_t)self->st_stat.s_info.nFileSizeLow));
 err_nosize:
 	err_no_size_info();
@@ -1934,7 +1934,7 @@ stat_issock(DeeStatObject *__restrict self) {
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 stat_getntattr_np(DeeStatObject *__restrict self) {
-	return DeeInt_NewU32(self->st_stat.s_info.dwFileAttributes);
+	return DeeInt_NewUInt32(self->st_stat.s_info.dwFileAttributes);
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -1942,7 +1942,7 @@ stat_getnttype_np(DeeStatObject *__restrict self) {
 	DWORD result = stat_get_nttype(&self->st_stat, false);
 	if unlikely(result == FILE_TYPE_UNKNOWN)
 		goto err;
-	return DeeInt_NewU32(result);
+	return DeeInt_NewUInt32(result);
 err:
 	return NULL;
 }

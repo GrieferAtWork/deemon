@@ -502,6 +502,10 @@ END(_impl_assert_failed)
 	testw flag, co_flags(scratch);
 #endif
 
+#define _SYM_DeeInt_STRIDE (DEE_OBJECT_OFFSETOF_DATA + 8)
+#define SYM_DeeInt_MinusOne (SYM(DeeInt_MinusOne_Zero_One))
+#define SYM_DeeInt_Zero     (SYM(DeeInt_MinusOne_Zero_One) + _SYM_DeeInt_STRIDE * 1)
+#define SYM_DeeInt_One      (SYM(DeeInt_MinusOne_Zero_One) + _SYM_DeeInt_STRIDE * 2)
 
 .text
 
@@ -3410,13 +3414,13 @@ target_varargs_getsize:
 	pushl  %eax
 	ADJUST_CFA_OFFSET(4)
 	/* EAX = DeeInt_NewSize((size_t)(frame->cf_argc-code->co_argc_max)) */
-	call   fSYM(DeeInt_NewU32,4)
+	call   fSYM(DeeInt_NewUInt32,4)
 	ADJUST_CFA_OFFSET(-4)
 	testl  %eax, %eax
 	jz     .except
 2:	sp_push %eax
 	jmp    .disp
-1:	leal   SYM(DeeInt_Zero), %eax
+1:	leal   SYM_DeeInt_Zero, %eax
 	incref %eax
 	jmp    2b
 
@@ -5071,17 +5075,17 @@ target_range_0_i32:
 	 *               overflow. */
 	pushl  %eax
 	ADJUST_CFA_OFFSET(4)
-	call   fSYM(DeeInt_NewU32,4)
+	call   fSYM(DeeInt_NewUInt32,4)
 	ADJUST_CFA_OFFSET(-4)
 	testl  %eax, %eax
 	jz     .except
 	pushl  %eax /* backup */
 	ADJUST_CFA_OFFSET(4)
-	pushl  $(SYM(DeeInt_One)) /* step */
+	pushl  $(SYM_DeeInt_One)  /* step */
 	ADJUST_CFA_OFFSET(4)
 	pushl  %eax /* end */
 	ADJUST_CFA_OFFSET(4)
-	pushl  $(SYM(DeeInt_Zero)) /* begin */
+	pushl  $(SYM_DeeInt_Zero) /* begin */
 	ADJUST_CFA_OFFSET(4)
 	call   fSYM(DeeRange_New,12)
 	ADJUST_CFA_OFFSET(-12)
@@ -5102,7 +5106,7 @@ target_range:
 	movl   SECOND, %eax
 	cmpl   $(SYM(DeeNone_Singleton)), %eax
 	jne    1f
-	leal   SYM(DeeInt_Zero), %eax
+	leal   SYM_DeeInt_Zero, %eax
 1:	pushl  %eax /* begin */
 	ADJUST_CFA_OFFSET(4)
 	call   fSYM(DeeRange_New,12)
@@ -5154,7 +5158,7 @@ target_range_step:
 	movl   THIRD, %eax
 	cmpl   $(SYM(DeeNone_Singleton)), %eax
 	jne    1f
-	leal   SYM(DeeInt_Zero), %eax
+	leal   SYM_DeeInt_Zero, %eax
 1:	pushl  %eax /* begin */
 	ADJUST_CFA_OFFSET(4)
 	call   fSYM(DeeRange_New,12)
@@ -7184,7 +7188,7 @@ prefix_target_push_simm8:
 	movsbl  %al, %eax
 	pushl  %eax
 	ADJUST_CFA_OFFSET(4)
-	call   fSYM(DeeInt_NewS32,4)
+	call   fSYM(DeeInt_NewInt32,4)
 	ADJUST_CFA_OFFSET(-4)
 	testl  %eax, %eax
 	jz     .except
@@ -7199,7 +7203,7 @@ prefix_target_push_imm16:
 	lodsw
 1:	pushl  %eax
 	ADJUST_CFA_OFFSET(4)
-	call   fSYM(DeeInt_NewU32,4)
+	call   fSYM(DeeInt_NewUInt32,4)
 	ADJUST_CFA_OFFSET(-4)
 	testl  %eax, %eax
 	jz     .except

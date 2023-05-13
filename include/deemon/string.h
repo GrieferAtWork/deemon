@@ -454,7 +454,7 @@ struct Dee_string_object {
 	Dee_OBJECT_HEAD
 	struct Dee_string_utf  *s_data; /* [0..1][owned][lock(WRITE_ONCE)]
 	                                 * Extended string data, as well as unicode information & lazily allocated caches. */
-	Dee_hash_t              s_hash; /* [valid_if(!= #define)][lock(WRITE_ONCE)] The string's hash. */
+	Dee_hash_t              s_hash; /* [valid_if(!= DEE_STRING_HASH_UNSET)][lock(WRITE_ONCE)] The string's hash. */
 #define DEE_STRING_HASH_UNSET ((Dee_hash_t)-1) /* A hash-representation of the string. */
 	size_t                  s_len;  /* [const] The number of bytes found in the single-byte string text. */
 	COMPILER_FLEXIBLE_ARRAY(/*unsigned*/ char,

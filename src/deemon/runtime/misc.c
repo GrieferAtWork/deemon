@@ -1694,9 +1694,11 @@ PUBLIC void *
 
 /* TODO: CONFIG_NO_CACHES */
 typedef size_t (DCALL *pcacheclr)(size_t max_clear);
-INTDEF size_t DCALL intcache_clear(size_t max_clear);
-INTDEF size_t DCALL tuplecache_clear(size_t max_clear);
-INTDEF size_t DCALL latincache_clear(size_t max_clear);
+INTDEF size_t DCALL Dee_intcache_clearall(size_t max_clear);
+INTDEF size_t DCALL Dee_tuplecache_clearall(size_t max_clear);
+#ifdef CONFIG_STRING_LATIN1_CACHED
+INTDEF size_t DCALL Dee_latincache_clearall(size_t max_clear);
+#endif /* CONFIG_STRING_LATIN1_CACHED */
 INTDEF size_t DCALL Dee_membercache_clearall(size_t max_clear);
 
 PRIVATE pcacheclr caches[] = {
@@ -1706,9 +1708,11 @@ PRIVATE pcacheclr caches[] = {
 #undef Co
 #undef Cs
 	/* Custom object/data cache clear functions. */
-	&intcache_clear,
-	&tuplecache_clear,
-	&latincache_clear,
+	&Dee_intcache_clearall,
+	&Dee_tuplecache_clearall,
+#ifdef CONFIG_STRING_LATIN1_CACHED
+	&Dee_latincache_clearall,
+#endif /* CONFIG_STRING_LATIN1_CACHED */
 	&Dee_membercache_clearall,
 #ifndef CONFIG_NO_DEC
 	&DecTime_ClearCache,

@@ -21,12 +21,10 @@
 #ifdef R_OK
 #define POSIX_R_OK_DEF \
 	{ "R_OK", (DeeObject *)&posix_R_OK, MODSYM_FREADONLY | MODSYM_FCONSTEXPR, "Test for read permission" },
-#if R_OK >= 0
-#if R_OK == 0
-#define posix_R_OK DeeInt_Zero
-#elif R_OK == 1
-#define posix_R_OK DeeInt_One
-#elif R_OK <= 0x7fffull /* 15-bit */
+#if DeeInt_IsSmallInt(R_OK)
+#define posix_R_OK (*DeeInt_ForSmallInt(R_OK))
+#elif R_OK >= 0
+#if R_OK <= 0x7fffull /* 15-bit */
 PRIVATE DEFINE_UINT15(posix_R_OK, R_OK);
 #elif R_OK <= 0x3fffffffull /* 30-bit */
 PRIVATE DEFINE_UINT30(posix_R_OK, R_OK);
@@ -38,9 +36,7 @@ PRIVATE DEFINE_UINT60(posix_R_OK, R_OK);
 PRIVATE DEFINE_UINT75(posix_R_OK, R_OK);
 #endif
 #else /* R_OK >= 0 */
-#if R_OK == -1
-#define posix_R_OK DeeInt_MinusOne
-#elif R_OK >= -0x4000ll /* 15-bit */
+#if R_OK >= -0x4000ll /* 15-bit */
 PRIVATE DEFINE_INT15(posix_R_OK, R_OK);
 #elif R_OK >= -0x20000000ll /* 30-bit */
 PRIVATE DEFINE_INT30(posix_R_OK, R_OK);
@@ -58,12 +54,10 @@ PRIVATE DEFINE_INT75(posix_R_OK, R_OK);
 #ifdef W_OK
 #define POSIX_W_OK_DEF \
 	{ "W_OK", (DeeObject *)&posix_W_OK, MODSYM_FREADONLY | MODSYM_FCONSTEXPR, "Test for write permission" },
-#if W_OK >= 0
-#if W_OK == 0
-#define posix_W_OK DeeInt_Zero
-#elif W_OK == 1
-#define posix_W_OK DeeInt_One
-#elif W_OK <= 0x7fffull /* 15-bit */
+#if DeeInt_IsSmallInt(W_OK)
+#define posix_W_OK (*DeeInt_ForSmallInt(W_OK))
+#elif W_OK >= 0
+#if W_OK <= 0x7fffull /* 15-bit */
 PRIVATE DEFINE_UINT15(posix_W_OK, W_OK);
 #elif W_OK <= 0x3fffffffull /* 30-bit */
 PRIVATE DEFINE_UINT30(posix_W_OK, W_OK);
@@ -75,9 +69,7 @@ PRIVATE DEFINE_UINT60(posix_W_OK, W_OK);
 PRIVATE DEFINE_UINT75(posix_W_OK, W_OK);
 #endif
 #else /* W_OK >= 0 */
-#if W_OK == -1
-#define posix_W_OK DeeInt_MinusOne
-#elif W_OK >= -0x4000ll /* 15-bit */
+#if W_OK >= -0x4000ll /* 15-bit */
 PRIVATE DEFINE_INT15(posix_W_OK, W_OK);
 #elif W_OK >= -0x20000000ll /* 30-bit */
 PRIVATE DEFINE_INT30(posix_W_OK, W_OK);
@@ -95,12 +87,10 @@ PRIVATE DEFINE_INT75(posix_W_OK, W_OK);
 #ifdef X_OK
 #define POSIX_X_OK_DEF \
 	{ "X_OK", (DeeObject *)&posix_X_OK, MODSYM_FREADONLY | MODSYM_FCONSTEXPR, "Test for execute permission" },
-#if X_OK >= 0
-#if X_OK == 0
-#define posix_X_OK DeeInt_Zero
-#elif X_OK == 1
-#define posix_X_OK DeeInt_One
-#elif X_OK <= 0x7fffull /* 15-bit */
+#if DeeInt_IsSmallInt(X_OK)
+#define posix_X_OK (*DeeInt_ForSmallInt(X_OK))
+#elif X_OK >= 0
+#if X_OK <= 0x7fffull /* 15-bit */
 PRIVATE DEFINE_UINT15(posix_X_OK, X_OK);
 #elif X_OK <= 0x3fffffffull /* 30-bit */
 PRIVATE DEFINE_UINT30(posix_X_OK, X_OK);
@@ -112,9 +102,7 @@ PRIVATE DEFINE_UINT60(posix_X_OK, X_OK);
 PRIVATE DEFINE_UINT75(posix_X_OK, X_OK);
 #endif
 #else /* X_OK >= 0 */
-#if X_OK == -1
-#define posix_X_OK DeeInt_MinusOne
-#elif X_OK >= -0x4000ll /* 15-bit */
+#if X_OK >= -0x4000ll /* 15-bit */
 PRIVATE DEFINE_INT15(posix_X_OK, X_OK);
 #elif X_OK >= -0x20000000ll /* 30-bit */
 PRIVATE DEFINE_INT30(posix_X_OK, X_OK);
@@ -132,12 +120,10 @@ PRIVATE DEFINE_INT75(posix_X_OK, X_OK);
 #ifdef F_OK
 #define POSIX_F_OK_DEF \
 	{ "F_OK", (DeeObject *)&posix_F_OK, MODSYM_FREADONLY | MODSYM_FCONSTEXPR, "Test for existence" },
-#if F_OK >= 0
-#if F_OK == 0
-#define posix_F_OK DeeInt_Zero
-#elif F_OK == 1
-#define posix_F_OK DeeInt_One
-#elif F_OK <= 0x7fffull /* 15-bit */
+#if DeeInt_IsSmallInt(F_OK)
+#define posix_F_OK (*DeeInt_ForSmallInt(F_OK))
+#elif F_OK >= 0
+#if F_OK <= 0x7fffull /* 15-bit */
 PRIVATE DEFINE_UINT15(posix_F_OK, F_OK);
 #elif F_OK <= 0x3fffffffull /* 30-bit */
 PRIVATE DEFINE_UINT30(posix_F_OK, F_OK);
@@ -149,9 +135,7 @@ PRIVATE DEFINE_UINT60(posix_F_OK, F_OK);
 PRIVATE DEFINE_UINT75(posix_F_OK, F_OK);
 #endif
 #else /* F_OK >= 0 */
-#if F_OK == -1
-#define posix_F_OK DeeInt_MinusOne
-#elif F_OK >= -0x4000ll /* 15-bit */
+#if F_OK >= -0x4000ll /* 15-bit */
 PRIVATE DEFINE_INT15(posix_F_OK, F_OK);
 #elif F_OK >= -0x20000000ll /* 30-bit */
 PRIVATE DEFINE_INT30(posix_F_OK, F_OK);

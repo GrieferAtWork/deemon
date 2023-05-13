@@ -204,7 +204,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 F(float_int)(DeeSTypeObject *__restrict UNUSED(tp_self), T *self) {
 	T value;
 	CTYPES_FAULTPROTECT(value = *self, return NULL);
-	return DeeInt_NewS64((int64_t)value);
+	return DeeInt_NewInt64((int64_t)value);
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL

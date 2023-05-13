@@ -211,9 +211,9 @@ function gi(
 		local existingName = KNOWN_INTEGER_CONSTANTS.get(value);
 		if (existingName is none) {
 			final local DEFAULT_KNOWN_CONSTANTS: {int: string} = {
-				-1 : "DeeInt_MinusOne",
-				0 : "DeeInt_Zero",
-				1 : "DeeInt_One",
+				-1 : "(*DeeInt_MinusOne)",
+				0 : "(*DeeInt_Zero)",
+				1 : "(*DeeInt_One)",
 			};
 			existingName = DEFAULT_KNOWN_CONSTANTS.get(value);
 		}
@@ -241,23 +241,23 @@ function gi(
 		}
 	} else {
 		/* The constant is given via a macro that, meaning we must generate dynamic code. */
-		print("#if ", value, " >= 0");
-		print("#if ", value, " == 0");
-		print("#define ", libname, name, " DeeInt_Zero");
-		print("#elif ", value, " == 1");
-		print("#define ", libname, name, " DeeInt_One");
+		print("#if DeeInt_IsSmallInt(", value, ")");
+		print("#define ", libname, name, " (*DeeInt_ForSmallInt(", value, "))");
+		print("#elif ", value, " >= 0");
+		local isFirst = true;
 		for (local b: valid_bits) {
-			print("#elif ", value, " <= ", ((1 << b) - 1).hex(), "ull /* ", b, "-bit */");
+			print(isFirst ? "#if " : "#elif ", value, " <= ", ((1 << b) - 1).hex(), "ull /* ", b, "-bit */");
+			isFirst = false;
 			define_with_bits(false, b);
 		}
 		print("#else");
 		define_with_bits(false, 75);
 		print("#endif");
 		print("#else /* ", value, " >= 0 */");
-		print("#if ", value, " == -1");
-		print("#define ", libname, name, " DeeInt_MinusOne");
+		local isFirst = true;
 		for (local b: valid_bits) {
-			print("#elif ", value, " >= -", (1 << (b - 1)).hex(), "ll /* ", b, "-bit */");
+			print(isFirst ? "#if " : "#elif ", value, " >= -", (1 << (b - 1)).hex(), "ll /* ", b, "-bit */");
+			isFirst = false;
 			define_with_bits(true, b);
 		}
 		print("#else");

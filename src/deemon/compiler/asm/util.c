@@ -107,7 +107,7 @@ INTERN WUNUSED int DCALL
 asm_gpush_u32(uint32_t value) {
 	DREF DeeObject *obj;
 	int32_t cid;
-	obj = DeeInt_NewU32(value);
+	obj = DeeInt_NewUInt32(value);
 	if unlikely(!obj)
 		goto err;
 	cid = asm_newconst(obj);
@@ -123,7 +123,7 @@ INTERN WUNUSED int DCALL
 asm_gpush_s32(int32_t value) {
 	DREF DeeObject *obj;
 	int32_t cid;
-	obj = DeeInt_NewS32(value);
+	obj = DeeInt_NewInt32(value);
 	if unlikely(!obj)
 		goto err;
 	cid = asm_newconst(obj);
@@ -2308,7 +2308,7 @@ asm_gcheck_final_local_bound(uint16_t lid) {
 	current_assembler.a_curr = &current_assembler.a_sect[SECTION_COLD];
 	asm_defsym(within_cold);
 	/* We get here only when the local was already bound. */
-	constlid = DeeInt_NewU16(lid);
+	constlid = DeeInt_NewUInt16(lid);
 	if unlikely(!constlid)
 		goto err;
 	temp_id = asm_newconst(constlid);

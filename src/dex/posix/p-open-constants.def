@@ -21,12 +21,10 @@
 #ifdef CONFIG_HAVE_O_RDONLY
 #define POSIX_O_RDONLY_DEF \
 	{ "O_RDONLY", (DeeObject *)&posix_O_RDONLY, MODSYM_FREADONLY | MODSYM_FCONSTEXPR },
-#if O_RDONLY >= 0
-#if O_RDONLY == 0
-#define posix_O_RDONLY DeeInt_Zero
-#elif O_RDONLY == 1
-#define posix_O_RDONLY DeeInt_One
-#elif O_RDONLY <= 0x7fffull /* 15-bit */
+#if DeeInt_IsSmallInt(O_RDONLY)
+#define posix_O_RDONLY (*DeeInt_ForSmallInt(O_RDONLY))
+#elif O_RDONLY >= 0
+#if O_RDONLY <= 0x7fffull /* 15-bit */
 PRIVATE DEFINE_UINT15(posix_O_RDONLY, O_RDONLY);
 #elif O_RDONLY <= 0x3fffffffull /* 30-bit */
 PRIVATE DEFINE_UINT30(posix_O_RDONLY, O_RDONLY);
@@ -38,9 +36,7 @@ PRIVATE DEFINE_UINT60(posix_O_RDONLY, O_RDONLY);
 PRIVATE DEFINE_UINT75(posix_O_RDONLY, O_RDONLY);
 #endif
 #else /* O_RDONLY >= 0 */
-#if O_RDONLY == -1
-#define posix_O_RDONLY DeeInt_MinusOne
-#elif O_RDONLY >= -0x4000ll /* 15-bit */
+#if O_RDONLY >= -0x4000ll /* 15-bit */
 PRIVATE DEFINE_INT15(posix_O_RDONLY, O_RDONLY);
 #elif O_RDONLY >= -0x20000000ll /* 30-bit */
 PRIVATE DEFINE_INT30(posix_O_RDONLY, O_RDONLY);
@@ -58,12 +54,10 @@ PRIVATE DEFINE_INT75(posix_O_RDONLY, O_RDONLY);
 #ifdef CONFIG_HAVE_O_WRONLY
 #define POSIX_O_WRONLY_DEF \
 	{ "O_WRONLY", (DeeObject *)&posix_O_WRONLY, MODSYM_FREADONLY | MODSYM_FCONSTEXPR },
-#if O_WRONLY >= 0
-#if O_WRONLY == 0
-#define posix_O_WRONLY DeeInt_Zero
-#elif O_WRONLY == 1
-#define posix_O_WRONLY DeeInt_One
-#elif O_WRONLY <= 0x7fffull /* 15-bit */
+#if DeeInt_IsSmallInt(O_WRONLY)
+#define posix_O_WRONLY (*DeeInt_ForSmallInt(O_WRONLY))
+#elif O_WRONLY >= 0
+#if O_WRONLY <= 0x7fffull /* 15-bit */
 PRIVATE DEFINE_UINT15(posix_O_WRONLY, O_WRONLY);
 #elif O_WRONLY <= 0x3fffffffull /* 30-bit */
 PRIVATE DEFINE_UINT30(posix_O_WRONLY, O_WRONLY);
@@ -75,9 +69,7 @@ PRIVATE DEFINE_UINT60(posix_O_WRONLY, O_WRONLY);
 PRIVATE DEFINE_UINT75(posix_O_WRONLY, O_WRONLY);
 #endif
 #else /* O_WRONLY >= 0 */
-#if O_WRONLY == -1
-#define posix_O_WRONLY DeeInt_MinusOne
-#elif O_WRONLY >= -0x4000ll /* 15-bit */
+#if O_WRONLY >= -0x4000ll /* 15-bit */
 PRIVATE DEFINE_INT15(posix_O_WRONLY, O_WRONLY);
 #elif O_WRONLY >= -0x20000000ll /* 30-bit */
 PRIVATE DEFINE_INT30(posix_O_WRONLY, O_WRONLY);
@@ -95,12 +87,10 @@ PRIVATE DEFINE_INT75(posix_O_WRONLY, O_WRONLY);
 #ifdef CONFIG_HAVE_O_RDWR
 #define POSIX_O_RDWR_DEF \
 	{ "O_RDWR", (DeeObject *)&posix_O_RDWR, MODSYM_FREADONLY | MODSYM_FCONSTEXPR },
-#if O_RDWR >= 0
-#if O_RDWR == 0
-#define posix_O_RDWR DeeInt_Zero
-#elif O_RDWR == 1
-#define posix_O_RDWR DeeInt_One
-#elif O_RDWR <= 0x7fffull /* 15-bit */
+#if DeeInt_IsSmallInt(O_RDWR)
+#define posix_O_RDWR (*DeeInt_ForSmallInt(O_RDWR))
+#elif O_RDWR >= 0
+#if O_RDWR <= 0x7fffull /* 15-bit */
 PRIVATE DEFINE_UINT15(posix_O_RDWR, O_RDWR);
 #elif O_RDWR <= 0x3fffffffull /* 30-bit */
 PRIVATE DEFINE_UINT30(posix_O_RDWR, O_RDWR);
@@ -112,9 +102,7 @@ PRIVATE DEFINE_UINT60(posix_O_RDWR, O_RDWR);
 PRIVATE DEFINE_UINT75(posix_O_RDWR, O_RDWR);
 #endif
 #else /* O_RDWR >= 0 */
-#if O_RDWR == -1
-#define posix_O_RDWR DeeInt_MinusOne
-#elif O_RDWR >= -0x4000ll /* 15-bit */
+#if O_RDWR >= -0x4000ll /* 15-bit */
 PRIVATE DEFINE_INT15(posix_O_RDWR, O_RDWR);
 #elif O_RDWR >= -0x20000000ll /* 30-bit */
 PRIVATE DEFINE_INT30(posix_O_RDWR, O_RDWR);
@@ -132,12 +120,10 @@ PRIVATE DEFINE_INT75(posix_O_RDWR, O_RDWR);
 #ifdef CONFIG_HAVE_O_APPEND
 #define POSIX_O_APPEND_DEF \
 	{ "O_APPEND", (DeeObject *)&posix_O_APPEND, MODSYM_FREADONLY | MODSYM_FCONSTEXPR, "Always append data to the end of the file" },
-#if O_APPEND >= 0
-#if O_APPEND == 0
-#define posix_O_APPEND DeeInt_Zero
-#elif O_APPEND == 1
-#define posix_O_APPEND DeeInt_One
-#elif O_APPEND <= 0x7fffull /* 15-bit */
+#if DeeInt_IsSmallInt(O_APPEND)
+#define posix_O_APPEND (*DeeInt_ForSmallInt(O_APPEND))
+#elif O_APPEND >= 0
+#if O_APPEND <= 0x7fffull /* 15-bit */
 PRIVATE DEFINE_UINT15(posix_O_APPEND, O_APPEND);
 #elif O_APPEND <= 0x3fffffffull /* 30-bit */
 PRIVATE DEFINE_UINT30(posix_O_APPEND, O_APPEND);
@@ -149,9 +135,7 @@ PRIVATE DEFINE_UINT60(posix_O_APPEND, O_APPEND);
 PRIVATE DEFINE_UINT75(posix_O_APPEND, O_APPEND);
 #endif
 #else /* O_APPEND >= 0 */
-#if O_APPEND == -1
-#define posix_O_APPEND DeeInt_MinusOne
-#elif O_APPEND >= -0x4000ll /* 15-bit */
+#if O_APPEND >= -0x4000ll /* 15-bit */
 PRIVATE DEFINE_INT15(posix_O_APPEND, O_APPEND);
 #elif O_APPEND >= -0x20000000ll /* 30-bit */
 PRIVATE DEFINE_INT30(posix_O_APPEND, O_APPEND);
@@ -169,12 +153,10 @@ PRIVATE DEFINE_INT75(posix_O_APPEND, O_APPEND);
 #ifdef CONFIG_HAVE_O_CREAT
 #define POSIX_O_CREAT_DEF \
 	{ "O_CREAT", (DeeObject *)&posix_O_CREAT, MODSYM_FREADONLY | MODSYM_FCONSTEXPR, "If missing, create a new file" },
-#if O_CREAT >= 0
-#if O_CREAT == 0
-#define posix_O_CREAT DeeInt_Zero
-#elif O_CREAT == 1
-#define posix_O_CREAT DeeInt_One
-#elif O_CREAT <= 0x7fffull /* 15-bit */
+#if DeeInt_IsSmallInt(O_CREAT)
+#define posix_O_CREAT (*DeeInt_ForSmallInt(O_CREAT))
+#elif O_CREAT >= 0
+#if O_CREAT <= 0x7fffull /* 15-bit */
 PRIVATE DEFINE_UINT15(posix_O_CREAT, O_CREAT);
 #elif O_CREAT <= 0x3fffffffull /* 30-bit */
 PRIVATE DEFINE_UINT30(posix_O_CREAT, O_CREAT);
@@ -186,9 +168,7 @@ PRIVATE DEFINE_UINT60(posix_O_CREAT, O_CREAT);
 PRIVATE DEFINE_UINT75(posix_O_CREAT, O_CREAT);
 #endif
 #else /* O_CREAT >= 0 */
-#if O_CREAT == -1
-#define posix_O_CREAT DeeInt_MinusOne
-#elif O_CREAT >= -0x4000ll /* 15-bit */
+#if O_CREAT >= -0x4000ll /* 15-bit */
 PRIVATE DEFINE_INT15(posix_O_CREAT, O_CREAT);
 #elif O_CREAT >= -0x20000000ll /* 30-bit */
 PRIVATE DEFINE_INT30(posix_O_CREAT, O_CREAT);
@@ -206,12 +186,10 @@ PRIVATE DEFINE_INT75(posix_O_CREAT, O_CREAT);
 #ifdef CONFIG_HAVE_O_TRUNC
 #define POSIX_O_TRUNC_DEF \
 	{ "O_TRUNC", (DeeObject *)&posix_O_TRUNC, MODSYM_FREADONLY | MODSYM_FCONSTEXPR },
-#if O_TRUNC >= 0
-#if O_TRUNC == 0
-#define posix_O_TRUNC DeeInt_Zero
-#elif O_TRUNC == 1
-#define posix_O_TRUNC DeeInt_One
-#elif O_TRUNC <= 0x7fffull /* 15-bit */
+#if DeeInt_IsSmallInt(O_TRUNC)
+#define posix_O_TRUNC (*DeeInt_ForSmallInt(O_TRUNC))
+#elif O_TRUNC >= 0
+#if O_TRUNC <= 0x7fffull /* 15-bit */
 PRIVATE DEFINE_UINT15(posix_O_TRUNC, O_TRUNC);
 #elif O_TRUNC <= 0x3fffffffull /* 30-bit */
 PRIVATE DEFINE_UINT30(posix_O_TRUNC, O_TRUNC);
@@ -223,9 +201,7 @@ PRIVATE DEFINE_UINT60(posix_O_TRUNC, O_TRUNC);
 PRIVATE DEFINE_UINT75(posix_O_TRUNC, O_TRUNC);
 #endif
 #else /* O_TRUNC >= 0 */
-#if O_TRUNC == -1
-#define posix_O_TRUNC DeeInt_MinusOne
-#elif O_TRUNC >= -0x4000ll /* 15-bit */
+#if O_TRUNC >= -0x4000ll /* 15-bit */
 PRIVATE DEFINE_INT15(posix_O_TRUNC, O_TRUNC);
 #elif O_TRUNC >= -0x20000000ll /* 30-bit */
 PRIVATE DEFINE_INT30(posix_O_TRUNC, O_TRUNC);
@@ -243,12 +219,10 @@ PRIVATE DEFINE_INT75(posix_O_TRUNC, O_TRUNC);
 #ifdef CONFIG_HAVE_O_EXCL
 #define POSIX_O_EXCL_DEF \
 	{ "O_EXCL", (DeeObject *)&posix_O_EXCL, MODSYM_FREADONLY | MODSYM_FCONSTEXPR, "When used with #O_CREAT, set #EEXIST if the file already exists" },
-#if O_EXCL >= 0
-#if O_EXCL == 0
-#define posix_O_EXCL DeeInt_Zero
-#elif O_EXCL == 1
-#define posix_O_EXCL DeeInt_One
-#elif O_EXCL <= 0x7fffull /* 15-bit */
+#if DeeInt_IsSmallInt(O_EXCL)
+#define posix_O_EXCL (*DeeInt_ForSmallInt(O_EXCL))
+#elif O_EXCL >= 0
+#if O_EXCL <= 0x7fffull /* 15-bit */
 PRIVATE DEFINE_UINT15(posix_O_EXCL, O_EXCL);
 #elif O_EXCL <= 0x3fffffffull /* 30-bit */
 PRIVATE DEFINE_UINT30(posix_O_EXCL, O_EXCL);
@@ -260,9 +234,7 @@ PRIVATE DEFINE_UINT60(posix_O_EXCL, O_EXCL);
 PRIVATE DEFINE_UINT75(posix_O_EXCL, O_EXCL);
 #endif
 #else /* O_EXCL >= 0 */
-#if O_EXCL == -1
-#define posix_O_EXCL DeeInt_MinusOne
-#elif O_EXCL >= -0x4000ll /* 15-bit */
+#if O_EXCL >= -0x4000ll /* 15-bit */
 PRIVATE DEFINE_INT15(posix_O_EXCL, O_EXCL);
 #elif O_EXCL >= -0x20000000ll /* 30-bit */
 PRIVATE DEFINE_INT30(posix_O_EXCL, O_EXCL);
@@ -280,12 +252,10 @@ PRIVATE DEFINE_INT75(posix_O_EXCL, O_EXCL);
 #ifdef CONFIG_HAVE_O_TEXT
 #define POSIX_O_TEXT_DEF \
 	{ "O_TEXT", (DeeObject *)&posix_O_TEXT, MODSYM_FREADONLY | MODSYM_FCONSTEXPR },
-#if O_TEXT >= 0
-#if O_TEXT == 0
-#define posix_O_TEXT DeeInt_Zero
-#elif O_TEXT == 1
-#define posix_O_TEXT DeeInt_One
-#elif O_TEXT <= 0x7fffull /* 15-bit */
+#if DeeInt_IsSmallInt(O_TEXT)
+#define posix_O_TEXT (*DeeInt_ForSmallInt(O_TEXT))
+#elif O_TEXT >= 0
+#if O_TEXT <= 0x7fffull /* 15-bit */
 PRIVATE DEFINE_UINT15(posix_O_TEXT, O_TEXT);
 #elif O_TEXT <= 0x3fffffffull /* 30-bit */
 PRIVATE DEFINE_UINT30(posix_O_TEXT, O_TEXT);
@@ -297,9 +267,7 @@ PRIVATE DEFINE_UINT60(posix_O_TEXT, O_TEXT);
 PRIVATE DEFINE_UINT75(posix_O_TEXT, O_TEXT);
 #endif
 #else /* O_TEXT >= 0 */
-#if O_TEXT == -1
-#define posix_O_TEXT DeeInt_MinusOne
-#elif O_TEXT >= -0x4000ll /* 15-bit */
+#if O_TEXT >= -0x4000ll /* 15-bit */
 PRIVATE DEFINE_INT15(posix_O_TEXT, O_TEXT);
 #elif O_TEXT >= -0x20000000ll /* 30-bit */
 PRIVATE DEFINE_INT30(posix_O_TEXT, O_TEXT);
@@ -317,12 +285,10 @@ PRIVATE DEFINE_INT75(posix_O_TEXT, O_TEXT);
 #ifdef CONFIG_HAVE_O_BINARY
 #define POSIX_O_BINARY_DEF \
 	{ "O_BINARY", (DeeObject *)&posix_O_BINARY, MODSYM_FREADONLY | MODSYM_FCONSTEXPR },
-#if O_BINARY >= 0
-#if O_BINARY == 0
-#define posix_O_BINARY DeeInt_Zero
-#elif O_BINARY == 1
-#define posix_O_BINARY DeeInt_One
-#elif O_BINARY <= 0x7fffull /* 15-bit */
+#if DeeInt_IsSmallInt(O_BINARY)
+#define posix_O_BINARY (*DeeInt_ForSmallInt(O_BINARY))
+#elif O_BINARY >= 0
+#if O_BINARY <= 0x7fffull /* 15-bit */
 PRIVATE DEFINE_UINT15(posix_O_BINARY, O_BINARY);
 #elif O_BINARY <= 0x3fffffffull /* 30-bit */
 PRIVATE DEFINE_UINT30(posix_O_BINARY, O_BINARY);
@@ -334,9 +300,7 @@ PRIVATE DEFINE_UINT60(posix_O_BINARY, O_BINARY);
 PRIVATE DEFINE_UINT75(posix_O_BINARY, O_BINARY);
 #endif
 #else /* O_BINARY >= 0 */
-#if O_BINARY == -1
-#define posix_O_BINARY DeeInt_MinusOne
-#elif O_BINARY >= -0x4000ll /* 15-bit */
+#if O_BINARY >= -0x4000ll /* 15-bit */
 PRIVATE DEFINE_INT15(posix_O_BINARY, O_BINARY);
 #elif O_BINARY >= -0x20000000ll /* 30-bit */
 PRIVATE DEFINE_INT30(posix_O_BINARY, O_BINARY);
@@ -354,12 +318,10 @@ PRIVATE DEFINE_INT75(posix_O_BINARY, O_BINARY);
 #ifdef CONFIG_HAVE_O_WTEXT
 #define POSIX_O_WTEXT_DEF \
 	{ "O_WTEXT", (DeeObject *)&posix_O_WTEXT, MODSYM_FREADONLY | MODSYM_FCONSTEXPR },
-#if O_WTEXT >= 0
-#if O_WTEXT == 0
-#define posix_O_WTEXT DeeInt_Zero
-#elif O_WTEXT == 1
-#define posix_O_WTEXT DeeInt_One
-#elif O_WTEXT <= 0x7fffull /* 15-bit */
+#if DeeInt_IsSmallInt(O_WTEXT)
+#define posix_O_WTEXT (*DeeInt_ForSmallInt(O_WTEXT))
+#elif O_WTEXT >= 0
+#if O_WTEXT <= 0x7fffull /* 15-bit */
 PRIVATE DEFINE_UINT15(posix_O_WTEXT, O_WTEXT);
 #elif O_WTEXT <= 0x3fffffffull /* 30-bit */
 PRIVATE DEFINE_UINT30(posix_O_WTEXT, O_WTEXT);
@@ -371,9 +333,7 @@ PRIVATE DEFINE_UINT60(posix_O_WTEXT, O_WTEXT);
 PRIVATE DEFINE_UINT75(posix_O_WTEXT, O_WTEXT);
 #endif
 #else /* O_WTEXT >= 0 */
-#if O_WTEXT == -1
-#define posix_O_WTEXT DeeInt_MinusOne
-#elif O_WTEXT >= -0x4000ll /* 15-bit */
+#if O_WTEXT >= -0x4000ll /* 15-bit */
 PRIVATE DEFINE_INT15(posix_O_WTEXT, O_WTEXT);
 #elif O_WTEXT >= -0x20000000ll /* 30-bit */
 PRIVATE DEFINE_INT30(posix_O_WTEXT, O_WTEXT);
@@ -391,12 +351,10 @@ PRIVATE DEFINE_INT75(posix_O_WTEXT, O_WTEXT);
 #ifdef CONFIG_HAVE_O_U16TEXT
 #define POSIX_O_U16TEXT_DEF \
 	{ "O_U16TEXT", (DeeObject *)&posix_O_U16TEXT, MODSYM_FREADONLY | MODSYM_FCONSTEXPR },
-#if O_U16TEXT >= 0
-#if O_U16TEXT == 0
-#define posix_O_U16TEXT DeeInt_Zero
-#elif O_U16TEXT == 1
-#define posix_O_U16TEXT DeeInt_One
-#elif O_U16TEXT <= 0x7fffull /* 15-bit */
+#if DeeInt_IsSmallInt(O_U16TEXT)
+#define posix_O_U16TEXT (*DeeInt_ForSmallInt(O_U16TEXT))
+#elif O_U16TEXT >= 0
+#if O_U16TEXT <= 0x7fffull /* 15-bit */
 PRIVATE DEFINE_UINT15(posix_O_U16TEXT, O_U16TEXT);
 #elif O_U16TEXT <= 0x3fffffffull /* 30-bit */
 PRIVATE DEFINE_UINT30(posix_O_U16TEXT, O_U16TEXT);
@@ -408,9 +366,7 @@ PRIVATE DEFINE_UINT60(posix_O_U16TEXT, O_U16TEXT);
 PRIVATE DEFINE_UINT75(posix_O_U16TEXT, O_U16TEXT);
 #endif
 #else /* O_U16TEXT >= 0 */
-#if O_U16TEXT == -1
-#define posix_O_U16TEXT DeeInt_MinusOne
-#elif O_U16TEXT >= -0x4000ll /* 15-bit */
+#if O_U16TEXT >= -0x4000ll /* 15-bit */
 PRIVATE DEFINE_INT15(posix_O_U16TEXT, O_U16TEXT);
 #elif O_U16TEXT >= -0x20000000ll /* 30-bit */
 PRIVATE DEFINE_INT30(posix_O_U16TEXT, O_U16TEXT);
@@ -428,12 +384,10 @@ PRIVATE DEFINE_INT75(posix_O_U16TEXT, O_U16TEXT);
 #ifdef CONFIG_HAVE_O_U8TEXT
 #define POSIX_O_U8TEXT_DEF \
 	{ "O_U8TEXT", (DeeObject *)&posix_O_U8TEXT, MODSYM_FREADONLY | MODSYM_FCONSTEXPR },
-#if O_U8TEXT >= 0
-#if O_U8TEXT == 0
-#define posix_O_U8TEXT DeeInt_Zero
-#elif O_U8TEXT == 1
-#define posix_O_U8TEXT DeeInt_One
-#elif O_U8TEXT <= 0x7fffull /* 15-bit */
+#if DeeInt_IsSmallInt(O_U8TEXT)
+#define posix_O_U8TEXT (*DeeInt_ForSmallInt(O_U8TEXT))
+#elif O_U8TEXT >= 0
+#if O_U8TEXT <= 0x7fffull /* 15-bit */
 PRIVATE DEFINE_UINT15(posix_O_U8TEXT, O_U8TEXT);
 #elif O_U8TEXT <= 0x3fffffffull /* 30-bit */
 PRIVATE DEFINE_UINT30(posix_O_U8TEXT, O_U8TEXT);
@@ -445,9 +399,7 @@ PRIVATE DEFINE_UINT60(posix_O_U8TEXT, O_U8TEXT);
 PRIVATE DEFINE_UINT75(posix_O_U8TEXT, O_U8TEXT);
 #endif
 #else /* O_U8TEXT >= 0 */
-#if O_U8TEXT == -1
-#define posix_O_U8TEXT DeeInt_MinusOne
-#elif O_U8TEXT >= -0x4000ll /* 15-bit */
+#if O_U8TEXT >= -0x4000ll /* 15-bit */
 PRIVATE DEFINE_INT15(posix_O_U8TEXT, O_U8TEXT);
 #elif O_U8TEXT >= -0x20000000ll /* 30-bit */
 PRIVATE DEFINE_INT30(posix_O_U8TEXT, O_U8TEXT);
@@ -465,12 +417,10 @@ PRIVATE DEFINE_INT75(posix_O_U8TEXT, O_U8TEXT);
 #ifdef CONFIG_HAVE_O_CLOEXEC
 #define POSIX_O_CLOEXEC_DEF \
 	{ "O_CLOEXEC", (DeeObject *)&posix_O_CLOEXEC, MODSYM_FREADONLY | MODSYM_FCONSTEXPR, "Close the file during ${exec()}" },
-#if O_CLOEXEC >= 0
-#if O_CLOEXEC == 0
-#define posix_O_CLOEXEC DeeInt_Zero
-#elif O_CLOEXEC == 1
-#define posix_O_CLOEXEC DeeInt_One
-#elif O_CLOEXEC <= 0x7fffull /* 15-bit */
+#if DeeInt_IsSmallInt(O_CLOEXEC)
+#define posix_O_CLOEXEC (*DeeInt_ForSmallInt(O_CLOEXEC))
+#elif O_CLOEXEC >= 0
+#if O_CLOEXEC <= 0x7fffull /* 15-bit */
 PRIVATE DEFINE_UINT15(posix_O_CLOEXEC, O_CLOEXEC);
 #elif O_CLOEXEC <= 0x3fffffffull /* 30-bit */
 PRIVATE DEFINE_UINT30(posix_O_CLOEXEC, O_CLOEXEC);
@@ -482,9 +432,7 @@ PRIVATE DEFINE_UINT60(posix_O_CLOEXEC, O_CLOEXEC);
 PRIVATE DEFINE_UINT75(posix_O_CLOEXEC, O_CLOEXEC);
 #endif
 #else /* O_CLOEXEC >= 0 */
-#if O_CLOEXEC == -1
-#define posix_O_CLOEXEC DeeInt_MinusOne
-#elif O_CLOEXEC >= -0x4000ll /* 15-bit */
+#if O_CLOEXEC >= -0x4000ll /* 15-bit */
 PRIVATE DEFINE_INT15(posix_O_CLOEXEC, O_CLOEXEC);
 #elif O_CLOEXEC >= -0x20000000ll /* 30-bit */
 PRIVATE DEFINE_INT30(posix_O_CLOEXEC, O_CLOEXEC);
@@ -502,12 +450,10 @@ PRIVATE DEFINE_INT75(posix_O_CLOEXEC, O_CLOEXEC);
 #ifdef CONFIG_HAVE_O_TEMPORARY
 #define POSIX_O_TEMPORARY_DEF \
 	{ "O_TEMPORARY", (DeeObject *)&posix_O_TEMPORARY, MODSYM_FREADONLY | MODSYM_FCONSTEXPR },
-#if O_TEMPORARY >= 0
-#if O_TEMPORARY == 0
-#define posix_O_TEMPORARY DeeInt_Zero
-#elif O_TEMPORARY == 1
-#define posix_O_TEMPORARY DeeInt_One
-#elif O_TEMPORARY <= 0x7fffull /* 15-bit */
+#if DeeInt_IsSmallInt(O_TEMPORARY)
+#define posix_O_TEMPORARY (*DeeInt_ForSmallInt(O_TEMPORARY))
+#elif O_TEMPORARY >= 0
+#if O_TEMPORARY <= 0x7fffull /* 15-bit */
 PRIVATE DEFINE_UINT15(posix_O_TEMPORARY, O_TEMPORARY);
 #elif O_TEMPORARY <= 0x3fffffffull /* 30-bit */
 PRIVATE DEFINE_UINT30(posix_O_TEMPORARY, O_TEMPORARY);
@@ -519,9 +465,7 @@ PRIVATE DEFINE_UINT60(posix_O_TEMPORARY, O_TEMPORARY);
 PRIVATE DEFINE_UINT75(posix_O_TEMPORARY, O_TEMPORARY);
 #endif
 #else /* O_TEMPORARY >= 0 */
-#if O_TEMPORARY == -1
-#define posix_O_TEMPORARY DeeInt_MinusOne
-#elif O_TEMPORARY >= -0x4000ll /* 15-bit */
+#if O_TEMPORARY >= -0x4000ll /* 15-bit */
 PRIVATE DEFINE_INT15(posix_O_TEMPORARY, O_TEMPORARY);
 #elif O_TEMPORARY >= -0x20000000ll /* 30-bit */
 PRIVATE DEFINE_INT30(posix_O_TEMPORARY, O_TEMPORARY);
@@ -539,12 +483,10 @@ PRIVATE DEFINE_INT75(posix_O_TEMPORARY, O_TEMPORARY);
 #ifdef CONFIG_HAVE_O_SHORT_LIVED
 #define POSIX_O_SHORT_LIVED_DEF \
 	{ "O_SHORT_LIVED", (DeeObject *)&posix_O_SHORT_LIVED, MODSYM_FREADONLY | MODSYM_FCONSTEXPR },
-#if O_SHORT_LIVED >= 0
-#if O_SHORT_LIVED == 0
-#define posix_O_SHORT_LIVED DeeInt_Zero
-#elif O_SHORT_LIVED == 1
-#define posix_O_SHORT_LIVED DeeInt_One
-#elif O_SHORT_LIVED <= 0x7fffull /* 15-bit */
+#if DeeInt_IsSmallInt(O_SHORT_LIVED)
+#define posix_O_SHORT_LIVED (*DeeInt_ForSmallInt(O_SHORT_LIVED))
+#elif O_SHORT_LIVED >= 0
+#if O_SHORT_LIVED <= 0x7fffull /* 15-bit */
 PRIVATE DEFINE_UINT15(posix_O_SHORT_LIVED, O_SHORT_LIVED);
 #elif O_SHORT_LIVED <= 0x3fffffffull /* 30-bit */
 PRIVATE DEFINE_UINT30(posix_O_SHORT_LIVED, O_SHORT_LIVED);
@@ -556,9 +498,7 @@ PRIVATE DEFINE_UINT60(posix_O_SHORT_LIVED, O_SHORT_LIVED);
 PRIVATE DEFINE_UINT75(posix_O_SHORT_LIVED, O_SHORT_LIVED);
 #endif
 #else /* O_SHORT_LIVED >= 0 */
-#if O_SHORT_LIVED == -1
-#define posix_O_SHORT_LIVED DeeInt_MinusOne
-#elif O_SHORT_LIVED >= -0x4000ll /* 15-bit */
+#if O_SHORT_LIVED >= -0x4000ll /* 15-bit */
 PRIVATE DEFINE_INT15(posix_O_SHORT_LIVED, O_SHORT_LIVED);
 #elif O_SHORT_LIVED >= -0x20000000ll /* 30-bit */
 PRIVATE DEFINE_INT30(posix_O_SHORT_LIVED, O_SHORT_LIVED);
@@ -576,12 +516,10 @@ PRIVATE DEFINE_INT75(posix_O_SHORT_LIVED, O_SHORT_LIVED);
 #ifdef CONFIG_HAVE_O_OBTAIN_DIR
 #define POSIX_O_OBTAIN_DIR_DEF \
 	{ "O_OBTAIN_DIR", (DeeObject *)&posix_O_OBTAIN_DIR, MODSYM_FREADONLY | MODSYM_FCONSTEXPR },
-#if O_OBTAIN_DIR >= 0
-#if O_OBTAIN_DIR == 0
-#define posix_O_OBTAIN_DIR DeeInt_Zero
-#elif O_OBTAIN_DIR == 1
-#define posix_O_OBTAIN_DIR DeeInt_One
-#elif O_OBTAIN_DIR <= 0x7fffull /* 15-bit */
+#if DeeInt_IsSmallInt(O_OBTAIN_DIR)
+#define posix_O_OBTAIN_DIR (*DeeInt_ForSmallInt(O_OBTAIN_DIR))
+#elif O_OBTAIN_DIR >= 0
+#if O_OBTAIN_DIR <= 0x7fffull /* 15-bit */
 PRIVATE DEFINE_UINT15(posix_O_OBTAIN_DIR, O_OBTAIN_DIR);
 #elif O_OBTAIN_DIR <= 0x3fffffffull /* 30-bit */
 PRIVATE DEFINE_UINT30(posix_O_OBTAIN_DIR, O_OBTAIN_DIR);
@@ -593,9 +531,7 @@ PRIVATE DEFINE_UINT60(posix_O_OBTAIN_DIR, O_OBTAIN_DIR);
 PRIVATE DEFINE_UINT75(posix_O_OBTAIN_DIR, O_OBTAIN_DIR);
 #endif
 #else /* O_OBTAIN_DIR >= 0 */
-#if O_OBTAIN_DIR == -1
-#define posix_O_OBTAIN_DIR DeeInt_MinusOne
-#elif O_OBTAIN_DIR >= -0x4000ll /* 15-bit */
+#if O_OBTAIN_DIR >= -0x4000ll /* 15-bit */
 PRIVATE DEFINE_INT15(posix_O_OBTAIN_DIR, O_OBTAIN_DIR);
 #elif O_OBTAIN_DIR >= -0x20000000ll /* 30-bit */
 PRIVATE DEFINE_INT30(posix_O_OBTAIN_DIR, O_OBTAIN_DIR);
@@ -613,12 +549,10 @@ PRIVATE DEFINE_INT75(posix_O_OBTAIN_DIR, O_OBTAIN_DIR);
 #ifdef CONFIG_HAVE_O_SEQUENTIAL
 #define POSIX_O_SEQUENTIAL_DEF \
 	{ "O_SEQUENTIAL", (DeeObject *)&posix_O_SEQUENTIAL, MODSYM_FREADONLY | MODSYM_FCONSTEXPR },
-#if O_SEQUENTIAL >= 0
-#if O_SEQUENTIAL == 0
-#define posix_O_SEQUENTIAL DeeInt_Zero
-#elif O_SEQUENTIAL == 1
-#define posix_O_SEQUENTIAL DeeInt_One
-#elif O_SEQUENTIAL <= 0x7fffull /* 15-bit */
+#if DeeInt_IsSmallInt(O_SEQUENTIAL)
+#define posix_O_SEQUENTIAL (*DeeInt_ForSmallInt(O_SEQUENTIAL))
+#elif O_SEQUENTIAL >= 0
+#if O_SEQUENTIAL <= 0x7fffull /* 15-bit */
 PRIVATE DEFINE_UINT15(posix_O_SEQUENTIAL, O_SEQUENTIAL);
 #elif O_SEQUENTIAL <= 0x3fffffffull /* 30-bit */
 PRIVATE DEFINE_UINT30(posix_O_SEQUENTIAL, O_SEQUENTIAL);
@@ -630,9 +564,7 @@ PRIVATE DEFINE_UINT60(posix_O_SEQUENTIAL, O_SEQUENTIAL);
 PRIVATE DEFINE_UINT75(posix_O_SEQUENTIAL, O_SEQUENTIAL);
 #endif
 #else /* O_SEQUENTIAL >= 0 */
-#if O_SEQUENTIAL == -1
-#define posix_O_SEQUENTIAL DeeInt_MinusOne
-#elif O_SEQUENTIAL >= -0x4000ll /* 15-bit */
+#if O_SEQUENTIAL >= -0x4000ll /* 15-bit */
 PRIVATE DEFINE_INT15(posix_O_SEQUENTIAL, O_SEQUENTIAL);
 #elif O_SEQUENTIAL >= -0x20000000ll /* 30-bit */
 PRIVATE DEFINE_INT30(posix_O_SEQUENTIAL, O_SEQUENTIAL);
@@ -650,12 +582,10 @@ PRIVATE DEFINE_INT75(posix_O_SEQUENTIAL, O_SEQUENTIAL);
 #ifdef CONFIG_HAVE_O_RANDOM
 #define POSIX_O_RANDOM_DEF \
 	{ "O_RANDOM", (DeeObject *)&posix_O_RANDOM, MODSYM_FREADONLY | MODSYM_FCONSTEXPR },
-#if O_RANDOM >= 0
-#if O_RANDOM == 0
-#define posix_O_RANDOM DeeInt_Zero
-#elif O_RANDOM == 1
-#define posix_O_RANDOM DeeInt_One
-#elif O_RANDOM <= 0x7fffull /* 15-bit */
+#if DeeInt_IsSmallInt(O_RANDOM)
+#define posix_O_RANDOM (*DeeInt_ForSmallInt(O_RANDOM))
+#elif O_RANDOM >= 0
+#if O_RANDOM <= 0x7fffull /* 15-bit */
 PRIVATE DEFINE_UINT15(posix_O_RANDOM, O_RANDOM);
 #elif O_RANDOM <= 0x3fffffffull /* 30-bit */
 PRIVATE DEFINE_UINT30(posix_O_RANDOM, O_RANDOM);
@@ -667,9 +597,7 @@ PRIVATE DEFINE_UINT60(posix_O_RANDOM, O_RANDOM);
 PRIVATE DEFINE_UINT75(posix_O_RANDOM, O_RANDOM);
 #endif
 #else /* O_RANDOM >= 0 */
-#if O_RANDOM == -1
-#define posix_O_RANDOM DeeInt_MinusOne
-#elif O_RANDOM >= -0x4000ll /* 15-bit */
+#if O_RANDOM >= -0x4000ll /* 15-bit */
 PRIVATE DEFINE_INT15(posix_O_RANDOM, O_RANDOM);
 #elif O_RANDOM >= -0x20000000ll /* 30-bit */
 PRIVATE DEFINE_INT30(posix_O_RANDOM, O_RANDOM);
@@ -687,12 +615,10 @@ PRIVATE DEFINE_INT75(posix_O_RANDOM, O_RANDOM);
 #ifdef CONFIG_HAVE_O_NOCTTY
 #define POSIX_O_NOCTTY_DEF \
 	{ "O_NOCTTY", (DeeObject *)&posix_O_NOCTTY, MODSYM_FREADONLY | MODSYM_FCONSTEXPR, "If the calling process does not have a controlling terminal assigned, do not attempt to assign the newly opened file as terminal, even when ${isatty(open(...))} would be true" },
-#if O_NOCTTY >= 0
-#if O_NOCTTY == 0
-#define posix_O_NOCTTY DeeInt_Zero
-#elif O_NOCTTY == 1
-#define posix_O_NOCTTY DeeInt_One
-#elif O_NOCTTY <= 0x7fffull /* 15-bit */
+#if DeeInt_IsSmallInt(O_NOCTTY)
+#define posix_O_NOCTTY (*DeeInt_ForSmallInt(O_NOCTTY))
+#elif O_NOCTTY >= 0
+#if O_NOCTTY <= 0x7fffull /* 15-bit */
 PRIVATE DEFINE_UINT15(posix_O_NOCTTY, O_NOCTTY);
 #elif O_NOCTTY <= 0x3fffffffull /* 30-bit */
 PRIVATE DEFINE_UINT30(posix_O_NOCTTY, O_NOCTTY);
@@ -704,9 +630,7 @@ PRIVATE DEFINE_UINT60(posix_O_NOCTTY, O_NOCTTY);
 PRIVATE DEFINE_UINT75(posix_O_NOCTTY, O_NOCTTY);
 #endif
 #else /* O_NOCTTY >= 0 */
-#if O_NOCTTY == -1
-#define posix_O_NOCTTY DeeInt_MinusOne
-#elif O_NOCTTY >= -0x4000ll /* 15-bit */
+#if O_NOCTTY >= -0x4000ll /* 15-bit */
 PRIVATE DEFINE_INT15(posix_O_NOCTTY, O_NOCTTY);
 #elif O_NOCTTY >= -0x20000000ll /* 30-bit */
 PRIVATE DEFINE_INT30(posix_O_NOCTTY, O_NOCTTY);
@@ -724,12 +648,10 @@ PRIVATE DEFINE_INT75(posix_O_NOCTTY, O_NOCTTY);
 #ifdef CONFIG_HAVE_O_NONBLOCK
 #define POSIX_O_NONBLOCK_DEF \
 	{ "O_NONBLOCK", (DeeObject *)&posix_O_NONBLOCK, MODSYM_FREADONLY | MODSYM_FCONSTEXPR, "Do not block when trying to read data that hasn\'t been written, yet" },
-#if O_NONBLOCK >= 0
-#if O_NONBLOCK == 0
-#define posix_O_NONBLOCK DeeInt_Zero
-#elif O_NONBLOCK == 1
-#define posix_O_NONBLOCK DeeInt_One
-#elif O_NONBLOCK <= 0x7fffull /* 15-bit */
+#if DeeInt_IsSmallInt(O_NONBLOCK)
+#define posix_O_NONBLOCK (*DeeInt_ForSmallInt(O_NONBLOCK))
+#elif O_NONBLOCK >= 0
+#if O_NONBLOCK <= 0x7fffull /* 15-bit */
 PRIVATE DEFINE_UINT15(posix_O_NONBLOCK, O_NONBLOCK);
 #elif O_NONBLOCK <= 0x3fffffffull /* 30-bit */
 PRIVATE DEFINE_UINT30(posix_O_NONBLOCK, O_NONBLOCK);
@@ -741,9 +663,7 @@ PRIVATE DEFINE_UINT60(posix_O_NONBLOCK, O_NONBLOCK);
 PRIVATE DEFINE_UINT75(posix_O_NONBLOCK, O_NONBLOCK);
 #endif
 #else /* O_NONBLOCK >= 0 */
-#if O_NONBLOCK == -1
-#define posix_O_NONBLOCK DeeInt_MinusOne
-#elif O_NONBLOCK >= -0x4000ll /* 15-bit */
+#if O_NONBLOCK >= -0x4000ll /* 15-bit */
 PRIVATE DEFINE_INT15(posix_O_NONBLOCK, O_NONBLOCK);
 #elif O_NONBLOCK >= -0x20000000ll /* 30-bit */
 PRIVATE DEFINE_INT30(posix_O_NONBLOCK, O_NONBLOCK);
@@ -761,12 +681,10 @@ PRIVATE DEFINE_INT75(posix_O_NONBLOCK, O_NONBLOCK);
 #ifdef CONFIG_HAVE_O_SYNC
 #define POSIX_O_SYNC_DEF \
 	{ "O_SYNC", (DeeObject *)&posix_O_SYNC, MODSYM_FREADONLY | MODSYM_FCONSTEXPR },
-#if O_SYNC >= 0
-#if O_SYNC == 0
-#define posix_O_SYNC DeeInt_Zero
-#elif O_SYNC == 1
-#define posix_O_SYNC DeeInt_One
-#elif O_SYNC <= 0x7fffull /* 15-bit */
+#if DeeInt_IsSmallInt(O_SYNC)
+#define posix_O_SYNC (*DeeInt_ForSmallInt(O_SYNC))
+#elif O_SYNC >= 0
+#if O_SYNC <= 0x7fffull /* 15-bit */
 PRIVATE DEFINE_UINT15(posix_O_SYNC, O_SYNC);
 #elif O_SYNC <= 0x3fffffffull /* 30-bit */
 PRIVATE DEFINE_UINT30(posix_O_SYNC, O_SYNC);
@@ -778,9 +696,7 @@ PRIVATE DEFINE_UINT60(posix_O_SYNC, O_SYNC);
 PRIVATE DEFINE_UINT75(posix_O_SYNC, O_SYNC);
 #endif
 #else /* O_SYNC >= 0 */
-#if O_SYNC == -1
-#define posix_O_SYNC DeeInt_MinusOne
-#elif O_SYNC >= -0x4000ll /* 15-bit */
+#if O_SYNC >= -0x4000ll /* 15-bit */
 PRIVATE DEFINE_INT15(posix_O_SYNC, O_SYNC);
 #elif O_SYNC >= -0x20000000ll /* 30-bit */
 PRIVATE DEFINE_INT30(posix_O_SYNC, O_SYNC);
@@ -798,12 +714,10 @@ PRIVATE DEFINE_INT75(posix_O_SYNC, O_SYNC);
 #ifdef CONFIG_HAVE_O_RSYNC
 #define POSIX_O_RSYNC_DEF \
 	{ "O_RSYNC", (DeeObject *)&posix_O_RSYNC, MODSYM_FREADONLY | MODSYM_FCONSTEXPR },
-#if O_RSYNC >= 0
-#if O_RSYNC == 0
-#define posix_O_RSYNC DeeInt_Zero
-#elif O_RSYNC == 1
-#define posix_O_RSYNC DeeInt_One
-#elif O_RSYNC <= 0x7fffull /* 15-bit */
+#if DeeInt_IsSmallInt(O_RSYNC)
+#define posix_O_RSYNC (*DeeInt_ForSmallInt(O_RSYNC))
+#elif O_RSYNC >= 0
+#if O_RSYNC <= 0x7fffull /* 15-bit */
 PRIVATE DEFINE_UINT15(posix_O_RSYNC, O_RSYNC);
 #elif O_RSYNC <= 0x3fffffffull /* 30-bit */
 PRIVATE DEFINE_UINT30(posix_O_RSYNC, O_RSYNC);
@@ -815,9 +729,7 @@ PRIVATE DEFINE_UINT60(posix_O_RSYNC, O_RSYNC);
 PRIVATE DEFINE_UINT75(posix_O_RSYNC, O_RSYNC);
 #endif
 #else /* O_RSYNC >= 0 */
-#if O_RSYNC == -1
-#define posix_O_RSYNC DeeInt_MinusOne
-#elif O_RSYNC >= -0x4000ll /* 15-bit */
+#if O_RSYNC >= -0x4000ll /* 15-bit */
 PRIVATE DEFINE_INT15(posix_O_RSYNC, O_RSYNC);
 #elif O_RSYNC >= -0x20000000ll /* 30-bit */
 PRIVATE DEFINE_INT30(posix_O_RSYNC, O_RSYNC);
@@ -835,12 +747,10 @@ PRIVATE DEFINE_INT75(posix_O_RSYNC, O_RSYNC);
 #ifdef CONFIG_HAVE_O_DSYNC
 #define POSIX_O_DSYNC_DEF \
 	{ "O_DSYNC", (DeeObject *)&posix_O_DSYNC, MODSYM_FREADONLY | MODSYM_FCONSTEXPR },
-#if O_DSYNC >= 0
-#if O_DSYNC == 0
-#define posix_O_DSYNC DeeInt_Zero
-#elif O_DSYNC == 1
-#define posix_O_DSYNC DeeInt_One
-#elif O_DSYNC <= 0x7fffull /* 15-bit */
+#if DeeInt_IsSmallInt(O_DSYNC)
+#define posix_O_DSYNC (*DeeInt_ForSmallInt(O_DSYNC))
+#elif O_DSYNC >= 0
+#if O_DSYNC <= 0x7fffull /* 15-bit */
 PRIVATE DEFINE_UINT15(posix_O_DSYNC, O_DSYNC);
 #elif O_DSYNC <= 0x3fffffffull /* 30-bit */
 PRIVATE DEFINE_UINT30(posix_O_DSYNC, O_DSYNC);
@@ -852,9 +762,7 @@ PRIVATE DEFINE_UINT60(posix_O_DSYNC, O_DSYNC);
 PRIVATE DEFINE_UINT75(posix_O_DSYNC, O_DSYNC);
 #endif
 #else /* O_DSYNC >= 0 */
-#if O_DSYNC == -1
-#define posix_O_DSYNC DeeInt_MinusOne
-#elif O_DSYNC >= -0x4000ll /* 15-bit */
+#if O_DSYNC >= -0x4000ll /* 15-bit */
 PRIVATE DEFINE_INT15(posix_O_DSYNC, O_DSYNC);
 #elif O_DSYNC >= -0x20000000ll /* 30-bit */
 PRIVATE DEFINE_INT30(posix_O_DSYNC, O_DSYNC);
@@ -872,12 +780,10 @@ PRIVATE DEFINE_INT75(posix_O_DSYNC, O_DSYNC);
 #ifdef CONFIG_HAVE_O_ASYNC
 #define POSIX_O_ASYNC_DEF \
 	{ "O_ASYNC", (DeeObject *)&posix_O_ASYNC, MODSYM_FREADONLY | MODSYM_FCONSTEXPR },
-#if O_ASYNC >= 0
-#if O_ASYNC == 0
-#define posix_O_ASYNC DeeInt_Zero
-#elif O_ASYNC == 1
-#define posix_O_ASYNC DeeInt_One
-#elif O_ASYNC <= 0x7fffull /* 15-bit */
+#if DeeInt_IsSmallInt(O_ASYNC)
+#define posix_O_ASYNC (*DeeInt_ForSmallInt(O_ASYNC))
+#elif O_ASYNC >= 0
+#if O_ASYNC <= 0x7fffull /* 15-bit */
 PRIVATE DEFINE_UINT15(posix_O_ASYNC, O_ASYNC);
 #elif O_ASYNC <= 0x3fffffffull /* 30-bit */
 PRIVATE DEFINE_UINT30(posix_O_ASYNC, O_ASYNC);
@@ -889,9 +795,7 @@ PRIVATE DEFINE_UINT60(posix_O_ASYNC, O_ASYNC);
 PRIVATE DEFINE_UINT75(posix_O_ASYNC, O_ASYNC);
 #endif
 #else /* O_ASYNC >= 0 */
-#if O_ASYNC == -1
-#define posix_O_ASYNC DeeInt_MinusOne
-#elif O_ASYNC >= -0x4000ll /* 15-bit */
+#if O_ASYNC >= -0x4000ll /* 15-bit */
 PRIVATE DEFINE_INT15(posix_O_ASYNC, O_ASYNC);
 #elif O_ASYNC >= -0x20000000ll /* 30-bit */
 PRIVATE DEFINE_INT30(posix_O_ASYNC, O_ASYNC);
@@ -909,12 +813,10 @@ PRIVATE DEFINE_INT75(posix_O_ASYNC, O_ASYNC);
 #ifdef CONFIG_HAVE_O_DIRECT
 #define POSIX_O_DIRECT_DEF \
 	{ "O_DIRECT", (DeeObject *)&posix_O_DIRECT, MODSYM_FREADONLY | MODSYM_FCONSTEXPR },
-#if O_DIRECT >= 0
-#if O_DIRECT == 0
-#define posix_O_DIRECT DeeInt_Zero
-#elif O_DIRECT == 1
-#define posix_O_DIRECT DeeInt_One
-#elif O_DIRECT <= 0x7fffull /* 15-bit */
+#if DeeInt_IsSmallInt(O_DIRECT)
+#define posix_O_DIRECT (*DeeInt_ForSmallInt(O_DIRECT))
+#elif O_DIRECT >= 0
+#if O_DIRECT <= 0x7fffull /* 15-bit */
 PRIVATE DEFINE_UINT15(posix_O_DIRECT, O_DIRECT);
 #elif O_DIRECT <= 0x3fffffffull /* 30-bit */
 PRIVATE DEFINE_UINT30(posix_O_DIRECT, O_DIRECT);
@@ -926,9 +828,7 @@ PRIVATE DEFINE_UINT60(posix_O_DIRECT, O_DIRECT);
 PRIVATE DEFINE_UINT75(posix_O_DIRECT, O_DIRECT);
 #endif
 #else /* O_DIRECT >= 0 */
-#if O_DIRECT == -1
-#define posix_O_DIRECT DeeInt_MinusOne
-#elif O_DIRECT >= -0x4000ll /* 15-bit */
+#if O_DIRECT >= -0x4000ll /* 15-bit */
 PRIVATE DEFINE_INT15(posix_O_DIRECT, O_DIRECT);
 #elif O_DIRECT >= -0x20000000ll /* 30-bit */
 PRIVATE DEFINE_INT30(posix_O_DIRECT, O_DIRECT);
@@ -946,12 +846,10 @@ PRIVATE DEFINE_INT75(posix_O_DIRECT, O_DIRECT);
 #ifdef CONFIG_HAVE_O_LARGEFILE
 #define POSIX_O_LARGEFILE_DEF \
 	{ "O_LARGEFILE", (DeeObject *)&posix_O_LARGEFILE, MODSYM_FREADONLY | MODSYM_FCONSTEXPR },
-#if O_LARGEFILE >= 0
-#if O_LARGEFILE == 0
-#define posix_O_LARGEFILE DeeInt_Zero
-#elif O_LARGEFILE == 1
-#define posix_O_LARGEFILE DeeInt_One
-#elif O_LARGEFILE <= 0x7fffull /* 15-bit */
+#if DeeInt_IsSmallInt(O_LARGEFILE)
+#define posix_O_LARGEFILE (*DeeInt_ForSmallInt(O_LARGEFILE))
+#elif O_LARGEFILE >= 0
+#if O_LARGEFILE <= 0x7fffull /* 15-bit */
 PRIVATE DEFINE_UINT15(posix_O_LARGEFILE, O_LARGEFILE);
 #elif O_LARGEFILE <= 0x3fffffffull /* 30-bit */
 PRIVATE DEFINE_UINT30(posix_O_LARGEFILE, O_LARGEFILE);
@@ -963,9 +861,7 @@ PRIVATE DEFINE_UINT60(posix_O_LARGEFILE, O_LARGEFILE);
 PRIVATE DEFINE_UINT75(posix_O_LARGEFILE, O_LARGEFILE);
 #endif
 #else /* O_LARGEFILE >= 0 */
-#if O_LARGEFILE == -1
-#define posix_O_LARGEFILE DeeInt_MinusOne
-#elif O_LARGEFILE >= -0x4000ll /* 15-bit */
+#if O_LARGEFILE >= -0x4000ll /* 15-bit */
 PRIVATE DEFINE_INT15(posix_O_LARGEFILE, O_LARGEFILE);
 #elif O_LARGEFILE >= -0x20000000ll /* 30-bit */
 PRIVATE DEFINE_INT30(posix_O_LARGEFILE, O_LARGEFILE);
@@ -983,12 +879,10 @@ PRIVATE DEFINE_INT75(posix_O_LARGEFILE, O_LARGEFILE);
 #ifdef CONFIG_HAVE_O_DIRECTORY
 #define POSIX_O_DIRECTORY_DEF \
 	{ "O_DIRECTORY", (DeeObject *)&posix_O_DIRECTORY, MODSYM_FREADONLY | MODSYM_FCONSTEXPR, "Set #ENOTDIR when the final path component of an open() system call turns out to be something other than a directory" },
-#if O_DIRECTORY >= 0
-#if O_DIRECTORY == 0
-#define posix_O_DIRECTORY DeeInt_Zero
-#elif O_DIRECTORY == 1
-#define posix_O_DIRECTORY DeeInt_One
-#elif O_DIRECTORY <= 0x7fffull /* 15-bit */
+#if DeeInt_IsSmallInt(O_DIRECTORY)
+#define posix_O_DIRECTORY (*DeeInt_ForSmallInt(O_DIRECTORY))
+#elif O_DIRECTORY >= 0
+#if O_DIRECTORY <= 0x7fffull /* 15-bit */
 PRIVATE DEFINE_UINT15(posix_O_DIRECTORY, O_DIRECTORY);
 #elif O_DIRECTORY <= 0x3fffffffull /* 30-bit */
 PRIVATE DEFINE_UINT30(posix_O_DIRECTORY, O_DIRECTORY);
@@ -1000,9 +894,7 @@ PRIVATE DEFINE_UINT60(posix_O_DIRECTORY, O_DIRECTORY);
 PRIVATE DEFINE_UINT75(posix_O_DIRECTORY, O_DIRECTORY);
 #endif
 #else /* O_DIRECTORY >= 0 */
-#if O_DIRECTORY == -1
-#define posix_O_DIRECTORY DeeInt_MinusOne
-#elif O_DIRECTORY >= -0x4000ll /* 15-bit */
+#if O_DIRECTORY >= -0x4000ll /* 15-bit */
 PRIVATE DEFINE_INT15(posix_O_DIRECTORY, O_DIRECTORY);
 #elif O_DIRECTORY >= -0x20000000ll /* 30-bit */
 PRIVATE DEFINE_INT30(posix_O_DIRECTORY, O_DIRECTORY);
@@ -1020,12 +912,10 @@ PRIVATE DEFINE_INT75(posix_O_DIRECTORY, O_DIRECTORY);
 #ifdef CONFIG_HAVE_O_NOFOLLOW
 #define POSIX_O_NOFOLLOW_DEF \
 	{ "O_NOFOLLOW", (DeeObject *)&posix_O_NOFOLLOW, MODSYM_FREADONLY | MODSYM_FCONSTEXPR, "Set #ELOOP when the final path component of an open() system call turns out to be a symbolic link" },
-#if O_NOFOLLOW >= 0
-#if O_NOFOLLOW == 0
-#define posix_O_NOFOLLOW DeeInt_Zero
-#elif O_NOFOLLOW == 1
-#define posix_O_NOFOLLOW DeeInt_One
-#elif O_NOFOLLOW <= 0x7fffull /* 15-bit */
+#if DeeInt_IsSmallInt(O_NOFOLLOW)
+#define posix_O_NOFOLLOW (*DeeInt_ForSmallInt(O_NOFOLLOW))
+#elif O_NOFOLLOW >= 0
+#if O_NOFOLLOW <= 0x7fffull /* 15-bit */
 PRIVATE DEFINE_UINT15(posix_O_NOFOLLOW, O_NOFOLLOW);
 #elif O_NOFOLLOW <= 0x3fffffffull /* 30-bit */
 PRIVATE DEFINE_UINT30(posix_O_NOFOLLOW, O_NOFOLLOW);
@@ -1037,9 +927,7 @@ PRIVATE DEFINE_UINT60(posix_O_NOFOLLOW, O_NOFOLLOW);
 PRIVATE DEFINE_UINT75(posix_O_NOFOLLOW, O_NOFOLLOW);
 #endif
 #else /* O_NOFOLLOW >= 0 */
-#if O_NOFOLLOW == -1
-#define posix_O_NOFOLLOW DeeInt_MinusOne
-#elif O_NOFOLLOW >= -0x4000ll /* 15-bit */
+#if O_NOFOLLOW >= -0x4000ll /* 15-bit */
 PRIVATE DEFINE_INT15(posix_O_NOFOLLOW, O_NOFOLLOW);
 #elif O_NOFOLLOW >= -0x20000000ll /* 30-bit */
 PRIVATE DEFINE_INT30(posix_O_NOFOLLOW, O_NOFOLLOW);
@@ -1057,12 +945,10 @@ PRIVATE DEFINE_INT75(posix_O_NOFOLLOW, O_NOFOLLOW);
 #ifdef CONFIG_HAVE_O_NOATIME
 #define POSIX_O_NOATIME_DEF \
 	{ "O_NOATIME", (DeeObject *)&posix_O_NOATIME, MODSYM_FREADONLY | MODSYM_FCONSTEXPR, "Don\'t update last-accessed time stamps" },
-#if O_NOATIME >= 0
-#if O_NOATIME == 0
-#define posix_O_NOATIME DeeInt_Zero
-#elif O_NOATIME == 1
-#define posix_O_NOATIME DeeInt_One
-#elif O_NOATIME <= 0x7fffull /* 15-bit */
+#if DeeInt_IsSmallInt(O_NOATIME)
+#define posix_O_NOATIME (*DeeInt_ForSmallInt(O_NOATIME))
+#elif O_NOATIME >= 0
+#if O_NOATIME <= 0x7fffull /* 15-bit */
 PRIVATE DEFINE_UINT15(posix_O_NOATIME, O_NOATIME);
 #elif O_NOATIME <= 0x3fffffffull /* 30-bit */
 PRIVATE DEFINE_UINT30(posix_O_NOATIME, O_NOATIME);
@@ -1074,9 +960,7 @@ PRIVATE DEFINE_UINT60(posix_O_NOATIME, O_NOATIME);
 PRIVATE DEFINE_UINT75(posix_O_NOATIME, O_NOATIME);
 #endif
 #else /* O_NOATIME >= 0 */
-#if O_NOATIME == -1
-#define posix_O_NOATIME DeeInt_MinusOne
-#elif O_NOATIME >= -0x4000ll /* 15-bit */
+#if O_NOATIME >= -0x4000ll /* 15-bit */
 PRIVATE DEFINE_INT15(posix_O_NOATIME, O_NOATIME);
 #elif O_NOATIME >= -0x20000000ll /* 30-bit */
 PRIVATE DEFINE_INT30(posix_O_NOATIME, O_NOATIME);
@@ -1094,12 +978,10 @@ PRIVATE DEFINE_INT75(posix_O_NOATIME, O_NOATIME);
 #ifdef CONFIG_HAVE_O_PATH
 #define POSIX_O_PATH_DEF \
 	{ "O_PATH", (DeeObject *)&posix_O_PATH, MODSYM_FREADONLY | MODSYM_FCONSTEXPR, "Open a path for *at system calls" },
-#if O_PATH >= 0
-#if O_PATH == 0
-#define posix_O_PATH DeeInt_Zero
-#elif O_PATH == 1
-#define posix_O_PATH DeeInt_One
-#elif O_PATH <= 0x7fffull /* 15-bit */
+#if DeeInt_IsSmallInt(O_PATH)
+#define posix_O_PATH (*DeeInt_ForSmallInt(O_PATH))
+#elif O_PATH >= 0
+#if O_PATH <= 0x7fffull /* 15-bit */
 PRIVATE DEFINE_UINT15(posix_O_PATH, O_PATH);
 #elif O_PATH <= 0x3fffffffull /* 30-bit */
 PRIVATE DEFINE_UINT30(posix_O_PATH, O_PATH);
@@ -1111,9 +993,7 @@ PRIVATE DEFINE_UINT60(posix_O_PATH, O_PATH);
 PRIVATE DEFINE_UINT75(posix_O_PATH, O_PATH);
 #endif
 #else /* O_PATH >= 0 */
-#if O_PATH == -1
-#define posix_O_PATH DeeInt_MinusOne
-#elif O_PATH >= -0x4000ll /* 15-bit */
+#if O_PATH >= -0x4000ll /* 15-bit */
 PRIVATE DEFINE_INT15(posix_O_PATH, O_PATH);
 #elif O_PATH >= -0x20000000ll /* 30-bit */
 PRIVATE DEFINE_INT30(posix_O_PATH, O_PATH);
@@ -1131,12 +1011,10 @@ PRIVATE DEFINE_INT75(posix_O_PATH, O_PATH);
 #ifdef CONFIG_HAVE_O_TMPFILE
 #define POSIX_O_TMPFILE_DEF \
 	{ "O_TMPFILE", (DeeObject *)&posix_O_TMPFILE, MODSYM_FREADONLY | MODSYM_FCONSTEXPR },
-#if O_TMPFILE >= 0
-#if O_TMPFILE == 0
-#define posix_O_TMPFILE DeeInt_Zero
-#elif O_TMPFILE == 1
-#define posix_O_TMPFILE DeeInt_One
-#elif O_TMPFILE <= 0x7fffull /* 15-bit */
+#if DeeInt_IsSmallInt(O_TMPFILE)
+#define posix_O_TMPFILE (*DeeInt_ForSmallInt(O_TMPFILE))
+#elif O_TMPFILE >= 0
+#if O_TMPFILE <= 0x7fffull /* 15-bit */
 PRIVATE DEFINE_UINT15(posix_O_TMPFILE, O_TMPFILE);
 #elif O_TMPFILE <= 0x3fffffffull /* 30-bit */
 PRIVATE DEFINE_UINT30(posix_O_TMPFILE, O_TMPFILE);
@@ -1148,9 +1026,7 @@ PRIVATE DEFINE_UINT60(posix_O_TMPFILE, O_TMPFILE);
 PRIVATE DEFINE_UINT75(posix_O_TMPFILE, O_TMPFILE);
 #endif
 #else /* O_TMPFILE >= 0 */
-#if O_TMPFILE == -1
-#define posix_O_TMPFILE DeeInt_MinusOne
-#elif O_TMPFILE >= -0x4000ll /* 15-bit */
+#if O_TMPFILE >= -0x4000ll /* 15-bit */
 PRIVATE DEFINE_INT15(posix_O_TMPFILE, O_TMPFILE);
 #elif O_TMPFILE >= -0x20000000ll /* 30-bit */
 PRIVATE DEFINE_INT30(posix_O_TMPFILE, O_TMPFILE);
@@ -1168,12 +1044,10 @@ PRIVATE DEFINE_INT75(posix_O_TMPFILE, O_TMPFILE);
 #ifdef CONFIG_HAVE_O_CLOFORK
 #define POSIX_O_CLOFORK_DEF \
 	{ "O_CLOFORK", (DeeObject *)&posix_O_CLOFORK, MODSYM_FREADONLY | MODSYM_FCONSTEXPR, "Close the handle when the file descriptors are unshared" },
-#if O_CLOFORK >= 0
-#if O_CLOFORK == 0
-#define posix_O_CLOFORK DeeInt_Zero
-#elif O_CLOFORK == 1
-#define posix_O_CLOFORK DeeInt_One
-#elif O_CLOFORK <= 0x7fffull /* 15-bit */
+#if DeeInt_IsSmallInt(O_CLOFORK)
+#define posix_O_CLOFORK (*DeeInt_ForSmallInt(O_CLOFORK))
+#elif O_CLOFORK >= 0
+#if O_CLOFORK <= 0x7fffull /* 15-bit */
 PRIVATE DEFINE_UINT15(posix_O_CLOFORK, O_CLOFORK);
 #elif O_CLOFORK <= 0x3fffffffull /* 30-bit */
 PRIVATE DEFINE_UINT30(posix_O_CLOFORK, O_CLOFORK);
@@ -1185,9 +1059,7 @@ PRIVATE DEFINE_UINT60(posix_O_CLOFORK, O_CLOFORK);
 PRIVATE DEFINE_UINT75(posix_O_CLOFORK, O_CLOFORK);
 #endif
 #else /* O_CLOFORK >= 0 */
-#if O_CLOFORK == -1
-#define posix_O_CLOFORK DeeInt_MinusOne
-#elif O_CLOFORK >= -0x4000ll /* 15-bit */
+#if O_CLOFORK >= -0x4000ll /* 15-bit */
 PRIVATE DEFINE_INT15(posix_O_CLOFORK, O_CLOFORK);
 #elif O_CLOFORK >= -0x20000000ll /* 30-bit */
 PRIVATE DEFINE_INT30(posix_O_CLOFORK, O_CLOFORK);
@@ -1205,12 +1077,10 @@ PRIVATE DEFINE_INT75(posix_O_CLOFORK, O_CLOFORK);
 #ifdef CONFIG_HAVE_O_SYMLINK
 #define POSIX_O_SYMLINK_DEF \
 	{ "O_SYMLINK", (DeeObject *)&posix_O_SYMLINK, MODSYM_FREADONLY | MODSYM_FCONSTEXPR, "Open a symlink itself, rather than dereferencing it" },
-#if O_SYMLINK >= 0
-#if O_SYMLINK == 0
-#define posix_O_SYMLINK DeeInt_Zero
-#elif O_SYMLINK == 1
-#define posix_O_SYMLINK DeeInt_One
-#elif O_SYMLINK <= 0x7fffull /* 15-bit */
+#if DeeInt_IsSmallInt(O_SYMLINK)
+#define posix_O_SYMLINK (*DeeInt_ForSmallInt(O_SYMLINK))
+#elif O_SYMLINK >= 0
+#if O_SYMLINK <= 0x7fffull /* 15-bit */
 PRIVATE DEFINE_UINT15(posix_O_SYMLINK, O_SYMLINK);
 #elif O_SYMLINK <= 0x3fffffffull /* 30-bit */
 PRIVATE DEFINE_UINT30(posix_O_SYMLINK, O_SYMLINK);
@@ -1222,9 +1092,7 @@ PRIVATE DEFINE_UINT60(posix_O_SYMLINK, O_SYMLINK);
 PRIVATE DEFINE_UINT75(posix_O_SYMLINK, O_SYMLINK);
 #endif
 #else /* O_SYMLINK >= 0 */
-#if O_SYMLINK == -1
-#define posix_O_SYMLINK DeeInt_MinusOne
-#elif O_SYMLINK >= -0x4000ll /* 15-bit */
+#if O_SYMLINK >= -0x4000ll /* 15-bit */
 PRIVATE DEFINE_INT15(posix_O_SYMLINK, O_SYMLINK);
 #elif O_SYMLINK >= -0x20000000ll /* 30-bit */
 PRIVATE DEFINE_INT30(posix_O_SYMLINK, O_SYMLINK);
@@ -1242,12 +1110,10 @@ PRIVATE DEFINE_INT75(posix_O_SYMLINK, O_SYMLINK);
 #ifdef CONFIG_HAVE_O_DOSPATH
 #define POSIX_O_DOSPATH_DEF \
 	{ "O_DOSPATH", (DeeObject *)&posix_O_DOSPATH, MODSYM_FREADONLY | MODSYM_FCONSTEXPR, "Interpret $\"\\\" as $\"/\", and ignore casing during path resolution. Additionally, recognize DOS mounting points, and interpret leading slashes as relative to the closest DOS mounting point" },
-#if O_DOSPATH >= 0
-#if O_DOSPATH == 0
-#define posix_O_DOSPATH DeeInt_Zero
-#elif O_DOSPATH == 1
-#define posix_O_DOSPATH DeeInt_One
-#elif O_DOSPATH <= 0x7fffull /* 15-bit */
+#if DeeInt_IsSmallInt(O_DOSPATH)
+#define posix_O_DOSPATH (*DeeInt_ForSmallInt(O_DOSPATH))
+#elif O_DOSPATH >= 0
+#if O_DOSPATH <= 0x7fffull /* 15-bit */
 PRIVATE DEFINE_UINT15(posix_O_DOSPATH, O_DOSPATH);
 #elif O_DOSPATH <= 0x3fffffffull /* 30-bit */
 PRIVATE DEFINE_UINT30(posix_O_DOSPATH, O_DOSPATH);
@@ -1259,9 +1125,7 @@ PRIVATE DEFINE_UINT60(posix_O_DOSPATH, O_DOSPATH);
 PRIVATE DEFINE_UINT75(posix_O_DOSPATH, O_DOSPATH);
 #endif
 #else /* O_DOSPATH >= 0 */
-#if O_DOSPATH == -1
-#define posix_O_DOSPATH DeeInt_MinusOne
-#elif O_DOSPATH >= -0x4000ll /* 15-bit */
+#if O_DOSPATH >= -0x4000ll /* 15-bit */
 PRIVATE DEFINE_INT15(posix_O_DOSPATH, O_DOSPATH);
 #elif O_DOSPATH >= -0x20000000ll /* 30-bit */
 PRIVATE DEFINE_INT30(posix_O_DOSPATH, O_DOSPATH);
@@ -1279,12 +1143,10 @@ PRIVATE DEFINE_INT75(posix_O_DOSPATH, O_DOSPATH);
 #ifdef CONFIG_HAVE_O_SHLOCK
 #define POSIX_O_SHLOCK_DEF \
 	{ "O_SHLOCK", (DeeObject *)&posix_O_SHLOCK, MODSYM_FREADONLY | MODSYM_FCONSTEXPR },
-#if O_SHLOCK >= 0
-#if O_SHLOCK == 0
-#define posix_O_SHLOCK DeeInt_Zero
-#elif O_SHLOCK == 1
-#define posix_O_SHLOCK DeeInt_One
-#elif O_SHLOCK <= 0x7fffull /* 15-bit */
+#if DeeInt_IsSmallInt(O_SHLOCK)
+#define posix_O_SHLOCK (*DeeInt_ForSmallInt(O_SHLOCK))
+#elif O_SHLOCK >= 0
+#if O_SHLOCK <= 0x7fffull /* 15-bit */
 PRIVATE DEFINE_UINT15(posix_O_SHLOCK, O_SHLOCK);
 #elif O_SHLOCK <= 0x3fffffffull /* 30-bit */
 PRIVATE DEFINE_UINT30(posix_O_SHLOCK, O_SHLOCK);
@@ -1296,9 +1158,7 @@ PRIVATE DEFINE_UINT60(posix_O_SHLOCK, O_SHLOCK);
 PRIVATE DEFINE_UINT75(posix_O_SHLOCK, O_SHLOCK);
 #endif
 #else /* O_SHLOCK >= 0 */
-#if O_SHLOCK == -1
-#define posix_O_SHLOCK DeeInt_MinusOne
-#elif O_SHLOCK >= -0x4000ll /* 15-bit */
+#if O_SHLOCK >= -0x4000ll /* 15-bit */
 PRIVATE DEFINE_INT15(posix_O_SHLOCK, O_SHLOCK);
 #elif O_SHLOCK >= -0x20000000ll /* 30-bit */
 PRIVATE DEFINE_INT30(posix_O_SHLOCK, O_SHLOCK);
@@ -1316,12 +1176,10 @@ PRIVATE DEFINE_INT75(posix_O_SHLOCK, O_SHLOCK);
 #ifdef CONFIG_HAVE_O_EXLOCK
 #define POSIX_O_EXLOCK_DEF \
 	{ "O_EXLOCK", (DeeObject *)&posix_O_EXLOCK, MODSYM_FREADONLY | MODSYM_FCONSTEXPR },
-#if O_EXLOCK >= 0
-#if O_EXLOCK == 0
-#define posix_O_EXLOCK DeeInt_Zero
-#elif O_EXLOCK == 1
-#define posix_O_EXLOCK DeeInt_One
-#elif O_EXLOCK <= 0x7fffull /* 15-bit */
+#if DeeInt_IsSmallInt(O_EXLOCK)
+#define posix_O_EXLOCK (*DeeInt_ForSmallInt(O_EXLOCK))
+#elif O_EXLOCK >= 0
+#if O_EXLOCK <= 0x7fffull /* 15-bit */
 PRIVATE DEFINE_UINT15(posix_O_EXLOCK, O_EXLOCK);
 #elif O_EXLOCK <= 0x3fffffffull /* 30-bit */
 PRIVATE DEFINE_UINT30(posix_O_EXLOCK, O_EXLOCK);
@@ -1333,9 +1191,7 @@ PRIVATE DEFINE_UINT60(posix_O_EXLOCK, O_EXLOCK);
 PRIVATE DEFINE_UINT75(posix_O_EXLOCK, O_EXLOCK);
 #endif
 #else /* O_EXLOCK >= 0 */
-#if O_EXLOCK == -1
-#define posix_O_EXLOCK DeeInt_MinusOne
-#elif O_EXLOCK >= -0x4000ll /* 15-bit */
+#if O_EXLOCK >= -0x4000ll /* 15-bit */
 PRIVATE DEFINE_INT15(posix_O_EXLOCK, O_EXLOCK);
 #elif O_EXLOCK >= -0x20000000ll /* 30-bit */
 PRIVATE DEFINE_INT30(posix_O_EXLOCK, O_EXLOCK);
@@ -1353,12 +1209,10 @@ PRIVATE DEFINE_INT75(posix_O_EXLOCK, O_EXLOCK);
 #ifdef CONFIG_HAVE_O_XATTR
 #define POSIX_O_XATTR_DEF \
 	{ "O_XATTR", (DeeObject *)&posix_O_XATTR, MODSYM_FREADONLY | MODSYM_FCONSTEXPR },
-#if O_XATTR >= 0
-#if O_XATTR == 0
-#define posix_O_XATTR DeeInt_Zero
-#elif O_XATTR == 1
-#define posix_O_XATTR DeeInt_One
-#elif O_XATTR <= 0x7fffull /* 15-bit */
+#if DeeInt_IsSmallInt(O_XATTR)
+#define posix_O_XATTR (*DeeInt_ForSmallInt(O_XATTR))
+#elif O_XATTR >= 0
+#if O_XATTR <= 0x7fffull /* 15-bit */
 PRIVATE DEFINE_UINT15(posix_O_XATTR, O_XATTR);
 #elif O_XATTR <= 0x3fffffffull /* 30-bit */
 PRIVATE DEFINE_UINT30(posix_O_XATTR, O_XATTR);
@@ -1370,9 +1224,7 @@ PRIVATE DEFINE_UINT60(posix_O_XATTR, O_XATTR);
 PRIVATE DEFINE_UINT75(posix_O_XATTR, O_XATTR);
 #endif
 #else /* O_XATTR >= 0 */
-#if O_XATTR == -1
-#define posix_O_XATTR DeeInt_MinusOne
-#elif O_XATTR >= -0x4000ll /* 15-bit */
+#if O_XATTR >= -0x4000ll /* 15-bit */
 PRIVATE DEFINE_INT15(posix_O_XATTR, O_XATTR);
 #elif O_XATTR >= -0x20000000ll /* 30-bit */
 PRIVATE DEFINE_INT30(posix_O_XATTR, O_XATTR);
@@ -1390,12 +1242,10 @@ PRIVATE DEFINE_INT75(posix_O_XATTR, O_XATTR);
 #ifdef CONFIG_HAVE_O_EXEC
 #define POSIX_O_EXEC_DEF \
 	{ "O_EXEC", (DeeObject *)&posix_O_EXEC, MODSYM_FREADONLY | MODSYM_FCONSTEXPR },
-#if O_EXEC >= 0
-#if O_EXEC == 0
-#define posix_O_EXEC DeeInt_Zero
-#elif O_EXEC == 1
-#define posix_O_EXEC DeeInt_One
-#elif O_EXEC <= 0x7fffull /* 15-bit */
+#if DeeInt_IsSmallInt(O_EXEC)
+#define posix_O_EXEC (*DeeInt_ForSmallInt(O_EXEC))
+#elif O_EXEC >= 0
+#if O_EXEC <= 0x7fffull /* 15-bit */
 PRIVATE DEFINE_UINT15(posix_O_EXEC, O_EXEC);
 #elif O_EXEC <= 0x3fffffffull /* 30-bit */
 PRIVATE DEFINE_UINT30(posix_O_EXEC, O_EXEC);
@@ -1407,9 +1257,7 @@ PRIVATE DEFINE_UINT60(posix_O_EXEC, O_EXEC);
 PRIVATE DEFINE_UINT75(posix_O_EXEC, O_EXEC);
 #endif
 #else /* O_EXEC >= 0 */
-#if O_EXEC == -1
-#define posix_O_EXEC DeeInt_MinusOne
-#elif O_EXEC >= -0x4000ll /* 15-bit */
+#if O_EXEC >= -0x4000ll /* 15-bit */
 PRIVATE DEFINE_INT15(posix_O_EXEC, O_EXEC);
 #elif O_EXEC >= -0x20000000ll /* 30-bit */
 PRIVATE DEFINE_INT30(posix_O_EXEC, O_EXEC);
@@ -1427,12 +1275,10 @@ PRIVATE DEFINE_INT75(posix_O_EXEC, O_EXEC);
 #ifdef CONFIG_HAVE_O_SEARCH
 #define POSIX_O_SEARCH_DEF \
 	{ "O_SEARCH", (DeeObject *)&posix_O_SEARCH, MODSYM_FREADONLY | MODSYM_FCONSTEXPR },
-#if O_SEARCH >= 0
-#if O_SEARCH == 0
-#define posix_O_SEARCH DeeInt_Zero
-#elif O_SEARCH == 1
-#define posix_O_SEARCH DeeInt_One
-#elif O_SEARCH <= 0x7fffull /* 15-bit */
+#if DeeInt_IsSmallInt(O_SEARCH)
+#define posix_O_SEARCH (*DeeInt_ForSmallInt(O_SEARCH))
+#elif O_SEARCH >= 0
+#if O_SEARCH <= 0x7fffull /* 15-bit */
 PRIVATE DEFINE_UINT15(posix_O_SEARCH, O_SEARCH);
 #elif O_SEARCH <= 0x3fffffffull /* 30-bit */
 PRIVATE DEFINE_UINT30(posix_O_SEARCH, O_SEARCH);
@@ -1444,9 +1290,7 @@ PRIVATE DEFINE_UINT60(posix_O_SEARCH, O_SEARCH);
 PRIVATE DEFINE_UINT75(posix_O_SEARCH, O_SEARCH);
 #endif
 #else /* O_SEARCH >= 0 */
-#if O_SEARCH == -1
-#define posix_O_SEARCH DeeInt_MinusOne
-#elif O_SEARCH >= -0x4000ll /* 15-bit */
+#if O_SEARCH >= -0x4000ll /* 15-bit */
 PRIVATE DEFINE_INT15(posix_O_SEARCH, O_SEARCH);
 #elif O_SEARCH >= -0x20000000ll /* 30-bit */
 PRIVATE DEFINE_INT30(posix_O_SEARCH, O_SEARCH);
@@ -1464,12 +1308,10 @@ PRIVATE DEFINE_INT75(posix_O_SEARCH, O_SEARCH);
 #ifdef CONFIG_HAVE_O_TTY_INIT
 #define POSIX_O_TTY_INIT_DEF \
 	{ "O_TTY_INIT", (DeeObject *)&posix_O_TTY_INIT, MODSYM_FREADONLY | MODSYM_FCONSTEXPR },
-#if O_TTY_INIT >= 0
-#if O_TTY_INIT == 0
-#define posix_O_TTY_INIT DeeInt_Zero
-#elif O_TTY_INIT == 1
-#define posix_O_TTY_INIT DeeInt_One
-#elif O_TTY_INIT <= 0x7fffull /* 15-bit */
+#if DeeInt_IsSmallInt(O_TTY_INIT)
+#define posix_O_TTY_INIT (*DeeInt_ForSmallInt(O_TTY_INIT))
+#elif O_TTY_INIT >= 0
+#if O_TTY_INIT <= 0x7fffull /* 15-bit */
 PRIVATE DEFINE_UINT15(posix_O_TTY_INIT, O_TTY_INIT);
 #elif O_TTY_INIT <= 0x3fffffffull /* 30-bit */
 PRIVATE DEFINE_UINT30(posix_O_TTY_INIT, O_TTY_INIT);
@@ -1481,9 +1323,7 @@ PRIVATE DEFINE_UINT60(posix_O_TTY_INIT, O_TTY_INIT);
 PRIVATE DEFINE_UINT75(posix_O_TTY_INIT, O_TTY_INIT);
 #endif
 #else /* O_TTY_INIT >= 0 */
-#if O_TTY_INIT == -1
-#define posix_O_TTY_INIT DeeInt_MinusOne
-#elif O_TTY_INIT >= -0x4000ll /* 15-bit */
+#if O_TTY_INIT >= -0x4000ll /* 15-bit */
 PRIVATE DEFINE_INT15(posix_O_TTY_INIT, O_TTY_INIT);
 #elif O_TTY_INIT >= -0x20000000ll /* 30-bit */
 PRIVATE DEFINE_INT30(posix_O_TTY_INIT, O_TTY_INIT);
@@ -1501,12 +1341,10 @@ PRIVATE DEFINE_INT75(posix_O_TTY_INIT, O_TTY_INIT);
 #ifdef CONFIG_HAVE_O_NOLINKS
 #define POSIX_O_NOLINKS_DEF \
 	{ "O_NOLINKS", (DeeObject *)&posix_O_NOLINKS, MODSYM_FREADONLY | MODSYM_FCONSTEXPR },
-#if O_NOLINKS >= 0
-#if O_NOLINKS == 0
-#define posix_O_NOLINKS DeeInt_Zero
-#elif O_NOLINKS == 1
-#define posix_O_NOLINKS DeeInt_One
-#elif O_NOLINKS <= 0x7fffull /* 15-bit */
+#if DeeInt_IsSmallInt(O_NOLINKS)
+#define posix_O_NOLINKS (*DeeInt_ForSmallInt(O_NOLINKS))
+#elif O_NOLINKS >= 0
+#if O_NOLINKS <= 0x7fffull /* 15-bit */
 PRIVATE DEFINE_UINT15(posix_O_NOLINKS, O_NOLINKS);
 #elif O_NOLINKS <= 0x3fffffffull /* 30-bit */
 PRIVATE DEFINE_UINT30(posix_O_NOLINKS, O_NOLINKS);
@@ -1518,9 +1356,7 @@ PRIVATE DEFINE_UINT60(posix_O_NOLINKS, O_NOLINKS);
 PRIVATE DEFINE_UINT75(posix_O_NOLINKS, O_NOLINKS);
 #endif
 #else /* O_NOLINKS >= 0 */
-#if O_NOLINKS == -1
-#define posix_O_NOLINKS DeeInt_MinusOne
-#elif O_NOLINKS >= -0x4000ll /* 15-bit */
+#if O_NOLINKS >= -0x4000ll /* 15-bit */
 PRIVATE DEFINE_INT15(posix_O_NOLINKS, O_NOLINKS);
 #elif O_NOLINKS >= -0x20000000ll /* 30-bit */
 PRIVATE DEFINE_INT30(posix_O_NOLINKS, O_NOLINKS);
@@ -1537,12 +1373,10 @@ PRIVATE DEFINE_INT75(posix_O_NOLINKS, O_NOLINKS);
 #endif /* !CONFIG_HAVE_O_NOLINKS */
 #define POSIX_AT_FDCWD_DEF \
 	{ "AT_FDCWD", (DeeObject *)&posix_AT_FDCWD, MODSYM_FREADONLY | MODSYM_FCONSTEXPR, "Special value used to indicate the *at functions should use the current working directory" },
-#if AT_FDCWD >= 0
-#if AT_FDCWD == 0
-#define posix_AT_FDCWD DeeInt_Zero
-#elif AT_FDCWD == 1
-#define posix_AT_FDCWD DeeInt_One
-#elif AT_FDCWD <= 0x7fffull /* 15-bit */
+#if DeeInt_IsSmallInt(AT_FDCWD)
+#define posix_AT_FDCWD (*DeeInt_ForSmallInt(AT_FDCWD))
+#elif AT_FDCWD >= 0
+#if AT_FDCWD <= 0x7fffull /* 15-bit */
 PRIVATE DEFINE_UINT15(posix_AT_FDCWD, AT_FDCWD);
 #elif AT_FDCWD <= 0x3fffffffull /* 30-bit */
 PRIVATE DEFINE_UINT30(posix_AT_FDCWD, AT_FDCWD);
@@ -1554,9 +1388,7 @@ PRIVATE DEFINE_UINT60(posix_AT_FDCWD, AT_FDCWD);
 PRIVATE DEFINE_UINT75(posix_AT_FDCWD, AT_FDCWD);
 #endif
 #else /* AT_FDCWD >= 0 */
-#if AT_FDCWD == -1
-#define posix_AT_FDCWD DeeInt_MinusOne
-#elif AT_FDCWD >= -0x4000ll /* 15-bit */
+#if AT_FDCWD >= -0x4000ll /* 15-bit */
 PRIVATE DEFINE_INT15(posix_AT_FDCWD, AT_FDCWD);
 #elif AT_FDCWD >= -0x20000000ll /* 30-bit */
 PRIVATE DEFINE_INT30(posix_AT_FDCWD, AT_FDCWD);
@@ -1570,12 +1402,10 @@ PRIVATE DEFINE_INT75(posix_AT_FDCWD, AT_FDCWD);
 #endif /* AT_FDCWD < 0 */
 #define POSIX_AT_SYMLINK_NOFOLLOW_DEF \
 	{ "AT_SYMLINK_NOFOLLOW", (DeeObject *)&posix_AT_SYMLINK_NOFOLLOW, MODSYM_FREADONLY | MODSYM_FCONSTEXPR, "Do not follow symbolic links" },
-#if AT_SYMLINK_NOFOLLOW >= 0
-#if AT_SYMLINK_NOFOLLOW == 0
-#define posix_AT_SYMLINK_NOFOLLOW DeeInt_Zero
-#elif AT_SYMLINK_NOFOLLOW == 1
-#define posix_AT_SYMLINK_NOFOLLOW DeeInt_One
-#elif AT_SYMLINK_NOFOLLOW <= 0x7fffull /* 15-bit */
+#if DeeInt_IsSmallInt(AT_SYMLINK_NOFOLLOW)
+#define posix_AT_SYMLINK_NOFOLLOW (*DeeInt_ForSmallInt(AT_SYMLINK_NOFOLLOW))
+#elif AT_SYMLINK_NOFOLLOW >= 0
+#if AT_SYMLINK_NOFOLLOW <= 0x7fffull /* 15-bit */
 PRIVATE DEFINE_UINT15(posix_AT_SYMLINK_NOFOLLOW, AT_SYMLINK_NOFOLLOW);
 #elif AT_SYMLINK_NOFOLLOW <= 0x3fffffffull /* 30-bit */
 PRIVATE DEFINE_UINT30(posix_AT_SYMLINK_NOFOLLOW, AT_SYMLINK_NOFOLLOW);
@@ -1587,9 +1417,7 @@ PRIVATE DEFINE_UINT60(posix_AT_SYMLINK_NOFOLLOW, AT_SYMLINK_NOFOLLOW);
 PRIVATE DEFINE_UINT75(posix_AT_SYMLINK_NOFOLLOW, AT_SYMLINK_NOFOLLOW);
 #endif
 #else /* AT_SYMLINK_NOFOLLOW >= 0 */
-#if AT_SYMLINK_NOFOLLOW == -1
-#define posix_AT_SYMLINK_NOFOLLOW DeeInt_MinusOne
-#elif AT_SYMLINK_NOFOLLOW >= -0x4000ll /* 15-bit */
+#if AT_SYMLINK_NOFOLLOW >= -0x4000ll /* 15-bit */
 PRIVATE DEFINE_INT15(posix_AT_SYMLINK_NOFOLLOW, AT_SYMLINK_NOFOLLOW);
 #elif AT_SYMLINK_NOFOLLOW >= -0x20000000ll /* 30-bit */
 PRIVATE DEFINE_INT30(posix_AT_SYMLINK_NOFOLLOW, AT_SYMLINK_NOFOLLOW);
@@ -1603,12 +1431,10 @@ PRIVATE DEFINE_INT75(posix_AT_SYMLINK_NOFOLLOW, AT_SYMLINK_NOFOLLOW);
 #endif /* AT_SYMLINK_NOFOLLOW < 0 */
 #define POSIX_AT_REMOVEDIR_DEF \
 	{ "AT_REMOVEDIR", (DeeObject *)&posix_AT_REMOVEDIR, MODSYM_FREADONLY | MODSYM_FCONSTEXPR, "Remove directory instead of unlinking file" },
-#if AT_REMOVEDIR >= 0
-#if AT_REMOVEDIR == 0
-#define posix_AT_REMOVEDIR DeeInt_Zero
-#elif AT_REMOVEDIR == 1
-#define posix_AT_REMOVEDIR DeeInt_One
-#elif AT_REMOVEDIR <= 0x7fffull /* 15-bit */
+#if DeeInt_IsSmallInt(AT_REMOVEDIR)
+#define posix_AT_REMOVEDIR (*DeeInt_ForSmallInt(AT_REMOVEDIR))
+#elif AT_REMOVEDIR >= 0
+#if AT_REMOVEDIR <= 0x7fffull /* 15-bit */
 PRIVATE DEFINE_UINT15(posix_AT_REMOVEDIR, AT_REMOVEDIR);
 #elif AT_REMOVEDIR <= 0x3fffffffull /* 30-bit */
 PRIVATE DEFINE_UINT30(posix_AT_REMOVEDIR, AT_REMOVEDIR);
@@ -1620,9 +1446,7 @@ PRIVATE DEFINE_UINT60(posix_AT_REMOVEDIR, AT_REMOVEDIR);
 PRIVATE DEFINE_UINT75(posix_AT_REMOVEDIR, AT_REMOVEDIR);
 #endif
 #else /* AT_REMOVEDIR >= 0 */
-#if AT_REMOVEDIR == -1
-#define posix_AT_REMOVEDIR DeeInt_MinusOne
-#elif AT_REMOVEDIR >= -0x4000ll /* 15-bit */
+#if AT_REMOVEDIR >= -0x4000ll /* 15-bit */
 PRIVATE DEFINE_INT15(posix_AT_REMOVEDIR, AT_REMOVEDIR);
 #elif AT_REMOVEDIR >= -0x20000000ll /* 30-bit */
 PRIVATE DEFINE_INT30(posix_AT_REMOVEDIR, AT_REMOVEDIR);
@@ -1637,12 +1461,10 @@ PRIVATE DEFINE_INT75(posix_AT_REMOVEDIR, AT_REMOVEDIR);
 #ifdef CONFIG_HAVE_AT_SYMLINK_FOLLOW
 #define POSIX_AT_SYMLINK_FOLLOW_DEF \
 	{ "AT_SYMLINK_FOLLOW", (DeeObject *)&posix_AT_SYMLINK_FOLLOW, MODSYM_FREADONLY | MODSYM_FCONSTEXPR, "Follow symbolic links" },
-#if AT_SYMLINK_FOLLOW >= 0
-#if AT_SYMLINK_FOLLOW == 0
-#define posix_AT_SYMLINK_FOLLOW DeeInt_Zero
-#elif AT_SYMLINK_FOLLOW == 1
-#define posix_AT_SYMLINK_FOLLOW DeeInt_One
-#elif AT_SYMLINK_FOLLOW <= 0x7fffull /* 15-bit */
+#if DeeInt_IsSmallInt(AT_SYMLINK_FOLLOW)
+#define posix_AT_SYMLINK_FOLLOW (*DeeInt_ForSmallInt(AT_SYMLINK_FOLLOW))
+#elif AT_SYMLINK_FOLLOW >= 0
+#if AT_SYMLINK_FOLLOW <= 0x7fffull /* 15-bit */
 PRIVATE DEFINE_UINT15(posix_AT_SYMLINK_FOLLOW, AT_SYMLINK_FOLLOW);
 #elif AT_SYMLINK_FOLLOW <= 0x3fffffffull /* 30-bit */
 PRIVATE DEFINE_UINT30(posix_AT_SYMLINK_FOLLOW, AT_SYMLINK_FOLLOW);
@@ -1654,9 +1476,7 @@ PRIVATE DEFINE_UINT60(posix_AT_SYMLINK_FOLLOW, AT_SYMLINK_FOLLOW);
 PRIVATE DEFINE_UINT75(posix_AT_SYMLINK_FOLLOW, AT_SYMLINK_FOLLOW);
 #endif
 #else /* AT_SYMLINK_FOLLOW >= 0 */
-#if AT_SYMLINK_FOLLOW == -1
-#define posix_AT_SYMLINK_FOLLOW DeeInt_MinusOne
-#elif AT_SYMLINK_FOLLOW >= -0x4000ll /* 15-bit */
+#if AT_SYMLINK_FOLLOW >= -0x4000ll /* 15-bit */
 PRIVATE DEFINE_INT15(posix_AT_SYMLINK_FOLLOW, AT_SYMLINK_FOLLOW);
 #elif AT_SYMLINK_FOLLOW >= -0x20000000ll /* 30-bit */
 PRIVATE DEFINE_INT30(posix_AT_SYMLINK_FOLLOW, AT_SYMLINK_FOLLOW);
@@ -1674,12 +1494,10 @@ PRIVATE DEFINE_INT75(posix_AT_SYMLINK_FOLLOW, AT_SYMLINK_FOLLOW);
 #ifdef CONFIG_HAVE_AT_NO_AUTOMOUNT
 #define POSIX_AT_NO_AUTOMOUNT_DEF \
 	{ "AT_NO_AUTOMOUNT", (DeeObject *)&posix_AT_NO_AUTOMOUNT, MODSYM_FREADONLY | MODSYM_FCONSTEXPR, "Suppress terminal automount traversal" },
-#if AT_NO_AUTOMOUNT >= 0
-#if AT_NO_AUTOMOUNT == 0
-#define posix_AT_NO_AUTOMOUNT DeeInt_Zero
-#elif AT_NO_AUTOMOUNT == 1
-#define posix_AT_NO_AUTOMOUNT DeeInt_One
-#elif AT_NO_AUTOMOUNT <= 0x7fffull /* 15-bit */
+#if DeeInt_IsSmallInt(AT_NO_AUTOMOUNT)
+#define posix_AT_NO_AUTOMOUNT (*DeeInt_ForSmallInt(AT_NO_AUTOMOUNT))
+#elif AT_NO_AUTOMOUNT >= 0
+#if AT_NO_AUTOMOUNT <= 0x7fffull /* 15-bit */
 PRIVATE DEFINE_UINT15(posix_AT_NO_AUTOMOUNT, AT_NO_AUTOMOUNT);
 #elif AT_NO_AUTOMOUNT <= 0x3fffffffull /* 30-bit */
 PRIVATE DEFINE_UINT30(posix_AT_NO_AUTOMOUNT, AT_NO_AUTOMOUNT);
@@ -1691,9 +1509,7 @@ PRIVATE DEFINE_UINT60(posix_AT_NO_AUTOMOUNT, AT_NO_AUTOMOUNT);
 PRIVATE DEFINE_UINT75(posix_AT_NO_AUTOMOUNT, AT_NO_AUTOMOUNT);
 #endif
 #else /* AT_NO_AUTOMOUNT >= 0 */
-#if AT_NO_AUTOMOUNT == -1
-#define posix_AT_NO_AUTOMOUNT DeeInt_MinusOne
-#elif AT_NO_AUTOMOUNT >= -0x4000ll /* 15-bit */
+#if AT_NO_AUTOMOUNT >= -0x4000ll /* 15-bit */
 PRIVATE DEFINE_INT15(posix_AT_NO_AUTOMOUNT, AT_NO_AUTOMOUNT);
 #elif AT_NO_AUTOMOUNT >= -0x20000000ll /* 30-bit */
 PRIVATE DEFINE_INT30(posix_AT_NO_AUTOMOUNT, AT_NO_AUTOMOUNT);
@@ -1711,12 +1527,10 @@ PRIVATE DEFINE_INT75(posix_AT_NO_AUTOMOUNT, AT_NO_AUTOMOUNT);
 #ifdef CONFIG_HAVE_AT_EMPTY_PATH
 #define POSIX_AT_EMPTY_PATH_DEF \
 	{ "AT_EMPTY_PATH", (DeeObject *)&posix_AT_EMPTY_PATH, MODSYM_FREADONLY | MODSYM_FCONSTEXPR, "Allow empty relative pathname" },
-#if AT_EMPTY_PATH >= 0
-#if AT_EMPTY_PATH == 0
-#define posix_AT_EMPTY_PATH DeeInt_Zero
-#elif AT_EMPTY_PATH == 1
-#define posix_AT_EMPTY_PATH DeeInt_One
-#elif AT_EMPTY_PATH <= 0x7fffull /* 15-bit */
+#if DeeInt_IsSmallInt(AT_EMPTY_PATH)
+#define posix_AT_EMPTY_PATH (*DeeInt_ForSmallInt(AT_EMPTY_PATH))
+#elif AT_EMPTY_PATH >= 0
+#if AT_EMPTY_PATH <= 0x7fffull /* 15-bit */
 PRIVATE DEFINE_UINT15(posix_AT_EMPTY_PATH, AT_EMPTY_PATH);
 #elif AT_EMPTY_PATH <= 0x3fffffffull /* 30-bit */
 PRIVATE DEFINE_UINT30(posix_AT_EMPTY_PATH, AT_EMPTY_PATH);
@@ -1728,9 +1542,7 @@ PRIVATE DEFINE_UINT60(posix_AT_EMPTY_PATH, AT_EMPTY_PATH);
 PRIVATE DEFINE_UINT75(posix_AT_EMPTY_PATH, AT_EMPTY_PATH);
 #endif
 #else /* AT_EMPTY_PATH >= 0 */
-#if AT_EMPTY_PATH == -1
-#define posix_AT_EMPTY_PATH DeeInt_MinusOne
-#elif AT_EMPTY_PATH >= -0x4000ll /* 15-bit */
+#if AT_EMPTY_PATH >= -0x4000ll /* 15-bit */
 PRIVATE DEFINE_INT15(posix_AT_EMPTY_PATH, AT_EMPTY_PATH);
 #elif AT_EMPTY_PATH >= -0x20000000ll /* 30-bit */
 PRIVATE DEFINE_INT30(posix_AT_EMPTY_PATH, AT_EMPTY_PATH);
@@ -1748,12 +1560,10 @@ PRIVATE DEFINE_INT75(posix_AT_EMPTY_PATH, AT_EMPTY_PATH);
 #ifdef CONFIG_HAVE_AT_EACCESS
 #define POSIX_AT_EACCESS_DEF \
 	{ "AT_EACCESS", (DeeObject *)&posix_AT_EACCESS, MODSYM_FREADONLY | MODSYM_FCONSTEXPR, "Test access permitted for effective IDs, not real IDs" },
-#if AT_EACCESS >= 0
-#if AT_EACCESS == 0
-#define posix_AT_EACCESS DeeInt_Zero
-#elif AT_EACCESS == 1
-#define posix_AT_EACCESS DeeInt_One
-#elif AT_EACCESS <= 0x7fffull /* 15-bit */
+#if DeeInt_IsSmallInt(AT_EACCESS)
+#define posix_AT_EACCESS (*DeeInt_ForSmallInt(AT_EACCESS))
+#elif AT_EACCESS >= 0
+#if AT_EACCESS <= 0x7fffull /* 15-bit */
 PRIVATE DEFINE_UINT15(posix_AT_EACCESS, AT_EACCESS);
 #elif AT_EACCESS <= 0x3fffffffull /* 30-bit */
 PRIVATE DEFINE_UINT30(posix_AT_EACCESS, AT_EACCESS);
@@ -1765,9 +1575,7 @@ PRIVATE DEFINE_UINT60(posix_AT_EACCESS, AT_EACCESS);
 PRIVATE DEFINE_UINT75(posix_AT_EACCESS, AT_EACCESS);
 #endif
 #else /* AT_EACCESS >= 0 */
-#if AT_EACCESS == -1
-#define posix_AT_EACCESS DeeInt_MinusOne
-#elif AT_EACCESS >= -0x4000ll /* 15-bit */
+#if AT_EACCESS >= -0x4000ll /* 15-bit */
 PRIVATE DEFINE_INT15(posix_AT_EACCESS, AT_EACCESS);
 #elif AT_EACCESS >= -0x20000000ll /* 30-bit */
 PRIVATE DEFINE_INT30(posix_AT_EACCESS, AT_EACCESS);
@@ -1784,12 +1592,10 @@ PRIVATE DEFINE_INT75(posix_AT_EACCESS, AT_EACCESS);
 #endif /* !CONFIG_HAVE_AT_EACCESS */
 #define POSIX_AT_REMOVEREG_DEF \
 	{ "AT_REMOVEREG", (DeeObject *)&posix_AT_REMOVEREG, MODSYM_FREADONLY | MODSYM_FCONSTEXPR, "Explicitly allow removing anything that unlink() removes. (Default; Set in addition to ?GAT_REMOVEDIR to implement ?Gremove semantics)" },
-#if AT_REMOVEREG >= 0
-#if AT_REMOVEREG == 0
-#define posix_AT_REMOVEREG DeeInt_Zero
-#elif AT_REMOVEREG == 1
-#define posix_AT_REMOVEREG DeeInt_One
-#elif AT_REMOVEREG <= 0x7fffull /* 15-bit */
+#if DeeInt_IsSmallInt(AT_REMOVEREG)
+#define posix_AT_REMOVEREG (*DeeInt_ForSmallInt(AT_REMOVEREG))
+#elif AT_REMOVEREG >= 0
+#if AT_REMOVEREG <= 0x7fffull /* 15-bit */
 PRIVATE DEFINE_UINT15(posix_AT_REMOVEREG, AT_REMOVEREG);
 #elif AT_REMOVEREG <= 0x3fffffffull /* 30-bit */
 PRIVATE DEFINE_UINT30(posix_AT_REMOVEREG, AT_REMOVEREG);
@@ -1801,9 +1607,7 @@ PRIVATE DEFINE_UINT60(posix_AT_REMOVEREG, AT_REMOVEREG);
 PRIVATE DEFINE_UINT75(posix_AT_REMOVEREG, AT_REMOVEREG);
 #endif
 #else /* AT_REMOVEREG >= 0 */
-#if AT_REMOVEREG == -1
-#define posix_AT_REMOVEREG DeeInt_MinusOne
-#elif AT_REMOVEREG >= -0x4000ll /* 15-bit */
+#if AT_REMOVEREG >= -0x4000ll /* 15-bit */
 PRIVATE DEFINE_INT15(posix_AT_REMOVEREG, AT_REMOVEREG);
 #elif AT_REMOVEREG >= -0x20000000ll /* 30-bit */
 PRIVATE DEFINE_INT30(posix_AT_REMOVEREG, AT_REMOVEREG);
@@ -1818,12 +1622,10 @@ PRIVATE DEFINE_INT75(posix_AT_REMOVEREG, AT_REMOVEREG);
 #ifdef CONFIG_HAVE_AT_DOSPATH
 #define POSIX_AT_DOSPATH_DEF \
 	{ "AT_DOSPATH", (DeeObject *)&posix_AT_DOSPATH, MODSYM_FREADONLY | MODSYM_FCONSTEXPR, "Interpret $\"\\\" as $\"/\", and ignore casing during path resolution" },
-#if AT_DOSPATH >= 0
-#if AT_DOSPATH == 0
-#define posix_AT_DOSPATH DeeInt_Zero
-#elif AT_DOSPATH == 1
-#define posix_AT_DOSPATH DeeInt_One
-#elif AT_DOSPATH <= 0x7fffull /* 15-bit */
+#if DeeInt_IsSmallInt(AT_DOSPATH)
+#define posix_AT_DOSPATH (*DeeInt_ForSmallInt(AT_DOSPATH))
+#elif AT_DOSPATH >= 0
+#if AT_DOSPATH <= 0x7fffull /* 15-bit */
 PRIVATE DEFINE_UINT15(posix_AT_DOSPATH, AT_DOSPATH);
 #elif AT_DOSPATH <= 0x3fffffffull /* 30-bit */
 PRIVATE DEFINE_UINT30(posix_AT_DOSPATH, AT_DOSPATH);
@@ -1835,9 +1637,7 @@ PRIVATE DEFINE_UINT60(posix_AT_DOSPATH, AT_DOSPATH);
 PRIVATE DEFINE_UINT75(posix_AT_DOSPATH, AT_DOSPATH);
 #endif
 #else /* AT_DOSPATH >= 0 */
-#if AT_DOSPATH == -1
-#define posix_AT_DOSPATH DeeInt_MinusOne
-#elif AT_DOSPATH >= -0x4000ll /* 15-bit */
+#if AT_DOSPATH >= -0x4000ll /* 15-bit */
 PRIVATE DEFINE_INT15(posix_AT_DOSPATH, AT_DOSPATH);
 #elif AT_DOSPATH >= -0x20000000ll /* 30-bit */
 PRIVATE DEFINE_INT30(posix_AT_DOSPATH, AT_DOSPATH);
@@ -1855,12 +1655,10 @@ PRIVATE DEFINE_INT75(posix_AT_DOSPATH, AT_DOSPATH);
 #ifdef CONFIG_HAVE_AT_FDROOT
 #define POSIX_AT_FDROOT_DEF \
 	{ "AT_FDROOT", (DeeObject *)&posix_AT_FDROOT, MODSYM_FREADONLY | MODSYM_FCONSTEXPR, "Same as ?GAT_FDCWD but sets the filesystem root (using this, you can ?Gchroot with ?Gdup2)" },
-#if AT_FDROOT >= 0
-#if AT_FDROOT == 0
-#define posix_AT_FDROOT DeeInt_Zero
-#elif AT_FDROOT == 1
-#define posix_AT_FDROOT DeeInt_One
-#elif AT_FDROOT <= 0x7fffull /* 15-bit */
+#if DeeInt_IsSmallInt(AT_FDROOT)
+#define posix_AT_FDROOT (*DeeInt_ForSmallInt(AT_FDROOT))
+#elif AT_FDROOT >= 0
+#if AT_FDROOT <= 0x7fffull /* 15-bit */
 PRIVATE DEFINE_UINT15(posix_AT_FDROOT, AT_FDROOT);
 #elif AT_FDROOT <= 0x3fffffffull /* 30-bit */
 PRIVATE DEFINE_UINT30(posix_AT_FDROOT, AT_FDROOT);
@@ -1872,9 +1670,7 @@ PRIVATE DEFINE_UINT60(posix_AT_FDROOT, AT_FDROOT);
 PRIVATE DEFINE_UINT75(posix_AT_FDROOT, AT_FDROOT);
 #endif
 #else /* AT_FDROOT >= 0 */
-#if AT_FDROOT == -1
-#define posix_AT_FDROOT DeeInt_MinusOne
-#elif AT_FDROOT >= -0x4000ll /* 15-bit */
+#if AT_FDROOT >= -0x4000ll /* 15-bit */
 PRIVATE DEFINE_INT15(posix_AT_FDROOT, AT_FDROOT);
 #elif AT_FDROOT >= -0x20000000ll /* 30-bit */
 PRIVATE DEFINE_INT30(posix_AT_FDROOT, AT_FDROOT);
@@ -1892,12 +1688,10 @@ PRIVATE DEFINE_INT75(posix_AT_FDROOT, AT_FDROOT);
 #ifdef CONFIG_HAVE_AT_THIS_TASK
 #define POSIX_AT_THIS_TASK_DEF \
 	{ "AT_THIS_TASK", (DeeObject *)&posix_AT_THIS_TASK, MODSYM_FREADONLY | MODSYM_FCONSTEXPR },
-#if AT_THIS_TASK >= 0
-#if AT_THIS_TASK == 0
-#define posix_AT_THIS_TASK DeeInt_Zero
-#elif AT_THIS_TASK == 1
-#define posix_AT_THIS_TASK DeeInt_One
-#elif AT_THIS_TASK <= 0x7fffull /* 15-bit */
+#if DeeInt_IsSmallInt(AT_THIS_TASK)
+#define posix_AT_THIS_TASK (*DeeInt_ForSmallInt(AT_THIS_TASK))
+#elif AT_THIS_TASK >= 0
+#if AT_THIS_TASK <= 0x7fffull /* 15-bit */
 PRIVATE DEFINE_UINT15(posix_AT_THIS_TASK, AT_THIS_TASK);
 #elif AT_THIS_TASK <= 0x3fffffffull /* 30-bit */
 PRIVATE DEFINE_UINT30(posix_AT_THIS_TASK, AT_THIS_TASK);
@@ -1909,9 +1703,7 @@ PRIVATE DEFINE_UINT60(posix_AT_THIS_TASK, AT_THIS_TASK);
 PRIVATE DEFINE_UINT75(posix_AT_THIS_TASK, AT_THIS_TASK);
 #endif
 #else /* AT_THIS_TASK >= 0 */
-#if AT_THIS_TASK == -1
-#define posix_AT_THIS_TASK DeeInt_MinusOne
-#elif AT_THIS_TASK >= -0x4000ll /* 15-bit */
+#if AT_THIS_TASK >= -0x4000ll /* 15-bit */
 PRIVATE DEFINE_INT15(posix_AT_THIS_TASK, AT_THIS_TASK);
 #elif AT_THIS_TASK >= -0x20000000ll /* 30-bit */
 PRIVATE DEFINE_INT30(posix_AT_THIS_TASK, AT_THIS_TASK);
@@ -1929,12 +1721,10 @@ PRIVATE DEFINE_INT75(posix_AT_THIS_TASK, AT_THIS_TASK);
 #ifdef CONFIG_HAVE_AT_THIS_PROCESS
 #define POSIX_AT_THIS_PROCESS_DEF \
 	{ "AT_THIS_PROCESS", (DeeObject *)&posix_AT_THIS_PROCESS, MODSYM_FREADONLY | MODSYM_FCONSTEXPR },
-#if AT_THIS_PROCESS >= 0
-#if AT_THIS_PROCESS == 0
-#define posix_AT_THIS_PROCESS DeeInt_Zero
-#elif AT_THIS_PROCESS == 1
-#define posix_AT_THIS_PROCESS DeeInt_One
-#elif AT_THIS_PROCESS <= 0x7fffull /* 15-bit */
+#if DeeInt_IsSmallInt(AT_THIS_PROCESS)
+#define posix_AT_THIS_PROCESS (*DeeInt_ForSmallInt(AT_THIS_PROCESS))
+#elif AT_THIS_PROCESS >= 0
+#if AT_THIS_PROCESS <= 0x7fffull /* 15-bit */
 PRIVATE DEFINE_UINT15(posix_AT_THIS_PROCESS, AT_THIS_PROCESS);
 #elif AT_THIS_PROCESS <= 0x3fffffffull /* 30-bit */
 PRIVATE DEFINE_UINT30(posix_AT_THIS_PROCESS, AT_THIS_PROCESS);
@@ -1946,9 +1736,7 @@ PRIVATE DEFINE_UINT60(posix_AT_THIS_PROCESS, AT_THIS_PROCESS);
 PRIVATE DEFINE_UINT75(posix_AT_THIS_PROCESS, AT_THIS_PROCESS);
 #endif
 #else /* AT_THIS_PROCESS >= 0 */
-#if AT_THIS_PROCESS == -1
-#define posix_AT_THIS_PROCESS DeeInt_MinusOne
-#elif AT_THIS_PROCESS >= -0x4000ll /* 15-bit */
+#if AT_THIS_PROCESS >= -0x4000ll /* 15-bit */
 PRIVATE DEFINE_INT15(posix_AT_THIS_PROCESS, AT_THIS_PROCESS);
 #elif AT_THIS_PROCESS >= -0x20000000ll /* 30-bit */
 PRIVATE DEFINE_INT30(posix_AT_THIS_PROCESS, AT_THIS_PROCESS);
@@ -1966,12 +1754,10 @@ PRIVATE DEFINE_INT75(posix_AT_THIS_PROCESS, AT_THIS_PROCESS);
 #ifdef CONFIG_HAVE_AT_PARENT_PROCESS
 #define POSIX_AT_PARENT_PROCESS_DEF \
 	{ "AT_PARENT_PROCESS", (DeeObject *)&posix_AT_PARENT_PROCESS, MODSYM_FREADONLY | MODSYM_FCONSTEXPR },
-#if AT_PARENT_PROCESS >= 0
-#if AT_PARENT_PROCESS == 0
-#define posix_AT_PARENT_PROCESS DeeInt_Zero
-#elif AT_PARENT_PROCESS == 1
-#define posix_AT_PARENT_PROCESS DeeInt_One
-#elif AT_PARENT_PROCESS <= 0x7fffull /* 15-bit */
+#if DeeInt_IsSmallInt(AT_PARENT_PROCESS)
+#define posix_AT_PARENT_PROCESS (*DeeInt_ForSmallInt(AT_PARENT_PROCESS))
+#elif AT_PARENT_PROCESS >= 0
+#if AT_PARENT_PROCESS <= 0x7fffull /* 15-bit */
 PRIVATE DEFINE_UINT15(posix_AT_PARENT_PROCESS, AT_PARENT_PROCESS);
 #elif AT_PARENT_PROCESS <= 0x3fffffffull /* 30-bit */
 PRIVATE DEFINE_UINT30(posix_AT_PARENT_PROCESS, AT_PARENT_PROCESS);
@@ -1983,9 +1769,7 @@ PRIVATE DEFINE_UINT60(posix_AT_PARENT_PROCESS, AT_PARENT_PROCESS);
 PRIVATE DEFINE_UINT75(posix_AT_PARENT_PROCESS, AT_PARENT_PROCESS);
 #endif
 #else /* AT_PARENT_PROCESS >= 0 */
-#if AT_PARENT_PROCESS == -1
-#define posix_AT_PARENT_PROCESS DeeInt_MinusOne
-#elif AT_PARENT_PROCESS >= -0x4000ll /* 15-bit */
+#if AT_PARENT_PROCESS >= -0x4000ll /* 15-bit */
 PRIVATE DEFINE_INT15(posix_AT_PARENT_PROCESS, AT_PARENT_PROCESS);
 #elif AT_PARENT_PROCESS >= -0x20000000ll /* 30-bit */
 PRIVATE DEFINE_INT30(posix_AT_PARENT_PROCESS, AT_PARENT_PROCESS);
@@ -2003,12 +1787,10 @@ PRIVATE DEFINE_INT75(posix_AT_PARENT_PROCESS, AT_PARENT_PROCESS);
 #ifdef CONFIG_HAVE_AT_GROUP_LEADER
 #define POSIX_AT_GROUP_LEADER_DEF \
 	{ "AT_GROUP_LEADER", (DeeObject *)&posix_AT_GROUP_LEADER, MODSYM_FREADONLY | MODSYM_FCONSTEXPR },
-#if AT_GROUP_LEADER >= 0
-#if AT_GROUP_LEADER == 0
-#define posix_AT_GROUP_LEADER DeeInt_Zero
-#elif AT_GROUP_LEADER == 1
-#define posix_AT_GROUP_LEADER DeeInt_One
-#elif AT_GROUP_LEADER <= 0x7fffull /* 15-bit */
+#if DeeInt_IsSmallInt(AT_GROUP_LEADER)
+#define posix_AT_GROUP_LEADER (*DeeInt_ForSmallInt(AT_GROUP_LEADER))
+#elif AT_GROUP_LEADER >= 0
+#if AT_GROUP_LEADER <= 0x7fffull /* 15-bit */
 PRIVATE DEFINE_UINT15(posix_AT_GROUP_LEADER, AT_GROUP_LEADER);
 #elif AT_GROUP_LEADER <= 0x3fffffffull /* 30-bit */
 PRIVATE DEFINE_UINT30(posix_AT_GROUP_LEADER, AT_GROUP_LEADER);
@@ -2020,9 +1802,7 @@ PRIVATE DEFINE_UINT60(posix_AT_GROUP_LEADER, AT_GROUP_LEADER);
 PRIVATE DEFINE_UINT75(posix_AT_GROUP_LEADER, AT_GROUP_LEADER);
 #endif
 #else /* AT_GROUP_LEADER >= 0 */
-#if AT_GROUP_LEADER == -1
-#define posix_AT_GROUP_LEADER DeeInt_MinusOne
-#elif AT_GROUP_LEADER >= -0x4000ll /* 15-bit */
+#if AT_GROUP_LEADER >= -0x4000ll /* 15-bit */
 PRIVATE DEFINE_INT15(posix_AT_GROUP_LEADER, AT_GROUP_LEADER);
 #elif AT_GROUP_LEADER >= -0x20000000ll /* 30-bit */
 PRIVATE DEFINE_INT30(posix_AT_GROUP_LEADER, AT_GROUP_LEADER);
@@ -2040,12 +1820,10 @@ PRIVATE DEFINE_INT75(posix_AT_GROUP_LEADER, AT_GROUP_LEADER);
 #ifdef CONFIG_HAVE_AT_SESSION_LEADER
 #define POSIX_AT_SESSION_LEADER_DEF \
 	{ "AT_SESSION_LEADER", (DeeObject *)&posix_AT_SESSION_LEADER, MODSYM_FREADONLY | MODSYM_FCONSTEXPR },
-#if AT_SESSION_LEADER >= 0
-#if AT_SESSION_LEADER == 0
-#define posix_AT_SESSION_LEADER DeeInt_Zero
-#elif AT_SESSION_LEADER == 1
-#define posix_AT_SESSION_LEADER DeeInt_One
-#elif AT_SESSION_LEADER <= 0x7fffull /* 15-bit */
+#if DeeInt_IsSmallInt(AT_SESSION_LEADER)
+#define posix_AT_SESSION_LEADER (*DeeInt_ForSmallInt(AT_SESSION_LEADER))
+#elif AT_SESSION_LEADER >= 0
+#if AT_SESSION_LEADER <= 0x7fffull /* 15-bit */
 PRIVATE DEFINE_UINT15(posix_AT_SESSION_LEADER, AT_SESSION_LEADER);
 #elif AT_SESSION_LEADER <= 0x3fffffffull /* 30-bit */
 PRIVATE DEFINE_UINT30(posix_AT_SESSION_LEADER, AT_SESSION_LEADER);
@@ -2057,9 +1835,7 @@ PRIVATE DEFINE_UINT60(posix_AT_SESSION_LEADER, AT_SESSION_LEADER);
 PRIVATE DEFINE_UINT75(posix_AT_SESSION_LEADER, AT_SESSION_LEADER);
 #endif
 #else /* AT_SESSION_LEADER >= 0 */
-#if AT_SESSION_LEADER == -1
-#define posix_AT_SESSION_LEADER DeeInt_MinusOne
-#elif AT_SESSION_LEADER >= -0x4000ll /* 15-bit */
+#if AT_SESSION_LEADER >= -0x4000ll /* 15-bit */
 PRIVATE DEFINE_INT15(posix_AT_SESSION_LEADER, AT_SESSION_LEADER);
 #elif AT_SESSION_LEADER >= -0x20000000ll /* 30-bit */
 PRIVATE DEFINE_INT30(posix_AT_SESSION_LEADER, AT_SESSION_LEADER);
@@ -2077,12 +1853,10 @@ PRIVATE DEFINE_INT75(posix_AT_SESSION_LEADER, AT_SESSION_LEADER);
 #ifdef CONFIG_HAVE_AT_DOS_DRIVEMIN
 #define POSIX_AT_DOS_DRIVEMIN_DEF \
 	{ "AT_DOS_DRIVEMIN", (DeeObject *)&posix_AT_DOS_DRIVEMIN, MODSYM_FREADONLY | MODSYM_FCONSTEXPR },
-#if AT_DOS_DRIVEMIN >= 0
-#if AT_DOS_DRIVEMIN == 0
-#define posix_AT_DOS_DRIVEMIN DeeInt_Zero
-#elif AT_DOS_DRIVEMIN == 1
-#define posix_AT_DOS_DRIVEMIN DeeInt_One
-#elif AT_DOS_DRIVEMIN <= 0x7fffull /* 15-bit */
+#if DeeInt_IsSmallInt(AT_DOS_DRIVEMIN)
+#define posix_AT_DOS_DRIVEMIN (*DeeInt_ForSmallInt(AT_DOS_DRIVEMIN))
+#elif AT_DOS_DRIVEMIN >= 0
+#if AT_DOS_DRIVEMIN <= 0x7fffull /* 15-bit */
 PRIVATE DEFINE_UINT15(posix_AT_DOS_DRIVEMIN, AT_DOS_DRIVEMIN);
 #elif AT_DOS_DRIVEMIN <= 0x3fffffffull /* 30-bit */
 PRIVATE DEFINE_UINT30(posix_AT_DOS_DRIVEMIN, AT_DOS_DRIVEMIN);
@@ -2094,9 +1868,7 @@ PRIVATE DEFINE_UINT60(posix_AT_DOS_DRIVEMIN, AT_DOS_DRIVEMIN);
 PRIVATE DEFINE_UINT75(posix_AT_DOS_DRIVEMIN, AT_DOS_DRIVEMIN);
 #endif
 #else /* AT_DOS_DRIVEMIN >= 0 */
-#if AT_DOS_DRIVEMIN == -1
-#define posix_AT_DOS_DRIVEMIN DeeInt_MinusOne
-#elif AT_DOS_DRIVEMIN >= -0x4000ll /* 15-bit */
+#if AT_DOS_DRIVEMIN >= -0x4000ll /* 15-bit */
 PRIVATE DEFINE_INT15(posix_AT_DOS_DRIVEMIN, AT_DOS_DRIVEMIN);
 #elif AT_DOS_DRIVEMIN >= -0x20000000ll /* 30-bit */
 PRIVATE DEFINE_INT30(posix_AT_DOS_DRIVEMIN, AT_DOS_DRIVEMIN);
@@ -2114,12 +1886,10 @@ PRIVATE DEFINE_INT75(posix_AT_DOS_DRIVEMIN, AT_DOS_DRIVEMIN);
 #ifdef CONFIG_HAVE_AT_DOS_DRIVEMAX
 #define POSIX_AT_DOS_DRIVEMAX_DEF \
 	{ "AT_DOS_DRIVEMAX", (DeeObject *)&posix_AT_DOS_DRIVEMAX, MODSYM_FREADONLY | MODSYM_FCONSTEXPR },
-#if AT_DOS_DRIVEMAX >= 0
-#if AT_DOS_DRIVEMAX == 0
-#define posix_AT_DOS_DRIVEMAX DeeInt_Zero
-#elif AT_DOS_DRIVEMAX == 1
-#define posix_AT_DOS_DRIVEMAX DeeInt_One
-#elif AT_DOS_DRIVEMAX <= 0x7fffull /* 15-bit */
+#if DeeInt_IsSmallInt(AT_DOS_DRIVEMAX)
+#define posix_AT_DOS_DRIVEMAX (*DeeInt_ForSmallInt(AT_DOS_DRIVEMAX))
+#elif AT_DOS_DRIVEMAX >= 0
+#if AT_DOS_DRIVEMAX <= 0x7fffull /* 15-bit */
 PRIVATE DEFINE_UINT15(posix_AT_DOS_DRIVEMAX, AT_DOS_DRIVEMAX);
 #elif AT_DOS_DRIVEMAX <= 0x3fffffffull /* 30-bit */
 PRIVATE DEFINE_UINT30(posix_AT_DOS_DRIVEMAX, AT_DOS_DRIVEMAX);
@@ -2131,9 +1901,7 @@ PRIVATE DEFINE_UINT60(posix_AT_DOS_DRIVEMAX, AT_DOS_DRIVEMAX);
 PRIVATE DEFINE_UINT75(posix_AT_DOS_DRIVEMAX, AT_DOS_DRIVEMAX);
 #endif
 #else /* AT_DOS_DRIVEMAX >= 0 */
-#if AT_DOS_DRIVEMAX == -1
-#define posix_AT_DOS_DRIVEMAX DeeInt_MinusOne
-#elif AT_DOS_DRIVEMAX >= -0x4000ll /* 15-bit */
+#if AT_DOS_DRIVEMAX >= -0x4000ll /* 15-bit */
 PRIVATE DEFINE_INT15(posix_AT_DOS_DRIVEMAX, AT_DOS_DRIVEMAX);
 #elif AT_DOS_DRIVEMAX >= -0x20000000ll /* 30-bit */
 PRIVATE DEFINE_INT30(posix_AT_DOS_DRIVEMAX, AT_DOS_DRIVEMAX);
@@ -2151,12 +1919,10 @@ PRIVATE DEFINE_INT75(posix_AT_DOS_DRIVEMAX, AT_DOS_DRIVEMAX);
 #ifdef RENAME_NOREPLACE
 #define POSIX_RENAME_NOREPLACE_DEF \
 	{ "RENAME_NOREPLACE", (DeeObject *)&posix_RENAME_NOREPLACE, MODSYM_FREADONLY | MODSYM_FCONSTEXPR, "Don\'t overwrite target" },
-#if RENAME_NOREPLACE >= 0
-#if RENAME_NOREPLACE == 0
-#define posix_RENAME_NOREPLACE DeeInt_Zero
-#elif RENAME_NOREPLACE == 1
-#define posix_RENAME_NOREPLACE DeeInt_One
-#elif RENAME_NOREPLACE <= 0x7fffull /* 15-bit */
+#if DeeInt_IsSmallInt(RENAME_NOREPLACE)
+#define posix_RENAME_NOREPLACE (*DeeInt_ForSmallInt(RENAME_NOREPLACE))
+#elif RENAME_NOREPLACE >= 0
+#if RENAME_NOREPLACE <= 0x7fffull /* 15-bit */
 PRIVATE DEFINE_UINT15(posix_RENAME_NOREPLACE, RENAME_NOREPLACE);
 #elif RENAME_NOREPLACE <= 0x3fffffffull /* 30-bit */
 PRIVATE DEFINE_UINT30(posix_RENAME_NOREPLACE, RENAME_NOREPLACE);
@@ -2168,9 +1934,7 @@ PRIVATE DEFINE_UINT60(posix_RENAME_NOREPLACE, RENAME_NOREPLACE);
 PRIVATE DEFINE_UINT75(posix_RENAME_NOREPLACE, RENAME_NOREPLACE);
 #endif
 #else /* RENAME_NOREPLACE >= 0 */
-#if RENAME_NOREPLACE == -1
-#define posix_RENAME_NOREPLACE DeeInt_MinusOne
-#elif RENAME_NOREPLACE >= -0x4000ll /* 15-bit */
+#if RENAME_NOREPLACE >= -0x4000ll /* 15-bit */
 PRIVATE DEFINE_INT15(posix_RENAME_NOREPLACE, RENAME_NOREPLACE);
 #elif RENAME_NOREPLACE >= -0x20000000ll /* 30-bit */
 PRIVATE DEFINE_INT30(posix_RENAME_NOREPLACE, RENAME_NOREPLACE);
@@ -2188,12 +1952,10 @@ PRIVATE DEFINE_INT75(posix_RENAME_NOREPLACE, RENAME_NOREPLACE);
 #ifdef CONFIG_HAVE_RENAME_EXCHANGE
 #define POSIX_RENAME_EXCHANGE_DEF \
 	{ "RENAME_EXCHANGE", (DeeObject *)&posix_RENAME_EXCHANGE, MODSYM_FREADONLY | MODSYM_FCONSTEXPR, "Exchange source and dest" },
-#if RENAME_EXCHANGE >= 0
-#if RENAME_EXCHANGE == 0
-#define posix_RENAME_EXCHANGE DeeInt_Zero
-#elif RENAME_EXCHANGE == 1
-#define posix_RENAME_EXCHANGE DeeInt_One
-#elif RENAME_EXCHANGE <= 0x7fffull /* 15-bit */
+#if DeeInt_IsSmallInt(RENAME_EXCHANGE)
+#define posix_RENAME_EXCHANGE (*DeeInt_ForSmallInt(RENAME_EXCHANGE))
+#elif RENAME_EXCHANGE >= 0
+#if RENAME_EXCHANGE <= 0x7fffull /* 15-bit */
 PRIVATE DEFINE_UINT15(posix_RENAME_EXCHANGE, RENAME_EXCHANGE);
 #elif RENAME_EXCHANGE <= 0x3fffffffull /* 30-bit */
 PRIVATE DEFINE_UINT30(posix_RENAME_EXCHANGE, RENAME_EXCHANGE);
@@ -2205,9 +1967,7 @@ PRIVATE DEFINE_UINT60(posix_RENAME_EXCHANGE, RENAME_EXCHANGE);
 PRIVATE DEFINE_UINT75(posix_RENAME_EXCHANGE, RENAME_EXCHANGE);
 #endif
 #else /* RENAME_EXCHANGE >= 0 */
-#if RENAME_EXCHANGE == -1
-#define posix_RENAME_EXCHANGE DeeInt_MinusOne
-#elif RENAME_EXCHANGE >= -0x4000ll /* 15-bit */
+#if RENAME_EXCHANGE >= -0x4000ll /* 15-bit */
 PRIVATE DEFINE_INT15(posix_RENAME_EXCHANGE, RENAME_EXCHANGE);
 #elif RENAME_EXCHANGE >= -0x20000000ll /* 30-bit */
 PRIVATE DEFINE_INT30(posix_RENAME_EXCHANGE, RENAME_EXCHANGE);
@@ -2225,12 +1985,10 @@ PRIVATE DEFINE_INT75(posix_RENAME_EXCHANGE, RENAME_EXCHANGE);
 #ifdef CONFIG_HAVE_RENAME_WHITEOUT
 #define POSIX_RENAME_WHITEOUT_DEF \
 	{ "RENAME_WHITEOUT", (DeeObject *)&posix_RENAME_WHITEOUT, MODSYM_FREADONLY | MODSYM_FCONSTEXPR, "Whiteout source" },
-#if RENAME_WHITEOUT >= 0
-#if RENAME_WHITEOUT == 0
-#define posix_RENAME_WHITEOUT DeeInt_Zero
-#elif RENAME_WHITEOUT == 1
-#define posix_RENAME_WHITEOUT DeeInt_One
-#elif RENAME_WHITEOUT <= 0x7fffull /* 15-bit */
+#if DeeInt_IsSmallInt(RENAME_WHITEOUT)
+#define posix_RENAME_WHITEOUT (*DeeInt_ForSmallInt(RENAME_WHITEOUT))
+#elif RENAME_WHITEOUT >= 0
+#if RENAME_WHITEOUT <= 0x7fffull /* 15-bit */
 PRIVATE DEFINE_UINT15(posix_RENAME_WHITEOUT, RENAME_WHITEOUT);
 #elif RENAME_WHITEOUT <= 0x3fffffffull /* 30-bit */
 PRIVATE DEFINE_UINT30(posix_RENAME_WHITEOUT, RENAME_WHITEOUT);
@@ -2242,9 +2000,7 @@ PRIVATE DEFINE_UINT60(posix_RENAME_WHITEOUT, RENAME_WHITEOUT);
 PRIVATE DEFINE_UINT75(posix_RENAME_WHITEOUT, RENAME_WHITEOUT);
 #endif
 #else /* RENAME_WHITEOUT >= 0 */
-#if RENAME_WHITEOUT == -1
-#define posix_RENAME_WHITEOUT DeeInt_MinusOne
-#elif RENAME_WHITEOUT >= -0x4000ll /* 15-bit */
+#if RENAME_WHITEOUT >= -0x4000ll /* 15-bit */
 PRIVATE DEFINE_INT15(posix_RENAME_WHITEOUT, RENAME_WHITEOUT);
 #elif RENAME_WHITEOUT >= -0x20000000ll /* 30-bit */
 PRIVATE DEFINE_INT30(posix_RENAME_WHITEOUT, RENAME_WHITEOUT);

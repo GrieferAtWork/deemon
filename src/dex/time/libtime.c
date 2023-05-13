@@ -1633,7 +1633,7 @@ time_int(DeeTimeObject *__restrict self) {
 	/* Return as nano-seconds */
 	Dee_int128_t result;
 	DeeTime_AsNano(self, &result);
-	return DeeInt_NewS128(result);
+	return DeeInt_NewInt128(result);
 }
 
 PRIVATE int DCALL
@@ -1751,7 +1751,7 @@ PRIVATE struct type_method tpconst time_methods[] = {
 	time_getval_##name(DeeTimeObject *__restrict self) {        \
 		Dee_int128_t value;                                     \
 		_DeeTime_GetRepr(&value, self, repr);                   \
-		return DeeInt_NewS128(value);                           \
+		return DeeInt_NewInt128(value);                           \
 	}                                                           \
 	PRIVATE WUNUSED NONNULL((1, 2)) int DCALL                   \
 	time_setval_##name(DeeTimeObject *self, DeeObject *value) { \
@@ -1898,7 +1898,7 @@ time_get_time_t(DeeTimeObject *__restrict self) {
 	DeeTime_AsNano(self, &result);
 	__hybrid_int128_floordiv32(result, NANOSECONDS_PER_SECOND);
 	__hybrid_int128_sub64(result, SECONDS_01_01_1970);
-	return DeeInt_NewS128(result);
+	return DeeInt_NewInt128(result);
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
@@ -2266,7 +2266,7 @@ time_div(DeeTimeObject *self, DeeObject *other) {
 			goto err_divzero;
 		DeeTime_AsNano(self, &res);
 		__hybrid_int128_floordiv128(res, rhs);
-		return DeeInt_NewS128(res);
+		return DeeInt_NewInt128(res);
 	}
 
 	if (DeeObject_AsInt128(other, &rhs))

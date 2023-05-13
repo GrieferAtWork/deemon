@@ -1040,7 +1040,7 @@ done:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 kmap_size(KwdsMapping *__restrict self) {
 	if (!atomic_read(&self->kmo_argv))
-		return_reference_(&DeeInt_Zero);
+		return_reference_(DeeInt_Zero);
 	return DeeInt_NewSize(self->kmo_kwds->kw_size);
 }
 

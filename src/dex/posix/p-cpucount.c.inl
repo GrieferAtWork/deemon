@@ -78,7 +78,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_cpu_count_f_impl(void)
 #ifdef posix_cpu_count_USE_GetSystemInfo
 	SYSTEM_INFO sysinfo;
 	GetSystemInfo(&sysinfo);
-	return DeeInt_NewU32(sysinfo.dwNumberOfProcessors);
+	return DeeInt_NewUInt32(sysinfo.dwNumberOfProcessors);
 #endif /* posix_cpu_count_USE_GetSystemInfo */
 
 #ifdef posix_cpu_count_USE_sysconf__SC_NPROCESSORS_ONLN
@@ -175,11 +175,11 @@ fallback_fp:
 	Dee_Decref_likely(file);
 fallback:
 	DeeError_Handled(Dee_ERROR_HANDLED_RESTORE);
-	return_reference(&DeeInt_One);
+	return_reference(DeeInt_One);
 #endif /* posix_cpu_count_USE_open_AND_proc_cpuinfo */
 
 #ifdef posix_cpu_count_USE_STUB
-	return_reference(&DeeInt_One);
+	return_reference(DeeInt_One);
 #endif /* posix_cpu_count_USE_STUB */
 }
 

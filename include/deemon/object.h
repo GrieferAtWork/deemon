@@ -498,7 +498,7 @@ DFUNDEF NONNULL((1)) void (DCALL Dee_weakref_support_fini)(struct Dee_weakref_li
 
 /* Initialize the given weak reference to NULL. */
 #define Dee_weakref_null(self) \
-	((self)->wr_obj = NULL, (self)->wr_del = NULL)
+	(void)((self)->wr_obj = NULL, (self)->wr_del = NULL)
 
 /* Weak reference functionality.
  * @assume(ob != NULL);

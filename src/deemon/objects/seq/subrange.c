@@ -244,7 +244,7 @@ subrange_size(SubRange *__restrict self) {
 	if unlikely(inner_size == (size_t)-1)
 		goto err;
 	if (self->sr_start >= inner_size)
-		return_reference_(&DeeInt_Zero);
+		return_reference_(DeeInt_Zero);
 	inner_size -= self->sr_start;
 	if (inner_size > self->sr_size)
 		inner_size = self->sr_size;

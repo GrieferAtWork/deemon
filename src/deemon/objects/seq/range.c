@@ -642,7 +642,7 @@ range_size(Range *__restrict self) {
 			goto err_temp;
 		Dee_Decref(temp);
 	}
-	error = DeeObject_CompareLo(result, &DeeInt_Zero);
+	error = DeeObject_CompareLo(result, DeeInt_Zero);
 	if unlikely(error != 0) {
 		if unlikely(error < 0)
 			goto err_r;
@@ -746,7 +746,7 @@ range_getrange(Range *self,
 		 * new_start = self->r_start;
 		 * goto got_ns_ne;
 		 */
-		error = DeeObject_CompareLo(end, &DeeInt_Zero);
+		error = DeeObject_CompareLo(end, DeeInt_Zero);
 		if (error != 0) {
 			if unlikely(error < 0)
 				goto err;
@@ -794,7 +794,7 @@ range_getrange(Range *self,
 	 *     new_start = start;
 	 * }
 	 */
-	error = DeeObject_CompareLo(start, &DeeInt_Zero);
+	error = DeeObject_CompareLo(start, DeeInt_Zero);
 	if (error != 0) {
 		if unlikely(error < 0)
 			goto err_mylen;
@@ -829,7 +829,7 @@ return_empty_seq_mylen_ns:
 		 *     new_end = end;
 		 * }
 		 */
-		error = DeeObject_CompareLo(end, &DeeInt_Zero);
+		error = DeeObject_CompareLo(end, DeeInt_Zero);
 		if (error != 0) {
 			if unlikely(error < 0)
 				goto err_mylen_ns;
@@ -1013,7 +1013,7 @@ range_deep(Range *__restrict self,
 		self->r_step = DeeObject_DeepCopy(other->r_step);
 		if unlikely(!self->r_step)
 			goto err_end;
-		temp = DeeObject_CompareLo(self->r_step, &DeeInt_Zero);
+		temp = DeeObject_CompareLo(self->r_step, DeeInt_Zero);
 		if unlikely(temp < 0)
 			goto err_step;
 		self->r_rev = !!temp;
@@ -1040,7 +1040,7 @@ range_init(Range *__restrict self,
 		goto err;
 	if (self->r_step) {
 		int temp;
-		temp = DeeObject_CompareLo(self->r_step, &DeeInt_Zero);
+		temp = DeeObject_CompareLo(self->r_step, DeeInt_Zero);
 		if unlikely(temp < 0)
 			goto err;
 		self->r_rev = !!temp;
@@ -1698,7 +1698,7 @@ do_object_range:
 
 	/* Check if `step' is negative (required for proper compare operations of the range iterator). */
 	if (step) {
-		temp = DeeObject_CompareLo(step, &DeeInt_Zero);
+		temp = DeeObject_CompareLo(step, DeeInt_Zero);
 		if unlikely(temp < 0)
 			goto err;
 	}

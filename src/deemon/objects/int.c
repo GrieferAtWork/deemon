@@ -126,6 +126,16 @@
 #define __hybrid_uint128_least_significant_DIGIT_BITS(var) (digit)(__hybrid_uint128_vec64_significand(var, 0) & DIGIT_MASK)
 #endif /* DIGIT_BITS > ... */
 
+/* Config option to statically pre-allocate all 8-bit integer constants (that is: [-128,255]). */
+#if (!defined(CONFIG_STRING_8BIT_STATIC) && \
+     !defined(CONFIG_STRING_8BIT_NORMAL))
+#ifdef __OPTIMIZE_SIZE__
+#define CONFIG_STRING_8BIT_NORMAL
+#else /* __OPTIMIZE_SIZE__ */
+#define CONFIG_STRING_8BIT_STATIC
+#endif /* !__OPTIMIZE_SIZE__ */
+#endif /* ... */
+
 
 DECL_BEGIN
 
@@ -159,7 +169,7 @@ struct free_int_set {
 PRIVATE struct free_int_set free_ints[CONFIG_INT_CACHE_MAXCOUNT];
 
 INTERN size_t DCALL
-intcache_clear(size_t max_clear) {
+Dee_intcache_clearall(size_t max_clear) {
 	size_t i, result = 0;
 	struct free_int_set *set;
 	for (i = 0; i < COMPILER_LENOF(free_ints); ++i) {
@@ -301,7 +311,7 @@ done:
 #else /* CONFIG_INT_CACHE_MAXCOUNT != 0 */
 
 INTERN size_t DCALL
-intcache_clear(size_t UNUSED(max_clear)) {
+Dee_intcache_clearall(size_t UNUSED(max_clear)) {
 	return 0;
 }
 
@@ -331,6 +341,422 @@ DeeInt_Alloc_dbg(size_t n_digits, char const *file, int line)
 }
 #endif /* CONFIG_INT_CACHE_MAXCOUNT == 0 */
 
+#if defined(CONFIG_STRING_8BIT_STATIC) || defined(__DEEMON__)
+typedef struct {
+	Dee_OBJECT_HEAD
+	Dee_ssize_t ob_size;
+	Dee_digit_t ob_digit[1];
+} DeeIntObject1Digit;
+/*[[[deemon
+print("PRIVATE DeeIntObject1Digit eightbit_blob[128 + 256] = {");
+for (local i: [-128:256]) {
+	print("	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), ",
+		i < 0 ? -1 : i > 0 ? 1 : 0, ", { ",
+		i.abs, " } }, /" "* ", i, " *" "/");
+}
+print("};");
+]]]*/
+PRIVATE DeeIntObject1Digit eightbit_blob[128 + 256] = {
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), -1, { 128 } }, /* -128 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), -1, { 127 } }, /* -127 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), -1, { 126 } }, /* -126 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), -1, { 125 } }, /* -125 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), -1, { 124 } }, /* -124 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), -1, { 123 } }, /* -123 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), -1, { 122 } }, /* -122 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), -1, { 121 } }, /* -121 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), -1, { 120 } }, /* -120 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), -1, { 119 } }, /* -119 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), -1, { 118 } }, /* -118 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), -1, { 117 } }, /* -117 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), -1, { 116 } }, /* -116 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), -1, { 115 } }, /* -115 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), -1, { 114 } }, /* -114 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), -1, { 113 } }, /* -113 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), -1, { 112 } }, /* -112 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), -1, { 111 } }, /* -111 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), -1, { 110 } }, /* -110 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), -1, { 109 } }, /* -109 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), -1, { 108 } }, /* -108 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), -1, { 107 } }, /* -107 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), -1, { 106 } }, /* -106 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), -1, { 105 } }, /* -105 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), -1, { 104 } }, /* -104 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), -1, { 103 } }, /* -103 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), -1, { 102 } }, /* -102 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), -1, { 101 } }, /* -101 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), -1, { 100 } }, /* -100 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), -1, { 99 } }, /* -99 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), -1, { 98 } }, /* -98 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), -1, { 97 } }, /* -97 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), -1, { 96 } }, /* -96 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), -1, { 95 } }, /* -95 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), -1, { 94 } }, /* -94 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), -1, { 93 } }, /* -93 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), -1, { 92 } }, /* -92 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), -1, { 91 } }, /* -91 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), -1, { 90 } }, /* -90 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), -1, { 89 } }, /* -89 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), -1, { 88 } }, /* -88 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), -1, { 87 } }, /* -87 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), -1, { 86 } }, /* -86 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), -1, { 85 } }, /* -85 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), -1, { 84 } }, /* -84 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), -1, { 83 } }, /* -83 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), -1, { 82 } }, /* -82 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), -1, { 81 } }, /* -81 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), -1, { 80 } }, /* -80 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), -1, { 79 } }, /* -79 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), -1, { 78 } }, /* -78 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), -1, { 77 } }, /* -77 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), -1, { 76 } }, /* -76 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), -1, { 75 } }, /* -75 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), -1, { 74 } }, /* -74 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), -1, { 73 } }, /* -73 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), -1, { 72 } }, /* -72 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), -1, { 71 } }, /* -71 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), -1, { 70 } }, /* -70 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), -1, { 69 } }, /* -69 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), -1, { 68 } }, /* -68 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), -1, { 67 } }, /* -67 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), -1, { 66 } }, /* -66 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), -1, { 65 } }, /* -65 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), -1, { 64 } }, /* -64 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), -1, { 63 } }, /* -63 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), -1, { 62 } }, /* -62 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), -1, { 61 } }, /* -61 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), -1, { 60 } }, /* -60 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), -1, { 59 } }, /* -59 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), -1, { 58 } }, /* -58 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), -1, { 57 } }, /* -57 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), -1, { 56 } }, /* -56 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), -1, { 55 } }, /* -55 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), -1, { 54 } }, /* -54 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), -1, { 53 } }, /* -53 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), -1, { 52 } }, /* -52 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), -1, { 51 } }, /* -51 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), -1, { 50 } }, /* -50 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), -1, { 49 } }, /* -49 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), -1, { 48 } }, /* -48 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), -1, { 47 } }, /* -47 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), -1, { 46 } }, /* -46 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), -1, { 45 } }, /* -45 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), -1, { 44 } }, /* -44 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), -1, { 43 } }, /* -43 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), -1, { 42 } }, /* -42 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), -1, { 41 } }, /* -41 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), -1, { 40 } }, /* -40 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), -1, { 39 } }, /* -39 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), -1, { 38 } }, /* -38 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), -1, { 37 } }, /* -37 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), -1, { 36 } }, /* -36 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), -1, { 35 } }, /* -35 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), -1, { 34 } }, /* -34 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), -1, { 33 } }, /* -33 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), -1, { 32 } }, /* -32 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), -1, { 31 } }, /* -31 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), -1, { 30 } }, /* -30 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), -1, { 29 } }, /* -29 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), -1, { 28 } }, /* -28 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), -1, { 27 } }, /* -27 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), -1, { 26 } }, /* -26 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), -1, { 25 } }, /* -25 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), -1, { 24 } }, /* -24 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), -1, { 23 } }, /* -23 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), -1, { 22 } }, /* -22 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), -1, { 21 } }, /* -21 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), -1, { 20 } }, /* -20 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), -1, { 19 } }, /* -19 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), -1, { 18 } }, /* -18 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), -1, { 17 } }, /* -17 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), -1, { 16 } }, /* -16 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), -1, { 15 } }, /* -15 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), -1, { 14 } }, /* -14 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), -1, { 13 } }, /* -13 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), -1, { 12 } }, /* -12 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), -1, { 11 } }, /* -11 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), -1, { 10 } }, /* -10 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), -1, { 9 } }, /* -9 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), -1, { 8 } }, /* -8 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), -1, { 7 } }, /* -7 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), -1, { 6 } }, /* -6 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), -1, { 5 } }, /* -5 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), -1, { 4 } }, /* -4 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), -1, { 3 } }, /* -3 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), -1, { 2 } }, /* -2 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), -1, { 1 } }, /* -1 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), 0, { 0 } }, /* 0 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 1 } }, /* 1 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 2 } }, /* 2 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 3 } }, /* 3 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 4 } }, /* 4 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 5 } }, /* 5 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 6 } }, /* 6 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 7 } }, /* 7 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 8 } }, /* 8 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 9 } }, /* 9 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 10 } }, /* 10 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 11 } }, /* 11 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 12 } }, /* 12 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 13 } }, /* 13 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 14 } }, /* 14 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 15 } }, /* 15 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 16 } }, /* 16 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 17 } }, /* 17 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 18 } }, /* 18 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 19 } }, /* 19 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 20 } }, /* 20 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 21 } }, /* 21 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 22 } }, /* 22 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 23 } }, /* 23 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 24 } }, /* 24 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 25 } }, /* 25 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 26 } }, /* 26 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 27 } }, /* 27 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 28 } }, /* 28 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 29 } }, /* 29 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 30 } }, /* 30 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 31 } }, /* 31 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 32 } }, /* 32 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 33 } }, /* 33 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 34 } }, /* 34 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 35 } }, /* 35 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 36 } }, /* 36 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 37 } }, /* 37 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 38 } }, /* 38 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 39 } }, /* 39 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 40 } }, /* 40 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 41 } }, /* 41 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 42 } }, /* 42 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 43 } }, /* 43 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 44 } }, /* 44 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 45 } }, /* 45 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 46 } }, /* 46 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 47 } }, /* 47 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 48 } }, /* 48 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 49 } }, /* 49 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 50 } }, /* 50 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 51 } }, /* 51 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 52 } }, /* 52 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 53 } }, /* 53 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 54 } }, /* 54 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 55 } }, /* 55 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 56 } }, /* 56 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 57 } }, /* 57 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 58 } }, /* 58 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 59 } }, /* 59 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 60 } }, /* 60 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 61 } }, /* 61 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 62 } }, /* 62 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 63 } }, /* 63 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 64 } }, /* 64 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 65 } }, /* 65 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 66 } }, /* 66 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 67 } }, /* 67 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 68 } }, /* 68 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 69 } }, /* 69 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 70 } }, /* 70 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 71 } }, /* 71 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 72 } }, /* 72 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 73 } }, /* 73 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 74 } }, /* 74 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 75 } }, /* 75 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 76 } }, /* 76 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 77 } }, /* 77 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 78 } }, /* 78 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 79 } }, /* 79 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 80 } }, /* 80 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 81 } }, /* 81 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 82 } }, /* 82 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 83 } }, /* 83 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 84 } }, /* 84 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 85 } }, /* 85 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 86 } }, /* 86 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 87 } }, /* 87 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 88 } }, /* 88 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 89 } }, /* 89 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 90 } }, /* 90 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 91 } }, /* 91 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 92 } }, /* 92 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 93 } }, /* 93 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 94 } }, /* 94 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 95 } }, /* 95 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 96 } }, /* 96 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 97 } }, /* 97 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 98 } }, /* 98 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 99 } }, /* 99 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 100 } }, /* 100 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 101 } }, /* 101 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 102 } }, /* 102 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 103 } }, /* 103 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 104 } }, /* 104 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 105 } }, /* 105 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 106 } }, /* 106 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 107 } }, /* 107 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 108 } }, /* 108 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 109 } }, /* 109 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 110 } }, /* 110 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 111 } }, /* 111 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 112 } }, /* 112 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 113 } }, /* 113 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 114 } }, /* 114 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 115 } }, /* 115 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 116 } }, /* 116 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 117 } }, /* 117 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 118 } }, /* 118 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 119 } }, /* 119 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 120 } }, /* 120 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 121 } }, /* 121 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 122 } }, /* 122 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 123 } }, /* 123 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 124 } }, /* 124 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 125 } }, /* 125 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 126 } }, /* 126 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 127 } }, /* 127 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 128 } }, /* 128 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 129 } }, /* 129 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 130 } }, /* 130 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 131 } }, /* 131 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 132 } }, /* 132 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 133 } }, /* 133 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 134 } }, /* 134 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 135 } }, /* 135 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 136 } }, /* 136 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 137 } }, /* 137 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 138 } }, /* 138 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 139 } }, /* 139 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 140 } }, /* 140 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 141 } }, /* 141 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 142 } }, /* 142 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 143 } }, /* 143 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 144 } }, /* 144 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 145 } }, /* 145 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 146 } }, /* 146 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 147 } }, /* 147 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 148 } }, /* 148 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 149 } }, /* 149 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 150 } }, /* 150 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 151 } }, /* 151 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 152 } }, /* 152 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 153 } }, /* 153 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 154 } }, /* 154 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 155 } }, /* 155 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 156 } }, /* 156 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 157 } }, /* 157 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 158 } }, /* 158 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 159 } }, /* 159 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 160 } }, /* 160 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 161 } }, /* 161 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 162 } }, /* 162 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 163 } }, /* 163 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 164 } }, /* 164 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 165 } }, /* 165 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 166 } }, /* 166 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 167 } }, /* 167 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 168 } }, /* 168 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 169 } }, /* 169 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 170 } }, /* 170 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 171 } }, /* 171 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 172 } }, /* 172 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 173 } }, /* 173 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 174 } }, /* 174 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 175 } }, /* 175 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 176 } }, /* 176 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 177 } }, /* 177 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 178 } }, /* 178 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 179 } }, /* 179 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 180 } }, /* 180 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 181 } }, /* 181 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 182 } }, /* 182 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 183 } }, /* 183 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 184 } }, /* 184 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 185 } }, /* 185 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 186 } }, /* 186 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 187 } }, /* 187 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 188 } }, /* 188 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 189 } }, /* 189 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 190 } }, /* 190 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 191 } }, /* 191 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 192 } }, /* 192 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 193 } }, /* 193 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 194 } }, /* 194 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 195 } }, /* 195 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 196 } }, /* 196 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 197 } }, /* 197 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 198 } }, /* 198 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 199 } }, /* 199 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 200 } }, /* 200 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 201 } }, /* 201 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 202 } }, /* 202 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 203 } }, /* 203 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 204 } }, /* 204 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 205 } }, /* 205 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 206 } }, /* 206 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 207 } }, /* 207 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 208 } }, /* 208 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 209 } }, /* 209 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 210 } }, /* 210 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 211 } }, /* 211 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 212 } }, /* 212 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 213 } }, /* 213 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 214 } }, /* 214 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 215 } }, /* 215 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 216 } }, /* 216 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 217 } }, /* 217 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 218 } }, /* 218 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 219 } }, /* 219 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 220 } }, /* 220 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 221 } }, /* 221 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 222 } }, /* 222 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 223 } }, /* 223 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 224 } }, /* 224 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 225 } }, /* 225 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 226 } }, /* 226 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 227 } }, /* 227 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 228 } }, /* 228 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 229 } }, /* 229 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 230 } }, /* 230 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 231 } }, /* 231 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 232 } }, /* 232 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 233 } }, /* 233 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 234 } }, /* 234 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 235 } }, /* 235 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 236 } }, /* 236 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 237 } }, /* 237 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 238 } }, /* 238 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 239 } }, /* 239 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 240 } }, /* 240 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 241 } }, /* 241 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 242 } }, /* 242 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 243 } }, /* 243 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 244 } }, /* 244 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 245 } }, /* 245 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 246 } }, /* 246 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 247 } }, /* 247 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 248 } }, /* 248 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 249 } }, /* 249 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 250 } }, /* 250 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 251 } }, /* 251 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 252 } }, /* 252 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 253 } }, /* 253 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 254 } }, /* 254 */
+	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 255 } }, /* 255 */
+};
+/*[[[end]]]*/
+#define eightbit (eightbit_blob + 128)
+#endif /* CONFIG_STRING_8BIT_STATIC || __DEEMON__ */
+
+/* Helpful singletons for some often used integers. */
+PUBLIC struct _Dee_int_1digit_object DeeInt_MinusOne_Zero_One[3] = {
+	{ OBJECT_HEAD_INIT(&DeeInt_Type), -1, { 1 } },
+	{ OBJECT_HEAD_INIT(&DeeInt_Type), 0, { 0 } }, /* Technically, zero doesn't needy a digit array */
+	{ OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 1 } }
+};
+
+
+
+
+
 /* Create an integer from signed/unsigned LEB data. */
 PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeInt_NewSleb(uint8_t const **__restrict p_reader) {
@@ -344,22 +770,41 @@ DeeInt_NewSleb(uint8_t const **__restrict p_reader) {
 	while (*reader++ & 0x80)
 		++num_digits;
 	num_digits = ((num_digits * 7 + (DIGIT_BITS - 1)) / DIGIT_BITS);
-	result     = DeeInt_Alloc(num_digits);
+#ifdef CONFIG_STRING_8BIT_STATIC
+	if (num_digits == 1) {
+		uint8_t first_byte;
+		/* See if maybe we can encode the value as one of the 8-bit constants. */
+		reader     = *p_reader;
+		num_bits   = 6;
+		first_byte = *reader++;
+		temp       = first_byte & 0x3f;
+		while (reader[-1] & 0x80) {
+			/* Set the top-most 7 bits. */
+			temp |= (twodigits)(*reader & 0x7f) << num_bits;
+			num_bits += 7;
+			++reader;
+		}
+		*p_reader = reader;
+		if (first_byte & 0x40)
+			return DeeInt_NewSTwoDigits(-(stwodigits)temp);
+		return DeeInt_NewTwoDigits(temp);
+	}
+#endif /* CONFIG_STRING_8BIT_STATIC */
+	result = DeeInt_Alloc(num_digits);
 	if unlikely(!result)
 		goto done;
+
 	/* Read the integer. */
 	reader   = *p_reader;
 	dst      = result->ob_digit;
 	num_bits = 6;
 	temp     = *reader++ & 0x3f;
 	for (;;) {
-		while (num_bits < DIGIT_BITS &&
-		       (reader[-1] & 0x80)) {
+		while (num_bits < DIGIT_BITS && (reader[-1] & 0x80)) {
 			/* Set the top-most 7 bits. */
 			temp |= (twodigits)(*reader & 0x7f) << num_bits;
 			num_bits += 7;
-			if (!(*reader++ & 0x80))
-				break;
+			++reader;
 		}
 		if (num_bits >= DIGIT_BITS) {
 			*dst++ = temp & DIGIT_MASK;
@@ -370,7 +815,7 @@ DeeInt_NewSleb(uint8_t const **__restrict p_reader) {
 				if (dst == result->ob_digit) {
 					/* Special case: INT(0) */
 					DeeInt_Free(result);
-					result = (DeeIntObject *)&DeeInt_Zero;
+					result = (DeeIntObject *)DeeInt_Zero;
 					Dee_Incref(result);
 					goto done2;
 				}
@@ -409,22 +854,38 @@ DeeInt_NewUleb(uint8_t const **__restrict p_reader) {
 	while (*reader++ & 0x80)
 		++num_digits;
 	num_digits = ((num_digits * 7 + (DIGIT_BITS - 1)) / DIGIT_BITS);
-	result     = DeeInt_Alloc(num_digits);
+#ifdef CONFIG_STRING_8BIT_STATIC
+	if (num_digits == 1) {
+		/* See if maybe we can encode the value as one of the 8-bit constants. */
+		reader   = *p_reader;
+		num_bits = 7;
+		temp     = *reader++ & 0x7f;
+		while (reader[-1] & 0x80) {
+			/* Set the top-most 7 bits. */
+			temp |= (twodigits)(*reader & 0x7f) << num_bits;
+			num_bits += 7;
+			++reader;
+		}
+		*p_reader = reader;
+		return DeeInt_NewTwoDigits(temp);
+	}
+#endif /* CONFIG_STRING_8BIT_STATIC */
+	result = DeeInt_Alloc(num_digits);
 	if unlikely(!result)
 		goto done;
+
 	/* Read the integer. */
 	reader   = *p_reader;
-	num_bits = 0, temp = 0;
-	dst = result->ob_digit;
+	num_bits = 7;
+	temp     = *reader++ & 0x7f;
+	dst      = result->ob_digit;
 	for (;;) {
-		while (num_bits < DIGIT_BITS &&
-		       (reader == *p_reader || (reader[-1] & 0x80))) {
+		while (num_bits < DIGIT_BITS && (reader[-1] & 0x80)) {
 			/* Set the top-most 7 bits. */
 			temp |= (twodigits)(*reader & 0x7f) << num_bits;
 			num_bits += 7;
 			if (!(*reader++ & 0x80)) {
-				while (num_bits &&
-				       !((temp >> (num_bits - 1))&1))
+				while (num_bits && !((temp >> (num_bits - 1)) & 1))
 					--num_bits;
 				break;
 			}
@@ -438,7 +899,7 @@ DeeInt_NewUleb(uint8_t const **__restrict p_reader) {
 				if (dst == result->ob_digit) {
 					/* Special case: INT(0) */
 					DeeInt_Free(result);
-					result = (DeeIntObject *)&DeeInt_Zero;
+					result = (DeeIntObject *)DeeInt_Zero;
 					Dee_Incref(result);
 					goto done2;
 				}
@@ -587,14 +1048,17 @@ DeeInt_GetUleb(DeeObject *__restrict self,
 }
 
 
-#if DIGIT_BITS < 16
-PUBLIC WUNUSED DREF DeeObject *DCALL DeeInt_NewS8(int8_t val) {
+PUBLIC WUNUSED DREF DeeObject *DCALL
+DeeInt_NewInt8(int8_t val) {
+#ifdef CONFIG_STRING_8BIT_STATIC
+	return_reference(eightbit + val);
+#else /* CONFIG_STRING_8BIT_STATIC */
 	DREF DeeIntObject *result;
 	int sign        = 1;
 	uint8_t abs_val = (uint8_t)val;
 	if (val <= 0) {
 		if (!val)
-			return_reference_((DeeObject *)&DeeInt_Zero);
+			return_reference_(DeeInt_Zero);
 		sign    = -1;
 		abs_val = (uint8_t)0 - (uint8_t)val;
 	}
@@ -604,27 +1068,37 @@ PUBLIC WUNUSED DREF DeeObject *DCALL DeeInt_NewS8(int8_t val) {
 		result->ob_digit[0] = (digit)abs_val;
 	}
 	return (DREF DeeObject *)result;
+#endif /* !CONFIG_STRING_8BIT_STATIC */
 }
 
-PUBLIC WUNUSED DREF DeeObject *DCALL DeeInt_NewU8(uint8_t val) {
+PUBLIC WUNUSED DREF DeeObject *DCALL
+DeeInt_NewUInt8(uint8_t val) {
+#ifdef CONFIG_STRING_8BIT_STATIC
+	return_reference(eightbit + val);
+#else /* CONFIG_STRING_8BIT_STATIC */
 	DREF DeeIntObject *result;
 	if (!val)
-		return_reference_((DeeObject *)&DeeInt_Zero);
+		return_reference_(DeeInt_Zero);
 	result = DeeInt_Alloc(1);
 	if likely(result) {
 		result->ob_size     = 1;
 		result->ob_digit[0] = (digit)val;
 	}
 	return (DREF DeeObject *)result;
+#endif /* !CONFIG_STRING_8BIT_STATIC */
 }
-#endif /* DIGIT_BITS < 16 */
 
 
-PUBLIC WUNUSED DREF DeeObject *DCALL DeeInt_NewU16(uint16_t val) {
+PUBLIC WUNUSED DREF DeeObject *DCALL
+DeeInt_NewUInt16(uint16_t val) {
 	DREF DeeIntObject *result;
+#ifdef CONFIG_STRING_8BIT_STATIC
+	if (val <= 0xff)
+		return_reference(eightbit + val);
+#endif /* CONFIG_STRING_8BIT_STATIC */
 #if DIGIT_BITS >= 16
 	if (!val)
-		return_reference_((DeeObject *)&DeeInt_Zero);
+		return_reference_(DeeInt_Zero);
 	result = DeeInt_Alloc(1);
 	if likely(result) {
 		result->ob_size     = 1;
@@ -633,7 +1107,7 @@ PUBLIC WUNUSED DREF DeeObject *DCALL DeeInt_NewU16(uint16_t val) {
 #elif DIGIT_BITS >= 8
 	if (!(val >> DIGIT_BITS)) {
 		if (!val)
-			return_reference_((DeeObject *)&DeeInt_Zero);
+			return_reference_(DeeInt_Zero);
 		/* Fast-path: The integer fits into a single digit. */
 		result = DeeInt_Alloc(1);
 		if likely(result) {
@@ -648,19 +1122,24 @@ PUBLIC WUNUSED DREF DeeObject *DCALL DeeInt_NewU16(uint16_t val) {
 			result->ob_digit[1] = val >> DIGIT_BITS;
 		}
 	}
-#else
+#else /* DIGIT_BITS >= ... */
 #error "Not implemented"
-#endif
+#endif /* DIGIT_BITS < ... */
 	return (DREF DeeObject *)result;
 }
 
-PUBLIC WUNUSED DREF DeeObject *DCALL DeeInt_NewU32(uint32_t val) {
+PUBLIC WUNUSED DREF DeeObject *DCALL
+DeeInt_NewUInt32(uint32_t val) {
 	DREF DeeIntObject *result;
 	size_t req_digits;
 	uint32_t iter;
+#ifdef CONFIG_STRING_8BIT_STATIC
+	if (val <= 0xff)
+		return_reference(eightbit + val);
+#endif /* CONFIG_STRING_8BIT_STATIC */
 	if (!(val >> DIGIT_BITS)) {
 		if (!val)
-			return_reference_((DeeObject *)&DeeInt_Zero);
+			return_reference_(DeeInt_Zero);
 		/* Fast-path: The integer fits into a single digit. */
 		result = DeeInt_Alloc(1);
 		if likely(result) {
@@ -683,21 +1162,29 @@ PUBLIC WUNUSED DREF DeeObject *DCALL DeeInt_NewU32(uint32_t val) {
 	return (DREF DeeObject *)result;
 }
 
-PUBLIC WUNUSED DREF DeeObject *DCALL DeeInt_NewU64(uint64_t val) {
+PUBLIC WUNUSED DREF DeeObject *DCALL
+DeeInt_NewUInt64(uint64_t val) {
 	DREF DeeIntObject *result;
 	size_t req_digits;
 	uint64_t iter;
-#if __SIZEOF_POINTER__ < 8
+
 	/* When the CPU wasn't designed for 64-bit
 	 * integers, prefer using 32-bit path. */
+#if __SIZEOF_POINTER__ < 8
 	if (val <= UINT32_MAX)
-		return DeeInt_NewU32((uint32_t)val);
-#endif
+		return DeeInt_NewUInt32((uint32_t)val);
+#else /* __SIZEOF_POINTER__ < 8 */
+#ifdef CONFIG_STRING_8BIT_STATIC
+	if (val <= 0xff)
+		return_reference(eightbit + val);
+#endif /* CONFIG_STRING_8BIT_STATIC */
+#endif /* __SIZEOF_POINTER__ >= 8 */
+
 		/* NOTE: 32 == Bits required to display everything in the range 0..UINT32_MAX */
 #if __SIZEOF_POINTER__ >= 8 || DIGIT_BITS > 32
 	if (!(val >> DIGIT_BITS)) {
 		if (!val)
-			return_reference_((DeeObject *)&DeeInt_Zero);
+			return_reference_(DeeInt_Zero);
 		/* Fast-path: The integer fits into a single digit. */
 		result = DeeInt_Alloc(1);
 		if likely(result) {
@@ -705,7 +1192,7 @@ PUBLIC WUNUSED DREF DeeObject *DCALL DeeInt_NewU64(uint64_t val) {
 			result->ob_digit[0] = (digit)val;
 		}
 	} else
-#endif
+#endif /* __SIZEOF_POINTER__ >= 8 || DIGIT_BITS > 32 */
 	{
 		for (iter = val, req_digits = 0; iter;
 		     iter >>= DIGIT_BITS, ++req_digits)
@@ -722,14 +1209,19 @@ PUBLIC WUNUSED DREF DeeObject *DCALL DeeInt_NewU64(uint64_t val) {
 	return (DREF DeeObject *)result;
 }
 
-PUBLIC WUNUSED DREF DeeObject *DCALL DeeInt_NewS16(int16_t val) {
+PUBLIC WUNUSED DREF DeeObject *DCALL
+DeeInt_NewInt16(int16_t val) {
 	DREF DeeIntObject *result;
 	int sign         = 1;
 	uint16_t abs_val = (uint16_t)val;
+#ifdef CONFIG_STRING_8BIT_STATIC
+	if (val >= -128 && val <= 127)
+		return_reference(eightbit + val);
+#endif /* CONFIG_STRING_8BIT_STATIC */
 #if DIGIT_BITS >= 16
 	if (val <= 0) {
 		if (!val)
-			return_reference_((DeeObject *)&DeeInt_Zero);
+			return_reference_(DeeInt_Zero);
 		sign    = -1;
 		abs_val = (uint16_t)0 - (uint16_t)val;
 	}
@@ -745,7 +1237,7 @@ PUBLIC WUNUSED DREF DeeObject *DCALL DeeInt_NewS16(int16_t val) {
 	}
 	if (!(abs_val >> DIGIT_BITS)) {
 		if (!val)
-			return_reference_((DeeObject *)&DeeInt_Zero);
+			return_reference_(DeeInt_Zero);
 		/* Fast-path: The integer fits into a single digit. */
 		result = DeeInt_Alloc(1);
 		if likely(result) {
@@ -760,24 +1252,31 @@ PUBLIC WUNUSED DREF DeeObject *DCALL DeeInt_NewS16(int16_t val) {
 			result->ob_digit[1] = abs_val >> DIGIT_BITS;
 		}
 	}
-#else
+#else /* DIGIT_BITS >= ... */
 #error "Not implemented"
-#endif
+#endif /* DIGIT_BITS < ... */
 	return (DREF DeeObject *)result;
 }
 
-PUBLIC WUNUSED DREF DeeObject *DCALL DeeInt_NewS32(int32_t val) {
+PUBLIC WUNUSED DREF DeeObject *DCALL
+DeeInt_NewInt32(int32_t val) {
 	DREF DeeIntObject *result;
-	int sign = 1;
+	int sign;
 	size_t req_digits;
-	uint32_t iter, abs_val = (uint32_t)val;
+	uint32_t iter, abs_val;
+#ifdef CONFIG_STRING_8BIT_STATIC
+	if (val >= -128 && val <= 127)
+		return_reference(eightbit + val);
+#endif /* CONFIG_STRING_8BIT_STATIC */
+	sign = 1;
+	abs_val = (uint32_t)val;
 	if (val < 0) {
 		sign    = -1;
 		abs_val = (uint32_t)0 - (uint32_t)val;
 	}
 	if (!(abs_val >> DIGIT_BITS)) {
 		if (!val)
-			return_reference_((DeeObject *)&DeeInt_Zero);
+			return_reference_(DeeInt_Zero);
 		/* Fast-path: The integer fits into a single digit. */
 		result = DeeInt_Alloc(1);
 		if likely(result) {
@@ -800,7 +1299,8 @@ PUBLIC WUNUSED DREF DeeObject *DCALL DeeInt_NewS32(int32_t val) {
 	return (DREF DeeObject *)result;
 }
 
-PUBLIC WUNUSED DREF DeeObject *DCALL DeeInt_NewS64(int64_t val) {
+PUBLIC WUNUSED DREF DeeObject *DCALL
+DeeInt_NewInt64(int64_t val) {
 	DREF DeeIntObject *result;
 	int sign;
 	size_t req_digits;
@@ -809,9 +1309,16 @@ PUBLIC WUNUSED DREF DeeObject *DCALL DeeInt_NewS64(int64_t val) {
 	/* When the CPU wasn't designed for 64-bit
 	 * integers, prefer using 32-bit path. */
 	if (val >= INT32_MIN && val <= INT32_MAX)
-		return DeeInt_NewS32((int32_t)val);
-#endif /* __SIZEOF_POINTER__ < 8 */
-	sign = 1, abs_val = (uint64_t)val;
+		return DeeInt_NewInt32((int32_t)val);
+#else /* __SIZEOF_POINTER__ < 8 */
+#ifdef CONFIG_STRING_8BIT_STATIC
+	if (val >= -128 && val <= 127)
+		return_reference(eightbit + val);
+#endif /* CONFIG_STRING_8BIT_STATIC */
+#endif /* __SIZEOF_POINTER__ >= 8 */
+
+	sign = 1;
+	abs_val = (uint64_t)val;
 	if (val < 0) {
 		sign    = -1;
 		abs_val = (uint64_t)0 - (uint64_t)val;
@@ -820,7 +1327,7 @@ PUBLIC WUNUSED DREF DeeObject *DCALL DeeInt_NewS64(int64_t val) {
 #if __SIZEOF_POINTER__ >= 8 || DIGIT_BITS > 32
 	if (!(abs_val >> DIGIT_BITS)) {
 		if (!val)
-			return_reference_((DeeObject *)&DeeInt_Zero);
+			return_reference_(DeeInt_Zero);
 		/* Fast-path: The integer fits into a single digit. */
 		result = DeeInt_Alloc(1);
 		if likely(result) {
@@ -848,14 +1355,14 @@ PUBLIC WUNUSED DREF DeeObject *DCALL DeeInt_NewS64(int64_t val) {
 
 /* 128-bit integer creation. */
 PUBLIC WUNUSED DREF DeeObject *DCALL
-DeeInt_NewU128(Dee_uint128_t val) {
+DeeInt_NewUInt128(Dee_uint128_t val) {
 	DREF DeeIntObject *result;
 	size_t req_digits;
 	Dee_uint128_t iter;
 
 	/* Simplification: When it fits into a 64-bit integer, use that path! */
 	if (__hybrid_uint128_is64bit(val))
-		return DeeInt_NewU64(__hybrid_uint128_get64(val));
+		return DeeInt_NewUInt64(__hybrid_uint128_get64(val));
 
 	/* The remainder is basically the same as any other creator, but
 	 * using special macros implementing some basic 128-bit arithmetic. */
@@ -875,7 +1382,7 @@ DeeInt_NewU128(Dee_uint128_t val) {
 }
 
 PUBLIC WUNUSED DREF DeeObject *DCALL
-DeeInt_NewS128(Dee_int128_t val) {
+DeeInt_NewInt128(Dee_int128_t val) {
 	DREF DeeIntObject *result;
 	int sign;
 	size_t req_digits;
@@ -886,7 +1393,7 @@ DeeInt_NewS128(Dee_int128_t val) {
 
 	/* Simplification: When it fits into a 64-bit integer, use that path! */
 	if (__hybrid_int128_is64bit(val))
-		return DeeInt_NewS64(__hybrid_int128_get64(val));
+		return DeeInt_NewInt64(__hybrid_int128_get64(val));
 
 	/* The remainder is basically the same as any other creator, but
 	 * using special macros implementing some basic 128-bit arithmetic. */
@@ -969,9 +1476,9 @@ PRIVATE double const log_base_BASE_[35] = {
 	0.33333333333333337, 0.33629294129056359,
 	0.33916418941668930, 0.34195220112966446,
 	0.34466166676282084
-#else
+#else /* DIGIT_BITS == ... */
 #error "Unsupported `DIGIT_BITS'"
-#endif
+#endif /* DIGIT_BITS != ... */
 };
 
 PRIVATE int const convwidth_base_[35] = {
@@ -983,9 +1490,9 @@ PRIVATE int const convwidth_base_[35] = {
 	15, 9, 7, 6, 5, 5, 5, 4, 4, 4, 4, 4, 3, 3,
 	3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3,
 	3, 3, 3, 2, 2, 2, 2
-#else
+#else /* DIGIT_BITS == ... */
 #error "Unsupported `DIGIT_BITS'"
-#endif
+#endif /* DIGIT_BITS != ... */
 };
 
 PRIVATE digit const convmultmax_base_[35] = {
@@ -1005,9 +1512,9 @@ PRIVATE digit const convmultmax_base_[35] = {
 	0x2998, 0x2f87, 0x3600, 0x3d09, 0x44a8,
 	0x4ce3, 0x55c0, 0x5f45, 0x6978, 0x745f,
 	0x8000, 0x0441, 0x0484, 0x04c9, 0x0510
-#else
+#else /* DIGIT_BITS == ... */
 #error "Unsupported `DIGIT_BITS'"
-#endif
+#endif /* DIGIT_BITS != ... */
 };
 #endif /* CONFIG_USE_PRECALCULATED_INT_FROM_STRING_CONSTANTS */
 
@@ -1050,7 +1557,6 @@ int_from_nonbinary_string(char const *__restrict begin,
 	convwidth   = convwidth_base[radix];
 	convmultmax = convmultmax_base[radix];
 	while (begin < end) {
-#if 1
 		c = 0;
 		for (i = 0; i < convwidth && begin < end; ++i, ++begin) {
 			digit dig;
@@ -1108,13 +1614,6 @@ handle_backslash_in_text:
 			c = (twodigits)(c * radix + dig);
 			ASSERT(c < DIGIT_BASE);
 		}
-#else
-		c = (digit)_PyLong_DigitValue[Py_CHARMASK(*begin++)];
-		for (i = 1; i < convwidth && begin < end; ++i, ++begin) {
-			c = (twodigits)(c * radix + (int)_PyLong_DigitValue[Py_CHARMASK(*begin)]);
-			ASSERT(c < DIGIT_BASE);
-		}
-#endif
 		convmult = convmultmax;
 		if (i != convwidth) {
 			convmult = radix;
@@ -1206,7 +1705,7 @@ DeeInt_FromString(/*utf-8*/ char const *__restrict str,
 		leading_zero = utf8_readchar((char const **)&begin, end);
 		if (DeeUni_AsDigitVal(leading_zero) == 0) {
 			if (begin == end) /* Special case: int(0) */
-				return_reference_((DeeObject *)&DeeInt_Zero);
+				return_reference_(DeeInt_Zero);
 			while (*begin == '\\' && (radix_and_flags & DEEINT_STRING_FESCAPED)) {
 				uint32_t begin_plus_one;
 				char const *new_begin = begin + 1;
@@ -1371,7 +1870,7 @@ DeeInt_FromAscii(/*ascii*/ char const *__restrict str,
 		if (DeeUni_AsDigitVal(leading_zero) == 0) {
 			++begin;
 			if (begin == end) /* Special case: int(0) */
-				return_reference_((DeeObject *)&DeeInt_Zero);
+				return_reference_(DeeInt_Zero);
 			while (*begin == '\\' && (radix_and_flags & DEEINT_STRING_FESCAPED)) {
 				char begin_plus_one = begin[1];
 				if (DeeUni_IsLF(begin_plus_one)) {
@@ -2142,7 +2641,7 @@ err:
  * @return: One of `INT_*' (See above) */
 PUBLIC WUNUSED ATTR_OUT(2) NONNULL((1)) int DCALL
 DeeInt_TryGet8Bit(DeeObject *__restrict self,
-              int8_t *__restrict value) {
+                  int8_t *__restrict value) {
 	int result;
 #if DIGIT_BITS <= 16
 	int16_t digval;
@@ -2181,7 +2680,7 @@ DeeInt_TryGet8Bit(DeeObject *__restrict self,
 
 PUBLIC WUNUSED ATTR_OUT(2) NONNULL((1)) int DCALL
 DeeInt_TryGet16Bit(DeeObject *__restrict self,
-               int16_t *__restrict value) {
+                   int16_t *__restrict value) {
 #if DIGIT_BITS <= 16
 	DeeIntObject *me = (DeeIntObject *)self;
 	uint16_t prev, result;
@@ -2252,7 +2751,7 @@ overflow:
 
 PUBLIC WUNUSED ATTR_OUT(2) NONNULL((1)) int DCALL
 DeeInt_TryGet32Bit(DeeObject *__restrict self,
-               int32_t *__restrict value) {
+                   int32_t *__restrict value) {
 	DeeIntObject *me = (DeeIntObject *)self;
 	uint32_t prev, result;
 	bool negative;
@@ -2298,7 +2797,7 @@ overflow:
 
 PUBLIC WUNUSED ATTR_OUT(2) NONNULL((1)) int DCALL
 DeeInt_TryGet64Bit(DeeObject *__restrict self,
-               int64_t *__restrict value) {
+                   int64_t *__restrict value) {
 	DeeIntObject *me = (DeeIntObject *)self;
 	uint64_t prev, result;
 	bool negative;
@@ -2344,7 +2843,7 @@ overflow:
 
 PUBLIC WUNUSED ATTR_OUT(2) NONNULL((1)) int DCALL
 DeeInt_TryGet128Bit(DeeObject *__restrict self,
-                Dee_int128_t *__restrict value) {
+                    Dee_int128_t *__restrict value) {
 	DeeIntObject *me = (DeeIntObject *)self;
 	union {
 		Dee_uint128_t u;
@@ -2469,7 +2968,7 @@ PUBLIC WUNUSED ATTR_OUT(2) NONNULL((1)) bool
 
 PUBLIC WUNUSED ATTR_OUT(2) NONNULL((1)) bool
 (DCALL DeeInt_TryAsUInt32)(DeeObject *__restrict self,
-                        uint32_t *__restrict value) {
+                           uint32_t *__restrict value) {
 	int error = DeeInt_TryGet32Bit(self, (int32_t *)value);
 	if (error == INT_SIGNED && *(int32_t const *)value < 0)
 		return false;
@@ -2479,7 +2978,7 @@ PUBLIC WUNUSED ATTR_OUT(2) NONNULL((1)) bool
 
 PUBLIC WUNUSED ATTR_OUT(2) NONNULL((1)) bool
 (DCALL DeeInt_TryAsUInt64)(DeeObject *__restrict self,
-                        uint64_t *__restrict value) {
+                           uint64_t *__restrict value) {
 	int error = DeeInt_TryGet64Bit(self, (int64_t *)value);
 	if (error == INT_SIGNED && *(int64_t const *)value < 0)
 		return false;
@@ -2489,7 +2988,7 @@ PUBLIC WUNUSED ATTR_OUT(2) NONNULL((1)) bool
 
 PUBLIC WUNUSED ATTR_OUT(2) NONNULL((1)) bool
 (DCALL DeeInt_TryAsUInt128)(DeeObject *__restrict self,
-                         Dee_uint128_t *__restrict value) {
+                            Dee_uint128_t *__restrict value) {
 	int error = DeeInt_TryGet128Bit(self, (Dee_int128_t *)value);
 	if (error == INT_SIGNED && __hybrid_int128_isneg(*(Dee_int128_t const *)value))
 		return false;
@@ -2711,11 +3210,13 @@ PUBLIC WUNUSED NONNULL((1, 2)) int
 	ASSERT(i == count - 1);
 	last_digit = me->ob_digit[i];
 	last_bits  = DIGIT_BITS;
+
 	/* The last bit was read. - Now truncate leading zeros. */
 	while (last_bits && !(last_digit & ((digit)1 << (last_bits - 1))))
 		--last_bits;
 	temp |= (twodigits)last_digit << num_bits;
 	num_bits += last_bits;
+
 	/* Write all remaining full bytes. */
 	while (num_bits >= 8) {
 		if (!remaining)
@@ -2745,6 +3246,7 @@ PUBLIC WUNUSED NONNULL((1, 2)) int
 		/* No space left for a sign bit. */
 		goto err_overflow;
 	}
+
 	/* Fill in all remaining bytes with the leading byte. */
 	memset(little_endian
 	       ? (void *)writer
@@ -2827,6 +3329,7 @@ PUBLIC WUNUSED DREF DeeObject *
 				sign_byte   = 0xff;
 				is_negative = true;
 			}
+
 			/* Strip leading sign bytes. */
 			while (((uint8_t *)buf)[length - 1] == sign_byte) {
 				if (!--length) {
@@ -2842,6 +3345,7 @@ PUBLIC WUNUSED DREF DeeObject *
 				sign_byte   = 0xff;
 				is_negative = true;
 			}
+
 			/* Strip leading sign bytes. */
 			while (((uint8_t *)buf)[0] == sign_byte) {
 				if (!--length) {
@@ -2854,6 +3358,7 @@ PUBLIC WUNUSED DREF DeeObject *
 			}
 			msb_byte = ((uint8_t *)buf)[0];
 		}
+
 		/* Strip leading bits. */
 		msb_topbit = 7;
 		while (msb_topbit) {
@@ -2892,6 +3397,7 @@ PUBLIC WUNUSED DREF DeeObject *
 		}
 		total_bits -= (7 - msb_topbit);
 	}
+
 	/* At this point, we've determined the exact number
 	 * of bits, as well as having extracted the sign bit,
 	 * and having stripped unused sign extensions. */
@@ -2900,6 +3406,7 @@ PUBLIC WUNUSED DREF DeeObject *
 	result = DeeInt_Alloc(total_digits);
 	if unlikely(!result)
 		goto done;
+
 	/* Now to actually fill in integer digit data. */
 	{
 		twodigits temp     = 0;
@@ -2982,9 +3489,9 @@ done_decr:
 done:
 	return (DREF DeeObject *)result;
 return_m1:
-	return_reference_((DeeObject *)&DeeInt_MinusOne);
+	return_reference_((DeeObject *)DeeInt_MinusOne);
 return_zero:
-	return_reference_((DeeObject *)&DeeInt_Zero);
+	return_reference_(DeeInt_Zero);
 }
 
 
@@ -2992,7 +3499,7 @@ return_zero:
 
 
 PRIVATE WUNUSED DREF DeeObject *DCALL int_return_zero(void) {
-	return_reference_((DeeObject *)&DeeInt_Zero);
+	return_reference_(DeeInt_Zero);
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
@@ -3775,7 +4282,7 @@ int_get_ffs(DeeIntObject *__restrict self) {
 	if unlikely(self->ob_size < 0)
 		goto err_neg;
 	if unlikely(self->ob_size == 0)
-		return_reference_((DeeIntObject *)&DeeInt_Zero);
+		return_reference_((DeeIntObject *)DeeInt_Zero);
 	result = 1;
 	for (i = 0;; ++i) {
 		digit dig;
@@ -3816,7 +4323,7 @@ int_get_ctz(DeeIntObject *__restrict self) {
 	if unlikely(self->ob_size < 0)
 		goto err_neg;
 	if unlikely(self->ob_size == 0)
-		return_reference_((DeeIntObject *)&DeeInt_Zero);
+		return_reference_((DeeIntObject *)DeeInt_Zero);
 	result = 0;
 	for (i = 0;; ++i) {
 		digit dig;
@@ -4162,11 +4669,6 @@ PUBLIC DeeTypeObject DeeInt_Type = {
 	/* .tp_class_getsets = */ NULL,
 	/* .tp_class_members = */ int_class_members
 };
-
-/* Helpful singletons for some often used integers. */
-PUBLIC struct _Dee_int_0digit_object DeeInt_Zero     = { OBJECT_HEAD_INIT(&DeeInt_Type), 0 };
-PUBLIC struct _Dee_int_1digit_object DeeInt_One      = { OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 1 } };
-PUBLIC struct _Dee_int_1digit_object DeeInt_MinusOne = { OBJECT_HEAD_INIT(&DeeInt_Type), -1, { 1 } };
 
 DECL_END
 

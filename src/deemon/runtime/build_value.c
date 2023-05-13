@@ -422,10 +422,10 @@ again:
 					Dee_Incref(result);
 				} else if (format[-1] == 'd' || format[-1] == 'i') {
 					/* Signed integer. */
-					result = DeeInt_NewS128(data128.s);
+					result = DeeInt_NewInt128(data128.s);
 				} else {
 					/* Unsigned integer. */
-					result = DeeInt_NewU128(data128.u);
+					result = DeeInt_NewUInt128(data128.u);
 				}
 				break;
 			} else {
@@ -480,16 +480,16 @@ has_length:
 		} else if (format[-1] == 'd' || format[-1] == 'i') {
 			/* Signed integer. */
 			if (length > 4) {
-				result = DeeInt_NewS64(data.i64);
+				result = DeeInt_NewInt64(data.i64);
 			} else {
-				result = DeeInt_NewS32(data.i32);
+				result = DeeInt_NewInt32(data.i32);
 			}
 		} else {
 			/* Unsigned integer. */
 			if (length > 4) {
-				result = DeeInt_NewU64(data.u64);
+				result = DeeInt_NewUInt64(data.u64);
 			} else {
-				result = DeeInt_NewU32(data.u32);
+				result = DeeInt_NewUInt32(data.u32);
 			}
 		}
 	}	break;

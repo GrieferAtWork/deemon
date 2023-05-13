@@ -579,10 +579,10 @@ keyword_get_counter(DeeCompilerItemObject *__restrict self) {
 	item = DeeCompilerItem_VALUE(self, struct TPPKeyword);
 	if likely(item) {
 		if (item->k_rare) {
-			result = DeeInt_NewS64(item->k_rare->kr_counter);
+			result = DeeInt_NewInt64(item->k_rare->kr_counter);
 		} else {
-			result = &DeeInt_Zero;
-			Dee_Incref(&DeeInt_Zero);
+			result = DeeInt_Zero;
+			Dee_Incref(DeeInt_Zero);
 		}
 	}
 	COMPILER_END();
@@ -643,8 +643,8 @@ keyword_get_uservalue(DeeCompilerItemObject *__restrict self) {
 		if (item->k_rare) {
 			result = DeeInt_NewUIntptr((uintptr_t)item->k_rare->kr_user);
 		} else {
-			result = &DeeInt_Zero;
-			Dee_Incref(&DeeInt_Zero);
+			result = DeeInt_Zero;
+			Dee_Incref(DeeInt_Zero);
 		}
 	}
 	COMPILER_END();
@@ -1076,7 +1076,7 @@ lexer_get_flags(DeeCompilerWrapperObject *__restrict self) {
 	DREF DeeObject *result;
 	if (COMPILER_BEGIN(self->cw_compiler))
 		return NULL;
-	result = DeeInt_NewU32(TPPLexer_Current->l_flags & ~TPPLEXER_FLAG_MERGEMASK);
+	result = DeeInt_NewUInt32(TPPLexer_Current->l_flags & ~TPPLEXER_FLAG_MERGEMASK);
 	COMPILER_END();
 	return result;
 }
@@ -1500,7 +1500,7 @@ lexer_get_counter(DeeCompilerWrapperObject *__restrict self) {
 	DREF DeeObject *result;
 	if (COMPILER_BEGIN(self->cw_compiler))
 		return NULL;
-	result = DeeInt_NewS64(TPPLexer_Current->l_counter);
+	result = DeeInt_NewInt64(TPPLexer_Current->l_counter);
 	COMPILER_END();
 	return result;
 }
@@ -3189,7 +3189,7 @@ lexer_token_decodeinteger(DeeCompilerWrapperObject *self, size_t argc, DeeObject
 			goto done;
 		if (warnchar && WARN(W_DEPRECATED_CHARACTER_INT))
 			goto done;
-		result = DeeInt_NewS64(value);
+		result = DeeInt_NewInt64(value);
 	} else {
 		DeeError_Throwf(&DeeError_ValueError,
 		                "The current token isn't an integer or character");
