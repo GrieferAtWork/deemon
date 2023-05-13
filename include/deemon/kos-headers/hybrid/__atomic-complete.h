@@ -257,7 +257,7 @@ function sub(n: string) {
 			print("#endif /" "* !__NO_XBLOCK *" "/");
 		}
 		print("#endif /" "* ... *" "/");
-		print("#endif /" "* !__hybrid_atomic_", op, n, " *" "/");
+		print("#endif /" "* !__hybrid_atomic_fetch", op, n, " *" "/");
 		print;
 	}
 
@@ -552,7 +552,7 @@ __LOCAL __ATTR_ARTIFICIAL __ATTR_WUNUSED __ATTR_NONNULL((1)) __UINT8_TYPE__ __NO
 }
 #endif /* !__NO_XBLOCK */
 #endif /* ... */
-#endif /* !__hybrid_atomic_add8 */
+#endif /* !__hybrid_atomic_fetchadd8 */
 
 #ifndef __hybrid_atomic_fetchsub8
 #ifdef __hybrid_atomic_fetchsub
@@ -590,7 +590,7 @@ __LOCAL __ATTR_ARTIFICIAL __ATTR_WUNUSED __ATTR_NONNULL((1)) __UINT8_TYPE__ __NO
 }
 #endif /* !__NO_XBLOCK */
 #endif /* ... */
-#endif /* !__hybrid_atomic_sub8 */
+#endif /* !__hybrid_atomic_fetchsub8 */
 
 #ifndef __hybrid_atomic_fetchand8
 #ifdef __hybrid_atomic_fetchand
@@ -613,7 +613,7 @@ __LOCAL __ATTR_ARTIFICIAL __ATTR_WUNUSED __ATTR_NONNULL((1)) __UINT8_TYPE__ __NO
 }
 #endif /* !__NO_XBLOCK */
 #endif /* ... */
-#endif /* !__hybrid_atomic_and8 */
+#endif /* !__hybrid_atomic_fetchand8 */
 
 #ifndef __hybrid_atomic_fetchxor8
 #ifdef __hybrid_atomic_fetchxor
@@ -647,7 +647,7 @@ __LOCAL __ATTR_ARTIFICIAL __ATTR_WUNUSED __ATTR_NONNULL((1)) __UINT8_TYPE__ __NO
 }
 #endif /* !__NO_XBLOCK */
 #endif /* ... */
-#endif /* !__hybrid_atomic_xor8 */
+#endif /* !__hybrid_atomic_fetchxor8 */
 
 #ifndef __hybrid_atomic_fetchor8
 #ifdef __hybrid_atomic_fetchor
@@ -670,7 +670,7 @@ __LOCAL __ATTR_ARTIFICIAL __ATTR_WUNUSED __ATTR_NONNULL((1)) __UINT8_TYPE__ __NO
 }
 #endif /* !__NO_XBLOCK */
 #endif /* ... */
-#endif /* !__hybrid_atomic_or8 */
+#endif /* !__hybrid_atomic_fetchor8 */
 
 #ifndef __hybrid_atomic_fetchnand8
 #ifdef __hybrid_atomic_fetchnand
@@ -693,7 +693,7 @@ __LOCAL __ATTR_ARTIFICIAL __ATTR_WUNUSED __ATTR_NONNULL((1)) __UINT8_TYPE__ __NO
 }
 #endif /* !__NO_XBLOCK */
 #endif /* ... */
-#endif /* !__hybrid_atomic_nand8 */
+#endif /* !__hybrid_atomic_fetchnand8 */
 
 #ifndef __hybrid_atomic_fetchinc8
 #ifdef __hybrid_atomic_fetchinc
@@ -705,7 +705,7 @@ __LOCAL __ATTR_ARTIFICIAL __ATTR_WUNUSED __ATTR_NONNULL((1)) __UINT8_TYPE__ __NO
 #elif defined(__hybrid_atomic_incfetch8)
 #define __hybrid_atomic_fetchinc8(p, order) (__hybrid_atomic_incfetch8(p, val, order) - 1)
 #endif /* ... */
-#endif /* !__hybrid_atomic_inc8 */
+#endif /* !__hybrid_atomic_fetchinc8 */
 
 #ifndef __hybrid_atomic_fetchdec8
 #ifdef __hybrid_atomic_fetchdec
@@ -717,7 +717,7 @@ __LOCAL __ATTR_ARTIFICIAL __ATTR_WUNUSED __ATTR_NONNULL((1)) __UINT8_TYPE__ __NO
 #elif defined(__hybrid_atomic_decfetch8)
 #define __hybrid_atomic_fetchdec8(p, order) (__hybrid_atomic_decfetch8(p, val, order) + 1)
 #endif /* ... */
-#endif /* !__hybrid_atomic_dec8 */
+#endif /* !__hybrid_atomic_fetchdec8 */
 
 #ifndef __hybrid_atomic_addfetch8
 #ifdef __hybrid_atomic_addfetch
@@ -1109,7 +1109,7 @@ __LOCAL __ATTR_ARTIFICIAL __ATTR_WUNUSED __ATTR_NONNULL((1)) __UINT16_TYPE__ __N
 }
 #endif /* !__NO_XBLOCK */
 #endif /* ... */
-#endif /* !__hybrid_atomic_add16 */
+#endif /* !__hybrid_atomic_fetchadd16 */
 
 #ifndef __hybrid_atomic_fetchsub16
 #ifdef __hybrid_atomic_fetchsub
@@ -1147,7 +1147,7 @@ __LOCAL __ATTR_ARTIFICIAL __ATTR_WUNUSED __ATTR_NONNULL((1)) __UINT16_TYPE__ __N
 }
 #endif /* !__NO_XBLOCK */
 #endif /* ... */
-#endif /* !__hybrid_atomic_sub16 */
+#endif /* !__hybrid_atomic_fetchsub16 */
 
 #ifndef __hybrid_atomic_fetchand16
 #ifdef __hybrid_atomic_fetchand
@@ -1170,7 +1170,7 @@ __LOCAL __ATTR_ARTIFICIAL __ATTR_WUNUSED __ATTR_NONNULL((1)) __UINT16_TYPE__ __N
 }
 #endif /* !__NO_XBLOCK */
 #endif /* ... */
-#endif /* !__hybrid_atomic_and16 */
+#endif /* !__hybrid_atomic_fetchand16 */
 
 #ifndef __hybrid_atomic_fetchxor16
 #ifdef __hybrid_atomic_fetchxor
@@ -1204,7 +1204,7 @@ __LOCAL __ATTR_ARTIFICIAL __ATTR_WUNUSED __ATTR_NONNULL((1)) __UINT16_TYPE__ __N
 }
 #endif /* !__NO_XBLOCK */
 #endif /* ... */
-#endif /* !__hybrid_atomic_xor16 */
+#endif /* !__hybrid_atomic_fetchxor16 */
 
 #ifndef __hybrid_atomic_fetchor16
 #ifdef __hybrid_atomic_fetchor
@@ -1227,7 +1227,7 @@ __LOCAL __ATTR_ARTIFICIAL __ATTR_WUNUSED __ATTR_NONNULL((1)) __UINT16_TYPE__ __N
 }
 #endif /* !__NO_XBLOCK */
 #endif /* ... */
-#endif /* !__hybrid_atomic_or16 */
+#endif /* !__hybrid_atomic_fetchor16 */
 
 #ifndef __hybrid_atomic_fetchnand16
 #ifdef __hybrid_atomic_fetchnand
@@ -1250,7 +1250,7 @@ __LOCAL __ATTR_ARTIFICIAL __ATTR_WUNUSED __ATTR_NONNULL((1)) __UINT16_TYPE__ __N
 }
 #endif /* !__NO_XBLOCK */
 #endif /* ... */
-#endif /* !__hybrid_atomic_nand16 */
+#endif /* !__hybrid_atomic_fetchnand16 */
 
 #ifndef __hybrid_atomic_fetchinc16
 #ifdef __hybrid_atomic_fetchinc
@@ -1262,7 +1262,7 @@ __LOCAL __ATTR_ARTIFICIAL __ATTR_WUNUSED __ATTR_NONNULL((1)) __UINT16_TYPE__ __N
 #elif defined(__hybrid_atomic_incfetch16)
 #define __hybrid_atomic_fetchinc16(p, order) (__hybrid_atomic_incfetch16(p, val, order) - 1)
 #endif /* ... */
-#endif /* !__hybrid_atomic_inc16 */
+#endif /* !__hybrid_atomic_fetchinc16 */
 
 #ifndef __hybrid_atomic_fetchdec16
 #ifdef __hybrid_atomic_fetchdec
@@ -1274,7 +1274,7 @@ __LOCAL __ATTR_ARTIFICIAL __ATTR_WUNUSED __ATTR_NONNULL((1)) __UINT16_TYPE__ __N
 #elif defined(__hybrid_atomic_decfetch16)
 #define __hybrid_atomic_fetchdec16(p, order) (__hybrid_atomic_decfetch16(p, val, order) + 1)
 #endif /* ... */
-#endif /* !__hybrid_atomic_dec16 */
+#endif /* !__hybrid_atomic_fetchdec16 */
 
 #ifndef __hybrid_atomic_addfetch16
 #ifdef __hybrid_atomic_addfetch
@@ -1666,7 +1666,7 @@ __LOCAL __ATTR_ARTIFICIAL __ATTR_WUNUSED __ATTR_NONNULL((1)) __UINT32_TYPE__ __N
 }
 #endif /* !__NO_XBLOCK */
 #endif /* ... */
-#endif /* !__hybrid_atomic_add32 */
+#endif /* !__hybrid_atomic_fetchadd32 */
 
 #ifndef __hybrid_atomic_fetchsub32
 #ifdef __hybrid_atomic_fetchsub
@@ -1704,7 +1704,7 @@ __LOCAL __ATTR_ARTIFICIAL __ATTR_WUNUSED __ATTR_NONNULL((1)) __UINT32_TYPE__ __N
 }
 #endif /* !__NO_XBLOCK */
 #endif /* ... */
-#endif /* !__hybrid_atomic_sub32 */
+#endif /* !__hybrid_atomic_fetchsub32 */
 
 #ifndef __hybrid_atomic_fetchand32
 #ifdef __hybrid_atomic_fetchand
@@ -1727,7 +1727,7 @@ __LOCAL __ATTR_ARTIFICIAL __ATTR_WUNUSED __ATTR_NONNULL((1)) __UINT32_TYPE__ __N
 }
 #endif /* !__NO_XBLOCK */
 #endif /* ... */
-#endif /* !__hybrid_atomic_and32 */
+#endif /* !__hybrid_atomic_fetchand32 */
 
 #ifndef __hybrid_atomic_fetchxor32
 #ifdef __hybrid_atomic_fetchxor
@@ -1761,7 +1761,7 @@ __LOCAL __ATTR_ARTIFICIAL __ATTR_WUNUSED __ATTR_NONNULL((1)) __UINT32_TYPE__ __N
 }
 #endif /* !__NO_XBLOCK */
 #endif /* ... */
-#endif /* !__hybrid_atomic_xor32 */
+#endif /* !__hybrid_atomic_fetchxor32 */
 
 #ifndef __hybrid_atomic_fetchor32
 #ifdef __hybrid_atomic_fetchor
@@ -1784,7 +1784,7 @@ __LOCAL __ATTR_ARTIFICIAL __ATTR_WUNUSED __ATTR_NONNULL((1)) __UINT32_TYPE__ __N
 }
 #endif /* !__NO_XBLOCK */
 #endif /* ... */
-#endif /* !__hybrid_atomic_or32 */
+#endif /* !__hybrid_atomic_fetchor32 */
 
 #ifndef __hybrid_atomic_fetchnand32
 #ifdef __hybrid_atomic_fetchnand
@@ -1807,7 +1807,7 @@ __LOCAL __ATTR_ARTIFICIAL __ATTR_WUNUSED __ATTR_NONNULL((1)) __UINT32_TYPE__ __N
 }
 #endif /* !__NO_XBLOCK */
 #endif /* ... */
-#endif /* !__hybrid_atomic_nand32 */
+#endif /* !__hybrid_atomic_fetchnand32 */
 
 #ifndef __hybrid_atomic_fetchinc32
 #ifdef __hybrid_atomic_fetchinc
@@ -1819,7 +1819,7 @@ __LOCAL __ATTR_ARTIFICIAL __ATTR_WUNUSED __ATTR_NONNULL((1)) __UINT32_TYPE__ __N
 #elif defined(__hybrid_atomic_incfetch32)
 #define __hybrid_atomic_fetchinc32(p, order) (__hybrid_atomic_incfetch32(p, val, order) - 1)
 #endif /* ... */
-#endif /* !__hybrid_atomic_inc32 */
+#endif /* !__hybrid_atomic_fetchinc32 */
 
 #ifndef __hybrid_atomic_fetchdec32
 #ifdef __hybrid_atomic_fetchdec
@@ -1831,7 +1831,7 @@ __LOCAL __ATTR_ARTIFICIAL __ATTR_WUNUSED __ATTR_NONNULL((1)) __UINT32_TYPE__ __N
 #elif defined(__hybrid_atomic_decfetch32)
 #define __hybrid_atomic_fetchdec32(p, order) (__hybrid_atomic_decfetch32(p, val, order) + 1)
 #endif /* ... */
-#endif /* !__hybrid_atomic_dec32 */
+#endif /* !__hybrid_atomic_fetchdec32 */
 
 #ifndef __hybrid_atomic_addfetch32
 #ifdef __hybrid_atomic_addfetch
@@ -2224,7 +2224,7 @@ __LOCAL __ATTR_ARTIFICIAL __ATTR_WUNUSED __ATTR_NONNULL((1)) __UINT64_TYPE__ __N
 }
 #endif /* !__NO_XBLOCK */
 #endif /* ... */
-#endif /* !__hybrid_atomic_add64 */
+#endif /* !__hybrid_atomic_fetchadd64 */
 
 #ifndef __hybrid_atomic_fetchsub64
 #ifdef __hybrid_atomic_fetchsub
@@ -2262,7 +2262,7 @@ __LOCAL __ATTR_ARTIFICIAL __ATTR_WUNUSED __ATTR_NONNULL((1)) __UINT64_TYPE__ __N
 }
 #endif /* !__NO_XBLOCK */
 #endif /* ... */
-#endif /* !__hybrid_atomic_sub64 */
+#endif /* !__hybrid_atomic_fetchsub64 */
 
 #ifndef __hybrid_atomic_fetchand64
 #ifdef __hybrid_atomic_fetchand
@@ -2285,7 +2285,7 @@ __LOCAL __ATTR_ARTIFICIAL __ATTR_WUNUSED __ATTR_NONNULL((1)) __UINT64_TYPE__ __N
 }
 #endif /* !__NO_XBLOCK */
 #endif /* ... */
-#endif /* !__hybrid_atomic_and64 */
+#endif /* !__hybrid_atomic_fetchand64 */
 
 #ifndef __hybrid_atomic_fetchxor64
 #ifdef __hybrid_atomic_fetchxor
@@ -2319,7 +2319,7 @@ __LOCAL __ATTR_ARTIFICIAL __ATTR_WUNUSED __ATTR_NONNULL((1)) __UINT64_TYPE__ __N
 }
 #endif /* !__NO_XBLOCK */
 #endif /* ... */
-#endif /* !__hybrid_atomic_xor64 */
+#endif /* !__hybrid_atomic_fetchxor64 */
 
 #ifndef __hybrid_atomic_fetchor64
 #ifdef __hybrid_atomic_fetchor
@@ -2342,7 +2342,7 @@ __LOCAL __ATTR_ARTIFICIAL __ATTR_WUNUSED __ATTR_NONNULL((1)) __UINT64_TYPE__ __N
 }
 #endif /* !__NO_XBLOCK */
 #endif /* ... */
-#endif /* !__hybrid_atomic_or64 */
+#endif /* !__hybrid_atomic_fetchor64 */
 
 #ifndef __hybrid_atomic_fetchnand64
 #ifdef __hybrid_atomic_fetchnand
@@ -2365,7 +2365,7 @@ __LOCAL __ATTR_ARTIFICIAL __ATTR_WUNUSED __ATTR_NONNULL((1)) __UINT64_TYPE__ __N
 }
 #endif /* !__NO_XBLOCK */
 #endif /* ... */
-#endif /* !__hybrid_atomic_nand64 */
+#endif /* !__hybrid_atomic_fetchnand64 */
 
 #ifndef __hybrid_atomic_fetchinc64
 #ifdef __hybrid_atomic_fetchinc
@@ -2377,7 +2377,7 @@ __LOCAL __ATTR_ARTIFICIAL __ATTR_WUNUSED __ATTR_NONNULL((1)) __UINT64_TYPE__ __N
 #elif defined(__hybrid_atomic_incfetch64)
 #define __hybrid_atomic_fetchinc64(p, order) (__hybrid_atomic_incfetch64(p, val, order) - 1)
 #endif /* ... */
-#endif /* !__hybrid_atomic_inc64 */
+#endif /* !__hybrid_atomic_fetchinc64 */
 
 #ifndef __hybrid_atomic_fetchdec64
 #ifdef __hybrid_atomic_fetchdec
@@ -2389,7 +2389,7 @@ __LOCAL __ATTR_ARTIFICIAL __ATTR_WUNUSED __ATTR_NONNULL((1)) __UINT64_TYPE__ __N
 #elif defined(__hybrid_atomic_decfetch64)
 #define __hybrid_atomic_fetchdec64(p, order) (__hybrid_atomic_decfetch64(p, val, order) + 1)
 #endif /* ... */
-#endif /* !__hybrid_atomic_dec64 */
+#endif /* !__hybrid_atomic_fetchdec64 */
 
 #ifndef __hybrid_atomic_addfetch64
 #ifdef __hybrid_atomic_addfetch
@@ -2783,7 +2783,7 @@ __LOCAL __ATTR_ARTIFICIAL __ATTR_WUNUSED __ATTR_NONNULL((1)) __UINT128_TYPE__ __
 }
 #endif /* !__NO_XBLOCK */
 #endif /* ... */
-#endif /* !__hybrid_atomic_add128 */
+#endif /* !__hybrid_atomic_fetchadd128 */
 
 #ifndef __hybrid_atomic_fetchsub128
 #ifdef __hybrid_atomic_fetchsub
@@ -2821,7 +2821,7 @@ __LOCAL __ATTR_ARTIFICIAL __ATTR_WUNUSED __ATTR_NONNULL((1)) __UINT128_TYPE__ __
 }
 #endif /* !__NO_XBLOCK */
 #endif /* ... */
-#endif /* !__hybrid_atomic_sub128 */
+#endif /* !__hybrid_atomic_fetchsub128 */
 
 #ifndef __hybrid_atomic_fetchand128
 #ifdef __hybrid_atomic_fetchand
@@ -2844,7 +2844,7 @@ __LOCAL __ATTR_ARTIFICIAL __ATTR_WUNUSED __ATTR_NONNULL((1)) __UINT128_TYPE__ __
 }
 #endif /* !__NO_XBLOCK */
 #endif /* ... */
-#endif /* !__hybrid_atomic_and128 */
+#endif /* !__hybrid_atomic_fetchand128 */
 
 #ifndef __hybrid_atomic_fetchxor128
 #ifdef __hybrid_atomic_fetchxor
@@ -2878,7 +2878,7 @@ __LOCAL __ATTR_ARTIFICIAL __ATTR_WUNUSED __ATTR_NONNULL((1)) __UINT128_TYPE__ __
 }
 #endif /* !__NO_XBLOCK */
 #endif /* ... */
-#endif /* !__hybrid_atomic_xor128 */
+#endif /* !__hybrid_atomic_fetchxor128 */
 
 #ifndef __hybrid_atomic_fetchor128
 #ifdef __hybrid_atomic_fetchor
@@ -2901,7 +2901,7 @@ __LOCAL __ATTR_ARTIFICIAL __ATTR_WUNUSED __ATTR_NONNULL((1)) __UINT128_TYPE__ __
 }
 #endif /* !__NO_XBLOCK */
 #endif /* ... */
-#endif /* !__hybrid_atomic_or128 */
+#endif /* !__hybrid_atomic_fetchor128 */
 
 #ifndef __hybrid_atomic_fetchnand128
 #ifdef __hybrid_atomic_fetchnand
@@ -2924,7 +2924,7 @@ __LOCAL __ATTR_ARTIFICIAL __ATTR_WUNUSED __ATTR_NONNULL((1)) __UINT128_TYPE__ __
 }
 #endif /* !__NO_XBLOCK */
 #endif /* ... */
-#endif /* !__hybrid_atomic_nand128 */
+#endif /* !__hybrid_atomic_fetchnand128 */
 
 #ifndef __hybrid_atomic_fetchinc128
 #ifdef __hybrid_atomic_fetchinc
@@ -2936,7 +2936,7 @@ __LOCAL __ATTR_ARTIFICIAL __ATTR_WUNUSED __ATTR_NONNULL((1)) __UINT128_TYPE__ __
 #elif defined(__hybrid_atomic_incfetch128)
 #define __hybrid_atomic_fetchinc128(p, order) (__hybrid_atomic_incfetch128(p, val, order) - 1)
 #endif /* ... */
-#endif /* !__hybrid_atomic_inc128 */
+#endif /* !__hybrid_atomic_fetchinc128 */
 
 #ifndef __hybrid_atomic_fetchdec128
 #ifdef __hybrid_atomic_fetchdec
@@ -2948,7 +2948,7 @@ __LOCAL __ATTR_ARTIFICIAL __ATTR_WUNUSED __ATTR_NONNULL((1)) __UINT128_TYPE__ __
 #elif defined(__hybrid_atomic_decfetch128)
 #define __hybrid_atomic_fetchdec128(p, order) (__hybrid_atomic_decfetch128(p, val, order) + 1)
 #endif /* ... */
-#endif /* !__hybrid_atomic_dec128 */
+#endif /* !__hybrid_atomic_fetchdec128 */
 
 #ifndef __hybrid_atomic_addfetch128
 #ifdef __hybrid_atomic_addfetch
