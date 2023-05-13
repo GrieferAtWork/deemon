@@ -204,14 +204,6 @@ function sub(n: string) {
 		print("#ifndef __hybrid_atomic_fetch", op, n);
 		print("#ifdef __hybrid_atomic_fetch", op);
 		print("#define __hybrid_atomic_fetch", op, n, " __hybrid_atomic_fetch", op);
-		if (op in ["inc", "dec"]) {
-			local subop = op == "inc" ? "add" : "sub";
-			print("#elif defined(__hybrid_atomic_fetch", subop, n, ")");
-			print("#define __hybrid_atomic_fetch", op, n, "(p, order) __hybrid_atomic_fetch", subop, n, "(p, 1, order)");
-			local subop = op == "inc" ? "sub" : "add";
-			print("#elif defined(__hybrid_atomic_fetch", subop, n, ")");
-			print("#define __hybrid_atomic_fetch", op, n, "(p, order) __hybrid_atomic_fetch", subop, n, "(p, (__UINT", n, "_TYPE__)-1, order)");
-		}
 		if (op in ["add", "sub"]) {
 			local subop = op == "add" ? "sub" : "add";
 			print("#elif defined(__hybrid_atomic_fetch", subop, ")");
@@ -221,7 +213,7 @@ function sub(n: string) {
 		}
 		if (op in ["inc", "dec"]) {
 			print("#elif defined(__hybrid_atomic_", op, "fetch", n, ")");
-			print("#define __hybrid_atomic_fetch", op, n, "(p, order) (__hybrid_atomic_", op, "fetch", n, "(p, val, order) ", op == "inc" ? "-" : "+", " 1)");
+			print("#define __hybrid_atomic_fetch", op, n, "(p, order) (__hybrid_atomic_", op, "fetch", n, "(p, order) ", op == "inc" ? "-" : "+", " 1)");
 		} else if (op in ["add", "sub", "xor"]) {
 			local revop = op == "add" ? "-" : op == "sub" ? "+" : "^";
 			print("#elif defined(__hybrid_atomic_", op, "fetch", n, ")");
@@ -235,6 +227,14 @@ function sub(n: string) {
 			print("	return __hybrid_atomic_", op, "fetch", n, "(__p, __val, __order) ", revop, " __val;");
 			print("}");
 			print("#endif /" "* __NO_XBLOCK *" "/");
+		}
+		if (op in ["inc", "dec"]) {
+			local subop = op == "inc" ? "add" : "sub";
+			print("#elif defined(__hybrid_atomic_fetch", subop, n, ")");
+			print("#define __hybrid_atomic_fetch", op, n, "(p, order) __hybrid_atomic_fetch", subop, n, "(p, 1, order)");
+			local subop = op == "inc" ? "sub" : "add";
+			print("#elif defined(__hybrid_atomic_fetch", subop, n, ")");
+			print("#define __hybrid_atomic_fetch", op, n, "(p, order) __hybrid_atomic_fetch", subop, n, "(p, (__UINT", n, "_TYPE__)-1, order)");
 		}
 		if (op !in ["inc", "dec"]) {
 			local opfun = OP_FUNCTIONS[op];
@@ -265,14 +265,6 @@ function sub(n: string) {
 		print("#ifndef __hybrid_atomic_", op, "fetch", n);
 		print("#ifdef __hybrid_atomic_", op, "fetch");
 		print("#define __hybrid_atomic_", op, "fetch", n, " __hybrid_atomic_", op, "fetch");
-		if (op in ["inc", "dec"]) {
-			local subop = op == "inc" ? "add" : "sub";
-			print("#elif defined(__hybrid_atomic_", subop, "fetch", n, ")");
-			print("#define __hybrid_atomic_", op, "fetch", n, "(p, order) __hybrid_atomic_", subop, "fetch", n, "(p, 1, order)");
-			local subop = op == "inc" ? "sub" : "add";
-			print("#elif defined(__hybrid_atomic_", subop, "fetch", n, ")");
-			print("#define __hybrid_atomic_", op, "fetch", n, "(p, order) __hybrid_atomic_", subop, "fetch", n, "(p, (__UINT", n, "_TYPE__)-1, order)");
-		}
 		if (op in ["add", "sub"]) {
 			local subop = op == "add" ? "sub" : "add";
 			print("#elif defined(__hybrid_atomic_", subop, "fetch)");
@@ -294,24 +286,32 @@ function sub(n: string) {
 			print("}");
 			print("#endif /" "* !__NO_XBLOCK *" "/");
 		}
+		if (op in ["inc", "dec"]) {
+			local subop = op == "inc" ? "add" : "sub";
+			print("#elif defined(__hybrid_atomic_", subop, "fetch", n, ")");
+			print("#define __hybrid_atomic_", op, "fetch", n, "(p, order) __hybrid_atomic_", subop, "fetch", n, "(p, 1, order)");
+			local subop = op == "inc" ? "sub" : "add";
+			print("#elif defined(__hybrid_atomic_", subop, "fetch", n, ")");
+			print("#define __hybrid_atomic_", op, "fetch", n, "(p, order) __hybrid_atomic_", subop, "fetch", n, "(p, (__UINT", n, "_TYPE__)-1, order)");
+		}
 		print("#endif /" "* ... *" "/");
 		print("#endif /" "* !__hybrid_atomic_", op, "fetch", n, " *" "/");
 		print;
 	}
 
-	for (local op: ["inc", "dec", "add", "sub", "and", "xor", "or", "nand"]) {
+	for (local op: ["add", "sub", "and", "xor", "or", "nand", "inc", "dec"]) {
 		print("#ifndef __hybrid_atomic_", op, n);
 		print("#ifdef __hybrid_atomic_", op);
 		print("#define __hybrid_atomic_", op, n, " __hybrid_atomic_", op);
+		print("#elif defined(__hybrid_atomic_fetch", op, n, ")");
+		print("#define __hybrid_atomic_", op, n, " (void)__hybrid_atomic_fetch", op, n);
+		print("#elif defined(__hybrid_atomic_", op, "fetch", n, ")");
+		print("#define __hybrid_atomic_", op, n, " (void)__hybrid_atomic_", op, "fetch", n);
 		if (op in ["inc", "dec"]) {
 			local subop = op == "inc" ? "add" : "sub";
 			print("#elif defined(__hybrid_atomic_", subop, n, ")");
 			print("#define __hybrid_atomic_", op, n, "(p, order) __hybrid_atomic_", subop, n, "(p, 1, order)");
 		}
-		print("#elif defined(__hybrid_atomic_fetch", op, n, ")");
-		print("#define __hybrid_atomic_", op, n, " (void)__hybrid_atomic_fetch", op, n);
-		print("#elif defined(__hybrid_atomic_", op, "fetch", n, ")");
-		print("#define __hybrid_atomic_", op, n, " (void)__hybrid_atomic_", op, "fetch", n);
 		print("#endif /" "* ... *" "/");
 		print("#endif /" "* !__hybrid_atomic_", op, n, " *" "/");
 		print;
@@ -698,24 +698,24 @@ __LOCAL __ATTR_ARTIFICIAL __ATTR_WUNUSED __ATTR_NONNULL((1)) __UINT8_TYPE__ __NO
 #ifndef __hybrid_atomic_fetchinc8
 #ifdef __hybrid_atomic_fetchinc
 #define __hybrid_atomic_fetchinc8 __hybrid_atomic_fetchinc
+#elif defined(__hybrid_atomic_incfetch8)
+#define __hybrid_atomic_fetchinc8(p, order) (__hybrid_atomic_incfetch8(p, order) - 1)
 #elif defined(__hybrid_atomic_fetchadd8)
 #define __hybrid_atomic_fetchinc8(p, order) __hybrid_atomic_fetchadd8(p, 1, order)
 #elif defined(__hybrid_atomic_fetchsub8)
 #define __hybrid_atomic_fetchinc8(p, order) __hybrid_atomic_fetchsub8(p, (__UINT8_TYPE__)-1, order)
-#elif defined(__hybrid_atomic_incfetch8)
-#define __hybrid_atomic_fetchinc8(p, order) (__hybrid_atomic_incfetch8(p, val, order) - 1)
 #endif /* ... */
 #endif /* !__hybrid_atomic_fetchinc8 */
 
 #ifndef __hybrid_atomic_fetchdec8
 #ifdef __hybrid_atomic_fetchdec
 #define __hybrid_atomic_fetchdec8 __hybrid_atomic_fetchdec
+#elif defined(__hybrid_atomic_decfetch8)
+#define __hybrid_atomic_fetchdec8(p, order) (__hybrid_atomic_decfetch8(p, order) + 1)
 #elif defined(__hybrid_atomic_fetchsub8)
 #define __hybrid_atomic_fetchdec8(p, order) __hybrid_atomic_fetchsub8(p, 1, order)
 #elif defined(__hybrid_atomic_fetchadd8)
 #define __hybrid_atomic_fetchdec8(p, order) __hybrid_atomic_fetchadd8(p, (__UINT8_TYPE__)-1, order)
-#elif defined(__hybrid_atomic_decfetch8)
-#define __hybrid_atomic_fetchdec8(p, order) (__hybrid_atomic_decfetch8(p, val, order) + 1)
 #endif /* ... */
 #endif /* !__hybrid_atomic_fetchdec8 */
 
@@ -849,30 +849,6 @@ __LOCAL __ATTR_ARTIFICIAL __ATTR_WUNUSED __ATTR_NONNULL((1)) __UINT8_TYPE__ __NO
 #endif /* ... */
 #endif /* !__hybrid_atomic_decfetch8 */
 
-#ifndef __hybrid_atomic_inc8
-#ifdef __hybrid_atomic_inc
-#define __hybrid_atomic_inc8 __hybrid_atomic_inc
-#elif defined(__hybrid_atomic_add8)
-#define __hybrid_atomic_inc8(p, order) __hybrid_atomic_add8(p, 1, order)
-#elif defined(__hybrid_atomic_fetchinc8)
-#define __hybrid_atomic_inc8 (void)__hybrid_atomic_fetchinc8
-#elif defined(__hybrid_atomic_incfetch8)
-#define __hybrid_atomic_inc8 (void)__hybrid_atomic_incfetch8
-#endif /* ... */
-#endif /* !__hybrid_atomic_inc8 */
-
-#ifndef __hybrid_atomic_dec8
-#ifdef __hybrid_atomic_dec
-#define __hybrid_atomic_dec8 __hybrid_atomic_dec
-#elif defined(__hybrid_atomic_sub8)
-#define __hybrid_atomic_dec8(p, order) __hybrid_atomic_sub8(p, 1, order)
-#elif defined(__hybrid_atomic_fetchdec8)
-#define __hybrid_atomic_dec8 (void)__hybrid_atomic_fetchdec8
-#elif defined(__hybrid_atomic_decfetch8)
-#define __hybrid_atomic_dec8 (void)__hybrid_atomic_decfetch8
-#endif /* ... */
-#endif /* !__hybrid_atomic_dec8 */
-
 #ifndef __hybrid_atomic_add8
 #ifdef __hybrid_atomic_add
 #define __hybrid_atomic_add8 __hybrid_atomic_add
@@ -932,6 +908,30 @@ __LOCAL __ATTR_ARTIFICIAL __ATTR_WUNUSED __ATTR_NONNULL((1)) __UINT8_TYPE__ __NO
 #define __hybrid_atomic_nand8 (void)__hybrid_atomic_nandfetch8
 #endif /* ... */
 #endif /* !__hybrid_atomic_nand8 */
+
+#ifndef __hybrid_atomic_inc8
+#ifdef __hybrid_atomic_inc
+#define __hybrid_atomic_inc8 __hybrid_atomic_inc
+#elif defined(__hybrid_atomic_fetchinc8)
+#define __hybrid_atomic_inc8 (void)__hybrid_atomic_fetchinc8
+#elif defined(__hybrid_atomic_incfetch8)
+#define __hybrid_atomic_inc8 (void)__hybrid_atomic_incfetch8
+#elif defined(__hybrid_atomic_add8)
+#define __hybrid_atomic_inc8(p, order) __hybrid_atomic_add8(p, 1, order)
+#endif /* ... */
+#endif /* !__hybrid_atomic_inc8 */
+
+#ifndef __hybrid_atomic_dec8
+#ifdef __hybrid_atomic_dec
+#define __hybrid_atomic_dec8 __hybrid_atomic_dec
+#elif defined(__hybrid_atomic_fetchdec8)
+#define __hybrid_atomic_dec8 (void)__hybrid_atomic_fetchdec8
+#elif defined(__hybrid_atomic_decfetch8)
+#define __hybrid_atomic_dec8 (void)__hybrid_atomic_decfetch8
+#elif defined(__hybrid_atomic_sub8)
+#define __hybrid_atomic_dec8(p, order) __hybrid_atomic_sub8(p, 1, order)
+#endif /* ... */
+#endif /* !__hybrid_atomic_dec8 */
 
 #ifndef __hybrid_atomic_cmpxch16
 #ifdef __hybrid_atomic_cmpxch
@@ -1255,24 +1255,24 @@ __LOCAL __ATTR_ARTIFICIAL __ATTR_WUNUSED __ATTR_NONNULL((1)) __UINT16_TYPE__ __N
 #ifndef __hybrid_atomic_fetchinc16
 #ifdef __hybrid_atomic_fetchinc
 #define __hybrid_atomic_fetchinc16 __hybrid_atomic_fetchinc
+#elif defined(__hybrid_atomic_incfetch16)
+#define __hybrid_atomic_fetchinc16(p, order) (__hybrid_atomic_incfetch16(p, order) - 1)
 #elif defined(__hybrid_atomic_fetchadd16)
 #define __hybrid_atomic_fetchinc16(p, order) __hybrid_atomic_fetchadd16(p, 1, order)
 #elif defined(__hybrid_atomic_fetchsub16)
 #define __hybrid_atomic_fetchinc16(p, order) __hybrid_atomic_fetchsub16(p, (__UINT16_TYPE__)-1, order)
-#elif defined(__hybrid_atomic_incfetch16)
-#define __hybrid_atomic_fetchinc16(p, order) (__hybrid_atomic_incfetch16(p, val, order) - 1)
 #endif /* ... */
 #endif /* !__hybrid_atomic_fetchinc16 */
 
 #ifndef __hybrid_atomic_fetchdec16
 #ifdef __hybrid_atomic_fetchdec
 #define __hybrid_atomic_fetchdec16 __hybrid_atomic_fetchdec
+#elif defined(__hybrid_atomic_decfetch16)
+#define __hybrid_atomic_fetchdec16(p, order) (__hybrid_atomic_decfetch16(p, order) + 1)
 #elif defined(__hybrid_atomic_fetchsub16)
 #define __hybrid_atomic_fetchdec16(p, order) __hybrid_atomic_fetchsub16(p, 1, order)
 #elif defined(__hybrid_atomic_fetchadd16)
 #define __hybrid_atomic_fetchdec16(p, order) __hybrid_atomic_fetchadd16(p, (__UINT16_TYPE__)-1, order)
-#elif defined(__hybrid_atomic_decfetch16)
-#define __hybrid_atomic_fetchdec16(p, order) (__hybrid_atomic_decfetch16(p, val, order) + 1)
 #endif /* ... */
 #endif /* !__hybrid_atomic_fetchdec16 */
 
@@ -1406,30 +1406,6 @@ __LOCAL __ATTR_ARTIFICIAL __ATTR_WUNUSED __ATTR_NONNULL((1)) __UINT16_TYPE__ __N
 #endif /* ... */
 #endif /* !__hybrid_atomic_decfetch16 */
 
-#ifndef __hybrid_atomic_inc16
-#ifdef __hybrid_atomic_inc
-#define __hybrid_atomic_inc16 __hybrid_atomic_inc
-#elif defined(__hybrid_atomic_add16)
-#define __hybrid_atomic_inc16(p, order) __hybrid_atomic_add16(p, 1, order)
-#elif defined(__hybrid_atomic_fetchinc16)
-#define __hybrid_atomic_inc16 (void)__hybrid_atomic_fetchinc16
-#elif defined(__hybrid_atomic_incfetch16)
-#define __hybrid_atomic_inc16 (void)__hybrid_atomic_incfetch16
-#endif /* ... */
-#endif /* !__hybrid_atomic_inc16 */
-
-#ifndef __hybrid_atomic_dec16
-#ifdef __hybrid_atomic_dec
-#define __hybrid_atomic_dec16 __hybrid_atomic_dec
-#elif defined(__hybrid_atomic_sub16)
-#define __hybrid_atomic_dec16(p, order) __hybrid_atomic_sub16(p, 1, order)
-#elif defined(__hybrid_atomic_fetchdec16)
-#define __hybrid_atomic_dec16 (void)__hybrid_atomic_fetchdec16
-#elif defined(__hybrid_atomic_decfetch16)
-#define __hybrid_atomic_dec16 (void)__hybrid_atomic_decfetch16
-#endif /* ... */
-#endif /* !__hybrid_atomic_dec16 */
-
 #ifndef __hybrid_atomic_add16
 #ifdef __hybrid_atomic_add
 #define __hybrid_atomic_add16 __hybrid_atomic_add
@@ -1489,6 +1465,30 @@ __LOCAL __ATTR_ARTIFICIAL __ATTR_WUNUSED __ATTR_NONNULL((1)) __UINT16_TYPE__ __N
 #define __hybrid_atomic_nand16 (void)__hybrid_atomic_nandfetch16
 #endif /* ... */
 #endif /* !__hybrid_atomic_nand16 */
+
+#ifndef __hybrid_atomic_inc16
+#ifdef __hybrid_atomic_inc
+#define __hybrid_atomic_inc16 __hybrid_atomic_inc
+#elif defined(__hybrid_atomic_fetchinc16)
+#define __hybrid_atomic_inc16 (void)__hybrid_atomic_fetchinc16
+#elif defined(__hybrid_atomic_incfetch16)
+#define __hybrid_atomic_inc16 (void)__hybrid_atomic_incfetch16
+#elif defined(__hybrid_atomic_add16)
+#define __hybrid_atomic_inc16(p, order) __hybrid_atomic_add16(p, 1, order)
+#endif /* ... */
+#endif /* !__hybrid_atomic_inc16 */
+
+#ifndef __hybrid_atomic_dec16
+#ifdef __hybrid_atomic_dec
+#define __hybrid_atomic_dec16 __hybrid_atomic_dec
+#elif defined(__hybrid_atomic_fetchdec16)
+#define __hybrid_atomic_dec16 (void)__hybrid_atomic_fetchdec16
+#elif defined(__hybrid_atomic_decfetch16)
+#define __hybrid_atomic_dec16 (void)__hybrid_atomic_decfetch16
+#elif defined(__hybrid_atomic_sub16)
+#define __hybrid_atomic_dec16(p, order) __hybrid_atomic_sub16(p, 1, order)
+#endif /* ... */
+#endif /* !__hybrid_atomic_dec16 */
 
 #ifndef __hybrid_atomic_cmpxch32
 #ifdef __hybrid_atomic_cmpxch
@@ -1812,24 +1812,24 @@ __LOCAL __ATTR_ARTIFICIAL __ATTR_WUNUSED __ATTR_NONNULL((1)) __UINT32_TYPE__ __N
 #ifndef __hybrid_atomic_fetchinc32
 #ifdef __hybrid_atomic_fetchinc
 #define __hybrid_atomic_fetchinc32 __hybrid_atomic_fetchinc
+#elif defined(__hybrid_atomic_incfetch32)
+#define __hybrid_atomic_fetchinc32(p, order) (__hybrid_atomic_incfetch32(p, order) - 1)
 #elif defined(__hybrid_atomic_fetchadd32)
 #define __hybrid_atomic_fetchinc32(p, order) __hybrid_atomic_fetchadd32(p, 1, order)
 #elif defined(__hybrid_atomic_fetchsub32)
 #define __hybrid_atomic_fetchinc32(p, order) __hybrid_atomic_fetchsub32(p, (__UINT32_TYPE__)-1, order)
-#elif defined(__hybrid_atomic_incfetch32)
-#define __hybrid_atomic_fetchinc32(p, order) (__hybrid_atomic_incfetch32(p, val, order) - 1)
 #endif /* ... */
 #endif /* !__hybrid_atomic_fetchinc32 */
 
 #ifndef __hybrid_atomic_fetchdec32
 #ifdef __hybrid_atomic_fetchdec
 #define __hybrid_atomic_fetchdec32 __hybrid_atomic_fetchdec
+#elif defined(__hybrid_atomic_decfetch32)
+#define __hybrid_atomic_fetchdec32(p, order) (__hybrid_atomic_decfetch32(p, order) + 1)
 #elif defined(__hybrid_atomic_fetchsub32)
 #define __hybrid_atomic_fetchdec32(p, order) __hybrid_atomic_fetchsub32(p, 1, order)
 #elif defined(__hybrid_atomic_fetchadd32)
 #define __hybrid_atomic_fetchdec32(p, order) __hybrid_atomic_fetchadd32(p, (__UINT32_TYPE__)-1, order)
-#elif defined(__hybrid_atomic_decfetch32)
-#define __hybrid_atomic_fetchdec32(p, order) (__hybrid_atomic_decfetch32(p, val, order) + 1)
 #endif /* ... */
 #endif /* !__hybrid_atomic_fetchdec32 */
 
@@ -1963,30 +1963,6 @@ __LOCAL __ATTR_ARTIFICIAL __ATTR_WUNUSED __ATTR_NONNULL((1)) __UINT32_TYPE__ __N
 #endif /* ... */
 #endif /* !__hybrid_atomic_decfetch32 */
 
-#ifndef __hybrid_atomic_inc32
-#ifdef __hybrid_atomic_inc
-#define __hybrid_atomic_inc32 __hybrid_atomic_inc
-#elif defined(__hybrid_atomic_add32)
-#define __hybrid_atomic_inc32(p, order) __hybrid_atomic_add32(p, 1, order)
-#elif defined(__hybrid_atomic_fetchinc32)
-#define __hybrid_atomic_inc32 (void)__hybrid_atomic_fetchinc32
-#elif defined(__hybrid_atomic_incfetch32)
-#define __hybrid_atomic_inc32 (void)__hybrid_atomic_incfetch32
-#endif /* ... */
-#endif /* !__hybrid_atomic_inc32 */
-
-#ifndef __hybrid_atomic_dec32
-#ifdef __hybrid_atomic_dec
-#define __hybrid_atomic_dec32 __hybrid_atomic_dec
-#elif defined(__hybrid_atomic_sub32)
-#define __hybrid_atomic_dec32(p, order) __hybrid_atomic_sub32(p, 1, order)
-#elif defined(__hybrid_atomic_fetchdec32)
-#define __hybrid_atomic_dec32 (void)__hybrid_atomic_fetchdec32
-#elif defined(__hybrid_atomic_decfetch32)
-#define __hybrid_atomic_dec32 (void)__hybrid_atomic_decfetch32
-#endif /* ... */
-#endif /* !__hybrid_atomic_dec32 */
-
 #ifndef __hybrid_atomic_add32
 #ifdef __hybrid_atomic_add
 #define __hybrid_atomic_add32 __hybrid_atomic_add
@@ -2046,6 +2022,30 @@ __LOCAL __ATTR_ARTIFICIAL __ATTR_WUNUSED __ATTR_NONNULL((1)) __UINT32_TYPE__ __N
 #define __hybrid_atomic_nand32 (void)__hybrid_atomic_nandfetch32
 #endif /* ... */
 #endif /* !__hybrid_atomic_nand32 */
+
+#ifndef __hybrid_atomic_inc32
+#ifdef __hybrid_atomic_inc
+#define __hybrid_atomic_inc32 __hybrid_atomic_inc
+#elif defined(__hybrid_atomic_fetchinc32)
+#define __hybrid_atomic_inc32 (void)__hybrid_atomic_fetchinc32
+#elif defined(__hybrid_atomic_incfetch32)
+#define __hybrid_atomic_inc32 (void)__hybrid_atomic_incfetch32
+#elif defined(__hybrid_atomic_add32)
+#define __hybrid_atomic_inc32(p, order) __hybrid_atomic_add32(p, 1, order)
+#endif /* ... */
+#endif /* !__hybrid_atomic_inc32 */
+
+#ifndef __hybrid_atomic_dec32
+#ifdef __hybrid_atomic_dec
+#define __hybrid_atomic_dec32 __hybrid_atomic_dec
+#elif defined(__hybrid_atomic_fetchdec32)
+#define __hybrid_atomic_dec32 (void)__hybrid_atomic_fetchdec32
+#elif defined(__hybrid_atomic_decfetch32)
+#define __hybrid_atomic_dec32 (void)__hybrid_atomic_decfetch32
+#elif defined(__hybrid_atomic_sub32)
+#define __hybrid_atomic_dec32(p, order) __hybrid_atomic_sub32(p, 1, order)
+#endif /* ... */
+#endif /* !__hybrid_atomic_dec32 */
 
 #ifdef __UINT64_TYPE__
 #ifndef __hybrid_atomic_cmpxch64
@@ -2370,24 +2370,24 @@ __LOCAL __ATTR_ARTIFICIAL __ATTR_WUNUSED __ATTR_NONNULL((1)) __UINT64_TYPE__ __N
 #ifndef __hybrid_atomic_fetchinc64
 #ifdef __hybrid_atomic_fetchinc
 #define __hybrid_atomic_fetchinc64 __hybrid_atomic_fetchinc
+#elif defined(__hybrid_atomic_incfetch64)
+#define __hybrid_atomic_fetchinc64(p, order) (__hybrid_atomic_incfetch64(p, order) - 1)
 #elif defined(__hybrid_atomic_fetchadd64)
 #define __hybrid_atomic_fetchinc64(p, order) __hybrid_atomic_fetchadd64(p, 1, order)
 #elif defined(__hybrid_atomic_fetchsub64)
 #define __hybrid_atomic_fetchinc64(p, order) __hybrid_atomic_fetchsub64(p, (__UINT64_TYPE__)-1, order)
-#elif defined(__hybrid_atomic_incfetch64)
-#define __hybrid_atomic_fetchinc64(p, order) (__hybrid_atomic_incfetch64(p, val, order) - 1)
 #endif /* ... */
 #endif /* !__hybrid_atomic_fetchinc64 */
 
 #ifndef __hybrid_atomic_fetchdec64
 #ifdef __hybrid_atomic_fetchdec
 #define __hybrid_atomic_fetchdec64 __hybrid_atomic_fetchdec
+#elif defined(__hybrid_atomic_decfetch64)
+#define __hybrid_atomic_fetchdec64(p, order) (__hybrid_atomic_decfetch64(p, order) + 1)
 #elif defined(__hybrid_atomic_fetchsub64)
 #define __hybrid_atomic_fetchdec64(p, order) __hybrid_atomic_fetchsub64(p, 1, order)
 #elif defined(__hybrid_atomic_fetchadd64)
 #define __hybrid_atomic_fetchdec64(p, order) __hybrid_atomic_fetchadd64(p, (__UINT64_TYPE__)-1, order)
-#elif defined(__hybrid_atomic_decfetch64)
-#define __hybrid_atomic_fetchdec64(p, order) (__hybrid_atomic_decfetch64(p, val, order) + 1)
 #endif /* ... */
 #endif /* !__hybrid_atomic_fetchdec64 */
 
@@ -2521,30 +2521,6 @@ __LOCAL __ATTR_ARTIFICIAL __ATTR_WUNUSED __ATTR_NONNULL((1)) __UINT64_TYPE__ __N
 #endif /* ... */
 #endif /* !__hybrid_atomic_decfetch64 */
 
-#ifndef __hybrid_atomic_inc64
-#ifdef __hybrid_atomic_inc
-#define __hybrid_atomic_inc64 __hybrid_atomic_inc
-#elif defined(__hybrid_atomic_add64)
-#define __hybrid_atomic_inc64(p, order) __hybrid_atomic_add64(p, 1, order)
-#elif defined(__hybrid_atomic_fetchinc64)
-#define __hybrid_atomic_inc64 (void)__hybrid_atomic_fetchinc64
-#elif defined(__hybrid_atomic_incfetch64)
-#define __hybrid_atomic_inc64 (void)__hybrid_atomic_incfetch64
-#endif /* ... */
-#endif /* !__hybrid_atomic_inc64 */
-
-#ifndef __hybrid_atomic_dec64
-#ifdef __hybrid_atomic_dec
-#define __hybrid_atomic_dec64 __hybrid_atomic_dec
-#elif defined(__hybrid_atomic_sub64)
-#define __hybrid_atomic_dec64(p, order) __hybrid_atomic_sub64(p, 1, order)
-#elif defined(__hybrid_atomic_fetchdec64)
-#define __hybrid_atomic_dec64 (void)__hybrid_atomic_fetchdec64
-#elif defined(__hybrid_atomic_decfetch64)
-#define __hybrid_atomic_dec64 (void)__hybrid_atomic_decfetch64
-#endif /* ... */
-#endif /* !__hybrid_atomic_dec64 */
-
 #ifndef __hybrid_atomic_add64
 #ifdef __hybrid_atomic_add
 #define __hybrid_atomic_add64 __hybrid_atomic_add
@@ -2604,6 +2580,30 @@ __LOCAL __ATTR_ARTIFICIAL __ATTR_WUNUSED __ATTR_NONNULL((1)) __UINT64_TYPE__ __N
 #define __hybrid_atomic_nand64 (void)__hybrid_atomic_nandfetch64
 #endif /* ... */
 #endif /* !__hybrid_atomic_nand64 */
+
+#ifndef __hybrid_atomic_inc64
+#ifdef __hybrid_atomic_inc
+#define __hybrid_atomic_inc64 __hybrid_atomic_inc
+#elif defined(__hybrid_atomic_fetchinc64)
+#define __hybrid_atomic_inc64 (void)__hybrid_atomic_fetchinc64
+#elif defined(__hybrid_atomic_incfetch64)
+#define __hybrid_atomic_inc64 (void)__hybrid_atomic_incfetch64
+#elif defined(__hybrid_atomic_add64)
+#define __hybrid_atomic_inc64(p, order) __hybrid_atomic_add64(p, 1, order)
+#endif /* ... */
+#endif /* !__hybrid_atomic_inc64 */
+
+#ifndef __hybrid_atomic_dec64
+#ifdef __hybrid_atomic_dec
+#define __hybrid_atomic_dec64 __hybrid_atomic_dec
+#elif defined(__hybrid_atomic_fetchdec64)
+#define __hybrid_atomic_dec64 (void)__hybrid_atomic_fetchdec64
+#elif defined(__hybrid_atomic_decfetch64)
+#define __hybrid_atomic_dec64 (void)__hybrid_atomic_decfetch64
+#elif defined(__hybrid_atomic_sub64)
+#define __hybrid_atomic_dec64(p, order) __hybrid_atomic_sub64(p, 1, order)
+#endif /* ... */
+#endif /* !__hybrid_atomic_dec64 */
 
 #endif /* __UINT64_TYPE__ */
 #ifdef __UINT128_TYPE__
@@ -2929,24 +2929,24 @@ __LOCAL __ATTR_ARTIFICIAL __ATTR_WUNUSED __ATTR_NONNULL((1)) __UINT128_TYPE__ __
 #ifndef __hybrid_atomic_fetchinc128
 #ifdef __hybrid_atomic_fetchinc
 #define __hybrid_atomic_fetchinc128 __hybrid_atomic_fetchinc
+#elif defined(__hybrid_atomic_incfetch128)
+#define __hybrid_atomic_fetchinc128(p, order) (__hybrid_atomic_incfetch128(p, order) - 1)
 #elif defined(__hybrid_atomic_fetchadd128)
 #define __hybrid_atomic_fetchinc128(p, order) __hybrid_atomic_fetchadd128(p, 1, order)
 #elif defined(__hybrid_atomic_fetchsub128)
 #define __hybrid_atomic_fetchinc128(p, order) __hybrid_atomic_fetchsub128(p, (__UINT128_TYPE__)-1, order)
-#elif defined(__hybrid_atomic_incfetch128)
-#define __hybrid_atomic_fetchinc128(p, order) (__hybrid_atomic_incfetch128(p, val, order) - 1)
 #endif /* ... */
 #endif /* !__hybrid_atomic_fetchinc128 */
 
 #ifndef __hybrid_atomic_fetchdec128
 #ifdef __hybrid_atomic_fetchdec
 #define __hybrid_atomic_fetchdec128 __hybrid_atomic_fetchdec
+#elif defined(__hybrid_atomic_decfetch128)
+#define __hybrid_atomic_fetchdec128(p, order) (__hybrid_atomic_decfetch128(p, order) + 1)
 #elif defined(__hybrid_atomic_fetchsub128)
 #define __hybrid_atomic_fetchdec128(p, order) __hybrid_atomic_fetchsub128(p, 1, order)
 #elif defined(__hybrid_atomic_fetchadd128)
 #define __hybrid_atomic_fetchdec128(p, order) __hybrid_atomic_fetchadd128(p, (__UINT128_TYPE__)-1, order)
-#elif defined(__hybrid_atomic_decfetch128)
-#define __hybrid_atomic_fetchdec128(p, order) (__hybrid_atomic_decfetch128(p, val, order) + 1)
 #endif /* ... */
 #endif /* !__hybrid_atomic_fetchdec128 */
 
@@ -3080,30 +3080,6 @@ __LOCAL __ATTR_ARTIFICIAL __ATTR_WUNUSED __ATTR_NONNULL((1)) __UINT128_TYPE__ __
 #endif /* ... */
 #endif /* !__hybrid_atomic_decfetch128 */
 
-#ifndef __hybrid_atomic_inc128
-#ifdef __hybrid_atomic_inc
-#define __hybrid_atomic_inc128 __hybrid_atomic_inc
-#elif defined(__hybrid_atomic_add128)
-#define __hybrid_atomic_inc128(p, order) __hybrid_atomic_add128(p, 1, order)
-#elif defined(__hybrid_atomic_fetchinc128)
-#define __hybrid_atomic_inc128 (void)__hybrid_atomic_fetchinc128
-#elif defined(__hybrid_atomic_incfetch128)
-#define __hybrid_atomic_inc128 (void)__hybrid_atomic_incfetch128
-#endif /* ... */
-#endif /* !__hybrid_atomic_inc128 */
-
-#ifndef __hybrid_atomic_dec128
-#ifdef __hybrid_atomic_dec
-#define __hybrid_atomic_dec128 __hybrid_atomic_dec
-#elif defined(__hybrid_atomic_sub128)
-#define __hybrid_atomic_dec128(p, order) __hybrid_atomic_sub128(p, 1, order)
-#elif defined(__hybrid_atomic_fetchdec128)
-#define __hybrid_atomic_dec128 (void)__hybrid_atomic_fetchdec128
-#elif defined(__hybrid_atomic_decfetch128)
-#define __hybrid_atomic_dec128 (void)__hybrid_atomic_decfetch128
-#endif /* ... */
-#endif /* !__hybrid_atomic_dec128 */
-
 #ifndef __hybrid_atomic_add128
 #ifdef __hybrid_atomic_add
 #define __hybrid_atomic_add128 __hybrid_atomic_add
@@ -3164,6 +3140,30 @@ __LOCAL __ATTR_ARTIFICIAL __ATTR_WUNUSED __ATTR_NONNULL((1)) __UINT128_TYPE__ __
 #endif /* ... */
 #endif /* !__hybrid_atomic_nand128 */
 
+#ifndef __hybrid_atomic_inc128
+#ifdef __hybrid_atomic_inc
+#define __hybrid_atomic_inc128 __hybrid_atomic_inc
+#elif defined(__hybrid_atomic_fetchinc128)
+#define __hybrid_atomic_inc128 (void)__hybrid_atomic_fetchinc128
+#elif defined(__hybrid_atomic_incfetch128)
+#define __hybrid_atomic_inc128 (void)__hybrid_atomic_incfetch128
+#elif defined(__hybrid_atomic_add128)
+#define __hybrid_atomic_inc128(p, order) __hybrid_atomic_add128(p, 1, order)
+#endif /* ... */
+#endif /* !__hybrid_atomic_inc128 */
+
+#ifndef __hybrid_atomic_dec128
+#ifdef __hybrid_atomic_dec
+#define __hybrid_atomic_dec128 __hybrid_atomic_dec
+#elif defined(__hybrid_atomic_fetchdec128)
+#define __hybrid_atomic_dec128 (void)__hybrid_atomic_fetchdec128
+#elif defined(__hybrid_atomic_decfetch128)
+#define __hybrid_atomic_dec128 (void)__hybrid_atomic_decfetch128
+#elif defined(__hybrid_atomic_sub128)
+#define __hybrid_atomic_dec128(p, order) __hybrid_atomic_sub128(p, 1, order)
+#endif /* ... */
+#endif /* !__hybrid_atomic_dec128 */
+
 #endif /* __UINT128_TYPE__ */
 /*[[[end]]]*/
 /* clang-format on */
@@ -3200,15 +3200,7 @@ function makeTypeGeneric(
 		const: bool = false) {
 	print("#ifndef __hybrid_atomic_", name);
 	local minSize = SIZES < ...;
-	if (name in ["inc", "dec", "fetchinc", "fetchdec", "incfetch", "decfetch"]) {
-		local subname = "inc" in name ? name.replace("inc", "add")
-		                              : name.replace("dec", "sub");
-		print("#ifdef __hybrid_atomic_", subname);
-		print("#define __hybrid_atomic_", name, "(p, order) __hybrid_atomic_", subname, "(p, 1, order)");
-		print("#elif defined(__hybrid_atomic_", name, minSize, ")");
-	} else {
-		print("#ifdef __hybrid_atomic_", name, minSize);
-	}
+	print("#ifdef __hybrid_atomic_", name, minSize);
 	print("#ifdef __cplusplus");
 	print('extern "C++" {');
 	print("#ifndef __HYBRID_PRIVATE_ATOMIC_ENABLE_IF_DEFINED");
@@ -3317,7 +3309,15 @@ function makeTypeGeneric(
 	defineCOverloadMacro([8]);
 	print("#endif /" "* !... *" "/");
 	print("#endif /" "* !__cplusplus *" "/");
-	print("#endif /" "* __hybrid_atomic_", name, minSize, " *" "/");
+	if (name in ["inc", "dec", "fetchinc", "fetchdec", "incfetch", "decfetch"]) {
+		local subname = "inc" in name ? name.replace("inc", "add")
+		                              : name.replace("dec", "sub");
+		print("#elif defined(__hybrid_atomic_", subname, ")");
+		print("#define __hybrid_atomic_", name, "(p, order) __hybrid_atomic_", subname, "(p, 1, order)");
+		print("#endif /" "* ... *" "/");
+	} else {
+		print("#endif /" "* __hybrid_atomic_", name, minSize, " *" "/");
+	}
 	print("#endif /" "* !__hybrid_atomic_", name, " *" "/");
 }
 
@@ -4397,9 +4397,7 @@ template<class __T, class __Tval> inline __ATTR_ARTIFICIAL __ATTR_WUNUSED __ATTR
 #endif /* __hybrid_atomic_fetchnand8 */
 #endif /* !__hybrid_atomic_fetchnand */
 #ifndef __hybrid_atomic_fetchinc
-#ifdef __hybrid_atomic_fetchadd
-#define __hybrid_atomic_fetchinc(p, order) __hybrid_atomic_fetchadd(p, 1, order)
-#elif defined(__hybrid_atomic_fetchinc8)
+#ifdef __hybrid_atomic_fetchinc8
 #ifdef __cplusplus
 extern "C++" {
 #ifndef __HYBRID_PRIVATE_ATOMIC_ENABLE_IF_DEFINED
@@ -4483,12 +4481,12 @@ template<class __T> inline __ATTR_ARTIFICIAL __ATTR_WUNUSED __ATTR_NONNULL((1)) 
 	__HYBRID_ATOMIC_RECAST(p, __hybrid_atomic_fetchinc8((__UINT8_TYPE__ *)(p), order))
 #endif /* !... */
 #endif /* !__cplusplus */
-#endif /* __hybrid_atomic_fetchinc8 */
+#elif defined(__hybrid_atomic_fetchadd)
+#define __hybrid_atomic_fetchinc(p, order) __hybrid_atomic_fetchadd(p, 1, order)
+#endif /* ... */
 #endif /* !__hybrid_atomic_fetchinc */
 #ifndef __hybrid_atomic_fetchdec
-#ifdef __hybrid_atomic_fetchsub
-#define __hybrid_atomic_fetchdec(p, order) __hybrid_atomic_fetchsub(p, 1, order)
-#elif defined(__hybrid_atomic_fetchdec8)
+#ifdef __hybrid_atomic_fetchdec8
 #ifdef __cplusplus
 extern "C++" {
 #ifndef __HYBRID_PRIVATE_ATOMIC_ENABLE_IF_DEFINED
@@ -4572,7 +4570,9 @@ template<class __T> inline __ATTR_ARTIFICIAL __ATTR_WUNUSED __ATTR_NONNULL((1)) 
 	__HYBRID_ATOMIC_RECAST(p, __hybrid_atomic_fetchdec8((__UINT8_TYPE__ *)(p), order))
 #endif /* !... */
 #endif /* !__cplusplus */
-#endif /* __hybrid_atomic_fetchdec8 */
+#elif defined(__hybrid_atomic_fetchsub)
+#define __hybrid_atomic_fetchdec(p, order) __hybrid_atomic_fetchsub(p, 1, order)
+#endif /* ... */
 #endif /* !__hybrid_atomic_fetchdec */
 #ifndef __hybrid_atomic_addfetch
 #ifdef __hybrid_atomic_addfetch8
@@ -5097,9 +5097,7 @@ template<class __T, class __Tval> inline __ATTR_ARTIFICIAL __ATTR_WUNUSED __ATTR
 #endif /* __hybrid_atomic_nandfetch8 */
 #endif /* !__hybrid_atomic_nandfetch */
 #ifndef __hybrid_atomic_incfetch
-#ifdef __hybrid_atomic_addfetch
-#define __hybrid_atomic_incfetch(p, order) __hybrid_atomic_addfetch(p, 1, order)
-#elif defined(__hybrid_atomic_incfetch8)
+#ifdef __hybrid_atomic_incfetch8
 #ifdef __cplusplus
 extern "C++" {
 #ifndef __HYBRID_PRIVATE_ATOMIC_ENABLE_IF_DEFINED
@@ -5183,12 +5181,12 @@ template<class __T> inline __ATTR_ARTIFICIAL __ATTR_WUNUSED __ATTR_NONNULL((1)) 
 	__HYBRID_ATOMIC_RECAST(p, __hybrid_atomic_incfetch8((__UINT8_TYPE__ *)(p), order))
 #endif /* !... */
 #endif /* !__cplusplus */
-#endif /* __hybrid_atomic_incfetch8 */
+#elif defined(__hybrid_atomic_addfetch)
+#define __hybrid_atomic_incfetch(p, order) __hybrid_atomic_addfetch(p, 1, order)
+#endif /* ... */
 #endif /* !__hybrid_atomic_incfetch */
 #ifndef __hybrid_atomic_decfetch
-#ifdef __hybrid_atomic_subfetch
-#define __hybrid_atomic_decfetch(p, order) __hybrid_atomic_subfetch(p, 1, order)
-#elif defined(__hybrid_atomic_decfetch8)
+#ifdef __hybrid_atomic_decfetch8
 #ifdef __cplusplus
 extern "C++" {
 #ifndef __HYBRID_PRIVATE_ATOMIC_ENABLE_IF_DEFINED
@@ -5272,7 +5270,9 @@ template<class __T> inline __ATTR_ARTIFICIAL __ATTR_WUNUSED __ATTR_NONNULL((1)) 
 	__HYBRID_ATOMIC_RECAST(p, __hybrid_atomic_decfetch8((__UINT8_TYPE__ *)(p), order))
 #endif /* !... */
 #endif /* !__cplusplus */
-#endif /* __hybrid_atomic_decfetch8 */
+#elif defined(__hybrid_atomic_subfetch)
+#define __hybrid_atomic_decfetch(p, order) __hybrid_atomic_subfetch(p, 1, order)
+#endif /* ... */
 #endif /* !__hybrid_atomic_decfetch */
 #ifndef __hybrid_atomic_add
 #ifdef __hybrid_atomic_add8
@@ -5797,9 +5797,7 @@ template<class __T, class __Tval> inline __ATTR_ARTIFICIAL __ATTR_NONNULL((1)) t
 #endif /* __hybrid_atomic_nand8 */
 #endif /* !__hybrid_atomic_nand */
 #ifndef __hybrid_atomic_inc
-#ifdef __hybrid_atomic_add
-#define __hybrid_atomic_inc(p, order) __hybrid_atomic_add(p, 1, order)
-#elif defined(__hybrid_atomic_inc8)
+#ifdef __hybrid_atomic_inc8
 #ifdef __cplusplus
 extern "C++" {
 #ifndef __HYBRID_PRIVATE_ATOMIC_ENABLE_IF_DEFINED
@@ -5883,12 +5881,12 @@ template<class __T> inline __ATTR_ARTIFICIAL __ATTR_NONNULL((1)) typename __NAME
 	(__hybrid_atomic_inc8((__UINT8_TYPE__ *)(p), order))
 #endif /* !... */
 #endif /* !__cplusplus */
-#endif /* __hybrid_atomic_inc8 */
+#elif defined(__hybrid_atomic_add)
+#define __hybrid_atomic_inc(p, order) __hybrid_atomic_add(p, 1, order)
+#endif /* ... */
 #endif /* !__hybrid_atomic_inc */
 #ifndef __hybrid_atomic_dec
-#ifdef __hybrid_atomic_sub
-#define __hybrid_atomic_dec(p, order) __hybrid_atomic_sub(p, 1, order)
-#elif defined(__hybrid_atomic_dec8)
+#ifdef __hybrid_atomic_dec8
 #ifdef __cplusplus
 extern "C++" {
 #ifndef __HYBRID_PRIVATE_ATOMIC_ENABLE_IF_DEFINED
@@ -5972,7 +5970,9 @@ template<class __T> inline __ATTR_ARTIFICIAL __ATTR_NONNULL((1)) typename __NAME
 	(__hybrid_atomic_dec8((__UINT8_TYPE__ *)(p), order))
 #endif /* !... */
 #endif /* !__cplusplus */
-#endif /* __hybrid_atomic_dec8 */
+#elif defined(__hybrid_atomic_sub)
+#define __hybrid_atomic_dec(p, order) __hybrid_atomic_sub(p, 1, order)
+#endif /* ... */
 #endif /* !__hybrid_atomic_dec */
 /*[[[end]]]*/
 /* clang-format on */
