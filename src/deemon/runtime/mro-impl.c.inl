@@ -19,8 +19,8 @@
  */
 #ifdef __INTELLISENSE__
 #include "mro.c"
-#define MRO_LEN 1
-#endif
+#define MRO_LEN
+#endif /* __INTELLISENSE__ */
 
 DECL_BEGIN
 
@@ -47,6 +47,19 @@ DECL_BEGIN
 #endif /* !MRO_LEN */
 
 
+/* Helpers to acquire and release cache tables. */
+#ifndef Dee_membercache_acquiretable
+#define Dee_membercache_acquiretable(self, p_table)                   \
+	(Dee_membercache_tabuse_inc(self),                                \
+	 *(p_table) = atomic_read(&(self)->mc_table),                     \
+	 *(p_table) ? Dee_membercache_table_incref(*(p_table)) : (void)0, \
+	 Dee_membercache_tabuse_dec(self),                                \
+	 *(p_table) != NULL)
+#define Dee_membercache_releasetable(self, table) \
+	Dee_membercache_table_decref(table)
+#endif /* !Dee_membercache_acquiretable */
+
+
 /* Lookup an attribute from cache.
  * @return: * :        The attribute value.
  * @return: NULL:      An error occurred.
@@ -54,43 +67,48 @@ DECL_BEGIN
 INTERN WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
 NLen(DeeType_GetCachedAttr)(DeeTypeObject *tp_self, DeeObject *self,
                             ATTR_ARG, dhash_t hash) {
+	DREF struct Dee_membercache_table *table;
 	dhash_t i, perturb;
-	MEMBERCACHE_READ(&tp_self->tp_cache);
-	if unlikely(!tp_self->tp_cache.mc_table)
-		goto done;
-	perturb = i = MEMBERCACHE_HASHST(&tp_self->tp_cache, hash);
-	for (;; MEMBERCACHE_HASHNX(i, perturb)) {
-		struct membercache_slot *item = MEMBERCACHE_HASHIT(&tp_self->tp_cache, i);
-		if (item->mcs_type == MEMBERCACHE_UNUSED)
+	if unlikely(!Dee_membercache_acquiretable(&tp_self->tp_cache, &table))
+		goto cache_miss;
+	perturb = i = Dee_membercache_table_hashst(table, hash);
+	for (;; Dee_membercache_table_hashnx(i, perturb)) {
+		struct Dee_membercache_slot *item;
+		uint16_t type;
+		item = Dee_membercache_table_hashit(table, i);
+		type = atomic_read(&item->mcs_type);
+		if (type == MEMBERCACHE_UNUSED)
 			break;
 		if (item->mcs_hash != hash)
 			continue;
+		if unlikely(type == MEMBERCACHE_UNINITIALIZED)
+			continue; /* Don't dereference uninitialized items! */
 		if (!ATTREQ(item))
 			continue;
-		switch (item->mcs_type) {
+		switch (type) {
 
 		case MEMBERCACHE_METHOD: {
 			dobjmethod_t func;
 			func = item->mcs_method.m_func;
 			if (item->mcs_method.m_flag & TYPE_METHOD_FKWDS) {
-				MEMBERCACHE_ENDREAD(&tp_self->tp_cache);
+				Dee_membercache_releasetable(&tp_self->tp_cache, table);
 				return DeeKwObjMethod_New((dkwobjmethod_t)func, self);
 			}
-			MEMBERCACHE_ENDREAD(&tp_self->tp_cache);
+			Dee_membercache_releasetable(&tp_self->tp_cache, table);
 			return DeeObjMethod_New(func, self);
 		}
 
 		case MEMBERCACHE_GETSET: {
 			dgetmethod_t getter;
-			DeeTypeObject *type;
+			DeeTypeObject *decl;
 			getter = item->mcs_getset.gs_get;
 			if likely(getter) {
-				MEMBERCACHE_ENDREAD(&tp_self->tp_cache);
+				Dee_membercache_releasetable(&tp_self->tp_cache, table);
 				return (*getter)(self);
 			}
-			type = item->mcs_decl;
-			MEMBERCACHE_ENDREAD(&tp_self->tp_cache);
-			err_cant_access_attribute(type, attr, ATTR_ACCESS_GET);
+			decl = item->mcs_decl;
+			Dee_membercache_releasetable(&tp_self->tp_cache, table);
+			err_cant_access_attribute(decl, attr, ATTR_ACCESS_GET);
 			goto err;
 		}
 
@@ -99,7 +117,7 @@ NLen(DeeType_GetCachedAttr)(DeeTypeObject *tp_self, DeeObject *self,
 				uint8_t dat[offsetof(struct type_member, m_doc)];
 			} buf;
 			buf = *(struct buffer *)&item->mcs_member;
-			MEMBERCACHE_ENDREAD(&tp_self->tp_cache);
+			Dee_membercache_releasetable(&tp_self->tp_cache, table);
 			return type_member_get((struct type_member const *)&buf, self);
 		}
 
@@ -108,7 +126,7 @@ NLen(DeeType_GetCachedAttr)(DeeTypeObject *tp_self, DeeObject *self,
 			struct class_desc *desc;
 			catt = item->mcs_attrib.a_attr;
 			desc = item->mcs_attrib.a_desc;
-			MEMBERCACHE_ENDREAD(&tp_self->tp_cache);
+			Dee_membercache_releasetable(&tp_self->tp_cache, table);
 			return DeeInstance_GetAttribute(desc,
 			                                DeeInstance_DESC(desc, self),
 			                                self, catt);
@@ -117,8 +135,8 @@ NLen(DeeType_GetCachedAttr)(DeeTypeObject *tp_self, DeeObject *self,
 		default: __builtin_unreachable();
 		}
 	}
-done:
-	MEMBERCACHE_ENDREAD(&tp_self->tp_cache);
+	Dee_membercache_releasetable(&tp_self->tp_cache, table);
+cache_miss:
 	return ITER_DONE;
 err:
 	return NULL;
@@ -127,43 +145,48 @@ err:
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 NLen(DeeType_GetCachedClassAttr)(DeeTypeObject *__restrict tp_self,
                                  ATTR_ARG, dhash_t hash) {
+	DREF struct Dee_membercache_table *table;
 	dhash_t i, perturb;
-	MEMBERCACHE_READ(&tp_self->tp_class_cache);
-	if unlikely(!tp_self->tp_class_cache.mc_table)
-		goto done;
-	perturb = i = MEMBERCACHE_HASHST(&tp_self->tp_class_cache, hash);
-	for (;; MEMBERCACHE_HASHNX(i, perturb)) {
-		struct membercache_slot *item = MEMBERCACHE_HASHIT(&tp_self->tp_class_cache, i);
-		if (item->mcs_type == MEMBERCACHE_UNUSED)
+	if unlikely(!Dee_membercache_acquiretable(&tp_self->tp_class_cache, &table))
+		goto cache_miss;
+	perturb = i = Dee_membercache_table_hashst(table, hash);
+	for (;; Dee_membercache_table_hashnx(i, perturb)) {
+		struct Dee_membercache_slot *item;
+		uint16_t type;
+		item = Dee_membercache_table_hashit(table, i);
+		type = atomic_read(&item->mcs_type);
+		if (type == MEMBERCACHE_UNUSED)
 			break;
 		if (item->mcs_hash != hash)
 			continue;
+		if unlikely(type == MEMBERCACHE_UNINITIALIZED)
+			continue; /* Don't dereference uninitialized items! */
 		if (!ATTREQ(item))
 			continue;
-		switch (item->mcs_type) {
+		switch (type) {
 
 		case MEMBERCACHE_METHOD: {
 			dobjmethod_t func;
 			func = item->mcs_method.m_func;
 			if (item->mcs_method.m_flag & TYPE_METHOD_FKWDS) {
-				MEMBERCACHE_ENDREAD(&tp_self->tp_class_cache);
+				Dee_membercache_releasetable(&tp_self->tp_class_cache, table);
 				return DeeKwObjMethod_New((dkwobjmethod_t)func, (DeeObject *)tp_self);
 			}
-			MEMBERCACHE_ENDREAD(&tp_self->tp_class_cache);
+			Dee_membercache_releasetable(&tp_self->tp_class_cache, table);
 			return DeeObjMethod_New(func, (DeeObject *)tp_self);
 		}
 
 		case MEMBERCACHE_GETSET: {
 			dgetmethod_t getter;
-			DeeTypeObject *type;
+			DeeTypeObject *decl;
 			getter = item->mcs_getset.gs_get;
 			if likely(getter) {
-				MEMBERCACHE_ENDREAD(&tp_self->tp_class_cache);
+				Dee_membercache_releasetable(&tp_self->tp_class_cache, table);
 				return (*getter)((DeeObject *)tp_self);
 			}
-			type = item->mcs_decl;
-			MEMBERCACHE_ENDREAD(&tp_self->tp_class_cache);
-			err_cant_access_attribute(type, attr, ATTR_ACCESS_GET);
+			decl = item->mcs_decl;
+			Dee_membercache_releasetable(&tp_self->tp_class_cache, table);
+			err_cant_access_attribute(decl, attr, ATTR_ACCESS_GET);
 			goto err;
 		}
 
@@ -172,7 +195,7 @@ NLen(DeeType_GetCachedClassAttr)(DeeTypeObject *__restrict tp_self,
 				uint8_t dat[offsetof(struct type_member, m_doc)];
 			} buf;
 			buf = *(struct buffer *)&item->mcs_member;
-			MEMBERCACHE_ENDREAD(&tp_self->tp_class_cache);
+			Dee_membercache_releasetable(&tp_self->tp_class_cache, table);
 			return type_member_get((struct type_member const *)&buf, (DeeObject *)tp_self);
 		}
 
@@ -181,59 +204,60 @@ NLen(DeeType_GetCachedClassAttr)(DeeTypeObject *__restrict tp_self,
 			struct class_desc *desc;
 			catt = item->mcs_attrib.a_attr;
 			desc = item->mcs_attrib.a_desc;
-			MEMBERCACHE_ENDREAD(&tp_self->tp_class_cache);
-			return DeeInstance_GetAttribute(desc, class_desc_as_instance(desc), (DeeObject *)tp_self, catt);
+			Dee_membercache_releasetable(&tp_self->tp_class_cache, table);
+			return DeeInstance_GetAttribute(desc, class_desc_as_instance(desc),
+			                                (DeeObject *)tp_self, catt);
 		}
 
 		case MEMBERCACHE_INSTANCE_METHOD: {
 			dobjmethod_t func;
-			DeeTypeObject *type;
+			DeeTypeObject *decl;
 			func = item->mcs_method.m_func;
-			type = item->mcs_decl;
+			decl = item->mcs_decl;
 			if (item->mcs_method.m_flag & TYPE_METHOD_FKWDS) {
-				MEMBERCACHE_ENDREAD(&tp_self->tp_class_cache);
-				return DeeKwClsMethod_New(type, (dkwobjmethod_t)func);
+				Dee_membercache_releasetable(&tp_self->tp_class_cache, table);
+				return DeeKwClsMethod_New(decl, (dkwobjmethod_t)func);
 			}
-			MEMBERCACHE_ENDREAD(&tp_self->tp_class_cache);
-			return DeeClsMethod_New(type, func);
+			Dee_membercache_releasetable(&tp_self->tp_class_cache, table);
+			return DeeClsMethod_New(decl, func);
 		}
 
 		case MEMBERCACHE_INSTANCE_GETSET: {
 			dgetmethod_t get;
 			ddelmethod_t del;
 			dsetmethod_t set;
-			DeeTypeObject *type;
+			DeeTypeObject *decl;
 			get  = item->mcs_getset.gs_get;
 			del  = item->mcs_getset.gs_del;
 			set  = item->mcs_getset.gs_set;
-			type = item->mcs_decl;
-			MEMBERCACHE_ENDREAD(&tp_self->tp_class_cache);
-			return DeeClsProperty_New(type, get, del, set);
+			decl = item->mcs_decl;
+			Dee_membercache_releasetable(&tp_self->tp_class_cache, table);
+			return DeeClsProperty_New(decl, get, del, set);
 		}
 
 		case MEMBERCACHE_INSTANCE_MEMBER: {
 			struct type_member member;
-			DeeTypeObject *type;
+			DeeTypeObject *decl;
 			member = item->mcs_member;
-			type   = item->mcs_decl;
-			MEMBERCACHE_ENDREAD(&tp_self->tp_class_cache);
-			return DeeClsMember_New(type, &member);
+			decl   = item->mcs_decl;
+			Dee_membercache_releasetable(&tp_self->tp_class_cache, table);
+			return DeeClsMember_New(decl, &member);
 		}
 
 		case MEMBERCACHE_INSTANCE_ATTRIB: {
 			struct class_attribute *catt;
-			DeeTypeObject *type;
+			DeeTypeObject *decl;
 			catt = item->mcs_attrib.a_attr;
-			type = item->mcs_decl;
-			MEMBERCACHE_ENDREAD(&tp_self->tp_class_cache);
-			return DeeClass_GetInstanceAttribute(type, catt);
+			decl = item->mcs_decl;
+			Dee_membercache_releasetable(&tp_self->tp_class_cache, table);
+			return DeeClass_GetInstanceAttribute(decl, catt);
 		}
 
 		default: __builtin_unreachable();
 		}
 	}
-done:
-	MEMBERCACHE_ENDREAD(&tp_self->tp_class_cache);
+	Dee_membercache_releasetable(&tp_self->tp_class_cache, table);
+cache_miss:
 	return ITER_DONE;
 err:
 	return NULL;
@@ -242,70 +266,75 @@ err:
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 NLen(DeeType_GetCachedInstanceAttr)(DeeTypeObject *__restrict tp_self,
                                     ATTR_ARG, dhash_t hash) {
+	DREF struct Dee_membercache_table *table;
 	dhash_t i, perturb;
-	MEMBERCACHE_READ(&tp_self->tp_cache);
-	if unlikely(!tp_self->tp_cache.mc_table)
-		goto done;
-	perturb = i = MEMBERCACHE_HASHST(&tp_self->tp_cache, hash);
-	for (;; MEMBERCACHE_HASHNX(i, perturb)) {
-		struct membercache_slot *item = MEMBERCACHE_HASHIT(&tp_self->tp_cache, i);
-		if (item->mcs_type == MEMBERCACHE_UNUSED)
+	if unlikely(!Dee_membercache_acquiretable(&tp_self->tp_cache, &table))
+		goto cache_miss;
+	perturb = i = Dee_membercache_table_hashst(table, hash);
+	for (;; Dee_membercache_table_hashnx(i, perturb)) {
+		struct Dee_membercache_slot *item;
+		uint16_t type;
+		item = Dee_membercache_table_hashit(table, i);
+		type = atomic_read(&item->mcs_type);
+		if (type == MEMBERCACHE_UNUSED)
 			break;
 		if (item->mcs_hash != hash)
 			continue;
+		if unlikely(type == MEMBERCACHE_UNINITIALIZED)
+			continue; /* Don't dereference uninitialized items! */
 		if (!ATTREQ(item))
 			continue;
-		switch (item->mcs_type) {
+		switch (type) {
 
 		case MEMBERCACHE_METHOD: {
 			dobjmethod_t func;
-			DeeTypeObject *type;
+			DeeTypeObject *decl;
 			func = item->mcs_method.m_func;
-			type = item->mcs_decl;
+			decl = item->mcs_decl;
 			if (item->mcs_method.m_flag & TYPE_METHOD_FKWDS) {
-				MEMBERCACHE_ENDREAD(&tp_self->tp_cache);
-				return DeeKwClsMethod_New(type, (dkwobjmethod_t)func);
+				Dee_membercache_releasetable(&tp_self->tp_cache, table);
+				return DeeKwClsMethod_New(decl, (dkwobjmethod_t)func);
 			}
-			MEMBERCACHE_ENDREAD(&tp_self->tp_cache);
-			return DeeClsMethod_New(type, func);
+			Dee_membercache_releasetable(&tp_self->tp_cache, table);
+			return DeeClsMethod_New(decl, func);
 		}
 
 		case MEMBERCACHE_GETSET: {
 			dgetmethod_t get;
 			ddelmethod_t del;
 			dsetmethod_t set;
-			DeeTypeObject *type;
+			DeeTypeObject *decl;
 			get  = item->mcs_getset.gs_get;
 			del  = item->mcs_getset.gs_del;
 			set  = item->mcs_getset.gs_set;
-			type = item->mcs_decl;
-			MEMBERCACHE_ENDREAD(&tp_self->tp_cache);
-			return DeeClsProperty_New(type, get, del, set);
+			decl = item->mcs_decl;
+			Dee_membercache_releasetable(&tp_self->tp_cache, table);
+			return DeeClsProperty_New(decl, get, del, set);
 		}
 
 		case MEMBERCACHE_MEMBER: {
 			struct type_member member;
-			DeeTypeObject *type;
+			DeeTypeObject *decl;
 			member = item->mcs_member;
-			type   = item->mcs_decl;
-			MEMBERCACHE_ENDREAD(&tp_self->tp_cache);
-			return DeeClsMember_New(type, &member);
+			decl   = item->mcs_decl;
+			Dee_membercache_releasetable(&tp_self->tp_cache, table);
+			return DeeClsMember_New(decl, &member);
 		}
 
 		case MEMBERCACHE_ATTRIB: {
 			struct class_attribute *catt;
-			DeeTypeObject *type;
+			DeeTypeObject *decl;
 			catt = item->mcs_attrib.a_attr;
-			type = item->mcs_decl;
-			MEMBERCACHE_ENDREAD(&tp_self->tp_cache);
-			return DeeClass_GetInstanceAttribute(type, catt);
+			decl = item->mcs_decl;
+			Dee_membercache_releasetable(&tp_self->tp_cache, table);
+			return DeeClass_GetInstanceAttribute(decl, catt);
 		}
 
 		default: __builtin_unreachable();
 		}
 	}
-done:
-	MEMBERCACHE_ENDREAD(&tp_self->tp_cache);
+	Dee_membercache_releasetable(&tp_self->tp_cache, table);
+cache_miss:
 	return ITER_DONE;
 }
 
@@ -318,23 +347,28 @@ INTERN WUNUSED NONNULL((1, 2, 3)) int DCALL
 NLen(DeeType_BoundCachedAttr)(DeeTypeObject *tp_self,
                               DeeObject *self,
                               ATTR_ARG, dhash_t hash) {
+	DREF struct Dee_membercache_table *table;
 	dhash_t i, perturb;
-	MEMBERCACHE_READ(&tp_self->tp_cache);
-	if unlikely(!tp_self->tp_cache.mc_table)
-		goto done;
-	perturb = i = MEMBERCACHE_HASHST(&tp_self->tp_cache, hash);
-	for (;; MEMBERCACHE_HASHNX(i, perturb)) {
-		struct membercache_slot *item = MEMBERCACHE_HASHIT(&tp_self->tp_cache, i);
-		if (item->mcs_type == MEMBERCACHE_UNUSED)
+	if unlikely(!Dee_membercache_acquiretable(&tp_self->tp_cache, &table))
+		goto cache_miss;
+	perturb = i = Dee_membercache_table_hashst(table, hash);
+	for (;; Dee_membercache_table_hashnx(i, perturb)) {
+		struct Dee_membercache_slot *item;
+		uint16_t type;
+		item = Dee_membercache_table_hashit(table, i);
+		type = atomic_read(&item->mcs_type);
+		if (type == MEMBERCACHE_UNUSED)
 			break;
 		if (item->mcs_hash != hash)
 			continue;
+		if unlikely(type == MEMBERCACHE_UNINITIALIZED)
+			continue; /* Don't dereference uninitialized items! */
 		if (!ATTREQ(item))
 			continue;
-		switch (item->mcs_type) {
+		switch (type) {
 
 		case MEMBERCACHE_METHOD:
-			MEMBERCACHE_ENDREAD(&tp_self->tp_cache);
+			Dee_membercache_releasetable(&tp_self->tp_cache, table);
 			return 1;
 
 		case MEMBERCACHE_GETSET: {
@@ -343,7 +377,7 @@ NLen(DeeType_BoundCachedAttr)(DeeTypeObject *tp_self,
 			DREF DeeObject *temp;
 			bound  = item->mcs_getset.gs_bound;
 			getter = item->mcs_getset.gs_get;
-			MEMBERCACHE_ENDREAD(&tp_self->tp_cache);
+			Dee_membercache_releasetable(&tp_self->tp_cache, table);
 			if (bound)
 				return (*bound)(self);
 			if unlikely(!getter)
@@ -365,7 +399,7 @@ NLen(DeeType_BoundCachedAttr)(DeeTypeObject *tp_self,
 				uint8_t dat[offsetof(struct type_member, m_doc)];
 			} buf;
 			buf = *(struct buffer *)&item->mcs_member;
-			MEMBERCACHE_ENDREAD(&tp_self->tp_cache);
+			Dee_membercache_releasetable(&tp_self->tp_cache, table);
 			return type_member_bound((struct type_member const *)&buf, self);
 		}
 
@@ -374,7 +408,7 @@ NLen(DeeType_BoundCachedAttr)(DeeTypeObject *tp_self,
 			struct class_desc *desc;
 			catt = item->mcs_attrib.a_attr;
 			desc = item->mcs_attrib.a_desc;
-			MEMBERCACHE_ENDREAD(&tp_self->tp_cache);
+			Dee_membercache_releasetable(&tp_self->tp_cache, table);
 			return DeeInstance_BoundAttribute(desc,
 			                                  DeeInstance_DESC(desc, self),
 			                                  self, catt);
@@ -383,8 +417,8 @@ NLen(DeeType_BoundCachedAttr)(DeeTypeObject *tp_self,
 		default: __builtin_unreachable();
 		}
 	}
-done:
-	MEMBERCACHE_ENDREAD(&tp_self->tp_cache);
+	Dee_membercache_releasetable(&tp_self->tp_cache, table);
+cache_miss:
 	return -2;
 err:
 	return -1;
@@ -393,26 +427,31 @@ err:
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 NLen(DeeType_BoundCachedClassAttr)(DeeTypeObject *__restrict tp_self,
                                    ATTR_ARG, dhash_t hash) {
+	DREF struct Dee_membercache_table *table;
 	dhash_t i, perturb;
-	MEMBERCACHE_READ(&tp_self->tp_class_cache);
-	if unlikely(!tp_self->tp_class_cache.mc_table)
-		goto done;
-	perturb = i = MEMBERCACHE_HASHST(&tp_self->tp_class_cache, hash);
-	for (;; MEMBERCACHE_HASHNX(i, perturb)) {
-		struct membercache_slot *item = MEMBERCACHE_HASHIT(&tp_self->tp_class_cache, i);
-		if (item->mcs_type == MEMBERCACHE_UNUSED)
+	if unlikely(!Dee_membercache_acquiretable(&tp_self->tp_class_cache, &table))
+		goto cache_miss;
+	perturb = i = Dee_membercache_table_hashst(table, hash);
+	for (;; Dee_membercache_table_hashnx(i, perturb)) {
+		struct Dee_membercache_slot *item;
+		uint16_t type;
+		item = Dee_membercache_table_hashit(table, i);
+		type = atomic_read(&item->mcs_type);
+		if (type == MEMBERCACHE_UNUSED)
 			break;
 		if (item->mcs_hash != hash)
 			continue;
+		if unlikely(type == MEMBERCACHE_UNINITIALIZED)
+			continue; /* Don't dereference uninitialized items! */
 		if (!ATTREQ(item))
 			continue;
-		switch (item->mcs_type) {
+		switch (type) {
 
 		case MEMBERCACHE_METHOD:
 		case MEMBERCACHE_INSTANCE_METHOD:
 		case MEMBERCACHE_INSTANCE_GETSET:
 		case MEMBERCACHE_INSTANCE_MEMBER:
-			MEMBERCACHE_ENDREAD(&tp_self->tp_class_cache);
+			Dee_membercache_releasetable(&tp_self->tp_class_cache, table);
 			return 1;
 
 		case MEMBERCACHE_GETSET: {
@@ -421,7 +460,7 @@ NLen(DeeType_BoundCachedClassAttr)(DeeTypeObject *__restrict tp_self,
 			DREF DeeObject *temp;
 			bound  = item->mcs_getset.gs_bound;
 			getter = item->mcs_getset.gs_get;
-			MEMBERCACHE_ENDREAD(&tp_self->tp_class_cache);
+			Dee_membercache_releasetable(&tp_self->tp_class_cache, table);
 			if (bound)
 				return (*bound)((DeeObject *)tp_self);
 			if unlikely(!getter)
@@ -443,7 +482,7 @@ NLen(DeeType_BoundCachedClassAttr)(DeeTypeObject *__restrict tp_self,
 				uint8_t dat[offsetof(struct type_member, m_doc)];
 			} buf;
 			buf = *(struct buffer *)&item->mcs_member;
-			MEMBERCACHE_ENDREAD(&tp_self->tp_class_cache);
+			Dee_membercache_releasetable(&tp_self->tp_class_cache, table);
 			return type_member_bound((struct type_member const *)&buf, (DeeObject *)tp_self);
 		}
 
@@ -452,24 +491,24 @@ NLen(DeeType_BoundCachedClassAttr)(DeeTypeObject *__restrict tp_self,
 			struct class_desc *desc;
 			catt = item->mcs_attrib.a_attr;
 			desc = item->mcs_attrib.a_desc;
-			MEMBERCACHE_ENDREAD(&tp_self->tp_class_cache);
+			Dee_membercache_releasetable(&tp_self->tp_class_cache, table);
 			return DeeInstance_BoundAttribute(desc, class_desc_as_instance(desc), (DeeObject *)tp_self, catt);
 		}
 
 		case MEMBERCACHE_INSTANCE_ATTRIB: {
 			struct class_attribute *catt;
-			DeeTypeObject *type;
+			DeeTypeObject *decl;
 			catt = item->mcs_attrib.a_attr;
-			type = item->mcs_decl;
-			MEMBERCACHE_ENDREAD(&tp_self->tp_class_cache);
-			return DeeClass_BoundInstanceAttribute(type, catt);
+			decl = item->mcs_decl;
+			Dee_membercache_releasetable(&tp_self->tp_class_cache, table);
+			return DeeClass_BoundInstanceAttribute(decl, catt);
 		}
 
 		default: __builtin_unreachable();
 		}
 	}
-done:
-	MEMBERCACHE_ENDREAD(&tp_self->tp_class_cache);
+	Dee_membercache_releasetable(&tp_self->tp_class_cache, table);
+cache_miss:
 	return -2;
 err:
 	return -1;
@@ -478,41 +517,46 @@ err:
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 NLen(DeeType_BoundCachedInstanceAttr)(DeeTypeObject *__restrict tp_self,
                                       ATTR_ARG, dhash_t hash) {
+	DREF struct Dee_membercache_table *table;
 	dhash_t i, perturb;
-	MEMBERCACHE_READ(&tp_self->tp_cache);
-	if unlikely(!tp_self->tp_cache.mc_table)
-		goto done;
-	perturb = i = MEMBERCACHE_HASHST(&tp_self->tp_cache, hash);
-	for (;; MEMBERCACHE_HASHNX(i, perturb)) {
-		struct membercache_slot *item = MEMBERCACHE_HASHIT(&tp_self->tp_cache, i);
-		if (item->mcs_type == MEMBERCACHE_UNUSED)
+	if unlikely(!Dee_membercache_acquiretable(&tp_self->tp_cache, &table))
+		goto cache_miss;
+	perturb = i = Dee_membercache_table_hashst(table, hash);
+	for (;; Dee_membercache_table_hashnx(i, perturb)) {
+		struct Dee_membercache_slot *item;
+		uint16_t type;
+		item = Dee_membercache_table_hashit(table, i);
+		type = atomic_read(&item->mcs_type);
+		if (type == MEMBERCACHE_UNUSED)
 			break;
 		if (item->mcs_hash != hash)
 			continue;
+		if unlikely(type == MEMBERCACHE_UNINITIALIZED)
+			continue; /* Don't dereference uninitialized items! */
 		if (!ATTREQ(item))
 			continue;
-		switch (item->mcs_type) {
+		switch (type) {
 
 		case MEMBERCACHE_METHOD:
 		case MEMBERCACHE_GETSET:
 		case MEMBERCACHE_MEMBER:
-			MEMBERCACHE_ENDREAD(&tp_self->tp_cache);
+			Dee_membercache_releasetable(&tp_self->tp_cache, table);
 			return 1;
 
 		case MEMBERCACHE_ATTRIB: {
 			struct class_attribute *catt;
-			DeeTypeObject *type;
+			DeeTypeObject *decl;
 			catt = item->mcs_attrib.a_attr;
-			type = item->mcs_decl;
-			MEMBERCACHE_ENDREAD(&tp_self->tp_cache);
-			return DeeClass_BoundInstanceAttribute(type, catt);
+			decl = item->mcs_decl;
+			Dee_membercache_releasetable(&tp_self->tp_cache, table);
+			return DeeClass_BoundInstanceAttribute(decl, catt);
 		}
 
 		default: __builtin_unreachable();
 		}
 	}
-done:
-	MEMBERCACHE_ENDREAD(&tp_self->tp_cache);
+	Dee_membercache_releasetable(&tp_self->tp_cache, table);
+cache_miss:
 	return -2;
 }
 
@@ -522,48 +566,58 @@ done:
 INTERN WUNUSED NONNULL((1, 2)) bool DCALL
 NLen(DeeType_HasCachedAttr)(DeeTypeObject *__restrict tp_self,
                             ATTR_ARG, dhash_t hash) {
+	DREF struct Dee_membercache_table *table;
 	dhash_t i, perturb;
-	MEMBERCACHE_READ(&tp_self->tp_cache);
-	if unlikely(!tp_self->tp_cache.mc_table)
-		goto done;
-	perturb = i = MEMBERCACHE_HASHST(&tp_self->tp_cache, hash);
-	for (;; MEMBERCACHE_HASHNX(i, perturb)) {
-		struct membercache_slot *item = MEMBERCACHE_HASHIT(&tp_self->tp_cache, i);
-		if (item->mcs_type == MEMBERCACHE_UNUSED)
+	if unlikely(!Dee_membercache_acquiretable(&tp_self->tp_cache, &table))
+		goto cache_miss;
+	perturb = i = Dee_membercache_table_hashst(table, hash);
+	for (;; Dee_membercache_table_hashnx(i, perturb)) {
+		struct Dee_membercache_slot *item;
+		uint16_t type;
+		item = Dee_membercache_table_hashit(table, i);
+		type = atomic_read(&item->mcs_type);
+		if (type == MEMBERCACHE_UNUSED)
 			break;
 		if (item->mcs_hash != hash)
 			continue;
+		if unlikely(type == MEMBERCACHE_UNINITIALIZED)
+			continue; /* Don't dereference uninitialized items! */
 		if (!ATTREQ(item))
 			continue;
-		MEMBERCACHE_ENDREAD(&tp_self->tp_cache);
+		Dee_membercache_releasetable(&tp_self->tp_cache, table);
 		return true;
 	}
-done:
-	MEMBERCACHE_ENDREAD(&tp_self->tp_cache);
+	Dee_membercache_releasetable(&tp_self->tp_cache, table);
+cache_miss:
 	return false;
 }
 
 INTERN WUNUSED NONNULL((1, 2)) bool DCALL
 NLen(DeeType_HasCachedClassAttr)(DeeTypeObject *__restrict tp_self,
                                  ATTR_ARG, dhash_t hash) {
+	DREF struct Dee_membercache_table *table;
 	dhash_t i, perturb;
-	MEMBERCACHE_READ(&tp_self->tp_class_cache);
-	if unlikely(!tp_self->tp_class_cache.mc_table)
-		goto done;
-	perturb = i = MEMBERCACHE_HASHST(&tp_self->tp_class_cache, hash);
-	for (;; MEMBERCACHE_HASHNX(i, perturb)) {
-		struct membercache_slot *item = MEMBERCACHE_HASHIT(&tp_self->tp_class_cache, i);
-		if (item->mcs_type == MEMBERCACHE_UNUSED)
+	if unlikely(!Dee_membercache_acquiretable(&tp_self->tp_class_cache, &table))
+		goto cache_miss;
+	perturb = i = Dee_membercache_table_hashst(table, hash);
+	for (;; Dee_membercache_table_hashnx(i, perturb)) {
+		struct Dee_membercache_slot *item;
+		uint16_t type;
+		item = Dee_membercache_table_hashit(table, i);
+		type = atomic_read(&item->mcs_type);
+		if (type == MEMBERCACHE_UNUSED)
 			break;
 		if (item->mcs_hash != hash)
 			continue;
+		if unlikely(type == MEMBERCACHE_UNINITIALIZED)
+			continue; /* Don't dereference uninitialized items! */
 		if (!ATTREQ(item))
 			continue;
-		MEMBERCACHE_ENDREAD(&tp_self->tp_class_cache);
+		Dee_membercache_releasetable(&tp_self->tp_class_cache, table);
 		return true;
 	}
-done:
-	MEMBERCACHE_ENDREAD(&tp_self->tp_class_cache);
+	Dee_membercache_releasetable(&tp_self->tp_class_cache, table);
+cache_miss:
 	return false;
 }
 
@@ -574,39 +628,44 @@ INTERN WUNUSED NONNULL((1, 2, 3)) int DCALL
 NLen(DeeType_DelCachedAttr)(DeeTypeObject *tp_self,
                             DeeObject *self,
                             ATTR_ARG, dhash_t hash) {
+	DREF struct Dee_membercache_table *table;
 	dhash_t i, perturb;
-	MEMBERCACHE_READ(&tp_self->tp_cache);
-	if unlikely(!tp_self->tp_cache.mc_table)
-		goto done;
-	perturb = i = MEMBERCACHE_HASHST(&tp_self->tp_cache, hash);
-	for (;; MEMBERCACHE_HASHNX(i, perturb)) {
-		struct membercache_slot *item = MEMBERCACHE_HASHIT(&tp_self->tp_cache, i);
-		if (item->mcs_type == MEMBERCACHE_UNUSED)
+	if unlikely(!Dee_membercache_acquiretable(&tp_self->tp_cache, &table))
+		goto cache_miss;
+	perturb = i = Dee_membercache_table_hashst(table, hash);
+	for (;; Dee_membercache_table_hashnx(i, perturb)) {
+		struct Dee_membercache_slot *item;
+		uint16_t type;
+		item = Dee_membercache_table_hashit(table, i);
+		type = atomic_read(&item->mcs_type);
+		if (type == MEMBERCACHE_UNUSED)
 			break;
 		if (item->mcs_hash != hash)
 			continue;
+		if unlikely(type == MEMBERCACHE_UNINITIALIZED)
+			continue; /* Don't dereference uninitialized items! */
 		if (!ATTREQ(item))
 			continue;
-		switch (item->mcs_type) {
+		switch (type) {
 
 		case MEMBERCACHE_METHOD: {
-			DeeTypeObject *type;
-			type = item->mcs_decl;
-			MEMBERCACHE_ENDREAD(&tp_self->tp_cache);
-			return err_cant_access_attribute(type, attr, ATTR_ACCESS_DEL);
+			DeeTypeObject *decl;
+			decl = item->mcs_decl;
+			Dee_membercache_releasetable(&tp_self->tp_cache, table);
+			return err_cant_access_attribute(decl, attr, ATTR_ACCESS_DEL);
 		}
 
 		case MEMBERCACHE_GETSET: {
 			ddelmethod_t del;
-			DeeTypeObject *type;
+			DeeTypeObject *decl;
 			del = item->mcs_getset.gs_del;
 			if likely(del) {
-				MEMBERCACHE_ENDREAD(&tp_self->tp_cache);
+				Dee_membercache_releasetable(&tp_self->tp_cache, table);
 				return (*del)(self);
 			}
-			type = item->mcs_decl;
-			MEMBERCACHE_ENDREAD(&tp_self->tp_cache);
-			err_cant_access_attribute(type, attr, ATTR_ACCESS_DEL);
+			decl = item->mcs_decl;
+			Dee_membercache_releasetable(&tp_self->tp_cache, table);
+			err_cant_access_attribute(decl, attr, ATTR_ACCESS_DEL);
 			goto err;
 		}
 
@@ -615,7 +674,7 @@ NLen(DeeType_DelCachedAttr)(DeeTypeObject *tp_self,
 				uint8_t dat[offsetof(struct type_member, m_doc)];
 			} buf;
 			buf = *(struct buffer *)&item->mcs_member;
-			MEMBERCACHE_ENDREAD(&tp_self->tp_cache);
+			Dee_membercache_releasetable(&tp_self->tp_cache, table);
 			return type_member_del((struct type_member const *)&buf, self);
 		}
 
@@ -624,7 +683,7 @@ NLen(DeeType_DelCachedAttr)(DeeTypeObject *tp_self,
 			struct class_desc *desc;
 			catt = item->mcs_attrib.a_attr;
 			desc = item->mcs_attrib.a_desc;
-			MEMBERCACHE_ENDREAD(&tp_self->tp_cache);
+			Dee_membercache_releasetable(&tp_self->tp_cache, table);
 			return DeeInstance_DelAttribute(desc,
 			                                DeeInstance_DESC(desc, self),
 			                                self, catt);
@@ -633,8 +692,8 @@ NLen(DeeType_DelCachedAttr)(DeeTypeObject *tp_self,
 		default: __builtin_unreachable();
 		}
 	}
-done:
-	MEMBERCACHE_ENDREAD(&tp_self->tp_cache);
+	Dee_membercache_releasetable(&tp_self->tp_cache, table);
+cache_miss:
 	return 1;
 err:
 	return -1;
@@ -643,42 +702,47 @@ err:
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 NLen(DeeType_DelCachedClassAttr)(DeeTypeObject *__restrict tp_self,
                                  ATTR_ARG, dhash_t hash) {
+	DREF struct Dee_membercache_table *table;
 	dhash_t i, perturb;
-	MEMBERCACHE_READ(&tp_self->tp_class_cache);
-	if unlikely(!tp_self->tp_class_cache.mc_table)
-		goto done;
-	perturb = i = MEMBERCACHE_HASHST(&tp_self->tp_class_cache, hash);
-	for (;; MEMBERCACHE_HASHNX(i, perturb)) {
-		struct membercache_slot *item = MEMBERCACHE_HASHIT(&tp_self->tp_class_cache, i);
-		if (item->mcs_type == MEMBERCACHE_UNUSED)
+	if unlikely(!Dee_membercache_acquiretable(&tp_self->tp_class_cache, &table))
+		goto cache_miss;
+	perturb = i = Dee_membercache_table_hashst(table, hash);
+	for (;; Dee_membercache_table_hashnx(i, perturb)) {
+		struct Dee_membercache_slot *item;
+		uint16_t type;
+		item = Dee_membercache_table_hashit(table, i);
+		type = atomic_read(&item->mcs_type);
+		if (type == MEMBERCACHE_UNUSED)
 			break;
 		if (item->mcs_hash != hash)
 			continue;
+		if unlikely(type == MEMBERCACHE_UNINITIALIZED)
+			continue; /* Don't dereference uninitialized items! */
 		if (!ATTREQ(item))
 			continue;
-		switch (item->mcs_type) {
+		switch (type) {
 
 		case MEMBERCACHE_METHOD:
 		case MEMBERCACHE_INSTANCE_METHOD:
 		case MEMBERCACHE_INSTANCE_GETSET:
 		case MEMBERCACHE_INSTANCE_MEMBER: {
-			DeeTypeObject *type;
-			type = item->mcs_decl;
-			MEMBERCACHE_ENDREAD(&tp_self->tp_cache);
-			return err_cant_access_attribute(type, attr, ATTR_ACCESS_DEL);
+			DeeTypeObject *decl;
+			decl = item->mcs_decl;
+			Dee_membercache_releasetable(&tp_self->tp_cache, table);
+			return err_cant_access_attribute(decl, attr, ATTR_ACCESS_DEL);
 		}
 
 		case MEMBERCACHE_GETSET: {
 			ddelmethod_t del;
-			DeeTypeObject *type;
+			DeeTypeObject *decl;
 			del = item->mcs_getset.gs_del;
 			if likely(del) {
-				MEMBERCACHE_ENDREAD(&tp_self->tp_class_cache);
+				Dee_membercache_releasetable(&tp_self->tp_class_cache, table);
 				return (*del)((DeeObject *)tp_self);
 			}
-			type = item->mcs_decl;
-			MEMBERCACHE_ENDREAD(&tp_self->tp_class_cache);
-			err_cant_access_attribute(type, attr, ATTR_ACCESS_DEL);
+			decl = item->mcs_decl;
+			Dee_membercache_releasetable(&tp_self->tp_class_cache, table);
+			err_cant_access_attribute(decl, attr, ATTR_ACCESS_DEL);
 			goto err;
 		}
 
@@ -687,7 +751,7 @@ NLen(DeeType_DelCachedClassAttr)(DeeTypeObject *__restrict tp_self,
 				uint8_t dat[offsetof(struct type_member, m_doc)];
 			} buf;
 			buf = *(struct buffer *)&item->mcs_member;
-			MEMBERCACHE_ENDREAD(&tp_self->tp_class_cache);
+			Dee_membercache_releasetable(&tp_self->tp_class_cache, table);
 			return type_member_del((struct type_member const *)&buf, (DeeObject *)tp_self);
 		}
 
@@ -696,24 +760,24 @@ NLen(DeeType_DelCachedClassAttr)(DeeTypeObject *__restrict tp_self,
 			struct class_desc *desc;
 			catt = item->mcs_attrib.a_attr;
 			desc = item->mcs_attrib.a_desc;
-			MEMBERCACHE_ENDREAD(&tp_self->tp_class_cache);
+			Dee_membercache_releasetable(&tp_self->tp_class_cache, table);
 			return DeeInstance_DelAttribute(desc, class_desc_as_instance(desc), (DeeObject *)tp_self, catt);
 		}
 
 		case MEMBERCACHE_INSTANCE_ATTRIB: {
 			struct class_attribute *catt;
-			DeeTypeObject *type;
+			DeeTypeObject *decl;
 			catt = item->mcs_attrib.a_attr;
-			type = item->mcs_decl;
-			MEMBERCACHE_ENDREAD(&tp_self->tp_class_cache);
-			return DeeClass_DelInstanceAttribute(type, catt);
+			decl = item->mcs_decl;
+			Dee_membercache_releasetable(&tp_self->tp_class_cache, table);
+			return DeeClass_DelInstanceAttribute(decl, catt);
 		}
 
 		default: __builtin_unreachable();
 		}
 	}
-done:
-	MEMBERCACHE_ENDREAD(&tp_self->tp_class_cache);
+	Dee_membercache_releasetable(&tp_self->tp_class_cache, table);
+cache_miss:
 	return 1;
 err:
 	return -1;
@@ -722,44 +786,49 @@ err:
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 NLen(DeeType_DelCachedInstanceAttr)(DeeTypeObject *__restrict tp_self,
                                     ATTR_ARG, dhash_t hash) {
+	DREF struct Dee_membercache_table *table;
 	dhash_t i, perturb;
-	MEMBERCACHE_READ(&tp_self->tp_cache);
-	if unlikely(!tp_self->tp_cache.mc_table)
-		goto done;
-	perturb = i = MEMBERCACHE_HASHST(&tp_self->tp_cache, hash);
-	for (;; MEMBERCACHE_HASHNX(i, perturb)) {
-		struct membercache_slot *item = MEMBERCACHE_HASHIT(&tp_self->tp_cache, i);
-		if (item->mcs_type == MEMBERCACHE_UNUSED)
+	if unlikely(!Dee_membercache_acquiretable(&tp_self->tp_cache, &table))
+		goto cache_miss;
+	perturb = i = Dee_membercache_table_hashst(table, hash);
+	for (;; Dee_membercache_table_hashnx(i, perturb)) {
+		struct Dee_membercache_slot *item;
+		uint16_t type;
+		item = Dee_membercache_table_hashit(table, i);
+		type = atomic_read(&item->mcs_type);
+		if (type == MEMBERCACHE_UNUSED)
 			break;
 		if (item->mcs_hash != hash)
 			continue;
+		if unlikely(type == MEMBERCACHE_UNINITIALIZED)
+			continue; /* Don't dereference uninitialized items! */
 		if (!ATTREQ(item))
 			continue;
-		switch (item->mcs_type) {
+		switch (type) {
 
 		case MEMBERCACHE_METHOD:
 		case MEMBERCACHE_GETSET:
 		case MEMBERCACHE_MEMBER: {
-			DeeTypeObject *type;
-			type = item->mcs_decl;
-			MEMBERCACHE_ENDREAD(&tp_self->tp_cache);
-			return err_cant_access_attribute(type, attr, ATTR_ACCESS_DEL);
+			DeeTypeObject *decl;
+			decl = item->mcs_decl;
+			Dee_membercache_releasetable(&tp_self->tp_cache, table);
+			return err_cant_access_attribute(decl, attr, ATTR_ACCESS_DEL);
 		}
 
 		case MEMBERCACHE_ATTRIB: {
 			struct class_attribute *catt;
-			DeeTypeObject *type;
+			DeeTypeObject *decl;
 			catt = item->mcs_attrib.a_attr;
-			type = item->mcs_decl;
-			MEMBERCACHE_ENDREAD(&tp_self->tp_cache);
-			return DeeClass_DelInstanceAttribute(type, catt);
+			decl = item->mcs_decl;
+			Dee_membercache_releasetable(&tp_self->tp_cache, table);
+			return DeeClass_DelInstanceAttribute(decl, catt);
 		}
 
 		default: __builtin_unreachable();
 		}
 	}
-done:
-	MEMBERCACHE_ENDREAD(&tp_self->tp_cache);
+	Dee_membercache_releasetable(&tp_self->tp_cache, table);
+cache_miss:
 	return 1;
 }
 
@@ -771,39 +840,44 @@ NLen(DeeType_SetCachedAttr)(DeeTypeObject *tp_self,
                             DeeObject *self,
                             ATTR_ARG, dhash_t hash,
                             DeeObject *value) {
+	DREF struct Dee_membercache_table *table;
 	dhash_t i, perturb;
-	MEMBERCACHE_READ(&tp_self->tp_cache);
-	if unlikely(!tp_self->tp_cache.mc_table)
-		goto done;
-	perturb = i = MEMBERCACHE_HASHST(&tp_self->tp_cache, hash);
-	for (;; MEMBERCACHE_HASHNX(i, perturb)) {
-		struct membercache_slot *item = MEMBERCACHE_HASHIT(&tp_self->tp_cache, i);
-		if (item->mcs_type == MEMBERCACHE_UNUSED)
+	if unlikely(!Dee_membercache_acquiretable(&tp_self->tp_cache, &table))
+		goto cache_miss;
+	perturb = i = Dee_membercache_table_hashst(table, hash);
+	for (;; Dee_membercache_table_hashnx(i, perturb)) {
+		struct Dee_membercache_slot *item;
+		uint16_t type;
+		item = Dee_membercache_table_hashit(table, i);
+		type = atomic_read(&item->mcs_type);
+		if (type == MEMBERCACHE_UNUSED)
 			break;
 		if (item->mcs_hash != hash)
 			continue;
+		if unlikely(type == MEMBERCACHE_UNINITIALIZED)
+			continue; /* Don't dereference uninitialized items! */
 		if (!ATTREQ(item))
 			continue;
-		switch (item->mcs_type) {
+		switch (type) {
 
 		case MEMBERCACHE_METHOD: {
-			DeeTypeObject *type;
-			type = item->mcs_decl;
-			MEMBERCACHE_ENDREAD(&tp_self->tp_cache);
-			return err_cant_access_attribute(type, attr, ATTR_ACCESS_SET);
+			DeeTypeObject *decl;
+			decl = item->mcs_decl;
+			Dee_membercache_releasetable(&tp_self->tp_cache, table);
+			return err_cant_access_attribute(decl, attr, ATTR_ACCESS_SET);
 		}
 
 		case MEMBERCACHE_GETSET: {
 			dsetmethod_t set;
-			DeeTypeObject *type;
+			DeeTypeObject *decl;
 			set = item->mcs_getset.gs_set;
 			if likely(set) {
-				MEMBERCACHE_ENDREAD(&tp_self->tp_cache);
+				Dee_membercache_releasetable(&tp_self->tp_cache, table);
 				return (*set)(self, value);
 			}
-			type = item->mcs_decl;
-			MEMBERCACHE_ENDREAD(&tp_self->tp_cache);
-			err_cant_access_attribute(type, attr, ATTR_ACCESS_SET);
+			decl = item->mcs_decl;
+			Dee_membercache_releasetable(&tp_self->tp_cache, table);
+			err_cant_access_attribute(decl, attr, ATTR_ACCESS_SET);
 			goto err;
 		}
 
@@ -812,7 +886,7 @@ NLen(DeeType_SetCachedAttr)(DeeTypeObject *tp_self,
 				uint8_t dat[offsetof(struct type_member, m_doc)];
 			} buf;
 			buf = *(struct buffer *)&item->mcs_member;
-			MEMBERCACHE_ENDREAD(&tp_self->tp_cache);
+			Dee_membercache_releasetable(&tp_self->tp_cache, table);
 			return type_member_set((struct type_member const *)&buf, self, value);
 		}
 
@@ -821,7 +895,7 @@ NLen(DeeType_SetCachedAttr)(DeeTypeObject *tp_self,
 			struct class_desc *desc;
 			catt = item->mcs_attrib.a_attr;
 			desc = item->mcs_attrib.a_desc;
-			MEMBERCACHE_ENDREAD(&tp_self->tp_cache);
+			Dee_membercache_releasetable(&tp_self->tp_cache, table);
 			return DeeInstance_SetAttribute(desc,
 			                                DeeInstance_DESC(desc, self),
 			                                self, catt, value);
@@ -830,8 +904,8 @@ NLen(DeeType_SetCachedAttr)(DeeTypeObject *tp_self,
 		default: __builtin_unreachable();
 		}
 	}
-done:
-	MEMBERCACHE_ENDREAD(&tp_self->tp_cache);
+	Dee_membercache_releasetable(&tp_self->tp_cache, table);
+cache_miss:
 	return 1;
 err:
 	return -1;
@@ -841,42 +915,47 @@ INTERN WUNUSED NONNULL((1, 2, IFELSE(4, 5))) int DCALL
 NLen(DeeType_SetCachedClassAttr)(DeeTypeObject *tp_self,
                                  ATTR_ARG, dhash_t hash,
                                  DeeObject *value) {
+	DREF struct Dee_membercache_table *table;
 	dhash_t i, perturb;
-	MEMBERCACHE_READ(&tp_self->tp_class_cache);
-	if unlikely(!tp_self->tp_class_cache.mc_table)
-		goto done;
-	perturb = i = MEMBERCACHE_HASHST(&tp_self->tp_class_cache, hash);
-	for (;; MEMBERCACHE_HASHNX(i, perturb)) {
-		struct membercache_slot *item = MEMBERCACHE_HASHIT(&tp_self->tp_class_cache, i);
-		if (item->mcs_type == MEMBERCACHE_UNUSED)
+	if unlikely(!Dee_membercache_acquiretable(&tp_self->tp_class_cache, &table))
+		goto cache_miss;
+	perturb = i = Dee_membercache_table_hashst(table, hash);
+	for (;; Dee_membercache_table_hashnx(i, perturb)) {
+		struct Dee_membercache_slot *item;
+		uint16_t type;
+		item = Dee_membercache_table_hashit(table, i);
+		type = atomic_read(&item->mcs_type);
+		if (type == MEMBERCACHE_UNUSED)
 			break;
 		if (item->mcs_hash != hash)
 			continue;
+		if unlikely(type == MEMBERCACHE_UNINITIALIZED)
+			continue; /* Don't dereference uninitialized items! */
 		if (!ATTREQ(item))
 			continue;
-		switch (item->mcs_type) {
+		switch (type) {
 
 		case MEMBERCACHE_METHOD:
 		case MEMBERCACHE_INSTANCE_METHOD:
 		case MEMBERCACHE_INSTANCE_GETSET:
 		case MEMBERCACHE_INSTANCE_MEMBER: {
-			DeeTypeObject *type;
-			type = item->mcs_decl;
-			MEMBERCACHE_ENDREAD(&tp_self->tp_cache);
-			return err_cant_access_attribute(type, attr, ATTR_ACCESS_SET);
+			DeeTypeObject *decl;
+			decl = item->mcs_decl;
+			Dee_membercache_releasetable(&tp_self->tp_cache, table);
+			return err_cant_access_attribute(decl, attr, ATTR_ACCESS_SET);
 		}
 
 		case MEMBERCACHE_GETSET: {
 			dsetmethod_t set;
-			DeeTypeObject *type;
+			DeeTypeObject *decl;
 			set = item->mcs_getset.gs_set;
 			if likely(set) {
-				MEMBERCACHE_ENDREAD(&tp_self->tp_class_cache);
+				Dee_membercache_releasetable(&tp_self->tp_class_cache, table);
 				return (*set)((DeeObject *)tp_self, value);
 			}
-			type = item->mcs_decl;
-			MEMBERCACHE_ENDREAD(&tp_self->tp_class_cache);
-			err_cant_access_attribute(type, attr, ATTR_ACCESS_SET);
+			decl = item->mcs_decl;
+			Dee_membercache_releasetable(&tp_self->tp_class_cache, table);
+			err_cant_access_attribute(decl, attr, ATTR_ACCESS_SET);
 			goto err;
 		}
 
@@ -885,7 +964,7 @@ NLen(DeeType_SetCachedClassAttr)(DeeTypeObject *tp_self,
 				uint8_t dat[offsetof(struct type_member, m_doc)];
 			} buf;
 			buf = *(struct buffer *)&item->mcs_member;
-			MEMBERCACHE_ENDREAD(&tp_self->tp_class_cache);
+			Dee_membercache_releasetable(&tp_self->tp_class_cache, table);
 			return type_member_set((struct type_member const *)&buf, (DeeObject *)tp_self, value);
 		}
 
@@ -894,24 +973,24 @@ NLen(DeeType_SetCachedClassAttr)(DeeTypeObject *tp_self,
 			struct class_desc *desc;
 			catt = item->mcs_attrib.a_attr;
 			desc = item->mcs_attrib.a_desc;
-			MEMBERCACHE_ENDREAD(&tp_self->tp_class_cache);
+			Dee_membercache_releasetable(&tp_self->tp_class_cache, table);
 			return DeeInstance_SetAttribute(desc, class_desc_as_instance(desc), (DeeObject *)tp_self, catt, value);
 		}
 
 		case MEMBERCACHE_INSTANCE_ATTRIB: {
 			struct class_attribute *catt;
-			DeeTypeObject *type;
+			DeeTypeObject *decl;
 			catt = item->mcs_attrib.a_attr;
-			type = item->mcs_decl;
-			MEMBERCACHE_ENDREAD(&tp_self->tp_class_cache);
-			return DeeClass_SetInstanceAttribute(type, catt, value);
+			decl = item->mcs_decl;
+			Dee_membercache_releasetable(&tp_self->tp_class_cache, table);
+			return DeeClass_SetInstanceAttribute(decl, catt, value);
 		}
 
 		default: __builtin_unreachable();
 		}
 	}
-done:
-	MEMBERCACHE_ENDREAD(&tp_self->tp_class_cache);
+	Dee_membercache_releasetable(&tp_self->tp_class_cache, table);
+cache_miss:
 	return 1;
 err:
 	return -1;
@@ -921,44 +1000,49 @@ INTERN WUNUSED NONNULL((1, 2, IFELSE(4, 5))) int DCALL
 NLen(DeeType_SetCachedInstanceAttr)(DeeTypeObject *tp_self,
                                     ATTR_ARG, dhash_t hash,
                                     DeeObject *value) {
+	DREF struct Dee_membercache_table *table;
 	dhash_t i, perturb;
-	MEMBERCACHE_READ(&tp_self->tp_cache);
-	if unlikely(!tp_self->tp_cache.mc_table)
-		goto done;
-	perturb = i = MEMBERCACHE_HASHST(&tp_self->tp_cache, hash);
-	for (;; MEMBERCACHE_HASHNX(i, perturb)) {
-		struct membercache_slot *item = MEMBERCACHE_HASHIT(&tp_self->tp_cache, i);
-		if (item->mcs_type == MEMBERCACHE_UNUSED)
+	if unlikely(!Dee_membercache_acquiretable(&tp_self->tp_cache, &table))
+		goto cache_miss;
+	perturb = i = Dee_membercache_table_hashst(table, hash);
+	for (;; Dee_membercache_table_hashnx(i, perturb)) {
+		struct Dee_membercache_slot *item;
+		uint16_t type;
+		item = Dee_membercache_table_hashit(table, i);
+		type = atomic_read(&item->mcs_type);
+		if (type == MEMBERCACHE_UNUSED)
 			break;
 		if (item->mcs_hash != hash)
 			continue;
+		if unlikely(type == MEMBERCACHE_UNINITIALIZED)
+			continue; /* Don't dereference uninitialized items! */
 		if (!ATTREQ(item))
 			continue;
-		switch (item->mcs_type) {
+		switch (type) {
 
 		case MEMBERCACHE_METHOD:
 		case MEMBERCACHE_GETSET:
 		case MEMBERCACHE_MEMBER: {
-			DeeTypeObject *type;
-			type = item->mcs_decl;
-			MEMBERCACHE_ENDREAD(&tp_self->tp_cache);
-			return err_cant_access_attribute(type, attr, ATTR_ACCESS_SET);
+			DeeTypeObject *decl;
+			decl = item->mcs_decl;
+			Dee_membercache_releasetable(&tp_self->tp_cache, table);
+			return err_cant_access_attribute(decl, attr, ATTR_ACCESS_SET);
 		}
 
 		case MEMBERCACHE_ATTRIB: {
 			struct class_attribute *catt;
-			DeeTypeObject *type;
+			DeeTypeObject *decl;
 			catt = item->mcs_attrib.a_attr;
-			type = item->mcs_decl;
-			MEMBERCACHE_ENDREAD(&tp_self->tp_cache);
-			return DeeClass_SetInstanceAttribute(type, catt, value);
+			decl = item->mcs_decl;
+			Dee_membercache_releasetable(&tp_self->tp_cache, table);
+			return DeeClass_SetInstanceAttribute(decl, catt, value);
 		}
 
 		default: __builtin_unreachable();
 		}
 	}
-done:
-	MEMBERCACHE_ENDREAD(&tp_self->tp_cache);
+	Dee_membercache_releasetable(&tp_self->tp_cache, table);
+cache_miss:
 	return 1;
 }
 
@@ -971,27 +1055,32 @@ NLen(DeeType_SetBasicCachedAttr)(DeeTypeObject *tp_self,
                                  DeeObject *self,
                                  ATTR_ARG, dhash_t hash,
                                  DeeObject *value) {
+	DREF struct Dee_membercache_table *table;
 	dhash_t i, perturb;
-	MEMBERCACHE_READ(&tp_self->tp_cache);
-	if unlikely(!tp_self->tp_cache.mc_table)
-		goto done;
-	perturb = i = MEMBERCACHE_HASHST(&tp_self->tp_cache, hash);
-	for (;; MEMBERCACHE_HASHNX(i, perturb)) {
-		struct membercache_slot *item = MEMBERCACHE_HASHIT(&tp_self->tp_cache, i);
-		if (item->mcs_type == MEMBERCACHE_UNUSED)
+	if unlikely(!Dee_membercache_acquiretable(&tp_self->tp_cache, &table))
+		goto cache_miss;
+	perturb = i = Dee_membercache_table_hashst(table, hash);
+	for (;; Dee_membercache_table_hashnx(i, perturb)) {
+		struct Dee_membercache_slot *item;
+		uint16_t type;
+		item = Dee_membercache_table_hashit(table, i);
+		type = atomic_read(&item->mcs_type);
+		if (type == MEMBERCACHE_UNUSED)
 			break;
 		if (item->mcs_hash != hash)
 			continue;
+		if unlikely(type == MEMBERCACHE_UNINITIALIZED)
+			continue; /* Don't dereference uninitialized items! */
 		if (!ATTREQ(item))
 			continue;
-		switch (item->mcs_type) {
+		switch (type) {
 
 		case MEMBERCACHE_MEMBER: {
 			struct buffer {
 				uint8_t dat[offsetof(struct type_member, m_doc)];
 			} buf;
 			buf = *(struct buffer *)&item->mcs_member;
-			MEMBERCACHE_ENDREAD(&tp_self->tp_cache);
+			Dee_membercache_releasetable(&tp_self->tp_cache, table);
 			return type_member_set((struct type_member const *)&buf, self, value);
 		}
 
@@ -1000,19 +1089,19 @@ NLen(DeeType_SetBasicCachedAttr)(DeeTypeObject *tp_self,
 			struct class_desc *desc;
 			catt = item->mcs_attrib.a_attr;
 			desc = item->mcs_attrib.a_desc;
-			MEMBERCACHE_ENDREAD(&tp_self->tp_cache);
+			Dee_membercache_releasetable(&tp_self->tp_cache, table);
 			return DeeInstance_SetBasicAttribute(desc,
 			                                     DeeInstance_DESC(desc, self),
 			                                     self, catt, value);
 		}
 
 		default:
-			MEMBERCACHE_ENDREAD(&tp_self->tp_cache);
+			Dee_membercache_releasetable(&tp_self->tp_cache, table);
 			return 2;
 		}
 	}
-done:
-	MEMBERCACHE_ENDREAD(&tp_self->tp_cache);
+	Dee_membercache_releasetable(&tp_self->tp_cache, table);
+cache_miss:
 	return 1;
 }
 
@@ -1020,27 +1109,32 @@ INTERN WUNUSED NONNULL((1, 2, IFELSE(4, 5))) int DCALL
 NLen(DeeType_SetBasicCachedClassAttr)(DeeTypeObject *tp_self,
                                       ATTR_ARG, dhash_t hash,
                                       DeeObject *value) {
+	DREF struct Dee_membercache_table *table;
 	dhash_t i, perturb;
-	MEMBERCACHE_READ(&tp_self->tp_class_cache);
-	if unlikely(!tp_self->tp_class_cache.mc_table)
-		goto done;
-	perturb = i = MEMBERCACHE_HASHST(&tp_self->tp_class_cache, hash);
-	for (;; MEMBERCACHE_HASHNX(i, perturb)) {
-		struct membercache_slot *item = MEMBERCACHE_HASHIT(&tp_self->tp_class_cache, i);
-		if (item->mcs_type == MEMBERCACHE_UNUSED)
+	if unlikely(!Dee_membercache_acquiretable(&tp_self->tp_class_cache, &table))
+		goto cache_miss;
+	perturb = i = Dee_membercache_table_hashst(table, hash);
+	for (;; Dee_membercache_table_hashnx(i, perturb)) {
+		struct Dee_membercache_slot *item;
+		uint16_t type;
+		item = Dee_membercache_table_hashit(table, i);
+		type = atomic_read(&item->mcs_type);
+		if (type == MEMBERCACHE_UNUSED)
 			break;
 		if (item->mcs_hash != hash)
 			continue;
+		if unlikely(type == MEMBERCACHE_UNINITIALIZED)
+			continue; /* Don't dereference uninitialized items! */
 		if (!ATTREQ(item))
 			continue;
-		switch (item->mcs_type) {
+		switch (type) {
 
 		case MEMBERCACHE_MEMBER: {
 			struct buffer {
 				uint8_t dat[offsetof(struct type_member, m_doc)];
 			} buf;
 			buf = *(struct buffer *)&item->mcs_member;
-			MEMBERCACHE_ENDREAD(&tp_self->tp_class_cache);
+			Dee_membercache_releasetable(&tp_self->tp_class_cache, table);
 			return type_member_set((struct type_member const *)&buf, (DeeObject *)tp_self, value);
 		}
 
@@ -1049,26 +1143,26 @@ NLen(DeeType_SetBasicCachedClassAttr)(DeeTypeObject *tp_self,
 			struct class_desc *desc;
 			catt = item->mcs_attrib.a_attr;
 			desc = item->mcs_attrib.a_desc;
-			MEMBERCACHE_ENDREAD(&tp_self->tp_class_cache);
+			Dee_membercache_releasetable(&tp_self->tp_class_cache, table);
 			return DeeInstance_SetBasicAttribute(desc, class_desc_as_instance(desc), (DeeObject *)tp_self, catt, value);
 		}
 
 		case MEMBERCACHE_INSTANCE_ATTRIB: {
 			struct class_attribute *catt;
-			DeeTypeObject *type;
+			DeeTypeObject *decl;
 			catt = item->mcs_attrib.a_attr;
-			type = item->mcs_decl;
-			MEMBERCACHE_ENDREAD(&tp_self->tp_class_cache);
-			return DeeClass_SetBasicInstanceAttribute(type, catt, value);
+			decl = item->mcs_decl;
+			Dee_membercache_releasetable(&tp_self->tp_class_cache, table);
+			return DeeClass_SetBasicInstanceAttribute(decl, catt, value);
 		}
 
 		default:
-			MEMBERCACHE_ENDREAD(&tp_self->tp_cache);
+			Dee_membercache_releasetable(&tp_self->tp_cache, table);
 			return 2;
 		}
 	}
-done:
-	MEMBERCACHE_ENDREAD(&tp_self->tp_class_cache);
+	Dee_membercache_releasetable(&tp_self->tp_class_cache, table);
+cache_miss:
 	return 1;
 }
 
@@ -1077,37 +1171,42 @@ INTERN WUNUSED NONNULL((1, 2, IFELSE(4, 5))) int DCALL
 NLen(DeeType_SetBasicCachedInstanceAttr)(DeeTypeObject *tp_self,
                                          ATTR_ARG, dhash_t hash,
                                          DeeObject *value) {
+	DREF struct Dee_membercache_table *table;
 	dhash_t i, perturb;
-	MEMBERCACHE_READ(&tp_self->tp_cache);
-	if unlikely(!tp_self->tp_cache.mc_table)
-		goto done;
-	perturb = i = MEMBERCACHE_HASHST(&tp_self->tp_cache, hash);
-	for (;; MEMBERCACHE_HASHNX(i, perturb)) {
-		struct membercache_slot *item = MEMBERCACHE_HASHIT(&tp_self->tp_cache, i);
-		if (item->mcs_type == MEMBERCACHE_UNUSED)
+	if unlikely(!Dee_membercache_acquiretable(&tp_self->tp_cache, &table))
+		goto cache_miss;
+	perturb = i = Dee_membercache_table_hashst(table, hash);
+	for (;; Dee_membercache_table_hashnx(i, perturb)) {
+		struct Dee_membercache_slot *item;
+		uint16_t type;
+		item = Dee_membercache_table_hashit(table, i);
+		type = atomic_read(&item->mcs_type);
+		if (type == MEMBERCACHE_UNUSED)
 			break;
 		if (item->mcs_hash != hash)
 			continue;
+		if unlikely(type == MEMBERCACHE_UNINITIALIZED)
+			continue; /* Don't dereference uninitialized items! */
 		if (!ATTREQ(item))
 			continue;
-		switch (item->mcs_type) {
+		switch (type) {
 
 		case MEMBERCACHE_ATTRIB: {
 			struct class_attribute *catt;
-			DeeTypeObject *type;
+			DeeTypeObject *decl;
 			catt = item->mcs_attrib.a_attr;
-			type = item->mcs_decl;
-			MEMBERCACHE_ENDREAD(&tp_self->tp_class_cache);
-			return DeeClass_SetBasicInstanceAttribute(type, catt, value);
+			decl = item->mcs_decl;
+			Dee_membercache_releasetable(&tp_self->tp_class_cache, table);
+			return DeeClass_SetBasicInstanceAttribute(decl, catt, value);
 		}
 
 		default:
-			MEMBERCACHE_ENDREAD(&tp_self->tp_cache);
+			Dee_membercache_releasetable(&tp_self->tp_cache, table);
 			return 2;
 		}
 	}
-done:
-	MEMBERCACHE_ENDREAD(&tp_self->tp_cache);
+	Dee_membercache_releasetable(&tp_self->tp_cache, table);
+cache_miss:
 	return 1;
 }
 #endif
@@ -1120,39 +1219,44 @@ NLen(DeeType_CallCachedAttr)(DeeTypeObject *tp_self,
                              DeeObject *self,
                              ATTR_ARG, dhash_t hash,
                              size_t argc, DeeObject *const *argv) {
+	DREF struct Dee_membercache_table *table;
 	dhash_t i, perturb;
 	DREF DeeObject *callback, *result;
-	MEMBERCACHE_READ(&tp_self->tp_cache);
-	if unlikely(!tp_self->tp_cache.mc_table)
-		goto done;
-	perturb = i = MEMBERCACHE_HASHST(&tp_self->tp_cache, hash);
-	for (;; MEMBERCACHE_HASHNX(i, perturb)) {
-		struct membercache_slot *item = MEMBERCACHE_HASHIT(&tp_self->tp_cache, i);
-		if (item->mcs_type == MEMBERCACHE_UNUSED)
+	if unlikely(!Dee_membercache_acquiretable(&tp_self->tp_cache, &table))
+		goto cache_miss;
+	perturb = i = Dee_membercache_table_hashst(table, hash);
+	for (;; Dee_membercache_table_hashnx(i, perturb)) {
+		struct Dee_membercache_slot *item;
+		uint16_t type;
+		item = Dee_membercache_table_hashit(table, i);
+		type = atomic_read(&item->mcs_type);
+		if (type == MEMBERCACHE_UNUSED)
 			break;
 		if (item->mcs_hash != hash)
 			continue;
+		if unlikely(type == MEMBERCACHE_UNINITIALIZED)
+			continue; /* Don't dereference uninitialized items! */
 		if (!ATTREQ(item))
 			continue;
-		switch (item->mcs_type) {
+		switch (type) {
 
 		case MEMBERCACHE_METHOD: {
 			dobjmethod_t func;
 			func = item->mcs_method.m_func;
 			if (item->mcs_method.m_flag & TYPE_METHOD_FKWDS) {
-				MEMBERCACHE_ENDREAD(&tp_self->tp_cache);
+				Dee_membercache_releasetable(&tp_self->tp_cache, table);
 				return (*(dkwobjmethod_t)func)(self, argc, argv, NULL);
 			}
-			MEMBERCACHE_ENDREAD(&tp_self->tp_cache);
+			Dee_membercache_releasetable(&tp_self->tp_cache, table);
 			return (*func)(self, argc, argv);
 		}
 
 		case MEMBERCACHE_GETSET: {
 			dgetmethod_t getter;
-			DeeTypeObject *type;
+			DeeTypeObject *decl;
 			getter = item->mcs_getset.gs_get;
 			if likely(getter) {
-				MEMBERCACHE_ENDREAD(&tp_self->tp_cache);
+				Dee_membercache_releasetable(&tp_self->tp_cache, table);
 				callback = (*getter)(self);
 check_and_invoke_callback:
 				if unlikely(!callback)
@@ -1161,9 +1265,9 @@ check_and_invoke_callback:
 				Dee_Decref(callback);
 				return result;
 			}
-			type = item->mcs_decl;
-			MEMBERCACHE_ENDREAD(&tp_self->tp_cache);
-			err_cant_access_attribute(type, attr, ATTR_ACCESS_GET);
+			decl = item->mcs_decl;
+			Dee_membercache_releasetable(&tp_self->tp_cache, table);
+			err_cant_access_attribute(decl, attr, ATTR_ACCESS_GET);
 			goto err;
 		}
 
@@ -1172,7 +1276,7 @@ check_and_invoke_callback:
 				uint8_t dat[offsetof(struct type_member, m_doc)];
 			} buf;
 			buf = *(struct buffer *)&item->mcs_member;
-			MEMBERCACHE_ENDREAD(&tp_self->tp_cache);
+			Dee_membercache_releasetable(&tp_self->tp_cache, table);
 			callback = type_member_get((struct type_member const *)&buf, self);
 			goto check_and_invoke_callback;
 		}
@@ -1182,7 +1286,7 @@ check_and_invoke_callback:
 			struct class_desc *desc;
 			catt = item->mcs_attrib.a_attr;
 			desc = item->mcs_attrib.a_desc;
-			MEMBERCACHE_ENDREAD(&tp_self->tp_cache);
+			Dee_membercache_releasetable(&tp_self->tp_cache, table);
 			return DeeInstance_CallAttribute(desc,
 			                                 DeeInstance_DESC(desc, self),
 			                                 self, catt, argc, argv);
@@ -1191,8 +1295,8 @@ check_and_invoke_callback:
 		default: __builtin_unreachable();
 		}
 	}
-done:
-	MEMBERCACHE_ENDREAD(&tp_self->tp_cache);
+	Dee_membercache_releasetable(&tp_self->tp_cache, table);
+cache_miss:
 	return ITER_DONE;
 err:
 	return NULL;
@@ -1233,39 +1337,44 @@ INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 NLen(DeeType_CallCachedClassAttr)(DeeTypeObject *tp_self,
                                   ATTR_ARG, dhash_t hash,
                                   size_t argc, DeeObject *const *argv) {
+	DREF struct Dee_membercache_table *table;
 	dhash_t i, perturb;
 	DREF DeeObject *callback, *result;
-	MEMBERCACHE_READ(&tp_self->tp_class_cache);
-	if unlikely(!tp_self->tp_class_cache.mc_table)
-		goto done;
-	perturb = i = MEMBERCACHE_HASHST(&tp_self->tp_class_cache, hash);
-	for (;; MEMBERCACHE_HASHNX(i, perturb)) {
-		struct membercache_slot *item = MEMBERCACHE_HASHIT(&tp_self->tp_class_cache, i);
-		if (item->mcs_type == MEMBERCACHE_UNUSED)
+	if unlikely(!Dee_membercache_acquiretable(&tp_self->tp_class_cache, &table))
+		goto cache_miss;
+	perturb = i = Dee_membercache_table_hashst(table, hash);
+	for (;; Dee_membercache_table_hashnx(i, perturb)) {
+		struct Dee_membercache_slot *item;
+		uint16_t type;
+		item = Dee_membercache_table_hashit(table, i);
+		type = atomic_read(&item->mcs_type);
+		if (type == MEMBERCACHE_UNUSED)
 			break;
 		if (item->mcs_hash != hash)
 			continue;
+		if unlikely(type == MEMBERCACHE_UNINITIALIZED)
+			continue; /* Don't dereference uninitialized items! */
 		if (!ATTREQ(item))
 			continue;
-		switch (item->mcs_type) {
+		switch (type) {
 
 		case MEMBERCACHE_METHOD: {
 			dobjmethod_t func;
 			func = item->mcs_method.m_func;
 			if (item->mcs_method.m_flag & TYPE_METHOD_FKWDS) {
-				MEMBERCACHE_ENDREAD(&tp_self->tp_class_cache);
+				Dee_membercache_releasetable(&tp_self->tp_class_cache, table);
 				return (*(dkwobjmethod_t)func)((DeeObject *)tp_self, argc, argv, NULL);
 			}
-			MEMBERCACHE_ENDREAD(&tp_self->tp_class_cache);
+			Dee_membercache_releasetable(&tp_self->tp_class_cache, table);
 			return (*func)((DeeObject *)tp_self, argc, argv);
 		}
 
 		case MEMBERCACHE_GETSET: {
 			dgetmethod_t getter;
-			DeeTypeObject *type;
+			DeeTypeObject *decl;
 			getter = item->mcs_getset.gs_get;
 			if likely(getter) {
-				MEMBERCACHE_ENDREAD(&tp_self->tp_class_cache);
+				Dee_membercache_releasetable(&tp_self->tp_class_cache, table);
 				callback = (*getter)((DeeObject *)tp_self);
 check_and_invoke_callback:
 				if unlikely(!callback)
@@ -1274,9 +1383,9 @@ check_and_invoke_callback:
 				Dee_Decref(callback);
 				return result;
 			}
-			type = item->mcs_decl;
-			MEMBERCACHE_ENDREAD(&tp_self->tp_class_cache);
-			err_cant_access_attribute(type, attr, ATTR_ACCESS_GET);
+			decl = item->mcs_decl;
+			Dee_membercache_releasetable(&tp_self->tp_class_cache, table);
+			err_cant_access_attribute(decl, attr, ATTR_ACCESS_GET);
 			goto err;
 		}
 
@@ -1285,7 +1394,7 @@ check_and_invoke_callback:
 				uint8_t dat[offsetof(struct type_member, m_doc)];
 			} buf;
 			buf = *(struct buffer *)&item->mcs_member;
-			MEMBERCACHE_ENDREAD(&tp_self->tp_class_cache);
+			Dee_membercache_releasetable(&tp_self->tp_class_cache, table);
 			callback = type_member_get((struct type_member const *)&buf, (DeeObject *)tp_self);
 			goto check_and_invoke_callback;
 		}
@@ -1295,30 +1404,30 @@ check_and_invoke_callback:
 			struct class_desc *desc;
 			catt = item->mcs_attrib.a_attr;
 			desc = item->mcs_attrib.a_desc;
-			MEMBERCACHE_ENDREAD(&tp_self->tp_class_cache);
+			Dee_membercache_releasetable(&tp_self->tp_class_cache, table);
 			return DeeInstance_CallAttribute(desc, class_desc_as_instance(desc), (DeeObject *)tp_self, catt, argc, argv);
 		}
 
 		case MEMBERCACHE_INSTANCE_METHOD: {
 			dobjmethod_t func;
-			DeeTypeObject *type;
+			DeeTypeObject *decl;
 			func = item->mcs_method.m_func;
-			type = item->mcs_decl;
+			decl = item->mcs_decl;
 			if (item->mcs_method.m_flag & TYPE_METHOD_FKWDS) {
-				MEMBERCACHE_ENDREAD(&tp_self->tp_class_cache);
+				Dee_membercache_releasetable(&tp_self->tp_class_cache, table);
 				if unlikely(!argc)
 					goto err_classmethod_noargs;
 				/* Allow non-instance objects for generic types. */
-				if unlikely(!(type->tp_flags & TP_FABSTRACT) && DeeObject_AssertType(argv[0], type))
+				if unlikely(!(decl->tp_flags & TP_FABSTRACT) && DeeObject_AssertType(argv[0], decl))
 					goto err;
 				/* Use the first argument as the this-argument. */
 				return (*(dkwobjmethod_t)func)(argv[0], argc - 1, argv + 1, NULL);
 			}
-			MEMBERCACHE_ENDREAD(&tp_self->tp_class_cache);
+			Dee_membercache_releasetable(&tp_self->tp_class_cache, table);
 			if unlikely(!argc)
 				goto err_classmethod_noargs;
 			/* Allow non-instance objects for generic types. */
-			if unlikely(!(type->tp_flags & TP_FABSTRACT) && DeeObject_AssertType(argv[0], type))
+			if unlikely(!(decl->tp_flags & TP_FABSTRACT) && DeeObject_AssertType(argv[0], decl))
 				goto err;
 			/* Use the first argument as the this-argument. */
 			return (*func)(argv[0], argc - 1, argv + 1);
@@ -1326,16 +1435,16 @@ check_and_invoke_callback:
 
 		case MEMBERCACHE_INSTANCE_GETSET: {
 			dgetmethod_t get;
-			DeeTypeObject *type;
+			DeeTypeObject *decl;
 			get  = item->mcs_getset.gs_get;
-			type = item->mcs_decl;
-			MEMBERCACHE_ENDREAD(&tp_self->tp_class_cache);
+			decl = item->mcs_decl;
+			Dee_membercache_releasetable(&tp_self->tp_class_cache, table);
 			if unlikely(!get)
 				goto err_no_getter;
 			if unlikely(argc != 1)
 				goto err_classproperty_invalid_args;
 			/* Allow non-instance objects for generic types. */
-			if unlikely(!(type->tp_flags & TP_FABSTRACT) && DeeObject_AssertType(argv[0], type))
+			if unlikely(!(decl->tp_flags & TP_FABSTRACT) && DeeObject_AssertType(argv[0], decl))
 				goto err;
 			/* Use the first argument as the this-argument. */
 			return (*get)(argv[0]);
@@ -1343,14 +1452,14 @@ check_and_invoke_callback:
 
 		case MEMBERCACHE_INSTANCE_MEMBER: {
 			struct type_member member;
-			DeeTypeObject *type;
+			DeeTypeObject *decl;
 			member = item->mcs_member;
-			type   = item->mcs_decl;
-			MEMBERCACHE_ENDREAD(&tp_self->tp_class_cache);
+			decl   = item->mcs_decl;
+			Dee_membercache_releasetable(&tp_self->tp_class_cache, table);
 			if unlikely(argc != 1)
 				goto err_classmember_invalid_args;
 			/* Allow non-instance objects for generic types. */
-			if unlikely(!(type->tp_flags & TP_FABSTRACT) && DeeObject_AssertType(argv[0], type))
+			if unlikely(!(decl->tp_flags & TP_FABSTRACT) && DeeObject_AssertType(argv[0], decl))
 				goto err;
 			/* Use the first argument as the this-argument. */
 			return type_member_get(&member, argv[0]);
@@ -1358,18 +1467,18 @@ check_and_invoke_callback:
 
 		case MEMBERCACHE_INSTANCE_ATTRIB: {
 			struct class_attribute *catt;
-			DeeTypeObject *type;
+			DeeTypeObject *decl;
 			catt = item->mcs_attrib.a_attr;
-			type = item->mcs_decl;
-			MEMBERCACHE_ENDREAD(&tp_self->tp_class_cache);
-			return DeeClass_CallInstanceAttribute(type, catt, argc, argv);
+			decl = item->mcs_decl;
+			Dee_membercache_releasetable(&tp_self->tp_class_cache, table);
+			return DeeClass_CallInstanceAttribute(decl, catt, argc, argv);
 		}
 
 		default: __builtin_unreachable();
 		}
 	}
-done:
-	MEMBERCACHE_ENDREAD(&tp_self->tp_class_cache);
+	Dee_membercache_releasetable(&tp_self->tp_class_cache, table);
+cache_miss:
 	return ITER_DONE;
 err_no_getter:
 	err_cant_access_clsproperty_get();
@@ -1391,42 +1500,47 @@ INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 NLen(DeeType_CallCachedInstanceAttr)(DeeTypeObject *tp_self,
                                      ATTR_ARG, dhash_t hash,
                                      size_t argc, DeeObject *const *argv) {
+	DREF struct Dee_membercache_table *table;
 	dhash_t i, perturb;
 	DREF DeeObject *callback, *result;
-	MEMBERCACHE_READ(&tp_self->tp_cache);
-	if unlikely(!tp_self->tp_cache.mc_table)
-		goto done;
-	perturb = i = MEMBERCACHE_HASHST(&tp_self->tp_cache, hash);
-	for (;; MEMBERCACHE_HASHNX(i, perturb)) {
-		struct membercache_slot *item = MEMBERCACHE_HASHIT(&tp_self->tp_cache, i);
-		if (item->mcs_type == MEMBERCACHE_UNUSED)
+	if unlikely(!Dee_membercache_acquiretable(&tp_self->tp_cache, &table))
+		goto cache_miss;
+	perturb = i = Dee_membercache_table_hashst(table, hash);
+	for (;; Dee_membercache_table_hashnx(i, perturb)) {
+		struct Dee_membercache_slot *item;
+		uint16_t type;
+		item = Dee_membercache_table_hashit(table, i);
+		type = atomic_read(&item->mcs_type);
+		if (type == MEMBERCACHE_UNUSED)
 			break;
 		if (item->mcs_hash != hash)
 			continue;
+		if unlikely(type == MEMBERCACHE_UNINITIALIZED)
+			continue; /* Don't dereference uninitialized items! */
 		if (!ATTREQ(item))
 			continue;
-		switch (item->mcs_type) {
+		switch (type) {
 
 		case MEMBERCACHE_METHOD: {
 			dobjmethod_t func;
-			DeeTypeObject *type;
+			DeeTypeObject *decl;
 			func = item->mcs_method.m_func;
-			type = item->mcs_decl;
+			decl = item->mcs_decl;
 			if (item->mcs_method.m_flag & TYPE_METHOD_FKWDS) {
-				MEMBERCACHE_ENDREAD(&tp_self->tp_cache);
+				Dee_membercache_releasetable(&tp_self->tp_cache, table);
 				if unlikely(!argc)
 					goto err_classmethod_noargs;
 				/* Allow non-instance objects for generic types. */
-				if unlikely(!(type->tp_flags & TP_FABSTRACT) && DeeObject_AssertType(argv[0], type))
+				if unlikely(!(decl->tp_flags & TP_FABSTRACT) && DeeObject_AssertType(argv[0], decl))
 					goto err;
 				/* Use the first argument as the this-argument. */
 				return (*(dkwobjmethod_t)func)(argv[0], argc - 1, argv + 1, NULL);
 			}
-			MEMBERCACHE_ENDREAD(&tp_self->tp_cache);
+			Dee_membercache_releasetable(&tp_self->tp_cache, table);
 			if unlikely(!argc)
 				goto err_classmethod_noargs;
 			/* Allow non-instance objects for generic types. */
-			if unlikely(!(type->tp_flags & TP_FABSTRACT) && DeeObject_AssertType(argv[0], type))
+			if unlikely(!(decl->tp_flags & TP_FABSTRACT) && DeeObject_AssertType(argv[0], decl))
 				goto err;
 			/* Use the first argument as the this-argument. */
 			return (*func)(argv[0], argc - 1, argv + 1);
@@ -1434,16 +1548,16 @@ NLen(DeeType_CallCachedInstanceAttr)(DeeTypeObject *tp_self,
 
 		case MEMBERCACHE_GETSET: {
 			dgetmethod_t get;
-			DeeTypeObject *type;
+			DeeTypeObject *decl;
 			get  = item->mcs_getset.gs_get;
-			type = item->mcs_decl;
-			MEMBERCACHE_ENDREAD(&tp_self->tp_cache);
+			decl = item->mcs_decl;
+			Dee_membercache_releasetable(&tp_self->tp_cache, table);
 			if unlikely(!get)
 				goto err_no_getter;
 			if unlikely(argc != 1)
 				goto err_classproperty_invalid_args;
 			/* Allow non-instance objects for generic types. */
-			if unlikely(!(type->tp_flags & TP_FABSTRACT) && DeeObject_AssertType(argv[0], type))
+			if unlikely(!(decl->tp_flags & TP_FABSTRACT) && DeeObject_AssertType(argv[0], decl))
 				goto err;
 			/* Use the first argument as the this-argument. */
 			return (*get)(argv[0]);
@@ -1451,14 +1565,14 @@ NLen(DeeType_CallCachedInstanceAttr)(DeeTypeObject *tp_self,
 
 		case MEMBERCACHE_MEMBER: {
 			struct type_member member;
-			DeeTypeObject *type;
+			DeeTypeObject *decl;
 			member = item->mcs_member;
-			type   = item->mcs_decl;
-			MEMBERCACHE_ENDREAD(&tp_self->tp_cache);
+			decl   = item->mcs_decl;
+			Dee_membercache_releasetable(&tp_self->tp_cache, table);
 			if unlikely(argc != 1)
 				goto err_classmember_invalid_args;
 			/* Allow non-instance objects for generic types. */
-			if unlikely(!(type->tp_flags & TP_FABSTRACT) && DeeObject_AssertType(argv[0], type))
+			if unlikely(!(decl->tp_flags & TP_FABSTRACT) && DeeObject_AssertType(argv[0], decl))
 				goto err;
 			/* Use the first argument as the this-argument. */
 			return type_member_get(&member, argv[0]);
@@ -1466,18 +1580,18 @@ NLen(DeeType_CallCachedInstanceAttr)(DeeTypeObject *tp_self,
 
 		case MEMBERCACHE_ATTRIB: {
 			struct class_attribute *catt;
-			DeeTypeObject *type;
+			DeeTypeObject *decl;
 			catt = item->mcs_attrib.a_attr;
-			type = item->mcs_decl;
-			MEMBERCACHE_ENDREAD(&tp_self->tp_cache);
-			return DeeClass_CallInstanceAttribute(type, catt, argc, argv);
+			decl = item->mcs_decl;
+			Dee_membercache_releasetable(&tp_self->tp_cache, table);
+			return DeeClass_CallInstanceAttribute(decl, catt, argc, argv);
 		}
 
 		default: __builtin_unreachable();
 		}
 	}
-done:
-	MEMBERCACHE_ENDREAD(&tp_self->tp_cache);
+	Dee_membercache_releasetable(&tp_self->tp_cache, table);
+cache_miss:
 	return ITER_DONE;
 err_no_getter:
 	err_cant_access_clsproperty_get();
@@ -1505,30 +1619,35 @@ S(DeeType_CallCachedAttrKw,
                                ATTR_ARG, dhash_t hash,
                                size_t argc, DeeObject *const *argv,
                                DeeObject *kw) {
+	DREF struct Dee_membercache_table *table;
 	dhash_t i, perturb;
 	DREF DeeObject *callback, *result;
-	MEMBERCACHE_READ(&tp_self->tp_cache);
-	if unlikely(!tp_self->tp_cache.mc_table)
-		goto done;
-	perturb = i = MEMBERCACHE_HASHST(&tp_self->tp_cache, hash);
-	for (;; MEMBERCACHE_HASHNX(i, perturb)) {
-		struct membercache_slot *item = MEMBERCACHE_HASHIT(&tp_self->tp_cache, i);
-		if (item->mcs_type == MEMBERCACHE_UNUSED)
+	if unlikely(!Dee_membercache_acquiretable(&tp_self->tp_cache, &table))
+		goto cache_miss;
+	perturb = i = Dee_membercache_table_hashst(table, hash);
+	for (;; Dee_membercache_table_hashnx(i, perturb)) {
+		struct Dee_membercache_slot *item;
+		uint16_t type;
+		item = Dee_membercache_table_hashit(table, i);
+		type = atomic_read(&item->mcs_type);
+		if (type == MEMBERCACHE_UNUSED)
 			break;
 		if (item->mcs_hash != hash)
 			continue;
+		if unlikely(type == MEMBERCACHE_UNINITIALIZED)
+			continue; /* Don't dereference uninitialized items! */
 		if (!ATTREQ(item))
 			continue;
-		switch (item->mcs_type) {
+		switch (type) {
 
 		case MEMBERCACHE_METHOD: {
 			dobjmethod_t func;
 			func = item->mcs_method.m_func;
 			if (item->mcs_method.m_flag & TYPE_METHOD_FKWDS) {
-				MEMBERCACHE_ENDREAD(&tp_self->tp_cache);
+				Dee_membercache_releasetable(&tp_self->tp_cache, table);
 				return (*(dkwobjmethod_t)func)(self, argc, argv, kw);
 			}
-			MEMBERCACHE_ENDREAD(&tp_self->tp_cache);
+			Dee_membercache_releasetable(&tp_self->tp_cache, table);
 			if (kw) {
 				if (DeeKwds_Check(kw)) {
 					if (DeeKwds_SIZE(kw) != 0)
@@ -1546,10 +1665,10 @@ S(DeeType_CallCachedAttrKw,
 
 		case MEMBERCACHE_GETSET: {
 			dgetmethod_t getter;
-			DeeTypeObject *type;
+			DeeTypeObject *decl;
 			getter = item->mcs_getset.gs_get;
 			if likely(getter) {
-				MEMBERCACHE_ENDREAD(&tp_self->tp_cache);
+				Dee_membercache_releasetable(&tp_self->tp_cache, table);
 				callback = (*getter)(self);
 check_and_invoke_callback:
 				if unlikely(!callback)
@@ -1558,9 +1677,9 @@ check_and_invoke_callback:
 				Dee_Decref(callback);
 				return result;
 			}
-			type = item->mcs_decl;
-			MEMBERCACHE_ENDREAD(&tp_self->tp_cache);
-			err_cant_access_attribute(type, attr, ATTR_ACCESS_GET);
+			decl = item->mcs_decl;
+			Dee_membercache_releasetable(&tp_self->tp_cache, table);
+			err_cant_access_attribute(decl, attr, ATTR_ACCESS_GET);
 			goto err;
 		}
 
@@ -1569,7 +1688,7 @@ check_and_invoke_callback:
 				uint8_t dat[offsetof(struct type_member, m_doc)];
 			} buf;
 			buf = *(struct buffer *)&item->mcs_member;
-			MEMBERCACHE_ENDREAD(&tp_self->tp_cache);
+			Dee_membercache_releasetable(&tp_self->tp_cache, table);
 			callback = type_member_get((struct type_member const *)&buf, self);
 			goto check_and_invoke_callback;
 		}
@@ -1579,7 +1698,7 @@ check_and_invoke_callback:
 			struct class_desc *desc;
 			catt = item->mcs_attrib.a_attr;
 			desc = item->mcs_attrib.a_desc;
-			MEMBERCACHE_ENDREAD(&tp_self->tp_cache);
+			Dee_membercache_releasetable(&tp_self->tp_cache, table);
 			return DeeInstance_CallAttributeKw(desc,
 			                                   DeeInstance_DESC(desc, self),
 			                                   self, catt, argc, argv, kw);
@@ -1588,8 +1707,8 @@ check_and_invoke_callback:
 		default: __builtin_unreachable();
 		}
 	}
-done:
-	MEMBERCACHE_ENDREAD(&tp_self->tp_cache);
+	Dee_membercache_releasetable(&tp_self->tp_cache, table);
+cache_miss:
 	return ITER_DONE;
 err_no_keywords:
 	err_keywords_func_not_accepted(attr, kw);
@@ -1605,30 +1724,35 @@ S(DeeType_CallCachedClassAttrKw,
                                     ATTR_ARG, dhash_t hash,
                                     size_t argc, DeeObject *const *argv,
                                     DeeObject *kw) {
+	DREF struct Dee_membercache_table *table;
 	dhash_t i, perturb;
 	DREF DeeObject *callback, *result;
-	MEMBERCACHE_READ(&tp_self->tp_class_cache);
-	if unlikely(!tp_self->tp_class_cache.mc_table)
-		goto done;
-	perturb = i = MEMBERCACHE_HASHST(&tp_self->tp_class_cache, hash);
-	for (;; MEMBERCACHE_HASHNX(i, perturb)) {
-		struct membercache_slot *item = MEMBERCACHE_HASHIT(&tp_self->tp_class_cache, i);
-		if (item->mcs_type == MEMBERCACHE_UNUSED)
+	if unlikely(!Dee_membercache_acquiretable(&tp_self->tp_class_cache, &table))
+		goto cache_miss;
+	perturb = i = Dee_membercache_table_hashst(table, hash);
+	for (;; Dee_membercache_table_hashnx(i, perturb)) {
+		struct Dee_membercache_slot *item;
+		uint16_t type;
+		item = Dee_membercache_table_hashit(table, i);
+		type = atomic_read(&item->mcs_type);
+		if (type == MEMBERCACHE_UNUSED)
 			break;
 		if (item->mcs_hash != hash)
 			continue;
+		if unlikely(type == MEMBERCACHE_UNINITIALIZED)
+			continue; /* Don't dereference uninitialized items! */
 		if (!ATTREQ(item))
 			continue;
-		switch (item->mcs_type) {
+		switch (type) {
 
 		case MEMBERCACHE_METHOD: {
 			dobjmethod_t func;
 			func = item->mcs_method.m_func;
 			if (item->mcs_method.m_flag & TYPE_METHOD_FKWDS) {
-				MEMBERCACHE_ENDREAD(&tp_self->tp_class_cache);
+				Dee_membercache_releasetable(&tp_self->tp_class_cache, table);
 				return (*(dkwobjmethod_t)func)((DeeObject *)tp_self, argc, argv, kw);
 			}
-			MEMBERCACHE_ENDREAD(&tp_self->tp_class_cache);
+			Dee_membercache_releasetable(&tp_self->tp_class_cache, table);
 			if (kw) {
 				if (DeeKwds_Check(kw)) {
 					if (DeeKwds_SIZE(kw) != 0)
@@ -1646,10 +1770,10 @@ S(DeeType_CallCachedClassAttrKw,
 
 		case MEMBERCACHE_GETSET: {
 			dgetmethod_t getter;
-			DeeTypeObject *type;
+			DeeTypeObject *decl;
 			getter = item->mcs_getset.gs_get;
 			if likely(getter) {
-				MEMBERCACHE_ENDREAD(&tp_self->tp_class_cache);
+				Dee_membercache_releasetable(&tp_self->tp_class_cache, table);
 				callback = (*getter)((DeeObject *)tp_self);
 check_and_invoke_callback:
 				if unlikely(!callback)
@@ -1658,9 +1782,9 @@ check_and_invoke_callback:
 				Dee_Decref(callback);
 				return result;
 			}
-			type = item->mcs_decl;
-			MEMBERCACHE_ENDREAD(&tp_self->tp_class_cache);
-			err_cant_access_attribute(type, attr, ATTR_ACCESS_GET);
+			decl = item->mcs_decl;
+			Dee_membercache_releasetable(&tp_self->tp_class_cache, table);
+			err_cant_access_attribute(decl, attr, ATTR_ACCESS_GET);
 			goto err;
 		}
 
@@ -1669,7 +1793,7 @@ check_and_invoke_callback:
 				uint8_t dat[offsetof(struct type_member, m_doc)];
 			} buf;
 			buf = *(struct buffer *)&item->mcs_member;
-			MEMBERCACHE_ENDREAD(&tp_self->tp_class_cache);
+			Dee_membercache_releasetable(&tp_self->tp_class_cache, table);
 			callback = type_member_get((struct type_member const *)&buf, (DeeObject *)tp_self);
 			goto check_and_invoke_callback;
 		}
@@ -1679,30 +1803,30 @@ check_and_invoke_callback:
 			struct class_desc *desc;
 			catt = item->mcs_attrib.a_attr;
 			desc = item->mcs_attrib.a_desc;
-			MEMBERCACHE_ENDREAD(&tp_self->tp_class_cache);
+			Dee_membercache_releasetable(&tp_self->tp_class_cache, table);
 			return DeeInstance_CallAttributeKw(desc, class_desc_as_instance(desc), (DeeObject *)tp_self, catt, argc, argv, kw);
 		}
 
 		case MEMBERCACHE_INSTANCE_METHOD: {
 			dobjmethod_t func;
-			DeeTypeObject *type;
+			DeeTypeObject *decl;
 			func = item->mcs_method.m_func;
-			type = item->mcs_decl;
+			decl = item->mcs_decl;
 			if (item->mcs_method.m_flag & TYPE_METHOD_FKWDS) {
-				MEMBERCACHE_ENDREAD(&tp_self->tp_class_cache);
+				Dee_membercache_releasetable(&tp_self->tp_class_cache, table);
 				if unlikely(!argc)
 					goto err_classmethod_noargs;
 				/* Allow non-instance objects for generic types. */
-				if unlikely(!(type->tp_flags & TP_FABSTRACT) && DeeObject_AssertType(argv[0], type))
+				if unlikely(!(decl->tp_flags & TP_FABSTRACT) && DeeObject_AssertType(argv[0], decl))
 					goto err;
 				/* Use the first argument as the this-argument. */
 				return (*(dkwobjmethod_t)func)(argv[0], argc - 1, argv + 1, kw);
 			}
-			MEMBERCACHE_ENDREAD(&tp_self->tp_class_cache);
+			Dee_membercache_releasetable(&tp_self->tp_class_cache, table);
 			if unlikely(!argc)
 				goto err_classmethod_noargs;
 			/* Allow non-instance objects for generic types. */
-			if unlikely(!(type->tp_flags & TP_FABSTRACT) && DeeObject_AssertType(argv[0], type))
+			if unlikely(!(decl->tp_flags & TP_FABSTRACT) && DeeObject_AssertType(argv[0], decl))
 				goto err;
 			if (kw) {
 				if (DeeKwds_Check(kw)) {
@@ -1722,17 +1846,17 @@ check_and_invoke_callback:
 
 		case MEMBERCACHE_INSTANCE_GETSET: {
 			dgetmethod_t get;
-			DeeTypeObject *type;
+			DeeTypeObject *decl;
 			DeeObject *thisarg;
 			get  = item->mcs_getset.gs_get;
-			type = item->mcs_decl;
-			MEMBERCACHE_ENDREAD(&tp_self->tp_class_cache);
+			decl = item->mcs_decl;
+			Dee_membercache_releasetable(&tp_self->tp_class_cache, table);
 			if unlikely(!get)
 				goto err_no_getter;
 			if unlikely(argc != 1)
 				goto err_classproperty_invalid_args;
 			/* Allow non-instance objects for generic types. */
-			if unlikely(!(type->tp_flags & TP_FABSTRACT) && DeeObject_AssertType(argv[0], type))
+			if unlikely(!(decl->tp_flags & TP_FABSTRACT) && DeeObject_AssertType(argv[0], decl))
 				goto err;
 			if (DeeArg_UnpackKw(argc, argv, kw, getter_kwlist, "o:get", &thisarg))
 				goto err;
@@ -1741,15 +1865,15 @@ check_and_invoke_callback:
 
 		case MEMBERCACHE_INSTANCE_MEMBER: {
 			struct type_member member;
-			DeeTypeObject *type;
+			DeeTypeObject *decl;
 			DeeObject *thisarg;
 			member = item->mcs_member;
-			type   = item->mcs_decl;
-			MEMBERCACHE_ENDREAD(&tp_self->tp_class_cache);
+			decl   = item->mcs_decl;
+			Dee_membercache_releasetable(&tp_self->tp_class_cache, table);
 			if unlikely(argc != 1)
 				goto err_classmember_invalid_args;
 			/* Allow non-instance objects for generic types. */
-			if unlikely(!(type->tp_flags & TP_FABSTRACT) && DeeObject_AssertType(argv[0], type))
+			if unlikely(!(decl->tp_flags & TP_FABSTRACT) && DeeObject_AssertType(argv[0], decl))
 				goto err;
 			if (DeeArg_UnpackKw(argc, argv, kw, getter_kwlist, "o:get", &thisarg))
 				goto err;
@@ -1758,18 +1882,18 @@ check_and_invoke_callback:
 
 		case MEMBERCACHE_INSTANCE_ATTRIB: {
 			struct class_attribute *catt;
-			DeeTypeObject *type;
+			DeeTypeObject *decl;
 			catt = item->mcs_attrib.a_attr;
-			type = item->mcs_decl;
-			MEMBERCACHE_ENDREAD(&tp_self->tp_class_cache);
-			return DeeClass_CallInstanceAttributeKw(type, catt, argc, argv, kw);
+			decl = item->mcs_decl;
+			Dee_membercache_releasetable(&tp_self->tp_class_cache, table);
+			return DeeClass_CallInstanceAttributeKw(decl, catt, argc, argv, kw);
 		}
 
 		default: __builtin_unreachable();
 		}
 	}
-done:
-	MEMBERCACHE_ENDREAD(&tp_self->tp_class_cache);
+	Dee_membercache_releasetable(&tp_self->tp_class_cache, table);
+cache_miss:
 	return ITER_DONE;
 err_no_getter:
 	err_cant_access_clsproperty_get();
@@ -1795,41 +1919,46 @@ S(DeeType_CallCachedInstanceAttrKw,
                                        ATTR_ARG, dhash_t hash,
                                        size_t argc, DeeObject *const *argv,
                                        DeeObject *kw) {
+	DREF struct Dee_membercache_table *table;
 	dhash_t i, perturb;
-	MEMBERCACHE_READ(&tp_self->tp_cache);
-	if unlikely(!tp_self->tp_cache.mc_table)
-		goto done;
-	perturb = i = MEMBERCACHE_HASHST(&tp_self->tp_cache, hash);
-	for (;; MEMBERCACHE_HASHNX(i, perturb)) {
-		struct membercache_slot *item = MEMBERCACHE_HASHIT(&tp_self->tp_cache, i);
-		if (item->mcs_type == MEMBERCACHE_UNUSED)
+	if unlikely(!Dee_membercache_acquiretable(&tp_self->tp_cache, &table))
+		goto cache_miss;
+	perturb = i = Dee_membercache_table_hashst(table, hash);
+	for (;; Dee_membercache_table_hashnx(i, perturb)) {
+		struct Dee_membercache_slot *item;
+		uint16_t type;
+		item = Dee_membercache_table_hashit(table, i);
+		type = atomic_read(&item->mcs_type);
+		if (type == MEMBERCACHE_UNUSED)
 			break;
 		if (item->mcs_hash != hash)
 			continue;
+		if unlikely(type == MEMBERCACHE_UNINITIALIZED)
+			continue; /* Don't dereference uninitialized items! */
 		if (!ATTREQ(item))
 			continue;
-		switch (item->mcs_type) {
+		switch (type) {
 
 		case MEMBERCACHE_METHOD: {
 			dobjmethod_t func;
-			DeeTypeObject *type;
+			DeeTypeObject *decl;
 			func = item->mcs_method.m_func;
-			type = item->mcs_decl;
+			decl = item->mcs_decl;
 			if (item->mcs_method.m_flag & TYPE_METHOD_FKWDS) {
-				MEMBERCACHE_ENDREAD(&tp_self->tp_cache);
+				Dee_membercache_releasetable(&tp_self->tp_cache, table);
 				if unlikely(!argc)
 					goto err_classmethod_noargs;
 				/* Allow non-instance objects for generic types. */
-				if unlikely(!(type->tp_flags & TP_FABSTRACT) && DeeObject_AssertType(argv[0], type))
+				if unlikely(!(decl->tp_flags & TP_FABSTRACT) && DeeObject_AssertType(argv[0], decl))
 					goto err;
 				/* Use the first argument as the this-argument. */
 				return (*(dkwobjmethod_t)func)(argv[0], argc - 1, argv + 1, kw);
 			}
-			MEMBERCACHE_ENDREAD(&tp_self->tp_cache);
+			Dee_membercache_releasetable(&tp_self->tp_cache, table);
 			if unlikely(!argc)
 				goto err_classmethod_noargs;
 			/* Allow non-instance objects for generic types. */
-			if unlikely(!(type->tp_flags & TP_FABSTRACT) && DeeObject_AssertType(argv[0], type))
+			if unlikely(!(decl->tp_flags & TP_FABSTRACT) && DeeObject_AssertType(argv[0], decl))
 				goto err;
 			if (kw) {
 				if (DeeKwds_Check(kw)) {
@@ -1849,17 +1978,17 @@ S(DeeType_CallCachedInstanceAttrKw,
 
 		case MEMBERCACHE_GETSET: {
 			dgetmethod_t get;
-			DeeTypeObject *type;
+			DeeTypeObject *decl;
 			DeeObject *thisarg;
 			get  = item->mcs_getset.gs_get;
-			type = item->mcs_decl;
-			MEMBERCACHE_ENDREAD(&tp_self->tp_cache);
+			decl = item->mcs_decl;
+			Dee_membercache_releasetable(&tp_self->tp_cache, table);
 			if unlikely(!get)
 				goto err_no_getter;
 			if unlikely(argc != 1)
 				goto err_classproperty_invalid_args;
 			/* Allow non-instance objects for generic types. */
-			if unlikely(!(type->tp_flags & TP_FABSTRACT) && DeeObject_AssertType(argv[0], type))
+			if unlikely(!(decl->tp_flags & TP_FABSTRACT) && DeeObject_AssertType(argv[0], decl))
 				goto err;
 			if (DeeArg_UnpackKw(argc, argv, kw, getter_kwlist, "o:get", &thisarg))
 				goto err;
@@ -1868,15 +1997,15 @@ S(DeeType_CallCachedInstanceAttrKw,
 
 		case MEMBERCACHE_MEMBER: {
 			struct type_member member;
-			DeeTypeObject *type;
+			DeeTypeObject *decl;
 			DeeObject *thisarg;
 			member = item->mcs_member;
-			type   = item->mcs_decl;
-			MEMBERCACHE_ENDREAD(&tp_self->tp_cache);
+			decl   = item->mcs_decl;
+			Dee_membercache_releasetable(&tp_self->tp_cache, table);
 			if unlikely(argc != 1)
 				goto err_classmember_invalid_args;
 			/* Allow non-instance objects for generic types. */
-			if unlikely(!(type->tp_flags & TP_FABSTRACT) && DeeObject_AssertType(argv[0], type))
+			if unlikely(!(decl->tp_flags & TP_FABSTRACT) && DeeObject_AssertType(argv[0], decl))
 				goto err;
 			if (DeeArg_UnpackKw(argc, argv, kw, getter_kwlist, "o:get", &thisarg))
 				goto err;
@@ -1885,18 +2014,18 @@ S(DeeType_CallCachedInstanceAttrKw,
 
 		case MEMBERCACHE_ATTRIB: {
 			struct class_attribute *catt;
-			DeeTypeObject *type;
+			DeeTypeObject *decl;
 			catt = item->mcs_attrib.a_attr;
-			type = item->mcs_decl;
-			MEMBERCACHE_ENDREAD(&tp_self->tp_cache);
-			return DeeClass_CallInstanceAttributeKw(type, catt, argc, argv, kw);
+			decl = item->mcs_decl;
+			Dee_membercache_releasetable(&tp_self->tp_cache, table);
+			return DeeClass_CallInstanceAttributeKw(decl, catt, argc, argv, kw);
 		}
 
 		default: __builtin_unreachable();
 		}
 	}
-done:
-	MEMBERCACHE_ENDREAD(&tp_self->tp_cache);
+	Dee_membercache_releasetable(&tp_self->tp_cache, table);
+cache_miss:
 	return ITER_DONE;
 err_no_getter:
 	err_cant_access_clsproperty_get();
@@ -1927,39 +2056,44 @@ S(DeeType_CallCachedAttrTuple,
                                   DeeObject *self,
                                   ATTR_ARG, dhash_t hash,
                                   DeeObject *args) {
+	DREF struct Dee_membercache_table *table;
 	dhash_t i, perturb;
 	DREF DeeObject *callback, *result;
-	MEMBERCACHE_READ(&tp_self->tp_cache);
-	if unlikely(!tp_self->tp_cache.mc_table)
-		goto done;
-	perturb = i = MEMBERCACHE_HASHST(&tp_self->tp_cache, hash);
-	for (;; MEMBERCACHE_HASHNX(i, perturb)) {
-		struct membercache_slot *item = MEMBERCACHE_HASHIT(&tp_self->tp_cache, i);
-		if (item->mcs_type == MEMBERCACHE_UNUSED)
+	if unlikely(!Dee_membercache_acquiretable(&tp_self->tp_cache, &table))
+		goto cache_miss;
+	perturb = i = Dee_membercache_table_hashst(table, hash);
+	for (;; Dee_membercache_table_hashnx(i, perturb)) {
+		struct Dee_membercache_slot *item;
+		uint16_t type;
+		item = Dee_membercache_table_hashit(table, i);
+		type = atomic_read(&item->mcs_type);
+		if (type == MEMBERCACHE_UNUSED)
 			break;
 		if (item->mcs_hash != hash)
 			continue;
+		if unlikely(type == MEMBERCACHE_UNINITIALIZED)
+			continue; /* Don't dereference uninitialized items! */
 		if (!ATTREQ(item))
 			continue;
-		switch (item->mcs_type) {
+		switch (type) {
 
 		case MEMBERCACHE_METHOD: {
 			dobjmethod_t func;
 			func = item->mcs_method.m_func;
 			if (item->mcs_method.m_flag & TYPE_METHOD_FKWDS) {
-				MEMBERCACHE_ENDREAD(&tp_self->tp_cache);
+				Dee_membercache_releasetable(&tp_self->tp_cache, table);
 				return (*(dkwobjmethod_t)func)(self, DeeTuple_SIZE(args), DeeTuple_ELEM(args), NULL);
 			}
-			MEMBERCACHE_ENDREAD(&tp_self->tp_cache);
+			Dee_membercache_releasetable(&tp_self->tp_cache, table);
 			return (*func)(self, DeeTuple_SIZE(args), DeeTuple_ELEM(args));
 		}
 
 		case MEMBERCACHE_GETSET: {
 			dgetmethod_t getter;
-			DeeTypeObject *type;
+			DeeTypeObject *decl;
 			getter = item->mcs_getset.gs_get;
 			if likely(getter) {
-				MEMBERCACHE_ENDREAD(&tp_self->tp_cache);
+				Dee_membercache_releasetable(&tp_self->tp_cache, table);
 				callback = (*getter)(self);
 check_and_invoke_callback:
 				if unlikely(!callback)
@@ -1968,9 +2102,9 @@ check_and_invoke_callback:
 				Dee_Decref(callback);
 				return result;
 			}
-			type = item->mcs_decl;
-			MEMBERCACHE_ENDREAD(&tp_self->tp_cache);
-			err_cant_access_attribute(type, attr, ATTR_ACCESS_GET);
+			decl = item->mcs_decl;
+			Dee_membercache_releasetable(&tp_self->tp_cache, table);
+			err_cant_access_attribute(decl, attr, ATTR_ACCESS_GET);
 			goto err;
 		}
 
@@ -1979,7 +2113,7 @@ check_and_invoke_callback:
 				uint8_t dat[offsetof(struct type_member, m_doc)];
 			} buf;
 			buf = *(struct buffer *)&item->mcs_member;
-			MEMBERCACHE_ENDREAD(&tp_self->tp_cache);
+			Dee_membercache_releasetable(&tp_self->tp_cache, table);
 			callback = type_member_get((struct type_member const *)&buf, self);
 			goto check_and_invoke_callback;
 		}
@@ -1989,7 +2123,7 @@ check_and_invoke_callback:
 			struct class_desc *desc;
 			catt = item->mcs_attrib.a_attr;
 			desc = item->mcs_attrib.a_desc;
-			MEMBERCACHE_ENDREAD(&tp_self->tp_cache);
+			Dee_membercache_releasetable(&tp_self->tp_cache, table);
 			return DeeInstance_CallAttributeTuple(desc,
 			                                      DeeInstance_DESC(desc, self),
 			                                      self, catt, args);
@@ -1998,8 +2132,8 @@ check_and_invoke_callback:
 		default: __builtin_unreachable();
 		}
 	}
-done:
-	MEMBERCACHE_ENDREAD(&tp_self->tp_cache);
+	Dee_membercache_releasetable(&tp_self->tp_cache, table);
+cache_miss:
 	return ITER_DONE;
 err:
 	return NULL;
@@ -2010,39 +2144,44 @@ S(DeeType_CallCachedClassAttrTuple,
   DeeType_CallCachedClassAttrLenTuple)(DeeTypeObject *tp_self,
                                        ATTR_ARG, dhash_t hash,
                                        DeeObject *args) {
+	DREF struct Dee_membercache_table *table;
 	dhash_t i, perturb;
 	DREF DeeObject *callback, *result;
-	MEMBERCACHE_READ(&tp_self->tp_class_cache);
-	if unlikely(!tp_self->tp_class_cache.mc_table)
-		goto done;
-	perturb = i = MEMBERCACHE_HASHST(&tp_self->tp_class_cache, hash);
-	for (;; MEMBERCACHE_HASHNX(i, perturb)) {
-		struct membercache_slot *item = MEMBERCACHE_HASHIT(&tp_self->tp_class_cache, i);
-		if (item->mcs_type == MEMBERCACHE_UNUSED)
+	if unlikely(!Dee_membercache_acquiretable(&tp_self->tp_class_cache, &table))
+		goto cache_miss;
+	perturb = i = Dee_membercache_table_hashst(table, hash);
+	for (;; Dee_membercache_table_hashnx(i, perturb)) {
+		struct Dee_membercache_slot *item;
+		uint16_t type;
+		item = Dee_membercache_table_hashit(table, i);
+		type = atomic_read(&item->mcs_type);
+		if (type == MEMBERCACHE_UNUSED)
 			break;
 		if (item->mcs_hash != hash)
 			continue;
+		if unlikely(type == MEMBERCACHE_UNINITIALIZED)
+			continue; /* Don't dereference uninitialized items! */
 		if (!ATTREQ(item))
 			continue;
-		switch (item->mcs_type) {
+		switch (type) {
 
 		case MEMBERCACHE_METHOD: {
 			dobjmethod_t func;
 			func = item->mcs_method.m_func;
 			if (item->mcs_method.m_flag & TYPE_METHOD_FKWDS) {
-				MEMBERCACHE_ENDREAD(&tp_self->tp_class_cache);
+				Dee_membercache_releasetable(&tp_self->tp_class_cache, table);
 				return (*(dkwobjmethod_t)func)((DeeObject *)tp_self, DeeTuple_SIZE(args), DeeTuple_ELEM(args), NULL);
 			}
-			MEMBERCACHE_ENDREAD(&tp_self->tp_class_cache);
+			Dee_membercache_releasetable(&tp_self->tp_class_cache, table);
 			return (*func)((DeeObject *)tp_self, DeeTuple_SIZE(args), DeeTuple_ELEM(args));
 		}
 
 		case MEMBERCACHE_GETSET: {
 			dgetmethod_t getter;
-			DeeTypeObject *type;
+			DeeTypeObject *decl;
 			getter = item->mcs_getset.gs_get;
 			if likely(getter) {
-				MEMBERCACHE_ENDREAD(&tp_self->tp_class_cache);
+				Dee_membercache_releasetable(&tp_self->tp_class_cache, table);
 				callback = (*getter)((DeeObject *)tp_self);
 check_and_invoke_callback:
 				if unlikely(!callback)
@@ -2051,9 +2190,9 @@ check_and_invoke_callback:
 				Dee_Decref(callback);
 				return result;
 			}
-			type = item->mcs_decl;
-			MEMBERCACHE_ENDREAD(&tp_self->tp_class_cache);
-			err_cant_access_attribute(type, attr, ATTR_ACCESS_GET);
+			decl = item->mcs_decl;
+			Dee_membercache_releasetable(&tp_self->tp_class_cache, table);
+			err_cant_access_attribute(decl, attr, ATTR_ACCESS_GET);
 			goto err;
 		}
 			{
@@ -2062,7 +2201,7 @@ check_and_invoke_callback:
 				} buf;
 			case MEMBERCACHE_MEMBER:
 				buf = *(struct buffer *)&item->mcs_member;
-				MEMBERCACHE_ENDREAD(&tp_self->tp_class_cache);
+				Dee_membercache_releasetable(&tp_self->tp_class_cache, table);
 				callback = type_member_get((struct type_member const *)&buf, (DeeObject *)tp_self);
 				goto check_and_invoke_callback;
 			}
@@ -2072,31 +2211,31 @@ check_and_invoke_callback:
 			struct class_desc *desc;
 			catt = item->mcs_attrib.a_attr;
 			desc = item->mcs_attrib.a_desc;
-			MEMBERCACHE_ENDREAD(&tp_self->tp_class_cache);
+			Dee_membercache_releasetable(&tp_self->tp_class_cache, table);
 			return DeeInstance_CallAttributeTuple(desc, class_desc_as_instance(desc),
 			                                      (DeeObject *)tp_self, catt, args);
 		}
 
 		case MEMBERCACHE_INSTANCE_METHOD: {
 			dobjmethod_t func;
-			DeeTypeObject *type;
+			DeeTypeObject *decl;
 			func = item->mcs_method.m_func;
-			type = item->mcs_decl;
+			decl = item->mcs_decl;
 			if (item->mcs_method.m_flag & TYPE_METHOD_FKWDS) {
-				MEMBERCACHE_ENDREAD(&tp_self->tp_class_cache);
+				Dee_membercache_releasetable(&tp_self->tp_class_cache, table);
 				if unlikely(!DeeTuple_SIZE(args))
 					goto err_classmethod_noargs;
 				/* Allow non-instance objects for generic types. */
-				if unlikely(!(type->tp_flags & TP_FABSTRACT) && DeeObject_AssertType(DeeTuple_GET(args, 0), type))
+				if unlikely(!(decl->tp_flags & TP_FABSTRACT) && DeeObject_AssertType(DeeTuple_GET(args, 0), decl))
 					goto err;
 				/* Use the first argument as the this-argument. */
 				return (*(dkwobjmethod_t)func)(DeeTuple_GET(args, 0), DeeTuple_SIZE(args) - 1, DeeTuple_ELEM(args) + 1, NULL);
 			}
-			MEMBERCACHE_ENDREAD(&tp_self->tp_class_cache);
+			Dee_membercache_releasetable(&tp_self->tp_class_cache, table);
 			if unlikely(!DeeTuple_SIZE(args))
 				goto err_classmethod_noargs;
 			/* Allow non-instance objects for generic types. */
-			if unlikely(!(type->tp_flags & TP_FABSTRACT) && DeeObject_AssertType(DeeTuple_GET(args, 0), type))
+			if unlikely(!(decl->tp_flags & TP_FABSTRACT) && DeeObject_AssertType(DeeTuple_GET(args, 0), decl))
 				goto err;
 			/* Use the first argument as the this-argument. */
 			return (*func)(DeeTuple_GET(args, 0), DeeTuple_SIZE(args) - 1, DeeTuple_ELEM(args) + 1);
@@ -2104,16 +2243,16 @@ check_and_invoke_callback:
 
 		case MEMBERCACHE_INSTANCE_GETSET: {
 			dgetmethod_t get;
-			DeeTypeObject *type;
+			DeeTypeObject *decl;
 			get  = item->mcs_getset.gs_get;
-			type = item->mcs_decl;
-			MEMBERCACHE_ENDREAD(&tp_self->tp_class_cache);
+			decl = item->mcs_decl;
+			Dee_membercache_releasetable(&tp_self->tp_class_cache, table);
 			if unlikely(!get)
 				goto err_no_getter;
 			if unlikely(DeeTuple_SIZE(args) != 1)
 				goto err_classproperty_invalid_args;
 			/* Allow non-instance objects for generic types. */
-			if unlikely(!(type->tp_flags & TP_FABSTRACT) && DeeObject_AssertType(DeeTuple_GET(args, 0), type))
+			if unlikely(!(decl->tp_flags & TP_FABSTRACT) && DeeObject_AssertType(DeeTuple_GET(args, 0), decl))
 				goto err;
 			/* Use the first argument as the this-argument. */
 			return (*get)(DeeTuple_GET(args, 0));
@@ -2121,14 +2260,14 @@ check_and_invoke_callback:
 
 		case MEMBERCACHE_INSTANCE_MEMBER: {
 			struct type_member member;
-			DeeTypeObject *type;
+			DeeTypeObject *decl;
 			member = item->mcs_member;
-			type   = item->mcs_decl;
-			MEMBERCACHE_ENDREAD(&tp_self->tp_class_cache);
+			decl   = item->mcs_decl;
+			Dee_membercache_releasetable(&tp_self->tp_class_cache, table);
 			if unlikely(DeeTuple_SIZE(args) != 1)
 				goto err_classmember_invalid_args;
 			/* Allow non-instance objects for generic types. */
-			if unlikely(!(type->tp_flags & TP_FABSTRACT) && DeeObject_AssertType(DeeTuple_GET(args, 0), type))
+			if unlikely(!(decl->tp_flags & TP_FABSTRACT) && DeeObject_AssertType(DeeTuple_GET(args, 0), decl))
 				goto err;
 			/* Use the first argument as the this-argument. */
 			return type_member_get(&member, DeeTuple_GET(args, 0));
@@ -2136,18 +2275,18 @@ check_and_invoke_callback:
 
 		case MEMBERCACHE_INSTANCE_ATTRIB: {
 			struct class_attribute *catt;
-			DeeTypeObject *type;
+			DeeTypeObject *decl;
 			catt = item->mcs_attrib.a_attr;
-			type = item->mcs_decl;
-			MEMBERCACHE_ENDREAD(&tp_self->tp_class_cache);
-			return DeeClass_CallInstanceAttributeTuple(type, catt, args);
+			decl = item->mcs_decl;
+			Dee_membercache_releasetable(&tp_self->tp_class_cache, table);
+			return DeeClass_CallInstanceAttributeTuple(decl, catt, args);
 		}
 
 		default: __builtin_unreachable();
 		}
 	}
-done:
-	MEMBERCACHE_ENDREAD(&tp_self->tp_class_cache);
+	Dee_membercache_releasetable(&tp_self->tp_class_cache, table);
+cache_miss:
 	return ITER_DONE;
 err_no_getter:
 	err_cant_access_clsproperty_get();
@@ -2170,42 +2309,47 @@ S(DeeType_CallCachedInstanceAttrTuple,
   DeeType_CallCachedInstanceAttrLenTuple)(DeeTypeObject *tp_self,
                                           ATTR_ARG, dhash_t hash,
                                           DeeObject *args) {
+	DREF struct Dee_membercache_table *table;
 	dhash_t i, perturb;
 	DREF DeeObject *callback, *result;
-	MEMBERCACHE_READ(&tp_self->tp_cache);
-	if unlikely(!tp_self->tp_cache.mc_table)
-		goto done;
-	perturb = i = MEMBERCACHE_HASHST(&tp_self->tp_cache, hash);
-	for (;; MEMBERCACHE_HASHNX(i, perturb)) {
-		struct membercache_slot *item = MEMBERCACHE_HASHIT(&tp_self->tp_cache, i);
-		if (item->mcs_type == MEMBERCACHE_UNUSED)
+	if unlikely(!Dee_membercache_acquiretable(&tp_self->tp_cache, &table))
+		goto cache_miss;
+	perturb = i = Dee_membercache_table_hashst(table, hash);
+	for (;; Dee_membercache_table_hashnx(i, perturb)) {
+		struct Dee_membercache_slot *item;
+		uint16_t type;
+		item = Dee_membercache_table_hashit(table, i);
+		type = atomic_read(&item->mcs_type);
+		if (type == MEMBERCACHE_UNUSED)
 			break;
 		if (item->mcs_hash != hash)
 			continue;
+		if unlikely(type == MEMBERCACHE_UNINITIALIZED)
+			continue; /* Don't dereference uninitialized items! */
 		if (!ATTREQ(item))
 			continue;
-		switch (item->mcs_type) {
+		switch (type) {
 
 		case MEMBERCACHE_METHOD: {
 			dobjmethod_t func;
-			DeeTypeObject *type;
+			DeeTypeObject *decl;
 			func = item->mcs_method.m_func;
-			type = item->mcs_decl;
+			decl = item->mcs_decl;
 			if (item->mcs_method.m_flag & TYPE_METHOD_FKWDS) {
-				MEMBERCACHE_ENDREAD(&tp_self->tp_cache);
+				Dee_membercache_releasetable(&tp_self->tp_cache, table);
 				if unlikely(!DeeTuple_SIZE(args))
 					goto err_classmethod_noargs;
 				/* Allow non-instance objects for generic types. */
-				if unlikely(!(type->tp_flags & TP_FABSTRACT) && DeeObject_AssertType(DeeTuple_GET(args, 0), type))
+				if unlikely(!(decl->tp_flags & TP_FABSTRACT) && DeeObject_AssertType(DeeTuple_GET(args, 0), decl))
 					goto err;
 				/* Use the first argument as the this-argument. */
 				return (*(dkwobjmethod_t)func)(DeeTuple_GET(args, 0), DeeTuple_SIZE(args) - 1, DeeTuple_ELEM(args) + 1, NULL);
 			}
-			MEMBERCACHE_ENDREAD(&tp_self->tp_cache);
+			Dee_membercache_releasetable(&tp_self->tp_cache, table);
 			if unlikely(!DeeTuple_SIZE(args))
 				goto err_classmethod_noargs;
 			/* Allow non-instance objects for generic types. */
-			if unlikely(!(type->tp_flags & TP_FABSTRACT) && DeeObject_AssertType(DeeTuple_GET(args, 0), type))
+			if unlikely(!(decl->tp_flags & TP_FABSTRACT) && DeeObject_AssertType(DeeTuple_GET(args, 0), decl))
 				goto err;
 			/* Use the first argument as the this-argument. */
 			return (*func)(DeeTuple_GET(args, 0), DeeTuple_SIZE(args) - 1, DeeTuple_ELEM(args) + 1);
@@ -2213,16 +2357,16 @@ S(DeeType_CallCachedInstanceAttrTuple,
 
 		case MEMBERCACHE_GETSET: {
 			dgetmethod_t get;
-			DeeTypeObject *type;
+			DeeTypeObject *decl;
 			get  = item->mcs_getset.gs_get;
-			type = item->mcs_decl;
-			MEMBERCACHE_ENDREAD(&tp_self->tp_cache);
+			decl = item->mcs_decl;
+			Dee_membercache_releasetable(&tp_self->tp_cache, table);
 			if unlikely(!get)
 				goto err_no_getter;
 			if unlikely(DeeTuple_SIZE(args) != 1)
 				goto err_classproperty_invalid_args;
 			/* Allow non-instance objects for generic types. */
-			if unlikely(!(type->tp_flags & TP_FABSTRACT) && DeeObject_AssertType(DeeTuple_GET(args, 0), type))
+			if unlikely(!(decl->tp_flags & TP_FABSTRACT) && DeeObject_AssertType(DeeTuple_GET(args, 0), decl))
 				goto err;
 			/* Use the first argument as the this-argument. */
 			return (*get)(DeeTuple_GET(args, 0));
@@ -2230,14 +2374,14 @@ S(DeeType_CallCachedInstanceAttrTuple,
 
 		case MEMBERCACHE_MEMBER: {
 			struct type_member member;
-			DeeTypeObject *type;
+			DeeTypeObject *decl;
 			member = item->mcs_member;
-			type   = item->mcs_decl;
-			MEMBERCACHE_ENDREAD(&tp_self->tp_cache);
+			decl   = item->mcs_decl;
+			Dee_membercache_releasetable(&tp_self->tp_cache, table);
 			if unlikely(DeeTuple_SIZE(args) != 1)
 				goto err_classmember_invalid_args;
 			/* Allow non-instance objects for generic types. */
-			if unlikely(!(type->tp_flags & TP_FABSTRACT) && DeeObject_AssertType(DeeTuple_GET(args, 0), type))
+			if unlikely(!(decl->tp_flags & TP_FABSTRACT) && DeeObject_AssertType(DeeTuple_GET(args, 0), decl))
 				goto err;
 			/* Use the first argument as the this-argument. */
 			return type_member_get(&member, DeeTuple_GET(args, 0));
@@ -2245,18 +2389,18 @@ S(DeeType_CallCachedInstanceAttrTuple,
 
 		case MEMBERCACHE_ATTRIB: {
 			struct class_attribute *catt;
-			DeeTypeObject *type;
+			DeeTypeObject *decl;
 			catt = item->mcs_attrib.a_attr;
-			type = item->mcs_decl;
-			MEMBERCACHE_ENDREAD(&tp_self->tp_cache);
-			return DeeClass_CallInstanceAttributeTuple(type, catt, args);
+			decl = item->mcs_decl;
+			Dee_membercache_releasetable(&tp_self->tp_cache, table);
+			return DeeClass_CallInstanceAttributeTuple(decl, catt, args);
 		}
 
 		default: __builtin_unreachable();
 		}
 	}
-done:
-	MEMBERCACHE_ENDREAD(&tp_self->tp_cache);
+	Dee_membercache_releasetable(&tp_self->tp_cache, table);
+cache_miss:
 	return ITER_DONE;
 err_no_getter:
 	err_cant_access_clsproperty_get();
@@ -2280,30 +2424,35 @@ S(DeeType_CallCachedAttrTupleKw,
                                     DeeObject *self,
                                     ATTR_ARG, dhash_t hash,
                                     DeeObject *args, DeeObject *kw) {
+	DREF struct Dee_membercache_table *table;
 	dhash_t i, perturb;
 	DREF DeeObject *callback, *result;
-	MEMBERCACHE_READ(&tp_self->tp_cache);
-	if unlikely(!tp_self->tp_cache.mc_table)
-		goto done;
-	perturb = i = MEMBERCACHE_HASHST(&tp_self->tp_cache, hash);
-	for (;; MEMBERCACHE_HASHNX(i, perturb)) {
-		struct membercache_slot *item = MEMBERCACHE_HASHIT(&tp_self->tp_cache, i);
-		if (item->mcs_type == MEMBERCACHE_UNUSED)
+	if unlikely(!Dee_membercache_acquiretable(&tp_self->tp_cache, &table))
+		goto cache_miss;
+	perturb = i = Dee_membercache_table_hashst(table, hash);
+	for (;; Dee_membercache_table_hashnx(i, perturb)) {
+		struct Dee_membercache_slot *item;
+		uint16_t type;
+		item = Dee_membercache_table_hashit(table, i);
+		type = atomic_read(&item->mcs_type);
+		if (type == MEMBERCACHE_UNUSED)
 			break;
 		if (item->mcs_hash != hash)
 			continue;
+		if unlikely(type == MEMBERCACHE_UNINITIALIZED)
+			continue; /* Don't dereference uninitialized items! */
 		if (!ATTREQ(item))
 			continue;
-		switch (item->mcs_type) {
+		switch (type) {
 
 		case MEMBERCACHE_METHOD: {
 			dobjmethod_t func;
 			func = item->mcs_method.m_func;
 			if (item->mcs_method.m_flag & TYPE_METHOD_FKWDS) {
-				MEMBERCACHE_ENDREAD(&tp_self->tp_cache);
+				Dee_membercache_releasetable(&tp_self->tp_cache, table);
 				return (*(dkwobjmethod_t)func)(self, DeeTuple_SIZE(args), DeeTuple_ELEM(args), kw);
 			}
-			MEMBERCACHE_ENDREAD(&tp_self->tp_cache);
+			Dee_membercache_releasetable(&tp_self->tp_cache, table);
 			if (kw) {
 				if (DeeKwds_Check(kw)) {
 					if (DeeKwds_SIZE(kw) != 0)
@@ -2321,10 +2470,10 @@ S(DeeType_CallCachedAttrTupleKw,
 
 		case MEMBERCACHE_GETSET: {
 			dgetmethod_t getter;
-			DeeTypeObject *type;
+			DeeTypeObject *decl;
 			getter = item->mcs_getset.gs_get;
 			if likely(getter) {
-				MEMBERCACHE_ENDREAD(&tp_self->tp_cache);
+				Dee_membercache_releasetable(&tp_self->tp_cache, table);
 				callback = (*getter)(self);
 check_and_invoke_callback:
 				if unlikely(!callback)
@@ -2333,9 +2482,9 @@ check_and_invoke_callback:
 				Dee_Decref(callback);
 				return result;
 			}
-			type = item->mcs_decl;
-			MEMBERCACHE_ENDREAD(&tp_self->tp_cache);
-			err_cant_access_attribute(type, attr, ATTR_ACCESS_GET);
+			decl = item->mcs_decl;
+			Dee_membercache_releasetable(&tp_self->tp_cache, table);
+			err_cant_access_attribute(decl, attr, ATTR_ACCESS_GET);
 			goto err;
 		}
 
@@ -2344,7 +2493,7 @@ check_and_invoke_callback:
 				uint8_t dat[offsetof(struct type_member, m_doc)];
 			} buf;
 			buf = *(struct buffer *)&item->mcs_member;
-			MEMBERCACHE_ENDREAD(&tp_self->tp_cache);
+			Dee_membercache_releasetable(&tp_self->tp_cache, table);
 			callback = type_member_get((struct type_member const *)&buf, self);
 			goto check_and_invoke_callback;
 		}
@@ -2354,7 +2503,7 @@ check_and_invoke_callback:
 			struct class_desc *desc;
 			catt = item->mcs_attrib.a_attr;
 			desc = item->mcs_attrib.a_desc;
-			MEMBERCACHE_ENDREAD(&tp_self->tp_cache);
+			Dee_membercache_releasetable(&tp_self->tp_cache, table);
 			return DeeInstance_CallAttributeTupleKw(desc,
 			                                        DeeInstance_DESC(desc, self),
 			                                        self, catt, args, kw);
@@ -2363,8 +2512,8 @@ check_and_invoke_callback:
 		default: __builtin_unreachable();
 		}
 	}
-done:
-	MEMBERCACHE_ENDREAD(&tp_self->tp_cache);
+	Dee_membercache_releasetable(&tp_self->tp_cache, table);
+cache_miss:
 	return ITER_DONE;
 err_no_keywords:
 	err_keywords_func_not_accepted(attr, kw);
@@ -2377,30 +2526,35 @@ S(DeeType_CallCachedClassAttrTupleKw,
   DeeType_CallCachedClassAttrLenTupleKw)(DeeTypeObject *tp_self,
                                          ATTR_ARG, dhash_t hash,
                                          DeeObject *args, DeeObject *kw) {
+	DREF struct Dee_membercache_table *table;
 	dhash_t i, perturb;
 	DREF DeeObject *callback, *result;
-	MEMBERCACHE_READ(&tp_self->tp_class_cache);
-	if unlikely(!tp_self->tp_class_cache.mc_table)
-		goto done;
-	perturb = i = MEMBERCACHE_HASHST(&tp_self->tp_class_cache, hash);
-	for (;; MEMBERCACHE_HASHNX(i, perturb)) {
-		struct membercache_slot *item = MEMBERCACHE_HASHIT(&tp_self->tp_class_cache, i);
-		if (item->mcs_type == MEMBERCACHE_UNUSED)
+	if unlikely(!Dee_membercache_acquiretable(&tp_self->tp_class_cache, &table))
+		goto cache_miss;
+	perturb = i = Dee_membercache_table_hashst(table, hash);
+	for (;; Dee_membercache_table_hashnx(i, perturb)) {
+		struct Dee_membercache_slot *item;
+		uint16_t type;
+		item = Dee_membercache_table_hashit(table, i);
+		type = atomic_read(&item->mcs_type);
+		if (type == MEMBERCACHE_UNUSED)
 			break;
 		if (item->mcs_hash != hash)
 			continue;
+		if unlikely(type == MEMBERCACHE_UNINITIALIZED)
+			continue; /* Don't dereference uninitialized items! */
 		if (!ATTREQ(item))
 			continue;
-		switch (item->mcs_type) {
+		switch (type) {
 
 		case MEMBERCACHE_METHOD: {
 			dobjmethod_t func;
 			func = item->mcs_method.m_func;
 			if (item->mcs_method.m_flag & TYPE_METHOD_FKWDS) {
-				MEMBERCACHE_ENDREAD(&tp_self->tp_class_cache);
+				Dee_membercache_releasetable(&tp_self->tp_class_cache, table);
 				return (*(dkwobjmethod_t)func)((DeeObject *)tp_self, DeeTuple_SIZE(args), DeeTuple_ELEM(args), kw);
 			}
-			MEMBERCACHE_ENDREAD(&tp_self->tp_class_cache);
+			Dee_membercache_releasetable(&tp_self->tp_class_cache, table);
 			if (kw) {
 				if (DeeKwds_Check(kw)) {
 					if (DeeKwds_SIZE(kw) != 0)
@@ -2418,10 +2572,10 @@ S(DeeType_CallCachedClassAttrTupleKw,
 
 		case MEMBERCACHE_GETSET: {
 			dgetmethod_t getter;
-			DeeTypeObject *type;
+			DeeTypeObject *decl;
 			getter = item->mcs_getset.gs_get;
 			if likely(getter) {
-				MEMBERCACHE_ENDREAD(&tp_self->tp_class_cache);
+				Dee_membercache_releasetable(&tp_self->tp_class_cache, table);
 				callback = (*getter)((DeeObject *)tp_self);
 check_and_invoke_callback:
 				if unlikely(!callback)
@@ -2430,9 +2584,9 @@ check_and_invoke_callback:
 				Dee_Decref(callback);
 				return result;
 			}
-			type = item->mcs_decl;
-			MEMBERCACHE_ENDREAD(&tp_self->tp_class_cache);
-			err_cant_access_attribute(type, attr, ATTR_ACCESS_GET);
+			decl = item->mcs_decl;
+			Dee_membercache_releasetable(&tp_self->tp_class_cache, table);
+			err_cant_access_attribute(decl, attr, ATTR_ACCESS_GET);
 			goto err;
 		}
 
@@ -2441,7 +2595,7 @@ check_and_invoke_callback:
 				uint8_t dat[offsetof(struct type_member, m_doc)];
 			} buf;
 			buf = *(struct buffer *)&item->mcs_member;
-			MEMBERCACHE_ENDREAD(&tp_self->tp_class_cache);
+			Dee_membercache_releasetable(&tp_self->tp_class_cache, table);
 			callback = type_member_get((struct type_member const *)&buf, (DeeObject *)tp_self);
 			goto check_and_invoke_callback;
 		}
@@ -2451,21 +2605,21 @@ check_and_invoke_callback:
 			struct class_desc *desc;
 			catt = item->mcs_attrib.a_attr;
 			desc = item->mcs_attrib.a_desc;
-			MEMBERCACHE_ENDREAD(&tp_self->tp_class_cache);
+			Dee_membercache_releasetable(&tp_self->tp_class_cache, table);
 			return DeeInstance_CallAttributeTupleKw(desc, class_desc_as_instance(desc), (DeeObject *)tp_self, catt, args, kw);
 		}
 
 		case MEMBERCACHE_INSTANCE_METHOD: {
 			dobjmethod_t func;
-			DeeTypeObject *type;
+			DeeTypeObject *decl;
 			func = item->mcs_method.m_func;
-			type = item->mcs_decl;
+			decl = item->mcs_decl;
 			if (item->mcs_method.m_flag & TYPE_METHOD_FKWDS) {
-				MEMBERCACHE_ENDREAD(&tp_self->tp_class_cache);
+				Dee_membercache_releasetable(&tp_self->tp_class_cache, table);
 				if unlikely(!DeeTuple_SIZE(args))
 					goto err_classmethod_noargs;
 				/* Allow non-instance objects for generic types. */
-				if unlikely(!(type->tp_flags & TP_FABSTRACT) && DeeObject_AssertType(DeeTuple_GET(args, 0), type))
+				if unlikely(!(decl->tp_flags & TP_FABSTRACT) && DeeObject_AssertType(DeeTuple_GET(args, 0), decl))
 					goto err;
 				/* Use the first argument as the this-argument. */
 				return (*(dkwobjmethod_t)func)(DeeTuple_GET(args, 0),
@@ -2473,11 +2627,11 @@ check_and_invoke_callback:
 				                               DeeTuple_ELEM(args) + 1,
 				                               kw);
 			}
-			MEMBERCACHE_ENDREAD(&tp_self->tp_class_cache);
+			Dee_membercache_releasetable(&tp_self->tp_class_cache, table);
 			if unlikely(!DeeTuple_SIZE(args))
 				goto err_classmethod_noargs;
 			/* Allow non-instance objects for generic types. */
-			if unlikely(!(type->tp_flags & TP_FABSTRACT) && DeeObject_AssertType(DeeTuple_GET(args, 0), type))
+			if unlikely(!(decl->tp_flags & TP_FABSTRACT) && DeeObject_AssertType(DeeTuple_GET(args, 0), decl))
 				goto err;
 			if (kw) {
 				if (DeeKwds_Check(kw)) {
@@ -2499,18 +2653,18 @@ check_and_invoke_callback:
 
 		case MEMBERCACHE_INSTANCE_GETSET: {
 			dgetmethod_t get;
-			DeeTypeObject *type;
+			DeeTypeObject *decl;
 			DeeObject *thisarg;
 			get  = item->mcs_getset.gs_get;
-			type = item->mcs_decl;
-			MEMBERCACHE_ENDREAD(&tp_self->tp_class_cache);
+			decl = item->mcs_decl;
+			Dee_membercache_releasetable(&tp_self->tp_class_cache, table);
 			if unlikely(!get)
 				goto err_no_getter;
 			if unlikely(DeeTuple_SIZE(args) != 1)
 				goto err_classproperty_invalid_args;
 			/* Allow non-instance objects for generic types. */
-			if unlikely(!(type->tp_flags & TP_FABSTRACT) &&
-			            DeeObject_AssertType(DeeTuple_GET(args, 0), type))
+			if unlikely(!(decl->tp_flags & TP_FABSTRACT) &&
+			            DeeObject_AssertType(DeeTuple_GET(args, 0), decl))
 				goto err;
 			if (DeeArg_UnpackKw(DeeTuple_SIZE(args), DeeTuple_ELEM(args),
 			                    kw, getter_kwlist, "o:get", &thisarg))
@@ -2520,16 +2674,16 @@ check_and_invoke_callback:
 
 		case MEMBERCACHE_INSTANCE_MEMBER: {
 			struct type_member member;
-			DeeTypeObject *type;
+			DeeTypeObject *decl;
 			DeeObject *thisarg;
 			member = item->mcs_member;
-			type   = item->mcs_decl;
-			MEMBERCACHE_ENDREAD(&tp_self->tp_class_cache);
+			decl   = item->mcs_decl;
+			Dee_membercache_releasetable(&tp_self->tp_class_cache, table);
 			if unlikely(DeeTuple_SIZE(args) != 1)
 				goto err_classmember_invalid_args;
 			/* Allow non-instance objects for generic types. */
-			if unlikely(!(type->tp_flags & TP_FABSTRACT) &&
-			            DeeObject_AssertType(DeeTuple_GET(args, 0), type))
+			if unlikely(!(decl->tp_flags & TP_FABSTRACT) &&
+			            DeeObject_AssertType(DeeTuple_GET(args, 0), decl))
 				goto err;
 			if (DeeArg_UnpackKw(DeeTuple_SIZE(args), DeeTuple_ELEM(args),
 			                    kw, getter_kwlist, "o:get", &thisarg))
@@ -2539,18 +2693,18 @@ check_and_invoke_callback:
 
 		case MEMBERCACHE_INSTANCE_ATTRIB: {
 			struct class_attribute *catt;
-			DeeTypeObject *type;
+			DeeTypeObject *decl;
 			catt = item->mcs_attrib.a_attr;
-			type = item->mcs_decl;
-			MEMBERCACHE_ENDREAD(&tp_self->tp_class_cache);
-			return DeeClass_CallInstanceAttributeTupleKw(type, catt, args, kw);
+			decl = item->mcs_decl;
+			Dee_membercache_releasetable(&tp_self->tp_class_cache, table);
+			return DeeClass_CallInstanceAttributeTupleKw(decl, catt, args, kw);
 		}
 
 		default: __builtin_unreachable();
 		}
 	}
-done:
-	MEMBERCACHE_ENDREAD(&tp_self->tp_class_cache);
+	Dee_membercache_releasetable(&tp_self->tp_class_cache, table);
+cache_miss:
 	return ITER_DONE;
 err_no_getter:
 	err_cant_access_clsproperty_get();
@@ -2576,33 +2730,38 @@ S(DeeType_CallCachedInstanceAttrTupleKw,
   DeeType_CallCachedInstanceAttrLenTupleKw)(DeeTypeObject *tp_self,
                                             ATTR_ARG, dhash_t hash,
                                             DeeObject *args, DeeObject *kw) {
+	DREF struct Dee_membercache_table *table;
 	dhash_t i, perturb;
 	DREF DeeObject *callback, *result;
-	MEMBERCACHE_READ(&tp_self->tp_cache);
-	if unlikely(!tp_self->tp_cache.mc_table)
-		goto done;
-	perturb = i = MEMBERCACHE_HASHST(&tp_self->tp_cache, hash);
-	for (;; MEMBERCACHE_HASHNX(i, perturb)) {
-		struct membercache_slot *item = MEMBERCACHE_HASHIT(&tp_self->tp_cache, i);
-		if (item->mcs_type == MEMBERCACHE_UNUSED)
+	if unlikely(!Dee_membercache_acquiretable(&tp_self->tp_cache, &table))
+		goto cache_miss;
+	perturb = i = Dee_membercache_table_hashst(table, hash);
+	for (;; Dee_membercache_table_hashnx(i, perturb)) {
+		struct Dee_membercache_slot *item;
+		uint16_t type;
+		item = Dee_membercache_table_hashit(table, i);
+		type = atomic_read(&item->mcs_type);
+		if (type == MEMBERCACHE_UNUSED)
 			break;
 		if (item->mcs_hash != hash)
 			continue;
+		if unlikely(type == MEMBERCACHE_UNINITIALIZED)
+			continue; /* Don't dereference uninitialized items! */
 		if (!ATTREQ(item))
 			continue;
-		switch (item->mcs_type) {
+		switch (type) {
 
 		case MEMBERCACHE_METHOD: {
 			dobjmethod_t func;
-			DeeTypeObject *type;
+			DeeTypeObject *decl;
 			func = item->mcs_method.m_func;
-			type = item->mcs_decl;
+			decl = item->mcs_decl;
 			if (item->mcs_method.m_flag & TYPE_METHOD_FKWDS) {
-				MEMBERCACHE_ENDREAD(&tp_self->tp_cache);
+				Dee_membercache_releasetable(&tp_self->tp_cache, table);
 				if unlikely(!DeeTuple_SIZE(args))
 					goto err_classmethod_noargs;
 				/* Allow non-instance objects for generic types. */
-				if unlikely(!(type->tp_flags & TP_FABSTRACT) && DeeObject_AssertType(DeeTuple_GET(args, 0), type))
+				if unlikely(!(decl->tp_flags & TP_FABSTRACT) && DeeObject_AssertType(DeeTuple_GET(args, 0), decl))
 					goto err;
 				/* Use the first argument as the this-argument. */
 				return (*(dkwobjmethod_t)func)(DeeTuple_GET(args, 0),
@@ -2610,11 +2769,11 @@ S(DeeType_CallCachedInstanceAttrTupleKw,
 				                               DeeTuple_ELEM(args) + 1,
 				                               kw);
 			}
-			MEMBERCACHE_ENDREAD(&tp_self->tp_cache);
+			Dee_membercache_releasetable(&tp_self->tp_cache, table);
 			if unlikely(!DeeTuple_SIZE(args))
 				goto err_classmethod_noargs;
 			/* Allow non-instance objects for generic types. */
-			if unlikely(!(type->tp_flags & TP_FABSTRACT) && DeeObject_AssertType(DeeTuple_GET(args, 0), type))
+			if unlikely(!(decl->tp_flags & TP_FABSTRACT) && DeeObject_AssertType(DeeTuple_GET(args, 0), decl))
 				goto err;
 			if (kw) {
 				if (DeeKwds_Check(kw)) {
@@ -2636,18 +2795,18 @@ S(DeeType_CallCachedInstanceAttrTupleKw,
 
 		case MEMBERCACHE_GETSET: {
 			dgetmethod_t get;
-			DeeTypeObject *type;
+			DeeTypeObject *decl;
 			DeeObject *thisarg;
 			get  = item->mcs_getset.gs_get;
-			type = item->mcs_decl;
-			MEMBERCACHE_ENDREAD(&tp_self->tp_cache);
+			decl = item->mcs_decl;
+			Dee_membercache_releasetable(&tp_self->tp_cache, table);
 			if unlikely(!get)
 				goto err_no_getter;
 			if unlikely(DeeTuple_SIZE(args) != 1)
 				goto err_classproperty_invalid_args;
 			/* Allow non-instance objects for generic types. */
-			if unlikely(!(type->tp_flags & TP_FABSTRACT) &&
-			            DeeObject_AssertType(DeeTuple_GET(args, 0), type))
+			if unlikely(!(decl->tp_flags & TP_FABSTRACT) &&
+			            DeeObject_AssertType(DeeTuple_GET(args, 0), decl))
 				goto err;
 			if (DeeArg_UnpackKw(DeeTuple_SIZE(args), DeeTuple_ELEM(args),
 			                    kw, getter_kwlist, "o:get", &thisarg))
@@ -2657,16 +2816,16 @@ S(DeeType_CallCachedInstanceAttrTupleKw,
 
 		case MEMBERCACHE_MEMBER: {
 			struct type_member member;
-			DeeTypeObject *type;
+			DeeTypeObject *decl;
 			DeeObject *thisarg;
 			member = item->mcs_member;
-			type   = item->mcs_decl;
-			MEMBERCACHE_ENDREAD(&tp_self->tp_cache);
+			decl   = item->mcs_decl;
+			Dee_membercache_releasetable(&tp_self->tp_cache, table);
 			if unlikely(DeeTuple_SIZE(args) != 1)
 				goto err_classmember_invalid_args;
 			/* Allow non-instance objects for generic types. */
-			if unlikely(!(type->tp_flags & TP_FABSTRACT) &&
-			            DeeObject_AssertType(DeeTuple_GET(args, 0), type))
+			if unlikely(!(decl->tp_flags & TP_FABSTRACT) &&
+			            DeeObject_AssertType(DeeTuple_GET(args, 0), decl))
 				goto err;
 			if (DeeArg_UnpackKw(DeeTuple_SIZE(args), DeeTuple_ELEM(args),
 			                    kw, getter_kwlist, "o:get", &thisarg))
@@ -2676,18 +2835,18 @@ S(DeeType_CallCachedInstanceAttrTupleKw,
 
 		case MEMBERCACHE_ATTRIB: {
 			struct class_attribute *catt;
-			DeeTypeObject *type;
+			DeeTypeObject *decl;
 			catt = item->mcs_attrib.a_attr;
-			type = item->mcs_decl;
-			MEMBERCACHE_ENDREAD(&tp_self->tp_cache);
-			return DeeClass_CallInstanceAttributeTupleKw(type, catt, args, kw);
+			decl = item->mcs_decl;
+			Dee_membercache_releasetable(&tp_self->tp_cache, table);
+			return DeeClass_CallInstanceAttributeTupleKw(decl, catt, args, kw);
 		}
 
 		default: __builtin_unreachable();
 		}
 	}
-done:
-	MEMBERCACHE_ENDREAD(&tp_self->tp_cache);
+	Dee_membercache_releasetable(&tp_self->tp_cache, table);
+cache_miss:
 	return ITER_DONE;
 err_no_getter:
 	err_cant_access_clsproperty_get();
@@ -2760,39 +2919,44 @@ S(DeeType_VCallCachedAttrf,
   DeeType_VCallCachedAttrLenf)(DeeTypeObject *tp_self, DeeObject *self,
                                ATTR_ARG, dhash_t hash,
                                char const *__restrict format, va_list args) {
+	DREF struct Dee_membercache_table *table;
 	dhash_t i, perturb;
 	DREF DeeObject *callback, *result;
-	MEMBERCACHE_READ(&tp_self->tp_cache);
-	if unlikely(!tp_self->tp_cache.mc_table)
-		goto done;
-	perturb = i = MEMBERCACHE_HASHST(&tp_self->tp_cache, hash);
-	for (;; MEMBERCACHE_HASHNX(i, perturb)) {
-		struct membercache_slot *item = MEMBERCACHE_HASHIT(&tp_self->tp_cache, i);
-		if (item->mcs_type == MEMBERCACHE_UNUSED)
+	if unlikely(!Dee_membercache_acquiretable(&tp_self->tp_cache, &table))
+		goto cache_miss;
+	perturb = i = Dee_membercache_table_hashst(table, hash);
+	for (;; Dee_membercache_table_hashnx(i, perturb)) {
+		struct Dee_membercache_slot *item;
+		uint16_t type;
+		item = Dee_membercache_table_hashit(table, i);
+		type = atomic_read(&item->mcs_type);
+		if (type == MEMBERCACHE_UNUSED)
 			break;
 		if (item->mcs_hash != hash)
 			continue;
+		if unlikely(type == MEMBERCACHE_UNINITIALIZED)
+			continue; /* Don't dereference uninitialized items! */
 		if (!ATTREQ(item))
 			continue;
-		switch (item->mcs_type) {
+		switch (type) {
 
 		case MEMBERCACHE_METHOD: {
 			dobjmethod_t func;
 			func = item->mcs_method.m_func;
 			if (item->mcs_method.m_flag & TYPE_METHOD_FKWDS) {
-				MEMBERCACHE_ENDREAD(&tp_self->tp_cache);
+				Dee_membercache_releasetable(&tp_self->tp_cache, table);
 				return dkwobjmethod_vcallf((dkwobjmethod_t)func, self, format, args, NULL);
 			}
-			MEMBERCACHE_ENDREAD(&tp_self->tp_cache);
+			Dee_membercache_releasetable(&tp_self->tp_cache, table);
 			return dobjmethod_vcallf(func, self, format, args);
 		}
 
 		case MEMBERCACHE_GETSET: {
 			dgetmethod_t getter;
-			DeeTypeObject *type;
+			DeeTypeObject *decl;
 			getter = item->mcs_getset.gs_get;
 			if likely(getter) {
-				MEMBERCACHE_ENDREAD(&tp_self->tp_cache);
+				Dee_membercache_releasetable(&tp_self->tp_cache, table);
 				callback = (*getter)(self);
 check_and_invoke_callback:
 				if unlikely(!callback)
@@ -2801,9 +2965,9 @@ check_and_invoke_callback:
 				Dee_Decref(callback);
 				return result;
 			}
-			type = item->mcs_decl;
-			MEMBERCACHE_ENDREAD(&tp_self->tp_cache);
-			err_cant_access_attribute(type, attr, ATTR_ACCESS_GET);
+			decl = item->mcs_decl;
+			Dee_membercache_releasetable(&tp_self->tp_cache, table);
+			err_cant_access_attribute(decl, attr, ATTR_ACCESS_GET);
 			goto err;
 		}
 
@@ -2812,7 +2976,7 @@ check_and_invoke_callback:
 				uint8_t dat[offsetof(struct type_member, m_doc)];
 			} buf;
 			buf = *(struct buffer *)&item->mcs_member;
-			MEMBERCACHE_ENDREAD(&tp_self->tp_cache);
+			Dee_membercache_releasetable(&tp_self->tp_cache, table);
 			callback = type_member_get((struct type_member const *)&buf, self);
 			goto check_and_invoke_callback;
 		}
@@ -2822,7 +2986,7 @@ check_and_invoke_callback:
 			struct class_desc *desc;
 			catt = item->mcs_attrib.a_attr;
 			desc = item->mcs_attrib.a_desc;
-			MEMBERCACHE_ENDREAD(&tp_self->tp_cache);
+			Dee_membercache_releasetable(&tp_self->tp_cache, table);
 			return DeeInstance_VCallAttributef(desc,
 			                                   DeeInstance_DESC(desc, self),
 			                                   self, catt, format, args);
@@ -2831,8 +2995,8 @@ check_and_invoke_callback:
 		default: __builtin_unreachable();
 		}
 	}
-done:
-	MEMBERCACHE_ENDREAD(&tp_self->tp_cache);
+	Dee_membercache_releasetable(&tp_self->tp_cache, table);
+cache_miss:
 	return ITER_DONE;
 err:
 	return NULL;
@@ -2843,39 +3007,44 @@ S(DeeType_VCallCachedClassAttrf,
   DeeType_VCallCachedClassAttrLenf)(DeeTypeObject *tp_self,
                                     ATTR_ARG, dhash_t hash,
                                     char const *__restrict format, va_list args) {
+	DREF struct Dee_membercache_table *table;
 	dhash_t i, perturb;
 	DREF DeeObject *callback, *result, *args_tuple;
-	MEMBERCACHE_READ(&tp_self->tp_class_cache);
-	if unlikely(!tp_self->tp_class_cache.mc_table)
-		goto done;
-	perturb = i = MEMBERCACHE_HASHST(&tp_self->tp_class_cache, hash);
-	for (;; MEMBERCACHE_HASHNX(i, perturb)) {
-		struct membercache_slot *item = MEMBERCACHE_HASHIT(&tp_self->tp_class_cache, i);
-		if (item->mcs_type == MEMBERCACHE_UNUSED)
+	if unlikely(!Dee_membercache_acquiretable(&tp_self->tp_class_cache, &table))
+		goto cache_miss;
+	perturb = i = Dee_membercache_table_hashst(table, hash);
+	for (;; Dee_membercache_table_hashnx(i, perturb)) {
+		struct Dee_membercache_slot *item;
+		uint16_t type;
+		item = Dee_membercache_table_hashit(table, i);
+		type = atomic_read(&item->mcs_type);
+		if (type == MEMBERCACHE_UNUSED)
 			break;
 		if (item->mcs_hash != hash)
 			continue;
+		if unlikely(type == MEMBERCACHE_UNINITIALIZED)
+			continue; /* Don't dereference uninitialized items! */
 		if (!ATTREQ(item))
 			continue;
-		switch (item->mcs_type) {
+		switch (type) {
 
 		case MEMBERCACHE_METHOD: {
 			dobjmethod_t func;
 			func = item->mcs_method.m_func;
 			if (item->mcs_method.m_flag & TYPE_METHOD_FKWDS) {
-				MEMBERCACHE_ENDREAD(&tp_self->tp_class_cache);
+				Dee_membercache_releasetable(&tp_self->tp_class_cache, table);
 				return dkwobjmethod_vcallf((dkwobjmethod_t)func, (DeeObject *)tp_self, format, args, NULL);
 			}
-			MEMBERCACHE_ENDREAD(&tp_self->tp_class_cache);
+			Dee_membercache_releasetable(&tp_self->tp_class_cache, table);
 			return dobjmethod_vcallf(func, (DeeObject *)tp_self, format, args);
 		}
 
 		case MEMBERCACHE_GETSET: {
 			dgetmethod_t getter;
-			DeeTypeObject *type;
+			DeeTypeObject *decl;
 			getter = item->mcs_getset.gs_get;
 			if likely(getter) {
-				MEMBERCACHE_ENDREAD(&tp_self->tp_class_cache);
+				Dee_membercache_releasetable(&tp_self->tp_class_cache, table);
 				callback = (*getter)((DeeObject *)tp_self);
 check_and_invoke_callback:
 				if unlikely(!callback)
@@ -2884,9 +3053,9 @@ check_and_invoke_callback:
 				Dee_Decref(callback);
 				return result;
 			}
-			type = item->mcs_decl;
-			MEMBERCACHE_ENDREAD(&tp_self->tp_class_cache);
-			err_cant_access_attribute(type, attr, ATTR_ACCESS_GET);
+			decl = item->mcs_decl;
+			Dee_membercache_releasetable(&tp_self->tp_class_cache, table);
+			err_cant_access_attribute(decl, attr, ATTR_ACCESS_GET);
 			goto err;
 		}
 
@@ -2895,7 +3064,7 @@ check_and_invoke_callback:
 				uint8_t dat[offsetof(struct type_member, m_doc)];
 			} buf;
 			buf = *(struct buffer *)&item->mcs_member;
-			MEMBERCACHE_ENDREAD(&tp_self->tp_class_cache);
+			Dee_membercache_releasetable(&tp_self->tp_class_cache, table);
 			callback = type_member_get((struct type_member const *)&buf, (DeeObject *)tp_self);
 			goto check_and_invoke_callback;
 		}
@@ -2905,24 +3074,24 @@ check_and_invoke_callback:
 			struct class_desc *desc;
 			catt = item->mcs_attrib.a_attr;
 			desc = item->mcs_attrib.a_desc;
-			MEMBERCACHE_ENDREAD(&tp_self->tp_class_cache);
+			Dee_membercache_releasetable(&tp_self->tp_class_cache, table);
 			return DeeInstance_VCallAttributef(desc, class_desc_as_instance(desc), (DeeObject *)tp_self, catt, format, args);
 		}
 
 		case MEMBERCACHE_INSTANCE_METHOD: {
 			dobjmethod_t func;
-			DeeTypeObject *type;
+			DeeTypeObject *decl;
 			func = item->mcs_method.m_func;
-			type = item->mcs_decl;
+			decl = item->mcs_decl;
 			if (item->mcs_method.m_flag & TYPE_METHOD_FKWDS) {
-				MEMBERCACHE_ENDREAD(&tp_self->tp_class_cache);
+				Dee_membercache_releasetable(&tp_self->tp_class_cache, table);
 				args_tuple = DeeTuple_VNewf(format, args);
 				if unlikely(!args_tuple)
 					goto err;
 				if unlikely(!DeeTuple_SIZE(args_tuple))
 					goto err_classmethod_noargs_args_tuple;
 				/* Allow non-instance objects for generic types. */
-				if unlikely(!(type->tp_flags & TP_FABSTRACT) && DeeObject_AssertType(DeeTuple_GET(args_tuple, 0), type))
+				if unlikely(!(decl->tp_flags & TP_FABSTRACT) && DeeObject_AssertType(DeeTuple_GET(args_tuple, 0), decl))
 					goto err_args_tuple;
 				/* Use the first argument as the this-argument. */
 				result = (*(dkwobjmethod_t)func)(DeeTuple_GET(args_tuple, 0),
@@ -2932,14 +3101,14 @@ check_and_invoke_callback:
 				Dee_Decref(args_tuple);
 				return result;
 			}
-			MEMBERCACHE_ENDREAD(&tp_self->tp_class_cache);
+			Dee_membercache_releasetable(&tp_self->tp_class_cache, table);
 			args_tuple = DeeTuple_VNewf(format, args);
 			if unlikely(!args_tuple)
 				goto err;
 			if unlikely(!DeeTuple_SIZE(args_tuple))
 				goto err_classmethod_noargs_args_tuple;
 			/* Allow non-instance objects for generic types. */
-			if unlikely(!(type->tp_flags & TP_FABSTRACT) && DeeObject_AssertType(DeeTuple_GET(args_tuple, 0), type))
+			if unlikely(!(decl->tp_flags & TP_FABSTRACT) && DeeObject_AssertType(DeeTuple_GET(args_tuple, 0), decl))
 				goto err_args_tuple;
 			/* Use the first argument as the this-argument. */
 			result = (*func)(DeeTuple_GET(args_tuple, 0),
@@ -2951,10 +3120,10 @@ check_and_invoke_callback:
 
 		case MEMBERCACHE_INSTANCE_GETSET: {
 			dgetmethod_t get;
-			DeeTypeObject *type;
+			DeeTypeObject *decl;
 			get  = item->mcs_getset.gs_get;
-			type = item->mcs_decl;
-			MEMBERCACHE_ENDREAD(&tp_self->tp_class_cache);
+			decl = item->mcs_decl;
+			Dee_membercache_releasetable(&tp_self->tp_class_cache, table);
 			if unlikely(!get)
 				goto err_no_getter;
 			args_tuple = DeeTuple_VNewf(format, args);
@@ -2963,7 +3132,7 @@ check_and_invoke_callback:
 			if unlikely(DeeTuple_SIZE(args_tuple) != 1)
 				goto err_classproperty_invalid_args_args_tuple;
 			/* Allow non-instance objects for generic types. */
-			if unlikely(!(type->tp_flags & TP_FABSTRACT) && DeeObject_AssertType(DeeTuple_GET(args_tuple, 0), type))
+			if unlikely(!(decl->tp_flags & TP_FABSTRACT) && DeeObject_AssertType(DeeTuple_GET(args_tuple, 0), decl))
 				goto err_args_tuple;
 			/* Use the first argument as the this-argument. */
 			result = (*get)(DeeTuple_GET(args_tuple, 0));
@@ -2973,17 +3142,17 @@ check_and_invoke_callback:
 
 		case MEMBERCACHE_INSTANCE_MEMBER: {
 			struct type_member member;
-			DeeTypeObject *type;
+			DeeTypeObject *decl;
 			member = item->mcs_member;
-			type   = item->mcs_decl;
-			MEMBERCACHE_ENDREAD(&tp_self->tp_class_cache);
+			decl   = item->mcs_decl;
+			Dee_membercache_releasetable(&tp_self->tp_class_cache, table);
 			args_tuple = DeeTuple_VNewf(format, args);
 			if unlikely(!args_tuple)
 				goto err;
 			if unlikely(DeeTuple_SIZE(args_tuple) != 1)
 				goto err_classmember_invalid_args_args_tuple;
 			/* Allow non-instance objects for generic types. */
-			if unlikely(!(type->tp_flags & TP_FABSTRACT) && DeeObject_AssertType(DeeTuple_GET(args_tuple, 0), type))
+			if unlikely(!(decl->tp_flags & TP_FABSTRACT) && DeeObject_AssertType(DeeTuple_GET(args_tuple, 0), decl))
 				goto err_args_tuple;
 			/* Use the first argument as the this-argument. */
 			result = type_member_get(&member, DeeTuple_GET(args_tuple, 0));
@@ -2993,18 +3162,18 @@ check_and_invoke_callback:
 
 		case MEMBERCACHE_INSTANCE_ATTRIB: {
 			struct class_attribute *catt;
-			DeeTypeObject *type;
+			DeeTypeObject *decl;
 			catt = item->mcs_attrib.a_attr;
-			type = item->mcs_decl;
-			MEMBERCACHE_ENDREAD(&tp_self->tp_class_cache);
-			return DeeClass_VCallInstanceAttributef(type, catt, format, args);
+			decl = item->mcs_decl;
+			Dee_membercache_releasetable(&tp_self->tp_class_cache, table);
+			return DeeClass_VCallInstanceAttributef(decl, catt, format, args);
 		}
 
 		default: __builtin_unreachable();
 		}
 	}
-done:
-	MEMBERCACHE_ENDREAD(&tp_self->tp_class_cache);
+	Dee_membercache_releasetable(&tp_self->tp_class_cache, table);
+cache_miss:
 	return ITER_DONE;
 err_no_getter:
 	err_cant_access_clsproperty_get();
@@ -3036,36 +3205,41 @@ S(DeeType_VCallCachedInstanceAttrf,
   DeeType_VCallCachedInstanceAttrLenf)(DeeTypeObject *tp_self,
                                        ATTR_ARG, dhash_t hash,
                                        char const *__restrict format, va_list args) {
+	DREF struct Dee_membercache_table *table;
 	dhash_t i, perturb;
 	DREF DeeObject *callback, *result, *args_tuple;
-	MEMBERCACHE_READ(&tp_self->tp_cache);
-	if unlikely(!tp_self->tp_cache.mc_table)
-		goto done;
-	perturb = i = MEMBERCACHE_HASHST(&tp_self->tp_cache, hash);
-	for (;; MEMBERCACHE_HASHNX(i, perturb)) {
-		struct membercache_slot *item = MEMBERCACHE_HASHIT(&tp_self->tp_cache, i);
-		if (item->mcs_type == MEMBERCACHE_UNUSED)
+	if unlikely(!Dee_membercache_acquiretable(&tp_self->tp_cache, &table))
+		goto cache_miss;
+	perturb = i = Dee_membercache_table_hashst(table, hash);
+	for (;; Dee_membercache_table_hashnx(i, perturb)) {
+		struct Dee_membercache_slot *item;
+		uint16_t type;
+		item = Dee_membercache_table_hashit(table, i);
+		type = atomic_read(&item->mcs_type);
+		if (type == MEMBERCACHE_UNUSED)
 			break;
 		if (item->mcs_hash != hash)
 			continue;
+		if unlikely(type == MEMBERCACHE_UNINITIALIZED)
+			continue; /* Don't dereference uninitialized items! */
 		if (!ATTREQ(item))
 			continue;
-		switch (item->mcs_type) {
+		switch (type) {
 
 		case MEMBERCACHE_METHOD: {
 			dobjmethod_t func;
-			DeeTypeObject *type;
+			DeeTypeObject *decl;
 			func = item->mcs_method.m_func;
-			type = item->mcs_decl;
+			decl = item->mcs_decl;
 			if (item->mcs_method.m_flag & TYPE_METHOD_FKWDS) {
-				MEMBERCACHE_ENDREAD(&tp_self->tp_cache);
+				Dee_membercache_releasetable(&tp_self->tp_cache, table);
 				args_tuple = DeeTuple_VNewf(format, args);
 				if unlikely(!args_tuple)
 					goto err;
 				if unlikely(!DeeTuple_SIZE(args_tuple))
 					goto err_classmethod_noargs_args_tuple;
 				/* Allow non-instance objects for generic types. */
-				if unlikely(!(type->tp_flags & TP_FABSTRACT) && DeeObject_AssertType(DeeTuple_GET(args_tuple, 0), type))
+				if unlikely(!(decl->tp_flags & TP_FABSTRACT) && DeeObject_AssertType(DeeTuple_GET(args_tuple, 0), decl))
 					goto err_args_tuple;
 				/* Use the first argument as the this-argument. */
 				result = (*(dkwobjmethod_t)func)(DeeTuple_GET(args_tuple, 0),
@@ -3075,14 +3249,14 @@ S(DeeType_VCallCachedInstanceAttrf,
 				Dee_Decref(args_tuple);
 				return result;
 			}
-			MEMBERCACHE_ENDREAD(&tp_self->tp_cache);
+			Dee_membercache_releasetable(&tp_self->tp_cache, table);
 			args_tuple = DeeTuple_VNewf(format, args);
 			if unlikely(!args_tuple)
 				goto err;
 			if unlikely(!DeeTuple_SIZE(args_tuple))
 				goto err_classmethod_noargs_args_tuple;
 			/* Allow non-instance objects for generic types. */
-			if unlikely(!(type->tp_flags & TP_FABSTRACT) && DeeObject_AssertType(DeeTuple_GET(args_tuple, 0), type))
+			if unlikely(!(decl->tp_flags & TP_FABSTRACT) && DeeObject_AssertType(DeeTuple_GET(args_tuple, 0), decl))
 				goto err_args_tuple;
 			/* Use the first argument as the this-argument. */
 			result = (*func)(DeeTuple_GET(args_tuple, 0),
@@ -3094,10 +3268,10 @@ S(DeeType_VCallCachedInstanceAttrf,
 
 		case MEMBERCACHE_GETSET: {
 			dgetmethod_t get;
-			DeeTypeObject *type;
+			DeeTypeObject *decl;
 			get  = item->mcs_getset.gs_get;
-			type = item->mcs_decl;
-			MEMBERCACHE_ENDREAD(&tp_self->tp_cache);
+			decl = item->mcs_decl;
+			Dee_membercache_releasetable(&tp_self->tp_cache, table);
 			if unlikely(!get)
 				goto err_no_getter;
 			args_tuple = DeeTuple_VNewf(format, args);
@@ -3106,7 +3280,7 @@ S(DeeType_VCallCachedInstanceAttrf,
 			if unlikely(DeeTuple_SIZE(args_tuple) != 1)
 				goto err_classproperty_invalid_args_args_tuple;
 			/* Allow non-instance objects for generic types. */
-			if unlikely(!(type->tp_flags & TP_FABSTRACT) && DeeObject_AssertType(DeeTuple_GET(args_tuple, 0), type))
+			if unlikely(!(decl->tp_flags & TP_FABSTRACT) && DeeObject_AssertType(DeeTuple_GET(args_tuple, 0), decl))
 				goto err_args_tuple;
 			/* Use the first argument as the this-argument. */
 			result = (*get)(DeeTuple_GET(args_tuple, 0));
@@ -3116,17 +3290,17 @@ S(DeeType_VCallCachedInstanceAttrf,
 
 		case MEMBERCACHE_MEMBER: {
 			struct type_member member;
-			DeeTypeObject *type;
+			DeeTypeObject *decl;
 			member = item->mcs_member;
-			type   = item->mcs_decl;
-			MEMBERCACHE_ENDREAD(&tp_self->tp_cache);
+			decl   = item->mcs_decl;
+			Dee_membercache_releasetable(&tp_self->tp_cache, table);
 			args_tuple = DeeTuple_VNewf(format, args);
 			if unlikely(!args_tuple)
 				goto err;
 			if unlikely(DeeTuple_SIZE(args_tuple) != 1)
 				goto err_classmember_invalid_args_args_tuple;
 			/* Allow non-instance objects for generic types. */
-			if unlikely(!(type->tp_flags & TP_FABSTRACT) && DeeObject_AssertType(DeeTuple_GET(args_tuple, 0), type))
+			if unlikely(!(decl->tp_flags & TP_FABSTRACT) && DeeObject_AssertType(DeeTuple_GET(args_tuple, 0), decl))
 				goto err_args_tuple;
 			/* Use the first argument as the this-argument. */
 			result = type_member_get(&member, DeeTuple_GET(args_tuple, 0));
@@ -3136,18 +3310,18 @@ S(DeeType_VCallCachedInstanceAttrf,
 
 		case MEMBERCACHE_ATTRIB: {
 			struct class_attribute *catt;
-			DeeTypeObject *type;
+			DeeTypeObject *decl;
 			catt = item->mcs_attrib.a_attr;
-			type = item->mcs_decl;
-			MEMBERCACHE_ENDREAD(&tp_self->tp_cache);
-			return DeeClass_VCallInstanceAttributef(type, catt, format, args);
+			decl = item->mcs_decl;
+			Dee_membercache_releasetable(&tp_self->tp_cache, table);
+			return DeeClass_VCallInstanceAttributef(decl, catt, format, args);
 		}
 
 		default: __builtin_unreachable();
 		}
 	}
-done:
-	MEMBERCACHE_ENDREAD(&tp_self->tp_cache);
+	Dee_membercache_releasetable(&tp_self->tp_cache, table);
+cache_miss:
 	return ITER_DONE;
 err_no_getter:
 	err_cant_access_clsproperty_get();
@@ -3187,25 +3361,30 @@ INTERN WUNUSED NONNULL((1, 3, 4)) int DCALL
 DeeType_FindCachedAttr(DeeTypeObject *tp_self, DeeObject *instance,
                        struct attribute_info *__restrict result,
                        struct attribute_lookup_rules const *__restrict rules) {
+	DREF struct Dee_membercache_table *table;
 	dhash_t i, perturb;
-	MEMBERCACHE_READ(&tp_self->tp_cache);
-	if unlikely(!tp_self->tp_cache.mc_table)
-		goto done;
-	perturb = i = MEMBERCACHE_HASHST(&tp_self->tp_cache, rules->alr_hash);
-	for (;; MEMBERCACHE_HASHNX(i, perturb)) {
-		struct membercache_slot *item = MEMBERCACHE_HASHIT(&tp_self->tp_cache, i);
+	if unlikely(!Dee_membercache_acquiretable(&tp_self->tp_cache, &table))
+		goto cache_miss;
+	perturb = i = Dee_membercache_table_hashst(table, rules->alr_hash);
+	for (;; Dee_membercache_table_hashnx(i, perturb)) {
 		char const *doc;
 		uint16_t perm;
 		DREF DeeTypeObject *member_decl, *member_type;
-		if (item->mcs_type == MEMBERCACHE_UNUSED)
+		struct Dee_membercache_slot *item;
+		uint16_t type;
+		item = Dee_membercache_table_hashit(table, i);
+		type = atomic_read(&item->mcs_type);
+		if (type == MEMBERCACHE_UNUSED)
 			break;
 		if (item->mcs_hash != rules->alr_hash)
 			continue;
+		if unlikely(type == MEMBERCACHE_UNINITIALIZED)
+			continue; /* Don't dereference uninitialized items! */
 		if (!streq(item->mcs_name, rules->alr_name))
 			continue;
 		if (rules->alr_decl && (DeeObject *)item->mcs_decl != result->a_decl)
 			break; /* Attribute isn't declared by the requested declarator. */
-		switch (item->mcs_type) {
+		switch (type) {
 
 		case MEMBERCACHE_METHOD:
 			perm        = ATTR_IMEMBER | ATTR_PERMGET | ATTR_PERMCALL;
@@ -3301,7 +3480,7 @@ DeeType_FindCachedAttr(DeeTypeObject *tp_self, DeeObject *instance,
 		}
 		member_decl = item->mcs_decl;
 		Dee_Incref(member_decl);
-		MEMBERCACHE_ENDREAD(&tp_self->tp_cache);
+		Dee_membercache_releasetable(&tp_self->tp_cache, table);
 		if ((perm & rules->alr_perm_mask) != rules->alr_perm_value) {
 			if (perm & ATTR_DOCOBJ)
 				Dee_Decref(COMPILER_CONTAINER_OF(doc, DeeStringObject, s_str));
@@ -3315,8 +3494,8 @@ DeeType_FindCachedAttr(DeeTypeObject *tp_self, DeeObject *instance,
 		result->a_attrtype = member_type; /* Inherit reference. */
 		return 0;
 	}
-done:
-	MEMBERCACHE_ENDREAD(&tp_self->tp_cache);
+	Dee_membercache_releasetable(&tp_self->tp_cache, table);
+cache_miss:
 not_found:
 	return 1;
 }
@@ -3325,25 +3504,30 @@ INTERN WUNUSED NONNULL((1, 2, 3)) int DCALL
 DeeType_FindCachedClassAttr(DeeTypeObject *tp_self,
                             struct attribute_info *__restrict result,
                             struct attribute_lookup_rules const *__restrict rules) {
+	DREF struct Dee_membercache_table *table;
 	dhash_t i, perturb;
-	MEMBERCACHE_READ(&tp_self->tp_class_cache);
-	if unlikely(!tp_self->tp_class_cache.mc_table)
-		goto done;
-	perturb = i = MEMBERCACHE_HASHST(&tp_self->tp_class_cache, rules->alr_hash);
-	for (;; MEMBERCACHE_HASHNX(i, perturb)) {
-		struct membercache_slot *item = MEMBERCACHE_HASHIT(&tp_self->tp_class_cache, i);
+	if unlikely(!Dee_membercache_acquiretable(&tp_self->tp_class_cache, &table))
+		goto cache_miss;
+	perturb = i = Dee_membercache_table_hashst(table, rules->alr_hash);
+	for (;; Dee_membercache_table_hashnx(i, perturb)) {
 		char const *doc;
 		uint16_t perm;
 		DREF DeeTypeObject *member_decl, *member_type;
-		if (item->mcs_type == MEMBERCACHE_UNUSED)
+		struct Dee_membercache_slot *item;
+		uint16_t type;
+		item = Dee_membercache_table_hashit(table, i);
+		type = atomic_read(&item->mcs_type);
+		if (type == MEMBERCACHE_UNUSED)
 			break;
 		if (item->mcs_hash != rules->alr_hash)
 			continue;
+		if unlikely(type == MEMBERCACHE_UNINITIALIZED)
+			continue; /* Don't dereference uninitialized items! */
 		if (!streq(item->mcs_name, rules->alr_name))
 			continue;
 		if (rules->alr_decl && (DeeObject *)item->mcs_decl != result->a_decl)
 			break; /* Attribute isn't declared by the requested declarator. */
-		switch (item->mcs_type) {
+		switch (type) {
 
 		case MEMBERCACHE_METHOD:
 			perm        = ATTR_CMEMBER | ATTR_PERMGET | ATTR_PERMCALL;
@@ -3517,7 +3701,7 @@ DeeType_FindCachedClassAttr(DeeTypeObject *tp_self,
 		}
 		member_decl = item->mcs_decl;
 		Dee_Incref(member_decl);
-		MEMBERCACHE_ENDREAD(&tp_self->tp_class_cache);
+		Dee_membercache_releasetable(&tp_self->tp_class_cache, table);
 		if ((perm & rules->alr_perm_mask) != rules->alr_perm_value) {
 			if (perm & ATTR_DOCOBJ)
 				Dee_Decref(COMPILER_CONTAINER_OF(doc, DeeStringObject, s_str));
@@ -3531,8 +3715,8 @@ DeeType_FindCachedClassAttr(DeeTypeObject *tp_self,
 		result->a_attrtype = member_type; /* Inherit reference. */
 		return 0;
 	}
-done:
-	MEMBERCACHE_ENDREAD(&tp_self->tp_class_cache);
+	Dee_membercache_releasetable(&tp_self->tp_class_cache, table);
+cache_miss:
 not_found:
 	return 1;
 }
@@ -3549,7 +3733,7 @@ INTERN WUNUSED NONNULL((1, 2, 3)) struct class_attribute *
 	struct class_attribute *result;
 	result = DeeClass_QueryInstanceAttributeWithHash(tp_self, attr, hash);
 	if (result)
-		membercache_addattrib(&tp_invoker->tp_cache, tp_self, hash, result);
+		Dee_membercache_addattrib(&tp_invoker->tp_cache, tp_self, hash, result);
 	return result;
 }
 #endif /* !MRO_LEN */
@@ -3563,7 +3747,7 @@ INTERN WUNUSED NONNULL((1, 2, 3)) struct class_attribute *
 	result = S(DeeClass_QueryInstanceAttributeStringWithHash(tp_self, attr, hash),
 	           DeeClass_QueryInstanceAttributeStringLenWithHash(tp_self, attr, attrlen, hash));
 	if (result)
-		membercache_addattrib(&tp_invoker->tp_cache, tp_self, hash, result);
+		Dee_membercache_addattrib(&tp_invoker->tp_cache, tp_self, hash, result);
 	return result;
 }
 
@@ -3576,7 +3760,7 @@ INTERN WUNUSED NONNULL((1, 2, 3)) struct class_attribute *
 	struct class_attribute *result;
 	result = DeeClass_QueryClassAttributeWithHash(tp_self, attr, hash);
 	if (result)
-		membercache_addattrib(&tp_invoker->tp_class_cache, tp_self, hash, result);
+		Dee_membercache_addattrib(&tp_invoker->tp_class_cache, tp_self, hash, result);
 	return result;
 }
 #endif /* !MRO_LEN */
@@ -3590,7 +3774,7 @@ INTERN WUNUSED NONNULL((1, 2, 3)) struct class_attribute *
 	result = S(DeeClass_QueryClassAttributeStringWithHash(tp_self, attr, hash),
 	           DeeClass_QueryClassAttributeStringLenWithHash(tp_self, attr, attrlen, hash));
 	if (result)
-		membercache_addattrib(&tp_invoker->tp_class_cache, tp_self, hash, result);
+		Dee_membercache_addattrib(&tp_invoker->tp_class_cache, tp_self, hash, result);
 	return result;
 }
 
@@ -3603,7 +3787,7 @@ INTERN WUNUSED NONNULL((1, 2, 3)) struct class_attribute *
 	struct class_attribute *result;
 	result = DeeClass_QueryInstanceAttributeWithHash(tp_self, attr, hash);
 	if (result)
-		membercache_addinstanceattrib(&tp_invoker->tp_class_cache, tp_self, hash, result);
+		Dee_membercache_addinstanceattrib(&tp_invoker->tp_class_cache, tp_self, hash, result);
 	return result;
 }
 #endif /* !MRO_LEN */
@@ -3617,20 +3801,20 @@ INTERN WUNUSED NONNULL((1, 2, 3)) struct class_attribute *
 	result = S(DeeClass_QueryInstanceAttributeStringWithHash(tp_self, attr, hash),
 	           DeeClass_QueryInstanceAttributeStringLenWithHash(tp_self, attr, attrlen, hash));
 	if (result)
-		membercache_addinstanceattrib(&tp_invoker->tp_class_cache, tp_self, hash, result);
+		Dee_membercache_addinstanceattrib(&tp_invoker->tp_class_cache, tp_self, hash, result);
 	return result;
 }
 
 
 
 INTERN WUNUSED NONNULL((1, 2, 3, 4, 5)) DREF DeeObject *DCALL
-N_len(type_method_getattr)(struct membercache *cache, DeeTypeObject *decl,
+N_len(type_method_getattr)(struct Dee_membercache *cache, DeeTypeObject *decl,
                            struct type_method const *chain, DeeObject *self,
                            ATTR_ARG, dhash_t hash) {
 	for (; chain->m_name; ++chain) {
 		if (!NAMEEQ(chain->m_name))
 			continue;
-		membercache_addmethod(cache, decl, hash, chain);
+		Dee_membercache_addmethod(cache, decl, hash, chain);
 		return type_method_get(chain, self);
 	}
 	return ITER_DONE;
@@ -3644,7 +3828,7 @@ INTERN WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *
 	for (; chain->m_name; ++chain) {
 		if (!NAMEEQ(chain->m_name))
 			continue;
-		membercache_addinstancemethod(&tp_invoker->tp_class_cache, tp_self, hash, chain);
+		Dee_membercache_addinstancemethod(&tp_invoker->tp_class_cache, tp_self, hash, chain);
 		return type_obmeth_get(tp_self, chain);
 	}
 	return ITER_DONE;
@@ -3658,21 +3842,21 @@ INTERN WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *
 	for (; chain->m_name; ++chain) {
 		if (!NAMEEQ(chain->m_name))
 			continue;
-		membercache_addmethod(&tp_invoker->tp_cache, tp_self, hash, chain);
+		Dee_membercache_addmethod(&tp_invoker->tp_cache, tp_self, hash, chain);
 		return type_obmeth_get(tp_self, chain);
 	}
 	return ITER_DONE;
 }
 
 INTERN WUNUSED NONNULL((1, 2, 3, 4, 5)) DREF DeeObject *DCALL
-N_len(type_method_callattr)(struct membercache *cache, DeeTypeObject *decl,
+N_len(type_method_callattr)(struct Dee_membercache *cache, DeeTypeObject *decl,
                             struct type_method const *chain, DeeObject *self,
                             ATTR_ARG, dhash_t hash,
                             size_t argc, DeeObject *const *argv) {
 	for (; chain->m_name; ++chain) {
 		if (!NAMEEQ(chain->m_name))
 			continue;
-		membercache_addmethod(cache, decl, hash, chain);
+		Dee_membercache_addmethod(cache, decl, hash, chain);
 		return type_method_call(chain, self, argc, argv);
 	}
 	return ITER_DONE;
@@ -3687,7 +3871,7 @@ INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *
 	for (; chain->m_name; ++chain) {
 		if (!NAMEEQ(chain->m_name))
 			continue;
-		membercache_addinstancemethod(&tp_invoker->tp_class_cache, tp_self, hash, chain);
+		Dee_membercache_addinstancemethod(&tp_invoker->tp_class_cache, tp_self, hash, chain);
 		return type_obmeth_call(tp_self, chain, argc, argv);
 	}
 	return ITER_DONE;
@@ -3695,7 +3879,7 @@ INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *
 
 INTERN WUNUSED NONNULL((1, 2, 3, 4, 5)) DREF DeeObject *DCALL
 S(type_method_callattr_kw,
-  type_method_callattr_len_kw)(struct membercache *cache, DeeTypeObject *decl,
+  type_method_callattr_len_kw)(struct Dee_membercache *cache, DeeTypeObject *decl,
                                struct type_method const *chain, DeeObject *self,
                                ATTR_ARG, dhash_t hash,
                                size_t argc, DeeObject *const *argv,
@@ -3703,7 +3887,7 @@ S(type_method_callattr_kw,
 	for (; chain->m_name; ++chain) {
 		if (!NAMEEQ(chain->m_name))
 			continue;
-		membercache_addmethod(cache, decl, hash, chain);
+		Dee_membercache_addmethod(cache, decl, hash, chain);
 		return type_method_call_kw(chain, self, argc, argv, kw);
 	}
 	return ITER_DONE;
@@ -3720,7 +3904,7 @@ S(DeeType_CallInstanceMethodAttrKw,
 	for (; chain->m_name; ++chain) {
 		if (!NAMEEQ(chain->m_name))
 			continue;
-		membercache_addinstancemethod(&tp_invoker->tp_class_cache, tp_self, hash, chain);
+		Dee_membercache_addinstancemethod(&tp_invoker->tp_class_cache, tp_self, hash, chain);
 		return type_obmeth_call_kw(tp_self, chain, argc, argv, kw);
 	}
 	return ITER_DONE;
@@ -3737,7 +3921,7 @@ S(DeeType_CallIInstanceMethodAttrKw,
 	for (; chain->m_name; ++chain) {
 		if (!NAMEEQ(chain->m_name))
 			continue;
-		membercache_addmethod(&tp_invoker->tp_cache, tp_self, hash, chain);
+		Dee_membercache_addmethod(&tp_invoker->tp_cache, tp_self, hash, chain);
 		return type_obmeth_call_kw(tp_self, chain, argc, argv, kw);
 	}
 	return ITER_DONE;
@@ -3745,14 +3929,14 @@ S(DeeType_CallIInstanceMethodAttrKw,
 
 INTERN WUNUSED NONNULL((1, 2, 3, 4)) DREF DeeObject *DCALL
 S(type_instance_method_callattr_kw,
-  type_instance_method_callattr_len_kw)(struct membercache *cache, DeeTypeObject *decl,
+  type_instance_method_callattr_len_kw)(struct Dee_membercache *cache, DeeTypeObject *decl,
                                         struct type_method const *chain, ATTR_ARG, dhash_t hash,
                                         size_t argc, DeeObject *const *argv,
                                         DeeObject *kw) {
 	for (; chain->m_name; ++chain) {
 		if (!NAMEEQ(chain->m_name))
 			continue;
-		membercache_addinstancemethod(cache, decl, hash, chain);
+		Dee_membercache_addinstancemethod(cache, decl, hash, chain);
 		return type_obmeth_call_kw(decl, chain, argc, argv, kw);
 	}
 	return ITER_DONE;
@@ -3760,7 +3944,7 @@ S(type_instance_method_callattr_kw,
 
 #ifndef MRO_LEN
 INTERN WUNUSED NONNULL((1, 2, 3, 4, 5, IFELSE(7, 8))) DREF DeeObject *DCALL
-type_method_vcallattrf(struct membercache *cache, DeeTypeObject *decl,
+type_method_vcallattrf(struct Dee_membercache *cache, DeeTypeObject *decl,
                        struct type_method const *chain, DeeObject *self,
                        ATTR_ARG, dhash_t hash,
                        char const *__restrict format, va_list args) {
@@ -3768,7 +3952,7 @@ type_method_vcallattrf(struct membercache *cache, DeeTypeObject *decl,
 	for (; chain->m_name; ++chain) {
 		if (!NAMEEQ(chain->m_name))
 			continue;
-		membercache_addmethod(cache, decl, hash, chain);
+		Dee_membercache_addmethod(cache, decl, hash, chain);
 		args_tuple = DeeTuple_VNewf(format, args);
 		if unlikely(!args_tuple)
 			goto err;
@@ -3794,7 +3978,7 @@ INTERN WUNUSED NONNULL((1, 2, 3, IFELSE(5, 6))) DREF DeeObject *
 	for (; chain->m_name; ++chain) {
 		if (!NAMEEQ(chain->m_name))
 			continue;
-		membercache_addinstancemethod(&tp_invoker->tp_class_cache, tp_self, hash, chain);
+		Dee_membercache_addinstancemethod(&tp_invoker->tp_class_cache, tp_self, hash, chain);
 		args_tuple = DeeTuple_VNewf(format, args);
 		if unlikely(!args_tuple)
 			goto err;
@@ -3819,7 +4003,7 @@ INTERN WUNUSED NONNULL((1, 2, 3, IFELSE(5, 6))) DREF DeeObject *
 	for (; chain->m_name; ++chain) {
 		if (!NAMEEQ(chain->m_name))
 			continue;
-		membercache_addmethod(&tp_invoker->tp_cache, tp_self, hash, chain);
+		Dee_membercache_addmethod(&tp_invoker->tp_cache, tp_self, hash, chain);
 		args_tuple = DeeTuple_VNewf(format, args);
 		if unlikely(!args_tuple)
 			goto err;
@@ -3838,13 +4022,13 @@ err:
 
 
 INTERN WUNUSED NONNULL((1, 2, 3, 4, 5)) DREF DeeObject *DCALL /* GET_GETSET */
-N_len(type_getset_getattr)(struct membercache *cache, DeeTypeObject *decl,
+N_len(type_getset_getattr)(struct Dee_membercache *cache, DeeTypeObject *decl,
                            struct type_getset const *chain, DeeObject *self,
                            ATTR_ARG, dhash_t hash) {
 	for (; chain->gs_name; ++chain) {
 		if (!NAMEEQ(chain->gs_name))
 			continue;
-		membercache_addgetset(cache, decl, hash, chain);
+		Dee_membercache_addgetset(cache, decl, hash, chain);
 		return type_getset_get(chain, self);
 	}
 	return ITER_DONE;
@@ -3858,7 +4042,7 @@ NLen(DeeType_GetInstanceGetSetAttr)(DeeTypeObject *tp_invoker,
 	for (; chain->gs_name; ++chain) {
 		if (!NAMEEQ(chain->gs_name))
 			continue;
-		membercache_addinstancegetset(&tp_invoker->tp_class_cache, tp_self, hash, chain);
+		Dee_membercache_addinstancegetset(&tp_invoker->tp_class_cache, tp_self, hash, chain);
 		return type_obprop_get(tp_self, chain);
 	}
 	return ITER_DONE;
@@ -3872,7 +4056,7 @@ NLen(DeeType_GetIInstanceGetSetAttr)(DeeTypeObject *tp_invoker,
 	for (; chain->gs_name; ++chain) {
 		if (!NAMEEQ(chain->gs_name))
 			continue;
-		membercache_addgetset(&tp_invoker->tp_cache, tp_self, hash, chain);
+		Dee_membercache_addgetset(&tp_invoker->tp_cache, tp_self, hash, chain);
 		return type_obprop_get(tp_self, chain);
 	}
 	return ITER_DONE;
@@ -3887,7 +4071,7 @@ NLen(DeeType_CallInstanceGetSetAttr)(DeeTypeObject *tp_invoker,
 	for (; chain->gs_name; ++chain) {
 		if (!NAMEEQ(chain->gs_name))
 			continue;
-		membercache_addinstancegetset(&tp_invoker->tp_class_cache, tp_self, hash, chain);
+		Dee_membercache_addinstancegetset(&tp_invoker->tp_class_cache, tp_self, hash, chain);
 		return type_obprop_call(tp_self, chain, argc, argv);
 	}
 	return ITER_DONE;
@@ -3903,7 +4087,7 @@ NLen(DeeType_CallIInstanceGetSetAttr)(DeeTypeObject *tp_invoker,
 	for (; chain->gs_name; ++chain) {
 		if (!NAMEEQ(chain->gs_name))
 			continue;
-		membercache_addgetset(&tp_invoker->tp_cache, tp_self, hash, chain);
+		Dee_membercache_addgetset(&tp_invoker->tp_cache, tp_self, hash, chain);
 		return type_obprop_call(tp_self, chain, argc, argv);
 	}
 	return ITER_DONE;
@@ -3921,7 +4105,7 @@ S(DeeType_CallInstanceGetSetAttrKw,
 	for (; chain->gs_name; ++chain) {
 		if (!NAMEEQ(chain->gs_name))
 			continue;
-		membercache_addinstancegetset(&tp_invoker->tp_class_cache, tp_self, hash, chain);
+		Dee_membercache_addinstancegetset(&tp_invoker->tp_class_cache, tp_self, hash, chain);
 		return type_obprop_call_kw(tp_self, chain, argc, argv, kw);
 	}
 	return ITER_DONE;
@@ -3938,7 +4122,7 @@ S(DeeType_CallIInstanceGetSetAttrKw,
 	for (; chain->gs_name; ++chain) {
 		if (!NAMEEQ(chain->gs_name))
 			continue;
-		membercache_addgetset(&tp_invoker->tp_cache, tp_self, hash, chain);
+		Dee_membercache_addgetset(&tp_invoker->tp_cache, tp_self, hash, chain);
 		return type_obprop_call_kw(tp_self, chain, argc, argv, kw);
 	}
 	return ITER_DONE;
@@ -3947,14 +4131,14 @@ S(DeeType_CallIInstanceGetSetAttrKw,
 
 
 INTERN WUNUSED NONNULL((1, 2, 3, 4, 5)) int DCALL /* BOUND_GETSET */
-N_len(type_getset_boundattr)(struct membercache *cache, DeeTypeObject *decl,
+N_len(type_getset_boundattr)(struct Dee_membercache *cache, DeeTypeObject *decl,
                              struct type_getset const *chain, DeeObject *self,
                              ATTR_ARG, dhash_t hash) {
 	DREF DeeObject *temp;
 	for (; chain->gs_name; ++chain) {
 		if (!NAMEEQ(chain->gs_name))
 			continue;
-		membercache_addgetset(cache, decl, hash, chain);
+		Dee_membercache_addgetset(cache, decl, hash, chain);
 		if (chain->gs_bound)
 			return (*chain->gs_bound)(self);
 		if unlikely(!chain->gs_get)
@@ -3974,26 +4158,26 @@ N_len(type_getset_boundattr)(struct membercache *cache, DeeTypeObject *decl,
 }
 
 INTERN WUNUSED NONNULL((1, 2, 3, 4, 5)) int DCALL /* DEL_GETSET */
-N_len(type_getset_delattr)(struct membercache *cache, DeeTypeObject *decl,
+N_len(type_getset_delattr)(struct Dee_membercache *cache, DeeTypeObject *decl,
                            struct type_getset const *chain, DeeObject *self,
                            ATTR_ARG, dhash_t hash) {
 	for (; chain->gs_name; ++chain) {
 		if (!NAMEEQ(chain->gs_name))
 			continue;
-		membercache_addgetset(cache, decl, hash, chain);
+		Dee_membercache_addgetset(cache, decl, hash, chain);
 		return type_getset_del(chain, self);
 	}
 	return 1;
 }
 
 INTERN WUNUSED NONNULL((1, 2, 3, 4, 5, IFELSE(7, 8))) int DCALL /* SET_GETSET */
-N_len(type_getset_setattr)(struct membercache *cache, DeeTypeObject *decl,
+N_len(type_getset_setattr)(struct Dee_membercache *cache, DeeTypeObject *decl,
                            struct type_getset const *chain, DeeObject *self,
                            ATTR_ARG, dhash_t hash, DeeObject *value) {
 	for (; chain->gs_name; ++chain) {
 		if (!NAMEEQ(chain->gs_name))
 			continue;
-		membercache_addgetset(cache, decl, hash, chain);
+		Dee_membercache_addgetset(cache, decl, hash, chain);
 		return type_getset_set(chain, self, value);
 	}
 	return 1;
@@ -4001,13 +4185,13 @@ N_len(type_getset_setattr)(struct membercache *cache, DeeTypeObject *decl,
 
 
 INTERN WUNUSED NONNULL((1, 2, 3, 4, 5)) DREF DeeObject *DCALL /* GET_MEMBER */
-N_len(type_member_getattr)(struct membercache *cache, DeeTypeObject *decl,
+N_len(type_member_getattr)(struct Dee_membercache *cache, DeeTypeObject *decl,
                            struct type_member const *chain, DeeObject *self,
                            ATTR_ARG, dhash_t hash) {
 	for (; chain->m_name; ++chain) {
 		if (!NAMEEQ(chain->m_name))
 			continue;
-		membercache_addmember(cache, decl, hash, chain);
+		Dee_membercache_addmember(cache, decl, hash, chain);
 		return type_member_get(chain, self);
 	}
 	return ITER_DONE;
@@ -4021,7 +4205,7 @@ NLen(DeeType_GetInstanceMemberAttr)(DeeTypeObject *tp_invoker,
 	for (; chain->m_name; ++chain) {
 		if (!NAMEEQ(chain->m_name))
 			continue;
-		membercache_addinstancemember(&tp_invoker->tp_class_cache, tp_self, hash, chain);
+		Dee_membercache_addinstancemember(&tp_invoker->tp_class_cache, tp_self, hash, chain);
 		return type_obmemb_get(tp_self, chain);
 	}
 	return ITER_DONE;
@@ -4035,7 +4219,7 @@ NLen(DeeType_GetIInstanceMemberAttr)(DeeTypeObject *tp_invoker,
 	for (; chain->m_name; ++chain) {
 		if (!NAMEEQ(chain->m_name))
 			continue;
-		membercache_addmember(&tp_invoker->tp_cache, tp_self, hash, chain);
+		Dee_membercache_addmember(&tp_invoker->tp_cache, tp_self, hash, chain);
 		return type_obmemb_get(tp_self, chain);
 	}
 	return ITER_DONE;
@@ -4050,7 +4234,7 @@ NLen(DeeType_CallInstanceMemberAttr)(DeeTypeObject *tp_invoker,
 	for (; chain->m_name; ++chain) {
 		if (!NAMEEQ(chain->m_name))
 			continue;
-		membercache_addinstancemember(&tp_invoker->tp_class_cache, tp_self, hash, chain);
+		Dee_membercache_addinstancemember(&tp_invoker->tp_class_cache, tp_self, hash, chain);
 		return type_obmemb_call(tp_self, chain, argc, argv);
 	}
 	return ITER_DONE;
@@ -4066,7 +4250,7 @@ NLen(DeeType_CallIInstanceMemberAttr)(DeeTypeObject *tp_invoker,
 	for (; chain->m_name; ++chain) {
 		if (!NAMEEQ(chain->m_name))
 			continue;
-		membercache_addmember(&tp_invoker->tp_cache, tp_self, hash, chain);
+		Dee_membercache_addmember(&tp_invoker->tp_cache, tp_self, hash, chain);
 		return type_obmemb_call(tp_self, chain, argc, argv);
 	}
 	return ITER_DONE;
@@ -4084,7 +4268,7 @@ S(DeeType_CallInstanceMemberAttrKw,
 	for (; chain->m_name; ++chain) {
 		if (!NAMEEQ(chain->m_name))
 			continue;
-		membercache_addinstancemember(&tp_invoker->tp_class_cache, tp_self, hash, chain);
+		Dee_membercache_addinstancemember(&tp_invoker->tp_class_cache, tp_self, hash, chain);
 		return type_obmemb_call_kw(tp_self, chain, argc, argv, kw);
 	}
 	return ITER_DONE;
@@ -4101,7 +4285,7 @@ S(DeeType_CallIInstanceMemberAttrKw,
 	for (; chain->m_name; ++chain) {
 		if (!NAMEEQ(chain->m_name))
 			continue;
-		membercache_addmember(&tp_invoker->tp_cache, tp_self, hash, chain);
+		Dee_membercache_addmember(&tp_invoker->tp_cache, tp_self, hash, chain);
 		return type_obmemb_call_kw(tp_self, chain, argc, argv, kw);
 	}
 	return ITER_DONE;
@@ -4111,39 +4295,39 @@ S(DeeType_CallIInstanceMemberAttrKw,
 
 
 INTERN WUNUSED NONNULL((1, 2, 3, 4, 5)) int DCALL /* BOUND_MEMBER */
-N_len(type_member_boundattr)(struct membercache *cache, DeeTypeObject *decl,
+N_len(type_member_boundattr)(struct Dee_membercache *cache, DeeTypeObject *decl,
                              struct type_member const *chain, DeeObject *self,
                              ATTR_ARG, dhash_t hash) {
 	for (; chain->m_name; ++chain) {
 		if (!NAMEEQ(chain->m_name))
 			continue;
-		membercache_addmember(cache, decl, hash, chain);
+		Dee_membercache_addmember(cache, decl, hash, chain);
 		return type_member_bound(chain, self);
 	}
 	return -2;
 }
 
 INTERN WUNUSED NONNULL((1, 2, 3, 4, 5)) int DCALL /* DEL_MEMBER */
-N_len(type_member_delattr)(struct membercache *cache, DeeTypeObject *decl,
+N_len(type_member_delattr)(struct Dee_membercache *cache, DeeTypeObject *decl,
                            struct type_member const *chain, DeeObject *self,
                            ATTR_ARG, dhash_t hash) {
 	for (; chain->m_name; ++chain) {
 		if (!NAMEEQ(chain->m_name))
 			continue;
-		membercache_addmember(cache, decl, hash, chain);
+		Dee_membercache_addmember(cache, decl, hash, chain);
 		return type_member_del(chain, self);
 	}
 	return 1;
 }
 
 INTERN WUNUSED NONNULL((1, 2, 3, 4, 5)) int DCALL /* SET_MEMBER */
-N_len(type_member_setattr)(struct membercache *cache, DeeTypeObject *decl,
+N_len(type_member_setattr)(struct Dee_membercache *cache, DeeTypeObject *decl,
                            struct type_member const *chain, DeeObject *self,
                            ATTR_ARG, dhash_t hash, DeeObject *value) {
 	for (; chain->m_name; ++chain) {
 		if (!NAMEEQ(chain->m_name))
 			continue;
-		membercache_addmember(cache, decl, hash, chain);
+		Dee_membercache_addmember(cache, decl, hash, chain);
 		return type_member_set(chain, self, value);
 	}
 	return 1;
@@ -4151,12 +4335,12 @@ N_len(type_member_setattr)(struct membercache *cache, DeeTypeObject *decl,
 
 
 INTERN WUNUSED NONNULL((1, 2, 3, 4)) bool DCALL /* METHOD */
-N_len(type_method_hasattr)(struct membercache *cache, DeeTypeObject *decl,
+N_len(type_method_hasattr)(struct Dee_membercache *cache, DeeTypeObject *decl,
                            struct type_method const *chain, ATTR_ARG, dhash_t hash) {
 	for (; chain->m_name; ++chain) {
 		if (!NAMEEQ(chain->m_name))
 			continue;
-		membercache_addmethod(cache, decl, hash, chain);
+		Dee_membercache_addmethod(cache, decl, hash, chain);
 		return true;
 	}
 	return false;
@@ -4170,19 +4354,19 @@ NLen(DeeType_HasInstanceMethodAttr)(DeeTypeObject *tp_invoker,
 	for (; chain->m_name; ++chain) {
 		if (!NAMEEQ(chain->m_name))
 			continue;
-		membercache_addinstancemethod(&tp_invoker->tp_class_cache, tp_self, hash, chain);
+		Dee_membercache_addinstancemethod(&tp_invoker->tp_class_cache, tp_self, hash, chain);
 		return true;
 	}
 	return false;
 }
 
 INTERN WUNUSED NONNULL((1, 2, 3, 4)) bool DCALL /* GETSET */
-N_len(type_getset_hasattr)(struct membercache *cache, DeeTypeObject *decl,
+N_len(type_getset_hasattr)(struct Dee_membercache *cache, DeeTypeObject *decl,
                            struct type_getset const *chain, ATTR_ARG, dhash_t hash) {
 	for (; chain->gs_name; ++chain) {
 		if (!NAMEEQ(chain->gs_name))
 			continue;
-		membercache_addgetset(cache, decl, hash, chain);
+		Dee_membercache_addgetset(cache, decl, hash, chain);
 		return true;
 	}
 	return false;
@@ -4196,19 +4380,19 @@ NLen(DeeType_HasInstanceGetSetAttr)(DeeTypeObject *tp_invoker,
 	for (; chain->gs_name; ++chain) {
 		if (!NAMEEQ(chain->gs_name))
 			continue;
-		membercache_addinstancegetset(&tp_invoker->tp_class_cache, tp_self, hash, chain);
+		Dee_membercache_addinstancegetset(&tp_invoker->tp_class_cache, tp_self, hash, chain);
 		return true;
 	}
 	return false;
 }
 
 INTERN WUNUSED NONNULL((1, 2, 3, 4)) bool DCALL /* MEMBER */
-N_len(type_member_hasattr)(struct membercache *cache, DeeTypeObject *decl,
+N_len(type_member_hasattr)(struct Dee_membercache *cache, DeeTypeObject *decl,
                            struct type_member const *chain, ATTR_ARG, dhash_t hash) {
 	for (; chain->m_name; ++chain) {
 		if (!NAMEEQ(chain->m_name))
 			continue;
-		membercache_addmember(cache, decl, hash, chain);
+		Dee_membercache_addmember(cache, decl, hash, chain);
 		return true;
 	}
 	return false;
@@ -4222,7 +4406,7 @@ NLen(DeeType_HasInstanceMemberAttr)(DeeTypeObject *tp_invoker,
 	for (; chain->m_name; ++chain) {
 		if (!NAMEEQ(chain->m_name))
 			continue;
-		membercache_addinstancemember(&tp_invoker->tp_class_cache, tp_self, hash, chain);
+		Dee_membercache_addinstancemember(&tp_invoker->tp_class_cache, tp_self, hash, chain);
 		return true;
 	}
 	return false;
@@ -4231,7 +4415,7 @@ NLen(DeeType_HasInstanceMemberAttr)(DeeTypeObject *tp_invoker,
 
 #ifndef MRO_LEN
 INTERN WUNUSED NONNULL((1, 2, 3, 5, 6)) int DCALL /* METHOD */
-type_method_findattr(struct membercache *cache, DeeTypeObject *decl,
+type_method_findattr(struct Dee_membercache *cache, DeeTypeObject *decl,
                      struct type_method const *chain, uint16_t perm,
                      struct attribute_info *__restrict result,
                      struct attribute_lookup_rules const *__restrict rules) {
@@ -4242,7 +4426,7 @@ type_method_findattr(struct membercache *cache, DeeTypeObject *decl,
 	for (; chain->m_name; ++chain) {
 		if (!streq(chain->m_name, rules->alr_name))
 			continue;
-		membercache_addmethod(cache, decl, rules->alr_hash, chain);
+		Dee_membercache_addmethod(cache, decl, rules->alr_hash, chain);
 		ASSERT(!(perm & ATTR_DOCOBJ));
 		result->a_doc      = chain->m_doc;
 		result->a_decl     = (DREF DeeObject *)decl;
@@ -4272,7 +4456,7 @@ DeeType_FindInstanceMethodAttr(DeeTypeObject *tp_invoker,
 	for (; chain->m_name; ++chain) {
 		if (!streq(chain->m_name, rules->alr_name))
 			continue;
-		membercache_addinstancemethod(&tp_invoker->tp_class_cache, tp_self, rules->alr_hash, chain);
+		Dee_membercache_addinstancemethod(&tp_invoker->tp_class_cache, tp_self, rules->alr_hash, chain);
 		ASSERT(!(perm & ATTR_DOCOBJ));
 		result->a_doc      = chain->m_doc;
 		result->a_decl     = (DREF DeeObject *)tp_self;
@@ -4289,7 +4473,7 @@ nope:
 }
 
 INTERN WUNUSED NONNULL((1, 2, 3, 5, 6)) int DCALL /* GETSET */
-type_getset_findattr(struct membercache *cache, DeeTypeObject *decl,
+type_getset_findattr(struct Dee_membercache *cache, DeeTypeObject *decl,
                      struct type_getset const *chain, uint16_t perm,
                      struct attribute_info *__restrict result,
                      struct attribute_lookup_rules const *__restrict rules) {
@@ -4307,7 +4491,7 @@ type_getset_findattr(struct membercache *cache, DeeTypeObject *decl,
 			continue;
 		if (!streq(chain->gs_name, rules->alr_name))
 			continue;
-		membercache_addgetset(cache, decl, rules->alr_hash, chain);
+		Dee_membercache_addgetset(cache, decl, rules->alr_hash, chain);
 		ASSERT(!(perm & ATTR_DOCOBJ));
 		result->a_doc      = chain->gs_doc;
 		result->a_perm     = flags;
@@ -4340,7 +4524,7 @@ DeeType_FindInstanceGetSetAttr(DeeTypeObject *tp_invoker,
 			continue;
 		if (!streq(chain->gs_name, rules->alr_name))
 			continue;
-		membercache_addinstancegetset(&tp_invoker->tp_class_cache, tp_self, rules->alr_hash, chain);
+		Dee_membercache_addinstancegetset(&tp_invoker->tp_class_cache, tp_self, rules->alr_hash, chain);
 		ASSERT(!(perm & ATTR_DOCOBJ));
 		result->a_doc      = chain->gs_doc;
 		result->a_perm     = flags;
@@ -4353,7 +4537,7 @@ DeeType_FindInstanceGetSetAttr(DeeTypeObject *tp_invoker,
 }
 
 INTERN WUNUSED NONNULL((1, 2, 3, 5, 6)) int DCALL /* MEMBER */
-type_member_findattr(struct membercache *cache, DeeTypeObject *decl,
+type_member_findattr(struct Dee_membercache *cache, DeeTypeObject *decl,
                      struct type_member const *chain, uint16_t perm,
                      struct attribute_info *__restrict result,
                      struct attribute_lookup_rules const *__restrict rules) {
@@ -4368,7 +4552,7 @@ type_member_findattr(struct membercache *cache, DeeTypeObject *decl,
 			continue;
 		if (!streq(chain->m_name, rules->alr_name))
 			continue;
-		membercache_addmember(cache, decl, rules->alr_hash, chain);
+		Dee_membercache_addmember(cache, decl, rules->alr_hash, chain);
 		ASSERT(!(perm & ATTR_DOCOBJ));
 		result->a_doc      = chain->m_doc;
 		result->a_perm     = flags;
@@ -4399,7 +4583,7 @@ DeeType_FindInstanceMemberAttr(DeeTypeObject *tp_invoker,
 			continue;
 		if (!streq(chain->m_name, rules->alr_name))
 			continue;
-		membercache_addinstancemember(&tp_invoker->tp_class_cache, tp_self, rules->alr_hash, chain);
+		Dee_membercache_addinstancemember(&tp_invoker->tp_class_cache, tp_self, rules->alr_hash, chain);
 		ASSERT(!(perm & ATTR_DOCOBJ));
 		result->a_doc      = chain->m_doc;
 		result->a_perm     = flags;

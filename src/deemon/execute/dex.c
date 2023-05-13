@@ -453,7 +453,7 @@ err:
 	return -1;
 }
 
-INTDEF size_t DCALL membercache_clear(size_t max_clear);
+INTDEF size_t DCALL Dee_membercache_clearall(size_t max_clear);
 
 PRIVATE NONNULL((1)) void DCALL
 dex_fini(DeeDexObject *__restrict self) {
@@ -492,7 +492,7 @@ dex_fini(DeeDexObject *__restrict self) {
 		 * If we don't do this before, dangling points may be left
 		 * in the global chain of active membercaches.
 		 * XXX: Only do this for caches apart of this module's static binary image? */
-		membercache_clear((size_t)-1);
+		Dee_membercache_clearall((size_t)-1);
 #if 0
 		/* FIXME: Work-around for preventing DEX modules being unloaded
 		 *        while objects referring to statically defined types inside

@@ -25,48 +25,52 @@
 #include "object.h"
 #include "util/lock.h"
 
+#include <hybrid/sched/__yield.h>
+
 DECL_BEGIN
 
 /* MRO -- Method (or rather Attribute) Resolution Order.
  *
- * Defines all the functions and types (except for `membercache' itself,
+ * Defines all the functions and types (except for `Dee_membercache' itself,
  * which needs to be defined in `object.h', because it appears 2x as an
  * inlined structure in every type object) that are required to resolve,
  * as well as cache the attributes of types/classes, both builtin, and
  * user-defined. */
 
 #ifdef DEE_SOURCE
-#define Dee_class_attribute  class_attribute
-#define Dee_class_desc       class_desc
-#define Dee_membercache_slot membercache_slot
+#define Dee_class_attribute class_attribute
+#define Dee_class_desc      class_desc
 #endif /* DEE_SOURCE */
 
+#ifdef CONFIG_BUILDING_DEEMON
 
-#ifdef DEE_SOURCE
+/* Type codes for `struct Dee_membercache_slot::mcs_type' */
 #define MEMBERCACHE_UNUSED          0  /* Unused slot. */
-#define MEMBERCACHE_METHOD          1  /* Method slot. */
-#define MEMBERCACHE_GETSET          2  /* Getset slot. */
-#define MEMBERCACHE_MEMBER          3  /* Member slot. */
-#define MEMBERCACHE_ATTRIB          4  /* Class attribute. */
-#define MEMBERCACHE_INSTANCE_METHOD 5  /* Same as `MEMBERCACHE_METHOD', but only found in `tp_class_cache', referring to an instance-method */
-#define MEMBERCACHE_INSTANCE_GETSET 6  /* Same as `MEMBERCACHE_GETSET', but only found in `tp_class_cache', referring to an instance-getset */
-#define MEMBERCACHE_INSTANCE_MEMBER 7  /* Same as `MEMBERCACHE_MEMBER', but only found in `tp_class_cache', referring to an instance-member */
-#define MEMBERCACHE_INSTANCE_ATTRIB 8  /* Same as `MEMBERCACHE_ATTRIB', but only found in `tp_class_cache', referring to an instance-attribute */
-#define MEMBERCACHE_COUNT           9  /* Amount of different cache types. */
-#endif /* DEE_SOURCE */
+#define MEMBERCACHE_UNINITIALIZED   1  /* Uninitialized slot (when encountered, keep searching)
+                                        * Used as a marker for a slot that is currently being
+                                        * entered into the cache. */
+#define MEMBERCACHE_METHOD          2  /* Method slot. */
+#define MEMBERCACHE_GETSET          3  /* Getset slot. */
+#define MEMBERCACHE_MEMBER          4  /* Member slot. */
+#define MEMBERCACHE_ATTRIB          5  /* Class attribute. */
+#define MEMBERCACHE_INSTANCE_METHOD 6  /* Same as `MEMBERCACHE_METHOD', but only found in `tp_class_cache', referring to an instance-method */
+#define MEMBERCACHE_INSTANCE_GETSET 7  /* Same as `MEMBERCACHE_GETSET', but only found in `tp_class_cache', referring to an instance-getset */
+#define MEMBERCACHE_INSTANCE_MEMBER 8  /* Same as `MEMBERCACHE_MEMBER', but only found in `tp_class_cache', referring to an instance-member */
+#define MEMBERCACHE_INSTANCE_ATTRIB 9  /* Same as `MEMBERCACHE_ATTRIB', but only found in `tp_class_cache', referring to an instance-attribute */
+#define MEMBERCACHE_COUNT           10 /* Amount of different cache types. */
 
 struct Dee_class_attribute;
 struct Dee_class_desc;
 struct Dee_membercache_slot {
-	/* A slot inside of a `struct membercache' table. */
+	/* A slot inside of a `struct Dee_membercache' table. */
 	uint16_t               mcs_type;   /* The type of this slot (One of `MEMBERCACHE_*') */
-	uint16_t               mcs_pad[(sizeof(void *)-2)/2];
-	Dee_hash_t             mcs_hash;   /* [valid_if(mcs_type != MEMBERCACHE_UNUSED)][== Dee_HashStr(mcs_name)] */
-	DeeTypeObject         *mcs_decl;   /* [valid_if(mcs_type != MEMBERCACHE_UNUSED)][1..1][const]
+	uint16_t              _mcs_pad[(sizeof(void *)-2)/2];
+	Dee_hash_t             mcs_hash;   /* [valid_if(mcs_type != MEMBERCACHE_UNUSED && mcs_type != MEMBERCACHE_UNINITIALIZED)][== Dee_HashStr(mcs_name)] */
+	DeeTypeObject         *mcs_decl;   /* [valid_if(mcs_type != MEMBERCACHE_UNUSED && mcs_type != MEMBERCACHE_UNINITIALIZED)][1..1][const]
 	                                    * The type that is providing this attribute, which must be
 	                                    * the associated type itself, or one of its base-classes. */
 	union {
-		char const            *mcs_name;   /* [valid_if(mcs_type != MEMBERCACHE_UNUSED)] */
+		char const            *mcs_name;   /* [valid_if(mcs_type != MEMBERCACHE_UNUSED && mcs_type != MEMBERCACHE_UNINITIALIZED)] */
 		struct Dee_type_method mcs_method; /* [valid_if(mcs_type == MEMBERCACHE_METHOD || mcs_type == MEMBERCACHE_INSTANCE_METHOD)] */
 		struct Dee_type_getset mcs_getset; /* [valid_if(mcs_type == MEMBERCACHE_GETSET || mcs_type == MEMBERCACHE_INSTANCE_GETSET)] */
 		struct Dee_type_member mcs_member; /* [valid_if(mcs_type == MEMBERCACHE_MEMBER || mcs_type == MEMBERCACHE_INSTANCE_MEMBER)] */
@@ -87,62 +91,82 @@ struct Dee_membercache_slot {
 	;
 };
 
-#ifdef DEE_SOURCE
-#define MEMBERCACHE_READ(self)          Dee_atomic_rwlock_read(&(self)->mc_lock)
-#define MEMBERCACHE_WRITE(self)         Dee_atomic_rwlock_write(&(self)->mc_lock)
-#define MEMBERCACHE_ENDREAD(self)       Dee_atomic_rwlock_endread(&(self)->mc_lock)
-#define MEMBERCACHE_ENDWRITE(self)      Dee_atomic_rwlock_endwrite(&(self)->mc_lock)
-#define MEMBERCACHE_HASHST(self, hash)  ((hash) & (self)->mc_mask)
-#define MEMBERCACHE_HASHNX(hs, perturb) (void)((hs) = ((hs) << 2) + (hs) + (perturb) + 1, (perturb) >>= 5) /* This `5' is tunable. */
-#define MEMBERCACHE_HASHIT(self, i)     ((self)->mc_table+((i) & (self)->mc_mask))
-#endif /* DEE_SOURCE */
+struct Dee_membercache_table {
+	Dee_refcnt_t                                         mc_refcnt; /* [lock(ATOMIC)] Reference counter. */
+	size_t                                               mc_mask;   /* [const] Allocated table size -1. */
+	size_t                                               mc_size;   /* [lock(ATOMIC)] Amount of used table entries (always `<= mc_mask'). */
+	COMPILER_FLEXIBLE_ARRAY(struct Dee_membercache_slot, mc_table); /* [0..mc_mask+1] Member cache table. */
+};
 
+/* Hashing functions for `Dee_membercache_table' */
+#define Dee_membercache_table_hashst(self, hash)  ((hash) & (self)->mc_mask)
+#define Dee_membercache_table_hashnx(hs, perturb) (void)((hs) = ((hs) << 2) + (hs) + (perturb) + 1, (perturb) >>= 5) /* This `5' is tunable. */
+#define Dee_membercache_table_hashit(self, i)     ((self)->mc_table+((i) & (self)->mc_mask))
 
-#ifdef CONFIG_BUILDING_DEEMON
-/* Finalize a given membercache. */
-INTDEF NONNULL((1)) void DCALL membercache_fini(struct membercache *__restrict self);
+/* Member-cache table reference counting functions. */
+#define Dee_membercache_table_destroy(self) Dee_Free(self)
+#define Dee_membercache_table_incref(self)  __hybrid_atomic_inc(&(self)->mc_refcnt, __ATOMIC_SEQ_CST)
+#define Dee_membercache_table_decref(self)  (void)(__hybrid_atomic_decfetch(&(self)->mc_refcnt, __ATOMIC_SEQ_CST) || (Dee_membercache_table_destroy(self), 0))
 
-/* Try to insert a new caching point into the given membercache `self'.
+/* Member-cache synchronization helpers. */
+#ifndef CONFIG_NO_THREADS
+#define Dee_membercache_waitfor(self)                                           \
+	do {                                                                        \
+		while (__hybrid_atomic_load(&(self)->mc_tabuse, __ATOMIC_ACQUIRE) != 0) \
+			__hybrid_yield();                                                   \
+	}	__WHILE0
+#define Dee_membercache_tabuse_inc(self) __hybrid_atomic_inc(&(self)->mc_tabuse, __ATOMIC_ACQUIRE)
+#define Dee_membercache_tabuse_dec(self) __hybrid_atomic_dec(&(self)->mc_tabuse, __ATOMIC_RELEASE)
+#else /* !CONFIG_NO_THREADS */
+#define Dee_membercache_waitfor(self)    (void)0
+#define Dee_membercache_tabuse_inc(self) (void)0
+#define Dee_membercache_tabuse_dec(self) (void)0
+#endif /* CONFIG_NO_THREADS */
+
+/* Finalize a given member-cache. */
+INTDEF NONNULL((1)) void DCALL Dee_membercache_fini(struct Dee_membercache *__restrict self);
+
+/* Try to insert a new caching point into the given Dee_membercache `self'.
  * @param: self: The cache to insert into.
  * @param: decl: The type providing the declaration. */
-INTDEF NONNULL((1, 2, 4)) void DCALL membercache_addmethod(struct membercache *self, DeeTypeObject *decl, dhash_t hash, struct type_method const *method);
-INTDEF NONNULL((1, 2, 4)) void DCALL membercache_addgetset(struct membercache *self, DeeTypeObject *decl, dhash_t hash, struct type_getset const *getset);
-INTDEF NONNULL((1, 2, 4)) void DCALL membercache_addmember(struct membercache *self, DeeTypeObject *decl, dhash_t hash, struct type_member const *member);
-INTDEF NONNULL((1, 2, 4)) void DCALL membercache_addattrib(struct membercache *self, DeeTypeObject *decl, dhash_t hash, struct Dee_class_attribute *attrib);
-INTDEF NONNULL((1, 2, 4)) void DCALL membercache_addinstancemethod(struct membercache *self, DeeTypeObject *decl, dhash_t hash, struct type_method const *method);
-INTDEF NONNULL((1, 2, 4)) void DCALL membercache_addinstancegetset(struct membercache *self, DeeTypeObject *decl, dhash_t hash, struct type_getset const *getset);
-INTDEF NONNULL((1, 2, 4)) void DCALL membercache_addinstancemember(struct membercache *self, DeeTypeObject *decl, dhash_t hash, struct type_member const *member);
-INTDEF NONNULL((1, 2, 4)) void DCALL membercache_addinstanceattrib(struct membercache *self, DeeTypeObject *decl, dhash_t hash, struct Dee_class_attribute *attrib);
+INTDEF NONNULL((1, 2, 4)) bool DCALL Dee_membercache_addmethod(struct Dee_membercache *self, DeeTypeObject *decl, dhash_t hash, struct type_method const *method);
+INTDEF NONNULL((1, 2, 4)) bool DCALL Dee_membercache_addgetset(struct Dee_membercache *self, DeeTypeObject *decl, dhash_t hash, struct type_getset const *getset);
+INTDEF NONNULL((1, 2, 4)) bool DCALL Dee_membercache_addmember(struct Dee_membercache *self, DeeTypeObject *decl, dhash_t hash, struct type_member const *member);
+INTDEF NONNULL((1, 2, 4)) bool DCALL Dee_membercache_addattrib(struct Dee_membercache *self, DeeTypeObject *decl, dhash_t hash, struct Dee_class_attribute *attrib);
+INTDEF NONNULL((1, 2, 4)) bool DCALL Dee_membercache_addinstancemethod(struct Dee_membercache *self, DeeTypeObject *decl, dhash_t hash, struct type_method const *method);
+INTDEF NONNULL((1, 2, 4)) bool DCALL Dee_membercache_addinstancegetset(struct Dee_membercache *self, DeeTypeObject *decl, dhash_t hash, struct type_getset const *getset);
+INTDEF NONNULL((1, 2, 4)) bool DCALL Dee_membercache_addinstancemember(struct Dee_membercache *self, DeeTypeObject *decl, dhash_t hash, struct type_member const *member);
+INTDEF NONNULL((1, 2, 4)) bool DCALL Dee_membercache_addinstanceattrib(struct Dee_membercache *self, DeeTypeObject *decl, dhash_t hash, struct Dee_class_attribute *attrib);
 
 #ifdef __INTELLISENSE__
 /* Cache an instance member (e.g. `tp_methods') in `tp_cache'. */
-INTDEF NONNULL((1, 2, 4)) void DCALL DeeType_CacheMethod(DeeTypeObject *self, DeeTypeObject *decl, dhash_t hash, struct type_method const *method);
-INTDEF NONNULL((1, 2, 4)) void DCALL DeeType_CacheGetSet(DeeTypeObject *self, DeeTypeObject *decl, dhash_t hash, struct type_getset const *getset);
-INTDEF NONNULL((1, 2, 4)) void DCALL DeeType_CacheMember(DeeTypeObject *self, DeeTypeObject *decl, dhash_t hash, struct type_member const *member);
-INTDEF NONNULL((1, 2, 4)) void DCALL DeeType_CacheAttrib(DeeTypeObject *self, DeeTypeObject *decl, dhash_t hash, struct Dee_class_attribute const *__restrict attrib);
+INTDEF NONNULL((1, 2, 4)) bool DCALL DeeType_CacheMethod(DeeTypeObject *self, DeeTypeObject *decl, dhash_t hash, struct type_method const *method);
+INTDEF NONNULL((1, 2, 4)) bool DCALL DeeType_CacheGetSet(DeeTypeObject *self, DeeTypeObject *decl, dhash_t hash, struct type_getset const *getset);
+INTDEF NONNULL((1, 2, 4)) bool DCALL DeeType_CacheMember(DeeTypeObject *self, DeeTypeObject *decl, dhash_t hash, struct type_member const *member);
+INTDEF NONNULL((1, 2, 4)) bool DCALL DeeType_CacheAttrib(DeeTypeObject *self, DeeTypeObject *decl, dhash_t hash, struct Dee_class_attribute const *__restrict attrib);
 /* Cache a class member (e.g. `tp_class_methods') in `tp_class_cache'. */
-INTDEF NONNULL((1, 2, 4)) void DCALL DeeType_CacheClassMethod(DeeTypeObject *self, DeeTypeObject *decl, dhash_t hash, struct type_method const *method);
-INTDEF NONNULL((1, 2, 4)) void DCALL DeeType_CacheClassGetSet(DeeTypeObject *self, DeeTypeObject *decl, dhash_t hash, struct type_getset const *getset);
-INTDEF NONNULL((1, 2, 4)) void DCALL DeeType_CacheClassMember(DeeTypeObject *self, DeeTypeObject *decl, dhash_t hash, struct type_member const *member);
-INTDEF NONNULL((1, 2, 4)) void DCALL DeeType_CacheClassAttrib(DeeTypeObject *self, DeeTypeObject *decl, dhash_t hash, struct Dee_class_attribute const *__restrict attrib);
+INTDEF NONNULL((1, 2, 4)) bool DCALL DeeType_CacheClassMethod(DeeTypeObject *self, DeeTypeObject *decl, dhash_t hash, struct type_method const *method);
+INTDEF NONNULL((1, 2, 4)) bool DCALL DeeType_CacheClassGetSet(DeeTypeObject *self, DeeTypeObject *decl, dhash_t hash, struct type_getset const *getset);
+INTDEF NONNULL((1, 2, 4)) bool DCALL DeeType_CacheClassMember(DeeTypeObject *self, DeeTypeObject *decl, dhash_t hash, struct type_member const *member);
+INTDEF NONNULL((1, 2, 4)) bool DCALL DeeType_CacheClassAttrib(DeeTypeObject *self, DeeTypeObject *decl, dhash_t hash, struct Dee_class_attribute const *__restrict attrib);
 /* Cache an instance member (e.g. `tp_methods') in `tp_class_cache'. */
-INTDEF NONNULL((1, 2, 4)) void DCALL DeeType_CacheInstanceMethod(DeeTypeObject *self, DeeTypeObject *decl, dhash_t hash, struct type_method const *method);
-INTDEF NONNULL((1, 2, 4)) void DCALL DeeType_CacheInstanceGetSet(DeeTypeObject *self, DeeTypeObject *decl, dhash_t hash, struct type_getset const *getset);
-INTDEF NONNULL((1, 2, 4)) void DCALL DeeType_CacheInstanceMember(DeeTypeObject *self, DeeTypeObject *decl, dhash_t hash, struct type_member const *member);
-INTDEF NONNULL((1, 2, 4)) void DCALL DeeType_CacheInstanceAttrib(DeeTypeObject *self, DeeTypeObject *decl, dhash_t hash, struct Dee_class_attribute const *__restrict attrib);
+INTDEF NONNULL((1, 2, 4)) bool DCALL DeeType_CacheInstanceMethod(DeeTypeObject *self, DeeTypeObject *decl, dhash_t hash, struct type_method const *method);
+INTDEF NONNULL((1, 2, 4)) bool DCALL DeeType_CacheInstanceGetSet(DeeTypeObject *self, DeeTypeObject *decl, dhash_t hash, struct type_getset const *getset);
+INTDEF NONNULL((1, 2, 4)) bool DCALL DeeType_CacheInstanceMember(DeeTypeObject *self, DeeTypeObject *decl, dhash_t hash, struct type_member const *member);
+INTDEF NONNULL((1, 2, 4)) bool DCALL DeeType_CacheInstanceAttrib(DeeTypeObject *self, DeeTypeObject *decl, dhash_t hash, struct Dee_class_attribute const *__restrict attrib);
 #else /* __INTELLISENSE__ */
-#define DeeType_CacheMethod(self, decl, hash, method)         membercache_addmethod(&(self)->tp_cache, decl, hash, method)
-#define DeeType_CacheGetSet(self, decl, hash, getset)         membercache_addgetset(&(self)->tp_cache, decl, hash, getset)
-#define DeeType_CacheMember(self, decl, hash, member)         membercache_addmember(&(self)->tp_cache, decl, hash, member)
-#define DeeType_CacheAttrib(self, decl, hash, attrib)         membercache_addattrib(&(self)->tp_cache, decl, hash, attrib)
-#define DeeType_CacheClassMethod(self, decl, hash, method)    membercache_addmethod(&(self)->tp_class_cache, decl, hash, method)
-#define DeeType_CacheClassGetSet(self, decl, hash, getset)    membercache_addgetset(&(self)->tp_class_cache, decl, hash, getset)
-#define DeeType_CacheClassMember(self, decl, hash, member)    membercache_addmember(&(self)->tp_class_cache, decl, hash, member)
-#define DeeType_CacheClassAttrib(self, decl, hash, attrib)    membercache_addattrib(&(self)->tp_class_cache, decl, hash, attrib)
-#define DeeType_CacheInstanceMethod(self, decl, hash, method) membercache_addinstancemethod(&(self)->tp_class_cache, decl, hash, method)
-#define DeeType_CacheInstanceGetSet(self, decl, hash, getset) membercache_addinstancegetset(&(self)->tp_class_cache, decl, hash, getset)
-#define DeeType_CacheInstanceMember(self, decl, hash, member) membercache_addinstancemember(&(self)->tp_class_cache, decl, hash, member)
-#define DeeType_CacheInstanceAttrib(self, decl, hash, attrib) membercache_addinstanceattrib(&(self)->tp_class_cache, decl, hash, attrib)
+#define DeeType_CacheMethod(self, decl, hash, method)         Dee_membercache_addmethod(&(self)->tp_cache, decl, hash, method)
+#define DeeType_CacheGetSet(self, decl, hash, getset)         Dee_membercache_addgetset(&(self)->tp_cache, decl, hash, getset)
+#define DeeType_CacheMember(self, decl, hash, member)         Dee_membercache_addmember(&(self)->tp_cache, decl, hash, member)
+#define DeeType_CacheAttrib(self, decl, hash, attrib)         Dee_membercache_addattrib(&(self)->tp_cache, decl, hash, attrib)
+#define DeeType_CacheClassMethod(self, decl, hash, method)    Dee_membercache_addmethod(&(self)->tp_class_cache, decl, hash, method)
+#define DeeType_CacheClassGetSet(self, decl, hash, getset)    Dee_membercache_addgetset(&(self)->tp_class_cache, decl, hash, getset)
+#define DeeType_CacheClassMember(self, decl, hash, member)    Dee_membercache_addmember(&(self)->tp_class_cache, decl, hash, member)
+#define DeeType_CacheClassAttrib(self, decl, hash, attrib)    Dee_membercache_addattrib(&(self)->tp_class_cache, decl, hash, attrib)
+#define DeeType_CacheInstanceMethod(self, decl, hash, method) Dee_membercache_addinstancemethod(&(self)->tp_class_cache, decl, hash, method)
+#define DeeType_CacheInstanceGetSet(self, decl, hash, getset) Dee_membercache_addinstancegetset(&(self)->tp_class_cache, decl, hash, getset)
+#define DeeType_CacheInstanceMember(self, decl, hash, member) Dee_membercache_addinstancemember(&(self)->tp_class_cache, decl, hash, member)
+#define DeeType_CacheInstanceAttrib(self, decl, hash, attrib) Dee_membercache_addinstanceattrib(&(self)->tp_class_cache, decl, hash, attrib)
 #endif /* !__INTELLISENSE__ */
 
 /* NOTES:
@@ -386,11 +410,11 @@ INTDEF WUNUSED NONNULL((1, 2, 3, 5)) DREF DeeObject *(DCALL DeeType_VCallClassMe
 //INTDEF WUNUSED NONNULL((1, 2, 3, 5)) DREF DeeObject *(DCALL DeeType_VCallIInstanceMethodAttrf)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr_name, dhash_t hash, char const *__restrict format, va_list args);
 #else /* __INTELLISENSE__ */
 INTDEF NONNULL((1, 2, 3, 4, 5)) DREF DeeObject *DCALL /* GET_METHOD */
-type_method_getattr(struct membercache *cache, DeeTypeObject *decl,
+type_method_getattr(struct Dee_membercache *cache, DeeTypeObject *decl,
                     struct type_method const *chain, DeeObject *self,
                     char const *__restrict attr_name, dhash_t hash);
 INTDEF WUNUSED NONNULL((1, 2, 3, 4, 5)) DREF DeeObject *DCALL /* GET_METHOD */
-type_method_getattr_len(struct membercache *cache, DeeTypeObject *decl,
+type_method_getattr_len(struct Dee_membercache *cache, DeeTypeObject *decl,
                         struct type_method const *chain, DeeObject *self,
                         char const *__restrict attr_name, size_t attrlen, dhash_t hash);
 #define DeeType_GetMethodAttr(tp_invoker, tp_self, self, attr_name, hash)             type_method_getattr(&(tp_invoker)->tp_cache, tp_self, (tp_self)->tp_methods, self, attr_name, hash)
@@ -403,12 +427,12 @@ INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeType_GetInstanceMeth
 INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeType_GetIInstanceMethodAttrLen)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr_name, size_t attrlen, dhash_t hash);
 
 INTDEF WUNUSED NONNULL((1, 2, 3, 4, 5)) DREF DeeObject *DCALL /* CALL_METHOD */
-type_method_callattr(struct membercache *cache, DeeTypeObject *decl,
+type_method_callattr(struct Dee_membercache *cache, DeeTypeObject *decl,
                      struct type_method const *chain, DeeObject *self,
                      char const *__restrict attr_name, dhash_t hash,
                      size_t argc, DeeObject *const *argv);
 INTDEF WUNUSED NONNULL((1, 2, 3, 4, 5)) DREF DeeObject *DCALL /* CALL_METHOD */
-type_method_callattr_len(struct membercache *cache, DeeTypeObject *decl,
+type_method_callattr_len(struct Dee_membercache *cache, DeeTypeObject *decl,
                          struct type_method const *chain, DeeObject *self,
                          char const *__restrict attr_name, size_t attrlen, dhash_t hash,
                          size_t argc, DeeObject *const *argv);
@@ -424,12 +448,12 @@ INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeType_CallInstanceMet
 	DeeType_CallIInstanceMethodAttrLenKw(tp_invoker, tp_self, attr_name, attrlen, hash, argc, argv, NULL)
 
 INTDEF WUNUSED NONNULL((1, 2, 3, 4, 5)) DREF DeeObject *DCALL /* CALL_METHOD_KW */
-type_method_callattr_kw(struct membercache *cache, DeeTypeObject *decl,
+type_method_callattr_kw(struct Dee_membercache *cache, DeeTypeObject *decl,
                         struct type_method const *chain, DeeObject *self,
                         char const *__restrict attr_name, dhash_t hash,
                         size_t argc, DeeObject *const *argv, DeeObject *kw);
 INTDEF WUNUSED NONNULL((1, 2, 3, 4, 5)) DREF DeeObject *DCALL /* CALL_METHOD_KW */
-type_method_callattr_len_kw(struct membercache *cache, DeeTypeObject *decl,
+type_method_callattr_len_kw(struct Dee_membercache *cache, DeeTypeObject *decl,
                             struct type_method const *chain, DeeObject *self,
                             char const *__restrict attr_name, size_t attrlen, dhash_t hash,
                             size_t argc, DeeObject *const *argv, DeeObject *kw);
@@ -463,7 +487,7 @@ INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeType_CallIInstanceMe
 #endif /* CONFIG_CALLTUPLE_OPTIMIZATIONS */
 
 INTDEF WUNUSED NONNULL((1, 2, 3, 4, 5, 7)) DREF DeeObject *DCALL /* CALL_METHOD */
-type_method_vcallattrf(struct membercache *cache, DeeTypeObject *decl,
+type_method_vcallattrf(struct Dee_membercache *cache, DeeTypeObject *decl,
                        struct type_method const *chain, DeeObject *self,
                        char const *__restrict attr_name, dhash_t hash,
                        char const *__restrict format, va_list args);
@@ -511,11 +535,11 @@ INTDEF WUNUSED NONNULL((1, 2, 3, 4, 7)) int (DCALL DeeType_SetGetSetAttrLen)(Dee
 INTDEF WUNUSED NONNULL((1, 2, 3, 6)) int (DCALL DeeType_SetClassGetSetAttrLen)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr_name, size_t attrlen, dhash_t hash, DeeObject *value);
 #else /* __INTELLISENSE__ */
 INTDEF WUNUSED NONNULL((1, 2, 3, 4, 5)) DREF DeeObject *DCALL /* GET_GETSET */
-type_getset_getattr(struct membercache *cache, DeeTypeObject *decl,
+type_getset_getattr(struct Dee_membercache *cache, DeeTypeObject *decl,
                     struct type_getset const *chain, DeeObject *self,
                     char const *__restrict attr_name, dhash_t hash);
 INTDEF WUNUSED NONNULL((1, 2, 3, 4, 5)) DREF DeeObject *DCALL /* GET_GETSET */
-type_getset_getattr_len(struct membercache *cache, DeeTypeObject *decl,
+type_getset_getattr_len(struct Dee_membercache *cache, DeeTypeObject *decl,
                         struct type_getset const *chain, DeeObject *self,
                         char const *__restrict attr_name, size_t attrlen, dhash_t hash);
 #define DeeType_GetGetSetAttr(tp_invoker, tp_self, self, attr_name, hash)             type_getset_getattr(&(tp_invoker)->tp_cache, tp_self, (tp_self)->tp_getsets, self, attr_name, hash)
@@ -540,11 +564,11 @@ INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeType_CallIInstanceGe
 INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeType_CallIInstanceGetSetAttrLenKw)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr_name, size_t attrlen, dhash_t hash, size_t argc, DeeObject *const *argv, DeeObject *kw);
 
 INTDEF WUNUSED NONNULL((1, 2, 3, 4, 5)) int DCALL /* BOUND_GETSET */
-type_getset_boundattr(struct membercache *cache, DeeTypeObject *decl,
+type_getset_boundattr(struct Dee_membercache *cache, DeeTypeObject *decl,
                       struct type_getset const *chain, DeeObject *self,
                       char const *__restrict attr_name, dhash_t hash);
 INTDEF WUNUSED NONNULL((1, 2, 3, 4, 5)) int DCALL /* BOUND_GETSET */
-type_getset_boundattr_len(struct membercache *cache, DeeTypeObject *decl,
+type_getset_boundattr_len(struct Dee_membercache *cache, DeeTypeObject *decl,
                           struct type_getset const *chain, DeeObject *self,
                           char const *__restrict attr_name, size_t attrlen, dhash_t hash);
 #define DeeType_BoundGetSetAttr(tp_invoker, tp_self, self, attr_name, hash)             type_getset_boundattr(&(tp_invoker)->tp_cache, tp_self, (tp_self)->tp_getsets, self, attr_name, hash)
@@ -553,11 +577,11 @@ type_getset_boundattr_len(struct membercache *cache, DeeTypeObject *decl,
 #define DeeType_BoundClassGetSetAttrLen(tp_invoker, tp_self, attr_name, attrlen, hash)  type_getset_boundattr_len(&(tp_invoker)->tp_class_cache, tp_self, (tp_self)->tp_class_getsets, (DeeObject *)(tp_invoker), attr_name, attrlen, hash)
 
 INTDEF WUNUSED NONNULL((1, 2, 3, 4, 5)) int DCALL /* DEL_GETSET */
-type_getset_delattr(struct membercache *cache, DeeTypeObject *decl,
+type_getset_delattr(struct Dee_membercache *cache, DeeTypeObject *decl,
                     struct type_getset const *chain, DeeObject *self,
                     char const *__restrict attr_name, dhash_t hash);
 INTDEF WUNUSED NONNULL((1, 2, 3, 4, 5)) int DCALL /* DEL_GETSET */
-type_getset_delattr_len(struct membercache *cache, DeeTypeObject *decl,
+type_getset_delattr_len(struct Dee_membercache *cache, DeeTypeObject *decl,
                         struct type_getset const *chain, DeeObject *self,
                         char const *__restrict attr_name, size_t attrlen, dhash_t hash);
 #define DeeType_DelGetSetAttr(tp_invoker, tp_self, self, attr_name, hash)             type_getset_delattr(&(tp_invoker)->tp_cache, tp_self, (tp_self)->tp_getsets, self, attr_name, hash)
@@ -566,11 +590,11 @@ type_getset_delattr_len(struct membercache *cache, DeeTypeObject *decl,
 #define DeeType_DelClassGetSetAttrLen(tp_invoker, tp_self, attr_name, attrlen, hash)  type_getset_delattr_len(&(tp_invoker)->tp_class_cache, tp_self, (tp_self)->tp_class_getsets, (DeeObject *)(tp_invoker), attr_name, attrlen, hash)
 
 INTDEF WUNUSED NONNULL((1, 2, 3, 4, 5, 7)) int DCALL /* SET_GETSET */
-type_getset_setattr(struct membercache *cache, DeeTypeObject *decl,
+type_getset_setattr(struct Dee_membercache *cache, DeeTypeObject *decl,
                     struct type_getset const *chain, DeeObject *self,
                     char const *__restrict attr_name, dhash_t hash, DeeObject *value);
 INTDEF WUNUSED NONNULL((1, 2, 3, 4, 5, 8)) int DCALL /* SET_GETSET */
-type_getset_setattr_len(struct membercache *cache, DeeTypeObject *decl,
+type_getset_setattr_len(struct Dee_membercache *cache, DeeTypeObject *decl,
                         struct type_getset const *chain, DeeObject *self,
                         char const *__restrict attr_name, size_t attrlen,
                         dhash_t hash, DeeObject *value);
@@ -616,11 +640,11 @@ INTDEF WUNUSED NONNULL((1, 2, 3, 4, 7)) int (DCALL DeeType_SetMemberAttrLen)(Dee
 INTDEF WUNUSED NONNULL((1, 2, 3, 6)) int (DCALL DeeType_SetClassMemberAttrLen)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr_name, size_t attrlen, dhash_t hash, DeeObject *value);
 #else /* __INTELLISENSE__ */
 INTDEF WUNUSED NONNULL((1, 2, 3, 4, 5)) DREF DeeObject *DCALL /* GET_MEMBER */
-type_member_getattr(struct membercache *cache, DeeTypeObject *decl,
+type_member_getattr(struct Dee_membercache *cache, DeeTypeObject *decl,
                     struct type_member const *chain, DeeObject *self,
                     char const *__restrict attr_name, dhash_t hash);
 INTDEF WUNUSED NONNULL((1, 2, 3, 4, 5)) DREF DeeObject *DCALL /* GET_MEMBER */
-type_member_getattr_len(struct membercache *cache, DeeTypeObject *decl,
+type_member_getattr_len(struct Dee_membercache *cache, DeeTypeObject *decl,
                         struct type_member const *chain, DeeObject *self,
                         char const *__restrict attr_name, size_t attrlen, dhash_t hash);
 #define DeeType_GetMemberAttr(tp_invoker, tp_self, self, attr_name, hash)             type_member_getattr(&(tp_invoker)->tp_cache, tp_self, (tp_self)->tp_members, self, attr_name, hash)
@@ -645,11 +669,11 @@ INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeType_CallIInstanceMe
 INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeType_CallIInstanceMemberAttrLenKw)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr_name, size_t attrlen, dhash_t hash, size_t argc, DeeObject *const *argv, DeeObject *kw);
 
 INTDEF WUNUSED NONNULL((1, 2, 3, 4, 5)) int DCALL /* BOUND_MEMBER */
-type_member_boundattr(struct membercache *cache, DeeTypeObject *decl,
+type_member_boundattr(struct Dee_membercache *cache, DeeTypeObject *decl,
                       struct type_member const *chain, DeeObject *self,
                       char const *__restrict attr_name, dhash_t hash);
 INTDEF WUNUSED NONNULL((1, 2, 3, 4, 5)) int DCALL /* BOUND_MEMBER */
-type_member_boundattr_len(struct membercache *cache, DeeTypeObject *decl,
+type_member_boundattr_len(struct Dee_membercache *cache, DeeTypeObject *decl,
                           struct type_member const *chain, DeeObject *self,
                           char const *__restrict attr_name, size_t attrlen, dhash_t hash);
 #define DeeType_BoundMemberAttr(tp_invoker, tp_self, self, attr_name, hash)             type_member_boundattr(&(tp_invoker)->tp_cache, tp_self, (tp_self)->tp_members, self, attr_name, hash)
@@ -658,11 +682,11 @@ type_member_boundattr_len(struct membercache *cache, DeeTypeObject *decl,
 #define DeeType_BoundClassMemberAttrLen(tp_invoker, tp_self, attr_name, attrlen, hash)  type_member_boundattr_len(&(tp_invoker)->tp_class_cache, tp_self, (tp_self)->tp_class_members, (DeeObject *)(tp_invoker), attr_name, attrlen, hash)
 
 INTDEF WUNUSED NONNULL((1, 2, 3, 4, 5)) int DCALL /* DEL_MEMBER */
-type_member_delattr(struct membercache *cache, DeeTypeObject *decl,
+type_member_delattr(struct Dee_membercache *cache, DeeTypeObject *decl,
                     struct type_member const *chain, DeeObject *self,
                     char const *__restrict attr_name, dhash_t hash);
 INTDEF WUNUSED NONNULL((1, 2, 3, 4, 5)) int DCALL /* DEL_MEMBER */
-type_member_delattr_len(struct membercache *cache, DeeTypeObject *decl,
+type_member_delattr_len(struct Dee_membercache *cache, DeeTypeObject *decl,
                         struct type_member const *chain, DeeObject *self,
                         char const *__restrict attr_name, size_t attrlen, dhash_t hash);
 #define DeeType_DelMemberAttr(tp_invoker, tp_self, self, attr_name, hash)             type_member_delattr(&(tp_invoker)->tp_cache, tp_self, (tp_self)->tp_members, self, attr_name, hash)
@@ -671,11 +695,11 @@ type_member_delattr_len(struct membercache *cache, DeeTypeObject *decl,
 #define DeeType_DelClassMemberAttrLen(tp_invoker, tp_self, attr_name, attrlen, hash)  type_member_delattr_len(&(tp_invoker)->tp_class_cache, tp_self, (tp_self)->tp_class_members, (DeeObject *)(tp_invoker), attr_name, attrlen, hash)
 
 INTDEF WUNUSED NONNULL((1, 2, 3, 4, 5, 7)) int DCALL /* SET_MEMBER */
-type_member_setattr(struct membercache *cache, DeeTypeObject *decl,
+type_member_setattr(struct Dee_membercache *cache, DeeTypeObject *decl,
                     struct type_member const *chain, DeeObject *self,
                     char const *__restrict attr_name, dhash_t hash, DeeObject *value);
 INTDEF WUNUSED NONNULL((1, 2, 3, 4, 5, 8)) int DCALL /* SET_MEMBER */
-type_member_setattr_len(struct membercache *cache, DeeTypeObject *decl,
+type_member_setattr_len(struct Dee_membercache *cache, DeeTypeObject *decl,
                         struct type_member const *chain, DeeObject *self,
                         char const *__restrict attr_name, size_t attrlen,
                         dhash_t hash, DeeObject *value);
@@ -714,11 +738,11 @@ INTDEF WUNUSED NONNULL((1, 2, 3)) bool (DCALL DeeType_HasInstanceMemberAttrLen)(
 INTDEF WUNUSED NONNULL((1, 2, 3)) bool (DCALL DeeType_HasIInstanceMemberAttrLen)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr_name, size_t attrlen, dhash_t hash);
 #else /* __INTELLISENSE__ */
 INTDEF WUNUSED NONNULL((1, 2, 3, 4)) bool DCALL /* METHOD */
-type_method_hasattr(struct membercache *cache, DeeTypeObject *decl,
+type_method_hasattr(struct Dee_membercache *cache, DeeTypeObject *decl,
                     struct type_method const *chain,
                     char const *__restrict attr_name, dhash_t hash);
 INTDEF WUNUSED NONNULL((1, 2, 3, 4)) bool DCALL /* METHOD */
-type_method_hasattr_len(struct membercache *cache, DeeTypeObject *decl,
+type_method_hasattr_len(struct Dee_membercache *cache, DeeTypeObject *decl,
                         struct type_method const *chain,
                         char const *__restrict attr_name,
                         size_t attrlen, dhash_t hash);
@@ -732,11 +756,11 @@ INTDEF WUNUSED NONNULL((1, 2, 3)) bool (DCALL DeeType_HasInstanceMethodAttrLen)(
 #define DeeType_HasIInstanceMethodAttrLen(tp_invoker, tp_self, attr_name, hash) type_method_hasattr_len(&(tp_invoker)->tp_cache, tp_self, (tp_self)->tp_methods, attr_name, attrlen, hash)
 
 INTDEF WUNUSED NONNULL((1, 2, 3, 4)) bool DCALL /* GETSET */
-type_getset_hasattr(struct membercache *cache, DeeTypeObject *decl,
+type_getset_hasattr(struct Dee_membercache *cache, DeeTypeObject *decl,
                     struct type_getset const *chain,
                     char const *__restrict attr_name, dhash_t hash);
 INTDEF WUNUSED NONNULL((1, 2, 3, 4)) bool DCALL /* GETSET */
-type_getset_hasattr_len(struct membercache *cache, DeeTypeObject *decl,
+type_getset_hasattr_len(struct Dee_membercache *cache, DeeTypeObject *decl,
                         struct type_getset const *chain,
                         char const *__restrict attr_name,
                         size_t attrlen, dhash_t hash);
@@ -750,11 +774,11 @@ INTDEF WUNUSED NONNULL((1, 2, 3)) bool (DCALL DeeType_HasInstanceGetSetAttrLen)(
 #define DeeType_HasIInstanceGetSetAttrLen(tp_invoker, tp_self, attr_name, hash) type_getset_hasattr(&(tp_invoker)->tp_cache, tp_self, (tp_self)->tp_getsets, attr_name, attrlen, hash)
 
 INTDEF WUNUSED NONNULL((1, 2, 3, 4)) bool DCALL /* MEMBER */
-type_member_hasattr(struct membercache *cache, DeeTypeObject *decl,
+type_member_hasattr(struct Dee_membercache *cache, DeeTypeObject *decl,
                     struct type_member const *chain,
                     char const *__restrict attr_name, dhash_t hash);
 INTDEF WUNUSED NONNULL((1, 2, 3, 4)) bool DCALL /* MEMBER */
-type_member_hasattr_len(struct membercache *cache, DeeTypeObject *decl,
+type_member_hasattr_len(struct Dee_membercache *cache, DeeTypeObject *decl,
                         struct type_member const *chain,
                         char const *__restrict attr_name,
                         size_t attrlen, dhash_t hash);
@@ -781,7 +805,7 @@ INTDEF WUNUSED NONNULL((1, 2, 3, 4)) int (DCALL DeeType_FindClassMemberAttr)(Dee
 INTDEF WUNUSED NONNULL((1, 2, 3, 4)) int (DCALL DeeType_FindInstanceMemberAttr)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, struct attribute_info *__restrict result, struct attribute_lookup_rules const *__restrict rules);
 #else /* __INTELLISENSE__ */
 INTDEF WUNUSED NONNULL((1, 2, 3, 5, 6)) int DCALL /* METHOD */
-type_method_findattr(struct membercache *cache, DeeTypeObject *decl,
+type_method_findattr(struct Dee_membercache *cache, DeeTypeObject *decl,
                      struct type_method const *chain, uint16_t perm,
                      struct attribute_info *__restrict result,
                      struct attribute_lookup_rules const *__restrict rules);
@@ -793,7 +817,7 @@ DeeType_FindInstanceMethodAttr(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self
                                struct attribute_lookup_rules const *__restrict rules);
 
 INTDEF WUNUSED NONNULL((1, 2, 3, 5, 6)) int DCALL /* GETSET */
-type_getset_findattr(struct membercache *cache, DeeTypeObject *decl,
+type_getset_findattr(struct Dee_membercache *cache, DeeTypeObject *decl,
                      struct type_getset const *chain, uint16_t perm,
                      struct attribute_info *__restrict result,
                      struct attribute_lookup_rules const *__restrict rules);
@@ -805,7 +829,7 @@ DeeType_FindInstanceGetSetAttr(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self
                                struct attribute_lookup_rules const *__restrict rules);
 
 INTDEF WUNUSED NONNULL((1, 2, 3, 5, 6)) int DCALL /* MEMBER */
-type_member_findattr(struct membercache *cache, DeeTypeObject *decl,
+type_member_findattr(struct Dee_membercache *cache, DeeTypeObject *decl,
                      struct type_member const *chain, uint16_t perm,
                      struct attribute_info *__restrict result,
                      struct attribute_lookup_rules const *__restrict rules);

@@ -2614,9 +2614,11 @@ PRIVATE NONNULL((1)) void DCALL type_fini(DeeTypeObject *__restrict self) {
 	        self->tp_name);
 	if (DeeType_IsClass(self))
 		class_fini(self);
+
 	/* Finalize the type's member caches. */
-	membercache_fini(&self->tp_cache);
-	membercache_fini(&self->tp_class_cache);
+	Dee_membercache_fini(&self->tp_cache);
+	Dee_membercache_fini(&self->tp_class_cache);
+
 	/* Cleanup name & doc objects should those have been used. */
 	if (self->tp_flags & TP_FNAMEOBJECT)
 		Dee_XDecref(COMPILER_CONTAINER_OF(self->tp_name, DeeStringObject, s_str));

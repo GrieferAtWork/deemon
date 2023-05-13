@@ -1697,7 +1697,7 @@ typedef size_t (DCALL *pcacheclr)(size_t max_clear);
 INTDEF size_t DCALL intcache_clear(size_t max_clear);
 INTDEF size_t DCALL tuplecache_clear(size_t max_clear);
 INTDEF size_t DCALL latincache_clear(size_t max_clear);
-INTDEF size_t DCALL membercache_clear(size_t max_clear);
+INTDEF size_t DCALL Dee_membercache_clearall(size_t max_clear);
 
 PRIVATE pcacheclr caches[] = {
 #define Cs(x) &x##_clear,
@@ -1709,7 +1709,7 @@ PRIVATE pcacheclr caches[] = {
 	&intcache_clear,
 	&tuplecache_clear,
 	&latincache_clear,
-	&membercache_clear,
+	&Dee_membercache_clearall,
 #ifndef CONFIG_NO_DEC
 	&DecTime_ClearCache,
 #endif /* !CONFIG_NO_DEC */

@@ -553,7 +553,7 @@
 #define TRY
 #define EXCEPT
 
-#define CASE(x) case x:
+#define CASE(x) case x
 
 #define DeeSlab_ENUMERATE(func) func(0, 4) func(1, 5) func(2, 6) func(3, 8) func(4, 10)
 #define DEE_PRIVATE_DEFINE_SLAB_FUNCTIONS(index, size) \
@@ -620,8 +620,6 @@
 #define Dee_object           object_
 #define Dee_type_object      type_object
 #define Dee_class_desc       class_desc
-#define Dee_membercache_slot membercache_slot
-#define Dee_membercache      membercache
 #define Dee_type_method      type_method
 #define Dee_type_getset      type_getset
 #define Dee_type_member      type_member

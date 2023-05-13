@@ -99,8 +99,6 @@ typedef __UINTPTR_TYPE__ uintptr_t;
 #define Dee_object           object_
 #define Dee_type_object      type_object
 #define Dee_class_desc       class_desc
-#define Dee_membercache_slot membercache_slot
-#define Dee_membercache      membercache
 #define Dee_type_method      type_method
 #define Dee_type_getset      type_getset
 #define Dee_type_member      type_member
@@ -2118,28 +2116,18 @@ struct Dee_type_member {
 #endif /* DEE_SOURCE */
 
 
-struct Dee_membercache_slot;
+struct Dee_membercache_table;
 struct Dee_membercache {
 	struct {
 		struct Dee_membercache *le_next, **le_prev;
-	}                            mc_link;  /* [0..1][lock(INTERNAL(membercache_lock))] Entry in global list of caches (or unbound if not yet linked) */
-	size_t                       mc_mask;  /* [lock(mc_lock)] Allocated table size -1. */
-	size_t                       mc_size;  /* [lock(mc_lock)] Amount of used table entries. */
-	struct Dee_membercache_slot *mc_table; /* [0..mc_mask+1][owned] Member cache table. */
+	}                                  mc_link;   /* [0..1][lock(INTERNAL(membercache_lock))]
+	                                               * Entry in global list of caches (or unbound if not yet
+	                                               * linked, in which case `mc_table == NULL') */
+	DREF struct Dee_membercache_table *mc_table;  /* [0..1][lock(mc_tabuse > 0)] Member cache table. */
 #ifndef CONFIG_NO_THREADS
-	Dee_atomic_rwlock_t          mc_lock;  /* Lock used for accessing this cache. */
+	size_t                             mc_tabuse; /* [lock(ATOMIC)] When non-zero, some thread is reading `mc_table'. */
 #endif /* !CONFIG_NO_THREADS */
 };
-
-#ifndef CONFIG_NO_THREADS
-#define Dee_MEMBERCACHE_INIT { { NULL, NULL }, 0, 0, NULL, DEE_ATOMIC_RWLOCK_INIT }
-#else /* !CONFIG_NO_THREADS */
-#define Dee_MEMBERCACHE_INIT { { NULL, NULL }, 0, 0, NULL }
-#endif /* CONFIG_NO_THREADS */
-
-#ifdef DEE_SOURCE
-#define MEMBERCACHE_INIT  Dee_MEMBERCACHE_INIT
-#endif /* DEE_SOURCE */
 
 
 
