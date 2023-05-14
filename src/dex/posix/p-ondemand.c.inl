@@ -2701,9 +2701,7 @@ err_bad_used_bufsize:
 	} else
 #endif /* HAVE_posix_copyfile_fileio_sendfile */
 	{
-		/* Map the remainder of the given `src' file into memory.
-		 *
-		 * Note that for this purpose, we  */
+		/* Map the remainder of the given `src' file into memory. */
 		mf_status = DeeMapFile_InitFile(&mf, src, (Dee_pos_t)-1,
 		                                0, (size_t)-1, 0,
 		                                DEE_MAPFILE_F_MUSTMMAP |

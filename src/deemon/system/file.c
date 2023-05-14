@@ -360,7 +360,7 @@ done:
 
 
 INTERN WUNUSED NONNULL((1)) Dee_fd_t DCALL
-DeeSystemFile_Fileno(/*FileSystem*/ DeeObject *__restrict self) {
+DeeSystemFile_Fileno(/*SystemFile*/ DeeObject *__restrict self) {
 #ifdef DEESYSTEM_FILE_USE_STUB
 	(void)self;
 	return (Dee_fd_t)DeeError_Throwf(&DeeError_FileClosed, fs_unsupported_message);

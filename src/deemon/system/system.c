@@ -2238,7 +2238,7 @@ DeeMapFile_InitFile(struct DeeMapFile *__restrict self, DeeObject *__restrict fi
 	size_t bufused;
 	size_t buffree;
 
-	if (DeeObject_InstanceOf(file, (DeeTypeObject *)&DeeSystemFile_Type)) {
+	if (DeeSystemFile_Check(file)) {
 		Dee_fd_t sfd = DeeSystemFile_Fileno(file);
 		if (sfd == Dee_fd_INVALID)
 			return -1;

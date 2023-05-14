@@ -892,8 +892,10 @@ got_read:
 	if ((maxbytes >= FILE_READ_MMAP_THRESHOLD) &&
 	    (ft_read == (size_t (DCALL *)(DeeFileObject *__restrict, void *__restrict, size_t, dioflag_t))&sysfile_read)) {
 		DREF /*Bytes*/ DeeObject *result;
-		result = file_read_trymap(DeeSystemFile_GetHandle(self),
-		                          maxbytes, (dpos_t)-1, readall);
+		Dee_fd_t os_fd = DeeSystemFile_Fileno(self);
+		if unlikely(os_fd == Dee_fd_INVALID)
+			goto err;
+		result = file_read_trymap(os_fd, maxbytes, (dpos_t)-1, readall);
 		if (result != ITER_DONE)
 			return result;
 	}
