@@ -83,7 +83,7 @@ global final gettmp = posix.gettmp;
 global final getcwd = posix.getcwd;
 global final gethostname = posix.gethostname;
 global final chdir = posix.chdir;
-global final chtime = posix.chtime; // TODO: Implement in terms of utime() (once that function is available)
+//global final chtime = posix.chtime; // TODO: Implement in terms of utime() (once that function is available)
 global final chmod = posix.chmod;
 global final lchmod = posix.lchmod;
 global final chown = posix.chown;
@@ -93,8 +93,69 @@ global final rmdir = posix.rmdir;
 global final unlink = posix.unlink;
 global final remove = posix.remove;
 global final rename = posix.rename;
-global final copyfile = posix.copyfile;
+
+@@Helper class to wrap @posix.CopyFileProgress in a way that is
+@@compatible with the traditional progress-info-DTO format of
+@@the @copyfile method of the `fs` module.
+local class _FsCopyFileProgress {
+	private member posixInfo: posix.CopyFileProgress;
+	this = default;
+	public operator float() {
+		return (float)posixInfo.copied / (float)posixInfo.total;
+	}
+	public property siz: int = { get() -> posixInfo.total; };
+	public property cur: int = { get() -> posixInfo.copied; };
+	public property rem: int = { get() -> posixInfo.total - posixInfo.copied; };
+}
+
+@@@interrupt
+@@@throw FileExists      The given @new_file already exists
+@@@throw NoDirectory     A part of the given @existing_file or @new_file is not a directory
+@@@throw FileNotFound    The given @existing_file could not be found, or a parent directory
+@@                       of @new_file does not exist
+@@@throw IsDirectory     The given @existing_file is a directory
+@@@throw FileAccessError The current user does not have permissions to access 
+@@                       the file @existing_file for reading, or the directory
+@@                       containing the non-existent file @new_file for writing
+@@@throw ReadOnlyFile    The file-system or device hosting the directory
+@@                       containing the non-existent file @new_file is
+@@                       in read-only operations mode, preventing the
+@@                       creation of new files
+@@@throw SystemError     Failed to copy the given @existing_file for some reason
+@@
+@@Copies a given @existing_file to be create a duplicate named @new_file
+@@
+@@When given, @progress is invoked periodically during the copy operation using @operator()
+@@while assing an internal progress descriptor object implementing the following functions:
+@@
+@@+----------------------+-----------------------------------------------------+
+@@| Function name        | Behavior                                            |
+@@+----------------------+-----------------------------------------------------+
+@@| @(operator float)    | Returns the overall progress as a floating-point    |
+@@|                      | value between @0.0 and @1.0                         |
+@@|                      |                                                     |
+@@| @(property siz: int) | The total number of bytes that must be copied       |
+@@|                      |                                                     |
+@@| @(property cur: int) | The total number of bytes already copied            |
+@@|                      |                                                     |
+@@| @(property rem: int) | The total number of bytes that must still be copied |
+@@+----------------------+-----------------------------------------------------+
+@@
+@@The callback may throw an error to abort the copy operation, which is then
+@@propagated, though the partially copied file isn't deleted in this case (or
+@@in the case of any other I/O error happening while writing)
+function copyfile(existing_file: string | File | int,
+                  new_file: string | File | int,
+                  progress: Callable = none) {
+	if (progress is none)
+		return posix.copyfile(existing_file, new_file);
+	return posix.copyfile(existing_file, new_file,
+		progress: info -> progress(_FsCopyFileProgress(info)));
+}
+
 global final link = posix.link;
+
+
 function symlink(text: string, path: string, format_target: bool = true) {
 	return format_target
 		? posix.symlink(text, path)
