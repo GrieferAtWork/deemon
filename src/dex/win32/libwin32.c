@@ -1509,58 +1509,6 @@ err:
 	return NULL;
 }
 
-/*[[[deemon import("rt.gen.dexutils").gw("SetFileAttributesW", "lpFileName:nt:LPCWSTR,dwFileAttributes:nt:DWORD" ERROR_OR_BOOL); ]]]*/
-FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_SetFileAttributesW_f_impl(LPCWSTR lpFileName, DWORD dwFileAttributes);
-PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_SetFileAttributesW_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
-#define LIBWIN32_SETFILEATTRIBUTESW_DEF { "SetFileAttributesW", (DeeObject *)&libwin32_SetFileAttributesW, MODSYM_FNORMAL, DOC("(lpFileName:?Dstring,dwFileAttributes:?Dint)") },
-#define LIBWIN32_SETFILEATTRIBUTESW_DEF_DOC(doc) { "SetFileAttributesW", (DeeObject *)&libwin32_SetFileAttributesW, MODSYM_FNORMAL, DOC("(lpFileName:?Dstring,dwFileAttributes:?Dint)\n" doc) },
-PRIVATE DEFINE_KWCMETHOD(libwin32_SetFileAttributesW, &libwin32_SetFileAttributesW_f);
-#ifndef LIBWIN32_KWDS_LPFILENAME_DWFILEATTRIBUTES_DEFINED
-#define LIBWIN32_KWDS_LPFILENAME_DWFILEATTRIBUTES_DEFINED
-PRIVATE DEFINE_KWLIST(libwin32_kwds_lpFileName_dwFileAttributes, { K(lpFileName), K(dwFileAttributes), KEND });
-#endif /* !LIBWIN32_KWDS_LPFILENAME_DWFILEATTRIBUTES_DEFINED */
-PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_SetFileAttributesW_f(size_t argc, DeeObject *const *argv, DeeObject *kw) {
-	LPCWSTR lpFileName_str;
-	DeeStringObject *lpFileName;
-	DWORD dwFileAttributes;
-	if (DeeArg_UnpackKw(argc, argv, kw, libwin32_kwds_lpFileName_dwFileAttributes, "o" UNPu32 ":SetFileAttributesW", &lpFileName, &dwFileAttributes))
-		goto err;
-	if (DeeObject_AssertTypeExact(lpFileName, &DeeString_Type))
-		goto err;
-	lpFileName_str = (LPCWSTR)DeeString_AsWide((DeeObject *)lpFileName);
-	if unlikely(!lpFileName_str)
-		goto err;
-	return libwin32_SetFileAttributesW_f_impl(lpFileName_str, dwFileAttributes);
-err:
-	return NULL;
-}
-FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_SetFileAttributesW_f_impl(LPCWSTR lpFileName, DWORD dwFileAttributes)
-/*[[[end]]]*/
-{
-	BOOL bResult;
-again:
-	DBG_ALIGNMENT_DISABLE();
-	bResult = SetFileAttributesW(lpFileName, dwFileAttributes);
-	if (!bResult) {
-		DWORD dwError;
-		dwError = GetLastError();
-		DBG_ALIGNMENT_ENABLE();
-		if (DeeNTSystem_IsIntr(dwError)) {
-			if (DeeThread_CheckInterrupt())
-				goto err;
-			goto again;
-		}
-		RETURN_ERROR_OR_FALSE(dwError,
-		                      "Failed to set file attribute of %lq to %#" PRFx32 "",
-		                      lpFileName, dwFileAttributes);
-	}
-	DBG_ALIGNMENT_ENABLE();
-	RETURN_SUCCESS_OR_TRUE;
-err:
-	return NULL;
-}
-
-
 /*[[[deemon import("rt.gen.dexutils").gw("SetFilePointer", "hFile:nt:HANDLE,lDistanceToMove:I64d,dwMoveMethod:nt:DWORD=FILE_BEGIN->?Dint"); ]]]*/
 FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_SetFilePointer_f_impl(HANDLE hFile, int64_t lDistanceToMove, DWORD dwMoveMethod);
 PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_SetFilePointer_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
