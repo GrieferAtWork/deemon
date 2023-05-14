@@ -126,7 +126,7 @@ local class _FsCopyFileProgress {
 @@Copies a given @existing_file to be create a duplicate named @new_file
 @@
 @@When given, @progress is invoked periodically during the copy operation using @operator()
-@@while assing an internal progress descriptor object implementing the following functions:
+@@while passing an internal progress descriptor object implementing the following functions:
 @@
 @@+----------------------+-----------------------------------------------------+
 @@| Function name        | Behavior                                            |
@@ -156,13 +156,49 @@ function copyfile(existing_file: string | File | int,
 global final link = posix.link;
 
 
+@@@interrupt
+@@@throw FileExists      A file or directory named @link_path already exists
+@@@throw FileNotFound    A parent directory of @link_path does not exist
+@@@throw NoDirectory     A part of the given @link_path is not a directory
+@@@throw UnsupportedAPI  The underlying file-system does not support (or allow
+@@                       *cough* windows...) symbolic links
+@@@throw FileAccessError The current user does not have permissions to access
+@@                       the directory containing the non-existent file @link_path
+@@                       for writing
+@@@throw ReadOnlyFile    The file-system or device hosting the directory
+@@                       containing the non-existent object @link_path is
+@@                       in read-only operations mode, preventing the
+@@                       creation of new symbolic links
+@@@throw SystemError     Failed to create a symbolic link under @link_path for
+@@                       some reason
+@@
+@@Symbolic links are file-system redirection points which you can think of as
+@@keyword-style macros that exist in directories. When addressed, simply imagine
+@@their name being replaced with @target_text, at which point the resulting path
+@@is then re-evaluated:
+@@
+@@>import symlink from fs;
+@@>import File from deemon;
+@@>
+@@>symlink("../foo", "/path/to/link");
+@@>
+@@>/* 1: "/path/to/[link]/file.txt" */
+@@>/* 2: "/path/to/[../foo]/file.txt" */
+@@>/* 3: "/path/foo/file.txt" */
+@@>File.open("/path/to/link/file.txt");
+@@
+@@Because of the fact that some file-system support alternative path separators,
+@@those separators may not be allowed to appear in symbolic link texts. If this
+@@is the case and if @format_target is @true, the given @target_text will be
+@@normalized to fix inconsistencies that might otherwise prevent the link from
+@@functioning properly
 function symlink(text: string, path: string, format_target: bool = true) {
 	return format_target
 		? posix.symlink(text, path)
 		: posix._symlink(text, path);
 }
-global final readlink = posix.readlink;
 
+global final readlink = posix.readlink;
 global final headof = posix.headof;
 global final tailof = posix.tailof;
 
