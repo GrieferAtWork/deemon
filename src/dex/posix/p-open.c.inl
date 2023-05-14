@@ -98,7 +98,7 @@ fgi      ("AT_SYMLINK_NOFOLLOW", doc: "Do not follow symbolic links");
 fgi      ("AT_REMOVEDIR",        doc: "Remove directory instead of unlinking file");
 fgii_conf("AT_SYMLINK_FOLLOW",   doc: "Follow symbolic links");
 fgii_conf("AT_NO_AUTOMOUNT",     doc: "Suppress terminal automount traversal");
-fgii_conf("AT_EMPTY_PATH",       doc: "Allow empty relative pathname");
+fgi      ("AT_EMPTY_PATH",       doc: "Allow empty relative pathname");
 fgii_conf("AT_EACCESS",          doc: "Test access permitted for effective IDs, not real IDs");
 fgi      ("AT_REMOVEREG",        doc: "Explicitly allow removing anything that unlink() removes. (Default; Set in addition to ?GAT_REMOVEDIR to implement ?Gremove semantics)");
 fgii_conf("AT_DOSPATH",          doc: "Interpret $\"\\\" as $\"/\", and ignore casing during path resolution");
