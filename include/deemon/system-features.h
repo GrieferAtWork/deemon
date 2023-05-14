@@ -564,7 +564,7 @@ func("_lseek", msvc, test: "return (int)_lseek(1, 0, SEEK_SET);");
 func("_lseek64", test: "return (int)_lseek64(1, 0, SEEK_SET);");
 func("_lseeki64", msvc, test: "return (int)_lseeki64(1, 0, SEEK_SET);");
 
-func("sendfile", "defined(CONFIG_HAVE_SYS_SENDFILE_H)", test: 'extern int outfd, infd; return (int)sendfile(outfd, intfd, NULL, 16 * 1024 * 1024);');
+func("sendfile", "defined(CONFIG_HAVE_SYS_SENDFILE_H)", test: 'extern int outfd, infd; return (int)sendfile(outfd, infd, NULL, 16 * 1024 * 1024);');
 
 functest('chdir("..")', unix);
 functest('_chdir("..")', msvc);
