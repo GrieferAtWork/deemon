@@ -1104,7 +1104,7 @@ err_unix_truncate(int errno_value, DeeObject *path, DeeObject *length) {
 
 #ifdef NEED_err_unix_ftruncate
 #undef NEED_err_unix_ftruncate
-INTERN ATTR_COLD NONNULL((2, 3)) int DCALL
+INTERN ATTR_COLD NONNULL((3)) int DCALL
 err_unix_ftruncate(int errno_value, int fd, DeeObject *length) {
 #if defined(EFBIG) || defined(EINVAL)
 	DeeSystem_IF_E2(errno_value, EFBIG, EINVAL, {

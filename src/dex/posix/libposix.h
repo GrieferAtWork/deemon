@@ -552,7 +552,7 @@ INTDEF ATTR_COLD NONNULL((2, 3)) int DCALL err_unix_rename(int errno_value, DeeO
 INTDEF ATTR_COLD NONNULL((2, 3)) int DCALL err_unix_link(int errno_value, DeeObject *existing_path, DeeObject *new_path);
 INTDEF ATTR_COLD NONNULL((2, 3)) int DCALL err_unix_symlink(int errno_value, DeeObject *text, DeeObject *path);
 INTDEF ATTR_COLD NONNULL((2, 3)) int DCALL err_unix_truncate(int errno_value, DeeObject *path, DeeObject *length);
-INTDEF ATTR_COLD NONNULL((2, 3)) int DCALL err_unix_ftruncate(int errno_value, int fd, DeeObject *length);
+INTDEF ATTR_COLD NONNULL((3)) int DCALL err_unix_ftruncate(int errno_value, int fd, DeeObject *length);
 
 INTDEF ATTR_COLD NONNULL((2)) int DCALL err_unix_remove_unsupported(int errno_value, DeeObject *__restrict path);
 INTDEF ATTR_COLD NONNULL((2)) int DCALL err_unix_unlink_unsupported(int errno_value, DeeObject *__restrict path);
