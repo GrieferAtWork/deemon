@@ -44,7 +44,7 @@ DECL_BEGIN
 /* Figure out how to implement `fcopyfile()' */
 #undef posix_fcopyfile_USE_posix_copyfile_fileio
 #undef posix_fcopyfile_USE_STUB
-#if !defined(DEESYSTEM_FILE_USE_STUB)
+#if 1 /* Always supported */
 #define posix_fcopyfile_USE_posix_copyfile_fileio
 #else /* ... */
 #define posix_fcopyfile_USE_STUB
@@ -53,7 +53,7 @@ DECL_BEGIN
 /* Figure out how to implement `copyfile()' */
 #undef posix_copyfile_USE_posix_copyfile_fileio
 #undef posix_copyfile_USE_STUB
-#if !defined(DEESYSTEM_FILE_USE_STUB)
+#if 1 /* Always supported */
 #define posix_copyfile_USE_posix_copyfile_fileio
 #else /* ... */
 #define posix_copyfile_USE_STUB
@@ -62,7 +62,7 @@ DECL_BEGIN
 /* Figure out how to implement `lcopyfile()' */
 #undef posix_lcopyfile_USE_posix_copyfile_fileio
 #undef posix_lcopyfile_USE_STUB
-#if !defined(DEESYSTEM_FILE_USE_STUB)
+#if 1 /* Always supported */
 #define posix_lcopyfile_USE_posix_copyfile_fileio
 #else /* ... */
 #define posix_lcopyfile_USE_STUB
@@ -501,7 +501,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_copyfileat_f_impl(DeeObject *oldd
 #ifdef posix_copyfileat_USE_copyfile__AND__lcopyfile__AND__fcopyfile
 	DREF DeeObject *abs_newpath, *result;
 	if (atflags & ~(AT_EMPTY_PATH | AT_SYMLINK_NOFOLLOW |
-	                POSIX_DFD_ABSPATH_ATFLAGS_MASK)) {
+	                POSIX_DFD_MAKEPATH_ATFLAGS_MASK)) {
 #define NEED_err_bad_atflags
 		err_bad_atflags(atflags);
 		goto err;
@@ -509,7 +509,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_copyfileat_f_impl(DeeObject *oldd
 	/* TODO: Support for `openat()' to open files without needing to expand paths first! */
 	/* TODO: Support for `readlinkat()' to check for symlink copy without needing to expand paths first! */
 
-	abs_newpath = posix_dfd_abspath(newdirfd, newpath, atflags & POSIX_DFD_ABSPATH_ATFLAGS_MASK);
+	abs_newpath = posix_dfd_makepath(newdirfd, newpath, atflags & POSIX_DFD_MAKEPATH_ATFLAGS_MASK);
 	if unlikely(!abs_newpath)
 		goto err;
 	if ((atflags & AT_EMPTY_PATH) &&
@@ -518,7 +518,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_copyfileat_f_impl(DeeObject *oldd
 		result = posix_fcopyfile_f_impl(olddirfd, abs_newpath, flags, progress, bufsize);
 	} else {
 		DREF DeeObject *abs_oldpath;
-		abs_oldpath = posix_dfd_abspath(olddirfd, oldpath, atflags & POSIX_DFD_ABSPATH_ATFLAGS_MASK);
+		abs_oldpath = posix_dfd_makepath(olddirfd, oldpath, atflags & POSIX_DFD_MAKEPATH_ATFLAGS_MASK);
 		if unlikely(!abs_oldpath)
 			goto err_abs_newpath;
 		if (atflags & AT_SYMLINK_NOFOLLOW) {

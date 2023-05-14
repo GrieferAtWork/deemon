@@ -339,8 +339,8 @@ err:
 
 #ifdef posix_freadlink_USE_posix_readlink
 	DREF DeeObject *result, *filename;
-#define NEED_posix_fd_abspath
-	filename = posix_fd_abspath(fd);
+#define NEED_posix_fd_makepath
+	filename = posix_fd_makepath(fd);
 	if unlikely(!filename)
 		goto err;
 	result = posix_readlink_f_impl(filename);
@@ -449,8 +449,8 @@ EINTR_LABEL(again)
 do_abspath_readlink:
 #endif /* posix_readlinkat_USE_freadlinkat || posix_readlinkat_USE_readlinkat */
 
-#define NEED_posix_dfd_abspath
-	absfile = posix_dfd_abspath(dfd, file, atflags);
+#define NEED_posix_dfd_makepath
+	absfile = posix_dfd_makepath(dfd, file, atflags);
 	if unlikely(!absfile)
 		goto err;
 	result = posix_readlink_f_impl(absfile);

@@ -60,6 +60,15 @@
 	(((fz) + DEFAULT_BLOCKSIZE - 1) / DEFAULT_BLOCKSIZE)
 
 
+
+#undef OPT_close
+#ifdef CONFIG_HAVE_close
+#define OPT_close(fd) close(fd)
+#else /* CONFIG_HAVE_close */
+#define OPT_close(fd) (void)0
+#endif /* !CONFIG_HAVE_close */
+
+
 DECL_BEGIN
 
 /* Imported module access. */
@@ -406,7 +415,7 @@ libposix_get_dfd_filename(int dfd, /*utf-8*/ char const *filename, int atflags);
 #define STAT_IXOTH (STAT_IXUSR >> 6) /* Execute by other. */
 
 /* Windows doesn't natively have an `AT_FDCWD', but we
- * need something to check for in `posix_dfd_abspath()' */
+ * need something to check for in `posix_dfd_makepath()' */
 #ifndef CONFIG_HAVE_AT_FDCWD
 #undef AT_FDCWD
 #define AT_FDCWD (-1)
@@ -480,16 +489,20 @@ err_unknown_env_var(DeeObject *__restrict name);
 /* ON-demand helper functions                                           */
 /************************************************************************/
 
-/* Construct an absolute path from `dfd:path'
+/* Construct a path from `dfd:path'
  * @param: dfd:  Can be a `File', `int', `string', or [nt:`HANDLE']
  * @param: path: Must be a `string' */
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-posix_dfd_abspath(DeeObject *dfd, DeeObject *path, unsigned int atflags);
-#define POSIX_DFD_ABSPATH_ATFLAGS_MASK 0 /* Bitset atflags supported by `posix_dfd_abspath' */
-#define POSIX_DFD_ABSPATH_ATFLAGS_FROM_OFLAGS(x) (0)
+posix_dfd_makepath(DeeObject *dfd, DeeObject *path, unsigned int atflags);
+#define POSIX_DFD_MAKEPATH_ATFLAGS_MASK 0 /* Bitset atflags supported by `posix_dfd_makepath' */
+#define POSIX_DFD_MAKEPATH_ATFLAGS_FROM_OFLAGS(x) (0)
 
+/* Construct a path that refers to the file described by `fd'
+ * @param: fd: Can be a `File', `int', or [nt:`HANDLE'] */
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-posix_fd_abspath(DeeObject *__restrict fd);
+posix_fd_makepath(DeeObject *__restrict fd);
+INTDEF WUNUSED DREF DeeObject *DCALL
+posix_fd_makepath_fd(int fd);
 
 /* Open a HANDLE/fd-compatible object as a `File' */
 INTDEF WUNUSED NONNULL((1)) /*File*/ DREF DeeObject *DCALL
@@ -538,6 +551,9 @@ INTDEF ATTR_COLD NONNULL((2)) int DCALL err_unix_mkdir(int errno_value, DeeObjec
 INTDEF ATTR_COLD NONNULL((2, 3)) int DCALL err_unix_rename(int errno_value, DeeObject *existing_path, DeeObject *new_path);
 INTDEF ATTR_COLD NONNULL((2, 3)) int DCALL err_unix_link(int errno_value, DeeObject *existing_path, DeeObject *new_path);
 INTDEF ATTR_COLD NONNULL((2, 3)) int DCALL err_unix_symlink(int errno_value, DeeObject *text, DeeObject *path);
+INTDEF ATTR_COLD NONNULL((2, 3)) int DCALL err_unix_truncate(int errno_value, DeeObject *path, DeeObject *length);
+INTDEF ATTR_COLD NONNULL((2, 3)) int DCALL err_unix_ftruncate(int errno_value, int fd, DeeObject *length);
+
 INTDEF ATTR_COLD NONNULL((2)) int DCALL err_unix_remove_unsupported(int errno_value, DeeObject *__restrict path);
 INTDEF ATTR_COLD NONNULL((2)) int DCALL err_unix_unlink_unsupported(int errno_value, DeeObject *__restrict path);
 INTDEF ATTR_COLD NONNULL((2)) int DCALL err_unix_rmdir_unsupported(int errno_value, DeeObject *__restrict path);
@@ -545,6 +561,7 @@ INTDEF ATTR_COLD NONNULL((2)) int DCALL err_unix_mkdir_unsupported(int errno_val
 INTDEF ATTR_COLD NONNULL((2, 3)) int DCALL err_unix_rename_unsupported(int errno_value, DeeObject *existing_path, DeeObject *new_path);
 INTDEF ATTR_COLD NONNULL((2, 3)) int DCALL err_unix_link_unsupported(int errno_value, DeeObject *existing_path, DeeObject *new_path);
 INTDEF ATTR_COLD NONNULL((2, 3)) int DCALL err_unix_symlink_unsupported(int errno_value, DeeObject *text, DeeObject *path);
+
 INTDEF ATTR_COLD NONNULL((2)) int DCALL err_unix_path_not_dir(int errno_value, DeeObject *__restrict path);
 INTDEF ATTR_COLD NONNULL((2, 3)) int DCALL err_unix_path_not_dir2(int errno_value, DeeObject *existing_path, DeeObject *new_path);
 INTDEF ATTR_COLD NONNULL((2)) int DCALL err_unix_path_not_found(int errno_value, DeeObject *__restrict path);
@@ -566,6 +583,14 @@ INTDEF ATTR_COLD NONNULL((2, 3)) int DCALL err_unix_move_to_child(int errno_valu
 INTDEF ATTR_COLD NONNULL((2)) int DCALL err_unix_path_not_empty(int errno_value, DeeObject *__restrict path);
 INTDEF ATTR_COLD NONNULL((2)) int DCALL err_unix_chtime_no_access(int errno_value, DeeObject *__restrict path);
 INTDEF ATTR_COLD NONNULL((2, 3)) int DCALL err_unix_path_cross_dev2(int errno_value, DeeObject *existing_path, DeeObject *new_path);
+INTDEF ATTR_COLD NONNULL((3)) int DCALL err_unix_ftruncate_fbig(int errno_value, int fd, DeeObject *length);
+INTDEF ATTR_COLD NONNULL((2, 3)) int DCALL err_unix_truncate_fbig(int errno_value, DeeObject *path, DeeObject *length);
+INTDEF ATTR_COLD int DCALL err_unix_ftruncate_isdir(int errno_value, int fd);
+INTDEF ATTR_COLD NONNULL((2)) int DCALL err_unix_truncate_isdir(int errno_value, DeeObject *__restrict path);
+INTDEF ATTR_COLD int DCALL err_unix_ftruncate_txtbusy(int errno_value, int fd);
+INTDEF ATTR_COLD NONNULL((2)) int DCALL err_unix_truncate_txtbusy(int errno_value, DeeObject *__restrict path);
+INTDEF ATTR_COLD NONNULL((2, 3)) int DCALL err_unix_truncate_failed(int errno_value, DeeObject *path, DeeObject *length);
+INTDEF ATTR_COLD int DCALL err_unix_file_closed(int errno_value, int fd);
 
 #ifdef CONFIG_HOST_WINDOWS
 INTDEF ATTR_COLD NONNULL((2)) int DCALL err_nt_unlink(DWORD dwError, DeeObject *__restrict path);

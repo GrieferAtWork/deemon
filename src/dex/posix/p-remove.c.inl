@@ -630,7 +630,7 @@ EINTR_ENOMEM_LABEL(again)
 #endif /* posix_unlinkat_USE_unlinkat */
 
 #define NEED_posix_dfd_absfile
-	absfile = posix_dfd_abspath(dfd, file, atflags & ~(AT_REMOVEDIR | AT_REMOVEREG));
+	absfile = posix_dfd_makepath(dfd, file, atflags & ~(AT_REMOVEDIR | AT_REMOVEREG));
 	if unlikely(!absfile)
 		goto err;
 	if ((atflags & (AT_REMOVEDIR | AT_REMOVEREG)) == (AT_REMOVEDIR | AT_REMOVEREG)) {
@@ -707,8 +707,8 @@ EINTR_ENOMEM_LABEL(again)
 	}
 #endif /* posix_removeat_USE_removeat */
 
-#define NEED_posix_dfd_abspath
-	abspath = posix_dfd_abspath(dfd, path, atflags);
+#define NEED_posix_dfd_makepath
+	abspath = posix_dfd_makepath(dfd, path, atflags);
 	if unlikely(!abspath)
 		goto err;
 	result = posix_remove_f_impl(abspath);
@@ -779,8 +779,8 @@ EINTR_ENOMEM_LABEL(again)
 	}
 #endif /* posix_rmdirat_USE_rmdirat */
 
-#define NEED_posix_dfd_abspath
-	abspath = posix_dfd_abspath(dfd, path, atflags);
+#define NEED_posix_dfd_makepath
+	abspath = posix_dfd_makepath(dfd, path, atflags);
 	if unlikely(!abspath)
 		goto err;
 	result = posix_rmdir_f_impl(abspath);

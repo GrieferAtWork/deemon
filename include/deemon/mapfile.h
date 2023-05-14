@@ -151,7 +151,7 @@ DeeMapFile_InitFile(struct DeeMapFile *__restrict self,
                     size_t num_trailing_nulbytes, unsigned int flags);
 
 /* Bits for the `flags' argument of `DeeMapFile_InitSysFd()' */
-#define DEE_MAPFILE_F_NORMAL  0
+#define DEE_MAPFILE_F_NORMAL    0 /* Normal flags */
 #ifdef DeeMapFile_IS_os_mapfile
 #define DEE_MAPFILE_F_READALL   FMAPFILE_READALL   /* Flag: use `preadall(3)' / `readall(3)' instead of `pread(2)' / `read(2)' */
 #define DEE_MAPFILE_F_MUSTMMAP  FMAPFILE_MUSTMMAP  /* Flag: require the use of a mmap(2) */

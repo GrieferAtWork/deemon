@@ -638,6 +638,8 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix__openat_f_impl(DeeObject *dfd, De
 		os_dfd = DeeUnixSystem_GetFD(dfd);
 		if unlikely(os_dfd == -1)
 			goto err;
+		if (DeeObject_AssertTypeExact(filename, &DeeString_Type))
+			goto err;
 #ifdef posix_openat_USE_wopenat
 		wide_filename = DeeString_AsWide(filename);
 		if unlikely(!wide_filename)
@@ -668,8 +670,8 @@ EINTR_ENOMEM_LABEL(again)
 		/* Fallthru to fallback path below */
 	}
 #endif /* posix_openat_USE_wopenat || posix_openat_USE_openat */
-	abspath = posix_dfd_abspath(dfd, filename, POSIX_DFD_ABSPATH_ATFLAGS_FROM_OFLAGS(oflags));
-#define NEED_posix_dfd_abspath
+	abspath = posix_dfd_makepath(dfd, filename, POSIX_DFD_MAKEPATH_ATFLAGS_FROM_OFLAGS(oflags));
+#define NEED_posix_dfd_makepath
 	if unlikely(!abspath)
 		goto err;
 	result = posix__open_f_impl(abspath, oflags, mode);

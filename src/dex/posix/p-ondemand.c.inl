@@ -42,6 +42,8 @@
 #define NEED_err_unix_symlink
 #define NEED_err_nt_link
 #define NEED_err_nt_symlink
+#define NEED_err_unix_truncate
+#define NEED_err_unix_ftruncate
 #define NEED_err_unix_remove_unsupported
 #define NEED_err_unix_unlink_unsupported
 #define NEED_err_nt_unlink_unsupported
@@ -96,6 +98,13 @@
 #define NEED_err_nt_chtime_no_access
 #define NEED_err_unix_path_cross_dev2
 #define NEED_err_nt_path_cross_dev2
+#define NEED_err_unix_file_closed
+#define NEED_err_unix_ftruncate_fbig
+#define NEED_err_unix_truncate_fbig
+#define NEED_err_unix_ftruncate_isdir
+#define NEED_err_unix_truncate_isdir
+#define NEED_err_unix_ftruncate_txtbusy
+#define NEED_err_unix_truncate_txtbusy
 #define NEED_err_nt_path_not_link
 #define NEED_nt_GetTempPath
 #define NEED_nt_GetComputerName
@@ -111,8 +120,9 @@
 #define NEED_nt_CreateHardLink
 #define NEED_nt_CreateSymbolicLinkAuto
 #define NEED_nt_CreateSymbolicLink
-#define NEED_posix_dfd_abspath
-#define NEED_posix_fd_abspath
+#define NEED_posix_dfd_makepath
+#define NEED_posix_fd_makepath
+#define NEED_posix_fd_makepath_fd
 #define NEED_posix_fd_openfile
 #define NEED_posix_copyfile_fileio
 #define NEED_err_bad_atflags
@@ -395,22 +405,19 @@ err:
 INTERN ATTR_COLD NONNULL((2)) int DCALL
 err_unix_chdir(int errno_value, DeeObject *__restrict path) {
 #ifdef EACCES
-	if (errno_value == EACCES) {
-#define NEED_err_unix_path_no_access
+	if (errno_value == EACCES)
 		return err_unix_path_no_access(errno_value, path);
-	}
+#define NEED_err_unix_path_no_access
 #endif /* EACCES */
 #ifdef ENOTDIR
-	if (errno_value == ENOTDIR) {
-#define NEED_err_unix_path_not_dir
+	if (errno_value == ENOTDIR)
 		return err_unix_path_not_dir(errno_value, path);
-	}
+#define NEED_err_unix_path_not_dir
 #endif /* ENOTDIR */
 #ifdef ENOENT
-	if (errno_value == ENOENT) {
-#define NEED_err_unix_path_not_found
+	if (errno_value == ENOENT)
 		return err_unix_path_not_found(errno_value, path);
-	}
+#define NEED_err_unix_path_not_found
 #endif /* ENOENT */
 	return DeeUnixSystem_ThrowErrorf(&DeeError_FSError, errno_value,
 	                                 "Failed to change the current working directory to %r",
@@ -423,10 +430,9 @@ err_unix_chdir(int errno_value, DeeObject *__restrict path) {
 INTERN ATTR_COLD NONNULL((2)) int DCALL
 err_unix_remove(int errno_value, DeeObject *__restrict path) {
 #ifdef EACCES
-	if (errno_value == EACCES) {
-#define NEED_err_unix_path_not_writable
+	if (errno_value == EACCES)
 		return err_unix_path_not_writable(errno_value, path);
-	}
+#define NEED_err_unix_path_not_writable
 #endif /* EACCES */
 #if defined(EBUSY) || defined(EINVAL)
 #define NEED_err_unix_path_busy
@@ -445,9 +451,9 @@ err_unix_remove(int errno_value, DeeObject *__restrict path) {
 		return err_unix_path_not_empty(errno_value, path);
 #endif /* ENOTEMPTY */
 #ifdef EROFS
-#define NEED_err_unix_path_readonly
 	if (errno_value == EROFS)
 		return err_unix_path_readonly(errno_value, path);
+#define NEED_err_unix_path_readonly
 #endif /* EROFS */
 #ifdef EPERM
 	if (errno_value == EPERM) {
@@ -497,34 +503,29 @@ err_unix_remove(int errno_value, DeeObject *__restrict path) {
 INTERN ATTR_COLD NONNULL((2)) int DCALL
 err_unix_unlink(int errno_value, DeeObject *__restrict path) {
 #ifdef EACCES
-	if (errno_value == EACCES) {
-#define NEED_err_unix_path_not_writable
+	if (errno_value == EACCES)
 		return err_unix_path_not_writable(errno_value, path);
-	}
+#define NEED_err_unix_path_not_writable
 #endif /* EACCES */
 #ifdef EBUSY
-	if (errno_value == EBUSY) {
-#define NEED_err_unix_path_busy
+	if (errno_value == EBUSY)
 		return err_unix_path_busy(errno_value, path);
-	}
+#define NEED_err_unix_path_busy
 #endif /* EBUSY */
 #ifdef EISDIR
-	if (errno_value == EISDIR) {
-#define NEED_err_unix_path_is_dir
+	if (errno_value == EISDIR)
 		return err_unix_path_is_dir(errno_value, path);
-	}
+#define NEED_err_unix_path_is_dir
 #endif /* EISDIR */
 #ifdef ENOTDIR
-	if (errno_value == ENOTDIR) {
-#define NEED_err_unix_path_not_dir
+	if (errno_value == ENOTDIR)
 		return err_unix_path_not_dir(errno_value, path);
-	}
+#define NEED_err_unix_path_not_dir
 #endif /* ENOTDIR */
 #ifdef ENOENT
-	if (errno_value == ENOENT) {
-#define NEED_err_unix_path_not_found
+	if (errno_value == ENOENT)
 		return err_unix_path_not_found(errno_value, path);
-	}
+#define NEED_err_unix_path_not_found
 #endif /* ENOENT */
 #ifdef EPERM
 	if (errno_value == EPERM) {
@@ -875,14 +876,14 @@ err_unix_rename(int errno_value, DeeObject *existing_path, DeeObject *new_path) 
 	}
 #endif /* EPERM */
 #ifdef EROFS
-#define NEED_err_unix_path_readonly2
 	if (errno_value == EROFS)
 		return err_unix_path_readonly2(errno_value, existing_path, new_path);
+#define NEED_err_unix_path_readonly2
 #endif /* EROFS */
 #ifdef EXDEV
-#define NEED_err_unix_path_cross_dev2
 	if (errno_value == EXDEV)
 		return err_unix_path_cross_dev2(errno_value, existing_path, new_path);
+#define NEED_err_unix_path_cross_dev2
 #endif /* EXDEV */
 	return DeeUnixSystem_ThrowErrorf(&DeeError_FSError, errno_value,
 	                                 "Failed to rename %r to %r",
@@ -964,6 +965,31 @@ err_unix_link(int errno_value, DeeObject *existing_path, DeeObject *new_path) {
 }
 #endif /* NEED_err_unix_link */
 
+#ifdef NEED_err_nt_link
+#undef NEED_err_nt_link
+INTERN ATTR_COLD NONNULL((2, 3)) int DCALL
+err_nt_link(DWORD dwError, DeeObject *existing_path, DeeObject *new_path) {
+#define NEED_err_nt_path_no_access2
+	if (DeeNTSystem_IsAccessDeniedError(dwError))
+		return err_nt_path_no_access2(dwError, existing_path, new_path);
+#define NEED_err_nt_path_exists
+	if (DeeNTSystem_IsExists(dwError))
+		return err_nt_path_exists(dwError, new_path);
+#define NEED_err_nt_path_not_found2
+	if (DeeNTSystem_IsFileNotFoundError(dwError))
+		return err_nt_path_not_found2(dwError, existing_path, new_path);
+#define NEED_err_nt_path_cross_dev2
+	if (DeeNTSystem_IsXDev(dwError))
+		return err_nt_path_cross_dev2(dwError, existing_path, new_path);
+#define NEED_err_nt_link_unsupported
+	if (DeeNTSystem_IsUnsupportedError(dwError))
+		return err_nt_link_unsupported(dwError, existing_path, new_path);
+	return DeeNTSystem_ThrowErrorf(&DeeError_FSError, dwError,
+	                               "Failed to create hard-link for %r at %r",
+	                               existing_path, new_path);
+}
+#endif /* NEED_err_nt_link */
+
 #ifdef NEED_err_unix_symlink
 #undef NEED_err_unix_symlink
 INTERN ATTR_COLD NONNULL((2, 3)) int DCALL
@@ -1004,31 +1030,6 @@ err_unix_symlink(int errno_value, DeeObject *text, DeeObject *path) {
 }
 #endif /* NEED_err_unix_symlink */
 
-#ifdef NEED_err_nt_link
-#undef NEED_err_nt_link
-INTERN ATTR_COLD NONNULL((2, 3)) int DCALL
-err_nt_link(DWORD dwError, DeeObject *existing_path, DeeObject *new_path) {
-#define NEED_err_nt_path_no_access2
-	if (DeeNTSystem_IsAccessDeniedError(dwError))
-		return err_nt_path_no_access2(dwError, existing_path, new_path);
-#define NEED_err_nt_path_exists
-	if (DeeNTSystem_IsExists(dwError))
-		return err_nt_path_exists(dwError, new_path);
-#define NEED_err_nt_path_not_found2
-	if (DeeNTSystem_IsFileNotFoundError(dwError))
-		return err_nt_path_not_found2(dwError, existing_path, new_path);
-#define NEED_err_nt_path_cross_dev2
-	if (DeeNTSystem_IsXDev(dwError))
-		return err_nt_path_cross_dev2(dwError, existing_path, new_path);
-#define NEED_err_nt_link_unsupported
-	if (DeeNTSystem_IsUnsupportedError(dwError))
-		return err_nt_link_unsupported(dwError, existing_path, new_path);
-	return DeeNTSystem_ThrowErrorf(&DeeError_FSError, dwError,
-	                               "Failed to create hard-link for %r at %r",
-	                               existing_path, new_path);
-}
-#endif /* NEED_err_nt_link */
-
 #ifdef NEED_err_nt_symlink
 #undef NEED_err_nt_symlink
 INTERN ATTR_COLD NONNULL((2, 3)) int DCALL
@@ -1053,6 +1054,85 @@ err_nt_symlink(DWORD dwError, DeeObject *text, DeeObject *path) {
 	                               text, path);
 }
 #endif /* NEED_err_nt_symlink */
+
+#ifdef NEED_err_unix_truncate
+#undef NEED_err_unix_truncate
+INTERN ATTR_COLD NONNULL((2, 3)) int DCALL
+err_unix_truncate(int errno_value, DeeObject *path, DeeObject *length) {
+#ifdef ENOENT
+	if (errno_value == ENOENT)
+		return err_unix_path_not_found(errno_value, path);
+#define NEED_err_unix_path_not_found
+#endif /* ENOENT */
+#ifdef ENOTDIR
+	if (errno_value == ENOTDIR)
+		return err_unix_path_not_dir(errno_value, path);
+#define NEED_err_unix_path_not_dir
+#endif /* ENOTDIR */
+#ifdef EACCES
+	if (errno_value == EACCES)
+		return err_unix_path_no_access(errno_value, path);
+#define NEED_err_unix_path_no_access
+#endif /* EACCES */
+#if defined(EFBIG) || defined(EINVAL)
+	DeeSystem_IF_E2(errno_value, EFBIG, EINVAL, {
+		return err_unix_truncate_fbig(errno_value, path, length);
+	});
+#define NEED_err_unix_truncate_fbig
+#endif /* EFBIG || EINVAL */
+#if defined(ENXIO) || defined(EISDIR)
+	DeeSystem_IF_E2(errno_value, ENXIO, EISDIR, {
+		return err_unix_truncate_isdir(errno_value, path);
+	});
+#define NEED_err_unix_truncate_isdir
+#endif /* ENXIO || EISDIR */
+#ifdef ETXTBSY
+	if (errno_value == ETXTBSY)
+		return err_unix_truncate_txtbusy(errno_value, path);
+#define NEED_err_unix_truncate_txtbusy
+#endif /* ETXTBSY */
+#ifdef EROFS
+	if (errno_value == EROFS)
+		return err_unix_path_readonly(errno_value, path);
+#define NEED_err_unix_path_readonly
+#endif /* EROFS */
+	return DeeUnixSystem_ThrowErrorf(&DeeError_SystemError, errno_value,
+	                                 "Failed to truncate path %r to length %r",
+	                                 path, length);
+}
+#endif /* NEED_err_unix_truncate */
+
+#ifdef NEED_err_unix_ftruncate
+#undef NEED_err_unix_ftruncate
+INTERN ATTR_COLD NONNULL((2, 3)) int DCALL
+err_unix_ftruncate(int errno_value, int fd, DeeObject *length) {
+#if defined(EFBIG) || defined(EINVAL)
+	DeeSystem_IF_E2(errno_value, EFBIG, EINVAL, {
+		return err_unix_ftruncate_fbig(errno_value, fd, length);
+	});
+#define NEED_err_unix_ftruncate_fbig
+#endif /* EFBIG || EINVAL */
+#if defined(ENXIO) || defined(EISDIR)
+	DeeSystem_IF_E2(errno_value, ENXIO, EISDIR, {
+		return err_unix_ftruncate_isdir(errno_value, fd);
+	});
+#define NEED_err_unix_ftruncate_isdir
+#endif /* ENXIO || EISDIR */
+#ifdef ETXTBSY
+	if (errno_value == ETXTBSY)
+		return err_unix_ftruncate_txtbusy(errno_value, fd);
+#define NEED_err_unix_ftruncate_txtbusy
+#endif /* ETXTBSY */
+#ifdef EBADF
+	if (errno_value == EBADF)
+		return err_unix_file_closed(errno_value, fd);
+#define NEED_err_unix_file_closed
+#endif /* EBADF */
+	return DeeUnixSystem_ThrowErrorf(&DeeError_SystemError, errno_value,
+	                                 "Failed to truncate fd %d to length %r",
+	                                 fd, length);
+}
+#endif /* NEED_err_unix_ftruncate */
 
 #ifdef NEED_err_unix_remove_unsupported
 #undef NEED_err_unix_remove_unsupported
@@ -1590,9 +1670,7 @@ err_nt_chtime_no_access(DWORD dwError, DeeObject *__restrict path) {
 #ifdef NEED_err_unix_path_cross_dev2
 #undef NEED_err_unix_path_cross_dev2
 INTERN ATTR_COLD NONNULL((2, 3)) int DCALL
-err_unix_path_cross_dev2(int errno_value,
-                         DeeObject *existing_path,
-                         DeeObject *new_path) {
+err_unix_path_cross_dev2(int errno_value, DeeObject *existing_path, DeeObject *new_path) {
 	return DeeUnixSystem_ThrowErrorf(&DeeError_CrossDeviceLink, errno_value,
 	                                 "Paths %r and %r are not apart of the same filesystem",
 	                                 existing_path, new_path);
@@ -1619,6 +1697,95 @@ err_nt_path_not_link(DWORD dwError, DeeObject *__restrict path) {
 }
 #endif /* NEED_err_nt_path_not_link */
 
+#ifdef NEED_err_unix_ftruncate_fbig
+#undef NEED_err_unix_ftruncate_fbig
+INTERN ATTR_COLD NONNULL((3)) int DCALL
+err_unix_ftruncate_fbig(int errno_value, int fd, DeeObject *length) {
+	int result = -1;
+	DREF DeeObject *fd_path;
+	fd_path = posix_fd_makepath_fd(fd);
+#define NEED_posix_fd_makepath_fd
+	if likely(fd_path) {
+		result = err_unix_truncate_fbig(errno_value, fd_path, length);
+#define NEED_err_unix_truncate_fbig
+		Dee_Decref(fd_path);
+	}
+	return result;
+}
+#endif /* NEED_err_unix_ftruncate_fbig */
+
+#ifdef NEED_err_unix_truncate_fbig
+#undef NEED_err_unix_truncate_fbig
+INTERN ATTR_COLD NONNULL((2, 3)) int DCALL
+err_unix_truncate_fbig(int errno_value, DeeObject *path, DeeObject *length) {
+	return DeeUnixSystem_ThrowErrorf(&DeeError_IntegerOverflow, errno_value,
+	                                 "Cannot truncate path %r: length %r is too large",
+	                                 path, length);
+}
+#endif /* NEED_err_unix_truncate_fbig */
+
+#ifdef NEED_err_unix_ftruncate_isdir
+#undef NEED_err_unix_ftruncate_isdir
+INTERN ATTR_COLD int DCALL
+err_unix_ftruncate_isdir(int errno_value, int fd) {
+	int result = -1;
+	DREF DeeObject *fd_path;
+	fd_path = posix_fd_makepath_fd(fd);
+#define NEED_posix_fd_makepath_fd
+	if likely(fd_path) {
+		result = err_unix_truncate_isdir(errno_value, fd_path);
+#define NEED_err_unix_truncate_isdir
+		Dee_Decref(fd_path);
+	}
+	return result;
+}
+#endif /* NEED_err_unix_ftruncate_isdir */
+
+#ifdef NEED_err_unix_truncate_isdir
+#undef NEED_err_unix_truncate_isdir
+INTERN ATTR_COLD NONNULL((2)) int DCALL
+err_unix_truncate_isdir(int errno_value, DeeObject *__restrict path) {
+	return DeeUnixSystem_ThrowErrorf(&DeeError_IntegerOverflow, errno_value,
+	                                 "Cannot truncate directory %r",
+	                                 path);
+}
+#endif /* NEED_err_unix_truncate_isdir */
+
+#ifdef NEED_err_unix_ftruncate_txtbusy
+#undef NEED_err_unix_ftruncate_txtbusy
+INTERN ATTR_COLD int DCALL
+err_unix_ftruncate_txtbusy(int errno_value, int fd) {
+	int result = -1;
+	DREF DeeObject *fd_path;
+	fd_path = posix_fd_makepath_fd(fd);
+#define NEED_posix_fd_makepath_fd
+	if likely(fd_path) {
+		result = err_unix_truncate_txtbusy(errno_value, fd_path);
+#define NEED_err_unix_truncate_txtbusy
+		Dee_Decref(fd_path);
+	}
+	return result;
+}
+#endif /* NEED_err_unix_ftruncate_txtbusy */
+
+#ifdef NEED_err_unix_truncate_txtbusy
+#undef NEED_err_unix_truncate_txtbusy
+INTERN ATTR_COLD NONNULL((2)) int DCALL
+err_unix_truncate_txtbusy(int errno_value, DeeObject *__restrict path) {
+	return DeeUnixSystem_ThrowErrorf(&DeeError_ReadOnlyFile, errno_value,
+	                                 "Cannot truncate %r because that file is currently being executed",
+	                                 path);
+}
+#endif /* NEED_err_unix_truncate_txtbusy */
+
+#ifdef NEED_err_unix_file_closed
+#undef NEED_err_unix_file_closed
+INTERN ATTR_COLD int DCALL
+err_unix_file_closed(int errno_value, int fd) {
+	return DeeUnixSystem_ThrowErrorf(&DeeError_FileClosed, errno_value,
+	                                 "Invalid fd %d", fd);
+}
+#endif /* NEED_err_unix_file_closed */
 
 
 
@@ -2355,144 +2522,6 @@ err:
 #endif /* NEED_nt_CreateSymbolicLink */
 
 
-#ifdef NEED_posix_dfd_abspath
-#undef NEED_posix_dfd_abspath
-/* Construct an absolute path from `dfd:path'
- * @param: dfd:  Can be a `File', `int', `string', or [nt:`HANDLE']
- * @param: path: Must be a `string' */
-INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-posix_dfd_abspath(DeeObject *dfd, DeeObject *path, unsigned int atflags) {
-	struct unicode_printer printer;
-	if (DeeObject_AssertTypeExact(path, &DeeString_Type))
-		goto err;
-	if unlikely(atflags & ~POSIX_DFD_ABSPATH_ATFLAGS_MASK) {
-#define NEED_err_bad_atflags
-		err_bad_atflags(atflags);
-		goto err;
-	}
-
-	/* Check if `path' is absolute. - If it is, then we must use _it_ */
-	if (DeeString_IsAbsPath(path))
-		return_reference_(path);
-
-	/* Must combine `dfd' with `path' */
-	unicode_printer_init(&printer);
-	if (DeeString_Check(dfd)) {
-		if unlikely(unicode_printer_printstring(&printer, dfd) < 0)
-			goto err_printer;
-	} else {
-		/* Special handling for `deemon.File' */
-		if (DeeFile_Check(dfd)) {
-			DREF DeeObject *dfd_filename;
-			dfd_filename = DeeFile_Filename(dfd);
-			if unlikely(!dfd_filename)
-				goto err_printer;
-			if (DeeString_IsAbsPath(dfd_filename)) {
-				if unlikely(unicode_printer_printstring(&printer, dfd_filename) < 0)
-					goto err_printer;
-				Dee_Decref(dfd_filename);
-				goto got_dfd_path;
-			}
-			Dee_Decref(dfd_filename);
-		}
-
-#ifndef CONFIG_HAVE_AT_FDCWD
-		/* OS doesn't support AT_FDCWD --> check if `dfd' is our custom replacement. */
-		if (DeeInt_Check(dfd)) {
-			int dfd_intval;
-			if (DeeInt_TryAsInt(dfd, &dfd_intval)) {
-				if (dfd_intval == AT_FDCWD) {
-					/* Caller made an explicit request for the path to be relative! */
-					unicode_printer_fini(&printer);
-					return_reference_(path);
-				}
-			}
-		}
-#endif /* !CONFIG_HAVE_AT_FDCWD */
-
-#ifdef CONFIG_HOST_WINDOWS
-		{
-			int error;
-			HANDLE hDfd;
-			hDfd = (HANDLE)DeeNTSystem_GetHandle(dfd);
-			if unlikely(hDfd == INVALID_HANDLE_VALUE)
-				goto err_printer;
-			error = DeeNTSystem_PrintFilenameOfHandle(&printer, hDfd);
-			if unlikely(error != 0) {
-				if (error > 0) {
-					DeeNTSystem_ThrowLastErrorf(NULL,
-					                            "Failed to print path of HANDLE %p",
-					                            hDfd);
-				}
-				goto err_printer;
-			}
-		}
-#endif /* CONFIG_HOST_WINDOWS */
-
-#ifdef CONFIG_HOST_UNIX
-		{
-			int os_dfd;
-			os_dfd = DeeUnixSystem_GetFD(dfd);
-			if unlikely(os_dfd == -1)
-				goto err_printer;
-#ifdef CONFIG_HAVE_PROCFS
-			if unlikely(unicode_printer_printf(&printer, "/proc/self/fd/%d/", os_dfd) < 0)
-				goto err_printer;
-#else /* CONFIG_HAVE_PROCFS */
-			{
-				int error;
-				error = DeeSystem_PrintFilenameOfFD(&printer, os_dfd);
-				if unlikely(error != 0)
-					goto err_printer;
-			}
-#endif /* !CONFIG_HAVE_PROCFS */
-		}
-#endif /* CONFIG_HOST_UNIX */
-	}
-
-	/* Trim trailing slashes. */
-got_dfd_path:
-	if (!UNICODE_PRINTER_ISEMPTY(&printer)) {
-		size_t newlen = UNICODE_PRINTER_LENGTH(&printer);
-		while (newlen && DeeSystem_IsSep(UNICODE_PRINTER_GETCHAR(&printer, newlen - 1)))
-			--newlen;
-		if (newlen >= UNICODE_PRINTER_LENGTH(&printer)) {
-			/* Append trailing slash */
-			if unlikely(unicode_printer_putascii(&printer, DeeSystem_SEP))
-				goto err_printer;
-		} else {
-			/* Trailing slash is already present (but make sure that there's only 1 of them) */
-			++newlen;
-			unicode_printer_truncate(&printer, newlen);
-		}
-	}
-
-#ifndef DEE_SYSTEM_IS_ABS_CHECKS_LEADING_SLASHES
-	if (DeeSystem_IsSep(DeeString_STR(path)[0])) {
-		/* Must skip leading slashes in `path' */
-		char *utf8_path = DeeString_AsUtf8(path);
-		if unlikely(!utf8_path)
-			goto err_printer;
-		while (DeeSystem_IsSep(*utf8_path))
-			++utf8_path;
-		if unlikely(unicode_printer_printutf8(&printer, utf8_path, strlen(utf8_path)) < 0)
-			goto err_printer;
-	} else
-#endif /* !DEE_SYSTEM_IS_ABS_CHECKS_LEADING_SLASHES */
-	{
-		if unlikely(unicode_printer_printstring(&printer, path) < 0)
-			goto err_printer;
-	}
-
-	/* Pack the resulting string together */
-	return unicode_printer_pack(&printer);
-err_printer:
-	unicode_printer_fini(&printer);
-err:
-	return NULL;
-}
-#endif /* NEED_posix_dfd_abspath */
-
 #ifdef NEED_posix_fd_openfile
 #undef NEED_posix_fd_openfile
 /* Open a HANDLE/fd-compatible object as a `File' */
@@ -2517,8 +2546,8 @@ posix_fd_openfile(DeeObject *__restrict fd, int oflags) {
 		result = DeeFile_OpenFd((Dee_fd_t)os_fd, NULL, oflags, false);
 #else /* ... */
 		DREF DeeObject *fd_path;
-		fd_path = posix_fd_abspath(fd);
-#define NEED_posix_fd_abspath
+		fd_path = posix_fd_makepath(fd);
+#define NEED_posix_fd_makepath
 		if unlikely(!fd_path)
 			goto err;
 		result = DeeFile_Open(fd_path, oflags, 0);
@@ -2876,15 +2905,155 @@ err:
 #endif /* NEED_posix_copyfile_fileio */
 
 
-#ifdef NEED_posix_fd_abspath
-#undef NEED_posix_fd_abspath
+#ifdef NEED_posix_dfd_makepath
+#undef NEED_posix_dfd_makepath
+/* Construct a path from `dfd:path'
+ * @param: dfd:  Can be a `File', `int', `string', or [nt:`HANDLE']
+ * @param: path: Must be a `string' */
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+posix_dfd_makepath(DeeObject *dfd, DeeObject *path, unsigned int atflags) {
+	struct unicode_printer printer;
+	if (DeeObject_AssertTypeExact(path, &DeeString_Type))
+		goto err;
+	if unlikely(atflags & ~POSIX_DFD_MAKEPATH_ATFLAGS_MASK) {
+#define NEED_err_bad_atflags
+		err_bad_atflags(atflags);
+		goto err;
+	}
+
+	/* Check if `path' is absolute. - If it is, then we must use _it_ */
+	if (DeeString_IsAbsPath(path))
+		return_reference_(path);
+
+	/* Must combine `dfd' with `path' */
+	unicode_printer_init(&printer);
+	if (DeeString_Check(dfd)) {
+		if unlikely(unicode_printer_printstring(&printer, dfd) < 0)
+			goto err_printer;
+	} else {
+		/* Special handling for `deemon.File' */
+		if (DeeFile_Check(dfd)) {
+			DREF DeeObject *dfd_filename;
+			dfd_filename = DeeFile_Filename(dfd);
+			if unlikely(!dfd_filename)
+				goto err_printer;
+			if (DeeString_IsAbsPath(dfd_filename)) {
+				if unlikely(unicode_printer_printstring(&printer, dfd_filename) < 0)
+					goto err_printer;
+				Dee_Decref(dfd_filename);
+				goto got_dfd_path;
+			}
+			Dee_Decref(dfd_filename);
+		}
+
+#ifndef CONFIG_HAVE_AT_FDCWD
+		/* OS doesn't support AT_FDCWD --> check if `dfd' is our custom replacement. */
+		if (DeeInt_Check(dfd)) {
+			int dfd_intval;
+			if (DeeInt_TryAsInt(dfd, &dfd_intval)) {
+				if (dfd_intval == AT_FDCWD) {
+					/* Caller made an explicit request for the path to be relative! */
+					unicode_printer_fini(&printer);
+					return_reference_(path);
+				}
+			}
+		}
+#endif /* !CONFIG_HAVE_AT_FDCWD */
+
+#ifdef CONFIG_HOST_WINDOWS
+		{
+			int error;
+			HANDLE hDfd;
+			hDfd = (HANDLE)DeeNTSystem_GetHandle(dfd);
+			if unlikely(hDfd == INVALID_HANDLE_VALUE)
+				goto err_printer;
+			error = DeeNTSystem_PrintFilenameOfHandle(&printer, hDfd);
+			if unlikely(error != 0) {
+				if (error > 0) {
+					DeeNTSystem_ThrowLastErrorf(NULL,
+					                            "Failed to print path of HANDLE %p",
+					                            hDfd);
+				}
+				goto err_printer;
+			}
+		}
+#endif /* CONFIG_HOST_WINDOWS */
+
+#ifdef CONFIG_HOST_UNIX
+		{
+			int os_dfd;
+			os_dfd = DeeUnixSystem_GetFD(dfd);
+			if unlikely(os_dfd == -1)
+				goto err_printer;
+#ifdef CONFIG_HAVE_PROCFS
+			if unlikely(unicode_printer_printf(&printer, "/proc/self/fd/%d/", os_dfd) < 0)
+				goto err_printer;
+#else /* CONFIG_HAVE_PROCFS */
+			{
+				int error;
+				error = DeeSystem_PrintFilenameOfFD(&printer, os_dfd);
+				if unlikely(error != 0)
+					goto err_printer;
+			}
+#endif /* !CONFIG_HAVE_PROCFS */
+		}
+#endif /* CONFIG_HOST_UNIX */
+	}
+
+	/* Trim trailing slashes. */
+got_dfd_path:
+	if (!UNICODE_PRINTER_ISEMPTY(&printer)) {
+		size_t newlen = UNICODE_PRINTER_LENGTH(&printer);
+		while (newlen && DeeSystem_IsSep(UNICODE_PRINTER_GETCHAR(&printer, newlen - 1)))
+			--newlen;
+		if (newlen >= UNICODE_PRINTER_LENGTH(&printer)) {
+			/* Append trailing slash */
+			if unlikely(unicode_printer_putascii(&printer, DeeSystem_SEP))
+				goto err_printer;
+		} else {
+			/* Trailing slash is already present (but make sure that there's only 1 of them) */
+			++newlen;
+			unicode_printer_truncate(&printer, newlen);
+		}
+	}
+
+#ifndef DEE_SYSTEM_IS_ABS_CHECKS_LEADING_SLASHES
+	if (DeeSystem_IsSep(DeeString_STR(path)[0])) {
+		/* Must skip leading slashes in `path' */
+		char *utf8_path = DeeString_AsUtf8(path);
+		if unlikely(!utf8_path)
+			goto err_printer;
+		while (DeeSystem_IsSep(*utf8_path))
+			++utf8_path;
+		if unlikely(unicode_printer_printutf8(&printer, utf8_path, strlen(utf8_path)) < 0)
+			goto err_printer;
+	} else
+#endif /* !DEE_SYSTEM_IS_ABS_CHECKS_LEADING_SLASHES */
+	{
+		if unlikely(unicode_printer_printstring(&printer, path) < 0)
+			goto err_printer;
+	}
+
+	/* Pack the resulting string together */
+	return unicode_printer_pack(&printer);
+err_printer:
+	unicode_printer_fini(&printer);
+err:
+	return NULL;
+}
+#endif /* NEED_posix_dfd_makepath */
+
+#ifdef NEED_posix_fd_makepath
+#undef NEED_posix_fd_makepath
 
 #ifdef __INTELLISENSE__ /* Defined in "p-pwd.c.inl" */
 FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_getcwd_f_impl(void);
 #endif /* __INTELLISENSE__ */
 
+/* Construct a path that refers to the file described by `fd'
+ * @param: fd: Can be a `File', `int', or [nt:`HANDLE'] */
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-posix_fd_abspath(DeeObject *__restrict fd) {
+posix_fd_makepath(DeeObject *__restrict fd) {
 	if (DeeFile_Check(fd)) {
 		DREF DeeObject *result;
 		result = DeeFile_Filename(fd);
@@ -2914,17 +3083,36 @@ posix_fd_abspath(DeeObject *__restrict fd) {
 		if unlikely(hFd == INVALID_HANDLE_VALUE)
 			goto err;
 		return DeeNTSystem_GetFilenameOfHandle(hFd);
-#else /* CONFIG_HOST_WINDOWS */
+#else /* ... */
 		int os_fd = DeeUnixSystem_GetFD(fd);
 		if unlikely(os_fd == -1)
 			goto err;
-		return DeeSystem_GetFilenameOfFD(os_fd);
-#endif /* !CONFIG_HOST_WINDOWS */
+		return posix_fd_makepath_fd(os_fd);
+#define NEED_posix_fd_makepath_fd
+#endif /* !... */
 	}
 err:
 	return NULL;
 }
-#endif /* NEED_posix_fd_abspath */
+#endif /* NEED_posix_fd_makepath */
+
+
+#ifdef NEED_posix_fd_makepath_fd
+#undef NEED_posix_fd_makepath_fd
+/* Construct a path that refers to the file described by `fd' */
+INTERN WUNUSED DREF DeeObject *DCALL
+posix_fd_makepath_fd(int fd) {
+#ifndef CONFIG_HAVE_AT_FDCWD
+	if (fd == AT_FDCWD)
+		return posix_getcwd_f_impl();
+#endif /* !CONFIG_HAVE_AT_FDCWD */
+#ifdef CONFIG_HAVE_PROCFS
+	return DeeString_Newf("/proc/self/fd/%d", fd);
+#else /* CONFIG_HAVE_PROCFS */
+	return DeeSystem_GetFilenameOfFD(fd);
+#endif /* !CONFIG_HAVE_PROCFS */
+}
+#endif /* NEED_posix_fd_makepath_fd */
 
 
 #ifdef NEED_err_bad_atflags

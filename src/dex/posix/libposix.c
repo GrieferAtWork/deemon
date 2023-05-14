@@ -109,7 +109,7 @@ libposix_get_dfd_filename(int dfd, /*utf-8*/ char const *filename, int atflags) 
 	(void)dfd;
 	(void)filename;
 	(void)atflags;
-	/* TODO: Don't try to use this function (it's gonna get removed) -- use `posix_dfd_abspath()' instead! */
+	/* TODO: Don't try to use this function (it's gonna get removed) -- use `posix_dfd_makepath()' instead! */
 	DeeError_NOTIMPLEMENTED();
 	return NULL;
 }
@@ -128,6 +128,8 @@ libposix_get_dfd_filename(int dfd, /*utf-8*/ char const *filename, int atflags) 
 local ALL_STUBS = {
 	("posix_truncate_USE_STUB",     { "truncate" }),
 	("posix_ftruncate_USE_STUB",    { "ftruncate" }),
+	("posix_ftruncateat_USE_STUB",  { "ftruncateat" }),
+	("posix_truncateat_USE_STUB",   { "truncateat" }),
 	("posix_pipe_USE_STUB",         { "pipe" }),
 	("posix_pipe2_USE_STUB",        { "pipe2" }),
 	("posix_strerror_USE_STUB",     { "strerror" }),
@@ -445,6 +447,20 @@ print("#endif /" "* POSIX_STUBS_TOTLEN == 0 *" "/");
 #define len_posix_close_USE_STUB /* nothing */
 #define str_posix_close_USE_STUB /* nothing */
 #endif /* !posix_close_USE_STUB */
+#ifdef posix_copyfile_USE_STUB
+#define len_posix_copyfile_USE_STUB +9
+#define str_posix_copyfile_USE_STUB 'c', 'o', 'p', 'y', 'f', 'i', 'l', 'e', '\0',
+#else /* posix_copyfile_USE_STUB */
+#define len_posix_copyfile_USE_STUB /* nothing */
+#define str_posix_copyfile_USE_STUB /* nothing */
+#endif /* !posix_copyfile_USE_STUB */
+#ifdef posix_copyfileat_USE_STUB
+#define len_posix_copyfileat_USE_STUB +11
+#define str_posix_copyfileat_USE_STUB 'c', 'o', 'p', 'y', 'f', 'i', 'l', 'e', 'a', 't', '\0',
+#else /* posix_copyfileat_USE_STUB */
+#define len_posix_copyfileat_USE_STUB /* nothing */
+#define str_posix_copyfileat_USE_STUB /* nothing */
+#endif /* !posix_copyfileat_USE_STUB */
 #ifdef posix_cpu_count_USE_STUB
 #define len_posix_cpu_count_USE_STUB +10
 #define str_posix_cpu_count_USE_STUB 'c', 'p', 'u', '_', 'c', 'o', 'u', 'n', 't', '\0',
@@ -515,6 +531,13 @@ print("#endif /" "* POSIX_STUBS_TOTLEN == 0 *" "/");
 #define len_posix_fchdirat_USE_STUB /* nothing */
 #define str_posix_fchdirat_USE_STUB /* nothing */
 #endif /* !posix_fchdirat_USE_STUB */
+#ifdef posix_fcopyfile_USE_STUB
+#define len_posix_fcopyfile_USE_STUB +10
+#define str_posix_fcopyfile_USE_STUB 'f', 'c', 'o', 'p', 'y', 'f', 'i', 'l', 'e', '\0',
+#else /* posix_fcopyfile_USE_STUB */
+#define len_posix_fcopyfile_USE_STUB /* nothing */
+#define str_posix_fcopyfile_USE_STUB /* nothing */
+#endif /* !posix_fcopyfile_USE_STUB */
 #ifdef posix_fdatasync_USE_STUB
 #define len_posix_fdatasync_USE_STUB +10
 #define str_posix_fdatasync_USE_STUB 'f', 'd', 'a', 't', 'a', 's', 'y', 'n', 'c', '\0',
@@ -571,6 +594,13 @@ print("#endif /" "* POSIX_STUBS_TOTLEN == 0 *" "/");
 #define len_posix_ftruncate_USE_STUB /* nothing */
 #define str_posix_ftruncate_USE_STUB /* nothing */
 #endif /* !posix_ftruncate_USE_STUB */
+#ifdef posix_ftruncateat_USE_STUB
+#define len_posix_ftruncateat_USE_STUB +12
+#define str_posix_ftruncateat_USE_STUB 'f', 't', 'r', 'u', 'n', 'c', 'a', 't', 'e', 'a', 't', '\0',
+#else /* posix_ftruncateat_USE_STUB */
+#define len_posix_ftruncateat_USE_STUB /* nothing */
+#define str_posix_ftruncateat_USE_STUB /* nothing */
+#endif /* !posix_ftruncateat_USE_STUB */
 #ifdef posix_getenv_USE_STUB
 #define len_posix_getenv_USE_STUB +7
 #define str_posix_getenv_USE_STUB 'g', 'e', 't', 'e', 'n', 'v', '\0',
@@ -599,6 +629,13 @@ print("#endif /" "* POSIX_STUBS_TOTLEN == 0 *" "/");
 #define len_posix_isatty_USE_STUB /* nothing */
 #define str_posix_isatty_USE_STUB /* nothing */
 #endif /* !posix_isatty_USE_STUB */
+#ifdef posix_lcopyfile_USE_STUB
+#define len_posix_lcopyfile_USE_STUB +10
+#define str_posix_lcopyfile_USE_STUB 'l', 'c', 'o', 'p', 'y', 'f', 'i', 'l', 'e', '\0',
+#else /* posix_lcopyfile_USE_STUB */
+#define len_posix_lcopyfile_USE_STUB /* nothing */
+#define str_posix_lcopyfile_USE_STUB /* nothing */
+#endif /* !posix_lcopyfile_USE_STUB */
 #ifdef posix_link_USE_STUB
 #define len_posix_link_USE_STUB +5
 #define str_posix_link_USE_STUB 'l', 'i', 'n', 'k', '\0',
@@ -970,6 +1007,13 @@ print("#endif /" "* POSIX_STUBS_TOTLEN == 0 *" "/");
 #define len_posix_truncate_USE_STUB /* nothing */
 #define str_posix_truncate_USE_STUB /* nothing */
 #endif /* !posix_truncate_USE_STUB */
+#ifdef posix_truncateat_USE_STUB
+#define len_posix_truncateat_USE_STUB +11
+#define str_posix_truncateat_USE_STUB 't', 'r', 'u', 'n', 'c', 'a', 't', 'e', 'a', 't', '\0',
+#else /* posix_truncateat_USE_STUB */
+#define len_posix_truncateat_USE_STUB /* nothing */
+#define str_posix_truncateat_USE_STUB /* nothing */
+#endif /* !posix_truncateat_USE_STUB */
 #ifdef posix_umask_USE_STUB
 #define len_posix_umask_USE_STUB +6
 #define str_posix_umask_USE_STUB 'u', 'm', 'a', 's', 'k', '\0',
@@ -1044,6 +1088,8 @@ print("#endif /" "* POSIX_STUBS_TOTLEN == 0 *" "/");
 	len_posix_chdir_USE_STUB \
 	len_posix_clearenv_USE_STUB \
 	len_posix_close_USE_STUB \
+	len_posix_copyfile_USE_STUB \
+	len_posix_copyfileat_USE_STUB \
 	len_posix_cpu_count_USE_STUB \
 	len_posix_creat_USE_STUB \
 	len_posix_dup2_USE_STUB \
@@ -1054,6 +1100,7 @@ print("#endif /" "* POSIX_STUBS_TOTLEN == 0 *" "/");
 	len_posix_euidaccess_USE_STUB \
 	len_posix_fchdir_USE_STUB \
 	len_posix_fchdirat_USE_STUB \
+	len_posix_fcopyfile_USE_STUB \
 	len_posix_fdatasync_USE_STUB \
 	len_posix_flink_USE_STUB \
 	len_posix_fmkdirat_USE_STUB \
@@ -1062,10 +1109,12 @@ print("#endif /" "* POSIX_STUBS_TOTLEN == 0 *" "/");
 	len_posix_fsymlinkat_USE_STUB \
 	len_posix_fsync_USE_STUB \
 	len_posix_ftruncate_USE_STUB \
+	len_posix_ftruncateat_USE_STUB \
 	len_posix_getenv_USE_STUB \
 	len_posix_gethostname_USE_STUB \
 	len_posix_getpid_USE_STUB \
 	len_posix_isatty_USE_STUB \
+	len_posix_lcopyfile_USE_STUB \
 	len_posix_link_USE_STUB \
 	len_posix_linkat_USE_STUB \
 	len_posix_lseek_USE_STUB \
@@ -1119,6 +1168,7 @@ print("#endif /" "* POSIX_STUBS_TOTLEN == 0 *" "/");
 	len_posix_symlinkat_USE_STUB \
 	len_posix_system_USE_STUB \
 	len_posix_truncate_USE_STUB \
+	len_posix_truncateat_USE_STUB \
 	len_posix_umask_USE_STUB \
 	len_posix_unlink_USE_STUB \
 	len_posix_unlinkat_USE_STUB \
@@ -1164,6 +1214,8 @@ PRIVATE struct {
 		str_posix_chdir_USE_STUB
 		str_posix_clearenv_USE_STUB
 		str_posix_close_USE_STUB
+		str_posix_copyfile_USE_STUB
+		str_posix_copyfileat_USE_STUB
 		str_posix_cpu_count_USE_STUB
 		str_posix_creat_USE_STUB
 		str_posix_dup2_USE_STUB
@@ -1174,6 +1226,7 @@ PRIVATE struct {
 		str_posix_euidaccess_USE_STUB
 		str_posix_fchdir_USE_STUB
 		str_posix_fchdirat_USE_STUB
+		str_posix_fcopyfile_USE_STUB
 		str_posix_fdatasync_USE_STUB
 		str_posix_flink_USE_STUB
 		str_posix_fmkdirat_USE_STUB
@@ -1182,10 +1235,12 @@ PRIVATE struct {
 		str_posix_fsymlinkat_USE_STUB
 		str_posix_fsync_USE_STUB
 		str_posix_ftruncate_USE_STUB
+		str_posix_ftruncateat_USE_STUB
 		str_posix_getenv_USE_STUB
 		str_posix_gethostname_USE_STUB
 		str_posix_getpid_USE_STUB
 		str_posix_isatty_USE_STUB
+		str_posix_lcopyfile_USE_STUB
 		str_posix_link_USE_STUB
 		str_posix_linkat_USE_STUB
 		str_posix_lseek_USE_STUB
@@ -1239,6 +1294,7 @@ PRIVATE struct {
 		str_posix_symlinkat_USE_STUB
 		str_posix_system_USE_STUB
 		str_posix_truncate_USE_STUB
+		str_posix_truncateat_USE_STUB
 		str_posix_umask_USE_STUB
 		str_posix_unlink_USE_STUB
 		str_posix_unlinkat_USE_STUB
@@ -1552,6 +1608,8 @@ PRIVATE struct dex_symbol symbols[] = {
 	/* Filesystem control */
 	D(POSIX_TRUNCATE_DEF)
 	D(POSIX_FTRUNCATE_DEF)
+	D(POSIX_TRUNCATEAT_DEF)
+	D(POSIX_FTRUNCATEAT_DEF)
 	D(POSIX_ACCESS_DEF)
 	D(POSIX_EUIDACCESS_DEF)
 	D(POSIX_FACCESSAT_DEF)

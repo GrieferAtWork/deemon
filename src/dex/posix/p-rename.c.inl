@@ -261,8 +261,8 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_frename_f_impl(DeeObject *oldfd, 
 {
 #ifdef posix_frename_USE_posix_rename
 	DREF DeeObject *result, *oldfd_abspath;
-#define NEED_posix_fd_abspath
-	oldfd_abspath = posix_fd_abspath(oldfd);
+#define NEED_posix_fd_makepath
+	oldfd_abspath = posix_fd_makepath(oldfd);
 	if unlikely(!oldfd_abspath)
 		goto err;
 	result = posix_rename_f_impl(oldfd_abspath, newpath);
@@ -347,12 +347,12 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_renameat_f_impl(DeeObject *olddir
 	}
 #endif /* posix_renameat_USE_renameat2 || posix_renameat_USE_renameat */
 
-#define NEED_posix_dfd_abspath
-	abs_oldpath = posix_dfd_abspath(olddirfd, oldpath, atflags);
+#define NEED_posix_dfd_makepath
+	abs_oldpath = posix_dfd_makepath(olddirfd, oldpath, atflags);
 	if unlikely(!abs_oldpath)
 		goto err;
-#define NEED_posix_dfd_abspath
-	abs_newpath = posix_dfd_abspath(newdirfd, newpath, atflags);
+#define NEED_posix_dfd_makepath
+	abs_newpath = posix_dfd_makepath(newdirfd, newpath, atflags);
 	if unlikely(!abs_newpath)
 		goto err_abs_oldpath;
 	result = posix_rename_f_impl(abs_oldpath, abs_newpath);
@@ -413,11 +413,11 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_renameat2_f_impl(DeeObject *olddi
 	if (flags & RENAME_NOREPLACE) {
 		int error;
 		DWORD dwError;
-		abs_oldpath = posix_dfd_abspath(olddirfd, oldpath, atflags);
+		abs_oldpath = posix_dfd_makepath(olddirfd, oldpath, atflags);
 		if unlikely(!abs_oldpath)
 			goto err;
-#define NEED_posix_dfd_abspath
-		abs_newpath = posix_dfd_abspath(newdirfd, newpath, atflags);
+#define NEED_posix_dfd_makepath
+		abs_newpath = posix_dfd_makepath(newdirfd, newpath, atflags);
 		if unlikely(!abs_newpath)
 			goto err_abs_oldpath;
 again:
@@ -497,12 +497,12 @@ EINTR_ENOMEM_LABEL(again_renameat2)
 		/* Directly handle rename errors */
 		errno_value = DeeSystem_GetErrno();
 		EINTR_ENOMEM_HANDLE(errno_value, again_renameat2, err);
-#define NEED_posix_dfd_abspath
-		abs_oldpath = posix_dfd_abspath(olddirfd, oldpath, atflags & POSIX_DFD_ABSPATH_ATFLAGS_MASK);
+#define NEED_posix_dfd_makepath
+		abs_oldpath = posix_dfd_makepath(olddirfd, oldpath, atflags & POSIX_DFD_MAKEPATH_ATFLAGS_MASK);
 		if unlikely(!abs_oldpath)
 			goto err;
-#define NEED_posix_dfd_abspath
-		abs_newpath = posix_dfd_abspath(newdirfd, newpath, atflags & POSIX_DFD_ABSPATH_ATFLAGS_MASK);
+#define NEED_posix_dfd_makepath
+		abs_newpath = posix_dfd_makepath(newdirfd, newpath, atflags & POSIX_DFD_MAKEPATH_ATFLAGS_MASK);
 		if unlikely(!abs_newpath)
 			goto err_abs_oldpath;
 		err_unix_rename(errno_value, abs_oldpath, abs_newpath);
@@ -542,8 +542,8 @@ err:
 		if (status == 0) {
 			/* File already exists */
 			DREF DeeObject *abs_newpath;
-#define NEED_posix_dfd_abspath
-			abs_newpath = posix_dfd_abspath(newdirfd, newpath, atflags & POSIX_DFD_ABSPATH_ATFLAGS_MASK);
+#define NEED_posix_dfd_makepath
+			abs_newpath = posix_dfd_makepath(newdirfd, newpath, atflags & POSIX_DFD_MAKEPATH_ATFLAGS_MASK);
 			if unlikely(!abs_newpath)
 				goto err;
 #define NEED_err_unix_path_exists
@@ -727,8 +727,8 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_flink_f_impl(DeeObject *oldfd, De
 		/* Fallthru to fallback path below */
 	}
 #endif /* posix_flink_USE_linkat */
-#define NEED_posix_fd_abspath
-	oldfd_abspath = posix_fd_abspath(oldfd);
+#define NEED_posix_fd_makepath
+	oldfd_abspath = posix_fd_makepath(oldfd);
 	if unlikely(!oldfd_abspath)
 		goto err;
 	result = posix_link_f_impl(oldfd_abspath, newpath);
@@ -804,12 +804,12 @@ EINTR_ENOMEM_LABEL(again)
 			return_none;
 		error = DeeSystem_GetErrno();
 		EINTR_ENOMEM_HANDLE(error, again, err);
-#define NEED_posix_dfd_abspath
-		newpath_abspath = posix_dfd_abspath(newdirfd, newpath, atflags & POSIX_DFD_ABSPATH_ATFLAGS_MASK);
+#define NEED_posix_dfd_makepath
+		newpath_abspath = posix_dfd_makepath(newdirfd, newpath, atflags & POSIX_DFD_MAKEPATH_ATFLAGS_MASK);
 		if unlikely(!newpath_abspath)
 			goto err;
-#define NEED_posix_dfd_abspath
-		oldpath_abspath = posix_dfd_abspath(olddirfd, oldpath, atflags & POSIX_DFD_ABSPATH_ATFLAGS_MASK);
+#define NEED_posix_dfd_makepath
+		oldpath_abspath = posix_dfd_makepath(olddirfd, oldpath, atflags & POSIX_DFD_MAKEPATH_ATFLAGS_MASK);
 		if unlikely(!oldpath_abspath)
 			goto err_newfd_abspath;
 #define NEED_err_unix_link
@@ -820,16 +820,17 @@ EINTR_ENOMEM_LABEL(again)
 	}
 #endif /* posix_linkat_USE_linkat */
 
-#define NEED_posix_dfd_abspath
-	newpath_abspath = posix_dfd_abspath(newdirfd, newpath, atflags & ~AT_EMPTY_PATH);
+#define NEED_posix_dfd_makepath
+	newpath_abspath = posix_dfd_makepath(newdirfd, newpath, atflags & ~AT_EMPTY_PATH);
 	if unlikely(!newpath_abspath)
 		goto err;
-	if (((atflags & AT_EMPTY_PATH) && !(atflags & ~AT_EMPTY_PATH)) &&
-	    DeeString_Check(oldpath) && DeeString_IsEmpty(oldpath) && !DeeString_Check(olddirfd)) {
+	if ((atflags & AT_EMPTY_PATH) &&
+	    (DeeNone_Check(oldpath) || (DeeString_Check(oldpath) && DeeString_IsEmpty(oldpath))) &&
+	    !DeeString_Check(olddirfd)) {
 		/* Special case: create a hardlink for the file specified by `olddirfd' */
 		result = posix_flink_f_impl(olddirfd, newpath_abspath);
 	} else {
-		oldpath_abspath = posix_dfd_abspath(olddirfd, oldpath, atflags);
+		oldpath_abspath = posix_dfd_makepath(olddirfd, oldpath, atflags);
 		if unlikely(!oldpath_abspath)
 			goto err_newfd_abspath;
 		result = posix_link_f_impl(oldpath_abspath, newpath_abspath);

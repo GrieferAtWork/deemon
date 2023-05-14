@@ -280,8 +280,8 @@ EINTR_ENOMEM_LABEL(again)
 		/* fallthru to the fallback path below */
 	}
 #endif /* posix_mkdirat_USE_wmkdirat || posix_mkdirat_USE_mkdirat */
-	abspath = posix_dfd_abspath(dfd, path, atflags);
-#define NEED_posix_dfd_abspath
+	abspath = posix_dfd_makepath(dfd, path, atflags);
+#define NEED_posix_dfd_makepath
 	if unlikely(!abspath)
 		goto err;
 	result = posix_mkdir_f_impl(abspath, mode);

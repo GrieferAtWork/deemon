@@ -499,8 +499,8 @@ err:
 
 #ifdef posix_fchdir_USE_posix_chdir
 	DREF DeeObject *abspath, *result;
-#define NEED_posix_fd_abspath
-	abspath = posix_fd_abspath(fd);
+#define NEED_posix_fd_makepath
+	abspath = posix_fd_makepath(fd);
 	if unlikely(!abspath)
 		goto err;
 	result = posix_chdir_f_impl(abspath);
@@ -565,8 +565,8 @@ EINTR_LABEL(again)
 	}
 #endif /* posix_fchdirat_USE_fchdirat */
 
-#define NEED_posix_dfd_abspath
-	abspath = posix_dfd_abspath(dfd, path, atflags);
+#define NEED_posix_dfd_makepath
+	abspath = posix_dfd_makepath(dfd, path, atflags);
 	if unlikely(!abspath)
 		goto err;
 	result = posix_chdir_f_impl(abspath);
