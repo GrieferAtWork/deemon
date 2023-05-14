@@ -454,7 +454,7 @@ public:
 		return *this;
 	}
 	RefBase &inplace_mul(int8_t right) {
-		throw_if_nonzero(DeeObject_InplaceMulInt(&m_ptr, right));
+		throw_if_nonzero(DeeObject_InplaceMulS8(&m_ptr, right));
 		return *this;
 	}
 	RefBase &inplace_mul(DeeObject *right) {
@@ -462,7 +462,7 @@ public:
 		return *this;
 	}
 	RefBase &inplace_div(int8_t right) {
-		throw_if_nonzero(DeeObject_InplaceDivInt(&m_ptr, right));
+		throw_if_nonzero(DeeObject_InplaceDivS8(&m_ptr, right));
 		return *this;
 	}
 	RefBase &inplace_div(DeeObject *right) {
@@ -470,7 +470,7 @@ public:
 		return *this;
 	}
 	RefBase &inplace_mod(int8_t right) {
-		throw_if_nonzero(DeeObject_InplaceModInt(&m_ptr, right));
+		throw_if_nonzero(DeeObject_InplaceModS8(&m_ptr, right));
 		return *this;
 	}
 	RefBase &inplace_mod(DeeObject *right) {
@@ -2750,19 +2750,19 @@ public:
 		return inherit(DeeObject_Sub(((ProxyType *)this)->ptr(), right));
 	}
 	Ref<MathType> mul(int8_t right) {
-		return inherit(DeeObject_MulInt(((ProxyType *)this)->ptr(), right));
+		return inherit(DeeObject_MulS8(((ProxyType *)this)->ptr(), right));
 	}
 	Ref<MathType> mul(DeeObject *right) {
 		return inherit(DeeObject_Mul(((ProxyType *)this)->ptr(), right));
 	}
 	Ref<MathType> div(int8_t right) {
-		return inherit(DeeObject_DivInt(((ProxyType *)this)->ptr(), right));
+		return inherit(DeeObject_DivS8(((ProxyType *)this)->ptr(), right));
 	}
 	Ref<MathType> div(DeeObject *right) {
 		return inherit(DeeObject_Div(((ProxyType *)this)->ptr(), right));
 	}
 	Ref<MathType> mod(int8_t right) {
-		return inherit(DeeObject_ModInt(((ProxyType *)this)->ptr(), right));
+		return inherit(DeeObject_ModS8(((ProxyType *)this)->ptr(), right));
 	}
 	Ref<MathType> mod(DeeObject *right) {
 		return inherit(DeeObject_Mod(((ProxyType *)this)->ptr(), right));
@@ -2829,19 +2829,19 @@ public:
 		return inherit(DeeObject_Sub(((ProxyType *)this)->ptr(), right));
 	}
 	Ref<MathType> operator*(int8_t right) {
-		return inherit(DeeObject_MulInt(((ProxyType *)this)->ptr(), right));
+		return inherit(DeeObject_MulS8(((ProxyType *)this)->ptr(), right));
 	}
 	Ref<MathType> operator*(DeeObject *right) {
 		return inherit(DeeObject_Mul(((ProxyType *)this)->ptr(), right));
 	}
 	Ref<MathType> operator/(int8_t right) {
-		return inherit(DeeObject_DivInt(((ProxyType *)this)->ptr(), right));
+		return inherit(DeeObject_DivS8(((ProxyType *)this)->ptr(), right));
 	}
 	Ref<MathType> operator/(DeeObject *right) {
 		return inherit(DeeObject_Div(((ProxyType *)this)->ptr(), right));
 	}
 	Ref<MathType> operator%(int8_t right) {
-		return inherit(DeeObject_ModInt(((ProxyType *)this)->ptr(), right));
+		return inherit(DeeObject_ModS8(((ProxyType *)this)->ptr(), right));
 	}
 	Ref<MathType> operator%(DeeObject *right) {
 		return inherit(DeeObject_Mod(((ProxyType *)this)->ptr(), right));

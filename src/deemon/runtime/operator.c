@@ -3143,7 +3143,7 @@ err:
 }
 
 PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-DeeObject_MulInt(DeeObject *__restrict self, int8_t val) {
+DeeObject_MulS8(DeeObject *__restrict self, int8_t val) {
 	DREF DeeObject *val_ob, *result;
 	/* TODO: Optimization for `int' */
 	val_ob = DeeInt_NewInt8(val);
@@ -3157,7 +3157,7 @@ err:
 }
 
 PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-DeeObject_DivInt(DeeObject *__restrict self, int8_t val) {
+DeeObject_DivS8(DeeObject *__restrict self, int8_t val) {
 	DREF DeeObject *val_ob, *result;
 	/* TODO: Optimization for `int' */
 	val_ob = DeeInt_NewInt8(val);
@@ -3171,7 +3171,7 @@ err:
 }
 
 PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-DeeObject_ModInt(DeeObject *__restrict self, int8_t val) {
+DeeObject_ModS8(DeeObject *__restrict self, int8_t val) {
 	DREF DeeObject *val_ob, *result;
 	/* TODO: Optimization for `int' */
 	val_ob = DeeInt_NewInt8(val);
@@ -3260,7 +3260,7 @@ err:
 #undef COPY_SELF
 
 
-DEFINE_OPERATOR(int, Inc, (DeeObject **__restrict p_self)) {
+DEFINE_OPERATOR(int, Inc, (DREF DeeObject **__restrict p_self)) {
 	LOAD_TP_SELFP;
 	do {
 		struct type_math *math;
@@ -3298,7 +3298,7 @@ err:
 	return -1;
 }
 
-DEFINE_OPERATOR(int, Dec, (DeeObject **__restrict p_self)) {
+DEFINE_OPERATOR(int, Dec, (DREF DeeObject **__restrict p_self)) {
 	LOAD_TP_SELFP;
 	do {
 		struct type_math *math;
@@ -3336,29 +3336,30 @@ err:
 	return -1;
 }
 
-#define DEFINE_MATH_INPLACE_OPERATOR2(name, xxx, operator_name, invoke, invoke_inplace)   \
-	DEFINE_OPERATOR(int, name, (DeeObject **__restrict p_self, DeeObject *some_object)) { \
-		LOAD_TP_SELFP;                                                                    \
-		ASSERT_OBJECT(some_object);                                                       \
-		do {                                                                              \
-			if (tp_self->tp_math) {                                                       \
-				if (tp_self->tp_math->tp_inplace_##xxx) {                                 \
-					return invoke_inplace(tp_self, p_self, some_object);                  \
-				}                                                                         \
-				if (tp_self->tp_math->tp_##xxx) {                                         \
-					DREF DeeObject *temp;                                                 \
-					temp = invoke(tp_self, *p_self, some_object);                         \
-					if unlikely(!temp)                                                    \
-						goto err;                                                         \
-					Dee_Decref(*p_self);                                                  \
-					*p_self = temp;                                                       \
-					return 0;                                                             \
-				}                                                                         \
-			}                                                                             \
-		} while (type_inherit_##xxx(tp_self));                                            \
-		err_unimplemented_operator(tp_self, operator_name);                               \
-	err:                                                                                  \
-		return -1;                                                                        \
+#define DEFINE_MATH_INPLACE_OPERATOR2(name, xxx, operator_name, invoke, invoke_inplace) \
+	DEFINE_OPERATOR(int, name, (DREF DeeObject **__restrict p_self,                     \
+	                            DeeObject *some_object)) {                              \
+		LOAD_TP_SELFP;                                                                  \
+		ASSERT_OBJECT(some_object);                                                     \
+		do {                                                                            \
+			if (tp_self->tp_math) {                                                     \
+				if (tp_self->tp_math->tp_inplace_##xxx) {                               \
+					return invoke_inplace(tp_self, p_self, some_object);                \
+				}                                                                       \
+				if (tp_self->tp_math->tp_##xxx) {                                       \
+					DREF DeeObject *temp;                                               \
+					temp = invoke(tp_self, *p_self, some_object);                       \
+					if unlikely(!temp)                                                  \
+						goto err;                                                       \
+					Dee_Decref(*p_self);                                                \
+					*p_self = temp;                                                     \
+					return 0;                                                           \
+				}                                                                       \
+			}                                                                           \
+		} while (type_inherit_##xxx(tp_self));                                          \
+		err_unimplemented_operator(tp_self, operator_name);                             \
+	err:                                                                                \
+		return -1;                                                                      \
 	}
 DEFINE_MATH_INPLACE_OPERATOR2(InplaceMul, mul, OPERATOR_INPLACE_MUL, DeeType_INVOKE_MUL, DeeType_INVOKE_IMUL)
 DEFINE_MATH_INPLACE_OPERATOR2(InplaceDiv, div, OPERATOR_INPLACE_DIV, DeeType_INVOKE_DIV, DeeType_INVOKE_IDIV)
@@ -3371,7 +3372,7 @@ DEFINE_MATH_INPLACE_OPERATOR2(InplaceXor, xor, OPERATOR_INPLACE_XOR, DeeType_INV
 DEFINE_MATH_INPLACE_OPERATOR2(InplacePow, pow, OPERATOR_INPLACE_POW, DeeType_INVOKE_POW, DeeType_INVOKE_IPOW)
 
 DEFINE_OPERATOR(int, InplaceAdd,
-                (DeeObject **__restrict p_self, DeeObject *some_object)) {
+                (DREF DeeObject **__restrict p_self, DeeObject *some_object)) {
 	LOAD_TP_SELFP;
 	ASSERT_OBJECT(some_object);
 	do {
@@ -3403,7 +3404,7 @@ err:
 	return -1;
 }
 DEFINE_OPERATOR(int, InplaceSub,
-                (DeeObject **__restrict p_self, DeeObject *some_object)) {
+                (DREF DeeObject **__restrict p_self, DeeObject *some_object)) {
 	LOAD_TP_SELFP;
 	ASSERT_OBJECT(some_object);
 	do {
@@ -3440,14 +3441,14 @@ err:
 #ifndef DEFINE_TYPED_OPERATORS
 #define DEFINE_MATH_INPLACE_INT_OPERATOR(DeeObject_InplaceXXX, reg, DeeInt_NewXXX, intX_t, operator_name) \
 	PUBLIC int DCALL                                                                                      \
-	DeeObject_InplaceXXX(DREF DeeObject **__restrict p_self, intX_t val) {                                 \
+	DeeObject_InplaceXXX(DREF DeeObject **__restrict p_self, intX_t val) {                                \
 		DREF DeeObject *temp;                                                                             \
 		int result;                                                                                       \
 		/* TODO: Optimization for `int' */                                                                \
 		temp = DeeInt_NewXXX(val);                                                                        \
 		if unlikely(!temp)                                                                                \
 			goto err;                                                                                     \
-		result = reg(p_self, temp);                                                                        \
+		result = reg(p_self, temp);                                                                       \
 		Dee_Decref(temp);                                                                                 \
 		return result;                                                                                    \
 	err:                                                                                                  \
@@ -3457,9 +3458,9 @@ DEFINE_MATH_INPLACE_INT_OPERATOR(DeeObject_InplaceAddS8, DeeObject_InplaceAdd, D
 DEFINE_MATH_INPLACE_INT_OPERATOR(DeeObject_InplaceSubS8, DeeObject_InplaceSub, DeeInt_NewInt8, int8_t, OPERATOR_INPLACE_SUB)
 DEFINE_MATH_INPLACE_INT_OPERATOR(DeeObject_InplaceAddInt, DeeObject_InplaceAdd, DeeInt_NewUInt32, uint32_t, OPERATOR_INPLACE_ADD)
 DEFINE_MATH_INPLACE_INT_OPERATOR(DeeObject_InplaceSubInt, DeeObject_InplaceSub, DeeInt_NewUInt32, uint32_t, OPERATOR_INPLACE_SUB)
-DEFINE_MATH_INPLACE_INT_OPERATOR(DeeObject_InplaceMulInt, DeeObject_InplaceMul, DeeInt_NewInt8, int8_t, OPERATOR_INPLACE_MUL)
-DEFINE_MATH_INPLACE_INT_OPERATOR(DeeObject_InplaceDivInt, DeeObject_InplaceDiv, DeeInt_NewInt8, int8_t, OPERATOR_INPLACE_DIV)
-DEFINE_MATH_INPLACE_INT_OPERATOR(DeeObject_InplaceModInt, DeeObject_InplaceMod, DeeInt_NewInt8, int8_t, OPERATOR_INPLACE_MOD)
+DEFINE_MATH_INPLACE_INT_OPERATOR(DeeObject_InplaceMulS8, DeeObject_InplaceMul, DeeInt_NewInt8, int8_t, OPERATOR_INPLACE_MUL)
+DEFINE_MATH_INPLACE_INT_OPERATOR(DeeObject_InplaceDivS8, DeeObject_InplaceDiv, DeeInt_NewInt8, int8_t, OPERATOR_INPLACE_DIV)
+DEFINE_MATH_INPLACE_INT_OPERATOR(DeeObject_InplaceModS8, DeeObject_InplaceMod, DeeInt_NewInt8, int8_t, OPERATOR_INPLACE_MOD)
 DEFINE_MATH_INPLACE_INT_OPERATOR(DeeObject_InplaceShlInt, DeeObject_InplaceShl, DeeInt_NewUInt8, uint8_t, OPERATOR_INPLACE_SHL)
 DEFINE_MATH_INPLACE_INT_OPERATOR(DeeObject_InplaceShrInt, DeeObject_InplaceShr, DeeInt_NewUInt8, uint8_t, OPERATOR_INPLACE_SHR)
 DEFINE_MATH_INPLACE_INT_OPERATOR(DeeObject_InplaceAndInt, DeeObject_InplaceAnd, DeeInt_NewUInt32, uint32_t, OPERATOR_INPLACE_AND)

@@ -553,7 +553,7 @@ EXPORTS
 	DeeObject_Destroy@4=_DeeObject_Destroy@4
 	DeeObject_Destroy_d@12=_DeeObject_Destroy_d@12
 	DeeObject_Div@8=_DeeObject_Div@8
-	DeeObject_DivInt@8=_DeeObject_DivInt@8
+	DeeObject_DivS8@8=_DeeObject_DivS8@8
 	DeeObject_Enter@4=_DeeObject_Enter@4
 	DeeObject_EnumAttr@16=_DeeObject_EnumAttr@16
 	DeeObject_ExtendInherited@12=_DeeObject_ExtendInherited@12
@@ -601,11 +601,11 @@ EXPORTS
 	DeeObject_InplaceDeepCopy@4=_DeeObject_InplaceDeepCopy@4
 	DeeObject_InplaceDeepCopyWithLock@8=_DeeObject_InplaceDeepCopyWithLock@8
 	DeeObject_InplaceDiv@8=_DeeObject_InplaceDiv@8
-	DeeObject_InplaceDivInt@8=_DeeObject_InplaceDivInt@8
+	DeeObject_InplaceDivS8@8=_DeeObject_InplaceDivS8@8
 	DeeObject_InplaceMod@8=_DeeObject_InplaceMod@8
-	DeeObject_InplaceModInt@8=_DeeObject_InplaceModInt@8
+	DeeObject_InplaceModS8@8=_DeeObject_InplaceModS8@8
 	DeeObject_InplaceMul@8=_DeeObject_InplaceMul@8
-	DeeObject_InplaceMulInt@8=_DeeObject_InplaceMulInt@8
+	DeeObject_InplaceMulS8@8=_DeeObject_InplaceMulS8@8
 	DeeObject_InplaceOr@8=_DeeObject_InplaceOr@8
 	DeeObject_InplaceOrInt@8=_DeeObject_InplaceOrInt@8
 	DeeObject_InplacePow@8=_DeeObject_InplacePow@8
@@ -625,10 +625,10 @@ EXPORTS
 	DeeObject_IterSelf@4=_DeeObject_IterSelf@4
 	DeeObject_Leave@4=_DeeObject_Leave@4
 	DeeObject_Mod@8=_DeeObject_Mod@8
-	DeeObject_ModInt@8=_DeeObject_ModInt@8
+	DeeObject_ModS8@8=_DeeObject_ModS8@8
 	DeeObject_MoveAssign@8=_DeeObject_MoveAssign@8
 	DeeObject_Mul@8=_DeeObject_Mul@8
-	DeeObject_MulInt@8=_DeeObject_MulInt@8
+	DeeObject_MulS8@8=_DeeObject_MulS8@8
 	DeeObject_Neg@4=_DeeObject_Neg@4
 	DeeObject_New@12=_DeeObject_New@12
 	DeeObject_NewDefault@4=_DeeObject_NewDefault@4

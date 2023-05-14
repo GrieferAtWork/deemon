@@ -4678,9 +4678,9 @@ define_binary_imm_op target_add_simm8, fSYM(DeeObject_AddS8,8), b,1
 define_binary_imm_op target_add_imm32, fSYM(DeeObject_AddInt,8), l,0
 define_binary_imm_op target_sub_simm8, fSYM(DeeObject_SubS8,8), b,1
 define_binary_imm_op target_sub_imm32, fSYM(DeeObject_SubInt,8), l,0
-define_binary_imm_op target_mul_simm8, fSYM(DeeObject_MulInt,8), b,1
-define_binary_imm_op target_div_simm8, fSYM(DeeObject_DivInt,8), b,1
-define_binary_imm_op target_mod_simm8, fSYM(DeeObject_ModInt,8), b,1
+define_binary_imm_op target_mul_simm8, fSYM(DeeObject_MulS8,8), b,1
+define_binary_imm_op target_div_simm8, fSYM(DeeObject_DivS8,8), b,1
+define_binary_imm_op target_mod_simm8, fSYM(DeeObject_ModS8,8), b,1
 define_binary_imm_op target_and_imm32, fSYM(DeeObject_AndInt,8), l,0
 define_binary_imm_op target_or_imm32,  fSYM(DeeObject_OrInt,8), l,0
 define_binary_imm_op target_xor_imm32, fSYM(DeeObject_XorInt,8), l,0
@@ -6898,9 +6898,9 @@ define_inplace_math_op_s8  prefix_target_add_simm8, fSYM(DeeObject_InplaceAddS8,
 define_inplace_math_op_u32 prefix_target_add_imm32, fSYM(DeeObject_InplaceAddInt,8)
 define_inplace_math_op_s8  prefix_target_sub_simm8, fSYM(DeeObject_InplaceSubS8,8)
 define_inplace_math_op_u32 prefix_target_sub_imm32, fSYM(DeeObject_InplaceSubInt,8)
-define_inplace_math_op_s8  prefix_target_mul_simm8, fSYM(DeeObject_InplaceMulInt,8)
-define_inplace_math_op_s8  prefix_target_div_simm8, fSYM(DeeObject_InplaceDivInt,8)
-define_inplace_math_op_s8  prefix_target_mod_simm8, fSYM(DeeObject_InplaceModInt,8)
+define_inplace_math_op_s8  prefix_target_mul_simm8, fSYM(DeeObject_InplaceMulS8,8)
+define_inplace_math_op_s8  prefix_target_div_simm8, fSYM(DeeObject_InplaceDivS8,8)
+define_inplace_math_op_s8  prefix_target_mod_simm8, fSYM(DeeObject_InplaceModS8,8)
 define_inplace_math_op_u32 prefix_target_and_imm32, fSYM(DeeObject_InplaceAndInt,8)
 define_inplace_math_op_u32 prefix_target_or_imm32,  fSYM(DeeObject_InplaceOrInt,8)
 define_inplace_math_op_u32 prefix_target_xor_imm32, fSYM(DeeObject_InplaceXorInt,8)
