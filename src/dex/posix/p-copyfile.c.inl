@@ -110,8 +110,6 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_fcopyfile_f_impl(DeeObject *oldfd
 #ifdef posix_fcopyfile_USE_posix_copyfile_fileio
 	DREF DeeObject *src_file;
 	DREF DeeObject *dst_file;
-	if (DeeObject_AssertTypeExact(newpath, &DeeString_Type))
-		goto err;
 	if (flags & ~(RENAME_NOREPLACE)) {
 		DeeError_Throwf(&DeeError_ValueError, "Invalid flags argument %#x", flags);
 		goto err;
@@ -200,8 +198,6 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_copyfile_f_impl(DeeObject *oldpat
 #ifdef posix_copyfile_USE_posix_copyfile_fileio
 	DREF DeeObject *src_file;
 	DREF DeeObject *dst_file;
-	if (DeeObject_AssertTypeExact(newpath, &DeeString_Type))
-		goto err;
 	if (flags & ~(RENAME_NOREPLACE)) {
 		DeeError_Throwf(&DeeError_ValueError, "Invalid flags argument %#x", flags);
 		goto err;
@@ -345,8 +341,6 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_lcopyfile_f_impl(DeeObject *oldpa
 #ifdef posix_lcopyfile_USE_posix_copyfile_fileio
 	DREF DeeObject *src_file;
 	DREF DeeObject *dst_file;
-	if (DeeObject_AssertTypeExact(newpath, &DeeString_Type))
-		goto err;
 	if (flags & ~(RENAME_NOREPLACE)) {
 		DeeError_Throwf(&DeeError_ValueError, "Invalid flags argument %#x", flags);
 		goto err;
