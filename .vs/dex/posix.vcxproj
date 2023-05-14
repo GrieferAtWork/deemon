@@ -37,6 +37,7 @@
 	<ItemGroup>
 		<ClInclude Include="..\..\src\dex\posix\libposix.h" />
 		<ClInclude Include="..\..\src\dex\posix\p-access.c.inl" />
+		<ClInclude Include="..\..\src\dex\posix\p-copyfile.c.inl" />
 		<ClInclude Include="..\..\src\dex\posix\p-cpucount.c.inl" />
 		<ClInclude Include="..\..\src\dex\posix\p-environ.c.inl" />
 		<ClInclude Include="..\..\src\dex\posix\p-errno.c.inl" />

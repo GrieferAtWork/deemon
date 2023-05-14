@@ -22,6 +22,8 @@
 
 #include "api.h"
 
+#include <hybrid/typecore.h>
+
 #include <stdbool.h>
 #include <stddef.h>
 

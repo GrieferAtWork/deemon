@@ -650,6 +650,25 @@ err:
 #endif /* Dee_fd_GETSET */
 }
 
+/* Retrieve and return the filename used to open the given file.
+ * NOTE: This function automatically asserts that `self'
+ *       is a `File', throwing a TypeError if it isn't.
+ * For this purpose, `DeeSystemFile_Filename()' is invoked if `self'
+ * is a system file, however if it isn't, `self.filename' will be
+ * retrieved (using `operator getattr()') and after asserting the
+ * result to be a string object, its value will be returned instead.
+ * This function should be used by library functions that wish to
+ * operate on a path, thus allowing them to accept file objects just
+ * as well as strings for operations:
+ * >> if (!DeeString_Check(arg)) {
+ * >>     arg = DeeFile_Filename(arg);
+ * >>     if unlikely(!arg)
+ * >>         goto err;
+ * >> } else {
+ * >>     Dee_Incref(arg);
+ * >> }
+ * >> ... // Operate on a filename string `arg'
+ * >> Dee_Decref(arg); */
 PUBLIC WUNUSED NONNULL((1)) DREF /*String*/ DeeObject *DCALL
 DeeFile_Filename(DeeObject *__restrict self) {
 	DREF DeeObject *result;

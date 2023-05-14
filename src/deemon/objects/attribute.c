@@ -369,9 +369,9 @@ err:
 
 PRIVATE DEFINE_KWLIST(attrinit_kwlist, { K(ob), K(name), K(flagmask), K(flagval), K(decl), KEND });
 
-PRIVATE int DCALL
-attribute_init(DeeAttributeObject *__restrict self, size_t argc,
-               DeeObject *const *argv, DeeObject *kw) {
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+attribute_init(DeeAttributeObject *__restrict self,
+               size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	int lookup_error;
 	DeeObject *search_self, *search_name;
 	DeeObject *flagmask = NULL, *flagval = NULL;
@@ -379,7 +379,7 @@ attribute_init(DeeAttributeObject *__restrict self, size_t argc,
 	rules.alr_decl       = NULL;
 	rules.alr_perm_mask  = 0;
 	rules.alr_perm_value = 0;
-	if (DeeArg_UnpackKw(argc, argv, kw, attrinit_kwlist, "oo|ooo:attribute",
+	if (DeeArg_UnpackKw(argc, argv, kw, attrinit_kwlist, "oo|ooo:Attribute",
 	                    &search_self,
 	                    &search_name,
 	                    &flagmask,

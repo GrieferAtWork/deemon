@@ -112,16 +112,16 @@ struct Dee_file_object {
 #undef Dee_fd_t_IS_int    /* Unix's `int'-style file handles (~ala `open(2)') */
 #undef Dee_fd_t_IS_FILE   /* Stdio's `FILE *' (~ala `fopen(3)') */
 #if defined(DEESYSTEM_FILE_USE_WINDOWS)
-#define Dee_fd_t_IS_HANDLE 1
+#define Dee_fd_t_IS_HANDLE
 #elif defined(DEESYSTEM_FILE_USE_UNIX)
-#define Dee_fd_t_IS_int 1
+#define Dee_fd_t_IS_int
 #elif defined(DEESYSTEM_FILE_USE_STDIO)
-#define Dee_fd_t_IS_FILE 1
+#define Dee_fd_t_IS_FILE
 #else /* ... */
 /* Fallback: Just assume FD-based file I/O (even though at this point
  *           it's most likely that no I/O at all is supported, which
  *           will cause the deemon sources to stub out most APIs...) */
-#define Dee_fd_t_IS_int 1
+#define Dee_fd_t_IS_int
 #endif /* !... */
 
 /* WARNING: These strings are hard-coded a second time in "runtime/strings.h" */
@@ -329,7 +329,8 @@ DFUNDEF WUNUSED NONNULL((1)) Dee_fd_t DCALL DeeFile_GetSysFD(DeeObject *__restri
  * as well as strings for operations:
  * >> if (!DeeString_Check(arg)) {
  * >>     arg = DeeFile_Filename(arg);
- * >>     if unlikely(!arg) goto err;
+ * >>     if unlikely(!arg)
+ * >>         goto err;
  * >> } else {
  * >>     Dee_Incref(arg);
  * >> }

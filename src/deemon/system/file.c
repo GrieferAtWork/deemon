@@ -651,6 +651,8 @@ DeeFile_Open(/*String*/ DeeObject *__restrict filename, int oflags, int mode) {
 		dwFlagsAndAttributes |= FILE_FLAG_WRITE_THROUGH;
 	if (oflags & OPEN_FHIDDEN)
 		dwFlagsAndAttributes |= FILE_ATTRIBUTE_HIDDEN;
+	if (oflags & OPEN_FNOFOLLOW)
+		dwFlagsAndAttributes |= FILE_FLAG_OPEN_REPARSE_POINT;
 again:
 	if (oflags & OPEN_FNOATIME) {
 		hFile = DeeNTSystem_CreateFileNoATime(filename, dwDesiredAccess, dwShareMode, NULL,

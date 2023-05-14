@@ -96,6 +96,7 @@
 #define NEED_err_nt_chtime_no_access
 #define NEED_err_unix_path_cross_dev2
 #define NEED_err_nt_path_cross_dev2
+#define NEED_err_nt_path_not_link
 #define NEED_nt_GetTempPath
 #define NEED_nt_GetComputerName
 #define NEED_nt_FReadLink
@@ -112,11 +113,22 @@
 #define NEED_nt_CreateSymbolicLink
 #define NEED_posix_dfd_abspath
 #define NEED_posix_fd_abspath
+#define NEED_posix_fd_openfile
+#define NEED_posix_copyfile_fileio
 #define NEED_err_bad_atflags
+#define NEED_err_bad_copyfile_bufsize_is_zero
 #define NEED_posix_err_unsupported
 #endif /* __INTELLISENSE__ */
 
+#include <deemon/format.h>
+#include <deemon/mapfile.h>
+
+#include <hybrid/typecore.h>
+
 DECL_BEGIN
+
+#undef byte_t
+#define byte_t __BYTE_TYPE__
 
 #ifdef NEED_nt_FReadLink
 #undef NEED_nt_FReadLink
@@ -176,9 +188,13 @@ typedef struct _DEE_REPARSE_DATA_BUFFER {
 } DEE_REPARSE_DATA_BUFFER, *DEE_PREPARSE_DATA_BUFFER;
 
 /* Read the contents of a symbolic link
- * @param: path: Only used for error messages */
+ * @param: path: Only used for error messages
+ * @return: * :        Symlink contents
+ * @return: NULL:      Error
+ * @return: ITER_DONE: Not a symbolic link (only if `throw_error_if_not_a_link == false') */
 INTERN WUNUSED NONNULL((2)) DREF DeeObject *DCALL
-nt_FReadLink(HANDLE hLinkFile, DeeObject *__restrict path) {
+nt_FReadLink(HANDLE hLinkFile, DeeObject *__restrict path,
+             bool throw_error_if_not_a_link) {
 #define READLINK_INITIAL_BUFFER 300
 	DEE_PREPARSE_DATA_BUFFER buffer;
 	DREF DeeObject *result;
@@ -276,9 +292,14 @@ cygwin_symlink_utf8:
 					goto free_buffer_and_return_result;
 				}
 			}
-			DeeNTSystem_ThrowErrorf(&DeeError_NoSymlink, dwError,
-			                        "Path %r is not a symbolic link",
-			                        path);
+
+			/* Not a symbolic link! */
+			if (!throw_error_if_not_a_link) {
+				Dee_Free(buffer);
+				return ITER_DONE;
+			}
+			err_nt_path_not_link(dwError, path);
+#define NEED_err_nt_path_not_link
 			goto err_buffer;
 		}
 		if (DeeNTSystem_IsUnsupportedError(dwError)) {
@@ -1578,6 +1599,16 @@ err_nt_path_cross_dev2(DWORD dwError, DeeObject *existing_path, DeeObject *new_p
 }
 #endif /* NEED_err_nt_path_cross_dev2 */
 
+#ifdef NEED_err_nt_path_not_link
+#undef NEED_err_nt_path_not_link
+INTERN ATTR_COLD NONNULL((2)) int DCALL
+err_nt_path_not_link(DWORD dwError, DeeObject *__restrict path) {
+	return DeeNTSystem_ThrowErrorf(&DeeError_NoSymlink, dwError,
+	                               "Path %r is not a symbolic link",
+	                               path);
+}
+#endif /* NEED_err_nt_path_not_link */
+
 
 
 
@@ -2452,6 +2483,246 @@ err:
 }
 #endif /* NEED_posix_dfd_abspath */
 
+#ifdef NEED_posix_fd_openfile
+#undef NEED_posix_fd_openfile
+/* Open a HANDLE/fd-compatible object as a `File' */
+INTERN WUNUSED NONNULL((1)) /*File*/ DREF DeeObject *DCALL
+posix_fd_openfile(DeeObject *__restrict fd, int oflags) {
+	DREF DeeObject *result;
+	if (DeeFile_Check(fd)) {
+		result = fd;
+		Dee_Incref(result);
+	} else {
+#if defined(CONFIG_HOST_WINDOWS) && defined(Dee_fd_t_IS_HANDLE)
+		HANDLE hFile;
+		hFile = DeeNTSystem_GetHandle(fd);
+		if unlikely(hFile == INVALID_HANDLE_VALUE)
+			goto err;
+		result = DeeFile_OpenFd((Dee_fd_t)hFile, NULL, oflags, false);
+#elif defined(Dee_fd_t_IS_int)
+		int os_fd;
+		os_fd = DeeUnixSystem_GetFD(fd);
+		if unlikely(os_fd == -1)
+			goto err;
+		result = DeeFile_OpenFd((Dee_fd_t)os_fd, NULL, oflags, false);
+#else /* ... */
+		DREF DeeObject *fd_path;
+		fd_path = posix_fd_abspath(fd);
+#define NEED_posix_fd_abspath
+		if unlikely(!fd_path)
+			goto err;
+		result = DeeFile_Open(fd_path, oflags, 0);
+		if unlikely(result == ITER_DONE) {
+			DeeError_Throwf(&DeeError_FileNotFound, "File %r could not be found", fd_path);
+			Dee_Decref(fd_path);
+			goto err_src_file;
+		}
+		Dee_Decref(fd_path);
+#endif /* !... */
+	}
+	return result;
+err:
+	return NULL;
+}
+#endif /* NEED_posix_fd_openfile */
+
+
+#ifdef NEED_posix_copyfile_fileio
+#undef NEED_posix_copyfile_fileio
+
+/* Copy all data from `src' to `dst', both of with are deemon File objects.
+ * @return: 0 : Success
+ * @return: -1: Error */
+INTERN WUNUSED NONNULL((1, 2, 3, 4)) int DCALL
+posix_copyfile_fileio(/*File*/ DeeObject *src,
+                      /*File*/ DeeObject *dst,
+                      DeeObject *progress,
+                      DeeObject *bufsize) {
+	DREF DeeCopyFileProgressObject *progress_info = NULL;
+	size_t used_bufsize;
+	struct DeeMapFile mf;
+	int mf_status;
+
+	/* Figure out the intended buffer size. */
+	used_bufsize = POSIX_COPYFILE_DEFAULT_BUFSIZE;
+	if (!DeeNone_Check(bufsize)) {
+		if (DeeObject_AsSize(bufsize, &used_bufsize))
+			goto err;
+		if unlikely(used_bufsize == 0) {
+err_bad_used_bufsize:
+			err_bad_copyfile_bufsize_is_zero();
+#define NEED_err_bad_copyfile_bufsize_is_zero
+			goto err_progress_info;
+		}
+	}
+
+	/* First of: try to mmap the source file. */
+	mf_status = DeeMapFile_InitFile(&mf, src, 0, 0, (size_t)-1, 0,
+	                                DEE_MAPFILE_F_MUSTMMAP |
+	                                DEE_MAPFILE_F_TRYMMAP);
+	if (mf_status <= 0) {
+		byte_t const *iter, *end;
+		if unlikely(mf_status < 0)
+			goto err;
+
+		/* Was able to mmap() the source file -> now to write that mapping into the target file. */
+		iter = (byte_t const *)DeeMapFile_GetBase(&mf);
+		end  = iter + DeeMapFile_GetSize(&mf);
+		while (iter < end) {
+			size_t ok, remaining, chunk_size;
+			size_t local_used_bufsize;
+			if (DeeThread_CheckInterrupt())
+				goto err_progress_info_mapfile;
+			local_used_bufsize = used_bufsize;
+			if (progress_info != NULL) {
+				local_used_bufsize = progress_info->cfp_bufsize;
+				COMPILER_READ_BARRIER();
+				if unlikely(local_used_bufsize == 0)
+					goto err_bad_used_bufsize;
+			}
+			remaining  = (size_t)(end - iter);
+			chunk_size = local_used_bufsize;
+			if (chunk_size > remaining)
+				chunk_size = remaining;
+			ok = DeeFile_WriteAll(dst, iter, chunk_size);
+			if unlikely(ok == (size_t)-1)
+				goto err_progress_info_mapfile;
+			ASSERT(ok <= chunk_size);
+			iter += ok;
+			if (ok < chunk_size) {
+				DeeError_Throwf(&DeeError_FileClosed,
+				                "Target file %k indicates EOF after "
+				                "%" PRFuSIZ " of %" PRFuSIZ " bytes",
+				                dst,
+				                (size_t)(iter - (byte_t const *)DeeMapFile_GetBase(&mf)),
+				                DeeMapFile_GetSize(&mf));
+err_progress_info_mapfile:
+				DeeMapFile_Fini(&mf);
+				goto err_progress_info;
+			}
+
+			/* If given (and not `none'), invoke the progress-callback with copy status information. */
+			if (!DeeNone_Check(progress)) {
+				DREF DeeObject *progress_status;
+				if (iter >= end)
+					break;
+				if (progress_info == NULL) {
+					progress_info = DeeObject_MALLOC(DeeCopyFileProgressObject);
+					if unlikely(!progress_info)
+						goto err_progress_info_mapfile;
+					Dee_Incref(src);
+					Dee_Incref(dst);
+					progress_info->cfp_srcfile = src; /* Inherit reference */
+					progress_info->cfp_dstfile = dst; /* Inherit reference */
+					progress_info->cfp_total   = DeeMapFile_GetSize(&mf);
+					progress_info->cfp_bufsize = used_bufsize;
+					DeeObject_Init(progress_info, &DeeCopyFileProgress_Type);
+				}
+
+				/* Update the copied-bytes counter of the progress info object. */
+				progress_info->cfp_copied = (size_t)(iter - (byte_t const *)DeeMapFile_GetBase(&mf));
+
+				/* Invoke the progress-info callback. */
+				progress_status = DeeObject_Call(progress, 1, (DeeObject *const *)&progress_info);
+				if unlikely(!progress_status)
+					goto err_progress_info_mapfile;
+				Dee_Decref(progress_status);
+			}
+		}
+		DeeMapFile_Fini(&mf);
+	} else {
+		byte_t *transfer_buffer;
+		size_t transfer_buffer_size;
+		uint64_t transfer_total;
+
+		/* TODO: Try to use `sendfile()' */
+
+		/* Copy file via read+write */
+		transfer_buffer_size = used_bufsize;
+		transfer_buffer = (byte_t *)Dee_Malloc(transfer_buffer_size);
+		if unlikely(!transfer_buffer)
+			goto err;
+		transfer_total = 0;
+		for (;;) {
+			size_t rd_size, wr_size;
+			rd_size = DeeFile_Read(src, transfer_buffer, transfer_buffer_size);
+			if unlikely(rd_size == (size_t)-1) {
+err_progress_info_transfer_buffer:
+				Dee_Free(transfer_buffer);
+				goto err_progress_info;
+			}
+			if (rd_size == 0)
+				break; /* Everything was read */
+			wr_size = DeeFile_WriteAll(dst, transfer_buffer, rd_size);
+			if unlikely(wr_size == (size_t)-1)
+				goto err_progress_info_transfer_buffer;
+			ASSERT(wr_size <= rd_size);
+			transfer_total += wr_size;
+			if (wr_size < rd_size) {
+				DeeError_Throwf(&DeeError_FileClosed,
+				                "Target file %k indicates EOF after %" PRFu64 " bytes",
+				                dst, transfer_total);
+				goto err_progress_info;
+			}
+
+			/* If given (and not `none'), invoke the progress-callback with copy status information. */
+			if (!DeeNone_Check(progress)) {
+				DREF DeeObject *progress_status;
+				if (progress_info == NULL) {
+					progress_info = DeeObject_MALLOC(DeeCopyFileProgressObject);
+					if unlikely(!progress_info)
+						goto err_progress_info_mapfile;
+					Dee_Incref(src);
+					Dee_Incref(dst);
+					progress_info->cfp_srcfile = src; /* Inherit reference */
+					progress_info->cfp_dstfile = dst; /* Inherit reference */
+					progress_info->cfp_total   = (uint64_t)-1;
+					progress_info->cfp_bufsize = transfer_buffer_size;
+					DeeObject_Init(progress_info, &DeeCopyFileProgress_Type);
+				}
+
+				/* Update the copied-bytes counter of the progress info object. */
+				progress_info->cfp_copied = transfer_total;
+
+				/* Invoke the progress-info callback. */
+				progress_status = DeeObject_Call(progress, 1, (DeeObject *const *)&progress_info);
+				if unlikely(!progress_status)
+					goto err_progress_info_mapfile;
+				Dee_Decref(progress_status);
+				if unlikely(progress_info->cfp_bufsize != transfer_buffer_size) {
+					/* Change transfer buffer size. */
+					byte_t *new_transfer_buffer;
+					size_t new_transfer_buffer_size;
+					new_transfer_buffer_size = progress_info->cfp_bufsize;
+					COMPILER_READ_BARRIER();
+					if unlikely(new_transfer_buffer_size == 0)
+						goto err_bad_used_bufsize;
+					new_transfer_buffer = (byte_t *)Dee_TryMalloc(new_transfer_buffer_size);
+					if (new_transfer_buffer) {
+						Dee_Free(transfer_buffer);
+						transfer_buffer = new_transfer_buffer;
+					} else {
+						new_transfer_buffer = (byte_t *)Dee_Realloc(transfer_buffer, new_transfer_buffer_size);
+						if unlikely(!new_transfer_buffer)
+							goto err_progress_info_transfer_buffer;
+						transfer_buffer      = new_transfer_buffer;
+						transfer_buffer_size = new_transfer_buffer_size;
+					}
+				}
+			} /* if (!DeeNone_Check(progress)) */
+		}
+		Dee_Free(transfer_buffer);
+	}
+	return 0;
+err_progress_info:
+	if (progress_info != NULL)
+		Dee_Decref_likely(progress_info);
+err:
+	return -1;
+}
+#endif /* NEED_posix_copyfile_fileio */
+
+
 #ifdef NEED_posix_fd_abspath
 #undef NEED_posix_fd_abspath
 
@@ -2512,6 +2783,15 @@ err_bad_atflags(unsigned int atflags) {
 	                       atflags);
 }
 #endif /* NEED_err_bad_atflags */
+
+#ifdef NEED_err_bad_copyfile_bufsize_is_zero
+#undef NEED_err_bad_copyfile_bufsize_is_zero
+INTERN ATTR_COLD int DCALL
+err_bad_copyfile_bufsize_is_zero(void) {
+	return DeeError_Throwf(&DeeError_ValueError,
+	                       "Invalid argument: `bufsize' cannot be zero");
+}
+#endif /* NEED_err_bad_copyfile_bufsize_is_zero */
 
 #ifdef NEED_posix_err_unsupported
 #undef NEED_posix_err_unsupported

@@ -27,6 +27,7 @@
 
 #ifndef __INTELLISENSE__
 #include "p-access.c.inl"
+#include "p-copyfile.c.inl"
 #include "p-cpucount.c.inl"
 #include "p-environ.c.inl"
 #include "p-errno.c.inl"
@@ -231,6 +232,10 @@ local ALL_STUBS = {
 	("posix_link_USE_STUB", { "link" }),
 	("posix_flink_USE_STUB", { "flink" }),
 	("posix_linkat_USE_STUB", { "linkat" }),
+	("posix_copyfile_USE_STUB", { "copyfile" }),
+	("posix_lcopyfile_USE_STUB", { "lcopyfile" }),
+	("posix_fcopyfile_USE_STUB", { "fcopyfile" }),
+	("posix_copyfileat_USE_STUB", { "copyfileat" }),
 }.sorted();
 for (local test, functions: ALL_STUBS) {
 	functions = "\0".join(functions) + "\0";
@@ -2163,6 +2168,27 @@ PRIVATE struct dex_symbol symbols[] = {
 	                       /**/ "unaffected by mount locations. A hard link simply create a new directory entry under "
 	                       /**/ "@newdirfd:@newpath that points to the data block of an existing file @olddirfd:@oldpath"))
 
+	/* copyfile */
+	D(POSIX_FCOPYFILE_DEF_DOC("@param flags Set of $0, ?GRENAME_NOREPLACE\n"
+	                          "@param progress Invoked every @bufsize bytes with an instance of ?GCopyFileProgress\n"
+	                          "@param bufsize How many bytes to copy at once (if not given, use a default)\n"
+	                          "Copy all data from @oldfd to @newpath"))
+	D(POSIX_COPYFILE_DEF_DOC("@param flags Set of $0, ?GRENAME_NOREPLACE\n"
+	                         "@param progress Invoked every @bufsize bytes with an instance of ?GCopyFileProgress\n"
+	                         "@param bufsize How many bytes to copy at once (if not given, use a default)\n"
+	                         "Copy all data from @oldpath to @newpath"))
+	D(POSIX_LCOPYFILE_DEF_DOC("@param flags Set of $0, ?GRENAME_NOREPLACE\n"
+	                          "@param progress Invoked every @bufsize bytes with an instance of ?GCopyFileProgress\n"
+	                          "@param bufsize How many bytes to copy at once (if not given, use a default)\n"
+	                          "Copy all data from @oldpath to @newpath. When @oldpath is a symlink, rather than "
+	                          /**/ "copy the file pointed-to by the symlink, the symlink *itself* is copied"))
+	D(POSIX_COPYFILEAT_DEF_DOC("@param flags Set of $0, ?GRENAME_NOREPLACE\n"
+	                           "@param atflags Set of $0, ?GAT_SYMLINK_NOFOLLOW, ?GAT_EMPTY_PATH\n"
+	                           "@param progress Invoked every @bufsize bytes with an instance of ?GCopyFileProgress\n"
+	                           "@param bufsize How many bytes to copy at once (if not given, use a default)\n"
+	                           "Copy all data from @olddirfd:@oldpath to @newdirfd:@newpath"))
+	D({ "CopyFileProgress", (DeeObject *)&DeeCopyFileProgress_Type, MODSYM_FNORMAL },)
+
 	/* Forward-aliases to `libfs' */
 #define DEFINE_LIBFS_ALIAS_ALT(altname, name, libfs_name, proto)                           \
 	D({ altname, (DeeObject *)&libposix_getfs_##name, MODSYM_FPROPERTY | MODSYM_FREADONLY, \
@@ -2177,7 +2203,6 @@ PRIVATE struct dex_symbol symbols[] = {
 	DEFINE_LIBFS_ALIAS_S_ALT(DeeString_STR(&libposix_libfs_name_##name), name, proto)
 	DEFINE_LIBFS_ALIAS_S(chmod, "(path:?Dstring,mode:?X2?Dstring?Dint)\n")
 	DEFINE_LIBFS_ALIAS_S(lchmod, "(path:?Dstring,mode:?X2?Dstring?Dint)\n")
-	DEFINE_LIBFS_ALIAS_S(copyfile, "(existing_file:?X3?Dstring?DFile?Dint,new_file:?X3?Dstring?DFile?Dint,progress:?DCallable=!N)\n")
 	DEFINE_LIBFS_ALIAS_S(chown, "(path:?Dstring,user:?X3?Efs:User?Dstring?Dint,group:?X3?Efs:Group?Dstring?Dint)\n")
 	DEFINE_LIBFS_ALIAS_S(lchown, "(path:?Dstring,user:?X3?Efs:User?Dstring?Dint,group:?X3?Efs:Group?Dstring?Dint)\n")
 	DEFINE_LIBFS_ALIAS_S_ALT("fchmod", chmod, "(fp:?DFile,mode:?X2?Dstring?Dint)\n"

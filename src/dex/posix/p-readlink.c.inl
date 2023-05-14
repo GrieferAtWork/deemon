@@ -150,7 +150,7 @@ again_createfile:
 	}
 ok_got_ownds_linkfd:
 #define NEED_nt_FReadLink
-	result = nt_FReadLink(hLinkFile, file);
+	result = nt_FReadLink(hLinkFile, file, true);
 	DBG_ALIGNMENT_DISABLE();
 	CloseHandle(hLinkFile);
 	DBG_ALIGNMENT_ENABLE();
@@ -330,7 +330,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_freadlink_f_impl(DeeObject *fd)
 		Dee_Decref(filename);
 	} else {
 #define NEED_nt_FReadLink
-		result = nt_FReadLink(hLinkFile, fd);
+		result = nt_FReadLink(hLinkFile, fd, true);
 	}
 	return result;
 err:

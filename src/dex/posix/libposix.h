@@ -405,6 +405,13 @@ libposix_get_dfd_filename(int dfd, /*utf-8*/ char const *filename, int atflags);
 #define STAT_IWOTH (STAT_IWUSR >> 6) /* Write by other. */
 #define STAT_IXOTH (STAT_IXUSR >> 6) /* Execute by other. */
 
+/* Windows doesn't natively have an `AT_FDCWD', but we
+ * need something to check for in `posix_dfd_abspath()' */
+#ifndef CONFIG_HAVE_AT_FDCWD
+#undef AT_FDCWD
+#define AT_FDCWD (-1)
+#endif /* !CONFIG_HAVE_AT_FDCWD */
+
 /* If the hosting operating system doesn't provide it,
  * we still need a value for `AT_SYMLINK_NOFOLLOW' that
  * we can then use in requests. */
@@ -412,13 +419,6 @@ libposix_get_dfd_filename(int dfd, /*utf-8*/ char const *filename, int atflags);
 #undef AT_SYMLINK_NOFOLLOW
 #define AT_SYMLINK_NOFOLLOW 0x0100
 #endif /* CONFIG_HAVE_AT_SYMLINK_NOFOLLOW */
-
-/* Windows doesn't natively have an `AT_FDCWD', but we
- * need something to check for in `posix_dfd_abspath()' */
-#ifndef CONFIG_HAVE_AT_FDCWD
-#undef AT_FDCWD
-#define AT_FDCWD (-1)
-#endif /* !CONFIG_HAVE_AT_FDCWD */
 
 #ifndef CONFIG_HAVE_AT_REMOVEDIR
 #undef AT_REMOVEDIR
@@ -491,8 +491,40 @@ posix_dfd_abspath(DeeObject *dfd, DeeObject *path, unsigned int atflags);
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 posix_fd_abspath(DeeObject *__restrict fd);
 
+/* Open a HANDLE/fd-compatible object as a `File' */
+INTDEF WUNUSED NONNULL((1)) /*File*/ DREF DeeObject *DCALL
+posix_fd_openfile(DeeObject *__restrict fd, int oflags);
+
+/* Copy all data from `src' to `dst', both of with are deemon File objects.
+ * @return: 0 : Success
+ * @return: -1: Error */
+INTDEF WUNUSED NONNULL((1, 2, 3, 4)) int DCALL
+posix_copyfile_fileio(/*File*/ DeeObject *src,
+                      /*File*/ DeeObject *dst,
+                      DeeObject *progress,
+                      DeeObject *bufsize);
+
+/* Default buffer size for copyfile */
+#ifndef POSIX_COPYFILE_DEFAULT_BUFSIZE
+#define POSIX_COPYFILE_DEFAULT_BUFSIZE (64 * 1024) /* 64K */
+#endif /* !POSIX_COPYFILE_DEFAULT_BUFSIZE */
+
+
+typedef struct {
+	OBJECT_HEAD
+	DREF DeeObject *cfp_srcfile; /* [1..1][const] Source file */
+	DREF DeeObject *cfp_dstfile; /* [1..1][const] Destination file */
+	size_t          cfp_bufsize; /* [lock(WEAK(ATOMIC))] Buffer size used during file copy */
+	uint64_t        cfp_copied;  /* [lock(WEAK(ATOMIC))] Number of bytes that have been copied */
+	uint64_t        cfp_total;   /* [lock(WRITE_ONCE)] Total size of `cfp_srcfile' (or `(size_t)-1' if not yet determined) */
+} DeeCopyFileProgressObject;
+
+INTDEF DeeTypeObject DeeCopyFileProgress_Type;
+
 
 INTDEF ATTR_COLD int DCALL err_bad_atflags(unsigned int atflags);
+INTDEF ATTR_COLD int DCALL err_bad_copyfile_bufsize_is_zero(void);
+
 INTDEF ATTR_COLD NONNULL((2)) int DCALL err_unix_chdir(int errno_value, DeeObject *__restrict path);
 INTDEF ATTR_COLD NONNULL((2)) int DCALL err_unix_remove(int errno_value, DeeObject *__restrict path);
 INTDEF ATTR_COLD NONNULL((2)) int DCALL err_unix_unlink(int errno_value, DeeObject *__restrict path);
@@ -563,15 +595,20 @@ INTDEF ATTR_COLD NONNULL((2, 3)) int DCALL err_nt_move_to_child(DWORD dwError, D
 INTDEF ATTR_COLD NONNULL((2)) int DCALL err_nt_path_not_empty(DWORD dwError, DeeObject *__restrict path);
 INTDEF ATTR_COLD NONNULL((2)) int DCALL err_nt_chtime_no_access(DWORD dwError, DeeObject *__restrict path);
 INTDEF ATTR_COLD NONNULL((2, 3)) int DCALL err_nt_path_cross_dev2(DWORD dwError, DeeObject *existing_path, DeeObject *new_path);
+INTDEF ATTR_COLD NONNULL((2)) int DCALL err_nt_path_not_link(DWORD dwError, DeeObject *__restrict path);
 
 
 INTDEF WUNUSED DREF DeeObject *DCALL nt_GetTempPath(void);
 INTDEF WUNUSED DREF DeeObject *DCALL nt_GetComputerName(void);
 
 /* Read the contents of a symbolic link
- * @param: path: Only used for error messages */
+ * @param: path: Only used for error messages
+ * @return: * :        Symlink contents
+ * @return: NULL:      Error
+ * @return: ITER_DONE: Not a symbolic link (only if `throw_error_if_not_a_link == false') */
 INTDEF WUNUSED NONNULL((2)) DREF DeeObject *DCALL
-nt_FReadLink(HANDLE hLinkFile, DeeObject *__restrict path);
+nt_FReadLink(HANDLE hLinkFile, DeeObject *__restrict path,
+             bool throw_error_if_not_a_link);
 
 /* Work around a problem with long path names.
  * @return:  0: Successfully changed working directories.
