@@ -496,18 +496,23 @@ INTDEF WUNUSED NONNULL((1)) /*File*/ DREF DeeObject *DCALL
 posix_fd_openfile(DeeObject *__restrict fd, int oflags);
 
 /* Copy all data from `src' to `dst', both of with are deemon File objects.
+ * @param: src_mmap_hints: Set of `0 | DEE_MAPFILE_F_ATSTART'
  * @return: 0 : Success
  * @return: -1: Error */
 INTDEF WUNUSED NONNULL((1, 2, 3, 4)) int DCALL
 posix_copyfile_fileio(/*File*/ DeeObject *src,
                       /*File*/ DeeObject *dst,
                       DeeObject *progress,
-                      DeeObject *bufsize);
+                      DeeObject *bufsize,
+                      unsigned int src_mmap_hints);
 
 /* Default buffer size for copyfile */
-#ifndef POSIX_COPYFILE_DEFAULT_BUFSIZE
-#define POSIX_COPYFILE_DEFAULT_BUFSIZE (64 * 1024) /* 64K */
-#endif /* !POSIX_COPYFILE_DEFAULT_BUFSIZE */
+#ifndef POSIX_COPYFILE_DEFAULT_IO_BUFSIZE
+#define POSIX_COPYFILE_DEFAULT_IO_BUFSIZE (64 * 1024) /* 64K */
+#endif /* !POSIX_COPYFILE_DEFAULT_IO_BUFSIZE */
+#ifndef POSIX_COPYFILE_DEFAULT_SENDFILE_BUFSIZE
+#define POSIX_COPYFILE_DEFAULT_SENDFILE_BUFSIZE (16 * 1024 * 1024) /* 64M */
+#endif /* !POSIX_COPYFILE_DEFAULT_SENDFILE_BUFSIZE */
 
 
 typedef struct {

@@ -29,6 +29,7 @@
 #include <deemon/file.h>
 #include <deemon/filetypes.h>
 #include <deemon/int.h>
+#include <deemon/mapfile.h>
 #include <deemon/object.h>
 
 /* Include posix dependencies */
@@ -141,7 +142,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_fcopyfile_f_impl(DeeObject *oldfd
 		goto err_src_file;
 
 	/* Do the actual copy. */
-	if unlikely(posix_copyfile_fileio(src_file, dst_file, progress, bufsize))
+	if unlikely(posix_copyfile_fileio(src_file, dst_file, progress, bufsize, DEE_MAPFILE_F_NORMAL))
 		goto err_src_file_dst_file;
 #define NEED_posix_copyfile_fileio
 
@@ -198,6 +199,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_copyfile_f_impl(DeeObject *oldpat
 #ifdef posix_copyfile_USE_posix_copyfile_fileio
 	DREF DeeObject *src_file;
 	DREF DeeObject *dst_file;
+	unsigned int src_file_mmap_hints = DEE_MAPFILE_F_NORMAL;
 	if (flags & ~(RENAME_NOREPLACE)) {
 		DeeError_Throwf(&DeeError_ValueError, "Invalid flags argument %#x", flags);
 		goto err;
@@ -210,6 +212,9 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_copyfile_f_impl(DeeObject *oldpat
 			DeeError_Throwf(&DeeError_FileNotFound, "File %r could not be found", oldpath);
 			goto err_src_file;
 		}
+
+		/* We opened the source-file, so we can assume that it's file-pointer is at the start. */
+		src_file_mmap_hints |= DEE_MAPFILE_F_ATSTART;
 	} else {
 		src_file = posix_fd_openfile(oldpath, OPEN_FRDONLY);
 #define NEED_posix_fd_openfile
@@ -237,7 +242,8 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_copyfile_f_impl(DeeObject *oldpat
 		goto err_src_file;
 
 	/* Do the actual copy. */
-	if unlikely(posix_copyfile_fileio(src_file, dst_file, progress, bufsize))
+	if unlikely(posix_copyfile_fileio(src_file, dst_file, progress,
+	                                  bufsize, src_file_mmap_hints))
 		goto err_src_file_dst_file;
 #define NEED_posix_copyfile_fileio
 
@@ -341,6 +347,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_lcopyfile_f_impl(DeeObject *oldpa
 #ifdef posix_lcopyfile_USE_posix_copyfile_fileio
 	DREF DeeObject *src_file;
 	DREF DeeObject *dst_file;
+	unsigned int src_file_mmap_hints = DEE_MAPFILE_F_NORMAL;
 	if (flags & ~(RENAME_NOREPLACE)) {
 		DeeError_Throwf(&DeeError_ValueError, "Invalid flags argument %#x", flags);
 		goto err;
@@ -371,6 +378,9 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_lcopyfile_f_impl(DeeObject *oldpa
 			DeeError_Throwf(&DeeError_FileNotFound, "File %r could not be found", oldpath);
 			goto err_src_file;
 		}
+
+		/* We opened the source-file, so we can assume that it's file-pointer is at the start. */
+		src_file_mmap_hints |= DEE_MAPFILE_F_ATSTART;
 	} else {
 		src_file = posix_fd_openfile(oldpath, OPEN_FRDONLY | OPEN_FNOFOLLOW);
 #define NEED_posix_fd_openfile
@@ -427,7 +437,8 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_lcopyfile_f_impl(DeeObject *oldpa
 		goto err_src_file;
 
 	/* Do the actual copy. */
-	if unlikely(posix_copyfile_fileio(src_file, dst_file, progress, bufsize))
+	if unlikely(posix_copyfile_fileio(src_file, dst_file, progress,
+	                                  bufsize, src_file_mmap_hints))
 		goto err_src_file_dst_file;
 #define NEED_posix_copyfile_fileio
 
@@ -569,7 +580,7 @@ copyfile_progress_init_kw(DeeCopyFileProgressObject *__restrict self,
                           size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	self->cfp_copied  = 0;
 	self->cfp_total   = (uint64_t)-1;
-	self->cfp_bufsize = POSIX_COPYFILE_DEFAULT_BUFSIZE;
+	self->cfp_bufsize = POSIX_COPYFILE_DEFAULT_IO_BUFSIZE;
 	if (DeeArg_UnpackKw(argc, argv, kw, copyfile_progress_init_kwlist,
 	                    "oo|" UNPu64 UNPu64 UNPuSIZ ":attribute",
 	                    &self->cfp_srcfile,

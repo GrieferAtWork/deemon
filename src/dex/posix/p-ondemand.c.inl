@@ -120,10 +120,20 @@
 #define NEED_posix_err_unsupported
 #endif /* __INTELLISENSE__ */
 
+#include <deemon/file.h>
+#include <deemon/filetypes.h>
 #include <deemon/format.h>
 #include <deemon/mapfile.h>
+#include <deemon/system-features.h>
 
 #include <hybrid/typecore.h>
+
+#ifdef CONFIG_HAVE_sendfile
+#ifdef CONFIG_HAVE_SYS_SENDFILE_H
+#include <sys/sendfile.h>
+#endif /* CONFIG_HAVE_SYS_SENDFILE_H */
+#endif /* CONFIG_HAVE_sendfile */
+
 
 DECL_BEGIN
 
@@ -2530,21 +2540,47 @@ err:
 #ifdef NEED_posix_copyfile_fileio
 #undef NEED_posix_copyfile_fileio
 
+/* Figure out if we want to support `sendfile(2)' in `posix_copyfile_fileio()' */
+#undef HAVE_posix_copyfile_fileio_sendfile
+#if defined(CONFIG_HAVE_sendfile) && defined(Dee_fd_t_IS_int)
+#define HAVE_posix_copyfile_fileio_sendfile
+#endif /* CONFIG_HAVE_sendfile && Dee_fd_t_IS_int */
+
+/* Figure out if we want to skip `sendfile(2)' if it ever indicatse ENOSYS */
+#undef HAVE_posix_copyfile_fileio_sendfile_ENOSYS
+#if defined(HAVE_posix_copyfile_fileio_sendfile) && defined(ENOSYS) && !defined(__OPTIMIZE_SIZE__)
+#define HAVE_posix_copyfile_fileio_sendfile_ENOSYS
+#endif /* HAVE_posix_copyfile_fileio_sendfile && ENOSYS && !__OPTIMIZE_SIZE__ */
+
+#ifdef HAVE_posix_copyfile_fileio_sendfile_ENOSYS
+/* When set to true, don't attempt to use `sendfile(2)' in `posix_copyfile_fileio()' */
+PRIVATE bool host_sendfile_is_ENOSYS = false;
+#endif /* HAVE_posix_copyfile_fileio_sendfile_ENOSYS */
+
+/* The max buffer limit for sendfile(2), as documented here:
+ * https://man7.org/linux/man-pages/man2/sendfile.2.html */
+#ifndef LINUX_SENDFILE_MAXCOUNT
+#define LINUX_SENDFILE_MAXCOUNT 0x7ffff000
+#endif /* !LINUX_SENDFILE_MAXCOUNT */
+
 /* Copy all data from `src' to `dst', both of with are deemon File objects.
+ * @param: src_mmap_hints: Set of `0 | DEE_MAPFILE_F_ATSTART'
  * @return: 0 : Success
  * @return: -1: Error */
 INTERN WUNUSED NONNULL((1, 2, 3, 4)) int DCALL
 posix_copyfile_fileio(/*File*/ DeeObject *src,
                       /*File*/ DeeObject *dst,
                       DeeObject *progress,
-                      DeeObject *bufsize) {
+                      DeeObject *bufsize,
+                      unsigned int src_mmap_hints) {
+	uint64_t transfer_total = 0;
 	DREF DeeCopyFileProgressObject *progress_info = NULL;
 	size_t used_bufsize;
 	struct DeeMapFile mf;
 	int mf_status;
 
 	/* Figure out the intended buffer size. */
-	used_bufsize = POSIX_COPYFILE_DEFAULT_BUFSIZE;
+	used_bufsize = POSIX_COPYFILE_DEFAULT_IO_BUFSIZE;
 	if (!DeeNone_Check(bufsize)) {
 		if (DeeObject_AsSize(bufsize, &used_bufsize))
 			goto err;
@@ -2556,14 +2592,128 @@ err_bad_used_bufsize:
 		}
 	}
 
-	/* First of: try to mmap the source file. */
-	mf_status = DeeMapFile_InitFile(&mf, src, 0, 0, (size_t)-1, 0,
-	                                DEE_MAPFILE_F_MUSTMMAP |
-	                                DEE_MAPFILE_F_TRYMMAP);
+	/* Try to use `sendfile()' */
+#ifdef HAVE_posix_copyfile_fileio_sendfile
+	if (DeeSystemFile_Check(src) && DeeSystemFile_Check(dst) &&
+#ifdef HAVE_posix_copyfile_fileio_sendfile_ENOSYS
+	    (!host_sendfile_is_ENOSYS) &&
+#endif /* HAVE_posix_copyfile_fileio_sendfile_ENOSYS */
+	    1) {
+		Dee_fd_t src_fd = DeeSystemFile_GetHandle(src);
+		Dee_fd_t dst_fd = DeeSystemFile_GetHandle(dst);
+		Dee_ssize_t sendfile_status;
+		size_t sendfile_iosize = used_bufsize;
+		if (DeeNone_Check(bufsize))
+			sendfile_iosize = POSIX_COPYFILE_DEFAULT_SENDFILE_BUFSIZE;
+		if unlikely(sendfile_iosize > LINUX_SENDFILE_MAXCOUNT)
+			sendfile_iosize = LINUX_SENDFILE_MAXCOUNT;
+		sendfile_status = sendfile(dst_fd, src_fd, NULL, sendfile_iosize);
+		if (sendfile_status < 0) {
+#ifdef HAVE_posix_copyfile_fileio_sendfile_ENOSYS
+			/* If `sendfile(2)' indicates that it isn't implemented
+			 * by the kernel, then don't *ever* try to use it again. */
+			if (DeeSystem_GetErrno() == ENOSYS)
+				host_sendfile_is_ENOSYS = true;
+#endif /* HAVE_posix_copyfile_fileio_sendfile_ENOSYS */
+		} else {
+			/* Keep copying data using `sendfile' until we're done. */
+			transfer_total = (size_t)sendfile_status;
+			if (sendfile_status == 0)
+				goto done; /* Input file was empty. */
+#define WANT_done
+			for (;;) {
+				if (DeeThread_CheckInterrupt())
+					goto err_progress_info;
+
+				/* If given (and not `none'), invoke the progress-callback with copy status information. */
+				if (!DeeNone_Check(progress)) {
+					DREF DeeObject *progress_status;
+					if (progress_info == NULL) {
+						progress_info = DeeObject_MALLOC(DeeCopyFileProgressObject);
+						if unlikely(!progress_info)
+							goto err_progress_info;
+						Dee_Incref(src);
+						Dee_Incref(dst);
+						progress_info->cfp_srcfile = src; /* Inherit reference */
+						progress_info->cfp_dstfile = dst; /* Inherit reference */
+						progress_info->cfp_total   = (uint64_t)-1;
+						progress_info->cfp_bufsize = sendfile_iosize;
+						DeeObject_Init(progress_info, &DeeCopyFileProgress_Type);
+					}
+
+					/* Update the copied-bytes counter of the progress info object. */
+					progress_info->cfp_copied = transfer_total;
+
+					/* Invoke the progress-info callback. */
+					progress_status = DeeObject_Call(progress, 1, (DeeObject *const *)&progress_info);
+					if unlikely(!progress_status)
+						goto err_progress_info;
+					Dee_Decref(progress_status);
+					sendfile_iosize = progress_info->cfp_bufsize;
+					COMPILER_READ_BARRIER();
+					if unlikely(sendfile_iosize == 0)
+						goto err_bad_used_bufsize;
+					if unlikely(sendfile_iosize > LINUX_SENDFILE_MAXCOUNT)
+						sendfile_iosize = LINUX_SENDFILE_MAXCOUNT;
+				} /* if (!DeeNone_Check(progress)) */
+
+				/* Send the next chunk */
+				sendfile_status = sendfile(dst_fd, src_fd, NULL, sendfile_iosize);
+				if (sendfile_status == 0)
+					goto done; /* Done copying data! */
+				if (sendfile_status < 0)
+					break; /* sendfile(2) reported an error -> try to copy the rest using file I/O */
+				transfer_total += sendfile_status;
+			}
+
+			/* Since we're going to copy remaining data via file I/O, we need
+			 * to switch the used buffer size down to the file I/O default, or
+			 * inherit a new custom I/O size, as set by the caller, or the
+			 * progress-callback. */
+			if (progress_info != NULL) {
+				if (DeeNone_Check(bufsize))
+					progress_info->cfp_bufsize = used_bufsize; /* Restore original default buffer size */
+				used_bufsize = progress_info->cfp_bufsize;     /* Inherit actively set buffer size. */
+			}
+		} /* if (sendfile_status >= 0) */
+	}     /* if (DeeSystemFile_Check(src) && DeeSystemFile_Check(dst)) */
+#endif /* HAVE_posix_copyfile_fileio_sendfile */
+
+	/* Secondly: try to mmap the source file, so we can try to use kernel I/O buffers.
+	 * -> There is a chance that the kernel will notice us directly copying the I/O
+	 *    buffer of one file into that of another file, which might allow it to perform
+	 *    the copy operations more quickly. */
+#ifdef HAVE_posix_copyfile_fileio_sendfile
+	if (src_mmap_hints & DEE_MAPFILE_F_ATSTART) {
+		/* Special handling needed for when the caller originally indicated
+		 * that the source-file was located at its beginning, yet due to us
+		 * possibly having been able to copy *some* file data using `sendfile',
+		 * that might no longer be the case.
+		 * 
+		 * Instead, in this situation we can assume that the source-file's
+		 * file pointer is currently located at `transfer_total' bytes, so
+		 * we only have to map all of the file's contents starting from that
+		 * byte-offset. */
+		mf_status = DeeMapFile_InitFile(&mf, src, transfer_total,
+		                                0, (size_t)-1, 0,
+		                                DEE_MAPFILE_F_MUSTMMAP |
+		                                DEE_MAPFILE_F_TRYMMAP);
+	} else
+#endif /* HAVE_posix_copyfile_fileio_sendfile */
+	{
+		/* Map the remainder of the given `src' file into memory.
+		 *
+		 * Note that for this purpose, we  */
+		mf_status = DeeMapFile_InitFile(&mf, src, (Dee_pos_t)-1,
+		                                0, (size_t)-1, 0,
+		                                DEE_MAPFILE_F_MUSTMMAP |
+		                                DEE_MAPFILE_F_TRYMMAP |
+		                                src_mmap_hints);
+	}
 	if (mf_status <= 0) {
 		byte_t const *iter, *end;
 		if unlikely(mf_status < 0)
-			goto err;
+			goto err_progress_info;
 
 		/* Was able to mmap() the source file -> now to write that mapping into the target file. */
 		iter = (byte_t const *)DeeMapFile_GetBase(&mf);
@@ -2614,13 +2764,14 @@ err_progress_info_mapfile:
 					Dee_Incref(dst);
 					progress_info->cfp_srcfile = src; /* Inherit reference */
 					progress_info->cfp_dstfile = dst; /* Inherit reference */
-					progress_info->cfp_total   = DeeMapFile_GetSize(&mf);
+					progress_info->cfp_total   = transfer_total + DeeMapFile_GetSize(&mf);
 					progress_info->cfp_bufsize = used_bufsize;
 					DeeObject_Init(progress_info, &DeeCopyFileProgress_Type);
 				}
 
 				/* Update the copied-bytes counter of the progress info object. */
-				progress_info->cfp_copied = (size_t)(iter - (byte_t const *)DeeMapFile_GetBase(&mf));
+				progress_info->cfp_copied = transfer_total +
+				                            (size_t)(iter - (byte_t const *)DeeMapFile_GetBase(&mf));
 
 				/* Invoke the progress-info callback. */
 				progress_status = DeeObject_Call(progress, 1, (DeeObject *const *)&progress_info);
@@ -2633,18 +2784,16 @@ err_progress_info_mapfile:
 	} else {
 		byte_t *transfer_buffer;
 		size_t transfer_buffer_size;
-		uint64_t transfer_total;
-
-		/* TODO: Try to use `sendfile()' */
 
 		/* Copy file via read+write */
 		transfer_buffer_size = used_bufsize;
 		transfer_buffer = (byte_t *)Dee_Malloc(transfer_buffer_size);
 		if unlikely(!transfer_buffer)
-			goto err;
-		transfer_total = 0;
+			goto err_progress_info;
 		for (;;) {
 			size_t rd_size, wr_size;
+			if (DeeThread_CheckInterrupt())
+				goto err_progress_info_transfer_buffer;
 			rd_size = DeeFile_Read(src, transfer_buffer, transfer_buffer_size);
 			if unlikely(rd_size == (size_t)-1) {
 err_progress_info_transfer_buffer:
@@ -2671,7 +2820,7 @@ err_progress_info_transfer_buffer:
 				if (progress_info == NULL) {
 					progress_info = DeeObject_MALLOC(DeeCopyFileProgressObject);
 					if unlikely(!progress_info)
-						goto err_progress_info_mapfile;
+						goto err_progress_info;
 					Dee_Incref(src);
 					Dee_Incref(dst);
 					progress_info->cfp_srcfile = src; /* Inherit reference */
@@ -2687,7 +2836,7 @@ err_progress_info_transfer_buffer:
 				/* Invoke the progress-info callback. */
 				progress_status = DeeObject_Call(progress, 1, (DeeObject *const *)&progress_info);
 				if unlikely(!progress_status)
-					goto err_progress_info_mapfile;
+					goto err_progress_info;
 				Dee_Decref(progress_status);
 				if unlikely(progress_info->cfp_bufsize != transfer_buffer_size) {
 					/* Change transfer buffer size. */
@@ -2713,6 +2862,12 @@ err_progress_info_transfer_buffer:
 		}
 		Dee_Free(transfer_buffer);
 	}
+#ifdef WANT_done
+#undef WANT_done
+done:
+#endif /* WANT_done */
+	if (progress_info != NULL)
+		Dee_Decref_likely(progress_info);
 	return 0;
 err_progress_info:
 	if (progress_info != NULL)

@@ -265,6 +265,7 @@ header_nostdinc("sys/param.h");
 header_nostdinc("envlock.h");
 header_nostdinc("spawn.h");
 header_nostdinc("vfork.h");
+header_nostdinc("sys/sendfile.h");
 
 include_known_headers();
 
@@ -562,6 +563,8 @@ func("lseek64", "defined(__USE_LARGEFILE64)", test: "return (int)lseek64(1, 0, S
 func("_lseek", msvc, test: "return (int)_lseek(1, 0, SEEK_SET);");
 func("_lseek64", test: "return (int)_lseek64(1, 0, SEEK_SET);");
 func("_lseeki64", msvc, test: "return (int)_lseeki64(1, 0, SEEK_SET);");
+
+func("sendfile", "defined(CONFIG_HAVE_SYS_SENDFILE_H)", test: 'extern int outfd, infd; return (int)sendfile(outfd, intfd, NULL, 16 * 1024 * 1024);');
 
 functest('chdir("..")', unix);
 functest('_chdir("..")', msvc);
@@ -1857,6 +1860,13 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif !defined(CONFIG_HAVE_VFORK_H) && \
       (__has_include(<vfork.h>))
 #define CONFIG_HAVE_VFORK_H
+#endif
+
+#ifdef CONFIG_NO_SYS_SENDFILE_H
+#undef CONFIG_HAVE_SYS_SENDFILE_H
+#elif !defined(CONFIG_HAVE_SYS_SENDFILE_H) && \
+      (__has_include(<sys/sendfile.h>))
+#define CONFIG_HAVE_SYS_SENDFILE_H
 #endif
 
 #ifdef CONFIG_HAVE_IO_H
@@ -4715,6 +4725,13 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif !defined(CONFIG_HAVE__lseeki64) && \
       (defined(_lseeki64) || defined(___lseeki64_defined) || defined(_MSC_VER))
 #define CONFIG_HAVE__lseeki64
+#endif
+
+#ifdef CONFIG_NO_sendfile
+#undef CONFIG_HAVE_sendfile
+#elif !defined(CONFIG_HAVE_sendfile) && \
+      (defined(sendfile) || defined(__sendfile_defined) || defined(CONFIG_HAVE_SYS_SENDFILE_H))
+#define CONFIG_HAVE_sendfile
 #endif
 
 #ifdef CONFIG_NO_chdir

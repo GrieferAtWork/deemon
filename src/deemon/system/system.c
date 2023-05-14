@@ -1497,15 +1497,15 @@ PRIVATE ATTR_CONST size_t DCALL dee_nt_getpagesize(void) {
 
 
 #ifdef CONFIG_HOST_WINDOWS
-#define STRUCT_STAT_FOR_SIZE_GETSIZE(x) ((x).QuadPart)
+#define STRUCT_STAT_FOR_SIZE_GETSIZE(x) ((Dee_pos_t)(x).QuadPart)
 #define STRUCT_STAT_FOR_SIZE            LARGE_INTEGER
 #define FSTAT_FOR_SIZE(fd, pst)         (GetFileSizeEx(fd, pst) ? 0 : -1)
 #elif defined(CONFIG_HAVE_fstat64)
-#define STRUCT_STAT_FOR_SIZE_GETSIZE(x) ((x).st_size)
+#define STRUCT_STAT_FOR_SIZE_GETSIZE(x) ((Dee_pos_t)(x).st_size)
 #define STRUCT_STAT_FOR_SIZE            struct stat64
 #define FSTAT_FOR_SIZE                  fstat64
 #elif defined(CONFIG_HAVE_fstat)
-#define STRUCT_STAT_FOR_SIZE_GETSIZE(x) ((x).st_size)
+#define STRUCT_STAT_FOR_SIZE_GETSIZE(x) ((Dee_pos_t)(x).st_size)
 #define STRUCT_STAT_FOR_SIZE            struct stat
 #define FSTAT_FOR_SIZE                  fstat
 #endif /* ... */
@@ -1698,10 +1698,34 @@ again:
 #endif /* !DeeMapFile_IS_CreateFileMapping */
 			}
 		}
-		if (OVERFLOW_USUB(STRUCT_STAT_FOR_SIZE_GETSIZE(st), map_offset, &map_bytes))
+		if (OVERFLOW_USUB(STRUCT_STAT_FOR_SIZE_GETSIZE(st), map_offset, &map_bytes)) {
 			map_bytes = 0;
-		if (map_bytes > max_bytes)
+			if (STRUCT_STAT_FOR_SIZE_GETSIZE(st) > (Dee_pos_t)map_offset)
+				map_bytes = (size_t)-1;
+		}
+		if (map_bytes >= max_bytes) {
 			map_bytes = max_bytes;
+#if __SIZEOF_SIZE_T__ < 8
+			if (map_bytes == (size_t)-1) {
+				/* Special case: caller wants to map the entire file, but it's too large. */
+				Dee_pos_t true_size;
+				true_size = STRUCT_STAT_FOR_SIZE_GETSIZE(st) - map_offset;
+				if (true_size > (Dee_pos_t)(size_t)-1) {
+					/* File is too large to be loaded into memory in its entirety. */
+					if (flags & DEE_MAPFILE_F_MUSTMMAP)
+						goto err_mmap_impossible;
+#define WANT_err_mmap_impossible
+
+					/* If we tried to allocate a buffer for this file in its entirety,
+					 * we'd sooner or later end up OOM-ing, since the file is literally
+					 * larger than what could fit into our address space.
+					 *
+					 * As such, just indicate a bad-allocation error with the max size. */
+					return Dee_BadAlloc((size_t)-1);
+				}
+			}
+#endif /* __SIZEOF_SIZE_T__ < 8 */
+		}
 		if (map_bytes) {
 			/* Map file into memory. */
 			size_t used_nulbytes;
@@ -1717,19 +1741,12 @@ again:
 			if (min_bytes > map_bytes)
 				used_nulbytes += min_bytes - map_bytes;
 #ifdef DeeMapFile_IS_CreateFileMapping
-			/* TODO: This right here doesn't work in all cases, mainly due to
+			/* NOTE: This right here doesn't work in all cases, mainly due to
 			 *       the fact that the `VirtualAlloc()' below fails if passed
 			 *       a base address that isn't a multiple of 0x10000 (and we
 			 *       need it to work if it's a multiple of 0x1000). Also, there
 			 *       can be the case where `VirtualAlloc()' fails because the
 			 *       relevant address is already mapped.
-			 *
-			 * Instead, do what cygwin does and use:
-			 * - NtCreateSection()
-			 * - NtMapViewOfSection()
-			 *
-			 * However, use the below as a fallback when we can't GetProcAddress
-			 * those functions!
 			 */
 			hMap = CreateFileMappingA(fd, NULL,
 			                          (flags & DEE_MAPFILE_F_MAPSHARED)
@@ -1868,6 +1885,10 @@ again:
 after_mmap_attempt:
 #endif /* DeeMapFile_IS_CreateFileMapping || DeeMapFile_IS_mmap */
 	if (flags & DEE_MAPFILE_F_MUSTMMAP) {
+#ifdef WANT_err_mmap_impossible
+#undef WANT_err_mmap_impossible
+err_mmap_impossible:
+#endif /* WANT_err_mmap_impossible */
 		if (flags & DEE_MAPFILE_F_TRYMMAP)
 			return 1;
 		return DeeError_Throwf(&DeeError_UnsupportedAPI,
