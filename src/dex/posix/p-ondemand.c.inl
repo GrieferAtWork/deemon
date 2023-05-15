@@ -3817,7 +3817,7 @@ err:
 #define HAVE_posix_copyfile_fileio_sendfile
 #endif /* CONFIG_HAVE_sendfile && Dee_fd_t_IS_int */
 
-/* Figure out if we want to skip `sendfile(2)' if it ever indicatse ENOSYS */
+/* Figure out if we want to skip `sendfile(2)' if it ever indicates ENOSYS */
 #undef HAVE_posix_copyfile_fileio_sendfile_ENOSYS
 #if defined(HAVE_posix_copyfile_fileio_sendfile) && defined(ENOSYS) && !defined(__OPTIMIZE_SIZE__)
 #define HAVE_posix_copyfile_fileio_sendfile_ENOSYS
