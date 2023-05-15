@@ -598,25 +598,35 @@ functest('mkdir("foo", 0755)', "defined(CONFIG_HAVE_SYS_STAT_H) && " + addparen(
 functest('_mkdir("foo")', msvc);
 func("wmkdir", test: "wchar_t c[] = { 'f', 'o', 'o', 0 }; return wmkdir(c, 0755);");
 func("_wmkdir", msvc, test: "wchar_t c[] = { 'f', 'o', 'o', 0 }; return _wmkdir(c);");
-functest('chmod("foo", 0777)', "defined(CONFIG_HAVE_SYS_STAT_H) && " + addparen(unix));
-functest('_chmod("foo", 0777)', msvc);
-func("wchmod", test: "wchar_t c[] = { 'f', 'o', 'o', 0 }; return wchmod(c, 0777);");
-func("_wchmod", "defined(_WIO_DEFINED) || " + addparen(msvc), test: "wchar_t c[] = { 'f', 'o', 'o', 0 }; return _wchmod(c, 0777);");
-functest('mkfifo("foo", 0666)', "defined(CONFIG_HAVE_SYS_STAT_H) && " + addparen(unix));
-functest('lchmod("foo", 0666)', "defined(CONFIG_HAVE_SYS_STAT_H) && defined(__USE_MISC)");
-functest('fchmodat(AT_FDCWD, "foo", 0666, 0)', "defined(CONFIG_HAVE_SYS_STAT_H) && defined(__USE_ATFILE)");
 functest('mkdirat(AT_FDCWD, "foo", 0755)', "defined(CONFIG_HAVE_SYS_STAT_H) && defined(__USE_ATFILE)");
 functest('fmkdirat(AT_FDCWD, "foo", 0755, 0)', "defined(CONFIG_HAVE_SYS_STAT_H) && defined(__USE_KOS) && defined(__USE_ATFILE)");
 func("wmkdirat", test: "wchar_t c[] = { 'f', 'o', 'o', 0 }; return wmkdirat(AT_FDCWD, c, 0755);");
 func("wfmkdirat", test: "wchar_t c[] = { 'f', 'o', 'o', 0 }; return wfmkdirat(AT_FDCWD, c, 0755, 0);");
+functest('mkfifo("foo", 0666)', "defined(CONFIG_HAVE_SYS_STAT_H) && " + addparen(unix));
 functest('mkfifoat(AT_FDCWD, "foo", 0666)', "defined(CONFIG_HAVE_SYS_STAT_H) && defined(__USE_ATFILE)");
-functest('fchmod(1, 0644)', "defined(CONFIG_HAVE_SYS_STAT_H) && defined(__USE_POSIX)");
 functest('mknod("foo", 0644, (dev_t)123)', "defined(CONFIG_HAVE_SYS_STAT_H) && (defined(__USE_MISC) || defined(__USE_XOPEN_EXTENDED))");
 functest('mknodat(AT_FDCWD, "foo", 0644, (dev_t)123)', "defined(CONFIG_HAVE_SYS_STAT_H) && (defined(__USE_MISC) || defined(__USE_XOPEN_EXTENDED)) && defined(__USE_ATFILE)");
 func("utimensat", "defined(CONFIG_HAVE_SYS_STAT_H) && defined(__USE_ATFILE)", test: 'struct timespec ts[2]; ts[0].tv_sec = 0; ts[0].tv_nsec = 0; ts[1] = ts[0]; return utimensat(AT_FDCWD, "foo", ts, 0);');
 func("utimensat64", "defined(CONFIG_HAVE_SYS_STAT_H) && defined(__USE_ATFILE) && defined(__USE_TIME64)", test: 'struct timespec64 ts[2]; ts[0].tv_sec = 0; ts[0].tv_nsec = 0; ts[1] = ts[0]; return utimensat64(AT_FDCWD, "foo", ts, 0);');
 func("futimens", "defined(CONFIG_HAVE_SYS_STAT_H) && defined(__USE_XOPEN2K8)", test: 'struct timespec ts[2]; ts[0].tv_sec = 0; ts[0].tv_nsec = 0; ts[1] = ts[0]; return futimens(1, ts);');
 func("futimens64", "defined(CONFIG_HAVE_SYS_STAT_H) && defined(__USE_XOPEN2K8) && defined(__USE_TIME64)", test: 'struct timespec64 ts[2]; ts[0].tv_sec = 0; ts[0].tv_nsec = 0; ts[1] = ts[0]; return futimens64(1, ts);');
+
+functest('chmod("foo", 0777)', "defined(CONFIG_HAVE_SYS_STAT_H) && " + addparen(unix));
+functest('_chmod("foo", 0777)', msvc);
+func("wchmod", test: "wchar_t c[] = { 'f', 'o', 'o', 0 }; return wchmod(c, 0777);");
+func("_wchmod", "defined(_WIO_DEFINED) || " + addparen(msvc), test: "wchar_t c[] = { 'f', 'o', 'o', 0 }; return _wchmod(c, 0777);");
+functest('lchmod("foo", 0666)', "defined(CONFIG_HAVE_SYS_STAT_H) && defined(__USE_MISC)");
+functest('fchmod(1, 0644)', "defined(CONFIG_HAVE_SYS_STAT_H) && defined(__USE_POSIX)");
+functest('fchmodat(AT_FDCWD, "foo", 0666, 0)', "defined(CONFIG_HAVE_SYS_STAT_H) && defined(__USE_ATFILE)");
+
+functest('chown("foo", (uid_t)-1, (gid_t)-1)', "defined(CONFIG_HAVE_UNISTD_H) && " + addparen(unix));
+functest('_chown("foo", (uid_t)-1, (gid_t)-1)', "defined(CONFIG_HAVE_UNISTD_H) && " + addparen(unix));
+func("wchown", test: "wchar_t c[] = { 'f', 'o', 'o', 0 }; return wchown(c, (uid_t)-1, (gid_t)-1);");
+func("_wchown", test: "wchar_t c[] = { 'f', 'o', 'o', 0 }; return _wchown(c, (uid_t)-1, (gid_t)-1);");
+functest('lchown("foo", (uid_t)-1, (gid_t)-1)', "defined(CONFIG_HAVE_UNISTD_H) && " + addparen(unix));
+functest('fchown(1, (uid_t)-1, (gid_t)-1)', "defined(CONFIG_HAVE_UNISTD_H) && " + addparen(unix));
+functest('fchownat(AT_FDCWD, "foo", (uid_t)-1, (gid_t)-1, 0)', "defined(__USE_ATFILE)");
+
 
 functest('symlink("foo", "bar")', "defined(CONFIG_HAVE_UNISTD_H) && (defined(__USE_XOPEN_EXTENDED) || defined(__USE_XOPEN2K))");
 functest('symlinkat("foo", AT_FDCWD, "bar")', "defined(CONFIG_HAVE_UNISTD_H) && defined(__USE_ATFILE)");
@@ -660,8 +670,6 @@ functest('faccessat(AT_FDCWD, "foo", F_OK, 0)', "defined(F_OK) && defined(X_OK) 
 functest('access("foo", F_OK)', "(defined(CONFIG_HAVE_UNISTD_H) || !" + addparen(msvc) + ") && defined(F_OK) && defined(X_OK) && defined(W_OK) && defined(R_OK)");
 functest('_access("foo", F_OK)', msvc);
 func("_waccess", "defined(_WIO_DEFINED) || " + addparen(msvc), test: "wchar_t c[] = { 'f', 'o', 'o', 0 }; return _waccess(c, F_OK);");
-
-functest('fchownat(AT_FDCWD, "foo", 0, 0, 0)', "defined(__USE_ATFILE)");
 
 func("pread", "defined(__USE_UNIX98) || defined(__USE_XOPEN2K8)", test: "char buf[7]; return (int)pread(1, buf, 7, 1234);");
 func("pwrite", "defined(__USE_UNIX98) || defined(__USE_XOPEN2K8)", test: 'char const buf[] = "foo"; return (int)pwrite(1, buf, 3, 1234);');
@@ -4956,62 +4964,6 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #define CONFIG_HAVE__wmkdir
 #endif
 
-#ifdef CONFIG_NO_chmod
-#undef CONFIG_HAVE_chmod
-#elif !defined(CONFIG_HAVE_chmod) && \
-      (defined(chmod) || defined(__chmod_defined) || (defined(CONFIG_HAVE_SYS_STAT_H) && \
-       (defined(__linux__) || defined(__linux) || defined(linux) || defined(__unix__) || \
-       defined(__unix) || defined(unix))))
-#define CONFIG_HAVE_chmod
-#endif
-
-#ifdef CONFIG_NO__chmod
-#undef CONFIG_HAVE__chmod
-#elif !defined(CONFIG_HAVE__chmod) && \
-      (defined(_chmod) || defined(___chmod_defined) || defined(_MSC_VER))
-#define CONFIG_HAVE__chmod
-#endif
-
-#ifdef CONFIG_NO_wchmod
-#undef CONFIG_HAVE_wchmod
-#elif !defined(CONFIG_HAVE_wchmod) && \
-      (defined(wchmod) || defined(__wchmod_defined))
-#define CONFIG_HAVE_wchmod
-#endif
-
-#ifdef CONFIG_NO__wchmod
-#undef CONFIG_HAVE__wchmod
-#elif !defined(CONFIG_HAVE__wchmod) && \
-      (defined(_wchmod) || defined(___wchmod_defined) || (defined(_WIO_DEFINED) || \
-       defined(_MSC_VER)))
-#define CONFIG_HAVE__wchmod
-#endif
-
-#ifdef CONFIG_NO_mkfifo
-#undef CONFIG_HAVE_mkfifo
-#elif !defined(CONFIG_HAVE_mkfifo) && \
-      (defined(mkfifo) || defined(__mkfifo_defined) || (defined(CONFIG_HAVE_SYS_STAT_H) && \
-       (defined(__linux__) || defined(__linux) || defined(linux) || defined(__unix__) || \
-       defined(__unix) || defined(unix))))
-#define CONFIG_HAVE_mkfifo
-#endif
-
-#ifdef CONFIG_NO_lchmod
-#undef CONFIG_HAVE_lchmod
-#elif !defined(CONFIG_HAVE_lchmod) && \
-      (defined(lchmod) || defined(__lchmod_defined) || (defined(CONFIG_HAVE_SYS_STAT_H) && \
-       defined(__USE_MISC)))
-#define CONFIG_HAVE_lchmod
-#endif
-
-#ifdef CONFIG_NO_fchmodat
-#undef CONFIG_HAVE_fchmodat
-#elif !defined(CONFIG_HAVE_fchmodat) && \
-      (defined(fchmodat) || defined(__fchmodat_defined) || (defined(CONFIG_HAVE_SYS_STAT_H) && \
-       defined(__USE_ATFILE)))
-#define CONFIG_HAVE_fchmodat
-#endif
-
 #ifdef CONFIG_NO_mkdirat
 #undef CONFIG_HAVE_mkdirat
 #elif !defined(CONFIG_HAVE_mkdirat) && \
@@ -5042,20 +4994,21 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #define CONFIG_HAVE_wfmkdirat
 #endif
 
+#ifdef CONFIG_NO_mkfifo
+#undef CONFIG_HAVE_mkfifo
+#elif !defined(CONFIG_HAVE_mkfifo) && \
+      (defined(mkfifo) || defined(__mkfifo_defined) || (defined(CONFIG_HAVE_SYS_STAT_H) && \
+       (defined(__linux__) || defined(__linux) || defined(linux) || defined(__unix__) || \
+       defined(__unix) || defined(unix))))
+#define CONFIG_HAVE_mkfifo
+#endif
+
 #ifdef CONFIG_NO_mkfifoat
 #undef CONFIG_HAVE_mkfifoat
 #elif !defined(CONFIG_HAVE_mkfifoat) && \
       (defined(mkfifoat) || defined(__mkfifoat_defined) || (defined(CONFIG_HAVE_SYS_STAT_H) && \
        defined(__USE_ATFILE)))
 #define CONFIG_HAVE_mkfifoat
-#endif
-
-#ifdef CONFIG_NO_fchmod
-#undef CONFIG_HAVE_fchmod
-#elif !defined(CONFIG_HAVE_fchmod) && \
-      (defined(fchmod) || defined(__fchmod_defined) || (defined(CONFIG_HAVE_SYS_STAT_H) && \
-       defined(__USE_POSIX)))
-#define CONFIG_HAVE_fchmod
 #endif
 
 #ifdef CONFIG_NO_mknod
@@ -5104,6 +5057,118 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
       (defined(futimens64) || defined(__futimens64_defined) || (defined(CONFIG_HAVE_SYS_STAT_H) && \
        defined(__USE_XOPEN2K8) && defined(__USE_TIME64)))
 #define CONFIG_HAVE_futimens64
+#endif
+
+#ifdef CONFIG_NO_chmod
+#undef CONFIG_HAVE_chmod
+#elif !defined(CONFIG_HAVE_chmod) && \
+      (defined(chmod) || defined(__chmod_defined) || (defined(CONFIG_HAVE_SYS_STAT_H) && \
+       (defined(__linux__) || defined(__linux) || defined(linux) || defined(__unix__) || \
+       defined(__unix) || defined(unix))))
+#define CONFIG_HAVE_chmod
+#endif
+
+#ifdef CONFIG_NO__chmod
+#undef CONFIG_HAVE__chmod
+#elif !defined(CONFIG_HAVE__chmod) && \
+      (defined(_chmod) || defined(___chmod_defined) || defined(_MSC_VER))
+#define CONFIG_HAVE__chmod
+#endif
+
+#ifdef CONFIG_NO_wchmod
+#undef CONFIG_HAVE_wchmod
+#elif !defined(CONFIG_HAVE_wchmod) && \
+      (defined(wchmod) || defined(__wchmod_defined))
+#define CONFIG_HAVE_wchmod
+#endif
+
+#ifdef CONFIG_NO__wchmod
+#undef CONFIG_HAVE__wchmod
+#elif !defined(CONFIG_HAVE__wchmod) && \
+      (defined(_wchmod) || defined(___wchmod_defined) || (defined(_WIO_DEFINED) || \
+       defined(_MSC_VER)))
+#define CONFIG_HAVE__wchmod
+#endif
+
+#ifdef CONFIG_NO_lchmod
+#undef CONFIG_HAVE_lchmod
+#elif !defined(CONFIG_HAVE_lchmod) && \
+      (defined(lchmod) || defined(__lchmod_defined) || (defined(CONFIG_HAVE_SYS_STAT_H) && \
+       defined(__USE_MISC)))
+#define CONFIG_HAVE_lchmod
+#endif
+
+#ifdef CONFIG_NO_fchmod
+#undef CONFIG_HAVE_fchmod
+#elif !defined(CONFIG_HAVE_fchmod) && \
+      (defined(fchmod) || defined(__fchmod_defined) || (defined(CONFIG_HAVE_SYS_STAT_H) && \
+       defined(__USE_POSIX)))
+#define CONFIG_HAVE_fchmod
+#endif
+
+#ifdef CONFIG_NO_fchmodat
+#undef CONFIG_HAVE_fchmodat
+#elif !defined(CONFIG_HAVE_fchmodat) && \
+      (defined(fchmodat) || defined(__fchmodat_defined) || (defined(CONFIG_HAVE_SYS_STAT_H) && \
+       defined(__USE_ATFILE)))
+#define CONFIG_HAVE_fchmodat
+#endif
+
+#ifdef CONFIG_NO_chown
+#undef CONFIG_HAVE_chown
+#elif !defined(CONFIG_HAVE_chown) && \
+      (defined(chown) || defined(__chown_defined) || (defined(CONFIG_HAVE_UNISTD_H) && \
+       (defined(__linux__) || defined(__linux) || defined(linux) || defined(__unix__) || \
+       defined(__unix) || defined(unix))))
+#define CONFIG_HAVE_chown
+#endif
+
+#ifdef CONFIG_NO__chown
+#undef CONFIG_HAVE__chown
+#elif !defined(CONFIG_HAVE__chown) && \
+      (defined(_chown) || defined(___chown_defined) || (defined(CONFIG_HAVE_UNISTD_H) && \
+       (defined(__linux__) || defined(__linux) || defined(linux) || defined(__unix__) || \
+       defined(__unix) || defined(unix))))
+#define CONFIG_HAVE__chown
+#endif
+
+#ifdef CONFIG_NO_wchown
+#undef CONFIG_HAVE_wchown
+#elif !defined(CONFIG_HAVE_wchown) && \
+      (defined(wchown) || defined(__wchown_defined))
+#define CONFIG_HAVE_wchown
+#endif
+
+#ifdef CONFIG_NO__wchown
+#undef CONFIG_HAVE__wchown
+#elif !defined(CONFIG_HAVE__wchown) && \
+      (defined(_wchown) || defined(___wchown_defined))
+#define CONFIG_HAVE__wchown
+#endif
+
+#ifdef CONFIG_NO_lchown
+#undef CONFIG_HAVE_lchown
+#elif !defined(CONFIG_HAVE_lchown) && \
+      (defined(lchown) || defined(__lchown_defined) || (defined(CONFIG_HAVE_UNISTD_H) && \
+       (defined(__linux__) || defined(__linux) || defined(linux) || defined(__unix__) || \
+       defined(__unix) || defined(unix))))
+#define CONFIG_HAVE_lchown
+#endif
+
+#ifdef CONFIG_NO_fchown
+#undef CONFIG_HAVE_fchown
+#elif !defined(CONFIG_HAVE_fchown) && \
+      (defined(fchown) || defined(__fchown_defined) || (defined(CONFIG_HAVE_UNISTD_H) && \
+       (defined(__linux__) || defined(__linux) || defined(linux) || defined(__unix__) || \
+       defined(__unix) || defined(unix))))
+#define CONFIG_HAVE_fchown
+#endif
+
+#ifdef CONFIG_NO_fchownat
+#undef CONFIG_HAVE_fchownat
+#elif !defined(CONFIG_HAVE_fchownat) && \
+      (defined(fchownat) || defined(__fchownat_defined) || defined(__USE_ATFILE))
+#define CONFIG_HAVE_fchownat
 #endif
 
 #ifdef CONFIG_NO_symlink
@@ -5352,13 +5417,6 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
       (defined(_waccess) || defined(___waccess_defined) || (defined(_WIO_DEFINED) || \
        defined(_MSC_VER)))
 #define CONFIG_HAVE__waccess
-#endif
-
-#ifdef CONFIG_NO_fchownat
-#undef CONFIG_HAVE_fchownat
-#elif !defined(CONFIG_HAVE_fchownat) && \
-      (defined(fchownat) || defined(__fchownat_defined) || defined(__USE_ATFILE))
-#define CONFIG_HAVE_fchownat
 #endif
 
 #ifdef CONFIG_NO_pread
@@ -9934,6 +9992,12 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #define chmod _chmod
 #endif /* chmod = _chmod */
 
+#if defined(CONFIG_HAVE__wchmod) && !defined(CONFIG_HAVE_wchmod)
+#define CONFIG_HAVE_wchmod
+#undef wchmod
+#define wchmod(name, mode) _wchmod(name, mode)
+#endif /* chmod = _chmod */
+
 #if !defined(CONFIG_HAVE_chmod) && (defined(CONFIG_HAVE_fchmodat) && defined(CONFIG_HAVE_AT_FDCWD))
 #define CONFIG_HAVE_chmod
 #undef chmod
@@ -9945,6 +10009,30 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #undef lchmod
 #define lchmod(path, mode) fchmodat(AT_FDCWD, path, mode, AT_SYMLINK_NOFOLLOW)
 #endif /* lchmod = fchmodat */
+
+#if defined(CONFIG_HAVE__chown) && !defined(CONFIG_HAVE_chown)
+#define CONFIG_HAVE_chown
+#undef chown
+#define chown _chown
+#endif /* chown = _chown */
+
+#if defined(CONFIG_HAVE__wchown) && !defined(CONFIG_HAVE_wchown)
+#define CONFIG_HAVE_wchown
+#undef wchown
+#define wchown(name, uid, gid) _wchown(name, uid, gid)
+#endif /* chown = _chown */
+
+#if !defined(CONFIG_HAVE_chown) && (defined(CONFIG_HAVE_fchownat) && defined(CONFIG_HAVE_AT_FDCWD))
+#define CONFIG_HAVE_chown
+#undef chown
+#define chown(path, uid, gid) fchownat(AT_FDCWD, path, uid, gid, 0)
+#endif /* chown = fchownat */
+
+#if !defined(CONFIG_HAVE_lchown) && (defined(CONFIG_HAVE_fchownat) && defined(CONFIG_HAVE_AT_FDCWD) && defined(CONFIG_HAVE_AT_SYMLINK_NOFOLLOW))
+#define CONFIG_HAVE_lchown
+#undef lchown
+#define lchown(path, uid, gid) fchownat(AT_FDCWD, path, uid, gid, AT_SYMLINK_NOFOLLOW)
+#endif /* lchown = fchownat */
 
 #ifndef CONFIG_HAVE_unlink
 #ifdef CONFIG_HAVE__unlink
@@ -10300,12 +10388,6 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #undef mkdir
 #define mkdir(name, mode) _mkdir(name)
 #endif /* mkdir = _mkdir */
-
-#if defined(CONFIG_HAVE__wchmod) && !defined(CONFIG_HAVE_wchmod)
-#define CONFIG_HAVE_wchmod
-#undef wchmod
-#define wchmod(name, mode) _wchmod(name, mode)
-#endif /* chmod = _chmod */
 
 #if defined(CONFIG_HAVE__wmkdir) && !defined(CONFIG_HAVE_wmkdir)
 #define CONFIG_HAVE_wmkdir

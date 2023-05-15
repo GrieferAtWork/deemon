@@ -328,6 +328,7 @@ err:
 FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_faccessat_f_impl(int dfd, /*utf-8*/ char const *filename, int how, int atflags)
 /*[[[end]]]*/
 {
+	/* TODO: Re-write this function */
 #ifdef posix_faccessat_USE_faccessat
 	int result;
 EINTR_LABEL(again)

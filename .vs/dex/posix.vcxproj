@@ -38,13 +38,13 @@
 		<ClInclude Include="..\..\src\dex\posix\libposix.h" />
 		<ClInclude Include="..\..\src\dex\posix\p-access.c.inl" />
 		<ClInclude Include="..\..\src\dex\posix\p-chmod.c.inl" />
+		<ClInclude Include="..\..\src\dex\posix\p-chown.c.inl" />
 		<ClInclude Include="..\..\src\dex\posix\p-copyfile.c.inl" />
 		<ClInclude Include="..\..\src\dex\posix\p-cpucount.c.inl" />
 		<ClInclude Include="..\..\src\dex\posix\p-environ.c.inl" />
 		<ClInclude Include="..\..\src\dex\posix\p-errno.c.inl" />
 		<ClInclude Include="..\..\src\dex\posix\p-exit.c.inl" />
 		<ClInclude Include="..\..\src\dex\posix\p-fd.c.inl" />
-		<ClInclude Include="..\..\src\dex\posix\p-fs-deprecated.c.inl" />
 		<ClInclude Include="..\..\src\dex\posix\p-mkdir.c.inl" />
 		<ClInclude Include="..\..\src\dex\posix\p-ondemand.c.inl" />
 		<ClInclude Include="..\..\src\dex\posix\p-open.c.inl" />

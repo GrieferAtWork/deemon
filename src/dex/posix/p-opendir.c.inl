@@ -870,12 +870,9 @@ directory_open(DeeDirIteratorObject *__restrict self,
 				                        "Path %r could not be found",
 				                        path);
 			} else if (DeeNTSystem_IsNotDir(dwError)) {
-				DREF DeeTypeObject *tp;
-				tp = (DREF DeeTypeObject *)DeeObject_GetAttrString(FS_MODULE, "NoDirectory");
-				if (tp) {
-					DeeNTSystem_ThrowErrorf(tp, dwError, "Some part of the path %r is not a directory", path);
-					Dee_Decref(tp);
-				}
+				DeeNTSystem_ThrowErrorf(&DeeError_NoDirectory, dwError,
+				                        "Some part of the path %r is not a directory",
+				                        path);
 			} else if (DeeNTSystem_IsAccessDeniedError(dwError)) {
 				DeeNTSystem_ThrowErrorf(&DeeError_FileAccessError, dwError,
 				                        "Search permissions are not granted for path %r",

@@ -464,8 +464,8 @@ err:
 
 
 
-/*[[[deemon import("rt.gen.dexutils").gw("fchmod", "fd:unix:fd,mode:?X2?Dstring?Dint", libname: "posix"); ]]]*/
-FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_fchmod_f_impl(int fd, DeeObject *mode);
+/*[[[deemon import("rt.gen.dexutils").gw("fchmod", "fd:?X2?Dint?DFile,mode:?X2?Dstring?Dint", libname: "posix"); ]]]*/
+FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_fchmod_f_impl(DeeObject *fd, DeeObject *mode);
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_fchmod_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define POSIX_FCHMOD_DEF { "fchmod", (DeeObject *)&posix_fchmod, MODSYM_FNORMAL, DOC("(fd:?X2?Dint?DFile,mode:?X2?Dstring?Dint)") },
 #define POSIX_FCHMOD_DEF_DOC(doc) { "fchmod", (DeeObject *)&posix_fchmod, MODSYM_FNORMAL, DOC("(fd:?X2?Dint?DFile,mode:?X2?Dstring?Dint)\n" doc) },
@@ -475,34 +475,33 @@ PRIVATE DEFINE_KWCMETHOD(posix_fchmod, &posix_fchmod_f);
 PRIVATE DEFINE_KWLIST(posix_kwds_fd_mode, { K(fd), K(mode), KEND });
 #endif /* !POSIX_KWDS_FD_MODE_DEFINED */
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_fchmod_f(size_t argc, DeeObject *const *argv, DeeObject *kw) {
-	int fd_fd;
 	DeeObject *fd;
 	DeeObject *mode;
 	if (DeeArg_UnpackKw(argc, argv, kw, posix_kwds_fd_mode, "oo:fchmod", &fd, &mode))
 		goto err;
-	fd_fd = DeeUnixSystem_GetFD(fd);
-	if unlikely(fd_fd == -1)
-		goto err;
-	return posix_fchmod_f_impl(fd_fd, mode);
+	return posix_fchmod_f_impl(fd, mode);
 err:
 	return NULL;
 }
-FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_fchmod_f_impl(int fd, DeeObject *mode)
+FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_fchmod_f_impl(DeeObject *fd, DeeObject *mode)
 /*[[[end]]]*/
 {
 #ifdef posix_fchmod_USE_fchmod
 	int error;
 	unsigned int used_mode;
+	int os_fd = DeeUnixSystem_GetFD(fd);
+	if unlikely(os_fd == -1)
+		goto err;
 
 	/* Load the chmod-mode argument. */
-	used_mode = posix_fchmod_getmode(fd, mode);
-#define NEED_posix_fchmod_getmode
+	used_mode = posix_chmod_getmode(fd, mode);
+#define NEED_posix_chmod_getmode
 	if unlikely(used_mode == (unsigned int)-1)
 		goto err;
 
 EINTR_ENOMEM_LABEL(again)
 	DBG_ALIGNMENT_DISABLE();
-	error = fchmod(fd, used_mode);
+	error = fchmod(os_fd, used_mode);
 	DBG_ALIGNMENT_ENABLE();
 	
 	if unlikely(error < 0) {
@@ -521,7 +520,7 @@ err:
 #if defined(posix_fchmod_USE_posix_lchmod) || defined(posix_fchmod_USE_posix_chmod)
 	DREF DeeObject *result;
 	DREF DeeObject *abspath;
-	abspath = posix_fd_makepath_fd(fd);
+	abspath = posix_fd_makepath(fd);
 #define NEED_posix_fd_makepath
 	if unlikely(!abspath)
 		goto err;
@@ -575,16 +574,10 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_fchmodat_f_impl(DeeObject *dfd, D
 	DREF DeeObject *result, *abspath;
 #ifdef posix_fchmodat_USE_posix_fchmod
 	if (atflags & AT_EMPTY_PATH) {
-		if (DeeNone_Check(path) || (DeeString_Check(path) &&
-		                            DeeString_IsEmpty(path))) {
-			int os_dfd;
-			if (DeeString_Check(dfd))
-				return posix_chmod_f_impl(dfd, mode);
-			os_dfd = DeeUnixSystem_GetFD(dfd);
-			if unlikely(os_dfd == -1)
-				goto err;
-			return posix_fchmod_f_impl(os_dfd, mode);
-		}
+		if (!DeeString_Check(dfd) &&
+		    (DeeNone_Check(path) || (DeeString_Check(path) &&
+		                             DeeString_IsEmpty(path))))
+			return posix_fchmod_f_impl(dfd, mode);
 		atflags &= ~AT_EMPTY_PATH;
 	}
 #endif /* posix_fchmodat_USE_posix_fchmod */

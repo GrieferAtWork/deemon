@@ -28,6 +28,7 @@
 #ifndef __INTELLISENSE__
 #include "p-access.c.inl"
 #include "p-chmod.c.inl"
+#include "p-chown.c.inl"
 #include "p-copyfile.c.inl"
 #include "p-cpucount.c.inl"
 #include "p-environ.c.inl"
@@ -57,10 +58,6 @@
 
 /* Include p-ondemand.c.inl last, since it defined functions on-demand */
 #include "p-ondemand.c.inl"
-
-/* Include p-fs-deprecated.c.inl last, since this once #undef's a
- * bunch of stuff that may be needed by other components. */
-#include "p-fs-deprecated.c.inl"
 #endif /* !__INTELLISENSE__ */
 
 #include <deemon/error.h>
@@ -136,6 +133,10 @@ local ALL_STUBS = {
 	("posix_lchmod_USE_STUB",       { "lchmod" }),
 	("posix_fchmod_USE_STUB",       { "fchmod" }),
 	("posix_fchmodat_USE_STUB",     { "fchmodat" }),
+	("posix_chown_USE_STUB",        { "chown" }),
+	("posix_lchown_USE_STUB",       { "lchown" }),
+	("posix_fchown_USE_STUB",       { "fchown" }),
+	("posix_fchownat_USE_STUB",     { "fchownat" }),
 	("posix_pipe_USE_STUB",         { "pipe" }),
 	("posix_pipe2_USE_STUB",        { "pipe2" }),
 	("posix_strerror_USE_STUB",     { "strerror" }),
@@ -446,6 +447,13 @@ print("#endif /" "* POSIX_STUBS_TOTLEN == 0 *" "/");
 #define len_posix_chmod_USE_STUB /* nothing */
 #define str_posix_chmod_USE_STUB /* nothing */
 #endif /* !posix_chmod_USE_STUB */
+#ifdef posix_chown_USE_STUB
+#define len_posix_chown_USE_STUB +6
+#define str_posix_chown_USE_STUB 'c', 'h', 'o', 'w', 'n', '\0',
+#else /* posix_chown_USE_STUB */
+#define len_posix_chown_USE_STUB /* nothing */
+#define str_posix_chown_USE_STUB /* nothing */
+#endif /* !posix_chown_USE_STUB */
 #ifdef posix_clearenv_USE_STUB
 #define len_posix_clearenv_USE_STUB +9
 #define str_posix_clearenv_USE_STUB 'c', 'l', 'e', 'a', 'r', 'e', 'n', 'v', '\0',
@@ -558,6 +566,20 @@ print("#endif /" "* POSIX_STUBS_TOTLEN == 0 *" "/");
 #define len_posix_fchmodat_USE_STUB /* nothing */
 #define str_posix_fchmodat_USE_STUB /* nothing */
 #endif /* !posix_fchmodat_USE_STUB */
+#ifdef posix_fchown_USE_STUB
+#define len_posix_fchown_USE_STUB +7
+#define str_posix_fchown_USE_STUB 'f', 'c', 'h', 'o', 'w', 'n', '\0',
+#else /* posix_fchown_USE_STUB */
+#define len_posix_fchown_USE_STUB /* nothing */
+#define str_posix_fchown_USE_STUB /* nothing */
+#endif /* !posix_fchown_USE_STUB */
+#ifdef posix_fchownat_USE_STUB
+#define len_posix_fchownat_USE_STUB +9
+#define str_posix_fchownat_USE_STUB 'f', 'c', 'h', 'o', 'w', 'n', 'a', 't', '\0',
+#else /* posix_fchownat_USE_STUB */
+#define len_posix_fchownat_USE_STUB /* nothing */
+#define str_posix_fchownat_USE_STUB /* nothing */
+#endif /* !posix_fchownat_USE_STUB */
 #ifdef posix_fcopyfile_USE_STUB
 #define len_posix_fcopyfile_USE_STUB +10
 #define str_posix_fcopyfile_USE_STUB 'f', 'c', 'o', 'p', 'y', 'f', 'i', 'l', 'e', '\0',
@@ -663,6 +685,13 @@ print("#endif /" "* POSIX_STUBS_TOTLEN == 0 *" "/");
 #define len_posix_lchmod_USE_STUB /* nothing */
 #define str_posix_lchmod_USE_STUB /* nothing */
 #endif /* !posix_lchmod_USE_STUB */
+#ifdef posix_lchown_USE_STUB
+#define len_posix_lchown_USE_STUB +7
+#define str_posix_lchown_USE_STUB 'l', 'c', 'h', 'o', 'w', 'n', '\0',
+#else /* posix_lchown_USE_STUB */
+#define len_posix_lchown_USE_STUB /* nothing */
+#define str_posix_lchown_USE_STUB /* nothing */
+#endif /* !posix_lchown_USE_STUB */
 #ifdef posix_lcopyfile_USE_STUB
 #define len_posix_lcopyfile_USE_STUB +10
 #define str_posix_lcopyfile_USE_STUB 'l', 'c', 'o', 'p', 'y', 'f', 'i', 'l', 'e', '\0',
@@ -1121,6 +1150,7 @@ print("#endif /" "* POSIX_STUBS_TOTLEN == 0 *" "/");
 	len_posix_access_USE_STUB \
 	len_posix_chdir_USE_STUB \
 	len_posix_chmod_USE_STUB \
+	len_posix_chown_USE_STUB \
 	len_posix_clearenv_USE_STUB \
 	len_posix_close_USE_STUB \
 	len_posix_copyfile_USE_STUB \
@@ -1137,6 +1167,8 @@ print("#endif /" "* POSIX_STUBS_TOTLEN == 0 *" "/");
 	len_posix_fchdirat_USE_STUB \
 	len_posix_fchmod_USE_STUB \
 	len_posix_fchmodat_USE_STUB \
+	len_posix_fchown_USE_STUB \
+	len_posix_fchownat_USE_STUB \
 	len_posix_fcopyfile_USE_STUB \
 	len_posix_fdatasync_USE_STUB \
 	len_posix_flink_USE_STUB \
@@ -1152,6 +1184,7 @@ print("#endif /" "* POSIX_STUBS_TOTLEN == 0 *" "/");
 	len_posix_getpid_USE_STUB \
 	len_posix_isatty_USE_STUB \
 	len_posix_lchmod_USE_STUB \
+	len_posix_lchown_USE_STUB \
 	len_posix_lcopyfile_USE_STUB \
 	len_posix_link_USE_STUB \
 	len_posix_linkat_USE_STUB \
@@ -1251,6 +1284,7 @@ PRIVATE struct {
 		str_posix_access_USE_STUB
 		str_posix_chdir_USE_STUB
 		str_posix_chmod_USE_STUB
+		str_posix_chown_USE_STUB
 		str_posix_clearenv_USE_STUB
 		str_posix_close_USE_STUB
 		str_posix_copyfile_USE_STUB
@@ -1267,6 +1301,8 @@ PRIVATE struct {
 		str_posix_fchdirat_USE_STUB
 		str_posix_fchmod_USE_STUB
 		str_posix_fchmodat_USE_STUB
+		str_posix_fchown_USE_STUB
+		str_posix_fchownat_USE_STUB
 		str_posix_fcopyfile_USE_STUB
 		str_posix_fdatasync_USE_STUB
 		str_posix_flink_USE_STUB
@@ -1282,6 +1318,7 @@ PRIVATE struct {
 		str_posix_getpid_USE_STUB
 		str_posix_isatty_USE_STUB
 		str_posix_lchmod_USE_STUB
+		str_posix_lchown_USE_STUB
 		str_posix_lcopyfile_USE_STUB
 		str_posix_link_USE_STUB
 		str_posix_linkat_USE_STUB
@@ -1471,13 +1508,6 @@ PRIVATE WUNUSED DREF DeeObject *DCALL pst_ctor(void) {
 #define PosixStubsList_Singleton Dee_EmptySet
 #endif /* POSIX_STUBS_TOTLEN == 0 */
 
-
-/* TODO: GET RID OF THIS DEPENDENCY! */
-PRIVATE char const *import_table[] = {
-	/* NOTE: Indices in this table must match those used by `*_MODULE' macros! */
-	"fs", /* #define FS_MODULE   DEX.d_imports[0] */
-	NULL
-};
 
 #ifdef __INTELLISENSE__
 #define D(...) /* nothing */
@@ -2318,6 +2348,40 @@ PRIVATE struct dex_symbol symbols[] = {
 	D(POSIX_FCHMODAT_DEF_DOC("@param atflags Set of $0, ?GAT_SYMLINK_NOFOLLOW, ?GAT_EMPTY_PATH\n"
 	                         "Combination of ?Glchmod, ?Glchmod, and ?Gfchmod, changing permissions of @dfd:@path"))
 
+	/* chown(2) */
+	D(POSIX_CHOWN_DEF_DOC("@interrupt\n"
+	                      "@throw FileNotFound The given @path could not be found\n"
+	                      "@throw NoDirectory A part of the given @path is not a directory\n"
+	                      "@throw FileAccessError The current user does not have permissions "
+	                      /*                  */ "to change the ownership of the given file @path\n"
+	                      "@throw ReadOnlyFile The filesystem or device hosting the file found under "
+	                      /*               */ "@path is in read-only operations mode, preventing the "
+	                      /*               */ "file's ownership from being changed\n"
+	                      "@throw ValueError The given @user or @group could not be found\n"
+	                      "@throw SystemError Failed to change ownership for some reason\n"
+	                      "@param uid The new user-id for the file, or !N to leave unchanged\n"
+	                      "@param gid The new group-id for the file, or !N to leave unchanged\n"
+	                      "Change the ownership of a given @path"))
+	D(POSIX_LCHOWN_DEF_DOC("@interrupt\n"
+	                       "@throw FileNotFound The given @path could not be found\n"
+	                       "@throw NoDirectory A part of the given @path is not a directory\n"
+	                       "@throw FileAccessError The current user does not have permissions "
+	                       /*                  */ "to change the ownership of the given file @path\n"
+	                       "@throw ReadOnlyFile The filesystem or device hosting the file found under "
+	                       /*               */ "@path is in read-only operations mode, preventing the "
+	                       /*               */ "file's ownership from being changed\n"
+	                       "@throw ValueError The given @user or @group could not be found\n"
+	                       "@throw SystemError Failed to change ownership for some reason\n"
+	                       "@param uid The new user-id for the file, or !N to leave unchanged\n"
+	                       "@param gid The new group-id for the file, or !N to leave unchanged\n"
+	                       "Change the ownership of a given @path\n"
+	                       "If @path refers to a symbolic link, change the ownership "
+	                       /**/ "of that link, rather than those of the pointed-to file"))
+	D(POSIX_FCHOWN_DEF_DOC("@throw FileClosed The given file @fd was closed\n"
+	                       "Same as ?Glchown, but change ownership of @fd"))
+	D(POSIX_FCHOWNAT_DEF_DOC("@param atflags Set of $0, ?GAT_SYMLINK_NOFOLLOW, ?GAT_EMPTY_PATH\n"
+	                         "Combination of ?Glchown, ?Glchown, and ?Gfchown, changing ownership of @dfd:@path"))
+
 	/* copyfile */
 	D(POSIX_FCOPYFILE_DEF_DOC("@param flags Set of $0, ?GRENAME_NOREPLACE\n"
 	                          "@param progress Invoked every @bufsize bytes with an instance of ?GCopyFileProgress\n"
@@ -2339,19 +2403,6 @@ PRIVATE struct dex_symbol symbols[] = {
 	                           "Copy all data from @olddirfd:@oldpath to @newdirfd:@newpath"))
 	D({ "CopyFileProgress", (DeeObject *)&DeeCopyFileProgress_Type, MODSYM_FNORMAL },)
 
-	/* Forward-aliases to `libfs' */
-#define DEFINE_LIBFS_ALIAS_S_ALT(altname, name, proto)                            \
-	D({ altname,                                                                  \
-	    (DeeObject *)&libposix_getfs_##name, MODSYM_FPROPERTY | MODSYM_FREADONLY, \
-	    DOC(proto "Alias for ?Efs:" #name " that has yet to be ported to posix") }, )
-#define DEFINE_LIBFS_ALIAS_S(name, proto) \
-	DEFINE_LIBFS_ALIAS_S_ALT(DeeString_STR(&libposix_libfs_name_##name), name, proto)
-	DEFINE_LIBFS_ALIAS_S(chown, "(path:?Dstring,user:?X3?Efs:User?Dstring?Dint,group:?X3?Efs:Group?Dstring?Dint)\n")
-	DEFINE_LIBFS_ALIAS_S(lchown, "(path:?Dstring,user:?X3?Efs:User?Dstring?Dint,group:?X3?Efs:Group?Dstring?Dint)\n")
-	DEFINE_LIBFS_ALIAS_S_ALT("fchown", chown, "(fp:?DFile,user:?X3?Efs:User?Dstring?Dint,group:?X3?Efs:Group?Dstring?Dint)\n"
-	                                          "(fd:?Dint,user:?X3?Efs:User?Dstring?Dint,group:?X3?Efs:Group?Dstring?Dint)\n")
-#undef DEFINE_LIBFS_ALIAS_S
-#undef DEFINE_LIBFS_ALIAS_S_ALT
 
 	/************************************************************************/
 	/* Application exit control                                             */
@@ -2508,7 +2559,7 @@ PUBLIC struct dex DEX = {
 #else /* HAVE_posix_dex_fini */
 	/* .d_fini         = */ NULL,
 #endif /* !HAVE_posix_dex_fini */
-	/* .d_import_names = */ { import_table }
+	/* .d_import_names = */ { NULL }
 };
 
 DECL_END

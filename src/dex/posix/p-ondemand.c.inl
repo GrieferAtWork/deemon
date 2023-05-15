@@ -34,8 +34,9 @@
 #define NEED_posix_chmod_parsemode
 #define NEED_posix_stat_getmode
 #define NEED_posix_lstat_getmode
-#define NEED_posix_fstat_getmode
 #define NEED_posix_xstat_getmode
+#define NEED_posix_chown_unix_parseuid
+#define NEED_posix_chown_unix_parsegid
 #define NEED_err_unix_chdir
 #define NEED_err_unix_remove
 #define NEED_err_unix_unlink
@@ -55,6 +56,9 @@
 #define NEED_err_unix_chmod
 #define NEED_err_unix_lchmod
 #define NEED_err_unix_fchmod
+#define NEED_err_unix_chown
+#define NEED_err_unix_lchown
+#define NEED_err_unix_fchown
 #define NEED_err_unix_remove_unsupported
 #define NEED_err_unix_unlink_unsupported
 #define NEED_err_nt_unlink_unsupported
@@ -110,6 +114,8 @@
 #define NEED_err_unix_path_cross_dev2
 #define NEED_err_nt_path_cross_dev2
 #define NEED_err_unix_file_closed
+#define NEED_err_unix_chmod_no_access
+#define NEED_err_unix_chown_no_access
 #define NEED_err_unix_ftruncate_fbig
 #define NEED_err_unix_truncate_fbig
 #define NEED_err_unix_ftruncate_isdir
@@ -501,41 +507,6 @@ err:
 }
 #endif /* NEED_posix_lchmod_getmode */
 
-#ifdef NEED_posix_fchmod_getmode
-#undef NEED_posix_fchmod_getmode
-INTERN WUNUSED NONNULL((2)) unsigned int DCALL
-posix_fchmod_getmode(int fd, DeeObject *__restrict mode) {
-	unsigned int result;
-	if (DeeString_Check(mode)) {
-		char const *mode_str;
-		mode_str = DeeString_AsUtf8(mode);
-		if unlikely(!mode_str)
-			goto err;
-		result = posix_chmod_parsemode(mode_str, (unsigned int)-1);
-#define NEED_posix_chmod_parsemode
-		if unlikely(result == (unsigned int)-1)
-			goto err;
-		if (result == (unsigned int)-2) {
-			result = posix_fstat_getmode(fd);
-#define NEED_posix_fstat_getmode
-			if unlikely(result == (unsigned int)-1)
-				goto err;
-			result = posix_chmod_parsemode(mode_str, result);
-#define NEED_posix_chmod_parsemode
-			if unlikely(result == (unsigned int)-1)
-				goto err;
-		}
-	} else {
-		if (DeeObject_AsUInt(mode, &result))
-			goto err;
-		result &= 07777;
-	}
-	return result;
-err:
-	return (unsigned int)-1;
-}
-#endif /* NEED_posix_fchmod_getmode */
-
 
 /* Parse a chmod(1)-style mode-string
  * @return: * : The new file-mode
@@ -702,24 +673,6 @@ posix_lstat_getmode(DeeObject *__restrict path) {
 }
 #endif /* NEED_posix_lstat_getmode */
 
-#ifdef NEED_posix_fstat_getmode
-#undef NEED_posix_fstat_getmode
-INTERN WUNUSED unsigned int DCALL
-posix_fstat_getmode(int fd) {
-	unsigned int result;
-	DREF DeeObject *fd_int;
-	fd_int = DeeInt_NewInt(fd);
-	if unlikely(!fd_int)
-		goto err;
-	result = posix_xstat_getmode(fd_int, DEE_STAT_F_NORMAL);
-#define NEED_posix_xstat_getmode
-	Dee_Decref(fd_int);
-	return result;
-err:
-	return (unsigned int)-1;
-}
-#endif /* NEED_posix_fstat_getmode */
-
 #ifdef NEED_posix_xstat_getmode
 #undef NEED_posix_xstat_getmode
 INTERN WUNUSED NONNULL((1)) unsigned int DCALL
@@ -755,6 +708,43 @@ err:
 #endif /* !posix_stat_get_mode_IS_STUB */
 }
 #endif /* NEED_posix_xstat_getmode */
+
+/* Parse a UID/GID from a given deemon object (with can either be an integer, or a string)
+ * @return: 0 : Success
+ * @return: -1: Error */
+#ifdef NEED_posix_chown_unix_parseuid
+#undef NEED_posix_chown_unix_parseuid
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
+posix_chown_unix_parseuid(DeeObject *__restrict uid,
+                          uid_t *__restrict p_result) {
+	if (DeeNone_Check(uid)) {
+		/* Keep unchanged */
+		*p_result = (uid_t)-1;
+		return 0;
+	}
+	if (DeeString_Check(uid)) {
+		/* TODO: getpwnam() */
+	}
+	return DeeObject_AsUIntX(uid, p_result);
+}
+#endif /* NEED_posix_chown_unix_parseuid */
+
+#ifdef NEED_posix_chown_unix_parsegid
+#undef NEED_posix_chown_unix_parsegid
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
+posix_chown_unix_parsegid(DeeObject *__restrict gid,
+                          gid_t *__restrict p_result) {
+	if (DeeNone_Check(gid)) {
+		/* Keep unchanged */
+		*p_result = (gid_t)-1;
+		return 0;
+	}
+	if (DeeString_Check(gid)) {
+		/* TODO: getgrnam() */
+	}
+	return DeeObject_AsUIntX(gid, p_result);
+}
+#endif /* NEED_posix_chown_unix_parsegid */
 
 
 
@@ -1464,8 +1454,8 @@ err_unix_truncate(int errno_value, DeeObject *path, DeeObject *length) {
 
 #ifdef NEED_err_unix_ftruncate
 #undef NEED_err_unix_ftruncate
-INTERN ATTR_COLD NONNULL((3)) int DCALL
-err_unix_ftruncate(int errno_value, int fd, DeeObject *length) {
+INTERN ATTR_COLD NONNULL((2, 3)) int DCALL
+err_unix_ftruncate(int errno_value, DeeObject *fd, DeeObject *length) {
 #if defined(EFBIG) || defined(EINVAL)
 	DeeSystem_IF_E2(errno_value, EFBIG, EINVAL, {
 		return err_unix_ftruncate_fbig(errno_value, fd, length);
@@ -1489,7 +1479,7 @@ err_unix_ftruncate(int errno_value, int fd, DeeObject *length) {
 #define NEED_err_unix_file_closed
 #endif /* EBADF */
 	return DeeUnixSystem_ThrowErrorf(&DeeError_SystemError, errno_value,
-	                                 "Failed to truncate fd %d to length %r",
+	                                 "Failed to truncate fd %r to length %r",
 	                                 fd, length);
 }
 #endif /* NEED_err_unix_ftruncate */
@@ -1498,12 +1488,16 @@ err_unix_ftruncate(int errno_value, int fd, DeeObject *length) {
 #undef NEED_err_unix_chmod
 INTERN ATTR_COLD NONNULL((2)) int DCALL
 err_unix_chmod(int errno_value, DeeObject *path, unsigned int mode) {
-#if defined(EACCES) || defined(EPERM)
-	DeeSystem_IF_E2(errno_value, EACCES, EPERM, {
+#ifdef EACCES
+	if (errno_value == EACCES)
 		return err_unix_path_no_access(errno_value, path);
-	});
 #define NEED_err_unix_path_no_access
-#endif /* EACCES || EPERM */
+#endif /* EACCES */
+#ifdef EPERM
+	if (errno_value == EPERM)
+		return err_unix_chmod_no_access(errno_value, path, mode);
+#define NEED_err_unix_chmod_no_access
+#endif /* EPERM */
 #ifdef ENOENT
 	if (errno_value == ENOENT)
 		return err_unix_path_not_found(errno_value, path);
@@ -1529,12 +1523,16 @@ err_unix_chmod(int errno_value, DeeObject *path, unsigned int mode) {
 #undef NEED_err_unix_lchmod
 INTERN ATTR_COLD NONNULL((2)) int DCALL
 err_unix_lchmod(int errno_value, DeeObject *path, unsigned int mode) {
-#if defined(EACCES) || defined(EPERM)
-	DeeSystem_IF_E2(errno_value, EACCES, EPERM, {
+#ifdef EACCES
+	if (errno_value == EACCES)
 		return err_unix_path_no_access(errno_value, path);
-	});
 #define NEED_err_unix_path_no_access
-#endif /* EACCES || EPERM */
+#endif /* EACCES */
+#ifdef EPERM
+	if (errno_value == EPERM)
+		return err_unix_chmod_no_access(errno_value, path, mode);
+#define NEED_err_unix_chmod_no_access
+#endif /* EPERM */
 #ifdef ENOENT
 	if (errno_value == ENOENT)
 		return err_unix_path_not_found(errno_value, path);
@@ -1559,17 +1557,112 @@ err_unix_lchmod(int errno_value, DeeObject *path, unsigned int mode) {
 #ifdef NEED_err_unix_fchmod
 #undef NEED_err_unix_fchmod
 INTERN ATTR_COLD int DCALL
-err_unix_fchmod(int errno_value, int fd, unsigned int mode) {
+err_unix_fchmod(int errno_value, DeeObject *fd, unsigned int mode) {
+#ifdef EPERM
+	if (errno_value == EPERM)
+		return err_unix_chmod_no_access(errno_value, fd, mode);
+#define NEED_err_unix_chmod_no_access
+#endif /* EPERM */
 #ifdef EBADF
 	if (errno_value == EBADF)
 		return err_unix_file_closed(errno_value, fd);
 #define NEED_err_unix_file_closed
 #endif /* EBADF */
 	return DeeUnixSystem_ThrowErrorf(&DeeError_SystemError, errno_value,
-	                                 "Failed to chmod fd %d to mode %#o",
+	                                 "Failed to chmod fd %r to mode %#o",
 	                                 fd, mode);
 }
 #endif /* NEED_err_unix_fchmod */
+
+#ifdef NEED_err_unix_chown
+#undef NEED_err_unix_chown
+INTERN ATTR_COLD NONNULL((2)) int DCALL
+err_unix_chown(int errno_value, DeeObject *path, uid_t uid, gid_t gid) {
+#ifdef EACCES
+	if (errno_value == EACCES)
+		return err_unix_path_no_access(errno_value, path);
+#define NEED_err_unix_path_no_access
+#endif /* EACCES */
+#ifdef EPERM
+	if (errno_value == EPERM)
+		return err_unix_chown_no_access(errno_value, path, uid, gid);
+#define NEED_err_unix_chown_no_access
+#endif /* EPERM */
+#ifdef ENOENT
+	if (errno_value == ENOENT)
+		return err_unix_path_not_found(errno_value, path);
+#define NEED_err_unix_path_not_found
+#endif /* ENOENT */
+#ifdef ENOTDIR
+	if (errno_value == ENOTDIR)
+		return err_unix_path_not_dir(errno_value, path);
+#define NEED_err_unix_path_not_dir
+#endif /* ENOTDIR */
+#ifdef EROFS
+	if (errno_value == EROFS)
+		return err_unix_path_readonly(errno_value, path);
+#define NEED_err_unix_path_readonly
+#endif /* EROFS */
+	return DeeUnixSystem_ThrowErrorf(&DeeError_SystemError, errno_value,
+	                                 "Failed to chown path %r to uid=%" PRFu32 ", gid=%" PRFu32,
+	                                 path, (uint32_t)uid, (uint32_t)gid);
+}
+#endif /* NEED_err_unix_chown */
+
+#ifdef NEED_err_unix_lchown
+#undef NEED_err_unix_lchown
+INTERN ATTR_COLD NONNULL((2)) int DCALL
+err_unix_lchown(int errno_value, DeeObject *path, uid_t uid, gid_t gid) {
+#ifdef EACCES
+	if (errno_value == EACCES)
+		return err_unix_path_no_access(errno_value, path);
+#define NEED_err_unix_path_no_access
+#endif /* EACCES */
+#ifdef EPERM
+	if (errno_value == EPERM)
+		return err_unix_chown_no_access(errno_value, path, uid, gid);
+#define NEED_err_unix_chown_no_access
+#endif /* EPERM */
+#ifdef ENOENT
+	if (errno_value == ENOENT)
+		return err_unix_path_not_found(errno_value, path);
+#define NEED_err_unix_path_not_found
+#endif /* ENOENT */
+#ifdef ENOTDIR
+	if (errno_value == ENOTDIR)
+		return err_unix_path_not_dir(errno_value, path);
+#define NEED_err_unix_path_not_dir
+#endif /* ENOTDIR */
+#ifdef EROFS
+	if (errno_value == EROFS)
+		return err_unix_path_readonly(errno_value, path);
+#define NEED_err_unix_path_readonly
+#endif /* EROFS */
+	return DeeUnixSystem_ThrowErrorf(&DeeError_SystemError, errno_value,
+	                                 "Failed to lchown path %r to uid=%" PRFu32 ", gid=%" PRFu32,
+	                                 path, (uint32_t)uid, (uint32_t)gid);
+}
+#endif /* NEED_err_unix_lchown */
+
+#ifdef NEED_err_unix_fchown
+#undef NEED_err_unix_fchown
+INTERN ATTR_COLD int DCALL
+err_unix_fchown(int errno_value, DeeObject *fd, uid_t uid, gid_t gid) {
+#ifdef EPERM
+	if (errno_value == EPERM)
+		return err_unix_chown_no_access(errno_value, fd, uid, gid);
+#define NEED_err_unix_chown_no_access
+#endif /* EPERM */
+#ifdef EBADF
+	if (errno_value == EBADF)
+		return err_unix_file_closed(errno_value, fd);
+#define NEED_err_unix_file_closed
+#endif /* EBADF */
+	return DeeUnixSystem_ThrowErrorf(&DeeError_SystemError, errno_value,
+	                                 "Failed to chown fd %r to uid=%" PRFu32 ", gid=%" PRFu32,
+	                                 fd, (uint32_t)uid, (uint32_t)gid);
+}
+#endif /* NEED_err_unix_fchown */
 
 #ifdef NEED_err_unix_remove_unsupported
 #undef NEED_err_unix_remove_unsupported
@@ -2136,12 +2229,12 @@ err_nt_path_not_link(DWORD dwError, DeeObject *__restrict path) {
 
 #ifdef NEED_err_unix_ftruncate_fbig
 #undef NEED_err_unix_ftruncate_fbig
-INTERN ATTR_COLD NONNULL((3)) int DCALL
-err_unix_ftruncate_fbig(int errno_value, int fd, DeeObject *length) {
+INTERN ATTR_COLD NONNULL((2, 3)) int DCALL
+err_unix_ftruncate_fbig(int errno_value, DeeObject *fd, DeeObject *length) {
 	int result = -1;
 	DREF DeeObject *fd_path;
-	fd_path = posix_fd_makepath_fd(fd);
-#define NEED_posix_fd_makepath_fd
+	fd_path = posix_fd_makepath(fd);
+#define NEED_posix_fd_makepath
 	if likely(fd_path) {
 		result = err_unix_truncate_fbig(errno_value, fd_path, length);
 #define NEED_err_unix_truncate_fbig
@@ -2163,12 +2256,12 @@ err_unix_truncate_fbig(int errno_value, DeeObject *path, DeeObject *length) {
 
 #ifdef NEED_err_unix_ftruncate_isdir
 #undef NEED_err_unix_ftruncate_isdir
-INTERN ATTR_COLD int DCALL
-err_unix_ftruncate_isdir(int errno_value, int fd) {
+INTERN ATTR_COLD NONNULL((2)) int DCALL
+err_unix_ftruncate_isdir(int errno_value, DeeObject *__restrict fd) {
 	int result = -1;
 	DREF DeeObject *fd_path;
-	fd_path = posix_fd_makepath_fd(fd);
-#define NEED_posix_fd_makepath_fd
+	fd_path = posix_fd_makepath(fd);
+#define NEED_posix_fd_makepath
 	if likely(fd_path) {
 		result = err_unix_truncate_isdir(errno_value, fd_path);
 #define NEED_err_unix_truncate_isdir
@@ -2190,12 +2283,12 @@ err_unix_truncate_isdir(int errno_value, DeeObject *__restrict path) {
 
 #ifdef NEED_err_unix_ftruncate_txtbusy
 #undef NEED_err_unix_ftruncate_txtbusy
-INTERN ATTR_COLD int DCALL
-err_unix_ftruncate_txtbusy(int errno_value, int fd) {
+INTERN ATTR_COLD NONNULL((2)) int DCALL
+err_unix_ftruncate_txtbusy(int errno_value, DeeObject *__restrict fd) {
 	int result = -1;
 	DREF DeeObject *fd_path;
-	fd_path = posix_fd_makepath_fd(fd);
-#define NEED_posix_fd_makepath_fd
+	fd_path = posix_fd_makepath(fd);
+#define NEED_posix_fd_makepath
 	if likely(fd_path) {
 		result = err_unix_truncate_txtbusy(errno_value, fd_path);
 #define NEED_err_unix_truncate_txtbusy
@@ -2217,12 +2310,34 @@ err_unix_truncate_txtbusy(int errno_value, DeeObject *__restrict path) {
 
 #ifdef NEED_err_unix_file_closed
 #undef NEED_err_unix_file_closed
-INTERN ATTR_COLD int DCALL
-err_unix_file_closed(int errno_value, int fd) {
+INTERN ATTR_COLD NONNULL((2)) int DCALL
+err_unix_file_closed(int errno_value, DeeObject *__restrict fd) {
 	return DeeUnixSystem_ThrowErrorf(&DeeError_FileClosed, errno_value,
-	                                 "Invalid fd %d", fd);
+	                                 "Invalid fd %r", fd);
 }
 #endif /* NEED_err_unix_file_closed */
+
+#ifdef NEED_err_unix_chmod_no_access
+#undef NEED_err_unix_chmod_no_access
+INTERN ATTR_COLD NONNULL((2)) int DCALL
+err_unix_chmod_no_access(int errno_value, DeeObject *__restrict path, unsigned int mode) {
+	return DeeUnixSystem_ThrowErrorf(&DeeError_FileAccessError, errno_value,
+	                                 "Not allowed to change file-mode of %r to %#x",
+	                                 path, mode);
+}
+#endif /* NEED_err_unix_chmod_no_access */
+
+#ifdef NEED_err_unix_chown_no_access
+#undef NEED_err_unix_chown_no_access
+INTERN ATTR_COLD NONNULL((2)) int DCALL
+err_unix_chown_no_access(int errno_value, DeeObject *__restrict path, uid_t uid, gid_t gid) {
+	return DeeUnixSystem_ThrowErrorf(&DeeError_FileAccessError, errno_value,
+	                                 "Not allowed to change owner/group of %r to uid=%" PRFu32 ", gid=%" PRFu32,
+	                                 path, (uint32_t)uid, (uint32_t)gid);
+}
+#endif /* NEED_err_unix_chown_no_access */
+
+
 
 /* Missing stat information errors. */
 #ifdef NEED_err_stat_no_mode_info
@@ -3684,17 +3799,17 @@ err:
 
 #ifdef NEED_posix_fd_makepath_fd
 #undef NEED_posix_fd_makepath_fd
-/* Construct a path that refers to the file described by `fd' */
+/* Construct a path that refers to the file described by `os_fd' */
 INTERN WUNUSED DREF DeeObject *DCALL
-posix_fd_makepath_fd(int fd) {
+posix_fd_makepath_fd(int os_fd) {
 #ifndef CONFIG_HAVE_AT_FDCWD
-	if (fd == AT_FDCWD)
+	if (os_fd == AT_FDCWD)
 		return posix_getcwd_f_impl();
 #endif /* !CONFIG_HAVE_AT_FDCWD */
 #ifdef CONFIG_HAVE_PROCFS
-	return DeeString_Newf("/proc/self/fd/%d", fd);
+	return DeeString_Newf("/proc/self/fd/%d", os_fd);
 #else /* CONFIG_HAVE_PROCFS */
-	return DeeSystem_GetFilenameOfFD(fd);
+	return DeeSystem_GetFilenameOfFD(os_fd);
 #endif /* !CONFIG_HAVE_PROCFS */
 }
 #endif /* NEED_posix_fd_makepath_fd */

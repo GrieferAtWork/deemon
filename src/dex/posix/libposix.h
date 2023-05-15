@@ -71,10 +71,6 @@
 
 DECL_BEGIN
 
-/* Imported module access. */
-#define FS_MODULE DEX.d_imports[0]
-
-
 #ifdef EINTR
 #define EINTR_LABEL(again) \
 	again:
@@ -120,15 +116,10 @@ DECL_BEGIN
 		DeeUnixSystem_ThrowErrorf(&DeeError_FileNotFound, error, __VA_ARGS__); \
 		goto err_label;                                                        \
 	});
-#define HANDLE_ENOTDIR(error, err_label, ...)                                         \
-	DeeSystem_IF_E1(error, ENOTDIR, {                                                 \
-		DREF DeeTypeObject *tp;                                                       \
-		tp = (DREF DeeTypeObject *)DeeObject_GetAttrString(FS_MODULE, "NoDirectory"); \
-		if (tp) {                                                                     \
-			DeeUnixSystem_ThrowErrorf(tp, error, __VA_ARGS__);                        \
-			Dee_Decref(tp);                                                           \
-		}                                                                             \
-		goto err_label;                                                               \
+#define HANDLE_ENOTDIR(error, err_label, ...)                                 \
+	DeeSystem_IF_E1(error, ENOTDIR, {                                         \
+		DeeUnixSystem_ThrowErrorf(&DeeError_NoDirectory, error, __VA_ARGS__); \
+		goto err_label;                                                       \
 	});
 #define HANDLE_ENOENT_ENOTDIR(error, err_label, ...)                           \
 	DeeSystem_IF_E2(error, ENOENT, ENOTDIR, {                                  \
@@ -449,6 +440,30 @@ libposix_get_dfd_filename(int dfd, /*utf-8*/ char const *filename, int atflags);
 #define RENAME_NOREPLACE 0x80000000
 #endif /* !CONFIG_HAVE_RENAME_NOREPLACE */
 
+/* Figure out if the host supports uid_t/gid_t */
+#undef CONFIG_HAVE_uid_t
+#undef CONFIG_HAVE_gid_t
+#if (defined(CONFIG_HAVE_chown) ||   \
+     defined(CONFIG_HAVE__chown) ||  \
+     defined(CONFIG_HAVE_wchown) ||  \
+     defined(CONFIG_HAVE__wchown) || \
+     defined(CONFIG_HAVE_lchown) ||  \
+     defined(CONFIG_HAVE_fchown) ||  \
+     defined(CONFIG_HAVE_fchownat))
+#define CONFIG_HAVE_uid_t
+#define CONFIG_HAVE_gid_t
+#endif /* ... */
+
+#ifndef CONFIG_HAVE_uid_t
+#undef uid_t
+#define uid_t uint32_t
+#endif /* !CONFIG_HAVE_uid_t */
+
+#ifndef CONFIG_HAVE_gid_t
+#undef gid_t
+#define gid_t uint32_t
+#endif /* !CONFIG_HAVE_gid_t */
+
 
 
 /************************************************************************/
@@ -501,8 +516,10 @@ posix_dfd_makepath(DeeObject *dfd, DeeObject *path, unsigned int atflags);
  * @param: fd: Can be a `File', `int', or [nt:`HANDLE'] */
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 posix_fd_makepath(DeeObject *__restrict fd);
+
+/* Construct a path that refers to the file described by `os_fd' */
 INTDEF WUNUSED DREF DeeObject *DCALL
-posix_fd_makepath_fd(int fd);
+posix_fd_makepath_fd(int os_fd);
 
 /* Open a HANDLE/fd-compatible object as a `File' */
 INTDEF WUNUSED NONNULL((1)) /*File*/ DREF DeeObject *DCALL
@@ -524,7 +541,6 @@ posix_copyfile_fileio(/*File*/ DeeObject *src,
  * @return: (unsigned int)-1: An error was thrown. */
 INTDEF WUNUSED NONNULL((1, 2)) unsigned int DCALL posix_chmod_getmode(DeeObject *path, DeeObject *mode);
 INTDEF WUNUSED NONNULL((1, 2)) unsigned int DCALL posix_lchmod_getmode(DeeObject *path, DeeObject *mode);
-INTDEF WUNUSED NONNULL((2)) unsigned int DCALL posix_fchmod_getmode(int fd, DeeObject *__restrict mode);
 
 /* Parse a chmod(1)-style mode-string
  * @return: * : The new file-mode
@@ -537,8 +553,18 @@ posix_chmod_parsemode(char const *__restrict mode_str,
 /* Get the current file-mode for the given argument. */
 INTDEF WUNUSED NONNULL((1)) unsigned int DCALL posix_stat_getmode(DeeObject *__restrict path);
 INTDEF WUNUSED NONNULL((1)) unsigned int DCALL posix_lstat_getmode(DeeObject *__restrict path);
-INTDEF WUNUSED unsigned int DCALL posix_fstat_getmode(int fd);
 INTDEF WUNUSED NONNULL((1)) unsigned int DCALL posix_xstat_getmode(DeeObject *__restrict path_or_fd, unsigned int stat_flags);
+
+/* Parse a UID/GID from a given deemon object (with can either be an integer, or a string)
+ * @return: 0 : Success
+ * @return: -1: Error */
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL
+posix_chown_unix_parseuid(DeeObject *__restrict uid,
+                          uid_t *__restrict p_result);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL
+posix_chown_unix_parsegid(DeeObject *__restrict gid,
+                          gid_t *__restrict p_result);
+
 
 /* Default buffer size for copyfile */
 #ifndef POSIX_COPYFILE_DEFAULT_IO_BUFSIZE
@@ -573,10 +599,13 @@ INTDEF ATTR_COLD NONNULL((2, 3)) int DCALL err_unix_rename(int errno_value, DeeO
 INTDEF ATTR_COLD NONNULL((2, 3)) int DCALL err_unix_link(int errno_value, DeeObject *existing_path, DeeObject *new_path);
 INTDEF ATTR_COLD NONNULL((2, 3)) int DCALL err_unix_symlink(int errno_value, DeeObject *text, DeeObject *path);
 INTDEF ATTR_COLD NONNULL((2, 3)) int DCALL err_unix_truncate(int errno_value, DeeObject *path, DeeObject *length);
-INTDEF ATTR_COLD NONNULL((3)) int DCALL err_unix_ftruncate(int errno_value, int fd, DeeObject *length);
+INTDEF ATTR_COLD NONNULL((2, 3)) int DCALL err_unix_ftruncate(int errno_value, DeeObject *fd, DeeObject *length);
 INTDEF ATTR_COLD NONNULL((2)) int DCALL err_unix_chmod(int errno_value, DeeObject *path, unsigned int mode);
 INTDEF ATTR_COLD NONNULL((2)) int DCALL err_unix_lchmod(int errno_value, DeeObject *path, unsigned int mode);
-INTDEF ATTR_COLD int DCALL err_unix_fchmod(int errno_value, int fd, unsigned int mode);
+INTDEF ATTR_COLD NONNULL((2)) int DCALL err_unix_fchmod(int errno_value, DeeObject *fd, unsigned int mode);
+INTDEF ATTR_COLD NONNULL((2)) int DCALL err_unix_chown(int errno_value, DeeObject *path, uid_t uid, gid_t gid);
+INTDEF ATTR_COLD NONNULL((2)) int DCALL err_unix_lchown(int errno_value, DeeObject *path, uid_t uid, gid_t gid);
+INTDEF ATTR_COLD NONNULL((2)) int DCALL err_unix_fchown(int errno_value, DeeObject *fd, uid_t uid, gid_t gid);
 
 INTDEF ATTR_COLD NONNULL((2)) int DCALL err_unix_remove_unsupported(int errno_value, DeeObject *__restrict path);
 INTDEF ATTR_COLD NONNULL((2)) int DCALL err_unix_unlink_unsupported(int errno_value, DeeObject *__restrict path);
@@ -607,14 +636,16 @@ INTDEF ATTR_COLD NONNULL((2, 3)) int DCALL err_unix_move_to_child(int errno_valu
 INTDEF ATTR_COLD NONNULL((2)) int DCALL err_unix_path_not_empty(int errno_value, DeeObject *__restrict path);
 INTDEF ATTR_COLD NONNULL((2)) int DCALL err_unix_chtime_no_access(int errno_value, DeeObject *__restrict path);
 INTDEF ATTR_COLD NONNULL((2, 3)) int DCALL err_unix_path_cross_dev2(int errno_value, DeeObject *existing_path, DeeObject *new_path);
-INTDEF ATTR_COLD NONNULL((3)) int DCALL err_unix_ftruncate_fbig(int errno_value, int fd, DeeObject *length);
+INTDEF ATTR_COLD NONNULL((2, 3)) int DCALL err_unix_ftruncate_fbig(int errno_value, DeeObject *fd, DeeObject *length);
 INTDEF ATTR_COLD NONNULL((2, 3)) int DCALL err_unix_truncate_fbig(int errno_value, DeeObject *path, DeeObject *length);
-INTDEF ATTR_COLD int DCALL err_unix_ftruncate_isdir(int errno_value, int fd);
+INTDEF ATTR_COLD NONNULL((2)) int DCALL err_unix_ftruncate_isdir(int errno_value, DeeObject *__restrict fd);
 INTDEF ATTR_COLD NONNULL((2)) int DCALL err_unix_truncate_isdir(int errno_value, DeeObject *__restrict path);
-INTDEF ATTR_COLD int DCALL err_unix_ftruncate_txtbusy(int errno_value, int fd);
+INTDEF ATTR_COLD NONNULL((2)) int DCALL err_unix_ftruncate_txtbusy(int errno_value, DeeObject *fd);
 INTDEF ATTR_COLD NONNULL((2)) int DCALL err_unix_truncate_txtbusy(int errno_value, DeeObject *__restrict path);
 INTDEF ATTR_COLD NONNULL((2, 3)) int DCALL err_unix_truncate_failed(int errno_value, DeeObject *path, DeeObject *length);
-INTDEF ATTR_COLD int DCALL err_unix_file_closed(int errno_value, int fd);
+INTDEF ATTR_COLD NONNULL((2)) int DCALL err_unix_file_closed(int errno_value, DeeObject *__restrict fd);
+INTDEF ATTR_COLD NONNULL((2)) int DCALL err_unix_chmod_no_access(int errno_value, DeeObject *__restrict path, unsigned int mode);
+INTDEF ATTR_COLD NONNULL((2)) int DCALL err_unix_chown_no_access(int errno_value, DeeObject *__restrict path, uid_t uid, gid_t gid);
 
 /* Missing stat information errors. */
 INTDEF ATTR_COLD NONNULL((1)) int DCALL err_stat_no_info(char const *__restrict level);

@@ -446,7 +446,7 @@ EINTR_ENOMEM_LABEL(again)
 			error = DeeSystem_GetErrno();
 			EINTR_HANDLE(error, again, err);
 			ENOMEM_HANDLE(error, again, err);
-			err_unix_ftruncate(error, os_fd, length);
+			err_unix_ftruncate(error, fd, length);
 #define NEED_err_unix_ftruncate
 			goto err;
 		}

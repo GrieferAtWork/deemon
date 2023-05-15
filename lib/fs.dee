@@ -104,7 +104,27 @@ function chmod(path_or_fd: File | string | int, mode: string | int) {
 }
 
 global final lchmod = posix.lchmod;
-global final chown = posix.chown;
+
+@@@interrupt
+@@@throw FileNotFound    The given @path_or_fd could not be found
+@@@throw NoDirectory     A part of the given @path_or_fd is not a directory
+@@@throw FileClosed      The given file @path_or_fd was closed
+@@@throw FileAccessError The current user does not have permissions
+@@                       to change the ownership of the given file @path_or_fd
+@@@throw ReadOnlyFile    The file-system or device hosting the file found under
+@@                       @path_or_fd is in read-only operations mode, preventing
+@@                       the file's ownership from being changed
+@@@throw ValueError      The given @user or @group could not be found
+@@@throw SystemError     Failed to change ownership for some reason
+@@Change the ownership of a given @path_or_fd
+function chown(path_or_fd: File | string | int,
+               uid: string | int,
+               gid: string | int) {
+	if (path_or_fd is string)
+		return posix.chown(path_or_fd, uid, gid);
+	return posix.fchown(path_or_fd, uid, gid);
+}
+
 global final lchown = posix.lchown;
 global final mkdir = posix.mkdir;
 global final rmdir = posix.rmdir;
