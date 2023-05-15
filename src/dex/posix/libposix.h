@@ -46,6 +46,7 @@
 
 #ifdef CONFIG_HOST_WINDOWS
 #include <Windows.h>
+#include <aclapi.h>
 #endif /* CONFIG_HOST_WINDOWS */
 
 
@@ -68,6 +69,12 @@
 #define OPT_close(fd) (void)0
 #endif /* !CONFIG_HAVE_close */
 
+
+/* Config option: uid_t/gid_t are NT SIDs encoded as integer via `DeeInt_FromBytes()' */
+#undef CONFIG_UGID_IS_NT_SID
+#ifdef CONFIG_HOST_WINDOWS
+#define CONFIG_UGID_IS_NT_SID
+#endif /* CONFIG_HOST_WINDOWS */
 
 DECL_BEGIN
 
@@ -575,6 +582,8 @@ posix_chown_unix_parsegid(DeeObject *__restrict gid,
 #endif /* !POSIX_COPYFILE_DEFAULT_SENDFILE_BUFSIZE */
 
 
+/* DTO that is passed to the progress-callback of `copyfile()'
+ * The type of this object is exposed as `posix.CopyFileProgress' */
 typedef struct {
 	OBJECT_HEAD
 	DREF DeeObject *cfp_srcfile; /* [1..1][const] Source file */
@@ -701,6 +710,36 @@ INTDEF ATTR_COLD NONNULL((2, 3)) int DCALL err_nt_path_cross_dev2(DWORD dwError,
 INTDEF ATTR_COLD NONNULL((2)) int DCALL err_nt_path_not_link(DWORD dwError, DeeObject *__restrict path);
 
 
+#ifdef CONFIG_UGID_IS_NT_SID
+typedef struct {
+	BYTE Revision;
+	BYTE SubAuthorityCount;
+	SID_IDENTIFIER_AUTHORITY IdentifierAuthority;
+	DWORD SubAuthority[256];
+} NT_SID;
+#define NT_SID_SIZEOF(SubAuthorityCount) (offsetof(NT_SID, SubAuthority) + (SubAuthorityCount) * sizeof(DWORD))
+#define NT_SID_GET_SIZEOF(self)          NT_SID_SIZEOF((self)->SubAuthorityCount)
+
+/* Encode an SID as a deemon integer */
+#define nt_EncodeSid(sid) \
+	DeeInt_FromBytes(sid, NT_SID_GET_SIZEOF(sid), true, false)
+
+/* Decode a deemon integer into an SID
+ * @return: * :   Success (The caller must `Dee_Free()' the returned pointed)
+ * @return: NULL: An error was thrown */
+INTDEF WUNUSED NONNULL((1)) NT_SID *DCALL
+nt_DecodeSid(/*Int*/ DeeObject *__restrict sid);
+
+/* Return an integer for the owner/group SID of a given handle.
+ * @return: * :   Integer-representation of SID
+ * @return: NULL: Error */
+INTDEF WUNUSED DREF DeeObject *DCALL
+nt_GetSecurityInfoOwnerSid(HANDLE Handle, SE_OBJECT_TYPE ObjectType);
+INTDEF WUNUSED DREF DeeObject *DCALL
+nt_GetSecurityInfoGroupSid(HANDLE Handle, SE_OBJECT_TYPE ObjectType);
+#endif /* CONFIG_UGID_IS_NT_SID */
+
+
 INTDEF WUNUSED DREF DeeObject *DCALL nt_GetTempPath(void);
 INTDEF WUNUSED DREF DeeObject *DCALL nt_GetComputerName(void);
 
@@ -801,6 +840,23 @@ nt_CreateSymbolicLink(DeeObject *lpSymlinkFileName,
 INTDEF NONNULL((1, 2)) int DCALL
 nt_CreateSymbolicLinkAuto(DeeObject *lpSymlinkFileName,
                           DeeObject *lpTargetFileName);
+
+
+/* Dynamically loaded functions from `ADVAPI32.dll'
+ *
+ * We do this because we probably won't actually need these functions, and by
+ * loading them lazily, the import of `posix' won't be slowed down by a the
+ * dependency on this library. */
+typedef BOOL (WINAPI *LPOPENPROCESSTOKEN)(HANDLE ProcessHandle, DWORD DesiredAccess, PHANDLE TokenHandle);
+typedef BOOL (WINAPI *LPLOOKUPPRIVILEGEVALUEW)(LPCWSTR lpSystemName, LPCWSTR lpName, PLUID lpLuid);
+typedef BOOL (WINAPI *LPADJUSTTOKENPRIVILEGES)(HANDLE TokenHandle, BOOL DisableAllPrivileges, PTOKEN_PRIVILEGES NewState, DWORD BufferLength, PTOKEN_PRIVILEGES PreviousState, PDWORD ReturnLength);
+typedef DWORD (WINAPI *LPGETSECURITYINFO)(HANDLE Handle, SE_OBJECT_TYPE ObjectType, SECURITY_INFORMATION SecurityInfo, PSID *ppsidOwner, PSID *ppsidGroup, PACL *ppDacl, PACL *ppSacl, PSECURITY_DESCRIPTOR *ppSecurityDescriptor);
+INTDEF LPOPENPROCESSTOKEN pdyn_OpenProcessToken;
+INTDEF LPLOOKUPPRIVILEGEVALUEW pdyn_LookupPrivilegeValueW;
+INTDEF LPADJUSTTOKENPRIVILEGES pdyn_AdjustTokenPrivileges;
+INTDEF LPGETSECURITYINFO pdyn_GetSecurityInfo;
+INTDEF void DCALL init_ADVAPI32_dll(void);
+
 
 #endif /* CONFIG_HOST_WINDOWS */
 /************************************************************************/

@@ -518,7 +518,13 @@ struct dir_iterator_object {
 #endif /* ... */
 
 #ifdef posix_opendir_NEED_STAT_EXTENSION
+#ifdef DIR_struct_stat_IS_BY_HANDLE_FILE_INFORMATION
+	HANDLE                odi_stHandle; /* [lock(odi_lock)] Handle used to fill `odi_st', or `INVALID_HANDLE_VALUE'. */
+#define DeeDirIterator_IsStatValid(self) ((self)->odi_stHandle != INVALID_HANDLE_VALUE)
+#else /* DIR_struct_stat_IS_BY_HANDLE_FILE_INFORMATION */
 	bool                  odi_stvalid;  /* [lock(odi_lock)] Set to true if `odi_st' has been loaded. */
+#define DeeDirIterator_IsStatValid(self) ((self)->odi_stvalid)
+#endif /* !DIR_struct_stat_IS_BY_HANDLE_FILE_INFORMATION */
 	DIR_struct_stat       odi_st;       /* [lock(odi_lock)] Additional stat information (lazily loaded). */
 #endif /* posix_opendir_NEED_STAT_EXTENSION */
 };
@@ -818,7 +824,7 @@ directory_open(DeeDirIteratorObject *__restrict self,
 				(void)close(fd); /* Inherited! */
 #endif /* CONFIG_HAVE_close */
 			} else {
-				CloseHandle(hPath); /* Inherited! */
+				(void)CloseHandle(hPath); /* Inherited! */
 			}
 		}
 		return result;
@@ -909,14 +915,14 @@ again_skipdots:
 						                        path);
 					}
 					DBG_ALIGNMENT_DISABLE();
-					FindClose(self->odi_hnd);
+					(void)FindClose(self->odi_hnd);
 					DBG_ALIGNMENT_ENABLE();
 					goto err;
 				}
 				hnd          = self->odi_hnd;
 				self->odi_hnd = INVALID_HANDLE_VALUE;
 				DBG_ALIGNMENT_DISABLE();
-				FindClose(hnd);
+				(void)FindClose(hnd);
 				DBG_ALIGNMENT_ENABLE();
 				/* Directory only contains "." and ".." */
 				self->odi_first = false;
@@ -1001,7 +1007,11 @@ EINTR_LABEL(again)
 	self->odi_path     = path;
 	self->odi_pathstr  = NULL;
 #ifdef posix_opendir_NEED_STAT_EXTENSION
+#ifdef DIR_struct_stat_IS_BY_HANDLE_FILE_INFORMATION
+	self->odi_stHandle = INVALID_HANDLE_VALUE;
+#else /* DIR_struct_stat_IS_BY_HANDLE_FILE_INFORMATION */
 	self->odi_stvalid = false;
+#endif /* !DIR_struct_stat_IS_BY_HANDLE_FILE_INFORMATION */
 #endif /* posix_opendir_NEED_STAT_EXTENSION */
 	Dee_Incref(path);
 	return 0;
@@ -1043,7 +1053,7 @@ again:
 			self->odi_hnd = INVALID_HANDLE_VALUE;
 			DeeDirIterator_LockEndWrite(self);
 			DBG_ALIGNMENT_DISABLE();
-			FindClose(hnd);
+			(void)FindClose(hnd);
 			DBG_ALIGNMENT_ENABLE();
 			return (DREF DeeDirIteratorObject *)ITER_DONE;
 		}
@@ -1058,9 +1068,24 @@ again:
 			goto again; /* Skip this one... */
 	}
 #ifdef posix_opendir_NEED_STAT_EXTENSION
+#ifdef DIR_struct_stat_IS_BY_HANDLE_FILE_INFORMATION
+	if (self->odi_stHandle != INVALID_HANDLE_VALUE) {
+		HANDLE hStHandle   = self->odi_stHandle;
+		self->odi_stHandle = INVALID_HANDLE_VALUE;
+		DeeDirIterator_LockEndWrite(self);
+		DBG_ALIGNMENT_DISABLE();
+		(void)CloseHandle(hStHandle);
+		DBG_ALIGNMENT_ENABLE();
+	} else {
+		DeeDirIterator_LockEndWrite(self);
+	}
+#else /* DIR_struct_stat_IS_BY_HANDLE_FILE_INFORMATION */
 	self->odi_stvalid = false;
-#endif /* posix_opendir_NEED_STAT_EXTENSION */
 	DeeDirIterator_LockEndWrite(self);
+#endif /* !DIR_struct_stat_IS_BY_HANDLE_FILE_INFORMATION */
+#else /* posix_opendir_NEED_STAT_EXTENSION */
+	DeeDirIterator_LockEndWrite(self);
+#endif /* !posix_opendir_NEED_STAT_EXTENSION */
 	Dee_Incref(self);
 	return self;
 #elif defined(posix_opendir_USE_opendir)
@@ -1089,9 +1114,24 @@ err:
 			goto again; /* Skip this one... */
 	}
 #ifdef posix_opendir_NEED_STAT_EXTENSION
+#ifdef DIR_struct_stat_IS_BY_HANDLE_FILE_INFORMATION
+	if (self->odi_stHandle != INVALID_HANDLE_VALUE) {
+		HANDLE hStHandle   = self->odi_stHandle;
+		self->odi_stHandle = INVALID_HANDLE_VALUE;
+		DeeDirIterator_LockEndWrite(self);
+		DBG_ALIGNMENT_DISABLE();
+		(void)CloseHandle(hStHandle);
+		DBG_ALIGNMENT_ENABLE();
+	} else {
+		DeeDirIterator_LockEndWrite(self);
+	}
+#else /* DIR_struct_stat_IS_BY_HANDLE_FILE_INFORMATION */
 	self->odi_stvalid = false;
-#endif /* posix_opendir_NEED_STAT_EXTENSION */
 	DeeDirIterator_LockEndWrite(self);
+#endif /* !DIR_struct_stat_IS_BY_HANDLE_FILE_INFORMATION */
+#else /* posix_opendir_NEED_STAT_EXTENSION */
+	DeeDirIterator_LockEndWrite(self);
+#endif /* !posix_opendir_NEED_STAT_EXTENSION */
 	Dee_Incref(self);
 	return self;
 #else /* ... */
@@ -1102,15 +1142,24 @@ err:
 
 PRIVATE NONNULL((1)) void DCALL
 diriter_fini(DeeDirIteratorObject *__restrict self) {
+#ifdef posix_opendir_NEED_STAT_EXTENSION
+#ifdef DIR_struct_stat_IS_BY_HANDLE_FILE_INFORMATION
+	if (self->odi_stHandle != INVALID_HANDLE_VALUE) {
+		DBG_ALIGNMENT_DISABLE();
+		(void)CloseHandle(self->odi_stHandle);
+		DBG_ALIGNMENT_ENABLE();
+	}
+#endif /* DIR_struct_stat_IS_BY_HANDLE_FILE_INFORMATION */
+#endif /* posix_opendir_NEED_STAT_EXTENSION */
 #ifdef posix_opendir_USE_FindFirstFileExW
 	if (self->odi_hnd != INVALID_HANDLE_VALUE) {
 		DBG_ALIGNMENT_DISABLE();
-		FindClose(self->odi_hnd);
+		(void)FindClose(self->odi_hnd);
 		DBG_ALIGNMENT_ENABLE();
 	}
 #elif defined(posix_opendir_USE_opendir)
 	DBG_ALIGNMENT_DISABLE();
-	closedir(self->odi_dir);
+	(void)closedir(self->odi_dir);
 	DBG_ALIGNMENT_ENABLE();
 #endif /* ... */
 	Dee_XDecref(self->odi_pathstr);
@@ -1262,7 +1311,7 @@ diriter_get_d_name(DeeDirIteratorObject *__restrict self) {
 #ifdef posix_opendir_NEED_STAT_EXTENSION
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 diriter_loadstat(DeeDirIteratorObject *__restrict self) {
-	if (!self->odi_stvalid) {
+	if (!DeeDirIterator_IsStatValid(self)) {
 #ifdef DIR_struct_stat_IS_BY_HANDLE_FILE_INFORMATION
 		DREF DeeStringObject *fullname;
 		HANDLE hFile;
@@ -1282,13 +1331,20 @@ diriter_loadstat(DeeDirIteratorObject *__restrict self) {
 
 		/* Actually retrieve stat information. */
 		if (GetFileInformationByHandle(hFile, &self->odi_st)) {
-			self->odi_stvalid = true;
-			CloseHandle(hFile);
+			/* Don't leak handles if another thread allocated another handle in the mean time. */
+			DeeDirIterator_LockWrite(self);
+			if unlikely(self->odi_stHandle != INVALID_HANDLE_VALUE) {
+				DeeDirIterator_LockEndWrite(self);
+				(void)CloseHandle(hFile);
+			} else {
+				self->odi_stHandle = hFile; /* Inherit handle. */
+				DeeDirIterator_LockEndWrite(self);
+			}
 			Dee_Decref(fullname);
 			return 0;
 		}
 		DeeNTSystem_ThrowLastErrorf(NULL, "Failed to stat %r in %k", fullname, self);
-		CloseHandle(hFile);
+		(void)CloseHandle(hFile);
 err_fullname:
 		Dee_Decref(fullname);
 err:
@@ -1586,15 +1642,13 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 diriter_get_d_uid(DeeDirIteratorObject *__restrict self) {
-#ifdef posix_opendir_USE_FindFirstFileExW
-#if 0 /* TODO */
-	if unlikely(self->so_stat.st_hand == INVALID_HANDLE_VALUE)
-		goto err_nouid;
-	return nt_NewUserDescriptorFromHandleOwner(self->so_stat.st_hand, SE_FILE_OBJECT);
-err_nouid:
-#else
-#define diriter_get_d_uid_IS_STUB
-#endif
+#if defined(posix_opendir_NEED_STAT_EXTENSION) && defined(DIR_struct_stat_IS_BY_HANDLE_FILE_INFORMATION)
+	if (self->odi_hnd != INVALID_HANDLE_VALUE) {
+		if unlikely(diriter_loadstat(self))
+			return NULL;
+		return nt_GetSecurityInfoOwnerSid(self->odi_stHandle, SE_FILE_OBJECT);
+#define NEED_nt_GetSecurityInfoOwnerSid
+	}
 #elif defined(posix_opendir_NEED_STAT_EXTENSION) && defined(DIR_stat_HAVE_st_uid)
 	if (self->odi_ent != NULL) {
 		if unlikely(diriter_loadstat(self))
@@ -1616,15 +1670,13 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 diriter_get_d_gid(DeeDirIteratorObject *__restrict self) {
-#ifdef posix_opendir_USE_FindFirstFileExW
-#if 0 /* TODO */
-	if unlikely(self->so_stat.st_hand == INVALID_HANDLE_VALUE)
-		goto err_nogid;
-	return nt_NewUserDescriptorFromHandleGroup(self->so_stat.st_hand, SE_FILE_OBJECT);
-err_nogid:
-#else
-#define diriter_get_d_gid_IS_STUB
-#endif
+#if defined(posix_opendir_NEED_STAT_EXTENSION) && defined(DIR_struct_stat_IS_BY_HANDLE_FILE_INFORMATION)
+	if (self->odi_hnd != INVALID_HANDLE_VALUE) {
+		if unlikely(diriter_loadstat(self))
+			return NULL;
+		return nt_GetSecurityInfoGroupSid(self->odi_stHandle, SE_FILE_OBJECT);
+#define NEED_nt_GetSecurityInfoGroupSid
+	}
 #elif defined(posix_opendir_NEED_STAT_EXTENSION) && defined(DIR_stat_HAVE_st_gid)
 	if (self->odi_ent != NULL) {
 		if unlikely(diriter_loadstat(self))

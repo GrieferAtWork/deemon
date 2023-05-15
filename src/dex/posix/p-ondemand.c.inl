@@ -161,6 +161,12 @@
 #define NEED_err_stat_no_nttype_info
 #define NEED_err_stat_no_info
 #define NEED_posix_err_unsupported
+
+#ifdef CONFIG_UGID_IS_NT_SID
+#define NEED_nt_DecodeSid
+#define NEED_nt_GetSecurityInfoOwnerSid
+#define NEED_nt_GetSecurityInfoGroupSid
+#endif /* CONFIG_UGID_IS_NT_SID */
 #endif /* __INTELLISENSE__ */
 
 #include <deemon/file.h>
@@ -168,6 +174,7 @@
 #include <deemon/format.h>
 #include <deemon/mapfile.h>
 #include <deemon/system-features.h>
+#include <deemon/util/once.h>
 
 #include <hybrid/typecore.h>
 
@@ -431,6 +438,147 @@ err:
 	return NULL;
 }
 #endif /* NEED_nt_FReadLink */
+
+
+
+#ifdef CONFIG_UGID_IS_NT_SID
+
+/* Decode a deemon integer into an SID
+ * @return: * :   Success (The caller must `Dee_Free()' the returned pointed)
+ * @return: NULL: An error was thrown */
+#ifdef NEED_nt_DecodeSid
+#undef NEED_nt_DecodeSid
+INTERN WUNUSED NONNULL((1)) NT_SID *DCALL
+nt_DecodeSid(/*Int*/ DeeObject *__restrict self) {
+	NT_SID *result;
+	size_t result_sizeof;
+	BYTE SubAuthorityCount;
+	DeeIntObject *me = (DeeIntObject *)self;
+	if (DeeObject_AssertTypeExact(me, &DeeInt_Type))
+		goto err;
+	if unlikely(me->ob_size <= 0) {
+		if unlikely(me->ob_size == 0) {
+			/* Special case for empty SID */
+			return (NT_SID *)Dee_Calloc(NT_SID_SIZEOF(0));
+		}
+		/* Integer-coded SIDs are never negative. */
+		DeeError_Throwf(&DeeError_ValueError, "Invalid SID: %r", self);
+		return NULL;
+	}
+
+	/* Figure out what's going to be the value of `SubAuthorityCount'
+	 *
+	 * Since we always use little-endian for encoding SIDs, and since
+	 * the `SubAuthorityCount' is only a single byte larger, its final
+	 * value will always be located in the same spot. */
+#if Dee_DIGIT_BITS >= 16
+	SubAuthorityCount = (me->ob_digit[0] >> 8) & 0xff;
+#else /* Dee_DIGIT_BITS >= 16 */
+	if ((size_t)me->ob_size >= 2) {
+		uint32_t val;
+		val = (uint32_t)me->ob_digit[0] |
+		      (uint32_t)me->ob_digit[1] << Dee_DIGIT_BITS;
+		SubAuthorityCount = (val >> 8) & 0xff;
+	} else {
+		SubAuthorityCount = (me->ob_digit[0] >> 8) & 0xff;
+	}
+#endif /* Dee_DIGIT_BITS < 16 */
+
+	/* Allocate the result buffer. */
+	result_sizeof = NT_SID_SIZEOF(SubAuthorityCount);
+	result = (NT_SID *)Dee_Malloc(result_sizeof);
+	if unlikely(!result)
+		goto err;
+
+	/* Decode the integer into an SID */
+	if unlikely(DeeInt_AsBytes((DeeObject *)me, result,
+	                           result_sizeof, true, false))
+		goto err_r;
+	ASSERTF(result->SubAuthorityCount == SubAuthorityCount,
+	        "%" PRFu32 " != %" PRFu32,
+	        result->SubAuthorityCount, SubAuthorityCount);
+	return result;
+err_r:
+	Dee_Free(result);
+err:
+	return NULL;
+}
+#endif /* NEED_nt_DecodeSid */
+
+
+/* Return an integer for the owner/group SID of a given handle. */
+#ifdef NEED_nt_GetSecurityInfoOwnerSid
+#undef NEED_nt_GetSecurityInfoOwnerSid
+
+#ifndef ERROR_CALL_NOT_IMPLEMENTED
+#define ERROR_CALL_NOT_IMPLEMENTED 120L
+#endif /* !ERROR_CALL_NOT_IMPLEMENTED */
+INTERN WUNUSED DREF DeeObject *DCALL
+nt_GetSecurityInfoOwnerSid(HANDLE Handle, SE_OBJECT_TYPE ObjectType) {
+	DREF DeeObject *result;
+	NT_SID *pSidOwner;
+	DWORD dwError;
+	PSECURITY_DESCRIPTOR pSD;
+	init_ADVAPI32_dll();
+#define NEED_init_ADVAPI32_dll
+	if unlikely(!pdyn_GetSecurityInfo) {
+		dwError = ERROR_CALL_NOT_IMPLEMENTED;
+		goto throw_system_error;
+	}
+	dwError = (*pdyn_GetSecurityInfo)(Handle, ObjectType,
+	                                  OWNER_SECURITY_INFORMATION,
+	                                  (PSID *)&pSidOwner, NULL,
+	                                  NULL, NULL, &pSD);
+#define NEED_pdyn_GetSecurityInfo
+	if (dwError != ERROR_SUCCESS)
+		goto throw_system_error;
+	DBG_ALIGNMENT_ENABLE();
+	result = nt_EncodeSid(pSidOwner);
+	LocalFree(pSD);
+	return result;
+throw_system_error:
+	DeeNTSystem_ThrowErrorf(&DeeError_SystemError, dwError,
+	                        "Failed to query owner SID of handle %p",
+	                        Handle);
+	return NULL;
+}
+#endif /* NEED_nt_GetSecurityInfoOwnerSid */
+
+#ifdef NEED_nt_GetSecurityInfoGroupSid
+#undef NEED_nt_GetSecurityInfoGroupSid
+INTERN WUNUSED DREF DeeObject *DCALL
+nt_GetSecurityInfoGroupSid(HANDLE Handle, SE_OBJECT_TYPE ObjectType) {
+	DREF DeeObject *result;
+	NT_SID *pSidOwner;
+	DWORD dwError;
+	PSECURITY_DESCRIPTOR pSD;
+	init_ADVAPI32_dll();
+#define NEED_init_ADVAPI32_dll
+	if unlikely(!pdyn_GetSecurityInfo) {
+		dwError = ERROR_CALL_NOT_IMPLEMENTED;
+		goto throw_system_error;
+	}
+	dwError = (*pdyn_GetSecurityInfo)(Handle, ObjectType,
+	                                  GROUP_SECURITY_INFORMATION,
+	                                  NULL, (PSID *)&pSidOwner,
+	                                  NULL, NULL, &pSD);
+#define NEED_pdyn_GetSecurityInfo
+	if (dwError != ERROR_SUCCESS)
+		goto throw_system_error;
+	DBG_ALIGNMENT_ENABLE();
+	result = nt_EncodeSid(pSidOwner);
+	LocalFree(pSD);
+	return result;
+throw_system_error:
+	DeeNTSystem_ThrowErrorf(&DeeError_SystemError, dwError,
+	                        "Failed to query group SID of handle %p",
+	                        Handle);
+	return NULL;
+}
+#endif /* NEED_nt_GetSecurityInfoGroupSid */
+
+#endif /* CONFIG_UGID_IS_NT_SID */
+
 
 
 
@@ -2679,15 +2827,26 @@ PRIVATE BOOL DCALL nt_AcquirePrivilege(LPCWSTR lpName) {
 	LUID luid;
 	TOKEN_PRIVILEGES tok_priv;
 	DWORD error;
-	hProcess = GetCurrentProcess();
-	if unlikely(!OpenProcessToken(hProcess, TOKEN_ADJUST_PRIVILEGES, &tok))
+	init_ADVAPI32_dll();
+#define NEED_init_ADVAPI32_dll
+	if unlikely(!pdyn_OpenProcessToken)
 		goto fail;
-	if unlikely(!LookupPrivilegeValueW(NULL, lpName, &luid))
+#define NEED_pdyn_OpenProcessToken
+	if unlikely(!pdyn_LookupPrivilegeValueW)
+		goto fail;
+#define NEED_pdyn_LookupPrivilegeValueW
+	if unlikely(!pdyn_AdjustTokenPrivileges)
+		goto fail;
+#define NEED_pdyn_AdjustTokenPrivileges
+	hProcess = GetCurrentProcess();
+	if unlikely(!(*pdyn_OpenProcessToken)(hProcess, TOKEN_ADJUST_PRIVILEGES, &tok))
+		goto fail;
+	if unlikely(!(*pdyn_LookupPrivilegeValueW)(NULL, lpName, &luid))
 		goto fail;
 	tok_priv.PrivilegeCount           = 1;
 	tok_priv.Privileges[0].Luid       = luid;
 	tok_priv.Privileges[0].Attributes = SE_PRIVILEGE_ENABLED;
-	if unlikely(!AdjustTokenPrivileges(tok, FALSE, &tok_priv, 0, NULL, NULL))
+	if unlikely(!(*pdyn_AdjustTokenPrivileges)(tok, FALSE, &tok_priv, 0, NULL, NULL))
 		goto fail;
 	error = GetLastError();
 	SetLastError(0);
@@ -3843,6 +4002,96 @@ posix_err_unsupported(char const *__restrict name) {
 	                       name);
 }
 #endif /* NEED_posix_err_unsupported */
+
+
+
+/* Dynamically loaded functions from `ADVAPI32.dll' */
+#if defined(CONFIG_HOST_WINDOWS) || defined(__DEEMON__)
+/*[[[deemon
+local libs = {
+	"ADVAPI32.dll" : {
+		"OpenProcessToken",
+		"LookupPrivilegeValueW",
+		"AdjustTokenPrivileges",
+		"GetSecurityInfo",
+	},
+};
+
+for (local lib, imports: libs.sorted()) {
+	local libImportName = lib.replace(".", "_");
+	print("#ifdef NEED_init_", libImportName);
+	print("#undef NEED_init_", libImportName);
+	for (local imp: imports.sorted()) {
+		print("#ifdef NEED_pdyn_", imp);
+		print("INTERN LP", imp.upper(), " pdyn_", imp, " = NULL;");
+		print("#endif /" "* NEED_pdyn_", imp, " *" "/");
+	}
+	print("PRIVATE WCHAR const name_", libImportName, "[] = { ",
+		", ".join(for (local ch: lib) f"'{ch}'"), ", 0 };");
+	print("LOCAL void DCALL do_init_", libImportName, "(void) {");
+	print("	HMODULE hModule;");
+	print("	hModule = LoadLibraryW(name_", libImportName, ");");
+	print("	if unlikely(hModule == NULL)");
+	print("		return;");
+	for (local imp: imports.sorted()) {
+		print("#ifdef NEED_pdyn_", imp);
+		print("#undef NEED_pdyn_", imp);
+		print("	pdyn_", imp, " = (LP", imp.upper(), ")GetProcAddress(hModule, ", repr imp, ");");
+		print("#endif /" "* NEED_pdyn_", imp, " *" "/");
+	}
+	print("}");
+	print("INTERN void DCALL init_", libImportName, "(void) {");
+	print("	Dee_ONCE(do_init_", libImportName, "());");
+	print("}");
+	print("#endif /" "* NEED_init_", libImportName, "*" "/");
+}
+
+]]]*/
+#ifdef NEED_init_ADVAPI32_dll
+#undef NEED_init_ADVAPI32_dll
+#ifdef NEED_pdyn_AdjustTokenPrivileges
+INTERN LPADJUSTTOKENPRIVILEGES pdyn_AdjustTokenPrivileges = NULL;
+#endif /* NEED_pdyn_AdjustTokenPrivileges */
+#ifdef NEED_pdyn_GetSecurityInfo
+INTERN LPGETSECURITYINFO pdyn_GetSecurityInfo = NULL;
+#endif /* NEED_pdyn_GetSecurityInfo */
+#ifdef NEED_pdyn_LookupPrivilegeValueW
+INTERN LPLOOKUPPRIVILEGEVALUEW pdyn_LookupPrivilegeValueW = NULL;
+#endif /* NEED_pdyn_LookupPrivilegeValueW */
+#ifdef NEED_pdyn_OpenProcessToken
+INTERN LPOPENPROCESSTOKEN pdyn_OpenProcessToken = NULL;
+#endif /* NEED_pdyn_OpenProcessToken */
+PRIVATE WCHAR const name_ADVAPI32_dll[] = { 'A', 'D', 'V', 'A', 'P', 'I', '3', '2', '.', 'd', 'l', 'l', 0 };
+LOCAL void DCALL do_init_ADVAPI32_dll(void) {
+	HMODULE hModule;
+	hModule = LoadLibraryW(name_ADVAPI32_dll);
+	if unlikely(hModule == NULL)
+		return;
+#ifdef NEED_pdyn_AdjustTokenPrivileges
+#undef NEED_pdyn_AdjustTokenPrivileges
+	pdyn_AdjustTokenPrivileges = (LPADJUSTTOKENPRIVILEGES)GetProcAddress(hModule, "AdjustTokenPrivileges");
+#endif /* NEED_pdyn_AdjustTokenPrivileges */
+#ifdef NEED_pdyn_GetSecurityInfo
+#undef NEED_pdyn_GetSecurityInfo
+	pdyn_GetSecurityInfo = (LPGETSECURITYINFO)GetProcAddress(hModule, "GetSecurityInfo");
+#endif /* NEED_pdyn_GetSecurityInfo */
+#ifdef NEED_pdyn_LookupPrivilegeValueW
+#undef NEED_pdyn_LookupPrivilegeValueW
+	pdyn_LookupPrivilegeValueW = (LPLOOKUPPRIVILEGEVALUEW)GetProcAddress(hModule, "LookupPrivilegeValueW");
+#endif /* NEED_pdyn_LookupPrivilegeValueW */
+#ifdef NEED_pdyn_OpenProcessToken
+#undef NEED_pdyn_OpenProcessToken
+	pdyn_OpenProcessToken = (LPOPENPROCESSTOKEN)GetProcAddress(hModule, "OpenProcessToken");
+#endif /* NEED_pdyn_OpenProcessToken */
+}
+INTERN void DCALL init_ADVAPI32_dll(void) {
+	Dee_ONCE(do_init_ADVAPI32_dll());
+}
+#endif /* NEED_init_ADVAPI32_dll*/
+/*[[[end]]]*/
+#endif /* CONFIG_HOST_WINDOWS || __DEEMON__ */
+
+
 
 DECL_END
 

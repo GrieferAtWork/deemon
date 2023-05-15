@@ -559,6 +559,14 @@ DFUNDEF WUNUSED DREF DeeObject *
 (DCALL DeeInt_FromBytes)(void const *buf, size_t length,
                          bool little_endian, bool as_signed);
 
+#if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
+#define DeeInt_AsNativeBytes(self, dst, length, as_signed) DeeInt_AsBytes(self, dst, length, true, as_signed)
+#define DeeInt_FromNativeBytes(buf, length, as_signed)     DeeInt_FromBytes(buf, length, true, as_signed)
+#else /* __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__ */
+#define DeeInt_AsNativeBytes(self, dst, length, as_signed) DeeInt_AsBytes(self, dst, length, false, as_signed)
+#define DeeInt_FromNativeBytes(buf, length, as_signed)     DeeInt_FromBytes(buf, length, false, as_signed)
+#endif /* __BYTE_ORDER__ != __ORDER_LITTLE_ENDIAN__ */
+
 #define DEE_PRIVATE_TRYGETSINT_1(self, val)  DeeInt_TryAsInt8(self, (int8_t *)(val))
 #define DEE_PRIVATE_TRYGETSINT_2(self, val)  DeeInt_TryAsInt16(self, (int16_t *)(val))
 #define DEE_PRIVATE_TRYGETSINT_4(self, val)  DeeInt_TryAsInt32(self, (int32_t *)(val))

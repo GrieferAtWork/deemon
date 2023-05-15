@@ -1251,17 +1251,11 @@ err_nolink:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 stat_get_uid(DeeStatObject *__restrict self) {
 #ifdef posix_stat_USE_WINDOWS
-#if 0 /* TODO */
-	if unlikely(self->so_stat.st_hand == INVALID_HANDLE_VALUE)
-		goto err_nouid;
-	return nt_NewUserDescriptorFromHandleOwner(self->so_stat.st_hand, SE_FILE_OBJECT);
-err_nouid:
-#else
-#define posix_stat_get_uid_IS_STUB
-	(void)self;
-#endif
-#define NEED_err_stat_no_uid_info
+	if likely(self->so_stat.st_hand != INVALID_HANDLE_VALUE)
+		return nt_GetSecurityInfoOwnerSid(self->so_stat.st_hand, SE_FILE_OBJECT);
+#define NEED_nt_GetSecurityInfoOwnerSid
 	err_stat_no_uid_info();
+#define NEED_err_stat_no_uid_info
 	return NULL;
 #elif defined(posix_stat_HAVE_st_uid)
 	return DeeInt_NEWU(self->so_stat.st_info.st_uid);
@@ -1277,17 +1271,11 @@ err_nouid:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 stat_get_gid(DeeStatObject *__restrict self) {
 #ifdef posix_stat_USE_WINDOWS
-#if 0 /* TODO */
-	if unlikely(self->so_stat.st_hand == INVALID_HANDLE_VALUE)
-		goto err_nogid;
-	return nt_NewUserDescriptorFromHandleGroup(self->so_stat.st_hand, SE_FILE_OBJECT);
-err_nogid:
-#else
-#define posix_stat_get_gid_IS_STUB
-	(void)self;
-#endif
-#define NEED_err_stat_no_gid_info
+	if likely(self->so_stat.st_hand != INVALID_HANDLE_VALUE)
+		return nt_GetSecurityInfoGroupSid(self->so_stat.st_hand, SE_FILE_OBJECT);
+#define NEED_nt_GetSecurityInfoGroupSid
 	err_stat_no_gid_info();
+#define NEED_err_stat_no_gid_info
 	return NULL;
 #elif defined(posix_stat_HAVE_st_gid)
 	return DeeInt_NEWU(self->so_stat.st_info.st_gid);
