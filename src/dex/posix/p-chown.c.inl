@@ -119,12 +119,15 @@ for (local f: functions) {
 
 
 /* Figure out how we want to implement `lchown()' */
+#undef posix_lchown_USE_nt_SetNamedSecurityInfo
 #undef posix_lchown_USE_wlchown
 #undef posix_lchown_USE_lchown
 #undef posix_lchown_USE_wopen_AND_fchown
 #undef posix_lchown_USE_open_AND_fchown
 #undef posix_lchown_USE_STUB
-#if defined(CONFIG_HAVE_wlchown) && defined(CONFIG_PREFER_WCHAR_FUNCTIONS)
+#ifdef CONFIG_HOST_WINDOWS
+#define posix_lchown_USE_nt_SetNamedSecurityInfo
+#elif defined(CONFIG_HAVE_wlchown) && defined(CONFIG_PREFER_WCHAR_FUNCTIONS)
 #define posix_lchown_USE_wlchown
 #elif defined(CONFIG_HAVE_lchown)
 #define posix_lchown_USE_lchown
@@ -152,11 +155,14 @@ for (local f: functions) {
 
 
 /* Figure out how we want to implement `fchown()' */
+#undef posix_fchown_USE_nt_SetSecurityInfo
 #undef posix_fchown_USE_fchown
 #undef posix_fchown_USE_posix_lchown
 #undef posix_fchown_USE_posix_chown
 #undef posix_fchown_USE_STUB
-#ifdef CONFIG_HAVE_fchown
+#ifdef CONFIG_HOST_WINDOWS
+#define posix_fchown_USE_nt_SetSecurityInfo
+#elif defined(CONFIG_HAVE_fchown)
 #define posix_fchown_USE_fchown
 #elif !defined(posix_lchown_USE_STUB)
 #define posix_fchown_USE_posix_lchown
@@ -413,7 +419,54 @@ err:
 FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_lchown_f_impl(DeeObject *path, DeeObject *uid, DeeObject *gid)
 /*[[[end]]]*/
 {
-#ifndef posix_lchown_USE_STUB
+#ifdef posix_lchown_USE_nt_SetNamedSecurityInfo
+	NT_SID *nt_uid, *nt_gid;
+	int status;
+	SECURITY_INFORMATION SecurityInfo;
+	if (DeeObject_AssertTypeExact(path, &DeeString_Type))
+		goto err;
+
+	/* Query uid/gid values */
+	nt_uid = nt_QuerySid(uid, false);
+#define NEED_nt_QuerySid
+	if unlikely(nt_uid == (NT_SID *)ITER_DONE)
+		goto err;
+	nt_gid = nt_QuerySid(gid, true);
+#define NEED_nt_QuerySid
+	if unlikely(nt_gid == (NT_SID *)ITER_DONE)
+		goto err_nt_uid;
+
+	/* Do the system call. */
+	SecurityInfo = 0;
+	if (nt_uid != NULL)
+		SecurityInfo |= OWNER_SECURITY_INFORMATION;
+	if (nt_gid != NULL)
+		SecurityInfo |= GROUP_SECURITY_INFORMATION;
+	if (SecurityInfo == 0) {
+		/* Nothing to do here -- neither uid, nor gid changed */
+	} else {
+		DWORD dwError;
+		status = nt_SetNamedSecurityInfo(path, SE_FILE_OBJECT, SecurityInfo,
+		                                 nt_uid, nt_gid, NULL, NULL, &dwError);
+#define NEED_nt_SetNamedSecurityInfo
+		if (status != 0) {
+			if (status < 0)
+				goto err_nt_uid_nt_gid;
+			err_nt_lchown(dwError, path, uid, gid);
+#define NEED_err_nt_lchown
+			goto err_nt_uid_nt_gid;
+		}
+	}
+	Dee_Free(nt_gid);
+	Dee_Free(nt_uid);
+	return_none;
+err_nt_uid_nt_gid:
+	Dee_Free(nt_gid);
+err_nt_uid:
+	Dee_Free(nt_uid);
+err:
+	return NULL;
+#elif !defined(posix_lchown_USE_STUB)
 	int error;
 	uid_t used_uid;
 	gid_t used_gid;
@@ -502,7 +555,55 @@ err:
 FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_fchown_f_impl(DeeObject *fd, DeeObject *uid, DeeObject *gid)
 /*[[[end]]]*/
 {
-#ifdef posix_fchown_USE_fchown
+#ifdef posix_fchown_USE_nt_SetSecurityInfo
+	NT_SID *nt_uid, *nt_gid;
+	int status;
+	SECURITY_INFORMATION SecurityInfo;
+	HANDLE hFd = DeeNTSystem_GetHandle(fd);
+	if unlikely(hFd == INVALID_HANDLE_VALUE)
+		goto err;
+
+	/* Query uid/gid values */
+	nt_uid = nt_QuerySid(uid, false);
+#define NEED_nt_QuerySid
+	if unlikely(nt_uid == (NT_SID *)ITER_DONE)
+		goto err;
+	nt_gid = nt_QuerySid(gid, true);
+#define NEED_nt_QuerySid
+	if unlikely(nt_gid == (NT_SID *)ITER_DONE)
+		goto err_nt_uid;
+
+	/* Do the system call. */
+	SecurityInfo = 0;
+	if (nt_uid != NULL)
+		SecurityInfo |= OWNER_SECURITY_INFORMATION;
+	if (nt_gid != NULL)
+		SecurityInfo |= GROUP_SECURITY_INFORMATION;
+	if (SecurityInfo == 0) {
+		/* Nothing to do here -- neither uid, nor gid changed */
+	} else {
+		DWORD dwError;
+		status = nt_SetSecurityInfo(hFd, SE_FILE_OBJECT, SecurityInfo,
+		                            nt_uid, nt_gid, NULL, NULL, &dwError);
+#define NEED_nt_SetSecurityInfo
+		if (status != 0) {
+			if (status < 0)
+				goto err_nt_uid_nt_gid;
+			err_nt_fchown(dwError, fd, uid, gid);
+#define NEED_err_nt_fchown
+			goto err_nt_uid_nt_gid;
+		}
+	}
+	Dee_Free(nt_gid);
+	Dee_Free(nt_uid);
+	return_none;
+err_nt_uid_nt_gid:
+	Dee_Free(nt_gid);
+err_nt_uid:
+	Dee_Free(nt_uid);
+err:
+	return NULL;
+#elif defined(posix_fchown_USE_fchown)
 	int error;
 	uid_t used_uid;
 	gid_t used_gid;

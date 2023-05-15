@@ -70,12 +70,6 @@
 #endif /* !CONFIG_HAVE_close */
 
 
-/* Config option: uid_t/gid_t are NT SIDs encoded as integer via `DeeInt_FromBytes()' */
-#undef CONFIG_UGID_IS_NT_SID
-#ifdef CONFIG_HOST_WINDOWS
-#define CONFIG_UGID_IS_NT_SID
-#endif /* CONFIG_HOST_WINDOWS */
-
 DECL_BEGIN
 
 #ifdef EINTR
@@ -653,8 +647,8 @@ INTDEF ATTR_COLD NONNULL((2)) int DCALL err_unix_ftruncate_txtbusy(int errno_val
 INTDEF ATTR_COLD NONNULL((2)) int DCALL err_unix_truncate_txtbusy(int errno_value, DeeObject *__restrict path);
 INTDEF ATTR_COLD NONNULL((2, 3)) int DCALL err_unix_truncate_failed(int errno_value, DeeObject *path, DeeObject *length);
 INTDEF ATTR_COLD NONNULL((2)) int DCALL err_unix_file_closed(int errno_value, DeeObject *__restrict fd);
-INTDEF ATTR_COLD NONNULL((2)) int DCALL err_unix_chmod_no_access(int errno_value, DeeObject *__restrict path, unsigned int mode);
-INTDEF ATTR_COLD NONNULL((2)) int DCALL err_unix_chown_no_access(int errno_value, DeeObject *__restrict path, uid_t uid, gid_t gid);
+INTDEF ATTR_COLD NONNULL((2)) int DCALL err_unix_chmod_no_access(int errno_value, DeeObject *__restrict path_or_fd, unsigned int mode);
+INTDEF ATTR_COLD NONNULL((2)) int DCALL err_unix_chown_no_access(int errno_value, DeeObject *__restrict path_or_fd, uid_t uid, gid_t gid);
 
 /* Missing stat information errors. */
 INTDEF ATTR_COLD NONNULL((1)) int DCALL err_stat_no_info(char const *__restrict level);
@@ -681,6 +675,8 @@ INTDEF ATTR_COLD NONNULL((2)) int DCALL err_nt_mkdir(DWORD dwError, DeeObject *_
 INTDEF ATTR_COLD NONNULL((2, 3)) int DCALL err_nt_rename(DWORD dwError, DeeObject *existing_path, DeeObject *new_path);
 INTDEF ATTR_COLD NONNULL((2, 3)) int DCALL err_nt_link(DWORD dwError, DeeObject *existing_path, DeeObject *new_path);
 INTDEF ATTR_COLD NONNULL((2, 3)) int DCALL err_nt_symlink(DWORD dwError, DeeObject *text, DeeObject *path);
+INTDEF ATTR_COLD NONNULL((2, 3, 4)) int DCALL err_nt_lchown(DWORD dwError, DeeObject *path, DeeObject *uid, DeeObject *gid);
+INTDEF ATTR_COLD NONNULL((2, 3, 4)) int DCALL err_nt_fchown(DWORD dwError, DeeObject *fd, DeeObject *uid, DeeObject *gid);
 INTDEF ATTR_COLD NONNULL((2)) int DCALL err_nt_unlink_unsupported(DWORD dwError, DeeObject *__restrict path);
 INTDEF ATTR_COLD NONNULL((2)) int DCALL err_nt_rmdir_unsupported(DWORD dwError, DeeObject *__restrict path);
 INTDEF ATTR_COLD NONNULL((2)) int DCALL err_nt_mkdir_unsupported(DWORD dwError, DeeObject *__restrict path, unsigned int mode);
@@ -708,15 +704,16 @@ INTDEF ATTR_COLD NONNULL((2)) int DCALL err_nt_path_not_empty(DWORD dwError, Dee
 INTDEF ATTR_COLD NONNULL((2)) int DCALL err_nt_chtime_no_access(DWORD dwError, DeeObject *__restrict path);
 INTDEF ATTR_COLD NONNULL((2, 3)) int DCALL err_nt_path_cross_dev2(DWORD dwError, DeeObject *existing_path, DeeObject *new_path);
 INTDEF ATTR_COLD NONNULL((2)) int DCALL err_nt_path_not_link(DWORD dwError, DeeObject *__restrict path);
+INTDEF ATTR_COLD NONNULL((2, 3, 4)) int DCALL err_nt_chown_no_access(DWORD dwError, DeeObject *path_or_fd, DeeObject *uid, DeeObject *gid);
 
 
-#ifdef CONFIG_UGID_IS_NT_SID
 typedef struct {
 	BYTE Revision;
 	BYTE SubAuthorityCount;
 	SID_IDENTIFIER_AUTHORITY IdentifierAuthority;
 	DWORD SubAuthority[256];
 } NT_SID;
+
 #define NT_SID_SIZEOF(SubAuthorityCount) (offsetof(NT_SID, SubAuthority) + (SubAuthorityCount) * sizeof(DWORD))
 #define NT_SID_GET_SIZEOF(self)          NT_SID_SIZEOF((self)->SubAuthorityCount)
 
@@ -725,10 +722,18 @@ typedef struct {
 	DeeInt_FromBytes(sid, NT_SID_GET_SIZEOF(sid), true, false)
 
 /* Decode a deemon integer into an SID
- * @return: * :   Success (The caller must `Dee_Free()' the returned pointed)
- * @return: NULL: An error was thrown */
+ * @return: * :        Success (The caller must `Dee_Free()' the returned pointer)
+ * @return: ITER_DONE: An error was thrown */
 INTDEF WUNUSED NONNULL((1)) NT_SID *DCALL
 nt_DecodeSid(/*Int*/ DeeObject *__restrict sid);
+
+/* Similar to `nt_DecodeSid()', but accept more than just strings.
+ * @param: argument_is_gid: When false, decode `uid_or_gid' as a UID; else, decode as a GID
+ * @return: * :        Success (The caller must `Dee_Free()' the returned pointer)
+ * @return: NULL:      Argument was `Dee_None' (NOT AN ERROR)
+ * @return: ITER_DONE: An error was thrown */
+INTDEF WUNUSED NONNULL((1)) NT_SID *DCALL
+nt_QuerySid(DeeObject *__restrict uid_or_gid, bool argument_is_gid);
 
 /* Return an integer for the owner/group SID of a given handle.
  * @return: * :   Integer-representation of SID
@@ -737,8 +742,26 @@ INTDEF WUNUSED DREF DeeObject *DCALL
 nt_GetSecurityInfoOwnerSid(HANDLE Handle, SE_OBJECT_TYPE ObjectType);
 INTDEF WUNUSED DREF DeeObject *DCALL
 nt_GetSecurityInfoGroupSid(HANDLE Handle, SE_OBJECT_TYPE ObjectType);
-#endif /* CONFIG_UGID_IS_NT_SID */
 
+/* Wrapper around the system function `SetNamedSecurityInfo()'
+ * @return: 1 : System error (`*p_dwError' was populated with the error)
+ * @return: 0 : Success
+ * @return: -1: An error was thrown */
+INTDEF WUNUSED NONNULL((1, 8)) int DCALL
+nt_SetNamedSecurityInfo(DeeObject *__restrict pObjectName,
+                        SE_OBJECT_TYPE ObjectType, SECURITY_INFORMATION SecurityInfo,
+                        NT_SID *psidOwner, NT_SID *psidGroup, PACL pDacl, PACL pSacl,
+                        DWORD *__restrict p_dwError);
+
+/* Wrapper around the system function `SetSecurityInfo()'
+ * @return: 1 : System error (`*p_dwError' was populated with the error)
+ * @return: 0 : Success
+ * @return: -1: An error was thrown */
+INTDEF WUNUSED NONNULL((8)) int DCALL
+nt_SetSecurityInfo(HANDLE handle,
+                   SE_OBJECT_TYPE ObjectType, SECURITY_INFORMATION SecurityInfo,
+                   NT_SID const *psidOwner, NT_SID const *psidGroup, PACL pDacl, PACL pSacl,
+                   DWORD *__restrict p_dwError);
 
 INTDEF WUNUSED DREF DeeObject *DCALL nt_GetTempPath(void);
 INTDEF WUNUSED DREF DeeObject *DCALL nt_GetComputerName(void);
@@ -841,6 +864,9 @@ INTDEF NONNULL((1, 2)) int DCALL
 nt_CreateSymbolicLinkAuto(DeeObject *lpSymlinkFileName,
                           DeeObject *lpTargetFileName);
 
+/* Try to acquire the named privilege */
+INTDEF BOOL DCALL nt_AcquirePrivilege(LPCWSTR lpName);
+
 
 /* Dynamically loaded functions from `ADVAPI32.dll'
  *
@@ -850,11 +876,17 @@ nt_CreateSymbolicLinkAuto(DeeObject *lpSymlinkFileName,
 typedef BOOL (WINAPI *LPOPENPROCESSTOKEN)(HANDLE ProcessHandle, DWORD DesiredAccess, PHANDLE TokenHandle);
 typedef BOOL (WINAPI *LPLOOKUPPRIVILEGEVALUEW)(LPCWSTR lpSystemName, LPCWSTR lpName, PLUID lpLuid);
 typedef BOOL (WINAPI *LPADJUSTTOKENPRIVILEGES)(HANDLE TokenHandle, BOOL DisableAllPrivileges, PTOKEN_PRIVILEGES NewState, DWORD BufferLength, PTOKEN_PRIVILEGES PreviousState, PDWORD ReturnLength);
-typedef DWORD (WINAPI *LPGETSECURITYINFO)(HANDLE Handle, SE_OBJECT_TYPE ObjectType, SECURITY_INFORMATION SecurityInfo, PSID *ppsidOwner, PSID *ppsidGroup, PACL *ppDacl, PACL *ppSacl, PSECURITY_DESCRIPTOR *ppSecurityDescriptor);
+typedef DWORD (WINAPI *LPGETSECURITYINFO)(HANDLE Handle, SE_OBJECT_TYPE ObjectType, SECURITY_INFORMATION SecurityInfo, NT_SID **ppsidOwner, NT_SID **ppsidGroup, PACL *ppDacl, PACL *ppSacl, PSECURITY_DESCRIPTOR *ppSecurityDescriptor);
+typedef DWORD (WINAPI *LPSETSECURITYINFO)(HANDLE handle, SE_OBJECT_TYPE ObjectType, SECURITY_INFORMATION SecurityInfo, NT_SID const *psidOwner, NT_SID const *psidGroup, PACL pDacl, PACL pSacl);
+typedef DWORD (WINAPI *LPGETNAMEDSECURITYINFOW)(LPCWSTR pObjectName, SE_OBJECT_TYPE ObjectType, SECURITY_INFORMATION SecurityInfo, NT_SID **ppsidOwner, NT_SID **ppsidGroup, PACL *ppDacl, PACL *ppSacl, PSECURITY_DESCRIPTOR *ppSecurityDescriptor);
+typedef DWORD (WINAPI *LPSETNAMEDSECURITYINFOW)(LPWSTR pObjectName, SE_OBJECT_TYPE ObjectType, SECURITY_INFORMATION SecurityInfo, NT_SID const *psidOwner, NT_SID const *psidGroup, PACL pDacl, PACL pSacl);
 INTDEF LPOPENPROCESSTOKEN pdyn_OpenProcessToken;
 INTDEF LPLOOKUPPRIVILEGEVALUEW pdyn_LookupPrivilegeValueW;
 INTDEF LPADJUSTTOKENPRIVILEGES pdyn_AdjustTokenPrivileges;
 INTDEF LPGETSECURITYINFO pdyn_GetSecurityInfo;
+INTDEF LPSETSECURITYINFO pdyn_SetSecurityInfo;
+INTDEF LPGETNAMEDSECURITYINFOW pdyn_GetNamedSecurityInfoW;
+INTDEF LPSETNAMEDSECURITYINFOW pdyn_SetNamedSecurityInfoW;
 INTDEF void DCALL init_ADVAPI32_dll(void);
 
 

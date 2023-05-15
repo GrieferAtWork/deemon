@@ -1166,7 +1166,7 @@ again:
 			goto again;
 		}
 		RETURN_ERROR(dwError,
-		             "Failed to open file %lq (dwDesiredAccess: %#" PRFx32 ", dwShareMode: %#" PRFx32 ", "
+		             "Failed to open file %r (dwDesiredAccess: %#" PRFx32 ", dwShareMode: %#" PRFx32 ", "
 		             "dwCreationDisposition: %#" PRFx32 ", dwFlagsAndAttributes: %#" PRFx32 ", hTemplateFile: %p)",
 		             lpFileName, dwDesiredAccess, dwShareMode,
 		             dwCreationDisposition, dwFlagsAndAttributes,

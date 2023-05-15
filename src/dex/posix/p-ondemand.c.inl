@@ -51,6 +51,8 @@
 #define NEED_err_unix_symlink
 #define NEED_err_nt_link
 #define NEED_err_nt_symlink
+#define NEED_err_nt_lchown
+#define NEED_err_nt_fchown
 #define NEED_err_unix_truncate
 #define NEED_err_unix_ftruncate
 #define NEED_err_unix_chmod
@@ -123,6 +125,7 @@
 #define NEED_err_unix_ftruncate_txtbusy
 #define NEED_err_unix_truncate_txtbusy
 #define NEED_err_nt_path_not_link
+#define NEED_err_nt_chown_no_access
 #define NEED_nt_GetTempPath
 #define NEED_nt_GetComputerName
 #define NEED_nt_FReadLink
@@ -161,12 +164,12 @@
 #define NEED_err_stat_no_nttype_info
 #define NEED_err_stat_no_info
 #define NEED_posix_err_unsupported
-
-#ifdef CONFIG_UGID_IS_NT_SID
 #define NEED_nt_DecodeSid
+#define NEED_nt_QuerySid
 #define NEED_nt_GetSecurityInfoOwnerSid
 #define NEED_nt_GetSecurityInfoGroupSid
-#endif /* CONFIG_UGID_IS_NT_SID */
+#define NEED_nt_SetNamedSecurityInfo
+#define NEED_nt_SetSecurityInfo
 #endif /* __INTELLISENSE__ */
 
 #include <deemon/file.h>
@@ -441,29 +444,63 @@ err:
 
 
 
-#ifdef CONFIG_UGID_IS_NT_SID
+#ifdef NEED_nt_QuerySid
+#undef NEED_nt_QuerySid
+/* Similar to `nt_DecodeSid()', but accept more than just strings.
+ * @param: argument_is_gid: When false, decode `uid_or_gid' as a UID; else, decode as a GID
+ * @return: * :        Success (The caller must `Dee_Free()' the returned pointer)
+ * @return: NULL:      Argument was `Dee_None' (NOT AN ERROR)
+ * @return: ITER_DONE: An error was thrown */
+INTERN WUNUSED NONNULL((1)) NT_SID *DCALL
+nt_QuerySid(DeeObject *__restrict uid_or_gid, bool argument_is_gid) {
+	NT_SID *result;
+	if (DeeNone_Check(uid_or_gid))
+		return NULL; /* Placeholder SID */
+	if (DeeInt_Check(uid_or_gid))
+		return nt_DecodeSid(uid_or_gid);
+#define NEED_nt_DecodeSid
+	if (DeeString_Check(uid_or_gid)) {
+		/* TODO: Lookup user/group name strings. */
+		(void)argument_is_gid;
+	}
 
-/* Decode a deemon integer into an SID
- * @return: * :   Success (The caller must `Dee_Free()' the returned pointed)
- * @return: NULL: An error was thrown */
+	/* Fallback: convert to integer and cast to SID */
+	uid_or_gid = DeeObject_Int(uid_or_gid);
+	if unlikely(!uid_or_gid)
+		goto err;
+	result = nt_DecodeSid(uid_or_gid);
+#define NEED_nt_DecodeSid
+	Dee_Decref(uid_or_gid);
+	return result;
+err:
+	return (NT_SID *)ITER_DONE;
+}
+#endif /* NEED_nt_QuerySid */
+
+
 #ifdef NEED_nt_DecodeSid
 #undef NEED_nt_DecodeSid
+/* Decode a deemon integer into an SID
+ * @return: * :        Success (The caller must `Dee_Free()' the returned pointer)
+ * @return: ITER_DONE: An error was thrown */
 INTERN WUNUSED NONNULL((1)) NT_SID *DCALL
 nt_DecodeSid(/*Int*/ DeeObject *__restrict self) {
 	NT_SID *result;
 	size_t result_sizeof;
 	BYTE SubAuthorityCount;
 	DeeIntObject *me = (DeeIntObject *)self;
-	if (DeeObject_AssertTypeExact(me, &DeeInt_Type))
-		goto err;
+	ASSERT_OBJECT_TYPE_EXACT(me, &DeeInt_Type);
 	if unlikely(me->ob_size <= 0) {
 		if unlikely(me->ob_size == 0) {
 			/* Special case for empty SID */
-			return (NT_SID *)Dee_Calloc(NT_SID_SIZEOF(0));
+			result = (NT_SID *)Dee_Calloc(NT_SID_SIZEOF(0));
+			if unlikely(!result)
+				goto err;
+			return result;
 		}
 		/* Integer-coded SIDs are never negative. */
 		DeeError_Throwf(&DeeError_ValueError, "Invalid SID: %r", self);
-		return NULL;
+		goto err;
 	}
 
 	/* Figure out what's going to be the value of `SubAuthorityCount'
@@ -501,7 +538,7 @@ nt_DecodeSid(/*Int*/ DeeObject *__restrict self) {
 err_r:
 	Dee_Free(result);
 err:
-	return NULL;
+	return (NT_SID *)ITER_DONE;
 }
 #endif /* NEED_nt_DecodeSid */
 
@@ -509,10 +546,10 @@ err:
 /* Return an integer for the owner/group SID of a given handle. */
 #ifdef NEED_nt_GetSecurityInfoOwnerSid
 #undef NEED_nt_GetSecurityInfoOwnerSid
-
 #ifndef ERROR_CALL_NOT_IMPLEMENTED
 #define ERROR_CALL_NOT_IMPLEMENTED 120L
 #endif /* !ERROR_CALL_NOT_IMPLEMENTED */
+
 INTERN WUNUSED DREF DeeObject *DCALL
 nt_GetSecurityInfoOwnerSid(HANDLE Handle, SE_OBJECT_TYPE ObjectType) {
 	DREF DeeObject *result;
@@ -527,8 +564,7 @@ nt_GetSecurityInfoOwnerSid(HANDLE Handle, SE_OBJECT_TYPE ObjectType) {
 	}
 	dwError = (*pdyn_GetSecurityInfo)(Handle, ObjectType,
 	                                  OWNER_SECURITY_INFORMATION,
-	                                  (PSID *)&pSidOwner, NULL,
-	                                  NULL, NULL, &pSD);
+	                                  &pSidOwner, NULL, NULL, NULL, &pSD);
 #define NEED_pdyn_GetSecurityInfo
 	if (dwError != ERROR_SUCCESS)
 		goto throw_system_error;
@@ -546,6 +582,10 @@ throw_system_error:
 
 #ifdef NEED_nt_GetSecurityInfoGroupSid
 #undef NEED_nt_GetSecurityInfoGroupSid
+#ifndef ERROR_CALL_NOT_IMPLEMENTED
+#define ERROR_CALL_NOT_IMPLEMENTED 120L
+#endif /* !ERROR_CALL_NOT_IMPLEMENTED */
+
 INTERN WUNUSED DREF DeeObject *DCALL
 nt_GetSecurityInfoGroupSid(HANDLE Handle, SE_OBJECT_TYPE ObjectType) {
 	DREF DeeObject *result;
@@ -560,8 +600,7 @@ nt_GetSecurityInfoGroupSid(HANDLE Handle, SE_OBJECT_TYPE ObjectType) {
 	}
 	dwError = (*pdyn_GetSecurityInfo)(Handle, ObjectType,
 	                                  GROUP_SECURITY_INFORMATION,
-	                                  NULL, (PSID *)&pSidOwner,
-	                                  NULL, NULL, &pSD);
+	                                  NULL, &pSidOwner, NULL, NULL, &pSD);
 #define NEED_pdyn_GetSecurityInfo
 	if (dwError != ERROR_SUCCESS)
 		goto throw_system_error;
@@ -577,7 +616,297 @@ throw_system_error:
 }
 #endif /* NEED_nt_GetSecurityInfoGroupSid */
 
-#endif /* CONFIG_UGID_IS_NT_SID */
+
+#if defined(NEED_nt_SetNamedSecurityInfo) || defined(NEED_nt_SetSecurityInfo)
+/* Set to true if we've acquired the `SeRestorePrivilege' privilege */
+PRIVATE BOOL nt_chown_bHoldingSeRestorePrivilege = FALSE;
+PRIVATE WCHAR const str_SeRestorePrivilege[] = {
+	'S', 'e', 'R', 'e', 's', 't', 'o', 'r', 'e',
+	'P', 'r', 'i', 'v', 'i', 'l', 'e', 'g', 'e', 0
+};
+
+PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) BOOL DCALL
+posix_EqualSid(NT_SID const *pSid1, NT_SID const *pSid2) {
+	return pSid1->SubAuthorityCount == pSid2->SubAuthorityCount &&
+	       bcmp(pSid1, pSid2, NT_SID_GET_SIZEOF(pSid1)) == 0;
+}
+#endif /* NEED_nt_SetNamedSecurityInfo || NEED_nt_SetSecurityInfo */
+
+#ifdef NEED_nt_SetSecurityInfo
+#undef NEED_nt_SetSecurityInfo
+#ifndef ERROR_CALL_NOT_IMPLEMENTED
+#define ERROR_CALL_NOT_IMPLEMENTED 120L
+#endif /* !ERROR_CALL_NOT_IMPLEMENTED */
+
+/* Internal wrapper.
+ * @return: 0 : Success or System error (`*p_dwError' was populated with the error, or ERROR_SUCCESS)
+ * @return: -1: An error was thrown */
+INTERN WUNUSED NONNULL((8)) int DCALL
+nt_SetSecurityInfo_impl(HANDLE Handle,
+                        SE_OBJECT_TYPE ObjectType, SECURITY_INFORMATION SecurityInfo,
+                        NT_SID const *psidOwner, NT_SID const *psidGroup, PACL pDacl, PACL pSacl,
+                        DWORD *p_dwError) {
+	DWORD dwError;
+	DBG_ALIGNMENT_DISABLE();
+	dwError = (*pdyn_SetSecurityInfo)(Handle, ObjectType, SecurityInfo,
+	                                  psidOwner, psidGroup, pDacl, pSacl);
+	DBG_ALIGNMENT_ENABLE();
+	if (dwError == ERROR_ACCESS_DENIED) {
+		/* Need the `WRITE_OWNER' attribute on the handle. */
+		HANDLE hProcess;
+		HANDLE hWriteOwner;
+		DBG_ALIGNMENT_DISABLE();
+
+		/* Try to re-open the handle with `WRITE_OWNER' permissions. */
+		hProcess = GetCurrentProcess();
+		if (DuplicateHandle(hProcess, Handle, hProcess, &hWriteOwner, WRITE_OWNER, FALSE, 0)) {
+			dwError = (*pdyn_SetSecurityInfo)(hWriteOwner, ObjectType, SecurityInfo,
+			                                  psidOwner, psidGroup, pDacl, pSacl);
+			(void)CloseHandle(hWriteOwner);
+			DBG_ALIGNMENT_ENABLE();
+		} else if (ObjectType == SE_FILE_OBJECT && GetLastError() == ERROR_ACCESS_DENIED) {
+			int result;
+			/* Might still be able to hard re-open the file via its name.
+			 * Yes: I know it's dumb that you're able to do this, even when
+			 *      you're not able to duplicate the handle, but it works... */
+			DREF DeeObject *hFilename;
+			DBG_ALIGNMENT_ENABLE();
+			hFilename = DeeNTSystem_GetFilenameOfHandle(Handle);
+			if unlikely(!hFilename)
+				goto err;
+			*p_dwError = ERROR_SUCCESS;
+			result = nt_SetNamedSecurityInfo(hFilename, ObjectType, SecurityInfo,
+			                                 (NT_SID *)psidOwner, (NT_SID *)psidGroup,
+			                                 pDacl, pSacl, p_dwError);
+#define NEED_nt_SetNamedSecurityInfo
+			Dee_Decref(hFilename);
+			if (result > 0)
+				result = 0;
+			return result;
+		} else {
+			/* Check for special case: only setting the owner/group SID,
+			 * but actually setting them to their current value. If this
+			 * is the case, then don't return an error. */
+			if ((pdyn_GetSecurityInfo != NULL) &&
+			    !(SecurityInfo & ~(OWNER_SECURITY_INFORMATION | GROUP_SECURITY_INFORMATION))) {
+#define NEED_pdyn_GetSecurityInfo
+				DWORD getDwError;
+				NT_SID *pGetSidOwner = NULL;
+				NT_SID *pGetSidGroup = NULL;
+				PSECURITY_DESCRIPTOR pSD;
+				DBG_ALIGNMENT_DISABLE();
+				getDwError = (*pdyn_GetSecurityInfo)(Handle, ObjectType, SecurityInfo,
+				                                     (SecurityInfo & OWNER_SECURITY_INFORMATION) ? &pGetSidOwner : NULL,
+				                                     (SecurityInfo & GROUP_SECURITY_INFORMATION) ? &pGetSidGroup : NULL,
+				                                     NULL, NULL, &pSD);
+#define NEED_pdyn_GetSecurityInfo
+				DBG_ALIGNMENT_ENABLE();
+				if (getDwError == ERROR_SUCCESS) {
+					BOOL areEqual = TRUE;
+					if (SecurityInfo & OWNER_SECURITY_INFORMATION) {
+						if (!pGetSidOwner || !psidOwner || !posix_EqualSid(pGetSidOwner, psidOwner))
+							areEqual = FALSE;
+					}
+					if (SecurityInfo & GROUP_SECURITY_INFORMATION) {
+						if (!pGetSidGroup || !psidGroup || !posix_EqualSid(pGetSidGroup, psidGroup))
+							areEqual = FALSE;
+					}
+					LocalFree(pSD);
+					if (areEqual)
+						dwError = ERROR_SUCCESS;
+				}
+			}
+			DBG_ALIGNMENT_ENABLE();
+		}
+	}
+	*p_dwError = dwError;
+	return 0;
+err:
+	return -1;
+}
+
+/* Wrapper around the system function `SetSecurityInfo()'
+ * @return: 1 : System error (`*p_dwError' was populated with the error)
+ * @return: 0 : Success
+ * @return: -1: An error was thrown */
+INTERN WUNUSED NONNULL((8)) int DCALL
+nt_SetSecurityInfo(HANDLE Handle,
+                   SE_OBJECT_TYPE ObjectType, SECURITY_INFORMATION SecurityInfo,
+                   NT_SID const *psidOwner, NT_SID const *psidGroup, PACL pDacl, PACL pSacl,
+                   DWORD *__restrict p_dwError) {
+	DWORD dwError;
+	init_ADVAPI32_dll();
+#define NEED_init_ADVAPI32_dll
+	if unlikely(!pdyn_SetSecurityInfo) {
+#define NEED_pdyn_SetSecurityInfo
+		*p_dwError = ERROR_CALL_NOT_IMPLEMENTED;
+		return 1;
+	}
+
+again_SetSecurityInfo:
+	if unlikely(nt_SetSecurityInfo_impl(Handle, ObjectType, SecurityInfo,
+	                                    psidOwner, psidGroup, pDacl, pSacl,
+	                                    &dwError))
+		goto err;
+	if (dwError == ERROR_SUCCESS)
+		return 0; /* Success */
+
+	if (dwError == ERROR_INVALID_OWNER && !nt_chown_bHoldingSeRestorePrivilege) {
+		/* This error is produced when trying to assign a non-existing SID.
+		 * However, this is a thing that we want to allow, and something
+		 * that can be done if the caller is holding the `SeRestorePrivilege' */
+		if (nt_AcquirePrivilege(str_SeRestorePrivilege)) {
+#define NEED_nt_AcquirePrivilege
+			nt_chown_bHoldingSeRestorePrivilege = TRUE;
+			goto again_SetSecurityInfo;
+		}
+	}
+
+	/* Handle some other common errors. */
+	if (DeeNTSystem_IsBadAllocError(dwError)) {
+		if (Dee_CollectMemory(1))
+			goto again_SetSecurityInfo;
+		goto err;
+	}
+	if (DeeNTSystem_IsIntr(dwError)) {
+		if (DeeThread_CheckInterrupt())
+			goto err;
+		goto again_SetSecurityInfo;
+	}
+
+	/* System error */
+	*p_dwError = dwError;
+	return 1;
+err:
+	return -1;
+}
+#endif /* NEED_nt_SetSecurityInfo */
+
+#ifdef NEED_nt_SetNamedSecurityInfo
+#undef NEED_nt_SetNamedSecurityInfo
+#ifndef ERROR_CALL_NOT_IMPLEMENTED
+#define ERROR_CALL_NOT_IMPLEMENTED 120L
+#endif /* !ERROR_CALL_NOT_IMPLEMENTED */
+
+PRIVATE WUNUSED DWORD DCALL
+nt_SetNamedSecurityInfo_impl(LPWSTR wObjectName,
+                             SE_OBJECT_TYPE ObjectType, SECURITY_INFORMATION SecurityInfo,
+                             NT_SID *psidOwner, NT_SID *psidGroup, PACL pDacl, PACL pSacl) {
+	DWORD dwError;
+	DBG_ALIGNMENT_DISABLE();
+	dwError = (*pdyn_SetNamedSecurityInfoW)(wObjectName, ObjectType, SecurityInfo,
+	                                        psidOwner, psidGroup, pDacl, pSacl);
+	DBG_ALIGNMENT_ENABLE();
+	if (dwError == ERROR_ACCESS_DENIED && (pdyn_GetNamedSecurityInfoW != NULL) &&
+	    !(SecurityInfo & ~(OWNER_SECURITY_INFORMATION | GROUP_SECURITY_INFORMATION))) {
+#define NEED_pdyn_GetNamedSecurityInfoW
+		/* Check for special case: only setting the owner/group SID,
+		 * but actually setting them to their current value. If this
+		 * is the case, then don't return an error. */
+		DWORD getDwError;
+		NT_SID *pGetSidOwner = NULL;
+		NT_SID *pGetSidGroup = NULL;
+		PSECURITY_DESCRIPTOR pSD;
+		DBG_ALIGNMENT_DISABLE();
+		getDwError = (*pdyn_GetNamedSecurityInfoW)(wObjectName, ObjectType, SecurityInfo,
+		                                           (SecurityInfo & OWNER_SECURITY_INFORMATION) ? &pGetSidOwner : NULL,
+		                                           (SecurityInfo & GROUP_SECURITY_INFORMATION) ? &pGetSidGroup : NULL,
+		                                           NULL, NULL, &pSD);
+#define NEED_pdyn_GetNamedSecurityInfoW
+		DBG_ALIGNMENT_ENABLE();
+		if (getDwError == ERROR_SUCCESS) {
+			BOOL areEqual = TRUE;
+			if (SecurityInfo & OWNER_SECURITY_INFORMATION) {
+				if (!pGetSidOwner || !psidOwner || !posix_EqualSid(pGetSidOwner, psidOwner))
+					areEqual = FALSE;
+			}
+			if (SecurityInfo & GROUP_SECURITY_INFORMATION) {
+				if (!pGetSidGroup || !psidGroup || !posix_EqualSid(pGetSidGroup, psidGroup))
+					areEqual = FALSE;
+			}
+			LocalFree(pSD);
+			if (areEqual)
+				dwError = ERROR_SUCCESS;
+		}
+	}
+	return dwError;
+}
+
+/* Wrapper around the system function `SetNamedSecurityInfo()'
+ * @return: 1 : System error (`*p_dwError' was populated with the error)
+ * @return: 0 : Success
+ * @return: -1: An error was thrown */
+INTERN WUNUSED NONNULL((1, 8)) int DCALL
+nt_SetNamedSecurityInfo(DeeObject *__restrict pObjectName,
+                        SE_OBJECT_TYPE ObjectType, SECURITY_INFORMATION SecurityInfo,
+                        NT_SID *psidOwner, NT_SID *psidGroup, PACL pDacl, PACL pSacl,
+                        DWORD *__restrict p_dwError) {
+	DWORD dwError;
+	LPWSTR wObjectName;
+	init_ADVAPI32_dll();
+#define NEED_init_ADVAPI32_dll
+	if unlikely(!pdyn_SetNamedSecurityInfoW) {
+#define NEED_pdyn_SetNamedSecurityInfoW
+		*p_dwError = ERROR_CALL_NOT_IMPLEMENTED;
+		return 1;
+	}
+	wObjectName = (LPWSTR)DeeString_AsWide(pObjectName);
+	if unlikely(!wObjectName)
+		goto err;
+
+again_SetNamedSecurityInfoW:
+	dwError = nt_SetNamedSecurityInfo_impl(wObjectName, ObjectType, SecurityInfo,
+	                                       psidOwner, psidGroup, pDacl, pSacl);
+	if (dwError == ERROR_SUCCESS)
+		return 0; /* Success */
+
+	/* Check for UNC errors. */
+	if (DeeNTSystem_IsUncError(dwError) && ObjectType == SE_FILE_OBJECT) {
+		pObjectName = DeeNTSystem_FixUncPath(pObjectName);
+		if unlikely(!pObjectName)
+			goto err;
+		wObjectName = (LPWSTR)DeeString_AsWide(pObjectName);
+		if unlikely(!wObjectName)
+			goto err_pObjectName;
+		dwError = nt_SetNamedSecurityInfo_impl(wObjectName, ObjectType, SecurityInfo,
+		                                       psidOwner, psidGroup, pDacl, pSacl);
+		Dee_Decref(pObjectName);
+		if (dwError == ERROR_SUCCESS)
+			return 0; /* Success */
+	}
+
+	if (dwError == ERROR_INVALID_OWNER && !nt_chown_bHoldingSeRestorePrivilege) {
+		/* This error is produced when trying to assign a non-existing SID.
+		 * However, this is a thing that we want to allow, and something
+		 * that can be done if the caller is holding the `SeRestorePrivilege' */
+		if (nt_AcquirePrivilege(str_SeRestorePrivilege)) {
+#define NEED_nt_AcquirePrivilege
+			nt_chown_bHoldingSeRestorePrivilege = TRUE;
+			goto again_SetNamedSecurityInfoW;
+		}
+	}
+
+	/* Handle some common errors. */
+	if (DeeNTSystem_IsBadAllocError(dwError)) {
+		if (Dee_CollectMemory(1))
+			goto again_SetNamedSecurityInfoW;
+		goto err;
+	}
+	if (DeeNTSystem_IsIntr(dwError)) {
+		if (DeeThread_CheckInterrupt())
+			goto err;
+		goto again_SetNamedSecurityInfoW;
+	}
+
+	/* System error */
+	*p_dwError = dwError;
+	return 1;
+err_pObjectName:
+	Dee_Decref(pObjectName);
+err:
+	return -1;
+}
+#endif /* NEED_nt_SetNamedSecurityInfo */
 
 
 
@@ -1533,8 +1862,8 @@ err_unix_symlink(int errno_value, DeeObject *text, DeeObject *path) {
 INTERN ATTR_COLD NONNULL((2, 3)) int DCALL
 err_nt_symlink(DWORD dwError, DeeObject *text, DeeObject *path) {
 	if (DeeNTSystem_IsAccessDeniedError(dwError))
-		return err_nt_path_readonly(dwError, path);
-#define NEED_err_nt_path_readonly
+		return err_nt_path_no_access(dwError, path);
+#define NEED_err_nt_path_no_access
 	if (DeeNTSystem_IsExists(dwError))
 		return err_nt_path_exists(dwError, path);
 #define NEED_err_nt_path_exists
@@ -1552,6 +1881,44 @@ err_nt_symlink(DWORD dwError, DeeObject *text, DeeObject *path) {
 	                               text, path);
 }
 #endif /* NEED_err_nt_symlink */
+
+#ifdef NEED_err_nt_lchown
+#undef NEED_err_nt_lchown
+INTERN ATTR_COLD NONNULL((2, 3, 4)) int DCALL
+err_nt_lchown(DWORD dwError, DeeObject *path, DeeObject *uid, DeeObject *gid) {
+	if (DeeNTSystem_IsAccessDeniedError(dwError))
+		return err_nt_chown_no_access(dwError, path, uid, gid);
+#define NEED_err_nt_chown_no_access
+	if (DeeNTSystem_IsExists(dwError))
+		return err_nt_path_exists(dwError, path);
+#define NEED_err_nt_path_exists
+	if (DeeNTSystem_IsFileNotFoundError(dwError))
+		return err_nt_path_not_found(dwError, path);
+#define NEED_err_nt_path_not_found
+	if (DeeNTSystem_IsNotDir(dwError))
+		return err_nt_path_not_dir(dwError, path);
+#define NEED_err_nt_path_not_dir
+	return DeeNTSystem_ThrowErrorf(&DeeError_FSError, dwError,
+	                               "Failed to lchown path %r to uid=%r, gid=%r",
+	                               path, uid, gid);
+}
+#endif /* NEED_err_nt_lchown */
+
+#ifdef NEED_err_nt_fchown
+#undef NEED_err_nt_fchown
+INTERN ATTR_COLD NONNULL((2, 3, 4)) int DCALL
+err_nt_fchown(DWORD dwError, DeeObject *fd, DeeObject *uid, DeeObject *gid) {
+	if (DeeNTSystem_IsAccessDeniedError(dwError))
+		return err_nt_chown_no_access(dwError, fd, uid, gid);
+#define NEED_err_nt_chown_no_access
+	if (DeeNTSystem_IsBadF(dwError))
+		return err_nt_handle_closed(dwError, fd);
+#define NEED_err_nt_handle_closed
+	return DeeNTSystem_ThrowErrorf(&DeeError_FSError, dwError,
+	                               "Failed to fchown %r to uid=%r, gid=%r",
+	                               fd, uid, gid);
+}
+#endif /* NEED_err_nt_fchown */
 
 #ifdef NEED_err_unix_truncate
 #undef NEED_err_unix_truncate
@@ -2375,6 +2742,16 @@ err_nt_path_not_link(DWORD dwError, DeeObject *__restrict path) {
 }
 #endif /* NEED_err_nt_path_not_link */
 
+#ifdef NEED_err_nt_chown_no_access
+#undef NEED_err_nt_chown_no_access
+INTERN ATTR_COLD NONNULL((2, 3, 4)) int DCALL
+err_nt_chown_no_access(DWORD dwError, DeeObject *path_or_fd, DeeObject *uid, DeeObject *gid) {
+	return DeeNTSystem_ThrowErrorf(&DeeError_FileAccessError, dwError,
+	                               "Not allowed to change owner/group of %r to uid=%r, gid=%r",
+	                               path_or_fd, uid, gid);
+}
+#endif /* NEED_err_nt_chown_no_access */
+
 #ifdef NEED_err_unix_ftruncate_fbig
 #undef NEED_err_unix_ftruncate_fbig
 INTERN ATTR_COLD NONNULL((2, 3)) int DCALL
@@ -2468,20 +2845,20 @@ err_unix_file_closed(int errno_value, DeeObject *__restrict fd) {
 #ifdef NEED_err_unix_chmod_no_access
 #undef NEED_err_unix_chmod_no_access
 INTERN ATTR_COLD NONNULL((2)) int DCALL
-err_unix_chmod_no_access(int errno_value, DeeObject *__restrict path, unsigned int mode) {
+err_unix_chmod_no_access(int errno_value, DeeObject *__restrict path_or_fd, unsigned int mode) {
 	return DeeUnixSystem_ThrowErrorf(&DeeError_FileAccessError, errno_value,
 	                                 "Not allowed to change file-mode of %r to %#x",
-	                                 path, mode);
+	                                 path_or_fd, mode);
 }
 #endif /* NEED_err_unix_chmod_no_access */
 
 #ifdef NEED_err_unix_chown_no_access
 #undef NEED_err_unix_chown_no_access
 INTERN ATTR_COLD NONNULL((2)) int DCALL
-err_unix_chown_no_access(int errno_value, DeeObject *__restrict path, uid_t uid, gid_t gid) {
+err_unix_chown_no_access(int errno_value, DeeObject *__restrict path_or_fd, uid_t uid, gid_t gid) {
 	return DeeUnixSystem_ThrowErrorf(&DeeError_FileAccessError, errno_value,
 	                                 "Not allowed to change owner/group of %r to uid=%" PRFu32 ", gid=%" PRFu32,
-	                                 path, (uint32_t)uid, (uint32_t)gid);
+	                                 path_or_fd, (uint32_t)uid, (uint32_t)gid);
 }
 #endif /* NEED_err_unix_chown_no_access */
 
@@ -2822,39 +3199,6 @@ PRIVATE WCHAR const str_SeCreateSymbolicLinkPrivilege[] = {
 	'c', 'L', 'i', 'n', 'k', 'P', 'r', 'i', 'v', 'i', 'l', 'e', 'g', 'e', 0
 };
 
-PRIVATE BOOL DCALL nt_AcquirePrivilege(LPCWSTR lpName) {
-	HANDLE tok, hProcess;
-	LUID luid;
-	TOKEN_PRIVILEGES tok_priv;
-	DWORD error;
-	init_ADVAPI32_dll();
-#define NEED_init_ADVAPI32_dll
-	if unlikely(!pdyn_OpenProcessToken)
-		goto fail;
-#define NEED_pdyn_OpenProcessToken
-	if unlikely(!pdyn_LookupPrivilegeValueW)
-		goto fail;
-#define NEED_pdyn_LookupPrivilegeValueW
-	if unlikely(!pdyn_AdjustTokenPrivileges)
-		goto fail;
-#define NEED_pdyn_AdjustTokenPrivileges
-	hProcess = GetCurrentProcess();
-	if unlikely(!(*pdyn_OpenProcessToken)(hProcess, TOKEN_ADJUST_PRIVILEGES, &tok))
-		goto fail;
-	if unlikely(!(*pdyn_LookupPrivilegeValueW)(NULL, lpName, &luid))
-		goto fail;
-	tok_priv.PrivilegeCount           = 1;
-	tok_priv.Privileges[0].Luid       = luid;
-	tok_priv.Privileges[0].Attributes = SE_PRIVILEGE_ENABLED;
-	if unlikely(!(*pdyn_AdjustTokenPrivileges)(tok, FALSE, &tok_priv, 0, NULL, NULL))
-		goto fail;
-	error = GetLastError();
-	SetLastError(0);
-	return unlikely(error == ERROR_NOT_ALL_ASSIGNED) ? 0 : 1;
-fail:
-	return FALSE;
-}
-
 /* Same as `nt_CreateSymbolicLink()', but automatically determine proper `dwFlags'
  * @return:  0: Successfully created the symlink.
  * @return: -1: A deemon callback failed and an error was thrown.
@@ -2891,13 +3235,11 @@ again:
 		/* Try to acquire the ~privilege~ to create symbolic links. */
 		if (error == ERROR_PRIVILEGE_NOT_HELD) {
 			if (!nt_symlink_bHoldingSymlinkPriv) {
-				DBG_ALIGNMENT_DISABLE();
 				if (nt_AcquirePrivilege(str_SeCreateSymbolicLinkPrivilege)) {
-					DBG_ALIGNMENT_ENABLE();
+#define NEED_nt_AcquirePrivilege
 					nt_symlink_bHoldingSymlinkPriv = TRUE;
 					goto again;
 				}
-				DBG_ALIGNMENT_ENABLE();
 			}
 
 			/* May as well not exist at all... */
@@ -2911,6 +3253,47 @@ err:
 	return -1;
 }
 #endif /* NEED_nt_CreateSymbolicLinkAuto */
+
+
+#ifdef NEED_nt_AcquirePrivilege
+#undef NEED_nt_AcquirePrivilege
+/* Try to acquire the named privilege */
+INTERN BOOL DCALL nt_AcquirePrivilege(LPCWSTR lpName) {
+	HANDLE tok, hProcess;
+	LUID luid;
+	TOKEN_PRIVILEGES tok_priv;
+	DWORD error;
+	init_ADVAPI32_dll();
+#define NEED_init_ADVAPI32_dll
+	if unlikely(!pdyn_OpenProcessToken)
+		goto fail;
+#define NEED_pdyn_OpenProcessToken
+	if unlikely(!pdyn_LookupPrivilegeValueW)
+		goto fail;
+#define NEED_pdyn_LookupPrivilegeValueW
+	if unlikely(!pdyn_AdjustTokenPrivileges)
+		goto fail;
+#define NEED_pdyn_AdjustTokenPrivileges
+	DBG_ALIGNMENT_DISABLE();
+	hProcess = GetCurrentProcess();
+	if unlikely(!(*pdyn_OpenProcessToken)(hProcess, TOKEN_ADJUST_PRIVILEGES, &tok))
+		goto fail;
+	if unlikely(!(*pdyn_LookupPrivilegeValueW)(NULL, lpName, &luid))
+		goto fail;
+	tok_priv.PrivilegeCount           = 1;
+	tok_priv.Privileges[0].Luid       = luid;
+	tok_priv.Privileges[0].Attributes = SE_PRIVILEGE_ENABLED;
+	if unlikely(!(*pdyn_AdjustTokenPrivileges)(tok, FALSE, &tok_priv, 0, NULL, NULL))
+		goto fail;
+	error = GetLastError();
+	SetLastError(0);
+	DBG_ALIGNMENT_ENABLE();
+	return unlikely(error == ERROR_NOT_ALL_ASSIGNED) ? 0 : 1;
+fail:
+	DBG_ALIGNMENT_ENABLE();
+	return FALSE;
+}
+#endif /* NEED_nt_AcquirePrivilege */
 
 
 #ifdef NEED_nt_GetFileAttributesEx
@@ -4014,6 +4397,9 @@ local libs = {
 		"LookupPrivilegeValueW",
 		"AdjustTokenPrivileges",
 		"GetSecurityInfo",
+		"SetSecurityInfo",
+		"GetNamedSecurityInfoW",
+		"SetNamedSecurityInfoW",
 	},
 };
 
@@ -4030,15 +4416,17 @@ for (local lib, imports: libs.sorted()) {
 		", ".join(for (local ch: lib) f"'{ch}'"), ", 0 };");
 	print("LOCAL void DCALL do_init_", libImportName, "(void) {");
 	print("	HMODULE hModule;");
+	print("	DBG_ALIGNMENT_DISABLE();");
 	print("	hModule = LoadLibraryW(name_", libImportName, ");");
-	print("	if unlikely(hModule == NULL)");
-	print("		return;");
+	print("	if likely(hModule != NULL) {");
 	for (local imp: imports.sorted()) {
 		print("#ifdef NEED_pdyn_", imp);
 		print("#undef NEED_pdyn_", imp);
-		print("	pdyn_", imp, " = (LP", imp.upper(), ")GetProcAddress(hModule, ", repr imp, ");");
+		print("		pdyn_", imp, " = (LP", imp.upper(), ")GetProcAddress(hModule, ", repr imp, ");");
 		print("#endif /" "* NEED_pdyn_", imp, " *" "/");
 	}
+	print("	}");
+	print("	DBG_ALIGNMENT_ENABLE();");
 	print("}");
 	print("INTERN void DCALL init_", libImportName, "(void) {");
 	print("	Dee_ONCE(do_init_", libImportName, "());");
@@ -4052,6 +4440,9 @@ for (local lib, imports: libs.sorted()) {
 #ifdef NEED_pdyn_AdjustTokenPrivileges
 INTERN LPADJUSTTOKENPRIVILEGES pdyn_AdjustTokenPrivileges = NULL;
 #endif /* NEED_pdyn_AdjustTokenPrivileges */
+#ifdef NEED_pdyn_GetNamedSecurityInfoW
+INTERN LPGETNAMEDSECURITYINFOW pdyn_GetNamedSecurityInfoW = NULL;
+#endif /* NEED_pdyn_GetNamedSecurityInfoW */
 #ifdef NEED_pdyn_GetSecurityInfo
 INTERN LPGETSECURITYINFO pdyn_GetSecurityInfo = NULL;
 #endif /* NEED_pdyn_GetSecurityInfo */
@@ -4061,28 +4452,48 @@ INTERN LPLOOKUPPRIVILEGEVALUEW pdyn_LookupPrivilegeValueW = NULL;
 #ifdef NEED_pdyn_OpenProcessToken
 INTERN LPOPENPROCESSTOKEN pdyn_OpenProcessToken = NULL;
 #endif /* NEED_pdyn_OpenProcessToken */
+#ifdef NEED_pdyn_SetNamedSecurityInfoW
+INTERN LPSETNAMEDSECURITYINFOW pdyn_SetNamedSecurityInfoW = NULL;
+#endif /* NEED_pdyn_SetNamedSecurityInfoW */
+#ifdef NEED_pdyn_SetSecurityInfo
+INTERN LPSETSECURITYINFO pdyn_SetSecurityInfo = NULL;
+#endif /* NEED_pdyn_SetSecurityInfo */
 PRIVATE WCHAR const name_ADVAPI32_dll[] = { 'A', 'D', 'V', 'A', 'P', 'I', '3', '2', '.', 'd', 'l', 'l', 0 };
 LOCAL void DCALL do_init_ADVAPI32_dll(void) {
 	HMODULE hModule;
+	DBG_ALIGNMENT_DISABLE();
 	hModule = LoadLibraryW(name_ADVAPI32_dll);
-	if unlikely(hModule == NULL)
-		return;
+	if likely(hModule != NULL) {
 #ifdef NEED_pdyn_AdjustTokenPrivileges
 #undef NEED_pdyn_AdjustTokenPrivileges
-	pdyn_AdjustTokenPrivileges = (LPADJUSTTOKENPRIVILEGES)GetProcAddress(hModule, "AdjustTokenPrivileges");
+		pdyn_AdjustTokenPrivileges = (LPADJUSTTOKENPRIVILEGES)GetProcAddress(hModule, "AdjustTokenPrivileges");
 #endif /* NEED_pdyn_AdjustTokenPrivileges */
+#ifdef NEED_pdyn_GetNamedSecurityInfoW
+#undef NEED_pdyn_GetNamedSecurityInfoW
+		pdyn_GetNamedSecurityInfoW = (LPGETNAMEDSECURITYINFOW)GetProcAddress(hModule, "GetNamedSecurityInfoW");
+#endif /* NEED_pdyn_GetNamedSecurityInfoW */
 #ifdef NEED_pdyn_GetSecurityInfo
 #undef NEED_pdyn_GetSecurityInfo
-	pdyn_GetSecurityInfo = (LPGETSECURITYINFO)GetProcAddress(hModule, "GetSecurityInfo");
+		pdyn_GetSecurityInfo = (LPGETSECURITYINFO)GetProcAddress(hModule, "GetSecurityInfo");
 #endif /* NEED_pdyn_GetSecurityInfo */
 #ifdef NEED_pdyn_LookupPrivilegeValueW
 #undef NEED_pdyn_LookupPrivilegeValueW
-	pdyn_LookupPrivilegeValueW = (LPLOOKUPPRIVILEGEVALUEW)GetProcAddress(hModule, "LookupPrivilegeValueW");
+		pdyn_LookupPrivilegeValueW = (LPLOOKUPPRIVILEGEVALUEW)GetProcAddress(hModule, "LookupPrivilegeValueW");
 #endif /* NEED_pdyn_LookupPrivilegeValueW */
 #ifdef NEED_pdyn_OpenProcessToken
 #undef NEED_pdyn_OpenProcessToken
-	pdyn_OpenProcessToken = (LPOPENPROCESSTOKEN)GetProcAddress(hModule, "OpenProcessToken");
+		pdyn_OpenProcessToken = (LPOPENPROCESSTOKEN)GetProcAddress(hModule, "OpenProcessToken");
 #endif /* NEED_pdyn_OpenProcessToken */
+#ifdef NEED_pdyn_SetNamedSecurityInfoW
+#undef NEED_pdyn_SetNamedSecurityInfoW
+		pdyn_SetNamedSecurityInfoW = (LPSETNAMEDSECURITYINFOW)GetProcAddress(hModule, "SetNamedSecurityInfoW");
+#endif /* NEED_pdyn_SetNamedSecurityInfoW */
+#ifdef NEED_pdyn_SetSecurityInfo
+#undef NEED_pdyn_SetSecurityInfo
+		pdyn_SetSecurityInfo = (LPSETSECURITYINFO)GetProcAddress(hModule, "SetSecurityInfo");
+#endif /* NEED_pdyn_SetSecurityInfo */
+	}
+	DBG_ALIGNMENT_ENABLE();
 }
 INTERN void DCALL init_ADVAPI32_dll(void) {
 	Dee_ONCE(do_init_ADVAPI32_dll());
