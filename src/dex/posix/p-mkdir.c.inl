@@ -44,6 +44,7 @@ DECL_BEGIN
 #endif /* !... */
 
 
+
 /* Figure out how to implement `fmkdirat()' */
 #undef posix_fmkdirat_USE_wfmkdirat
 #undef posix_fmkdirat_USE_wmkdirat
@@ -74,6 +75,7 @@ DECL_BEGIN
 #else /* ... */
 #define posix_fmkdirat_USE_STUB
 #endif /* !... */
+
 
 
 /* Figure out how to implement `mkdirat()' */

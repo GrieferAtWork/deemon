@@ -62,6 +62,8 @@ print "/" "**" "/";
 /**/
 /*[[[end]]]*/
 
+
+
 /* Figure out how to implement `access()' */
 #undef posix_access_USE_waccess
 #undef posix_access_USE_access
@@ -76,6 +78,8 @@ print "/" "**" "/";
 #define posix_access_USE_STUB
 #endif /* !... */
 
+
+
 /* Figure out how to implement `euidaccess()' */
 #undef posix_euidaccess_USE_euidaccess
 #undef posix_euidaccess_USE_STUB
@@ -84,6 +88,8 @@ print "/" "**" "/";
 #else /* ... */
 #define posix_euidaccess_USE_STUB
 #endif /* !... */
+
+
 
 /* Figure out how to implement `faccessat()' */
 #undef posix_faccessat_USE_faccessat

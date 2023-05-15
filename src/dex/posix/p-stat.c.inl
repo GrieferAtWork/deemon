@@ -34,6 +34,7 @@
 
 DECL_BEGIN
 
+/* Figure out how to implement `stat()' */
 #undef posix_stat_USE_WINDOWS
 #undef posix_stat_USE_stat64
 #undef posix_stat_USE_stat

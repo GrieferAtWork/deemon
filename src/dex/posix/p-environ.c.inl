@@ -35,6 +35,9 @@ DECL_BEGIN
 INTDEF DeeTypeObject DeeEnviron_Type;
 INTDEF DeeTypeObject DeeEnvironIterator_Type;
 
+
+
+/* Figure out how to implement `getenv()' */
 #undef posix_getenv_USE_GetEnvironmentVariableW
 #undef posix_getenv_USE_wgetenv
 #undef posix_getenv_USE_getenv
@@ -59,6 +62,9 @@ INTDEF DeeTypeObject DeeEnvironIterator_Type;
 #define posix_getenv_USE_STUB
 #endif /* !... */
 
+
+
+/* Figure out how to implement `setenv()' */
 #undef posix_setenv_USE_SetEnvironmentVariableW
 #undef posix_setenv_USE_wsetenv
 #undef posix_setenv_USE_setenv
@@ -91,6 +97,9 @@ INTDEF DeeTypeObject DeeEnvironIterator_Type;
 #define posix_setenv_USE_STUB
 #endif /* !... */
 
+
+
+/* Figure out how to implement `unsetenv()' */
 #undef posix_unsetenv_USE_SetEnvironmentVariableW
 #undef posix_unsetenv_USE_wunsetenv
 #undef posix_unsetenv_USE_unsetenv
@@ -121,6 +130,9 @@ INTDEF DeeTypeObject DeeEnvironIterator_Type;
 #define posix_unsetenv_USE_STUB
 #endif /* !... */
 
+
+
+/* Figure out how to implement `clearenv()' */
 #undef posix_clearenv_USE_environ_setempty
 #undef posix_clearenv_USE_wenviron_setempty
 #undef posix_clearenv_USE_SetEnvironmentStringsW
@@ -163,6 +175,9 @@ INTDEF DeeTypeObject DeeEnvironIterator_Type;
 #define posix_clearenv_USE_STUB
 #endif /* !... */
 
+
+
+/* Figure out how to implement `environ.operator iter()' */
 #undef posix_enumenv_USE_GetEnvironmentStringsW
 #undef posix_enumenv_USE_environ
 #undef posix_enumenv_USE_wenviron
@@ -228,6 +243,7 @@ PRIVATE size_t dee_environ_version = 0;
      defined(posix_setenv_USE_wenviron) || defined(posix_enumenv_USE_GetEnvironmentStringsW) || \
      defined(posix_enumenv_USE_wenviron))
 #ifndef CONFIG_HAVE_wcslen
+#define CONFIG_HAVE_wcslen
 #undef wcslen
 #define wcslen dee_wcslen
 DeeSystem_DEFINE_wcslen(dee_wcslen)

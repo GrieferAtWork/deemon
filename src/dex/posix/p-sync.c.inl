@@ -35,14 +35,16 @@ DECL_BEGIN
 #define posix_fsync_USE_STUB
 #endif /* !... */
 
+
+
 /* Figure out how to implement `fdatasync()' */
 #undef posix_fdatasync_USE_fdatasync
-#undef posix_fdatasync_USE_fsync
+#undef posix_fdatasync_USE_posix_fsync
 #undef posix_fdatasync_USE_STUB
 #ifdef CONFIG_HAVE_fdatasync
 #define posix_fdatasync_USE_fdatasync
 #elif !defined(posix_fsync_USE_STUB)
-#define posix_fdatasync_USE_fsync
+#define posix_fdatasync_USE_posix_fsync
 #else /* ... */
 #define posix_fdatasync_USE_STUB
 #endif /* !... */
@@ -195,9 +197,9 @@ err:
 	return NULL;
 #endif /* posix_fdatasync_USE_fdatasync */
 
-#ifdef posix_fdatasync_USE_fsync
+#ifdef posix_fdatasync_USE_posix_fsync
 	return posix_fsync_f_impl(fd);
-#endif /* !posix_fdatasync_USE_fsync */
+#endif /* !posix_fdatasync_USE_posix_fsync */
 
 #ifdef posix_fdatasync_USE_STUB
 #define NEED_posix_err_unsupported

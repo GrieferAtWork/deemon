@@ -32,7 +32,7 @@
 #include <deemon/util/atomic.h>
 #include <deemon/util/lock.h>
 
-/* Figure out how we want to implement the DIR-system */
+/* Figure out how to implement `opendir()' */
 #undef posix_opendir_USE_FindFirstFileExW
 #undef posix_opendir_USE_opendir
 #undef posix_opendir_USE_STUB
@@ -495,6 +495,7 @@ struct dir_iterator_object {
 	DREF DeeObject       *odi_path;     /* [1..1][const] String, File, or int */
 	DREF DeeStringObject *odi_pathstr;  /* [0..1][lock(WRITE_ONCE)] String */
 	bool                  odi_skipdots; /* [const] When true, skip '.' and '..' entries. */
+
 #ifdef posix_opendir_USE_FindFirstFileExW
 	bool                  odi_first;    /* [lock(odi_lock)] When true, we're at the first entry. */
 	HANDLE                odi_hnd;      /* [0..1|NULL(INVALID_HANDLE_VALUE)][lock(odi_lock)]
@@ -573,7 +574,9 @@ struct dir_object {
 
 #ifdef posix_opendir_USE_FindFirstFileExW
 #ifndef CONFIG_HAVE_wcslen
-#define wcslen          dee_wcslen
+#define CONFIG_HAVE_wcslen
+#undef wcslen
+#define wcslen dee_wcslen
 DeeSystem_DEFINE_wcslen(dee_wcslen)
 #endif /* !CONFIG_HAVE_wcslen */
 #endif /* posix_opendir_USE_FindFirstFileExW */
@@ -812,7 +815,7 @@ directory_open(DeeDirIteratorObject *__restrict self,
 				/* NOTE: If `DeeNTSystem_GetHandle' used get_osfhandle(), we must
 				 *       close(fd) here instead (where `fd' is the fd that was
 				 *       used by `DeeNTSystem_GetHandle')! */
-				close(fd); /* Inherited! */
+				(void)close(fd); /* Inherited! */
 #endif /* CONFIG_HAVE_close */
 			} else {
 				CloseHandle(hPath); /* Inherited! */
@@ -823,6 +826,7 @@ directory_open(DeeDirIteratorObject *__restrict self,
 	wname = (LPWSTR)DeeString_AsWide(path);
 	if unlikely(!wname)
 		goto err;
+
 	/* Append the `\\*' to the given path and fix forward-slashes. */
 	wname_length = WSTR_LENGTH(wname);
 	wpattern     = (LPWSTR)Dee_Malloca(8 + wname_length * 2);
@@ -837,12 +841,15 @@ directory_open(DeeDirIteratorObject *__restrict self,
 			ch = '\\';
 		wpattern[i] = ch;
 	}
+
 	/* Use the current directory if the given name is empty. */
 	if (!wname_length)
 		wpattern[wname_length++] = '.';
+
 	/* Append a trailing backslash if there isn't one already. */
 	if (wpattern[wname_length - 1] != '\\')
 		wpattern[wname_length++] = '\\';
+
 	/* Append a match-all wildcard. */
 	wpattern[wname_length++] = '*';
 	wpattern[wname_length]   = 0;
@@ -880,6 +887,7 @@ directory_open(DeeDirIteratorObject *__restrict self,
 			}
 			goto err;
 		}
+
 		/* Empty directory? ok... */
 		self->odi_first = false;
 	} else if (skipdots) {
@@ -944,7 +952,7 @@ EINTR_LABEL(again)
 				if unlikely(!dir) {
 					int saved_errno;
 					saved_errno = DeeSystem_GetErrno();
-					close(fd);
+					(void)close(fd);
 					DeeSystem_SetErrno(saved_errno);
 				}
 			}
@@ -1274,6 +1282,7 @@ diriter_loadstat(DeeDirIteratorObject *__restrict self) {
 			DeeNTSystem_ThrowLastErrorf(NULL, "Failed to stat-open %r in %k", fullname, self);
 			goto err_fullname;
 		}
+
 		/* Actually retrieve stat information. */
 		if (GetFileInformationByHandle(hFile, &self->odi_st)) {
 			self->odi_stvalid = true;

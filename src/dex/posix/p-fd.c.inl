@@ -62,6 +62,7 @@ print "/" "**" "/";
 /*[[[end]]]*/
 
 
+
 /* Figure out how to implement `isatty()' */
 #undef posix_isatty_USE_isatty
 #undef posix_isatty_USE_STUB
@@ -70,6 +71,7 @@ print "/" "**" "/";
 #else /* CONFIG_HAVE_isatty2 */
 #define posix_isatty_USE_STUB
 #endif /* !CONFIG_HAVE_isatty2 */
+
 
 
 /* Figure out how to implement `umask()' */
@@ -82,6 +84,7 @@ print "/" "**" "/";
 #endif /* !CONFIG_HAVE_umask2 */
 
 
+
 /* Figure out how to implement `dup()' */
 #undef posix_dup_USE_dup
 #undef posix_dup_USE_STUB
@@ -92,6 +95,7 @@ print "/" "**" "/";
 #endif /* !CONFIG_HAVE_dup2 */
 
 
+
 /* Figure out how to implement `dup2()' */
 #undef posix_dup2_USE_dup2
 #undef posix_dup2_USE_STUB
@@ -100,6 +104,7 @@ print "/" "**" "/";
 #else /* CONFIG_HAVE_dup2 */
 #define posix_dup2_USE_STUB
 #endif /* !CONFIG_HAVE_dup2 */
+
 
 
 /* Figure out how to implement `dup3()' */

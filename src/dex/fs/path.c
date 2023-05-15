@@ -38,11 +38,13 @@ DECL_BEGIN
 
 #define DeeSystem_IsAbsString(x) DeeSystem_IsAbs(DeeString_STR(x))
 
-
 #ifndef CONFIG_HAVE_memrchr
+#define CONFIG_HAVE_memrchr
+#undef memrchr
 #define memrchr dee_memrchr
 DeeSystem_DEFINE_memrchr(dee_memrchr)
 #endif /* !CONFIG_HAVE_memrchr */
+
 
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 fs_pathhead(DeeObject *__restrict path) {

@@ -34,6 +34,8 @@
 #include <stdarg.h>
 
 #ifndef CONFIG_HAVE_wcslen
+#define CONFIG_HAVE_wcslen
+#undef wcslen
 #define wcslen dee_wcslen
 DECL_BEGIN
 DeeSystem_DEFINE_wcslen(dee_wcslen)

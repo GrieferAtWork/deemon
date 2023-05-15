@@ -2290,6 +2290,7 @@ PRIVATE void DCALL dee_writeall(int fd, void const *buf, size_t num_bytes) {
 #ifdef ipc_Process_USE_WCHAR_CHDIR_APIS
 #ifndef CONFIG_HAVE_wcslen
 #define CONFIG_HAVE_wcslen
+#undef wcslen
 #define wcslen dee_wcslen
 DeeSystem_DEFINE_wcslen(dee_wcslen)
 #endif /* !CONFIG_HAVE_wcslen */
@@ -4221,6 +4222,7 @@ err:
 #if defined(ipc_Process_USE_cmdline) && defined(ipc_Process_USE_CreateProcessW)
 #ifndef CONFIG_HAVE_wcslen
 #define CONFIG_HAVE_wcslen
+#undef wcslen
 #define wcslen dee_wcslen
 DeeSystem_DEFINE_wcslen(dee_wcslen)
 #endif /* !CONFIG_HAVE_wcslen */

@@ -29,6 +29,7 @@
 
 DECL_BEGIN
 
+/* Figure out how to implement `rename()' */
 #undef posix_rename_USE_nt_MoveFileEx
 #undef posix_rename_USE_wrename
 #undef posix_rename_USE_rename
@@ -45,6 +46,9 @@ DECL_BEGIN
 #define posix_rename_USE_STUB
 #endif /* !... */
 
+
+
+/* Figure out how to implement `frename()' */
 #undef posix_frename_USE_posix_rename
 #undef posix_frename_USE_STUB
 #ifndef posix_rename_USE_STUB
@@ -53,6 +57,9 @@ DECL_BEGIN
 #define posix_frename_USE_STUB
 #endif /* !... */
 
+
+
+/* Figure out how to implement `renameat()' */
 #undef posix_renameat_USE_posix_rename
 #undef posix_renameat_USE_renameat2
 #undef posix_renameat_USE_renameat
@@ -70,6 +77,9 @@ DECL_BEGIN
 #define posix_renameat_USE_STUB
 #endif /* !... */
 
+
+
+/* Figure out how to implement `renameat2()' */
 #undef posix_renameat2_USE_posix_renameat
 #undef posix_renameat2_USE_renameat2
 #undef posix_renameat2_USE_nt_MoveFileEx
@@ -84,6 +94,9 @@ DECL_BEGIN
 #define posix_renameat2_USE_STUB
 #endif /* !... */
 
+
+
+/* Figure out how to implement `link()' */
 #undef posix_link_USE_nt_CreateHardLink
 #undef posix_link_USE_wlink
 #undef posix_link_USE_link
@@ -100,6 +113,9 @@ DECL_BEGIN
 #define posix_link_USE_STUB
 #endif /* !... */
 
+
+
+/* Figure out how to implement `flink()' */
 #undef posix_flink_USE_posix_link
 #undef posix_flink_USE_linkat
 #undef posix_flink_USE_STUB
@@ -114,6 +130,9 @@ DECL_BEGIN
 #define posix_flink_USE_STUB
 #endif /* !... */
 
+
+
+/* Figure out how to implement `linkat()' */
 #undef posix_linkat_USE_posix_link
 #undef posix_linkat_USE_linkat
 #undef posix_linkat_USE_STUB

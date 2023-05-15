@@ -50,6 +50,8 @@ DECL_BEGIN
 #define posix_fcopyfile_USE_STUB
 #endif /* !... */
 
+
+
 /* Figure out how to implement `copyfile()' */
 #undef posix_copyfile_USE_posix_copyfile_fileio
 #undef posix_copyfile_USE_STUB
@@ -59,6 +61,8 @@ DECL_BEGIN
 #define posix_copyfile_USE_STUB
 #endif /* !... */
 
+
+
 /* Figure out how to implement `lcopyfile()' */
 #undef posix_lcopyfile_USE_posix_copyfile_fileio
 #undef posix_lcopyfile_USE_STUB
@@ -67,6 +71,8 @@ DECL_BEGIN
 #else /* ... */
 #define posix_lcopyfile_USE_STUB
 #endif /* !... */
+
+
 
 /* Figure out how to implement `copyfileat()' */
 #undef posix_copyfileat_USE_copyfile__AND__lcopyfile__AND__fcopyfile

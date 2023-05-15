@@ -28,6 +28,7 @@ DECL_BEGIN
 
 
 
+/* Figure out how to implement `gettmp()' */
 #undef posix_gettmp_USE_nt_GetTempPath
 #undef posix_gettmp_USE_P_tmpdir
 #ifdef CONFIG_HOST_WINDOWS
@@ -41,6 +42,7 @@ DECL_BEGIN
 
 
 
+/* Figure out how to implement `gethostname()' */
 #undef posix_gethostname_USE_nt_GetComputerName
 #undef posix_gethostname_USE_gethostname
 #undef posix_gethostname_USE_read_etc_hostname
@@ -57,6 +59,7 @@ DECL_BEGIN
 
 
 
+/* Figure out how to implement `chdir()' */
 #undef posix_chdir_USE_nt_SetCurrentDirectory
 #undef posix_chdir_USE_chdir
 #undef posix_chdir_USE_wchdir
@@ -76,6 +79,7 @@ DECL_BEGIN
 
 
 
+/* Figure out how to implement `fchdir()' */
 #undef posix_fchdir_USE_fchdir
 #undef posix_fchdir_USE_posix_chdir
 #undef posix_fchdir_USE_STUB
@@ -91,6 +95,7 @@ DECL_BEGIN
 
 
 
+/* Figure out how to implement `fchdirat()' */
 #undef posix_fchdirat_USE_fchdirat
 #undef posix_fchdirat_USE_posix_chdir
 #undef posix_fchdirat_USE_STUB
@@ -136,6 +141,8 @@ PRIVATE DEFINE_STRING(posix_tmpdir_default, P_tmpdir);
 
 #ifdef posix_gethostname_USE_gethostname
 #ifndef CONFIG_HAVE_strnlen
+#define CONFIG_HAVE_strnlen
+#undef strnlen
 #define strnlen dee_strnlen
 DeeSystem_DEFINE_strnlen(strnlen)
 #endif /* !CONFIG_HAVE_strnlen */
@@ -202,8 +209,8 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_gettmp_f_impl(void)
 #endif /* !posix_getenv_USE_STUB */
 
 #ifdef posix_gettmp_USE_nt_GetTempPath
-#define NEED_nt_GetTempPath
 	return nt_GetTempPath();
+#define NEED_nt_GetTempPath
 #endif /* posix_gettmp_USE_nt_GetTempPath */
 
 #ifdef posix_gettmp_USE_P_tmpdir
@@ -230,8 +237,8 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_gethostname_f_impl(void)
 /*[[[end]]]*/
 {
 #ifdef posix_gethostname_USE_nt_GetComputerName
-#define NEED_nt_GetComputerName
 	return nt_GetComputerName();
+#define NEED_nt_GetComputerName
 #endif /* posix_gethostname_USE_nt_GetComputerName */
 
 #ifdef posix_gethostname_USE_gethostname
@@ -309,8 +316,8 @@ err:
 #endif /* posix_gethostname_USE_read_etc_hostname */
 
 #ifdef posix_gethostname_USE_STUB
-#define NEED_posix_err_unsupported
 	posix_err_unsupported("gethostname");
+#define NEED_posix_err_unsupported
 	return NULL;
 #endif /* posix_gethostname_USE_STUB */
 }
@@ -343,8 +350,8 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_chdir_f_impl(DeeObject *path)
 	if (DeeObject_AssertTypeExact(path, &DeeString_Type))
 		goto err;
 again:
-#define NEED_nt_SetCurrentDirectory
 	result = nt_SetCurrentDirectory(path);
+#define NEED_nt_SetCurrentDirectory
 	if unlikely(result != 0) {
 		DWORD dwError;
 		if unlikely(result < 0)
@@ -367,23 +374,23 @@ again:
 		if (dwError == ERROR_ACCESS_DENIED) {
 			DWORD dwAttributes;
 			/* Check if the path is actually a directory. */
-#define NEED_nt_GetFileAttributes
 			result = nt_GetFileAttributes(path, &dwAttributes);
+#define NEED_nt_GetFileAttributes
 			if (result < 0)
 				goto err;
 			if (result == 0 && !(dwAttributes & FILE_ATTRIBUTE_DIRECTORY)) {
 do_throw_not_dir:
-#define NEED_err_nt_path_not_dir
 				err_nt_path_not_dir(dwError, path);
+#define NEED_err_nt_path_not_dir
 				goto err;
 			}
 		}
 		if (DeeNTSystem_IsFileNotFoundError(dwError)) {
-#define NEED_err_nt_path_not_found
 			err_nt_path_not_found(dwError, path);
+#define NEED_err_nt_path_not_found
 		} else if (DeeNTSystem_IsAccessDeniedError(dwError)) {
-#define NEED_err_nt_path_no_access
 			err_nt_path_no_access(dwError, path);
+#define NEED_err_nt_path_no_access
 		} else {
 			DeeNTSystem_ThrowErrorf(&DeeError_FSError, dwError,
 			                        "Failed to change the current working directory to %r",
@@ -400,10 +407,10 @@ err:
 
 #if defined(posix_chdir_USE_chdir) || defined(posix_chdir_USE_wchdir)
 #ifdef posix_chdir_USE_chdir
-	char *utf8_path;
+	char const *utf8_path;
 #endif /* posix_chdir_USE_chdir */
 #ifdef posix_chdir_USE_wchdir
-	dwchar_t *wide_path;
+	dwchar_t const *wide_path;
 #endif /* ..posix_chdir_USE_wchdir */
 
 	if (DeeObject_AssertTypeExact(path, &DeeString_Type))
@@ -423,14 +430,14 @@ EINTR_ENOMEM_LABEL(again)
 #ifdef posix_chdir_USE_chdir
 	if unlikely(chdir(utf8_path) != 0)
 #elif defined(posix_chdir_USE_wchdir)
-	if unlikely(wchdir(wide_path) != 0)
+	if unlikely(wchdir((wchar_t const *)wide_path) != 0)
 #endif /* ... */
 	{
 		int error = DeeSystem_GetErrno();
 		EINTR_HANDLE(error, again, err);
 		ENOMEM_HANDLE(error, again, err);
-#define NEED_err_unix_chdir
 		err_unix_chdir(error, path);
+#define NEED_err_unix_chdir
 		goto err;
 	}
 	if (DeeNotify_BroadcastClass(Dee_NOTIFICATION_CLASS_PWD))
@@ -441,9 +448,9 @@ err:
 #endif /* posix_chdir_USE_chdir || posix_chdir_USE_wchdir */
 
 #ifdef posix_chdir_USE_STUB
-#define NEED_posix_err_unsupported
 	(void)path;
 	posix_err_unsupported("chdir");
+#define NEED_posix_err_unsupported
 	return NULL;
 #endif /* posix_chdir_USE_STUB */
 }
@@ -486,8 +493,8 @@ EINTR_LABEL(again)
 			goto err;
 		}
 #endif /* EBADF */
-#define NEED_err_unix_chdir
 		err_unix_chdir(error, fd);
+#define NEED_err_unix_chdir
 		goto err;
 	}
 	if (DeeNotify_BroadcastClass(Dee_NOTIFICATION_CLASS_PWD))
@@ -499,8 +506,8 @@ err:
 
 #ifdef posix_fchdir_USE_posix_chdir
 	DREF DeeObject *abspath, *result;
-#define NEED_posix_fd_makepath
 	abspath = posix_fd_makepath(fd);
+#define NEED_posix_fd_makepath
 	if unlikely(!abspath)
 		goto err;
 	result = posix_chdir_f_impl(abspath);
@@ -511,9 +518,9 @@ err:
 #endif /* posix_fchdir_USE_posix_chdir */
 
 #ifdef posix_fchdir_USE_STUB
-#define NEED_posix_err_unsupported
 	(void)fd;
 	posix_err_unsupported("fchdir");
+#define NEED_posix_err_unsupported
 	return NULL;
 #endif /* posix_fchdir_USE_STUB */
 }
@@ -577,11 +584,11 @@ err:
 #endif /* posix_fchdirat_USE_posix_chdir */
 
 #ifdef posix_fchdirat_USE_STUB
-#define NEED_posix_err_unsupported
 	(void)dfd;
 	(void)path;
 	(void)atflags;
 	posix_err_unsupported("fchdirat");
+#define NEED_posix_err_unsupported
 	return NULL;
 #endif /* posix_fchdirat_USE_STUB */
 }

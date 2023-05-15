@@ -63,6 +63,8 @@ DECL_BEGIN
 #define byte_t __BYTE_TYPE__
 
 #ifndef CONFIG_HAVE_strnlen
+#define CONFIG_HAVE_strnlen
+#undef strnlen
 #define strnlen dee_strnlen
 DeeSystem_DEFINE_strnlen(strnlen)
 #endif /* !CONFIG_HAVE_strnlen */

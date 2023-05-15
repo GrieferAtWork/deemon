@@ -260,11 +260,15 @@ DECL_END
 DECL_BEGIN
 
 #ifndef CONFIG_HAVE_memrchr
+#define CONFIG_HAVE_memrchr
+#undef memrchr
 #define memrchr dee_memrchr
 DeeSystem_DEFINE_memrchr(dee_memrchr)
 #endif /* !CONFIG_HAVE_memrchr */
 
 #ifndef CONFIG_HAVE_strnlen
+#define CONFIG_HAVE_strnlen
+#undef strnlen
 #define strnlen dee_strnlen
 DeeSystem_DEFINE_strnlen(strnlen)
 #endif /* !CONFIG_HAVE_strnlen */

@@ -26,6 +26,7 @@
 
 DECL_BEGIN
 
+/* Figure out how to implement `readlink()' */
 #undef posix_readlink_USE_nt_FReadLink
 #undef posix_readlink_USE_freadlinkat
 #undef posix_readlink_USE_wreadlink
@@ -45,6 +46,9 @@ DECL_BEGIN
 #define posix_readlink_USE_STUB
 #endif /* !... */
 
+
+
+/* Figure out how to implement `freadlink()' */
 #undef posix_freadlink_USE_nt_FReadLink
 #undef posix_freadlink_USE_posix_readlink
 #undef posix_freadlink_USE_STUB
@@ -56,6 +60,9 @@ DECL_BEGIN
 #define posix_freadlink_USE_STUB
 #endif /* !... */
 
+
+
+/* Figure out how to implement `readlinkat()' */
 #undef posix_readlinkat_USE_freadlinkat
 #undef posix_readlinkat_USE_readlinkat
 #undef posix_readlinkat_USE_posix_readlink
@@ -385,11 +392,11 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_readlinkat_f_impl(DeeObject *dfd,
 #ifdef posix_readlinkat_USE_posix_readlink
 	DREF DeeObject *absfile, *result;
 #if defined(posix_readlinkat_USE_freadlinkat) || defined(posix_readlinkat_USE_readlinkat)
-	if (!DeeString_Check(dfd) && DeeString_Check(file)
+	if (!DeeString_Check(dfd) && DeeString_Check(file) &&
 #ifdef posix_readlinkat_USE_readlinkat
-	    && atflags == 0
+	    atflags == 0 &&
 #endif /* posix_readlinkat_USE_readlinkat */
-		) {
+	    1) {
 		int os_dfd = DeeUnixSystem_GetFD(dfd);
 		char *utf8_file;
 		char *buffer, *new_buffer;

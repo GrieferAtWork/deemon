@@ -56,6 +56,8 @@ DECL_BEGIN
 #define posix_cpu_count_USE_STUB
 #endif /* !... */
 
+
+
 /*[[[deemon import("rt.gen.dexutils").gw("cpu_count", "->?Dint", libname: "posix"); ]]]*/
 FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_cpu_count_f_impl(void);
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_cpu_count_f(size_t argc, DeeObject *const *argv);

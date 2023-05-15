@@ -10241,6 +10241,12 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #define pipe(fds) _pipe(fds, 4096, O_BINARY)
 #endif /* pipe = _pipe */
 
+#if defined(CONFIG_HAVE_pipe2) && !defined(CONFIG_HAVE_pipe)
+#define CONFIG_HAVE_pipe
+#undef pipe
+#define pipe(fds) pipe2(fds, 0)
+#endif /* pipe = pipe2 */
+
 #if !defined(CONFIG_HAVE_mkdirat) && defined(CONFIG_HAVE_fmkdirat)
 #define CONFIG_HAVE_mkdirat
 #undef mkdirat
@@ -11461,7 +11467,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #endif /* !CONFIG_HAVE_isalnum */
 
 
-/* Mandatory <string.h> features */
+/* Define missing <string.h> functions that all code assumes to be present */
 #ifndef CONFIG_HAVE_strlen
 #define CONFIG_HAVE_strlen
 DECL_BEGIN

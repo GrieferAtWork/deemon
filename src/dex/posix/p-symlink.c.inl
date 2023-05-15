@@ -44,6 +44,7 @@ DECL_BEGIN
 #endif /* !... */
 
 
+
 /* Figure out how to implement `fsymlinkat()' */
 #undef posix_fsymlinkat_USE_wfsymlinkat
 #undef posix_fsymlinkat_USE_wsymlinkat
@@ -74,6 +75,7 @@ DECL_BEGIN
 #else /* ... */
 #define posix_fsymlinkat_USE_STUB
 #endif /* !... */
+
 
 
 /* Figure out how to implement `symlinkat()' */

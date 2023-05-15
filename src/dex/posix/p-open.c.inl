@@ -320,6 +320,8 @@ for (local f: functions) {
 #define posix_open_USE_STUB
 #endif /* !... */
 
+
+
 /* Figure out how to implement `creat()' */
 #undef posix_creat_USE_wcreat
 #undef posix_creat_USE_creat
@@ -335,6 +337,27 @@ for (local f: functions) {
 #define posix_creat_USE_open
 #else /* ... */
 #define posix_creat_USE_STUB
+#endif /* !... */
+
+
+/* Figure out how to implement `openat()' */
+#undef posix_openat_USE_wopenat
+#undef posix_openat_USE_openat
+#undef posix_openat_USE_posix_open
+#undef posix_openat_USE_STUB
+#if defined(CONFIG_HAVE_wopenat) && defined(CONFIG_PREFER_WCHAR_FUNCTIONS)
+#define posix_openat_USE_wopenat
+#define posix_openat_USE_posix_open
+#elif defined(CONFIG_HAVE_openat)
+#define posix_openat_USE_openat
+#define posix_openat_USE_posix_open
+#elif defined(CONFIG_HAVE_wopenat)
+#define posix_openat_USE_wopenat
+#define posix_openat_USE_posix_open
+#elif !defined(posix_open_USE_STUB)
+#define posix_openat_USE_posix_open
+#else /* ... */
+#define posix_openat_USE_STUB
 #endif /* !... */
 
 
@@ -571,27 +594,6 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_creat_f_impl(DeeObject *filename,
 
 
 
-
-
-/* Figure out how to implement `openat()' */
-#undef posix_openat_USE_wopenat
-#undef posix_openat_USE_openat
-#undef posix_openat_USE_posix_open
-#undef posix_openat_USE_STUB
-#if defined(CONFIG_HAVE_wopenat) && defined(CONFIG_PREFER_WCHAR_FUNCTIONS)
-#define posix_openat_USE_wopenat
-#define posix_openat_USE_posix_open
-#elif defined(CONFIG_HAVE_openat)
-#define posix_openat_USE_openat
-#define posix_openat_USE_posix_open
-#elif defined(CONFIG_HAVE_wopenat)
-#define posix_openat_USE_wopenat
-#define posix_openat_USE_posix_open
-#elif !defined(posix_open_USE_STUB)
-#define posix_openat_USE_posix_open
-#else /* ... */
-#define posix_openat_USE_STUB
-#endif /* !... */
 
 
 /************************************************************************/

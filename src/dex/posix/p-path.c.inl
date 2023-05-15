@@ -161,8 +161,8 @@ posix_path_inctrail_f(DeeObject *__restrict path) {
 	/* If the string contains an instances of the alt-sep,
 	 * but no instance of the primary sep, then we must
 	 * append the alt-sep instead!
-	 * 
-	 * For this, we can always just search the STR-repr of the string. */
+	 *
+	 * For this, we can always just search DeeString_STR. */
 	if (memchr(DeeString_STR(path), DeeSystem_ALTSEP, DeeString_SIZE(path) * sizeof(char)) != NULL &&
 	    memchr(DeeString_STR(path), DeeSystem_SEP, DeeString_SIZE(path) * sizeof(char)) == NULL)
 		return DeeObject_Add(path, (DeeObject *)&posix_FS_ALTSEP);
@@ -230,6 +230,7 @@ again:
 			break;
 		pth_end = next;
 	}
+
 	/* Search for the next DeeSystem_SEP and unroll `pth_end' to point directly after it. */
 	for (;;) {
 		if (pth_begin >= pth_end)
@@ -291,7 +292,7 @@ posix_path_abspath_f(DeeObject *__restrict path, DeeObject *pwd) {
 	ASSERT_OBJECT_TYPE_EXACT(path, &DeeString_Type);
 	ASSERT_OBJECT_TYPE_EXACT_OPT(pwd, &DeeString_Type);
 
-	/* Quick check: If the given path already is absolute,
+	/* Quick check: If the given path is already absolute,
 	 *              then we've got nothing to do. */
 	if (DeeString_IsAbsPath(path)) {
 		if (!pwd) {

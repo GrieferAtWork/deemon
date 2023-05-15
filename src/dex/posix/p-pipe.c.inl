@@ -31,7 +31,7 @@ DECL_BEGIN
 #undef posix_pipe_USE_pipe
 #undef posix_pipe_USE_CreatePipe
 #undef posix_pipe_USE_STUB
-#if defined(CONFIG_HAVE_pipe) || defined(CONFIG_HAVE_pipe2)
+#ifdef CONFIG_HAVE_pipe
 #define posix_pipe_USE_pipe
 #elif defined(CONFIG_HAVE_open_osfhandle) && defined(CONFIG_HOST_WINDOWS)
 #define posix_pipe_USE_CreatePipe
@@ -89,11 +89,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_pipe_f_impl(void)
 	int fds[2];
 EINTR_LABEL(again)
 	DBG_ALIGNMENT_DISABLE();
-#ifdef CONFIG_HAVE_pipe
 	error = pipe(fds);
-#else /* CONFIG_HAVE_pipe */
-	error = pipe2(fds, 0);
-#endif /* !CONFIG_HAVE_pipe */
 	DBG_ALIGNMENT_ENABLE();
 	if (error < 0) {
 		error = DeeSystem_GetErrno();
@@ -109,10 +105,12 @@ EINTR_LABEL(again)
 		goto err_fds;
 	return result;
 err_fds:
+#ifdef CONFIG_HAVE_close
 	DBG_ALIGNMENT_DISABLE();
-	close(fds[1]);
-	close(fds[0]);
+	(void)close(fds[1]);
+	(void)close(fds[0]);
 	DBG_ALIGNMENT_ENABLE();
+#endif /* CONFIG_HAVE_close */
 err:
 	return NULL;
 #endif /* posix_pipe_USE_pipe */
@@ -152,14 +150,21 @@ again:
 		goto err_fds;
 	return result;
 err_fds:
+#ifdef CONFIG_HAVE_close
 	DBG_ALIGNMENT_DISABLE();
-	close(fds[1]);
-	close(fds[0]);
+	(void)close(fds[1]);
+	(void)close(fds[0]);
+	DBG_ALIGNMENT_ENABLE();
+#endif /* CONFIG_HAVE_close */
 	goto err;
 err_hWritefds0_errno:
 	DeeUnixSystem_ThrowErrorf(&DeeError_SystemError, DeeSystem_GetErrno(),
 	                          "Failed to create pipe");
-	close(fds[0]);
+#ifdef CONFIG_HAVE_close
+	DBG_ALIGNMENT_DISABLE();
+	(void)close(fds[0]);
+	DBG_ALIGNMENT_ENABLE();
+#endif /* CONFIG_HAVE_close */
 	goto err_hWrite;
 err_hWritehRead_errno:
 	DeeUnixSystem_ThrowErrorf(&DeeError_SystemError, DeeSystem_GetErrno(),
@@ -232,9 +237,9 @@ EINTR_LABEL(again)
 	if (oflags & ~(O_CLOEXEC | O_NONBLOCK))
 #elif defined(CONFIG_HAVE_O_NONBLOCK)
 	if (oflags & ~(O_NONBLOCK))
-#else
+#else /* ... */
 	if (oflags & ~(O_CLOEXEC))
-#endif
+#endif /* !... */
 	{
 		DeeSystem_SetErrno(EINVAL);
 		DBG_ALIGNMENT_ENABLE();
@@ -243,6 +248,7 @@ EINTR_LABEL(again)
 	error = pipe(fds);
 	if (error < 0)
 		goto handle_system_error;
+
 	/* Apply O_CLOEXEC */
 #ifdef CONFIG_HAVE_O_CLOEXEC
 	if (oflags & O_CLOEXEC) {
@@ -273,8 +279,8 @@ EINTR_LABEL(again)
 #ifdef CONFIG_HAVE_close
 	if unlikely(!result) {
 		DBG_ALIGNMENT_DISABLE();
-		close(fds[1]);
-		close(fds[0]);
+		(void)close(fds[1]);
+		(void)close(fds[0]);
 		DBG_ALIGNMENT_ENABLE();
 	}
 #endif /* CONFIG_HAVE_close */
@@ -284,8 +290,8 @@ EINTR_LABEL(again)
 handle_system_error_fds:
 #ifdef CONFIG_HAVE_close
 	error = DeeSystem_GetErrno();
-	close(fds[1]);
-	close(fds[0]);
+	(void)close(fds[1]);
+	(void)close(fds[0]);
 	DeeSystem_SetErrno(error);
 #endif /* CONFIG_HAVE_close */
 #endif /* posix_pipe2_USE_pipe_AND_fcntl */
@@ -351,8 +357,8 @@ again:
 #ifdef CONFIG_HAVE_close
 	if unlikely(!result) {
 		DBG_ALIGNMENT_DISABLE();
-		close(fds[1]);
-		close(fds[0]);
+		(void)close(fds[1]);
+		(void)close(fds[0]);
 		DBG_ALIGNMENT_ENABLE();
 	}
 #endif /* CONFIG_HAVE_close */
@@ -361,7 +367,7 @@ err_hWritefds0_errno:
 	DeeUnixSystem_ThrowErrorf(&DeeError_SystemError, DeeSystem_GetErrno(),
 	                          "Failed to create pipe");
 #ifdef CONFIG_HAVE_close
-	close(fds[0]);
+	(void)close(fds[0]);
 #endif /* CONFIG_HAVE_close */
 	goto err_hWrite;
 err_hWritehRead_errno:

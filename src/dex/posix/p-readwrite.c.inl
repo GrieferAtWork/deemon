@@ -86,6 +86,8 @@ typedef union {
 } my_OVERLAPPED;
 #endif /* CONFIG_HOST_WINDOWS */
 
+
+
 /* Figure out how to implement `read()' */
 #undef posix_read_USE_read
 #undef posix_read_USE_STUB
@@ -94,6 +96,8 @@ typedef union {
 #else /* CONFIG_HAVE_read */
 #define posix_read_USE_STUB
 #endif /* !CONFIG_HAVE_read */
+
+
 
 /* Figure out how to implement `lseek()' */
 #undef posix_lseek_USE_lseek
@@ -108,6 +112,8 @@ typedef union {
 #else /* CONFIG_HAVE_lseek */
 #define posix_lseek_USE_STUB
 #endif /* !CONFIG_HAVE_lseek */
+
+
 
 /* Figure out how to implement `pread()' */
 #undef posix_pread_USE_pread64
@@ -150,6 +156,7 @@ typedef union {
 #endif /* !POSIX_READ_BUFSIZE */
 
 
+
 /* Figure out how to implement `write()' */
 #undef posix_write_USE_write
 #undef posix_write_USE_STUB
@@ -158,6 +165,8 @@ typedef union {
 #else /* CONFIG_HAVE_write */
 #define posix_write_USE_STUB
 #endif /* !CONFIG_HAVE_write */
+
+
 
 /* Figure out how to implement `pwrite()' */
 #undef posix_pwrite_USE_pwrite64

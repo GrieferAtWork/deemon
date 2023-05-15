@@ -135,7 +135,10 @@ for (local f: functions) {
 #define posix_lchmod_USE_STUB
 #endif /* !... */
 
-
+/* Check if we should emulate
+ * >> chmod(path, mode);
+ * As:
+ * >> lchmod(try joinpath(headof(path), readlink(path)) catch (NoSymlink) path, mode); */
 #if defined(posix_chmod_USE_STUB) && !defined(posix_lchmod_USE_STUB) && !defined(posix_readlink_USE_STUB)
 #undef posix_chmod_USE_STUB
 #define posix_chmod_USE_posix_readlink__AND__posix_lchmod
