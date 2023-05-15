@@ -27,6 +27,7 @@
 
 #ifndef __INTELLISENSE__
 #include "p-access.c.inl"
+#include "p-chmod.c.inl"
 #include "p-copyfile.c.inl"
 #include "p-cpucount.c.inl"
 #include "p-environ.c.inl"
@@ -65,6 +66,7 @@
 #include <deemon/error.h>
 #include <deemon/error_types.h>
 #include <deemon/seq.h>
+#include <deemon/set.h>
 #include <deemon/string.h>
 
 
@@ -130,6 +132,10 @@ local ALL_STUBS = {
 	("posix_ftruncate_USE_STUB",    { "ftruncate" }),
 	("posix_ftruncateat_USE_STUB",  { "ftruncateat" }),
 	("posix_truncateat_USE_STUB",   { "truncateat" }),
+	("posix_chmod_USE_STUB",        { "chmod" }),
+	("posix_lchmod_USE_STUB",       { "lchmod" }),
+	("posix_fchmod_USE_STUB",       { "fchmod" }),
+	("posix_fchmodat_USE_STUB",     { "fchmodat" }),
 	("posix_pipe_USE_STUB",         { "pipe" }),
 	("posix_pipe2_USE_STUB",        { "pipe2" }),
 	("posix_strerror_USE_STUB",     { "strerror" }),
@@ -164,32 +170,32 @@ local ALL_STUBS = {
 	("posix_enumenv_USE_STUB",      { "environ" }),
 	("posix_stat_USE_STUB",         { "stat" }),
 	("posix_lstat_USE_STUB",        { "lstat" }),
-	("diriter_get_d_name_IS_STUB", { "dirent.d_name" }),
+	("diriter_get_d_name_IS_STUB",  { "dirent.d_name" }),
 	("diriter_get_d_fullname_IS_STUB", { "dirent.d_fullname" }),
-	("diriter_get_d_type_IS_STUB", { "dirent.d_type" }),
-	("diriter_get_d_ino_IS_STUB", { "dirent.d_ino" }),
+	("diriter_get_d_type_IS_STUB",  { "dirent.d_type" }),
+	("diriter_get_d_ino_IS_STUB",   { "dirent.d_ino" }),
 	("diriter_get_d_namlen_IS_STUB", { "dirent.d_namlen" }),
 	("diriter_get_d_reclen_IS_STUB", { "dirent.d_reclen" }),
-	("diriter_get_d_off_IS_STUB", { "dirent.d_off" }),
-	("diriter_get_d_dev_IS_STUB", { "dirent.d_dev" }),
-	("diriter_get_d_mode_IS_STUB", { "dirent.d_mode" }),
+	("diriter_get_d_off_IS_STUB",   { "dirent.d_off" }),
+	("diriter_get_d_dev_IS_STUB",   { "dirent.d_dev" }),
+	("diriter_get_d_mode_IS_STUB",  { "dirent.d_mode" }),
 	("diriter_get_d_nlink_IS_STUB", { "dirent.d_nlink" }),
-	("diriter_get_d_uid_IS_STUB", { "dirent.d_uid" }),
-	("diriter_get_d_gid_IS_STUB", { "dirent.d_gid" }),
-	("diriter_get_d_rdev_IS_STUB", { "dirent.d_rdev" }),
-	("diriter_get_d_size_IS_STUB", { "dirent.d_size" }),
+	("diriter_get_d_uid_IS_STUB",   { "dirent.d_uid" }),
+	("diriter_get_d_gid_IS_STUB",   { "dirent.d_gid" }),
+	("diriter_get_d_rdev_IS_STUB",  { "dirent.d_rdev" }),
+	("diriter_get_d_size_IS_STUB",  { "dirent.d_size" }),
 	("diriter_get_d_blocks_IS_STUB", { "dirent.d_blocks" }),
 	("diriter_get_d_blksize_IS_STUB", { "dirent.d_blksize" }),
 	("diriter_get_d_atime_IS_STUB", { "dirent.d_atime" }),
 	("diriter_get_d_mtime_IS_STUB", { "dirent.d_mtime" }),
 	("diriter_get_d_ctime_IS_STUB", { "dirent.d_ctime" }),
 	("diriter_get_d_birthtime_IS_STUB", { "dirent.st_birthtime" }),
-	("posix_stat_get_dev_IS_STUB", { "stat.st_dev" }),
-	("posix_stat_get_ino_IS_STUB", { "stat.st_ino" }),
+	("posix_stat_get_dev_IS_STUB",  { "stat.st_dev" }),
+	("posix_stat_get_ino_IS_STUB",  { "stat.st_ino" }),
 	("posix_stat_get_mode_IS_STUB", { "stat.st_mode" }),
 	("posix_stat_get_nlink_IS_STUB", { "stat.st_nlink" }),
-	("posix_stat_get_uid_IS_STUB", { "stat.st_uid" }),
-	("posix_stat_get_gid_IS_STUB", { "stat.st_gid" }),
+	("posix_stat_get_uid_IS_STUB",  { "stat.st_uid" }),
+	("posix_stat_get_gid_IS_STUB",  { "stat.st_gid" }),
 	("posix_stat_get_rdev_IS_STUB", { "stat.st_rdev" }),
 	("posix_stat_get_size_IS_STUB", { "stat.st_size" }),
 	("posix_stat_get_blocks_IS_STUB", { "stat.st_blocks" }),
@@ -198,46 +204,46 @@ local ALL_STUBS = {
 	("posix_stat_get_mtime_IS_STUB", { "stat.st_mtime" }),
 	("posix_stat_get_ctime_IS_STUB", { "stat.st_ctime" }),
 	("posix_stat_get_birthtime_IS_STUB", { "stat.st_birthtime" }),
-	("posix_stat_isdir_IS_STUB", { "stat.isdir" }),
-	("posix_stat_ischr_IS_STUB", { "stat.ischr" }),
-	("posix_stat_isblk_IS_STUB", { "stat.isblk" }),
-	("posix_stat_isdev_IS_STUB", { "stat.isdev" }),
-	("posix_stat_isreg_IS_STUB", { "stat.isreg" }),
-	("posix_stat_isfifo_IS_STUB", { "stat.isfifo" }),
-	("posix_stat_islnk_IS_STUB", { "stat.islnk" }),
-	("posix_stat_issock_IS_STUB", { "stat.issock" }),
-	("stat_class_isexe_IS_STUB", { "stat.isexe" }),
+	("posix_stat_isdir_IS_STUB",    { "stat.isdir" }),
+	("posix_stat_ischr_IS_STUB",    { "stat.ischr" }),
+	("posix_stat_isblk_IS_STUB",    { "stat.isblk" }),
+	("posix_stat_isdev_IS_STUB",    { "stat.isdev" }),
+	("posix_stat_isreg_IS_STUB",    { "stat.isreg" }),
+	("posix_stat_isfifo_IS_STUB",   { "stat.isfifo" }),
+	("posix_stat_islnk_IS_STUB",    { "stat.islnk" }),
+	("posix_stat_issock_IS_STUB",   { "stat.issock" }),
+	("stat_class_isexe_IS_STUB",    { "stat.isexe" }),
 	("stat_class_ishidden_IS_STUB", { "stat.ishidden" }),
-	("posix_gethostname_USE_STUB", { "gethostname" }),
-	("posix_chdir_USE_STUB", { "chdir" }),
-	("posix_fchdir_USE_STUB", { "fchdir" }),
-	("posix_fchdirat_USE_STUB", { "fchdirat" }),
-	("posix_unlink_USE_STUB", { "unlink" }),
-	("posix_rmdir_USE_STUB", { "rmdir" }),
-	("posix_remove_USE_STUB", { "remove" }),
-	("posix_unlinkat_USE_STUB", { "unlinkat" }),
-	("posix_rmdirat_USE_STUB", { "rmdirat" }),
-	("posix_mkdir_USE_STUB", { "mkdir" }),
-	("posix_mkdirat_USE_STUB", { "mkdirat" }),
-	("posix_fmkdirat_USE_STUB", { "fmkdirat" }),
-	("posix_symlink_USE_STUB", { "symlink", "_symlink" }),
-	("posix_symlinkat_USE_STUB", { "symlinkat", "_symlinkat" }),
-	("posix_fsymlinkat_USE_STUB", { "fsymlinkat", "_fsymlinkat" }),
-	("posix_removeat_USE_STUB", { "removeat" }),
-	("posix_readlink_USE_STUB", { "readlink" }),
-	("posix_freadlink_USE_STUB", { "freadlink" }),
-	("posix_readlinkat_USE_STUB", { "readlinkat" }),
-	("posix_rename_USE_STUB", { "rename" }),
-	("posix_frename_USE_STUB", { "frename" }),
-	("posix_renameat_USE_STUB", { "renameat" }),
-	("posix_renameat2_USE_STUB", { "renameat2" }),
-	("posix_link_USE_STUB", { "link" }),
-	("posix_flink_USE_STUB", { "flink" }),
-	("posix_linkat_USE_STUB", { "linkat" }),
-	("posix_copyfile_USE_STUB", { "copyfile" }),
-	("posix_lcopyfile_USE_STUB", { "lcopyfile" }),
-	("posix_fcopyfile_USE_STUB", { "fcopyfile" }),
-	("posix_copyfileat_USE_STUB", { "copyfileat" }),
+	("posix_gethostname_USE_STUB",  { "gethostname" }),
+	("posix_chdir_USE_STUB",        { "chdir" }),
+	("posix_fchdir_USE_STUB",       { "fchdir" }),
+	("posix_fchdirat_USE_STUB",     { "fchdirat" }),
+	("posix_unlink_USE_STUB",       { "unlink" }),
+	("posix_rmdir_USE_STUB",        { "rmdir" }),
+	("posix_remove_USE_STUB",       { "remove" }),
+	("posix_unlinkat_USE_STUB",     { "unlinkat" }),
+	("posix_rmdirat_USE_STUB",      { "rmdirat" }),
+	("posix_mkdir_USE_STUB",        { "mkdir" }),
+	("posix_mkdirat_USE_STUB",      { "mkdirat" }),
+	("posix_fmkdirat_USE_STUB",     { "fmkdirat" }),
+	("posix_symlink_USE_STUB",      { "symlink", "_symlink" }),
+	("posix_symlinkat_USE_STUB",    { "symlinkat", "_symlinkat" }),
+	("posix_fsymlinkat_USE_STUB",   { "fsymlinkat", "_fsymlinkat" }),
+	("posix_removeat_USE_STUB",     { "removeat" }),
+	("posix_readlink_USE_STUB",     { "readlink" }),
+	("posix_freadlink_USE_STUB",    { "freadlink" }),
+	("posix_readlinkat_USE_STUB",   { "readlinkat" }),
+	("posix_rename_USE_STUB",       { "rename" }),
+	("posix_frename_USE_STUB",      { "frename" }),
+	("posix_renameat_USE_STUB",     { "renameat" }),
+	("posix_renameat2_USE_STUB",    { "renameat2" }),
+	("posix_link_USE_STUB",         { "link" }),
+	("posix_flink_USE_STUB",        { "flink" }),
+	("posix_linkat_USE_STUB",       { "linkat" }),
+	("posix_copyfile_USE_STUB",     { "copyfile" }),
+	("posix_lcopyfile_USE_STUB",    { "lcopyfile" }),
+	("posix_fcopyfile_USE_STUB",    { "fcopyfile" }),
+	("posix_copyfileat_USE_STUB",   { "copyfileat" }),
 }.sorted();
 for (local test, functions: ALL_STUBS) {
 	functions = "\0".join(functions) + "\0";
@@ -433,6 +439,13 @@ print("#endif /" "* POSIX_STUBS_TOTLEN == 0 *" "/");
 #define len_posix_chdir_USE_STUB /* nothing */
 #define str_posix_chdir_USE_STUB /* nothing */
 #endif /* !posix_chdir_USE_STUB */
+#ifdef posix_chmod_USE_STUB
+#define len_posix_chmod_USE_STUB +6
+#define str_posix_chmod_USE_STUB 'c', 'h', 'm', 'o', 'd', '\0',
+#else /* posix_chmod_USE_STUB */
+#define len_posix_chmod_USE_STUB /* nothing */
+#define str_posix_chmod_USE_STUB /* nothing */
+#endif /* !posix_chmod_USE_STUB */
 #ifdef posix_clearenv_USE_STUB
 #define len_posix_clearenv_USE_STUB +9
 #define str_posix_clearenv_USE_STUB 'c', 'l', 'e', 'a', 'r', 'e', 'n', 'v', '\0',
@@ -531,6 +544,20 @@ print("#endif /" "* POSIX_STUBS_TOTLEN == 0 *" "/");
 #define len_posix_fchdirat_USE_STUB /* nothing */
 #define str_posix_fchdirat_USE_STUB /* nothing */
 #endif /* !posix_fchdirat_USE_STUB */
+#ifdef posix_fchmod_USE_STUB
+#define len_posix_fchmod_USE_STUB +7
+#define str_posix_fchmod_USE_STUB 'f', 'c', 'h', 'm', 'o', 'd', '\0',
+#else /* posix_fchmod_USE_STUB */
+#define len_posix_fchmod_USE_STUB /* nothing */
+#define str_posix_fchmod_USE_STUB /* nothing */
+#endif /* !posix_fchmod_USE_STUB */
+#ifdef posix_fchmodat_USE_STUB
+#define len_posix_fchmodat_USE_STUB +9
+#define str_posix_fchmodat_USE_STUB 'f', 'c', 'h', 'm', 'o', 'd', 'a', 't', '\0',
+#else /* posix_fchmodat_USE_STUB */
+#define len_posix_fchmodat_USE_STUB /* nothing */
+#define str_posix_fchmodat_USE_STUB /* nothing */
+#endif /* !posix_fchmodat_USE_STUB */
 #ifdef posix_fcopyfile_USE_STUB
 #define len_posix_fcopyfile_USE_STUB +10
 #define str_posix_fcopyfile_USE_STUB 'f', 'c', 'o', 'p', 'y', 'f', 'i', 'l', 'e', '\0',
@@ -629,6 +656,13 @@ print("#endif /" "* POSIX_STUBS_TOTLEN == 0 *" "/");
 #define len_posix_isatty_USE_STUB /* nothing */
 #define str_posix_isatty_USE_STUB /* nothing */
 #endif /* !posix_isatty_USE_STUB */
+#ifdef posix_lchmod_USE_STUB
+#define len_posix_lchmod_USE_STUB +7
+#define str_posix_lchmod_USE_STUB 'l', 'c', 'h', 'm', 'o', 'd', '\0',
+#else /* posix_lchmod_USE_STUB */
+#define len_posix_lchmod_USE_STUB /* nothing */
+#define str_posix_lchmod_USE_STUB /* nothing */
+#endif /* !posix_lchmod_USE_STUB */
 #ifdef posix_lcopyfile_USE_STUB
 #define len_posix_lcopyfile_USE_STUB +10
 #define str_posix_lcopyfile_USE_STUB 'l', 'c', 'o', 'p', 'y', 'f', 'i', 'l', 'e', '\0',
@@ -1086,6 +1120,7 @@ print("#endif /" "* POSIX_STUBS_TOTLEN == 0 *" "/");
 	len_diriter_get_d_uid_IS_STUB \
 	len_posix_access_USE_STUB \
 	len_posix_chdir_USE_STUB \
+	len_posix_chmod_USE_STUB \
 	len_posix_clearenv_USE_STUB \
 	len_posix_close_USE_STUB \
 	len_posix_copyfile_USE_STUB \
@@ -1100,6 +1135,8 @@ print("#endif /" "* POSIX_STUBS_TOTLEN == 0 *" "/");
 	len_posix_euidaccess_USE_STUB \
 	len_posix_fchdir_USE_STUB \
 	len_posix_fchdirat_USE_STUB \
+	len_posix_fchmod_USE_STUB \
+	len_posix_fchmodat_USE_STUB \
 	len_posix_fcopyfile_USE_STUB \
 	len_posix_fdatasync_USE_STUB \
 	len_posix_flink_USE_STUB \
@@ -1114,6 +1151,7 @@ print("#endif /" "* POSIX_STUBS_TOTLEN == 0 *" "/");
 	len_posix_gethostname_USE_STUB \
 	len_posix_getpid_USE_STUB \
 	len_posix_isatty_USE_STUB \
+	len_posix_lchmod_USE_STUB \
 	len_posix_lcopyfile_USE_STUB \
 	len_posix_link_USE_STUB \
 	len_posix_linkat_USE_STUB \
@@ -1212,6 +1250,7 @@ PRIVATE struct {
 		str_diriter_get_d_uid_IS_STUB
 		str_posix_access_USE_STUB
 		str_posix_chdir_USE_STUB
+		str_posix_chmod_USE_STUB
 		str_posix_clearenv_USE_STUB
 		str_posix_close_USE_STUB
 		str_posix_copyfile_USE_STUB
@@ -1226,6 +1265,8 @@ PRIVATE struct {
 		str_posix_euidaccess_USE_STUB
 		str_posix_fchdir_USE_STUB
 		str_posix_fchdirat_USE_STUB
+		str_posix_fchmod_USE_STUB
+		str_posix_fchmodat_USE_STUB
 		str_posix_fcopyfile_USE_STUB
 		str_posix_fdatasync_USE_STUB
 		str_posix_flink_USE_STUB
@@ -1240,6 +1281,7 @@ PRIVATE struct {
 		str_posix_gethostname_USE_STUB
 		str_posix_getpid_USE_STUB
 		str_posix_isatty_USE_STUB
+		str_posix_lchmod_USE_STUB
 		str_posix_lcopyfile_USE_STUB
 		str_posix_link_USE_STUB
 		str_posix_linkat_USE_STUB
@@ -1343,6 +1385,8 @@ err:
 }
 
 #ifndef CONFIG_HAVE_memmem
+#define CONFIG_HAVE_memmem
+#undef memmem
 #define memmem dee_memmem
 DeeSystem_DEFINE_memmem(dee_memmem)
 #endif /* !CONFIG_HAVE_memmem */
@@ -1380,7 +1424,7 @@ PRIVATE DeeTypeObject PosixStubsList_Type = {
 	/* .tp_flags    = */ TP_FNORMAL | TP_FVARIABLE | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
-	/* .tp_base     = */ &DeeSeq_Type,
+	/* .tp_base     = */ &DeeSet_Type,
 	/* .tp_init = */ {
 		{
 			/* .tp_var = */ {
@@ -1424,7 +1468,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL pst_ctor(void) {
 }
 #else /* POSIX_STUBS_TOTLEN != 0 */
 /* Special case: There aren't _any_ stubs! */
-#define PosixStubsList_Singleton DeeTuple_Empty
+#define PosixStubsList_Singleton Dee_EmptySet
 #endif /* POSIX_STUBS_TOTLEN == 0 */
 
 
@@ -1559,12 +1603,12 @@ PRIVATE struct dex_symbol symbols[] = {
 
 	{ "stubs", &PosixStubsList_Singleton, MODSYM_FNORMAL,
 	  DOC("->?S?Dstring\n"
-	      "List of the names of all of the functions that are implemented as stubs\n"
-	      "The names contained within this list are identical to the names of the "
+	      "Set of the names of all of the functions that are implemented as stubs\n"
+	      "The names contained within this set are identical to the names of the "
 	      /**/ "resp. symbols exported by this module. e.g. ${'open' in posix.stubs} would "
 	      /**/ "mean that ?Gopen will unconditionally throw :{UnsupportedAPI}. Other functions "
-	      /**/ "may behave differently and always behave as no-ops, but the general behavior "
-	      /**/ "is that the function will simply be implemented as a stub") },
+	      /**/ "may behave differently or always behave as no-ops, but the general meaning is "
+	      /**/ "that the function will simply be implemented as a stub") },
 
 	/* File control */
 	D(POSIX_OPEN_DEF_DOC("Open a given @filename using @oflags (a set of ${O_*} flags), and @mode (describing "
@@ -1614,7 +1658,6 @@ PRIVATE struct dex_symbol symbols[] = {
 	D(POSIX_EUIDACCESS_DEF)
 	D(POSIX_FACCESSAT_DEF)
 	D(POSIX_FCHOWNAT_DEF)
-	D(POSIX_FCHMODAT_DEF)
 	/* TODO: chflags() */
 	/* TODO: lchflags() */
 	/* TODO: chroot() */
@@ -1883,51 +1926,11 @@ PRIVATE struct dex_symbol symbols[] = {
 	                         "@throw ValueError Invalid set of flags specified by @atflags\n"
 	                         "Change the current working directory to @dfd:@path"))
 
-	/* Filesystem */
-	D(POSIX_UNLINK_DEF_DOC("@interrupt\n"
-	                       "@throw FileNotFound The given @file does not exist\n"
-	                       "@throw NoDirectory A part of the given @file is not a directory\n"
-	                       "@throw IsDirectory The given @file is a directory and ?Grmdir or ?Gremove must be used to delete it\n"
-	                       "@throw BusyFile The given @file is currently being used and cannot be deleted\n"
-	                       "@throw FileAccessError The current user does not have permissions to remove the file described by @file\n"
-	                       "@throw ReadOnlyFile The filesystem or device hosting the directory of @file is in read-only "
-	                       /*               */ "operations mode, preventing the deletion of existing files\n"
-	                       "@throw SystemError Failed to unlink the given file @file for some reason\n"
-	                       "Remove a non-directory filesystem object named @file"))
-	D(POSIX_RMDIR_DEF_DOC("@interrupt\n"
-	                      "@throw FileNotFound The given @path does not exist\n"
-	                      "@throw NoDirectory A part of the given @path is not a directory\n"
-	                      "@throw NoDirectory The given @path isn't a directory and either ?Gunlink or ?Gremove must be used to "
-	                      /*              */ "delete it, or it is a mounting point if such functionality is supported by the host\n"
-	                      "@throw NotEmpty The given directory @path isn't empty empty\n"
-	                      "@throw BusyFile The given @path is currently being used and cannot be deleted\n"
-	                      "@throw FileAccessError The current user does not have permissions to remove the directory described by @path\n"
-	                      "@throw ReadOnlyFile The filesystem or device hosting the directory of @path is in read-only "
-	                      /*               */ "operations mode, preventing the deletion of existing directories\n"
-	                      "@throw SystemError Failed to delete the directory @path for some reason\n"
-	                      "Remove a directory named @path"))
-	D(POSIX_REMOVE_DEF_DOC("@interrupt\n"
-	                       "@throw FileNotFound The given @path does not exist\n"
-	                       "@throw NoDirectory A part of the given @path is not a directory\n"
-	                       "@throw NotEmpty The given @path is a directory that isn't empty empty\n"
-	                       "@throw BusyFile The given @path is currently being used and cannot be deleted\n"
-	                       "@throw FileAccessError The current user does not have permissions to remove the file or directory described by @path\n"
-	                       "@throw ReadOnlyFile The filesystem or device hosting the directory of @path is in read-only "
-	                       /*               */ "operations mode, preventing the deletion of existing files or directories\n"
-	                       "@throw SystemError Failed to remove the given file @path for some reason\n"
-	                       "Remove a file or an empty directory name @path"))
-	D(POSIX_UNLINKAT_DEF_DOC("@interrupt\n"
-	                         "@throw FileNotFound The given @dfd:@file does not exist\n"
-	                         "@throw NoDirectory A part of the given @dfd:@file is not a directory\n"
-	                         "@throw IsDirectory The given @dfd:@file is a directory and ?Grmdir or ?Gremove must be used to delete it\n"
-	                         "@throw BusyFile The given @dfd:@file is currently being used and cannot be deleted\n"
-	                         "@throw FileAccessError The current user does not have permissions to remove the file described by @dfd:@file\n"
-	                         "@throw ReadOnlyFile The filesystem or device hosting the directory of @dfd:@file is in read-only "
-	                         /*               */ "operations mode, preventing the deletion of existing files\n"
-	                         "@throw FileClosed The given @fd was closed\n"
-	                         "@throw SystemError Failed to unlink the given file @dfd:@file for some reason\n"
-	                         "@param atflags Set of ?GAT_REMOVEDIR, ?GAT_REMOVEREG\n"
-	                         "Remove a filesystem object named @dfd:@file"))
+	/************************************************************************/
+	/* Filesystem                                                           */
+	/************************************************************************/
+
+	/* mkdir(2) */
 	D(POSIX_MKDIR_DEF_DOC("@interrupt\n"
 	                      "@throw FileNotFound One or more of @path's parents do not exist\n"
 	                      "@throw NoDirectory A part of the given @path is not a directory\n"
@@ -1966,9 +1969,12 @@ PRIVATE struct dex_symbol symbols[] = {
 	                         "@throw SystemError Failed to create a directory for some reason\n"
 	                         "@throw FileClosed The given @dfd was closed\n"
 	                         "Create a new directory named @dfd:@path"))
+
 	/* TODO: mkdir_p() -- Same as `mkdir()', but:
 	 * - Also create missing parent directories
 	 * - Ignore directory-already-exists errors (but only if the already-existing thing *actually* is a directory) */
+
+	/* symlink(2) */
 	D(POSIX_SYMLINK_DEF_DOC("@interrupt\n"
 	                        "@throw FileExists A file or directory named @path already exists\n"
 	                        "@throw FileNotFound A parent directory of @path does not exist\n"
@@ -2049,6 +2055,44 @@ PRIVATE struct dex_symbol symbols[] = {
 	D(POSIX__SYMLINK_DEF_DOC("Same as ?Gsymlink, but don't perform any OS-specific transformations on @text"))
 	D(POSIX__SYMLINKAT_DEF_DOC("Same as ?Gsymlinkat, but don't perform any OS-specific transformations on @text"))
 	D(POSIX__FSYMLINKAT_DEF_DOC("Same as ?Gfsymlinkat, but don't perform any OS-specific transformations on @text"))
+
+	/* unlink(2) */
+	D(POSIX_UNLINK_DEF_DOC("@interrupt\n"
+	                       "@throw FileNotFound The given @file does not exist\n"
+	                       "@throw NoDirectory A part of the given @file is not a directory\n"
+	                       "@throw IsDirectory The given @file is a directory and ?Grmdir or ?Gremove must be used to delete it\n"
+	                       "@throw BusyFile The given @file is currently being used and cannot be deleted\n"
+	                       "@throw FileAccessError The current user does not have permissions to remove the file described by @file\n"
+	                       "@throw ReadOnlyFile The filesystem or device hosting the directory of @file is in read-only "
+	                       /*               */ "operations mode, preventing the deletion of existing files\n"
+	                       "@throw SystemError Failed to unlink the given file @file for some reason\n"
+	                       "Remove a non-directory filesystem object named @file"))
+	D(POSIX_UNLINKAT_DEF_DOC("@interrupt\n"
+	                         "@throw FileNotFound The given @dfd:@file does not exist\n"
+	                         "@throw NoDirectory A part of the given @dfd:@file is not a directory\n"
+	                         "@throw IsDirectory The given @dfd:@file is a directory and ?Grmdir or ?Gremove must be used to delete it\n"
+	                         "@throw BusyFile The given @dfd:@file is currently being used and cannot be deleted\n"
+	                         "@throw FileAccessError The current user does not have permissions to remove the file described by @dfd:@file\n"
+	                         "@throw ReadOnlyFile The filesystem or device hosting the directory of @dfd:@file is in read-only "
+	                         /*               */ "operations mode, preventing the deletion of existing files\n"
+	                         "@throw FileClosed The given @fd was closed\n"
+	                         "@throw SystemError Failed to unlink the given file @dfd:@file for some reason\n"
+	                         "@param atflags Set of ?GAT_REMOVEDIR, ?GAT_REMOVEREG\n"
+	                         "Remove a filesystem object named @dfd:@file"))
+
+	/* rmdir(2) */
+	D(POSIX_RMDIR_DEF_DOC("@interrupt\n"
+	                      "@throw FileNotFound The given @path does not exist\n"
+	                      "@throw NoDirectory A part of the given @path is not a directory\n"
+	                      "@throw NoDirectory The given @path isn't a directory and either ?Gunlink or ?Gremove must be used to "
+	                      /*              */ "delete it, or it is a mounting point if such functionality is supported by the host\n"
+	                      "@throw NotEmpty The given directory @path isn't empty empty\n"
+	                      "@throw BusyFile The given @path is currently being used and cannot be deleted\n"
+	                      "@throw FileAccessError The current user does not have permissions to remove the directory described by @path\n"
+	                      "@throw ReadOnlyFile The filesystem or device hosting the directory of @path is in read-only "
+	                      /*               */ "operations mode, preventing the deletion of existing directories\n"
+	                      "@throw SystemError Failed to delete the directory @path for some reason\n"
+	                      "Remove a directory named @path"))
 	D(POSIX_RMDIRAT_DEF_DOC("@interrupt\n"
 	                        "@throw FileNotFound The given @dfd:@path does not exist\n"
 	                        "@throw NoDirectory A part of the given @dfd:@path is not a directory\n"
@@ -2062,6 +2106,18 @@ PRIVATE struct dex_symbol symbols[] = {
 	                        "@throw FileClosed The given @dfd was closed\n"
 	                        "@throw SystemError Failed to delete the directory @dfd:@path for some reason\n"
 	                        "Remove a directory named @dfd:@path"))
+
+	/* remove(3) */
+	D(POSIX_REMOVE_DEF_DOC("@interrupt\n"
+	                       "@throw FileNotFound The given @path does not exist\n"
+	                       "@throw NoDirectory A part of the given @path is not a directory\n"
+	                       "@throw NotEmpty The given @path is a directory that isn't empty empty\n"
+	                       "@throw BusyFile The given @path is currently being used and cannot be deleted\n"
+	                       "@throw FileAccessError The current user does not have permissions to remove the file or directory described by @path\n"
+	                       "@throw ReadOnlyFile The filesystem or device hosting the directory of @path is in read-only "
+	                       /*               */ "operations mode, preventing the deletion of existing files or directories\n"
+	                       "@throw SystemError Failed to remove the given file @path for some reason\n"
+	                       "Remove a file or an empty directory name @path"))
 	D(POSIX_REMOVEAT_DEF_DOC("@interrupt\n"
 	                         "@throw FileNotFound The given @dfd:@path does not exist\n"
 	                         "@throw NoDirectory A part of the given @dfd:@path is not a directory\n"
@@ -2073,6 +2129,8 @@ PRIVATE struct dex_symbol symbols[] = {
 	                         "@throw FileClosed The given @fd was closed\n"
 	                         "@throw SystemError Failed to remove the given file @dfd:@path for some reason\n"
 	                         "Remove a file or an empty directory name @dfd:@path"))
+
+	/* readlink(2) */
 	D(POSIX_READLINK_DEF_DOC("@interrupt\n"
 	                         "@throw FileNotFound The given @file does not exist\n"
 	                         "@throw NoDirectory A part of the given @file is not a directory\n"
@@ -2100,6 +2158,8 @@ PRIVATE struct dex_symbol symbols[] = {
 	                           "@throw FileClosed The given @dfd was closed\n"
 	                           "@throw SystemError Failed to read the symbolic link under @dfd:@file for some reason\n"
 	                           "Read and return the targetText used to create a symbolic link (see ?Gsymlink)"))
+
+	/* rename(2) */
 	D(POSIX_RENAME_DEF_DOC("@interrupt\n"
 	                       "@throw FileNotFound The given @oldpath could not be found, or a parent directory of @newpath does not exist\n"
 	                       "@throw NotEmpty The given @newpath is a non-empty directory\n"
@@ -2174,6 +2234,8 @@ PRIVATE struct dex_symbol symbols[] = {
 	                          "@throw SystemError Failed to rename the given @olddirfd:@oldpath for some reason\n"
 	                          "Renames or moves a given @olddirfd:@oldpath to be referred to as @newdirfd:@newpath from then on\n"
 	                          "When @newpath already exists, it is replaced by @olddirfd:@oldpath"))
+
+	/* link(2) */
 	D(POSIX_LINK_DEF_DOC("@interrupt\n"
 	                     "@throw FileNotFound The given @oldpath could not be found, or a parent directory of @newpath does not exist\n"
 	                     "@throw FileExists The given @newpath already exists\n"
@@ -2226,6 +2288,36 @@ PRIVATE struct dex_symbol symbols[] = {
 	                       /**/ "unaffected by mount locations. A hard link simply create a new directory entry under "
 	                       /**/ "@newdirfd:@newpath that points to the data block of an existing file @olddirfd:@oldpath"))
 
+	/* chmod(2) */
+	D(POSIX_CHMOD_DEF_DOC("@interrupt\n"
+	                      "@throw FileNotFound The given @path could not be found\n"
+	                      "@throw NoDirectory A part of the given @path is not a directory\n"
+	                      "@throw FileAccessError The current user does not have permissions "
+	                      /*                  */ "to change the mode of the given file @path\n"
+	                      "@throw ReadOnlyFile The filesystem or device hosting the file found under "
+	                      /*               */ "@path is in read-only operations mode, preventing the "
+	                      /*               */ "file's mode from being changed\n"
+	                      "@throw SystemError Failed to change permission for some reason\n"
+	                      "@throw ValueError The given @mode is malformed or not recognized\n"
+	                      "Change the permissions associated with a given @path"))
+	D(POSIX_LCHMOD_DEF_DOC("@interrupt\n"
+	                       "@throw FileNotFound The given @path could not be found\n"
+	                       "@throw NoDirectory A part of the given @path is not a directory\n"
+	                       "@throw FileAccessError The current user does not have permissions "
+	                       /*                  */ "to change the mode of the given file @path\n"
+	                       "@throw ReadOnlyFile The filesystem or device hosting the file found under "
+	                       /*               */ "@path is in read-only operations mode, preventing the "
+	                       /*               */ "file's mode from being changed\n"
+	                       "@throw SystemError Failed to change permission for some reason\n"
+	                       "@throw ValueError The given @mode is malformed or not recognized\n"
+	                       "Change the permissions associated with a given @path\n"
+	                       "If @path refers to a symbolic link, change the permissions "
+	                       /**/ "of that link, rather than those of the pointed-to file"))
+	D(POSIX_FCHMOD_DEF_DOC("@throw FileClosed The given file @fd was closed\n"
+	                       "Same as ?Glchmod, but change permissions of @fd"))
+	D(POSIX_FCHMODAT_DEF_DOC("@param atflags Set of $0, ?GAT_SYMLINK_NOFOLLOW, ?GAT_EMPTY_PATH\n"
+	                         "Combination of ?Glchmod, ?Glchmod, and ?Gfchmod, changing permissions of @dfd:@path"))
+
 	/* copyfile */
 	D(POSIX_FCOPYFILE_DEF_DOC("@param flags Set of $0, ?GRENAME_NOREPLACE\n"
 	                          "@param progress Invoked every @bufsize bytes with an instance of ?GCopyFileProgress\n"
@@ -2248,31 +2340,22 @@ PRIVATE struct dex_symbol symbols[] = {
 	D({ "CopyFileProgress", (DeeObject *)&DeeCopyFileProgress_Type, MODSYM_FNORMAL },)
 
 	/* Forward-aliases to `libfs' */
-#define DEFINE_LIBFS_ALIAS_ALT(altname, name, libfs_name, proto)                           \
-	D({ altname, (DeeObject *)&libposix_getfs_##name, MODSYM_FPROPERTY | MODSYM_FREADONLY, \
-	    DOC(proto "Alias for ?Efs:" libfs_name " that has yet to be ported to posix") }, )
 #define DEFINE_LIBFS_ALIAS_S_ALT(altname, name, proto)                            \
 	D({ altname,                                                                  \
 	    (DeeObject *)&libposix_getfs_##name, MODSYM_FPROPERTY | MODSYM_FREADONLY, \
 	    DOC(proto "Alias for ?Efs:" #name " that has yet to be ported to posix") }, )
-#define DEFINE_LIBFS_ALIAS(name, libfs_name, proto) \
-	DEFINE_LIBFS_ALIAS_ALT(#name, name, libfs_name, proto)
 #define DEFINE_LIBFS_ALIAS_S(name, proto) \
 	DEFINE_LIBFS_ALIAS_S_ALT(DeeString_STR(&libposix_libfs_name_##name), name, proto)
-	DEFINE_LIBFS_ALIAS_S(chmod, "(path:?Dstring,mode:?X2?Dstring?Dint)\n")
-	DEFINE_LIBFS_ALIAS_S(lchmod, "(path:?Dstring,mode:?X2?Dstring?Dint)\n")
 	DEFINE_LIBFS_ALIAS_S(chown, "(path:?Dstring,user:?X3?Efs:User?Dstring?Dint,group:?X3?Efs:Group?Dstring?Dint)\n")
 	DEFINE_LIBFS_ALIAS_S(lchown, "(path:?Dstring,user:?X3?Efs:User?Dstring?Dint,group:?X3?Efs:Group?Dstring?Dint)\n")
-	DEFINE_LIBFS_ALIAS_S_ALT("fchmod", chmod, "(fp:?DFile,mode:?X2?Dstring?Dint)\n"
-	                                          "(fd:?Dint,mode:?X2?Dstring?Dint)\n")
 	DEFINE_LIBFS_ALIAS_S_ALT("fchown", chown, "(fp:?DFile,user:?X3?Efs:User?Dstring?Dint,group:?X3?Efs:Group?Dstring?Dint)\n"
 	                                          "(fd:?Dint,user:?X3?Efs:User?Dstring?Dint,group:?X3?Efs:Group?Dstring?Dint)\n")
 #undef DEFINE_LIBFS_ALIAS_S
-#undef DEFINE_LIBFS_ALIAS
 #undef DEFINE_LIBFS_ALIAS_S_ALT
-#undef DEFINE_LIBFS_ALIAS_ALT
 
-	/* Application exit control */
+	/************************************************************************/
+	/* Application exit control                                             */
+	/************************************************************************/
 	D(POSIX_ATEXIT_DEF_DOC("Register a callback to-be invoked before ?Gexit (Same as :AppExit.atexit)"))
 	D(POSIX_EXIT_DEF_DOC("Terminate execution of deemon after invoking ?Gatexit callbacks\n"
 	                     "Termination is done using the C $exit or $_Exit functions, if available. However if these "
@@ -2309,7 +2392,9 @@ PRIVATE struct dex_symbol symbols[] = {
 	                             /**/ "return the name (e.g. $\"ENOENT\") of the error as a string\n"
 	                             "If the given error number is not recognized, return ?N instead"))
 
-	/* Path utilities */
+	/************************************************************************/
+	/* Path utilities                                                       */
+	/************************************************************************/
 	D(POSIX_HEADOF_DEF_DOC("@return The head of a path, that is the directory without the filename\n"
 	                       "${"
 	                       /**/ "import headof from posix;\n"
@@ -2400,7 +2485,9 @@ PRIVATE struct dex_symbol symbols[] = {
 	    DOC("->?Dstring\n"
 	        "A special filename accepted by ?Gopen to return a handle to ?Astderr?DFile") },)
 
-	/* Allow user-code to  */
+	/* Allow user-code to dynamically determine if the host has a case-insensitive file-system.
+	 * We mark this global variable a a CONSTEXPR (in user-code: `final'), so that the compiler
+	 * is allowed to substitute it with a constant expression at compile-time. */
 #ifdef DEE_SYSTEM_FS_ICASE
 #define posix_FS_ICASE (*Dee_True)
 #else /* DEE_SYSTEM_FS_ICASE */

@@ -26,8 +26,6 @@
 
 DECL_BEGIN
 
-#undef chmod
-#undef lchmod
 #undef chown
 #undef lchown
 
@@ -40,8 +38,6 @@ DECL_BEGIN
 	PRIVATE DEFINE_CMETHOD(libposix_getfs_##name, &libposix_getfs_##name##_f);
 #define DEFINE_LIBFS_FORWARD_WRAPPER_S(name) \
 	DEFINE_LIBFS_FORWARD_WRAPPER(name, #name)
-DEFINE_LIBFS_FORWARD_WRAPPER_S(chmod)
-DEFINE_LIBFS_FORWARD_WRAPPER_S(lchmod)
 DEFINE_LIBFS_FORWARD_WRAPPER_S(chown)
 DEFINE_LIBFS_FORWARD_WRAPPER_S(lchown)
 #undef DEFINE_LIBFS_FORWARD_WRAPPER_S
@@ -157,92 +153,6 @@ err:
 	return NULL;
 }
 
-
-
-
-
-/************************************************************************/
-/* fchmodat()                                                           */
-/************************************************************************/
-
-/*[[[deemon import("rt.gen.dexutils").gw("fchmodat", "dfd:d,filename:c:char[],mode:u,atflags:d->?Dint", libname: "posix"); ]]]*/
-FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_fchmodat_f_impl(int dfd, /*utf-8*/ char const *filename, unsigned int mode, int atflags);
-PRIVATE WUNUSED DREF DeeObject *DCALL posix_fchmodat_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
-#define POSIX_FCHMODAT_DEF { "fchmodat", (DeeObject *)&posix_fchmodat, MODSYM_FNORMAL, DOC("(dfd:?Dint,filename:?Dstring,mode:?Dint,atflags:?Dint)->?Dint") },
-#define POSIX_FCHMODAT_DEF_DOC(doc) { "fchmodat", (DeeObject *)&posix_fchmodat, MODSYM_FNORMAL, DOC("(dfd:?Dint,filename:?Dstring,mode:?Dint,atflags:?Dint)->?Dint\n" doc) },
-PRIVATE DEFINE_KWCMETHOD(posix_fchmodat, &posix_fchmodat_f);
-#ifndef POSIX_KWDS_DFD_FILENAME_MODE_ATFLAGS_DEFINED
-#define POSIX_KWDS_DFD_FILENAME_MODE_ATFLAGS_DEFINED
-PRIVATE DEFINE_KWLIST(posix_kwds_dfd_filename_mode_atflags, { K(dfd), K(filename), K(mode), K(atflags), KEND });
-#endif /* !POSIX_KWDS_DFD_FILENAME_MODE_ATFLAGS_DEFINED */
-PRIVATE WUNUSED DREF DeeObject *DCALL posix_fchmodat_f(size_t argc, DeeObject *const *argv, DeeObject *kw) {
-	int dfd;
-	/*utf-8*/ char const *filename_str;
-	DeeStringObject *filename;
-	unsigned int mode;
-	int atflags;
-	if (DeeArg_UnpackKw(argc, argv, kw, posix_kwds_dfd_filename_mode_atflags, "doud:fchmodat", &dfd, &filename, &mode, &atflags))
-		goto err;
-	if (DeeObject_AssertTypeExact(filename, &DeeString_Type))
-		goto err;
-	filename_str = DeeString_AsUtf8((DeeObject *)filename);
-	if unlikely(!filename_str)
-		goto err;
-	return posix_fchmodat_f_impl(dfd, filename_str, mode, atflags);
-err:
-	return NULL;
-}
-FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_fchmodat_f_impl(int dfd, /*utf-8*/ char const *filename, unsigned int mode, int atflags)
-/*[[[end]]]*/
-{
-#ifdef CONFIG_HAVE_fchmodat
-	int result;
-EINTR_LABEL(again)
-	DBG_ALIGNMENT_DISABLE();
-	result = fchmodat(dfd, filename, mode, atflags);
-	DBG_ALIGNMENT_ENABLE();
-	if (result < 0) {
-		result = DeeSystem_GetErrno();
-		EINTR_HANDLE(result, again, err)
-		HANDLE_ENOSYS(result, err, "fchmodat")
-		HANDLE_EINVAL(result, err, "Invalid at-flags")
-		HANDLE_ENOMEM(result, err, "Insufficient kernel memory to change access mode of %d:%q", dfd, filename)
-		HANDLE_ENOENT_ENOTDIR(result, err, "File or directory %d:%q could not be found", dfd, filename)
-		HANDLE_EROFS_ETXTBSY(result, err, "Read-only file %d:%q", dfd, filename)
-		HANDLE_EBADF(result, err, "Invalid handle %d", dfd)
-		DeeUnixSystem_ThrowErrorf(&DeeError_SystemError, result,
-		                          "Failed to change access mode of %d:%q",
-		                          dfd, filename);
-		goto err;
-	}
-	return DeeInt_NewInt(result);
-#else /* CONFIG_HAVE_fchmodat */
-#define NEED_libposix_get_dfd_filename 1
-	DREF DeeObject *func;
-	DREF DeeObject *result;
-	DREF DeeObject *args[2];
-	args[0] = libposix_get_dfd_filename(dfd, filename, atflags);
-	if unlikely(!args[0])
-		goto err;
-	func = libposix_getfs_chmod_f(0, NULL);
-	if unlikely(!func) {
-		result = NULL;
-	} else {
-		args[1] = DeeInt_NewUInt(mode);
-		if unlikely(!args[1]) {
-			result = NULL;
-		} else {
-			result = DeeObject_Call(func, 2, args);
-			Dee_Decref(args[1]);
-		}
-		Dee_Decref(func);
-	}
-	Dee_Decref(args[0]);
-	return result;
-#endif /* !CONFIG_HAVE_fchmodat */
-err:
-	return NULL;
-}
 
 DECL_END
 

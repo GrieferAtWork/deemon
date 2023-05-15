@@ -84,7 +84,25 @@ global final getcwd = posix.getcwd;
 global final gethostname = posix.gethostname;
 global final chdir = posix.chdir;
 //global final chtime = posix.chtime; // TODO: Implement in terms of utime() (once that function is available)
-global final chmod = posix.chmod;
+
+@@@interrupt
+@@@throw FileNotFound    The given @path_or_fd could not be found
+@@@throw NoDirectory     A part of the given @path_or_fd is not a directory
+@@@throw FileClosed      The given file @path_or_fd was closed
+@@@throw FileAccessError The current user does not have permissions
+@@                       to change the mode of the given file @path_or_fd
+@@@throw ReadOnlyFile    The file-system or device hosting the file found under
+@@                       @path_or_fd is in read-only operations mode, preventing the
+@@                       file's mode from being changed
+@@@throw SystemError     Failed to change permission for some reason
+@@@throw ValueError      The given @mode is malformed or not recognized
+@@Change the permissions associated with a given @path_or_fd
+function chmod(path_or_fd: File | string | int, mode: string | int) {
+	if (path_or_fd is string)
+		return posix.chmod(path_or_fd, mode);
+	return posix.fchmod(path_or_fd, mode);
+}
+
 global final lchmod = posix.lchmod;
 global final chown = posix.chown;
 global final lchown = posix.lchown;

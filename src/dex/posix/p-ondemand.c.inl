@@ -28,6 +28,14 @@
 #include "p-path.c.inl"
 #include "p-stat.c.inl"
 
+#define NEED_posix_chmod_getmode
+#define NEED_posix_lchmod_getmode
+#define NEED_posix_fchmod_getmode
+#define NEED_posix_chmod_parsemode
+#define NEED_posix_stat_getmode
+#define NEED_posix_lstat_getmode
+#define NEED_posix_fstat_getmode
+#define NEED_posix_xstat_getmode
 #define NEED_err_unix_chdir
 #define NEED_err_unix_remove
 #define NEED_err_unix_unlink
@@ -44,6 +52,9 @@
 #define NEED_err_nt_symlink
 #define NEED_err_unix_truncate
 #define NEED_err_unix_ftruncate
+#define NEED_err_unix_chmod
+#define NEED_err_unix_lchmod
+#define NEED_err_unix_fchmod
 #define NEED_err_unix_remove_unsupported
 #define NEED_err_unix_unlink_unsupported
 #define NEED_err_nt_unlink_unsupported
@@ -127,6 +138,22 @@
 #define NEED_posix_copyfile_fileio
 #define NEED_err_bad_atflags
 #define NEED_err_bad_copyfile_bufsize_is_zero
+#define NEED_err_stat_no_mode_info
+#define NEED_err_stat_no_dev_info
+#define NEED_err_stat_no_ino_info
+#define NEED_err_stat_no_link_info
+#define NEED_err_stat_no_uid_info
+#define NEED_err_stat_no_gid_info
+#define NEED_err_stat_no_rdev_info
+#define NEED_err_stat_no_size_info
+#define NEED_err_stat_no_blocks_info
+#define NEED_err_stat_no_blksize_info
+#define NEED_err_stat_no_atime_info
+#define NEED_err_stat_no_mtime_info
+#define NEED_err_stat_no_ctime_info
+#define NEED_err_stat_no_birthtime_info
+#define NEED_err_stat_no_nttype_info
+#define NEED_err_stat_no_info
 #define NEED_posix_err_unsupported
 #endif /* __INTELLISENSE__ */
 
@@ -398,6 +425,339 @@ err:
 	return NULL;
 }
 #endif /* NEED_nt_FReadLink */
+
+
+
+/* Parse a `chmod(1)'-style mode-string, or convert `mode' into an integer
+ * @return: * : The new st_mode to-be used for the file.
+ * @return: (unsigned int)-1: An error was thrown. */
+#ifdef NEED_posix_chmod_getmode
+#undef NEED_posix_chmod_getmode
+INTERN WUNUSED NONNULL((1, 2)) unsigned int DCALL
+posix_chmod_getmode(DeeObject *path, DeeObject *mode) {
+	unsigned int result;
+	if (DeeString_Check(mode)) {
+		char const *mode_str;
+		mode_str = DeeString_AsUtf8(mode);
+		if unlikely(!mode_str)
+			goto err;
+		result = posix_chmod_parsemode(mode_str, (unsigned int)-1);
+#define NEED_posix_chmod_parsemode
+		if unlikely(result == (unsigned int)-1)
+			goto err;
+		if (result == (unsigned int)-2) {
+			result = posix_stat_getmode(path);
+#define NEED_posix_stat_getmode
+			if unlikely(result == (unsigned int)-1)
+				goto err;
+			result = posix_chmod_parsemode(mode_str, result);
+#define NEED_posix_chmod_parsemode
+			if unlikely(result == (unsigned int)-1)
+				goto err;
+		}
+	} else {
+		if (DeeObject_AsUInt(mode, &result))
+			goto err;
+		result &= 07777;
+	}
+	return result;
+err:
+	return (unsigned int)-1;
+}
+#endif /* NEED_posix_chmod_getmode */
+
+#ifdef NEED_posix_lchmod_getmode
+#undef NEED_posix_lchmod_getmode
+INTERN WUNUSED NONNULL((1, 2)) unsigned int DCALL
+posix_lchmod_getmode(DeeObject *path, DeeObject *mode) {
+	unsigned int result;
+	if (DeeString_Check(mode)) {
+		char const *mode_str;
+		mode_str = DeeString_AsUtf8(mode);
+		if unlikely(!mode_str)
+			goto err;
+		result = posix_chmod_parsemode(mode_str, (unsigned int)-1);
+#define NEED_posix_chmod_parsemode
+		if unlikely(result == (unsigned int)-1)
+			goto err;
+		if (result == (unsigned int)-2) {
+			result = posix_lstat_getmode(path);
+#define NEED_posix_lstat_getmode
+			if unlikely(result == (unsigned int)-1)
+				goto err;
+			result = posix_chmod_parsemode(mode_str, result);
+#define NEED_posix_chmod_parsemode
+			if unlikely(result == (unsigned int)-1)
+				goto err;
+		}
+	} else {
+		if (DeeObject_AsUInt(mode, &result))
+			goto err;
+		result &= 07777;
+	}
+	return result;
+err:
+	return (unsigned int)-1;
+}
+#endif /* NEED_posix_lchmod_getmode */
+
+#ifdef NEED_posix_fchmod_getmode
+#undef NEED_posix_fchmod_getmode
+INTERN WUNUSED NONNULL((2)) unsigned int DCALL
+posix_fchmod_getmode(int fd, DeeObject *__restrict mode) {
+	unsigned int result;
+	if (DeeString_Check(mode)) {
+		char const *mode_str;
+		mode_str = DeeString_AsUtf8(mode);
+		if unlikely(!mode_str)
+			goto err;
+		result = posix_chmod_parsemode(mode_str, (unsigned int)-1);
+#define NEED_posix_chmod_parsemode
+		if unlikely(result == (unsigned int)-1)
+			goto err;
+		if (result == (unsigned int)-2) {
+			result = posix_fstat_getmode(fd);
+#define NEED_posix_fstat_getmode
+			if unlikely(result == (unsigned int)-1)
+				goto err;
+			result = posix_chmod_parsemode(mode_str, result);
+#define NEED_posix_chmod_parsemode
+			if unlikely(result == (unsigned int)-1)
+				goto err;
+		}
+	} else {
+		if (DeeObject_AsUInt(mode, &result))
+			goto err;
+		result &= 07777;
+	}
+	return result;
+err:
+	return (unsigned int)-1;
+}
+#endif /* NEED_posix_fchmod_getmode */
+
+
+/* Parse a chmod(1)-style mode-string
+ * @return: * : The new file-mode
+ * @return: (unsigned int)-1: Error
+ * @return: (unsigned int)-2: The given `st_mode == (unsigned int)-1', but would be needed. */
+#ifdef NEED_posix_chmod_parsemode
+#undef NEED_posix_chmod_parsemode
+INTERN WUNUSED NONNULL((1)) unsigned int DCALL
+posix_chmod_parsemode(char const *__restrict mode_str,
+                      unsigned int st_mode) {
+	unsigned int result   = 0;
+	unsigned int set_mask = 0;
+	if (*mode_str >= '0' && *mode_str <= '7') {
+		/* Octal-encoded mode string. */
+		char const *iter = mode_str;
+		result = *iter - '0';
+		++iter;
+		while (*iter) {
+			char ch = *iter++;
+			if unlikely(result > 07777 || !(ch >= '0' && ch <= '7')) {
+				return (unsigned int)DeeError_Throwf(&DeeError_ValueError,
+				                                     "Bad octal-encoded mode string %q",
+				                                     mode_str);
+			}
+			result <<= 3;
+			result |= ch - '0';
+		}
+		goto done;
+	}
+	while (*mode_str) {
+		/* Who mask multiplier:
+		 * u: 0001
+		 * g: 0010
+		 * o: 0100
+		 * a: 0111 */
+		unsigned int who, bits;
+		char ch, action;
+		if (*mode_str == ',') {
+			++mode_str; /* Skip empty expression */
+			continue;
+		}
+
+		who = 0;
+next_who:
+		ch = *mode_str++;
+		switch (ch) {
+		case 'u': who |= 0001; goto next_who;
+		case 'g': who |= 0010; goto next_who;
+		case 'o': who |= 0100; goto next_who;
+		case 'a': who |= 0111; goto next_who;
+		default:
+			if (who == 0)
+				who = 0111; /* Default: all */
+			break;
+		}
+		if (!strchr("-+=", ch)) {
+			return (unsigned int)DeeError_Throwf(&DeeError_ValueError,
+			                                     "Expected '-+=' in mode-string, but got %Q",
+			                                     ch);
+		}
+		action = ch;
+
+		/* Special case for inheriting from ugo */
+		if (*mode_str == 'u') {
+			if (st_mode == (unsigned int)-1)
+				return (unsigned int)-2;
+			bits = st_mode & 7;
+		} else if (*mode_str == 'g') {
+			if (st_mode == (unsigned int)-1)
+				return (unsigned int)-2;
+			bits = (st_mode >> 3) & 7;
+		} else if (*mode_str == 'o') {
+			if (st_mode == (unsigned int)-1)
+				return (unsigned int)-2;
+			bits = (st_mode >> 6) & 7;
+		} else {
+			bits = 0;
+next_op:
+			ch = *mode_str++;
+			switch (ch) {
+			case 'x': bits |= 1; goto next_op;
+			case 'w': bits |= 2; goto next_op;
+			case 'r': bits |= 4; goto next_op;
+
+			case 'X':
+				if (st_mode == (unsigned int)-1)
+					return (unsigned int)-2;
+				if ((st_mode & 1) || STAT_ISDIR(st_mode))
+					bits |= 1;
+				goto next_op;
+
+			case 's': {
+				unsigned int s_bits = 0;
+				if (who & 0007)
+					s_bits |= STAT_ISUID;
+				if (who & 0070)
+					s_bits |= STAT_ISGID;
+				set_mask |= s_bits;
+				result &= ~s_bits;
+				if (action != '-')
+					result |= s_bits;
+				goto next_op;
+			}	break;
+
+			case 't': {
+				set_mask |= STAT_ISVTX;
+				result &= ~STAT_ISVTX;
+				if (action != '-')
+					result |= STAT_ISVTX;
+				goto next_op;
+			}	break;
+
+			default: break;
+			}
+			--mode_str; /* Don't consume the last op-char */
+
+			if (bits == 0)
+				continue; /* Special case: empty op-list */
+		}
+
+		/* Apply new bits. */
+		if (action == '=') {
+			set_mask |= 7 * who;
+			result &= ~(7 * who);
+			action = '+';
+		}
+		set_mask |= bits * who;
+		if (action == '+') {
+			result |= (bits * who);
+		} else {
+			result &= ~(bits * who);
+		}
+	}
+
+	set_mask &= 07777;
+	result &= set_mask;
+	if (set_mask != 07777) {
+		if (st_mode == (unsigned int)-1)
+			return (unsigned int)-2;
+		result |= st_mode & ~set_mask;
+	}
+done:
+	return result;
+}
+#endif /* NEED_posix_chmod_parsemode */
+
+
+/* Get the current file-mode for the given argument. */
+#ifdef NEED_posix_stat_getmode
+#undef NEED_posix_stat_getmode
+INTERN WUNUSED NONNULL((1)) unsigned int DCALL
+posix_stat_getmode(DeeObject *__restrict path) {
+	return posix_xstat_getmode(path, DEE_STAT_F_NORMAL);
+#define NEED_posix_xstat_getmode
+}
+#endif /* NEED_posix_stat_getmode */
+
+#ifdef NEED_posix_lstat_getmode
+#undef NEED_posix_lstat_getmode
+INTERN WUNUSED NONNULL((1)) unsigned int DCALL
+posix_lstat_getmode(DeeObject *__restrict path) {
+	return posix_xstat_getmode(path, DEE_STAT_F_LSTAT);
+#define NEED_posix_xstat_getmode
+}
+#endif /* NEED_posix_lstat_getmode */
+
+#ifdef NEED_posix_fstat_getmode
+#undef NEED_posix_fstat_getmode
+INTERN WUNUSED unsigned int DCALL
+posix_fstat_getmode(int fd) {
+	unsigned int result;
+	DREF DeeObject *fd_int;
+	fd_int = DeeInt_NewInt(fd);
+	if unlikely(!fd_int)
+		goto err;
+	result = posix_xstat_getmode(fd_int, DEE_STAT_F_NORMAL);
+#define NEED_posix_xstat_getmode
+	Dee_Decref(fd_int);
+	return result;
+err:
+	return (unsigned int)-1;
+}
+#endif /* NEED_posix_fstat_getmode */
+
+#ifdef NEED_posix_xstat_getmode
+#undef NEED_posix_xstat_getmode
+INTERN WUNUSED NONNULL((1)) unsigned int DCALL
+posix_xstat_getmode(DeeObject *__restrict path_or_fd, unsigned int stat_flags) {
+#ifdef posix_stat_get_mode_IS_STUB
+	(void)path_or_fd;
+	(void)stat_flags;
+#define NEED_err_stat_no_mode_info
+	err_stat_no_mode_info();
+	return (unsigned int)-1;
+#else /* posix_stat_get_mode_IS_STUB */
+	unsigned int result;
+	int stat_error;
+	struct dee_stat st;
+	stat_error = dee_stat_init(&st, NULL, path_or_fd, stat_flags);
+	if unlikely(stat_error)
+		goto err;
+#ifdef posix_stat_USE_WINDOWS
+	result = 0444 | 0111; /* XXX: executable should depend on extension. */
+	if (!(st.st_info.dwFileAttributes & FILE_ATTRIBUTE_READONLY))
+		result |= 0222;
+	if (st.st_info.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
+		result |= STAT_IFDIR;
+#elif defined(posix_stat_HAVE_st_mode)
+	result = st.st_info.st_mode;
+#else /* ... */
+#error "Unsupported configuration"
+#endif /* !... */
+	dee_stat_fini(&st);
+	return result;
+err:
+	return (unsigned int)-1;
+#endif /* !posix_stat_get_mode_IS_STUB */
+}
+#endif /* NEED_posix_xstat_getmode */
+
+
+
 
 
 #ifdef NEED_err_unix_chdir
@@ -1134,6 +1494,83 @@ err_unix_ftruncate(int errno_value, int fd, DeeObject *length) {
 }
 #endif /* NEED_err_unix_ftruncate */
 
+#ifdef NEED_err_unix_chmod
+#undef NEED_err_unix_chmod
+INTERN ATTR_COLD NONNULL((2)) int DCALL
+err_unix_chmod(int errno_value, DeeObject *path, unsigned int mode) {
+#if defined(EACCES) || defined(EPERM)
+	DeeSystem_IF_E2(errno_value, EACCES, EPERM, {
+		return err_unix_path_no_access(errno_value, path);
+	});
+#define NEED_err_unix_path_no_access
+#endif /* EACCES || EPERM */
+#ifdef ENOENT
+	if (errno_value == ENOENT)
+		return err_unix_path_not_found(errno_value, path);
+#define NEED_err_unix_path_not_found
+#endif /* ENOENT */
+#ifdef ENOTDIR
+	if (errno_value == ENOTDIR)
+		return err_unix_path_not_dir(errno_value, path);
+#define NEED_err_unix_path_not_dir
+#endif /* ENOTDIR */
+#ifdef EROFS
+	if (errno_value == EROFS)
+		return err_unix_path_readonly(errno_value, path);
+#define NEED_err_unix_path_readonly
+#endif /* EROFS */
+	return DeeUnixSystem_ThrowErrorf(&DeeError_SystemError, errno_value,
+	                                 "Failed to chmod path %r to mode %#o",
+	                                 path, mode);
+}
+#endif /* NEED_err_unix_chmod */
+
+#ifdef NEED_err_unix_lchmod
+#undef NEED_err_unix_lchmod
+INTERN ATTR_COLD NONNULL((2)) int DCALL
+err_unix_lchmod(int errno_value, DeeObject *path, unsigned int mode) {
+#if defined(EACCES) || defined(EPERM)
+	DeeSystem_IF_E2(errno_value, EACCES, EPERM, {
+		return err_unix_path_no_access(errno_value, path);
+	});
+#define NEED_err_unix_path_no_access
+#endif /* EACCES || EPERM */
+#ifdef ENOENT
+	if (errno_value == ENOENT)
+		return err_unix_path_not_found(errno_value, path);
+#define NEED_err_unix_path_not_found
+#endif /* ENOENT */
+#ifdef ENOTDIR
+	if (errno_value == ENOTDIR)
+		return err_unix_path_not_dir(errno_value, path);
+#define NEED_err_unix_path_not_dir
+#endif /* ENOTDIR */
+#ifdef EROFS
+	if (errno_value == EROFS)
+		return err_unix_path_readonly(errno_value, path);
+#define NEED_err_unix_path_readonly
+#endif /* EROFS */
+	return DeeUnixSystem_ThrowErrorf(&DeeError_SystemError, errno_value,
+	                                 "Failed to lchmod path %r to mode %#o",
+	                                 path, mode);
+}
+#endif /* NEED_err_unix_lchmod */
+
+#ifdef NEED_err_unix_fchmod
+#undef NEED_err_unix_fchmod
+INTERN ATTR_COLD int DCALL
+err_unix_fchmod(int errno_value, int fd, unsigned int mode) {
+#ifdef EBADF
+	if (errno_value == EBADF)
+		return err_unix_file_closed(errno_value, fd);
+#define NEED_err_unix_file_closed
+#endif /* EBADF */
+	return DeeUnixSystem_ThrowErrorf(&DeeError_SystemError, errno_value,
+	                                 "Failed to chmod fd %d to mode %#o",
+	                                 fd, mode);
+}
+#endif /* NEED_err_unix_fchmod */
+
 #ifdef NEED_err_unix_remove_unsupported
 #undef NEED_err_unix_remove_unsupported
 INTERN ATTR_COLD NONNULL((2)) int DCALL
@@ -1362,7 +1799,7 @@ err_nt_path_not_found2(DWORD dwError, DeeObject *existing_path, DeeObject *new_p
 INTERN ATTR_COLD NONNULL((2)) int DCALL
 err_unix_path_no_access(int error, DeeObject *__restrict path) {
 	return DeeUnixSystem_ThrowErrorf(&DeeError_FileAccessError, error,
-	                                 "Search permissions are not granted for path %r",
+	                                 "Access denied for path %r",
 	                                 path);
 }
 #endif /* NEED_err_unix_path_no_access */
@@ -1372,7 +1809,7 @@ err_unix_path_no_access(int error, DeeObject *__restrict path) {
 INTERN ATTR_COLD NONNULL((2)) int DCALL
 err_nt_path_no_access(DWORD dwError, DeeObject *__restrict path) {
 	return DeeNTSystem_ThrowErrorf(&DeeError_FileAccessError, dwError,
-	                               "Search permissions are not granted for path %r",
+	                               "Access denied for path %r",
 	                               path);
 }
 #endif /* NEED_err_nt_path_no_access */
@@ -1382,7 +1819,7 @@ err_nt_path_no_access(DWORD dwError, DeeObject *__restrict path) {
 INTERN ATTR_COLD NONNULL((2, 3)) int DCALL
 err_unix_path_no_access2(int errno_value, DeeObject *existing_path, DeeObject *new_path) {
 	return DeeUnixSystem_ThrowErrorf(&DeeError_FileAccessError, errno_value,
-	                                 "Access to %r or %r has not been granted",
+	                                 "Access denied for path %r or %r",
 	                                 existing_path, new_path);
 }
 #endif /* NEED_err_unix_path_no_access2 */
@@ -1392,7 +1829,7 @@ err_unix_path_no_access2(int errno_value, DeeObject *existing_path, DeeObject *n
 INTERN ATTR_COLD NONNULL((2, 3)) int DCALL
 err_nt_path_no_access2(DWORD dwError, DeeObject *existing_path, DeeObject *new_path) {
 	return DeeNTSystem_ThrowErrorf(&DeeError_FileAccessError, dwError,
-	                               "Access to %r or %r has not been granted",
+	                               "Access denied for path %r or %r",
 	                               existing_path, new_path);
 }
 #endif /* NEED_err_nt_path_no_access2 */
@@ -1786,6 +2223,154 @@ err_unix_file_closed(int errno_value, int fd) {
 	                                 "Invalid fd %d", fd);
 }
 #endif /* NEED_err_unix_file_closed */
+
+/* Missing stat information errors. */
+#ifdef NEED_err_stat_no_mode_info
+#undef NEED_err_stat_no_mode_info
+INTERN ATTR_NOINLINE ATTR_COLD int DCALL
+err_stat_no_mode_info(void) {
+	return err_stat_no_info("st_mode");
+#define NEED_err_stat_no_info
+}
+#endif /* NEED_err_stat_no_mode_info */
+
+#ifdef NEED_err_stat_no_dev_info
+#undef NEED_err_stat_no_dev_info
+INTERN ATTR_NOINLINE ATTR_COLD int DCALL
+err_stat_no_dev_info(void) {
+	return err_stat_no_info("st_dev");
+#define NEED_err_stat_no_info
+}
+#endif /* NEED_err_stat_no_dev_info */
+
+#ifdef NEED_err_stat_no_ino_info
+#undef NEED_err_stat_no_ino_info
+INTERN ATTR_NOINLINE ATTR_COLD int DCALL
+err_stat_no_ino_info(void) {
+	return err_stat_no_info("st_ino");
+#define NEED_err_stat_no_info
+}
+#endif /* NEED_err_stat_no_ino_info */
+
+#ifdef NEED_err_stat_no_link_info
+#undef NEED_err_stat_no_link_info
+INTERN ATTR_NOINLINE ATTR_COLD int DCALL
+err_stat_no_link_info(void) {
+	return err_stat_no_info("st_nlink");
+#define NEED_err_stat_no_info
+}
+#endif /* NEED_err_stat_no_link_info */
+
+#ifdef NEED_err_stat_no_uid_info
+#undef NEED_err_stat_no_uid_info
+INTERN ATTR_NOINLINE ATTR_COLD int DCALL
+err_stat_no_uid_info(void) {
+	return err_stat_no_info("st_uid");
+#define NEED_err_stat_no_info
+}
+#endif /* NEED_err_stat_no_uid_info */
+
+#ifdef NEED_err_stat_no_gid_info
+#undef NEED_err_stat_no_gid_info
+INTERN ATTR_NOINLINE ATTR_COLD int DCALL
+err_stat_no_gid_info(void) {
+	return err_stat_no_info("st_gid");
+#define NEED_err_stat_no_info
+}
+#endif /* NEED_err_stat_no_gid_info */
+
+#ifdef NEED_err_stat_no_rdev_info
+#undef NEED_err_stat_no_rdev_info
+INTERN ATTR_NOINLINE ATTR_COLD int DCALL
+err_stat_no_rdev_info(void) {
+	return err_stat_no_info("st_rdev");
+#define NEED_err_stat_no_info
+}
+#endif /* NEED_err_stat_no_rdev_info */
+
+#ifdef NEED_err_stat_no_size_info
+#undef NEED_err_stat_no_size_info
+INTERN ATTR_NOINLINE ATTR_COLD int DCALL
+err_stat_no_size_info(void) {
+	return err_stat_no_info("st_size");
+#define NEED_err_stat_no_info
+}
+#endif /* NEED_err_stat_no_size_info */
+
+#ifdef NEED_err_stat_no_blocks_info
+#undef NEED_err_stat_no_blocks_info
+INTERN ATTR_NOINLINE ATTR_COLD int DCALL
+err_stat_no_blocks_info(void) {
+	return err_stat_no_info("st_blocks");
+#define NEED_err_stat_no_info
+}
+#endif /* NEED_err_stat_no_blocks_info */
+
+#ifdef NEED_err_stat_no_blksize_info
+#undef NEED_err_stat_no_blksize_info
+INTERN ATTR_NOINLINE ATTR_COLD int DCALL
+err_stat_no_blksize_info(void) {
+	return err_stat_no_info("st_blksize");
+#define NEED_err_stat_no_info
+}
+#endif /* NEED_err_stat_no_blksize_info */
+
+#ifdef NEED_err_stat_no_atime_info
+#undef NEED_err_stat_no_atime_info
+INTERN ATTR_NOINLINE ATTR_COLD int DCALL
+err_stat_no_atime_info(void) {
+	return err_stat_no_info("st_atime");
+#define NEED_err_stat_no_info
+}
+#endif /* NEED_err_stat_no_atime_info */
+
+#ifdef NEED_err_stat_no_mtime_info
+#undef NEED_err_stat_no_mtime_info
+INTERN ATTR_NOINLINE ATTR_COLD int DCALL
+err_stat_no_mtime_info(void) {
+	return err_stat_no_info("st_mtime");
+#define NEED_err_stat_no_info
+}
+#endif /* NEED_err_stat_no_mtime_info */
+
+#ifdef NEED_err_stat_no_ctime_info
+#undef NEED_err_stat_no_ctime_info
+INTERN ATTR_NOINLINE ATTR_COLD int DCALL
+err_stat_no_ctime_info(void) {
+	return err_stat_no_info("st_ctime");
+#define NEED_err_stat_no_info
+}
+#endif /* NEED_err_stat_no_ctime_info */
+
+#ifdef NEED_err_stat_no_birthtime_info
+#undef NEED_err_stat_no_birthtime_info
+INTERN ATTR_NOINLINE ATTR_COLD int DCALL
+err_stat_no_birthtime_info(void) {
+	return err_stat_no_info("st_birthtime");
+#define NEED_err_stat_no_info
+}
+#endif /* NEED_err_stat_no_birthtime_info */
+
+#ifdef NEED_err_stat_no_nttype_info
+#undef NEED_err_stat_no_nttype_info
+INTERN ATTR_NOINLINE ATTR_COLD int DCALL
+err_stat_no_nttype_info(void) {
+	return err_stat_no_info("nttype_np");
+#define NEED_err_stat_no_info
+}
+#endif /* NEED_err_stat_no_nttype_info */
+
+#ifdef NEED_err_stat_no_info
+#undef NEED_err_stat_no_info
+INTERN ATTR_NOINLINE ATTR_COLD NONNULL((1)) int DCALL
+err_stat_no_info(char const *__restrict level) {
+	return DeeError_Throwf(&DeeError_UnboundAttribute,
+	                       "The stat object does not contain any %s information",
+	                       level);
+}
+#endif /* NEED_err_stat_no_info */
+
+
 
 
 
@@ -2916,8 +3501,8 @@ posix_dfd_makepath(DeeObject *dfd, DeeObject *path, unsigned int atflags) {
 	if (DeeObject_AssertTypeExact(path, &DeeString_Type))
 		goto err;
 	if unlikely(atflags & ~POSIX_DFD_MAKEPATH_ATFLAGS_MASK) {
-#define NEED_err_bad_atflags
 		err_bad_atflags(atflags);
+#define NEED_err_bad_atflags
 		goto err;
 	}
 

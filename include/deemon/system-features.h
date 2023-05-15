@@ -600,6 +600,7 @@ func("wmkdir", test: "wchar_t c[] = { 'f', 'o', 'o', 0 }; return wmkdir(c, 0755)
 func("_wmkdir", msvc, test: "wchar_t c[] = { 'f', 'o', 'o', 0 }; return _wmkdir(c);");
 functest('chmod("foo", 0777)', "defined(CONFIG_HAVE_SYS_STAT_H) && " + addparen(unix));
 functest('_chmod("foo", 0777)', msvc);
+func("wchmod", test: "wchar_t c[] = { 'f', 'o', 'o', 0 }; return wchmod(c, 0777);");
 func("_wchmod", "defined(_WIO_DEFINED) || " + addparen(msvc), test: "wchar_t c[] = { 'f', 'o', 'o', 0 }; return _wchmod(c, 0777);");
 functest('mkfifo("foo", 0666)', "defined(CONFIG_HAVE_SYS_STAT_H) && " + addparen(unix));
 functest('lchmod("foo", 0666)', "defined(CONFIG_HAVE_SYS_STAT_H) && defined(__USE_MISC)");
@@ -4969,6 +4970,13 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif !defined(CONFIG_HAVE__chmod) && \
       (defined(_chmod) || defined(___chmod_defined) || defined(_MSC_VER))
 #define CONFIG_HAVE__chmod
+#endif
+
+#ifdef CONFIG_NO_wchmod
+#undef CONFIG_HAVE_wchmod
+#elif !defined(CONFIG_HAVE_wchmod) && \
+      (defined(wchmod) || defined(__wchmod_defined))
+#define CONFIG_HAVE_wchmod
 #endif
 
 #ifdef CONFIG_NO__wchmod
@@ -9926,6 +9934,18 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #define chmod _chmod
 #endif /* chmod = _chmod */
 
+#if !defined(CONFIG_HAVE_chmod) && (defined(CONFIG_HAVE_fchmodat) && defined(CONFIG_HAVE_AT_FDCWD))
+#define CONFIG_HAVE_chmod
+#undef chmod
+#define chmod(path, mode) fchmodat(AT_FDCWD, path, mode, 0)
+#endif /* chmod = fchmodat */
+
+#if !defined(CONFIG_HAVE_lchmod) && (defined(CONFIG_HAVE_fchmodat) && defined(CONFIG_HAVE_AT_FDCWD) && defined(CONFIG_HAVE_AT_SYMLINK_NOFOLLOW))
+#define CONFIG_HAVE_lchmod
+#undef lchmod
+#define lchmod(path, mode) fchmodat(AT_FDCWD, path, mode, AT_SYMLINK_NOFOLLOW)
+#endif /* lchmod = fchmodat */
+
 #ifndef CONFIG_HAVE_unlink
 #ifdef CONFIG_HAVE__unlink
 #define CONFIG_HAVE_unlink
@@ -10274,6 +10294,12 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #undef mkdir
 #define mkdir(name, mode) _mkdir(name)
 #endif /* mkdir = _mkdir */
+
+#if defined(CONFIG_HAVE__wchmod) && !defined(CONFIG_HAVE_wchmod)
+#define CONFIG_HAVE_wchmod
+#undef wchmod
+#define wchmod(name, mode) _wchmod(name, mode)
+#endif /* chmod = _chmod */
 
 #if defined(CONFIG_HAVE__wmkdir) && !defined(CONFIG_HAVE_wmkdir)
 #define CONFIG_HAVE_wmkdir
@@ -11299,6 +11325,29 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #define STDIN_FILENO 0
 #define STDOUT_FILENO 1
 #define STDERR_FILENO 2
+
+/* MSVC is actually lying about the behavior of its `chmod()' function!
+ * It doesn't dereference symbolic links, so it's actually lchmod()! */
+#ifdef CONFIG_HAVE_chmod
+#undef CONFIG_HAVE_chmod
+#define CONFIG_HAVE_lchmod
+#define lchmod(path, mode) chmod(path, mode)
+#endif /* CONFIG_HAVE_chmod */
+#ifdef CONFIG_HAVE__chmod
+#undef CONFIG_HAVE__chmod
+#define CONFIG_HAVE__lchmod
+#define _lchmod(path, mode) _chmod(path, mode)
+#endif /* CONFIG_HAVE__chmod */
+#ifdef CONFIG_HAVE_wchmod
+#undef CONFIG_HAVE_wchmod
+#define CONFIG_HAVE_wlchmod
+#define wlchmod(path, mode) wchmod(path, mode)
+#endif /* CONFIG_HAVE_wchmod */
+#ifdef CONFIG_HAVE__wchmod
+#undef CONFIG_HAVE__wchmod
+#define CONFIG_HAVE__wlchmod
+#define _wlchmod(path, mode) _wchmod(path, mode)
+#endif /* CONFIG_HAVE__wchmod */
 #endif /* _MSC_VER */
 
 #ifndef EOK

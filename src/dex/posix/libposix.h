@@ -519,6 +519,27 @@ posix_copyfile_fileio(/*File*/ DeeObject *src,
                       DeeObject *bufsize,
                       unsigned int src_mmap_hints);
 
+/* Parse a `chmod(1)'-style mode-string, or convert `mode' into an integer
+ * @return: * : The new st_mode to-be used for the file.
+ * @return: (unsigned int)-1: An error was thrown. */
+INTDEF WUNUSED NONNULL((1, 2)) unsigned int DCALL posix_chmod_getmode(DeeObject *path, DeeObject *mode);
+INTDEF WUNUSED NONNULL((1, 2)) unsigned int DCALL posix_lchmod_getmode(DeeObject *path, DeeObject *mode);
+INTDEF WUNUSED NONNULL((2)) unsigned int DCALL posix_fchmod_getmode(int fd, DeeObject *__restrict mode);
+
+/* Parse a chmod(1)-style mode-string
+ * @return: * : The new file-mode
+ * @return: (unsigned int)-1: Error
+ * @return: (unsigned int)-2: The given `st_mode == (unsigned int)-1', but would be needed. */
+INTDEF WUNUSED NONNULL((1)) unsigned int DCALL
+posix_chmod_parsemode(char const *__restrict mode_str,
+                      unsigned int st_mode);
+
+/* Get the current file-mode for the given argument. */
+INTDEF WUNUSED NONNULL((1)) unsigned int DCALL posix_stat_getmode(DeeObject *__restrict path);
+INTDEF WUNUSED NONNULL((1)) unsigned int DCALL posix_lstat_getmode(DeeObject *__restrict path);
+INTDEF WUNUSED unsigned int DCALL posix_fstat_getmode(int fd);
+INTDEF WUNUSED NONNULL((1)) unsigned int DCALL posix_xstat_getmode(DeeObject *__restrict path_or_fd, unsigned int stat_flags);
+
 /* Default buffer size for copyfile */
 #ifndef POSIX_COPYFILE_DEFAULT_IO_BUFSIZE
 #define POSIX_COPYFILE_DEFAULT_IO_BUFSIZE (64 * 1024) /* 64K */
@@ -553,6 +574,9 @@ INTDEF ATTR_COLD NONNULL((2, 3)) int DCALL err_unix_link(int errno_value, DeeObj
 INTDEF ATTR_COLD NONNULL((2, 3)) int DCALL err_unix_symlink(int errno_value, DeeObject *text, DeeObject *path);
 INTDEF ATTR_COLD NONNULL((2, 3)) int DCALL err_unix_truncate(int errno_value, DeeObject *path, DeeObject *length);
 INTDEF ATTR_COLD NONNULL((3)) int DCALL err_unix_ftruncate(int errno_value, int fd, DeeObject *length);
+INTDEF ATTR_COLD NONNULL((2)) int DCALL err_unix_chmod(int errno_value, DeeObject *path, unsigned int mode);
+INTDEF ATTR_COLD NONNULL((2)) int DCALL err_unix_lchmod(int errno_value, DeeObject *path, unsigned int mode);
+INTDEF ATTR_COLD int DCALL err_unix_fchmod(int errno_value, int fd, unsigned int mode);
 
 INTDEF ATTR_COLD NONNULL((2)) int DCALL err_unix_remove_unsupported(int errno_value, DeeObject *__restrict path);
 INTDEF ATTR_COLD NONNULL((2)) int DCALL err_unix_unlink_unsupported(int errno_value, DeeObject *__restrict path);
@@ -591,6 +615,24 @@ INTDEF ATTR_COLD int DCALL err_unix_ftruncate_txtbusy(int errno_value, int fd);
 INTDEF ATTR_COLD NONNULL((2)) int DCALL err_unix_truncate_txtbusy(int errno_value, DeeObject *__restrict path);
 INTDEF ATTR_COLD NONNULL((2, 3)) int DCALL err_unix_truncate_failed(int errno_value, DeeObject *path, DeeObject *length);
 INTDEF ATTR_COLD int DCALL err_unix_file_closed(int errno_value, int fd);
+
+/* Missing stat information errors. */
+INTDEF ATTR_COLD NONNULL((1)) int DCALL err_stat_no_info(char const *__restrict level);
+INTDEF ATTR_COLD int DCALL err_stat_no_mode_info(void);
+INTDEF ATTR_COLD int DCALL err_stat_no_dev_info(void);
+INTDEF ATTR_COLD int DCALL err_stat_no_ino_info(void);
+INTDEF ATTR_COLD int DCALL err_stat_no_link_info(void);
+INTDEF ATTR_COLD int DCALL err_stat_no_uid_info(void);
+INTDEF ATTR_COLD int DCALL err_stat_no_gid_info(void);
+INTDEF ATTR_COLD int DCALL err_stat_no_rdev_info(void);
+INTDEF ATTR_COLD int DCALL err_stat_no_size_info(void);
+INTDEF ATTR_COLD int DCALL err_stat_no_blocks_info(void);
+INTDEF ATTR_COLD int DCALL err_stat_no_blksize_info(void);
+INTDEF ATTR_COLD int DCALL err_stat_no_atime_info(void);
+INTDEF ATTR_COLD int DCALL err_stat_no_mtime_info(void);
+INTDEF ATTR_COLD int DCALL err_stat_no_ctime_info(void);
+INTDEF ATTR_COLD int DCALL err_stat_no_birthtime_info(void);
+INTDEF ATTR_COLD int DCALL err_stat_no_nttype_info(void);
 
 #ifdef CONFIG_HOST_WINDOWS
 INTDEF ATTR_COLD NONNULL((2)) int DCALL err_nt_unlink(DWORD dwError, DeeObject *__restrict path);

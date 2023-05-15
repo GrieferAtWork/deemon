@@ -76,7 +76,7 @@ posix_path_headof_f(DeeObject *__restrict path) {
 	ASSERT(tailsep >= pathstr);
 	if (tailsep <= pathstr)
 		return_empty_string;
-	++tailsep;
+	--tailsep; /* Don't include the trailing SEP */
 	return DeeString_NewUtf8(pathstr,
 	                         (size_t)(tailsep - pathstr),
 	                         STRING_ERROR_FIGNORE);
@@ -95,7 +95,6 @@ posix_path_tailof_f(DeeObject *__restrict path) {
 	ASSERT(tailsep >= pathstr);
 	if (tailsep <= pathstr)
 		return_reference_(path);
-	++tailsep;
 	return DeeString_NewUtf8(tailsep,
 	                         (size_t)((pathstr + WSTR_LENGTH(pathstr)) - tailsep),
 	                         STRING_ERROR_FIGNORE);
