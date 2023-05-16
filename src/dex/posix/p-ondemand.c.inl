@@ -625,6 +625,12 @@ PRIVATE WCHAR const str_SeRestorePrivilege[] = {
 	'P', 'r', 'i', 'v', 'i', 'l', 'e', 'g', 'e', 0
 };
 
+PRIVATE BOOL nt_chown_bTookSeTakeOwnershipPrivilege = FALSE;
+PRIVATE WCHAR const str_SeTakeOwnershipPrivilege[] = {
+	'S', 'e', 'T', 'a', 'k', 'e', 'O', 'w', 'n', 'e', 'r', 's',
+	'h', 'i', 'p', 'P', 'r', 'i', 'v', 'i', 'l', 'e', 'g', 'e', 0
+};
+
 PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) BOOL DCALL
 posix_EqualSid(NT_SID const *pSid1, NT_SID const *pSid2) {
 	return pSid1->SubAuthorityCount == pSid2->SubAuthorityCount &&
@@ -647,14 +653,27 @@ nt_SetSecurityInfo_impl(HANDLE Handle,
                         NT_SID const *psidOwner, NT_SID const *psidGroup, PACL pDacl, PACL pSacl,
                         DWORD *p_dwError) {
 	DWORD dwError;
+again:
 	DBG_ALIGNMENT_DISABLE();
 	dwError = (*pdyn_SetSecurityInfo)(Handle, ObjectType, SecurityInfo,
 	                                  psidOwner, psidGroup, pDacl, pSacl);
 	DBG_ALIGNMENT_ENABLE();
 	if (dwError == ERROR_ACCESS_DENIED) {
-		/* Need the `WRITE_OWNER' attribute on the handle. */
 		HANDLE hProcess;
 		HANDLE hWriteOwner;
+		/* """
+		 * To set the owner, the caller must have WRITE_OWNER access to
+		 * the object or have the SE_TAKE_OWNERSHIP_NAME privilege enabled
+		 * """ */
+		if (!nt_chown_bTookSeTakeOwnershipPrivilege) {
+			BOOL ok;
+			ok = nt_AcquirePrivilege(str_SeTakeOwnershipPrivilege);
+			nt_chown_bTookSeTakeOwnershipPrivilege = true;
+			if (ok)
+				goto again;
+		}
+
+		/* Need the `WRITE_OWNER' attribute on the handle. */
 		DBG_ALIGNMENT_DISABLE();
 
 		/* Try to re-open the handle with `WRITE_OWNER' permissions. */
@@ -793,40 +812,55 @@ nt_SetNamedSecurityInfo_impl(LPWSTR wObjectName,
                              SE_OBJECT_TYPE ObjectType, SECURITY_INFORMATION SecurityInfo,
                              NT_SID *psidOwner, NT_SID *psidGroup, PACL pDacl, PACL pSacl) {
 	DWORD dwError;
+again:
 	DBG_ALIGNMENT_DISABLE();
 	dwError = (*pdyn_SetNamedSecurityInfoW)(wObjectName, ObjectType, SecurityInfo,
 	                                        psidOwner, psidGroup, pDacl, pSacl);
 	DBG_ALIGNMENT_ENABLE();
-	if (dwError == ERROR_ACCESS_DENIED && (pdyn_GetNamedSecurityInfoW != NULL) &&
-	    !(SecurityInfo & ~(OWNER_SECURITY_INFORMATION | GROUP_SECURITY_INFORMATION))) {
+	if (dwError == ERROR_ACCESS_DENIED) {
+		/* """
+		 * To set the owner, the caller must have WRITE_OWNER access to
+		 * the object or have the SE_TAKE_OWNERSHIP_NAME privilege enabled
+		 * """ */
+		if (!nt_chown_bTookSeTakeOwnershipPrivilege) {
+			BOOL ok;
+			ok = nt_AcquirePrivilege(str_SeTakeOwnershipPrivilege);
+			nt_chown_bTookSeTakeOwnershipPrivilege = true;
+			if (ok)
+				goto again;
+		}
+
+		if ((pdyn_GetNamedSecurityInfoW != NULL) &&
+		    !(SecurityInfo & ~(OWNER_SECURITY_INFORMATION | GROUP_SECURITY_INFORMATION))) {
 #define NEED_pdyn_GetNamedSecurityInfoW
-		/* Check for special case: only setting the owner/group SID,
-		 * but actually setting them to their current value. If this
-		 * is the case, then don't return an error. */
-		DWORD getDwError;
-		NT_SID *pGetSidOwner = NULL;
-		NT_SID *pGetSidGroup = NULL;
-		PSECURITY_DESCRIPTOR pSD;
-		DBG_ALIGNMENT_DISABLE();
-		getDwError = (*pdyn_GetNamedSecurityInfoW)(wObjectName, ObjectType, SecurityInfo,
-		                                           (SecurityInfo & OWNER_SECURITY_INFORMATION) ? &pGetSidOwner : NULL,
-		                                           (SecurityInfo & GROUP_SECURITY_INFORMATION) ? &pGetSidGroup : NULL,
-		                                           NULL, NULL, &pSD);
+			/* Check for special case: only setting the owner/group SID,
+			 * but actually setting them to their current value. If this
+			 * is the case, then don't return an error. */
+			DWORD getDwError;
+			NT_SID *pGetSidOwner = NULL;
+			NT_SID *pGetSidGroup = NULL;
+			PSECURITY_DESCRIPTOR pSD;
+			DBG_ALIGNMENT_DISABLE();
+			getDwError = (*pdyn_GetNamedSecurityInfoW)(wObjectName, ObjectType, SecurityInfo,
+			                                           (SecurityInfo & OWNER_SECURITY_INFORMATION) ? &pGetSidOwner : NULL,
+			                                           (SecurityInfo & GROUP_SECURITY_INFORMATION) ? &pGetSidGroup : NULL,
+			                                           NULL, NULL, &pSD);
 #define NEED_pdyn_GetNamedSecurityInfoW
-		DBG_ALIGNMENT_ENABLE();
-		if (getDwError == ERROR_SUCCESS) {
-			BOOL areEqual = TRUE;
-			if (SecurityInfo & OWNER_SECURITY_INFORMATION) {
-				if (!pGetSidOwner || !psidOwner || !posix_EqualSid(pGetSidOwner, psidOwner))
-					areEqual = FALSE;
+			DBG_ALIGNMENT_ENABLE();
+			if (getDwError == ERROR_SUCCESS) {
+				BOOL areEqual = TRUE;
+				if (SecurityInfo & OWNER_SECURITY_INFORMATION) {
+					if (!pGetSidOwner || !psidOwner || !posix_EqualSid(pGetSidOwner, psidOwner))
+						areEqual = FALSE;
+				}
+				if (SecurityInfo & GROUP_SECURITY_INFORMATION) {
+					if (!pGetSidGroup || !psidGroup || !posix_EqualSid(pGetSidGroup, psidGroup))
+						areEqual = FALSE;
+				}
+				LocalFree(pSD);
+				if (areEqual)
+					dwError = ERROR_SUCCESS;
 			}
-			if (SecurityInfo & GROUP_SECURITY_INFORMATION) {
-				if (!pGetSidGroup || !psidGroup || !posix_EqualSid(pGetSidGroup, psidGroup))
-					areEqual = FALSE;
-			}
-			LocalFree(pSD);
-			if (areEqual)
-				dwError = ERROR_SUCCESS;
 		}
 	}
 	return dwError;
@@ -3288,7 +3322,7 @@ INTERN BOOL DCALL nt_AcquirePrivilege(LPCWSTR lpName) {
 	error = GetLastError();
 	SetLastError(0);
 	DBG_ALIGNMENT_ENABLE();
-	return unlikely(error == ERROR_NOT_ALL_ASSIGNED) ? 0 : 1;
+	return (error == ERROR_NOT_ALL_ASSIGNED) ? FALSE : TRUE;
 fail:
 	DBG_ALIGNMENT_ENABLE();
 	return FALSE;
