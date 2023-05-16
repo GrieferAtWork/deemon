@@ -205,7 +205,7 @@ PUBLIC ATTR_COLD NONNULL((1, 2)) int
 	return result;
 }
 
-INTERN void DCALL
+INTERN NONNULL((1, 2)) void DCALL
 restore_interrupt_error(DeeThreadObject *__restrict ts,
                         /*inherit*/ struct except_frame *__restrict frame) {
 	DREF DeeObject *frame_error = frame->ef_error;

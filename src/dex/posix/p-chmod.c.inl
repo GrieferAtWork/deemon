@@ -318,7 +318,9 @@ err_link_text:
 	Dee_Decref(link_text);
 err:
 	return NULL;
-#elif !defined(posix_chmod_USE_STUB)
+#endif /* posix_chmod_USE_posix_readlink__AND__posix_lchmod */
+
+#if defined(posix_chmod_USE_chmod) || defined(posix_chmod_USE_wchmod)
 	int error;
 	unsigned int used_mode;
 #ifdef posix_chmod_USE_chmod
@@ -369,11 +371,13 @@ EINTR_ENOMEM_LABEL(again)
 	return_none;
 err:
 	return NULL;
-#else /* !posix_chmod_USE_STUB */
-#define NEED_posix_err_unsupported
+#endif /* posix_chmod_USE_chmod || posix_chmod_USE_wchmod */
+
+#ifdef posix_chmod_USE_STUB
 	(void)path;
 	(void)mode;
 	posix_err_unsupported("chmod");
+#define NEED_posix_err_unsupported
 	return NULL;
 #endif /* posix_chmod_USE_STUB */
 }
@@ -402,7 +406,7 @@ err:
 FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_lchmod_f_impl(DeeObject *path, DeeObject *mode)
 /*[[[end]]]*/
 {
-#ifndef posix_lchmod_USE_STUB
+#if defined(posix_lchmod_USE_lchmod) || defined(posix_lchmod_USE_wlchmod)
 	int error;
 	unsigned int used_mode;
 #ifdef posix_lchmod_USE_lchmod
@@ -453,11 +457,13 @@ EINTR_ENOMEM_LABEL(again)
 	return_none;
 err:
 	return NULL;
-#else /* !posix_lchmod_USE_STUB */
-#define NEED_posix_err_unsupported
+#endif /* posix_lchmod_USE_lchmod || posix_lchmod_USE_wlchmod */
+
+#ifdef posix_lchmod_USE_STUB
 	(void)path;
 	(void)mode;
 	posix_err_unsupported("lchmod");
+#define NEED_posix_err_unsupported
 	return NULL;
 #endif /* posix_lchmod_USE_STUB */
 }

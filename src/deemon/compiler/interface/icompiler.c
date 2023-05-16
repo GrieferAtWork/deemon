@@ -59,8 +59,8 @@ INTERN WUNUSED NONNULL((1)) int DCALL
 compiler_init(DeeCompilerObject *__restrict self,
               size_t argc, DeeObject *const *argv,
               DeeObject *kw) {
-	DeeObject *module       = Dee_None;
-	struct keyword kwlist[] = { K(module), KEND };
+	PRIVATE struct keyword kwlist[] = { K(module), KEND };
+	DeeObject *module = Dee_None;
 	/* TODO: All those other arguments, like compiler options, etc. */
 	if (DeeArg_UnpackKw(argc, argv, kw, kwlist, "|o", &module))
 		goto err;

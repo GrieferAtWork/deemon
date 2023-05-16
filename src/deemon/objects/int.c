@@ -2880,7 +2880,7 @@ DeeInt_TryGet128Bit(DeeObject *__restrict self,
 		__hybrid_uint128_or(result.u, me->ob_digit[i]);
 	}
 	if (negative) {
-		static Dee_uint128_t const uint128_ill_pos =
+		PRIVATE Dee_uint128_t const uint128_ill_pos =
 		__HYBRID_UINT128_INIT16N(0x8000, 0x0000, 0x0000, 0x0000,
 		                         0x0000, 0x0000, 0x0000, 0x0000);
 		if (__hybrid_uint128_gr128(result.u, uint128_ill_pos))
@@ -3882,7 +3882,7 @@ int_reqbits(DeeIntObject const *__restrict self, bool is_signed) {
 					goto not_a_limit_int;
 			}
 			if (digit_count == 1 && last_digit == 1) {
-				/* Special case: `-1' (still requires at least 2 bits to represent) */
+				/* Special case: `-1' (still requires at least 2 bits to be represented) */
 			} else {
 				--result;
 			}
@@ -3916,7 +3916,7 @@ err_underflow:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 int_tobytes(DeeIntObject *self, size_t argc,
             DeeObject *const *argv, DeeObject *kw) {
-	struct keyword kwlist[] = { K(length), K(byteorder), K(signed), KEND };
+	PRIVATE struct keyword kwlist[] = { K(length), K(byteorder), K(signed), KEND };
 	size_t length = (size_t)-1;
 	DeeObject *byteorder = Dee_None;
 	bool is_signed       = false;
@@ -3975,7 +3975,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 int_bitcount(DeeIntObject *self, size_t argc,
              DeeObject *const *argv, DeeObject *kw) {
-	struct keyword kwlist[] = { K(signed), KEND };
+	PRIVATE struct keyword kwlist[] = { K(signed), KEND };
 	bool is_signed = false;
 	size_t result;
 	if (DeeArg_UnpackKw(argc, argv, kw, kwlist, "|b:bitcount",
@@ -3993,7 +3993,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 int_frombytes(DeeObject *UNUSED(self), size_t argc,
               DeeObject *const *argv, DeeObject *kw) {
-	struct keyword kwlist[] = { K(bytes), K(byteorder), K(signed), KEND };
+	PRIVATE struct keyword kwlist[] = { K(bytes), K(byteorder), K(signed), KEND };
 	DeeObject *bytes;
 	DeeObject *byteorder = Dee_None;
 	bool is_signed       = false;

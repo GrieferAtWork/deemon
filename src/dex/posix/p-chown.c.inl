@@ -330,7 +330,9 @@ err_link_text:
 	Dee_Decref(link_text);
 err:
 	return NULL;
-#elif !defined(posix_chown_USE_STUB)
+#endif /* posix_chown_USE_posix_readlink__AND__posix_lchown */
+
+#if defined(posix_chown_USE_chown) || defined(posix_chown_USE_wchown)
 	int error;
 	uid_t used_uid;
 	gid_t used_gid;
@@ -384,12 +386,14 @@ EINTR_ENOMEM_LABEL(again)
 	return_none;
 err:
 	return NULL;
-#else /* !posix_chown_USE_STUB */
-#define NEED_posix_err_unsupported
+#endif /* posix_chown_USE_chown || posix_chown_USE_wchown */
+
+#ifdef posix_chown_USE_STUB
 	(void)path;
 	(void)uid;
 	(void)gid;
 	posix_err_unsupported("chown");
+#define NEED_posix_err_unsupported
 	return NULL;
 #endif /* posix_chown_USE_STUB */
 }
@@ -466,7 +470,9 @@ err_nt_uid:
 	Dee_Free(nt_uid);
 err:
 	return NULL;
-#elif !defined(posix_lchown_USE_STUB)
+#endif /* posix_lchown_USE_nt_SetNamedSecurityInfo */
+
+#if defined(posix_lchown_USE_wlchown) || defined(posix_lchown_USE_lchown)
 	int error;
 	uid_t used_uid;
 	gid_t used_gid;
@@ -520,12 +526,14 @@ EINTR_ENOMEM_LABEL(again)
 	return_none;
 err:
 	return NULL;
-#else /* !posix_lchown_USE_STUB */
-#define NEED_posix_err_unsupported
+#endif /* posix_lchown_USE_wlchown || posix_lchown_USE_lchown */
+
+#ifdef posix_lchown_USE_STUB
 	(void)path;
 	(void)uid;
 	(void)gid;
 	posix_err_unsupported("lchown");
+#define NEED_posix_err_unsupported
 	return NULL;
 #endif /* posix_lchown_USE_STUB */
 }
@@ -603,7 +611,9 @@ err_nt_uid:
 	Dee_Free(nt_uid);
 err:
 	return NULL;
-#elif defined(posix_fchown_USE_fchown)
+#endif /* posix_fchown_USE_nt_SetSecurityInfo */
+
+#ifdef posix_fchown_USE_fchown
 	int error;
 	uid_t used_uid;
 	gid_t used_gid;
