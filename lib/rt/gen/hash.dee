@@ -37,3 +37,7 @@ function _Dee_HashSelect(value: string): string {
 		hash64.hex()
 	}))";
 }
+
+function define_Dee_HashStr(value: string): string {
+	return f"#define Dee_HashStr__{value} {_Dee_HashSelect(value)}";
+}

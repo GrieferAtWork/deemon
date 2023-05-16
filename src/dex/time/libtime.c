@@ -2936,17 +2936,17 @@ time_ctor(DeeTimeObject *__restrict self) {
 /* @return:  0: Success (Argument is present)
  * @return:  1: Argument not present
  * @return: -1: Error */
-PRIVATE WUNUSED NONNULL((1, 5, 6)) int FCALL
+PRIVATE WUNUSED NONNULL((1, 5, 7)) int FCALL
 time_init_getarg(DeeKwArgs *__restrict kwds,
                  size_t argc, DeeObject *const *argv,
                  size_t default_argi,
-                 char const *__restrict argname,
+                 char const *__restrict argname, dhash_t hash,
                  Dee_int128_t *__restrict p_result) {
 	int result;
 	DREF DeeObject *arg;
 	if (default_argi < argc)
 		return DeeObject_AsInt128(argv[default_argi], p_result);
-	arg = DeeKwArgs_GetStringDef(kwds, argname, ITER_DONE);
+	arg = DeeKwArgs_GetStringDef(kwds, argname, hash, ITER_DONE);
 	if (arg == ITER_DONE)
 		return 1;
 	if (arg == NULL)
@@ -3002,6 +3002,53 @@ time_init_setrepr(DeeTimeObject *__restrict self,
 	DeeTime_SetRepr(self, p_value, repr);
 }
 
+/*[[[deemon
+import define_Dee_HashStr from rt.gen.hash;
+print define_Dee_HashStr("nanoseconds");
+print define_Dee_HashStr("microseconds");
+print define_Dee_HashStr("milliseconds");
+print define_Dee_HashStr("seconds");
+print define_Dee_HashStr("minutes");
+print define_Dee_HashStr("hours");
+print define_Dee_HashStr("days");
+print define_Dee_HashStr("weeks");
+print define_Dee_HashStr("months");
+print define_Dee_HashStr("years");
+print define_Dee_HashStr("decades");
+print define_Dee_HashStr("centuries");
+print define_Dee_HashStr("millennia");
+print define_Dee_HashStr("year");
+print define_Dee_HashStr("month");
+print define_Dee_HashStr("day");
+print define_Dee_HashStr("hour");
+print define_Dee_HashStr("minute");
+print define_Dee_HashStr("second");
+print define_Dee_HashStr("nanosecond");
+print define_Dee_HashStr("time_t");
+]]]*/
+#define Dee_HashStr__nanoseconds _Dee_HashSelect(UINT32_C(0x587ebc6), UINT64_C(0xcb733bf64e31051))
+#define Dee_HashStr__microseconds _Dee_HashSelect(UINT32_C(0xd0f0ca9e), UINT64_C(0x21fdc701b3dee431))
+#define Dee_HashStr__milliseconds _Dee_HashSelect(UINT32_C(0x258c8584), UINT64_C(0x4ae62fd98df3908b))
+#define Dee_HashStr__seconds _Dee_HashSelect(UINT32_C(0x60e8b29f), UINT64_C(0x75b48546f982eb0))
+#define Dee_HashStr__minutes _Dee_HashSelect(UINT32_C(0x697b99e0), UINT64_C(0x2b17a96eb6daa7a1))
+#define Dee_HashStr__hours _Dee_HashSelect(UINT32_C(0xb7820007), UINT64_C(0x699674a9e26e1066))
+#define Dee_HashStr__days _Dee_HashSelect(UINT32_C(0x64ba5ac8), UINT64_C(0xbbe238b514802b8f))
+#define Dee_HashStr__weeks _Dee_HashSelect(UINT32_C(0x480ea47c), UINT64_C(0x232b45f396262210))
+#define Dee_HashStr__months _Dee_HashSelect(UINT32_C(0x343842c8), UINT64_C(0x659b8ab01b268775))
+#define Dee_HashStr__years _Dee_HashSelect(UINT32_C(0x8db899c8), UINT64_C(0x6a5238e03b1fb05a))
+#define Dee_HashStr__decades _Dee_HashSelect(UINT32_C(0x78678682), UINT64_C(0xb4b017a5614d049))
+#define Dee_HashStr__centuries _Dee_HashSelect(UINT32_C(0xae87212e), UINT64_C(0x77b9ecd75eae79f5))
+#define Dee_HashStr__millennia _Dee_HashSelect(UINT32_C(0x5d46b99f), UINT64_C(0x7a369d205687a08f))
+#define Dee_HashStr__year _Dee_HashSelect(UINT32_C(0x310a1818), UINT64_C(0xa8d044c5ea490cb6))
+#define Dee_HashStr__month _Dee_HashSelect(UINT32_C(0x51ca185c), UINT64_C(0xbe9d67504ee78acc))
+#define Dee_HashStr__day _Dee_HashSelect(UINT32_C(0xe0fe498d), UINT64_C(0x8e12be46fd64d268))
+#define Dee_HashStr__hour _Dee_HashSelect(UINT32_C(0x1a9ed795), UINT64_C(0x10f3e1a52760b6c5))
+#define Dee_HashStr__minute _Dee_HashSelect(UINT32_C(0x951f07e5), UINT64_C(0x841bf13791a969b))
+#define Dee_HashStr__second _Dee_HashSelect(UINT32_C(0x1a084e7b), UINT64_C(0x3058181b9a44b68c))
+#define Dee_HashStr__nanosecond _Dee_HashSelect(UINT32_C(0xe8e3c3b6), UINT64_C(0x16f16d5d9832d2aa))
+#define Dee_HashStr__time_t _Dee_HashSelect(UINT32_C(0xad3d6b3f), UINT64_C(0x79f5c2060abaa727))
+/*[[[end]]]*/
+
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 time_init_kw(DeeTimeObject *__restrict self,
@@ -3033,52 +3080,54 @@ time_init_kw(DeeTimeObject *__restrict self,
 	int error;
 	if (DeeKwArgs_Init(&kwds, &argc, argv, kw))
 		goto err;
-#define IF_LOADARG(i, name)                                               \
-	if ((error = time_init_getarg(&kwds, argc, argv, i, name, &arg)) > 0) \
-		;                                                                 \
-	else if unlikely(error < 0)                                           \
-		goto err;                                                         \
+#define IF_LOADARG(i, name)                                   \
+	if ((error = time_init_getarg(&kwds, argc, argv, i,       \
+	                              #name, Dee_HashStr__##name, \
+	                              &arg)) > 0)                 \
+		;                                                     \
+	else if unlikely(error < 0)                               \
+		goto err;                                             \
 	else
 	self->t_typekind = TIME_TYPEKIND(TIME_TYPE_NANOSECONDS, TIME_KIND_INVALID);
 	__hybrid_int128_setzero(self->t_nanos);
-	IF_LOADARG(0, "nanoseconds") {
+	IF_LOADARG(0, nanoseconds) {
 		self->t_kind  = TIME_KIND_DELTA;
 		self->t_nanos = arg;
 	}
-	IF_LOADARG(1, "microseconds") {
+	IF_LOADARG(1, microseconds) {
 		time_init_addrepr(self, &arg, TIME_REPR_MICROSECONDS);
 	}
-	IF_LOADARG(2, "milliseconds") {
+	IF_LOADARG(2, milliseconds) {
 		time_init_addrepr(self, &arg, TIME_REPR_MILLISECONDS);
 	}
-	IF_LOADARG(3, "seconds") {
+	IF_LOADARG(3, seconds) {
 		time_init_addrepr(self, &arg, TIME_REPR_SECONDS);
 	}
-	IF_LOADARG(4, "minutes") {
+	IF_LOADARG(4, minutes) {
 		time_init_addrepr(self, &arg, TIME_REPR_MINUTES);
 	}
-	IF_LOADARG(5, "hours") {
+	IF_LOADARG(5, hours) {
 		time_init_addrepr(self, &arg, TIME_REPR_HOURS);
 	}
-	IF_LOADARG(6, "days") {
+	IF_LOADARG(6, days) {
 		time_init_addrepr(self, &arg, TIME_REPR_DAYS);
 	}
-	IF_LOADARG(7, "weeks") {
+	IF_LOADARG(7, weeks) {
 		time_init_addrepr(self, &arg, TIME_REPR_WEEKS);
 	}
-	IF_LOADARG(8, "months") {
+	IF_LOADARG(8, months) {
 		time_init_addrepr_months(self, &arg, TIME_REPR_MONTHS);
 	}
-	IF_LOADARG(9, "years") {
+	IF_LOADARG(9, years) {
 		time_init_addrepr_months(self, &arg, TIME_REPR_YEARS);
 	}
-	IF_LOADARG(10, "decades") {
+	IF_LOADARG(10, decades) {
 		time_init_addrepr_months(self, &arg, TIME_REPR_DECADES);
 	}
-	IF_LOADARG(11, "centuries") {
+	IF_LOADARG(11, centuries) {
 		time_init_addrepr_months(self, &arg, TIME_REPR_CENTURIES);
 	}
-	IF_LOADARG(12, "millennia") {
+	IF_LOADARG(12, millennia) {
 		time_init_addrepr_months(self, &arg, TIME_REPR_MILLENNIA);
 	}
 	if (argc > 12 || DeeKwArgs_MaybeHaveMoreArgs(&kwds)) {
@@ -3088,28 +3137,28 @@ time_init_kw(DeeTimeObject *__restrict self,
 		addend                 = self->t_nanos;
 		self->t_typekind       = TIME_TYPEKIND(TIME_TYPE_NANOSECONDS, TIME_KIND_INVALID);
 		__hybrid_int128_setzero(self->t_nanos);
-		IF_LOADARG(13, "year") {
+		IF_LOADARG(13, year) {
 			time_init_setrepr(self, &arg, TIME_REPR_YEAR);
 		}
-		IF_LOADARG(14, "month") {
+		IF_LOADARG(14, month) {
 			time_init_setrepr(self, &arg, TIME_REPR_MONTH);
 		}
-		IF_LOADARG(15, "day") {
+		IF_LOADARG(15, day) {
 			time_init_setrepr(self, &arg, TIME_REPR_MDAY);
 		}
-		IF_LOADARG(16, "hour") {
+		IF_LOADARG(16, hour) {
 			time_init_setrepr(self, &arg, TIME_REPR_HOUR);
 		}
-		IF_LOADARG(17, "minute") {
+		IF_LOADARG(17, minute) {
 			time_init_setrepr(self, &arg, TIME_REPR_MINUTE);
 		}
-		IF_LOADARG(18, "second") {
+		IF_LOADARG(18, second) {
 			time_init_setrepr(self, &arg, TIME_REPR_SECOND);
 		}
-		IF_LOADARG(19, "nanosecond") {
+		IF_LOADARG(19, nanosecond) {
 			time_init_setrepr(self, &arg, TIME_REPR_NANOSECOND);
 		}
-		IF_LOADARG(20, "time_t") {
+		IF_LOADARG(20, time_t) {
 			__hybrid_int128_add64(arg, SECONDS_01_01_1970);
 			__hybrid_int128_mul32(arg, NANOSECONDS_PER_SECOND);
 			if (!__hybrid_int128_iszero(self->t_nanos)) {

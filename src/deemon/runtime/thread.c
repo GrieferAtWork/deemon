@@ -42,6 +42,7 @@
 #include <deemon/util/atomic.h>
 #include <deemon/util/futex.h>
 #include <deemon/util/lock.h>
+#include <deemon/util/once.h>
 #include <deemon/util/rlock.h>
 
 #include <hybrid/overflow.h>
@@ -333,27 +334,21 @@ DeeThread_SetName__SetThreadDescription(char const *__restrict name) {
 	typedef HRESULT (WINAPI *LPSETTHREADDESCRIPTION)(HANDLE hThread, PCWSTR lpThreadDescription);
 	PRIVATE WCHAR const wKernelBase_dll[] = { 'K', 'e', 'r', 'n', 'e', 'l', 'B', 'a', 's', 'e', '.', 'd', 'l', 'l', 0 };
 	PRIVATE LPSETTHREADDESCRIPTION pdyn_SetThreadDescription = NULL;
-	PRIVATE HMODULE hm = NULL;
 	HRESULT hr;
 	PWSTR lpwName;
-	if (!ITER_ISOK(hm)) {
-		if (hm == (HMODULE)ITER_DONE)
-			return false;
+	Dee_ONCE({
+		HMODULE hm;
+		DBG_ALIGNMENT_DISABLE();
 		hm = LoadLibraryW(wKernelBase_dll);
-		if (hm == NULL) {
-			hm = (HMODULE)ITER_DONE;
-			return false;
+		if (hm) {
+			pdyn_SetThreadDescription = (LPSETTHREADDESCRIPTION)GetProcAddress(hm, "SetThreadDescription");
+			if (!pdyn_SetThreadDescription)
+				(void)FreeLibrary(hm);
 		}
-		pdyn_SetThreadDescription = (LPSETTHREADDESCRIPTION)GetProcAddress(hm, "SetThreadDescription");
-		if (!pdyn_SetThreadDescription) {
-			HMODULE lib = hm;
-			COMPILER_BARRIER();
-			hm = (HMODULE)ITER_DONE;
-			COMPILER_BARRIER();
-			(void)FreeLibrary(lib);
-			return false;
-		}
-	}
+		DBG_ALIGNMENT_ENABLE();
+	});
+	if (!pdyn_SetThreadDescription)
+		return false;
 	lpwName = (PWSTR)try_utf8_to_wide(name);
 	if unlikely(!lpwName)
 		return false;

@@ -340,16 +340,21 @@ DeeKwArgs_Done(DeeKwArgs *__restrict self,
  * @return: NULL: An error was thrown.*/
 DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 DeeKwArgs_GetString(DeeKwArgs *__restrict self,
-                    char const *__restrict name);
+                    char const *__restrict name,
+                    Dee_hash_t hash);
 DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-DeeKwArgs_GetStringLen(DeeKwArgs *__restrict self, char const *__restrict name,
+DeeKwArgs_GetStringLen(DeeKwArgs *__restrict self,
+                       char const *__restrict name,
                        size_t namelen, Dee_hash_t hash);
-DFUNDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
+DFUNDEF WUNUSED NONNULL((1, 2, 4)) DREF DeeObject *DCALL
 DeeKwArgs_GetStringDef(DeeKwArgs *__restrict self,
-                       char const *__restrict name, DeeObject *def);
+                       char const *__restrict name,
+                       Dee_hash_t hash, DeeObject *def);
 DFUNDEF WUNUSED NONNULL((1, 2, 5)) DREF DeeObject *DCALL
-DeeKwArgs_GetStringLenDef(DeeKwArgs *__restrict self, char const *__restrict name,
-                          size_t namelen, Dee_hash_t hash, DeeObject *def);
+DeeKwArgs_GetStringLenDef(DeeKwArgs *__restrict self,
+                          char const *__restrict name,
+                          size_t namelen, Dee_hash_t hash,
+                          DeeObject *def);
 
 
 
@@ -365,14 +370,14 @@ DeeArg_PutKw(size_t argc, DeeObject *const *argv, DREF DeeObject *kw);
  * `name', or throw a TypeError exception or return `def' if not provided. */
 DFUNDEF WUNUSED NONNULL((4)) DREF DeeObject *DCALL
 DeeArg_GetKwString(size_t argc, DeeObject *const *argv, DeeObject *kw,
-                   char const *__restrict name);
+                   char const *__restrict name, Dee_hash_t hash);
 DFUNDEF WUNUSED NONNULL((4)) DREF DeeObject *DCALL
 DeeArg_GetKwStringLen(size_t argc, DeeObject *const *argv, DeeObject *kw,
                       char const *__restrict name, size_t namelen, Dee_hash_t hash);
-DFUNDEF WUNUSED NONNULL((4, 5)) DREF DeeObject *DCALL
+DFUNDEF WUNUSED NONNULL((4, 6)) DREF DeeObject *DCALL
 DeeArg_GetKwStringDef(size_t argc, DeeObject *const *argv,
                       DeeObject *kw, char const *__restrict name,
-                      DeeObject *def);
+                      Dee_hash_t hash, DeeObject *def);
 DFUNDEF WUNUSED NONNULL((4, 7)) DREF DeeObject *DCALL
 DeeArg_GetKwStringLenDef(size_t argc, DeeObject *const *argv,
                          DeeObject *kw, char const *__restrict name,

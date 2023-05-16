@@ -1512,14 +1512,13 @@ err:
  * @return: NULL: An error was thrown.*/
 PUBLIC WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 DeeKwArgs_GetString(DeeKwArgs *__restrict self,
-                    char const *__restrict name) {
+                    char const *__restrict name,
+                    Dee_hash_t hash) {
 	DREF DeeObject *result;
-	dhash_t hash;
 	if (!self->kwa_kw) {
 		err_unknown_key_str(Dee_EmptyMapping, name);
 		return NULL;
 	}
-	hash = Dee_HashStr(name);
 	if (DeeKwds_Check(self->kwa_kw)) {
 		size_t kw_index;
 		kw_index = kwds_findstr((Kwds *)self->kwa_kw, name, hash);
@@ -1537,7 +1536,8 @@ DeeKwArgs_GetString(DeeKwArgs *__restrict self,
 }
 
 PUBLIC WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-DeeKwArgs_GetStringLen(DeeKwArgs *__restrict self, char const *__restrict name,
+DeeKwArgs_GetStringLen(DeeKwArgs *__restrict self,
+                       char const *__restrict name,
                        size_t namelen, Dee_hash_t hash) {
 	DREF DeeObject *result;
 	if (!self->kwa_kw) {
@@ -1561,12 +1561,11 @@ DeeKwArgs_GetStringLen(DeeKwArgs *__restrict self, char const *__restrict name,
 	return result;
 }
 
-PUBLIC WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
+PUBLIC WUNUSED NONNULL((1, 2, 4)) DREF DeeObject *DCALL
 DeeKwArgs_GetStringDef(DeeKwArgs *__restrict self,
-                       char const *__restrict name, DeeObject *def) {
+                       char const *__restrict name,
+                       Dee_hash_t hash, DeeObject *def) {
 	if (self->kwa_kw) {
-		dhash_t hash;
-		hash = Dee_HashStr(name);
 		if (DeeKwds_Check(self->kwa_kw)) {
 			size_t kw_index;
 			kw_index = kwds_findstr((Kwds *)self->kwa_kw, name, hash);
@@ -1624,14 +1623,12 @@ DeeKwArgs_GetStringLenDef(DeeKwArgs *__restrict self, char const *__restrict nam
 
 
 PUBLIC WUNUSED NONNULL((4)) DREF DeeObject *DCALL
-DeeArg_GetKwString(size_t argc, DeeObject *const *argv,
-                   DeeObject *kw, char const *__restrict name) {
-	dhash_t hash;
+DeeArg_GetKwString(size_t argc, DeeObject *const *argv, DeeObject *kw,
+                   char const *__restrict name, Dee_hash_t hash) {
 	if (!kw) {
 		err_unknown_key_str(Dee_EmptyMapping, name);
 		return NULL;
 	}
-	hash = Dee_HashStr(name);
 	if (DeeKwds_Check(kw)) {
 		size_t kw_index;
 		size_t num_keywords = DeeKwds_SIZE(kw);
@@ -1677,18 +1674,16 @@ DeeArg_GetKwStringLen(size_t argc, DeeObject *const *argv, DeeObject *kw,
 	return DeeObject_GetItemStringLen(kw, name, namelen, hash);
 }
 
-PUBLIC WUNUSED NONNULL((4, 5)) DREF DeeObject *DCALL
+PUBLIC WUNUSED NONNULL((4, 6)) DREF DeeObject *DCALL
 DeeArg_GetKwStringDef(size_t argc, DeeObject *const *argv,
                       DeeObject *kw, char const *__restrict name,
-                      DeeObject *def) {
-	dhash_t hash;
+                      Dee_hash_t hash, DeeObject *def) {
 	if (!kw) {
 return_def:
 		if (def != ITER_DONE)
 			Dee_Incref(def);
 		return def;
 	}
-	hash = Dee_HashStr(name);
 	if (DeeKwds_Check(kw)) {
 		size_t kw_index;
 		size_t num_keywords = DeeKwds_SIZE(kw);

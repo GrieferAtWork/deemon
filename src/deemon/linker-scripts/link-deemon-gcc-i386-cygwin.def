@@ -4,8 +4,8 @@ EXPORTS
 	; See this mail that noone ever bothered to reply to:
 	; https://cygwin.com/ml/cygwin/2001-03/msg00514.html
 	_DeeArg_GetKw@12=DeeArg_GetKw@12
-	_DeeArg_GetKwString@16=DeeArg_GetKwString@16
-	_DeeArg_GetKwStringDef@20=DeeArg_GetKwStringDef@20
+	_DeeArg_GetKwString@20=DeeArg_GetKwString@20
+	_DeeArg_GetKwStringDef@24=DeeArg_GetKwStringDef@24
 	_DeeArg_GetKwStringLen@24=DeeArg_GetKwStringLen@24
 	_DeeArg_GetKwStringLenDef@28=DeeArg_GetKwStringLenDef@28
 	_DeeArg_PutKw@12=DeeArg_PutKw@12
@@ -351,8 +351,8 @@ EXPORTS
 	_DeeInt_TryGet64Bit@8=DeeInt_TryGet64Bit@8
 	_DeeInt_TryGet8Bit@8=DeeInt_TryGet8Bit@8
 	_DeeKwArgs_Done@12=DeeKwArgs_Done@12
-	_DeeKwArgs_GetString@8=DeeKwArgs_GetString@8
-	_DeeKwArgs_GetStringDef@12=DeeKwArgs_GetStringDef@12
+	_DeeKwArgs_GetString@12=DeeKwArgs_GetString@12
+	_DeeKwArgs_GetStringDef@16=DeeKwArgs_GetStringDef@16
 	_DeeKwArgs_GetStringLen@16=DeeKwArgs_GetStringLen@16
 	_DeeKwArgs_GetStringLenDef@20=DeeKwArgs_GetStringLenDef@20
 	_DeeKwArgs_Init@16=DeeKwArgs_Init@16
@@ -959,6 +959,10 @@ EXPORTS
 	_Dee_ddi_state_init@12=Dee_ddi_state_init@12
 	_Dee_event_waitfor@4=Dee_event_waitfor@4
 	_Dee_event_waitfor_timed@12=Dee_event_waitfor_timed@12
+	_Dee_once_abort@4=Dee_once_abort@4
+	_Dee_once_begin@4=Dee_once_begin@4
+	_Dee_once_begin_noint@4=Dee_once_begin_noint@4
+	_Dee_once_commit@4=Dee_once_commit@4
 	_Dee_rshared_lock_acquire@4=Dee_rshared_lock_acquire@4
 	_Dee_rshared_lock_acquire_noint@4=Dee_rshared_lock_acquire_noint@4
 	_Dee_rshared_lock_acquire_timed@12=Dee_rshared_lock_acquire_timed@12
