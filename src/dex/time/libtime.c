@@ -2689,6 +2689,12 @@ err:
 }
 
 
+/*[[[deemon
+import * from time;
+print("#define UNIX_TIME_T_BASE_SECONDS INT64_C(", Time(year: 1970, month: 1, day: 1).seconds.hex(), ")");
+]]]*/
+#define UNIX_TIME_T_BASE_SECONDS INT64_C(0xe79747c00)
+/*[[[end]]]*/
 
 PUBLIC WUNUSED DREF DeeObject *DCALL
 DeeTime_NewUnix(int64_t seconds_since_01_01_1970,
@@ -2698,6 +2704,7 @@ DeeTime_NewUnix(int64_t seconds_since_01_01_1970,
 	if unlikely(!result)
 		goto done;
 	__hybrid_int128_set64(result->t_nanos, seconds_since_01_01_1970);
+	__hybrid_int128_add64(result->t_nanos, UNIX_TIME_T_BASE_SECONDS);
 	__hybrid_int128_mul32(result->t_nanos, NANOSECONDS_PER_SECOND);
 	__hybrid_int128_add32(result->t_nanos, extra_nanoseconds);
 	result->t_typekind = TIME_TYPEKIND(TIME_TYPE_NANOSECONDS, TIME_KIND_TIMESTAMP);
@@ -2719,6 +2726,7 @@ f_libtime__mkunix(size_t argc, DeeObject *const *argv) {
 	                  &__hybrid_int128_vec64_significand(result->t_nanos, 0),
 	                  &extra_nano))
 		goto err_r;
+	__hybrid_int128_add64(result->t_nanos, UNIX_TIME_T_BASE_SECONDS);
 	__hybrid_int128_mul32(result->t_nanos, NANOSECONDS_PER_SECOND);
 	__hybrid_int128_add32(result->t_nanos, extra_nano);
 	result->t_typekind = TIME_TYPEKIND(TIME_TYPE_NANOSECONDS, TIME_KIND_TIMESTAMP);
