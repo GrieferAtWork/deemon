@@ -24,7 +24,7 @@
 
 #include "libposix.h"
 
-#ifdef __INTELLISENSE__
+#if defined(__INTELLISENSE__) || defined(__DEEMON__)
 #include "p-path.c.inl"
 #include "p-stat.c.inl"
 
@@ -37,6 +37,10 @@
 #define NEED_posix_xstat_getmode
 #define NEED_posix_chown_unix_parseuid
 #define NEED_posix_chown_unix_parsegid
+#define NEED_posix_utime_unix_parse_utimbuf
+#define NEED_posix_utime_unix_parse_utimbuf32
+#define NEED_posix_utime_unix_parse_utimbuf64
+#define NEED_posix_utime_unix_parse_utimbuf_common
 #define NEED_err_unix_chdir
 #define NEED_err_unix_remove
 #define NEED_err_unix_unlink
@@ -61,6 +65,10 @@
 #define NEED_err_unix_chown
 #define NEED_err_unix_lchown
 #define NEED_err_unix_fchown
+#define NEED_err_unix_utime
+#define NEED_err_unix_lutime
+#define NEED_err_unix_futime
+#define NEED_err_unix_utime_cannot_set_ctime_or_btime
 #define NEED_err_unix_remove_unsupported
 #define NEED_err_unix_unlink_unsupported
 #define NEED_err_nt_unlink_unsupported
@@ -111,8 +119,8 @@
 #define NEED_err_nt_move_to_child
 #define NEED_err_unix_path_not_empty
 #define NEED_err_nt_path_not_empty
-#define NEED_err_unix_chtime_no_access
-#define NEED_err_nt_chtime_no_access
+#define NEED_err_unix_utime_no_access
+#define NEED_err_nt_utime_no_access
 #define NEED_err_unix_path_cross_dev2
 #define NEED_err_nt_path_cross_dev2
 #define NEED_err_unix_file_closed
@@ -163,6 +171,7 @@
 #define NEED_err_stat_no_birthtime_info
 #define NEED_err_stat_no_nttype_info
 #define NEED_err_stat_no_info
+#define NEED_err_integer_overflow
 #define NEED_posix_err_unsupported
 #define NEED_nt_DecodeSid
 #define NEED_nt_QuerySid
@@ -179,6 +188,7 @@
 #include <deemon/system-features.h>
 #include <deemon/util/once.h>
 
+#include <hybrid/overflow.h>
 #include <hybrid/typecore.h>
 
 #ifdef CONFIG_HAVE_sendfile
@@ -1259,6 +1269,181 @@ posix_chown_unix_parsegid(DeeObject *__restrict gid,
 
 
 
+/* For utime() implementations using `utime(2)' */
+#ifdef NEED_posix_utime_unix_parse_utimbuf
+#undef NEED_posix_utime_unix_parse_utimbuf
+INTERN WUNUSED NONNULL((1, 2, 3, 4, 5, 6)) int DCALL
+posix_utime_unix_parse_utimbuf(struct utimbuf *__restrict p_result,
+                               DeeObject *path_or_fd,
+                               DeeObject *atime, DeeObject *mtime,
+                               DeeObject *ctime, DeeObject *btime,
+                               unsigned int stat_flags) {
+	int result;
+	int64_t used_atime, used_mtime;
+	if (!DeeNone_Check(ctime) || !DeeNone_Check(btime))
+		return err_unix_utime_cannot_set_ctime_or_btime(path_or_fd, ctime, btime);
+#define NEED_err_unix_utime_cannot_set_ctime_or_btime
+	result = posix_utime_unix_parse_utimbuf_common(&used_atime, &used_mtime,
+	                                               atime, mtime,
+	                                               path_or_fd, stat_flags);
+#define NEED_posix_utime_unix_parse_utimbuf_common
+	if likely(result == 0) {
+		if unlikely(OVERFLOW_SCAST(used_atime, &p_result->actime) ||
+		            OVERFLOW_SCAST(used_mtime, &p_result->modtime))
+			result = err_integer_overflow();
+#define NEED_err_integer_overflow
+	}
+	return result;
+}
+#endif /* NEED_posix_utime_unix_parse_utimbuf */
+
+#ifdef NEED_posix_utime_unix_parse_utimbuf32
+#undef NEED_posix_utime_unix_parse_utimbuf32
+INTERN WUNUSED NONNULL((1, 2, 3, 4, 5, 6)) int DCALL
+posix_utime_unix_parse_utimbuf32(struct utimbuf32 *__restrict p_result,
+                                 DeeObject *path_or_fd,
+                                 DeeObject *atime, DeeObject *mtime,
+                                 DeeObject *ctime, DeeObject *btime,
+                                 unsigned int stat_flags) {
+	int result;
+	int64_t used_atime, used_mtime;
+	if (!DeeNone_Check(ctime) || !DeeNone_Check(btime))
+		return err_unix_utime_cannot_set_ctime_or_btime(path_or_fd, ctime, btime);
+#define NEED_err_unix_utime_cannot_set_ctime_or_btime
+	result = posix_utime_unix_parse_utimbuf_common(&used_atime, &used_mtime,
+	                                               atime, mtime,
+	                                               path_or_fd, stat_flags);
+#define NEED_posix_utime_unix_parse_utimbuf_common
+	if likely(result == 0) {
+		if unlikely(OVERFLOW_SCAST(used_atime, &p_result->actime) ||
+		            OVERFLOW_SCAST(used_mtime, &p_result->modtime))
+			result = err_integer_overflow();
+#define NEED_err_integer_overflow
+	}
+	return result;
+}
+#endif /* NEED_posix_utime_unix_parse_utimbuf32 */
+
+#ifdef NEED_posix_utime_unix_parse_utimbuf64
+#undef NEED_posix_utime_unix_parse_utimbuf64
+INTERN WUNUSED NONNULL((1, 2, 3, 4, 5, 6)) int DCALL
+posix_utime_unix_parse_utimbuf64(struct utimbuf64 *__restrict p_result,
+                                 DeeObject *path_or_fd,
+                                 DeeObject *atime, DeeObject *mtime,
+                                 DeeObject *ctime, DeeObject *btime,
+                                 unsigned int stat_flags) {
+	int result;
+	int64_t used_atime, used_mtime;
+	if (!DeeNone_Check(ctime) || !DeeNone_Check(btime))
+		return err_unix_utime_cannot_set_ctime_or_btime(path_or_fd, ctime, btime);
+#define NEED_err_unix_utime_cannot_set_ctime_or_btime
+	result = posix_utime_unix_parse_utimbuf_common(&used_atime, &used_mtime,
+	                                               atime, mtime,
+	                                               path_or_fd, stat_flags);
+#define NEED_posix_utime_unix_parse_utimbuf_common
+	if likely(result == 0) {
+		if unlikely(OVERFLOW_SCAST(used_atime, &p_result->actime) ||
+		            OVERFLOW_SCAST(used_mtime, &p_result->modtime))
+			result = err_integer_overflow();
+#define NEED_err_integer_overflow
+	}
+	return result;
+}
+#endif /* NEED_posix_utime_unix_parse_utimbuf64 */
+
+#ifdef NEED_posix_utime_unix_parse_utimbuf_common
+#undef NEED_posix_utime_unix_parse_utimbuf_common
+/*[[[deemon
+import * from time;
+print("#define UNIX_TIME_T_BASE_SECONDS ", Time(year: 1970, month: 1, day: 1).seconds.hex());
+print("#define NT_FILETIME_BASE_SECONDS ", Time(year: 1601, month: 1, day: 1).seconds.hex());
+print("#define NANOSECONDS_PER_SECOND   ", Time(seconds: 1).nanoseconds);
+]]]*/
+#define UNIX_TIME_T_BASE_SECONDS 0xe79747c00
+#define NT_FILETIME_BASE_SECONDS 0xbc363eb00
+#define NANOSECONDS_PER_SECOND   1000000000
+/*[[[end]]]*/
+
+INTERN WUNUSED NONNULL((1, 2, 3, 4, 5)) int DCALL
+posix_utime_unix_parse_utimbuf_common(int64_t *__restrict p_actime,
+                                      int64_t *__restrict p_modtime,
+                                      DeeObject *atime, DeeObject *mtime,
+                                      DeeObject *path_or_fd,
+                                      unsigned int stat_flags) {
+	if (!DeeNone_Check(atime)) {
+		Dee_int128_t temp;
+		if (DeeObject_AsInt128(atime, &temp))
+			goto err;
+		__hybrid_int128_div(temp, NANOSECONDS_PER_SECOND);
+		__hybrid_int128_sub(temp, UNIX_TIME_T_BASE_SECONDS);
+		if (!__hybrid_int128_is64bit(temp))
+			goto err_overflow;
+		*p_actime = __hybrid_int128_get64(temp);
+	}
+	if (!DeeNone_Check(mtime)) {
+		Dee_int128_t temp;
+		if (DeeObject_AsInt128(mtime, &temp))
+			goto err;
+		__hybrid_int128_div(temp, NANOSECONDS_PER_SECOND);
+		__hybrid_int128_sub(temp, UNIX_TIME_T_BASE_SECONDS);
+		if (!__hybrid_int128_is64bit(temp))
+			goto err_overflow;
+		*p_modtime = __hybrid_int128_get64(temp);
+	}
+	if (DeeNone_Check(atime) || DeeNone_Check(mtime)) {
+		/* Must fill in the rest from stat information. */
+		int error;
+		struct dee_stat st;
+		error = dee_stat_init(&st, NULL, path_or_fd, stat_flags);
+		if unlikely(error != 0)
+			goto err;
+		if (DeeNone_Check(atime)) {
+#ifdef posix_stat_USE_WINDOWS
+			int64_t val;
+			memcpy(&val, &st.st_info.ftLastAccessTime, sizeof(val));
+			val /= (NANOSECONDS_PER_SECOND / 100);
+			val -= NT_FILETIME_BASE_SECONDS;
+			val += UNIX_TIME_T_BASE_SECONDS;
+			*p_actime = val;
+#elif defined(posix_stat_GET_ATIME_SEC)
+			*p_actime = posix_stat_GET_ATIME_SEC(&self->so_stat.st_info);
+#else /* ... */
+			err_stat_no_atime_info();
+#define NEED_err_stat_no_atime_info
+			dee_stat_fini(&st);
+			goto err;
+#endif /* !... */
+		}
+		if (DeeNone_Check(mtime)) {
+#ifdef posix_stat_USE_WINDOWS
+			int64_t val;
+			memcpy(&val, &st.st_info.ftLastWriteTime, sizeof(val));
+			val /= (NANOSECONDS_PER_SECOND / 100);
+			val -= NT_FILETIME_BASE_SECONDS;
+			val += UNIX_TIME_T_BASE_SECONDS;
+			*p_actime = val;
+#elif defined(posix_stat_GET_MTIME_SEC)
+			*p_actime = posix_stat_GET_MTIME_SEC(&self->so_stat.st_info);
+#else /* ... */
+			err_stat_no_mtime_info();
+#define NEED_err_stat_no_mtime_info
+			dee_stat_fini(&st);
+			goto err;
+#endif /* !... */
+		}
+		dee_stat_fini(&st);
+	}
+	return 0;
+err_overflow:
+	return err_integer_overflow();
+#define NEED_err_integer_overflow
+err:
+	return -1;
+}
+#endif /* NEED_posix_utime_unix_parse_utimbuf_common */
+
+
+
 
 
 #ifdef NEED_err_unix_chdir
@@ -2213,6 +2398,119 @@ err_unix_fchown(int errno_value, DeeObject *fd, uid_t uid, gid_t gid) {
 }
 #endif /* NEED_err_unix_fchown */
 
+#ifdef NEED_err_unix_utime
+#undef NEED_err_unix_utime
+INTERN ATTR_COLD NONNULL((2, 3, 4, 5, 6)) int DCALL
+err_unix_utime(int errno_value, DeeObject *path,
+               DeeObject *atime, DeeObject *mtime,
+               DeeObject *ctime, DeeObject *btime) {
+#ifdef EACCES
+	if (errno_value == EACCES)
+		return err_unix_path_no_access(errno_value, path);
+#define NEED_err_unix_path_no_access
+#endif /* EACCES */
+#ifdef EPERM
+	if (errno_value == EPERM)
+		return err_unix_utime_no_access(errno_value, path, atime, mtime, ctime, btime);
+#define NEED_err_unix_utime_no_access
+#endif /* EPERM */
+#ifdef ENOENT
+	if (errno_value == ENOENT)
+		return err_unix_path_not_found(errno_value, path);
+#define NEED_err_unix_path_not_found
+#endif /* ENOENT */
+#ifdef ENOTDIR
+	if (errno_value == ENOTDIR)
+		return err_unix_path_not_dir(errno_value, path);
+#define NEED_err_unix_path_not_dir
+#endif /* ENOTDIR */
+#ifdef EROFS
+	if (errno_value == EROFS)
+		return err_unix_path_readonly(errno_value, path);
+#define NEED_err_unix_path_readonly
+#endif /* EROFS */
+	return DeeUnixSystem_ThrowErrorf(&DeeError_SystemError, errno_value,
+	                                 "Failed to change timestamps of path %r to "
+	                                 "[atime:%r, mtime:%r, ctime:%r, btime: %r]",
+	                                 path, atime, mtime, ctime, btime);
+}
+#endif /* NEED_err_unix_utime */
+
+#ifdef NEED_err_unix_lutime
+#undef NEED_err_unix_lutime
+INTERN ATTR_COLD NONNULL((2, 3, 4, 5, 6)) int DCALL
+err_unix_lutime(int errno_value, DeeObject *path,
+                DeeObject *atime, DeeObject *mtime,
+                DeeObject *ctime, DeeObject *btime) {
+#ifdef EACCES
+	if (errno_value == EACCES)
+		return err_unix_path_no_access(errno_value, path);
+#define NEED_err_unix_path_no_access
+#endif /* EACCES */
+#ifdef EPERM
+	if (errno_value == EPERM)
+		return err_unix_utime_no_access(errno_value, path, atime, mtime, ctime, btime);
+#define NEED_err_unix_utime_no_access
+#endif /* EPERM */
+#ifdef ENOENT
+	if (errno_value == ENOENT)
+		return err_unix_path_not_found(errno_value, path);
+#define NEED_err_unix_path_not_found
+#endif /* ENOENT */
+#ifdef ENOTDIR
+	if (errno_value == ENOTDIR)
+		return err_unix_path_not_dir(errno_value, path);
+#define NEED_err_unix_path_not_dir
+#endif /* ENOTDIR */
+#ifdef EROFS
+	if (errno_value == EROFS)
+		return err_unix_path_readonly(errno_value, path);
+#define NEED_err_unix_path_readonly
+#endif /* EROFS */
+	return DeeUnixSystem_ThrowErrorf(&DeeError_SystemError, errno_value,
+	                                 "Failed to change timestamps of link %r to "
+	                                 "[atime:%r, mtime:%r, ctime:%r, btime: %r]",
+	                                 path, atime, mtime, ctime, btime);
+}
+#endif /* NEED_err_unix_lutime */
+
+#ifdef NEED_err_unix_futime
+#undef NEED_err_unix_futime
+INTERN ATTR_COLD NONNULL((2, 3, 4, 5, 6)) int DCALL
+err_unix_futime(int errno_value, DeeObject *fd,
+                DeeObject *atime, DeeObject *mtime,
+                DeeObject *ctime, DeeObject *btime) {
+#ifdef EPERM
+	if (errno_value == EPERM)
+		return err_unix_utime_no_access(errno_value, fd, atime, mtime, ctime, btime);
+#define NEED_err_unix_utime_no_access
+#endif /* EPERM */
+#ifdef EBADF
+	if (errno_value == EBADF)
+		return err_unix_file_closed(errno_value, fd);
+#define NEED_err_unix_file_closed
+#endif /* EBADF */
+	return DeeUnixSystem_ThrowErrorf(&DeeError_SystemError, errno_value,
+	                                 "Failed to change timestamps of fd %r to "
+	                                 "[atime:%r, mtime:%r, ctime:%r, btime: %r]",
+	                                 fd, atime, mtime, ctime, btime);
+}
+#endif /* NEED_err_unix_futime */
+
+
+#ifdef NEED_err_unix_utime_cannot_set_ctime_or_btime
+#undef NEED_err_unix_utime_cannot_set_ctime_or_btime
+INTERN ATTR_COLD NONNULL((1, 2, 3)) int DCALL
+err_unix_utime_cannot_set_ctime_or_btime(DeeObject *path_or_fd,
+                                         DeeObject *ctime, DeeObject *btime) {
+	return DeeError_Throwf(&DeeError_UnsupportedAPI,
+	                       "The system does not support changing the "
+	                       "ctime/btime of %r to [ctime:%r, btime:%r]",
+	                       path_or_fd, ctime, btime);
+}
+#endif /* NEED_err_unix_utime_cannot_set_ctime_or_btime */
+
+
 #ifdef NEED_err_unix_remove_unsupported
 #undef NEED_err_unix_remove_unsupported
 INTERN ATTR_COLD NONNULL((2)) int DCALL
@@ -2726,25 +3024,31 @@ err_nt_path_not_empty(DWORD dwError, DeeObject *__restrict path) {
 }
 #endif /* NEED_err_nt_path_not_empty */
 
-#ifdef NEED_err_unix_chtime_no_access
-#undef NEED_err_unix_chtime_no_access
-INTERN ATTR_COLD NONNULL((2)) int DCALL
-err_unix_chtime_no_access(int errno_value, DeeObject *__restrict path) {
+#ifdef NEED_err_unix_utime_no_access
+#undef NEED_err_unix_utime_no_access
+INTERN ATTR_COLD NONNULL((2, 3, 4, 5, 6)) int DCALL
+err_unix_utime_no_access(int errno_value, DeeObject *path,
+                         DeeObject *atime, DeeObject *mtime,
+                         DeeObject *ctime, DeeObject *btime) {
 	return DeeUnixSystem_ThrowErrorf(&DeeError_FileAccessError, errno_value,
-	                                 "Changes to the selected timestamps of %r are not allowed",
-	                                 path);
+	                                 "Changes to timestamps of %r are not allowed "
+	                                 "[atime:%r, mtime:%r, ctime:%r, btime: %r]",
+	                                 path, atime, mtime, ctime, btime);
 }
-#endif /* NEED_err_unix_chtime_no_access */
+#endif /* NEED_err_unix_utime_no_access */
 
-#ifdef NEED_err_nt_chtime_no_access
-#undef NEED_err_nt_chtime_no_access
-INTERN ATTR_COLD NONNULL((2)) int DCALL
-err_nt_chtime_no_access(DWORD dwError, DeeObject *__restrict path) {
+#ifdef NEED_err_nt_utime_no_access
+#undef NEED_err_nt_utime_no_access
+INTERN ATTR_COLD NONNULL((2, 3, 4, 5, 6)) int DCALL
+err_nt_utime_no_access(DWORD dwError, DeeObject *path,
+                       DeeObject *atime, DeeObject *mtime,
+                       DeeObject *ctime, DeeObject *btime) {
 	return DeeNTSystem_ThrowErrorf(&DeeError_FileAccessError, dwError,
-	                               "Changes to the selected timestamps of %r are not allowed",
-	                               path);
+	                               "Changes to timestamps of %r are not allowed "
+	                               "[atime:%r, mtime:%r, ctime:%r, btime: %r]",
+	                               path, atime, mtime, ctime, btime);
 }
-#endif /* NEED_err_nt_chtime_no_access */
+#endif /* NEED_err_nt_utime_no_access */
 
 #ifdef NEED_err_unix_path_cross_dev2
 #undef NEED_err_unix_path_cross_dev2
@@ -2901,7 +3205,7 @@ err_unix_chown_no_access(int errno_value, DeeObject *__restrict path_or_fd, uid_
 /* Missing stat information errors. */
 #ifdef NEED_err_stat_no_mode_info
 #undef NEED_err_stat_no_mode_info
-INTERN ATTR_NOINLINE ATTR_COLD int DCALL
+INTERN ATTR_COLD int DCALL
 err_stat_no_mode_info(void) {
 	return err_stat_no_info("st_mode");
 #define NEED_err_stat_no_info
@@ -2910,7 +3214,7 @@ err_stat_no_mode_info(void) {
 
 #ifdef NEED_err_stat_no_dev_info
 #undef NEED_err_stat_no_dev_info
-INTERN ATTR_NOINLINE ATTR_COLD int DCALL
+INTERN ATTR_COLD int DCALL
 err_stat_no_dev_info(void) {
 	return err_stat_no_info("st_dev");
 #define NEED_err_stat_no_info
@@ -2919,7 +3223,7 @@ err_stat_no_dev_info(void) {
 
 #ifdef NEED_err_stat_no_ino_info
 #undef NEED_err_stat_no_ino_info
-INTERN ATTR_NOINLINE ATTR_COLD int DCALL
+INTERN ATTR_COLD int DCALL
 err_stat_no_ino_info(void) {
 	return err_stat_no_info("st_ino");
 #define NEED_err_stat_no_info
@@ -2928,7 +3232,7 @@ err_stat_no_ino_info(void) {
 
 #ifdef NEED_err_stat_no_link_info
 #undef NEED_err_stat_no_link_info
-INTERN ATTR_NOINLINE ATTR_COLD int DCALL
+INTERN ATTR_COLD int DCALL
 err_stat_no_link_info(void) {
 	return err_stat_no_info("st_nlink");
 #define NEED_err_stat_no_info
@@ -2937,7 +3241,7 @@ err_stat_no_link_info(void) {
 
 #ifdef NEED_err_stat_no_uid_info
 #undef NEED_err_stat_no_uid_info
-INTERN ATTR_NOINLINE ATTR_COLD int DCALL
+INTERN ATTR_COLD int DCALL
 err_stat_no_uid_info(void) {
 	return err_stat_no_info("st_uid");
 #define NEED_err_stat_no_info
@@ -2946,7 +3250,7 @@ err_stat_no_uid_info(void) {
 
 #ifdef NEED_err_stat_no_gid_info
 #undef NEED_err_stat_no_gid_info
-INTERN ATTR_NOINLINE ATTR_COLD int DCALL
+INTERN ATTR_COLD int DCALL
 err_stat_no_gid_info(void) {
 	return err_stat_no_info("st_gid");
 #define NEED_err_stat_no_info
@@ -2955,7 +3259,7 @@ err_stat_no_gid_info(void) {
 
 #ifdef NEED_err_stat_no_rdev_info
 #undef NEED_err_stat_no_rdev_info
-INTERN ATTR_NOINLINE ATTR_COLD int DCALL
+INTERN ATTR_COLD int DCALL
 err_stat_no_rdev_info(void) {
 	return err_stat_no_info("st_rdev");
 #define NEED_err_stat_no_info
@@ -2964,7 +3268,7 @@ err_stat_no_rdev_info(void) {
 
 #ifdef NEED_err_stat_no_size_info
 #undef NEED_err_stat_no_size_info
-INTERN ATTR_NOINLINE ATTR_COLD int DCALL
+INTERN ATTR_COLD int DCALL
 err_stat_no_size_info(void) {
 	return err_stat_no_info("st_size");
 #define NEED_err_stat_no_info
@@ -2973,7 +3277,7 @@ err_stat_no_size_info(void) {
 
 #ifdef NEED_err_stat_no_blocks_info
 #undef NEED_err_stat_no_blocks_info
-INTERN ATTR_NOINLINE ATTR_COLD int DCALL
+INTERN ATTR_COLD int DCALL
 err_stat_no_blocks_info(void) {
 	return err_stat_no_info("st_blocks");
 #define NEED_err_stat_no_info
@@ -2982,7 +3286,7 @@ err_stat_no_blocks_info(void) {
 
 #ifdef NEED_err_stat_no_blksize_info
 #undef NEED_err_stat_no_blksize_info
-INTERN ATTR_NOINLINE ATTR_COLD int DCALL
+INTERN ATTR_COLD int DCALL
 err_stat_no_blksize_info(void) {
 	return err_stat_no_info("st_blksize");
 #define NEED_err_stat_no_info
@@ -2991,7 +3295,7 @@ err_stat_no_blksize_info(void) {
 
 #ifdef NEED_err_stat_no_atime_info
 #undef NEED_err_stat_no_atime_info
-INTERN ATTR_NOINLINE ATTR_COLD int DCALL
+INTERN ATTR_COLD int DCALL
 err_stat_no_atime_info(void) {
 	return err_stat_no_info("st_atime");
 #define NEED_err_stat_no_info
@@ -3000,7 +3304,7 @@ err_stat_no_atime_info(void) {
 
 #ifdef NEED_err_stat_no_mtime_info
 #undef NEED_err_stat_no_mtime_info
-INTERN ATTR_NOINLINE ATTR_COLD int DCALL
+INTERN ATTR_COLD int DCALL
 err_stat_no_mtime_info(void) {
 	return err_stat_no_info("st_mtime");
 #define NEED_err_stat_no_info
@@ -3009,7 +3313,7 @@ err_stat_no_mtime_info(void) {
 
 #ifdef NEED_err_stat_no_ctime_info
 #undef NEED_err_stat_no_ctime_info
-INTERN ATTR_NOINLINE ATTR_COLD int DCALL
+INTERN ATTR_COLD int DCALL
 err_stat_no_ctime_info(void) {
 	return err_stat_no_info("st_ctime");
 #define NEED_err_stat_no_info
@@ -3018,7 +3322,7 @@ err_stat_no_ctime_info(void) {
 
 #ifdef NEED_err_stat_no_birthtime_info
 #undef NEED_err_stat_no_birthtime_info
-INTERN ATTR_NOINLINE ATTR_COLD int DCALL
+INTERN ATTR_COLD int DCALL
 err_stat_no_birthtime_info(void) {
 	return err_stat_no_info("st_birthtime");
 #define NEED_err_stat_no_info
@@ -3027,7 +3331,7 @@ err_stat_no_birthtime_info(void) {
 
 #ifdef NEED_err_stat_no_nttype_info
 #undef NEED_err_stat_no_nttype_info
-INTERN ATTR_NOINLINE ATTR_COLD int DCALL
+INTERN ATTR_COLD int DCALL
 err_stat_no_nttype_info(void) {
 	return err_stat_no_info("nttype_np");
 #define NEED_err_stat_no_info
@@ -3036,13 +3340,20 @@ err_stat_no_nttype_info(void) {
 
 #ifdef NEED_err_stat_no_info
 #undef NEED_err_stat_no_info
-INTERN ATTR_NOINLINE ATTR_COLD NONNULL((1)) int DCALL
+INTERN ATTR_COLD NONNULL((1)) int DCALL
 err_stat_no_info(char const *__restrict level) {
 	return DeeError_Throwf(&DeeError_UnboundAttribute,
 	                       "The stat object does not contain any %s information",
 	                       level);
 }
 #endif /* NEED_err_stat_no_info */
+
+#ifdef NEED_err_integer_overflow
+#undef NEED_err_integer_overflow
+INTERN ATTR_COLD int DCALL err_integer_overflow(void) {
+	return DeeError_Throwf(&DeeError_IntegerOverflow, "Integer overflow");
+}
+#endif /* NEED_err_integer_overflow */
 
 
 

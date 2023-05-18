@@ -62,6 +62,7 @@
 		<ClInclude Include="..\..\src\dex\posix\p-symlink.c.inl" />
 		<ClInclude Include="..\..\src\dex\posix\p-sync.c.inl" />
 		<ClInclude Include="..\..\src\dex\posix\p-truncate.c.inl" />
+		<ClInclude Include="..\..\src\dex\posix\p-utime.c.inl" />
 	</ItemGroup>
 	<ItemGroup>
 		<ClCompile Include="..\..\src\dex\posix\libposix.c" />

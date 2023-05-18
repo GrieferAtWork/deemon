@@ -241,6 +241,8 @@ header("strings.h", unix);
 header("wchar.h", stdc);
 header("dlfcn.h", unix);
 header("float.h", stdc);
+header("utime.h", addparen(msvc) + " || " + addparen(unix));
+header("sys/utime.h", addparen(msvc));
 
 header_nostdinc("crtdbg.h", addparen(msvc) + " || defined(__KOS_SYSTEM_HEADERS__)");
 header_nostdinc("limits.h", stdc);
@@ -517,7 +519,7 @@ constant("AT_SYMLINK_FOLLOW");
 constant("AT_NO_AUTOMOUNT");
 constant("AT_EMPTY_PATH");
 constant("AT_SYMLINK_REGULAR");
-constant("AT_CHANGE_CTIME");
+constant("AT_CHANGE_BTIME");
 //constant("AT_READLINK_REQSIZE"); // Note needed (Only used by; and also implied by `freadlinkat()')
 constant("AT_REMOVEREG");
 constant("AT_ALTPATH");
@@ -606,10 +608,6 @@ functest('mkfifo("foo", 0666)', "defined(CONFIG_HAVE_SYS_STAT_H) && " + addparen
 functest('mkfifoat(AT_FDCWD, "foo", 0666)', "defined(CONFIG_HAVE_SYS_STAT_H) && defined(__USE_ATFILE)");
 functest('mknod("foo", 0644, (dev_t)123)', "defined(CONFIG_HAVE_SYS_STAT_H) && (defined(__USE_MISC) || defined(__USE_XOPEN_EXTENDED))");
 functest('mknodat(AT_FDCWD, "foo", 0644, (dev_t)123)', "defined(CONFIG_HAVE_SYS_STAT_H) && (defined(__USE_MISC) || defined(__USE_XOPEN_EXTENDED)) && defined(__USE_ATFILE)");
-func("utimensat", "defined(CONFIG_HAVE_SYS_STAT_H) && defined(__USE_ATFILE)", test: 'struct timespec ts[2]; ts[0].tv_sec = 0; ts[0].tv_nsec = 0; ts[1] = ts[0]; return utimensat(AT_FDCWD, "foo", ts, 0);');
-func("utimensat64", "defined(CONFIG_HAVE_SYS_STAT_H) && defined(__USE_ATFILE) && defined(__USE_TIME64)", test: 'struct timespec64 ts[2]; ts[0].tv_sec = 0; ts[0].tv_nsec = 0; ts[1] = ts[0]; return utimensat64(AT_FDCWD, "foo", ts, 0);');
-func("futimens", "defined(CONFIG_HAVE_SYS_STAT_H) && defined(__USE_XOPEN2K8)", test: 'struct timespec ts[2]; ts[0].tv_sec = 0; ts[0].tv_nsec = 0; ts[1] = ts[0]; return futimens(1, ts);');
-func("futimens64", "defined(CONFIG_HAVE_SYS_STAT_H) && defined(__USE_XOPEN2K8) && defined(__USE_TIME64)", test: 'struct timespec64 ts[2]; ts[0].tv_sec = 0; ts[0].tv_nsec = 0; ts[1] = ts[0]; return futimens64(1, ts);');
 
 functest('chmod("foo", 0777)', "defined(CONFIG_HAVE_SYS_STAT_H) && " + addparen(unix));
 functest('_chmod("foo", 0777)', msvc);
@@ -648,12 +646,52 @@ func("_tzset", "defined(CONFIG_HAVE_TIME_H) && " + addparen(msvc), test: "_tzset
 var("timezone", "defined(CONFIG_HAVE_TIME_H) && !" + addparen(msvc));
 var("_timezone", "defined(CONFIG_HAVE_TIME_H)");
 func("__timezone", "defined(CONFIG_HAVE_TIME_H) && " + addparen(msvc), test: "extern long v; v = (long)*__timezone(); return 0;");
+
+// utime(2) and friends.
+func("utime", "(defined(CONFIG_HAVE_UTIME_H) || defined(CONFIG_HAVE_SYS_UTIME_H)) && !defined(_CRT_NO_TIME_T)", test: 'struct utimbuf utm; utm.actime = (time_t)0; utm.modtime = (time_t)0; return utime("foo", &utm);');
+func("_utime", "(defined(CONFIG_HAVE_UTIME_H) || defined(CONFIG_HAVE_SYS_UTIME_H)) && " + addparen(msvc), test: 'struct _utimbuf utm; utm.actime = (time_t)0; utm.modtime = (time_t)0; return _utime("foo", &utm);');
+func("futime", "(defined(CONFIG_HAVE_UTIME_H) || defined(CONFIG_HAVE_SYS_UTIME_H)) && defined(__USE_KOS)", test: 'struct utimbuf utm; utm.actime = (time_t)0; utm.modtime = (time_t)0; return futime(42, &utm);');
+func("_futime", "(defined(CONFIG_HAVE_UTIME_H) || defined(CONFIG_HAVE_SYS_UTIME_H)) && !defined(_CRT_NO_TIME_T) && " + addparen(msvc), test: 'struct _utimbuf utm; utm.actime = (time_t)0; utm.modtime = (time_t)0; return _futime(42, &utm);');
+func("lutime", test: 'struct utimbuf utm; utm.actime = (time_t)0; utm.modtime = (time_t)0; return lutime("foo", &utm);');
+func("_lutime", test: 'struct _utimbuf utm; utm.actime = (time_t)0; utm.modtime = (time_t)0; return _lutime("foo", &utm);');
+func("wutime", test: "wchar_t c[] = { 'f', 'o', 'o', 0 }; struct utimbuf utm; utm.actime = (time_t)0; utm.modtime = (time_t)0; return wutime(c, &utm);");
+func("_wutime", "(defined(CONFIG_HAVE_UTIME_H) || defined(CONFIG_HAVE_SYS_UTIME_H)) && !defined(_CRT_NO_TIME_T) && " + addparen(msvc), test: "wchar_t c[] = { 'f', 'o', 'o', 0 }; struct _utimbuf utm; utm.actime = (time_t)0; utm.modtime = (time_t)0; return _wutime(c, &utm);");
+func("wlutime", test: "wchar_t c[] = { 'f', 'o', 'o', 0 }; struct utimbuf utm; utm.actime = (time_t)0; utm.modtime = (time_t)0; return wlutime(c, &utm);");
+func("_wlutime", test: "wchar_t c[] = { 'f', 'o', 'o', 0 }; struct _utimbuf utm; utm.actime = (time_t)0; utm.modtime = (time_t)0; return _wlutime(c, &utm);");
+func("utime32", test: 'struct utimbuf32 utm; utm.actime = (time_t)0; utm.modtime = (time_t)0; return utime("foo", &utm);');
+func("_utime32", "(defined(CONFIG_HAVE_UTIME_H) || defined(CONFIG_HAVE_SYS_UTIME_H)) && " + addparen(msvc), test: 'struct _utimbuf32 utm; utm.actime = (time_t)0; utm.modtime = (time_t)0; return _utime("foo", &utm);');
+func("futime32", test: 'struct utimbuf32 utm; utm.actime = (time_t)0; utm.modtime = (time_t)0; return futime(42, &utm);');
+func("_futime32", "(defined(CONFIG_HAVE_UTIME_H) || defined(CONFIG_HAVE_SYS_UTIME_H)) && " + addparen(msvc), test: 'struct _utimbuf32 utm; utm.actime = (time_t)0; utm.modtime = (time_t)0; return _futime(42, &utm);');
+func("lutime32", test: 'struct utimbuf32 utm; utm.actime = (time_t)0; utm.modtime = (time_t)0; return lutime("foo", &utm);');
+func("_lutime32", test: 'struct _utimbuf32 utm; utm.actime = (time_t)0; utm.modtime = (time_t)0; return _lutime("foo", &utm);');
+func("wutime32", test: "wchar_t c[] = { 'f', 'o', 'o', 0 }; struct utimbuf32 utm; utm.actime = (time_t)0; utm.modtime = (time_t)0; return wutime(c, &utm);");
+func("_wutime32", "(defined(CONFIG_HAVE_UTIME_H) || defined(CONFIG_HAVE_SYS_UTIME_H)) && " + addparen(msvc), test: "wchar_t c[] = { 'f', 'o', 'o', 0 }; struct _utimbuf32 utm; utm.actime = (time_t)0; utm.modtime = (time_t)0; return _wutime(c, &utm);");
+func("wlutime32", test: "wchar_t c[] = { 'f', 'o', 'o', 0 }; struct utimbuf32 utm; utm.actime = (time_t)0; utm.modtime = (time_t)0; return wlutime(c, &utm);");
+func("_wlutime32", test: "wchar_t c[] = { 'f', 'o', 'o', 0 }; struct _utimbuf32 utm; utm.actime = (time_t)0; utm.modtime = (time_t)0; return _wlutime(c, &utm);");
+func("utime64", "(defined(CONFIG_HAVE_UTIME_H) || defined(CONFIG_HAVE_SYS_UTIME_H)) && defined(__USE_TIME64)", test: 'struct utimbuf64 utm; utm.actime = (time_t)0; utm.modtime = (time_t)0; return utime("foo", &utm);');
+func("_utime64", "(defined(CONFIG_HAVE_UTIME_H) || defined(CONFIG_HAVE_SYS_UTIME_H)) && " + addparen(msvc), test: 'struct _utimbuf64 utm; utm.actime = (time_t)0; utm.modtime = (time_t)0; return _utime("foo", &utm);');
+func("futime64", "(defined(CONFIG_HAVE_UTIME_H) || defined(CONFIG_HAVE_SYS_UTIME_H)) && defined(__USE_KOS) && defined(__USE_TIME64)", test: 'struct utimbuf64 utm; utm.actime = (time_t)0; utm.modtime = (time_t)0; return futime(42, &utm);');
+func("_futime64", "(defined(CONFIG_HAVE_UTIME_H) || defined(CONFIG_HAVE_SYS_UTIME_H)) && " + addparen(msvc), test: 'struct _utimbuf64 utm; utm.actime = (time_t)0; utm.modtime = (time_t)0; return _futime(42, &utm);');
+func("lutime64", test: 'struct utimbuf64 utm; utm.actime = (time_t)0; utm.modtime = (time_t)0; return lutime("foo", &utm);');
+func("_lutime64", test: 'struct _utimbuf64 utm; utm.actime = (time_t)0; utm.modtime = (time_t)0; return _lutime("foo", &utm);');
+func("wutime64", test: "wchar_t c[] = { 'f', 'o', 'o', 0 }; struct utimbuf64 utm; utm.actime = (time_t)0; utm.modtime = (time_t)0; return wutime(c, &utm);");
+func("_wutime64", "(defined(CONFIG_HAVE_UTIME_H) || defined(CONFIG_HAVE_SYS_UTIME_H)) && " + addparen(msvc), test: "wchar_t c[] = { 'f', 'o', 'o', 0 }; struct _utimbuf64 utm; utm.actime = (time_t)0; utm.modtime = (time_t)0; return _wutime(c, &utm);");
+func("wlutime64", test: "wchar_t c[] = { 'f', 'o', 'o', 0 }; struct utimbuf64 utm; utm.actime = (time_t)0; utm.modtime = (time_t)0; return wlutime(c, &utm);");
+func("_wlutime64", test: "wchar_t c[] = { 'f', 'o', 'o', 0 }; struct _utimbuf64 utm; utm.actime = (time_t)0; utm.modtime = (time_t)0; return _wlutime(c, &utm);");
+
+// Better file time modification
 func("utimes", "defined(CONFIG_HAVE_SYS_TIME_H) && defined(__USE_MISC)", test: 'struct timeval tv[2]; tv[0].tv_sec = 0; tv[0].tv_usec = 0; tv[1] = tv[0]; return utimes("foo", tv);');
 func("utimes64", "defined(CONFIG_HAVE_SYS_TIME_H) && defined(__USE_MISC) && defined(__USE_TIME64)", test: 'struct timeval64 tv[2]; tv[0].tv_sec = 0; tv[0].tv_usec = 0; tv[1] = tv[0]; return utimes64("foo", tv);');
 func("lutimes", "defined(CONFIG_HAVE_SYS_TIME_H)", test: 'struct timeval tv[2]; tv[0].tv_sec = 0; tv[0].tv_usec = 0; tv[1] = tv[0]; return lutimes("foo", tv);');
 func("lutimes64", "defined(CONFIG_HAVE_SYS_TIME_H) && defined(__USE_TIME64)", test: 'struct timeval64 tv[2]; tv[0].tv_sec = 0; tv[0].tv_usec = 0; tv[1] = tv[0]; return lutimes64("foo", tv);');
 func("futimesat", "defined(CONFIG_HAVE_SYS_TIME_H) && defined(__USE_GNU)", test: 'struct timeval tv[2]; tv[0].tv_sec = 0; tv[0].tv_usec = 0; tv[1] = tv[0]; return futimesat(AT_FDCWD, "foo", tv);');
 func("futimesat64", "defined(CONFIG_HAVE_SYS_TIME_H) && defined(__USE_GNU) && defined(__USE_TIME64)", test: 'struct timeval64 tv[2]; tv[0].tv_sec = 0; tv[0].tv_usec = 0; tv[1] = tv[0]; return futimesat64(AT_FDCWD, "foo", tv);');
+
+// Even better file time modification
+func("utimensat", "defined(CONFIG_HAVE_SYS_STAT_H) && defined(__USE_ATFILE)", test: 'struct timespec ts[2]; ts[0].tv_sec = 0; ts[0].tv_nsec = 0; ts[1] = ts[0]; return utimensat(AT_FDCWD, "foo", ts, 0);');
+func("utimensat64", "defined(CONFIG_HAVE_SYS_STAT_H) && defined(__USE_ATFILE) && defined(__USE_TIME64)", test: 'struct timespec64 ts[2]; ts[0].tv_sec = 0; ts[0].tv_nsec = 0; ts[1] = ts[0]; return utimensat64(AT_FDCWD, "foo", ts, 0);');
+func("futimens", "defined(CONFIG_HAVE_SYS_STAT_H) && defined(__USE_XOPEN2K8)", test: 'struct timespec ts[2]; ts[0].tv_sec = 0; ts[0].tv_nsec = 0; ts[1] = ts[0]; return futimens(1, ts);');
+func("futimens64", "defined(CONFIG_HAVE_SYS_STAT_H) && defined(__USE_XOPEN2K8) && defined(__USE_TIME64)", test: 'struct timespec64 ts[2]; ts[0].tv_sec = 0; ts[0].tv_nsec = 0; ts[1] = ts[0]; return futimens64(1, ts);');
 
 
 print "#ifdef _MSC_VER";
@@ -1700,6 +1738,22 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #define CONFIG_HAVE_FLOAT_H
 #endif
 
+#ifdef CONFIG_NO_UTIME_H
+#undef CONFIG_HAVE_UTIME_H
+#elif !defined(CONFIG_HAVE_UTIME_H) && \
+      (__has_include(<utime.h>) || (defined(__NO_has_include) && (defined(_MSC_VER) || \
+       (defined(__linux__) || defined(__linux) || defined(linux) || defined(__unix__) || \
+       defined(__unix) || defined(unix)))))
+#define CONFIG_HAVE_UTIME_H
+#endif
+
+#ifdef CONFIG_NO_SYS_UTIME_H
+#undef CONFIG_HAVE_SYS_UTIME_H
+#elif !defined(CONFIG_HAVE_SYS_UTIME_H) && \
+      (__has_include(<sys/utime.h>) || (defined(__NO_has_include) && defined(_MSC_VER)))
+#define CONFIG_HAVE_SYS_UTIME_H
+#endif
+
 #ifdef CONFIG_NO_CRTDBG_H
 #undef CONFIG_HAVE_CRTDBG_H
 #elif !defined(CONFIG_HAVE_CRTDBG_H) && \
@@ -2037,6 +2091,14 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #ifdef CONFIG_HAVE_FLOAT_H
 #include <float.h>
 #endif /* CONFIG_HAVE_FLOAT_H */
+
+#ifdef CONFIG_HAVE_UTIME_H
+#include <utime.h>
+#endif /* CONFIG_HAVE_UTIME_H */
+
+#ifdef CONFIG_HAVE_SYS_UTIME_H
+#include <sys/utime.h>
+#endif /* CONFIG_HAVE_SYS_UTIME_H */
 
 #ifdef CONFIG_NO__Exit
 #undef CONFIG_HAVE__Exit
@@ -4450,11 +4512,11 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #define CONFIG_HAVE_AT_SYMLINK_REGULAR
 #endif
 
-#ifdef CONFIG_NO_AT_CHANGE_CTIME
-#undef CONFIG_HAVE_AT_CHANGE_CTIME
-#elif !defined(CONFIG_HAVE_AT_CHANGE_CTIME) && \
-      (defined(AT_CHANGE_CTIME) || defined(__AT_CHANGE_CTIME_defined))
-#define CONFIG_HAVE_AT_CHANGE_CTIME
+#ifdef CONFIG_NO_AT_CHANGE_BTIME
+#undef CONFIG_HAVE_AT_CHANGE_BTIME
+#elif !defined(CONFIG_HAVE_AT_CHANGE_BTIME) && \
+      (defined(AT_CHANGE_BTIME) || defined(__AT_CHANGE_BTIME_defined))
+#define CONFIG_HAVE_AT_CHANGE_BTIME
 #endif
 
 #ifdef CONFIG_NO_AT_REMOVEREG
@@ -5027,38 +5089,6 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #define CONFIG_HAVE_mknodat
 #endif
 
-#ifdef CONFIG_NO_utimensat
-#undef CONFIG_HAVE_utimensat
-#elif !defined(CONFIG_HAVE_utimensat) && \
-      (defined(utimensat) || defined(__utimensat_defined) || (defined(CONFIG_HAVE_SYS_STAT_H) && \
-       defined(__USE_ATFILE)))
-#define CONFIG_HAVE_utimensat
-#endif
-
-#ifdef CONFIG_NO_utimensat64
-#undef CONFIG_HAVE_utimensat64
-#elif !defined(CONFIG_HAVE_utimensat64) && \
-      (defined(utimensat64) || defined(__utimensat64_defined) || (defined(CONFIG_HAVE_SYS_STAT_H) && \
-       defined(__USE_ATFILE) && defined(__USE_TIME64)))
-#define CONFIG_HAVE_utimensat64
-#endif
-
-#ifdef CONFIG_NO_futimens
-#undef CONFIG_HAVE_futimens
-#elif !defined(CONFIG_HAVE_futimens) && \
-      (defined(futimens) || defined(__futimens_defined) || (defined(CONFIG_HAVE_SYS_STAT_H) && \
-       defined(__USE_XOPEN2K8)))
-#define CONFIG_HAVE_futimens
-#endif
-
-#ifdef CONFIG_NO_futimens64
-#undef CONFIG_HAVE_futimens64
-#elif !defined(CONFIG_HAVE_futimens64) && \
-      (defined(futimens64) || defined(__futimens64_defined) || (defined(CONFIG_HAVE_SYS_STAT_H) && \
-       defined(__USE_XOPEN2K8) && defined(__USE_TIME64)))
-#define CONFIG_HAVE_futimens64
-#endif
-
 #ifdef CONFIG_NO_chmod
 #undef CONFIG_HAVE_chmod
 #elif !defined(CONFIG_HAVE_chmod) && \
@@ -5317,6 +5347,229 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #define CONFIG_HAVE___timezone
 #endif
 
+#ifdef CONFIG_NO_utime
+#undef CONFIG_HAVE_utime
+#elif !defined(CONFIG_HAVE_utime) && \
+      (defined(utime) || defined(__utime_defined) || ((defined(CONFIG_HAVE_UTIME_H) || \
+       defined(CONFIG_HAVE_SYS_UTIME_H)) && !defined(_CRT_NO_TIME_T)))
+#define CONFIG_HAVE_utime
+#endif
+
+#ifdef CONFIG_NO__utime
+#undef CONFIG_HAVE__utime
+#elif !defined(CONFIG_HAVE__utime) && \
+      (defined(_utime) || defined(___utime_defined) || ((defined(CONFIG_HAVE_UTIME_H) || \
+       defined(CONFIG_HAVE_SYS_UTIME_H)) && defined(_MSC_VER)))
+#define CONFIG_HAVE__utime
+#endif
+
+#ifdef CONFIG_NO_futime
+#undef CONFIG_HAVE_futime
+#elif !defined(CONFIG_HAVE_futime) && \
+      (defined(futime) || defined(__futime_defined) || ((defined(CONFIG_HAVE_UTIME_H) || \
+       defined(CONFIG_HAVE_SYS_UTIME_H)) && defined(__USE_KOS)))
+#define CONFIG_HAVE_futime
+#endif
+
+#ifdef CONFIG_NO__futime
+#undef CONFIG_HAVE__futime
+#elif !defined(CONFIG_HAVE__futime) && \
+      (defined(_futime) || defined(___futime_defined) || ((defined(CONFIG_HAVE_UTIME_H) || \
+       defined(CONFIG_HAVE_SYS_UTIME_H)) && !defined(_CRT_NO_TIME_T) && defined(_MSC_VER)))
+#define CONFIG_HAVE__futime
+#endif
+
+#ifdef CONFIG_NO_lutime
+#undef CONFIG_HAVE_lutime
+#elif !defined(CONFIG_HAVE_lutime) && \
+      (defined(lutime) || defined(__lutime_defined))
+#define CONFIG_HAVE_lutime
+#endif
+
+#ifdef CONFIG_NO__lutime
+#undef CONFIG_HAVE__lutime
+#elif !defined(CONFIG_HAVE__lutime) && \
+      (defined(_lutime) || defined(___lutime_defined))
+#define CONFIG_HAVE__lutime
+#endif
+
+#ifdef CONFIG_NO_wutime
+#undef CONFIG_HAVE_wutime
+#elif !defined(CONFIG_HAVE_wutime) && \
+      (defined(wutime) || defined(__wutime_defined))
+#define CONFIG_HAVE_wutime
+#endif
+
+#ifdef CONFIG_NO__wutime
+#undef CONFIG_HAVE__wutime
+#elif !defined(CONFIG_HAVE__wutime) && \
+      (defined(_wutime) || defined(___wutime_defined) || ((defined(CONFIG_HAVE_UTIME_H) || \
+       defined(CONFIG_HAVE_SYS_UTIME_H)) && !defined(_CRT_NO_TIME_T) && defined(_MSC_VER)))
+#define CONFIG_HAVE__wutime
+#endif
+
+#ifdef CONFIG_NO_wlutime
+#undef CONFIG_HAVE_wlutime
+#elif !defined(CONFIG_HAVE_wlutime) && \
+      (defined(wlutime) || defined(__wlutime_defined))
+#define CONFIG_HAVE_wlutime
+#endif
+
+#ifdef CONFIG_NO__wlutime
+#undef CONFIG_HAVE__wlutime
+#elif !defined(CONFIG_HAVE__wlutime) && \
+      (defined(_wlutime) || defined(___wlutime_defined))
+#define CONFIG_HAVE__wlutime
+#endif
+
+#ifdef CONFIG_NO_utime32
+#undef CONFIG_HAVE_utime32
+#elif !defined(CONFIG_HAVE_utime32) && \
+      (defined(utime32) || defined(__utime32_defined))
+#define CONFIG_HAVE_utime32
+#endif
+
+#ifdef CONFIG_NO__utime32
+#undef CONFIG_HAVE__utime32
+#elif !defined(CONFIG_HAVE__utime32) && \
+      (defined(_utime32) || defined(___utime32_defined) || ((defined(CONFIG_HAVE_UTIME_H) || \
+       defined(CONFIG_HAVE_SYS_UTIME_H)) && defined(_MSC_VER)))
+#define CONFIG_HAVE__utime32
+#endif
+
+#ifdef CONFIG_NO_futime32
+#undef CONFIG_HAVE_futime32
+#elif !defined(CONFIG_HAVE_futime32) && \
+      (defined(futime32) || defined(__futime32_defined))
+#define CONFIG_HAVE_futime32
+#endif
+
+#ifdef CONFIG_NO__futime32
+#undef CONFIG_HAVE__futime32
+#elif !defined(CONFIG_HAVE__futime32) && \
+      (defined(_futime32) || defined(___futime32_defined) || ((defined(CONFIG_HAVE_UTIME_H) || \
+       defined(CONFIG_HAVE_SYS_UTIME_H)) && defined(_MSC_VER)))
+#define CONFIG_HAVE__futime32
+#endif
+
+#ifdef CONFIG_NO_lutime32
+#undef CONFIG_HAVE_lutime32
+#elif !defined(CONFIG_HAVE_lutime32) && \
+      (defined(lutime32) || defined(__lutime32_defined))
+#define CONFIG_HAVE_lutime32
+#endif
+
+#ifdef CONFIG_NO__lutime32
+#undef CONFIG_HAVE__lutime32
+#elif !defined(CONFIG_HAVE__lutime32) && \
+      (defined(_lutime32) || defined(___lutime32_defined))
+#define CONFIG_HAVE__lutime32
+#endif
+
+#ifdef CONFIG_NO_wutime32
+#undef CONFIG_HAVE_wutime32
+#elif !defined(CONFIG_HAVE_wutime32) && \
+      (defined(wutime32) || defined(__wutime32_defined))
+#define CONFIG_HAVE_wutime32
+#endif
+
+#ifdef CONFIG_NO__wutime32
+#undef CONFIG_HAVE__wutime32
+#elif !defined(CONFIG_HAVE__wutime32) && \
+      (defined(_wutime32) || defined(___wutime32_defined) || ((defined(CONFIG_HAVE_UTIME_H) || \
+       defined(CONFIG_HAVE_SYS_UTIME_H)) && defined(_MSC_VER)))
+#define CONFIG_HAVE__wutime32
+#endif
+
+#ifdef CONFIG_NO_wlutime32
+#undef CONFIG_HAVE_wlutime32
+#elif !defined(CONFIG_HAVE_wlutime32) && \
+      (defined(wlutime32) || defined(__wlutime32_defined))
+#define CONFIG_HAVE_wlutime32
+#endif
+
+#ifdef CONFIG_NO__wlutime32
+#undef CONFIG_HAVE__wlutime32
+#elif !defined(CONFIG_HAVE__wlutime32) && \
+      (defined(_wlutime32) || defined(___wlutime32_defined))
+#define CONFIG_HAVE__wlutime32
+#endif
+
+#ifdef CONFIG_NO_utime64
+#undef CONFIG_HAVE_utime64
+#elif !defined(CONFIG_HAVE_utime64) && \
+      (defined(utime64) || defined(__utime64_defined) || ((defined(CONFIG_HAVE_UTIME_H) || \
+       defined(CONFIG_HAVE_SYS_UTIME_H)) && defined(__USE_TIME64)))
+#define CONFIG_HAVE_utime64
+#endif
+
+#ifdef CONFIG_NO__utime64
+#undef CONFIG_HAVE__utime64
+#elif !defined(CONFIG_HAVE__utime64) && \
+      (defined(_utime64) || defined(___utime64_defined) || ((defined(CONFIG_HAVE_UTIME_H) || \
+       defined(CONFIG_HAVE_SYS_UTIME_H)) && defined(_MSC_VER)))
+#define CONFIG_HAVE__utime64
+#endif
+
+#ifdef CONFIG_NO_futime64
+#undef CONFIG_HAVE_futime64
+#elif !defined(CONFIG_HAVE_futime64) && \
+      (defined(futime64) || defined(__futime64_defined) || ((defined(CONFIG_HAVE_UTIME_H) || \
+       defined(CONFIG_HAVE_SYS_UTIME_H)) && defined(__USE_KOS) && defined(__USE_TIME64)))
+#define CONFIG_HAVE_futime64
+#endif
+
+#ifdef CONFIG_NO__futime64
+#undef CONFIG_HAVE__futime64
+#elif !defined(CONFIG_HAVE__futime64) && \
+      (defined(_futime64) || defined(___futime64_defined) || ((defined(CONFIG_HAVE_UTIME_H) || \
+       defined(CONFIG_HAVE_SYS_UTIME_H)) && defined(_MSC_VER)))
+#define CONFIG_HAVE__futime64
+#endif
+
+#ifdef CONFIG_NO_lutime64
+#undef CONFIG_HAVE_lutime64
+#elif !defined(CONFIG_HAVE_lutime64) && \
+      (defined(lutime64) || defined(__lutime64_defined))
+#define CONFIG_HAVE_lutime64
+#endif
+
+#ifdef CONFIG_NO__lutime64
+#undef CONFIG_HAVE__lutime64
+#elif !defined(CONFIG_HAVE__lutime64) && \
+      (defined(_lutime64) || defined(___lutime64_defined))
+#define CONFIG_HAVE__lutime64
+#endif
+
+#ifdef CONFIG_NO_wutime64
+#undef CONFIG_HAVE_wutime64
+#elif !defined(CONFIG_HAVE_wutime64) && \
+      (defined(wutime64) || defined(__wutime64_defined))
+#define CONFIG_HAVE_wutime64
+#endif
+
+#ifdef CONFIG_NO__wutime64
+#undef CONFIG_HAVE__wutime64
+#elif !defined(CONFIG_HAVE__wutime64) && \
+      (defined(_wutime64) || defined(___wutime64_defined) || ((defined(CONFIG_HAVE_UTIME_H) || \
+       defined(CONFIG_HAVE_SYS_UTIME_H)) && defined(_MSC_VER)))
+#define CONFIG_HAVE__wutime64
+#endif
+
+#ifdef CONFIG_NO_wlutime64
+#undef CONFIG_HAVE_wlutime64
+#elif !defined(CONFIG_HAVE_wlutime64) && \
+      (defined(wlutime64) || defined(__wlutime64_defined))
+#define CONFIG_HAVE_wlutime64
+#endif
+
+#ifdef CONFIG_NO__wlutime64
+#undef CONFIG_HAVE__wlutime64
+#elif !defined(CONFIG_HAVE__wlutime64) && \
+      (defined(_wlutime64) || defined(___wlutime64_defined))
+#define CONFIG_HAVE__wlutime64
+#endif
+
 #ifdef CONFIG_NO_utimes
 #undef CONFIG_HAVE_utimes
 #elif !defined(CONFIG_HAVE_utimes) && \
@@ -5362,6 +5615,38 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
       (defined(futimesat64) || defined(__futimesat64_defined) || (defined(CONFIG_HAVE_SYS_TIME_H) && \
        defined(__USE_GNU) && defined(__USE_TIME64)))
 #define CONFIG_HAVE_futimesat64
+#endif
+
+#ifdef CONFIG_NO_utimensat
+#undef CONFIG_HAVE_utimensat
+#elif !defined(CONFIG_HAVE_utimensat) && \
+      (defined(utimensat) || defined(__utimensat_defined) || (defined(CONFIG_HAVE_SYS_STAT_H) && \
+       defined(__USE_ATFILE)))
+#define CONFIG_HAVE_utimensat
+#endif
+
+#ifdef CONFIG_NO_utimensat64
+#undef CONFIG_HAVE_utimensat64
+#elif !defined(CONFIG_HAVE_utimensat64) && \
+      (defined(utimensat64) || defined(__utimensat64_defined) || (defined(CONFIG_HAVE_SYS_STAT_H) && \
+       defined(__USE_ATFILE) && defined(__USE_TIME64)))
+#define CONFIG_HAVE_utimensat64
+#endif
+
+#ifdef CONFIG_NO_futimens
+#undef CONFIG_HAVE_futimens
+#elif !defined(CONFIG_HAVE_futimens) && \
+      (defined(futimens) || defined(__futimens_defined) || (defined(CONFIG_HAVE_SYS_STAT_H) && \
+       defined(__USE_XOPEN2K8)))
+#define CONFIG_HAVE_futimens
+#endif
+
+#ifdef CONFIG_NO_futimens64
+#undef CONFIG_HAVE_futimens64
+#elif !defined(CONFIG_HAVE_futimens64) && \
+      (defined(futimens64) || defined(__futimens64_defined) || (defined(CONFIG_HAVE_SYS_STAT_H) && \
+       defined(__USE_XOPEN2K8) && defined(__USE_TIME64)))
+#define CONFIG_HAVE_futimens64
 #endif
 
 #ifdef _MSC_VER
@@ -9998,6 +10283,165 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #define wchmod(name, mode) _wchmod(name, mode)
 #endif /* chmod = _chmod */
 
+#if ((defined(CONFIG_HAVE__utime) || defined(CONFIG_HAVE__futime) ||    \
+      defined(CONFIG_HAVE__lutime) || defined(CONFIG_HAVE__wutime) ||   \
+      defined(CONFIG_HAVE__wlutime)) &&                                 \
+     !(defined(CONFIG_HAVE_utime) && !defined(CONFIG_HAVE__utime)) &&   \
+     !(defined(CONFIG_HAVE_futime) && !defined(CONFIG_HAVE__futime)) && \
+     !(defined(CONFIG_HAVE_lutime) && !defined(CONFIG_HAVE__lutime)) && \
+     !(defined(CONFIG_HAVE_wutime) && !defined(CONFIG_HAVE__wutime)) && \
+     !(defined(CONFIG_HAVE_wlutime) && !defined(CONFIG_HAVE__wlutime)))
+/* Alias the variants without an underscore to the ones with.
+ * Because this also requires using `_utimbuf', we have to do
+ * all of these at once. */
+#undef utimbuf
+#define utimbuf _utimbuf
+#ifdef CONFIG_HAVE__utime
+#undef CONFIG_HAVE_utime
+#define CONFIG_HAVE_utime
+#undef utime
+#define utime(name, file_times) _utime(name, file_times)
+#endif /* utime = _utime */
+#ifdef CONFIG_HAVE__futime
+#undef CONFIG_HAVE_futime
+#define CONFIG_HAVE_futime
+#undef futime
+#define futime(fd, file_times) _futime(fd, file_times)
+#endif /* futime = _futime */
+#ifdef CONFIG_HAVE__lutime
+#undef CONFIG_HAVE_lutime
+#define CONFIG_HAVE_lutime
+#undef lutime
+#define lutime(name, file_times) _lutime(name, file_times)
+#endif /* lutime = _lutime */
+#ifdef CONFIG_HAVE__wutime
+#undef CONFIG_HAVE_wutime
+#define CONFIG_HAVE_wutime
+#undef wutime
+#define wutime(name, file_times) _wutime(name, file_times)
+#endif /* wutime = _wutime */
+#ifdef CONFIG_HAVE__wlutime
+#undef CONFIG_HAVE_wlutime
+#define CONFIG_HAVE_wlutime
+#undef wlutime
+#define wlutime(name, file_times) _wlutime(name, file_times)
+#endif /* wlutime = _wlutime */
+#endif /* ... */
+
+#if ((defined(CONFIG_HAVE__utime32) || defined(CONFIG_HAVE__futime32) ||    \
+      defined(CONFIG_HAVE__lutime32) || defined(CONFIG_HAVE__wutime32) ||   \
+      defined(CONFIG_HAVE__wlutime32)) &&                                   \
+     !(defined(CONFIG_HAVE_utime32) && !defined(CONFIG_HAVE__utime32)) &&   \
+     !(defined(CONFIG_HAVE_futime32) && !defined(CONFIG_HAVE__futime32)) && \
+     !(defined(CONFIG_HAVE_lutime32) && !defined(CONFIG_HAVE__lutime32)) && \
+     !(defined(CONFIG_HAVE_wutime32) && !defined(CONFIG_HAVE__wutime32)) && \
+     !(defined(CONFIG_HAVE_wlutime32) && !defined(CONFIG_HAVE__wlutime32)))
+/* Alias the variants without an underscore to the ones with.
+ * Because this also requires using `__utimbuf32', we have to
+ * do all of these at once. */
+#undef utimbuf32
+#define utimbuf32 __utimbuf32
+#ifdef CONFIG_HAVE__utime32
+#undef CONFIG_HAVE_utime32
+#define CONFIG_HAVE_utime32
+#undef utime32
+#define utime32(name, file_times) _utime32(name, file_times)
+#endif /* utime32 = _utime32 */
+#ifdef CONFIG_HAVE__futime32
+#undef CONFIG_HAVE_futime32
+#define CONFIG_HAVE_futime32
+#undef futime32
+#define futime32(fd, file_times) _futime32(fd, file_times)
+#endif /* futime32 = _futime32 */
+#ifdef CONFIG_HAVE__lutime32
+#undef CONFIG_HAVE_lutime32
+#define CONFIG_HAVE_lutime32
+#undef lutime32
+#define lutime32(name, file_times) _lutime32(name, file_times)
+#endif /* lutime32 = _lutime32 */
+#ifdef CONFIG_HAVE__wutime32
+#undef CONFIG_HAVE_wutime32
+#define CONFIG_HAVE_wutime32
+#undef wutime32
+#define wutime32(name, file_times) _wutime32(name, file_times)
+#endif /* wutime32 = _wutime32 */
+#ifdef CONFIG_HAVE__wlutime32
+#undef CONFIG_HAVE_wlutime32
+#define CONFIG_HAVE_wlutime32
+#undef wlutime32
+#define wlutime32(name, file_times) _wlutime32(name, file_times)
+#endif /* wlutime32 = _wlutime32 */
+#endif /* ... */
+
+#if ((defined(CONFIG_HAVE__utime64) || defined(CONFIG_HAVE__futime64) ||    \
+      defined(CONFIG_HAVE__lutime64) || defined(CONFIG_HAVE__wutime64) ||   \
+      defined(CONFIG_HAVE__wlutime64)) &&                                   \
+     !(defined(CONFIG_HAVE_utime64) && !defined(CONFIG_HAVE__utime64)) &&   \
+     !(defined(CONFIG_HAVE_futime64) && !defined(CONFIG_HAVE__futime64)) && \
+     !(defined(CONFIG_HAVE_lutime64) && !defined(CONFIG_HAVE__lutime64)) && \
+     !(defined(CONFIG_HAVE_wutime64) && !defined(CONFIG_HAVE__wutime64)) && \
+     !(defined(CONFIG_HAVE_wlutime64) && !defined(CONFIG_HAVE__wlutime64)))
+/* Alias the variants without an underscore to the ones with.
+ * Because this also requires using `__utimbuf64', we have to
+ * do all of these at once. */
+#undef utimbuf64
+#define utimbuf64 __utimbuf64
+#ifdef CONFIG_HAVE__utime64
+#undef CONFIG_HAVE_utime64
+#define CONFIG_HAVE_utime64
+#undef utime64
+#define utime64(name, file_times) _utime64(name, file_times)
+#endif /* utime64 = _utime64 */
+#ifdef CONFIG_HAVE__futime64
+#undef CONFIG_HAVE_futime64
+#define CONFIG_HAVE_futime64
+#undef futime64
+#define futime64(fd, file_times) _futime64(fd, file_times)
+#endif /* futime64 = _futime64 */
+#ifdef CONFIG_HAVE__lutime64
+#undef CONFIG_HAVE_lutime64
+#define CONFIG_HAVE_lutime64
+#undef lutime64
+#define lutime64(name, file_times) _lutime64(name, file_times)
+#endif /* lutime64 = _lutime64 */
+#ifdef CONFIG_HAVE__wutime64
+#undef CONFIG_HAVE_wutime64
+#define CONFIG_HAVE_wutime64
+#undef wutime64
+#define wutime64(name, file_times) _wutime64(name, file_times)
+#endif /* wutime64 = _wutime64 */
+#ifdef CONFIG_HAVE__wlutime64
+#undef CONFIG_HAVE_wlutime64
+#define CONFIG_HAVE_wlutime64
+#undef wlutime64
+#define wlutime64(name, file_times) _wlutime64(name, file_times)
+#endif /* wlutime64 = _wlutime64 */
+#endif /* ... */
+
+#if !defined(CONFIG_HAVE_utimes) && (defined(CONFIG_HAVE_futimesat) && defined(CONFIG_HAVE_AT_FDCWD))
+#define CONFIG_HAVE_utimes
+#undef utimes
+#define utimes(path, tv) futimesat(AT_FDCWD, path, tv, 0)
+#endif /* utimes = futimesat */
+
+#if !defined(CONFIG_HAVE_lutimes) && (defined(CONFIG_HAVE_futimesat) && defined(CONFIG_HAVE_AT_FDCWD) && defined(CONFIG_HAVE_AT_SYMLINK_NOFOLLOW))
+#define CONFIG_HAVE_lutimes
+#undef lutimes
+#define lutimes(path, tv) futimesat(AT_FDCWD, path, tv, AT_SYMLINK_NOFOLLOW)
+#endif /* lutimes = futimesat */
+
+#if !defined(CONFIG_HAVE_utimes64) && (defined(CONFIG_HAVE_futimesat64) && defined(CONFIG_HAVE_AT_FDCWD))
+#define CONFIG_HAVE_utimes64
+#undef utimes64
+#define utimes64(path, tv) futimesat64(AT_FDCWD, path, tv, 0)
+#endif /* utimes64 = futimesat64 */
+
+#if !defined(CONFIG_HAVE_lutimes64) && (defined(CONFIG_HAVE_futimesat64) && defined(CONFIG_HAVE_AT_FDCWD) && defined(CONFIG_HAVE_AT_SYMLINK_NOFOLLOW))
+#define CONFIG_HAVE_lutimes64
+#undef lutimes64
+#define lutimes64(path, tv) futimesat64(AT_FDCWD, path, tv, AT_SYMLINK_NOFOLLOW)
+#endif /* lutimes64 = futimesat64 */
+
 #if !defined(CONFIG_HAVE_chmod) && (defined(CONFIG_HAVE_fchmodat) && defined(CONFIG_HAVE_AT_FDCWD))
 #define CONFIG_HAVE_chmod
 #undef chmod
@@ -11436,6 +11880,68 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #define CONFIG_HAVE__wlchmod
 #define _wlchmod(path, mode) _wchmod(path, mode)
 #endif /* CONFIG_HAVE__wchmod */
+
+/* Same deal with `utime()' as with `chmod()' -- it's actually `lutime()' */
+#ifdef CONFIG_HAVE_utime
+#undef CONFIG_HAVE_utime
+#define CONFIG_HAVE_lutime
+#define lutime(path, file_times) utime(path, file_times)
+#endif /* CONFIG_HAVE_utime */
+#ifdef CONFIG_HAVE_wutime
+#undef CONFIG_HAVE_wutime
+#define CONFIG_HAVE_wlutime
+#define wlutime(path, file_times) wutime(path, file_times)
+#endif /* CONFIG_HAVE_wutime */
+#ifdef CONFIG_HAVE__utime
+#undef CONFIG_HAVE__utime
+#define CONFIG_HAVE__lutime
+#define _lutime(path, file_times) _utime(path, file_times)
+#endif /* CONFIG_HAVE__utime */
+#ifdef CONFIG_HAVE__wutime
+#undef CONFIG_HAVE__wutime
+#define CONFIG_HAVE__wlutime
+#define _wlutime(path, file_times) _wutime(path, file_times)
+#endif /* CONFIG_HAVE__wutime */
+#ifdef CONFIG_HAVE_utime32
+#undef CONFIG_HAVE_utime32
+#define CONFIG_HAVE_lutime32
+#define lutime32(path, file_times) utime32(path, file_times)
+#endif /* CONFIG_HAVE_utime32 */
+#ifdef CONFIG_HAVE_wutime32
+#undef CONFIG_HAVE_wutime32
+#define CONFIG_HAVE_wlutime32
+#define wlutime32(path, file_times) wutime32(path, file_times)
+#endif /* CONFIG_HAVE_wutime32 */
+#ifdef CONFIG_HAVE_utime64
+#undef CONFIG_HAVE_utime64
+#define CONFIG_HAVE_lutime64
+#define lutime64(path, file_times) utime64(path, file_times)
+#endif /* CONFIG_HAVE_utime64 */
+#ifdef CONFIG_HAVE_wutime64
+#undef CONFIG_HAVE_wutime64
+#define CONFIG_HAVE_wlutime64
+#define wlutime64(path, file_times) wutime64(path, file_times)
+#endif /* CONFIG_HAVE_wutime64 */
+#ifdef CONFIG_HAVE__utime32
+#undef CONFIG_HAVE__utime32
+#define CONFIG_HAVE__lutime32
+#define _lutime32(path, file_times) _utime32(path, file_times)
+#endif /* CONFIG_HAVE__utime32 */
+#ifdef CONFIG_HAVE__wutime32
+#undef CONFIG_HAVE__wutime32
+#define CONFIG_HAVE__wlutime32
+#define _wlutime32(path, file_times) _wutime32(path, file_times)
+#endif /* CONFIG_HAVE__wutime32 */
+#ifdef CONFIG_HAVE__utime64
+#undef CONFIG_HAVE__utime64
+#define CONFIG_HAVE__lutime64
+#define _lutime64(path, file_times) _utime64(path, file_times)
+#endif /* CONFIG_HAVE__utime64 */
+#ifdef CONFIG_HAVE__wutime64
+#undef CONFIG_HAVE__wutime64
+#define CONFIG_HAVE__wlutime64
+#define _wlutime64(path, file_times) _wutime64(path, file_times)
+#endif /* CONFIG_HAVE__wutime64 */
 #endif /* _MSC_VER */
 
 #ifndef EOK

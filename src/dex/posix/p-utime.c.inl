@@ -1,0 +1,962 @@
+/* Copyright (c) 2018-2023 Griefer@Work                                       *
+ *                                                                            *
+ * This software is provided 'as-is', without any express or implied          *
+ * warranty. In no event will the authors be held liable for any damages      *
+ * arising from the use of this software.                                     *
+ *                                                                            *
+ * Permission is granted to anyone to use this software for any purpose,      *
+ * including commercial applications, and to alter it and redistribute it     *
+ * freely, subject to the following restrictions:                             *
+ *                                                                            *
+ * 1. The origin of this software must not be misrepresented; you must not    *
+ *    claim that you wrote the original software. If you use this software    *
+ *    in a product, an acknowledgement (see the following) in the product     *
+ *    documentation is required:                                              *
+ *    Portions Copyright (c) 2018-2023 Griefer@Work                           *
+ * 2. Altered source versions must be plainly marked as such, and must not be *
+ *    misrepresented as being the original software.                          *
+ * 3. This notice may not be removed or altered from any source distribution. *
+ */
+#ifndef GUARD_DEX_POSIX_P_UTIME_C_INL
+#define GUARD_DEX_POSIX_P_UTIME_C_INL 1
+#define CONFIG_BUILDING_LIBPOSIX
+#define DEE_SOURCE
+
+#include "libposix.h"
+/**/
+
+#include "p-readlink.c.inl" /* For `posix_utime_USE_posix_readlink__AND__posix_lutime()' */
+#include "p-path.c.inl"     /* For `posix_utime_USE_posix_readlink__AND__posix_lutime()' */
+#include "p-stat.c.inl"     /* For `DEE_STAT_F_LSTAT' */
+
+DECL_BEGIN
+
+/* Re-link system functions to try and use 64-bit variants (if available) */
+/*[[[deemon
+local functions = {
+	"open",
+	"openat",
+	"creat",
+	"wopen",
+	"wopenat",
+	"wcreat",
+};
+for (local f: functions) {
+	print("#ifdef CONFIG_HAVE_", f, "64");
+	print("#undef CONFIG_HAVE_", f);
+	print("#define CONFIG_HAVE_", f);
+	print("#undef ", f);
+	print("#define ", f, " ", f, "64");
+	print("#endif /" "* CONFIG_HAVE_", f, "64 *" "/");
+}
+]]]*/
+#ifdef CONFIG_HAVE_open64
+#undef CONFIG_HAVE_open
+#define CONFIG_HAVE_open
+#undef open
+#define open open64
+#endif /* CONFIG_HAVE_open64 */
+#ifdef CONFIG_HAVE_openat64
+#undef CONFIG_HAVE_openat
+#define CONFIG_HAVE_openat
+#undef openat
+#define openat openat64
+#endif /* CONFIG_HAVE_openat64 */
+#ifdef CONFIG_HAVE_creat64
+#undef CONFIG_HAVE_creat
+#define CONFIG_HAVE_creat
+#undef creat
+#define creat creat64
+#endif /* CONFIG_HAVE_creat64 */
+#ifdef CONFIG_HAVE_wopen64
+#undef CONFIG_HAVE_wopen
+#define CONFIG_HAVE_wopen
+#undef wopen
+#define wopen wopen64
+#endif /* CONFIG_HAVE_wopen64 */
+#ifdef CONFIG_HAVE_wopenat64
+#undef CONFIG_HAVE_wopenat
+#define CONFIG_HAVE_wopenat
+#undef wopenat
+#define wopenat wopenat64
+#endif /* CONFIG_HAVE_wopenat64 */
+#ifdef CONFIG_HAVE_wcreat64
+#undef CONFIG_HAVE_wcreat
+#define CONFIG_HAVE_wcreat
+#undef wcreat
+#define wcreat wcreat64
+#endif /* CONFIG_HAVE_wcreat64 */
+/*[[[end]]]*/
+
+
+/* Figure out how we want to implement `utime()' */
+#undef posix_utime_USE_wutime64
+#undef posix_utime_USE_wutime32
+#undef posix_utime_USE_wutime
+#undef posix_utime_USE_utime64
+#undef posix_utime_USE_utime32
+#undef posix_utime_USE_utime
+#undef posix_utime_USE_wopen_AND_futime64
+#undef posix_utime_USE_wopen_AND_futime32
+#undef posix_utime_USE_wopen_AND_futime
+#undef posix_utime_USE_open_AND_futime64
+#undef posix_utime_USE_open_AND_futime32
+#undef posix_utime_USE_open_AND_futime
+#undef posix_utime_USE_posix_readlink__AND__posix_lutime
+#undef posix_utime_USE_STUB
+#if defined(CONFIG_HAVE_wutime64) && defined(CONFIG_PREFER_WCHAR_FUNCTIONS)
+#define posix_utime_USE_wutime64
+#elif defined(CONFIG_HAVE_utime64)
+#define posix_utime_USE_utime64
+#elif defined(CONFIG_HAVE_wutime64)
+#define posix_utime_USE_wutime64
+#elif defined(CONFIG_HAVE_wutime) && defined(CONFIG_PREFER_WCHAR_FUNCTIONS)
+#define posix_utime_USE_wutime
+#elif defined(CONFIG_HAVE_utime)
+#define posix_utime_USE_utime
+#elif defined(CONFIG_HAVE_wutime)
+#define posix_utime_USE_wutime
+#elif defined(CONFIG_HAVE_wopen) && defined(CONFIG_HAVE_O_RDWR) && defined(CONFIG_HAVE_futime64) && defined(CONFIG_PREFER_WCHAR_FUNCTIONS)
+#define posix_utime_USE_wopen_AND_futime64
+#elif defined(CONFIG_HAVE_open) && defined(CONFIG_HAVE_O_RDWR) && defined(CONFIG_HAVE_futime64)
+#define posix_utime_USE_open_AND_futime64
+#elif defined(CONFIG_HAVE_wopen) && defined(CONFIG_HAVE_O_RDWR) && defined(CONFIG_HAVE_futime64)
+#define posix_utime_USE_wopen_AND_futime64
+#elif defined(CONFIG_HAVE_wopen) && defined(CONFIG_HAVE_O_RDWR) && defined(CONFIG_HAVE_futime) && defined(CONFIG_PREFER_WCHAR_FUNCTIONS)
+#define posix_utime_USE_wopen_AND_futime
+#elif defined(CONFIG_HAVE_open) && defined(CONFIG_HAVE_O_RDWR) && defined(CONFIG_HAVE_futime)
+#define posix_utime_USE_open_AND_futime
+#elif defined(CONFIG_HAVE_wopen) && defined(CONFIG_HAVE_O_RDWR) && defined(CONFIG_HAVE_futime)
+#define posix_utime_USE_wopen_AND_futime
+#elif defined(CONFIG_HAVE_wutime32) && defined(CONFIG_PREFER_WCHAR_FUNCTIONS)
+#define posix_utime_USE_wutime32
+#elif defined(CONFIG_HAVE_utime32)
+#define posix_utime_USE_utime32
+#elif defined(CONFIG_HAVE_wutime32)
+#define posix_utime_USE_wutime32
+#elif defined(CONFIG_HAVE_wopen) && defined(CONFIG_HAVE_O_RDWR) && defined(CONFIG_HAVE_futime32) && defined(CONFIG_PREFER_WCHAR_FUNCTIONS)
+#define posix_utime_USE_wopen_AND_futime32
+#elif defined(CONFIG_HAVE_open) && defined(CONFIG_HAVE_O_RDWR) && defined(CONFIG_HAVE_futime32)
+#define posix_utime_USE_open_AND_futime32
+#elif defined(CONFIG_HAVE_wopen) && defined(CONFIG_HAVE_O_RDWR) && defined(CONFIG_HAVE_futime32)
+#define posix_utime_USE_wopen_AND_futime32
+#else /* ... */
+#define posix_utime_USE_STUB
+#endif /* !... */
+
+
+
+/* Figure out how we want to implement `lutime()' */
+#undef posix_lutime_USE_wlutime64
+#undef posix_lutime_USE_wlutime32
+#undef posix_lutime_USE_wlutime
+#undef posix_lutime_USE_lutime64
+#undef posix_lutime_USE_lutime32
+#undef posix_lutime_USE_lutime
+#undef posix_lutime_USE_wopen_AND_futime64
+#undef posix_lutime_USE_wopen_AND_futime32
+#undef posix_lutime_USE_wopen_AND_futime
+#undef posix_lutime_USE_open_AND_futime64
+#undef posix_lutime_USE_open_AND_futime32
+#undef posix_lutime_USE_open_AND_futime
+#undef posix_lutime_USE_STUB
+#if defined(CONFIG_HAVE_wlutime64) && defined(CONFIG_PREFER_WCHAR_FUNCTIONS)
+#define posix_lutime_USE_wlutime64
+#elif defined(CONFIG_HAVE_lutime64)
+#define posix_lutime_USE_lutime64
+#elif defined(CONFIG_HAVE_wlutime64)
+#define posix_lutime_USE_wlutime64
+#elif defined(CONFIG_HAVE_wlutime) && defined(CONFIG_PREFER_WCHAR_FUNCTIONS)
+#define posix_lutime_USE_wlutime
+#elif defined(CONFIG_HAVE_lutime)
+#define posix_lutime_USE_lutime
+#elif defined(CONFIG_HAVE_wlutime)
+#define posix_lutime_USE_wlutime
+#elif defined(CONFIG_HAVE_wopen) && defined(CONFIG_HAVE_O_RDWR) && defined(CONFIG_HAVE_O_NOFOLLOW) && defined(CONFIG_HAVE_futime64) && defined(CONFIG_PREFER_WCHAR_FUNCTIONS)
+#define posix_lutime_USE_wopen_AND_futime64
+#elif defined(CONFIG_HAVE_open) && defined(CONFIG_HAVE_O_RDWR) && defined(CONFIG_HAVE_O_NOFOLLOW) && defined(CONFIG_HAVE_futime64)
+#define posix_lutime_USE_open_AND_futime64
+#elif defined(CONFIG_HAVE_wopen) && defined(CONFIG_HAVE_O_RDWR) && defined(CONFIG_HAVE_O_NOFOLLOW) && defined(CONFIG_HAVE_futime64)
+#define posix_lutime_USE_wopen_AND_futime64
+#elif defined(CONFIG_HAVE_wopen) && defined(CONFIG_HAVE_O_RDWR) && defined(CONFIG_HAVE_O_NOFOLLOW) && defined(CONFIG_HAVE_futime) && defined(CONFIG_PREFER_WCHAR_FUNCTIONS)
+#define posix_lutime_USE_wopen_AND_futime
+#elif defined(CONFIG_HAVE_open) && defined(CONFIG_HAVE_O_RDWR) && defined(CONFIG_HAVE_O_NOFOLLOW) && defined(CONFIG_HAVE_futime)
+#define posix_lutime_USE_open_AND_futime
+#elif defined(CONFIG_HAVE_wopen) && defined(CONFIG_HAVE_O_RDWR) && defined(CONFIG_HAVE_O_NOFOLLOW) && defined(CONFIG_HAVE_futime)
+#define posix_lutime_USE_wopen_AND_futime
+#elif defined(CONFIG_HAVE_wlutime32) && defined(CONFIG_PREFER_WCHAR_FUNCTIONS)
+#define posix_lutime_USE_wlutime32
+#elif defined(CONFIG_HAVE_lutime32)
+#define posix_lutime_USE_lutime32
+#elif defined(CONFIG_HAVE_wlutime32)
+#define posix_lutime_USE_wlutime32
+#elif defined(CONFIG_HAVE_wopen) && defined(CONFIG_HAVE_O_RDWR) && defined(CONFIG_HAVE_O_NOFOLLOW) && defined(CONFIG_HAVE_futime32) && defined(CONFIG_PREFER_WCHAR_FUNCTIONS)
+#define posix_lutime_USE_wopen_AND_futime32
+#elif defined(CONFIG_HAVE_open) && defined(CONFIG_HAVE_O_RDWR) && defined(CONFIG_HAVE_O_NOFOLLOW) && defined(CONFIG_HAVE_futime32)
+#define posix_lutime_USE_open_AND_futime32
+#elif defined(CONFIG_HAVE_wopen) && defined(CONFIG_HAVE_O_RDWR) && defined(CONFIG_HAVE_O_NOFOLLOW) && defined(CONFIG_HAVE_futime32)
+#define posix_lutime_USE_wopen_AND_futime32
+#else /* ... */
+#define posix_lutime_USE_STUB
+#endif /* !... */
+
+/* Check if we should emulate
+ * >> utime(path, file_times);
+ * As:
+ * >> lutime(try joinpath(headof(path), readlink(path)) catch (NoSymlink) path, file_times); */
+#if ((defined(posix_utime_USE_STUB) ||                \
+      defined(posix_utime_USE_open_AND_futime) ||     \
+      defined(posix_utime_USE_open_AND_futime32) ||   \
+      defined(posix_utime_USE_open_AND_futime64) ||   \
+      defined(posix_utime_USE_wopen_AND_futime) ||    \
+      defined(posix_utime_USE_wopen_AND_futime32) ||  \
+      defined(posix_utime_USE_wopen_AND_futime64)) && \
+     (!defined(posix_lutime_USE_STUB) && !defined(posix_readlink_USE_STUB)))
+#undef posix_utime_USE_STUB
+#undef posix_utime_USE_open_AND_futime
+#undef posix_utime_USE_open_AND_futime32
+#undef posix_utime_USE_open_AND_futime64
+#undef posix_utime_USE_wopen_AND_futime
+#undef posix_utime_USE_wopen_AND_futime32
+#undef posix_utime_USE_wopen_AND_futime64
+#define posix_utime_USE_posix_readlink__AND__posix_lutime
+#endif /* ... */
+
+
+
+/* Figure out how we want to implement `futime()' */
+#undef posix_futime_USE_futime64
+#undef posix_futime_USE_futime32
+#undef posix_futime_USE_futime
+#undef posix_futime_USE_posix_lutime
+#undef posix_futime_USE_posix_utime
+#undef posix_futime_USE_STUB
+#ifdef CONFIG_HAVE_futime64
+#define posix_futime_USE_futime64
+#elif defined(CONFIG_HAVE_futime)
+#define posix_futime_USE_futime
+#elif defined(CONFIG_HAVE_futime32)
+#define posix_futime_USE_futime32
+#elif !defined(posix_lutime_USE_STUB)
+#define posix_futime_USE_posix_lutime
+#elif !defined(posix_utime_USE_STUB)
+#define posix_futime_USE_posix_utime
+#else /* ... */
+#define posix_futime_USE_STUB
+#endif /* !... */
+
+
+
+/* Figure out how we want to implement `futimeat()' */
+#undef posix_futimeat_USE_posix_utime
+#undef posix_futimeat_USE_posix_lutime
+#undef posix_futimeat_USE_posix_futime
+#undef posix_futimeat_USE_STUB
+#if !defined(posix_utime_USE_STUB) || !defined(posix_lutime_USE_STUB)
+#ifndef posix_utime_USE_STUB
+#define posix_futimeat_USE_posix_utime
+#endif /* !posix_utime_USE_STUB */
+#ifndef posix_lutime_USE_STUB
+#define posix_futimeat_USE_posix_lutime
+#endif /* !posix_lutime_USE_STUB */
+#ifndef posix_futime_USE_STUB
+#define posix_futimeat_USE_posix_futime
+#endif /* !posix_futime_USE_STUB */
+#else /* !posix_utime_USE_STUB */
+#define posix_futimeat_USE_STUB
+#endif /* posix_utime_USE_STUB */
+
+
+
+
+/* Implement the open+futime wrappers. */
+#ifdef posix_utime_USE_wopen_AND_futime
+#undef posix_utime_USE_wopen_AND_futime
+#define posix_utime_USE_wutime
+#undef wutime
+#define wutime dee_wutime
+PRIVATE int DCALL dee_wutime(wchar_t const *filename, struct utimbuf *file_times) {
+	int result;
+	result = wopen(filename, O_RDWR);
+	if (result != -1) {
+		int error;
+		error = futime(result, file_times);
+		OPT_close(result);
+		result = error;
+	}
+	return result;
+}
+#endif /* posix_utime_USE_wopen_AND_futime */
+
+#ifdef posix_utime_USE_open_AND_futime
+#undef posix_utime_USE_open_AND_futime
+#define posix_utime_USE_utime
+#undef utime
+#define utime dee_utime
+PRIVATE int DCALL dee_utime(wchar_t const *filename, struct utimbuf *file_times) {
+	int result;
+	result = open(filename, O_RDWR);
+	if (result != -1) {
+		int error;
+		error = futime(result, file_times);
+		OPT_close(result);
+		result = error;
+	}
+	return result;
+}
+#endif /* posix_utime_USE_open_AND_futime */
+
+#ifdef posix_lutime_USE_wopen_AND_futime
+#undef posix_lutime_USE_wopen_AND_futime
+#define posix_lutime_USE_wlutime
+#undef wlutime
+#define wlutime dee_wlutime
+PRIVATE int DCALL dee_wlutime(wchar_t const *filename, struct utimbuf *file_times) {
+	int result;
+	result = wopen(filename, O_RDWR | O_NOFOLLOW);
+	if (result != -1) {
+		int error;
+		error = futime(result, file_times);
+		OPT_close(result);
+		result = error;
+	}
+	return result;
+}
+#endif /* posix_lutime_USE_wopen_AND_futime */
+
+#ifdef posix_lutime_USE_open_AND_futime
+#undef posix_lutime_USE_open_AND_futime
+#define posix_lutime_USE_lutime
+#undef lutime
+#define lutime dee_lutime
+PRIVATE int DCALL dee_lutime(wchar_t const *filename, struct utimbuf *file_times) {
+	int result;
+	result = open(filename, O_RDWR | O_NOFOLLOW);
+	if (result != -1) {
+		int error;
+		error = futime(result, file_times);
+		OPT_close(result);
+		result = error;
+	}
+	return result;
+}
+#endif /* posix_lutime_USE_open_AND_futime */
+
+#ifdef posix_utime_USE_wopen_AND_futime32
+#undef posix_utime_USE_wopen_AND_futime32
+#define posix_utime_USE_wutime32
+#undef wutime32
+#define wutime32 dee_wutime32
+PRIVATE int DCALL dee_wutime32(wchar_t const *filename, struct utimbuf32 *file_times) {
+	int result;
+	result = wopen(filename, O_RDWR);
+	if (result != -1) {
+		int error;
+		error = futime32(result, file_times);
+		OPT_close(result);
+		result = error;
+	}
+	return result;
+}
+#endif /* posix_utime_USE_wopen_AND_futime32 */
+
+#ifdef posix_utime_USE_open_AND_futime32
+#undef posix_utime_USE_open_AND_futime32
+#define posix_utime_USE_utime32
+#undef utime32
+#define utime32 dee_utime32
+PRIVATE int DCALL dee_utime32(wchar_t const *filename, struct utimbuf32 *file_times) {
+	int result;
+	result = open(filename, O_RDWR);
+	if (result != -1) {
+		int error;
+		error = futime32(result, file_times);
+		OPT_close(result);
+		result = error;
+	}
+	return result;
+}
+#endif /* posix_utime_USE_open_AND_futime32 */
+
+#ifdef posix_lutime_USE_wopen_AND_futime32
+#undef posix_lutime_USE_wopen_AND_futime32
+#define posix_lutime_USE_wlutime32
+#undef wlutime32
+#define wlutime32 dee_wlutime32
+PRIVATE int DCALL dee_wlutime32(wchar_t const *filename, struct utimbuf32 *file_times) {
+	int result;
+	result = wopen(filename, O_RDWR | O_NOFOLLOW);
+	if (result != -1) {
+		int error;
+		error = futime32(result, file_times);
+		OPT_close(result);
+		result = error;
+	}
+	return result;
+}
+#endif /* posix_lutime_USE_wopen_AND_futime32 */
+
+#ifdef posix_lutime_USE_open_AND_futime32
+#undef posix_lutime_USE_open_AND_futime32
+#define posix_lutime_USE_lutime32
+#undef lutime32
+#define lutime32 dee_lutime32
+PRIVATE int DCALL dee_lutime32(wchar_t const *filename, struct utimbuf32 *file_times) {
+	int result;
+	result = open(filename, O_RDWR | O_NOFOLLOW);
+	if (result != -1) {
+		int error;
+		error = futime32(result, file_times);
+		OPT_close(result);
+		result = error;
+	}
+	return result;
+}
+#endif /* posix_lutime_USE_open_AND_futime32 */
+
+#ifdef posix_utime_USE_wopen_AND_futime64
+#undef posix_utime_USE_wopen_AND_futime64
+#define posix_utime_USE_wutime64
+#undef wutime64
+#define wutime64 dee_wutime64
+PRIVATE int DCALL dee_wutime64(wchar_t const *filename, struct utimbuf64 *file_times) {
+	int result;
+	result = wopen(filename, O_RDWR);
+	if (result != -1) {
+		int error;
+		error = futime64(result, file_times);
+		OPT_close(result);
+		result = error;
+	}
+	return result;
+}
+#endif /* posix_utime_USE_wopen_AND_futime64 */
+
+#ifdef posix_utime_USE_open_AND_futime64
+#undef posix_utime_USE_open_AND_futime64
+#define posix_utime_USE_utime64
+#undef utime64
+#define utime64 dee_utime64
+PRIVATE int DCALL dee_utime64(wchar_t const *filename, struct utimbuf64 *file_times) {
+	int result;
+	result = open(filename, O_RDWR);
+	if (result != -1) {
+		int error;
+		error = futime64(result, file_times);
+		OPT_close(result);
+		result = error;
+	}
+	return result;
+}
+#endif /* posix_utime_USE_open_AND_futime64 */
+
+#ifdef posix_lutime_USE_wopen_AND_futime64
+#undef posix_lutime_USE_wopen_AND_futime64
+#define posix_lutime_USE_wlutime64
+#undef wlutime64
+#define wlutime64 dee_wlutime64
+PRIVATE int DCALL dee_wlutime64(wchar_t const *filename, struct utimbuf64 *file_times) {
+	int result;
+	result = wopen(filename, O_RDWR | O_NOFOLLOW);
+	if (result != -1) {
+		int error;
+		error = futime64(result, file_times);
+		OPT_close(result);
+		result = error;
+	}
+	return result;
+}
+#endif /* posix_lutime_USE_wopen_AND_futime64 */
+
+#ifdef posix_lutime_USE_open_AND_futime64
+#undef posix_lutime_USE_open_AND_futime64
+#define posix_lutime_USE_lutime64
+#undef lutime64
+#define lutime64 dee_lutime64
+PRIVATE int DCALL dee_lutime64(wchar_t const *filename, struct utimbuf64 *file_times) {
+	int result;
+	result = open(filename, O_RDWR | O_NOFOLLOW);
+	if (result != -1) {
+		int error;
+		error = futime64(result, file_times);
+		OPT_close(result);
+		result = error;
+	}
+	return result;
+}
+#endif /* posix_lutime_USE_open_AND_futime64 */
+
+#ifdef posix_utime_USE_posix_readlink__AND__posix_lutime
+FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_lutime_f_impl(DeeObject *path, DeeObject *atime, DeeObject *mtime, DeeObject *ctime, DeeObject *btime);
+#endif /* posix_utime_USE_posix_readlink__AND__posix_lutime */
+
+
+/* Define helper macros for `posix_utime()' */
+#undef posix_utime_USED_struct_utimbuf
+#undef posix_utime_USED_struct_utimbuf_parse
+#if defined(posix_utime_USE_utime) || defined(posix_utime_USE_wutime)
+#define posix_utime_USED_struct_utimbuf       struct utimbuf
+#define posix_utime_USED_struct_utimbuf_parse posix_utime_unix_parse_utimbuf
+#define NEED_posix_utime_unix_parse_utimbuf
+#elif defined(posix_utime_USE_utime32) || defined(posix_utime_USE_wutime32)
+#define posix_utime_USED_struct_utimbuf       struct utimbuf32
+#define posix_utime_USED_struct_utimbuf_parse posix_utime_unix_parse_utimbuf32
+#define NEED_posix_utime_unix_parse_utimbuf32
+#elif defined(posix_utime_USE_utime64) || defined(posix_utime_USE_wutime64)
+#define posix_utime_USED_struct_utimbuf       struct utimbuf64
+#define posix_utime_USED_struct_utimbuf_parse posix_utime_unix_parse_utimbuf64
+#define NEED_posix_utime_unix_parse_utimbuf64
+#endif /* ... */
+#undef posix_utime_USED_charT
+#undef posix_utime_USED_DeeString_AsCharT
+#if defined(posix_utime_USE_wutime) || defined(posix_utime_USE_wutime32) || defined(posix_utime_USE_wutime64)
+#define posix_utime_USED_charT             dwchar_t
+#define posix_utime_USED_DeeString_AsCharT DeeString_AsWide
+#elif defined(posix_utime_USE_utime) || defined(posix_utime_USE_utime32) || defined(posix_utime_USE_utime64)
+#define posix_utime_USED_charT             char
+#define posix_utime_USED_DeeString_AsCharT DeeString_AsUtf8
+#endif /* ... */
+
+/* Define helper macros for `posix_lutime()' */
+#undef posix_lutime_USED_struct_utimbuf
+#undef posix_lutime_USED_struct_utimbuf_parse
+#if defined(posix_lutime_USE_lutime) || defined(posix_lutime_USE_wlutime)
+#define posix_lutime_USED_struct_utimbuf       struct utimbuf
+#define posix_lutime_USED_struct_utimbuf_parse posix_utime_unix_parse_utimbuf
+#define NEED_posix_utime_unix_parse_utimbuf
+#elif defined(posix_lutime_USE_lutime32) || defined(posix_lutime_USE_wlutime32)
+#define posix_lutime_USED_struct_utimbuf       struct utimbuf32
+#define posix_lutime_USED_struct_utimbuf_parse posix_utime_unix_parse_utimbuf32
+#define NEED_posix_utime_unix_parse_utimbuf32
+#elif defined(posix_lutime_USE_lutime64) || defined(posix_lutime_USE_wlutime64)
+#define posix_lutime_USED_struct_utimbuf       struct utimbuf64
+#define posix_lutime_USED_struct_utimbuf_parse posix_utime_unix_parse_utimbuf64
+#define NEED_posix_utime_unix_parse_utimbuf64
+#endif /* ... */
+#undef posix_lutime_USED_charT
+#undef posix_lutime_USED_DeeString_AsCharT
+#if defined(posix_lutime_USE_wlutime) || defined(posix_lutime_USE_wlutime32) || defined(posix_lutime_USE_wlutime64)
+#define posix_lutime_USED_charT             dwchar_t
+#define posix_lutime_USED_DeeString_AsCharT DeeString_AsWide
+#elif defined(posix_lutime_USE_lutime) || defined(posix_lutime_USE_lutime32) || defined(posix_lutime_USE_lutime64)
+#define posix_lutime_USED_charT             char
+#define posix_lutime_USED_DeeString_AsCharT DeeString_AsUtf8
+#endif /* ... */
+
+/* Define helper macros for `posix_futime()' */
+#undef posix_futime_USED_struct_utimbuf
+#undef posix_futime_USED_struct_utimbuf_parse
+#if defined(posix_futime_USE_futime) || defined(posix_futime_USE_wfutime)
+#define posix_futime_USED_struct_utimbuf       struct utimbuf
+#define posix_futime_USED_struct_utimbuf_parse posix_utime_unix_parse_utimbuf
+#define NEED_posix_utime_unix_parse_utimbuf
+#elif defined(posix_futime_USE_futime32) || defined(posix_futime_USE_wfutime32)
+#define posix_futime_USED_struct_utimbuf       struct utimbuf32
+#define posix_futime_USED_struct_utimbuf_parse posix_utime_unix_parse_utimbuf32
+#define NEED_posix_utime_unix_parse_utimbuf32
+#elif defined(posix_futime_USE_futime64) || defined(posix_futime_USE_wfutime64)
+#define posix_futime_USED_struct_utimbuf       struct utimbuf64
+#define posix_futime_USED_struct_utimbuf_parse posix_utime_unix_parse_utimbuf64
+#define NEED_posix_utime_unix_parse_utimbuf64
+#endif /* ... */
+
+
+/*[[[deemon import("rt.gen.dexutils").gw("utime", "path:?Dstring,atime:?Etime:Time=Dee_None,mtime:?Etime:Time=Dee_None,ctime:?Etime:Time=Dee_None,btime:?Etime:Time=Dee_None", libname: "posix"); ]]]*/
+FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_utime_f_impl(DeeObject *path, DeeObject *atime, DeeObject *mtime, DeeObject *ctime, DeeObject *btime);
+PRIVATE WUNUSED DREF DeeObject *DCALL posix_utime_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
+#define POSIX_UTIME_DEF { "utime", (DeeObject *)&posix_utime, MODSYM_FNORMAL, DOC("(path:?Dstring,atime:?Etime:Time=!N,mtime:?Etime:Time=!N,ctime:?Etime:Time=!N,btime:?Etime:Time=!N)") },
+#define POSIX_UTIME_DEF_DOC(doc) { "utime", (DeeObject *)&posix_utime, MODSYM_FNORMAL, DOC("(path:?Dstring,atime:?Etime:Time=!N,mtime:?Etime:Time=!N,ctime:?Etime:Time=!N,btime:?Etime:Time=!N)\n" doc) },
+PRIVATE DEFINE_KWCMETHOD(posix_utime, &posix_utime_f);
+#ifndef POSIX_KWDS_PATH_ATIME_MTIME_CTIME_BTIME_DEFINED
+#define POSIX_KWDS_PATH_ATIME_MTIME_CTIME_BTIME_DEFINED
+PRIVATE DEFINE_KWLIST(posix_kwds_path_atime_mtime_ctime_btime, { K(path), K(atime), K(mtime), K(ctime), K(btime), KEND });
+#endif /* !POSIX_KWDS_PATH_ATIME_MTIME_CTIME_BTIME_DEFINED */
+PRIVATE WUNUSED DREF DeeObject *DCALL posix_utime_f(size_t argc, DeeObject *const *argv, DeeObject *kw) {
+	DeeObject *path;
+	DeeObject *atime = Dee_None;
+	DeeObject *mtime = Dee_None;
+	DeeObject *ctime = Dee_None;
+	DeeObject *btime = Dee_None;
+	if (DeeArg_UnpackKw(argc, argv, kw, posix_kwds_path_atime_mtime_ctime_btime, "o|oooo:utime", &path, &atime, &mtime, &ctime, &btime))
+		goto err;
+	return posix_utime_f_impl(path, atime, mtime, ctime, btime);
+err:
+	return NULL;
+}
+FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_utime_f_impl(DeeObject *path, DeeObject *atime, DeeObject *mtime, DeeObject *ctime, DeeObject *btime)
+/*[[[end]]]*/
+{
+#ifdef posix_utime_USE_posix_readlink__AND__posix_lutime
+	DREF DeeObject *link_text;
+	/* Try to readlink() the given `path' to see if it's a symbolic link. */
+	link_text = posix_readlink_f_impl(path);
+	if (link_text) {
+		DREF DeeObject *parts[2], *full_path, *result;
+		parts[0] = posix_path_headof_f(path);
+		if unlikely(!parts[0])
+			goto err_link_text;
+		parts[1] = link_text;
+		full_path = posix_path_joinpath_f(2, parts);
+		Dee_Decref(parts[1]);
+		Dee_Decref(parts[0]);
+		if unlikely(!full_path)
+			goto err;
+		result = posix_lutime_f_impl(full_path, atime, mtime, ctime, btime);
+		Dee_Decref(full_path);
+		return result;
+	}
+	if (!DeeError_Catch(&DeeError_NoSymlink))
+		goto err;
+
+	/* Not a symbolic link -> lutime() will work to do what we want! */
+	return posix_lutime_f_impl(path, atime, mtime, ctime, btime);
+err_link_text:
+	Dee_Decref(link_text);
+err:
+	return NULL;
+#endif /* posix_utime_USE_posix_readlink__AND__posix_lutime */
+
+#ifdef posix_utime_USED_struct_utimbuf
+	int error;
+	posix_utime_USED_struct_utimbuf file_times;
+	posix_utime_USED_charT const *os_path;
+
+	/* Decode arguments. */
+	if (DeeObject_AssertTypeExact(path, &DeeString_Type))
+		goto err;
+	os_path = posix_utime_USED_DeeString_AsCharT(path);
+	if unlikely(!os_path)
+		goto err;
+
+	/* Load the utime-file_times argument. */
+	if unlikely(posix_utime_USED_struct_utimbuf_parse(&file_times, path,
+	                                                  atime, mtime,
+	                                                  ctime, btime, 0))
+		goto err;
+
+EINTR_ENOMEM_LABEL(again)
+	DBG_ALIGNMENT_DISABLE();
+#ifdef posix_utime_USE_wutime
+	error = wutime(os_path, &file_times);
+#endif /* posix_utime_USE_wutime */
+#ifdef posix_utime_USE_wutime32
+	error = wutime32(os_path, &file_times);
+#endif /* posix_utime_USE_wutime32 */
+#ifdef posix_utime_USE_wutime64
+	error = wutime64(os_path, &file_times);
+#endif /* posix_utime_USE_wutime64 */
+#ifdef posix_utime_USE_utime
+	error = utime(os_path, &file_times);
+#endif /* posix_utime_USE_utime */
+#ifdef posix_utime_USE_utime32
+	error = utime32(os_path, &file_times);
+#endif /* posix_utime_USE_utime32 */
+#ifdef posix_utime_USE_utime64
+	error = utime64(os_path, &file_times);
+#endif /* posix_utime_USE_utime64 */
+	DBG_ALIGNMENT_ENABLE();
+
+	if unlikely(error < 0) {
+		error = DeeSystem_GetErrno();
+		EINTR_HANDLE(error, again, err);
+		ENOMEM_HANDLE(error, again, err);
+		err_unix_utime(error, path, atime, mtime, ctime, btime);
+#define NEED_err_unix_utime
+		goto err;
+	}
+	return_none;
+err:
+	return NULL;
+#endif /* posix_utime_USED_struct_utimbuf */
+
+#ifdef posix_utime_USE_STUB
+	(void)path;
+	(void)atime;
+	(void)mtime;
+	(void)ctime;
+	(void)btime;
+	posix_err_unsupported("utime");
+#define NEED_posix_err_unsupported
+	return NULL;
+#endif /* posix_utime_USE_STUB */
+}
+
+
+
+/*[[[deemon import("rt.gen.dexutils").gw("lutime", "path:?Dstring,atime:?Etime:Time=Dee_None,mtime:?Etime:Time=Dee_None,ctime:?Etime:Time=Dee_None,btime:?Etime:Time=Dee_None", libname: "posix"); ]]]*/
+FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_lutime_f_impl(DeeObject *path, DeeObject *atime, DeeObject *mtime, DeeObject *ctime, DeeObject *btime);
+PRIVATE WUNUSED DREF DeeObject *DCALL posix_lutime_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
+#define POSIX_LUTIME_DEF { "lutime", (DeeObject *)&posix_lutime, MODSYM_FNORMAL, DOC("(path:?Dstring,atime:?Etime:Time=!N,mtime:?Etime:Time=!N,ctime:?Etime:Time=!N,btime:?Etime:Time=!N)") },
+#define POSIX_LUTIME_DEF_DOC(doc) { "lutime", (DeeObject *)&posix_lutime, MODSYM_FNORMAL, DOC("(path:?Dstring,atime:?Etime:Time=!N,mtime:?Etime:Time=!N,ctime:?Etime:Time=!N,btime:?Etime:Time=!N)\n" doc) },
+PRIVATE DEFINE_KWCMETHOD(posix_lutime, &posix_lutime_f);
+#ifndef POSIX_KWDS_PATH_ATIME_MTIME_CTIME_BTIME_DEFINED
+#define POSIX_KWDS_PATH_ATIME_MTIME_CTIME_BTIME_DEFINED
+PRIVATE DEFINE_KWLIST(posix_kwds_path_atime_mtime_ctime_btime, { K(path), K(atime), K(mtime), K(ctime), K(btime), KEND });
+#endif /* !POSIX_KWDS_PATH_ATIME_MTIME_CTIME_BTIME_DEFINED */
+PRIVATE WUNUSED DREF DeeObject *DCALL posix_lutime_f(size_t argc, DeeObject *const *argv, DeeObject *kw) {
+	DeeObject *path;
+	DeeObject *atime = Dee_None;
+	DeeObject *mtime = Dee_None;
+	DeeObject *ctime = Dee_None;
+	DeeObject *btime = Dee_None;
+	if (DeeArg_UnpackKw(argc, argv, kw, posix_kwds_path_atime_mtime_ctime_btime, "o|oooo:lutime", &path, &atime, &mtime, &ctime, &btime))
+		goto err;
+	return posix_lutime_f_impl(path, atime, mtime, ctime, btime);
+err:
+	return NULL;
+}
+FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_lutime_f_impl(DeeObject *path, DeeObject *atime, DeeObject *mtime, DeeObject *ctime, DeeObject *btime)
+/*[[[end]]]*/
+{
+#ifdef posix_lutime_USED_struct_utimbuf
+	int error;
+	posix_lutime_USED_struct_utimbuf file_times;
+	posix_lutime_USED_charT const *os_path;
+
+	/* Decode arguments. */
+	if (DeeObject_AssertTypeExact(path, &DeeString_Type))
+		goto err;
+	os_path = posix_lutime_USED_DeeString_AsCharT(path);
+	if unlikely(!os_path)
+		goto err;
+
+	/* Load the lutime-file_times argument. */
+	if unlikely(posix_lutime_USED_struct_utimbuf_parse(&file_times, path,
+	                                                   atime, mtime,
+	                                                   ctime, btime,
+	                                                   DEE_STAT_F_LSTAT))
+		goto err;
+
+EINTR_ENOMEM_LABEL(again)
+	DBG_ALIGNMENT_DISABLE();
+#ifdef posix_lutime_USE_wlutime
+	error = wlutime(os_path, &file_times);
+#endif /* posix_lutime_USE_wlutime */
+#ifdef posix_lutime_USE_wlutime32
+	error = wlutime32(os_path, &file_times);
+#endif /* posix_lutime_USE_wlutime32 */
+#ifdef posix_lutime_USE_wlutime64
+	error = wlutime64(os_path, &file_times);
+#endif /* posix_lutime_USE_wlutime64 */
+#ifdef posix_lutime_USE_lutime
+	error = lutime(os_path, &file_times);
+#endif /* posix_lutime_USE_lutime */
+#ifdef posix_lutime_USE_lutime32
+	error = lutime32(os_path, &file_times);
+#endif /* posix_lutime_USE_lutime32 */
+#ifdef posix_lutime_USE_lutime64
+	error = lutime64(os_path, &file_times);
+#endif /* posix_lutime_USE_lutime64 */
+	DBG_ALIGNMENT_ENABLE();
+
+	if unlikely(error < 0) {
+		error = DeeSystem_GetErrno();
+		EINTR_HANDLE(error, again, err);
+		ENOMEM_HANDLE(error, again, err);
+		err_unix_lutime(error, path, atime, mtime, ctime, btime);
+#define NEED_err_unix_lutime
+		goto err;
+	}
+	return_none;
+err:
+	return NULL;
+#endif /* posix_lutime_USED_struct_utimbuf */
+
+#ifdef posix_lutime_USE_STUB
+	(void)path;
+	(void)atime;
+	(void)mtime;
+	(void)ctime;
+	(void)btime;
+	posix_err_unsupported("lutime");
+#define NEED_posix_err_unsupported
+	return NULL;
+#endif /* posix_lutime_USE_STUB */
+}
+
+
+
+/*[[[deemon import("rt.gen.dexutils").gw("futime", "fd:?X2?Dint?DFile,atime:?Etime:Time=Dee_None,mtime:?Etime:Time=Dee_None,ctime:?Etime:Time=Dee_None,btime:?Etime:Time=Dee_None", libname: "posix"); ]]]*/
+FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_futime_f_impl(DeeObject *fd, DeeObject *atime, DeeObject *mtime, DeeObject *ctime, DeeObject *btime);
+PRIVATE WUNUSED DREF DeeObject *DCALL posix_futime_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
+#define POSIX_FUTIME_DEF { "futime", (DeeObject *)&posix_futime, MODSYM_FNORMAL, DOC("(fd:?X2?Dint?DFile,atime:?Etime:Time=!N,mtime:?Etime:Time=!N,ctime:?Etime:Time=!N,btime:?Etime:Time=!N)") },
+#define POSIX_FUTIME_DEF_DOC(doc) { "futime", (DeeObject *)&posix_futime, MODSYM_FNORMAL, DOC("(fd:?X2?Dint?DFile,atime:?Etime:Time=!N,mtime:?Etime:Time=!N,ctime:?Etime:Time=!N,btime:?Etime:Time=!N)\n" doc) },
+PRIVATE DEFINE_KWCMETHOD(posix_futime, &posix_futime_f);
+#ifndef POSIX_KWDS_FD_ATIME_MTIME_CTIME_BTIME_DEFINED
+#define POSIX_KWDS_FD_ATIME_MTIME_CTIME_BTIME_DEFINED
+PRIVATE DEFINE_KWLIST(posix_kwds_fd_atime_mtime_ctime_btime, { K(fd), K(atime), K(mtime), K(ctime), K(btime), KEND });
+#endif /* !POSIX_KWDS_FD_ATIME_MTIME_CTIME_BTIME_DEFINED */
+PRIVATE WUNUSED DREF DeeObject *DCALL posix_futime_f(size_t argc, DeeObject *const *argv, DeeObject *kw) {
+	DeeObject *fd;
+	DeeObject *atime = Dee_None;
+	DeeObject *mtime = Dee_None;
+	DeeObject *ctime = Dee_None;
+	DeeObject *btime = Dee_None;
+	if (DeeArg_UnpackKw(argc, argv, kw, posix_kwds_fd_atime_mtime_ctime_btime, "o|oooo:futime", &fd, &atime, &mtime, &ctime, &btime))
+		goto err;
+	return posix_futime_f_impl(fd, atime, mtime, ctime, btime);
+err:
+	return NULL;
+}
+FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_futime_f_impl(DeeObject *fd, DeeObject *atime, DeeObject *mtime, DeeObject *ctime, DeeObject *btime)
+/*[[[end]]]*/
+{
+#ifdef posix_futime_USED_struct_utimbuf
+	int error;
+	int os_fd;
+	posix_futime_USED_struct_utimbuf file_times;
+
+	/* Decode arguments. */
+	os_fd = DeeUnixSystem_GetFD(fd);
+	if unlikely(os_fd == -1)
+		goto err;
+
+	/* Load the futime-file_times argument. */
+	if unlikely(posix_futime_USED_struct_utimbuf_parse(&file_times, fd,
+	                                                   atime, mtime,
+	                                                   ctime, btime, 0))
+		goto err;
+
+EINTR_ENOMEM_LABEL(again)
+	DBG_ALIGNMENT_DISABLE();
+#ifdef posix_futime_USE_futime
+	error = futime(os_fd, &file_times);
+#endif /* posix_futime_USE_futime */
+#ifdef posix_futime_USE_futime32
+	error = futime32(os_fd, &file_times);
+#endif /* posix_futime_USE_futime32 */
+#ifdef posix_futime_USE_futime64
+	error = futime64(os_fd, &file_times);
+#endif /* posix_futime_USE_futime64 */
+	DBG_ALIGNMENT_ENABLE();
+
+	if unlikely(error < 0) {
+		error = DeeSystem_GetErrno();
+		EINTR_HANDLE(error, again, err);
+		ENOMEM_HANDLE(error, again, err);
+		err_unix_futime(error, fd, atime, mtime, ctime, btime);
+#define NEED_err_unix_futime
+		goto err;
+	}
+	return_none;
+err:
+	return NULL;
+#endif /* posix_futime_USED_struct_utimbuf */
+
+#if defined(posix_futime_USE_posix_lutime) || defined(posix_futime_USE_posix_utime)
+	DREF DeeObject *result;
+	DREF DeeObject *abspath;
+	abspath = posix_fd_makepath(fd);
+#define NEED_posix_fd_makepath
+	if unlikely(!abspath)
+		goto err;
+#ifdef posix_futime_USE_posix_lutime
+	result = posix_lutime_f_impl(abspath, atime, mtime, ctime, btime);
+#else /* posix_futime_USE_posix_lutime */
+	result = posix_utime_f_impl(abspath, atime, mtime, ctime, btime);
+#endif /* !posix_futime_USE_posix_lutime */
+	Dee_Decref(abspath);
+	return result;
+err:
+	return NULL;
+#endif /* posix_futime_USE_posix_lutime || posix_futime_USE_posix_utime */
+
+#ifdef posix_futime_USE_STUB
+	(void)fd;
+	(void)atime;
+	(void)mtime;
+	(void)ctime;
+	(void)btime;
+	posix_err_unsupported("futime");
+#define NEED_posix_err_unsupported
+	return NULL;
+#endif /* posix_futime_USE_STUB */
+}
+
+
+
+/*[[[deemon import("rt.gen.dexutils").gw("futimeat", "dfd:?X3?DFile?Dint?Dstring,path:?Dstring,atime:?Etime:Time=Dee_None,mtime:?Etime:Time=Dee_None,ctime:?Etime:Time=Dee_None,btime:?Etime:Time=Dee_None,atflags:u=0", libname: "posix"); ]]]*/
+FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_futimeat_f_impl(DeeObject *dfd, DeeObject *path, DeeObject *atime, DeeObject *mtime, DeeObject *ctime, DeeObject *btime, unsigned int atflags);
+PRIVATE WUNUSED DREF DeeObject *DCALL posix_futimeat_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
+#define POSIX_FUTIMEAT_DEF { "futimeat", (DeeObject *)&posix_futimeat, MODSYM_FNORMAL, DOC("(dfd:?X3?DFile?Dint?Dstring,path:?Dstring,atime:?Etime:Time=!N,mtime:?Etime:Time=!N,ctime:?Etime:Time=!N,btime:?Etime:Time=!N,atflags:?Dint=!0)") },
+#define POSIX_FUTIMEAT_DEF_DOC(doc) { "futimeat", (DeeObject *)&posix_futimeat, MODSYM_FNORMAL, DOC("(dfd:?X3?DFile?Dint?Dstring,path:?Dstring,atime:?Etime:Time=!N,mtime:?Etime:Time=!N,ctime:?Etime:Time=!N,btime:?Etime:Time=!N,atflags:?Dint=!0)\n" doc) },
+PRIVATE DEFINE_KWCMETHOD(posix_futimeat, &posix_futimeat_f);
+#ifndef POSIX_KWDS_DFD_PATH_ATIME_MTIME_CTIME_BTIME_ATFLAGS_DEFINED
+#define POSIX_KWDS_DFD_PATH_ATIME_MTIME_CTIME_BTIME_ATFLAGS_DEFINED
+PRIVATE DEFINE_KWLIST(posix_kwds_dfd_path_atime_mtime_ctime_btime_atflags, { K(dfd), K(path), K(atime), K(mtime), K(ctime), K(btime), K(atflags), KEND });
+#endif /* !POSIX_KWDS_DFD_PATH_ATIME_MTIME_CTIME_BTIME_ATFLAGS_DEFINED */
+PRIVATE WUNUSED DREF DeeObject *DCALL posix_futimeat_f(size_t argc, DeeObject *const *argv, DeeObject *kw) {
+	DeeObject *dfd;
+	DeeObject *path;
+	DeeObject *atime = Dee_None;
+	DeeObject *mtime = Dee_None;
+	DeeObject *ctime = Dee_None;
+	DeeObject *btime = Dee_None;
+	unsigned int atflags = 0;
+	if (DeeArg_UnpackKw(argc, argv, kw, posix_kwds_dfd_path_atime_mtime_ctime_btime_atflags, "oo|oooou:futimeat", &dfd, &path, &atime, &mtime, &ctime, &btime, &atflags))
+		goto err;
+	return posix_futimeat_f_impl(dfd, path, atime, mtime, ctime, btime, atflags);
+err:
+	return NULL;
+}
+FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_futimeat_f_impl(DeeObject *dfd, DeeObject *path, DeeObject *atime, DeeObject *mtime, DeeObject *ctime, DeeObject *btime, unsigned int atflags)
+/*[[[end]]]*/
+{
+#if defined(posix_futimeat_USE_posix_utime) || defined(posix_futimeat_USE_posix_lutime)
+	DREF DeeObject *result, *abspath;
+#ifdef posix_futimeat_USE_posix_futime
+	if (atflags & AT_EMPTY_PATH) {
+		if (!DeeString_Check(dfd) &&
+		    (DeeNone_Check(path) || (DeeString_Check(path) &&
+		                             DeeString_IsEmpty(path))))
+			return posix_futime_f_impl(dfd, atime, mtime, ctime, btime);
+		atflags &= ~AT_EMPTY_PATH;
+	}
+#endif /* posix_futimeat_USE_posix_futime */
+
+#ifdef posix_futimeat_USE_posix_lutime
+	abspath = posix_dfd_makepath(dfd, path, atflags & ~AT_SYMLINK_NOFOLLOW);
+#else /* posix_futimeat_USE_posix_lutime */
+	abspath = posix_dfd_makepath(dfd, path, atflags);
+#endif /* !posix_futimeat_USE_posix_lutime */
+	if unlikely(!abspath)
+		goto err;
+#ifdef posix_futimeat_USE_posix_lutime
+	if (atflags & AT_SYMLINK_NOFOLLOW) {
+		result = posix_lutime_f_impl(abspath, atime, mtime, ctime, btime);
+	} else
+#endif /* posix_futimeat_USE_posix_lutime */
+	{
+#ifdef posix_futimeat_USE_posix_utime
+		result = posix_utime_f_impl(abspath, atime, mtime, ctime, btime);
+#else /* posix_futimeat_USE_posix_utime */
+		Dee_Decref(abspath);
+		err_bad_atflags(atflags);
+#define NEED_err_bad_atflags
+		goto err;
+#endif /* !posix_futimeat_USE_posix_utime */
+	}
+	Dee_Decref(abspath);
+	return result;
+err:
+	return NULL;
+#endif /* posix_futimeat_USE_posix_utime || posix_futimeat_USE_posix_lutime */
+
+#ifdef posix_futimeat_USE_STUB
+	(void)dfd;
+	(void)path;
+	(void)atime;
+	(void)mtime;
+	(void)ctime;
+	(void)btime;
+	(void)atflags;
+	posix_err_unsupported("futimeat");
+#define NEED_posix_err_unsupported
+	return NULL;
+#endif /* posix_futimeat_USE_STUB */
+}
+
+
+DECL_END
+
+#endif /* !GUARD_DEX_POSIX_P_UTIME_C_INL */

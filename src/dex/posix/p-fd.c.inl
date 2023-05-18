@@ -68,9 +68,9 @@ print "/" "**" "/";
 #undef posix_isatty_USE_STUB
 #ifdef CONFIG_HAVE_isatty
 #define posix_isatty_USE_isatty
-#else /* CONFIG_HAVE_isatty2 */
+#else /* CONFIG_HAVE_isatty */
 #define posix_isatty_USE_STUB
-#endif /* !CONFIG_HAVE_isatty2 */
+#endif /* !CONFIG_HAVE_isatty */
 
 
 
@@ -79,9 +79,9 @@ print "/" "**" "/";
 #undef posix_umask_USE_STUB
 #ifdef CONFIG_HAVE_umask
 #define posix_umask_USE_umask
-#else /* CONFIG_HAVE_umask2 */
+#else /* CONFIG_HAVE_umask */
 #define posix_umask_USE_STUB
-#endif /* !CONFIG_HAVE_umask2 */
+#endif /* !CONFIG_HAVE_umask */
 
 
 

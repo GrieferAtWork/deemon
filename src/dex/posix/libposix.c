@@ -49,6 +49,7 @@
 #include "p-symlink.c.inl"
 #include "p-sync.c.inl"
 #include "p-truncate.c.inl"
+#include "p-utime.c.inl"
 
 /**/
 #include "p-pwd.c.inl" /* This one has to come after "p-environ.c.inl" */
@@ -65,6 +66,7 @@
 #include <deemon/seq.h>
 #include <deemon/set.h>
 #include <deemon/string.h>
+#include <deemon/system-features.h>
 
 
 DECL_BEGIN
@@ -133,6 +135,10 @@ local ALL_STUBS = {
 	("posix_lchmod_USE_STUB",       { "lchmod" }),
 	("posix_fchmod_USE_STUB",       { "fchmod" }),
 	("posix_fchmodat_USE_STUB",     { "fchmodat" }),
+	("posix_utime_USE_STUB",        { "utime" }),
+	("posix_lutime_USE_STUB",       { "lutime" }),
+	("posix_futime_USE_STUB",       { "futime" }),
+	("posix_futimeat_USE_STUB",     { "futimeat" }),
 	("posix_chown_USE_STUB",        { "chown" }),
 	("posix_lchown_USE_STUB",       { "lchown" }),
 	("posix_fchown_USE_STUB",       { "fchown" }),
@@ -650,6 +656,20 @@ print("#endif /" "* POSIX_STUBS_TOTLEN == 0 *" "/");
 #define len_posix_ftruncateat_USE_STUB /* nothing */
 #define str_posix_ftruncateat_USE_STUB /* nothing */
 #endif /* !posix_ftruncateat_USE_STUB */
+#ifdef posix_futime_USE_STUB
+#define len_posix_futime_USE_STUB +7
+#define str_posix_futime_USE_STUB 'f', 'u', 't', 'i', 'm', 'e', '\0',
+#else /* posix_futime_USE_STUB */
+#define len_posix_futime_USE_STUB /* nothing */
+#define str_posix_futime_USE_STUB /* nothing */
+#endif /* !posix_futime_USE_STUB */
+#ifdef posix_futimeat_USE_STUB
+#define len_posix_futimeat_USE_STUB +9
+#define str_posix_futimeat_USE_STUB 'f', 'u', 't', 'i', 'm', 'e', 'a', 't', '\0',
+#else /* posix_futimeat_USE_STUB */
+#define len_posix_futimeat_USE_STUB /* nothing */
+#define str_posix_futimeat_USE_STUB /* nothing */
+#endif /* !posix_futimeat_USE_STUB */
 #ifdef posix_getenv_USE_STUB
 #define len_posix_getenv_USE_STUB +7
 #define str_posix_getenv_USE_STUB 'g', 'e', 't', 'e', 'n', 'v', '\0',
@@ -727,6 +747,13 @@ print("#endif /" "* POSIX_STUBS_TOTLEN == 0 *" "/");
 #define len_posix_lstat_USE_STUB /* nothing */
 #define str_posix_lstat_USE_STUB /* nothing */
 #endif /* !posix_lstat_USE_STUB */
+#ifdef posix_lutime_USE_STUB
+#define len_posix_lutime_USE_STUB +7
+#define str_posix_lutime_USE_STUB 'l', 'u', 't', 'i', 'm', 'e', '\0',
+#else /* posix_lutime_USE_STUB */
+#define len_posix_lutime_USE_STUB /* nothing */
+#define str_posix_lutime_USE_STUB /* nothing */
+#endif /* !posix_lutime_USE_STUB */
 #ifdef posix_mkdir_USE_STUB
 #define len_posix_mkdir_USE_STUB +6
 #define str_posix_mkdir_USE_STUB 'm', 'k', 'd', 'i', 'r', '\0',
@@ -1105,6 +1132,13 @@ print("#endif /" "* POSIX_STUBS_TOTLEN == 0 *" "/");
 #define len_posix_unsetenv_USE_STUB /* nothing */
 #define str_posix_unsetenv_USE_STUB /* nothing */
 #endif /* !posix_unsetenv_USE_STUB */
+#ifdef posix_utime_USE_STUB
+#define len_posix_utime_USE_STUB +6
+#define str_posix_utime_USE_STUB 'u', 't', 'i', 'm', 'e', '\0',
+#else /* posix_utime_USE_STUB */
+#define len_posix_utime_USE_STUB /* nothing */
+#define str_posix_utime_USE_STUB /* nothing */
+#endif /* !posix_utime_USE_STUB */
 #ifdef posix_write_USE_STUB
 #define len_posix_write_USE_STUB +6
 #define str_posix_write_USE_STUB 'w', 'r', 'i', 't', 'e', '\0',
@@ -1179,6 +1213,8 @@ print("#endif /" "* POSIX_STUBS_TOTLEN == 0 *" "/");
 	len_posix_fsync_USE_STUB \
 	len_posix_ftruncate_USE_STUB \
 	len_posix_ftruncateat_USE_STUB \
+	len_posix_futime_USE_STUB \
+	len_posix_futimeat_USE_STUB \
 	len_posix_getenv_USE_STUB \
 	len_posix_gethostname_USE_STUB \
 	len_posix_getpid_USE_STUB \
@@ -1190,6 +1226,7 @@ print("#endif /" "* POSIX_STUBS_TOTLEN == 0 *" "/");
 	len_posix_linkat_USE_STUB \
 	len_posix_lseek_USE_STUB \
 	len_posix_lstat_USE_STUB \
+	len_posix_lutime_USE_STUB \
 	len_posix_mkdir_USE_STUB \
 	len_posix_mkdirat_USE_STUB \
 	len_posix_open_USE_STUB \
@@ -1244,6 +1281,7 @@ print("#endif /" "* POSIX_STUBS_TOTLEN == 0 *" "/");
 	len_posix_unlink_USE_STUB \
 	len_posix_unlinkat_USE_STUB \
 	len_posix_unsetenv_USE_STUB \
+	len_posix_utime_USE_STUB \
 	len_posix_write_USE_STUB \
 	len_stat_class_isexe_IS_STUB \
 	len_stat_class_ishidden_IS_STUB \
@@ -1313,6 +1351,8 @@ PRIVATE struct {
 		str_posix_fsync_USE_STUB
 		str_posix_ftruncate_USE_STUB
 		str_posix_ftruncateat_USE_STUB
+		str_posix_futime_USE_STUB
+		str_posix_futimeat_USE_STUB
 		str_posix_getenv_USE_STUB
 		str_posix_gethostname_USE_STUB
 		str_posix_getpid_USE_STUB
@@ -1324,6 +1364,7 @@ PRIVATE struct {
 		str_posix_linkat_USE_STUB
 		str_posix_lseek_USE_STUB
 		str_posix_lstat_USE_STUB
+		str_posix_lutime_USE_STUB
 		str_posix_mkdir_USE_STUB
 		str_posix_mkdirat_USE_STUB
 		str_posix_open_USE_STUB
@@ -1378,6 +1419,7 @@ PRIVATE struct {
 		str_posix_unlink_USE_STUB
 		str_posix_unlinkat_USE_STUB
 		str_posix_unsetenv_USE_STUB
+		str_posix_utime_USE_STUB
 		str_posix_write_USE_STUB
 		str_stat_class_isexe_IS_STUB
 		str_stat_class_ishidden_IS_STUB
@@ -1710,7 +1752,7 @@ PRIVATE struct dex_symbol symbols[] = {
 	/* TODO: fsetxattr() */
 	/* TODO: removexattr() */
 	/* TODO: lremovexattr() */
-	/* TODO: flremovexattr() */
+	/* TODO: fremovexattr() */
 	/* TODO: listxattr() */
 	/* TODO: llistxattr() */
 	/* TODO: flistxattr() */
@@ -1795,24 +1837,24 @@ PRIVATE struct dex_symbol symbols[] = {
 	/* TODO: WSTOPSIG() */
 
 	/* User/Permission control */
-	/* TODO: geteuid() */
+	/* TODO: geteuid() */ /* nt: GetTokenInformation(OpenProcessToken(), TokenOwner) */
 	/* TODO: seteuid() */
-	/* TODO: getegid() */
+	/* TODO: getegid() */ /* nt: GetTokenInformation(OpenProcessToken(), TokenPrimaryGroup) */
 	/* TODO: setegid() */
-	/* TODO: getgid() */
-	/* TODO: setgid() */
-	/* TODO: getuid() */
+	/* TODO: getuid() */ /* nt: LookupAccountName(GetUserName()) */
 	/* TODO: setuid() */
+	/* TODO: getgid() */ /* ??? */
+	/* TODO: setgid() */
 	/* TODO: setreuid() */
 	/* TODO: setregid() */
-	/* TODO: getgrouplist() */
-	/* TODO: getgroups() */
-	/* TODO: setgroups() */
-	/* TODO: initgroups() */
 	/* TODO: setresuid() */
 	/* TODO: setresgid() */
 	/* TODO: getresuid() */
 	/* TODO: getresgid() */
+	/* TODO: getgrouplist() */
+	/* TODO: getgroups() */ /* nt: GetTokenInformation(OpenProcessToken(), TokenGroups) */
+	/* TODO: setgroups() */
+	/* TODO: initgroups() */
 
 	/* Random number generation */
 	/* TODO: urandom() */
@@ -2346,6 +2388,44 @@ PRIVATE struct dex_symbol symbols[] = {
 	D(POSIX_FCHMOD_DEF_DOC("@throw FileClosed The given file @fd was closed\n"
 	                       "Same as ?Glchmod, but change permissions of @fd"))
 	D(POSIX_FCHMODAT_DEF_DOC("@param atflags Set of $0, ?GAT_SYMLINK_NOFOLLOW, ?GAT_EMPTY_PATH\n"
+	                         "Combination of ?Glchmod, ?Glchmod, and ?Gfchmod, changing permissions of @dfd:@path"))
+
+	/* utime(2) */
+	D(POSIX_UTIME_DEF_DOC("@interrupt\n"
+	                      "@throw FileNotFound The given @path could not be found\n"
+	                      "@throw NoDirectory A part of the given @path is not a directory\n"
+	                      "@throw FileAccessError The current user does not have permissions "
+	                      /*                  */ "to change the mode of the given file @path\n"
+	                      "@throw ReadOnlyFile The filesystem or device hosting the file found under "
+	                      /*               */ "@path is in read-only operations mode, preventing the "
+	                      /*               */ "file's mode from being changed\n"
+	                      "@throw SystemError Failed to change timestamps for some reason\n"
+	                      "@throw ValueError The given @mode is malformed or not recognized\n"
+	                      "@param atime The new last-accessed timestamp to set, or !N to leave unchanged (s.a. ?Ast_atime?Gstat)\n"
+	                      "@param mtime The new last-modified timestamp to set, or !N to leave unchanged (s.a. ?Ast_mtime?Gstat)\n"
+	                      "@param ctime The new last-attribute-changed timestamp to set, or !N to leave unchanged (s.a. ?Ast_ctime?Gstat)\n"
+	                      "@param btime The new birth timestamp to set, or !N to leave unchanged (s.a. ?Ast_btime?Gstat)\n"
+	                      "Change the timestamps associated with a given @path"))
+	D(POSIX_LUTIME_DEF_DOC("@interrupt\n"
+	                       "@throw FileNotFound The given @path could not be found\n"
+	                       "@throw NoDirectory A part of the given @path is not a directory\n"
+	                       "@throw FileAccessError The current user does not have permissions "
+	                       /*                  */ "to change the mode of the given file @path\n"
+	                       "@throw ReadOnlyFile The filesystem or device hosting the file found under "
+	                       /*               */ "@path is in read-only operations mode, preventing the "
+	                       /*               */ "file's mode from being changed\n"
+	                       "@throw SystemError Failed to change timestamps for some reason\n"
+	                       "@throw ValueError The given @mode is malformed or not recognized\n"
+	                       "@param atime The new last-accessed timestamp to set, or !N to leave unchanged (s.a. ?Ast_atime?Gstat)\n"
+	                       "@param mtime The new last-modified timestamp to set, or !N to leave unchanged (s.a. ?Ast_mtime?Gstat)\n"
+	                       "@param ctime The new last-attribute-changed timestamp to set, or !N to leave unchanged (s.a. ?Ast_ctime?Gstat)\n"
+	                       "@param btime The new birth timestamp to set, or !N to leave unchanged (s.a. ?Ast_btime?Gstat)\n"
+	                       "Change the timestamps associated with a given @path\n"
+	                       "If @path refers to a symbolic link, change the timestamps "
+	                       /**/ "of that link, rather than those of the pointed-to file"))
+	D(POSIX_FUTIME_DEF_DOC("@throw FileClosed The given file @fd was closed\n"
+	                       "Same as ?Glchmod, but change permissions of @fd"))
+	D(POSIX_FUTIMEAT_DEF_DOC("@param atflags Set of $0, ?GAT_SYMLINK_NOFOLLOW, ?GAT_EMPTY_PATH\n"
 	                         "Combination of ?Glchmod, ?Glchmod, and ?Gfchmod, changing permissions of @dfd:@path"))
 
 	/* chown(2) */

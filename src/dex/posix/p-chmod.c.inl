@@ -93,8 +93,8 @@ for (local f: functions) {
 #undef posix_chmod_USE_chmod
 #undef posix_chmod_USE_wopen_AND_fchmod
 #undef posix_chmod_USE_open_AND_fchmod
-#undef posix_chmod_USE_STUB
 #undef posix_chmod_USE_posix_readlink__AND__posix_lchmod
+#undef posix_chmod_USE_STUB
 #if defined(CONFIG_HAVE_wchmod) && defined(CONFIG_PREFER_WCHAR_FUNCTIONS)
 #define posix_chmod_USE_wchmod
 #elif defined(CONFIG_HAVE_chmod)
@@ -139,10 +139,14 @@ for (local f: functions) {
  * >> chmod(path, mode);
  * As:
  * >> lchmod(try joinpath(headof(path), readlink(path)) catch (NoSymlink) path, mode); */
-#if defined(posix_chmod_USE_STUB) && !defined(posix_lchmod_USE_STUB) && !defined(posix_readlink_USE_STUB)
+#if ((defined(posix_chmod_USE_STUB) || defined(posix_chmod_USE_open_AND_fchmod) || \
+      defined(posix_chmod_USE_wopen_AND_fchmod)) &&                                \
+     (!defined(posix_lchmod_USE_STUB) && !defined(posix_readlink_USE_STUB)))
 #undef posix_chmod_USE_STUB
+#undef posix_chmod_USE_open_AND_fchmod
+#undef posix_chmod_USE_wopen_AND_fchmod
 #define posix_chmod_USE_posix_readlink__AND__posix_lchmod
-#endif /* posix_chmod_USE_STUB && !posix_lchmod_USE_STUB && !posix_readlink_USE_STUB */
+#endif /* ... */
 
 
 
@@ -233,7 +237,7 @@ PRIVATE int DCALL dee_chmod(wchar_t const *filename, int mode) {
 #define wlchmod dee_wlchmod
 PRIVATE int DCALL dee_wlchmod(wchar_t const *filename, int mode) {
 	int result;
-	result = wopen(filename, O_RDWR);
+	result = wopen(filename, O_RDWR | O_NOFOLLOW);
 	if (result != -1) {
 		int error;
 		error = fchmod(result, mode);
@@ -251,7 +255,7 @@ PRIVATE int DCALL dee_wlchmod(wchar_t const *filename, int mode) {
 #define lchmod dee_lchmod
 PRIVATE int DCALL dee_lchmod(wchar_t const *filename, int mode) {
 	int result;
-	result = open(filename, O_RDWR);
+	result = open(filename, O_RDWR | O_NOFOLLOW);
 	if (result != -1) {
 		int error;
 		error = fchmod(result, mode);

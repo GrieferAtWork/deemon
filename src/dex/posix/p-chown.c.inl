@@ -98,8 +98,8 @@ for (local f: functions) {
 #undef posix_chown_USE_chown
 #undef posix_chown_USE_wopen_AND_fchown
 #undef posix_chown_USE_open_AND_fchown
-#undef posix_chown_USE_STUB
 #undef posix_chown_USE_posix_readlink__AND__posix_lchown
+#undef posix_chown_USE_STUB
 #if defined(CONFIG_HAVE_wchown) && defined(CONFIG_PREFER_WCHAR_FUNCTIONS)
 #define posix_chown_USE_wchown
 #elif defined(CONFIG_HAVE_chown)
@@ -147,10 +147,14 @@ for (local f: functions) {
  * >> chown(path, uid, gid);
  * As:
  * >> lchown(try joinpath(headof(path), readlink(path)) catch (NoSymlink) path, uid, gid); */
-#if defined(posix_chown_USE_STUB) && !defined(posix_lchown_USE_STUB) && !defined(posix_readlink_USE_STUB)
+#if ((defined(posix_chown_USE_STUB) || defined(posix_chown_USE_open_AND_fchown) || \
+      defined(posix_chown_USE_wopen_AND_fchown)) &&                                \
+     (!defined(posix_lchown_USE_STUB) && !defined(posix_readlink_USE_STUB)))
 #undef posix_chown_USE_STUB
+#undef posix_chown_USE_open_AND_fchown
+#undef posix_chown_USE_wopen_AND_fchown
 #define posix_chown_USE_posix_readlink__AND__posix_lchown
-#endif /* posix_chown_USE_STUB && !posix_lchown_USE_STUB && !posix_readlink_USE_STUB */
+#endif /* ... */
 
 
 
@@ -244,7 +248,7 @@ PRIVATE int DCALL dee_chown(wchar_t const *filename, uid_t uid, gid_t gid) {
 #define wlchown dee_wlchown
 PRIVATE int DCALL dee_wlchown(wchar_t const *filename, uid_t uid, gid_t gid) {
 	int result;
-	result = wopen(filename, O_RDWR);
+	result = wopen(filename, O_RDWR | O_NOFOLLOW);
 	if (result != -1) {
 		int error;
 		error = fchown(result, uid, gid);
@@ -262,7 +266,7 @@ PRIVATE int DCALL dee_wlchown(wchar_t const *filename, uid_t uid, gid_t gid) {
 #define lchown dee_lchown
 PRIVATE int DCALL dee_lchown(wchar_t const *filename, uid_t uid, gid_t gid) {
 	int result;
-	result = open(filename, O_RDWR);
+	result = open(filename, O_RDWR | O_NOFOLLOW);
 	if (result != -1) {
 		int error;
 		error = fchown(result, uid, gid);

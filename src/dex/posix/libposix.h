@@ -567,6 +567,36 @@ posix_chown_unix_parsegid(DeeObject *__restrict gid,
                           gid_t *__restrict p_result);
 
 
+/* For utime() implementations using `utime(2)' */
+struct utimbuf;
+struct utimbuf32;
+struct utimbuf64;
+INTDEF WUNUSED NONNULL((1, 2, 3, 4, 5, 6)) int DCALL
+posix_utime_unix_parse_utimbuf(struct utimbuf *__restrict p_result,
+                               DeeObject *path_or_fd,
+                               DeeObject *atime, DeeObject *mtime,
+                               DeeObject *ctime, DeeObject *btime,
+                               unsigned int stat_flags);
+INTDEF WUNUSED NONNULL((1, 2, 3, 4, 5, 6)) int DCALL
+posix_utime_unix_parse_utimbuf32(struct utimbuf32 *__restrict p_result,
+                                 DeeObject *path_or_fd,
+                                 DeeObject *atime, DeeObject *mtime,
+                                 DeeObject *ctime, DeeObject *btime,
+                                 unsigned int stat_flags);
+INTDEF WUNUSED NONNULL((1, 2, 3, 4, 5, 6)) int DCALL
+posix_utime_unix_parse_utimbuf64(struct utimbuf64 *__restrict p_result,
+                                 DeeObject *path_or_fd,
+                                 DeeObject *atime, DeeObject *mtime,
+                                 DeeObject *ctime, DeeObject *btime,
+                                 unsigned int stat_flags);
+INTDEF WUNUSED NONNULL((1, 2, 3, 4, 5)) int DCALL
+posix_utime_unix_parse_utimbuf_common(int64_t *__restrict p_actime,
+                                      int64_t *__restrict p_modtime,
+                                      DeeObject *atime, DeeObject *mtime,
+                                      DeeObject *path_or_fd,
+                                      unsigned int stat_flags);
+
+
 /* Default buffer size for copyfile */
 #ifndef POSIX_COPYFILE_DEFAULT_IO_BUFSIZE
 #define POSIX_COPYFILE_DEFAULT_IO_BUFSIZE (64 * 1024) /* 64K */
@@ -609,6 +639,10 @@ INTDEF ATTR_COLD NONNULL((2)) int DCALL err_unix_fchmod(int errno_value, DeeObje
 INTDEF ATTR_COLD NONNULL((2)) int DCALL err_unix_chown(int errno_value, DeeObject *path, uid_t uid, gid_t gid);
 INTDEF ATTR_COLD NONNULL((2)) int DCALL err_unix_lchown(int errno_value, DeeObject *path, uid_t uid, gid_t gid);
 INTDEF ATTR_COLD NONNULL((2)) int DCALL err_unix_fchown(int errno_value, DeeObject *fd, uid_t uid, gid_t gid);
+INTDEF ATTR_COLD NONNULL((2, 3, 4, 5, 6)) int DCALL err_unix_utime(int errno_value, DeeObject *path, DeeObject *atime, DeeObject *mtime, DeeObject *ctime, DeeObject *btime);
+INTDEF ATTR_COLD NONNULL((2, 3, 4, 5, 6)) int DCALL err_unix_lutime(int errno_value, DeeObject *path, DeeObject *atime, DeeObject *mtime, DeeObject *ctime, DeeObject *btime);
+INTDEF ATTR_COLD NONNULL((2, 3, 4, 5, 6)) int DCALL err_unix_futime(int errno_value, DeeObject *fd, DeeObject *atime, DeeObject *mtime, DeeObject *ctime, DeeObject *btime);
+INTDEF ATTR_COLD NONNULL((1, 2, 3)) int DCALL err_unix_utime_cannot_set_ctime_or_btime(DeeObject *path_or_fd, DeeObject *ctime, DeeObject *btime);
 
 INTDEF ATTR_COLD NONNULL((2)) int DCALL err_unix_remove_unsupported(int errno_value, DeeObject *__restrict path);
 INTDEF ATTR_COLD NONNULL((2)) int DCALL err_unix_unlink_unsupported(int errno_value, DeeObject *__restrict path);
@@ -637,7 +671,7 @@ INTDEF ATTR_COLD NONNULL((2)) int DCALL err_unix_path_busy(int errno_value, DeeO
 INTDEF ATTR_COLD NONNULL((2, 3)) int DCALL err_unix_path_busy2(int errno_value, DeeObject *existing_path, DeeObject *new_path);
 INTDEF ATTR_COLD NONNULL((2, 3)) int DCALL err_unix_move_to_child(int errno_value, DeeObject *existing_path, DeeObject *new_path);
 INTDEF ATTR_COLD NONNULL((2)) int DCALL err_unix_path_not_empty(int errno_value, DeeObject *__restrict path);
-INTDEF ATTR_COLD NONNULL((2)) int DCALL err_unix_chtime_no_access(int errno_value, DeeObject *__restrict path);
+INTDEF ATTR_COLD NONNULL((2, 3, 4, 5, 6)) int DCALL err_unix_utime_no_access(int errno_value, DeeObject *path, DeeObject *atime, DeeObject *mtime, DeeObject *ctime, DeeObject *btime);
 INTDEF ATTR_COLD NONNULL((2, 3)) int DCALL err_unix_path_cross_dev2(int errno_value, DeeObject *existing_path, DeeObject *new_path);
 INTDEF ATTR_COLD NONNULL((2, 3)) int DCALL err_unix_ftruncate_fbig(int errno_value, DeeObject *fd, DeeObject *length);
 INTDEF ATTR_COLD NONNULL((2, 3)) int DCALL err_unix_truncate_fbig(int errno_value, DeeObject *path, DeeObject *length);
@@ -667,6 +701,7 @@ INTDEF ATTR_COLD int DCALL err_stat_no_mtime_info(void);
 INTDEF ATTR_COLD int DCALL err_stat_no_ctime_info(void);
 INTDEF ATTR_COLD int DCALL err_stat_no_birthtime_info(void);
 INTDEF ATTR_COLD int DCALL err_stat_no_nttype_info(void);
+INTDEF ATTR_COLD int DCALL err_integer_overflow(void);
 
 #ifdef CONFIG_HOST_WINDOWS
 INTDEF ATTR_COLD NONNULL((2)) int DCALL err_nt_unlink(DWORD dwError, DeeObject *__restrict path);
@@ -701,7 +736,7 @@ INTDEF ATTR_COLD NONNULL((2)) int DCALL err_nt_path_busy(DWORD dwError, DeeObjec
 INTDEF ATTR_COLD NONNULL((2, 3)) int DCALL err_nt_path_busy2(DWORD dwError, DeeObject *existing_path, DeeObject *new_path);
 INTDEF ATTR_COLD NONNULL((2, 3)) int DCALL err_nt_move_to_child(DWORD dwError, DeeObject *existing_path, DeeObject *new_path);
 INTDEF ATTR_COLD NONNULL((2)) int DCALL err_nt_path_not_empty(DWORD dwError, DeeObject *__restrict path);
-INTDEF ATTR_COLD NONNULL((2)) int DCALL err_nt_chtime_no_access(DWORD dwError, DeeObject *__restrict path);
+INTDEF ATTR_COLD NONNULL((2)) int DCALL err_nt_utime_no_access(DWORD dwError, DeeObject *__restrict path);
 INTDEF ATTR_COLD NONNULL((2, 3)) int DCALL err_nt_path_cross_dev2(DWORD dwError, DeeObject *existing_path, DeeObject *new_path);
 INTDEF ATTR_COLD NONNULL((2)) int DCALL err_nt_path_not_link(DWORD dwError, DeeObject *__restrict path);
 INTDEF ATTR_COLD NONNULL((2, 3, 4)) int DCALL err_nt_chown_no_access(DWORD dwError, DeeObject *path_or_fd, DeeObject *uid, DeeObject *gid);
