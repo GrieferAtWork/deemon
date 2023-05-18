@@ -83,7 +83,34 @@ global final gettmp = posix.gettmp;
 global final getcwd = posix.getcwd;
 global final gethostname = posix.gethostname;
 global final chdir = posix.chdir;
-//global final chtime = posix.chtime; // TODO: Implement in terms of utime() (once that function is available)
+
+@@@interrupt
+@@@throw FileNotFound    The given @path could not be found
+@@@throw NoDirectory     A part of the given @path is not a directory
+@@@throw FileClosed      The given file @fp was closed, or the given handle @fd is invalid
+@@@throw FileAccessError The current user does not have permissions to
+@@                       change at least one of the given timestamps.
+@@                       Note that some hosts (linux) don't allow
+@@                       modification of the creation time, in which
+@@                       case any attempt to change it will result
+@@                       in this error being thrown
+@@@throw ReadOnlyFile    The file-system or device hosting the file found under
+@@                       @path is in read-only operations mode, preventing the
+@@                       file's timestamps from being changed
+@@@throw SystemError     Failed to change time for some reason
+@@@param atime The new last-accessed timestamp to set, or @none to leave unchanged (s.a. @stat.st_atime)
+@@@param mtime The new last-modified timestamp to set, or @none to leave unchanged (s.a. @stat.st_mtime)
+@@@param ctime The new birth timestamp to set, or @none to leave unchanged (s.a. @stat.st_birthtime)
+@@Change the timestamps associated with the given @path
+@@CAUTION: The @ctime parameter actually sets the file's `st_birthtime` (rather than its `st_ctime`)
+function chtime(path_or_fd: File | string | int,
+                atime: Time from time = none,
+                mtime: Time from time = none,
+                ctime: Time from time = none) {
+	if (path_or_fd is string)
+		return posix.utime(path_or_fd, atime: atime, mtime: mtime, btime: ctime);
+	return posix.futime(path_or_fd, atime: atime, mtime: mtime, btime: ctime);
+}
 
 @@@interrupt
 @@@throw FileNotFound    The given @path_or_fd could not be found
