@@ -2016,6 +2016,11 @@ again_createfile:
 			if (DeeThread_CheckInterrupt())
 				goto err;
 			goto again_createfile;
+		} else if (DeeNTSystem_IsBadAllocError(dwError)) {
+			DBG_ALIGNMENT_ENABLE();
+			if (!Dee_CollectMemory(1))
+				goto err;
+			goto again_createfile;
 		}
 	}
 	DBG_ALIGNMENT_ENABLE();

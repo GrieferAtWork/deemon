@@ -106,7 +106,6 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_readlink_f_impl(DeeObject *file)
 	HANDLE hLinkFile;
 	if (DeeObject_AssertTypeExact(file, &DeeString_Type))
 		goto err;
-again_createfile:
 	hLinkFile = DeeNTSystem_CreateFileNoATime(file, FILE_READ_DATA | FILE_READ_ATTRIBUTES,
 	                                          FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
 	                                          NULL, OPEN_EXISTING,
@@ -119,11 +118,6 @@ again_createfile:
 		DBG_ALIGNMENT_DISABLE();
 		dwError = GetLastError();
 		DBG_ALIGNMENT_ENABLE();
-		if (DeeNTSystem_IsBadAllocError(dwError)) {
-			if (Dee_CollectMemory(1))
-				goto again_createfile;
-			goto err;
-		}
 		if (DeeNTSystem_IsNotDir(dwError)) {
 #define NEED_err_nt_path_not_dir
 			err_nt_path_not_dir(dwError, file);

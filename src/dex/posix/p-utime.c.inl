@@ -90,6 +90,7 @@ for (local f: functions) {
 
 
 /* Figure out how we want to implement `utime()' */
+#undef posix_utime_USE_nt_SetFileTime
 #undef posix_utime_USE_wutime64
 #undef posix_utime_USE_wutime32
 #undef posix_utime_USE_wutime
@@ -104,7 +105,9 @@ for (local f: functions) {
 #undef posix_utime_USE_open_AND_futime
 #undef posix_utime_USE_posix_readlink__AND__posix_lutime
 #undef posix_utime_USE_STUB
-#if defined(CONFIG_HAVE_wutime64) && defined(CONFIG_PREFER_WCHAR_FUNCTIONS)
+#ifdef CONFIG_HOST_WINDOWS
+#define posix_utime_USE_nt_SetFileTime
+#elif defined(CONFIG_HAVE_wutime64) && defined(CONFIG_PREFER_WCHAR_FUNCTIONS)
 #define posix_utime_USE_wutime64
 #elif defined(CONFIG_HAVE_utime64)
 #define posix_utime_USE_utime64
@@ -147,6 +150,7 @@ for (local f: functions) {
 
 
 /* Figure out how we want to implement `lutime()' */
+#undef posix_lutime_USE_nt_SetFileTime
 #undef posix_lutime_USE_wlutime64
 #undef posix_lutime_USE_wlutime32
 #undef posix_lutime_USE_wlutime
@@ -160,7 +164,9 @@ for (local f: functions) {
 #undef posix_lutime_USE_open_AND_futime32
 #undef posix_lutime_USE_open_AND_futime
 #undef posix_lutime_USE_STUB
-#if defined(CONFIG_HAVE_wlutime64) && defined(CONFIG_PREFER_WCHAR_FUNCTIONS)
+#ifdef CONFIG_HOST_WINDOWS
+#define posix_lutime_USE_nt_SetFileTime
+#elif defined(CONFIG_HAVE_wlutime64) && defined(CONFIG_PREFER_WCHAR_FUNCTIONS)
 #define posix_lutime_USE_wlutime64
 #elif defined(CONFIG_HAVE_lutime64)
 #define posix_lutime_USE_lutime64
@@ -225,13 +231,16 @@ for (local f: functions) {
 
 
 /* Figure out how we want to implement `futime()' */
+#undef posix_futime_USE_nt_SetFileTime
 #undef posix_futime_USE_futime64
 #undef posix_futime_USE_futime32
 #undef posix_futime_USE_futime
 #undef posix_futime_USE_posix_lutime
 #undef posix_futime_USE_posix_utime
 #undef posix_futime_USE_STUB
-#ifdef CONFIG_HAVE_futime64
+#ifdef CONFIG_HOST_WINDOWS
+#define posix_futime_USE_nt_SetFileTime
+#elif defined(CONFIG_HAVE_futime64)
 #define posix_futime_USE_futime64
 #elif defined(CONFIG_HAVE_futime)
 #define posix_futime_USE_futime
@@ -560,6 +569,49 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_lutime_f_impl(DeeObject *path, De
 #define NEED_posix_utime_unix_parse_utimbuf64
 #endif /* ... */
 
+#if (defined(posix_utime_USE_nt_SetFileTime) || \
+     defined(posix_lutime_USE_nt_SetFileTime))
+PRIVATE WUNUSED DREF DeeObject *DCALL
+posix_Xutime_impl_nt_SetFileTime(DeeObject *path,
+                                 DeeObject *atime, DeeObject *mtime,
+                                 DeeObject *ctime, DeeObject *btime,
+                                 DeeNT_DWORD dwFlagsAndAttributes) {
+	HANDLE hFile;
+	int error;
+	if unlikely(!DeeNone_Check(ctime))
+		goto err_canot_set_ctime;
+	hFile = DeeNTSystem_CreateFileNoATime(path, FILE_WRITE_ATTRIBUTES,
+	                                      FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
+	                                      NULL, OPEN_EXISTING, dwFlagsAndAttributes, NULL);
+	if unlikely(!hFile)
+		goto err;
+	if unlikely(hFile == INVALID_HANDLE_VALUE) {
+		error = 1;
+	} else {
+		error = nt_SetFileTime(hFile, atime, mtime, btime);
+#define NEED_nt_SetFileTime
+		(void)CloseHandle(hFile);
+		if unlikely(error < 0)
+			goto err;
+	}
+	if unlikely(error > 0) {
+		DWORD dwError;
+		DBG_ALIGNMENT_DISABLE();
+		dwError = GetLastError();
+		DBG_ALIGNMENT_ENABLE();
+		err_nt_utime(dwError, path, atime, mtime, btime);
+#define NEED_err_nt_utime
+		goto err;
+	}
+	return_none;
+err_canot_set_ctime:
+	err_utime_cannot_set_ctime(path, ctime);
+#define NEED_err_utime_cannot_set_ctime
+err:
+	return NULL;
+}
+#endif /* ... */
+
 
 /*[[[deemon import("rt.gen.dexutils").gw("utime", "path:?Dstring,atime:?Etime:Time=Dee_None,mtime:?Etime:Time=Dee_None,ctime:?Etime:Time=Dee_None,btime:?Etime:Time=Dee_None", libname: "posix"); ]]]*/
 FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_utime_f_impl(DeeObject *path, DeeObject *atime, DeeObject *mtime, DeeObject *ctime, DeeObject *btime);
@@ -586,6 +638,12 @@ err:
 FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_utime_f_impl(DeeObject *path, DeeObject *atime, DeeObject *mtime, DeeObject *ctime, DeeObject *btime)
 /*[[[end]]]*/
 {
+#ifdef posix_utime_USE_nt_SetFileTime
+	return posix_Xutime_impl_nt_SetFileTime(path, atime, mtime, ctime, btime,
+	                                        FILE_ATTRIBUTE_NORMAL |
+	                                        FILE_FLAG_BACKUP_SEMANTICS);
+#endif /* posix_utime_USE_nt_SetFileTime */
+
 #ifdef posix_utime_USE_posix_readlink__AND__posix_lutime
 	DREF DeeObject *link_text;
 	/* Try to readlink() the given `path' to see if it's a symbolic link. */
@@ -708,6 +766,13 @@ err:
 FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_lutime_f_impl(DeeObject *path, DeeObject *atime, DeeObject *mtime, DeeObject *ctime, DeeObject *btime)
 /*[[[end]]]*/
 {
+#ifdef posix_lutime_USE_nt_SetFileTime
+	return posix_Xutime_impl_nt_SetFileTime(path, atime, mtime, ctime, btime,
+	                                        FILE_ATTRIBUTE_NORMAL |
+	                                        FILE_FLAG_BACKUP_SEMANTICS |
+	                                        FILE_FLAG_OPEN_REPARSE_POINT);
+#endif /* posix_lutime_USE_nt_SetFileTime */
+
 #ifdef posix_lutime_USED_struct_utimbuf
 	int error;
 	posix_lutime_USED_struct_utimbuf file_times;
@@ -801,6 +866,35 @@ err:
 FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_futime_f_impl(DeeObject *fd, DeeObject *atime, DeeObject *mtime, DeeObject *ctime, DeeObject *btime)
 /*[[[end]]]*/
 {
+#ifdef posix_futime_USE_nt_SetFileTime
+	HANDLE hFile;
+	int error;
+	if unlikely(!DeeNone_Check(ctime))
+		goto err_canot_set_ctime;
+	hFile = DeeNTSystem_GetHandle(fd);
+	if unlikely(hFile == INVALID_HANDLE_VALUE)
+		goto err;
+	error = nt_SetFileTime(hFile, atime, mtime, btime);
+#define NEED_nt_SetFileTime
+	if unlikely(error != 0) {
+		DWORD dwError;
+		if unlikely(error < 0)
+			goto err;
+		DBG_ALIGNMENT_DISABLE();
+		dwError = GetLastError();
+		DBG_ALIGNMENT_ENABLE();
+		err_nt_futime(dwError, fd, atime, mtime, btime);
+#define NEED_err_nt_futime
+		goto err;
+	}
+	return_none;
+err_canot_set_ctime:
+	err_utime_cannot_set_ctime(fd, ctime);
+#define NEED_err_utime_cannot_set_ctime
+err:
+	return NULL;
+#endif /* posix_futime_USE_nt_SetFileTime */
+
 #ifdef posix_futime_USED_struct_utimbuf
 	int error;
 	int os_fd;

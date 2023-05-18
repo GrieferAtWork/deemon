@@ -68,7 +68,8 @@
 #define NEED_err_unix_utime
 #define NEED_err_unix_lutime
 #define NEED_err_unix_futime
-#define NEED_err_unix_utime_cannot_set_ctime_or_btime
+#define NEED_err_utime_cannot_set_ctime_or_btime
+#define NEED_err_utime_cannot_set_ctime
 #define NEED_err_unix_remove_unsupported
 #define NEED_err_unix_unlink_unsupported
 #define NEED_err_nt_unlink_unsupported
@@ -126,6 +127,8 @@
 #define NEED_err_unix_file_closed
 #define NEED_err_unix_chmod_no_access
 #define NEED_err_unix_chown_no_access
+#define NEED_err_nt_utime
+#define NEED_err_nt_futime
 #define NEED_err_unix_ftruncate_fbig
 #define NEED_err_unix_truncate_fbig
 #define NEED_err_unix_ftruncate_isdir
@@ -174,6 +177,7 @@
 #define NEED_err_integer_overflow
 #define NEED_posix_err_unsupported
 #define NEED_nt_DecodeSid
+#define NEED_nt_SetFileTime
 #define NEED_nt_QuerySid
 #define NEED_nt_GetSecurityInfoOwnerSid
 #define NEED_nt_GetSecurityInfoGroupSid
@@ -451,6 +455,140 @@ err:
 	return NULL;
 }
 #endif /* NEED_nt_FReadLink */
+
+
+
+#ifdef NEED_nt_SetFileTime
+#undef NEED_nt_SetFileTime
+/*[[[deemon
+import * from time;
+print("#define NT_FILETIME_BASE_SECONDS_FILETIME UINT64_C(",
+	(Time(year: 1601, month: 1, day: 1).nanoseconds / 100).hex(), ")");
+]]]*/
+#define NT_FILETIME_BASE_SECONDS_FILETIME UINT64_C(0x702edb1c5a78000)
+/*[[[end]]]*/
+
+PRIVATE WUNUSED NONNULL((2, 3)) int DCALL
+nt_ObjectToFILETIME(DeeObject *__restrict self,
+                    FILETIME *__restrict pFileTime) {
+	Dee_int128_t nano_since_zero;
+	int64_t filetime_value;
+	if (DeeObject_AsInt128(self, &nano_since_zero))
+		goto err;
+	__hybrid_int128_div8(nano_since_zero, 100); /* FILETIME is 100/1th nano-seconds */
+	__hybrid_int128_sub64(nano_since_zero, NT_FILETIME_BASE_SECONDS_FILETIME);
+	if (!__hybrid_int128_is64bit(nano_since_zero))
+		goto err_overflow;
+	filetime_value = __hybrid_int128_get64(nano_since_zero);
+	memcpy(pFileTime, &filetime_value, sizeof(filetime_value));
+	return 0;
+err_overflow:
+	err_integer_overflow();
+#define NEED_err_integer_overflow
+err:
+	return -1;
+}
+
+/* Helper wrapper around `SetFileTime()' that automatically
+ * does all of the necessary conversion of time arguments
+ * from nanoseconds-since-01-01-0000 into NT's FILETIME format.
+ * @return:  0: Success
+ * @return: -1: An error was thrown
+ * @return:  1: The system call failed (s.a. `GetLastError()') */
+INTERN WUNUSED NONNULL((2, 3, 4)) int DCALL
+nt_SetFileTime(HANDLE hFile, DeeObject *atime,
+               DeeObject *mtime, DeeObject *btime) {
+	BOOL bOK;
+	FILETIME osATime, osMTime, osBTime;
+	if (!DeeNone_Check(atime) && unlikely(nt_ObjectToFILETIME(atime, &osATime)))
+		goto err;
+	if (!DeeNone_Check(mtime) && unlikely(nt_ObjectToFILETIME(mtime, &osMTime)))
+		goto err;
+	if (!DeeNone_Check(btime) && unlikely(nt_ObjectToFILETIME(btime, &osBTime)))
+		goto err;
+again_SetFileTime:
+	DBG_ALIGNMENT_DISABLE();
+	bOK = SetFileTime(hFile,
+	                  DeeNone_Check(btime) ? NULL : &osBTime,
+	                  DeeNone_Check(atime) ? NULL : &osATime,
+	                  DeeNone_Check(mtime) ? NULL : &osMTime);
+	DBG_ALIGNMENT_ENABLE();
+	if (!bOK) {
+		DWORD dwError;
+		DBG_ALIGNMENT_DISABLE();
+		dwError = GetLastError();
+		DBG_ALIGNMENT_ENABLE();
+
+		/* Handle some common system errors. */
+		if (DeeNTSystem_IsIntr(dwError)) {
+			if (DeeThread_CheckInterrupt())
+				goto err;
+			goto again_SetFileTime;
+		}
+		if (DeeNTSystem_IsBadAllocError(dwError)) {
+			if (!Dee_CollectMemory(1))
+				goto err;
+			goto again_SetFileTime;
+		}
+
+		/* Check for special case: the given `hFile' isn't opened with enough permissions.
+		 * In this case, try to re-open the underlying file with extra more permissions. */
+		if (dwError == ERROR_ACCESS_DENIED) {
+			HANDLE hProcess;
+			HANDLE hWriteAttributes;
+			DBG_ALIGNMENT_DISABLE();
+			hProcess = GetCurrentProcess();
+			if (DuplicateHandle(hProcess, hFile, hProcess, &hWriteAttributes,
+			                    FILE_WRITE_ATTRIBUTES, FALSE, 0)) {
+				bOK = SetFileTime(hWriteAttributes,
+				                  DeeNone_Check(btime) ? NULL : &osBTime,
+				                  DeeNone_Check(atime) ? NULL : &osATime,
+				                  DeeNone_Check(mtime) ? NULL : &osMTime);
+				(void)CloseHandle(hWriteAttributes);
+			} else {
+				DREF DeeObject *hFilename;
+				DBG_ALIGNMENT_ENABLE();
+				hFilename = DeeNTSystem_GetFilenameOfHandle(hFile);
+				if unlikely(!hFilename) {
+					DeeError_Handled(Dee_ERROR_HANDLED_RESTORE);
+				} else {
+					hWriteAttributes = DeeNTSystem_CreateFileNoATime(hFilename, FILE_WRITE_ATTRIBUTES,
+					                                                 FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
+					                                                 NULL, OPEN_EXISTING,
+					                                                 FILE_ATTRIBUTE_NORMAL |
+					                                                 FILE_FLAG_BACKUP_SEMANTICS |
+					                                                 FILE_FLAG_OPEN_REPARSE_POINT,
+					                                                 NULL);
+					if unlikely(!hWriteAttributes) {
+						DeeError_Handled(Dee_ERROR_HANDLED_RESTORE);
+					} else if (hWriteAttributes != INVALID_HANDLE_VALUE) {
+						bOK = SetFileTime(hWriteAttributes,
+						                  DeeNone_Check(btime) ? NULL : &osBTime,
+						                  DeeNone_Check(atime) ? NULL : &osATime,
+						                  DeeNone_Check(mtime) ? NULL : &osMTime);
+						(void)CloseHandle(hWriteAttributes);
+					}
+				}
+				DBG_ALIGNMENT_DISABLE();
+			}
+
+			/* Check if we were able to re-open the file with WRITE_ATTRIBUTES permissions. */
+			if (bOK) {
+				DBG_ALIGNMENT_ENABLE();
+				return 0;
+			}
+
+			/* Restore the original error */
+			SetLastError(dwError);
+			DBG_ALIGNMENT_ENABLE();
+		}
+		return 1; /* System error */
+	}
+	return 0;
+err:
+	return -1;
+}
+#endif /* NEED_nt_SetFileTime */
 
 
 
@@ -1281,8 +1419,8 @@ posix_utime_unix_parse_utimbuf(struct utimbuf *__restrict p_result,
 	int result;
 	int64_t used_atime, used_mtime;
 	if (!DeeNone_Check(ctime) || !DeeNone_Check(btime))
-		return err_unix_utime_cannot_set_ctime_or_btime(path_or_fd, ctime, btime);
-#define NEED_err_unix_utime_cannot_set_ctime_or_btime
+		return err_utime_cannot_set_ctime_or_btime(path_or_fd, ctime, btime);
+#define NEED_err_utime_cannot_set_ctime_or_btime
 	result = posix_utime_unix_parse_utimbuf_common(&used_atime, &used_mtime,
 	                                               atime, mtime,
 	                                               path_or_fd, stat_flags);
@@ -1308,8 +1446,8 @@ posix_utime_unix_parse_utimbuf32(struct utimbuf32 *__restrict p_result,
 	int result;
 	int64_t used_atime, used_mtime;
 	if (!DeeNone_Check(ctime) || !DeeNone_Check(btime))
-		return err_unix_utime_cannot_set_ctime_or_btime(path_or_fd, ctime, btime);
-#define NEED_err_unix_utime_cannot_set_ctime_or_btime
+		return err_utime_cannot_set_ctime_or_btime(path_or_fd, ctime, btime);
+#define NEED_err_utime_cannot_set_ctime_or_btime
 	result = posix_utime_unix_parse_utimbuf_common(&used_atime, &used_mtime,
 	                                               atime, mtime,
 	                                               path_or_fd, stat_flags);
@@ -1335,8 +1473,8 @@ posix_utime_unix_parse_utimbuf64(struct utimbuf64 *__restrict p_result,
 	int result;
 	int64_t used_atime, used_mtime;
 	if (!DeeNone_Check(ctime) || !DeeNone_Check(btime))
-		return err_unix_utime_cannot_set_ctime_or_btime(path_or_fd, ctime, btime);
-#define NEED_err_unix_utime_cannot_set_ctime_or_btime
+		return err_utime_cannot_set_ctime_or_btime(path_or_fd, ctime, btime);
+#define NEED_err_utime_cannot_set_ctime_or_btime
 	result = posix_utime_unix_parse_utimbuf_common(&used_atime, &used_mtime,
 	                                               atime, mtime,
 	                                               path_or_fd, stat_flags);
@@ -2497,18 +2635,68 @@ err_unix_futime(int errno_value, DeeObject *fd,
 }
 #endif /* NEED_err_unix_futime */
 
+#ifdef NEED_err_nt_utime
+#undef NEED_err_nt_utime
+INTERN ATTR_COLD NONNULL((2, 3, 4, 5)) int DCALL
+err_nt_utime(DWORD dwError, DeeObject *path,
+             DeeObject *atime, DeeObject *mtime, DeeObject *btime) {
+	if (DeeNTSystem_IsAccessDeniedError(dwError))
+		return err_nt_utime_no_access(dwError, path, atime, mtime, btime);
+#define NEED_err_nt_utime_no_access
+	if (DeeNTSystem_IsFileNotFoundError(dwError))
+		return err_nt_path_not_found(dwError, path);
+#define NEED_err_nt_path_not_found
+	if (DeeNTSystem_IsNotDir(dwError))
+		return err_nt_path_not_dir(dwError, path);
+#define NEED_err_nt_path_not_dir
+	return DeeUnixSystem_ThrowErrorf(&DeeError_SystemError, dwError,
+	                                 "Failed to change timestamps of path %r to "
+	                                 "[atime:%r, mtime:%r, btime: %r]",
+	                                 path, atime, mtime, btime);
+}
+#endif /* NEED_err_nt_utime */
 
-#ifdef NEED_err_unix_utime_cannot_set_ctime_or_btime
-#undef NEED_err_unix_utime_cannot_set_ctime_or_btime
+#ifdef NEED_err_nt_futime
+#undef NEED_err_nt_futime
+INTERN ATTR_COLD NONNULL((2, 3, 4, 5)) int DCALL
+err_nt_futime(DWORD dwError, DeeObject *fd,
+              DeeObject *atime, DeeObject *mtime, DeeObject *btime) {
+	if (DeeNTSystem_IsAccessDeniedError(dwError))
+		return err_nt_utime_no_access(dwError, fd, atime, mtime, btime);
+#define NEED_err_nt_utime_no_access
+	if (DeeNTSystem_IsBadF(dwError))
+		return err_nt_handle_closed(dwError, fd);
+#define NEED_err_nt_handle_closed
+	return DeeUnixSystem_ThrowErrorf(&DeeError_SystemError, dwError,
+	                                 "Failed to change timestamps of fd %r to "
+	                                 "[atime:%r, mtime:%r, btime: %r]",
+	                                 fd, atime, mtime, btime);
+}
+#endif /* NEED_err_nt_futime */
+
+#ifdef NEED_err_utime_cannot_set_ctime_or_btime
+#undef NEED_err_utime_cannot_set_ctime_or_btime
 INTERN ATTR_COLD NONNULL((1, 2, 3)) int DCALL
-err_unix_utime_cannot_set_ctime_or_btime(DeeObject *path_or_fd,
-                                         DeeObject *ctime, DeeObject *btime) {
+err_utime_cannot_set_ctime_or_btime(DeeObject *path_or_fd,
+                                    DeeObject *ctime, DeeObject *btime) {
 	return DeeError_Throwf(&DeeError_UnsupportedAPI,
 	                       "The system does not support changing the "
 	                       "ctime/btime of %r to [ctime:%r, btime:%r]",
 	                       path_or_fd, ctime, btime);
 }
-#endif /* NEED_err_unix_utime_cannot_set_ctime_or_btime */
+#endif /* NEED_err_utime_cannot_set_ctime_or_btime */
+
+
+#ifdef NEED_err_utime_cannot_set_ctime
+#undef NEED_err_utime_cannot_set_ctime
+INTERN ATTR_COLD NONNULL((1, 2)) int DCALL
+err_utime_cannot_set_ctime(DeeObject *path_or_fd, DeeObject *ctime) {
+	return DeeError_Throwf(&DeeError_UnsupportedAPI,
+	                       "The system does not support changing the "
+	                       "ctime of %r to [ctime:%r]",
+	                       path_or_fd, ctime);
+}
+#endif /* NEED_err_utime_cannot_set_ctime */
 
 
 #ifdef NEED_err_unix_remove_unsupported
@@ -3039,10 +3227,9 @@ err_unix_utime_no_access(int errno_value, DeeObject *path,
 
 #ifdef NEED_err_nt_utime_no_access
 #undef NEED_err_nt_utime_no_access
-INTERN ATTR_COLD NONNULL((2, 3, 4, 5, 6)) int DCALL
+INTERN ATTR_COLD NONNULL((2, 3, 4, 5)) int DCALL
 err_nt_utime_no_access(DWORD dwError, DeeObject *path,
-                       DeeObject *atime, DeeObject *mtime,
-                       DeeObject *ctime, DeeObject *btime) {
+                       DeeObject *atime, DeeObject *mtime, DeeObject *btime) {
 	return DeeNTSystem_ThrowErrorf(&DeeError_FileAccessError, dwError,
 	                               "Changes to timestamps of %r are not allowed "
 	                               "[atime:%r, mtime:%r, ctime:%r, btime: %r]",

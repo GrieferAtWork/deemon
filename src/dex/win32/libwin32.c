@@ -1146,8 +1146,6 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_CreateFile_f_impl(DeeObject *l
 {
 	HANDLE hResult;
 	DREF DeeObject *result;
-again:
-	DBG_ALIGNMENT_DISABLE();
 	(void)lpSecurityAttributes; /* TODO */
 	hResult = DeeNTSystem_CreateFile(lpFileName,
 	                                 dwDesiredAccess,
@@ -1159,12 +1157,6 @@ again:
 	if unlikely(hResult == INVALID_HANDLE_VALUE) {
 		DWORD dwError;
 		dwError = GetLastError();
-		DBG_ALIGNMENT_ENABLE();
-		if (DeeNTSystem_IsIntr(dwError)) {
-			if (DeeThread_CheckInterrupt())
-				goto err;
-			goto again;
-		}
 		RETURN_ERROR(dwError,
 		             "Failed to open file %r (dwDesiredAccess: %#" PRFx32 ", dwShareMode: %#" PRFx32 ", "
 		             "dwCreationDisposition: %#" PRFx32 ", dwFlagsAndAttributes: %#" PRFx32 ", hTemplateFile: %p)",
@@ -1172,12 +1164,10 @@ again:
 		             dwCreationDisposition, dwFlagsAndAttributes,
 		             hTemplateFile);
 	}
-	DBG_ALIGNMENT_ENABLE();
 	result = libwin32_CreateHandle(hResult);
 	if likely(result)
 		return result;
 	CloseHandle(hResult);
-err:
 	return NULL;
 }
 
