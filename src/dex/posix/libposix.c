@@ -2386,47 +2386,9 @@ PRIVATE struct dex_symbol symbols[] = {
 	                       "If @path refers to a symbolic link, change the permissions "
 	                       /**/ "of that link, rather than those of the pointed-to file"))
 	D(POSIX_FCHMOD_DEF_DOC("@throw FileClosed The given file @fd was closed\n"
-	                       "Same as ?Glchmod, but change permissions of @fd"))
+	                       "Same as ?Gchmod and ?Glchmod, but change permissions of @fd"))
 	D(POSIX_FCHMODAT_DEF_DOC("@param atflags Set of $0, ?GAT_SYMLINK_NOFOLLOW, ?GAT_EMPTY_PATH\n"
-	                         "Combination of ?Glchmod, ?Glchmod, and ?Gfchmod, changing permissions of @dfd:@path"))
-
-	/* utime(2) */
-	D(POSIX_UTIME_DEF_DOC("@interrupt\n"
-	                      "@throw FileNotFound The given @path could not be found\n"
-	                      "@throw NoDirectory A part of the given @path is not a directory\n"
-	                      "@throw FileAccessError The current user does not have permissions "
-	                      /*                  */ "to change the mode of the given file @path\n"
-	                      "@throw ReadOnlyFile The filesystem or device hosting the file found under "
-	                      /*               */ "@path is in read-only operations mode, preventing the "
-	                      /*               */ "file's mode from being changed\n"
-	                      "@throw SystemError Failed to change timestamps for some reason\n"
-	                      "@throw ValueError The given @mode is malformed or not recognized\n"
-	                      "@param atime The new last-accessed timestamp to set, or !N to leave unchanged (s.a. ?Ast_atime?Gstat)\n"
-	                      "@param mtime The new last-modified timestamp to set, or !N to leave unchanged (s.a. ?Ast_mtime?Gstat)\n"
-	                      "@param ctime The new last-attribute-changed timestamp to set, or !N to leave unchanged (s.a. ?Ast_ctime?Gstat)\n"
-	                      "@param birthtime The new birth timestamp to set, or !N to leave unchanged (s.a. ?Ast_btime?Gstat)\n"
-	                      "Change the timestamps associated with a given @path"))
-	D(POSIX_LUTIME_DEF_DOC("@interrupt\n"
-	                       "@throw FileNotFound The given @path could not be found\n"
-	                       "@throw NoDirectory A part of the given @path is not a directory\n"
-	                       "@throw FileAccessError The current user does not have permissions "
-	                       /*                  */ "to change the mode of the given file @path\n"
-	                       "@throw ReadOnlyFile The filesystem or device hosting the file found under "
-	                       /*               */ "@path is in read-only operations mode, preventing the "
-	                       /*               */ "file's mode from being changed\n"
-	                       "@throw SystemError Failed to change timestamps for some reason\n"
-	                       "@throw ValueError The given @mode is malformed or not recognized\n"
-	                       "@param atime The new last-accessed timestamp to set, or !N to leave unchanged (s.a. ?Ast_atime?Gstat)\n"
-	                       "@param mtime The new last-modified timestamp to set, or !N to leave unchanged (s.a. ?Ast_mtime?Gstat)\n"
-	                       "@param ctime The new last-attribute-changed timestamp to set, or !N to leave unchanged (s.a. ?Ast_ctime?Gstat)\n"
-	                       "@param birthtime The new birth timestamp to set, or !N to leave unchanged (s.a. ?Ast_btime?Gstat)\n"
-	                       "Change the timestamps associated with a given @path\n"
-	                       "If @path refers to a symbolic link, change the timestamps "
-	                       /**/ "of that link, rather than those of the pointed-to file"))
-	D(POSIX_FUTIME_DEF_DOC("@throw FileClosed The given file @fd was closed\n"
-	                       "Same as ?Glchmod, but change permissions of @fd"))
-	D(POSIX_UTIMEAT_DEF_DOC("@param atflags Set of $0, ?GAT_SYMLINK_NOFOLLOW, ?GAT_EMPTY_PATH\n"
-	                        "Combination of ?Glchmod, ?Glchmod, and ?Gfchmod, changing permissions of @dfd:@path"))
+	                         "Combination of ?Gchmod, ?Glchmod, and ?Gfchmod, changing permissions of @dfd:@path"))
 
 	/* chown(2) */
 	D(POSIX_CHOWN_DEF_DOC("@interrupt\n"
@@ -2462,6 +2424,44 @@ PRIVATE struct dex_symbol symbols[] = {
 	D(POSIX_FCHOWNAT_DEF_DOC("@param atflags Set of $0, ?GAT_SYMLINK_NOFOLLOW, ?GAT_EMPTY_PATH\n"
 	                         "Combination of ?Glchown, ?Glchown, and ?Gfchown, changing ownership of @dfd:@path"))
 
+	/* utime(2) */
+	D(POSIX_UTIME_DEF_DOC("@interrupt\n"
+	                      "@throw FileNotFound The given @path could not be found\n"
+	                      "@throw NoDirectory A part of the given @path is not a directory\n"
+	                      "@throw FileAccessError The current user does not have permissions "
+	                      /*                  */ "to change the mode of the given file @path\n"
+	                      "@throw ReadOnlyFile The filesystem or device hosting the file found under "
+	                      /*               */ "@path is in read-only operations mode, preventing the "
+	                      /*               */ "file's mode from being changed\n"
+	                      "@throw SystemError Failed to change timestamps for some reason\n"
+	                      "@throw ValueError The given @mode is malformed or not recognized\n"
+	                      "@param atime The new last-accessed timestamp to set, or !N to leave unchanged (s.a. ?Ast_atime?Gstat)\n"
+	                      "@param mtime The new last-modified timestamp to set, or !N to leave unchanged (s.a. ?Ast_mtime?Gstat)\n"
+	                      "@param ctime The new last-attribute-changed timestamp to set, or !N to leave unchanged (s.a. ?Ast_ctime?Gstat)\n"
+	                      "@param birthtime The new birth timestamp to set, or !N to leave unchanged (s.a. ?Ast_btime?Gstat)\n"
+	                      "Change the timestamps associated with a given @path"))
+	D(POSIX_LUTIME_DEF_DOC("@interrupt\n"
+	                       "@throw FileNotFound The given @path could not be found\n"
+	                       "@throw NoDirectory A part of the given @path is not a directory\n"
+	                       "@throw FileAccessError The current user does not have permissions "
+	                       /*                  */ "to change the mode of the given file @path\n"
+	                       "@throw ReadOnlyFile The filesystem or device hosting the file found under "
+	                       /*               */ "@path is in read-only operations mode, preventing the "
+	                       /*               */ "file's mode from being changed\n"
+	                       "@throw SystemError Failed to change timestamps for some reason\n"
+	                       "@throw ValueError The given @mode is malformed or not recognized\n"
+	                       "@param atime The new last-accessed timestamp to set, or !N to leave unchanged (s.a. ?Ast_atime?Gstat)\n"
+	                       "@param mtime The new last-modified timestamp to set, or !N to leave unchanged (s.a. ?Ast_mtime?Gstat)\n"
+	                       "@param ctime The new last-attribute-changed timestamp to set, or !N to leave unchanged (s.a. ?Ast_ctime?Gstat)\n"
+	                       "@param birthtime The new birth timestamp to set, or !N to leave unchanged (s.a. ?Ast_btime?Gstat)\n"
+	                       "Change the timestamps associated with a given @path\n"
+	                       "If @path refers to a symbolic link, change the timestamps "
+	                       /**/ "of that link, rather than those of the pointed-to file"))
+	D(POSIX_FUTIME_DEF_DOC("@throw FileClosed The given file @fd was closed\n"
+	                       "Same as ?Gutime and ?Glutime, but change permissions of @fd"))
+	D(POSIX_UTIMEAT_DEF_DOC("@param atflags Set of $0, ?GAT_SYMLINK_NOFOLLOW, ?GAT_EMPTY_PATH\n"
+	                        "Combination of ?Gutime, ?Glutime, and ?Gfutime, changing timestamps of @dfd:@path"))
+
 	/* copyfile */
 	D(POSIX_FCOPYFILE_DEF_DOC("@param flags Set of $0, ?GRENAME_NOREPLACE\n"
 	                          "@param progress Invoked every @bufsize bytes with an instance of ?GCopyFileProgress\n"
@@ -2475,7 +2475,7 @@ PRIVATE struct dex_symbol symbols[] = {
 	                          "@param progress Invoked every @bufsize bytes with an instance of ?GCopyFileProgress\n"
 	                          "@param bufsize How many bytes to copy at once (if not given, use a default)\n"
 	                          "Copy all data from @oldpath to @newpath. When @oldpath is a symlink, rather than "
-	                          /**/ "copy the file pointed-to by the symlink, the symlink *itself* is copied"))
+	                          /**/ "copy the file pointed-to by the symlink, the symlink #Iitself is copied"))
 	D(POSIX_COPYFILEAT_DEF_DOC("@param flags Set of $0, ?GRENAME_NOREPLACE\n"
 	                           "@param atflags Set of $0, ?GAT_SYMLINK_NOFOLLOW, ?GAT_EMPTY_PATH\n"
 	                           "@param progress Invoked every @bufsize bytes with an instance of ?GCopyFileProgress\n"
