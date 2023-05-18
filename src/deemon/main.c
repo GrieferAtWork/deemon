@@ -514,7 +514,8 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL cmd_D(char *arg) {
 	if (macro_value) {
 		name_length = (size_t)((macro_value++) - arg);
 	} else {
-		macro_value = "1", name_length = strlen(arg);
+		macro_value = "1";
+		name_length = strlen(arg);
 	}
 	if (!TPPLexer_Define(arg, name_length,
 	                     macro_value, strlen(macro_value),
@@ -1154,7 +1155,7 @@ int main(int argc, char *argv[]) {
 	/* Literally the only deemon component that actually needs to
 	 * be initialized (and isn't already initialized statically):
 	 *  - The TLS variable that is used by `DeeThread_Self()'
-	 * To bad there's no cross-platform way to do this statically.
+	 * Too bad there's no cross-platform way to do this statically.
 	 * Else, this'd be so much simpler. */
 	Dee_Initialize();
 
@@ -1233,6 +1234,7 @@ int main(int argc, char *argv[]) {
 				goto err;
 			interactive_output = script_options.co_decoutput;
 			script_options.co_decoutput = NULL;
+
 			/* Default to using `stderr' as output for interactive modules. */
 			if (!interactive_output &&
 			    (interactive_output = DeeFile_GetStd(DEE_STDERR)) == NULL)
@@ -1255,6 +1257,7 @@ int main(int argc, char *argv[]) {
 				Dee_Decref(interactive_output);
 				goto err;
 			}
+
 			/* Construct an iterator for the interactive module. */
 			interactive_iterator = DeeObject_IterSelf(interactive_module);
 			if unlikely(!interactive_iterator) {
@@ -1264,6 +1267,7 @@ int main(int argc, char *argv[]) {
 			}
 			for (;;) {
 				size_t error;
+
 				/* Pull items from the interactive module. */
 				value = DeeObject_IterNext(interactive_iterator);
 				if (!ITER_ISOK(value))
@@ -1390,7 +1394,7 @@ done:
 
 	/* Shutdown the deemon core.
 	 * This function does pretty much everything for us:
-	 *  - Interrupt + join all threads but the calling one.
+	 *  - Interrupt + join all threads but the main one.
 	 *  - Clear all remaining GC objects.
 	 *  - Unload all loaded DEX modules.
 	 *  - ...
