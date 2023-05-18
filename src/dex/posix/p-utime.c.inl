@@ -89,7 +89,7 @@ for (local f: functions) {
 /*[[[end]]]*/
 
 
-/* Check if we can use `AT_CHANGE_BTIME' to implement a 3-channel utime() function. */
+/* Check if we can use `AT_CHANGE_BTIME' to implement 3-channel utime() functions. */
 #undef utimens_3
 #undef futimens_3
 #undef lutimens_3
@@ -120,6 +120,12 @@ for (local f: functions) {
 
 /* Figure out how we want to implement `utime()' */
 #undef posix_utime_USE_nt_SetFileTime
+#undef posix_utime_USE_utimens64_3
+#undef posix_utime_USE_utimens_3
+#undef posix_utime_USE_utimens64
+#undef posix_utime_USE_utimens
+#undef posix_utime_USE_utimes64
+#undef posix_utime_USE_utimes
 #undef posix_utime_USE_wutime64
 #undef posix_utime_USE_wutime32
 #undef posix_utime_USE_wutime
@@ -266,9 +272,9 @@ for (local f: functions) {
 #endif /* !... */
 
 /* Check if we should emulate
- * >> utime(path, file_times);
+ * >> utime(path, atime, mtime, ctime, btime);
  * As:
- * >> lutime(try joinpath(headof(path), readlink(path)) catch (NoSymlink) path, file_times); */
+ * >> lutime(try joinpath(headof(path), readlink(path)) catch (NoSymlink) path, atime, mtime, ctime, btime); */
 #if ((defined(posix_utime_USE_STUB) ||                \
       defined(posix_utime_USE_open_AND_futime) ||     \
       defined(posix_utime_USE_open_AND_futime32) ||   \
