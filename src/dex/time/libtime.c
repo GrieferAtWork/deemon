@@ -2715,20 +2715,20 @@ done:
 
 PRIVATE WUNUSED DREF DeeTimeObject *DCALL
 f_libtime__mkunix(size_t argc, DeeObject *const *argv) {
-	uint32_t extra_nano;
+	uint32_t extra_nanoseconds;
 	DREF DeeTimeObject *result;
 	result = DeeObject_MALLOC(DeeTimeObject);
 	if unlikely(!result)
 		goto done;
-	extra_nano = 0;
+	extra_nanoseconds = 0;
 	__hybrid_int128_vec64_significand(result->t_nanos, 1) = 0;
 	if (DeeArg_Unpack(argc, argv, UNPd64 "|" UNPu32 ":_mkunix",
 	                  &__hybrid_int128_vec64_significand(result->t_nanos, 0),
-	                  &extra_nano))
+	                  &extra_nanoseconds))
 		goto err_r;
 	__hybrid_int128_add64(result->t_nanos, UNIX_TIME_T_BASE_SECONDS);
 	__hybrid_int128_mul32(result->t_nanos, NANOSECONDS_PER_SECOND);
-	__hybrid_int128_add32(result->t_nanos, extra_nano);
+	__hybrid_int128_add32(result->t_nanos, extra_nanoseconds);
 	result->t_typekind = TIME_TYPEKIND(TIME_TYPE_NANOSECONDS, TIME_KIND_TIMESTAMP);
 	DeeObject_Init(result, &DeeTime_Type);
 done:

@@ -27,7 +27,7 @@
 
 #include "p-readlink.c.inl" /* For `posix_utime_USE_posix_readlink__AND__posix_lutime()' */
 #include "p-path.c.inl"     /* For `posix_utime_USE_posix_readlink__AND__posix_lutime()' */
-#include "p-stat.c.inl"     /* For `DEE_STAT_F_LSTAT' */
+#include "p-stat.c.inl"     /* For `DEE_STAT_F_LSTAT', `stat_get_ctime_IS_stat_get_mtime' */
 
 DECL_BEGIN
 
@@ -832,8 +832,17 @@ posix_Xutime_impl_nt_SetFileTime(DeeObject *path,
                                  DeeNT_DWORD dwFlagsAndAttributes) {
 	HANDLE hFile;
 	int error;
-	if unlikely(!DeeNone_Check(ctime))
-		goto err_canot_set_ctime;
+	if unlikely(!DeeNone_Check(ctime)) {
+#ifdef stat_get_ctime_IS_stat_get_mtime
+		if (DeeNone_Check(mtime)) {
+			mtime = ctime;
+			/*ctime = Dee_None;*/
+		} else
+#endif /* stat_get_ctime_IS_stat_get_mtime */
+		{
+			goto err_canot_set_ctime;
+		}
+	}
 	hFile = DeeNTSystem_CreateFileNoATime(path, FILE_WRITE_ATTRIBUTES,
 	                                      FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
 	                                      NULL, OPEN_EXISTING, dwFlagsAndAttributes, NULL);
@@ -934,6 +943,12 @@ err:
 	posix_utime_USED_charT const *os_path;
 
 	/* Check that we can satisfy all requested time channels. */
+#ifdef stat_get_ctime_IS_stat_get_mtime
+	if (!DeeNone_Check(ctime) && DeeNone_Check(mtime)) {
+		mtime = ctime;
+		ctime = Dee_None;
+	}
+#endif /* stat_get_ctime_IS_stat_get_mtime */
 #if posix_utime_USED_struct_timespec_COUNT == 2
 	if (!DeeNone_Check(ctime) || !DeeNone_Check(btime)) {
 		err_utime_cannot_set_ctime_or_btime(path, ctime, btime);
@@ -1088,6 +1103,12 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_lutime_f_impl(DeeObject *path, De
 	posix_lutime_USED_charT const *os_path;
 
 	/* Check that we can satisfy all requested time channels. */
+#ifdef stat_get_ctime_IS_stat_get_mtime
+	if (!DeeNone_Check(ctime) && DeeNone_Check(mtime)) {
+		mtime = ctime;
+		ctime = Dee_None;
+	}
+#endif /* stat_get_ctime_IS_stat_get_mtime */
 #if posix_lutime_USED_struct_timespec_COUNT == 2
 	if (!DeeNone_Check(ctime) || !DeeNone_Check(btime)) {
 		err_utime_cannot_set_ctime_or_btime(path, ctime, btime);
@@ -1233,8 +1254,17 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_futime_f_impl(DeeObject *fd, DeeO
 #ifdef posix_futime_USE_nt_SetFileTime
 	HANDLE hFile;
 	int error;
-	if unlikely(!DeeNone_Check(ctime))
-		goto err_canot_set_ctime;
+	if unlikely(!DeeNone_Check(ctime)) {
+#ifdef stat_get_ctime_IS_stat_get_mtime
+		if (DeeNone_Check(mtime)) {
+			mtime = ctime;
+			/*ctime = Dee_None;*/
+		} else
+#endif /* stat_get_ctime_IS_stat_get_mtime */
+		{
+			goto err_canot_set_ctime;
+		}
+	}
 	hFile = DeeNTSystem_GetHandle(fd);
 	if unlikely(hFile == INVALID_HANDLE_VALUE)
 		goto err;
@@ -1265,6 +1295,12 @@ err:
 	int os_fd;
 
 	/* Check that we can satisfy all requested time channels. */
+#ifdef stat_get_ctime_IS_stat_get_mtime
+	if (!DeeNone_Check(ctime) && DeeNone_Check(mtime)) {
+		mtime = ctime;
+		ctime = Dee_None;
+	}
+#endif /* stat_get_ctime_IS_stat_get_mtime */
 #if posix_futime_USED_struct_timespec_COUNT == 2
 	if (!DeeNone_Check(ctime) || !DeeNone_Check(btime)) {
 		err_utime_cannot_set_ctime_or_btime(fd, ctime, btime);
@@ -1428,6 +1464,12 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_futimeat_f_impl(DeeObject *dfd, D
 #endif /* posix_futimeat_USE_posix_futime */
 
 #ifdef posix_futimeat_USED_utimensat
+#ifdef stat_get_ctime_IS_stat_get_mtime
+	if (!DeeNone_Check(ctime) && DeeNone_Check(mtime)) {
+		mtime = ctime;
+		ctime = Dee_None;
+	}
+#endif /* stat_get_ctime_IS_stat_get_mtime */
 	if (!DeeString_Check(dfd) &&
 #if posix_futimeat_USED_struct_timespec_COUNT == 2
 	    DeeNone_Check(btime) &&

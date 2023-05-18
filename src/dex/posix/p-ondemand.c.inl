@@ -1428,6 +1428,12 @@ posix_utime_unix_parse_utimbuf(struct utimbuf *__restrict p_result,
                                unsigned int stat_flags) {
 	int result;
 	int64_t used_atime, used_mtime;
+#ifdef stat_get_ctime_IS_stat_get_mtime
+	if (!DeeNone_Check(ctime) && DeeNone_Check(mtime)) {
+		mtime = ctime;
+		ctime = Dee_None;
+	}
+#endif /* stat_get_ctime_IS_stat_get_mtime */
 	if (!DeeNone_Check(ctime) || !DeeNone_Check(btime))
 		return err_utime_cannot_set_ctime_or_btime(path_or_fd, ctime, btime);
 #define NEED_err_utime_cannot_set_ctime_or_btime
@@ -1455,6 +1461,12 @@ posix_utime_unix_parse_utimbuf32(struct utimbuf32 *__restrict p_result,
                                  unsigned int stat_flags) {
 	int result;
 	int64_t used_atime, used_mtime;
+#ifdef stat_get_ctime_IS_stat_get_mtime
+	if (!DeeNone_Check(ctime) && DeeNone_Check(mtime)) {
+		mtime = ctime;
+		ctime = Dee_None;
+	}
+#endif /* stat_get_ctime_IS_stat_get_mtime */
 	if (!DeeNone_Check(ctime) || !DeeNone_Check(btime))
 		return err_utime_cannot_set_ctime_or_btime(path_or_fd, ctime, btime);
 #define NEED_err_utime_cannot_set_ctime_or_btime
@@ -1482,6 +1494,12 @@ posix_utime_unix_parse_utimbuf64(struct utimbuf64 *__restrict p_result,
                                  unsigned int stat_flags) {
 	int result;
 	int64_t used_atime, used_mtime;
+#ifdef stat_get_ctime_IS_stat_get_mtime
+	if (!DeeNone_Check(ctime) && DeeNone_Check(mtime)) {
+		mtime = ctime;
+		ctime = Dee_None;
+	}
+#endif /* stat_get_ctime_IS_stat_get_mtime */
 	if (!DeeNone_Check(ctime) || !DeeNone_Check(btime))
 		return err_utime_cannot_set_ctime_or_btime(path_or_fd, ctime, btime);
 #define NEED_err_utime_cannot_set_ctime_or_btime

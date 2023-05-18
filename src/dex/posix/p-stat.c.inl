@@ -1500,9 +1500,11 @@ err_notime:
 #endif /* !... */
 }
 
+#undef stat_get_ctime_IS_stat_get_mtime
 #ifdef posix_stat_USE_WINDOWS
 /* If the OS doesn't have a dedicated st_ctime timestamp, re-use the st_mtime-one (if present) */
 #define stat_get_ctime stat_get_mtime
+#define stat_get_ctime_IS_stat_get_mtime
 #elif defined(posix_stat_GET_CTIME_SEC) && defined(posix_stat_GET_CTIME_NSEC)
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 stat_get_ctime(DeeStatObject *__restrict self) {
@@ -1519,6 +1521,7 @@ stat_get_ctime(DeeStatObject *__restrict self) {
 #elif !defined(posix_stat_get_mtime_IS_STUB)
 /* If the OS doesn't have a dedicated st_ctime timestamp, re-use the st_mtime-one (if present) */
 #define stat_get_ctime stat_get_mtime
+#define stat_get_ctime_IS_stat_get_mtime
 #else /* ... */
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 stat_get_ctime(DeeStatObject *__restrict self) {
