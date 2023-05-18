@@ -1422,9 +1422,9 @@ posix_chown_unix_parsegid(DeeObject *__restrict gid,
 #undef NEED_posix_utime_unix_parse_utimbuf
 INTERN WUNUSED NONNULL((1, 2, 3, 4, 5, 6)) int DCALL
 posix_utime_unix_parse_utimbuf(struct utimbuf *__restrict p_result,
-                               DeeObject *path_or_fd,
                                DeeObject *atime, DeeObject *mtime,
                                DeeObject *ctime, DeeObject *btime,
+                               DeeObject *path_or_fd,
                                unsigned int stat_flags) {
 	int result;
 	int64_t used_atime, used_mtime;
@@ -1455,9 +1455,9 @@ posix_utime_unix_parse_utimbuf(struct utimbuf *__restrict p_result,
 #undef NEED_posix_utime_unix_parse_utimbuf32
 INTERN WUNUSED NONNULL((1, 2, 3, 4, 5, 6)) int DCALL
 posix_utime_unix_parse_utimbuf32(struct utimbuf32 *__restrict p_result,
-                                 DeeObject *path_or_fd,
                                  DeeObject *atime, DeeObject *mtime,
                                  DeeObject *ctime, DeeObject *btime,
+                                 DeeObject *path_or_fd,
                                  unsigned int stat_flags) {
 	int result;
 	int64_t used_atime, used_mtime;
@@ -1488,9 +1488,9 @@ posix_utime_unix_parse_utimbuf32(struct utimbuf32 *__restrict p_result,
 #undef NEED_posix_utime_unix_parse_utimbuf64
 INTERN WUNUSED NONNULL((1, 2, 3, 4, 5, 6)) int DCALL
 posix_utime_unix_parse_utimbuf64(struct utimbuf64 *__restrict p_result,
-                                 DeeObject *path_or_fd,
                                  DeeObject *atime, DeeObject *mtime,
                                  DeeObject *ctime, DeeObject *btime,
+                                 DeeObject *path_or_fd,
                                  unsigned int stat_flags) {
 	int result;
 	int64_t used_atime, used_mtime;

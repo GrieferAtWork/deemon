@@ -573,21 +573,21 @@ struct utimbuf32;
 struct utimbuf64;
 INTDEF WUNUSED NONNULL((1, 2, 3, 4, 5, 6)) int DCALL
 posix_utime_unix_parse_utimbuf(struct utimbuf *__restrict p_result,
-                               DeeObject *path_or_fd,
                                DeeObject *atime, DeeObject *mtime,
                                DeeObject *ctime, DeeObject *btime,
+                               DeeObject *path_or_fd,
                                unsigned int stat_flags);
 INTDEF WUNUSED NONNULL((1, 2, 3, 4, 5, 6)) int DCALL
 posix_utime_unix_parse_utimbuf32(struct utimbuf32 *__restrict p_result,
-                                 DeeObject *path_or_fd,
                                  DeeObject *atime, DeeObject *mtime,
                                  DeeObject *ctime, DeeObject *btime,
+                                 DeeObject *path_or_fd,
                                  unsigned int stat_flags);
 INTDEF WUNUSED NONNULL((1, 2, 3, 4, 5, 6)) int DCALL
 posix_utime_unix_parse_utimbuf64(struct utimbuf64 *__restrict p_result,
-                                 DeeObject *path_or_fd,
                                  DeeObject *atime, DeeObject *mtime,
                                  DeeObject *ctime, DeeObject *btime,
+                                 DeeObject *path_or_fd,
                                  unsigned int stat_flags);
 INTDEF WUNUSED NONNULL((1, 2, 3, 4, 5)) int DCALL
 posix_utime_unix_parse_utimbuf_common(int64_t *__restrict p_actime,

@@ -1011,9 +1011,10 @@ err:
 		goto err;
 
 	/* Load the utime-file_times argument. */
-	if unlikely(posix_utime_USED_struct_utimbuf_parse(&file_times, path,
+	if unlikely(posix_utime_USED_struct_utimbuf_parse(&file_times,
 	                                                  atime, mtime,
-	                                                  ctime, btime, 0))
+	                                                  ctime, btime,
+	                                                  path, 0))
 		goto err;
 
 EINTR_ENOMEM_LABEL(again)
@@ -1171,10 +1172,10 @@ err:
 		goto err;
 
 	/* Load the lutime-file_times argument. */
-	if unlikely(posix_lutime_USED_struct_utimbuf_parse(&file_times, path,
+	if unlikely(posix_lutime_USED_struct_utimbuf_parse(&file_times,
 	                                                   atime, mtime,
 	                                                   ctime, btime,
-	                                                   DEE_STAT_F_LSTAT))
+	                                                   path, DEE_STAT_F_LSTAT))
 		goto err;
 
 EINTR_ENOMEM_LABEL(again)
@@ -1359,9 +1360,10 @@ err:
 		goto err;
 
 	/* Load the futime-file_times argument. */
-	if unlikely(posix_futime_USED_struct_utimbuf_parse(&file_times, fd,
+	if unlikely(posix_futime_USED_struct_utimbuf_parse(&file_times,
 	                                                   atime, mtime,
-	                                                   ctime, btime, 0))
+	                                                   ctime, btime,
+	                                                   fd, 0))
 		goto err;
 
 EINTR_ENOMEM_LABEL(again)
