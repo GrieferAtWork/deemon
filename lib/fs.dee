@@ -318,6 +318,11 @@ global final S_ISLNK = posix.S_ISLNK;
 global final S_ISSOCK = posix.S_ISSOCK;
 
 #ifdef __WINDOWS__
-global final fixunc_np = posix.fixunc_np;
-global final chattr_np = posix.chattr_np;
+global final fixunc_np, chattr_np;
+try {
+	local win32 = import("win32");
+	fixunc_np = win32.operator . ("FixUncPath");
+	chattr_np = win32.operator . ("SetFileAttributes");
+} catch (...) {
+}
 #endif /* __WINDOWS__ */

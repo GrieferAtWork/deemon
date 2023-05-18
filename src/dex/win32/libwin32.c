@@ -6100,6 +6100,35 @@ err:
 }
 
 
+/*[[[deemon import("rt.gen.dexutils").gw("FixUncPath", "path:?Dstring->?Dstring"); ]]]*/
+FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_FixUncPath_f_impl(DeeObject *path);
+PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_FixUncPath_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
+#define LIBWIN32_FIXUNCPATH_DEF { "FixUncPath", (DeeObject *)&libwin32_FixUncPath, MODSYM_FNORMAL, DOC("(path:?Dstring)->?Dstring") },
+#define LIBWIN32_FIXUNCPATH_DEF_DOC(doc) { "FixUncPath", (DeeObject *)&libwin32_FixUncPath, MODSYM_FNORMAL, DOC("(path:?Dstring)->?Dstring\n" doc) },
+PRIVATE DEFINE_KWCMETHOD(libwin32_FixUncPath, &libwin32_FixUncPath_f);
+#ifndef LIBWIN32_KWDS_PATH_DEFINED
+#define LIBWIN32_KWDS_PATH_DEFINED
+PRIVATE DEFINE_KWLIST(libwin32_kwds_path, { K(path), KEND });
+#endif /* !LIBWIN32_KWDS_PATH_DEFINED */
+PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_FixUncPath_f(size_t argc, DeeObject *const *argv, DeeObject *kw) {
+	DeeObject *path;
+	if (DeeArg_UnpackKw(argc, argv, kw, libwin32_kwds_path, "o:FixUncPath", &path))
+		goto err;
+	return libwin32_FixUncPath_f_impl(path);
+err:
+	return NULL;
+}
+FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_FixUncPath_f_impl(DeeObject *path)
+/*[[[end]]]*/
+{
+	if (DeeObject_AssertTypeExact(path, &DeeString_Type))
+		goto err;
+	return DeeNTSystem_FixUncPath(path);
+err:
+	return NULL;
+}
+
+
 
 
 
@@ -6114,6 +6143,17 @@ PRIVATE struct dex_symbol symbols[] = {
 	{ "INVALID_HANDLE_VALUE", (DeeObject *)&Dee_INVALID_HANDLE_VALUE, MODSYM_FNORMAL },
 	/* TODO: Wrapper types for `SECURITY_ATTRIBUTES' and `OVERLAPPED' */
 	/* TODO: Wrapper types for `WIN32_FIND_DATA' */
+
+	/* Deemon-specific helpers */
+	LIBWIN32_FIXUNCPATH_DEF_DOC("@interrupt\n"
+	                            "Used ot fix a given path to become a valid UNC long-path.\n"
+	                            "The main purpose of doing this is to break the 260-character "
+	                            /**/ "limit of regular paths under windows and extend it to a "
+	                            /**/ "maximum of around ${2**16}.\n"
+	                            "Note that all system APIs directly exposed by deemon already "
+	                            /**/ "include handling to automatically apply this fix when you "
+	                            /**/ "pass a path that exceeds non-UNC limits, so using this "
+	                            /**/ "function shouldn't be necessary in most cases.")
 
 	/* Error-related functions. */
 	LIBWIN32_GETHANDLE_DEF_DOC("Return the underlying system handle that is bound to the given object\n"
