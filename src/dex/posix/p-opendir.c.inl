@@ -861,7 +861,7 @@ directory_open(DeeDirIteratorObject *__restrict self,
 	wpattern[wname_length]   = 0;
 	DBG_ALIGNMENT_DISABLE();
 	self->odi_hnd = FindFirstFileExW(wpattern, FindExInfoBasic, &self->odi_data,
-	                                FindExSearchNameMatch, NULL, 0);
+	                                 FindExSearchNameMatch, NULL, 0);
 	DBG_ALIGNMENT_ENABLE();
 	Dee_Freea(wpattern);
 	self->odi_first = true;

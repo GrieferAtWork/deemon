@@ -138,7 +138,7 @@ local ALL_STUBS = {
 	("posix_utime_USE_STUB",        { "utime" }),
 	("posix_lutime_USE_STUB",       { "lutime" }),
 	("posix_futime_USE_STUB",       { "futime" }),
-	("posix_futimeat_USE_STUB",     { "futimeat" }),
+	("posix_utimeat_USE_STUB",      { "utimeat" }),
 	("posix_chown_USE_STUB",        { "chown" }),
 	("posix_lchown_USE_STUB",       { "lchown" }),
 	("posix_fchown_USE_STUB",       { "fchown" }),
@@ -663,13 +663,6 @@ print("#endif /" "* POSIX_STUBS_TOTLEN == 0 *" "/");
 #define len_posix_futime_USE_STUB /* nothing */
 #define str_posix_futime_USE_STUB /* nothing */
 #endif /* !posix_futime_USE_STUB */
-#ifdef posix_futimeat_USE_STUB
-#define len_posix_futimeat_USE_STUB +9
-#define str_posix_futimeat_USE_STUB 'f', 'u', 't', 'i', 'm', 'e', 'a', 't', '\0',
-#else /* posix_futimeat_USE_STUB */
-#define len_posix_futimeat_USE_STUB /* nothing */
-#define str_posix_futimeat_USE_STUB /* nothing */
-#endif /* !posix_futimeat_USE_STUB */
 #ifdef posix_getenv_USE_STUB
 #define len_posix_getenv_USE_STUB +7
 #define str_posix_getenv_USE_STUB 'g', 'e', 't', 'e', 'n', 'v', '\0',
@@ -1139,6 +1132,13 @@ print("#endif /" "* POSIX_STUBS_TOTLEN == 0 *" "/");
 #define len_posix_utime_USE_STUB /* nothing */
 #define str_posix_utime_USE_STUB /* nothing */
 #endif /* !posix_utime_USE_STUB */
+#ifdef posix_utimeat_USE_STUB
+#define len_posix_utimeat_USE_STUB +8
+#define str_posix_utimeat_USE_STUB 'u', 't', 'i', 'm', 'e', 'a', 't', '\0',
+#else /* posix_utimeat_USE_STUB */
+#define len_posix_utimeat_USE_STUB /* nothing */
+#define str_posix_utimeat_USE_STUB /* nothing */
+#endif /* !posix_utimeat_USE_STUB */
 #ifdef posix_write_USE_STUB
 #define len_posix_write_USE_STUB +6
 #define str_posix_write_USE_STUB 'w', 'r', 'i', 't', 'e', '\0',
@@ -1214,7 +1214,6 @@ print("#endif /" "* POSIX_STUBS_TOTLEN == 0 *" "/");
 	len_posix_ftruncate_USE_STUB \
 	len_posix_ftruncateat_USE_STUB \
 	len_posix_futime_USE_STUB \
-	len_posix_futimeat_USE_STUB \
 	len_posix_getenv_USE_STUB \
 	len_posix_gethostname_USE_STUB \
 	len_posix_getpid_USE_STUB \
@@ -1282,6 +1281,7 @@ print("#endif /" "* POSIX_STUBS_TOTLEN == 0 *" "/");
 	len_posix_unlinkat_USE_STUB \
 	len_posix_unsetenv_USE_STUB \
 	len_posix_utime_USE_STUB \
+	len_posix_utimeat_USE_STUB \
 	len_posix_write_USE_STUB \
 	len_stat_class_isexe_IS_STUB \
 	len_stat_class_ishidden_IS_STUB \
@@ -1352,7 +1352,6 @@ PRIVATE struct {
 		str_posix_ftruncate_USE_STUB
 		str_posix_ftruncateat_USE_STUB
 		str_posix_futime_USE_STUB
-		str_posix_futimeat_USE_STUB
 		str_posix_getenv_USE_STUB
 		str_posix_gethostname_USE_STUB
 		str_posix_getpid_USE_STUB
@@ -1420,6 +1419,7 @@ PRIVATE struct {
 		str_posix_unlinkat_USE_STUB
 		str_posix_unsetenv_USE_STUB
 		str_posix_utime_USE_STUB
+		str_posix_utimeat_USE_STUB
 		str_posix_write_USE_STUB
 		str_stat_class_isexe_IS_STUB
 		str_stat_class_ishidden_IS_STUB
@@ -2425,8 +2425,8 @@ PRIVATE struct dex_symbol symbols[] = {
 	                       /**/ "of that link, rather than those of the pointed-to file"))
 	D(POSIX_FUTIME_DEF_DOC("@throw FileClosed The given file @fd was closed\n"
 	                       "Same as ?Glchmod, but change permissions of @fd"))
-	D(POSIX_FUTIMEAT_DEF_DOC("@param atflags Set of $0, ?GAT_SYMLINK_NOFOLLOW, ?GAT_EMPTY_PATH\n"
-	                         "Combination of ?Glchmod, ?Glchmod, and ?Gfchmod, changing permissions of @dfd:@path"))
+	D(POSIX_UTIMEAT_DEF_DOC("@param atflags Set of $0, ?GAT_SYMLINK_NOFOLLOW, ?GAT_EMPTY_PATH\n"
+	                        "Combination of ?Glchmod, ?Glchmod, and ?Gfchmod, changing permissions of @dfd:@path"))
 
 	/* chown(2) */
 	D(POSIX_CHOWN_DEF_DOC("@interrupt\n"
