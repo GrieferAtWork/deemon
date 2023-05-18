@@ -684,14 +684,20 @@ func("utimes", "defined(CONFIG_HAVE_SYS_TIME_H) && defined(__USE_MISC)", test: '
 func("utimes64", "defined(CONFIG_HAVE_SYS_TIME_H) && defined(__USE_MISC) && defined(__USE_TIME64)", test: 'struct timeval64 tv[2]; tv[0].tv_sec = 0; tv[0].tv_usec = 0; tv[1] = tv[0]; return utimes64("foo", tv);');
 func("lutimes", "defined(CONFIG_HAVE_SYS_TIME_H)", test: 'struct timeval tv[2]; tv[0].tv_sec = 0; tv[0].tv_usec = 0; tv[1] = tv[0]; return lutimes("foo", tv);');
 func("lutimes64", "defined(CONFIG_HAVE_SYS_TIME_H) && defined(__USE_TIME64)", test: 'struct timeval64 tv[2]; tv[0].tv_sec = 0; tv[0].tv_usec = 0; tv[1] = tv[0]; return lutimes64("foo", tv);');
+func("futimes", "defined(CONFIG_HAVE_SYS_TIME_H) && defined(__USE_MISC)", test: 'struct timeval tv[2]; tv[0].tv_sec = 0; tv[0].tv_usec = 0; tv[1] = tv[0]; return futimes(42, tv);');
+func("futimes64", "defined(CONFIG_HAVE_SYS_TIME_H) && defined(__USE_MISC) && defined(__USE_TIME64)", test: 'struct timeval64 tv[2]; tv[0].tv_sec = 0; tv[0].tv_usec = 0; tv[1] = tv[0]; return futimes64(42, tv);');
 func("futimesat", "defined(CONFIG_HAVE_SYS_TIME_H) && defined(__USE_GNU)", test: 'struct timeval tv[2]; tv[0].tv_sec = 0; tv[0].tv_usec = 0; tv[1] = tv[0]; return futimesat(AT_FDCWD, "foo", tv);');
 func("futimesat64", "defined(CONFIG_HAVE_SYS_TIME_H) && defined(__USE_GNU) && defined(__USE_TIME64)", test: 'struct timeval64 tv[2]; tv[0].tv_sec = 0; tv[0].tv_usec = 0; tv[1] = tv[0]; return futimesat64(AT_FDCWD, "foo", tv);');
 
 // Even better file time modification
-func("utimensat", "defined(CONFIG_HAVE_SYS_STAT_H) && defined(__USE_ATFILE)", test: 'struct timespec ts[2]; ts[0].tv_sec = 0; ts[0].tv_nsec = 0; ts[1] = ts[0]; return utimensat(AT_FDCWD, "foo", ts, 0);');
-func("utimensat64", "defined(CONFIG_HAVE_SYS_STAT_H) && defined(__USE_ATFILE) && defined(__USE_TIME64)", test: 'struct timespec64 ts[2]; ts[0].tv_sec = 0; ts[0].tv_nsec = 0; ts[1] = ts[0]; return utimensat64(AT_FDCWD, "foo", ts, 0);');
-func("futimens", "defined(CONFIG_HAVE_SYS_STAT_H) && defined(__USE_XOPEN2K8)", test: 'struct timespec ts[2]; ts[0].tv_sec = 0; ts[0].tv_nsec = 0; ts[1] = ts[0]; return futimens(1, ts);');
-func("futimens64", "defined(CONFIG_HAVE_SYS_STAT_H) && defined(__USE_XOPEN2K8) && defined(__USE_TIME64)", test: 'struct timespec64 ts[2]; ts[0].tv_sec = 0; ts[0].tv_nsec = 0; ts[1] = ts[0]; return futimens64(1, ts);');
+func("utimens", test: 'struct timespec ts[2]; ts[0].tv_sec = 0; ts[0].tv_nsec = UTIME_OMIT; ts[1] = ts[0]; return utimens("foo", ts);');
+func("utimens64", test: 'struct timespec64 ts[2]; ts[0].tv_sec = 0; ts[0].tv_nsec = UTIME_OMIT; ts[1] = ts[0]; return utimens64("foo", ts);');
+func("lutimens", test: 'struct timespec ts[2]; ts[0].tv_sec = 0; ts[0].tv_nsec = UTIME_OMIT; ts[1] = ts[0]; return lutimens("foo", ts);');
+func("lutimens64", test: 'struct timespec64 ts[2]; ts[0].tv_sec = 0; ts[0].tv_nsec = UTIME_OMIT; ts[1] = ts[0]; return lutimens64("foo", ts);');
+func("futimens", "defined(CONFIG_HAVE_SYS_STAT_H) && defined(__USE_XOPEN2K8)", test: 'struct timespec ts[2]; ts[0].tv_sec = 0; ts[0].tv_nsec = UTIME_OMIT; ts[1] = ts[0]; return futimens(1, ts);');
+func("futimens64", "defined(CONFIG_HAVE_SYS_STAT_H) && defined(__USE_XOPEN2K8) && defined(__USE_TIME64)", test: 'struct timespec64 ts[2]; ts[0].tv_sec = 0; ts[0].tv_nsec = UTIME_OMIT; ts[1] = ts[0]; return futimens64(1, ts);');
+func("utimensat", "defined(CONFIG_HAVE_SYS_STAT_H) && defined(__USE_ATFILE)", test: 'struct timespec ts[2]; ts[0].tv_sec = 0; ts[0].tv_nsec = UTIME_OMIT; ts[1] = ts[0]; return utimensat(AT_FDCWD, "foo", ts, 0);');
+func("utimensat64", "defined(CONFIG_HAVE_SYS_STAT_H) && defined(__USE_ATFILE) && defined(__USE_TIME64)", test: 'struct timespec64 ts[2]; ts[0].tv_sec = 0; ts[0].tv_nsec = UTIME_OMIT; ts[1] = ts[0]; return utimensat64(AT_FDCWD, "foo", ts, 0);');
 
 
 print "#ifdef _MSC_VER";
@@ -5601,6 +5607,22 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #define CONFIG_HAVE_lutimes64
 #endif
 
+#ifdef CONFIG_NO_futimes
+#undef CONFIG_HAVE_futimes
+#elif !defined(CONFIG_HAVE_futimes) && \
+      (defined(futimes) || defined(__futimes_defined) || (defined(CONFIG_HAVE_SYS_TIME_H) && \
+       defined(__USE_MISC)))
+#define CONFIG_HAVE_futimes
+#endif
+
+#ifdef CONFIG_NO_futimes64
+#undef CONFIG_HAVE_futimes64
+#elif !defined(CONFIG_HAVE_futimes64) && \
+      (defined(futimes64) || defined(__futimes64_defined) || (defined(CONFIG_HAVE_SYS_TIME_H) && \
+       defined(__USE_MISC) && defined(__USE_TIME64)))
+#define CONFIG_HAVE_futimes64
+#endif
+
 #ifdef CONFIG_NO_futimesat
 #undef CONFIG_HAVE_futimesat
 #elif !defined(CONFIG_HAVE_futimesat) && \
@@ -5617,20 +5639,32 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #define CONFIG_HAVE_futimesat64
 #endif
 
-#ifdef CONFIG_NO_utimensat
-#undef CONFIG_HAVE_utimensat
-#elif !defined(CONFIG_HAVE_utimensat) && \
-      (defined(utimensat) || defined(__utimensat_defined) || (defined(CONFIG_HAVE_SYS_STAT_H) && \
-       defined(__USE_ATFILE)))
-#define CONFIG_HAVE_utimensat
+#ifdef CONFIG_NO_utimens
+#undef CONFIG_HAVE_utimens
+#elif !defined(CONFIG_HAVE_utimens) && \
+      (defined(utimens) || defined(__utimens_defined))
+#define CONFIG_HAVE_utimens
 #endif
 
-#ifdef CONFIG_NO_utimensat64
-#undef CONFIG_HAVE_utimensat64
-#elif !defined(CONFIG_HAVE_utimensat64) && \
-      (defined(utimensat64) || defined(__utimensat64_defined) || (defined(CONFIG_HAVE_SYS_STAT_H) && \
-       defined(__USE_ATFILE) && defined(__USE_TIME64)))
-#define CONFIG_HAVE_utimensat64
+#ifdef CONFIG_NO_utimens64
+#undef CONFIG_HAVE_utimens64
+#elif !defined(CONFIG_HAVE_utimens64) && \
+      (defined(utimens64) || defined(__utimens64_defined))
+#define CONFIG_HAVE_utimens64
+#endif
+
+#ifdef CONFIG_NO_lutimens
+#undef CONFIG_HAVE_lutimens
+#elif !defined(CONFIG_HAVE_lutimens) && \
+      (defined(lutimens) || defined(__lutimens_defined))
+#define CONFIG_HAVE_lutimens
+#endif
+
+#ifdef CONFIG_NO_lutimens64
+#undef CONFIG_HAVE_lutimens64
+#elif !defined(CONFIG_HAVE_lutimens64) && \
+      (defined(lutimens64) || defined(__lutimens64_defined))
+#define CONFIG_HAVE_lutimens64
 #endif
 
 #ifdef CONFIG_NO_futimens
@@ -5647,6 +5681,22 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
       (defined(futimens64) || defined(__futimens64_defined) || (defined(CONFIG_HAVE_SYS_STAT_H) && \
        defined(__USE_XOPEN2K8) && defined(__USE_TIME64)))
 #define CONFIG_HAVE_futimens64
+#endif
+
+#ifdef CONFIG_NO_utimensat
+#undef CONFIG_HAVE_utimensat
+#elif !defined(CONFIG_HAVE_utimensat) && \
+      (defined(utimensat) || defined(__utimensat_defined) || (defined(CONFIG_HAVE_SYS_STAT_H) && \
+       defined(__USE_ATFILE)))
+#define CONFIG_HAVE_utimensat
+#endif
+
+#ifdef CONFIG_NO_utimensat64
+#undef CONFIG_HAVE_utimensat64
+#elif !defined(CONFIG_HAVE_utimensat64) && \
+      (defined(utimensat64) || defined(__utimensat64_defined) || (defined(CONFIG_HAVE_SYS_STAT_H) && \
+       defined(__USE_ATFILE) && defined(__USE_TIME64)))
+#define CONFIG_HAVE_utimensat64
 #endif
 
 #ifdef _MSC_VER
@@ -10441,6 +10491,42 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #undef lutimes64
 #define lutimes64(path, tv) futimesat64(AT_FDCWD, path, tv, AT_SYMLINK_NOFOLLOW)
 #endif /* lutimes64 = futimesat64 */
+
+#if !defined(CONFIG_HAVE_utimens) && (defined(CONFIG_HAVE_utimensat) && defined(CONFIG_HAVE_AT_FDCWD))
+#define CONFIG_HAVE_utimens
+#undef utimens
+#define utimens(path, tv) utimensat(AT_FDCWD, path, tv, 0)
+#endif /* utimens = utimensat */
+
+#if !defined(CONFIG_HAVE_lutimens) && (defined(CONFIG_HAVE_utimensat) && defined(CONFIG_HAVE_AT_FDCWD) && defined(CONFIG_HAVE_AT_SYMLINK_NOFOLLOW))
+#define CONFIG_HAVE_lutimens
+#undef lutimens
+#define lutimens(path, tv) utimensat(AT_FDCWD, path, tv, AT_SYMLINK_NOFOLLOW)
+#endif /* lutimens = utimensat */
+
+#if !defined(CONFIG_HAVE_futimens) && defined(CONFIG_HAVE_utimensat)
+#define CONFIG_HAVE_futimens
+#undef futimens
+#define futimens(fd, tv) utimensat(fd, NULL, tv, 0)
+#endif /* futimens = utimensat */
+
+#if !defined(CONFIG_HAVE_utimens64) && (defined(CONFIG_HAVE_utimensat64) && defined(CONFIG_HAVE_AT_FDCWD))
+#define CONFIG_HAVE_utimens64
+#undef utimens64
+#define utimens64(path, tv) utimensat64(AT_FDCWD, path, tv, 0)
+#endif /* utimens64 = utimensat64 */
+
+#if !defined(CONFIG_HAVE_lutimens64) && (defined(CONFIG_HAVE_utimensat64) && defined(CONFIG_HAVE_AT_FDCWD) && defined(CONFIG_HAVE_AT_SYMLINK_NOFOLLOW))
+#define CONFIG_HAVE_lutimens64
+#undef lutimens64
+#define lutimens64(path, tv) utimensat64(AT_FDCWD, path, tv, AT_SYMLINK_NOFOLLOW)
+#endif /* lutimens64 = utimensat64 */
+
+#if !defined(CONFIG_HAVE_futimens64) && defined(CONFIG_HAVE_utimensat64)
+#define CONFIG_HAVE_futimens64
+#undef futimens64
+#define futimens64(fd, tv) utimensat64(fd, NULL, tv, 0)
+#endif /* futimens64 = utimensat64 */
 
 #if !defined(CONFIG_HAVE_chmod) && (defined(CONFIG_HAVE_fchmodat) && defined(CONFIG_HAVE_AT_FDCWD))
 #define CONFIG_HAVE_chmod

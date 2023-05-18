@@ -41,6 +41,16 @@
 #define NEED_posix_utime_unix_parse_utimbuf32
 #define NEED_posix_utime_unix_parse_utimbuf64
 #define NEED_posix_utime_unix_parse_utimbuf_common
+#define NEED_posix_utime_unix_parse_timeval
+#define NEED_posix_utime_unix_parse_timeval64
+#define NEED_posix_utime_unix_parse_timespec_2
+#define NEED_posix_utime_unix_parse_timespec64_2
+#define NEED_posix_utime_unix_parse_timespec_3
+#define NEED_posix_utime_unix_parse_timespec64_3
+#define NEED_posix_utime_unix_object_to_timeval
+#define NEED_posix_utime_unix_object_to_timeval64
+#define NEED_posix_utime_unix_object_to_timespec
+#define NEED_posix_utime_unix_object_to_timespec64
 #define NEED_err_unix_chdir
 #define NEED_err_unix_remove
 #define NEED_err_unix_unlink
@@ -1512,8 +1522,8 @@ posix_utime_unix_parse_utimbuf_common(int64_t *__restrict p_actime,
 		Dee_int128_t temp;
 		if (DeeObject_AsInt128(atime, &temp))
 			goto err;
-		__hybrid_int128_div(temp, NANOSECONDS_PER_SECOND);
-		__hybrid_int128_sub(temp, UNIX_TIME_T_BASE_SECONDS);
+		__hybrid_int128_div32(temp, NANOSECONDS_PER_SECOND);
+		__hybrid_int128_sub32(temp, UNIX_TIME_T_BASE_SECONDS);
 		if (!__hybrid_int128_is64bit(temp))
 			goto err_overflow;
 		*p_actime = __hybrid_int128_get64(temp);
@@ -1522,8 +1532,8 @@ posix_utime_unix_parse_utimbuf_common(int64_t *__restrict p_actime,
 		Dee_int128_t temp;
 		if (DeeObject_AsInt128(mtime, &temp))
 			goto err;
-		__hybrid_int128_div(temp, NANOSECONDS_PER_SECOND);
-		__hybrid_int128_sub(temp, UNIX_TIME_T_BASE_SECONDS);
+		__hybrid_int128_div32(temp, NANOSECONDS_PER_SECOND);
+		__hybrid_int128_sub32(temp, UNIX_TIME_T_BASE_SECONDS);
 		if (!__hybrid_int128_is64bit(temp))
 			goto err_overflow;
 		*p_modtime = __hybrid_int128_get64(temp);
@@ -1579,6 +1589,477 @@ err:
 	return -1;
 }
 #endif /* NEED_posix_utime_unix_parse_utimbuf_common */
+
+
+
+
+#ifdef NEED_posix_utime_unix_parse_timeval
+#undef NEED_posix_utime_unix_parse_timeval
+/*[[[deemon
+import * from time;
+print("#define UNIX_TIME_T_BASE_SECONDS    ", Time(year: 1970, month: 1, day: 1).seconds.hex());
+print("#define NT_FILETIME_BASE_SECONDS    ", Time(year: 1601, month: 1, day: 1).seconds.hex());
+print("#define MICROSECONDS_PER_SECOND     ", Time(seconds: 1).microseconds);
+print("#define NANOSECONDS_PER_MICROSECOND ", Time(microseconds: 1).nanoseconds);
+]]]*/
+#define UNIX_TIME_T_BASE_SECONDS    0xe79747c00
+#define NT_FILETIME_BASE_SECONDS    0xbc363eb00
+#define MICROSECONDS_PER_SECOND     1000000
+#define NANOSECONDS_PER_MICROSECOND 1000
+/*[[[end]]]*/
+
+INTERN WUNUSED NONNULL((1, 2, 3, 4)) int DCALL
+posix_utime_unix_parse_timeval(struct timeval *p_tsv /*[2]*/, DeeObject *atime, DeeObject *mtime,
+                               DeeObject *path_or_fd, unsigned int stat_flags) {
+	int result = 0;
+	if (!DeeNone_Check(atime)) {
+		result = posix_utime_unix_object_to_timeval(atime, &p_tsv[0]);
+		if unlikely(result != 0)
+			goto done;
+	}
+	if (!DeeNone_Check(mtime)) {
+		result = posix_utime_unix_object_to_timeval(mtime, &p_tsv[1]);
+		if unlikely(result != 0)
+			goto done;
+	}
+	if (DeeNone_Check(atime) || DeeNone_Check(mtime)) {
+		struct dee_stat st;
+		result = dee_stat_init(&st, NULL, path_or_fd, stat_flags);
+		if unlikely(result != 0)
+			goto done;
+		if (DeeNone_Check(atime)) {
+#ifdef posix_stat_USE_WINDOWS
+			int64_t val;
+			memcpy(&val, &st.st_info.ftLastAccessTime, sizeof(val));
+			val /= 10; /* Convert to microseconds */
+			val -= (int64_t)(NT_FILETIME_BASE_SECONDS * MICROSECONDS_PER_SECOND);
+			val += (int64_t)(UNIX_TIME_T_BASE_SECONDS * MICROSECONDS_PER_SECOND);
+			p_tsv[0].tv_sec  = val / MICROSECONDS_PER_SECOND;
+			p_tsv[0].tv_usec = val % MICROSECONDS_PER_SECOND;
+#elif defined(posix_stat_GET_ATIME_SEC)
+			p_tsv[0].tv_sec = posix_stat_GET_ATIME_SEC(&self->so_stat.st_info);
+#ifdef posix_stat_GET_ATIME_NSEC
+			p_tsv[0].tv_usec = posix_stat_GET_ATIME_NSEC(&self->so_stat.st_info) / NANOSECONDS_PER_MICROSECOND;
+#else /* posix_stat_GET_ATIME_NSEC */
+			p_tsv[0].tv_usec = 0;
+#endif /* !posix_stat_GET_ATIME_NSEC */
+#else /* ... */
+			err_stat_no_atime_info();
+#define NEED_err_stat_no_atime_info
+			dee_stat_fini(&st);
+			goto err;
+#endif /* !... */
+		}
+		if (DeeNone_Check(mtime)) {
+#ifdef posix_stat_USE_WINDOWS
+			int64_t val;
+			memcpy(&val, &st.st_info.ftLastWriteTime, sizeof(val));
+			val /= 10; /* Convert to microseconds */
+			val -= (int64_t)(NT_FILETIME_BASE_SECONDS * MICROSECONDS_PER_SECOND);
+			val += (int64_t)(UNIX_TIME_T_BASE_SECONDS * MICROSECONDS_PER_SECOND);
+			p_tsv[1].tv_sec  = val / MICROSECONDS_PER_SECOND;
+			p_tsv[1].tv_usec = val % MICROSECONDS_PER_SECOND;
+#elif defined(posix_stat_GET_MTIME_SEC)
+			p_tsv[1].tv_sec = posix_stat_GET_MTIME_SEC(&self->so_stat.st_info);
+#ifdef posix_stat_GET_MTIME_NSEC
+			p_tsv[1].tv_usec = posix_stat_GET_MTIME_NSEC(&self->so_stat.st_info) / NANOSECONDS_PER_MICROSECOND;
+#else /* posix_stat_GET_MTIME_NSEC */
+			p_tsv[1].tv_usec = 0;
+#endif /* !posix_stat_GET_MTIME_NSEC */
+#else /* ... */
+			err_stat_no_mtime_info();
+#define NEED_err_stat_no_mtime_info
+			dee_stat_fini(&st);
+			goto err;
+#endif /* !... */
+		}
+		dee_stat_fini(&st);
+	}
+done:
+	return result;
+}
+#endif /* NEED_posix_utime_unix_parse_timeval */
+
+#ifdef NEED_posix_utime_unix_parse_timeval64
+#undef NEED_posix_utime_unix_parse_timeval64
+/*[[[deemon
+import * from time;
+print("#define UNIX_TIME_T_BASE_SECONDS    ", Time(year: 1970, month: 1, day: 1).seconds.hex());
+print("#define NT_FILETIME_BASE_SECONDS    ", Time(year: 1601, month: 1, day: 1).seconds.hex());
+print("#define MICROSECONDS_PER_SECOND     ", Time(seconds: 1).microseconds);
+print("#define NANOSECONDS_PER_MICROSECOND ", Time(microseconds: 1).nanoseconds);
+]]]*/
+#define UNIX_TIME_T_BASE_SECONDS    0xe79747c00
+#define NT_FILETIME_BASE_SECONDS    0xbc363eb00
+#define MICROSECONDS_PER_SECOND     1000000
+#define NANOSECONDS_PER_MICROSECOND 1000
+/*[[[end]]]*/
+
+INTERN WUNUSED NONNULL((1, 2, 3, 4)) int DCALL
+posix_utime_unix_parse_timeval64(struct timeval64 *p_tsv /*[2]*/, DeeObject *atime, DeeObject *mtime,
+                                 DeeObject *path_or_fd, unsigned int stat_flags) {
+	int result = 0;
+	if (!DeeNone_Check(atime)) {
+		result = posix_utime_unix_object_to_timeval64(atime, &p_tsv[0]);
+		if unlikely(result != 0)
+			goto done;
+	}
+	if (!DeeNone_Check(mtime)) {
+		result = posix_utime_unix_object_to_timeval64(mtime, &p_tsv[1]);
+		if unlikely(result != 0)
+			goto done;
+	}
+	if (DeeNone_Check(atime) || DeeNone_Check(mtime)) {
+		struct dee_stat st;
+		result = dee_stat_init(&st, NULL, path_or_fd, stat_flags);
+		if unlikely(result != 0)
+			goto done;
+		if (DeeNone_Check(atime)) {
+#ifdef posix_stat_USE_WINDOWS
+			int64_t val;
+			memcpy(&val, &st.st_info.ftLastAccessTime, sizeof(val));
+			val /= 10; /* Convert to microseconds */
+			val -= (int64_t)(NT_FILETIME_BASE_SECONDS * MICROSECONDS_PER_SECOND);
+			val += (int64_t)(UNIX_TIME_T_BASE_SECONDS * MICROSECONDS_PER_SECOND);
+			p_tsv[0].tv_sec  = val / MICROSECONDS_PER_SECOND;
+			p_tsv[0].tv_usec = val % MICROSECONDS_PER_SECOND;
+#elif defined(posix_stat_GET_ATIME_SEC)
+			p_tsv[0].tv_sec = posix_stat_GET_ATIME_SEC(&self->so_stat.st_info);
+#ifdef posix_stat_GET_ATIME_NSEC
+			p_tsv[0].tv_usec = posix_stat_GET_ATIME_NSEC(&self->so_stat.st_info) / NANOSECONDS_PER_MICROSECOND;
+#else /* posix_stat_GET_ATIME_NSEC */
+			p_tsv[0].tv_usec = 0;
+#endif /* !posix_stat_GET_ATIME_NSEC */
+#else /* ... */
+			err_stat_no_atime_info();
+#define NEED_err_stat_no_atime_info
+			dee_stat_fini(&st);
+			goto err;
+#endif /* !... */
+		}
+		if (DeeNone_Check(mtime)) {
+#ifdef posix_stat_USE_WINDOWS
+			int64_t val;
+			memcpy(&val, &st.st_info.ftLastWriteTime, sizeof(val));
+			val /= 10; /* Convert to microseconds */
+			val -= (int64_t)(NT_FILETIME_BASE_SECONDS * MICROSECONDS_PER_SECOND);
+			val += (int64_t)(UNIX_TIME_T_BASE_SECONDS * MICROSECONDS_PER_SECOND);
+			p_tsv[1].tv_sec  = val / MICROSECONDS_PER_SECOND;
+			p_tsv[1].tv_usec = val % MICROSECONDS_PER_SECOND;
+#elif defined(posix_stat_GET_MTIME_SEC)
+			p_tsv[1].tv_sec = posix_stat_GET_MTIME_SEC(&self->so_stat.st_info);
+#ifdef posix_stat_GET_MTIME_NSEC
+			p_tsv[1].tv_usec = posix_stat_GET_MTIME_NSEC(&self->so_stat.st_info) / NANOSECONDS_PER_MICROSECOND;
+#else /* posix_stat_GET_MTIME_NSEC */
+			p_tsv[1].tv_usec = 0;
+#endif /* !posix_stat_GET_MTIME_NSEC */
+#else /* ... */
+			err_stat_no_mtime_info();
+#define NEED_err_stat_no_mtime_info
+			dee_stat_fini(&st);
+			goto err;
+#endif /* !... */
+		}
+		dee_stat_fini(&st);
+	}
+done:
+	return result;
+}
+#endif /* NEED_posix_utime_unix_parse_timeval64 */
+
+#ifdef NEED_posix_utime_unix_parse_timespec_2
+#undef NEED_posix_utime_unix_parse_timespec_2
+INTERN WUNUSED NONNULL((1, 2, 3)) int DCALL
+posix_utime_unix_parse_timespec_2(struct timespec *p_tsv /*[2]*/,
+                                  DeeObject *atime, DeeObject *mtime) {
+	int result = posix_utime_unix_object_to_timespec(atime, &p_tsv[0]);
+#define NEED_posix_utime_unix_object_to_timespec
+	if likely(result == 0)
+		result = posix_utime_unix_object_to_timespec(mtime, &p_tsv[1]);
+	return result;
+}
+#endif /* NEED_posix_utime_unix_parse_timespec_2 */
+
+#ifdef NEED_posix_utime_unix_parse_timespec64_2
+#undef NEED_posix_utime_unix_parse_timespec64_2
+INTERN WUNUSED NONNULL((1, 2, 3)) int DCALL
+posix_utime_unix_parse_timespec64_2(struct timespec64 *p_tsv /*[2]*/,
+                                    DeeObject *atime, DeeObject *mtime) {
+	int result = posix_utime_unix_object_to_timespec64(atime, &p_tsv[0]);
+#define NEED_posix_utime_unix_object_to_timespec64
+	if likely(result == 0)
+		result = posix_utime_unix_object_to_timespec64(mtime, &p_tsv[1]);
+	return result;
+}
+#endif /* NEED_posix_utime_unix_parse_timespec64_2 */
+
+#ifdef NEED_posix_utime_unix_parse_timespec_3
+#undef NEED_posix_utime_unix_parse_timespec_3
+INTERN WUNUSED NONNULL((1, 2, 3, 4)) int DCALL
+posix_utime_unix_parse_timespec_3(struct timespec *p_tsv /*[3]*/,
+                                  DeeObject *atime, DeeObject *mtime, DeeObject *btime) {
+	int result = posix_utime_unix_object_to_timespec(atime, &p_tsv[0]);
+#define NEED_posix_utime_unix_object_to_timespec
+	if likely(result == 0)
+		result = posix_utime_unix_object_to_timespec(mtime, &p_tsv[1]);
+	if likely(result == 0)
+		result = posix_utime_unix_object_to_timespec(btime, &p_tsv[2]);
+	return result;
+}
+#endif /* NEED_posix_utime_unix_parse_timespec_3 */
+
+#ifdef NEED_posix_utime_unix_parse_timespec64_3
+#undef NEED_posix_utime_unix_parse_timespec64_3
+INTERN WUNUSED NONNULL((1, 2, 3, 4)) int DCALL
+posix_utime_unix_parse_timespec64_3(struct timespec64 *p_tsv /*[3]*/,
+                                    DeeObject *atime, DeeObject *mtime, DeeObject *btime) {
+	int result = posix_utime_unix_object_to_timespec64(atime, &p_tsv[0]);
+#define NEED_posix_utime_unix_object_to_timespec64
+	if likely(result == 0)
+		result = posix_utime_unix_object_to_timespec64(mtime, &p_tsv[1]);
+	if likely(result == 0)
+		result = posix_utime_unix_object_to_timespec64(btime, &p_tsv[2]);
+	return result;
+}
+#endif /* NEED_posix_utime_unix_parse_timespec64_3 */
+
+
+#ifdef NEED_posix_utime_unix_object_to_timeval
+#undef NEED_posix_utime_unix_object_to_timeval
+/*[[[deemon
+import * from time;
+import * from time;
+print("#define UNIX_TIME_T_BASE_MICROSECOND UINT64_C(", Time(year: 1970, month: 1, day: 1).microseconds.hex(), ")");
+print("#define MICROSECONDS_PER_SECOND      ", Time(seconds: 1).microseconds);
+print("#define NANOSECONDS_PER_MICROSECOND  ", Time(microseconds: 1).nanoseconds);
+]]]*/
+#define UNIX_TIME_T_BASE_MICROSECOND UINT64_C(0xdcdcc1a9170000)
+#define MICROSECONDS_PER_SECOND      1000000
+#define NANOSECONDS_PER_MICROSECOND  1000
+/*[[[end]]]*/
+
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
+posix_utime_unix_object_to_timeval(DeeObject *__restrict self,
+                                   struct timeval *__restrict result) {
+	Dee_int128_t temp, seconds128;
+	uint32_t microseconds;
+	if (DeeObject_AsInt128(self, &temp))
+		goto err;
+	__hybrid_int128_div16(temp, NANOSECONDS_PER_MICROSECOND);
+	__hybrid_int128_sub64(temp, UNIX_TIME_T_BASE_MICROSECOND);
+	__hybrid_int128_floordivmod32(temp, MICROSECONDS_PER_SECOND, seconds128, microseconds);
+	__STATIC_IF(sizeof(result->tv_sec) == 4) {
+		if (!__hybrid_int128_is32bit(seconds128))
+			goto err_overflow;
+		result->tv_sec = __hybrid_int128_get32(seconds128);
+	} __STATIC_ELSE(sizeof(result->tv_sec) == 4) {
+		__STATIC_IF(sizeof(result->tv_sec) >= 8) {
+			if (!__hybrid_int128_is64bit(seconds128))
+				goto err_overflow;
+			result->tv_sec = __hybrid_int128_get64(seconds128);
+		} __STATIC_ELSE(sizeof(result->tv_sec) >= 8) {
+			__STATIC_IF(sizeof(result->tv_sec) >= 2) {
+				if (!__hybrid_int128_is16bit(seconds128))
+					goto err_overflow;
+				result->tv_sec = __hybrid_int128_get16(seconds128);
+			} __STATIC_ELSE(sizeof(result->tv_sec) >= 2) {
+				if (!__hybrid_int128_is8bit(seconds128))
+					goto err_overflow;
+				result->tv_sec = __hybrid_int128_get8(seconds128);
+			}
+		}
+	}
+	result->tv_usec = microseconds;
+	return 0;
+err_overflow:
+	err_integer_overflow();
+#define NEED_err_integer_overflow
+err:
+	return -1;
+}
+#endif /* NEED_posix_utime_unix_object_to_timeval */
+
+#ifdef NEED_posix_utime_unix_object_to_timeval64
+#undef NEED_posix_utime_unix_object_to_timeval64
+/*[[[deemon
+import * from time;
+import * from time;
+print("#define UNIX_TIME_T_BASE_MICROSECOND UINT64_C(", Time(year: 1970, month: 1, day: 1).microseconds.hex(), ")");
+print("#define MICROSECONDS_PER_SECOND      ", Time(seconds: 1).microseconds);
+print("#define NANOSECONDS_PER_MICROSECOND  ", Time(microseconds: 1).nanoseconds);
+]]]*/
+#define UNIX_TIME_T_BASE_MICROSECOND UINT64_C(0xdcdcc1a9170000)
+#define MICROSECONDS_PER_SECOND      1000000
+#define NANOSECONDS_PER_MICROSECOND  1000
+/*[[[end]]]*/
+
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
+posix_utime_unix_object_to_timeval64(DeeObject *__restrict self,
+                                     struct timeval64 *__restrict result) {
+	Dee_int128_t temp, seconds128;
+	uint32_t microseconds;
+	if (DeeObject_AsInt128(self, &temp))
+		goto err;
+	__hybrid_int128_div16(temp, NANOSECONDS_PER_MICROSECOND);
+	__hybrid_int128_sub64(temp, UNIX_TIME_T_BASE_MICROSECOND);
+	__hybrid_int128_floordivmod32(temp, MICROSECONDS_PER_SECOND, seconds128, microseconds);
+	__STATIC_IF(sizeof(result->tv_sec) == 4) {
+		if (!__hybrid_int128_is32bit(seconds128))
+			goto err_overflow;
+		result->tv_sec = __hybrid_int128_get32(seconds128);
+	} __STATIC_ELSE(sizeof(result->tv_sec) == 4) {
+		__STATIC_IF(sizeof(result->tv_sec) >= 8) {
+			if (!__hybrid_int128_is64bit(seconds128))
+				goto err_overflow;
+			result->tv_sec = __hybrid_int128_get64(seconds128);
+		} __STATIC_ELSE(sizeof(result->tv_sec) >= 8) {
+			__STATIC_IF(sizeof(result->tv_sec) >= 2) {
+				if (!__hybrid_int128_is16bit(seconds128))
+					goto err_overflow;
+				result->tv_sec = __hybrid_int128_get16(seconds128);
+			} __STATIC_ELSE(sizeof(result->tv_sec) >= 2) {
+				if (!__hybrid_int128_is8bit(seconds128))
+					goto err_overflow;
+				result->tv_sec = __hybrid_int128_get8(seconds128);
+			}
+		}
+	}
+	result->tv_usec = microseconds;
+	return 0;
+err_overflow:
+	err_integer_overflow();
+#define NEED_err_integer_overflow
+err:
+	return -1;
+}
+#endif /* NEED_posix_utime_unix_object_to_timeval64 */
+
+#ifdef NEED_posix_utime_unix_object_to_timespec
+#undef NEED_posix_utime_unix_object_to_timespec
+/*[[[deemon
+import * from time;
+import * from time;
+print("#ifndef UNIX_TIME_T_BASE_NANOSECOND");
+print("#define UNIX_TIME_T_BASE_NANOSECOND UNIX_TIME_T_BASE_NANOSECOND");
+print("PRIVATE Dee_int128_t const UNIX_TIME_T_BASE_NANOSECOND =");
+print("__HYBRID_INT128_INIT16N(",
+	", ".join(for (local x: Time(year: 1970, month: 1, day: 1).nanoseconds.hex(32)[2:].segments(4)) f"0x{x}")
+	, ");");
+print("#endif /" "* UNIX_TIME_T_BASE_NANOSECOND *" "/");
+print("#define NANOSECONDS_PER_SECOND ", Time(seconds: 1).nanoseconds);
+]]]*/
+#ifndef UNIX_TIME_T_BASE_NANOSECOND
+#define UNIX_TIME_T_BASE_NANOSECOND UNIX_TIME_T_BASE_NANOSECOND
+PRIVATE Dee_int128_t const UNIX_TIME_T_BASE_NANOSECOND =
+__HYBRID_INT128_INIT16N(0x0000, 0x0000, 0x0000, 0x0003, 0x5ebe, 0x547c, 0x81d8, 0x0000);
+#endif /* UNIX_TIME_T_BASE_NANOSECOND */
+#define NANOSECONDS_PER_SECOND 1000000000
+/*[[[end]]]*/
+
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
+posix_utime_unix_object_to_timespec(DeeObject *__restrict self,
+                                    struct timespec *__restrict result) {
+	Dee_int128_t temp, seconds128;
+	uint32_t nanoseconds;
+	if (DeeObject_AsInt128(self, &temp))
+		goto err;
+	__hybrid_int128_sub128(temp, UNIX_TIME_T_BASE_NANOSECOND);
+	__hybrid_int128_floordivmod32(temp, NANOSECONDS_PER_SECOND, seconds128, nanoseconds);
+	__STATIC_IF(sizeof(result->tv_sec) == 4) {
+		if (!__hybrid_int128_is32bit(seconds128))
+			goto err_overflow;
+		result->tv_sec = __hybrid_int128_get32(seconds128);
+	} __STATIC_ELSE(sizeof(result->tv_sec) == 4) {
+		__STATIC_IF(sizeof(result->tv_sec) >= 8) {
+			if (!__hybrid_int128_is64bit(seconds128))
+				goto err_overflow;
+			result->tv_sec = __hybrid_int128_get64(seconds128);
+		} __STATIC_ELSE(sizeof(result->tv_sec) >= 8) {
+			__STATIC_IF(sizeof(result->tv_sec) >= 2) {
+				if (!__hybrid_int128_is16bit(seconds128))
+					goto err_overflow;
+				result->tv_sec = __hybrid_int128_get16(seconds128);
+			} __STATIC_ELSE(sizeof(result->tv_sec) >= 2) {
+				if (!__hybrid_int128_is8bit(seconds128))
+					goto err_overflow;
+				result->tv_sec = __hybrid_int128_get8(seconds128);
+			}
+		}
+	}
+	result->tv_nsec = nanoseconds;
+	return 0;
+err_overflow:
+	err_integer_overflow();
+#define NEED_err_integer_overflow
+err:
+	return -1;
+}
+#endif /* NEED_posix_utime_unix_object_to_timespec */
+
+#ifdef NEED_posix_utime_unix_object_to_timespec64
+#undef NEED_posix_utime_unix_object_to_timespec64
+/*[[[deemon
+import * from time;
+import * from time;
+print("#ifndef UNIX_TIME_T_BASE_NANOSECOND");
+print("#define UNIX_TIME_T_BASE_NANOSECOND UNIX_TIME_T_BASE_NANOSECOND");
+print("PRIVATE Dee_int128_t const UNIX_TIME_T_BASE_NANOSECOND =");
+print("__HYBRID_INT128_INIT16N(",
+	", ".join(for (local x: Time(year: 1970, month: 1, day: 1).nanoseconds.hex(32)[2:].segments(4)) f"0x{x}")
+	, ");");
+print("#endif /" "* UNIX_TIME_T_BASE_NANOSECOND *" "/");
+print("#define NANOSECONDS_PER_SECOND ", Time(seconds: 1).nanoseconds);
+]]]*/
+#ifndef UNIX_TIME_T_BASE_NANOSECOND
+#define UNIX_TIME_T_BASE_NANOSECOND UNIX_TIME_T_BASE_NANOSECOND
+PRIVATE Dee_int128_t const UNIX_TIME_T_BASE_NANOSECOND =
+__HYBRID_INT128_INIT16N(0x0000, 0x0000, 0x0000, 0x0003, 0x5ebe, 0x547c, 0x81d8, 0x0000);
+#endif /* UNIX_TIME_T_BASE_NANOSECOND */
+#define NANOSECONDS_PER_SECOND 1000000000
+/*[[[end]]]*/
+
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
+posix_utime_unix_object_to_timespec64(DeeObject *__restrict self,
+                                      struct timespec64 *__restrict result) {
+	Dee_int128_t temp, seconds128;
+	uint32_t nanoseconds;
+	if (DeeObject_AsInt128(self, &temp))
+		goto err;
+	__hybrid_int128_sub128(temp, UNIX_TIME_T_BASE_NANOSECOND);
+	__hybrid_int128_floordivmod32(temp, NANOSECONDS_PER_SECOND, seconds128, nanoseconds);
+	__STATIC_IF(sizeof(result->tv_sec) == 4) {
+		if (!__hybrid_int128_is32bit(seconds128))
+			goto err_overflow;
+		result->tv_sec = __hybrid_int128_get32(seconds128);
+	} __STATIC_ELSE(sizeof(result->tv_sec) == 4) {
+		__STATIC_IF(sizeof(result->tv_sec) >= 8) {
+			if (!__hybrid_int128_is64bit(seconds128))
+				goto err_overflow;
+			result->tv_sec = __hybrid_int128_get64(seconds128);
+		} __STATIC_ELSE(sizeof(result->tv_sec) >= 8) {
+			__STATIC_IF(sizeof(result->tv_sec) >= 2) {
+				if (!__hybrid_int128_is16bit(seconds128))
+					goto err_overflow;
+				result->tv_sec = __hybrid_int128_get16(seconds128);
+			} __STATIC_ELSE(sizeof(result->tv_sec) >= 2) {
+				if (!__hybrid_int128_is8bit(seconds128))
+					goto err_overflow;
+				result->tv_sec = __hybrid_int128_get8(seconds128);
+			}
+		}
+	}
+	result->tv_nsec = nanoseconds;
+	return 0;
+err_overflow:
+	err_integer_overflow();
+#define NEED_err_integer_overflow
+err:
+	return -1;
+}
+#endif /* NEED_posix_utime_unix_object_to_timespec64 */
+
+
+
 
 
 

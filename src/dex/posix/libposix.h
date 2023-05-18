@@ -596,6 +596,45 @@ posix_utime_unix_parse_utimbuf_common(int64_t *__restrict p_actime,
                                       DeeObject *path_or_fd,
                                       unsigned int stat_flags);
 
+/* For utime() implementations using `utimes(2)' or `utimens(2)' */
+#ifdef CONFIG_HAVE_AT_CHANGE_BTIME
+#define POSIX_UTIME_TIMESPEC_COUNT 3
+#else /* CONFIG_HAVE_AT_CHANGE_BTIME */
+#define POSIX_UTIME_TIMESPEC_COUNT 2
+#endif /* !CONFIG_HAVE_AT_CHANGE_BTIME */
+#define POSIX_UTIME_TIMEVAL_COUNT 2
+
+struct timeval;
+struct timeval64;
+struct timespec;
+struct timespec64;
+INTDEF WUNUSED NONNULL((1, 2, 3, 4)) int DCALL
+posix_utime_unix_parse_timeval(struct timeval *__restrict p_tsv /*[2]*/, DeeObject *atime, DeeObject *mtime,
+                               DeeObject *path_or_fd, unsigned int stat_flags);
+INTDEF WUNUSED NONNULL((1, 2, 3, 3)) int DCALL
+posix_utime_unix_parse_timeval64(struct timeval64 *__restrict p_tsv /*[2]*/,
+                                 DeeObject *atime, DeeObject *mtime,
+                                 DeeObject *path_or_fd, unsigned int stat_flags);
+INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL
+posix_utime_unix_parse_timespec_2(struct timespec *__restrict p_tsv /*[2]*/,
+                                  DeeObject *atime, DeeObject *mtime);
+INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL
+posix_utime_unix_parse_timespec64_2(struct timespec64 *__restrict p_tsv /*[2]*/,
+                                    DeeObject *atime, DeeObject *mtime);
+INTDEF WUNUSED NONNULL((1, 2, 3, 4)) int DCALL
+posix_utime_unix_parse_timespec_3(struct timespec *__restrict p_tsv /*[3]*/,
+                                  DeeObject *atime, DeeObject *mtime, DeeObject *btime);
+INTDEF WUNUSED NONNULL((1, 2, 3, 4)) int DCALL
+posix_utime_unix_parse_timespec64_3(struct timespec64 *__restrict p_tsv /*[3]*/,
+                                    DeeObject *atime, DeeObject *mtime, DeeObject *btime);
+
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL posix_utime_unix_object_to_timeval(DeeObject *__restrict self, struct timeval *__restrict result);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL posix_utime_unix_object_to_timeval64(DeeObject *__restrict self, struct timeval64 *__restrict result);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL posix_utime_unix_object_to_timespec(DeeObject *__restrict self, struct timespec *__restrict result); /* Note: also accepts `none' */
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL posix_utime_unix_object_to_timespec64(DeeObject *__restrict self, struct timespec64 *__restrict result); /* Note: also accepts `none' */
+
+
+
 
 /* Default buffer size for copyfile */
 #ifndef POSIX_COPYFILE_DEFAULT_IO_BUFSIZE

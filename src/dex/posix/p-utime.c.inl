@@ -89,6 +89,35 @@ for (local f: functions) {
 /*[[[end]]]*/
 
 
+/* Check if we can use `AT_CHANGE_BTIME' to implement a 3-channel utime() function. */
+#undef utimens_3
+#undef futimens_3
+#undef lutimens_3
+#undef utimens64_3
+#undef futimens64_3
+#undef lutimens64_3
+#ifdef CONFIG_HAVE_AT_CHANGE_BTIME
+#ifdef CONFIG_HAVE_utimensat
+#define futimens_3(fd, tsv)   utimensat(fd, NULL, tsv, AT_CHANGE_BTIME)
+#ifdef CONFIG_HAVE_AT_FDCWD
+#define utimens_3(path, tsv)  utimensat(AT_FDCWD, path, tsv, AT_CHANGE_BTIME)
+#ifdef CONFIG_HAVE_AT_SYMLINK_NOFOLLOW
+#define lutimens_3(path, tsv) utimensat(AT_FDCWD, path, tsv, AT_CHANGE_BTIME | AT_SYMLINK_NOFOLLOW)
+#endif /* CONFIG_HAVE_AT_SYMLINK_NOFOLLOW */
+#endif /* CONFIG_HAVE_AT_FDCWD */
+#endif /* CONFIG_HAVE_utimensat */
+#ifdef CONFIG_HAVE_utimensat64
+#define futimens64_3(fd, tsv)   utimensat64(fd, NULL, tsv, AT_CHANGE_BTIME)
+#ifdef CONFIG_HAVE_AT_FDCWD
+#define utimens64_3(path, tsv)  utimensat64(AT_FDCWD, path, tsv, AT_CHANGE_BTIME)
+#ifdef CONFIG_HAVE_AT_SYMLINK_NOFOLLOW
+#define lutimens64_3(path, tsv) utimensat64(AT_FDCWD, path, tsv, AT_CHANGE_BTIME | AT_SYMLINK_NOFOLLOW)
+#endif /* CONFIG_HAVE_AT_SYMLINK_NOFOLLOW */
+#endif /* CONFIG_HAVE_AT_FDCWD */
+#endif /* CONFIG_HAVE_utimensat64 */
+#endif /* CONFIG_HAVE_AT_CHANGE_BTIME */
+
+
 /* Figure out how we want to implement `utime()' */
 #undef posix_utime_USE_nt_SetFileTime
 #undef posix_utime_USE_wutime64
@@ -107,6 +136,18 @@ for (local f: functions) {
 #undef posix_utime_USE_STUB
 #ifdef CONFIG_HOST_WINDOWS
 #define posix_utime_USE_nt_SetFileTime
+#elif defined(utimens64_3)
+#define posix_utime_USE_utimens64_3
+#elif defined(CONFIG_HAVE_utimens64)
+#define posix_utime_USE_utimens64
+#elif defined(CONFIG_HAVE_utimes64)
+#define posix_utime_USE_utimes64
+#elif defined(utimens_3)
+#define posix_utime_USE_utimens_3
+#elif defined(CONFIG_HAVE_utimens)
+#define posix_utime_USE_utimens
+#elif defined(CONFIG_HAVE_utimes)
+#define posix_utime_USE_utimes
 #elif defined(CONFIG_HAVE_wutime64) && defined(CONFIG_PREFER_WCHAR_FUNCTIONS)
 #define posix_utime_USE_wutime64
 #elif defined(CONFIG_HAVE_utime64)
@@ -151,6 +192,12 @@ for (local f: functions) {
 
 /* Figure out how we want to implement `lutime()' */
 #undef posix_lutime_USE_nt_SetFileTime
+#undef posix_lutime_USE_lutimens64_3
+#undef posix_lutime_USE_lutimens_3
+#undef posix_lutime_USE_lutimens64
+#undef posix_lutime_USE_lutimens
+#undef posix_lutime_USE_lutimes64
+#undef posix_lutime_USE_lutimes
 #undef posix_lutime_USE_wlutime64
 #undef posix_lutime_USE_wlutime32
 #undef posix_lutime_USE_wlutime
@@ -166,6 +213,18 @@ for (local f: functions) {
 #undef posix_lutime_USE_STUB
 #ifdef CONFIG_HOST_WINDOWS
 #define posix_lutime_USE_nt_SetFileTime
+#elif defined(lutimens64_3)
+#define posix_lutime_USE_lutimens64_3
+#elif defined(CONFIG_HAVE_lutimens64)
+#define posix_lutime_USE_lutimens64
+#elif defined(CONFIG_HAVE_lutimes64)
+#define posix_lutime_USE_lutimes64
+#elif defined(lutimens_3)
+#define posix_lutime_USE_lutimens_3
+#elif defined(CONFIG_HAVE_lutimens)
+#define posix_lutime_USE_lutimens
+#elif defined(CONFIG_HAVE_lutimes)
+#define posix_lutime_USE_lutimes
 #elif defined(CONFIG_HAVE_wlutime64) && defined(CONFIG_PREFER_WCHAR_FUNCTIONS)
 #define posix_lutime_USE_wlutime64
 #elif defined(CONFIG_HAVE_lutime64)
@@ -232,6 +291,12 @@ for (local f: functions) {
 
 /* Figure out how we want to implement `futime()' */
 #undef posix_futime_USE_nt_SetFileTime
+#undef posix_futime_USE_futimens64_3
+#undef posix_futime_USE_futimens_3
+#undef posix_futime_USE_futimens64
+#undef posix_futime_USE_futimens
+#undef posix_futime_USE_futimes64
+#undef posix_futime_USE_futimes
 #undef posix_futime_USE_futime64
 #undef posix_futime_USE_futime32
 #undef posix_futime_USE_futime
@@ -240,6 +305,18 @@ for (local f: functions) {
 #undef posix_futime_USE_STUB
 #ifdef CONFIG_HOST_WINDOWS
 #define posix_futime_USE_nt_SetFileTime
+#elif defined(futimens64_3)
+#define posix_futime_USE_futimens64_3
+#elif defined(CONFIG_HAVE_futimens64)
+#define posix_futime_USE_futimens64
+#elif defined(CONFIG_HAVE_futimes64)
+#define posix_futime_USE_futimes64
+#elif defined(futimens_3)
+#define posix_futime_USE_futimens_3
+#elif defined(CONFIG_HAVE_futimens)
+#define posix_futime_USE_futimens
+#elif defined(CONFIG_HAVE_futimes)
+#define posix_futime_USE_futimes
 #elif defined(CONFIG_HAVE_futime64)
 #define posix_futime_USE_futime64
 #elif defined(CONFIG_HAVE_futime)
@@ -257,11 +334,18 @@ for (local f: functions) {
 
 
 /* Figure out how we want to implement `futimeat()' */
+#undef posix_futimeat_USE_utimensat
+#undef posix_futimeat_USE_utimensat64
 #undef posix_futimeat_USE_posix_utime
 #undef posix_futimeat_USE_posix_lutime
 #undef posix_futimeat_USE_posix_futime
 #undef posix_futimeat_USE_STUB
 #if !defined(posix_utime_USE_STUB) || !defined(posix_lutime_USE_STUB)
+#ifdef CONFIG_HAVE_utimensat64
+#define posix_futimeat_USE_utimensat64
+#elif defined(CONFIG_HAVE_utimensat)
+#define posix_futimeat_USE_utimensat
+#endif /* ... */
 #ifndef posix_utime_USE_STUB
 #define posix_futimeat_USE_posix_utime
 #endif /* !posix_utime_USE_STUB */
@@ -521,10 +605,55 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_lutime_f_impl(DeeObject *path, De
 #if defined(posix_utime_USE_wutime) || defined(posix_utime_USE_wutime32) || defined(posix_utime_USE_wutime64)
 #define posix_utime_USED_charT             dwchar_t
 #define posix_utime_USED_DeeString_AsCharT DeeString_AsWide
-#elif defined(posix_utime_USE_utime) || defined(posix_utime_USE_utime32) || defined(posix_utime_USE_utime64)
+#else /* ... */
 #define posix_utime_USED_charT             char
 #define posix_utime_USED_DeeString_AsCharT DeeString_AsUtf8
+#endif /* !... */
+#undef posix_utime_USED_utimens
+#undef posix_utime_USED_struct_timespec
+#undef posix_utime_USED_struct_timespec_COUNT
+#undef posix_utime_USED_struct_timespec_parse
+#undef posix_utime_USED_struct_timespec_IS_timeval
+#ifdef posix_utime_USE_utimens64_3
+#define posix_utime_USED_utimens               utimens64_3
+#define posix_utime_USED_struct_timespec       struct timespec64
+#define posix_utime_USED_struct_timespec_COUNT 3
+#define posix_utime_USED_struct_timespec_parse posix_utime_unix_parse_timespec64_3
+#define NEED_posix_utime_unix_parse_timespec64_3
+#elif defined(posix_utime_USE_utimens_3)
+#define posix_utime_USED_utimens               utimens_3
+#define posix_utime_USED_struct_timespec       struct timespec
+#define posix_utime_USED_struct_timespec_COUNT 3
+#define posix_utime_USED_struct_timespec_parse posix_utime_unix_parse_timespec_3
+#define NEED_posix_utime_unix_parse_timespec_3
+#elif defined(posix_utime_USE_utimens64)
+#define posix_utime_USED_utimens               utimens64
+#define posix_utime_USED_struct_timespec       struct timespec64
+#define posix_utime_USED_struct_timespec_COUNT 2
+#define posix_utime_USED_struct_timespec_parse posix_utime_unix_parse_timespec64_2
+#define NEED_posix_utime_unix_parse_timespec64_2
+#elif defined(posix_utime_USE_utimens)
+#define posix_utime_USED_utimens               utimens
+#define posix_utime_USED_struct_timespec       struct timespec
+#define posix_utime_USED_struct_timespec_COUNT 2
+#define posix_utime_USED_struct_timespec_parse posix_utime_unix_parse_timespec_2
+#define NEED_posix_utime_unix_parse_timespec_2
+#elif defined(posix_utime_USE_utimes64)
+#define posix_utime_USED_utimens               utimes64
+#define posix_utime_USED_struct_timespec       struct timeval64
+#define posix_utime_USED_struct_timespec_COUNT 2
+#define posix_utime_USED_struct_timespec_parse posix_utime_unix_parse_timeval64
+#define posix_utime_USED_struct_timespec_IS_timeval
+#define NEED_posix_utime_unix_parse_timeval64
+#elif defined(posix_utime_USE_utimes)
+#define posix_utime_USED_utimens               utimes
+#define posix_utime_USED_struct_timespec       struct timeval
+#define posix_utime_USED_struct_timespec_COUNT 2
+#define posix_utime_USED_struct_timespec_parse posix_utime_unix_parse_timeval
+#define posix_utime_USED_struct_timespec_IS_timeval
+#define NEED_posix_utime_unix_parse_timeval
 #endif /* ... */
+
 
 /* Define helper macros for `posix_lutime()' */
 #undef posix_lutime_USED_struct_utimbuf
@@ -547,10 +676,55 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_lutime_f_impl(DeeObject *path, De
 #if defined(posix_lutime_USE_wlutime) || defined(posix_lutime_USE_wlutime32) || defined(posix_lutime_USE_wlutime64)
 #define posix_lutime_USED_charT             dwchar_t
 #define posix_lutime_USED_DeeString_AsCharT DeeString_AsWide
-#elif defined(posix_lutime_USE_lutime) || defined(posix_lutime_USE_lutime32) || defined(posix_lutime_USE_lutime64)
+#else /* ... */
 #define posix_lutime_USED_charT             char
 #define posix_lutime_USED_DeeString_AsCharT DeeString_AsUtf8
+#endif /* !... */
+#undef posix_lutime_USED_lutimens
+#undef posix_lutime_USED_struct_timespec
+#undef posix_lutime_USED_struct_timespec_COUNT
+#undef posix_lutime_USED_struct_timespec_parse
+#undef posix_lutime_USED_struct_timespec_IS_timeval
+#ifdef posix_lutime_USE_lutimens64_3
+#define posix_lutime_USED_lutimens              lutimens64_3
+#define posix_lutime_USED_struct_timespec       struct timespec64
+#define posix_lutime_USED_struct_timespec_COUNT 3
+#define posix_lutime_USED_struct_timespec_parse posix_utime_unix_parse_timespec64_3
+#define NEED_posix_utime_unix_parse_timespec64_3
+#elif defined(posix_lutime_USE_lutimens_3)
+#define posix_lutime_USED_lutimens              lutimens_3
+#define posix_lutime_USED_struct_timespec       struct timespec
+#define posix_lutime_USED_struct_timespec_COUNT 3
+#define posix_lutime_USED_struct_timespec_parse posix_utime_unix_parse_timespec_3
+#define NEED_posix_utime_unix_parse_timespec_3
+#elif defined(posix_lutime_USE_lutimens64)
+#define posix_lutime_USED_lutimens              lutimens64
+#define posix_lutime_USED_struct_timespec       struct timespec64
+#define posix_lutime_USED_struct_timespec_COUNT 2
+#define posix_lutime_USED_struct_timespec_parse posix_utime_unix_parse_timespec64_2
+#define NEED_posix_utime_unix_parse_timespec64_2
+#elif defined(posix_lutime_USE_lutimens)
+#define posix_lutime_USED_lutimens              lutimens
+#define posix_lutime_USED_struct_timespec       struct timespec
+#define posix_lutime_USED_struct_timespec_COUNT 2
+#define posix_lutime_USED_struct_timespec_parse posix_utime_unix_parse_timespec_2
+#define NEED_posix_utime_unix_parse_timespec_2
+#elif defined(posix_lutime_USE_lutimes64)
+#define posix_lutime_USED_lutimens              lutimes64
+#define posix_lutime_USED_struct_timespec       struct timeval64
+#define posix_lutime_USED_struct_timespec_COUNT 2
+#define posix_lutime_USED_struct_timespec_parse posix_utime_unix_parse_timeval64
+#define posix_lutime_USED_struct_timespec_IS_timeval
+#define NEED_posix_utime_unix_parse_timeval64
+#elif defined(posix_lutime_USE_lutimes)
+#define posix_lutime_USED_lutimens              lutimes
+#define posix_lutime_USED_struct_timespec       struct timeval
+#define posix_lutime_USED_struct_timespec_COUNT 2
+#define posix_lutime_USED_struct_timespec_parse posix_utime_unix_parse_timeval
+#define posix_lutime_USED_struct_timespec_IS_timeval
+#define NEED_posix_utime_unix_parse_timeval
 #endif /* ... */
+
 
 /* Define helper macros for `posix_futime()' */
 #undef posix_futime_USED_struct_utimbuf
@@ -568,6 +742,86 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_lutime_f_impl(DeeObject *path, De
 #define posix_futime_USED_struct_utimbuf_parse posix_utime_unix_parse_utimbuf64
 #define NEED_posix_utime_unix_parse_utimbuf64
 #endif /* ... */
+#undef posix_futime_USED_futimens
+#undef posix_futime_USED_struct_timespec
+#undef posix_futime_USED_struct_timespec_COUNT
+#undef posix_futime_USED_struct_timespec_parse
+#undef posix_futime_USED_struct_timespec_IS_timeval
+#ifdef posix_futime_USE_futimens64_3
+#define posix_futime_USED_futimens              futimens64_3
+#define posix_futime_USED_struct_timespec       struct timespec64
+#define posix_futime_USED_struct_timespec_COUNT 3
+#define posix_futime_USED_struct_timespec_parse posix_utime_unix_parse_timespec64_3
+#define NEED_posix_utime_unix_parse_timespec64_3
+#elif defined(posix_futime_USE_futimens_3)
+#define posix_futime_USED_futimens              futimens_3
+#define posix_futime_USED_struct_timespec       struct timespec
+#define posix_futime_USED_struct_timespec_COUNT 3
+#define posix_futime_USED_struct_timespec_parse posix_utime_unix_parse_timespec_3
+#define NEED_posix_utime_unix_parse_timespec_3
+#elif defined(posix_futime_USE_futimens64)
+#define posix_futime_USED_futimens              futimens64
+#define posix_futime_USED_struct_timespec       struct timespec64
+#define posix_futime_USED_struct_timespec_COUNT 2
+#define posix_futime_USED_struct_timespec_parse posix_utime_unix_parse_timespec64_2
+#define NEED_posix_utime_unix_parse_timespec64_2
+#elif defined(posix_futime_USE_futimens)
+#define posix_futime_USED_futimens              futimens
+#define posix_futime_USED_struct_timespec       struct timespec
+#define posix_futime_USED_struct_timespec_COUNT 2
+#define posix_futime_USED_struct_timespec_parse posix_utime_unix_parse_timespec_2
+#define NEED_posix_utime_unix_parse_timespec_2
+#elif defined(posix_futime_USE_futimes64)
+#define posix_futime_USED_futimens              futimes64
+#define posix_futime_USED_struct_timespec       struct timeval64
+#define posix_futime_USED_struct_timespec_COUNT 2
+#define posix_futime_USED_struct_timespec_parse posix_utime_unix_parse_timeval64
+#define posix_futime_USED_struct_timespec_IS_timeval
+#define NEED_posix_utime_unix_parse_timeval64
+#elif defined(posix_futime_USE_futimes)
+#define posix_futime_USED_futimens              futimes
+#define posix_futime_USED_struct_timespec       struct timeval
+#define posix_futime_USED_struct_timespec_COUNT 2
+#define posix_futime_USED_struct_timespec_parse posix_utime_unix_parse_timeval
+#define posix_futime_USED_struct_timespec_IS_timeval
+#define NEED_posix_utime_unix_parse_timeval
+#endif /* ... */
+
+
+
+
+/* Define helper macros for `posix_futimeat()' */
+#undef posix_futimeat_USED_utimensat
+#undef posix_futimeat_USED_struct_timespec
+#undef posix_futimeat_USED_struct_timespec_COUNT
+#undef posix_futimeat_USED_struct_timespec_parse
+#ifdef posix_futimeat_USE_utimensat64
+#define posix_futimeat_USED_utimensat             utimensat64
+#define posix_futimeat_USED_struct_timespec       struct timespec64
+#define posix_futimeat_USED_struct_timespec_COUNT POSIX_UTIME_TIMESPEC_COUNT
+#if posix_futimeat_USED_struct_timespec_COUNT == 2
+#define posix_futimeat_USED_struct_timespec_parse posix_utime_unix_parse_timespec64_2
+#define NEED_posix_utime_unix_parse_timespec64_2
+#else /* posix_futimeat_USED_struct_timespec_COUNT == 2 */
+#define posix_futimeat_USED_struct_timespec_parse posix_utime_unix_parse_timespec64_3
+#define NEED_posix_utime_unix_parse_timespec64_3
+#endif /* posix_futimeat_USED_struct_timespec_COUNT != 2 */
+#elif defined(posix_futimeat_USE_utimensat)
+#define posix_futimeat_USED_utimensat             utimensat
+#define posix_futimeat_USED_struct_timespec       struct timespec
+#define posix_futimeat_USED_struct_timespec_COUNT POSIX_UTIME_TIMESPEC_COUNT
+#if posix_futimeat_USED_struct_timespec_COUNT == 2
+#define posix_futimeat_USED_struct_timespec_parse posix_utime_unix_parse_timespec_2
+#define NEED_posix_utime_unix_parse_timespec_2
+#else /* posix_futimeat_USED_struct_timespec_COUNT == 2 */
+#define posix_futimeat_USED_struct_timespec_parse posix_utime_unix_parse_timespec_3
+#define NEED_posix_utime_unix_parse_timespec_3
+#endif /* posix_futimeat_USED_struct_timespec_COUNT != 2 */
+#endif /* ... */
+
+
+
+
 
 #if (defined(posix_utime_USE_nt_SetFileTime) || \
      defined(posix_lutime_USE_nt_SetFileTime))
@@ -674,6 +928,61 @@ err:
 	return NULL;
 #endif /* posix_utime_USE_posix_readlink__AND__posix_lutime */
 
+#ifdef posix_utime_USED_utimens
+	posix_utime_USED_struct_timespec tsv[posix_utime_USED_struct_timespec_COUNT];
+	int error;
+	posix_utime_USED_charT const *os_path;
+
+	/* Check that we can satisfy all requested time channels. */
+#if posix_utime_USED_struct_timespec_COUNT == 2
+	if (!DeeNone_Check(ctime) || !DeeNone_Check(btime)) {
+		err_utime_cannot_set_ctime_or_btime(path, ctime, btime);
+#define NEED_err_utime_cannot_set_ctime_or_btime
+		goto err;
+	}
+#else /* posix_utime_USED_struct_timespec_COUNT == 2 */
+	if (!DeeNone_Check(ctime)) {
+		err_utime_cannot_set_ctime(path, ctime);
+#define NEED_err_utime_cannot_set_ctime
+		goto err;
+	}
+#endif /* posix_utime_USED_struct_timespec_COUNT != 2 */
+
+	/* Decode arguments. */
+	if (DeeObject_AssertTypeExact(path, &DeeString_Type))
+		goto err;
+	os_path = posix_utime_USED_DeeString_AsCharT(path);
+	if unlikely(!os_path)
+		goto err;
+#ifdef posix_utime_USED_struct_timespec_IS_timeval
+	if (posix_utime_USED_struct_timespec_parse(tsv, atime, mtime, path, 0))
+#elif posix_utime_USED_struct_timespec_COUNT == 2
+	if (posix_utime_USED_struct_timespec_parse(tsv, atime, mtime))
+#else /* posix_utime_USED_struct_timespec_COUNT == 2 */
+	if (posix_utime_USED_struct_timespec_parse(tsv, atime, mtime, btime))
+#endif /* posix_utime_USED_struct_timespec_COUNT != 2 */
+	{
+		goto err;
+	}
+
+EINTR_ENOMEM_LABEL(again)
+	DBG_ALIGNMENT_DISABLE();
+	error = posix_utime_USED_utimens(os_path, tsv);
+	if unlikely(error != 0) {
+		DBG_ALIGNMENT_DISABLE();
+		error = DeeSystem_GetErrno();
+		DBG_ALIGNMENT_ENABLE();
+		EINTR_HANDLE(error, again, err);
+		ENOMEM_HANDLE(error, again, err);
+		err_unix_utime(error, path, atime, mtime, ctime, btime);
+#define NEED_err_unix_utime
+		goto err;
+	}
+	return_none;
+err:
+	return NULL;
+#endif /* posix_utime_USED_utimens */
+
 #ifdef posix_utime_USED_struct_utimbuf
 	int error;
 	posix_utime_USED_struct_utimbuf file_times;
@@ -714,7 +1023,7 @@ EINTR_ENOMEM_LABEL(again)
 #endif /* posix_utime_USE_utime64 */
 	DBG_ALIGNMENT_ENABLE();
 
-	if unlikely(error < 0) {
+	if unlikely(error != 0) {
 		error = DeeSystem_GetErrno();
 		EINTR_HANDLE(error, again, err);
 		ENOMEM_HANDLE(error, again, err);
@@ -773,6 +1082,61 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_lutime_f_impl(DeeObject *path, De
 	                                        FILE_FLAG_OPEN_REPARSE_POINT);
 #endif /* posix_lutime_USE_nt_SetFileTime */
 
+#ifdef posix_lutime_USED_lutimens
+	posix_lutime_USED_struct_timespec tsv[posix_lutime_USED_struct_timespec_COUNT];
+	int error;
+	posix_lutime_USED_charT const *os_path;
+
+	/* Check that we can satisfy all requested time channels. */
+#if posix_lutime_USED_struct_timespec_COUNT == 2
+	if (!DeeNone_Check(ctime) || !DeeNone_Check(btime)) {
+		err_utime_cannot_set_ctime_or_btime(path, ctime, btime);
+#define NEED_err_utime_cannot_set_ctime_or_btime
+		goto err;
+	}
+#else /* posix_lutime_USED_struct_timespec_COUNT == 2 */
+	if (!DeeNone_Check(ctime)) {
+		err_utime_cannot_set_ctime(path, ctime);
+#define NEED_err_utime_cannot_set_ctime
+		goto err;
+	}
+#endif /* posix_lutime_USED_struct_timespec_COUNT != 2 */
+
+	/* Decode arguments. */
+	if (DeeObject_AssertTypeExact(path, &DeeString_Type))
+		goto err;
+	os_path = posix_lutime_USED_DeeString_AsCharT(path);
+	if unlikely(!os_path)
+		goto err;
+#ifdef posix_lutime_USED_struct_timespec_IS_timeval
+	if (posix_lutime_USED_struct_timespec_parse(tsv, atime, mtime, path, DEE_STAT_F_LSTAT))
+#elif posix_lutime_USED_struct_timespec_COUNT == 2
+	if (posix_lutime_USED_struct_timespec_parse(tsv, atime, mtime))
+#else /* posix_lutime_USED_struct_timespec_COUNT == 2 */
+	if (posix_lutime_USED_struct_timespec_parse(tsv, atime, mtime, btime))
+#endif /* posix_lutime_USED_struct_timespec_COUNT != 2 */
+	{
+		goto err;
+	}
+
+EINTR_ENOMEM_LABEL(again)
+	DBG_ALIGNMENT_DISABLE();
+	error = posix_lutime_USED_lutimens(os_path, tsv);
+	if unlikely(error != 0) {
+		DBG_ALIGNMENT_DISABLE();
+		error = DeeSystem_GetErrno();
+		DBG_ALIGNMENT_ENABLE();
+		EINTR_HANDLE(error, again, err);
+		ENOMEM_HANDLE(error, again, err);
+		err_unix_lutime(error, path, atime, mtime, ctime, btime);
+#define NEED_err_unix_lutime
+		goto err;
+	}
+	return_none;
+err:
+	return NULL;
+#endif /* posix_lutime_USED_lutimens */
+
 #ifdef posix_lutime_USED_struct_utimbuf
 	int error;
 	posix_lutime_USED_struct_utimbuf file_times;
@@ -814,7 +1178,7 @@ EINTR_ENOMEM_LABEL(again)
 #endif /* posix_lutime_USE_lutime64 */
 	DBG_ALIGNMENT_ENABLE();
 
-	if unlikely(error < 0) {
+	if unlikely(error != 0) {
 		error = DeeSystem_GetErrno();
 		EINTR_HANDLE(error, again, err);
 		ENOMEM_HANDLE(error, again, err);
@@ -895,6 +1259,59 @@ err:
 	return NULL;
 #endif /* posix_futime_USE_nt_SetFileTime */
 
+#ifdef posix_futime_USED_futimens
+	posix_futime_USED_struct_timespec tsv[posix_futime_USED_struct_timespec_COUNT];
+	int error;
+	int os_fd;
+
+	/* Check that we can satisfy all requested time channels. */
+#if posix_futime_USED_struct_timespec_COUNT == 2
+	if (!DeeNone_Check(ctime) || !DeeNone_Check(btime)) {
+		err_utime_cannot_set_ctime_or_btime(fd, ctime, btime);
+#define NEED_err_utime_cannot_set_ctime_or_btime
+		goto err;
+	}
+#else /* posix_futime_USED_struct_timespec_COUNT == 2 */
+	if (!DeeNone_Check(ctime)) {
+		err_utime_cannot_set_ctime(fd, ctime);
+#define NEED_err_utime_cannot_set_ctime
+		goto err;
+	}
+#endif /* posix_futime_USED_struct_timespec_COUNT != 2 */
+
+	/* Decode arguments. */
+	os_fd = DeeUnixSystem_GetFD(fd);
+	if unlikely(os_fd == -1)
+		goto err;
+#ifdef posix_futime_USED_struct_timespec_IS_timeval
+	if (posix_futime_USED_struct_timespec_parse(tsv, atime, mtime, fd, 0))
+#elif posix_futime_USED_struct_timespec_COUNT == 2
+	if (posix_futime_USED_struct_timespec_parse(tsv, atime, mtime))
+#else /* posix_futime_USED_struct_timespec_COUNT == 2 */
+	if (posix_futime_USED_struct_timespec_parse(tsv, atime, mtime, btime))
+#endif /* posix_futime_USED_struct_timespec_COUNT != 2 */
+	{
+		goto err;
+	}
+
+EINTR_ENOMEM_LABEL(again)
+	DBG_ALIGNMENT_DISABLE();
+	error = posix_futime_USED_futimens(os_fd, tsv);
+	if unlikely(error != 0) {
+		DBG_ALIGNMENT_DISABLE();
+		error = DeeSystem_GetErrno();
+		DBG_ALIGNMENT_ENABLE();
+		EINTR_HANDLE(error, again, err);
+		ENOMEM_HANDLE(error, again, err);
+		err_unix_futime(error, fd, atime, mtime, ctime, btime);
+#define NEED_err_unix_futime
+		goto err;
+	}
+	return_none;
+err:
+	return NULL;
+#endif /* posix_futime_USED_futimens */
+
 #ifdef posix_futime_USED_struct_utimbuf
 	int error;
 	int os_fd;
@@ -924,8 +1341,10 @@ EINTR_ENOMEM_LABEL(again)
 #endif /* posix_futime_USE_futime64 */
 	DBG_ALIGNMENT_ENABLE();
 
-	if unlikely(error < 0) {
+	if unlikely(error != 0) {
+		DBG_ALIGNMENT_DISABLE();
 		error = DeeSystem_GetErrno();
+		DBG_ALIGNMENT_ENABLE();
 		EINTR_HANDLE(error, again, err);
 		ENOMEM_HANDLE(error, again, err);
 		err_unix_futime(error, fd, atime, mtime, ctime, btime);
@@ -1007,6 +1426,52 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_futimeat_f_impl(DeeObject *dfd, D
 		atflags &= ~AT_EMPTY_PATH;
 	}
 #endif /* posix_futimeat_USE_posix_futime */
+
+#ifdef posix_futimeat_USED_utimensat
+	if (!DeeString_Check(dfd) &&
+#if posix_futimeat_USED_struct_timespec_COUNT == 2
+	    DeeNone_Check(btime) &&
+#endif /* posix_futimeat_USED_struct_timespec_COUNT == 2 */
+	    DeeNone_Check(ctime)) {
+		posix_futimeat_USED_struct_timespec tsv[posix_futimeat_USED_struct_timespec_COUNT];
+		int error;
+		int os_dfd;
+		char const *utf8_path;
+		os_dfd = DeeUnixSystem_GetFD(dfd);
+		if unlikely(os_dfd == -1)
+			goto err;
+		if (DeeObject_AssertTypeExact(path, &DeeString_Type))
+			goto err;
+		utf8_path = DeeString_AsUtf8(path);
+		if unlikely(!utf8_path)
+			goto err;
+#if posix_futimeat_USED_struct_timespec_COUNT == 2
+		if (posix_futimeat_USED_struct_timespec_parse(tsv, atime, mtime))
+#else /* posix_futimeat_USED_struct_timespec_COUNT == 2 */
+		if (posix_futimeat_USED_struct_timespec_parse(tsv, atime, mtime, btime))
+#endif /* posix_futimeat_USED_struct_timespec_COUNT != 2 */
+		{
+			goto err;
+		}
+#ifdef CONFIG_HAVE_AT_CHANGE_BTIME
+		atflags |= AT_CHANGE_BTIME;
+#endif /* CONFIG_HAVE_AT_CHANGE_BTIME */
+EINTR_ENOMEM_LABEL(again)
+		DBG_ALIGNMENT_DISABLE();
+		if (posix_futimeat_USED_utimensat(os_dfd, utf8_path, tsv, atflags) == 0) {
+			DBG_ALIGNMENT_ENABLE();
+			return_none;
+		}
+		error = DeeSystem_GetErrno();
+		DBG_ALIGNMENT_ENABLE();
+		EINTR_HANDLE(error, again, err);
+		ENOMEM_HANDLE(error, again, err);
+#ifdef CONFIG_HAVE_AT_CHANGE_BTIME
+		atflags &= ~AT_CHANGE_BTIME;
+#endif /* CONFIG_HAVE_AT_CHANGE_BTIME */
+		/* Fallthru to fallback path below */
+	}
+#endif /* posix_futimeat_USED_utimensat */
 
 #ifdef posix_futimeat_USE_posix_lutime
 	abspath = posix_dfd_makepath(dfd, path, atflags & ~AT_SYMLINK_NOFOLLOW);
