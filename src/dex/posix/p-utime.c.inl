@@ -272,9 +272,9 @@ for (local f: functions) {
 #endif /* !... */
 
 /* Check if we should emulate
- * >> utime(path, atime, mtime, ctime, btime);
+ * >> utime(path, atime, mtime, ctime, birthtime);
  * As:
- * >> lutime(try joinpath(headof(path), readlink(path)) catch (NoSymlink) path, atime, mtime, ctime, btime); */
+ * >> lutime(try joinpath(headof(path), readlink(path)) catch (NoSymlink) path, atime, mtime, ctime, birthtime); */
 #if ((defined(posix_utime_USE_STUB) ||                \
       defined(posix_utime_USE_open_AND_futime) ||     \
       defined(posix_utime_USE_open_AND_futime32) ||   \
@@ -586,7 +586,7 @@ PRIVATE int DCALL dee_lutime64(wchar_t const *filename, struct utimbuf64 *file_t
 #endif /* posix_lutime_USE_open_AND_futime64 */
 
 #ifdef posix_utime_USE_posix_readlink__AND__posix_lutime
-FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_lutime_f_impl(DeeObject *path, DeeObject *atime, DeeObject *mtime, DeeObject *ctime, DeeObject *btime);
+FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_lutime_f_impl(DeeObject *path, DeeObject *atime, DeeObject *mtime, DeeObject *ctime, DeeObject *birthtime);
 #endif /* posix_utime_USE_posix_readlink__AND__posix_lutime */
 
 
@@ -834,7 +834,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_lutime_f_impl(DeeObject *path, De
 PRIVATE WUNUSED DREF DeeObject *DCALL
 posix_Xutime_impl_nt_SetFileTime(DeeObject *path,
                                  DeeObject *atime, DeeObject *mtime,
-                                 DeeObject *ctime, DeeObject *btime,
+                                 DeeObject *ctime, DeeObject *birthtime,
                                  DeeNT_DWORD dwFlagsAndAttributes) {
 	HANDLE hFile;
 	int error;
@@ -857,7 +857,7 @@ posix_Xutime_impl_nt_SetFileTime(DeeObject *path,
 	if unlikely(hFile == INVALID_HANDLE_VALUE) {
 		error = 1;
 	} else {
-		error = nt_SetFileTime(hFile, atime, mtime, btime);
+		error = nt_SetFileTime(hFile, atime, mtime, birthtime);
 #define NEED_nt_SetFileTime
 		(void)CloseHandle(hFile);
 		if unlikely(error < 0)
@@ -868,7 +868,7 @@ posix_Xutime_impl_nt_SetFileTime(DeeObject *path,
 		DBG_ALIGNMENT_DISABLE();
 		dwError = GetLastError();
 		DBG_ALIGNMENT_ENABLE();
-		err_nt_utime(dwError, path, atime, mtime, btime);
+		err_nt_utime(dwError, path, atime, mtime, birthtime);
 #define NEED_err_nt_utime
 		goto err;
 	}
@@ -882,33 +882,33 @@ err:
 #endif /* ... */
 
 
-/*[[[deemon import("rt.gen.dexutils").gw("utime", "path:?Dstring,atime:?Etime:Time=Dee_None,mtime:?Etime:Time=Dee_None,ctime:?Etime:Time=Dee_None,btime:?Etime:Time=Dee_None", libname: "posix"); ]]]*/
-FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_utime_f_impl(DeeObject *path, DeeObject *atime, DeeObject *mtime, DeeObject *ctime, DeeObject *btime);
+/*[[[deemon import("rt.gen.dexutils").gw("utime", "path:?Dstring,atime:?Etime:Time=Dee_None,mtime:?Etime:Time=Dee_None,ctime:?Etime:Time=Dee_None,birthtime:?Etime:Time=Dee_None", libname: "posix"); ]]]*/
+FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_utime_f_impl(DeeObject *path, DeeObject *atime, DeeObject *mtime, DeeObject *ctime, DeeObject *birthtime);
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_utime_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
-#define POSIX_UTIME_DEF { "utime", (DeeObject *)&posix_utime, MODSYM_FNORMAL, DOC("(path:?Dstring,atime:?Etime:Time=!N,mtime:?Etime:Time=!N,ctime:?Etime:Time=!N,btime:?Etime:Time=!N)") },
-#define POSIX_UTIME_DEF_DOC(doc) { "utime", (DeeObject *)&posix_utime, MODSYM_FNORMAL, DOC("(path:?Dstring,atime:?Etime:Time=!N,mtime:?Etime:Time=!N,ctime:?Etime:Time=!N,btime:?Etime:Time=!N)\n" doc) },
+#define POSIX_UTIME_DEF { "utime", (DeeObject *)&posix_utime, MODSYM_FNORMAL, DOC("(path:?Dstring,atime:?Etime:Time=!N,mtime:?Etime:Time=!N,ctime:?Etime:Time=!N,birthtime:?Etime:Time=!N)") },
+#define POSIX_UTIME_DEF_DOC(doc) { "utime", (DeeObject *)&posix_utime, MODSYM_FNORMAL, DOC("(path:?Dstring,atime:?Etime:Time=!N,mtime:?Etime:Time=!N,ctime:?Etime:Time=!N,birthtime:?Etime:Time=!N)\n" doc) },
 PRIVATE DEFINE_KWCMETHOD(posix_utime, &posix_utime_f);
-#ifndef POSIX_KWDS_PATH_ATIME_MTIME_CTIME_BTIME_DEFINED
-#define POSIX_KWDS_PATH_ATIME_MTIME_CTIME_BTIME_DEFINED
-PRIVATE DEFINE_KWLIST(posix_kwds_path_atime_mtime_ctime_btime, { K(path), K(atime), K(mtime), K(ctime), K(btime), KEND });
-#endif /* !POSIX_KWDS_PATH_ATIME_MTIME_CTIME_BTIME_DEFINED */
+#ifndef POSIX_KWDS_PATH_ATIME_MTIME_CTIME_BIRTHTIME_DEFINED
+#define POSIX_KWDS_PATH_ATIME_MTIME_CTIME_BIRTHTIME_DEFINED
+PRIVATE DEFINE_KWLIST(posix_kwds_path_atime_mtime_ctime_birthtime, { K(path), K(atime), K(mtime), K(ctime), K(birthtime), KEND });
+#endif /* !POSIX_KWDS_PATH_ATIME_MTIME_CTIME_BIRTHTIME_DEFINED */
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_utime_f(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	DeeObject *path;
 	DeeObject *atime = Dee_None;
 	DeeObject *mtime = Dee_None;
 	DeeObject *ctime = Dee_None;
-	DeeObject *btime = Dee_None;
-	if (DeeArg_UnpackKw(argc, argv, kw, posix_kwds_path_atime_mtime_ctime_btime, "o|oooo:utime", &path, &atime, &mtime, &ctime, &btime))
+	DeeObject *birthtime = Dee_None;
+	if (DeeArg_UnpackKw(argc, argv, kw, posix_kwds_path_atime_mtime_ctime_birthtime, "o|oooo:utime", &path, &atime, &mtime, &ctime, &birthtime))
 		goto err;
-	return posix_utime_f_impl(path, atime, mtime, ctime, btime);
+	return posix_utime_f_impl(path, atime, mtime, ctime, birthtime);
 err:
 	return NULL;
 }
-FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_utime_f_impl(DeeObject *path, DeeObject *atime, DeeObject *mtime, DeeObject *ctime, DeeObject *btime)
+FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_utime_f_impl(DeeObject *path, DeeObject *atime, DeeObject *mtime, DeeObject *ctime, DeeObject *birthtime)
 /*[[[end]]]*/
 {
 #ifdef posix_utime_USE_nt_SetFileTime
-	return posix_Xutime_impl_nt_SetFileTime(path, atime, mtime, ctime, btime,
+	return posix_Xutime_impl_nt_SetFileTime(path, atime, mtime, ctime, birthtime,
 	                                        FILE_ATTRIBUTE_NORMAL |
 	                                        FILE_FLAG_BACKUP_SEMANTICS);
 #endif /* posix_utime_USE_nt_SetFileTime */
@@ -928,7 +928,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_utime_f_impl(DeeObject *path, Dee
 		Dee_Decref(parts[0]);
 		if unlikely(!full_path)
 			goto err;
-		result = posix_lutime_f_impl(full_path, atime, mtime, ctime, btime);
+		result = posix_lutime_f_impl(full_path, atime, mtime, ctime, birthtime);
 		Dee_Decref(full_path);
 		return result;
 	}
@@ -936,7 +936,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_utime_f_impl(DeeObject *path, Dee
 		goto err;
 
 	/* Not a symbolic link -> lutime() will work to do what we want! */
-	return posix_lutime_f_impl(path, atime, mtime, ctime, btime);
+	return posix_lutime_f_impl(path, atime, mtime, ctime, birthtime);
 err_link_text:
 	Dee_Decref(link_text);
 err:
@@ -956,8 +956,8 @@ err:
 	}
 #endif /* stat_get_ctime_IS_stat_get_mtime */
 #if posix_utime_USED_struct_timespec_COUNT == 2
-	if (!DeeNone_Check(ctime) || !DeeNone_Check(btime)) {
-		err_utime_cannot_set_ctime_or_btime(path, ctime, btime);
+	if (!DeeNone_Check(ctime) || !DeeNone_Check(birthtime)) {
+		err_utime_cannot_set_ctime_or_btime(path, ctime, birthtime);
 #define NEED_err_utime_cannot_set_ctime_or_btime
 		goto err;
 	}
@@ -980,7 +980,7 @@ err:
 #elif posix_utime_USED_struct_timespec_COUNT == 2
 	if (posix_utime_USED_struct_timespec_parse(tsv, atime, mtime))
 #else /* posix_utime_USED_struct_timespec_COUNT == 2 */
-	if (posix_utime_USED_struct_timespec_parse(tsv, atime, mtime, btime))
+	if (posix_utime_USED_struct_timespec_parse(tsv, atime, mtime, birthtime))
 #endif /* posix_utime_USED_struct_timespec_COUNT != 2 */
 	{
 		goto err;
@@ -995,7 +995,7 @@ EINTR_ENOMEM_LABEL(again)
 		DBG_ALIGNMENT_ENABLE();
 		EINTR_HANDLE(error, again, err);
 		ENOMEM_HANDLE(error, again, err);
-		err_unix_utime(error, path, atime, mtime, ctime, btime);
+		err_unix_utime(error, path, atime, mtime, ctime, birthtime);
 #define NEED_err_unix_utime
 		goto err;
 	}
@@ -1019,7 +1019,7 @@ err:
 	/* Load the utime-file_times argument. */
 	if unlikely(posix_utime_USED_struct_utimbuf_parse(&file_times,
 	                                                  atime, mtime,
-	                                                  ctime, btime,
+	                                                  ctime, birthtime,
 	                                                  path, 0))
 		goto err;
 
@@ -1049,7 +1049,7 @@ EINTR_ENOMEM_LABEL(again)
 		error = DeeSystem_GetErrno();
 		EINTR_HANDLE(error, again, err);
 		ENOMEM_HANDLE(error, again, err);
-		err_unix_utime(error, path, atime, mtime, ctime, btime);
+		err_unix_utime(error, path, atime, mtime, ctime, birthtime);
 #define NEED_err_unix_utime
 		goto err;
 	}
@@ -1063,7 +1063,7 @@ err:
 	(void)atime;
 	(void)mtime;
 	(void)ctime;
-	(void)btime;
+	(void)birthtime;
 	posix_err_unsupported("utime");
 #define NEED_posix_err_unsupported
 	return NULL;
@@ -1072,33 +1072,33 @@ err:
 
 
 
-/*[[[deemon import("rt.gen.dexutils").gw("lutime", "path:?Dstring,atime:?Etime:Time=Dee_None,mtime:?Etime:Time=Dee_None,ctime:?Etime:Time=Dee_None,btime:?Etime:Time=Dee_None", libname: "posix"); ]]]*/
-FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_lutime_f_impl(DeeObject *path, DeeObject *atime, DeeObject *mtime, DeeObject *ctime, DeeObject *btime);
+/*[[[deemon import("rt.gen.dexutils").gw("lutime", "path:?Dstring,atime:?Etime:Time=Dee_None,mtime:?Etime:Time=Dee_None,ctime:?Etime:Time=Dee_None,birthtime:?Etime:Time=Dee_None", libname: "posix"); ]]]*/
+FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_lutime_f_impl(DeeObject *path, DeeObject *atime, DeeObject *mtime, DeeObject *ctime, DeeObject *birthtime);
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_lutime_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
-#define POSIX_LUTIME_DEF { "lutime", (DeeObject *)&posix_lutime, MODSYM_FNORMAL, DOC("(path:?Dstring,atime:?Etime:Time=!N,mtime:?Etime:Time=!N,ctime:?Etime:Time=!N,btime:?Etime:Time=!N)") },
-#define POSIX_LUTIME_DEF_DOC(doc) { "lutime", (DeeObject *)&posix_lutime, MODSYM_FNORMAL, DOC("(path:?Dstring,atime:?Etime:Time=!N,mtime:?Etime:Time=!N,ctime:?Etime:Time=!N,btime:?Etime:Time=!N)\n" doc) },
+#define POSIX_LUTIME_DEF { "lutime", (DeeObject *)&posix_lutime, MODSYM_FNORMAL, DOC("(path:?Dstring,atime:?Etime:Time=!N,mtime:?Etime:Time=!N,ctime:?Etime:Time=!N,birthtime:?Etime:Time=!N)") },
+#define POSIX_LUTIME_DEF_DOC(doc) { "lutime", (DeeObject *)&posix_lutime, MODSYM_FNORMAL, DOC("(path:?Dstring,atime:?Etime:Time=!N,mtime:?Etime:Time=!N,ctime:?Etime:Time=!N,birthtime:?Etime:Time=!N)\n" doc) },
 PRIVATE DEFINE_KWCMETHOD(posix_lutime, &posix_lutime_f);
-#ifndef POSIX_KWDS_PATH_ATIME_MTIME_CTIME_BTIME_DEFINED
-#define POSIX_KWDS_PATH_ATIME_MTIME_CTIME_BTIME_DEFINED
-PRIVATE DEFINE_KWLIST(posix_kwds_path_atime_mtime_ctime_btime, { K(path), K(atime), K(mtime), K(ctime), K(btime), KEND });
-#endif /* !POSIX_KWDS_PATH_ATIME_MTIME_CTIME_BTIME_DEFINED */
+#ifndef POSIX_KWDS_PATH_ATIME_MTIME_CTIME_BIRTHTIME_DEFINED
+#define POSIX_KWDS_PATH_ATIME_MTIME_CTIME_BIRTHTIME_DEFINED
+PRIVATE DEFINE_KWLIST(posix_kwds_path_atime_mtime_ctime_birthtime, { K(path), K(atime), K(mtime), K(ctime), K(birthtime), KEND });
+#endif /* !POSIX_KWDS_PATH_ATIME_MTIME_CTIME_BIRTHTIME_DEFINED */
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_lutime_f(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	DeeObject *path;
 	DeeObject *atime = Dee_None;
 	DeeObject *mtime = Dee_None;
 	DeeObject *ctime = Dee_None;
-	DeeObject *btime = Dee_None;
-	if (DeeArg_UnpackKw(argc, argv, kw, posix_kwds_path_atime_mtime_ctime_btime, "o|oooo:lutime", &path, &atime, &mtime, &ctime, &btime))
+	DeeObject *birthtime = Dee_None;
+	if (DeeArg_UnpackKw(argc, argv, kw, posix_kwds_path_atime_mtime_ctime_birthtime, "o|oooo:lutime", &path, &atime, &mtime, &ctime, &birthtime))
 		goto err;
-	return posix_lutime_f_impl(path, atime, mtime, ctime, btime);
+	return posix_lutime_f_impl(path, atime, mtime, ctime, birthtime);
 err:
 	return NULL;
 }
-FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_lutime_f_impl(DeeObject *path, DeeObject *atime, DeeObject *mtime, DeeObject *ctime, DeeObject *btime)
+FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_lutime_f_impl(DeeObject *path, DeeObject *atime, DeeObject *mtime, DeeObject *ctime, DeeObject *birthtime)
 /*[[[end]]]*/
 {
 #ifdef posix_lutime_USE_nt_SetFileTime
-	return posix_Xutime_impl_nt_SetFileTime(path, atime, mtime, ctime, btime,
+	return posix_Xutime_impl_nt_SetFileTime(path, atime, mtime, ctime, birthtime,
 	                                        FILE_ATTRIBUTE_NORMAL |
 	                                        FILE_FLAG_BACKUP_SEMANTICS |
 	                                        FILE_FLAG_OPEN_REPARSE_POINT);
@@ -1117,8 +1117,8 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_lutime_f_impl(DeeObject *path, De
 	}
 #endif /* stat_get_ctime_IS_stat_get_mtime */
 #if posix_lutime_USED_struct_timespec_COUNT == 2
-	if (!DeeNone_Check(ctime) || !DeeNone_Check(btime)) {
-		err_utime_cannot_set_ctime_or_btime(path, ctime, btime);
+	if (!DeeNone_Check(ctime) || !DeeNone_Check(birthtime)) {
+		err_utime_cannot_set_ctime_or_btime(path, ctime, birthtime);
 #define NEED_err_utime_cannot_set_ctime_or_btime
 		goto err;
 	}
@@ -1141,7 +1141,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_lutime_f_impl(DeeObject *path, De
 #elif posix_lutime_USED_struct_timespec_COUNT == 2
 	if (posix_lutime_USED_struct_timespec_parse(tsv, atime, mtime))
 #else /* posix_lutime_USED_struct_timespec_COUNT == 2 */
-	if (posix_lutime_USED_struct_timespec_parse(tsv, atime, mtime, btime))
+	if (posix_lutime_USED_struct_timespec_parse(tsv, atime, mtime, birthtime))
 #endif /* posix_lutime_USED_struct_timespec_COUNT != 2 */
 	{
 		goto err;
@@ -1156,7 +1156,7 @@ EINTR_ENOMEM_LABEL(again)
 		DBG_ALIGNMENT_ENABLE();
 		EINTR_HANDLE(error, again, err);
 		ENOMEM_HANDLE(error, again, err);
-		err_unix_lutime(error, path, atime, mtime, ctime, btime);
+		err_unix_lutime(error, path, atime, mtime, ctime, birthtime);
 #define NEED_err_unix_lutime
 		goto err;
 	}
@@ -1180,7 +1180,7 @@ err:
 	/* Load the lutime-file_times argument. */
 	if unlikely(posix_lutime_USED_struct_utimbuf_parse(&file_times,
 	                                                   atime, mtime,
-	                                                   ctime, btime,
+	                                                   ctime, birthtime,
 	                                                   path, DEE_STAT_F_LSTAT))
 		goto err;
 
@@ -1210,7 +1210,7 @@ EINTR_ENOMEM_LABEL(again)
 		error = DeeSystem_GetErrno();
 		EINTR_HANDLE(error, again, err);
 		ENOMEM_HANDLE(error, again, err);
-		err_unix_lutime(error, path, atime, mtime, ctime, btime);
+		err_unix_lutime(error, path, atime, mtime, ctime, birthtime);
 #define NEED_err_unix_lutime
 		goto err;
 	}
@@ -1224,7 +1224,7 @@ err:
 	(void)atime;
 	(void)mtime;
 	(void)ctime;
-	(void)btime;
+	(void)birthtime;
 	posix_err_unsupported("lutime");
 #define NEED_posix_err_unsupported
 	return NULL;
@@ -1233,29 +1233,29 @@ err:
 
 
 
-/*[[[deemon import("rt.gen.dexutils").gw("futime", "fd:?X2?Dint?DFile,atime:?Etime:Time=Dee_None,mtime:?Etime:Time=Dee_None,ctime:?Etime:Time=Dee_None,btime:?Etime:Time=Dee_None", libname: "posix"); ]]]*/
-FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_futime_f_impl(DeeObject *fd, DeeObject *atime, DeeObject *mtime, DeeObject *ctime, DeeObject *btime);
+/*[[[deemon import("rt.gen.dexutils").gw("futime", "fd:?X2?Dint?DFile,atime:?Etime:Time=Dee_None,mtime:?Etime:Time=Dee_None,ctime:?Etime:Time=Dee_None,birthtime:?Etime:Time=Dee_None", libname: "posix"); ]]]*/
+FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_futime_f_impl(DeeObject *fd, DeeObject *atime, DeeObject *mtime, DeeObject *ctime, DeeObject *birthtime);
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_futime_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
-#define POSIX_FUTIME_DEF { "futime", (DeeObject *)&posix_futime, MODSYM_FNORMAL, DOC("(fd:?X2?Dint?DFile,atime:?Etime:Time=!N,mtime:?Etime:Time=!N,ctime:?Etime:Time=!N,btime:?Etime:Time=!N)") },
-#define POSIX_FUTIME_DEF_DOC(doc) { "futime", (DeeObject *)&posix_futime, MODSYM_FNORMAL, DOC("(fd:?X2?Dint?DFile,atime:?Etime:Time=!N,mtime:?Etime:Time=!N,ctime:?Etime:Time=!N,btime:?Etime:Time=!N)\n" doc) },
+#define POSIX_FUTIME_DEF { "futime", (DeeObject *)&posix_futime, MODSYM_FNORMAL, DOC("(fd:?X2?Dint?DFile,atime:?Etime:Time=!N,mtime:?Etime:Time=!N,ctime:?Etime:Time=!N,birthtime:?Etime:Time=!N)") },
+#define POSIX_FUTIME_DEF_DOC(doc) { "futime", (DeeObject *)&posix_futime, MODSYM_FNORMAL, DOC("(fd:?X2?Dint?DFile,atime:?Etime:Time=!N,mtime:?Etime:Time=!N,ctime:?Etime:Time=!N,birthtime:?Etime:Time=!N)\n" doc) },
 PRIVATE DEFINE_KWCMETHOD(posix_futime, &posix_futime_f);
-#ifndef POSIX_KWDS_FD_ATIME_MTIME_CTIME_BTIME_DEFINED
-#define POSIX_KWDS_FD_ATIME_MTIME_CTIME_BTIME_DEFINED
-PRIVATE DEFINE_KWLIST(posix_kwds_fd_atime_mtime_ctime_btime, { K(fd), K(atime), K(mtime), K(ctime), K(btime), KEND });
-#endif /* !POSIX_KWDS_FD_ATIME_MTIME_CTIME_BTIME_DEFINED */
+#ifndef POSIX_KWDS_FD_ATIME_MTIME_CTIME_BIRTHTIME_DEFINED
+#define POSIX_KWDS_FD_ATIME_MTIME_CTIME_BIRTHTIME_DEFINED
+PRIVATE DEFINE_KWLIST(posix_kwds_fd_atime_mtime_ctime_birthtime, { K(fd), K(atime), K(mtime), K(ctime), K(birthtime), KEND });
+#endif /* !POSIX_KWDS_FD_ATIME_MTIME_CTIME_BIRTHTIME_DEFINED */
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_futime_f(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	DeeObject *fd;
 	DeeObject *atime = Dee_None;
 	DeeObject *mtime = Dee_None;
 	DeeObject *ctime = Dee_None;
-	DeeObject *btime = Dee_None;
-	if (DeeArg_UnpackKw(argc, argv, kw, posix_kwds_fd_atime_mtime_ctime_btime, "o|oooo:futime", &fd, &atime, &mtime, &ctime, &btime))
+	DeeObject *birthtime = Dee_None;
+	if (DeeArg_UnpackKw(argc, argv, kw, posix_kwds_fd_atime_mtime_ctime_birthtime, "o|oooo:futime", &fd, &atime, &mtime, &ctime, &birthtime))
 		goto err;
-	return posix_futime_f_impl(fd, atime, mtime, ctime, btime);
+	return posix_futime_f_impl(fd, atime, mtime, ctime, birthtime);
 err:
 	return NULL;
 }
-FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_futime_f_impl(DeeObject *fd, DeeObject *atime, DeeObject *mtime, DeeObject *ctime, DeeObject *btime)
+FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_futime_f_impl(DeeObject *fd, DeeObject *atime, DeeObject *mtime, DeeObject *ctime, DeeObject *birthtime)
 /*[[[end]]]*/
 {
 #ifdef posix_futime_USE_nt_SetFileTime
@@ -1275,7 +1275,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_futime_f_impl(DeeObject *fd, DeeO
 	hFile = DeeNTSystem_GetHandle(fd);
 	if unlikely(hFile == INVALID_HANDLE_VALUE)
 		goto err;
-	error = nt_SetFileTime(hFile, atime, mtime, btime);
+	error = nt_SetFileTime(hFile, atime, mtime, birthtime);
 #define NEED_nt_SetFileTime
 	if unlikely(error != 0) {
 		DWORD dwError;
@@ -1284,7 +1284,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_futime_f_impl(DeeObject *fd, DeeO
 		DBG_ALIGNMENT_DISABLE();
 		dwError = GetLastError();
 		DBG_ALIGNMENT_ENABLE();
-		err_nt_futime(dwError, fd, atime, mtime, btime);
+		err_nt_futime(dwError, fd, atime, mtime, birthtime);
 #define NEED_err_nt_futime
 		goto err;
 	}
@@ -1309,8 +1309,8 @@ err:
 	}
 #endif /* stat_get_ctime_IS_stat_get_mtime */
 #if posix_futime_USED_struct_timespec_COUNT == 2
-	if (!DeeNone_Check(ctime) || !DeeNone_Check(btime)) {
-		err_utime_cannot_set_ctime_or_btime(fd, ctime, btime);
+	if (!DeeNone_Check(ctime) || !DeeNone_Check(birthtime)) {
+		err_utime_cannot_set_ctime_or_btime(fd, ctime, birthtime);
 #define NEED_err_utime_cannot_set_ctime_or_btime
 		goto err;
 	}
@@ -1331,7 +1331,7 @@ err:
 #elif posix_futime_USED_struct_timespec_COUNT == 2
 	if (posix_futime_USED_struct_timespec_parse(tsv, atime, mtime))
 #else /* posix_futime_USED_struct_timespec_COUNT == 2 */
-	if (posix_futime_USED_struct_timespec_parse(tsv, atime, mtime, btime))
+	if (posix_futime_USED_struct_timespec_parse(tsv, atime, mtime, birthtime))
 #endif /* posix_futime_USED_struct_timespec_COUNT != 2 */
 	{
 		goto err;
@@ -1346,7 +1346,7 @@ EINTR_ENOMEM_LABEL(again)
 		DBG_ALIGNMENT_ENABLE();
 		EINTR_HANDLE(error, again, err);
 		ENOMEM_HANDLE(error, again, err);
-		err_unix_futime(error, fd, atime, mtime, ctime, btime);
+		err_unix_futime(error, fd, atime, mtime, ctime, birthtime);
 #define NEED_err_unix_futime
 		goto err;
 	}
@@ -1368,7 +1368,7 @@ err:
 	/* Load the futime-file_times argument. */
 	if unlikely(posix_futime_USED_struct_utimbuf_parse(&file_times,
 	                                                   atime, mtime,
-	                                                   ctime, btime,
+	                                                   ctime, birthtime,
 	                                                   fd, 0))
 		goto err;
 
@@ -1391,7 +1391,7 @@ EINTR_ENOMEM_LABEL(again)
 		DBG_ALIGNMENT_ENABLE();
 		EINTR_HANDLE(error, again, err);
 		ENOMEM_HANDLE(error, again, err);
-		err_unix_futime(error, fd, atime, mtime, ctime, btime);
+		err_unix_futime(error, fd, atime, mtime, ctime, birthtime);
 #define NEED_err_unix_futime
 		goto err;
 	}
@@ -1408,9 +1408,9 @@ err:
 	if unlikely(!abspath)
 		goto err;
 #ifdef posix_futime_USE_posix_lutime
-	result = posix_lutime_f_impl(abspath, atime, mtime, ctime, btime);
+	result = posix_lutime_f_impl(abspath, atime, mtime, ctime, birthtime);
 #else /* posix_futime_USE_posix_lutime */
-	result = posix_utime_f_impl(abspath, atime, mtime, ctime, btime);
+	result = posix_utime_f_impl(abspath, atime, mtime, ctime, birthtime);
 #endif /* !posix_futime_USE_posix_lutime */
 	Dee_Decref(abspath);
 	return result;
@@ -1423,7 +1423,7 @@ err:
 	(void)atime;
 	(void)mtime;
 	(void)ctime;
-	(void)btime;
+	(void)birthtime;
 	posix_err_unsupported("futime");
 #define NEED_posix_err_unsupported
 	return NULL;
@@ -1432,31 +1432,31 @@ err:
 
 
 
-/*[[[deemon import("rt.gen.dexutils").gw("futimeat", "dfd:?X3?DFile?Dint?Dstring,path:?Dstring,atime:?Etime:Time=Dee_None,mtime:?Etime:Time=Dee_None,ctime:?Etime:Time=Dee_None,btime:?Etime:Time=Dee_None,atflags:u=0", libname: "posix"); ]]]*/
-FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_futimeat_f_impl(DeeObject *dfd, DeeObject *path, DeeObject *atime, DeeObject *mtime, DeeObject *ctime, DeeObject *btime, unsigned int atflags);
+/*[[[deemon import("rt.gen.dexutils").gw("futimeat", "dfd:?X3?DFile?Dint?Dstring,path:?Dstring,atime:?Etime:Time=Dee_None,mtime:?Etime:Time=Dee_None,ctime:?Etime:Time=Dee_None,birthtime:?Etime:Time=Dee_None,atflags:u=0", libname: "posix"); ]]]*/
+FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_futimeat_f_impl(DeeObject *dfd, DeeObject *path, DeeObject *atime, DeeObject *mtime, DeeObject *ctime, DeeObject *birthtime, unsigned int atflags);
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_futimeat_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
-#define POSIX_FUTIMEAT_DEF { "futimeat", (DeeObject *)&posix_futimeat, MODSYM_FNORMAL, DOC("(dfd:?X3?DFile?Dint?Dstring,path:?Dstring,atime:?Etime:Time=!N,mtime:?Etime:Time=!N,ctime:?Etime:Time=!N,btime:?Etime:Time=!N,atflags:?Dint=!0)") },
-#define POSIX_FUTIMEAT_DEF_DOC(doc) { "futimeat", (DeeObject *)&posix_futimeat, MODSYM_FNORMAL, DOC("(dfd:?X3?DFile?Dint?Dstring,path:?Dstring,atime:?Etime:Time=!N,mtime:?Etime:Time=!N,ctime:?Etime:Time=!N,btime:?Etime:Time=!N,atflags:?Dint=!0)\n" doc) },
+#define POSIX_FUTIMEAT_DEF { "futimeat", (DeeObject *)&posix_futimeat, MODSYM_FNORMAL, DOC("(dfd:?X3?DFile?Dint?Dstring,path:?Dstring,atime:?Etime:Time=!N,mtime:?Etime:Time=!N,ctime:?Etime:Time=!N,birthtime:?Etime:Time=!N,atflags:?Dint=!0)") },
+#define POSIX_FUTIMEAT_DEF_DOC(doc) { "futimeat", (DeeObject *)&posix_futimeat, MODSYM_FNORMAL, DOC("(dfd:?X3?DFile?Dint?Dstring,path:?Dstring,atime:?Etime:Time=!N,mtime:?Etime:Time=!N,ctime:?Etime:Time=!N,birthtime:?Etime:Time=!N,atflags:?Dint=!0)\n" doc) },
 PRIVATE DEFINE_KWCMETHOD(posix_futimeat, &posix_futimeat_f);
-#ifndef POSIX_KWDS_DFD_PATH_ATIME_MTIME_CTIME_BTIME_ATFLAGS_DEFINED
-#define POSIX_KWDS_DFD_PATH_ATIME_MTIME_CTIME_BTIME_ATFLAGS_DEFINED
-PRIVATE DEFINE_KWLIST(posix_kwds_dfd_path_atime_mtime_ctime_btime_atflags, { K(dfd), K(path), K(atime), K(mtime), K(ctime), K(btime), K(atflags), KEND });
-#endif /* !POSIX_KWDS_DFD_PATH_ATIME_MTIME_CTIME_BTIME_ATFLAGS_DEFINED */
+#ifndef POSIX_KWDS_DFD_PATH_ATIME_MTIME_CTIME_BIRTHTIME_ATFLAGS_DEFINED
+#define POSIX_KWDS_DFD_PATH_ATIME_MTIME_CTIME_BIRTHTIME_ATFLAGS_DEFINED
+PRIVATE DEFINE_KWLIST(posix_kwds_dfd_path_atime_mtime_ctime_birthtime_atflags, { K(dfd), K(path), K(atime), K(mtime), K(ctime), K(birthtime), K(atflags), KEND });
+#endif /* !POSIX_KWDS_DFD_PATH_ATIME_MTIME_CTIME_BIRTHTIME_ATFLAGS_DEFINED */
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_futimeat_f(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	DeeObject *dfd;
 	DeeObject *path;
 	DeeObject *atime = Dee_None;
 	DeeObject *mtime = Dee_None;
 	DeeObject *ctime = Dee_None;
-	DeeObject *btime = Dee_None;
+	DeeObject *birthtime = Dee_None;
 	unsigned int atflags = 0;
-	if (DeeArg_UnpackKw(argc, argv, kw, posix_kwds_dfd_path_atime_mtime_ctime_btime_atflags, "oo|oooou:futimeat", &dfd, &path, &atime, &mtime, &ctime, &btime, &atflags))
+	if (DeeArg_UnpackKw(argc, argv, kw, posix_kwds_dfd_path_atime_mtime_ctime_birthtime_atflags, "oo|oooou:futimeat", &dfd, &path, &atime, &mtime, &ctime, &birthtime, &atflags))
 		goto err;
-	return posix_futimeat_f_impl(dfd, path, atime, mtime, ctime, btime, atflags);
+	return posix_futimeat_f_impl(dfd, path, atime, mtime, ctime, birthtime, atflags);
 err:
 	return NULL;
 }
-FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_futimeat_f_impl(DeeObject *dfd, DeeObject *path, DeeObject *atime, DeeObject *mtime, DeeObject *ctime, DeeObject *btime, unsigned int atflags)
+FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_futimeat_f_impl(DeeObject *dfd, DeeObject *path, DeeObject *atime, DeeObject *mtime, DeeObject *ctime, DeeObject *birthtime, unsigned int atflags)
 /*[[[end]]]*/
 {
 #if defined(posix_futimeat_USE_posix_utime) || defined(posix_futimeat_USE_posix_lutime)
@@ -1466,7 +1466,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_futimeat_f_impl(DeeObject *dfd, D
 		if (!DeeString_Check(dfd) &&
 		    (DeeNone_Check(path) || (DeeString_Check(path) &&
 		                             DeeString_IsEmpty(path))))
-			return posix_futime_f_impl(dfd, atime, mtime, ctime, btime);
+			return posix_futime_f_impl(dfd, atime, mtime, ctime, birthtime);
 		atflags &= ~AT_EMPTY_PATH;
 	}
 #endif /* posix_futimeat_USE_posix_futime */
@@ -1480,7 +1480,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_futimeat_f_impl(DeeObject *dfd, D
 #endif /* stat_get_ctime_IS_stat_get_mtime */
 	if (!DeeString_Check(dfd) &&
 #if posix_futimeat_USED_struct_timespec_COUNT == 2
-	    DeeNone_Check(btime) &&
+	    DeeNone_Check(birthtime) &&
 #endif /* posix_futimeat_USED_struct_timespec_COUNT == 2 */
 	    DeeNone_Check(ctime)) {
 		posix_futimeat_USED_struct_timespec tsv[posix_futimeat_USED_struct_timespec_COUNT];
@@ -1498,7 +1498,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_futimeat_f_impl(DeeObject *dfd, D
 #if posix_futimeat_USED_struct_timespec_COUNT == 2
 		if (posix_futimeat_USED_struct_timespec_parse(tsv, atime, mtime))
 #else /* posix_futimeat_USED_struct_timespec_COUNT == 2 */
-		if (posix_futimeat_USED_struct_timespec_parse(tsv, atime, mtime, btime))
+		if (posix_futimeat_USED_struct_timespec_parse(tsv, atime, mtime, birthtime))
 #endif /* posix_futimeat_USED_struct_timespec_COUNT != 2 */
 		{
 			goto err;
@@ -1532,12 +1532,12 @@ EINTR_ENOMEM_LABEL(again)
 		goto err;
 #ifdef posix_futimeat_USE_posix_lutime
 	if (atflags & AT_SYMLINK_NOFOLLOW) {
-		result = posix_lutime_f_impl(abspath, atime, mtime, ctime, btime);
+		result = posix_lutime_f_impl(abspath, atime, mtime, ctime, birthtime);
 	} else
 #endif /* posix_futimeat_USE_posix_lutime */
 	{
 #ifdef posix_futimeat_USE_posix_utime
-		result = posix_utime_f_impl(abspath, atime, mtime, ctime, btime);
+		result = posix_utime_f_impl(abspath, atime, mtime, ctime, birthtime);
 #else /* posix_futimeat_USE_posix_utime */
 		Dee_Decref(abspath);
 		err_bad_atflags(atflags);
@@ -1557,7 +1557,7 @@ err:
 	(void)atime;
 	(void)mtime;
 	(void)ctime;
-	(void)btime;
+	(void)birthtime;
 	(void)atflags;
 	posix_err_unsupported("futimeat");
 #define NEED_posix_err_unsupported

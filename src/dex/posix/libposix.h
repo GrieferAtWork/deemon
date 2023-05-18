@@ -574,19 +574,19 @@ struct utimbuf64;
 INTDEF WUNUSED NONNULL((1, 2, 3, 4, 5, 6)) int DCALL
 posix_utime_unix_parse_utimbuf(struct utimbuf *__restrict p_result,
                                DeeObject *atime, DeeObject *mtime,
-                               DeeObject *ctime, DeeObject *btime,
+                               DeeObject *ctime, DeeObject *birthtime,
                                DeeObject *path_or_fd,
                                unsigned int stat_flags);
 INTDEF WUNUSED NONNULL((1, 2, 3, 4, 5, 6)) int DCALL
 posix_utime_unix_parse_utimbuf32(struct utimbuf32 *__restrict p_result,
                                  DeeObject *atime, DeeObject *mtime,
-                                 DeeObject *ctime, DeeObject *btime,
+                                 DeeObject *ctime, DeeObject *birthtime,
                                  DeeObject *path_or_fd,
                                  unsigned int stat_flags);
 INTDEF WUNUSED NONNULL((1, 2, 3, 4, 5, 6)) int DCALL
 posix_utime_unix_parse_utimbuf64(struct utimbuf64 *__restrict p_result,
                                  DeeObject *atime, DeeObject *mtime,
-                                 DeeObject *ctime, DeeObject *btime,
+                                 DeeObject *ctime, DeeObject *birthtime,
                                  DeeObject *path_or_fd,
                                  unsigned int stat_flags);
 INTDEF WUNUSED NONNULL((1, 2, 3, 4, 5)) int DCALL
@@ -623,10 +623,10 @@ posix_utime_unix_parse_timespec64_2(struct timespec64 *__restrict p_tsv /*[2]*/,
                                     DeeObject *atime, DeeObject *mtime);
 INTDEF WUNUSED NONNULL((1, 2, 3, 4)) int DCALL
 posix_utime_unix_parse_timespec_3(struct timespec *__restrict p_tsv /*[3]*/,
-                                  DeeObject *atime, DeeObject *mtime, DeeObject *btime);
+                                  DeeObject *atime, DeeObject *mtime, DeeObject *birthtime);
 INTDEF WUNUSED NONNULL((1, 2, 3, 4)) int DCALL
 posix_utime_unix_parse_timespec64_3(struct timespec64 *__restrict p_tsv /*[3]*/,
-                                    DeeObject *atime, DeeObject *mtime, DeeObject *btime);
+                                    DeeObject *atime, DeeObject *mtime, DeeObject *birthtime);
 
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL posix_utime_unix_object_to_timeval(DeeObject *__restrict self, struct timeval *__restrict result);
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL posix_utime_unix_object_to_timeval64(DeeObject *__restrict self, struct timeval64 *__restrict result);
@@ -678,10 +678,10 @@ INTDEF ATTR_COLD NONNULL((2)) int DCALL err_unix_fchmod(int errno_value, DeeObje
 INTDEF ATTR_COLD NONNULL((2)) int DCALL err_unix_chown(int errno_value, DeeObject *path, uid_t uid, gid_t gid);
 INTDEF ATTR_COLD NONNULL((2)) int DCALL err_unix_lchown(int errno_value, DeeObject *path, uid_t uid, gid_t gid);
 INTDEF ATTR_COLD NONNULL((2)) int DCALL err_unix_fchown(int errno_value, DeeObject *fd, uid_t uid, gid_t gid);
-INTDEF ATTR_COLD NONNULL((2, 3, 4, 5, 6)) int DCALL err_unix_utime(int errno_value, DeeObject *path, DeeObject *atime, DeeObject *mtime, DeeObject *ctime, DeeObject *btime);
-INTDEF ATTR_COLD NONNULL((2, 3, 4, 5, 6)) int DCALL err_unix_lutime(int errno_value, DeeObject *path, DeeObject *atime, DeeObject *mtime, DeeObject *ctime, DeeObject *btime);
-INTDEF ATTR_COLD NONNULL((2, 3, 4, 5, 6)) int DCALL err_unix_futime(int errno_value, DeeObject *fd, DeeObject *atime, DeeObject *mtime, DeeObject *ctime, DeeObject *btime);
-INTDEF ATTR_COLD NONNULL((1, 2, 3)) int DCALL err_utime_cannot_set_ctime_or_btime(DeeObject *path_or_fd, DeeObject *ctime, DeeObject *btime);
+INTDEF ATTR_COLD NONNULL((2, 3, 4, 5, 6)) int DCALL err_unix_utime(int errno_value, DeeObject *path, DeeObject *atime, DeeObject *mtime, DeeObject *ctime, DeeObject *birthtime);
+INTDEF ATTR_COLD NONNULL((2, 3, 4, 5, 6)) int DCALL err_unix_lutime(int errno_value, DeeObject *path, DeeObject *atime, DeeObject *mtime, DeeObject *ctime, DeeObject *birthtime);
+INTDEF ATTR_COLD NONNULL((2, 3, 4, 5, 6)) int DCALL err_unix_futime(int errno_value, DeeObject *fd, DeeObject *atime, DeeObject *mtime, DeeObject *ctime, DeeObject *birthtime);
+INTDEF ATTR_COLD NONNULL((1, 2, 3)) int DCALL err_utime_cannot_set_ctime_or_btime(DeeObject *path_or_fd, DeeObject *ctime, DeeObject *birthtime);
 INTDEF ATTR_COLD NONNULL((1, 2)) int DCALL err_utime_cannot_set_ctime(DeeObject *path_or_fd, DeeObject *ctime);
 
 INTDEF ATTR_COLD NONNULL((2)) int DCALL err_unix_remove_unsupported(int errno_value, DeeObject *__restrict path);
@@ -711,7 +711,7 @@ INTDEF ATTR_COLD NONNULL((2)) int DCALL err_unix_path_busy(int errno_value, DeeO
 INTDEF ATTR_COLD NONNULL((2, 3)) int DCALL err_unix_path_busy2(int errno_value, DeeObject *existing_path, DeeObject *new_path);
 INTDEF ATTR_COLD NONNULL((2, 3)) int DCALL err_unix_move_to_child(int errno_value, DeeObject *existing_path, DeeObject *new_path);
 INTDEF ATTR_COLD NONNULL((2)) int DCALL err_unix_path_not_empty(int errno_value, DeeObject *__restrict path);
-INTDEF ATTR_COLD NONNULL((2, 3, 4, 5, 6)) int DCALL err_unix_utime_no_access(int errno_value, DeeObject *path, DeeObject *atime, DeeObject *mtime, DeeObject *ctime, DeeObject *btime);
+INTDEF ATTR_COLD NONNULL((2, 3, 4, 5, 6)) int DCALL err_unix_utime_no_access(int errno_value, DeeObject *path, DeeObject *atime, DeeObject *mtime, DeeObject *ctime, DeeObject *birthtime);
 INTDEF ATTR_COLD NONNULL((2, 3)) int DCALL err_unix_path_cross_dev2(int errno_value, DeeObject *existing_path, DeeObject *new_path);
 INTDEF ATTR_COLD NONNULL((2, 3)) int DCALL err_unix_ftruncate_fbig(int errno_value, DeeObject *fd, DeeObject *length);
 INTDEF ATTR_COLD NONNULL((2, 3)) int DCALL err_unix_truncate_fbig(int errno_value, DeeObject *path, DeeObject *length);
@@ -776,12 +776,12 @@ INTDEF ATTR_COLD NONNULL((2)) int DCALL err_nt_path_busy(DWORD dwError, DeeObjec
 INTDEF ATTR_COLD NONNULL((2, 3)) int DCALL err_nt_path_busy2(DWORD dwError, DeeObject *existing_path, DeeObject *new_path);
 INTDEF ATTR_COLD NONNULL((2, 3)) int DCALL err_nt_move_to_child(DWORD dwError, DeeObject *existing_path, DeeObject *new_path);
 INTDEF ATTR_COLD NONNULL((2)) int DCALL err_nt_path_not_empty(DWORD dwError, DeeObject *__restrict path);
-INTDEF ATTR_COLD NONNULL((2, 3, 4, 5)) int DCALL err_nt_utime_no_access(DWORD dwError, DeeObject *path, DeeObject *atime, DeeObject *mtime, DeeObject *btime);
+INTDEF ATTR_COLD NONNULL((2, 3, 4, 5)) int DCALL err_nt_utime_no_access(DWORD dwError, DeeObject *path, DeeObject *atime, DeeObject *mtime, DeeObject *birthtime);
 INTDEF ATTR_COLD NONNULL((2, 3)) int DCALL err_nt_path_cross_dev2(DWORD dwError, DeeObject *existing_path, DeeObject *new_path);
 INTDEF ATTR_COLD NONNULL((2)) int DCALL err_nt_path_not_link(DWORD dwError, DeeObject *__restrict path);
 INTDEF ATTR_COLD NONNULL((2, 3, 4)) int DCALL err_nt_chown_no_access(DWORD dwError, DeeObject *path_or_fd, DeeObject *uid, DeeObject *gid);
-INTDEF ATTR_COLD NONNULL((2, 3, 4, 5)) int DCALL err_nt_utime(DWORD dwError, DeeObject *path, DeeObject *atime, DeeObject *mtime, DeeObject *btime);
-INTDEF ATTR_COLD NONNULL((2, 3, 4, 5)) int DCALL err_nt_futime(DWORD dwError, DeeObject *fd, DeeObject *atime, DeeObject *mtime, DeeObject *btime);
+INTDEF ATTR_COLD NONNULL((2, 3, 4, 5)) int DCALL err_nt_utime(DWORD dwError, DeeObject *path, DeeObject *atime, DeeObject *mtime, DeeObject *birthtime);
+INTDEF ATTR_COLD NONNULL((2, 3, 4, 5)) int DCALL err_nt_futime(DWORD dwError, DeeObject *fd, DeeObject *atime, DeeObject *mtime, DeeObject *birthtime);
 
 /* Helper wrapper around `SetFileTime()' that automatically
  * does all of the necessary conversion of time arguments
@@ -791,7 +791,7 @@ INTDEF ATTR_COLD NONNULL((2, 3, 4, 5)) int DCALL err_nt_futime(DWORD dwError, De
  * @return:  1: The system call failed (s.a. `GetLastError()') */
 INTDEF WUNUSED NONNULL((2, 3, 4)) int DCALL
 nt_SetFileTime(HANDLE hFile, DeeObject *atime,
-               DeeObject *mtime, DeeObject *btime);
+               DeeObject *mtime, DeeObject *birthtime);
 
 typedef struct {
 	BYTE Revision;

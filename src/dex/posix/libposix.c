@@ -2404,7 +2404,7 @@ PRIVATE struct dex_symbol symbols[] = {
 	                      "@param atime The new last-accessed timestamp to set, or !N to leave unchanged (s.a. ?Ast_atime?Gstat)\n"
 	                      "@param mtime The new last-modified timestamp to set, or !N to leave unchanged (s.a. ?Ast_mtime?Gstat)\n"
 	                      "@param ctime The new last-attribute-changed timestamp to set, or !N to leave unchanged (s.a. ?Ast_ctime?Gstat)\n"
-	                      "@param btime The new birth timestamp to set, or !N to leave unchanged (s.a. ?Ast_btime?Gstat)\n"
+	                      "@param birthtime The new birth timestamp to set, or !N to leave unchanged (s.a. ?Ast_btime?Gstat)\n"
 	                      "Change the timestamps associated with a given @path"))
 	D(POSIX_LUTIME_DEF_DOC("@interrupt\n"
 	                       "@throw FileNotFound The given @path could not be found\n"
@@ -2419,7 +2419,7 @@ PRIVATE struct dex_symbol symbols[] = {
 	                       "@param atime The new last-accessed timestamp to set, or !N to leave unchanged (s.a. ?Ast_atime?Gstat)\n"
 	                       "@param mtime The new last-modified timestamp to set, or !N to leave unchanged (s.a. ?Ast_mtime?Gstat)\n"
 	                       "@param ctime The new last-attribute-changed timestamp to set, or !N to leave unchanged (s.a. ?Ast_ctime?Gstat)\n"
-	                       "@param btime The new birth timestamp to set, or !N to leave unchanged (s.a. ?Ast_btime?Gstat)\n"
+	                       "@param birthtime The new birth timestamp to set, or !N to leave unchanged (s.a. ?Ast_btime?Gstat)\n"
 	                       "Change the timestamps associated with a given @path\n"
 	                       "If @path refers to a symbolic link, change the timestamps "
 	                       /**/ "of that link, rather than those of the pointed-to file"))

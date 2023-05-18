@@ -108,8 +108,8 @@ function chtime(path_or_fd: File | string | int,
                 mtime: Time from time = none,
                 ctime: Time from time = none) {
 	if (path_or_fd is string)
-		return posix.utime(path_or_fd, atime: atime, mtime: mtime, btime: ctime);
-	return posix.futime(path_or_fd, atime: atime, mtime: mtime, btime: ctime);
+		return posix.utime(path_or_fd, atime: atime, mtime: mtime, birthtime: ctime);
+	return posix.futime(path_or_fd, atime: atime, mtime: mtime, birthtime: ctime);
 }
 
 @@@interrupt

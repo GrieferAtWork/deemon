@@ -507,19 +507,19 @@ err:
  * @return:  1: The system call failed (s.a. `GetLastError()') */
 INTERN WUNUSED NONNULL((2, 3, 4)) int DCALL
 nt_SetFileTime(HANDLE hFile, DeeObject *atime,
-               DeeObject *mtime, DeeObject *btime) {
+               DeeObject *mtime, DeeObject *birthtime) {
 	BOOL bOK;
 	FILETIME osATime, osMTime, osBTime;
 	if (!DeeNone_Check(atime) && unlikely(nt_ObjectToFILETIME(atime, &osATime)))
 		goto err;
 	if (!DeeNone_Check(mtime) && unlikely(nt_ObjectToFILETIME(mtime, &osMTime)))
 		goto err;
-	if (!DeeNone_Check(btime) && unlikely(nt_ObjectToFILETIME(btime, &osBTime)))
+	if (!DeeNone_Check(birthtime) && unlikely(nt_ObjectToFILETIME(birthtime, &osBTime)))
 		goto err;
 again_SetFileTime:
 	DBG_ALIGNMENT_DISABLE();
 	bOK = SetFileTime(hFile,
-	                  DeeNone_Check(btime) ? NULL : &osBTime,
+	                  DeeNone_Check(birthtime) ? NULL : &osBTime,
 	                  DeeNone_Check(atime) ? NULL : &osATime,
 	                  DeeNone_Check(mtime) ? NULL : &osMTime);
 	DBG_ALIGNMENT_ENABLE();
@@ -551,7 +551,7 @@ again_SetFileTime:
 			if (DuplicateHandle(hProcess, hFile, hProcess, &hWriteAttributes,
 			                    FILE_WRITE_ATTRIBUTES, FALSE, 0)) {
 				bOK = SetFileTime(hWriteAttributes,
-				                  DeeNone_Check(btime) ? NULL : &osBTime,
+				                  DeeNone_Check(birthtime) ? NULL : &osBTime,
 				                  DeeNone_Check(atime) ? NULL : &osATime,
 				                  DeeNone_Check(mtime) ? NULL : &osMTime);
 				(void)CloseHandle(hWriteAttributes);
@@ -573,7 +573,7 @@ again_SetFileTime:
 						DeeError_Handled(Dee_ERROR_HANDLED_RESTORE);
 					} else if (hWriteAttributes != INVALID_HANDLE_VALUE) {
 						bOK = SetFileTime(hWriteAttributes,
-						                  DeeNone_Check(btime) ? NULL : &osBTime,
+						                  DeeNone_Check(birthtime) ? NULL : &osBTime,
 						                  DeeNone_Check(atime) ? NULL : &osATime,
 						                  DeeNone_Check(mtime) ? NULL : &osMTime);
 						(void)CloseHandle(hWriteAttributes);
@@ -1423,7 +1423,7 @@ posix_chown_unix_parsegid(DeeObject *__restrict gid,
 INTERN WUNUSED NONNULL((1, 2, 3, 4, 5, 6)) int DCALL
 posix_utime_unix_parse_utimbuf(struct utimbuf *__restrict p_result,
                                DeeObject *atime, DeeObject *mtime,
-                               DeeObject *ctime, DeeObject *btime,
+                               DeeObject *ctime, DeeObject *birthtime,
                                DeeObject *path_or_fd,
                                unsigned int stat_flags) {
 	int result;
@@ -1434,8 +1434,8 @@ posix_utime_unix_parse_utimbuf(struct utimbuf *__restrict p_result,
 		ctime = Dee_None;
 	}
 #endif /* stat_get_ctime_IS_stat_get_mtime */
-	if (!DeeNone_Check(ctime) || !DeeNone_Check(btime))
-		return err_utime_cannot_set_ctime_or_btime(path_or_fd, ctime, btime);
+	if (!DeeNone_Check(ctime) || !DeeNone_Check(birthtime))
+		return err_utime_cannot_set_ctime_or_btime(path_or_fd, ctime, birthtime);
 #define NEED_err_utime_cannot_set_ctime_or_btime
 	result = posix_utime_unix_parse_utimbuf_common(&used_atime, &used_mtime,
 	                                               atime, mtime,
@@ -1456,7 +1456,7 @@ posix_utime_unix_parse_utimbuf(struct utimbuf *__restrict p_result,
 INTERN WUNUSED NONNULL((1, 2, 3, 4, 5, 6)) int DCALL
 posix_utime_unix_parse_utimbuf32(struct utimbuf32 *__restrict p_result,
                                  DeeObject *atime, DeeObject *mtime,
-                                 DeeObject *ctime, DeeObject *btime,
+                                 DeeObject *ctime, DeeObject *birthtime,
                                  DeeObject *path_or_fd,
                                  unsigned int stat_flags) {
 	int result;
@@ -1467,8 +1467,8 @@ posix_utime_unix_parse_utimbuf32(struct utimbuf32 *__restrict p_result,
 		ctime = Dee_None;
 	}
 #endif /* stat_get_ctime_IS_stat_get_mtime */
-	if (!DeeNone_Check(ctime) || !DeeNone_Check(btime))
-		return err_utime_cannot_set_ctime_or_btime(path_or_fd, ctime, btime);
+	if (!DeeNone_Check(ctime) || !DeeNone_Check(birthtime))
+		return err_utime_cannot_set_ctime_or_btime(path_or_fd, ctime, birthtime);
 #define NEED_err_utime_cannot_set_ctime_or_btime
 	result = posix_utime_unix_parse_utimbuf_common(&used_atime, &used_mtime,
 	                                               atime, mtime,
@@ -1489,7 +1489,7 @@ posix_utime_unix_parse_utimbuf32(struct utimbuf32 *__restrict p_result,
 INTERN WUNUSED NONNULL((1, 2, 3, 4, 5, 6)) int DCALL
 posix_utime_unix_parse_utimbuf64(struct utimbuf64 *__restrict p_result,
                                  DeeObject *atime, DeeObject *mtime,
-                                 DeeObject *ctime, DeeObject *btime,
+                                 DeeObject *ctime, DeeObject *birthtime,
                                  DeeObject *path_or_fd,
                                  unsigned int stat_flags) {
 	int result;
@@ -1500,8 +1500,8 @@ posix_utime_unix_parse_utimbuf64(struct utimbuf64 *__restrict p_result,
 		ctime = Dee_None;
 	}
 #endif /* stat_get_ctime_IS_stat_get_mtime */
-	if (!DeeNone_Check(ctime) || !DeeNone_Check(btime))
-		return err_utime_cannot_set_ctime_or_btime(path_or_fd, ctime, btime);
+	if (!DeeNone_Check(ctime) || !DeeNone_Check(birthtime))
+		return err_utime_cannot_set_ctime_or_btime(path_or_fd, ctime, birthtime);
 #define NEED_err_utime_cannot_set_ctime_or_btime
 	result = posix_utime_unix_parse_utimbuf_common(&used_atime, &used_mtime,
 	                                               atime, mtime,
@@ -1815,13 +1815,13 @@ posix_utime_unix_parse_timespec64_2(struct timespec64 *p_tsv /*[2]*/,
 #undef NEED_posix_utime_unix_parse_timespec_3
 INTERN WUNUSED NONNULL((1, 2, 3, 4)) int DCALL
 posix_utime_unix_parse_timespec_3(struct timespec *p_tsv /*[3]*/,
-                                  DeeObject *atime, DeeObject *mtime, DeeObject *btime) {
+                                  DeeObject *atime, DeeObject *mtime, DeeObject *birthtime) {
 	int result = posix_utime_unix_object_to_timespec(atime, &p_tsv[0]);
 #define NEED_posix_utime_unix_object_to_timespec
 	if likely(result == 0)
 		result = posix_utime_unix_object_to_timespec(mtime, &p_tsv[1]);
 	if likely(result == 0)
-		result = posix_utime_unix_object_to_timespec(btime, &p_tsv[2]);
+		result = posix_utime_unix_object_to_timespec(birthtime, &p_tsv[2]);
 	return result;
 }
 #endif /* NEED_posix_utime_unix_parse_timespec_3 */
@@ -1830,13 +1830,13 @@ posix_utime_unix_parse_timespec_3(struct timespec *p_tsv /*[3]*/,
 #undef NEED_posix_utime_unix_parse_timespec64_3
 INTERN WUNUSED NONNULL((1, 2, 3, 4)) int DCALL
 posix_utime_unix_parse_timespec64_3(struct timespec64 *p_tsv /*[3]*/,
-                                    DeeObject *atime, DeeObject *mtime, DeeObject *btime) {
+                                    DeeObject *atime, DeeObject *mtime, DeeObject *birthtime) {
 	int result = posix_utime_unix_object_to_timespec64(atime, &p_tsv[0]);
 #define NEED_posix_utime_unix_object_to_timespec64
 	if likely(result == 0)
 		result = posix_utime_unix_object_to_timespec64(mtime, &p_tsv[1]);
 	if likely(result == 0)
-		result = posix_utime_unix_object_to_timespec64(btime, &p_tsv[2]);
+		result = posix_utime_unix_object_to_timespec64(birthtime, &p_tsv[2]);
 	return result;
 }
 #endif /* NEED_posix_utime_unix_parse_timespec64_3 */
@@ -3040,7 +3040,7 @@ err_unix_fchown(int errno_value, DeeObject *fd, uid_t uid, gid_t gid) {
 INTERN ATTR_COLD NONNULL((2, 3, 4, 5, 6)) int DCALL
 err_unix_utime(int errno_value, DeeObject *path,
                DeeObject *atime, DeeObject *mtime,
-               DeeObject *ctime, DeeObject *btime) {
+               DeeObject *ctime, DeeObject *birthtime) {
 #ifdef EACCES
 	if (errno_value == EACCES)
 		return err_unix_path_no_access(errno_value, path);
@@ -3048,7 +3048,7 @@ err_unix_utime(int errno_value, DeeObject *path,
 #endif /* EACCES */
 #ifdef EPERM
 	if (errno_value == EPERM)
-		return err_unix_utime_no_access(errno_value, path, atime, mtime, ctime, btime);
+		return err_unix_utime_no_access(errno_value, path, atime, mtime, ctime, birthtime);
 #define NEED_err_unix_utime_no_access
 #endif /* EPERM */
 #ifdef ENOENT
@@ -3068,8 +3068,8 @@ err_unix_utime(int errno_value, DeeObject *path,
 #endif /* EROFS */
 	return DeeUnixSystem_ThrowErrorf(&DeeError_SystemError, errno_value,
 	                                 "Failed to change timestamps of path %r to "
-	                                 "[atime:%r, mtime:%r, ctime:%r, btime: %r]",
-	                                 path, atime, mtime, ctime, btime);
+	                                 "[atime:%r, mtime:%r, ctime:%r, birthtime: %r]",
+	                                 path, atime, mtime, ctime, birthtime);
 }
 #endif /* NEED_err_unix_utime */
 
@@ -3078,7 +3078,7 @@ err_unix_utime(int errno_value, DeeObject *path,
 INTERN ATTR_COLD NONNULL((2, 3, 4, 5, 6)) int DCALL
 err_unix_lutime(int errno_value, DeeObject *path,
                 DeeObject *atime, DeeObject *mtime,
-                DeeObject *ctime, DeeObject *btime) {
+                DeeObject *ctime, DeeObject *birthtime) {
 #ifdef EACCES
 	if (errno_value == EACCES)
 		return err_unix_path_no_access(errno_value, path);
@@ -3086,7 +3086,7 @@ err_unix_lutime(int errno_value, DeeObject *path,
 #endif /* EACCES */
 #ifdef EPERM
 	if (errno_value == EPERM)
-		return err_unix_utime_no_access(errno_value, path, atime, mtime, ctime, btime);
+		return err_unix_utime_no_access(errno_value, path, atime, mtime, ctime, birthtime);
 #define NEED_err_unix_utime_no_access
 #endif /* EPERM */
 #ifdef ENOENT
@@ -3106,8 +3106,8 @@ err_unix_lutime(int errno_value, DeeObject *path,
 #endif /* EROFS */
 	return DeeUnixSystem_ThrowErrorf(&DeeError_SystemError, errno_value,
 	                                 "Failed to change timestamps of link %r to "
-	                                 "[atime:%r, mtime:%r, ctime:%r, btime: %r]",
-	                                 path, atime, mtime, ctime, btime);
+	                                 "[atime:%r, mtime:%r, ctime:%r, birthtime: %r]",
+	                                 path, atime, mtime, ctime, birthtime);
 }
 #endif /* NEED_err_unix_lutime */
 
@@ -3116,10 +3116,10 @@ err_unix_lutime(int errno_value, DeeObject *path,
 INTERN ATTR_COLD NONNULL((2, 3, 4, 5, 6)) int DCALL
 err_unix_futime(int errno_value, DeeObject *fd,
                 DeeObject *atime, DeeObject *mtime,
-                DeeObject *ctime, DeeObject *btime) {
+                DeeObject *ctime, DeeObject *birthtime) {
 #ifdef EPERM
 	if (errno_value == EPERM)
-		return err_unix_utime_no_access(errno_value, fd, atime, mtime, ctime, btime);
+		return err_unix_utime_no_access(errno_value, fd, atime, mtime, ctime, birthtime);
 #define NEED_err_unix_utime_no_access
 #endif /* EPERM */
 #ifdef EBADF
@@ -3129,8 +3129,8 @@ err_unix_futime(int errno_value, DeeObject *fd,
 #endif /* EBADF */
 	return DeeUnixSystem_ThrowErrorf(&DeeError_SystemError, errno_value,
 	                                 "Failed to change timestamps of fd %r to "
-	                                 "[atime:%r, mtime:%r, ctime:%r, btime: %r]",
-	                                 fd, atime, mtime, ctime, btime);
+	                                 "[atime:%r, mtime:%r, ctime:%r, birthtime: %r]",
+	                                 fd, atime, mtime, ctime, birthtime);
 }
 #endif /* NEED_err_unix_futime */
 
@@ -3138,9 +3138,9 @@ err_unix_futime(int errno_value, DeeObject *fd,
 #undef NEED_err_nt_utime
 INTERN ATTR_COLD NONNULL((2, 3, 4, 5)) int DCALL
 err_nt_utime(DWORD dwError, DeeObject *path,
-             DeeObject *atime, DeeObject *mtime, DeeObject *btime) {
+             DeeObject *atime, DeeObject *mtime, DeeObject *birthtime) {
 	if (DeeNTSystem_IsAccessDeniedError(dwError))
-		return err_nt_utime_no_access(dwError, path, atime, mtime, btime);
+		return err_nt_utime_no_access(dwError, path, atime, mtime, birthtime);
 #define NEED_err_nt_utime_no_access
 	if (DeeNTSystem_IsFileNotFoundError(dwError))
 		return err_nt_path_not_found(dwError, path);
@@ -3150,8 +3150,8 @@ err_nt_utime(DWORD dwError, DeeObject *path,
 #define NEED_err_nt_path_not_dir
 	return DeeUnixSystem_ThrowErrorf(&DeeError_SystemError, dwError,
 	                                 "Failed to change timestamps of path %r to "
-	                                 "[atime:%r, mtime:%r, btime: %r]",
-	                                 path, atime, mtime, btime);
+	                                 "[atime:%r, mtime:%r, birthtime: %r]",
+	                                 path, atime, mtime, birthtime);
 }
 #endif /* NEED_err_nt_utime */
 
@@ -3159,17 +3159,17 @@ err_nt_utime(DWORD dwError, DeeObject *path,
 #undef NEED_err_nt_futime
 INTERN ATTR_COLD NONNULL((2, 3, 4, 5)) int DCALL
 err_nt_futime(DWORD dwError, DeeObject *fd,
-              DeeObject *atime, DeeObject *mtime, DeeObject *btime) {
+              DeeObject *atime, DeeObject *mtime, DeeObject *birthtime) {
 	if (DeeNTSystem_IsAccessDeniedError(dwError))
-		return err_nt_utime_no_access(dwError, fd, atime, mtime, btime);
+		return err_nt_utime_no_access(dwError, fd, atime, mtime, birthtime);
 #define NEED_err_nt_utime_no_access
 	if (DeeNTSystem_IsBadF(dwError))
 		return err_nt_handle_closed(dwError, fd);
 #define NEED_err_nt_handle_closed
 	return DeeUnixSystem_ThrowErrorf(&DeeError_SystemError, dwError,
 	                                 "Failed to change timestamps of fd %r to "
-	                                 "[atime:%r, mtime:%r, btime: %r]",
-	                                 fd, atime, mtime, btime);
+	                                 "[atime:%r, mtime:%r, birthtime: %r]",
+	                                 fd, atime, mtime, birthtime);
 }
 #endif /* NEED_err_nt_futime */
 
@@ -3177,11 +3177,11 @@ err_nt_futime(DWORD dwError, DeeObject *fd,
 #undef NEED_err_utime_cannot_set_ctime_or_btime
 INTERN ATTR_COLD NONNULL((1, 2, 3)) int DCALL
 err_utime_cannot_set_ctime_or_btime(DeeObject *path_or_fd,
-                                    DeeObject *ctime, DeeObject *btime) {
+                                    DeeObject *ctime, DeeObject *birthtime) {
 	return DeeError_Throwf(&DeeError_UnsupportedAPI,
 	                       "The system does not support changing the "
-	                       "ctime/btime of %r to [ctime:%r, btime:%r]",
-	                       path_or_fd, ctime, btime);
+	                       "ctime/birthtime of %r to [ctime:%r, birthtime:%r]",
+	                       path_or_fd, ctime, birthtime);
 }
 #endif /* NEED_err_utime_cannot_set_ctime_or_btime */
 
@@ -3716,11 +3716,11 @@ err_nt_path_not_empty(DWORD dwError, DeeObject *__restrict path) {
 INTERN ATTR_COLD NONNULL((2, 3, 4, 5, 6)) int DCALL
 err_unix_utime_no_access(int errno_value, DeeObject *path,
                          DeeObject *atime, DeeObject *mtime,
-                         DeeObject *ctime, DeeObject *btime) {
+                         DeeObject *ctime, DeeObject *birthtime) {
 	return DeeUnixSystem_ThrowErrorf(&DeeError_FileAccessError, errno_value,
 	                                 "Changes to timestamps of %r are not allowed "
-	                                 "[atime:%r, mtime:%r, ctime:%r, btime: %r]",
-	                                 path, atime, mtime, ctime, btime);
+	                                 "[atime:%r, mtime:%r, ctime:%r, birthtime: %r]",
+	                                 path, atime, mtime, ctime, birthtime);
 }
 #endif /* NEED_err_unix_utime_no_access */
 
@@ -3728,11 +3728,11 @@ err_unix_utime_no_access(int errno_value, DeeObject *path,
 #undef NEED_err_nt_utime_no_access
 INTERN ATTR_COLD NONNULL((2, 3, 4, 5)) int DCALL
 err_nt_utime_no_access(DWORD dwError, DeeObject *path,
-                       DeeObject *atime, DeeObject *mtime, DeeObject *btime) {
+                       DeeObject *atime, DeeObject *mtime, DeeObject *birthtime) {
 	return DeeNTSystem_ThrowErrorf(&DeeError_FileAccessError, dwError,
 	                               "Changes to timestamps of %r are not allowed "
-	                               "[atime:%r, mtime:%r, ctime:%r, btime: %r]",
-	                               path, atime, mtime, ctime, btime);
+	                               "[atime:%r, mtime:%r, ctime:%r, birthtime: %r]",
+	                               path, atime, mtime, ctime, birthtime);
 }
 #endif /* NEED_err_nt_utime_no_access */
 
