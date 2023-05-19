@@ -1979,6 +1979,10 @@ posix_utime_unix_object_to_timespec(DeeObject *__restrict self,
                                     struct timespec *__restrict result) {
 	Dee_int128_t temp, seconds128;
 	uint32_t nanoseconds;
+	if (DeeNone_Check(self)) {
+		result->tv_nsec = UTIME_OMIT;
+		return 0;
+	}
 	if (DeeObject_AsInt128(self, &temp))
 		goto err;
 	__hybrid_int128_sub128(temp, UNIX_TIME_T_BASE_NANOSECOND);
@@ -2041,6 +2045,10 @@ posix_utime_unix_object_to_timespec64(DeeObject *__restrict self,
                                       struct timespec64 *__restrict result) {
 	Dee_int128_t temp, seconds128;
 	uint32_t nanoseconds;
+	if (DeeNone_Check(self)) {
+		result->tv_nsec = UTIME_OMIT;
+		return 0;
+	}
 	if (DeeObject_AsInt128(self, &temp))
 		goto err;
 	__hybrid_int128_sub128(temp, UNIX_TIME_T_BASE_NANOSECOND);
