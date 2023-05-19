@@ -74,6 +74,18 @@
 #endif /* CONFIG_HAVE_CRTDBG_H */
 #endif /* !NDEBUG */
 
+/* Whitelist of some C libraries where we know that `malloc(0)'
+ * doesn't return `NULL' unless it's *actually* out-of-memory. */
+#ifndef __MALLOC_ZERO_IS_NONNULL
+#ifndef __KOS_SYSTEM_HEADERS__
+#if defined(_MSC_VER)
+#undef __MALLOC_ZERO_IS_NONNULL /* Nope, `realloc(p, 0)' acts like `free(p)'... */
+#elif defined(__GLIBC__) || defined(__GNU_LIBRARY__)
+#define __MALLOC_ZERO_IS_NONNULL
+#endif /* ... */
+#endif /* !__KOS_SYSTEM_HEADERS__ */
+#endif /* !__MALLOC_ZERO_IS_NONNULL */
+
 DECL_BEGIN
 
 #define packw(x) \
@@ -1522,7 +1534,70 @@ PUBLIC void
 	DBG_ALIGNMENT_ENABLE();
 }
 
-#if defined(_MSC_VER) && _MSC_VER < 1900
+#if defined(_MSC_VER) && _MSC_VER <= 1916 /* Might work for newer versions, too. But untested */
+
+#define no_mans_land_size 4
+struct _CrtMemBlockHeader {
+	struct _CrtMemBlockHeader *_block_header_next;
+	struct _CrtMemBlockHeader *_block_header_prev;
+	char const                *_file_name;
+	int                        _line_number;
+	int                        _block_use;
+	size_t                     _data_size;
+	long                       _request_number;
+	unsigned char              gap[no_mans_land_size];
+};
+
+#ifndef _CRT_BLOCK
+#define _CRT_BLOCK 2
+#endif /* !_CRT_BLOCK */
+
+#define header_from_block(pbData) (((struct _CrtMemBlockHeader *)(pbData)) - 1)
+
+PRIVATE WUNUSED NONNULL((1)) bool DCALL
+validate_header(struct _CrtMemBlockHeader *__restrict hdr) {
+	unsigned int i;
+	__try {
+		for (i = 0; i < no_mans_land_size; ++i)
+			if (hdr->gap[i] != 0xFD)
+				goto nope;
+		if (hdr->_block_header_next &&
+		    hdr->_block_header_next->_block_header_prev != hdr)
+			goto nope;
+		if (hdr->_block_header_prev &&
+		    hdr->_block_header_prev->_block_header_next != hdr)
+			goto nope;
+		/* Badly named. - Should be `_COUNT_BLOCKS' or `_NUM_BLOCKS'!
+		 * `_MAX_BLOCKS' would be the max-valid-block, but this is
+		 * number of block types! */
+		if (hdr->_block_use >= _MAX_BLOCKS)
+			goto nope;
+	} __except (EXCEPTION_EXECUTE_HANDLER) {
+		/* If we failed to access the header for some reason, assume
+		 * that something went wrong because the header was malformed. */
+		goto nope;
+	}
+	return true;
+nope:
+	return false;
+}
+
+
+#define DeeDbg_UntrackAlloc_DEFINED
+PUBLIC void *
+(DCALL DeeDbg_UntrackAlloc)(void *ptr, char const *file, int line) {
+	(void)file;
+	(void)line;
+	if (ptr) {
+		struct _CrtMemBlockHeader *hdr = header_from_block(ptr);
+		if (validate_header(hdr)) {
+			hdr->_block_use = _CRT_BLOCK;
+		}
+	}
+	return ptr;
+}
+
+#elif defined(_MSC_VER) && _MSC_VER <= 1900
 extern ATTR_DLLIMPORT void __cdecl _lock(_In_ int _File);
 extern ATTR_DLLIMPORT void __cdecl _unlock(_Inout_ int _File);
 #define _HEAP_LOCK 4
@@ -1533,13 +1608,13 @@ typedef struct _CrtMemBlockHeader {
 	struct _CrtMemBlockHeader *pBlockHeaderPrev;
 	char                      *szFileName;
 	int                        nLine;
-#if __SIZEOF_POINTER__ >= 8
+#if __SIZEOF_POINTER__ >= 8 || _MSC_VER >= 1900
 	int                        nBlockUse;
 	size_t                     nDataSize;
-#else /* __SIZEOF_POINTER__ >= 8 */
+#else /* __SIZEOF_POINTER__ >= 8 || _MSC_VER >= 1900 */
 	size_t                     nDataSize;
 	int                        nBlockUse;
-#endif /* __SIZEOF_POINTER__ < 8 */
+#endif /* __SIZEOF_POINTER__ < 8 && _MSC_VER < 1900 */
 	long                       lRequest;
 	unsigned char              gap[nNoMansLandSize];
 } _CrtMemBlockHeader;

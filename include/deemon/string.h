@@ -404,8 +404,7 @@ struct Dee_string_utf {
 	                                            * >>     Dee_ASSERT(!u_utf16 || u_utf16 == u_data[Dee_STRING_WIDTH_2BYTE]);
 	                                            * >> }
 	                                            * >> if (u_flags & Dee_STRING_UTF_FASCII)
-	                                            * >>     Dee_ASSERT(u_utf8 == :s_str);
-	                                            */
+	                                            * >>     Dee_ASSERT(u_utf8 == :s_str); */
 	char        *u_utf8;  /* [0..1][lock(WRITE_ONCE)][owned_if(!= :s_str)]
 	                       * A lazily allocated width-string (meaning you can use `Dee_WSTR_LENGTH' to
 	                       * determine its length), representing the UTF-8 variant of this string. */
