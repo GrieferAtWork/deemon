@@ -383,19 +383,38 @@ DECL_BEGIN
 /* The `va_list' structure is simply a pointer into the argument list,
  * where arguments can be indexed by alignment of at least sizeof(void *).
  * This allows one to do the following:
- * >> void DCALL function_a(size_t argc, void **argv) {
+ * >> DFUNDEF void DCALL function_a(size_t argc, void **argv);
+ * >> DFUNDEF void DCALL function_b(size_t argc, va_list args);
+ * >> DFUNDEF void function_c(size_t argc, ...);
+ * >>
+ * >> ...
+ * >>
+ * >> PUBLIC void DCALL function_a(size_t argc, void **argv) {
  * >>      size_t i;
  * >>      for (i = 0; i < argc; ++i)
  * >>          printf("argv[%lu] = %p\n", (unsigned long)i, argv[i]);
  * >> }
+ * >>
+ * >> #ifdef CONFIG_VA_LIST_IS_STACK_POINTER
  * >> #ifndef __NO_DEFINE_ALIAS
  * >> DEFINE_PUBLIC_ALIAS(ASSEMBLY_NAME(function_b, 8),
  * >>                     ASSEMBLY_NAME(function_a, 8));
  * >> #else // !__NO_DEFINE_ALIAS
- * >> void DCALL function_b(size_t argc, va_list args) {
+ * >> PUBLIC void DCALL function_b(size_t argc, va_list args) {
  * >>      function_a(argc, (void **)args);
  * >> }
  * >> #endif // __NO_DEFINE_ALIAS
+ * >> #else // CONFIG_VA_LIST_IS_STACK_POINTER
+ * >> PUBLIC void DCALL function_b(size_t argc, va_list args) {
+ * >>      size_t i;
+ * >>      void **argv;
+ * >>      argv = (void **)Dee_Allocac(argc, sizeof(void *));
+ * >>      for (i = 0; i < argc; ++i)
+ * >>          argv[i] = va_arg(args, void *);
+ * >>      function_a(argc, argv);
+ * >> }
+ * >> #endif // !CONFIG_VA_LIST_IS_STACK_POINTER
+ * >>
  * >> void function_c(size_t argc, ...) {
  * >>      va_list args;
  * >>      va_start(args, argc);
@@ -437,11 +456,11 @@ extern void (__debugbreak)(void);
 #endif /* !Dee_BREAKPOINT */
 
 #ifdef CONFIG_BUILDING_DEEMON
-#   define DFUNDEF __EXPDEF
-#   define DDATDEF __EXPDEF
+#define DFUNDEF __EXPDEF
+#define DDATDEF __EXPDEF
 #else /* CONFIG_BUILDING_DEEMON */
-#   define DFUNDEF __IMPDEF
-#   define DDATDEF __IMPDEF
+#define DFUNDEF __IMPDEF
+#define DDATDEF __IMPDEF
 #endif /* !CONFIG_BUILDING_DEEMON */
 
 #ifdef __GNUC__

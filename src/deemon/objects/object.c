@@ -4950,6 +4950,7 @@ PUBLIC ATTR_RETNONNULL ATTR_OUTS(1, 3) ATTR_INS(2, 3) DREF DeeObject **
 
 DFUNDEF void (DCALL Dee_DumpReferenceLeaks)(void);
 PUBLIC void (DCALL Dee_DumpReferenceLeaks)(void) {
+	COMPILER_IMPURE();
 }
 
 #ifndef CONFIG_NO_BADREFCNT_CHECKS
@@ -5055,7 +5056,9 @@ PUBLIC ATTR_RETNONNULL ATTR_OUTS(1, 3) ATTR_INS(2, 3) DREF DeeObject **
 #ifndef DID_DEFINE_DEEOBJECT_FREETRACKER
 #define DID_DEFINE_DEEOBJECT_FREETRACKER
 PUBLIC NONNULL((1)) void /* Defined only for binary compatibility */
-(DCALL DeeObject_FreeTracker)(DeeObject *__restrict UNUSED(self)) {
+(DCALL DeeObject_FreeTracker)(DeeObject *__restrict self) {
+	COMPILER_IMPURE();
+	(void)self;
 }
 #endif /* !DID_DEFINE_DEEOBJECT_FREETRACKER */
 
@@ -5148,84 +5151,110 @@ assert_badtype_impl(char const *check_name, char const *file,
 }
 
 PUBLIC void DCALL
-DeeAssert_BadObject(char const *file, int line, DeeObject const *ob) {
+DeeAssert_BadObject(DeeObject const *ob, char const *file, int line) {
 	assert_badobject_impl("ASSERT_OBJECT", file, line, ob);
 }
 
 PUBLIC void DCALL
-DeeAssert_BadObjectOpt(char const *file, int line, DeeObject const *ob) {
+DeeAssert_BadObjectOpt(DeeObject const *ob, char const *file, int line) {
 	assert_badobject_impl("ASSERT_OBJECT_OPT", file, line, ob);
 }
 
 PUBLIC void DCALL
-DeeAssert_BadObjectType(char const *file, int line, DeeObject const *ob,
-                        DeeTypeObject const *wanted_type) {
+DeeAssert_BadObjectType(DeeObject const *ob,
+                        DeeTypeObject const *wanted_type,
+                        char const *file, int line) {
 	assert_badtype_impl("ASSERT_OBJECT_TYPE", file, line, ob, false, wanted_type);
 }
 
 PUBLIC void DCALL
-DeeAssert_BadObjectTypeOpt(char const *file, int line, DeeObject const *ob,
-                           DeeTypeObject const *wanted_type) {
+DeeAssert_BadObjectTypeOpt(DeeObject const *ob,
+                           DeeTypeObject const *wanted_type,
+                           char const *file, int line) {
 	assert_badtype_impl("ASSERT_OBJECT_TYPE_OPT", file, line, ob, false, wanted_type);
 }
 
 PUBLIC void DCALL
-DeeAssert_BadObjectTypeExact(char const *file, int line, DeeObject const *ob,
-                             DeeTypeObject const *wanted_type) {
+DeeAssert_BadObjectTypeExact(DeeObject const *ob,
+                             DeeTypeObject const *wanted_type,
+                             char const *file, int line) {
 	assert_badtype_impl("ASSERT_OBJECT_TYPE_EXACT", file, line, ob, true, wanted_type);
 }
 
 PUBLIC void DCALL
-DeeAssert_BadObjectTypeExactOpt(char const *file, int line, DeeObject const *ob,
-                                DeeTypeObject const *wanted_type) {
+DeeAssert_BadObjectTypeExactOpt(DeeObject const *ob,
+                                DeeTypeObject const *wanted_type,
+                                char const *file, int line) {
 	assert_badtype_impl("ASSERT_OBJECT_TYPE_EXACT_OPT", file, line, ob, true, wanted_type);
 }
 
 #else /* !NDEBUG */
 
 PUBLIC void DCALL
-DeeAssert_BadObject(char const *UNUSED(file),
-                    int UNUSED(line),
-                    DeeObject const *UNUSED(ob)) {
+DeeAssert_BadObject(DeeObject const *ob,
+                    char const *file, int line) {
+	(void)ob;
+	(void)file;
+	(void)line;
+	COMPILER_IMPURE();
 	/* no-op */
 }
 
 PUBLIC void DCALL
-DeeAssert_BadObjectOpt(char const *UNUSED(file),
-                       int UNUSED(line),
-                       DeeObject const *UNUSED(ob)) {
+DeeAssert_BadObjectOpt(DeeObject const *ob,
+                       char const *file, int line) {
+	(void)ob;
+	(void)file;
+	(void)line;
+	COMPILER_IMPURE();
 	/* no-op */
 }
 
 PUBLIC void DCALL
-DeeAssert_BadObjectType(char const *UNUSED(file),
-                        int UNUSED(line),
-                        DeeObject const *UNUSED(ob),
-                        DeeTypeObject const *UNUSED(wanted_type)) {
+DeeAssert_BadObjectType(DeeObject const *ob,
+                        DeeTypeObject const *wanted_type,
+                        char const *file, int line) {
+	(void)ob;
+	(void)wanted_type;
+	(void)file;
+	(void)line;
+	COMPILER_IMPURE();
 	/* no-op */
 }
 
 PUBLIC void DCALL
-DeeAssert_BadObjectTypeOpt(char const *UNUSED(file),
-                           int UNUSED(line),
-                           DeeObject const *UNUSED(ob),
-                           DeeTypeObject const *UNUSED(wanted_type)) {
+DeeAssert_BadObjectTypeOpt(DeeObject const *ob,
+                           DeeTypeObject const *wanted_type,
+                           char const *file, int line) {
+	(void)ob;
+	(void)wanted_type;
+	(void)file;
+	(void)line;
+	COMPILER_IMPURE();
 	/* no-op */
 }
 
 PUBLIC void DCALL
-DeeAssert_BadObjectTypeExact(char const *UNUSED(file),
-                             int UNUSED(line),
-                             DeeObject const *UNUSED(ob),
-                             DeeTypeObject const *UNUSED(wanted_type)) {
+DeeAssert_BadObjectTypeExact(DeeObject const *ob,
+                             DeeTypeObject const *wanted_type,
+                             char const *file, int line) {
+	(void)ob;
+	(void)wanted_type;
+	(void)file;
+	(void)line;
+	COMPILER_IMPURE();
 	/* no-op */
 }
 
 PUBLIC void DCALL
-DeeAssert_BadObjectTypeExactOpt(char const *UNUSED(file),
-                                int UNUSED(line),
-                                DeeObject const *UNUSED(ob),
-                                DeeTypeObject const *UNUSED(wanted_type)) {
+DeeAssert_BadObjectTypeExactOpt(DeeObject const *ob,
+                                DeeTypeObject const *wanted_type,
+                                char const *file, int line) {
+	(void)ob;
+	(void)wanted_type;
+	(void)file;
+	(void)line;
+	COMPILER_IMPURE();
 	/* no-op */
 }
 

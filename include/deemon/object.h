@@ -243,11 +243,12 @@ DFUNDEF void DCALL Dee_DumpReferenceLeaks(void);
 #define DEE_OBJECT_OFFSETOF_DATA   (__SIZEOF_POINTER__ * 2)
 #endif /* !CONFIG_TRACE_REFCHANGES */
 
+/* Statically defined offsets within deemon objects. */
 #define DEE_OBJECT_OFFSETOF_REFCNT  0
 #define DEE_OBJECT_OFFSETOF_TYPE    __SIZEOF_POINTER__
 
 
-
+/* IDE hint for macros that require arguments types to implement `OBJECT_HEAD' */
 #ifdef __INTELLISENSE__
 #define Dee_REQUIRES_OBJECT(x) ((DeeObject *)&(x)->ob_refcnt)
 #else /* __INTELLISENSE__ */
@@ -319,6 +320,9 @@ struct Dee_object {
 #define DeeObject_InitNoref(self, type) ((self)->ob_refcnt = 1, (self)->ob_type = (type))
 #endif /* !CONFIG_TRACE_REFCHANGES */
 
+/* Initialize the standard objects fields of a freshly allocated object.
+ * @param: DeeObject      *self: The object to initialize
+ * @param: DeeTypeoObject *type: The type to assign to the object */
 #define DeeObject_Init(self, type)    \
 	(Dee_Incref((DeeObject *)(type)), \
 	 DeeObject_InitNoref(self, type))
@@ -329,20 +333,20 @@ struct Dee_object {
 	((ob)->ob_refcnt &&     \
 	 (ob)->ob_type &&       \
 	 ((DeeObject *)(ob)->ob_type)->ob_refcnt)
-#define Dee_ASSERT_OBJECT(ob)                      (void)(DeeObject_Check(ob) || (DeeAssert_BadObject(__FILE__, __LINE__, (DeeObject *)(ob)), Dee_BREAKPOINT(), 0))
-#define Dee_ASSERT_OBJECT_OPT(ob)                  (void)(!(ob) || DeeObject_Check(ob) || (DeeAssert_BadObjectOpt(__FILE__, __LINE__, (DeeObject *)(ob)), Dee_BREAKPOINT(), 0))
-#define Dee_ASSERT_OBJECT_TYPE(ob, type)           (void)((DeeObject_Check(ob) && DeeObject_InstanceOf(ob, type)) || (DeeAssert_BadObjectType(__FILE__, __LINE__, (DeeObject *)(ob), (DeeTypeObject *)(type)), Dee_BREAKPOINT(), 0))
-#define Dee_ASSERT_OBJECT_TYPE_OPT(ob, type)       (void)(!(ob) || (DeeObject_Check(ob) && DeeObject_InstanceOf(ob, type)) || (DeeAssert_BadObjectTypeOpt(__FILE__, __LINE__, (DeeObject *)(ob), (DeeTypeObject *)(type)), Dee_BREAKPOINT(), 0))
-#define Dee_ASSERT_OBJECT_TYPE_A(ob, type)         (void)((DeeObject_Check(ob) && (DeeObject_InstanceOf(ob, type) || DeeType_IsAbstract(type))) || (DeeAssert_BadObjectType(__FILE__, __LINE__, (DeeObject *)(ob), (DeeTypeObject *)(type)), Dee_BREAKPOINT(), 0))
-#define Dee_ASSERT_OBJECT_TYPE_A_OPT(ob, type)     (void)(!(ob) || (DeeObject_Check(ob) && (DeeObject_InstanceOf(ob, type) || DeeType_IsAbstract(type))) || (DeeAssert_BadObjectTypeOpt(__FILE__, __LINE__, (DeeObject *)(ob), (DeeTypeObject *)(type)), Dee_BREAKPOINT(), 0))
-#define Dee_ASSERT_OBJECT_TYPE_EXACT(ob, type)     (void)((DeeObject_Check(ob) && DeeObject_InstanceOfExact(ob, type)) || (DeeAssert_BadObjectTypeExact(__FILE__, __LINE__, (DeeObject *)(ob), (DeeTypeObject *)(type)), Dee_BREAKPOINT(), 0))
-#define Dee_ASSERT_OBJECT_TYPE_EXACT_OPT(ob, type) (void)(!(ob) || (DeeObject_Check(ob) && DeeObject_InstanceOfExact(ob, type)) || (DeeAssert_BadObjectTypeExactOpt(__FILE__, __LINE__, (DeeObject *)(ob), (DeeTypeObject *)(type)), Dee_BREAKPOINT(), 0))
-DFUNDEF ATTR_COLD void DCALL DeeAssert_BadObject(char const *file, int line, DeeObject const *ob);
-DFUNDEF ATTR_COLD void DCALL DeeAssert_BadObjectOpt(char const *file, int line, DeeObject const *ob);
-DFUNDEF ATTR_COLD void DCALL DeeAssert_BadObjectType(char const *file, int line, DeeObject const *ob, DeeTypeObject const *wanted_type);
-DFUNDEF ATTR_COLD void DCALL DeeAssert_BadObjectTypeOpt(char const *file, int line, DeeObject const *ob, DeeTypeObject const *wanted_type);
-DFUNDEF ATTR_COLD void DCALL DeeAssert_BadObjectTypeExact(char const *file, int line, DeeObject const *ob, DeeTypeObject const *wanted_type);
-DFUNDEF ATTR_COLD void DCALL DeeAssert_BadObjectTypeExactOpt(char const *file, int line, DeeObject const *ob, DeeTypeObject const *wanted_type);
+#define Dee_ASSERT_OBJECT(ob)                      (void)(likely(DeeObject_Check(ob)) || (DeeAssert_BadObject((DeeObject *)(ob), __FILE__, __LINE__), Dee_BREAKPOINT(), 0))
+#define Dee_ASSERT_OBJECT_OPT(ob)                  (void)(likely(!(ob) || DeeObject_Check(ob)) || (DeeAssert_BadObjectOpt((DeeObject *)(ob), __FILE__, __LINE__), Dee_BREAKPOINT(), 0))
+#define Dee_ASSERT_OBJECT_TYPE(ob, type)           (void)(likely((DeeObject_Check(ob) && DeeObject_InstanceOf(ob, type))) || (DeeAssert_BadObjectType((DeeObject *)(ob), (DeeTypeObject *)(type), __FILE__, __LINE__), Dee_BREAKPOINT(), 0))
+#define Dee_ASSERT_OBJECT_TYPE_OPT(ob, type)       (void)(likely(!(ob) || (DeeObject_Check(ob) && DeeObject_InstanceOf(ob, type))) || (DeeAssert_BadObjectTypeOpt((DeeObject *)(ob), (DeeTypeObject *)(type), __FILE__, __LINE__), Dee_BREAKPOINT(), 0))
+#define Dee_ASSERT_OBJECT_TYPE_A(ob, type)         (void)(likely((DeeObject_Check(ob) && (DeeObject_InstanceOf(ob, type) || DeeType_IsAbstract(type)))) || (DeeAssert_BadObjectType((DeeObject *)(ob), (DeeTypeObject *)(type), __FILE__, __LINE__), Dee_BREAKPOINT(), 0))
+#define Dee_ASSERT_OBJECT_TYPE_A_OPT(ob, type)     (void)(likely(!(ob) || (DeeObject_Check(ob) && (DeeObject_InstanceOf(ob, type) || DeeType_IsAbstract(type)))) || (DeeAssert_BadObjectTypeOpt((DeeObject *)(ob), (DeeTypeObject *)(type), __FILE__, __LINE__), Dee_BREAKPOINT(), 0))
+#define Dee_ASSERT_OBJECT_TYPE_EXACT(ob, type)     (void)(likely((DeeObject_Check(ob) && DeeObject_InstanceOfExact(ob, type))) || (DeeAssert_BadObjectTypeExact((DeeObject *)(ob), (DeeTypeObject *)(type), __FILE__, __LINE__), Dee_BREAKPOINT(), 0))
+#define Dee_ASSERT_OBJECT_TYPE_EXACT_OPT(ob, type) (void)(likely(!(ob) || (DeeObject_Check(ob) && DeeObject_InstanceOfExact(ob, type))) || (DeeAssert_BadObjectTypeExactOpt((DeeObject *)(ob), (DeeTypeObject *)(type), __FILE__, __LINE__), Dee_BREAKPOINT(), 0))
+DFUNDEF ATTR_COLD void DCALL DeeAssert_BadObject(DeeObject const *ob, char const *file, int line);
+DFUNDEF ATTR_COLD void DCALL DeeAssert_BadObjectOpt(DeeObject const *ob, char const *file, int line);
+DFUNDEF ATTR_COLD void DCALL DeeAssert_BadObjectType(DeeObject const *ob, DeeTypeObject const *wanted_type, char const *file, int line);
+DFUNDEF ATTR_COLD void DCALL DeeAssert_BadObjectTypeOpt(DeeObject const *ob, DeeTypeObject const *wanted_type, char const *file, int line);
+DFUNDEF ATTR_COLD void DCALL DeeAssert_BadObjectTypeExact(DeeObject const *ob, DeeTypeObject const *wanted_type, char const *file, int line);
+DFUNDEF ATTR_COLD void DCALL DeeAssert_BadObjectTypeExactOpt(DeeObject const *ob, DeeTypeObject const *wanted_type, char const *file, int line);
 #else /* !NDEBUG */
 #define DeeObject_Check(ob)                        true
 #define Dee_ASSERT_OBJECT(ob)                      (void)0
@@ -683,13 +687,21 @@ DFUNDEF NONNULL((1)) void DCALL DeeFatal_BadDecref(DeeObject *ob, char const *fi
 #define _DeeRefcnt_AddFetch(x, n) ((x) += (n))
 #define _DeeRefcnt_FetchAdd(x, n) (((x) += (n)) - (n))
 #ifndef CONFIG_NO_BADREFCNT_CHECKS
+#ifdef __NO_builtin_expect
 #define Dee_Incref_untraced(x)          (void)((x)->ob_refcnt++ || (_DeeFatal_BadIncref(x), 0))
 #define Dee_Incref_n_untraced(x, n)     (void)(_DeeRefcnt_FetchAdd((x)->ob_refcnt, n) || (_DeeFatal_BadIncref(x), 0))
-#define Dee_Decref_untraced(x)          (void)((x)->ob_refcnt-- > 1 || (DeeObject_Destroy((DeeObject *)(x)), 0))
+#define Dee_DecrefNokill_untraced(x)    (void)((x)->ob_refcnt-- > 1 || (_DeeFatal_BadDecref(x), 0))
+#define Dee_Decref_likely_untraced(x)   (void)((x)->ob_refcnt-- > 1 || (DeeObject_Destroy((DeeObject *)(x)), 0))
+#define Dee_Decref_unlikely_untraced(x) (void)((x)->ob_refcnt-- > 1 || (DeeObject_Destroy((DeeObject *)(x)), 0))
+#else /* __NO_builtin_expect */
+#define Dee_Incref_untraced(x)          (void)(likely((x)->ob_refcnt++) || (_DeeFatal_BadIncref(x), 0))
+#define Dee_Incref_n_untraced(x, n)     (void)(likely(_DeeRefcnt_FetchAdd((x)->ob_refcnt, n)) || (_DeeFatal_BadIncref(x), 0))
+#define Dee_DecrefNokill_untraced(x)    (void)(likely((x)->ob_refcnt-- > 1) || (_DeeFatal_BadDecref(x), 0))
 #define Dee_Decref_likely_untraced(x)   (void)(unlikely((x)->ob_refcnt-- > 1) || (DeeObject_Destroy((DeeObject *)(x)), 0))
 #define Dee_Decref_unlikely_untraced(x) (void)(likely((x)->ob_refcnt-- > 1) || (DeeObject_Destroy((DeeObject *)(x)), 0))
+#endif /* !__NO_builtin_expect */
+#define Dee_Decref_untraced(x)          (void)((x)->ob_refcnt-- > 1 || (DeeObject_Destroy((DeeObject *)(x)), 0))
 #define Dee_DecrefDokill_untraced(x)    (void)(--(x)->ob_refcnt, DeeObject_Destroy((DeeObject *)(x)))
-#define Dee_DecrefNokill_untraced(x)    (void)((x)->ob_refcnt-- > 1 || (_DeeFatal_BadDecref(x), 0))
 #define Dee_DecrefWasOk_untraced(x)     ((x)->ob_refcnt-- > 1 ? false : (DeeObject_Destroy((DeeObject *)(x)), true))
 #else /* !CONFIG_NO_BADREFCNT_CHECKS */
 #define Dee_Incref_untraced(x)          (void)(++(x)->ob_refcnt)
@@ -733,13 +745,21 @@ DFUNDEF NONNULL((1)) void DCALL DeeFatal_BadDecref(DeeObject *ob, char const *fi
 #define _DeeRefcnt_AddFetch(x, n) __hybrid_atomic_addfetch(x, n, __ATOMIC_SEQ_CST)
 #endif /* !_DeeRefcnt_FetchAdd */
 #ifndef CONFIG_NO_BADREFCNT_CHECKS
+#ifdef __NO_builtin_expect
 #define Dee_Incref_untraced(x)          (void)(_DeeRefcnt_FetchInc(&(x)->ob_refcnt) || (_DeeFatal_BadIncref(x), 0))
 #define Dee_Incref_n_untraced(x, n)     (void)(_DeeRefcnt_FetchAdd(&(x)->ob_refcnt, n) || (_DeeFatal_BadIncref(x), 0))
-#define Dee_Decref_untraced(x)          (void)(_DeeRefcnt_FetchDec(&(x)->ob_refcnt) > 1 || (DeeObject_Destroy((DeeObject *)(x)), 0))
 #define Dee_Decref_likely_untraced(x)   (void)(unlikely(_DeeRefcnt_FetchDec(&(x)->ob_refcnt) > 1) || (DeeObject_Destroy((DeeObject *)(x)), 0))
 #define Dee_Decref_unlikely_untraced(x) (void)(likely(_DeeRefcnt_FetchDec(&(x)->ob_refcnt) > 1) || (DeeObject_Destroy((DeeObject *)(x)), 0))
-#define Dee_DecrefDokill_untraced(x)    (_DeeRefcnt_FetchDec(&(x)->ob_refcnt), DeeObject_Destroy((DeeObject *)(x)))
 #define Dee_DecrefNokill_untraced(x)    (void)(_DeeRefcnt_FetchDec(&(x)->ob_refcnt) > 1 || (_DeeFatal_BadDecref(x), 0))
+#else /* __NO_builtin_expect */
+#define Dee_Incref_untraced(x)          (void)(likely(_DeeRefcnt_FetchInc(&(x)->ob_refcnt)) || (_DeeFatal_BadIncref(x), 0))
+#define Dee_Incref_n_untraced(x, n)     (void)(likely(_DeeRefcnt_FetchAdd(&(x)->ob_refcnt, n)) || (_DeeFatal_BadIncref(x), 0))
+#define Dee_Decref_likely_untraced(x)   (void)(unlikely(_DeeRefcnt_FetchDec(&(x)->ob_refcnt) > 1) || (DeeObject_Destroy((DeeObject *)(x)), 0))
+#define Dee_Decref_unlikely_untraced(x) (void)(likely(_DeeRefcnt_FetchDec(&(x)->ob_refcnt) > 1) || (DeeObject_Destroy((DeeObject *)(x)), 0))
+#define Dee_DecrefNokill_untraced(x)    (void)(likely(_DeeRefcnt_FetchDec(&(x)->ob_refcnt) > 1) || (_DeeFatal_BadDecref(x), 0))
+#endif /* !__NO_builtin_expect */
+#define Dee_Decref_untraced(x)          (void)(_DeeRefcnt_FetchDec(&(x)->ob_refcnt) > 1 || (DeeObject_Destroy((DeeObject *)(x)), 0))
+#define Dee_DecrefDokill_untraced(x)    (_DeeRefcnt_FetchDec(&(x)->ob_refcnt), DeeObject_Destroy((DeeObject *)(x)))
 #define Dee_DecrefWasOk_untraced(x)     (_DeeRefcnt_FetchDec(&(x)->ob_refcnt) > 1 ? false : (DeeObject_Destroy((DeeObject *)(x)), true))
 #define Dee_DecrefIfOne_untraced(self)  Dee_DecrefIfOne_untraced_d((DeeObject *)(self), __FILE__, __LINE__)
 #else /* !CONFIG_NO_BADREFCNT_CHECKS */
@@ -1004,7 +1024,7 @@ LOCAL ATTR_RETNONNULL ATTR_OUTS(1, 3) ATTR_INS(2, 3) DREF DeeObject **
 #define Dee_Movrefv_untraced(dst, src, object_count)      ((void)(object_count), Dee_REQUIRES_OBJECT(*(src)), (DeeObject **)Dee_REQUIRES_OBJECT(*(dst)))
 #elif defined(CONFIG_INLINE_INCREFV)
 #define Dee_Increfv_untraced(object_vector, object_count) \
-	Dee_Increfv_untraced((DeeObject **)(object_vector), object_count)
+	Dee_Increfv_untraced((DeeObject *const *)(object_vector), object_count)
 LOCAL ATTR_RETNONNULL ATTR_INS(1, 2) DREF DeeObject **
 (DCALL Dee_Increfv_untraced)(DeeObject *const *__restrict object_vector,
                              size_t object_count) {
@@ -1073,7 +1093,7 @@ DFUNDEF ATTR_RETNONNULL ATTR_OUTS(1, 3) ATTR_INS(2, 3) DREF DeeObject **(DCALL D
 #define Dee_Movrefv(dst, src, object_count)      Dee_Movrefv_traced((DeeObject **)(dst), (DeeObject *const *)(src), object_count, __FILE__, __LINE__)
 
 #define Dee_XIncrefv_traced(object_vector, object_count, file, line) \
-	Dee_XIncrefv_traced((DeeObject **)(object_vector), object_count, file, line)
+	Dee_XIncrefv_traced((DeeObject *const *)(object_vector), object_count, file, line)
 LOCAL ATTR_RETNONNULL ATTR_INS(1, 2) DREF DeeObject **
 (DCALL Dee_XIncrefv_traced)(DeeObject *const *__restrict object_vector,
                             size_t object_count, char const *file, int line) {
@@ -1219,10 +1239,10 @@ typedef Dee_enum_t denum_t;
 
 /* Expose shorter variants of macros */
 #ifdef DEE_SOURCE
-#define TYPE_ALLOCATOR              DEE_TYPE_ALLOCATOR
-#define TYPE_AUTOSIZED_ALLOCATOR    DEE_TYPE_AUTOSIZED_ALLOCATOR
-#define TYPE_AUTOSIZED_ALLOCATOR_R  DEE_TYPE_AUTOSIZED_ALLOCATOR_R
-#define TYPE_AUTO_ALLOCATOR         DEE_TYPE_AUTO_ALLOCATOR
+#define TYPE_ALLOCATOR             DEE_TYPE_ALLOCATOR
+#define TYPE_AUTOSIZED_ALLOCATOR   DEE_TYPE_AUTOSIZED_ALLOCATOR
+#define TYPE_AUTOSIZED_ALLOCATOR_R DEE_TYPE_AUTOSIZED_ALLOCATOR_R
+#define TYPE_AUTO_ALLOCATOR        DEE_TYPE_AUTO_ALLOCATOR
 #endif /* DEE_SOURCE */
 #endif /* !DEE_TYPE_ALLOCATOR */
 
@@ -1230,12 +1250,12 @@ typedef Dee_enum_t denum_t;
 /* Specifies an allocator that may provides optimizations
  * for types with a FIXED size (which most objects have). */
 #ifdef CONFIG_NO_OBJECT_SLABS
-#define DEE_TYPE_SIZED_ALLOCATOR_R     DEE_TYPE_AUTOSIZED_ALLOCATOR_R
-#define DEE_TYPE_SIZED_ALLOCATOR_GC_R  DEE_TYPE_AUTOSIZED_ALLOCATOR_R
-#define DEE_TYPE_SIZED_ALLOCATOR       DEE_TYPE_AUTOSIZED_ALLOCATOR
-#define DEE_TYPE_SIZED_ALLOCATOR_GC    DEE_TYPE_AUTOSIZED_ALLOCATOR
-#define DEE_TYPE_FIXED_ALLOCATOR       DEE_TYPE_AUTO_ALLOCATOR
-#define DEE_TYPE_FIXED_ALLOCATOR_GC    DEE_TYPE_AUTO_ALLOCATOR
+#define DEE_TYPE_SIZED_ALLOCATOR_R    DEE_TYPE_AUTOSIZED_ALLOCATOR_R
+#define DEE_TYPE_SIZED_ALLOCATOR_GC_R DEE_TYPE_AUTOSIZED_ALLOCATOR_R
+#define DEE_TYPE_SIZED_ALLOCATOR      DEE_TYPE_AUTOSIZED_ALLOCATOR
+#define DEE_TYPE_SIZED_ALLOCATOR_GC   DEE_TYPE_AUTOSIZED_ALLOCATOR
+#define DEE_TYPE_FIXED_ALLOCATOR      DEE_TYPE_AUTO_ALLOCATOR
+#define DEE_TYPE_FIXED_ALLOCATOR_GC   DEE_TYPE_AUTO_ALLOCATOR
 #else /* CONFIG_NO_OBJECT_SLABS */
 #define DEE_TYPE_SIZED_ALLOCATOR_R(min_size, max_size)                     \
 	  DeeSlab_Invoke((Dee_funptr_t)&DeeObject_SlabFree, min_size, , NULL), \
@@ -1520,11 +1540,11 @@ struct Dee_type_gc {
 
 
 /* GC destruction priority levels of builtin types. */
-#define Dee_GC_PRIORITY_LATE      0x0000 /* (Preferably) destroyed last. */
-#define Dee_GC_PRIORITY_CLASS     0xfd00 /* User-classes. */
-#define Dee_GC_PRIORITY_INSTANCE  0xfe00 /* Instances of user-classes. */
-#define Dee_GC_PRIORITY_MODULE    0xff00 /* Module objects. */
-#define Dee_GC_PRIORITY_EARLY     0xffff /* (Preferably) destroyed before anything else. */
+#define Dee_GC_PRIORITY_LATE     0x0000 /* (Preferably) destroyed last. */
+#define Dee_GC_PRIORITY_CLASS    0xfd00 /* User-classes. */
+#define Dee_GC_PRIORITY_INSTANCE 0xfe00 /* Instances of user-classes. */
+#define Dee_GC_PRIORITY_MODULE   0xff00 /* Module objects. */
+#define Dee_GC_PRIORITY_EARLY    0xffff /* (Preferably) destroyed before anything else. */
 
 
 /* Return values for `tp_int32' and `tp_int64' */
@@ -1564,19 +1584,19 @@ struct Dee_type_math {
 	WUNUSED_T NONNULL_T((1, 2)) DREF DeeObject *(DCALL *tp_pow)(DeeObject *self, DeeObject *some_object);
 
 	/* Inplace operators (Optional; Implemented using functions above when not available) */
-	WUNUSED_T NONNULL_T((1)) int (DCALL *tp_inc)(DeeObject **__restrict p_self);
-	WUNUSED_T NONNULL_T((1)) int (DCALL *tp_dec)(DeeObject **__restrict p_self);
-	WUNUSED_T NONNULL_T((1, 2)) int (DCALL *tp_inplace_add)(DeeObject **__restrict p_self, DeeObject *some_object);
-	WUNUSED_T NONNULL_T((1, 2)) int (DCALL *tp_inplace_sub)(DeeObject **__restrict p_self, DeeObject *some_object);
-	WUNUSED_T NONNULL_T((1, 2)) int (DCALL *tp_inplace_mul)(DeeObject **__restrict p_self, DeeObject *some_object);
-	WUNUSED_T NONNULL_T((1, 2)) int (DCALL *tp_inplace_div)(DeeObject **__restrict p_self, DeeObject *some_object);
-	WUNUSED_T NONNULL_T((1, 2)) int (DCALL *tp_inplace_mod)(DeeObject **__restrict p_self, DeeObject *some_object);
-	WUNUSED_T NONNULL_T((1, 2)) int (DCALL *tp_inplace_shl)(DeeObject **__restrict p_self, DeeObject *some_object);
-	WUNUSED_T NONNULL_T((1, 2)) int (DCALL *tp_inplace_shr)(DeeObject **__restrict p_self, DeeObject *some_object);
-	WUNUSED_T NONNULL_T((1, 2)) int (DCALL *tp_inplace_and)(DeeObject **__restrict p_self, DeeObject *some_object);
-	WUNUSED_T NONNULL_T((1, 2)) int (DCALL *tp_inplace_or)(DeeObject **__restrict p_self, DeeObject *some_object);
-	WUNUSED_T NONNULL_T((1, 2)) int (DCALL *tp_inplace_xor)(DeeObject **__restrict p_self, DeeObject *some_object);
-	WUNUSED_T NONNULL_T((1, 2)) int (DCALL *tp_inplace_pow)(DeeObject **__restrict p_self, DeeObject *some_object);
+	WUNUSED_T NONNULL_T((1)) int (DCALL *tp_inc)(DREF DeeObject **__restrict p_self);
+	WUNUSED_T NONNULL_T((1)) int (DCALL *tp_dec)(DREF DeeObject **__restrict p_self);
+	WUNUSED_T NONNULL_T((1, 2)) int (DCALL *tp_inplace_add)(DREF DeeObject **__restrict p_self, DeeObject *some_object);
+	WUNUSED_T NONNULL_T((1, 2)) int (DCALL *tp_inplace_sub)(DREF DeeObject **__restrict p_self, DeeObject *some_object);
+	WUNUSED_T NONNULL_T((1, 2)) int (DCALL *tp_inplace_mul)(DREF DeeObject **__restrict p_self, DeeObject *some_object);
+	WUNUSED_T NONNULL_T((1, 2)) int (DCALL *tp_inplace_div)(DREF DeeObject **__restrict p_self, DeeObject *some_object);
+	WUNUSED_T NONNULL_T((1, 2)) int (DCALL *tp_inplace_mod)(DREF DeeObject **__restrict p_self, DeeObject *some_object);
+	WUNUSED_T NONNULL_T((1, 2)) int (DCALL *tp_inplace_shl)(DREF DeeObject **__restrict p_self, DeeObject *some_object);
+	WUNUSED_T NONNULL_T((1, 2)) int (DCALL *tp_inplace_shr)(DREF DeeObject **__restrict p_self, DeeObject *some_object);
+	WUNUSED_T NONNULL_T((1, 2)) int (DCALL *tp_inplace_and)(DREF DeeObject **__restrict p_self, DeeObject *some_object);
+	WUNUSED_T NONNULL_T((1, 2)) int (DCALL *tp_inplace_or)(DREF DeeObject **__restrict p_self, DeeObject *some_object);
+	WUNUSED_T NONNULL_T((1, 2)) int (DCALL *tp_inplace_xor)(DREF DeeObject **__restrict p_self, DeeObject *some_object);
+	WUNUSED_T NONNULL_T((1, 2)) int (DCALL *tp_inplace_pow)(DREF DeeObject **__restrict p_self, DeeObject *some_object);
 };
 
 struct Dee_type_nii;
@@ -2232,7 +2252,7 @@ struct Dee_membercache {
 #define OPTYPE_BINARY         0x002  /* `...(DeeObject *self, DeeObject *other);' */
 #define OPTYPE_TRINARY        0x003  /* `...(DeeObject *self, DeeObject *a, DeeObject *b);' */
 #define OPTYPE_QUAD           0x004  /* `...(DeeObject *self, DeeObject *a, DeeObject *b, DeeObject *c);' */
-#define OPTYPE_INPLACE        0x008  /* FLAG: [override] The first argument is actually `DeeObject **__restrict p_self'. */
+#define OPTYPE_INPLACE        0x008  /* FLAG: [override] The first argument is actually `DREF DeeObject **__restrict p_self'. */
 #define OPTYPE_VARIABLE       0x080  /* FLAG: User-code can invoke the operator with a variable number of arguments passed through the last operand. */
 #define OPTYPE_ROBJECT        0x000  /* FLAG: The operator returns `DREF DeeObject *'. */
 #define OPTYPE_RINT32         0x010  /* FLAG: The operator returns `int32_t'. */
@@ -2341,7 +2361,7 @@ DFUNDEF WUNUSED ATTR_INS(4, 3) NONNULL((1)) DREF DeeObject *DCALL
 DeeObject_InvokeOperator(DeeObject *self, uint16_t name,
                          size_t argc, DeeObject *const *argv);
 DFUNDEF WUNUSED ATTR_INS(4, 3) NONNULL((1)) DREF DeeObject *DCALL
-DeeObject_PInvokeOperator(DeeObject **__restrict p_self, uint16_t name,
+DeeObject_PInvokeOperator(DREF DeeObject **__restrict p_self, uint16_t name,
                           size_t argc, DeeObject *const *argv);
 #define DeeObject_InvokeOperatorTuple(self, name, args) \
 	DeeObject_InvokeOperator(self, name, DeeTuple_SIZE(args), DeeTuple_ELEM(args))

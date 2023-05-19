@@ -300,6 +300,7 @@
 
 #define DFUNDEF extern
 #define DDATDEF extern
+#define ASSEMBLY_NAME(x,s) x
 
 #define DEFINE_PRIVATE_ALIAS(new,old) int new() {}
 #define DEFINE_PUBLIC_ALIAS(new,old) int new() {}
@@ -783,8 +784,11 @@
 #define ACTION(...)
 
 
-#define DEFINE_OPERATOR(return, name, args) return DeeObject_##name args
-#define DEFINE_INTERNAL_OPERATOR(return, name, args) return DeeObject_##name args
+#define DEFINE_OPERATOR(return,name,args) return DeeObject_##name args {}
+#define DEFINE_INTERNAL_OPERATOR(return,name,args) return DeeObject_##name args {}
+#define DEFINE_MATH_INPLACE_INT_OPERATOR(DeeObject_InplaceXXX,reg,DeeInt_NewXXX,intX_t,operator_name) \
+	int DeeObject_InplaceXXX(DeeObject **__restrict p_self, intX_t val) {}
+#define DEFINE_TYPE_INHERIT_FUNCTION(name,opname,field) bool name(DeeTypeObject *self) {}
 #define RESTRICT_IF_NOTYPE
 
 #define __BOOL             bool

@@ -3471,7 +3471,7 @@ DEFINE_MATH_INPLACE_INT_OPERATOR(DeeObject_InplaceXorInt, DeeObject_InplaceXor, 
 
 
 LOCAL WUNUSED DREF DeeObject *DCALL
-invoke_not(DREF DeeObject *ob) {
+xinvoke_not(/*nullable*/ DREF DeeObject *ob) {
 	if (ob) {
 		int temp = DeeObject_Bool(ob);
 		Dee_Decref(ob);
@@ -3528,7 +3528,7 @@ type_inherit_compare(DeeTypeObject *__restrict self) {
 				if (tp_self->tp_cmp->tp_##fwd)                                         \
 					return invoke_fwd(tp_self, self, some_object);                     \
 				if (tp_self->tp_cmp->tp_##bck)                                         \
-					return invoke_not(invoke_bck(tp_self, self, some_object));         \
+					return xinvoke_not(invoke_bck(tp_self, self, some_object));        \
 			}                                                                          \
 		} while (type_inherit_compare(tp_self));                                       \
 		err_unimplemented_operator(tp_self, operator_name);                            \
@@ -3659,7 +3659,7 @@ again:
 			if (tp_lo) {
 				opres = (*tp_lo)(lhs, rhs);
 			} else if (tp_lhs->tp_cmp->tp_ge) {
-				opres = invoke_not((*tp_lhs->tp_cmp->tp_ge)(lhs, rhs));
+				opres = xinvoke_not((*tp_lhs->tp_cmp->tp_ge)(lhs, rhs));
 			} else {
 				break;
 			}
@@ -3675,7 +3675,7 @@ again:
 			if (tp_lhs->tp_cmp->tp_eq) {
 				opres = (*tp_lhs->tp_cmp->tp_eq)(lhs, rhs);
 			} else if (tp_lhs->tp_cmp->tp_ne) {
-				opres = invoke_not((*tp_lhs->tp_cmp->tp_ne)(lhs, rhs));
+				opres = xinvoke_not((*tp_lhs->tp_cmp->tp_ne)(lhs, rhs));
 			} else {
 				err_unimplemented_operator(tp_lhs, OPERATOR_LO);
 				return -2;
@@ -3707,26 +3707,26 @@ again:
 #endif /* !DEFINE_TYPED_OPERATORS */
 
 #ifndef DEFINE_TYPED_OPERATORS
-#define DEFINE_TYPE_INHERIT_FUNCTION(name, opname, field)          \
-	INTERN NONNULL((1)) bool DCALL                                 \
-	name(DeeTypeObject *__restrict self) {                         \
-		DeeTypeObject *base = DeeType_Base(self);                  \
-		struct type_seq *base_seq;                                 \
-		if (!base)                                                 \
-			return false;                                          \
-		base_seq = base->tp_seq;                                   \
-		if (base_seq == NULL || !base_seq->field) {                \
-			if (!name(base))                                       \
-				return false;                                      \
-		}                                                          \
-		base_seq = base->tp_seq;                                   \
-		LOG_INHERIT(base, self, opname);                           \
-		if (self->tp_seq) {                                        \
-			self->tp_seq->field = base_seq->field;                 \
-		} else {                                                   \
-			self->tp_seq = base_seq;                               \
-		}                                                          \
-		return true;                                               \
+#define DEFINE_TYPE_INHERIT_FUNCTION(name, opname, field) \
+	INTERN NONNULL((1)) bool DCALL                        \
+	name(DeeTypeObject *__restrict self) {                \
+		DeeTypeObject *base = DeeType_Base(self);         \
+		struct type_seq *base_seq;                        \
+		if (!base)                                        \
+			return false;                                 \
+		base_seq = base->tp_seq;                          \
+		if (base_seq == NULL || !base_seq->field) {       \
+			if (!name(base))                              \
+				return false;                             \
+		}                                                 \
+		base_seq = base->tp_seq;                          \
+		LOG_INHERIT(base, self, opname);                  \
+		if (self->tp_seq) {                               \
+			self->tp_seq->field = base_seq->field;        \
+		} else {                                          \
+			self->tp_seq = base_seq;                      \
+		}                                                 \
+		return true;                                      \
 	}
 
 INTERN NONNULL((1)) bool DCALL
