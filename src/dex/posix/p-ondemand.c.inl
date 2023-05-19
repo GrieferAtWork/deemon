@@ -1866,27 +1866,8 @@ posix_utime_unix_object_to_timeval(DeeObject *__restrict self,
 	__hybrid_int128_div16(temp, NANOSECONDS_PER_MICROSECOND);
 	__hybrid_int128_sub64(temp, UNIX_TIME_T_BASE_MICROSECOND);
 	__hybrid_int128_floordivmod32(temp, MICROSECONDS_PER_SECOND, seconds128, microseconds);
-	__STATIC_IF(sizeof(result->tv_sec) == 4) {
-		if (!__hybrid_int128_is32bit(seconds128))
-			goto err_overflow;
-		result->tv_sec = __hybrid_int128_get32(seconds128);
-	} __STATIC_ELSE(sizeof(result->tv_sec) == 4) {
-		__STATIC_IF(sizeof(result->tv_sec) >= 8) {
-			if (!__hybrid_int128_is64bit(seconds128))
-				goto err_overflow;
-			result->tv_sec = __hybrid_int128_get64(seconds128);
-		} __STATIC_ELSE(sizeof(result->tv_sec) >= 8) {
-			__STATIC_IF(sizeof(result->tv_sec) >= 2) {
-				if (!__hybrid_int128_is16bit(seconds128))
-					goto err_overflow;
-				result->tv_sec = __hybrid_int128_get16(seconds128);
-			} __STATIC_ELSE(sizeof(result->tv_sec) >= 2) {
-				if (!__hybrid_int128_is8bit(seconds128))
-					goto err_overflow;
-				result->tv_sec = __hybrid_int128_get8(seconds128);
-			}
-		}
-	}
+	if (__hybrid_int128_overflow_cast(seconds128, &result->tv_sec))
+		goto err_overflow;
 	result->tv_usec = microseconds;
 	return 0;
 err_overflow:
@@ -1921,27 +1902,8 @@ posix_utime_unix_object_to_timeval64(DeeObject *__restrict self,
 	__hybrid_int128_div16(temp, NANOSECONDS_PER_MICROSECOND);
 	__hybrid_int128_sub64(temp, UNIX_TIME_T_BASE_MICROSECOND);
 	__hybrid_int128_floordivmod32(temp, MICROSECONDS_PER_SECOND, seconds128, microseconds);
-	__STATIC_IF(sizeof(result->tv_sec) == 4) {
-		if (!__hybrid_int128_is32bit(seconds128))
-			goto err_overflow;
-		result->tv_sec = __hybrid_int128_get32(seconds128);
-	} __STATIC_ELSE(sizeof(result->tv_sec) == 4) {
-		__STATIC_IF(sizeof(result->tv_sec) >= 8) {
-			if (!__hybrid_int128_is64bit(seconds128))
-				goto err_overflow;
-			result->tv_sec = __hybrid_int128_get64(seconds128);
-		} __STATIC_ELSE(sizeof(result->tv_sec) >= 8) {
-			__STATIC_IF(sizeof(result->tv_sec) >= 2) {
-				if (!__hybrid_int128_is16bit(seconds128))
-					goto err_overflow;
-				result->tv_sec = __hybrid_int128_get16(seconds128);
-			} __STATIC_ELSE(sizeof(result->tv_sec) >= 2) {
-				if (!__hybrid_int128_is8bit(seconds128))
-					goto err_overflow;
-				result->tv_sec = __hybrid_int128_get8(seconds128);
-			}
-		}
-	}
+	if (__hybrid_int128_overflow_cast(seconds128, &result->tv_sec))
+		goto err_overflow;
 	result->tv_usec = microseconds;
 	return 0;
 err_overflow:
@@ -1987,27 +1949,8 @@ posix_utime_unix_object_to_timespec(DeeObject *__restrict self,
 		goto err;
 	__hybrid_int128_sub128(temp, UNIX_TIME_T_BASE_NANOSECOND);
 	__hybrid_int128_floordivmod32(temp, NANOSECONDS_PER_SECOND, seconds128, nanoseconds);
-	__STATIC_IF(sizeof(result->tv_sec) == 4) {
-		if (!__hybrid_int128_is32bit(seconds128))
-			goto err_overflow;
-		result->tv_sec = __hybrid_int128_get32(seconds128);
-	} __STATIC_ELSE(sizeof(result->tv_sec) == 4) {
-		__STATIC_IF(sizeof(result->tv_sec) >= 8) {
-			if (!__hybrid_int128_is64bit(seconds128))
-				goto err_overflow;
-			result->tv_sec = __hybrid_int128_get64(seconds128);
-		} __STATIC_ELSE(sizeof(result->tv_sec) >= 8) {
-			__STATIC_IF(sizeof(result->tv_sec) >= 2) {
-				if (!__hybrid_int128_is16bit(seconds128))
-					goto err_overflow;
-				result->tv_sec = __hybrid_int128_get16(seconds128);
-			} __STATIC_ELSE(sizeof(result->tv_sec) >= 2) {
-				if (!__hybrid_int128_is8bit(seconds128))
-					goto err_overflow;
-				result->tv_sec = __hybrid_int128_get8(seconds128);
-			}
-		}
-	}
+	if (__hybrid_int128_overflow_cast(seconds128, &result->tv_sec))
+		goto err_overflow;
 	result->tv_nsec = nanoseconds;
 	return 0;
 err_overflow:
@@ -2053,27 +1996,8 @@ posix_utime_unix_object_to_timespec64(DeeObject *__restrict self,
 		goto err;
 	__hybrid_int128_sub128(temp, UNIX_TIME_T_BASE_NANOSECOND);
 	__hybrid_int128_floordivmod32(temp, NANOSECONDS_PER_SECOND, seconds128, nanoseconds);
-	__STATIC_IF(sizeof(result->tv_sec) == 4) {
-		if (!__hybrid_int128_is32bit(seconds128))
-			goto err_overflow;
-		result->tv_sec = __hybrid_int128_get32(seconds128);
-	} __STATIC_ELSE(sizeof(result->tv_sec) == 4) {
-		__STATIC_IF(sizeof(result->tv_sec) >= 8) {
-			if (!__hybrid_int128_is64bit(seconds128))
-				goto err_overflow;
-			result->tv_sec = __hybrid_int128_get64(seconds128);
-		} __STATIC_ELSE(sizeof(result->tv_sec) >= 8) {
-			__STATIC_IF(sizeof(result->tv_sec) >= 2) {
-				if (!__hybrid_int128_is16bit(seconds128))
-					goto err_overflow;
-				result->tv_sec = __hybrid_int128_get16(seconds128);
-			} __STATIC_ELSE(sizeof(result->tv_sec) >= 2) {
-				if (!__hybrid_int128_is8bit(seconds128))
-					goto err_overflow;
-				result->tv_sec = __hybrid_int128_get8(seconds128);
-			}
-		}
-	}
+	if (__hybrid_int128_overflow_cast(seconds128, &result->tv_sec))
+		goto err_overflow;
 	result->tv_nsec = nanoseconds;
 	return 0;
 err_overflow:
