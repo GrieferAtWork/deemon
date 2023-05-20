@@ -79,9 +79,11 @@
 #ifndef __MALLOC_ZERO_IS_NONNULL
 #ifndef __KOS_SYSTEM_HEADERS__
 #if defined(_MSC_VER)
-#undef __MALLOC_ZERO_IS_NONNULL /* Nope, `realloc(p, 0)' acts like `free(p)'... */
+#define __MALLOC_ZERO_IS_NONNULL
+#undef __REALLOC_ZERO_IS_NONNULL /* Nope, `realloc(p, 0)' acts like `free(p)'... */
 #elif defined(__GLIBC__) || defined(__GNU_LIBRARY__)
 #define __MALLOC_ZERO_IS_NONNULL
+#define __REALLOC_ZERO_IS_NONNULL
 #endif /* ... */
 #endif /* !__KOS_SYSTEM_HEADERS__ */
 #endif /* !__MALLOC_ZERO_IS_NONNULL */
@@ -1527,7 +1529,9 @@ again:
 }
 
 PUBLIC void
-(DCALL DeeDbg_Free)(void *ptr, char const *UNUSED(file), int UNUSED(line)) {
+(DCALL DeeDbg_Free)(void *ptr, char const *file, int line) {
+	(void)file;
+	(void)line;
 	DBG_ALIGNMENT_DISABLE();
 	HEAP_CHECK();
 	_free_dbg(ptr, _NORMAL_BLOCK);
@@ -1713,45 +1717,61 @@ PUBLIC void *
 #ifndef HAVE_DEEDBG_MALLOC
 /* Fallback: The host does not provide a debug-allocation API. */
 PUBLIC ATTR_MALLOC WUNUSED void *
-(DCALL DeeDbg_Malloc)(size_t n_bytes, char const *UNUSED(file), int UNUSED(line)) {
+(DCALL DeeDbg_Malloc)(size_t n_bytes, char const *file, int line) {
+	(void)file;
+	(void)line;
 	return (Dee_Malloc)(n_bytes);
 }
 
 PUBLIC ATTR_MALLOC WUNUSED void *
-(DCALL DeeDbg_Calloc)(size_t n_bytes, char const *UNUSED(file), int UNUSED(line)) {
+(DCALL DeeDbg_Calloc)(size_t n_bytes, char const *file, int line) {
+	(void)file;
+	(void)line;
 	return (Dee_Calloc)(n_bytes);
 }
 
 PUBLIC WUNUSED void *
-(DCALL DeeDbg_Realloc)(void *ptr, size_t n_bytes, char const *UNUSED(file), int UNUSED(line)) {
+(DCALL DeeDbg_Realloc)(void *ptr, size_t n_bytes, char const *file, int line) {
+	(void)file;
+	(void)line;
 	return (Dee_Realloc)(ptr, n_bytes);
 }
 
 PUBLIC ATTR_MALLOC WUNUSED void *
-(DCALL DeeDbg_TryMalloc)(size_t n_bytes, char const *UNUSED(file), int UNUSED(line)) {
+(DCALL DeeDbg_TryMalloc)(size_t n_bytes, char const *file, int line) {
+	(void)file;
+	(void)line;
 	return (Dee_TryMalloc)(n_bytes);
 }
 
 PUBLIC ATTR_MALLOC WUNUSED void *
-(DCALL DeeDbg_TryCalloc)(size_t n_bytes, char const *UNUSED(file), int UNUSED(line)) {
+(DCALL DeeDbg_TryCalloc)(size_t n_bytes, char const *file, int line) {
+	(void)file;
+	(void)line;
 	return (Dee_TryCalloc)(n_bytes);
 }
 
 PUBLIC WUNUSED void *
 (DCALL DeeDbg_TryRealloc)(void *ptr, size_t n_bytes,
-                          char const *UNUSED(file), int UNUSED(line)) {
+                          char const *file, int line) {
+	(void)file;
+	(void)line;
 	return (Dee_TryRealloc)(ptr, n_bytes);
 }
 
 PUBLIC void
-(DCALL DeeDbg_Free)(void *ptr, char const *UNUSED(file), int UNUSED(line)) {
-	return (Dee_Free)(ptr);
+(DCALL DeeDbg_Free)(void *ptr, char const *file, int line) {
+	(void)file;
+	(void)line;
+	(Dee_Free)(ptr);
 }
 #endif /* !HAVE_DEEDBG_MALLOC */
 
 #ifndef DeeDbg_UntrackAlloc_DEFINED
 PUBLIC void *
-(DCALL DeeDbg_UntrackAlloc)(void *ptr, char const *UNUSED(file), int UNUSED(line)) {
+(DCALL DeeDbg_UntrackAlloc)(void *ptr, char const *file, int line) {
+	(void)file;
+	(void)line;
 	return ptr;
 }
 #endif /* !DeeDbg_UntrackAlloc_DEFINED */

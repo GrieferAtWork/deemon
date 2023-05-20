@@ -67,6 +67,7 @@ JITLexer_SkipComma(JITLexer *__restrict self, uint16_t mode,
 	               ? LOOKUP_SYM_ALLOWDECL
 	               : LOOKUP_SYM_NORMAL);
 #endif /* AST_COMMA_ALLOWVARDECLS != LOOKUP_SYM_ALLOWDECL */
+
 	/* Allow explicit visibility modifiers when variable can be declared. */
 	if (mode & AST_COMMA_ALLOWVARDECLS) {
 		if unlikely(JITLexer_ParseLookupMode(self, &lookup_mode))
@@ -75,6 +76,7 @@ JITLexer_SkipComma(JITLexer *__restrict self, uint16_t mode,
 
 next_expr:
 	need_semi = !!(mode & AST_COMMA_PARSESEMI);
+
 	/* Parse an expression (special handling for functions/classes) */
 	if (self->jl_tok == JIT_KEYWORD && JITLexer_ISTOK(self, "class")) {
 		/* Declare a new class */
@@ -97,6 +99,7 @@ next_expr:
 #endif /* !JIT_EVAL */
 		if (ISERR(current))
 			goto err;
+
 		/* Classes always have braces and don't need semicolons. */
 		need_semi = false;
 	} else if (JITLexer_ISKWD(self, "function")) {
@@ -121,6 +124,7 @@ next_expr:
 					symbol_mode |= LOOKUP_SYM_VLOCAL;
 				}
 			}
+
 			/* Create the symbol that will be used by the function. */
 #ifdef JIT_EVAL
 			name_start = self->jl_tokstart;
@@ -173,11 +177,13 @@ err_var_symbol:
 			if (JITLexer_SkipExpression(self, JITLEXER_EVAL_FSECONDARY))
 				goto err;
 			source_end = self->jl_tokstart;
+
 			/* Trim trailing whitespace. */
 			while (source_end > source_start) {
 				uint32_t ch;
-				char const *next = (char const *)source_end;
-				ch               = utf8_readchar_rev(&next, (char const *)source_start);
+				char const *next;
+				next = (char const *)source_end;
+				ch   = utf8_readchar_rev(&next, (char const *)source_start);
 				if (!DeeUni_IsSpace(ch))
 					break;
 				source_end = (unsigned char *)next;
@@ -208,6 +214,7 @@ err_var_symbol:
 			unsigned int brace_recursion = 1;
 			JITLexer_Yield(self);
 			source_end = source_start = self->jl_tokstart;
+
 			/* Scan the body of the function. */
 			while (self->jl_tok) {
 				if (self->jl_tok == '{') {
@@ -271,6 +278,7 @@ err_var_symbol:
 				goto done_expression_nocurrent;
 		}
 		current = CALL_PRIMARYF(Expression, lookup_mode);
+
 		/* Check for errors. */
 		if (ISERR(current))
 			goto err;
@@ -319,6 +327,7 @@ err_var_symbol:
 				/* Single-operand argument list. */
 				if (self->jl_tok == '=')
 					JITLexer_Yield(self);
+
 				/* Parse a preferred-type brace expression. */
 				args = CALL_PRIMARYF(Expression, LOOKUP_SYM_NORMAL);
 				if (ISERR(args)) {
@@ -562,6 +571,7 @@ err_store_source_current_lvalue:
 				}
 				Dee_Decref(current);
 			}
+
 			/* At this point, we have to unpack `store_source' into `expr_comma.ll_size'
 			 * different objects, then proceed to assign each of those to the objects
 			 * to their respective l-values in `expr_comma' */
@@ -607,6 +617,7 @@ continue_expression_after_dots:
 					if (JITLexer_MaybeExpressionBegin((JITLexer *)&smlex))
 						goto set_multiple_and_continue_at_comma_continue;
 				}
+
 				/* Pack the expression to-be returned. */
 				if (!seq_type) {
 					ASSERT(expr_batch.ol_elemc >= expand_count);
@@ -712,12 +723,14 @@ done_expression:
 				if unlikely(error)
 					goto err_current;
 			}
+
 			/* Append the remaining expression to the batch. */
 			LOAD_LVALUE(current, err);
 			error = objectlist_append(&expr_batch, current);
 			if unlikely(error)
 				goto err_current;
 			Dee_Decref(current);
+
 			/* Pack the branch together to form a multi-branch AST. */
 			if (seq_type == &DeeTuple_Type) {
 				current = objectlist_packtuple(&expr_batch);
@@ -726,10 +739,12 @@ done_expression:
 			}
 			if unlikely(!current)
 				goto err;
+
 			/* Free an remaining buffers. */
 			/*Dee_Free(expr_batch.ast_v);*/ /* This one was inherited. */
 			JITLValueList_Fini(&expr_comma);
 		}
+
 		/* WARNING: At this point, both `expr_batch' and `expr_comma' are
 		 *          in an undefined state, but don't hold any real data. */
 	} else {
@@ -800,6 +815,7 @@ done_expression_nocurrent:
 					goto err;
 				JITLValueList_Fini(&expr_comma);
 			}
+
 			/* Pack the branch together to form a multi-branch AST. */
 			if (seq_type == &DeeTuple_Type) {
 				current = objectlist_packtuple(&expr_batch);
@@ -808,14 +824,17 @@ done_expression_nocurrent:
 			}
 			if unlikely(!current)
 				goto err_nocomma;
+
 			/* Free an remaining buffers. */
 			/*Dee_Free(expr_batch.ast_v);*/ /* This one was inherited. */
 		}
+
 		/* WARNING: At this point, both `expr_batch' and `expr_comma' are
 		 *          in an undefined state, but don't hold any real data. */
 	} else {
 		ASSERT(!expr_batch.ol_elemv);
 		ASSERT(!expr_comma.ll_list);
+
 		/* If the caller wants to force us to package
 		 * everything in a multi-branch, grant that wish. */
 		if (!seq_type) {

@@ -90,8 +90,8 @@ DECL_BEGIN
 #define NANOSECONDS_PER_SECOND 1000000000
 #endif /* !NANOSECONDS_PER_SECOND */
 
-/* Blocking wait if `*(uint32_t *)addr == expected', until someone calls `DeeFutex_Wake*(addr)'
- * @return: 1 : [DeeFutex_Wait32Timed] The given `timeout_nanoseconds' expired.
+/* Blocking wait if `*(uintNN_t *)addr == expected', until someone calls `DeeFutex_Wake*(addr)'
+ * @return: 1 : [DeeFutex_WaitNNTimed] The given `timeout_nanoseconds' expired.
  * @return: 0 : Success (someone called `DeeFutex_Wake*(addr)', or `*addr != expected', or spurious wake-up)
  * @return: -1: Error (an error was thrown) */
 #if defined(LOCAL_IS_NO_INTERRUPT) && !defined(LOCAL_HAVE_timeout_nanoseconds)
@@ -149,10 +149,12 @@ PUBLIC WUNUSED NONNULL((1)) int
 	SCHED_YIELD();
 	LOCAL_return_0;
 #else /* LOCAL_IS_NO_INTERRUPT */
-	int result = DeeThread_CheckInterrupt();
-	if likely(result == 0)
-		SCHED_YIELD();
-	return result;
+	{
+		int result = DeeThread_CheckInterrupt();
+		if likely(result == 0)
+			SCHED_YIELD();
+		return result;
+	}
 #endif /* !LOCAL_IS_NO_INTERRUPT */
 
 #elif (defined(DeeFutex_USE_os_futex) || \

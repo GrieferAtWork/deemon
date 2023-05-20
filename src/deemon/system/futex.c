@@ -926,6 +926,7 @@ futex_ataddr_create(uintptr_t addr) {
 					futex_controller_destroy(result);
 					return existing_result;
 				}
+
 				/* There is a dead controller at our address.
 				 * -> just remove it from the tree so we can move on. */
 				futex_tree_removenode(&fcont_tree, existing_result);
