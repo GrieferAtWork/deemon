@@ -1142,13 +1142,16 @@ INIT_CUSTOM_ERROR("NoSymlink", "An error derived from :FileNotFound that is thro
                   NULL, NULL, NULL, NULL, NULL);
 /* END::SystemError */
 
+#ifndef EXIT_SUCCESS
+#define EXIT_SUCCESS 0
+#endif /* !EXIT_SUCCESS */
 
 
 PRIVATE int DCALL
 appexit_init(struct appexit_object *__restrict self,
              size_t argc, DeeObject *const *argv) {
 	int result;
-	self->ae_exitcode = EXIT_FAILURE;
+	self->ae_exitcode = EXIT_SUCCESS;
 	/* Read the exitcode from arguments. */
 	result = DeeArg_Unpack(argc, argv,
 	                       "|d:appexit",
@@ -1237,7 +1240,7 @@ PUBLIC int DCALL Dee_Exit(int exitcode, bool run_atexit) {
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 appexit_class_exit(DeeObject *UNUSED(self),
                    size_t argc, DeeObject *const *argv) {
-	int exitcode = EXIT_FAILURE;
+	int exitcode = EXIT_SUCCESS;
 	bool run_atexit = true;
 	if (DeeArg_Unpack(argc, argv, "|db:exit", &exitcode, &run_atexit))
 		goto err;
@@ -1253,7 +1256,7 @@ PRIVATE struct type_method tpconst appexit_class_methods[] = {
 	            "Terminate execution of deemon after invoking ?#atexit callbacks when @invoke_atexit is ?Dtrue\n"
 	            "Termination is done using the C #Cexit or #C_exit functions, if available. However if these "
 	            /**/ "functions are not provided by the host, an :AppExit error is thrown instead\n"
-	            "When no @exitcode is given, the host's default default value of #CEXIT_FAILURE, or $1 is used\n"
+	            "When no @exitcode is given, the host's default default value of #CEXIT_SUCCESS, or $1 is used\n"
 	            "This function never returns normally"),
 	TYPE_METHOD("atexit", &appexit_class_atexit,
 	            "(callback:?DCallable,args=!T0)\n"
@@ -1277,7 +1280,7 @@ PUBLIC DeeTypeObject DeeError_AppExit = {
 	                         "()\n"
 	                         "(exitcode:?Dint)\n"
 	                         "Construct a new AppExit object using the given @exitcode "
-	                         /**/ "or the host's default value for #CEXIT_FAILURE, or $1"),
+	                         /**/ "or the host's default value for #CEXIT_SUCCESS, or $1"),
 	/* .tp_flags    = */ TP_FFINAL|TP_FINTERRUPT,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
