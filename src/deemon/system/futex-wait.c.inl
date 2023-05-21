@@ -90,6 +90,18 @@ DECL_BEGIN
 #define NANOSECONDS_PER_SECOND 1000000000
 #endif /* !NANOSECONDS_PER_SECOND */
 
+/* Without interrupts, we also don't have callers capable of
+ * doing exception handling, so we also mustn't throw an errors
+ * when we fail to allocate a futex controller.
+ *
+ * Hence, we have to use a different method for creating these
+ * controllers in that scenario. */
+#ifdef LOCAL_IS_NO_INTERRUPT
+#define LOCAL_futex_ataddr_create futex_ataddr_trycreate
+#else /* LOCAL_IS_NO_INTERRUPT */
+#define LOCAL_futex_ataddr_create futex_ataddr_create
+#endif /* !LOCAL_IS_NO_INTERRUPT */
+
 /* Blocking wait if `*(uintNN_t *)addr == expected', until someone calls `DeeFutex_Wake*(addr)'
  * @return: 1 : [DeeFutex_WaitNNTimed] The given `timeout_nanoseconds' expired.
  * @return: 0 : Success (someone called `DeeFutex_Wake*(addr)', or `*addr != expected', or spurious wake-up)
@@ -282,7 +294,7 @@ again_futex_wait:
 	case NT_FUTEX_IMPLEMENTATION_COND_AND_CRIT: {
 		BOOL bCondOk;
 		DREF struct futex_controller *ctrl;
-		ctrl = futex_ataddr_create((uintptr_t)addr);
+		ctrl = LOCAL_futex_ataddr_create((uintptr_t)addr);
 		if unlikely(!ctrl)
 			LOCAL_return_error(-1);
 
@@ -348,7 +360,7 @@ again_call_AcquireSRWLockShared:
 	case NT_FUTEX_IMPLEMENTATION_SEMAPHORE: {
 		DWORD dwWaitStatus;
 		DREF struct futex_controller *ctrl;
-		ctrl = futex_ataddr_create((uintptr_t)addr);
+		ctrl = LOCAL_futex_ataddr_create((uintptr_t)addr);
 		if unlikely(!ctrl)
 			LOCAL_return_error(-1);
 again_call_inc_dwThreads:
@@ -437,7 +449,7 @@ again_call_inc_dwThreads:
 	int error;
 #endif /* DeeFutex_USE_sem_t */
 	DREF struct futex_controller *ctrl;
-	ctrl = futex_ataddr_create((uintptr_t)addr);
+	ctrl = LOCAL_futex_ataddr_create((uintptr_t)addr);
 	if unlikely(!ctrl)
 		LOCAL_return_error(-1);
 
@@ -876,6 +888,7 @@ again_inc_n_threads:
 #undef LOCAL_should_wait
 }
 
+#undef LOCAL_futex_ataddr_create
 #undef LOCAL_return_type_is_void
 #undef LOCAL_os_futex_waitX_timed
 #undef LOCAL_os_futex_waitX

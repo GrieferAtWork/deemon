@@ -267,6 +267,7 @@
 		<ClInclude Include="..\src\deemon\runtime\slab-impl.c.inl" />
 		<ClInclude Include="..\src\deemon\runtime\slab.c.inl" />
 		<ClInclude Include="..\src\deemon\runtime\strings.h" />
+		<ClInclude Include="..\src\deemon\system\futex-controller-new.c.inl" />
 		<ClInclude Include="..\src\deemon\system\futex-wait.c.inl" />
 		<ClInclude Include="..\src\deemon\system\futex-wake.c.inl" />
 		<ClInclude Include="..\src\deemon\system\system-nt.c.inl" />

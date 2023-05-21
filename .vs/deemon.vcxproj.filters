@@ -774,6 +774,9 @@
 		<ClInclude Include="..\src\deemon\runtime\strings.h">
 			<Filter>src\runtime</Filter>
 		</ClInclude>
+		<ClInclude Include="..\src\deemon\system\futex-controller-new.c.inl">
+			<Filter>src\system</Filter>
+		</ClInclude>
 		<ClInclude Include="..\src\deemon\system\futex-wait.c.inl">
 			<Filter>src\system</Filter>
 		</ClInclude>

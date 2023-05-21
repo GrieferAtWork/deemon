@@ -246,9 +246,8 @@ PUBLIC DeeTypeObject DeeNone_Type = {
 	/* .tp_doc      = */ DOC("None is a singleton object that can be used in any operation "
 	                         /**/ "as either a placeholder, or as a no-op object. Besides being a "
 	                         /**/ "no-op for everything, it has several special characteristics, "
-	                         /**/ "such as its ability of being expanded in any number of itself "
-	                         /**/ "without causing :{UnpackError}s to be thrown, only being one "
-	                         /**/ "of them\n"
+	                         /**/ "like its ability to be expanded to any number of itself without "
+	                         /**/ "causing :{UnpackError}s to be thrown.\n"
 
 	                         "\n"
 	                         "(args!)\n"
@@ -324,7 +323,7 @@ PUBLIC DeeTypeObject DeeNone_Type = {
 	                         "del.(attr:?Dstring)->?N\n"
 	                         ".=(attr:?Dstring)->?N\n"
 	                         "No-op that ignores all arguments and always re-returns ?N"),
-	/* .tp_flags    = */ TP_FVARIABLE|TP_FNORMAL | TP_FNAMEOBJECT | TP_FABSTRACT,
+	/* .tp_flags    = */ TP_FVARIABLE | TP_FNORMAL | TP_FNAMEOBJECT | TP_FABSTRACT,
 	/* .tp_weakrefs = */ WEAKREF_SUPPORT_ADDR(DeeNoneObject),
 	/* .tp_features = */ TF_SINGLETON,
 	/* .tp_base     = */ &DeeObject_Type,

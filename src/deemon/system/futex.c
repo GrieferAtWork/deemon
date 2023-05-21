@@ -412,6 +412,7 @@ struct futex_controller {
  *       for fixed-length objects (which `struct futex_controller' is), so that we're
  *       able to make use of the (extremely fast) slab allocator. */
 #define futex_controller_alloc()    DeeObject_MALLOC(struct futex_controller)
+#define futex_controller_tryalloc() DeeObject_TRYMALLOC(struct futex_controller)
 #define futex_controller_free(self) DeeObject_FREE(self)
 
 /* Define the futex-controller tree access API */
@@ -723,119 +724,6 @@ futex_controller_do_destroy(struct futex_controller *__restrict self) {
 	futex_controller_free(self);
 }
 
-/* Raw, low-level allocate a new futex controller. */
-PRIVATE WUNUSED struct futex_controller *DCALL
-futex_controller_do_new_impl(void) {
-	DREF struct futex_controller *result;
-	result = futex_controller_alloc();
-	if unlikely(!result)
-		goto err;
-
-	/* Initialize the os-specific part of `result' */
-#ifdef DeeFutex_USE_os_futex_32_only
-	result->fc_word = 0;
-#elif defined(DeeFutex_USE_WaitOnAddress_OR_CONDITION_VARIABLE_AND_SRWLOCK_OR_CreateSemaphoreW)
-	switch (nt_futex_implementation) {
-	case NT_FUTEX_IMPLEMENTATION_COND_AND_CRIT:
-		/* Neither CONDITION_VARIABLEs, nor SWRLOCKs have destructors. */
-		InitializeConditionVariable(&result->fc_nt_cond_crit.cc_cond);
-		InitializeSRWLock(&result->fc_nt_cond_crit.cc_lock);
-		break;
-	case NT_FUTEX_IMPLEMENTATION_SEMAPHORE: {
-		HANDLE hSem = CreateSemaphoreW(NULL, 0, INT32_MAX, NULL);
-		if unlikely(hSem == NULL || hSem == INVALID_HANDLE_VALUE) {
-			DWORD dwError = GetLastError();
-			futex_controller_free(result);
-			DeeNTSystem_ThrowErrorf(NULL, dwError, "Failed to allocate semaphore");
-			goto err;
-		}
-		result->fc_nt_sem.sm_hSemaphore = hSem;
-		result->fc_nt_sem.sm_dwThreads  = 0;
-	}	break;
-	default: __builtin_unreachable();
-	}
-#elif defined(DeeFutex_USE_pthread_cond_t_AND_pthread_mutex_t)
-	{
-		int error;
-		error = pthread_mutex_init(&result->fc_mutx, NULL);
-		if likely(error == 0) {
-			error = pthread_cond_init(&result->fc_cond, NULL);
-			if unlikely(error != 0) {
-				(void)pthread_mutex_destroy(&result->fc_mutx);
-			}
-		}
-		if unlikely(error != 0) {
-			futex_controller_free(result);
-			DeeUnixSystem_ThrowErrorf(NULL, error, "Failed to initialize mutex and condition variable");
-			goto err;
-		}
-	}
-#elif defined(DeeFutex_USE_cnd_t_AND_mtx_t)
-	{
-		int error;
-		error = mtx_init(&result->fc_mutx, mtx_plain);
-		if likely(error == 0) {
-			error = cnd_init(&result->fc_cond);
-			if unlikely(error != 0) {
-				(void)mtx_destroy(&result->fc_mutx);
-			}
-		}
-		if unlikely(error != 0) {
-			futex_controller_free(result);
-#ifdef ENOMEM
-			error = ENOMEM;
-#else /* ENOMEM */
-			error = 1;
-#endif /* !ENOMEM */
-			DeeUnixSystem_ThrowErrorf(NULL, error, "Failed to initialize mutex and condition variable");
-			goto err;
-		}
-	}
-#elif defined(DeeFutex_USE_sem_t)
-	if unlikely(sem_init(&result->fc_sem) != 0) {
-		int error = DeeSystem_GetErrno();
-		futex_controller_free(result);
-		DeeUnixSystem_ThrowErrorf(NULL, error, "Failed to initialize semaphore");
-		goto err;
-	}
-	result->fc_n_threads = 0;
-#endif /* ... */
-
-	return result;
-err:
-	return NULL;
-}
-
-
-/* Similar to `futex_controller_do_new_impl()', but try
- * to take a pre-existing object from the free-list, as
- * well as also set the reference counter to `1'.
- *
- * @return: * :   The new controller.
- * @return: NULL: Alloc failed (an error was thrown) */
-PRIVATE WUNUSED DREF struct futex_controller *DCALL
-futex_controller_new(void) {
-	DREF struct futex_controller *result;
-	if (atomic_read(&fcont_freesize) != 0) {
-		fcont_lock_write();
-		result = SLIST_FIRST(&fcont_freelist);
-		if likely(result != NULL) {
-			SLIST_REMOVE_HEAD(&fcont_freelist, fc_free);
-			--fcont_freesize;
-			fcont_lock_endwrite();
-			goto set_refcnt;
-		}
-		fcont_lock_endwrite();
-	}
-	result = futex_controller_do_new_impl();
-	if likely(result) {
-set_refcnt:
-		result->fc_refcnt = 1;
-	}
-	return result;
-}
-
-
 /* incref/decref operations for `struct futex_controller' */
 #define futex_controller_incref(self) atomic_inc(&(self)->fc_refcnt)
 #define futex_controller_decref(self) (void)(atomic_decfetch(&(self)->fc_refcnt) || (futex_controller_destroy(self), 0))
@@ -896,49 +784,23 @@ futex_ataddr_get(uintptr_t addr) {
 	return result;
 }
 
-
 /* Lookup a futex controller at a given address,
  * or create one at said address if there wasn't
  * one there already.
  *
  * @return: * :   Reference to the controller at `addr'
- * @return: NULL: Failed to create a new controller (an error was thrown) */
-PRIVATE WUNUSED DREF struct futex_controller *DCALL
-futex_ataddr_create(uintptr_t addr) {
-	DREF struct futex_controller *result;
-	result = futex_ataddr_get(addr);
-	if (result == NULL) {
-		/* Must create a new controller. */
-		result = futex_controller_new();
-		if likely(result != NULL) {
-			DREF struct futex_controller *existing_result;
+ * @return: NULL: Failed to create a new controller (an error was thrown)
+ *                Note that `futex_ataddr_trycreate' doesn't throw an error */
+PRIVATE WUNUSED DREF struct futex_controller *DCALL futex_ataddr_create(uintptr_t addr);
+PRIVATE WUNUSED DREF struct futex_controller *DCALL futex_ataddr_trycreate(uintptr_t addr);
 
-			/* Initialize the new controller's address. */
-			result->fc_addr = addr;
+#ifndef __INTELLISENSE__
+#define DEFINE_futex_ataddr_create
+#include "futex-controller-new.c.inl"
+#define DEFINE_futex_ataddr_trycreate
+#include "futex-controller-new.c.inl"
+#endif /* !__INTELLISENSE__ */
 
-			/* Inject the new controller into the tree. */
-			fcont_lock_write();
-			existing_result = futex_tree_locate(fcont_tree, addr);
-			if unlikely(existing_result) {
-				if (futex_controller_tryincref(existing_result)) {
-					/* Race condition: another thread created the controller before we could. */
-					fcont_lock_endwrite();
-					futex_controller_destroy(result);
-					return existing_result;
-				}
-
-				/* There is a dead controller at our address.
-				 * -> just remove it from the tree so we can move on. */
-				futex_tree_removenode(&fcont_tree, existing_result);
-			}
-
-			/* Insert our newly created controller into the tree. */
-			futex_tree_insert(&fcont_tree, result);
-			fcont_lock_endwrite();
-		}
-	}
-	return result;
-}
 
 PRIVATE NONNULL((1)) void DCALL
 futex_controller_wakeall(struct futex_controller *__restrict self) {
