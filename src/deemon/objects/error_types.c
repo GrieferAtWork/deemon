@@ -1169,7 +1169,7 @@ appexit_copy(struct appexit_object *__restrict self,
 PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
 appexit_print(struct appexit_object *__restrict self,
               dformatprinter printer, void *arg) {
-	return DeeFormat_Printf(printer, arg, "exit:%d", self->ae_exitcode);
+	return DeeFormat_Printf(printer, arg, "<AppExit with exitcode %d>", self->ae_exitcode);
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
@@ -1186,7 +1186,7 @@ PRIVATE struct type_member tpconst appexit_members[] = {
 
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-appexit_class_atexit(DeeObject *UNUSED(self),
+appexit_class_atexit(DeeTypeObject *UNUSED(self),
                      size_t argc, DeeObject *const *argv) {
 	DeeObject *callback, *args = Dee_EmptyTuple;
 	if (DeeArg_Unpack(argc, argv, "o|o:atexit", &callback, &args))
@@ -1205,6 +1205,9 @@ err:
  * NOTE: When available, calling stdlib's `exit()' is identical to this.
  * @return: -1: If this function returns at all, it always returns `-1' */
 PUBLIC int DCALL Dee_Exit(int exitcode, bool run_atexit) {
+	(void)exitcode;
+	(void)run_atexit;
+	COMPILER_IMPURE();
 #ifdef CONFIG_HAVE__Exit
 #ifdef CONFIG_HAVE_exit
 	if (run_atexit)
@@ -1238,7 +1241,7 @@ PUBLIC int DCALL Dee_Exit(int exitcode, bool run_atexit) {
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-appexit_class_exit(DeeObject *UNUSED(self),
+appexit_class_exit(DeeTypeObject *UNUSED(self),
                    size_t argc, DeeObject *const *argv) {
 	int exitcode = EXIT_SUCCESS;
 	bool run_atexit = true;
@@ -1252,8 +1255,8 @@ err:
 PRIVATE struct type_method tpconst appexit_class_methods[] = {
 	TYPE_METHOD("exit", &appexit_class_exit,
 	            "()\n"
-	            "(exitcode:?Dint,invoke_atexit=!t)\n"
-	            "Terminate execution of deemon after invoking ?#atexit callbacks when @invoke_atexit is ?Dtrue\n"
+	            "(exitcode:?Dint,run_atexit=!t)\n"
+	            "Terminate execution of deemon after invoking ?#atexit callbacks when @run_atexit is !t\n"
 	            "Termination is done using the C #Cexit or #C_exit functions, if available. However if these "
 	            /**/ "functions are not provided by the host, an :AppExit error is thrown instead\n"
 	            "When no @exitcode is given, the host's default default value of #CEXIT_SUCCESS, or $1 is used\n"
@@ -1396,8 +1399,8 @@ INIT_CUSTOM_ERROR("KeyboardInterrupt", NULL,
                   TP_FNORMAL | TP_FINHERITCTOR | TP_FINTERRUPT /* Interrupt type! */, &DeeError_Interrupt,
                   NULL, NULL, NULL, NULL, DeeSignalObject, NULL, NULL, NULL,
                   NULL, NULL, NULL, NULL, NULL);
-INTDEF int DCALL none_i1(void *UNUSED(a));
-INTDEF int DCALL none_i2(void *UNUSED(a), void *UNUSED(b));
+INTDEF int DCALL none_i1(void *a);
+INTDEF int DCALL none_i2(void *a, void *b);
 PRIVATE struct type_member tpconst signal_class_members[] = {
 	TYPE_MEMBER_CONST("Interrupt", &DeeError_Interrupt),
 	TYPE_MEMBER_CONST("StopIteration", &DeeError_StopIteration),

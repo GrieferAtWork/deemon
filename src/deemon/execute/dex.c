@@ -577,6 +577,11 @@ PUBLIC DeeTypeObject DeeDex_Type = {
 DECL_END
 
 
+#undef DeeModule_FromStaticPointer_USE_GetModuleHandleExW
+#undef DeeModule_FromStaticPointer_USE_dlgethandle
+#undef DeeModule_FromStaticPointer_USE_dl_iterate_phdr
+#undef DeeModule_FromStaticPointer_USE_xdlmodule_info
+#undef DeeModule_FromStaticPointer_USE_STUB
 #ifdef DeeSystem_DlOpen_USE_LoadLibrary /* Windows */
 #define DeeModule_FromStaticPointer_USE_GetModuleHandleExW
 #elif defined(DeeSystem_DlOpen_USE_dlopen) && defined(CONFIG_HAVE_dlgethandle)
@@ -846,8 +851,11 @@ DECL_BEGIN
  * >> // Invoke the native symbol.
  * >> return DeeInt_NewIntN((*p_add)(x, y)); */
 PUBLIC WUNUSED NONNULL((1, 2)) void *DCALL
-DeeModule_GetNativeSymbol(DeeObject *__restrict UNUSED(self),
-                          char const *__restrict UNUSED(name)) {
+DeeModule_GetNativeSymbol(DeeObject *__restrict self,
+                          char const *__restrict name) {
+	(void)self;
+	(void)name;
+	COMPILER_IMPURE();
 	return NULL;
 }
 
@@ -865,8 +873,10 @@ DeeModule_GetNativeSymbol(DeeObject *__restrict UNUSED(self),
  *                No matter the case, no error is thrown for this, meaning that
  *                the caller must decide on how to handle this. */
 PUBLIC WUNUSED DREF DeeObject *DCALL
-DeeModule_FromStaticPointer(void const *UNUSED(ptr)) {
+DeeModule_FromStaticPointer(void const *ptr) {
 	DREF DeeModuleObject *result;
+	(void)ptr;
+	COMPILER_IMPURE();
 	result = DeeModule_GetDeemon();
 	Dee_Incref(result);
 	return (DREF DeeObject *)result;

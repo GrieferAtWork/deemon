@@ -221,9 +221,8 @@ DeeFileBuffer_SetMode(DeeObject *__restrict self,
                       uint16_t mode, size_t size);
 
 /* Synchronize unwritten data of all interactive TTY devices.
- * NOTE: The first time a buffered TTY device is written to, this
- *       function is added to the `atexit()' chain unless deemon
- *       was built with the `CONFIG_NO_STDLIB' option enabled.
+ * NOTE: The first time a buffered TTY device is written to,
+ *       this function is registered with `Dee_AtExit()'.
  * NOTE: This function can be called as `(File from deemon).buffer.sync()'
  * @return: 1 : `or_unlock_me' was non-NULL, and had to be unlocked
  * @return: 0 : Success

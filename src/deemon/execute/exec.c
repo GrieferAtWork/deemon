@@ -33,14 +33,11 @@
 #include <deemon/object.h>
 #include <deemon/system-features.h>
 #include <deemon/thread.h>
+#include <deemon/tuple.h>
 #include <deemon/util/atomic.h>
 #include <deemon/util/lock.h>
 
 #include <hybrid/sched/yield.h>
-
-#ifndef CONFIG_NO_STDLIB
-#include <deemon/tuple.h>
-#endif /* !CONFIG_NO_STDLIB */
 
 /* Pull in some header to form artificial dependencies in order
  * to force the timestamp of the builtin `deemon' module to be
@@ -435,8 +432,6 @@ err:
 
 
 
-#ifndef CONFIG_NO_STDLIB
-
 #ifndef CONFIG_NO_THREADS
 PRIVATE Dee_atomic_lock_t atexit_lock = DEE_ATOMIC_LOCK_INIT;
 #endif /* !CONFIG_NO_THREADS */
@@ -589,22 +584,6 @@ err:
 	return -1;
 }
 
-#else
-
-PUBLIC WUNUSED NONNULL((1, 2)) int DCALL
-Dee_AtExit(DeeObject *UNUSED(callback),
-           DeeObject *UNUSED(args)) {
-	return DeeError_Throwf(&DeeError_NotImplemented,
-	                       "Deemon was built without atexit() support");
-}
-
-PUBLIC int DCALL
-Dee_RunAtExit(uint16_t UNUSED(flags)) {
-	return 0;
-}
-
-#endif
-
 
 
 #ifdef CONFIG_NO_DEC
@@ -612,7 +591,7 @@ PRIVATE uint64_t exec_timestamp = (uint64_t)-1;
 #define HAS_EXEC_TIMESTAMP    (exec_timestamp != (uint64_t)-1)
 #define SET_EXEC_TIMESTAMP(x) (exec_timestamp = (x))
 #else /* CONFIG_NO_DEC */
-#define exec_timestamp         deemon_module.mo_ctime
+#define exec_timestamp        deemon_module.mo_ctime
 #define HAS_EXEC_TIMESTAMP    (deemon_module.mo_flags & MODULE_FHASCTIME)
 #define SET_EXEC_TIMESTAMP(x) (exec_timestamp = (x), atomic_or(&deemon_module.mo_flags, MODULE_FHASCTIME))
 #endif /* !CONFIG_NO_DEC */
@@ -631,16 +610,16 @@ PRIVATE uint64_t exec_timestamp = (uint64_t)-1;
 #define MICROSECONDS_PER_DAY         (MICROSECONDS_PER_HOUR * HOURS_PER_DAY)
 
 
-#if defined(_MSC_VER) && !defined(__clang__) && defined(__PE__)
+#ifdef BUILD_TIMESTAMP
+#define WRAP_UINT64_C(x) UINT64_C(x)
+#define parse_timestamp() (WRAP_UINT64_C(BUILD_TIMESTAMP) * MICROSECONDS_PER_SECOND)
+#elif defined(_MSC_VER) && !defined(__clang__) && defined(__PE__)
 extern /*IMAGE_DOS_HEADER*/ uint8_t const __ImageBase[];
 LOCAL uint64_t parse_timestamp(void) {
 	uint32_t e_lfanew      = *(uint32_t const *)(__ImageBase + 60);
 	uint32_t TimeDateStamp = *(uint32_t const *)(__ImageBase + e_lfanew + 8); /* Problem: this is 32-bit... */
 	return (uint64_t)TimeDateStamp * MICROSECONDS_PER_SECOND;
 }
-#elif defined(BUILD_TIMESTAMP)
-#define WRAP_UINT64_C(x) UINT64_C(x)
-#define parse_timestamp() (WRAP_UINT64_C(BUILD_TIMESTAMP) * MICROSECONDS_PER_SECOND)
 #else /* ... */
 /* The timestamp when deemon was compiled, generated as `__DATE__ "|" __TIME__'
  * CAUTION (and why we try not to use this variant):
