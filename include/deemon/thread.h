@@ -225,10 +225,11 @@ struct Dee_thread_interrupt {
 	                                        * descriptor, and simply decref() `ti_intr'. */
 };
 
-#define Dee_thread_interrupt_alloc()     ((struct Dee_thread_interrupt *)Dee_Malloc(sizeof(struct Dee_thread_interrupt)))
-#define Dee_thread_interrupt_free(self)  (likely((self)->ti_args != (DREF struct Dee_tuple_object *)ITER_DONE) ? Dee_Free(self) : (void)0)
+/* NOTE: It is important that thread interrupts and exceptions can be reused for one-another! */
+#define Dee_thread_interrupt_alloc()     DeeSlab_MALLOC(struct Dee_thread_interrupt)
+#define _Dee_thread_interrupt_free(self) DeeSlab_FREE(self)
+#define Dee_thread_interrupt_free(self)  (likely((self)->ti_args != (DREF struct Dee_tuple_object *)ITER_DONE) ? _Dee_thread_interrupt_free(self) : (void)0)
 #define Dee_thread_interrupt_xfree(self) (void)((self) && (Dee_thread_interrupt_free(self), 0))
-
 
 /*
  * Thread state phases:

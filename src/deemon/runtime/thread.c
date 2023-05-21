@@ -1377,7 +1377,7 @@ DeeThread_DiscardAllInterrupts(DeeThreadObject *__restrict self) {
 			struct thread_interrupt *interrupt;
 			interrupt = self->t_interrupt.ti_next;
 			memcpy(&self->t_interrupt, interrupt,
-				   sizeof(struct thread_interrupt));
+			       sizeof(struct thread_interrupt));
 			Dee_thread_interrupt_free(interrupt);
 		} else {
 			self->t_interrupt.ti_intr = NULL;
@@ -1956,7 +1956,8 @@ again_cleanup:
 			frame = self->t_except;
 			self->t_except = frame->ef_prev;
 			Dee_Decref(frame->ef_error);
-			Dee_XDecref(frame->ef_trace);
+			if (ITER_ISOK(frame->ef_trace))
+				Dee_Decref(frame->ef_trace);
 			Dee_except_frame_free(frame);
 			ASSERT(self->t_exceptsz != 0);
 			--self->t_exceptsz;
@@ -2316,6 +2317,81 @@ PUBLIC WUNUSED int (DCALL DeeThread_CheckInterrupt)(void) {
 
 
 #ifndef DeeThread_USE_SINGLE_THREADED
+
+/* Forward an appexit interrupt to the main thread. */
+PRIVATE NONNULL((1)) void DCALL
+forward_appexit_to_main_thread(/*inherit(always)*/ struct thread_interrupt *__restrict interrupt) {
+	uint32_t state;
+	uintptr_t version;
+	for (;;) {
+		state = atomic_fetchor(&DeeThread_Main.ot_thread.t_state,
+		                       Dee_THREAD_STATE_INTERRUPTING);
+		if (!(state & Dee_THREAD_STATE_INTERRUPTING))
+			break;
+		if (state & Dee_THREAD_STATE_TERMINATING)
+			goto already_terminated;
+		SCHED_YIELD();
+	}
+
+	/* Check if the thread has already terminated (or is unmanaged). */
+	if (state & Dee_THREAD_STATE_TERMINATING) {
+		atomic_and(&DeeThread_Main.ot_thread.t_state, ~Dee_THREAD_STATE_INTERRUPTING);
+		goto already_terminated;
+	}
+
+	/* Schedule the interrupt as pending for the target thread. */
+	if (DeeThread_Main.ot_thread.t_interrupt.ti_intr == NULL) {
+		/* Simple case: first interrupt */
+		DeeThread_Main.ot_thread.t_interrupt.ti_intr = interrupt->ti_intr;
+		DeeThread_Main.ot_thread.t_interrupt.ti_args = interrupt->ti_args;
+	} else {
+		/* Complicated case: secondary interrupt */
+		struct thread_interrupt *prev;
+		prev = &DeeThread_Main.ot_thread.t_interrupt;
+		while (prev->ti_next)
+			prev = prev->ti_next;
+		prev->ti_next = interrupt;
+		interrupt->ti_next = NULL;
+		interrupt = NULL;
+	}
+
+	/* Release the interrupt-lock */
+	atomic_and(&DeeThread_Main.ot_thread.t_state, ~Dee_THREAD_STATE_INTERRUPTING);
+
+	/* Free an unused interrupt descriptor. */
+	if (interrupt != NULL)
+		_Dee_thread_interrupt_free(interrupt);
+
+	/* Set the INTERRUPTED flag for the target thread, and force it to wake up. */
+	version = atomic_read(&DeeThread_Main.ot_thread.t_int_vers);
+	atomic_or(&DeeThread_Main.ot_thread.t_state, Dee_THREAD_STATE_INTERRUPTED);
+
+	/* Wait for the thread to have handled its pending interrupts.
+	 *
+	 * NOTE: Because we've already created the interrupt at this
+	 *       point, we must perform this wait without doing any
+	 *       interrupt checks! */
+	for (;;) {
+		DeeThread_Wake((DeeObject *)&DeeThread_Main.ot_thread);
+		state = atomic_read(&DeeThread_Main.ot_thread.t_state);
+		if (!(state & Dee_THREAD_STATE_INTERRUPTED))
+			break;
+		if (!(state & Dee_THREAD_STATE_WAITING)) {
+			atomic_or(&DeeThread_Main.ot_thread.t_state, Dee_THREAD_STATE_WAITING);
+			state |= Dee_THREAD_STATE_WAITING;
+		}
+	
+		/* Keep waking the thread in case it just went inside of a blocking system call. */
+		DeeFutex_Wait32NoIntTimed(&DeeThread_Main.ot_thread.t_state, state, THREAD_WAKE_DELAY);
+		if (version != atomic_read(&DeeThread_Main.ot_thread.t_int_vers))
+			break; /* The thread checked for interrupts in the meantime */
+	}
+	return;
+already_terminated:
+	Dee_thread_interrupt_free(interrupt);
+}
+
+
 #ifdef DeeThread_USE_CreateThread
 PRIVATE DWORD WINAPI DeeThread_Entry_func(void *arg)
 #define LOCAL_thread_entry_return return 0
@@ -2482,21 +2558,61 @@ do_cleanup_and_set_result:
 handle_thread_error_threadargs:
 	Dee_Decref(thread_args);
 handle_thread_error:
-	{
+	if (self->ot_thread.t_exceptsz) {
 		DeeObject *current;
-		current = DeeError_Current();
-		/* Special case: Check for a thread-exit exception. */
-		if (current && DeeThreadExit_Check(current)) {
+		current = self->ot_thread.t_except->ef_error;
+		/* Special case: Thread-exit exception. */
+		if (DeeThreadExit_Check(current)) {
 			result = DeeThreadExit_Result(current);
 			Dee_Incref(result);
 			DeeError_Handled(ERROR_HANDLED_INTERRUPT);
 			while (DeeError_Catch(&DeeError_Interrupt))
 				;
-
+	
 			/* If no further exceptions have occurred, set the thread-exit return value. */
-			if (!DeeError_Current())
+			if (!DeeError_Current()) {
+				_DeeThread_AcquireInterrupt(&self->ot_thread);
+				atomic_or(&self->ot_thread.t_state, Dee_THREAD_STATE_TERMINATING);
+				_DeeThread_ReleaseInterrupt(&self->ot_thread);
 				goto do_cleanup_and_set_result;
+			}
 			Dee_Decref(result);
+		}
+
+		/* Special case: App-exit exception. */
+		if (DeeAppExit_Check(current)) {
+			/* Send an RPC to the main thread and have *it* propagate the exit request. */
+			struct except_frame *frame;
+			struct thread_interrupt *interrupt;
+			STATIC_ASSERT(sizeof(struct thread_interrupt) <=
+			              sizeof(struct except_frame));
+			frame = self->ot_thread.t_except;
+			self->ot_thread.t_except = frame->ef_prev;
+			--self->ot_thread.t_exceptsz;
+
+			/* Convert the except frame into an interrupt frame. */
+			if (ITER_ISOK(frame->ef_trace))
+				Dee_Decref(frame->ef_trace);
+			interrupt = (struct thread_interrupt *)frame;
+			interrupt->ti_intr = current; /* Inherited from the except frame. */
+			interrupt->ti_args = NULL;    /* Its an exception interrupt, so no callback args. */
+			forward_appexit_to_main_thread(interrupt);
+
+			/* Handle extra interrupt errors. */
+			while (DeeError_Catch(&DeeError_Interrupt))
+				;
+
+			/* If no further exceptions have occurred, have the thread return with `none'.
+			 * Note however that this shouldn't *really* matter, since the main thread is
+			 * supposed to die anyways, however by not throwing more errors into the mix,
+			 * we *may* be able to make things easier. */
+			if (!DeeError_Current()) {
+				_DeeThread_AcquireInterrupt(&self->ot_thread);
+				atomic_or(&self->ot_thread.t_state, Dee_THREAD_STATE_TERMINATING);
+				_DeeThread_ReleaseInterrupt(&self->ot_thread);
+				result = DeeNone_NewRef();
+				goto do_cleanup_and_set_result;
+			}
 		}
 	}
 
@@ -3513,18 +3629,19 @@ thread_print_impl(DeeThreadObject *__restrict self,
 	} else
 #endif /* !DeeThread_USE_SINGLE_THREADED */
 	{
-#ifdef DeeThread_USE_SINGLE_THREADED
+#ifndef DeeThread_USE_SINGLE_THREADED
+		bool iscaller = self == DeeThread_Self();
+		if ((state & Dee_THREAD_STATE_TERMINATED) || iscaller)
+#else /* !DeeThread_USE_SINGLE_THREADED */
 		if (!(state & Dee_THREAD_STATE_UNMANAGED))
-#else /* DeeThread_USE_SINGLE_THREADED */
-		if ((state & Dee_THREAD_STATE_TERMINATED) || self == DeeThread_Self())
-#endif /* !DeeThread_USE_SINGLE_THREADED */
+#endif /* DeeThread_USE_SINGLE_THREADED */
 		{
 			if (self->t_exceptsz) {
 				thread_except = self->t_except->ef_error;
 				Dee_Incref(thread_except);
 			}
 #ifndef DeeThread_USE_SINGLE_THREADED
-			else {
+			else if (!iscaller) {
 				thread_result = self->t_inout.io_result;
 				Dee_Incref(thread_result);
 			}
@@ -3839,7 +3956,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-thread_interrupt(DeeObject *self, size_t argc, DeeObject *const *argv) {
+thread_interrupt_impl(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	DeeObject *sig  = &DeeError_Interrupt_instance;
 	DeeObject *args = NULL;
 	int error;
@@ -4046,7 +4163,7 @@ PRIVATE struct type_method tpconst thread_methods[] = {
 	            "(timeout_in_nanoseconds:?Dint)->?Dbool\n"
 	            "@interrupt\n"
 	            "Same as ?#waitfor, but only attempt to wait at most @timeout_in_nanoseconds"),
-	TYPE_METHOD("interrupt", &thread_interrupt,
+	TYPE_METHOD("interrupt", &thread_interrupt_impl,
 	            "->?Dbool\n"
 	            "(signal)->?Dbool\n"
 	            "(async_func:?DCallable,async_args:?DTuple)->?Dbool\n"
