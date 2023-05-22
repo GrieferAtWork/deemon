@@ -1206,10 +1206,10 @@ stat_get_mode(DeeStatObject *__restrict self) {
 		}
 		ATTR_FALLTHROUGH
 	default:
-		if (self->so_stat.st_info.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
-			result |= STAT_IFDIR;
-		} else if (self->so_stat.st_info.dwFileAttributes & FILE_ATTRIBUTE_REPARSE_POINT) {
+		if (self->so_stat.st_info.dwFileAttributes & FILE_ATTRIBUTE_REPARSE_POINT) {
 			result |= STAT_IFLNK;
+		} else if (self->so_stat.st_info.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
+			result |= STAT_IFDIR;
 		} else {
 			result |= STAT_IFREG;
 		}
@@ -1563,7 +1563,8 @@ err_notime:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 stat_isdir(DeeStatObject *__restrict self) {
 #ifdef posix_stat_USE_WINDOWS
-	return_bool(self->so_stat.st_info.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY);
+	return_bool((self->so_stat.st_info.dwFileAttributes & (FILE_ATTRIBUTE_DIRECTORY | FILE_ATTRIBUTE_REPARSE_POINT)) ==
+	/*                                                 */ (FILE_ATTRIBUTE_DIRECTORY));
 #elif defined(posix_stat_HAVE_st_mode)
 	return_bool(STAT_ISDIR(self->so_stat.st_info.st_mode));
 #elif defined(posix_stat_USE_fopen)
@@ -1789,8 +1790,10 @@ stat_class_isdir(DeeObject *self, size_t argc, DeeObject *const *argv) {
 			DBG_ALIGNMENT_ENABLE();
 			if unlikely(error < 0)
 				goto err;
-			if (error == 0)
-				return_bool(dwAttr & FILE_ATTRIBUTE_DIRECTORY);
+			if (error == 0) {
+				return_bool((dwAttr & (FILE_ATTRIBUTE_DIRECTORY | FILE_ATTRIBUTE_REPARSE_POINT)) ==
+				/*                 */ (FILE_ATTRIBUTE_DIRECTORY));
+			}
 		}
 #endif /* !__OPTIMIZE_SIZE__ && posix_stat_USE_WINDOWS */
 		if (stat_unpack_args(argc, argv, stat_unpack_args_format("isdir"),

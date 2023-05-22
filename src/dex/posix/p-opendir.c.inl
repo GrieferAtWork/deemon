@@ -1397,10 +1397,10 @@ diriter_get_d_type(DeeDirIteratorObject *__restrict self) {
 #ifdef posix_opendir_USE_FindFirstFileExW
 	if (self->odi_hnd != INVALID_HANDLE_VALUE) {
 		DeeObject *result;
-		if (self->odi_data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
-			result = (DeeObject *)&posix_DT_DIR;
-		} else if (self->odi_data.dwFileAttributes & FILE_ATTRIBUTE_REPARSE_POINT) {
+		if (self->odi_data.dwFileAttributes & FILE_ATTRIBUTE_REPARSE_POINT) {
 			result = (DeeObject *)&posix_DT_LNK;
+		} else if (self->odi_data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
+			result = (DeeObject *)&posix_DT_DIR;
 		} else if (self->odi_data.dwFileAttributes & FILE_ATTRIBUTE_DEVICE) {
 			result = (DeeObject *)&posix_DT_CHR; /* TODO: Must determine the type of device */
 		} else if (self->odi_data.dwFileAttributes & FILE_ATTRIBUTE_SYSTEM) {
@@ -1579,10 +1579,10 @@ diriter_get_d_mode(DeeDirIteratorObject *__restrict self) {
 		uint32_t result = 0444 | 0111; /* XXX: executable should depend on extension. */
 		if (!(self->odi_data.dwFileAttributes & FILE_ATTRIBUTE_READONLY))
 			result |= 0222;
-		if (self->odi_data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
-			result |= STAT_IFDIR;
-		} else if (self->odi_data.dwFileAttributes & FILE_ATTRIBUTE_REPARSE_POINT) {
+		if (self->odi_data.dwFileAttributes & FILE_ATTRIBUTE_REPARSE_POINT) {
 			result |= STAT_IFLNK;
+		} else if (self->odi_data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
+			result |= STAT_IFDIR;
 		} else if (self->odi_data.dwFileAttributes & FILE_ATTRIBUTE_DEVICE) {
 			result |= STAT_IFCHR; /* TODO: Must determine the type of device */
 		} else if (self->odi_data.dwFileAttributes & FILE_ATTRIBUTE_SYSTEM) {
