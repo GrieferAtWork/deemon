@@ -1214,7 +1214,7 @@
 /*      ASM_                  0xf03a  *               --------                            - ------------------ */
 #define ASM16_PUSH_STATIC     0xf03b /* [4][-0,+1]   `push static <imm16>'                - Push the static variable indexed by `<imm16>'.
                                       * [4][-0,+0]   `mov  PREFIX, static <imm16>'        - `PREFIX: push static <imm16>' */
-#define ASM16_PUSH_EXTERN     0xf03c /* [6][-0,+0]   `push extern <imm16>:<imm16>'        - Push the extern variable indexed by `<imm16>:<imm16>'. If it isn't bound, throw an `Error.RuntimeError.UnboundLocal'
+#define ASM16_PUSH_EXTERN     0xf03c /* [6][-0,+1]   `push extern <imm16>:<imm16>'        - Push the extern variable indexed by `<imm16>:<imm16>'. If it isn't bound, throw an `Error.RuntimeError.UnboundLocal'
                                       * [4][-0,+0]   `mov  PREFIX, extern <imm16>:<imm16>'- `PREFIX: push extern <imm16>:<imm16>' */
 /*      ASM_                  0xf03d  *               --------                            - ------------------ */
 #define ASM16_PUSH_GLOBAL     0xf03e /* [4][-0,+1]   `push global <imm16>'                - Push the global variable indexed by `<imm16>'. If it isn't bound, throw an `Error.RuntimeError.UnboundLocal'

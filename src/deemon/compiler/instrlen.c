@@ -413,7 +413,7 @@ PRIVATE uint8_t const intr_len_f0[256] = {
 	/* 0x08 */ 5, /* `ASM16_CALL_KW':               `call top, #<imm8>, const <imm16>' */
 	/* 0x09 */ 4, /* `ASM16_CALL_TUPLE_KW':         `call top, pop..., const <imm16>' */
 	/* 0x0a */ 2, /* --- */
-	/* 0x0b */ 4, /* `ASM16_PUSH_BND_ARG':          `push bound arg <imm8>' */
+	/* 0x0b */ 4, /* `ASM16_PUSH_BND_ARG':          `push bound arg <imm16>' */
 	/* 0x0c */ 6, /* `ASM16_PUSH_BND_EXTERN':       `push bound extern <imm16>:<imm16>' */
 	/* 0x0d */ 2, /* --- */
 	/* 0x0e */ 4, /* `ASM16_PUSH_BND_GLOBAL':       `push bound global <imm16>' */
@@ -931,7 +931,7 @@ PRIVATE uint8_t const stack_effect_f0[256] = {
 	/* 0x08 */ STACK_EFFECT_UNDEF, /* `ASM16_CALL_KW':               `call top, #<imm8>, const <imm16>' */
 	/* 0x09 */ STACK_EFFECT(2, 1), /* `ASM16_CALL_TUPLE_KW':         `call top, pop..., const <imm16>' */
 	/* 0x0a */ STACK_EFFECT_UNDEF, /* --- */
-	/* 0x0b */ STACK_EFFECT(0, 1), /* `ASM16_PUSH_BND_ARG':          `push bound arg <imm8>' */
+	/* 0x0b */ STACK_EFFECT(0, 1), /* `ASM16_PUSH_BND_ARG':          `push bound arg <imm16>' */
 	/* 0x0c */ STACK_EFFECT(0, 1), /* `ASM16_PUSH_BND_EXTERN':       `push bound extern <imm16>:<imm16>' */
 	/* 0x0d */ STACK_EFFECT_UNDEF, /* --- */
 	/* 0x0e */ STACK_EFFECT(0, 1), /* `ASM16_PUSH_BND_GLOBAL':       `push bound global <imm16>' */
@@ -980,7 +980,7 @@ PRIVATE uint8_t const stack_effect_f0[256] = {
 	/* 0x39 */ STACK_EFFECT(0, 1), /* `ASM16_PUSH_REF':              `push ref <imm16>' */
 	/* 0x3a */ STACK_EFFECT_UNDEF, /* --- */
 	/* 0x3b */ STACK_EFFECT(0, 1), /* `ASM16_PUSH_STATIC':           `push static <imm16>' */
-	/* 0x3c */ STACK_EFFECT(0, 0), /* `ASM16_PUSH_EXTERN':           `push extern <imm16>:<imm16>' */
+	/* 0x3c */ STACK_EFFECT(0, 1), /* `ASM16_PUSH_EXTERN':           `push extern <imm16>:<imm16>' */
 	/* 0x3d */ STACK_EFFECT_UNDEF, /* --- */
 	/* 0x3e */ STACK_EFFECT(0, 1), /* `ASM16_PUSH_GLOBAL':           `push global <imm16>' */
 	/* 0x3f */ STACK_EFFECT(0, 1), /* `ASM16_PUSH_LOCAL':            `push local <imm16>' */

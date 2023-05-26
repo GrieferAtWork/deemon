@@ -945,6 +945,7 @@ prefix_except_prefix:
 		/* Print the instruction address. */
 		if (!(flags & PCODE_FNOADDRESS))
 			printf("%.4I32X   ", (code_addr_t)(iter - start_addr));
+
 		/* Print instruction bytes. */
 		if (!(flags & PCODE_FNOBYTES)) {
 			char bytes[INSTRLEN_MAX * 3];

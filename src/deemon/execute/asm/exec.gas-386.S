@@ -10392,7 +10392,7 @@ inst_table_f0:
 	.long target16_call_kw               /* 0x08 : `call top, #<imm8>, const <imm16>' */
 	.long target16_call_tuple_kw         /* 0x09 : `call top, pop..., const <imm16>' */
 	.long invop
-	.long target16_push_bnd_arg          /* 0x0b : `push bound arg <imm8>' */
+	.long target16_push_bnd_arg          /* 0x0b : `push bound arg <imm16>' */
 	.long target16_push_bnd_extern       /* 0x0c : `push bound extern <imm16>:<imm16>' */
 	.long invop
 	.long target16_push_bnd_global       /* 0x0e : `push bound global <imm16>' */
@@ -10908,7 +10908,7 @@ prefix_inst_table_f0:
 	.long prefix_target16_call_kw               /* 0x08 : `call top, #<imm8>, const <imm16>' */
 	.long prefix_target16_call_tuple_kw         /* 0x09 : `call top, pop..., const <imm16>' */
 	.long prefix_invop
-	.long prefix_target16_push_bnd_arg          /* 0x0b : `push bound arg <imm8>' */
+	.long prefix_target16_push_bnd_arg          /* 0x0b : `push bound arg <imm16>' */
 	.long prefix_target16_push_bnd_extern       /* 0x0c : `push bound extern <imm16>:<imm16>' */
 	.long prefix_invop
 	.long prefix_target16_push_bnd_global       /* 0x0e : `push bound global <imm16>' */

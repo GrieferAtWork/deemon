@@ -73,6 +73,7 @@ local longest_name_f0 = 0;
 
 for (local l: file.open("../../../include/deemon/asm.h")) {
 	local name, code, misc;
+	l = l.decode("utf-8");
 	try {
 		name, code, none, misc = l.scanf(" # define ASM%[^ ] 0x%[0-9a-fA-F] /" "* [ %[^ \\]] ] %[^]")...;
 	} catch (e...) {
@@ -1328,12 +1329,13 @@ libdisasm_printinstr(dformatprinter printer, void *arg,
 		opcode = (opcode << 8) | *iter.ptr++;
 	if (opcode <= UINT8_MAX) {
 		mnemonic = mnemonic_names[opcode];
-	} else {
-		ASSERT(opcode >= (ASM_EXTENDED1 << 8));
-		ASSERT(opcode <= (ASM_EXTENDED1 << 8) + 0xff);
-		/* XXX: If more opcode extension tables get added, they must be made available here! */
+	} else if ((opcode & 0xff00) == 0xf000) {
 		mnemonic = mnemonic_names_f0[opcode & 0xff];
+	} else {
+		/* XXX: If more opcode extension tables get added, they must be made available here! */
+		mnemonic = UNKNOWN_MNEMONIC;
 	}
+
 	/* Special case for prefix instructions */
 	if (ASM_ISPREFIX(opcode & 0xff)) {
 		switch (opcode) {
@@ -1900,8 +1902,7 @@ print_duppop_stack:
 		iter.ptr = old_iter;
 	}
 
-	if (opcode == ASM_RET && code &&
-	    code->co_flags & CODE_FYIELDING)
+	if (opcode == ASM_RET && code && (code->co_flags & CODE_FYIELDING))
 		mnemonic = "yield  pop";
 	print(mnemonic, strlen(mnemonic));
 do_instruction_specific:
