@@ -41,7 +41,7 @@ class dir: Sequence {
 	@@@interrupt
 	@@Construct a sequence for enumerating the contents of a directory
 	this(path: string)
-		: m_dir(posix.DIR(path))
+		: m_dir(posix.opendir(path))
 	{}
 
 	@@Enumerate the names of the files within the given directory
@@ -53,7 +53,7 @@ class dir: Sequence {
 
 class query: dir {
 	@@The wildcard-enabled pattern with which to filter files
-	private member m_pattern: posix.DIR;
+	private member m_pattern: string;
 
 	@@@interrupt
 	@@Construct a directory query that yields the names of all filesystem
