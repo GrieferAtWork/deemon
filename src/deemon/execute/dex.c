@@ -583,7 +583,7 @@ DECL_END
 
 #ifdef CONFIG_HAVE_dlinfo__RTLD_DI_LINKMAP
 #define dlinfo_RTLD_DI_LINKMAP(handle, p_result) \
-	(void)(dlinfo(handle, RTLD_DI_LINKMAP, (void **)(p_result)) || (*(p_result) = (struct link_map *)(handle), 1))
+	(void)(dlinfo(handle, RTLD_DI_LINKMAP, (void *)(p_result)) || (*(p_result) = (struct link_map *)(handle), 1))
 #else /* CONFIG_HAVE_dlinfo__RTLD_DI_LINKMAP */
 #define dlinfo_RTLD_DI_LINKMAP(handle, p_result) \
 	(void)(*(p_result) = (struct link_map *)(handle))
