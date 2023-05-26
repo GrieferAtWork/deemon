@@ -235,13 +235,12 @@ next:
 	ch = *iter++;
 	switch (ch) {
 
-	/* NOTE: The following part has been mirrored in `fs_pathexpand'
-	 *       that is apart of the `fs' DEX implementation file: `fs/path.c'
-	 *       If a bug is found in this code, it should be fixed here, as
-	 *       well as within the DEX source file. */
-#ifdef DeeSystem_ALTSEP
+	/* NOTE: The following part has been mirrored in `posix_path_normalpath_f'
+	 * If a bug is found in this code, it should be fixed here, as well as
+	 * within the DEX source file. */
+#if defined(DeeSystem_ALTSEP) && DeeSystem_ALTSEP != DeeSystem_SEP
 	case DeeSystem_ALTSEP:
-#endif /* DeeSystem_ALTSEP */
+#endif /* DeeSystem_ALTSEP && DeeSystem_ALTSEP != DeeSystem_SEP */
 	case DeeSystem_SEP:
 	case '\0': {
 		char const *sep_loc;
@@ -275,9 +274,14 @@ next:
 				if (UNICODE_PRINTER_GETCHAR(&printer, printer_length - 1) == DeeSystem_SEP)
 					--printer_length;
 				new_end = unicode_printer_memrchr(&printer, DeeSystem_SEP, 0, printer_length);
-				if (new_end == (size_t)-1)
-					goto do_flush_after_sep;
-				++new_end;
+				if (new_end == (size_t)-1) {
+					/* Special handling to trim a path segment at the very start of the given path. */
+					if (printer_length == 0)
+						goto do_flush_after_sep;
+					new_end = 0;
+				} else {
+					++new_end;
+				}
 
 				/* Truncate the valid length of the printer to after the previous slash. */
 				printer.up_length = new_end;
@@ -358,13 +362,17 @@ done:
 
 		/* Check for special case: The printer was never used.
 		 * If this is the case, we can simply re-return the given path. */
-		if (!UNICODE_PRINTER_LENGTH(&printer)) {
+		if (UNICODE_PRINTER_ISEMPTY(&printer)) {
+#ifdef CONFIG_UNICODE_PRINTER_MUSTFINI_IF_EMPTY
+			unicode_printer_fini(&printer);
+#endif /* CONFIG_UNICODE_PRINTER_MUSTFINI_IF_EMPTY */
 			unicode_printer_fini(&printer);
 #ifdef CONFIG_HOST_WINDOWS
 return_unmodified:
 #endif /* CONFIG_HOST_WINDOWS */
 			return_reference_(filename);
 		}
+
 		/* Actually print the remainder. */
 		if (unicode_printer_print(&printer, flush_start,
 		                          (size_t)(iter - flush_start)) < 0)

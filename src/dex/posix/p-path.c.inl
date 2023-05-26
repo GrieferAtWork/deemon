@@ -35,6 +35,13 @@
 
 DECL_BEGIN
 
+#ifndef CONFIG_HAVE_memrchr
+#define CONFIG_HAVE_memrchr
+#undef memrchr
+#define memrchr dee_memrchr
+DeeSystem_DEFINE_memrchr(dee_memrchr)
+#endif /* !CONFIG_HAVE_memrchr */
+
 /************************************************************************/
 /* Path utilities (originally from `fs')                                */
 /************************************************************************/
@@ -44,9 +51,10 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL posix_path_tailof_f(DeeObject
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL posix_path_driveof_f(DeeObject *__restrict path);
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL posix_path_inctrail_f(DeeObject *__restrict path);
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL posix_path_exctrail_f(DeeObject *__restrict path);
-PRIVATE WUNUSED DREF DeeObject *DCALL posix_path_abspath_f(DeeObject *__restrict path, DeeObject *pwd);
-PRIVATE WUNUSED DREF DeeObject *DCALL posix_path_relpath_f(DeeObject *__restrict path, DeeObject *pwd);
-PRIVATE WUNUSED DREF DeeObject *DCALL posix_path_joinpath_f(size_t pathc, DeeObject *const *__restrict pathv);
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL posix_path_abspath_f(DeeObject *__restrict path, DeeObject *pwd);
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL posix_path_relpath_f(DeeObject *__restrict path, DeeObject *pwd);
+PRIVATE WUNUSED ATTR_INS(2, 1) DREF DeeObject *DCALL posix_path_joinpath_f(size_t pathc, DeeObject *const *__restrict pathv);
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL posix_path_normalpath_f(DeeObject *__restrict path);
 
 
 
@@ -286,7 +294,7 @@ done:
 
 
 
-PRIVATE WUNUSED DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 posix_path_abspath_f(DeeObject *__restrict path, DeeObject *pwd) {
 	DREF DeeObject *result;
 	ASSERT_OBJECT_TYPE_EXACT(path, &DeeString_Type);
@@ -544,7 +552,7 @@ PRIVATE char const aligned_upref_buffer[MAX_UPREF_COPY][3] = {
 	{ '.', '.', DeeSystem_SEP }
 };
 
-PRIVATE WUNUSED DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 posix_path_relpath_f(DeeObject *__restrict path, DeeObject *pwd) {
 	DREF DeeObject *result;
 	size_t uprefs, pth_length;
@@ -905,7 +913,177 @@ err:
 	return NULL;
 }
 
-PRIVATE WUNUSED DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+posix_path_normalpath_f(DeeObject *__restrict path) {
+	struct unicode_printer printer = UNICODE_PRINTER_INIT;
+	/*utf-8*/ char *iter, *begin, *end, *iter_next;
+	/*utf-8*/ char *flush_start, *flush_end;
+	uint32_t ch;
+	ASSERT_OBJECT_TYPE_EXACT(path, &DeeString_Type);
+	begin = DeeString_AsUtf8(path);
+	if unlikely(!begin)
+		goto err;
+	end = begin + WSTR_LENGTH(begin);
+	ASSERT(*end == '\0');
+	flush_start = iter = begin;
+next:
+	ch = *iter++;
+	switch (ch) {
+		/* NOTE: The following part has been mirrored in `DeeSystem_MakeAbsolute'
+		 * If a bug is found in this code, it should be fixed here, as well as
+		 * within the core. */
+
+#if defined(DeeSystem_ALTSEP) && DeeSystem_ALTSEP != DeeSystem_SEP
+	case DeeSystem_ALTSEP:
+#endif /* DeeSystem_ALTSEP && DeeSystem_ALTSEP != DeeSystem_SEP */
+	case DeeSystem_SEP:
+	case '\0': {
+		char const *sep_loc;
+		bool did_print_sep;
+
+		/* Delete slashes and expand paths. */
+		sep_loc = flush_end = iter - 1;
+
+		/* Skip multiple slashes and whitespace following a path separator. */
+		while (iter < end) {
+			iter_next = iter;
+			ch        = utf8_readchar((char const **)&iter_next, end);
+			if (!DeeUni_IsSpace(ch) && !DeeSystem_IsSep(ch))
+				break;
+			iter = iter_next;
+		}
+		while (flush_end > flush_start) {
+			iter_next = flush_end;
+			ch        = utf8_readchar_rev((char const **)&iter_next, flush_start);
+			if (!DeeUni_IsSpace(ch))
+				break;
+			flush_end = iter_next;
+		}
+
+		/* Analyze the last path portion for being a special name (`.' or `..') */
+		if (flush_end[-1] == '.') {
+			if (flush_end[-2] == '.' && flush_end - 2 == flush_start) {
+				/* Parent-directory-reference. */
+				size_t printer_length, new_end;
+
+				/* Delete the last directory that was written. */
+				printer_length = UNICODE_PRINTER_LENGTH(&printer);
+				if (!printer_length)
+					goto do_flush_after_sep;
+				if (UNICODE_PRINTER_GETCHAR(&printer, printer_length - 1) == DeeSystem_SEP)
+					--printer_length;
+				new_end = unicode_printer_memrchr(&printer, DeeSystem_SEP, 0, printer_length);
+				if (new_end == (size_t)-1) {
+					/* Special handling to trim a path segment at the very start of the given path. */
+					if (printer_length == 0)
+						goto do_flush_after_sep;
+					new_end = 0;
+				} else {
+					++new_end;
+				}
+
+				/* Truncate the valid length of the printer to after the previous slash. */
+				unicode_printer_truncate(&printer, new_end);
+				goto done_flush;
+			} else if (flush_end[-3] == DeeSystem_SEP) {
+				/* Parent-directory-reference. */
+				char *new_end;
+				ASSERT((flush_end - 3) >= flush_start);
+				new_end = (char *)memrchr(flush_start, DeeSystem_SEP,
+				                          (size_t)((flush_end - 3) - flush_start));
+				if (!new_end)
+					goto done_flush;
+				flush_end = new_end + 1; /* Include the previous sep in this flush. */
+				if (unicode_printer_print(&printer, flush_start,
+				                          (size_t)(flush_end - flush_start)) < 0)
+					goto err;
+				goto done_flush;
+			} else if (flush_end - 1 == flush_start) {
+				/* Self-directory-reference. */
+done_flush:
+				flush_start = iter;
+				goto done_flush_nostart;
+			} else if (flush_end[-2] == DeeSystem_SEP &&
+			           flush_end - 2 >= flush_start) {
+				/* Self-directory-reference. */
+				flush_end -= 2;
+			}
+		}
+do_flush_after_sep:
+		/* Check if we need to fix anything */
+		if (flush_end == iter - 1
+#ifdef DeeSystem_ALTSEP
+		    && (*sep_loc == DeeSystem_SEP || iter == end + 1)
+#endif /* DeeSystem_ALTSEP */
+		    ) {
+			goto done_flush_nostart;
+		}
+
+		/* If we can already include a slash in this part, do so. */
+		did_print_sep = false;
+		if (sep_loc == flush_end
+#ifdef DeeSystem_ALTSEP
+		    && (*sep_loc == DeeSystem_SEP)
+#endif /* DeeSystem_ALTSEP */
+		    ) {
+			++flush_end;
+			did_print_sep = true;
+		}
+
+		/* Flush everything prior to the path. */
+		ASSERT(flush_end >= flush_start);
+		if (unicode_printer_print(&printer, flush_start,
+		                          (size_t)(flush_end - flush_start)) < 0)
+			goto err;
+		flush_start = iter;
+		if (did_print_sep) {
+			/* The slash has already been been printed: `foo/ bar' */
+		} else if (sep_loc == iter - 1
+#ifdef DeeSystem_ALTSEP
+		           && (!*sep_loc || *sep_loc == DeeSystem_SEP)
+#endif /* DeeSystem_ALTSEP */
+		           ) {
+			--flush_start; /* The slash will be printed as part of the next flush: `foo /bar' */
+		} else {
+			/* The slash must be printed explicitly: `foo / bar' */
+			if (unicode_printer_putascii(&printer, DeeSystem_SEP) < 0)
+				goto err;
+		}
+done_flush_nostart:
+		if (iter == end + 1)
+			goto done;
+		goto next;
+	}
+	default: goto next;
+	}
+done:
+	--iter;
+
+	/* Print the remainder. */
+	if (iter > flush_start) {
+		/* Check for special case: The printer was never used.
+		 * If this is the case, we can simply re-return the given path. */
+		if (UNICODE_PRINTER_ISEMPTY(&printer)) {
+#ifdef CONFIG_UNICODE_PRINTER_MUSTFINI_IF_EMPTY
+			unicode_printer_fini(&printer);
+#endif /* CONFIG_UNICODE_PRINTER_MUSTFINI_IF_EMPTY */
+			return_reference_(path);
+		}
+
+		/* Actually print the remainder. */
+		if (unicode_printer_print(&printer, flush_start,
+		                          (size_t)(iter - flush_start)) < 0)
+			goto err;
+	}
+
+	/* Pack everything together. */
+	return unicode_printer_pack(&printer);
+err:
+	unicode_printer_fini(&printer);
+	return NULL;
+}
+
+PRIVATE WUNUSED ATTR_INS(2, 1) DREF DeeObject *DCALL
 posix_path_joinpath_f(size_t pathc, DeeObject *const *__restrict pathv) {
 	size_t i;
 	char nextsep = DeeSystem_SEP;
@@ -1169,6 +1347,34 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_relpath_f_impl(DeeObject *path, D
 	if (pwd && DeeObject_AssertTypeExact(pwd, &DeeString_Type))
 		goto err;
 	return posix_path_relpath_f(path, pwd);
+err:
+	return NULL;
+}
+
+/*[[[deemon import("rt.gen.dexutils").gw("normalpath", "path:?Dstring->?Dstring", libname: "posix");]]]*/
+FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_normalpath_f_impl(DeeObject *path);
+PRIVATE WUNUSED DREF DeeObject *DCALL posix_normalpath_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
+#define POSIX_NORMALPATH_DEF { "normalpath", (DeeObject *)&posix_normalpath, MODSYM_FNORMAL, DOC("(path:?Dstring)->?Dstring") },
+#define POSIX_NORMALPATH_DEF_DOC(doc) { "normalpath", (DeeObject *)&posix_normalpath, MODSYM_FNORMAL, DOC("(path:?Dstring)->?Dstring\n" doc) },
+PRIVATE DEFINE_KWCMETHOD(posix_normalpath, &posix_normalpath_f);
+#ifndef POSIX_KWDS_PATH_DEFINED
+#define POSIX_KWDS_PATH_DEFINED
+PRIVATE DEFINE_KWLIST(posix_kwds_path, { K(path), KEND });
+#endif /* !POSIX_KWDS_PATH_DEFINED */
+PRIVATE WUNUSED DREF DeeObject *DCALL posix_normalpath_f(size_t argc, DeeObject *const *argv, DeeObject *kw) {
+	DeeObject *path;
+	if (DeeArg_UnpackKw(argc, argv, kw, posix_kwds_path, "o:normalpath", &path))
+		goto err;
+	return posix_normalpath_f_impl(path);
+err:
+	return NULL;
+}
+FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_normalpath_f_impl(DeeObject *path)
+/*[[[end]]]*/
+{
+	if (DeeObject_AssertTypeExact(path, &DeeString_Type))
+		goto err;
+	return posix_path_normalpath_f(path);
 err:
 	return NULL;
 }

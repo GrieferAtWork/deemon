@@ -2576,6 +2576,8 @@ PRIVATE struct dex_symbol symbols[] = {
 	                        /**/ "result of calling ?Gabspath with it and the return value of ?Ggetcwd\n"
 	                        "When running on a windows host, in the event that @path is located on a "
 	                        /**/ "different ?Gdriveof than @pwd, @path will be re-returned as is"))
+	D(POSIX_NORMALPATH_DEF_DOC("Normalize the given @path. This removes spaces around slashes, replaces os-specific "
+	                           "?GFS_ALTSEP with ?GFS_SEP, as well as $\".\" and $\"..\" path segments (if possible)"))
 	D(POSIX_ISABS_DEF_DOC("Returns ?t if the given @path is considered to be absolute"))
 	D(POSIX_ISREL_DEF_DOC("Returns the inverse of ?Gisabs"))
 	D(POSIX_ISSEP_DEF_DOC("Returns ?t if the given @str is recognized as a path "
