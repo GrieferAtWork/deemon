@@ -323,7 +323,7 @@ check_getattr_sym:
 				modsym = get_module_symbol(SYMBOL_MODULE_MODULE(sym), attrname);
 				if (!modsym)
 					break;
-				if (!PUSH_RESULT)
+				if (!PUSH_RESULT && !(modsym->ss_flags & MODSYM_FPROPERTY))
 					goto done;
 				if (modsym->ss_flags & MODSYM_FEXTERN) {
 					uint16_t impid = modsym->ss_extern.ss_impid;
