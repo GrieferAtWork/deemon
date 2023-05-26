@@ -1000,8 +1000,8 @@ func("dlmodulename", "defined(CONFIG_HAVE_DLFCN_H) && defined(__USE_KOS)", test:
 func("dlgethandle", "defined(CONFIG_HAVE_DLFCN_H) && defined(__USE_KOS)", test: 'extern int x; void *dl = dlgethandle(&x, DLGETHANDLE_FNORMAL); return dl != NULL;');
 func("dl_iterate_phdr", "defined(CONFIG_HAVE_LINK_H) && defined(__ELF__)", test: 'extern int my_dl_callback(struct dl_phdr_info *, size_t, void *); extern struct dl_phdr_info info; extern struct link_map lm; return dl_iterate_phdr(&my_dl_callback, NULL) && info.dlpi_phnum && info.dlpi_addr && info.dlpi_phdr[0].p_vaddr && info.dlpi_phdr[0].p_memsz && lm.l_addr;');
 func("dladdr", "defined(CONFIG_HAVE_DLFCN_H) && (defined(__USE_GNU) || defined(__USE_NETBSD) || defined(__USE_SOLARIS))", test: 'extern int my_symbol; Dl_info dli; return dladdr(&my_symbol, &dli) && dli.dli_fname;');
-feature("dlinfo__RTLD_DI_LINKMAP", "defined(CONFIG_HAVE_DLFCN_H) && defined(RTLD_DI_LINKMAP) && (defined(__USE_GNU) || defined(__USE_NETBSD) || defined(__USE_SOLARIS))", test: 'extern void *handle; void *lm; return dlinfo(handle, RTLD_DI_LINKMAP, &lm);');
-feature("dladdr1__RTLD_DL_LINKMAP", "defined(CONFIG_HAVE_DLFCN_H) && defined(RTLD_DL_LINKMAP) && defined(__USE_GNU)", test: 'extern void *handle; Dl_info dli; void *lm; return dladdr1(handle, &dli, &lm, RTLD_DI_LINKMAP);');
+feature("dlinfo__RTLD_DI_LINKMAP", "defined(CONFIG_HAVE_DLFCN_H) && defined(RTLD_DI_LINKMAP) && (defined(__USE_GNU) || defined(__USE_NETBSD) || defined(__USE_SOLARIS))", test: 'extern void *handle; void *lm; return dlinfo(handle, RTLD_DI_LINKMAP, (void *)&lm);');
+feature("dladdr1__RTLD_DL_LINKMAP", "defined(CONFIG_HAVE_DLFCN_H) && defined(RTLD_DL_LINKMAP) && defined(__USE_GNU)", test: 'extern void *handle; Dl_info dli; void *lm; return dladdr1(handle, &dli, (void **)&lm, RTLD_DI_LINKMAP);');
 feature("struct__link_map__l_name", "defined(CONFIG_HAVE_LINK_H)", test: 'extern struct link_map *lm; char const *s = lm->l_name; return !!s;');
 constant("RTLD_GLOBAL");
 constant("RTLD_LOCAL");
