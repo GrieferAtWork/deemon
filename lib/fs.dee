@@ -19,6 +19,7 @@
  */
 
 import * from deemon;
+import * from errors;
 import posix;
 
 global final stat = posix.stat;
@@ -304,7 +305,141 @@ global final isabs = posix.isabs;
 global final isrel = posix.isrel;
 global final issep = posix.issep;
 global final joinpath = posix.joinpath;
-//TODO: expand
+
+local function _gethome(user: string = none): string {
+	if (user is none) {
+		local result = posix.environ.get("HOME");
+		if (result !is none)
+			return result;
+	}
+	// TODO
+	return "/home/me";
+}
+
+function expand(path: string, options: string = "hvpf", env: {string: string} = none) {
+	if (env is none)
+		env = posix.environ;
+	local opt_HOME   = false; /* `h': Expand a `~' prefix with `_gethome()' */
+	local opt_VARS   = false; /* `v': Expand `$nam' and `${nam}' with `env[nam]' */
+	local opt_WVARS  = false; /* `V': Expand `%nam%' with `env[nam]' */
+	local opt_PATH   = false; /* `p': Expand `.' and `..' folders and delete multiple consecutive
+	                           *      slashes, as well as whitespace surrounding them. */
+	local opt_ABS    = false; /* `a': Force the path to become absolute (same as `posix.abspath(path)'). */
+	local opt_REL    = false; /* `r': Force the path to become relative (same as `posix.relpath(path)'). - Overrules `opt_ABS' */
+	local opt_CASE   = false; /* `c': Force all parts of the path to share the same casing when the host file-system is case-insensitive. */
+	local opt_NOFAIL = false; /* `f': Skip expansion when a variable isn't known, or the home path cannot be determined. */
+	for (local ch: options) {
+		switch (ch) {
+		case 'h': opt_HOME   = true; break;
+		case 'v': opt_VARS   = true; break;
+		case 'V': opt_WVARS  = true; break;
+		case 'p': opt_PATH   = true; break;
+		case 'a': opt_ABS    = true; break;
+		case 'r': opt_REL    = true; break;
+		case 'c': opt_CASE   = true; break;
+		case 'f': opt_NOFAIL = true; break;
+		default: throw ValueError(f"Invalid expand options {repr options}");
+		}
+	}
+	if (opt_PATH) {
+		/* We're supposed to normalize the path. */
+		path = posix.normalpath(path);
+	}
+	if (opt_ABS)
+		path = posix.abspath(path);
+	local fp = File.Writer();
+	local i = 0, flushStart = 0, len = #path;
+	while (i < len) {
+		local ch = path[i];
+		switch (ch) {
+
+		case '~': {
+			if (!opt_HOME)
+				break;
+			fp << path[flushStart:i];
+			++i;
+			local userName = none;
+			if (i < len && path.issymstrt(i)) {
+				local userNameStart = i;
+				do {
+					++i;
+				} while (i < len && path.issymcont(i));
+				userName = path[userNameStart:i];
+			}
+			fp << _gethome(userName);
+			flushStart = i;
+			continue;
+		}
+
+		case '$': {
+			if (!opt_VARS)
+				break;
+			local envStart = i;
+			++i;
+			local varName: string;
+			if (i < len && path[i] == "{") {
+				++i;
+				local varNameStart = i;
+				while (i < len && path[i] != "}")
+					++i;
+				varName = path[varNameStart:i];
+				if (i < len)
+					++i;
+			} else {
+				local varNameStart = i;
+				while (i < len && path.issymcont(i))
+					++i;
+				varName = path[varNameStart:i];
+			}
+			if (opt_NOFAIL) {
+				varName = env.get(varName);
+				if (varName is none)
+					continue;
+			} else {
+				varName = env[varName];
+			}
+			fp << path[flushStart:envStart] << varName;
+			flushStart = i;
+			continue;
+		}
+
+		case '%': {
+			if (!opt_WVARS)
+				break;
+			local envStart = i;
+			++i;
+			local varNameStart = i;
+			while (i < len && path[i] != "%")
+				++i;
+			local varName = path[varNameStart:i];
+			if (i < len)
+				++i;
+			if (opt_NOFAIL) {
+				varName = env.get(varName);
+				if (varName is none)
+					continue;
+			} else {
+				varName = env[varName];
+			}
+			fp << path[flushStart:envStart] << varName;
+			flushStart = i;
+			continue;
+		}
+
+		default:
+			break;
+		}
+		++i;
+	}
+	if (flushStart < len)
+		fp << path[flushStart:len];
+	local result = fp.string;
+	if (opt_REL)
+		result = posix.relpath(result);
+	if (opt_CASE && posix.FS_ICASE)
+		result = result.upper();
+	return result;
+}
 
 global final SEP = posix.FS_SEP;
 global final ALTSEP = posix.FS_ALTSEP;
