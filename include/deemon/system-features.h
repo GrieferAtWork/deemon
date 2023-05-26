@@ -999,7 +999,10 @@ func("dlsym", "defined(CONFIG_HAVE_DLFCN_H)", test: 'extern void *dl; void *s = 
 func("dlmodulename", "defined(CONFIG_HAVE_DLFCN_H) && defined(__USE_KOS)", test: 'extern void *dl; char const *n = dlmodulename(dl); return n != NULL;');
 func("dlgethandle", "defined(CONFIG_HAVE_DLFCN_H) && defined(__USE_KOS)", test: 'extern int x; void *dl = dlgethandle(&x, DLGETHANDLE_FNORMAL); return dl != NULL;');
 func("dl_iterate_phdr", "defined(CONFIG_HAVE_LINK_H) && defined(__ELF__)", test: 'extern int my_dl_callback(struct dl_phdr_info *, size_t, void *); extern struct dl_phdr_info info; extern struct link_map lm; return dl_iterate_phdr(&my_dl_callback, NULL) && info.dlpi_phnum && info.dlpi_addr && info.dlpi_phdr[0].p_vaddr && info.dlpi_phdr[0].p_memsz && lm.l_addr;');
-feature("dlinfo__RTLD_DI_LINKMAP", "defined(CONFIG_HAVE_DLFCN_H) && defined(RTLD_DI_LINKMAP) && (defined(__USE_GNU) || defined(__USE_NETBSD) || defined(__USE_SOLARIS))", test: 'extern void *handle; void *lm; return dlinfo(handle, RTLD_DI_LINKMAP, &lm)');
+func("dladdr", "defined(CONFIG_HAVE_DLFCN_H) && (defined(__USE_GNU) || defined(__USE_NETBSD) || defined(__USE_SOLARIS))", test: 'extern int my_symbol; Dl_info dli; return dladdr(&my_symbol, &dli) && dli.dli_fname;');
+feature("dlinfo__RTLD_DI_LINKMAP", "defined(CONFIG_HAVE_DLFCN_H) && defined(RTLD_DI_LINKMAP) && (defined(__USE_GNU) || defined(__USE_NETBSD) || defined(__USE_SOLARIS))", test: 'extern void *handle; void *lm; return dlinfo(handle, RTLD_DI_LINKMAP, &lm);');
+feature("dladdr1__RTLD_DL_LINKMAP", "defined(CONFIG_HAVE_DLFCN_H) && defined(RTLD_DL_LINKMAP) && defined(__USE_GNU)", test: 'extern void *handle; Dl_info dli; void *lm; return dladdr1(handle, &dli, &lm, RTLD_DI_LINKMAP);');
+feature("struct__link_map__l_name", "defined(CONFIG_HAVE_LINK_H)", test: 'extern struct link_map *lm; char const *s = lm->l_name; return !!s;');
 constant("RTLD_GLOBAL");
 constant("RTLD_LOCAL");
 constant("RTLD_LAZY");
@@ -7648,12 +7651,34 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #define CONFIG_HAVE_dl_iterate_phdr
 #endif
 
+#ifdef CONFIG_NO_dladdr
+#undef CONFIG_HAVE_dladdr
+#elif !defined(CONFIG_HAVE_dladdr) && \
+      (defined(dladdr) || defined(__dladdr_defined) || (defined(CONFIG_HAVE_DLFCN_H) && \
+       (defined(__USE_GNU) || defined(__USE_NETBSD) || defined(__USE_SOLARIS))))
+#define CONFIG_HAVE_dladdr
+#endif
+
 #ifdef CONFIG_NO_dlinfo__RTLD_DI_LINKMAP
 #undef CONFIG_HAVE_dlinfo__RTLD_DI_LINKMAP
 #elif !defined(CONFIG_HAVE_dlinfo__RTLD_DI_LINKMAP) && \
       (defined(CONFIG_HAVE_DLFCN_H) && defined(RTLD_DI_LINKMAP) && (defined(__USE_GNU) || \
        defined(__USE_NETBSD) || defined(__USE_SOLARIS)))
 #define CONFIG_HAVE_dlinfo__RTLD_DI_LINKMAP
+#endif
+
+#ifdef CONFIG_NO_dladdr1__RTLD_DL_LINKMAP
+#undef CONFIG_HAVE_dladdr1__RTLD_DL_LINKMAP
+#elif !defined(CONFIG_HAVE_dladdr1__RTLD_DL_LINKMAP) && \
+      (defined(CONFIG_HAVE_DLFCN_H) && defined(RTLD_DL_LINKMAP) && defined(__USE_GNU))
+#define CONFIG_HAVE_dladdr1__RTLD_DL_LINKMAP
+#endif
+
+#ifdef CONFIG_NO_struct__link_map__l_name
+#undef CONFIG_HAVE_struct__link_map__l_name
+#elif !defined(CONFIG_HAVE_struct__link_map__l_name) && \
+      (defined(CONFIG_HAVE_LINK_H))
+#define CONFIG_HAVE_struct__link_map__l_name
 #endif
 
 #ifdef CONFIG_NO_RTLD_GLOBAL

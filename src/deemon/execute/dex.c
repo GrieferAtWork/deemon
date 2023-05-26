@@ -576,24 +576,47 @@ PUBLIC DeeTypeObject DeeDex_Type = {
 
 DECL_END
 
+/* Using `RTLD_DI_LINKMAP' isn't necessary on KOS */
+#ifdef __KOS__
+#undef CONFIG_HAVE_dlinfo__RTLD_DI_LINKMAP
+#endif /* __KOS__ */
+
+#ifdef CONFIG_HAVE_dlinfo__RTLD_DI_LINKMAP
+#define dlinfo_RTLD_DI_LINKMAP(handle, p_result) \
+	(void)(dlinfo(handle, RTLD_DI_LINKMAP, (void **)(p_result)) || (*(p_result) = (struct link_map *)(handle), 1))
+#else /* CONFIG_HAVE_dlinfo__RTLD_DI_LINKMAP */
+#define dlinfo_RTLD_DI_LINKMAP(handle, p_result) \
+	(void)(*(p_result) = (struct link_map *)(handle))
+#endif /* !CONFIG_HAVE_dlinfo__RTLD_DI_LINKMAP */
+
+
 
 #undef DeeModule_FromStaticPointer_USE_GetModuleHandleExW
 #undef DeeModule_FromStaticPointer_USE_dlgethandle
 #undef DeeModule_FromStaticPointer_USE_dl_iterate_phdr
 #undef DeeModule_FromStaticPointer_USE_xdlmodule_info
+#undef DeeModule_FromStaticPointer_USE_dladdr1__RTLD_DL_LINKMAP
+#undef DeeModule_FromStaticPointer_USE_dladdr__dli_fname
 #undef DeeModule_FromStaticPointer_USE_STUB
-#ifdef DeeSystem_DlOpen_USE_LoadLibrary /* Windows */
-#define DeeModule_FromStaticPointer_USE_GetModuleHandleExW
+#ifdef DeeSystem_DlOpen_USE_LoadLibrary
+#define DeeModule_FromStaticPointer_USE_GetModuleHandleExW /* Windows */
 #elif defined(DeeSystem_DlOpen_USE_dlopen) && defined(CONFIG_HAVE_dlgethandle)
 #define DeeModule_FromStaticPointer_USE_dlgethandle /* KOSmk4 */
-#elif defined(DeeSystem_DlOpen_USE_dlopen) && defined(CONFIG_HAVE_dl_iterate_phdr)
-#define DeeModule_FromStaticPointer_USE_dl_iterate_phdr /* Linux */
-#elif (defined(DeeSystem_DlOpen_USE_dlopen) && \
-       defined(__KOS_VERSION__) && (__KOS_VERSION__ >= 300 && __KOS_VERSION__ < 400))
+#elif defined(DeeSystem_DlOpen_USE_dlopen) && defined(__KOS_VERSION__) && (__KOS_VERSION__ >= 300 && __KOS_VERSION__ < 400)
 #define DeeModule_FromStaticPointer_USE_xdlmodule_info /* KOSmk3 */
-#else /* XXX: Further support? */
+#else /* ... */
+/* Under linux, there are many different ways to do this, some of which may not work at runtime. */
+#if defined(DeeSystem_DlOpen_USE_dlopen) && defined(CONFIG_HAVE_dladdr1__RTLD_DL_LINKMAP)
+#define DeeModule_FromStaticPointer_USE_dladdr1__RTLD_DL_LINKMAP /* Linux */
+#endif /* DeeSystem_DlOpen_USE_dlopen && CONFIG_HAVE_dladdr1__RTLD_DL_LINKMAP */
+#if defined(DeeSystem_DlOpen_USE_dlopen) && defined(CONFIG_HAVE_dladdr)
+#define DeeModule_FromStaticPointer_USE_dladdr__dli_fname /* Linux */
+#endif /* DeeSystem_DlOpen_USE_dlopen && CONFIG_HAVE_dladdr */
+#if defined(DeeSystem_DlOpen_USE_dlopen) && defined(CONFIG_HAVE_dl_iterate_phdr)
+#define DeeModule_FromStaticPointer_USE_dl_iterate_phdr /* Linux */
+#endif /* DeeSystem_DlOpen_USE_dlopen && CONFIG_HAVE_dl_iterate_phdr */
 #define DeeModule_FromStaticPointer_USE_STUB
-#endif
+#endif /* !... */
 
 
 DECL_BEGIN
@@ -613,23 +636,13 @@ extern /*IMAGE_DOS_HEADER*/ int __ImageBase;
 
 #ifdef DeeModule_FromStaticPointer_USE_dl_iterate_phdr
 
-/* Using `RTLD_DI_LINKMAP' isn't necessary on KOS */
-#ifdef __KOS__
-#undef CONFIG_HAVE_dlinfo__RTLD_DI_LINKMAP
-#endif /* __KOS__ */
-
 PRIVATE WUNUSED DREF DeeObject *DCALL
 DeeModule_FromElfLoadAddr(ElfW(Addr) addr) {
 	DeeDexObject *iter;
 	dex_lock_read();
 	for (iter = dex_chain; iter; iter = iter->d_next) {
 		struct link_map *lm;
-#ifdef CONFIG_HAVE_dlinfo__RTLD_DI_LINKMAP
-		if (dlinfo(iter->d_handle, RTLD_DI_LINKMAP, &lm) != 0)
-#endif /* CONFIG_HAVE_dlinfo__RTLD_DI_LINKMAP */
-		{
-			lm = (struct link_map *)iter->d_handle;
-		}
+		dlinfo_RTLD_DI_LINKMAP(iter->d_handle, &lm);
 		if (lm->l_addr != addr)
 			continue;
 		Dee_Incref((DeeModuleObject *)iter);
@@ -728,15 +741,6 @@ DeeModule_FromStaticPointer(void const *ptr) {
 	return NULL;
 #endif /* DeeModule_FromStaticPointer_USE_GetModuleHandleExW */
 
-#ifdef DeeModule_FromStaticPointer_USE_dl_iterate_phdr
-	struct iter_modules_data data;
-	data.search_ptr = ptr;
-	data.search_res = NULL;
-	/* Enumerate all loaded modules. */
-	dl_iterate_phdr(&iter_modules_callback, (void *)&data);
-	return data.search_res;
-#endif /* DeeModule_FromStaticPointer_USE_dl_iterate_phdr */
-
 #ifdef DeeModule_FromStaticPointer_USE_dlgethandle
 	/* KOS Mk4 changed up the dynlib API somewhat, such that we
 	 * need a different way of translating module pointers.
@@ -823,6 +827,99 @@ DeeModule_FromStaticPointer(void const *ptr) {
 	}
 	return NULL;
 #endif /* DeeModule_FromStaticPointer_USE_xdlmodule_info */
+
+#ifdef DeeModule_FromStaticPointer_USE_dladdr1__RTLD_DL_LINKMAP
+	/* Compare link map pointers. */
+	{
+		Dl_info dli;
+		struct link_map *ptr_lm = NULL;
+		if (dladdr1(ptr, &dli, &ptr_lm, RTLD_DL_LINKMAP) == 0 && ptr_lm) {
+			struct link_map *dex_lm;
+			DeeDexObject *iter;
+			dex_lock_read();
+			for (iter = dex_chain; iter; iter = iter->d_next) {
+				dlinfo_RTLD_DI_LINKMAP(iter->d_handle, &dex_lm);
+				if (dex_lm != ptr_lm)
+					continue;
+				Dee_Incref((DeeModuleObject *)iter);
+				dex_lock_endread();
+				return (DREF DeeObject *)iter;
+			}
+			dex_lock_endread();
+
+			/* Check if it's the main module. */
+			if (dladdr1((void *)&DeeModule_FromStaticPointer, &dli, &dex_lm, RTLD_DL_LINKMAP) == 0 && dex_lm) {
+				if (ptr_lm == dex_lm) {
+					/* It is the deemon core. */
+					DREF DeeObject *result;
+					result = (DREF DeeObject *)DeeModule_GetDeemon();
+					Dee_Incref(result);
+					return result;
+				}
+				return NULL;
+			}
+		}
+	}
+#endif /* DeeModule_FromStaticPointer_USE_dladdr1__RTLD_DL_LINKMAP */
+
+#ifdef DeeModule_FromStaticPointer_USE_dladdr__dli_fname
+#define Dl_info__dli_fname__equal(a, b) \
+	((sizeof(((Dl_info *)0)->dli_fname) == sizeof(void *) && (a) == (b)) || strcmp(a, b) == 0)
+	/* Compare object filenames. */
+	{
+		Dl_info dli;
+		if (dladdr(ptr, &dli) == 0 && dli.dli_fname) {
+			Dl_info dex_dli;
+			DeeDexObject *iter;
+			dex_lock_read();
+			for (iter = dex_chain; iter; iter = iter->d_next) {
+#ifdef CONFIG_HAVE_struct__link_map__l_name
+				/* If possible, try not to make yet another call to `dladdr()' */
+				struct link_map *dex_lm;
+				dlinfo_RTLD_DI_LINKMAP(iter->d_handle, &dex_lm);
+				if (Dl_info__dli_fname__equal(dli.dli_fname, dex_lm->l_name)) {
+					Dee_Incref((DeeModuleObject *)iter);
+					dex_lock_endread();
+					return (DREF DeeObject *)iter;
+				}
+#else /* CONFIG_HAVE_struct__link_map__l_name */
+				if (dladdr(iter->d_dex, &dex_dli) == 0 && dex_dli.dli_fname &&
+				    Dl_info__dli_fname__equal(dli.dli_fname, dex_dli.dli_fname)) {
+					Dee_Incref((DeeModuleObject *)iter);
+					dex_lock_endread();
+					return (DREF DeeObject *)iter;
+				}
+#endif /* !CONFIG_HAVE_struct__link_map__l_name */
+			}
+			dex_lock_endread();
+
+			/* Check if it's the main module. */
+			if (dladdr((void *)&DeeModule_FromStaticPointer, &dex_dli) == 0 && dex_dli.dli_fname) {
+				if (Dl_info__dli_fname__equal(dli.dli_fname, dex_dli.dli_fname)) {
+					/* It is the deemon core. */
+					DREF DeeObject *result;
+					result = (DREF DeeObject *)DeeModule_GetDeemon();
+					Dee_Incref(result);
+					return result;
+				}
+				return NULL;
+			}
+		}
+	}
+#undef Dl_info__dli_fname__equal
+#endif /* DeeModule_FromStaticPointer_USE_dladdr__dli_fname */
+
+#ifdef DeeModule_FromStaticPointer_USE_dl_iterate_phdr
+	{
+		struct iter_modules_data data;
+		data.search_ptr = ptr;
+		data.search_res = NULL;
+		/* Enumerate all loaded modules. */
+		dl_iterate_phdr(&iter_modules_callback, (void *)&data);
+		if (data.search_res != NULL)
+			return data.search_res;
+	}
+#endif /* DeeModule_FromStaticPointer_USE_dl_iterate_phdr */
 
 #ifdef DeeModule_FromStaticPointer_USE_STUB
 	(void)ptr;
