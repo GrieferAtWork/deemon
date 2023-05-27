@@ -316,6 +316,9 @@
 #define STATIC_ASSERT_MSG(...)
 #define __STATIC_ASSERT_MSG(...)
 
+#define __CDECL_OR_DEFAULT
+#define __HYBRID_LIBATOMIC_DECL
+#define __HYBRID_LIBATOMIC_CC
 #define __HYBRID_Q_STRUCT struct
 #define __HYBRID_Q_CLASS class
 #define LIST_HEAD(n,t) struct n{struct t *lh_first;}
