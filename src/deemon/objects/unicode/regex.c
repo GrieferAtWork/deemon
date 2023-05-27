@@ -312,7 +312,7 @@ typedef Dee_ssize_t re_sregoff_t;
 #undef assert
 #define assert ASSERT
 #undef assert_failed
-#define assert_failed(message) _DeeAssert_Fail(message, __FILE__, __LINE__)
+#define assert_failed(message) _DeeAssert_XFail(message, __FILE__, __LINE__)
 #undef assertf
 #define assertf ASSERTF
 #undef static_assert
@@ -327,25 +327,25 @@ typedef Dee_ssize_t re_sregoff_t;
 #undef format_vprintf
 #define format_vprintf DeeFormat_VPrintf
 #undef PRIx8
-#define PRIx8 "I8x"
+#define PRIx8 PRFx8
 #undef PRIx16
-#define PRIx16 "I16x"
+#define PRIx16 PRFx16
 #undef PRIx32
-#define PRIx32 "I32x"
+#define PRIx32 PRFx32
 #undef PRIx64
-#define PRIx64 "I64x"
+#define PRIx64 PRFx64
 #undef PRIxSIZ
-#define PRIxSIZ "Ix"
+#define PRIxSIZ PRFxSIZ
 #undef PRIu8
-#define PRIu8 "I8u"
+#define PRIu8 PRFu8
 #undef PRIu16
-#define PRIu16 "I16u"
+#define PRIu16 PRFu16
 #undef PRIu32
-#define PRIu32 "I32u"
+#define PRIu32 PRFu32
 #undef PRIu64
-#define PRIu64 "I64u"
+#define PRIu64 PRFu64
 #undef PRIuSIZ
-#define PRIuSIZ "Iu"
+#define PRIuSIZ PRFuSIZ
 
 /* Emulation of `<sys/bitstring.h>' */
 #undef bitstr_t

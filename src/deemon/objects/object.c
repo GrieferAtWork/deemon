@@ -2719,6 +2719,7 @@ type_new_raw(DeeTypeObject *__restrict self) {
 		if (!first_base)
 			break;
 	}
+
 	/* Instantiate non-base types. */
 	if (!first_base || first_base == &DeeObject_Type)
 		goto done;
