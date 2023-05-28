@@ -1900,7 +1900,7 @@ type_expression_parser_parsename(struct type_expression_parser *__restrict self,
 	result->ten_end = doc;
 	self->tep_doc   = doc + 1;
 
-	/* Check if the string must be decoded (i.e. contains any '\' characters) */
+	/* Check if the string must be unescaped (i.e. contains any '\' characters) */
 	if (memchr(result->ten_start, '\\',
 	           (size_t)(result->ten_end - result->ten_start)) != NULL)
 		return type_expression_name_unescape(result);
@@ -1911,7 +1911,7 @@ err_bad_doc_string:
 	                       self->tep_doc);
 }
 
-/* Decode the referenced type, or return `ITER_DONE' if a type expression is used.
+/* Decode the referenced type, or return `ITER_DONE' if an extended type expression is used.
  * This function handles:
  * - ?.
  * - ?N
@@ -2000,7 +2000,8 @@ type_expression_parser_parsetype(struct type_expression_parser *__restrict self,
 			++self->tep_doc;
 			if (name.ten_str == NULL) {
 				name.ten_str = (DREF DeeStringObject *)DeeString_NewUtf8(name.ten_start,
-				                                                         (size_t)(name.ten_end - name.ten_start),
+				                                                         (size_t)(name.ten_end -
+				                                                                  name.ten_start),
 				                                                         STRING_ERROR_FSTRICT);
 				if unlikely(!name.ten_str)
 					goto err_name;
@@ -2009,7 +2010,8 @@ type_expression_parser_parsetype(struct type_expression_parser *__restrict self,
 				goto err_name;
 			if (export_name.ten_str == NULL) {
 				export_name.ten_str = (DREF DeeStringObject *)DeeString_NewUtf8(export_name.ten_start,
-				                                                                (size_t)(export_name.ten_end - export_name.ten_start),
+				                                                                (size_t)(export_name.ten_end -
+				                                                                         export_name.ten_start),
 				                                                                STRING_ERROR_FSTRICT);
 				if unlikely(!export_name.ten_str)
 					goto err_name;
