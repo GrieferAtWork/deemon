@@ -1189,15 +1189,18 @@ LOCAL ATTR_RETNONNULL ATTR_OUTS(1, 3) ATTR_INS(2, 3) DREF DeeObject **
  * @param attr_name:  [1..1] The name of the attribute.
  * @param attr_doc:   [0..1] An optional documentation string containing additional information.
  * @param perm:              Set of `ATTR_*' describing permissions granted by the attribute.
- * @param attr_type:  [0..1] The type of object that would be returned by `DeeObject_GetAttr', or `NULL' if unknown.
+ * @param attr_type:  [0..1] The type of object that would be returned by `DeeObject_GetAttr',
+ *                           or `NULL' if unknown. Note that this type is NOT derived by parsing
+ *                           type annotation from `attr_doc', but instead from from other meta-
+ *                           data, such as `STRUCT_*' typing for type_member attributes.
  * @param arg:               User-defined callback argument.
  * @return: < 0:      Propagate an error, letting `DeeObject_EnumAttr()' fail with the same error.
  * @return: >= 0:     Add this value to the sum of all other positive values, which `DeeObject_EnumAttr()' will then return.
  * @return: -1:       An error occurred and was thrown (This may also be returned by `DeeObject_EnumAttr()' when enumeration fails for some other reason)
  * WARNING: The callback must _NEVER_ be invoked while _ANY_ kind of lock is held! */
 typedef WUNUSED_T NONNULL_T((1, 2)) Dee_ssize_t
-(DCALL *Dee_enum_t)(DeeObject *__restrict declarator,
-                    char const *__restrict attr_name, char const *attr_doc,
+(DCALL *Dee_enum_t)(DeeObject *declarator,
+                    char const *attr_name, char const *attr_doc,
                     uint16_t perm, DeeTypeObject *attr_type, void *arg);
 #define Dee_ATTR_PERMGET   0x0001 /* [NAME("g")] Attribute supports get/has queries (g -- get). */
 #define Dee_ATTR_PERMDEL   0x0002 /* [NAME("d")] Attribute supports del queries (d -- del). */
@@ -3101,10 +3104,8 @@ DFUNDEF WUNUSED NONNULL((1, 2, 4)) Dee_ssize_t
 DFUNDEF WUNUSED WUNUSED NONNULL((1)) DREF DeeObject *(DCALL DeeObject_IterSelf)(DeeObject *__restrict self);
 DFUNDEF WUNUSED WUNUSED NONNULL((1)) DREF DeeObject *(DCALL DeeObject_IterNext)(DeeObject *__restrict self);
 
-typedef WUNUSED_T NONNULL_T((2)) Dee_ssize_t (DCALL *Dee_foreach_t)(void *arg, DeeObject *__restrict elem);
-#ifdef DEE_SOURCE
-typedef Dee_foreach_t dforeach_t;
-#endif /* DEE_SOURCE */
+typedef WUNUSED_T NONNULL_T((2)) Dee_ssize_t (DCALL *Dee_foreach_t)(void *arg, DeeObject *elem);
+typedef WUNUSED_T NONNULL_T((2, 3)) Dee_ssize_t (DCALL *Dee_foreach_pair_t)(void *arg, DeeObject *key, DeeObject *value);
 
 /* Invoke `proc' for each element of a general-purpose sequence.
  * When `*proc' returns < 0, that value is propagated.
@@ -3113,6 +3114,10 @@ typedef Dee_foreach_t dforeach_t;
  * @return: -1: An error occurred during iteration (or potentially inside of `*proc') */
 DFUNDEF WUNUSED WUNUSED NONNULL((1, 2)) Dee_ssize_t
 (DCALL DeeObject_Foreach)(DeeObject *__restrict self, Dee_foreach_t proc, void *arg);
+
+/* Same as `DeeObject_Foreach()', but meant for enumeration of mapping key/value pairs. */
+DFUNDEF WUNUSED WUNUSED NONNULL((1, 2)) Dee_ssize_t
+(DCALL DeeObject_ForeachPair)(DeeObject *__restrict self, Dee_foreach_pair_t proc, void *arg);
 
 /* Unpack the given sequence `self' into `objc' items then stored within the `objv' vector. */
 DFUNDEF WUNUSED NONNULL((1, 3)) int

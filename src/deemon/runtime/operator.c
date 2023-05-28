@@ -5439,7 +5439,7 @@ err:
 
 PUBLIC WUNUSED NONNULL((1, 2)) dssize_t DCALL
 DeeObject_Foreach(DeeObject *__restrict self,
-                  dforeach_t proc, void *arg) {
+                  Dee_foreach_t proc, void *arg) {
 	dssize_t temp, result = 0;
 	DREF DeeObject *elem;
 	size_t fast_size;
@@ -5467,6 +5467,73 @@ DeeObject_Foreach(DeeObject *__restrict self,
 	while (ITER_ISOK(elem = DeeObject_IterNext(self))) {
 		temp = (*proc)(arg, elem);
 		Dee_Decref(elem);
+		if unlikely(temp < 0) {
+			result = temp;
+			break;
+		}
+		result += temp; /* Propagate return values by summarizing them. */
+		if (DeeThread_CheckInterrupt())
+			goto err_self;
+	}
+	if unlikely(!elem)
+		goto err_self;
+	Dee_Decref(self);
+	return result;
+err_self:
+	Dee_Decref(self);
+err:
+	return -1;
+}
+
+PUBLIC WUNUSED NONNULL((1, 2)) dssize_t DCALL
+DeeObject_ForeachPair(DeeObject *__restrict self,
+                      Dee_foreach_pair_t proc, void *arg) {
+	DREF DeeObject *key_and_value[2];
+	dssize_t temp, result = 0;
+	DREF DeeObject *elem;
+	size_t fast_size;
+	fast_size = DeeFastSeq_GetSize(self);
+	if (fast_size != DEE_FASTSEQ_NOTFAST) {
+		size_t i;
+		/* Optimization for fast-sequence object. */
+		for (i = 0; i < fast_size; ++i) {
+			int error;
+			elem = DeeFastSeq_GetItem(self, i);
+			if unlikely(!elem)
+				goto err;
+			error = DeeObject_Unpack(elem, 2, key_and_value);
+			Dee_Decref(elem);
+			if unlikely(error)
+				goto err;
+			temp = (*proc)(arg, key_and_value[0], key_and_value[1]);
+			Dee_Decref(key_and_value[1]);
+			Dee_Decref(key_and_value[0]);
+			if unlikely(temp < 0) {
+				result = temp;
+				break;
+			}
+			result += temp;
+		}
+		return result;
+	}
+
+	/* TODO: Support for some well-known mapping types:
+	 * - DeeDict_Type
+	 * - DeeRoDict_Type
+	 * - DeeKwdsMapping_Type
+	 */
+
+	/* Fallback: Use an iterator. */
+	if ((self = DeeObject_IterSelf(self)) == NULL)
+		goto err;
+	while (ITER_ISOK(elem = DeeObject_IterNext(self))) {
+		int error = DeeObject_Unpack(elem, 2, key_and_value);
+		Dee_Decref(elem);
+		if unlikely(error)
+			goto err_self;
+		temp = (*proc)(arg, key_and_value[0], key_and_value[1]);
+		Dee_Decref(key_and_value[1]);
+		Dee_Decref(key_and_value[0]);
 		if unlikely(temp < 0) {
 			result = temp;
 			break;

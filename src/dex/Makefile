@@ -113,6 +113,20 @@ $(BIN_PATH)/lib/ipc$(DLL): $(DEX_OBJECTS_ipc) $(BIN_PATH)/deemon$(EXE)
 endif
 
 
+### json
+ifndef CONFIG_WITHOUT_DEX_JSON
+DEX += json
+DEX_SOURCES_json += $(wildcard $(SRC_ROOT)/src/dex/json/*.c)
+DEX_OBJECTS_json = $(call dex_objects,json,$(DEX_SOURCES_json))
+-include $(foreach F,$(DEX_OBJECTS_json),$(F:.o=.MF))
+$(BLD_PATH)/dex/json/%.o: $(SRC_ROOT)/%.c
+	@mkdir -p $(dir $@)
+	$(DEX_CC) -MMD -MF $(@:.o=.MF) -c -o $@ $(CFLAGS) $(DEX_CFLAGS) $<
+$(BIN_PATH)/lib/json$(DLL): $(DEX_OBJECTS_json) $(BIN_PATH)/deemon$(EXE)
+	$(DEX_CC) -o $@ -L$(BIN_PATH) $(LDFLAGS) $(DEX_LDFLAGS) $(DEX_OBJECTS_json) $(LIBS) $(DEX_LIBS)
+endif
+
+
 ### math
 ifndef CONFIG_WITHOUT_DEX_MATH
 DEX += math

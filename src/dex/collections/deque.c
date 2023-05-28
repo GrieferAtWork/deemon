@@ -808,7 +808,7 @@ deq_init(Deque *__restrict self,
 	self->d_version  = 0;
 	weakref_support_init(self);
 #if __SIZEOF_INT__ == __SIZEOF_SIZE_T__
-	if (DeeObject_Foreach(init, (dforeach_t)&Deque_PushBack, self) < 0)
+	if (DeeObject_Foreach(init, (Dee_foreach_t)&Deque_PushBack, self) < 0)
 #else /* __SIZEOF_INT__ == __SIZEOF_SIZE_T__ */
 	if (DeeObject_Foreach(init, &deque_push_back, self) < 0)
 #endif /* __SIZEOF_INT__ != __SIZEOF_SIZE_T__ */
@@ -850,7 +850,7 @@ deq_assign(Deque *__restrict self,
 		bTemp.d_bucket_sz = DEQUE_BUCKET_DEFAULT_SIZE;
 		Dee_atomic_rwlock_init(&bTemp.d_lock);
 #if __SIZEOF_INT__ == __SIZEOF_SIZE_T__
-		if (DeeObject_Foreach(seq, (dforeach_t)&Deque_PushBack, &bTemp) < 0)
+		if (DeeObject_Foreach(seq, (Dee_foreach_t)&Deque_PushBack, &bTemp) < 0)
 #else /* __SIZEOF_INT__ == __SIZEOF_SIZE_T__ */
 		if (DeeObject_Foreach(seq, &deque_push_back, &bTemp) < 0)
 #endif /* __SIZEOF_INT__ != __SIZEOF_SIZE_T__ */

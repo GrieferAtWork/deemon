@@ -1008,36 +1008,36 @@ constant("RTLD_LOCAL");
 constant("RTLD_LAZY");
 constant("RTLD_NOW");
 
-functest('_memicmp("a", "A", 1)', msvc);
-functest('memicmp("a", "A", 1)', msvc);
-functest('memcasecmp("a", "A", 1)', "defined(__USE_KOS)");
+functest('_memicmp("a", "A", 1)', "defined(CONFIG_HAVE_STRING_H) && " + addparen(msvc));
+functest('memicmp("a", "A", 1)', "defined(CONFIG_HAVE_STRING_H) && " + addparen(msvc));
+functest('memcasecmp("a", "A", 1)', "defined(CONFIG_HAVE_STRING_H) && defined(__USE_KOS)");
 
-functest('_stricmp("a", "A")', msvc);
-functest('_strcmpi("a", "A")', msvc);
-functest('stricmp("a", "A")', msvc);
-functest('strcmpi("a", "A")', msvc);
-functest('strcasecmp("a", "A")', "defined(__USE_KOS)");
+functest('_stricmp("a", "A")', "defined(CONFIG_HAVE_STRING_H) && " + addparen(msvc));
+functest('_strcmpi("a", "A")', "defined(CONFIG_HAVE_STRING_H) && " + addparen(msvc));
+functest('stricmp("a", "A")', "defined(CONFIG_HAVE_STRING_H) && " + addparen(msvc));
+functest('strcmpi("a", "A")', "defined(CONFIG_HAVE_STRING_H) && " + addparen(msvc));
+functest('strcasecmp("a", "A")', "defined(CONFIG_HAVE_STRING_H) && defined(__USE_KOS)");
 
-func("memchr", stdc, test: "extern char *buf; void *p = memchr(buf, '!', 123); return p != NULL;");
-func("memrchr", "defined(__USE_GNU)", test: "extern char *buf; void *p = memrchr(buf, '!', 123); return p != NULL;");
-func("rawmemchr", "defined(__USE_GNU)", test: "extern char *buf; void *p = rawmemchr(buf, '!'); return p == buf;");
-functest('atoi("42")', stdc);
-functest('strlen("foo")', stdc);
-functest('strchr("foo", 102)', stdc);
+func("memchr", "defined(CONFIG_HAVE_STRING_H) && " + addparen(stdc), test: "extern char *buf; void *p = memchr(buf, '!', 123); return p != NULL;");
+func("memrchr", "defined(CONFIG_HAVE_STRING_H) && defined(__USE_GNU)", test: "extern char *buf; void *p = memrchr(buf, '!', 123); return p != NULL;");
+func("rawmemchr", "defined(CONFIG_HAVE_STRING_H) && defined(__USE_GNU)", test: "extern char *buf; void *p = rawmemchr(buf, '!'); return p == buf;");
+functest('atoi("42")', "defined(CONFIG_HAVE_STDLIB_H) && " + addparen(stdc));
+functest('strlen("foo")', "defined(CONFIG_HAVE_STRING_H) && " + addparen(stdc));
+functest('strchr("foo", 102)', "defined(CONFIG_HAVE_STRING_H) && " + addparen(stdc));
 func('wcschr', stdc, test: "wchar_t c[] = { 'A', 0 }; wcschr(c, 'A');");
-functest('strrchr("foo", 102)', stdc);
-functest('strnchr("foo", 102, 3)', "defined(__USE_KOS)");
-functest('strnrchr("foo", 102, 3)', "defined(__USE_KOS)");
-functest('strnlen("foo", 3)', "defined(__USE_XOPEN2K8) || defined(__USE_DOS) || (defined(_MSC_VER) && !defined(__KOS_SYSTEM_HEADERS__))");
-functest('strchrnul("foo", 102)', "defined(__USE_GNU) || defined(__USE_NETBSD)");
-functest('strrchrnul("foo", 102)', "defined(__USE_KOS)");
-functest('strnchrnul("foo", 102, 3)', "defined(__USE_KOS)");
-functest('strnrchrnul("foo", 102, 3)', "defined(__USE_KOS)");
-functest('strcasestr("foo", "o")', "defined(__USE_GNU) || defined(__USE_BSD)");
-functest('basename("foo")', "defined(__USE_GNU)");
-functest('strverscmp("foo", "bar")', "defined(__USE_GNU)");
-functest('strfry((char *)"foo")', "defined(__USE_GNU)");
-functest('memfrob((char *)"foo", 3)', "defined(__USE_GNU)");
+functest('strrchr("foo", 102)', "defined(CONFIG_HAVE_STRING_H) && " + addparen(stdc));
+functest('strnchr("foo", 102, 3)', "defined(CONFIG_HAVE_STRING_H) && defined(__USE_KOS)");
+functest('strnrchr("foo", 102, 3)', "defined(CONFIG_HAVE_STRING_H) && defined(__USE_KOS)");
+functest('strnlen("foo", 3)', "defined(CONFIG_HAVE_STRING_H) && (defined(__USE_XOPEN2K8) || defined(__USE_DOS) || (defined(_MSC_VER) && !defined(__KOS_SYSTEM_HEADERS__)))");
+functest('strchrnul("foo", 102)', "defined(CONFIG_HAVE_STRING_H) && (defined(__USE_GNU) || defined(__USE_NETBSD))");
+functest('strrchrnul("foo", 102)', "defined(CONFIG_HAVE_STRING_H) && defined(__USE_KOS)");
+functest('strnchrnul("foo", 102, 3)', "defined(CONFIG_HAVE_STRING_H) && defined(__USE_KOS)");
+functest('strnrchrnul("foo", 102, 3)', "defined(CONFIG_HAVE_STRING_H) && defined(__USE_KOS)");
+functest('strcasestr("foo", "o")', "defined(CONFIG_HAVE_STRING_H) && (defined(__USE_GNU) || defined(__USE_BSD))");
+functest('basename("foo")', "defined(CONFIG_HAVE_STRING_H) && defined(__USE_GNU)");
+functest('strverscmp("foo", "bar")', "defined(CONFIG_HAVE_STRING_H) && defined(__USE_GNU)");
+functest('strfry((char *)"foo")', "defined(CONFIG_HAVE_STRING_H) && defined(__USE_GNU)");
+functest('memfrob((char *)"foo", 3)', "defined(CONFIG_HAVE_STRING_H) && defined(__USE_GNU)");
 
 func("bcopy", "defined(CONFIG_HAVE_STRINGS_H)", test: "extern void *a; extern void const *b; bcopy(b, a, 16); return 0;");
 
@@ -1080,94 +1080,95 @@ func("memmove", stdc, test: "extern void *a; extern void const *b; return memmov
 func("memccpy", "defined(CONFIG_HAVE_STRING_H) && (defined(__USE_MISC) || defined(__USE_XOPEN) || " + addparen(msvc) + ")", test: "extern void *a; extern void const *b; return memccpy(a, b, 7, 16) == a;");
 func("_memccpy", "defined(CONFIG_HAVE_STRING_H) && (defined(__USE_MISC) || defined(__USE_XOPEN) || " + addparen(msvc) + ")", test: "extern void *a; extern void const *b; return _memccpy(a, b, 7, 16) == a;");
 functest('strcmp("foo", "bar")', stdc);
-functest('strncmp("foo", "bar", 3)', stdc);
-functest('strcpy((char *)0, "bar")', stdc);
+functest('strcmpz("foo", "bar", 3)', "defined(CONFIG_HAVE_STRING_H) && defined(__USE_KOS)");
+functest('strncmp("foo", "bar", 3)', "defined(CONFIG_HAVE_STRING_H) && " + addparen(stdc));
+functest('strcpy((char *)0, "bar")', "defined(CONFIG_HAVE_STRING_H) && " + addparen(stdc));
 functest('stpcpy((char *)0, "bar")', "defined(__USE_XOPEN2K8)");
 functest('stpncpy((char *)0, "bar", 3)', "defined(__USE_XOPEN2K8)");
-functest('strcat((char *)0, "bar")', stdc);
-functest('strncpy((char *)0, "bar", 3)', stdc);
-functest('strncat((char *)0, "bar", 3)', stdc);
-functest('strstr("foobar", "foo")', stdc);
+functest('strcat((char *)0, "bar")', "defined(CONFIG_HAVE_STRING_H) && " + addparen(stdc));
+functest('strncpy((char *)0, "bar", 3)', "defined(CONFIG_HAVE_STRING_H) && " + addparen(stdc));
+functest('strncat((char *)0, "bar", 3)', "defined(CONFIG_HAVE_STRING_H) && " + addparen(stdc));
+functest('strstr("foobar", "foo")', "defined(CONFIG_HAVE_STRING_H) && " + addparen(stdc));
 functest('strcasestr("foobar", "foo")', "defined(__USE_GNU) || defined(__USE_BSD)");
 functest('strnstr("foobar", "foo", 6)', "defined(__USE_BSD) || defined(__USE_KOS)");
 functest('strncasestr("foobar", "foo", 6)', "0");
-func("memcmp", stdc, test: "extern void const *a, *b; return memcmp(a, b, 16) == 0;");
-func("mempmove", "defined(__USE_KOS)", test: "extern void *a; extern void const *b; return mempmove(a, b, 16) == (char *)a + 16;");
-func("mempcpy", "defined(__USE_GNU)", test: "extern void *a; extern void const *b; return mempcpy(a, b, 16) == (char *)a + 16;");
-func("mempset", "defined(__USE_KOS)", test: "extern void *a; return mempset(a, 0, 16) == (char *)a + 16;");
-func("mempcpyw", "defined(__USE_STRING_BWLQ)", test: "extern void *a; extern void const *b; return (void *)mempcpyw(a, b, 16) == (char *)a + 32;");
-func("mempcpyl", "defined(__USE_STRING_BWLQ)", test: "extern void *a; extern void const *b; return (void *)mempcpyl(a, b, 16) == (char *)a + 64;");
-func("mempcpyq", "defined(__USE_STRING_BWLQ)", test: "extern void *a; extern void const *b; return (void *)mempcpyq(a, b, 16) == (char *)a + 128;");
-func("mempcpyc", "defined(__USE_KOS)", test: "extern void *a; extern void const *b; return mempcpyc(a, b, 16, 2) == (char *)a + 32;");
+func("memcmp", "defined(CONFIG_HAVE_STRING_H) && " + addparen(stdc), test: "extern void const *a, *b; return memcmp(a, b, 16) == 0;");
+func("mempmove", "defined(CONFIG_HAVE_STRING_H) && defined(__USE_KOS)", test: "extern void *a; extern void const *b; return mempmove(a, b, 16) == (char *)a + 16;");
+func("mempcpy", "defined(CONFIG_HAVE_STRING_H) && defined(__USE_GNU)", test: "extern void *a; extern void const *b; return mempcpy(a, b, 16) == (char *)a + 16;");
+func("mempset", "defined(CONFIG_HAVE_STRING_H) && defined(__USE_KOS)", test: "extern void *a; return mempset(a, 0, 16) == (char *)a + 16;");
+func("mempcpyw", "defined(CONFIG_HAVE_STRING_H) && defined(__USE_STRING_BWLQ)", test: "extern void *a; extern void const *b; return (void *)mempcpyw(a, b, 16) == (char *)a + 32;");
+func("mempcpyl", "defined(CONFIG_HAVE_STRING_H) && defined(__USE_STRING_BWLQ)", test: "extern void *a; extern void const *b; return (void *)mempcpyl(a, b, 16) == (char *)a + 64;");
+func("mempcpyq", "defined(CONFIG_HAVE_STRING_H) && defined(__USE_STRING_BWLQ)", test: "extern void *a; extern void const *b; return (void *)mempcpyq(a, b, 16) == (char *)a + 128;");
+func("mempcpyc", "defined(CONFIG_HAVE_STRING_H) && defined(__USE_KOS)", test: "extern void *a; extern void const *b; return mempcpyc(a, b, 16, 2) == (char *)a + 32;");
 
-func("mempmovew", "defined(__USE_STRING_BWLQ)", test: "extern void *a; extern void const *b; return (void *)mempmovew(a, b, 16) == (char *)a + 32;");
-func("mempmovel", "defined(__USE_STRING_BWLQ)", test: "extern void *a; extern void const *b; return (void *)mempmovel(a, b, 16) == (char *)a + 64;");
-func("mempmoveq", "defined(__USE_STRING_BWLQ)", test: "extern void *a; extern void const *b; return (void *)mempmoveq(a, b, 16) == (char *)a + 128;");
-func("mempmovec", "defined(__USE_KOS)", test: "extern void *a; extern void const *b; return mempmovec(a, b, 16, 2) == (char *)a + 32;");
+func("mempmovew", "defined(CONFIG_HAVE_STRING_H) && defined(__USE_STRING_BWLQ)", test: "extern void *a; extern void const *b; return (void *)mempmovew(a, b, 16) == (char *)a + 32;");
+func("mempmovel", "defined(CONFIG_HAVE_STRING_H) && defined(__USE_STRING_BWLQ)", test: "extern void *a; extern void const *b; return (void *)mempmovel(a, b, 16) == (char *)a + 64;");
+func("mempmoveq", "defined(CONFIG_HAVE_STRING_H) && defined(__USE_STRING_BWLQ)", test: "extern void *a; extern void const *b; return (void *)mempmoveq(a, b, 16) == (char *)a + 128;");
+func("mempmovec", "defined(CONFIG_HAVE_STRING_H) && defined(__USE_KOS)", test: "extern void *a; extern void const *b; return mempmovec(a, b, 16, 2) == (char *)a + 32;");
 
-func("mempmoveupw", "defined(__USE_STRING_BWLQ)", test: "extern void *a; extern void const *b; return (void *)mempmoveupw(a, b, 16) == (char *)a + 32;");
-func("mempmoveupl", "defined(__USE_STRING_BWLQ)", test: "extern void *a; extern void const *b; return (void *)mempmoveupl(a, b, 16) == (char *)a + 64;");
-func("mempmoveupq", "defined(__USE_STRING_BWLQ)", test: "extern void *a; extern void const *b; return (void *)mempmoveupq(a, b, 16) == (char *)a + 128;");
-func("mempmoveupc", "defined(__USE_KOS)", test: "extern void *a; extern void const *b; return mempmoveupc(a, b, 16, 2) == (char *)a + 32;");
+func("mempmoveupw", "defined(CONFIG_HAVE_STRING_H) && defined(__USE_STRING_BWLQ)", test: "extern void *a; extern void const *b; return (void *)mempmoveupw(a, b, 16) == (char *)a + 32;");
+func("mempmoveupl", "defined(CONFIG_HAVE_STRING_H) && defined(__USE_STRING_BWLQ)", test: "extern void *a; extern void const *b; return (void *)mempmoveupl(a, b, 16) == (char *)a + 64;");
+func("mempmoveupq", "defined(CONFIG_HAVE_STRING_H) && defined(__USE_STRING_BWLQ)", test: "extern void *a; extern void const *b; return (void *)mempmoveupq(a, b, 16) == (char *)a + 128;");
+func("mempmoveupc", "defined(CONFIG_HAVE_STRING_H) && defined(__USE_KOS)", test: "extern void *a; extern void const *b; return mempmoveupc(a, b, 16, 2) == (char *)a + 32;");
 
-func("mempmovedownw", "defined(__USE_STRING_BWLQ)", test: "extern void *a; extern void const *b; return (void *)mempmovedownw(a, b, 16) == (char *)a + 32;");
-func("mempmovedownl", "defined(__USE_STRING_BWLQ)", test: "extern void *a; extern void const *b; return (void *)mempmovedownl(a, b, 16) == (char *)a + 64;");
-func("mempmovedownq", "defined(__USE_STRING_BWLQ)", test: "extern void *a; extern void const *b; return (void *)mempmovedownq(a, b, 16) == (char *)a + 128;");
-func("mempmovedownc", "defined(__USE_KOS)", test: "extern void *a; extern void const *b; return mempmovedownc(a, b, 16, 2) == (char *)a + 32;");
+func("mempmovedownw", "defined(CONFIG_HAVE_STRING_H) && defined(__USE_STRING_BWLQ)", test: "extern void *a; extern void const *b; return (void *)mempmovedownw(a, b, 16) == (char *)a + 32;");
+func("mempmovedownl", "defined(CONFIG_HAVE_STRING_H) && defined(__USE_STRING_BWLQ)", test: "extern void *a; extern void const *b; return (void *)mempmovedownl(a, b, 16) == (char *)a + 64;");
+func("mempmovedownq", "defined(CONFIG_HAVE_STRING_H) && defined(__USE_STRING_BWLQ)", test: "extern void *a; extern void const *b; return (void *)mempmovedownq(a, b, 16) == (char *)a + 128;");
+func("mempmovedownc", "defined(CONFIG_HAVE_STRING_H) && defined(__USE_KOS)", test: "extern void *a; extern void const *b; return mempmovedownc(a, b, 16, 2) == (char *)a + 32;");
 
 
-func("memcpyc", "defined(__USE_KOS)", test: "extern void *a, *b; a = memcpyc(a, b, 16, sizeof(char)); return 0;");
-func("memcpyw", "defined(__USE_KOS)", test: "extern void *a, *b; a = memcpyw(a, b, 16); return 0;");
-func("memcpyl", "defined(__USE_KOS)", test: "extern void *a, *b; a = memcpyl(a, b, 16); return 0;");
-func("memcpyq", "defined(__USE_KOS)", test: "extern void *a, *b; a = memcpyq(a, b, 16); return 0;");
-func("memmovec", "defined(__USE_KOS)", test: "extern void *a, *b; a = memmovec(a, b, 16, sizeof(char)); return 0;");
-func("memmovew", "defined(__USE_KOS)", test: "extern void *a, *b; a = memmovew(a, b, 16); return 0;");
-func("memmovel", "defined(__USE_KOS)", test: "extern void *a, *b; a = memmovel(a, b, 16); return 0;");
-func("memmoveq", "defined(__USE_KOS)", test: "extern void *a, *b; a = memmoveq(a, b, 16); return 0;");
-func("memmoveup", "defined(__USE_KOS)", test: "extern void *a, *b; a = memmoveup(a, b, 16); return 0;");
-func("mempmoveup", "defined(__USE_KOS)", test: "extern void *a, *b; a = mempmoveup(a, b, 16); return 0;");
-func("memmoveupc", "defined(__USE_KOS)", test: "extern void *a, *b; a = memmoveupc(a, b, 16, sizeof(char)); return 0;");
-func("memmoveupw", "defined(__USE_KOS)", test: "extern void *a, *b; a = memmoveupw(a, b, 16); return 0;");
-func("memmoveupl", "defined(__USE_KOS)", test: "extern void *a, *b; a = memmoveupl(a, b, 16); return 0;");
-func("memmoveupq", "defined(__USE_KOS)", test: "extern void *a, *b; a = memmoveupq(a, b, 16); return 0;");
-func("memmovedown", "defined(__USE_KOS)", test: "extern void *a, *b; a = memmovedown(a, b, 16); return 0;");
-func("mempmovedown", "defined(__USE_KOS)", test: "extern void *a, *b; a = mempmovedown(a, b, 16); return 0;");
-func("memmovedownc", "defined(__USE_KOS)", test: "extern void *a, *b; a = memmovedownc(a, b, 16, sizeof(char)); return 0;");
-func("memmovedownw", "defined(__USE_KOS)", test: "extern void *a, *b; a = memmovedownw(a, b, 16); return 0;");
-func("memmovedownl", "defined(__USE_KOS)", test: "extern void *a, *b; a = memmovedownl(a, b, 16); return 0;");
-func("memmovedownq", "defined(__USE_KOS)", test: "extern void *a, *b; a = memmovedownq(a, b, 16); return 0;");
-func("memsetw", "defined(__USE_KOS)", test: "extern void *a; a = memsetw(a, 0xcc, 16); return 0;");
-func("memsetl", "defined(__USE_KOS)", test: "extern void *a; a = memsetl(a, 0xcc, 16); return 0;");
-func("memsetq", "defined(__USE_KOS)", test: "extern void *a; a = memsetq(a, 0xcc, 16); return 0;");
-func("mempsetw", "defined(__USE_KOS)", test: "extern void *a; a = mempsetw(a, 0xcc, 16); return 0;");
-func("mempsetl", "defined(__USE_KOS)", test: "extern void *a; a = mempsetl(a, 0xcc, 16); return 0;");
-func("mempsetq", "defined(__USE_KOS)", test: "extern void *a; a = mempsetq(a, 0xcc, 16); return 0;");
-func("memchrw", "defined(__USE_KOS)", test: "extern void const *a; return memchrw(a, 0xcc, 16) != 0;");
-func("memchrl", "defined(__USE_KOS)", test: "extern void const *a; return memchrl(a, 0xcc, 16) != 0;");
-func("memchrq", "defined(__USE_KOS)", test: "extern void const *a; return memchrq(a, 0xcc, 16) != 0;");
-func("memrchrw", "defined(__USE_KOS)", test: "extern void const *a; return memrchrw(a, 0xcc, 16) != 0;");
-func("memrchrl", "defined(__USE_KOS)", test: "extern void const *a; return memrchrl(a, 0xcc, 16) != 0;");
-func("memrchrq", "defined(__USE_KOS)", test: "extern void const *a; return memrchrq(a, 0xcc, 16) != 0;");
-func("memcmpw", "defined(__USE_KOS)", test: "extern void const *a, *b; return memcmpw(a, b, 16) == 0;");
-func("memcmpl", "defined(__USE_KOS)", test: "extern void const *a, *b; return memcmpl(a, b, 16) == 0;");
-func("memcmpq", "defined(__USE_KOS)", test: "extern void const *a, *b; return memcmpq(a, b, 16) == 0;");
+func("memcpyc", "defined(CONFIG_HAVE_STRING_H) && defined(__USE_KOS)", test: "extern void *a, *b; a = memcpyc(a, b, 16, sizeof(char)); return 0;");
+func("memcpyw", "defined(CONFIG_HAVE_STRING_H) && defined(__USE_KOS)", test: "extern void *a, *b; a = memcpyw(a, b, 16); return 0;");
+func("memcpyl", "defined(CONFIG_HAVE_STRING_H) && defined(__USE_KOS)", test: "extern void *a, *b; a = memcpyl(a, b, 16); return 0;");
+func("memcpyq", "defined(CONFIG_HAVE_STRING_H) && defined(__USE_KOS)", test: "extern void *a, *b; a = memcpyq(a, b, 16); return 0;");
+func("memmovec", "defined(CONFIG_HAVE_STRING_H) && defined(__USE_KOS)", test: "extern void *a, *b; a = memmovec(a, b, 16, sizeof(char)); return 0;");
+func("memmovew", "defined(CONFIG_HAVE_STRING_H) && defined(__USE_KOS)", test: "extern void *a, *b; a = memmovew(a, b, 16); return 0;");
+func("memmovel", "defined(CONFIG_HAVE_STRING_H) && defined(__USE_KOS)", test: "extern void *a, *b; a = memmovel(a, b, 16); return 0;");
+func("memmoveq", "defined(CONFIG_HAVE_STRING_H) && defined(__USE_KOS)", test: "extern void *a, *b; a = memmoveq(a, b, 16); return 0;");
+func("memmoveup", "defined(CONFIG_HAVE_STRING_H) && defined(__USE_KOS)", test: "extern void *a, *b; a = memmoveup(a, b, 16); return 0;");
+func("mempmoveup", "defined(CONFIG_HAVE_STRING_H) && defined(__USE_KOS)", test: "extern void *a, *b; a = mempmoveup(a, b, 16); return 0;");
+func("memmoveupc", "defined(CONFIG_HAVE_STRING_H) && defined(__USE_KOS)", test: "extern void *a, *b; a = memmoveupc(a, b, 16, sizeof(char)); return 0;");
+func("memmoveupw", "defined(CONFIG_HAVE_STRING_H) && defined(__USE_KOS)", test: "extern void *a, *b; a = memmoveupw(a, b, 16); return 0;");
+func("memmoveupl", "defined(CONFIG_HAVE_STRING_H) && defined(__USE_KOS)", test: "extern void *a, *b; a = memmoveupl(a, b, 16); return 0;");
+func("memmoveupq", "defined(CONFIG_HAVE_STRING_H) && defined(__USE_KOS)", test: "extern void *a, *b; a = memmoveupq(a, b, 16); return 0;");
+func("memmovedown", "defined(CONFIG_HAVE_STRING_H) && defined(__USE_KOS)", test: "extern void *a, *b; a = memmovedown(a, b, 16); return 0;");
+func("mempmovedown", "defined(CONFIG_HAVE_STRING_H) && defined(__USE_KOS)", test: "extern void *a, *b; a = mempmovedown(a, b, 16); return 0;");
+func("memmovedownc", "defined(CONFIG_HAVE_STRING_H) && defined(__USE_KOS)", test: "extern void *a, *b; a = memmovedownc(a, b, 16, sizeof(char)); return 0;");
+func("memmovedownw", "defined(CONFIG_HAVE_STRING_H) && defined(__USE_KOS)", test: "extern void *a, *b; a = memmovedownw(a, b, 16); return 0;");
+func("memmovedownl", "defined(CONFIG_HAVE_STRING_H) && defined(__USE_KOS)", test: "extern void *a, *b; a = memmovedownl(a, b, 16); return 0;");
+func("memmovedownq", "defined(CONFIG_HAVE_STRING_H) && defined(__USE_KOS)", test: "extern void *a, *b; a = memmovedownq(a, b, 16); return 0;");
+func("memsetw", "defined(CONFIG_HAVE_STRING_H) && defined(__USE_KOS)", test: "extern void *a; a = memsetw(a, 0xcc, 16); return 0;");
+func("memsetl", "defined(CONFIG_HAVE_STRING_H) && defined(__USE_KOS)", test: "extern void *a; a = memsetl(a, 0xcc, 16); return 0;");
+func("memsetq", "defined(CONFIG_HAVE_STRING_H) && defined(__USE_KOS)", test: "extern void *a; a = memsetq(a, 0xcc, 16); return 0;");
+func("mempsetw", "defined(CONFIG_HAVE_STRING_H) && defined(__USE_KOS)", test: "extern void *a; a = mempsetw(a, 0xcc, 16); return 0;");
+func("mempsetl", "defined(CONFIG_HAVE_STRING_H) && defined(__USE_KOS)", test: "extern void *a; a = mempsetl(a, 0xcc, 16); return 0;");
+func("mempsetq", "defined(CONFIG_HAVE_STRING_H) && defined(__USE_KOS)", test: "extern void *a; a = mempsetq(a, 0xcc, 16); return 0;");
+func("memchrw", "defined(CONFIG_HAVE_STRING_H) && defined(__USE_KOS)", test: "extern void const *a; return memchrw(a, 0xcc, 16) != 0;");
+func("memchrl", "defined(CONFIG_HAVE_STRING_H) && defined(__USE_KOS)", test: "extern void const *a; return memchrl(a, 0xcc, 16) != 0;");
+func("memchrq", "defined(CONFIG_HAVE_STRING_H) && defined(__USE_KOS)", test: "extern void const *a; return memchrq(a, 0xcc, 16) != 0;");
+func("memrchrw", "defined(CONFIG_HAVE_STRING_H) && defined(__USE_KOS)", test: "extern void const *a; return memrchrw(a, 0xcc, 16) != 0;");
+func("memrchrl", "defined(CONFIG_HAVE_STRING_H) && defined(__USE_KOS)", test: "extern void const *a; return memrchrl(a, 0xcc, 16) != 0;");
+func("memrchrq", "defined(CONFIG_HAVE_STRING_H) && defined(__USE_KOS)", test: "extern void const *a; return memrchrq(a, 0xcc, 16) != 0;");
+func("memcmpw", "defined(CONFIG_HAVE_STRING_H) && defined(__USE_KOS)", test: "extern void const *a, *b; return memcmpw(a, b, 16) == 0;");
+func("memcmpl", "defined(CONFIG_HAVE_STRING_H) && defined(__USE_KOS)", test: "extern void const *a, *b; return memcmpl(a, b, 16) == 0;");
+func("memcmpq", "defined(CONFIG_HAVE_STRING_H) && defined(__USE_KOS)", test: "extern void const *a, *b; return memcmpq(a, b, 16) == 0;");
 
-func("rawmemrchr", "defined(__USE_KOS)", test: "extern void const *buf; void *p = rawmemrchr(buf, '!'); return p == buf - 1;");
-func("memend", "defined(__USE_KOS)", test: "extern void const *buf; void *p = memend(buf, '!', 123); return p == buf;");
-func("memrend", "defined(__USE_KOS)", test: "extern void const *buf; void *p = memrend(buf, '!', 123); return p == buf;");
-func("memlen", "defined(__USE_KOS)", test: "extern void const *buf; size_t s = memlen(buf, '!', 123); return s == 0;");
-func("memrlen", "defined(__USE_KOS)", test: "extern void const *buf; size_t s = memrlen(buf, '!', 123); return s == 0;");
-func("rawmemlen", "defined(__USE_KOS)", test: "extern void const *buf; size_t s = rawmemlen(buf, '!'); return s == 0;");
-func("rawmemrlen", "defined(__USE_KOS)", test: "extern void const *buf; size_t s = rawmemrlen(buf, '!'); return s == 0;");
-func("memrev", "defined(__USE_KOS)", test: "extern void *buf; void *p = memrev(buf, 123); return p == buf;");
-func("strend", "defined(__USE_KOS)", test: "extern char const *buf; char *p = strend(buf); return p == buf + 123;");
-func("strnend", "defined(__USE_KOS)", test: "extern char const *buf; char *p = strnend(buf, 3); return p == buf + 3;");
+func("rawmemrchr", "defined(CONFIG_HAVE_STRING_H) && defined(__USE_KOS)", test: "extern void const *buf; void *p = rawmemrchr(buf, '!'); return p == buf - 1;");
+func("memend", "defined(CONFIG_HAVE_STRING_H) && defined(__USE_KOS)", test: "extern void const *buf; void *p = memend(buf, '!', 123); return p == buf;");
+func("memrend", "defined(CONFIG_HAVE_STRING_H) && defined(__USE_KOS)", test: "extern void const *buf; void *p = memrend(buf, '!', 123); return p == buf;");
+func("memlen", "defined(CONFIG_HAVE_STRING_H) && defined(__USE_KOS)", test: "extern void const *buf; size_t s = memlen(buf, '!', 123); return s == 0;");
+func("memrlen", "defined(CONFIG_HAVE_STRING_H) && defined(__USE_KOS)", test: "extern void const *buf; size_t s = memrlen(buf, '!', 123); return s == 0;");
+func("rawmemlen", "defined(CONFIG_HAVE_STRING_H) && defined(__USE_KOS)", test: "extern void const *buf; size_t s = rawmemlen(buf, '!'); return s == 0;");
+func("rawmemrlen", "defined(CONFIG_HAVE_STRING_H) && defined(__USE_KOS)", test: "extern void const *buf; size_t s = rawmemrlen(buf, '!'); return s == 0;");
+func("memrev", "defined(CONFIG_HAVE_STRING_H) && defined(__USE_KOS)", test: "extern void *buf; void *p = memrev(buf, 123); return p == buf;");
+func("strend", "defined(CONFIG_HAVE_STRING_H) && defined(__USE_KOS)", test: "extern char const *buf; char *p = strend(buf); return p == buf + 123;");
+func("strnend", "defined(CONFIG_HAVE_STRING_H) && defined(__USE_KOS)", test: "extern char const *buf; char *p = strnend(buf, 3); return p == buf + 3;");
 
-func("memxend", "defined(__USE_STRING_XCHR)", test: "extern void const *buf; void *p = memxend(buf, '!', 123); return p == buf;");
-func("memxlen", "defined(__USE_STRING_XCHR)", test: "extern void const *buf; size_t s = memxlen(buf, '!', 123); return s == 0;");
-func("memxchr", "defined(__USE_STRING_XCHR)", test: "extern void const *buf; void *p = memxchr(buf, '!', 123); return p == buf;");
-func("rawmemxchr", "defined(__USE_STRING_XCHR)", test: "extern void const *buf; void *p = rawmemxchr(buf, '!'); return p == buf;");
-func("rawmemxlen", "defined(__USE_STRING_XCHR)", test: "extern void const *buf; size_t s = rawmemxlen(buf, '!'); return s == 0;");
+func("memxend", "defined(CONFIG_HAVE_STRING_H) && defined(__USE_STRING_XCHR)", test: "extern void const *buf; void *p = memxend(buf, '!', 123); return p == buf;");
+func("memxlen", "defined(CONFIG_HAVE_STRING_H) && defined(__USE_STRING_XCHR)", test: "extern void const *buf; size_t s = memxlen(buf, '!', 123); return s == 0;");
+func("memxchr", "defined(CONFIG_HAVE_STRING_H) && defined(__USE_STRING_XCHR)", test: "extern void const *buf; void *p = memxchr(buf, '!', 123); return p == buf;");
+func("rawmemxchr", "defined(CONFIG_HAVE_STRING_H) && defined(__USE_STRING_XCHR)", test: "extern void const *buf; void *p = rawmemxchr(buf, '!'); return p == buf;");
+func("rawmemxlen", "defined(CONFIG_HAVE_STRING_H) && defined(__USE_STRING_XCHR)", test: "extern void const *buf; size_t s = rawmemxlen(buf, '!'); return s == 0;");
 func("memxrchr", test: "extern void const *buf; void *p = memxrchr(buf, '!', 123); return p != NULL;");
 func("memxrend", test: "extern void const *buf; void *p = memxrend(buf, '!', 123); return p == buf;");
 func("memxrlen", test: "extern void const *buf; size_t s = memxrlen(buf, '!', 123); return s == 0;");
@@ -7712,94 +7713,108 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #ifdef CONFIG_NO__memicmp
 #undef CONFIG_HAVE__memicmp
 #elif !defined(CONFIG_HAVE__memicmp) && \
-      (defined(_memicmp) || defined(___memicmp_defined) || defined(_MSC_VER))
+      (defined(_memicmp) || defined(___memicmp_defined) || (defined(CONFIG_HAVE_STRING_H) && \
+       defined(_MSC_VER)))
 #define CONFIG_HAVE__memicmp
 #endif
 
 #ifdef CONFIG_NO_memicmp
 #undef CONFIG_HAVE_memicmp
 #elif !defined(CONFIG_HAVE_memicmp) && \
-      (defined(memicmp) || defined(__memicmp_defined) || defined(_MSC_VER))
+      (defined(memicmp) || defined(__memicmp_defined) || (defined(CONFIG_HAVE_STRING_H) && \
+       defined(_MSC_VER)))
 #define CONFIG_HAVE_memicmp
 #endif
 
 #ifdef CONFIG_NO_memcasecmp
 #undef CONFIG_HAVE_memcasecmp
 #elif !defined(CONFIG_HAVE_memcasecmp) && \
-      (defined(memcasecmp) || defined(__memcasecmp_defined) || defined(__USE_KOS))
+      (defined(memcasecmp) || defined(__memcasecmp_defined) || (defined(CONFIG_HAVE_STRING_H) && \
+       defined(__USE_KOS)))
 #define CONFIG_HAVE_memcasecmp
 #endif
 
 #ifdef CONFIG_NO__stricmp
 #undef CONFIG_HAVE__stricmp
 #elif !defined(CONFIG_HAVE__stricmp) && \
-      (defined(_stricmp) || defined(___stricmp_defined) || defined(_MSC_VER))
+      (defined(_stricmp) || defined(___stricmp_defined) || (defined(CONFIG_HAVE_STRING_H) && \
+       defined(_MSC_VER)))
 #define CONFIG_HAVE__stricmp
 #endif
 
 #ifdef CONFIG_NO__strcmpi
 #undef CONFIG_HAVE__strcmpi
 #elif !defined(CONFIG_HAVE__strcmpi) && \
-      (defined(_strcmpi) || defined(___strcmpi_defined) || defined(_MSC_VER))
+      (defined(_strcmpi) || defined(___strcmpi_defined) || (defined(CONFIG_HAVE_STRING_H) && \
+       defined(_MSC_VER)))
 #define CONFIG_HAVE__strcmpi
 #endif
 
 #ifdef CONFIG_NO_stricmp
 #undef CONFIG_HAVE_stricmp
 #elif !defined(CONFIG_HAVE_stricmp) && \
-      (defined(stricmp) || defined(__stricmp_defined) || defined(_MSC_VER))
+      (defined(stricmp) || defined(__stricmp_defined) || (defined(CONFIG_HAVE_STRING_H) && \
+       defined(_MSC_VER)))
 #define CONFIG_HAVE_stricmp
 #endif
 
 #ifdef CONFIG_NO_strcmpi
 #undef CONFIG_HAVE_strcmpi
 #elif !defined(CONFIG_HAVE_strcmpi) && \
-      (defined(strcmpi) || defined(__strcmpi_defined) || defined(_MSC_VER))
+      (defined(strcmpi) || defined(__strcmpi_defined) || (defined(CONFIG_HAVE_STRING_H) && \
+       defined(_MSC_VER)))
 #define CONFIG_HAVE_strcmpi
 #endif
 
 #ifdef CONFIG_NO_strcasecmp
 #undef CONFIG_HAVE_strcasecmp
 #elif !defined(CONFIG_HAVE_strcasecmp) && \
-      (defined(strcasecmp) || defined(__strcasecmp_defined) || defined(__USE_KOS))
+      (defined(strcasecmp) || defined(__strcasecmp_defined) || (defined(CONFIG_HAVE_STRING_H) && \
+       defined(__USE_KOS)))
 #define CONFIG_HAVE_strcasecmp
 #endif
 
 #ifdef CONFIG_NO_memchr
 #undef CONFIG_HAVE_memchr
-#else
+#elif !defined(CONFIG_HAVE_memchr) && \
+      (defined(memchr) || defined(__memchr_defined) || defined(CONFIG_HAVE_STRING_H))
 #define CONFIG_HAVE_memchr
 #endif
 
 #ifdef CONFIG_NO_memrchr
 #undef CONFIG_HAVE_memrchr
 #elif !defined(CONFIG_HAVE_memrchr) && \
-      (defined(memrchr) || defined(__memrchr_defined) || defined(__USE_GNU))
+      (defined(memrchr) || defined(__memrchr_defined) || (defined(CONFIG_HAVE_STRING_H) && \
+       defined(__USE_GNU)))
 #define CONFIG_HAVE_memrchr
 #endif
 
 #ifdef CONFIG_NO_rawmemchr
 #undef CONFIG_HAVE_rawmemchr
 #elif !defined(CONFIG_HAVE_rawmemchr) && \
-      (defined(rawmemchr) || defined(__rawmemchr_defined) || defined(__USE_GNU))
+      (defined(rawmemchr) || defined(__rawmemchr_defined) || (defined(CONFIG_HAVE_STRING_H) && \
+       defined(__USE_GNU)))
 #define CONFIG_HAVE_rawmemchr
 #endif
 
 #ifdef CONFIG_NO_atoi
 #undef CONFIG_HAVE_atoi
-#else
+#elif !defined(CONFIG_HAVE_atoi) && \
+      (defined(atoi) || defined(__atoi_defined) || defined(CONFIG_HAVE_STDLIB_H))
 #define CONFIG_HAVE_atoi
 #endif
 
 #ifdef CONFIG_NO_strlen
 #undef CONFIG_HAVE_strlen
-#else
+#elif !defined(CONFIG_HAVE_strlen) && \
+      (defined(strlen) || defined(__strlen_defined) || defined(CONFIG_HAVE_STRING_H))
 #define CONFIG_HAVE_strlen
 #endif
 
 #ifdef CONFIG_NO_strchr
 #undef CONFIG_HAVE_strchr
-#else
+#elif !defined(CONFIG_HAVE_strchr) && \
+      (defined(strchr) || defined(__strchr_defined) || defined(CONFIG_HAVE_STRING_H))
 #define CONFIG_HAVE_strchr
 #endif
 
@@ -7811,94 +7826,105 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 
 #ifdef CONFIG_NO_strrchr
 #undef CONFIG_HAVE_strrchr
-#else
+#elif !defined(CONFIG_HAVE_strrchr) && \
+      (defined(strrchr) || defined(__strrchr_defined) || defined(CONFIG_HAVE_STRING_H))
 #define CONFIG_HAVE_strrchr
 #endif
 
 #ifdef CONFIG_NO_strnchr
 #undef CONFIG_HAVE_strnchr
 #elif !defined(CONFIG_HAVE_strnchr) && \
-      (defined(strnchr) || defined(__strnchr_defined) || defined(__USE_KOS))
+      (defined(strnchr) || defined(__strnchr_defined) || (defined(CONFIG_HAVE_STRING_H) && \
+       defined(__USE_KOS)))
 #define CONFIG_HAVE_strnchr
 #endif
 
 #ifdef CONFIG_NO_strnrchr
 #undef CONFIG_HAVE_strnrchr
 #elif !defined(CONFIG_HAVE_strnrchr) && \
-      (defined(strnrchr) || defined(__strnrchr_defined) || defined(__USE_KOS))
+      (defined(strnrchr) || defined(__strnrchr_defined) || (defined(CONFIG_HAVE_STRING_H) && \
+       defined(__USE_KOS)))
 #define CONFIG_HAVE_strnrchr
 #endif
 
 #ifdef CONFIG_NO_strnlen
 #undef CONFIG_HAVE_strnlen
 #elif !defined(CONFIG_HAVE_strnlen) && \
-      (defined(strnlen) || defined(__strnlen_defined) || (defined(__USE_XOPEN2K8) || \
-       defined(__USE_DOS) || (defined(_MSC_VER) && !defined(__KOS_SYSTEM_HEADERS__))))
+      (defined(strnlen) || defined(__strnlen_defined) || (defined(CONFIG_HAVE_STRING_H) && \
+       (defined(__USE_XOPEN2K8) || defined(__USE_DOS) || (defined(_MSC_VER) && \
+       !defined(__KOS_SYSTEM_HEADERS__)))))
 #define CONFIG_HAVE_strnlen
 #endif
 
 #ifdef CONFIG_NO_strchrnul
 #undef CONFIG_HAVE_strchrnul
 #elif !defined(CONFIG_HAVE_strchrnul) && \
-      (defined(strchrnul) || defined(__strchrnul_defined) || (defined(__USE_GNU) || \
-       defined(__USE_NETBSD)))
+      (defined(strchrnul) || defined(__strchrnul_defined) || (defined(CONFIG_HAVE_STRING_H) && \
+       (defined(__USE_GNU) || defined(__USE_NETBSD))))
 #define CONFIG_HAVE_strchrnul
 #endif
 
 #ifdef CONFIG_NO_strrchrnul
 #undef CONFIG_HAVE_strrchrnul
 #elif !defined(CONFIG_HAVE_strrchrnul) && \
-      (defined(strrchrnul) || defined(__strrchrnul_defined) || defined(__USE_KOS))
+      (defined(strrchrnul) || defined(__strrchrnul_defined) || (defined(CONFIG_HAVE_STRING_H) && \
+       defined(__USE_KOS)))
 #define CONFIG_HAVE_strrchrnul
 #endif
 
 #ifdef CONFIG_NO_strnchrnul
 #undef CONFIG_HAVE_strnchrnul
 #elif !defined(CONFIG_HAVE_strnchrnul) && \
-      (defined(strnchrnul) || defined(__strnchrnul_defined) || defined(__USE_KOS))
+      (defined(strnchrnul) || defined(__strnchrnul_defined) || (defined(CONFIG_HAVE_STRING_H) && \
+       defined(__USE_KOS)))
 #define CONFIG_HAVE_strnchrnul
 #endif
 
 #ifdef CONFIG_NO_strnrchrnul
 #undef CONFIG_HAVE_strnrchrnul
 #elif !defined(CONFIG_HAVE_strnrchrnul) && \
-      (defined(strnrchrnul) || defined(__strnrchrnul_defined) || defined(__USE_KOS))
+      (defined(strnrchrnul) || defined(__strnrchrnul_defined) || (defined(CONFIG_HAVE_STRING_H) && \
+       defined(__USE_KOS)))
 #define CONFIG_HAVE_strnrchrnul
 #endif
 
 #ifdef CONFIG_NO_strcasestr
 #undef CONFIG_HAVE_strcasestr
 #elif !defined(CONFIG_HAVE_strcasestr) && \
-      (defined(strcasestr) || defined(__strcasestr_defined) || (defined(__USE_GNU) || \
-       defined(__USE_BSD)))
+      (defined(strcasestr) || defined(__strcasestr_defined) || (defined(CONFIG_HAVE_STRING_H) && \
+       (defined(__USE_GNU) || defined(__USE_BSD))))
 #define CONFIG_HAVE_strcasestr
 #endif
 
 #ifdef CONFIG_NO_basename
 #undef CONFIG_HAVE_basename
 #elif !defined(CONFIG_HAVE_basename) && \
-      (defined(basename) || defined(__basename_defined) || defined(__USE_GNU))
+      (defined(basename) || defined(__basename_defined) || (defined(CONFIG_HAVE_STRING_H) && \
+       defined(__USE_GNU)))
 #define CONFIG_HAVE_basename
 #endif
 
 #ifdef CONFIG_NO_strverscmp
 #undef CONFIG_HAVE_strverscmp
 #elif !defined(CONFIG_HAVE_strverscmp) && \
-      (defined(strverscmp) || defined(__strverscmp_defined) || defined(__USE_GNU))
+      (defined(strverscmp) || defined(__strverscmp_defined) || (defined(CONFIG_HAVE_STRING_H) && \
+       defined(__USE_GNU)))
 #define CONFIG_HAVE_strverscmp
 #endif
 
 #ifdef CONFIG_NO_strfry
 #undef CONFIG_HAVE_strfry
 #elif !defined(CONFIG_HAVE_strfry) && \
-      (defined(strfry) || defined(__strfry_defined) || defined(__USE_GNU))
+      (defined(strfry) || defined(__strfry_defined) || (defined(CONFIG_HAVE_STRING_H) && \
+       defined(__USE_GNU)))
 #define CONFIG_HAVE_strfry
 #endif
 
 #ifdef CONFIG_NO_memfrob
 #undef CONFIG_HAVE_memfrob
 #elif !defined(CONFIG_HAVE_memfrob) && \
-      (defined(memfrob) || defined(__memfrob_defined) || defined(__USE_GNU))
+      (defined(memfrob) || defined(__memfrob_defined) || (defined(CONFIG_HAVE_STRING_H) && \
+       defined(__USE_GNU)))
 #define CONFIG_HAVE_memfrob
 #endif
 
@@ -8075,15 +8101,25 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #define CONFIG_HAVE_strcmp
 #endif
 
+#ifdef CONFIG_NO_strcmpz
+#undef CONFIG_HAVE_strcmpz
+#elif !defined(CONFIG_HAVE_strcmpz) && \
+      (defined(strcmpz) || defined(__strcmpz_defined) || (defined(CONFIG_HAVE_STRING_H) && \
+       defined(__USE_KOS)))
+#define CONFIG_HAVE_strcmpz
+#endif
+
 #ifdef CONFIG_NO_strncmp
 #undef CONFIG_HAVE_strncmp
-#else
+#elif !defined(CONFIG_HAVE_strncmp) && \
+      (defined(strncmp) || defined(__strncmp_defined) || defined(CONFIG_HAVE_STRING_H))
 #define CONFIG_HAVE_strncmp
 #endif
 
 #ifdef CONFIG_NO_strcpy
 #undef CONFIG_HAVE_strcpy
-#else
+#elif !defined(CONFIG_HAVE_strcpy) && \
+      (defined(strcpy) || defined(__strcpy_defined) || defined(CONFIG_HAVE_STRING_H))
 #define CONFIG_HAVE_strcpy
 #endif
 
@@ -8103,25 +8139,29 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 
 #ifdef CONFIG_NO_strcat
 #undef CONFIG_HAVE_strcat
-#else
+#elif !defined(CONFIG_HAVE_strcat) && \
+      (defined(strcat) || defined(__strcat_defined) || defined(CONFIG_HAVE_STRING_H))
 #define CONFIG_HAVE_strcat
 #endif
 
 #ifdef CONFIG_NO_strncpy
 #undef CONFIG_HAVE_strncpy
-#else
+#elif !defined(CONFIG_HAVE_strncpy) && \
+      (defined(strncpy) || defined(__strncpy_defined) || defined(CONFIG_HAVE_STRING_H))
 #define CONFIG_HAVE_strncpy
 #endif
 
 #ifdef CONFIG_NO_strncat
 #undef CONFIG_HAVE_strncat
-#else
+#elif !defined(CONFIG_HAVE_strncat) && \
+      (defined(strncat) || defined(__strncat_defined) || defined(CONFIG_HAVE_STRING_H))
 #define CONFIG_HAVE_strncat
 #endif
 
 #ifdef CONFIG_NO_strstr
 #undef CONFIG_HAVE_strstr
-#else
+#elif !defined(CONFIG_HAVE_strstr) && \
+      (defined(strstr) || defined(__strstr_defined) || defined(CONFIG_HAVE_STRING_H))
 #define CONFIG_HAVE_strstr
 #endif
 
@@ -8150,490 +8190,560 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 
 #ifdef CONFIG_NO_memcmp
 #undef CONFIG_HAVE_memcmp
-#else
+#elif !defined(CONFIG_HAVE_memcmp) && \
+      (defined(memcmp) || defined(__memcmp_defined) || defined(CONFIG_HAVE_STRING_H))
 #define CONFIG_HAVE_memcmp
 #endif
 
 #ifdef CONFIG_NO_mempmove
 #undef CONFIG_HAVE_mempmove
 #elif !defined(CONFIG_HAVE_mempmove) && \
-      (defined(mempmove) || defined(__mempmove_defined) || defined(__USE_KOS))
+      (defined(mempmove) || defined(__mempmove_defined) || (defined(CONFIG_HAVE_STRING_H) && \
+       defined(__USE_KOS)))
 #define CONFIG_HAVE_mempmove
 #endif
 
 #ifdef CONFIG_NO_mempcpy
 #undef CONFIG_HAVE_mempcpy
 #elif !defined(CONFIG_HAVE_mempcpy) && \
-      (defined(mempcpy) || defined(__mempcpy_defined) || defined(__USE_GNU))
+      (defined(mempcpy) || defined(__mempcpy_defined) || (defined(CONFIG_HAVE_STRING_H) && \
+       defined(__USE_GNU)))
 #define CONFIG_HAVE_mempcpy
 #endif
 
 #ifdef CONFIG_NO_mempset
 #undef CONFIG_HAVE_mempset
 #elif !defined(CONFIG_HAVE_mempset) && \
-      (defined(mempset) || defined(__mempset_defined) || defined(__USE_KOS))
+      (defined(mempset) || defined(__mempset_defined) || (defined(CONFIG_HAVE_STRING_H) && \
+       defined(__USE_KOS)))
 #define CONFIG_HAVE_mempset
 #endif
 
 #ifdef CONFIG_NO_mempcpyw
 #undef CONFIG_HAVE_mempcpyw
 #elif !defined(CONFIG_HAVE_mempcpyw) && \
-      (defined(mempcpyw) || defined(__mempcpyw_defined) || defined(__USE_STRING_BWLQ))
+      (defined(mempcpyw) || defined(__mempcpyw_defined) || (defined(CONFIG_HAVE_STRING_H) && \
+       defined(__USE_STRING_BWLQ)))
 #define CONFIG_HAVE_mempcpyw
 #endif
 
 #ifdef CONFIG_NO_mempcpyl
 #undef CONFIG_HAVE_mempcpyl
 #elif !defined(CONFIG_HAVE_mempcpyl) && \
-      (defined(mempcpyl) || defined(__mempcpyl_defined) || defined(__USE_STRING_BWLQ))
+      (defined(mempcpyl) || defined(__mempcpyl_defined) || (defined(CONFIG_HAVE_STRING_H) && \
+       defined(__USE_STRING_BWLQ)))
 #define CONFIG_HAVE_mempcpyl
 #endif
 
 #ifdef CONFIG_NO_mempcpyq
 #undef CONFIG_HAVE_mempcpyq
 #elif !defined(CONFIG_HAVE_mempcpyq) && \
-      (defined(mempcpyq) || defined(__mempcpyq_defined) || defined(__USE_STRING_BWLQ))
+      (defined(mempcpyq) || defined(__mempcpyq_defined) || (defined(CONFIG_HAVE_STRING_H) && \
+       defined(__USE_STRING_BWLQ)))
 #define CONFIG_HAVE_mempcpyq
 #endif
 
 #ifdef CONFIG_NO_mempcpyc
 #undef CONFIG_HAVE_mempcpyc
 #elif !defined(CONFIG_HAVE_mempcpyc) && \
-      (defined(mempcpyc) || defined(__mempcpyc_defined) || defined(__USE_KOS))
+      (defined(mempcpyc) || defined(__mempcpyc_defined) || (defined(CONFIG_HAVE_STRING_H) && \
+       defined(__USE_KOS)))
 #define CONFIG_HAVE_mempcpyc
 #endif
 
 #ifdef CONFIG_NO_mempmovew
 #undef CONFIG_HAVE_mempmovew
 #elif !defined(CONFIG_HAVE_mempmovew) && \
-      (defined(mempmovew) || defined(__mempmovew_defined) || defined(__USE_STRING_BWLQ))
+      (defined(mempmovew) || defined(__mempmovew_defined) || (defined(CONFIG_HAVE_STRING_H) && \
+       defined(__USE_STRING_BWLQ)))
 #define CONFIG_HAVE_mempmovew
 #endif
 
 #ifdef CONFIG_NO_mempmovel
 #undef CONFIG_HAVE_mempmovel
 #elif !defined(CONFIG_HAVE_mempmovel) && \
-      (defined(mempmovel) || defined(__mempmovel_defined) || defined(__USE_STRING_BWLQ))
+      (defined(mempmovel) || defined(__mempmovel_defined) || (defined(CONFIG_HAVE_STRING_H) && \
+       defined(__USE_STRING_BWLQ)))
 #define CONFIG_HAVE_mempmovel
 #endif
 
 #ifdef CONFIG_NO_mempmoveq
 #undef CONFIG_HAVE_mempmoveq
 #elif !defined(CONFIG_HAVE_mempmoveq) && \
-      (defined(mempmoveq) || defined(__mempmoveq_defined) || defined(__USE_STRING_BWLQ))
+      (defined(mempmoveq) || defined(__mempmoveq_defined) || (defined(CONFIG_HAVE_STRING_H) && \
+       defined(__USE_STRING_BWLQ)))
 #define CONFIG_HAVE_mempmoveq
 #endif
 
 #ifdef CONFIG_NO_mempmovec
 #undef CONFIG_HAVE_mempmovec
 #elif !defined(CONFIG_HAVE_mempmovec) && \
-      (defined(mempmovec) || defined(__mempmovec_defined) || defined(__USE_KOS))
+      (defined(mempmovec) || defined(__mempmovec_defined) || (defined(CONFIG_HAVE_STRING_H) && \
+       defined(__USE_KOS)))
 #define CONFIG_HAVE_mempmovec
 #endif
 
 #ifdef CONFIG_NO_mempmoveupw
 #undef CONFIG_HAVE_mempmoveupw
 #elif !defined(CONFIG_HAVE_mempmoveupw) && \
-      (defined(mempmoveupw) || defined(__mempmoveupw_defined) || defined(__USE_STRING_BWLQ))
+      (defined(mempmoveupw) || defined(__mempmoveupw_defined) || (defined(CONFIG_HAVE_STRING_H) && \
+       defined(__USE_STRING_BWLQ)))
 #define CONFIG_HAVE_mempmoveupw
 #endif
 
 #ifdef CONFIG_NO_mempmoveupl
 #undef CONFIG_HAVE_mempmoveupl
 #elif !defined(CONFIG_HAVE_mempmoveupl) && \
-      (defined(mempmoveupl) || defined(__mempmoveupl_defined) || defined(__USE_STRING_BWLQ))
+      (defined(mempmoveupl) || defined(__mempmoveupl_defined) || (defined(CONFIG_HAVE_STRING_H) && \
+       defined(__USE_STRING_BWLQ)))
 #define CONFIG_HAVE_mempmoveupl
 #endif
 
 #ifdef CONFIG_NO_mempmoveupq
 #undef CONFIG_HAVE_mempmoveupq
 #elif !defined(CONFIG_HAVE_mempmoveupq) && \
-      (defined(mempmoveupq) || defined(__mempmoveupq_defined) || defined(__USE_STRING_BWLQ))
+      (defined(mempmoveupq) || defined(__mempmoveupq_defined) || (defined(CONFIG_HAVE_STRING_H) && \
+       defined(__USE_STRING_BWLQ)))
 #define CONFIG_HAVE_mempmoveupq
 #endif
 
 #ifdef CONFIG_NO_mempmoveupc
 #undef CONFIG_HAVE_mempmoveupc
 #elif !defined(CONFIG_HAVE_mempmoveupc) && \
-      (defined(mempmoveupc) || defined(__mempmoveupc_defined) || defined(__USE_KOS))
+      (defined(mempmoveupc) || defined(__mempmoveupc_defined) || (defined(CONFIG_HAVE_STRING_H) && \
+       defined(__USE_KOS)))
 #define CONFIG_HAVE_mempmoveupc
 #endif
 
 #ifdef CONFIG_NO_mempmovedownw
 #undef CONFIG_HAVE_mempmovedownw
 #elif !defined(CONFIG_HAVE_mempmovedownw) && \
-      (defined(mempmovedownw) || defined(__mempmovedownw_defined) || defined(__USE_STRING_BWLQ))
+      (defined(mempmovedownw) || defined(__mempmovedownw_defined) || (defined(CONFIG_HAVE_STRING_H) && \
+       defined(__USE_STRING_BWLQ)))
 #define CONFIG_HAVE_mempmovedownw
 #endif
 
 #ifdef CONFIG_NO_mempmovedownl
 #undef CONFIG_HAVE_mempmovedownl
 #elif !defined(CONFIG_HAVE_mempmovedownl) && \
-      (defined(mempmovedownl) || defined(__mempmovedownl_defined) || defined(__USE_STRING_BWLQ))
+      (defined(mempmovedownl) || defined(__mempmovedownl_defined) || (defined(CONFIG_HAVE_STRING_H) && \
+       defined(__USE_STRING_BWLQ)))
 #define CONFIG_HAVE_mempmovedownl
 #endif
 
 #ifdef CONFIG_NO_mempmovedownq
 #undef CONFIG_HAVE_mempmovedownq
 #elif !defined(CONFIG_HAVE_mempmovedownq) && \
-      (defined(mempmovedownq) || defined(__mempmovedownq_defined) || defined(__USE_STRING_BWLQ))
+      (defined(mempmovedownq) || defined(__mempmovedownq_defined) || (defined(CONFIG_HAVE_STRING_H) && \
+       defined(__USE_STRING_BWLQ)))
 #define CONFIG_HAVE_mempmovedownq
 #endif
 
 #ifdef CONFIG_NO_mempmovedownc
 #undef CONFIG_HAVE_mempmovedownc
 #elif !defined(CONFIG_HAVE_mempmovedownc) && \
-      (defined(mempmovedownc) || defined(__mempmovedownc_defined) || defined(__USE_KOS))
+      (defined(mempmovedownc) || defined(__mempmovedownc_defined) || (defined(CONFIG_HAVE_STRING_H) && \
+       defined(__USE_KOS)))
 #define CONFIG_HAVE_mempmovedownc
 #endif
 
 #ifdef CONFIG_NO_memcpyc
 #undef CONFIG_HAVE_memcpyc
 #elif !defined(CONFIG_HAVE_memcpyc) && \
-      (defined(memcpyc) || defined(__memcpyc_defined) || defined(__USE_KOS))
+      (defined(memcpyc) || defined(__memcpyc_defined) || (defined(CONFIG_HAVE_STRING_H) && \
+       defined(__USE_KOS)))
 #define CONFIG_HAVE_memcpyc
 #endif
 
 #ifdef CONFIG_NO_memcpyw
 #undef CONFIG_HAVE_memcpyw
 #elif !defined(CONFIG_HAVE_memcpyw) && \
-      (defined(memcpyw) || defined(__memcpyw_defined) || defined(__USE_KOS))
+      (defined(memcpyw) || defined(__memcpyw_defined) || (defined(CONFIG_HAVE_STRING_H) && \
+       defined(__USE_KOS)))
 #define CONFIG_HAVE_memcpyw
 #endif
 
 #ifdef CONFIG_NO_memcpyl
 #undef CONFIG_HAVE_memcpyl
 #elif !defined(CONFIG_HAVE_memcpyl) && \
-      (defined(memcpyl) || defined(__memcpyl_defined) || defined(__USE_KOS))
+      (defined(memcpyl) || defined(__memcpyl_defined) || (defined(CONFIG_HAVE_STRING_H) && \
+       defined(__USE_KOS)))
 #define CONFIG_HAVE_memcpyl
 #endif
 
 #ifdef CONFIG_NO_memcpyq
 #undef CONFIG_HAVE_memcpyq
 #elif !defined(CONFIG_HAVE_memcpyq) && \
-      (defined(memcpyq) || defined(__memcpyq_defined) || defined(__USE_KOS))
+      (defined(memcpyq) || defined(__memcpyq_defined) || (defined(CONFIG_HAVE_STRING_H) && \
+       defined(__USE_KOS)))
 #define CONFIG_HAVE_memcpyq
 #endif
 
 #ifdef CONFIG_NO_memmovec
 #undef CONFIG_HAVE_memmovec
 #elif !defined(CONFIG_HAVE_memmovec) && \
-      (defined(memmovec) || defined(__memmovec_defined) || defined(__USE_KOS))
+      (defined(memmovec) || defined(__memmovec_defined) || (defined(CONFIG_HAVE_STRING_H) && \
+       defined(__USE_KOS)))
 #define CONFIG_HAVE_memmovec
 #endif
 
 #ifdef CONFIG_NO_memmovew
 #undef CONFIG_HAVE_memmovew
 #elif !defined(CONFIG_HAVE_memmovew) && \
-      (defined(memmovew) || defined(__memmovew_defined) || defined(__USE_KOS))
+      (defined(memmovew) || defined(__memmovew_defined) || (defined(CONFIG_HAVE_STRING_H) && \
+       defined(__USE_KOS)))
 #define CONFIG_HAVE_memmovew
 #endif
 
 #ifdef CONFIG_NO_memmovel
 #undef CONFIG_HAVE_memmovel
 #elif !defined(CONFIG_HAVE_memmovel) && \
-      (defined(memmovel) || defined(__memmovel_defined) || defined(__USE_KOS))
+      (defined(memmovel) || defined(__memmovel_defined) || (defined(CONFIG_HAVE_STRING_H) && \
+       defined(__USE_KOS)))
 #define CONFIG_HAVE_memmovel
 #endif
 
 #ifdef CONFIG_NO_memmoveq
 #undef CONFIG_HAVE_memmoveq
 #elif !defined(CONFIG_HAVE_memmoveq) && \
-      (defined(memmoveq) || defined(__memmoveq_defined) || defined(__USE_KOS))
+      (defined(memmoveq) || defined(__memmoveq_defined) || (defined(CONFIG_HAVE_STRING_H) && \
+       defined(__USE_KOS)))
 #define CONFIG_HAVE_memmoveq
 #endif
 
 #ifdef CONFIG_NO_memmoveup
 #undef CONFIG_HAVE_memmoveup
 #elif !defined(CONFIG_HAVE_memmoveup) && \
-      (defined(memmoveup) || defined(__memmoveup_defined) || defined(__USE_KOS))
+      (defined(memmoveup) || defined(__memmoveup_defined) || (defined(CONFIG_HAVE_STRING_H) && \
+       defined(__USE_KOS)))
 #define CONFIG_HAVE_memmoveup
 #endif
 
 #ifdef CONFIG_NO_mempmoveup
 #undef CONFIG_HAVE_mempmoveup
 #elif !defined(CONFIG_HAVE_mempmoveup) && \
-      (defined(mempmoveup) || defined(__mempmoveup_defined) || defined(__USE_KOS))
+      (defined(mempmoveup) || defined(__mempmoveup_defined) || (defined(CONFIG_HAVE_STRING_H) && \
+       defined(__USE_KOS)))
 #define CONFIG_HAVE_mempmoveup
 #endif
 
 #ifdef CONFIG_NO_memmoveupc
 #undef CONFIG_HAVE_memmoveupc
 #elif !defined(CONFIG_HAVE_memmoveupc) && \
-      (defined(memmoveupc) || defined(__memmoveupc_defined) || defined(__USE_KOS))
+      (defined(memmoveupc) || defined(__memmoveupc_defined) || (defined(CONFIG_HAVE_STRING_H) && \
+       defined(__USE_KOS)))
 #define CONFIG_HAVE_memmoveupc
 #endif
 
 #ifdef CONFIG_NO_memmoveupw
 #undef CONFIG_HAVE_memmoveupw
 #elif !defined(CONFIG_HAVE_memmoveupw) && \
-      (defined(memmoveupw) || defined(__memmoveupw_defined) || defined(__USE_KOS))
+      (defined(memmoveupw) || defined(__memmoveupw_defined) || (defined(CONFIG_HAVE_STRING_H) && \
+       defined(__USE_KOS)))
 #define CONFIG_HAVE_memmoveupw
 #endif
 
 #ifdef CONFIG_NO_memmoveupl
 #undef CONFIG_HAVE_memmoveupl
 #elif !defined(CONFIG_HAVE_memmoveupl) && \
-      (defined(memmoveupl) || defined(__memmoveupl_defined) || defined(__USE_KOS))
+      (defined(memmoveupl) || defined(__memmoveupl_defined) || (defined(CONFIG_HAVE_STRING_H) && \
+       defined(__USE_KOS)))
 #define CONFIG_HAVE_memmoveupl
 #endif
 
 #ifdef CONFIG_NO_memmoveupq
 #undef CONFIG_HAVE_memmoveupq
 #elif !defined(CONFIG_HAVE_memmoveupq) && \
-      (defined(memmoveupq) || defined(__memmoveupq_defined) || defined(__USE_KOS))
+      (defined(memmoveupq) || defined(__memmoveupq_defined) || (defined(CONFIG_HAVE_STRING_H) && \
+       defined(__USE_KOS)))
 #define CONFIG_HAVE_memmoveupq
 #endif
 
 #ifdef CONFIG_NO_memmovedown
 #undef CONFIG_HAVE_memmovedown
 #elif !defined(CONFIG_HAVE_memmovedown) && \
-      (defined(memmovedown) || defined(__memmovedown_defined) || defined(__USE_KOS))
+      (defined(memmovedown) || defined(__memmovedown_defined) || (defined(CONFIG_HAVE_STRING_H) && \
+       defined(__USE_KOS)))
 #define CONFIG_HAVE_memmovedown
 #endif
 
 #ifdef CONFIG_NO_mempmovedown
 #undef CONFIG_HAVE_mempmovedown
 #elif !defined(CONFIG_HAVE_mempmovedown) && \
-      (defined(mempmovedown) || defined(__mempmovedown_defined) || defined(__USE_KOS))
+      (defined(mempmovedown) || defined(__mempmovedown_defined) || (defined(CONFIG_HAVE_STRING_H) && \
+       defined(__USE_KOS)))
 #define CONFIG_HAVE_mempmovedown
 #endif
 
 #ifdef CONFIG_NO_memmovedownc
 #undef CONFIG_HAVE_memmovedownc
 #elif !defined(CONFIG_HAVE_memmovedownc) && \
-      (defined(memmovedownc) || defined(__memmovedownc_defined) || defined(__USE_KOS))
+      (defined(memmovedownc) || defined(__memmovedownc_defined) || (defined(CONFIG_HAVE_STRING_H) && \
+       defined(__USE_KOS)))
 #define CONFIG_HAVE_memmovedownc
 #endif
 
 #ifdef CONFIG_NO_memmovedownw
 #undef CONFIG_HAVE_memmovedownw
 #elif !defined(CONFIG_HAVE_memmovedownw) && \
-      (defined(memmovedownw) || defined(__memmovedownw_defined) || defined(__USE_KOS))
+      (defined(memmovedownw) || defined(__memmovedownw_defined) || (defined(CONFIG_HAVE_STRING_H) && \
+       defined(__USE_KOS)))
 #define CONFIG_HAVE_memmovedownw
 #endif
 
 #ifdef CONFIG_NO_memmovedownl
 #undef CONFIG_HAVE_memmovedownl
 #elif !defined(CONFIG_HAVE_memmovedownl) && \
-      (defined(memmovedownl) || defined(__memmovedownl_defined) || defined(__USE_KOS))
+      (defined(memmovedownl) || defined(__memmovedownl_defined) || (defined(CONFIG_HAVE_STRING_H) && \
+       defined(__USE_KOS)))
 #define CONFIG_HAVE_memmovedownl
 #endif
 
 #ifdef CONFIG_NO_memmovedownq
 #undef CONFIG_HAVE_memmovedownq
 #elif !defined(CONFIG_HAVE_memmovedownq) && \
-      (defined(memmovedownq) || defined(__memmovedownq_defined) || defined(__USE_KOS))
+      (defined(memmovedownq) || defined(__memmovedownq_defined) || (defined(CONFIG_HAVE_STRING_H) && \
+       defined(__USE_KOS)))
 #define CONFIG_HAVE_memmovedownq
 #endif
 
 #ifdef CONFIG_NO_memsetw
 #undef CONFIG_HAVE_memsetw
 #elif !defined(CONFIG_HAVE_memsetw) && \
-      (defined(memsetw) || defined(__memsetw_defined) || defined(__USE_KOS))
+      (defined(memsetw) || defined(__memsetw_defined) || (defined(CONFIG_HAVE_STRING_H) && \
+       defined(__USE_KOS)))
 #define CONFIG_HAVE_memsetw
 #endif
 
 #ifdef CONFIG_NO_memsetl
 #undef CONFIG_HAVE_memsetl
 #elif !defined(CONFIG_HAVE_memsetl) && \
-      (defined(memsetl) || defined(__memsetl_defined) || defined(__USE_KOS))
+      (defined(memsetl) || defined(__memsetl_defined) || (defined(CONFIG_HAVE_STRING_H) && \
+       defined(__USE_KOS)))
 #define CONFIG_HAVE_memsetl
 #endif
 
 #ifdef CONFIG_NO_memsetq
 #undef CONFIG_HAVE_memsetq
 #elif !defined(CONFIG_HAVE_memsetq) && \
-      (defined(memsetq) || defined(__memsetq_defined) || defined(__USE_KOS))
+      (defined(memsetq) || defined(__memsetq_defined) || (defined(CONFIG_HAVE_STRING_H) && \
+       defined(__USE_KOS)))
 #define CONFIG_HAVE_memsetq
 #endif
 
 #ifdef CONFIG_NO_mempsetw
 #undef CONFIG_HAVE_mempsetw
 #elif !defined(CONFIG_HAVE_mempsetw) && \
-      (defined(mempsetw) || defined(__mempsetw_defined) || defined(__USE_KOS))
+      (defined(mempsetw) || defined(__mempsetw_defined) || (defined(CONFIG_HAVE_STRING_H) && \
+       defined(__USE_KOS)))
 #define CONFIG_HAVE_mempsetw
 #endif
 
 #ifdef CONFIG_NO_mempsetl
 #undef CONFIG_HAVE_mempsetl
 #elif !defined(CONFIG_HAVE_mempsetl) && \
-      (defined(mempsetl) || defined(__mempsetl_defined) || defined(__USE_KOS))
+      (defined(mempsetl) || defined(__mempsetl_defined) || (defined(CONFIG_HAVE_STRING_H) && \
+       defined(__USE_KOS)))
 #define CONFIG_HAVE_mempsetl
 #endif
 
 #ifdef CONFIG_NO_mempsetq
 #undef CONFIG_HAVE_mempsetq
 #elif !defined(CONFIG_HAVE_mempsetq) && \
-      (defined(mempsetq) || defined(__mempsetq_defined) || defined(__USE_KOS))
+      (defined(mempsetq) || defined(__mempsetq_defined) || (defined(CONFIG_HAVE_STRING_H) && \
+       defined(__USE_KOS)))
 #define CONFIG_HAVE_mempsetq
 #endif
 
 #ifdef CONFIG_NO_memchrw
 #undef CONFIG_HAVE_memchrw
 #elif !defined(CONFIG_HAVE_memchrw) && \
-      (defined(memchrw) || defined(__memchrw_defined) || defined(__USE_KOS))
+      (defined(memchrw) || defined(__memchrw_defined) || (defined(CONFIG_HAVE_STRING_H) && \
+       defined(__USE_KOS)))
 #define CONFIG_HAVE_memchrw
 #endif
 
 #ifdef CONFIG_NO_memchrl
 #undef CONFIG_HAVE_memchrl
 #elif !defined(CONFIG_HAVE_memchrl) && \
-      (defined(memchrl) || defined(__memchrl_defined) || defined(__USE_KOS))
+      (defined(memchrl) || defined(__memchrl_defined) || (defined(CONFIG_HAVE_STRING_H) && \
+       defined(__USE_KOS)))
 #define CONFIG_HAVE_memchrl
 #endif
 
 #ifdef CONFIG_NO_memchrq
 #undef CONFIG_HAVE_memchrq
 #elif !defined(CONFIG_HAVE_memchrq) && \
-      (defined(memchrq) || defined(__memchrq_defined) || defined(__USE_KOS))
+      (defined(memchrq) || defined(__memchrq_defined) || (defined(CONFIG_HAVE_STRING_H) && \
+       defined(__USE_KOS)))
 #define CONFIG_HAVE_memchrq
 #endif
 
 #ifdef CONFIG_NO_memrchrw
 #undef CONFIG_HAVE_memrchrw
 #elif !defined(CONFIG_HAVE_memrchrw) && \
-      (defined(memrchrw) || defined(__memrchrw_defined) || defined(__USE_KOS))
+      (defined(memrchrw) || defined(__memrchrw_defined) || (defined(CONFIG_HAVE_STRING_H) && \
+       defined(__USE_KOS)))
 #define CONFIG_HAVE_memrchrw
 #endif
 
 #ifdef CONFIG_NO_memrchrl
 #undef CONFIG_HAVE_memrchrl
 #elif !defined(CONFIG_HAVE_memrchrl) && \
-      (defined(memrchrl) || defined(__memrchrl_defined) || defined(__USE_KOS))
+      (defined(memrchrl) || defined(__memrchrl_defined) || (defined(CONFIG_HAVE_STRING_H) && \
+       defined(__USE_KOS)))
 #define CONFIG_HAVE_memrchrl
 #endif
 
 #ifdef CONFIG_NO_memrchrq
 #undef CONFIG_HAVE_memrchrq
 #elif !defined(CONFIG_HAVE_memrchrq) && \
-      (defined(memrchrq) || defined(__memrchrq_defined) || defined(__USE_KOS))
+      (defined(memrchrq) || defined(__memrchrq_defined) || (defined(CONFIG_HAVE_STRING_H) && \
+       defined(__USE_KOS)))
 #define CONFIG_HAVE_memrchrq
 #endif
 
 #ifdef CONFIG_NO_memcmpw
 #undef CONFIG_HAVE_memcmpw
 #elif !defined(CONFIG_HAVE_memcmpw) && \
-      (defined(memcmpw) || defined(__memcmpw_defined) || defined(__USE_KOS))
+      (defined(memcmpw) || defined(__memcmpw_defined) || (defined(CONFIG_HAVE_STRING_H) && \
+       defined(__USE_KOS)))
 #define CONFIG_HAVE_memcmpw
 #endif
 
 #ifdef CONFIG_NO_memcmpl
 #undef CONFIG_HAVE_memcmpl
 #elif !defined(CONFIG_HAVE_memcmpl) && \
-      (defined(memcmpl) || defined(__memcmpl_defined) || defined(__USE_KOS))
+      (defined(memcmpl) || defined(__memcmpl_defined) || (defined(CONFIG_HAVE_STRING_H) && \
+       defined(__USE_KOS)))
 #define CONFIG_HAVE_memcmpl
 #endif
 
 #ifdef CONFIG_NO_memcmpq
 #undef CONFIG_HAVE_memcmpq
 #elif !defined(CONFIG_HAVE_memcmpq) && \
-      (defined(memcmpq) || defined(__memcmpq_defined) || defined(__USE_KOS))
+      (defined(memcmpq) || defined(__memcmpq_defined) || (defined(CONFIG_HAVE_STRING_H) && \
+       defined(__USE_KOS)))
 #define CONFIG_HAVE_memcmpq
 #endif
 
 #ifdef CONFIG_NO_rawmemrchr
 #undef CONFIG_HAVE_rawmemrchr
 #elif !defined(CONFIG_HAVE_rawmemrchr) && \
-      (defined(rawmemrchr) || defined(__rawmemrchr_defined) || defined(__USE_KOS))
+      (defined(rawmemrchr) || defined(__rawmemrchr_defined) || (defined(CONFIG_HAVE_STRING_H) && \
+       defined(__USE_KOS)))
 #define CONFIG_HAVE_rawmemrchr
 #endif
 
 #ifdef CONFIG_NO_memend
 #undef CONFIG_HAVE_memend
 #elif !defined(CONFIG_HAVE_memend) && \
-      (defined(memend) || defined(__memend_defined) || defined(__USE_KOS))
+      (defined(memend) || defined(__memend_defined) || (defined(CONFIG_HAVE_STRING_H) && \
+       defined(__USE_KOS)))
 #define CONFIG_HAVE_memend
 #endif
 
 #ifdef CONFIG_NO_memrend
 #undef CONFIG_HAVE_memrend
 #elif !defined(CONFIG_HAVE_memrend) && \
-      (defined(memrend) || defined(__memrend_defined) || defined(__USE_KOS))
+      (defined(memrend) || defined(__memrend_defined) || (defined(CONFIG_HAVE_STRING_H) && \
+       defined(__USE_KOS)))
 #define CONFIG_HAVE_memrend
 #endif
 
 #ifdef CONFIG_NO_memlen
 #undef CONFIG_HAVE_memlen
 #elif !defined(CONFIG_HAVE_memlen) && \
-      (defined(memlen) || defined(__memlen_defined) || defined(__USE_KOS))
+      (defined(memlen) || defined(__memlen_defined) || (defined(CONFIG_HAVE_STRING_H) && \
+       defined(__USE_KOS)))
 #define CONFIG_HAVE_memlen
 #endif
 
 #ifdef CONFIG_NO_memrlen
 #undef CONFIG_HAVE_memrlen
 #elif !defined(CONFIG_HAVE_memrlen) && \
-      (defined(memrlen) || defined(__memrlen_defined) || defined(__USE_KOS))
+      (defined(memrlen) || defined(__memrlen_defined) || (defined(CONFIG_HAVE_STRING_H) && \
+       defined(__USE_KOS)))
 #define CONFIG_HAVE_memrlen
 #endif
 
 #ifdef CONFIG_NO_rawmemlen
 #undef CONFIG_HAVE_rawmemlen
 #elif !defined(CONFIG_HAVE_rawmemlen) && \
-      (defined(rawmemlen) || defined(__rawmemlen_defined) || defined(__USE_KOS))
+      (defined(rawmemlen) || defined(__rawmemlen_defined) || (defined(CONFIG_HAVE_STRING_H) && \
+       defined(__USE_KOS)))
 #define CONFIG_HAVE_rawmemlen
 #endif
 
 #ifdef CONFIG_NO_rawmemrlen
 #undef CONFIG_HAVE_rawmemrlen
 #elif !defined(CONFIG_HAVE_rawmemrlen) && \
-      (defined(rawmemrlen) || defined(__rawmemrlen_defined) || defined(__USE_KOS))
+      (defined(rawmemrlen) || defined(__rawmemrlen_defined) || (defined(CONFIG_HAVE_STRING_H) && \
+       defined(__USE_KOS)))
 #define CONFIG_HAVE_rawmemrlen
 #endif
 
 #ifdef CONFIG_NO_memrev
 #undef CONFIG_HAVE_memrev
 #elif !defined(CONFIG_HAVE_memrev) && \
-      (defined(memrev) || defined(__memrev_defined) || defined(__USE_KOS))
+      (defined(memrev) || defined(__memrev_defined) || (defined(CONFIG_HAVE_STRING_H) && \
+       defined(__USE_KOS)))
 #define CONFIG_HAVE_memrev
 #endif
 
 #ifdef CONFIG_NO_strend
 #undef CONFIG_HAVE_strend
 #elif !defined(CONFIG_HAVE_strend) && \
-      (defined(strend) || defined(__strend_defined) || defined(__USE_KOS))
+      (defined(strend) || defined(__strend_defined) || (defined(CONFIG_HAVE_STRING_H) && \
+       defined(__USE_KOS)))
 #define CONFIG_HAVE_strend
 #endif
 
 #ifdef CONFIG_NO_strnend
 #undef CONFIG_HAVE_strnend
 #elif !defined(CONFIG_HAVE_strnend) && \
-      (defined(strnend) || defined(__strnend_defined) || defined(__USE_KOS))
+      (defined(strnend) || defined(__strnend_defined) || (defined(CONFIG_HAVE_STRING_H) && \
+       defined(__USE_KOS)))
 #define CONFIG_HAVE_strnend
 #endif
 
 #ifdef CONFIG_NO_memxend
 #undef CONFIG_HAVE_memxend
 #elif !defined(CONFIG_HAVE_memxend) && \
-      (defined(memxend) || defined(__memxend_defined) || defined(__USE_STRING_XCHR))
+      (defined(memxend) || defined(__memxend_defined) || (defined(CONFIG_HAVE_STRING_H) && \
+       defined(__USE_STRING_XCHR)))
 #define CONFIG_HAVE_memxend
 #endif
 
 #ifdef CONFIG_NO_memxlen
 #undef CONFIG_HAVE_memxlen
 #elif !defined(CONFIG_HAVE_memxlen) && \
-      (defined(memxlen) || defined(__memxlen_defined) || defined(__USE_STRING_XCHR))
+      (defined(memxlen) || defined(__memxlen_defined) || (defined(CONFIG_HAVE_STRING_H) && \
+       defined(__USE_STRING_XCHR)))
 #define CONFIG_HAVE_memxlen
 #endif
 
 #ifdef CONFIG_NO_memxchr
 #undef CONFIG_HAVE_memxchr
 #elif !defined(CONFIG_HAVE_memxchr) && \
-      (defined(memxchr) || defined(__memxchr_defined) || defined(__USE_STRING_XCHR))
+      (defined(memxchr) || defined(__memxchr_defined) || (defined(CONFIG_HAVE_STRING_H) && \
+       defined(__USE_STRING_XCHR)))
 #define CONFIG_HAVE_memxchr
 #endif
 
 #ifdef CONFIG_NO_rawmemxchr
 #undef CONFIG_HAVE_rawmemxchr
 #elif !defined(CONFIG_HAVE_rawmemxchr) && \
-      (defined(rawmemxchr) || defined(__rawmemxchr_defined) || defined(__USE_STRING_XCHR))
+      (defined(rawmemxchr) || defined(__rawmemxchr_defined) || (defined(CONFIG_HAVE_STRING_H) && \
+       defined(__USE_STRING_XCHR)))
 #define CONFIG_HAVE_rawmemxchr
 #endif
 
 #ifdef CONFIG_NO_rawmemxlen
 #undef CONFIG_HAVE_rawmemxlen
 #elif !defined(CONFIG_HAVE_rawmemxlen) && \
-      (defined(rawmemxlen) || defined(__rawmemxlen_defined) || defined(__USE_STRING_XCHR))
+      (defined(rawmemxlen) || defined(__rawmemxlen_defined) || (defined(CONFIG_HAVE_STRING_H) && \
+       defined(__USE_STRING_XCHR)))
 #define CONFIG_HAVE_rawmemxlen
 #endif
 
@@ -12519,6 +12629,26 @@ DECL_END
 
 #define DeeSystem_DEFINE_wcslen(name) \
 	_DeeSystem_DEFINE_strlenT(Dee_wchar_t, name)
+
+#define _DeeSystem_DEFINE_strcmpzT(T, Tu, Tr, name)                \
+	LOCAL WUNUSED NONNULL((1, 2)) Tr DCALL                         \
+	name(T const *lhs, T const *rhs, size_t rhs_len) {             \
+		T c1, c2;                                                  \
+		do {                                                       \
+			c1 = *lhs++;                                           \
+			if (!rhs_len--) {                                      \
+				/* Once  RHS  reaches  the end  of  the string,    \
+				 * compare the last character of LHS with `NUL' */ \
+				return (Tr)((Tu)c1 - '\0');                        \
+			}                                                      \
+			c2 = *rhs++;                                           \
+			if unlikely(c1 != c2)                                  \
+				return (Tr)((Tu)c1 - (Tu)c2);                      \
+		} while (c1);                                              \
+		return 0;                                                  \
+	}
+#define DeeSystem_DEFINE_strcmpz(name) \
+	_DeeSystem_DEFINE_strcmpzT(char, unsigned char, int, name)
 
 #define DeeSystem_DEFINE_rawmemchr(name)        \
 	LOCAL ATTR_PURE WUNUSED NONNULL((1)) void * \

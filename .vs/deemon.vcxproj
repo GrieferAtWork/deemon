@@ -210,6 +210,7 @@
 		<ClInclude Include="..\include\deemon\util\bytewriter.h" />
 		<ClInclude Include="..\include\deemon\util\cache.h" />
 		<ClInclude Include="..\include\deemon\util\futex.h" />
+		<ClInclude Include="..\include\deemon\util\kos-compat.h" />
 		<ClInclude Include="..\include\deemon\util\lock-utils.h" />
 		<ClInclude Include="..\include\deemon\util\lock.h" />
 		<ClInclude Include="..\include\deemon\util\objectlist.h" />

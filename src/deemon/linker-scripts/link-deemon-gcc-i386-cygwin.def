@@ -558,6 +558,7 @@ EXPORTS
 	_DeeObject_EnumAttr@16=DeeObject_EnumAttr@16
 	_DeeObject_ExtendInherited@12=DeeObject_ExtendInherited@12
 	_DeeObject_Foreach@12=DeeObject_Foreach@12
+	_DeeObject_ForeachPair@12=DeeObject_ForeachPair@12
 	_DeeObject_Free@4=DeeObject_Free@4
 	_DeeObject_FreeTracker@4=DeeObject_FreeTracker@4
 	_DeeObject_GenericEnumAttr@12=DeeObject_GenericEnumAttr@12

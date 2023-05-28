@@ -486,9 +486,11 @@ extern void (__debugbreak)(void);
 /* We want to be ABI-compatible with KOS's native `pformatprinter' system. */
 #if defined(__KOS_SYSTEM_HEADERS__) || __has_include(<bits/crt/format-printer.h>)
 #include <bits/crt/format-printer.h>
+#define DPRINTER_CC_IS___FORMATPRINTER_CC
 #define DPRINTER_CC __FORMATPRINTER_CC
 #elif __has_include(<format-printer.h>)
 #include <format-printer.h>
+#define DPRINTER_CC_IS_FORMATPRINTER_CC
 #define DPRINTER_CC FORMATPRINTER_CC
 #endif /* ... */
 #endif /* __KOS__ && __KOS_VERSION__ >= 400 */

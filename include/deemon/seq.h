@@ -319,6 +319,7 @@ struct Dee_type_nii {
 			int             (DCALL *nii_hasprev)(DeeObject *__restrict self);
 
 			/* NOTE: `nii_hasnext' should be provided through `tp_bool' (`operator bool()') */
+
 			/* Peek the next iterator value, but don't actually advance the iterator.
 			 * @return: ITER_DONE: The iterator has already been exhausted. */
 			WUNUSED_T NONNULL_T((1))

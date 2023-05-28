@@ -134,6 +134,7 @@ set_with_feature() {
 	dex-threading)           set_dex_specific "THREADING" "$2" ;;
 	dex-time)                set_dex_specific "TIME" "$2" ;;
 	dex-win32)               set_dex_specific "WIN32" "$2" ;;
+	dex-json)                set_dex_specific "JSON" "$2" ;;
 	kos-system-headers)      WITH_KOS_SYSTEM_HEADERS="$2" ;;
 	debug)                   WITH_DEBUG="$2" ;;
 	optimize=*)              WITH_OPTIMIZE="$(echo "$1" | cut -d '=' -f 2)" ;;
@@ -197,6 +198,7 @@ print_help_features() {
 	echo "    dex-threading            Provide the native deemon extension module: 'threading' (default: yes)"
 	echo "    dex-time                 Provide the native deemon extension module: 'time' (default: yes)"
 	echo "    dex-win32                Provide the native deemon extension module: 'win32' (default: yes)"
+	echo "    dex-json                 Provide the native deemon extension module: 'json' (default: yes)"
 	echo "    kos-system-headers       Use the deemon-provided copies of KOS's hybrid system headers (default: auto)"
 	echo "    debug                    Include debug informations (default: yes)"
 	echo "    optimize=*               Additional compiler options for optimization (default: '-O2')"

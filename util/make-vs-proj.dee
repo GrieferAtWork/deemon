@@ -25,6 +25,21 @@ import fs;
 
 fs.chdir(fs.headof(__FILE__) + "/..");
 
+@@When scanning for files, we also want to follow symlinks
+function isDirOrSymlinkToDir(ent: dirent): bool {
+	if (ent.d_type == DT_DIR)
+		return true;
+	if (ent.d_type == DT_LNK) {
+		local abs = ent.d_fullname;
+		local lnk = readlink(abs);
+		if (!isabs(lnk))
+			lnk = abspath(lnk, headof(abs));
+		/* FIXME: `stat' doesn't dereference symlinks like it should on windows! */
+		return stat.isdir(lnk);
+	}
+	return false;
+}
+
 /* Make sure that .gitignore is being parsed correctly. */
 assert isFileGitIgnored("deemon.exe");
 
@@ -33,7 +48,7 @@ global final DEEMON_CORE_GUID = "86D226C5-EF62-4562-AC06-E6A753DFA7CF";
 global final ROOT_FOLDER_GUID = "2150E333-8FDC-42A3-9474-1A3956D46DE8";
 global final DEX_NAMES = (
 	for (local dt: opendir("src/dex"))
-		if (dt.d_type == DT_DIR)
+		if (isDirOrSymlinkToDir(dt))
 			dt.d_name
 ).sorted().frozen;
 
@@ -183,7 +198,7 @@ function loadFsDir(path: string): FsDirNode {
 	for (local dt: opendir(path)) {
 		if (isFileGitIgnored(dt.d_fullname))
 			continue;
-		if (dt.d_type == DT_DIR) {
+		if (isDirOrSymlinkToDir(dt)) {
 			result.subDirs.append(loadFsDir(fs.joinpath(path, dt.d_name)));
 		} else {
 			result.files.append(dt.d_name);
@@ -329,7 +344,7 @@ function scanSourceFiles(path: string, recursive: bool = true): {SourceFile...} 
 		local ext = fs.extof(dt.d_name);
 		if (isFileGitIgnored(dt.d_fullname))
 			continue;
-		if (dt.d_type == DT_DIR) {
+		if (isDirOrSymlinkToDir(dt)) {
 			if (recursive) {
 				yield scanSourceFiles(fs.joinpath(path, dt.d_name), recursive: recursive)...;
 			}

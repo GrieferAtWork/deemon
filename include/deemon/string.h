@@ -2200,7 +2200,7 @@ typedef uint16_t Dee_uniflag_t;
 #define DeeUni_IsAlpha(ch)    unicode_isalpha(ch)
 #define DeeUni_IsDigit(ch)    unicode_isdigit(ch)
 #define DeeUni_IsHex(ch)      unicode_ishex(ch)
-#define DeeUni_IsXdigit(ch)   unicode_isxdigit(ch)
+#define DeeUni_IsXDigit(ch)   unicode_isxdigit(ch)
 #define DeeUni_IsAlnum(ch)    unicode_isalnum(ch)
 #define DeeUni_IsPunct(ch)    unicode_ispunct(ch)
 #define DeeUni_IsGraph(ch)    unicode_isgraph(ch)
@@ -2472,9 +2472,9 @@ DDATDEF char const _DeeAscii_Itoa[101];
 #ifndef DeeUni_IsHex
 #define DeeUni_IsHex(ch) (DeeUni_Flags(ch) & Dee_UNICODE_ISHEX)
 #endif /* !DeeUni_IsHex */
-#ifndef DeeUni_IsXdigit
-#define DeeUni_IsXdigit(ch) (DeeUni_Flags(ch) & Dee_UNICODE_ISXDIGIT)
-#endif /* !DeeUni_IsXdigit */
+#ifndef DeeUni_IsXDigit
+#define DeeUni_IsXDigit(ch) (DeeUni_Flags(ch) & Dee_UNICODE_ISXDIGIT)
+#endif /* !DeeUni_IsXDigit */
 #ifndef DeeUni_IsAlnum
 #define DeeUni_IsAlnum(ch) (DeeUni_Flags(ch) & Dee_UNICODE_ISALNUM)
 #endif /* !DeeUni_IsAlnum */

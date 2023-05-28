@@ -603,6 +603,9 @@
 		<ClInclude Include="..\include\deemon\util\futex.h">
 			<Filter>include\util</Filter>
 		</ClInclude>
+		<ClInclude Include="..\include\deemon\util\kos-compat.h">
+			<Filter>include\util</Filter>
+		</ClInclude>
 		<ClInclude Include="..\include\deemon\util\lock-utils.h">
 			<Filter>include\util</Filter>
 		</ClInclude>

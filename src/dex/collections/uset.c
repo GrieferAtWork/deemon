@@ -1122,7 +1122,7 @@ uset_update(USet *self, size_t argc, DeeObject *const *argv) {
 	dssize_t result;
 	if (DeeArg_Unpack(argc, argv, "o:update", &items))
 		goto err;
-	result = DeeObject_Foreach(items, (dforeach_t)&insert_callback, self);
+	result = DeeObject_Foreach(items, (Dee_foreach_t)&insert_callback, self);
 	if unlikely(result < 0)
 		goto err;
 	return DeeInt_NewSize((size_t)result);

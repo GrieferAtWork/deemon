@@ -2445,12 +2445,15 @@ PRIVATE struct type_getset tpconst object_getsets[] = {
 };
 
 PRIVATE struct type_member tpconst object_members[] = {
-	TYPE_MEMBER_FIELD_DOC("type", STRUCT_CONST | STRUCT_SIZE_T, offsetof(DeeObject, ob_type),
-	                      "->?DType\nThe type of @this object (same as ${type this})"),
+	TYPE_MEMBER_FIELD_DOC("type", STRUCT_OBJECT, offsetof(DeeObject, ob_type),
+	                      "->?DType\n"
+	                      "The type of @this object (same as ${type this})"),
 	TYPE_MEMBER_FIELD_DOC("__refcnt__", STRUCT_CONST | STRUCT_SIZE_T, offsetof(DeeObject, ob_refcnt),
-	                      "->?Dint\nThe number of references currently existing for @this object"),
-	TYPE_MEMBER_FIELD_DOC(STR___type__, STRUCT_CONST | STRUCT_SIZE_T, offsetof(DeeObject, ob_type),
-	                      "->?DType\nAlias for ?#type"),
+	                      "->?Dint\n"
+	                      "The number of references currently existing for @this object"),
+	TYPE_MEMBER_FIELD_DOC(STR___type__, STRUCT_OBJECT, offsetof(DeeObject, ob_type),
+	                      "->?DType\n"
+	                      "Alias for ?#type"),
 	TYPE_MEMBER_END
 };
 
