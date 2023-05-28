@@ -837,13 +837,13 @@ jseq_iter(DeeJsonSequenceObject *__restrict self) {
 	result = DeeObject_MALLOC(DeeJsonIteratorObject);
 	if unlikely(!result)
 		goto done;
-	result->ji_owner = self->js_owner;
-	Dee_Incref(result->ji_owner);
 	DeeJsonSequence_LockRead(self);
 	result->ji_parser = self->js_parser;
 	DeeJsonSequence_LockEndRead(self);
 	if unlikely(libjson_parser_rewind(&result->ji_parser) != JSON_PARSER_ARRAY)
 		goto err_r_syntax;
+	result->ji_owner = self->js_owner;
+	Dee_Incref(result->ji_owner);
 	DeeObject_Init(result, &DeeJsonSequenceIterator_Type);
 done:
 	return result;
@@ -859,13 +859,13 @@ jmap_iter(DeeJsonMappingObject *__restrict self) {
 	result = DeeObject_MALLOC(DeeJsonIteratorObject);
 	if unlikely(!result)
 		goto done;
-	result->ji_owner = self->jm_owner;
-	Dee_Incref(result->ji_owner);
 	DeeJsonMapping_LockRead(self);
 	result->ji_parser = self->jm_parser;
 	DeeJsonMapping_LockEndRead(self);
 	if unlikely(libjson_parser_rewind(&result->ji_parser) != JSON_PARSER_OBJECT)
 		goto err_r_syntax;
+	result->ji_owner = self->jm_owner;
+	Dee_Incref(result->ji_owner);
 	DeeObject_Init(result, &DeeJsonMappingIterator_Type);
 done:
 	return result;
@@ -1413,7 +1413,7 @@ DeeJsonSequence_New(DeeJsonParser *__restrict self, bool must_advance_parser) {
 	result->js_size  = 0;
 	result->js_owner = self->djp_owner;
 	Dee_Incref(self->djp_owner);
-	DeeObject_Init(result, &DeeJsonMapping_Type);
+	DeeObject_Init(result, &DeeJsonSequence_Type);
 done:
 	return result;
 err_syntax_array_retval:

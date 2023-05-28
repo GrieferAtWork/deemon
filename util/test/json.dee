@@ -1,0 +1,67 @@
+#!/usr/bin/deemon
+/* Copyright (c) 2018-2023 Griefer@Work                                       *
+ *                                                                            *
+ * This software is provided 'as-is', without any express or implied          *
+ * warranty. In no event will the authors be held liable for any damages      *
+ * arising from the use of this software.                                     *
+ *                                                                            *
+ * Permission is granted to anyone to use this software for any purpose,      *
+ * including commercial applications, and to alter it and redistribute it     *
+ * freely, subject to the following restrictions:                             *
+ *                                                                            *
+ * 1. The origin of this software must not be misrepresented; you must not    *
+ *    claim that you wrote the original software. If you use this software    *
+ *    in a product, an acknowledgement (see the following) in the product     *
+ *    documentation is required:                                              *
+ *    Portions Copyright (c) 2018-2023 Griefer@Work                           *
+ * 2. Altered source versions must be plainly marked as such, and must not be *
+ *    misrepresented as being the original software.                          *
+ * 3. This notice may not be removed or altered from any source distribution. *
+ */
+
+import * from deemon;
+import * from errors;
+import json;
+
+class MyDTO2 {
+	this = default;
+	public member foo: {(int | string)...};
+}
+
+class MyDTO {
+	this = default;
+	public member x: int;
+	public member y: int;
+	public member z: MyDTO2;
+}
+
+/* Assert that JSON is able to parse simple expressions */
+assert json.parse(r'"foo"') == "foo";
+assert json.parse(r'42') == 42;
+assert json.parse(r'0.5') == 0.5;
+assert json.parse(r'1.0') == 1.0;
+assert json.parse(r'1.5') == 1.5;
+assert json.parse(r'true') === true;
+assert json.parse(r'false') === false;
+assert json.parse(r'null') === none;
+assert json.parse(r'[]') == {};
+assert json.parse(r'[0]') == {0};
+assert json.parse(r'{}') == {};
+assert json.parse(r'{"foo": 10}') == { "foo": 10 };
+assert json.parse(r'{"x":null}') == { "x": none };
+
+/* Test that user-defined DTOs can be converted to JSON */
+local myDTOInstance = MyDTO(z: MyDTO2(foo: [42, "foo"]));
+assert json.write(myDTOInstance) == r'{"z":{"foo":[42,"foo"]}}';
+
+/* Test that JSON can be converted back into user-defined DTOs,
+ * whilst also respecting user-defined type annotation in order
+ * to determine the intended typing of fields and so on. */
+assert json.parse(r'{"z":{"foo":[42,"foo"]}}', into: MyDTO) == myDTOInstance;
+assert json.parse(r'{"z":{"foo":[]}}', into: MyDTO) == MyDTO(z: MyDTO2(foo: []));
+
+/* The JSON parser enforces user-defined type annotations, so trying to
+ * construct DTOs with illegal member types results inn TypeError to be
+ * thrown */
+assert (try json.parse(r'{"z":{"foo":[true]}}', into: MyDTO) catch (e...) e) is TypeError;
+assert (try json.parse(r'{"x":null}', into: MyDTO) catch (e...) e) is TypeError;
