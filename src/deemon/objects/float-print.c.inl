@@ -19,89 +19,70 @@
  */
 #ifdef __INTELLISENSE__
 #include "float.c"
-#define PRINT_LONG_DOUBLE 1
+#define DEFINE_DeeFloat_LPrint
+//#define DEFINE_DeeFloat_Print
 #endif
 
-#include <deemon/format.h>
+#if (defined(DEFINE_DeeFloat_LPrint) + \
+     defined(DEFINE_DeeFloat_Print)) != 1
+#error "Must #define exactly one of these macros"
+#endif /* ... */
 
-#include <math.h> /* FIXME: This needs a feature check! */
+#include <deemon/format.h>
+#include <deemon/system-features.h>
+
+#ifdef CONFIG_HAVE_MATH_H
+#include <math.h>
+#endif /* CONFIG_HAVE_MATH_H */
 
 /* Print a string representation of the given floating point value.
  * @param: flags: Set of `DEEFLOAT_PRINT_F*' */
-#ifdef PRINT_LONG_DOUBLE
-#define FLOAT_TYPE  long double
+#ifdef DEFINE_DeeFloat_LPrint
+#define LOCAL_float_t long double
 PUBLIC WUNUSED NONNULL((2)) dssize_t DCALL
 DeeFloat_LPrint(long double value, dformatprinter printer, void *arg,
                 size_t width, size_t precision, unsigned int flags)
-#else /* PRINT_LONG_DOUBLE */
-#define FLOAT_TYPE  double
+#else /* DEFINE_DeeFloat_LPrint */
+#define LOCAL_float_t  double
 PUBLIC WUNUSED NONNULL((2)) dssize_t DCALL
 DeeFloat_Print(double value, dformatprinter printer, void *arg,
                size_t width, size_t precision, unsigned int flags)
-#endif /* !PRINT_LONG_DOUBLE */
+#endif /* !DEFINE_DeeFloat_LPrint */
 {
 	dssize_t temp, result = 0;
-	PRIVATE FLOAT_TYPE const pow10[10] = {
+	PRIVATE LOCAL_float_t const pow10[10] = {
 		1, 10, 100, 1000, 10000, 100000, 1000000,
 		10000000, 100000000, 1000000000
 	};
-	FLOAT_TYPE tmpval, diff;
+	LOCAL_float_t tmpval, diff;
 	char buf[32]; /* Must be able to hold a decimal-encoded UINT64_MAX +1 more character */
 	size_t len, total_len;
 	bool is_negative;
 	unsigned int max_prec, min_prec;
 	uintmax_t whole, frac;
-#if 1
+
+	/* Check for INF */
+#ifdef CONFIG_HAVE_isinf
 	if (isinf(value)) {
 		buf[1] = 'I';
 		buf[2] = 'N';
 		buf[3] = 'F';
-do_special_float:
-		total_len   = 3;
-		is_negative = false;
-		if (value < 0)
-			is_negative = true;
-		if (is_negative || (flags & (DEEFLOAT_PRINT_FSIGN | DEEFLOAT_PRINT_FSPACE)))
-			++total_len;
-		if ((flags & (DEEFLOAT_PRINT_FWIDTH | DEEFLOAT_PRINT_FLJUST)) ==
-		    (DEEFLOAT_PRINT_FWIDTH | DEEFLOAT_PRINT_FLJUST) &&
-		    (width > total_len)) {
-			temp = DeeFormat_Repeat(printer, arg, ' ', width - total_len);
-			if unlikely(temp < 0)
-				goto err;
-			result += temp;
-		}
-		if (total_len == 4) {
-			if (is_negative) {
-				buf[0] = '-';
-			} else if (flags & DEEFLOAT_PRINT_FSIGN) {
-				buf[0] = '+';
-			} else {
-				buf[0] = ' ';
-			}
-			temp = (*printer)(arg, buf, 4);
-		} else {
-			temp = (*printer)(arg, buf + 1, 3);
-		}
-		if unlikely(temp < 0)
-			goto err;
-		result += temp;
-		if ((flags & (DEEFLOAT_PRINT_FWIDTH | DEEFLOAT_PRINT_FLJUST)) ==
-		    (DEEFLOAT_PRINT_FWIDTH) &&
-		    (width > total_len)) {
-			temp = DeeFormat_Repeat(printer, arg, ' ', width - total_len);
-			if unlikely(temp < 0)
-				goto err;
-			result += temp;
-		}
-		return result;
-	} else if (isnan(value)) {
+		goto do_special_float;
+#define WANT_do_special_float
+	}
+#endif /* CONFIG_HAVE_isinf */
+
+	/* Check for NAN */
+#ifdef CONFIG_HAVE_isnan
+	if (isnan(value)) {
 		buf[1] = 'N';
 		buf[2] = 'a';
 		buf[3] = 'N';
 		goto do_special_float;
+#define WANT_do_special_float
 	}
-#endif /* Special floating point values... */
+#endif /* CONFIG_HAVE_isnan */
+
 	is_negative = false;
 	if (value < 0) {
 		is_negative = true;
@@ -136,7 +117,7 @@ do_special_float:
 
 	/* Special case: no fraction wanted. - Round the whole-part. */
 	if (max_prec == 0) {
-		diff = value - (FLOAT_TYPE)whole;
+		diff = value - (LOCAL_float_t)whole;
 		if (diff > 0.5) {
 			++whole;
 		} else if (diff == 0.5 && (whole & 1)) {
@@ -159,7 +140,7 @@ do_special_float:
 		frac /= 10;
 	total_len = COMPILER_LENOF(buf) - len;
 	if ((flags & (DEEFLOAT_PRINT_FWIDTH | DEEFLOAT_PRINT_FLJUST)) ==
-	    (DEEFLOAT_PRINT_FWIDTH | DEEFLOAT_PRINT_FLJUST)) {
+	    /*    */ (DEEFLOAT_PRINT_FWIDTH | DEEFLOAT_PRINT_FLJUST)) {
 		/* Pad with with leading zeroes. */
 		if (is_negative || (flags & (DEEFLOAT_PRINT_FSIGN | DEEFLOAT_PRINT_FSPACE)))
 			++total_len;
@@ -241,8 +222,9 @@ do_float_normal_width:
 		}
 	}
 	if ((flags & (DEEFLOAT_PRINT_FWIDTH | DEEFLOAT_PRINT_FLJUST)) ==
-	    (DEEFLOAT_PRINT_FWIDTH) &&
+	    /*    */ (DEEFLOAT_PRINT_FWIDTH) &&
 	    (width > total_len)) {
+
 		/* Insert a missing decimal separator. */
 		if (flags & DEEFLOAT_PRINT_FPADZERO && max_prec == 0) {
 			buf[0] = '.';
@@ -252,6 +234,7 @@ do_float_normal_width:
 			result += temp;
 			--total_len;
 		}
+
 		/* Add trailing zeroes to pad out our length the requested width. */
 		temp = DeeFormat_Repeat(printer, arg,
 		                        flags & DEEFLOAT_PRINT_FPADZERO ? '0' : ' ',
@@ -260,12 +243,54 @@ do_float_normal_width:
 			goto err;
 		result += temp;
 	}
-#undef FLOAT_TYPE
 	return result;
 err:
 	return temp;
+#ifdef WANT_do_special_float
+#undef WANT_do_special_float
+do_special_float:
+	total_len   = 3;
+	is_negative = false;
+	if (value < 0)
+		is_negative = true;
+	if (is_negative || (flags & (DEEFLOAT_PRINT_FSIGN | DEEFLOAT_PRINT_FSPACE)))
+		++total_len;
+	if ((flags & (DEEFLOAT_PRINT_FWIDTH | DEEFLOAT_PRINT_FLJUST)) ==
+	    (DEEFLOAT_PRINT_FWIDTH | DEEFLOAT_PRINT_FLJUST) &&
+	    (width > total_len)) {
+		temp = DeeFormat_Repeat(printer, arg, ' ', width - total_len);
+		if unlikely(temp < 0)
+			goto err;
+		result += temp;
+	}
+	if (total_len == 4) {
+		if (is_negative) {
+			buf[0] = '-';
+		} else if (flags & DEEFLOAT_PRINT_FSIGN) {
+			buf[0] = '+';
+		} else {
+			buf[0] = ' ';
+		}
+		temp = (*printer)(arg, buf, 4);
+	} else {
+		temp = (*printer)(arg, buf + 1, 3);
+	}
+	if unlikely(temp < 0)
+		goto err;
+	result += temp;
+	if ((flags & (DEEFLOAT_PRINT_FWIDTH | DEEFLOAT_PRINT_FLJUST)) ==
+	    (DEEFLOAT_PRINT_FWIDTH) &&
+	    (width > total_len)) {
+		temp = DeeFormat_Repeat(printer, arg, ' ', width - total_len);
+		if unlikely(temp < 0)
+			goto err;
+		result += temp;
+	}
+	return result;
+#endif /* WANT_do_special_float */
 }
 
 
-#undef FLOAT_TYPE
-#undef PRINT_LONG_DOUBLE
+#undef LOCAL_float_t
+#undef DEFINE_DeeFloat_LPrint
+#undef DEFINE_DeeFloat_Print

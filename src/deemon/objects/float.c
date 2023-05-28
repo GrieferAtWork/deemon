@@ -846,12 +846,12 @@ DECL_END
 
 #ifdef CONFIG_HAVE_FPU
 #ifndef __INTELLISENSE__
-#undef PRINT_LONG_DOUBLE
+#define DEFINE_DeeFloat_Print
+#include "float-print.c.inl"
 #ifdef __COMPILER_HAVE_LONGDOUBLE
-#define PRINT_LONG_DOUBLE 1
+#define DEFINE_DeeFloat_LPrint
 #include "float-print.c.inl"
 #endif /* __COMPILER_HAVE_LONGDOUBLE */
-#include "float-print.c.inl"
 #endif /* !__INTELLISENSE__ */
 #endif /* CONFIG_HAVE_FPU */
 
