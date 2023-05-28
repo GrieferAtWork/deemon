@@ -83,6 +83,13 @@ DeeSystem_DEFINE_memsetw(dee_memsetw)
 DeeSystem_DEFINE_memsetl(dee_memsetl)
 #endif /* !CONFIG_HAVE_memsetl */
 
+#ifndef CONFIG_HAVE_memsetq
+#define CONFIG_HAVE_memsetq
+#undef memsetq
+#define memsetq dee_memsetq
+DeeSystem_DEFINE_memsetq(dee_memsetq)
+#endif /* !CONFIG_HAVE_memsetq */
+
 #ifndef CONFIG_HAVE_mempsetw
 #define CONFIG_HAVE_mempsetw
 #undef mempsetw
@@ -96,6 +103,13 @@ DeeSystem_DEFINE_mempsetw(dee_mempsetw)
 #define mempsetl dee_mempsetl
 DeeSystem_DEFINE_mempsetl(dee_mempsetl)
 #endif /* !CONFIG_HAVE_mempsetl */
+
+#ifndef CONFIG_HAVE_mempsetq
+#define CONFIG_HAVE_mempsetq
+#undef mempsetq
+#define mempsetq dee_mempsetq
+DeeSystem_DEFINE_mempsetq(dee_mempsetq)
+#endif /* !CONFIG_HAVE_mempsetq */
 
 #ifndef CONFIG_HAVE_memcmpw
 #define CONFIG_HAVE_memcmpw
@@ -270,6 +284,13 @@ DeeSystem_DEFINE_memcasecmp(dee_memcasecmp)
 #define issymstrt(ch) (isalpha(ch) || (ch) == '_' || (ch) == '$')
 #undef issymcont
 #define issymcont(ch) (isalnum(ch) || (ch) == '_' || (ch) == '$')
+
+#ifndef __native_char16_t_defined
+#undef char16_t
+#define char16_t __UINT16_TYPE__
+#undef char32_t
+#define char32_t __UINT32_TYPE__
+#endif /* !__native_char16_t_defined */
 
 #ifndef CONFIG_HAVE_UNICODE_H
 #undef unicode_utf8seqlen
@@ -563,12 +584,6 @@ NOTHROW_NCX(DCALL dee_unicode_readutf32_swap_rev_n)(/*utf-32*/ char32_t const **
 #define __libc_hex2int(ch, p_result) \
 	DeeUni_AsDigit(ch, 16, p_result)
 
-#ifndef __native_char16_t_defined
-#undef char16_t
-#define char16_t uint16_t
-#undef char32_t
-#define char32_t uint32_t
-#endif /* !__native_char16_t_defined */
 #undef assert
 #define assert ASSERT
 #undef assert_failed

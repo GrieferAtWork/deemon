@@ -271,7 +271,7 @@ typedef struct {
  *                              will be left in an undefined state)
  * @return: * : The equivalent deemon object of the just-parsed JSON
  * @return: NULL: An error was thrown. */
-PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeJson_ParseObject(DeeJsonParser *__restrict self,
                     bool must_advance_parser);
 

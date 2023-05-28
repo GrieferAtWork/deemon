@@ -2931,7 +2931,7 @@ DeeJson_ParseInto(DeeJsonParser *__restrict self, DeeObject *into,
  * @return: *   : Success
  * @return: NULL: An error was thrown
  * @return: ITER_DONE: `throw_error_if_typing_fails' is `false' and typing failed */
-PRIVATE WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 DeeJson_ParseIntoType(DeeJsonParser *__restrict self,
                       DeeTypeObject *into_type,
                       bool must_advance_parser,
@@ -2997,7 +2997,8 @@ DeeJson_ParseIntoType(DeeJsonParser *__restrict self,
 
 	/* Mapping types */
 	if (DeeType_IsInherited(into_type, &DeeMapping_Type)) {
-		int tok = libjson_parser_peeknext(&self->djp_parser);
+		int tok;
+		tok = libjson_parser_peeknext(&self->djp_parser);
 		if (tok == JSON_PARSER_OBJECT) {
 			result = (DREF DeeObject *)DeeJsonMapping_New(self, must_advance_parser);
 check_result_and_maybe_cast_to_into_type:
@@ -3016,7 +3017,8 @@ check_result_and_maybe_cast_to_into_type:
 
 	/* Sequence types */
 	if (DeeType_IsInherited(into_type, &DeeSeq_Type)) {
-		int tok = libjson_parser_peeknext(&self->djp_parser);
+		int tok;
+		tok = libjson_parser_peeknext(&self->djp_parser);
 		if (tok == JSON_PARSER_ARRAY) {
 			result = (DREF DeeObject *)DeeJsonSequence_New(self, must_advance_parser);
 			goto check_result_and_maybe_cast_to_into_type;
