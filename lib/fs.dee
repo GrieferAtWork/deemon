@@ -24,8 +24,14 @@ import posix;
 
 global final stat = posix.stat;
 global final lstat = posix.lstat;
-//global final User = posix.User; ???
-//global final Group = posix.Group; ???
+
+@@TODO
+final class User {
+}
+
+@@TODO
+final class Group {
+}
 
 /* Exceptions. (deprecated; use the symbols from `errors` instead) */
 global final NoDirectory = Error.SystemError.FSError.FileNotFound.NoDirectory;
@@ -36,6 +42,8 @@ global final BusyFile = Error.SystemError.FSError.BusyFile;
 global final NoLink = Error.SystemError.FSError.FileNotFound.NoSymlink;
 
 class dir: Sequence {
+	public static final member Iterator: Type = YieldFunctionIterator from rt;
+
 	@@The internal posix-DIR object.
 	private member m_dir: posix.DIR;
 
@@ -53,6 +61,8 @@ class dir: Sequence {
 }
 
 class query: dir {
+	public static final member Iterator: Type = YieldFunctionIterator from rt;
+
 	@@The wildcard-enabled pattern with which to filter files
 	private member m_pattern: string;
 
@@ -293,7 +303,7 @@ function extof(path: string): string {
 	local pos = tail.rfind(".");
 	if (pos == -1)
 		return "";
-	return tail[pos:];
+	return tail[pos+1:];
 }
 
 global final driveof = posix.driveof;

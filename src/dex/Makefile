@@ -85,20 +85,6 @@ $(BIN_PATH)/lib/files$(DLL): $(DEX_OBJECTS_files) $(BIN_PATH)/deemon$(EXE)
 	$(DEX_CC) -o $@ -L$(BIN_PATH) $(LDFLAGS) $(DEX_LDFLAGS) $(DEX_OBJECTS_files) $(LIBS) $(DEX_LIBS)
 
 
-### fs
-ifndef CONFIG_WITHOUT_DEX_FS
-DEX += fs
-DEX_SOURCES_fs += $(wildcard $(SRC_ROOT)/src/dex/fs/*.c)
-DEX_OBJECTS_fs = $(call dex_objects,fs,$(DEX_SOURCES_fs))
--include $(foreach F,$(DEX_OBJECTS_fs),$(F:.o=.MF))
-$(BLD_PATH)/dex/fs/%.o: $(SRC_ROOT)/%.c
-	@mkdir -p $(dir $@)
-	$(DEX_CC) -MMD -MF $(@:.o=.MF) -c -o $@ $(CFLAGS) $(DEX_CFLAGS) $<
-$(BIN_PATH)/lib/fs$(DLL): $(DEX_OBJECTS_fs) $(BIN_PATH)/deemon$(EXE)
-	$(DEX_CC) -o $@ -L$(BIN_PATH) $(LDFLAGS) $(DEX_LDFLAGS) $(DEX_OBJECTS_fs) $(LIBS) $(DEX_LIBS)
-endif
-
-
 ### ipc
 ifndef CONFIG_WITHOUT_DEX_IPC
 DEX += ipc

@@ -130,7 +130,6 @@ set_with_feature() {
 	dex-posix)               set_dex_specific "POSIX" "$2" ;;
 	dex-math)                set_dex_specific "MATH" "$2" ;;
 	dex-ipc)                 set_dex_specific "IPC" "$2" ;;
-	dex-fs)                  set_dex_specific "FS" "$2" ;;
 	dex-threading)           set_dex_specific "THREADING" "$2" ;;
 	dex-time)                set_dex_specific "TIME" "$2" ;;
 	dex-win32)               set_dex_specific "WIN32" "$2" ;;
@@ -194,7 +193,6 @@ print_help_features() {
 	echo "    dex-posix                Provide the native deemon extension module: 'posix' (default: yes)"
 	echo "    dex-math                 Provide the native deemon extension module: 'math' (default: yes)"
 	echo "    dex-ipc                  Provide the native deemon extension module: 'ipc' (default: yes)"
-	echo "    dex-fs                   Provide the native deemon extension module: 'fs' (default: yes)"
 	echo "    dex-threading            Provide the native deemon extension module: 'threading' (default: yes)"
 	echo "    dex-time                 Provide the native deemon extension module: 'time' (default: yes)"
 	echo "    dex-win32                Provide the native deemon extension module: 'win32' (default: yes)"

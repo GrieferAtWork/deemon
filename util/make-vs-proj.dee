@@ -158,7 +158,8 @@ function createVsFile(filename: string, cb: Callable) {
 			try fs.mkdir(".vs/dex"); catch (...);
 			fp = File.open(".vs/" + filename, "w");
 		}
-		with (fp) cb(fp);
+		with (fp)
+			cb(fp);
 	}
 }
 
