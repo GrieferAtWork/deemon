@@ -84,7 +84,7 @@ posix_path_headof_f(DeeObject *__restrict path) {
 	ASSERT(tailsep >= pathstr);
 	if (tailsep <= pathstr)
 		return_empty_string;
-	--tailsep; /* Don't include the trailing SEP */
+	/* Note that we *do* include the trailing slash! */
 	return DeeString_NewUtf8(pathstr,
 	                         (size_t)(tailsep - pathstr),
 	                         STRING_ERROR_FIGNORE);
