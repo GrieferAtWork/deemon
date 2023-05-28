@@ -92,6 +92,10 @@ struct Dee_objectlist {
 	(Dee_Decrefv((self)->ol_elemv, (self)->ol_elemc), \
 	 Dee_Free((self)->ol_elemv))
 
+/* Finalize the given object list, but don't drop references. */
+#define Dee_objectlist_fini_nodecref(self) \
+	Dee_Free((self)->ol_elemv)
+
 /* Allocate memory for at least `num_objects' entries and return a pointer to
  * the first of them, leaving it up to the caller to initialize that memory.
  * Upon error, `NULL' is returned instead.
