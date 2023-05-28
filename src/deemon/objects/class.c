@@ -3570,6 +3570,7 @@ impl_instance_builtin_eq(DeeTypeObject *tp_self,
 			Dee_Decref(lhs_val);
 			if (temp <= 0)
 				return temp; /* Error, or non-equal */
+			Dee_instance_desc_lock_read(instance);
 		}
 	}
 	Dee_instance_desc_lock_endread(instance);
@@ -3618,6 +3619,7 @@ impl_instance_builtin_lo(DeeTypeObject *tp_self,
 			Dee_Decref(lhs_val);
 			if (temp <= 0)
 				return temp; /* Error, or non-qual */
+			Dee_instance_desc_lock_read(instance);
 		}
 	}
 	Dee_instance_desc_lock_endread(instance);
@@ -3682,6 +3684,7 @@ non_last_member:
 			Dee_Decref(lhs_val);
 			if (temp <= 0)
 				return temp; /* Error, or non-qual */
+			Dee_instance_desc_lock_read(instance);
 		}
 	}
 	Dee_instance_desc_lock_endread(instance);
@@ -3727,6 +3730,9 @@ INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL DeeObject_TCompareLeObje
 INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL DeeObject_TCompareGrObject(DeeTypeObject *tp_self, DeeObject *self, DeeObject *other);
 INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL DeeObject_TCompareGeObject(DeeTypeObject *tp_self, DeeObject *self, DeeObject *other);
 
+#define DeeType_HasBaseForCompare(self) \
+	(DeeType_Base(self) && DeeType_Base(self) != &DeeObject_Type)
+
 INTERN WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
 instance_builtin_teq(DeeTypeObject *tp_self, DeeObject *self, DeeObject *other) {
 	DREF DeeObject *result;
@@ -3737,7 +3743,7 @@ instance_builtin_teq(DeeTypeObject *tp_self, DeeObject *self, DeeObject *other) 
 		goto err;
 
 	/* Compare the underlying objects. */
-	if (DeeType_Base(tp_self)) {
+	if (DeeType_HasBaseForCompare(tp_self)) {
 		result = DeeObject_TCompareEqObject(DeeType_Base(tp_self), self, other);
 		if unlikely(!result)
 			goto err;
@@ -3769,7 +3775,7 @@ instance_builtin_tne(DeeTypeObject *tp_self, DeeObject *self, DeeObject *other) 
 		goto err;
 
 	/* Compare the underlying objects. */
-	if (DeeType_Base(tp_self)) {
+	if (DeeType_HasBaseForCompare(tp_self)) {
 		result = DeeObject_TCompareNeObject(DeeType_Base(tp_self), self, other);
 		if unlikely(!result)
 			goto err;
@@ -3799,7 +3805,7 @@ instance_builtin_tlo(DeeTypeObject *tp_self, DeeObject *self, DeeObject *other) 
 		goto err;
 
 	/* BASE < OTHER || (BASE == OTHER && SELF < OTHER) */
-	if (DeeType_Base(tp_self)) {
+	if (DeeType_HasBaseForCompare(tp_self)) {
 		/* Compare the underlying objects. */
 		result = DeeObject_TCompareLoObject(DeeType_Base(tp_self), self, other);
 		if unlikely(!result)
@@ -3839,7 +3845,7 @@ instance_builtin_tle(DeeTypeObject *tp_self, DeeObject *self, DeeObject *other) 
 		goto err;
 
 	/* BASE < OTHER || (BASE == OTHER && SELF <= OTHER) */
-	if (DeeType_Base(tp_self)) {
+	if (DeeType_HasBaseForCompare(tp_self)) {
 		/* Compare the underlying objects. */
 		result = DeeObject_TCompareLoObject(DeeType_Base(tp_self), self, other);
 		if unlikely(!result)
@@ -3879,7 +3885,7 @@ instance_builtin_tgr(DeeTypeObject *tp_self, DeeObject *self, DeeObject *other) 
 		goto err;
 
 	/* BASE > OTHER || (BASE == OTHER && SELF > OTHER) */
-	if (DeeType_Base(tp_self)) {
+	if (DeeType_HasBaseForCompare(tp_self)) {
 		/* Compare the underlying objects. */
 		result = DeeObject_TCompareGrObject(DeeType_Base(tp_self), self, other);
 		if unlikely(!result)
@@ -3919,7 +3925,7 @@ instance_builtin_tge(DeeTypeObject *tp_self, DeeObject *self, DeeObject *other) 
 		goto err;
 
 	/* BASE > OTHER || (BASE == OTHER && SELF >= OTHER) */
-	if (DeeType_Base(tp_self)) {
+	if (DeeType_HasBaseForCompare(tp_self)) {
 		/* Compare the underlying objects. */
 		result = DeeObject_TCompareGrObject(DeeType_Base(tp_self), self, other);
 		if unlikely(!result)
