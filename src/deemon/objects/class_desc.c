@@ -3622,7 +3622,7 @@ err:
 
 
 
-INTERN WUNUSED NONNULL((1, 2, 3, 4)) DREF DeeObject *DCALL
+PUBLIC WUNUSED NONNULL((1, 2, 3, 4)) DREF DeeObject *DCALL
 DeeInstance_GetAttribute(struct class_desc *__restrict desc,
                          struct instance_desc *__restrict self,
                          DeeObject *__restrict this_arg,
@@ -3676,7 +3676,7 @@ illegal:
 	return NULL;
 }
 
-INTERN WUNUSED NONNULL((1, 2, 3, 4)) int DCALL
+PUBLIC WUNUSED NONNULL((1, 2, 3, 4)) int DCALL
 DeeInstance_BoundAttribute(struct class_desc *__restrict desc,
                            struct instance_desc *__restrict self,
                            DeeObject *__restrict this_arg,
@@ -3716,7 +3716,7 @@ unbound:
 	return 0;
 }
 
-INTERN WUNUSED NONNULL((1, 2, 3, 4)) DREF DeeObject *DCALL
+PUBLIC WUNUSED NONNULL((1, 2, 3, 4)) DREF DeeObject *DCALL
 DeeInstance_CallAttribute(struct class_desc *__restrict desc,
                           struct instance_desc *__restrict self,
                           DeeObject *this_arg,
@@ -3772,7 +3772,7 @@ err:
 	return NULL;
 }
 
-INTERN WUNUSED NONNULL((1, 2, 3, 4, 5)) DREF DeeObject *DCALL
+PUBLIC WUNUSED NONNULL((1, 2, 3, 4, 5)) DREF DeeObject *DCALL
 DeeInstance_VCallAttributef(struct class_desc *__restrict desc,
                             struct instance_desc *__restrict self,
                             DeeObject *this_arg,
@@ -3828,7 +3828,7 @@ err:
 	return NULL;
 }
 
-INTERN WUNUSED NONNULL((1, 2, 3, 4)) DREF DeeObject *DCALL
+PUBLIC WUNUSED NONNULL((1, 2, 3, 4)) DREF DeeObject *DCALL
 DeeInstance_CallAttributeKw(struct class_desc *__restrict desc,
                             struct instance_desc *__restrict self,
                             DeeObject *this_arg,
@@ -3886,7 +3886,7 @@ err:
 }
 
 #ifdef CONFIG_CALLTUPLE_OPTIMIZATIONS
-INTERN WUNUSED NONNULL((1, 2, 3, 4, 5)) DREF DeeObject *DCALL
+PUBLIC WUNUSED NONNULL((1, 2, 3, 4, 5)) DREF DeeObject *DCALL
 DeeInstance_CallAttributeTuple(struct class_desc *__restrict desc,
                                struct instance_desc *__restrict self,
                                DeeObject *this_arg,
@@ -3942,7 +3942,7 @@ err:
 	return NULL;
 }
 
-INTERN WUNUSED NONNULL((1, 2, 3, 4, 5)) DREF DeeObject *DCALL
+PUBLIC WUNUSED NONNULL((1, 2, 3, 4, 5)) DREF DeeObject *DCALL
 DeeInstance_CallAttributeTupleKw(struct class_desc *__restrict desc,
                                  struct instance_desc *__restrict self,
                                  DeeObject *this_arg,
@@ -3997,10 +3997,35 @@ illegal:
 err:
 	return NULL;
 }
-#endif /* CONFIG_CALLTUPLE_OPTIMIZATIONS */
+#else /* CONFIG_CALLTUPLE_OPTIMIZATIONS */
+PUBLIC WUNUSED NONNULL((1, 2, 3, 4, 5)) DREF DeeObject *DCALL
+DeeInstance_CallAttributeTuple(struct class_desc *__restrict desc,
+                               struct instance_desc *__restrict self,
+                               DeeObject *this_arg,
+                               struct class_attribute *__restrict attr,
+                               DeeObject *args) {
+	/* For binary compatibility */
+	return DeeInstance_CallAttribute(desc, self, this_arg, attr,
+	                                 DeeTuple_SIZE(args),
+	                                 DeeTuple_ELEM(args));
+}
+
+PUBLIC WUNUSED NONNULL((1, 2, 3, 4, 5)) DREF DeeObject *DCALL
+DeeInstance_CallAttributeTupleKw(struct class_desc *__restrict desc,
+                                 struct instance_desc *__restrict self,
+                                 DeeObject *this_arg,
+                                 struct class_attribute *__restrict attr,
+                                 DeeObject *args, DeeObject *kw) {
+	/* For binary compatibility */
+	return DeeInstance_CallAttributeKw(desc, self, this_arg, attr,
+	                                   DeeTuple_SIZE(args),
+	                                   DeeTuple_ELEM(args),
+	                                   kw);
+}
+#endif /* !CONFIG_CALLTUPLE_OPTIMIZATIONS */
 
 
-INTERN WUNUSED NONNULL((1, 2, 3, 4)) int DCALL
+PUBLIC WUNUSED NONNULL((1, 2, 3, 4)) int DCALL
 DeeInstance_DelAttribute(struct class_desc *__restrict desc,
                          struct instance_desc *__restrict self,
                          DeeObject *__restrict this_arg,
@@ -4060,7 +4085,7 @@ err:
 	return -1;
 }
 
-INTERN WUNUSED NONNULL((1, 2, 3, 4, 5)) int DCALL
+PUBLIC WUNUSED NONNULL((1, 2, 3, 4, 5)) int DCALL
 DeeInstance_SetAttribute(struct class_desc *__restrict desc,
                          struct instance_desc *__restrict self,
                          DeeObject *this_arg,

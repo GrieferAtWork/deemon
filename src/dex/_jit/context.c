@@ -176,9 +176,9 @@ class_desc_as_instance_from_instance(struct instance_desc *__restrict self,
 
 
 PRIVATE WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
-DeeInstance_GetAttribute(struct instance_desc *__restrict self,
-                         DeeObject *__restrict this_arg,
-                         struct class_attribute *__restrict attr) {
+fast_DeeInstance_GetAttribute(struct instance_desc *__restrict self,
+                              DeeObject *__restrict this_arg,
+                              struct class_attribute *__restrict attr) {
 	DREF DeeObject *result;
 	ASSERT_OBJECT(this_arg);
 	if (attr->ca_flag & CLASS_ATTRIBUTE_FCLASSMEM)
@@ -229,9 +229,9 @@ illegal:
 }
 
 PRIVATE WUNUSED NONNULL((1, 2, 3)) int DCALL
-DeeInstance_BoundAttribute(struct instance_desc *__restrict self,
-                           DeeObject *__restrict this_arg,
-                           struct class_attribute *__restrict attr) {
+fast_DeeInstance_BoundAttribute(struct instance_desc *__restrict self,
+                                DeeObject *__restrict this_arg,
+                                struct class_attribute *__restrict attr) {
 	DREF DeeObject *result;
 	ASSERT_OBJECT(this_arg);
 	if (attr->ca_flag & CLASS_ATTRIBUTE_FCLASSMEM)
@@ -268,9 +268,9 @@ unbound:
 
 
 PRIVATE WUNUSED NONNULL((1, 2, 3)) int DCALL
-DeeInstance_DelAttribute(struct instance_desc *__restrict self,
-                         DeeObject *__restrict this_arg,
-                         struct class_attribute *__restrict attr) {
+fast_DeeInstance_DelAttribute(struct instance_desc *__restrict self,
+                              DeeObject *__restrict this_arg,
+                              struct class_attribute *__restrict attr) {
 	ASSERT_OBJECT(this_arg);
 	/* Make sure that the access is allowed. */
 	if (attr->ca_flag & CLASS_ATTRIBUTE_FREADONLY)
@@ -324,10 +324,10 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1, 2, 3, 4)) int DCALL
-DeeInstance_SetAttribute(struct instance_desc *__restrict self,
-                         DeeObject *this_arg,
-                         struct class_attribute *__restrict attr,
-                         DeeObject *value) {
+fast_DeeInstance_SetAttribute(struct instance_desc *__restrict self,
+                              DeeObject *this_arg,
+                              struct class_attribute *__restrict attr,
+                              DeeObject *value) {
 	ASSERT_OBJECT(this_arg);
 	if (attr->ca_flag & CLASS_ATTRIBUTE_FCLASSMEM)
 		self = class_desc_as_instance_from_instance(self, this_arg);
@@ -423,9 +423,9 @@ JITLValue_IsBound(JITLValue *__restrict self,
 		break;
 
 	case JIT_LVALUE_CLSATTRIB:
-		result = DeeInstance_BoundAttribute(self->lv_clsattrib.lc_desc,
-		                                    self->lv_clsattrib.lc_obj,
-		                                    self->lv_clsattrib.lc_attr);
+		result = fast_DeeInstance_BoundAttribute(self->lv_clsattrib.lc_desc,
+		                                         self->lv_clsattrib.lc_obj,
+		                                         self->lv_clsattrib.lc_attr);
 		break;
 
 	case JIT_LVALUE_ATTR:
@@ -527,7 +527,7 @@ err_unbound:
 		break;
 
 	case JIT_LVALUE_CLSATTRIB:
-		result = DeeInstance_GetAttribute(self->lv_clsattrib.lc_desc,
+		result = fast_DeeInstance_GetAttribute(self->lv_clsattrib.lc_desc,
 		                                  self->lv_clsattrib.lc_obj,
 		                                  self->lv_clsattrib.lc_attr);
 		break;
@@ -620,9 +620,9 @@ JITLValue_DelValue(JITLValue *__restrict self,
 		break;
 
 	case JIT_LVALUE_CLSATTRIB:
-		result = DeeInstance_DelAttribute(self->lv_clsattrib.lc_desc,
-		                                  self->lv_clsattrib.lc_obj,
-		                                  self->lv_clsattrib.lc_attr);
+		result = fast_DeeInstance_DelAttribute(self->lv_clsattrib.lc_desc,
+		                                       self->lv_clsattrib.lc_obj,
+		                                       self->lv_clsattrib.lc_attr);
 		break;
 
 	case JIT_LVALUE_ATTR:
@@ -724,10 +724,10 @@ JITLValue_SetValue(JITLValue *__restrict self,
 		break;
 
 	case JIT_LVALUE_CLSATTRIB:
-		result = DeeInstance_SetAttribute(self->lv_clsattrib.lc_desc,
-		                                  self->lv_clsattrib.lc_obj,
-		                                  self->lv_clsattrib.lc_attr,
-		                                  value);
+		result = fast_DeeInstance_SetAttribute(self->lv_clsattrib.lc_desc,
+		                                       self->lv_clsattrib.lc_obj,
+		                                       self->lv_clsattrib.lc_attr,
+		                                       value);
 		break;
 
 	case JIT_LVALUE_ATTR:

@@ -3948,13 +3948,15 @@ target_class_c:
 	lodsb
 1:	LOAD_CODE(%ecx)
 	ASSERT_BELOW(%ax,co_staticc(CODE_OR_ECX))
+	pushl  co_module(CODE_OR_ECX) /* DeeClass_New:declaring_module */
+	ADJUST_CFA_OFFSET(4)
 	movl   co_staticv(CODE_OR_ECX), %ecx
-	pushl  (%ecx,%eax,4) /* DeeClass_New:descriptor */
+	pushl  (%ecx,%eax,4)          /* DeeClass_New:descriptor */
 	ADJUST_CFA_OFFSET(4)
-	pushl  TOP           /* DeeClass_New:base */
+	pushl  TOP                    /* DeeClass_New:base */
 	ADJUST_CFA_OFFSET(4)
-	call   fSYM(DeeClass_New,8)
-	ADJUST_CFA_OFFSET(-8)
+	call   fSYM(DeeClass_New,12)
+	ADJUST_CFA_OFFSET(-21)
 	testl  %eax, %eax
 	jz     .except
 	xchgl  TOP, %eax
@@ -3974,8 +3976,8 @@ target_class_ec:
 	lodsb
 	movl   %eax, %ecx
 	lodsb
-1:	subl   $4, %esp       /* Reserve memory for BASE_BACKUP */
-	ADJUST_CFA_OFFSET(4)
+1:	subl   $8, %esp       /* Reserve memory for BASE_BACKUP + `DeeClass_New:declaring_module' */
+	ADJUST_CFA_OFFSET(8)
 	pushl  %ecx           /* backup GID / reserve `DeeClass_New:descriptor' */
 	ADJUST_CFA_OFFSET(4)
 	LOAD_CODE(%ecx)
@@ -3986,11 +3988,12 @@ target_class_ec:
 	/* Read the class base from `extern %EDX:%ECX' */
 	LOAD_CODE(%eax)
 	movl   co_module(CODE_OR_EAX), %eax   /* EAX = THIS_MODULE */
+	movl   %eax, 8(%esp)                  /* DeeClass_New:declaring_module */
 	ASSERT_BELOW(%dx,mo_importc(%eax))
 	movl   mo_importv(%eax), %eax
 	movl   (%eax,%edx,4), %edx            /* EDX = IMPORTS[MID] */
 	jmp    .create_class_module_edx
-	ADJUST_CFA_OFFSET(-8)
+	ADJUST_CFA_OFFSET(-12)
 
 target16_class_gc:
 	lodsw
@@ -4001,8 +4004,8 @@ target_class_gc:
 	lodsb
 	movl   %eax, %ecx
 	lodsb
-1:	subl   $4, %esp       /* Reserve memory for BASE_BACKUP */
-	ADJUST_CFA_OFFSET(4)
+1:	subl   $8, %esp       /* Reserve memory for BASE_BACKUP + `DeeClass_New:declaring_module' */
+	ADJUST_CFA_OFFSET(8)
 	LOAD_CODE(%edx)
 	ASSERT_BELOW(%ax,co_staticc(CODE_OR_EDX))
 	movl   co_staticv(CODE_OR_EDX), %edx
@@ -4015,8 +4018,9 @@ target_class_gc:
 	 *  >> EAX   -- UNDEFINED
 	 *  >> ECX   -- GID (8/16-bit)
 	 *  >> EDX   -- `DeeModuleObject *'
-	 *  >> STACK -- +8 { 0..3 = `DeeClassDescriptorObject *', 4..7 = RESERVED }
+	 *  >> STACK -- +12 { 0..3 = `DeeClassDescriptorObject *', 4..7 = UNDEFINED, 8..11 = RESERVED }
 	 */
+	movl   %edx, 4(%esp) /* DeeClass_New:declaring_module */
 	ASSERT_BELOW(%cx,mo_globalc(%edx))
 #ifndef CONFIG_NO_THREADS
 	pushl  %ecx
@@ -4037,11 +4041,11 @@ target_class_gc:
 #ifndef CONFIG_NO_THREADS
 	rwlock_endread mo_lock(%edx)
 #endif /* !CONFIG_NO_THREADS */
-	movl   %eax, 4(%esp)  /* BACKUP(base) = base */
+	movl   %eax, 8(%esp)  /* BACKUP(base) = base */
 	pushl  %eax           /* DeeClass_New:base */
 	ADJUST_CFA_OFFSET(4)
-	call   fSYM(DeeClass_New,8)
-	ADJUST_CFA_OFFSET(-8)
+	call   fSYM(DeeClass_New,12)
+	ADJUST_CFA_OFFSET(-12)
 	testl  %eax, %eax
 	jz     .except_decref_pop
 	sp_push %eax
@@ -4062,12 +4066,16 @@ target_class:
 	movl   TOP, %eax
 	cmpl   $SYM(DeeClassDescriptor_Type), ob_type(%eax)
 	jne    99f
+	LOAD_CODE(%ecx)
+	movl   co_module(CODE_OR_ECX), %ecx
+	pushl  %ecx   /* DeeClass_New:declaring_module */
+	ADJUST_CFA_OFFSET(4)
 	pushl  %eax   /* DeeClass_New:descriptor */
 	ADJUST_CFA_OFFSET(4)
 	pushl  SECOND /* DeeClass_New:base */
 	ADJUST_CFA_OFFSET(4)
-	call   fSYM(DeeClass_New,8)
-	ADJUST_CFA_OFFSET(-8)
+	call   fSYM(DeeClass_New,12)
+	ADJUST_CFA_OFFSET(-12)
 	testl  %eax, %eax
 	jz     .except
 	xchgl  SECOND, %eax  /* Save the result onto the stack. */

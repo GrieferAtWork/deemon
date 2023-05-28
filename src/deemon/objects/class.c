@@ -31,6 +31,7 @@
 #include <deemon/float.h>
 #include <deemon/gc.h>
 #include <deemon/int.h>
+#include <deemon/module.h>
 #include <deemon/none.h>
 #include <deemon/string.h>
 #include <deemon/system-features.h>
@@ -5039,15 +5040,26 @@ err:
 }
 
 
+/* Create a new class type derived from `base',
+ * featuring traits from `descriptor'.
+ * @param: base: The base of the resulting class.
+ *               You may pass `Dee_None' to have the resulting
+ *               class not be derived from anything (be base-less).
+ * @param: descriptor: A `DeeClassDescriptor_Type'-object, detailing the class's prototype.
+ * @param: declaring_module: When non-NULL, the module that gets stored in `tp_module'
+ * @throw: TypeError: The given `base' is neither `none', nor a type-object.
+ * @throw: TypeError: The given `base' is a final or variable type. */
 PUBLIC WUNUSED NONNULL((1, 2)) DREF DeeTypeObject *DCALL
 DeeClass_New(DeeTypeObject *__restrict base,
-             DeeObject *__restrict descriptor) {
+             DeeObject *__restrict descriptor,
+             struct Dee_module_object *declaring_module) {
 	DeeClassDescriptorObject *desc;
 	DREF DeeTypeObject *result;
 	DeeTypeObject *result_type_type;
 	struct class_desc *result_class;
 	size_t result_class_offset;
 	ASSERT_OBJECT_TYPE_EXACT(descriptor, &DeeClassDescriptor_Type);
+	ASSERT_OBJECT_TYPE_OPT(declaring_module, &DeeModule_Type);
 	desc             = (DeeClassDescriptorObject *)descriptor;
 	result_type_type = Dee_TYPE(base);
 	if (result_type_type == &DeeNone_Type) {
@@ -5376,8 +5388,13 @@ err_custom_allocator:
 	/* Make sure to disallow MOVE-ANY when the builtin move-assign operator is used. */
 	if (result->tp_init.tp_move_assign == &instance_builtin_moveassign)
 		result->tp_flags &= ~TP_FMOVEANY;
+
+	/* Assign the declaring module (if given) */
+	if likely(declaring_module != NULL)
+		Dee_weakref_init(&result->tp_module, (DeeObject *)declaring_module, NULL);
+
+	/* Initialize custom fields of the underlying type. */
 	if (result_type_type != &DeeType_Type) {
-		/* Initialize custom fields of the underlying type. */
 		int error = 0;
 		if (result_type_type->tp_init.tp_alloc.tp_ctor) {
 			error = (*result_type_type->tp_init.tp_alloc.tp_ctor)((DeeObject *)result);
@@ -5394,6 +5411,7 @@ err_custom_allocator:
 	DeeObject_Init(result, result_type_type);
 	return (DeeTypeObject *)DeeGC_Track((DeeObject *)result);
 err_r_base:
+	Dee_weakref_fini(&result->tp_module);
 	Dee_Free(result->tp_math);
 	Dee_Free(result->tp_cmp);
 	Dee_Free(result->tp_seq);

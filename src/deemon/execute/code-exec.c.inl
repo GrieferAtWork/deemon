@@ -2152,12 +2152,12 @@ do_class_c:
 				if unlikely(DeeObject_AssertTypeExact(descriptor, &DeeClassDescriptor_Type)) {
 					new_class = NULL;
 				} else {
-					new_class = DeeClass_New((DeeTypeObject *)TOP, descriptor);
+					new_class = DeeClass_New((DeeTypeObject *)TOP, descriptor, code->co_module);
 				}
 				Dee_Decref(descriptor);
 			}
 #else /* EXEC_SAFE */
-			new_class = DeeClass_New((DeeTypeObject *)TOP, CONSTimm);
+			new_class = DeeClass_New((DeeTypeObject *)TOP, CONSTimm, code->co_module);
 #endif /* !EXEC_SAFE */
 			if unlikely(!new_class)
 				HANDLE_EXCEPT();
@@ -2190,12 +2190,12 @@ do_class_gc:
 				if unlikely(DeeObject_AssertTypeExact(descriptor, &DeeClassDescriptor_Type)) {
 					new_class = NULL;
 				} else {
-					new_class = DeeClass_New((DeeTypeObject *)base, descriptor);
+					new_class = DeeClass_New((DeeTypeObject *)base, descriptor, code->co_module);
 				}
 				Dee_Decref(descriptor);
 			}
 #else /* EXEC_SAFE */
-			new_class = DeeClass_New((DeeTypeObject *)base, CONSTimm);
+			new_class = DeeClass_New((DeeTypeObject *)base, CONSTimm, code->co_module);
 #endif /* !EXEC_SAFE */
 			Dee_Decref(base);
 			if unlikely(!new_class)
@@ -2232,12 +2232,12 @@ do_class_gc:
 				if unlikely(DeeObject_AssertTypeExact(descriptor, &DeeClassDescriptor_Type)) {
 					new_class = NULL;
 				} else {
-					new_class = DeeClass_New((DeeTypeObject *)base, descriptor);
+					new_class = DeeClass_New((DeeTypeObject *)base, descriptor, code->co_module);
 				}
 				Dee_Decref(descriptor);
 			}
 #else /* EXEC_SAFE */
-			new_class = DeeClass_New((DeeTypeObject *)base, CONSTimm);
+			new_class = DeeClass_New((DeeTypeObject *)base, CONSTimm, code->co_module);
 #endif /* !EXEC_SAFE */
 			Dee_Decref(base);
 			if unlikely(!new_class)
@@ -4525,7 +4525,7 @@ do_setattr_this_c:
 					DREF DeeTypeObject *new_class;
 					if (DeeObject_AssertTypeExact(TOP, &DeeClassDescriptor_Type))
 						HANDLE_EXCEPT();
-					new_class = DeeClass_New((DeeTypeObject *)SECOND, TOP);
+					new_class = DeeClass_New((DeeTypeObject *)SECOND, TOP, code->co_module);
 					if unlikely(!new_class)
 						HANDLE_EXCEPT();
 					POPREF();
@@ -4573,12 +4573,12 @@ do_setattr_this_c:
 						if unlikely(DeeObject_AssertTypeExact(descriptor, &DeeClassDescriptor_Type)) {
 							new_class = NULL;
 						} else {
-							new_class = DeeClass_New((DeeTypeObject *)base, descriptor);
+							new_class = DeeClass_New((DeeTypeObject *)base, descriptor, code->co_module);
 						}
 						Dee_Decref(descriptor);
 					}
 #else /* EXEC_SAFE */
-					new_class = DeeClass_New((DeeTypeObject *)base, CONSTimm);
+					new_class = DeeClass_New((DeeTypeObject *)base, CONSTimm, code->co_module);
 #endif /* !EXEC_SAFE */
 					Dee_Decref(base);
 					if unlikely(!new_class)

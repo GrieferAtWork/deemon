@@ -635,9 +635,9 @@ again:
 
 
 /* Overwrite an already initialize weak reference with the given `ob'.
- * @return: true:    Successfully overwritten the weak reference.
- * @return: false:   The given object `ob' does not support weak referencing
- *                   and the stored weak reference was not modified. */
+ * @return: true:  Successfully overwritten the weak reference.
+ * @return: false: The given object `ob' does not support weak referencing
+ *                 and the stored weak reference was not modified. */
 PUBLIC NONNULL((1, 2)) bool DCALL
 Dee_weakref_set(struct weakref *__restrict self,
                 DeeObject *__restrict ob) {
@@ -697,7 +697,7 @@ again:
 
 /* Lock a weak reference, returning a regular reference to the pointed-to object.
  * @return: * :   A new reference to the pointed-to object.
- * @return: NULL: Failed to lock the weak reference. */
+ * @return: NULL: Failed to lock the weak reference (No error is thrown in this case). */
 #ifdef __INTELLISENSE__
 PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *
 (DCALL Dee_weakref_lock)(struct weakref const *__restrict self)
@@ -2607,8 +2607,10 @@ INTDEF NONNULL((1, 2)) void DCALL class_visit(DeeTypeObject *__restrict self, dv
 INTDEF NONNULL((1)) void DCALL class_clear(DeeTypeObject *__restrict self);
 INTDEF void DCALL class_pclear(DeeTypeObject *__restrict self, unsigned int gc_priority);
 
-PRIVATE NONNULL((1)) void DCALL type_fini(DeeTypeObject *__restrict self) {
+PRIVATE NONNULL((1)) void DCALL
+type_fini(DeeTypeObject *__restrict self) {
 	/* Clear weak references and check for revival. */
+	Dee_weakref_fini(&self->tp_module);
 	weakref_support_fini(self);
 	if (Dee_IncrefIfNotZero(self))
 		return;
@@ -4084,13 +4086,22 @@ DeeType_GetModule(DeeTypeObject *__restrict self) {
 	 *   then simply compare the type pointer against those bounds.
 	 * - All other types are defined as part of the builtin `deemon' module. */
 again:
-	if (self->tp_class)
-		return DeeClass_GetModule(self);
+	result = Dee_weakref_lock(&self->tp_module);
+	if (result != NULL)
+		return result;
+	if (self->tp_class) {
+		result = DeeClass_GetModule(self);
+		if (result != NULL)
+			Dee_weakref_set(&self->tp_module, result);
+		return result;
+	}
 	if (!(self->tp_flags & TP_FHEAP)) {
 		/* Lookup the originating module of a statically allocated C-type. */
 		result = DeeModule_FromStaticPointer(self);
-		if (result)
+		if (result) {
+			Dee_weakref_set(&self->tp_module, result);
 			return result;
+		}
 	}
 
 	/* Special case for custom type-types (such

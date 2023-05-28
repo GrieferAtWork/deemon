@@ -45,7 +45,7 @@ EXPORTS
 	DeeClassDescriptor_QueryInstanceAttributeStringWithHash@12=_DeeClassDescriptor_QueryInstanceAttributeStringWithHash@12
 	DeeClassDescriptor_QueryInstanceAttributeWithHash@12=_DeeClassDescriptor_QueryInstanceAttributeWithHash@12
 	DeeClass_GetOperator@8=_DeeClass_GetOperator@8
-	DeeClass_New@8=_DeeClass_New@8
+	DeeClass_New@12=_DeeClass_New@12
 	DeeClass_TryGetOperator@8=_DeeClass_TryGetOperator@8
 	DeeClass_TryGetPrivateOperator@8=_DeeClass_TryGetPrivateOperator@8
 	DeeClsMember_New@8=_DeeClsMember_New@8
@@ -301,6 +301,15 @@ EXPORTS
 	DeeHashSet_UnifyString@12=_DeeHashSet_UnifyString@12
 	DeeInstanceMember_New@8=_DeeInstanceMember_New@8
 	DeeInstanceMethod_New@8=_DeeInstanceMethod_New@8
+	DeeInstance_BoundAttribute@16=_DeeInstance_BoundAttribute@16
+	DeeInstance_CallAttribute@24=_DeeInstance_CallAttribute@24
+	DeeInstance_CallAttributeKw@28=_DeeInstance_CallAttributeKw@28
+	DeeInstance_CallAttributeTuple@20=_DeeInstance_CallAttributeTuple@20
+	DeeInstance_CallAttributeTupleKw@24=_DeeInstance_CallAttributeTupleKw@24
+	DeeInstance_DelAttribute@16=_DeeInstance_DelAttribute@16
+	DeeInstance_GetAttribute@16=_DeeInstance_GetAttribute@16
+	DeeInstance_SetAttribute@20=_DeeInstance_SetAttribute@20
+	DeeInstance_VCallAttributef@24=_DeeInstance_VCallAttributef@24
 	DeeInt_AsBytes@20=_DeeInt_AsBytes@20
 	DeeInt_AsInt128@8=_DeeInt_AsInt128@8
 	DeeInt_AsInt16@8=_DeeInt_AsInt16@8

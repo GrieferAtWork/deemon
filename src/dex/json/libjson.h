@@ -86,7 +86,7 @@
  * - `parse(File)' is the same as `parse(File.readall())', as in: there is no
  *   way to only parse a single JSON object from a file and leave the file's
  *   pointer such that it points directly after the JSON object.
- * - `parse(data, Type)' is the same as `parse(data, Type.newinstance())',
+ * - `parse(data, Type)' is the same as `parse(data, Type())',
  * - Only `public' members of DTOs will be initialized by `parse'
  * - `write' will encode JSONObject-types as would be expected, and all other
  *   objects are treated as DTOs and have their attributes enumerated and then
@@ -225,6 +225,9 @@ typedef struct {
 	       (result)->jp_end      = (self)->ji_parser.jp_end,               \
 	       (result)->jp_pos      = atomic_read(&(self)->ji_parser.jp_pos), \
 	       (result)->jp_encoding = (self)->ji_parser.jp_encoding)
+#define DeeJsonIterator_GetParserEx(self, result)                  \
+	(void)(DeeJsonIterator_GetParser(self, &(result)->djp_parser), \
+	       (result)->djp_owner = (self)->ji_owner)
 
 
 
@@ -233,6 +236,13 @@ INTDEF DeeTypeObject DeeJsonSequence_Type;
 INTDEF DeeTypeObject DeeJsonSequenceIterator_Type;
 INTDEF DeeTypeObject DeeJsonMapping_Type;
 INTDEF DeeTypeObject DeeJsonMappingIterator_Type;
+
+
+typedef struct {
+	struct json_parser djp_parser; /* Underlying parser */
+	DeeObject         *djp_owner;  /* [1..1] Underlying object that owns `djp_parser' */
+} DeeJsonParser;
+
 
 
 /* Parse a single JSON element and convert it into an object.
@@ -262,9 +272,12 @@ INTDEF DeeTypeObject DeeJsonMappingIterator_Type;
  * @return: * : The equivalent deemon object of the just-parsed JSON
  * @return: NULL: An error was thrown. */
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-DeeJson_ParseObject(struct json_parser *__restrict self,
-                    DeeObject *__restrict parser_owner,
+DeeJson_ParseObject(DeeJsonParser *__restrict self,
                     bool must_advance_parser);
+
+/* Check what's the canonical type of whatever is about to be parsed by `self' */
+PRIVATE ATTR_RETNONNULL WUNUSED NONNULL((1)) DeeTypeObject *DCALL
+DeeJson_PeekCanonicalObjectType(struct json_parser const *__restrict self);
 
 /* Helper to specifically parse strings. */
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -289,23 +302,33 @@ DeeJson_ParseNumber(struct json_parser *__restrict self);
  * NOTE: This function also supports user-defined struct types defined
  *       by the `ctypes' dex.
  *
+ * @return: 1 : `throw_error_if_typing_fails' is `false' and typing failed
  * @return: 0 : Success
  * @return: -1: An error was thrown */
-PRIVATE WUNUSED NONNULL((1, 2, 3)) int DCALL
-DeeJson_ParseInto(struct json_parser *__restrict self,
-                  DeeObject *parser_owner, DeeObject *into,
-                  bool must_advance_parser);
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+DeeJson_ParseInto(DeeJsonParser *__restrict self, DeeObject *into,
+                  bool must_advance_parser,
+                  bool throw_error_if_typing_fails);
+
+/* Similar to `DeeJson_ParseInto()', but construct an instance of `into_type' and populate it.
+ * @return: *   : Success
+ * @return: NULL: An error was thrown
+ * @return: ITER_DONE: `throw_error_if_typing_fails' is `false' and typing failed */
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+DeeJson_ParseIntoType(DeeJsonParser  *__restrict self,
+                      DeeTypeObject *into_type,
+                      bool must_advance_parser,
+                      bool throw_error_if_typing_fails);
 
 /* Same as `DeeJson_ParseInto()', but don't actually do any JSON-parsing,
  * but simply read out the elements of `mapping' and assign them to the
- * attributes of `obj', whilst doing the same special handling that is
+ * attributes of `self', whilst doing the same special handling that is
  * also done by `DeeJson_ParseInto()' for type annotations.
  *
  * @return: 0 : Success
  * @return: -1: An error was thrown */
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-DeeJson_MappingIntoObject(DeeObject *__restrict mapping,
-                          DeeObject *__restrict obj);
+DeeObject_PopulateFromMapping(DeeObject *self, DeeObject *mapping);
 
 
 typedef struct {

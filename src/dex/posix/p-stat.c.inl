@@ -41,7 +41,7 @@ DECL_BEGIN
 #undef posix_stat_USE_fopen
 #undef posix_stat_USE_STUB
 #if defined(CONFIG_HOST_WINDOWS)
-#define posix_stat_USE_WINDOWS
+#define posix_stat_USE_WINDOWS /* TODO: windows impl of `stat()' doesn't deref symlinks! */
 #elif (defined(CONFIG_HAVE_wstat64) || defined(CONFIG_HAVE_fstat64) || defined(CONFIG_HAVE_wfstatat64)) && defined(CONFIG_PREFER_WCHAR_FUNCTIONS)
 #define posix_stat_USE_wstat64
 #elif (defined(CONFIG_HAVE_wstat) || defined(CONFIG_HAVE_fstat) || defined(CONFIG_HAVE_wfstatat)) && defined(CONFIG_PREFER_WCHAR_FUNCTIONS)

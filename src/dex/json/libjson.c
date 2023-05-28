@@ -28,6 +28,7 @@
 #include <deemon/arg.h>
 #include <deemon/bool.h>
 #include <deemon/bytes.h>
+#include <deemon/class.h>
 #include <deemon/error.h>
 #include <deemon/file.h>
 #include <deemon/float.h>
@@ -35,6 +36,7 @@
 #include <deemon/map.h>
 #include <deemon/mapfile.h>
 #include <deemon/none.h>
+#include <deemon/numeric.h>
 #include <deemon/objmethod.h>
 #include <deemon/seq.h>
 #include <deemon/string.h>
@@ -162,26 +164,26 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 jseqiter_nii_peek(DeeJsonIteratorObject *__restrict self) {
-	struct json_parser parser;
-	DeeJsonIterator_GetParser(self, &parser);
-	if (libjson_parser_peeknext(&parser) == JSON_PARSER_ENDARRAY)
+	DeeJsonParser parser;
+	DeeJsonIterator_GetParserEx(self, &parser);
+	if (libjson_parser_peeknext(&parser.djp_parser) == JSON_PARSER_ENDARRAY)
 		return ITER_DONE;
-	return DeeJson_ParseObject(&parser, self->ji_owner, false);
+	return DeeJson_ParseObject(&parser, false);
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 jmapiter_nii_peek(DeeJsonIteratorObject *__restrict self) {
 	DREF DeeObject *key_and_value[2], *result;
-	struct json_parser parser;
-	DeeJsonIterator_GetParser(self, &parser);
-	if (libjson_parser_peeknext(&parser) == JSON_PARSER_ENDARRAY)
+	DeeJsonParser parser;
+	DeeJsonIterator_GetParserEx(self, &parser);
+	if (libjson_parser_peeknext(&parser.djp_parser) == JSON_PARSER_ENDARRAY)
 		return ITER_DONE;
-	key_and_value[0] = DeeJson_ParseString(&parser);
+	key_and_value[0] = DeeJson_ParseString(&parser.djp_parser);
 	if unlikely(!key_and_value[0])
 		goto err;
-	if (libjson_parser_yield(&parser) != JSON_PARSER_COLON)
+	if (libjson_parser_yield(&parser.djp_parser) != JSON_PARSER_COLON)
 		goto err_key_syntax;
-	key_and_value[1] = DeeJson_ParseObject(&parser, self->ji_owner, false);
+	key_and_value[1] = DeeJson_ParseObject(&parser, false);
 	if unlikely(!key_and_value[1])
 		goto err_key;
 	result = DeeTuple_NewVectorSymbolic(2, key_and_value);
@@ -203,18 +205,19 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 jseqiter_next(DeeJsonIteratorObject *__restrict self) {
 	char const *orig_pos;
 	DREF DeeObject *result;
-	struct json_parser parser;
+	DeeJsonParser parser;
 again:
-	DeeJsonIterator_GetParser(self, &parser);
-	orig_pos = parser.jp_pos;
-	if (libjson_parser_peeknext(&parser) == JSON_PARSER_ENDARRAY)
+	DeeJsonIterator_GetParserEx(self, &parser);
+	orig_pos = parser.djp_parser.jp_pos;
+	if (libjson_parser_peeknext(&parser.djp_parser) == JSON_PARSER_ENDARRAY)
 		return ITER_DONE;
-	result = DeeJson_ParseObject(&parser, self->ji_owner, true);
+	result = DeeJson_ParseObject(&parser, true);
 	if unlikely(!result)
 		goto err;
 
 	/* Try to write-back the new parser position. */
-	if (!atomic_cmpxch_or_write(&self->ji_parser.jp_pos, orig_pos, parser.jp_pos)) {
+	if (!atomic_cmpxch_or_write(&self->ji_parser.jp_pos, orig_pos,
+	                            parser.djp_parser.jp_pos)) {
 		Dee_Decref(result);
 		goto again;
 	}
@@ -228,18 +231,18 @@ jmapiter_next(DeeJsonIteratorObject *__restrict self) {
 	int tok;
 	char const *orig_pos, *temp;
 	DREF DeeObject *key_and_value[2], *result;
-	struct json_parser parser;
+	DeeJsonParser parser;
 again:
-	DeeJsonIterator_GetParser(self, &parser);
-	orig_pos = parser.jp_pos;
-	if (libjson_parser_peeknext(&parser) == JSON_PARSER_ENDOBJECT)
+	DeeJsonIterator_GetParserEx(self, &parser);
+	orig_pos = parser.djp_parser.jp_pos;
+	if (libjson_parser_peeknext(&parser.djp_parser) == JSON_PARSER_ENDOBJECT)
 		return ITER_DONE;
-	key_and_value[0] = DeeJson_ParseString(&parser);
+	key_and_value[0] = DeeJson_ParseString(&parser.djp_parser);
 	if unlikely(!key_and_value[0])
 		goto err;
-	if (libjson_parser_yield(&parser) != JSON_PARSER_COLON)
+	if (libjson_parser_yield(&parser.djp_parser) != JSON_PARSER_COLON)
 		goto err_key_syntax;
-	key_and_value[1] = DeeJson_ParseObject(&parser, self->ji_owner, true);
+	key_and_value[1] = DeeJson_ParseObject(&parser, true);
 	if unlikely(!key_and_value[1])
 		goto err_key;
 	result = DeeTuple_NewVectorSymbolic(2, key_and_value);
@@ -247,16 +250,17 @@ again:
 		goto err_key_value;
 
 	/* Parse the trailing ',' that following the mapping value. */
-	temp = parser.jp_pos;
-	tok  = libjson_parser_yield(&parser);
+	temp = parser.djp_parser.jp_pos;
+	tok  = libjson_parser_yield(&parser.djp_parser);
 	if (tok != JSON_PARSER_COMMA) {
 		if (tok != JSON_PARSER_ENDOBJECT)
 			goto err_key_value_syntax;
-		parser.jp_pos = temp; /* Rewind to the start of the '}' token. */
+		parser.djp_parser.jp_pos = temp; /* Rewind to the start of the '}' token. */
 	}
 
 	/* Try to write-back the new parser position. */
-	if (!atomic_cmpxch_or_write(&self->ji_parser.jp_pos, orig_pos, parser.jp_pos)) {
+	if (!atomic_cmpxch_or_write(&self->ji_parser.jp_pos, orig_pos,
+	                            parser.djp_parser.jp_pos)) {
 		Dee_Decref(result);
 		goto again;
 	}
@@ -279,23 +283,24 @@ jmapiter_nextkey(DeeJsonIteratorObject *__restrict self) {
 	int tok;
 	char const *orig_pos;
 	DREF DeeObject *key;
-	struct json_parser parser;
+	DeeJsonParser parser;
 again:
-	DeeJsonIterator_GetParser(self, &parser);
-	orig_pos = parser.jp_pos;
-	if (libjson_parser_peeknext(&parser) == JSON_PARSER_ENDARRAY)
+	DeeJsonIterator_GetParserEx(self, &parser);
+	orig_pos = parser.djp_parser.jp_pos;
+	if (libjson_parser_peeknext(&parser.djp_parser) == JSON_PARSER_ENDARRAY)
 		return ITER_DONE;
-	key = DeeJson_ParseString(&parser);
+	key = DeeJson_ParseString(&parser.djp_parser);
 	if unlikely(!key)
 		goto err;
-	if (libjson_parser_yield(&parser) != JSON_PARSER_COLON)
+	if (libjson_parser_yield(&parser.djp_parser) != JSON_PARSER_COLON)
 		goto err_key_syntax;
-	tok = libjson_parser_next(&parser);
+	tok = libjson_parser_next(&parser.djp_parser);
 	if (tok == JSON_ERROR_SYNTAX)
 		goto err_key_syntax;
 
 	/* Try to write-back the new parser position. */
-	if (!atomic_cmpxch_or_write(&self->ji_parser.jp_pos, orig_pos, parser.jp_pos)) {
+	if (!atomic_cmpxch_or_write(&self->ji_parser.jp_pos, orig_pos,
+	                            parser.djp_parser.jp_pos)) {
 		Dee_Decref(key);
 		goto again;
 	}
@@ -313,31 +318,32 @@ jmapiter_nextvalue(DeeJsonIteratorObject *__restrict self) {
 	int tok;
 	char const *orig_pos, *temp;
 	DREF DeeObject *value;
-	struct json_parser parser;
+	DeeJsonParser parser;
 again:
-	DeeJsonIterator_GetParser(self, &parser);
-	orig_pos = parser.jp_pos;
-	if (libjson_parser_peeknext(&parser) == JSON_PARSER_ENDARRAY)
+	DeeJsonIterator_GetParserEx(self, &parser);
+	orig_pos = parser.djp_parser.jp_pos;
+	if (libjson_parser_peeknext(&parser.djp_parser) == JSON_PARSER_ENDARRAY)
 		return ITER_DONE;
-	if (libjson_parser_yield(&parser) != JSON_PARSER_STRING)
+	if (libjson_parser_yield(&parser.djp_parser) != JSON_PARSER_STRING)
 		goto err_syntax;
-	if (libjson_parser_yield(&parser) != JSON_PARSER_COLON)
+	if (libjson_parser_yield(&parser.djp_parser) != JSON_PARSER_COLON)
 		goto err_syntax;
-	value = DeeJson_ParseObject(&parser, self->ji_owner, true);
+	value = DeeJson_ParseObject(&parser, true);
 	if unlikely(!value)
 		goto err;
 
 	/* Parse the trailing ',' that following the mapping value. */
-	temp = parser.jp_pos;
-	tok  = libjson_parser_yield(&parser);
+	temp = parser.djp_parser.jp_pos;
+	tok  = libjson_parser_yield(&parser.djp_parser);
 	if (tok != JSON_PARSER_COMMA) {
 		if (tok != JSON_PARSER_ENDOBJECT)
 			goto err_syntax_value;
-		parser.jp_pos = temp; /* Rewind to the start of the '}' token. */
+		parser.djp_parser.jp_pos = temp; /* Rewind to the start of the '}' token. */
 	}
 
 	/* Try to write-back the new parser position. */
-	if (!atomic_cmpxch_or_write(&self->ji_parser.jp_pos, orig_pos, parser.jp_pos)) {
+	if (!atomic_cmpxch_or_write(&self->ji_parser.jp_pos, orig_pos,
+	                            parser.djp_parser.jp_pos)) {
 		Dee_Decref(value);
 		goto again;
 	}
@@ -891,7 +897,7 @@ err_syntax:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 jseq_nsi_getitem(DeeJsonSequenceObject *__restrict self, size_t index) {
 	int tok;
-	struct json_parser parser;
+	DeeJsonParser parser;
 	DREF DeeObject *result;
 	size_t old_index;
 	DeeJsonSequence_LockRead(self);
@@ -899,21 +905,21 @@ jseq_nsi_getitem(DeeJsonSequenceObject *__restrict self, size_t index) {
 		DeeJsonSequence_LockEndRead(self);
 		goto err_out_of_bounds;
 	}
-	parser    = self->js_parser;
-	old_index = self->js_index;
+	parser.djp_parser = self->js_parser;
+	old_index         = self->js_index;
 	DeeJsonSequence_LockEndRead(self);
 
 	/* Move the parser to the requested item */
 	if (index < old_index) {
 		size_t delta = old_index - index;
 		do {
-			if (libjson_parser_prev(&parser, false) != JSON_ERROR_OK)
+			if (libjson_parser_prev(&parser.djp_parser, false) != JSON_ERROR_OK)
 				goto err_syntax;
 		} while (--delta);
 	} else if (index > old_index) {
 		size_t delta = index - old_index;
 		do {
-			tok = libjson_parser_next(&parser);
+			tok = libjson_parser_next(&parser.djp_parser);
 			if (tok != JSON_ERROR_OK) {
 				if (tok == JSON_ERROR_SYNTAX)
 					goto err_syntax;
@@ -927,12 +933,13 @@ jseq_nsi_getitem(DeeJsonSequenceObject *__restrict self, size_t index) {
 	}
 
 	/* Parse the requested array element. */
-	result = DeeJson_ParseObject(&parser, self->js_owner, true);
+	parser.djp_owner = self->js_owner;
+	result = DeeJson_ParseObject(&parser, true);
 	if unlikely(!result)
 		goto err;
 
 	/* Parse the ',' token following the element. */
-	tok = libjson_parser_yield(&parser);
+	tok = libjson_parser_yield(&parser.djp_parser);
 	if (tok != JSON_PARSER_COMMA) {
 		if (tok != JSON_PARSER_ENDARRAY)
 			goto err_syntax_r;
@@ -944,8 +951,8 @@ jseq_nsi_getitem(DeeJsonSequenceObject *__restrict self, size_t index) {
 
 	/* Cache the parser as it points to the element *after* the ',' */
 	DeeJsonSequence_LockWrite(self);
-	self->js_parser = parser;
-	self->js_index  = index + 1;
+	self->js_parser.jp_pos = parser.djp_parser.jp_pos;
+	self->js_index         = index + 1;
 	DeeJsonSequence_LockEndWrite(self);
 done:
 	return result;
@@ -987,16 +994,16 @@ PRIVATE WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
 jmap_nsi_getdefault(DeeJsonMappingObject *self,
                     DeeObject *key, DeeObject *defl) {
 	int error;
-	struct json_parser parser;
+	DeeJsonParser parser;
 	DREF DeeObject *result;
 	char const *keystr;
 	if (DeeObject_AssertTypeExact(key, &DeeString_Type))
 		goto err;
 	keystr = DeeString_AsUtf8(key);
 	DeeJsonMapping_LockRead(self);
-	parser = self->jm_parser;
+	parser.djp_parser = self->jm_parser;
 	DeeJsonMapping_LockEndRead(self);
-	error = libjson_parser_findkey(&parser, keystr, WSTR_LENGTH(keystr));
+	error = libjson_parser_findkey(&parser.djp_parser, keystr, WSTR_LENGTH(keystr));
 	if unlikely(error == JSON_ERROR_SYNTAX)
 		goto err_syntax;
 	if (error == JSON_ERROR_NOOBJ) {
@@ -1006,13 +1013,14 @@ jmap_nsi_getdefault(DeeJsonMappingObject *self,
 	}
 
 	/* Parse a JSON object at the key we've just found. */
-	result = DeeJson_ParseObject(&parser, self->jm_owner, true);
+	parser.djp_owner = self->jm_owner;
+	result = DeeJson_ParseObject(&parser, true);
 	if unlikely(!result)
 		goto err;
 
 	/* Try to cache the updated parser (so the next usage works off of a different parser position). */
 	DeeJsonMapping_LockWrite(self);
-	self->jm_parser = parser;
+	self->jm_parser.jp_pos = parser.djp_parser.jp_pos;
 	DeeJsonMapping_LockEndWrite(self);
 	return result;
 err_syntax:
@@ -1351,6 +1359,60 @@ INTERN DeeTypeObject DeeJsonMapping_Type = {
 	/* .tp_class_members = */ jmap_class_members
 };
 
+PRIVATE WUNUSED NONNULL((1)) DREF DeeJsonMappingObject *DCALL
+DeeJsonMapping_New(DeeJsonParser *__restrict self, bool must_advance_parser) {
+	DREF DeeJsonMappingObject *result;
+	result = DeeObject_MALLOC(DeeJsonMappingObject);
+	if unlikely(!result)
+		goto done;
+	result->jm_parser = self->djp_parser;
+	if unlikely(libjson_parser_yield(&result->jm_parser) != JSON_PARSER_OBJECT)
+		goto err_syntax_object_retval;
+	if (must_advance_parser) {
+		if (libjson_parser_next(&self->djp_parser) == JSON_ERROR_SYNTAX)
+			goto err_syntax_object_retval;
+	}
+	Dee_atomic_rwlock_init(&result->jm_lock);
+	result->jm_owner = self->djp_owner;
+	Dee_Incref(self->djp_owner);
+	DeeObject_Init(result, &DeeJsonMapping_Type);
+done:
+	return result;
+err_syntax_object_retval:
+	DeeObject_FREE(result);
+/*err_syntax:*/
+	err_json_syntax();
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeJsonSequenceObject *DCALL
+DeeJsonSequence_New(DeeJsonParser *__restrict self, bool must_advance_parser) {
+	DREF DeeJsonSequenceObject *result;
+	result = DeeObject_MALLOC(DeeJsonSequenceObject);
+	if unlikely(!result)
+		goto done;
+	result->js_parser = self->djp_parser;
+	if unlikely(libjson_parser_yield(&result->js_parser) != JSON_PARSER_ARRAY)
+		goto err_syntax_array_retval;
+	if (must_advance_parser) {
+		if (libjson_parser_next(&self->djp_parser) == JSON_ERROR_SYNTAX)
+			goto err_syntax_array_retval;
+	}
+	Dee_atomic_rwlock_init(&result->js_lock);
+	result->js_index = 0;
+	result->js_size  = 0;
+	result->js_owner = self->djp_owner;
+	Dee_Incref(self->djp_owner);
+	DeeObject_Init(result, &DeeJsonMapping_Type);
+done:
+	return result;
+err_syntax_array_retval:
+	DeeObject_FREE(result);
+/*err_syntax:*/
+	err_json_syntax();
+	return NULL;
+}
+
 
 /* Parse a single JSON element and convert it into an object.
  * Upon success, the given parser `self' will point at the first
@@ -1378,84 +1440,45 @@ INTERN DeeTypeObject DeeJsonMapping_Type = {
  *                              will be left in an undefined state)
  * @return: * : The equivalent deemon object of the just-parsed JSON
  * @return: NULL: An error was thrown. */
-PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-DeeJson_ParseObject(struct json_parser *__restrict self,
-                    DeeObject *__restrict parser_owner,
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+DeeJson_ParseObject(DeeJsonParser *__restrict self,
                     bool must_advance_parser) {
 	DREF DeeObject *result;
-	int tok = libjson_parser_peeknext(self);
+	int tok = libjson_parser_peeknext(&self->djp_parser);
 	switch (tok) {
 
 	case JSON_PARSER_STRING:
-		result = DeeJson_ParseString(self);
+		result = DeeJson_ParseString(&self->djp_parser);
 		break;
 
 	case JSON_PARSER_NUMBER:
-		result = DeeJson_ParseNumber(self);
+		result = DeeJson_ParseNumber(&self->djp_parser);
 		break;
 
-	case JSON_PARSER_OBJECT: {
-		DREF DeeJsonMappingObject *retval;
-		retval = DeeObject_MALLOC(DeeJsonMappingObject);
-		if unlikely(!retval)
-			goto err;
-		retval->jm_parser = *self;
-		if unlikely(libjson_parser_yield(&retval->jm_parser) != JSON_PARSER_OBJECT) {
-err_syntax_object_retval:
-			DeeObject_FREE(retval);
-			goto err_syntax;
-		}
-		if (must_advance_parser) {
-			if (libjson_parser_next(self) == JSON_ERROR_SYNTAX)
-				goto err_syntax_object_retval;
-		}
-		Dee_atomic_rwlock_init(&retval->jm_lock);
-		retval->jm_owner = parser_owner;
-		Dee_Incref(parser_owner);
-		DeeObject_Init(retval, &DeeJsonMapping_Type);
-		result = (DREF DeeObject *)retval;
-	}	break;
+	case JSON_PARSER_OBJECT:
+		result = (DREF DeeObject *)DeeJsonMapping_New(self, must_advance_parser);
+		break;
 
-	case JSON_PARSER_ARRAY: {
-		DREF DeeJsonSequenceObject *retval;
-		retval = DeeObject_MALLOC(DeeJsonSequenceObject);
-		if unlikely(!retval)
-			goto err;
-		retval->js_parser = *self;
-		if unlikely(libjson_parser_yield(&retval->js_parser) != JSON_PARSER_ARRAY) {
-err_syntax_array_retval:
-			DeeObject_FREE(retval);
-			goto err_syntax;
-		}
-		if (must_advance_parser) {
-			if (libjson_parser_next(self) == JSON_ERROR_SYNTAX)
-				goto err_syntax_array_retval;
-		}
-		Dee_atomic_rwlock_init(&retval->js_lock);
-		retval->js_index = 0;
-		retval->js_size  = 0;
-		retval->js_owner = parser_owner;
-		Dee_Incref(parser_owner);
-		DeeObject_Init(retval, &DeeJsonMapping_Type);
-		result = (DREF DeeObject *)retval;
-	}	break;
+	case JSON_PARSER_ARRAY:
+		result = (DREF DeeObject *)DeeJsonSequence_New(self, must_advance_parser);
+		break;
 
 	case JSON_PARSER_NULL: {
-		if (must_advance_parser && libjson_parser_yield(self) != JSON_PARSER_NULL)
+		if (must_advance_parser && libjson_parser_yield(&self->djp_parser) != JSON_PARSER_NULL)
 			goto err_syntax;
 		result = Dee_None;
 		Dee_Incref(result);
 	}	break;
 
 	case JSON_PARSER_TRUE: {
-		if (must_advance_parser && libjson_parser_yield(self) != JSON_PARSER_TRUE)
+		if (must_advance_parser && libjson_parser_yield(&self->djp_parser) != JSON_PARSER_TRUE)
 			goto err_syntax;
 		result = Dee_True;
 		Dee_Incref(result);
 	}	break;
 
 	case JSON_PARSER_FALSE: {
-		if (must_advance_parser && libjson_parser_yield(self) != JSON_PARSER_FALSE)
+		if (must_advance_parser && libjson_parser_yield(&self->djp_parser) != JSON_PARSER_FALSE)
 			goto err_syntax;
 		result = Dee_False;
 		Dee_Incref(result);
@@ -1467,9 +1490,108 @@ err_syntax_array_retval:
 	return result;
 err_syntax:
 	err_json_syntax();
-err:
+/*err:*/
 	return NULL;
 }
+
+
+/* Helper to specifically parse integers / floats.
+ * @return: JSON_ERROR_OK:     Yes, it's a float
+ * @return: JSON_ERROR_SYNTAX: Syntax error
+ * @return: JSON_ERROR_NOOBJ:  No, it's not a float  */
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+json_parser_peek_number_is_float(struct json_parser const *__restrict self) {
+	struct json_parser me = *self;
+	char32_t ch = json_getc(&me);
+	unsigned int radix = 10;
+	if (ch == '-')
+		ch = json_getc(&me);
+	if (!unicode_isdigit(ch))
+		goto err_syntax; /* Not an integer. */
+	if (ch == '0') {
+		ch  = json_getc(&me);
+		if (ch == 'x' || ch == 'X') {
+			radix = 16;
+			ch    = json_getc(&me);
+		} else if (ch == 'b' || ch == 'B') {
+			radix = 2;
+			ch    = json_getc(&me);
+		} else {
+			radix = 8;
+		}
+		if (!unicode_isxdigit(ch)) {
+			if (radix != 8)
+				goto err_syntax;
+
+			/* Check if this is a floating-point number. */
+			if (ch == '.' || ch == 'e' || ch == 'E')
+				goto parse_float;
+
+			/* Special case: '0' */
+			return JSON_ERROR_NOOBJ;
+		}
+	}
+	for (;;) {
+		uint8_t digit;
+		if unlikely(!unicode_asdigit(ch, radix, &digit)) {
+			if ((ch == '.' || ch == 'e' || ch == 'E') && radix == 10)
+				goto parse_float;
+			goto err_syntax;
+		}
+		ch = json_getc(&me);
+		if (unicode_isdigit(ch))
+			continue;
+		if (radix >= 16) {
+			if (unicode_ishex(ch))
+				continue;
+		}
+		break;
+	}
+
+	/* Fast-path for signed integers that fits into a CPU pointer register. */
+	return JSON_ERROR_NOOBJ;
+err_syntax:
+	return JSON_ERROR_SYNTAX;
+parse_float:
+	return JSON_ERROR_OK;
+}
+
+
+/* Check what's the canonical type of whatever is about to be parsed by `self' */
+PRIVATE ATTR_RETNONNULL WUNUSED NONNULL((1)) DeeTypeObject *DCALL
+DeeJson_PeekCanonicalObjectType(struct json_parser const *__restrict self) {
+	int tok = libjson_parser_peeknext(self);
+	switch (tok) {
+
+	case JSON_PARSER_STRING:
+		return &DeeString_Type;
+
+	case JSON_PARSER_NUMBER:
+		/* Check if it's a float, or an integer. */
+		if (json_parser_peek_number_is_float(self) == JSON_ERROR_OK)
+			return &DeeFloat_Type;
+		return &DeeInt_Type;
+
+	case JSON_PARSER_OBJECT:
+		return &DeeJsonMapping_Type;
+
+	case JSON_PARSER_ARRAY:
+		return &DeeJsonSequence_Type;
+
+	case JSON_PARSER_NULL:
+		return &DeeNone_Type;
+
+	case JSON_PARSER_TRUE:
+	case JSON_PARSER_FALSE:
+		return &DeeBool_Type;
+
+	default:
+		break;
+	}
+	return &DeeObject_Type;
+}
+
+
 
 
 /* Helper to specifically parse strings. */
@@ -1690,6 +1812,508 @@ parse_float:
 }
 
 
+struct type_expression_parser {
+	DeeTypeObject *tep_decl_type; /* [1..1] The type that is declaring the doc-string. */
+	char const    *tep_doc;       /* [1..1] Parser position (points to the first character after the leading '?') */
+	uint32_t       tep_flags;     /* Parser flags (set of `TYPE_EXPRESSION_FLAG_*') */
+#define TYPE_EXPRESSION_FLAG_NORMAL     0x0000 /* Normal flags */
+#define TYPE_EXPRESSION_FLAG_GOT_OBJECT 0x0001 /* Encountered `?O', `?DObject', or `?Edeemon:Object' at one point */
+};
+
+struct type_expression_name {
+	char const           *ten_start; /* [1..1] Start of name */
+	char const           *ten_end;   /* [1..1] End of name */
+	DREF DeeStringObject *ten_str;   /* [0..1] Name string (in case an extended name was used) */
+};
+
+#define type_expression_name_fini(self) Dee_XDecref((self)->ten_str)
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+type_expression_name_unescape(struct type_expression_name *__restrict self) {
+	struct unicode_printer printer = UNICODE_PRINTER_INIT;
+	char const *iter, *end, *flush_start;
+	/* Parse the string and unescape special symbols. */
+	iter = self->ten_start;
+	end  = self->ten_end;
+	flush_start = iter;
+	while (iter < end) {
+		char ch = *iter++;
+		if (ch == '\\') { /* Remove every first '\'-character */
+			if unlikely(unicode_printer_print(&printer, flush_start,
+			                                  (size_t)((iter - 1) - flush_start)) < 0)
+				goto err_printer;
+			flush_start = iter;
+			if (iter < end)
+				++iter; /* Don't remove the character following '\', even if it's another '\' */
+		}
+	}
+	if (flush_start < end) {
+		if unlikely(unicode_printer_print(&printer, flush_start,
+		                                  (size_t)(end - flush_start)) < 0)
+			goto err_printer;
+	}
+
+	/* Pack the unicode string */
+	self->ten_str = (DREF DeeStringObject *)unicode_printer_pack(&printer);
+	if unlikely(!self->ten_str)
+		goto err;
+	self->ten_start = DeeString_AsUtf8((DeeObject *)self->ten_str);
+	if unlikely(!self->ten_start)
+		goto err_ten_str;
+	self->ten_end = self->ten_start + WSTR_LENGTH(self->ten_start);
+	return 0;
+err_ten_str:
+	Dee_Decref(self->ten_str);
+	goto err;
+err_printer:
+	unicode_printer_fini(&printer);
+err:
+	return -1;
+}
+
+/* Parse a type-expression `<NAME>' element
+ * @return: 0 : Success (*result was initialized)
+ * @return: -1: An error was thrown (*result is in an undefined state) */
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+type_expression_parser_parsename(struct type_expression_parser *__restrict self,
+                                 /*out*/ struct type_expression_name *__restrict result) {
+	char const *doc = self->tep_doc;
+	result->ten_str = NULL;
+	if (*doc != '{') {
+		result->ten_start = doc;
+		while (DeeUni_IsSymCont(*doc))
+			++doc;
+		result->ten_end = doc;
+		self->tep_doc   = doc;
+		return 0;
+	}
+	++doc;
+	result->ten_start = doc;
+	doc = strchr(doc, '}');
+	if unlikely(!doc)
+		goto err_bad_doc_string;
+	result->ten_end = doc;
+	self->tep_doc   = doc + 1;
+
+	/* Check if the string must be decoded (i.e. contains any '\' characters) */
+	if (memchr(result->ten_start, '\\',
+	           (size_t)(result->ten_end - result->ten_start)) != NULL)
+		return type_expression_name_unescape(result);
+	return 0;
+err_bad_doc_string:
+	return DeeError_Throwf(&DeeError_ValueError,
+	                       "Malformed type annotation: Missing '}' after '{' in %q",
+	                       self->tep_doc);
+}
+
+/* Decode the referenced type, or return `ITER_DONE' if a type expression is used.
+ * This function handles:
+ * - ?.
+ * - ?N
+ * - ?O
+ * - ?#<NAME>
+ * - ?D<NAME>
+ * - ?U<NAME>     (Treated identical to ?O)
+ * - ?G<NAME>
+ * - ?E<NAME>:<NAME>
+ * - ?A<NAME><TYPE>
+ * @return: * :        The referenced type
+ * @return: NULL:      An error was thrown
+ * @return: ITER_DONE: An extended type expression was used */
+PRIVATE WUNUSED NONNULL((1)) DREF DeeTypeObject *DCALL
+type_expression_parser_parsetype(struct type_expression_parser *__restrict self,
+                                 bool accept_non_type_object) {
+	DREF DeeTypeObject *result;
+	char const *doc = self->tep_doc;
+	struct type_expression_name name;
+	switch (*doc++) {
+
+	case '.':
+		result = self->tep_decl_type;
+		Dee_Incref(result);
+		self->tep_doc = doc;
+		break;
+
+	case 'N':
+		result = &DeeNone_Type;
+		Dee_Incref(result);
+		self->tep_doc = doc;
+		break;
+
+	case 'U':
+		self->tep_doc = doc;
+		if (type_expression_parser_parsename(self, &name))
+			goto err;
+		type_expression_name_fini(&name);
+		doc = self->tep_doc;
+		ATTR_FALLTHROUGH
+	case 'O':
+		result = &DeeObject_Type;
+		Dee_Incref(result);
+		self->tep_doc = doc;
+		break;
+
+	case '#':
+	case 'D':
+	case 'G':
+	case 'E':
+	case 'A': {
+		DREF DeeObject *base;
+		self->tep_doc = doc;
+		if (type_expression_parser_parsename(self, &name))
+			goto err;
+		switch (doc[-1]) {
+
+		case '#':
+			base = (DREF DeeObject *)self->tep_decl_type;
+			Dee_Incref(base);
+			break;
+
+		case 'D':
+			base = (DREF DeeObject *)DeeModule_GetDeemon();
+			Dee_Incref(base);
+			break;
+
+		case 'G':
+			base = DeeType_GetModule(self->tep_decl_type);
+			if unlikely(!base) {
+				DeeError_Throwf(&DeeError_TypeError,
+				                "Unable to determine module of type %r",
+				                self->tep_decl_type);
+				goto err_name;
+			}
+			break;
+
+		case 'E': {
+			struct type_expression_name export_name;
+			if (*self->tep_doc != ':') {
+				DeeError_Throwf(&DeeError_ValueError,
+				                "Malformed type annotation: Expected ':' after '?E' in %q",
+				                doc);
+				goto err_name;
+			}
+			++self->tep_doc;
+			if (name.ten_str == NULL) {
+				name.ten_str = (DREF DeeStringObject *)DeeString_NewUtf8(name.ten_start,
+				                                                         (size_t)(name.ten_end - name.ten_start),
+				                                                         STRING_ERROR_FSTRICT);
+				if unlikely(!name.ten_str)
+					goto err_name;
+			}
+			if (type_expression_parser_parsename(self, &export_name))
+				goto err_name;
+			if (export_name.ten_str == NULL) {
+				export_name.ten_str = (DREF DeeStringObject *)DeeString_NewUtf8(export_name.ten_start,
+				                                                                (size_t)(export_name.ten_end - export_name.ten_start),
+				                                                                STRING_ERROR_FSTRICT);
+				if unlikely(!export_name.ten_str)
+					goto err_name;
+			}
+			result = (DREF DeeTypeObject *)DeeModule_GetExtern((DeeObject *)name.ten_str,
+			                                                   (DeeObject *)export_name.ten_str);
+			type_expression_name_fini(&export_name);
+			type_expression_name_fini(&name);
+			if unlikely(!result)
+				goto err;
+			goto done_assert_result_is_type;
+		}	break;
+
+		case 'A': {
+			/* Attribute of another object. */
+			if (*self->tep_doc != '?') {
+				DeeError_Throwf(&DeeError_ValueError,
+				                "Malformed type annotation: Expected '?' after '?A' in %q",
+				                doc);
+				goto err_name;
+			}
+			++self->tep_doc;
+			base = (DREF DeeObject *)type_expression_parser_parsetype(self, true);
+			if (!ITER_ISOK(base)) {
+				if (!base)
+					goto err;
+				DeeError_Throwf(&DeeError_ValueError,
+				                "Malformed type annotation: Expected a basic type expression after '?A' in %q",
+				                doc);
+				goto err_name;
+			}
+		}	break;
+
+		default: __builtin_unreachable();
+		}
+		if (name.ten_str) {
+			result = (DREF DeeTypeObject *)DeeObject_GetAttr(base, (DeeObject *)name.ten_str);
+		} else {
+			result = (DREF DeeTypeObject *)DeeObject_GetAttrStringLen(base, name.ten_start,
+			                                                          (size_t)(name.ten_end - name.ten_start));
+		}
+		Dee_Decref(base);
+		type_expression_name_fini(&name);
+		if unlikely(!result)
+			goto err;
+done_assert_result_is_type:
+		if (!accept_non_type_object) {
+			if (DeeObject_AssertType(result, &DeeType_Type))
+				goto err_r;
+		}
+	}	break;
+
+	default:
+		return (DREF DeeTypeObject *)ITER_DONE;
+	}
+/*done:*/
+	return result;
+err_name:
+	type_expression_name_fini(&name);
+	goto err;
+err_r:
+	Dee_Decref(result);
+err:
+	return NULL;
+}
+
+
+/* Parse a JSON-component expression into an object
+ * whose typing is described by `*p_type_expression'
+ * @return: * :        Success
+ * @return: ITER_DONE: Encountered JSON cannot be decoded into the requested type
+ *                     In this case, `*p_type_expression' is updated to point to
+ *                     the end of the attempted type expression (such that if the
+ *                     caller is currently evaluating an `?X<n>' expression, they
+ *                     should try the next element next)
+ * @return: NULL:      An error was thrown */
+PRIVATE WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
+DeeJsonObject_ParseWithTypeAnnotation(DeeJsonParser *__restrict self,
+                                      struct type_expression_parser *__restrict tx_parser,
+                                      bool throw_error_if_typing_fails) {
+	DREF DeeTypeObject *wanted_type;
+	ASSERT(tx_parser->tep_doc[-1] == '?');
+
+	/* Try to parse a simple type expression. */
+	wanted_type = type_expression_parser_parsetype(tx_parser, false);
+	if (ITER_ISOK(wanted_type)) {
+		DREF DeeObject *result;
+
+		/* Special case for `Object' (which is handled differently) */
+		if unlikely(wanted_type == &DeeObject_Type) {
+			tx_parser->tep_flags |= TYPE_EXPRESSION_FLAG_GOT_OBJECT;
+			Dee_DecrefNokill(wanted_type);
+			return ITER_DONE;
+		}
+
+		/* Caller wants us to produce an object with specific typing. */
+		result = DeeJson_ParseIntoType(self, wanted_type, true,
+		                               throw_error_if_typing_fails);
+		Dee_Decref(wanted_type);
+		return result;
+	}
+	if unlikely(!wanted_type)
+		goto err;
+
+
+	/* Handle all of the other types of known type annotations. */
+	switch (*tx_parser->tep_doc) {
+
+	case 'C':
+		/* Sequences with custom typing. */
+		/* TODO */
+		break;
+
+	case 'T':
+		/* Tuple with custom element types. */
+		/* TODO */
+		break;
+
+	case 'X':
+		/* Multiple type choices */
+		/* TODO */
+		break;
+
+	case 'S':
+		/* Sequence with custom element types */
+		/* TODO */
+		break;
+
+	case 'R':
+	case 'Q':
+		/* Not implemented: evaluated type-expressions. */
+		break;
+
+	default:
+		break;
+	}
+
+	DeeError_Throwf(&DeeError_ValueError,
+	                "Malformed type annotation: %q",
+	                tx_parser->tep_doc - 1);
+err:
+	return NULL;
+}
+
+PRIVATE ATTR_COLD NONNULL((1, 2, 3)) int DCALL
+err_json_cannot_decode_as_type_expression(struct json_parser *__restrict self,
+                                          struct type_expression_parser *__restrict tx_parser,
+                                          DeeStringObject *attr_name) {
+	DeeTypeObject *json_type = DeeJson_PeekCanonicalObjectType(self);
+	return DeeError_Throwf(&DeeError_TypeError,
+	                       "Json-blob with type %k cannot be used to assign %k.%k "
+	                       "which only accepts types %q", /* TODO: pretty-print accepted types */
+	                       json_type, tx_parser->tep_decl_type, attr_name,
+	                       tx_parser->tep_doc);
+}
+
+/* Parse a JSON-component expression and assign it to the specified class-attribute
+ * @return: 1 : `throw_error_if_typing_fails' is `false' and typing failed
+ * @return: 0 : Success
+ * @return: -1: An error was thrown */
+PRIVATE WUNUSED NONNULL((1, 2, 3, 4, 5)) int DCALL
+DeeJsonObject_ParseIntoClassAttribute(DeeJsonParser *__restrict self,
+                                      DeeObject *into,
+                                      DeeTypeObject *into_attr_type,
+                                      struct class_desc *into_attr_class,
+                                      struct class_attribute *into_attr,
+                                      bool throw_error_if_typing_fails) {
+	int result;
+	struct instance_desc *into_instance;
+	DREF DeeObject *value;
+	if (into_attr->ca_doc) {
+		struct type_expression_parser parser;
+		parser.tep_doc = DeeString_STR(into_attr->ca_doc);
+		if (bcmpc(parser.tep_doc, "->?", 3, sizeof(char)) != 0)
+			goto fallback;
+		parser.tep_decl_type = into_attr_type;
+		parser.tep_flags     = TYPE_EXPRESSION_FLAG_NORMAL;
+		parser.tep_doc += 3;
+		value = DeeJsonObject_ParseWithTypeAnnotation(self, &parser, throw_error_if_typing_fails);
+		if (!ITER_ISOK(value)) {
+			if (!value)
+				goto err;
+
+			/* Check for special case: if we ever encountered
+			 * `Object' as a candidate, parse as generic JSON. */
+			if (parser.tep_flags & TYPE_EXPRESSION_FLAG_GOT_OBJECT)
+				goto fallback;
+
+			/* Throw an error explaining that the given JSON-expression
+			 * cannot be stored in a field that requires the given types. */
+			if (!throw_error_if_typing_fails)
+				return 1; /* Typing failed... */
+			parser.tep_doc = DeeString_STR(into_attr->ca_doc) + 3;
+			err_json_cannot_decode_as_type_expression(&self->djp_parser, &parser, into_attr->ca_name);
+			goto err;
+		}
+	} else {
+		/* Fallback: parse a generic JSON object. */
+fallback:
+		value = DeeJson_ParseObject(self, true);
+		if unlikely(!value)
+			goto err;
+	}
+	into_instance = DeeInstance_DESC(into_attr_class, into);
+	result = DeeInstance_SetAttribute(into_attr_class, into_instance, into, into_attr, value);
+	Dee_Decref(value);
+	return result;
+err:
+	return -1;
+}
+
+/* Parse a JSON-component expression and assign it to `<into>.operator . (<attr_name>)'
+ * @return: 1 : `throw_error_if_typing_fails' is `false' and typing failed
+ * @return: 0 : Success
+ * @return: -1: An error was thrown */
+PRIVATE WUNUSED NONNULL((1, 2, 3)) int DCALL
+DeeJsonObject_ParseIntoAttribute(DeeJsonParser *__restrict self,
+                                 DeeObject *into,
+                                 DeeStringObject *attr_name,
+                                 bool throw_error_if_typing_fails) {
+	int error;
+	DREF DeeObject *value;
+	DeeTypeObject *into_type = Dee_TYPE(into);
+	if (DeeType_IsClass(into_type)) {
+		struct class_desc *attr_class;
+		struct class_attribute *attr;
+		attr_class = DeeClass_DESC(into_type);
+		attr       = DeeClassDesc_QueryInstanceAttribute(attr_class, (DeeObject *)attr_name);
+		if (!attr) {
+			/* Check if the attribute exists in a base-class */
+			for (;;) {
+				into_type = DeeType_Base(into_type);
+				if (into_type == NULL)
+					goto fallback;
+				if (!DeeType_IsClass(into_type))
+					goto fallback;
+				attr_class = DeeClass_DESC(into_type);
+				attr       = DeeClassDesc_QueryInstanceAttribute(attr_class, (DeeObject *)attr_name);
+				if (attr)
+					break;
+			}
+		}
+
+		/* Parse into a specific attribute. */
+		return DeeJsonObject_ParseIntoClassAttribute(self, into, into_type, attr_class,
+		                                             attr, throw_error_if_typing_fails);
+	}
+
+fallback:
+	/* Parse as generic JSON and do a regular attribute assignment. */
+	value = DeeJson_ParseObject(self, true);
+	if unlikely(!value)
+		goto err;
+	error = DeeObject_SetAttr(into, (DeeObject *)attr_name, value);
+	Dee_Decref(value);
+	return error;
+err:
+	return -1;
+}
+
+/* Same as `DeeJson_ParseInto()', but the leading `{' has already been parsed.
+ * @return: 1 : `throw_error_if_typing_fails' is `false' and typing failed
+ * @return: 0 : Success
+ * @return: -1: An error was thrown */
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+DeeJsonObject_ParseInto(DeeJsonParser *__restrict self, DeeObject *into,
+                        bool must_advance_parser,
+                        bool throw_error_if_typing_fails) {
+	DREF DeeStringObject *attr_name;
+	for (;;) {
+		int error;
+		if (libjson_parser_peeknext(&self->djp_parser) == JSON_PARSER_ENDOBJECT)
+			break;
+
+		/* Parse the attribute name. */
+		attr_name = (DREF DeeStringObject *)DeeJson_ParseString(&self->djp_parser);
+		if unlikely(!attr_name)
+			goto err;
+		if (libjson_parser_yield(&self->djp_parser) != JSON_PARSER_COLON)
+			goto err_syntax_attr_name;
+
+		/* Parse the value to-be assigned to the attribute. */
+		error = DeeJsonObject_ParseIntoAttribute(self, into, attr_name,
+		                                         throw_error_if_typing_fails);
+		Dee_Decref(attr_name);
+		if unlikely(error)
+			goto err;
+
+		/* Parse the ',' following the attribute, or the trailing '}'-token. */
+		error = libjson_parser_yield(&self->djp_parser);
+		if (error != JSON_PARSER_COMMA) {
+			if (error == JSON_PARSER_ENDOBJECT)
+				return 0;
+			goto err_syntax;
+		}
+	}
+	if (must_advance_parser) {
+		if (libjson_parser_yield(&self->djp_parser) != JSON_PARSER_ENDOBJECT)
+			goto err_syntax;
+	}
+	return 0;
+err_syntax_attr_name:
+	Dee_Decref(attr_name);
+err_syntax:
+	return err_json_syntax();
+err:
+	return -1;
+}
+
 /* Implement the functionality of parsing JSON *into* the attributes
  * of a given object `into'. Note that for this purpose, it is OK if
  * the object specifies more fields than are provided by `self', but
@@ -1705,34 +2329,187 @@ parse_float:
  * NOTE: This function also supports user-defined struct types defined
  *       by the `ctypes' dex.
  *
+ * @return: 1 : `throw_error_if_typing_fails' is `false' and typing failed
  * @return: 0 : Success
  * @return: -1: An error was thrown */
-PRIVATE WUNUSED NONNULL((1, 2, 3)) int DCALL
-DeeJson_ParseInto(struct json_parser *__restrict self,
-                  DeeObject *parser_owner, DeeObject *into,
-                  bool must_advance_parser) {
-	/* TODO */
-	(void)self;
-	(void)parser_owner;
-	(void)into;
-	(void)must_advance_parser;
-	return DeeError_NOTIMPLEMENTED();
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+DeeJson_ParseInto(DeeJsonParser *__restrict self, DeeObject *into,
+                  bool must_advance_parser,
+                  bool throw_error_if_typing_fails) {
+	int tok = libjson_parser_yield(&self->djp_parser);
+	if (tok == JSON_PARSER_OBJECT) {
+		return DeeJsonObject_ParseInto(self, into,
+		                               must_advance_parser,
+		                               throw_error_if_typing_fails);
+	}
+
+	/* Only json-objects can be parsed into deemon objects,
+	 * so any token other than '{' is a syntax error. */
+	return err_json_syntax();
 }
 
 
+/* Similar to `DeeJson_ParseInto()', but construct an instance of `into_type' and populate it.
+ * @return: *   : Success
+ * @return: NULL: An error was thrown
+ * @return: ITER_DONE: `throw_error_if_typing_fails' is `false' and typing failed */
+PRIVATE WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
+DeeJson_ParseIntoType(DeeJsonParser *__restrict self,
+                      DeeTypeObject *into_type,
+                      bool must_advance_parser,
+                      bool throw_error_if_typing_fails) {
+	int error;
+	DREF DeeObject *result;
+
+	/* Handling for special core types */
+
+	/* None (aka. `null') */
+	if (into_type == &DeeNone_Type) {
+		int tok = libjson_parser_peeknext(&self->djp_parser);
+		if (tok == JSON_PARSER_NULL) {
+			if (libjson_parser_yield(&self->djp_parser) != JSON_PARSER_NULL)
+				goto err_syntax;
+			return_none;
+		}
+		goto err_cannot_parse_into;
+	}
+
+	/* Bool */
+	if (into_type == &DeeBool_Type) {
+		int tok = libjson_parser_peeknext(&self->djp_parser);
+		if (tok == JSON_PARSER_TRUE) {
+			if (libjson_parser_yield(&self->djp_parser) != JSON_PARSER_TRUE)
+				goto err_syntax;
+			return_true;
+		}
+		if (tok == JSON_PARSER_FALSE) {
+			if (libjson_parser_yield(&self->djp_parser) != JSON_PARSER_FALSE)
+				goto err_syntax;
+			return_false;
+		}
+		goto err_cannot_parse_into;
+	}
+
+	/* String */
+	if (into_type == &DeeString_Type) {
+		int tok = libjson_parser_peeknext(&self->djp_parser);
+		if (tok == JSON_PARSER_STRING)
+			return DeeJson_ParseString(&self->djp_parser);
+		goto err_cannot_parse_into;
+	}
+
+	/* Number types */
+	if (into_type == &DeeNumeric_Type || /* TODO: Support for numeric types from ctypes */
+	    into_type == &DeeInt_Type ||
+	    into_type == &DeeFloat_Type) {
+		int tok = libjson_parser_peeknext(&self->djp_parser);
+		if (tok == JSON_PARSER_NUMBER) {
+			char const *pos;
+			pos    = self->djp_parser.jp_pos;
+			result = DeeJson_ParseNumber(&self->djp_parser);
+			if unlikely(!result)
+				goto err;
+			if (DeeObject_InstanceOf(result, into_type))
+				return result;
+			self->djp_parser.jp_pos = pos;
+			Dee_Decref_likely(result);
+		}
+		goto err_cannot_parse_into;
+	}
+
+	/* Mapping types */
+	if (DeeType_IsInherited(into_type, &DeeMapping_Type)) {
+		int tok = libjson_parser_peeknext(&self->djp_parser);
+		if (tok == JSON_PARSER_OBJECT) {
+			result = (DREF DeeObject *)DeeJsonMapping_New(self, must_advance_parser);
+check_result_and_maybe_cast_to_into_type:
+			if unlikely(!result)
+				goto err;
+			if (!DeeObject_InstanceOf(result, into_type)) {
+				DREF DeeObject *new_result;
+				new_result = DeeObject_New(into_type, 1, &result);
+				Dee_Decref(result);
+				result = new_result;
+			}
+			return result;
+		}
+		goto err_cannot_parse_into;
+	}
+
+	/* Sequence types */
+	if (DeeType_IsInherited(into_type, &DeeSeq_Type)) {
+		int tok = libjson_parser_peeknext(&self->djp_parser);
+		if (tok == JSON_PARSER_ARRAY) {
+			result = (DREF DeeObject *)DeeJsonSequence_New(self, must_advance_parser);
+			goto check_result_and_maybe_cast_to_into_type;
+		}
+		goto err_cannot_parse_into;
+	}
+
+	/* Default: construct an instance of the given type and parse into it. */
+	result = DeeObject_NewDefault(into_type);
+	if unlikely(!result)
+		goto err;
+	error = DeeJson_ParseInto(self, result,
+	                          must_advance_parser,
+	                          throw_error_if_typing_fails);
+	if (error == 0)
+		return result;
+	Dee_Decref_likely(result);
+	if (error > 1)
+		return ITER_DONE;
+err:
+	return NULL;
+err_syntax:
+	err_json_syntax();
+	goto err;
+err_cannot_parse_into:
+	if (throw_error_if_typing_fails) {
+		DeeError_Throwf(&DeeError_TypeError, "Cannot parse instance of `%k' into `%k'",
+		                DeeJson_PeekCanonicalObjectType(&self->djp_parser), into_type);
+		return NULL;
+	}
+	return ITER_DONE;
+}
+
+
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+DeeJsonMapping_IntoObject(DeeJsonMappingObject *self,
+                          DeeObject *obj) {
+	DeeJsonParser parser;
+	DeeJsonMapping_LockRead(self);
+	parser.djp_parser = self->jm_parser;
+	DeeJsonMapping_LockEndRead(self);
+	parser.djp_owner = self->jm_owner;
+	if (libjson_parser_rewind(&parser.djp_parser) != JSON_PARSER_OBJECT)
+		goto err_syntax;
+	return DeeJsonObject_ParseInto(&parser, obj, false, true);
+err_syntax:
+	return err_json_syntax();
+}
+
 /* Same as `DeeJson_ParseInto()', but don't actually do any JSON-parsing,
  * but simply read out the elements of `mapping' and assign them to the
- * attributes of `obj', whilst doing the same special handling that is
+ * attributes of `self', whilst doing the same special handling that is
  * also done by `DeeJson_ParseInto()' for type annotations.
  *
  * @return: 0 : Success
  * @return: -1: An error was thrown */
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-DeeJson_MappingIntoObject(DeeObject *__restrict mapping,
-                          DeeObject *__restrict obj) {
-	/* TODO */
+DeeObject_PopulateFromMapping(DeeObject *self, DeeObject *mapping) {
+	/* Special handling for when the given `mapping' is a json-mapping-wrapper.
+	 * In this case, we can use the dedicated json-into-object code-path. */
+	if (DeeObject_InstanceOfExact(mapping, &DeeJsonMapping_Type))
+		return DeeJsonMapping_IntoObject((DeeJsonMappingObject *)mapping, self);
+
+	/* TODO: just like with the parse-from-json code above:
+	 * >> import json;
+	 * >> local jsonBlob = json.write(mapping);
+	 * >> json.parse(jsonBlob, into: self); // Only that types that can't be represented as json also work here!
+	 */
+	(void)self;
 	(void)mapping;
-	(void)obj;
 	return DeeError_NOTIMPLEMENTED();
 }
 
@@ -1852,7 +2629,7 @@ put_none:
 			goto err;
 		if unlikely(json_print(&self->djw_writer, "null", 4))
 			goto err;
-	} else if (type == &DeeFloat_Type || /* TODO: Support for integer types from `ctypes' */
+	} else if (type == &DeeFloat_Type || /* TODO: Support for numeric types from `ctypes' */
 	           type == &DeeInt_Type ||
 	           type == &DeeBool_Type) {
 		/* Can just print the object representation as-is */
@@ -1913,34 +2690,19 @@ err:
 
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-DeeType_NewInstance(DeeTypeObject *__restrict self) {
-	/* TODO: Expose the `Type.newinstance' function via a C API. */
-	return DeeObject_CallAttrString((DeeObject *)&DeeType_Type, "newinstance", 1, (DeeObject **)&self);
-}
-
-
-PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-json_parser_parse_maybe_into(struct json_parser *__restrict self,
-                             DeeObject *parser_owner,
+json_parser_parse_maybe_into(DeeJsonParser *__restrict self,
                              /*nullable*/ DeeObject *into) {
 	/* Deal with special case of parsing JSON *into* an object. */
 	if (into) {
-		int error;
-		if (DeeType_Check(into)) {
-			into = DeeType_NewInstance((DeeTypeObject *)into);
-		} else {
-			Dee_Incref(into);
-		}
-		error = DeeJson_ParseInto(self, parser_owner, into, false);
-		if unlikely(error != 0) {
-			Dee_Decref(into);
+		if (DeeType_Check(into))
+			return DeeJson_ParseIntoType(self, (DeeTypeObject *)into, false, true);
+		if unlikely(DeeJson_ParseInto(self, into, false, true))
 			goto err;
-		}
-		return into; /* Inherit reference */
+		return_reference_(into);
 	}
 
 	/* Default case: parse JSON and convert to its canonical deemon form. */
-	return DeeJson_ParseObject(self, parser_owner, false);
+	return DeeJson_ParseObject(self, false);
 err:
 	return NULL;
 }
@@ -1949,7 +2711,7 @@ PRIVATE struct keyword parse_kwlist[] = { K(data), K(into), KEND };
 PRIVATE WUNUSED DREF DeeObject *DCALL
 f_libjson_parse(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	DREF DeeObject *result;
-	struct json_parser parser;
+	DeeJsonParser parser;
 	DeeObject *data, *into = NULL;
 	if (DeeArg_UnpackKw(argc, argv, kw, parse_kwlist, "o|o", &data, &into))
 		goto err;
@@ -1957,9 +2719,10 @@ f_libjson_parse(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 		/* Parse raw bytes as json. */
 		void *start = DeeBytes_DATA(data);
 		void *end   = DeeBytes_TERM(data);
-		libjson_parser_init(&parser, start, end);
-		result = json_parser_parse_maybe_into(&parser, into, data);
-		json_parser_fini(&parser);
+		libjson_parser_init(&parser.djp_parser, start, end);
+		parser.djp_owner = data;
+		result = json_parser_parse_maybe_into(&parser, into);
+		json_parser_fini(&parser.djp_parser);
 	} else if (DeeString_Check(data)) {
 		/* Parse a given string as json. */
 		void const *start, *end;
@@ -1991,9 +2754,10 @@ f_libjson_parse(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 			start = utf8;
 			end   = utf8 + WSTR_LENGTH(utf8);
 		}
-		libjson_parser_init(&parser, start, end);
-		result = json_parser_parse_maybe_into(&parser, data, into);
-		json_parser_fini(&parser);
+		libjson_parser_init(&parser.djp_parser, start, end);
+		parser.djp_owner = data;
+		result = json_parser_parse_maybe_into(&parser, into);
+		json_parser_fini(&parser.djp_parser);
 	} else if (DeeFile_Check(data)) {
 		void *start, *end;
 		data = DeeFile_ReadBytes(data, (size_t)-1, true);
@@ -2001,9 +2765,10 @@ f_libjson_parse(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 			goto err;
 		start = DeeBytes_DATA(data);
 		end   = DeeBytes_TERM(data);
-		libjson_parser_init(&parser, start, end);
-		result = json_parser_parse_maybe_into(&parser, data, into);
-		json_parser_fini(&parser);
+		libjson_parser_init(&parser.djp_parser, start, end);
+		parser.djp_owner = data;
+		result = json_parser_parse_maybe_into(&parser, into);
+		json_parser_fini(&parser.djp_parser);
 		Dee_Decref_likely(data);
 	} else {
 		/* Convert mapping to DTO-like object. */
@@ -2014,12 +2779,12 @@ f_libjson_parse(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 			return_reference_(data);
 		}
 		if (DeeType_Check(into)) {
-			result = DeeType_NewInstance((DeeTypeObject *)into);
+			result = DeeObject_NewDefault((DeeTypeObject *)into);
 		} else {
 			result = into;
 			Dee_Incref(result);
 		}
-		error = DeeJson_MappingIntoObject(data, result);
+		error = DeeObject_PopulateFromMapping(data, result);
 		if unlikely(error != 0) {
 			Dee_Decref(result);
 			goto err;
@@ -2085,7 +2850,8 @@ PRIVATE struct dex_symbol symbols[] = {
 	      "(data:?X4?DFile?DBytes?Dstring?DMapping,into:?DType)->\n"
 	      "Parse JSON @data and convert it either into its native deemon representation, or "
 	      /**/ "use it to populate the fields of an object @into, or by creating a new instance "
-	      /**/ "of an object @into, filling its fields, and then returning said object.\n"
+	      /**/ "of an object @into (by calling its construct without any arguments), filling its "
+	      /**/ "fields, and then returning said object.\n"
 	      "Additionally, a ?DMapping object can be given as data which then represents already-"
 	      /**/ "process JSON data. Using this, you can fill in DTO objects from sources other "
 	      /**/ "than JSON blobs\n"

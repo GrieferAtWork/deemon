@@ -545,9 +545,9 @@ DFUNDEF NONNULL((1, 2)) void (DCALL Dee_weakref_copyassign)(struct Dee_weakref *
 #endif /* !__INTELLISENSE__ */
 
 /* Overwrite an already initialize weak reference with the given `ob'.
- * @return: true:    Successfully overwritten the weak reference.
- * @return: false:   The given object `ob' does not support weak referencing
- *                   and the stored weak reference was not modified. */
+ * @return: true:  Successfully overwritten the weak reference.
+ * @return: false: The given object `ob' does not support weak referencing
+ *                 and the stored weak reference was not modified. */
 DFUNDEF NONNULL((1, 2)) bool DCALL
 Dee_weakref_set(struct Dee_weakref *__restrict self,
                 DeeObject *__restrict ob);
@@ -560,7 +560,7 @@ Dee_weakref_clear(struct Dee_weakref *__restrict self);
 
 /* Lock a weak reference, returning a regular reference to the pointed-to object.
  * @return: * :   A new reference to the pointed-to object.
- * @return: NULL: Failed to lock the weak reference. */
+ * @return: NULL: Failed to lock the weak reference (No error is thrown in this case). */
 #ifdef __INTELLISENSE__
 DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *(DCALL Dee_weakref_lock)(struct Dee_weakref const *__restrict self);
 #else /* __INTELLISENSE__ */
@@ -2500,6 +2500,7 @@ struct Dee_type_object {
 	struct Dee_membercache  tp_class_cache;
 	struct Dee_class_desc  *tp_class;    /* [0..1] Class descriptor (Usually points below this type object). */
 	Dee_WEAKREF_SUPPORT                  /* Weak reference support. */
+	struct Dee_weakref      tp_module;   /* [0..1] Weak reference to module that is declaring this type. */
 	/* ... Extended type fields go here (e.g.: `DeeFileTypeObject') */
 	/* ... `struct class_desc' of class types goes here */
 };
