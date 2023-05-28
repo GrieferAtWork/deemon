@@ -1787,7 +1787,7 @@ DeeJson_ParseNumber(struct json_parser *__restrict self) {
 		if unlikely(!unicode_asdigit(ch, radix, &digit)) {
 			if ((ch == '.' || ch == 'e' || ch == 'E') && radix == 10)
 				goto parse_float;
-			goto err_syntax;
+			break;
 		}
 		new_result = (result * radix) + digit;
 		if (new_result < result)
@@ -1795,13 +1795,6 @@ DeeJson_ParseNumber(struct json_parser *__restrict self) {
 		result = new_result;
 		start  = self->jp_pos;
 		ch     = json_getc(self);
-		if (unicode_isdigit(ch))
-			continue;
-		if (radix >= 16) {
-			if (unicode_ishex(ch))
-				continue;
-		}
-		break;
 	}
 
 	/* Skip trailing whitespace. */
@@ -2868,8 +2861,8 @@ DeeJsonObject_ParseInto(DeeJsonParser *__restrict self, DeeObject *into,
 		error = DeeJsonObject_ParseIntoAttribute(self, into, attr_name,
 		                                         throw_error_if_typing_fails);
 		Dee_Decref(attr_name);
-		if unlikely(error)
-			goto err;
+		if unlikely(error != 0)
+			return error; /* Error or type-error */
 
 		/* Parse the ',' following the attribute, or the trailing '}'-token. */
 		error = libjson_parser_yield(&self->djp_parser);
@@ -2920,6 +2913,10 @@ DeeJson_ParseInto(DeeJsonParser *__restrict self, DeeObject *into,
 		                               must_advance_parser,
 		                               throw_error_if_typing_fails);
 	}
+
+	/* Check for special type: `null' can be parsed into `none' */
+	if (tok == JSON_PARSER_NULL && DeeNone_Check(into))
+		return 0;
 
 	/* Only json-objects can be parsed into deemon objects,
 	 * so any token other than '{' is a syntax error. */
@@ -3040,7 +3037,7 @@ check_result_and_maybe_cast_to_into_type:
 	if (error == 0)
 		return result;
 	Dee_Decref_likely(result);
-	if (error > 1)
+	if (error > 0)
 		return ITER_DONE;
 err:
 	return NULL;
@@ -3144,7 +3141,7 @@ json_foreach_write_attribute(DeeObject *declarator,
 	 * - The attribute must not be private
 	 * - The attribute must not be a property
 	 * - The attribute must not be a function
-	 * - The attribute must not be part of the class definition (i.e. must not be statis)
+	 * - The attribute must not be part of the class definition (i.e. must not be static)
 	 * - The attribute must be readable */
 	if ((perm & (Dee_ATTR_PRIVATE | Dee_ATTR_PROPERTY | Dee_ATTR_CMEMBER |
 	             Dee_ATTR_PERMGET | Dee_ATTR_PERMCALL)) != (Dee_ATTR_PERMGET))
