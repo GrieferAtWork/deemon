@@ -26,6 +26,7 @@
 #include <deemon/hashset.h>
 #include <deemon/object.h>
 #include <deemon/string.h>
+#include <deemon/system-features.h>
 #include <deemon/util/atomic.h>
 #include <deemon/util/lock.h>
 
@@ -119,6 +120,10 @@
 #define LIBJSON_NO_PARSER_GETBOOL
 #define LIBJSON_NO_PARSER_GETNULL
 #define LIBJSON_NO_PARSER_FINDINDEX
+#define LIBJSON_NO_PARSER_ENTER_LEAVE
+#ifndef CONFIG_HAVE_FPU
+#define LIBJSON_NO_PARSER_GETFLOAT
+#endif /* !CONFIG_HAVE_FPU */
 
 /* Enable KOS compatibility emulation */
 #include <deemon/util/kos-compat.h>
@@ -256,14 +261,18 @@ INTDEF DeeTypeObject DeeJsonMappingIterator_Type;
  *                              will be left in an undefined state)
  * @return: * : The equivalent deemon object of the just-parsed JSON
  * @return: NULL: An error was thrown. */
-INTDEF NONNULL((1, 2)) DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 DeeJson_ParseObject(struct json_parser *__restrict self,
                     DeeObject *__restrict parser_owner,
                     bool must_advance_parser);
 
 /* Helper to specifically parse strings. */
-INTDEF NONNULL((1)) DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeJson_ParseString(struct json_parser *__restrict self);
+
+/* Helper to specifically parse integers / floats. */
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+DeeJson_ParseNumber(struct json_parser *__restrict self);
 
 /* Implement the functionality of parsing JSON *into* the attributes
  * of a given object `into'. Note that for this purpose, it is OK if
@@ -282,7 +291,7 @@ DeeJson_ParseString(struct json_parser *__restrict self);
  *
  * @return: 0 : Success
  * @return: -1: An error was thrown */
-INTDEF NONNULL((1, 2, 3)) int DCALL
+PRIVATE WUNUSED NONNULL((1, 2, 3)) int DCALL
 DeeJson_ParseInto(struct json_parser *__restrict self,
                   DeeObject *parser_owner, DeeObject *into,
                   bool must_advance_parser);
@@ -294,7 +303,7 @@ DeeJson_ParseInto(struct json_parser *__restrict self,
  *
  * @return: 0 : Success
  * @return: -1: An error was thrown */
-INTDEF NONNULL((1, 2)) int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 DeeJson_MappingIntoObject(DeeObject *__restrict mapping,
                           DeeObject *__restrict obj);
 
@@ -323,7 +332,7 @@ typedef struct {
  *
  * @return: 0 : Success
  * @return: -1: An error was thrown */
-INTDEF NONNULL((1, 2)) int DCALL
+PRIVATE NONNULL((1, 2)) int DCALL
 DeeJson_WriteObject(DeeJsonWriter *__restrict self,
                     DeeObject *__restrict obj);
 

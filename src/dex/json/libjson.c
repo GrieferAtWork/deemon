@@ -232,7 +232,7 @@ jmapiter_next(DeeJsonIteratorObject *__restrict self) {
 again:
 	DeeJsonIterator_GetParser(self, &parser);
 	orig_pos = parser.jp_pos;
-	if (libjson_parser_peeknext(&parser) == JSON_PARSER_ENDARRAY)
+	if (libjson_parser_peeknext(&parser) == JSON_PARSER_ENDOBJECT)
 		return ITER_DONE;
 	key_and_value[0] = DeeJson_ParseString(&parser);
 	if unlikely(!key_and_value[0])
@@ -411,7 +411,7 @@ jmapiter_getseq(DeeJsonIteratorObject *__restrict self) {
 	if unlikely(libjson_parser_rewind(&result->jm_parser) != JSON_PARSER_OBJECT)
 		goto err_r_syntax;
 	Dee_atomic_rwlock_init(&result->jm_lock);
-	DeeObject_Init(result, &DeeJsonSequence_Type);
+	DeeObject_Init(result, &DeeJsonMapping_Type);
 done:
 	return result;
 err_r_syntax:
@@ -850,7 +850,7 @@ jmap_iter(DeeJsonMappingObject *__restrict self) {
 	DeeJsonMapping_LockEndRead(self);
 	if unlikely(libjson_parser_rewind(&result->ji_parser) != JSON_PARSER_OBJECT)
 		goto err_r_syntax;
-	DeeObject_Init(result, &DeeJsonSequenceIterator_Type);
+	DeeObject_Init(result, &DeeJsonMappingIterator_Type);
 done:
 	return result;
 err_r_syntax:
@@ -1276,7 +1276,7 @@ INTERN DeeTypeObject DeeJsonSequence_Type = {
 				/* .tp_copy_ctor = */ (dfunptr_t)&jseq_copy,
 				/* .tp_deep_ctor = */ (dfunptr_t)&jseq_copy,
 				/* .tp_any_ctor  = */ (dfunptr_t)&jseq_init,
-				TYPE_FIXED_ALLOCATOR_GC(DeeJsonSequenceObject)
+				TYPE_FIXED_ALLOCATOR(DeeJsonSequenceObject)
 			}
 		},
 		/* .tp_dtor = */ (void (DCALL *)(DeeObject *__restrict))&jseq_fini
@@ -1323,7 +1323,7 @@ INTERN DeeTypeObject DeeJsonMapping_Type = {
 				/* .tp_copy_ctor = */ (dfunptr_t)&jmap_copy,
 				/* .tp_deep_ctor = */ (dfunptr_t)&jmap_copy,
 				/* .tp_any_ctor  = */ (dfunptr_t)&jmap_init,
-				TYPE_FIXED_ALLOCATOR_GC(DeeJsonSequenceObject)
+				TYPE_FIXED_ALLOCATOR(DeeJsonMappingObject)
 			}
 		},
 		/* .tp_dtor = */ (void (DCALL *)(DeeObject *__restrict))&jmap_fini
@@ -1378,26 +1378,315 @@ INTERN DeeTypeObject DeeJsonMapping_Type = {
  *                              will be left in an undefined state)
  * @return: * : The equivalent deemon object of the just-parsed JSON
  * @return: NULL: An error was thrown. */
-INTERN NONNULL((1, 2)) DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 DeeJson_ParseObject(struct json_parser *__restrict self,
                     DeeObject *__restrict parser_owner,
                     bool must_advance_parser) {
-	/* TODO */
-	(void)self;
-	(void)parser_owner;
-	(void)must_advance_parser;
-	DeeError_NOTIMPLEMENTED();
+	DREF DeeObject *result;
+	int tok = libjson_parser_peeknext(self);
+	switch (tok) {
+
+	case JSON_PARSER_STRING:
+		result = DeeJson_ParseString(self);
+		break;
+
+	case JSON_PARSER_NUMBER:
+		result = DeeJson_ParseNumber(self);
+		break;
+
+	case JSON_PARSER_OBJECT: {
+		DREF DeeJsonMappingObject *retval;
+		retval = DeeObject_MALLOC(DeeJsonMappingObject);
+		if unlikely(!retval)
+			goto err;
+		retval->jm_parser = *self;
+		if unlikely(libjson_parser_yield(&retval->jm_parser) != JSON_PARSER_OBJECT) {
+err_syntax_object_retval:
+			DeeObject_FREE(retval);
+			goto err_syntax;
+		}
+		if (must_advance_parser) {
+			if (libjson_parser_next(self) == JSON_ERROR_SYNTAX)
+				goto err_syntax_object_retval;
+		}
+		Dee_atomic_rwlock_init(&retval->jm_lock);
+		retval->jm_owner = parser_owner;
+		Dee_Incref(parser_owner);
+		DeeObject_Init(retval, &DeeJsonMapping_Type);
+		result = (DREF DeeObject *)retval;
+	}	break;
+
+	case JSON_PARSER_ARRAY: {
+		DREF DeeJsonSequenceObject *retval;
+		retval = DeeObject_MALLOC(DeeJsonSequenceObject);
+		if unlikely(!retval)
+			goto err;
+		retval->js_parser = *self;
+		if unlikely(libjson_parser_yield(&retval->js_parser) != JSON_PARSER_ARRAY) {
+err_syntax_array_retval:
+			DeeObject_FREE(retval);
+			goto err_syntax;
+		}
+		if (must_advance_parser) {
+			if (libjson_parser_next(self) == JSON_ERROR_SYNTAX)
+				goto err_syntax_array_retval;
+		}
+		Dee_atomic_rwlock_init(&retval->js_lock);
+		retval->js_index = 0;
+		retval->js_size  = 0;
+		retval->js_owner = parser_owner;
+		Dee_Incref(parser_owner);
+		DeeObject_Init(retval, &DeeJsonMapping_Type);
+		result = (DREF DeeObject *)retval;
+	}	break;
+
+	case JSON_PARSER_NULL: {
+		if (must_advance_parser && libjson_parser_yield(self) != JSON_PARSER_NULL)
+			goto err_syntax;
+		result = Dee_None;
+		Dee_Incref(result);
+	}	break;
+
+	case JSON_PARSER_TRUE: {
+		if (must_advance_parser && libjson_parser_yield(self) != JSON_PARSER_TRUE)
+			goto err_syntax;
+		result = Dee_True;
+		Dee_Incref(result);
+	}	break;
+
+	case JSON_PARSER_FALSE: {
+		if (must_advance_parser && libjson_parser_yield(self) != JSON_PARSER_FALSE)
+			goto err_syntax;
+		result = Dee_False;
+		Dee_Incref(result);
+	}	break;
+
+	default:
+		goto err_syntax;
+	}
+	return result;
+err_syntax:
+	err_json_syntax();
+err:
 	return NULL;
 }
 
 
 /* Helper to specifically parse strings. */
-INTERN NONNULL((1)) DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeJson_ParseString(struct json_parser *__restrict self) {
-	/* TODO */
-	(void)self;
-	DeeError_NOTIMPLEMENTED();
+	int status;
+	dssize_t error;
+	struct unicode_printer printer = UNICODE_PRINTER_INIT;
+	/* Print the json string into a unicode-printer to convert it into a deemon string. */
+	status = libjson_parser_printstring(self, &unicode_printer_print, &printer, &error);
+	if (status != JSON_ERROR_OK) {
+		unicode_printer_fini(&printer);
+		if (status == JSON_ERROR_SYSERR)
+			goto err;    /* `unicode_printer_print()' returned a negative value. */
+		goto err_syntax; /* Either a *true* syntax error, or current token isn't a string. */
+	}
+	return unicode_printer_pack(&printer);
+err_syntax:
+	err_json_syntax();
+err:
 	return NULL;
+}
+
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+DeeJson_ParseFloat(struct json_parser *__restrict self) {
+#ifdef LIBJSON_NO_PARSER_GETFLOAT
+	(void)self;
+	DeeError_Throwf(&DeeError_UnsupportedAPI, "Cannot decode floats: No FPU support");
+	return NULL;
+#else /* LIBJSON_NO_PARSER_GETFLOAT */
+	double value;
+	if (libjson_parser_getfloat(self, &value) != JSON_ERROR_OK)
+		goto err_syntax;
+	return DeeFloat_New(value);
+err_syntax:
+	err_json_syntax();
+	return NULL;
+#endif /* !LIBJSON_NO_PARSER_GETFLOAT */
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+DeeJson_ParseLargeInteger(struct json_parser *__restrict self, char const *start) {
+	DREF DeeObject *result;
+	char const *end = self->jp_pos;
+
+	/* Parse the actual number itself. */
+	switch (self->jp_encoding) {
+
+	case JSON_ENCODING_UTF8:
+		result = DeeInt_FromString(start, (size_t)(end - start),
+		                           DEEINT_STRING(0, DEEINT_STRING_FNOSEPS));
+		break;
+
+	case JSON_ENCODING_UTF16LE:
+	case JSON_ENCODING_UTF32LE:
+	case JSON_ENCODING_UTF16BE:
+	case JSON_ENCODING_UTF32BE: {
+		/* When a multi-byte encoding is used, parsing gets more complicated
+		 * since we first have to convert the input blob into utf-8. */
+		DREF DeeObject *input_str;
+		char const *input_utf8;
+		switch (self->jp_encoding) {
+		case JSON_ENCODING_UTF16LE:
+			input_str = DeeString_NewUtf16Le((uint16_t const *)start,
+			                                 (size_t)((uint16_t const *)end -
+			                                          (uint16_t const *)start),
+			                                 STRING_ERROR_FSTRICT);
+			break;
+		case JSON_ENCODING_UTF32LE:
+			input_str = DeeString_NewUtf32Le((uint32_t const *)start,
+			                                 (size_t)((uint32_t const *)end -
+			                                          (uint32_t const *)start),
+			                                 STRING_ERROR_FSTRICT);
+			break;
+		case JSON_ENCODING_UTF16BE:
+			input_str = DeeString_NewUtf16Be((uint16_t const *)start,
+			                                 (size_t)((uint16_t const *)end -
+			                                          (uint16_t const *)start),
+			                                 STRING_ERROR_FSTRICT);
+			break;
+		case JSON_ENCODING_UTF32BE:
+			input_str = DeeString_NewUtf32Be((uint32_t const *)start,
+			                                 (size_t)((uint32_t const *)end -
+			                                          (uint32_t const *)start),
+			                                 STRING_ERROR_FSTRICT);
+			break;
+		default: __builtin_unreachable();
+		}
+		if unlikely(!input_str)
+			goto err;
+		input_utf8 = DeeString_AsUtf8(input_str);
+		if unlikely(!input_utf8) {
+			Dee_Decref(input_str);
+			goto err;
+		}
+		result = DeeInt_FromString(input_utf8, WSTR_LENGTH(input_utf8),
+		                           DEEINT_STRING(0, DEEINT_STRING_FNOSEPS));
+		Dee_Decref(input_str);
+	}	break;
+
+	default: __builtin_unreachable();
+	}
+	if unlikely(!result)
+		goto err;
+
+	/* Skip trailing whitespace. */
+	json_skip_whitespace(self);
+	return result;
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+DeeJson_ParseLargeNumber(struct json_parser *__restrict self,
+                         char const *orig_pos, unsigned int radix) {
+	char32_t ch;
+	char const *pos;
+	/* Check if this might be a large floating-point value. */
+	for (;;) {
+		uint8_t digit;
+		pos = self->jp_pos;
+		ch  = json_getc(self);
+		if unlikely(!unicode_asdigit(ch, radix, &digit)) {
+			if ((ch == '.' || ch == 'e' || ch == 'E') && radix == 10)
+				goto parse_float;
+			self->jp_pos = pos;
+			break;
+		}
+	}
+
+	/* Nope: it's just a large integer value. */
+	return DeeJson_ParseLargeInteger(self, orig_pos);
+parse_float:
+	self->jp_pos = orig_pos;
+	return DeeJson_ParseFloat(self);
+}
+
+/* Helper to specifically parse integers / floats. */
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+DeeJson_ParseNumber(struct json_parser *__restrict self) {
+	char const *orig_pos = self->jp_pos;
+	char const *start    = self->jp_pos;
+	char32_t ch = json_getc(self);
+	bool negative = false;
+	unsigned int radix = 10;
+	intptr_t result, new_result;
+	if (ch == '-') {
+		ch = json_getc(self);
+		negative = true;
+	}
+	if (!unicode_isdigit(ch))
+		goto err_syntax; /* Not an integer. */
+	result = 0;
+	if (ch == '0') {
+		char const *pos;
+		pos = self->jp_pos;
+		ch  = json_getc(self);
+		if (ch == 'x' || ch == 'X') {
+			radix = 16;
+			ch    = json_getc(self);
+		} else if (ch == 'b' || ch == 'B') {
+			radix = 2;
+			ch    = json_getc(self);
+		} else {
+			radix = 8;
+		}
+		if (!unicode_isxdigit(ch)) {
+			if (radix != 8)
+				goto err_syntax;
+
+			/* Check if this is a floating-point number. */
+			if (ch == '.' || ch == 'e' || ch == 'E')
+				goto parse_float;
+
+			/* Special case: '0' */
+			json_skip_whitespace_at(self, ch, pos);
+			return_reference_(DeeInt_Zero);
+		}
+	}
+	for (;;) {
+		uint8_t digit;
+		if unlikely(!unicode_asdigit(ch, radix, &digit)) {
+			if ((ch == '.' || ch == 'e' || ch == 'E') && radix == 10)
+				goto parse_float;
+			goto err_syntax;
+		}
+		new_result = (result * radix) + digit;
+		if (new_result < result)
+			return DeeJson_ParseLargeNumber(self, orig_pos, radix);
+		result = new_result;
+		start  = self->jp_pos;
+		ch     = json_getc(self);
+		if (unicode_isdigit(ch))
+			continue;
+		if (radix >= 16) {
+			if (unicode_ishex(ch))
+				continue;
+		}
+		break;
+	}
+
+	/* Skip trailing whitespace. */
+	json_skip_whitespace_at(self, ch, start);
+
+	/* Store the generated integer. */
+	if (negative)
+		result = -result;
+
+	/* Fast-path for signed integers that fits into a CPU pointer register. */
+	return DeeInt_NEWS(result);
+err_syntax:
+	err_json_syntax();
+	return NULL;
+parse_float:
+	self->jp_pos = orig_pos;
+	return DeeJson_ParseFloat(self);
 }
 
 
@@ -1418,7 +1707,7 @@ DeeJson_ParseString(struct json_parser *__restrict self) {
  *
  * @return: 0 : Success
  * @return: -1: An error was thrown */
-INTERN NONNULL((1, 2, 3)) int DCALL
+PRIVATE WUNUSED NONNULL((1, 2, 3)) int DCALL
 DeeJson_ParseInto(struct json_parser *__restrict self,
                   DeeObject *parser_owner, DeeObject *into,
                   bool must_advance_parser) {
@@ -1438,7 +1727,7 @@ DeeJson_ParseInto(struct json_parser *__restrict self,
  *
  * @return: 0 : Success
  * @return: -1: An error was thrown */
-INTERN NONNULL((1, 2)) int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 DeeJson_MappingIntoObject(DeeObject *__restrict mapping,
                           DeeObject *__restrict obj) {
 	/* TODO */
@@ -1447,12 +1736,6 @@ DeeJson_MappingIntoObject(DeeObject *__restrict mapping,
 	return DeeError_NOTIMPLEMENTED();
 }
 
-
-#ifdef __INTELLISENSE__
-LOCAL NONNULL((1, 2)) int CC /* From: `../../libjson/writer.c' */
-json_print(struct json_writer *__restrict self,
-           char const *__restrict data, size_t len);
-#endif /* __INTELLISENSE__ */
 
 PRIVATE WUNUSED NONNULL((2)) dssize_t DCALL
 json_foreach_write_item(void *arg, DeeObject *elem) {
@@ -1553,7 +1836,7 @@ err:
  *
  * @return: 0 : Success
  * @return: -1: An error was thrown */
-INTERN NONNULL((1, 2)) int DCALL
+PRIVATE NONNULL((1, 2)) int DCALL
 DeeJson_WriteObject(DeeJsonWriter *__restrict self,
                     DeeObject *__restrict obj) {
 	DeeTypeObject *type = Dee_TYPE(obj);
