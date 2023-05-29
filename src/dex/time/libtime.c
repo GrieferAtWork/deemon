@@ -1759,6 +1759,7 @@ PRIVATE struct type_method tpconst time_methods[] = {
 		if (DeeObject_AsInt128(value, &tval))                   \
 			goto err;                                           \
 		DeeTime_SetRepr(self, &tval, repr);                     \
+		return 0;                                               \
 	err:                                                        \
 		return -1;                                              \
 	}                                                           \
