@@ -535,7 +535,7 @@ err:
 	return -1;
 }
 
-PRIVATE int DCALL
+PRIVATE NONNULL((1)) int DCALL
 ast_import_all_from_module(DeeModuleObject *__restrict mod,
                            struct ast_loc *loc) {
 	struct module_symbol *iter, *end;

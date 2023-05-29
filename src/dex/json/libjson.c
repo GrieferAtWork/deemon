@@ -1325,7 +1325,7 @@ INTERN DeeTypeObject DeeJsonSequence_Type = {
 INTERN DeeTypeObject DeeJsonMapping_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "Mapping",
-	/* .tp_doc      = */ DOC("An optimized sequence type for JIT-parsing of JSON mappings.\n"
+	/* .tp_doc      = */ DOC("An optimized mapping type for JIT-parsing of JSON mappings.\n"
 	                         "\n"
 
 	                         "()\n"
