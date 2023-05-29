@@ -2230,6 +2230,11 @@ struct Dee_membercache {
 #define OPERATOR_PCLEAR       0x8002 /* `tp_pclear'. */
 #define OPERATOR_GETBUF       0x8003 /* `tp_getbuf'. */
 
+/* Fake operators (for use with `DeeFormat_PrintOperatorRepr()'). */
+#define FAKE_OPERATOR_IS          0xff00 /* `a is b' */
+#define FAKE_OPERATOR_SAME_OBJECT 0xff01 /* `a === b' */
+#define FAKE_OPERATOR_DIFF_OBJECT 0xff02 /* `a !== b' */
+
 /* Operator association ranges. */
 #define OPERATOR_TYPEMIN    OPERATOR_CONSTRUCTOR
 #define OPERATOR_TYPEMAX    OPERATOR_CALL

@@ -1476,7 +1476,8 @@ DeeString_IsSymbol(DeeStringObject *__restrict self,
 
 /* Print a representation of invoking operator `name' on `self' with the given arguments.
  * This function is used to generate the representation of the expression in the default
- * assertion failure handler. */
+ * assertion failure handler.
+ * NOTE: This function also accepts "fake" operators (`FAKE_OPERATOR_*') for `name' */
 PUBLIC WUNUSED NONNULL((1, 3)) Dee_ssize_t DCALL
 DeeFormat_PrintOperatorRepr(Dee_formatprinter_t printer, void *arg,
                             DeeObject *self, uint16_t name,
@@ -1669,6 +1670,29 @@ DeeFormat_PrintOperatorRepr(Dee_formatprinter_t printer, void *arg,
 			} else {
 				DO(err, DeeFormat_Printf(printer, arg, ".operator . (%r) = %r", argv[0], argv[1]));
 			}
+			goto done;
+		}
+		break;
+
+		/* Fake operators */
+	case FAKE_OPERATOR_IS:
+	case FAKE_OPERATOR_SAME_OBJECT:
+	case FAKE_OPERATOR_DIFF_OBJECT:
+		if (argc == 1) {
+			char const *optok;
+			switch (name) {
+			case FAKE_OPERATOR_IS:
+				optok = "is";
+				break;
+			case FAKE_OPERATOR_SAME_OBJECT:
+				optok = "===";
+				break;
+			case FAKE_OPERATOR_DIFF_OBJECT:
+				optok = "!==";
+				break;
+			default: __builtin_unreachable();
+			}
+			DO(err, DeeFormat_Printf(printer, arg, " %s %r", optok, argv[0]));
 			goto done;
 		}
 		break;

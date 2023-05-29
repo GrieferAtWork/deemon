@@ -183,15 +183,45 @@ emit_instruction:
 		    (op_instr = operator_instr_table[operator_name]) == 0 ||
 		    (operand_mode = operator_opcount_table[operator_name],
 		     (operand_mode & OPCOUNT_OPCOUNTMASK) != argc)) {
-			if (operator_name == OPERATOR_CALL && argc == 2) {
+			int error;
+			switch (operator_name) {
+
+			case OPERATOR_CALL:
+				if (argc != 2)
+					goto fallback_generate_goperator;
 				/* Special case: call-with-keywords */
-				if (asm_gcall_tuple_kwds())
-					goto err;
-			} else {
+				error = asm_gcall_tuple_kwds();
+				break;
+
+			case FAKE_OPERATOR_IS:
+				if (argc != 2)
+					goto fallback_generate_goperator;
+				/* Special case: `assert a is b' */
+				error = asm_ginstanceof();
+				break;
+
+			case FAKE_OPERATOR_SAME_OBJECT:
+				if (argc != 2)
+					goto fallback_generate_goperator;
+				/* Special case: `assert a === b' */
+				error = asm_gsameobj();
+				break;
+
+			case FAKE_OPERATOR_DIFF_OBJECT:
+				if (argc != 2)
+					goto fallback_generate_goperator;
+				/* Special case: `assert a !== b' */
+				error = asm_gdiffobj();
+				break;
+
+			default:
+fallback_generate_goperator:
 				/* Invoke the operator using a general-purpose instruction. */
-				if (asm_goperator(operator_name, argc - 1))
-					goto err;
+				error = asm_goperator(operator_name, argc - 1);
+				break;
 			}
+			if unlikely(error)
+				goto err;
 		} else {
 			/* The operator has its own dedicated instruction, which we can use. */
 			if (asm_put(op_instr))
@@ -332,7 +362,9 @@ emit_instruction:
 	}
 
 	if (expr->a_type == AST_ACTION) {
-		if (expr->a_flag == AST_FACTION_IN) {
+		switch (expr->a_flag) {
+
+		case AST_FACTION_IN:
 			/* Special case: in-expressions. */
 			operator_name = OPERATOR_CONTAINS;
 			argc          = 2;
@@ -345,8 +377,8 @@ emit_instruction:
 			if (asm_gswap())
 				goto err;
 			goto emit_instruction;
-		}
-		if (expr->a_flag == AST_FACTION_CALL_KW) {
+
+		case AST_FACTION_CALL_KW:
 			/* Special case: call with keywords. */
 			operator_name = OPERATOR_CALL;
 			argc          = 3;
@@ -359,6 +391,33 @@ emit_instruction:
 			if (asm_putddi(ddi_ast))
 				goto err;
 			goto emit_instruction;
+
+		case AST_FACTION_IS:
+		case AST_FACTION_SAMEOBJ:
+		case AST_FACTION_DIFFOBJ:
+			/* Special case: `a is b', `a === b' and `a !== b'. */
+			switch (expr->a_flag) {
+			case AST_FACTION_IS:
+				operator_name = FAKE_OPERATOR_IS;
+				break;
+			case AST_FACTION_SAMEOBJ:
+				operator_name = FAKE_OPERATOR_SAME_OBJECT;
+				break;
+			case AST_FACTION_DIFFOBJ:
+				operator_name = FAKE_OPERATOR_DIFF_OBJECT;
+				break;
+			default: __builtin_unreachable();
+			}
+			if (ast_genasm(expr->a_action.a_act0, ASM_G_FPUSHRES))
+				goto err;
+			if (ast_genasm_one(expr->a_action.a_act1, ASM_G_FPUSHRES))
+				goto err;
+			if (asm_putddi(ddi_ast))
+				goto err;
+			argc = 2;
+			goto emit_instruction;
+
+		default: break;
 		}
 	}
 #if 0
