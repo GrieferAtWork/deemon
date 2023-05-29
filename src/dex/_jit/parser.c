@@ -801,8 +801,7 @@ JITLexer_ParseModuleName(JITLexer *__restrict self,
 				unsigned char *temp;
 				--end;
 				temp = end;
-				ch32 = utf8_readchar((char const **)&end,
-				                     (char const *)self->jl_end);
+				ch32 = unicode_readutf8_n(&end, self->jl_end);
 				if (!DeeUni_IsSymCont(ch32)) {
 					end = temp;
 					break;

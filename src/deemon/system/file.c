@@ -1451,7 +1451,7 @@ nt_write_utf8_to_console(SystemFile *__restrict self,
 			++iter;
 			continue;
 		}
-		len = utf8_sequence_len[ch];
+		len = unicode_utf8seqlen[ch];
 		ASSERT(len != 0);
 		if (len > (size_t)(end - iter))
 			break;

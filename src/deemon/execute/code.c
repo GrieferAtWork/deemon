@@ -1001,19 +1001,19 @@ PRIVATE struct type_getset tpconst code_getsets[] = {
 	 * where they must be kept hidden from the basic namespace provided
 	 * for standard-compliant deemon code.
 	 * Properties matching these names can be found in a variety of other
-	 * types, including `function', `objmethod', etc.
+	 * types, including `Function', `ObjMethod', etc.
 	 */
 	TYPE_GETTER(STR___name__, &code_get_name,
 	            "->?X2?Dstring?N\n"
-	            "Returns the name of @this code object, or ?N if unknown (s.a. :Function.__name__)"),
+	            "Returns the name of @this code object, or ?N if unknown (s.a. ?A__name__?DFunction)"),
 	TYPE_GETTER(STR___doc__, &code_get_doc,
 	            "->?X2?Dstring?N\n"
-	            "Returns the documentation string of @this code object, or ?N if unknown (s.a. :Function.__doc__)"),
+	            "Returns the documentation string of @this code object, or ?N if unknown (s.a. ?A__doc__?DFunction)"),
 	TYPE_GETTER(STR___type__, &code_get_type,
 	            "->?X2?DType?N\n"
 	            "Try to determine if @this code object is defined as part of a user-defined class, "
 	            /**/ "and if it is, return that class type, or ?N if that class couldn't be found, "
-	            /**/ "or if @this code object is defined as stand-alone (s.a. :Function.__type__)"),
+	            /**/ "or if @this code object is defined as stand-alone (s.a. ?A__type__?DFunction)"),
 	TYPE_GETTER(STR___kwds__, &code_get_kwds,
 	            "->?S?Dstring\n"
 	            "Returns a sequence of keyword argument names accepted by @this code object\n"
@@ -1024,17 +1024,17 @@ PRIVATE struct type_getset tpconst code_getsets[] = {
 	            /**/ "and if so, if it is used to define an operator callback. If that is the case, "
 	            /**/ "return the internal ID of the operator that @this code object provides, or ?N "
 	            /**/ "if that class couldn't be found, @this code object is defined as stand-alone, or "
-	            /**/ "defined as a class- or instance-method (s.a. :Function.__operator__)"),
+	            /**/ "defined as a class- or instance-method (s.a. ?A__operator__?DFunction)"),
 	TYPE_GETTER("__operatorname__", &code_get_operatorname,
 	            "->?X3?Dstring?Dint?N\n"
 	            "Same as ?#__operator__, but instead try to return the unambiguous name of the "
 	            /**/ "operator, though still return its ID if the operator isn't recognized as being "
-	            /**/ "part of the standard (s.a. :Function.__operatorname__)"),
+	            /**/ "part of the standard (s.a. ?A__operatorname__?DFunction)"),
 	TYPE_GETTER("__property__", &code_get_property,
 	            "->?X2?Dint?N\n"
 	            "Returns an integer describing the kind if @this code is part of a property or getset, "
 	            /**/ "or returns ?N if the function's property could not be found, or if the function isn't "
-	            /**/ "declared as a property callback (s.a. :Function.__property__)"),
+	            /**/ "declared as a property callback (s.a. ?A__property__?DFunction)"),
 	TYPE_GETTER("__default__", &code_getdefault,
 	            "->?S?O\n"
 	            "Access to the default values of arguments"),
@@ -2033,7 +2033,7 @@ PUBLIC DeeTypeObject DeeCode_Type = {
 	                         "@param module The module to-be used as the declaring module\n"
 	                         "@param statics An indexable sequence containing the static variables that are to be made available to the code\n"
 	                         "@param except A sequence of ${(startpc#: int, endpc#: int, entrypc#: int, entrysp#: int, flags#: string #| int = \"\", mask#: Type = none)}-"
-	                         /*         */ ":{Tuple}s, with `flags' being a comma-separated string of $\"finally\", $\"interrupt\", $\"handled\"\n"
+	                         /*         */ "?D{Tuple}s, with `flags' being a comma-separated string of $\"finally\", $\"interrupt\", $\"handled\"\n"
 	                         "@param nlocal The number of local variables to-be allocated for every frame\n"
 	                         "@param nstack The amount of stack space to be allocated for every frame\n"
 	                         "@param argc The max number of dedicated arguments taken by the function (must be >= ${##defaults} and == ${##keywords} if those are given). "

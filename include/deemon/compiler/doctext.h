@@ -604,13 +604,6 @@ DECL_BEGIN
  *                               - ?Dfoo         (Globals within the deemon module)
  *                               - ?Eerrors:foo  (The name of a builtin Error or Signal class)
  *         :{foo}               ...
- *         :foo.bar             Multi-purpose. Same as the first match from (in order):
- *                               - ?Abar?Dfoo         (Globals within the deemon module)
- *                               - ?Abar?Eerrors:foo  (The name of a builtin Error or Signal class)
- *                              Note that this way of chaining attributes can be extended indefinitely
- *         :{foo.bar}           ...
- *         :deemon:Object.id    Same as ?Aid?Edeemon:Object
- *         :{deemon:Object.id}  ...
  *
  *     When no {}-block is used, the string must allow for issymbol().
  *     Otherwise, when a {}-block is used, the contained string `name'

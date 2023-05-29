@@ -180,8 +180,9 @@ again0:
 	}
 
 	if (type == &DeeSuper_Type) {
-		int result = CONSTEXPR_ALLOWED, temp;
-		temp       = allow_constexpr((DeeObject *)DeeSuper_TYPE(self));
+		int temp, result;
+		result = CONSTEXPR_ALLOWED;
+		temp   = allow_constexpr((DeeObject *)DeeSuper_TYPE(self));
 		if (temp == CONSTEXPR_ILLEGAL)
 			goto illegal;
 		if (temp == CONSTEXPR_USECOPY)
@@ -196,9 +197,10 @@ again0:
 
 	if (type == &DeeTuple_Type) {
 		/* Allow tuples consisting only of other allowed types. */
+		int result;
 		size_t i, count;
-		int result = CONSTEXPR_ALLOWED;
-		count = DeeTuple_SIZE(self);
+		result = CONSTEXPR_ALLOWED;
+		count  = DeeTuple_SIZE(self);
 		for (i = 0; i < count; ++i) {
 			int temp;
 			DeeObject *elem;
@@ -214,9 +216,10 @@ again0:
 
 	if (type == &DeeRoDict_Type) {
 		/* Allow read-only dicts consisting only of other allowed types. */
-		int temp, result = CONSTEXPR_ALLOWED;
-		size_t i;
 		DeeRoDictObject *me = (DeeRoDictObject *)self;
+		int temp, result;
+		size_t i;
+		result = CONSTEXPR_ALLOWED;
 		for (i = 0; i <= me->rd_mask; ++i) {
 			if (!me->rd_elem[i].di_key)
 				continue;
@@ -236,9 +239,10 @@ again0:
 
 	if (type == &DeeRoSet_Type) {
 		/* Allow read-only sets consisting only of other allowed types. */
-		int temp, result = CONSTEXPR_ALLOWED;
-		size_t i;
 		DeeRoSetObject *me = (DeeRoSetObject *)self;
+		int temp, result;
+		size_t i;
+		result = CONSTEXPR_ALLOWED;
 		for (i = 0; i <= me->rs_mask; ++i) {
 			if (!me->rs_elem[i].rsi_key)
 				continue;
@@ -325,6 +329,7 @@ again0:
 		CONSTEXPR_FRAME_END;
 		goto usecopy;
 	}
+
 	/* Last check: There is a small hand full of constant objects that are always allowed. */
 	if (Dec_BuiltinID(self) != DEC_BUILTINID_UNKNOWN)
 		goto allowed;

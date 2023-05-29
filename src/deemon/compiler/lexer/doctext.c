@@ -45,7 +45,7 @@ skip_tpp_comment_line_prefix_after_escaped_linefeed(char const *iter,
 	orig_line_start = iter;
 	for (;;) {
 		uint32_t ch;
-		ch = utf8_readchar((char const **)&iter, end);
+		ch = unicode_readutf8_n(&iter, end);
 		if (DeeUni_IsLF(ch) || !ch)
 			break;
 		if (DeeUni_IsSpace(ch))
@@ -55,23 +55,23 @@ skip_tpp_comment_line_prefix_after_escaped_linefeed(char const *iter,
 			 * the start of the documentation string on this line. - Since
 			 * we're trying to act like TPP hadn't escaped the linefeed, we
 			 * must also remove such a comment. */
-			ch = utf8_readchar((char const **)&iter, end);
+			ch = unicode_readutf8_n(&iter, end);
 			if (ch != '*')
 				break;
 			do {
-				ch = utf8_readchar((char const **)&iter, end);
+				ch = unicode_readutf8_n(&iter, end);
 again_search_for_c_comment_end_after_escaped_linefeed:
 				;
 			} while (ch && ch != '*');
 			if (ch != '*')
 				break;
-			ch = utf8_readchar((char const **)&iter, end);
+			ch = unicode_readutf8_n(&iter, end);
 			if (ch != '/')
 				goto again_search_for_c_comment_end_after_escaped_linefeed;
 			continue;
 		}
 		if (ch == '@') {
-			ch = utf8_readchar((char const **)&iter, end);
+			ch = unicode_readutf8_n(&iter, end);
 			if (ch != '@')
 				break;
 			/* The double-@ has been found! */
@@ -115,7 +115,7 @@ lstrip_whitespace(/*utf-8*/ char const *start,
 		uint32_t ch;
 		char const *ch_start;
 		ch_start = start;
-		ch = utf8_readchar((char const **)&start, end);
+		ch = unicode_readutf8_n(&start, end);
 		if (!DeeUni_IsSpace(ch)) {
 			start = ch_start;
 			break;
@@ -132,7 +132,7 @@ rstrip_whitespace(/*utf-8*/ char const *start,
 		uint32_t ch;
 		char const *ch_end;
 		ch_end = end;
-		ch = utf8_readchar_rev((char const **)&end, start);
+		ch = unicode_readutf8_rev_n(&end, start);
 		if (!DeeUni_IsSpace(ch)) {
 			end = ch_end;
 			break;
@@ -146,11 +146,11 @@ PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) bool DCALL
 is_symbol(/*utf-8*/ char const *start,
           /*utf-8*/ char const *end) {
 	uint32_t ch;
-	ch = utf8_readchar((char const **)&start, end);
+	ch = unicode_readutf8_n(&start, end);
 	if (!DeeUni_IsSymStrt(ch))
 		goto no;
 	for (;;) {
-		ch = utf8_readchar((char const **)&start, end);
+		ch = unicode_readutf8_n(&start, end);
 		if (!ch && (start >= end))
 			break; /* Done */
 		if (!DeeUni_IsSymCont(ch)) {
@@ -158,7 +158,7 @@ is_symbol(/*utf-8*/ char const *start,
 			 *               so if a \ is followed by _, then we can still consider
 			 *               it as a symbol character here! */
 			if (ch == '\\') {
-				ch = utf8_readchar((char const **)&start, end);
+				ch = unicode_readutf8_n(&start, end);
 				if (DeeUni_IsSymCont(ch))
 					continue;
 			}
@@ -228,7 +228,7 @@ contains_only_decimals_dot_colon_or_backslash(/*utf-8*/ char const *text,
                                                /*utf-8*/ char const *end) {
 	uint32_t ch;
 	for (;;) {
-		ch = utf8_readchar((char const **)&text, end);
+		ch = unicode_readutf8_n(&text, end);
 		if (!ch && (text >= end))
 			break;
 		if (DeeUni_IsDigit(ch))
@@ -259,11 +259,11 @@ find_nonescaped_match(/*utf-8*/ char const *text,
 		char const *ch_start;
 		uint32_t ch;
 		ch_start = text;
-		ch = utf8_readchar((char const **)&text, end);
+		ch = unicode_readutf8_n(&text, end);
 		if (!ch && (text >= end))
 			break;
 		if (ch == '\\') {
-			utf8_readchar((char const **)&text, end);
+			unicode_readutf8_n(&text, end);
 			continue;
 		}
 		if (ch == (unsigned char)find_open) {
@@ -294,13 +294,13 @@ reprint_but_unescape_backslash_pipe(struct unicode_printer *__restrict printer,
 		uint32_t ch;
 		char const *ch_start, *escape_start;
 		ch_start = text;
-		ch = utf8_readchar((char const **)&text, end);
+		ch = unicode_readutf8_n(&text, end);
 		if (!ch && (text >= end))
 			break;
 		if (ch != '\\')
 			continue;
 		escape_start = text;
-		ch = utf8_readchar((char const **)&text, end);
+		ch = unicode_readutf8_n(&text, end);
 		if (!ch && (text >= end))
 			break;
 		if (ch == '|' || ch == '\\') {
@@ -339,7 +339,7 @@ print_escaped(struct unicode_printer *__restrict printer,
 		uint32_t ch;
 		char const *ch_start;
 		ch_start = text;
-		ch = utf8_readchar((char const **)&text, end);
+		ch = unicode_readutf8_n(&text, end);
 		if (!ch && (text >= end))
 			break;
 		if (ch == '#' || ch == '$' || ch == '%' || ch == '&' || ch == '~' ||
@@ -360,7 +360,7 @@ do_escape_ch:
 				goto err;
 			flush_start = ch_start;
 			ch_start    = text;
-			ch = utf8_readchar((char const **)&text, end);
+			ch = unicode_readutf8_n(&text, end);
 			if (ch == '[' || ch == ']' || ch == '|' || ch == '~' ||
 			    ch == '*' || ch == '@' || ch == '-' || ch == '+' ||
 			    ch == '#' || ch == ':')
@@ -398,7 +398,7 @@ print_escaped_dedent(struct unicode_printer *__restrict printer,
 			uint32_t ch;
 			char const *ch_start;
 			ch_start = text;
-			ch = utf8_readchar((char const **)&text, end);
+			ch = unicode_readutf8_n(&text, end);
 			if (nskip) {
 				if (DeeUni_IsLF(ch)) {
 					/* Empty line (reset the counter) */
@@ -422,7 +422,7 @@ do_reset_on_newline:
 				current_line_start = ch_start;
 				for (;;) {
 					ch_start = text;
-					ch = utf8_readchar((char const **)&text, end);
+					ch = unicode_readutf8_n(&text, end);
 					if (DeeUni_IsLF(ch))
 						break;
 					if (!ch && (text >= end)) {
@@ -458,7 +458,7 @@ find_least_indentation_and_strip_empty_leading_lines(/*utf-8*/ char const **__re
 	size_t current_line_leading_spaces = 0;
 	for (;;) {
 		uint32_t ch;
-		ch = utf8_readchar((char const **)&text, end);
+		ch = unicode_readutf8_n(&text, end);
 		if (DeeUni_IsLF(ch)) {
 			if (min_line_leading_spaces == (size_t)-1)
 				*p_text = text; /* Skip an empty leading line */
@@ -481,7 +481,7 @@ find_least_indentation_and_strip_empty_leading_lines(/*utf-8*/ char const **__re
 		for (;;) {
 			if (!ch && (text >= end))
 				goto done;
-			ch = utf8_readchar((char const **)&text, end);
+			ch = unicode_readutf8_n(&text, end);
 			if (DeeUni_IsLF(ch))
 				break;
 		}
@@ -593,7 +593,7 @@ do_compile(/*utf-8*/ char const *text,
 	 * white-space characters. */
 	for (;;) {
 		ch_start = iter;
-		ch = utf8_readchar((char const **)&iter, end);
+		ch = unicode_readutf8_n(&iter, end);
 		if (DeeUni_IsLF(ch)) {
 			current_line_start          = iter;
 			current_line_leading_spaces = 0;
@@ -613,12 +613,12 @@ do_compile(/*utf-8*/ char const *text,
 	result_printer_origlen  = result_printer->up_length;
 
 	ch_start = iter;
-	ch       = utf8_readchar((char const **)&iter, end);
+	ch       = unicode_readutf8_n(&iter, end);
 	goto do_switch_ch_at_start_of_line;
 	for (;;) {
 do_read_and_switch_ch:
 		ch_start = iter;
-		ch = utf8_readchar((char const **)&iter, end);
+		ch = unicode_readutf8_n(&iter, end);
 do_switch_ch:
 		ASSERT(ch_start >= flush_start);
 		ASSERT(iter >= flush_start);
@@ -651,10 +651,10 @@ do_set_current_line:
 			FLUSHTO(ch_start);
 do_set_current_line_noflush:
 			ch_start = iter;
-			nextchar = utf8_readchar((char const **)&iter, end);
+			nextchar = unicode_readutf8_n(&iter, end);
 			if (ch == '\r' && nextchar == '\n') {
 				ch_start = iter;
-				nextchar = utf8_readchar((char const **)&iter, end);
+				nextchar = unicode_readutf8_n(&iter, end);
 			}
 			ch = nextchar;
 			/* Count the # of leading spaces within the next line.
@@ -673,7 +673,7 @@ scan_newline_with_first_ch_and_explicit_linefeed:
 			goto check_ch_after_lf;
 			for (;;) {
 				ch_start = iter;
-				ch = utf8_readchar((char const **)&iter, end);
+				ch = unicode_readutf8_n(&iter, end);
 check_ch_after_lf:
 				if (DeeUni_IsLF(ch)) {
 					next_line_start          = iter;
@@ -725,7 +725,7 @@ check_ch_after_lf:
 					prev_line_start = current_line_start_after_whitespace;
 					prev_line_end   = current_line_start_after_whitespace;
 					do {
-						temp_ch = utf8_readchar((char const **)&prev_line_end, next_line_start);
+						temp_ch = unicode_readutf8_n(&prev_line_end, next_line_start);
 						if (!temp_ch && (prev_line_end <= prev_line_start))
 							goto do_join_with_linefeed;
 						if (DeeUni_IsLF(temp_ch))
@@ -733,19 +733,19 @@ check_ch_after_lf:
 					} while (--count);
 					/* Check if `prev_line_end' points to a non-whitespace character. */
 					temp = prev_line_end;
-					temp_ch = utf8_readchar((char const **)&prev_line_end, next_line_start);
+					temp_ch = unicode_readutf8_n(&prev_line_end, next_line_start);
 					if (DeeUni_IsSpace(temp_ch))
 						goto do_join_with_linefeed;
 					prev_line_end = temp;
 					/* Skip whitespace found prior to `prev_line_end' */
 					prev_line_end = rstrip_whitespace(prev_line_start, prev_line_end);
 					/* Check if there's a :-character before `prev_line_end' */
-					temp_ch = utf8_readchar_rev((char const **)&prev_line_end, prev_line_start);
+					temp_ch = unicode_readutf8_rev_n(&prev_line_end, prev_line_start);
 					if (temp_ch != ':')
 						goto do_join_with_linefeed;
 					/* Check if the :-character is preceded by `.', <space> or <issymcont>
 					 * If it is, then we must join the two lines via space */
-					temp_ch = utf8_readchar_rev((char const **)&prev_line_end, prev_line_start);
+					temp_ch = unicode_readutf8_rev_n(&prev_line_end, prev_line_start);
 					if (DeeUni_IsSymCont(temp_ch) || DeeUni_IsSpace(temp_ch) || temp_ch == '.')
 						goto do_join_with_space;
 do_join_with_linefeed:
@@ -795,7 +795,7 @@ do_switch_ch_at_start_of_line:
 				/* Seek ahead to the start of the first cell. */
 				for (;;) {
 					ch_start = iter;
-					ch       = utf8_readchar((char const **)&iter, end);
+					ch       = unicode_readutf8_n(&iter, end);
 					if (!ch && (iter >= end))
 						goto not_a_table;
 					if (DeeUni_IsLF(ch))
@@ -813,12 +813,12 @@ do_switch_ch_at_start_of_line:
 						 * of remaining `corner_ch'-characters as `column_count' */
 						column_count = 0;
 						for (;;) {
-							ch = utf8_readchar((char const **)&iter, end);
+							ch = unicode_readutf8_n(&iter, end);
 							if (DeeUni_IsLF(ch)) {
 								/* Deal with windows-style line-feeds */
 								if (ch == '\r') {
 									char const *temp = iter;
-									ch = utf8_readchar((char const **)&iter, end);
+									ch = unicode_readutf8_n(&iter, end);
 									if (ch != '\n')
 										iter = temp;
 								}
@@ -835,7 +835,7 @@ do_switch_ch_at_start_of_line:
 						/* A top border was present, and we did parse it.
 						 * Now we must move on to the start of the first cell. */
 						for (;;) {
-							ch = utf8_readchar((char const **)&iter, end);
+							ch = unicode_readutf8_n(&iter, end);
 							if (DeeUni_IsLF(ch) || (!ch && iter >= end))
 								goto not_a_table;
 							if (DeeUni_IsSpace(ch))
@@ -848,7 +848,7 @@ do_switch_ch_at_start_of_line:
 						/* Skip additional whitespace at the start of the first cell. */
 						for (;;) {
 							ch_start = iter;
-							ch = utf8_readchar((char const **)&iter, end);
+							ch = unicode_readutf8_n(&iter, end);
 							if (DeeUni_IsLF(ch) || (!ch && iter >= end))
 								goto not_a_table;
 							if (!DeeUni_IsSpace(ch))
@@ -881,7 +881,7 @@ do_switch_ch_at_start_of_line:
 								++column_count;
 							}
 							if (scan_ch == '\\') {
-								scan_ch = utf8_readchar((char const **)&scan_iter, end);
+								scan_ch = unicode_readutf8_n(&scan_iter, end);
 								if (DeeUni_IsLF(scan_ch) || (!scan_ch && scan_iter >= end))
 									break;
 							}
@@ -889,7 +889,7 @@ do_switch_ch_at_start_of_line:
 							 *       A |-character inside of @(foo | bar) should automatically
 							 *       be escaped, and similar should happen for `foo | bar' (i.e.
 							 *       inlined code) */
-							scan_ch = utf8_readchar((char const **)&scan_iter, end);
+							scan_ch = unicode_readutf8_n(&scan_iter, end);
 						}
 						if (!column_count)
 							goto not_a_table;
@@ -906,12 +906,12 @@ do_switch_ch_at_start_of_line:
 					uint32_t prev_ch;
 					char const *prev_iter = iter;
 					/* Rewind whitespace characters. */
-					prev_ch = utf8_readchar_rev((char const **)&iter, table_top_left);
+					prev_ch = unicode_readutf8_rev_n(&iter, table_top_left);
 					if (DeeUni_IsSpace(prev_ch))
 						continue;
 					iter     = prev_iter;
 					ch_start = prev_iter;
-					ch       = utf8_readchar((char const **)&iter, table_top_left);
+					ch       = unicode_readutf8_n(&iter, table_top_left);
 					break;
 				}
 				/* NOTE: ch/ch_start point at the first character of the top-left cell;
@@ -975,7 +975,7 @@ do_handle_end_of_line_in_table_line:
 										/* Deal with windows-style line-feeds */
 										if (ch == '\r') {
 											char const *temp = iter;
-											ch = utf8_readchar((char const **)&iter, end);
+											ch = unicode_readutf8_n(&iter, end);
 											if (ch != '\n') {
 												iter = temp;
 												/*ch = '\r';*/
@@ -1018,7 +1018,7 @@ do_handle_wrong_number_of_cells:
 										cell_start     = current_table_line;
 										prev_line_iter = previous_table_line;
 										prev_line_separator_ch = vertical_ch;
-										prev_line_ch = utf8_readchar((char const **)&prev_line_iter, end);
+										prev_line_ch = unicode_readutf8_n(&prev_line_iter, end);
 										/* Handle the case where the previous line is actually a thick
 										 * separator or table top/bottom border, in which case we must
 										 * match against corner characters. */
@@ -1030,8 +1030,8 @@ do_handle_wrong_number_of_cells:
 											prev_line_ch_was_escaped = false;
 continue_table_extended_scan_after_escape:
 											ch_start     = iter;
-											ch           = utf8_readchar((char const **)&iter, end);
-											prev_line_ch = utf8_readchar((char const **)&prev_line_iter, end);
+											ch           = unicode_readutf8_n(&iter, end);
+											prev_line_ch = unicode_readutf8_n(&prev_line_iter, end);
 											if (DeeUni_IsLF(ch) || (!ch && iter >= end))
 												break;
 											if (DeeUni_IsLF(prev_line_ch)) {
@@ -1044,7 +1044,7 @@ continue_table_extended_scan_after_escape:
 													if (!DeeUni_IsSpace(ch))
 														goto not_a_table2_or_done_table;
 													ch_start = iter;
-													ch = utf8_readchar((char const **)&iter, end);
+													ch = unicode_readutf8_n(&iter, end);
 												}
 												ASSERT(column_index == column_count);
 												break;
@@ -1083,7 +1083,7 @@ continue_table_extended_scan_after_escape:
 										/* Deal with windows-style line-feeds */
 										if (ch == '\r') {
 											char const *temp = iter;
-											ch = utf8_readchar((char const **)&iter, end);
+											ch = unicode_readutf8_n(&iter, end);
 											if (ch != '\n') {
 												iter = temp;
 											} else {
@@ -1115,7 +1115,7 @@ not_a_table2_or_done_table:
 								/* Ignore |-characters that are pre-fixed by \-characters */
 								if (ch == '\\') {
 									ch_start = iter;
-									ch = utf8_readchar((char const **)&iter, end);
+									ch = unicode_readutf8_n(&iter, end);
 									if (DeeUni_IsLF(ch) || (!ch && (iter >= end)))
 										goto do_handle_end_of_line_in_table_line;
 									if (ch == vertical_ch)
@@ -1126,7 +1126,7 @@ not_a_table2_or_done_table:
 								 *       be escaped, and similar should happen for `foo | bar' (i.e.
 								 *       inlined code) */
 								ch_start = iter;
-								ch = utf8_readchar((char const **)&iter, end);
+								ch = unicode_readutf8_n(&iter, end);
 							}
 							/* Figure out where the contents of the current cell end. */
 							cell_end = ch_start;
@@ -1135,7 +1135,7 @@ not_a_table2_or_done_table:
 								/* Empty cell. */
 								++column_index;
 								ch_start = iter;
-								ch = utf8_readchar((char const **)&iter, end);
+								ch = unicode_readutf8_n(&iter, end);
 								continue;
 							}
 							/* Make sure there aren't more columns all-of-the-sudden */
@@ -1167,7 +1167,7 @@ not_a_table2_or_done_table:
 							/* Move on to the next cell */
 							++column_index;
 							ch_start = iter;
-							ch = utf8_readchar((char const **)&iter, end);
+							ch = unicode_readutf8_n(&iter, end);
 						} /* for (;;) */
 						{
 							/* Table row separator:
@@ -1182,7 +1182,7 @@ got_table_line:
 							/* Skip leading spaces at the start of the next line. */
 							for (;;) {
 								ch_start = iter;
-								ch = utf8_readchar((char const **)&iter, end);
+								ch = unicode_readutf8_n(&iter, end);
 								if (DeeUni_IsSpace(ch) && !DeeUni_IsLF(ch))
 									continue;
 								break;
@@ -1195,7 +1195,7 @@ got_table_line:
 								char const *nextline_firstcell_start;
 								bool did_encounter_horizontal_character;
 								ch_start = iter;
-								ch = utf8_readchar((char const **)&iter, end);
+								ch = unicode_readutf8_n(&iter, end);
 								if (corner_ch_is_known && corner_ch != vertical_ch) {
 extend_table_row_or_insert_thin_separator:
 									if (need_thin_separator) {
@@ -1232,10 +1232,10 @@ extend_table_row_or_insert_thin_separator:
 continue_row_at_nextline_firstcell_start:
 										ch_start = nextline_firstcell_start;
 										iter     = nextline_firstcell_start;
-										ch       = utf8_readchar((char const **)&iter, end);
+										ch       = unicode_readutf8_n(&iter, end);
 										goto extend_table_row_or_insert_thin_separator;
 									}
-									ch = utf8_readchar((char const **)&iter, end);
+									ch = unicode_readutf8_n(&iter, end);
 								}
 								/* If we didn't encounter any horizontal characters, then the
 								 * cell is entirely empty, which we must handle as a row that
@@ -1247,7 +1247,7 @@ continue_row_at_nextline_firstcell_start:
 								/* Scan until the end of this row. */
 								column_index = 1;
 								for (;;) {
-									ch = utf8_readchar((char const **)&iter, end);
+									ch = unicode_readutf8_n(&iter, end);
 									if (DeeUni_IsLF(ch) || (!ch && iter >= end))
 										break;
 									if (DeeUni_IsSpace(ch))
@@ -1272,12 +1272,12 @@ continue_row_at_nextline_firstcell_start:
 								/* Deal with windows-line-feeds */
 								if (ch == '\r') {
 									char const *temp = iter;
-									ch = utf8_readchar((char const **)&iter, end);
+									ch = unicode_readutf8_n(&iter, end);
 									if (ch != '\n')
 										iter = temp;
 								}
 								ch_start = iter;
-								ch       = utf8_readchar((char const **)&iter, end);
+								ch       = unicode_readutf8_n(&iter, end);
 								nextline_start = iter;
 								/* NOTE: ch/ch_start point at the first character of the line that followed
 								 *       after the thick row. Next, skip some optional whitespace and update
@@ -1294,14 +1294,14 @@ thick_border_is_actually_table_end:
 									}
 									if (DeeUni_IsSpace(ch)) {
 										ch_start = iter;
-										ch = utf8_readchar((char const **)&iter, end);
+										ch = unicode_readutf8_n(&iter, end);
 										continue;
 									}
 									if (ch != vertical_ch)
 										goto thick_border_is_actually_table_end;
 									/* First character after the initial <vertical_ch> */
 									ch_start = iter;
-									ch = utf8_readchar((char const **)&iter, end);
+									ch = unicode_readutf8_n(&iter, end);
 									break;
 								}
 							} else if (ch == corner_ch) {
@@ -1320,7 +1320,7 @@ do_handle_corner_ch_as_thick_row:
 								/* ch/ch_start now point at the first non-whitespace character of the next line. */
 								column_index = 0;
 								for (;;) {
-									ch = utf8_readchar((char const **)&iter, end);
+									ch = unicode_readutf8_n(&iter, end);
 									if (DeeUni_IsLF(ch) || (!ch && iter >= end))
 										break;
 									if (DeeUni_IsSpace(ch))
@@ -1346,13 +1346,13 @@ do_handle_corner_ch_as_thick_row:
 								 * continues, or if the thick row was actually the table's footer */
 								nextline_start = iter;
 								if (ch == '\r') {
-									ch = utf8_readchar((char const **)&iter, end);
+									ch = unicode_readutf8_n(&iter, end);
 									if (ch != '\n')
 										iter = nextline_start;
 								}
 								/* Skip leading whitespace. */
 								for (;;) {
-									ch = utf8_readchar((char const **)&iter, end);
+									ch = unicode_readutf8_n(&iter, end);
 									if (DeeUni_IsLF(ch) || (!ch && iter >= end))
 										goto set_end_of_table;
 									if (DeeUni_IsSpace(ch))
@@ -1364,7 +1364,7 @@ do_handle_corner_ch_as_thick_row:
 								}
 								/* Read the first character for the first cell after the thick separator. */
 								ch_start = iter;
-								ch = utf8_readchar((char const **)&iter, end);
+								ch = unicode_readutf8_n(&iter, end);
 							} else if (table_iscorner(ch) && !corner_ch_is_known) {
 								corner_ch_is_known = true;
 								corner_ch          = ch;
@@ -1452,7 +1452,7 @@ done_table_nochk_columns:
 					/* Read the first character that is no longer apart of the table. */
 					flush_start = iter;
 					ch_start    = iter;
-					ch = utf8_readchar((char const **)&iter, end);
+					ch = unicode_readutf8_n(&iter, end);
 					goto scan_newline_with_first_ch_and_implicit_linefeed;
 err_table:
 					for (column_index = 0; column_index < column_count; ++column_index)
@@ -1470,7 +1470,7 @@ not_a_table2:
 not_a_table:
 				ch_start = table_top_left;
 				iter     = table_top_left;
-				ch = utf8_readchar((char const **)&iter, end);
+				ch = unicode_readutf8_n(&iter, end);
 #if table_iscorner('+') || table_isvert('+')
 				if (ch == '+')
 					goto check_for_list;
@@ -1495,7 +1495,7 @@ check_for_list:
 				list_prefix_ch  = ch;
 				is_ordered_list = ch >= '0' && ch <= '9';
 				list_firstline_start = ch_start;
-				ch = utf8_readchar((char const **)&iter, end);
+				ch = unicode_readutf8_n(&iter, end);
 				/* Scan the list item prefix of an ordered list. */
 				item_prefix_start  = NULL;
 				item_prefix_end    = NULL;
@@ -1507,7 +1507,7 @@ check_for_list:
 					for (;;) {
 						if (ch == ':') {
 							item_prefix_end = iter;
-							ch = utf8_readchar((char const **)&iter, end);
+							ch = unicode_readutf8_n(&iter, end);
 							if (!DeeUni_IsSpace(ch))
 								goto not_a_list;
 							list_prefix_ch  = ':';
@@ -1516,7 +1516,7 @@ check_for_list:
 						if (ch == '.') {
 							/* Check if the next character is whitespace. */
 							item_prefix_end = iter;
-							ch = utf8_readchar((char const **)&iter, end);
+							ch = unicode_readutf8_n(&iter, end);
 							if (!DeeUni_IsSpace(ch)) {
 								++list_element_indent;
 								continue;
@@ -1527,7 +1527,7 @@ check_for_list:
 						/* Only decimal characters (and '.') are allowed in here! */
 						if (!DeeUni_IsDigit(ch))
 							goto not_a_list;
-						ch = utf8_readchar((char const **)&iter, end);
+						ch = unicode_readutf8_n(&iter, end);
 						++list_element_indent;
 					}
 				}
@@ -1542,7 +1542,7 @@ check_for_list:
 not_a_list:
 					ch_start = list_firstline_start;
 					iter     = list_firstline_start;
-					ch = utf8_readchar((char const **)&iter, end);
+					ch = unicode_readutf8_n(&iter, end);
 					break;
 				}
 				/* Figure out the common indentation of list elements.
@@ -1560,7 +1560,7 @@ not_a_list:
 got_space_after_list_start:
 				for (;;) {
 					ch_start = iter;
-					ch = utf8_readchar((char const **)&iter, end);
+					ch = unicode_readutf8_n(&iter, end);
 					if (DeeUni_IsLF(ch))
 						goto not_a_list;
 					if (!DeeUni_IsSpace(ch))
@@ -1618,7 +1618,7 @@ list_continue_current_line:
 								/* Deal with windows-style line-feeds */
 								if (ch == '\r') {
 									char const *temp = iter;
-									ch = utf8_readchar((char const **)&iter, end);
+									ch = unicode_readutf8_n(&iter, end);
 									if (ch != '\n')
 										iter = temp;
 								}
@@ -1627,12 +1627,12 @@ list_continue_current_line:
 							}
 							if (ch == '\\') {
 								/* Deal with escaped line-feeds */
-								ch = utf8_readchar((char const **)&iter, end);
+								ch = unicode_readutf8_n(&iter, end);
 								if (DeeUni_IsLF(ch)) {
 									/* Deal with windows-style line-feeds */
 									if (ch == '\r') {
 										char const *temp = iter;
-										ch = utf8_readchar((char const **)&iter, end);
+										ch = unicode_readutf8_n(&iter, end);
 										if (ch != '\n')
 											iter = temp;
 									}
@@ -1643,7 +1643,7 @@ list_continue_current_line:
 								}
 								continue;
 							}
-							ch = utf8_readchar((char const **)&iter, end);
+							ch = unicode_readutf8_n(&iter, end);
 						}
 						/* At this point, ch is the line-feed at the end of the current list element
 						 * line (and iter points after the line-feed). - As such, we commit everything
@@ -1672,7 +1672,7 @@ list_continue_current_line:
 						nextline_indentation = 0;
 						for (;;) {
 							ch_start = iter;
-							ch = utf8_readchar((char const **)&iter, end);
+							ch = unicode_readutf8_n(&iter, end);
 							if (DeeUni_IsLF(ch)) {
 								/* Special case: The line may be shorter, but it only contains whitespace.
 								 *               This is counted as an insert-marker for an explicit line-feed! */
@@ -1681,7 +1681,7 @@ list_continue_current_line:
 								/* Deal with windows-style line-feeds */
 								if (ch == '\r') {
 									char const *temp = iter;
-									ch = utf8_readchar((char const **)&iter, end);
+									ch = unicode_readutf8_n(&iter, end);
 									if (ch != '\n')
 										iter = temp;
 								}
@@ -1701,14 +1701,14 @@ list_continue_current_line:
 								temp  = iter;
 								temp2 = ch_start;
 								ch_start = iter;
-								ch = utf8_readchar((char const **)&iter, end);
+								ch = unicode_readutf8_n(&iter, end);
 								if (DeeUni_IsLF(ch)) {
 									if unlikely(unicode_printer_putascii(&item_printer, '\n'))
 										goto err_item_printer;
 									/* Deal with windows-style line-feeds */
 									if (ch == '\r') {
 										char const *temp3 = iter;
-										ch = utf8_readchar((char const **)&iter, end);
+										ch = unicode_readutf8_n(&iter, end);
 										if (ch != '\n')
 											iter = temp3;
 									}
@@ -1750,7 +1750,7 @@ end_of_list:
 							for (;;) {
 								if (DeeUni_IsDigit(ch)) {
 continue_scan_order_list_prefix:
-									ch = utf8_readchar((char const **)&iter, end);
+									ch = unicode_readutf8_n(&iter, end);
 									++nextline_indentation;
 									if (nextline_indentation >= list_element_indent)
 										goto end_of_list; /* Indentation has grown too large... */
@@ -1764,7 +1764,7 @@ continue_scan_order_list_prefix:
 										goto continue_scan_order_list_prefix; /* Handle like any other allowed character in this case! */
 again_handle_dot_in_ordered_list_prefix:
 									ch_start = iter;
-									ch = utf8_readchar((char const **)&iter, end);
+									ch = unicode_readutf8_n(&iter, end);
 									++nextline_indentation;
 									if (nextline_indentation >= list_element_indent)
 										goto end_of_list; /* Indentation has grown too large... */
@@ -1783,14 +1783,14 @@ again_handle_dot_in_ordered_list_prefix:
 						}
 						/* Append the current item, but continue the current list. */
 						ch_start = iter;
-						ch = utf8_readchar((char const **)&iter, end);
+						ch = unicode_readutf8_n(&iter, end);
 						++nextline_indentation;
 skip_whitespace_after_list_item_prefix:
 						while (nextline_indentation < list_element_indent) {
 							if (!DeeUni_IsSpace(ch) || DeeUni_IsLF(ch))
 								goto end_of_list;
 							ch_start = iter;
-							ch = utf8_readchar((char const **)&iter, end);
+							ch = unicode_readutf8_n(&iter, end);
 							++nextline_indentation;
 						}
 						if (nextline_indentation != list_element_indent)
@@ -1821,7 +1821,7 @@ err_item_printer:
 				 * following the end of the last list element, and iter points after
 				 * that same character. */
 				ch_start = iter;
-				ch       = utf8_readchar((char const **)&iter, end);
+				ch       = unicode_readutf8_n(&iter, end);
 				/* Continue parsing with the explicit line-feed in mind */
 				goto scan_newline_with_first_ch_and_implicit_linefeed;
 			}	break;
@@ -1842,7 +1842,7 @@ err_item_printer:
 			uint32_t escaped_ch;
 			char const *escaped_ch_start;
 			escaped_ch_start = iter;
-			escaped_ch = utf8_readchar((char const **)&iter, end);
+			escaped_ch = unicode_readutf8_n(&iter, end);
 			switch (escaped_ch) {
 
 			case 0:
@@ -1861,7 +1861,7 @@ err_item_printer:
 				/* When escaping a line-feed, also check for windows-style linefeeds */
 				char const *temp = iter;
 				uint32_t second_lf_char;
-				second_lf_char = utf8_readchar((char const **)&iter, end);
+				second_lf_char = unicode_readutf8_n(&iter, end);
 				if (second_lf_char != '\n')
 					iter = temp; /* Only include the second character in the escape if it's a \n */
 			}	ATTR_FALLTHROUGH
@@ -1871,7 +1871,7 @@ err_item_printer:
 					uint32_t trailing_space_character;
 					char const *orig_ch_start;
 					orig_ch_start = ch_start;
-					trailing_space_character = utf8_readchar_rev((char const **)&ch_start, flush_start);
+					trailing_space_character = unicode_readutf8_rev_n(&ch_start, flush_start);
 					if (trailing_space_character == 0 && (ch_start <= flush_start)) {
 						strip_trailing_whitespace_until(result_printer,
 						                                result_printer_origlen);
@@ -1900,7 +1900,7 @@ err_item_printer:
 				iter = skip_tpp_comment_line_prefix_after_escaped_linefeed(iter, end);
 				flush_start = iter;
 				ch_start    = iter;
-				ch = utf8_readchar((char const **)&iter, end);
+				ch = unicode_readutf8_n(&iter, end);
 				goto scan_newline_with_first_ch_and_explicit_linefeed;
 
 			/* ESCAPED INPUT:  \ _ @ ` [ ] ( ) - + | = ~ * # : */
@@ -1940,7 +1940,7 @@ err_item_printer:
 				flush_start = escaped_ch_start;
 				/* Check if this is escaping an extended block. */
 				ch_start = iter;
-				ch = utf8_readchar((char const **)&iter, end);
+				ch = unicode_readutf8_n(&iter, end);
 				if (ch == escaped_ch) {
 					if (ch == '`') {
 						/* Code-blocks can appear with 3 backticks, in
@@ -1948,11 +1948,11 @@ err_item_printer:
 						char const *temp;
 						temp     = ch_start;
 						ch_start = iter;
-						ch = utf8_readchar((char const **)&iter, end);
+						ch = unicode_readutf8_n(&iter, end);
 						if (ch != '`') {
 							ch_start = temp;
 							iter     = temp;
-							ch = utf8_readchar((char const **)&iter, end);
+							ch = unicode_readutf8_n(&iter, end);
 						}
 					}
 					goto do_switch_ch; /* Yes -> Also escape the second character */
@@ -2006,7 +2006,7 @@ check_ordered_list_digit:
 			orig_iter = iter;
 			iter      = ch_start;
 			do {
-				prev_ch = utf8_readchar_rev((char const **)&iter, text);
+				prev_ch = unicode_readutf8_rev_n(&iter, text);
 			} while (prev_ch == '_');
 			iter = orig_iter;
 			if (DeeUni_IsSymCont(prev_ch) || prev_ch == '\\')
@@ -2020,7 +2020,7 @@ check_ordered_list_digit:
 			char const *body_start, *body_end;
 			construct_start = ch_start;
 			after_first_ch = iter;
-			nextch = utf8_readchar((char const **)&iter, end);
+			nextch = unicode_readutf8_n(&iter, end);
 			if (nextch == ch) {
 				/* Extended attribute block.
 				 * -> Search for the end of the block and re-parse the body */
@@ -2028,10 +2028,10 @@ check_ordered_list_digit:
 				body_start = iter;
 				for (;;) {
 					body_end = iter;
-					nextch = utf8_readchar((char const **)&iter, end);
+					nextch = unicode_readutf8_n(&iter, end);
 					if (nextch == ch) {
 						did_find_single = true;
-						nextch = utf8_readchar((char const **)&iter, end);
+						nextch = unicode_readutf8_n(&iter, end);
 						if (nextch != ch)
 							continue;
 						break;
@@ -2052,7 +2052,7 @@ check_ordered_list_digit:
 						if (did_find_single) {
 							PRINTASCII(buf, count / 2);
 							iter = construct_start;
-							utf8_readchar((char const **)&iter, end);
+							unicode_readutf8_n(&iter, end);
 							flush_start = iter;
 						} else {
 							PRINTASCII(buf, count);
@@ -2062,7 +2062,7 @@ check_ordered_list_digit:
 						goto do_read_and_switch_ch;
 					}
 					if (nextch == '\\') /* Escaped the next character. */
-						utf8_readchar((char const **)&iter, end);
+						unicode_readutf8_n(&iter, end);
 				}
 			} else {
 				/* Search until a space/line-feed character is found, or the construct is ended correctly */
@@ -2084,7 +2084,7 @@ check_ordered_list_digit:
 							char const *followup;
 							followup = iter;
 							do {
-								nextch = utf8_readchar((char const **)&iter, end);
+								nextch = unicode_readutf8_n(&iter, end);
 							} while (nextch == '_');
 							if (!DeeUni_IsSymCont(nextch)) {
 								iter = followup;
@@ -2096,9 +2096,9 @@ check_ordered_list_digit:
 						break; /* Found the end! */
 					}
 					if (nextch == '\\') /* Escaped the next character. */
-						utf8_readchar((char const **)&iter, end);
+						unicode_readutf8_n(&iter, end);
 					body_end = iter;
-					nextch   = utf8_readchar((char const **)&iter, end);
+					nextch   = unicode_readutf8_n(&iter, end);
 				}
 			}
 			/* Got the body:
@@ -2134,7 +2134,7 @@ check_ordered_list_digit:
 			/* Check if the body qualifies for being a symbol */
 			flush_start = iter;
 			ch_start = iter;
-			ch = utf8_readchar((char const **)&iter, end);
+			ch = unicode_readutf8_n(&iter, end);
 			{
 				bool need_braces;
 				/* Special case: The component is followed by more symbol-continue characters.
@@ -2170,16 +2170,14 @@ not_a_link:
 				iter     = after_lbracket;
 				goto escape_current_character;
 			}
-			after_lparen = before_rbracket;
-			utf8_readchar_u((char const **)&after_lparen);
-			ch = utf8_readchar((char const **)&after_lparen, end);
+			after_lparen = unicode_skiputf8(before_rbracket);
+			ch = unicode_readutf8_n(&after_lparen, end);
 			if (ch != '(')
 				goto not_a_link;
 			before_rparen = find_nonescaped_match(after_lparen, end, '(', ')');
 			if (!before_rparen)
 				goto not_a_link;
-			after_rparen = before_rparen;
-			utf8_readchar_u((char const **)&after_rparen);
+			after_rparen = unicode_skiputf8(before_rparen);
 			/* Flush up until the leading [-character */
 			FLUSHTO(before_lbracket);
 			/* Check if first part has leading/trailing space, and strip that space. */
@@ -2187,7 +2185,7 @@ not_a_link:
 			for (;;) {
 				char const *temp;
 				temp = after_lbracket;
-				ch = utf8_readchar((char const **)&after_lbracket, before_rbracket);
+				ch = unicode_readutf8_n(&after_lbracket, before_rbracket);
 				if (DeeUni_IsSpace(ch)) {
 					has_leading_space = true;
 					continue;
@@ -2198,7 +2196,7 @@ not_a_link:
 			for (;;) {
 				char const *temp;
 				temp = before_rbracket;
-				ch = utf8_readchar_rev((char const **)&before_rbracket, after_lbracket);
+				ch = unicode_readutf8_rev_n(&before_rbracket, after_lbracket);
 				if (DeeUni_IsSpace(ch)) {
 					has_trailing_space = true;
 					continue;
@@ -2233,7 +2231,7 @@ not_a_link:
 				/* Skip all additional space characters following the link */
 				for (;;) {
 					ch_start = iter;
-					ch = utf8_readchar((char const **)&iter, end);
+					ch = unicode_readutf8_n(&iter, end);
 					if (!DeeUni_IsSpace(ch) || (!ch && iter >= end))
 						break;
 				}
@@ -2250,10 +2248,10 @@ not_a_link:
 			char const *before_right_backtick;
 			before_left_backtick = ch_start;
 			after_left_backtick  = iter;
-			ch = utf8_readchar((char const **)&iter, end);
+			ch = unicode_readutf8_n(&iter, end);
 			if (ch == '`') {
 				char const *temp = iter;
-				ch = utf8_readchar((char const **)&iter, end);
+				ch = unicode_readutf8_n(&iter, end);
 				if (ch == '`') {
 					char const *end_of_first_line;
 					after_left_backtick = iter;
@@ -2262,17 +2260,17 @@ not_a_link:
 					end_of_first_line = NULL;
 					for (;;) {
 						before_right_backtick = iter;
-						ch = utf8_readchar((char const **)&iter, end);
+						ch = unicode_readutf8_n(&iter, end);
 						if (!ch && (iter >= end))
 							goto not_a_code;
 						if (DeeUni_IsLF(ch) && !end_of_first_line)
 							end_of_first_line = before_right_backtick;
 						if (ch != '`')
 							continue;
-						ch = utf8_readchar((char const **)&iter, end);
+						ch = unicode_readutf8_n(&iter, end);
 						if (ch != '`')
 							continue;
-						ch = utf8_readchar((char const **)&iter, end);
+						ch = unicode_readutf8_n(&iter, end);
 						if (ch == '`')
 							break;
 					}
@@ -2295,10 +2293,10 @@ not_a_link:
 						/* Skip the line-feed between the first and second line in
 						 * order to determine the true start of the second line. */
 						start_of_second_line = end_of_first_line;
-						ch = utf8_readchar((char const **)&start_of_second_line, before_right_backtick);
+						ch = unicode_readutf8_n(&start_of_second_line, before_right_backtick);
 						if (ch == '\r') {
 							char const *temp2 = start_of_second_line;
-							ch = utf8_readchar((char const **)&start_of_second_line, before_right_backtick);
+							ch = unicode_readutf8_n(&start_of_second_line, before_right_backtick);
 							if (ch != '\n')
 								start_of_second_line = temp2;
 						}
@@ -2328,7 +2326,7 @@ not_a_link:
 						}
 						flush_start = iter;
 						ch_start    = iter;
-						ch          = utf8_readchar((char const **)&iter, end);
+						ch          = unicode_readutf8_n(&iter, end);
 						{
 							bool need_braces;
 							need_braces = DeeUni_IsSymCont(ch) ||
@@ -2367,7 +2365,7 @@ not_a_link:
 do_handle_autoescaped_linefeed:
 							if (ch == '\r') {
 								char const *temp2 = iter;
-								ch = utf8_readchar((char const **)&iter, end);
+								ch = unicode_readutf8_n(&iter, end);
 								if (ch != '\n')
 									iter = temp2;
 							}
@@ -2377,13 +2375,13 @@ do_handle_autoescaped_linefeed:
 							/* Read the first character from the next line. */
 							flush_start = iter;
 							ch_start    = iter;
-							ch = utf8_readchar((char const **)&iter, end);
+							ch = unicode_readutf8_n(&iter, end);
 							goto scan_newline_with_first_ch_and_explicit_linefeed;
 						} else if (DeeUni_IsSpace(ch)) {
 							/* Allow for trailing space before an eventual line-feed */
 							char const *temp2 = ch_start;
 							for (;;) {
-								ch = utf8_readchar((char const **)&iter, end);
+								ch = unicode_readutf8_n(&iter, end);
 								if (DeeUni_IsLF(ch))
 									goto do_handle_autoescaped_linefeed;
 								if (DeeUni_IsSpace(ch))
@@ -2392,7 +2390,7 @@ do_handle_autoescaped_linefeed:
 							}
 							ch_start = temp2;
 							iter     = temp2;
-							ch = utf8_readchar((char const **)&iter, end);
+							ch = unicode_readutf8_n(&iter, end);
 						}
 						goto do_switch_ch;
 					}
@@ -2406,10 +2404,10 @@ do_handle_autoescaped_linefeed:
 						if (DeeUni_IsLF(ch))
 							goto not_a_code;
 						before_right_backtick = iter;
-						ch = utf8_readchar((char const **)&iter, end);
+						ch = unicode_readutf8_n(&iter, end);
 						if (ch != '`')
 							continue;
-						ch = utf8_readchar((char const **)&iter, end);
+						ch = unicode_readutf8_n(&iter, end);
 						if (ch == '`')
 							break;
 					}
@@ -2422,7 +2420,7 @@ do_handle_autoescaped_linefeed:
 					if (DeeUni_IsLF(ch))
 						goto not_a_code;
 					before_right_backtick = iter;
-					ch = utf8_readchar((char const **)&iter, end);
+					ch = unicode_readutf8_n(&iter, end);
 					if (ch == '`' || ch == '\'')
 						break;
 				}
@@ -2434,7 +2432,7 @@ do_handle_autoescaped_linefeed:
 			 * if we have to force braces because the next character would continue a symbol) */
 			flush_start = iter;
 			ch_start    = iter;
-			ch          = utf8_readchar((char const **)&iter, end);
+			ch          = unicode_readutf8_n(&iter, end);
 			/* Print the code contents as an escaped string (but don't re-parse the contents). */
 			{
 				bool need_braces;
@@ -2473,7 +2471,7 @@ not_a_code:
 				for (;;) {
 					uint32_t second_space;
 					ch_start     = iter;
-					second_space = utf8_readchar((char const **)&iter, end);
+					second_space = unicode_readutf8_n(&iter, end);
 					if (DeeUni_IsLF(second_space)) {
 						FLUSHTO(before_first_space);
 						ch = second_space;

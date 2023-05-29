@@ -1549,9 +1549,9 @@ again:
 	 * get to work and start appending the new content! */
 	if (self->w_printer.up_flags & UNICODE_PRINTER_FPENDING) {
 		/* Complete a UTF-8 sequence. */
-		uint8_t seqlen = utf8_sequence_len[self->w_printer.up_pend[0]];
+		uint8_t seqlen = unicode_utf8seqlen[self->w_printer.up_pend[0]];
 		uint8_t gotlen = (self->w_printer.up_flags & UNICODE_PRINTER_FPENDING) >> UNICODE_PRINTER_FPENDING_SHFT;
-		uint8_t missing, full_sequence[UTF8_CUR_MBLEN], *tempptr;
+		uint8_t missing, full_sequence[UNICODE_UTF8_CURLEN], *tempptr;
 		ASSERT(gotlen < seqlen);
 		missing = seqlen - gotlen;
 		if (missing > bufsize) {
@@ -1595,7 +1595,7 @@ again:
 			}
 
 			/* Goto a multi-byte sequence. */
-			seqlen = utf8_sequence_len[*iter];
+			seqlen = unicode_utf8seqlen[*iter];
 			if (seqlen > (size_t)(end - iter)) {
 				/* Incomplete sequence (remember the portion already given) */
 				seqlen = (uint8_t)(end - iter);

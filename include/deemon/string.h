@@ -120,6 +120,7 @@
      !defined(__CRT_HAVE_unicode_fold) ||                              \
      !defined(UNICODE_FOLDED_MAX))
 #undef CONFIG_HAVE_UNICODE_H
+#define CONFIG_NO_UNICODE_H
 #endif /* !... */
 #endif /* CONFIG_HAVE_UNICODE_H */
 

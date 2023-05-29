@@ -60,7 +60,7 @@ STATIC_ASSERT(STRING_SIZEOF_WIDTH(STRING_WIDTH_2BYTE) == 2);
 STATIC_ASSERT(STRING_SIZEOF_WIDTH(STRING_WIDTH_4BYTE) == 4);
 
 
-PUBLIC uint8_t const Dee_utf8_sequence_len[256] = {
+PUBLIC uint8_t const Dee_unicode_utf8seqlen[256] = {
 	/* ASCII */
 	1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, /* 0x00-0x0f */
 	1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, /* 0x10-0x1f */
@@ -2014,8 +2014,108 @@ err:
 	return NULL;
 }
 
-INTDEF ATTR_PURE WUNUSED NONNULL((1)) uint32_t DCALL
-utf8_getchar(uint8_t const *__restrict base, uint8_t seqlen);
+INTERN ATTR_PURE WUNUSED NONNULL((1)) uint32_t DCALL
+utf8_getchar(uint8_t const *__restrict base, uint8_t seqlen) {
+	uint32_t result;
+	switch (seqlen) {
+
+	case 0:
+		result = 0;
+		break;
+
+	case 1:
+		result = base[0];
+		break;
+
+	case 2:
+		result = (base[0] & 0x1f) << 6;
+		result |= (base[1] & 0x3f);
+		break;
+
+	case 3:
+		result = (base[0] & 0x0f) << 12;
+		result |= (base[1] & 0x3f) << 6;
+		result |= (base[2] & 0x3f);
+		break;
+
+	case 4:
+		result = (base[0] & 0x07) << 18;
+		result |= (base[1] & 0x3f) << 12;
+		result |= (base[2] & 0x3f) << 6;
+		result |= (base[3] & 0x3f);
+		break;
+
+	case 5:
+		result = (base[0] & 0x03) << 24;
+		result |= (base[1] & 0x3f) << 18;
+		result |= (base[2] & 0x3f) << 12;
+		result |= (base[3] & 0x3f) << 6;
+		result |= (base[4] & 0x3f);
+		break;
+
+	case 6:
+		result = (base[0] & 0x01) << 30;
+		result |= (base[1] & 0x3f) << 24;
+		result |= (base[2] & 0x3f) << 18;
+		result |= (base[3] & 0x3f) << 12;
+		result |= (base[4] & 0x3f) << 6;
+		result |= (base[5] & 0x3f);
+		break;
+
+	case 7:
+		result = (base[1] & 0x03 /*0x3f*/) << 30;
+		result |= (base[2] & 0x3f) << 24;
+		result |= (base[3] & 0x3f) << 18;
+		result |= (base[4] & 0x3f) << 12;
+		result |= (base[5] & 0x3f) << 6;
+		result |= (base[6] & 0x3f);
+		break;
+
+	case 8:
+		/*result = (base[0] & 0x3f) << 42;*/
+		/*result = (base[1] & 0x3f) << 36;*/
+		result = (base[2] & 0x03 /*0x3f*/) << 30;
+		result |= (base[3] & 0x3f) << 24;
+		result |= (base[4] & 0x3f) << 18;
+		result |= (base[5] & 0x3f) << 12;
+		result |= (base[6] & 0x3f) << 6;
+		result |= (base[7] & 0x3f);
+		break;
+
+	default: __builtin_unreachable();
+	}
+	return result;
+}
+
+LOCAL WUNUSED NONNULL((1)) uint16_t DCALL
+utf8_getchar16(uint8_t const *__restrict base, uint8_t seqlen) {
+	uint16_t result;
+	ASSERT(seqlen <= 3);
+	switch (seqlen) {
+
+	case 0:
+		result = 0;
+		break;
+
+	case 1:
+		result = base[0];
+		break;
+
+	case 2:
+		result = (base[0] & 0x1f) << 6;
+		result |= (base[1] & 0x3f);
+		break;
+
+	case 3:
+		result = (base[0] & 0x0f) << 12;
+		result |= (base[1] & 0x3f) << 6;
+		result |= (base[2] & 0x3f);
+		break;
+
+	default: __builtin_unreachable();
+	}
+	return result;
+}
 
 /* Construct a string from a UTF-8 character sequence. */
 PUBLIC WUNUSED DREF DeeObject *DCALL
@@ -2040,7 +2140,7 @@ DeeString_NewUtf8(char const *__restrict str, size_t length,
 			++iter;
 			continue;
 		}
-		seqlen = utf8_sequence_len[ch];
+		seqlen = unicode_utf8seqlen[ch];
 		if unlikely(!seqlen || iter + seqlen > end) {
 			/* Invalid UTF-8 character */
 			if (error_mode == STRING_ERROR_FREPLAC) {
@@ -2091,7 +2191,7 @@ use_buffer32:
 					*dst32++ = ch;
 					continue;
 				}
-				seqlen = utf8_sequence_len[ch];
+				seqlen = unicode_utf8seqlen[ch];
 				if unlikely(!seqlen || iter + seqlen > end) {
 					/* Invalid UTF-8 character */
 					if (error_mode == STRING_ERROR_FREPLAC) {
@@ -2153,7 +2253,7 @@ err_buffer32:
 					*dst16++ = ch;
 					continue;
 				}
-				seqlen = utf8_sequence_len[ch];
+				seqlen = unicode_utf8seqlen[ch];
 				if unlikely(!seqlen || iter + seqlen > end) {
 					/* Invalid UTF-8 character */
 					if (error_mode == STRING_ERROR_FREPLAC) {
@@ -2254,7 +2354,7 @@ DeeString_SetUtf8(/*inherit(always)*/ DREF DeeObject *__restrict self,
 			++iter;
 			continue;
 		}
-		seqlen = utf8_sequence_len[ch];
+		seqlen = unicode_utf8seqlen[ch];
 		if unlikely(!seqlen || iter + seqlen > end) {
 			/* Invalid UTF-8 character */
 			if (error_mode == STRING_ERROR_FREPLAC) {
@@ -2304,7 +2404,7 @@ use_buffer32:
 					*dst32++ = ch;
 					continue;
 				}
-				seqlen = utf8_sequence_len[ch];
+				seqlen = unicode_utf8seqlen[ch];
 				if unlikely(!seqlen || iter + seqlen > end) {
 					/* Invalid UTF-8 character */
 					if (error_mode == STRING_ERROR_FREPLAC) {
@@ -2366,7 +2466,7 @@ err_buffer32:
 					*dst16++ = ch;
 					continue;
 				}
-				seqlen = utf8_sequence_len[ch];
+				seqlen = unicode_utf8seqlen[ch];
 				if unlikely(!seqlen || iter + seqlen > end) {
 					/* Invalid UTF-8 character */
 					if (error_mode == STRING_ERROR_FREPLAC) {
@@ -2459,7 +2559,7 @@ DeeString_TrySetUtf8(/*inherit(on_success)*/ DREF DeeObject *__restrict self) {
 			++iter;
 			continue;
 		}
-		seqlen = utf8_sequence_len[ch];
+		seqlen = unicode_utf8seqlen[ch];
 		if unlikely(!seqlen || iter + seqlen > end) {
 			/* Invalid UTF-8 character */
 			--end;
@@ -2498,7 +2598,7 @@ use_buffer32:
 					*dst32++ = ch;
 					continue;
 				}
-				seqlen = utf8_sequence_len[ch];
+				seqlen = unicode_utf8seqlen[ch];
 				if unlikely(!seqlen || iter + seqlen > end) {
 					/* Invalid UTF-8 character */
 					--end;
@@ -2549,7 +2649,7 @@ use_buffer32:
 					*dst16++ = ch;
 					continue;
 				}
-				seqlen = utf8_sequence_len[ch];
+				seqlen = unicode_utf8seqlen[ch];
 				if unlikely(!seqlen || iter + seqlen > end) {
 					/* Invalid UTF-8 character */
 					--end;
@@ -2836,143 +2936,33 @@ err:
 
 
 
-INTERN ATTR_PURE WUNUSED NONNULL((1)) uint32_t DCALL
-utf8_getchar(uint8_t const *__restrict base, uint8_t seqlen) {
+PUBLIC WUNUSED ATTR_INOUT(1) uint32_t
+(DCALL Dee_unicode_readutf8)(char const **__restrict ptext) {
 	uint32_t result;
-	switch (seqlen) {
-
-	case 0:
-		result = 0;
-		break;
-
-	case 1:
-		result = base[0];
-		break;
-
-	case 2:
-		result = (base[0] & 0x1f) << 6;
-		result |= (base[1] & 0x3f);
-		break;
-
-	case 3:
-		result = (base[0] & 0x0f) << 12;
-		result |= (base[1] & 0x3f) << 6;
-		result |= (base[2] & 0x3f);
-		break;
-
-	case 4:
-		result = (base[0] & 0x07) << 18;
-		result |= (base[1] & 0x3f) << 12;
-		result |= (base[2] & 0x3f) << 6;
-		result |= (base[3] & 0x3f);
-		break;
-
-	case 5:
-		result = (base[0] & 0x03) << 24;
-		result |= (base[1] & 0x3f) << 18;
-		result |= (base[2] & 0x3f) << 12;
-		result |= (base[3] & 0x3f) << 6;
-		result |= (base[4] & 0x3f);
-		break;
-
-	case 6:
-		result = (base[0] & 0x01) << 30;
-		result |= (base[1] & 0x3f) << 24;
-		result |= (base[2] & 0x3f) << 18;
-		result |= (base[3] & 0x3f) << 12;
-		result |= (base[4] & 0x3f) << 6;
-		result |= (base[5] & 0x3f);
-		break;
-
-	case 7:
-		result = (base[1] & 0x03 /*0x3f*/) << 30;
-		result |= (base[2] & 0x3f) << 24;
-		result |= (base[3] & 0x3f) << 18;
-		result |= (base[4] & 0x3f) << 12;
-		result |= (base[5] & 0x3f) << 6;
-		result |= (base[6] & 0x3f);
-		break;
-
-	case 8:
-		/*result = (base[0] & 0x3f) << 42;*/
-		/*result = (base[1] & 0x3f) << 36;*/
-		result = (base[2] & 0x03 /*0x3f*/) << 30;
-		result |= (base[3] & 0x3f) << 24;
-		result |= (base[4] & 0x3f) << 18;
-		result |= (base[5] & 0x3f) << 12;
-		result |= (base[6] & 0x3f) << 6;
-		result |= (base[7] & 0x3f);
-		break;
-
-	default: __builtin_unreachable();
-	}
-	return result;
-}
-
-LOCAL WUNUSED NONNULL((1)) uint16_t DCALL
-utf8_getchar16(uint8_t const *__restrict base, uint8_t seqlen) {
-	uint16_t result;
-	ASSERT(seqlen <= 3);
-	switch (seqlen) {
-
-	case 0:
-		result = 0;
-		break;
-
-	case 1:
-		result = base[0];
-		break;
-
-	case 2:
-		result = (base[0] & 0x1f) << 6;
-		result |= (base[1] & 0x3f);
-		break;
-
-	case 3:
-		result = (base[0] & 0x0f) << 12;
-		result |= (base[1] & 0x3f) << 6;
-		result |= (base[2] & 0x3f);
-		break;
-
-	default: __builtin_unreachable();
-	}
-	return result;
-}
-
-PUBLIC NONNULL((1, 2)) uint32_t DCALL
-Dee_utf8_readchar(char const **__restrict p_iter,
-                  char const *end) {
-	uint32_t result;
-	char const *iter = *p_iter;
-	if (iter >= end)
-		return 0;
-	result = (uint8_t)*iter++;
+	char const *iter = *ptext;
+	result = (uint32_t)(uint8_t)*iter++;
 	if (result >= 0xc0) {
-		uint8_t len;
-		len = utf8_sequence_len[result];
-		if (iter + len - 1 >= end)
-			len = (uint8_t)(end - iter) + 1;
-		switch (len) {
+		switch (unicode_utf8seqlen[result]) {
 
 		case 0:
 		case 1:
 			break;
 
 		case 2:
-			result = (result & 0x1f) << 6;
+			result  = (result & 0x1f) << 6;
 			result |= (iter[0] & 0x3f);
 			iter += 1;
 			break;
 
 		case 3:
-			result = (result & 0x0f) << 12;
+			result  = (result & 0x0f) << 12;
 			result |= (iter[0] & 0x3f) << 6;
 			result |= (iter[1] & 0x3f);
 			iter += 2;
 			break;
 
 		case 4:
-			result = (result & 0x07) << 18;
+			result  = (result & 0x07) << 18;
 			result |= (iter[0] & 0x3f) << 12;
 			result |= (iter[1] & 0x3f) << 6;
 			result |= (iter[2] & 0x3f);
@@ -2980,7 +2970,7 @@ Dee_utf8_readchar(char const **__restrict p_iter,
 			break;
 
 		case 5:
-			result = (result & 0x03) << 24;
+			result  = (result & 0x03) << 24;
 			result |= (iter[0] & 0x3f) << 18;
 			result |= (iter[1] & 0x3f) << 12;
 			result |= (iter[2] & 0x3f) << 6;
@@ -2989,7 +2979,7 @@ Dee_utf8_readchar(char const **__restrict p_iter,
 			break;
 
 		case 6:
-			result = (result & 0x01) << 30;
+			result  = (result & 0x01) << 30;
 			result |= (iter[0] & 0x3f) << 24;
 			result |= (iter[1] & 0x3f) << 18;
 			result |= (iter[2] & 0x3f) << 12;
@@ -2999,7 +2989,7 @@ Dee_utf8_readchar(char const **__restrict p_iter,
 			break;
 
 		case 7:
-			result = (iter[0] & 0x03 /*0x3f*/) << 30;
+			result  = (iter[0] & 0x03/*0x3f*/) << 30;
 			result |= (iter[1] & 0x3f) << 24;
 			result |= (iter[2] & 0x3f) << 18;
 			result |= (iter[3] & 0x3f) << 12;
@@ -3009,8 +2999,8 @@ Dee_utf8_readchar(char const **__restrict p_iter,
 			break;
 
 		case 8:
-			/*result = (result & 0x3f) << 36;*/
-			result = (iter[1] & 0x03 /*0x3f*/) << 30;
+			/*result = (iter[0] & 0x3f) << 36;*/
+			result  = (iter[1] & 0x03/*0x3f*/) << 30;
 			result |= (iter[2] & 0x3f) << 24;
 			result |= (iter[3] & 0x3f) << 18;
 			result |= (iter[4] & 0x3f) << 12;
@@ -3019,21 +3009,27 @@ Dee_utf8_readchar(char const **__restrict p_iter,
 			iter += 7;
 			break;
 
-		default: __builtin_unreachable();
+		default:
+			__builtin_unreachable();
 		}
 	}
-	*p_iter = iter;
+	*ptext = iter;
 	return result;
 }
 
-PUBLIC NONNULL((1)) uint32_t DCALL
-Dee_utf8_readchar_u(char const **__restrict p_iter) {
+PUBLIC ATTR_INOUT(1) NONNULL((2)) uint32_t
+(DCALL Dee_unicode_readutf8_n)(char const **__restrict ptext,
+                               char const *text_end) {
 	uint32_t result;
-	char const *iter = *p_iter;
-	result           = (uint8_t)*iter++;
+	char const *iter = *ptext;
+	if unlikely(iter >= text_end)
+		return 0;
+	result = (uint32_t)(uint8_t)*iter++;
 	if (result >= 0xc0) {
 		uint8_t len;
-		len = utf8_sequence_len[result];
+		len = unicode_utf8seqlen[result];
+		if (iter + len - 1 >= text_end)
+			len = (uint8_t)(text_end - iter)+1;
 		switch (len) {
 
 		case 0:
@@ -3041,20 +3037,20 @@ Dee_utf8_readchar_u(char const **__restrict p_iter) {
 			break;
 
 		case 2:
-			result = (result & 0x1f) << 6;
+			result  = (result & 0x1f) << 6;
 			result |= (iter[0] & 0x3f);
 			iter += 1;
 			break;
 
 		case 3:
-			result = (result & 0x0f) << 12;
+			result  = (result & 0x0f) << 12;
 			result |= (iter[0] & 0x3f) << 6;
 			result |= (iter[1] & 0x3f);
 			iter += 2;
 			break;
 
 		case 4:
-			result = (result & 0x07) << 18;
+			result  = (result & 0x07) << 18;
 			result |= (iter[0] & 0x3f) << 12;
 			result |= (iter[1] & 0x3f) << 6;
 			result |= (iter[2] & 0x3f);
@@ -3062,7 +3058,7 @@ Dee_utf8_readchar_u(char const **__restrict p_iter) {
 			break;
 
 		case 5:
-			result = (result & 0x03) << 24;
+			result  = (result & 0x03) << 24;
 			result |= (iter[0] & 0x3f) << 18;
 			result |= (iter[1] & 0x3f) << 12;
 			result |= (iter[2] & 0x3f) << 6;
@@ -3071,7 +3067,7 @@ Dee_utf8_readchar_u(char const **__restrict p_iter) {
 			break;
 
 		case 6:
-			result = (result & 0x01) << 30;
+			result  = (result & 0x01) << 30;
 			result |= (iter[0] & 0x3f) << 24;
 			result |= (iter[1] & 0x3f) << 18;
 			result |= (iter[2] & 0x3f) << 12;
@@ -3081,7 +3077,7 @@ Dee_utf8_readchar_u(char const **__restrict p_iter) {
 			break;
 
 		case 7:
-			result = (iter[0] & 0x03 /*0x3f*/) << 30;
+			result  = (iter[0] & 0x03/*0x3f*/) << 30;
 			result |= (iter[1] & 0x3f) << 24;
 			result |= (iter[2] & 0x3f) << 18;
 			result |= (iter[3] & 0x3f) << 12;
@@ -3091,8 +3087,8 @@ Dee_utf8_readchar_u(char const **__restrict p_iter) {
 			break;
 
 		case 8:
-			/*result = (result & 0x3f) << 36;*/
-			result = (iter[1] & 0x03 /*0x3f*/) << 30;
+			/*result = (iter[0] & 0x3f) << 36;*/
+			result  = (iter[1] & 0x03/*0x3f*/) << 30;
 			result |= (iter[2] & 0x3f) << 24;
 			result |= (iter[3] & 0x3f) << 18;
 			result |= (iter[4] & 0x3f) << 12;
@@ -3101,34 +3097,105 @@ Dee_utf8_readchar_u(char const **__restrict p_iter) {
 			iter += 7;
 			break;
 
-		default: __builtin_unreachable();
+		default:
+			__builtin_unreachable();
 		}
 	}
-	*p_iter = iter;
+	*ptext = iter;
 	return result;
 }
 
-PUBLIC NONNULL((1)) uint32_t DCALL
-Dee_utf8_readchar_rev(char const **__restrict p_end,
-                      char const *begin) {
+PUBLIC ATTR_INOUT(1) uint32_t
+(DCALL Dee_unicode_readutf8_rev_n)(char const **__restrict ptext,
+                                   char const *text_start) {
 	uint32_t result;
-	char const *end = *p_end;
-	uint8_t seqlen  = 1;
-	if (end <= begin)
+	char const *iter = *ptext;
+	uint8_t seqlen = 1;
+	if unlikely(iter <= text_start)
 		return 0;
-	while (end > begin &&
-	       ((unsigned char)*--end & 0xc0) == 0x80 &&
-	       seqlen < 8)
+	for (;;) {
+		result = (unsigned char)*--iter;
+		if ((result & 0xc0) != 0x80)
+			break;
+		if (seqlen >= 8)
+			break;
 		++seqlen;
-	result = utf8_getchar((uint8_t *)end, seqlen);
-	*p_end  = end;
+		if (iter <= text_start)
+			break;
+	}
+	if (result >= 0xc0) {
+		switch (seqlen) {
+
+		case 0:
+		case 1:
+			break;
+
+		case 2:
+			result  = (result & 0x1f) << 6;
+			result |= (iter[0] & 0x3f);
+			break;
+
+		case 3:
+			result  = (result & 0x0f) << 12;
+			result |= (iter[0] & 0x3f) << 6;
+			result |= (iter[1] & 0x3f);
+			break;
+
+		case 4:
+			result  = (result & 0x07) << 18;
+			result |= (iter[0] & 0x3f) << 12;
+			result |= (iter[1] & 0x3f) << 6;
+			result |= (iter[2] & 0x3f);
+			break;
+
+		case 5:
+			result  = (result & 0x03) << 24;
+			result |= (iter[0] & 0x3f) << 18;
+			result |= (iter[1] & 0x3f) << 12;
+			result |= (iter[2] & 0x3f) << 6;
+			result |= (iter[3] & 0x3f);
+			break;
+
+		case 6:
+			result  = (result & 0x01) << 30;
+			result |= (iter[0] & 0x3f) << 24;
+			result |= (iter[1] & 0x3f) << 18;
+			result |= (iter[2] & 0x3f) << 12;
+			result |= (iter[3] & 0x3f) << 6;
+			result |= (iter[4] & 0x3f);
+			break;
+
+		case 7:
+			result  = (iter[0] & 0x03/*0x3f*/) << 30;
+			result |= (iter[1] & 0x3f) << 24;
+			result |= (iter[2] & 0x3f) << 18;
+			result |= (iter[3] & 0x3f) << 12;
+			result |= (iter[4] & 0x3f) << 6;
+			result |= (iter[5] & 0x3f);
+			break;
+
+		case 8:
+			/*result = (iter[0] & 0x3f) << 36;*/
+			result  = (iter[1] & 0x03/*0x3f*/) << 30;
+			result |= (iter[2] & 0x3f) << 24;
+			result |= (iter[3] & 0x3f) << 18;
+			result |= (iter[4] & 0x3f) << 12;
+			result |= (iter[5] & 0x3f) << 6;
+			result |= (iter[6] & 0x3f);
+			break;
+
+		default:
+			__builtin_unreachable();
+		}
+	}
+	*ptext = iter;
 	return result;
 }
 
 
 
-PUBLIC WUNUSED NONNULL((1)) char *DCALL
-Dee_utf8_writechar(char *__restrict buffer, uint32_t ch) {
+PUBLIC ATTR_RETNONNULL WUNUSED NONNULL((1)) char *
+(DCALL Dee_unicode_writeutf8)(char *__restrict buffer, uint32_t ch) {
 	uint8_t *dst = (uint8_t *)buffer;
 	if (ch <= UTF8_1BYTE_MAX) {
 		*dst++ = (uint8_t)ch;
@@ -3158,7 +3225,7 @@ Dee_utf8_writechar(char *__restrict buffer, uint32_t ch) {
 		*dst++ = 0x80 | (uint8_t)((ch >> 6) & 0x3f);
 		*dst++ = 0x80 | (uint8_t)((ch)&0x3f);
 	} else {
-		STATIC_ASSERT(UTF8_CUR_MBLEN >= 7);
+		STATIC_ASSERT(UNICODE_UTF8_CURLEN >= 7);
 		*dst++ = 0xfe;
 		*dst++ = 0x80 | (uint8_t)((ch >> 30) & 0x03 /* & 0x3f*/);
 		*dst++ = 0x80 | (uint8_t)((ch >> 24) & 0x3f);
@@ -3696,7 +3763,7 @@ PUBLIC WUNUSED NONNULL((1)) int
 		uint8_t curlen, reqlen;
 		curlen                = (self->up_flags & UNICODE_PRINTER_FPENDING) >> UNICODE_PRINTER_FPENDING_SHFT;
 		self->up_pend[curlen] = ch;
-		reqlen                = utf8_sequence_len[self->up_pend[0]];
+		reqlen                = unicode_utf8seqlen[self->up_pend[0]];
 		ASSERT(curlen + 1 <= reqlen);
 		if (curlen + 1 == reqlen) {
 			/* Append the full character. */
@@ -3760,7 +3827,7 @@ Dee_unicode_printer_print(void *__restrict self,
 			goto done;
 		curlen              = (me->up_flags & UNICODE_PRINTER_FPENDING) >> UNICODE_PRINTER_FPENDING_SHFT;
 		me->up_pend[curlen] = (uint8_t)*text++;
-		reqlen              = utf8_sequence_len[me->up_pend[0]];
+		reqlen              = unicode_utf8seqlen[me->up_pend[0]];
 		ASSERT(curlen + 1 <= reqlen);
 		if (curlen + 1 == reqlen) {
 			/* Append the full character. */
@@ -3789,7 +3856,7 @@ again_flush:
 		uint8_t seqlen;
 		uint32_t ch32;
 		ASSERT((unsigned char)*text >= 0xc0);
-		seqlen = utf8_sequence_len[(uint8_t)*text];
+		seqlen = unicode_utf8seqlen[(uint8_t)*text];
 		if (seqlen > textlen) {
 			/* Incomplete sequence! (safe as pending UTF-8) */
 			memcpyb(me->up_pend, text, textlen);
@@ -4573,14 +4640,14 @@ err:
 /* Print a unicode character `ch', encoded as UTF-8 into `printer' */
 PUBLIC WUNUSED NONNULL((1)) dssize_t DCALL
 DeeFormat_Putc(dformatprinter printer, void *arg, uint32_t ch) {
-	char utf8_repr[UTF8_CUR_MBLEN];
+	char utf8_repr[UNICODE_UTF8_CURLEN];
 	size_t utf8_len;
 	if (printer == &unicode_printer_print) {
 		if (unicode_printer_putc((struct unicode_printer *)arg, ch))
 			goto err;
 		return 1;
 	}
-	utf8_len = (size_t)(utf8_writechar(utf8_repr, ch) - utf8_repr);
+	utf8_len = (size_t)(unicode_writeutf8(utf8_repr, ch) - utf8_repr);
 	return (*printer)(arg, utf8_repr, utf8_len);
 err:
 	return -1;
@@ -4859,7 +4926,7 @@ Dee_unicode_printer_commit_utf8(struct unicode_printer *__restrict self,
 			if (ch < 0xc0)
 				continue; /* Pure ASCII / invalid UTF-8 (which we ignore here) */
 			/* Decode the full unicode character. */
-			utf8_length = utf8_sequence_len[ch];
+			utf8_length = unicode_utf8seqlen[ch];
 			ASSERT(utf8_length >= 2);
 			if (utf8_length > count) {
 				/* Incomplete, trailing UTF-8 sequence */
@@ -4900,7 +4967,7 @@ Dee_unicode_printer_commit_utf8(struct unicode_printer *__restrict self,
 							++i;
 							continue;
 						}
-						utf8_length = utf8_sequence_len[ch];
+						utf8_length = unicode_utf8seqlen[ch];
 						ASSERT(utf8_length >= 2);
 						if (i + utf8_length > utf8_convlength) {
 							/* Incomplete UTF-8 sequence. */
@@ -4933,7 +5000,7 @@ Dee_unicode_printer_commit_utf8(struct unicode_printer *__restrict self,
 							++i;
 							continue;
 						}
-						utf8_length = utf8_sequence_len[ch];
+						utf8_length = unicode_utf8seqlen[ch];
 						ASSERT(utf8_length >= 2);
 						ASSERT(utf8_length <= 4);
 						*dst++ = utf8_getchar16(&utf8_start[i], utf8_length);
@@ -4963,7 +5030,7 @@ upcast_to_32bit:
 							++i;
 							continue;
 						}
-						utf8_length = utf8_sequence_len[ch];
+						utf8_length = unicode_utf8seqlen[ch];
 						ASSERT(utf8_length >= 2);
 						w32_length -= (utf8_length - 1);
 						i += utf8_length;
@@ -4982,7 +5049,7 @@ upcast_to_32bit:
 							++i;
 							continue;
 						}
-						utf8_length = utf8_sequence_len[ch];
+						utf8_length = unicode_utf8seqlen[ch];
 						ASSERT(utf8_length >= 2);
 						*dst++ = utf8_getchar(&utf8_start[i], utf8_length);
 						i += utf8_length;
@@ -5541,7 +5608,7 @@ parse_hex_integer:
 				uint32_t ch32;
 				uint8_t val;
 				char const *old_iter = iter;
-				ch32 = utf8_readchar(&iter, end);
+				ch32 = unicode_readutf8_n(&iter, end);
 				if (!DeeUni_AsDigit(ch32, 16, &val)) {
 					iter = old_iter;
 					break;
@@ -5608,7 +5675,7 @@ parse_oct_integer:
 					uint8_t digit;
 					uint32_t ch32;
 					char const *old_iter = iter;
-					ch32 = utf8_readchar(&iter, end);
+					ch32 = unicode_readutf8_n(&iter, end);
 					if (!DeeUni_AsDigit(ch32, 8, &digit)) {
 						iter = old_iter;
 						break;
@@ -5625,7 +5692,7 @@ parse_oct_integer:
 				uint32_t ch32;
 				struct unitraits *desc;
 				--iter;
-				ch32 = utf8_readchar(&iter, end);
+				ch32 = unicode_readutf8_n(&iter, end);
 				desc = DeeUni_Descriptor(ch32);
 				if (desc->ut_flags & UNICODE_ISLF)
 					break; /* Escaped line-feed */
@@ -5680,7 +5747,7 @@ Dee_bytes_printer_print(void *__restrict self,
 		if (!textlen)
 			goto done;
 		me->bp_pend[me->bp_numpend] = (uint8_t)*text++;
-		reqlen                      = utf8_sequence_len[me->bp_pend[0]];
+		reqlen                      = unicode_utf8seqlen[me->bp_pend[0]];
 		ASSERT(me->bp_numpend + 1 <= reqlen);
 		if (me->bp_numpend + 1 == reqlen) {
 			/* Append the full character. */
@@ -5710,7 +5777,7 @@ again_flush:
 	if (textlen) {
 		uint8_t seqlen;
 		ASSERT((unsigned char)*text >= 0xc0);
-		seqlen = utf8_sequence_len[(uint8_t)*text];
+		seqlen = unicode_utf8seqlen[(uint8_t)*text];
 		if (seqlen > textlen) {
 			/* Incomplete sequence! (safe as pending UTF-8) */
 			memcpyb(me->bp_pend, text, textlen);
@@ -5824,12 +5891,12 @@ DeeFormat_Print32(dformatprinter printer, void *arg,
                   size_t textlen) {
 	dssize_t temp, result = 0;
 	size_t utf8_length;
-	uint8_t utf8_buffer[UTF8_CUR_MBLEN]; /* TODO: Buffer more than 1 character at-a-time */
+	uint8_t utf8_buffer[UNICODE_UTF8_CURLEN]; /* TODO: Buffer more than 1 character at-a-time */
 	if (printer == &unicode_printer_print)
 		return unicode_printer_print32((struct unicode_printer *)arg, text, textlen);
 	while (textlen--) {
 		uint32_t ch = *text++;
-		utf8_length = (size_t)((uint8_t *)utf8_writechar((char *)utf8_buffer, ch) - utf8_buffer);
+		utf8_length = (size_t)((uint8_t *)unicode_writeutf8((char *)utf8_buffer, ch) - utf8_buffer);
 		DO(err, (*printer)(arg, (char const *)utf8_buffer, utf8_length));
 	}
 	return result;
@@ -5945,11 +6012,11 @@ check_1byte:
 						DeeString_STR(self)[index] = (char)(uint8_t)value; /* Data loss here cannot be prevented... */
 					} else {
 						/* The difficult case. */
-						size_t i          = index;
-						uint8_t *utf8_dst = (uint8_t *)DeeString_STR(self);
-						while (i--)
-							utf8_readchar_u((char const **)&utf8_dst);
-						switch (utf8_sequence_len[*utf8_dst]) {
+						size_t i = index;
+						uint8_t *utf8_dst;
+						utf8_dst = (uint8_t *)DeeString_STR(self);
+						utf8_dst = (uint8_t *)unicode_skiputf8_c(utf8_dst, i);
+						switch (unicode_utf8seqlen[*utf8_dst]) {
 
 						default:
 							*utf8_dst = (uint8_t)value;
@@ -6118,38 +6185,22 @@ check_1byte:
 						char *utf8_src, *utf8_dst, *end;
 						size_t i;
 						if (dst < src) {
-							i        = dst;
-							utf8_dst = DeeString_STR(self);
-							while (i--)
-								utf8_readchar_u((char const **)&utf8_dst);
-							utf8_src = utf8_dst;
-							i        = src - dst;
-							while (i--)
-								utf8_readchar_u((char const **)&utf8_src);
-							end = utf8_src;
-							i   = num_chars;
-							while (i--)
-								utf8_readchar_u((char const **)&end);
+							utf8_dst = unicode_skiputf8_c(DeeString_STR(self), dst);
+							utf8_src = unicode_skiputf8_c(utf8_dst, src - dst);
+							end      = unicode_skiputf8_c(utf8_src, num_chars);
 						} else {
-							i        = dst;
-							utf8_src = DeeString_STR(self);
-							while (i--)
-								utf8_readchar_u((char const **)&utf8_src);
+							utf8_src = unicode_skiputf8_c(DeeString_STR(self), dst);
 							utf8_dst = utf8_src;
 							i        = dst - src;
 							if (num_chars > i) {
-								while (i--)
-									utf8_readchar_u((char const **)&utf8_dst);
-								i   = num_chars - (dst - src);
-								end = utf8_dst;
-								while (i--)
-									utf8_readchar_u((char const **)&end);
+								utf8_dst = unicode_skiputf8_c(utf8_dst, i);
+								end      = unicode_skiputf8_c(utf8_dst, num_chars - (dst - src));
 							} else {
 								end = NULL;
 								while (i--) {
 									if (!num_chars--)
 										end = utf8_dst;
-									utf8_readchar_u((char const **)&utf8_dst);
+									utf8_dst = unicode_skiputf8(utf8_dst);
 								}
 								ASSERT(end != NULL);
 							}

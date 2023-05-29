@@ -794,6 +794,8 @@
 #define DEFINE_TYPE_INHERIT_FUNCTION(name,opname,field) bool name(DeeTypeObject *self) {}
 #define RESTRICT_IF_NOTYPE
 
+#define CONSTEXPR_FRAME_BEGIN(...) if(0)
+
 #define __BOOL             bool
 #define __LONGLONG         long long
 #define __ULONGLONG        unsigned long long

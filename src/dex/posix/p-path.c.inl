@@ -233,7 +233,7 @@ again:
 		if (pth_begin >= pth_end)
 			goto done;
 		next = pth_end;
-		ch   = utf8_readchar_rev((char const **)&next, pth_begin);
+		ch   = unicode_readutf8_rev_n(&next, pth_begin);
 		if (!DeeSystem_IsSep(ch) && !DeeUni_IsSpace(ch))
 			break;
 		pth_end = next;
@@ -245,7 +245,7 @@ again:
 			goto done;
 		next = pth_end;
 		/* TODO: special handling for unwinding `.' and `..' segments. */
-		ch = utf8_readchar_rev((char const **)&next, pth_begin);
+		ch = unicode_readutf8_rev_n(&next, pth_begin);
 		if (DeeSystem_IsSep(ch))
 			break;
 		if (ch == '.') {
@@ -419,7 +419,7 @@ return_unmodified:
 		/* Trim the given PWD and PATH strings. */
 		while (pth_end > pth_begin) {
 			next = pth_end;
-			ch   = utf8_readchar_rev((char const **)&next, pth_begin);
+			ch   = unicode_readutf8_rev_n(&next, pth_begin);
 			if (!DeeUni_IsSpace(ch) && !DeeSystem_IsSep(ch))
 				break;
 			pth_end = next;
@@ -449,7 +449,7 @@ return_unmodified:
 
 		while (pth_begin < pth_end) {
 			next = pth_begin;
-			ch   = utf8_readchar((char const **)&next, pth_end);
+			ch   = unicode_readutf8_n(&next, pth_end);
 			if (!DeeUni_IsSpace(ch) && !DeeSystem_IsSep(ch))
 				break;
 			pth_begin = next;
@@ -457,7 +457,7 @@ return_unmodified:
 again_trip_paths:
 		while (pwd_end > pwd_begin) {
 			next = pwd_end;
-			ch   = utf8_readchar_rev((char const **)&next, pwd_begin);
+			ch   = unicode_readutf8_rev_n(&next, pwd_begin);
 			if (!DeeUni_IsSpace(ch) && !DeeSystem_IsSep(ch))
 				break;
 			pwd_end = next;
@@ -473,7 +473,7 @@ again_trip_paths:
 
 			/* Check if this segment really only contains 1/2 dots. */
 			while (next < pth_end) {
-				ch = utf8_readchar((char const **)&next, pth_end);
+				ch = unicode_readutf8_n(&next, pth_end);
 				if (DeeSystem_IsSep(ch))
 					break;
 				if (!DeeUni_IsSpace(ch))
@@ -484,7 +484,7 @@ again_trip_paths:
 			pth_begin = next;
 			while (pth_begin < pth_end) {
 				next = pth_begin;
-				ch   = utf8_readchar((char const **)&next, pth_end);
+				ch   = unicode_readutf8_n(&next, pth_end);
 				if (!DeeSystem_IsSep(ch) && !DeeUni_IsSpace(ch))
 					break;
 				pth_begin = next;
@@ -624,8 +624,8 @@ posix_path_relpath_f(DeeObject *__restrict path, DeeObject *pwd) {
 	/* Match the drive prefix. */
 #ifdef DEE_SYSTEM_FS_DRIVES
 	for (;;) {
-		a = utf8_readchar((char const **)&pth_iter, pth_end);
-		b = utf8_readchar((char const **)&pwd_iter, pwd_end);
+		a = unicode_readutf8_n(&pth_iter, pth_end);
+		b = unicode_readutf8_n(&pwd_iter, pwd_end);
 		if ((a != b) && (DeeUni_ToUpper(a) != DeeUni_ToUpper(b))) {
 			/* Different drives (return the given path as-is) */
 			result = path;
@@ -649,8 +649,8 @@ posix_path_relpath_f(DeeObject *__restrict path, DeeObject *pwd) {
 	goto continue_after_sep;
 
 	for (;;) {
-		a = utf8_readchar((char const **)&pth_iter, pth_end);
-		b = utf8_readchar((char const **)&pwd_iter, pwd_end);
+		a = unicode_readutf8_n(&pth_iter, pth_end);
+		b = unicode_readutf8_n(&pwd_iter, pwd_end);
 #ifdef DEE_SYSTEM_FS_ICASE
 		a = DeeUni_ToUpper(a);
 		b = DeeUni_ToUpper(b);
@@ -658,7 +658,7 @@ posix_path_relpath_f(DeeObject *__restrict path, DeeObject *pwd) {
 		if (DeeSystem_IsSep(a)) {
 			/* Align differing space in `b' */
 			while (DeeUni_IsSpace(b)) {
-				b = utf8_readchar((char const **)&pwd_iter, pwd_end);
+				b = unicode_readutf8_n(&pwd_iter, pwd_end);
 			}
 			if (!DeeSystem_IsSep(b)) {
 				if (!b && pwd_iter >= pwd_end) {
@@ -669,7 +669,7 @@ posix_path_relpath_f(DeeObject *__restrict path, DeeObject *pwd) {
 					pwd_begin = pwd_end;
 					for (;;) {
 						next = pth_iter;
-						a    = utf8_readchar((char const **)&next, pth_end);
+						a    = unicode_readutf8_n(&next, pth_end);
 						if (!DeeSystem_IsSep(a) && !DeeUni_IsSpace(a))
 							break;
 						pth_iter = next;
@@ -681,14 +681,14 @@ posix_path_relpath_f(DeeObject *__restrict path, DeeObject *pwd) {
 continue_after_sep:
 			while (pth_iter < pth_end) {
 				next = pth_iter;
-				a    = utf8_readchar((char const **)&next, pth_end);
+				a    = unicode_readutf8_n(&next, pth_end);
 				if (!DeeUni_IsSpace(a) && !DeeSystem_IsSep(a))
 					break;
 				pth_iter = next;
 			}
 			while (pwd_iter < pwd_end) {
 				next = pwd_iter;
-				b    = utf8_readchar((char const **)&next, pwd_end);
+				b    = unicode_readutf8_n(&next, pwd_end);
 				if (!DeeUni_IsSpace(b) && !DeeSystem_IsSep(b))
 					break;
 				pwd_iter = next;
@@ -702,7 +702,7 @@ continue_after_sep_sp:
 		if (DeeSystem_IsSep(b)) {
 			/* Align differing space in `a' */
 			while (DeeUni_IsSpace(a))
-				a = utf8_readchar((char const **)&pth_iter, pth_end);
+				a = unicode_readutf8_n(&pth_iter, pth_end);
 			if (!DeeSystem_IsSep(a)) {
 				if (!a && pth_iter >= pth_end) {
 					/* End of the path-string when the pwd-string is at a slash
@@ -712,7 +712,7 @@ continue_after_sep_sp:
 					pth_begin = pth_end;
 					for (;;) {
 						next = pwd_iter;
-						b    = utf8_readchar((char const **)&next, pwd_end);
+						b    = unicode_readutf8_n(&next, pwd_end);
 						if (!DeeSystem_IsSep(b) && !DeeUni_IsSpace(b))
 							break;
 						pwd_iter = next;
@@ -728,14 +728,14 @@ continue_after_sep_sp:
 				/* Special handling for differing space characters surrounding slashes. */
 				while (pth_iter < pth_end) {
 					next = pth_iter;
-					a    = utf8_readchar((char const **)&next, pth_end);
+					a    = unicode_readutf8_n(&next, pth_end);
 					if (!DeeUni_IsSpace(a) && !DeeSystem_IsSep(a))
 						break;
 					pth_iter = next;
 				}
 				while (pwd_iter < pwd_end) {
 					next = pwd_iter;
-					b    = utf8_readchar((char const **)&next, pwd_end);
+					b    = unicode_readutf8_n(&next, pwd_end);
 					if (!DeeUni_IsSpace(b) && !DeeSystem_IsSep(b))
 						break;
 					pwd_iter = next;
@@ -750,7 +750,7 @@ continue_after_sep_sp:
 			if (!a && pth_iter >= pth_end) {
 				next = pwd_iter;
 				while (next < pwd_end) {
-					b = utf8_readchar((char const **)&next, pwd_end);
+					b = unicode_readutf8_n(&next, pwd_end);
 					if (!DeeUni_IsSpace(b) && !DeeSystem_IsSep(b))
 						break;
 				}
@@ -762,7 +762,7 @@ continue_after_sep_sp:
 			if (!b && pwd_iter >= pwd_end) {
 				next = pth_iter;
 				while (next < pth_end) {
-					a = utf8_readchar((char const **)&next, pth_end);
+					a = unicode_readutf8_n(&next, pth_end);
 					if (!DeeUni_IsSpace(a) && !DeeSystem_IsSep(a))
 						break;
 				}
@@ -791,7 +791,7 @@ continue_after_sep_sp:
 	is_nonempty_segment = false;
 continue_uprefs_normal:
 	while (pwd_begin < pwd_end) {
-		b = utf8_readchar((char const **)&pwd_begin, pwd_end);
+		b = unicode_readutf8_n(&pwd_begin, pwd_end);
 		if (!DeeSystem_IsSep(b) || (!b && pwd_begin >= pwd_end)) {
 			bool is_parent_ref;
 
@@ -801,14 +801,14 @@ continue_uprefs_normal:
 				continue;
 			}
 			is_nonempty_segment = false;
-			b                   = utf8_readchar((char const **)&pwd_begin, pwd_end);
+			b                   = unicode_readutf8_n(&pwd_begin, pwd_end);
 			is_parent_ref       = b == '.';
 			if (is_parent_ref)
-				b = utf8_readchar((char const **)&pwd_begin, pwd_end);
+				b = unicode_readutf8_n(&pwd_begin, pwd_end);
 			while (!DeeSystem_IsSep(b)) {
 				if (!DeeUni_IsSpace(b))
 					goto continue_uprefs_normal;
-				b = utf8_readchar((char const **)&pwd_begin, pwd_end);
+				b = unicode_readutf8_n(&pwd_begin, pwd_end);
 			}
 
 			/* Got a self/parent directory reference. */
@@ -840,7 +840,7 @@ continue_uprefs_normal:
 			/* Skip all additional space and DeeSystem_SEP-characters. */
 			for (;;) {
 				next = pwd_begin;
-				b    = utf8_readchar((char const **)&next, pwd_end);
+				b    = unicode_readutf8_n(&next, pwd_end);
 				if (!DeeSystem_IsSep(b) && !DeeUni_IsSpace(b))
 					break;
 				pwd_begin = next;
@@ -850,7 +850,7 @@ continue_uprefs_normal:
 		++uprefs;
 		is_nonempty_segment = false;
 		do {
-			b = utf8_readchar((char const **)&pwd_begin, pwd_end);
+			b = unicode_readutf8_n(&pwd_begin, pwd_end);
 		} while (DeeSystem_IsSep(b) || DeeUni_IsSpace(b));
 	}
 	if (is_nonempty_segment)
@@ -864,7 +864,7 @@ continue_uprefs_normal:
 	/* Strip leading slashes & whitespace from `path' */
 	while (pth_begin < pth_end) {
 		next = pth_begin;
-		a    = utf8_readchar((char const **)&next, pth_end);
+		a    = unicode_readutf8_n(&next, pth_end);
 		if (!DeeSystem_IsSep(a) && !DeeUni_IsSpace(a))
 			break;
 		pth_begin = next;
@@ -873,7 +873,7 @@ continue_uprefs_normal:
 	/* Strip trailing whitespace from `path' */
 	while (pth_end > pth_begin) {
 		next = pth_end;
-		a    = utf8_readchar_rev((char const **)&next, pth_begin);
+		a    = unicode_readutf8_rev_n(&next, pth_begin);
 		if (!DeeUni_IsSpace(a))
 			break;
 		pth_end = next;
@@ -947,14 +947,14 @@ next:
 		/* Skip multiple slashes and whitespace following a path separator. */
 		while (iter < end) {
 			iter_next = iter;
-			ch        = utf8_readchar((char const **)&iter_next, end);
+			ch        = unicode_readutf8_n(&iter_next, end);
 			if (!DeeUni_IsSpace(ch) && !DeeSystem_IsSep(ch))
 				break;
 			iter = iter_next;
 		}
 		while (flush_end > flush_start) {
 			iter_next = flush_end;
-			ch        = utf8_readchar_rev((char const **)&iter_next, flush_start);
+			ch        = unicode_readutf8_rev_n(&iter_next, flush_start);
 			if (!DeeUni_IsSpace(ch))
 				break;
 			flush_end = iter_next;
@@ -1107,7 +1107,7 @@ posix_path_joinpath_f(size_t pathc, DeeObject *const *__restrict pathv) {
 		end = begin + WSTR_LENGTH(begin);
 		while (begin < end) {
 			next = begin;
-			ch   = utf8_readchar((char const **)&next, end);
+			ch   = unicode_readutf8_n(&next, end);
 			if (!DeeUni_IsSpace(ch) && /* Don't skip leading SEPs */
 			    (UNICODE_PRINTER_ISEMPTY(&printer) || !DeeSystem_IsSep(ch)))
 				break;
@@ -1115,7 +1115,7 @@ posix_path_joinpath_f(size_t pathc, DeeObject *const *__restrict pathv) {
 		}
 		while (end > begin) {
 			next = end;
-			ch   = utf8_readchar_rev((char const **)&next, begin);
+			ch   = unicode_readutf8_rev_n(&next, begin);
 			if (!DeeUni_IsSpace(ch) && !DeeSystem_IsSep(ch))
 				break;
 			end = next;

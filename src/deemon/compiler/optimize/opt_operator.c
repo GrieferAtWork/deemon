@@ -178,16 +178,6 @@ emulate_getattr(DeeObject *base, DeeObject *name) {
 }
 
 
-/* TODO: Add AST optimizers for:
- *
- * - from: >> print("foo = {}".format({ repr bar })); // aka. print(f"foo = {repr bar}")
- *   to:   >> print("foo = ", repr bar);
- *
- * - from: >> print("value = " + foo + bar);
- *   to:   >> print("value = ", foo, bar);
- */
-
-
 
 
 INTDEF WUNUSED NONNULL((1)) DREF DeeStringObject *
@@ -505,29 +495,54 @@ INTERN WUNUSED NONNULL((1, 2)) int
 			goto err;
 		if (ast_optimize(stack, attr, true))
 			goto err;
-		if (base->a_type == AST_CONSTEXPR &&
-		    attr->a_type == AST_CONSTEXPR &&
+		if (attr->a_type == AST_CONSTEXPR &&
 		    DeeString_Check(attr->a_constexpr)) {
-			/* Black-list certain attributes */
-			operator_result = emulate_getattr(base->a_constexpr,
-			                                  attr->a_constexpr);
-			if (operator_result == ITER_DONE)
-				goto done; /* lookup wasn't allowed. */
+			if (base->a_type == AST_CONSTEXPR) {
+				/* Black-list certain attributes */
+				operator_result = emulate_getattr(base->a_constexpr,
+				                                  attr->a_constexpr);
+				if (operator_result == ITER_DONE)
+					goto done; /* lookup wasn't allowed. */
 #ifdef CONFIG_HAVE_OPTIMIZE_VERBOSE
-			if (operator_result &&
-			    allow_constexpr(operator_result) != CONSTEXPR_ILLEGAL) {
-				OPTIMIZE_VERBOSE("Reduce constant expression `%r.%k -> %r'\n",
-				                 base->a_constexpr,
-				                 attr->a_constexpr,
-				                 operator_result);
-			}
+				if (operator_result &&
+				    allow_constexpr(operator_result) != CONSTEXPR_ILLEGAL) {
+					OPTIMIZE_VERBOSE("Reduce constant expression `%r.%k -> %r'\n",
+					                 base->a_constexpr,
+					                 attr->a_constexpr,
+					                 operator_result);
+				}
 #endif /* CONFIG_HAVE_OPTIMIZE_VERBOSE */
-			opcount = 2;
-			goto set_operator_result;
+				opcount = 2;
+				goto set_operator_result;
+			}
+			/* Special handling to allow propagation of `static final' member of user-defined classes:
+			 * >> class MyClass1 {
+			 * >>     public static final FOO = 42;
+			 * >> }
+			 * >> class MyClass2 {
+			 * >>     public static final BAR = MyClass1;
+			 * >> }
+			 * >> print MyClass1.FOO;     // Can be optimized to `42'
+			 * >> print MyClass2.BAR.FOO; // Can be optimized to `42'
+			 * >> print MyClass2.BAR;     // Can be optimized to `MyClass1' */
+
+			/* TODO: Must differentiate a couple of different cases here:
+			 * - AST_SYM -> SYMBOL_TYPE_EXTERN             (for `MyClass.FOO')
+			 * - ast_isoperator2(base, OPERATOR_GETATTR)   (for `MyClass2.BAR.FOO')
+			 *
+			 * Note that this doesn't yet handle the case where the class gets
+			 * defined by the current module! For that, `ast_assumes' probably
+			 * needs to be re-written to not track constant expressions, but
+			 * instead track the ASTs that get assigned to variables (because
+			 * that way, we can know if a symbol will *always* hold some class
+			 * type, even if that type hasn't been created yet (because the
+			 * attached AST would be of type AST_CLASS))
+			 */
 		}
 		goto do_generic;
 	}
-	/* Since `objmethod' isn't allowed in constant expressions, but
+
+	/* Since `ObjMethod' isn't allowed in constant expressions, but
 	 * since it is the gateway to all kinds of compiler optimizations,
 	 * such as `"foo".upper()' --> `"FOO"', as a special case we try
 	 * to bridge across the GETATTR operator invocation and try to

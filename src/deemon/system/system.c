@@ -198,7 +198,7 @@ DeeSystem_MakeAbsolute(/*String*/ DeeObject *__restrict filename) {
 #endif /* CONFIG_HOST_WINDOWS */
 
 	/* Strip leading space. */
-	begin = utf8_skipspace(begin, end);
+	begin = unicode_skipspaceutf8_n(begin, end);
 	if (!DeeSystem_IsAbs(begin)) {
 		/* Print the current working directory when the given path isn't absolute. */
 		if unlikely(DeeSystem_PrintPwd(&printer, true) < 0)
@@ -216,7 +216,7 @@ DeeSystem_MakeAbsolute(/*String*/ DeeObject *__restrict filename) {
 
 			/* Strip leading slashes. */
 			for (;;) {
-				begin = utf8_skipspace(begin, end);
+				begin = unicode_skipspaceutf8_n(begin, end);
 				if (begin >= end)
 					break;
 				if (!DeeSystem_IsSep(*begin))
@@ -249,14 +249,14 @@ next:
 
 		/* Skip multiple slashes and whitespace following a path separator. */
 		for (;;) {
-			iter = utf8_skipspace(iter, end);
+			iter = unicode_skipspaceutf8_n(iter, end);
 			if (iter >= end)
 				break;
 			if (!DeeSystem_IsSep(*iter))
 				break;
 			++iter;
 		}
-		flush_end = utf8_skipspace_rev(flush_end, flush_start);
+		flush_end = unicode_skipspaceutf8_rev_n(flush_end, flush_start);
 
 		/* Analyze the last path portion for being a special name (`.' or `..') */
 		if (flush_end[-1] == '.') {

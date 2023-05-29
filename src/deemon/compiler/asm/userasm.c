@@ -2120,7 +2120,7 @@ next:
 		if (ch == '(') {
 			/* To prevent ambiguity, we allow format options to be surrounded by (...) */
 			has_paren = true;
-			iter      = utf8_skipspace(iter, end);
+			iter      = unicode_skipspaceutf8_n(iter, end);
 			ch        = *iter++;
 		}
 		if (ch != '%') {
@@ -2145,7 +2145,7 @@ next:
 				char const *name_start;
 				struct TPPKeyword *name;
 				struct asm_operand *op_iter, *op_end;
-				iter = utf8_skipspace(iter, end);
+				iter = unicode_skipspaceutf8_n(iter, end);
 				ch   = *iter++;
 				if (!DeeUni_IsSymStrt(ch)) {
 					DeeError_Throwf(&DeeError_CompilerError,
@@ -2176,7 +2176,7 @@ err_unknown_operand:
 				}
 				goto err_unknown_operand;
 has_operand:
-				iter = utf8_skipspace(iter - 1, end);
+				iter = unicode_skipspaceutf8_n(iter - 1, end);
 				ch   = *iter++;
 				if (ch != ']') {
 					DeeError_Throwf(&DeeError_CompilerError,
@@ -2224,7 +2224,7 @@ has_operand:
 		}
 done_special:
 		if (has_paren) {
-			iter = utf8_skipspace(iter, end);
+			iter = unicode_skipspaceutf8_n(iter, end);
 			if (*iter != ')') {
 				DeeError_Throwf(&DeeError_CompilerError,
 				                "Expected `)' after `%(' in user-assembly text");

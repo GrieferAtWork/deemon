@@ -285,36 +285,26 @@ DeeSystem_DEFINE_memcasecmp(dee_memcasecmp)
 #undef issymcont
 #define issymcont(ch) (isalnum(ch) || (ch) == '_' || (ch) == '$')
 
-#ifndef __native_char16_t_defined
 #undef char16_t
 #define char16_t __UINT16_TYPE__
 #undef char32_t
 #define char32_t __UINT32_TYPE__
-#endif /* !__native_char16_t_defined */
 
 #ifndef CONFIG_HAVE_UNICODE_H
 #undef unicode_utf8seqlen
-#define unicode_utf8seqlen Dee_utf8_sequence_len
+#define unicode_utf8seqlen Dee_unicode_utf8seqlen
 #undef unicode_readutf8
-#define unicode_readutf8 Dee_utf8_readchar_u
+#define unicode_readutf8 Dee_unicode_readutf8
 #undef unicode_readutf8_n
-#define unicode_readutf8_n Dee_utf8_readchar
+#define unicode_readutf8_n Dee_unicode_readutf8_n
 #undef unicode_readutf8_rev
-#define unicode_readutf8_rev(p_text) Dee_utf8_readchar_rev(p_text, (char const *)0)
+#define unicode_readutf8_rev Dee_unicode_readutf8_rev
 #undef unicode_readutf8_rev_n
-#define unicode_readutf8_rev_n Dee_utf8_readchar_rev
+#define unicode_readutf8_rev_n Dee_unicode_readutf8_rev_n
 #undef unicode_writeutf8
-#define unicode_writeutf8 Dee_utf8_writechar
-/* TODO: unicode_readutf16le_n */
-/* TODO: unicode_readutf16be_n */
-/* TODO: unicode_readutf32le_n */
-/* TODO: unicode_readutf32be_n */
-/* TODO: unicode_readutf16le_rev_n */
-/* TODO: unicode_readutf32le_rev_n */
-/* TODO: unicode_readutf16be_rev_n */
-/* TODO: unicode_readutf32be_rev_n */
+#define unicode_writeutf8 Dee_unicode_writeutf8
 #undef UNICODE_UTF8_CURLEN
-#define UNICODE_UTF8_CURLEN Dee_UTF8_CUR_MBLEN
+#define UNICODE_UTF8_CURLEN Dee_UNICODE_UTF8_CURLEN
 #undef unicode_tolower
 #define unicode_tolower DeeUni_ToLower
 #undef unicode_toupper
@@ -389,195 +379,6 @@ DeeSystem_DEFINE_memcasecmp(dee_memcasecmp)
 #define __UNICODE_ISTITLE Dee_UNICODE_ISTITLE
 #undef __UNICODE_ISNUMERIC
 #define __UNICODE_ISNUMERIC Dee_UNICODE_ISNUMERIC
-
-
-/* Define missing unicode parsing functions */
-
-LOCAL ATTR_INOUT(1) NONNULL((2)) char32_t
-NOTHROW_NCX(DCALL dee_unicode_readutf16_n)(char16_t const **__restrict ptext,
-                                           char16_t const *text_end) {
-	char32_t result;
-	char16_t const *text = *ptext;
-	if (text >= text_end)
-		return 0;
-	result = (char32_t)(uint16_t)*text++;
-	if (result >= 0xd800 &&
-	    result <= 0xdbff &&
-	    text < text_end) {
-		result -= 0xd800;
-		result <<= 10;
-		result += 0x10000 - 0xdc00;
-		result += *text++; /* low surrogate */
-	}
-	*ptext = text;
-	return result;
-}
-
-LOCAL ATTR_INOUT(1) NONNULL((2)) char32_t
-NOTHROW_NCX(DCALL dee_unicode_readutf16_swap_n)(char16_t const **__restrict ptext,
-                                                char16_t const *text_end) {
-	char32_t result;
-	char16_t const *text = *ptext;
-	if (text >= text_end)
-		return 0;
-	result = (char32_t)__hybrid_bswap16((uint16_t)*text);
-	++text;
-	if (result >= 0xd800 &&
-	    result <= 0xdbff &&
-	    text < text_end) {
-		result -= 0xd800;
-		result <<= 10;
-		result += 0x10000 - 0xdc00;
-		result += __hybrid_bswap16(*text); /* low surrogate */
-		++text;
-	}
-	*ptext = text;
-	return result;
-}
-
-LOCAL ATTR_INOUT(1) NONNULL((2)) char32_t
-NOTHROW_NCX(DCALL dee_unicode_readutf16_rev_n)(char16_t const **__restrict ptext,
-                                               char16_t const *text_start) {
-	char32_t result;
-	char16_t const *text = *ptext;
-	if (text <= text_start)
-		return 0;
-	result = (char32_t)(uint16_t)*--text;
-	if (result >= 0xdc00 &&
-	    result <= 0xdfff && likely(text > text_start)) {
-		char32_t high = *--text;
-		high   -= 0xd800;
-		high   <<= 10;
-		high   += 0x10000 - 0xdc00;
-		result += high;
-	}
-	*ptext = text;
-	return result;
-}
-
-LOCAL ATTR_IN(2) ATTR_INOUT(1) char32_t
-NOTHROW_NCX(DCALL dee_unicode_readutf16_swap_rev_n)(char16_t const **__restrict ptext,
-                                                    char16_t const *text_start) {
-	char32_t result;
-	char16_t const *text = *ptext;
-	if (text <= text_start)
-		return 0;
-	--text;
-	result = (char32_t)__hybrid_bswap16((uint16_t)*text);
-	if (result >= 0xdc00 &&
-	    result <= 0xdfff && likely(text > text_start)) {
-		char32_t high = (--text, __hybrid_bswap16(*text));
-		high   -= 0xd800;
-		high   <<= 10;
-		high   += 0x10000 - 0xdc00;
-		result += high;
-	}
-	*ptext = text;
-	return result;
-}
-
-LOCAL ATTR_INOUT(1) NONNULL((2)) char32_t
-NOTHROW_NCX(DCALL dee_unicode_readutf32_n)(/*utf-32*/ char32_t const **__restrict ptext,
-                                           char32_t const *text_end) {
-	char32_t result;
-	char32_t const *text = *ptext;
-	if (text >= text_end)
-		return 0;
-	result = *text++;
-	*ptext = text;
-	return result;
-}
-
-LOCAL ATTR_INOUT(1) NONNULL((2)) char32_t
-NOTHROW_NCX(DCALL dee_unicode_readutf32_rev_n)(/*utf-32*/ char32_t const **__restrict ptext,
-                                               char32_t const *text_start) {
-	char32_t result;
-	char32_t const *text = *ptext;
-	if (text <= text_start)
-		return 0;
-	result = *--text;
-	*ptext = text;
-	return result;
-}
-
-LOCAL ATTR_INOUT(1) NONNULL((2)) char32_t
-NOTHROW_NCX(DCALL dee_unicode_readutf32_swap_n)(/*utf-32*/ char32_t const **__restrict ptext,
-                                                char32_t const *text_end) {
-	char32_t result;
-	char32_t const *text = *ptext;
-	if (text >= text_end)
-		return 0;
-	result = *text++;
-	*ptext = text;
-	return __hybrid_bswap32(result);
-}
-
-LOCAL ATTR_INOUT(1) NONNULL((2)) char32_t
-NOTHROW_NCX(DCALL dee_unicode_readutf32_swap_rev_n)(/*utf-32*/ char32_t const **__restrict ptext,
-                                                    char32_t const *text_start) {
-	char32_t result;
-	char32_t const *text = *ptext;
-	if (text <= text_start)
-		return 0;
-	result = *--text;
-	*ptext = text;
-	return __hybrid_bswap32(result);
-}
-
-
-
-#if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
-#define dee_unicode_readutf16le_n     dee_unicode_readutf16_n
-#define dee_unicode_readutf32le_n     dee_unicode_readutf32_n
-#define dee_unicode_readutf16be_n     dee_unicode_readutf16_swap_n
-#define dee_unicode_readutf32be_n     dee_unicode_readutf32_swap_n
-#define dee_unicode_readutf16le_rev_n dee_unicode_readutf16_rev_n
-#define dee_unicode_readutf32le_rev_n dee_unicode_readutf32_rev_n
-#define dee_unicode_readutf16be_rev_n dee_unicode_readutf16_swap_rev_n
-#define dee_unicode_readutf32be_rev_n dee_unicode_readutf32_swap_rev_n
-#elif __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
-#define dee_unicode_readutf16be_n     dee_unicode_readutf16_n
-#define dee_unicode_readutf32be_n     dee_unicode_readutf32_n
-#define dee_unicode_readutf16le_n     dee_unicode_readutf16_swap_n
-#define dee_unicode_readutf32le_n     dee_unicode_readutf32_swap_n
-#define dee_unicode_readutf16be_rev_n dee_unicode_readutf16_rev_n
-#define dee_unicode_readutf32be_rev_n dee_unicode_readutf32_rev_n
-#define dee_unicode_readutf16le_rev_n dee_unicode_readutf16_swap_rev_n
-#define dee_unicode_readutf32le_rev_n dee_unicode_readutf32_swap_rev_n
-#endif /* __BYTE_ORDER__ == ... */
-
-#undef unicode_readutf16_n
-#undef unicode_readutf32_n
-#undef unicode_readutf16_swap_n
-#undef unicode_readutf32_swap_n
-#undef unicode_readutf16_rev_n
-#undef unicode_readutf32_rev_n
-#undef unicode_readutf16_swap_rev_n
-#undef unicode_readutf32_swap_rev_n
-#undef unicode_readutf16le_n
-#undef unicode_readutf32le_n
-#undef unicode_readutf16be_n
-#undef unicode_readutf32be_n
-#undef unicode_readutf16le_rev_n
-#undef unicode_readutf32le_rev_n
-#undef unicode_readutf16be_rev_n
-#undef unicode_readutf32be_rev_n
-#define unicode_readutf16_n          dee_unicode_readutf16_n
-#define unicode_readutf32_n          dee_unicode_readutf32_n
-#define unicode_readutf16_swap_n     dee_unicode_readutf16_swap_n
-#define unicode_readutf32_swap_n     dee_unicode_readutf32_swap_n
-#define unicode_readutf16_rev_n      dee_unicode_readutf16_rev_n
-#define unicode_readutf32_rev_n      dee_unicode_readutf32_rev_n
-#define unicode_readutf16_swap_rev_n dee_unicode_readutf16_swap_rev_n
-#define unicode_readutf32_swap_rev_n dee_unicode_readutf32_swap_rev_n
-#define unicode_readutf16le_n        dee_unicode_readutf16_n
-#define unicode_readutf32le_n        dee_unicode_readutf32_n
-#define unicode_readutf16be_n        dee_unicode_readutf16_swap_n
-#define unicode_readutf32be_n        dee_unicode_readutf32_swap_n
-#define unicode_readutf16le_rev_n    dee_unicode_readutf16_rev_n
-#define unicode_readutf32le_rev_n    dee_unicode_readutf32_rev_n
-#define unicode_readutf16be_rev_n    dee_unicode_readutf16_swap_rev_n
-#define unicode_readutf32be_rev_n    dee_unicode_readutf32_swap_rev_n
 #endif /* !CONFIG_HAVE_UNICODE_H */
 
 #undef __libc_hex2int

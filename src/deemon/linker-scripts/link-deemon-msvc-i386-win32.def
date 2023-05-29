@@ -1044,10 +1044,10 @@ EXPORTS
 	Dee_unicode_printer_tryresize_utf16@12=_Dee_unicode_printer_tryresize_utf16@12
 	Dee_unicode_printer_tryresize_utf32@12=_Dee_unicode_printer_tryresize_utf32@12
 	Dee_unicode_printer_tryresize_utf8@12=_Dee_unicode_printer_tryresize_utf8@12
-	Dee_utf8_readchar@8=_Dee_utf8_readchar@8
-	Dee_utf8_readchar_rev@8=_Dee_utf8_readchar_rev@8
-	Dee_utf8_readchar_u@4=_Dee_utf8_readchar_u@4
-	Dee_utf8_writechar@8=_Dee_utf8_writechar@8
+	Dee_unicode_readutf8@4=_Dee_unicode_readutf8@4
+	Dee_unicode_readutf8_n@8=_Dee_unicode_readutf8_n@8
+	Dee_unicode_readutf8_rev_n@8=_Dee_unicode_readutf8_rev_n@8
+	Dee_unicode_writeutf8@8=_Dee_unicode_writeutf8@8
 	Dee_vsnprintf@16=_Dee_vsnprintf@16
 	Dee_vsprintf@12=_Dee_vsprintf@12
 	Dee_weakref_bound@4=_Dee_weakref_bound@4

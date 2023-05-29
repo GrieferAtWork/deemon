@@ -352,7 +352,7 @@ parse_hex_integer:
 					uint8_t val;
 					char *old_iter;
 					old_iter = text_iter;
-					ch32     = utf8_readchar((char const **)&text_iter, text_end);
+					ch32     = unicode_readutf8_n(&text_iter, text_end);
 					if (!DeeUni_AsDigit(ch32, 16, &val)) {
 						text_iter = old_iter;
 						break;
@@ -386,7 +386,7 @@ parse_oct_integer:
 						uint8_t digit;
 						char *old_iter;
 						old_iter = text_iter;
-						ch32     = utf8_readchar((char const **)&text_iter, text_end);
+						ch32     = unicode_readutf8_n(&text_iter, text_end);
 						if (!DeeUni_AsDigit(ch32, 8, &digit)) {
 							text_iter = old_iter;
 							break;
@@ -404,7 +404,7 @@ parse_oct_integer:
 					struct unitraits const *desc;
 					uint8_t digit;
 					--text_iter;
-					ch32 = utf8_readchar((char const **)&text_iter, text_end);
+					ch32 = unicode_readutf8_n(&text_iter, text_end);
 					desc = DeeUni_Descriptor(ch32);
 					if (desc->ut_flags & UNICODE_ISLF)
 						goto after_escaped_putc; /* Escaped line-feed */

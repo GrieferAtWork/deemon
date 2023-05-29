@@ -66,8 +66,7 @@ raw_again:
 				/* UTF-8 sequence. */
 				--iter;
 				start = iter;
-				ch32 = utf8_readchar((char const **)&iter,
-				                     (char const *)self->jl_end);
+				ch32 = unicode_readutf8_n(&iter, self->jl_end);
 				if (!(DeeUni_Flags(ch32) & (UNICODE_ISSYMCONT | UNICODE_ISDIGIT))) {
 					if (ch32 == '.' && self->jl_tok == TOK_INT) {
 						self->jl_tok = TOK_FLOAT;
@@ -216,8 +215,7 @@ raw_again:
 					}
 					if (ch > 0x7f) {
 						--iter;
-						ch32 = utf8_readchar((char const **)&iter,
-						                     (char const *)self->jl_end);
+						ch32 = unicode_readutf8_n(&iter, self->jl_end);
 						if (DeeUni_IsLF(ch32))
 							break;
 					}
@@ -390,8 +388,7 @@ raw_again:
 		if unlikely(ch > 0x7f) {
 			/* UTF-8 sequence. */
 			--iter;
-			ch32 = utf8_readchar((char const **)&iter,
-			                     (char const *)self->jl_end);
+			ch32 = unicode_readutf8_n(&iter, self->jl_end);
 			flags = DeeUni_Flags(ch32);
 			if (flags & UNICODE_ISSPACE)
 				goto again;
@@ -470,8 +467,7 @@ scan_keyword:
 					unsigned char *start;
 					--iter;
 					start = iter;
-					ch32 = utf8_readchar((char const **)&iter,
-					                     (char const *)self->jl_end);
+					ch32 = unicode_readutf8_n(&iter, self->jl_end);
 					if (!(DeeUni_Flags(ch32) & UNICODE_ISSYMCONT)) {
 						iter = start;
 						break;

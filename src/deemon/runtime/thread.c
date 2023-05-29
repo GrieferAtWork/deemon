@@ -316,7 +316,7 @@ try_utf8_to_wide(char const *__restrict name) {
 	if unlikely(!result)
 		return NULL;
 	dst = result;
-	while ((ch = Dee_utf8_readchar_u((char const **)&name)) != 0) {
+	while ((ch = unicode_readutf8(&name)) != 0) {
 		if likely(ch <= 0xffff && (ch < 0xd800 || ch > 0xdfff)) {
 			*dst++ = (uint16_t)ch;
 		} else {

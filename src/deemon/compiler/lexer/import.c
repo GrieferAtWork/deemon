@@ -326,7 +326,7 @@ get_module_symbol_name(DeeStringObject *__restrict module_name, bool is_module) 
 			goto bad_symbol_name;
 		for (; iter < end; ++iter) {
 			uniflag_t flags;
-			ch    = utf8_readchar((char const **)&iter, end);
+			ch    = unicode_readutf8_n(&iter, end);
 			flags = DeeUni_Flags(ch);
 			if (iter == symbol_start ? !(flags & UNICODE_ISSYMSTRT)
 			                         : !(flags & UNICODE_ISSYMCONT)) {

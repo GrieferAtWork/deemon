@@ -498,7 +498,7 @@ DeeString_DecodeLFEscaped(struct unicode_printer *__restrict printer,
 		start = (char *)candidate;
 		ASSERT(start <= end);
 		if (start < end) {
-			ch = utf8_readchar((char const **)&candidate, end);
+			ch = unicode_readutf8_n(&candidate, end);
 			if (DeeUni_IsLF(ch)) {
 				if (ch == '\r' && candidate < end && *candidate == '\n')
 					++candidate; /* CRLF */
@@ -595,11 +595,11 @@ count_chars_without_escaped_linefeeds(char const *start,
 	size_t result = 0;
 	while (start < end) {
 		uint32_t ch;
-		ch = utf8_readchar(&start, end);
+		ch = unicode_readutf8_n(&start, end);
 		if (ch == '\\') {
-			ch = utf8_readchar(&start, end);
+			ch = unicode_readutf8_n(&start, end);
 			if (ch == '\r')
-				utf8_readchar(&start, end);
+				unicode_readutf8_n(&start, end);
 			continue;
 		}
 		++result;

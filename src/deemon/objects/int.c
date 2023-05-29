@@ -1569,7 +1569,7 @@ parse_ch:
 				/* Unicode character? */
 				uint32_t uni;
 				struct unitraits *traits;
-				uni    = utf8_readchar((char const **)&begin, end);
+				uni    = unicode_readutf8_n(&begin, end);
 				traits = DeeUni_Descriptor(uni);
 				if (traits->ut_flags & (UNICODE_ISNUMERIC | UNICODE_ISHEX)) {
 					dig = traits->ut_digit_idx;
@@ -1687,7 +1687,7 @@ DeeInt_FromString(/*utf-8*/ char const *__restrict str,
 		if (*begin == '\\' && (radix_and_flags & DEEINT_STRING_FESCAPED)) {
 			uint32_t begin_plus_one;
 			char const *new_begin = begin + 1;
-			begin_plus_one = utf8_readchar((char const **)&new_begin, end);
+			begin_plus_one = unicode_readutf8_n(&new_begin, end);
 			if (DeeUni_IsLF(begin_plus_one)) {
 				begin = new_begin;
 				if (begin_plus_one == '\r' &&
@@ -1702,14 +1702,14 @@ DeeInt_FromString(/*utf-8*/ char const *__restrict str,
 		/* Automatically determine the radix. */
 		char const *old_begin = begin;
 		uint32_t leading_zero;
-		leading_zero = utf8_readchar((char const **)&begin, end);
+		leading_zero = unicode_readutf8_n(&begin, end);
 		if (DeeUni_AsDigitVal(leading_zero) == 0) {
 			if (begin == end) /* Special case: int(0) */
 				return_reference_(DeeInt_Zero);
 			while (*begin == '\\' && (radix_and_flags & DEEINT_STRING_FESCAPED)) {
 				uint32_t begin_plus_one;
 				char const *new_begin = begin + 1;
-				begin_plus_one = utf8_readchar((char const **)&new_begin, end);
+				begin_plus_one = unicode_readutf8_n(&new_begin, end);
 				if (DeeUni_IsLF(begin_plus_one)) {
 					begin = new_begin;
 					if (begin_plus_one == '\r' &&
@@ -1765,7 +1765,7 @@ DeeInt_FromString(/*utf-8*/ char const *__restrict str,
 			uint32_t ch;
 			digit dig;
 			struct unitraits *traits;
-			ch     = utf8_readchar_rev((char const **)&iter, begin);
+			ch     = unicode_readutf8_rev_n(&iter, begin);
 			traits = DeeUni_Descriptor(ch);
 			if (traits->ut_flags & (UNICODE_ISNUMERIC | Dee_UNICODE_ISHEX)) {
 				dig = traits->ut_digit_idx;
@@ -1933,7 +1933,7 @@ DeeInt_FromAscii(/*ascii*/ char const *__restrict str,
 				uint32_t uni;
 				struct unitraits *traits;
 				++iter;
-				uni    = utf8_readchar_rev((char const **)&iter, end);
+				uni    = unicode_readutf8_rev_n(&iter, end);
 				traits = DeeUni_Descriptor(uni);
 				/* All any kind of digit/decimal character. - If the caller doesn't
 				 * want to support any kind of digit, have `int("²")' evaluate to 2,
@@ -2029,7 +2029,7 @@ PUBLIC WUNUSED NONNULL((1, 4)) int
 		if (*begin == '\\' && (radix_and_flags & DEEINT_STRING_FESCAPED)) {
 			uint32_t begin_plus_one;
 			char const *new_begin = begin + 1;
-			begin_plus_one = utf8_readchar((char const **)&new_begin, end);
+			begin_plus_one = unicode_readutf8_n(&new_begin, end);
 			if (DeeUni_IsLF(begin_plus_one)) {
 				begin = new_begin;
 				if (begin_plus_one == '\r' &&
@@ -2050,7 +2050,7 @@ PUBLIC WUNUSED NONNULL((1, 4)) int
 		/* Automatically determine the radix. */
 		uint32_t leading_zero;
 		char const *old_begin = begin;
-		leading_zero = utf8_readchar((char const **)&begin, end);
+		leading_zero = unicode_readutf8_n(&begin, end);
 		if (DeeUni_AsDigitVal(leading_zero) == 0) {
 			if (begin == end) {
 				/* Special case: int(0) */
@@ -2060,7 +2060,7 @@ PUBLIC WUNUSED NONNULL((1, 4)) int
 			while (*begin == '\\' && (radix_and_flags & DEEINT_STRING_FESCAPED)) {
 				uint32_t begin_plus_one;
 				char const *new_begin = begin + 1;
-				begin_plus_one = utf8_readchar((char const **)&new_begin, end);
+				begin_plus_one = unicode_readutf8_n(&new_begin, end);
 				if (DeeUni_IsLF(begin_plus_one)) {
 					begin = new_begin;
 					if (begin_plus_one == '\r' &&
@@ -2095,7 +2095,7 @@ PUBLIC WUNUSED NONNULL((1, 4)) int
 		uint32_t ch;
 		uint8_t dig;
 		struct unitraits *traits;
-		ch  = utf8_readchar_rev((char const **)&iter, begin);
+		ch  = unicode_readutf8_rev_n(&iter, begin);
 		traits = DeeUni_Descriptor(ch);
 		if (traits->ut_flags & (UNICODE_ISNUMERIC | UNICODE_ISHEX)) {
 			dig = traits->ut_digit_idx;

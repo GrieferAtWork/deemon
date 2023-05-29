@@ -81,17 +81,17 @@ match_contains(char *__restrict sel_start,
                char *__restrict sel_end,
                uint32_t ch) {
 	while (sel_start < sel_end) {
-		uint32_t sel_ch = utf8_readchar((char const **)&sel_start, sel_end);
+		uint32_t sel_ch = unicode_readutf8_n(&sel_start, sel_end);
 		/* Deal with character escaping. */
 		if (sel_ch == '\\')
-			sel_ch = utf8_readchar((char const **)&sel_start, sel_end);
+			sel_ch = unicode_readutf8_n(&sel_start, sel_end);
 		if (sel_start < sel_end && *sel_start == '-') {
 			/* Selection range. */
 			uint32_t sel_max;
 			++sel_start;
-			sel_max = utf8_readchar((char const **)&sel_start, sel_end);
+			sel_max = unicode_readutf8_n(&sel_start, sel_end);
 			if (sel_max == '\\')
-				sel_max = utf8_readchar((char const **)&sel_start, sel_end);
+				sel_max = unicode_readutf8_n(&sel_start, sel_end);
 			/* Check if part of this range. */
 			if (ch >= sel_ch && ch <= sel_max)
 				return true;
@@ -140,10 +140,10 @@ next_format:
 		/* Check: Ignored field. */
 		if (format >= format_end)
 			goto out_formatend;
-		ch32 = utf8_readchar_u((char const **)&format);
+		ch32 = unicode_readutf8(&format);
 		if (ch32 == '*') {
 			ignore_data = true;
-			ch32        = utf8_readchar_u((char const **)&format);
+			ch32        = unicode_readutf8(&format);
 		}
 		/* Check: is the max field width given. */
 		{
@@ -153,7 +153,7 @@ next_format:
 				for (;;) {
 					if (format >= format_end)
 						goto out_formatend;
-					ch32 = utf8_readchar_u((char const **)&format);
+					ch32 = unicode_readutf8(&format);
 					if (!DeeUni_AsDigit(ch32, 10, &digit))
 						break;
 					width *= 10;
@@ -190,7 +190,7 @@ do_integer_scan:
 				char *prev_data;
 				prev_data  = data;
 				radix_ch32 = is_bytes ? (uint32_t)(uint8_t)*data++
-				                      : utf8_readchar((char const **)&data, data_end);
+				                      : unicode_readutf8_n(&data, data_end);
 				if (DeeUni_AsDigitVal(radix_ch32) == 0) {
 					--width;
 					if (width && (*data == 'x' || *data == 'X')) {
@@ -224,7 +224,7 @@ do_integer_scan:
 				}
 				prev_data = data;
 				data_ch32 = is_bytes ? (uint32_t)(uint8_t)*data++
-				                     : utf8_readchar((char const **)&data, data_end);
+				                     : unicode_readutf8_n(&data, data_end);
 				if (!DeeUni_AsDigit(data_ch32, scan_radix, &digit)) {
 					data = prev_data;
 					break;
@@ -267,7 +267,7 @@ do_integer_scan:
 				while (data < data_end && width) {
 					uint32_t data_ch;
 					char *prev_data = data;
-					data_ch         = utf8_readchar((char const **)&data, data_end);
+					data_ch         = unicode_readutf8_n(&data, data_end);
 					if (!DeeUni_IsSpace(data_ch)) {
 						data = prev_data;
 						break;
@@ -302,7 +302,7 @@ do_integer_scan:
 		case 'L':
 			if (format >= format_end)
 				goto out_formatend;
-			ch32 = utf8_readchar_u((char const **)&format);
+			ch32 = unicode_readutf8(&format);
 			goto next_spec;
 
 		case '[': {
@@ -343,7 +343,7 @@ do_integer_scan:
 			} else {
 				while (data < data_end && width) {
 					char *prev_data  = data;
-					uint32_t data_ch = utf8_readchar((char const **)&data, data_end);
+					uint32_t data_ch = unicode_readutf8_n(&data, data_end);
 					if (!(match_contains(sel_begin, format, data_ch) ^ inverse_selection)) {
 						data = prev_data;
 						break;
@@ -385,7 +385,7 @@ yield_string_from_spec_data_start_until_data:
 				total_consumption = 0;
 				while (iter < data) {
 					++total_consumption;
-					utf8_readchar((char const **)&iter, data);
+					unicode_readutf8_n(&iter, data);
 				}
 				result = DeeInt_NewSize(total_consumption);
 			}
@@ -417,7 +417,7 @@ yield_string_from_spec_data_start_until_data:
 		} else {
 			while (data < data_end) {
 				char *prev_data  = data;
-				uint32_t data_ch = utf8_readchar((char const **)&data, data_end);
+				uint32_t data_ch = unicode_readutf8_n(&data, data_end);
 				if (!DeeUni_IsSpace(data_ch)) {
 					data = prev_data;
 					break;
@@ -455,7 +455,7 @@ yield_string_from_spec_data_start_until_data:
 			if (is_bytes)
 				goto out_missmatch;
 			/*prev_data = data;*/
-			data_ch = utf8_readchar((char const **)&data, data_end);
+			data_ch = unicode_readutf8_n(&data, data_end);
 			if (!DeeUni_IsLF(data_ch)) { /*data = prev_data;*/
 				goto out_missmatch;
 			}

@@ -1104,7 +1104,7 @@ DeeFormat_Quote(dformatprinter printer, void *arg,
 		}
 		if (flush_start < text)
 			DO((*printer)(arg, flush_start, (size_t)(text - flush_start)));
-		ch = utf8_readchar((char const **)&text, end);
+		ch = unicode_readutf8_n(&text, end);
 		esc = escapeseq;
 		*esc++ = '\\';
 		switch (ch) {
@@ -1500,7 +1500,7 @@ DeeFormat_RepeatUtf8(dformatprinter printer, void *arg,
 		uint8_t ch = (uint8_t)str[i];
 		if (ch < 0xc0)
 			continue;
-		ch = utf8_sequence_len[ch];
+		ch = unicode_utf8seqlen[ch];
 		ASSERT(ch != 0);
 		utf8_length -= ch - 1;
 		i += ch - 1;
@@ -1518,7 +1518,7 @@ DeeFormat_RepeatUtf8(dformatprinter printer, void *arg,
 		i = 0;
 		while (i < length && total_characters--) {
 			uint8_t len;
-			len = utf8_sequence_len[(uint8_t)str[i]];
+			len = unicode_utf8seqlen[(uint8_t)str[i]];
 			if unlikely(!len)
 				len = 1;
 			i += len;

@@ -1072,8 +1072,9 @@ done_y1:
 				/* Trim trailing whitespace. */
 				while (source_end > source_start) {
 					uint32_t ch;
-					char const *next = (char const *)source_end;
-					ch               = utf8_readchar_rev(&next, (char const *)source_start);
+					char const *next;
+					next = (char const *)source_end;
+					ch   = unicode_readutf8_rev_n(&next, source_start);
 					if (!DeeUni_IsSpace(ch))
 						break;
 					source_end = (unsigned char *)next;
@@ -1189,8 +1190,9 @@ not_a_java_lambda:
 					/* Trim trailing whitespace. */
 					while (source_end > source_start) {
 						uint32_t ch;
-						char const *next = (char const *)source_end;
-						ch               = utf8_readchar_rev(&next, (char const *)source_start);
+						char const *next;
+						next = (char const *)source_end;
+						ch   = unicode_readutf8_rev_n(&next, source_start);
 						if (!DeeUni_IsSpace(ch))
 							break;
 						source_end = (unsigned char *)next;
@@ -1291,8 +1293,9 @@ not_a_java_lambda:
 				/* Trim trailing whitespace. */
 				while (source_end > source_start) {
 					uint32_t ch;
-					char const *next = (char const *)source_end;
-					ch               = utf8_readchar_rev(&next, (char const *)source_start);
+					char const *next;
+					next = (char const *)source_end;
+					ch   = unicode_readutf8_rev_n(&next, source_start);
 					if (!DeeUni_IsSpace(ch))
 						break;
 					source_end = (unsigned char *)next;
@@ -1964,8 +1967,9 @@ err_oo_class_reinit_lvalue:
 				/* Trim trailing whitespace. */
 				while (source_end > source_start) {
 					uint32_t ch;
-					char const *next = (char const *)source_end;
-					ch               = utf8_readchar_rev(&next, (char const *)source_start);
+					char const *next;
+					next = (char const *)source_end;
+					ch   = unicode_readutf8_rev_n(&next, source_start);
 					if (!DeeUni_IsSpace(ch))
 						break;
 					source_end = (unsigned char *)next;

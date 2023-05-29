@@ -183,7 +183,7 @@ err_var_symbol:
 				uint32_t ch;
 				char const *next;
 				next = (char const *)source_end;
-				ch   = utf8_readchar_rev(&next, (char const *)source_start);
+				ch   = unicode_readutf8_rev_n(&next, source_start);
 				if (!DeeUni_IsSpace(ch))
 					break;
 				source_end = (unsigned char *)next;

@@ -9315,7 +9315,7 @@ string_charcnt2bytecnt(String const *self, size_t charpos, char const *utf8) {
 	iter     = utf8;
 	num_bytes = WSTR_LENGTH(utf8);
 	for (; charpos; --charpos) {
-		uint8_t charlen = utf8_sequence_len[(unsigned char)*iter];
+		uint8_t charlen = unicode_utf8seqlen[(unsigned char)*iter];
 		if unlikely(charlen > num_bytes) {
 			iter += num_bytes;
 			break;
@@ -9335,7 +9335,7 @@ string_bytecnt2charcnt(String const *self, size_t bytepos, char const *utf8) {
 	ASSERT(bytepos <= WSTR_LENGTH(utf8));
 	charpos = 0;
 	while (bytepos) {
-		uint8_t charlen = utf8_sequence_len[(unsigned char)*utf8];
+		uint8_t charlen = unicode_utf8seqlen[(unsigned char)*utf8];
 		if unlikely(charlen > bytepos)
 			break;
 		utf8 += charlen;

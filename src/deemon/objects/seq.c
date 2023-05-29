@@ -2584,7 +2584,7 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 	            "}"),
 	TYPE_METHOD("any", &seq_any,
 	            "->?Dbool\n"
-	            "Returns ?t if any element of @this Sequence evaluates to :{true}\n"
+	            "Returns ?t if any element of @this Sequence evaluates to ?t\n"
 	            "If @this Sequence is empty, ?f is returned\n"
 	            "This function has the same effect as ${this || ...}\n"
 	            "${"

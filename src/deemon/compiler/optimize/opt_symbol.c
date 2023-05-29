@@ -116,7 +116,7 @@ set_constant_expression:
 				goto did_optimize;
 			}
 done_set_constexpr:
-			Dee_Decref(symval);
+			Dee_XDecref(symval);
 		}
 	} else if (sym->s_type == SYMBOL_TYPE_CONST) {
 		/* Check for symbols that are actually constant expression. */

@@ -76,7 +76,7 @@
  *   >>     public member inner: Inner;
  *   >>     public member z: string;
  *   >> }
- *   >> local x = json.parse('{"inner":{x:10,y:20},z:"Foo"}', Outer);
+ *   >> local x = json.parse('{"inner":{"x":10,"y":20},"z":"Foo"}', Outer);
  *   >> print repr x; // Outer(inner: Inner(x: 10, y: 20), z: "Foo")
  *   >> json.parse('{z:42}', Outer); // Throws a TypeError
  *   - Note that for this purpose, Tuple type descriptions expected JSON input

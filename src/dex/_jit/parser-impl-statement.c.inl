@@ -585,7 +585,7 @@ again_eval_asm_rawstring:
 					/* Make sure that the string only contains space characters! */
 					while (str_start < str_end) {
 						uint32_t ch;
-						ch = utf8_readchar((char const **)&str_start, (char const *)str_end);
+						ch = unicode_readutf8_n(&str_start, str_end);
 						if unlikely(!DeeUni_IsSpace(ch))
 							goto err_unsupported_assembly;
 					}
