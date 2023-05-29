@@ -1256,7 +1256,7 @@ PRIVATE struct type_method tpconst appexit_class_methods[] = {
 	TYPE_METHOD("exit", &appexit_class_exit,
 	            "()\n"
 	            "(exitcode:?Dint,run_atexit=!t)\n"
-	            "Terminate execution of deemon after invoking ?#atexit callbacks when @run_atexit is !t\n"
+	            "Terminate execution of deemon after invoking ?#atexit callbacks when @run_atexit is ?t\n"
 	            "Termination is done using the C #Cexit or #C_exit functions, if available. However if these "
 	            /**/ "functions are not provided by the host, an :AppExit error is thrown instead\n"
 	            "When no @exitcode is given, the host's default default value of #CEXIT_SUCCESS, or $1 is used\n"

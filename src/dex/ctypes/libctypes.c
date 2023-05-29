@@ -1275,7 +1275,7 @@ PRIVATE struct dex_symbol symbols[] = {
 	      /**/ "depending on the typing of @ptr. Supported widths are $1, $2, $4 and $8 bytes") },
 	{ "atomic_cmpxch_val", (DeeObject *)&ctypes_atomic_cmpxch_val, MODSYM_FNORMAL,
 	  DOC("(ptr:?Aptr?GStructured,oldval:?Q!A!Aptr!Pind],newval:?Q!A!Aptr!Pind])->?Q!A!Aptr!Pind]\n"
-	      "Same as ?Gatomic_cmpxch, except that rather than returning !t or !f indicative of "
+	      "Same as ?Gatomic_cmpxch, except that rather than returning ?t or ?f indicative of "
 	      /**/ "the success of the exchange, the #Ireal old value read from @ptr is returned. If "
 	      /**/ "this is equal to @oldval, the operation was successful. If not, memory pointed-to "
 	      /**/ "by @ptr remains unchanged") },
@@ -1377,7 +1377,7 @@ PRIVATE struct dex_symbol symbols[] = {
 	      "@return true You were woken up, either sporadically, because the value of ${ptr.ind} differs "
 	      /*        */ "from @expected, or because another thread called ?Gfutex_wakeone or ?Gfutex_wakeall\n"
 	      "@return false The given @timeout_nanoseconds has expired\n"
-	      "Atomically check if ${ptr.ind == expected}. If this is isn't the case, immediately return !t. "
+	      "Atomically check if ${ptr.ind == expected}. If this is isn't the case, immediately return ?t. "
 	      /**/ "Otherwise, wait until either @timeout_nanoseconds have elapsed, or another thread "
 	      /**/ "makes a call to ?Gfutex_wakeone or ?Gfutex_wakeall, or until the #I{stars align} "
 	      /**/ "(by which I mean that this function might also return sporadically)\n"

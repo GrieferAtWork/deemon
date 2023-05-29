@@ -1900,7 +1900,7 @@ PRIVATE struct dex_symbol symbols[] = {
 	{ "makeclass", (DeeObject *)&librt_makeclass, MODSYM_FREADONLY,
 	  DOC("(base:?X2?DType?N,descriptor:?GClassDescriptor,module:?X2?DModule?N=!N)->?DType\n"
 	      "@param module The module that is declaring the class (and returned by ${return.__module__}). "
-	      /*         */ "When not given (or given as !N), the type is not linked to a module.\n"
+	      /*         */ "When not given (or given as ?N), the type is not linked to a module.\n"
 	      "Construct a new class from a given @base type, as well as class @descriptor") },
 
 	/* Access of the arguments passed to the __MAIN__ module. */
@@ -1910,7 +1910,7 @@ PRIVATE struct dex_symbol symbols[] = {
 	      /**/ "module, where they are available as ${[...]}.\n"
 	      "Since because of this these arguments aren't accessible from any other "
 	      /**/ "module if not explicitly passed by the $__MAIN__ module itself (similar "
-	      /**/ "to how you'd have to forward `argc' + `argv' in C), this rt-specific "
+	      /**/ "to how you'd have to forward #Cargc + #Cargv in C), this rt-specific "
 	      /**/ "extension property allows you to get and set that tuple of arguments.\n"
 	      "Note however that setting a new argument tuple will not change the tuple "
 	      /**/ "which the $__MAIN__ module has access to.") },

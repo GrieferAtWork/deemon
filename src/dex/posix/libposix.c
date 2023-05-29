@@ -1877,11 +1877,11 @@ PRIVATE struct dex_symbol symbols[] = {
 	    DOC("(path:?X3?Dstring?DFile?Dint,skipdots=!t,inheritfd=!f)->?GDIR\n"
 	        "Read the contents of a given directory. The returned "
 	        /**/ "object may be iterated to yield ?Gdirent objects.\n"
-	        "Additionally, you may specify @skipdots as !f if you "
+	        "Additionally, you may specify @skipdots as ?f if you "
 	        /**/ "wish to include the special $'.' and $'..' entries.") },)
 	D({ "fdopendir", (DeeObject *)&posix_fdopendir, MODSYM_FNORMAL,
 	    DOC("(path:?X3?Dstring?DFile?Dint,skipdots=!t,inheritfd=!t)->?GDIR\n"
-	        "Same as ?Gopendir, but the default value of @inheritfd is !t, "
+	        "Same as ?Gopendir, but the default value of @inheritfd is ?t, "
 	        /**/ "mimicking the behavior of the native $fdopendir function") },)
 
 	/* File type constants. */
@@ -1904,11 +1904,11 @@ PRIVATE struct dex_symbol symbols[] = {
 	/* Environ control */
 	D(POSIX_GETENV_DEF_DOC("@throws KeyError The given @varname wasn't found, and @defl wasn't given\n"
 	                       "Same as ${environ[varname]}\n"))
-	D(POSIX_SETENV_DEF_DOC("Same as ${environ[varname] = value}. When @replace is !f, only "
+	D(POSIX_SETENV_DEF_DOC("Same as ${environ[varname] = value}. When @replace is ?f, only "
 	                       "add new variables, but don't override one that was already set\n"))
 	D(POSIX_PUTENV_DEF_DOC("If @envline constains $'=', same as ${local name, none, value = envline.partition(\"=\")...; setenv(name, value);}\n"
 	                       "Otherwise, same as ?#unsetenv"))
-	D(POSIX_UNSETENV_DEF_DOC("Returns !t if @varname was deleted, and !f if @varname didn't exist in ?Genviron"))
+	D(POSIX_UNSETENV_DEF_DOC("Returns ?t if @varname was deleted, and ?f if @varname didn't exist in ?Genviron"))
 	D(POSIX_CLEARENV_DEF_DOC("Clear ?Genviron"))
 	D({ "environ", &DeeEnviron_Singleton, MODSYM_FREADONLY,
 	    DOC("->?M?Dstring?Dstring\n"
@@ -2401,8 +2401,8 @@ PRIVATE struct dex_symbol symbols[] = {
 	                      /*               */ "file's ownership from being changed\n"
 	                      "@throw ValueError The given @user or @group could not be found\n"
 	                      "@throw SystemError Failed to change ownership for some reason\n"
-	                      "@param uid The new user-id for the file, or !N to leave unchanged\n"
-	                      "@param gid The new group-id for the file, or !N to leave unchanged\n"
+	                      "@param uid The new user-id for the file, or ?N to leave unchanged\n"
+	                      "@param gid The new group-id for the file, or ?N to leave unchanged\n"
 	                      "Change the ownership of a given @path"))
 	D(POSIX_LCHOWN_DEF_DOC("@interrupt\n"
 	                       "@throw FileNotFound The given @path could not be found\n"
@@ -2414,8 +2414,8 @@ PRIVATE struct dex_symbol symbols[] = {
 	                       /*               */ "file's ownership from being changed\n"
 	                       "@throw ValueError The given @user or @group could not be found\n"
 	                       "@throw SystemError Failed to change ownership for some reason\n"
-	                       "@param uid The new user-id for the file, or !N to leave unchanged\n"
-	                       "@param gid The new group-id for the file, or !N to leave unchanged\n"
+	                       "@param uid The new user-id for the file, or ?N to leave unchanged\n"
+	                       "@param gid The new group-id for the file, or ?N to leave unchanged\n"
 	                       "Change the ownership of a given @path\n"
 	                       "If @path refers to a symbolic link, change the ownership "
 	                       /**/ "of that link, rather than those of the pointed-to file"))
@@ -2435,10 +2435,10 @@ PRIVATE struct dex_symbol symbols[] = {
 	                      /*               */ "file's mode from being changed\n"
 	                      "@throw SystemError Failed to change timestamps for some reason\n"
 	                      "@throw ValueError The given @mode is malformed or not recognized\n"
-	                      "@param atime The new last-accessed timestamp to set, or !N to leave unchanged (s.a. ?Ast_atime?Gstat)\n"
-	                      "@param mtime The new last-modified timestamp to set, or !N to leave unchanged (s.a. ?Ast_mtime?Gstat)\n"
-	                      "@param ctime The new last-attribute-changed timestamp to set, or !N to leave unchanged (s.a. ?Ast_ctime?Gstat)\n"
-	                      "@param birthtime The new birth timestamp to set, or !N to leave unchanged (s.a. ?Ast_btime?Gstat)\n"
+	                      "@param atime The new last-accessed timestamp to set, or ?N to leave unchanged (s.a. ?Ast_atime?Gstat)\n"
+	                      "@param mtime The new last-modified timestamp to set, or ?N to leave unchanged (s.a. ?Ast_mtime?Gstat)\n"
+	                      "@param ctime The new last-attribute-changed timestamp to set, or ?N to leave unchanged (s.a. ?Ast_ctime?Gstat)\n"
+	                      "@param birthtime The new birth timestamp to set, or ?N to leave unchanged (s.a. ?Ast_btime?Gstat)\n"
 	                      "Change the timestamps associated with a given @path"))
 	D(POSIX_LUTIME_DEF_DOC("@interrupt\n"
 	                       "@throw FileNotFound The given @path could not be found\n"
@@ -2450,10 +2450,10 @@ PRIVATE struct dex_symbol symbols[] = {
 	                       /*               */ "file's mode from being changed\n"
 	                       "@throw SystemError Failed to change timestamps for some reason\n"
 	                       "@throw ValueError The given @mode is malformed or not recognized\n"
-	                       "@param atime The new last-accessed timestamp to set, or !N to leave unchanged (s.a. ?Ast_atime?Gstat)\n"
-	                       "@param mtime The new last-modified timestamp to set, or !N to leave unchanged (s.a. ?Ast_mtime?Gstat)\n"
-	                       "@param ctime The new last-attribute-changed timestamp to set, or !N to leave unchanged (s.a. ?Ast_ctime?Gstat)\n"
-	                       "@param birthtime The new birth timestamp to set, or !N to leave unchanged (s.a. ?Ast_btime?Gstat)\n"
+	                       "@param atime The new last-accessed timestamp to set, or ?N to leave unchanged (s.a. ?Ast_atime?Gstat)\n"
+	                       "@param mtime The new last-modified timestamp to set, or ?N to leave unchanged (s.a. ?Ast_mtime?Gstat)\n"
+	                       "@param ctime The new last-attribute-changed timestamp to set, or ?N to leave unchanged (s.a. ?Ast_ctime?Gstat)\n"
+	                       "@param birthtime The new birth timestamp to set, or ?N to leave unchanged (s.a. ?Ast_btime?Gstat)\n"
 	                       "Change the timestamps associated with a given @path\n"
 	                       "If @path refers to a symbolic link, change the timestamps "
 	                       /**/ "of that link, rather than those of the pointed-to file"))

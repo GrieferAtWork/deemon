@@ -4732,7 +4732,7 @@ PRIVATE struct type_getset tpconst thread_getsets[] = {
 	TYPE_GETTER("isstarting", &thread_isstarting,
 	            "->?Dbool\n"
 	            "Returns ?t if @this thread is currently being started, or ?#hasstarted\n"
-	            "This is similar to ?#hasstarted, but becomes !t a little bit earlier"),
+	            "This is similar to ?#hasstarted, but becomes ?t a little bit earlier"),
 #endif /* !DeeThread_USE_SINGLE_THREADED */
 	TYPE_GETTER("hascrashed", &thread_hascrashed,
 	            "->?Dbool\n"
@@ -4743,7 +4743,7 @@ PRIVATE struct type_getset tpconst thread_getsets[] = {
 	TYPE_GETTER("isterminating", &thread_isterminating,
 	            "->?Dbool\n"
 	            "Returns ?t if @this thread is currently being terminated, or ?#hasterminated\n"
-	            "This is similar to ?#hasterminated, but becomes !t a little bit earlier"),
+	            "This is similar to ?#hasterminated, but becomes ?t a little bit earlier"),
 #ifdef Dee_THREAD_STATE_HASOSCTX
 	TYPE_GETTER("wasdetached", &thread_wasdetached,
 	            "->?Dbool\n"
@@ -4772,7 +4772,7 @@ PRIVATE struct type_member tpconst thread_members[] = {
 	                      "Returns ?t if @this thread has been started"),
 	TYPE_MEMBER_CONST_DOC("isstarting", Dee_True,
 	                      "Returns ?t if @this thread is currently being started, or ?#hasstarted\n"
-	                      "This is similar to ?#hasstarted, but becomes !t a little bit earlier"),
+	                      "This is similar to ?#hasstarted, but becomes ?t a little bit earlier"),
 	TYPE_MEMBER_CONST_DOC("isrunning", Dee_True,
 	                      "Returns ?t if @this thread is current running (i.e. ?#hasstarted, but hasn't ?#hasterminated)"),
 	TYPE_MEMBER_CONST_DOC("hasterminated", Dee_False,

@@ -304,13 +304,13 @@ DOC_DEF(doc_lock_release,
         "Release a lock previously acquired by ?#acquire or some other means");
 DOC_DEF(doc_lock_tryacquire,
         "->?Dbool\n"
-        "Try to acquire @this lock, returning !t on success, and !f if doing so would block");
+        "Try to acquire @this lock, returning ?t on success, and ?f if doing so would block");
 DOC_DEF(doc_lock_timedacquire,
         "(timeout_nanoseconds:?Dint)->?Dbool\n"
         "@interrupt\n"
-        "Same as ?#acquire, returning !t on success, but block for at "
+        "Same as ?#acquire, returning ?t on success, but block for at "
         /**/ "most @timeout_nanoseconds. Once that amount of time has elapsed, "
-        /**/ "stop trying to acquire the lock and fail by returning !f instead.");
+        /**/ "stop trying to acquire the lock and fail by returning ?f instead.");
 DOC_DEF(doc_lock_waitfor,
         "()\n"
         "@interrupt\n"
@@ -320,10 +320,10 @@ DOC_DEF(doc_lock_waitfor,
 DOC_DEF(doc_lock_timedwaitfor,
         "(timeout_nanoseconds:?Dint)->?Dbool\n"
         "@interrupt\n"
-        "Same as ?#waitfor, returning !t on success, but block for at "
+        "Same as ?#waitfor, returning ?t on success, but block for at "
         /**/ "most @timeout_nanoseconds. Once that amount of time has elapsed, "
         /**/ "stop trying to wait for the lock to become available, and fail "
-        /**/ "by returning !f instead.");
+        /**/ "by returning ?f instead.");
 DOC_DEF(doc_lock_available,
         "->?Dbool\n"
         "Check if @this lock could currently be acquired without blocking\n"
@@ -350,9 +350,9 @@ DOC_DEF(doc_rwlock_read,
 DOC_DEF(doc_rwlock_timedread,
         "(timeout_nanoseconds:?Dint)->?Dbool\n"
         "@interrupt\n"
-        "Same as ?#read, returning !t on success, but block for at "
+        "Same as ?#read, returning ?t on success, but block for at "
         /**/ "most @timeout_nanoseconds. Once that amount of time has elapsed, "
-        /**/ "stop trying to acquire a shared (read) lock and fail by returning !f instead.\n"
+        /**/ "stop trying to acquire a shared (read) lock and fail by returning ?f instead.\n"
         "Same as ${this.readlock.timedacquire(timeout_nanoseconds)}");
 DOC_DEF(doc_rwlock_write,
         "()\n"
@@ -362,9 +362,9 @@ DOC_DEF(doc_rwlock_write,
 DOC_DEF(doc_rwlock_timedwrite,
         "(timeout_nanoseconds:?Dint)->?Dbool\n"
         "@interrupt\n"
-        "Same as ?#write, returning !t on success, but block for at "
+        "Same as ?#write, returning ?t on success, but block for at "
         /**/ "most @timeout_nanoseconds. Once that amount of time has elapsed, "
-        /**/ "stop trying to acquire an exclusive (write) lock and fail by returning !f instead.\n"
+        /**/ "stop trying to acquire an exclusive (write) lock and fail by returning ?f instead.\n"
         "Same as ${this.writelock.timedacquire(timeout_nanoseconds)}");
 DOC_DEF(doc_rwlock_waitread,
         "()\n"
@@ -376,10 +376,10 @@ DOC_DEF(doc_rwlock_waitread,
 DOC_DEF(doc_rwlock_timedwaitread,
         "(timeout_nanoseconds:?Dint)->?Dbool\n"
         "@interrupt\n"
-        "Same as ?#waitread, returning !t on success, but block for at "
+        "Same as ?#waitread, returning ?t on success, but block for at "
         /**/ "most @timeout_nanoseconds. Once that amount of time has elapsed, "
         /**/ "stop trying to wait for a shared (read) lock to become available, and "
-        /**/ "fail by returning !f instead.\n"
+        /**/ "fail by returning ?f instead.\n"
         "Same as ${this.readlock.timedwaitfor(timeout_nanoseconds)}");
 DOC_DEF(doc_rwlock_waitwrite,
         "()\n"
@@ -391,10 +391,10 @@ DOC_DEF(doc_rwlock_waitwrite,
 DOC_DEF(doc_rwlock_timedwaitwrite,
         "(timeout_nanoseconds:?Dint)->?Dbool\n"
         "@interrupt\n"
-        "Same as ?#waitwrite, returning !t on success, but block for at "
+        "Same as ?#waitwrite, returning ?t on success, but block for at "
         /**/ "most @timeout_nanoseconds. Once that amount of time has elapsed, "
         /**/ "stop trying to wait for an exclusive (write) lock to become available, and "
-        /**/ "fail by returning !f instead.\n"
+        /**/ "fail by returning ?f instead.\n"
         "Same as ${this.writelock.timedwaitfor(timeout_nanoseconds)}");
 DOC_DEF(doc_rwlock_endread,
         "()\n"
@@ -413,7 +413,7 @@ DOC_DEF(doc_rwlock_end,
 DOC_DEF(doc_rwlock_tryupgrade,
         "->?DBool\n"
         "Try to upgrade a shared (read) lock (s.a. ?#read) into an exclusive (write) lock (s.a. ?#write)\n"
-        "If the lock was upgraded, return !t. Otherwise, the shared (read) lock is kept, and !f is returned.");
+        "If the lock was upgraded, return ?t. Otherwise, the shared (read) lock is kept, and ?f is returned.");
 DOC_DEF(doc_rwlock_upgrade,
         "->?DBool\n"
         "@interrupt\n"
@@ -427,17 +427,17 @@ DOC_DEF(doc_rwlock_downgrade,
         "Downgrade an exclusive (write) lock into a shared (read) lock, but maintain some kind of lock at every point in time");
 DOC_DEF(doc_rwlock_reading,
         "->?Dbool\n"
-        "Returns !t if either a shared- (read) or an exclusive (write) lock is being held");
+        "Returns ?t if either a shared- (read) or an exclusive (write) lock is being held");
 DOC_DEF(doc_rwlock_writing,
         "->?Dbool\n"
-        "Returns !t if some thread is holding an exclusive (write) lock");
+        "Returns ?t if some thread is holding an exclusive (write) lock");
 DOC_DEF(doc_rwlock_canread,
         "->?Dbool\n"
-        "Returns !t so-long as no-one is holding an exclusive (write) lock (inverse of ?#writing)\n"
+        "Returns ?t so-long as no-one is holding an exclusive (write) lock (inverse of ?#writing)\n"
         "Same as ${this.timedwaitread(0)}");
 DOC_DEF(doc_rwlock_canwrite,
         "->?Dbool\n"
-        "Returns !t so-long as no shared- (read) and no exclusive (write) locks are being held (inverse of ?#reading)\n"
+        "Returns ?t so-long as no shared- (read) and no exclusive (write) locks are being held (inverse of ?#reading)\n"
         "Same as ${this.timedwaitwrite(0)}");
 DOC_DEF(doc_rwlock_readlock,
         "->?GRWLockReadLock\n"
@@ -2021,10 +2021,10 @@ PRIVATE struct type_method event_methods[] = {
 	            "Wait until the event becomes set"),
 	TYPE_METHOD(STR_timedwaitfor, &event_timedwaitfor,
 	            "(timeout_nanoseconds:?Dint)->?Dbool\n"
-	            "Same as ?#waitfor, returning !t on success, but block for at "
+	            "Same as ?#waitfor, returning ?t on success, but block for at "
 	            /**/ "most @timeout_nanoseconds. Once that amount of time has elapsed, "
 	            /**/ "stop trying to wait for the event to become set, and fail by "
-	            /**/ "returning !f instead."),
+	            /**/ "returning ?f instead."),
 	TYPE_METHOD("set", &event_set,
 	            "()\n"
 	            "Trigger the event as having taken place"),

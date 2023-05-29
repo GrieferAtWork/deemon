@@ -1252,7 +1252,7 @@ PRIVATE struct type_getset tpconst numeric_getsets[] = {
 	            "}"),
 	TYPE_GETTER(STR_isfloat, &numeric_get_isfloat,
 	            "->?Dbool\n"
-	            "Returns !t if @this number might have a decimal point. Implemented as:\n"
+	            "Returns ?t if @this number might have a decimal point. Implemented as:\n"
 	            "${"
 	            /**/ "property isfloat: bool {\n"
 	            /**/ "	get(): bool {\n"
@@ -1350,7 +1350,7 @@ PRIVATE struct type_getset tpconst numeric_getsets[] = {
 	            "}"),
 	TYPE_GETTER("isnan", &numeric_get_isnan,
 	            "->?Dbool\n"
-	            "Return !t if @this number is not-a-number. Implemented as:\n"
+	            "Return ?t if @this number is not-a-number. Implemented as:\n"
 	            "${"
 	            /**/ "property isnan: bool {\n"
 	            /**/ "	get(): bool {\n"
@@ -1363,7 +1363,7 @@ PRIVATE struct type_getset tpconst numeric_getsets[] = {
 	            "}"),
 	TYPE_GETTER("isinf", &numeric_get_isinf,
 	            "->?Dbool\n"
-	            "Return !t if @this number is infinite. Implemented as:\n"
+	            "Return ?t if @this number is infinite. Implemented as:\n"
 	            "${"
 	            /**/ "property isinf: bool {\n"
 	            /**/ "	get(): bool {\n"
@@ -1376,7 +1376,7 @@ PRIVATE struct type_getset tpconst numeric_getsets[] = {
 	            "}"),
 	TYPE_GETTER("isfinite", &numeric_get_isfinite,
 	            "->?Dbool\n"
-	            "Return !t if @this number is finite. Implemented as:\n"
+	            "Return ?t if @this number is finite. Implemented as:\n"
 	            "${"
 	            /**/ "property isfinite: bool {\n"
 	            /**/ "	get(): bool {\n"
@@ -1389,7 +1389,7 @@ PRIVATE struct type_getset tpconst numeric_getsets[] = {
 	            "}"),
 	TYPE_GETTER("isnormal", &numeric_get_isnormal,
 	            "->?Dbool\n"
-	            "Return !t if @this number is normal. Implemented as:\n"
+	            "Return ?t if @this number is normal. Implemented as:\n"
 	            "${"
 	            /**/ "property isnormal: bool {\n"
 	            /**/ "	get(): bool {\n"
@@ -1425,7 +1425,7 @@ err:
 PRIVATE struct type_getset tpconst numeric_class_getsets[] = {
 	TYPE_GETTER(STR_isfloat, &numeric_get_class_isfloat,
 	            "->?Dbool\n"
-	            "Returns !t if instances of @this number might have a decimal point. Implemented as:\n"
+	            "Returns ?t if instances of @this number might have a decimal point. Implemented as:\n"
 	            "${"
 	            /**/ "class property isfloat: bool {\n"
 	            /**/ "	get(): bool {\n"

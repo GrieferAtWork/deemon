@@ -2559,13 +2559,13 @@ PRIVATE struct type_method tpconst file_methods[] = {
 	              /*           */ "number of bytes has been reached, simply stop there.\n"
 	              "@param offset Starting offset of mapping (absolute), or ${-1} to map the entire file\n"
 	              "@param nulbytes When non-zero, append this many trailing ${0x00}-bytes at the end of the map\n"
-	              "@param readall When !t, use ?#readall, rather than ?#read\n"
-	              "@param mustmmap When !t, throw an :UnsupportedAPI exception if @this file doesn't support $mmap\n"
-	              "@param mapshared When !t, use $MAP_SHARED instead of $MAP_PRIVATE (also implies @mustmmap)\n"
+	              "@param readall When ?t, use ?#readall, rather than ?#read\n"
+	              "@param mustmmap When ?t, throw an :UnsupportedAPI exception if @this file doesn't support $mmap\n"
+	              "@param mapshared When ?t, use $MAP_SHARED instead of $MAP_PRIVATE (also implies @mustmmap)\n"
 	              "Map the contents of the file into memory. If $mmap isn't supported by the this file, "
-	              /**/ "and @mustmmap is !f, allow the use of ?#read and ?#readall for loading file data.\n"
+	              /**/ "and @mustmmap is ?f, allow the use of ?#read and ?#readall for loading file data.\n"
 	              "The returned ?DBytes object is always writable, though changes "
-	              /**/ "are only reflected within files when @mapshared is !t.\n"
+	              /**/ "are only reflected within files when @mapshared is ?t.\n"
 	              "Calls to ?#read and ?#pread (without a caller-provided buffer) automatically make use of this "
 	              /**/ "function during large I/O requests in order to off-load disk I/O until the actual point of use."),
 

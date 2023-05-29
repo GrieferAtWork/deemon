@@ -2355,7 +2355,7 @@ PRIVATE struct type_method tpconst object_methods[] = {
 	TYPE_METHOD(STR___iternext__,   &object_iternext, "->\n@return The result of ${this.operator next()}"),
 	TYPE_METHOD(STR___getattr__,    &object_getattr, "(name:?Dstring)->\n@return The result of ${this.operator . (name)}"),
 	TYPE_METHOD(STR___callattr__,   &object_callattr, "(name:?Dstring,args!)->\n@return The result of ${this.operator . (name)(args!)}"),
-	TYPE_METHOD(STR___hasattr__,    &object_hasattr, "(name:?Dstring)->?Dbool\nCheck if @this object provides an attribute @name, returning !t or !f indicative of this"),
+	TYPE_METHOD(STR___hasattr__,    &object_hasattr, "(name:?Dstring)->?Dbool\nCheck if @this object provides an attribute @name, returning ?t or ?f indicative of this"),
 	TYPE_METHOD(STR___delattr__,    &object_delattr, "(name:?Dstring)\nInvokes ${this.operator del . (name)}"),
 	TYPE_METHOD(STR___setattr__,    &object_setattr, "(name:?Dstring,value)\n@return Always re-returned @value\nInvokes ${this.operator .= (name, value)}"),
 	TYPE_METHOD(STR___enumattr__,   &object_enumattr, "()->?S?DAttribute\n@return Same as ${deemon.enumattr(this)}"),

@@ -1961,7 +1961,7 @@ PRIVATE struct type_method tpconst mapfile_methods[] = {
 PRIVATE struct type_getset tpconst mapfile_getsets[] = {
 	TYPE_GETTER("ismmap", &mapfile_get_ismmap,
 	            "->?Dbool\n"
-	            "Returns !t if @this file map uses mmap to implement its buffer"),
+	            "Returns ?t if @this file map uses mmap to implement its buffer"),
 	TYPE_GETSET_END
 };
 
