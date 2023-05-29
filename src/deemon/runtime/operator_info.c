@@ -1469,6 +1469,10 @@ err:
 
 
 
+INTDEF WUNUSED NONNULL((1)) bool DCALL
+DeeString_IsSymbol(DeeStringObject *__restrict self,
+                   size_t start_index,
+                   size_t end_index);
 
 /* Print a representation of invoking operator `name' on `self' with the given arguments.
  * This function is used to generate the representation of the expression in the default
@@ -1649,14 +1653,22 @@ DeeFormat_PrintOperatorRepr(Dee_formatprinter_t printer, void *arg,
 	case OPERATOR_GETATTR:
 	case OPERATOR_DELATTR:
 		if (argc == 1 && DeeString_Check(argv[0])) {
-			DO(err, DeeFormat_Printf(printer, arg, ".%k", argv[0]));
+			if (DeeString_IsSymbol((DeeStringObject *)argv[0], 0, (size_t)-1)) {
+				DO(err, DeeFormat_Printf(printer, arg, ".%k", argv[0]));
+			} else {
+				DO(err, DeeFormat_Printf(printer, arg, ".operator . (%r)", argv[0]));
+			}
 			goto done;
 		}
 		break;
 
 	case OPERATOR_SETATTR:
 		if (argc == 2 && DeeString_Check(argv[0])) {
-			DO(err, DeeFormat_Printf(printer, arg, ".%k = %r", argv[0], argv[1]));
+			if (DeeString_IsSymbol((DeeStringObject *)argv[0], 0, (size_t)-1)) {
+				DO(err, DeeFormat_Printf(printer, arg, ".%k = %r", argv[0], argv[1]));
+			} else {
+				DO(err, DeeFormat_Printf(printer, arg, ".operator . (%r) = %r", argv[0], argv[1]));
+			}
 			goto done;
 		}
 		break;
