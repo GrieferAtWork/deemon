@@ -3207,7 +3207,6 @@ DeeJson_WriteObject(DeeJsonWriter *__restrict self,
 		if unlikely(libjson_writer_putstring(&self->djw_writer, utf8, WSTR_LENGTH(utf8)))
 			goto err;
 	} else if (type == &DeeNone_Type) {
-put_none:
 		if unlikely(libjson_writer_putvalue(&self->djw_writer))
 			goto err;
 		if unlikely(json_print(&self->djw_writer, "null", 4))
@@ -3233,7 +3232,10 @@ put_none:
 			if unlikely(already_handled_status < 0)
 				goto err;
 			/* Object was already written */
-			goto put_none;
+			DeeError_Throwf(&DeeError_ValueError,
+			                "Cannot write recursive object %r as json",
+			                obj);
+			goto err;
 		}
 		if (DeeType_IsInherited(type, &DeeMapping_Type)) {
 			if unlikely(libjson_writer_beginobject(&self->djw_writer))
