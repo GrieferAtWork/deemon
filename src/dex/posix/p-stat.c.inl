@@ -41,7 +41,7 @@ DECL_BEGIN
 #undef posix_stat_USE_fopen
 #undef posix_stat_USE_STUB
 #if defined(CONFIG_HOST_WINDOWS)
-#define posix_stat_USE_WINDOWS /* TODO: windows impl of `stat()' doesn't deref symlinks! */
+#define posix_stat_USE_WINDOWS
 #elif (defined(CONFIG_HAVE_wstat64) || defined(CONFIG_HAVE_fstat64) || defined(CONFIG_HAVE_wfstatat64)) && defined(CONFIG_PREFER_WCHAR_FUNCTIONS)
 #define posix_stat_USE_wstat64
 #elif (defined(CONFIG_HAVE_wstat) || defined(CONFIG_HAVE_fstat) || defined(CONFIG_HAVE_wfstatat)) && defined(CONFIG_PREFER_WCHAR_FUNCTIONS)
@@ -578,8 +578,8 @@ dee_stat_init(struct dee_stat *__restrict self, DeeObject *dfd,
 		DREF DeeObject *abs_path;
 #define NEED_posix_dfd_makepath
 		abs_path = posix_dfd_makepath(dfd, path_or_file,
-		                             atflags & ~(DEE_STAT_F_TRY |
-		                                         DEE_STAT_F_LSTAT));
+		                              atflags & ~(DEE_STAT_F_TRY |
+		                                          DEE_STAT_F_LSTAT));
 		if unlikely(!abs_path)
 			goto err;
 #define NEED_err
@@ -1791,8 +1791,13 @@ stat_class_isdir(DeeObject *self, size_t argc, DeeObject *const *argv) {
 			if unlikely(error < 0)
 				goto err;
 			if (error == 0) {
-				return_bool((dwAttr & (FILE_ATTRIBUTE_DIRECTORY | FILE_ATTRIBUTE_REPARSE_POINT)) ==
-				/*                 */ (FILE_ATTRIBUTE_DIRECTORY));
+				if (STAT_CLASS_ISLSTAT(self)) {
+					/* If the caller used `posix.lstat.isdir()', then don't accept symlink-to-directory */
+					return_bool((dwAttr & (FILE_ATTRIBUTE_DIRECTORY | FILE_ATTRIBUTE_REPARSE_POINT)) ==
+					/*                 */ (FILE_ATTRIBUTE_DIRECTORY));
+				}
+				/* In this case, also accept symlink-to-directory */
+				return_bool(dwAttr & FILE_ATTRIBUTE_DIRECTORY);
 			}
 		}
 #endif /* !__OPTIMIZE_SIZE__ && posix_stat_USE_WINDOWS */
@@ -1957,7 +1962,7 @@ stat_class_isreg(DeeObject *self, size_t argc, DeeObject *const *argv) {
 			DBG_ALIGNMENT_ENABLE();
 			if unlikely(error < 0)
 				goto err;
-			if (error == 0 && !(dwAttr & FILE_ATTRIBUTE_REPARSE_POINT) || STAT_CLASS_ISLSTAT(self)) {
+			if (error == 0 && (!(dwAttr & FILE_ATTRIBUTE_REPARSE_POINT) || STAT_CLASS_ISLSTAT(self))) {
 				return_bool(!(dwAttr & (FILE_ATTRIBUTE_DEVICE |
 				                        FILE_ATTRIBUTE_DIRECTORY |
 				                        FILE_ATTRIBUTE_REPARSE_POINT)));

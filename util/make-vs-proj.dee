@@ -29,14 +29,8 @@ fs.chdir(fs.headof(__FILE__) + "/..");
 function isDirOrSymlinkToDir(ent: dirent): bool {
 	if (ent.d_type == DT_DIR)
 		return true;
-	if (ent.d_type == DT_LNK) {
-		local abs = ent.d_fullname;
-		local lnk = readlink(abs);
-		if (!isabs(lnk))
-			lnk = abspath(lnk, headof(abs));
-		/* FIXME: `stat' doesn't dereference symlinks like it should on windows! */
-		return stat.isdir(lnk);
-	}
+	if (ent.d_type == DT_LNK)
+		return stat.isdir(ent.d_fullname);
 	return false;
 }
 
