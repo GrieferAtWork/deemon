@@ -2389,7 +2389,7 @@ lock_union_leave_x1_count(LockUnion *__restrict self, size_t count) {
 	ASSERT(count <= self->lu_size);
 	while (count) {
 		--count;
-		if unlikely(lock_do_release(self->lu_elem[0]))
+		if unlikely(lock_do_release(self->lu_elem[count]))
 			goto err_count;
 	}
 	return 0;
