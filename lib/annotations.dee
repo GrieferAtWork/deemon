@@ -60,11 +60,11 @@ class Overload: Callable {
 		throw Error.TypeError(f"function {primary} does not accept {#args} args");
 	}
 
-	operator () (args...) {
+	operator () (args..., **kwds) {
 		__stack local argc = #args;
 		if (argc < #overloads)
 			return overloads[argc](args...);
-		return primary(args...);
+		return primary(args..., **kwds);
 	}
 
 	@@Register a new overload to-be considered for invocation
@@ -119,7 +119,7 @@ class Deprecated: Callable {
 		return f"Deprecated({repr m_func})";
 	}
 
-	operator () (args...) {
+	operator () (args..., **kwds) {
 		if (!m_didcall) {
 			import Traceback from deemon;
 			m_didcall = true;
@@ -147,7 +147,7 @@ class Deprecated: Callable {
 				print File.stderr: ":", m_message,;
 			print File.stderr:;
 		}
-		return m_func(args...);
+		return m_func(args..., **kwds);
 	}
 }
 
@@ -195,9 +195,9 @@ class Synchronized: Callable {
 	operator leave(): none {
 		return m_lock.operator leave();
 	}
-	operator () (args...) {
+	operator () (args..., **kwds) {
 		with (m_lock) {
-			return m_func(args...);
+			return m_func(args..., **kwds);
 		}
 	}
 
@@ -241,10 +241,10 @@ class Timed: Callable {
 		return f"Timed({repr m_func})";
 	}
 
-	operator () (args...) {
+	operator () (args..., **kwds) {
 		local start = m_libtime.tick();
 		try {
-			return m_func(args...);
+			return m_func(args..., **kwds);
 		} finally {
 			m_total_spend += m_libtime.tick() - start;
 			++m_num_invocations;
