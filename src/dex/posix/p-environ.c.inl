@@ -489,13 +489,13 @@ posix_environ_getenv(DeeStringObject *name, DeeObject *defl) {
 		environ_lock_endread();
 		if (!error) {
 			/* Error. */
+			DeeString_FreeWideBuffer(buffer);
 			if (defl) {
 				if (defl != ITER_DONE)
 					Dee_Incref(defl);
 				return defl;
 			}
 			err_unknown_env_var((DeeObject *)name);
-			DeeString_FreeWideBuffer(buffer);
 			goto err;
 		}
 		if (error <= bufsize)
