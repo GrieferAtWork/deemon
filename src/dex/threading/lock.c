@@ -2450,6 +2450,14 @@ blocking_acquire_lock_i:
 					ASSERT(already_holding != i);
 					if (already_holding >= i)
 						lock_do_release_nx(self->lu_elem[already_holding]);
+
+					/* Force at least 1 interrupt-check in here, just in
+					 * case none of the lock types we're trying to acquire
+					 * perform one, and in case acquiring all locks at once
+					 * is impossible due to some lock appearing more than
+					 * once (otherwise, it'd be impossible to kill deemon) */
+					if (DeeThread_CheckInterrupt())
+						goto err;
 					goto blocking_acquire_lock_i;
 				}
 			}
@@ -2641,6 +2649,14 @@ blocking_acquire_lock_i:
 					ASSERT(already_holding != i);
 					if (already_holding >= i)
 						lock_do_release_nx(self->lu_elem[already_holding]);
+
+					/* Force at least 1 interrupt-check in here, just in
+					 * case none of the lock types we're trying to acquire
+					 * perform one, and in case acquiring all locks at once
+					 * is impossible due to some lock appearing more than
+					 * once (otherwise, it'd be impossible to kill deemon) */
+					if (DeeThread_CheckInterrupt())
+						goto err;
 					goto blocking_acquire_lock_i;
 				}
 			}
