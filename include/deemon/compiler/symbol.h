@@ -257,9 +257,11 @@ struct class_attribute;
  *   ?T<N>(<TYPE> * N) --- A Tuple expression containing <N> (encoded as a decimal) other types
  *                         e.g.: `?T2?Dstring?Dint' --- `(string, int)'
  *   ?X<N>(<TYPE> * N) --- A set of <N> (encoded as a decimal) alternative type representations
- *                         e.g.: `?S?Dstring' --- `{string...}'
+ *                         e.g.: `?X2?Dstring?Dint' --- `string | int'
  *   ?S<TYPE>          --- A generic Sequence expression for <TYPE>
  *                         e.g.: `?S?Dstring' --- `{string...}'
+ *   ?M<TYPE><TYPE>    --- A generic Mapping expression for <TYPE> to <TYPE>
+ *                         e.g.: `?M?Dstring?Dint' --- `{string: int}'
  *   ?R<EXPR>]         --- Referring to the result of a given <EXPR> can take on (yes: the trailing `]' is intended)
  *   ?Q<EXPR>]         --- Referring to the types which a given <EXPR> can take on (yes: the trailing `]' is intended)
  *
@@ -374,10 +376,11 @@ struct class_attribute;
 #define DAST_ALT     0x0003 /* `int | bool' Declaration information has multiple, alternative representations. */
 #define DAST_TUPLE   0x0004 /* `(int, string, float)' Declaration describes an n-element Tuple of values. */
 #define DAST_SEQ     0x0005 /* `{int...}' Declaration describes a variable-length sequence of some element-type. */
-#define DAST_FUNC    0x0006 /* `(x: int, y: int): int' Declaration describes a variable-length sequence of some element-type. */
-#define DAST_ATTR    0x0007 /* `List.Iterator' Access a custom attribute of another declaration. */
-#define DAST_WITH    0x0008 /* `WeakRef with Object' Extended type information to describe Cell-like objects */
-#define DAST_STRING  0x0009 /* __asm__("?T2?O?O") Custom string inserted into the representation. */
+#define DAST_MAP     0x0006 /* `{string: int}' Declaration describes an abstract mapping-type */
+#define DAST_FUNC    0x0007 /* `(x: int, y: int): int' Declaration describes a variable-length sequence of some element-type. */
+#define DAST_ATTR    0x0008 /* `List.Iterator' Access a custom attribute of another declaration. */
+#define DAST_WITH    0x0009 /* `WeakRef with Object' Extended type information to describe Cell-like objects */
+#define DAST_STRING  0x000a /* __asm__("?T2?O?O") Custom string inserted into the representation. */
 
 #define DAST_FNORMAL 0x0000 /* Normal declaration ast flags */
 
@@ -406,6 +409,9 @@ struct decl_ast {
 			DREF struct string_object *a_name; /* [1..1] Attribute name. */
 		}                   da_attr;   /* [DAST_ATTR] The representation is the attribute of another expression. */
 		struct {
+			struct decl_ast *m_key_value; /* [2..2][owned] 0: The map key; 1: The map value. */
+		}                   da_map;    /* [DAST_MAP] Representation for map-like containers. */
+		struct {
 			struct decl_ast *w_cell;   /* [2..2][owned] 0: The cell container; 1: The cell element. */
 		}                   da_with;   /* [DAST_WITH] Representation for cell-like containers. */
 		DREF struct string_object *da_string; /* [1..1][DAST_STRING] Custom string. */
@@ -427,7 +433,9 @@ struct decl_ast {
 
 #ifdef CONFIG_BUILDING_DEEMON
 /* Finalize the given declaration ast. */
-INTDEF void DCALL decl_ast_fini(struct decl_ast *__restrict self);
+INTDEF NONNULL((1)) void DCALL
+decl_ast_fini(struct decl_ast *__restrict self);
+
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL
 decl_ast_copy(struct decl_ast *__restrict self,
               struct decl_ast const *__restrict other);
@@ -1277,11 +1285,6 @@ decl_ast_func_getscope(struct decl_ast const *__restrict self) {
 	Dee_ASSERT(self->da_type == DAST_FUNC);
 	return (DREF DeeBaseScopeObject *)Dee_weakref_lock(&self->da_func.f_scope);
 }
-
-#define DAST_ATTR    0x0007 /* `List.Iterator' Access a custom attribute of another declaration. */
-#define DAST_WITH    0x0008 /* `WeakRef with Object' Extended type information to describe Cell-like objects */
-#define DAST_STRING  0x0009 /* __asm__("?T2?O?O") Custom string inserted into the representation. */
-
 
 #endif /* CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION */
 

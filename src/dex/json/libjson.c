@@ -2142,6 +2142,7 @@ again:
 		goto again;
 
 	case 'C':
+	case 'M':
 		self->tep_doc = doc;
 		if (!type_expression_parser_skip_expression(self))
 			goto err;
@@ -2348,6 +2349,10 @@ DeeJsonObject_ParseWithTypeAnnotationEx(DeeJsonParser *__restrict self,
 
 	/* Handle all of the other types of known type annotations. */
 	switch (*tx_parser->tep_doc++) {
+
+	case 'M':
+		/* TODO: Custom mapping types (these are only allowed when the key-type is `?Dstring') */
+		break;
 
 	case 'C':   /* Custom sequence with custom element types */
 	case 'S': { /* Generic sequence with custom element types */

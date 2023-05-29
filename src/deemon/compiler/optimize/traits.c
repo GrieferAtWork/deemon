@@ -153,6 +153,9 @@ again:
 	case DAST_FUNC:
 		return &DeeCallable_Type;
 
+	case DAST_MAP:
+		return &DeeMapping_Type;
+
 	case DAST_WITH:
 		self = &self->da_with.w_cell[0];
 		goto again;

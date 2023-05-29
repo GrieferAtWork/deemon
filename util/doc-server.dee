@@ -359,6 +359,14 @@ function printTypeExpr(fp: File, t: TypeExpr) {
 		}
 	}	break;
 
+	case "M":
+		fp << "{";
+		printTypeExpr(fp, t.Mkeytype);
+		fp << ": ";
+		printTypeExpr(fp, t.Mvaluetype);
+		fp << "}";
+		break;
+
 	case "S":
 		fp << "{";
 		printTypeExpr(fp, t.Stype);

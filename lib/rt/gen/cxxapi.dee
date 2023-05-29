@@ -145,6 +145,12 @@ function typeExprToCxxType(tx: TypeExpr): string {
 		return f"Sequence<{templateGt(elemType)}>";
 	}	break;
 
+	case "M": {
+		local keyType   = finalizeCxxType(typeExprToCxxType(tx.Mkeytype));
+		local valueType = finalizeCxxType(typeExprToCxxType(tx.Mvaluetype));
+		return f"Mapping<{templateGt(keyType)}, {templateGt(valueType)}>";
+	}	break;
+
 	default:
 		break;
 	}

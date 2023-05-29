@@ -401,6 +401,7 @@ local function getNextTyperefStart(typeref: string, start: int): int {
 	switch (typeref[start]) {
 
 	case "C":
+	case "M":
 		start = findNonEscaped(typeref, "?", start);
 		if (start != -1)
 			start = getNextTyperefStart(typeref, start);
@@ -513,7 +514,7 @@ global final OPERATOR_NAMES: {string: string} = {
 	"!=" : "ne", "[]" : "getitem", "del[]" : "delitem",
 	"[]=" : "setitem", "[:]" : "getrange", "del[:]" : "delrange",
 	"[:]=" : "setrange", "." : "getattr", ".=" : "setattr",
-	"del." : "delattr", "lt" : "lo", "gt" : "gr",
+	"del." : "delattr",
 };
 
 @@Lookup table for converting from real operator names to pretty names
@@ -981,6 +982,7 @@ again:
 		goto again;
 
 	case "C":
+	case "M":
 		++result;
 		result = typeExprEnd(s, result);
 		goto again;
@@ -1274,12 +1276,32 @@ class TypeExpr: WeakRefAble {
 		case "C": {
 			if (ob !is Ccelltype.typ)
 				return false;
-			local cellitem = Citemtype.typ;
-			if (cellitem === Object)
+			local itemtype = Citemtype;
+			if (itemtype.typ === Object)
 				return true;
 			try {
-				if (ob.value is cellitem)
-					return true;
+				for (local v: ob) {
+					if (!itemtype.isaccepted(v))
+						return false;
+				}
+				return true;
+			} catch (...) {
+			}
+		}	break;
+
+		case "M": {
+			if (ob !is Mapping)
+				return false;
+			local keytype = Mkeytype;
+			local valuetype = Mvaluetype;
+			try {
+				for (local key, value: ob) {
+					if (!keytype.isaccepted(key))
+						return false;
+					if (!valuetype.isaccepted(value))
+						return false;
+				}
+				return true;
 			} catch (...) {
 			}
 		}	break;
@@ -1364,7 +1386,7 @@ check_elem:
 			break;
 
 		case "T":
-			yield Sequence;
+			yield Tuple;
 			break;
 
 		case "X":
@@ -1372,14 +1394,13 @@ check_elem:
 				yield x.enumtypes()...;
 			break;
 
-		case "S": {
-			local st = Stype;
-			if (st.docstring.startswith("?T2")) {
-				yield Mapping; /* Sequence of 2-element tuples. */
-			} else {
-				yield Sequence; /* Sequence of something else. */
-			}
-		}	break;
+		case "S":
+			yield Sequence;
+			break;
+
+		case "M":
+			yield Mapping;
+			break;
 
 		case "Q":
 			yield Qexpr.exprtypes...;
@@ -1397,6 +1418,7 @@ check_elem:
 	@@ - @"C": Container-like type (s.a. @Ccelltype and @Citemtype)
 	@@ - @"T": Tuple consisting of multiple child-elements (s.a. @Ttypes)
 	@@ - @"X": A set of multiple, alternatively accepted types (s.a. @Xtypes)
+	@@ - @"M": A key-value mapping type (s.a. @Mkeytype and @Mvaluetype)
 	@@ - @"S": A sequence containing elements of a specific type (s.a. @Stype)
 	@@ - @"Q": The type of an expression (s.a. @Qexpr)
 	public final property kind: string = {
@@ -1418,7 +1440,7 @@ check_elem:
 
 	@@Cache of child-expressions / references
 	private member m_cache: TypeRef | TypeExpr | {TypeExpr...} | (TypeExpr, TypeExpr) | Expression;
-	private loadC() {
+	private loadCM() {
 		local end = typeExprEnd(m_docstring, 2);
 		m_cache = (
 			TypeExpr(docdecl, m_docstring.substr(2, end)),
@@ -1461,7 +1483,7 @@ check_elem:
 	public final property Ccelltype: TypeExpr = {
 		get(): TypeExpr {
 			if (m_cache !is bound)
-				loadC();
+				loadCM();
 			return m_cache[0];
 		}
 	}
@@ -1471,7 +1493,7 @@ check_elem:
 	public final property Citemtype: TypeExpr = {
 		get(): TypeExpr {
 			if (m_cache !is bound)
-				loadC();
+				loadCM();
 			return m_cache[1];
 		}
 	}
@@ -1506,6 +1528,38 @@ check_elem:
 		}
 	}
 
+	@@Returns the key type for @this
+	@@WARNING: This property must only be used when @kind is equal to @"M"
+	public final property Mkeytype: TypeExpr = {
+		get(): TypeExpr {
+			if (m_cache !is bound)
+				loadCM();
+			return m_cache[0];
+		}
+	}
+
+	@@Returns the value type for @this
+	@@WARNING: This property must only be used when @kind is equal to @"M"
+	public final property Mvaluetype: TypeExpr = {
+		get(): TypeExpr {
+			if (m_cache !is bound)
+				loadCM();
+			return m_cache[1];
+		}
+	}
+
+	@@Returns the key/value tuple type (== item type) for @this
+	@@WARNING: This property must only be used when @kind is equal to @"M"
+	public final property Mitemtype: TypeExpr = {
+		get(): TypeExpr {
+			if (m_cache !is bound)
+				loadCM();
+			return TypeExpr(docdecl, f"?T2{
+				m_cache[0].docstring}{
+				m_cache[1].docstring}");
+		}
+	}
+
 	@@Returns the expression who's type is referenced by @this TypeExpr
 	@@WARNING: This property must only be used when @kind is equal to @"Q"
 	public final property Qexpr: Expression = {
@@ -1536,6 +1590,9 @@ check_elem:
 
 		case "S":
 			return f"\{{Stype}...\}";
+
+		case "M":
+			return f"\{{Mkeytype}: {Mvaluetype}\}";
 
 		case "Q":
 			return f"type({Qexpr})";
@@ -1854,7 +1911,7 @@ done:
 		}
 	}
 
-	@@Returns the referenced parameter when @kind is @"C"
+	@@Returns the referenced parameter when @kind is @"A"
 	public final property Aparam: Parameter | none = {
 		get(): Parameter {
 			if (m_cache !is bound) {

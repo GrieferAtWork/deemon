@@ -103,6 +103,7 @@ copy_inner:
 		self->da_seq = inner;
 	}	break;
 
+	case DAST_MAP:
 	case DAST_WITH: {
 		struct decl_ast *inner;
 		inner = (struct decl_ast *)Dee_Mallocc(2, sizeof(struct decl_ast));
@@ -129,7 +130,7 @@ err:
 
 
 /* Finalize the given declaration ast. */
-INTERN void DCALL
+INTERN NONNULL((1)) void DCALL
 decl_ast_fini(struct decl_ast *__restrict self) {
 	switch (self->da_type) {
 
@@ -150,6 +151,7 @@ decl_ast_fini(struct decl_ast *__restrict self) {
 		Dee_Free(self->da_alt.a_altv);
 	}	break;
 
+	case DAST_MAP:
 	case DAST_WITH:
 		decl_ast_fini(&self->da_with.w_cell[1]);
 		goto free_inner;
@@ -290,6 +292,7 @@ decl_ast_isempty(struct decl_ast const *__restrict self) {
 	case DAST_TUPLE:
 	case DAST_SEQ:
 	case DAST_ATTR:
+	case DAST_MAP:
 	case DAST_WITH:
 		goto nope;
 
@@ -412,7 +415,7 @@ decl_ast_print_const_type(DeeObject const *__restrict ob,
 			if (UNICODE_PRINTER_PRINT(printer, "?S?O") < 0)
 				goto err;
 		} else if (i == id_Mapping) {
-			if (UNICODE_PRINTER_PRINT(printer, "?S?T2?O?O") < 0) /* {(Object, Object)...} */
+			if (UNICODE_PRINTER_PRINT(printer, "?M?O?O") < 0) /* {Object: Object} */
 				goto err;
 		} else
 #endif
@@ -505,7 +508,7 @@ switch_symbol_type:
 					if (UNICODE_PRINTER_PRINT(printer, "?S?O") < 0)
 						goto err;
 				} else if (msym->ss_index == id_Mapping) {
-					if (UNICODE_PRINTER_PRINT(printer, "?S?T2?O?O") < 0)
+					if (UNICODE_PRINTER_PRINT(printer, "?M?O?O") < 0)
 						goto err;
 #endif
 				} else {
@@ -615,6 +618,15 @@ print_undefined_symbol_name:
 		if unlikely(decl_ast_print_type(&self->da_with.w_cell[0], printer))
 			goto err;
 		if unlikely(decl_ast_print_type(&self->da_with.w_cell[1], printer))
+			goto err;
+		break;
+
+	case DAST_MAP:
+		if unlikely(UNICODE_PRINTER_PRINT(printer, "?M") < 0)
+			goto err;
+		if unlikely(decl_ast_print_type(&self->da_map.m_key_value[0], printer))
+			goto err;
+		if unlikely(decl_ast_print_type(&self->da_map.m_key_value[1], printer))
 			goto err;
 		break;
 
@@ -1169,37 +1181,35 @@ err_seq:
 		}
 		if (tok == ':') {
 			/* Special case: `{x: y}' is an alias for `{(x, y)...}', as it best represents a mapping */
-			struct decl_ast *elemv;
-			elemv = (struct decl_ast *)Dee_Mallocc(2, sizeof(struct decl_ast));
-			if unlikely(!elemv) {
+			struct decl_ast *key_value;
+			key_value = (struct decl_ast *)Dee_Reallocc(decl_seq, 2, sizeof(struct decl_ast));
+			if unlikely(!key_value) {
 err_seq_0:
 				decl_ast_fini(decl_seq);
 				goto err_seq;
 			}
-			decl_ast_move(&elemv[0], decl_seq);
 			if unlikely(yield() < 0) {
 err_elemv_0:
-				decl_ast_fini(&elemv[0]);
-				Dee_Free(elemv);
-				goto err_seq;
+				decl_ast_fini(&key_value[0]);
+				Dee_Free(key_value);
+				goto err_flags;
 			}
-			error = decl_ast_parse(&elemv[1]);
+			error = decl_ast_parse(&key_value[1]);
 			if unlikely(error)
 				goto err_elemv_0;
-			decl_seq->da_type          = DAST_TUPLE;
-			decl_seq->da_flag          = DAST_FNORMAL;
-			decl_seq->da_tuple.t_itemc = 2;
-			decl_seq->da_tuple.t_itemv = elemv; /* Inherit */
+			self->da_type = DAST_MAP;
+			self->da_flag = DAST_FNORMAL;
+			self->da_map.m_key_value = key_value; /* Inherit */
 		} else {
+			self->da_type = DAST_SEQ;
+			self->da_flag = DAST_FNORMAL;
+			self->da_seq  = decl_seq;
 			if (skip(TOK_DOTS, W_EXPECTED_DOTS_OR_COLON_AFTER_BRACE_IN_TYPE_ANNOTATION))
 				goto err_seq_0;
 		}
 		TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
 		if (skip('}', W_EXPECTED_RBRACE_AFTER_SEQUENCE))
 			goto err_seq_0;
-		self->da_type = DAST_SEQ;
-		self->da_flag = DAST_FNORMAL;
-		self->da_seq  = decl_seq;
 	}	break;
 
 
