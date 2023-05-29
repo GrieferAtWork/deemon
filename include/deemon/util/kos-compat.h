@@ -23,6 +23,10 @@
 #include "../api.h"
 /**/
 
+#ifndef DEE_SOURCE
+#error "This header should only be used when `DEE_SOURCE' is also enabled"
+#endif /* !DEE_SOURCE */
+
 #include "../format.h"
 #include "../string.h"
 #include "../stringutils.h"
@@ -291,20 +295,6 @@ DeeSystem_DEFINE_memcasecmp(dee_memcasecmp)
 #define char32_t __UINT32_TYPE__
 
 #ifndef CONFIG_HAVE_UNICODE_H
-#undef unicode_utf8seqlen
-#define unicode_utf8seqlen Dee_unicode_utf8seqlen
-#undef unicode_readutf8
-#define unicode_readutf8 Dee_unicode_readutf8
-#undef unicode_readutf8_n
-#define unicode_readutf8_n Dee_unicode_readutf8_n
-#undef unicode_readutf8_rev
-#define unicode_readutf8_rev Dee_unicode_readutf8_rev
-#undef unicode_readutf8_rev_n
-#define unicode_readutf8_rev_n Dee_unicode_readutf8_rev_n
-#undef unicode_writeutf8
-#define unicode_writeutf8 Dee_unicode_writeutf8
-#undef UNICODE_UTF8_CURLEN
-#define UNICODE_UTF8_CURLEN Dee_UNICODE_UTF8_CURLEN
 #undef unicode_tolower
 #define unicode_tolower DeeUni_ToLower
 #undef unicode_toupper
