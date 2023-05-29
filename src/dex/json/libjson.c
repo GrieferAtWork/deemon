@@ -3227,10 +3227,29 @@ DeeJson_WriteObject(DeeJsonWriter *__restrict self,
 	} else {
 		/* Make sure that we haven't already written this object. */
 		int already_handled_status;
-		already_handled_status = DeeJsonWriter_InsertDone(self, obj);
+		already_handled_status = DeeJsonWriter_InsertActive(self, obj);
 		if (already_handled_status <= 0) {
 			if unlikely(already_handled_status < 0)
 				goto err;
+
+			/* Support for user-defined recursion handlers. */
+			if (!DeeNone_Check(self->djw_recursion)) {
+				obj = DeeObject_Call(self->djw_recursion, 1, &obj);
+				if unlikely(!obj)
+					goto err;
+				/* Check if the produced object is already being printed. */
+				already_handled_status = DeeJsonWriter_IsActive(self, obj);
+				if (already_handled_status == 0) {
+					int result = DeeJson_WriteObject(self, obj);
+					Dee_Decref(obj);
+					return result;
+				}
+				Dee_Decref(obj);
+				if unlikely(already_handled_status < 0)
+					goto err;
+				/* Fallthru to the error-throw below. */
+			}
+
 			/* Object was already written */
 			DeeError_Throwf(&DeeError_ValueError,
 			                "Cannot write recursive object %r as json",
@@ -3264,7 +3283,7 @@ DeeJson_WriteObject(DeeJsonWriter *__restrict self,
 			if unlikely(libjson_writer_endobject(&self->djw_writer))
 				goto err;
 		}
-		if unlikely(DeeJsonWriter_RemoveDone(self, obj) < 0)
+		if unlikely(DeeJsonWriter_RemoveActive(self, obj) < 0)
 			goto err;
 	}
 	return 0;
@@ -3298,7 +3317,7 @@ f_libjson_parse(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	DREF DeeObject *result;
 	DeeJsonParser parser;
 	DeeObject *data, *into = NULL;
-	if (DeeArg_UnpackKw(argc, argv, kw, parse_kwlist, "o|o", &data, &into))
+	if (DeeArg_UnpackKw(argc, argv, kw, parse_kwlist, "o|o:parse", &data, &into))
 		goto err;
 	if (DeeBytes_Check(data)) {
 		/* Parse raw bytes as JSON. */
@@ -3380,7 +3399,7 @@ err:
 	return NULL;
 }
 
-PRIVATE struct keyword write_kwlist[] = { K(data), K(into), K(pretty), KEND };
+PRIVATE struct keyword write_kwlist[] = { K(data), K(into), K(pretty), K(recursion), KEND };
 PRIVATE WUNUSED DREF DeeObject *DCALL
 f_libjson_write(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	int error;
@@ -3388,7 +3407,9 @@ f_libjson_write(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	bool pretty = false;
 	unsigned int format;
 	DeeObject *data, *into = NULL;
-	if (DeeArg_UnpackKw(argc, argv, kw, write_kwlist, "o|ob", &data, &into, &pretty))
+	writer.djw_recursion = Dee_None;
+	if (DeeArg_UnpackKw(argc, argv, kw, write_kwlist, "o|obo:write",
+	                    &data, &into, &pretty, &writer.djw_recursion))
 		goto err;
 #if JSON_WRITER_FORMAT_COMPACT == 0 && JSON_WRITER_FORMAT_PRETTY == 1
 	format = (unsigned int)pretty;
@@ -3449,8 +3470,11 @@ PRIVATE struct dex_symbol symbols[] = {
 	      /**/ "specific. Though if no exception is thrown, such trailing data is ignored and has no "
 	      /**/ "effect.") },
 	{ "write", (DeeObject *)&libjson_write, MODSYM_FNORMAL,
-	  DOC("(data:?X8?O?Dfloat?Dint?Dstring?Dbool?N?DSequence?DMapping,pretty=!f)->?Dstring\n"
-	      "(data:?X8?O?Dfloat?Dint?Dstring?Dbool?N?DSequence?DMapping,into:?DFile,pretty=!f)->?DFile\n"
+	  DOC("(data:?X8?O?Dfloat?Dint?Dstring?Dbool?N?DSequence?DMapping,pretty=!f,recursion:?DCallable=!n)->?Dstring\n"
+	      "(data:?X8?O?Dfloat?Dint?Dstring?Dbool?N?DSequence?DMapping,into:?DFile,pretty=!f,recursion:?DCallable=!n)->?DFile\n"
+	      "@param recursion An optional callback that is invoked to replace inner instances of objects referencing "
+	      /*            */ "themselves via some attribute. When set to !N, or if the object returned by the callback, "
+	      /*            */ "is also currently being written, a :ValueError is thrown instead.\n"
 	      "Convert a native deemon object @data into JSON and write said JSON to @into, or pack it "
 	      /**/ "into a string which is then returned. In either case, you can use @pretty to specify "
 	      /**/ "if a pretty representation (using newlines, and indentation), or a compact one should "

@@ -332,20 +332,22 @@ DeeObject_PopulateFromMapping(DeeObject *self, DeeObject *mapping);
 
 
 typedef struct {
-	struct json_writer djw_writer;  /* Underlying writer */
-	DeeObject         *djw_obj;  /* [?..1] The object whose attributes are currently being enumerated */
-	DeeHashSetObject   djw_done; /* Set of object that have already been enumerated */
+	struct json_writer djw_writer;    /* Underlying writer */
+	DeeObject         *djw_recursion; /* [1..1] Recursion handler, or `Dee_None' */
+	DeeObject         *djw_obj;       /* [?..1] The object whose attributes are currently being enumerated */
+	DeeHashSetObject   djw_active;      /* Set of object that are currently being enumerated */
 } DeeJsonWriter;
 
 #define DeeJsonWriter_Init(self, printer, arg, format)            \
 	(json_writer_init(&(self)->djw_writer, printer, arg, format), \
-	 DeeObject_InitNoref(&(self)->djw_done, &DeeHashSet_Type),    \
-	 (*DeeHashSet_Type.tp_init.tp_alloc.tp_ctor)((DeeObject *)&(self)->djw_done))
+	 DeeObject_InitNoref(&(self)->djw_active, &DeeHashSet_Type),    \
+	 (*DeeHashSet_Type.tp_init.tp_alloc.tp_ctor)((DeeObject *)&(self)->djw_active))
 #define DeeJsonWriter_Fini(self)            \
 	(json_writer_fini(&(self)->djw_writer), \
-	 (*DeeHashSet_Type.tp_init.tp_dtor)((DeeObject *)&(self)->djw_done))
-#define DeeJsonWriter_InsertDone(self, obj) DeeHashSet_Insert((DeeObject *)&(self)->djw_done, obj)
-#define DeeJsonWriter_RemoveDone(self, obj) DeeHashSet_Remove((DeeObject *)&(self)->djw_done, obj)
+	 (*DeeHashSet_Type.tp_init.tp_dtor)((DeeObject *)&(self)->djw_active))
+#define DeeJsonWriter_IsActive(self, obj)     DeeHashSet_Contains((DeeObject *)&(self)->djw_active, obj)
+#define DeeJsonWriter_InsertActive(self, obj) DeeHashSet_Insert((DeeObject *)&(self)->djw_active, obj)
+#define DeeJsonWriter_RemoveActive(self, obj) DeeHashSet_Remove((DeeObject *)&(self)->djw_active, obj)
 
 /* Convert an object `obj' to JSON and write said JSON to `self'.
  * This function supports the same set of object types as are supported
