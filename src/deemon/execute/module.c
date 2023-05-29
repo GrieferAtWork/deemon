@@ -1377,7 +1377,7 @@ DeeModule_ViewGlobals(DeeObject *__restrict self);
 
 PRIVATE struct type_getset tpconst module_getsets[] = {
 	TYPE_GETTER("__exports__", &DeeModule_ViewExports,
-	            "->?S?T2?Dstring?O\n"
+	            "->?M?Dstring?O\n"
 	            "Returns a modifiable mapping-like object containing @this "
 	            "Module's global variables accessible by name (and enumerable)\n"
 	            "Note that only existing exports can be modified, however no new symbols can be added:\n"

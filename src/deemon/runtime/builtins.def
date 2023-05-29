@@ -235,7 +235,7 @@ BUILTIN_DOC(hash, &builtin_hash, MODSYM_FREADONLY | MODSYM_FCONSTEXPR,
 
 /* TODO: Add more options to this function */
 BUILTIN_DOC(exec, &builtin_exec, MODSYM_FNORMAL,
-            "(expr:?X3?Dstring?DBytes?DFile,globals?:?S?T2?Dstring?O,base?:?DModule)->?O\n"
+            "(expr:?X3?Dstring?DBytes?DFile,globals?:?M?Dstring?O,base?:?DModule)->?O\n"
             "Evaluate a user-code deemon expression and return the result\n"
             "This type of evaluation is much more restrictive than evaluation of "
             /**/ "normal user-code, as rather than being parsed, optimized, assembled "

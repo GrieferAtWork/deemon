@@ -278,14 +278,14 @@ PRIVATE struct type_getset tpconst jy_getsets[] = {
 	            "->?S?O\n"
 	            "Alias for ?A__refs__?GFunction though ?#__func__"),
 	TYPE_GETTER("__refsbyname__", &jy_getrefsbyname,
-	            "->?S?T2?Dstring?O\n"
+	            "->?M?Dstring?O\n"
 	            "Alias for ?A__refsbyname__?GFunction though ?#__func__"),
 	TYPE_GETSET_END
 };
 
 PRIVATE struct type_member tpconst jy_members[] = {
 	TYPE_MEMBER_FIELD_DOC("__func__", STRUCT_OBJECT, offsetof(JITYieldFunction, jy_func), "->?GFunction"),
-	TYPE_MEMBER_FIELD_DOC("__kw__", STRUCT_OBJECT_OPT, offsetof(JITYieldFunction, jy_kw), "->?S?T2?Dstring?X2?Dint?O"),
+	TYPE_MEMBER_FIELD_DOC("__kw__", STRUCT_OBJECT_OPT, offsetof(JITYieldFunction, jy_kw), "->?M?Dstring?X2?Dint?O"),
 	TYPE_MEMBER_END
 };
 
@@ -1939,7 +1939,7 @@ PRIVATE struct type_getset tpconst ji_getsets[] = {
 	            "->?S?O\n"
 	            "Alias for ?A__refs__?GFunction though ?#__func__"),
 	TYPE_GETTER("__refsbyname__", &ji_getrefsbyname,
-	            "->?S?T2?Dstring?O\n"
+	            "->?M?Dstring?O\n"
 	            "Alias for ?A__refsbyname__?GFunction though ?#__func__"),
 	TYPE_GETSET_END
 };

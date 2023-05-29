@@ -347,7 +347,7 @@ PRIVATE struct type_member tpconst F(members)[] = {
 	TYPE_MEMBER_FIELD_DOC("__seq__", STRUCT_OBJECT, offsetof(STRUCT_TYPE, se_seq), "->?DSequence"),
 	TYPE_MEMBER_FIELD_DOC("__attr__", STRUCT_OBJECT, offsetof(STRUCT_TYPE, sg_attr), "->?Dstring"),
 #ifdef DEFINE_CALLATTRKW
-	TYPE_MEMBER_FIELD_DOC("__kw__", STRUCT_OBJECT, offsetof(STRUCT_TYPE, sg_kw), "->?S?T2?Dstring?O"),
+	TYPE_MEMBER_FIELD_DOC("__kw__", STRUCT_OBJECT, offsetof(STRUCT_TYPE, sg_kw), "->?M?Dstring?O"),
 #endif /* DEFINE_CALLATTRKW */
 	TYPE_MEMBER_END
 };
@@ -648,7 +648,7 @@ INTERN DeeTypeObject TYPE_OBJECT = {
 #elif defined(DEFINE_CALLATTRKW)
 	/* .tp_name     = */ "_SeqEachCallAttrKw",
 	/* .tp_doc      = */ DOC("()\n"
-	                         "(seq:?DSequence,attr:?Dstring,args=!T0,kw:?S?T2?Dstring?O=!T0)"),
+	                         "(seq:?DSequence,attr:?Dstring,args=!T0,kw:?M?Dstring?O=!T0)"),
 #define TYPE_FLAGS (TP_FNORMAL | TP_FFINAL | TP_FMOVEANY | TP_FVARIABLE)
 	/* .tp_flags    = */ TYPE_FLAGS,
 #else /* ... */

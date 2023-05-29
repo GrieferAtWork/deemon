@@ -1214,7 +1214,7 @@ PRIVATE struct type_getset tpconst jf_getsets[] = {
 	            "->?S?O\n"
 	            "Returns a sequence of all of the references used by @this function"),
 	TYPE_GETTER("__refsbyname__", &jf_getrefsbyname,
-	            "->?S?T2?Dstring?O\n"
+	            "->?M?Dstring?O\n"
 	            "Similar to ?#__refs__, but return a mapping from symbol name to object"),
 	/* TODO: __type__ */
 	/* TODO: __operator__ */
@@ -1242,7 +1242,7 @@ PRIVATE struct type_member tpconst jf_members[] = {
 	                      "->?X2?DModule?N\n"
 	                      "Returns the module used for relative module imports"),
 	TYPE_MEMBER_FIELD_DOC("__globals__", STRUCT_OBJECT_OPT, offsetof(JITFunction, jf_globals),
-	                      "->?X2?S?T2?Dstring?O?N"),
+	                      "->?X2?M?Dstring?O?N"),
 	TYPE_MEMBER_FIELD_DOC("__module__", STRUCT_OBJECT_OPT, offsetof(JITFunction, jf_impbase),
 	                      "->?X2?DModule?N\n"
 	                      "Alias for ?#__impbase__"),

@@ -1911,7 +1911,7 @@ PRIVATE struct dex_symbol symbols[] = {
 	D(POSIX_UNSETENV_DEF_DOC("Returns !t if @varname was deleted, and !f if @varname didn't exist in ?Genviron"))
 	D(POSIX_CLEARENV_DEF_DOC("Clear ?Genviron"))
 	D({ "environ", &DeeEnviron_Singleton, MODSYM_FREADONLY,
-	    DOC("->?S?T2?Dstring?Dstring\n"
+	    DOC("->?M?Dstring?Dstring\n"
 	        "A ?DMapping-style singleton instance that can be used to "
 	        /**/ "access and enumerate environment variables by name:\n"
 	        "${"

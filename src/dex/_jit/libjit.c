@@ -207,7 +207,7 @@ PRIVATE DEFINE_KWCMETHOD(libjit_exec, &libjit_exec_f);
 
 PRIVATE struct dex_symbol symbols[] = {
 	{ "exec", (DeeObject *)&libjit_exec, MODSYM_FNORMAL,
-	  DOC("(expr:?X3?Dstring?DBytes?DFile,globals?:?S?T2?Dstring?O,base?:?DModule)->\n"
+	  DOC("(expr:?X3?Dstring?DBytes?DFile,globals?:?M?Dstring?O,base?:?DModule)->\n"
 	      "Execute a given expression @expr and return the result\n"
 	      "This function is used to implement the builtin ?Dexec function") },
 	/* TODO: `mode:?Dstring=!Prestricted'

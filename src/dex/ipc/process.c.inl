@@ -5045,7 +5045,7 @@ PRIVATE struct type_getset tpconst process_getsets[] = {
 	            "->?S?Dstring\n"
 	            "The argument vector passed to the programms #C{main()} method"),
 	TYPE_GETSET("environ", &process_get_environ, &process_del_environ, &process_set_environ,
-	            "->?S?T2?Dstring?Dstring\n"
+	            "->?M?Dstring?Dstring\n"
 	            "The state of environment variables in the given ?.\n"
 	            "When constructing a new ?., or leaving this unset, the contents of "
 	            /**/ "?Eposix:environ at the time of ?#start being called is used instead"),
