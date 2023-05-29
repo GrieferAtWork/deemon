@@ -98,7 +98,7 @@
  *   As such, technically speaking all functionality provided by this dex is
  *   also already available by `_jit' (and `deemon.exec()'), though it should
  *   be obvious that *executing as code* would be a security risk in case you
- *   received the json-blob from an untrusted source (or really *any source*
+ *   received the JSON-blob from an untrusted source (or really *any source*
  *   for that matter).
  */
 

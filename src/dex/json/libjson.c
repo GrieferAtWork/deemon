@@ -682,7 +682,7 @@ PRIVATE NONNULL((1, 2)) int DCALL
 jseq_or_map_init_parser(DeeJsonSequenceObject *__restrict self,
                         DeeObject *__restrict data) {
 	if (DeeBytes_Check(data)) {
-		/* Parse raw bytes as json. */
+		/* Parse raw bytes as JSON. */
 		void *start = DeeBytes_DATA(data);
 		void *end   = DeeBytes_TERM(data);
 		libjson_parser_init(&self->js_parser, start, end);
@@ -1610,7 +1610,7 @@ DeeJson_ParseString(struct json_parser *__restrict self) {
 	int status;
 	dssize_t error;
 	struct unicode_printer printer = UNICODE_PRINTER_INIT;
-	/* Print the json string into a unicode-printer to convert it into a deemon string. */
+	/* Print the JSON string into a unicode-printer to convert it into a deemon string. */
 	status = libjson_parser_printstring(self, &unicode_printer_print, &printer, &error);
 	if (status != JSON_ERROR_OK) {
 		unicode_printer_fini(&printer);
@@ -2478,7 +2478,7 @@ err_seq_type:
 			n_items += temp;
 		}
 
-		/* Consume leading '[' of the json-array */
+		/* Consume leading '[' of the JSON-array */
 		tok = libjson_parser_yield(&self->djp_parser);
 		if unlikely(tok != JSON_PARSER_ARRAY) {
 			if (tok == JSON_ERROR_SYNTAX)
@@ -2920,7 +2920,7 @@ DeeJson_ParseInto(DeeJsonParser *__restrict self, DeeObject *into,
 	if (tok == JSON_PARSER_NULL && DeeNone_Check(into))
 		return 0;
 
-	/* Only json-objects can be parsed into deemon objects,
+	/* Only JSON-objects can be parsed into deemon objects,
 	 * so any token other than '{' is a syntax error. */
 	return err_json_syntax();
 }
@@ -3081,15 +3081,15 @@ err_syntax:
  * @return: -1: An error was thrown */
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 DeeObject_PopulateFromMapping(DeeObject *self, DeeObject *mapping) {
-	/* Special handling for when the given `mapping' is a json-mapping-wrapper.
-	 * In this case, we can use the dedicated json-into-object code-path. */
+	/* Special handling for when the given `mapping' is a JSON-mapping-wrapper.
+	 * In this case, we can use the dedicated JSON-into-object code-path. */
 	if (DeeObject_InstanceOfExact(mapping, &DeeJsonMapping_Type))
 		return DeeJsonMapping_IntoObject((DeeJsonMappingObject *)mapping, self);
 
-	/* TODO: just like with the parse-from-json code above:
+	/* TODO: just like with the parse-from-JSON code above:
 	 * >> import json;
 	 * >> local jsonBlob = json.write(mapping);
-	 * >> json.parse(jsonBlob, into: self); // Only that types that can't be represented as json also work here!
+	 * >> json.parse(jsonBlob, into: self); // Only that types that can't be represented as JSON also work here!
 	 */
 	(void)self;
 	(void)mapping;
@@ -3299,7 +3299,7 @@ f_libjson_parse(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	if (DeeArg_UnpackKw(argc, argv, kw, parse_kwlist, "o|o", &data, &into))
 		goto err;
 	if (DeeBytes_Check(data)) {
-		/* Parse raw bytes as json. */
+		/* Parse raw bytes as JSON. */
 		void *start = DeeBytes_DATA(data);
 		void *end   = DeeBytes_TERM(data);
 		libjson_parser_init(&parser.djp_parser, start, end);
@@ -3307,7 +3307,7 @@ f_libjson_parse(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 		result = json_parser_parse_maybe_into(&parser, into);
 		json_parser_fini(&parser.djp_parser);
 	} else if (DeeString_Check(data)) {
-		/* Parse a given string as json. */
+		/* Parse a given string as JSON. */
 		void const *start, *end;
 		DeeStringObject *input = (DeeStringObject *)data;
 		if (input->s_data) {
