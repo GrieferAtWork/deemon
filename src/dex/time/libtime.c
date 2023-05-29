@@ -1751,15 +1751,16 @@ PRIVATE struct type_method tpconst time_methods[] = {
 	time_getval_##name(DeeTimeObject *__restrict self) {        \
 		Dee_int128_t value;                                     \
 		_DeeTime_GetRepr(&value, self, repr);                   \
-		return DeeInt_NewInt128(value);                           \
+		return DeeInt_NewInt128(value);                         \
 	}                                                           \
 	PRIVATE WUNUSED NONNULL((1, 2)) int DCALL                   \
 	time_setval_##name(DeeTimeObject *self, DeeObject *value) { \
 		Dee_int128_t tval;                                      \
 		if (DeeObject_AsInt128(value, &tval))                   \
-			return -1;                                          \
+			goto err;                                           \
 		DeeTime_SetRepr(self, &tval, repr);                     \
-		return 0;                                               \
+	err:                                                        \
+		return -1;                                              \
 	}                                                           \
 	PRIVATE WUNUSED NONNULL((1)) int DCALL                      \
 	time_delval_##name(DeeTimeObject *__restrict self) {        \
@@ -2037,7 +2038,8 @@ PRIVATE struct type_getset tpconst time_getsets[] = {
 	TYPE_GETSET("part", &time_datepart_get, &time_datepart_del, &time_datepart_set,
 	            "->?GTime\nDeprecated alias for ?#datepart"),
 #define DEFINE_DEPRECATED_TIME_AS(name, alias_for) \
-	TYPE_GETSET(name, &time_getval_##alias_for, &time_delval_##alias_for, &time_setval_##alias_for, "->?Dint\nDeprecated alias for ?#" #alias_for)
+	TYPE_GETSET(name, &time_getval_##alias_for, &time_delval_##alias_for, &time_setval_##alias_for, \
+	            "->?Dint\nDeprecated alias for ?#" #alias_for)
 	DEFINE_DEPRECATED_TIME_AS("mic", microsecond),
 	DEFINE_DEPRECATED_TIME_AS("mil", millisecond),
 	DEFINE_DEPRECATED_TIME_AS("sec", second),
@@ -2093,7 +2095,11 @@ PRIVATE struct type_getset tpconst time_getsets[] = {
 	            "->?Dbool\n"
 	            "Returns ?t if DaylightSavingsTime is in active at @this time\n"
 	            "Note that this implementation does not perform any special "
-	            /**/ "handling no matter if daylight savings is active or not"),
+	            /**/ "handling no matter if daylight savings is active or not.\n"
+	            "Also note that this implementation does not account for different "
+	            /**/ "algorithms that may be used around the world to determine isdst "
+	            /**/ "being enabled, or certain countries/timezones that may not even "
+	            /**/ "have daylight savings time."),
 	TYPE_GETSET_END
 };
 
@@ -2881,10 +2887,10 @@ PRIVATE struct type_method tpconst time_class_methods[] = {
 	            "Deprecated. Always returns $1000000"),
 	TYPE_KWMETHOD("time", &time_class_maketime,
 	              "(hour=!0,minute=!0,second=!0,nanosecond=!0)->?.\n"
-	              "Deprecated. Use ?Gmaketime instead"),
+	              "Deprecated. Use ?Gmaketime or ?GTime instead"),
 	TYPE_KWMETHOD("date", &time_class_makedate,
 	              "(year=!0,month=!1,day=!1)->?.\n"
-	              "Deprecated. Use ?Gmakedate instead"),
+	              "Deprecated. Use ?Gmakedate or ?GTime instead"),
 	TYPE_METHOD("from_time_t", &time_class_from_time_t,
 	            "(time_t_value:?Dint)->?.\n"
 	            "Deprecated (use ${Time(time_t: time_t_value)} instead)"),
@@ -3358,33 +3364,33 @@ INTERN DeeTypeObject DeeTime_Type = {
 	                         /**/ "object is a ?#istimestamp equal to that described by the singular "
 	                         /**/ "arguments, and off-set by what is specified by the plural arguments\n"
 	                         "When no arguments are specific, a zero-delta is constructed\n"
-
 	                         "\n"
+
 	                         "int->\n"
 	                         "Return then number of nano-seconds described by @this time-object. "
 	                         /**/ "In the case of ?#isdelta, the length of that delta is returned. In the "
 	                         /**/ "case of ?#istimestamp, the total nano-seconds since #C{01-01-0000} are returned.\n"
-
 	                         "\n"
+
 	                         "str->\n"
 	                         "Returns value of @this time object when it was constructed to "
 	                         /**/ "represent an explicit view (such as through use of ?Gdays, "
 	                         /**/ "or through a sub-view such as ?#days), or return the time "
 	                         /**/ "represented in a human-readable fashion\n"
-
 	                         "\n"
+
 	                         "repr->\n"
 	                         "Returns a string representation of the components of @this time object\n"
-
 	                         "\n"
+
 	                         "int->\n"
 	                         "Returns the value of @this time object as the number of nanoseconds since #C{01-01-0000} "
 	                         /**/ "for timestamps (s.a. ?#istimestamp), or the number of delta-nanoseconds for delta time "
 	                         /**/ "objects (s.a. ?#isdelta).\n"
 	                         "This operator allows time objects to be passed to system functions that take "
 	                         /**/ "integer timeouts in nanoseconds, such as :Thread.sleep or ?Aaccept?Enet:socket."
-
 	                         "\n"
+
 	                         "-(other:?.)->?.\n"
 	                         "+(other:?.)->?.\n"
 	                         "Adding or subtracting time objects affects time deltas as follows:\n"
@@ -3398,36 +3404,35 @@ INTERN DeeTypeObject DeeTime_Type = {
 	                         /**/ "?#isdelta|${+}|?#isdelta|?#isdelta&"
 	                         /**/ "?#isdelta|${-}|?#isdelta|?#isdelta&"
 	                         "}\n"
-
 	                         "\n"
+
 	                         "*(other:?Dint)->?.\n"
 	                         "@throw ValueError @this ?. object isn't a delta (s.a. ?#isdelta)\n"
 	                         "Multiply a delta time object by the given amount.\n"
-
 	                         "\n"
+
 	                         "/(other:?.)->?Dint\n"
 	                         "@throw ValueError @this ?. object isn't a delta (s.a. ?#isdelta)\n"
 	                         "@throw DivideByZero @other represents $0 nano-seconds\n"
 	                         "Divide 2 delta time object by each other\n"
-
 	                         "\n"
+
 	                         "/(other:?Dint)->?.\n"
 	                         "@throw ValueError @this ?. object isn't a delta (s.a. ?#isdelta)\n"
 	                         "@throw DivideByZero @other is $0\n"
 	                         "Divide a delta time object by the given amount.\n"
-
 	                         "\n"
+
 	                         "%(other:?.)->?.\n"
 	                         "@throw ValueError @this ?. object isn't a delta (s.a. ?#isdelta)\n"
 	                         "@throw DivideByZero @other represents $0 nano-seconds\n"
 	                         "Get the remainder from dividing 2 delta time object by each other.\n"
-
 	                         "\n"
+
 	                         "%(other:?Dint)->?.\n"
 	                         "@throw ValueError @this ?. object isn't a delta (s.a. ?#isdelta)\n"
 	                         "@throw DivideByZero @other is $0\n"
-	                         "Get the remainder from dividing @this time delta by the given amount.\n"
-	),
+	                         "Get the remainder from dividing @this time delta by the given amount."),
 	/* .tp_flags    = */ TP_FNORMAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
@@ -3508,11 +3513,11 @@ PRIVATE struct dex_symbol symbols[] = {
 	  DOC("->?GTime\n"
 	      "Returns the current tick suitable for high-precision timings.\n"
 	      "The tick itself is offset from some undefined point in time, meaning that the only "
-	      "meaningful use, is to subtract the return values of two calls to this function.") },
+	      /**/ "meaningful use, is to subtract the return values of two calls to this function.") },
 	{ "maketime", (DeeObject *)&libtime_maketime, MODSYM_FNORMAL,
 	  DOC("(hour=!0,minute=!0,second=!0,nanosecond=!0)->?GTime\n"
 	      "Construct a new ?GTime object using the given arguments for the "
-	      "sub-day portion, while filling in the remainder as all zeroes:\n"
+	      /**/ "sub-day portion, while filling in the remainder as all zeroes:\n"
 	      "${"
 	      /**/ "import Time from time;\n"
 	      /**/ "Time(hour: hour, minute: minute, second: second, nanosecond: nanosecond);"
@@ -3520,7 +3525,7 @@ PRIVATE struct dex_symbol symbols[] = {
 	{ "makedate", (DeeObject *)&libtime_makedate, MODSYM_FNORMAL,
 	  DOC("(year=!0,month=!1,day=!1)->?GTime\n"
 	      "Construct a new ?GTime object using the given arguments for the "
-	      "post-day portion, while filling in the remainder as all zeroes:\n"
+	      /**/ "post-day portion, while filling in the remainder as all zeroes:\n"
 	      "${"
 	      /**/ "import Time from time;\n"
 	      /**/ "Time(year: year, month: month, day: day);"
@@ -3532,7 +3537,7 @@ PRIVATE struct dex_symbol symbols[] = {
 	 *       as it is implementation-specific what's the time resolution
 	 *       that's used by functions accepting timeouts (in the GATW
 	 *       implementation it's nanoseconds, but that wasn't always the
-	 *       case):
+	 *       case, as not-too-long-ago, it was microseconds):
 	 * >> import seconds from time;
 	 * >> import Thread from deemon;
 	 * >> 
@@ -3583,7 +3588,7 @@ PRIVATE struct dex_symbol symbols[] = {
 	{ "_mkunix", (DeeObject *)&libtime__mkunix, MODSYM_FNORMAL,
 	  DOC("(time_t:?Dint,nanosecond=!0)->?GTime\n"
 	      "Construct a new anonymous timestamp object, from @time_t as seconds-"
-	      "since-#C{01-01-1970}, and the accompanying extra @nanosecond addend.") },
+	      /**/ "since-#C{01-01-1970}, and the accompanying extra @nanosecond addend.") },
 #ifdef CONFIG_HOST_WINDOWS
 	{ "_mkFILETIME", (DeeObject *)&libtime__mkFILETIME, MODSYM_FNORMAL,
 	  DOC("(FILETIME:?Dint)->?GTime\n"

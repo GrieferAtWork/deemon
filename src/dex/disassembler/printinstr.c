@@ -2549,9 +2549,6 @@ err:
 	return temp;
 }
 
-
-
-
 DECL_END
 
 #endif /* !GUARD_DEX_FS_PRINTINSTR_C */

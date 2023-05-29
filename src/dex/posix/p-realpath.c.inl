@@ -115,10 +115,10 @@ again_frealpathat:
 increase_frealpathat_buflen:
 					new_buflen = buflen * 2;
 					newbuf     = (char *)DeeString_TryResize1ByteBuffer((uint8_t *)buf, new_buflen);
-					if unlikely (!newbuf) {
+					if unlikely(!newbuf) {
 						new_buflen = buflen + 1;
 						newbuf     = (char *)DeeString_Resize1ByteBuffer((uint8_t *)buf, new_buflen);
-						if unlikely (!newbuf) {
+						if unlikely(!newbuf) {
 							DeeString_Free1ByteBuffer((uint8_t *)buf);
 							goto err;
 						}

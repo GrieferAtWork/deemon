@@ -140,11 +140,11 @@ STATIC_ASSERT(sizeof(long) == __SIZEOF_LONG__);
 #define F_SIGNED   0x0100
 #define F_FIXBUF   0x0200
 
-#define DO(expr)                          \
-	do {                                  \
-		if unlikely ((temp = (expr)) < 0) \
-			goto err;                     \
-		result += temp;                   \
+#define DO(expr)                         \
+	do {                                 \
+		if unlikely((temp = (expr)) < 0) \
+			goto err;                    \
+		result += temp;                  \
 	}	__WHILE0
 #define print(p, s)                   \
 	do {                              \

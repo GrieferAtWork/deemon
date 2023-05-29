@@ -1696,7 +1696,7 @@ PRIVATE struct dex_symbol symbols[] = {
 	D(POSIX__OPENAT_DEF_DOC("Same as ?G_open, but allows the path to be specified as @dfd:@filename"))
 	D(POSIX_READ_DEF_DOC("Read up to @count bytes into @buf\n"
 	                     "When @buf is given, return the actual number of read bytes. "
-	                     /**/ "Otherwise, read into a new :Bytes object that is then returned"))
+	                     /**/ "Otherwise, read into a new ?GBytes object that is then returned"))
 	D(POSIX_WRITE_DEF_DOC("Write up to @count bytes from @buf, returning the actual number of bytes written"))
 	D(POSIX_LSEEK_DEF)
 	D(POSIX_FSYNC_DEF)
@@ -1896,10 +1896,10 @@ PRIVATE struct dex_symbol symbols[] = {
 	D({ "DT_WHT", (DeeObject *)&posix_DT_WHT, MODSYM_FNORMAL },)
 	D({ "DTTOIF", (DeeObject *)&posix_DTTOIF, MODSYM_FNORMAL,
 	    DOC("(dt:?Dint)->?Dint\n"
-	        "Convert a ${DT_*} constant to ${S_IF*}") },)
+	        "Convert a #C{DT_*} constant to #C{S_IF*}") },)
 	D({ "IFTODT", (DeeObject *)&posix_IFTODT, MODSYM_FNORMAL,
 	    DOC("(if:?Dint)->?Dint\n"
-	        "Convert an ${S_IF*} constant to ${DT_*}") },)
+	        "Convert an #C{S_IF*} constant to #C{DT_*}") },)
 
 	/* Environ control */
 	D(POSIX_GETENV_DEF_DOC("@throws KeyError The given @varname wasn't found, and @defl wasn't given\n"
@@ -2053,16 +2053,16 @@ PRIVATE struct dex_symbol symbols[] = {
 	                        "@throw NoDirectory A part of the given @path is not a directory\n"
 	                        "@throw UnsupportedAPI The underlying filesystem does not support symbolic links\n"
 	                        "@throw FileAccessError The current user does not have permissions to access the "
-	                        /*                  */ "directory containing the non-existant file @path for writing\n"
+	                        /*                  */ "directory containing the non-existent file @path for writing\n"
 	                        "@throw ReadOnlyFile The filesystem or device hosting the directory "
-	                        /*               */ "containing the non-existant object @path is "
+	                        /*               */ "containing the non-existent object @path is "
 	                        /*               */ "in read-only operations mode, preventing the "
 	                        /*               */ "creation of new symbolic links\n"
 	                        "@throw SystemError Failed to create a symbolic link under @path for some reason\n"
 	                        "Symbolic links are filesystem redirection points which you can think of as "
 	                        /**/ "keyword-style macros that exist in directories. When addressed, simply imagine "
 	                        /**/ "their name being replaced with @text, at which point the resulting path "
-	                        "is then re-evaluated:\n"
+	                        /**/ "is then re-evaluated:\n"
 	                        "${"
 	                        /**/ "import symlink from fs;\n"
 	                        /**/ "import File from deemon;\n"
@@ -2078,9 +2078,9 @@ PRIVATE struct dex_symbol symbols[] = {
 	                          "@throw NoDirectory A part of the given @dfd:@path is not a directory\n"
 	                          "@throw UnsupportedAPI The underlying filesystem does not support symbolic links\n"
 	                          "@throw FileAccessError The current user does not have permissions to access the "
-	                          /*                  */ "directory containing the non-existant file @dfd:@path for writing\n"
+	                          /*                  */ "directory containing the non-existent file @dfd:@path for writing\n"
 	                          "@throw ReadOnlyFile The filesystem or device hosting the directory "
-	                          /*               */ "containing the non-existant object @dfd:@path is "
+	                          /*               */ "containing the non-existent object @dfd:@path is "
 	                          /*               */ "in read-only operations mode, preventing the "
 	                          /*               */ "creation of new symbolic links\n"
 	                          "@throw SystemError Failed to create a symbolic link under @dfd:@path for some reason\n"
@@ -2088,7 +2088,7 @@ PRIVATE struct dex_symbol symbols[] = {
 	                          "Symbolic links are filesystem redirection points which you can think of as "
 	                          /**/ "keyword-style macros that exist in directories. When addressed, simply imagine "
 	                          /**/ "their name being replaced with @text, at which point the resulting path "
-	                          "is then re-evaluated:\n"
+	                          /**/ "is then re-evaluated:\n"
 	                          "${"
 	                          /**/ "import symlink from fs;\n"
 	                          /**/ "import File from deemon;\n"
@@ -2104,9 +2104,9 @@ PRIVATE struct dex_symbol symbols[] = {
 	                           "@throw NoDirectory A part of the given @dfd:@path is not a directory\n"
 	                           "@throw UnsupportedAPI The underlying filesystem does not support symbolic links\n"
 	                           "@throw FileAccessError The current user does not have permissions to access the "
-	                           /*                  */ "directory containing the non-existant file @dfd:@path for writing\n"
+	                           /*                  */ "directory containing the non-existent file @dfd:@path for writing\n"
 	                           "@throw ReadOnlyFile The filesystem or device hosting the directory "
-	                           /*               */ "containing the non-existant object @dfd:@path is "
+	                           /*               */ "containing the non-existent object @dfd:@path is "
 	                           /*               */ "in read-only operations mode, preventing the "
 	                           /*               */ "creation of new symbolic links\n"
 	                           "@throw SystemError Failed to create a symbolic link under @dfd:@path for some reason\n"
@@ -2114,7 +2114,7 @@ PRIVATE struct dex_symbol symbols[] = {
 	                           "Symbolic links are filesystem redirection points which you can think of as "
 	                           /**/ "keyword-style macros that exist in directories. When addressed, simply imagine "
 	                           /**/ "their name being replaced with @text, at which point the resulting path "
-	                           "is then re-evaluated:\n"
+	                           /**/ "is then re-evaluated:\n"
 	                           "${"
 	                           /**/ "import symlink from fs;\n"
 	                           /**/ "import File from deemon;\n"
@@ -2244,7 +2244,7 @@ PRIVATE struct dex_symbol symbols[] = {
 	                       "@throw FileAccessError The current user does not have permissions to access the file "
 	                       /*                  */ "or directory @oldpath, or the directory containing @newpath\n"
 	                       "@throw ReadOnlyFile The filesystem or device hosting the given file or directory @oldpath or the "
-	                       /*               */ "directory containing the non-existant file @newpath is in read-only operations "
+	                       /*               */ "directory containing the non-existent file @newpath is in read-only operations "
 	                       /*               */ "mode, preventing the modification of existing files or directories\n"
 	                       "@throw SystemError Failed to rename the given @oldpath for some reason\n"
 	                       "Renames or moves a given @oldpath to be referred to as @newpath from then on\n"
@@ -2261,7 +2261,7 @@ PRIVATE struct dex_symbol symbols[] = {
 	                        "@throw FileAccessError The current user does not have permissions to access the file "
 	                        /*                  */ "or directory @oldfd, or the directory containing @newpath\n"
 	                        "@throw ReadOnlyFile The filesystem or device hosting the given file or directory @oldfd or the "
-	                        /*               */ "directory containing the non-existant file @newpath is in read-only operations "
+	                        /*               */ "directory containing the non-existent file @newpath is in read-only operations "
 	                        /*               */ "mode, preventing the modification of existing files or directories\n"
 	                        "@throw FileClosed The given @oldfd has already been closed\n"
 	                        "@throw SystemError Failed to rename the given @oldfd for some reason\n"
@@ -2279,7 +2279,7 @@ PRIVATE struct dex_symbol symbols[] = {
 	                         "@throw FileAccessError The current user does not have permissions to access the file "
 	                         /*                  */ "or directory @olddirfd:@oldpath, or the directory containing @newdirfd:@newpath\n"
 	                         "@throw ReadOnlyFile The filesystem or device hosting the given file or directory @olddirfd:@oldpath or the "
-	                         /*               */ "directory containing the non-existant file @newdirfd:@newpath is in read-only operations "
+	                         /*               */ "directory containing the non-existent file @newdirfd:@newpath is in read-only operations "
 	                         /*               */ "mode, preventing the modification of existing files or directories\n"
 	                         "@throw FileClosed The given @olddirfd or @newdirfd has already been closed\n"
 	                         "@throw ValueError Invalid @atflags\n"
@@ -2298,7 +2298,7 @@ PRIVATE struct dex_symbol symbols[] = {
 	                          "@throw FileAccessError The current user does not have permissions to access the file "
 	                          /*                  */ "or directory @olddirfd:@oldpath, or the directory containing @newdirfd:@newpath\n"
 	                          "@throw ReadOnlyFile The filesystem or device hosting the given file or directory @olddirfd:@oldpath or the "
-	                          /*               */ "directory containing the non-existant file @newdirfd:@newpath is in read-only operations "
+	                          /*               */ "directory containing the non-existent file @newdirfd:@newpath is in read-only operations "
 	                          /*               */ "mode, preventing the modification of existing files or directories\n"
 	                          "@throw FileExists @flags include ?GRENAME_NOREPLACE, but @newdirfd:@newpath already exists\n"
 	                          "@throw FileClosed The given @olddirfd or @newdirfd has already been closed\n"
@@ -2315,9 +2315,9 @@ PRIVATE struct dex_symbol symbols[] = {
 	                     "@throw UnsupportedAPI The underlying filesystem hosting @oldpath and @newpathdoes not support hard links\n"
 	                     "@throw CrossDevice The given @oldpath and @newpath are not apart of the same drive\n"
 	                     "@throw FileAccessError The current user does not have permissions to access the file or directory "
-	                     /*                  */ "@oldpath for reading, or the directory containing the non-existant "
+	                     /*                  */ "@oldpath for reading, or the directory containing the non-existent "
 	                     /*                  */ "object @newpath for writing\n"
-	                     "@throw ReadOnlyFile The filesystem or device hosting the directory containing the non-existant "
+	                     "@throw ReadOnlyFile The filesystem or device hosting the directory containing the non-existent "
 	                     /*               */ "object @newpath is in read-only operations mode, preventing the addition "
 	                     /*               */ "of file or directory links\n"
 	                     "@throw SystemError Failed to create the link to @oldpath for some reason\n"
@@ -2332,9 +2332,9 @@ PRIVATE struct dex_symbol symbols[] = {
 	                      "@throw UnsupportedAPI The underlying filesystem hosting @oldfd and @newpathdoes not support hard links\n"
 	                      "@throw CrossDevice The given @oldfd and @newpath are not apart of the same drive\n"
 	                      "@throw FileAccessError The current user does not have permissions to access the file or directory "
-	                      /*                  */ "@oldfd for reading, or the directory containing the non-existant "
+	                      /*                  */ "@oldfd for reading, or the directory containing the non-existent "
 	                      /*                  */ "object @newpath for writing\n"
-	                      "@throw ReadOnlyFile The filesystem or device hosting the directory containing the non-existant "
+	                      "@throw ReadOnlyFile The filesystem or device hosting the directory containing the non-existent "
 	                      /*               */ "object @newpath is in read-only operations mode, preventing the addition "
 	                      /*               */ "of file or directory links\n"
 	                      "@throw SystemError Failed to create the link to @oldfd for some reason\n"
@@ -2349,9 +2349,9 @@ PRIVATE struct dex_symbol symbols[] = {
 	                       "@throw UnsupportedAPI The underlying filesystem hosting @olddirfd:@oldpath and @newdirfd:@newpathdoes not support hard links\n"
 	                       "@throw CrossDevice The given @olddirfd:@oldpath and @newdirfd:@newpath are not apart of the same drive\n"
 	                       "@throw FileAccessError The current user does not have permissions to access the file or directory "
-	                       /*                  */ "@olddirfd:@oldpath for reading, or the directory containing the non-existant "
+	                       /*                  */ "@olddirfd:@oldpath for reading, or the directory containing the non-existent "
 	                       /*                  */ "object @newdirfd:@newpath for writing\n"
-	                       "@throw ReadOnlyFile The filesystem or device hosting the directory containing the non-existant "
+	                       "@throw ReadOnlyFile The filesystem or device hosting the directory containing the non-existent "
 	                       /*               */ "object @newdirfd:@newpath is in read-only operations mode, preventing the addition "
 	                       /*               */ "of file or directory links\n"
 	                       "@throw SystemError Failed to create the link to @olddirfd:@oldpath for some reason\n"
@@ -2487,10 +2487,10 @@ PRIVATE struct dex_symbol symbols[] = {
 	/************************************************************************/
 	/* Application exit control                                             */
 	/************************************************************************/
-	D(POSIX_ATEXIT_DEF_DOC("Register a callback to-be invoked before ?Gexit (Same as :AppExit.atexit)"))
+	D(POSIX_ATEXIT_DEF_DOC("Register a callback to-be invoked before ?Gexit (Same as ?Aatexit?AAppExit?DError)"))
 	D(POSIX_EXIT_DEF_DOC("Terminate execution of deemon after invoking ?Gatexit callbacks\n"
 	                     "Termination is done using the C $exit or $_Exit functions, if available. However if these "
-	                     /**/ "functions are not provided by the host, an :AppExit error is thrown instead\n"
+	                     /**/ "functions are not provided by the host, an ?AAppExit?DError error is thrown instead\n"
 	                     "When no @exitcode is given, the host's default default value of ?GEXIT_FAILURE, or $1 is used\n"
 	                     "This function never returns normally"))
 	D(POSIX__EXIT_DEF_DOC("Terminate execution of deemon without invoking ?Gatexit callbacks (s.a. ?Gexit)"))
@@ -2585,8 +2585,8 @@ PRIVATE struct dex_symbol symbols[] = {
 	                      "The host's primary and secondary separator "
 	                      /**/ "values can be read from ?GSEP and ?GALTSEP"))
 	D(POSIX_JOINPATH_DEF_DOC("Joins all @paths passed through varargs to generate a full path. "
-	                         "For this purpose, all path elements are joined with ?GSEP, "
-	                         "after removal of additional slashes and spaces surrounding the given @paths"))
+	                         /**/ "For this purpose, all path elements are joined with ?GSEP, "
+	                         /**/ "after removal of additional slashes and spaces surrounding the given @paths"))
 	D({ "FS_SEP", (DeeObject *)&posix_FS_SEP, MODSYM_FNORMAL,
 	    DOC("->?Dstring\n"
 	        "The host's primary path separator. On windows that is "
@@ -2603,20 +2603,20 @@ PRIVATE struct dex_symbol symbols[] = {
 	        /**/ "found in environment variables, most notably ${environ[\"PATH\"]}") },)
 	D({ "DEV_NULL", (DeeObject *)&posix_DEV_NULL, MODSYM_FNORMAL,
 	    DOC("->?Dstring\n"
-	        "A special filename accepted by ?Gopen to return a data sink") },)
+	        "A special filename accepted by ?Gopen and ?Aopen?DFile to return a data sink") },)
 	D({ "DEV_TTY", (DeeObject *)&posix_DEV_TTY, MODSYM_FNORMAL,
 	    DOC("->?Dstring\n"
-	        "A special filename accepted by ?Gopen to return a "
+	        "A special filename accepted by ?Gopen and ?Aopen?DFile to return a "
 	        /**/ "handle to the calling process's controlling terminal") },)
 	D({ "DEV_STDIN", (DeeObject *)&posix_DEV_STDIN, MODSYM_FNORMAL,
 	    DOC("->?Dstring\n"
-	        "A special filename accepted by ?Gopen to return a handle to ?Astdin?DFile") },)
+	        "A special filename accepted by ?Gopen and ?Aopen?DFile to return a handle to ?Astdin?DFile") },)
 	D({ "DEV_STDOUT", (DeeObject *)&posix_DEV_STDOUT, MODSYM_FNORMAL,
 	    DOC("->?Dstring\n"
-	        "A special filename accepted by ?Gopen to return a handle to ?Astdout?DFile") },)
+	        "A special filename accepted by ?Gopen and ?Aopen?DFile to return a handle to ?Astdout?DFile") },)
 	D({ "DEV_STDERR", (DeeObject *)&posix_DEV_STDERR, MODSYM_FNORMAL,
 	    DOC("->?Dstring\n"
-	        "A special filename accepted by ?Gopen to return a handle to ?Astderr?DFile") },)
+	        "A special filename accepted by ?Gopen and ?Aopen?DFile to return a handle to ?Astderr?DFile") },)
 
 	/* Allow user-code to dynamically determine if the host has a case-insensitive file-system.
 	 * We mark this global variable a a CONSTEXPR (in user-code: `final'), so that the compiler

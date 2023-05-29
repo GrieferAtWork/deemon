@@ -246,7 +246,7 @@ BUILTIN_DOC(exec, &builtin_exec, MODSYM_FNORMAL,
             /**/ "language-level features such as goto-labels or true support for type "
             /**/ "annotations\n"
             "The given @expr is either evaluated as an expression or statement, "
-            "i.e. both $\"10 + 20\" and $\"print 42;\" are accepted")
+            /**/ "i.e. both $\"10 + 20\" and $\"print 42;\" are accepted")
 
 
 /* Builtin runtime operator helpers. */

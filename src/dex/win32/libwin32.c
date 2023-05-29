@@ -6144,15 +6144,19 @@ PRIVATE struct dex_symbol symbols[] = {
 	                            /**/ "include handling to automatically apply this fix when you "
 	                            /**/ "pass a path that exceeds non-UNC limits, so using this "
 	                            /**/ "function shouldn't be necessary in most cases.")
-
-	/* Error-related functions. */
-	LIBWIN32_GETHANDLE_DEF_DOC("Return the underlying system handle that is bound to the given object\n"
-	                           " - When ?N is given, always return ${HANDLE(0)}\n"
-	                           " - When an :int is given, return the result of ${get_osfhandle(ob)}\n"
-	                           " - When the given object has an attribute $" Dee_fd_osfhandle_GETSET ", return ${ob." Dee_fd_osfhandle_GETSET "}\n"
-	                           " - When the given object has an attribute $" Dee_fd_fileno_GETSET ", return ${get_osfhandle(ob." Dee_fd_osfhandle_GETSET ")}\n"
-	                           " - When another ?GHANDLE object is given, re-return that object\n"
-	                           "Note that these sames steps are also performed by all other functions taking ?GHANDLE input arguments")
+	LIBWIN32_GETHANDLE_DEF_DOC("Return the underlying system handle that is bound to the given object"
+	                           "#L-{"
+	                           /**/ "When ?N is given, always return ${HANDLE(0)}|"
+	                           /**/ "When an :int is given, return the result of ${get_osfhandle(ob)}|"
+	                           /**/ "When the given object has an attribute $" Dee_fd_osfhandle_GETSET ", return ${ob." Dee_fd_osfhandle_GETSET "}|"
+	                           /**/ "When the given object has an attribute $" Dee_fd_fileno_GETSET ", return ${get_osfhandle(ob." Dee_fd_osfhandle_GETSET ")}|"
+	                           /**/ "When another ?GHANDLE object is given, re-return that object"
+	                           "}"
+	                           "Note that these sames steps are also performed by all other "
+	                           /**/ "functions taking ?GHANDLE input arguments, as well as "
+	                           /**/ "all functions in the ?Mposix module accepting file descriptors "
+	                           /**/ "when compiled for a windows host (e.g. ?Eposix:openat will "
+	                           /**/ "accept a handle opened by ?GCreateFile).")
 
 	/* Error-related functions. */
 	LIBWIN32_GETLASTERROR_DEF
@@ -6164,30 +6168,30 @@ PRIVATE struct dex_symbol symbols[] = {
 	LIBWIN32_CLOSEHANDLE_DEF
 	LIBWIN32_CREATEFILE_DEF
 	LIBWIN32_DUPLICATEHANDLE_DEF
-	LIBWIN32_READFILE_DEF_DOC("Returns dwNumberOfBytesRead")
-	LIBWIN32_WRITEFILE_DEF_DOC("Returns dwNumberOfBytesWritten")
+	LIBWIN32_READFILE_DEF_DOC("Returns #CdwNumberOfBytesRead")
+	LIBWIN32_WRITEFILE_DEF_DOC("Returns #CdwNumberOfBytesWritten")
 	LIBWIN32_SETENDOFFILE_DEF
 	LIBWIN32_SETFILEPOINTER_DEF_DOC("Returns the new stream position")
-	LIBWIN32_GETFILETIME_DEF_DOC("Returns a tuple (CreationTime, LastAccessTime, LastWriteTime) for the given @hFile")
+	LIBWIN32_GETFILETIME_DEF_DOC("Returns a tuple #C{(CreationTime, LastAccessTime, LastWriteTime)} for the given @hFile")
 	LIBWIN32_SETFILETIME_DEF
 	LIBWIN32_SETFILEVALIDDATA_DEF
-	LIBWIN32_GETDISKFREESPACE_DEF_DOC("Returns a tuple (uSectorsPerCluster, uBytesPerSector, uNumberOfFreeClusters, uTotalNumberOfClusters)")
-	LIBWIN32_GETDISKFREESPACEEX_DEF_DOC("Returns a tuple (uFreeBytesAvailableToCaller, uTotalNumberOfBytes, uTotalNumberOfFreeBytes)")
+	LIBWIN32_GETDISKFREESPACE_DEF_DOC("Returns a tuple #C{(uSectorsPerCluster, uBytesPerSector, uNumberOfFreeClusters, uTotalNumberOfClusters)}")
+	LIBWIN32_GETDISKFREESPACEEX_DEF_DOC("Returns a tuple #C{(uFreeBytesAvailableToCaller, uTotalNumberOfBytes, uTotalNumberOfFreeBytes)}")
 	LIBWIN32_GETTEMPPATH_DEF_DOC("Returns a string containing a temporary path")
 	LIBWIN32_GETDLLDIRECTORY_DEF_DOC("Returns a string describing the windows DLL directory")
 	LIBWIN32_SETDLLDIRECTORY_DEF_DOC("Set the windows DLL directory, as used when loading dynamic libraries, and as returned by ?GGetDllDirectory")
-	LIBWIN32_GETFILETYPE_DEF_DOC("Return one of `FILE_TYPE_*'")
+	LIBWIN32_GETFILETYPE_DEF_DOC("Return one of #C{FILE_TYPE_*}")
 	LIBWIN32_GETFILESIZE_DEF_DOC("Return the size of the given @hFile")
-	LIBWIN32_GETDRIVETYPE_DEF_DOC("Returns the type of drive of @lpRootPathName (one of `DRIVE_*')")
-	LIBWIN32_GETFILEATTRIBUTES_DEF_DOC("Returns attributes for @lpFileName (set of `FILE_ATTRIBUTE_*')")
-	LIBWIN32_SETFILEATTRIBUTES_DEF_DOC("Set attributes for @lpFileName to @dwFileAttributes (set of `FILE_ATTRIBUTE_*')")
+	LIBWIN32_GETDRIVETYPE_DEF_DOC("Returns the type of drive of @lpRootPathName (one of #C{DRIVE_*})")
+	LIBWIN32_GETFILEATTRIBUTES_DEF_DOC("Returns attributes for @lpFileName (set of #C{FILE_ATTRIBUTE_*})")
+	LIBWIN32_SETFILEATTRIBUTES_DEF_DOC("Set attributes for @lpFileName to @dwFileAttributes (set of #C{FILE_ATTRIBUTE_*})")
 	LIBWIN32_GETCOMPRESSEDFILESIZE_DEF
 	LIBWIN32_FLUSHFILEBUFFERS_DEF
 	LIBWIN32_GETFINALPATHNAMEBYHANDLE_DEF
 	LIBWIN32_GETFILENAMEOFHANDLE_DEF_DOC("Convenience wrapper for ?GGetFinalPathNameByHandle that also supports the "
 	                                     /**/ "${GetMappedFileName(MapViewOfFile(CreateFileMapping(hFile)))} workaround "
 	                                     /**/ "that is required on Windows XP\n"
-	                                     "Note that a similar function is provided by ?Eposix:frealpath")
+	                                     "Note that similar functionality is also provided by ?Eposix:frealpath")
 	LIBWIN32_WAITFORSINGLEOBJECT_DEF
 	LIBWIN32_WAITFORMULTIPLEOBJECTS_DEF
 	LIBWIN32_SIGNALOBJECTANDWAIT_DEF
@@ -6236,7 +6240,7 @@ PRIVATE struct dex_symbol symbols[] = {
 	LIBWIN32_QUERYDOSDEVICE_DEF_DOC("Returns a list of DOS devices mounted under the given drive (which should be one of ?GGetLogicalDriveStrings)")
 
 	/* DLL functions */
-	LIBWIN32_GETMODULEFILENAME_DEF_DOC("Returns ?N upon error, or the name of the module")
+	LIBWIN32_GETMODULEFILENAME_DEF
 	LIBWIN32_GETMAPPEDFILENAME_DEF
 
 	/* Named pipe API. */

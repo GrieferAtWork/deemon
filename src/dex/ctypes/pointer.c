@@ -275,9 +275,9 @@ PRIVATE struct type_getset tpconst pointer_getsets[] = {
 PRIVATE struct type_member tpconst pointer_members[] = {
 	TYPE_MEMBER_FIELD_DOC("__ptr__", STRUCT_UINTPTR_T, offsetof(struct pointer_object, p_ptr),
 	                      "ABI interface for other libraries to determine if some given object "
-	                      "can be accessed as a pointer. Modules that wish to accept pointer "
-	                      "object should try to access a $\"__ptr__\" attribute of the given "
-	                      "object and interpret that attribute's value as :Numeric"),
+	                      /**/ "can be accessed as a pointer. Modules that wish to accept pointer "
+	                      /**/ "object should try to access a $\"__ptr__\" attribute of the given "
+	                      /**/ "object and interpret that attribute's value as ?DNumeric"),
 	TYPE_MEMBER_END
 };
 

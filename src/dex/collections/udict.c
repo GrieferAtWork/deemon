@@ -1307,7 +1307,7 @@ PRIVATE struct type_method tpconst udict_methods[] = {
 	TYPE_METHOD("update", &udict_update,
 	            "(items:?S?T2?O?O)\n"
 	            "Iterate @items and unpack each element into 2 others, using them as "
-	            "key and value to insert into @this Dict"),
+	            /**/ "key and value to insert into @this Dict"),
 	TYPE_METHOD_END
 };
 

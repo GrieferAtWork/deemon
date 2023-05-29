@@ -330,8 +330,8 @@ array_getrange(DeeArrayTypeObject *tp_self, void *base,
 	if unlikely(end < 0)
 		end += tp_self->at_count;
 	if unlikely((size_t)begin >= tp_self->at_count ||
-		         (size_t)begin >= (size_t)end)
-	begin = end = 0; /* Empty array. */
+	            (size_t)begin >= (size_t)end)
+		begin = end = 0; /* Empty array. */
 	if unlikely((size_t)end > tp_self->at_count)
 		end = (dssize_t)tp_self->at_count;
 
@@ -425,7 +425,7 @@ array_setrange(DeeArrayTypeObject *tp_self, void *base,
 		size_t item_size;
 		union pointer array_iter, array_end;
 		if unlikely((size_t)end > tp_self->at_count)
-			end             = (dssize_t)tp_self->at_count;
+			end = (dssize_t)tp_self->at_count;
 		item_size       = DeeSType_Sizeof(tp_self->at_orig);
 		array_iter.uint = (uintptr_t)base + (size_t)begin * item_size;
 		array_end.uint  = (uintptr_t)base + (size_t)end * item_size;

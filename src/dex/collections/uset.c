@@ -1250,7 +1250,7 @@ INTERN DeeTypeObject USet_Type = {
 
 	                         "iter->\n"
 	                         "Returns an iterator for enumerating all items "
-	                         "in @this set, following a random order"),
+	                         /**/ "in @this set, following an undefined order"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FGC,
 	/* .tp_weakrefs = */ WEAKREF_SUPPORT_ADDR(USet),
 	/* .tp_features = */ TF_NONE,

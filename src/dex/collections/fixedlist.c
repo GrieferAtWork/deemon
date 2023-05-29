@@ -1138,7 +1138,7 @@ INTERN DeeTypeObject FixedList_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "FixedList",
 	/* .tp_doc      = */ DOC("A mutable, but fixed-length sequence type, functioning as "
-	                         "a sort-of hybrid between ?DList and ?DTuple\n"
+	                         /**/ "a sort-of hybrid between ?DList and ?DTuple\n"
 	                         "\n"
 
 	                         "()\n"
@@ -1147,7 +1147,7 @@ INTERN DeeTypeObject FixedList_Type = {
 
 	                         "(size:?Dint,init?)\n"
 	                         "Create an pre-sized list of @size elements, all initialized "
-	                         "as @init, or as unbound when no @init is given\n"
+	                         /**/ "as @init, or as unbound when no @init is given\n"
 	                         "\n"
 
 	                         "(seq:?S?O)\n"
@@ -1169,7 +1169,8 @@ INTERN DeeTypeObject FixedList_Type = {
 
 	                         "move:=->\n"
 	                         "@throw UnpackError @other has a different length than @this\n"
-	                         "Move all the elements from @other into @this FixedList, changing all of them to unbound in @other\n"
+	                         "Move all the elements from @other into @this FixedList, "
+	                         /**/ "changing all of them to unbound in @other\n"
 	                         "\n"
 
 	                         "bool->\n"

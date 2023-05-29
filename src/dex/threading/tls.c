@@ -723,7 +723,7 @@ PRIVATE struct type_method tpconst tls_methods[] = {
 	TYPE_METHOD("delete", &tls_delete,
 	            "->?Dbool\n"
 	            "Unbind the TLS variable slot, returning ?f if "
-	            "it had already been unbound and ?t otherwise"),
+	            /**/ "it had already been unbound and ?t otherwise"),
 	TYPE_METHOD("set", &tls_set,
 	            "(ob)\n"
 	            "Set the TLS variable. Same as ${this.item = ob}"),

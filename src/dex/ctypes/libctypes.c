@@ -232,7 +232,7 @@ f_ctypes_sizeof(size_t argc, DeeObject *const *argv) {
 		if (DeeBytes_Check(arg))
 			return DeeInt_NewSize(DeeBytes_SIZE(arg));
 		type = DeeSType_Get(arg);
-		if unlikely (!type)
+		if unlikely(!type)
 			goto err;
 	}
 	if (DeeLValueType_Check(type))
@@ -254,7 +254,7 @@ f_ctypes_alignof(size_t argc, DeeObject *const *argv) {
 		type = (DeeSTypeObject *)Dee_TYPE(arg);
 	} else {
 		type = DeeSType_Get(arg);
-		if unlikely (!type)
+		if unlikely(!type)
 			goto err;
 	}
 	if (DeeLValueType_Check(type))
@@ -700,7 +700,7 @@ PRIVATE struct dex_symbol symbols[] = {
 	 * ... Anyways: the core idea that types must be able to specify extra bases holds,
 	 *              and is something that needs to be implemented independently of how
 	 *              user-defined classes might interact with such a feature, meaning
-	 *              that the runtime part can (and must be) be implemented long before
+	 *              that the runtime part can (and must be) implemented long before
 	 *              the user-code part can be.
 	 */
 
@@ -791,7 +791,7 @@ PRIVATE struct dex_symbol symbols[] = {
 
 	      "\n"
 	      "(ob:?DBytes)->?Dint\n"
-	      "Returns the size of the given :Bytes ob, which is the same as ${##ob}") },
+	      "Returns the size of the given ?DBytes ob, which is the same as ${##ob}") },
 	{ "alignof", (DeeObject *)&ctypes_alignof, MODSYM_FNORMAL,
 	  DOC("(ob:?GStructuredType)->?Dint\n"
 	      "(ob:?GStructured)->?Dint\n"
@@ -866,7 +866,7 @@ PRIVATE struct dex_symbol symbols[] = {
 	  DOC("(size:?Dint)->?Aptr?Gvoid\n"
 	      "@throw NoMemory Insufficient memory to allocate @size bytes\n"
 	      "Allocate a raw buffer of @size bytes from a heap and return a "
-	      "pointer to its base\n"
+	      /**/ "pointer to its base\n"
 	      "Passing a value of $0 for @size will allocate a minimal-sized heap-block") },
 	{ "calloc", (DeeObject *)&ctypes_calloc, MODSYM_FNORMAL,
 	  DOC("(size:?Dint)->?Aptr?Gvoid\n"
@@ -874,27 +874,27 @@ PRIVATE struct dex_symbol symbols[] = {
 	      "@throw NoMemory Insufficient memory to allocate ${count * size} bytes\n"
 	      "@throw IntegerOverflow The given @count and @size overflow ?Gsize_t when multiplied\n"
 	      "Same as ?Gmalloc, but rather than leaving the newly allocated memory uninitialized, "
-	      "fill it with all zeroes, the same way ${memset(malloc(size), 0, size)} would\n"
-	      "If the product of @count and @size equals ${0}, a minimal-sized heap-block is allocated, "
-	      "however the caller must still assume that the memory range they are allowed to access "
-	      "is non-existant") },
+	      /**/ "fill it with all zeroes, the same way ${memset(malloc(size), 0, size)} would\n"
+	      /**/ "If the product of @count and @size equals ${0}, a minimal-sized heap-block is allocated, "
+	      /**/ "however the caller must still assume that the memory range they are allowed to access "
+	      /**/ "is non-existent") },
 	{ "realloc", (DeeObject *)&ctypes_realloc, MODSYM_FNORMAL,
 	  DOC("(ptr:?Aptr?Gvoid,size:?Dint)->?Aptr?Gvoid\n"
 	      "@throw NoMemory Insufficient memory to allocate @size bytes\n"
 	      "Given a heap-pointer previously allocated using either ?Gmalloc, ?Gcalloc or "
-	      "a prior call to ?Grealloc, change its size to @size, either releasing then "
-	      "unused trailing memory resulting from the difference between its old size "
-	      "and a smaller, newer size, or try to extend it if its new size is larger "
-	      "than its own, in which case a collision with another block located at the "
-	      "location where the extension attempt was made will result in an entirely "
-	      "new block being allocated, with all pre-existing data being copied inside.\n"
+	      /**/ "a prior call to ?Grealloc, change its size to @size, either releasing then "
+	      /**/ "unused trailing memory resulting from the difference between its old size "
+	      /**/ "and a smaller, newer size, or try to extend it if its new size is larger "
+	      /**/ "than its own, in which case a collision with another block located at the "
+	      /**/ "location where the extension attempt was made will result in an entirely "
+	      /**/ "new block being allocated, with all pre-existing data being copied inside.\n"
 	      "In all cases, a pointer to the new heap block is returned, which may be "
-	      "identical to the old block\n"
+	      /**/ "identical to the old block\n"
 	      "If a NULL-pointer is passed for @ptr, the function behaves the same as "
-	      "a call to ?Gmalloc with the given @{size}. Alternatively, if a valid heap "
-	      "pointer is passed for @ptr, and @size is passed as ${0}, the heap block is "
-	      "truncated to a minimal size and a heap block is returned that is semantically "
-	      "equivalent to one returned by ${malloc(0)}\n"
+	      /**/ "a call to ?Gmalloc with the given @{size}. Alternatively, if a valid heap "
+	      /**/ "pointer is passed for @ptr, and @size is passed as ${0}, the heap block is "
+	      /**/ "truncated to a minimal size and a heap block is returned that is semantically "
+	      /**/ "equivalent to one returned by ${malloc(0)}\n"
 	      "In the event of failure, the pre-existing heap-block passed for @ptr will remain unchanged") },
 	{ "free", (DeeObject *)&ctypes_free, MODSYM_FNORMAL,
 	  DOC("(ptr:?Aptr?Gvoid)\n"
@@ -903,16 +903,16 @@ PRIVATE struct dex_symbol symbols[] = {
 	{ "trymalloc", (DeeObject *)&ctypes_trymalloc, MODSYM_FNORMAL,
 	  DOC("(size:?Dint)->?Aptr?Gvoid\n"
 	      "Same as ?Gmalloc, but return a NULL-pointer if allocation isn't "
-	      "possible due to lack of memory, rather than throwing a :NoMemory error") },
+	      /**/ "possible due to lack of memory, rather than throwing a :NoMemory error") },
 	{ "trycalloc", (DeeObject *)&ctypes_trycalloc, MODSYM_FNORMAL,
 	  DOC("(size:?Dint)->?Aptr?Gvoid\n"
 	      "(count:?Dint,size:?Dint)->?Aptr?Gvoid\n"
 	      "Same as ?Gcalloc, but return a NULL-pointer if allocation isn't "
-	      "possible due to lack of memory, rather than throwing a :NoMemory error") },
+	      /**/ "possible due to lack of memory, rather than throwing a :NoMemory error") },
 	{ "tryrealloc", (DeeObject *)&ctypes_tryrealloc, MODSYM_FNORMAL,
 	  DOC("(ptr:?Aptr?Gvoid,size:?Dint)->?Aptr?Gvoid\n"
 	      "Same as ?Grealloc, but return a NULL-pointer if allocation isn't "
-	      "possible due to lack of memory, rather than throwing a :NoMemory error\n"
+	      /**/ "possible due to lack of memory, rather than throwing a :NoMemory error\n"
 	      "In this event, the pre-existing heap-block passed for @ptr is not freed") },
 	{ "strdup", (DeeObject *)&ctypes_strdup, MODSYM_FNORMAL,
 	  DOC("(str:?Aptr?Gchar,maxlen:?Dint=!A!Pmax!Gsize_t)->?Aptr?Gchar\n"
@@ -995,13 +995,13 @@ PRIVATE struct dex_symbol symbols[] = {
 	      "Return a pointer to the first byte in @haystack that is equal to @needle, or @haystack+@haystack_size if now found") },
 	{ "memrend", (DeeObject *)&ctypes_memrend, MODSYM_FNORMAL,
 	  DOC("(haystack:?Aptr?Gvoid,needle:?Dint,haystack_size:?Dint)->?Aptr?Gvoid\n"
-	      "Same as :memend, but if @needle appears multiple times, return a pointer to the last instance\n"
+	      "Same as ?Gmemend, but if @needle appears multiple times, return a pointer to the last instance\n"
 	      "If @needle doesn't appear at all, return a pointer to @haystack") },
 	{ "rawmemchr", (DeeObject *)&ctypes_rawmemchr, MODSYM_FNORMAL,
 	  DOC("(haystack:?Aptr?Gvoid,needle:?Dint)->?Aptr?Gvoid\n"
 	      "Search for the byte equal to @needle, starting at @haystack and only "
-	      "stopping once one is found, or unmapped memory is reached and "
-	      "the host provides support for a MMU") },
+	      /**/ "stopping once one is found, or unmapped memory is reached and "
+	      /**/ "the host provides support for a MMU") },
 	{ "rawmemlen", (DeeObject *)&ctypes_rawmemlen, MODSYM_FNORMAL,
 	  DOC("(haystack:?Aptr?Gvoid,needle:?Dint)->?Dint\n"
 	      "Same as ?Grawmemchr, but return the offset from @haystack") },
@@ -1009,11 +1009,11 @@ PRIVATE struct dex_symbol symbols[] = {
 	  DOC("(haystack:?Aptr?Gvoid,needle:?Dint)->?Aptr?Gvoid\n"
 	      "Same as :rawmemchr, but search in reverse, starting with ${haystack[-1]}\n"
 	      "You can think of this function as a variant of ?Gmemrend that operates "
-	      "on a buffer that spans the entirety of the available address space") },
+	      /**/ "on a buffer that spans the entirety of the available address space") },
 	{ "rawmemrlen", (DeeObject *)&ctypes_rawmemrlen, MODSYM_FNORMAL,
 	  DOC("(haystack:?Aptr?Gvoid,needle:?Dint)->?Dint\n"
 	      "Same as ?Grawmemrchr, but return the positive (unsigned) offset of the "
-	      "matching byte, such that ${haystack + return} points to the byte in question") },
+	      /**/ "matching byte, such that ${haystack + return} points to the byte in question") },
 	{ "memxchr", (DeeObject *)&ctypes_memxchr, MODSYM_FNORMAL,
 	  DOC("(haystack:?Aptr?Gvoid,needle:?Dint,haystack_size:?Dint)->?Aptr?Gvoid\n"
 	      "Same as ?Gmemchr, but instead of comparing bytes for being equal, compare them for being different") },
@@ -1081,7 +1081,7 @@ PRIVATE struct dex_symbol symbols[] = {
 	      "and so on.") },
 	{ "memfrob", (DeeObject *)&ctypes_memfrob, MODSYM_FNORMAL,
 	  DOC("(buf:?Aptr?Gchar,size:?Dint)->?Aptr?Gvoid\n"
-	      "xor all bytse within @buf with $42, implementing _very_ simplistic encryption") },
+	      "xor all bytes within @buf with $42, implementing _very_ simplistic encryption") },
 
 	{ "strlen", (DeeObject *)&ctypes_strlen, MODSYM_FNORMAL,
 	  DOC("(str:?Aptr?Gchar)->?Dint\n"
@@ -1111,16 +1111,20 @@ PRIVATE struct dex_symbol symbols[] = {
 	      "Same as ?Gstrrchr, but limit the max number of scanned characters to @maxlen") },
 	{ "stroff", (DeeObject *)&ctypes_stroff, MODSYM_FNORMAL,
 	  DOC("(haystack:?Aptr?Gchar,needle:?Dint)->?Dint\n"
-	      "Same ?Gstrchr, but return the offset of the found character from @haystack, or ${strlen(haystack)} if @needle wasn't found") },
+	      "Same ?Gstrchr, but return the offset of the found character from @haystack, "
+	      /**/ "or ${strlen(haystack)} if @needle wasn't found") },
 	{ "strroff", (DeeObject *)&ctypes_strroff, MODSYM_FNORMAL,
 	  DOC("(haystack:?Aptr?Gchar,needle:?Dint)->?Dint\n"
-	      "Same ?Gstrrchr, but return the offset of the found character from @haystack, or ${size_t.max} if @needle wasn't found") },
+	      "Same ?Gstrrchr, but return the offset of the found character from @haystack, "
+	      /**/ "or ${size_t.max} if @needle wasn't found") },
 	{ "strnoff", (DeeObject *)&ctypes_strnoff, MODSYM_FNORMAL,
 	  DOC("(haystack:?Aptr?Gchar,needle:?Dint,maxlen:?Dint)->?Dint\n"
-	      "Same ?Gstrnchr, but return the offset of the found character from @haystack, or ${strnlen(haystack, maxlen)} if @needle wasn't found") },
+	      "Same ?Gstrnchr, but return the offset of the found character from @haystack, "
+	      /**/ "or ${strnlen(haystack, maxlen)} if @needle wasn't found") },
 	{ "strnroff", (DeeObject *)&ctypes_strnroff, MODSYM_FNORMAL,
 	  DOC("(haystack:?Aptr?Gchar,needle:?Dint,maxlen:?Dint)->?Dint\n"
-	      "Same ?Gstrnrchr, but return the offset of the found character from @haystack, or ${size_t.max} if @needle wasn't found") },
+	      "Same ?Gstrnrchr, but return the offset of the found character from @haystack, "
+	      /**/ "or ${size_t.max} if @needle wasn't found") },
 	{ "strchrnul", (DeeObject *)&ctypes_strchrnul, MODSYM_FNORMAL,
 	  DOC("(haystack:?Aptr?Gchar,needle:?Dint)->?Aptr?Gchar\n"
 	      "Same as ?Gstrchr, but return ${strend(haystack)} if @needle wasn't found") },
@@ -1265,16 +1269,16 @@ PRIVATE struct dex_symbol symbols[] = {
 	{ "atomic_cmpxch", (DeeObject *)&ctypes_atomic_cmpxch, MODSYM_FNORMAL,
 	  DOC("(ptr:?Aptr?GStructured,oldval:?Q!A!Aptr!Pind],newval:?Q!A!Aptr!Pind],weak=!f)->?Dbool\n"
 	      "Do an atomic compare-and-exchange of memory at @ptr from @oldval to @newval\n"
-	      "When @weak is true, the operation is allowed to fail sporadically, even when "
-	      "memory at @ptr and @oldval are identical\n"
+	      /**/ "When @weak is true, the operation is allowed to fail sporadically, even when "
+	      /**/ "memory at @ptr and @oldval are identical\n"
 	      "This is a type-generic operation, with the address-width of the atomic operation "
-	      "depending on the typing of @ptr. Supported widths are $1, $2, $4 and $8 bytes") },
+	      /**/ "depending on the typing of @ptr. Supported widths are $1, $2, $4 and $8 bytes") },
 	{ "atomic_cmpxch_val", (DeeObject *)&ctypes_atomic_cmpxch_val, MODSYM_FNORMAL,
 	  DOC("(ptr:?Aptr?GStructured,oldval:?Q!A!Aptr!Pind],newval:?Q!A!Aptr!Pind])->?Q!A!Aptr!Pind]\n"
 	      "Same as ?Gatomic_cmpxch, except that rather than returning !t or !f indicative of "
-	      "the success of the exchange, the #Ireal old value read from @ptr is returned. If "
-	      "this is equal to @oldval, the operation was successful. If not, memory pointed-to "
-	      "by @ptr remains unchanged") },
+	      /**/ "the success of the exchange, the #Ireal old value read from @ptr is returned. If "
+	      /**/ "this is equal to @oldval, the operation was successful. If not, memory pointed-to "
+	      /**/ "by @ptr remains unchanged") },
 	{ "atomic_fetchadd", (DeeObject *)&ctypes_atomic_fetchadd, MODSYM_FNORMAL,
 	  DOC("(ptr:?Aptr?GStructured,addend:?Q!A!Aptr!Pind])->?Q!A!Aptr!Pind]\n"
 	      "Atomic operation for ${({ local r = copy ptr.ind; ptr.ind += addend; r; })}") },
@@ -1363,7 +1367,7 @@ PRIVATE struct dex_symbol symbols[] = {
 	      "Wake all threads that are waiting for @ptr to change (s.a. ?Gfutex_wait)") },
 	{ "futex_wait", (DeeObject *)&ctypes_futex_wait, MODSYM_FNORMAL,
 	  DOC("(ptr:?Aptr?GStructured,expected:?Q!A!Aptr!Pind])\n"
-	      "Atomically check if ${ptr.ind == expected}. If this is isn't the case, return immediatly. "
+	      "Atomically check if ${ptr.ind == expected}. If this is isn't the case, return immediately. "
 	      /**/ "Otherwise, wait until another thread makes a call to ?Gfutex_wakeone or ?Gfutex_wakeall, "
 	      /**/ "or until the #I{stars align} (by which I mean that this function might also return sporadically)\n"
 	      "This function can be used to form the basis for any other, arbitrary synchronization "
@@ -1373,7 +1377,7 @@ PRIVATE struct dex_symbol symbols[] = {
 	      "@return true You were woken up, either sporadically, because the value of ${ptr.ind} differs "
 	      /*        */ "from @expected, or because another thread called ?Gfutex_wakeone or ?Gfutex_wakeall\n"
 	      "@return false The given @timeout_nanoseconds has expired\n"
-	      "Atomically check if ${ptr.ind == expected}. If this is isn't the case, immediatly return !t. "
+	      "Atomically check if ${ptr.ind == expected}. If this is isn't the case, immediately return !t. "
 	      /**/ "Otherwise, wait until either @timeout_nanoseconds have elapsed, or another thread "
 	      /**/ "makes a call to ?Gfutex_wakeone or ?Gfutex_wakeall, or until the #I{stars align} "
 	      /**/ "(by which I mean that this function might also return sporadically)\n"

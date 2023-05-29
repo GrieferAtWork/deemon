@@ -1488,10 +1488,10 @@ INTERN DeeTypeObject Deque_Type = {
 	                         "(seq:?S?O)\n"
 	                         "(seq:?S?O,bucketsize:?Dint)\n"
 	                         "Construct a Deque pre-initialized with items from "
-	                         "@seq, and set the Deque's bucket size to @bucketsize\n"
+	                         /**/ "@seq, and set the Deque's bucket size to @bucketsize\n"
 	                         "When @bucketsize is omitted, an implementation-specific "
-	                         "default value is used, which may also depend on other "
-	                         "environmental factors selected to maximize performance\n"
+	                         /**/ "default value is used, which may also depend on other "
+	                         /**/ "environmental factors selected to maximize performance\n"
 	                         "\n"
 
 	                         "copy->\n"
@@ -1752,7 +1752,7 @@ PRIVATE struct type_getset tpconst deqiter_getsets[] = {
 	            "->?X2?Dint?N\n"
 	            "Get/set the index of @this iterator within its associated ?GDeque\n"
 	            "When ?N, the iterator has been invalidated, possibly due to the "
-	            "deque having changed"),
+	            /**/ "deque having changed"),
 	TYPE_GETSET_END
 };
 

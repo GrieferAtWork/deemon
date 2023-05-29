@@ -1866,16 +1866,16 @@ PRIVATE struct dex_symbol symbols[] = {
 	{ "getstacklimit", (DeeObject *)&librt_getstacklimit, MODSYM_FNORMAL,
 	  DOC("->?Dint\n"
 	      "Returns the current stack limit, that is the max number of "
-	      "user-code functions that may be executed consecutively before "
-	      "a :StackOverflow error is thrown\n"
+	      /**/ "user-code functions that may be executed consecutively before "
+	      /**/ "a :StackOverflow error is thrown\n"
 	      "The default stack limit is $" PP_STR(DEE_CONFIG_DEFAULT_STACK_LIMIT)) },
 	{ "setstacklimit", (DeeObject *)&librt_setstacklimit, MODSYM_FNORMAL,
 	  DOC("(new_limit=!" PP_STR(DEE_CONFIG_DEFAULT_STACK_LIMIT) ")->?Dint\n"
 	      "@throw IntegerOverflow @new_limit is negative, or greater than $0xffff\n"
 	      "Set the new stack limit to @new_limit and return the old limit\n"
 	      "The stack limit is checked every time a user-code function is "
-	      "entered, at which point a :StackOverflow error is thrown if "
-	      "the currently set limit is exceeded") },
+	      /**/ "entered, at which point a :StackOverflow error is thrown if "
+	      /**/ "the currently set limit is exceeded") },
 	{ "stacklimitunlimited",
 #ifdef CONFIG_HAVE_EXEC_ALTSTACK
 	  Dee_True
@@ -1886,16 +1886,16 @@ PRIVATE struct dex_symbol symbols[] = {
 	  MODSYM_FNORMAL,
 	  DOC("->?Dbool\n"
 	      "A boolean that is ?t if the deemon interpreter supports "
-	      "an unlimited stack limit, meaning that #setstacklimit can "
-	      "be used to set a stack limit of to up $0xffff ($65535), which "
-	      "is the hard limit\n"
+	      /**/ "an unlimited stack limit, meaning that #setstacklimit can "
+	      /**/ "be used to set a stack limit of to up $0xffff ($65535), which "
+	      /**/ "is the hard limit.\n"
 	      "When ?f, setting the stack limit higher than the default "
-	      "may lead to hard crashes of the deemon interpreter, causing "
-	      "the user-script and hosting application to crash in an undefined "
-	      "manner.\n"
+	      /**/ "may lead to hard crashes of the deemon interpreter, causing "
+	      /**/ "the user-script and hosting application to crash in an undefined "
+	      /**/ "manner.\n"
 	      "Unlimited stack limit support requires a special arch-specific "
-	      "sub-routine within the deemon core, which may not be implemented "
-	      "for an arbitrary architecture") },
+	      /**/ "sub-routine within the deemon core, which may not be implemented "
+	      /**/ "for an arbitrary architecture.") },
 	{ "SlabStat", (DeeObject *)&SlabStat_Type, MODSYM_FREADONLY }, /* Access to slab allocator statistics. */
 	{ "makeclass", (DeeObject *)&librt_makeclass, MODSYM_FREADONLY,
 	  DOC("(base:?X2?DType?N,descriptor:?GClassDescriptor,module:?X2?DModule?N=!N)->?DType\n"
@@ -1906,14 +1906,14 @@ PRIVATE struct dex_symbol symbols[] = {
 	/* Access of the arguments passed to the __MAIN__ module. */
 	{ "argv", (DeeObject *)&librt_argv_get, MODSYM_FPROPERTY,
 	  DOC("->?DTuple\n"
-	      "The arguments that are passed to the __MAIN__ user-code "
-	      "module, where they are available as ${[...]}\n"
+	      "The arguments that are passed to the $__MAIN__ user-code "
+	      /**/ "module, where they are available as ${[...]}.\n"
 	      "Since because of this these arguments aren't accessible from any other "
-	      "module if not explicitly passed by the __MAIN__ module itself (similar "
-	      "to how you'd have to forward `argc' + `argv' in C), this rt-specific "
-	      "extension property allows you to get and set that tuple of arguments.\n"
+	      /**/ "module if not explicitly passed by the $__MAIN__ module itself (similar "
+	      /**/ "to how you'd have to forward `argc' + `argv' in C), this rt-specific "
+	      /**/ "extension property allows you to get and set that tuple of arguments.\n"
 	      "Note however that setting a new argument tuple will not change the tuple "
-	      "which the __MAIN__ module has access to") },
+	      /**/ "which the $__MAIN__ module has access to.") },
 	{ NULL, NULL, MODSYM_FNORMAL },
 	{ NULL, (DeeObject *)&librt_argv_set, MODSYM_FNORMAL },
 
@@ -1985,17 +1985,17 @@ PRIVATE struct dex_symbol symbols[] = {
 	{ "MappingKeys", (DeeObject *)&librt_get_MappingKeys, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR,
 	  DOC("General purpose, sequence proxy type for viewing the keys of an abstract mapping object\n"
 	      "When not overwritten by the mapping type itself, this is the type of sequence that's returned "
-	      "by :Mapping.keys") }, /* DeeMappingKeys_Type */
+	      /**/ "by :Mapping.keys") }, /* DeeMappingKeys_Type */
 	{ "MappingKeysIterator", (DeeObject *)&librt_get_MappingKeysIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR }, /* DeeMappingKeysIterator_Type */
 	{ "MappingValues", (DeeObject *)&librt_get_MappingValues, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR,
 	  DOC("General purpose, sequence proxy type for viewing the values of an abstract mapping object\n"
 	      "When not overwritten by the mapping type itself, this is the type of sequence that's returned "
-	      "by :Mapping.values") }, /* DeeMappingValues_Type */
+	      /**/ "by :Mapping.values") }, /* DeeMappingValues_Type */
 	{ "MappingValuesIterator", (DeeObject *)&librt_get_MappingValuesIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR }, /* DeeMappingValuesIterator_Type */
 	{ "MappingItems", (DeeObject *)&librt_get_MappingItems, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR,
 	  DOC("General purpose, sequence proxy type for viewing the items (key-value pairs) of an abstract mapping object\n"
 	      "When not overwritten by the mapping type itself, this is the type of sequence that's returned "
-	      "by :Mapping.items") }, /* DeeMappingItems_Type */
+	      /**/ "by :Mapping.items") }, /* DeeMappingItems_Type */
 	{ "MappingItemsIterator", (DeeObject *)&librt_get_MappingItemsIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },           /* DeeMappingProxyIterator_Type */
 	{ "MappingHashFilter", (DeeObject *)&librt_get_MappingHashFilter, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                 /* MapHashFilter_Type */
 	{ "MappingHashFilterIterator", (DeeObject *)&librt_get_MappingHashFilterIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR }, /* MapHashFilterIterator_Type */
@@ -2082,13 +2082,13 @@ PRIVATE struct dex_symbol symbols[] = {
 	/* Internal types used to drive natively defined types */
 	{ "TypeOperators", (DeeObject *)&librt_get_TypeOperators, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR,
 	  DOC("Sequence type used to enumerate operators that have been overwritten by a given type\n"
-	      "A sequence of this type is returned by :Type.__operators__ and :Type.__operatorids__") }, /* TypeOperators_Type */
+	      "A sequence of this type is returned by ?A__operators__?DType and ?A__operatorids__?DType") }, /* TypeOperators_Type */
 	{ "TypeOperatorsIterator", (DeeObject *)&librt_get_TypeOperatorsIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR }, /* TypeOperatorsIterator_Type */
 
 	/* Internal types used to drive the garbage collector */
 	{ "GCSet", (DeeObject *)&librt_get_GCSet, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR, /* DeeGCSet_Type */
-	  DOC("The set-like type returned by :gc.referred, :gc.referredgc, "
-	      ":gc.reachable, :gc.reachablegc and :gc.referring") },
+	  DOC("The set-like type returned by ?Areferred?Dgc, ?Areferredgc?Dgc, "
+	      /**/ "?Areachable?Dgc, ?Areachablegc?Dgc and ?Areferring?Dgc") },
 	{ "GCSetIterator", (DeeObject *)&librt_get_GCSetIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR }, /* DeeGCSetIterator_Type */
 
 	/* Internal types used to drive variable keyword arguments */
@@ -2096,14 +2096,14 @@ PRIVATE struct dex_symbol symbols[] = {
 	  (DeeObject *)&librt_get_BlackListVarkwds,
 	  MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR,
 	  DOC("A ${{string: Object}}-like mapping that is used to exclude positional "
-	      "keyword arguments for a variable-keywords user-code function, when that "
-	      "function is invoked with regular keywords being passed:\n"
+	      /**/ "keyword arguments for a variable-keywords user-code function, when that "
+	      /**/ "function is invoked with regular keywords being passed:\n"
 	      "${"
-	      "function foo(a, **kwds) {\n"
-	      "	print type kwds; /* _BlackListVarkwds */\n"
-	      "}\n"
-	      "foo(10, b: 20);\n"
-	      "foo(a: 10, b: 20);"
+	      /**/ "function foo(a, **kwds) {\n"
+	      /**/ "	print type kwds; /* _BlackListVarkwds */\n"
+	      /**/ "}\n"
+	      /**/ "foo(10, b: 20);\n"
+	      /**/ "foo(a: 10, b: 20);"
 	      "}") },
 	{ "BlackListVarkwdsIterator", /* BlackListVarkwdsIterator_Type */
 	  (DeeObject *)&librt_get_BlackListVarkwdsIterator,
@@ -2112,14 +2112,14 @@ PRIVATE struct dex_symbol symbols[] = {
 	  (DeeObject *)&librt_get_BlackListMapping,
 	  MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR,
 	  DOC("A ${{string: Object}}-like mapping that is similar to ?GBlackListVarkwds, "
-	      "however gets used when the function is invoked using a custom keyword "
-	      "protocol, rather than conventional keyword arguments that store their "
-	      "values as part of the argument vector:\n"
+	      /**/ "however gets used when the function is invoked using a custom keyword "
+	      /**/ "protocol, rather than conventional keyword arguments that store their "
+	      /**/ "values as part of the argument vector:\n"
 	      "${"
-	      "function foo(a, **kwds) {\n"
-	      "	print type kwds; /* _BlackListMapping */\n"
-	      "}\n"
-	      "foo(**{ \"a\": 10, \"b\": 20});"
+	      /**/ "function foo(a, **kwds) {\n"
+	      /**/ "	print type kwds; /* _BlackListMapping */\n"
+	      /**/ "}\n"
+	      /**/ "foo(**{ \"a\": 10, \"b\": 20});"
 	      "}") },
 	{ "BlackListMappingIterator", /* BlackListMappingIterator_Type */
 	  (DeeObject *)&librt_get_BlackListMappingIterator,
@@ -2131,19 +2131,22 @@ PRIVATE struct dex_symbol symbols[] = {
 	  MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR,
 	  DOC("Internal type for enumerating the keywords of functions implemented in C\n"
 	      "This is done via the associated doc string, with this sequence type being "
-	      "used to implement the string processing. This type is then returned by "
-	      "the $__kwds__ attributes of ?GKwCMethod, ?GKwObjMethod and ?GKwClassMethod "
-	      "when the associated documentation string was found to be non-empty") },
+	      /**/ "used to implement the string processing. This type is then returned by "
+	      /**/ "the $__kwds__ attributes of ?GKwCMethod, ?GKwObjMethod and ?GKwClassMethod "
+	      /**/ "when the associated documentation string was found to be non-empty") },
 	{ "DocKwdsIterator", /* DocKwdsIterator_Type */
 	  (DeeObject *)&librt_get_DocKwdsIterator,
 	  MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },
 
 	/* Special types exposed by the C API, but not normally visible to user-code. */
-	{ "InteractiveModule", (DeeObject *)&DeeInteractiveModule_Type, MODSYM_FREADONLY }, /* The type used to implement an interactive module, as available by `deemon -i' */
+	{ "InteractiveModule", (DeeObject *)&DeeInteractiveModule_Type, MODSYM_FREADONLY,
+	  DOC("The type used to implement an interactive module, as available by #C{deemon -i}") },
 #ifndef CONFIG_NO_DEX
-	{ "DexModule", (DeeObject *)&DeeDex_Type, MODSYM_FREADONLY }, /* The type of a module that has been loaded from a machine-level shared library. */
+	{ "DexModule", (DeeObject *)&DeeDex_Type, MODSYM_FREADONLY,
+	  DOC("The type of a module that has been loaded from a machine-level shared library.") },
 #endif /* !CONFIG_NO_DEX */
-	{ "Compiler", (DeeObject *)&DeeCompiler_Type, MODSYM_FREADONLY }, /* A user-code interface for the compiler used by this implementation */
+	{ "Compiler", (DeeObject *)&DeeCompiler_Type, MODSYM_FREADONLY,
+	  DOC("A user-code interface for the compiler used by this implementation") },
 	/* TODO: All of the different compiler wrapper types, as well as the internal types for Ast and the different Scopes:
 	 *  - DeeCompilerObjItem_Type
 	 *  - DeeCompilerWrapper_Type
@@ -2163,28 +2166,46 @@ PRIVATE struct dex_symbol symbols[] = {
 	 *  - DeeBaseScope_Type
 	 *  - DeeRootScope_Type
 	 */
-	{ "ClassDescriptor", (DeeObject *)&DeeClassDescriptor_Type, MODSYM_FREADONLY }, /* The descriptor type generated by the compiler as a prototype for how a class will be created at runtime. */
-	{ "InstanceMember", (DeeObject *)&DeeInstanceMember_Type, MODSYM_FREADONLY },   /* An unbund class->instance member (e.g. `class MyClass { member foo; } type(MyClass.foo);') */
-	{ "CMethod", (DeeObject *)&DeeCMethod_Type, MODSYM_FREADONLY },                 /* C-variant of `function' (e.g. `boundattr from deemon') */
-	{ "KwCMethod", (DeeObject *)&DeeKwCMethod_Type, MODSYM_FREADONLY },             /* C-variant of `function' (with keyword support) */
-	{ "ObjMethod", (DeeObject *)&DeeObjMethod_Type, MODSYM_FREADONLY },             /* C-variant of `InstanceMethod' (e.g. `"FOO".lower') */
-	{ "KwObjMethod", (DeeObject *)&DeeKwObjMethod_Type, MODSYM_FREADONLY },         /* C-variant of `InstanceMethod' (with keyword support) */
-	{ "ClassMethod", (DeeObject *)&DeeClsMethod_Type, MODSYM_FREADONLY },           /* C-variant of an unbound class->instance method (e.g. `string.lower') */
-	{ "KwClassMethod", (DeeObject *)&DeeKwClsMethod_Type, MODSYM_FREADONLY },       /* C-variant of an unbound class->instance method (with keyword support) */
-	{ "ClassProperty", (DeeObject *)&DeeClsProperty_Type, MODSYM_FREADONLY },       /* C-variant of an unbound class->instance getset (e.g. `Sequence.length') */
-	{ "ClassMember", (DeeObject *)&DeeClsMember_Type, MODSYM_FREADONLY },           /* C-variant of an unbound class->instance member (e.g. `Type.__name__') */
-	{ "FileType", (DeeObject *)&DeeFileType_Type, MODSYM_FREADONLY },               /* `type(File)' -- The typetype for file types. */
+	{ "ClassDescriptor", (DeeObject *)&DeeClassDescriptor_Type, MODSYM_FREADONLY,
+	  DOC("The descriptor type generated by the compiler as a prototype for how a class will be created at runtime (s.a. ?Gmakeclass).") },
+	{ "InstanceMember", (DeeObject *)&DeeInstanceMember_Type, MODSYM_FREADONLY,
+	  DOC("An unbund class->instance member (e.g. ${class MyClass { member foo; } type(MyClass.foo);})") },
+	{ "CMethod", (DeeObject *)&DeeCMethod_Type, MODSYM_FREADONLY,
+	  DOC("C-variant of ?GFunction (e.g. ${boundattr from deemon})") },
+	{ "KwCMethod", (DeeObject *)&DeeKwCMethod_Type, MODSYM_FREADONLY,
+	  DOC("C-variant of ?GFunction (with keyword support)") },
+	{ "ObjMethod", (DeeObject *)&DeeObjMethod_Type, MODSYM_FREADONLY,
+	  DOC("C-variant of ?GInstanceMethod (e.g. ${\"FOO\".lower'})") },
+	{ "KwObjMethod", (DeeObject *)&DeeKwObjMethod_Type, MODSYM_FREADONLY,
+	  DOC("C-variant of ?GInstanceMethod (with keyword support)") },
+	{ "ClassMethod", (DeeObject *)&DeeClsMethod_Type, MODSYM_FREADONLY,
+	  DOC("C-variant of an unbound class->instance method (e.g. ${string.lower})") },
+	{ "KwClassMethod", (DeeObject *)&DeeKwClsMethod_Type, MODSYM_FREADONLY,
+	  DOC("C-variant of an unbound class->instance method (with keyword support)") },
+	{ "ClassProperty", (DeeObject *)&DeeClsProperty_Type, MODSYM_FREADONLY,
+	  DOC("C-variant of an unbound class->instance getset (e.g. ${Sequence.length})") },
+	{ "ClassMember", (DeeObject *)&DeeClsMember_Type, MODSYM_FREADONLY,
+	  DOC("C-variant of an unbound class->instance member (e.g. ${Type.__name__})") },
+	{ "FileType", (DeeObject *)&DeeFileType_Type, MODSYM_FREADONLY,
+	  DOC("The typetype for file types (i.e. ${type(File)})") },
 	{ "YieldFunction", (DeeObject *)&DeeYieldFunction_Type, MODSYM_FREADONLY },
 	{ "YieldFunctionIterator", (DeeObject *)&DeeYieldFunctionIterator_Type, MODSYM_FREADONLY },
-	{ "RoDict", (DeeObject *)&DeeRoDict_Type, MODSYM_FREADONLY },                                                                    /* A read-only variant of the builtin `Dict' type (used by the compiler to construct constant, generic mapping expression) */
-	{ "RoDictIterator", (DeeObject *)&librt_get_RoDictIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },           /* RoDictIterator_Type */
-	{ "RoSet", (DeeObject *)&DeeRoSet_Type, MODSYM_FREADONLY },                                                                      /* A read-only variant of the builtin `HashSet' type (used by the compiler to construct constant, generic set expression) */
-	{ "RoSetIterator", (DeeObject *)&librt_get_RoSetIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },             /* RoSetIterator_Type */
-	{ "Kwds", (DeeObject *)&DeeKwds_Type, MODSYM_FREADONLY },                                                                        /* The type used to represent keyword arguments being mapped onto positional arguments. */
-	{ "KwdsIterator", (DeeObject *)&librt_get_KwdsIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },               /* DeeKwdsIterator_Type */
-	{ "KwdsMapping", (DeeObject *)&DeeKwdsMapping_Type, MODSYM_FREADONLY },                                                          /* A wrapper around `Kwds' and the associated argc/argv to create a proper Mapping object */
+	{ "RoDict", (DeeObject *)&DeeRoDict_Type, MODSYM_FREADONLY,
+	  DOC("A read-only variant of the builtin ?GDict type, aka. ?AFrozen?DDict. "
+	      /**/ "Used by the compiler to construct constant, generic mapping expression.") },
+	{ "RoDictIterator", (DeeObject *)&librt_get_RoDictIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },/* RoDictIterator_Type */
+	{ "RoSet", (DeeObject *)&DeeRoSet_Type, MODSYM_FREADONLY,
+	  DOC("A read-only variant of the builtin ?GHashSet type, aka. ?AFrozen?DHashSet. "
+	      /**/ "Used by the compiler to construct constant, generic set expression.") },
+	{ "RoSetIterator", (DeeObject *)&librt_get_RoSetIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR }, /* RoSetIterator_Type */
+	{ "Kwds", (DeeObject *)&DeeKwds_Type, MODSYM_FREADONLY,
+	  DOC("The type used to represent keyword arguments being mapped onto positional arguments.") },
+	{ "KwdsIterator", (DeeObject *)&librt_get_KwdsIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR }, /* DeeKwdsIterator_Type */
+	{ "KwdsMapping", (DeeObject *)&DeeKwdsMapping_Type, MODSYM_FREADONLY,
+	  DOC("A wrapper around ?GKwds and the associated argc/argv to create a proper Mapping object") },
 	{ "KwdsMappingIterator", (DeeObject *)&librt_get_KwdsMappingIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR }, /* DeeKwdsMappingIterator_Type */
-	{ "Ddi", (DeeObject *)&DeeDDI_Type, MODSYM_FREADONLY },                                                                          /* The type used to hold debug information for user-defined code objects. */
+	{ "DDI", (DeeObject *)&DeeDDI_Type, MODSYM_FREADONLY,
+	  DOC("The type used to hold debug information for user-defined code objects (DeemonDebugInformation).") },
 	{ "NoMemory_instance", (DeeObject *)&DeeError_NoMemory_instance, MODSYM_FREADONLY },
 	{ "StopIteration_instance", (DeeObject *)&DeeError_StopIteration_instance, MODSYM_FREADONLY },
 	{ "Interrupt_instance", (DeeObject *)&DeeError_Interrupt_instance, MODSYM_FREADONLY },
@@ -2225,17 +2246,17 @@ PRIVATE struct dex_symbol symbols[] = {
 	{ "Int_m1", DeeInt_MinusOne, MODSYM_FREADONLY, DOC("The integer constant ${-1}") },
 	{ "Code_empty", (DeeObject *)&librt_get_Code_empty, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR,
 	  DOC("->?GCode\n"
-	      "Special instance of ?GCode that immediatly returns ?N") }, /* empty_code_head.c_code */
+	      "Special instance of ?GCode that immediately returns ?N") }, /* empty_code_head.c_code */
 	{ "GCSet_empty", (DeeObject *)&librt_get_GCSet_empty, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR,
 	  DOC("->?GGCSet\n"
 	      "Special instance of ?GGCSet that is used to describe an empty set of objects") }, /* DeeGCSet_Empty */
 	{ "GCEnum_singleton", &DeeGCEnumTracked_Singleton, MODSYM_FREADONLY | MODSYM_FCONSTEXPR,
-	  DOC("The gc-singleton which can also be found under :gc") }, /* DeeGCEnumTracked_Singleton */
+	  DOC("The gc-singleton which can also be found under ?Dgc") }, /* DeeGCEnumTracked_Singleton */
 	{ "GCEnum", (DeeObject *)&librt_get_GCEnum, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR,
 	  DOC("The result of ${type(gc from deemon)}") }, /* GCEnum_Type */
 	{ "Traceback_empty", (DeeObject *)&librt_get_Traceback_empty, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR,
 	  DOC("->?GTraceback\n"
-	      "The fallback 'empty' traceback") }, /* DeeTraceback_Empty */
+	      "The fallback #Iempty traceback") }, /* DeeTraceback_Empty */
 
 	/* Re-exports of standard types also exported from `deemon' */
 	{ "Int", (DeeObject *)&DeeInt_Type, MODSYM_FREADONLY },
@@ -2266,11 +2287,15 @@ PRIVATE struct dex_symbol symbols[] = {
 	{ "Thread", (DeeObject *)&DeeThread_Type, MODSYM_FREADONLY },
 	{ "WeakRef", (DeeObject *)&DeeWeakRef_Type, MODSYM_FREADONLY },
 	{ "Cell", (DeeObject *)&DeeCell_Type, MODSYM_FREADONLY },
-	{ "File", (DeeObject *)&DeeFile_Type, MODSYM_FREADONLY },             /* (intended) base class for all file types (is to `FileType' what `Object' is to `Type'). */
+	{ "File", (DeeObject *)&DeeFile_Type, MODSYM_FREADONLY,
+	  DOC("(intended) base class for all file types (is to ?GFileType what ?GObject is to ?GType).") },
 	{ "FileBuffer", (DeeObject *)&DeeFileBuffer_Type, MODSYM_FREADONLY }, /* `File.Buffer' */
-	{ "SystemFile", (DeeObject *)&DeeSystemFile_Type, MODSYM_FREADONLY }, /* Base class for file types that are managed by the system. */
-	{ "FSFile", (DeeObject *)&DeeFSFile_Type, MODSYM_FREADONLY },         /* Derived from `SystemFile': A system file that has been opened via the file system. */
-	{ "MapFile", (DeeObject *)&DeeMapFile_Type, MODSYM_FREADONLY },       /* Owner type for mmap buffers used during large file reads. */
+	{ "SystemFile", (DeeObject *)&DeeSystemFile_Type, MODSYM_FREADONLY,
+	  DOC("Base class for file types that are managed by the system.") },
+	{ "FSFile", (DeeObject *)&DeeFSFile_Type, MODSYM_FREADONLY,
+	  DOC("Derived from ?GSystemFile: A system file that has been opened via the file system.") },
+	{ "MapFile", (DeeObject *)&DeeMapFile_Type, MODSYM_FREADONLY,
+	  DOC("Owner type for mmap buffers used during large file reads.") },
 	{ "NoneType", (DeeObject *)&DeeNone_Type, MODSYM_FREADONLY },         /* `type(none)' */
 	{ "None", Dee_None, MODSYM_FREADONLY },                               /* `none' */
 	{ "MemoryFile", (DeeObject *)&DeeMemoryFile_Type, MODSYM_FREADONLY,   /* An internal file type for streaming from read-only raw memory. */
@@ -2282,8 +2307,9 @@ PRIVATE struct dex_symbol symbols[] = {
 	      /**/ "access to wrapped memory once the file's creator destroys it.") },
 	{ "FileReader", (DeeObject *)&DeeFileReader_Type, MODSYM_FREADONLY },             /* `File.Reader' */
 	{ "FileWriter", (DeeObject *)&DeeFileWriter_Type, MODSYM_FREADONLY },             /* `File.Writer' */
-	{ "FilePrinter", (DeeObject *)&DeeFilePrinter_Type, MODSYM_FREADONLY },           /* Internal file-type for wrapping `dformatprinter' when invoking user-defined print/printrepr operators */
-	{ "Attribute", (DeeObject *)&DeeAttribute_Type, MODSYM_FREADONLY },               /* `attribute' */
+	{ "FilePrinter", (DeeObject *)&DeeFilePrinter_Type, MODSYM_FREADONLY,
+	  DOC("Internal file-type for wrapping #Cdformatprinter when invoking user-defined print/printrepr operators") },
+	{ "Attribute", (DeeObject *)&DeeAttribute_Type, MODSYM_FREADONLY },               /* `Attribute' */
 	{ "EnumAttr", (DeeObject *)&DeeEnumAttr_Type, MODSYM_FREADONLY },                 /* `enumattr' */
 	{ "EnumAttrIterator", (DeeObject *)&DeeEnumAttrIterator_Type, MODSYM_FREADONLY }, /* `enumattr.Iterator' */
 

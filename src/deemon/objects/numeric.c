@@ -1688,20 +1688,20 @@ err:
 		/* >> if (this.isfloat)                                            \
 		 * >>     return this.operator float().name(y); */                 \
 		error = DeeObject_IsFloat(self);                                   \
-		if unlikely (error < 0)                                            \
+		if unlikely(error < 0)                                             \
 			goto err;                                                      \
 		if (error) {                                                       \
 			DREF DeeObject *result;                                        \
 			DREF DeeFloatObject *asflt;                                    \
 			asflt = (DREF DeeFloatObject *)DeeObject_Float(self);          \
-			if unlikely (!asflt)                                           \
+			if unlikely(!asflt)                                            \
 				goto err;                                                  \
 			result = float_##name(asflt, 1, &y);                           \
 			Dee_Decref(asflt);                                             \
 			return result;                                                 \
 		}                                                                  \
 		return DeeObject_CompareXObject(self, y);                          \
-err:                                                                       \
+	err:                                                                   \
 		return NULL;                                                       \
 	}
 DEFINE_NUMERIC_ISCMP(isgreater, DeeObject_CompareGrObject)

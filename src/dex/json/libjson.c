@@ -3430,6 +3430,10 @@ PRIVATE DEFINE_KWCMETHOD(libjson_write, &f_libjson_write);
 
 PRIVATE struct dex_symbol symbols[] = {
 	{ "parse", (DeeObject *)&libjson_parse, MODSYM_FNORMAL,
+	  /* TODO: Add another argument `path' that allows you to only parse certain sub-
+	   *       components of a larger JSON-blob. For this, it's probably best to implement
+	   *       a sub-set of JsonPath: https://github.com/json-path/JsonPath
+	   */
 	  DOC("(data:?X4?DFile?DBytes?Dstring?DMapping)->?X7?Dfloat?Dint?Dstring?Dbool?N?GSequence?GMapping\n"
 	      "(data:?X4?DFile?DBytes?Dstring?DMapping,into)->\n"
 	      "(data:?X4?DFile?DBytes?Dstring?DMapping,into:?DType)->\n"

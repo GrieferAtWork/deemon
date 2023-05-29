@@ -242,242 +242,242 @@ DEFINE_MATH_CONVERSION_1(sin)
 #endif /* CONFIG_HAVE_sin */
 
 #ifdef CONFIG_HAVE_cos
-#define MATH_HAVE_cos 1
+#define MATH_HAVE_cos
 DEFINE_MATH_CONVERSION_1(cos)
 #endif /* CONFIG_HAVE_cos */
 
 #ifdef CONFIG_HAVE_tan
-#define MATH_HAVE_tan 1
+#define MATH_HAVE_tan
 DEFINE_MATH_CONVERSION_1(tan)
 #endif /* CONFIG_HAVE_tan */
 
 #ifdef CONFIG_HAVE_asin
-#define MATH_HAVE_asin 1
+#define MATH_HAVE_asin
 DEFINE_MATH_CONVERSION_1_E(asin)
 #endif /* CONFIG_HAVE_asin */
 
 #ifdef CONFIG_HAVE_acos
-#define MATH_HAVE_acos 1
+#define MATH_HAVE_acos
 DEFINE_MATH_CONVERSION_1_E(acos)
 #endif /* CONFIG_HAVE_acos */
 
 #ifdef CONFIG_HAVE_atan
-#define MATH_HAVE_atan 1
+#define MATH_HAVE_atan
 DEFINE_MATH_CONVERSION_1_E(atan)
 #endif /* CONFIG_HAVE_atan */
 
 #ifdef CONFIG_HAVE_sinh
-#define MATH_HAVE_sinh 1
+#define MATH_HAVE_sinh
 DEFINE_MATH_CONVERSION_1_E(sinh)
 #endif /* CONFIG_HAVE_sinh */
 
 #ifdef CONFIG_HAVE_cosh
-#define MATH_HAVE_cosh 1
+#define MATH_HAVE_cosh
 DEFINE_MATH_CONVERSION_1_E(cosh)
 #endif /* CONFIG_HAVE_cosh */
 
 #ifdef CONFIG_HAVE_tanh
-#define MATH_HAVE_tanh 1
+#define MATH_HAVE_tanh
 DEFINE_MATH_CONVERSION_1_E(tanh)
 #endif /* CONFIG_HAVE_tanh */
 
 #ifdef CONFIG_HAVE_asinh
-#define MATH_HAVE_asinh 1
+#define MATH_HAVE_asinh
 DEFINE_MATH_CONVERSION_1_E(asinh)
 #endif /* CONFIG_HAVE_asinh */
 
 #ifdef CONFIG_HAVE_acosh
-#define MATH_HAVE_acosh 1
+#define MATH_HAVE_acosh
 DEFINE_MATH_CONVERSION_1_E(acosh)
 #endif /* CONFIG_HAVE_acosh */
 
 #ifdef CONFIG_HAVE_atanh
-#define MATH_HAVE_atanh 1
+#define MATH_HAVE_atanh
 DEFINE_MATH_CONVERSION_1_E(atanh)
 #endif /* CONFIG_HAVE_atanh */
 
 #ifdef CONFIG_HAVE_copysign
-#define MATH_HAVE_copysign 1
+#define MATH_HAVE_copysign
 DEFINE_MATH_CONVERSION_2(copysign)
 #endif /* CONFIG_HAVE_copysign */
 
 #ifdef CONFIG_HAVE_atan2
-#define MATH_HAVE_atan2 1
+#define MATH_HAVE_atan2
 DEFINE_MATH_CONVERSION_2_E(atan2)
 #endif /* CONFIG_HAVE_atan2 */
 
 #ifdef CONFIG_HAVE_exp
-#define MATH_HAVE_exp 1
+#define MATH_HAVE_exp
 DEFINE_MATH_CONVERSION_1_E(exp)
 #endif /* CONFIG_HAVE_exp */
 
 #ifdef CONFIG_HAVE_exp2
-#define MATH_HAVE_exp2 1
+#define MATH_HAVE_exp2
 DEFINE_MATH_CONVERSION_1_E(exp2)
 #endif /* CONFIG_HAVE_exp2 */
 
 #ifdef CONFIG_HAVE_expm1
-#define MATH_HAVE_expm1 1
+#define MATH_HAVE_expm1
 DEFINE_MATH_CONVERSION_1_E(expm1)
 #endif /* CONFIG_HAVE_expm1 */
 
 #ifdef CONFIG_HAVE_erf
-#define MATH_HAVE_erf 1
+#define MATH_HAVE_erf
 DEFINE_MATH_CONVERSION_1(erf)
 #endif /* CONFIG_HAVE_erf */
 
 #ifdef CONFIG_HAVE_erfc
-#define MATH_HAVE_erfc 1
+#define MATH_HAVE_erfc
 DEFINE_MATH_CONVERSION_1_E(erfc)
 #endif /* CONFIG_HAVE_erfc */
 
 #ifdef CONFIG_HAVE_fabs
-#define MATH_HAVE_fabs 1
+#define MATH_HAVE_fabs
 DEFINE_MATH_CONVERSION_1(fabs)
 #endif /* CONFIG_HAVE_fabs */
 
 #ifdef CONFIG_HAVE_sqrt
-#define MATH_HAVE_sqrt 1
+#define MATH_HAVE_sqrt
 DEFINE_MATH_CONVERSION_1_E(sqrt)
 #endif /* CONFIG_HAVE_sqrt */
 
 #ifdef CONFIG_HAVE_log
-#define MATH_HAVE_log 1
+#define MATH_HAVE_log
 DEFINE_MATH_CONVERSION_1_E(log)
 #endif /* CONFIG_HAVE_log */
 
 #ifdef CONFIG_HAVE_log2
-#define MATH_HAVE_log2 1
+#define MATH_HAVE_log2
 DEFINE_MATH_CONVERSION_1_E(log2)
 #endif /* CONFIG_HAVE_log2 */
 
 #ifdef CONFIG_HAVE_logb
-#define MATH_HAVE_logb 1
+#define MATH_HAVE_logb
 DEFINE_MATH_CONVERSION_1_E(logb)
 #endif /* CONFIG_HAVE_logb */
 
 #ifdef CONFIG_HAVE_log1p
-#define MATH_HAVE_log1p 1
+#define MATH_HAVE_log1p
 DEFINE_MATH_CONVERSION_1_E(log1p)
 #endif /* CONFIG_HAVE_log1p */
 
 #ifdef CONFIG_HAVE_log10
-#define MATH_HAVE_log10 1
+#define MATH_HAVE_log10
 DEFINE_MATH_CONVERSION_1_E(log10)
 #endif /* CONFIG_HAVE_log10 */
 
 #ifdef CONFIG_HAVE_cbrt
-#define MATH_HAVE_cbrt 1
+#define MATH_HAVE_cbrt
 DEFINE_MATH_CONVERSION_1_E(cbrt)
 #endif /* CONFIG_HAVE_cbrt */
 
 #ifdef CONFIG_HAVE_tgamma
-#define MATH_HAVE_tgamma 1
+#define MATH_HAVE_tgamma
 DEFINE_MATH_CONVERSION_1_E(tgamma)
 #endif /* CONFIG_HAVE_tgamma */
 
 #ifdef CONFIG_HAVE_lgamma
-#define MATH_HAVE_lgamma 1
+#define MATH_HAVE_lgamma
 DEFINE_MATH_CONVERSION_1_E(lgamma)
 #endif /* CONFIG_HAVE_lgamma */
 
 #ifdef CONFIG_HAVE_pow
-#define MATH_HAVE_pow 1
+#define MATH_HAVE_pow
 DEFINE_MATH_CONVERSION_2_E(pow)
 #endif /* CONFIG_HAVE_pow */
 
 #ifdef CONFIG_HAVE_ceil
-#define MATH_HAVE_ceil 1
+#define MATH_HAVE_ceil
 DEFINE_MATH_CONVERSION_1(ceil)
 #endif /* CONFIG_HAVE_ceil */
 
 #ifdef CONFIG_HAVE_floor
-#define MATH_HAVE_floor 1
+#define MATH_HAVE_floor
 DEFINE_MATH_CONVERSION_1(floor)
 #endif /* CONFIG_HAVE_floor */
 
 #ifdef CONFIG_HAVE_round
-#define MATH_HAVE_round 1
+#define MATH_HAVE_round
 DEFINE_MATH_CONVERSION_1(round)
 #endif /* CONFIG_HAVE_round */
 
 #ifdef CONFIG_HAVE_fmod
-#define MATH_HAVE_fmod 1
+#define MATH_HAVE_fmod
 DEFINE_MATH_CONVERSION_2_E(fmod)
 #endif /* CONFIG_HAVE_fmod */
 
 #ifdef CONFIG_HAVE_hypot
-#define MATH_HAVE_hypot 1
+#define MATH_HAVE_hypot
 DEFINE_MATH_CONVERSION_2_E(hypot)
 #endif /* CONFIG_HAVE_hypot */
 
 #ifdef CONFIG_HAVE_remainder
-#define MATH_HAVE_remainder 1
+#define MATH_HAVE_remainder
 DEFINE_MATH_CONVERSION_2_E(remainder)
 #endif /* CONFIG_HAVE_remainder */
 
 #ifdef CONFIG_HAVE_nextafter
-#define MATH_HAVE_nextafter 1
+#define MATH_HAVE_nextafter
 DEFINE_MATH_CONVERSION_2_E(nextafter)
 #endif /* CONFIG_HAVE_nextafter */
 
 #ifdef CONFIG_HAVE_fdim
-#define MATH_HAVE_fdim 1
+#define MATH_HAVE_fdim
 DEFINE_MATH_CONVERSION_2(fdim)
 #endif /* CONFIG_HAVE_fdim */
 
 #ifdef CONFIG_HAVE_isnan
-#define MATH_HAVE_isnan 1
+#define MATH_HAVE_isnan
 DEFINE_MATH_FLOAT_TRAIT(isnan)
 #endif /* CONFIG_HAVE_isnan */
 
 #ifdef CONFIG_HAVE_isinf
-#define MATH_HAVE_isinf 1
+#define MATH_HAVE_isinf
 DEFINE_MATH_FLOAT_TRAIT(isinf)
 #endif /* CONFIG_HAVE_isinf */
 
 #ifdef CONFIG_HAVE_isfinite
-#define MATH_HAVE_isfinite 1
+#define MATH_HAVE_isfinite
 DEFINE_MATH_FLOAT_TRAIT(isfinite)
 #endif /* CONFIG_HAVE_isfinite */
 
 #ifdef CONFIG_HAVE_isnormal
-#define MATH_HAVE_isnormal 1
+#define MATH_HAVE_isnormal
 DEFINE_MATH_FLOAT_TRAIT(isnormal)
 #endif /* CONFIG_HAVE_isnormal */
 
 #ifdef CONFIG_HAVE_signbit
-#define MATH_HAVE_signbit 1
+#define MATH_HAVE_signbit
 DEFINE_MATH_FLOAT_TRAIT(signbit)
 #endif /* CONFIG_HAVE_signbit */
 
 #ifdef CONFIG_HAVE_isgreater
-#define MATH_HAVE_isgreater 1
+#define MATH_HAVE_isgreater
 DEFINE_MATH_FLOAT_TRAIT2(isgreater)
 #endif /* CONFIG_HAVE_isgreater */
 
 #ifdef CONFIG_HAVE_isgreaterequal
-#define MATH_HAVE_isgreaterequal 1
+#define MATH_HAVE_isgreaterequal
 DEFINE_MATH_FLOAT_TRAIT2(isgreaterequal)
 #endif /* CONFIG_HAVE_isgreaterequal */
 
 #ifdef CONFIG_HAVE_isless
-#define MATH_HAVE_isless 1
+#define MATH_HAVE_isless
 DEFINE_MATH_FLOAT_TRAIT2(isless)
 #endif /* CONFIG_HAVE_isless */
 
 #ifdef CONFIG_HAVE_islessequal
-#define MATH_HAVE_islessequal 1
+#define MATH_HAVE_islessequal
 DEFINE_MATH_FLOAT_TRAIT2(islessequal)
 #endif /* CONFIG_HAVE_islessequal */
 
 #ifdef CONFIG_HAVE_islessgreater
-#define MATH_HAVE_islessgreater 1
+#define MATH_HAVE_islessgreater
 DEFINE_MATH_FLOAT_TRAIT2(islessgreater)
 #endif /* CONFIG_HAVE_islessgreater */
 
 #ifdef CONFIG_HAVE_isunordered
-#define MATH_HAVE_isunordered 1
+#define MATH_HAVE_isunordered
 DEFINE_MATH_FLOAT_TRAIT2(isunordered)
 #endif /* CONFIG_HAVE_isunordered */
 
@@ -489,7 +489,7 @@ DEFINE_MATH_FLOAT_TRAIT2(isunordered)
 #undef DEFINE_MATH_CONVERSION_1
 
 #ifdef CONFIG_HAVE_ilogb
-#define MATH_HAVE_ilogb 1
+#define MATH_HAVE_ilogb
 PRIVATE WUNUSED DREF DeeObject *DCALL
 f_math_ilogb(size_t argc, DeeObject *const *argv) {
 	double x;
@@ -509,7 +509,7 @@ PRIVATE DEFINE_CMETHOD(math_ilogb, &f_math_ilogb);
 #endif /* CONFIG_HAVE_ilogb */
 
 #ifdef CONFIG_HAVE_frexp
-#define MATH_HAVE_frexp 1
+#define MATH_HAVE_frexp
 PRIVATE WUNUSED DREF DeeObject *DCALL
 f_math_frexp(size_t argc, DeeObject *const *argv) {
 	double x, y, mat;
@@ -543,7 +543,7 @@ PRIVATE DEFINE_CMETHOD(math_frexp, &f_math_frexp);
 #endif /* CONFIG_HAVE_frexp */
 
 #ifdef CONFIG_HAVE_modf
-#define MATH_HAVE_modf 1
+#define MATH_HAVE_modf
 PRIVATE WUNUSED DREF DeeObject *DCALL
 f_math_modf(size_t argc, DeeObject *const *argv) {
 	DREF DeeObject *result, *a, *b;
@@ -573,7 +573,7 @@ PRIVATE DEFINE_CMETHOD(math_modf, &f_math_modf);
 #endif /* CONFIG_HAVE_modf */
 
 #ifdef CONFIG_HAVE_ldexp
-#define MATH_HAVE_ldexp 1
+#define MATH_HAVE_ldexp
 PRIVATE WUNUSED DREF DeeObject *DCALL
 f_math_ldexp(size_t argc, DeeObject *const *argv) {
 	double x, result;
@@ -604,7 +604,7 @@ PRIVATE DEFINE_CMETHOD(math_ldexp, &f_math_ldexp);
 
 #if (defined(CONFIG_HAVE_sincos) || \
      (defined(CONFIG_HAVE_sin) && defined(CONFIG_HAVE_cos)))
-#define MATH_HAVE_sincos 1
+#define MATH_HAVE_sincos
 PRIVATE WUNUSED DREF DeeObject *DCALL
 f_math_sincos(size_t argc, DeeObject *const *argv) {
 	double x, sinx, cosx;
@@ -628,7 +628,7 @@ PRIVATE DEFINE_CMETHOD(math_sincos, &f_math_sincos);
 
 #if (defined(CONFIG_HAVE_asincos) || \
      (defined(CONFIG_HAVE_asin) && defined(CONFIG_HAVE_acos)))
-#define MATH_HAVE_asincos 1
+#define MATH_HAVE_asincos
 PRIVATE WUNUSED DREF DeeObject *DCALL
 f_math_asincos(size_t argc, DeeObject *const *argv) {
 	double x, asinx, acosx;
@@ -653,7 +653,7 @@ PRIVATE DEFINE_CMETHOD(math_asincos, &f_math_asincos);
 
 #if (defined(CONFIG_HAVE_sincosh) || \
      (defined(CONFIG_HAVE_sinh) && defined(CONFIG_HAVE_cosh)))
-#define MATH_HAVE_sincosh 1
+#define MATH_HAVE_sincosh
 PRIVATE WUNUSED DREF DeeObject *DCALL
 f_math_sincosh(size_t argc, DeeObject *const *argv) {
 	double x, sinhx, coshx;
@@ -678,7 +678,7 @@ PRIVATE DEFINE_CMETHOD(math_sincosh, &f_math_sincosh);
 
 #if (defined(CONFIG_HAVE_asincosh) || \
      (defined(CONFIG_HAVE_asinh) && defined(CONFIG_HAVE_acosh)))
-#define MATH_HAVE_asincosh 1
+#define MATH_HAVE_asincosh
 PRIVATE WUNUSED DREF DeeObject *DCALL
 f_math_asincosh(size_t argc, DeeObject *const *argv) {
 	double x, asinhx, acoshx;
@@ -703,7 +703,7 @@ PRIVATE DEFINE_CMETHOD(math_asincosh, &f_math_asincosh);
 
 
 #if defined(CONFIG_HAVE_scalbln) || defined(CONFIG_HAVE_scalbn)
-#define MATH_HAVE_scalbn 1
+#define MATH_HAVE_scalbn
 PRIVATE WUNUSED DREF DeeObject *DCALL
 f_math_scalbn(size_t argc, DeeObject *const *argv) {
 	double x, result;
@@ -754,22 +754,22 @@ PRIVATE DEFINE_CMETHOD(math_remquo, &f_math_remquo);
 
 
 #ifdef M_PI
-#define MATH_HAVE_pi 1
+#define MATH_HAVE_pi
 PRIVATE DEFINE_FLOAT(math_pi, M_PI);
 #endif /* M_PI */
 
 #ifdef M_TAU
-#define MATH_HAVE_tau 1
+#define MATH_HAVE_tau
 PRIVATE DEFINE_FLOAT(math_tau, M_TAU);
 #endif /* M_TAU */
 
 #ifdef M_E
-#define MATH_HAVE_e 1
+#define MATH_HAVE_e
 PRIVATE DEFINE_FLOAT(math_e, M_E);
 #endif /* M_E */
 
 #ifdef NAN
-#define MATH_HAVE_nan 1
+#define MATH_HAVE_nan
 PRIVATE DEFINE_FLOAT(math_nan, NAN);
 #endif /* NAN */
 
