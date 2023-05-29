@@ -405,16 +405,16 @@ PRIVATE struct type_member tpconst float_class_members[] = {
 	TYPE_MEMBER_CONST_DOC("max", &float_max, "The greatest possible floating point value"),
 #endif /* float_max_IS_CONSTANT */
 #ifdef float_min_exp_IS_CONSTANT
-	TYPE_MEMBER_CONST_DOC("min_exp", &float_min_exp, "Lowest binary exponent ($e such that ${radix ** (e - 1)} is a normalized :float)"),
+	TYPE_MEMBER_CONST_DOC("min_exp", &float_min_exp, "Lowest binary exponent ($e such that ${radix ** (e - 1)} is a normalized ?Dfloat)"),
 #endif /* float_min_exp_IS_CONSTANT */
 #ifdef float_min_10_exp_IS_CONSTANT
-	TYPE_MEMBER_CONST_DOC("min_10_exp", &float_min_10_exp, "Lowest decimal exponent ($e such that ${10 ** e} is a normalized :float)"),
+	TYPE_MEMBER_CONST_DOC("min_10_exp", &float_min_10_exp, "Lowest decimal exponent ($e such that ${10 ** e} is a normalized ?Dfloat)"),
 #endif /* float_min_10_exp_IS_CONSTANT */
 #ifdef float_max_exp_IS_CONSTANT
-	TYPE_MEMBER_CONST_DOC("max_exp", &float_max_exp, "Greatest binary exponent ($e such that ${radix ** (e - 1)} is representible as a :float)"),
+	TYPE_MEMBER_CONST_DOC("max_exp", &float_max_exp, "Greatest binary exponent ($e such that ${radix ** (e - 1)} is representible as a ?Dfloat)"),
 #endif /* float_max_exp_IS_CONSTANT */
 #ifdef float_max_10_exp_IS_CONSTANT
-	TYPE_MEMBER_CONST_DOC("max_10_exp", &float_max_10_exp, "Greatest decimal exponent ($e such that ${10 ** e} is representible as a :float)"),
+	TYPE_MEMBER_CONST_DOC("max_10_exp", &float_max_10_exp, "Greatest decimal exponent ($e such that ${10 ** e} is representible as a ?Dfloat)"),
 #endif /* float_max_10_exp_IS_CONSTANT */
 #ifdef float_dig_IS_CONSTANT
 	TYPE_MEMBER_CONST_DOC("dig", &float_dig, "The number of decimal precision digits"),
@@ -624,13 +624,13 @@ PRIVATE struct type_getset tpconst float_getsets[] = {
 
 
 #define DEFINE_FLOAT_COMPARE_FUNCTION(name)                          \
-	INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL               \
+	INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL                \
 	float_##name(Float *self, size_t argc, DeeObject *const *argv) { \
 		double y;                                                    \
 		if (DeeArg_Unpack(argc, argv, "D:" #name, &y))               \
 			goto err;                                                \
 		return_bool(name(self->f_value, y));                         \
-err:                                                                 \
+	err:                                                             \
 		return NULL;                                                 \
 	}
 #ifdef CONFIG_HAVE_isgreater
