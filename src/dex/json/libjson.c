@@ -3234,7 +3234,7 @@ DeeJson_WriteObject(DeeJsonWriter *__restrict self,
 
 			/* Support for user-defined recursion handlers. */
 			if (!DeeNone_Check(self->djw_recursion)) {
-				obj = DeeObject_Call(self->djw_recursion, 1, &obj);
+				obj = DeeObject_Call(self->djw_recursion, 1, (DeeObject **)&obj);
 				if unlikely(!obj)
 					goto err;
 				/* Check if the produced object is already being printed. */
