@@ -2165,11 +2165,11 @@ typedef uint16_t Dee_uniflag_t;
 
 /* Max number of characters which may be generated
  * by case folding a single unicode character. */
-#define Dee_UNICODE_ISOLDED_MAX UNICODE_FOLDED_MAX
+#define Dee_UNICODE_FOLDED_MAX UNICODE_FOLDED_MAX
 
 /* case-fold the given unicode character `ch', and
  * return the number of resulting folded characters.
- * @assume(return >= 1 && return <= Dee_UNICODE_ISOLDED_MAX); */
+ * @assume(return >= 1 && return <= Dee_UNICODE_FOLDED_MAX); */
 #define DeeUni_ToFolded(ch, buf) \
 	((size_t)(unicode_fold((__CHAR32_TYPE__)(ch), (__CHAR32_TYPE__ *)(buf)) - (__CHAR32_TYPE__ *)(buf)))
 
@@ -2270,13 +2270,13 @@ DFUNDEF ATTR_CONST ATTR_RETNONNULL WUNUSED struct Dee_unitraits *
 
 /* Max number of characters which may be generated
  * by case folding a single unicode character. */
-#define Dee_UNICODE_ISOLDED_MAX 3
+#define Dee_UNICODE_FOLDED_MAX 3
 
 /* case-fold the given unicode character `ch', and
  * return the number of resulting folded characters.
- * @assume(return >= 1 && return <= Dee_UNICODE_ISOLDED_MAX); */
+ * @assume(return >= 1 && return <= Dee_UNICODE_FOLDED_MAX); */
 DFUNDEF NONNULL((2)) size_t
-(DCALL DeeUni_ToFolded)(uint32_t ch, uint32_t buf[Dee_UNICODE_ISOLDED_MAX]);
+(DCALL DeeUni_ToFolded)(uint32_t ch, uint32_t buf[Dee_UNICODE_FOLDED_MAX]);
 
 #ifndef __NO_builtin_choose_expr
 #define DeeUni_Flags(ch)                                  \
@@ -2533,7 +2533,7 @@ DDATDEF char const _DeeAscii_Itoa[101];
 #define UNICODE_ISSYMCONT  Dee_UNICODE_ISSYMCONT
 typedef Dee_uniflag_t uniflag_t;
 #ifndef UNICODE_FOLDED_MAX
-#define UNICODE_FOLDED_MAX Dee_UNICODE_ISOLDED_MAX
+#define UNICODE_FOLDED_MAX Dee_UNICODE_FOLDED_MAX
 #endif /* !UNICODE_FOLDED_MAX */
 #define UNICODE_CONVERT_LOWER Dee_UNICODE_CONVERT_LOWER
 #define UNICODE_CONVERT_UPPER Dee_UNICODE_CONVERT_UPPER

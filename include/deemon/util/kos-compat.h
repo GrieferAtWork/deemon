@@ -295,50 +295,118 @@ DeeSystem_DEFINE_memcasecmp(dee_memcasecmp)
 #define char32_t __UINT32_TYPE__
 
 #ifndef CONFIG_HAVE_UNICODE_H
+#undef UNICODE_FOLDED_MAX
+#define UNICODE_FOLDED_MAX Dee_UNICODE_FOLDED_MAX
+#undef unicode_fold
+#define unicode_fold(ch, buf) ((buf) + DeeUni_ToFolded((uint32_t)(ch), (uint32_t *)(buf)))
+#undef __unicode_asdigit
+#define __unicode_asdigit DeeUni_AsDigitVal
+#undef __unicode_descriptor_digit
+#define __unicode_descriptor_digit DeeUni_GetNumericIdx8
+#undef __unicode_descriptor_digit64
+#define __unicode_descriptor_digit64 DeeUni_GetNumericIdx64
+#undef __unicode_descriptor_digitd
+#define __unicode_descriptor_digitd DeeUni_GetNumericIdxD
 #undef unicode_tolower
 #define unicode_tolower DeeUni_ToLower
 #undef unicode_toupper
 #define unicode_toupper DeeUni_ToUpper
 #undef unicode_totitle
 #define unicode_totitle DeeUni_ToTitle
+#undef unicode_iscntrl
+#define unicode_iscntrl DeeUni_IsCntrl
+#undef unicode_istab
+#define unicode_istab DeeUni_IsTab
+#undef unicode_iswhite
+#define unicode_iswhite DeeUni_IsWhite
+#undef unicode_isempty
+#define unicode_isempty DeeUni_IsEmpty
 #undef unicode_islf
 #define unicode_islf DeeUni_IsLF
 #undef unicode_isspace
 #define unicode_isspace DeeUni_IsSpace
+#undef unicode_islower
+#define unicode_islower DeeUni_IsLower
+#undef unicode_isupper
+#define unicode_isupper DeeUni_IsUpper
+#undef unicode_isalpha
+#define unicode_isalpha DeeUni_IsAlpha
 #undef unicode_isdigit
 #define unicode_isdigit DeeUni_IsDigit
-#undef unicode_isxdigit
-#define unicode_isxdigit DeeUni_IsXDigit
 #undef unicode_ishex
 #define unicode_ishex DeeUni_IsHex
+#undef unicode_isxdigit
+#define unicode_isxdigit DeeUni_IsXDigit
+#undef unicode_isalnum
+#define unicode_isalnum DeeUni_IsAlnum
+#undef unicode_ispunct
+#define unicode_ispunct DeeUni_IsPunct
+#undef unicode_isgraph
+#define unicode_isgraph DeeUni_IsGraph
+#undef unicode_isprint
+#define unicode_isprint DeeUni_IsPrint
+#undef unicode_isblank
+#define unicode_isblank DeeUni_IsBlank
+#undef unicode_istitle
+#define unicode_istitle DeeUni_IsTitle
+#undef unicode_isnumeric
+#define unicode_isnumeric DeeUni_IsNumeric
+#undef unicode_issymstrt
+#define unicode_issymstrt DeeUni_IsSymStrt
+#undef unicode_issymcont
+#define unicode_issymcont DeeUni_IsSymCont
 #undef unicode_getnumeric
 #define unicode_getnumeric DeeUni_GetNumeric8
 #undef unicode_getnumeric64
 #define unicode_getnumeric64 DeeUni_GetNumeric64
 #undef unicode_getnumericdbl
 #define unicode_getnumericdbl DeeUni_GetNumericD
-#undef unicode_issymstrt
-#define unicode_issymstrt DeeUni_IsSymStrt
-#undef unicode_issymcont
-#define unicode_issymcont DeeUni_IsSymCont
 #undef unicode_asdigit
 #define unicode_asdigit DeeUni_AsDigit
-#undef __unicode_descriptor
-#define __unicode_descriptor(c) DeeUni_Descriptor(c)
+#undef __unitraits
+#define __unitraits Dee_unitraits
 #undef __ut_flags
 #define __ut_flags ut_flags
+#undef __ut_digit_idx
+#define __ut_digit_idx ut_digit_idx
+#undef __ut_fold_idx
+#define __ut_fold_idx ut_fold_idx
+#undef __ut_lower
+#define __ut_lower ut_lower
+#undef __ut_upper
+#define __ut_upper ut_upper
+#undef __ut_title
+#define __ut_title ut_title
+#undef __unicode_descriptor
+#define __unicode_descriptor DeeUni_Descriptor
 #undef __UNICODE_ISCNTRL
 #define __UNICODE_ISCNTRL Dee_UNICODE_ISCNTRL
+#undef __UNICODE_ISCTAB
+#define __UNICODE_ISCTAB Dee_UNICODE_ISCTAB
+#undef __UNICODE_ISXTAB
+#define __UNICODE_ISXTAB Dee_UNICODE_ISXTAB
+#undef __UNICODE_ISTAB
+#define __UNICODE_ISTAB Dee_UNICODE_ISTAB
+#undef __UNICODE_ISWHITE
+#define __UNICODE_ISWHITE Dee_UNICODE_ISWHITE
+#undef __UNICODE_ISEMPTY
+#define __UNICODE_ISEMPTY Dee_UNICODE_ISEMPTY
+#undef __UNICODE_ISLF
+#define __UNICODE_ISLF Dee_UNICODE_ISLF
 #undef __UNICODE_ISSPACE
 #define __UNICODE_ISSPACE Dee_UNICODE_ISSPACE
-#undef __UNICODE_ISUPPER
-#define __UNICODE_ISUPPER Dee_UNICODE_ISUPPER
 #undef __UNICODE_ISLOWER
 #define __UNICODE_ISLOWER Dee_UNICODE_ISLOWER
+#undef __UNICODE_ISUPPER
+#define __UNICODE_ISUPPER Dee_UNICODE_ISUPPER
+#undef __UNICODE_ISXALPHA
+#define __UNICODE_ISXALPHA Dee_UNICODE_ISXALPHA
 #undef __UNICODE_ISALPHA
 #define __UNICODE_ISALPHA Dee_UNICODE_ISALPHA
 #undef __UNICODE_ISDIGIT
 #define __UNICODE_ISDIGIT Dee_UNICODE_ISDIGIT
+#undef __UNICODE_ISHEX
+#define __UNICODE_ISHEX Dee_UNICODE_ISHEX
 #undef __UNICODE_ISXDIGIT
 #define __UNICODE_ISXDIGIT Dee_UNICODE_ISXDIGIT
 #undef __UNICODE_ISALNUM
@@ -351,24 +419,16 @@ DeeSystem_DEFINE_memcasecmp(dee_memcasecmp)
 #define __UNICODE_ISPRINT Dee_UNICODE_ISPRINT
 #undef __UNICODE_ISBLANK
 #define __UNICODE_ISBLANK Dee_UNICODE_ISBLANK
+#undef __UNICODE_ISTITLE
+#define __UNICODE_ISTITLE Dee_UNICODE_ISTITLE
+#undef __UNICODE_ISXNUMERIC
+#define __UNICODE_ISXNUMERIC Dee_UNICODE_ISXNUMERIC
+#undef __UNICODE_ISNUMERIC
+#define __UNICODE_ISNUMERIC Dee_UNICODE_ISNUMERIC
 #undef __UNICODE_ISSYMSTRT
 #define __UNICODE_ISSYMSTRT Dee_UNICODE_ISSYMSTRT
 #undef __UNICODE_ISSYMCONT
 #define __UNICODE_ISSYMCONT Dee_UNICODE_ISSYMCONT
-#undef __UNICODE_ISTAB
-#define __UNICODE_ISTAB Dee_UNICODE_ISTAB
-#undef __UNICODE_ISWHITE
-#define __UNICODE_ISWHITE Dee_UNICODE_ISWHITE
-#undef __UNICODE_ISEMPTY
-#define __UNICODE_ISEMPTY Dee_UNICODE_ISEMPTY
-#undef __UNICODE_ISLF
-#define __UNICODE_ISLF Dee_UNICODE_ISLF
-#undef __UNICODE_ISHEX
-#define __UNICODE_ISHEX Dee_UNICODE_ISHEX
-#undef __UNICODE_ISTITLE
-#define __UNICODE_ISTITLE Dee_UNICODE_ISTITLE
-#undef __UNICODE_ISNUMERIC
-#define __UNICODE_ISNUMERIC Dee_UNICODE_ISNUMERIC
 #endif /* !CONFIG_HAVE_UNICODE_H */
 
 #undef __libc_hex2int

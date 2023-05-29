@@ -191,7 +191,7 @@ WUNUSED ATTR_INS(1, 2) size_t (DCALL DeeUni_FoldedLength)(uint32_t const *__rest
 LOCAL WUNUSED ATTR_INS(1, 2) size_t
 (DCALL _DeeUni_FoldedLength_b)(uint8_t const *__restrict text, size_t length) {
 	size_t i, result = 0;
-	uint32_t buf[Dee_UNICODE_ISOLDED_MAX];
+	uint32_t buf[Dee_UNICODE_FOLDED_MAX];
 	for (i = 0; i < length; ++i)
 		result += DeeUni_ToFolded(text[i], buf);
 	return result;
@@ -200,7 +200,7 @@ LOCAL WUNUSED ATTR_INS(1, 2) size_t
 LOCAL WUNUSED ATTR_INS(1, 2) size_t
 (DCALL _DeeUni_FoldedLength_w)(uint16_t const *__restrict text, size_t length) {
 	size_t i, result = 0;
-	uint32_t buf[Dee_UNICODE_ISOLDED_MAX];
+	uint32_t buf[Dee_UNICODE_FOLDED_MAX];
 	for (i = 0; i < length; ++i)
 		result += DeeUni_ToFolded(text[i], buf);
 	return result;
@@ -209,7 +209,7 @@ LOCAL WUNUSED ATTR_INS(1, 2) size_t
 LOCAL WUNUSED ATTR_INS(1, 2) size_t
 (DCALL _DeeUni_FoldedLength_l)(uint32_t const *__restrict text, size_t length) {
 	size_t i, result = 0;
-	uint32_t buf[Dee_UNICODE_ISOLDED_MAX];
+	uint32_t buf[Dee_UNICODE_FOLDED_MAX];
 	for (i = 0; i < length; ++i)
 		result += DeeUni_ToFolded(text[i], buf);
 	return result;

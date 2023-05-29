@@ -4639,7 +4639,7 @@ err:
 
 /* Print a unicode character `ch', encoded as UTF-8 into `printer' */
 PUBLIC WUNUSED NONNULL((1)) dssize_t DCALL
-DeeFormat_Putc(dformatprinter printer, void *arg, uint32_t ch) {
+DeeFormat_Putc(/*utf-8*/ dformatprinter printer, void *arg, uint32_t ch) {
 	char utf8_repr[UNICODE_UTF8_CURLEN];
 	size_t utf8_len;
 	if (printer == &unicode_printer_print) {
@@ -5658,7 +5658,8 @@ parse_hex_integer:
 			goto put_ch;
 
 		case 'e':
-			ch = (char)0x1b; /*goto put_ch;*/
+			ch = (char)0x1b;
+			/*goto put_ch;*/
 put_ch:
 			if (unicode_printer_putc(printer, (uint32_t)(unsigned char)ch))
 				goto err;
@@ -5818,7 +5819,7 @@ PUBLIC WUNUSED NONNULL((1)) int
 /* Convert an 8, 16, or 32-bit character array to UTF-8 and write it to `printer'
  * NOTE: 8-bit here refers to the unicode range U+0000 - U+00FF */
 PUBLIC WUNUSED NONNULL((1, 3)) dssize_t DCALL
-DeeFormat_Print8(dformatprinter printer, void *arg,
+DeeFormat_Print8(/*utf-8*/ dformatprinter printer, void *arg,
                  /*latin-1*/ uint8_t const *__restrict text,
                  size_t textlen) {
 	uint8_t const *iter, *end, *flush_start;
@@ -5855,8 +5856,8 @@ err:
 }
 
 PUBLIC WUNUSED NONNULL((1, 3)) dssize_t DCALL
-DeeFormat_Print16(dformatprinter printer, void *arg,
-                  /*utf-16-without-surrogats*/ uint16_t const *__restrict text,
+DeeFormat_Print16(/*utf-8*/ dformatprinter printer, void *arg,
+                  /*utf-16-without-surrogates*/ uint16_t const *__restrict text,
                   size_t textlen) {
 	dssize_t temp, result = 0;
 	uint8_t utf8_buffer[3]; /* TODO: Buffer more than 1 character at-a-time */
@@ -5886,7 +5887,7 @@ err:
 }
 
 PUBLIC WUNUSED NONNULL((1, 3)) dssize_t DCALL
-DeeFormat_Print32(dformatprinter printer, void *arg,
+DeeFormat_Print32(/*utf-8*/ dformatprinter printer, void *arg,
                   /*utf-32*/ uint32_t const *__restrict text,
                   size_t textlen) {
 	dssize_t temp, result = 0;

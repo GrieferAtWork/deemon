@@ -1240,8 +1240,8 @@ err:
 
 /* Format-quote 8-bit, 16-bit, and 32-bit unicode text: */
 PUBLIC WUNUSED NONNULL((1, 3)) dssize_t DCALL
-DeeFormat_Quote8(dformatprinter printer, void *arg,
-                 uint8_t const *__restrict text, size_t textlen) {
+DeeFormat_Quote8(/*ascii*/ dformatprinter printer, void *arg,
+                 /*latin-1*/ uint8_t const *__restrict text, size_t textlen) {
 	dssize_t temp, result = 0;
 	uint8_t const *flush_start, *end;
 	flush_start = text;
@@ -1307,8 +1307,8 @@ err:
 }
 
 PUBLIC WUNUSED NONNULL((1, 3)) dssize_t DCALL
-DeeFormat_Quote16(dformatprinter printer, void *arg,
-                  uint16_t const *__restrict text, size_t textlen) {
+DeeFormat_Quote16(/*ascii*/ dformatprinter printer, void *arg,
+                  /*utf-16-without-surrogates*/ uint16_t const *__restrict text, size_t textlen) {
 	dssize_t temp, result = 0;
 	uint16_t const *end = text + textlen;
 	while (text < end) {
@@ -1373,8 +1373,8 @@ err:
 }
 
 PUBLIC WUNUSED NONNULL((1, 3)) dssize_t DCALL
-DeeFormat_Quote32(dformatprinter printer, void *arg,
-                  uint32_t const *__restrict text, size_t textlen) {
+DeeFormat_Quote32(/*ascii*/ dformatprinter printer, void *arg,
+                  /*utf-32*/ uint32_t const *__restrict text, size_t textlen) {
 	dssize_t temp, result = 0;
 	uint32_t const *end = text + textlen;
 	while (text < end) {
@@ -1456,15 +1456,16 @@ DeeFormat_Repeat(/*ascii*/ dformatprinter printer, void *arg,
                  /*ascii*/ char ch, size_t count) {
 	char buffer[128];
 	dssize_t temp, result;
-	if (sizeof(buffer) >= count) {
+	if (COMPILER_LENOF(buffer) >= count) {
 		memset(buffer, ch, count);
 		return (*printer)(arg, buffer, count);
 	}
 	result = 0;
 	memset(buffer, ch, sizeof(buffer));
 	while (count) {
-		size_t part = MIN(count, sizeof(buffer));
-		temp        = (*printer)(arg, buffer, part);
+		size_t part;
+		part = MIN(count, COMPILER_LENOF(buffer));
+		temp = (*printer)(arg, buffer, part);
 		if unlikely(temp < 0)
 			goto err;
 		result += temp;
@@ -1480,7 +1481,7 @@ err:
 /* Repeat `str...+=length' such that a total of `total_characters'
  * characters (not bytes, but characters) are printed. */
 DFUNDEF WUNUSED NONNULL((1, 3)) dssize_t DCALL
-DeeFormat_RepeatUtf8(dformatprinter printer, void *arg,
+DeeFormat_RepeatUtf8(/*utf-8*/ dformatprinter printer, void *arg,
                      /*utf-8*/ char const *__restrict str,
                      size_t length, size_t total_characters) {
 	size_t utf8_length, i;

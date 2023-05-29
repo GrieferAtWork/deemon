@@ -266,7 +266,7 @@ DeeFormat_Quote8(/*ascii*/ Dee_formatprinter_t printer, void *arg,
                  /*latin-1*/ uint8_t const *__restrict text, size_t textlen);
 DFUNDEF WUNUSED NONNULL((1, 3)) Dee_ssize_t DCALL
 DeeFormat_Quote16(/*ascii*/ Dee_formatprinter_t printer, void *arg,
-                  /*utf-16-without-surrogats*/ uint16_t const *__restrict text, size_t textlen);
+                  /*utf-16-without-surrogates*/ uint16_t const *__restrict text, size_t textlen);
 DFUNDEF WUNUSED NONNULL((1, 3)) Dee_ssize_t DCALL
 DeeFormat_Quote32(/*ascii*/ Dee_formatprinter_t printer, void *arg,
                   /*utf-32*/ uint32_t const *__restrict text, size_t textlen);
@@ -279,26 +279,26 @@ DeeFormat_Repeat(/*ascii*/ Dee_formatprinter_t printer, void *arg,
 /* Repeat `str...+=length' such that a total of `total_characters'
  * characters (not bytes, but characters) are printed. */
 DFUNDEF WUNUSED NONNULL((1, 3)) Dee_ssize_t DCALL
-DeeFormat_RepeatUtf8(Dee_formatprinter_t printer, void *arg,
+DeeFormat_RepeatUtf8(/*utf-8*/ Dee_formatprinter_t printer, void *arg,
                      /*utf-8*/ char const *__restrict str,
                      size_t length, size_t total_characters);
 
 /* Print a unicode character `ch', encoded as UTF-8 into `printer' */
 DFUNDEF WUNUSED NONNULL((1)) Dee_ssize_t DCALL
-DeeFormat_Putc(Dee_formatprinter_t printer, void *arg, uint32_t ch);
+DeeFormat_Putc(/*utf-8*/ Dee_formatprinter_t printer, void *arg, uint32_t ch);
 
 /* Convert an 8, 16, or 32-bit character array to UTF-8 and write it to `printer'
  * NOTE: 8-bit here refers to the unicode range U+0000 - U+00FF */
 DFUNDEF WUNUSED NONNULL((1, 3)) Dee_ssize_t DCALL
-DeeFormat_Print8(Dee_formatprinter_t printer, void *arg,
+DeeFormat_Print8(/*utf-8*/ Dee_formatprinter_t printer, void *arg,
                  /*latin-1*/ uint8_t const *__restrict text,
                  size_t textlen);
 DFUNDEF WUNUSED NONNULL((1, 3)) Dee_ssize_t DCALL
-DeeFormat_Print16(Dee_formatprinter_t printer, void *arg,
-                  /*utf-16-without-surrogats*/ uint16_t const *__restrict text,
+DeeFormat_Print16(/*utf-8*/ Dee_formatprinter_t printer, void *arg,
+                  /*utf-16-without-surrogates*/ uint16_t const *__restrict text,
                   size_t textlen);
 DFUNDEF WUNUSED NONNULL((1, 3)) Dee_ssize_t DCALL
-DeeFormat_Print32(Dee_formatprinter_t printer, void *arg,
+DeeFormat_Print32(/*utf-8*/ Dee_formatprinter_t printer, void *arg,
                   /*utf-32*/ uint32_t const *__restrict text,
                   size_t textlen);
 

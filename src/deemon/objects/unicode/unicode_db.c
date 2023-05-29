@@ -134,8 +134,8 @@ PRIVATE uint16_t const unicode_tab2[42];
 #include "db/db.dat"
 #endif /* !__INTELLISENSE__ */
 
-STATIC_ASSERT_MSG(UNICODE_FOLD_MAXLEN <= Dee_UNICODE_ISOLDED_MAX,
-                  "Dee_UNICODE_ISOLDED_MAX must be increased!");
+STATIC_ASSERT_MSG(UNICODE_FOLD_MAXLEN <= Dee_UNICODE_FOLDED_MAX,
+                  "Dee_UNICODE_FOLDED_MAX must be increased!");
 
 PRIVATE struct unitraits const default_traits = { 0x0, 0, 0xff, 0, 0, 0 };
 
