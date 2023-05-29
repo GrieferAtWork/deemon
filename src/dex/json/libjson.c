@@ -2453,7 +2453,7 @@ err_seq_type:
 			svec = DeeSharedVector_NewShared(ol.ol_elemc, ol.ol_elemv);
 			if likely(svec) {
 				result = DeeObject_New(seq_type, 1, &svec);
-				Dee_Decref(svec);
+				DeeSharedVector_Decref(svec);
 			}
 			objectlist_fini(&ol);
 			Dee_Decref(seq_type);
