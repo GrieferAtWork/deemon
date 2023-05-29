@@ -46,7 +46,7 @@
 DECL_BEGIN
 
 INTDEF DeeThreadObject DeeThread_Main;
-INTERN struct empty_traceback_object empty_traceback = {
+INTERN struct empty_traceback_object DeeTraceback_Empty = {
 	OBJECT_HEAD_INIT(&DeeTraceback_Type),
 	/* .tb_thread    = */ &DeeThread_Main,
 #ifndef CONFIG_NO_THREADS
@@ -225,9 +225,9 @@ INTDEF DeeTypeObject DeeTracebackIterator_Type;
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 traceiter_ctor(TraceIterator *__restrict self) {
-	self->ti_trace = (DREF DeeTracebackObject *)&empty_traceback;
+	self->ti_trace = (DREF DeeTracebackObject *)&DeeTraceback_Empty;
 	self->ti_next  = self->ti_trace->tb_frames;
-	Dee_Incref(&empty_traceback);
+	Dee_Incref(&DeeTraceback_Empty);
 	return 0;
 }
 
@@ -705,7 +705,7 @@ traceback_current(DeeObject *__restrict UNUSED(self)) {
 		goto err_no_except;
 	result = (DREF DeeObject *)except_frame_gettb(thread->t_except);
 	if unlikely(result == NULL)
-		result = (DREF DeeObject *)&empty_traceback;
+		result = (DREF DeeObject *)&DeeTraceback_Empty;
 	Dee_Incref(result);
 	return result;
 err_no_except:

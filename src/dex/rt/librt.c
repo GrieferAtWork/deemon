@@ -341,15 +341,31 @@ librt_get_DictValuesIterator_f(size_t UNUSED(argc), DeeObject *const *UNUSED(arg
 	                         (DeeObject *)&str_Iterator);
 }
 
-PRIVATE WUNUSED DREF DeeObject *DCALL
-librt_get_TracebackIterator_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
+LOCAL WUNUSED DREF DeeObject *DCALL
+librt_get_TracebackIterator_impl_f(void) {
 	return DeeObject_GetAttr((DeeObject *)&DeeTraceback_Type,
 	                         (DeeObject *)&str_Iterator);
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
+librt_get_TracebackIterator_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
+	return librt_get_TracebackIterator_impl_f();
+}
+
+PRIVATE WUNUSED DREF DeeObject *DCALL
 librt_get_GCEnum_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
 	return_reference((DREF DeeObject *)Dee_TYPE(&DeeGCEnumTracked_Singleton));
+}
+
+PRIVATE WUNUSED DREF DeeObject *DCALL
+librt_get_Traceback_empty_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
+	DREF DeeObject *iter, *result = NULL;
+	iter = librt_get_TracebackIterator_impl_f();
+	if likely(iter) {
+		result = DeeObject_GetAttrString(iter, "seq");
+		Dee_Decref_likely(iter);
+	}
+	return result;
 }
 
 LOCAL WUNUSED DREF DeeObject *DCALL
@@ -1725,6 +1741,7 @@ PRIVATE DEFINE_CMETHOD(librt_get_BlackListVarkwdsIterator, librt_get_BlackListVa
 PRIVATE DEFINE_CMETHOD(librt_get_BlackListMapping, librt_get_BlackListMapping_f);
 PRIVATE DEFINE_CMETHOD(librt_get_BlackListMappingIterator, librt_get_BlackListMappingIterator_f);
 PRIVATE DEFINE_CMETHOD(librt_get_GCEnum, librt_get_GCEnum_f);
+PRIVATE DEFINE_CMETHOD(librt_get_Traceback_empty, librt_get_Traceback_empty_f);
 PRIVATE DEFINE_CMETHOD(librt_get_DocKwds, librt_get_DocKwds_f);
 PRIVATE DEFINE_CMETHOD(librt_get_DocKwdsIterator, librt_get_DocKwdsIterator_f);
 PRIVATE DEFINE_CMETHOD(librt_get_MappingProxy, librt_get_MappingProxy_f);
@@ -2210,6 +2227,9 @@ PRIVATE struct dex_symbol symbols[] = {
 	  DOC("The gc-singleton which can also be found under :gc") }, /* DeeGCEnumTracked_Singleton */
 	{ "GCEnum", (DeeObject *)&librt_get_GCEnum, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR,
 	  DOC("The result of ${type(gc from deemon)}") }, /* GCEnum_Type */
+	{ "Traceback_empty", (DeeObject *)&librt_get_Traceback_empty, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR,
+	  DOC("->?GTraceback\n"
+	      "The fallback 'empty' traceback") }, /* DeeTraceback_Empty */
 
 	/* Re-exports of standard types also exported from `deemon' */
 	{ "Int", (DeeObject *)&DeeInt_Type, MODSYM_FREADONLY },
@@ -2249,11 +2269,11 @@ PRIVATE struct dex_symbol symbols[] = {
 	{ "None", Dee_None, MODSYM_FREADONLY },                               /* `none' */
 	{ "MemoryFile", (DeeObject *)&DeeMemoryFile_Type, MODSYM_FREADONLY,   /* An internal file type for streaming from read-only raw memory. */
 	  DOC("A special file type that may be used by the deemon runtime to temporarily "
-	      "allow user-code access to raw memory regions via the file interface, rather "
-	      "than the bytes interface. Note however that this type of file cannot be "
-	      "constructed from user-code such that it would reference data, and that memory "
-	      "files impose special access restrictions to prevent user-code from maintaining "
-	      "access to wrapped memory once the file's creator destroys it") },
+	      /**/ "allow user-code access to raw memory regions via the file interface, rather "
+	      /**/ "than the bytes interface. Note however that this type of file cannot be "
+	      /**/ "constructed from user-code such that it would reference data, and that memory "
+	      /**/ "files impose special access restrictions to prevent user-code from maintaining "
+	      /**/ "access to wrapped memory once the file's creator destroys it.") },
 	{ "FileReader", (DeeObject *)&DeeFileReader_Type, MODSYM_FREADONLY },             /* `File.Reader' */
 	{ "FileWriter", (DeeObject *)&DeeFileWriter_Type, MODSYM_FREADONLY },             /* `File.Writer' */
 	{ "FilePrinter", (DeeObject *)&DeeFilePrinter_Type, MODSYM_FREADONLY },           /* Internal file-type for wrapping `dformatprinter' when invoking user-defined print/printrepr operators */

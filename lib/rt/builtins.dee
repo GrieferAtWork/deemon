@@ -57,7 +57,7 @@ final local opt_win32 = try import("win32") catch (...) none;
 local __objects = deemon.List {
 	/* 0x0000 */ none, // Must be 0
 	/* 0x0001 */ "",
-	/* 0x0002 */ none, /* empty-Traceback */
+	/* 0x0002 */ rt.Traceback_empty, /* empty-Traceback */
 	/* 0x0003 */ true,
 	/* 0x0004 */ false,
 	/* 0x0005 */ pack(),

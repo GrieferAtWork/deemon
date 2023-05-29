@@ -85,9 +85,9 @@ struct empty_traceback_object {
 	uint16_t                       tb_numframes;
 	uint16_t                       tb_padding[3];
 };
-INTDEF struct empty_traceback_object empty_traceback;
+INTDEF struct empty_traceback_object DeeTraceback_Empty;
 #else /* GUARD_DEEMON_OBJECTS_TRACEBACK_C */
-INTDEF DeeTracebackObject empty_traceback;
+INTDEF DeeTracebackObject DeeTraceback_Empty;
 #endif /* !GUARD_DEEMON_OBJECTS_TRACEBACK_C */
 #endif /* CONFIG_BUILDING_DEEMON */
 

@@ -5092,7 +5092,7 @@ DeeThread_Trace(/*Thread*/ DeeObject *__restrict self) {
 #ifdef DeeThread_USE_SINGLE_THREADED
 	/* All threads other than the caller are unmanaged, and thus have empty tracebacks. */
 	if (me != DeeThread_Self()) {
-		return_reference_((DeeObject *)&empty_traceback);
+		return_reference_((DeeObject *)&DeeTraceback_Empty);
 	} else
 #else /* DeeThread_USE_SINGLE_THREADED */
 	if (me != DeeThread_Self()) {
