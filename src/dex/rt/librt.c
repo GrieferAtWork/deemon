@@ -113,16 +113,20 @@ PRIVATE WUNUSED DREF DeeObject *DCALL
 librt_makeclass_f(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	DeeTypeObject *base;
 	DeeObject *descriptor;
-	DeeModuleObject *declaring_module = NULL;
+	DeeModuleObject *declaring_module = (DeeModuleObject *)Dee_None;
 	PRIVATE DEFINE_KWLIST(kwlist, { K(base), K(descriptor), K(module), KEND });
 	if (DeeArg_UnpackKw(argc, argv, kw, kwlist, "oo|o:makeclass",
 	                    &base, &descriptor, &declaring_module))
 		goto err;
 	if (DeeObject_AssertTypeExact(descriptor, &DeeClassDescriptor_Type))
 		goto err;
-	if (declaring_module &&
-	    DeeObject_AssertTypeExact(declaring_module, &DeeModule_Type))
-		goto err;
+	if (DeeNone_Check(declaring_module)) {
+		/* Special case: no declaring module given. */
+		declaring_module = NULL;
+	} else {
+		if (DeeObject_AssertTypeExact(declaring_module, &DeeModule_Type))
+			goto err;
+	}
 	return (DREF DeeObject *)DeeClass_New(base, descriptor, declaring_module);
 err:
 	return NULL;
@@ -1894,7 +1898,9 @@ PRIVATE struct dex_symbol symbols[] = {
 	      "for an arbitrary architecture") },
 	{ "SlabStat", (DeeObject *)&SlabStat_Type, MODSYM_FREADONLY }, /* Access to slab allocator statistics. */
 	{ "makeclass", (DeeObject *)&librt_makeclass, MODSYM_FREADONLY,
-	  DOC("(base:?X2?DType?N,descriptor:?GClassDescriptor,module?:?DModule)->?DType\n"
+	  DOC("(base:?X2?DType?N,descriptor:?GClassDescriptor,module:?X2?DModule?N=!N)->?DType\n"
+	      "@param module The module that is declaring the class (and returned by ${return.__module__}). "
+	      /*         */ "When not given (or given as !N), the type is not linked to a module.\n"
 	      "Construct a new class from a given @base type, as well as class @descriptor") },
 
 	/* Access of the arguments passed to the __MAIN__ module. */
