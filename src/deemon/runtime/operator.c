@@ -5492,6 +5492,81 @@ DeeObject_ForeachPair(DeeObject *__restrict self,
 	dssize_t temp, result = 0;
 	DREF DeeObject *elem;
 	size_t fast_size;
+	DeeTypeObject *self_type;
+
+	/* Special optimizations for some well-known mapping types */
+	self_type = Dee_TYPE(self);
+	if (self_type == &DeeDict_Type) {
+		DeeDictObject *me = (DeeDictObject *)self;
+		dhash_t i;
+		DeeDict_LockRead(me);
+		for (i = 0; i <= me->d_mask; ++i) {
+			DREF DeeObject *key, *value;
+			key = me->d_elem[i].di_key;
+			if (key == NULL || key == &DeeDict_Dummy)
+				continue;
+			value = me->d_elem[i].di_value;
+			Dee_Incref(key);
+			Dee_Incref(value);
+			DeeDict_LockEndRead(me);
+			temp = (*proc)(arg, key, value);
+			Dee_Decref_unlikely(value);
+			Dee_Decref_unlikely(key);
+			if unlikely(temp < 0)
+				return temp;
+			result += temp;
+			DeeDict_LockRead(me);
+		}
+		DeeDict_LockEndRead(me);
+		return result;
+	}
+	if (self_type == &DeeRoDict_Type) {
+		DeeRoDictObject *me = (DeeRoDictObject *)self;
+		dhash_t i;
+		for (i = 0; i <= me->rd_mask; ++i) {
+			if (me->rd_elem[i].rdi_key == NULL)
+				continue;
+			temp = (*proc)(arg,
+			               me->rd_elem[i].rdi_key,
+			               me->rd_elem[i].rdi_value);
+			if unlikely(temp < 0)
+				return temp;
+			result += temp;
+		}
+		return result;
+	}
+	if (self_type == &DeeKwdsMapping_Type) {
+		DeeKwdsMappingObject *me = (DeeKwdsMappingObject *)self;
+		DeeKwdsObject *kwds      = me->kmo_kwds;
+		dhash_t i;
+		for (i = 0; i <= kwds->kw_mask; ++i) {
+			DREF DeeObject *value;
+			struct kwds_entry *kwd = &kwds->kw_map[i];
+			if (kwd->ke_name == NULL)
+				continue;
+			DeeKwdsMapping_LockRead(me);
+			if unlikely(!me->kmo_argv) {
+				DeeKwdsMapping_LockEndRead(me);
+				break;
+			}
+			value = me->kmo_argv[kwd->ke_index];
+			Dee_Incref(value);
+			DeeKwdsMapping_LockEndRead(me);
+			temp = (*proc)(arg, (DeeObject *)kwds->kw_map[i].ke_name, value);
+			Dee_Decref_unlikely(value);
+			if unlikely(temp < 0)
+				return temp;
+			result += temp;
+		}
+		return result;
+	}
+
+	/* TODO: BlackListVarkwds_Type */
+
+	/* TODO: BlackListMapping_Type (recursively enumerate the
+	 *       pointed-to mapping and exclude blacklisted members) */
+
+	/* Generic fast-sequence support. */
 	fast_size = DeeFastSeq_GetSize(self);
 	if (fast_size != DEE_FASTSEQ_NOTFAST) {
 		size_t i;
@@ -5516,12 +5591,6 @@ DeeObject_ForeachPair(DeeObject *__restrict self,
 		}
 		return result;
 	}
-
-	/* TODO: Support for some well-known mapping types:
-	 * - DeeDict_Type
-	 * - DeeRoDict_Type
-	 * - DeeKwdsMapping_Type
-	 */
 
 	/* Fallback: Use an iterator. */
 	if ((self = DeeObject_IterSelf(self)) == NULL)
