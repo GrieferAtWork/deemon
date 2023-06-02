@@ -2725,13 +2725,19 @@ err:
 	return -1;
 }
 
-PRIVATE int DCALL
-module_import_symbol(DeeModuleObject *__restrict self,
-                     DeeStringObject *__restrict name,
-                     DeeObject *__restrict value,
-                     unsigned int mode,
-                     uint16_t *__restrict p_globala) {
-	if (!(mode & DEE_EXEC_RUNMODE_FDEFAULTS_ARE_GLOBALS)) {
+struct module_import_data {
+	DeeModuleObject *mid_self;    /* [1..1] The module into which to import. */
+	unsigned int     mid_mode;    /* Import mode (s.a. `DEE_EXEC_RUNMODE_*') */
+	uint16_t         mid_globala; /* Allocated vector size of `mid_self->mo_globalv' */
+};
+
+PRIVATE WUNUSED NONNULL((1, 2, 3)) dssize_t DCALL
+module_import_symbol(void *arg, DeeObject *name, DeeObject *value) {
+	struct module_import_data *data = (struct module_import_data *)arg;
+	DeeModuleObject *self = data->mid_self;
+	if unlikely(DeeObject_AssertTypeExact(name, &DeeString_Type))
+		goto err;
+	if (!(data->mid_mode & DEE_EXEC_RUNMODE_FDEFAULTS_ARE_GLOBALS)) {
 		struct TPPKeyword *kwd;
 		struct symbol *sym;
 
@@ -2741,8 +2747,7 @@ module_import_symbol(DeeModuleObject *__restrict self,
 		                             1);
 		if unlikely(!kwd)
 			goto err;
-		sym = get_local_symbol_in_scope((DeeScopeObject *)current_rootscope,
-		                                kwd);
+		sym = get_local_symbol_in_scope((DeeScopeObject *)current_rootscope, kwd);
 		if unlikely(sym) {
 			if (sym->s_type == SYMBOL_TYPE_CONST &&
 			    sym->s_const == value)
@@ -2752,9 +2757,7 @@ module_import_symbol(DeeModuleObject *__restrict self,
 			                name);
 			goto err;
 		}
-		sym = new_local_symbol_in_scope((DeeScopeObject *)current_rootscope,
-		                                kwd,
-		                                NULL);
+		sym = new_local_symbol_in_scope((DeeScopeObject *)current_rootscope, kwd, NULL);
 		if unlikely(!sym)
 			goto err;
 		sym->s_type  = SYMBOL_TYPE_CONST;
@@ -2768,9 +2771,9 @@ module_import_symbol(DeeModuleObject *__restrict self,
 		if (self->mo_globalc / 2 >= current_rootscope->rs_bucketm &&
 		    module_rehash_globals())
 			goto err;
-		if (self->mo_globalc >= *p_globala) {
+		if (self->mo_globalc >= data->mid_globala) {
 			DREF DeeObject **new_globalv;
-			uint16_t new_globala = *p_globala * 2;
+			uint16_t new_globala = data->mid_globala * 2;
 			if (!new_globala)
 				new_globala = 2;
 			ASSERT(new_globala > self->mo_globalc);
@@ -2785,12 +2788,12 @@ module_import_symbol(DeeModuleObject *__restrict self,
 				if unlikely(!new_globalv)
 					goto err;
 			}
-			self->mo_globalv = new_globalv;
-			*p_globala       = new_globala;
+			self->mo_globalv  = new_globalv;
+			data->mid_globala = new_globala;
 		}
 
 		/* Append the symbol initializer */
-		addr                   = self->mo_globalc++;
+		addr = self->mo_globalc++;
 		self->mo_globalv[addr] = value;
 		Dee_Incref(value);
 
@@ -2817,51 +2820,19 @@ err:
 	return -1;
 }
 
-PRIVATE int DCALL
-module_import_symbol_pair(DeeModuleObject *__restrict self,
-                          DeeObject *__restrict symbol_pair,
-                          unsigned int mode,
-                          uint16_t *__restrict p_globala) {
-	DREF DeeObject *key_and_value[2];
-	int result;
-	if (DeeObject_Unpack(symbol_pair, 2, key_and_value))
-		goto err;
-	if (DeeObject_AssertTypeExact(key_and_value[0], &DeeString_Type)) {
-		result = -1;
-	} else {
-		result = module_import_symbol(self,
-		                              (DeeStringObject *)key_and_value[0],
-		                              key_and_value[1],
-		                              mode,
-		                              p_globala);
-	}
-	Dee_Decref(key_and_value[1]);
-	Dee_Decref(key_and_value[0]);
-	return result;
-err:
-	return -1;
-}
-
-PRIVATE int DCALL
-module_import_symbols(DeeModuleObject *__restrict self,
-                      DeeObject *__restrict default_symbols,
+PRIVATE WUNUSED NONNULL((1, 2, 4)) dssize_t DCALL
+module_import_symbols(DeeModuleObject *self,
+                      DeeObject *default_symbols,
                       unsigned int mode,
                       uint16_t *__restrict p_globala) {
-	DREF DeeObject *iterator, *elem;
-	int temp;
-	iterator = DeeObject_IterSelf(default_symbols);
-	if unlikely(!iterator)
-		goto err;
-	while (ITER_ISOK(elem = DeeObject_IterNext(iterator))) {
-		temp = module_import_symbol_pair(self, elem, mode, p_globala);
-		Dee_Decref(elem);
-		if unlikely(temp)
-			goto err;
-	}
-	Dee_Decref(iterator);
-	return 0;
-err:
-	return -1;
+	dssize_t result;
+	struct module_import_data mid;
+	mid.mid_self    = self;
+	mid.mid_mode    = mode;
+	mid.mid_globala = *p_globala;
+	result = DeeObject_ForeachPair(default_symbols, &module_import_symbol, &mid);
+	*p_globala = mid.mid_globala;
+	return result;
 }
 
 
@@ -3029,7 +3000,7 @@ DeeExec_CompileModuleStream(DeeObject *source_stream,
 	result_globala = 0;
 	if (default_symbols) {
 		/* Provide default symbols as though they were defined as globals. */
-		if unlikely(module_import_symbols(result, default_symbols, mode, &result_globala))
+		if unlikely(module_import_symbols(result, default_symbols, mode, &result_globala) < 0)
 			goto err_r_compiler;
 		current_rootscope->rs_globalc = result->mo_globalc;
 	}

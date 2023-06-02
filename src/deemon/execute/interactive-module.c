@@ -983,46 +983,18 @@ err:
 	return -1;
 }
 
-PRIVATE int DCALL
-module_import_symbol_pair(DeeModuleObject *self,
-                          DeeObject *symbol_pair) {
-	DREF DeeObject *key_and_value[2];
-	int result;
-	if (DeeObject_Unpack(symbol_pair, 2, key_and_value))
+PRIVATE WUNUSED NONNULL((1, 2, 3)) dssize_t DCALL
+module_import_symbol_pair(void *arg, DeeObject *key, DeeObject *value) {
+	if (DeeObject_AssertTypeExact(key, &DeeString_Type))
 		goto err;
-	if (DeeObject_AssertTypeExact(key_and_value[0], &DeeString_Type)) {
-		result = -1;
-	} else {
-		result = module_import_symbol(self,
-		                              (DeeStringObject *)key_and_value[0],
-		                              key_and_value[1]);
-	}
-	Dee_Decref(key_and_value[1]);
-	Dee_Decref(key_and_value[0]);
-	return result;
+	return module_import_symbol((DeeModuleObject *)arg,
+	                            (DeeStringObject *)key, value);
 err:
 	return -1;
 }
 
-PRIVATE int DCALL
-module_import_symbols(DeeModuleObject *self,
-                      DeeObject *default_symbols) {
-	DREF DeeObject *iterator, *elem;
-	int temp;
-	iterator = DeeObject_IterSelf(default_symbols);
-	if unlikely(!iterator)
-		goto err;
-	while (ITER_ISOK(elem = DeeObject_IterNext(iterator))) {
-		temp = module_import_symbol_pair(self, elem);
-		Dee_Decref(elem);
-		if unlikely(temp)
-			goto err;
-	}
-	Dee_Decref(iterator);
-	return 0;
-err:
-	return -1;
-}
+#define module_import_symbols(self, default_symbols) \
+	DeeObject_ForeachPair(default_symbols, &module_import_symbol_pair, self)
 
 
 
@@ -1144,7 +1116,7 @@ imod_init(InteractiveModule *__restrict self,
 
 	/* If given, import default symbols as globals. */
 	if (default_symbols) {
-		if unlikely(module_import_symbols(&self->im_module, default_symbols))
+		if unlikely(module_import_symbols(&self->im_module, default_symbols) < 0)
 			goto err_globals;
 	}
 

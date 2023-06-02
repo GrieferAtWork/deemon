@@ -101,33 +101,26 @@ byattr_setattr(MapByAttr *self, /*String*/ DeeObject *name, DeeObject *value) {
 }
 
 struct byattr_enumattr_foreach_data {
-	MapByAttr *self;
-	Dee_enum_t proc;
-	void      *arg;
+	MapByAttr *befd_self;
+	Dee_enum_t befd_proc;
+	void      *befd_arg;
 };
 
-PRIVATE WUNUSED NONNULL((2)) Dee_ssize_t DCALL
-byattr_enumattr_foreach(void *arg, DeeObject *__restrict elem) {
-	struct byattr_enumattr_foreach_data *cookie;
-	DREF DeeObject *key_and_value[2];
+PRIVATE WUNUSED NONNULL((1, 2, 3)) Dee_ssize_t DCALL
+byattr_enumattr_foreach(void *arg, DeeObject *key, DeeObject *value) {
 	Dee_ssize_t result;
+	struct byattr_enumattr_foreach_data *cookie;
 	cookie = (struct byattr_enumattr_foreach_data *)arg;
-	if (DeeObject_Unpack(elem, 2, key_and_value))
-		goto err;
 	result = 0;
-	Dee_Decref(key_and_value[1]);
-	if (DeeString_Check(key_and_value[0])) {
-		result = (*cookie->proc)((DeeObject *)cookie->self,
-		                         DeeString_STR(key_and_value[0]),
-		                         NULL,
-		                         ATTR_PERMGET | ATTR_PERMDEL | ATTR_PERMSET |
-		                         ATTR_IMEMBER | ATTR_PROPERTY | ATTR_NAMEOBJ,
-		                         NULL, cookie->arg);
+	if (DeeString_Check(key)) {
+		result = (*cookie->befd_proc)((DeeObject *)cookie->befd_self,
+		                              DeeString_STR(key), NULL,
+		                              ATTR_PERMGET | ATTR_PERMDEL | ATTR_PERMSET |
+		                              ATTR_IMEMBER | ATTR_PROPERTY | ATTR_NAMEOBJ,
+		                              Dee_TYPE(value), cookie->befd_arg);
 	}
-	Dee_Decref(key_and_value[0]);
+	Dee_Decref(key);
 	return result;
-err:
-	return -1;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2, 3)) Dee_ssize_t DCALL
@@ -135,12 +128,12 @@ byattr_enumattr(DeeTypeObject *tp_self, MapByAttr *self,
                 Dee_enum_t proc, void *arg) {
 	struct byattr_enumattr_foreach_data cookie;
 	(void)tp_self;
-	cookie.self = self;
-	cookie.proc = proc;
-	cookie.arg  = arg;
-	return DeeObject_Foreach(self->mba_map,
-	                         &byattr_enumattr_foreach,
-	                         &cookie);
+	cookie.befd_self = self;
+	cookie.befd_proc = proc;
+	cookie.befd_arg  = arg;
+	return DeeObject_ForeachPair(self->mba_map,
+	                             &byattr_enumattr_foreach,
+	                             &cookie);
 }
 
 

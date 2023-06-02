@@ -3122,7 +3122,7 @@ DFUNDEF WUNUSED WUNUSED NONNULL((1, 2)) Dee_ssize_t
 (DCALL DeeObject_Foreach)(DeeObject *__restrict self, Dee_foreach_t proc, void *arg);
 
 /* Same as `DeeObject_Foreach()', but meant for enumeration of mapping key/value pairs. */
-DFUNDEF WUNUSED WUNUSED NONNULL((1, 2)) Dee_ssize_t
+DFUNDEF WUNUSED WUNUSED NONNULL((1, 2)) Dee_ssize_t /* TODO: Refactor more code to use this instead of `DeeObject_Unpack()' */
 (DCALL DeeObject_ForeachPair)(DeeObject *__restrict self, Dee_foreach_pair_t proc, void *arg);
 
 /* Unpack the given sequence `self' into `objc' items then stored within the `objv' vector. */
