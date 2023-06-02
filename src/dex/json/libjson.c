@@ -3230,6 +3230,25 @@ DeeJson_WriteObject(DeeJsonWriter *__restrict self,
 		}
 		self->djw_writer.jw_result += temp;
 	} else {
+		/* TODO: Types need to be able to define some magic function whose
+		 *       presence indicates that some custom behavior should be
+		 *       used in order to facilitate JSON encode/decode.
+		 * Idea:
+		 * >> class MyClass {
+		 * >>     public function __into_literal__(): int | float | bool | none | string | Sequence | Mapping;
+		 * >>     public static function __from_literal__(lit: int | float | bool | none | string | Sequence | Mapping): MyClass;
+		 * >> }
+		 * This pair of functions (if present) would then be used to convert
+		 * an object to/from JSON-compatible literals. For example, these functions
+		 * could be implemented by `Time from time' to have __into_literal__ return
+		 * strings like "2023-05-29T20:39Z", and `__from_literal__' to parse those
+		 * strings once again (in addition to also supporting other formats, which
+		 * would then depend on the actual value of the given `lit')
+		 *
+		 * NOTE: But before implementing something like this, check if (and how)
+		 *       python might already do something similar to this in its json module.
+		 */
+
 		/* Make sure that we haven't already written this object. */
 		int already_handled_status;
 		already_handled_status = DeeJsonWriter_InsertActive(self, obj);
@@ -3242,6 +3261,7 @@ DeeJson_WriteObject(DeeJsonWriter *__restrict self,
 				obj = DeeObject_Call(self->djw_recursion, 1, (DeeObject **)&obj);
 				if unlikely(!obj)
 					goto err;
+
 				/* Check if the produced object is already being printed. */
 				already_handled_status = DeeJsonWriter_IsActive(self, obj);
 				if (already_handled_status == 0) {
