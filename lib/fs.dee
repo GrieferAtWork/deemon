@@ -326,6 +326,48 @@ local function _gethome(user: string = none): string {
 	return "/home/me";
 }
 
+@@@@interrupt
+@@@param env A Dict-style mapping used to resolve variable names. Defaults to @posix.environ
+@@@throw ValueError The given @options string contains unrecognized options
+@@@throw ValueError An unknown environment variable was accessed and @"f" isn't part of @options
+@@
+@@Expand parts of the given @path, according to @options which is either an
+@@implementation-specific bitset, or a sequence of the following option characters:
+@@
+@@+------+--------------------------------------------------------------------------+
+@@| Name | Behavior                                                                 |
+@@+------+--------------------------------------------------------------------------+
+@@| @"h" | Expand @"~" and @"~<nam>" to the return value of @(User([<nam>]).home()) |
+@@|      |                                                                          |
+@@| @"v" | Expand @"$<nam>" and @"${<nam>}" to @env[nam]                            |
+@@|      |                                                                          |
+@@| @"V" | Expand @"%<nam>%" to @env[nam]                                           |
+@@|      |                                                                          |
+@@| @"p" | Expand @"." and @".." folders names while also deleting multiple         |
+@@|      | consecutive slashes, as well as all whitespace surrounding them. On      |
+@@|      | hosts with an @ALTSEP differing from @SEP, all occurrences of @ALTSEP    |
+@@|      | are also replaced with @SEP.                                             |
+@@|      | This option, alongside @"c" and @"a" should be used before a path-string |
+@@|      | can be considered uniform and suitable to be used as key in a hash-table |
+@@|      | used for mapping files to objects.                                       |
+@@|      | Note that the deemon core uses an option similar to this to implement    |
+@@|      | the mapping between modules and their associated files.                  |
+@@|      | Also note that this option is identical to @posix.normalpath.            |
+@@|      |                                                                          |
+@@| @"a" | Force the returned path to be absolute in relation to @getcwd            |
+@@|      |                                                                          |
+@@| @"r" | Force the returned path to be relative to @getcwd (Overrules @"a")       |
+@@|      |                                                                          |
+@@| @"c" | When the host file-system is case-insensitive, force all case-sensitive  |
+@@|      | parts into a uniform casing. If the host's file-system isn't case-       |
+@@|      | sensitive, this flag is ignored.                                         |
+@@|      |                                                                          |
+@@| @"f" | When used with @"h", @"v" or @"V", handle errors for unknown environment |
+@@|      | variables or @(KeyError)s when accessing @env, or a failure to determine |
+@@|      | the user's home directory by not expanding that part of the path.        |
+@@+------+--------------------------------------------------------------------------+
+@@
+@@Passing the same option more than once is allowed and simply ignored
 function expand(path: string, options: string = "hvpf", env: {string: string} = none) {
 	if (env is none)
 		env = posix.environ;
@@ -351,10 +393,8 @@ function expand(path: string, options: string = "hvpf", env: {string: string} = 
 		default: throw ValueError(f"Invalid expand options {repr options}");
 		}
 	}
-	if (opt_PATH) {
-		/* We're supposed to normalize the path. */
+	if (opt_PATH)
 		path = posix.normalpath(path);
-	}
 	if (opt_ABS)
 		path = posix.abspath(path);
 	local fp = File.Writer();
