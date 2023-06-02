@@ -186,20 +186,21 @@ again:
 PRIVATE NONNULL((1, 3, 4)) void DCALL
 rodict_insert_nocheck(DeeRoDictObject *__restrict self,
                       dhash_t hash,
-                      DREF DeeObject *__restrict key,
-                      DREF DeeObject *__restrict value) {
+                      /*inherit(always)*/ DREF DeeObject *key,
+                      /*inherit(always)*/ DREF DeeObject *value) {
 	size_t i, perturb;
 	struct rodict_item *item;
 	perturb = i = RODICT_HASHST(self, hash);
 	for (;; RODICT_HASHNX(i, perturb)) {
 		item = &self->rd_elem[i & self->rd_mask];
-		if (!item->di_key)
+		if (!item->rdi_key)
 			break;
 	}
+
 	/* Fill in the item. */
-	item->di_hash  = hash;
-	item->di_key   = key;   /* Inherit reference. */
-	item->di_value = value; /* Inherit reference. */
+	item->rdi_hash  = hash;
+	item->rdi_key   = key;   /* Inherit reference. */
+	item->rdi_value = value; /* Inherit reference. */
 }
 
 
@@ -207,7 +208,7 @@ rodict_insert_nocheck(DeeRoDictObject *__restrict self,
 PRIVATE NONNULL((1, 3)) void DCALL
 roset_insert_nocheck(DeeRoSetObject *__restrict self,
                      dhash_t hash,
-                     DREF DeeObject *__restrict key) {
+                     /*inherit(always)*/ DREF DeeObject *key) {
 	size_t i, perturb;
 	struct roset_item *item;
 	perturb = i = ROSET_HASHST(self, hash);
@@ -216,6 +217,7 @@ roset_insert_nocheck(DeeRoSetObject *__restrict self,
 		if (!item->rsi_key)
 			break;
 	}
+
 	/* Fill in the item. */
 	item->rsi_hash = hash;
 	item->rsi_key  = key; /* Inherit reference. */

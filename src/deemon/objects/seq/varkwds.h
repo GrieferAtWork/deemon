@@ -184,8 +184,8 @@ typedef struct {
 	                                                           *               be blacklisted from the the resulting mapping.
 	                                                           * NOTE: This code doesn't always takes at least 1 argument, and
 	                                                           *       always specifies its keywords. When constructing a
-	                                                           *      `BlackListVarkwds' object with code not doing this, a
-	                                                           *      `DeeKwdsMappingObject' object will be returned instead,
+	                                                           *       `BlackListVarkwds' object with code not doing this, a
+	                                                           *       `DeeKwdsMappingObject' object will be returned instead,
 	                                                           *       which maps keywords to arguments without including a
 	                                                           *       blacklist of arguments which are not to be mapped.
 	                                                           * NOTE: If revived during unsharing, the object in this field

@@ -55,9 +55,9 @@ DECL_BEGIN
 typedef struct Dee_rodict_object DeeRoDictObject;
 
 struct Dee_rodict_item {
-	DREF DeeObject *di_key;   /* [0..1][const] Dictionary item key. */
-	DREF DeeObject *di_value; /* [1..1][valid_if(di_key)][const] Dictionary item value. */
-	Dee_hash_t      di_hash;  /* [valid_if(di_key)][const] Hash of `di_key' (with a starting value of `0'). */
+	DREF DeeObject *rdi_key;   /* [0..1][const] Dictionary item key. */
+	DREF DeeObject *rdi_value; /* [1..1][valid_if(rdi_key)][const] Dictionary item value. */
+	Dee_hash_t      rdi_hash;  /* [valid_if(rdi_key)][const] Hash of `rdi_key' (with a starting value of `0'). */
 };
 
 struct Dee_rodict_object {

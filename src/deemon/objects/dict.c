@@ -187,9 +187,9 @@ err:
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL dict_copy(Dict *__restrict self, Dict *__restrict other);
 
 STATIC_ASSERT(sizeof(struct dict_item) == sizeof(struct rodict_item));
-STATIC_ASSERT(offsetof(struct dict_item, di_key) == offsetof(struct rodict_item, di_key));
-STATIC_ASSERT(offsetof(struct dict_item, di_value) == offsetof(struct rodict_item, di_value));
-STATIC_ASSERT(offsetof(struct dict_item, di_hash) == offsetof(struct rodict_item, di_hash));
+STATIC_ASSERT(offsetof(struct dict_item, di_key) == offsetof(struct rodict_item, rdi_key));
+STATIC_ASSERT(offsetof(struct dict_item, di_value) == offsetof(struct rodict_item, rdi_value));
+STATIC_ASSERT(offsetof(struct dict_item, di_hash) == offsetof(struct rodict_item, rdi_hash));
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 dict_init_sequence(Dict *__restrict self,
@@ -333,6 +333,7 @@ dict_deepload(Dict *__restrict self) {
 		DREF DeeObject *e_key;   /* [0..1][lock(:d_lock)] Dictionary item key. */
 		DREF DeeObject *e_value; /* [1..1|if(di_key == dummy, 0..0)][valid_if(di_key)][lock(:d_lock)] Dictionary item value. */
 	} Entry;
+
 	/* #1 Allocate 2 new element-vector of the same size as `self'
 	 *    One of them has a length `d_mask+1', the other `d_used'
 	 * #2 Copy all key/value pairs from `self' into the d_used-one (create references)
@@ -460,7 +461,8 @@ err_items:
 	return -1;
 }
 
-PRIVATE NONNULL((1)) void DCALL dict_fini(Dict *__restrict self) {
+PRIVATE NONNULL((1)) void DCALL
+dict_fini(Dict *__restrict self) {
 	weakref_support_fini(self);
 	ASSERT((self->d_elem == DeeDict_EmptyItems) == (self->d_mask == 0));
 	ASSERT((self->d_elem == DeeDict_EmptyItems) == (self->d_size == 0));
@@ -478,7 +480,8 @@ PRIVATE NONNULL((1)) void DCALL dict_fini(Dict *__restrict self) {
 	}
 }
 
-PRIVATE NONNULL((1)) void DCALL dict_clear(Dict *__restrict self) {
+PRIVATE NONNULL((1)) void DCALL
+dict_clear(Dict *__restrict self) {
 	struct dict_item *elem;
 	size_t mask;
 	DeeDict_LockWrite(self);
@@ -610,12 +613,13 @@ INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 DeeDict_GetItemString(DeeObject *__restrict self,
                       char const *__restrict key,
                       dhash_t hash) {
+	Dict *me = (Dict *)self;
 	DREF DeeObject *result;
 	dhash_t i, perturb;
-	DeeDict_LockRead(self);
-	perturb = i = DeeDict_HashSt(self, hash);
+	DeeDict_LockRead(me);
+	perturb = i = DeeDict_HashSt(me, hash);
 	for (;; DeeDict_HashNx(i, perturb)) {
-		struct dict_item *item = DeeDict_HashIt(self, i);
+		struct dict_item *item = DeeDict_HashIt(me, i);
 		if (!item->di_key)
 			break; /* Not found */
 		if (item->di_hash != hash)
@@ -625,12 +629,12 @@ DeeDict_GetItemString(DeeObject *__restrict self,
 		if (!strcmp(DeeString_STR(item->di_key), key)) {
 			result = item->di_value;
 			Dee_Incref(result);
-			DeeDict_LockEndRead(self);
+			DeeDict_LockEndRead(me);
 			return result;
 		}
 	}
-	DeeDict_LockEndRead(self);
-	err_unknown_key_str(self, key);
+	DeeDict_LockEndRead(me);
+	err_unknown_key_str((DeeObject *)me, key);
 	return NULL;
 }
 
@@ -639,12 +643,13 @@ DeeDict_GetItemStringLen(DeeObject *__restrict self,
                          char const *__restrict key,
                          size_t keylen,
                          dhash_t hash) {
+	Dict *me = (Dict *)self;
 	DREF DeeObject *result;
 	dhash_t i, perturb;
-	DeeDict_LockRead(self);
-	perturb = i = DeeDict_HashSt(self, hash);
+	DeeDict_LockRead(me);
+	perturb = i = DeeDict_HashSt(me, hash);
 	for (;; DeeDict_HashNx(i, perturb)) {
-		struct dict_item *item = DeeDict_HashIt(self, i);
+		struct dict_item *item = DeeDict_HashIt(me, i);
 		if (!item->di_key)
 			break; /* Not found */
 		if (item->di_hash != hash)
@@ -654,12 +659,12 @@ DeeDict_GetItemStringLen(DeeObject *__restrict self,
 		if (DeeString_EqualsBuf(item->di_key, key, keylen)) {
 			result = item->di_value;
 			Dee_Incref(result);
-			DeeDict_LockEndRead(self);
+			DeeDict_LockEndRead(me);
 			return result;
 		}
 	}
-	DeeDict_LockEndRead(self);
-	err_unknown_key_str_len(self, key, keylen);
+	DeeDict_LockEndRead(me);
+	err_unknown_key_str_len((DeeObject *)me, key, keylen);
 	return NULL;
 }
 
@@ -668,13 +673,14 @@ DeeDict_GetItemStringDef(DeeObject *self,
                          char const *__restrict key,
                          dhash_t hash,
                          DeeObject *def) {
+	Dict *me = (Dict *)self;
 	DREF DeeObject *result;
 	dhash_t i, perturb;
 	ASSERT_OBJECT(def);
-	DeeDict_LockRead(self);
-	perturb = i = DeeDict_HashSt(self, hash);
+	DeeDict_LockRead(me);
+	perturb = i = DeeDict_HashSt(me, hash);
 	for (;; DeeDict_HashNx(i, perturb)) {
-		struct dict_item *item = DeeDict_HashIt(self, i);
+		struct dict_item *item = DeeDict_HashIt(me, i);
 		if (!item->di_key)
 			break; /* Not found */
 		if (item->di_hash != hash)
@@ -684,11 +690,11 @@ DeeDict_GetItemStringDef(DeeObject *self,
 		if (strcmp(DeeString_STR(item->di_key), key) == 0) {
 			result = item->di_value;
 			Dee_Incref(result);
-			DeeDict_LockEndRead(self);
+			DeeDict_LockEndRead(me);
 			return result;
 		}
 	}
-	DeeDict_LockEndRead(self);
+	DeeDict_LockEndRead(me);
 	if (def != ITER_DONE)
 		Dee_Incref(def);
 	return def;
@@ -700,13 +706,14 @@ DeeDict_GetItemStringLenDef(DeeObject *self,
                             size_t keylen,
                             dhash_t hash,
                             DeeObject *def) {
+	Dict *me = (Dict *)self;
 	DREF DeeObject *result;
 	dhash_t i, perturb;
 	ASSERT_OBJECT(def);
-	DeeDict_LockRead(self);
-	perturb = i = DeeDict_HashSt(self, hash);
+	DeeDict_LockRead(me);
+	perturb = i = DeeDict_HashSt(me, hash);
 	for (;; DeeDict_HashNx(i, perturb)) {
-		struct dict_item *item = DeeDict_HashIt(self, i);
+		struct dict_item *item = DeeDict_HashIt(me, i);
 		if (!item->di_key)
 			break; /* Not found */
 		if (item->di_hash != hash)
@@ -716,11 +723,11 @@ DeeDict_GetItemStringLenDef(DeeObject *self,
 		if (DeeString_EqualsBuf(item->di_key, key, keylen)) {
 			result = item->di_value;
 			Dee_Incref(result);
-			DeeDict_LockEndRead(self);
+			DeeDict_LockEndRead(me);
 			return result;
 		}
 	}
-	DeeDict_LockEndRead(self);
+	DeeDict_LockEndRead(me);
 	if (def != ITER_DONE)
 		Dee_Incref(def);
 	return def;
@@ -730,11 +737,12 @@ INTERN WUNUSED NONNULL((1, 2)) bool DCALL
 DeeDict_HasItemString(DeeObject *__restrict self,
                       char const *__restrict key,
                       dhash_t hash) {
+	Dict *me = (Dict *)self;
 	dhash_t i, perturb;
-	DeeDict_LockRead(self);
-	perturb = i = DeeDict_HashSt(self, hash);
+	DeeDict_LockRead(me);
+	perturb = i = DeeDict_HashSt(me, hash);
 	for (;; DeeDict_HashNx(i, perturb)) {
-		struct dict_item *item = DeeDict_HashIt(self, i);
+		struct dict_item *item = DeeDict_HashIt(me, i);
 		if (!item->di_key)
 			break; /* Not found */
 		if (item->di_hash != hash)
@@ -742,11 +750,11 @@ DeeDict_HasItemString(DeeObject *__restrict self,
 		if (!DeeString_Check(item->di_key))
 			continue; /* NOTE: This also captures `dummy' */
 		if (strcmp(DeeString_STR(item->di_key), key) == 0) {
-			DeeDict_LockEndRead(self);
+			DeeDict_LockEndRead(me);
 			return true;
 		}
 	}
-	DeeDict_LockEndRead(self);
+	DeeDict_LockEndRead(me);
 	return false;
 }
 
@@ -755,11 +763,12 @@ DeeDict_HasItemStringLen(DeeObject *__restrict self,
                          char const *__restrict key,
                          size_t keylen,
                          dhash_t hash) {
+	Dict *me = (Dict *)self;
 	dhash_t i, perturb;
-	DeeDict_LockRead(self);
-	perturb = i = DeeDict_HashSt(self, hash);
+	DeeDict_LockRead(me);
+	perturb = i = DeeDict_HashSt(me, hash);
 	for (;; DeeDict_HashNx(i, perturb)) {
-		struct dict_item *item = DeeDict_HashIt(self, i);
+		struct dict_item *item = DeeDict_HashIt(me, i);
 		if (!item->di_key)
 			break; /* Not found */
 		if (item->di_hash != hash)
@@ -767,11 +776,11 @@ DeeDict_HasItemStringLen(DeeObject *__restrict self,
 		if (!DeeString_Check(item->di_key))
 			continue; /* NOTE: This also captures `dummy' */
 		if (DeeString_EqualsBuf(item->di_key, key, keylen)) {
-			DeeDict_LockEndRead(self);
+			DeeDict_LockEndRead(me);
 			return true;
 		}
 	}
-	DeeDict_LockEndRead(self);
+	DeeDict_LockEndRead(me);
 	return false;
 }
 
@@ -785,10 +794,10 @@ DeeDict_DelItemString(DeeObject *__restrict self,
 #ifndef CONFIG_NO_THREADS
 again_lock:
 #endif /* !CONFIG_NO_THREADS */
-	DeeDict_LockRead(self);
-	perturb = i = DeeDict_HashSt(self, hash);
+	DeeDict_LockRead(me);
+	perturb = i = DeeDict_HashSt(me, hash);
 	for (;; DeeDict_HashNx(i, perturb)) {
-		struct dict_item *item = DeeDict_HashIt(self, i);
+		struct dict_item *item = DeeDict_HashIt(me, i);
 		if (!item->di_key)
 			break; /* Not found */
 		if (item->di_hash != hash)
@@ -814,13 +823,13 @@ again_lock:
 		 * items if there are a lot of them now. */
 		if (--me->d_used <= me->d_size / 3)
 			dict_rehash(me, -1);
-		DeeDict_LockEndWrite(self);
+		DeeDict_LockEndWrite(me);
 		Dee_Decref(old_value);
 		Dee_Decref(old_key);
 		return 0;
 	}
-	DeeDict_LockEndRead(self);
-	return err_unknown_key_str(self, key);
+	DeeDict_LockEndRead(me);
+	return err_unknown_key_str((DeeObject *)me, key);
 }
 
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
@@ -834,10 +843,10 @@ DeeDict_DelItemStringLen(DeeObject *__restrict self,
 #ifndef CONFIG_NO_THREADS
 again_lock:
 #endif /* !CONFIG_NO_THREADS */
-	DeeDict_LockRead(self);
-	perturb = i = DeeDict_HashSt(self, hash);
+	DeeDict_LockRead(me);
+	perturb = i = DeeDict_HashSt(me, hash);
 	for (;; DeeDict_HashNx(i, perturb)) {
-		struct dict_item *item = DeeDict_HashIt(self, i);
+		struct dict_item *item = DeeDict_HashIt(me, i);
 		if (!item->di_key)
 			break; /* Not found */
 		if (item->di_hash != hash)
@@ -863,13 +872,13 @@ again_lock:
 		 * items if there are a lot of them now. */
 		if (--me->d_used <= me->d_size / 3)
 			dict_rehash(me, -1);
-		DeeDict_LockEndWrite(self);
+		DeeDict_LockEndWrite(me);
 		Dee_Decref(old_value);
 		Dee_Decref(old_key);
 		return 0;
 	}
-	DeeDict_LockEndRead(self);
-	return err_unknown_key_str_len(self, key, keylen);
+	DeeDict_LockEndRead(me);
+	return err_unknown_key_str_len((DeeObject *)me, key, keylen);
 }
 
 INTERN WUNUSED NONNULL((1, 2, 4)) int DCALL
@@ -882,12 +891,12 @@ DeeDict_SetItemString(DeeObject *self,
 	struct dict_item *first_dummy;
 	dhash_t i, perturb;
 again_lock:
-	DeeDict_LockRead(self);
+	DeeDict_LockRead(me);
 again:
 	first_dummy = NULL;
-	perturb = i = DeeDict_HashSt(self, hash);
+	perturb = i = DeeDict_HashSt(me, hash);
 	for (;; DeeDict_HashNx(i, perturb)) {
-		struct dict_item *item = DeeDict_HashIt(self, i);
+		struct dict_item *item = DeeDict_HashIt(me, i);
 		if (!item->di_key) {
 			if (!first_dummy)
 				first_dummy = item;
@@ -914,7 +923,7 @@ again:
 		old_value = item->di_value;
 		Dee_Incref(value);
 		item->di_value = value;
-		DeeDict_LockEndWrite(self);
+		DeeDict_LockEndWrite(me);
 		Dee_Decref(old_value);
 		return 0;
 	}
@@ -953,16 +962,16 @@ again:
 		/* Try to keep the Dict vector big at least twice as big as the element count. */
 		if (me->d_size * 2 > me->d_mask)
 			dict_rehash(me, 1);
-		DeeDict_LockEndWrite(self);
+		DeeDict_LockEndWrite(me);
 		return 0;
 	}
 	/* Rehash the Dict and try again. */
 	if (dict_rehash(me, 1)) {
-		DeeDict_LockDowngrade(self);
+		DeeDict_LockDowngrade(me);
 		goto again;
 	}
 collect_memory:
-	DeeDict_LockEndWrite(self);
+	DeeDict_LockEndWrite(me);
 	if (Dee_CollectMemory(1))
 		goto again_lock;
 	return -1;
@@ -979,12 +988,12 @@ DeeDict_SetItemStringLen(DeeObject *self,
 	struct dict_item *first_dummy;
 	dhash_t i, perturb;
 again_lock:
-	DeeDict_LockRead(self);
+	DeeDict_LockRead(me);
 again:
 	first_dummy = NULL;
-	perturb = i = DeeDict_HashSt(self, hash);
+	perturb = i = DeeDict_HashSt(me, hash);
 	for (;; DeeDict_HashNx(i, perturb)) {
-		struct dict_item *item = DeeDict_HashIt(self, i);
+		struct dict_item *item = DeeDict_HashIt(me, i);
 		if (!item->di_key) {
 			if (!first_dummy)
 				first_dummy = item;
@@ -1011,7 +1020,7 @@ again:
 		old_value = item->di_value;
 		Dee_Incref(value);
 		item->di_value = value;
-		DeeDict_LockEndWrite(self);
+		DeeDict_LockEndWrite(me);
 		Dee_Decref(old_value);
 		return 0;
 	}
@@ -1049,16 +1058,16 @@ again:
 		/* Try to keep the Dict vector big at least twice as big as the element count. */
 		if (me->d_size * 2 > me->d_mask)
 			dict_rehash(me, 1);
-		DeeDict_LockEndWrite(self);
+		DeeDict_LockEndWrite(me);
 		return 0;
 	}
 	/* Rehash the Dict and try again. */
 	if (dict_rehash(me, 1)) {
-		DeeDict_LockDowngrade(self);
+		DeeDict_LockDowngrade(me);
 		goto again;
 	}
 collect_memory:
-	DeeDict_LockEndWrite(self);
+	DeeDict_LockEndWrite(me);
 	if (Dee_CollectMemory(1))
 		goto again_lock;
 	return -1;

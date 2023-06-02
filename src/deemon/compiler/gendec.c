@@ -1086,13 +1086,13 @@ INTERN WUNUSED int (DCALL dec_putobj)(DeeObject *self) {
 		/* Encode all of the ro-Dict's elements. */
 		for (i = 0; i <= me->rd_mask; ++i) {
 			int error;
-			if (!me->rd_elem[i].di_key)
+			if (!me->rd_elem[i].rdi_key)
 				continue;
 
 			/* Emit the Dict key + value pair. */
-			error = dec_putobj(me->rd_elem[i].di_key);
+			error = dec_putobj(me->rd_elem[i].rdi_key);
 			if (!error)
-				error = dec_putobj(me->rd_elem[i].di_value);
+				error = dec_putobj(me->rd_elem[i].rdi_value);
 			if unlikely(error)
 				goto err;
 #ifndef NDEBUG

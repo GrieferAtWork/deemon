@@ -444,9 +444,9 @@ do_generate_block:
 		/* Make sure that all constant cases share the same common SP value. */
 		for (i = 0; i <= jump_table->rd_mask; ++i) {
 			DeeObject *case_target;
-			if (!jump_table->rd_elem[i].di_key)
+			if (!jump_table->rd_elem[i].rdi_key)
 				continue;
-			case_target = jump_table->rd_elem[i].di_value;
+			case_target = jump_table->rd_elem[i].rdi_value;
 			if unlikely(!DeeTuple_Check(case_target))
 				goto done; /* Shouldn't happen */
 			if unlikely(DeeTuple_SIZE(case_target) != 2)
@@ -477,12 +477,12 @@ update_constants:
 			Dee_Decref_likely(default_target);
 			for (i = 0; i <= jump_table->rd_mask; ++i) {
 				DeeObject *case_target;
-				if (!jump_table->rd_elem[i].di_key)
+				if (!jump_table->rd_elem[i].rdi_key)
 					continue;
-				case_target = jump_table->rd_elem[i].di_value;
+				case_target = jump_table->rd_elem[i].rdi_value;
 				ASSERT(DeeTuple_Check(case_target));
 				ASSERT(DeeTuple_SIZE(case_target) == 2);
-				jump_table->rd_elem[i].di_value = DeeTuple_GET(case_target, 0);
+				jump_table->rd_elem[i].rdi_value = DeeTuple_GET(case_target, 0);
 				Dee_Incref(DeeTuple_GET(case_target, 0));
 				Dee_Decref_likely(case_target);
 			}

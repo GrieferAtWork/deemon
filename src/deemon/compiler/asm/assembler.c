@@ -2120,9 +2120,9 @@ fix_relint_r(DeeObject **__restrict p_obj) {
 		iter = ((DeeRoDictObject *)obj)->rd_elem;
 		end  = iter + ((DeeRoDictObject *)obj)->rd_mask + 1;
 		for (; iter < end; ++iter) {
-			if (!iter->di_key)
+			if (!iter->rdi_key)
 				continue;
-			if (fix_relint_r(&iter->di_value))
+			if (fix_relint_r(&iter->rdi_value))
 				goto err;
 		}
 	}

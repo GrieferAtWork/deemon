@@ -135,11 +135,11 @@ asm_allowconst(DeeObject *__restrict self) {
 		iter = ((DeeRoDictObject *)self)->rd_elem;
 		end  = iter + ((DeeRoDictObject *)self)->rd_mask + 1;
 		for (; iter < end; ++iter) {
-			if (!iter->di_key)
+			if (!iter->rdi_key)
 				continue;
-			if (!asm_allowconst(iter->di_key))
+			if (!asm_allowconst(iter->rdi_key))
 				goto illegal;
-			if (!asm_allowconst(iter->di_value))
+			if (!asm_allowconst(iter->rdi_value))
 				goto illegal;
 		}
 		goto allowed;
@@ -221,14 +221,14 @@ again0:
 		size_t i;
 		result = CONSTEXPR_ALLOWED;
 		for (i = 0; i <= me->rd_mask; ++i) {
-			if (!me->rd_elem[i].di_key)
+			if (!me->rd_elem[i].rdi_key)
 				continue;
-			temp = allow_constexpr(me->rd_elem[i].di_key);
+			temp = allow_constexpr(me->rd_elem[i].rdi_key);
 			if (temp == CONSTEXPR_ILLEGAL)
 				goto illegal;
 			if (temp == CONSTEXPR_USECOPY)
 				result = CONSTEXPR_USECOPY;
-			temp = allow_constexpr(me->rd_elem[i].di_value);
+			temp = allow_constexpr(me->rd_elem[i].rdi_value);
 			if (temp == CONSTEXPR_ILLEGAL)
 				goto illegal;
 			if (temp == CONSTEXPR_USECOPY)
