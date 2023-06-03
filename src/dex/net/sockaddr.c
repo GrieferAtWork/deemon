@@ -1907,7 +1907,6 @@ INTERN DeeTypeObject DeeSockAddr_Type = {
 #endif /* AF_NETLINK */
 
 	                     "str->\n"
-	                     "@throw \n"
 	                     "Generates and returns a string representation of @this sockaddr\n"
 	                     ,
 #endif /* !CONFIG_NO_DOC */

@@ -1835,7 +1835,7 @@ PRIVATE struct type_getset tpconst buffer_getsets[] = {
 #ifdef Dee_fd_GETSET
 	TYPE_GETTER(STR_getsysfd, &buffer_getsysfd,
 	            "->?Dint\n"
-	            "@throw AttributeError The file being buffered does not implement a member function $" Dee_fd_GETSET "\n"
+	            "#tAttributeError{The file being buffered does not implement a member function $" Dee_fd_GETSET "}"
 	            "Forward to the $" Dee_fd_GETSET " getset of the file being buffered"),
 #endif /* Dee_fd_GETSET */
 	TYPE_GETTER("file", &buffer_getfile,

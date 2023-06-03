@@ -3549,7 +3549,7 @@ PRIVATE struct dex_symbol symbols[] = {
 #define DEFINE_DELTA_CALLBACK(name)                        \
 	{ #name, (DeeObject *)&libtime_##name, MODSYM_FNORMAL, \
 	  DOC("(value:?Dint)->?GTime\n"                        \
-		  "@return A time delta of @value " #name) }
+		  "#r{A time delta of @value " #name "}") }
 	DEFINE_DELTA_CALLBACK(nanoseconds),
 	DEFINE_DELTA_CALLBACK(microseconds),
 	DEFINE_DELTA_CALLBACK(milliseconds),
