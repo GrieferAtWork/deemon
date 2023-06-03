@@ -1500,9 +1500,13 @@ continue_table_after_pipe:
 						do {
 							++i;
 						} while (i < end && docstring.issymstrt(i));
-						nameValue = docstring[nameStart:i];
-						if (descriptionType != "p")
+						nameValue = unEscapePoundCharacters(docstring[nameStart:i]);
+						if (descriptionType != "p") {
+							local externalPath = resolveColonReferenceShortcut(nameValue);
+							if (externalPath !is none)
+								nameValue = ExternalReference(path: externalPath);
 							nameValue = { nameValue };
+						}
 					} else {
 						++i;
 						local nameEnd = findNonEscapedMatch(docstring, "{", "}", i, end);

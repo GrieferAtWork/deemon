@@ -574,7 +574,7 @@ DECL_BEGIN
  *         #r{BODY}             Description on function return value
  *
  *         #tNAME{BODY}         Description on exception NAME (which is usually a symbol reference)
- *         #t{NAME}{BODY}       ...
+ *         #t{NAME}{BODY}       Note that #tNAME{BODY} is treated the same as #t{:NAME}{BODY}.
  *         #t{NAME}             When there is no body, either show a default body, or
  *                              only indicate that objects of this type can be thrown.
  *
