@@ -56,7 +56,7 @@ DECL_BEGIN
 #define LIBREGEX_DECL                   INTDEF /* Declare the normally public API as INTERN (which we override again below) */
 #define LIBREGEX_DEFINE___CTYPE_C_FLAGS        /* Can't rely on KOS's libc's `__ctype_C_flags' */
 #define LIBREGEX_REGEXEC_SINGLE_CHUNK          /* Don't need (or want) iovec support */
-#define LIBREGEX_USED__re_max_failures  2000   /* Use a hard-coded, fixed limit on how large the on-fail stack can grow */
+#define LIBREGEX_USED__re_max_failures  200000 /* Use a hard-coded, fixed limit on how large the on-fail stack can grow */
 
 
 /* Configure libregex syntax, and inject our `DEE_REGEX_COMPILE_*' flags. */
