@@ -1,0 +1,75 @@
+#!/usr/bin/deemon
+/* Copyright (c) 2018-2023 Griefer@Work                                       *
+ *                                                                            *
+ * This software is provided 'as-is', without any express or implied          *
+ * warranty. In no event will the authors be held liable for any damages      *
+ * arising from the use of this software.                                     *
+ *                                                                            *
+ * Permission is granted to anyone to use this software for any purpose,      *
+ * including commercial applications, and to alter it and redistribute it     *
+ * freely, subject to the following restrictions:                             *
+ *                                                                            *
+ * 1. The origin of this software must not be misrepresented; you must not    *
+ *    claim that you wrote the original software. If you use this software    *
+ *    in a product, an acknowledgement (see the following) in the product     *
+ *    documentation is required:                                              *
+ *    Portions Copyright (c) 2018-2023 Griefer@Work                           *
+ * 2. Altered source versions must be plainly marked as such, and must not be *
+ *    misrepresented as being the original software.                          *
+ * 3. This notice may not be removed or altered from any source distribution. *
+ */
+
+import * from deemon;
+import * from errors;
+
+function assertBits(i: int,
+                    ffs: int = none,
+                    fls: int = none,
+                    ctz: int = none,
+                    msb: int = none) {
+	if (ctz !is none) {
+		assert ffs is none;
+		ffs = ctz + 1;
+		assert i.ctz == ctz, f"Wrong value for {i}.ctz";
+		assert i.ffs == ffs, f"Wrong value for {i}.ffs";
+	} else {
+		assert (try i.ctz catch (e...) e) is IntegerOverflow;
+	}
+	if (msb !is none) {
+		assert fls is none;
+		fls = msb + 1;
+		assert i.msb == msb, f"Wrong value for {i}.msb";
+		assert i.fls == fls, f"Wrong value for {i}.fls";
+		assert (i >> msb) == 1;
+	} else {
+		assert (try i.msb catch (e...) e) is IntegerOverflow;
+	}
+	if (ffs !is none) {
+		assert i.ffs == ffs, f"Wrong value for {i}.ffs";
+	} else {
+		assert (try i.ffs catch (e...) e) is IntegerOverflow;
+	}
+	if (fls !is none) {
+		assert i.fls == fls, f"Wrong value for {i}.fls";
+	} else {
+		assert (try i.fls catch (e...) e) is IntegerOverflow;
+	}
+}
+
+assertBits(i: -8, ctz: 3);
+assertBits(i: -7, ctz: 0);
+assertBits(i: -6, ctz: 1);
+assertBits(i: -5, ctz: 0);
+assertBits(i: -4, ctz: 2);
+assertBits(i: -3, ctz: 0);
+assertBits(i: -2, ctz: 1);
+assertBits(i: -1, ctz: 0);
+assertBits(i:  0, ffs: 0, fls: 0);
+assertBits(i:  1, ctz: 0, msb: 0);
+assertBits(i:  2, ctz: 1, msb: 1);
+assertBits(i:  3, ctz: 0, msb: 1);
+assertBits(i:  4, ctz: 2, msb: 2);
+assertBits(i:  5, ctz: 0, msb: 2);
+assertBits(i:  6, ctz: 1, msb: 2);
+assertBits(i:  7, ctz: 0, msb: 2);
+assertBits(i:  8, ctz: 3, msb: 3);

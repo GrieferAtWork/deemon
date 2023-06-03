@@ -4279,9 +4279,7 @@ err_neg:
 INTERN WUNUSED NONNULL((1)) DREF DeeIntObject *DCALL
 int_get_ffs(DeeIntObject *__restrict self) {
 	size_t result, i;
-	if unlikely(self->ob_size < 0)
-		goto err_neg;
-	if unlikely(self->ob_size == 0)
+	if likely(self->ob_size == 0)
 		return_reference_((DeeIntObject *)DeeInt_Zero);
 	result = 1;
 	for (i = 0;; ++i) {
@@ -4295,9 +4293,6 @@ int_get_ffs(DeeIntObject *__restrict self) {
 		result += DIGIT_BITS;
 	}
 	return (DREF DeeIntObject *)DeeInt_NewSize(result);
-err_neg:
-	err_int_negative((DeeObject *)self);
-	return NULL;
 }
 
 INTERN WUNUSED NONNULL((1)) DREF DeeIntObject *DCALL
@@ -4320,10 +4315,8 @@ err_neg:
 INTERN WUNUSED NONNULL((1)) DREF DeeIntObject *DCALL
 int_get_ctz(DeeIntObject *__restrict self) {
 	size_t result, i;
-	if unlikely(self->ob_size < 0)
-		goto err_neg;
-	if unlikely(self->ob_size == 0)
-		return_reference_((DeeIntObject *)DeeInt_Zero);
+	if likely(self->ob_size == 0)
+		goto err_zero;
 	result = 0;
 	for (i = 0;; ++i) {
 		digit dig;
@@ -4335,6 +4328,25 @@ int_get_ctz(DeeIntObject *__restrict self) {
 		}
 		result += DIGIT_BITS;
 	}
+	return (DREF DeeIntObject *)DeeInt_NewSize(result);
+err_zero:
+	err_int_zero((DeeObject *)self);
+	return NULL;
+}
+
+INTERN WUNUSED NONNULL((1)) DREF DeeIntObject *DCALL
+int_get_fls(DeeIntObject *__restrict self) {
+	size_t result;
+	digit msb_digit;
+	if unlikely(self->ob_size <= 0) {
+		if likely(self->ob_size == 0)
+			return_reference_((DeeIntObject *)DeeInt_Zero);
+		goto err_neg;
+	}
+	result    = ((size_t)self->ob_size - 1) * DIGIT_BITS;
+	msb_digit = self->ob_digit[(size_t)self->ob_size - 1];
+	result += sizeof(digit) * CHAR_BIT;
+	result -= CLZ(msb_digit);
 	return (DREF DeeIntObject *)DeeInt_NewSize(result);
 err_neg:
 	err_int_negative((DeeObject *)self);
@@ -4349,7 +4361,7 @@ int_get_msb(DeeIntObject *__restrict self) {
 		goto err_neg_or_zero;
 	result    = ((size_t)self->ob_size - 1) * DIGIT_BITS;
 	msb_digit = self->ob_digit[(size_t)self->ob_size - 1];
-	result += sizeof(digit) * CHAR_BIT;
+	result += (sizeof(digit) * CHAR_BIT) - 1;
 	result -= CLZ(msb_digit);
 	return (DREF DeeIntObject *)DeeInt_NewSize(result);
 err_neg_or_zero:
@@ -4438,15 +4450,18 @@ PRIVATE struct type_getset tpconst int_getsets[] = {
 	            "Return the number of 1-bits in this integer"),
 	TYPE_GETTER("ffs", &int_get_ffs,
 	            "->?Dint\n"
-	            "@throw IntegerOverflow When ${this < 0}\n"
 	            "FindFirstSet: same as ?#ctz +1, but returns $0 when ${this == 0}"),
+	TYPE_GETTER("fls", &int_get_fls,
+	            "->?Dint\n"
+	            "@throw IntegerOverflow When ${this < 0}\n"
+	            "FindLastSet: same as ?#msb +1, but returns $0 when ${this == 0}"),
 	TYPE_GETTER("partity", &int_get_partity,
 	            "->?Dint\n"
 	            "@throw IntegerOverflow When ${this < 0}\n"
 	            "Return $0 or $1 indivative of the even/odd parity of @this. Same as ${this.popcount % 2}"),
 	TYPE_GETTER("ctz", &int_get_ctz,
 	            "->?Dint\n"
-	            "@throw IntegerOverflow When ${this < 0}\n"
+	            "@throw IntegerOverflow When ${this == 0}\n"
 	            "CountTrailingZeros: return the number of trailing zero-bits:\n"
 	            "${"
 	            /**/ "local n = this.ctz;\n"
@@ -4455,7 +4470,7 @@ PRIVATE struct type_getset tpconst int_getsets[] = {
 	TYPE_GETTER("msb", &int_get_msb,
 	            "->?Dint\n"
 	            "@throw IntegerOverflow When ${this <= 0}\n"
-	            "MostSignificantBit: return the index of the most significant 1-bit:\n"
+	            "MostSignificantBit: return the index of the most significant 1-bit (0-based):\n"
 	            "${"
 	            /**/ "assert (this >> this.msb) == 1;"
 	            "}"),

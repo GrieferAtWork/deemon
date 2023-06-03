@@ -166,6 +166,14 @@ INTERN ATTR_COLD NONNULL((1)) int
 }
 
 INTERN ATTR_COLD NONNULL((1)) int
+(DCALL err_int_zero)(DeeObject *__restrict ob) {
+	ASSERT_OBJECT(ob);
+	return DeeError_Throwf(&DeeError_IntegerOverflow,
+	                       "Unexpected zero-integer: %r",
+	                       ob);
+}
+
+INTERN ATTR_COLD NONNULL((1)) int
 (DCALL err_cannot_weak_reference)(DeeObject *__restrict ob) {
 	ASSERT_OBJECT(ob);
 	return DeeError_Throwf(&DeeError_TypeError,

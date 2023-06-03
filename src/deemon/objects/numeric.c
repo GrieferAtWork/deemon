@@ -339,6 +339,7 @@ err:
 
 INTDEF WUNUSED NONNULL((1)) DREF DeeIntObject *DCALL int_get_popcount(DeeIntObject *__restrict self);
 INTDEF WUNUSED NONNULL((1)) DREF DeeIntObject *DCALL int_get_ffs(DeeIntObject *__restrict self);
+INTDEF WUNUSED NONNULL((1)) DREF DeeIntObject *DCALL int_get_fls(DeeIntObject *__restrict self);
 INTDEF WUNUSED NONNULL((1)) DREF DeeIntObject *DCALL int_get_partity(DeeIntObject *__restrict self);
 INTDEF WUNUSED NONNULL((1)) DREF DeeIntObject *DCALL int_get_ctz(DeeIntObject *__restrict self);
 INTDEF WUNUSED NONNULL((1)) DREF DeeIntObject *DCALL int_get_msb(DeeIntObject *__restrict self);
@@ -408,6 +409,20 @@ numeric_get_ffs(DeeObject *__restrict self) {
 	if unlikely(!asint)
 		goto err;
 	result = int_get_ffs(asint);
+	Dee_Decref(asint);
+	return result;
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeIntObject *DCALL
+numeric_get_fls(DeeObject *__restrict self) {
+	DREF DeeIntObject *result;
+	DREF DeeIntObject *asint;
+	asint = (DREF DeeIntObject *)DeeObject_Int(self);
+	if unlikely(!asint)
+		goto err;
+	result = int_get_fls(asint);
 	Dee_Decref(asint);
 	return result;
 err:
@@ -1187,12 +1202,22 @@ PRIVATE struct type_getset tpconst numeric_getsets[] = {
 	            "}"),
 	TYPE_GETTER("ffs", &numeric_get_ffs,
 	            "->?Dint\n"
-	            "@throw IntegerOverflow When ${this < 0}\n"
 	            "FindFirstSet: same as ?#ctz +1, but returns $0 when ${this == 0}. Implemented as:\n"
 	            "${"
 	            /**/ "property ffs: int {\n"
 	            /**/ "	get(): int {\n"
 	            /**/ "		return ((int)this).ffs;\n"
+	            /**/ "	}\n"
+	            /**/ "}"
+	            "}"),
+	TYPE_GETTER("fls", &numeric_get_fls,
+	            "->?Dint\n"
+	            "@throw IntegerOverflow When ${this < 0}\n"
+	            "FindFirstSet: same as ?#msb +1, but returns $0 when ${this == 0}. Implemented as:\n"
+	            "${"
+	            /**/ "property fls: int {\n"
+	            /**/ "	get(): int {\n"
+	            /**/ "		return ((int)this).fls;\n"
 	            /**/ "	}\n"
 	            /**/ "}"
 	            "}"),
@@ -1209,7 +1234,7 @@ PRIVATE struct type_getset tpconst numeric_getsets[] = {
 	            "}"),
 	TYPE_GETTER("ctz", &numeric_get_ctz,
 	            "->?Dint\n"
-	            "@throw IntegerOverflow When ${this <= 0}\n"
+	            "@throw IntegerOverflow When ${this == 0}\n"
 	            "CountTrailingZeros: return the number of trailing zero-bits:\n"
 	            "${"
 	            /**/ "local n = this.ctz;\n"
@@ -1225,8 +1250,8 @@ PRIVATE struct type_getset tpconst numeric_getsets[] = {
 	            "}"),
 	TYPE_GETTER("msb", &numeric_get_msb,
 	            "->?Dint\n"
-	            "@throw IntegerOverflow When ${this < 0}\n"
-	            "MostSignificantBit: return the index of the most significant 1-bit:\n"
+	            "@throw IntegerOverflow When ${this <= 0}\n"
+	            "MostSignificantBit: return the index of the most significant 1-bit (0-based):\n"
 	            "${"
 	            /**/ "assert (this >> this.msb) == 1;"
 	            "}\n"
