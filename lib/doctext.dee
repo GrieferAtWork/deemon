@@ -145,7 +145,7 @@ local function findNonBackslashEscaped(
 @@Split string at the nearest whitespace position before @maxSplitPosition,
 @@or split it at @(maxSplitPosition - 1) and insert a "-"-character before
 @@returning 2 strings for the first and second half around the split
-function splitStripBefore(s: string, maxSplitPosition: int): (string, string) {
+local function splitStripBefore(s: string, maxSplitPosition: int): (string, string) {
 	if (maxSplitPosition >= #s)
 		return (s, ""); /* Shouldn't happen... */
 	if (!maxSplitPosition)
@@ -174,6 +174,7 @@ class ConsolePrinter {
 	public member fp: File = File.Writer();
 	public member maxWidth: int = DEFAULT_CONSOLE_WIDTH;
 	public member currentLineInUse: int = 0;
+	public member base: ConsolePrinter | none = none;
 
 	public property currentLineAvail: int = {
 		get(): int {
@@ -226,6 +227,8 @@ again_handle_l:
 
 }
 
+
+@@Print @obj into a string which is then returned
 function createConsoleString(
 		obj: string | Object,
 		maxWidth: int = DEFAULT_CONSOLE_WIDTH): string {
@@ -233,6 +236,13 @@ function createConsoleString(
 	p.append(obj);
 	return p.fp.string;
 }
+
+@@Print @obj to @out
+function printConsoleString(obj: string | Object, out: File) {
+	/* TODO: when `out' isatty, derive `maxWidth' from its dimensions! */
+	ConsolePrinter(fp: out).append(obj);
+}
+
 
 
 
@@ -251,8 +261,8 @@ class Header {
 		p.appendall(body);
 	}
 
-	operator str(): string {
-		return createConsoleString(this);
+	operator str(out: File) {
+		return printConsoleString(this, out);
 	}
 }
 
@@ -293,8 +303,8 @@ class Code {
 		}
 	}
 
-	operator str(): string {
-		return createConsoleString(this);
+	operator str(out: File) {
+		return printConsoleString(this, out);
 	}
 }
 
@@ -311,10 +321,9 @@ class HyperLink {
 		(p << "[").appendall(body) << "](" << link << ")";
 	}
 
-	operator str(): string {
-		return createConsoleString(this);
+	operator str(out: File) {
+		return printConsoleString(this, out);
 	}
-
 }
 
 class List {
@@ -344,7 +353,7 @@ class List {
 			if (!p.currentLineAvail)
 				p << "\n"; /* Shouldn't happen */
 			p.appendNormal(
-				ConsolePrinter(maxWidth: p.currentLineAvail)
+				ConsolePrinter(maxWidth: p.currentLineAvail, base: p)
 				.appendall(body)
 				.fp
 				.string
@@ -356,8 +365,8 @@ class List {
 			p.appendNormal("\n");
 	}
 
-	operator str(): string {
-		return createConsoleString(this);
+	operator str(out: File) {
+		return printConsoleString(this, out);
 	}
 }
 
@@ -396,8 +405,8 @@ class Emphasis {
 		p << ekind << usedBody << ekind;
 	}
 
-	operator str(): string {
-		return createConsoleString(this);
+	operator str(out: File) {
+		return printConsoleString(this, out);
 	}
 }
 
@@ -595,7 +604,7 @@ class Table {
 			 * how many lines will be needed in total. */
 			for (local column: [:nColumns]) {
 				local cellPrinter = ConsolePrinter(
-					maxWidth: columnsWidths[column]);
+					maxWidth: columnsWidths[column], base: p);
 				cellPrinter.appendall(row[column][1]);
 				local lines = Tuple(cellPrinter.fp.string.splitlines(false));
 				cellLines[column] = lines;
@@ -654,8 +663,8 @@ class Table {
 			p.appendNormal("\n");
 	}
 
-	operator str(): string {
-		return createConsoleString(this);
+	operator str(out: File) {
+		return printConsoleString(this, out);
 	}
 }
 
@@ -675,8 +684,8 @@ class ArgumentReference {
 		}
 	}
 
-	operator str(): string {
-		return createConsoleString(this);
+	operator str(out: File) {
+		return printConsoleString(this, out);
 	}
 }
 
@@ -718,8 +727,8 @@ class ExternalReference {
 		p << ">" << name << "<";
 	}
 
-	operator str(): string {
-		return createConsoleString(this);
+	operator str(out: File) {
+		return printConsoleString(this, out);
 	}
 }
 
@@ -745,7 +754,7 @@ class ParameterDescription {
 		local prefixLength = p.currentLineInUse;
 		local indentSpaces = " " * prefixLength;
 		p.appendNormal(
-			ConsolePrinter(maxWidth: p.currentLineAvail)
+			ConsolePrinter(maxWidth: p.currentLineAvail, base: p)
 			.appendall(body)
 			.fp
 			.string
@@ -755,8 +764,8 @@ class ParameterDescription {
 			p.appendNormal("\n");
 	}
 
-	operator str(): string {
-		return createConsoleString(this);
+	operator str(out: File) {
+		return printConsoleString(this, out);
 	}
 }
 
@@ -779,7 +788,7 @@ class ReturnDescription {
 		local prefixLength = p.currentLineInUse;
 		local indentSpaces = " " * prefixLength;
 		p.appendNormal(
-			ConsolePrinter(maxWidth: p.currentLineAvail)
+			ConsolePrinter(maxWidth: p.currentLineAvail, base: p)
 			.appendall(body)
 			.fp
 			.string
@@ -789,8 +798,8 @@ class ReturnDescription {
 			p.appendNormal("\n");
 	}
 
-	operator str(): string {
-		return createConsoleString(this);
+	operator str(out: File) {
+		return printConsoleString(this, out);
 	}
 }
 
@@ -816,16 +825,17 @@ class ThrowsDescription {
 		p << "@throws ";
 		local prefixLength = p.currentLineInUse;
 		local indentSpaces = " " * prefixLength;
-		p.appendall(ConsolePrinter(maxWidth: p.currentLineAvail)
+		p.appendall(ConsolePrinter(maxWidth: p.currentLineAvail, base: p)
 			.appendall(errorType)
 			.fp
 			.string
 			.indent(indentSpaces)
 			[prefixLength:]);
+		p << " ";
 		local prefixLength = p.currentLineInUse;
 		local indentSpaces = " " * prefixLength;
 		p.appendNormal(
-			ConsolePrinter(maxWidth: p.currentLineAvail)
+			ConsolePrinter(maxWidth: p.currentLineAvail, base: p)
 			.appendall(body)
 			.fp
 			.string
@@ -835,8 +845,8 @@ class ThrowsDescription {
 			p.appendNormal("\n");
 	}
 
-	operator str(): string {
-		return createConsoleString(this);
+	operator str(out: File) {
+		return printConsoleString(this, out);
 	}
 }
 
@@ -1539,6 +1549,9 @@ continue_table_after_pipe:
 				FLUSHTO(poundStart);
 				local hasLeadingLineFeed = poundStart > start;
 				local hasTrailingLineFeed = i < end;
+				if (hasTrailingLineFeed && docstring[i] == "#" &&
+				    (i + 1) < end && docstring[i+1] in "ptr")
+					hasTrailingLineFeed = false;
 				switch (descriptionType) {
 				case "p":
 					yield ParameterDescription(
