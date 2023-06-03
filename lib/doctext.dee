@@ -723,6 +723,122 @@ class ExternalReference {
 	}
 }
 
+class ParameterDescription {
+	this = default;
+
+	@@The name of the parameter that is being described
+	public member name: string;
+
+	@@The description for the parameter
+	public member body: {(string | Object)...};
+
+	@@Set to @true if this @ParameterDescription should be be preceded by a line-feed
+	public member hasLeadingLineFeed: bool;
+
+	@@Set to @true if this @ParameterDescription should be be followed by a line-feed
+	public member hasTrailingLineFeed: bool;
+
+	function printConsoleString(p: ConsolePrinter) {
+		if (hasLeadingLineFeed)
+			p.appendNormal("\n");
+		p << "@param " << name << " ";
+		local prefixLength = p.currentLineInUse;
+		local indentSpaces = " " * prefixLength;
+		p.appendNormal(
+			ConsolePrinter(maxWidth: p.currentLineAvail)
+			.appendall(body)
+			.fp
+			.string
+			.indent(indentSpaces)
+			[prefixLength:]);
+		if (hasTrailingLineFeed)
+			p.appendNormal("\n");
+	}
+
+	operator str(): string {
+		return createConsoleString(this);
+	}
+}
+
+class ReturnDescription {
+	this = default;
+
+	@@The description for the function's return value
+	public member body: {(string | Object)...};
+
+	@@Set to @true if this @ReturnDescription should be be preceded by a line-feed
+	public member hasLeadingLineFeed: bool;
+
+	@@Set to @true if this @ReturnDescription should be be followed by a line-feed
+	public member hasTrailingLineFeed: bool;
+
+	function printConsoleString(p: ConsolePrinter) {
+		if (hasLeadingLineFeed)
+			p.appendNormal("\n");
+		p << "@return ";
+		local prefixLength = p.currentLineInUse;
+		local indentSpaces = " " * prefixLength;
+		p.appendNormal(
+			ConsolePrinter(maxWidth: p.currentLineAvail)
+			.appendall(body)
+			.fp
+			.string
+			.indent(indentSpaces)
+			[prefixLength:]);
+		if (hasTrailingLineFeed)
+			p.appendNormal("\n");
+	}
+
+	operator str(): string {
+		return createConsoleString(this);
+	}
+}
+
+class ThrowsDescription {
+	this = default;
+
+	@@The description of the type that is being thrown (usually
+	@@just consists of a single @ExternalReference element)
+	public member errorType: {(string | Object)...};
+
+	@@The description for when @errorType gets thrown
+	public member body: {(string | Object)...};
+
+	@@Set to @true if this @ThrowsDescription should be be preceded by a line-feed
+	public member hasLeadingLineFeed: bool;
+
+	@@Set to @true if this @ThrowsDescription should be be followed by a line-feed
+	public member hasTrailingLineFeed: bool;
+
+	function printConsoleString(p: ConsolePrinter) {
+		if (hasLeadingLineFeed)
+			p.appendNormal("\n");
+		p << "@throws ";
+		local prefixLength = p.currentLineInUse;
+		local indentSpaces = " " * prefixLength;
+		p.appendall(ConsolePrinter(maxWidth: p.currentLineAvail)
+			.appendall(errorType)
+			.fp
+			.string
+			.indent(indentSpaces)
+			[prefixLength:]);
+		local prefixLength = p.currentLineInUse;
+		local indentSpaces = " " * prefixLength;
+		p.appendNormal(
+			ConsolePrinter(maxWidth: p.currentLineAvail)
+			.appendall(body)
+			.fp
+			.string
+			.indent(indentSpaces)
+			[prefixLength:]);
+		if (hasTrailingLineFeed)
+			p.appendNormal("\n");
+	}
+
+	operator str(): string {
+		return createConsoleString(this);
+	}
+}
 
 
 @@Invoke the `getattr()` operator on the second item from each element from @items
@@ -870,12 +986,13 @@ function claculateComponentIndentation(
 	return result;
 }
 
-@@A given @docstring belonging to a @TextSegment such that special formating
-@@constructs are replaced with dedicated format representation objects, which
-@@can then be used to easily render the actual text.
 @@@param: mypath: The doc-path of the component to which @docstring belongs,
 @@                followed by @true if the component is referring to a type,
 @@                rather than a type member or function.
+@@
+@@A given @docstring belonging to a @TextSegment such that special formating
+@@constructs are replaced with dedicated format representation objects, which
+@@can then be used to easily render the actual text.
 @@
 @@This function yields the raw text parts as @(string)s, separated from each
 @@other by one of the special documentation text component descriptor classes
@@ -909,10 +1026,19 @@ function claculateComponentIndentation(
 @@|                                |                                        |
 @@| @ExternalReference             | - @"?..." (too many to list)           |
 @@|                                |                                        |
+@@| @ParameterDescription          | - @"#p{NAME}{BODY}"                    |
+@@|                                | - @"#pNAME{BODY}"                      |
+@@|                                |                                        |
+@@| @ReturnDescription             | - @"#r{BODY}"                          |
+@@|                                |                                        |
+@@| @ThrowsDescription             | - @"#p{TYPE}{BODY}"                    |
+@@|                                | - @"#pTYPE{BODY}"                      |
+@@|                                |                                        |
 @@| @string                        | - ...                                  |
 @@+--------------------------------+----------------------------------------+
 function splitTextSegment(
-		docstring: string, mypath: (string, bool),
+		docstring: string,
+		mypath: (string, bool) = none,
 		start: int = 0, end: int = -1)
 	: {(string | Object)...}
 {
@@ -1337,6 +1463,105 @@ continue_table_after_pipe:
 					thickRows:           thickRows,
 					hasLeadingLineFeed:  poundStart > start,
 					hasTrailingLineFeed: i < end);
+				flushStart = i;
+			}	break;
+
+			case "p":
+			case "t":
+			case "r": {
+				/* ParameterDescription, ThrowsDescription, ReturnDescription */
+				local descriptionType = ch;
+				++i;
+				if (i >= end)
+					goto continue_after_poundStart;
+
+				@@The description name value:
+				@@ - @ParameterDescription: @string               (name of argument)
+				@@ - @ThrowsDescription: @{(string | Object)...}  (type of error)
+				@@ - @ReturnDescription: @none                    (unused)
+				local nameValue: string | {(string | Object)...} | none = none;
+
+				if (descriptionType != "r") {
+					ch = docstring[i];
+					if (ch != "{") {
+						if (!ch.issymstrt())
+							goto continue_after_poundStart;
+						local nameStart = i;
+						do {
+							++i;
+						} while (i < end && docstring.issymstrt(i));
+						nameValue = docstring[nameStart:i];
+						if (descriptionType != "p")
+							nameValue = { nameValue };
+					} else {
+						++i;
+						local nameEnd = findNonEscapedMatch(docstring, "{", "}", i, end);
+						if (nameEnd < 0)
+							goto continue_after_poundStart;
+						if (descriptionType == "p") {
+							nameValue = docstring[i:nameEnd];
+						} else {
+							nameValue = splitTextSegment(docstring, mypath, i, nameEnd);
+						}
+						i = nameEnd + 1;
+					}
+				}
+
+				local bodyValue: {(string | Object)...};
+				if (i < end && docstring[i] == "{") {
+					++i;
+					local bodyEnd = findNonEscapedMatch(docstring, "{", "}", i, end);
+					if (bodyEnd < 0)
+						goto continue_after_poundStart;
+					bodyValue = splitTextSegment(docstring, mypath, i, bodyEnd);
+					i = bodyEnd + 1;
+				} else if (descriptionType == "t") {
+					bodyValue = {};
+					if (nameValue is Sequence && #nameValue == 1) {
+						local referencedException = nameValue.first;
+						if (referencedException is ExternalReference) {
+							referencedException = referencedException.path;
+							referencedException = referencedException.replace("c:", "");
+							referencedException = referencedException.replace("i:", "");
+							switch (referencedException) {
+							case "/deemon/Signal/Interrupt":
+							case "/errors/Interrupt":
+								bodyValue = { "This function is a cancellation point" };
+								break;
+							default:
+								break;
+							}
+						}
+					}
+				} else {
+					goto continue_after_poundStart;
+				}
+				FLUSHTO(poundStart);
+				local hasLeadingLineFeed = poundStart > start;
+				local hasTrailingLineFeed = i < end;
+				switch (descriptionType) {
+				case "p":
+					yield ParameterDescription(
+						name:                nameValue,
+						body:                bodyValue,
+						hasLeadingLineFeed:  hasLeadingLineFeed,
+						hasTrailingLineFeed: hasTrailingLineFeed);
+					break;
+				case "t":
+					yield ThrowsDescription(
+						errorType:           nameValue,
+						body:                bodyValue,
+						hasLeadingLineFeed:  hasLeadingLineFeed,
+						hasTrailingLineFeed: hasTrailingLineFeed);
+					break;
+				case "r":
+					yield ReturnDescription(
+						body:                bodyValue,
+						hasLeadingLineFeed:  hasLeadingLineFeed,
+						hasTrailingLineFeed: hasTrailingLineFeed);
+					break;
+				default: assert false;
+				}
 				flushStart = i;
 			}	break;
 

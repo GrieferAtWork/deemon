@@ -441,6 +441,19 @@ DECL_BEGIN
  *     This formating component is the one used most often and it's main purpose is to have code
  *     point at something particular that should be clickable for easy reference inside of text.
  *
+ *
+ *   - Parameter/return/throws descriptions
+ *     >> @@@param foo This is the description of foo
+ *     >> @@@return This explains what the function returns and why
+ *     >> @@@throws Error This is the description of why @Error may get thrown
+ *     >> @@@interrupt
+ *      - The @-character must appear at the start of a line (or only be preceded by whitespace)
+ *      - An optional ':' character may appear after the tag, and once again after the referenced argument/type
+ *        >> @@@throws: Error: This time with ':'-characters
+ *      - In the case of `@param' and `@throws', the referenced
+ *        >> @@@throws: Error: This time with ':'-characters
+ *     
+ *
  */
 
 /* +=============================================================================+
@@ -553,6 +566,18 @@ DECL_BEGIN
  *                                                    by ignored by the rendering engine in order
  *                                                    to allow for forward-compatibility with
  *                                                    future options.
+ *
+ *   - Parameter/return/throws descriptions
+ *         #pNAME{BODY}         Description on parameter `NAME' (NAME is handled similarly to `@NAME')
+ *         #p{NAME}{BODY}       ...
+ *
+ *         #r{BODY}             Description on function return value
+ *
+ *         #tNAME{BODY}         Description on exception NAME (which is usually a symbol reference)
+ *         #t{NAME}{BODY}       ...
+ *         #t{NAME}             When there is no body, either show a default body, or
+ *                              only indicate that objects of this type can be thrown.
+ *
  *
  *   - Symbol references
  *         ?.                   The current type in the documentation of a type-header, operator, or this-function

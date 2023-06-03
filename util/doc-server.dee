@@ -253,6 +253,10 @@ th {
 	transition: opacity 0.3s;
 }
 
+.ParameterDescription .name, .ReturnDescription .name, .ThrowsDescription .name {
+	white-space: nowrap;
+}
+
 /* Show the tooltip text when you mouse over the tooltip container */
 .tooltip:hover .tooltiptext {
 	visibility: visible;
@@ -684,6 +688,27 @@ function printTextSegmentElement(fp: File, t: Object) {
 		fp << "<h" << t.size << ">";
 		printTextSegmentElements(fp, t.body);
 		fp << "</h" << t.size << ">";
+		return;
+	}
+	if (t is doctext.ParameterDescription) {
+		fp << "<table class=\"ParameterDescription\"><tr><td class=\"name\"><code>param "
+		   << t.name << "</code></td><td class=\"body\">";
+		printTextSegmentElements(fp, t.body);
+		fp << "</td></tr></table>\n";
+		return;
+	}
+	if (t is doctext.ReturnDescription) {
+		fp << "<table class=\"ReturnDescription\"><tr><td class=\"name\"><code>return</code></td><td class=\"body\">";
+		printTextSegmentElements(fp, t.body);
+		fp << "</td></tr></table>\n";
+		return;
+	}
+	if (t is doctext.ThrowsDescription) {
+		fp << "<table class=\"ThrowsDescription\"><tr><td class=\"name\"><code>throws </code>";
+		printTextSegmentElements(fp, t.errorType);
+		fp << "</td><td class=\"body\">";
+		printTextSegmentElements(fp, t.body);
+		fp << "</td></tr></table>\n";
 		return;
 	}
 	if (t is doctext.ArgumentReference) {

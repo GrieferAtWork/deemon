@@ -38,7 +38,7 @@ DECL_BEGIN
  * meaning that we have to somehow filter out that text.
  * @param: iter: Pointer to the first character of the next line.
  * @return: * :  Pointer after the leading @@-sequence on the next line. */
-PRIVATE ATTR_RETNONNULL NONNULL((1, 2)) char const *DCALL
+PRIVATE WUNUSED ATTR_RETNONNULL NONNULL((1, 2)) char const *DCALL
 skip_tpp_comment_line_prefix_after_escaped_linefeed(char const *iter,
                                                     char const *end) {
 	char const *orig_line_start;
@@ -108,7 +108,7 @@ unicode_printer_erase_whitespace(struct unicode_printer *__restrict self,
 
 
 /* Returns a new pointer for `start' */
-PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) /*utf-8*/ char const *DCALL
+PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1, 2)) /*utf-8*/ char const *DCALL
 lstrip_whitespace(/*utf-8*/ char const *start,
                   /*utf-8*/ char const *end) {
 	for (;;) {
@@ -125,7 +125,7 @@ lstrip_whitespace(/*utf-8*/ char const *start,
 }
 
 /* Returns a new pointer for `end' */
-PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) /*utf-8*/ char const *DCALL
+PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1, 2)) /*utf-8*/ char const *DCALL
 rstrip_whitespace(/*utf-8*/ char const *start,
                   /*utf-8*/ char const *end) {
 	for (;;) {
@@ -139,6 +139,84 @@ rstrip_whitespace(/*utf-8*/ char const *start,
 		}
 	}
 	return end;
+}
+
+PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1, 2)) /*utf-8*/ char const *DCALL
+lstrip_whitespacenolf(/*utf-8*/ char const *start,
+                      /*utf-8*/ char const *end) {
+	for (;;) {
+		uint32_t ch;
+		char const *ch_start;
+		ch_start = start;
+		ch = unicode_readutf8_n(&start, end);
+		if (!DeeUni_IsSpaceNoLf(ch)) {
+			start = ch_start;
+			break;
+		}
+	}
+	return start;
+}
+
+PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1, 2)) /*utf-8*/ char const *DCALL
+lstrip_whitespacenolf_and_one_optional_colon(/*utf-8*/ char const *start,
+                                             /*utf-8*/ char const *end) {
+	for (;;) {
+		uint32_t ch;
+		char const *ch_start;
+		ch_start = start;
+		ch = unicode_readutf8_n(&start, end);
+		if (!DeeUni_IsSpaceNoLf(ch)) {
+			if (ch == ':')
+				return lstrip_whitespacenolf(start, end);
+			start = ch_start;
+			break;
+		}
+	}
+	return start;
+}
+
+/* Return a pointer after the first unmatched ')' character, or NULL if no such character exists. */
+PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) /*utf-8*/ char const *DCALL
+find_first_unmatched_closing_parenthesis(/*utf-8*/ char const *start,
+                                         /*utf-8*/ char const *end) {
+	unsigned int recursion = 0;
+	uint32_t ch;
+	for (;;) {
+		ch = unicode_readutf8_n(&start, end);
+		if (ch == '(') {
+			++recursion;
+		} else if (ch == ')') {
+			if (recursion == 0)
+				break;
+			--recursion;
+		} else if (ch == 0 && start >= end) {
+			return NULL;
+		}
+	}
+	return start;
+}
+
+/* Skip a single symbol-string, or until the end of a recursive pair of '(' ... ')'
+ * Simply re-returns `start' when neither of these constructs could be parsed. */
+PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1, 2)) /*utf-8*/ char const *DCALL
+skip_symbol_or_recursive_parenthesis(/*utf-8*/ char const *start,
+                                     /*utf-8*/ char const *end) {
+	uint32_t ch;
+	char const *ch_start;
+	ch_start = start;
+	ch = unicode_readutf8_n(&start, end);
+	if (ch == '(') {
+		char const *result;
+		result = find_first_unmatched_closing_parenthesis(start, end);
+		if likely(result)
+			return result;
+	} else if (DeeUni_IsSymStrt(ch)) {
+		do {
+			ch_start = start;
+			ch = unicode_readutf8_n(&start, end);
+		} while (DeeUni_IsSymCont(ch));
+	}
+	return ch_start;
 }
 
 /* Check if the given start/end pointers contain a symbol-string */
@@ -493,23 +571,70 @@ done:
 	return min_line_leading_spaces;
 }
 
+PRIVATE NONNULL((1, 2)) char const *DCALL
+find_end_of_current_line_with_first_ch(uint32_t ch,
+                                       /*utf-8*/ char const **__restrict p_iter,
+                                       /*utf-8*/ char const *end) {
+	char const *iter = *p_iter;
+	for (;;) {
+		if (DeeUni_IsLF(ch) || (!ch && iter >= end)) {
+			/* Deal with windows-style line-feeds */
+			if (ch == '\r') {
+				char const *temp = iter;
+				ch = unicode_readutf8_n(&iter, end);
+				if (ch != '\n')
+					iter = temp;
+			}
+			*p_iter = iter;
+			return iter; /* End was found! */
+		}
+		if (ch == '\\') {
+			/* Deal with escaped line-feeds */
+			ch = unicode_readutf8_n(&iter, end);
+			if (DeeUni_IsLF(ch)) {
+
+				/* Deal with windows-style line-feeds */
+				if (ch == '\r') {
+					char const *temp = iter;
+					ch = unicode_readutf8_n(&iter, end);
+					if (ch != '\n')
+						iter = temp;
+				}
+				/* Skip the leading TPP comment line prefix. */
+				*p_iter = skip_tpp_comment_line_prefix_after_escaped_linefeed(iter, end);
+				return iter;
+			}
+			continue;
+		}
+		ch = unicode_readutf8_n(&iter, end);
+	}
+}
+
+
+
+
+/* Flags for doctext compilation */
+#define DOCTEXT_COMPILE_FLAG_NORMAL 0x0000 /* Normal flags */
+#define DOCTEXT_COMPILE_FLAG_ROOT   0x0001 /* Currently inside of the root text-block */
 
 PRIVATE WUNUSED NONNULL((1, 2, 3)) int DCALL
 do_compile(/*utf-8*/ char const *text,
            /*utf-8*/ char const *end,
            struct unicode_printer *__restrict result_printer,
-           /*nullable*/ struct unicode_printer *source_printer);
+           /*nullable*/ struct unicode_printer *source_printer,
+           unsigned int flags);
 
 /* Compile the string from `source_printer' and write the result to `result_printer'
  * NOTE: This function is allowed to modify `source_printer' */
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 do_compile_printer_to_printer(struct unicode_printer *__restrict result_printer,
-                              struct unicode_printer *__restrict source_printer) {
+                              struct unicode_printer *__restrict source_printer,
+                              unsigned int flags) {
 	if likely((source_printer->up_flags & UNICODE_PRINTER_FWIDTH) == STRING_WIDTH_1BYTE) {
 		/* Directly compile the original documentation text. */
 		return do_compile((/*utf-8*/ char const *)source_printer->up_buffer,
 		                  (/*utf-8*/ char const *)source_printer->up_buffer + source_printer->up_length,
-		                  result_printer, source_printer);
+		                  result_printer, source_printer, flags);
 	} else {
 		/* Re-package as a 1-byte, utf-8 string. */
 		DREF DeeStringObject *rawtext;
@@ -527,7 +652,7 @@ err_rawtext:
 		}
 		/* Compile the utf-8 variant of the documentation string. */
 		if unlikely(do_compile(rawutf8, rawutf8 + WSTR_LENGTH(rawutf8),
-		                       result_printer, NULL))
+		                       result_printer, NULL, flags))
 			goto err_rawtext;
 		Dee_Decref_likely(rawtext);
 	}
@@ -548,7 +673,8 @@ PRIVATE WUNUSED NONNULL((1, 2, 3)) int DCALL
 do_compile(/*utf-8*/ char const *text,
            /*utf-8*/ char const *end,
            struct unicode_printer *__restrict result_printer,
-           /*nullable*/ struct unicode_printer *source_printer) {
+           /*nullable*/ struct unicode_printer *source_printer,
+           unsigned int flags) {
 	uint32_t ch;
 	char const *ch_start;
 	char const *iter, *flush_start;
@@ -662,9 +788,12 @@ do_set_current_line_noflush:
 			 * in which case we must print a single line-feed for the 2 line,
 			 * followed by possibly more line-feeds for any additional lines
 			 * followed there-after. */
-scan_newline_with_first_ch_and_implicit_linefeed:
+/*scan_newline_with_first_ch_and_implicit_linefeed:*/
 			has_explicit_linefeed = false;
 			__IF0 {
+start_newline_with_explicit_linefeed:
+				ch_start = iter;
+				ch = unicode_readutf8_n(&iter, end);
 scan_newline_with_first_ch_and_explicit_linefeed:
 				has_explicit_linefeed = true;
 			}
@@ -676,6 +805,8 @@ scan_newline_with_first_ch_and_explicit_linefeed:
 				ch = unicode_readutf8_n(&iter, end);
 check_ch_after_lf:
 				if (DeeUni_IsLF(ch)) {
+					if (ch == '\r' && (iter < end && *iter == '\r'))
+						++iter;
 					next_line_start          = iter;
 					next_line_leading_spaces = 0;
 					PUTASCII('\n'); /* Force a line-feed here. */
@@ -930,7 +1061,7 @@ do_switch_ch_at_start_of_line:
 
 					/* Allocate & initialize buffers for all of the columns. */
 					columns = (struct table_column *)Dee_Mallocc(column_count,
-		                                                         sizeof(struct table_column));
+					                                             sizeof(struct table_column));
 					if unlikely(!columns)
 						goto err_table_output;
 					/* Initialize printers for the cells. */
@@ -1398,7 +1529,8 @@ table_has_nonempty_column:
 								}
 								/* compile and write output to `table_output' */
 								if unlikely(do_compile_printer_to_printer(&table_output,
-								                                          &columns[column_index].tc_body))
+								                                          &columns[column_index].tc_body,
+								                                          flags & ~DOCTEXT_COMPILE_FLAG_ROOT))
 									goto err_table;
 								unicode_printer_fini(&columns[column_index].tc_body);
 								unicode_printer_init(&columns[column_index].tc_body);
@@ -1449,11 +1581,9 @@ done_table_nochk_columns:
 						goto err_table_output;
 					/* Destroy the table output buffer. */
 					unicode_printer_fini(&table_output);
-					/* Read the first character that is no longer apart of the table. */
-					flush_start = iter;
-					ch_start    = iter;
-					ch = unicode_readutf8_n(&iter, end);
-					goto scan_newline_with_first_ch_and_implicit_linefeed;
+
+					/* Continue parsing with the explicit line-feed in mind */
+					goto start_newline_with_explicit_linefeed;
 err_table:
 					for (column_index = 0; column_index < column_count; ++column_index)
 						unicode_printer_fini(&columns[column_index].tc_body);
@@ -1612,39 +1742,10 @@ list_begin_next_line:
 						size_t nextline_indentation;
 list_continue_current_line:
 						list_line_start = ch_start;
+
 						/* Find the end of the current line (which is known to be apart of the list!) */
-						for (;;) {
-							if (DeeUni_IsLF(ch) || (!ch && iter >= end)) {
-								/* Deal with windows-style line-feeds */
-								if (ch == '\r') {
-									char const *temp = iter;
-									ch = unicode_readutf8_n(&iter, end);
-									if (ch != '\n')
-										iter = temp;
-								}
-								list_line_end = iter;
-								break; /* End was found! */
-							}
-							if (ch == '\\') {
-								/* Deal with escaped line-feeds */
-								ch = unicode_readutf8_n(&iter, end);
-								if (DeeUni_IsLF(ch)) {
-									/* Deal with windows-style line-feeds */
-									if (ch == '\r') {
-										char const *temp = iter;
-										ch = unicode_readutf8_n(&iter, end);
-										if (ch != '\n')
-											iter = temp;
-									}
-									/* Skip the leading TPP comment line prefix. */
-									list_line_end = iter;
-									iter = skip_tpp_comment_line_prefix_after_escaped_linefeed(iter, end);
-									break;
-								}
-								continue;
-							}
-							ch = unicode_readutf8_n(&iter, end);
-						}
+						list_line_end = find_end_of_current_line_with_first_ch(ch, &iter, end);
+
 						/* At this point, ch is the line-feed at the end of the current list element
 						 * line (and iter points after the line-feed). - As such, we commit everything
 						 * from `list_line_start' up until `list_line_end' (so-as to include the line-feed) to
@@ -1654,6 +1755,7 @@ list_continue_current_line:
 						                                  (size_t)(list_line_end - list_line_start)) < 0)
 							goto err_item_printer;
 						list_line_start = iter;
+
 						/* Check if current line (where `iter' points to its first character) is:
 						 *    - A continuation of the same list item (as indicative of having a whitespace
 						 *      indentation of at least `list_element_indent' characters).
@@ -1722,9 +1824,11 @@ list_continue_current_line:
 							}
 							break;
 						}
+
 						/* If the indent matches the element indent, then this is a continuation! */
 						if (nextline_indentation == list_element_indent)
 							goto list_continue_current_line;
+
 						/* If the current indentation doesn't match the list prefix indent,
 						 * then we know for certain the list has been terminated. */
 						if (nextline_indentation != list_prefix_indent) {
@@ -1800,8 +1904,8 @@ skip_whitespace_after_list_item_prefix:
 					}
 					/* Re-parse the list item contents and append them to the result printer. */
 do_append_list_item:
-					if unlikely(do_compile_printer_to_printer(result_printer,
-					                                          &item_printer)) {
+					if unlikely(do_compile_printer_to_printer(result_printer, &item_printer,
+					                                          flags & ~DOCTEXT_COMPILE_FLAG_ROOT)) {
 err_item_printer:
 						unicode_printer_fini(&item_printer);
 						goto err;
@@ -1817,14 +1921,215 @@ err_item_printer:
 				}
 				/* Write the list footer */
 				PUTASCII('}');
+
 				/* At this point, iter point at the first character of the first line
 				 * following the end of the last list element, and iter points after
 				 * that same character. */
-				ch_start = iter;
-				ch       = unicode_readutf8_n(&iter, end);
+
 				/* Continue parsing with the explicit line-feed in mind */
-				goto scan_newline_with_first_ch_and_implicit_linefeed;
+				goto start_newline_with_explicit_linefeed;
 			}	break;
+
+			case '@':
+				/* If we're inside of the root scope, then check for descriptive tag annotations. */
+				if (flags & DOCTEXT_COMPILE_FLAG_ROOT) {
+					/* Tag annotation */
+					char const *anno_after_at = iter;
+					char const *anno_start, *description_start;
+					char anno_tag;
+					anno_start = iter;
+					anno_start = lstrip_whitespace(anno_start, end);
+					anno_tag   = '\0';
+					if (bcmpc(anno_start, "param", 5, sizeof(char)) == 0) {
+						anno_start += 5;
+						anno_tag = 'p';
+					} else if (bcmpc(anno_start, "return", 6, sizeof(char)) == 0) {
+						anno_start += 6;
+						anno_tag = 'r';
+						if (*anno_start == 's')
+							++anno_start;
+					} else if (bcmpc(anno_start, "throw", 5, sizeof(char)) == 0) {
+						anno_start += 5;
+						anno_tag = 't';
+						if (*anno_start == 's')
+							++anno_start;
+					} else if (bcmpc(anno_start, "interrupt", 9, sizeof(char)) == 0) {
+						anno_start += 9;
+						anno_start = lstrip_whitespacenolf(anno_start, end);
+						ch = unicode_readutf8_n(&anno_start, end);
+						if (DeeUni_IsLF(ch) || (ch == 0 && anno_start >= end)) {
+							/* Special case: `@interrupt' annotation */
+							FLUSHTO(ch_start);
+							strip_all_trailing_whitespace_until(result_printer, result_printer_origlen);
+							PRINTASCII("#t{:Interrupt}", 14);
+							iter = anno_start;
+							if (ch == '\r' && (iter < end && *iter == '\r'))
+								++iter;
+							/* Continue parsing with the explicit line-feed in mind */
+							goto start_newline_with_explicit_linefeed;
+						}
+					}
+					if (anno_tag != '\0') {
+						description_start = lstrip_whitespacenolf_and_one_optional_colon(anno_start, end);
+						if (description_start > anno_start) {
+							size_t anno_description_indent;
+							FLUSHTO(ch_start);
+							strip_all_trailing_whitespace_until(result_printer, result_printer_origlen);
+							PUTASCII('#');
+							PUTASCII(anno_tag);
+							iter = description_start;
+	
+							/* Parse the annotation tag ref (if this type of annotation tag has one) */
+							if (anno_tag == 'p' || anno_tag == 't') {
+								char const *ref_start, *ref_end;
+								ref_start = iter;
+								ch = unicode_readutf8_n(&iter, end);
+								if (ch == '@') /* Ignore a leading '@'-character */
+									ref_start = iter;
+								ref_end = skip_symbol_or_recursive_parenthesis(ref_start, end);
+	
+								/* Encode the ref-argument. */
+								if (anno_tag == 'p') {
+									while (ref_start < ref_end &&
+									       ref_start[0] == '(' &&
+									       ref_end[-1] == ')') {
+										++ref_start;
+										--ref_end;
+									}
+									if (ref_start < ref_end && *ref_start != '(') {
+										PRINT(ref_start, (size_t)(ref_end - ref_start));
+									} else {
+										PUTASCII('{');
+										PRINT(ref_start, (size_t)(ref_end - ref_start));
+										PUTASCII('}');
+									}
+								} else {
+									int error;
+									char saved_char;
+									PUTASCII('{');
+									/* Hack so we always interpret the ref-arg as a reference element */
+									saved_char = ref_start[-1];
+									((char *)ref_start)[-1] = '@';
+									error = do_compile(ref_start - 1, ref_end, result_printer,
+									                   NULL, flags & ~DOCTEXT_COMPILE_FLAG_ROOT);
+									((char *)ref_start)[-1] = saved_char;
+									PUTASCII('}');
+									if unlikely(error)
+										goto err;
+								}
+								iter = ref_end;
+								iter = lstrip_whitespacenolf_and_one_optional_colon(iter, end);
+							}
+	
+							/* Calculate the indentation of our current `iter' */
+							anno_description_indent = current_line_leading_spaces + 1; /* +1: for the '@' character */
+							description_start       = iter;
+							iter = anno_after_at;
+							while (iter < description_start) {
+								iter = unicode_skiputf8(iter);
+								++anno_description_indent;
+							}
+	
+							/* At this point, we're at the start of the annotation description body.
+							 * The body itself starts at `description_start' and encompasses all
+							 * following lines that have at least `anno_description_indent' leading
+							 * whitespace characters. */
+							PUTASCII('{');
+							{
+								struct unicode_printer tag_body_printer = UNICODE_PRINTER_INIT;
+								char const *currline_start, *currline_end;
+								size_t nextline_indentation;
+								iter = description_start;
+								ch_start = iter;
+								ch       = unicode_readutf8_n(&iter, end);
+again_copy_tag_body_line:
+								/* Figure out the bounds of the current line. */
+								currline_start = ch_start;
+								currline_end   = find_end_of_current_line_with_first_ch(ch, &iter, end);
+								if unlikely(unicode_printer_print(&tag_body_printer, currline_start,
+								                                  (size_t)(currline_end - currline_start)) < 0)
+									goto err_tag_body_printer;
+								currline_start = iter;
+
+								/* Figure out where the next line starts, and if it's part of the tag description block */
+								nextline_indentation = 0;
+								for (;;) {
+									ch_start = iter;
+									ch = unicode_readutf8_n(&iter, end);
+									if (DeeUni_IsLF(ch)) {
+										/* Special case: The line may be shorter, but it only contains whitespace.
+										 *               This is counted as an insert-marker for an explicit line-feed! */
+										if unlikely(unicode_printer_putascii(&tag_body_printer, '\n'))
+											goto err_tag_body_printer;
+										/* Deal with windows-style line-feeds */
+										if (ch == '\r') {
+											char const *temp = iter;
+											ch = unicode_readutf8_n(&iter, end);
+											if (ch != '\n')
+												iter = temp;
+										}
+										ch_start = iter;
+										goto again_copy_tag_body_line;
+									}
+									if (DeeUni_IsSpace(ch)) {
+										/* Continuation of the previous line. */
+										if (nextline_indentation >= anno_description_indent)
+											goto again_copy_tag_body_line;
+										++nextline_indentation;
+										continue;
+									}
+									if (ch == '\\') {
+										/* Check for escaped line-feeds */
+										char const *temp, *temp2;
+										temp  = iter;
+										temp2 = ch_start;
+										ch_start = iter;
+										ch = unicode_readutf8_n(&iter, end);
+										if (DeeUni_IsLF(ch)) {
+											if unlikely(unicode_printer_putascii(&tag_body_printer, '\n'))
+												goto err_tag_body_printer;
+											/* Deal with windows-style line-feeds */
+											if (ch == '\r') {
+												char const *temp3 = iter;
+												ch = unicode_readutf8_n(&iter, end);
+												if (ch != '\n')
+													iter = temp3;
+											}
+											iter = skip_tpp_comment_line_prefix_after_escaped_linefeed(iter, end);
+											ch_start = iter;
+											goto again_copy_tag_body_line;
+										}
+										iter     = temp;
+										ch_start = temp2;
+										ch       = '\\';
+									}
+									break;
+								}
+
+								/* If the indent matches the element indent, then this is a continuation! */
+								if (nextline_indentation == anno_description_indent)
+									goto again_copy_tag_body_line;
+
+								/* Print the last line that was still part of */
+								if unlikely(do_compile_printer_to_printer(result_printer, &tag_body_printer,
+								                                          flags & ~DOCTEXT_COMPILE_FLAG_ROOT)) {
+err_tag_body_printer:
+									unicode_printer_fini(&tag_body_printer);
+									goto err;
+								}
+								iter = currline_start;
+							} /* Scope... */
+							PUTASCII('}');
+
+							/* NOTE: At this point, `iter' points at the start of
+							 *       the first line after the tag annotation body. */
+
+							/* Continue parsing with the explicit line-feed in mind */
+							goto start_newline_with_explicit_linefeed;
+						}     /* if (description_start > anno_start) */
+					}         /* if (anno_tag != '\0') */
+				}
+				break;
 
 			default:
 				/* Ordered lists can be started with any decimal-like character.
@@ -2144,7 +2449,8 @@ check_ordered_list_digit:
 				if (need_braces)
 					PUTASCII('{');
 				/* Recursively compile the contained body. */
-				if unlikely(do_compile(body_start, body_end, result_printer, NULL))
+				if unlikely(do_compile(body_start, body_end, result_printer, NULL,
+				                       flags & ~DOCTEXT_COMPILE_FLAG_ROOT))
 					goto err;
 				if (need_braces)
 					PUTASCII('}');
@@ -2217,7 +2523,8 @@ not_a_link:
 			before_rparen = rstrip_whitespace(after_lparen, before_rparen);
 			PRINTASCII("#A{", 3);
 			/* Print the link body */
-			if unlikely(do_compile(after_lbracket, before_rbracket, result_printer, NULL))
+			if unlikely(do_compile(after_lbracket, before_rbracket, result_printer, NULL,
+			                       flags & ~DOCTEXT_COMPILE_FLAG_ROOT))
 				goto err;
 			PUTASCII('|');
 			/* Print the link text. */
@@ -2454,7 +2761,8 @@ not_a_code:
 		}
 
 		case '@':
-			/* TODO: Reference */
+			/* TODO: Reference / inline deemon code */
+			ch = '@';
 			goto escape_current_character;
 
 
@@ -2546,11 +2854,14 @@ done_dontflush:
 					ch2 = UNICODE_PRINTER_GETCHAR(result_printer, i);
 					if (ch2 == '{' || ch2 == '#') {
 						++i; /* Escaped brace/pound (ignore) */
-					} else if (ch2 == 'T' || ch2 == 'L') {
+					} else if (ch2 == 'T' || ch2 == 'L' || ch2 == 'p' ||
+					           ch2 == 'r' || ch2 == 't') {
 						size_t recursion;
 						/* Tables and Lists are followed by implicit line-feeds.
 						 * As such, we must also strip common whitespace following
-						 * the end of one of these constructs! */
+						 * the end of one of these constructs!
+						 *
+						 * The same also goes for `@param', `@return' and `@throws' */
 						++i;
 						if (i >= UNICODE_PRINTER_LENGTH(result_printer))
 							goto done_return_now; /* Shouldn't happen... */
@@ -2559,28 +2870,46 @@ done_dontflush:
 							if (i >= UNICODE_PRINTER_LENGTH(result_printer))
 								goto done_return_now; /* Shouldn't happen... */
 						}
-						if (UNICODE_PRINTER_GETCHAR(result_printer, i) != '{')
-							continue; /* Shouldn't happen... */
-						/* Find the matching brace character. */
-						++i;
-						recursion = 0;
-						for (;;) {
-							if (i >= UNICODE_PRINTER_LENGTH(result_printer))
-								goto done_return_now;
-							ch2 = UNICODE_PRINTER_GETCHAR(result_printer, i);
+						ch2 = UNICODE_PRINTER_GETCHAR(result_printer, i);
+						if (ch2 == '{') {
+							/* Find the matching brace character. */
+skip_over_brace_block_in_erase_whitespace:
 							++i;
-							if (ch2 == '#') {
+							recursion = 0;
+							for (;;) {
+								if (i >= UNICODE_PRINTER_LENGTH(result_printer))
+									goto done_return_now;
+								ch2 = UNICODE_PRINTER_GETCHAR(result_printer, i);
 								++i;
-							} else if (ch2 == '{') {
-								++recursion;
-							} else if (ch2 == '}') {
-								if (!recursion)
-									break;
-								--recursion;
+								if (ch2 == '#') {
+									++i;
+								} else if (ch2 == '{') {
+									++recursion;
+								} else if (ch2 == '}') {
+									if (!recursion)
+										break;
+									--recursion;
+								}
 							}
+						} else if (DeeUni_IsSymStrt(ch2)) {
+							for (;;) {
+								++i;
+								if (i >= UNICODE_PRINTER_LENGTH(result_printer))
+									goto done_return_now;
+								ch2 = UNICODE_PRINTER_GETCHAR(result_printer, i);
+								if (!DeeUni_IsSymCont(ch2))
+									break;
+							}
+						} else {
+							continue; /* Shouldn't happen */
 						}
+
 						if (i >= UNICODE_PRINTER_LENGTH(result_printer))
 							goto done_return_now;
+						if (UNICODE_PRINTER_GETCHAR(result_printer, i) == '{') {
+							/* #p and #t accept an optional {BODY} argument after the initial argument. */
+							goto skip_over_brace_block_in_erase_whitespace;
+						}
 						goto do_erase_after_linefeed;
 					}
 				}
@@ -2619,8 +2948,12 @@ doctext_compile(struct unicode_printer *__restrict doctext) {
 	if likely((doctext->up_flags & UNICODE_PRINTER_FWIDTH) == STRING_WIDTH_1BYTE) {
 		struct unicode_printer result = UNICODE_PRINTER_INIT;
 		/* Directly compile the original documentation text. */
+#ifndef NDEBUG
+		*((char *)doctext->up_buffer + doctext->up_length) = '\0';
+#endif /* !NDEBUG */
 		if unlikely(do_compile((/*utf-8*/ char const *)doctext->up_buffer,
-		                       (/*utf-8*/ char const *)doctext->up_buffer + doctext->up_length, &result, doctext)) {
+		                       (/*utf-8*/ char const *)doctext->up_buffer + doctext->up_length,
+		                       &result, doctext, DOCTEXT_COMPILE_FLAG_ROOT)) {
 			unicode_printer_fini(&result);
 			goto err;
 		}
@@ -2642,7 +2975,8 @@ err_rawtext:
 			goto err;
 		}
 		/* Compile the utf-8 variant of the documentation string. */
-		if unlikely(do_compile(rawutf8, rawutf8 + WSTR_LENGTH(rawutf8), doctext, NULL))
+		if unlikely(do_compile(rawutf8, rawutf8 + WSTR_LENGTH(rawutf8),
+		                       doctext, NULL, DOCTEXT_COMPILE_FLAG_ROOT))
 			goto err_rawtext;
 		Dee_Decref_likely(rawtext);
 	}
