@@ -663,8 +663,11 @@ function_visit(Function *__restrict self,
 PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
 function_print(Function *__restrict self,
                dformatprinter printer, void *arg) {
+	char *name = DeeCode_NAME(self->fo_code);
 	dssize_t temp, result;
 	uint16_t i;
+	if (name != NULL)
+		return DeeFormat_Printf(printer, arg, "<Function %s>", name);
 	result = DeeFormat_PRINT(printer, arg, "<Function(");
 	if unlikely(result < 0)
 		goto done;
