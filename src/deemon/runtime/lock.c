@@ -1276,7 +1276,7 @@ do_wait_with_timeout:
 
 
 /* Enter the once-block
- * @return: 1 : You're not responsible for executing the once-function
+ * @return: 1 : You're now responsible for executing the once-function
  * @return: 0 : The once-function has already been executed
  * @return: -1: An error was thrown */
 PUBLIC WUNUSED NONNULL((1)) int
@@ -1330,7 +1330,7 @@ again_start_waiting:
 }
 
 /* Enter the once-block
- * @return: true:  You're not responsible for executing the once-function
+ * @return: true:  You're now responsible for executing the once-function
  * @return: false: The once-function has already been executed */
 PUBLIC WUNUSED NONNULL((1)) bool
 (DCALL Dee_once_begin_noint)(Dee_once_t *__restrict self) {
@@ -1375,6 +1375,46 @@ again_start_waiting:
 		if (state <= 1)
 			goto again_start_waiting;
 	}
+#endif /* !CONFIG_NO_THREADS */
+}
+
+/* Try to begin execution of a once-block
+ * @return: 0 : The once-function has already been executed
+ * @return: 1 : You're now responsible for executing the once-function
+ * @return: 2 : Another thread is currently executing the once-function (NO ERROR WAS THROWN) */
+PUBLIC WUNUSED NONNULL((1)) int
+(DCALL Dee_once_trybegin)(Dee_once_t *__restrict self) {
+#ifdef CONFIG_NO_THREADS
+	return Dee_once_trybegin(self);
+#else /* CONFIG_NO_THREADS */
+	uint32_t state;
+	state = atomic_read(&self->oc_didrun);
+	if (state >= DEE_ONCE_COMPLETED_THRESHOLD)
+		return 0; /* Already executed */
+
+	/* Start trying to run the once-controller. */
+	state = atomic_fetchinc(&self->oc_didrun);
+	if unlikely(state >= DEE_ONCE_COMPLETED_THRESHOLD) {
+		/* Race condition: the once-block finished in
+		 * another thread while we were trying to start it. */
+		atomic_write(&self->oc_didrun, DEE_ONCE_COMPLETED_THRESHOLD);
+		return 0;
+	}
+
+	if (state == 0)
+		return 1; /* Caller must run the block. */
+
+	/* Construct the (presumed) current controller value. */
+	++state;
+
+	/* If there are already some other threads waiting for completion. */
+	if (state >= 3) {
+		atomic_cmpxch(&self->oc_didrun, state, 2);
+		state = 2;
+	}
+
+	/* Another thread is currently executing the once-function. */
+	return -1;
 #endif /* !CONFIG_NO_THREADS */
 }
 

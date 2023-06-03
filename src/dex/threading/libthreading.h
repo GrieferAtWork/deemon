@@ -57,6 +57,9 @@ INTDEF DeeTypeObject DeeSemaphore_Type;
 /* Event */
 INTDEF DeeTypeObject DeeEvent_Type;
 
+/* Once */
+INTDEF DeeTypeObject DeeOnce_Type;
+
 /* >> all(args...: Lock): Lock
  * Proxy lock which can be used to acquire multiple locks at the same time,
  * without running the risk of a dead-lock (assuming that the caller isn't

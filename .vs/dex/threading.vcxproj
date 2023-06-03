@@ -42,6 +42,7 @@
 	<ItemGroup>
 		<ClCompile Include="..\..\src\dex\threading\libthreading.c" />
 		<ClCompile Include="..\..\src\dex\threading\lock.c" />
+		<ClCompile Include="..\..\src\dex\threading\once.c" />
 		<ClCompile Include="..\..\src\dex\threading\tls.c" />
 	</ItemGroup>
 	<PropertyGroup Label="Globals">

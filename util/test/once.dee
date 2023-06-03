@@ -1,0 +1,107 @@
+#!/usr/bin/deemon
+/* Copyright (c) 2018-2023 Griefer@Work                                       *
+ *                                                                            *
+ * This software is provided 'as-is', without any express or implied          *
+ * warranty. In no event will the authors be held liable for any damages      *
+ * arising from the use of this software.                                     *
+ *                                                                            *
+ * Permission is granted to anyone to use this software for any purpose,      *
+ * including commercial applications, and to alter it and redistribute it     *
+ * freely, subject to the following restrictions:                             *
+ *                                                                            *
+ * 1. The origin of this software must not be misrepresented; you must not    *
+ *    claim that you wrote the original software. If you use this software    *
+ *    in a product, an acknowledgement (see the following) in the product     *
+ *    documentation is required:                                              *
+ *    Portions Copyright (c) 2018-2023 Griefer@Work                           *
+ * 2. Altered source versions must be plainly marked as such, and must not be *
+ *    misrepresented as being the original software.                          *
+ * 3. This notice may not be removed or altered from any source distribution. *
+ */
+
+import * from threading;
+
+global myCallbackCount = 0;
+function myCallback() {
+	++myCallbackCount;
+	return f"result{myCallbackCount}";
+}
+
+function myCallback2(x) {
+	return f"{x}result{x}";
+}
+
+local o1 = Once(myCallback);
+local o2 = Once(callback: myCallback);
+local o3 = Once();
+local o4 = Once();
+local o5 = Once();
+
+assert !o1.hasrun;
+assert o1.ispending;
+assert myCallbackCount == 0;
+assert o1() == "result1";
+assert myCallbackCount == 1;
+assert o1() == "result1";
+assert o1() == "result1";
+assert o1() == "result1";
+assert myCallbackCount == 1;
+assert o1.hasrun;
+assert !o1.ispending;
+
+assert !o2.hasrun;
+assert o2.ispending;
+assert myCallbackCount == 1;
+assert o2() == "result2";
+assert myCallbackCount == 2;
+assert o2() == "result2";
+assert o2() == "result2";
+assert o2() == "result2";
+assert myCallbackCount == 2;
+assert o2.hasrun;
+assert !o2.ispending;
+
+assert !o3.hasrun;
+assert o3.ispending;
+assert myCallbackCount == 2;
+assert o3(myCallback) == "result3";
+assert myCallbackCount == 3;
+assert o3() == "result3";
+assert o3() == "result3";
+assert o3(myCallback) == "result3";
+assert o3(myCallback) == "result3";
+assert o3(callback: myCallback) == "result3";
+assert o3(callback: myCallback) == "result3";
+assert myCallbackCount == 3;
+assert o3.hasrun;
+assert !o3.ispending;
+
+assert !o4.hasrun;
+assert o4.ispending;
+assert myCallbackCount == 3;
+assert o4(callback: myCallback) == "result4";
+assert myCallbackCount == 4;
+assert o4() == "result4";
+assert o4() == "result4";
+assert o4(myCallback) == "result4";
+assert o4(myCallback) == "result4";
+assert o4(callback: myCallback) == "result4";
+assert o4(callback: myCallback) == "result4";
+assert myCallbackCount == 4;
+assert o4.hasrun;
+assert !o4.ispending;
+
+assert !o5.hasrun;
+assert !o5.isrunning;
+assert o5.ispending;
+assert o5(callback: (a, b, c) -> {
+	assert !o5.hasrun;
+	assert o5.isrunning;
+	assert !o5.ispending;
+	return a + b + c;
+}, args: (10, 20, 30)) == 60;
+assert o5() == 60;
+assert o5() == 60;
+assert o5.hasrun;
+assert !o5.isrunning;
+assert !o5.ispending;

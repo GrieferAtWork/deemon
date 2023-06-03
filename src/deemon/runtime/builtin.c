@@ -26,10 +26,7 @@
 #include <deemon/object.h>
 #include <deemon/string.h>
 #include <deemon/util/atomic.h>
-
-#ifndef CONFIG_NO_THREADS
-#include <hybrid/sched/yield.h>
-#endif /* !CONFIG_NO_THREADS */
+#include <deemon/util/once.h>
 
 #include "builtin.h"
 #include "strings.h"
@@ -135,34 +132,13 @@ PRIVATE ATTR_NOINLINE void DCALL init_builtins(void) {
 }
 
 
-#ifdef CONFIG_NO_THREADS
-#define INIT_PENDING 0
-#define INIT_COMPLET 1
-#else /* CONFIG_NO_THREADS */
-#define INIT_PENDING 0
-#define INIT_PROGRES 1
-#define INIT_COMPLET 2
-#endif /* !CONFIG_NO_THREADS */
-PRIVATE int init_state = INIT_PENDING;
-
 PUBLIC WUNUSED ATTR_CONST ATTR_RETNONNULL DeeModuleObject *DCALL
 DeeModule_GetDeemon(void) {
 	/* Lazily calculate hashes of exported objects upon first access. */
-	if unlikely(init_state != INIT_COMPLET) {
-#ifdef CONFIG_NO_THREADS
+	/* TODO: Do this statically */
+	Dee_ONCE({
 		init_builtins();
-		init_state = INIT_COMPLET;
-#else /* CONFIG_NO_THREADS */
-		COMPILER_READ_BARRIER();
-		if (atomic_cmpxch(&init_state, INIT_PENDING, INIT_PROGRES)) {
-			init_builtins();
-			atomic_write(&init_state, INIT_COMPLET);
-		} else {
-			while (atomic_read(&init_state) != INIT_COMPLET)
-				SCHED_YIELD();
-		}
-#endif /* !CONFIG_NO_THREADS */
-	}
+	});
 	return &deemon_module;
 }
 

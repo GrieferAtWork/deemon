@@ -1347,7 +1347,7 @@ PUBLIC WUNUSED ATTR_INS(2, 1) NONNULL((4, 5)) int
 		} else {
 			/* All right! we've got the argument! */
 			temp = Dee_VPUnpackf(keyword_value, (char const **)&format, p_args);
-			Dee_Decref(keyword_value); /* XXX: This might cause problems for `o'-targets... */
+			Dee_Decref(keyword_value); /* FIXME: This might cause problems for `o'-targets... */
 			if unlikely(temp)
 				return temp;
 			++kw_argc;

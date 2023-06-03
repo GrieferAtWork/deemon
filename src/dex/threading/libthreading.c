@@ -23,6 +23,7 @@
 #define DEE_SOURCE
 
 #include "libthreading.h"
+/**/
 
 #include <deemon/api.h>
 #include <deemon/dex.h>
@@ -68,6 +69,9 @@ PRIVATE struct dex_symbol symbols[] = {
 	/* Event */
 	{ "Event", (DeeObject *)&DeeEvent_Type },
 
+	/* Once */
+	{ "Once", (DeeObject *)&DeeOnce_Type },
+
 	/* ThreadLocalStorage */
 	{ "TLS", (DeeObject *)&DeeTLS_Type },
 	{ NULL }
@@ -104,6 +108,5 @@ PUBLIC struct dex DEX = {
 };
 
 DECL_END
-
 
 #endif /* !GUARD_DEX_THREADING_LIBTHREADING_C */
