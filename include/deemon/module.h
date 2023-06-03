@@ -396,10 +396,10 @@ DDATDEF struct Dee_static_module_struct DeeModule_Deemon;
 #ifdef CONFIG_BUILDING_DEEMON
 /* A stub module-object named `' (empty string), and pointing to `empty_code'. */
 #ifdef __INTELLISENSE__
-DDATDEF DeeModuleObject DeeModule_Empty;
+INTDEF DeeModuleObject DeeModule_Empty;
 #else /* __INTELLISENSE__ */
 #undef DeeModule_Empty
-DDATDEF struct Dee_static_module_struct DeeModule_Empty;
+INTDEF struct Dee_static_module_struct DeeModule_Empty;
 #define DeeModule_Empty DeeModule_Empty.m_module
 #endif /* !__INTELLISENSE__ */
 #endif /* CONFIG_BUILDING_DEEMON */

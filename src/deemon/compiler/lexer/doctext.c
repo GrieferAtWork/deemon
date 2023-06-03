@@ -571,7 +571,7 @@ done:
 	return min_line_leading_spaces;
 }
 
-PRIVATE NONNULL((1, 2)) char const *DCALL
+PRIVATE NONNULL((2, 3)) char const *DCALL
 find_end_of_current_line_with_first_ch(uint32_t ch,
                                        /*utf-8*/ char const **__restrict p_iter,
                                        /*utf-8*/ char const *end) {

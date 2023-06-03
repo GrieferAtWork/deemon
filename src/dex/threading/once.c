@@ -448,7 +448,7 @@ PRIVATE struct type_method once_methods[] = {
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 once_result_get(DeeOnceObject *__restrict self) {
 	DREF DeeObject *result;
-	if (!Dee_once_hasrun(&self->o_once) != 1)
+	if (!Dee_once_hasrun(&self->o_once))
 		goto err_not_finished;
 
 	DeeOnce_InUseInc(self);
@@ -470,7 +470,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 once_result_del(DeeOnceObject *__restrict self) {
 	DREF DeeObject *value;
-	if (!Dee_once_hasrun(&self->o_once) != 1)
+	if (!Dee_once_hasrun(&self->o_once))
 		goto err_not_finished;
 	value = self->o_value;
 	self->o_value = NULL;
@@ -490,7 +490,7 @@ err_not_finished:
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 once_result_set(DeeOnceObject *self, DeeObject *new_value) {
 	DREF DeeObject *old_value;
-	if (!Dee_once_hasrun(&self->o_once) != 1)
+	if (!Dee_once_hasrun(&self->o_once))
 		goto err_not_finished;
 	Dee_Incref(new_value);
 	old_value = self->o_value;
