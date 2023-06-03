@@ -74,7 +74,7 @@ is_defined_by_deemon_core(DeeTypeObject *__restrict self) {
 		DeeError_Handled(ERROR_HANDLED_RESTORE);
 		return false;
 	}
-	result = type_module == (DeeObject *)&deemon_module;
+	result = type_module == (DeeObject *)&DeeModule_Deemon;
 	Dee_Decref(type_module);
 	return result;
 }
@@ -95,7 +95,7 @@ filter_builtin_deemon_types(/*inherit(always)*/ DREF DeeObject *__restrict self)
 	}
 	Dee_Decref(type_module);
 	/* Only propagate types from the builtin deemon module. */
-	if (type_module != (DeeObject *)&deemon_module) {
+	if (type_module != (DeeObject *)&DeeModule_Deemon) {
 		Dee_Decref(self);
 		return NULL;
 	}

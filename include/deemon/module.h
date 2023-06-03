@@ -28,13 +28,10 @@
 #include <stdbool.h>
 #include <stddef.h>
 
+#include "gc.h"
 #include "object.h"
 #include "system.h" /* DEE_SYSTEM_FS_ICASE */
 #include "util/lock.h"
-
-#ifdef CONFIG_BUILDING_DEEMON
-#include "gc.h"
-#endif /* CONFIG_BUILDING_DEEMON */
 
 #ifdef GUARD_DEEMON_EXECUTE_MODPATH_C
 #include "list.h"
@@ -371,32 +368,43 @@ DFUNDEF NONNULL((1)) void DCALL DeeModule_UnlockSymbols(DeeModuleObject *__restr
 #endif /* CONFIG_NO_THREADS */
 
 
-/* The module of builtin objects accessible by opening `deemon'. */
-DFUNDEF WUNUSED ATTR_CONST ATTR_RETNONNULL DeeModuleObject *DCALL DeeModule_GetDeemon(void);
-
-#ifdef CONFIG_BUILDING_DEEMON
-/* A stub module-object named `' (empty string), and pointing to `empty_code'. */
-struct static_module_struct {
+struct Dee_static_module_struct {
 	/* Even though never tracked, static modules still need the GC header for visiting. */
 	struct gc_head_link m_head;
-	DeeModuleObject    m_module;
+	DeeModuleObject     m_module;
 };
-
-#ifdef __INTELLISENSE__
-INTDEF DeeModuleObject empty_module;
-INTDEF DeeModuleObject deemon_module;
-#else /* __INTELLISENSE__ */
-INTDEF struct static_module_struct empty_module_head;
-INTDEF struct static_module_struct deemon_module_head;
-#define empty_module   empty_module_head.m_module
-#define deemon_module  deemon_module_head.m_module
-#endif /* !__INTELLISENSE__ */
-
-#endif /* CONFIG_BUILDING_DEEMON */
 
 DDATDEF DeeTypeObject DeeModule_Type;
 #define DeeModule_Check(ob)      DeeObject_InstanceOf(ob, &DeeModule_Type)
 #define DeeModule_CheckExact(ob) DeeObject_InstanceOfExact(ob, &DeeModule_Type)
+
+
+/* The built-in `deemon' module. */
+#ifdef __INTELLISENSE__
+DDATDEF DeeModuleObject DeeModule_Deemon;
+#else /* __INTELLISENSE__ */
+#undef DeeModule_Deemon
+DDATDEF struct Dee_static_module_struct DeeModule_Deemon;
+#define DeeModule_Deemon DeeModule_Deemon.m_module
+#endif /* !__INTELLISENSE__ */
+
+/* The module of builtin objects accessible by opening `deemon'. */
+#define DeeModule_GetDeemon() (&DeeModule_Deemon)
+
+
+
+#ifdef CONFIG_BUILDING_DEEMON
+/* A stub module-object named `' (empty string), and pointing to `empty_code'. */
+#ifdef __INTELLISENSE__
+DDATDEF DeeModuleObject DeeModule_Empty;
+#else /* __INTELLISENSE__ */
+#undef DeeModule_Empty
+DDATDEF struct Dee_static_module_struct DeeModule_Empty;
+#define DeeModule_Empty DeeModule_Empty.m_module
+#endif /* !__INTELLISENSE__ */
+#endif /* CONFIG_BUILDING_DEEMON */
+
+
 
 /* Create a new module object that has yet to be initialized or loaded. */
 DFUNDEF WUNUSED DREF /*Module*/ DeeObject *DCALL

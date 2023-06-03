@@ -2864,9 +2864,9 @@ DeeModule_GetCTime(/*Module*/ DeeObject *__restrict self) {
 	if (me->mo_flags & MODULE_FHASCTIME) {
 		result = me->mo_ctime;
 		ASSERT(result != (uint64_t)-1);
-	} else if (me == &deemon_module) {
+	} else if (me == &DeeModule_Deemon) {
 		/* `DeeExec_GetTimestamp()' already uses the `mo_ctime' field
-		 *  of `deemon_module' as cache if that field is available. */
+		 *  of `DeeModule_Deemon' as cache if that field is available. */
 		result = DeeExec_GetTimestamp();
 	} else {
 		/* Lookup the last-modified time of the module's path file. */

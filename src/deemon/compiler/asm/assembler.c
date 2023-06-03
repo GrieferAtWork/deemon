@@ -3260,19 +3260,19 @@ asm_bind_deemon_export(DeeObject *__restrict constval) {
 		goto done;
 	}
 do_search:
-	DeeModule_LockRead(&deemon_module);
+	DeeModule_LockRead(&DeeModule_Deemon);
 	for (i = 0; i < num_builtins_obj; ++i) {
 		struct symbol *result;
-		if (deemon_module.mo_globalv[i] != constval)
+		if (DeeModule_Deemon.mo_globalv[i] != constval)
 			continue;
-		DeeModule_LockEndRead(&deemon_module);
+		DeeModule_LockEndRead(&DeeModule_Deemon);
 did_find_export:
 		/* Check if the symbol has already been bound. */
 		result = current_rootscope->rs_scope.bs_scope.s_del;
 		for (; result; result = result->s_next) {
 			if (result->s_type != SYMBOL_TYPE_EXTERN)
 				continue;
-			if (result->s_extern.e_module != &deemon_module)
+			if (result->s_extern.e_module != &DeeModule_Deemon)
 				continue;
 			if (result->s_extern.e_symbol->ss_index != i)
 				continue;
@@ -3283,12 +3283,12 @@ did_find_export:
 			goto done_result;
 		result->s_type            = SYMBOL_TYPE_EXTERN;
 		result->s_extern.e_module = DeeModule_GetDeemon();
-		result->s_extern.e_symbol = DeeModule_GetSymbolID(&deemon_module, i);
+		result->s_extern.e_symbol = DeeModule_GetSymbolID(&DeeModule_Deemon, i);
 		ASSERT(result->s_extern.e_symbol != NULL);
 done_result:
 		return result;
 	}
-	DeeModule_LockEndRead(&deemon_module);
+	DeeModule_LockEndRead(&DeeModule_Deemon);
 done:
 	return ASM_BIND_DEEMON_EXPORT_NOTFOUND;
 }

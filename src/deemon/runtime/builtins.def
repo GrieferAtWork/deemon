@@ -25,6 +25,12 @@
 #define BUILTIN_DOC(name, object, flags, doc) BUILTIN(name, object, flags)
 #endif /* !BUILTIN_DOC */
 
+/*
+ * IMPORTANT: After making changes to this file, you must run the following command:
+ * >> deemon -F src/deemon/runtime/builtin.c
+ */
+
+#ifndef BUILTIN_NO_INCLUDES
 #include <deemon/compiler/compiler.h>
 
 #include <deemon/api.h>
@@ -58,6 +64,7 @@
 #include <deemon/traceback.h>
 #include <deemon/tuple.h>
 #include <deemon/weakref.h>
+#endif /* !BUILTIN_NO_INCLUDES */
 
 /* Very important symbols: `Signal', `Error' and `Traceback' */
 BUILTIN(Signal, &DeeError_Signal, MODSYM_FREADONLY | MODSYM_FCONSTEXPR)
@@ -130,7 +137,7 @@ BUILTIN_DOC(gc, &DeeGCEnumTracked_Singleton, MODSYM_FREADONLY,
             /**/ "all GC objects no longer referenced anywhere else")
 
 #ifndef BUILTIN_RUNTIME_DEFINED
-#define BUILTIN_RUNTIME_DEFINED 1
+#define BUILTIN_RUNTIME_DEFINED
 DECL_BEGIN
 
 INTDEF DeeCMethodObject rt_pooad;

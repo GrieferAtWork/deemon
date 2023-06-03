@@ -3216,7 +3216,7 @@ print_symbol(struct symbol *__restrict sym,
 	dssize_t temp, result = 0;
 	if (sym->s_name == &TPPKeyword_Empty) {
 		if (sym->s_type == SYMBOL_TYPE_EXTERN) {
-			if (sym->s_extern.e_module == &deemon_module &&
+			if (sym->s_extern.e_module == &DeeModule_Deemon &&
 			    sym->s_extern.e_symbol->ss_index == id_import) {
 				print(STR_import, 6);
 			} else {

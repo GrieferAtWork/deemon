@@ -1678,7 +1678,13 @@ PUBLIC DeeTypeObject DeeModule_Type = {
 	/* .tp_class_members = */ NULL
 };
 
-INTERN struct static_module_struct empty_module_head = {
+#ifdef __INTELLISENSE__
+INTERN struct Dee_static_module_struct DeeModule_Empty_real =
+#else /* __INTELLISENSE__ */
+#undef DeeModule_Empty
+INTERN struct Dee_static_module_struct DeeModule_Empty =
+#endif /* !__INTELLISENSE__ */
+{
 	{
 		/* ... */
 		NULL,

@@ -207,7 +207,7 @@ check_symbol:
 			goto check_symbol;
 
 		case SYMBOL_TYPE_EXTERN:
-			return (sym->s_extern.e_module == &deemon_module &&
+			return (sym->s_extern.e_module == &DeeModule_Deemon &&
 			        sym->s_extern.e_symbol->ss_index == id_none);
 
 		case SYMBOL_TYPE_CONST:
@@ -234,7 +234,7 @@ check_symbol:
 			goto check_symbol;
 
 		case SYMBOL_TYPE_EXTERN:
-			return (sym->s_extern.e_module == &deemon_module &&
+			return (sym->s_extern.e_module == &DeeModule_Deemon &&
 			        sym->s_extern.e_symbol->ss_index == id_Object);
 
 		case SYMBOL_TYPE_CONST:
@@ -265,10 +265,10 @@ check_symbol:
 		case SYMBOL_TYPE_EXTERN:
 			/* Check if the symbol refers to the same type, when
 			 * that type is exported from the deemon module. */
-			if (sym->s_extern.e_module != &deemon_module)
+			if (sym->s_extern.e_module != &DeeModule_Deemon)
 				return false;
-			if (sym->s_extern.e_symbol->ss_index < deemon_module.mo_globalc &&
-			    deemon_module.mo_globalv[sym->s_extern.e_symbol->ss_index] == (DeeObject *)tp)
+			if (sym->s_extern.e_symbol->ss_index < DeeModule_Deemon.mo_globalc &&
+			    DeeModule_Deemon.mo_globalv[sym->s_extern.e_symbol->ss_index] == (DeeObject *)tp)
 				return true;
 			break;
 
@@ -477,7 +477,7 @@ switch_symbol_type:
 		case SYMBOL_TYPE_EXTERN: {
 			struct module_symbol *msym;
 			msym = sym->s_extern.e_symbol;
-			if (sym->s_extern.e_module != &deemon_module) {
+			if (sym->s_extern.e_module != &DeeModule_Deemon) {
 				char const *module_name;
 				/* External symbol reference. */
 				if (UNICODE_PRINTER_PRINT(printer, "?E") < 0)

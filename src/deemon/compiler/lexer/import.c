@@ -88,7 +88,7 @@ module_opened:
 			goto err;
 		if (WARNAT(loc, W_MODULE_NOT_FOUND, module_name))
 			goto err;
-		result = &empty_module;
+		result = &DeeModule_Empty;
 		Dee_Incref(result);
 	} else {
 		/* Check for recursive dependency. */
@@ -628,8 +628,8 @@ ast_import_all_from_module(DeeModuleObject *__restrict mod,
 									/* One of the modules contains a copy-alias (i.e. a secondary memory location)
 									 * for the other symbol. - Try to figure out which one is aliasing which, and
 									 * potentially re-assign the import such that the new module has less dependencies. */
-									if (sym->s_extern.e_module != &deemon_module) {
-										if (mod == &deemon_module) {
+									if (sym->s_extern.e_module != &DeeModule_Deemon) {
+										if (mod == &DeeModule_Deemon) {
 do_reassign_new_alias:
 											Dee_Incref(mod);
 											Dee_Decref(sym->s_extern.e_module);

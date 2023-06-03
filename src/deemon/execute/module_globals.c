@@ -62,8 +62,8 @@ INTDEF WUNUSED NONNULL((1)) DREF ModuleExports *DCALL DeeModule_ViewExports(DeeM
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 mei_ctor(ModuleExportsIterator *__restrict self) {
 	self->mei_index  = 0;
-	self->mei_module = &empty_module;
-	Dee_Incref(&empty_module);
+	self->mei_module = &DeeModule_Empty;
+	Dee_Incref(&DeeModule_Empty);
 	return 0;
 }
 
@@ -282,8 +282,8 @@ INTERN DeeTypeObject ModuleExportsIterator_Type = {
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 me_ctor(ModuleExports *__restrict self) {
-	self->me_module = &empty_module;
-	Dee_Incref(&empty_module);
+	self->me_module = &DeeModule_Empty;
+	Dee_Incref(&DeeModule_Empty);
 	return 0;
 }
 
@@ -294,7 +294,7 @@ me_init(ModuleExports *__restrict self,
 		goto err;
 	if (DeeObject_AssertType(self->me_module, &DeeModule_Type))
 		goto err;
-	Dee_Incref(&empty_module);
+	Dee_Incref(&DeeModule_Empty);
 	return 0;
 err:
 	return -1;
@@ -754,7 +754,7 @@ mg_init(ModuleGlobals *__restrict self,
 		goto err;
 	if (DeeObject_AssertType(self->mg_module, &DeeModule_Type))
 		goto err;
-	Dee_Incref(&empty_module);
+	Dee_Incref(&DeeModule_Empty);
 	return 0;
 err:
 	return -1;

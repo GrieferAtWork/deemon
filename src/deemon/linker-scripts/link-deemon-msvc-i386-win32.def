@@ -403,7 +403,6 @@ EXPORTS
 	DeeModule_Get@4=_DeeModule_Get@4
 	DeeModule_GetAttrSymbol@8=_DeeModule_GetAttrSymbol@8
 	DeeModule_GetCTime@4=_DeeModule_GetCTime@4
-	DeeModule_GetDeemon@0=_DeeModule_GetDeemon@0
 	DeeModule_GetExtern@8=_DeeModule_GetExtern@8
 	DeeModule_GetExternString@8=_DeeModule_GetExternString@8
 	DeeModule_GetNativeSymbol@8=_DeeModule_GetNativeSymbol@8
@@ -973,6 +972,7 @@ EXPORTS
 	Dee_once_begin@4=_Dee_once_begin@4
 	Dee_once_begin_noint@4=_Dee_once_begin_noint@4
 	Dee_once_commit@4=_Dee_once_commit@4
+	Dee_once_trybegin@4=_Dee_once_trybegin@4
 	Dee_rshared_lock_acquire@4=_Dee_rshared_lock_acquire@4
 	Dee_rshared_lock_acquire_noint@4=_Dee_rshared_lock_acquire_noint@4
 	Dee_rshared_lock_acquire_timed@12=_Dee_rshared_lock_acquire_timed@12

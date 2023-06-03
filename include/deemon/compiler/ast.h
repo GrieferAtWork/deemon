@@ -610,10 +610,10 @@ struct ast {
 
 
 #define ast_isconstexpr(self, v) ((self)->a_constexpr == (DeeObject *)Dee_REQUIRES_OBJECT(v))
-#define ast_is_deemon_symbol(self, symbol_id)              \
-	((self)->a_type == AST_SYM &&                          \
-	 (self)->a_sym->s_type == SYMBOL_TYPE_EXTERN &&        \
-	 (self)->a_sym->s_extern.e_module == &deemon_module && \
+#define ast_is_deemon_symbol(self, symbol_id)                 \
+	((self)->a_type == AST_SYM &&                             \
+	 (self)->a_sym->s_type == SYMBOL_TYPE_EXTERN &&           \
+	 (self)->a_sym->s_extern.e_module == &DeeModule_Deemon && \
 	 (self)->a_sym->s_extern.e_symbol->ss_index == (symbol_id))
 
 
