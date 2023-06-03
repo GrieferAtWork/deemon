@@ -411,6 +411,30 @@ librt_get_Code_empty_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
 	return librt_get_Code_empty_impl_f();
 }
 
+LOCAL WUNUSED DREF DeeObject *DCALL
+librt_get_Module_empty_f_impl(void) {
+	DREF DeeObject *empty_code;
+	DREF DeeModuleObject *result;
+	empty_code = librt_get_Code_empty_impl_f();
+	if unlikely(!empty_code)
+		goto err;
+	if (DeeObject_AssertTypeExact(empty_code, &DeeCode_Type))
+		goto err_empty_code;
+	result = ((DeeCodeObject *)empty_code)->co_module;
+	Dee_Incref(result);
+	Dee_Decref_unlikely(empty_code);
+	return (DREF DeeObject *)result;
+err_empty_code:
+	Dee_Decref(empty_code);
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED DREF DeeObject *DCALL
+librt_get_Module_empty_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
+	return librt_get_Module_empty_f_impl();
+}
+
 
 
 PRIVATE DeeStringObject *varkwds_keywords[1] = { NULL };
@@ -451,11 +475,11 @@ PRIVATE DEFINE_KWDS(
 LOCAL WUNUSED DREF DeeObject *DCALL
 librt_get_BlackListVarkwds_impl_f(void) {
 	/* `type(varkwds_func(iterator: none))' */
-	DeeObject *argv[]                         = { Dee_None };
-	dhash_t h                                 = DeeString_Hash((DeeObject *)&str_Iterator);
+	DeeObject *argv[] = { Dee_None };
+	dhash_t h = DeeString_Hash((DeeObject *)&str_Iterator);
 	varkwds_invoke_kwds.kw_map[h & 1].ke_name = &str_Iterator;
 	varkwds_invoke_kwds.kw_map[h & 1].ke_hash = h;
-	varkwds_keywords[0]                       = (DeeStringObject *)&str_Iterator;
+	varkwds_keywords[0] = (DeeStringObject *)&str_Iterator;
 	return get_type_of(DeeObject_CallKw((DeeObject *)&varkwds_func,
 	                                    COMPILER_LENOF(argv),
 	                                    argv,
@@ -1746,6 +1770,7 @@ PRIVATE DEFINE_CMETHOD(librt_get_BlackListMapping, librt_get_BlackListMapping_f)
 PRIVATE DEFINE_CMETHOD(librt_get_BlackListMappingIterator, librt_get_BlackListMappingIterator_f);
 PRIVATE DEFINE_CMETHOD(librt_get_GCEnum, librt_get_GCEnum_f);
 PRIVATE DEFINE_CMETHOD(librt_get_Traceback_empty, librt_get_Traceback_empty_f);
+PRIVATE DEFINE_CMETHOD(librt_get_Module_empty, librt_get_Module_empty_f);
 PRIVATE DEFINE_CMETHOD(librt_get_DocKwds, librt_get_DocKwds_f);
 PRIVATE DEFINE_CMETHOD(librt_get_DocKwdsIterator, librt_get_DocKwdsIterator_f);
 PRIVATE DEFINE_CMETHOD(librt_get_MappingProxy, librt_get_MappingProxy_f);
@@ -2257,6 +2282,12 @@ PRIVATE struct dex_symbol symbols[] = {
 	{ "Traceback_empty", (DeeObject *)&librt_get_Traceback_empty, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR,
 	  DOC("->?GTraceback\n"
 	      "The fallback #Iempty traceback") }, /* DeeTraceback_Empty */
+	{ "Module_deemon", (DeeObject *)&DeeModule_Deemon, MODSYM_FREADONLY,
+	  DOC("->?GModule\n"
+	      "The built-in ?Mdeemon module") }, /* DeeModule_Deemon */
+	{ "Module_empty", (DeeObject *)&librt_get_Module_empty, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR,
+	  DOC("->?GModule\n"
+	      "The fallback #Iempty module") }, /* DeeModule_Empty */
 
 	/* Re-exports of standard types also exported from `deemon' */
 	{ "Int", (DeeObject *)&DeeInt_Type, MODSYM_FREADONLY },
