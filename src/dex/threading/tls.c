@@ -653,7 +653,7 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL tls_bool(TLS *__restrict self) {
 
 PRIVATE struct type_getset tpconst tls_getsets[] = {
 	TYPE_GETSET_BOUND("value", &tls_getvalue, &tls_delvalue, &tls_setvalue, &tls_bool,
-	                  "@throw AttributeError The TLS variable isn't bound, or has already been unbound\n"
+	                  "#tAttributeError{The TLS variable isn't bound, or has already been unbound}"
 	                  "Read/write access to the object assigned to this TLS variable slot in the calling thread\n"
 	                  "If a factory has been defined, it will be invoked upon first access, unless that access is setting the TLS value.\n"
 	                  "If no factory has been defined, the TLS is initialized as unbound and any attempt "
@@ -718,7 +718,7 @@ err:
 PRIVATE struct type_method tpconst tls_methods[] = {
 	TYPE_METHOD("get", &tls_get,
 	            "->\n"
-	            "@throw UnboundAttribute The TLS variable isn't bound\n"
+	            "#tUnboundAttribute{The TLS variable isn't bound}"
 	            "Return the stored object. Same as ${this.item}"),
 	TYPE_METHOD("delete", &tls_delete,
 	            "->?Dbool\n"
@@ -729,11 +729,11 @@ PRIVATE struct type_method tpconst tls_methods[] = {
 	            "Set the TLS variable. Same as ${this.item = ob}"),
 	TYPE_METHOD("xch", &tls_xch,
 	            "(ob)->\n"
-	            "@throw AttributeError The TLS variable had already been unbound\n"
+	            "#tAttributeError{The TLS variable had already been unbound}"
 	            "Exchange the stored TLS value with @ob and return the old value"),
 	TYPE_METHOD("pop", &tls_pop,
 	            "->\n"
-	            "@throw AttributeError The TLS variable had already been unbound\n"
+	            "#tAttributeError{The TLS variable had already been unbound}"
 	            "Unbind the stored TLS object and return the previously stored object"),
 
 	/* Deprecated functions. */

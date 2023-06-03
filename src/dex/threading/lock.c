@@ -296,30 +296,30 @@ PRIVATE DEFINE_STRING_EX(str_end, "end", 0x37fb4a05, 0x6de935c204dc3d01);
 /* Pre-defined doc strings for lock-like objects */
 DOC_DEF(doc_lock_acquire,
         "()\n"
-        "@interrupt\n"
+        "#t{:Interrupt}"
         "Acquire @this lock, blocking until that becomes possible");
 DOC_DEF(doc_lock_release,
         "()\n"
-        "@throws ValueError You're not holding this lock\n"
+        "#tValueError{You're not holding this lock}"
         "Release a lock previously acquired by ?#acquire or some other means");
 DOC_DEF(doc_lock_tryacquire,
         "->?Dbool\n"
         "Try to acquire @this lock, returning ?t on success, and ?f if doing so would block");
 DOC_DEF(doc_lock_timedacquire,
         "(timeout_nanoseconds:?Dint)->?Dbool\n"
-        "@interrupt\n"
+        "#t{:Interrupt}"
         "Same as ?#acquire, returning ?t on success, but block for at "
         /**/ "most @timeout_nanoseconds. Once that amount of time has elapsed, "
         /**/ "stop trying to acquire the lock and fail by returning ?f instead.");
 DOC_DEF(doc_lock_waitfor,
         "()\n"
-        "@interrupt\n"
+        "#t{:Interrupt}"
         "Wait until @this lock can be acquired without blocking\n"
         "Note that by the time this function returns, trying to acquire the "
         /**/ "lock might already block once again.");
 DOC_DEF(doc_lock_timedwaitfor,
         "(timeout_nanoseconds:?Dint)->?Dbool\n"
-        "@interrupt\n"
+        "#t{:Interrupt}"
         "Same as ?#waitfor, returning ?t on success, but block for at "
         /**/ "most @timeout_nanoseconds. Once that amount of time has elapsed, "
         /**/ "stop trying to wait for the lock to become available, and fail "
@@ -344,38 +344,38 @@ DOC_DEF(doc_rwlock_trywrite,
         "Same as ${this.writelock.tryacquire()}");
 DOC_DEF(doc_rwlock_read,
         "()\n"
-        "@interrupt\n"
+        "#t{:Interrupt}"
         "Acquire a shared (read) lock to @this, blocking until that becomes possible.\n"
         "Same as ${this.readlock.tryacquire()}");
 DOC_DEF(doc_rwlock_timedread,
         "(timeout_nanoseconds:?Dint)->?Dbool\n"
-        "@interrupt\n"
+        "#t{:Interrupt}"
         "Same as ?#read, returning ?t on success, but block for at "
         /**/ "most @timeout_nanoseconds. Once that amount of time has elapsed, "
         /**/ "stop trying to acquire a shared (read) lock and fail by returning ?f instead.\n"
         "Same as ${this.readlock.timedacquire(timeout_nanoseconds)}");
 DOC_DEF(doc_rwlock_write,
         "()\n"
-        "@interrupt\n"
+        "#t{:Interrupt}"
         "Acquire an exclusive (write) lock to @this, blocking until that becomes possible.\n"
         "Same as ${this.writelock.tryacquire()}");
 DOC_DEF(doc_rwlock_timedwrite,
         "(timeout_nanoseconds:?Dint)->?Dbool\n"
-        "@interrupt\n"
+        "#t{:Interrupt}"
         "Same as ?#write, returning ?t on success, but block for at "
         /**/ "most @timeout_nanoseconds. Once that amount of time has elapsed, "
         /**/ "stop trying to acquire an exclusive (write) lock and fail by returning ?f instead.\n"
         "Same as ${this.writelock.timedacquire(timeout_nanoseconds)}");
 DOC_DEF(doc_rwlock_waitread,
         "()\n"
-        "@interrupt\n"
+        "#t{:Interrupt}"
         "Wait until a shared (read) lock can be acquired without blocking\n"
         "Note that by the time this function returns, trying to acquire a "
         /**/ "shared (read) lock might already block once again.\n"
         "Same as ${this.readlock.waitfor()}");
 DOC_DEF(doc_rwlock_timedwaitread,
         "(timeout_nanoseconds:?Dint)->?Dbool\n"
-        "@interrupt\n"
+        "#t{:Interrupt}"
         "Same as ?#waitread, returning ?t on success, but block for at "
         /**/ "most @timeout_nanoseconds. Once that amount of time has elapsed, "
         /**/ "stop trying to wait for a shared (read) lock to become available, and "
@@ -383,14 +383,14 @@ DOC_DEF(doc_rwlock_timedwaitread,
         "Same as ${this.readlock.timedwaitfor(timeout_nanoseconds)}");
 DOC_DEF(doc_rwlock_waitwrite,
         "()\n"
-        "@interrupt\n"
+        "#t{:Interrupt}"
         "Wait until an exclusive (write) lock can be acquired without blocking\n"
         "Note that by the time this function returns, trying to acquire an exclusive (write) "
         /**/ "lock might already block once again.\n"
         "Same as ${this.writelock.waitfor()}");
 DOC_DEF(doc_rwlock_timedwaitwrite,
         "(timeout_nanoseconds:?Dint)->?Dbool\n"
-        "@interrupt\n"
+        "#t{:Interrupt}"
         "Same as ?#waitwrite, returning ?t on success, but block for at "
         /**/ "most @timeout_nanoseconds. Once that amount of time has elapsed, "
         /**/ "stop trying to wait for an exclusive (write) lock to become available, and "
@@ -398,17 +398,17 @@ DOC_DEF(doc_rwlock_timedwaitwrite,
         "Same as ${this.writelock.timedwaitfor(timeout_nanoseconds)}");
 DOC_DEF(doc_rwlock_endread,
         "()\n"
-        "@throws ValueError No shared (read) lock is currently held\n"
+        "#tValueError{No shared (read) lock is currently held}"
         "Release a shared (read) lock from @this, previously acquired by ?#read or some other function.\n"
         "Same as ${this.readlock.release()}");
 DOC_DEF(doc_rwlock_endwrite,
         "()\n"
-        "@throws ValueError No exclusive (write) lock is currently held\n"
+        "#tValueError{No exclusive (write) lock is currently held}"
         "Release an exclusive (write) lock from @this, previously acquired by ?#write or some other function.\n"
         "Same as ${this.writelock.release()}");
 DOC_DEF(doc_rwlock_end,
         "()\n"
-        "@throws ValueError No lock of any kind is currently held\n"
+        "#tValueError{No lock of any kind is currently held}"
         "Release either an exclusive (write), or a shared (read) lock from @this");
 DOC_DEF(doc_rwlock_tryupgrade,
         "->?DBool\n"
@@ -416,14 +416,14 @@ DOC_DEF(doc_rwlock_tryupgrade,
         "If the lock was upgraded, return ?t. Otherwise, the shared (read) lock is kept, and ?f is returned.");
 DOC_DEF(doc_rwlock_upgrade,
         "->?DBool\n"
-        "@interrupt\n"
-        "@throws ValueError Not holding a shared (read) lock at the moment\n"
-        "@return true Lock upgrade could be performed atomically (without dropping the shared (read) lock temporarily)\n"
-        "@return false Lock upgrade was performed by temporarily dropping the shared (read) lock, before acquiring an exclusive (write) lock\n"
+        "#t{:Interrupt}"
+        "#tValueError{Not holding a shared (read) lock at the moment}"
+        "#r{true Lock upgrade could be performed atomically (without dropping the shared (read) lock temporarily)}"
+        "#r{false Lock upgrade was performed by temporarily dropping the shared (read) lock, before acquiring an exclusive (write) lock}"
         "Upgrade a shared (read) lock into an exclusive (write) lock (if an interrupt error is thrown, the shared (read) lock was released)");
 DOC_DEF(doc_rwlock_downgrade,
         "()\n"
-        "@throws ValueError Not holding an exclusive (write) lock at the moment\n"
+        "#tValueError{Not holding an exclusive (write) lock at the moment}"
         "Downgrade an exclusive (write) lock into a shared (read) lock, but maintain some kind of lock at every point in time");
 DOC_DEF(doc_rwlock_reading,
         "->?Dbool\n"
@@ -1847,7 +1847,7 @@ PRIVATE struct type_method semaphore_methods[] = {
 	TYPE_METHOD(STR_acquire, &semaphore_acquire, DOC_GET(doc_lock_acquire)),
 	TYPE_METHOD(STR_release, &semaphore_release,
 	            "(tickets=!1)\n"
-	            "@throw IntegerOverflow The new total number of tickets would be too large\n"
+	            "#tIntegerOverflow{The new total number of tickets would be too large}"
 	            "Release @tickets tickets to the semaphore"),
 	TYPE_METHOD(STR_timedacquire, &semaphore_timedacquire, DOC_GET(doc_lock_timedacquire)),
 	TYPE_METHOD(STR_waitfor, &semaphore_waitfor, DOC_GET(doc_lock_waitfor)),

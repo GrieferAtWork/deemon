@@ -1899,14 +1899,14 @@ hashset_sizeof(HashSet *self) {
 PRIVATE struct type_method tpconst hashset_methods[] = {
 	TYPE_METHOD(STR_pop, &hashset_pop,
 	            "->\n"
-	            "@throw ValueError The set is empty\n"
+	            "#tValueError{The set is empty}"
 	            "Pop a random item from the set and return it"),
 	TYPE_METHOD(STR_clear, &hashset_doclear,
 	            "()\n"
 	            "Clear all items from the set"),
 	TYPE_METHOD("popitem", &hashset_pop,
 	            "->\n"
-	            "@throw ValueError The set is empty\n"
+	            "#tValueError{The set is empty}"
 	            "Pop a random item from the set and return it (alias for ?#pop)"),
 	TYPE_METHOD("unify", &hashset_unify,
 	            "(ob)->\n"

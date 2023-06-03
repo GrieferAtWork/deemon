@@ -324,7 +324,7 @@ PRIVATE struct type_cmp cell_cmp = {
 
 PRIVATE struct type_getset tpconst cell_getsets[] = {
 	TYPE_GETSET_BOUND("value", &DeeCell_Get, &DeeCell_Del, &DeeCell_Set, &cell_bool,
-	                  "@throw UnboundAttribute Attempted to read from an empty Cell\n"
+	                  "#tUnboundAttribute{Attempted to read from an empty Cell}"
 	                  "Read/write access to the underlying, contained ?O"),
 	TYPE_GETSET_END
 };
@@ -472,7 +472,7 @@ err:
 PRIVATE struct type_method tpconst cell_methods[] = {
 	TYPE_METHOD(STR_get, &cell_get,
 	            "->\n"
-	            "@throw ValueError @this Cell is empty\n"
+	            "#tValueError{@this Cell is empty}"
 	            "Returns the contained value of the Cell\n"
 	            "\n"
 
@@ -484,7 +484,7 @@ PRIVATE struct type_method tpconst cell_methods[] = {
 	            /**/ "the Cell wasn't empty before, or ?f if it already was"),
 	TYPE_METHOD(STR_pop, &cell_pop,
 	            "->\n"
-	            "@throw ValueError The Cell was empty\n"
+	            "#tValueError{The Cell was empty}"
 
 	            "\n"
 	            "(def)->\n"
@@ -495,7 +495,7 @@ PRIVATE struct type_method tpconst cell_methods[] = {
 	            /**/ "has been overwritten, or ?f if no value had been set before"),
 	TYPE_METHOD(STR_xch, &cell_xch,
 	            "(value)->\n"
-	            "@throw ValueError @this Cell is empty\n"
+	            "#tValueError{@this Cell is empty}"
 	            "Overwrite the Cell's value and return the old value or throw an error when it was empty\n"
 
 	            "\n"
@@ -507,7 +507,7 @@ PRIVATE struct type_method tpconst cell_methods[] = {
 	            /**/ "the case, delete the stored object and return ?t. Otherwise, return ?f"),
 	TYPE_METHOD("cmpxch", &cell_cmpxch,
 	            "(old_value,new_value)->\n"
-	            "@throw ValueError @this Cell is empty\n"
+	            "#tValueError{@this Cell is empty}"
 	            "\n"
 
 	            "(old_value,new_value,def)->\n"

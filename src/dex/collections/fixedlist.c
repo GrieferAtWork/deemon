@@ -1163,12 +1163,12 @@ INTERN DeeTypeObject FixedList_Type = {
 	                         "\n"
 
 	                         ":=(other:?S?O)->\n"
-	                         "@throw UnpackError @other has a different length than @this\n"
+	                         "#tUnpackError{@other has a different length than @this}"
 	                         "Assign all the elements from @other to @this FixedList\n"
 	                         "\n"
 
 	                         "move:=->\n"
-	                         "@throw UnpackError @other has a different length than @this\n"
+	                         "#tUnpackError{@other has a different length than @this}"
 	                         "Move all the elements from @other into @this FixedList, "
 	                         /**/ "changing all of them to unbound in @other\n"
 	                         "\n"
@@ -1182,20 +1182,20 @@ INTERN DeeTypeObject FixedList_Type = {
 	                         "\n"
 
 	                         "[]->\n"
-	                         "@throw IndexError @index is greater that the length of @this FixedList\n"
-	                         "@throw IntegerOverflow @index is negative or too large\n"
+	                         "#tIndexError{@index is greater that the length of @this FixedList}"
+	                         "#tIntegerOverflow{@index is negative or too large}"
 	                         "Returns the @index'th item of @this FixedList\n"
 	                         "\n"
 
 	                         "[]=->\n"
-	                         "@throw IndexError @index is greater that the length of @this FixedList\n"
-	                         "@throw IntegerOverflow @index is negative or too large\n"
+	                         "#tIndexError{@index is greater that the length of @this FixedList}"
+	                         "#tIntegerOverflow{@index is negative or too large}"
 	                         "Set the @index'th item of @this FixedList to @item\n"
 	                         "\n"
 
 	                         "del[]->\n"
-	                         "@throw IndexError @index is greater that the length of @this FixedList\n"
-	                         "@throw IntegerOverflow @index is negative or too large\n"
+	                         "#tIndexError{@index is greater that the length of @this FixedList}"
+	                         "#tIntegerOverflow{@index is negative or too large}"
 	                         "Mark the @index'th element of @this FixedList as unbound\n"
 	                         "\n"
 

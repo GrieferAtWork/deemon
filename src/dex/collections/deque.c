@@ -1385,17 +1385,17 @@ deq_sizeof(Deque *self) {
 PRIVATE struct type_method tpconst deq_methods[] = {
 	TYPE_KWMETHOD("insert", &deq_insert,
 	              "(index:?Dint,ob)\n"
-	              "@throw IntegerOverflow @index is negative or too large\n"
+	              "#tIntegerOverflow{@index is negative or too large}"
 	              "Insert the given object @ob at @index"),
 	TYPE_KWMETHOD("erase", &deq_erase,
 	              "(index:?Dint,num_items=!1)->?Dint\n"
-	              "@throw IntegerOverflow @index is negative or too large\n"
-	              "@return The actual number of erased items\n"
+	              "#tIntegerOverflow{@index is negative or too large}"
+	              "#r{The actual number of erased items}"
 	              "Erase up to @num_items objects from @this deque, starting at @index"),
 	TYPE_KWMETHOD("pop", &deq_pop,
 	              "(index=!-1)->\n"
-	              "@throw IntegerOverflow @index is negative or too large\n"
-	              "@return The item that got removed\n"
+	              "#tIntegerOverflow{@index is negative or too large}"
+	              "#r{The item that got removed}"
 	              "Pop (erase) the item located at @index and return it"),
 	TYPE_METHOD("pushfront", &deq_pushfront,
 	            "(ob)\n"
@@ -1405,15 +1405,15 @@ PRIVATE struct type_method tpconst deq_methods[] = {
 	            "Insert the given object @ob at the back of @this deque"),
 	TYPE_METHOD("popfront", &deq_popfront,
 	            "->\n"
-	            "@throw ValueError @this deque is empty\n"
+	            "#tValueError{@this deque is empty}"
 	            "Pop and return an item from the front of @this deque"),
 	TYPE_METHOD("popback", &deq_popback,
 	            "->\n"
-	            "@throw ValueError @this deque is empty\n"
+	            "#tValueError{@this deque is empty}"
 	            "Pop and return an item from the back of @this deque"),
 	TYPE_METHOD("llrot", &deq_llrot,
 	            "(num_items:?Dint)\n"
-	            "@throw IndexError @this deque contain less than @num_items items\n"
+	            "#tIndexError{@this deque contain less than @num_items items}"
 	            "Rotate the first @num_items items left by 1:\n"
 	            "${"
 	            /**/ "import deque from collections;\n"
@@ -1423,7 +1423,7 @@ PRIVATE struct type_method tpconst deq_methods[] = {
 	            "}"),
 	TYPE_METHOD("lrrot", &deq_lrrot,
 	            "(num_items:?Dint)\n"
-	            "@throw IndexError @this deque contain less than @num_items items\n"
+	            "#tIndexError{@this deque contain less than @num_items items}"
 	            "Rotate the first @num_items items right by 1:\n"
 	            "${"
 	            /**/ "import deque from collections;\n"
@@ -1433,7 +1433,7 @@ PRIVATE struct type_method tpconst deq_methods[] = {
 	            "}"),
 	TYPE_METHOD("rlrot", &deq_rlrot,
 	            "(num_items:?Dint)\n"
-	            "@throw IndexError @this deque contain less than @num_items items\n"
+	            "#tIndexError{@this deque contain less than @num_items items}"
 	            "Rotate the last @num_items items left by 1:\n"
 	            "${"
 	            /**/ "import deque from collections;\n"
@@ -1443,7 +1443,7 @@ PRIVATE struct type_method tpconst deq_methods[] = {
 	            "}"),
 	TYPE_METHOD("rrrot", &deq_rrrot,
 	            "(num_items:?Dint)\n"
-	            "@throw IndexError @this deque contain less than @num_items items\n"
+	            "#tIndexError{@this deque contain less than @num_items items}"
 	            "Rotate the last @num_items items right by 1:\n"
 	            "${"
 	            /**/ "import deque from collections;\n"
@@ -1519,20 +1519,20 @@ INTERN DeeTypeObject Deque_Type = {
 	                         "\n"
 
 	                         "[]->\n"
-	                         "@throw IndexError @index is greater that the length of @this Deque\n"
-	                         "@throw IntegerOverflow @index is negative or too large\n"
+	                         "#tIndexError{@index is greater that the length of @this Deque}"
+	                         "#tIntegerOverflow{@index is negative or too large}"
 	                         "Returns the @index'th item of @this Deque\n"
 	                         "\n"
 
 	                         "[]=->\n"
-	                         "@throw IndexError @index is greater that the length of @this Deque\n"
-	                         "@throw IntegerOverflow @index is negative or too large\n"
+	                         "#tIndexError{@index is greater that the length of @this Deque}"
+	                         "#tIntegerOverflow{@index is negative or too large}"
 	                         "Set the @index'th item of @this Deque to @item\n"
 	                         "\n"
 
 	                         "del[]->\n"
-	                         "@throw IndexError @index is greater that the length of @this Deque\n"
-	                         "@throw IntegerOverflow @index is negative or too large\n"
+	                         "#tIndexError{@index is greater that the length of @this Deque}"
+	                         "#tIntegerOverflow{@index is negative or too large}"
 	                         "Same as ${this.pop(index)} for positive values for @index\n"
 	                         "\n"
 

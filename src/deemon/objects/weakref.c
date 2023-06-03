@@ -335,7 +335,7 @@ PRIVATE struct type_method tpconst ob_weakref_methods[] = {
 	TYPE_METHOD("lock", &ob_weakref_lock,
 	            "->\n"
 	            "(def)->\n"
-	            "@throw ReferenceError The weak reference is no longer bound and no @def was given\n"
+	            "#tReferenceError{The weak reference is no longer bound and no @def was given}"
 	            "Lock the weak reference and return the pointed-to object"),
 #ifndef CONFIG_NO_DEEMON_100_COMPAT
 	TYPE_METHOD("try_lock", &ob_weakref_try_lock,
@@ -348,8 +348,8 @@ PRIVATE struct type_method tpconst ob_weakref_methods[] = {
 
 PRIVATE struct type_getset tpconst ob_weakref_getsets[] = {
 	TYPE_GETSET("value", &ob_weakref_get, &ob_weakref_del, &ob_weakref_set,
-	            "@throw ReferenceError Attempted to get the value after the reference has been unbound\n"
-	            "@throw ValueError Attempted to set an object that does not support weak referencing\n"
+	            "#tReferenceError{Attempted to get the value after the reference has been unbound}"
+	            "#tValueError{Attempted to set an object that does not support weak referencing}"
 	            "Access to the referenced object"),
 	TYPE_GETTER("alive", &ob_weakref_alive,
 	            "->?Dbool\n"
@@ -360,7 +360,7 @@ PRIVATE struct type_getset tpconst ob_weakref_getsets[] = {
 PRIVATE struct type_member tpconst ob_weakref_members[] = {
 	TYPE_MEMBER_FIELD_DOC("callback", STRUCT_OBJECT, offsetof(WeakRef, wr_del),
 	                      "->?DCallable\n"
-	                      "@throw UnboundAttribute No callback has been specified\n"
+	                      "#tUnboundAttribute{No callback has been specified}"
 	                      "The second argument passed to the constructor, specifying "
 	                      /**/ "an optional callback to-be executed when the bound "
 	                      /**/ "object dies on its own\n"
@@ -380,7 +380,7 @@ PUBLIC DeeTypeObject DeeWeakRef_Type = {
 	                         "\n"
 
 	                         "(obj,callback?:?DCallable)\n"
-	                         "@throw TypeError The given object @obj does not implement weak referencing support\n"
+	                         "#tTypeError{The given object @obj does not implement weak referencing support}"
 	                         "Construct a weak reference bound to @obj, that will be notified once said "
 	                         /**/ "object is supposed to be destroyed. With that in mind, weak references don't "
 	                         /**/ "actually hold references at all, but rather allow the user to test if an "
@@ -414,7 +414,7 @@ PUBLIC DeeTypeObject DeeWeakRef_Type = {
 	                         "\n"
 
 	                         ":=(other:?X2?.?O)->\n"
-	                         "@throw TypeError The given @other does not implement weak referencing support\n"
+	                         "#tTypeError{The given @other does not implement weak referencing support}"
 	                         "Assign the value of @other to @this WeakRef object\n"
 	                         "\n"
 

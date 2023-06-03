@@ -315,8 +315,8 @@ PRIVATE struct type_method tpconst stype_methods[] = {
 	TYPE_METHOD("func", &stype_func,
 	            "(types!:?DType)->?Gfunction_type\n"
 	            "(cc:?Dstring,types!:?DType)->?Gfunction_type\n"
-	            "@throw ValueError The given @cc is unknown, or not supported by the host\n"
-	            "@param cc The name of the calling convention\n"
+	            "#tValueError{The given @cc is unknown, or not supported by the host}"
+	            "#pcc{The name of the calling convention}"
 	            "Construct a new function prototype, using @types as argument, @this "
 	            /**/ "as return type, and @cc as calling convention\n"
 	            "Note that unlike ?#{op:call}, certain types from the ?Mdeemon core "
@@ -324,8 +324,8 @@ PRIVATE struct type_method tpconst stype_methods[] = {
 	TYPE_METHOD("vfunc", &stype_vfunc,
 	            "(types!:?DType)->function_type\n"
 	            "(cc:?Dstring,types!:?DType)->function_type\n"
-	            "@throw ValueError The given @cc is unknown, or not supported by the host\n"
-	            "@param cc The name of the calling convention\n"
+	            "#tValueError{The given @cc is unknown, or not supported by the host}"
+	            "#pcc{The name of the calling convention}"
 	            "Same as ?#func, but enable support for varargs"),
 	//TYPE_METHOD("is_pointer", &type_is_return_false, "->?Dbool\nDeprecated (always returns ?f)"),
 	//TYPE_METHOD("is_lvalue", &type_is_return_false, "->?Dbool\nDeprecated (always returns ?f)"),

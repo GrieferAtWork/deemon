@@ -1400,11 +1400,11 @@ PRIVATE struct type_getset tpconst module_getsets[] = {
 	            "can be accessed and modified"),
 	TYPE_GETTER("__code__", &module_get_code,
 	            "->?Ert:Code\n"
-	            "@throw ValueError The Module hasn't been fully loaded\n"
+	            "#tValueError{The Module hasn't been fully loaded}"
 	            "Returns the code object for the Module's root initializer"),
 	TYPE_GETTER("__path__", &module_get_path,
 	            "->?X2?Dstring?N\n"
-	            "@throw ValueError The Module hasn't been fully loaded\n"
+	            "#tValueError{The Module hasn't been fully loaded}"
 	            "Returns the absolute filesystem path of the Module's source file, or ?N "
 	            "if the Module wasn't created from a file accessible via the filesystem"),
 	TYPE_GETTER("__isglobal__", &module_get_isglobal,

@@ -4990,45 +4990,45 @@ process_set_stderr(Process *self, DeeObject *value) {
 PRIVATE struct type_method tpconst process_methods[] = {
 	TYPE_METHOD("start", &process_start,
 	            "->?Dbool\n"
-	            "@interrupt\n"
-	            "@throw FileNotFound The specified executable could not be found\n"
-	            "@throw FileAccessError The current user does not have permissions to access the "
-	            /*                  */ "executable, or the executable is lacking execute permissions\n"
-	            "@throw SystemError Failed to start the process for some reason\n"
+	            "#t{:Interrupt}"
+	            "#tFileNotFound{The specified executable could not be found}"
+	            "#tFileAccessError{The current user does not have permissions to access the "
+	            /*                  */ "executable, or the executable is lacking execute permissions}"
+	            "#tSystemError{Failed to start the process for some reason}"
 	            "Begin execution of the process"),
 	TYPE_METHOD("join", &process_join,
 	            "->?Dint\n"
-	            "@interrupt\n"
-	            "@throw ValueError @this process was never started\n"
-	            "@throw ValueError @this process as already detached or joined\n"
-	            "@throw SystemError Failed to join @this process for some reason\n"
-	            "@return The exit code of the process\n"
+	            "#t{:Interrupt}"
+	            "#tValueError{@this process was never started}"
+	            "#tValueError{@this process as already detached or joined}"
+	            "#tSystemError{Failed to join @this process for some reason}"
+	            "#r{The exit code of the process}"
 	            "Joins @this process and returns the return value of its main function"),
 	TYPE_METHOD("tryjoin", &process_tryjoin,
 	            "->?X2?Dint?N\n"
-	            "@throw ValueError @this process was never started\n"
-	            "@throw ValueError @this process as already detached or joined\n"
-	            "@throw SystemError Failed to join @this process for some reason\n"
+	            "#tValueError{@this process was never started}"
+	            "#tValueError{@this process as already detached or joined}"
+	            "#tSystemError{Failed to join @this process for some reason}"
 	            "Same as ?#join, but don't check for interrupts and fail immediately"),
 	TYPE_METHOD("timedjoin", &process_timedjoin,
 	            "(timeout_in_nanoseconds:?Dint)->?X2?Dint?N\n"
-	            "@throw ValueError @this process was never started\n"
-	            "@throw ValueError @this process as already detached or joined\n"
-	            "@throw SystemError Failed to join @this process for some reason\n"
+	            "#tValueError{@this process was never started}"
+	            "#tValueError{@this process as already detached or joined}"
+	            "#tSystemError{Failed to join @this process for some reason}"
 	            "Same as ?#join, but only attempt to join for a given @timeout_in_nanoseconds"),
 	TYPE_METHOD("detach", &process_detach,
 	            "->?Dbool\n"
-	            "@throw ValueError @this process was never started\n"
-	            "@throw SystemError Failed to detach @this process for some reason\n"
-	            "@return true The ?. has been detached\n"
-	            "@return false The ?. had already been detached or joined\n"
+	            "#tValueError{@this process was never started}"
+	            "#tSystemError{Failed to detach @this process for some reason}"
+	            "#r{true The ?. has been detached}"
+	            "#r{false The ?. had already been detached or joined}"
 	            "Detaches @this process"),
 	TYPE_KWMETHOD("kill", &process_kill,
 	              "(exitcode=!0,signal=!9)->?Dbool\n"
-	              "@throw ValueError @this process was never started\n"
-	              "@throw SystemError Failed to terminate @this process for some reason\n"
-	              "@return true The ?. has been terminated\n"
-	              "@return false The ?. was already terminated\n"
+	              "#tValueError{@this process was never started}"
+	              "#tSystemError{Failed to terminate @this process for some reason}"
+	              "#r{true The ?. has been terminated}"
+	              "#r{false The ?. was already terminated}"
 	              "Terminate @this process with the given @exitcode or @signal"),
 	TYPE_KWMETHOD("terminate", &process_kill,
 	              "(exitcode=!0,signal=!9)->?Dbool\n"
@@ -5070,7 +5070,7 @@ PRIVATE struct type_getset tpconst process_getsets[] = {
 	            "Returns ?t if @this ?. has terminated"),
 	TYPE_GETTER("id", &process_id,
 	            "->?Dint\n"
-	            "@throw ValueError The ?. hasn't been started yet\n"
+	            "#tValueError{The ?. hasn't been started yet}"
 	            "Returns an operating-system specific id of @this ?."),
 
 #ifdef ipc_Process_USE_cmdline

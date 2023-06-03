@@ -1896,7 +1896,7 @@ PRIVATE struct dex_symbol symbols[] = {
 	      "The default stack limit is $" PP_STR(DEE_CONFIG_DEFAULT_STACK_LIMIT)) },
 	{ "setstacklimit", (DeeObject *)&librt_setstacklimit, MODSYM_FNORMAL,
 	  DOC("(new_limit=!" PP_STR(DEE_CONFIG_DEFAULT_STACK_LIMIT) ")->?Dint\n"
-	      "@throw IntegerOverflow @new_limit is negative, or greater than $0xffff\n"
+	      "#tIntegerOverflow{@new_limit is negative, or greater than $0xffff}"
 	      "Set the new stack limit to @new_limit and return the old limit\n"
 	      "The stack limit is checked every time a user-code function is "
 	      /**/ "entered, at which point a :StackOverflow error is thrown if "
@@ -1924,8 +1924,8 @@ PRIVATE struct dex_symbol symbols[] = {
 	{ "SlabStat", (DeeObject *)&SlabStat_Type, MODSYM_FREADONLY }, /* Access to slab allocator statistics. */
 	{ "makeclass", (DeeObject *)&librt_makeclass, MODSYM_FREADONLY,
 	  DOC("(base:?X2?DType?N,descriptor:?GClassDescriptor,module:?X2?DModule?N=!N)->?DType\n"
-	      "@param module The module that is declaring the class (and returned by ${return.__module__}). "
-	      /*         */ "When not given (or given as ?N), the type is not linked to a module.\n"
+	      "#pmodule{The module that is declaring the class (and returned by ${return.__module__}). "
+	      /*         */ "When not given (or given as ?N), the type is not linked to a module.}"
 	      "Construct a new class from a given @base type, as well as class @descriptor") },
 
 	/* Access of the arguments passed to the __MAIN__ module. */

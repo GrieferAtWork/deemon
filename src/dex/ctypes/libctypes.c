@@ -786,7 +786,7 @@ PRIVATE struct dex_symbol symbols[] = {
 	{ "sizeof", (DeeObject *)&ctypes_sizeof, MODSYM_FNORMAL,
 	  DOC("(ob:?GStructuredType)->?Dint\n"
 	      "(ob:?GStructured)->?Dint\n"
-	      "@throw TypeError The given @tp or @ob are not recognized c-types, nor aliases\n"
+	      "#tTypeError{The given @tp or @ob are not recognized c-types, nor aliases}"
 	      "Returns the size of a given structured type or object in bytes\n"
 
 	      "\n"
@@ -795,11 +795,11 @@ PRIVATE struct dex_symbol symbols[] = {
 	{ "alignof", (DeeObject *)&ctypes_alignof, MODSYM_FNORMAL,
 	  DOC("(ob:?GStructuredType)->?Dint\n"
 	      "(ob:?GStructured)->?Dint\n"
-	      "@throw TypeError The given @tp or @ob are not recognized c-types, nor aliases\n"
+	      "#tTypeError{The given @tp or @ob are not recognized c-types, nor aliases}"
 	      "Returns the alignment of a given structured type or object in bytes") },
 	{ "intfor", (DeeObject *)&ctypes_intfor, MODSYM_FNORMAL,
 	  DOC("(size:?Dint,signed=!t)->?GStructuredType\n"
-	      "@throw ValueError No integer matching the requirements of @size is supported") },
+	      "#tValueError{No integer matching the requirements of @size is supported}") },
 
 	{ "bswap16", (DeeObject *)&ctypes_bswap16, MODSYM_FNORMAL,
 	  DOC("(x:?Guint16_t)->?Guint16_t\n"
@@ -864,15 +864,15 @@ PRIVATE struct dex_symbol symbols[] = {
 	/* <string.h> & <stdlib.h> - style ctypes functions */
 	{ "malloc", (DeeObject *)&ctypes_malloc, MODSYM_FNORMAL,
 	  DOC("(size:?Dint)->?Aptr?Gvoid\n"
-	      "@throw NoMemory Insufficient memory to allocate @size bytes\n"
+	      "#tNoMemory{Insufficient memory to allocate @size bytes}"
 	      "Allocate a raw buffer of @size bytes from a heap and return a "
 	      /**/ "pointer to its base\n"
 	      "Passing a value of $0 for @size will allocate a minimal-sized heap-block") },
 	{ "calloc", (DeeObject *)&ctypes_calloc, MODSYM_FNORMAL,
 	  DOC("(size:?Dint)->?Aptr?Gvoid\n"
 	      "(count:?Dint,size:?Dint)->?Aptr?Gvoid\n"
-	      "@throw NoMemory Insufficient memory to allocate ${count * size} bytes\n"
-	      "@throw IntegerOverflow The given @count and @size overflow ?Gsize_t when multiplied\n"
+	      "#tNoMemory{Insufficient memory to allocate ${count * size} bytes}"
+	      "#tIntegerOverflow{The given @count and @size overflow ?Gsize_t when multiplied}"
 	      "Same as ?Gmalloc, but rather than leaving the newly allocated memory uninitialized, "
 	      /**/ "fill it with all zeroes, the same way ${memset(malloc(size), 0, size)} would\n"
 	      /**/ "If the product of @count and @size equals ${0}, a minimal-sized heap-block is allocated, "
@@ -880,7 +880,7 @@ PRIVATE struct dex_symbol symbols[] = {
 	      /**/ "is non-existent") },
 	{ "realloc", (DeeObject *)&ctypes_realloc, MODSYM_FNORMAL,
 	  DOC("(ptr:?Aptr?Gvoid,size:?Dint)->?Aptr?Gvoid\n"
-	      "@throw NoMemory Insufficient memory to allocate @size bytes\n"
+	      "#tNoMemory{Insufficient memory to allocate @size bytes}"
 	      "Given a heap-pointer previously allocated using either ?Gmalloc, ?Gcalloc or "
 	      /**/ "a prior call to ?Grealloc, change its size to @size, either releasing then "
 	      /**/ "unused trailing memory resulting from the difference between its old size "
@@ -916,7 +916,7 @@ PRIVATE struct dex_symbol symbols[] = {
 	      "In this event, the pre-existing heap-block passed for @ptr is not freed") },
 	{ "strdup", (DeeObject *)&ctypes_strdup, MODSYM_FNORMAL,
 	  DOC("(str:?Aptr?Gchar,maxlen:?Dint=!A!Pmax!Gsize_t)->?Aptr?Gchar\n"
-	      "@throw NoMemory Insufficient memory\n"
+	      "#tNoMemory{Insufficient memory}"
 	      "Duplicate the given @str into a heap-allocated memory block\n"
 	      "${"
 	      /**/ "function strndup(str: char.ptr, maxlen?: int): char.ptr {\n"
@@ -947,35 +947,35 @@ PRIVATE struct dex_symbol symbols[] = {
 
 	{ "memcpy", (DeeObject *)&ctypes_memcpy, MODSYM_FNORMAL,
 	  DOC("(dst:?Aptr?Gvoid,src:?Aptr?Gvoid,size:?Dint,count=!1)->?Aptr?Gvoid\n"
-	      "@return Always re-returns @dst as a ?Aptr?Gvoid\n"
+	      "#r{Always re-returns @dst as a ?Aptr?Gvoid}"
 	      "Copies @size * @count bytes of memory from @src to @dst\n"
 	      "Note that the source and destination ranges may not overlap") },
 	{ "mempcpy", (DeeObject *)&ctypes_mempcpy, MODSYM_FNORMAL,
 	  DOC("(dst:?Aptr?Gvoid,src:?Aptr?Gvoid,size:?Dint,count=!1)->?Aptr?Gvoid\n"
-	      "@return Always re-returns ${dst + size * count} as a ?Aptr?Gvoid\n"
+	      "#r{Always re-returns ${dst + size * count} as a ?Aptr?Gvoid}"
 	      "Same as ?Gmemcpy, but returns ${dst + size * count}") },
 	{ "memccpy", (DeeObject *)&ctypes_memccpy, MODSYM_FNORMAL,
 	  DOC("(dst:?Aptr?Gvoid,src:?Aptr?Gvoid,needle:?Dint,size:?Dint)->?Aptr?Gvoid\n"
-	      "@return The last modified by in @dst\n"
+	      "#r{The last modified by in @dst}"
 	      "Same as ?Gmemcpy, but stop after a byte equal to @needle is encountered in @src") },
 	{ "memset", (DeeObject *)&ctypes_memset, MODSYM_FNORMAL,
 	  DOC("(dst:?Aptr?Gvoid,byte:?Dint,size:?Dint)->?Aptr?Gvoid\n"
-	      "@return Always re-returns @dst as a ?Aptr?Gvoid\n"
+	      "#r{Always re-returns @dst as a ?Aptr?Gvoid}"
 	      "Set every byte in the range @dst+@size to equal @byte") },
 	{ "mempset", (DeeObject *)&ctypes_mempset, MODSYM_FNORMAL,
 	  DOC("(dst:?Aptr?Gvoid,byte:?Dint,size:?Dint)->?Aptr?Gvoid\n"
-	      "@return Always re-returns ${dst + size} as a ?Aptr?Gvoid\n"
+	      "#r{Always re-returns ${dst + size} as a ?Aptr?Gvoid}"
 	      "Same as ?Gmemset, but returns ${dst + size}") },
 	{ "bzero", (DeeObject *)&ctypes_bzero, MODSYM_FNORMAL,
 	  DOC("(dst:?Aptr?Gvoid,size:?Dint,count=!1)\n"
 	      "Same as ?Gmemset, but always fills memory with ${0}s") },
 	{ "memmove", (DeeObject *)&ctypes_memmove, MODSYM_FNORMAL,
 	  DOC("(dst:?Aptr?Gvoid,src:?Aptr?Gvoid,size:?Dint)->?Aptr?Gvoid\n"
-	      "@return Always re-returns @dst as a ?Aptr?Gvoid\n"
+	      "#r{Always re-returns @dst as a ?Aptr?Gvoid}"
 	      "Same as ?Gmemcpy, but the source and destination ranges are allowed to overlap") },
 	{ "mempmove", (DeeObject *)&ctypes_mempmove, MODSYM_FNORMAL,
 	  DOC("(dst:?Aptr?Gvoid,src:?Aptr?Gvoid,size:?Dint)->?Aptr?Gvoid\n"
-	      "@return Always re-returns ${dst + size} as a ?Aptr?Gvoid\n"
+	      "#r{Always re-returns ${dst + size} as a ?Aptr?Gvoid}"
 	      "Same as ?Gmemcpy, but returns ${dst + size}") },
 	{ "memchr", (DeeObject *)&ctypes_memchr, MODSYM_FNORMAL,
 	  DOC("(haystack:?Aptr?Gvoid,needle:?Dint,haystack_size:?Dint)->?Aptr?Gvoid\n"
@@ -1374,9 +1374,9 @@ PRIVATE struct dex_symbol symbols[] = {
 	      /**/ "primitive (mutex, semaphore, condition-variable, events, #Ianything)") },
 	{ "futex_timedwait", (DeeObject *)&ctypes_futex_timedwait, MODSYM_FNORMAL,
 	  DOC("(ptr:?Aptr?GStructured,expected:?Q!A!Aptr!Pind],timeout_nanoseconds:?Dint)->?Dbool\n"
-	      "@return true You were woken up, either sporadically, because the value of ${ptr.ind} differs "
-	      /*        */ "from @expected, or because another thread called ?Gfutex_wakeone or ?Gfutex_wakeall\n"
-	      "@return false The given @timeout_nanoseconds has expired\n"
+	      "#r{true You were woken up, either sporadically, because the value of ${ptr.ind} differs "
+	      /*        */ "from @expected, or because another thread called ?Gfutex_wakeone or ?Gfutex_wakeall}"
+	      "#r{false The given @timeout_nanoseconds has expired}"
 	      "Atomically check if ${ptr.ind == expected}. If this is isn't the case, immediately return ?t. "
 	      /**/ "Otherwise, wait until either @timeout_nanoseconds have elapsed, or another thread "
 	      /**/ "makes a call to ?Gfutex_wakeone or ?Gfutex_wakeall, or until the #I{stars align} "

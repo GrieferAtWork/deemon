@@ -3083,7 +3083,7 @@ err:
 PRIVATE struct type_getset tpconst list_getsets[] = {
 	TYPE_GETSET("allocated", &list_getallocated, &list_delallocated, &list_setallocated,
 	            "->?Dint\n"
-	            "@throw ValueError Attmpted to set the List preallocation size to a value lower than ${##this}\n"
+	            "#tValueError{Attmpted to set the List preallocation size to a value lower than ${##this}}"
 	            "The number of allocated items\n"
 	            "When using performing a del-operation on this property, the allocation will "
 	            /**/ "be set to use the least amount of memory, which is achived by setting it to ${##this}.\n"
@@ -3101,10 +3101,10 @@ PRIVATE struct type_getset tpconst list_getsets[] = {
 	            "}"),
 	TYPE_GETSET(STR_first, &list_get_first, &list_del_first, &list_set_first,
 	            "->\n"
-	            "@return The first item from @this List"),
+	            "#r{The first item from @this List}"),
 	TYPE_GETSET(STR_last, &list_get_last, &list_del_last, &list_set_last,
 	            "->\n"
-	            "@return The last item from @this List"),
+	            "#r{The last item from @this List}"),
 	TYPE_GETTER(STR_frozen, &list_get_frozen,
 	            "->?DTuple\n"
 	            "Return a copy of the contents of @this List as an immutable sequence"),
@@ -3121,40 +3121,40 @@ PRIVATE struct type_method tpconst list_methods[] = {
 	            "Append all elements from @items to the end of @this List"),
 	TYPE_KWMETHOD(STR_resize, &list_resize,
 	              "(newsize:?Dint,filler=!N)\n"
-	              "@throw IntegerOverflow The given @newsize is lower than $0\n"
+	              "#tIntegerOverflow{The given @newsize is lower than $0}"
 	              "Resize the size of @this List to match @newsize, using @filler to initialize new items"),
 	TYPE_KWMETHOD(STR_insert, &list_insert,
 	              "(index:?Dint,item)\n"
-	              "@throw IntegerOverflow The given @index is too large\n"
+	              "#tIntegerOverflow{The given @index is too large}"
 	              "Insert the given @item at the specified @index\n"
 	              "When @index is lower than $0, or greater thatn ${##this}, append items at the end"),
 	TYPE_KWMETHOD(STR_insertall, &list_insertall,
 	              "(index:?Dint,seq:?S?O)\n"
-	              "@throw IntegerOverflow The given @index is too large\n"
+	              "#tIntegerOverflow{The given @index is too large}"
 	              "Insert all items from a sequence @seq at the specified @index\n"
 	              "When @index is lower than $0, or greater thatn ${##this}, append items at the end"),
 	TYPE_KWMETHOD(STR_erase, &list_erase,
 	              "(index:?Dint,count=!1)->?Dint\n"
-	              "@throw IntegerOverflow The given @index or @count are lower than $0, or too large\n"
-	              "@return The number of erased items (Zero when @index is out of bounds)\n"
+	              "#tIntegerOverflow{The given @index or @count are lower than $0, or too large}"
+	              "#r{The number of erased items (Zero when @index is out of bounds)}"
 	              "Erase up to @count items starting at the given @index"),
 	TYPE_KWMETHOD(STR_pop, &list_pop,
 	              "(index=!-1)->\n"
-	              "@throw IndexError The given @index is out of bounds\n"
-	              "@return Items that was removed\n"
+	              "#tIndexError{The given @index is out of bounds}"
+	              "#r{Items that was removed}"
 	              "Pops an item at the given @{index}. When @index is lower "
 	              "than $0, add ${##this} prior to evaluation, meaning that "
 	              "negative numbers pop items relative to the end of the List"),
 	TYPE_KWMETHOD(STR_xch, &list_xch,
 	              "(index:?Dint,value)->\n"
-	              "@throw IndexError The given @index is out of bounds\n"
+	              "#tIndexError{The given @index is out of bounds}"
 	              "Exchange the @index'th item of @this List with @value, returning the item's old value"),
 	TYPE_METHOD(STR_clear, &list_clear,
 	            "()\n"
 	            "Clear all items from @this List"),
 	TYPE_KWMETHOD(STR_removeif, &list_removeif,
 	              "(should:?DCallable,start=!0,end=!-1)->?Dint\n"
-	              "@return The number of removed items\n"
+	              "#r{The number of removed items}"
 	              "Remove all elements within the given sub-range for which ${!!should(elem)} is true"),
 	TYPE_METHOD(STR_pushfront, &list_pushfront,
 	            "(item)\n"
@@ -3793,13 +3793,13 @@ PUBLIC DeeTypeObject DeeList_Type = {
 	                         "\n"
 
 	                         "*(count:?Dint)->\n"
-	                         "@throw IntegerOverflow @count is negative\n"
+	                         "#tIntegerOverflow{@count is negative}"
 	                         "Return a new List containing all the elements of @this one, repeated @count times\n"
 	                         "When @count is equal to $0, an empty List is returned\n"
 	                         "\n"
 
 	                         "*=(count:?Dint)->\n"
-	                         "@throw IntegerOverflow @count is negative\n"
+	                         "#tIntegerOverflow{@count is negative}"
 	                         "Extend @this List to contain @count as many items, filling the new slots with repetitions of all pre-existing items\n"
 	                         "When @count is equal to $0, the operator behaves the same as ?#clear\n"
 	                         "\n"
@@ -3809,38 +3809,38 @@ PUBLIC DeeTypeObject DeeList_Type = {
 	                         "\n"
 
 	                         "[](index:?Dint)->\n"
-	                         "@throw IndexError @index is out of bounds\n"
-	                         "@throw IntegerOverflow @index is negative or too large\n"
+	                         "#tIndexError{@index is out of bounds}"
+	                         "#tIntegerOverflow{@index is negative or too large}"
 	                         "Return the @index'th item of @this List\n"
 	                         "\n"
 
 	                         "del[](index:?Dint)->\n"
-	                         "@throw IndexError @index is out of bounds\n"
-	                         "@throw IntegerOverflow @index is negative or too large\n"
+	                         "#tIndexError{@index is out of bounds}"
+	                         "#tIntegerOverflow{@index is negative or too large}"
 	                         "Delete the @index'th item from @this List. (same as ${this.erase(index, 1)})\n"
 	                         "\n"
 
 	                         "[]=(index:?Dint,ob)->\n"
-	                         "@throw IndexError @index is out of bounds\n"
-	                         "@throw IntegerOverflow @index is negative or too large\n"
+	                         "#tIndexError{@index is out of bounds}"
+	                         "#tIntegerOverflow{@index is negative or too large}"
 	                         "Replace the @index'th item of @this List with @ob\n"
 	                         "\n"
 
 	                         "[:](start:?Dint,end:?Dint)->\n"
-	                         "@throw IntegerOverflow @start or @end are too large\n"
+	                         "#tIntegerOverflow{@start or @end are too large}"
 	                         "Return a new List containing the elements within the range @{start}...@end\n"
 	                         "If either @start or @end are negative, ${##this} is added first.\n"
 	                         "If following this, either is greater than ${##this}, it is clampled to that value\n"
 	                         "\n"
 
 	                         "del[:](start:?Dint,end:?Dint)->\n"
-	                         "@throw IntegerOverflow @start or @end are too large\n"
+	                         "#tIntegerOverflow{@start or @end are too large}"
 	                         "Using the same index-rules as for ?#{op:getrange}, delete all items from that range\n"
 	                         "\n"
 
 	                         "[:]=(start:?Dint,end:?Dint,items:?S?O)->\n"
-	                         "@throw NotImplemented The given @items cannot be iterated\n"
-	                         "@throw IntegerOverflow @start or @end are too large\n"
+	                         "#tNotImplemented{The given @items cannot be iterated}"
+	                         "#tIntegerOverflow{@start or @end are too large}"
 	                         "Using the same index-rules as for ?#{op:getrange}, delete all items from that range "
 	                         /**/ "before inserting all elements from @items at the range's start. - This operation "
 	                         /**/ "is performed atomically, and @this List is not modified if @items cannot be iterated\n"
@@ -3860,7 +3860,7 @@ PUBLIC DeeTypeObject DeeList_Type = {
 	                         "!=(other:?X2?.?S?O)->\n"
 	                         ">(other:?X2?.?S?O)->\n"
 	                         ">=(other:?X2?.?S?O)->\n"
-	                         "@throw NotImplemented The given @other cannot be iterated\n"
+	                         "#tNotImplemented{The given @other cannot be iterated}"
 	                         "Perform a lexicographical comparison between @this List and the given @other sequence"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FGC | TP_FNAMEOBJECT,
 	/* .tp_weakrefs = */ WEAKREF_SUPPORT_ADDR(List),

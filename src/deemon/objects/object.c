@@ -3745,10 +3745,10 @@ PRIVATE struct type_method tpconst type_methods[] = {
 	              "(initializer:?S?T2?.?T2?N?DTuple=!N)->\n"                       /* {(Type, (none, Tuple)...} */
 	              "(initializer:?S?T2?.?T3?N?DTuple?N=!N)->\n"                     /* {(Type, (none, Tuple, none)...} */
 	              "(initializer:?S?T2?.?T3?N?DTuple?DMapping=!N)->\n"              /* {(Type, (none, Tuple, Mapping)...} */
-	              "@throw TypeError No superargs tuple was provided for one of the type's bases, when that base "
+	              "#tTypeError{No superargs tuple was provided for one of the type's bases, when that base "
 	              /*            */ "has a mandatory constructor that can't be invoked without any arguments. "
 	              /*            */ "Note that a user-defined class never has a mandatory constructor, with this "
-	              /*            */ "only affecting builtin types such as ?DInstanceMethod or ?DProperty\n"
+	              /*            */ "only affecting builtin types such as ?DInstanceMethod or ?DProperty}"
 	              "A extended way of constructing and initializing a ?., that involves providing explicit "
 	              /**/ "member initializers on a per-Type bases, as well as argument tuples and optional keyword "
 	              /**/ "mappings to-be used for construction of one of the type's sub-classes (allowing to provide "
@@ -4204,7 +4204,7 @@ PRIVATE struct type_getset tpconst type_getsets[] = {
 	 *                            Type\n${{ this, __bases__... }}  */
 	TYPE_GETTER("__class__", &type_get_classdesc,
 	            "->?Ert:ClassDescriptor\n"
-	            "@throw AttributeError @this typeType is a user-defined class (s.a. ?#__isclass__)\n"
+	            "#tAttributeError{@this typeType is a user-defined class (s.a. ?#__isclass__)}"
 	            "Returns the internal class-descriptor descriptor for a user-defined class"),
 	TYPE_GETTER("__issingleton__", &type_issingleton,
 	            "->?Dbool\n"

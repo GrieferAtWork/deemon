@@ -1647,7 +1647,7 @@ done:
 PRIVATE struct type_method tpconst tuple_class_methods[] = {
 	TYPE_METHOD("unpack", &tuple_unpack,
 	            "(num:?Dint,seq:?S?O)->?.\n"
-	            "@throw UnpackError The given @seq doesn't contain exactly @num elements\n"
+	            "#tUnpackError{The given @seq doesn't contain exactly @num elements}"
 	            "Unpack the given sequence @seq into a Tuple consisting of @num elements"),
 	TYPE_METHOD_END
 };
@@ -2110,13 +2110,13 @@ PUBLIC DeeTypeObject DeeTuple_Type = {
 
 	                         "+->\n"
 	                         "+(other:?S?O)->\n"
-	                         "@throw NotImplemented The given @other isn't iterable\n"
+	                         "#tNotImplemented{The given @other isn't iterable}"
 	                         "Returns a new ?. consisting of the elements from @this, followed by "
 	                         /**/ "those from @other, which may be another ?., or a generic sequence\n"
 	                         "\n"
 
 	                         "*(count:?Dint)->\n"
-	                         "@throw IntegerOverflow The given @count is negative, or too large\n"
+	                         "#tIntegerOverflow{The given @count is negative, or too large}"
 	                         "Return a new ?. consisting of the elements from @this, repeated @count times\n"
 	                         "When @count is $0, an empty ?. is returned. When @count is $1, @this ?. is re-returned\n"
 	                         "\n"
@@ -2144,8 +2144,8 @@ PUBLIC DeeTypeObject DeeTuple_Type = {
 	                         "\n"
 
 	                         "[]->\n"
-	                         "@throw IntegerOverflow The given @index is negative, or too large\n"
-	                         "@throw IndexError The given @index is out of bounds\n"
+	                         "#tIntegerOverflow{The given @index is negative, or too large}"
+	                         "#tIndexError{The given @index is out of bounds}"
 	                         "Returns the @index'th item of @this ?.\n"
 	                         "\n"
 

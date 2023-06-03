@@ -164,20 +164,20 @@ DECL_END
  * >> hasattr(ob: Object, attr: string): bool; */
 BUILTIN_DOC(hasattr, &builtin_hasattr, MODSYM_FREADONLY | MODSYM_FCONSTEXPR,
             "(ob,attr:?Dstring)->?Dbool\n"
-            "@return Indicative of @ob containing an attribute @attr")
+            "#r{Indicative of @ob containing an attribute @attr}")
 
 /* Check if an object has a given item */
 BUILTIN_DOC(hasitem, &builtin_hasitem, MODSYM_FREADONLY | MODSYM_FCONSTEXPR,
             "(ob,key:?O)->?Dbool\n"
             "(ob,index:?Dint)->?Dbool\n"
-            "@return Indicative of @ob containing an item @key or @index")
+            "#r{Indicative of @ob containing an item @key or @index}")
 
 /* Check if a given object attribute is bound.
  * >> boundattr(ob: Object, attr: string, allow_missing: bool = true): bool; */
 BUILTIN_DOC(boundattr, &builtin_boundattr, MODSYM_FREADONLY | MODSYM_FCONSTEXPR,
             "(ob,attr:?Dstring,allow_missing=!t)->?Dbool\n"
-            "@throw AttributeError The attribute doesn't exist, and @allow_missing is ?f\n"
-            "@return Indicative of attribute @attr of @ob currently being bound\n"
+            "#tAttributeError{The attribute doesn't exist, and @allow_missing is ?f}"
+            "#r{Indicative of attribute @attr of @ob currently being bound}"
             "If the attribute doesn't exist, return ?f, or throw an :AttributeError, "
             /**/ "depending on the given @allow_missing\n"
             "${"
@@ -191,9 +191,9 @@ BUILTIN_DOC(boundattr, &builtin_boundattr, MODSYM_FREADONLY | MODSYM_FCONSTEXPR,
 BUILTIN_DOC(bounditem, &builtin_bounditem, MODSYM_FREADONLY | MODSYM_FCONSTEXPR,
             "(ob,index:?Dint,allow_missing=!t)->?Dbool\n"
             "(ob,key:?O,allow_missing=!t)->?Dbool\n"
-            "@throw IndexError The given @index doesn't exist, and @allow_missing is ?f\n"
-            "@throw KeyError The given @key doesn't exist, and @allow_missing is ?f\n"
-            "@return Indicative of item @index or @key of @ob currently being bound\n"
+            "#tIndexError{The given @index doesn't exist, and @allow_missing is ?f}"
+            "#tKeyError{The given @key doesn't exist, and @allow_missing is ?f}"
+            "#r{Indicative of item @index or @key of @ob currently being bound}"
             "If the item doesn't exist, return ?f, or throw an :IndexError or :KeyError, "
             /**/ "depending on the given @allow_missing\n"
             "${"
@@ -206,10 +206,10 @@ BUILTIN_DOC(bounditem, &builtin_bounditem, MODSYM_FREADONLY | MODSYM_FCONSTEXPR,
  * >> compare(lhs: Object, rhs: Object): int; */
 BUILTIN_DOC(compare, &builtin_compare, MODSYM_FREADONLY | MODSYM_FCONSTEXPR,
             "(lhs,rhs)->?Dint\n"
-            "@throw NotImplemented The type of @lhs does not implement comparison\n"
-            "@throw TypeError The types of @lhs and @rhs cannot be compared\n"
-            "@throw ValueError The instances @lhs and @rhs cannot be compared\n"
-            "@return One of ${-1}, $0, or $1, indicative of the relation between @lhs and @rhs\n"
+            "#tNotImplemented{The type of @lhs does not implement comparison}"
+            "#tTypeError{The types of @lhs and @rhs cannot be compared}"
+            "#tValueError{The instances @lhs and @rhs cannot be compared}"
+            "#r{One of ${-1}, $0, or $1, indicative of the relation between @lhs and @rhs}"
             "${"
             /**/ "import compare from deemon;\n"
             /**/ "print compare(\"foo\", \"bar\"); /* 1 */"
@@ -221,9 +221,9 @@ BUILTIN_DOC(compare, &builtin_compare, MODSYM_FREADONLY | MODSYM_FCONSTEXPR,
  *       as a stand-alone within an expression. */
 BUILTIN_DOC(import, &builtin_import, MODSYM_FNORMAL,
             "(module_name:?Dstring,base?:?DModule)->?DModule\n"
-            "@throw ValueError The given @module_name is invalid\n"
-            "@throw FileNotFound The named @module_name could not be found\n"
-            "@return The ?DModule associated with the given @module_name")
+            "#tValueError{The given @module_name is invalid}"
+            "#tFileNotFound{The named @module_name could not be found}"
+            "#r{The ?DModule associated with the given @module_name}")
 
 
 /* Load a module, given its name.

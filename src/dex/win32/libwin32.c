@@ -6135,7 +6135,7 @@ PRIVATE struct dex_symbol symbols[] = {
 	/* TODO: Wrapper types for `WIN32_FIND_DATA' */
 
 	/* Deemon-specific helpers */
-	LIBWIN32_FIXUNCPATH_DEF_DOC("@interrupt\n"
+	LIBWIN32_FIXUNCPATH_DEF_DOC("#t{:Interrupt}"
 	                            "Used ot fix a given path to become a valid UNC long-path.\n"
 	                            "The main purpose of doing this is to break the 260-character "
 	                            /**/ "limit of regular paths under windows and extend it to a "

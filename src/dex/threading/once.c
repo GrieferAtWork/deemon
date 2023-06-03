@@ -438,7 +438,7 @@ err_already_finished:
 PRIVATE struct type_method once_methods[] = {
 	TYPE_KWMETHOD("finish", &once_finish,
 	              "(result,override=!f)\n"
-	              "@throw ValueError @this ?GOnce-object has already finished, and @override is false\n"
+	              "#tValueError{@this ?GOnce-object has already finished, and @override is false}"
 	              "By-pass any stored callback and force @this ?GOnce-object to finish with "
 	              /**/ "the given @result. When @override is true, override a stored ?#result "
 	              /**/ "with the given @result in case the ?GOnce-object has already completed."),
@@ -612,16 +612,16 @@ once_printrepr(DeeOnceObject *__restrict self, dformatprinter printer, void *arg
 PRIVATE struct type_getset once_getsets[] = {
 	TYPE_GETSET("callback", &once_callback_get, &once_callback_del, &once_callback_set,
 	            "->?DCallable\n"
-	            "@throw UnboundAttribute No callback has been assigned\n"
-	            "@throw ValueError The ?GOnce-object has already been invoked (or is being "
+	            "#tUnboundAttribute{No callback has been assigned}"
+	            "#tValueError{The ?GOnce-object has already been invoked (or is being "
 	            /*             */ "invoked right now), and the callback can no longer be "
-	            /*             */ "accessed or modified.\n"
+	            /*             */ "accessed or modified.}"
 	            "Get/set the callback invoked by this ?GOnce-object"),
 	TYPE_GETSET("result", &once_result_get, &once_result_del, &once_result_set,
 	            "->\n"
-	            "@throw UnboundAttribute No result has been assigned\n"
-	            "@throw ValueError The ?GOnce-object has not yet been invoked, "
-	            /*             */ "so the result cannot be accessed (yet).\n"
+	            "#tUnboundAttribute{No result has been assigned}"
+	            "#tValueError{The ?GOnce-object has not yet been invoked, "
+	            /*             */ "so the result cannot be accessed (yet).}"
 	            "Get/set the result of this ?GOnce-object"),
 	TYPE_GETTER("hasrun", &once_hasrun_get,
 	            "->?Dbool\n"
@@ -673,7 +673,7 @@ INTERN DeeTypeObject DeeOnce_Type = {
 	                         "\n"
 
 	                         "call(args!,kwds!!)->\n"
-	                         "@throw UnboundAttribute @this ?GOnce-object's has finished, but then its ?#result was unbound\n"
+	                         "#tUnboundAttribute{@this ?GOnce-object's has finished, but then its ?#result was unbound}"
 	                         "Invoke the callback given to ?#{op:constructor} with @args and @kwds "
 	                         /**/ "and return its result. The callback is only invoked the first time, "
 	                         /**/ "and any subsequence call only ever returns the return value of "
@@ -684,7 +684,7 @@ INTERN DeeTypeObject DeeOnce_Type = {
 	                         "\n"
 
 	                         "call(callback:?DCallable,args:?DTuple=!T0,kwds?:?M?Dstring?O)->\n"
-	                         "@throw UnboundAttribute @this ?GOnce-object's has finished, but then its ?#result was unbound\n"
+	                         "#tUnboundAttribute{@this ?GOnce-object's has finished, but then its ?#result was unbound}"
 	                         "Invoke @callback with @args and @kwds if @this ?GOnce-object hasn't been executed already.\n"
 	                         "The return value of this call is what gets returned by @callback, or what was "
 	                         /**/ "returned the first time @this ?GOnce-object was invoked."

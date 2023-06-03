@@ -2299,7 +2299,7 @@ err:
 
 DOC_DEF(seq_byhash_doc,
         "(template:?O)->?DSequence\n"
-        "@param template The object who's hash should be used to search for collisions\n"
+        "#ptemplate{The object who's hash should be used to search for collisions}"
         "Find all objects apart of @this sequence who's hash matches that of @template\n"
         "Note that when hashing ?Dint objects, integers who's value lies within the range "
         /**/ "of valid hash values get hashed to their original value, meaning that the following "
@@ -2555,8 +2555,8 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 	            "}"),
 	TYPE_METHOD("filter", &seq_filter,
 	            "(keep:?DCallable)->?DSequence\n"
-	            "@param keep A key function which is called for each element of @this Sequence"
-	            /**/ "Returns a sub-Sequence of all elements for which ${keep(elem)} evaluates to ?t\n"
+	            "#pkeep{A key function which is called for each element of @this Sequence"
+	            /**/ "Returns a sub-Sequence of all elements for which ${keep(elem)} evaluates to ?t}"
 	            "Semantically, this is identical to ${(for (local x: this) if (keep(x)) x)}\n"
 	            "${"
 	            /**/ "function filter(keep): Sequence {\n"
@@ -2624,7 +2624,7 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 	            "}"),
 	TYPE_KWMETHOD("min", &seq_min,
 	              "(key:?DCallable=!N)->\n"
-	              "@param key A key function for transforming Sequence elements\n"
+	              "#pkey{A key function for transforming Sequence elements}"
 	              "Returns the smallest element of @this Sequence\n"
 	              "If @this Sequence is empty, ?N is returned\n"
 	              "When no @key is given, this function has the same effect as ${this < ...}\n"
@@ -2654,7 +2654,7 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 	              "}"),
 	TYPE_KWMETHOD("max", &seq_max,
 	              "(key:?DCallable=!N)->\n"
-	              "@param key A key function for transforming Sequence elements\n"
+	              "#pkey{A key function for transforming Sequence elements}"
 	              "Returns the greatest element of @this Sequence\n"
 	              "If @this Sequence is empty, ?N is returned\n"
 	              "This function has the same effect as ${this > ...}\n"
@@ -2683,8 +2683,8 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 	              "}"),
 	TYPE_METHOD("count", &seq_count,
 	            "(elem,key:?DCallable=!N)->?Dint\n"
-	            "@param elem The element to search for\n"
-	            "@param key A key function for transforming Sequence elements\n"
+	            "#pelem{The element to search for}"
+	            "#pkey{A key function for transforming Sequence elements}"
 	            "Returns the number of instances of a given object @elem in @this Sequence\n"
 	            "${"
 	            /**/ "function count(elem: Object, key: Callable = none): int {\n"
@@ -2709,9 +2709,9 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 	             * "(elem,start:?Dint,key:?DCallable=!N,defl?)->\n"
 	             * "(elem,start:?Dint,end:?Dint,key:?DCallable=!N,defl?)->\n" */
 	            "(elem,key:?DCallable=!N)->\n"
-	            "@param elem The element to search for\n"
-	            "@param key A key function for transforming Sequence elements\n"
-	            "@throw ValueError The Sequence does not contain an element matching @elem\n"
+	            "#pelem{The element to search for}"
+	            "#pkey{A key function for transforming Sequence elements}"
+	            "#tValueError{The Sequence does not contain an element matching @elem}"
 	            "Returns the first item equal to @elem\n"
 	            "${"
 	            /**/ "function locate(elem: Object, key: Callable = none): Object {\n"
@@ -2736,9 +2736,9 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 	             * "(elem,start:?Dint,key:?DCallable=!N,defl?)->\n"
 	             * "(elem,start:?Dint,end:?Dint,key:?DCallable=!N,defl?)->\n" */
 	            "(elem,key:?DCallable=!N)->\n"
-	            "@param elem The element to search for\n"
-	            "@param key A key function for transforming Sequence elements\n"
-	            "@throw ValueError The Sequence does not contain an element matching @elem\n"
+	            "#pelem{The element to search for}"
+	            "#pkey{A key function for transforming Sequence elements}"
+	            "#tValueError{The Sequence does not contain an element matching @elem}"
 	            "Returns the last item equal to @elem\n"
 	            "${"
 	            /**/ "function rlocate(elem, key: Callable) {\n"
@@ -2770,8 +2770,8 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 	             * "(elem,start:?Dint,key:?DCallable=!N)->?S?O\n"
 	             * "(elem,start:?Dint,end:?Dint,key:?DCallable=!N)->?S?O\n" */
 	            "(elem,key:?DCallable=!N)->?S?O\n"
-	            "@param elem The element to search for\n"
-	            "@param key A key function for transforming Sequence elements\n"
+	            "#pelem{The element to search for}"
+	            "#pkey{A key function for transforming Sequence elements}"
 	            "Returns a Sequence of items equal to @elem\n"
 	            "${"
 	            /**/ "function locateall(elem: Object, key: Callable): Sequence {\n"
@@ -2791,7 +2791,7 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 	            "}"),
 	TYPE_METHOD("transform", &seq_transform,
 	            "(transformation:?DCallable)->?DSequence\n"
-	            "@param transformation A key function invoked to transform members of @this Sequence\n"
+	            "#ptransformation{A key function invoked to transform members of @this Sequence}"
 	            "Returns a Sequence that is a transformation of @this, with each element passed "
 	            "to @transformation for processing before being returned\n"
 	            "${"
@@ -2803,8 +2803,8 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 	            "Hint: The python equivalent of this function is #A{map|https://docs.python.org/3/library/functions.html##map}"),
 	TYPE_METHOD("contains", &seq_contains,
 	            "(elem,key:?DCallable=!N)->?Dbool\n"
-	            "@param elem The element to search for\n"
-	            "@param key A key function for transforming Sequence elements\n"
+	            "#pelem{The element to search for}"
+	            "#pkey{A key function for transforming Sequence elements}"
 	            "Returns ?t if @this Sequence contains an element matching @elem\n"
 	            "${"
 	            /**/ "function contains(elem: Object, key: Callable): bool {\n"
@@ -2820,16 +2820,16 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 	            "}"),
 	TYPE_METHOD("startswith", &seq_startswith,
 	            "(elem,key:?DCallable=!N)->?Dbool\n"
-	            "@param elem The element to compare against\n"
-	            "@param key A key function for transforming Sequence elements\n"
+	            "#pelem{The element to compare against}"
+	            "#pkey{A key function for transforming Sequence elements}"
 	            "Returns ?t / ?f indicative of @this Sequence's first element matching :elem\n"
 	            "The implementation of this is derived from #first, where the found is then compared "
 	            /**/ "against @elem, potentially through use of @{key}: ${key(first) == key(elem)} or ${first == elem}, "
 	            /**/ "however instead of throwing a :ValueError when the Sequence is empty, ?f is returned"),
 	TYPE_METHOD("endswith", &seq_endswith,
 	            "(elem,key:?DCallable=!N)->?Dbool\n"
-	            "@param elem The element to compare against\n"
-	            "@param key A key function for transforming Sequence elements\n"
+	            "#pelem{The element to compare against}"
+	            "#pkey{A key function for transforming Sequence elements}"
 	            "Returns ?t / ?f indicative of @this Sequence's last element matching :elem\n"
 	            "The implementation of this is derived from #last, where the found is then compared "
 	            /**/ "against @elem, potentially through use of @{key}: ${key(last) == key(elem)} or ${last == elem}, "
@@ -2838,10 +2838,10 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 	              "(elem,key:?DCallable=!N)->?Dint\n"
 	              "(elem,start:?Dint,key:?DCallable=!N)->?Dint\n"
 	              "(elem,start:?Dint,end:?Dint,key:?DCallable=!N)->?Dint\n"
-	              "@param elem The element to search for\n"
-	              "@param key A key function for transforming Sequence elements\n"
-	              "@param start The start index for a sub-range to search (clamped by ${##this})\n"
-	              "@param end The end index for a sub-range to search (clamped by ${##this})\n"
+	              "#pelem{The element to search for}"
+	              "#pkey{A key function for transforming Sequence elements}"
+	              "#pstart{The start index for a sub-range to search (clamped by ${##this})}"
+	              "#pend{The end index for a sub-range to search (clamped by ${##this})}"
 	              "Search for the first element matching @elem and return its index\n"
 	              "If no such element exists, return ${-1} instead\n"
 	              "Depending on the nearest implemented group of operators, "
@@ -2924,10 +2924,10 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 	              "(elem,key:?DCallable=!N)->?Dint\n"
 	              "(elem,start:?Dint,key:?DCallable=!N)->?Dint\n"
 	              "(elem,start:?Dint,end:?Dint,key:?DCallable=!N)->?Dint\n"
-	              "@param elem The element to search for\n"
-	              "@param key A key function for transforming Sequence elements\n"
-	              "@param start The start index for a sub-range to search (clamped by ${##this})\n"
-	              "@param end The end index for a sub-range to search (clamped by ${##this})\n"
+	              "#pelem{The element to search for}"
+	              "#pkey{A key function for transforming Sequence elements}"
+	              "#pstart{The start index for a sub-range to search (clamped by ${##this})}"
+	              "#pend{The end index for a sub-range to search (clamped by ${##this})}"
 	              "Search for the last element matching @elem and return its index\n"
 	              "If no such element exists, return ${-1} instead\n"
 	              "Depending on the nearest implemented group of operators, "
@@ -3017,11 +3017,11 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 	              "(elem,key:?DCallable=!N)->?Dint\n"
 	              "(elem,start:?Dint,key:?DCallable=!N)->?Dint\n"
 	              "(elem,start:?Dint,end:?Dint,key:?DCallable=!N)->?Dint\n"
-	              "@param elem The element to search for\n"
-	              "@param key A key function for transforming Sequence elements\n"
-	              "@param start The start index for a sub-range to search (clamped by ${##this})\n"
-	              "@param end The end index for a sub-range to search (clamped by ${##this})\n"
-	              "@throw ValueError The Sequence does not contain an element matching @elem\n"
+	              "#pelem{The element to search for}"
+	              "#pkey{A key function for transforming Sequence elements}"
+	              "#pstart{The start index for a sub-range to search (clamped by ${##this})}"
+	              "#pend{The end index for a sub-range to search (clamped by ${##this})}"
+	              "#tValueError{The Sequence does not contain an element matching @elem}"
 	              "Search for the first element matching @elem and return its index\n"
 	              "This function is implemented as:\n"
 	              "${"
@@ -3037,11 +3037,11 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 	              "(elem,key:?DCallable=!N)->?Dint\n"
 	              "(elem,start:?Dint,key:?DCallable=!N)->?Dint\n"
 	              "(elem,start:?Dint,end:?Dint,key:?DCallable=!N)->?Dint\n"
-	              "@param elem The element to search for\n"
-	              "@param key A key function for transforming Sequence elements\n"
-	              "@param start The start index for a sub-range to search (clamped by ${##this})\n"
-	              "@param end The end index for a sub-range to search (clamped by ${##this})\n"
-	              "@throw ValueError The Sequence does not contain an element matching @elem\n"
+	              "#pelem{The element to search for}"
+	              "#pkey{A key function for transforming Sequence elements}"
+	              "#pstart{The start index for a sub-range to search (clamped by ${##this})}"
+	              "#pend{The end index for a sub-range to search (clamped by ${##this})}"
+	              "#tValueError{The Sequence does not contain an element matching @elem}"
 	              "Search for the last element matching @elem and return its index\n"
 	              "This function is implemented as:\n"
 	              "${"
@@ -3066,16 +3066,16 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 	TYPE_METHOD("segments",
 	            &seq_segments,
 	            "(segment_size:?Dint)->?S?DSequence\n"
-	            "@throw IntegerOverflow @segment_size is negative, or too large\n"
-	            "@throw ValueError The given @segment_size is zero\n"
+	            "#tIntegerOverflow{@segment_size is negative, or too large}"
+	            "#tValueError{The given @segment_size is zero}"
 	            "Return a Sequence of sequences contains all elements from @this Sequence, "
 	            /**/ "with the first n sequences all consisting of @segment_size elements, before "
 	            /**/ "the last one contains the remainder of up to @segment_size elements"),
 	TYPE_METHOD("distribute",
 	            &seq_distribute,
 	            "(bucket_count:?Dint)->?S?DSequence\n"
-	            "@throw IntegerOverflow @segment_size is negative, or too large\n"
-	            "@throw ValueError The given @segment_size is zero\n"
+	            "#tIntegerOverflow{@segment_size is negative, or too large}"
+	            "#tValueError{The given @segment_size is zero}"
 	            "Re-distribute the elements of @this Sequence to form @bucket_count similarly-sized "
 	            /**/ "buckets of objects, with the last bucket containing the remaining elements, making "
 	            /**/ "its length a little bit shorter than the other buckets\n"
@@ -3084,7 +3084,7 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 	TYPE_METHOD("combinations",
 	            &seq_combinations,
 	            "(r:?Dint)->?S?DSequence\n"
-	            "@throw IntegerOverflow @r is negative, or too large\n"
+	            "#tIntegerOverflow{@r is negative, or too large}"
 	            "Returns a Sequence of r-long sequences representing all possible (ordered) "
 	            /**/ "combinations of elements retrieved from @this\n"
 	            "${"
@@ -3103,7 +3103,7 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 	TYPE_METHOD("repeatcombinations",
 	            &seq_repeatcombinations,
 	            "(r:?Dint)->?S?DSequence\n"
-	            "@throw IntegerOverflow @r is negative, or too large\n"
+	            "#tIntegerOverflow{@r is negative, or too large}"
 	            "Same as #combinations, however elements of @this Sequence may be repeated (though element order is still enforced)\n"
 	            "${"
 	            /**/ "/* { (\"A\", \"A\"), (\"A\", \"B\"), (\"A\", \"C\"),\n"
@@ -3120,7 +3120,7 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 	TYPE_METHOD("permutations",
 	            &seq_permutations,
 	            "(r:?Dint=!N)->?S?DSequence\n"
-	            "@throw IntegerOverflow @r is negative, or too large\n"
+	            "#tIntegerOverflow{@r is negative, or too large}"
 	            "Same as #combinations, however the order of elements must "
 	            /**/ "not be enforced, though indices may not be repeated\n"
 	            "When @r is ?N, ${##this} is used instead\n"
@@ -3173,8 +3173,8 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 	/* Functions for mutable sequences. */
 	TYPE_KWMETHOD(STR_insert, &seq_insert,
 	              "(index:?Dint,item)\n"
-	              "@throw IntegerOverflow The given @index is negative, or too large\n"
-	              "@throw SequenceError @this Sequence cannot be resized\n"
+	              "#tIntegerOverflow{The given @index is negative, or too large}"
+	              "#tSequenceError{@this Sequence cannot be resized}"
 	              "When @index is negative, it will refer to the end of the Sequence\n"
 	              "For mutable sequences only: Insert the given @item under @index\n"
 	              "When this function isn't defined by a sub-class, the following "
@@ -3217,8 +3217,8 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 	              "}"),
 	TYPE_KWMETHOD(STR_insertall, &seq_insertall,
 	              "(index:?Dint,items:?DSequence)\n"
-	              "@throw IntegerOverflow The given @index is negative, or too large\n"
-	              "@throw SequenceError @this Sequence cannot be resized\n"
+	              "#tIntegerOverflow{The given @index is negative, or too large}"
+	              "#tSequenceError{@this Sequence cannot be resized}"
 	              "For mutable sequences only: Insert all elements from @items at @index\n"
 	              "When this function isn't defined by a sub-class, the following "
 	              /**/ "default-implementation is provided by ?.:\n"
@@ -3264,8 +3264,8 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 	              "}"),
 	TYPE_METHOD(STR_append, &seq_append,
 	            "(item)\n"
-	            "@throw IndexError The given @index is out of bounds\n"
-	            "@throw SequenceError @this Sequence cannot be resized\n"
+	            "#tIndexError{The given @index is out of bounds}"
+	            "#tSequenceError{@this Sequence cannot be resized}"
 	            "For mutable sequences only: Append the given @item at the end of @this Sequence\n"
 	            "When this function isn't defined by a sub-class, the following "
 	            /**/ "default-implementation is provided by ?.:\n"
@@ -3300,7 +3300,7 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 	            "}"),
 	TYPE_METHOD(STR_extend, &seq_extend,
 	            "(items:?DSequence)\n"
-	            "@throw SequenceError @this Sequence cannot be resized\n"
+	            "#tSequenceError{@this Sequence cannot be resized}"
 	            "For mutable sequences only: Append all elements from @items at the end of @this Sequence\n"
 	            "When this function isn't defined by a sub-class, the following "
 	            /**/ "default-implementation is provided by ?.:\n"
@@ -3336,9 +3336,9 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 	            "}"),
 	TYPE_KWMETHOD(STR_erase, &seq_erase,
 	              "(index:?Dint,count=!1)\n"
-	              "@throw IntegerOverflow The given @index is negative, or too large\n"
-	              "@throw IndexError The given @index is out of bounds\n"
-	              "@throw SequenceError @this Sequence cannot be resized\n"
+	              "#tIntegerOverflow{The given @index is negative, or too large}"
+	              "#tIndexError{The given @index is out of bounds}"
+	              "#tSequenceError{@this Sequence cannot be resized}"
 	              "For mutable sequences only: Erase up to @count elements starting at @index, "
 	              /**/ "and return the actual number of erased items (Less than @count may be erased "
 	              /**/ "when ${index + count > ##this})\n"
@@ -3379,9 +3379,9 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 	              "}"),
 	TYPE_KWMETHOD(STR_xch, &seq_xch,
 	              "(index:?Dint,value)->\n"
-	              "@throw IntegerOverflow The given @index is negative, or too large\n"
-	              "@throw IndexError The given @index is out of bounds\n"
-	              "@throw SequenceError @this Sequence cannot be resized\n"
+	              "#tIntegerOverflow{The given @index is negative, or too large}"
+	              "#tIndexError{The given @index is out of bounds}"
+	              "#tSequenceError{@this Sequence cannot be resized}"
 	              "For mutable sequences only: Exchange the @index'th element of @this Sequence "
 	              /**/ "with the given @value, returning the old element found under that index\n"
 	              /**/ "When this function isn't defined by a sub-class, the following "
@@ -3407,9 +3407,9 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 	              "}"),
 	TYPE_KWMETHOD(STR_pop, &seq_pop,
 	              "(index=!-1)->\n"
-	              "@throw IntegerOverflow The given @index is too large\n"
-	              "@throw IndexError The given @index is out of bounds\n"
-	              "@throw SequenceError @this Sequence cannot be resized\n"
+	              "#tIntegerOverflow{The given @index is too large}"
+	              "#tIndexError{The given @index is out of bounds}"
+	              "#tSequenceError{@this Sequence cannot be resized}"
 	              "For mutable sequences only: Pop the @index'th element of @this Sequence and "
 	              /**/ "return it. When @index is lower than $0, add ${##this} prior to index selection\n"
 	              "When this function isn't defined by a sub-class, the following "
@@ -3442,8 +3442,8 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 	              "}"),
 	TYPE_METHOD(STR_popfront, &seq_popfront,
 	            "->\n"
-	            "@throw IndexError The given @index is out of bounds\n"
-	            "@throw SequenceError @this Sequence cannot be resized\n"
+	            "#tIndexError{The given @index is out of bounds}"
+	            "#tSequenceError{@this Sequence cannot be resized}"
 	            "For mutable sequences only: Convenience wrapper for #pop\n"
 	            "${"
 	            /**/ "function popfront(): Object {\n"
@@ -3457,8 +3457,8 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 	            "}"),
 	TYPE_METHOD(STR_popback, &seq_popback,
 	            "->\n"
-	            "@throw IndexError The given @index is out of bounds\n"
-	            "@throw SequenceError @this Sequence cannot be resized\n"
+	            "#tIndexError{The given @index is out of bounds}"
+	            "#tSequenceError{@this Sequence cannot be resized}"
 	            "For mutable sequences only: Convenience wrapper for #pop\n"
 	            "${"
 	            /**/ "function popfront(): Object {\n"
@@ -3472,8 +3472,8 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 	            "}"),
 	TYPE_METHOD(STR_pushfront, &seq_pushfront,
 	            "(item)\n"
-	            "@throw IndexError The given @index is out of bounds\n"
-	            "@throw SequenceError @this Sequence cannot be resized\n"
+	            "#tIndexError{The given @index is out of bounds}"
+	            "#tSequenceError{@this Sequence cannot be resized}"
 	            "For mutable sequences only: Convenience wrapper for #insert at position $0\n"
 	            "${"
 	            /**/ "function pushfront(item: Object) {\n"
@@ -3482,8 +3482,8 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 	            "}"),
 	TYPE_METHOD(STR_pushback, &seq_pushback,
 	            "(item)\n"
-	            "@throw IndexError The given @index is out of bounds\n"
-	            "@throw SequenceError @this Sequence cannot be resized\n"
+	            "#tIndexError{The given @index is out of bounds}"
+	            "#tSequenceError{@this Sequence cannot be resized}"
 	            "For mutable sequences only: Convenience wrapper for #append\n"
 	            "${"
 	            /**/ "function pushback(item: Object) {\n"
@@ -3494,8 +3494,8 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 	              "(elem,key:?DCallable=!N)->?Dbool\n"
 	              "(elem,start:?Dint,key:?DCallable=!N)->?Dbool\n"
 	              "(elem,start:?Dint,end:?Dint,key:?DCallable=!N)->?Dbool\n"
-	              "@param key A key function for transforming Sequence elements\n"
-	              "@throw SequenceError @this Sequence is immutable\n"
+	              "#pkey{A key function for transforming Sequence elements}"
+	              "#tSequenceError{@this Sequence is immutable}"
 	              "For mutable sequences only: Find the first instance of @elem and remove it, "
 	              /**/ "returning ?t if an element got removed, or ?f if @elem could not be found\n"
 	              "Depending on the nearest implemented group of operators, "
@@ -3585,8 +3585,8 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 	              "(elem,key:?DCallable=!N)->?Dbool\n"
 	              "(elem,start:?Dint,key:?DCallable=!N)->?Dbool\n"
 	              "(elem,start:?Dint,end:?Dint,key:?DCallable=!N)->?Dbool\n"
-	              "@param key A key function for transforming Sequence elements\n"
-	              "@throw SequenceError @this Sequence is immutable\n"
+	              "#pkey{A key function for transforming Sequence elements}"
+	              "#tSequenceError{@this Sequence is immutable}"
 	              "For mutable sequences only: Find the last instance of @elem and remove it, "
 	              /**/ "returning ?t if an element got removed, or ?f if @elem could not be found\n"
 	              "Depending on the nearest implemented group of operators, "
@@ -3682,8 +3682,8 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 	              "(elem,key:?DCallable=!N)->?Dint\n"
 	              "(elem,start:?Dint,key:?DCallable=!N)->?Dint\n"
 	              "(elem,start:?Dint,end:?Dint,key:?DCallable=!N)->?Dint\n"
-	              "@param key A key function for transforming Sequence elements\n"
-	              "@throw SequenceError @this Sequence is immutable\n"
+	              "#pkey{A key function for transforming Sequence elements}"
+	              "#tSequenceError{@this Sequence is immutable}"
 	              "For mutable sequences only: Find all instance of @elem and remove "
 	              /**/ "them, returning the number of instances found (and consequently removed)\n"
 	              "Depending on the nearest implemented group of operators, "
@@ -3832,8 +3832,8 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 	              "}"),
 	TYPE_KWMETHOD(STR_removeif, &seq_removeif,
 	              "(should:?DCallable,start=!0,end=!-1)->?Dint\n"
-	              "@param key A key function for transforming Sequence elements\n"
-	              "@throw SequenceError @this Sequence is immutable\n"
+	              "#pkey{A key function for transforming Sequence elements}"
+	              "#tSequenceError{@this Sequence is immutable}"
 	              "For mutable sequences only: Remove all elements within the given sub-range, "
 	              /**/ "for which ${should(elem)} evaluates to ?t, and return the number "
 	              /**/ "of elements found (and consequently removed)\n"
@@ -3938,7 +3938,7 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 	              "}"),
 	TYPE_METHOD(STR_clear, &seq_clear,
 	            "()\n"
-	            "@throw SequenceError @this Sequence is immutable\n"
+	            "#tSequenceError{@this Sequence is immutable}"
 	            "For mutable sequences only: Clear all elements from the Sequence\n"
 	            "When not implemented by a sub-class, ?. implements "
 	            "this function as follows (s.a. ?#{op:setrange}):\n"
@@ -3949,7 +3949,7 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 	            "}"),
 	TYPE_KWMETHOD(STR_resize, &seq_resize,
 	              "(int newsize,filler=!N)\n"
-	              "@throw SequenceError @this Sequence isn't resizable\n"
+	              "#tSequenceError{@this Sequence isn't resizable}"
 	              "Resize @this Sequence to have a new length of @newsize "
 	              /**/ "items, using @filler to initialize newly added entries\n"
 	              "When not implemented by a sub-class, ?. "
@@ -3972,7 +3972,7 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 	              "}"),
 	TYPE_KWMETHOD("fill", &seq_fill,
 	              "(start=!0,end=!-1,filler=!N)->?Dint\n"
-	              "@throw SequenceError @this Sequence is immutable\n"
+	              "#tSequenceError{@this Sequence is immutable}"
 	              "For mutable sequences only: Assign @filler to all elements within "
 	              /**/ "the given sub-range, and return the number of written indices\n"
 	              "Depending on the nearest implemented group of operators, "
@@ -4011,7 +4011,7 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 	              "}"),
 	TYPE_METHOD("reverse", &seq_reverse,
 	            "()\n"
-	            "@throw SequenceError @this Sequence is immutable\n"
+	            "#tSequenceError{@this Sequence is immutable}"
 	            "For mutable sequences only: Reverse the order of all elements\n"
 	            "When not implemented by a sub-class, ?. implements "
 	            /**/ "this function as follows (s.a. ?#{op:assign}):\n"
@@ -4022,8 +4022,8 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 	            "}"),
 	TYPE_KWMETHOD("sort", &seq_sort,
 	              "(key:?DCallable=!N)\n"
-	              "@param key A key function for transforming Sequence elements\n"
-	              "@throw SequenceError @this Sequence is immutable\n"
+	              "#pkey{A key function for transforming Sequence elements}"
+	              "#tSequenceError{@this Sequence is immutable}"
 	              "For mutable sequences only: Sort the elements of @this Sequence\n"
 	              "When not implemented by a sub-class, ?. implements "
 	              /**/ "this function as follows (s.a. ?#{op:assign}):\n"
@@ -4039,10 +4039,10 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 	              "(elem,key:?DCallable=!N)->?X2?Dint?N\n"
 	              "(elem,start:?Dint,key:?DCallable=!N)->?X2?Dint?N\n"
 	              "(elem,start:?Dint,end:?Dint,key:?DCallable=!N)->?X2?Dint?N\n"
-	              "@param elem The element to search for\n"
-	              "@param key A key function for transforming Sequence elements\n"
-	              "@param start The start index for a sub-range to search (clamped by ${##this})\n"
-	              "@param end The end index for a sub-range to search (clamped by ${##this})\n"
+	              "#pelem{The element to search for}"
+	              "#pkey{A key function for transforming Sequence elements}"
+	              "#pstart{The start index for a sub-range to search (clamped by ${##this})}"
+	              "#pend{The end index for a sub-range to search (clamped by ${##this})}"
 	              "Do a binary search (requiring @this to be sorted via @key) for @elem\n"
 	              "In case multiple elements match @elem, the returned index will be "
 	              /**/ "that for one of them, though it is undefined which one specifically.\n"
@@ -4051,39 +4051,39 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 	              "(elem,key:?DCallable=!N)->?Dbool\n"
 	              "(elem,start:?Dint,key:?DCallable=!N)->?Dbool\n"
 	              "(elem,start:?Dint,end:?Dint,key:?DCallable=!N)->?Dbool\n"
-	              "@param elem The element to search for\n"
-	              "@param key A key function for transforming Sequence elements\n"
-	              "@param start The start index for a sub-range to search (clamped by ${##this})\n"
-	              "@param end The end index for a sub-range to search (clamped by ${##this})\n"
+	              "#pelem{The element to search for}"
+	              "#pkey{A key function for transforming Sequence elements}"
+	              "#pstart{The start index for a sub-range to search (clamped by ${##this})}"
+	              "#pend{The end index for a sub-range to search (clamped by ${##this})}"
 	              "Wrapper around ?#bfind that simply returns ${this.bfind(...) !is none}"),
 	TYPE_KWMETHOD("bindex", &seq_bindex,
 	              "(elem,key:?DCallable=!N)->?Dint\n"
 	              "(elem,start:?Dint,key:?DCallable=!N)->?Dint\n"
 	              "(elem,start:?Dint,end:?Dint,key:?DCallable=!N)->?Dint\n"
-	              "@param elem The element to search for\n"
-	              "@param key A key function for transforming Sequence elements\n"
-	              "@param start The start index for a sub-range to search (clamped by ${##this})\n"
-	              "@param end The end index for a sub-range to search (clamped by ${##this})\n"
-	              "@throw ValueError The Sequence does not contain an element matching @elem\n"
+	              "#pelem{The element to search for}"
+	              "#pkey{A key function for transforming Sequence elements}"
+	              "#pstart{The start index for a sub-range to search (clamped by ${##this})}"
+	              "#pend{The end index for a sub-range to search (clamped by ${##this})}"
+	              "#tValueError{The Sequence does not contain an element matching @elem}"
 	              "Same as ?#bfind, but throw an :ValueError instead of returning ?N."),
 	TYPE_KWMETHOD("bposition", &seq_bposition,
 	              "(elem,key:?DCallable=!N)->?Dint\n"
 	              "(elem,start:?Dint,key:?DCallable=!N)->?Dint\n"
 	              "(elem,start:?Dint,end:?Dint,key:?DCallable=!N)->?Dint\n"
-	              "@param elem The element to search for\n"
-	              "@param key A key function for transforming Sequence elements\n"
-	              "@param start The start index for a sub-range to search (clamped by ${##this})\n"
-	              "@param end The end index for a sub-range to search (clamped by ${##this})\n"
+	              "#pelem{The element to search for}"
+	              "#pkey{A key function for transforming Sequence elements}"
+	              "#pstart{The start index for a sub-range to search (clamped by ${##this})}"
+	              "#pend{The end index for a sub-range to search (clamped by ${##this})}"
 	              "Same as ?#bfind, but return (an) index where @elem should be inserted, rather "
 	              /**/ "than ?N when @this doesn't contain any matching object"),
 	TYPE_KWMETHOD("brange", &seq_brange,
 	              "(elem,key:?DCallable=!N)->?T2?Dint?Dint\n"
 	              "(elem,start:?Dint,key:?DCallable=!N)->?T2?Dint?Dint\n"
 	              "(elem,start:?Dint,end:?Dint,key:?DCallable=!N)->?T2?Dint?Dint\n"
-	              "@param elem The element to search for\n"
-	              "@param key A key function for transforming Sequence elements\n"
-	              "@param start The start index for a sub-range to search (clamped by ${##this})\n"
-	              "@param end The end index for a sub-range to search (clamped by ${##this})\n"
+	              "#pelem{The element to search for}"
+	              "#pkey{A key function for transforming Sequence elements}"
+	              "#pstart{The start index for a sub-range to search (clamped by ${##this})}"
+	              "#pend{The end index for a sub-range to search (clamped by ${##this})}"
 	              "Similar to ?#bfind, but return a tuple ${[begin,end)} of integers representing "
 	              /**/ "the lower and upper bound of indices for elements from @this matching @elem.\n"
 	              "NOTE: The returned tuple is allowed to be an ASP, meaning that its elements may "
@@ -4092,18 +4092,18 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 	              "(elem,key:?DCallable=!N,defl?)->\n"
 	              "(elem,start:?Dint,key:?DCallable=!N,defl?)->\n"
 	              "(elem,start:?Dint,end:?Dint,key:?DCallable=!N,defl?)->\n"
-	              "@param elem The element to search for\n"
-	              "@param key A key function for transforming Sequence elements\n"
-	              "@throw ValueError The Sequence does not contain an element matching @elem\n"
+	              "#pelem{The element to search for}"
+	              "#pkey{A key function for transforming Sequence elements}"
+	              "#tValueError{The Sequence does not contain an element matching @elem}"
 	              "Same as ?#bfind, but return the matching element, rather than its index"),
 	TYPE_KWMETHOD("blocateall", &seq_blocateall,
 	              "(elem,key:?DCallable=!N)->?S?O\n"
 	              "(elem,start:?Dint,key:?DCallable=!N)->?S?O\n"
 	              "(elem,start:?Dint,end:?Dint,key:?DCallable=!N)->?S?O\n"
-	              "@param elem The element to search for\n"
-	              "@param key A key function for transforming Sequence elements\n"
-	              "@param start The start index for a sub-range to search (clamped by ${##this})\n"
-	              "@param end The end index for a sub-range to search (clamped by ${##this})\n"
+	              "#pelem{The element to search for}"
+	              "#pkey{A key function for transforming Sequence elements}"
+	              "#pstart{The start index for a sub-range to search (clamped by ${##this})}"
+	              "#pend{The end index for a sub-range to search (clamped by ${##this})}"
 	              "Return the sub-range from @this of elements matching @elem, as returned by ?#brange\n"
 	              "${"
 	              /**/ "function blocateall(args..., **kwds) {\n"
@@ -4566,13 +4566,13 @@ PRIVATE struct type_method tpconst seq_class_methods[] = {
 	            "}"),
 	TYPE_METHOD("repeat", &seq_class_repeat,
 	            "(obj,count:?Dint)->?DSequence\n"
-	            "@throw IntegerOverflow @count is negative\n"
+	            "#tIntegerOverflow{@count is negative}"
 	            "Create a proxy-Sequence that yields @obj a total of @count times\n"
 	            "The main purpose of this function is to construct large sequences "
 	            /**/ "to be used as initializers for mutable sequences such as ?DList"),
 	TYPE_METHOD("repeatseq", &seq_class_repeatseq,
 	            "(seq:?DSequence,count:?Dint)->?DSequence\n"
-	            "@throw IntegerOverflow @count is negative\n"
+	            "#tIntegerOverflow{@count is negative}"
 	            "Repeat all the elements from @seq a total of @count times\n"
 	            "This is the same as ${(seq as Sequence from deemon) * count}"),
 	TYPE_METHOD("concat", &seq_class_concat,
@@ -4688,7 +4688,7 @@ PUBLIC DeeTypeObject DeeSeq_Type = {
 	                         "\n"
 
 	                         "*(count:?Dint)->\n"
-	                         "@throw IntegerOverflow @count is negative, or larger than :int.SIZE_MAX\n"
+	                         "#tIntegerOverflow{@count is negative, or larger than :int.SIZE_MAX}"
 	                         "Returns a proxy Sequence for accessing the elements of @this "
 	                         /**/ "Sequence, consecutively repeated a total of @count times\n"
 	                         "The implementation is allowed to assume that the number and value of "
@@ -4726,9 +4726,9 @@ PUBLIC DeeTypeObject DeeSeq_Type = {
 	                         "\n"
 
 	                         "[]->\n"
-	                         "@throw OverflowError The given @index is negative\n"
-	                         "@throw IndexError The given @index is greater than the length of @this Sequence (${##this})\n"
-	                         "@throw UnboundItem The item associated with @index is unbound\n"
+	                         "#tOverflowError{The given @index is negative}"
+	                         "#tIndexError{The given @index is greater than the length of @this Sequence (${##this})}"
+	                         "#tUnboundItem{The item associated with @index is unbound}"
 	                         "Returns the @{index}th element of @this Sequence, as determinable by enumeration\n"
 	                         "Depending on the nearest implemented group of operators, "
 	                         /**/ "one of the following implementations is chosen\n"
@@ -4962,7 +4962,7 @@ PUBLIC DeeTypeObject DeeSeq_Type = {
 	                         "\n"
 
 	                         ":=->\n"
-	                         "@throw SequenceError @this Sequence is immutable\n"
+	                         "#tSequenceError{@this Sequence is immutable}"
 	                         "For mutable sequences only: Assign the contents from @other to @this Sequence\n"
 	                         "When this operator is lacking, the following "
 	                         /**/ "default-implementation is provided by ?.:\n"
@@ -4979,10 +4979,10 @@ PUBLIC DeeTypeObject DeeSeq_Type = {
 	                         "\n"
 
 	                         "del[]->\n"
-	                         "@throw IntegerOverflow The given @index is negative, or too large\n"
-	                         "@throw IndexError The given @index is out of bounds\n"
-	                         "@throw UnboundItem The item associated with @index had already been unbound\n"
-	                         "@throw SequenceError @this Sequence is immutable\n"
+	                         "#tIntegerOverflow{The given @index is negative, or too large}"
+	                         "#tIndexError{The given @index is out of bounds}"
+	                         "#tUnboundItem{The item associated with @index had already been unbound}"
+	                         "#tSequenceError{@this Sequence is immutable}"
 	                         "For mutable sequences only: Remove the item found at @index, either "
 	                         /**/ "removing it from the Sequence, or changing it to being unbound\n"
 	                         "When this operator is lacking, but ${operator del[:]}, ${operator [:]=} or "
@@ -5018,9 +5018,9 @@ PUBLIC DeeTypeObject DeeSeq_Type = {
 	                         "\n"
 
 	                         "[]=->\n"
-	                         "@throw IntegerOverflow The given @index is negative, or too large\n"
-	                         "@throw IndexError The given @index is out of bounds\n"
-	                         "@throw SequenceError @this Sequence is immutable\n"
+	                         "#tIntegerOverflow{The given @index is negative, or too large}"
+	                         "#tIndexError{The given @index is out of bounds}"
+	                         "#tSequenceError{@this Sequence is immutable}"
 	                         "For mutable sequences only: Override the item found at @index with @value\n"
 	                         "When this operator is lacking, but ${operator [:]=} is available, the following "
 	                         /**/ "default-implementation is provided by ?.:\n"
@@ -5038,8 +5038,8 @@ PUBLIC DeeTypeObject DeeSeq_Type = {
 	                         "\n"
 
 	                         "del[:]->\n"
-	                         "@throw IntegerOverflow @start or @end are too large\n"
-	                         "@throw SequenceError @this Sequence cannot be resized\n"
+	                         "#tIntegerOverflow{@start or @end are too large}"
+	                         "#tSequenceError{@this Sequence cannot be resized}"
 	                         "For mutable sequences only: Delete, or unbind all items within the given range\n"
 	                         "When this operator is lacking, the following default-implementation is "
 	                         /**/ "provided by ?. when the required operators and members are present.\n"
@@ -5117,8 +5117,8 @@ PUBLIC DeeTypeObject DeeSeq_Type = {
 	                         "\n"
 
 	                         "[:]=->\n"
-	                         "@throw IntegerOverflow @start or @end are too large\n"
-	                         "@throw SequenceError @this Sequence is immutable, or cannot be resized\n"
+	                         "#tIntegerOverflow{@start or @end are too large}"
+	                         "#tSequenceError{@this Sequence is immutable, or cannot be resized}"
 	                         "For mutable sequences only: Override the given range with items from @{values}:\n"
 	                         "When this operator is lacking, the following default-implementation is "
 	                         /**/ "provided by ?. when the required operators and members are present.\n"

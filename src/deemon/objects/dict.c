@@ -2100,7 +2100,7 @@ PRIVATE struct type_method tpconst dict_methods[] = {
 	TYPE_METHOD(STR_pop, &dict_pop,
 	            "(key)->\n"
 	            "(key,def)->\n"
-	            "@throw KeyError No @def was given and @key was not found\n"
+	            "#tKeyError{No @def was given and @key was not found}"
 	            "Delete @key from @this and return its previously assigned "
 	            /**/ "value or @def when @key had no item associated"),
 	TYPE_METHOD(STR_clear, &dict_doclear,
@@ -2108,28 +2108,28 @@ PRIVATE struct type_method tpconst dict_methods[] = {
 	            "Clear all values from @this ?."),
 	TYPE_METHOD("popitem", &dict_popsomething,
 	            "->?T2?O?O\n"
-	            "@return A random pair key-value pair that has been removed\n"
-	            "@throw ValueError @this ?. was empty"),
+	            "#r{A random pair key-value pair that has been removed}"
+	            "#tValueError{@this ?. was empty}"),
 	TYPE_METHOD("setdefault", &dict_setdefault,
 	            "(key,def=!N)->\n"
-	            "@return The object currently assigned to @key\n"
+	            "#r{The object currently assigned to @key}"
 	            "Lookup @key in @this ?. and return its value if found. "
 	            /**/ "Otherwise, assign @def to @key and return it instead"),
 	TYPE_METHOD("setold", &dict_setold,
 	            "(key,value)->?Dbool\n"
-	            "@return Indicative of @value having been assigned to @key\n"
+	            "#r{Indicative of @value having been assigned to @key}"
 	            "Assign @value to @key, only succeeding when @key already existed to begin with"),
 	TYPE_METHOD("setnew", &dict_setnew,
 	            "(key,value)->?Dbool\n"
-	            "@return Indicative of @value having been assigned to @key\n"
+	            "#r{Indicative of @value having been assigned to @key}"
 	            "Assign @value to @key, only succeeding when @key didn't exist before"),
 	TYPE_METHOD("setold_ex", &dict_setold_ex,
 	            "(key,value)->?T2?Dbool?O\n"
-	            "@return A pair of values (new-value-was-assigned, old-value-or-none)\n"
+	            "#r{A pair of values (new-value-was-assigned, old-value-or-none)}"
 	            "Same as #setold but also return the previously assigned object"),
 	TYPE_METHOD("setnew_ex", &dict_setnew_ex,
 	            "(key,value)->?T2?Dbool?O\n"
-	            "@return A pair of values (new-value-was-assigned, old-value-or-none)\n"
+	            "#r{A pair of values (new-value-was-assigned, old-value-or-none)}"
 	            "Same as #setnew but return the previously assigned object on failure"),
 	TYPE_METHOD("update", &dict_update,
 	            "(items:?S?T2?O?O)\n"
@@ -2158,13 +2158,13 @@ INTDEF struct type_getset tpconst dict_getsets[];
 INTERN_TPCONST struct type_getset tpconst dict_getsets[] = {
 	TYPE_GETTER("keys", &dict_keys,
 	            "->?AKeys?.\n"
-	            "@return A proxy sequence for viewing the keys of @this ?."),
+	            "#r{A proxy sequence for viewing the keys of @this ?.}"),
 	TYPE_GETTER("values", &dict_values,
 	            "->?AValues?.\n"
-	            "@return A proxy sequence for viewing the values of @this ?."),
+	            "#r{A proxy sequence for viewing the values of @this ?.}"),
 	TYPE_GETTER("items", &dict_items,
 	            "->?AItems?.\n"
-	            "@return A proxy sequence for viewing the key-value pairs of @this ?."),
+	            "#r{A proxy sequence for viewing the key-value pairs of @this ?.}"),
 	TYPE_GETTER(STR_frozen, &DeeRoDict_FromSequence,
 	            "->?Ert:RoDict\n"
 	            "Returns a read-only (frozen) copy of @this ?."),

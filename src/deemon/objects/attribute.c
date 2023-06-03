@@ -583,7 +583,7 @@ err:
 PRIVATE struct type_method tpconst attr_class_methods[] = {
 	TYPE_KWMETHOD("exists", &attribute_exists,
 	              "(ob,name:?Dstring,flagmask:?X2?Dint?Dstring=!P{},flagval:?X2?Dint?Dstring=!Aflagmask,decl?)->?Dbool\n"
-	              "@throw ValueError The given @flagmask or @flagval contains an unrecognized flag character\n"
+	              "#tValueError{The given @flagmask or @flagval contains an unrecognized flag character}"
 	              "Taking the same arguments as ?#{op:constructor}, check if the an attribute matching "
 	              /**/ "the given arguments exists, returning ?t/?f indicative of this\n"
 	              "${"
@@ -599,7 +599,7 @@ PRIVATE struct type_method tpconst attr_class_methods[] = {
 	              "}"),
 	TYPE_KWMETHOD("lookup", &attribute_lookup,
 	              "(ob,name:?Dstring,flagmask:?X2?Dint?Dstring=!P{},flagval:?X2?Dint?Dstring=!Aflagmask,decl?)->?X2?.?N\n"
-	              "@throw ValueError The given @flagmask or @flagval contains an unrecognized flag character\n"
+	              "#tValueError{The given @flagmask or @flagval contains an unrecognized flag character}"
 	              "Same as ?#{op:constructor}, but return ?N if the attribute doesn't exist\n"
 	              "${"
 	              /**/ "static function lookup(ob, name, flagmask = \"\", flagval = \"\", decl?) {\n"
@@ -624,12 +624,12 @@ PUBLIC DeeTypeObject DeeAttribute_Type = {
 	                         "\n"
 
 	                         "(ob,name:?Dstring,flagmask:?X2?Dint?Dstring=!P{},flagval:?X2?Dint?Dstring=!Aflagmask,decl?)\n"
-	                         "@param flagmask Set of attribute flags to mask when searching for matches (s.a. ?#flags)\n"
-	                         "@param flagval Set of attribute flags required when searching for matches (s.a. ?#flags) "
+	                         "#pflagmask{Set of attribute flags to mask when searching for matches (s.a. ?#flags)}"
+	                         "#pflagval{Set of attribute flags required when searching for matches (s.a. ?#flags) "
 	                         /*          */ "(When only this is given, and @flagmask is omit (as possible when "
-	                         /*          */ "using keyword arguments), flagmask is set to @flagval)\n"
-	                         "@throw AttributeError No attribute matching the specified restrictions could be found\n"
-	                         "@throw ValueError The given @flagmask or @flagval contains an unrecognized flag character\n"
+	                         /*          */ "using keyword arguments), flagmask is set to @flagval)}"
+	                         "#tAttributeError{No attribute matching the specified restrictions could be found}"
+	                         "#tValueError{The given @flagmask or @flagval contains an unrecognized flag character}"
 	                         "Lookup an ?. enumerated by ${enumattr(ob)} or ${enumattr(tp)}, matching "
 	                         /**/ "the given @name, as well as having its set of flags match @flagval, when masked by @flagmask\n"
 	                         "Additionally, @decl may be specified to narrow down valid matches to only those declared by it\n"

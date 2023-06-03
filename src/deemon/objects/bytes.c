@@ -1486,13 +1486,13 @@ PRIVATE struct type_getset tpconst bytes_getsets[] = {
 	            "Alias for ?#iswritable, overriding ?Aismutable?DSequence"),
 	TYPE_GETSET(STR_first, &bytes_getfirst, &bytes_delfirst, &bytes_setfirst,
 	            "->?Dint\n"
-	            "@throw ValueError @this ?. object is empty\n"
-	            "@throw BufferError Attempted to modify the byte when @this ?. object is not writable\n"
+	            "#tValueError{@this ?. object is empty}"
+	            "#tBufferError{Attempted to modify the byte when @this ?. object is not writable}"
 	            "Access the first byte of @this ?. object"),
 	TYPE_GETSET(STR_last, &bytes_getlast, &bytes_dellast, &bytes_setlast,
 	            "->?Dint\n"
-	            "@throw ValueError @this ?. object is empty\n"
-	            "@throw BufferError Attempted to modify the byte when @this ?. object is not writable\n"
+	            "#tValueError{@this ?. object is empty}"
+	            "#tBufferError{Attempted to modify the byte when @this ?. object is not writable}"
 	            "Access the last byte of @this ?. object"),
 	TYPE_GETTER("__sizeof__", &bytes_sizeof, "->?Dint"),
 	TYPE_GETSET_END
@@ -1680,17 +1680,17 @@ err:
 PRIVATE struct type_method tpconst bytes_class_methods[] = {
 	TYPE_METHOD("fromseq", &bytes_fromseq,
 	            "(seq:?S?Dint)->?.\n"
-	            "@throw NotImplemented The given @seq cannot be iterated, or contains at "
-	            /*                 */ "least one item that cannot be converted into an integer\n"
-	            "@throw IntegerOverflow At least one of the integers found in @seq is lower "
-	            /*                  */ "than $0, or greater than $0xff\n"
+	            "#tNotImplemented{The given @seq cannot be iterated, or contains at "
+	            /*                 */ "least one item that cannot be converted into an integer}"
+	            "#tIntegerOverflow{At least one of the integers found in @seq is lower "
+	            /*                  */ "than $0, or greater than $0xff}"
 	            "Convert the items of the given sequence @seq into integers, "
 	            /**/ "and construct a writable ?. object from their values\n"
 	            "Passing ?N for @seq will return an empty ?. object"),
 	TYPE_METHOD("fromhex", &bytes_fromhex,
 	            "(hex_string:?Dstring)->?.\n"
-	            "@throw ValueError The given @hex_string contains non-hexadecimal and non-space characters\n"
-	            "@throw ValueError The given @hex_string contains an unbalanced hexadecimal digit\n"
+	            "#tValueError{The given @hex_string contains non-hexadecimal and non-space characters}"
+	            "#tValueError{The given @hex_string contains an unbalanced hexadecimal digit}"
 	            "Decode a given string containing only digit characters, characters between $\"a\" and $\"f\" "
 	            /**/ "or $\"A\" and $\"F\", or optional space characters separating pairs of such characters.\n"
 	            "Each pair of hexadecimal digits is then interpreted as a byte that is then used to construct "
@@ -1741,7 +1741,7 @@ PUBLIC DeeTypeObject DeeBytes_Type = {
 
 	                         "(ob:?O,start=!0,end=!-1)\n"
 	                         "(ob:?O,mode=!Pr,start=!0,end=!-1)\n"
-	                         "@throw NotImplemented The given @ob does not implement the buffer protocol\n"
+	                         "#tNotImplemented{The given @ob does not implement the buffer protocol}"
 	                         "Construct a ?. object for viewing the memory of @ob, either "
 	                         /**/ "as read-only when @mode is set to $\"r\" or omitted, or as read-write "
 	                         /**/ "when set to $\"w\". The section of memory then addressed by the "
@@ -1757,7 +1757,7 @@ PUBLIC DeeTypeObject DeeBytes_Type = {
 
 	                         "(num_bytes:?Dint)\n"
 	                         "(num_bytes:?Dint,init:?Dint)\n"
-	                         "@throw IntegerOverflow The given @init is negative, or greater than $0xff\n"
+	                         "#tIntegerOverflow{The given @init is negative, or greater than $0xff}"
 	                         "Construct a writable, self-contained ?. object for a total "
 	                         /**/ "of @num_bytes bytes of memory, pre-initialized to @init, or left "
 	                         /**/ "undefined when @init isn't specified\n"
@@ -1802,14 +1802,14 @@ PUBLIC DeeTypeObject DeeBytes_Type = {
 	                         "\n"
 
 	                         "contains(needle:?X3?.?Dstring?Dint)->\n"
-	                         "@throw ValueError The given @needle is a string containing characters ${> 0xff}\n"
-	                         "@throw IntegerOverflow The given @needle is an integer lower than $0, or greater than $0xff\n"
+	                         "#tValueError{The given @needle is a string containing characters ${> 0xff}}"
+	                         "#tIntegerOverflow{The given @needle is an integer lower than $0, or greater than $0xff}"
 	                         "Check if @needle appears within @this ?. object\n"
 	                         "\n"
 
 	                         ":=(data:?X3?.?Dstring?S?Dint)->\n"
-	                         "@throw BufferError @this ?. object is not writable\n"
-	                         "@throw UnpackError The length of the given @data does not equal ${##this}\n"
+	                         "#tBufferError{@this ?. object is not writable}"
+	                         "#tUnpackError{The length of the given @data does not equal ${##this}}"
 	                         "Assign the contents of @data to @this ?. object\n"
 	                         "You may pass ?N for @data to clear all bytes of @this buffer\n"
 	                         "\n"
@@ -1819,15 +1819,15 @@ PUBLIC DeeTypeObject DeeBytes_Type = {
 	                         "\n"
 
 	                         "[]=(index:?Dint,value:?Dint)->\n"
-	                         "@throw BufferError @this ?. object is not writable\n"
-	                         "@throw IndexError The given @index is negative, or greater than the length of @this \n"
-	                         "@throw IntegerOverflow @value is negative or greater than $0xff\n"
+	                         "#tBufferError{@this ?. object is not writable}"
+	                         "#tIndexError{The given @index is negative, or greater than the length of @this }"
+	                         "#tIntegerOverflow{@value is negative or greater than $0xff}"
 	                         "Taking the integer value of @value, assign that value to the byte found at @index\n"
 	                         "\n"
 
 	                         "del[]->\n"
-	                         "@throw BufferError @this ?. object is not writable\n"
-	                         "@throw IndexError The given @index is negative, or greater than the length of @this \n"
+	                         "#tBufferError{@this ?. object is not writable}"
+	                         "#tIndexError{The given @index is negative, or greater than the length of @this }"
 	                         "Same as ${this[index] = 0}, assigning a zero-byte at the given @index\n"
 	                         "\n"
 
@@ -1838,13 +1838,13 @@ PUBLIC DeeTypeObject DeeBytes_Type = {
 	                         "\n"
 
 	                         "[:]=(start:?Dint,end:?Dint,data:?X3?.?Dstring?S?Dint)->\n"
-	                         "@throw BufferError @this ?. object is not writable\n"
-	                         "@throw IntegerOverflow One of the integers extracted from @data is negative, "
-	                         /*                  */ "or greater than $0xff\n"
-	                         "@throw ValueError @data is a string containing characters ${> 0xff}\n"
-	                         "@throw UnpackError The length of the given sequence @data does not match the "
+	                         "#tBufferError{@this ?. object is not writable}"
+	                         "#tIntegerOverflow{One of the integers extracted from @data is negative, "
+	                         /*                  */ "or greater than $0xff}"
+	                         "#tValueError{@data is a string containing characters ${> 0xff}}"
+	                         "#tUnpackError{The length of the given sequence @data does not match the "
 	                         /*              */ "number of bytes, that is ${end-start}. If any, and how many "
-	                         /*              */ "bytes of @this ?. object were already modified is undefined\n"
+	                         /*              */ "bytes of @this ?. object were already modified is undefined}"
 	                         "Assign values to a given range of bytes\n"
 	                         "You may pass ?N to fill the entire range with zero-bytes\n"
 	                         "\n"
@@ -1863,7 +1863,7 @@ PUBLIC DeeTypeObject DeeBytes_Type = {
 	                         "!=(other:?X2?.?Dstring)->\n"
 	                         ">(other:?X2?.?Dstring)->\n"
 	                         ">=(other:?X2?.?Dstring)->\n"
-	                         "@throw ValueError The given @other is a string containing characters ${> 0xff}\n"
+	                         "#tValueError{The given @other is a string containing characters ${> 0xff}}"
 	                         "Perform a lexicographical comparison between @this and @other, and return the result\n"
 	                         "\n"
 
@@ -1882,13 +1882,13 @@ PUBLIC DeeTypeObject DeeBytes_Type = {
 	                         "\n"
 
 	                         "*(times:?Dint)->\n"
-	                         "@throw IntegerOverflow @times is negative, or too large\n"
+	                         "#tIntegerOverflow{@times is negative, or too large}"
 	                         "Returns @this ?. object repeated @times number of times\n"
 	                         "\n"
 
 	                         "%(args:?DTuple)->\n"
 	                         "%(arg:?O)->\n"
-	                         "@throw UnicodeEncodeError Attempted to print a unicode character ${> 0xff}\n"
+	                         "#tUnicodeEncodeError{Attempted to print a unicode character ${> 0xff}}"
 	                         "After interpreting the bytes from @this ?. object as LATIN-1, generate "
 	                         /**/ "a printf-style format string containing only LATIN-1 characters.\n"
 	                         "If @arg isn't a tuple, it is packed into one and the call is identical "

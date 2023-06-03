@@ -235,11 +235,11 @@ symbol_printrepr(DeeCompilerSymbolObject *__restrict self,
 PRIVATE struct type_getset tpconst symbol_getsets[] = {
 	TYPE_GETSET("kind", &symbol_getkind, &symbol_delkind, &symbol_setkind,
 	            "->?Dstring\n"
-	            "@throw ValueError Attempted to set an invalid symbol type\n"
-	            "@throw TypeError Attempted to set the symbol type to one of "
+	            "#tValueError{Attempted to set an invalid symbol type}"
+	            "#tTypeError{Attempted to set the symbol type to one of "
 	            /*            */ "${[\"extern\", \"module\", \"cfield\", \"ifield\", \"alias\", \"arg\"]} "
-	            /*            */ "(use the `set*' member functions instead)\n"
-	            "@throw TypeError Attempted to modify the typing of an $\"arg\" symbol\n"
+	            /*            */ "(use the `set*' member functions instead)}"
+	            "#tTypeError{Attempted to modify the typing of an $\"arg\" symbol}"
 	            "Get, del (set to $\"none\"), or set the typing of @this symbol\n"
 	            "The symbol's typing affects the assembly generated when the symbol "
 	            /**/ "is used in ?AAst?Ert:Compiler branches\n"
@@ -403,13 +403,13 @@ PRIVATE struct type_method tpconst symbol_methods[] = {
 	            /**/ "the effective symbol that is being aliased by it"),
 	TYPE_METHOD("setalias", &symbol_setalias,
 	            "(other:?.)->?.\n"
-	            "@throw ReferenceError Either @other is the same symbol as @this, or "
-	            /*                 */ "it is another alias eventually leading to @this\n"
-	            "@throw TypeError Attempted to modify the typing of an $\"arg\" symbol\n"
+	            "#tReferenceError{Either @other is the same symbol as @this, or "
+	            /*                 */ "it is another alias eventually leading to @this}"
+	            "#tTypeError{Attempted to modify the typing of an $\"arg\" symbol}"
 	            "Change @this symbol to be an alias for @other, and re-return @this"),
 	TYPE_METHOD("setnone", &symbol_setnone,
 	            "->?.\n"
-	            "@throw TypeError Attempted to modify the typing of an $\"arg\" symbol\n"
+	            "#tTypeError{Attempted to modify the typing of an $\"arg\" symbol}"
 	            "Change @this symbol to a none-symbol"),
 	TYPE_METHOD_END
 };

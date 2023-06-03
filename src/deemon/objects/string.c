@@ -1421,11 +1421,11 @@ err:
 PRIVATE struct type_method tpconst string_class_methods[] = {
 	TYPE_METHOD("chr", &string_class_chr,
 	            "(ch:?Dint)->?.\n"
-	            "@throw IntegerOverflow @ch is negative or greater than the greatest unicode-character\n"
-	            "@return A single-character string matching the unicode-character @ch"),
+	            "#tIntegerOverflow{@ch is negative or greater than the greatest unicode-character}"
+	            "#r{A single-character string matching the unicode-character @ch}"),
 	TYPE_METHOD("fromseq", &string_class_fromseq,
 	            "(ordinals:?S?Dint)->?.\n"
-	            "@throw IntegerOverflow One of the ordinals is negative, or greater than $0xffffffff\n"
+	            "#tIntegerOverflow{One of the ordinals is negative, or greater than $0xffffffff}"
 	            "Construct a new string object from a sequence of ordinal values"),
 	TYPE_METHOD_END
 };
@@ -1636,11 +1636,11 @@ PRIVATE struct type_getset tpconst string_getsets[] = {
 	            "Evaluates to ?t if @this ?. has been compiled as a regex pattern in the past"),
 	TYPE_GETTER(STR_first, &string_getfirst,
 	            "->?.\n"
-	            "@throw ValueError @this ?. is empty\n"
+	            "#tValueError{@this ?. is empty}"
 	            "Returns the first character of @this ?."),
 	TYPE_GETTER(STR_last, &string_getlast,
 	            "->?.\n"
-	            "@throw ValueError @this ?. is empty\n"
+	            "#tValueError{@this ?. is empty}"
 	            "Returns the last character of @this ?."),
 	TYPE_GETTER("__sizeof__", &string_sizeof, "->?Dint"),
 
@@ -1665,18 +1665,18 @@ PRIVATE struct type_getset tpconst string_getsets[] = {
 	            "Internal function to view the bytes of ${DeeString_AsUtf8()}"),
 	TYPE_GETTER("__utf16_bytes__", &string_audit_utf16_bytes,
 	            "->?DBytes\n"
-	            "@throw UnicodeEncodeError @this ?Dstring contains ordinals that can't be encoded as utf-16\n"
+	            "#tUnicodeEncodeError{@this ?Dstring contains ordinals that can't be encoded as utf-16}"
 	            "Internal function to view the bytes of ${DeeString_AsUtf16()}"),
 	TYPE_GETTER("__utf32_bytes__", &string_audit_utf32_bytes,
 	            "->?DBytes\n"
 	            "Internal function to view the bytes of ${DeeString_AsUtf32()}"),
 	TYPE_GETTER("__1byte_bytes__", &string_audit_1byte_bytes,
 	            "->?DBytes\n"
-	            "@throw UnicodeEncodeError @this ?Dstring contains ordinals greater than $0xff\n"
+	            "#tUnicodeEncodeError{@this ?Dstring contains ordinals greater than $0xff}"
 	            "Internal function to view the bytes of ${DeeString_As1Byte()}"),
 	TYPE_GETTER("__2byte_bytes__", &string_audit_2byte_bytes,
 	            "->?DBytes\n"
-	            "@throw UnicodeEncodeError @this ?Dstring contains ordinals greater than $0xffff\n"
+	            "#tUnicodeEncodeError{@this ?Dstring contains ordinals greater than $0xffff}"
 	            "Internal function to view the bytes of ${DeeString_As2Byte()}"),
 	TYPE_GETTER("__4byte_bytes__", &string_audit_4byte_bytes,
 	            "->?DBytes\n"
@@ -1753,7 +1753,7 @@ PUBLIC DeeTypeObject DeeString_Type = {
 	                         "\n"
 
 	                         "*(times:?Dint)->\n"
-	                         "@throw IntegerOverflow @times is negative, or too large\n"
+	                         "#tIntegerOverflow{@times is negative, or too large}"
 	                         "Returns @this ?. repeated @times number of times\n"
 	                         "\n"
 
@@ -1797,8 +1797,8 @@ PUBLIC DeeTypeObject DeeString_Type = {
 	                         "\n"
 
 	                         "[]->?.\n"
-	                         "@throw IntegerOverflow @index is negative\n"
-	                         "@throw IndexError @index is greater than ${##this}\n"
+	                         "#tIntegerOverflow{@index is negative}"
+	                         "#tIndexError{@index is greater than ${##this}}"
 	                         "Returns the @{index}th character of @this ?.\n"
 	                         "${"
 	                         /**/ "print \"foo\"[0]; /* \"f\" */\n"

@@ -1947,11 +1947,11 @@ PUBLIC DeeTypeObject DeeClassDescriptor_Type = {
 	                         /**/ "iattr:?S?T2?Dstring?X3?Dint?T2?Dint?X2?Dstring?Dint?T3?Dint?X2?Dstring?Dint?Dstring=!T0,"
 	                         /**/ "cattr:?S?T2?Dstring?X3?Dint?T2?Dint?X2?Dstring?Dint?T3?Dint?X2?Dstring?Dint?Dstring=!T0,"
 	                         /**/ "isize?:?Dint,csize?:?Dint)\n"
-	                         "@throw ValueError Some operator or attribute was defined multiple times\n"
-	                         "@throw ValueError A specified operator name wasn't recognized (custom operators must be encoded as IDs)\n"
-	                         "@throw ValueError A specified set of flags contains an invalid option\n"
-	                         "@throw ValueError An attribute or operator is bound to an out-of-bounds object table index\n"
-	                         "@throw IntergerOverflow A used object table index exceeds the hard limit of $0xffff (unsigned 16-bit)\n"
+	                         "#tValueError{Some operator or attribute was defined multiple times}"
+	                         "#tValueError{A specified operator name wasn't recognized (custom operators must be encoded as IDs)}"
+	                         "#tValueError{A specified set of flags contains an invalid option}"
+	                         "#tValueError{An attribute or operator is bound to an out-of-bounds object table index}"
+	                         "#tIntergerOverflow{A used object table index exceeds the hard limit of $0xffff (unsigned 16-bit)}"
 	                         "Create a new class descriptor\n"
 	                         "The given @flags is a comma-separated string of flags as described in ?#flags\n"
 	                         "The given @isize and @csize determine the allocated sizes of the instance class "
@@ -2331,7 +2331,7 @@ INTERN DeeTypeObject ObjectTable_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_ObjectTable",
 	/* .tp_doc      = */ DOC("(ob:?X2?O?DType)\n"
-	                         "@throw TypeError The given @ob isn't a class or class instance\n"
+	                         "#tTypeError{The given @ob isn't a class or class instance}"
 	                         "Load the object member table of a class, or class instance"),
 	/* .tp_flags    = */ TP_FFINAL,
 	/* .tp_weakrefs = */ 0,

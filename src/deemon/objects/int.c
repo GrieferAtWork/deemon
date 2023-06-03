@@ -4038,10 +4038,10 @@ err:
 PRIVATE struct type_method tpconst int_class_methods[] = {
 	TYPE_KWMETHOD("frombytes", &int_frombytes,
 	              "(data:?DBytes,byteorder:?Dstring=!N,signed=!f)->?.\n"
-	              "@param byteorder The byteorder encoding used by the returned bytes. "
+	              "#pbyteorder{The byteorder encoding used by the returned bytes. "
 	              /*            */ "One of $\"little\" (for little-endian), $\"big\" "
-	              /*            */ "(for big-endian) or ?N (for host-endian)\n"
-	              "@throw ValueError The given @byteorder string isn't recognized\n"
+	              /*            */ "(for big-endian) or ?N (for host-endian)}"
+	              "#tValueError{The given @byteorder string isn't recognized}"
 	              "The inverse of ?#tobytes, decoding a given bytes buffer @bytes to "
 	              /**/ "construct an integer"),
 	TYPE_METHOD_END
@@ -4183,10 +4183,10 @@ DOC_REF(numeric_isunordered_doc);
 PRIVATE struct type_method tpconst int_methods[] = {
 	TYPE_KWMETHOD(STR_tostr, &int_tostr,
 	              "(radix=!10,precision=!0,mode=!P{})->?Dstring\n"
-	              "@param precision The minimum number of digits (excluding radix/sign "
-	              /*            */ "prefixes) to print. Padding is done using $'0'-chars.\n"
-	              "@throw ValueError The given @mode was not recognized\n"
-	              "@throw NotImplemented The given @radix cannot be represented\n"
+	              "#pprecision{The minimum number of digits (excluding radix/sign "
+	              /*            */ "prefixes) to print. Padding is done using $'0'-chars.}"
+	              "#tValueError{The given @mode was not recognized}"
+	              "#tNotImplemented{The given @radix cannot be represented}"
 	              "Convert @this integer to a string, using @radix as base and a "
 	              /**/ "character-options set @mode for which the following control "
 	              /**/ "characters are recognized\n"
@@ -4200,11 +4200,11 @@ PRIVATE struct type_method tpconst int_methods[] = {
 	TYPE_KWMETHOD("oct", &int_oct, numeric_oct_doc),
 	TYPE_KWMETHOD("tobytes", &int_tobytes,
 	              "(length?:?.,byteorder:?Dstring=!N,signed=!f)->?DBytes\n"
-	              "@param byteorder The byteorder encoding used by the returned bytes. "
+	              "#pbyteorder{The byteorder encoding used by the returned bytes. "
 	              /*            */ "One of $\"little\" (for little-endian), $\"big\" (for big-endian) "
-	              /*            */ "or ?N (for host-endian)\n"
-	              "@throw IntegerOverflow @signed is ?f and @this integer is negative\n"
-	              "@throw ValueError The given @byteorder string isn't recognized\n"
+	              /*            */ "or ?N (for host-endian)}"
+	              "#tIntegerOverflow{@signed is ?f and @this integer is negative}"
+	              "#tValueError{The given @byteorder string isn't recognized}"
 	              "Returns the data of @this integer as a @length bytes long "
 	              /**/ "writable Bytes object that is disjunct from @this integer.\n"
 	              "When @signed is ?f, throw an :IntegerOverflow if @this "
@@ -4212,7 +4212,7 @@ PRIVATE struct type_method tpconst int_methods[] = {
 	              /**/ "negative integers"),
 	TYPE_KWMETHOD("bitcount", &int_bitcount,
 	              "(signed=!f)->?.\n"
-	              "@throw IntegerOverflow @signed is ?f and @this integer is negative\n"
+	              "#tIntegerOverflow{@signed is ?f and @this integer is negative}"
 	              "Return the number of bits needed to represent @this integer in base-2"),
 	TYPE_METHOD("divmod", &int_divmod_f, numeric_divmod_doc),
 	TYPE_METHOD("nextafter", &int_nextafter,
@@ -4446,22 +4446,22 @@ PRIVATE struct type_getset tpconst int_getsets[] = {
 	/* Binary property helper functions */
 	TYPE_GETTER("popcount", &int_get_popcount,
 	            "->?Dint\n"
-	            "@throw IntegerOverflow When ${this < 0}\n"
+	            "#tIntegerOverflow{When ${this < 0}}"
 	            "Return the number of 1-bits in this integer"),
 	TYPE_GETTER("ffs", &int_get_ffs,
 	            "->?Dint\n"
 	            "FindFirstSet: same as ?#ctz +1, but returns $0 when ${this == 0}"),
 	TYPE_GETTER("fls", &int_get_fls,
 	            "->?Dint\n"
-	            "@throw IntegerOverflow When ${this < 0}\n"
+	            "#tIntegerOverflow{When ${this < 0}}"
 	            "FindLastSet: same as ?#msb +1, but returns $0 when ${this == 0}"),
 	TYPE_GETTER("partity", &int_get_partity,
 	            "->?Dint\n"
-	            "@throw IntegerOverflow When ${this < 0}\n"
+	            "#tIntegerOverflow{When ${this < 0}}"
 	            "Return $0 or $1 indivative of the even/odd parity of @this. Same as ${this.popcount % 2}"),
 	TYPE_GETTER("ctz", &int_get_ctz,
 	            "->?Dint\n"
-	            "@throw IntegerOverflow When ${this == 0}\n"
+	            "#tIntegerOverflow{When ${this == 0}}"
 	            "CountTrailingZeros: return the number of trailing zero-bits:\n"
 	            "${"
 	            /**/ "local n = this.ctz;\n"
@@ -4469,7 +4469,7 @@ PRIVATE struct type_getset tpconst int_getsets[] = {
 	            "}"),
 	TYPE_GETTER("msb", &int_get_msb,
 	            "->?Dint\n"
-	            "@throw IntegerOverflow When ${this <= 0}\n"
+	            "#tIntegerOverflow{When ${this <= 0}}"
 	            "MostSignificantBit: return the index of the most significant 1-bit (0-based):\n"
 	            "${"
 	            /**/ "assert (this >> this.msb) == 1;"
@@ -4546,14 +4546,14 @@ PUBLIC DeeTypeObject DeeInt_Type = {
 	                         "\n"
 
 	                         "(ob)\n"
-	                         "@throw NotImplemented The given @ob does not implement ${operator int}\n"
+	                         "#tNotImplemented{The given @ob does not implement ${operator int}}"
 	                         "Converts @ob into an integer\n"
 	                         "\n"
 
 	                         "(s:?Dstring,radix=!0)\n"
 	                         "(s:?DBytes,radix=!0)\n"
-	                         "@throw ValueError The given string @s is not a valid integer\n"
-	                         "@throw ValueError The given @radix is invalid\n"
+	                         "#tValueError{The given string @s is not a valid integer}"
+	                         "#tValueError{The given @radix is invalid}"
 	                         "Convert the given :string or :Bytes object @s into an integer\n"
 	                         "When @radix is $0, automatically detect it based on a prefix such as $\"0x\". "
 	                         /**/ "Otherwise, use @radix as it is provided\n"
@@ -4604,22 +4604,22 @@ PUBLIC DeeTypeObject DeeInt_Type = {
 	                         "\n"
 
 	                         "/->\n"
-	                         "@throw DivideByZero The given @other is $0\n"
+	                         "#tDivideByZero{The given @other is $0}"
 	                         "Divide @this by @other and return the truncated result\n"
 	                         "\n"
 
 	                         "%->\n"
-	                         "@throw DivideByZero The given @other is $0\n"
+	                         "#tDivideByZero{The given @other is $0}"
 	                         "Divide @this by @other and return the remainder\n"
 	                         "\n"
 
 	                         "<<(count:?.)->\n"
-	                         "@throw NegativeShift The given @count is lower than $0\n"
+	                         "#tNegativeShift{The given @count is lower than $0}"
 	                         "Shift the bits of @this left a total of @count times\n"
 	                         "\n"
 
 	                         ">>(count:?.)->\n"
-	                         "@throw NegativeShift The given @count is lower than $0\n"
+	                         "#tNegativeShift{The given @count is lower than $0}"
 	                         "Shift the bits of @this right a total of @count times. "
 	                         /**/ "All bits that fall off of the end are discarded\n"
 	                         "\n"

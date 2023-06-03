@@ -650,17 +650,17 @@ PRIVATE struct type_getset tpconst frame_getsets[] = {
 	            "Returns the function that is referenced by @this Frame, or ?N if not available"),
 	TYPE_GETTER("__code__", &frame_getcode,
 	            "->?Ert:Code\n"
-	            "@throw ReferenceError The Frame has continued execution, or was otherwise released\n"
+	            "#tReferenceError{The Frame has continued execution, or was otherwise released}"
 	            "The code object that is being executed"),
 	TYPE_GETSET("__pc__", &frame_getpc, NULL, &frame_setpc,
 	            "->?Dint\n"
-	            "@throw ReferenceError The Frame has continued execution, or was otherwise released\n"
-	            "@throw ValueError Attempted to set PC within a read-only Frame\n"
+	            "#tReferenceError{The Frame has continued execution, or was otherwise released}"
+	            "#tValueError{Attempted to set PC within a read-only Frame}"
 	            "The current program counter"),
 	TYPE_GETTER("__sp__", &frame_getsp_obj,
 	            "->?Dint\n"
-	            "@throw ReferenceError The Frame has continued execution, or was otherwise released\n"
-	            "@throw ValueError The stack depth was undefined and could not be determined\n"
+	            "#tReferenceError{The Frame has continued execution, or was otherwise released}"
+	            "#tValueError{The stack depth was undefined and could not be determined}"
 	            "Get the current stack depth (same as ${##this.__stack__})\n"
 	            "To modify this value, use ?#__stack__ to append/pop objects"),
 	/* TODO: __stack__ (read-write, custom, modifiable & resizable, sequence-like object)

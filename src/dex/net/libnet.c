@@ -221,7 +221,7 @@ PRIVATE struct dex_symbol symbols[] = {
 	{ "getafof", (DeeObject *)&lib_getafof, MODSYM_FREADONLY,
 	  DOC("(id:?Dint)->?Dint\n"
 	      "(name:?Dstring)->?Dint\n"
-	      "@throw NetError.NoSupport The given @name is not recognized by this library\n"
+	      "#t{?ANoSupport?GNetError}{The given @name is not recognized by this library}"
 	      "Return the system-dependent ID of a given address family @name, or re-return the given @id.\n"
 	      "The given @name is encoded the same way as the first constructor argument for ?Gsocket") },
 	{ "gettypename", (DeeObject *)&lib_gettypename, MODSYM_FREADONLY,
@@ -232,7 +232,7 @@ PRIVATE struct dex_symbol symbols[] = {
 	{ "gettypeof", (DeeObject *)&lib_gettypeof, MODSYM_FREADONLY,
 	  DOC("(typ:?Dint)->?Dint\n"
 	      "(name:?Dstring)->?Dint\n"
-	      "@throw NetError.NoSupport The given @name is not recognized by this library\n"
+	      "#t{?ANoSupport?GNetError}{The given @name is not recognized by this library}"
 	      "Return the system-dependent ID of a given socket type @name, or re-return the given @type.\n"
 	      "The given @name is encoded the same way as the second constructor argument for ?Gsocket") },
 	{ "getprotoname", (DeeObject *)&lib_getprotoname, MODSYM_FREADONLY,
@@ -243,7 +243,7 @@ PRIVATE struct dex_symbol symbols[] = {
 	{ "getprotoof", (DeeObject *)&lib_getprotoof, MODSYM_FREADONLY,
 	  DOC("(proto:?Dint)->?Dint\n"
 	      "(name:?Dstring)->?Dint\n"
-	      "@throw NetError.NoSupport The given @name is not recognized by this library\n"
+	      "#t{?ANoSupport?GNetError}{The given @name is not recognized by this library}"
 	      "Return the system-dependent ID of a given protocol name @name, or re-return the given @proto.\n"
 	      "The given @name is encoded the same way as the third constructor argument for ?Gsocket") },
 	{ "getmsgflagsname", (DeeObject *)&lib_getmsgflagsname, MODSYM_FREADONLY,
@@ -254,7 +254,7 @@ PRIVATE struct dex_symbol symbols[] = {
 	{ "getmsgflagsof", (DeeObject *)&lib_getmsgflagsof, MODSYM_FREADONLY,
 	  DOC("(msgflags:?Dint)->?Dint\n"
 	      "(flags:?Dstring)->?Dint\n"
-	      "@throw NetError.NoSupport The given @flags contains at least one flag that is not recognized by this library\n"
+	      "#t{?ANoSupport?GNetError}{The given @flags contains at least one flag that is not recognized by this library}"
 	      "Return a system-dependent set of flags for given message flags @flags, or re-return the given @flags.\n"
 	      "The given @flags is encoded the same way as the flags argument passed to ?Arecv?Gsocket") },
 	{ "ntoh16", (DeeObject *)&lib_ntoh16, MODSYM_FREADONLY,

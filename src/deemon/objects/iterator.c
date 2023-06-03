@@ -846,13 +846,13 @@ err:
 PRIVATE struct type_method tpconst iterator_methods[] = {
 	TYPE_METHOD("next", &iterator_next,
 	            "(defl?)->\n"
-	            "@throw StopIteration @this Iterator has been exhausted, and no @defl was given\n"
+	            "#tStopIteration{@this Iterator has been exhausted, and no @defl was given}"
 	            "Same as ${this.operator next()}\n"
 	            "When given, @defl is returned when the Iterator has been "
 	            /**/ "exhaused, rather than throwing a :StopIteration error"),
 	TYPE_METHOD(STR_peek, &iterator_peek,
 	            "(defl?)->\n"
-	            "@throw StopIteration @this Iterator has been exhausted, and no @defl was given\n"
+	            "#tStopIteration{@this Iterator has been exhausted, and no @defl was given}"
 	            "Peek the next upcoming object, but don't advance to it\n"
 	            "${"
 	            /**/ "function peek(defl?) {\n"
@@ -868,7 +868,7 @@ PRIVATE struct type_method tpconst iterator_methods[] = {
 	            "}\n"),
 	TYPE_METHOD(STR_prev, &iterator_prev,
 	            "->?Dbool\n"
-	            "@throw NotImplemented @this Iterator isn't bi-directional (s.a. ?#isbidirectional)\n"
+	            "#tNotImplemented{@this Iterator isn't bi-directional (s.a. ?#isbidirectional)}"
 	            "Rewind @this Iterator to the previous item, returning ?f if "
 	            /**/ "@this Iterator had already been positioned at the start of its sequence, "
 	            /**/ "or ?t otherwise\n"
@@ -966,7 +966,7 @@ PRIVATE struct type_method tpconst iterator_methods[] = {
 	            "}"),
 	TYPE_METHOD(STR_rewind, &iterator_rewind,
 	            "()\n"
-	            "@throw NotImplemented @this Iterator isn't bi-directional (s.a. ?#isbidirectional)\n"
+	            "#tNotImplemented{@this Iterator isn't bi-directional (s.a. ?#isbidirectional)}"
 	            "Rewind @this Iterator to the start of its sequence\n"
 
 	            "${"
@@ -1033,7 +1033,7 @@ PRIVATE struct type_method tpconst iterator_methods[] = {
 	            "}\n"),
 	TYPE_METHOD(STR_revert, &iterator_revert,
 	            "(step:?Dint)\n"
-	            "@throw NotImplemented @step is positive, and @this Iterator isn't bi-directional (s.a. ?#isbidirectional)\n"
+	            "#tNotImplemented{@step is positive, and @this Iterator isn't bi-directional (s.a. ?#isbidirectional)}"
 	            "Revert @this Iterator by @step items\n"
 	            "${"
 	            /**/ "function revert(step: int) {\n"
@@ -1087,7 +1087,7 @@ PRIVATE struct type_method tpconst iterator_methods[] = {
 	            "}\n"),
 	TYPE_METHOD(STR_advance, &iterator_advance,
 	            "(step:?Dint)\n"
-	            "@throw NotImplemented @step is negative, and @this Iterator isn't bi-directional (s.a. ?#isbidirectional)\n"
+	            "#tNotImplemented{@step is negative, and @this Iterator isn't bi-directional (s.a. ?#isbidirectional)}"
 	            "Revert @this Iterator by @step items\n"
 	            "${"
 	            /**/ "function advance(step: int) {\n"
@@ -2156,7 +2156,7 @@ PRIVATE struct type_getset tpconst iterator_getsets[] = {
 	            /**/ "to be bi-directional, it should override this property and have it evaluate to ?f"),
 	TYPE_GETTER(STR_hasprev, &iterator_get_hasprev,
 	            "->?Dbool\n"
-	            "@throw NotImplemented @this Iterator isn't bi-directional (s.a. ?#isbidirectional)\n"
+	            "#tNotImplemented{@this Iterator isn't bi-directional (s.a. ?#isbidirectional)}"
 	            "Returns ?t if @this Iterator has a predecessor\n"
 	            "${"
 	            /**/ "property hasprev: bool = {\n"
@@ -2187,7 +2187,7 @@ PRIVATE struct type_getset tpconst iterator_getsets[] = {
 	            "Returns ?t if @this Iterator has a successor (alias for ?#{op:bool})"),
 	TYPE_GETSET(STR_index, &iterator_get_index, NULL, &iterator_set_index,
 	            "->?Dint\n"
-	            "@throw NotImplemented @this Iterator isn't bi-directional (s.a. ?#isbidirectional)\n"
+	            "#tNotImplemented{@this Iterator isn't bi-directional (s.a. ?#isbidirectional)}"
 	            "Get/set the current sequence index of @this Iterator\n"
 	            "Note however that depending on the type of sequence, certain indices "
 	            /**/ "may not have values bound to them. When invoked, ?#{op:next} usually skips "
@@ -2491,15 +2491,15 @@ PUBLIC DeeTypeObject DeeIterator_Type = {
 	                         "\n"
 
 	                         "+(step:?Dint)->\n"
-	                         "@throw NotImplemented @step is negative, and @this Iterator isn't bi-directional (s.a. ?#isbidirectional)\n"
-	                         "@throw IntegerOverflow @step is too large\n"
+	                         "#tNotImplemented{@step is negative, and @this Iterator isn't bi-directional (s.a. ?#isbidirectional)}"
+	                         "#tIntegerOverflow{@step is too large}"
 	                         "Copies @this Iterator and advance it by yielding @step items from it before returning it\n"
 	                         "If the Iterator becomes exhausted before then, stop and return that exhausted iterator\n"
 	                         "\n"
 
 	                         "+=(step:?Dint)->\n"
-	                         "@throw NotImplemented @step is negative, and @this Iterator isn't bi-directional (s.a. ?#isbidirectional)\n"
-	                         "@throw IntegerOverflow @step is too large\n"
+	                         "#tNotImplemented{@step is negative, and @this Iterator isn't bi-directional (s.a. ?#isbidirectional)}"
+	                         "#tIntegerOverflow{@step is too large}"
 	                         "Advance @this Iterator by yielding @step items\n"
 	                         "If @this Iterator becomes exhausted before then, stop prematurely\n"
 	                         "\n"
@@ -2527,20 +2527,20 @@ PUBLIC DeeTypeObject DeeIterator_Type = {
 	                         "\n"
 
 	                         "-(step:?Dint)->\n"
-	                         "@throw NotImplemented @step is positive, and @this Iterator isn't bi-directional (s.a. ?#isbidirectional)\n"
-	                         "@throw IntegerOverflow @step is too large\n"
+	                         "#tNotImplemented{@step is positive, and @this Iterator isn't bi-directional (s.a. ?#isbidirectional)}"
+	                         "#tIntegerOverflow{@step is too large}"
 	                         "Copies @this Iterator and reverts it by @step before returning it\n"
 	                         "If the Iterator reaches its starting position before then, stop prematurely\n"
 	                         "\n"
 
 	                         "--->\n"
-	                         "@throw NotImplemented @this Iterator isn't bi-directional (s.a. ?#isbidirectional)\n"
+	                         "#tNotImplemented{@this Iterator isn't bi-directional (s.a. ?#isbidirectional)}"
 	                         "Decrement @this operator by one. No-op if the Iterator is already at its starting position\n"
 	                         "\n"
 
 	                         "-=(step:?Dint)->\n"
-	                         "@throw NotImplemented @step is positive, and @this Iterator isn't bi-directional (s.a. ?#isbidirectional)\n"
-	                         "@throw IntegerOverflow @step is too large\n"
+	                         "#tNotImplemented{@step is positive, and @this Iterator isn't bi-directional (s.a. ?#isbidirectional)}"
+	                         "#tIntegerOverflow{@step is too large}"
 	                         "Revert @this Iterator by @step items\n"
 	                         "If @this Iterator reaches its starting position before then, stop prematurely\n"
 	                         "\n"
@@ -2551,7 +2551,7 @@ PUBLIC DeeTypeObject DeeIterator_Type = {
 	                         "!=->\n"
 	                         ">->\n"
 	                         ">=->\n"
-	                         "@throw TypeError The types of @other and @this don't match\n"
+	                         "#tTypeError{The types of @other and @this don't match}"
 	                         "Compare @this Iterator with @other, returning ?t/?f "
 	                         /**/ "indicate of the remaining number of elements left to be yielded.\n"
 	                         "Various iterator sub-classes also override these operators, and their "

@@ -716,7 +716,7 @@ err_no_except:
 PRIVATE struct type_getset tpconst traceback_class_getsets[] = {
 	TYPE_GETTER("current", &traceback_current,
 	            "->?.\n"
-	            "@throw RuntimeError No exception was being handled\n"
+	            "#tRuntimeError{No exception was being handled}"
 	            "Returns the traceback associated with the current exception"),
 	TYPE_GETSET_END
 };

@@ -1770,7 +1770,7 @@ PRIVATE struct type_method tpconst buffer_methods[] = {
 	            /**/ "of whether or not $\"nosync\" was passed to the constructor, or ?#setbuf"),
 	TYPE_KWMETHOD("setbuf", &buffer_setbuf,
 	              "(mode:?Dstring,size=!0)\n"
-	              "@throw ValueError The given @mode is malformed, or not recognized\n"
+	              "#tValueError{The given @mode is malformed, or not recognized}"
 	              "Set the buffering mode of @this buffer to @mode, with a buffer size of @size\n"
 	              "When non-zero, @size dictates the initial buffer size, or a fixed buffer size when "
 	              /**/ "the buffering mode is set to $\"none\", otherwise a buffer size of $0 allows "
@@ -1891,7 +1891,7 @@ PUBLIC DeeFileTypeObject DeeFileBuffer_Type = {
 		/* .tp_doc      = */ DOC("General-purpose input/output file buffering\n"
 		                         "\n"
 		                         "(fp:?DFile,mode=!Pauto,size=!0)\n"
-		                         "@throw ValueError The given @mode is malformed, or not recognized\n"
+		                         "#tValueError{The given @mode is malformed, or not recognized}"
 		                         "Construct a new buffer for @fp using the given @mode and @size\n"
 		                         "When non-zero, @size dictates the initial buffer size, or a fixed buffer size when "
 		                         /**/ "the buffering mode is set to $\"none\". Otherwise a buffer size of $0 causes "

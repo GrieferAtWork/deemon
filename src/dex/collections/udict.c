@@ -1271,38 +1271,38 @@ PRIVATE struct type_member tpconst udict_class_members[] = {
 PRIVATE struct type_method tpconst udict_methods[] = {
 	TYPE_METHOD("get", &udict_get,
 	            "(key,def=!N)->\n"
-	            "@return The value associated with @key or @def when @key has no value associated"),
+	            "#r{The value associated with @key or @def when @key has no value associated}"),
 	TYPE_METHOD("pop", &udict_pop,
 	            "(key)->\n"
 	            "(key,def)->\n"
-	            "@throw KeyError No @def was given and @key was not found\n"
+	            "#tKeyError{No @def was given and @key was not found}"
 	            "Delete @key from @this and return its previously assigned value or @def when @key had no item associated"),
 	TYPE_METHOD("clear", &udict_clearfun,
 	            "()\n"
 	            "Clear all values from @this :Dict"),
 	TYPE_METHOD("popitem", &udict_popsomething,
 	            "->?T2?O?O\n"
-	            "@return A random pair key-value pair that has been removed\n"
-	            "@throw ValueError @this :Dict was empty"),
+	            "#r{A random pair key-value pair that has been removed}"
+	            "#tValueError{@this :Dict was empty}"),
 	TYPE_METHOD("setdefault", &udict_setdefault,
 	            "(key,def=!N)->\n"
-	            "@return The object currently assigned to @key\n"
+	            "#r{The object currently assigned to @key}"
 	            "Lookup @key in @this Dict and return its value if found. Otherwise, assign @def to @key and return it instead"),
 	TYPE_METHOD("setold", &udict_setold,
 	            "(key,value)->?Dbool\n"
-	            "@return Indicative of @value having been assigned to @key\n"
+	            "#r{Indicative of @value having been assigned to @key}"
 	            "Assign @value to @key, only succeeding when @key already existed to begin with"),
 	TYPE_METHOD("setnew", &udict_setnew,
 	            "(key,value)->?Dbool\n"
-	            "@return Indicative of @value having been assigned to @key\n"
+	            "#r{Indicative of @value having been assigned to @key}"
 	            "Assign @value to @key, only succeeding when @key didn't exist before"),
 	TYPE_METHOD("setold_ex", &udict_setold_ex,
 	            "(key,value)->?T2?Dbool?O\n"
-	            "@return A pair of values (new-value-was-assigned, old-value-or-none)\n"
+	            "#r{A pair of values (new-value-was-assigned, old-value-or-none)}"
 	            "Same as #setold but also return the previously assigned object"),
 	TYPE_METHOD("setnew_ex", &udict_setnew_ex,
 	            "(key,value)->?T2?Dbool?O\n"
-	            "@return A pair of values (new-value-was-assigned, old-value-or-none)\n"
+	            "#r{A pair of values (new-value-was-assigned, old-value-or-none)}"
 	            "Same as #setnew but return the previously assigned object on failure"),
 	TYPE_METHOD("update", &udict_update,
 	            "(items:?S?T2?O?O)\n"
@@ -1983,7 +1983,7 @@ urodict_sizeof(URoDict *self) {
 PRIVATE struct type_method tpconst urodict_methods[] = {
 	TYPE_METHOD("get", &urodict_get,
 	            "(key,def=!N)->\n"
-	            "@return The value associated with @key or @def when @key has no value associated"),
+	            "#r{The value associated with @key or @def when @key has no value associated}"),
 	TYPE_METHOD_END
 };
 

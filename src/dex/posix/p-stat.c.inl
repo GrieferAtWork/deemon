@@ -2406,11 +2406,11 @@ err:
 PRIVATE struct type_getset tpconst stat_getsets[] = {
 	TYPE_GETTER("st_dev", &stat_get_dev,
 	            "->?Dint\n"
-	            "@throw ValueError @this stat-file does not contain valid device information\n"
+	            "#tValueError{@this stat-file does not contain valid device information}"
 	            "Return the device number of the storage device on which the stat-file is located"),
 	TYPE_GETTER("st_ino", &stat_get_ino,
 	            "->?Dint\n"
-	            "@throw ValueError @this stat-file does not contain valid inode information\n"
+	            "#tValueError{@this stat-file does not contain valid inode information}"
 	            "Returns the inode number or file-id of the stat-file"),
 	TYPE_GETTER("st_mode", &stat_get_mode,
 	            "->?Dint\n"
@@ -2427,67 +2427,67 @@ PRIVATE struct type_getset tpconst stat_getsets[] = {
 	            "Returns a descriptor for the group owning this file"),
 	TYPE_GETTER("st_rdev", &stat_get_rdev,
 	            "->?Dint\n"
-	            "@throw ValueError @this stat-file does not contain valid r-dev information\n"
+	            "#tValueError{@this stat-file does not contain valid r-dev information}"
 	            "Returns the device ID of the character/block device described by this stat-file"),
 	TYPE_GETTER("st_size", &stat_get_size,
 	            "->?Dint\n"
-	            "@throw ValueError @this stat-file does not contain valid size information\n"
+	            "#tValueError{@this stat-file does not contain valid size information}"
 	            "Returns the size of the stat-file in bytes"),
 	TYPE_GETTER("st_blocks", &stat_get_blocks,
 	            "->?Dint\n"
-	            "@throw ValueError @this stat-file does not contain valid block-count information\n"
+	            "#tValueError{@this stat-file does not contain valid block-count information}"
 	            "Returns the number of filesystem blocks used by the stat-file"),
 	TYPE_GETTER("st_blksize", &stat_get_blksize,
 	            "->?Dint\n"
-	            "@throw ValueError @this stat-file does not contain valid block-count information\n"
+	            "#tValueError{@this stat-file does not contain valid block-count information}"
 	            "Returns the size of a filesystem blocks, as used by the stat-file"),
 	TYPE_GETTER("st_atime", &stat_get_atime,
 	            "->?Etime:Time\n"
-	            "@throw ValueError @this stat-file does not contain valid time information\n"
+	            "#tValueError{@this stat-file does not contain valid time information}"
 	            "Return the last-accessed time of the stat-file"),
 	TYPE_GETTER("st_mtime", &stat_get_mtime,
 	            "->?Etime:Time\n"
-	            "@throw ValueError @this stat-file does not contain valid time information\n"
+	            "#tValueError{@this stat-file does not contain valid time information}"
 	            "Return the last-modified (file content only) time of the stat-file"),
 	TYPE_GETTER("st_ctime", &stat_get_ctime,
 	            "->?Etime:Time\n"
-	            "@throw ValueError @this stat-file does not contain valid time information\n"
+	            "#tValueError{@this stat-file does not contain valid time information}"
 	            "Return the lsat-changed (file content & file attributes) time of the stat-file"),
 	TYPE_GETTER("st_birthtime", &stat_get_birthtime,
 	            "->?Etime:Time\n"
-	            "@throw ValueError @this stat-file does not contain valid time information\n"
+	            "#tValueError{@this stat-file does not contain valid time information}"
 	            "Return the creation (birth) time of the stat-file"),
 	TYPE_GETTER("isdir", &stat_isdir,
 	            "->?Dbool\n"
-	            "@interrupt\n"
+	            "#t{:Interrupt}"
 	            "Check if @this stat-file refers to a directory"),
 	TYPE_GETTER("ischr", &stat_ischr,
 	            "->?Dbool\n"
-	            "@interrupt\n"
+	            "#t{:Interrupt}"
 	            "Check if @this stat-file refers to a character-device"),
 	TYPE_GETTER("isblk", &stat_isblk,
 	            "->?Dbool\n"
-	            "@interrupt\n"
+	            "#t{:Interrupt}"
 	            "Check if @this stat-file refers to a block-device"),
 	TYPE_GETTER("isdev", &stat_isdev,
 	            "->?Dbool\n"
-	            "@interrupt\n"
+	            "#t{:Interrupt}"
 	            "Check if @this stat-file refers to a character- or block-device"),
 	TYPE_GETTER("isreg", &stat_isreg,
 	            "->?Dbool\n"
-	            "@interrupt\n"
+	            "#t{:Interrupt}"
 	            "Check if @this stat-file refers to a regular file"),
 	TYPE_GETTER("isfifo", &stat_isfifo,
 	            "->?Dbool\n"
-	            "@interrupt\n"
+	            "#t{:Interrupt}"
 	            "Check if @this stat-file refers to a pipe"),
 	TYPE_GETTER("islnk", &stat_islnk,
 	            "->?Dbool\n"
-	            "@interrupt\n"
+	            "#t{:Interrupt}"
 	            "Check if @this stat-file refers to a symbolic link"),
 	TYPE_GETTER("issock", &stat_issock,
 	            "->?Dbool\n"
-	            "@interrupt\n"
+	            "#t{:Interrupt}"
 	            "Check if @this stat-file refers to a socket"),
 
 	/* Non-portable NT extensions. */
@@ -2500,7 +2500,7 @@ PRIVATE struct type_getset tpconst stat_getsets[] = {
 #ifdef HAVE_stat_getnttype_np
 	TYPE_GETTER("nttype_np", &stat_getnttype_np,
 	            "->?Dint\n"
-	            "@throw ValueError @this stat-file does not contain valid NT-type information\n"
+	            "#tValueError{@this stat-file does not contain valid NT-type information}"
 	            "Non-portable windows extension for retrieving the NT type of this stat-file, that "
 	            /**/ "type being one of the `FILE_TYPE_*' constants found in windows system headers"),
 #endif /* HAVE_stat_getnttype_np */
@@ -2515,7 +2515,7 @@ PRIVATE struct type_method tpconst stat_class_methods[] = {
 	            "(fp:?DFile)->?Dbool\n"
 	            "(fd:?Dint)->?Dbool\n"
 	            "(dfd:?X3?DFile?Dint?Dstring,path:?Dstring,atflags=!0)->?Dbool\n"
-	            "@interrupt\n"
+	            "#t{:Interrupt}"
 	            "Taking the same arguments as the constructor of ?Gstat, "
 	            /**/ "check if the referred file exists, or if the given "
 	            /**/ "file described can be used with ?Gstat"),
@@ -2525,7 +2525,7 @@ PRIVATE struct type_method tpconst stat_class_methods[] = {
 	            "(fp:?DFile)->?Dbool\n"
 	            "(fd:?Dint)->?Dbool\n"
 	            "(dfd:?X3?DFile?Dint?Dstring,path:?Dstring,atflags=!0)->?Dbool\n"
-	            "@interrupt\n"
+	            "#t{:Interrupt}"
 	            "Taking the same arguments as the constructor of ?Gstat, "
 	            /**/ "check if the passed parameters refer to an existing directory"),
 	TYPE_METHOD("ischr", &stat_class_ischr,
@@ -2534,7 +2534,7 @@ PRIVATE struct type_method tpconst stat_class_methods[] = {
 	            "(fp:?DFile)->?Dbool\n"
 	            "(fd:?Dint)->?Dbool\n"
 	            "(dfd:?X3?DFile?Dint?Dstring,path:?Dstring,atflags=!0)->?Dbool\n"
-	            "@interrupt\n"
+	            "#t{:Interrupt}"
 	            "Taking the same arguments as the constructor of ?Gstat, "
 	            /**/ "check if the passed parameters refer to an existing character-device"),
 	TYPE_METHOD("isblk", &stat_class_isblk,
@@ -2543,7 +2543,7 @@ PRIVATE struct type_method tpconst stat_class_methods[] = {
 	            "(fp:?DFile)->?Dbool\n"
 	            "(fd:?Dint)->?Dbool\n"
 	            "(dfd:?X3?DFile?Dint?Dstring,path:?Dstring,atflags=!0)->?Dbool\n"
-	            "@interrupt\n"
+	            "#t{:Interrupt}"
 	            "Taking the same arguments as the constructor of ?Gstat, "
 	            /**/ "check if the passed parameters refer to an existing block-device"),
 	TYPE_METHOD("isdev", &stat_class_isdev,
@@ -2552,7 +2552,7 @@ PRIVATE struct type_method tpconst stat_class_methods[] = {
 	            "(fp:?DFile)->?Dbool\n"
 	            "(fd:?Dint)->?Dbool\n"
 	            "(dfd:?X3?DFile?Dint?Dstring,path:?Dstring,atflags=!0)->?Dbool\n"
-	            "@interrupt\n"
+	            "#t{:Interrupt}"
 	            "Taking the same arguments as the constructor of ?Gstat, "
 	            /**/ "check if the passed parameters refer to an existing character- or block-device"),
 	TYPE_METHOD("isreg", &stat_class_isreg,
@@ -2561,7 +2561,7 @@ PRIVATE struct type_method tpconst stat_class_methods[] = {
 	            "(fp:?DFile)->?Dbool\n"
 	            "(fd:?Dint)->?Dbool\n"
 	            "(dfd:?X3?DFile?Dint?Dstring,path:?Dstring,atflags=!0)->?Dbool\n"
-	            "@interrupt\n"
+	            "#t{:Interrupt}"
 	            "Taking the same arguments as the constructor of ?Gstat, "
 	            /**/ "check if the passed parameters refer to an existing regular file"),
 	TYPE_METHOD("isfifo", &stat_class_isfifo,
@@ -2570,7 +2570,7 @@ PRIVATE struct type_method tpconst stat_class_methods[] = {
 	            "(fp:?DFile)->?Dbool\n"
 	            "(fd:?Dint)->?Dbool\n"
 	            "(dfd:?X3?DFile?Dint?Dstring,path:?Dstring,atflags=!0)->?Dbool\n"
-	            "@interrupt\n"
+	            "#t{:Interrupt}"
 	            "Taking the same arguments as the constructor of ?Gstat, "
 	            /**/ "check if the passed parameters refer to an existing pipe"),
 	TYPE_METHOD("islnk", &stat_class_islnk,
@@ -2579,7 +2579,7 @@ PRIVATE struct type_method tpconst stat_class_methods[] = {
 	            "(fp:?DFile)->?Dbool\n"
 	            "(fd:?Dint)->?Dbool\n"
 	            "(dfd:?X3?DFile?Dint?Dstring,path:?Dstring,atflags=!0)->?Dbool\n"
-	            "@interrupt\n"
+	            "#t{:Interrupt}"
 	            "Taking the same arguments as the constructor of ?Gstat, "
 	            /**/ "check if the passed parameters refer to an existing symbolic link"),
 	TYPE_METHOD("issock", &stat_class_issock,
@@ -2588,7 +2588,7 @@ PRIVATE struct type_method tpconst stat_class_methods[] = {
 	            "(fp:?DFile)->?Dbool\n"
 	            "(fd:?Dint)->?Dbool\n"
 	            "(dfd:?X3?DFile?Dint?Dstring,path:?Dstring,atflags=!0)->?Dbool\n"
-	            "@interrupt\n"
+	            "#t{:Interrupt}"
 	            "Taking the same arguments as the constructor of ?Gstat, "
 	            /**/ "check if the passed parameters refer to an existing socket"),
 	TYPE_METHOD("ishidden", &stat_class_ishidden,
@@ -2597,7 +2597,7 @@ PRIVATE struct type_method tpconst stat_class_methods[] = {
 	            "(fp:?DFile)->?Dbool\n"
 	            "(fd:?Dint)->?Dbool\n"
 	            "(dfd:?X3?DFile?Dint?Dstring,path:?Dstring,atflags=!0)->?Dbool\n"
-	            "@interrupt\n"
+	            "#t{:Interrupt}"
 	            "Taking the same arguments as the constructor of "
 	            /**/ "?Gstat, check if the passed parameters refer to a hidden file. "
 	            /**/ "If the filesystem encodes the hidden-attribute as part of the "
@@ -2609,7 +2609,7 @@ PRIVATE struct type_method tpconst stat_class_methods[] = {
 	            "(fp:?DFile)->?Dbool\n"
 	            "(fd:?Dint)->?Dbool\n"
 	            "(dfd:?X3?DFile?Dint?Dstring,path:?Dstring,atflags=!0)->?Dbool\n"
-	            "@interrupt\n"
+	            "#t{:Interrupt}"
 	            "Taking the same arguments as the constructor of ?Gstat, "
 	            /**/ "check if the passed parameters refer to an executable file. "
 	            /**/ "If the filesystem encodes the executable-attribute as part of the "
@@ -2626,10 +2626,10 @@ INTERN DeeTypeObject DeeStat_Type = {
 	                         "(fp:?DFile)\n"
 	                         "(fd:?Dint)\n"
 	                         "(dfd:?X3?DFile?Dint?Dstring,path:?Dstring,atflags=!0)\n"
-	                         "@interrupt\n"
-	                         "@throw FileNotFound The given @path or @fp could not be found\n"
-	                         "@throw SystemError Failed to query file information for some reason\n"
-	                         "@throw ValueError Invalid @atflags argument\n"
+	                         "#t{:Interrupt}"
+	                         "#tFileNotFound{The given @path or @fp could not be found}"
+	                         "#tSystemError{Failed to query file information for some reason}"
+	                         "#tValueError{Invalid @atflags argument}"
 	                         "Query information on a given @path, file stream @fp "
 	                         /**/ "or file descriptor @fd (if supported by the host)\n"
 	                         "If you wish to test the existing and type of a type, "
@@ -2688,9 +2688,9 @@ INTERN DeeTypeObject DeeLStat_Type = {
 	/* .tp_name     = */ "lstat",
 	/* .tp_doc      = */ DOC("(path:?Dstring)\n"
 	                         "(dfd:?X3?DFile?Dint?Dstring,path:?Dstring)\n"
-	                         "@interrupt\n"
-	                         "@throw FileNotFound The given @path or @fp could not be found\n"
-	                         "@throw SystemError Failed to query file information for some reason\n"
+	                         "#t{:Interrupt}"
+	                         "#tFileNotFound{The given @path or @fp could not be found}"
+	                         "#tSystemError{Failed to query file information for some reason}"
 	                         "Same as its base type ?Gstat, but query information without "
 	                         /**/ "dereferencing the final link"),
 	/* .tp_flags    = */ TP_FNORMAL,

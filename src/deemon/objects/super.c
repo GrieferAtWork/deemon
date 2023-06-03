@@ -702,12 +702,12 @@ err:
 PRIVATE struct type_method tpconst super_class_methods[] = {
 	TYPE_METHOD("typeof", &super_typeof,
 	            "(ob:?.)->?DType\n"
-	            "@throw TypeError @ob is not a super-object\n"
-	            "@return the type of a given super-view @ob"),
+	            "#tTypeError{@ob is not a super-object}"
+	            "#r{the type of a given super-view @ob}"),
 	TYPE_METHOD("selfof", &super_selfof,
 	            "(ob:?.)->\n"
-	            "@throw TypeError @ob is not a super-object\n"
-	            "@return the object of a given super-view @ob"),
+	            "#tTypeError{@ob is not a super-object}"
+	            "#r{the object of a given super-view @ob}"),
 	TYPE_METHOD_END
 };
 
@@ -725,16 +725,16 @@ PUBLIC DeeTypeObject DeeSuper_Type = {
 	                         "\n"
 	                         "(ob:?.)\n"
 	                         "Same as ${Super(Super.selfof(ob), Super.typeof(ob).__base__}\n"
-	                         "@throw TypeError The class of @ob has no base-class\n"
+	                         "#tTypeError{The class of @ob has no base-class}"
 
 	                         "\n"
 	                         "(ob)\n"
-	                         "@throw TypeError The type of @ob has no base-class\n"
+	                         "#tTypeError{The type of @ob has no base-class}"
 	                         "Same as ${Super(ob, type(ob).__base__}\n"
 
 	                         "\n"
 	                         "(ob,tp:?DType)\n"
-	                         "@throw TypeError The given object @ob is not an instance of @tp\n"
+	                         "#tTypeError{The given object @ob is not an instance of @tp}"
 	                         "Creates a new super-view for @ob as an instance of @tp\n"
 	                         "When @ob is another super-view, ${Super.selfof(ob)} is used instead\n"
 

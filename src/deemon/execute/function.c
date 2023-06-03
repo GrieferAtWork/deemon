@@ -1921,7 +1921,7 @@ PRIVATE struct type_getset tpconst yfi_getsets[] = {
 	            "->?Dframe\n"
 	            "The execution stack-frame representing the current state of the iterator"),
 	TYPE_GETTER("__this__", &yfi_getthis,
-	            "@throw UnboundAttribute No $this-argument available\n"
+	            "#tUnboundAttribute{No $this-argument available}"
 	            "The $this-argument used during execution"),
 #ifndef CONFIG_NO_THREADS
 	TYPE_GETTER("__yfunc__", &yfi_getyfunc,

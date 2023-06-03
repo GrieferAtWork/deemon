@@ -1822,25 +1822,25 @@ INTERN DeeTypeObject DeeSockAddr_Type = {
 	/* .tp_doc      = */ NULL,
 #else /* CONFIG_NO_DOC */
 	/* .tp_doc      = */ "(family:?X2?Dstring?Dint,args!)\n"
-	                     "@param family The family of which this is a socket address. You may pass ?N, an empty "
-	                                   "string, $\"AF_AUTO\", or ${-1} to determine the proper family automatically\n"
+	                     "#pfamily{The family of which this is a socket address. You may pass ?N, an empty "
+	                                   "string, $\"AF_AUTO\", or ${-1} to determine the proper family automatically}"
 	                     "Create a new socket address. @args is documented below and depends on @family\n"
 	                     "Note that many functions from :socket also accept @args as arguments to various functions\n"
 	                     "\n"
 
 	                     "(args!,other:?Dsockaddr)\n"
-	                     "@throw ValueError The @other socket uses a ?#family incompatible to the previously specified family\n"
-	                     "@param other The @other socket address that should be duplicated\n"
+	                     "#tValueError{The @other socket uses a ?#family incompatible to the previously specified family}"
+	                     "#pother{The @other socket address that should be duplicated}"
 	                     "Always accepted is another socket address that is duplicated\n"
 	                     "\n"
 
 	                     "(args!,host_and_port:?Dstring)\n"
 	                     "(args!,host:?Dstring,port:?Dstring)\n"
 	                     "(args!,host:?Dstring,port:?Dint)\n"
-	                     "@throw NetError.HostNotFound.NoHostAddress The @host exists, but offers no address matching the required family\n"
-	                     "@throw NetError.HostNotFound Failed to find the host described by @host_and_port or @host and @port\n"
-	                     "@throw NetError An unknown error caused the hostname lookup to fail\n"
-	                     "@param host_and_port The host and port separated by a $\":\" character\n"
+	                     "#t{?ANoHostAddress?AHostNotFound?GNetError}{The @host exists, but offers no address matching the required family}"
+	                     "#t{?AHostNotFound?GNetError}{Failed to find the host described by @host_and_port or @host and @port}"
+	                     "#tNetError{An unknown error caused the hostname lookup to fail}"
+	                     "#phost_and_port{The host and port separated by a $\":\" character}"
 	                     "Always accepted is a host+port argument part encoded in strings\n"
 #if defined(AF_INET) || defined(AF_INET6)
 	                     "Note that this is the preferred way of encoding "
@@ -1896,7 +1896,7 @@ INTERN DeeTypeObject DeeSockAddr_Type = {
 
 #ifdef AF_UNIX
 	                     "(family=!PAF_UNIX,path:?Dstring)\n"
-	                     "@throw ValueError The given @path is too long\n"
+	                     "#tValueError{The given @path is too long}"
 	                     "Create a unix-pipe socket address using the given @path\n"
 	                     "\n"
 #endif /* AF_UNIX */

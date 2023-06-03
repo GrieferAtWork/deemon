@@ -799,7 +799,7 @@ PRIVATE struct type_getset tpconst keyword_getsets[] = {
 	            &keyword_del_uservalue,
 	            &keyword_set_uservalue,
 	            "->?Dint\n"
-	            "@throw IntegerOverflow Attempted to write a negative value, or one that is too large\n"
+	            "#tIntegerOverflow{Attempted to write a negative value, or one that is too large}"
 	            "Get, del (set to $0), or set a custom user-value which can be stored within "
 	            /**/ "keyword descriptors. This value must be an unsigned integer that fits into "
 	            /**/ "a single pointer, as used by the host"),
@@ -2422,8 +2422,8 @@ PRIVATE struct type_method tpconst lexer_methods[] = {
 	            "existed, and therefor didn't get deleted, either"),
 	TYPE_KWMETHOD("define", &lexer_define,
 	              "(name:?Dstring,value:?Dstring,builtin=!f)\n"
-	              "@param builtin When ?t define the macro as builtin, meaning the "
-	              "definition set by @value is restored when resetting macros\n"
+	              "#pbuiltin{When ?t define the macro as builtin, meaning the "
+	              "definition set by @value is restored when resetting macros}"
 	              "Define a new keyword-like macro @name to expand to @value"),
 	TYPE_KWMETHOD("addassert", &lexer_addassert,
 	              "(predicate:?Dstring,answer:?Dstring)\n"
@@ -2432,7 +2432,7 @@ PRIVATE struct type_method tpconst lexer_methods[] = {
 	              "within a preprocessor expression"),
 	TYPE_KWMETHOD("delassert", &lexer_delassert,
 	              "(predicate:?Dstring,answer?:?Dstring)->?Dbool\n"
-	              "@return Returns ?t when at least 1 answer got deleted for the given @predicate\n"
+	              "#r{Returns ?t when at least 1 answer got deleted for the given @predicate}"
 	              "Delete an assertion @answer, or all assertions made for a given "
 	              "@predicate, such that ${##if #predicate(answer)} no longer evaluates "
 	              "to ?t when encountered within a preprocessor expression"),
@@ -3203,13 +3203,13 @@ done2:
 PRIVATE struct type_method tpconst lexer_token_methods[] = {
 	TYPE_METHOD("decodestring", &lexer_token_decodestring,
 	            "->?Dstring\n"
-	            "@throw ValueError The current token isn't a string\n"
-	            "@throw UnicodeDecodeError The string contains an invalid escape-character\n"
+	            "#tValueError{The current token isn't a string}"
+	            "#tUnicodeDecodeError{The string contains an invalid escape-character}"
 	            "Decode the current token (which must be a string-token) as a string"),
 	TYPE_METHOD("decodeinteger", &lexer_token_decodeinteger,
 	            "(warnchar=!t)->?Dint\n"
-	            "@throw ValueError The current token isn't an integer, or character\n"
-	            "@throw ValueError The current token contains an invalid digit\n"
+	            "#tValueError{The current token isn't an integer, or character}"
+	            "#tValueError{The current token contains an invalid digit}"
 	            "Decode the current token (which must be an integer or character) as an :int object\n"
 	            "When @warnchar is ?t, emit a warning when a character is used as an integer"),
 	TYPE_METHOD_END
@@ -4564,7 +4564,7 @@ PRIVATE struct type_getset tpconst file_getsets[] = {
 	            &file_delfilename,
 	            &file_setfilename,
 	            "->?Dstring\n"
-	            "@throw ValueError Attempted to delete, or set the filename of a non-text file\n"
+	            "#tValueError{Attempted to delete, or set the filename of a non-text file}"
 	            "Returns the filename of a text file, or the filename of the file containing the "
 	            /**/ "definition of the @this macro\n"
 	            "In the event that a ${##line} directive was used to override the filename, the "
@@ -4586,19 +4586,19 @@ PRIVATE struct type_getset tpconst file_getsets[] = {
 	            &file_dellineoffset,
 	            &file_setlineoffset,
 	            "->?Dint\n"
-	            "@throw ValueError @this File isn't a text file (?#istext is ?f)\n"
+	            "#tValueError{@this File isn't a text file (?#istext is ?f)}"
 	            "Get, del(set to zero), or set the line-offset within @this "
 	            /**/ "text file, as can also be set by the ?#line directive"),
 	TYPE_GETTER("stream", &file_stream,
 	            "->?DFile\n"
-	            "@throw ValueError @this File isn't a text file (?#istext is ?f)\n"
+	            "#tValueError{@this File isn't a text file (?#istext is ?f)}"
 	            "Returns the file stream from which data is read into @this File"),
 	TYPE_GETSET("guard",
 	            &file_getguard,
 	            &file_delguard,
 	            &file_setguard,
 	            "->?X2?AKeyword?ALexer?Ert:Compiler?N\n"
-	            "@throw ValueError @this File isn't a text file (?#istext is ?f)\n"
+	            "#tValueError{@this File isn't a text file (?#istext is ?f)}"
 	            "Get, delete, or set a keyword that is checked for being defined "
 	            /**/ "before allowing @this File to be included by ${##include} again\n"
 	            "In the event of the keyword having an associated macro that is also "
@@ -4609,24 +4609,24 @@ PRIVATE struct type_getset tpconst file_getsets[] = {
 	            &file_delnewguard,
 	            &file_setnewguard,
 	            "->?X2?AKeyword?ALexer?Ert:Compiler?N\n"
-	            "@throw ValueError @this File isn't a text file (?#istext is ?f)\n"
+	            "#tValueError{@this File isn't a text file (?#istext is ?f)}"
 	            "Get, delete, or set a keyword that will be set as ?#guard (if no guard has "
 	            /**/ "already been set) once @this File is popped from the ${##include}-stack, and "
 	            /**/ "?#disallowguard is ?f"),
 	TYPE_GETTER("includecount", &file_includecount,
 	            "->?Dint\n"
-	            "@throw ValueError @this File isn't a text file (?#istext is ?f)\n"
+	            "#tValueError{@this File isn't a text file (?#istext is ?f)}"
 	            "Return the number of times that @this File exists within the ${##include}-stack"),
 	TYPE_GETTER("readcount", &file_readcount,
 	            "->?Dint\n"
-	            "@throw ValueError @this File isn't a text file (?#istext is ?f)\n"
+	            "#tValueError{@this File isn't a text file (?#istext is ?f)}"
 	            "Returns the number of bytes already read from the underlying source stream"),
 	TYPE_GETSET("disallowguard",
 	            &file_getdisallowguard,
 	            &file_deldisallowguard,
 	            &file_setdisallowguard,
 	            "->?Dbool\n"
-	            "@throw ValueError @this File isn't a text file (?#istext is ?f)\n"
+	            "#tValueError{@this File isn't a text file (?#istext is ?f)}"
 	            "Get, del (set to false), or set @this File's disallow-guard property.\n"
 	            "When set to ?f, ?#newguard will be applied as ?#guard when the file is "
 	            /**/ "popped, allowing the lexer to remember a potential file guard.\n"
@@ -4638,7 +4638,7 @@ PRIVATE struct type_getset tpconst file_getsets[] = {
 	            &file_delissystemheader,
 	            &file_setissystemheader,
 	            "->?Dbool\n"
-	            "@throw ValueError @this File isn't a text file (?#istext is ?f)\n"
+	            "#tValueError{@this File isn't a text file (?#istext is ?f)}"
 	            "Get, del (set to false), or set if @this File is considered a system header\n"
 	            "When ?t, all non-error warnings are suppressed\n"
 	            "This flag is usually set by a ${##pragma GCC system_header} directive"),
@@ -4647,7 +4647,7 @@ PRIVATE struct type_getset tpconst file_getsets[] = {
 	            &file_delnonblocking,
 	            &file_setnonblocking,
 	            "->?Dbool\n"
-	            "@throw ValueError @this File isn't a text file (?#istext is ?f)\n"
+	            "#tValueError{@this File isn't a text file (?#istext is ?f)}"
 	            "Get, del (set to false), or set if the underlying stream allows "
 	            /**/ "for non-blocking I/O, and should be performed in non-blocking mode "
 	            /**/ "when ?#nextchunk is called with $nonblocking set to ?t and when "
@@ -4663,27 +4663,27 @@ PRIVATE struct type_getset tpconst file_getsets[] = {
 	            "Note that in this case, ?#ismacro will also return ?t"),
 	TYPE_GETTER("definitionsfile", &file_definitionsfile,
 	            "->?X2?.?N\n"
-	            "@throw ValueError @this File isn't a macro file (?#ismacro is ?f)\n"
+	            "#tValueError{@this File isn't a macro file (?#ismacro is ?f)}"
 	            "Returns the file that was used to define @this macro, or return ?N if "
 	            /**/ "the macro was defined through other means, such as via the commandline"),
 	TYPE_GETTER("definitionsposition", &file_definitionsposition,
 	            "->?X2?T2?Dint?Dint?N\n"
-	            "@throw ValueError @this File isn't a macro file (?#ismacro is ?f)\n"
+	            "#tValueError{@this File isn't a macro file (?#ismacro is ?f)}"
 	            "Return the (line, column) pair of the definition location of @this macro file\n"
 	            "Macros not defined through files will return ${(0, 0)}"),
 	TYPE_GETTER("previousdefinition", &file_previousdefinition,
 	            "->?X2?.?N\n"
-	            "@throw ValueError @this File isn't a macro file (?#ismacro is ?f)\n"
+	            "#tValueError{@this File isn't a macro file (?#ismacro is ?f)}"
 	            "Return the previous definition of pushed macro (as created by ${##pragma push_macro(\"foo\")})\n"
 	            "If the macro hasn't been pushed, or is the oldest variant, ?N is returned"),
 	TYPE_GETTER("pushcount", &file_pushcount,
 	            "->?Dint\n"
-	            "@throw ValueError @this File isn't a macro file (?#ismacro is ?f)\n"
+	            "#tValueError{@this File isn't a macro file (?#ismacro is ?f)}"
 	            "The amount of times ${##pragma push_macro(\"foo\")} was repeated without actually "
 	            /**/ "providing a new definition of the macro. Used to handle recursive use of that pragma"),
 	TYPE_GETTER("keywordexpandorigin", &file_keywordexpandorigin,
 	            "->?.\n"
-	            "@throw ValueError @this File isn't a keyword-like macro file (?#iskeywordmacro is ?f)\n"
+	            "#tValueError{@this File isn't a keyword-like macro file (?#iskeywordmacro is ?f)}"
 	            "The originating file of a keyword-like macro"),
 	TYPE_GETTER("isvariadicmacro", &file_isvariadicmacro,
 	            "->?Dbool\n"
@@ -4694,7 +4694,7 @@ PRIVATE struct type_getset tpconst file_getsets[] = {
 	            &file_delallowselfexpansion,
 	            &file_setallowselfexpansion,
 	            "->?Dbool\n"
-	            "@throw ValueError @this File isn't a function-like macro file (?#isfunctionmacro is ?f)\n"
+	            "#tValueError{@this File isn't a function-like macro file (?#isfunctionmacro is ?f)}"
 	            "Get, del (set to ?f), or set if @this function-like macro is allowed to expand to itself\n"
 	            "This flag is set for newly defined macros when the $\"macro-recursion\" extension is enabled, "
 	            /**/ "and is cleared when that extension is disabled (default)\n"
@@ -4706,7 +4706,7 @@ PRIVATE struct type_getset tpconst file_getsets[] = {
 	            &file_delkeepargumentspace,
 	            &file_setkeepargumentspace,
 	            "->?Dbool\n"
-	            "@throw ValueError @this File isn't a function-like macro file (?#isfunctionmacro is ?f)\n"
+	            "#tValueError{@this File isn't a function-like macro file (?#isfunctionmacro is ?f)}"
 	            "Get, del (set to ?f), or set if whitespace surrounding arguments passed "
 	            /**/ "to @this function-like macro should be kept, or trimmed.\n"
 	            "This flag is set for newly defined macros when the $\"macro-argument-whitespace\" extension "
@@ -4721,16 +4721,16 @@ PRIVATE struct type_getset tpconst file_getsets[] = {
 	            "}"),
 	TYPE_GETSET("functionmacrovariant", &file_getfunctionmacrovariant, NULL, &file_setfunctionmacrovariant,
 	            "->?Dstring\n"
-	            "@throw ValueError @this File isn't a function-like macro file (?#isfunctionmacro is ?f)\n"
-	            "@throw ValueError Attempted to set a value not apart of ${(\"(\", \"[\", \"{\", \"<\")}\n"
+	            "#tValueError{@this File isn't a function-like macro file (?#isfunctionmacro is ?f)}"
+	            "#tValueError{Attempted to set a value not apart of ${(\"(\", \"[\", \"{\", \"<\")}}"
 	            "Get or set the type of parenthesis used to start the argument list of @this function-like macro"),
 	TYPE_GETTER("functionmacroargc", &file_functionmacroargc,
 	            "->?Dint\n"
-	            "@throw ValueError @this File isn't a function-like macro file (?#isfunctionmacro is ?f)\n"
+	            "#tValueError{@this File isn't a function-like macro file (?#isfunctionmacro is ?f)}"
 	            "Return the number of (non-variadic) argument taken by @this function-like macro"),
 	TYPE_GETTER("functionmacroexpansions", &file_functionmacroexpansions,
 	            "->?Dint\n"
-	            "@throw ValueError @this File isn't a function-like macro file (?#isfunctionmacro is ?f)\n"
+	            "#tValueError{@this File isn't a function-like macro file (?#isfunctionmacro is ?f)}"
 	            "Return the number of times that @this function-like macro is being expanded\n"
 	            "Note that normally only function-like macros with ?#allowselfexpansion set to ?t "
 	            /**/ "can ever be expanded more than once at the same time"),
@@ -4772,7 +4772,7 @@ done:
 PRIVATE struct type_method tpconst file_methods[] = {
 	TYPE_KWMETHOD("nextchunk", &file_nextchunk,
 	              "(extend=!f,binary=!f,nonblocking=!f)->?Dbool\n"
-	              "@return Returns ?t if data was read, or ?f if the EOF of the input stream has been reached\n"
+	              "#r{Returns ?t if data was read, or ?f if the EOF of the input stream has been reached}"
 	              "Try to load the next, or @extend the current chunk of loaded data, by reading a "
 	              /**/ "new chunk from ?#stream. When @binary is ?t, don't try to decode unicode data, "
 	              /**/ "but read data as-is, without decoding it. When @nonblocking is ?t, and the "

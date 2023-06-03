@@ -55,7 +55,7 @@ PRIVATE struct dex_symbol symbols[] = {
 	{ "LockUnion", (DeeObject *)&DeeLockUnion_Type },
 	{ "all", (DeeObject *)&libthreading_lockunion_all, MODSYM_FNORMAL,
 	  DOC("(locks!:?GLock)->?GLock\n"
-	      "@throws ValueError No @locks specified (a lock union must contain at least 1 lock)\n"
+	      "#tValueError{No @locks specified (a lock union must contain at least 1 lock)}"
 	      "Return a lock union for all of the given @locks, or re-returns ${locks.first} when "
 	      /**/ "only a single lock was given\n"
 	      "Lock unions can be used to (safely) acquire multiple locks at the same time, whilst "

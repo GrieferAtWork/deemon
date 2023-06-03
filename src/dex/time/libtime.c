@@ -2078,15 +2078,15 @@ PRIVATE struct type_getset tpconst time_getsets[] = {
 
 	TYPE_GETSET("timepart", &time_timepart_get, &time_timepart_del, &time_timepart_set,
 	            "->?GTime\n"
-	            "@throw ValueError (get-only) @this ?. object isn't a timestamp (s.a. ?#istimestamp)\n"
+	            "#tValueError{(get-only) @this ?. object isn't a timestamp (s.a. ?#istimestamp)}"
 	            "Read/write the time portion of @this time object, that is everything below the "
 	            /**/ "day-threshold, including ?#hour, ?#minute, ?#second, ?#millisecond and ?#microsecond\n"
 	            "When setting, the passed objected is interpreted as an integer describing the "
 	            /**/ "number of microsecond since the day began"),
 	TYPE_GETSET("datepart", &time_datepart_get, &time_datepart_del, &time_datepart_set,
 	            "->?GTime\n"
-	            "@throw ValueError (get-only) @this ?. object isn't a timestamp (s.a. ?#istimestamp)\n"
-	            "@throw ValueError Attempted to assign a time value with a non-zero ?#timepart\n"
+	            "#tValueError{(get-only) @this ?. object isn't a timestamp (s.a. ?#istimestamp)}"
+	            "#tValueError{Attempted to assign a time value with a non-zero ?#timepart}"
 	            "Read/write the date portion of @this time object, that is everything "
 	            /**/ "above the day-threshold, including ?#mday, ?#month and ?#year\n"
 	            "When setting, the passed objected is interpreted as an integer "
@@ -3408,31 +3408,31 @@ INTERN DeeTypeObject DeeTime_Type = {
 	                         "\n"
 
 	                         "*(other:?Dint)->?.\n"
-	                         "@throw ValueError @this ?. object isn't a delta (s.a. ?#isdelta)\n"
+	                         "#tValueError{@this ?. object isn't a delta (s.a. ?#isdelta)}"
 	                         "Multiply a delta time object by the given amount.\n"
 	                         "\n"
 
 	                         "/(other:?.)->?Dint\n"
-	                         "@throw ValueError @this ?. object isn't a delta (s.a. ?#isdelta)\n"
-	                         "@throw DivideByZero @other represents $0 nano-seconds\n"
+	                         "#tValueError{@this ?. object isn't a delta (s.a. ?#isdelta)}"
+	                         "#tDivideByZero{@other represents $0 nano-seconds}"
 	                         "Divide 2 delta time object by each other\n"
 	                         "\n"
 
 	                         "/(other:?Dint)->?.\n"
-	                         "@throw ValueError @this ?. object isn't a delta (s.a. ?#isdelta)\n"
-	                         "@throw DivideByZero @other is $0\n"
+	                         "#tValueError{@this ?. object isn't a delta (s.a. ?#isdelta)}"
+	                         "#tDivideByZero{@other is $0}"
 	                         "Divide a delta time object by the given amount.\n"
 	                         "\n"
 
 	                         "%(other:?.)->?.\n"
-	                         "@throw ValueError @this ?. object isn't a delta (s.a. ?#isdelta)\n"
-	                         "@throw DivideByZero @other represents $0 nano-seconds\n"
+	                         "#tValueError{@this ?. object isn't a delta (s.a. ?#isdelta)}"
+	                         "#tDivideByZero{@other represents $0 nano-seconds}"
 	                         "Get the remainder from dividing 2 delta time object by each other.\n"
 	                         "\n"
 
 	                         "%(other:?Dint)->?.\n"
-	                         "@throw ValueError @this ?. object isn't a delta (s.a. ?#isdelta)\n"
-	                         "@throw DivideByZero @other is $0\n"
+	                         "#tValueError{@this ?. object isn't a delta (s.a. ?#isdelta)}"
+	                         "#tDivideByZero{@other is $0}"
 	                         "Get the remainder from dividing @this time delta by the given amount."),
 	/* .tp_flags    = */ TP_FNORMAL,
 	/* .tp_weakrefs = */ 0,

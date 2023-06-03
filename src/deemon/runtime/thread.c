@@ -4132,43 +4132,43 @@ err:
 PRIVATE struct type_method tpconst thread_methods[] = {
 	TYPE_METHOD("start", &thread_start,
 	            "->?Dbool\n"
-	            "@throw SystemError Failed to start @this thread for some reason\n"
-	            "@return true The ?. is now running\n"
-	            "@return false The ?. had already been started\n"
+	            "#tSystemError{Failed to start @this thread for some reason}"
+	            "#r{true The ?. is now running}"
+	            "#r{false The ?. had already been started}"
 	            "Starts @this thread"),
 	TYPE_METHOD("detach", &thread_detach,
 	            "->?Dbool\n"
-	            "@return true The ?. has been detached\n"
-	            "@return false The ?. was already detached\n"
+	            "#r{true The ?. has been detached}"
+	            "#r{false The ?. was already detached}"
 	            "Detaches @this thread"),
 	TYPE_METHOD("join", &thread_join,
 	            "->\n"
-	            "@interrupt\n"
-	            "@throw ThreadCrash The error(s) that caused @this thread to crash, encapsulated in a :ThreadCrash error\n"
-	            "@return The return value of @this thread\n"
+	            "#t{:Interrupt}"
+	            "#tThreadCrash{The error(s) that caused @this thread to crash, encapsulated in a :ThreadCrash error}"
+	            "#r{The return value of @this thread}"
 	            "Joins @this thread and returns the return value of its main function"),
 	TYPE_METHOD("tryjoin", &thread_tryjoin,
 	            "->?T2?Dbool?O\n"
-	            "@throw ThreadCrash The error(s) that caused @this thread to crash, encapsulated in a :ThreadCrash error\n"
+	            "#tThreadCrash{The error(s) that caused @this thread to crash, encapsulated in a :ThreadCrash error}"
 	            "Same as ?#join, but don't check for interrupts and fail immediately"),
 	TYPE_METHOD("timedjoin", &thread_timedjoin,
 	            "(timeout_in_nanoseconds:?Dint)->?T2?Dbool?O\n"
-	            "@throw ThreadCrash The error(s) that caused @this thread to crash, encapsulated in a :ThreadCrash error\n"
+	            "#tThreadCrash{The error(s) that caused @this thread to crash, encapsulated in a :ThreadCrash error}"
 	            "Same as ?#join, but only attempt to join for a given @timeout_in_nanoseconds"),
 	TYPE_METHOD("waitfor", &thread_waitfor,
 	            "()\n"
-	            "@interrupt\n"
+	            "#t{:Interrupt}"
 	            "Block until @this Thread ?#hasterminated"),
 	TYPE_METHOD("timedwaitfor", &thread_timedwaitfor,
 	            "(timeout_in_nanoseconds:?Dint)->?Dbool\n"
-	            "@interrupt\n"
+	            "#t{:Interrupt}"
 	            "Same as ?#waitfor, but only attempt to wait at most @timeout_in_nanoseconds"),
 	TYPE_METHOD("interrupt", &thread_interrupt_impl,
 	            "->?Dbool\n"
 	            "(signal)->?Dbool\n"
 	            "(async_func:?DCallable,async_args:?DTuple)->?Dbool\n"
-	            "@return true: The interrupt was delivered\n"
-	            "@return false: The ?. has already terminated and can no longer process interrupts\n"
+	            "#r{true: The interrupt was delivered}"
+	            "#r{false: The ?. has already terminated and can no longer process interrupts}"
 	            "Throws the given @signal or an instance of :Interrupt within @this thread, "
 	            "or schedule the given @async_func to be called asynchronously using @async_args\n"
 	            "Calling the function with no arguments is identical to:\n"
@@ -4360,11 +4360,11 @@ PRIVATE struct type_method tpconst thread_class_methods[] = {
 	            "Deprecated alias for ?#current"),
 	TYPE_METHOD("selfid", &thread_selfid,
 	            "->?Dint\n"
-	            "@throw SystemError The system does not provide a way to query thread ids\n"
+	            "#tSystemError{The system does not provide a way to query thread ids}"
 	            "Deprecated alias for ${Thread.current.id}"),
 	TYPE_METHOD("check_interrupt", &thread_check_interrupt,
 	            "()\n"
-	            "@interrupt\n"
+	            "#t{:Interrupt}"
 	            "Checks for interrupts in the calling thread"),
 	/* TODO: Must make this one deprecated, and add a new one with a different name!
 	 *       `yield' is a reserved identifer, and `import Thread from deemon; Thread.yield();'
@@ -4374,11 +4374,11 @@ PRIVATE struct type_method tpconst thread_class_methods[] = {
 	            "Willingly preempt execution to another thread or process"),
 	TYPE_METHOD("sleep", &thread_sleep,
 	            "(timeout_in_nanoseconds:?Dint)\n"
-	            "@interrupt\n"
+	            "#t{:Interrupt}"
 	            "Suspending execution for a total of @timeout_in_nanoseconds"),
 	TYPE_METHOD("exit", &thread_exit,
 	            "(result=!N)\n"
-	            "@throw ThreadExit Always thrown to exit the current thread\n"
+	            "#tThreadExit{Always thrown to exit the current thread}"
 	            "Throw a :ThreadExit error object in order to terminate execution "
 	            /**/ "within the current thread. This function does not return normally"),
 	TYPE_METHOD_END
@@ -4681,33 +4681,33 @@ thread_get_osfhandle_np(DeeThreadObject *__restrict self) {
 PRIVATE struct type_getset tpconst thread_getsets[] = {
 	TYPE_GETSET("callback", &thread_callback_get, &thread_callback_del, &thread_callback_set,
 	            "->?DCallable\n"
-	            "@throw AttributeError Attempted to overwrite the callback of a sub-class of ?., rather than an exact instance. "
+	            "#tAttributeError{Attempted to overwrite the callback of a sub-class of ?., rather than an exact instance. "
 	            /*                 */ "To prevent the need of overwriting this attribute whenever a sub-class wishes to provide a $run "
 	            /*                 */ "member function, write-access to this field is denied in sub-classes of ?. and only granted "
-	            /*                 */ "to exact instances\n"
-	            "@throw ValueError Attempted to delete or set the attribute when @this thread has already been started.\n"
+	            /*                 */ "to exact instances}"
+	            "#tValueError{Attempted to delete or set the attribute when @this thread has already been started.}"
 	            "The callback that will be executed when the thread is started\n"
 	            "In the event that no callback has been set, or that the callback has been deleted, "
 	            /**/ "the getter will attempt to return the instance attribute $run which can be "
 	            /**/ "overwritten by sub-classes to provide an automatic and implicit thread-callback"),
 	TYPE_GETSET("callargs", &thread_callargs_get, &thread_callargs_del, &thread_callargs_set,
 	            "->?DTuple\n"
-	            "@throw AttributeError Attempted to overwrite the callback arguments of a sub-class of ?., rather than an exact instance. "
+	            "#tAttributeError{Attempted to overwrite the callback arguments of a sub-class of ?., rather than an exact instance. "
 	            /*                 */ "To prevent the need of overwriting this attribute whenever a sub-class wishes to provide a $run "
 	            /*                 */ "member function, write-access to this field is denied in sub-classes of ?. and only granted "
-	            /*                 */ "to exact instances\n"
-	            "@throw ValueError Attempted to delete or set the attribute when @this thread has already been started\n"
+	            /*                 */ "to exact instances}"
+	            "#tValueError{Attempted to delete or set the attribute when @this thread has already been started}"
 	            "The callback arguments that are passed to ?#callback when the thread is started\n"
 	            "Deleting this member or setting ?N is the same as setting an empty tuple"),
 	TYPE_GETTER("result", &thread_result_get,
-	            "@throw ValueError @this thread has not terminated yet\n"
+	            "#tValueError{@this thread has not terminated yet}"
 	            "Return the result value of @this thread once it has terminated\n"
 	            "This is similar to what is returned by ?#join, but in the event that "
 	            /**/ "the thread terminated because it crashed, ?N is returned rather "
 	            /**/ "than all the errors that caused the thread to crash being encapsulated and propagated"),
 	TYPE_GETTER("crashinfo", &thread_crashinfo,
 	            "->?S?T2?O?DTraceback\n"
-	            "@throw ValueEror @this thread hasn't terminated yet\n"
+	            "#tValueEror{@this thread hasn't terminated yet}"
 	            "Returns a sequence of 2-element tuples describing the errors that were "
 	            /**/ "active when the thread crashed (s.a. ?#hascrashed), or an empty sequence when "
 	            /**/ "the thread didn't crash\n"
@@ -4722,8 +4722,8 @@ PRIVATE struct type_getset tpconst thread_getsets[] = {
 	            "Generate a traceback for the thread's current execution position"),
 	TYPE_GETTER("id", &thread_id,
 	            "->?Dint\n"
-	            "@throw ValueError The thread hasn't been started yet\n"
-	            "@throw SystemError The system does not provide a way to query thread ids\n"
+	            "#tValueError{The thread hasn't been started yet}"
+	            "#tSystemError{The system does not provide a way to query thread ids}"
 	            "Returns an operating-system specific id of @this thread"),
 #ifndef DeeThread_USE_SINGLE_THREADED
 	TYPE_GETTER("isrunning", &thread_isrunning,

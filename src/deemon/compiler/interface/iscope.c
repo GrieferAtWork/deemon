@@ -399,9 +399,9 @@ PRIVATE struct type_method tpconst scope_methods[] = {
 	            "New symbols are created with $\"none\"-typing (s.a. ?Akind?#symbol)"),
 	TYPE_KWMETHOD("newlocal", &scope_newlocal,
 	              "(name:?Dstring,requirenew=!t,loc?:?T3?AFile?ALexer?Ert:Compiler?Dint?Dint)->?ASymbol?Ert:Compiler\n"
-	              "@param loc The declaration position of the symbol, omitted to use the current "
-	              /*      */ "token position, or ?N when not available\n"
-	              "@throw ValueError @requirenew is ?t, and another symbol @name already exists\n"
+	              "#ploc{The declaration position of the symbol, omitted to use the current "
+	              /*      */ "token position, or ?N when not available}"
+	              "#tValueError{@requirenew is ?t, and another symbol @name already exists}"
 	              "Lookup, or create a new local symbol named @name\n"
 	              "If another symbol with that same name already exists, either return that "
 	              /**/ "symbol when @requirenew is ?f, or throw a :ValueError otherwise\n"
@@ -439,12 +439,12 @@ INTERN DeeTypeObject DeeCompilerScope_Type = {
 	                         "\n"
 
 	                         "[](string name)->symbol\n"
-	                         "@throw ValueError No symbol matching @name is contained within @this scope\n"
+	                         "#tValueError{No symbol matching @name is contained within @this scope}"
 	                         "Returns the symbol associated with @name\n"
 	                         "\n"
 
 	                         "del[](string name)->\n"
-	                         "@throw ValueError No symbol matching @name is contained within @this scope\n"
+	                         "#tValueError{No symbol matching @name is contained within @this scope}"
 	                         "Delete the symbol associated with @name, adding it to the set of deleted symbols"),
 	/* .tp_flags    = */ TP_FNORMAL,
 	/* .tp_weakrefs = */ 0,

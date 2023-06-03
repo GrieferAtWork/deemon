@@ -10374,9 +10374,9 @@ INTERN_TPCONST struct type_method tpconst string_methods[] = {
 	/* String encode/decode functions */
 	TYPE_KWMETHOD("decode", &string_decode,
 	              "(codec:?.,errors=!Pstrict)->?X2?.?O\n"
-	              "@throw ValueError The given @codec or @errors wasn't recognized\n"
-	              "@throw UnicodeDecodeError @this ?. could not be decoded as @codec and @errors was set to $\"strict\"\n"
-	              "@param errors The way that decode-errors are handled as one of $\"strict\", $\"replace\" or $\"ignore\"\n"
+	              "#tValueError{The given @codec or @errors wasn't recognized}"
+	              "#tUnicodeDecodeError{@this ?. could not be decoded as @codec and @errors was set to $\"strict\"}"
+	              "#perrors{The way that decode-errors are handled as one of $\"strict\", $\"replace\" or $\"ignore\"}"
 	              "Decode @this ?., re-interpreting its underlying character bytes as @codec\n"
 	              "Prior to processing, @codec is normalized as follows:\n"
 	              "${"
@@ -10403,9 +10403,9 @@ INTERN_TPCONST struct type_method tpconst string_methods[] = {
 	              "If the given @codec is not apart of this list, a call is made to ?Ecodecs:decode"),
 	TYPE_KWMETHOD("encode", &string_encode,
 	              "(codec:?.,errors=!Pstrict)->?X3?DBytes?.?O\n"
-	              "@throw ValueError The given @codec or @errors wasn't recognized\n"
-	              "@throw UnicodeEncodeError @this ?. could not be decoded as @codec and @errors was set to $\"strict\"\n"
-	              "@param errors The way that decode-errors are handled as one of $\"strict\", $\"replace\" or $\"ignore\"\n"
+	              "#tValueError{The given @codec or @errors wasn't recognized}"
+	              "#tUnicodeEncodeError{@this ?. could not be decoded as @codec and @errors was set to $\"strict\"}"
+	              "#perrors{The way that decode-errors are handled as one of $\"strict\", $\"replace\" or $\"ignore\"}"
 	              "Encode @this ?., re-interpreting its underlying character bytes as @codec\n"
 	              "Prior to processing, @codec is normalized as follows:\n${"
 	              "name = name.lower().replace(\"_\", \"-\");\n"
@@ -10432,19 +10432,19 @@ INTERN_TPCONST struct type_method tpconst string_methods[] = {
 	TYPE_METHOD("bytes", &string_bytes,
 	            "(allow_invalid=!f)->?DBytes\n"
 	            "(start:?Dint,end:?Dint,allow_invalid=!f)->?DBytes\n"
-	            "@throw ValueError @allow_invalid is ?f, and @this ?. contains characters above $0xff\n"
+	            "#tValueError{@allow_invalid is ?f, and @this ?. contains characters above $0xff}"
 	            "Returns a read-only bytes representation of the characters within ${this.substr(start, end)}, "
 	            "using a single byte per character. A character greater than $0xff either causes :ValueError "
 	            "to be thrown (when @allow_invalid is false), or is replaced with the ASCII character "
 	            "$\"?\" in the returned Bytes object"),
 	TYPE_METHOD("ord", &string_ord,
 	            "->?Dint\n"
-	            "@throw ValueError The length of @this ?. is not equal to $1\n"
+	            "#tValueError{The length of @this ?. is not equal to $1}"
 	            "Return the ordinal integral value of @this single-character ?.\n"
 	            "\n"
 	            "(index:?Dint)->?Dint\n"
-	            "@throw IntegerOverflow The given @index is lower than $0\n"
-	            "@throw IndexError The given @index is greater than ${##this}\n"
+	            "#tIntegerOverflow{The given @index is lower than $0}"
+	            "#tIndexError{The given @index is greater than ${##this}}"
 	            "Returns the ordinal integral value of the @index'th character of @this ?."),
 
 	/* String formatting / scanning. */
@@ -10547,8 +10547,8 @@ INTERN_TPCONST struct type_method tpconst string_methods[] = {
 	            "}"),
 	TYPE_METHOD("scanf", &string_scanf,
 	            "(format:?.)->?S?O\n"
-	            "@throw ValueError The given @format is malformed\n"
-	            "@throw ValueError Conversion to an integer failed\n"
+	            "#tValueError{The given @format is malformed}"
+	            "#tValueError{Conversion to an integer failed}"
 
 	            "Scan @this ?. using a scanf-like format string @format\n"
 
@@ -10589,8 +10589,8 @@ INTERN_TPCONST struct type_method tpconst string_methods[] = {
 	            "->?Dbool\n"                                                         \
 	            "(index:?Dint)->?Dbool\n"                                            \
 	            "(start:?Dint,end:?Dint)->?Dbool\n"                                  \
-	            "@throw IndexError The given @index is larger than ${##this}\n"      \
-	            "@throw IntegerOverflow The given @index is negative or too large\n" \
+	            "#tIndexError{The given @index is larger than ${##this}}"      \
+	            "#tIntegerOverflow{The given @index is negative or too large}" \
 	            doc)
 #define DEFINE_STRING_TRAIT(name, func, are_xxx) \
 	DEFINE_STRING_TRAIT_EX(name, func, "Returns ?t if $this, ${this[index]}, or all characters in ${this.substr(start, end)} " are_xxx)
@@ -10618,8 +10618,8 @@ INTERN_TPCONST struct type_method tpconst string_methods[] = {
 	DEFINE_STRING_TRAIT("isascii", string_isascii, "are ascii-characters, that is have an ordinal value ${<= 0x7f}"),
 	TYPE_METHOD("istitle", &string_istitle,
 	            "(index:?Dint)->?Dbool\n"
-	            "@throw IndexError The given @index is larger than ${?#this}\n"
-	            "@throw IntegerOverflow The given @index is negative or too large\n"
+	            "#tIndexError{The given @index is larger than ${?#this}}"
+	            "#tIntegerOverflow{The given @index is negative or too large}"
 	            "Returns ?t if the character at ${this[index]} has title-casing\n"
 
 	            "\n"
@@ -10630,8 +10630,8 @@ INTERN_TPCONST struct type_method tpconst string_methods[] = {
 	            /**/ "with all remaining characters not being title-case"),
 	TYPE_METHOD("issymbol", &string_issymbol,
 	            "(index:?Dint)->?Dbool\n"
-	            "@throw IndexError The given @index is larger than ${?#this}\n"
-	            "@throw IntegerOverflow The given @index is negative or too large\n"
+	            "#tIndexError{The given @index is larger than ${?#this}}"
+	            "#tIntegerOverflow{The given @index is negative or too large}"
 	            "Returns ?t if the character at ${this[index]} can be used "
 	            /**/ "to start a symbol name. Same as ${this.issymstrt(index)}\n"
 
@@ -10676,13 +10676,13 @@ INTERN_TPCONST struct type_method tpconst string_methods[] = {
 
 	TYPE_METHOD("asnumeric", &string_asnumeric,
 	            "->?X2?Dfloat?Dint\n"
-	            "@throw ValueError The string is longer than a single character\n"
+	            "#tValueError{The string is longer than a single character}"
 	            "(index:?Dint)->?X2?Dfloat?Dint\n"
-	            "@throw ValueError The character at @index isn't numeric\n"
+	            "#tValueError{The character at @index isn't numeric}"
 	            "(index:?Dint,defl:?Dint)->?X2?Dfloat?Dint\n"
 	            "(index:?Dint,defl)->\n"
-	            "@throw IntegerOverflow The given @index is negative or too large\n"
-	            "@throw IndexError The given @index is out of bounds\n"
+	            "#tIntegerOverflow{The given @index is negative or too large}"
+	            "#tIndexError{The given @index is out of bounds}"
 	            "Return the numeric value of the @index'th or only character of @this ?., "
 	            /**/ "or throw a :ValueError or return @defl if that character isn't ?#isnumeric\n"
 	            "${"
@@ -10695,23 +10695,23 @@ INTERN_TPCONST struct type_method tpconst string_methods[] = {
 	            "}"),
 	TYPE_METHOD("asdigit", &string_asdigit,
 	            "->?Dint\n"
-	            "@throw ValueError The string is longer than a single character\n"
+	            "#tValueError{The string is longer than a single character}"
 	            "(index:?Dint)->?Dint\n"
-	            "@throw ValueError The character at @index isn't numeric\n"
+	            "#tValueError{The character at @index isn't numeric}"
 	            "(index:?Dint,defl:?Dint)->?Dint\n"
 	            "(index:?Dint,defl)->\n"
-	            "@throw IntegerOverflow The given @index is negative or too large\n"
-	            "@throw IndexError The given @index is out of bounds\n"
+	            "#tIntegerOverflow{The given @index is negative or too large}"
+	            "#tIndexError{The given @index is out of bounds}"
 	            "Same as ?#asnumeric, but only succeed if the selected character matches ?#isdigit, rather than ?#isnumeric"),
 	TYPE_METHOD("asxdigit", &string_asxdigit,
 	            "->?Dint\n"
-	            "@throw ValueError The string is longer than a single character\n"
+	            "#tValueError{The string is longer than a single character}"
 	            "(index:?Dint)->?Dint\n"
-	            "@throw ValueError The character at @index isn't numeric\n"
+	            "#tValueError{The character at @index isn't numeric}"
 	            "(index:?Dint,defl:?Dint)->?Dint\n"
 	            "(index:?Dint,defl)->\n"
-	            "@throw IntegerOverflow The given @index is negative or too large\n"
-	            "@throw IndexError The given @index is out of bounds\n"
+	            "#tIntegerOverflow{The given @index is negative or too large}"
+	            "#tIndexError{The given @index is out of bounds}"
 	            "Same as ?#asdigit, but also accepts #C{a-f} and #C{A-F}"),
 
 	/* String conversion */
@@ -10766,12 +10766,12 @@ INTERN_TPCONST struct type_method tpconst string_methods[] = {
 	              "and return its starting index, or ${-1} if no such position exists"),
 	TYPE_KWMETHOD(STR_index, &string_index,
 	              "(needle:?.,start=!0,end=!-1)->?Dint\n"
-	              "@throw IndexError No instance of @needle can be found within ${this.substr(start, end)}\n"
+	              "#tIndexError{No instance of @needle can be found within ${this.substr(start, end)}}"
 	              "Find the first instance of @needle within ${this.substr(start, end)}, "
 	              "and return its starting index"),
 	TYPE_KWMETHOD("rindex", &string_rindex,
 	              "(needle:?.,start=!0,end=!-1)->?Dint\n"
-	              "@throw IndexError No instance of @needle can be found within ${this.substr(start, end)}\n"
+	              "#tIndexError{No instance of @needle can be found within ${this.substr(start, end)}}"
 	              "Find the last instance of @needle within ${this.substr(start, end)}, "
 	              "and return its starting index"),
 	TYPE_KWMETHOD("findany", &string_findany,
@@ -10784,12 +10784,12 @@ INTERN_TPCONST struct type_method tpconst string_methods[] = {
 	              "and return its starting index, or ?N if no such position exists"),
 	TYPE_KWMETHOD("indexany", &string_indexany,
 	              "(needles:?S?.,start=!0,end=!-1)->?Dint\n"
-	              "@throw IndexError No instance of @needles can be found within ${this.substr(start, end)}\n"
+	              "#tIndexError{No instance of @needles can be found within ${this.substr(start, end)}}"
 	              "Find the first instance of any of the given @needles within ${this.substr(start, end)}, "
 	              "and return its starting index"),
 	TYPE_KWMETHOD("rindexany", &string_rindexany,
 	              "(needles:?S?.,start=!0,end=!-1)->?Dint\n"
-	              "@throw IndexError No instance of @needles can be found within ${this.substr(start, end)}\n"
+	              "#tIndexError{No instance of @needles can be found within ${this.substr(start, end)}}"
 	              "Find the last instance of any of the given @needles within ${this.substr(start, end)}, "
 	              "and return its starting index"),
 	TYPE_KWMETHOD("findall", &string_findall,
@@ -11197,8 +11197,8 @@ INTERN_TPCONST struct type_method tpconst string_methods[] = {
 	            /**/ "strings, are allowed to be of any length"),
 	TYPE_METHOD("indexmatch", &string_indexmatch,
 	            "(open:?.,close:?.,start=!0,end=!-1)->?Dint\n"
-	            "@throw IndexError No instance of @close without a matching @open "
-	            /*             */ "exists within ${this.substr(start, end)}\n"
+	            "#tIndexError{No instance of @close without a matching @open "
+	            /*             */ "exists within ${this.substr(start, end)}}"
 	            "Same as ?#findmatch, but throw an :IndexError instead of "
 	            /**/ "returning ${-1} if no @close without a matching @open exists"),
 	TYPE_METHOD("casefindmatch", &string_casefindmatch,
@@ -11208,8 +11208,8 @@ INTERN_TPCONST struct type_method tpconst string_methods[] = {
 	            "If no match if found, ?N is returned"),
 	TYPE_METHOD("caseindexmatch", &string_caseindexmatch,
 	            "(open:?.,close:?.,start=!0,end=!-1)->?T2?Dint?Dint\n"
-	            "@throw IndexError No instance of @close without a matching @open "
-	            /*             */ "exists within ${this.substr(start, end)}\n"
+	            "#tIndexError{No instance of @close without a matching @open "
+	            /*             */ "exists within ${this.substr(start, end)}}"
 	            "Same as ?#indexmatch, however perform a case-folded search and "
 	            /**/ "return the start and end indices of the match"),
 	TYPE_METHOD("rfindmatch", &string_rfindmatch,
@@ -11227,8 +11227,8 @@ INTERN_TPCONST struct type_method tpconst string_methods[] = {
 	            "If no @open without a matching @close exists, ${-1} is returned"),
 	TYPE_METHOD("rindexmatch", &string_rindexmatch,
 	            "(open:?.,close:?.,start=!0,end=!-1)->?Dint\n"
-	            "@throw IndexError No instance of @open without a matching @close "
-	            /*             */ "exists within ${this.substr(start, end)}\n"
+	            "#tIndexError{No instance of @open without a matching @close "
+	            /*             */ "exists within ${this.substr(start, end)}}"
 	            "Same as ?#rfindmatch, but throw an :IndexError instead of "
 	            /**/ "returning ${-1} if no @open without a matching @close exists"),
 	TYPE_METHOD("caserfindmatch", &string_caserfindmatch,
@@ -11238,8 +11238,8 @@ INTERN_TPCONST struct type_method tpconst string_methods[] = {
 	            "If no match if found, ?N is returned"),
 	TYPE_METHOD("caserindexmatch", &string_caserindexmatch,
 	            "(open:?.,close:?.,start=!0,end=!-1)->?T2?Dint?Dint\n"
-	            "@throw IndexError No instance of @open without a matching @close exists "
-	            /**/ "within ${this.substr(start, end)}\n"
+	            "#tIndexError{No instance of @open without a matching @close exists "
+	            /**/ "within ${this.substr(start, end)}}"
 	            "Same as ?#rindexmatch, however perform a case-folded search and return "
 	            /**/ "the start and end indices of the match"),
 
@@ -11321,9 +11321,9 @@ INTERN_TPCONST struct type_method tpconst string_methods[] = {
 	/* Regex functions. */
 	TYPE_KWMETHOD("rematch", &string_rematch,
 	              "(pattern:?.,start=!0,end=!-1,rules=!P{})->?X2?Dint?N\n"
-	              "@throw ValueError The given @pattern is malformed\n"
-	              "@return The number of leading characters in ${this.substr(start, end)} "
-	              /*    */ "matched by @pattern, or ?N if @pattern doesn't match\n"
+	              "#tValueError{The given @pattern is malformed}"
+	              "#r{The number of leading characters in ${this.substr(start, end)} "
+	              /*    */ "matched by @pattern, or ?N if @pattern doesn't match}"
 	              "Check if ${this.substr(start, end)} matches the given regular expression @pattern\n"
 	              "When given, @rules specifies extra compilation rules for the regex. These take the form of a tightly "
 	              /**/ "packed string, where each character represents a regex flag. The following characters are defined:"
@@ -11446,68 +11446,68 @@ INTERN_TPCONST struct type_method tpconst string_methods[] = {
 	              "}"),
 	TYPE_KWMETHOD("rematches", &string_rematches,
 	              "(pattern:?.,start=!0,end=!-1,rules=!P{})->?Dbool\n"
-	              "@param pattern The regular expression pattern (s.a. ?#rematch)\n"
-	              "@param rules The regular expression rules (s.a. ?#rematch)\n"
-	              "@throw ValueError The given @pattern is malformed\n"
+	              "#ppattern{The regular expression pattern (s.a. ?#rematch)}"
+	              "#prules{The regular expression rules (s.a. ?#rematch)}"
+	              "#tValueError{The given @pattern is malformed}"
 	              "Check if @pattern matches the entirety of the specified range of @this ?.\n"
 	              "This function behaves identical to ${this.rematch(...) == ?#this}"),
 	TYPE_KWMETHOD("refind", &string_refind,
 	              "(pattern:?.,start=!0,end=!-1,range:?Dint=!A!Dint!PSIZE_MAX,rules=!P{})->?X2?T2?Dint?Dint?N\n"
-	              "@param pattern The regular expression pattern (s.a. ?#rematch)\n"
-	              "@param range The max number of search attempts to perform\n"
-	              "@param rules The regular expression rules (s.a. ?#rematch)\n"
-	              "@throw ValueError The given @pattern is malformed\n"
+	              "#ppattern{The regular expression pattern (s.a. ?#rematch)}"
+	              "#prange{The max number of search attempts to perform}"
+	              "#prules{The regular expression rules (s.a. ?#rematch)}"
+	              "#tValueError{The given @pattern is malformed}"
 	              "Find the first sub-string matched by @pattern, and return its start/end indices, or ?N if no match exists\n"
 	              "Note that using ?N in an expand expression will expand to the all ?N-values"),
 	TYPE_KWMETHOD("rerfind", &string_rerfind,
 	              "(pattern:?.,start=!0,end=!-1,range:?Dint=!A!Dint!PSIZE_MAX,rules=!P{})->?X2?T2?Dint?Dint?N\n"
-	              "@param pattern The regular expression pattern (s.a. ?#rematch)\n"
-	              "@param range The max number of search attempts to perform\n"
-	              "@param rules The regular expression rules (s.a. ?#rematch)\n"
-	              "@throw ValueError The given @pattern is malformed\n"
+	              "#ppattern{The regular expression pattern (s.a. ?#rematch)}"
+	              "#prange{The max number of search attempts to perform}"
+	              "#prules{The regular expression rules (s.a. ?#rematch)}"
+	              "#tValueError{The given @pattern is malformed}"
 	              "Find the last sub-string matched by @pattern, and return its start/end indices, "
 	              /**/ "or ?N if no match exists (s.a. #refind)"),
 	TYPE_KWMETHOD("reindex", &string_reindex,
 	              "(pattern:?.,start=!0,end=!-1,range:?Dint=!A!Dint!PSIZE_MAX,rules=!P{})->?T2?Dint?Dint\n"
-	              "@param pattern The regular expression pattern (s.a. ?#rematch)\n"
-	              "@param range The max number of search attempts to perform\n"
-	              "@param rules The regular expression rules (s.a. ?#rematch)\n"
-	              "@throw ValueError The given @pattern is malformed\n"
-	              "@throw IndexError No substring matching the given @pattern could be found\n"
+	              "#ppattern{The regular expression pattern (s.a. ?#rematch)}"
+	              "#prange{The max number of search attempts to perform}"
+	              "#prules{The regular expression rules (s.a. ?#rematch)}"
+	              "#tValueError{The given @pattern is malformed}"
+	              "#tIndexError{No substring matching the given @pattern could be found}"
 	              "Same as ?#refind, but throw an :IndexError when no match can be found"),
 	TYPE_KWMETHOD("rerindex", &string_rerindex,
 	              "(pattern:?.,start=!0,end=!-1,range:?Dint=!A!Dint!PSIZE_MAX,rules=!P{})->?T2?Dint?Dint\n"
-	              "@param pattern The regular expression pattern (s.a. ?#rematch)\n"
-	              "@param range The max number of search attempts to perform\n"
-	              "@param rules The regular expression rules (s.a. ?#rematch)\n"
-	              "@throw ValueError The given @pattern is malformed\n"
-	              "@throw IndexError No substring matching the given @pattern could be found\n"
+	              "#ppattern{The regular expression pattern (s.a. ?#rematch)}"
+	              "#prange{The max number of search attempts to perform}"
+	              "#prules{The regular expression rules (s.a. ?#rematch)}"
+	              "#tValueError{The given @pattern is malformed}"
+	              "#tIndexError{No substring matching the given @pattern could be found}"
 	              "Same as ?#rerfind, but throw an :IndexError when no match can be found"),
 	TYPE_KWMETHOD("relocate", &string_relocate,
 	              "(pattern:?.,start=!0,end=!-1,range:?Dint=!A!Dint!PSIZE_MAX,rules=!P{})->?X2?.?N\n"
-	              "@param pattern The regular expression pattern (s.a. ?#rematch)\n"
-	              "@param range The max number of search attempts to perform\n"
-	              "@param rules The regular expression rules (s.a. ?#rematch)\n"
-	              "@throw ValueError The given @pattern is malformed\n"
+	              "#ppattern{The regular expression pattern (s.a. ?#rematch)}"
+	              "#prange{The max number of search attempts to perform}"
+	              "#prules{The regular expression rules (s.a. ?#rematch)}"
+	              "#tValueError{The given @pattern is malformed}"
 	              "Same as ${this.substr(this.refind(pattern, start, end, rules)...)}\n"
 	              "In other words: return the first sub-string matched by the "
 	              /**/ "given regular expression, or ?N if not found\n"
 	              "This function has nothing to do with relocations! - it's pronounced R.E. locate"),
 	TYPE_KWMETHOD("rerlocate", &string_rerlocate,
 	              "(pattern:?.,start=!0,end=!-1,range:?Dint=!A!Dint!PSIZE_MAX,rules=!P{})->?X2?.?N\n"
-	              "@param pattern The regular expression pattern (s.a. ?#rematch)\n"
-	              "@param range The max number of search attempts to perform\n"
-	              "@param rules The regular expression rules (s.a. ?#rematch)\n"
-	              "@throw ValueError The given @pattern is malformed\n"
+	              "#ppattern{The regular expression pattern (s.a. ?#rematch)}"
+	              "#prange{The max number of search attempts to perform}"
+	              "#prules{The regular expression rules (s.a. ?#rematch)}"
+	              "#tValueError{The given @pattern is malformed}"
 	              "Same as ${this.substr(this.rerfind(pattern, start, end, rules)...)}\n"
 	              "In other words: return the last sub-string matched by the "
 	              /**/ "given regular expression, or ?N if not found"),
 	TYPE_KWMETHOD("repartition", &string_repartition,
 	              "(pattern:?.,start=!0,end=!-1,range:?Dint=!A!Dint!PSIZE_MAX,rules=!P{})->?T3?.?.?.\n"
-	              "@param pattern The regular expression pattern (s.a. ?#rematch)\n"
-	              "@param range The max number of search attempts to perform\n"
-	              "@param rules The regular expression rules (s.a. ?#rematch)\n"
-	              "@throw ValueError The given @pattern is malformed\n"
+	              "#ppattern{The regular expression pattern (s.a. ?#rematch)}"
+	              "#prange{The max number of search attempts to perform}"
+	              "#prules{The regular expression rules (s.a. ?#rematch)}"
+	              "#tValueError{The given @pattern is malformed}"
 	              "A hybrid between ?#refind and ?#partition\n${"
 	              "function repartition(pattern: string, start: int, end: int, rules: string) {\n"
 	              "	local start, end = this.refind(pattern, start, end, rules)...;\n"
@@ -11521,10 +11521,10 @@ INTERN_TPCONST struct type_method tpconst string_methods[] = {
 	              "}}"),
 	TYPE_KWMETHOD("rerpartition", &string_rerpartition,
 	              "(pattern:?.,start=!0,end=!-1,range:?Dint=!A!Dint!PSIZE_MAX,rules=!P{})->?T3?.?.?.\n"
-	              "@param pattern The regular expression pattern (s.a. ?#rematch)\n"
-	              "@param range The max number of search attempts to perform\n"
-	              "@param rules The regular expression rules (s.a. ?#rematch)\n"
-	              "@throw ValueError The given @pattern is malformed\n"
+	              "#ppattern{The regular expression pattern (s.a. ?#rematch)}"
+	              "#prange{The max number of search attempts to perform}"
+	              "#prules{The regular expression rules (s.a. ?#rematch)}"
+	              "#tValueError{The given @pattern is malformed}"
 	              "A hybrid between ?#rerfind and ?#rpartition\n${"
 	              "function rerpartition(pattern: string, start: int, end: int, rules: string) {\n"
 	              "	local start, end = this.rerfind(pattern, start, end, rules)...;\n"
@@ -11538,9 +11538,9 @@ INTERN_TPCONST struct type_method tpconst string_methods[] = {
 	              "}}"),
 	TYPE_KWMETHOD("rereplace", &string_rereplace,
 	              "(pattern:?.,replace:?.,max:?Dint=!A!Dint!PSIZE_MAX,rules=!P{})->?.\n"
-	              "@param pattern The regular expression pattern (s.a. ?#rematch)\n"
-	              "@param rules The regular expression rules (s.a. ?#rematch)\n"
-	              "@throw ValueError The given @pattern is malformed\n"
+	              "#ppattern{The regular expression pattern (s.a. ?#rematch)}"
+	              "#prules{The regular expression rules (s.a. ?#rematch)}"
+	              "#tValueError{The given @pattern is malformed}"
 	              "Similar to ?#replace, however the ?. to search for is implemented as a regular expression "
 	              "pattern, with the sub-string matched by it then getting replaced by @replace.\n"
 	              "Locations where @pattern matches epsilon are not replaced\n"
@@ -11554,17 +11554,17 @@ INTERN_TPCONST struct type_method tpconst string_methods[] = {
 	              "}"),
 	TYPE_KWMETHOD("refindall", &string_refindall,
 	              "(pattern:?.,start=!0,end=!-1,rules=!P{})->?S?T2?Dint?Dint\n"
-	              "@param pattern The regular expression pattern (s.a. ?#rematch)\n"
-	              "@param rules The regular expression rules (s.a. ?#rematch)\n"
-	              "@throw ValueError The given @pattern is malformed\n"
+	              "#ppattern{The regular expression pattern (s.a. ?#rematch)}"
+	              "#prules{The regular expression rules (s.a. ?#rematch)}"
+	              "#tValueError{The given @pattern is malformed}"
 	              "Similar to ?#refind, but return a sequence of all matches found within ${this.substr(start, end)}\n"
 	              "Locations where @pattern matches epsilon are not included in the returned sequence\n"
 	              "Note that the matches returned are ordered ascendingly"),
 	TYPE_KWMETHOD("relocateall", &string_relocateall,
 	              "(pattern:?.,start=!0,end=!-1,rules=!P{})->?S?.\n"
-	              "@param pattern The regular expression pattern (s.a. ?#rematch)\n"
-	              "@param rules The regular expression rules (s.a. ?#rematch)\n"
-	              "@throw ValueError The given @pattern is malformed\n"
+	              "#ppattern{The regular expression pattern (s.a. ?#rematch)}"
+	              "#prules{The regular expression rules (s.a. ?#rematch)}"
+	              "#tValueError{The given @pattern is malformed}"
 	              "Similar to ?#relocate, but return a sequence of all matched "
 	              "sub-strings found within ${this.substr(start, end)}\n"
 	              "Note that the matches returned are ordered ascendingly\n"
@@ -11572,9 +11572,9 @@ INTERN_TPCONST struct type_method tpconst string_methods[] = {
 	              "This function has nothing to do with relocations! - it's pronounced R.E. locate all"),
 	TYPE_KWMETHOD("resplit", &string_resplit,
 	              "(pattern:?.,start=!0,end=!-1,rules=!P{})->?S?.\n"
-	              "@param pattern The regular expression pattern (s.a. ?#rematch)\n"
-	              "@param rules The regular expression rules (s.a. ?#rematch)\n"
-	              "@throw ValueError The given @pattern is malformed\n"
+	              "#ppattern{The regular expression pattern (s.a. ?#rematch)}"
+	              "#prules{The regular expression rules (s.a. ?#rematch)}"
+	              "#tValueError{The given @pattern is malformed}"
 	              "Similar to ?#split, but use a regular expression in order to "
 	              "express the sections of the ?. around which to perform the split\n"
 	              "Locations where @pattern matches epsilon do not trigger a split\n"
@@ -11590,9 +11590,9 @@ INTERN_TPCONST struct type_method tpconst string_methods[] = {
 	              "as a sequence"),
 	TYPE_KWMETHOD("restartswith", &string_restartswith,
 	              "(pattern:?.,start=!0,end=!-1,rules=!P{})->?Dbool\n"
-	              "@param pattern The regular expression pattern (s.a. ?#rematch)\n"
-	              "@param rules The regular expression rules (s.a. ?#rematch)\n"
-	              "@throw ValueError The given @pattern is malformed\n"
+	              "#ppattern{The regular expression pattern (s.a. ?#rematch)}"
+	              "#prules{The regular expression rules (s.a. ?#rematch)}"
+	              "#tValueError{The given @pattern is malformed}"
 	              "Check if @this ?. starts with a regular expression described by @pattern (s.a. ?#startswith)\n"
 	              "${"
 	              /**/ "function restartswith(pattern: string) {\n"
@@ -11601,9 +11601,9 @@ INTERN_TPCONST struct type_method tpconst string_methods[] = {
 	              "}"),
 	TYPE_KWMETHOD("reendswith", &string_reendswith,
 	              "(pattern:?.,start=!0,end=!-1,rules=!P{})->?Dbool\n"
-	              "@param pattern The regular expression pattern (s.a. ?#rematch)\n"
-	              "@param rules The regular expression rules (s.a. ?#rematch)\n"
-	              "@throw ValueError The given @pattern is malformed\n"
+	              "#ppattern{The regular expression pattern (s.a. ?#rematch)}"
+	              "#prules{The regular expression rules (s.a. ?#rematch)}"
+	              "#tValueError{The given @pattern is malformed}"
 	              "Check if @this ?. ends with a regular expression described by @pattern (s.a. ?#endswith)\n"
 	              "${"
 	              /**/ "function restartswith(pattern: string) {\n"
@@ -11613,43 +11613,43 @@ INTERN_TPCONST struct type_method tpconst string_methods[] = {
 	              "}"),
 	TYPE_KWMETHOD("restrip", &string_restrip,
 	              "(pattern:?.,start=!0,end=!-1,rules=!P{})->?.\n"
-	              "@param pattern The regular expression pattern (s.a. ?#rematch)\n"
-	              "@param rules The regular expression rules (s.a. ?#rematch)\n"
-	              "@throw ValueError The given @pattern is malformed\n"
+	              "#ppattern{The regular expression pattern (s.a. ?#rematch)}"
+	              "#prules{The regular expression rules (s.a. ?#rematch)}"
+	              "#tValueError{The given @pattern is malformed}"
 	              "Strip all leading and trailing matches for @pattern from @this ?. and return the result (s.a. ?#strip)"),
 	TYPE_KWMETHOD("relstrip", &string_relstrip,
 	              "(pattern:?.,start=!0,end=!-1,rules=!P{})->?.\n"
-	              "@param pattern The regular expression pattern (s.a. ?#rematch)\n"
-	              "@param rules The regular expression rules (s.a. ?#rematch)\n"
-	              "@throw ValueError The given @pattern is malformed\n"
+	              "#ppattern{The regular expression pattern (s.a. ?#rematch)}"
+	              "#prules{The regular expression rules (s.a. ?#rematch)}"
+	              "#tValueError{The given @pattern is malformed}"
 	              "Strip all leading matches for @pattern from @this ?. and return the result (s.a. ?#lstrip)"),
 	TYPE_KWMETHOD("rerstrip", &string_rerstrip,
 	              "(pattern:?.,start=!0,end=!-1,rules=!P{})->?.\n"
-	              "@param pattern The regular expression pattern (s.a. ?#rematch)\n"
-	              "@param rules The regular expression rules (s.a. ?#rematch)\n"
-	              "@throw ValueError The given @pattern is malformed\n"
+	              "#ppattern{The regular expression pattern (s.a. ?#rematch)}"
+	              "#prules{The regular expression rules (s.a. ?#rematch)}"
+	              "#tValueError{The given @pattern is malformed}"
 	              "Strip all trailing matches for @pattern from @this ?. and return the result (s.a. ?#lstrip)"),
 	TYPE_KWMETHOD("recount", &string_recount,
 	              "(pattern:?.,start=!0,end=!-1,rules=!P{})->?Dint\n"
-	              "@param pattern The regular expression pattern (s.a. ?#rematch)\n"
-	              "@param rules The regular expression rules (s.a. ?#rematch)\n"
-	              "@throw ValueError The given @pattern is malformed\n"
+	              "#ppattern{The regular expression pattern (s.a. ?#rematch)}"
+	              "#prules{The regular expression rules (s.a. ?#rematch)}"
+	              "#tValueError{The given @pattern is malformed}"
 	              "Count the number of matches of a given regular expression @pattern (s.a. ?#count)\n"
 	              "Hint: This is the same as ${##this.refindall(pattern)} or ${##this.relocateall(pattern)}\n"
 	              "Instances where @pattern matches epsilon are not counted"),
 	TYPE_KWMETHOD("recontains", &string_recontains,
 	              "(pattern:?.,start=!0,end=!-1,rules=!P{})->?Dbool\n"
-	              "@param pattern The regular expression pattern (s.a. ?#rematch)\n"
-	              "@param rules The regular expression rules (s.a. ?#rematch)\n"
-	              "@throw ValueError The given @pattern is malformed\n"
+	              "#ppattern{The regular expression pattern (s.a. ?#rematch)}"
+	              "#prules{The regular expression rules (s.a. ?#rematch)}"
+	              "#tValueError{The given @pattern is malformed}"
 	              "Check if @this contains a match for the given regular expression @pattern (s.a. ?#contains)\n"
 	              "Hint: This is the same as ${!!this.refindall(pattern)} or ${!!this.relocateall(pattern)}"),
 	TYPE_KWMETHOD("rescanf", &string_rescanf,
 	              "(pattern:?.,start=!0,end=!-1,rules=!P{})->?S?X2?.?N\n"
-	              "@param pattern The regular expression pattern (s.a. ?#rematch)\n"
-	              "@param range The max number of search attempts to perform\n"
-	              "@param rules The regular expression rules (s.a. ?#rematch)\n"
-	              "@throw ValueError The given @pattern is malformed\n"
+	              "#ppattern{The regular expression pattern (s.a. ?#rematch)}"
+	              "#prange{The max number of search attempts to perform}"
+	              "#prules{The regular expression rules (s.a. ?#rematch)}"
+	              "#tValueError{The given @pattern is malformed}"
 	              "Similar to ?#regmatch, but rather than return a list of matched offsets, a sequence of "
 	              "matched strings is returned, allowing the user to easily extract matched text in a way "
 	              "that is similar to ?#scanf. Returns an empty sequence when @pattern can't be matched."),
@@ -11701,19 +11701,19 @@ INTERN_TPCONST struct type_method tpconst string_methods[] = {
 	              "When nothing was matched, an empty sequence is returned (s.a. ?#regmatch)."),
 	TYPE_KWMETHOD("regindex", &string_regindex,
 	              "(pattern:?.,start=!0,end=!-1,range:?Dint=!A!Dint!PSIZE_MAX,rules=!P{})->?S?X2?T2?Dint?Dint?N\n"
-	              "@param pattern The regular expression pattern (s.a. ?#rematch)\n"
-	              "@param range The max number of search attempts to perform\n"
-	              "@param rules The regular expression rules (s.a. ?#rematch)\n"
-	              "@throw ValueError The given @pattern is malformed\n"
-	              "@throw IndexError No substring matching the given @pattern could be found\n"
+	              "#ppattern{The regular expression pattern (s.a. ?#rematch)}"
+	              "#prange{The max number of search attempts to perform}"
+	              "#prules{The regular expression rules (s.a. ?#rematch)}"
+	              "#tValueError{The given @pattern is malformed}"
+	              "#tIndexError{No substring matching the given @pattern could be found}"
 	              "Same as ?#regfind, but throw an :IndexError when no match can be found"),
 	TYPE_KWMETHOD("regrindex", &string_regrindex,
 	              "(pattern:?.,start=!0,end=!-1,range:?Dint=!A!Dint!PSIZE_MAX,rules=!P{})->?S?X2?T2?Dint?Dint?N\n"
-	              "@param pattern The regular expression pattern (s.a. ?#rematch)\n"
-	              "@param range The max number of search attempts to perform\n"
-	              "@param rules The regular expression rules (s.a. ?#rematch)\n"
-	              "@throw ValueError The given @pattern is malformed\n"
-	              "@throw IndexError No substring matching the given @pattern could be found\n"
+	              "#ppattern{The regular expression pattern (s.a. ?#rematch)}"
+	              "#prange{The max number of search attempts to perform}"
+	              "#prules{The regular expression rules (s.a. ?#rematch)}"
+	              "#tValueError{The given @pattern is malformed}"
+	              "#tIndexError{No substring matching the given @pattern could be found}"
 	              "Same as ?#regrfind, but throw an :IndexError when no match can be found"),
 
 	/* Deprecated functions. */

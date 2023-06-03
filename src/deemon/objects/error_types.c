@@ -1263,8 +1263,8 @@ PRIVATE struct type_method tpconst appexit_class_methods[] = {
 	            "This function never returns normally"),
 	TYPE_METHOD("atexit", &appexit_class_atexit,
 	            "(callback:?DCallable,args=!T0)\n"
-	            "@throw RuntimeError Additional atexit-callbacks can no longer be registered\n"
-	            "@throw NotImplemented Deemon was built without support for ?#atexit\n"
+	            "#tRuntimeError{Additional atexit-callbacks can no longer be registered}"
+	            "#tNotImplemented{Deemon was built without support for ?#atexit}"
 	            "Register a given @callback to be executed before deemon terminates"),
 	TYPE_METHOD_END
 };

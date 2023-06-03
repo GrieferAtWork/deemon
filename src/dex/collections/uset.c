@@ -1176,14 +1176,14 @@ PRIVATE struct type_seq uset_seq = {
 PRIVATE struct type_method tpconst uset_methods[] = {
 	TYPE_METHOD("pop", &uset_pop,
 	            "->\n"
-	            "@throw ValueError The set is empty\n"
+	            "#tValueError{The set is empty}"
 	            "Pop a random item from the set and return it"),
 	TYPE_METHOD("clear", &uset_doclear,
 	            "()\n"
 	            "Clear all items from the set"),
 	TYPE_METHOD("popitem", &uset_pop,
 	            "->\n"
-	            "@throw ValueError The set is empty\n"
+	            "#tValueError{The set is empty}"
 	            "Pop a random item from the set and return it (alias for ?#pop)"),
 	TYPE_METHOD("unify", &uset_unify,
 	            "(ob)->\n"

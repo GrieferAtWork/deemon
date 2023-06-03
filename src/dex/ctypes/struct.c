@@ -413,18 +413,18 @@ err:
 PRIVATE struct type_method tpconst struct_type_methods[] = {
 	TYPE_METHOD("offsetof", &struct_type_offsetof,
 	            "(field:?Dstring)->?Dint\n"
-	            "@throw AttributeError No field with the name @field exists\n"
+	            "#tAttributeError{No field with the name @field exists}"
 	            "Returns the offset of a given @field"),
 	TYPE_METHOD("offsetafter", &struct_type_offsetafter,
 	            "(field:?Dstring)->?Dint\n"
-	            "@throw AttributeError No field with the name @field exists\n"
+	            "#tAttributeError{No field with the name @field exists}"
 	            "Returns the offset after a given @field"),
 	/* TODO: containerof(pointer p, string field) -> lvalue
 	 *       Where type(p) === this.typeof(field).pointer,
 	 *       and type(return) == this.lvalue */
 	TYPE_METHOD("typeof", &struct_type_typeof,
 	            "(field:?Dstring)->structured_type\n"
-	            "@throw AttributeError No field with the name @field exists\n"
+	            "#tAttributeError{No field with the name @field exists}"
 	            "Returns the typing of given @field"),
 	TYPE_METHOD_END
 };
