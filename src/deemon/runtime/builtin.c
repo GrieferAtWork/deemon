@@ -86,15 +86,15 @@ local BUILTINS_HASHMASK = (1 << (NUM_BUILTINS_SPC - 1).fls) - 1;
 print("#define NUM_BUILTINS_SYM  ", NUM_BUILTINS_SYM);
 print("#define NUM_BUILTINS_SPC  ", NUM_BUILTINS_SPC);
 print("#define BUILTINS_HASHMASK ", BUILTINS_HASHMASK.hex());
-print("STATIC_ASSERT(_NUM_BUILTINS_SYM == ", NUM_BUILTINS_SYM, ");");
+print("STATIC_ASSERT_MSG(_NUM_BUILTINS_SYM == ", NUM_BUILTINS_SYM, ", \"You need to re-run `deemon -F src/deemon/runtime/builtin.c'\");");
 print("PRIVATE struct module_symbol deemon_symbols[", BUILTINS_HASHMASK + 1, "] = {");
 
 // Construct the hash-table of builtin deemon objects.
 local isFirst = true;
 for (local hashof, ppCond, uintNN_C: {
-		(rtHash.hash32, "_Dee_HashSelect(32, 64) == 32", 32),
-		(rtHash.hash64, "_Dee_HashSelect(32, 64) == 64", 64)
-	}) {
+	(rtHash.hash32, "_Dee_HashSelect(32, 64) == 32", 32),
+	(rtHash.hash64, "_Dee_HashSelect(32, 64) == 64", 64)
+}) {
 	local hashtab: List with (string, string, string | none) = [none] * (BUILTINS_HASHMASK + 1);
 	for (local name, flags, doc: builtins) {
 		local hash = hashof(name), i, perturb;
@@ -147,7 +147,7 @@ print("};");
 #define NUM_BUILTINS_SYM  53
 #define NUM_BUILTINS_SPC  70
 #define BUILTINS_HASHMASK 0x7f
-STATIC_ASSERT(_NUM_BUILTINS_SYM == 53);
+STATIC_ASSERT_MSG(_NUM_BUILTINS_SYM == 53, "You need to re-run `deemon -F src/deemon/runtime/builtin.c'");
 PRIVATE struct module_symbol deemon_symbols[128] = {
 #if _Dee_HashSelect(32, 64) == 32
 	{ DeeString_STR(&str_none), NULL, UINT32_C(0xde6dda00), MODSYM_FREADONLY | MODSYM_FCONSTEXPR | MODSYM_FNAMEOBJ, { id_none } },
