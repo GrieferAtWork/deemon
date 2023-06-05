@@ -203,8 +203,7 @@ do_realloc:
 	return new_expression;
 err:
 	/* Cleanup. */
-	while (exprc--)
-		ast_decref(exprv[exprc]);
+	ast_decrefv(exprv, exprc);
 	Dee_Free(exprv);
 	return NULL;
 }
@@ -238,7 +237,8 @@ again:
 		if unlikely(yield() < 0)
 			goto err;
 		/* Enter a new scope and parse expressions. */
-		result = ast_putddi(ast_parse_statements_until(AST_FMULTIPLE_KEEPLAST, '}'), &loc);
+		result = ast_parse_statements_until(AST_FMULTIPLE_KEEPLAST, '}');
+		result = ast_putddi(result, &loc);
 		if unlikely(!result)
 			goto err;
 		while (tok == '\n')
@@ -256,7 +256,8 @@ again:
 		goto again;
 
 	case ';':
-		result = ast_sethere(ast_constexpr(Dee_None));
+		result = ast_constexpr(Dee_None);
+		result = ast_sethere(result);
 		if unlikely(yieldnbif(allow_nonblock) < 0)
 			goto err;
 		break;
@@ -291,6 +292,7 @@ again:
 		if unlikely(!tt_branch)
 			goto err_r;
 		ff_branch = NULL;
+
 		/* Allow tags before the `else' keyword (forward-compatibility...) */
 		if unlikely(ast_tags_clear())
 			goto err_tt_branch;
@@ -315,11 +317,8 @@ do_else_branch:
 			if unlikely(!ff_branch)
 				goto err_tt_branch;
 		}
-		merge = ast_setddi(ast_conditional(AST_FCOND_EVAL | expect,
-		                                   result,
-		                                   tt_branch,
-		                                   ff_branch),
-		                   &loc);
+		merge = ast_conditional(AST_FCOND_EVAL | expect, result, tt_branch, ff_branch);
+		merge = ast_setddi(merge, &loc);
 		scope_pop();
 		ast_xdecref(ff_branch);
 		ast_decref(tt_branch);
@@ -373,11 +372,13 @@ do_else_branch:
 		                         NULL);
 		if unlikely(!result)
 			goto err;
-		merge = ast_setddi(ast_expand(result), &loc);
+		merge = ast_expand(result);
+		merge = ast_setddi(merge, &loc);
 		ast_decref(result);
 		if unlikely(!merge)
 			goto err;
-		result = ast_setddi(ast_yield(merge), &loc);
+		result = ast_yield(merge);
+		result = ast_setddi(result, &loc);
 		ast_decref(merge);
 		if unlikely(!result)
 			goto err;
@@ -471,7 +472,8 @@ do_else_branch:
 					result = merge;
 				}
 				if (is_semicolon()) {
-					text = ast_sethere(ast_constexpr(Dee_EmptyTuple));
+					text = ast_constexpr(Dee_EmptyTuple);
+					text = ast_sethere(text);
 				} else {
 					text = ast_parse_comma(AST_COMMA_FORCEMULTIPLE |
 					                       AST_COMMA_STRICTCOMMA,
@@ -556,11 +558,8 @@ do_else_branch:
 		if unlikely(!loop)
 			goto err_loop;
 		/* Create the loop branch. */
-		result = ast_setddi(ast_loop((uint16_t)type,
-		                             elem_or_cond,
-		                             iter_or_next,
-		                             loop),
-		                    &loc);
+		result = ast_loop((uint16_t)type, elem_or_cond, iter_or_next, loop);
+		result = ast_setddi(result, &loc);
 		if unlikely(!result)
 			goto err_loop2;
 		ast_decref(loop);
@@ -626,11 +625,8 @@ err_loop:
 		foreach_loop = ast_parse_statement(allow_nonblock);
 		if unlikely(!foreach_loop)
 			goto err_foreach_iter;
-		result = ast_setddi(ast_loop(AST_FLOOP_FOREACH,
-		                             foreach_elem,
-		                             foreach_iter,
-		                             foreach_loop),
-		                    &loc);
+		result = ast_loop(AST_FLOOP_FOREACH, foreach_elem, foreach_iter, foreach_loop);
+		result = ast_setddi(result, &loc);
 		ast_decref(foreach_loop);
 		ast_decref(foreach_iter);
 		ast_decref(foreach_elem);
@@ -682,7 +678,8 @@ err_foreach_elem:
 		TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
 		if (paren_end(has_paren, W_EXPECTED_RPAREN_AFTER_WHILE))
 			goto err_r;
-		merge = ast_setddi(ast_loop(AST_FLOOP_POSTCOND, cond, NULL, result), &loc);
+		merge = ast_loop(AST_FLOOP_POSTCOND, cond, NULL, result);
+		merge = ast_setddi(merge, &loc);
 		ast_decref(result);
 		ast_decref(cond);
 		if unlikely(!merge)
@@ -718,7 +715,8 @@ err_foreach_elem:
 		loop = ast_parse_statement(allow_nonblock);
 		if unlikely(!loop)
 			goto err_r;
-		merge = ast_setddi(ast_loop(AST_FNORMAL, result, NULL, loop), &loc);
+		merge = ast_loop(AST_FNORMAL, result, NULL, loop);
+		merge = ast_setddi(merge, &loc);
 		ast_decref(loop);
 		ast_decref(result);
 		if unlikely(!merge)
@@ -728,13 +726,15 @@ err_foreach_elem:
 	}	break;
 
 	case KWD_break:
-	case KWD_continue:
+	case KWD_continue: {
 #if AST_FLOOPCTL_BRK + 1 == AST_FLOOPCTL_CON
+		STATIC_ASSERT(AST_FLOOPCTL_BRK == (KWD_break - KWD_break));
+		STATIC_ASSERT(AST_FLOOPCTL_CON == (KWD_continue - KWD_break));
 		result = ast_loopctl((uint16_t)(tok - KWD_break));
-#else
+#else /* AST_FLOOPCTL_BRK + 1 == AST_FLOOPCTL_CON */
 		result = ast_loopctl(tok == KWD_break ? AST_FLOOPCTL_BRK : AST_FLOOPCTL_CON);
-#endif
-		ast_sethere(result);
+#endif /* AST_FLOOPCTL_BRK + 1 != AST_FLOOPCTL_CON */
+		result = ast_sethere(result);
 		if unlikely(!result)
 			goto err;
 		if unlikely(yield() < 0)
@@ -743,7 +743,7 @@ err_foreach_elem:
 		            ? (yield_semicolonnbif(allow_nonblock) < 0)
 		            : WARN(W_EXPECTED_SEMICOLON_AFTER_BREAK))
 			goto err_r;
-		break;
+	}	break;
 
 	case KWD_with:
 		result = ast_parse_with(true, allow_nonblock);
@@ -761,7 +761,7 @@ err_foreach_elem:
 		 * >>     print "Error";
 		 * >> }
 		 * >> 
-		 * >> @"Documentation text" // We've already parsed this due to the chance of this being followed by `catch' or `finally'
+		 * >> @@Documentation text // We've already parsed this due to the chance of this being followed by `catch' or `finally'
 		 * >> global foo = 42;
 		 */
 		goto done_no_tag_reset;
@@ -798,7 +798,7 @@ err_foreach_elem:
 			if unlikely(!result)
 				goto err;
 		}
-		ast_putddi(result, &loc);
+		result = ast_putddi(result, &loc);
 		if unlikely(likely(is_semicolon())
 		            ? (yield_semicolonnbif(allow_nonblock) < 0)
 		            : WARN(W_EXPECTED_SEMICOLON_AFTER_DEL))
@@ -834,6 +834,7 @@ err_foreach_elem:
 				goto err;
 		}
 		result = ast_goto(goto_label, current_basescope);
+		result = ast_setddi(result, &loc);
 		if unlikely(!result)
 			goto err;
 		if unlikely(likely(is_semicolon())
@@ -893,6 +894,7 @@ err_foreach_elem:
 
 		if unlikely(!switch_block)
 			goto err_r_switch;
+
 		/* Since cases are currently in order of
 		 * last -> first, we must reverse that order. */
 		{
@@ -916,6 +918,7 @@ err_foreach_elem:
 		                   &loc);
 		if unlikely(!merge)
 			goto err_r_switch_block;
+
 		/* Cleanup + assign the new switch statement to the return value. */
 		ast_decref(switch_block);
 		ast_decref(result);
@@ -971,6 +974,7 @@ handle_post_label:
 					label_ast = ast_setddi(ast_label(label_flags, def_label, current_basescope), &loc);
 					if unlikely(!label_ast)
 						goto err;
+
 					/* Parse the statement that is prefixed by the label. */
 					result = ast_parse_statement(allow_nonblock);
 					if unlikely(!result) {
@@ -1022,6 +1026,7 @@ err_label_ast:
 				loc_here(&loc);
 				if unlikely(yield() < 0)
 					goto err;
+
 				/* Parse the case expression. */
 				result = ast_parse_expr(LOOKUP_SYM_NORMAL);
 				if unlikely(!result)
@@ -1032,6 +1037,7 @@ err_label_ast:
 					ast_decref(result);
 					goto again;
 				}
+
 				/* Create the new text label that will be used as case. */
 				def_label = new_case_label(result);
 				ast_decref(result);
@@ -1055,6 +1061,7 @@ err_label_ast:
 					goto err;
 				if unlikely(!(current_basescope->bs_cflags & BASESCOPE_FSWITCH))
 					goto again;
+
 				/* Ensure existence of the default label. */
 				def_label = new_default_label();
 				if unlikely(!def_label)
@@ -1073,7 +1080,8 @@ err_label_ast:
 		                            AST_COMMA_ALLOWTYPEDECL | AST_COMMA_PARSESEMI),
 		                         AST_FMULTIPLE_KEEPLAST,
 		                         NULL);
-		/*if unlikely(!result) goto err;*/
+		/*if unlikely(!result)
+			goto err;*/
 		break;
 	}
 	/* Clear tags at the end of each statement. */

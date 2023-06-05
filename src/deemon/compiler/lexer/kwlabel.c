@@ -49,7 +49,7 @@ ast_parse_argument_list(uint16_t mode,
 		/* XXX: I really don't like using `**' for this.
 		 *      I realize that I _have_ to provide some way
 		 *      of passing arbitrary mappings through keywords,
-		 *      however this just feel too python-sque to me...
+		 *      however this just feels too python-esque to me...
 		 */
 		if unlikely(yield() < 0)
 			goto err_r;

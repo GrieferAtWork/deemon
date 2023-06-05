@@ -193,12 +193,10 @@ parse_generator_loop(struct ast_loc *__restrict ddi_loc) {
 		if unlikely(type < 0)
 			goto err_flags;
 		TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
-		if (type & AST_FLOOP_FOREACH && iter_or_next) {
+		if ((type & AST_FLOOP_FOREACH) && iter_or_next) {
 			/* Wrap the iterator of a foreach-loop with an __iterself__ operator. */
-			merge = ast_setddi(ast_operator1(OPERATOR_ITERSELF,
-			                                 AST_OPERATOR_FNORMAL,
-			                                 iter_or_next),
-			                   &loc);
+			merge = ast_operator1(OPERATOR_ITERSELF, AST_OPERATOR_FNORMAL, iter_or_next);
+			merge = ast_setddi(merge, &loc);
 			if unlikely(!merge)
 				goto err_for_loop;
 			ast_decref(iter_or_next);
@@ -279,11 +277,8 @@ err_for_loop:
 		foreach_loop = parse_generator_loop(&loc);
 		if unlikely(!foreach_loop)
 			goto err_foreach_iter;
-		result = ast_setddi(ast_loop(AST_FLOOP_FOREACH,
-		                             foreach_elem,
-		                             foreach_iter,
-		                             foreach_loop),
-		                    &loc);
+		result = ast_loop(AST_FLOOP_FOREACH, foreach_elem, foreach_iter, foreach_loop);
+		result = ast_setddi(result, &loc);
 		ast_decref(foreach_loop);
 		ast_decref(foreach_iter);
 		ast_decref(foreach_elem);
@@ -338,7 +333,8 @@ INTERN WUNUSED DREF struct ast *FCALL ast_parse_loopexpr(void) {
 		goto err_scope;
 
 	/* Wrap the generator loop in a function ast. */
-	merge = ast_setddi(ast_function(result, current_basescope), &loc);
+	merge = ast_function(result, current_basescope);
+	merge = ast_setddi(merge, &loc);
 	ast_decref(result);
 	basescope_pop();
 	if unlikely(!merge)
@@ -354,10 +350,12 @@ INTERN WUNUSED DREF struct ast *FCALL ast_parse_loopexpr(void) {
 	result->a_scope = current_scope;
 
 	/* With the lambda function now created, we must still wrap it in a call-expression. */
-	other = ast_setddi(ast_constexpr(Dee_EmptyTuple), &loc);
+	other = ast_constexpr(Dee_EmptyTuple);
+	other = ast_setddi(other, &loc);
 	if unlikely(!other)
 		goto err_r;
-	merge = ast_setddi(ast_operator2(OPERATOR_CALL, AST_OPERATOR_FNORMAL, result, other), &loc);
+	merge = ast_operator2(OPERATOR_CALL, AST_OPERATOR_FNORMAL, result, other);
+	merge = ast_setddi(merge, &loc);
 	ast_decref(other);
 	ast_decref(result);
 

@@ -1026,19 +1026,15 @@ do_xdecref_3:
 		goto do_xdecref_3;
 
 	case AST_MULTIPLE: {
-		DREF struct ast **iter, **end;
-		end = (iter = self->a_multiple.m_astv) +
-		      self->a_multiple.m_astc;
-		for (; iter < end; ++iter)
-			ast_decref(*iter);
+		ast_decrefv(self->a_multiple.m_astv, self->a_multiple.m_astc);
 		Dee_Free(self->a_multiple.m_astv);
 	}	break;
 
 	case AST_TRY: {
 		struct catch_expr *iter, *end;
 		ast_decref(self->a_try.t_guard);
-		end = (iter = self->a_try.t_catchv) +
-		      self->a_try.t_catchc;
+		iter = self->a_try.t_catchv;
+		end  = iter + self->a_try.t_catchc;
 		for (; iter < end; ++iter) {
 			ast_xdecref(iter->ce_mask);
 			ast_decref(iter->ce_code);
@@ -1078,9 +1074,8 @@ do_xdecref_3:
 	case AST_ASSEMBLY: {
 		struct asm_operand *iter, *end;
 		size_t i;
-		end = (iter = self->a_assembly.as_opv) +
-		      (self->a_assembly.as_num_o +
-		       self->a_assembly.as_num_i);
+		iter = self->a_assembly.as_opv;
+		end  = iter + (self->a_assembly.as_num_o + self->a_assembly.as_num_i);
 		/* Track the writes to output operands. */
 		for (i = 0; i < self->a_assembly.as_num_o; ++i) {
 			struct asm_operand *op = &self->a_assembly.as_opv[i];

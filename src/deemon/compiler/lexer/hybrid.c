@@ -63,7 +63,7 @@ ast_parse_statement_or_expression(unsigned int *p_was_expression) {
 			/* Try to parse a suffix expression.
 			 * If there was one, then we know that it actually was an expression. */
 			unsigned long token_num = token.t_num;
-			result                  = ast_parse_postexpr(result);
+			result = ast_parse_postexpr(result);
 			if (token_num != token.t_num)
 				was_expression = AST_PARSE_WASEXPR_YES;
 		}
@@ -205,11 +205,8 @@ do_else_branch:
 		if unlikely(!ff_branch)
 			goto err_tt;
 	}
-	merge = ast_setddi(ast_conditional(AST_FCOND_EVAL | expect,
-	                                   result,
-	                                   tt_branch,
-	                                   ff_branch),
-	                   &loc);
+	merge = ast_conditional(AST_FCOND_EVAL | expect, result, tt_branch, ff_branch);
+	merge = ast_setddi(merge, &loc);
 	ast_xdecref(ff_branch);
 	ast_xdecref(tt_branch);
 	ast_xdecref(result);
@@ -244,7 +241,8 @@ ast_parse_statement_or_braces(unsigned int *p_was_expression) {
 
 	case '}':
 		/* Special case: empty sequence. */
-		result = ast_setddi(ast_multiple(AST_FMULTIPLE_GENERIC, 0, NULL), &loc);
+		result = ast_multiple(AST_FMULTIPLE_GENERIC, 0, NULL);
+		result = ast_setddi(result, &loc);
 		if unlikely(!result)
 			goto err;
 		if unlikely(yield() < 0)
@@ -254,7 +252,8 @@ ast_parse_statement_or_braces(unsigned int *p_was_expression) {
 		break;
 
 	case '.':
-		result = ast_setddi(ast_do_parse_brace_items(), &loc);
+		result = ast_do_parse_brace_items();
+		result = ast_setddi(result, &loc);
 		if unlikely(!result)
 			goto err;
 		if (skip('}', W_EXPECTED_RBRACE_AFTER_BRACEINIT))
@@ -262,7 +261,6 @@ ast_parse_statement_or_braces(unsigned int *p_was_expression) {
 		if (p_was_expression)
 			*p_was_expression = AST_PARSE_WASEXPR_YES;
 		break;
-
 
 	case '{': /* Recursion! */
 		if unlikely(scope_push() < 0)
@@ -311,6 +309,7 @@ parse_remainder_before_rbrace_popscope_wrap:
 				if unlikely(WARN(W_EXPECTED_RBRACE_AFTER_BRACEINIT))
 					goto err_r;
 			}
+
 			/* Wrap the result as a single sequence. */
 			new_elemv = (DREF struct ast **)Dee_Mallocc(1, sizeof(DREF struct ast *));
 			if unlikely(!new_elemv)
@@ -321,6 +320,7 @@ parse_remainder_before_rbrace_popscope_wrap:
 				Dee_Free(new_elemv);
 				goto err_r;
 			}
+
 			/* `ast_multiple()' inherited `new_elemv' on success. */
 			result = ast_setddi(remainder, &loc);
 			goto parse_remainder_after_rbrace_popscope;
@@ -389,7 +389,6 @@ parse_remainder_after_semicolon_hybrid_popscope:
 		/* Same as `assert': `import' requires a trailing `;' */
 		goto parse_remainder_after_semicolon_hybrid_popscope;
 
-
 	case KWD_for:
 	case KWD_foreach:
 	case KWD_do:
@@ -398,7 +397,6 @@ parse_remainder_after_semicolon_hybrid_popscope:
 			goto err;
 		result = ast_parse_loopexpr_hybrid(&was_expression);
 		goto parse_remainder_after_hybrid_popscope;
-
 
 	case KWD_from:
 	case KWD_del: /* TODO: This can also appear in expressions! */
@@ -439,6 +437,7 @@ is_a_statement:
 
 	default: {
 		uint16_t comma_mode;
+
 		/* Check for a label definition. */
 		if (TPP_ISKEYWORD(tok)) {
 			char *next_token = peek_next_token(NULL);
@@ -449,6 +448,7 @@ is_a_statement:
 			     *next_token != ':' && *next_token != '='))
 				goto is_a_statement; /* label */
 		}
+
 		/* Figure out what we're dealing with as we go. */
 		if unlikely(scope_push() < 0)
 			goto err;
@@ -484,6 +484,7 @@ parse_remainder_after_rbrace_popscope:
 				result = remainder;
 parse_remainder_after_colon_popscope:
 				scope_pop();
+
 				/* mapping-like brace expression. */
 				if unlikely(yield() < 0)
 					goto err_r;
@@ -499,6 +500,7 @@ parse_remainder_after_colon_popscope:
 				break;
 			}
 		}
+
 		/* Statement expression. */
 		if (comma_mode & AST_COMMA_OUT_FNEEDSEMI) {
 			/* Consume a `;' token as part of the expression. */
@@ -569,7 +571,6 @@ err_r:
 err:
 	return NULL;
 }
-
 
 DECL_END
 

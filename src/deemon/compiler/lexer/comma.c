@@ -52,9 +52,7 @@ DECL_BEGIN
 
 INTERN NONNULL((1)) void DCALL
 astlist_fini(struct astlist *__restrict self) {
-	size_t i;
-	for (i = 0; i < self->ast_c; ++i)
-		ast_decref(self->ast_v[i]);
+	ast_decrefv(self->ast_v, self->ast_c);
 	Dee_Free(self->ast_v);
 }
 

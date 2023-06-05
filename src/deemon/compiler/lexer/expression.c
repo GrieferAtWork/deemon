@@ -1104,6 +1104,7 @@ do_create_class:
 			goto err;
 		if unlikely(yield() < 0)
 			goto err_r;
+
 		/* The specs officially only allow `import' in expression, when followed by `(' or `pack'
 		 * So we simply emit an error if what follows isn't one of those. */
 		if (tok != '(' && tok != KWD_pack &&
@@ -1240,7 +1241,7 @@ err_restore_pos:
 			} else {
 				/* Lambda function. */
 #ifdef CONFIG_LANGUAGE_HAVE_JAVA_LAMBDAS
-				int error = ast_is_after_lapren_of_java_lambda();
+				int error = ast_is_after_lparen_of_java_lambda();
 				if (error != 0) {
 					if unlikely(error < 0)
 						goto err;
@@ -1377,7 +1378,6 @@ err_restore_pos:
 			goto err;
 		result = ast_setddi(merge, &loc);
 	}	break;
-
 
 	case '[': /* List */
 		loc_here(&loc);
@@ -1650,7 +1650,7 @@ do_keyword:
 					goto err;
 				result = ast_parse_import_single(name);
 				if (result && (tok != ';' && tok != ',' && tok != ')' &&
-				               tok != '}' && tok != ']' && tok > 0 &&
+				               tok != '}' && tok != ']' && tok != '\n' && tok > 0 &&
 				               /* Don't emit this warning from macros! */
 				               token.t_file->f_kind == TPPFILE_KIND_TEXT)) {
 					/* Warn about bad readability in code like:
@@ -2032,11 +2032,8 @@ ast_parse_prod_operand(/*inherit(always)*/ DREF struct ast *__restrict lhs) {
 		rhs = ast_parse_unary(LOOKUP_SYM_SECONDARY);
 		if unlikely(!rhs)
 			goto err_r;
-		merge = ast_setddi(ast_operator2(cmd == TOK_POW
-		                                 ? OPERATOR_POW
-		                                 : GET_CHOP(cmd),
-		                                 0, lhs, rhs),
-		                   &loc);
+		merge = ast_operator2(cmd == TOK_POW ? OPERATOR_POW : GET_CHOP(cmd), 0, lhs, rhs);
+		merge = ast_setddi(merge, &loc);
 		ast_decref(rhs);
 		ast_decref(lhs);
 		lhs = merge;
@@ -2100,11 +2097,8 @@ ast_parse_shift_operand(/*inherit(always)*/ DREF struct ast *__restrict lhs) {
 		rhs = ast_parse_sum(LOOKUP_SYM_SECONDARY);
 		if unlikely(!rhs)
 			goto err_r;
-		merge = ast_setddi(ast_operator2(cmd == TOK_SHL
-		                                 ? OPERATOR_SHL
-		                                 : OPERATOR_SHR,
-		                                 0, lhs, rhs),
-		                   &loc);
+		merge = ast_operator2(cmd == TOK_SHL ? OPERATOR_SHL : OPERATOR_SHR, 0, lhs, rhs);
+		merge = ast_setddi(merge, &loc);
 		ast_decref(rhs);
 		ast_decref(lhs);
 		lhs = merge;
@@ -2230,9 +2224,11 @@ yield_again:
 		lhs = merge;
 		if unlikely(!lhs)
 			break;
+
 		/* Invert the result, if required. */
 		if (invert) {
-			merge = ast_setddi(ast_bool(AST_FBOOL_NEGATE, lhs), &loc);
+			merge = ast_bool(AST_FBOOL_NEGATE, lhs);
+			merge = ast_setddi(merge, &loc);
 			ast_decref(lhs);
 			lhs = merge;
 			if unlikely(!lhs)
@@ -2261,7 +2257,8 @@ ast_parse_and_operand(/*inherit(always)*/ DREF struct ast *__restrict lhs) {
 		rhs = ast_parse_cmpeq(LOOKUP_SYM_SECONDARY);
 		if unlikely(!rhs)
 			goto err_r;
-		merge = ast_setddi(ast_operator2(OPERATOR_AND, 0, lhs, rhs), &loc);
+		merge = ast_operator2(OPERATOR_AND, 0, lhs, rhs);
+		merge = ast_setddi(merge, &loc);
 		ast_decref(rhs);
 		ast_decref(lhs);
 		lhs = merge;
@@ -2289,7 +2286,8 @@ ast_parse_xor_operand(/*inherit(always)*/ DREF struct ast *__restrict lhs) {
 		rhs = ast_parse_and(LOOKUP_SYM_SECONDARY);
 		if unlikely(!rhs)
 			goto err_r;
-		merge = ast_setddi(ast_operator2(OPERATOR_XOR, 0, lhs, rhs), &loc);
+		merge = ast_operator2(OPERATOR_XOR, 0, lhs, rhs);
+		merge = ast_setddi(merge, &loc);
 		ast_decref(rhs);
 		ast_decref(lhs);
 		lhs = merge;
@@ -2317,7 +2315,8 @@ ast_parse_or_operand(/*inherit(always)*/ DREF struct ast *__restrict lhs) {
 		rhs = ast_parse_xor(LOOKUP_SYM_SECONDARY);
 		if unlikely(!rhs)
 			goto err_r;
-		merge = ast_setddi(ast_operator2(OPERATOR_OR, 0, lhs, rhs), &loc);
+		merge = ast_operator2(OPERATOR_OR, 0, lhs, rhs);
+		merge = ast_setddi(merge, &loc);
 		ast_decref(rhs);
 		ast_decref(lhs);
 		lhs = merge;
@@ -2345,7 +2344,8 @@ ast_parse_as_operand(/*inherit(always)*/ DREF struct ast *__restrict lhs) {
 		rhs = ast_parse_or(LOOKUP_SYM_SECONDARY);
 		if unlikely(!rhs)
 			goto err_r;
-		merge = ast_setddi(ast_action2(AST_FACTION_AS, lhs, rhs), &loc);
+		merge = ast_action2(AST_FACTION_AS, lhs, rhs);
+		merge = ast_setddi(merge, &loc);
 		ast_decref(rhs);
 		ast_decref(lhs);
 		lhs = merge;
@@ -2496,7 +2496,8 @@ do_parse_ff_branch:
 			/* Missing false-branch will be evaluated to `none' */
 			ff = NULL;
 		}
-		merge = ast_setddi(ast_conditional(AST_FCOND_EVAL | expect, lhs, tt, ff), &loc);
+		merge = ast_conditional(AST_FCOND_EVAL | expect, lhs, tt, ff);
+		merge = ast_setddi(merge, &loc);
 		ast_xdecref(ff);
 		ast_decref(tt);
 		ast_decref(lhs);

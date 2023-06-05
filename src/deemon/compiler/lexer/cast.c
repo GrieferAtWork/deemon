@@ -53,6 +53,7 @@ ast_parse_cast(struct ast *__restrict typeexpr) {
 		struct TPPFile *tok_file;
 		struct TPPKeyword *kwd;
 		char *tok_begin;
+
 		/* Special handling required:
 		 * >> (int)!!!42;         // This...
 		 * >> (int)!!!in my_list; // ... vs. this
@@ -93,7 +94,6 @@ not_a_cast:
 		ast_incref(result);
 		break;
 
-#if 1
 	case '(': {
 		struct ast_loc loc;
 		bool second_paren;
@@ -113,14 +113,12 @@ not_a_cast:
 		if (tok == ')') {
 			/* Handle case #0 */
 			TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
-			merge = ast_setddi(ast_constexpr(Dee_EmptyTuple), &loc);
+			merge = ast_constexpr(Dee_EmptyTuple);
+			merge = ast_setddi(merge, &loc);
 			if unlikely(!merge)
 				goto err;
-			result = ast_setddi(ast_operator2(OPERATOR_CALL,
-			                                  AST_OPERATOR_FNORMAL,
-			                                  typeexpr,
-			                                  merge),
-			                    &typeexpr->a_ddi);
+			result = ast_operator2(OPERATOR_CALL, AST_OPERATOR_FNORMAL, typeexpr, merge);
+			result = ast_setddi(result, &typeexpr->a_ddi);
 			ast_decref(merge);
 			if unlikely(!result)
 				goto err;
@@ -129,6 +127,7 @@ not_a_cast:
 			goto done;
 		}
 		second_paren = tok == '(';
+
 		/* Parse the cast-expression / argument list. */
 		merge = ast_parse_argument_list(AST_COMMA_FORCEMULTIPLE, &kw_labels);
 		if unlikely(!merge)
@@ -139,15 +138,11 @@ not_a_cast:
 		if (skip(')', W_EXPECTED_RPAREN_AFTER_LPAREN))
 			goto err_merge_kwlabels;
 		if (kw_labels) {
-			result = ast_setddi(ast_action3(AST_FACTION_CALL_KW,
-			                                typeexpr,
-			                                merge,
-			                                kw_labels),
-			                    &typeexpr->a_ddi);
+			result = ast_action3(AST_FACTION_CALL_KW, typeexpr, merge, kw_labels);
+			result = ast_setddi(result, &typeexpr->a_ddi);
 			ast_decref(kw_labels);
 		} else {
-			if (!second_paren &&
-			    merge->a_multiple.m_astc == 1) {
+			if (!second_paren && merge->a_multiple.m_astc == 1) {
 				/* Recursively parse cast suffix expressions:
 				 * >> (int)(float)get_value(); 
 				 * Parse as:
@@ -183,18 +178,13 @@ not_a_cast:
 					}
 				}
 			}
-			result = ast_setddi(ast_operator2(OPERATOR_CALL,
-			                                  AST_OPERATOR_FNORMAL,
-			                                  typeexpr,
-			                                  merge),
-			                    &typeexpr->a_ddi);
+			result = ast_operator2(OPERATOR_CALL, AST_OPERATOR_FNORMAL, typeexpr, merge);
+			result = ast_setddi(result, &typeexpr->a_ddi);
 		}
 		ast_decref(merge);
 		if unlikely(!result)
 			goto err;
 	}	break;
-#endif
-
 
 	default:
 		/* If what follows still isn't the start of
@@ -213,22 +203,22 @@ do_a_cast:
 		result = ast_parse_unary(LOOKUP_SYM_NORMAL);
 		if unlikely(!result)
 			goto err;
+
 		/* Use the parsed branch in a single-argument call-operator invocation. */
 		exprv = (DREF struct ast **)Dee_Mallocc(1, sizeof(DREF struct ast *));
 		if unlikely(!exprv)
 			goto err_r;
 		exprv[0] = result; /* Inherit */
+
 		/* Pack together the argument list branch. */
-		merge = ast_setddi(ast_multiple(AST_FMULTIPLE_TUPLE, 1, exprv),
-		                   &typeexpr->a_ddi);
+		merge = ast_multiple(AST_FMULTIPLE_TUPLE, 1, exprv);
+		merge = ast_setddi(merge, &typeexpr->a_ddi);
 		if unlikely(!merge)
 			goto err_r_exprv;
+
 		/* Create the call expression branch. */
-		result = ast_setddi(ast_operator2(OPERATOR_CALL,
-		                                  AST_OPERATOR_FNORMAL,
-		                                  typeexpr,
-		                                  merge),
-		                    &typeexpr->a_ddi);
+		result = ast_operator2(OPERATOR_CALL, AST_OPERATOR_FNORMAL, typeexpr, merge);
+		result = ast_setddi(result, &typeexpr->a_ddi);
 		ast_decref(merge);
 		break;
 	}

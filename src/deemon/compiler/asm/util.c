@@ -64,8 +64,8 @@ asm_gpop_stack(uint16_t absolute_stack_addr) {
 	        "Invalid stack address");
 	offset = (current_assembler.a_stackcur - 1) - absolute_stack_addr;
 	/* XXX: `offset == 0' doesn't ~really~ make sense as that would
-	 *       mean to pop a stack value into itself, then discard it.
-	 *       Though we still allow doing this... */
+	 *      mean to pop a stack value into itself, then discard it.
+	 *      Though we still allow doing this... */
 	return offset == 0 ? asm_gpop() : asm_gpop_n(offset - 1);
 }
 
@@ -170,6 +170,7 @@ again:
 			goto again;
 		return NULL;
 	}
+
 	/* Copy vector elements. */
 	for (i = 0; i < (size_t)end; ++i) {
 		result->t_elem[i] = DeeList_GET(self, (size_t)begin + i);
@@ -253,14 +254,17 @@ INTERN WUNUSED NONNULL((1)) int
 			goto err;
 		return asm_gsuper();
 	}
+
 	if (DeeTuple_Check(value)) {
 		/* Special case for tuples: If only constant expressions are
 		 * contained, then we can push the tuple as a constant expression, too. */
 		size_t start, end, len = DeeTuple_SIZE(value);
 		bool is_first_part;
+
 		/* Special case: empty tuple. */
 		if (!len)
 			return asm_gpack_tuple(0);
+
 		/* Check if the tuple can be pushed as a constant expression. */
 		for (start = 0; start < len; ++start) {
 			if (!asm_allowconst(DeeTuple_GET(value, start)))
@@ -433,6 +437,7 @@ push_tuple_parts:
 		/* TO-DO: Check if all contained keys are allocated as constants. */
 	}
 #endif
+
 	if (DeeDict_Check(value)) {
 		/* Construct dicts in one of 2 ways:
 		 *   #1: If all Dict elements are allocated as constants,
@@ -477,6 +482,7 @@ check_dict_again:
 		}
 		rodict->rd_size = num_items;
 		rodict->rd_mask = ro_mask;
+
 		/* Pack all key-value pairs into the ro-Dict. */
 		for (i = 0; i <= mask; ++i) {
 			if (!elem[i].di_key)
@@ -492,18 +498,21 @@ check_dict_again:
 		}
 		DeeDict_LockEndRead(value);
 		DeeObject_Init(rodict, &DeeRoDict_Type);
+
 		/* All right! we've got the ro-Dict all packed together!
 		 * -> Register it as a constant. */
 		cid = asm_newconst((DeeObject *)rodict);
 		Dee_Decref(rodict);
 		if unlikely(cid < 0)
 			goto err;
+
 		/* Now push the ro-Dict, then cast it to a regular one. */
 		if (asm_gpush_const((uint16_t)cid))
 			goto err;
 		if (asm_gcast_dict())
 			goto err;
 		return 0;
+
 push_dict_parts:
 		/* Construct a Dict by pushing its individual parts. */
 		num_items = 0;
@@ -520,6 +529,7 @@ push_dict_parts:
 			Dee_Incref(item_key);
 			Dee_Incref(item_value);
 			DeeDict_LockEndRead(value);
+
 			/* Push the key & item. */
 			error = asm_gpush_constexpr(item_key);
 			if likely(!error)
@@ -532,9 +542,11 @@ push_dict_parts:
 			DeeDict_LockRead(value);
 		}
 		DeeDict_LockEndRead(value);
+
 		/* With everything pushed, pack together the Dict. */
 		return asm_gpack_dict((uint16_t)num_items);
 	}
+
 	if (DeeHashSet_Check(value)) {
 		/* Construct hash-sets in one of 2 ways:
 		 *   #1: If all set elements are allocated as constants,
@@ -578,6 +590,7 @@ check_set_again:
 		}
 		roset->rs_size = num_items;
 		roset->rs_mask = ro_mask;
+
 		/* Pack all key-value pairs into the ro-set. */
 		for (i = 0; i <= mask; ++i) {
 			if (!elem[i].hsi_key)
@@ -591,18 +604,21 @@ check_set_again:
 		}
 		DeeHashSet_LockEndRead(value);
 		DeeObject_Init(roset, &DeeRoSet_Type);
+
 		/* All right! we've got the ro-set all packed together!
 		 * -> Register it as a constant. */
 		cid = asm_newconst((DeeObject *)roset);
 		Dee_Decref(roset);
 		if unlikely(cid < 0)
 			goto err;
+
 		/* Now push the ro-set, then cast it to a regular one. */
 		if (asm_gpush_const((uint16_t)cid))
 			goto err;
 		if (asm_gcast_hashset())
 			goto err;
 		return 0;
+
 push_set_parts:
 		/* Construct a set by pushing its individual parts. */
 		num_items = 0;
@@ -644,16 +660,19 @@ err:
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 asm_check_thiscall(struct symbol *__restrict sym,
                    struct ast *__restrict warn_ast) {
-	/* Throw a compiler-error when one attempts to
-	 * access an instance member from a class method.
+	/* Throw a compiler-error when one attempts to access an instance member
+	 * from a class method.
+	 *
 	 * We must check this now because at runtime, the fast-mode interpreter
 	 * assumes that a this-argument is present when an instruction using it
 	 * is encountered, while the safe-mode interpreter throws an error if not.
-	 * But since we're trying to generate code for fast-mode, we need to check this now. */
+	 * But since we're trying to generate code for fast-mode, we need to check
+	 * this now. */
 	if (asm_symbol_accessible(sym))
 		return 0;
-	/* Hint to the user that they may write `MyClass.symbol' instead of
-	 * `symbol', if they to access the attribute in its unbound form:
+
+	/* Hint to the user that they may write `MyClass.symbol' instead
+	 * of `sym', if they to access the attribute in its unbound form:
 	 * >> class MyClass {
 	 * >>     func() {
 	 * >>         print "Hello";
@@ -761,7 +780,7 @@ check_function_class:
 						goto err; /* Call as an InstanceMethod */
 					if (asm_gcall_extern((uint16_t)symid, id_InstanceMethod, 2))
 						goto err; /* args..., class_sym.func */
-					              /* Fallthrough to invoke the InstanceMethod normally. */
+					/* Fallthrough to invoke the InstanceMethod normally. */
 				}
 				if (asm_grrot(argc + 1))
 					goto err;           /* func, args... */
@@ -785,6 +804,7 @@ check_function_class:
 					goto err;                                       /* this, args... */
 				return asm_gcallattr_const((uint16_t)symid2, argc); /* result */
 			}
+
 			/* Regular, old member variable. */
 			if (attr->ca_flag & CLASS_ATTRIBUTE_FCLASSMEM) {
 				if (ASM_SYMBOL_MAY_REFERENCE(class_sym)) {
@@ -861,7 +881,7 @@ check_function_class:
 					goto err; /* Call as an InstanceMethod */
 				if (asm_gcall_extern((uint16_t)symid, id_InstanceMethod, 2))
 					goto err; /* args..., this.func */
-				              /* Fallthrough to invoke the InstanceMethod normally. */
+				/* Fallthrough to invoke the InstanceMethod normally. */
 			}
 			/* args..., func */
 got_attribute_value:
@@ -873,6 +893,7 @@ got_attribute_value:
 		default: break;
 		}
 	}
+
 	/* Fallback: Generate an extended call. */
 	if unlikely(asm_gpush_symbol(function, warn_ast))
 		goto err;
@@ -959,13 +980,13 @@ check_sym_class:
 		absolute_stack_addr = SYMBOL_STACK_OFFSET(sym);
 		if (current_assembler.a_stackcur <= absolute_stack_addr) {
 			/* This can happen in code like this:
-				 * __stack local foo;
-				 * {
-				 *     __stack local bar = "ValueOfBar";
-				 *     foo = "ValueOfFoo";
-				 * }
-				 * print foo; // Error here
-				 */
+			 * >> __stack local foo;
+			 * >> {
+			 * >>     __stack local bar = "ValueOfBar";
+			 * >>     foo = "ValueOfFoo";
+			 * >> }
+			 * >> print foo; // Error here
+			 */
 			if (ASM_WARN(W_ASM_STACK_VARIABLE_WAS_DEALLOCATED, sym))
 				goto err;
 			return asm_gpush_none();
@@ -1020,6 +1041,7 @@ check_sym_class:
 			}
 			return 0;
 		}
+
 		/* The attribute must be accessed as virtual. */
 		if unlikely(asm_check_thiscall(sym, warn_ast))
 			goto err;
@@ -1035,6 +1057,7 @@ check_sym_class:
 				goto err;
 			return asm_ggetattr_const((uint16_t)symid2);
 		}
+
 		/* Regular, old member variable. */
 		if (attr->ca_flag & CLASS_ATTRIBUTE_FCLASSMEM) {
 			if (ASM_SYMBOL_MAY_REFERENCE(class_sym)) {
@@ -1282,12 +1305,12 @@ check_sym_class:
 		ASSERT(sym->s_flag & SYMBOL_FALLOC);
 		if (current_assembler.a_stackcur <= SYMBOL_STACK_OFFSET(sym)) {
 			/* This can happen in code like this:
-			 * __stack local foo;
-			 * {
-			 *     __stack local bar = "ValueOfBar";
-			 *     foo = "ValueOfFoo";
-			 * }
-			 * print foo; // Error here
+			 * >> __stack local foo;
+			 * >> {
+			 * >>     __stack local bar = "ValueOfBar";
+			 * >>     foo = "ValueOfFoo";
+			 * >> }
+			 * >> print foo; // Error here
 			 */
 			ASM_ERR(W_ASM_STACK_VARIABLE_WAS_DEALLOCATED, sym);
 			goto err;
@@ -1347,12 +1370,12 @@ check_sym_class:
 		ASSERT(sym->s_flag & SYMBOL_FALLOC);
 		if (current_assembler.a_stackcur <= SYMBOL_STACK_OFFSET(sym)) {
 			/* This can happen in code like this:
-			 * __stack local foo;
-			 * {
-			 *     __stack local bar = "ValueOfBar";
-			 *     foo = "ValueOfFoo";
-			 * }
-			 * print foo; // Error here
+			 * >> __stack local foo;
+			 * >> {
+			 * >>     __stack local bar = "ValueOfBar";
+			 * >>     foo = "ValueOfFoo";
+			 * >> }
+			 * >> print foo; // Error here
 			 */
 			ASM_ERR(W_ASM_STACK_VARIABLE_WAS_DEALLOCATED, sym);
 			goto err;
@@ -1459,6 +1482,7 @@ test_class_attribute:
 				goto err;
 			return asm_gboundattr();
 		}
+
 		/* The attribute must be accessed as virtual. */
 		if unlikely(asm_check_thiscall(sym, warn_ast))
 			goto err;
@@ -1474,6 +1498,7 @@ test_class_attribute:
 				goto err;
 			return asm_gboundattr();
 		}
+
 		/* Regular, old member variable. */
 #ifdef CONFIG_INLINE_GETSET_BINDING_CHECKER
 		if (attr->ca_flag & CLASS_ATTRIBUTE_FGETSET) {
@@ -1527,6 +1552,7 @@ test_class_attribute:
 				if (asm_ggetmember_this(attr->ca_addr + CLASS_GETSET_GET))
 					goto err;
 			}
+
 			/* At this point, we've acquired to getter callback. - Now to invoke it. */
 			if (!(attr->ca_flag & CLASS_ATTRIBUTE_FMETHOD)) {
 				if (asm_gcall(0))
@@ -1562,6 +1588,7 @@ got_attribute_value:
 			guard_end = asm_newsym();
 			if unlikely(!guard_end)
 				goto err;
+
 			/* Setup an exception handler for dealing with unbound-attribute errors. */
 			exception_handler->ex_addr  = guard_begin;
 			exception_handler->ex_flags = EXCEPTION_HANDLER_FHANDLED;
@@ -1703,9 +1730,10 @@ check_sym_class:
 				if (ASM_WARN(W_ASM_UNBIND_FINAL_SYMBOL, sym))
 					goto err;
 			}
-			/* If `bound()' is used on the symbol, warn about the fact that
-			 * doing this will not actually unbind the symbol, but only delete
-			 * the value that was being stored. */
+
+			/* If `del()' is used on the symbol, warn about the fact that
+			 * doing this will not actually unbind the symbol, but only
+			 * delete the value that was being stored. */
 			if (sym->s_nbound != 0 &&
 			    !(sym->s_flag & SYMBOL_FSTACK_NOUNBIND_OK) &&
 			    WARN(W_ASM_DELETED_STACK_VARIABLE_ISNT_UNBOUND, sym))
@@ -1720,6 +1748,7 @@ check_sym_class:
 					goto err;
 				return 0;
 			}
+
 			/* Overwrite the stack-variable with `none':
 			 * >> mov stack#..., none */
 			if (asm_pstack(SYMBOL_STACK_OFFSET(sym)))
@@ -1762,6 +1791,7 @@ del_class_attribute:
 					}
 					return asm_gpop();
 				}
+
 				/* Because there is no ASM_DELCMEMBER instruction, we simply
 				 * encode this as a delattr, which, while not static, still
 				 * does exactly what we want it to do! */
@@ -1772,6 +1802,7 @@ del_class_attribute:
 					goto err;
 				return asm_gdelattr_const((uint16_t)symid);
 			}
+
 			/* The attribute must be accessed as virtual. */
 			if unlikely(asm_check_thiscall(sym, warn_ast))
 				goto err;
@@ -1788,6 +1819,7 @@ del_class_attribute:
 					goto err;
 				return asm_gdelattr_const((uint16_t)symid2);
 			}
+
 			/* Regular, old member variable. */
 			if (attr->ca_flag & CLASS_ATTRIBUTE_FGETSET) {
 				/* Call the delete function of the attribute. */
@@ -1874,6 +1906,7 @@ pop_unused_result:
 		case SYMBOL_TYPE_GETSET:
 			if (!sym->s_getset.gs_del)
 				return 0; /* TODO: Warning */
+
 			/* Generate a zero-argument call to the delete symbol. */
 			if (asm_gcall_symbol_n(sym->s_getset.gs_del, 0, warn_ast))
 				goto err;
@@ -1934,6 +1967,7 @@ check_sym_class:
 					goto err;
 				symid = asm_newconst_string(sym->s_name->k_name,
 				                            sym->s_name->k_size);
+
 				/* Must ensure that the write is only written once! */
 				if (asm_gpush_this_module())                /* value, this_module */
 					goto err;
@@ -2007,6 +2041,7 @@ check_sym_class:
 							 */
 							return asm_gpop();
 						}
+
 						/* The scope can be reached, so the variable is actually owned by an
 						 * active portion of the assembler, meaning it will get cleaned up
 						 * when its associated scope ends:
@@ -2087,6 +2122,7 @@ set_class_attribute:
 					goto err;      /* class */
 				return asm_gpop(); /* - */
 			}
+
 			/* The attribute must be accessed as virtual. */
 			if unlikely(asm_check_thiscall(sym, warn_ast))
 				goto err;
@@ -2104,6 +2140,7 @@ set_class_attribute:
 					goto err; /* this, value */
 				return asm_gsetattr_const((uint16_t)symid);
 			}
+
 			/* Regular, old member variable. */
 			if (attr->ca_flag & CLASS_ATTRIBUTE_FGETSET) {
 				/* Call the delete function of the attribute. */
@@ -2149,6 +2186,7 @@ set_class_attribute:
 					if (asm_ggetmember_this(attr->ca_addr + CLASS_GETSET_SET))
 						goto err;
 				}
+
 				/* value, callback */
 				if (!(attr->ca_flag & CLASS_ATTRIBUTE_FMETHOD)) {
 					if (asm_gswap())
@@ -2205,6 +2243,7 @@ pop_unused_result:
 				if (asm_gcall_symbol_n(sym->s_getset.gs_set, 1, warn_ast))
 					goto err;
 			}
+
 			/* Pop the return value. */
 			return asm_gpop();
 
@@ -2217,6 +2256,7 @@ pop_unused_result:
 			break;
 		}
 	}
+
 	/* Warn about the fact that the symbol cannot be written. */
 	if (ASM_WARN(W_ASM_CANNOT_WRITE_SYMBOL, sym))
 		goto err;
@@ -2258,6 +2298,7 @@ INTERN WUNUSED NONNULL((1, 3)) int
 		if (asm_gjmp(ASM_JF, skip_mov))
 			goto err;
 		asm_decsp();
+
 		/* Only perform the store if the argument was given. */
 		if (asm_gpush_varg(argid))
 			goto err;
@@ -2266,6 +2307,7 @@ INTERN WUNUSED NONNULL((1, 3)) int
 		asm_defsym(skip_mov);
 		return 0;
 	}
+
 	/* Fallback: push the argument, then pop it into the symbol. */
 	if (asm_gpush_varg(argid))
 		goto err;
@@ -2309,6 +2351,7 @@ asm_gcheck_final_local_bound(uint16_t lid) {
 		goto err;
 	current_assembler.a_curr = &current_assembler.a_sect[SECTION_COLD];
 	asm_defsym(within_cold);
+
 	/* We get here only when the local was already bound. */
 	constlid = DeeInt_NewUInt16(lid);
 	if unlikely(!constlid)
@@ -2322,11 +2365,13 @@ asm_gcheck_final_local_bound(uint16_t lid) {
 	temp_id = asm_newmodule(DeeModule_GetDeemon());
 	if unlikely(temp_id < 0)
 		goto err;
+
 	/* Invoke `__roloc from deemon' and let it decide what to do about the error. */
 	if (asm_gcall_extern((uint16_t)temp_id, id___roloc, 1))
 		goto err;
 	if (asm_gpop())
 		goto err;
+
 	/* Jump/Switch back to the previous section. */
 	if (sect != &current_assembler.a_sect[SECTION_COLD] &&
 	    asm_gjmp(ASM_JMP, after_cold))
@@ -2337,7 +2382,6 @@ asm_gcheck_final_local_bound(uint16_t lid) {
 err:
 	return -1;
 }
-
 
 DECL_END
 

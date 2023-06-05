@@ -32,6 +32,7 @@ DECL_BEGIN
  * >> with (<foo>) {
  * >>     <bar>
  * >> }
+ *
  * `with' doesn't have its own AST, but instead is equivalent
  * (and actually encoded as) the following replacement:
  * >> {
@@ -43,14 +44,14 @@ DECL_BEGIN
  * >>         __hidden.operator leave();
  * >>     }
  * >> }
+ *
  * It's main purpose is to be useful for automatic, scope-based
  * resource management, specifically synchronization primitives
- * such as mutexes, or read/write locks, but it can also be used
+ * such as locks and read/write locks, but it can also be used
  * in other places, such as to automatically close files:
- * >> with (local fp = file.open("foo")) {
+ * >> with (local fp = File.open("foo")) {
  * >>     print fp.read();
- * >>     // `fp.operator leave()' here will invoke `fp.close()'
- * >> }
+ * >> }   // `fp.operator leave()' here will invoke `fp.close()'
  */
 
 /* Parse a with-statement/expression.
@@ -96,10 +97,12 @@ ast_parse_with(bool is_statement, bool allow_nonblock) {
 	expression_sym->s_type = SYMBOL_TYPE_STACK;
 
 	/* Generate the store expression. */
-	other = ast_setddi(ast_sym(expression_sym), &loc);
+	other = ast_sym(expression_sym);
+	other = ast_setddi(other, &loc);
 	if unlikely(!other)
 		goto err_scope_r;
-	merge = ast_setddi(ast_action2(AST_FACTION_STORE, other, result), &loc);
+	merge = ast_action2(AST_FACTION_STORE, other, result);
+	merge = ast_setddi(merge, &loc);
 	ast_decref(other);
 	ast_decref(result);
 	if unlikely(!merge)
@@ -117,7 +120,8 @@ ast_parse_with(bool is_statement, bool allow_nonblock) {
 	if unlikely(!result_v)
 		goto err_scope_r;
 	result_v[0] = result; /* Inherit */
-	result      = ast_setddi(ast_sym(expression_sym), &loc);
+	result      = ast_sym(expression_sym);
+	result      = ast_setddi(result, &loc);
 	if unlikely(!result)
 		goto err_result_v_0;
 	merge = ast_operator1(OPERATOR_ENTER, AST_OPERATOR_FNORMAL, result);
@@ -133,7 +137,8 @@ ast_parse_with(bool is_statement, bool allow_nonblock) {
 		goto err_result_v_1;
 
 	/* Create the leave-expression for the finally block. */
-	merge = ast_setddi(ast_sym(expression_sym), &loc);
+	merge = ast_sym(expression_sym);
+	merge = ast_setddi(merge, &loc);
 	if unlikely(!merge)
 		goto err_result_v_1_r;
 
@@ -144,9 +149,8 @@ ast_parse_with(bool is_statement, bool allow_nonblock) {
 		goto err_result_v_1_r;
 
 	/* Wrap the with-block in a try-finally AST with the leave-statement. */
-	merge = ast_setddi(ast_tryfinally(result,
-	                                  other),
-	                   &loc);
+	merge = ast_tryfinally(result, other);
+	merge = ast_setddi(merge, &loc);
 	ast_decref(other);
 	ast_decref(result);
 	if unlikely(!merge)
@@ -159,7 +163,8 @@ ast_parse_with(bool is_statement, bool allow_nonblock) {
 	 *       this ast, which is exactly what we want the with-statement
 	 *       to evaluate to when used in an expression (aka. whatever
 	 *       the user writes as the last expression of the try-block). */
-	result = ast_setddi(ast_multiple(AST_FMULTIPLE_KEEPLAST, 3, result_v), &loc);
+	result = ast_multiple(AST_FMULTIPLE_KEEPLAST, 3, result_v);
+	result = ast_setddi(result, &loc);
 	if unlikely(!result)
 		goto err_result_v_2;
 	scope_pop();
@@ -229,10 +234,12 @@ ast_parse_with_hybrid(unsigned int *p_was_expression) {
 	expression_sym->s_type = SYMBOL_TYPE_STACK;
 
 	/* Generate the store expression. */
-	other = ast_setddi(ast_sym(expression_sym), &loc);
+	other = ast_sym(expression_sym);
+	other = ast_setddi(other, &loc);
 	if unlikely(!other)
 		goto err_scope_r;
-	merge = ast_setddi(ast_action2(AST_FACTION_STORE, other, result), &loc);
+	merge = ast_action2(AST_FACTION_STORE, other, result);
+	merge = ast_setddi(merge, &loc);
 	ast_decref(other);
 	ast_decref(result);
 	if unlikely(!merge)
@@ -249,7 +256,8 @@ ast_parse_with_hybrid(unsigned int *p_was_expression) {
 	if unlikely(!result_v)
 		goto err_scope_r;
 	result_v[0] = result; /* Inherit */
-	result      = ast_setddi(ast_sym(expression_sym), &loc);
+	result      = ast_sym(expression_sym);
+	result      = ast_setddi(result, &loc);
 	if unlikely(!result)
 		goto err_result_v_0;
 	merge = ast_operator1(OPERATOR_ENTER, AST_OPERATOR_FNORMAL, result);
@@ -264,7 +272,8 @@ ast_parse_with_hybrid(unsigned int *p_was_expression) {
 		goto err_result_v_1;
 
 	/* Create the leave-expression for the finally block. */
-	merge = ast_setddi(ast_sym(expression_sym), &loc);
+	merge = ast_sym(expression_sym);
+	merge = ast_setddi(merge, &loc);
 	if unlikely(!merge)
 		goto err_result_v_1_r;
 
@@ -275,9 +284,8 @@ ast_parse_with_hybrid(unsigned int *p_was_expression) {
 		goto err_result_v_1_r;
 
 	/* Wrap the with-block in a try-finally AST with the leave-statement. */
-	merge = ast_setddi(ast_tryfinally(result,
-	                                  other),
-	                   &loc);
+	merge = ast_tryfinally(result, other);
+	merge = ast_setddi(merge, &loc);
 	ast_decref(other);
 	ast_decref(result);
 	if unlikely(!merge)
@@ -290,7 +298,8 @@ ast_parse_with_hybrid(unsigned int *p_was_expression) {
 	 *       this ast, which is exactly what we want the with-statement
 	 *       to evaluate to when used in an expression (aka. whatever
 	 *       the user writes as the last expression of the try-block). */
-	result = ast_setddi(ast_multiple(AST_FMULTIPLE_KEEPLAST, 3, result_v), &loc);
+	result = ast_multiple(AST_FMULTIPLE_KEEPLAST, 3, result_v);
+	result = ast_setddi(result, &loc);
 	if unlikely(!result)
 		goto err_result_v_2;
 	scope_pop();
@@ -316,8 +325,6 @@ err_scope_r:
 	ast_decref(result);
 	goto err_scope;
 }
-
-
 
 DECL_END
 

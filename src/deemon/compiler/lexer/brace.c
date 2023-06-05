@@ -40,25 +40,29 @@ INTERN WUNUSED NONNULL((1)) DREF struct ast *FCALL
 ast_parse_mapping(struct ast *__restrict initial_key) {
 	size_t elema, elemc;
 	DREF struct ast *result;
-	DREF struct ast **elemv, *item;
-	/* Parse the associated item. */
-	item = ast_parse_expr(LOOKUP_SYM_NORMAL);
-	if unlikely(!item)
+	DREF struct ast **elemv, *value;
+
+	/* Parse the associated value. */
+	value = ast_parse_expr(LOOKUP_SYM_NORMAL);
+	if unlikely(!value)
 		goto err;
-	elema = 1, elemc = 0;
+	elema = 1;
+	elemc = 0;
 	elemv = (DREF struct ast **)Dee_Mallocc(2, sizeof(DREF struct ast *));
 	if unlikely(!elemv) {
-		ast_decref(item);
+		ast_decref(value);
 		goto err;
 	}
 	ast_incref(initial_key);
 	elemv[0] = initial_key;
-	elemv[1] = item; /* Inherit */
+	elemv[1] = value; /* Inherit */
 	++elemc;
+
 	/* Parse the remainder of a Dict initializer. */
 	while (tok == ',') {
 		if unlikely(yield() < 0)
 			goto err_dict_elemv;
+
 		/* Parse the key expression. */
 		if (tok == '.') {
 			if unlikely(yield() < 0)
@@ -97,10 +101,12 @@ ast_parse_mapping(struct ast *__restrict initial_key) {
 			if (skip(':', W_EXPECTED_COLON_AFTER_DICT_KEY))
 				goto err_dict_elemv_r;
 		}
-		/* Now parse the associated item. */
-		item = ast_parse_expr(LOOKUP_SYM_NORMAL);
-		if unlikely(!item)
+
+		/* Now parse the associated value. */
+		value = ast_parse_expr(LOOKUP_SYM_NORMAL);
+		if unlikely(!value)
 			goto err_dict_elemv_r;
+
 		/* Extend the element vector if needed. */
 		if (elemc == elema) {
 			DREF struct ast **new_elemv;
@@ -122,7 +128,7 @@ do_realloc_dict:
 			elema = new_elema;
 		}
 		elemv[(elemc * 2) + 0] = result; /* Inherit */
-		elemv[(elemc * 2) + 1] = item;   /* Inherit */
+		elemv[(elemc * 2) + 1] = value;   /* Inherit */
 		++elemc;
 	}
 	if (elemc != elema) {
@@ -139,14 +145,11 @@ do_realloc_dict:
 done:
 	return result;
 err_dict_keyitem:
-	ast_decref(item);
+	ast_decref(value);
 err_dict_elemv_r:
 	ast_decref(result);
 err_dict_elemv:
-	while (elemc--) {
-		ast_decref(elemv[(elemc / 2) + 0]);
-		ast_decref(elemv[(elemc / 2) + 1]);
-	}
+	ast_decrefv(elemv, elemc * 2);
 	Dee_Free(elemv);
 err:
 	result = NULL;
@@ -220,13 +223,13 @@ do_realloc_list:
 	result = ast_multiple(AST_FMULTIPLE_GENERIC, elemc, elemv);
 	if unlikely(!result)
 		goto err_list_elemv;
+
 	/* Upon success, `ast_multiple' inherits the element vector. */
 	return result;
 err_list_elemv_result:
 	ast_decref(result);
 err_list_elemv:
-	while (elemc--)
-		ast_decref(elemv[elemc]);
+	ast_decrefv(elemv, elemc);
 	Dee_Free(elemv);
 	goto err;
 err:

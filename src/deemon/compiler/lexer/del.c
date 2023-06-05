@@ -71,6 +71,7 @@ ast_parse_del_single(unsigned int lookup_mode) {
 
 		default: goto default_case;
 		}
+
 		/* Create a new operator branch. */
 		if unlikely(result->a_operator.o_exflag & AST_OPERATOR_FVARARGS)
 			goto create_2;
@@ -106,7 +107,7 @@ create_2:
 	}	break;
 
 	default:
-	default_case:
+default_case:
 		if (WARN(W_UNEXPECTED_EXPRESSION_FOR_DEL))
 			goto err_r;
 		break;
@@ -140,6 +141,7 @@ ast_parse_del(unsigned int lookup_mode) {
 	DREF struct ast *result;
 	size_t delc, dela;
 	DREF struct ast **delv;
+
 	/* Parse additional lookup modifiers. */
 	if (ast_parse_lookup_mode(&lookup_mode))
 		goto err;
@@ -202,6 +204,7 @@ do_realloc_delv:
 				}
 			}
 		}
+
 		/* Pack all delete expression together into a multiple-branch. */
 		ASSERT(delc <= dela);
 		if (delc != dela) {
@@ -214,15 +217,15 @@ do_realloc_delv:
 		result = ast_multiple(AST_FMULTIPLE_KEEPLAST, delc, delv);
 		if unlikely(!result)
 			goto err_delv;
-		/* Upon success, the multiple-branch inherited all `delv' expressions. */
+
+		/* Upon success, the multiple-branch `result' inherited all `delv' expressions. */
 	}
 done:
 	return result;
 err_delv_r:
 	ast_decref(result);
 err_delv:
-	while (delc--)
-		ast_decref(delv[delc]);
+	ast_decrefv(delv, delc);
 	Dee_Free(delv);
 	goto err;
 err_r:

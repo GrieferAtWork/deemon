@@ -53,7 +53,8 @@ INTERN WUNUSED NONNULL((1, 2)) DREF struct ast *
 			if unlikely(!expr_v)
 				goto err_input;
 			expr_v[0] = input; /* Inherit reference. */
-			args      = ast_setddi(ast_multiple(AST_FMULTIPLE_TUPLE, 1, expr_v), &func->a_ddi);
+			args      = ast_multiple(AST_FMULTIPLE_TUPLE, 1, expr_v);
+			args      = ast_setddi(args, &func->a_ddi);
 			if unlikely(!args) {
 				Dee_Free(expr_v);
 				goto err_input;
@@ -91,7 +92,8 @@ INTERN WUNUSED NONNULL((1, 2)) DREF struct ast *
 					goto set_merge_from_inherit_args;
 				}
 			}
-			merge = ast_setddi(ast_expand(args), &func->a_ddi);
+			merge = ast_expand(args);
+			merge = ast_setddi(merge, &func->a_ddi);
 			if unlikely(!merge)
 				goto err_input;
 			expr_v = (struct ast **)Dee_Mallocc(2, sizeof(struct ast *));
@@ -270,6 +272,7 @@ PRIVATE WUNUSED int DCALL append_decl_string(void) {
 			goto err;
 	} while (tok == TOK_STRING ||
 	         (tok == TOK_CHAR && !HAS(EXT_CHARACTER_LITERALS)));
+
 	/* Append a line-feed at the end. */
 #ifdef CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION
 	if unlikely(unicode_printer_putascii(&current_tags.at_decl, '\n'))
@@ -354,12 +357,14 @@ again_compiler_subtag:
 		} else {
 			tag_name_str = token.t_kwd->k_name;
 			tag_name_len = token.t_kwd->k_size;
+
 			/* Trim leading/trailing underscores from tag names (prevent ambiguity when macros are used).
 			 * NOTE: Doing this is an extension implemented by the GATW implementation */
 			while (tag_name_len && *tag_name_str == '_')
 				++tag_name_str, --tag_name_len;
 			while (tag_name_len && tag_name_str[tag_name_len - 1] == '_')
 				--tag_name_len;
+
 			/* Compiler annotation required by the standard. */
 			if (IS_TAG("interrupt")) {
 				current_tags.at_class_flags |= TP_FINTERRUPT;

@@ -729,9 +729,8 @@ class_maker_addinit(struct class_maker *__restrict self,
 		symbol_ast = ast_sym(sym);
 		if unlikely(!symbol_ast)
 			goto err;
-		initializer = ast_setddi(ast_action2(AST_FACTION_STORE, symbol_ast,
-		                                     ast_putddi(initializer, loc)),
-		                         loc);
+		initializer = ast_action2(AST_FACTION_STORE, symbol_ast, ast_putddi(initializer, loc));
+		initializer = ast_setddi(initializer, loc);
 		ast_decref(symbol_ast);
 		if unlikely(!initializer)
 			goto err;
@@ -853,8 +852,7 @@ class_maker_fini(struct class_maker *__restrict self) {
 	ast_xdecref_unlikely(self->cm_ctor);
 	Dee_XDecref_unlikely((DeeObject *)self->cm_ctor_scope);
 	unicode_printer_fini(&self->cm_doc);
-	for (i = 0; i < self->cm_initc; ++i)
-		ast_decref(self->cm_initv[i]);
+	ast_decrefv(self->cm_initv, self->cm_initc);
 	Dee_Free(self->cm_initv);
 	for (i = 0; i < self->cm_class_initc; ++i)
 		ast_decref(self->cm_class_initv[i].cm_ast);
@@ -1076,12 +1074,21 @@ parse_constructor_initializers(struct class_maker *__restrict self) {
 			TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTLF;
 			if (paren_begin(&has_paren, W_EXPECTED_LPAREN_AFTER_SUPER_INIT))
 				goto err_flags;
-			if (has_paren && tok == ')') {
-				/* Empty super-args argument list.
-				 * Since this is what the runtime will do by default in any case,
-				 * there's no point in us not simply optimizing for this case already
-				 * by just not generating a superargs operator. */
-				goto done_superargs;
+			if (has_paren) {
+				if (tok == ')') {
+					/* Empty super-args argument list.
+					 * Since this is what the runtime will do by default in any case,
+					 * there's no point in us not simply optimizing for this case already
+					 * by just not generating a superargs operator. */
+					goto done_superargs;
+				}
+			} else {
+				temp = maybe_expression_begin();
+				if (temp <= 0) {
+					if unlikely(temp < 0)
+						goto err_flags;
+					goto done_superargs;
+				}
 			}
 			basescope_pop(); /* Pop the constructor scope. */
 			if unlikely(basescope_push())
@@ -1107,7 +1114,8 @@ err_flags_superargs_superkwds:
 				}
 				pair[0] = superargs; /* Inherit reference (on success) */
 				pair[1] = superkwds; /* Inherit reference (on success) */
-				merge   = ast_setddi(ast_multiple(AST_FMULTIPLE_TUPLE, 2, pair), &loc);
+				merge   = ast_multiple(AST_FMULTIPLE_TUPLE, 2, pair);
+				merge   = ast_setddi(merge, &loc);
 				if unlikely(!merge)
 					goto err_flags_superargs_superkwds;
 				superargs = merge;
@@ -1115,7 +1123,8 @@ err_flags_superargs_superkwds:
 			}
 
 			/* With the argument-tuple at hand, wrap it in a return + function ast. */
-			merge = ast_setddi(ast_return(superargs), &loc);
+			merge = ast_return(superargs);
+			merge = ast_setddi(merge, &loc);
 			ast_decref(superargs);
 			if unlikely(!merge)
 				goto err_flags;
@@ -1123,7 +1132,8 @@ err_flags_superargs_superkwds:
 
 			/* Pop the super-args scope. (create the function in the class-scope context) */
 			basescope_pop();
-			superargs = ast_setddi(ast_function(merge, (DeeBaseScopeObject *)merge->a_scope), &loc);
+			superargs = ast_function(merge, (DeeBaseScopeObject *)merge->a_scope);
+			superargs = ast_setddi(superargs, &loc);
 			ast_decref(merge);
 			if unlikely(!superargs)
 				goto err_flags;
@@ -1151,27 +1161,38 @@ done_superargs:
 				goto err;
 
 			/* Member initializer (c++ style). */
-			if (tok == '=' || tok == KWD_pack) {
+			if (tok == '=') {
 				if unlikely(yield() < 0)
 					goto err;
 				initializer_ast = ast_parse_expr(LOOKUP_SYM_NORMAL);
 				if unlikely(!initializer_ast)
 					goto err;
 			} else {
+				bool has_paren;
 				old_flags = TPPLexer_Current->l_flags;
 				TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTLF;
-				if (skip('(', W_EXPECTED_LPAREN_OR_EQUAL_IN_CONSTRUCTOR_INIT))
+				if (paren_begin(&has_paren, W_EXPECTED_LPAREN_OR_EQUAL_IN_CONSTRUCTOR_INIT))
 					goto err_flags;
-				if (tok == ')') {
+				if (has_paren && tok == ')') {
 					/* Special case: Same as `= none' (aka: initializer to `none') */
-					initializer_ast = ast_setddi(ast_constexpr(Dee_None), &loc);
+constructor_list_none_initializer:
+					initializer_ast = ast_constexpr(Dee_None);
+					initializer_ast = ast_setddi(initializer_ast, &loc);
 				} else {
+					if (!has_paren) {
+						int error = maybe_expression_begin();
+						if (error <= 0) {
+							if unlikely(error < 0)
+								goto err_flags;
+							goto constructor_list_none_initializer;
+						}
+					}
 					initializer_ast = ast_parse_expr(LOOKUP_SYM_NORMAL);
 				}
 				if unlikely(!initializer_ast)
 					goto err_flags;
 				TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
-				if (skip(')', W_EXPECTED_RPAREN_CONSTRUCTOR_INIT)) {
+				if (paren_end(has_paren, W_EXPECTED_RPAREN_CONSTRUCTOR_INIT)) {
 					ast_decref(initializer_ast);
 					goto err;
 				}
@@ -1229,10 +1250,11 @@ PRIVATE struct callback_name const callback_names[] = {
 	/* [CLASS_GETSET_GET] = */ { "get", 0, CLASS_GETSET_GET },
 	/* [CLASS_GETSET_DEL] = */ { "del", 0, CLASS_GETSET_DEL },
 	/* [CLASS_GETSET_SET] = */ { "set", 0, CLASS_GETSET_SET },
+
 	/* The old deemon accepted _a_ _lot_ of other names for callbacks.
 	 * We continue to support them, but we warn if they are used instead
-	 * of the preferred `get', `del' and `set' names, as also found as
-	 * the names of property/member wrapper types like `classmember from deemon' */
+	 * of the preferred `get', `del' and `set' names, as also found as the
+	 * names of property/member wrapper types like `ClassMember from rt' */
 	{ "__get__", 1, CLASS_GETSET_GET },
 	{ "__del__", 1, CLASS_GETSET_DEL },
 	{ "__set__", 1, CLASS_GETSET_SET },
@@ -1276,7 +1298,6 @@ next:
 		if unlikely(skip_lf())
 			goto err;
 		goto next;
-
 
 	case ';':
 		/* Rewind and clear context flags.

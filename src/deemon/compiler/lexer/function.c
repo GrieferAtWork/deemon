@@ -82,11 +82,13 @@ create_anon_argument:
 					goto err;
 				goto create_anon_argument;
 			}
+
 			/* Check if the argument name is a reserved identifier. */
 			if (is_reserved_symbol_name(argument_name)) {
 				if (WARN(W_RESERVED_ARGUMENT_NAME, argument_name))
 					goto err;
 			}
+
 			/* Create a new symbol for the argument. */
 			result = new_local_symbol(argument_name, NULL);
 		}
@@ -203,10 +205,10 @@ set_arg_as_varargs_argument:
 				if unlikely(resize_argument_list(&arga))
 					goto err;
 				/* Add the symbol to the argument symbol vector. */
-				arg->s_type                                              = SYMBOL_TYPE_ARG;
-				arg->s_symid                                             = current_basescope->bs_argc;
+				arg->s_type  = SYMBOL_TYPE_ARG;
+				arg->s_symid = current_basescope->bs_argc;
 				current_basescope->bs_argv[current_basescope->bs_argc++] = arg;
-				current_basescope->bs_varargs                            = arg;
+				current_basescope->bs_varargs = arg;
 				current_basescope->bs_flags |= CODE_FVARARGS;
 parse_varargs_suffix:
 				if unlikely(tok == '?') {
@@ -242,13 +244,14 @@ parse_varargs_suffix:
 			symbol_flags = SYMBOL_FNORMAL;
 			for (;;) {
 				if (tok == KWD_local) {
+					/* ... */
 				} else if (tok == KWD_final) {
-					if (symbol_flags & SYMBOL_FFINAL &&
+					if ((symbol_flags & SYMBOL_FFINAL) &&
 					    WARN(W_VARIABLE_MODIFIER_DUPLICATED))
 						goto err;
 					symbol_flags |= SYMBOL_FFINAL;
 				} else if (tok == KWD_varying) {
-					if (symbol_flags & SYMBOL_FVARYING &&
+					if ((symbol_flags & SYMBOL_FVARYING) &&
 					    WARN(W_VARIABLE_MODIFIER_DUPLICATED))
 						goto err;
 					symbol_flags |= SYMBOL_FVARYING;
@@ -258,6 +261,7 @@ parse_varargs_suffix:
 				if (yield() < 0)
 					goto err;
 			}
+
 			/* Check for keyword arguments parameter. */
 			if (tok == TOK_POW) {
 				if unlikely(current_basescope->bs_flags & CODE_FVARKWDS) {
@@ -272,18 +276,20 @@ parse_varargs_suffix:
 				}
 				if unlikely(yield() < 0)
 					goto err;
+
 				/* Parse the argument name. */
 				arg = parse_argument_name();
 				if unlikely(!arg)
 					goto err;
 				if unlikely(resize_argument_list(&arga))
 					goto err;
+
 				/* Add the symbol to the argument symbol vector. */
-				arg->s_type                                              = SYMBOL_TYPE_ARG;
-				arg->s_flag                                              = SYMBOL_FALLOC | symbol_flags;
-				arg->s_symid                                             = current_basescope->bs_argc;
+				arg->s_type  = SYMBOL_TYPE_ARG;
+				arg->s_flag  = SYMBOL_FALLOC | symbol_flags;
+				arg->s_symid = current_basescope->bs_argc;
 				current_basescope->bs_argv[current_basescope->bs_argc++] = arg;
-				current_basescope->bs_varkwds                            = arg;
+				current_basescope->bs_varkwds = arg;
 				current_basescope->bs_flags |= CODE_FVARKWDS;
 				goto parse_varargs_suffix;
 			}
@@ -337,6 +343,7 @@ set_argument_as_local:
 				current_basescope->bs_argv[current_basescope->bs_argc++] = arg;
 				if unlikely(resize_default_list(&defaulta))
 					goto err;
+
 				/* Set a default value of NULL to indicate a variable that is unbound by default. */
 				current_basescope->bs_default[current_basescope->bs_argc_max -
 				                              current_basescope->bs_argc_min] = NULL;
@@ -356,6 +363,7 @@ set_argument_as_local:
 skip_default_suffix:
 					if unlikely(yield() < 0)
 						goto err;
+
 					/* Parse & discard the default expression. */
 					default_expr = ast_parse_expr(LOOKUP_SYM_NORMAL);
 					if unlikely(!default_expr)
@@ -403,10 +411,10 @@ err_default_expr:
 					Dee_Incref(default_value);
 				}
 				ast_decref(default_expr);
-				arg->s_type                                                   = SYMBOL_TYPE_ARG;
-				arg->s_flag                                                   = SYMBOL_FALLOC | symbol_flags;
-				arg->s_symid                                                  = current_basescope->bs_argc;
-				current_basescope->bs_argv[current_basescope->bs_argc++]      = arg;
+				arg->s_type  = SYMBOL_TYPE_ARG;
+				arg->s_flag  = SYMBOL_FALLOC | symbol_flags;
+				arg->s_symid = current_basescope->bs_argc;
+				current_basescope->bs_argv[current_basescope->bs_argc++] = arg;
 				current_basescope->bs_default[current_basescope->bs_argc_max -
 				                              current_basescope->bs_argc_min] = default_value; /* Inherit reference. */
 				++current_basescope->bs_argc_max;
@@ -421,6 +429,7 @@ set_arg_as_normal:
 						goto err;
 					goto set_argument_as_local;
 				}
+
 				/* Mandatory, positional argument. */
 				arg->s_type  = SYMBOL_TYPE_ARG;
 				arg->s_flag  = SYMBOL_FALLOC | symbol_flags;
@@ -446,6 +455,7 @@ next_argument:
 	ASSERT(current_basescope->bs_argc_min <=
 	       current_basescope->bs_argc_max);
 	ASSERT(arga >= current_basescope->bs_argc);
+
 	/* Truncate the argument vector. */
 	if (arga != current_basescope->bs_argc) {
 		struct symbol **new_symv;
@@ -536,16 +546,19 @@ ast_parse_function_noscope(struct TPPKeyword *name,
 #endif /* !CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION */
 		/* Save the function name in the base scope. */
 		current_basescope->bs_name = name;
+
 		/* Create a new symbol to allow for function-self-referencing. */
 		funcself_symbol = new_local_symbol(name, name_loc);
 		if unlikely(!funcself_symbol)
 			goto err;
 		funcself_symbol->s_type = SYMBOL_TYPE_MYFUNC;
 	}
-#ifdef CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION
+
 	/* Declaration meta-information */
+#ifdef CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION
 	decl_ast_initfunc(&my_decl, NULL, current_basescope);
 #endif /* CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION */
+
 	if (tok == '(') {
 		/* Argument list. */
 		old_flags = TPPLexer_Current->l_flags;
@@ -561,6 +574,7 @@ ast_parse_function_noscope(struct TPPKeyword *name,
 		if (WARN(W_DEPRECATED_NO_PARAMETER_LIST))
 			goto err_decl;
 	}
+
 #ifdef CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION
 	if (tok == ':') {
 		struct decl_ast *return_type;
@@ -577,6 +591,7 @@ ast_parse_function_noscope(struct TPPKeyword *name,
 		}
 		my_decl.da_func.f_ret = return_type; /* Inherit */
 	}
+
 	/* Copy declaration information into the function symbol (if it exists) */
 	if (funcself_symbol) {
 		if (funcself_symbol->s_decltype.da_type != DAST_NONE) {
@@ -594,11 +609,13 @@ ast_parse_function_noscope(struct TPPKeyword *name,
 		my_decl.da_type = DAST_NONE;
 	}
 #endif /* CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION */
+
 	if (tok == TOK_ARROW) {
 		struct ast_loc arrow_loc;
 		loc_here(&arrow_loc);
 		if unlikely(yield() < 0)
 			goto err_decl;
+
 		/* Expression function. */
 		code = ast_parse_expr(LOOKUP_SYM_NORMAL);
 		if unlikely(!code)
@@ -629,6 +646,7 @@ ast_parse_function_noscope(struct TPPKeyword *name,
 		/* Missing function body (this was allowed in deemon 100+, where
 		 * this was interpreted the same way an `{ }'-like empty body would
 		 * have been)
+		 *
 		 * Back then, the intend was to go hand-in-hand with the user being
 		 * able to re-assign the code of a function after that function had
 		 * already been created, thus allowing for self-referencing functions
@@ -645,6 +663,15 @@ ast_parse_function_noscope(struct TPPKeyword *name,
 		 * >>     }
 		 * >> }
 		 * >> x(0);
+		 *
+		 * But that's no longer allowed since functions don't implement the
+		 * `operator assign' anymore (they are immutable once created), and
+		 * self-referencing functions are done by ASM_THIS_FUNCTION which
+		 * will push the current function onto the stack (thus allowing a
+		 * function to reference itself)
+		 *
+		 * Still: we *do* parse functions without a body for the sake of
+		 *        syntax compatibility with deemon 100+.
 		 */
 		if (WARN(W_EXPECTED_LBRACE_AFTER_FUNCTION))
 			goto err;
@@ -658,6 +685,7 @@ ast_parse_function_noscope(struct TPPKeyword *name,
 	ast_decref(code);
 	if unlikely(!result)
 		goto err_decl;
+
 	/* Hack: The function AST itself must be located in the caller's scope. */
 	Dee_Decref(result->a_scope);
 	ASSERT(current_basescope->bs_scope.s_prev);
@@ -748,6 +776,7 @@ ast_parse_function_noscope_noargs(bool *p_need_semi) {
 	ast_decref(code);
 	if unlikely(!result)
 		goto err;
+
 	/* Hack: The function AST itself must be located in the caller's scope. */
 	Dee_Decref(result->a_scope);
 	ASSERT(current_basescope->bs_scope.s_prev);
@@ -792,6 +821,7 @@ ast_parse_function_java_lambda(struct TPPKeyword *first_argument_name,
 				if (WARN(W_RESERVED_ARGUMENT_NAME, first_argument_name))
 					goto err_scope;
 			}
+
 			/* Create a new symbol for the argument. */
 			arg = new_local_symbol(first_argument_name, first_argument_loc);
 		}
@@ -896,7 +926,7 @@ err:
  * @return:  1: Yes
  * @return:  0: No
  * @return: -1: Error */
-INTERN WUNUSED int DCALL ast_is_after_lapren_of_java_lambda(void) {
+INTERN WUNUSED int DCALL ast_is_after_lparen_of_java_lambda(void) {
 	struct TPPLexerPosition pos;
 	if (!TPP_ISKEYWORD(tok)) {
 		if (tok == TOK_POW) {

@@ -178,8 +178,7 @@ multiple_continue_at_iter:
 					goto err;
 				}
 			}
-			for (i = 0; i < self->a_multiple.m_astc; ++i)
-				ast_decref(self->a_multiple.m_astv[i]);
+			ast_decrefv(self->a_multiple.m_astv, self->a_multiple.m_astc);
 			Dee_Free(self->a_multiple.m_astv);
 			self->a_constexpr = new_set;
 		} else if (self->a_flag == AST_FMULTIPLE_DICT) {
@@ -196,8 +195,7 @@ multiple_continue_at_iter:
 					goto err;
 				}
 			}
-			for (i = 0; i < self->a_multiple.m_astc; ++i)
-				ast_decref(self->a_multiple.m_astv[i]);
+			ast_decrefv(self->a_multiple.m_astv, self->a_multiple.m_astc);
 			Dee_Free(self->a_multiple.m_astv);
 			self->a_constexpr = new_dict; /* Inherit reference. */
 		} else if (self->a_flag == AST_FMULTIPLE_GENERIC_KEYS) {
@@ -215,8 +213,7 @@ multiple_continue_at_iter:
 					goto err;
 				}
 			}
-			for (i = 0; i < self->a_multiple.m_astc; ++i)
-				ast_decref(self->a_multiple.m_astv[i]);
+			ast_decrefv(self->a_multiple.m_astv, self->a_multiple.m_astc);
 			Dee_Free(self->a_multiple.m_astv);
 			self->a_constexpr = (DREF DeeObject *)new_dict; /* Inherit reference. */
 		} else {

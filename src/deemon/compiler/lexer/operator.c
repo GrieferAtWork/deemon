@@ -325,7 +325,7 @@ do_generic:
 			Dee_Free(argv);
 			goto err_args;
 		}
-		args            = new_args; /* This is now the argument tuple for the builtin function call. */
+		args = new_args; /* This is now the argument tuple for the builtin function call. */
 		function_symbol = new_unnamed_symbol();
 		if unlikely(!function_symbol)
 			goto err_args;
@@ -562,6 +562,7 @@ do_operator_gr:
 			result = OPERATOR_CALL;
 			goto done_y1;
 		}
+
 		/* Parenthesis around operator name. */
 		result = ast_parse_operator_name(features);
 		if unlikely(result < 0)

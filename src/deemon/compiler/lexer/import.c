@@ -343,6 +343,7 @@ bad_symbol_name:
 			}
 		}
 	}
+
 	/* Lookup/create a keyword for the module's symbol name. */
 	return TPPLexer_LookupKeyword(symbol_start, symbol_length, 1);
 err:
@@ -505,6 +506,7 @@ autogenerate_symbol_name:
 			goto err;
 		if (tok != KWD_as)
 			goto autogenerate_symbol_name;
+
 		/* An import alias was given. */
 		if unlikely(yield() < 0)
 			goto err_name;
@@ -514,6 +516,7 @@ autogenerate_symbol_name:
 			goto autogenerate_symbol_name;
 		}
 		result->ii_symbol_name = token.t_kwd;
+
 		/* Warn about reserved identifiers in alias names. */
 		if (is_reserved_symbol_name(token.t_kwd) &&
 		    WARN(W_RESERVED_IDENTIFIER_IN_ALIAS_NAME, token.t_kwd))
@@ -576,6 +579,7 @@ ast_import_all_from_module(DeeModuleObject *__restrict mod,
 			 */
 			if (!SYMBOL_IS_WEAK(sym))
 				continue; /* Not a weakly declared symbol. */
+
 			/* Special handling for re-imports. */
 			if (sym->s_type == SYMBOL_TYPE_EXTERN) {
 				if (sym->s_extern.e_module == mod) {
@@ -592,12 +596,13 @@ ast_import_all_from_module(DeeModuleObject *__restrict mod,
 					/* Special case: When both the old and new symbol refers to an external `final global'
 					 * variable (with neither being `varying'), then ensure that the modules have been
 					 * initialized, and check if the values bound for the symbols differ.
-					 * If they are identical, we're allowed to assume that they simply alias each other, in
-					 * which case it doesn't really matter which one we use for binding. However in the interest
-					 * of minimizing dependencies, if either module is the builtin `deemon' module, bind against
-					 * the symbol as found in `deemon', otherwise check if either module uses the other, in which
-					 * case: bind against the symbol of the module being used (aka. further down in the dependency
-					 * tree) */
+					 *
+					 * If they are identical, we're allowed to assume that they simply alias each other,
+					 * in which case it doesn't really matter which one we use for binding. However in the
+					 * interest of minimizing dependencies, if either module is the builtin `deemon' module,
+					 * bind against the symbol as found in `deemon', otherwise check if either module uses
+					 * the other, in which case: bind against the symbol of the module being used (aka.
+					 * further down in the dependency tree) */
 					if ((sym->s_extern.e_symbol->ss_flags & (MODSYM_FREADONLY | MODSYM_FCONSTEXPR |
 					                                         MODSYM_FPROPERTY | MODSYM_FEXTERN)) ==
 					    /*                               */ (MODSYM_FREADONLY | MODSYM_FCONSTEXPR) &&
@@ -637,9 +642,11 @@ do_reassign_new_alias:
 											sym->s_extern.e_symbol = iter;
 										} else {
 											uint16_t i;
+
 											/* Neither module is the builtin `deemon' module.
-											 * Check if one of the modules is importing the other,
-											 * or bind the new module if it doesn't have any imports. */
+											 *
+											 * Check if one of the modules is importing the other, or
+											 * bind the new module if it doesn't have any imports. */
 											if (!mod->mo_importc)
 												goto do_reassign_new_alias;
 											for (i = 0; i < sym->s_extern.e_module->mo_importc; ++i) {
@@ -677,6 +684,7 @@ do_reassign_new_alias:
 			sym = new_local_symbol(name, loc);
 			if unlikely(!sym)
 				goto err;
+
 			/* Define this symbol as an import from this module. */
 			sym->s_type = SYMBOL_TYPE_EXTERN;
 			sym->s_flag |= SYMBOL_FWEAK; /* Symbols imported by `*' are defined weakly. */
@@ -728,6 +736,7 @@ ast_import_single_from_module(DeeModuleObject *__restrict mod,
 			SYMBOL_CLEAR_WEAK(import_symbol);
 			goto init_import_symbol;
 		}
+
 		/* Another symbol with the same name had already been imported. */
 		if (import_symbol->s_type == SYMBOL_TYPE_EXTERN &&
 		    import_symbol->s_extern.e_module == mod &&
@@ -783,6 +792,7 @@ ast_import_module(struct import_item *__restrict item) {
 			SYMBOL_CLEAR_WEAK(import_symbol);
 			goto init_import_symbol;
 		}
+
 		/* Another symbol with the same name had already been imported. */
 		if ((import_symbol->s_type == SYMBOL_TYPE_MODULE &&
 		     import_symbol->s_extern.e_module == mod) ||
@@ -830,14 +840,14 @@ INTERN int FCALL ast_parse_post_import(void) {
 	 * - import "deemon" as my_deemon;
 	 * - import deemon as my_deemon, util as my_util;
 	 * - import * from deemon;
-	 * - import object from deemon;
-	 * - import object, list from deemon;
-	 * - import my_object = object from deemon;
-	 * - import my_object = "object" from deemon;
-	 * - import my_object = object, my_list = list from deemon;
-	 * - import object as my_object from deemon;
-	 * - import "object" as my_object from deemon;
-	 * - import object as my_object, list as my_list from deemon; */
+	 * - import Object from deemon;
+	 * - import Object, List from deemon;
+	 * - import MyObject = Object from deemon;
+	 * - import MyObject = "Object" from deemon;
+	 * - import MyObject = Object, MyList = List from deemon;
+	 * - import Object as MyObject from deemon;
+	 * - import "Object" as MyObject from deemon;
+	 * - import Object as MyObject, List as MyList from deemon; */
 	int error;
 	struct import_item item;
 	bool allow_modules = true;
@@ -893,6 +903,7 @@ parse_module_import_list:
 			if unlikely(error == 2)
 				break;
 		}
+
 		/* Warn if the module import list is followed by a `from' */
 		if (tok == KWD_from &&
 		    WARN(W_UNEXPECTED_FROM_AFTER_MODULE_IMPORT_LIST))
@@ -980,21 +991,25 @@ import_parse_list:
 				}
 			}
 		} while (tok == ',');
+
 		/* A multi-item, comma-separated import list has now been parsed. */
 		if (tok == KWD_from) {
 			size_t i;
+
 			/* import foo, bar, foobar from foobarfoo;  (symbol import) */
 			if unlikely(yield() < 0)
 				goto err_item_v;
 			mod = parse_module_byname(true);
 			if unlikely(!mod)
 				goto err_item_v;
+
 			/* If `*' was apart of the symbol import list,
 			 * start by importing all symbols from the module. */
 			if (star_loc.l_file) {
 				if unlikely(ast_import_all_from_module(mod, &star_loc))
 					goto err_item_v_module;
 			}
+
 			/* Now import all the explicitly defined symbols. */
 			for (i = 0; i < item_c; ++i) {
 				if unlikely(ast_import_single_from_module(mod, &item_v[i]))
@@ -1009,6 +1024,7 @@ import_parse_list:
 				if (WARN(W_EXPECTED_FROM_AFTER_SYMBOL_IMPORT_LIST))
 					goto err_item_v;
 			}
+
 			/* import foo, bar, foobar;  (module import) */
 			for (i = 0; i < item_c; ++i) {
 				if unlikely(ast_import_module(&item_v[i]))
@@ -1049,7 +1065,8 @@ ast_parse_import_hybrid(unsigned int *p_was_expression) {
 		goto err;
 	if (tok == '(' || tok == KWD_pack) {
 		/* `import', as seen in expressions. */
-		result = ast_setddi(ast_sym_import_from_deemon(), &import_loc);
+		result = ast_sym_import_from_deemon();
+		result = ast_setddi(result, &import_loc);
 		if unlikely(!result)
 			goto err;
 		result = ast_parse_unary_operand(result);
@@ -1059,7 +1076,8 @@ ast_parse_import_hybrid(unsigned int *p_was_expression) {
 		if (p_was_expression)
 			*p_was_expression = AST_PARSE_WASEXPR_YES;
 	} else {
-		result = ast_setddi(ast_constexpr(Dee_None), &import_loc);
+		result = ast_constexpr(Dee_None);
+		result = ast_setddi(result, &import_loc);
 		if unlikely(!result)
 			goto err;
 		if unlikely(ast_parse_post_import())
@@ -1079,6 +1097,7 @@ INTERN WUNUSED DREF struct ast *FCALL ast_parse_import(void) {
 	DREF DeeModuleObject *mod;
 	DREF struct ast *result;
 	struct ast_loc import_loc;
+
 	/* There are many valid ways of writing import statements:
 	 *  - import("deemon");
 	 *  - import pack "deemon";
@@ -1091,23 +1110,23 @@ INTERN WUNUSED DREF struct ast *FCALL ast_parse_import(void) {
 	 *  - import "deemon" as my_deemon;
 	 *  - import deemon as my_deemon, util as my_util;
 	 *  - import * from deemon;
-	 *  - import object from deemon;
-	 *  - import object, list from deemon;
-	 *  - import my_object = object from deemon;
-	 *  - import my_object = "object" from deemon;
-	 *  - import my_object = object, my_list = list from deemon;
-	 *  - import object as my_object from deemon;
-	 *  - import "object" as my_object from deemon;
-	 *  - import object as my_object, list as my_list from deemon;
+	 *  - import Object from deemon;
+	 *  - import Object, List from deemon;
+	 *  - import MyObject = Object from deemon;
+	 *  - import MyObject = "Object" from deemon;
+	 *  - import MyObject = Object, MyList = List from deemon;
+	 *  - import Object as MyObject from deemon;
+	 *  - import "Object" as MyObject from deemon;
+	 *  - import Object as MyObject, List as MyList from deemon;
 	 *  - from deemon import *;
-	 *  - from deemon import object;
-	 *  - from deemon import object, list;
-	 *  - from deemon import my_object = object;
-	 *  - from deemon import my_object = "object";
-	 *  - from deemon import my_object = object, my_list = list;
-	 *  - from deemon import object as my_object;
-	 *  - from deemon import "object" as my_object;
-	 *  - from deemon import object as my_object, list as my_list;
+	 *  - from deemon import Object;
+	 *  - from deemon import Object, List;
+	 *  - from deemon import MyObject = Object;
+	 *  - from deemon import MyObject = "Object";
+	 *  - from deemon import MyObject = Object, MyList = List;
+	 *  - from deemon import Object as MyObject;
+	 *  - from deemon import "Object" as MyObject;
+	 *  - from deemon import Object as MyObject, List as MyList;
 	 * ----
 	 *  // NOTE: `keyword' may not be followed by `string', and
 	 *  //       `string' may not be followed by `keyword'
@@ -1155,14 +1174,14 @@ INTERN WUNUSED DREF struct ast *FCALL ast_parse_import(void) {
 	loc_here(&import_loc);
 	if (tok == KWD_from) {
 		/* - from deemon import *;
-		 * - from deemon import object;
-		 * - from deemon import object, list;
-		 * - from deemon import my_object = object;
-		 * - from deemon import my_object = "object";
-		 * - from deemon import my_object = object, my_list = list;
-		 * - from deemon import object as my_object;
-		 * - from deemon import "object" as my_object;
-		 * - from deemon import object as my_object, list as my_list; */
+		 * - from deemon import Object;
+		 * - from deemon import Object, List;
+		 * - from deemon import MyObject = Object;
+		 * - from deemon import MyObject = "Object";
+		 * - from deemon import MyObject = Object, MyList = List;
+		 * - from deemon import Object as MyObject;
+		 * - from deemon import "Object" as MyObject;
+		 * - from deemon import Object as MyObject, List as MyList; */
 		bool did_import_all = false;
 		result              = ast_setddi(ast_constexpr(Dee_None), &import_loc);
 		if unlikely(!result)
@@ -1172,6 +1191,7 @@ INTERN WUNUSED DREF struct ast *FCALL ast_parse_import(void) {
 		mod = parse_module_byname(true);
 		if unlikely(!mod)
 			goto err_r;
+
 		/* All right! we've got the module. */
 		if (skip(KWD_import, W_EXPECTED_IMPORT_AFTER_FROM))
 			goto err_r_module;
@@ -1217,14 +1237,14 @@ INTERN WUNUSED DREF struct ast *FCALL ast_parse_import(void) {
 		 * - import "deemon" as my_deemon;
 		 * - import deemon as my_deemon, util as my_util;
 		 * - import * from deemon;
-		 * - import object from deemon;
-		 * - import object, list from deemon;
-		 * - import my_object = object from deemon;
-		 * - import my_object = "object" from deemon;
-		 * - import my_object = object, my_list = list from deemon;
-		 * - import object as my_object from deemon;
-		 * - import "object" as my_object from deemon;
-		 * - import object as my_object, list as my_list from deemon; */
+		 * - import Object from deemon;
+		 * - import Object, List from deemon;
+		 * - import MyObject = Object from deemon;
+		 * - import MyObject = "Object" from deemon;
+		 * - import MyObject = Object, MyList = List from deemon;
+		 * - import Object as MyObject from deemon;
+		 * - import "Object" as MyObject from deemon;
+		 * - import Object as MyObject, List as MyList from deemon; */
 		ASSERT(tok == KWD_import);
 		if unlikely(yield() < 0)
 			goto err;

@@ -40,6 +40,7 @@ INTERN WUNUSED DREF struct ast *DCALL ast_parse_catchmask(void) {
 		if unlikely(!exprv)
 			goto err_r;
 		exprv[0] = result; /* Inherit */
+
 		/* Multiple masks.
 		 * >> import Error from deemon;
 		 * >> try {
@@ -51,7 +52,7 @@ INTERN WUNUSED DREF struct ast *DCALL ast_parse_catchmask(void) {
 		 * >>     print "So this happened:", err;
 		 * >> }
 		 * Multi-masks are actually just implemented as
-		 * tuple-expressions found in the mask ast, meaning
+		 * Tuple-expressions found in the mask ast, meaning
 		 * that the above example could also be written as:
 		 * >> import Error from deemon;
 		 * >> try {
@@ -91,6 +92,7 @@ do_realloc:
 				goto err_exprv;
 			exprv[exprc++] = result; /* Inherit */
 		}
+
 		/* Pack together the multi-expression. */
 		result = ast_setddi(ast_multiple(AST_FMULTIPLE_TUPLE,
 		                                 exprc, exprv),
@@ -128,7 +130,9 @@ ast_parse_try(bool is_statement) {
 	         : ast_parse_expr(LOOKUP_SYM_NORMAL);
 	if unlikely(!result)
 		goto err;
-	catcha = catchc = 0, catchv = NULL;
+	catcha = 0;
+	catchc = 0;
+	catchv = NULL;
 	for (;;) {
 		tok_t mode = tok;
 		if unlikely(ast_tags_clear())
@@ -140,6 +144,7 @@ ast_parse_try(bool is_statement) {
 		if unlikely(yield() < 0)
 			goto err_try;
 		ASSERT(catchc <= catcha);
+
 		/* Most of the time a try-statement only has a single handler,
 		 * meaning that the following check will succeed most of the time. */
 		handler = catchv;
@@ -166,6 +171,7 @@ do_realloc_catchv:
 		handler->ce_mask  = NULL;
 		handler->ce_flags = EXCEPTION_HANDLER_FNORMAL;
 		handler->ce_mode  = CATCH_EXPR_FNORMAL;
+
 		/* Set the interrupt-flag when an @[interrupt] tag was used. */
 		if (current_tags.at_class_flags & TP_FINTERRUPT)
 			handler->ce_flags |= EXCEPTION_HANDLER_FINTERPT;
@@ -275,6 +281,7 @@ end_catch_handler:
 		}
 		++catchc;
 	}
+
 	/* Clear unused buffer memory. */
 	if (catchc != catcha) {
 		handler = (struct catch_expr *)Dee_TryReallocc(catchv, catchc,
@@ -282,12 +289,14 @@ end_catch_handler:
 		if likely(handler)
 			catchv = handler;
 	}
+
 	/* Create the new try-AST. */
 	merge = ast_setddi(ast_try(result, catchc, catchv), &loc);
 	if unlikely(!merge)
 		goto err_try;
 	ast_decref(result);
 	result = merge;
+
 	/* Warn if we didn't parse any handlers. */
 	if unlikely(unlikely(!catchc) &&
 	            WARN(W_EXPECTED_CATCH_OR_FINALLY_AFTER_TRY))
@@ -326,7 +335,9 @@ ast_parse_try_hybrid(unsigned int *p_was_expression) {
 	result = ast_parse_hybrid_primary(&was_expression);
 	if unlikely(!result)
 		goto err;
-	catcha = catchc = 0, catchv = NULL;
+	catcha = 0;
+	catchc = 0;
+	catchv = NULL;
 	for (;;) {
 		tok_t mode = tok;
 		if unlikely(ast_tags_clear())
@@ -364,6 +375,7 @@ do_realloc_catchv:
 		handler->ce_mask  = NULL;
 		handler->ce_flags = EXCEPTION_HANDLER_FNORMAL;
 		handler->ce_mode  = CATCH_EXPR_FNORMAL;
+
 		/* Set the interrupt-flag when an @[interrupt] tag was used. */
 		if (current_tags.at_class_flags & TP_FINTERRUPT)
 			handler->ce_flags |= EXCEPTION_HANDLER_FINTERPT;
@@ -424,6 +436,7 @@ do_realloc_catchv:
 parse_catch_mask:
 				/* Explicit catch mask: `try { ... } catch (get_mask())' */
 				handler->ce_mask = ast_parse_catchmask();
+
 				/* NOTE: For some reason I though it would be a good idea to use
 				 *       the arrow token here in the old deemon (like wtf?).
 				 *       But since using `as' in its place is literally a 1-on-1
@@ -479,7 +492,8 @@ end_catch_handler:
 	}
 
 	/* Create the new try-AST. */
-	merge = ast_setddi(ast_try(result, catchc, catchv), &loc);
+	merge = ast_try(result, catchc, catchv);
+	merge = ast_setddi(merge, &loc);
 	if unlikely(!merge)
 		goto err_try;
 	ast_decref(result);

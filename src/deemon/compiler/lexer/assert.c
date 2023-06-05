@@ -91,6 +91,7 @@ ast_parse_assert(bool needs_parenthesis) {
 				goto err_r;
 		}
 	}
+
 	/* Create the assert branch. */
 	merge = ast_setddi(message ? ast_action2(AST_FACTION_ASSERT_M, result, message)
 	                           : ast_action1(AST_FACTION_ASSERT, result),
@@ -99,7 +100,7 @@ ast_parse_assert(bool needs_parenthesis) {
 #else /* CONFIG_ASSERT_DDI_USES_EXPRESSION */
 	                   &loc
 #endif /* !CONFIG_ASSERT_DDI_USES_EXPRESSION */
-	);
+	                   );
 	ast_xdecref(message);
 	ast_decref(result);
 	return merge;

@@ -790,9 +790,11 @@ decl_ast_print(struct decl_ast const *__restrict self,
 		 * through its shorted variant written as `()' */
 		if (!scope->bs_argc && decl_ast_isnone(ret))
 			goto encode_empty_paren;
+
 		/* Explicit return type information. */
 		if (UNICODE_PRINTER_PRINT(printer, "->") < 0)
 			goto err;
+
 		/* The return type can be omitted when it is `object from deemon' */
 		if (!decl_ast_isobject(ret)) {
 			if (decl_ast_print_type(ret, printer))

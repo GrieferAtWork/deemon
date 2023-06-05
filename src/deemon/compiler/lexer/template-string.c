@@ -158,7 +158,7 @@ err_old_flags:
 			 * as this:
 			 * >> [f]["foo: {a + '"][' + b} -- more"...]
 			 *                       ^-- ERROR: Unescaped quote
-			 * 
+			 *
 			 * As such, it won't natively load the entire template-string token
 			 * into its file buffer, meaning we have to trick it by forcing it
 			 * to load file data until the next unescaped quotation mark matching

@@ -636,6 +636,7 @@ INTDEF NONNULL((1, 2)) void DCALL ast_visit_impl(struct ast *__restrict self, De
 #define ast_shared(x)          ((x)->a_refcnt > 1)
 #define ast_incref(x)          (Dee_ASSERT((x)->a_refcnt), ++(x)->a_refcnt)
 #define ast_decref(x)          (Dee_ASSERT((x)->a_refcnt), --(x)->a_refcnt ? (void)0 : ast_destroy(x))
+#define ast_decrefv             ast_decrefv
 #define ast_decref_likely(x)   (Dee_ASSERT((x)->a_refcnt), unlikely(--(x)->a_refcnt) ? (void)0 : ast_destroy(x))
 #define ast_decref_unlikely(x) (Dee_ASSERT((x)->a_refcnt), likely(--(x)->a_refcnt) ? (void)0 : ast_destroy(x))
 #define ast_decref_nokill(x)   (Dee_ASSERT((x)->a_refcnt >= 2), --(x)->a_refcnt)
@@ -644,12 +645,19 @@ INTDEF NONNULL((1, 2)) void DCALL ast_visit_impl(struct ast *__restrict self, De
 #define ast_xdecref_unlikely(x)((x) ? (Dee_ASSERT((x)->a_refcnt), --(x)->a_refcnt ? (void)0 : ast_destroy(x)) : (void)0)
 #define ASSERT_AST(ob)          Dee_ASSERT((ob)->a_refcnt >= 1)
 #define ASSERT_AST_OPT(ob)      Dee_ASSERT(!(ob) || ((ob)->a_refcnt >= 1))
+LOCAL void (DCALL ast_decrefv)(struct ast *const *__restrict p, size_t n) {
+	while (n--) {
+		struct ast *a = p[n];
+		ast_decref(a);
+	}
+}
 #else /* CONFIG_AST_IS_STRUCT */
 #define ast_visit(x)           Dee_Visit(x)
 #define ast_shared(x)          DeeObject_IsShared(x)
 /* XXX: I don't think we need to use atomic instructions in reference counters for asts! */
 #define ast_incref(x)          Dee_Incref(x)
 #define ast_decref(x)          Dee_Decref(x)
+#define ast_decrefv(p, n)      (void)Dee_Decrefv(p, n)
 #define ast_decref_likely(x)   Dee_Decref_likely(x)
 #define ast_decref_unlikely(x) Dee_Decref_unlikely(x)
 #define ast_decref_nokill(x)   Dee_DecrefNokill(x)

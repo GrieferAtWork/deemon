@@ -103,6 +103,7 @@ do_realloc:
 		self->ol_v = result;
 		self->ol_a = new_alloc;
 	}
+
 	/* Reserve the next operand number. */
 	result += self->ol_c++;
 	++self->ol_count[type];
@@ -297,6 +298,7 @@ PRIVATE NONNULL((1)) ptrdiff_t
 		 * >> Must be done to assure the expectation of `if(sp_length == 0) sp_string == NULL' */
 		if unlikely(!bufsize)
 			return 0;
+
 		/* Allocate the initial string. */
 		alloc_size = 8;
 		while (alloc_size < bufsize)
@@ -344,6 +346,7 @@ realloc_again:
 		self->sp_string = string;
 		string->s_size  = alloc_size;
 	}
+
 	/* Copy text into the dynamic string. */
 	memcpyc(string->s_text + self->sp_length,
 	        buf, bufsize, sizeof(char));
@@ -376,8 +379,10 @@ PRIVATE /*REF*/ struct TPPString *
 			result         = reloc;
 		result->s_size = self->sp_length;
 	}
+
 	/* Make sure to terminate the c-string representation. */
 	result->s_text[self->sp_length] = '\0';
+
 	/* Do final object initialization. */
 	result->s_refcnt = 1;
 	DBG_memset(self, 0xcc, sizeof(*self));
