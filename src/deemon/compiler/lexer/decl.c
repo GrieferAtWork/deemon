@@ -177,9 +177,10 @@ free_inner:
 
 
 
-
-/* If `self' refers to a constant object, return that object. */
-INTERN WUNUSED NONNULL((1)) DeeObject *DCALL
+#if 0
+/* If `self' refers to a constant object, return that object.
+ * Otherwise, return `NULL' */
+PRIVATE WUNUSED NONNULL((1)) DeeObject *DCALL
 decl_ast_getobj(struct decl_ast const *__restrict self) {
 	if (self->da_type == DAST_CONST)
 		return self->da_const;
@@ -191,9 +192,10 @@ decl_ast_getobj(struct decl_ast const *__restrict self) {
 	}
 	return NULL;
 }
+#endif
 
 /* Check if `self' refers to `none' or `type none' */
-INTERN WUNUSED NONNULL((1)) bool DCALL
+PRIVATE WUNUSED NONNULL((1)) bool DCALL
 decl_ast_isnone(struct decl_ast const *__restrict self) {
 	if (self->da_type == DAST_CONST)
 		return DeeNone_Check(self->da_const) || self->da_const == (DeeObject *)&DeeNone_Type;
@@ -220,7 +222,8 @@ check_symbol:
 }
 
 
-INTERN WUNUSED NONNULL((1)) bool DCALL
+/* Check if `self' refers to `Object from deemon' */
+PRIVATE WUNUSED NONNULL((1)) bool DCALL
 decl_ast_isobject(struct decl_ast const *__restrict self) {
 	if (self->da_type == DAST_CONST)
 		return self->da_const == (DeeObject *)&DeeObject_Type;
@@ -246,7 +249,8 @@ check_symbol:
 	return false;
 }
 
-INTERN WUNUSED NONNULL((1, 2)) bool DCALL
+/* Check if `self' is the given `tp' */
+PRIVATE WUNUSED NONNULL((1, 2)) bool DCALL
 decl_ast_istype(struct decl_ast const *__restrict self,
                 DeeTypeObject *__restrict tp) {
 	if (tp == &DeeNone_Type)
@@ -282,7 +286,9 @@ check_symbol:
 }
 
 
-INTERN WUNUSED NONNULL((1)) bool DCALL
+/* Check if the given declaration AST contains information that can't be inferred
+ * from non-documentation sources (such as argument names, types, etc.) */
+PRIVATE WUNUSED NONNULL((1)) bool DCALL
 decl_ast_isempty(struct decl_ast const *__restrict self) {
 	switch (self->da_type) {
 
@@ -332,7 +338,7 @@ nope:
  * >>     name = name.replace("\n", "\\\n"); // For any type of line-feed
  * >>     name = "{" + name + "}";
  * >> } */
-INTERN int DCALL
+PRIVATE int DCALL
 decl_ast_escapename(/*utf-8*/ char const *__restrict name, size_t name_len,
                     struct unicode_printer *__restrict printer) {
 	char const *iter, *end, *flush_start = name;
@@ -391,7 +397,7 @@ err:
 	return -1;
 }
 
-INTERN WUNUSED NONNULL((1, 2)) int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 decl_ast_print_const_type(DeeObject const *__restrict ob,
                           struct unicode_printer *__restrict printer) {
 	uint16_t i;
@@ -453,7 +459,7 @@ err:
 }
 
 
-INTERN WUNUSED NONNULL((1, 2)) int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 decl_ast_print_type(struct decl_ast const *__restrict self,
                     struct unicode_printer *__restrict printer) {
 	switch (self->da_type) {
@@ -648,7 +654,7 @@ err:
 }
 
 #if 0
-INTERN WUNUSED NONNULL((1, 2)) int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 decl_ast_print_const_expr(DeeObject *__restrict self,
                           struct unicode_printer *__restrict printer) {
 	if (unicode_printer_putascii(printer, '!'))
@@ -698,7 +704,8 @@ err:
 }
 #endif
 
-INTERN WUNUSED NONNULL((1, 2)) int DCALL
+/* Print declaration information from `self', encoded as described above, into `printer' */
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 decl_ast_print(struct decl_ast const *__restrict self,
                struct unicode_printer *__restrict printer) {
 	size_t i;
@@ -811,19 +818,20 @@ err_noscope:
  *  - Escape any line-feed immediately following after another
  *  - Escape any instance of "->" with "-\>"
  *  - Escape any line starting with "(" as "\(" */
-INTDEF WUNUSED NONNULL((1, 3, 4)) int DCALL
+#ifdef __INTELLISENSE__
+PRIVATE WUNUSED NONNULL((1, 3, 4)) int DCALL
 decl_ast_escapetext8(uint8_t const *__restrict text, size_t text_len,
                      struct unicode_printer *__restrict printer,
                      struct unicode_printer *__restrict source_printer);
-INTDEF WUNUSED NONNULL((1, 3, 4)) int DCALL
+PRIVATE WUNUSED NONNULL((1, 3, 4)) int DCALL
 decl_ast_escapetext16(uint16_t const *__restrict text, size_t text_len,
                       struct unicode_printer *__restrict printer,
                       struct unicode_printer *__restrict source_printer);
-INTDEF WUNUSED NONNULL((1, 3, 4)) int DCALL
+PRIVATE WUNUSED NONNULL((1, 3, 4)) int DCALL
 decl_ast_escapetext32(uint32_t const *__restrict text, size_t text_len,
                       struct unicode_printer *__restrict printer,
                       struct unicode_printer *__restrict source_printer);
-#ifndef __INTELLISENSE__
+#else /* __INTELLISENSE__ */
 #define N 8
 #include "decl-escape-text-impl.c.inl"
 #define N 16
@@ -978,7 +986,7 @@ err2:
 
 
 /* Parse a declaration expression. */
-INTERN WUNUSED NONNULL((1)) int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 decl_ast_parse_unary_head(struct decl_ast *__restrict self) {
 	uint32_t old_flags;
 	switch (tok) {
@@ -994,7 +1002,7 @@ decl_ast_parse_unary_head(struct decl_ast *__restrict self) {
 			goto err_flags;
 
 		/* Custom, user-defined encoding:
-		 * >> function foo(a: __asm__("?Dobject")) {
+		 * >> function foo(a: __asm__("?DObject")) {
 		 * >>     ...
 		 * >> } */
 		if likely(tok == TOK_STRING ||
@@ -1316,7 +1324,7 @@ err:
 	return -1;
 }
 
-INTERN WUNUSED NONNULL((1)) int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 decl_ast_parse_unary(struct decl_ast *__restrict self) {
 	int result;
 	result = decl_ast_parse_unary_head(self);
@@ -1395,7 +1403,7 @@ err_r:
 	return -1;
 }
 
-INTERN WUNUSED NONNULL((1)) int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 decl_ast_parse_alt(struct decl_ast *__restrict self) {
 	int result;
 	size_t elema, elemc, i;

@@ -26,7 +26,7 @@
  *  - Escape any line-feed immediately following after another
  *  - Escape any instance of "->" with "-\>"
  *  - Escape any line starting with "(" as "\(" */
-INTERN WUNUSED NONNULL((1, 3, 4)) int DCALL
+PRIVATE WUNUSED NONNULL((1, 3, 4)) int DCALL
 PP_CAT2(decl_ast_escapetext, N)(PP_CAT3(uint, N, _t) const *__restrict text, size_t text_len,
                                 struct unicode_printer *__restrict printer,
                                 struct unicode_printer *__restrict source_printer) {

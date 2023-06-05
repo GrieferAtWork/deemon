@@ -440,33 +440,6 @@ INTDEF WUNUSED NONNULL((1, 2)) int DCALL
 decl_ast_copy(struct decl_ast *__restrict self,
               struct decl_ast const *__restrict other);
 
-/* If `self' refers to a constant object, return that object.
- * Otherwise, return `NULL' */
-INTDEF WUNUSED NONNULL((1)) DeeObject *DCALL
-decl_ast_getobj(struct decl_ast const *__restrict self);
-
-/* Check if `self' refers to `none' or `type none' */
-INTDEF WUNUSED NONNULL((1)) bool DCALL
-decl_ast_isnone(struct decl_ast const *__restrict self);
-
-/* Check if `self' refers to `Object from deemon' */
-INTDEF WUNUSED NONNULL((1)) bool DCALL
-decl_ast_isobject(struct decl_ast const *__restrict self);
-
-/* Check if `self' is the given `tp' */
-INTDEF WUNUSED NONNULL((1, 2)) bool DCALL
-decl_ast_istype(struct decl_ast const *__restrict self,
-                DeeTypeObject *__restrict tp);
-
-/* Check if the given declaration AST contains information that can't be inferred
- * from non-documentation sources (such as argument names, types, etc.) */
-INTDEF WUNUSED NONNULL((1)) bool DCALL decl_ast_isempty(struct decl_ast const *__restrict self);
-
-/* Print declaration information from `self', encoded as described above, into `printer' */
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL
-decl_ast_print(struct decl_ast const *__restrict self,
-               struct unicode_printer *__restrict printer);
-
 /* Check if `a' and `b' are exactly identical. */
 INTDEF WUNUSED NONNULL((1, 2)) bool DCALL
 decl_ast_equal(struct decl_ast const *__restrict a,
