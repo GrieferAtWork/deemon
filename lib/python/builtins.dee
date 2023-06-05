@@ -37,7 +37,7 @@ final global function hex(x: int): string {
 }
 
 @@Compare the 2 given objects @a and @b
-final global function cmp(a, b): int {
+function cmp(a: Object, b: Object): int {
 	if (a < b)
 		return -1;
 	if (a == b)
@@ -45,17 +45,19 @@ final global function cmp(a, b): int {
 	return 1;
 }
 
-final global function divmod(a, b): (Object, Object) {
-	if (a is int)
+@[optional.gatw.doc("(:?Dint,:?Dint)->?T2?Dint?Dint")]
+@[optional.gatw.doc("(,)->?T2?O?O")]
+function divmod(a, b) {
+	if (a is Numeric)
 		return a.divmod(b);
 	return (a / b, a % b);
 }
 
-final global function filter(func: Callable, iter: Sequence): Sequence {
-	return (iter as Sequence).filter(func);
+function filter(func: Callable, iter: Sequence): Sequence {
+	return Sequence.filter(iter, func);
 }
 
-final global function format(value, format_spec: string = ""): Sequence {
+function format(value, format_spec: string = ""): string {
 	return value.__format__(format_spec);
 }
 
@@ -63,49 +65,55 @@ final global frozenset = rt.RoSet;
 final global id = deemon.Object.id;
 final global open = deemon.File.open;
 final global chr = deemon.string.chr;
-final global function range(args..., **kwds) {
+
+function range(args..., **kwds) {
 	return List(Sequence.range(args..., **kwds));
 }
-final global function apply(func, args, kwds?) {
+
+function apply(func, args, kwds?) {
 	if (kwds is bound)
 		return func(args..., **kwds);
 	return func(args...);
 }
-final global function coerce(a, b) {
+
+function coerce(a, b) {
 	/* TODO: Support for complex numbers. */
 	if (a is float || b is float)
 		return (float(a), float(b));
 	return (int(a), int(b));
 }
+
 final global xrange = deemon.Sequence.range;
 final global reversed = deemon.Sequence.reversed;
 final global intern = functools.identity;
 
-final global function ord(s: string): int {
+function ord(s: string): int {
 	return s.ord();
 }
 
-final global function reduce(func: Callable, iterable: Sequence, ...) {
-	return (iterable as Sequence).reduce(func, ...);
+function reduce(func: Callable, iterable: Sequence, ...) {
+	return Sequence.reduce(iterable, func, ...);
 }
 
-final global function super_(typ, ob) {
+function super_(typ, ob) {
 	return Super(ob, deemon.Type.__base__(typ));
 }
 
-final global function pow(x, y, z?) {
+function pow(x, y, z?) {
 	if (z is bound)
 		return (x ** y) % z;
 	return x ** y;
 }
 
-final global function isinstance(ob, typ): bool {
+function isinstance(ob, typ): bool {
 	return ob is typ;
 }
-final global function issubclass(cls, typ): bool {
+
+function issubclass(cls, typ): bool {
 	return deemon.Type.derivedfrom(cls, typ);
 }
-final global function map(func, iterable, more...): bool {
+
+function map(func, iterable, more...): bool {
 	if (!more) {
 		for (local x: iterable)
 			yield func(x);
@@ -130,7 +138,8 @@ final global function map(func, iterable, more...): bool {
 		}
 	}
 }
-final global function print_(objects..., **kwds) {
+
+function print_(objects..., **kwds) {
 	local sep = kwds.get("sep", " ");
 	local end = kwds.get("end", "\n");
 	local file = kwds.get("file");
@@ -147,7 +156,7 @@ final global function print_(objects..., **kwds) {
 }
 
 
-global class slice {
+class slice {
 	public member start: Object;
 	public member stop: Object;
 	public member step: Object;
@@ -176,11 +185,10 @@ global class slice {
 	}
 }
 
-final global function sorted(
-		iterable: Sequence,
-		cmp?: Callable,
-		key?: Callable,
-		reversed: bool = false) {
+function sorted(iterable: Sequence,
+                cmp?: Callable,
+                key?: Callable,
+                reversed: bool = false) {
 	if (cmp is bound) {
 		if (key is bound)
 			throw TypeError("with `cmp' and `key' passed to `sorted'");
@@ -188,7 +196,7 @@ final global function sorted(
 	} else if (key !is bound) {
 		key = none;
 	}
-	local result = (iterable as Sequence).sorted(key);
+	local result = Sequence.sorted(iterable, key);
 	if (reversed)
 		result = result.reversed();
 	return result;
