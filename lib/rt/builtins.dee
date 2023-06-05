@@ -27,7 +27,7 @@
  * ----------------------------------------------------------------------------------
  * Backwards compatibility with the old __builtin_object() function:
  *   - `__builtin_object(...)' is a macro that
- *      compiles as `(get_builtin from __builtins)(...)'
+ *     compiles as `(get_builtin from __builtins)(...)'
  */
 
 import deemon;

@@ -756,6 +756,9 @@ decl_ast_print(struct decl_ast const *__restrict self,
 					goto err;
 			}
 			if (!decl_ast_isempty(&arg->s_decltype) &&
+			    /* Since `Object' is the default, we don't have to
+			     * generate annotations when it's explicitly stated */
+			    !decl_ast_isobject(&arg->s_decltype) &&
 			    (i < scope->bs_argc_min || i >= scope->bs_argc_max ||
 			     !scope->bs_default[i - scope->bs_argc_min] ||
 			     !decl_ast_istype(&arg->s_decltype, /* Don't encode a type if it can be deduced from the default argument */
