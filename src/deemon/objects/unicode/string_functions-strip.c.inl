@@ -92,9 +92,11 @@ DECL_BEGIN
 #define LOCAL_IS_RSTRIP
 #elif defined(DEFINE_DeeString_LStripSpc)
 #define LOCAL_DeeString_Strip DeeString_LStripSpc
+#define LOCAL_HAVE_max_count
 #define LOCAL_IS_LSTRIP
 #elif defined(DEFINE_DeeString_RStripSpc)
 #define LOCAL_DeeString_Strip DeeString_RStripSpc
+#define LOCAL_HAVE_max_count
 #define LOCAL_IS_RSTRIP
 #elif defined(DEFINE_DeeString_StripMask)
 #define LOCAL_DeeString_Strip DeeString_StripMask
@@ -103,10 +105,12 @@ DECL_BEGIN
 #define LOCAL_IS_MASKED
 #elif defined(DEFINE_DeeString_LStripMask)
 #define LOCAL_DeeString_Strip DeeString_LStripMask
+#define LOCAL_HAVE_max_count
 #define LOCAL_IS_LSTRIP
 #define LOCAL_IS_MASKED
 #elif defined(DEFINE_DeeString_RStripMask)
 #define LOCAL_DeeString_Strip DeeString_RStripMask
+#define LOCAL_HAVE_max_count
 #define LOCAL_IS_RSTRIP
 #define LOCAL_IS_MASKED
 #elif defined(DEFINE_DeeString_CaseStripMask)
@@ -117,11 +121,13 @@ DECL_BEGIN
 #define LOCAL_IS_NOCASE
 #elif defined(DEFINE_DeeString_CaseLStripMask)
 #define LOCAL_DeeString_Strip DeeString_CaseLStripMask
+#define LOCAL_HAVE_max_count
 #define LOCAL_IS_LSTRIP
 #define LOCAL_IS_MASKED
 #define LOCAL_IS_NOCASE
 #elif defined(DEFINE_DeeString_CaseRStripMask)
 #define LOCAL_DeeString_Strip DeeString_CaseRStripMask
+#define LOCAL_HAVE_max_count
 #define LOCAL_IS_RSTRIP
 #define LOCAL_IS_MASKED
 #define LOCAL_IS_NOCASE
@@ -132,10 +138,12 @@ DECL_BEGIN
 #define LOCAL_IS_SSTRIP
 #elif defined(DEFINE_DeeString_LSStrip)
 #define LOCAL_DeeString_Strip DeeString_LSStrip
+#define LOCAL_HAVE_max_count
 #define LOCAL_IS_LSTRIP
 #define LOCAL_IS_SSTRIP
 #elif defined(DEFINE_DeeString_RSStrip)
 #define LOCAL_DeeString_Strip DeeString_RSStrip
+#define LOCAL_HAVE_max_count
 #define LOCAL_IS_RSTRIP
 #define LOCAL_IS_SSTRIP
 #elif defined(DEFINE_DeeString_CaseSStrip)
@@ -146,11 +154,13 @@ DECL_BEGIN
 #define LOCAL_IS_NOCASE
 #elif defined(DEFINE_DeeString_CaseLSStrip)
 #define LOCAL_DeeString_Strip DeeString_CaseLSStrip
+#define LOCAL_HAVE_max_count
 #define LOCAL_IS_LSTRIP
 #define LOCAL_IS_SSTRIP
 #define LOCAL_IS_NOCASE
 #elif defined(DEFINE_DeeString_CaseRSStrip)
 #define LOCAL_DeeString_Strip DeeString_CaseRSStrip
+#define LOCAL_HAVE_max_count
 #define LOCAL_IS_RSTRIP
 #define LOCAL_IS_SSTRIP
 #define LOCAL_IS_NOCASE
@@ -243,12 +253,22 @@ DECL_BEGIN
 #define LOCAL_IS_MASKED
 #endif /* LOCAL_IS_SSTRIP */
 
+#ifdef LOCAL_HAVE_max_count
+#define LOCAL__PARAM_max_count  , size_t max_count
+#define LOCAL_max_count_OR_true max_count
+#define LOCAL_max_count_dec()   (void)--max_count
+#else /* LOCAL_HAVE_max_count */
+#define LOCAL__PARAM_max_count  /* nothing */
+#define LOCAL_max_count_OR_true 1
+#define LOCAL_max_count_dec()   (void)0
+#endif /* !LOCAL_HAVE_max_count */
+
 #ifdef LOCAL_IS_MASKED
 PRIVATE WUNUSED NONNULL((1, 2)) DREF String *DCALL
-LOCAL_DeeString_Strip(String *self, String *mask)
+LOCAL_DeeString_Strip(String *self, String *mask LOCAL__PARAM_max_count)
 #else /* LOCAL_IS_MASKED */
 PRIVATE WUNUSED NONNULL((1)) DREF String *DCALL
-LOCAL_DeeString_Strip(String *__restrict self)
+LOCAL_DeeString_Strip(String *__restrict self LOCAL__PARAM_max_count)
 #endif /* !LOCAL_IS_MASKED */
 {
 #ifdef LOCAL_IS_LINES
@@ -340,14 +360,16 @@ LOCAL_DeeString_Strip(String *__restrict self)
 #endif /* LOCAL_IS_SSTRIP */
 #endif /* LOCAL_IS_MASKED */
 #ifdef LOCAL_IS_LSTRIP
-		while (LOCAL_MEMSTARTSWITHB(newstr.cp8, newlen)) {
+		while (LOCAL_max_count_OR_true && LOCAL_MEMSTARTSWITHB(newstr.cp8, newlen)) {
 			newstr.cp8 += LOCAL_matchlen;
 			newlen -= LOCAL_matchlen;
+			LOCAL_max_count_dec();
 		}
 #endif /* LOCAL_IS_LSTRIP */
 #ifdef LOCAL_IS_RSTRIP
-		while (LOCAL_MEMENDSWITHB(newstr.cp8, newlen)) {
+		while (LOCAL_max_count_OR_true && LOCAL_MEMENDSWITHB(newstr.cp8, newlen)) {
 			newlen -= LOCAL_matchlen;
+			LOCAL_max_count_dec();
 		}
 #endif /* LOCAL_IS_RSTRIP */
 
@@ -438,14 +460,16 @@ LOCAL_DeeString_Strip(String *__restrict self)
 #endif /* LOCAL_IS_SSTRIP */
 #endif /* LOCAL_IS_MASKED */
 #ifdef LOCAL_IS_LSTRIP
-		while (LOCAL_MEMSTARTSWITHW(newstr.cp16, newlen)) {
+		while (LOCAL_max_count_OR_true && LOCAL_MEMSTARTSWITHW(newstr.cp16, newlen)) {
 			newstr.cp16 += LOCAL_matchlen;
 			newlen -= LOCAL_matchlen;
+			LOCAL_max_count_dec();
 		}
 #endif /* LOCAL_IS_LSTRIP */
 #ifdef LOCAL_IS_RSTRIP
-		while (LOCAL_MEMENDSWITHW(newstr.cp16, newlen)) {
+		while (LOCAL_max_count_OR_true && LOCAL_MEMENDSWITHW(newstr.cp16, newlen)) {
 			newlen -= LOCAL_matchlen;
+			LOCAL_max_count_dec();
 		}
 #endif /* LOCAL_IS_RSTRIP */
 
@@ -540,14 +564,16 @@ LOCAL_DeeString_Strip(String *__restrict self)
 #endif /* LOCAL_IS_SSTRIP */
 #endif /* LOCAL_IS_MASKED */
 #ifdef LOCAL_IS_LSTRIP
-		while (LOCAL_MEMSTARTSWITHL(newstr.cp32, newlen)) {
+		while (LOCAL_max_count_OR_true && LOCAL_MEMSTARTSWITHL(newstr.cp32, newlen)) {
 			newstr.cp32 += LOCAL_matchlen;
 			newlen -= LOCAL_matchlen;
+			LOCAL_max_count_dec();
 		}
 #endif /* LOCAL_IS_LSTRIP */
 #ifdef LOCAL_IS_RSTRIP
-		while (LOCAL_MEMENDSWITHL(newstr.cp32, newlen)) {
+		while (LOCAL_max_count_OR_true && LOCAL_MEMENDSWITHL(newstr.cp32, newlen)) {
 			newlen -= LOCAL_matchlen;
+			LOCAL_max_count_dec();
 		}
 #endif /* LOCAL_IS_RSTRIP */
 
@@ -655,7 +681,11 @@ err:
 #endif /* ... */
 }
 
+#undef LOCAL_max_count_OR_true
+#undef LOCAL_max_count_dec
+#undef LOCAL__PARAM_max_count
 #undef LOCAL_DeeString_Strip
+#undef LOCAL_HAVE_max_count
 #undef LOCAL_IS_LINES
 #undef LOCAL_IS_LSTRIP
 #undef LOCAL_IS_RSTRIP

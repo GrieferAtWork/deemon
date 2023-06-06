@@ -2527,17 +2527,17 @@ err:
 
 #ifdef __INTELLISENSE__
 PRIVATE WUNUSED NONNULL((1)) DREF Bytes *DCALL bytes_strip(Bytes *self, size_t argc, DeeObject *const *argv);
-PRIVATE WUNUSED NONNULL((1)) DREF Bytes *DCALL bytes_lstrip(Bytes *self, size_t argc, DeeObject *const *argv);
-PRIVATE WUNUSED NONNULL((1)) DREF Bytes *DCALL bytes_rstrip(Bytes *self, size_t argc, DeeObject *const *argv);
+PRIVATE WUNUSED NONNULL((1)) DREF Bytes *DCALL bytes_lstrip(Bytes *self, size_t argc, DeeObject *const *argv, DeeObject *kw);
+PRIVATE WUNUSED NONNULL((1)) DREF Bytes *DCALL bytes_rstrip(Bytes *self, size_t argc, DeeObject *const *argv, DeeObject *kw);
 PRIVATE WUNUSED NONNULL((1)) DREF Bytes *DCALL bytes_sstrip(Bytes *self, size_t argc, DeeObject *const *argv);
-PRIVATE WUNUSED NONNULL((1)) DREF Bytes *DCALL bytes_lsstrip(Bytes *self, size_t argc, DeeObject *const *argv);
-PRIVATE WUNUSED NONNULL((1)) DREF Bytes *DCALL bytes_rsstrip(Bytes *self, size_t argc, DeeObject *const *argv);
+PRIVATE WUNUSED NONNULL((1)) DREF Bytes *DCALL bytes_lsstrip(Bytes *self, size_t argc, DeeObject *const *argv, DeeObject *kw);
+PRIVATE WUNUSED NONNULL((1)) DREF Bytes *DCALL bytes_rsstrip(Bytes *self, size_t argc, DeeObject *const *argv, DeeObject *kw);
 PRIVATE WUNUSED NONNULL((1)) DREF Bytes *DCALL bytes_casestrip(Bytes *self, size_t argc, DeeObject *const *argv);
-PRIVATE WUNUSED NONNULL((1)) DREF Bytes *DCALL bytes_caselstrip(Bytes *self, size_t argc, DeeObject *const *argv);
-PRIVATE WUNUSED NONNULL((1)) DREF Bytes *DCALL bytes_caserstrip(Bytes *self, size_t argc, DeeObject *const *argv);
+PRIVATE WUNUSED NONNULL((1)) DREF Bytes *DCALL bytes_caselstrip(Bytes *self, size_t argc, DeeObject *const *argv, DeeObject *kw);
+PRIVATE WUNUSED NONNULL((1)) DREF Bytes *DCALL bytes_caserstrip(Bytes *self, size_t argc, DeeObject *const *argv, DeeObject *kw);
 PRIVATE WUNUSED NONNULL((1)) DREF Bytes *DCALL bytes_casesstrip(Bytes *self, size_t argc, DeeObject *const *argv);
-PRIVATE WUNUSED NONNULL((1)) DREF Bytes *DCALL bytes_caselsstrip(Bytes *self, size_t argc, DeeObject *const *argv);
-PRIVATE WUNUSED NONNULL((1)) DREF Bytes *DCALL bytes_casersstrip(Bytes *self, size_t argc, DeeObject *const *argv);
+PRIVATE WUNUSED NONNULL((1)) DREF Bytes *DCALL bytes_caselsstrip(Bytes *self, size_t argc, DeeObject *const *argv, DeeObject *kw);
+PRIVATE WUNUSED NONNULL((1)) DREF Bytes *DCALL bytes_casersstrip(Bytes *self, size_t argc, DeeObject *const *argv, DeeObject *kw);
 PRIVATE WUNUSED NONNULL((1)) DREF Bytes *DCALL bytes_striplines(Bytes *self, size_t argc, DeeObject *const *argv);
 PRIVATE WUNUSED NONNULL((1)) DREF Bytes *DCALL bytes_lstriplines(Bytes *self, size_t argc, DeeObject *const *argv);
 PRIVATE WUNUSED NONNULL((1)) DREF Bytes *DCALL bytes_rstriplines(Bytes *self, size_t argc, DeeObject *const *argv);
@@ -5480,14 +5480,14 @@ INTERN_TPCONST struct type_method tpconst bytes_methods[] = {
 	            "(mask?:?X3?.?Dstring?Dint)->?.\n"
 	            "Strip all leading and trailing whitespace-characters, or "
 	            /**/ "characters apart of @mask, and return a sub-view of @this ?. object"),
-	TYPE_METHOD("lstrip", &bytes_lstrip,
-	            "(mask?:?X3?.?Dstring?Dint)->?.\n"
-	            "Strip all leading whitespace-characters, or characters "
-	            /**/ "apart of @mask, and return a sub-view of @this ?. object"),
-	TYPE_METHOD("rstrip", &bytes_rstrip,
-	            "(mask?:?X3?.?Dstring?Dint)->?.\n"
-	            "Strip all trailing whitespace-characters, or characters "
-	            /**/ "apart of @mask, and return a sub-view of @this ?. object"),
+	TYPE_KWMETHOD("lstrip", &bytes_lstrip,
+	              "(mask?:?X3?.?Dstring?Dint)->?.\n"
+	              "Strip all leading whitespace-characters, or characters "
+	              /**/ "apart of @mask, and return a sub-view of @this ?. object"),
+	TYPE_KWMETHOD("rstrip", &bytes_rstrip,
+	              "(mask?:?X3?.?Dstring?Dint)->?.\n"
+	              "Strip all trailing whitespace-characters, or characters "
+	              /**/ "apart of @mask, and return a sub-view of @this ?. object"),
 	TYPE_METHOD("sstrip", &bytes_sstrip,
 	            "(other:?X3?.?Dstring?Dint)->?.\n"
 	            "Strip all leading and trailing instances of @other from @this string\n"
@@ -5498,22 +5498,22 @@ INTERN_TPCONST struct type_method tpconst bytes_methods[] = {
 	            /**/ "while (result.endswith(other))\n"
 	            /**/ "	result = result[:##result - ##other];"
 	            "}"),
-	TYPE_METHOD("lsstrip", &bytes_lsstrip,
-	            "(other:?X3?.?Dstring?Dint)->?.\n"
-	            "Strip all leading instances of @other from @this string\n"
-	            "${"
-	            /**/ "local result = this;\n"
-	            /**/ "while (result.startswith(other))\n"
-	            /**/ "	result = result[##other:];"
-	            "}"),
-	TYPE_METHOD("rsstrip", &bytes_rsstrip,
-	            "(other:?X3?.?Dstring?Dint)->?.\n"
-	            "Strip all trailing instances of @other from @this string\n"
-	            "${"
-	            /**/ "local result = this;\n"
-	            /**/ "while (result.endswith(other))\n"
-	            /**/ "	result = result[:##result - ##other];"
-	            "}"),
+	TYPE_KWMETHOD("lsstrip", &bytes_lsstrip,
+	              "(other:?X3?.?Dstring?Dint)->?.\n"
+	              "Strip all leading instances of @other from @this string\n"
+	              "${"
+	              /**/ "local result = this;\n"
+	              /**/ "while (result.startswith(other))\n"
+	              /**/ "	result = result[##other:];"
+	              "}"),
+	TYPE_KWMETHOD("rsstrip", &bytes_rsstrip,
+	              "(other:?X3?.?Dstring?Dint)->?.\n"
+	              "Strip all trailing instances of @other from @this string\n"
+	              "${"
+	              /**/ "local result = this;\n"
+	              /**/ "while (result.endswith(other))\n"
+	              /**/ "	result = result[:##result - ##other];"
+	              "}"),
 	TYPE_METHOD("striplines", &bytes_striplines,
 	            "(mask?:?X3?.?Dstring?Dint)->?.\n"
 	            "Strip all whitspace, or @mask characters at the start, end, and before/after linefeeds\n"
@@ -5680,21 +5680,21 @@ INTERN_TPCONST struct type_method tpconst bytes_methods[] = {
 	TYPE_METHOD("casestrip", &bytes_casestrip,
 	            "(mask?:?X3?.?Dstring?Dint)->?.\n"
 	            "Same as ?#strip, however ascii-casing is ignored during character comparisons"),
-	TYPE_METHOD("caselstrip", &bytes_caselstrip,
-	            "(mask?:?X3?.?Dstring?Dint)->?.\n"
-	            "Same as ?#lstrip, however ascii-casing is ignored during character comparisons"),
-	TYPE_METHOD("caserstrip", &bytes_caserstrip,
-	            "(mask?:?X3?.?Dstring?Dint)->?.\n"
-	            "Same as ?#rstrip, however ascii-casing is ignored during character comparisons"),
+	TYPE_KWMETHOD("caselstrip", &bytes_caselstrip,
+	              "(mask?:?X3?.?Dstring?Dint)->?.\n"
+	              "Same as ?#lstrip, however ascii-casing is ignored during character comparisons"),
+	TYPE_KWMETHOD("caserstrip", &bytes_caserstrip,
+	              "(mask?:?X3?.?Dstring?Dint)->?.\n"
+	              "Same as ?#rstrip, however ascii-casing is ignored during character comparisons"),
 	TYPE_METHOD("casesstrip", &bytes_casesstrip,
 	            "(needle:?X3?.?Dstring?Dint)->?.\n"
 	            "Same as ?#sstrip, however ascii-casing is ignored during character comparisons"),
-	TYPE_METHOD("caselsstrip", &bytes_caselsstrip,
-	            "(needle:?X3?.?Dstring?Dint)->?.\n"
-	            "Same as ?#lsstrip, however ascii-casing is ignored during character comparisons"),
-	TYPE_METHOD("casersstrip", &bytes_casersstrip,
-	            "(needle:?X3?.?Dstring?Dint)->?.\n"
-	            "Same as ?#rsstrip, however ascii-casing is ignored during character comparisons"),
+	TYPE_KWMETHOD("caselsstrip", &bytes_caselsstrip,
+	              "(needle:?X3?.?Dstring?Dint)->?.\n"
+	              "Same as ?#lsstrip, however ascii-casing is ignored during character comparisons"),
+	TYPE_KWMETHOD("casersstrip", &bytes_casersstrip,
+	              "(needle:?X3?.?Dstring?Dint)->?.\n"
+	              "Same as ?#rsstrip, however ascii-casing is ignored during character comparisons"),
 	TYPE_METHOD("casestriplines", &bytes_casestriplines,
 	            "(mask?:?X3?.?Dstring?Dint)->?.\n"
 	            "Same as ?#striplines, however ascii-casing is ignored during character comparisons"),

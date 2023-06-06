@@ -74,6 +74,13 @@ DECL_BEGIN
 #error "Must #define exactly one of these macros!"
 #endif /* ... */
 
+#ifndef SIZE_MAX
+#include <hybrid/limitcore.h>
+#ifndef SIZE_MAX
+#define SIZE_MAX __SIZE_MAX__
+#endif /* !SIZE_MAX */
+#endif /* !SIZE_MAX */
+
 #ifdef DEFINE_bytes_strip
 #define LOCAL_bytes_strip      bytes_strip
 #define LOCAL_bytes_strip_NAME "strip"
@@ -83,10 +90,12 @@ DECL_BEGIN
 #define LOCAL_bytes_strip      bytes_lstrip
 #define LOCAL_bytes_strip_NAME "lstrip"
 #define LOCAL_IS_LSTRIP
+#define LOCAL_HAVE_max_count
 #elif defined(DEFINE_bytes_rstrip)
 #define LOCAL_bytes_strip      bytes_rstrip
 #define LOCAL_bytes_strip_NAME "rstrip"
 #define LOCAL_IS_RSTRIP
+#define LOCAL_HAVE_max_count
 #elif defined(DEFINE_bytes_sstrip)
 #define LOCAL_bytes_strip      bytes_sstrip
 #define LOCAL_bytes_strip_NAME "sstrip"
@@ -98,11 +107,13 @@ DECL_BEGIN
 #define LOCAL_bytes_strip_NAME "lsstrip"
 #define LOCAL_IS_LSTRIP
 #define LOCAL_IS_SSTRIP
+#define LOCAL_HAVE_max_count
 #elif defined(DEFINE_bytes_rsstrip)
 #define LOCAL_bytes_strip      bytes_rsstrip
 #define LOCAL_bytes_strip_NAME "rsstrip"
 #define LOCAL_IS_RSTRIP
 #define LOCAL_IS_SSTRIP
+#define LOCAL_HAVE_max_count
 #elif defined(DEFINE_bytes_casestrip)
 #define LOCAL_bytes_strip      bytes_casestrip
 #define LOCAL_bytes_strip_NAME "casestrip"
@@ -114,11 +125,13 @@ DECL_BEGIN
 #define LOCAL_bytes_strip_NAME "caselstrip"
 #define LOCAL_IS_LSTRIP
 #define LOCAL_IS_NOCASE
+#define LOCAL_HAVE_max_count
 #elif defined(DEFINE_bytes_caserstrip)
 #define LOCAL_bytes_strip      bytes_caserstrip
 #define LOCAL_bytes_strip_NAME "caserstrip"
 #define LOCAL_IS_RSTRIP
 #define LOCAL_IS_NOCASE
+#define LOCAL_HAVE_max_count
 #elif defined(DEFINE_bytes_casesstrip)
 #define LOCAL_bytes_strip      bytes_casesstrip
 #define LOCAL_bytes_strip_NAME "casesstrip"
@@ -132,12 +145,14 @@ DECL_BEGIN
 #define LOCAL_IS_LSTRIP
 #define LOCAL_IS_SSTRIP
 #define LOCAL_IS_NOCASE
+#define LOCAL_HAVE_max_count
 #elif defined(DEFINE_bytes_casersstrip)
 #define LOCAL_bytes_strip      bytes_casersstrip
 #define LOCAL_bytes_strip_NAME "casersstrip"
 #define LOCAL_IS_RSTRIP
 #define LOCAL_IS_SSTRIP
 #define LOCAL_IS_NOCASE
+#define LOCAL_HAVE_max_count
 #elif defined(DEFINE_bytes_striplines)
 #define LOCAL_bytes_strip      bytes_striplines
 #define LOCAL_bytes_strip_NAME "striplines"
@@ -243,8 +258,29 @@ DECL_BEGIN
  * >> } */
 __pragma_GCC_diagnostic_push_ignored(Wmaybe_uninitialized)
 
+#ifdef LOCAL_HAVE_max_count
+#ifdef LOCAL_IS_SSTRIP
+#ifndef LSSTRIP_RSSTRIP_KWLIST_DEFINED
+#define LSSTRIP_RSSTRIP_KWLIST_DEFINED
+PRIVATE struct keyword lsstrip_rsstrip_kwlist[] = { K(needle), K(max), KEND };
+#endif /* !lsstrip_rsstrip_kwlist_DEFINED */
+#define LOCAL_kwlist lsstrip_rsstrip_kwlist
+#else /* LOCAL_IS_SSTRIP */
+#ifndef LSTRIP_RSTRIP_KWLIST_DEFINED
+#define LSTRIP_RSTRIP_KWLIST_DEFINED
+PRIVATE struct keyword lstrip_rstrip_kwlist[] = { K(mask), K(max), KEND };
+#endif /* !lstrip_rstrip_kwlist_DEFINED */
+#define LOCAL_kwlist lstrip_rstrip_kwlist
+#endif /* !LOCAL_IS_SSTRIP */
+
 PRIVATE WUNUSED NONNULL((1)) DREF Bytes *DCALL
-LOCAL_bytes_strip(Bytes *self, size_t argc, DeeObject *const *argv) {
+LOCAL_bytes_strip(Bytes *self, size_t argc,
+                  DeeObject *const *argv, DeeObject *kw)
+#else /* LOCAL_HAVE_max_count */
+PRIVATE WUNUSED NONNULL((1)) DREF Bytes *DCALL
+LOCAL_bytes_strip(Bytes *self, size_t argc, DeeObject *const *argv)
+#endif /* !LOCAL_HAVE_max_count */
+{
 	uint8_t *begin;
 	Needle needle;
 #ifdef LOCAL_IS_SSTRIP
@@ -252,6 +288,14 @@ LOCAL_bytes_strip(Bytes *self, size_t argc, DeeObject *const *argv) {
 #else /* LOCAL_IS_SSTRIP */
 	uint8_t *end;
 #endif /* !LOCAL_IS_SSTRIP */
+#ifdef LOCAL_HAVE_max_count
+	size_t max_count = SIZE_MAX;
+#define LOCAL_max_count_OR_true max_count
+#define LOCAL_max_count_dec()   (void)--max_count
+#else /* LOCAL_HAVE_max_count */
+#define LOCAL_max_count_OR_true 1
+#define LOCAL_max_count_dec()   (void)0
+#endif /* !LOCAL_HAVE_max_count */
 #ifdef LOCAL_IS_LINES
 #ifdef LOCAL_IS_SSTRIP
 	uint8_t *end;
@@ -259,17 +303,28 @@ LOCAL_bytes_strip(Bytes *self, size_t argc, DeeObject *const *argv) {
 	struct bytes_printer printer;
 	uint8_t *flush_start;
 #endif /* LOCAL_IS_LINES */
+	DeeObject *mask;
 
 	/* In sstrip-mode, the `mask' parameter becomes mandatory. */
+#ifdef LOCAL_HAVE_max_count
 #ifdef LOCAL_IS_SSTRIP
-	DeeObject *mask;
+	if (DeeArg_UnpackKw(argc, argv, kw, LOCAL_kwlist, "o|" UNPuSIZ ":" LOCAL_bytes_strip_NAME, &mask, &max_count))
+		goto err;
+#else /* LOCAL_IS_SSTRIP */
+	mask = NULL;
+	if (DeeArg_UnpackKw(argc, argv, kw, LOCAL_kwlist, "|o" UNPuSIZ ":" LOCAL_bytes_strip_NAME, &mask, &max_count))
+		goto err;
+#endif /* !LOCAL_IS_SSTRIP */
+#else /* LOCAL_HAVE_max_count */
+#ifdef LOCAL_IS_SSTRIP
 	if (DeeArg_Unpack(argc, argv, "o:" LOCAL_bytes_strip_NAME, &mask))
 		goto err;
 #else /* LOCAL_IS_SSTRIP */
-	DeeObject *mask = NULL;
+	mask = NULL;
 	if (DeeArg_Unpack(argc, argv, "|o:" LOCAL_bytes_strip_NAME, &mask))
 		goto err;
 #endif /* !LOCAL_IS_SSTRIP */
+#endif /* !LOCAL_HAVE_max_count */
 
 	/* Do the actual strip at the front/back */
 #ifdef LOCAL_IS_SSTRIP
@@ -305,21 +360,33 @@ LOCAL_bytes_strip(Bytes *self, size_t argc, DeeObject *const *argv) {
 			goto err;
 #endif /* !LOCAL_IS_SSTRIP */
 #ifdef LOCAL_IS_LSTRIP
-		while (begin < end && LOCAL_memchr(needle.n_data, *begin, needle.n_size))
+		while (begin < end && LOCAL_max_count_OR_true &&
+		       LOCAL_memchr(needle.n_data, *begin, needle.n_size)) {
 			++begin;
+			LOCAL_max_count_dec();
+		}
 #endif /* LOCAL_IS_LSTRIP */
 #ifdef LOCAL_IS_RSTRIP
-		while (end > begin && LOCAL_memchr(needle.n_data, end[-1], needle.n_size))
+		while (end > begin && LOCAL_max_count_OR_true &&
+		       LOCAL_memchr(needle.n_data, end[-1], needle.n_size)) {
 			--end;
+			LOCAL_max_count_dec();
+		}
 #endif /* LOCAL_IS_RSTRIP */
 	} else {
 #ifdef LOCAL_IS_LSTRIP
-		while (begin < end && LOCAL_isspace(*begin))
+		while (begin < end && LOCAL_max_count_OR_true &&
+		       LOCAL_isspace(*begin)) {
 			++begin;
+			LOCAL_max_count_dec();
+		}
 #endif /* LOCAL_IS_LSTRIP */
 #ifdef LOCAL_IS_RSTRIP
-		while (end > begin && LOCAL_isspace(end[-1]))
+		while (end > begin && LOCAL_max_count_OR_true &&
+		       LOCAL_isspace(end[-1])) {
 			--end;
+			LOCAL_max_count_dec();
+		}
 #endif /* LOCAL_IS_RSTRIP */
 	}
 #endif /* ... */
@@ -483,6 +550,11 @@ err:
 }
 
 __pragma_GCC_diagnostic_pop_ignored(Wmaybe_uninitialized)
+
+#undef LOCAL_max_count_OR_true
+#undef LOCAL_max_count_dec
+#undef LOCAL_kwlist
+#undef LOCAL_HAVE_max_count
 
 #undef LOCAL_isspace
 

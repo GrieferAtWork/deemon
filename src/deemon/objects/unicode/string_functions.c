@@ -42,24 +42,31 @@
 
 #include "regroups.h"
 
+#ifndef SIZE_MAX
+#include <hybrid/limitcore.h>
+#ifndef SIZE_MAX
+#define SIZE_MAX __SIZE_MAX__
+#endif /* !SIZE_MAX */
+#endif /* !SIZE_MAX */
+
 DECL_BEGIN
 
 #ifdef __INTELLISENSE__
 PRIVATE WUNUSED NONNULL((1)) DREF String *DCALL DeeString_StripSpc(String *__restrict self);
-PRIVATE WUNUSED NONNULL((1)) DREF String *DCALL DeeString_LStripSpc(String *__restrict self);
-PRIVATE WUNUSED NONNULL((1)) DREF String *DCALL DeeString_RStripSpc(String *__restrict self);
+PRIVATE WUNUSED NONNULL((1)) DREF String *DCALL DeeString_LStripSpc(String *__restrict self, size_t max_count);
+PRIVATE WUNUSED NONNULL((1)) DREF String *DCALL DeeString_RStripSpc(String *__restrict self, size_t max_count);
 PRIVATE WUNUSED NONNULL((1, 2)) DREF String *DCALL DeeString_StripMask(String *self, String *mask);
-PRIVATE WUNUSED NONNULL((1, 2)) DREF String *DCALL DeeString_LStripMask(String *self, String *mask);
-PRIVATE WUNUSED NONNULL((1, 2)) DREF String *DCALL DeeString_RStripMask(String *self, String *mask);
+PRIVATE WUNUSED NONNULL((1, 2)) DREF String *DCALL DeeString_LStripMask(String *self, String *mask, size_t max_count);
+PRIVATE WUNUSED NONNULL((1, 2)) DREF String *DCALL DeeString_RStripMask(String *self, String *mask, size_t max_count);
 PRIVATE WUNUSED NONNULL((1, 2)) DREF String *DCALL DeeString_CaseStripMask(String *self, String *mask);
-PRIVATE WUNUSED NONNULL((1, 2)) DREF String *DCALL DeeString_CaseLStripMask(String *self, String *mask);
-PRIVATE WUNUSED NONNULL((1, 2)) DREF String *DCALL DeeString_CaseRStripMask(String *self, String *mask);
+PRIVATE WUNUSED NONNULL((1, 2)) DREF String *DCALL DeeString_CaseLStripMask(String *self, String *mask, size_t max_count);
+PRIVATE WUNUSED NONNULL((1, 2)) DREF String *DCALL DeeString_CaseRStripMask(String *self, String *mask, size_t max_count);
 PRIVATE WUNUSED NONNULL((1, 2)) DREF String *DCALL DeeString_SStrip(String *self, String *mask);
-PRIVATE WUNUSED NONNULL((1, 2)) DREF String *DCALL DeeString_LSStrip(String *self, String *mask);
-PRIVATE WUNUSED NONNULL((1, 2)) DREF String *DCALL DeeString_RSStrip(String *self, String *mask);
+PRIVATE WUNUSED NONNULL((1, 2)) DREF String *DCALL DeeString_LSStrip(String *self, String *mask, size_t max_count);
+PRIVATE WUNUSED NONNULL((1, 2)) DREF String *DCALL DeeString_RSStrip(String *self, String *mask, size_t max_count);
 PRIVATE WUNUSED NONNULL((1, 2)) DREF String *DCALL DeeString_CaseSStrip(String *self, String *mask);
-PRIVATE WUNUSED NONNULL((1, 2)) DREF String *DCALL DeeString_CaseLSStrip(String *self, String *mask);
-PRIVATE WUNUSED NONNULL((1, 2)) DREF String *DCALL DeeString_CaseRSStrip(String *self, String *mask);
+PRIVATE WUNUSED NONNULL((1, 2)) DREF String *DCALL DeeString_CaseLSStrip(String *self, String *mask, size_t max_count);
+PRIVATE WUNUSED NONNULL((1, 2)) DREF String *DCALL DeeString_CaseRSStrip(String *self, String *mask, size_t max_count);
 PRIVATE WUNUSED NONNULL((1)) DREF String *DCALL DeeString_StripLinesSpc(String *__restrict self);
 PRIVATE WUNUSED NONNULL((1)) DREF String *DCALL DeeString_LStripLinesSpc(String *__restrict self);
 PRIVATE WUNUSED NONNULL((1)) DREF String *DCALL DeeString_RStripLinesSpc(String *__restrict self);
@@ -5471,30 +5478,41 @@ err:
 	return NULL;
 }
 
+#ifndef LSTRIP_RSTRIP_KWLIST_DEFINED
+#define LSTRIP_RSTRIP_KWLIST_DEFINED
+PRIVATE struct keyword lstrip_rstrip_kwlist[] = { K(mask), K(max), KEND };
+#endif /* !lstrip_rstrip_kwlist_DEFINED */
+
 PRIVATE WUNUSED NONNULL((1)) DREF String *DCALL
-string_lstrip(String *self, size_t argc, DeeObject *const *argv) {
+string_lstrip(String *self, size_t argc,
+              DeeObject *const *argv, DeeObject *kw) {
 	String *mask = NULL;
-	if (DeeArg_Unpack(argc, argv, "|o:lstrip", &mask))
+	size_t max_count = SIZE_MAX;
+	if (DeeArg_UnpackKw(argc, argv, kw, lstrip_rstrip_kwlist,
+	                    "|o" UNPuSIZ ":lstrip", &mask, &max_count))
 		goto err;
 	if (!mask)
-		return DeeString_LStripSpc(self);
+		return DeeString_LStripSpc(self, max_count);
 	if (DeeObject_AssertTypeExact(mask, &DeeString_Type))
 		goto err;
-	return DeeString_LStripMask(self, mask);
+	return DeeString_LStripMask(self, mask, max_count);
 err:
 	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF String *DCALL
-string_rstrip(String *self, size_t argc, DeeObject *const *argv) {
+string_rstrip(String *self, size_t argc,
+              DeeObject *const *argv, DeeObject *kw) {
 	String *mask = NULL;
-	if (DeeArg_Unpack(argc, argv, "|o:rstrip", &mask))
+	size_t max_count = SIZE_MAX;
+	if (DeeArg_UnpackKw(argc, argv, kw, lstrip_rstrip_kwlist,
+	                    "|o" UNPuSIZ ":rstrip", &mask, &max_count))
 		goto err;
 	if (!mask)
-		return DeeString_RStripSpc(self);
+		return DeeString_RStripSpc(self, max_count);
 	if (DeeObject_AssertTypeExact(mask, &DeeString_Type))
 		goto err;
-	return DeeString_RStripMask(self, mask);
+	return DeeString_RStripMask(self, mask, max_count);
 err:
 	return NULL;
 }
@@ -5514,101 +5532,124 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF String *DCALL
-string_caselstrip(String *self, size_t argc, DeeObject *const *argv) {
+string_caselstrip(String *self, size_t argc,
+                  DeeObject *const *argv, DeeObject *kw) {
 	String *mask = NULL;
-	if (DeeArg_Unpack(argc, argv, "|o:caselstrip", &mask))
+	size_t max_count = SIZE_MAX;
+	if (DeeArg_UnpackKw(argc, argv, kw, lstrip_rstrip_kwlist,
+	                    "|o" UNPuSIZ ":caselstrip", &mask, &max_count))
 		goto err;
 	if (!mask)
-		return DeeString_LStripSpc(self);
+		return DeeString_LStripSpc(self, max_count);
 	if (DeeObject_AssertTypeExact(mask, &DeeString_Type))
 		goto err;
-	return DeeString_CaseLStripMask(self, mask);
+	return DeeString_CaseLStripMask(self, mask, max_count);
 err:
 	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF String *DCALL
-string_caserstrip(String *self, size_t argc, DeeObject *const *argv) {
+string_caserstrip(String *self, size_t argc,
+                  DeeObject *const *argv, DeeObject *kw) {
 	String *mask = NULL;
-	if (DeeArg_Unpack(argc, argv, "|o:caserstrip", &mask))
+	size_t max_count = SIZE_MAX;
+	if (DeeArg_UnpackKw(argc, argv, kw, lstrip_rstrip_kwlist,
+	                    "|o" UNPuSIZ ":caserstrip", &mask, &max_count))
 		goto err;
 	if (!mask)
-		return DeeString_RStripSpc(self);
+		return DeeString_RStripSpc(self, max_count);
 	if (DeeObject_AssertTypeExact(mask, &DeeString_Type))
 		goto err;
-	return DeeString_CaseRStripMask(self, mask);
+	return DeeString_CaseRStripMask(self, mask, max_count);
 err:
 	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF String *DCALL
 string_sstrip(String *self, size_t argc, DeeObject *const *argv) {
-	String *other;
-	if (DeeArg_Unpack(argc, argv, "o:sstrip", &other))
+	String *needle;
+	if (DeeArg_Unpack(argc, argv, "o:sstrip", &needle))
 		goto err;
-	if (DeeObject_AssertTypeExact(other, &DeeString_Type))
+	if (DeeObject_AssertTypeExact(needle, &DeeString_Type))
 		goto err;
-	return DeeString_SStrip(self, other);
+	return DeeString_SStrip(self, needle);
+err:
+	return NULL;
+}
+
+#ifndef LSSTRIP_RSSTRIP_KWLIST_DEFINED
+#define LSSTRIP_RSSTRIP_KWLIST_DEFINED
+PRIVATE struct keyword lsstrip_rsstrip_kwlist[] = { K(needle), K(max), KEND };
+#endif /* !lsstrip_rsstrip_kwlist_DEFINED */
+
+PRIVATE WUNUSED NONNULL((1)) DREF String *DCALL
+string_lsstrip(String *self, size_t argc,
+               DeeObject *const *argv, DeeObject *kw) {
+	String *needle;
+	size_t max_count = SIZE_MAX;
+	if (DeeArg_UnpackKw(argc, argv, kw, lstrip_rstrip_kwlist,
+	                    "o|" UNPuSIZ ":lsstrip", &needle, &max_count))
+		goto err;
+	if (DeeObject_AssertTypeExact(needle, &DeeString_Type))
+		goto err;
+	return DeeString_LSStrip(self, needle, max_count);
 err:
 	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF String *DCALL
-string_lsstrip(String *self, size_t argc, DeeObject *const *argv) {
-	String *other;
-	if (DeeArg_Unpack(argc, argv, "o:lsstrip", &other))
+string_rsstrip(String *self, size_t argc,
+               DeeObject *const *argv, DeeObject *kw) {
+	String *needle;
+	size_t max_count = SIZE_MAX;
+	if (DeeArg_UnpackKw(argc, argv, kw, lstrip_rstrip_kwlist,
+	                    "o|" UNPuSIZ ":rsstrip", &needle, &max_count))
 		goto err;
-	if (DeeObject_AssertTypeExact(other, &DeeString_Type))
+	if (DeeObject_AssertTypeExact(needle, &DeeString_Type))
 		goto err;
-	return DeeString_LSStrip(self, other);
-err:
-	return NULL;
-}
-
-PRIVATE WUNUSED NONNULL((1)) DREF String *DCALL
-string_rsstrip(String *self, size_t argc, DeeObject *const *argv) {
-	String *other;
-	if (DeeArg_Unpack(argc, argv, "o:rsstrip", &other))
-		goto err;
-	if (DeeObject_AssertTypeExact(other, &DeeString_Type))
-		goto err;
-	return DeeString_RSStrip(self, other);
+	return DeeString_RSStrip(self, needle, max_count);
 err:
 	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF String *DCALL
 string_casesstrip(String *self, size_t argc, DeeObject *const *argv) {
-	String *other;
-	if (DeeArg_Unpack(argc, argv, "o:casesstrip", &other))
+	String *needle;
+	if (DeeArg_Unpack(argc, argv, "o:casesstrip", &needle))
 		goto err;
-	if (DeeObject_AssertTypeExact(other, &DeeString_Type))
+	if (DeeObject_AssertTypeExact(needle, &DeeString_Type))
 		goto err;
-	return DeeString_CaseSStrip(self, other);
+	return DeeString_CaseSStrip(self, needle);
 err:
 	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF String *DCALL
-string_caselsstrip(String *self, size_t argc, DeeObject *const *argv) {
-	String *other;
-	if (DeeArg_Unpack(argc, argv, "o:caselsstrip", &other))
+string_caselsstrip(String *self, size_t argc,
+                   DeeObject *const *argv, DeeObject *kw) {
+	String *needle;
+	size_t max_count = SIZE_MAX;
+	if (DeeArg_UnpackKw(argc, argv, kw, lstrip_rstrip_kwlist,
+	                    "o|" UNPuSIZ ":caselsstrip", &needle, &max_count))
 		goto err;
-	if (DeeObject_AssertTypeExact(other, &DeeString_Type))
+	if (DeeObject_AssertTypeExact(needle, &DeeString_Type))
 		goto err;
-	return DeeString_CaseLSStrip(self, other);
+	return DeeString_CaseLSStrip(self, needle, max_count);
 err:
 	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF String *DCALL
-string_casersstrip(String *self, size_t argc, DeeObject *const *argv) {
-	String *other;
-	if (DeeArg_Unpack(argc, argv, "o:casersstrip", &other))
+string_casersstrip(String *self, size_t argc,
+                   DeeObject *const *argv, DeeObject *kw) {
+	String *needle;
+	size_t max_count = SIZE_MAX;
+	if (DeeArg_UnpackKw(argc, argv, kw, lstrip_rstrip_kwlist,
+	                    "o|" UNPuSIZ ":casersstrip", &needle, &max_count))
 		goto err;
-	if (DeeObject_AssertTypeExact(other, &DeeString_Type))
+	if (DeeObject_AssertTypeExact(needle, &DeeString_Type))
 		goto err;
-	return DeeString_CaseRSStrip(self, other);
+	return DeeString_CaseRSStrip(self, needle, max_count);
 err:
 	return NULL;
 }
@@ -10828,14 +10869,14 @@ INTERN_TPCONST struct type_method tpconst string_methods[] = {
 	            "(mask?:?.)->?.\n"
 	            "Strip all leading and trailing whitespace-characters, or "
 	            /**/ "characters apart of @mask, and return the resulting ?."),
-	TYPE_METHOD("lstrip", &string_lstrip,
-	            "(mask?:?.)->?.\n"
-	            "Strip all leading whitespace-characters, or "
-	            /**/ "characters apart of @mask, and return the resulting ?."),
-	TYPE_METHOD("rstrip", &string_rstrip,
-	            "(mask?:?.)->?.\n"
-	            "Strip all trailing whitespace-characters, or "
-	            /**/ "characters apart of @mask, and return the resulting ?."),
+	TYPE_KWMETHOD("lstrip", &string_lstrip,
+	              "(mask?:?.)->?.\n"
+	              "Strip all leading whitespace-characters, or "
+	              /**/ "characters apart of @mask, and return the resulting ?."),
+	TYPE_KWMETHOD("rstrip", &string_rstrip,
+	              "(mask?:?.)->?.\n"
+	              "Strip all trailing whitespace-characters, or "
+	              /**/ "characters apart of @mask, and return the resulting ?."),
 	TYPE_METHOD("sstrip", &string_sstrip,
 	            "(needle:?.)->?.\n"
 	            "Strip all leading and trailing instances of @needle from @this ?.\n"
@@ -10849,28 +10890,28 @@ INTERN_TPCONST struct type_method tpconst string_methods[] = {
 	            /**/ "	return result;\n"
 	            /**/ "}"
 	            "}"),
-	TYPE_METHOD("lsstrip", &string_lsstrip,
-	            "(needle:?.)->?.\n"
-	            "Strip all leading instances of @needle from @this ?.\n"
-	            "${"
-	            /**/ "function lsstrip(needle: string): string {\n"
-	            /**/ "	local result = this;\n"
-	            /**/ "	while (result.startswith(needle))\n"
-	            /**/ "		result = result[##needle:];\n"
-	            /**/ "	return result;\n"
-	            /**/ "}"
-	            "}"),
-	TYPE_METHOD("rsstrip", &string_rsstrip,
-	            "(needle:?.)->?.\n"
-	            "Strip all trailing instances of @needle from @this ?.\n"
-	            "${"
-	            /**/ "function lsstrip(needle: string): string {\n"
-	            /**/ "	local result = this;\n"
-	            /**/ "	while (result.endswith(needle))\n"
-	            /**/ "		result = result[:##result - ##needle];}\n"
-	            /**/ "	return result;\n"
-	            /**/ "}"
-	            "}"),
+	TYPE_KWMETHOD("lsstrip", &string_lsstrip,
+	              "(needle:?.)->?.\n"
+	              "Strip all leading instances of @needle from @this ?.\n"
+	              "${"
+	              /**/ "function lsstrip(needle: string): string {\n"
+	              /**/ "	local result = this;\n"
+	              /**/ "	while (result.startswith(needle))\n"
+	              /**/ "		result = result[##needle:];\n"
+	              /**/ "	return result;\n"
+	              /**/ "}"
+	              "}"),
+	TYPE_KWMETHOD("rsstrip", &string_rsstrip,
+	              "(needle:?.)->?.\n"
+	              "Strip all trailing instances of @needle from @this ?.\n"
+	              "${"
+	              /**/ "function lsstrip(needle: string): string {\n"
+	              /**/ "	local result = this;\n"
+	              /**/ "	while (result.endswith(needle))\n"
+	              /**/ "		result = result[:##result - ##needle];}\n"
+	              /**/ "	return result;\n"
+	              /**/ "}"
+	              "}"),
 	TYPE_METHOD("striplines", &string_striplines,
 	            "(mask?:?.)->?.\n"
 	            "Strip all whitspace, or @mask characters at the start, end, and before/after linefeeds\n"
@@ -11022,21 +11063,21 @@ INTERN_TPCONST struct type_method tpconst string_methods[] = {
 	TYPE_METHOD("casestrip", &string_casestrip,
 	            "(mask?:?.)->?.\n"
 	            "Same as ?#strip, however perform a case-folded search when @mask is given (s.a. ?#casefold)"),
-	TYPE_METHOD("caselstrip", &string_caselstrip,
-	            "(mask?:?.)->?.\n"
-	            "Same as ?#lstrip, however perform a case-folded search when @mask is given (s.a. ?#casefold)"),
-	TYPE_METHOD("caserstrip", &string_caserstrip,
-	            "(mask?:?.)->?.\n"
-	            "Same as ?#rstrip, however perform a case-folded search when @mask is given (s.a. ?#casefold)"),
+	TYPE_KWMETHOD("caselstrip", &string_caselstrip,
+	              "(mask?:?.)->?.\n"
+	              "Same as ?#lstrip, however perform a case-folded search when @mask is given (s.a. ?#casefold)"),
+	TYPE_KWMETHOD("caserstrip", &string_caserstrip,
+	              "(mask?:?.)->?.\n"
+	              "Same as ?#rstrip, however perform a case-folded search when @mask is given (s.a. ?#casefold)"),
 	TYPE_METHOD("casesstrip", &string_casesstrip,
 	            "(needle:?.)->?.\n"
 	            "Same as ?#sstrip, however perform a case-folded search (s.a. ?#casefold)"),
-	TYPE_METHOD("caselsstrip", &string_caselsstrip,
-	            "(needle:?.)->?.\n"
-	            "Same as ?#lsstrip, however perform a case-folded search (s.a. ?#casefold)"),
-	TYPE_METHOD("casersstrip", &string_casersstrip,
-	            "(needle:?.)->?.\n"
-	            "Same as ?#rsstrip, however perform a case-folded search (s.a. ?#casefold)"),
+	TYPE_KWMETHOD("caselsstrip", &string_caselsstrip,
+	              "(needle:?.)->?.\n"
+	              "Same as ?#lsstrip, however perform a case-folded search (s.a. ?#casefold)"),
+	TYPE_KWMETHOD("casersstrip", &string_casersstrip,
+	              "(needle:?.)->?.\n"
+	              "Same as ?#rsstrip, however perform a case-folded search (s.a. ?#casefold)"),
 	TYPE_METHOD("casestriplines", &string_casestriplines,
 	            "(mask?:?.)->?.\n"
 	            "Same as ?#striplines, however perform a case-folded search when @mask is given (s.a. ?#casefold)"),
