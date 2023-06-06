@@ -3241,7 +3241,7 @@ PRIVATE WUNUSED DREF /*String*/ DeeStringObject *DCALL get_default_home(void) {
 #define CONFIG_DEEMON_HOME_ENVIRON "DEEMON_HOME"
 #endif /* !CONFIG_DEEMON_HOME_ENVIRON */
 	DBG_ALIGNMENT_DISABLE();
-	env = getenv(CONFIG_DEEMON_HOME_ENVIRON);
+	env = getenv(CONFIG_DEEMON_HOME_ENVIRON); /* TODO: system-feature test */
 	DBG_ALIGNMENT_ENABLE();
 	if (env) {
 		DREF DeeStringObject *result;
