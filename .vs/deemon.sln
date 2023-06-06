@@ -306,15 +306,11 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "util", "util", "{2360741E-F
 		..\util\test.dee = ..\util\test.dee
 	EndProjectSection
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "misc", "misc", "{2360741E-FB49-40D4-B684-00007A1703BB}"
-	ProjectSection(SolutionItems) = preProject
-		..\util\misc\.gitignore = ..\util\misc\.gitignore
-	EndProjectSection
-EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "scripts", "scripts", "{2360741E-FB49-40D4-B684-00F42E7A6DD3}"
 	ProjectSection(SolutionItems) = preProject
 		..\util\scripts\fib.dee = ..\util\scripts\fib.dee
 		..\util\scripts\fixlinefeeds.dee = ..\util\scripts\fixlinefeeds.dee
+		..\util\scripts\migrate-tag-descriptions.dee = ..\util\scripts\migrate-tag-descriptions.dee
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{2360741E-FB49-40D4-B684-00007A1732AC}"
@@ -351,6 +347,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{2360741E-F
 		..\util\test\int-fromstring.dee = ..\util\test\int-fromstring.dee
 		..\util\test\int-imm.dee = ..\util\test\int-imm.dee
 		..\util\test\int-incdec.dee = ..\util\test\int-incdec.dee
+		..\util\test\int-msb.dee = ..\util\test\int-msb.dee
 		..\util\test\int-nth.dee = ..\util\test\int-nth.dee
 		..\util\test\int-tostr-thousands.dee = ..\util\test\int-tostr-thousands.dee
 		..\util\test\int-tostr.dee = ..\util\test\int-tostr.dee
@@ -364,6 +361,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{2360741E-F
 		..\util\test\memmem.dee = ..\util\test\memmem.dee
 		..\util\test\newinstance.dee = ..\util\test\newinstance.dee
 		..\util\test\numeric-isfloat.dee = ..\util\test\numeric-isfloat.dee
+		..\util\test\once.dee = ..\util\test\once.dee
 		..\util\test\paren-brace-pasing.dee = ..\util\test\paren-brace-pasing.dee
 		..\util\test\posix-DIR.dee = ..\util\test\posix-DIR.dee
 		..\util\test\print-in-statement-expressions.dee = ..\util\test\print-in-statement-expressions.dee
@@ -383,6 +381,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{2360741E-F
 		..\util\test\string-bytes-compare.dee = ..\util\test\string-bytes-compare.dee
 		..\util\test\string-encoding.dee = ..\util\test\string-encoding.dee
 		..\util\test\string-repeat.dee = ..\util\test\string-repeat.dee
+		..\util\test\string-strip.dee = ..\util\test\string-strip.dee
 		..\util\test\strings.dee = ..\util\test\strings.dee
 		..\util\test\striplines.dee = ..\util\test\striplines.dee
 		..\util\test\template-string-jit.dee = ..\util\test\template-string-jit.dee
@@ -741,7 +740,6 @@ Global
 		{2360741E-FB49-40D4-B684-4301F0D08DF1} = {2360741E-FB49-40D4-B684-00182015F605}
 		{2360741E-FB49-40D4-B684-591924C4CFA6} = {2360741E-FB49-40D4-B684-4301F0D08DF1}
 		{2360741E-FB49-40D4-B684-0003040EE286} = {2360741E-FB49-40D4-B684-0000003040E4}
-		{2360741E-FB49-40D4-B684-00007A1703BB} = {2360741E-FB49-40D4-B684-00000000F424}
 		{2360741E-FB49-40D4-B684-00F42E7A6DD3} = {2360741E-FB49-40D4-B684-00000000F424}
 		{2360741E-FB49-40D4-B684-00007A1732AC} = {2360741E-FB49-40D4-B684-00000000F424}
 		{2360741E-FB49-40D4-B684-00000F42E6DC} = {2360741E-FB49-40D4-B684-00000000F424}
