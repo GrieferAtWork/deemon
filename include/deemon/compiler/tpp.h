@@ -248,7 +248,7 @@ DECL_END
 /* TODO: Use `DeeObject *' (String/Int) for `struct TPPConst' */
 #include <hybrid/typecore.h>
 #define TPP_NO_INCLUDE_STDLIB_H 1
-#include "../../../src/tpp/tpp.h"
+#include "../../../src/tpp/src/tpp.h"
 
 DECL_BEGIN
 

@@ -4,3 +4,6 @@
 [submodule "src/libjson"]
 	path = src/libjson
 	url = https://github.com/GrieferAtWork/kos-libjson.git
+[submodule "src/tpp"]
+	path = src/tpp
+	url = https://github.com/GrieferAtWork/tpp.git

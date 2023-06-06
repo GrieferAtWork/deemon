@@ -189,7 +189,7 @@ err:
 #define NO_INCLUDE_ALLOCA_H   1
 
 #ifndef __INTELLISENSE__
-#include "../../tpp/tpp.c"
+#include "../../tpp/src/tpp.c"
 #endif /* !__INTELLISENSE__ */
 
 DECL_BEGIN

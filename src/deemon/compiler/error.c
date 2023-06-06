@@ -120,7 +120,7 @@ print_warning_message(struct unicode_printer *__restrict _printer,
 	case name:                      \
 		expr;                       \
 		break;
-#include "../../../src/tpp/tpp-defs.inl"
+#include "../../../src/tpp/src/tpp-defs.inl"
 #undef WARNING_MESSAGE
 #undef DECLARE_WARNING_MESSAGES
 	default: break;
