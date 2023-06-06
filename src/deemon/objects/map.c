@@ -869,11 +869,11 @@ map_iterself(DeeObject *__restrict self) {
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-map_tpcontains(DeeObject *self, DeeObject *key) {
+map_contains(DeeObject *self, DeeObject *key) {
 	DREF DeeObject *value;
-	value = DeeObject_GetItem(self, key);
-	if (!value) {
-		if (DeeError_Catch(&DeeError_KeyError))
+	value = DeeObject_GetItemDef(self, key, ITER_DONE);
+	if (!ITER_ISOK(value)) {
+		if (value == ITER_DONE)
 			return_false;
 		return NULL;
 	}
@@ -881,13 +881,65 @@ map_tpcontains(DeeObject *self, DeeObject *key) {
 	return_true;
 }
 
+PRIVATE WUNUSED NONNULL((1)) size_t DCALL
+map_nsi_getsize(DeeObject *__restrict self) {
+	size_t result = 0;
+	DREF DeeObject *iter, *item;
+	DeeTypeObject *tp_self = Dee_TYPE(self);
+
+	/* Check if a sub-class is overriding `operator iter'. If
+	 * not, then the mapping is empty for all we're concerned */
+	if (tp_self->tp_seq->tp_iter_self == &map_iterself)
+		goto done;
+
+	/* Very inefficient: iterate the mapping and count items. */
+	iter = DeeObject_IterSelf(self);
+	if unlikely(!iter)
+		goto err;
+	while (ITER_ISOK(item = DeeObject_IterNext(iter))) {
+		Dee_Decref(item);
+		if (DeeThread_CheckInterrupt())
+			goto err_iter;
+		++result;
+	}
+	if unlikely(!item)
+		goto err_iter;
+	Dee_Decref(iter);
+done:
+	return result;
+err_iter:
+	Dee_Decref(iter);
+err:
+	return (size_t)-1;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+map_size(DeeObject *__restrict self) {
+	size_t result = map_nsi_getsize(self);
+	if unlikely(result == (size_t)-1)
+		goto err;
+	return DeeInt_NewSize(result);
+err:
+	return NULL;
+}
+
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 map_getitem(DeeObject *self, DeeObject *key) {
 	DREF DeeObject *iter, *item;
 	DREF DeeObject *item_key_and_value[2];
-	dhash_t key_hash = DeeObject_Hash(key);
+	dhash_t key_hash;
+	DeeTypeObject *tp_self = Dee_TYPE(self);
+
+	/* Check if a sub-class is overriding `operator iter'. If
+	 * not, then the mapping is empty for all we're concerned */
+	if (tp_self->tp_seq->tp_iter_self == &map_iterself) {
+		err_unknown_key(self, key);
+		goto err;
+	}
+
 	/* Very inefficient: iterate the mapping to search for a matching key-item pair. */
-	iter = DeeObject_IterSelf(self);
+	key_hash = DeeObject_Hash(key);
+	iter     = DeeObject_IterSelf(self);
 	if unlikely(!iter)
 		goto err;
 	while (ITER_ISOK(item = DeeObject_IterNext(iter))) {
@@ -896,6 +948,7 @@ map_getitem(DeeObject *self, DeeObject *key) {
 		Dee_Decref(item);
 		if unlikely(unpack_error)
 			goto err_iter;
+
 		/* Check if this is the key we're looking for. */
 		if (DeeObject_Hash(item_key_and_value[0]) != key_hash) {
 			Dee_Decref(item_key_and_value[0]);
@@ -905,6 +958,7 @@ map_getitem(DeeObject *self, DeeObject *key) {
 			if (temp != 0) {
 				if unlikely(temp < 0)
 					Dee_Clear(item_key_and_value[1]);
+
 				/* Found it! */
 				Dee_Decref(iter);
 				return item_key_and_value[1];
@@ -922,6 +976,62 @@ err:
 	return NULL;
 }
 
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+map_getitem_def(DeeObject *self, DeeObject *key, DeeObject *defl) {
+	DREF DeeObject *iter, *item;
+	DREF DeeObject *item_key_and_value[2];
+	dhash_t key_hash;
+	DeeTypeObject *tp_self = Dee_TYPE(self);
+
+	/* Check if a sub-class is overriding `operator iter'. If
+	 * not, then the mapping is empty for all we're concerned */
+	if (tp_self->tp_seq->tp_iter_self == &map_iterself)
+		goto return_defl;
+
+	/* Very inefficient: iterate the mapping to search for a matching key-item pair. */
+	key_hash = DeeObject_Hash(key);
+	iter     = DeeObject_IterSelf(self);
+	if unlikely(!iter)
+		goto err;
+	while (ITER_ISOK(item = DeeObject_IterNext(iter))) {
+		int unpack_error, temp;
+		unpack_error = DeeObject_Unpack(item, 2, item_key_and_value);
+		Dee_Decref(item);
+		if unlikely(unpack_error)
+			goto err_iter;
+
+		/* Check if this is the key we're looking for. */
+		if (DeeObject_Hash(item_key_and_value[0]) != key_hash) {
+			Dee_Decref(item_key_and_value[0]);
+		} else {
+			temp = DeeObject_CompareEq(key, item_key_and_value[0]);
+			Dee_Decref(item_key_and_value[0]);
+			if (temp != 0) {
+				if unlikely(temp < 0)
+					Dee_Clear(item_key_and_value[1]);
+
+				/* Found it! */
+				Dee_Decref(iter);
+				return item_key_and_value[1];
+			}
+		}
+		Dee_Decref(item_key_and_value[1]);
+		if (DeeThread_CheckInterrupt())
+			goto err_iter;
+	}
+	if (!item)
+		goto err_iter;
+	Dee_Decref(iter);
+return_defl:
+	if (defl != ITER_DONE)
+		Dee_Incref(defl);
+	return defl;
+err_iter:
+	Dee_Decref(iter);
+err:
+	return NULL;
+}
+
 PRIVATE WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
 map_getrange(DeeObject *self,
              DeeObject *UNUSED(begin),
@@ -931,6 +1041,18 @@ map_getrange(DeeObject *self,
 	return NULL;
 }
 
+PRIVATE struct type_nsi tpconst map_nsi = {
+	/* .nsi_class   = */ TYPE_SEQX_CLASS_MAP,
+	/* .nsi_flags   = */ TYPE_SEQX_FNORMAL,
+	{
+		/* .nsi_maplike = */ {
+			/* .nsi_getsize    = */ (dfunptr_t)&map_nsi_getsize,
+			/* .nsi_nextkey    = */ (dfunptr_t)NULL,
+			/* .nsi_nextvalue  = */ (dfunptr_t)NULL,
+			/* .nsi_getdefault = */ (dfunptr_t)&map_getitem_def
+		}
+	}
+};
 
 
 PRIVATE struct type_math map_math = {
@@ -956,14 +1078,15 @@ PRIVATE struct type_math map_math = {
 
 PRIVATE struct type_seq map_seq = {
 	/* .tp_iter_self = */ &map_iterself,
-	/* .tp_size      = */ NULL,
-	/* .tp_contains  = */ &map_tpcontains,
+	/* .tp_size      = */ &map_size,
+	/* .tp_contains  = */ &map_contains,
 	/* .tp_get       = */ &map_getitem,
 	/* .tp_del       = */ NULL,
 	/* .tp_set       = */ NULL,
 	/* .tp_range_get = */ &map_getrange,
 	/* .tp_range_del = */ NULL,
-	/* .tp_range_set = */ NULL
+	/* .tp_range_set = */ NULL,
+	/* .tp_nsi       = */ &map_nsi
 };
 
 
