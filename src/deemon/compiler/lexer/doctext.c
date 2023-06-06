@@ -2209,6 +2209,7 @@ err_tag_body_printer:
 									unicode_printer_fini(&tag_body_printer);
 									goto err;
 								}
+								unicode_printer_fini(&tag_body_printer);
 								iter = currline_start;
 							} /* Scope... */
 							PUTASCII('}');
