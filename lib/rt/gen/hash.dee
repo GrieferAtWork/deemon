@@ -31,11 +31,15 @@ function _Dee_HashSelect(value: string): string {
 	} else {
 		assert value.operator hash() == hash32;
 	}
+#if 1
+	return f"_Dee_HashSelectC({hash32.hex()}, {hash64.hex()})";
+#else
 	return f"_Dee_HashSelect(UINT32_C({
 		hash32.hex()
 	}), UINT64_C({
 		hash64.hex()
 	}))";
+#endif
 }
 
 function define_Dee_HashStr(value: string): string {

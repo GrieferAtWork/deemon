@@ -102,7 +102,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix__symlink_f(size_t argc, DeeObject *c
 PRIVATE DEFINE_KWCMETHOD(posix__symlink, &posix__symlink_f);
 #ifndef POSIX_KWDS_TEXT_PATH_DEFINED
 #define POSIX_KWDS_TEXT_PATH_DEFINED
-PRIVATE DEFINE_KWLIST(posix_kwds_text_path, { K(text), K(path), KEND });
+PRIVATE DEFINE_KWLIST(posix_kwds_text_path, { KEX("text", 0xc624ae24, 0x2a28a0084dd3a743), KEX("path", 0x1ab74e01, 0xc2dd5992f362b3c4), KEND });
 #endif /* !POSIX_KWDS_TEXT_PATH_DEFINED */
 PRIVATE WUNUSED DREF DeeObject *DCALL posix__symlink_f(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	DeeObject *text;
@@ -225,7 +225,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix__fsymlinkat_f(size_t argc, DeeObject
 PRIVATE DEFINE_KWCMETHOD(posix__fsymlinkat, &posix__fsymlinkat_f);
 #ifndef POSIX_KWDS_TEXT_DFD_PATH_ATFLAGS_DEFINED
 #define POSIX_KWDS_TEXT_DFD_PATH_ATFLAGS_DEFINED
-PRIVATE DEFINE_KWLIST(posix_kwds_text_dfd_path_atflags, { K(text), K(dfd), K(path), K(atflags), KEND });
+PRIVATE DEFINE_KWLIST(posix_kwds_text_dfd_path_atflags, { KEX("text", 0xc624ae24, 0x2a28a0084dd3a743), KEX("dfd", 0x1c30614d, 0x6edb9568429a136f), KEX("path", 0x1ab74e01, 0xc2dd5992f362b3c4), KEX("atflags", 0x250a5b0d, 0x79142af6dc89e37c), KEND });
 #endif /* !POSIX_KWDS_TEXT_DFD_PATH_ATFLAGS_DEFINED */
 PRIVATE WUNUSED DREF DeeObject *DCALL posix__fsymlinkat_f(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	DeeObject *text;
@@ -333,7 +333,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix__symlinkat_f(size_t argc, DeeObject 
 PRIVATE DEFINE_KWCMETHOD(posix__symlinkat, &posix__symlinkat_f);
 #ifndef POSIX_KWDS_TEXT_DFD_PATH_DEFINED
 #define POSIX_KWDS_TEXT_DFD_PATH_DEFINED
-PRIVATE DEFINE_KWLIST(posix_kwds_text_dfd_path, { K(text), K(dfd), K(path), KEND });
+PRIVATE DEFINE_KWLIST(posix_kwds_text_dfd_path, { KEX("text", 0xc624ae24, 0x2a28a0084dd3a743), KEX("dfd", 0x1c30614d, 0x6edb9568429a136f), KEX("path", 0x1ab74e01, 0xc2dd5992f362b3c4), KEND });
 #endif /* !POSIX_KWDS_TEXT_DFD_PATH_DEFINED */
 PRIVATE WUNUSED DREF DeeObject *DCALL posix__symlinkat_f(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	DeeObject *text;
@@ -434,7 +434,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix_symlink_f(size_t argc, DeeObject *co
 PRIVATE DEFINE_KWCMETHOD(posix_symlink, &posix_symlink_f);
 #ifndef POSIX_KWDS_TEXT_PATH_DEFINED
 #define POSIX_KWDS_TEXT_PATH_DEFINED
-PRIVATE DEFINE_KWLIST(posix_kwds_text_path, { K(text), K(path), KEND });
+PRIVATE DEFINE_KWLIST(posix_kwds_text_path, { KEX("text", 0xc624ae24, 0x2a28a0084dd3a743), KEX("path", 0x1ab74e01, 0xc2dd5992f362b3c4), KEND });
 #endif /* !POSIX_KWDS_TEXT_PATH_DEFINED */
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_symlink_f(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	DeeObject *text;
@@ -467,7 +467,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix_fsymlinkat_f(size_t argc, DeeObject 
 PRIVATE DEFINE_KWCMETHOD(posix_fsymlinkat, &posix_fsymlinkat_f);
 #ifndef POSIX_KWDS_TEXT_DFD_PATH_ATFLAGS_DEFINED
 #define POSIX_KWDS_TEXT_DFD_PATH_ATFLAGS_DEFINED
-PRIVATE DEFINE_KWLIST(posix_kwds_text_dfd_path_atflags, { K(text), K(dfd), K(path), K(atflags), KEND });
+PRIVATE DEFINE_KWLIST(posix_kwds_text_dfd_path_atflags, { KEX("text", 0xc624ae24, 0x2a28a0084dd3a743), KEX("dfd", 0x1c30614d, 0x6edb9568429a136f), KEX("path", 0x1ab74e01, 0xc2dd5992f362b3c4), KEX("atflags", 0x250a5b0d, 0x79142af6dc89e37c), KEND });
 #endif /* !POSIX_KWDS_TEXT_DFD_PATH_ATFLAGS_DEFINED */
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_fsymlinkat_f(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	DeeObject *text;
@@ -502,7 +502,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix_symlinkat_f(size_t argc, DeeObject *
 PRIVATE DEFINE_KWCMETHOD(posix_symlinkat, &posix_symlinkat_f);
 #ifndef POSIX_KWDS_TEXT_DFD_PATH_DEFINED
 #define POSIX_KWDS_TEXT_DFD_PATH_DEFINED
-PRIVATE DEFINE_KWLIST(posix_kwds_text_dfd_path, { K(text), K(dfd), K(path), KEND });
+PRIVATE DEFINE_KWLIST(posix_kwds_text_dfd_path, { KEX("text", 0xc624ae24, 0x2a28a0084dd3a743), KEX("dfd", 0x1c30614d, 0x6edb9568429a136f), KEX("path", 0x1ab74e01, 0xc2dd5992f362b3c4), KEND });
 #endif /* !POSIX_KWDS_TEXT_DFD_PATH_DEFINED */
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_symlinkat_f(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	DeeObject *text;

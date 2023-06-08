@@ -52,48 +52,48 @@ public:
 public:
 /*[[[deemon (CxxType from rt.gen.cxxapi)(Iterator from deemon).printCxxApi(templateParameters: { "T" });]]]*/
 	WUNUSED Ref<T> (next)() {
-		return inherit(DeeObject_CallAttrStringHash(this, "next", _Dee_HashSelect(UINT32_C(0x7e5e1569), UINT64_C(0x2a31f6a650652d33)), 0, NULL));
+		return inherit(DeeObject_CallAttrStringHash(this, "next", _Dee_HashSelectC(0x7e5e1569, 0x2a31f6a650652d33), 0, NULL));
 	}
 	WUNUSED NONNULL_CXX((1)) Ref<T> (next)(DeeObject *defl) {
 		DeeObject *args[1];
 		args[0] = defl;
-		return inherit(DeeObject_CallAttrStringHash(this, "next", _Dee_HashSelect(UINT32_C(0x7e5e1569), UINT64_C(0x2a31f6a650652d33)), 1, args));
+		return inherit(DeeObject_CallAttrStringHash(this, "next", _Dee_HashSelectC(0x7e5e1569, 0x2a31f6a650652d33), 1, args));
 	}
 	WUNUSED Ref<T> (peek)() {
-		return inherit(DeeObject_CallAttrStringHash(this, "peek", _Dee_HashSelect(UINT32_C(0xb2ae48a2), UINT64_C(0xcc667a4d924a91f8)), 0, NULL));
+		return inherit(DeeObject_CallAttrStringHash(this, "peek", _Dee_HashSelectC(0xb2ae48a2, 0xcc667a4d924a91f8), 0, NULL));
 	}
 	WUNUSED NONNULL_CXX((1)) Ref<T> (peek)(DeeObject *defl) {
 		DeeObject *args[1];
 		args[0] = defl;
-		return inherit(DeeObject_CallAttrStringHash(this, "peek", _Dee_HashSelect(UINT32_C(0xb2ae48a2), UINT64_C(0xcc667a4d924a91f8)), 1, args));
+		return inherit(DeeObject_CallAttrStringHash(this, "peek", _Dee_HashSelectC(0xb2ae48a2, 0xcc667a4d924a91f8), 1, args));
 	}
 	WUNUSED Ref<deemon::bool_> (prev)() {
-		return inherit(DeeObject_CallAttrStringHash(this, "prev", _Dee_HashSelect(UINT32_C(0xeb31683d), UINT64_C(0x7487ec947044729e)), 0, NULL));
+		return inherit(DeeObject_CallAttrStringHash(this, "prev", _Dee_HashSelectC(0xeb31683d, 0x7487ec947044729e), 0, NULL));
 	}
 	void (rewind)() {
-		decref(throw_if_null(DeeObject_CallAttrStringHash(this, "rewind", _Dee_HashSelect(UINT32_C(0x2ab1b235), UINT64_C(0xa35b8bb3941ca25f)), 0, NULL)));
+		decref(throw_if_null(DeeObject_CallAttrStringHash(this, "rewind", _Dee_HashSelectC(0x2ab1b235, 0xa35b8bb3941ca25f), 0, NULL)));
 	}
 	NONNULL_CXX((1)) void (revert)(DeeObject *step) {
 		DeeObject *args[1];
 		args[0] = step;
-		decref(throw_if_null(DeeObject_CallAttrStringHash(this, "revert", _Dee_HashSelect(UINT32_C(0x98ca826), UINT64_C(0x626b4fca0d39dcf2)), 1, args)));
+		decref(throw_if_null(DeeObject_CallAttrStringHash(this, "revert", _Dee_HashSelectC(0x98ca826, 0x626b4fca0d39dcf2), 1, args)));
 	}
 	void (revert)(Dee_ssize_t step) {
-		decref(throw_if_null(DeeObject_CallAttrStringHashf(this, "revert", _Dee_HashSelect(UINT32_C(0x98ca826), UINT64_C(0x626b4fca0d39dcf2)),  DEE_PCKdSIZ, step)));
+		decref(throw_if_null(DeeObject_CallAttrStringHashf(this, "revert", _Dee_HashSelectC(0x98ca826, 0x626b4fca0d39dcf2),  DEE_PCKdSIZ, step)));
 	}
 	void (revert)(size_t step) {
-		decref(throw_if_null(DeeObject_CallAttrStringHashf(this, "revert", _Dee_HashSelect(UINT32_C(0x98ca826), UINT64_C(0x626b4fca0d39dcf2)),  DEE_PCKuSIZ, step)));
+		decref(throw_if_null(DeeObject_CallAttrStringHashf(this, "revert", _Dee_HashSelectC(0x98ca826, 0x626b4fca0d39dcf2),  DEE_PCKuSIZ, step)));
 	}
 	NONNULL_CXX((1)) void (advance)(DeeObject *step) {
 		DeeObject *args[1];
 		args[0] = step;
-		decref(throw_if_null(DeeObject_CallAttrStringHash(this, "advance", _Dee_HashSelect(UINT32_C(0xdd1157a0), UINT64_C(0x8667ad2c6ab8d35d)), 1, args)));
+		decref(throw_if_null(DeeObject_CallAttrStringHash(this, "advance", _Dee_HashSelectC(0xdd1157a0, 0x8667ad2c6ab8d35d), 1, args)));
 	}
 	void (advance)(Dee_ssize_t step) {
-		decref(throw_if_null(DeeObject_CallAttrStringHashf(this, "advance", _Dee_HashSelect(UINT32_C(0xdd1157a0), UINT64_C(0x8667ad2c6ab8d35d)),  DEE_PCKdSIZ, step)));
+		decref(throw_if_null(DeeObject_CallAttrStringHashf(this, "advance", _Dee_HashSelectC(0xdd1157a0, 0x8667ad2c6ab8d35d),  DEE_PCKdSIZ, step)));
 	}
 	void (advance)(size_t step) {
-		decref(throw_if_null(DeeObject_CallAttrStringHashf(this, "advance", _Dee_HashSelect(UINT32_C(0xdd1157a0), UINT64_C(0x8667ad2c6ab8d35d)),  DEE_PCKuSIZ, step)));
+		decref(throw_if_null(DeeObject_CallAttrStringHashf(this, "advance", _Dee_HashSelectC(0xdd1157a0, 0x8667ad2c6ab8d35d),  DEE_PCKuSIZ, step)));
 	}
 	class _Wrap_seq
 		: public deemon::detail::ConstGetRefProxy<_Wrap_seq, Sequence<T> > {
@@ -103,10 +103,10 @@ public:
 		_Wrap_seq(DeeObject *self) DEE_CXX_NOTHROW
 			: m_self(self) {}
 		WUNUSED DREF DeeObject *_getref() const DEE_CXX_NOTHROW {
-			return DeeObject_GetAttrStringHash(m_self, "seq", _Dee_HashSelect(UINT32_C(0x232af2b7), UINT64_C(0x80a0b0950a5a5251)));
+			return DeeObject_GetAttrStringHash(m_self, "seq", _Dee_HashSelectC(0x232af2b7, 0x80a0b0950a5a5251));
 		}
 		WUNUSED bool bound() const {
-			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "seq", _Dee_HashSelect(UINT32_C(0x232af2b7), UINT64_C(0x80a0b0950a5a5251))));
+			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "seq", _Dee_HashSelectC(0x232af2b7, 0x80a0b0950a5a5251)));
 		}
 	};
 	WUNUSED _Wrap_seq (seq)() {
@@ -120,10 +120,10 @@ public:
 		_Wrap_future(DeeObject *self) DEE_CXX_NOTHROW
 			: m_self(self) {}
 		WUNUSED DREF DeeObject *_getref() const DEE_CXX_NOTHROW {
-			return DeeObject_GetAttrStringHash(m_self, "future", _Dee_HashSelect(UINT32_C(0x5ca3159c), UINT64_C(0x8ab2926ab5959525)));
+			return DeeObject_GetAttrStringHash(m_self, "future", _Dee_HashSelectC(0x5ca3159c, 0x8ab2926ab5959525));
 		}
 		WUNUSED bool bound() const {
-			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "future", _Dee_HashSelect(UINT32_C(0x5ca3159c), UINT64_C(0x8ab2926ab5959525))));
+			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "future", _Dee_HashSelectC(0x5ca3159c, 0x8ab2926ab5959525)));
 		}
 	};
 	WUNUSED _Wrap_future (future)() {
@@ -137,10 +137,10 @@ public:
 		_Wrap_pending(DeeObject *self) DEE_CXX_NOTHROW
 			: m_self(self) {}
 		WUNUSED DREF DeeObject *_getref() const DEE_CXX_NOTHROW {
-			return DeeObject_GetAttrStringHash(m_self, "pending", _Dee_HashSelect(UINT32_C(0xa318502a), UINT64_C(0x9f3f699bf5a1e785)));
+			return DeeObject_GetAttrStringHash(m_self, "pending", _Dee_HashSelectC(0xa318502a, 0x9f3f699bf5a1e785));
 		}
 		WUNUSED bool bound() const {
-			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "pending", _Dee_HashSelect(UINT32_C(0xa318502a), UINT64_C(0x9f3f699bf5a1e785))));
+			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "pending", _Dee_HashSelectC(0xa318502a, 0x9f3f699bf5a1e785)));
 		}
 	};
 	WUNUSED _Wrap_pending (pending)() {
@@ -154,10 +154,10 @@ public:
 		_Wrap_isbidirectional(DeeObject *self) DEE_CXX_NOTHROW
 			: m_self(self) {}
 		WUNUSED DREF DeeObject *_getref() const DEE_CXX_NOTHROW {
-			return DeeObject_GetAttrStringHash(m_self, "isbidirectional", _Dee_HashSelect(UINT32_C(0x11d9fc36), UINT64_C(0x192134b5c30b96b7)));
+			return DeeObject_GetAttrStringHash(m_self, "isbidirectional", _Dee_HashSelectC(0x11d9fc36, 0x192134b5c30b96b7));
 		}
 		WUNUSED bool bound() const {
-			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "isbidirectional", _Dee_HashSelect(UINT32_C(0x11d9fc36), UINT64_C(0x192134b5c30b96b7))));
+			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "isbidirectional", _Dee_HashSelectC(0x11d9fc36, 0x192134b5c30b96b7)));
 		}
 	};
 	WUNUSED _Wrap_isbidirectional (isbidirectional)() {
@@ -171,10 +171,10 @@ public:
 		_Wrap_hasprev(DeeObject *self) DEE_CXX_NOTHROW
 			: m_self(self) {}
 		WUNUSED DREF DeeObject *_getref() const DEE_CXX_NOTHROW {
-			return DeeObject_GetAttrStringHash(m_self, "hasprev", _Dee_HashSelect(UINT32_C(0xe7e8f3c), UINT64_C(0x17b364986c9ecd3b)));
+			return DeeObject_GetAttrStringHash(m_self, "hasprev", _Dee_HashSelectC(0xe7e8f3c, 0x17b364986c9ecd3b));
 		}
 		WUNUSED bool bound() const {
-			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "hasprev", _Dee_HashSelect(UINT32_C(0xe7e8f3c), UINT64_C(0x17b364986c9ecd3b))));
+			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "hasprev", _Dee_HashSelectC(0xe7e8f3c, 0x17b364986c9ecd3b)));
 		}
 	};
 	WUNUSED _Wrap_hasprev (hasprev)() {
@@ -188,10 +188,10 @@ public:
 		_Wrap_hasnext(DeeObject *self) DEE_CXX_NOTHROW
 			: m_self(self) {}
 		WUNUSED DREF DeeObject *_getref() const DEE_CXX_NOTHROW {
-			return DeeObject_GetAttrStringHash(m_self, "hasnext", _Dee_HashSelect(UINT32_C(0xae2186a8), UINT64_C(0x19d7bd95854b765f)));
+			return DeeObject_GetAttrStringHash(m_self, "hasnext", _Dee_HashSelectC(0xae2186a8, 0x19d7bd95854b765f));
 		}
 		WUNUSED bool bound() const {
-			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "hasnext", _Dee_HashSelect(UINT32_C(0xae2186a8), UINT64_C(0x19d7bd95854b765f))));
+			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "hasnext", _Dee_HashSelectC(0xae2186a8, 0x19d7bd95854b765f)));
 		}
 	};
 	WUNUSED _Wrap_hasnext (hasnext)() {
@@ -207,13 +207,13 @@ public:
 		_Wrap_index(DeeObject *self) DEE_CXX_NOTHROW
 			: m_self(self) {}
 		WUNUSED DREF DeeObject *_getref() const DEE_CXX_NOTHROW {
-			return DeeObject_GetAttrStringHash(m_self, "index", _Dee_HashSelect(UINT32_C(0x77f34f0), UINT64_C(0x440d5888c0ff3081)));
+			return DeeObject_GetAttrStringHash(m_self, "index", _Dee_HashSelectC(0x77f34f0, 0x440d5888c0ff3081));
 		}
 		WUNUSED bool bound() const {
-			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "index", _Dee_HashSelect(UINT32_C(0x77f34f0), UINT64_C(0x440d5888c0ff3081))));
+			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "index", _Dee_HashSelectC(0x77f34f0, 0x440d5888c0ff3081)));
 		}
 		int _setref(DeeObject *value) const DEE_CXX_NOTHROW {
-			return DeeObject_SetAttrStringHash(m_self, "index", _Dee_HashSelect(UINT32_C(0x77f34f0), UINT64_C(0x440d5888c0ff3081)), value);
+			return DeeObject_SetAttrStringHash(m_self, "index", _Dee_HashSelectC(0x77f34f0, 0x440d5888c0ff3081), value);
 		}
 	};
 	WUNUSED _Wrap_index (index)() {

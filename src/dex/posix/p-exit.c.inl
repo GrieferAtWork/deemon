@@ -74,7 +74,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix_atexit_f(size_t argc, DeeObject *con
 PRIVATE DEFINE_KWCMETHOD(posix_atexit, &posix_atexit_f);
 #ifndef POSIX_KWDS_CALLBACK_ARGS_DEFINED
 #define POSIX_KWDS_CALLBACK_ARGS_DEFINED
-PRIVATE DEFINE_KWLIST(posix_kwds_callback_args, { K(callback), K(args), KEND });
+PRIVATE DEFINE_KWLIST(posix_kwds_callback_args, { KEX("callback", 0x3b9dd39e, 0x1e7dd8df6e98f4c6), KEX("args", 0xc6fc997f, 0x4af7cd17f976719e), KEND });
 #endif /* !POSIX_KWDS_CALLBACK_ARGS_DEFINED */
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_atexit_f(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	DeeObject *callback;
@@ -113,7 +113,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix_exit_f(size_t argc, DeeObject *const
 PRIVATE DEFINE_KWCMETHOD(posix_exit, &posix_exit_f);
 #ifndef POSIX_KWDS_EXITCODE_DEFINED
 #define POSIX_KWDS_EXITCODE_DEFINED
-PRIVATE DEFINE_KWLIST(posix_kwds_exitcode, { K(exitcode), KEND });
+PRIVATE DEFINE_KWLIST(posix_kwds_exitcode, { KEX("exitcode", 0x79c9d863, 0x3fcba2655ec7fa85), KEND });
 #endif /* !POSIX_KWDS_EXITCODE_DEFINED */
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_exit_f(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	int exitcode;
@@ -146,7 +146,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix__Exit_f(size_t argc, DeeObject *cons
 PRIVATE DEFINE_KWCMETHOD(posix__Exit, &posix__Exit_f);
 #ifndef POSIX_KWDS_EXITCODE_DEFINED
 #define POSIX_KWDS_EXITCODE_DEFINED
-PRIVATE DEFINE_KWLIST(posix_kwds_exitcode, { K(exitcode), KEND });
+PRIVATE DEFINE_KWLIST(posix_kwds_exitcode, { KEX("exitcode", 0x79c9d863, 0x3fcba2655ec7fa85), KEND });
 #endif /* !POSIX_KWDS_EXITCODE_DEFINED */
 PRIVATE WUNUSED DREF DeeObject *DCALL posix__Exit_f(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	int exitcode;

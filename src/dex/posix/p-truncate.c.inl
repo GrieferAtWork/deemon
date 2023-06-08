@@ -287,7 +287,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix_truncate_f(size_t argc, DeeObject *c
 PRIVATE DEFINE_KWCMETHOD(posix_truncate, &posix_truncate_f);
 #ifndef POSIX_KWDS_PATH_LENGTH_DEFINED
 #define POSIX_KWDS_PATH_LENGTH_DEFINED
-PRIVATE DEFINE_KWLIST(posix_kwds_path_length, { K(path), K(length), KEND });
+PRIVATE DEFINE_KWLIST(posix_kwds_path_length, { KEX("path", 0x1ab74e01, 0xc2dd5992f362b3c4), KEX("length", 0xecef0c1, 0x2993e8eb119cab21), KEND });
 #endif /* !POSIX_KWDS_PATH_LENGTH_DEFINED */
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_truncate_f(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	DeeObject *path;
@@ -376,7 +376,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix_ftruncate_f(size_t argc, DeeObject *
 PRIVATE DEFINE_KWCMETHOD(posix_ftruncate, &posix_ftruncate_f);
 #ifndef POSIX_KWDS_FD_LENGTH_DEFINED
 #define POSIX_KWDS_FD_LENGTH_DEFINED
-PRIVATE DEFINE_KWLIST(posix_kwds_fd_length, { K(fd), K(length), KEND });
+PRIVATE DEFINE_KWLIST(posix_kwds_fd_length, { KEX("fd", 0x10561ad6, 0xce2e588d84c6793), KEX("length", 0xecef0c1, 0x2993e8eb119cab21), KEND });
 #endif /* !POSIX_KWDS_FD_LENGTH_DEFINED */
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_ftruncate_f(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	DeeObject *fd;
@@ -467,7 +467,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix_ftruncateat_f(size_t argc, DeeObject
 PRIVATE DEFINE_KWCMETHOD(posix_ftruncateat, &posix_ftruncateat_f);
 #ifndef POSIX_KWDS_DFD_PATH_LENGTH_ATFLAGS_DEFINED
 #define POSIX_KWDS_DFD_PATH_LENGTH_ATFLAGS_DEFINED
-PRIVATE DEFINE_KWLIST(posix_kwds_dfd_path_length_atflags, { K(dfd), K(path), K(length), K(atflags), KEND });
+PRIVATE DEFINE_KWLIST(posix_kwds_dfd_path_length_atflags, { KEX("dfd", 0x1c30614d, 0x6edb9568429a136f), KEX("path", 0x1ab74e01, 0xc2dd5992f362b3c4), KEX("length", 0xecef0c1, 0x2993e8eb119cab21), KEX("atflags", 0x250a5b0d, 0x79142af6dc89e37c), KEND });
 #endif /* !POSIX_KWDS_DFD_PATH_LENGTH_ATFLAGS_DEFINED */
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_ftruncateat_f(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	DeeObject *dfd;
@@ -523,7 +523,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix_truncateat_f(size_t argc, DeeObject 
 PRIVATE DEFINE_KWCMETHOD(posix_truncateat, &posix_truncateat_f);
 #ifndef POSIX_KWDS_DFD_PATH_LENGTH_DEFINED
 #define POSIX_KWDS_DFD_PATH_LENGTH_DEFINED
-PRIVATE DEFINE_KWLIST(posix_kwds_dfd_path_length, { K(dfd), K(path), K(length), KEND });
+PRIVATE DEFINE_KWLIST(posix_kwds_dfd_path_length, { KEX("dfd", 0x1c30614d, 0x6edb9568429a136f), KEX("path", 0x1ab74e01, 0xc2dd5992f362b3c4), KEX("length", 0xecef0c1, 0x2993e8eb119cab21), KEND });
 #endif /* !POSIX_KWDS_DFD_PATH_LENGTH_DEFINED */
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_truncateat_f(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	DeeObject *dfd;

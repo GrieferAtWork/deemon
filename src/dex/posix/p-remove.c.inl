@@ -150,7 +150,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix_unlink_f(size_t argc, DeeObject *con
 PRIVATE DEFINE_KWCMETHOD(posix_unlink, &posix_unlink_f);
 #ifndef POSIX_KWDS_FILE_DEFINED
 #define POSIX_KWDS_FILE_DEFINED
-PRIVATE DEFINE_KWLIST(posix_kwds_file, { K(file), KEND });
+PRIVATE DEFINE_KWLIST(posix_kwds_file, { KEX("file", 0x1a11b2b3, 0x612e37678ce7db5b), KEND });
 #endif /* !POSIX_KWDS_FILE_DEFINED */
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_unlink_f(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	DeeObject *file;
@@ -279,7 +279,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix_rmdir_f(size_t argc, DeeObject *cons
 PRIVATE DEFINE_KWCMETHOD(posix_rmdir, &posix_rmdir_f);
 #ifndef POSIX_KWDS_PATH_DEFINED
 #define POSIX_KWDS_PATH_DEFINED
-PRIVATE DEFINE_KWLIST(posix_kwds_path, { K(path), KEND });
+PRIVATE DEFINE_KWLIST(posix_kwds_path, { KEX("path", 0x1ab74e01, 0xc2dd5992f362b3c4), KEND });
 #endif /* !POSIX_KWDS_PATH_DEFINED */
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_rmdir_f(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	DeeObject *path;
@@ -372,7 +372,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix_remove_f(size_t argc, DeeObject *con
 PRIVATE DEFINE_KWCMETHOD(posix_remove, &posix_remove_f);
 #ifndef POSIX_KWDS_PATH_DEFINED
 #define POSIX_KWDS_PATH_DEFINED
-PRIVATE DEFINE_KWLIST(posix_kwds_path, { K(path), KEND });
+PRIVATE DEFINE_KWLIST(posix_kwds_path, { KEX("path", 0x1ab74e01, 0xc2dd5992f362b3c4), KEND });
 #endif /* !POSIX_KWDS_PATH_DEFINED */
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_remove_f(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	DeeObject *path;
@@ -587,7 +587,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix_unlinkat_f(size_t argc, DeeObject *c
 PRIVATE DEFINE_KWCMETHOD(posix_unlinkat, &posix_unlinkat_f);
 #ifndef POSIX_KWDS_DFD_FILE_ATFLAGS_DEFINED
 #define POSIX_KWDS_DFD_FILE_ATFLAGS_DEFINED
-PRIVATE DEFINE_KWLIST(posix_kwds_dfd_file_atflags, { K(dfd), K(file), K(atflags), KEND });
+PRIVATE DEFINE_KWLIST(posix_kwds_dfd_file_atflags, { KEX("dfd", 0x1c30614d, 0x6edb9568429a136f), KEX("file", 0x1a11b2b3, 0x612e37678ce7db5b), KEX("atflags", 0x250a5b0d, 0x79142af6dc89e37c), KEND });
 #endif /* !POSIX_KWDS_DFD_FILE_ATFLAGS_DEFINED */
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_unlinkat_f(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	DeeObject *dfd;
@@ -665,7 +665,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix_removeat_f(size_t argc, DeeObject *c
 PRIVATE DEFINE_KWCMETHOD(posix_removeat, &posix_removeat_f);
 #ifndef POSIX_KWDS_DFD_PATH_ATFLAGS_DEFINED
 #define POSIX_KWDS_DFD_PATH_ATFLAGS_DEFINED
-PRIVATE DEFINE_KWLIST(posix_kwds_dfd_path_atflags, { K(dfd), K(path), K(atflags), KEND });
+PRIVATE DEFINE_KWLIST(posix_kwds_dfd_path_atflags, { KEX("dfd", 0x1c30614d, 0x6edb9568429a136f), KEX("path", 0x1ab74e01, 0xc2dd5992f362b3c4), KEX("atflags", 0x250a5b0d, 0x79142af6dc89e37c), KEND });
 #endif /* !POSIX_KWDS_DFD_PATH_ATFLAGS_DEFINED */
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_removeat_f(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	DeeObject *dfd;
@@ -737,7 +737,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix_rmdirat_f(size_t argc, DeeObject *co
 PRIVATE DEFINE_KWCMETHOD(posix_rmdirat, &posix_rmdirat_f);
 #ifndef POSIX_KWDS_DFD_PATH_ATFLAGS_DEFINED
 #define POSIX_KWDS_DFD_PATH_ATFLAGS_DEFINED
-PRIVATE DEFINE_KWLIST(posix_kwds_dfd_path_atflags, { K(dfd), K(path), K(atflags), KEND });
+PRIVATE DEFINE_KWLIST(posix_kwds_dfd_path_atflags, { KEX("dfd", 0x1c30614d, 0x6edb9568429a136f), KEX("path", 0x1ab74e01, 0xc2dd5992f362b3c4), KEX("atflags", 0x250a5b0d, 0x79142af6dc89e37c), KEND });
 #endif /* !POSIX_KWDS_DFD_PATH_ATFLAGS_DEFINED */
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_rmdirat_f(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	DeeObject *dfd;

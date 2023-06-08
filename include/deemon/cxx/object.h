@@ -3256,341 +3256,341 @@ public:
 
 /*[[[deemon (CxxType from rt.gen.cxxapi)(Object from deemon).printCxxApi(exclude: { "this", "class", "type", "super" });]]]*/
 	WUNUSED Ref<Object> (__copy__)() {
-		return inherit(DeeObject_CallAttrStringHash(this, "__copy__", _Dee_HashSelect(UINT32_C(0xdd5d91cd), UINT64_C(0x3b45880f436d8335)), 0, NULL));
+		return inherit(DeeObject_CallAttrStringHash(this, "__copy__", _Dee_HashSelectC(0xdd5d91cd, 0x3b45880f436d8335), 0, NULL));
 	}
 	WUNUSED Ref<Object> (__deepcopy__)() {
-		return inherit(DeeObject_CallAttrStringHash(this, "__deepcopy__", _Dee_HashSelect(UINT32_C(0xedd98409), UINT64_C(0x2ee5773152024f39)), 0, NULL));
+		return inherit(DeeObject_CallAttrStringHash(this, "__deepcopy__", _Dee_HashSelectC(0xedd98409, 0x2ee5773152024f39), 0, NULL));
 	}
 	WUNUSED NONNULL_CXX((1)) Ref<Object> (__assign__)(DeeObject *other) {
 		DeeObject *args[1];
 		args[0] = other;
-		return inherit(DeeObject_CallAttrStringHash(this, "__assign__", _Dee_HashSelect(UINT32_C(0x1fe4d78d), UINT64_C(0x874637496b0b0a2d)), 1, args));
+		return inherit(DeeObject_CallAttrStringHash(this, "__assign__", _Dee_HashSelectC(0x1fe4d78d, 0x874637496b0b0a2d), 1, args));
 	}
 	WUNUSED NONNULL_CXX((1)) Ref<Object> (__moveassign__)(DeeObject *other) {
 		DeeObject *args[1];
 		args[0] = other;
-		return inherit(DeeObject_CallAttrStringHash(this, "__moveassign__", _Dee_HashSelect(UINT32_C(0x45785caa), UINT64_C(0x3ef73258381466b4)), 1, args));
+		return inherit(DeeObject_CallAttrStringHash(this, "__moveassign__", _Dee_HashSelectC(0x45785caa, 0x3ef73258381466b4), 1, args));
 	}
 	WUNUSED Ref<string> (__str__)() {
-		return inherit(DeeObject_CallAttrStringHash(this, "__str__", _Dee_HashSelect(UINT32_C(0xbcdfcf00), UINT64_C(0xc0caa980438eff23)), 0, NULL));
+		return inherit(DeeObject_CallAttrStringHash(this, "__str__", _Dee_HashSelectC(0xbcdfcf00, 0xc0caa980438eff23), 0, NULL));
 	}
 	WUNUSED Ref<string> (__repr__)() {
-		return inherit(DeeObject_CallAttrStringHash(this, "__repr__", _Dee_HashSelect(UINT32_C(0x5c5d08ce), UINT64_C(0xfdc7945465f9ede7)), 0, NULL));
+		return inherit(DeeObject_CallAttrStringHash(this, "__repr__", _Dee_HashSelectC(0x5c5d08ce, 0xfdc7945465f9ede7), 0, NULL));
 	}
 	WUNUSED Ref<deemon::bool_> (__bool__)() {
-		return inherit(DeeObject_CallAttrStringHash(this, "__bool__", _Dee_HashSelect(UINT32_C(0x1d6e29c8), UINT64_C(0x7d5655cb5b8aa88b)), 0, NULL));
+		return inherit(DeeObject_CallAttrStringHash(this, "__bool__", _Dee_HashSelectC(0x1d6e29c8, 0x7d5655cb5b8aa88b), 0, NULL));
 	}
 	WUNUSED NONNULL_CXX((1)) Ref<Object> (__call__)(DeeObject *args) {
 		DeeObject *args_[1];
 		args_[0] = args;
-		return inherit(DeeObject_CallAttrStringHash(this, "__call__", _Dee_HashSelect(UINT32_C(0xbf1484cd), UINT64_C(0x98fac865489cd2e0)), 1, args_));
+		return inherit(DeeObject_CallAttrStringHash(this, "__call__", _Dee_HashSelectC(0xbf1484cd, 0x98fac865489cd2e0), 1, args_));
 	}
 	WUNUSED NONNULL_CXX((1, 2)) Ref<Object> (__thiscall__)(DeeObject *this_arg, DeeObject *args) {
 		DeeObject *args_[2];
 		args_[0] = this_arg;
 		args_[1] = args;
-		return inherit(DeeObject_CallAttrStringHash(this, "__thiscall__", _Dee_HashSelect(UINT32_C(0xb621cbeb), UINT64_C(0x1f66fa1159253519)), 2, args_));
+		return inherit(DeeObject_CallAttrStringHash(this, "__thiscall__", _Dee_HashSelectC(0xb621cbeb, 0x1f66fa1159253519), 2, args_));
 	}
 	WUNUSED Ref<deemon::int_> (__hash__)() {
-		return inherit(DeeObject_CallAttrStringHash(this, "__hash__", _Dee_HashSelect(UINT32_C(0xc088645e), UINT64_C(0xbc5b5b1504b9d2d8)), 0, NULL));
+		return inherit(DeeObject_CallAttrStringHash(this, "__hash__", _Dee_HashSelectC(0xc088645e, 0xbc5b5b1504b9d2d8), 0, NULL));
 	}
 	WUNUSED Ref<deemon::int_> (__int__)() {
-		return inherit(DeeObject_CallAttrStringHash(this, "__int__", _Dee_HashSelect(UINT32_C(0x5400020e), UINT64_C(0xf79c54cf51ffa1f8)), 0, NULL));
+		return inherit(DeeObject_CallAttrStringHash(this, "__int__", _Dee_HashSelectC(0x5400020e, 0xf79c54cf51ffa1f8), 0, NULL));
 	}
 	WUNUSED Ref<Object> (__inv__)() {
-		return inherit(DeeObject_CallAttrStringHash(this, "__inv__", _Dee_HashSelect(UINT32_C(0x63d81258), UINT64_C(0xef0370cd96d93e7e)), 0, NULL));
+		return inherit(DeeObject_CallAttrStringHash(this, "__inv__", _Dee_HashSelectC(0x63d81258, 0xef0370cd96d93e7e), 0, NULL));
 	}
 	WUNUSED Ref<Object> (__pos__)() {
-		return inherit(DeeObject_CallAttrStringHash(this, "__pos__", _Dee_HashSelect(UINT32_C(0x108c10b3), UINT64_C(0xad88142ae7345f59)), 0, NULL));
+		return inherit(DeeObject_CallAttrStringHash(this, "__pos__", _Dee_HashSelectC(0x108c10b3, 0xad88142ae7345f59), 0, NULL));
 	}
 	WUNUSED Ref<Object> (__neg__)() {
-		return inherit(DeeObject_CallAttrStringHash(this, "__neg__", _Dee_HashSelect(UINT32_C(0x2b34a59d), UINT64_C(0xbbdf80da78d5b0ee)), 0, NULL));
+		return inherit(DeeObject_CallAttrStringHash(this, "__neg__", _Dee_HashSelectC(0x2b34a59d, 0xbbdf80da78d5b0ee), 0, NULL));
 	}
 	WUNUSED NONNULL_CXX((1)) Ref<Object> (__add__)(DeeObject *other) {
 		DeeObject *args[1];
 		args[0] = other;
-		return inherit(DeeObject_CallAttrStringHash(this, "__add__", _Dee_HashSelect(UINT32_C(0x5cb4d11a), UINT64_C(0x6f33a2bc44b51c54)), 1, args));
+		return inherit(DeeObject_CallAttrStringHash(this, "__add__", _Dee_HashSelectC(0x5cb4d11a, 0x6f33a2bc44b51c54), 1, args));
 	}
 	WUNUSED NONNULL_CXX((1)) Ref<Object> (__sub__)(DeeObject *other) {
 		DeeObject *args[1];
 		args[0] = other;
-		return inherit(DeeObject_CallAttrStringHash(this, "__sub__", _Dee_HashSelect(UINT32_C(0xc2239a1e), UINT64_C(0xd91dc2370225ae2f)), 1, args));
+		return inherit(DeeObject_CallAttrStringHash(this, "__sub__", _Dee_HashSelectC(0xc2239a1e, 0xd91dc2370225ae2f), 1, args));
 	}
 	WUNUSED NONNULL_CXX((1)) Ref<Object> (__mul__)(DeeObject *other) {
 		DeeObject *args[1];
 		args[0] = other;
-		return inherit(DeeObject_CallAttrStringHash(this, "__mul__", _Dee_HashSelect(UINT32_C(0x51c62b13), UINT64_C(0x7e793c85424d924c)), 1, args));
+		return inherit(DeeObject_CallAttrStringHash(this, "__mul__", _Dee_HashSelectC(0x51c62b13, 0x7e793c85424d924c), 1, args));
 	}
 	WUNUSED NONNULL_CXX((1)) Ref<Object> (__div__)(DeeObject *other) {
 		DeeObject *args[1];
 		args[0] = other;
-		return inherit(DeeObject_CallAttrStringHash(this, "__div__", _Dee_HashSelect(UINT32_C(0x5b814977), UINT64_C(0x4a50b3e0b859e051)), 1, args));
+		return inherit(DeeObject_CallAttrStringHash(this, "__div__", _Dee_HashSelectC(0x5b814977, 0x4a50b3e0b859e051), 1, args));
 	}
 	WUNUSED NONNULL_CXX((1)) Ref<Object> (__mod__)(DeeObject *other) {
 		DeeObject *args[1];
 		args[0] = other;
-		return inherit(DeeObject_CallAttrStringHash(this, "__mod__", _Dee_HashSelect(UINT32_C(0x481c8a3), UINT64_C(0x4f56cb923e40dd8)), 1, args));
+		return inherit(DeeObject_CallAttrStringHash(this, "__mod__", _Dee_HashSelectC(0x481c8a3, 0x4f56cb923e40dd8), 1, args));
 	}
 	WUNUSED NONNULL_CXX((1)) Ref<Object> (__shl__)(DeeObject *other) {
 		DeeObject *args[1];
 		args[0] = other;
-		return inherit(DeeObject_CallAttrStringHash(this, "__shl__", _Dee_HashSelect(UINT32_C(0xca15bfa1), UINT64_C(0x8eb668f22579acf1)), 1, args));
+		return inherit(DeeObject_CallAttrStringHash(this, "__shl__", _Dee_HashSelectC(0xca15bfa1, 0x8eb668f22579acf1), 1, args));
 	}
 	WUNUSED NONNULL_CXX((1)) Ref<Object> (__shr__)(DeeObject *other) {
 		DeeObject *args[1];
 		args[0] = other;
-		return inherit(DeeObject_CallAttrStringHash(this, "__shr__", _Dee_HashSelect(UINT32_C(0xb066ed7b), UINT64_C(0xc3d4cf88459979b3)), 1, args));
+		return inherit(DeeObject_CallAttrStringHash(this, "__shr__", _Dee_HashSelectC(0xb066ed7b, 0xc3d4cf88459979b3), 1, args));
 	}
 	WUNUSED NONNULL_CXX((1)) Ref<Object> (__and__)(DeeObject *other) {
 		DeeObject *args[1];
 		args[0] = other;
-		return inherit(DeeObject_CallAttrStringHash(this, "__and__", _Dee_HashSelect(UINT32_C(0xac39cb48), UINT64_C(0x2b28cb619a45a71e)), 1, args));
+		return inherit(DeeObject_CallAttrStringHash(this, "__and__", _Dee_HashSelectC(0xac39cb48, 0x2b28cb619a45a71e), 1, args));
 	}
 	WUNUSED NONNULL_CXX((1)) Ref<Object> (__or__)(DeeObject *other) {
 		DeeObject *args[1];
 		args[0] = other;
-		return inherit(DeeObject_CallAttrStringHash(this, "__or__", _Dee_HashSelect(UINT32_C(0xf95e054c), UINT64_C(0x2bc6caacde6c129e)), 1, args));
+		return inherit(DeeObject_CallAttrStringHash(this, "__or__", _Dee_HashSelectC(0xf95e054c, 0x2bc6caacde6c129e), 1, args));
 	}
 	WUNUSED NONNULL_CXX((1)) Ref<Object> (__xor__)(DeeObject *other) {
 		DeeObject *args[1];
 		args[0] = other;
-		return inherit(DeeObject_CallAttrStringHash(this, "__xor__", _Dee_HashSelect(UINT32_C(0x7378854c), UINT64_C(0x4a8410f65a74106f)), 1, args));
+		return inherit(DeeObject_CallAttrStringHash(this, "__xor__", _Dee_HashSelectC(0x7378854c, 0x4a8410f65a74106f), 1, args));
 	}
 	WUNUSED NONNULL_CXX((1)) Ref<Object> (__pow__)(DeeObject *other) {
 		DeeObject *args[1];
 		args[0] = other;
-		return inherit(DeeObject_CallAttrStringHash(this, "__pow__", _Dee_HashSelect(UINT32_C(0xe40938b1), UINT64_C(0xefb08d20fe1ec58)), 1, args));
+		return inherit(DeeObject_CallAttrStringHash(this, "__pow__", _Dee_HashSelectC(0xe40938b1, 0xefb08d20fe1ec58), 1, args));
 	}
 	WUNUSED NONNULL_CXX((1)) Ref<Object> (__eq__)(DeeObject *other) {
 		DeeObject *args[1];
 		args[0] = other;
-		return inherit(DeeObject_CallAttrStringHash(this, "__eq__", _Dee_HashSelect(UINT32_C(0x2e15aa28), UINT64_C(0x20311e6561792a00)), 1, args));
+		return inherit(DeeObject_CallAttrStringHash(this, "__eq__", _Dee_HashSelectC(0x2e15aa28, 0x20311e6561792a00), 1, args));
 	}
 	WUNUSED NONNULL_CXX((1)) Ref<Object> (__ne__)(DeeObject *other) {
 		DeeObject *args[1];
 		args[0] = other;
-		return inherit(DeeObject_CallAttrStringHash(this, "__ne__", _Dee_HashSelect(UINT32_C(0x485d961), UINT64_C(0xe9453f35f2aef187)), 1, args));
+		return inherit(DeeObject_CallAttrStringHash(this, "__ne__", _Dee_HashSelectC(0x485d961, 0xe9453f35f2aef187), 1, args));
 	}
 	WUNUSED NONNULL_CXX((1)) Ref<Object> (__lo__)(DeeObject *other) {
 		DeeObject *args[1];
 		args[0] = other;
-		return inherit(DeeObject_CallAttrStringHash(this, "__lo__", _Dee_HashSelect(UINT32_C(0xbd689eba), UINT64_C(0xf2a5e28053b056c9)), 1, args));
+		return inherit(DeeObject_CallAttrStringHash(this, "__lo__", _Dee_HashSelectC(0xbd689eba, 0xf2a5e28053b056c9), 1, args));
 	}
 	WUNUSED NONNULL_CXX((1)) Ref<Object> (__le__)(DeeObject *other) {
 		DeeObject *args[1];
 		args[0] = other;
-		return inherit(DeeObject_CallAttrStringHash(this, "__le__", _Dee_HashSelect(UINT32_C(0xd4e31410), UINT64_C(0xe371879105557498)), 1, args));
+		return inherit(DeeObject_CallAttrStringHash(this, "__le__", _Dee_HashSelectC(0xd4e31410, 0xe371879105557498), 1, args));
 	}
 	WUNUSED NONNULL_CXX((1)) Ref<Object> (__gr__)(DeeObject *other) {
 		DeeObject *args[1];
 		args[0] = other;
-		return inherit(DeeObject_CallAttrStringHash(this, "__gr__", _Dee_HashSelect(UINT32_C(0x8af205e9), UINT64_C(0x3fe2793f689055e5)), 1, args));
+		return inherit(DeeObject_CallAttrStringHash(this, "__gr__", _Dee_HashSelectC(0x8af205e9, 0x3fe2793f689055e5), 1, args));
 	}
 	WUNUSED NONNULL_CXX((1)) Ref<Object> (__ge__)(DeeObject *other) {
 		DeeObject *args[1];
 		args[0] = other;
-		return inherit(DeeObject_CallAttrStringHash(this, "__ge__", _Dee_HashSelect(UINT32_C(0xe467e452), UINT64_C(0xe5ad3ef5f6f17572)), 1, args));
+		return inherit(DeeObject_CallAttrStringHash(this, "__ge__", _Dee_HashSelectC(0xe467e452, 0xe5ad3ef5f6f17572), 1, args));
 	}
 	WUNUSED Ref<Object> (__size__)() {
-		return inherit(DeeObject_CallAttrStringHash(this, "__size__", _Dee_HashSelect(UINT32_C(0x543ba3b5), UINT64_C(0xd416117435cce357)), 0, NULL));
+		return inherit(DeeObject_CallAttrStringHash(this, "__size__", _Dee_HashSelectC(0x543ba3b5, 0xd416117435cce357), 0, NULL));
 	}
 	WUNUSED NONNULL_CXX((1)) Ref<Object> (__contains__)(DeeObject *item) {
 		DeeObject *args[1];
 		args[0] = item;
-		return inherit(DeeObject_CallAttrStringHash(this, "__contains__", _Dee_HashSelect(UINT32_C(0x769af591), UINT64_C(0x80f9234f8000b556)), 1, args));
+		return inherit(DeeObject_CallAttrStringHash(this, "__contains__", _Dee_HashSelectC(0x769af591, 0x80f9234f8000b556), 1, args));
 	}
 	WUNUSED NONNULL_CXX((1)) Ref<Object> (__getitem__)(DeeObject *index) {
 		DeeObject *args[1];
 		args[0] = index;
-		return inherit(DeeObject_CallAttrStringHash(this, "__getitem__", _Dee_HashSelect(UINT32_C(0x2796c7b1), UINT64_C(0x326672bfc335fb3d)), 1, args));
+		return inherit(DeeObject_CallAttrStringHash(this, "__getitem__", _Dee_HashSelectC(0x2796c7b1, 0x326672bfc335fb3d), 1, args));
 	}
 	NONNULL_CXX((1)) void (__delitem__)(DeeObject *index) {
 		DeeObject *args[1];
 		args[0] = index;
-		decref(throw_if_null(DeeObject_CallAttrStringHash(this, "__delitem__", _Dee_HashSelect(UINT32_C(0x20ba3d50), UINT64_C(0x477c6001247177f)), 1, args)));
+		decref(throw_if_null(DeeObject_CallAttrStringHash(this, "__delitem__", _Dee_HashSelectC(0x20ba3d50, 0x477c6001247177f), 1, args)));
 	}
 	WUNUSED NONNULL_CXX((1, 2)) Ref<Object> (__setitem__)(DeeObject *index, DeeObject *value) {
 		DeeObject *args[2];
 		args[0] = index;
 		args[1] = value;
-		return inherit(DeeObject_CallAttrStringHash(this, "__setitem__", _Dee_HashSelect(UINT32_C(0xa12b6584), UINT64_C(0x4f2c202e4a8ee77a)), 2, args));
+		return inherit(DeeObject_CallAttrStringHash(this, "__setitem__", _Dee_HashSelectC(0xa12b6584, 0x4f2c202e4a8ee77a), 2, args));
 	}
 	WUNUSED NONNULL_CXX((1, 2)) Ref<Object> (__getrange__)(DeeObject *start, DeeObject *end) {
 		DeeObject *args[2];
 		args[0] = start;
 		args[1] = end;
-		return inherit(DeeObject_CallAttrStringHash(this, "__getrange__", _Dee_HashSelect(UINT32_C(0x7f22541), UINT64_C(0x53d4d4259a06a055)), 2, args));
+		return inherit(DeeObject_CallAttrStringHash(this, "__getrange__", _Dee_HashSelectC(0x7f22541, 0x53d4d4259a06a055), 2, args));
 	}
 	NONNULL_CXX((1, 2)) void (__delrange__)(DeeObject *start, DeeObject *end) {
 		DeeObject *args[2];
 		args[0] = start;
 		args[1] = end;
-		decref(throw_if_null(DeeObject_CallAttrStringHash(this, "__delrange__", _Dee_HashSelect(UINT32_C(0x685a6ec8), UINT64_C(0xbd7df74412129f9d)), 2, args)));
+		decref(throw_if_null(DeeObject_CallAttrStringHash(this, "__delrange__", _Dee_HashSelectC(0x685a6ec8, 0xbd7df74412129f9d), 2, args)));
 	}
 	WUNUSED NONNULL_CXX((1, 2, 3)) Ref<Object> (__setrange__)(DeeObject *start, DeeObject *end, DeeObject *value) {
 		DeeObject *args[3];
 		args[0] = start;
 		args[1] = end;
 		args[2] = value;
-		return inherit(DeeObject_CallAttrStringHash(this, "__setrange__", _Dee_HashSelect(UINT32_C(0x7f9874f9), UINT64_C(0x9da9fdb9a7e37ce8)), 3, args));
+		return inherit(DeeObject_CallAttrStringHash(this, "__setrange__", _Dee_HashSelectC(0x7f9874f9, 0x9da9fdb9a7e37ce8), 3, args));
 	}
 	WUNUSED Ref<Object> (__iter__)() {
-		return inherit(DeeObject_CallAttrStringHash(this, "__iter__", _Dee_HashSelect(UINT32_C(0x4ae49b3), UINT64_C(0x29df7f8a609cead7)), 0, NULL));
+		return inherit(DeeObject_CallAttrStringHash(this, "__iter__", _Dee_HashSelectC(0x4ae49b3, 0x29df7f8a609cead7), 0, NULL));
 	}
 	WUNUSED Ref<Object> (__next__)() {
-		return inherit(DeeObject_CallAttrStringHash(this, "__next__", _Dee_HashSelect(UINT32_C(0xa1934f1e), UINT64_C(0xe3997be8198920dd)), 0, NULL));
+		return inherit(DeeObject_CallAttrStringHash(this, "__next__", _Dee_HashSelectC(0xa1934f1e, 0xe3997be8198920dd), 0, NULL));
 	}
 	WUNUSED NONNULL_CXX((1)) Ref<Object> (__getattr__)(DeeObject *name) {
 		DeeObject *args[1];
 		args[0] = name;
-		return inherit(DeeObject_CallAttrStringHash(this, "__getattr__", _Dee_HashSelect(UINT32_C(0x59b442c5), UINT64_C(0xdef2290969a1663b)), 1, args));
+		return inherit(DeeObject_CallAttrStringHash(this, "__getattr__", _Dee_HashSelectC(0x59b442c5, 0xdef2290969a1663b), 1, args));
 	}
 	WUNUSED Ref<Object> (__getattr__)(char const *name) {
-		return inherit(DeeObject_CallAttrStringHashf(this, "__getattr__", _Dee_HashSelect(UINT32_C(0x59b442c5), UINT64_C(0xdef2290969a1663b)), "s", name));
+		return inherit(DeeObject_CallAttrStringHashf(this, "__getattr__", _Dee_HashSelectC(0x59b442c5, 0xdef2290969a1663b), "s", name));
 	}
 	WUNUSED NONNULL_CXX((1, 2)) Ref<Object> (__callattr__)(DeeObject *name, DeeObject *args) {
 		DeeObject *args_[2];
 		args_[0] = name;
 		args_[1] = args;
-		return inherit(DeeObject_CallAttrStringHash(this, "__callattr__", _Dee_HashSelect(UINT32_C(0xdb8ad67), UINT64_C(0x55d365851b01ce77)), 2, args_));
+		return inherit(DeeObject_CallAttrStringHash(this, "__callattr__", _Dee_HashSelectC(0xdb8ad67, 0x55d365851b01ce77), 2, args_));
 	}
 	WUNUSED NONNULL_CXX((2)) Ref<Object> (__callattr__)(char const *name, DeeObject *args) {
-		return inherit(DeeObject_CallAttrStringHashf(this, "__callattr__", _Dee_HashSelect(UINT32_C(0xdb8ad67), UINT64_C(0x55d365851b01ce77)), "so", name, args));
+		return inherit(DeeObject_CallAttrStringHashf(this, "__callattr__", _Dee_HashSelectC(0xdb8ad67, 0x55d365851b01ce77), "so", name, args));
 	}
 	WUNUSED NONNULL_CXX((1)) Ref<deemon::bool_> (__hasattr__)(DeeObject *name) {
 		DeeObject *args[1];
 		args[0] = name;
-		return inherit(DeeObject_CallAttrStringHash(this, "__hasattr__", _Dee_HashSelect(UINT32_C(0xca559b90), UINT64_C(0x8e9c1065fc0f38a5)), 1, args));
+		return inherit(DeeObject_CallAttrStringHash(this, "__hasattr__", _Dee_HashSelectC(0xca559b90, 0x8e9c1065fc0f38a5), 1, args));
 	}
 	WUNUSED Ref<deemon::bool_> (__hasattr__)(char const *name) {
-		return inherit(DeeObject_CallAttrStringHashf(this, "__hasattr__", _Dee_HashSelect(UINT32_C(0xca559b90), UINT64_C(0x8e9c1065fc0f38a5)), "s", name));
+		return inherit(DeeObject_CallAttrStringHashf(this, "__hasattr__", _Dee_HashSelectC(0xca559b90, 0x8e9c1065fc0f38a5), "s", name));
 	}
 	NONNULL_CXX((1)) void (__delattr__)(DeeObject *name) {
 		DeeObject *args[1];
 		args[0] = name;
-		decref(throw_if_null(DeeObject_CallAttrStringHash(this, "__delattr__", _Dee_HashSelect(UINT32_C(0x4f3fb870), UINT64_C(0x15b0036f4684d4a7)), 1, args)));
+		decref(throw_if_null(DeeObject_CallAttrStringHash(this, "__delattr__", _Dee_HashSelectC(0x4f3fb870, 0x15b0036f4684d4a7), 1, args)));
 	}
 	void (__delattr__)(char const *name) {
-		decref(throw_if_null(DeeObject_CallAttrStringHashf(this, "__delattr__", _Dee_HashSelect(UINT32_C(0x4f3fb870), UINT64_C(0x15b0036f4684d4a7)), "s", name)));
+		decref(throw_if_null(DeeObject_CallAttrStringHashf(this, "__delattr__", _Dee_HashSelectC(0x4f3fb870, 0x15b0036f4684d4a7), "s", name)));
 	}
 	NONNULL_CXX((1, 2)) void (__setattr__)(DeeObject *name, DeeObject *value) {
 		DeeObject *args[2];
 		args[0] = name;
 		args[1] = value;
-		decref(throw_if_null(DeeObject_CallAttrStringHash(this, "__setattr__", _Dee_HashSelect(UINT32_C(0x8a57f5f3), UINT64_C(0x8f1d3bac859d769d)), 2, args)));
+		decref(throw_if_null(DeeObject_CallAttrStringHash(this, "__setattr__", _Dee_HashSelectC(0x8a57f5f3, 0x8f1d3bac859d769d), 2, args)));
 	}
 	NONNULL_CXX((2)) void (__setattr__)(char const *name, DeeObject *value) {
-		decref(throw_if_null(DeeObject_CallAttrStringHashf(this, "__setattr__", _Dee_HashSelect(UINT32_C(0x8a57f5f3), UINT64_C(0x8f1d3bac859d769d)), "so", name, value)));
+		decref(throw_if_null(DeeObject_CallAttrStringHashf(this, "__setattr__", _Dee_HashSelectC(0x8a57f5f3, 0x8f1d3bac859d769d), "so", name, value)));
 	}
 	WUNUSED Ref<Sequence<Object> > (__enumattr__)() {
-		return inherit(DeeObject_CallAttrStringHash(this, "__enumattr__", _Dee_HashSelect(UINT32_C(0xcd281d49), UINT64_C(0x761caa648b619b9e)), 0, NULL));
+		return inherit(DeeObject_CallAttrStringHash(this, "__enumattr__", _Dee_HashSelectC(0xcd281d49, 0x761caa648b619b9e), 0, NULL));
 	}
 	WUNUSED NONNULL_CXX((1)) Ref<string> (__format__)(DeeObject *format) {
 		DeeObject *args[1];
 		args[0] = format;
-		return inherit(DeeObject_CallAttrStringHash(this, "__format__", _Dee_HashSelect(UINT32_C(0xb59a1ae2), UINT64_C(0xdf14ed3788cde344)), 1, args));
+		return inherit(DeeObject_CallAttrStringHash(this, "__format__", _Dee_HashSelectC(0xb59a1ae2, 0xdf14ed3788cde344), 1, args));
 	}
 	WUNUSED Ref<string> (__format__)(char const *format) {
-		return inherit(DeeObject_CallAttrStringHashf(this, "__format__", _Dee_HashSelect(UINT32_C(0xb59a1ae2), UINT64_C(0xdf14ed3788cde344)), "s", format));
+		return inherit(DeeObject_CallAttrStringHashf(this, "__format__", _Dee_HashSelectC(0xb59a1ae2, 0xdf14ed3788cde344), "s", format));
 	}
 	WUNUSED Ref<Object> (__iterself__)() {
-		return inherit(DeeObject_CallAttrStringHash(this, "__iterself__", _Dee_HashSelect(UINT32_C(0x4daaaed1), UINT64_C(0x5517f97b342fe2c1)), 0, NULL));
+		return inherit(DeeObject_CallAttrStringHash(this, "__iterself__", _Dee_HashSelectC(0x4daaaed1, 0x5517f97b342fe2c1), 0, NULL));
 	}
 	WUNUSED Ref<Object> (__iternext__)() {
-		return inherit(DeeObject_CallAttrStringHash(this, "__iternext__", _Dee_HashSelect(UINT32_C(0x29de3af1), UINT64_C(0xa4832d636bd81d42)), 0, NULL));
+		return inherit(DeeObject_CallAttrStringHash(this, "__iternext__", _Dee_HashSelectC(0x29de3af1, 0xa4832d636bd81d42), 0, NULL));
 	}
 	WUNUSED Ref<Object> (__move__)() {
-		return inherit(DeeObject_CallAttrStringHash(this, "__move__", _Dee_HashSelect(UINT32_C(0xa04fc316), UINT64_C(0x9e97bf092c9c90d2)), 0, NULL));
+		return inherit(DeeObject_CallAttrStringHash(this, "__move__", _Dee_HashSelectC(0xa04fc316, 0x9e97bf092c9c90d2), 0, NULL));
 	}
 	WUNUSED NONNULL_CXX((1)) Ref<Object> (__lt__)(DeeObject *other) {
 		DeeObject *args[1];
 		args[0] = other;
-		return inherit(DeeObject_CallAttrStringHash(this, "__lt__", _Dee_HashSelect(UINT32_C(0x121ff95f), UINT64_C(0x3a902a00b1c281dc)), 1, args));
+		return inherit(DeeObject_CallAttrStringHash(this, "__lt__", _Dee_HashSelectC(0x121ff95f, 0x3a902a00b1c281dc), 1, args));
 	}
 	WUNUSED NONNULL_CXX((1)) Ref<Object> (__gt__)(DeeObject *other) {
 		DeeObject *args[1];
 		args[0] = other;
-		return inherit(DeeObject_CallAttrStringHash(this, "__gt__", _Dee_HashSelect(UINT32_C(0x17d0ec4e), UINT64_C(0x27b68eacce43548b)), 1, args));
+		return inherit(DeeObject_CallAttrStringHash(this, "__gt__", _Dee_HashSelectC(0x17d0ec4e, 0x27b68eacce43548b), 1, args));
 	}
 	WUNUSED Ref<deemon::bool_> (__not__)() {
-		return inherit(DeeObject_CallAttrStringHash(this, "__not__", _Dee_HashSelect(UINT32_C(0x649d0c36), UINT64_C(0x2c7779d2eeb10015)), 0, NULL));
+		return inherit(DeeObject_CallAttrStringHash(this, "__not__", _Dee_HashSelectC(0x649d0c36, 0x2c7779d2eeb10015), 0, NULL));
 	}
 	WUNUSED NONNULL_CXX((1)) Ref<deemon::bool_> (__is__)(DeeObject *tp) {
 		DeeObject *args[1];
 		args[0] = tp;
-		return inherit(DeeObject_CallAttrStringHash(this, "__is__", _Dee_HashSelect(UINT32_C(0x2b1a70e0), UINT64_C(0xad244331897a16d8)), 1, args));
+		return inherit(DeeObject_CallAttrStringHash(this, "__is__", _Dee_HashSelectC(0x2b1a70e0, 0xad244331897a16d8), 1, args));
 	}
 	WUNUSED NONNULL_CXX((1)) Ref<Object> (__deepequals__)(DeeObject *other) {
 		DeeObject *args[1];
 		args[0] = other;
-		return inherit(DeeObject_CallAttrStringHash(this, "__deepequals__", _Dee_HashSelect(UINT32_C(0x3313c27d), UINT64_C(0xe49a1925c263f351)), 1, args));
+		return inherit(DeeObject_CallAttrStringHash(this, "__deepequals__", _Dee_HashSelectC(0x3313c27d, 0xe49a1925c263f351), 1, args));
 	}
 	WUNUSED Ref<Object> (__inc__)() {
-		return inherit(DeeObject_CallAttrStringHash(this, "__inc__", _Dee_HashSelect(UINT32_C(0xd5dda33a), UINT64_C(0x79decd04e006c348)), 0, NULL));
+		return inherit(DeeObject_CallAttrStringHash(this, "__inc__", _Dee_HashSelectC(0xd5dda33a, 0x79decd04e006c348), 0, NULL));
 	}
 	WUNUSED Ref<Object> (__dec__)() {
-		return inherit(DeeObject_CallAttrStringHash(this, "__dec__", _Dee_HashSelect(UINT32_C(0xfaefcbae), UINT64_C(0x2b760c2bd9183e47)), 0, NULL));
+		return inherit(DeeObject_CallAttrStringHash(this, "__dec__", _Dee_HashSelectC(0xfaefcbae, 0x2b760c2bd9183e47), 0, NULL));
 	}
 	WUNUSED Ref<Object> (__incpost__)() {
-		return inherit(DeeObject_CallAttrStringHash(this, "__incpost__", _Dee_HashSelect(UINT32_C(0x883cc053), UINT64_C(0xbea592bfd47b7365)), 0, NULL));
+		return inherit(DeeObject_CallAttrStringHash(this, "__incpost__", _Dee_HashSelectC(0x883cc053, 0xbea592bfd47b7365), 0, NULL));
 	}
 	WUNUSED Ref<Object> (__decpost__)() {
-		return inherit(DeeObject_CallAttrStringHash(this, "__decpost__", _Dee_HashSelect(UINT32_C(0x4948ab96), UINT64_C(0x6ef9e5fc09db4cec)), 0, NULL));
+		return inherit(DeeObject_CallAttrStringHash(this, "__decpost__", _Dee_HashSelectC(0x4948ab96, 0x6ef9e5fc09db4cec), 0, NULL));
 	}
 	WUNUSED NONNULL_CXX((1)) Ref<Object> (__iadd__)(DeeObject *other) {
 		DeeObject *args[1];
 		args[0] = other;
-		return inherit(DeeObject_CallAttrStringHash(this, "__iadd__", _Dee_HashSelect(UINT32_C(0xa098243d), UINT64_C(0x285a2423f4071a26)), 1, args));
+		return inherit(DeeObject_CallAttrStringHash(this, "__iadd__", _Dee_HashSelectC(0xa098243d, 0x285a2423f4071a26), 1, args));
 	}
 	WUNUSED NONNULL_CXX((1)) Ref<Object> (__isub__)(DeeObject *other) {
 		DeeObject *args[1];
 		args[0] = other;
-		return inherit(DeeObject_CallAttrStringHash(this, "__isub__", _Dee_HashSelect(UINT32_C(0x8ab9b3ac), UINT64_C(0xaeba4543ae375177)), 1, args));
+		return inherit(DeeObject_CallAttrStringHash(this, "__isub__", _Dee_HashSelectC(0x8ab9b3ac, 0xaeba4543ae375177), 1, args));
 	}
 	WUNUSED NONNULL_CXX((1)) Ref<Object> (__imul__)(DeeObject *other) {
 		DeeObject *args[1];
 		args[0] = other;
-		return inherit(DeeObject_CallAttrStringHash(this, "__imul__", _Dee_HashSelect(UINT32_C(0x147f6149), UINT64_C(0xfe507ea03c334483)), 1, args));
+		return inherit(DeeObject_CallAttrStringHash(this, "__imul__", _Dee_HashSelectC(0x147f6149, 0xfe507ea03c334483), 1, args));
 	}
 	WUNUSED NONNULL_CXX((1)) Ref<Object> (__idiv__)(DeeObject *other) {
 		DeeObject *args[1];
 		args[0] = other;
-		return inherit(DeeObject_CallAttrStringHash(this, "__idiv__", _Dee_HashSelect(UINT32_C(0xe6ec70cc), UINT64_C(0x25a04ba2340cfea4)), 1, args));
+		return inherit(DeeObject_CallAttrStringHash(this, "__idiv__", _Dee_HashSelectC(0xe6ec70cc, 0x25a04ba2340cfea4), 1, args));
 	}
 	WUNUSED NONNULL_CXX((1)) Ref<Object> (__imod__)(DeeObject *other) {
 		DeeObject *args[1];
 		args[0] = other;
-		return inherit(DeeObject_CallAttrStringHash(this, "__imod__", _Dee_HashSelect(UINT32_C(0xceed3226), UINT64_C(0x77990987221a348e)), 1, args));
+		return inherit(DeeObject_CallAttrStringHash(this, "__imod__", _Dee_HashSelectC(0xceed3226, 0x77990987221a348e), 1, args));
 	}
 	WUNUSED NONNULL_CXX((1)) Ref<Object> (__ishl__)(DeeObject *other) {
 		DeeObject *args[1];
 		args[0] = other;
-		return inherit(DeeObject_CallAttrStringHash(this, "__ishl__", _Dee_HashSelect(UINT32_C(0xe34046a4), UINT64_C(0xfb3c3eaf13c7ebf5)), 1, args));
+		return inherit(DeeObject_CallAttrStringHash(this, "__ishl__", _Dee_HashSelectC(0xe34046a4, 0xfb3c3eaf13c7ebf5), 1, args));
 	}
 	WUNUSED NONNULL_CXX((1)) Ref<Object> (__ishr__)(DeeObject *other) {
 		DeeObject *args[1];
 		args[0] = other;
-		return inherit(DeeObject_CallAttrStringHash(this, "__ishr__", _Dee_HashSelect(UINT32_C(0xa03408b4), UINT64_C(0x12df0bba41454989)), 1, args));
+		return inherit(DeeObject_CallAttrStringHash(this, "__ishr__", _Dee_HashSelectC(0xa03408b4, 0x12df0bba41454989), 1, args));
 	}
 	WUNUSED NONNULL_CXX((1)) Ref<Object> (__iand__)(DeeObject *other) {
 		DeeObject *args[1];
 		args[0] = other;
-		return inherit(DeeObject_CallAttrStringHash(this, "__iand__", _Dee_HashSelect(UINT32_C(0x303cee11), UINT64_C(0x7247beb98b3e97fa)), 1, args));
+		return inherit(DeeObject_CallAttrStringHash(this, "__iand__", _Dee_HashSelectC(0x303cee11, 0x7247beb98b3e97fa), 1, args));
 	}
 	WUNUSED NONNULL_CXX((1)) Ref<Object> (__ior__)(DeeObject *other) {
 		DeeObject *args[1];
 		args[0] = other;
-		return inherit(DeeObject_CallAttrStringHash(this, "__ior__", _Dee_HashSelect(UINT32_C(0xcd0bcc8c), UINT64_C(0xeacfdc77e1d50bef)), 1, args));
+		return inherit(DeeObject_CallAttrStringHash(this, "__ior__", _Dee_HashSelectC(0xcd0bcc8c, 0xeacfdc77e1d50bef), 1, args));
 	}
 	WUNUSED NONNULL_CXX((1)) Ref<Object> (__ixor__)(DeeObject *other) {
 		DeeObject *args[1];
 		args[0] = other;
-		return inherit(DeeObject_CallAttrStringHash(this, "__ixor__", _Dee_HashSelect(UINT32_C(0x4a21400c), UINT64_C(0x29dec6e135bac526)), 1, args));
+		return inherit(DeeObject_CallAttrStringHash(this, "__ixor__", _Dee_HashSelectC(0x4a21400c, 0x29dec6e135bac526), 1, args));
 	}
 	WUNUSED NONNULL_CXX((1)) Ref<Object> (__ipow__)(DeeObject *other) {
 		DeeObject *args[1];
 		args[0] = other;
-		return inherit(DeeObject_CallAttrStringHash(this, "__ipow__", _Dee_HashSelect(UINT32_C(0xf77b6ecf), UINT64_C(0x401aa0d3bfcf83df)), 1, args));
+		return inherit(DeeObject_CallAttrStringHash(this, "__ipow__", _Dee_HashSelectC(0xf77b6ecf, 0x401aa0d3bfcf83df), 1, args));
 	}
 	class _Wrap___itable__
 		: public deemon::detail::ConstGetRefProxy<_Wrap___itable__, Sequence<> > {
@@ -3600,10 +3600,10 @@ public:
 		_Wrap___itable__(DeeObject *self) DEE_CXX_NOTHROW
 			: m_self(self) {}
 		WUNUSED DREF DeeObject *_getref() const DEE_CXX_NOTHROW {
-			return DeeObject_GetAttrStringHash(m_self, "__itable__", _Dee_HashSelect(UINT32_C(0xb7ec355a), UINT64_C(0xbcabfd5c3d01dac0)));
+			return DeeObject_GetAttrStringHash(m_self, "__itable__", _Dee_HashSelectC(0xb7ec355a, 0xbcabfd5c3d01dac0));
 		}
 		WUNUSED bool bound() const {
-			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "__itable__", _Dee_HashSelect(UINT32_C(0xb7ec355a), UINT64_C(0xbcabfd5c3d01dac0))));
+			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "__itable__", _Dee_HashSelectC(0xb7ec355a, 0xbcabfd5c3d01dac0)));
 		}
 	};
 	WUNUSED _Wrap___itable__ (__itable__)() {
@@ -3617,10 +3617,10 @@ public:
 		_Wrap_id(DeeObject *self) DEE_CXX_NOTHROW
 			: m_self(self) {}
 		WUNUSED DREF DeeObject *_getref() const DEE_CXX_NOTHROW {
-			return DeeObject_GetAttrStringHash(m_self, "id", _Dee_HashSelect(UINT32_C(0x98768be1), UINT64_C(0x828b9fe0c4522be2)));
+			return DeeObject_GetAttrStringHash(m_self, "id", _Dee_HashSelectC(0x98768be1, 0x828b9fe0c4522be2));
 		}
 		WUNUSED bool bound() const {
-			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "id", _Dee_HashSelect(UINT32_C(0x98768be1), UINT64_C(0x828b9fe0c4522be2))));
+			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "id", _Dee_HashSelectC(0x98768be1, 0x828b9fe0c4522be2)));
 		}
 	};
 	WUNUSED _Wrap_id (id)() {
@@ -3634,10 +3634,10 @@ public:
 		_Wrap___sizeof__(DeeObject *self) DEE_CXX_NOTHROW
 			: m_self(self) {}
 		WUNUSED DREF DeeObject *_getref() const DEE_CXX_NOTHROW {
-			return DeeObject_GetAttrStringHash(m_self, "__sizeof__", _Dee_HashSelect(UINT32_C(0x422f56f1), UINT64_C(0x4240f7a183278760)));
+			return DeeObject_GetAttrStringHash(m_self, "__sizeof__", _Dee_HashSelectC(0x422f56f1, 0x4240f7a183278760));
 		}
 		WUNUSED bool bound() const {
-			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "__sizeof__", _Dee_HashSelect(UINT32_C(0x422f56f1), UINT64_C(0x4240f7a183278760))));
+			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "__sizeof__", _Dee_HashSelectC(0x422f56f1, 0x4240f7a183278760)));
 		}
 	};
 	WUNUSED _Wrap___sizeof__ (__sizeof__)() {

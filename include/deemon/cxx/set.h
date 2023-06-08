@@ -54,37 +54,37 @@ public:
 	WUNUSED NONNULL_CXX((1)) Ref<Set<T> > (difference)(DeeObject *to) {
 		DeeObject *args[1];
 		args[0] = to;
-		return inherit(DeeObject_CallAttrStringHash(this, "difference", _Dee_HashSelect(UINT32_C(0xe944baff), UINT64_C(0x6add28d83d2e1f6e)), 1, args));
+		return inherit(DeeObject_CallAttrStringHash(this, "difference", _Dee_HashSelectC(0xe944baff, 0x6add28d83d2e1f6e), 1, args));
 	}
 	WUNUSED NONNULL_CXX((1)) Ref<Set<T> > (intersection)(DeeObject *with_) {
 		DeeObject *args[1];
 		args[0] = with_;
-		return inherit(DeeObject_CallAttrStringHash(this, "intersection", _Dee_HashSelect(UINT32_C(0xabaa0afa), UINT64_C(0xc72d025e185198b7)), 1, args));
+		return inherit(DeeObject_CallAttrStringHash(this, "intersection", _Dee_HashSelectC(0xabaa0afa, 0xc72d025e185198b7), 1, args));
 	}
 	WUNUSED NONNULL_CXX((1)) Ref<deemon::bool_> (isdisjoint)(DeeObject *with_) {
 		DeeObject *args[1];
 		args[0] = with_;
-		return inherit(DeeObject_CallAttrStringHash(this, "isdisjoint", _Dee_HashSelect(UINT32_C(0x4b97e75a), UINT64_C(0x14d2b48b4b9da607)), 1, args));
+		return inherit(DeeObject_CallAttrStringHash(this, "isdisjoint", _Dee_HashSelectC(0x4b97e75a, 0x14d2b48b4b9da607), 1, args));
 	}
 	WUNUSED NONNULL_CXX((1)) Ref<Set<T> > (union_)(DeeObject *with_) {
 		DeeObject *args[1];
 		args[0] = with_;
-		return inherit(DeeObject_CallAttrStringHash(this, "union", _Dee_HashSelect(UINT32_C(0x23b88b9b), UINT64_C(0x3b416e7d690babb2)), 1, args));
+		return inherit(DeeObject_CallAttrStringHash(this, "union", _Dee_HashSelectC(0x23b88b9b, 0x3b416e7d690babb2), 1, args));
 	}
 	WUNUSED NONNULL_CXX((1)) Ref<Set<T> > (symmetric_difference)(DeeObject *with_) {
 		DeeObject *args[1];
 		args[0] = with_;
-		return inherit(DeeObject_CallAttrStringHash(this, "symmetric_difference", _Dee_HashSelect(UINT32_C(0x9a1e5057), UINT64_C(0x17b1425a414674d3)), 1, args));
+		return inherit(DeeObject_CallAttrStringHash(this, "symmetric_difference", _Dee_HashSelectC(0x9a1e5057, 0x17b1425a414674d3), 1, args));
 	}
 	WUNUSED NONNULL_CXX((1)) Ref<deemon::bool_> (issubset)(DeeObject *of) {
 		DeeObject *args[1];
 		args[0] = of;
-		return inherit(DeeObject_CallAttrStringHash(this, "issubset", _Dee_HashSelect(UINT32_C(0xac6aa1c0), UINT64_C(0x49ece9bed26428cf)), 1, args));
+		return inherit(DeeObject_CallAttrStringHash(this, "issubset", _Dee_HashSelectC(0xac6aa1c0, 0x49ece9bed26428cf), 1, args));
 	}
 	WUNUSED NONNULL_CXX((1)) Ref<deemon::bool_> (issuperset)(DeeObject *of) {
 		DeeObject *args[1];
 		args[0] = of;
-		return inherit(DeeObject_CallAttrStringHash(this, "issuperset", _Dee_HashSelect(UINT32_C(0x55780f5f), UINT64_C(0x7f578be05d081a7f)), 1, args));
+		return inherit(DeeObject_CallAttrStringHash(this, "issuperset", _Dee_HashSelectC(0x55780f5f, 0x7f578be05d081a7f), 1, args));
 	}
 	class _Wrap_frozen
 		: public deemon::detail::ConstGetRefProxy<_Wrap_frozen, Set<T> > {
@@ -94,10 +94,10 @@ public:
 		_Wrap_frozen(DeeObject *self) DEE_CXX_NOTHROW
 			: m_self(self) {}
 		WUNUSED DREF DeeObject *_getref() const DEE_CXX_NOTHROW {
-			return DeeObject_GetAttrStringHash(m_self, "frozen", _Dee_HashSelect(UINT32_C(0x82311b77), UINT64_C(0x7b55e2e6e642b6fd)));
+			return DeeObject_GetAttrStringHash(m_self, "frozen", _Dee_HashSelectC(0x82311b77, 0x7b55e2e6e642b6fd));
 		}
 		WUNUSED bool bound() const {
-			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "frozen", _Dee_HashSelect(UINT32_C(0x82311b77), UINT64_C(0x7b55e2e6e642b6fd))));
+			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "frozen", _Dee_HashSelectC(0x82311b77, 0x7b55e2e6e642b6fd)));
 		}
 	};
 	WUNUSED _Wrap_frozen (frozen)() {

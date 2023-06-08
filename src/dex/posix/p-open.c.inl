@@ -375,7 +375,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix__open_f(size_t argc, DeeObject *cons
 PRIVATE DEFINE_KWCMETHOD(posix__open, &posix__open_f);
 #ifndef POSIX_KWDS_FILENAME_OFLAGS_MODE_DEFINED
 #define POSIX_KWDS_FILENAME_OFLAGS_MODE_DEFINED
-PRIVATE DEFINE_KWLIST(posix_kwds_filename_oflags_mode, { K(filename), K(oflags), K(mode), KEND });
+PRIVATE DEFINE_KWLIST(posix_kwds_filename_oflags_mode, { KEX("filename", 0x199d68d3, 0x4a5d0431e1a3caed), KEX("oflags", 0xbe92b5be, 0x4f84e498f7c9d171), KEX("mode", 0x11abbac9, 0xa978c54b1db00143), KEND });
 #endif /* !POSIX_KWDS_FILENAME_OFLAGS_MODE_DEFINED */
 PRIVATE WUNUSED DREF DeeObject *DCALL posix__open_f(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	DeeObject *filename;
@@ -452,7 +452,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix_open_f(size_t argc, DeeObject *const
 PRIVATE DEFINE_KWCMETHOD(posix_open, &posix_open_f);
 #ifndef POSIX_KWDS_FILENAME_OFLAGS_MODE_DEFINED
 #define POSIX_KWDS_FILENAME_OFLAGS_MODE_DEFINED
-PRIVATE DEFINE_KWLIST(posix_kwds_filename_oflags_mode, { K(filename), K(oflags), K(mode), KEND });
+PRIVATE DEFINE_KWLIST(posix_kwds_filename_oflags_mode, { KEX("filename", 0x199d68d3, 0x4a5d0431e1a3caed), KEX("oflags", 0xbe92b5be, 0x4f84e498f7c9d171), KEX("mode", 0x11abbac9, 0xa978c54b1db00143), KEND });
 #endif /* !POSIX_KWDS_FILENAME_OFLAGS_MODE_DEFINED */
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_open_f(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	DeeObject *filename;
@@ -488,7 +488,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix__creat_f(size_t argc, DeeObject *con
 PRIVATE DEFINE_KWCMETHOD(posix__creat, &posix__creat_f);
 #ifndef POSIX_KWDS_FILENAME_MODE_DEFINED
 #define POSIX_KWDS_FILENAME_MODE_DEFINED
-PRIVATE DEFINE_KWLIST(posix_kwds_filename_mode, { K(filename), K(mode), KEND });
+PRIVATE DEFINE_KWLIST(posix_kwds_filename_mode, { KEX("filename", 0x199d68d3, 0x4a5d0431e1a3caed), KEX("mode", 0x11abbac9, 0xa978c54b1db00143), KEND });
 #endif /* !POSIX_KWDS_FILENAME_MODE_DEFINED */
 PRIVATE WUNUSED DREF DeeObject *DCALL posix__creat_f(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	DeeObject *filename;
@@ -567,7 +567,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix_creat_f(size_t argc, DeeObject *cons
 PRIVATE DEFINE_KWCMETHOD(posix_creat, &posix_creat_f);
 #ifndef POSIX_KWDS_FILENAME_MODE_DEFINED
 #define POSIX_KWDS_FILENAME_MODE_DEFINED
-PRIVATE DEFINE_KWLIST(posix_kwds_filename_mode, { K(filename), K(mode), KEND });
+PRIVATE DEFINE_KWLIST(posix_kwds_filename_mode, { KEX("filename", 0x199d68d3, 0x4a5d0431e1a3caed), KEX("mode", 0x11abbac9, 0xa978c54b1db00143), KEND });
 #endif /* !POSIX_KWDS_FILENAME_MODE_DEFINED */
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_creat_f(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	DeeObject *filename;
@@ -608,7 +608,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix__openat_f(size_t argc, DeeObject *co
 PRIVATE DEFINE_KWCMETHOD(posix__openat, &posix__openat_f);
 #ifndef POSIX_KWDS_DFD_FILENAME_OFLAGS_MODE_DEFINED
 #define POSIX_KWDS_DFD_FILENAME_OFLAGS_MODE_DEFINED
-PRIVATE DEFINE_KWLIST(posix_kwds_dfd_filename_oflags_mode, { K(dfd), K(filename), K(oflags), K(mode), KEND });
+PRIVATE DEFINE_KWLIST(posix_kwds_dfd_filename_oflags_mode, { KEX("dfd", 0x1c30614d, 0x6edb9568429a136f), KEX("filename", 0x199d68d3, 0x4a5d0431e1a3caed), KEX("oflags", 0xbe92b5be, 0x4f84e498f7c9d171), KEX("mode", 0x11abbac9, 0xa978c54b1db00143), KEND });
 #endif /* !POSIX_KWDS_DFD_FILENAME_OFLAGS_MODE_DEFINED */
 PRIVATE WUNUSED DREF DeeObject *DCALL posix__openat_f(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	DeeObject *dfd;
@@ -702,7 +702,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix_openat_f(size_t argc, DeeObject *con
 PRIVATE DEFINE_KWCMETHOD(posix_openat, &posix_openat_f);
 #ifndef POSIX_KWDS_DFD_FILENAME_OFLAGS_MODE_DEFINED
 #define POSIX_KWDS_DFD_FILENAME_OFLAGS_MODE_DEFINED
-PRIVATE DEFINE_KWLIST(posix_kwds_dfd_filename_oflags_mode, { K(dfd), K(filename), K(oflags), K(mode), KEND });
+PRIVATE DEFINE_KWLIST(posix_kwds_dfd_filename_oflags_mode, { KEX("dfd", 0x1c30614d, 0x6edb9568429a136f), KEX("filename", 0x199d68d3, 0x4a5d0431e1a3caed), KEX("oflags", 0xbe92b5be, 0x4f84e498f7c9d171), KEX("mode", 0x11abbac9, 0xa978c54b1db00143), KEND });
 #endif /* !POSIX_KWDS_DFD_FILENAME_OFLAGS_MODE_DEFINED */
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_openat_f(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	DeeObject *dfd;

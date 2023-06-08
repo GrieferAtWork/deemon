@@ -38,6 +38,7 @@ DECL_BEGIN
 #define DEFINE_KWDS             Dee_DEFINE_KWDS
 #define K                       Dee_KEYWORD
 #define KS                      Dee_KEYWORD_STR
+#define KEX                     Dee_KEYWORD_EX
 #define KEND                    Dee_KEYWORD_END
 #define DEFINE_KWLIST           Dee_DEFINE_KWLIST
 #endif /* DEE_SOURCE */
@@ -395,6 +396,7 @@ struct dee_keyword {
 
 #define Dee_KEYWORD(x)               { #x, (Dee_hash_t)-1 }
 #define Dee_KEYWORD_STR(s)           { s, (Dee_hash_t)-1 }
+#define Dee_KEYWORD_EX(s, h32, h64)  { s, _Dee_HashSelectC(h32, h64) }
 #define Dee_KEYWORD_END              { NULL }
 #define Dee_DEFINE_KWLIST(name, ...) struct dee_keyword name[] = __VA_ARGS__
 

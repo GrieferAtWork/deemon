@@ -65,10 +65,10 @@ public:
 		_Wrap___name__(DeeObject *self) DEE_CXX_NOTHROW
 			: m_self(self) {}
 		WUNUSED DREF DeeObject *_getref() const DEE_CXX_NOTHROW {
-			return DeeObject_GetAttrStringHash(m_self, "__name__", _Dee_HashSelect(UINT32_C(0x27a6cbdf), UINT64_C(0x9004f0806b170f3f)));
+			return DeeObject_GetAttrStringHash(m_self, "__name__", _Dee_HashSelectC(0x27a6cbdf, 0x9004f0806b170f3f));
 		}
 		WUNUSED bool bound() const {
-			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "__name__", _Dee_HashSelect(UINT32_C(0x27a6cbdf), UINT64_C(0x9004f0806b170f3f))));
+			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "__name__", _Dee_HashSelectC(0x27a6cbdf, 0x9004f0806b170f3f)));
 		}
 	};
 	WUNUSED _Wrap___name__ (__name__)() {
@@ -82,10 +82,10 @@ public:
 		_Wrap___doc__(DeeObject *self) DEE_CXX_NOTHROW
 			: m_self(self) {}
 		WUNUSED DREF DeeObject *_getref() const DEE_CXX_NOTHROW {
-			return DeeObject_GetAttrStringHash(m_self, "__doc__", _Dee_HashSelect(UINT32_C(0xd5eefba), UINT64_C(0x9e1c0e198ad451ff)));
+			return DeeObject_GetAttrStringHash(m_self, "__doc__", _Dee_HashSelectC(0xd5eefba, 0x9e1c0e198ad451ff));
 		}
 		WUNUSED bool bound() const {
-			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "__doc__", _Dee_HashSelect(UINT32_C(0xd5eefba), UINT64_C(0x9e1c0e198ad451ff))));
+			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "__doc__", _Dee_HashSelectC(0xd5eefba, 0x9e1c0e198ad451ff)));
 		}
 	};
 	WUNUSED _Wrap___doc__ (__doc__)() {
@@ -99,10 +99,10 @@ public:
 		_Wrap___type__(DeeObject *self) DEE_CXX_NOTHROW
 			: m_self(self) {}
 		WUNUSED DREF DeeObject *_getref() const DEE_CXX_NOTHROW {
-			return DeeObject_GetAttrStringHash(m_self, "__type__", _Dee_HashSelect(UINT32_C(0xc25dc337), UINT64_C(0xd3fa545616840a4e)));
+			return DeeObject_GetAttrStringHash(m_self, "__type__", _Dee_HashSelectC(0xc25dc337, 0xd3fa545616840a4e));
 		}
 		WUNUSED bool bound() const {
-			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "__type__", _Dee_HashSelect(UINT32_C(0xc25dc337), UINT64_C(0xd3fa545616840a4e))));
+			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "__type__", _Dee_HashSelectC(0xc25dc337, 0xd3fa545616840a4e)));
 		}
 	};
 	WUNUSED _Wrap___type__ (__type__)() {
@@ -116,10 +116,10 @@ public:
 		_Wrap___module__(DeeObject *self) DEE_CXX_NOTHROW
 			: m_self(self) {}
 		WUNUSED DREF DeeObject *_getref() const DEE_CXX_NOTHROW {
-			return DeeObject_GetAttrStringHash(m_self, "__module__", _Dee_HashSelect(UINT32_C(0x3bea6c9f), UINT64_C(0x183a20d7d6c28dbb)));
+			return DeeObject_GetAttrStringHash(m_self, "__module__", _Dee_HashSelectC(0x3bea6c9f, 0x183a20d7d6c28dbb));
 		}
 		WUNUSED bool bound() const {
-			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "__module__", _Dee_HashSelect(UINT32_C(0x3bea6c9f), UINT64_C(0x183a20d7d6c28dbb))));
+			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "__module__", _Dee_HashSelectC(0x3bea6c9f, 0x183a20d7d6c28dbb)));
 		}
 	};
 	WUNUSED _Wrap___module__ (__module__)() {
@@ -133,10 +133,10 @@ public:
 		_Wrap___operator__(DeeObject *self) DEE_CXX_NOTHROW
 			: m_self(self) {}
 		WUNUSED DREF DeeObject *_getref() const DEE_CXX_NOTHROW {
-			return DeeObject_GetAttrStringHash(m_self, "__operator__", _Dee_HashSelect(UINT32_C(0xce3dee75), UINT64_C(0x9d8d1bba3a878aad)));
+			return DeeObject_GetAttrStringHash(m_self, "__operator__", _Dee_HashSelectC(0xce3dee75, 0x9d8d1bba3a878aad));
 		}
 		WUNUSED bool bound() const {
-			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "__operator__", _Dee_HashSelect(UINT32_C(0xce3dee75), UINT64_C(0x9d8d1bba3a878aad))));
+			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "__operator__", _Dee_HashSelectC(0xce3dee75, 0x9d8d1bba3a878aad)));
 		}
 	};
 	WUNUSED _Wrap___operator__ (__operator__)() {
@@ -150,10 +150,10 @@ public:
 		_Wrap___operatorname__(DeeObject *self) DEE_CXX_NOTHROW
 			: m_self(self) {}
 		WUNUSED DREF DeeObject *_getref() const DEE_CXX_NOTHROW {
-			return DeeObject_GetAttrStringHash(m_self, "__operatorname__", _Dee_HashSelect(UINT32_C(0x8893f1ad), UINT64_C(0x1bbac41c8a3c45b)));
+			return DeeObject_GetAttrStringHash(m_self, "__operatorname__", _Dee_HashSelectC(0x8893f1ad, 0x1bbac41c8a3c45b));
 		}
 		WUNUSED bool bound() const {
-			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "__operatorname__", _Dee_HashSelect(UINT32_C(0x8893f1ad), UINT64_C(0x1bbac41c8a3c45b))));
+			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "__operatorname__", _Dee_HashSelectC(0x8893f1ad, 0x1bbac41c8a3c45b)));
 		}
 	};
 	WUNUSED _Wrap___operatorname__ (__operatorname__)() {
@@ -167,10 +167,10 @@ public:
 		_Wrap___property__(DeeObject *self) DEE_CXX_NOTHROW
 			: m_self(self) {}
 		WUNUSED DREF DeeObject *_getref() const DEE_CXX_NOTHROW {
-			return DeeObject_GetAttrStringHash(m_self, "__property__", _Dee_HashSelect(UINT32_C(0x1267b4ff), UINT64_C(0x77922bbfee0194ee)));
+			return DeeObject_GetAttrStringHash(m_self, "__property__", _Dee_HashSelectC(0x1267b4ff, 0x77922bbfee0194ee));
 		}
 		WUNUSED bool bound() const {
-			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "__property__", _Dee_HashSelect(UINT32_C(0x1267b4ff), UINT64_C(0x77922bbfee0194ee))));
+			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "__property__", _Dee_HashSelectC(0x1267b4ff, 0x77922bbfee0194ee)));
 		}
 	};
 	WUNUSED _Wrap___property__ (__property__)() {
@@ -184,10 +184,10 @@ public:
 		_Wrap___refs__(DeeObject *self) DEE_CXX_NOTHROW
 			: m_self(self) {}
 		WUNUSED DREF DeeObject *_getref() const DEE_CXX_NOTHROW {
-			return DeeObject_GetAttrStringHash(m_self, "__refs__", _Dee_HashSelect(UINT32_C(0x17cd1423), UINT64_C(0x6bbc6d8947e3c6a2)));
+			return DeeObject_GetAttrStringHash(m_self, "__refs__", _Dee_HashSelectC(0x17cd1423, 0x6bbc6d8947e3c6a2));
 		}
 		WUNUSED bool bound() const {
-			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "__refs__", _Dee_HashSelect(UINT32_C(0x17cd1423), UINT64_C(0x6bbc6d8947e3c6a2))));
+			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "__refs__", _Dee_HashSelectC(0x17cd1423, 0x6bbc6d8947e3c6a2)));
 		}
 	};
 	WUNUSED _Wrap___refs__ (__refs__)() {
@@ -201,10 +201,10 @@ public:
 		_Wrap___kwds__(DeeObject *self) DEE_CXX_NOTHROW
 			: m_self(self) {}
 		WUNUSED DREF DeeObject *_getref() const DEE_CXX_NOTHROW {
-			return DeeObject_GetAttrStringHash(m_self, "__kwds__", _Dee_HashSelect(UINT32_C(0xd3926a14), UINT64_C(0xa90825b224a7262b)));
+			return DeeObject_GetAttrStringHash(m_self, "__kwds__", _Dee_HashSelectC(0xd3926a14, 0xa90825b224a7262b));
 		}
 		WUNUSED bool bound() const {
-			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "__kwds__", _Dee_HashSelect(UINT32_C(0xd3926a14), UINT64_C(0xa90825b224a7262b))));
+			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "__kwds__", _Dee_HashSelectC(0xd3926a14, 0xa90825b224a7262b)));
 		}
 	};
 	WUNUSED _Wrap___kwds__ (__kwds__)() {

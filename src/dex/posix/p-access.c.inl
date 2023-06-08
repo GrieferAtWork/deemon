@@ -121,7 +121,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix_access_f(size_t argc, DeeObject *con
 PRIVATE DEFINE_KWCMETHOD(posix_access, &posix_access_f);
 #ifndef POSIX_KWDS_FILENAME_HOW_DEFINED
 #define POSIX_KWDS_FILENAME_HOW_DEFINED
-PRIVATE DEFINE_KWLIST(posix_kwds_filename_how, { K(filename), K(how), KEND });
+PRIVATE DEFINE_KWLIST(posix_kwds_filename_how, { KEX("filename", 0x199d68d3, 0x4a5d0431e1a3caed), KEX("how", 0xdb5b834b, 0x1f0671eb224f8869), KEND });
 #endif /* !POSIX_KWDS_FILENAME_HOW_DEFINED */
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_access_f(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	dwchar_t const *filename_str;
@@ -150,7 +150,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix_access_f(size_t argc, DeeObject *con
 PRIVATE DEFINE_KWCMETHOD(posix_access, &posix_access_f);
 #ifndef POSIX_KWDS_FILENAME_HOW_DEFINED
 #define POSIX_KWDS_FILENAME_HOW_DEFINED
-PRIVATE DEFINE_KWLIST(posix_kwds_filename_how, { K(filename), K(how), KEND });
+PRIVATE DEFINE_KWLIST(posix_kwds_filename_how, { KEX("filename", 0x199d68d3, 0x4a5d0431e1a3caed), KEX("how", 0xdb5b834b, 0x1f0671eb224f8869), KEND });
 #endif /* !POSIX_KWDS_FILENAME_HOW_DEFINED */
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_access_f(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	/*utf-8*/ char const *filename_str;
@@ -235,7 +235,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix_euidaccess_f(size_t argc, DeeObject 
 PRIVATE DEFINE_KWCMETHOD(posix_euidaccess, &posix_euidaccess_f);
 #ifndef POSIX_KWDS_FILENAME_HOW_DEFINED
 #define POSIX_KWDS_FILENAME_HOW_DEFINED
-PRIVATE DEFINE_KWLIST(posix_kwds_filename_how, { K(filename), K(how), KEND });
+PRIVATE DEFINE_KWLIST(posix_kwds_filename_how, { KEX("filename", 0x199d68d3, 0x4a5d0431e1a3caed), KEX("how", 0xdb5b834b, 0x1f0671eb224f8869), KEND });
 #endif /* !POSIX_KWDS_FILENAME_HOW_DEFINED */
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_euidaccess_f(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	/*utf-8*/ char const *filename_str;
@@ -306,7 +306,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix_faccessat_f(size_t argc, DeeObject *
 PRIVATE DEFINE_KWCMETHOD(posix_faccessat, &posix_faccessat_f);
 #ifndef POSIX_KWDS_DFD_FILENAME_HOW_ATFLAGS_DEFINED
 #define POSIX_KWDS_DFD_FILENAME_HOW_ATFLAGS_DEFINED
-PRIVATE DEFINE_KWLIST(posix_kwds_dfd_filename_how_atflags, { K(dfd), K(filename), K(how), K(atflags), KEND });
+PRIVATE DEFINE_KWLIST(posix_kwds_dfd_filename_how_atflags, { KEX("dfd", 0x1c30614d, 0x6edb9568429a136f), KEX("filename", 0x199d68d3, 0x4a5d0431e1a3caed), KEX("how", 0xdb5b834b, 0x1f0671eb224f8869), KEX("atflags", 0x250a5b0d, 0x79142af6dc89e37c), KEND });
 #endif /* !POSIX_KWDS_DFD_FILENAME_HOW_ATFLAGS_DEFINED */
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_faccessat_f(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	int dfd;

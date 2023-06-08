@@ -205,7 +205,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix_pipe2_f(size_t argc, DeeObject *cons
 PRIVATE DEFINE_KWCMETHOD(posix_pipe2, &posix_pipe2_f);
 #ifndef POSIX_KWDS_OFLAGS_DEFINED
 #define POSIX_KWDS_OFLAGS_DEFINED
-PRIVATE DEFINE_KWLIST(posix_kwds_oflags, { K(oflags), KEND });
+PRIVATE DEFINE_KWLIST(posix_kwds_oflags, { KEX("oflags", 0xbe92b5be, 0x4f84e498f7c9d171), KEND });
 #endif /* !POSIX_KWDS_OFLAGS_DEFINED */
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_pipe2_f(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	int oflags;

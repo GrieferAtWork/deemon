@@ -280,7 +280,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix_chmod_f(size_t argc, DeeObject *cons
 PRIVATE DEFINE_KWCMETHOD(posix_chmod, &posix_chmod_f);
 #ifndef POSIX_KWDS_PATH_MODE_DEFINED
 #define POSIX_KWDS_PATH_MODE_DEFINED
-PRIVATE DEFINE_KWLIST(posix_kwds_path_mode, { K(path), K(mode), KEND });
+PRIVATE DEFINE_KWLIST(posix_kwds_path_mode, { KEX("path", 0x1ab74e01, 0xc2dd5992f362b3c4), KEX("mode", 0x11abbac9, 0xa978c54b1db00143), KEND });
 #endif /* !POSIX_KWDS_PATH_MODE_DEFINED */
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_chmod_f(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	DeeObject *path;
@@ -396,7 +396,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix_lchmod_f(size_t argc, DeeObject *con
 PRIVATE DEFINE_KWCMETHOD(posix_lchmod, &posix_lchmod_f);
 #ifndef POSIX_KWDS_PATH_MODE_DEFINED
 #define POSIX_KWDS_PATH_MODE_DEFINED
-PRIVATE DEFINE_KWLIST(posix_kwds_path_mode, { K(path), K(mode), KEND });
+PRIVATE DEFINE_KWLIST(posix_kwds_path_mode, { KEX("path", 0x1ab74e01, 0xc2dd5992f362b3c4), KEX("mode", 0x11abbac9, 0xa978c54b1db00143), KEND });
 #endif /* !POSIX_KWDS_PATH_MODE_DEFINED */
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_lchmod_f(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	DeeObject *path;
@@ -482,7 +482,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix_fchmod_f(size_t argc, DeeObject *con
 PRIVATE DEFINE_KWCMETHOD(posix_fchmod, &posix_fchmod_f);
 #ifndef POSIX_KWDS_FD_MODE_DEFINED
 #define POSIX_KWDS_FD_MODE_DEFINED
-PRIVATE DEFINE_KWLIST(posix_kwds_fd_mode, { K(fd), K(mode), KEND });
+PRIVATE DEFINE_KWLIST(posix_kwds_fd_mode, { KEX("fd", 0x10561ad6, 0xce2e588d84c6793), KEX("mode", 0x11abbac9, 0xa978c54b1db00143), KEND });
 #endif /* !POSIX_KWDS_FD_MODE_DEFINED */
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_fchmod_f(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	DeeObject *fd;
@@ -564,7 +564,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix_fchmodat_f(size_t argc, DeeObject *c
 PRIVATE DEFINE_KWCMETHOD(posix_fchmodat, &posix_fchmodat_f);
 #ifndef POSIX_KWDS_DFD_PATH_MODE_ATFLAGS_DEFINED
 #define POSIX_KWDS_DFD_PATH_MODE_ATFLAGS_DEFINED
-PRIVATE DEFINE_KWLIST(posix_kwds_dfd_path_mode_atflags, { K(dfd), K(path), K(mode), K(atflags), KEND });
+PRIVATE DEFINE_KWLIST(posix_kwds_dfd_path_mode_atflags, { KEX("dfd", 0x1c30614d, 0x6edb9568429a136f), KEX("path", 0x1ab74e01, 0xc2dd5992f362b3c4), KEX("mode", 0x11abbac9, 0xa978c54b1db00143), KEX("atflags", 0x250a5b0d, 0x79142af6dc89e37c), KEND });
 #endif /* !POSIX_KWDS_DFD_PATH_MODE_ATFLAGS_DEFINED */
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_fchmodat_f(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	DeeObject *dfd;

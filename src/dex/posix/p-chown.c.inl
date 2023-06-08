@@ -291,7 +291,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix_chown_f(size_t argc, DeeObject *cons
 PRIVATE DEFINE_KWCMETHOD(posix_chown, &posix_chown_f);
 #ifndef POSIX_KWDS_PATH_UID_GID_DEFINED
 #define POSIX_KWDS_PATH_UID_GID_DEFINED
-PRIVATE DEFINE_KWLIST(posix_kwds_path_uid_gid, { K(path), K(uid), K(gid), KEND });
+PRIVATE DEFINE_KWLIST(posix_kwds_path_uid_gid, { KEX("path", 0x1ab74e01, 0xc2dd5992f362b3c4), KEX("uid", 0x4ab38c00, 0x2b7634be3d12bdca), KEX("gid", 0x2fcfb954, 0x5b22a7472448739b), KEND });
 #endif /* !POSIX_KWDS_PATH_UID_GID_DEFINED */
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_chown_f(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	DeeObject *path;
@@ -412,7 +412,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix_lchown_f(size_t argc, DeeObject *con
 PRIVATE DEFINE_KWCMETHOD(posix_lchown, &posix_lchown_f);
 #ifndef POSIX_KWDS_PATH_UID_GID_DEFINED
 #define POSIX_KWDS_PATH_UID_GID_DEFINED
-PRIVATE DEFINE_KWLIST(posix_kwds_path_uid_gid, { K(path), K(uid), K(gid), KEND });
+PRIVATE DEFINE_KWLIST(posix_kwds_path_uid_gid, { KEX("path", 0x1ab74e01, 0xc2dd5992f362b3c4), KEX("uid", 0x4ab38c00, 0x2b7634be3d12bdca), KEX("gid", 0x2fcfb954, 0x5b22a7472448739b), KEND });
 #endif /* !POSIX_KWDS_PATH_UID_GID_DEFINED */
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_lchown_f(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	DeeObject *path;
@@ -552,7 +552,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix_fchown_f(size_t argc, DeeObject *con
 PRIVATE DEFINE_KWCMETHOD(posix_fchown, &posix_fchown_f);
 #ifndef POSIX_KWDS_FD_UID_GID_DEFINED
 #define POSIX_KWDS_FD_UID_GID_DEFINED
-PRIVATE DEFINE_KWLIST(posix_kwds_fd_uid_gid, { K(fd), K(uid), K(gid), KEND });
+PRIVATE DEFINE_KWLIST(posix_kwds_fd_uid_gid, { KEX("fd", 0x10561ad6, 0xce2e588d84c6793), KEX("uid", 0x4ab38c00, 0x2b7634be3d12bdca), KEX("gid", 0x2fcfb954, 0x5b22a7472448739b), KEND });
 #endif /* !POSIX_KWDS_FD_UID_GID_DEFINED */
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_fchown_f(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	DeeObject *fd;
@@ -689,7 +689,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix_fchownat_f(size_t argc, DeeObject *c
 PRIVATE DEFINE_KWCMETHOD(posix_fchownat, &posix_fchownat_f);
 #ifndef POSIX_KWDS_DFD_PATH_UID_GID_ATFLAGS_DEFINED
 #define POSIX_KWDS_DFD_PATH_UID_GID_ATFLAGS_DEFINED
-PRIVATE DEFINE_KWLIST(posix_kwds_dfd_path_uid_gid_atflags, { K(dfd), K(path), K(uid), K(gid), K(atflags), KEND });
+PRIVATE DEFINE_KWLIST(posix_kwds_dfd_path_uid_gid_atflags, { KEX("dfd", 0x1c30614d, 0x6edb9568429a136f), KEX("path", 0x1ab74e01, 0xc2dd5992f362b3c4), KEX("uid", 0x4ab38c00, 0x2b7634be3d12bdca), KEX("gid", 0x2fcfb954, 0x5b22a7472448739b), KEX("atflags", 0x250a5b0d, 0x79142af6dc89e37c), KEND });
 #endif /* !POSIX_KWDS_DFD_PATH_UID_GID_ATFLAGS_DEFINED */
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_fchownat_f(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	DeeObject *dfd;

@@ -500,7 +500,7 @@ struct Dee_string_object {
 	} name = {                                                    \
 		Dee_OBJECT_HEAD_INIT(&DeeString_Type),                    \
 		&name.s_utf,                                              \
-		_Dee_HashSelect(UINT32_C(hash32), UINT64_C(hash64)),      \
+		_Dee_HashSelectC(hash32, hash64),                         \
 		(sizeof(str) / sizeof(char)) - 1,                         \
 		str,                                                      \
 		{ Dee_STRING_WIDTH_1BYTE,                                 \

@@ -166,9 +166,11 @@ DFUNDEF ATTR_CONST WUNUSED Dee_hash_t
 (FCALL Dee_HashCombine)(Dee_hash_t a, Dee_hash_t b);
 
 #if __SIZEOF_POINTER__ <= 4
-#define _Dee_HashSelect(hash32, hash64) hash32
+#define _Dee_HashSelect(hash32, hash64)  hash32
+#define _Dee_HashSelectC(hash32, hash64) UINT32_C(hash32)
 #else /* __SIZEOF_POINTER__ <= 4 */
-#define _Dee_HashSelect(hash32, hash64) hash64
+#define _Dee_HashSelect(hash32, hash64)  hash64
+#define _Dee_HashSelectC(hash32, hash64) UINT64_C(hash64)
 #endif /* __SIZEOF_POINTER__ > 4 */
 
 /* This is the special hash we assign to empty sequences.

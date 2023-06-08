@@ -890,7 +890,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix_utime_f(size_t argc, DeeObject *cons
 PRIVATE DEFINE_KWCMETHOD(posix_utime, &posix_utime_f);
 #ifndef POSIX_KWDS_PATH_ATIME_MTIME_CTIME_BIRTHTIME_DEFINED
 #define POSIX_KWDS_PATH_ATIME_MTIME_CTIME_BIRTHTIME_DEFINED
-PRIVATE DEFINE_KWLIST(posix_kwds_path_atime_mtime_ctime_birthtime, { K(path), K(atime), K(mtime), K(ctime), K(birthtime), KEND });
+PRIVATE DEFINE_KWLIST(posix_kwds_path_atime_mtime_ctime_birthtime, { KEX("path", 0x1ab74e01, 0xc2dd5992f362b3c4), KEX("atime", 0xdc4358af, 0x2d543aa498d68399), KEX("mtime", 0xd2dc3dac, 0x25287308d8bca8fd), KEX("ctime", 0xd3c27b8d, 0x4582041ef6ec6f80), KEX("birthtime", 0x85a70ed7, 0x1f72b099e114440a), KEND });
 #endif /* !POSIX_KWDS_PATH_ATIME_MTIME_CTIME_BIRTHTIME_DEFINED */
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_utime_f(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	DeeObject *path;
@@ -1080,7 +1080,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix_lutime_f(size_t argc, DeeObject *con
 PRIVATE DEFINE_KWCMETHOD(posix_lutime, &posix_lutime_f);
 #ifndef POSIX_KWDS_PATH_ATIME_MTIME_CTIME_BIRTHTIME_DEFINED
 #define POSIX_KWDS_PATH_ATIME_MTIME_CTIME_BIRTHTIME_DEFINED
-PRIVATE DEFINE_KWLIST(posix_kwds_path_atime_mtime_ctime_birthtime, { K(path), K(atime), K(mtime), K(ctime), K(birthtime), KEND });
+PRIVATE DEFINE_KWLIST(posix_kwds_path_atime_mtime_ctime_birthtime, { KEX("path", 0x1ab74e01, 0xc2dd5992f362b3c4), KEX("atime", 0xdc4358af, 0x2d543aa498d68399), KEX("mtime", 0xd2dc3dac, 0x25287308d8bca8fd), KEX("ctime", 0xd3c27b8d, 0x4582041ef6ec6f80), KEX("birthtime", 0x85a70ed7, 0x1f72b099e114440a), KEND });
 #endif /* !POSIX_KWDS_PATH_ATIME_MTIME_CTIME_BIRTHTIME_DEFINED */
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_lutime_f(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	DeeObject *path;
@@ -1241,7 +1241,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix_futime_f(size_t argc, DeeObject *con
 PRIVATE DEFINE_KWCMETHOD(posix_futime, &posix_futime_f);
 #ifndef POSIX_KWDS_FD_ATIME_MTIME_CTIME_BIRTHTIME_DEFINED
 #define POSIX_KWDS_FD_ATIME_MTIME_CTIME_BIRTHTIME_DEFINED
-PRIVATE DEFINE_KWLIST(posix_kwds_fd_atime_mtime_ctime_birthtime, { K(fd), K(atime), K(mtime), K(ctime), K(birthtime), KEND });
+PRIVATE DEFINE_KWLIST(posix_kwds_fd_atime_mtime_ctime_birthtime, { KEX("fd", 0x10561ad6, 0xce2e588d84c6793), KEX("atime", 0xdc4358af, 0x2d543aa498d68399), KEX("mtime", 0xd2dc3dac, 0x25287308d8bca8fd), KEX("ctime", 0xd3c27b8d, 0x4582041ef6ec6f80), KEX("birthtime", 0x85a70ed7, 0x1f72b099e114440a), KEND });
 #endif /* !POSIX_KWDS_FD_ATIME_MTIME_CTIME_BIRTHTIME_DEFINED */
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_futime_f(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	DeeObject *fd;
@@ -1440,7 +1440,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix_utimeat_f(size_t argc, DeeObject *co
 PRIVATE DEFINE_KWCMETHOD(posix_utimeat, &posix_utimeat_f);
 #ifndef POSIX_KWDS_DFD_PATH_ATIME_MTIME_CTIME_BIRTHTIME_ATFLAGS_DEFINED
 #define POSIX_KWDS_DFD_PATH_ATIME_MTIME_CTIME_BIRTHTIME_ATFLAGS_DEFINED
-PRIVATE DEFINE_KWLIST(posix_kwds_dfd_path_atime_mtime_ctime_birthtime_atflags, { K(dfd), K(path), K(atime), K(mtime), K(ctime), K(birthtime), K(atflags), KEND });
+PRIVATE DEFINE_KWLIST(posix_kwds_dfd_path_atime_mtime_ctime_birthtime_atflags, { KEX("dfd", 0x1c30614d, 0x6edb9568429a136f), KEX("path", 0x1ab74e01, 0xc2dd5992f362b3c4), KEX("atime", 0xdc4358af, 0x2d543aa498d68399), KEX("mtime", 0xd2dc3dac, 0x25287308d8bca8fd), KEX("ctime", 0xd3c27b8d, 0x4582041ef6ec6f80), KEX("birthtime", 0x85a70ed7, 0x1f72b099e114440a), KEX("atflags", 0x250a5b0d, 0x79142af6dc89e37c), KEND });
 #endif /* !POSIX_KWDS_DFD_PATH_ATIME_MTIME_CTIME_BIRTHTIME_ATFLAGS_DEFINED */
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_utimeat_f(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	DeeObject *dfd;

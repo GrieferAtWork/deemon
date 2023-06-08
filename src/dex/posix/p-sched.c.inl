@@ -80,7 +80,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix_system_f(size_t argc, DeeObject *con
 PRIVATE DEFINE_KWCMETHOD(posix_system, &posix_system_f);
 #ifndef POSIX_KWDS_COMMAND_DEFINED
 #define POSIX_KWDS_COMMAND_DEFINED
-PRIVATE DEFINE_KWLIST(posix_kwds_command, { K(command), KEND });
+PRIVATE DEFINE_KWLIST(posix_kwds_command, { KEX("command", 0xe876e30d, 0x2a35e05780aa8e3b), KEND });
 #endif /* !POSIX_KWDS_COMMAND_DEFINED */
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_system_f(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	dwchar_t const *command_str;
@@ -108,7 +108,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix_system_f(size_t argc, DeeObject *con
 PRIVATE DEFINE_KWCMETHOD(posix_system, &posix_system_f);
 #ifndef POSIX_KWDS_COMMAND_DEFINED
 #define POSIX_KWDS_COMMAND_DEFINED
-PRIVATE DEFINE_KWLIST(posix_kwds_command, { K(command), KEND });
+PRIVATE DEFINE_KWLIST(posix_kwds_command, { KEX("command", 0xe876e30d, 0x2a35e05780aa8e3b), KEND });
 #endif /* !POSIX_KWDS_COMMAND_DEFINED */
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_system_f(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	/*utf-8*/ char const *command_str;

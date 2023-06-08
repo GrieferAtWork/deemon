@@ -20,7 +20,7 @@
 
 import * from deemon;
 import * from doc;
-import ..hash as rtHash;
+import _Dee_HashSelect from rt.gen.hash;
 import util;
 
 function commonType(types: {Type...}): Type {
@@ -415,11 +415,7 @@ final class CxxType {
 			if (name in exclude)
 				continue;
 			local cxxName = cxxEscapeReservedName(name);
-			local nameHashSelect = f"_Dee_HashSelect(UINT32_C({
-				rtHash.hash32(name).hex()
-			}), UINT64_C({
-				rtHash.hash64(name).hex()
-			}))";
+			local nameHashSelect = _Dee_HashSelect(name);
 			switch (c.kind) {
 
 			case "operator":

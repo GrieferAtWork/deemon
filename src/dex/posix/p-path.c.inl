@@ -1157,7 +1157,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix_headof_f(size_t argc, DeeObject *con
 PRIVATE DEFINE_KWCMETHOD(posix_headof, &posix_headof_f);
 #ifndef POSIX_KWDS_PATH_DEFINED
 #define POSIX_KWDS_PATH_DEFINED
-PRIVATE DEFINE_KWLIST(posix_kwds_path, { K(path), KEND });
+PRIVATE DEFINE_KWLIST(posix_kwds_path, { KEX("path", 0x1ab74e01, 0xc2dd5992f362b3c4), KEND });
 #endif /* !POSIX_KWDS_PATH_DEFINED */
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_headof_f(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	DeeObject *path;
@@ -1185,7 +1185,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix_tailof_f(size_t argc, DeeObject *con
 PRIVATE DEFINE_KWCMETHOD(posix_tailof, &posix_tailof_f);
 #ifndef POSIX_KWDS_PATH_DEFINED
 #define POSIX_KWDS_PATH_DEFINED
-PRIVATE DEFINE_KWLIST(posix_kwds_path, { K(path), KEND });
+PRIVATE DEFINE_KWLIST(posix_kwds_path, { KEX("path", 0x1ab74e01, 0xc2dd5992f362b3c4), KEND });
 #endif /* !POSIX_KWDS_PATH_DEFINED */
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_tailof_f(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	DeeObject *path;
@@ -1213,7 +1213,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix_driveof_f(size_t argc, DeeObject *co
 PRIVATE DEFINE_KWCMETHOD(posix_driveof, &posix_driveof_f);
 #ifndef POSIX_KWDS_PATH_DEFINED
 #define POSIX_KWDS_PATH_DEFINED
-PRIVATE DEFINE_KWLIST(posix_kwds_path, { K(path), KEND });
+PRIVATE DEFINE_KWLIST(posix_kwds_path, { KEX("path", 0x1ab74e01, 0xc2dd5992f362b3c4), KEND });
 #endif /* !POSIX_KWDS_PATH_DEFINED */
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_driveof_f(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	DeeObject *path;
@@ -1241,7 +1241,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix_inctrail_f(size_t argc, DeeObject *c
 PRIVATE DEFINE_KWCMETHOD(posix_inctrail, &posix_inctrail_f);
 #ifndef POSIX_KWDS_PATH_DEFINED
 #define POSIX_KWDS_PATH_DEFINED
-PRIVATE DEFINE_KWLIST(posix_kwds_path, { K(path), KEND });
+PRIVATE DEFINE_KWLIST(posix_kwds_path, { KEX("path", 0x1ab74e01, 0xc2dd5992f362b3c4), KEND });
 #endif /* !POSIX_KWDS_PATH_DEFINED */
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_inctrail_f(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	DeeObject *path;
@@ -1269,7 +1269,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix_exctrail_f(size_t argc, DeeObject *c
 PRIVATE DEFINE_KWCMETHOD(posix_exctrail, &posix_exctrail_f);
 #ifndef POSIX_KWDS_PATH_DEFINED
 #define POSIX_KWDS_PATH_DEFINED
-PRIVATE DEFINE_KWLIST(posix_kwds_path, { K(path), KEND });
+PRIVATE DEFINE_KWLIST(posix_kwds_path, { KEX("path", 0x1ab74e01, 0xc2dd5992f362b3c4), KEND });
 #endif /* !POSIX_KWDS_PATH_DEFINED */
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_exctrail_f(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	DeeObject *path;
@@ -1297,7 +1297,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix_abspath_f(size_t argc, DeeObject *co
 PRIVATE DEFINE_KWCMETHOD(posix_abspath, &posix_abspath_f);
 #ifndef POSIX_KWDS_PATH_PWD_DEFINED
 #define POSIX_KWDS_PATH_PWD_DEFINED
-PRIVATE DEFINE_KWLIST(posix_kwds_path_pwd, { K(path), K(pwd), KEND });
+PRIVATE DEFINE_KWLIST(posix_kwds_path_pwd, { KEX("path", 0x1ab74e01, 0xc2dd5992f362b3c4), KEX("pwd", 0x33a2a198, 0xc64fc5785f58c2ce), KEND });
 #endif /* !POSIX_KWDS_PATH_PWD_DEFINED */
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_abspath_f(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	DeeObject *path;
@@ -1328,7 +1328,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix_relpath_f(size_t argc, DeeObject *co
 PRIVATE DEFINE_KWCMETHOD(posix_relpath, &posix_relpath_f);
 #ifndef POSIX_KWDS_PATH_PWD_DEFINED
 #define POSIX_KWDS_PATH_PWD_DEFINED
-PRIVATE DEFINE_KWLIST(posix_kwds_path_pwd, { K(path), K(pwd), KEND });
+PRIVATE DEFINE_KWLIST(posix_kwds_path_pwd, { KEX("path", 0x1ab74e01, 0xc2dd5992f362b3c4), KEX("pwd", 0x33a2a198, 0xc64fc5785f58c2ce), KEND });
 #endif /* !POSIX_KWDS_PATH_PWD_DEFINED */
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_relpath_f(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	DeeObject *path;
@@ -1359,7 +1359,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix_normalpath_f(size_t argc, DeeObject 
 PRIVATE DEFINE_KWCMETHOD(posix_normalpath, &posix_normalpath_f);
 #ifndef POSIX_KWDS_PATH_DEFINED
 #define POSIX_KWDS_PATH_DEFINED
-PRIVATE DEFINE_KWLIST(posix_kwds_path, { K(path), KEND });
+PRIVATE DEFINE_KWLIST(posix_kwds_path, { KEX("path", 0x1ab74e01, 0xc2dd5992f362b3c4), KEND });
 #endif /* !POSIX_KWDS_PATH_DEFINED */
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_normalpath_f(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	DeeObject *path;
@@ -1387,7 +1387,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix_isabs_f(size_t argc, DeeObject *cons
 PRIVATE DEFINE_KWCMETHOD(posix_isabs, &posix_isabs_f);
 #ifndef POSIX_KWDS_PATH_DEFINED
 #define POSIX_KWDS_PATH_DEFINED
-PRIVATE DEFINE_KWLIST(posix_kwds_path, { K(path), KEND });
+PRIVATE DEFINE_KWLIST(posix_kwds_path, { KEX("path", 0x1ab74e01, 0xc2dd5992f362b3c4), KEND });
 #endif /* !POSIX_KWDS_PATH_DEFINED */
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_isabs_f(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	DeeObject *path;
@@ -1415,7 +1415,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix_isrel_f(size_t argc, DeeObject *cons
 PRIVATE DEFINE_KWCMETHOD(posix_isrel, &posix_isrel_f);
 #ifndef POSIX_KWDS_PATH_DEFINED
 #define POSIX_KWDS_PATH_DEFINED
-PRIVATE DEFINE_KWLIST(posix_kwds_path, { K(path), KEND });
+PRIVATE DEFINE_KWLIST(posix_kwds_path, { KEX("path", 0x1ab74e01, 0xc2dd5992f362b3c4), KEND });
 #endif /* !POSIX_KWDS_PATH_DEFINED */
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_isrel_f(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	DeeObject *path;
@@ -1443,7 +1443,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix_issep_f(size_t argc, DeeObject *cons
 PRIVATE DEFINE_KWCMETHOD(posix_issep, &posix_issep_f);
 #ifndef POSIX_KWDS_PATH_DEFINED
 #define POSIX_KWDS_PATH_DEFINED
-PRIVATE DEFINE_KWLIST(posix_kwds_path, { K(path), KEND });
+PRIVATE DEFINE_KWLIST(posix_kwds_path, { KEX("path", 0x1ab74e01, 0xc2dd5992f362b3c4), KEND });
 #endif /* !POSIX_KWDS_PATH_DEFINED */
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_issep_f(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	DeeObject *path;

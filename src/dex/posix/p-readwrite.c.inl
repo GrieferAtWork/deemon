@@ -356,7 +356,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix_lseek_f(size_t argc, DeeObject *cons
 PRIVATE DEFINE_KWCMETHOD(posix_lseek, &posix_lseek_f);
 #ifndef POSIX_KWDS_FD_OFFSET_WHENCE_DEFINED
 #define POSIX_KWDS_FD_OFFSET_WHENCE_DEFINED
-PRIVATE DEFINE_KWLIST(posix_kwds_fd_offset_whence, { K(fd), K(offset), K(whence), KEND });
+PRIVATE DEFINE_KWLIST(posix_kwds_fd_offset_whence, { KEX("fd", 0x10561ad6, 0xce2e588d84c6793), KEX("offset", 0xa97063e7, 0x2381bd4159ebe8a7), KEX("whence", 0x41d86ee7, 0x560314d7be8806a5), KEND });
 #endif /* !POSIX_KWDS_FD_OFFSET_WHENCE_DEFINED */
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_lseek_f(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	int fd_fd;
@@ -384,7 +384,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix_lseek_f(size_t argc, DeeObject *cons
 PRIVATE DEFINE_KWCMETHOD(posix_lseek, &posix_lseek_f);
 #ifndef POSIX_KWDS_FD_OFFSET_WHENCE_DEFINED
 #define POSIX_KWDS_FD_OFFSET_WHENCE_DEFINED
-PRIVATE DEFINE_KWLIST(posix_kwds_fd_offset_whence, { K(fd), K(offset), K(whence), KEND });
+PRIVATE DEFINE_KWLIST(posix_kwds_fd_offset_whence, { KEX("fd", 0x10561ad6, 0xce2e588d84c6793), KEX("offset", 0xa97063e7, 0x2381bd4159ebe8a7), KEX("whence", 0x41d86ee7, 0x560314d7be8806a5), KEND });
 #endif /* !POSIX_KWDS_FD_OFFSET_WHENCE_DEFINED */
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_lseek_f(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	int fd_fd;
@@ -691,7 +691,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix_write_f(size_t argc, DeeObject *cons
 PRIVATE DEFINE_KWCMETHOD(posix_write, &posix_write_f);
 #ifndef POSIX_KWDS_FD_BUF_COUNT_DEFINED
 #define POSIX_KWDS_FD_BUF_COUNT_DEFINED
-PRIVATE DEFINE_KWLIST(posix_kwds_fd_buf_count, { K(fd), K(buf), K(count), KEND });
+PRIVATE DEFINE_KWLIST(posix_kwds_fd_buf_count, { KEX("fd", 0x10561ad6, 0xce2e588d84c6793), KEX("buf", 0x32af0e7d, 0x1b91d549e0d74603), KEX("count", 0x54eac164, 0xbd66b5980d54babb), KEND });
 #endif /* !POSIX_KWDS_FD_BUF_COUNT_DEFINED */
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_write_f(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	int fd_fd;

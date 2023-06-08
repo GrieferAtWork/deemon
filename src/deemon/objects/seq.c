@@ -1545,11 +1545,11 @@ print define_Dee_HashStr("end");
 print define_Dee_HashStr("key");
 print define_Dee_HashStr("defl");
 ]]]*/
-#define Dee_HashStr__elem _Dee_HashSelect(UINT32_C(0x1aacf22d), UINT64_C(0x705652c4aed9308a))
-#define Dee_HashStr__start _Dee_HashSelect(UINT32_C(0xa2ed6890), UINT64_C(0x80b621ce3c3982d5))
-#define Dee_HashStr__end _Dee_HashSelect(UINT32_C(0x37fb4a05), UINT64_C(0x6de935c204dc3d01))
-#define Dee_HashStr__key _Dee_HashSelect(UINT32_C(0xe29c6a44), UINT64_C(0x612dd31212e90587))
-#define Dee_HashStr__defl _Dee_HashSelect(UINT32_C(0x4353f18), UINT64_C(0x655c26b85fe0c07b))
+#define Dee_HashStr__elem _Dee_HashSelectC(0x1aacf22d, 0x705652c4aed9308a)
+#define Dee_HashStr__start _Dee_HashSelectC(0xa2ed6890, 0x80b621ce3c3982d5)
+#define Dee_HashStr__end _Dee_HashSelectC(0x37fb4a05, 0x6de935c204dc3d01)
+#define Dee_HashStr__key _Dee_HashSelectC(0xe29c6a44, 0x612dd31212e90587)
+#define Dee_HashStr__defl _Dee_HashSelectC(0x4353f18, 0x655c26b85fe0c07b)
 /*[[[end]]]*/
 
 /* (elem,key:?DCallable=!N)

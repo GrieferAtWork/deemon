@@ -156,7 +156,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix_isatty_f(size_t argc, DeeObject *con
 PRIVATE DEFINE_KWCMETHOD(posix_isatty, &posix_isatty_f);
 #ifndef POSIX_KWDS_FD_DEFINED
 #define POSIX_KWDS_FD_DEFINED
-PRIVATE DEFINE_KWLIST(posix_kwds_fd, { K(fd), KEND });
+PRIVATE DEFINE_KWLIST(posix_kwds_fd, { KEX("fd", 0x10561ad6, 0xce2e588d84c6793), KEND });
 #endif /* !POSIX_KWDS_FD_DEFINED */
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_isatty_f(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	int fd_fd;
@@ -224,7 +224,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix_umask_f(size_t argc, DeeObject *cons
 PRIVATE DEFINE_KWCMETHOD(posix_umask, &posix_umask_f);
 #ifndef POSIX_KWDS_MASK_DEFINED
 #define POSIX_KWDS_MASK_DEFINED
-PRIVATE DEFINE_KWLIST(posix_kwds_mask, { K(mask), KEND });
+PRIVATE DEFINE_KWLIST(posix_kwds_mask, { KEX("mask", 0xc3b4302b, 0x933f153b40dd4379), KEND });
 #endif /* !POSIX_KWDS_MASK_DEFINED */
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_umask_f(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	int mask;
@@ -275,7 +275,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix_dup_f(size_t argc, DeeObject *const 
 PRIVATE DEFINE_KWCMETHOD(posix_dup, &posix_dup_f);
 #ifndef POSIX_KWDS_FD_DEFINED
 #define POSIX_KWDS_FD_DEFINED
-PRIVATE DEFINE_KWLIST(posix_kwds_fd, { K(fd), KEND });
+PRIVATE DEFINE_KWLIST(posix_kwds_fd, { KEX("fd", 0x10561ad6, 0xce2e588d84c6793), KEND });
 #endif /* !POSIX_KWDS_FD_DEFINED */
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_dup_f(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	int fd_fd;
@@ -335,7 +335,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix_dup2_f(size_t argc, DeeObject *const
 PRIVATE DEFINE_KWCMETHOD(posix_dup2, &posix_dup2_f);
 #ifndef POSIX_KWDS_OLDFD_NEWFD_DEFINED
 #define POSIX_KWDS_OLDFD_NEWFD_DEFINED
-PRIVATE DEFINE_KWLIST(posix_kwds_oldfd_newfd, { K(oldfd), K(newfd), KEND });
+PRIVATE DEFINE_KWLIST(posix_kwds_oldfd_newfd, { KEX("oldfd", 0x5a92fcdb, 0x3de145419f68339e), KEX("newfd", 0xd4ea987d, 0xe1d56bf670fa4fe3), KEND });
 #endif /* !POSIX_KWDS_OLDFD_NEWFD_DEFINED */
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_dup2_f(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	int oldfd_fd;
@@ -402,7 +402,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix_dup3_f(size_t argc, DeeObject *const
 PRIVATE DEFINE_KWCMETHOD(posix_dup3, &posix_dup3_f);
 #ifndef POSIX_KWDS_OLDFD_NEWFD_OFLAGS_DEFINED
 #define POSIX_KWDS_OLDFD_NEWFD_OFLAGS_DEFINED
-PRIVATE DEFINE_KWLIST(posix_kwds_oldfd_newfd_oflags, { K(oldfd), K(newfd), K(oflags), KEND });
+PRIVATE DEFINE_KWLIST(posix_kwds_oldfd_newfd_oflags, { KEX("oldfd", 0x5a92fcdb, 0x3de145419f68339e), KEX("newfd", 0xd4ea987d, 0xe1d56bf670fa4fe3), KEX("oflags", 0xbe92b5be, 0x4f84e498f7c9d171), KEND });
 #endif /* !POSIX_KWDS_OLDFD_NEWFD_OFLAGS_DEFINED */
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_dup3_f(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	int oldfd_fd;
@@ -590,7 +590,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix_close_f(size_t argc, DeeObject *cons
 PRIVATE DEFINE_KWCMETHOD(posix_close, &posix_close_f);
 #ifndef POSIX_KWDS_FD_DEFINED
 #define POSIX_KWDS_FD_DEFINED
-PRIVATE DEFINE_KWLIST(posix_kwds_fd, { K(fd), KEND });
+PRIVATE DEFINE_KWLIST(posix_kwds_fd, { KEX("fd", 0x10561ad6, 0xce2e588d84c6793), KEND });
 #endif /* !POSIX_KWDS_FD_DEFINED */
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_close_f(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	int fd_fd;

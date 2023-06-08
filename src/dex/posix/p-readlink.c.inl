@@ -88,7 +88,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix_readlink_f(size_t argc, DeeObject *c
 PRIVATE DEFINE_KWCMETHOD(posix_readlink, &posix_readlink_f);
 #ifndef POSIX_KWDS_FILE_DEFINED
 #define POSIX_KWDS_FILE_DEFINED
-PRIVATE DEFINE_KWLIST(posix_kwds_file, { K(file), KEND });
+PRIVATE DEFINE_KWLIST(posix_kwds_file, { KEX("file", 0x1a11b2b3, 0x612e37678ce7db5b), KEND });
 #endif /* !POSIX_KWDS_FILE_DEFINED */
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_readlink_f(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	DeeObject *file;
@@ -300,7 +300,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix_freadlink_f(size_t argc, DeeObject *
 PRIVATE DEFINE_KWCMETHOD(posix_freadlink, &posix_freadlink_f);
 #ifndef POSIX_KWDS_FD_DEFINED
 #define POSIX_KWDS_FD_DEFINED
-PRIVATE DEFINE_KWLIST(posix_kwds_fd, { K(fd), KEND });
+PRIVATE DEFINE_KWLIST(posix_kwds_fd, { KEX("fd", 0x10561ad6, 0xce2e588d84c6793), KEND });
 #endif /* !POSIX_KWDS_FD_DEFINED */
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_freadlink_f(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	DeeObject *fd;
@@ -368,7 +368,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix_readlinkat_f(size_t argc, DeeObject 
 PRIVATE DEFINE_KWCMETHOD(posix_readlinkat, &posix_readlinkat_f);
 #ifndef POSIX_KWDS_DFD_FILE_ATFLAGS_DEFINED
 #define POSIX_KWDS_DFD_FILE_ATFLAGS_DEFINED
-PRIVATE DEFINE_KWLIST(posix_kwds_dfd_file_atflags, { K(dfd), K(file), K(atflags), KEND });
+PRIVATE DEFINE_KWLIST(posix_kwds_dfd_file_atflags, { KEX("dfd", 0x1c30614d, 0x6edb9568429a136f), KEX("file", 0x1a11b2b3, 0x612e37678ce7db5b), KEX("atflags", 0x250a5b0d, 0x79142af6dc89e37c), KEND });
 #endif /* !POSIX_KWDS_DFD_FILE_ATFLAGS_DEFINED */
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_readlinkat_f(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	DeeObject *dfd;

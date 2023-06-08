@@ -66,80 +66,80 @@ public:
 	WUNUSED NONNULL_CXX((1)) Ref<Value> (get)(DeeObject *key) {
 		DeeObject *args[1];
 		args[0] = key;
-		return inherit(DeeObject_CallAttrStringHash(this, "get", _Dee_HashSelect(UINT32_C(0x3b6d35a2), UINT64_C(0x7c8e1568eac4979f)), 1, args));
+		return inherit(DeeObject_CallAttrStringHash(this, "get", _Dee_HashSelectC(0x3b6d35a2, 0x7c8e1568eac4979f), 1, args));
 	}
 	WUNUSED NONNULL_CXX((1, 2)) Ref<Value> (get)(DeeObject *key, DeeObject *def) {
 		DeeObject *args[2];
 		args[0] = key;
 		args[1] = def;
-		return inherit(DeeObject_CallAttrStringHash(this, "get", _Dee_HashSelect(UINT32_C(0x3b6d35a2), UINT64_C(0x7c8e1568eac4979f)), 2, args));
+		return inherit(DeeObject_CallAttrStringHash(this, "get", _Dee_HashSelectC(0x3b6d35a2, 0x7c8e1568eac4979f), 2, args));
 	}
 	WUNUSED NONNULL_CXX((1)) Ref<Value> (pop)(DeeObject *key) {
 		DeeObject *args[1];
 		args[0] = key;
-		return inherit(DeeObject_CallAttrStringHash(this, "pop", _Dee_HashSelect(UINT32_C(0x960361ff), UINT64_C(0x666fb01461b0a0eb)), 1, args));
+		return inherit(DeeObject_CallAttrStringHash(this, "pop", _Dee_HashSelectC(0x960361ff, 0x666fb01461b0a0eb), 1, args));
 	}
 	WUNUSED NONNULL_CXX((1, 2)) Ref<Value> (pop)(DeeObject *key, DeeObject *def) {
 		DeeObject *args[2];
 		args[0] = key;
 		args[1] = def;
-		return inherit(DeeObject_CallAttrStringHash(this, "pop", _Dee_HashSelect(UINT32_C(0x960361ff), UINT64_C(0x666fb01461b0a0eb)), 2, args));
+		return inherit(DeeObject_CallAttrStringHash(this, "pop", _Dee_HashSelectC(0x960361ff, 0x666fb01461b0a0eb), 2, args));
 	}
 	void (clear)() {
-		decref(throw_if_null(DeeObject_CallAttrStringHash(this, "clear", _Dee_HashSelect(UINT32_C(0x7857faae), UINT64_C(0x22a34b6f82b3b83c)), 0, NULL)));
+		decref(throw_if_null(DeeObject_CallAttrStringHash(this, "clear", _Dee_HashSelectC(0x7857faae, 0x22a34b6f82b3b83c), 0, NULL)));
 	}
 	WUNUSED Ref<_AbstractTuple<Key, Value> > (popitem)() {
-		return inherit(DeeObject_CallAttrStringHash(this, "popitem", _Dee_HashSelect(UINT32_C(0x40b249f3), UINT64_C(0x131a404a88439bc0)), 0, NULL));
+		return inherit(DeeObject_CallAttrStringHash(this, "popitem", _Dee_HashSelectC(0x40b249f3, 0x131a404a88439bc0), 0, NULL));
 	}
 	WUNUSED NONNULL_CXX((1)) Ref<Value> (setdefault)(DeeObject *key) {
 		DeeObject *args[1];
 		args[0] = key;
-		return inherit(DeeObject_CallAttrStringHash(this, "setdefault", _Dee_HashSelect(UINT32_C(0x947d5cce), UINT64_C(0x7cbcb4f64ace9cbc)), 1, args));
+		return inherit(DeeObject_CallAttrStringHash(this, "setdefault", _Dee_HashSelectC(0x947d5cce, 0x7cbcb4f64ace9cbc), 1, args));
 	}
 	WUNUSED NONNULL_CXX((1, 2)) Ref<Value> (setdefault)(DeeObject *key, DeeObject *def) {
 		DeeObject *args[2];
 		args[0] = key;
 		args[1] = def;
-		return inherit(DeeObject_CallAttrStringHash(this, "setdefault", _Dee_HashSelect(UINT32_C(0x947d5cce), UINT64_C(0x7cbcb4f64ace9cbc)), 2, args));
+		return inherit(DeeObject_CallAttrStringHash(this, "setdefault", _Dee_HashSelectC(0x947d5cce, 0x7cbcb4f64ace9cbc), 2, args));
 	}
 	WUNUSED NONNULL_CXX((1, 2)) Ref<deemon::bool_> (setold)(DeeObject *key, DeeObject *value) {
 		DeeObject *args[2];
 		args[0] = key;
 		args[1] = value;
-		return inherit(DeeObject_CallAttrStringHash(this, "setold", _Dee_HashSelect(UINT32_C(0xb02a28d9), UINT64_C(0xe69353d27a45da0c)), 2, args));
+		return inherit(DeeObject_CallAttrStringHash(this, "setold", _Dee_HashSelectC(0xb02a28d9, 0xe69353d27a45da0c), 2, args));
 	}
 	WUNUSED NONNULL_CXX((1, 2)) Ref<deemon::bool_> (setnew)(DeeObject *key, DeeObject *value) {
 		DeeObject *args[2];
 		args[0] = key;
 		args[1] = value;
-		return inherit(DeeObject_CallAttrStringHash(this, "setnew", _Dee_HashSelect(UINT32_C(0xb6040b2), UINT64_C(0xde8a8697e7aca93d)), 2, args));
+		return inherit(DeeObject_CallAttrStringHash(this, "setnew", _Dee_HashSelectC(0xb6040b2, 0xde8a8697e7aca93d), 2, args));
 	}
 	WUNUSED NONNULL_CXX((1, 2)) Ref<_AbstractTuple<deemon::bool_, Value> > (setold_ex)(DeeObject *key, DeeObject *value) {
 		DeeObject *args[2];
 		args[0] = key;
 		args[1] = value;
-		return inherit(DeeObject_CallAttrStringHash(this, "setold_ex", _Dee_HashSelect(UINT32_C(0xf8b4d68b), UINT64_C(0x73d8fdc770be1ae)), 2, args));
+		return inherit(DeeObject_CallAttrStringHash(this, "setold_ex", _Dee_HashSelectC(0xf8b4d68b, 0x73d8fdc770be1ae), 2, args));
 	}
 	WUNUSED NONNULL_CXX((1, 2)) Ref<_AbstractTuple<deemon::bool_, Value> > (setnew_ex)(DeeObject *key, DeeObject *value) {
 		DeeObject *args[2];
 		args[0] = key;
 		args[1] = value;
-		return inherit(DeeObject_CallAttrStringHash(this, "setnew_ex", _Dee_HashSelect(UINT32_C(0x3f694391), UINT64_C(0x104d84a2d9986bc5)), 2, args));
+		return inherit(DeeObject_CallAttrStringHash(this, "setnew_ex", _Dee_HashSelectC(0x3f694391, 0x104d84a2d9986bc5), 2, args));
 	}
 	NONNULL_CXX((1)) void (update)(DeeObject *items) {
 		DeeObject *args[1];
 		args[0] = items;
-		decref(throw_if_null(DeeObject_CallAttrStringHash(this, "update", _Dee_HashSelect(UINT32_C(0xdf8e9237), UINT64_C(0x41c79529f2460018)), 1, args)));
+		decref(throw_if_null(DeeObject_CallAttrStringHash(this, "update", _Dee_HashSelectC(0xdf8e9237, 0x41c79529f2460018), 1, args)));
 	}
 	WUNUSED NONNULL_CXX((1)) Ref<Sequence<_AbstractTuple<Key, Value> > > (byhash)(DeeObject *template_) {
 		DeeObject *args[1];
 		args[0] = template_;
-		return inherit(DeeObject_CallAttrStringHash(this, "byhash", _Dee_HashSelect(UINT32_C(0x7b5277ce), UINT64_C(0x773c8074445a28d9)), 1, args));
+		return inherit(DeeObject_CallAttrStringHash(this, "byhash", _Dee_HashSelectC(0x7b5277ce, 0x773c8074445a28d9), 1, args));
 	}
 	NONNULL_CXX((1)) void (insert_all)(DeeObject *items) {
 		DeeObject *args[1];
 		args[0] = items;
-		decref(throw_if_null(DeeObject_CallAttrStringHash(this, "insert_all", _Dee_HashSelect(UINT32_C(0xc6123bae), UINT64_C(0x6d5810c3bb999f3c)), 1, args)));
+		decref(throw_if_null(DeeObject_CallAttrStringHash(this, "insert_all", _Dee_HashSelectC(0xc6123bae, 0x6d5810c3bb999f3c), 1, args)));
 	}
 	class _Wrap_keys
 		: public deemon::detail::ConstGetRefProxy<_Wrap_keys, Sequence<Key> > {
@@ -149,10 +149,10 @@ public:
 		_Wrap_keys(DeeObject *self) DEE_CXX_NOTHROW
 			: m_self(self) {}
 		WUNUSED DREF DeeObject *_getref() const DEE_CXX_NOTHROW {
-			return DeeObject_GetAttrStringHash(m_self, "keys", _Dee_HashSelect(UINT32_C(0x97e36be1), UINT64_C(0x654d31bc4825131c)));
+			return DeeObject_GetAttrStringHash(m_self, "keys", _Dee_HashSelectC(0x97e36be1, 0x654d31bc4825131c));
 		}
 		WUNUSED bool bound() const {
-			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "keys", _Dee_HashSelect(UINT32_C(0x97e36be1), UINT64_C(0x654d31bc4825131c))));
+			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "keys", _Dee_HashSelectC(0x97e36be1, 0x654d31bc4825131c)));
 		}
 	};
 	WUNUSED _Wrap_keys (keys)() {
@@ -166,10 +166,10 @@ public:
 		_Wrap_values(DeeObject *self) DEE_CXX_NOTHROW
 			: m_self(self) {}
 		WUNUSED DREF DeeObject *_getref() const DEE_CXX_NOTHROW {
-			return DeeObject_GetAttrStringHash(m_self, "values", _Dee_HashSelect(UINT32_C(0x33b551c8), UINT64_C(0xf6e3e991b86d1574)));
+			return DeeObject_GetAttrStringHash(m_self, "values", _Dee_HashSelectC(0x33b551c8, 0xf6e3e991b86d1574));
 		}
 		WUNUSED bool bound() const {
-			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "values", _Dee_HashSelect(UINT32_C(0x33b551c8), UINT64_C(0xf6e3e991b86d1574))));
+			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "values", _Dee_HashSelectC(0x33b551c8, 0xf6e3e991b86d1574)));
 		}
 	};
 	WUNUSED _Wrap_values (values)() {
@@ -183,10 +183,10 @@ public:
 		_Wrap_items(DeeObject *self) DEE_CXX_NOTHROW
 			: m_self(self) {}
 		WUNUSED DREF DeeObject *_getref() const DEE_CXX_NOTHROW {
-			return DeeObject_GetAttrStringHash(m_self, "items", _Dee_HashSelect(UINT32_C(0x8858badc), UINT64_C(0xa52ef5f42baafa42)));
+			return DeeObject_GetAttrStringHash(m_self, "items", _Dee_HashSelectC(0x8858badc, 0xa52ef5f42baafa42));
 		}
 		WUNUSED bool bound() const {
-			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "items", _Dee_HashSelect(UINT32_C(0x8858badc), UINT64_C(0xa52ef5f42baafa42))));
+			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "items", _Dee_HashSelectC(0x8858badc, 0xa52ef5f42baafa42)));
 		}
 	};
 	WUNUSED _Wrap_items (items)() {
@@ -200,10 +200,10 @@ public:
 		_Wrap_frozen(DeeObject *self) DEE_CXX_NOTHROW
 			: m_self(self) {}
 		WUNUSED DREF DeeObject *_getref() const DEE_CXX_NOTHROW {
-			return DeeObject_GetAttrStringHash(m_self, "frozen", _Dee_HashSelect(UINT32_C(0x82311b77), UINT64_C(0x7b55e2e6e642b6fd)));
+			return DeeObject_GetAttrStringHash(m_self, "frozen", _Dee_HashSelectC(0x82311b77, 0x7b55e2e6e642b6fd));
 		}
 		WUNUSED bool bound() const {
-			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "frozen", _Dee_HashSelect(UINT32_C(0x82311b77), UINT64_C(0x7b55e2e6e642b6fd))));
+			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "frozen", _Dee_HashSelectC(0x82311b77, 0x7b55e2e6e642b6fd)));
 		}
 	};
 	WUNUSED _Wrap_frozen (frozen)() {
@@ -219,16 +219,16 @@ public:
 		_Wrap_max_load_factor(DeeObject *self) DEE_CXX_NOTHROW
 			: m_self(self) {}
 		WUNUSED DREF DeeObject *_getref() const DEE_CXX_NOTHROW {
-			return DeeObject_GetAttrStringHash(m_self, "max_load_factor", _Dee_HashSelect(UINT32_C(0xae8f7ef7), UINT64_C(0xa0a4981439b4c20f)));
+			return DeeObject_GetAttrStringHash(m_self, "max_load_factor", _Dee_HashSelectC(0xae8f7ef7, 0xa0a4981439b4c20f));
 		}
 		WUNUSED bool bound() const {
-			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "max_load_factor", _Dee_HashSelect(UINT32_C(0xae8f7ef7), UINT64_C(0xa0a4981439b4c20f))));
+			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "max_load_factor", _Dee_HashSelectC(0xae8f7ef7, 0xa0a4981439b4c20f)));
 		}
 		void del() const {
-			throw_if_nonzero(DeeObject_DelAttrStringHash(m_self, "max_load_factor", _Dee_HashSelect(UINT32_C(0xae8f7ef7), UINT64_C(0xa0a4981439b4c20f))));
+			throw_if_nonzero(DeeObject_DelAttrStringHash(m_self, "max_load_factor", _Dee_HashSelectC(0xae8f7ef7, 0xa0a4981439b4c20f)));
 		}
 		int _setref(DeeObject *value) const DEE_CXX_NOTHROW {
-			return DeeObject_SetAttrStringHash(m_self, "max_load_factor", _Dee_HashSelect(UINT32_C(0xae8f7ef7), UINT64_C(0xa0a4981439b4c20f)), value);
+			return DeeObject_SetAttrStringHash(m_self, "max_load_factor", _Dee_HashSelectC(0xae8f7ef7, 0xa0a4981439b4c20f), value);
 		}
 	};
 	WUNUSED _Wrap_max_load_factor (max_load_factor)() {
@@ -242,10 +242,10 @@ public:
 		_Wrap___sizeof__(DeeObject *self) DEE_CXX_NOTHROW
 			: m_self(self) {}
 		WUNUSED DREF DeeObject *_getref() const DEE_CXX_NOTHROW {
-			return DeeObject_GetAttrStringHash(m_self, "__sizeof__", _Dee_HashSelect(UINT32_C(0x422f56f1), UINT64_C(0x4240f7a183278760)));
+			return DeeObject_GetAttrStringHash(m_self, "__sizeof__", _Dee_HashSelectC(0x422f56f1, 0x4240f7a183278760));
 		}
 		WUNUSED bool bound() const {
-			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "__sizeof__", _Dee_HashSelect(UINT32_C(0x422f56f1), UINT64_C(0x4240f7a183278760))));
+			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "__sizeof__", _Dee_HashSelectC(0x422f56f1, 0x4240f7a183278760)));
 		}
 	};
 	WUNUSED _Wrap___sizeof__ (__sizeof__)() {

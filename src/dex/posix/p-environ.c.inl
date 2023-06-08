@@ -2291,7 +2291,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix_getenv_f(size_t argc, DeeObject *con
 PRIVATE DEFINE_KWCMETHOD(posix_getenv, &posix_getenv_f);
 #ifndef POSIX_KWDS_VARNAME_DEFL_DEFINED
 #define POSIX_KWDS_VARNAME_DEFL_DEFINED
-PRIVATE DEFINE_KWLIST(posix_kwds_varname_defl, { K(varname), K(defl), KEND });
+PRIVATE DEFINE_KWLIST(posix_kwds_varname_defl, { KEX("varname", 0x4d384ee, 0x68ff72c018adb0c4), KEX("defl", 0x4353f18, 0x655c26b85fe0c07b), KEND });
 #endif /* !POSIX_KWDS_VARNAME_DEFL_DEFINED */
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_getenv_f(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	DeeObject *varname;
@@ -2321,7 +2321,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix_setenv_f(size_t argc, DeeObject *con
 PRIVATE DEFINE_KWCMETHOD(posix_setenv, &posix_setenv_f);
 #ifndef POSIX_KWDS_VARNAME_VALUE_REPLACE_DEFINED
 #define POSIX_KWDS_VARNAME_VALUE_REPLACE_DEFINED
-PRIVATE DEFINE_KWLIST(posix_kwds_varname_value_replace, { K(varname), K(value), K(replace), KEND });
+PRIVATE DEFINE_KWLIST(posix_kwds_varname_value_replace, { KEX("varname", 0x4d384ee, 0x68ff72c018adb0c4), KEX("value", 0xd9093f6e, 0x69e7413ae0c88471), KEX("replace", 0x54b94882, 0x2d4ba4f8cfd63bc6), KEND });
 #endif /* !POSIX_KWDS_VARNAME_VALUE_REPLACE_DEFINED */
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_setenv_f(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	DeeObject *varname;
@@ -2358,7 +2358,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix_putenv_f(size_t argc, DeeObject *con
 PRIVATE DEFINE_KWCMETHOD(posix_putenv, &posix_putenv_f);
 #ifndef POSIX_KWDS_ENVLINE_DEFINED
 #define POSIX_KWDS_ENVLINE_DEFINED
-PRIVATE DEFINE_KWLIST(posix_kwds_envline, { K(envline), KEND });
+PRIVATE DEFINE_KWLIST(posix_kwds_envline, { KEX("envline", 0x86f5873f, 0x891a6b77bb84dc09), KEND });
 #endif /* !POSIX_KWDS_ENVLINE_DEFINED */
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_putenv_f(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	DeeObject *envline;
@@ -2417,7 +2417,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix_unsetenv_f(size_t argc, DeeObject *c
 PRIVATE DEFINE_KWCMETHOD(posix_unsetenv, &posix_unsetenv_f);
 #ifndef POSIX_KWDS_VARNAME_DEFINED
 #define POSIX_KWDS_VARNAME_DEFINED
-PRIVATE DEFINE_KWLIST(posix_kwds_varname, { K(varname), KEND });
+PRIVATE DEFINE_KWLIST(posix_kwds_varname, { KEX("varname", 0x4d384ee, 0x68ff72c018adb0c4), KEND });
 #endif /* !POSIX_KWDS_VARNAME_DEFINED */
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_unsetenv_f(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	DeeObject *varname;

@@ -99,7 +99,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix_fsync_f(size_t argc, DeeObject *cons
 PRIVATE DEFINE_KWCMETHOD(posix_fsync, &posix_fsync_f);
 #ifndef POSIX_KWDS_FD_DEFINED
 #define POSIX_KWDS_FD_DEFINED
-PRIVATE DEFINE_KWLIST(posix_kwds_fd, { K(fd), KEND });
+PRIVATE DEFINE_KWLIST(posix_kwds_fd, { KEX("fd", 0x10561ad6, 0xce2e588d84c6793), KEND });
 #endif /* !POSIX_KWDS_FD_DEFINED */
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_fsync_f(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	int fd_fd;
@@ -160,7 +160,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix_fdatasync_f(size_t argc, DeeObject *
 PRIVATE DEFINE_KWCMETHOD(posix_fdatasync, &posix_fdatasync_f);
 #ifndef POSIX_KWDS_FD_DEFINED
 #define POSIX_KWDS_FD_DEFINED
-PRIVATE DEFINE_KWLIST(posix_kwds_fd, { K(fd), KEND });
+PRIVATE DEFINE_KWLIST(posix_kwds_fd, { KEX("fd", 0x10561ad6, 0xce2e588d84c6793), KEND });
 #endif /* !POSIX_KWDS_FD_DEFINED */
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_fdatasync_f(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	int fd_fd;

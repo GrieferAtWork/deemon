@@ -22,6 +22,7 @@ local copyright =
 import fs;
 import util;
 import * from deemon;
+import rt.hash as rtHash;
 
 local converter_map: {string: (string, string, string) | string} = {
 	"o"            : ("o", "?O",       "DeeObject *"),
@@ -477,8 +478,11 @@ function gw(name: string, args: string = "", docdecl: bool = true, kw: bool = tr
 		print("#ifndef ", kwlist_def_name);
 		print("#define ", kwlist_def_name);
 		print(visi, " DEFINE_KWLIST(", kwlist_name, ", { "),;
-		for (local x, y, z: arg_data)
-			print("K(", x, "), "),;
+		for (local x, y, z: arg_data) {
+			print("KEX(", repr x, ", ",
+				rtHash.hash32(x).hex(), ", ",
+				rtHash.hash64(x).hex(), "), "),;
+		}
 		print("KEND });");
 		print("#endif /* !", kwlist_def_name, " */");
 		print(visi, " WUNUSED DREF DeeObject *DCALL ", libname, name,

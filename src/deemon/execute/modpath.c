@@ -95,7 +95,7 @@ print("#define HASHOF_str_deemon DeeString_Hash((DeeObject *)&str_deemon)");
 print("#endif");
 ]]]*/
 #if 1
-#define HASHOF_str_deemon _Dee_HashSelect(UINT32_C(0x4579666d), UINT64_C(0xeb3bb684d0ec756))
+#define HASHOF_str_deemon _Dee_HashSelectC(0x4579666d, 0xeb3bb684d0ec756)
 #else
 #define HASHOF_str_deemon DeeString_Hash((DeeObject *)&str_deemon)
 #endif

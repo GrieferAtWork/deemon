@@ -97,7 +97,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix_fcopyfile_f(size_t argc, DeeObject *
 PRIVATE DEFINE_KWCMETHOD(posix_fcopyfile, &posix_fcopyfile_f);
 #ifndef POSIX_KWDS_OLDFD_NEWPATH_FLAGS_PROGRESS_BUFSIZE_DEFINED
 #define POSIX_KWDS_OLDFD_NEWPATH_FLAGS_PROGRESS_BUFSIZE_DEFINED
-PRIVATE DEFINE_KWLIST(posix_kwds_oldfd_newpath_flags_progress_bufsize, { K(oldfd), K(newpath), K(flags), K(progress), K(bufsize), KEND });
+PRIVATE DEFINE_KWLIST(posix_kwds_oldfd_newpath_flags_progress_bufsize, { KEX("oldfd", 0x5a92fcdb, 0x3de145419f68339e), KEX("newpath", 0x1e4b25cf, 0x18c3eb62ffd9a6ce), KEX("flags", 0xd9e40622, 0x6afda85728fae70d), KEX("progress", 0x2b0d4ed7, 0xcace2890c513a747), KEX("bufsize", 0x24b3a7e0, 0x94bf4a0770b058aa), KEND });
 #endif /* !POSIX_KWDS_OLDFD_NEWPATH_FLAGS_PROGRESS_BUFSIZE_DEFINED */
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_fcopyfile_f(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	DeeObject *oldfd;
@@ -185,7 +185,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix_copyfile_f(size_t argc, DeeObject *c
 PRIVATE DEFINE_KWCMETHOD(posix_copyfile, &posix_copyfile_f);
 #ifndef POSIX_KWDS_OLDPATH_NEWPATH_FLAGS_PROGRESS_BUFSIZE_DEFINED
 #define POSIX_KWDS_OLDPATH_NEWPATH_FLAGS_PROGRESS_BUFSIZE_DEFINED
-PRIVATE DEFINE_KWLIST(posix_kwds_oldpath_newpath_flags_progress_bufsize, { K(oldpath), K(newpath), K(flags), K(progress), K(bufsize), KEND });
+PRIVATE DEFINE_KWLIST(posix_kwds_oldpath_newpath_flags_progress_bufsize, { KEX("oldpath", 0x6af2d717, 0x74cfc4ae2e46bac3), KEX("newpath", 0x1e4b25cf, 0x18c3eb62ffd9a6ce), KEX("flags", 0xd9e40622, 0x6afda85728fae70d), KEX("progress", 0x2b0d4ed7, 0xcace2890c513a747), KEX("bufsize", 0x24b3a7e0, 0x94bf4a0770b058aa), KEND });
 #endif /* !POSIX_KWDS_OLDPATH_NEWPATH_FLAGS_PROGRESS_BUFSIZE_DEFINED */
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_copyfile_f(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	DeeObject *oldpath;
@@ -333,7 +333,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix_lcopyfile_f(size_t argc, DeeObject *
 PRIVATE DEFINE_KWCMETHOD(posix_lcopyfile, &posix_lcopyfile_f);
 #ifndef POSIX_KWDS_OLDPATH_NEWPATH_FLAGS_PROGRESS_BUFSIZE_DEFINED
 #define POSIX_KWDS_OLDPATH_NEWPATH_FLAGS_PROGRESS_BUFSIZE_DEFINED
-PRIVATE DEFINE_KWLIST(posix_kwds_oldpath_newpath_flags_progress_bufsize, { K(oldpath), K(newpath), K(flags), K(progress), K(bufsize), KEND });
+PRIVATE DEFINE_KWLIST(posix_kwds_oldpath_newpath_flags_progress_bufsize, { KEX("oldpath", 0x6af2d717, 0x74cfc4ae2e46bac3), KEX("newpath", 0x1e4b25cf, 0x18c3eb62ffd9a6ce), KEX("flags", 0xd9e40622, 0x6afda85728fae70d), KEX("progress", 0x2b0d4ed7, 0xcace2890c513a747), KEX("bufsize", 0x24b3a7e0, 0x94bf4a0770b058aa), KEND });
 #endif /* !POSIX_KWDS_OLDPATH_NEWPATH_FLAGS_PROGRESS_BUFSIZE_DEFINED */
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_lcopyfile_f(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	DeeObject *oldpath;
@@ -484,7 +484,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix_copyfileat_f(size_t argc, DeeObject 
 PRIVATE DEFINE_KWCMETHOD(posix_copyfileat, &posix_copyfileat_f);
 #ifndef POSIX_KWDS_OLDDIRFD_OLDPATH_NEWDIRFD_NEWPATH_FLAGS_ATFLAGS_PROGRESS_BUFSIZE_DEFINED
 #define POSIX_KWDS_OLDDIRFD_OLDPATH_NEWDIRFD_NEWPATH_FLAGS_ATFLAGS_PROGRESS_BUFSIZE_DEFINED
-PRIVATE DEFINE_KWLIST(posix_kwds_olddirfd_oldpath_newdirfd_newpath_flags_atflags_progress_bufsize, { K(olddirfd), K(oldpath), K(newdirfd), K(newpath), K(flags), K(atflags), K(progress), K(bufsize), KEND });
+PRIVATE DEFINE_KWLIST(posix_kwds_olddirfd_oldpath_newdirfd_newpath_flags_atflags_progress_bufsize, { KEX("olddirfd", 0xfce5716b, 0x69852ead3adcc550), KEX("oldpath", 0x6af2d717, 0x74cfc4ae2e46bac3), KEX("newdirfd", 0xcef3d13f, 0x767804c5c500a418), KEX("newpath", 0x1e4b25cf, 0x18c3eb62ffd9a6ce), KEX("flags", 0xd9e40622, 0x6afda85728fae70d), KEX("atflags", 0x250a5b0d, 0x79142af6dc89e37c), KEX("progress", 0x2b0d4ed7, 0xcace2890c513a747), KEX("bufsize", 0x24b3a7e0, 0x94bf4a0770b058aa), KEND });
 #endif /* !POSIX_KWDS_OLDDIRFD_OLDPATH_NEWDIRFD_NEWPATH_FLAGS_ATFLAGS_PROGRESS_BUFSIZE_DEFINED */
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_copyfileat_f(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	DeeObject *olddirfd;

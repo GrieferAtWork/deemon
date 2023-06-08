@@ -259,307 +259,307 @@ public:
 	WUNUSED NONNULL_CXX((1)) Ref<deemon::int_> (readinto)(DeeObject *dst) {
 		DeeObject *args[1];
 		args[0] = dst;
-		return inherit(DeeObject_CallAttrStringHash(this, "readinto", _Dee_HashSelect(UINT32_C(0x3beface0), UINT64_C(0x14b1a7a62217aa57)), 1, args));
+		return inherit(DeeObject_CallAttrStringHash(this, "readinto", _Dee_HashSelectC(0x3beface0, 0x14b1a7a62217aa57), 1, args));
 	}
 	WUNUSED NONNULL_CXX((1, 2)) Ref<deemon::int_> (readinto)(DeeObject *dst, DeeObject *readall) {
 		DeeObject *args[2];
 		args[0] = dst;
 		args[1] = readall;
-		return inherit(DeeObject_CallAttrStringHash(this, "readinto", _Dee_HashSelect(UINT32_C(0x3beface0), UINT64_C(0x14b1a7a62217aa57)), 2, args));
+		return inherit(DeeObject_CallAttrStringHash(this, "readinto", _Dee_HashSelectC(0x3beface0, 0x14b1a7a62217aa57), 2, args));
 	}
 	WUNUSED NONNULL_CXX((1)) Ref<deemon::int_> (readinto)(DeeObject *dst, bool readall) {
-		return inherit(DeeObject_CallAttrStringHashf(this, "readinto", _Dee_HashSelect(UINT32_C(0x3beface0), UINT64_C(0x14b1a7a62217aa57)), "ob", dst, readall));
+		return inherit(DeeObject_CallAttrStringHashf(this, "readinto", _Dee_HashSelectC(0x3beface0, 0x14b1a7a62217aa57), "ob", dst, readall));
 	}
 	WUNUSED Ref<deemon::int_> (readinto)(char const *dst) {
-		return inherit(DeeObject_CallAttrStringHashf(this, "readinto", _Dee_HashSelect(UINT32_C(0x3beface0), UINT64_C(0x14b1a7a62217aa57)), "s", dst));
+		return inherit(DeeObject_CallAttrStringHashf(this, "readinto", _Dee_HashSelectC(0x3beface0, 0x14b1a7a62217aa57), "s", dst));
 	}
 	WUNUSED NONNULL_CXX((2)) Ref<deemon::int_> (readinto)(char const *dst, DeeObject *readall) {
-		return inherit(DeeObject_CallAttrStringHashf(this, "readinto", _Dee_HashSelect(UINT32_C(0x3beface0), UINT64_C(0x14b1a7a62217aa57)), "so", dst, readall));
+		return inherit(DeeObject_CallAttrStringHashf(this, "readinto", _Dee_HashSelectC(0x3beface0, 0x14b1a7a62217aa57), "so", dst, readall));
 	}
 	WUNUSED Ref<deemon::int_> (readinto)(char const *dst, bool readall) {
-		return inherit(DeeObject_CallAttrStringHashf(this, "readinto", _Dee_HashSelect(UINT32_C(0x3beface0), UINT64_C(0x14b1a7a62217aa57)), "sb", dst, readall));
+		return inherit(DeeObject_CallAttrStringHashf(this, "readinto", _Dee_HashSelectC(0x3beface0, 0x14b1a7a62217aa57), "sb", dst, readall));
 	}
 	WUNUSED NONNULL_CXX((1, 2)) Ref<Bytes> (preadinto)(DeeObject *dst, DeeObject *pos) {
 		DeeObject *args[2];
 		args[0] = dst;
 		args[1] = pos;
-		return inherit(DeeObject_CallAttrStringHash(this, "preadinto", _Dee_HashSelect(UINT32_C(0x739ea18e), UINT64_C(0x69dbe6959249e490)), 2, args));
+		return inherit(DeeObject_CallAttrStringHash(this, "preadinto", _Dee_HashSelectC(0x739ea18e, 0x69dbe6959249e490), 2, args));
 	}
 	WUNUSED NONNULL_CXX((1, 2, 3)) Ref<Bytes> (preadinto)(DeeObject *dst, DeeObject *pos, DeeObject *readall) {
 		DeeObject *args[3];
 		args[0] = dst;
 		args[1] = pos;
 		args[2] = readall;
-		return inherit(DeeObject_CallAttrStringHash(this, "preadinto", _Dee_HashSelect(UINT32_C(0x739ea18e), UINT64_C(0x69dbe6959249e490)), 3, args));
+		return inherit(DeeObject_CallAttrStringHash(this, "preadinto", _Dee_HashSelectC(0x739ea18e, 0x69dbe6959249e490), 3, args));
 	}
 	WUNUSED NONNULL_CXX((1, 2)) Ref<Bytes> (preadinto)(DeeObject *dst, DeeObject *pos, bool readall) {
-		return inherit(DeeObject_CallAttrStringHashf(this, "preadinto", _Dee_HashSelect(UINT32_C(0x739ea18e), UINT64_C(0x69dbe6959249e490)), "oob", dst, pos, readall));
+		return inherit(DeeObject_CallAttrStringHashf(this, "preadinto", _Dee_HashSelectC(0x739ea18e, 0x69dbe6959249e490), "oob", dst, pos, readall));
 	}
 	WUNUSED NONNULL_CXX((1)) Ref<Bytes> (preadinto)(DeeObject *dst, Dee_ssize_t pos) {
-		return inherit(DeeObject_CallAttrStringHashf(this, "preadinto", _Dee_HashSelect(UINT32_C(0x739ea18e), UINT64_C(0x69dbe6959249e490)), "o" DEE_PCKdSIZ, dst, pos));
+		return inherit(DeeObject_CallAttrStringHashf(this, "preadinto", _Dee_HashSelectC(0x739ea18e, 0x69dbe6959249e490), "o" DEE_PCKdSIZ, dst, pos));
 	}
 	WUNUSED NONNULL_CXX((1, 3)) Ref<Bytes> (preadinto)(DeeObject *dst, Dee_ssize_t pos, DeeObject *readall) {
-		return inherit(DeeObject_CallAttrStringHashf(this, "preadinto", _Dee_HashSelect(UINT32_C(0x739ea18e), UINT64_C(0x69dbe6959249e490)), "o" DEE_PCKdSIZ "o", dst, pos, readall));
+		return inherit(DeeObject_CallAttrStringHashf(this, "preadinto", _Dee_HashSelectC(0x739ea18e, 0x69dbe6959249e490), "o" DEE_PCKdSIZ "o", dst, pos, readall));
 	}
 	WUNUSED NONNULL_CXX((1)) Ref<Bytes> (preadinto)(DeeObject *dst, Dee_ssize_t pos, bool readall) {
-		return inherit(DeeObject_CallAttrStringHashf(this, "preadinto", _Dee_HashSelect(UINT32_C(0x739ea18e), UINT64_C(0x69dbe6959249e490)), "o" DEE_PCKdSIZ "b", dst, pos, readall));
+		return inherit(DeeObject_CallAttrStringHashf(this, "preadinto", _Dee_HashSelectC(0x739ea18e, 0x69dbe6959249e490), "o" DEE_PCKdSIZ "b", dst, pos, readall));
 	}
 	WUNUSED NONNULL_CXX((1)) Ref<Bytes> (preadinto)(DeeObject *dst, size_t pos) {
-		return inherit(DeeObject_CallAttrStringHashf(this, "preadinto", _Dee_HashSelect(UINT32_C(0x739ea18e), UINT64_C(0x69dbe6959249e490)), "o" DEE_PCKuSIZ, dst, pos));
+		return inherit(DeeObject_CallAttrStringHashf(this, "preadinto", _Dee_HashSelectC(0x739ea18e, 0x69dbe6959249e490), "o" DEE_PCKuSIZ, dst, pos));
 	}
 	WUNUSED NONNULL_CXX((1, 3)) Ref<Bytes> (preadinto)(DeeObject *dst, size_t pos, DeeObject *readall) {
-		return inherit(DeeObject_CallAttrStringHashf(this, "preadinto", _Dee_HashSelect(UINT32_C(0x739ea18e), UINT64_C(0x69dbe6959249e490)), "o" DEE_PCKuSIZ "o", dst, pos, readall));
+		return inherit(DeeObject_CallAttrStringHashf(this, "preadinto", _Dee_HashSelectC(0x739ea18e, 0x69dbe6959249e490), "o" DEE_PCKuSIZ "o", dst, pos, readall));
 	}
 	WUNUSED NONNULL_CXX((1)) Ref<Bytes> (preadinto)(DeeObject *dst, size_t pos, bool readall) {
-		return inherit(DeeObject_CallAttrStringHashf(this, "preadinto", _Dee_HashSelect(UINT32_C(0x739ea18e), UINT64_C(0x69dbe6959249e490)), "o" DEE_PCKuSIZ "b", dst, pos, readall));
+		return inherit(DeeObject_CallAttrStringHashf(this, "preadinto", _Dee_HashSelectC(0x739ea18e, 0x69dbe6959249e490), "o" DEE_PCKuSIZ "b", dst, pos, readall));
 	}
 	WUNUSED NONNULL_CXX((2)) Ref<Bytes> (preadinto)(char const *dst, DeeObject *pos) {
-		return inherit(DeeObject_CallAttrStringHashf(this, "preadinto", _Dee_HashSelect(UINT32_C(0x739ea18e), UINT64_C(0x69dbe6959249e490)), "so", dst, pos));
+		return inherit(DeeObject_CallAttrStringHashf(this, "preadinto", _Dee_HashSelectC(0x739ea18e, 0x69dbe6959249e490), "so", dst, pos));
 	}
 	WUNUSED NONNULL_CXX((2, 3)) Ref<Bytes> (preadinto)(char const *dst, DeeObject *pos, DeeObject *readall) {
-		return inherit(DeeObject_CallAttrStringHashf(this, "preadinto", _Dee_HashSelect(UINT32_C(0x739ea18e), UINT64_C(0x69dbe6959249e490)), "soo", dst, pos, readall));
+		return inherit(DeeObject_CallAttrStringHashf(this, "preadinto", _Dee_HashSelectC(0x739ea18e, 0x69dbe6959249e490), "soo", dst, pos, readall));
 	}
 	WUNUSED NONNULL_CXX((2)) Ref<Bytes> (preadinto)(char const *dst, DeeObject *pos, bool readall) {
-		return inherit(DeeObject_CallAttrStringHashf(this, "preadinto", _Dee_HashSelect(UINT32_C(0x739ea18e), UINT64_C(0x69dbe6959249e490)), "sob", dst, pos, readall));
+		return inherit(DeeObject_CallAttrStringHashf(this, "preadinto", _Dee_HashSelectC(0x739ea18e, 0x69dbe6959249e490), "sob", dst, pos, readall));
 	}
 	WUNUSED Ref<Bytes> (preadinto)(char const *dst, Dee_ssize_t pos) {
-		return inherit(DeeObject_CallAttrStringHashf(this, "preadinto", _Dee_HashSelect(UINT32_C(0x739ea18e), UINT64_C(0x69dbe6959249e490)), "s" DEE_PCKdSIZ, dst, pos));
+		return inherit(DeeObject_CallAttrStringHashf(this, "preadinto", _Dee_HashSelectC(0x739ea18e, 0x69dbe6959249e490), "s" DEE_PCKdSIZ, dst, pos));
 	}
 	WUNUSED NONNULL_CXX((3)) Ref<Bytes> (preadinto)(char const *dst, Dee_ssize_t pos, DeeObject *readall) {
-		return inherit(DeeObject_CallAttrStringHashf(this, "preadinto", _Dee_HashSelect(UINT32_C(0x739ea18e), UINT64_C(0x69dbe6959249e490)), "s" DEE_PCKdSIZ "o", dst, pos, readall));
+		return inherit(DeeObject_CallAttrStringHashf(this, "preadinto", _Dee_HashSelectC(0x739ea18e, 0x69dbe6959249e490), "s" DEE_PCKdSIZ "o", dst, pos, readall));
 	}
 	WUNUSED Ref<Bytes> (preadinto)(char const *dst, Dee_ssize_t pos, bool readall) {
-		return inherit(DeeObject_CallAttrStringHashf(this, "preadinto", _Dee_HashSelect(UINT32_C(0x739ea18e), UINT64_C(0x69dbe6959249e490)), "s" DEE_PCKdSIZ "b", dst, pos, readall));
+		return inherit(DeeObject_CallAttrStringHashf(this, "preadinto", _Dee_HashSelectC(0x739ea18e, 0x69dbe6959249e490), "s" DEE_PCKdSIZ "b", dst, pos, readall));
 	}
 	WUNUSED Ref<Bytes> (preadinto)(char const *dst, size_t pos) {
-		return inherit(DeeObject_CallAttrStringHashf(this, "preadinto", _Dee_HashSelect(UINT32_C(0x739ea18e), UINT64_C(0x69dbe6959249e490)), "s" DEE_PCKuSIZ, dst, pos));
+		return inherit(DeeObject_CallAttrStringHashf(this, "preadinto", _Dee_HashSelectC(0x739ea18e, 0x69dbe6959249e490), "s" DEE_PCKuSIZ, dst, pos));
 	}
 	WUNUSED NONNULL_CXX((3)) Ref<Bytes> (preadinto)(char const *dst, size_t pos, DeeObject *readall) {
-		return inherit(DeeObject_CallAttrStringHashf(this, "preadinto", _Dee_HashSelect(UINT32_C(0x739ea18e), UINT64_C(0x69dbe6959249e490)), "s" DEE_PCKuSIZ "o", dst, pos, readall));
+		return inherit(DeeObject_CallAttrStringHashf(this, "preadinto", _Dee_HashSelectC(0x739ea18e, 0x69dbe6959249e490), "s" DEE_PCKuSIZ "o", dst, pos, readall));
 	}
 	WUNUSED Ref<Bytes> (preadinto)(char const *dst, size_t pos, bool readall) {
-		return inherit(DeeObject_CallAttrStringHashf(this, "preadinto", _Dee_HashSelect(UINT32_C(0x739ea18e), UINT64_C(0x69dbe6959249e490)), "s" DEE_PCKuSIZ "b", dst, pos, readall));
+		return inherit(DeeObject_CallAttrStringHashf(this, "preadinto", _Dee_HashSelectC(0x739ea18e, 0x69dbe6959249e490), "s" DEE_PCKuSIZ "b", dst, pos, readall));
 	}
 	WUNUSED NONNULL_CXX((1)) Ref<Bytes> (readat)(DeeObject *pos) {
 		DeeObject *args[1];
 		args[0] = pos;
-		return inherit(DeeObject_CallAttrStringHash(this, "readat", _Dee_HashSelect(UINT32_C(0xba87cc58), UINT64_C(0xb190e1a01928006e)), 1, args));
+		return inherit(DeeObject_CallAttrStringHash(this, "readat", _Dee_HashSelectC(0xba87cc58, 0xb190e1a01928006e), 1, args));
 	}
 	WUNUSED NONNULL_CXX((1, 2)) Ref<Bytes> (readat)(DeeObject *pos, DeeObject *maxbytes) {
 		DeeObject *args[2];
 		args[0] = pos;
 		args[1] = maxbytes;
-		return inherit(DeeObject_CallAttrStringHash(this, "readat", _Dee_HashSelect(UINT32_C(0xba87cc58), UINT64_C(0xb190e1a01928006e)), 2, args));
+		return inherit(DeeObject_CallAttrStringHash(this, "readat", _Dee_HashSelectC(0xba87cc58, 0xb190e1a01928006e), 2, args));
 	}
 	WUNUSED NONNULL_CXX((1, 2, 3)) Ref<Bytes> (readat)(DeeObject *pos, DeeObject *maxbytes, DeeObject *readall) {
 		DeeObject *args[3];
 		args[0] = pos;
 		args[1] = maxbytes;
 		args[2] = readall;
-		return inherit(DeeObject_CallAttrStringHash(this, "readat", _Dee_HashSelect(UINT32_C(0xba87cc58), UINT64_C(0xb190e1a01928006e)), 3, args));
+		return inherit(DeeObject_CallAttrStringHash(this, "readat", _Dee_HashSelectC(0xba87cc58, 0xb190e1a01928006e), 3, args));
 	}
 	WUNUSED NONNULL_CXX((1, 2)) Ref<Bytes> (readat)(DeeObject *pos, DeeObject *maxbytes, bool readall) {
-		return inherit(DeeObject_CallAttrStringHashf(this, "readat", _Dee_HashSelect(UINT32_C(0xba87cc58), UINT64_C(0xb190e1a01928006e)), "oob", pos, maxbytes, readall));
+		return inherit(DeeObject_CallAttrStringHashf(this, "readat", _Dee_HashSelectC(0xba87cc58, 0xb190e1a01928006e), "oob", pos, maxbytes, readall));
 	}
 	WUNUSED NONNULL_CXX((1)) Ref<Bytes> (readat)(DeeObject *pos, Dee_ssize_t maxbytes) {
-		return inherit(DeeObject_CallAttrStringHashf(this, "readat", _Dee_HashSelect(UINT32_C(0xba87cc58), UINT64_C(0xb190e1a01928006e)), "o" DEE_PCKdSIZ, pos, maxbytes));
+		return inherit(DeeObject_CallAttrStringHashf(this, "readat", _Dee_HashSelectC(0xba87cc58, 0xb190e1a01928006e), "o" DEE_PCKdSIZ, pos, maxbytes));
 	}
 	WUNUSED NONNULL_CXX((1, 3)) Ref<Bytes> (readat)(DeeObject *pos, Dee_ssize_t maxbytes, DeeObject *readall) {
-		return inherit(DeeObject_CallAttrStringHashf(this, "readat", _Dee_HashSelect(UINT32_C(0xba87cc58), UINT64_C(0xb190e1a01928006e)), "o" DEE_PCKdSIZ "o", pos, maxbytes, readall));
+		return inherit(DeeObject_CallAttrStringHashf(this, "readat", _Dee_HashSelectC(0xba87cc58, 0xb190e1a01928006e), "o" DEE_PCKdSIZ "o", pos, maxbytes, readall));
 	}
 	WUNUSED NONNULL_CXX((1)) Ref<Bytes> (readat)(DeeObject *pos, Dee_ssize_t maxbytes, bool readall) {
-		return inherit(DeeObject_CallAttrStringHashf(this, "readat", _Dee_HashSelect(UINT32_C(0xba87cc58), UINT64_C(0xb190e1a01928006e)), "o" DEE_PCKdSIZ "b", pos, maxbytes, readall));
+		return inherit(DeeObject_CallAttrStringHashf(this, "readat", _Dee_HashSelectC(0xba87cc58, 0xb190e1a01928006e), "o" DEE_PCKdSIZ "b", pos, maxbytes, readall));
 	}
 	WUNUSED NONNULL_CXX((1)) Ref<Bytes> (readat)(DeeObject *pos, bool maxbytes) {
-		return inherit(DeeObject_CallAttrStringHashf(this, "readat", _Dee_HashSelect(UINT32_C(0xba87cc58), UINT64_C(0xb190e1a01928006e)), "ob", pos, maxbytes));
+		return inherit(DeeObject_CallAttrStringHashf(this, "readat", _Dee_HashSelectC(0xba87cc58, 0xb190e1a01928006e), "ob", pos, maxbytes));
 	}
 	WUNUSED NONNULL_CXX((1)) Ref<Bytes> (readat)(DeeObject *pos, size_t maxbytes) {
-		return inherit(DeeObject_CallAttrStringHashf(this, "readat", _Dee_HashSelect(UINT32_C(0xba87cc58), UINT64_C(0xb190e1a01928006e)), "o" DEE_PCKuSIZ, pos, maxbytes));
+		return inherit(DeeObject_CallAttrStringHashf(this, "readat", _Dee_HashSelectC(0xba87cc58, 0xb190e1a01928006e), "o" DEE_PCKuSIZ, pos, maxbytes));
 	}
 	WUNUSED NONNULL_CXX((1, 3)) Ref<Bytes> (readat)(DeeObject *pos, size_t maxbytes, DeeObject *readall) {
-		return inherit(DeeObject_CallAttrStringHashf(this, "readat", _Dee_HashSelect(UINT32_C(0xba87cc58), UINT64_C(0xb190e1a01928006e)), "o" DEE_PCKuSIZ "o", pos, maxbytes, readall));
+		return inherit(DeeObject_CallAttrStringHashf(this, "readat", _Dee_HashSelectC(0xba87cc58, 0xb190e1a01928006e), "o" DEE_PCKuSIZ "o", pos, maxbytes, readall));
 	}
 	WUNUSED NONNULL_CXX((1)) Ref<Bytes> (readat)(DeeObject *pos, size_t maxbytes, bool readall) {
-		return inherit(DeeObject_CallAttrStringHashf(this, "readat", _Dee_HashSelect(UINT32_C(0xba87cc58), UINT64_C(0xb190e1a01928006e)), "o" DEE_PCKuSIZ "b", pos, maxbytes, readall));
+		return inherit(DeeObject_CallAttrStringHashf(this, "readat", _Dee_HashSelectC(0xba87cc58, 0xb190e1a01928006e), "o" DEE_PCKuSIZ "b", pos, maxbytes, readall));
 	}
 	WUNUSED Ref<Bytes> (readat)(Dee_ssize_t pos) {
-		return inherit(DeeObject_CallAttrStringHashf(this, "readat", _Dee_HashSelect(UINT32_C(0xba87cc58), UINT64_C(0xb190e1a01928006e)),  DEE_PCKdSIZ, pos));
+		return inherit(DeeObject_CallAttrStringHashf(this, "readat", _Dee_HashSelectC(0xba87cc58, 0xb190e1a01928006e),  DEE_PCKdSIZ, pos));
 	}
 	WUNUSED NONNULL_CXX((2)) Ref<Bytes> (readat)(Dee_ssize_t pos, DeeObject *maxbytes) {
-		return inherit(DeeObject_CallAttrStringHashf(this, "readat", _Dee_HashSelect(UINT32_C(0xba87cc58), UINT64_C(0xb190e1a01928006e)),  DEE_PCKdSIZ "o", pos, maxbytes));
+		return inherit(DeeObject_CallAttrStringHashf(this, "readat", _Dee_HashSelectC(0xba87cc58, 0xb190e1a01928006e),  DEE_PCKdSIZ "o", pos, maxbytes));
 	}
 	WUNUSED NONNULL_CXX((2, 3)) Ref<Bytes> (readat)(Dee_ssize_t pos, DeeObject *maxbytes, DeeObject *readall) {
-		return inherit(DeeObject_CallAttrStringHashf(this, "readat", _Dee_HashSelect(UINT32_C(0xba87cc58), UINT64_C(0xb190e1a01928006e)),  DEE_PCKdSIZ "oo", pos, maxbytes, readall));
+		return inherit(DeeObject_CallAttrStringHashf(this, "readat", _Dee_HashSelectC(0xba87cc58, 0xb190e1a01928006e),  DEE_PCKdSIZ "oo", pos, maxbytes, readall));
 	}
 	WUNUSED NONNULL_CXX((2)) Ref<Bytes> (readat)(Dee_ssize_t pos, DeeObject *maxbytes, bool readall) {
-		return inherit(DeeObject_CallAttrStringHashf(this, "readat", _Dee_HashSelect(UINT32_C(0xba87cc58), UINT64_C(0xb190e1a01928006e)),  DEE_PCKdSIZ "ob", pos, maxbytes, readall));
+		return inherit(DeeObject_CallAttrStringHashf(this, "readat", _Dee_HashSelectC(0xba87cc58, 0xb190e1a01928006e),  DEE_PCKdSIZ "ob", pos, maxbytes, readall));
 	}
 	WUNUSED Ref<Bytes> (readat)(Dee_ssize_t pos, Dee_ssize_t maxbytes) {
-		return inherit(DeeObject_CallAttrStringHashf(this, "readat", _Dee_HashSelect(UINT32_C(0xba87cc58), UINT64_C(0xb190e1a01928006e)),  DEE_PCKdSIZ DEE_PCKdSIZ, pos, maxbytes));
+		return inherit(DeeObject_CallAttrStringHashf(this, "readat", _Dee_HashSelectC(0xba87cc58, 0xb190e1a01928006e),  DEE_PCKdSIZ DEE_PCKdSIZ, pos, maxbytes));
 	}
 	WUNUSED NONNULL_CXX((3)) Ref<Bytes> (readat)(Dee_ssize_t pos, Dee_ssize_t maxbytes, DeeObject *readall) {
-		return inherit(DeeObject_CallAttrStringHashf(this, "readat", _Dee_HashSelect(UINT32_C(0xba87cc58), UINT64_C(0xb190e1a01928006e)),  DEE_PCKdSIZ DEE_PCKdSIZ "o", pos, maxbytes, readall));
+		return inherit(DeeObject_CallAttrStringHashf(this, "readat", _Dee_HashSelectC(0xba87cc58, 0xb190e1a01928006e),  DEE_PCKdSIZ DEE_PCKdSIZ "o", pos, maxbytes, readall));
 	}
 	WUNUSED Ref<Bytes> (readat)(Dee_ssize_t pos, Dee_ssize_t maxbytes, bool readall) {
-		return inherit(DeeObject_CallAttrStringHashf(this, "readat", _Dee_HashSelect(UINT32_C(0xba87cc58), UINT64_C(0xb190e1a01928006e)),  DEE_PCKdSIZ DEE_PCKdSIZ "b", pos, maxbytes, readall));
+		return inherit(DeeObject_CallAttrStringHashf(this, "readat", _Dee_HashSelectC(0xba87cc58, 0xb190e1a01928006e),  DEE_PCKdSIZ DEE_PCKdSIZ "b", pos, maxbytes, readall));
 	}
 	WUNUSED Ref<Bytes> (readat)(Dee_ssize_t pos, bool maxbytes) {
-		return inherit(DeeObject_CallAttrStringHashf(this, "readat", _Dee_HashSelect(UINT32_C(0xba87cc58), UINT64_C(0xb190e1a01928006e)),  DEE_PCKdSIZ "b", pos, maxbytes));
+		return inherit(DeeObject_CallAttrStringHashf(this, "readat", _Dee_HashSelectC(0xba87cc58, 0xb190e1a01928006e),  DEE_PCKdSIZ "b", pos, maxbytes));
 	}
 	WUNUSED Ref<Bytes> (readat)(Dee_ssize_t pos, size_t maxbytes) {
-		return inherit(DeeObject_CallAttrStringHashf(this, "readat", _Dee_HashSelect(UINT32_C(0xba87cc58), UINT64_C(0xb190e1a01928006e)),  DEE_PCKdSIZ DEE_PCKuSIZ, pos, maxbytes));
+		return inherit(DeeObject_CallAttrStringHashf(this, "readat", _Dee_HashSelectC(0xba87cc58, 0xb190e1a01928006e),  DEE_PCKdSIZ DEE_PCKuSIZ, pos, maxbytes));
 	}
 	WUNUSED NONNULL_CXX((3)) Ref<Bytes> (readat)(Dee_ssize_t pos, size_t maxbytes, DeeObject *readall) {
-		return inherit(DeeObject_CallAttrStringHashf(this, "readat", _Dee_HashSelect(UINT32_C(0xba87cc58), UINT64_C(0xb190e1a01928006e)),  DEE_PCKdSIZ DEE_PCKuSIZ "o", pos, maxbytes, readall));
+		return inherit(DeeObject_CallAttrStringHashf(this, "readat", _Dee_HashSelectC(0xba87cc58, 0xb190e1a01928006e),  DEE_PCKdSIZ DEE_PCKuSIZ "o", pos, maxbytes, readall));
 	}
 	WUNUSED Ref<Bytes> (readat)(Dee_ssize_t pos, size_t maxbytes, bool readall) {
-		return inherit(DeeObject_CallAttrStringHashf(this, "readat", _Dee_HashSelect(UINT32_C(0xba87cc58), UINT64_C(0xb190e1a01928006e)),  DEE_PCKdSIZ DEE_PCKuSIZ "b", pos, maxbytes, readall));
+		return inherit(DeeObject_CallAttrStringHashf(this, "readat", _Dee_HashSelectC(0xba87cc58, 0xb190e1a01928006e),  DEE_PCKdSIZ DEE_PCKuSIZ "b", pos, maxbytes, readall));
 	}
 	WUNUSED Ref<Bytes> (readat)(size_t pos) {
-		return inherit(DeeObject_CallAttrStringHashf(this, "readat", _Dee_HashSelect(UINT32_C(0xba87cc58), UINT64_C(0xb190e1a01928006e)),  DEE_PCKuSIZ, pos));
+		return inherit(DeeObject_CallAttrStringHashf(this, "readat", _Dee_HashSelectC(0xba87cc58, 0xb190e1a01928006e),  DEE_PCKuSIZ, pos));
 	}
 	WUNUSED NONNULL_CXX((2)) Ref<Bytes> (readat)(size_t pos, DeeObject *maxbytes) {
-		return inherit(DeeObject_CallAttrStringHashf(this, "readat", _Dee_HashSelect(UINT32_C(0xba87cc58), UINT64_C(0xb190e1a01928006e)),  DEE_PCKuSIZ "o", pos, maxbytes));
+		return inherit(DeeObject_CallAttrStringHashf(this, "readat", _Dee_HashSelectC(0xba87cc58, 0xb190e1a01928006e),  DEE_PCKuSIZ "o", pos, maxbytes));
 	}
 	WUNUSED NONNULL_CXX((2, 3)) Ref<Bytes> (readat)(size_t pos, DeeObject *maxbytes, DeeObject *readall) {
-		return inherit(DeeObject_CallAttrStringHashf(this, "readat", _Dee_HashSelect(UINT32_C(0xba87cc58), UINT64_C(0xb190e1a01928006e)),  DEE_PCKuSIZ "oo", pos, maxbytes, readall));
+		return inherit(DeeObject_CallAttrStringHashf(this, "readat", _Dee_HashSelectC(0xba87cc58, 0xb190e1a01928006e),  DEE_PCKuSIZ "oo", pos, maxbytes, readall));
 	}
 	WUNUSED NONNULL_CXX((2)) Ref<Bytes> (readat)(size_t pos, DeeObject *maxbytes, bool readall) {
-		return inherit(DeeObject_CallAttrStringHashf(this, "readat", _Dee_HashSelect(UINT32_C(0xba87cc58), UINT64_C(0xb190e1a01928006e)),  DEE_PCKuSIZ "ob", pos, maxbytes, readall));
+		return inherit(DeeObject_CallAttrStringHashf(this, "readat", _Dee_HashSelectC(0xba87cc58, 0xb190e1a01928006e),  DEE_PCKuSIZ "ob", pos, maxbytes, readall));
 	}
 	WUNUSED Ref<Bytes> (readat)(size_t pos, Dee_ssize_t maxbytes) {
-		return inherit(DeeObject_CallAttrStringHashf(this, "readat", _Dee_HashSelect(UINT32_C(0xba87cc58), UINT64_C(0xb190e1a01928006e)),  DEE_PCKuSIZ DEE_PCKdSIZ, pos, maxbytes));
+		return inherit(DeeObject_CallAttrStringHashf(this, "readat", _Dee_HashSelectC(0xba87cc58, 0xb190e1a01928006e),  DEE_PCKuSIZ DEE_PCKdSIZ, pos, maxbytes));
 	}
 	WUNUSED NONNULL_CXX((3)) Ref<Bytes> (readat)(size_t pos, Dee_ssize_t maxbytes, DeeObject *readall) {
-		return inherit(DeeObject_CallAttrStringHashf(this, "readat", _Dee_HashSelect(UINT32_C(0xba87cc58), UINT64_C(0xb190e1a01928006e)),  DEE_PCKuSIZ DEE_PCKdSIZ "o", pos, maxbytes, readall));
+		return inherit(DeeObject_CallAttrStringHashf(this, "readat", _Dee_HashSelectC(0xba87cc58, 0xb190e1a01928006e),  DEE_PCKuSIZ DEE_PCKdSIZ "o", pos, maxbytes, readall));
 	}
 	WUNUSED Ref<Bytes> (readat)(size_t pos, Dee_ssize_t maxbytes, bool readall) {
-		return inherit(DeeObject_CallAttrStringHashf(this, "readat", _Dee_HashSelect(UINT32_C(0xba87cc58), UINT64_C(0xb190e1a01928006e)),  DEE_PCKuSIZ DEE_PCKdSIZ "b", pos, maxbytes, readall));
+		return inherit(DeeObject_CallAttrStringHashf(this, "readat", _Dee_HashSelectC(0xba87cc58, 0xb190e1a01928006e),  DEE_PCKuSIZ DEE_PCKdSIZ "b", pos, maxbytes, readall));
 	}
 	WUNUSED Ref<Bytes> (readat)(size_t pos, bool maxbytes) {
-		return inherit(DeeObject_CallAttrStringHashf(this, "readat", _Dee_HashSelect(UINT32_C(0xba87cc58), UINT64_C(0xb190e1a01928006e)),  DEE_PCKuSIZ "b", pos, maxbytes));
+		return inherit(DeeObject_CallAttrStringHashf(this, "readat", _Dee_HashSelectC(0xba87cc58, 0xb190e1a01928006e),  DEE_PCKuSIZ "b", pos, maxbytes));
 	}
 	WUNUSED Ref<Bytes> (readat)(size_t pos, size_t maxbytes) {
-		return inherit(DeeObject_CallAttrStringHashf(this, "readat", _Dee_HashSelect(UINT32_C(0xba87cc58), UINT64_C(0xb190e1a01928006e)),  DEE_PCKuSIZ DEE_PCKuSIZ, pos, maxbytes));
+		return inherit(DeeObject_CallAttrStringHashf(this, "readat", _Dee_HashSelectC(0xba87cc58, 0xb190e1a01928006e),  DEE_PCKuSIZ DEE_PCKuSIZ, pos, maxbytes));
 	}
 	WUNUSED NONNULL_CXX((3)) Ref<Bytes> (readat)(size_t pos, size_t maxbytes, DeeObject *readall) {
-		return inherit(DeeObject_CallAttrStringHashf(this, "readat", _Dee_HashSelect(UINT32_C(0xba87cc58), UINT64_C(0xb190e1a01928006e)),  DEE_PCKuSIZ DEE_PCKuSIZ "o", pos, maxbytes, readall));
+		return inherit(DeeObject_CallAttrStringHashf(this, "readat", _Dee_HashSelectC(0xba87cc58, 0xb190e1a01928006e),  DEE_PCKuSIZ DEE_PCKuSIZ "o", pos, maxbytes, readall));
 	}
 	WUNUSED Ref<Bytes> (readat)(size_t pos, size_t maxbytes, bool readall) {
-		return inherit(DeeObject_CallAttrStringHashf(this, "readat", _Dee_HashSelect(UINT32_C(0xba87cc58), UINT64_C(0xb190e1a01928006e)),  DEE_PCKuSIZ DEE_PCKuSIZ "b", pos, maxbytes, readall));
+		return inherit(DeeObject_CallAttrStringHashf(this, "readat", _Dee_HashSelectC(0xba87cc58, 0xb190e1a01928006e),  DEE_PCKuSIZ DEE_PCKuSIZ "b", pos, maxbytes, readall));
 	}
 	WUNUSED NONNULL_CXX((1, 2)) Ref<deemon::int_> (writeat)(DeeObject *data, DeeObject *pos) {
 		DeeObject *args[2];
 		args[0] = data;
 		args[1] = pos;
-		return inherit(DeeObject_CallAttrStringHash(this, "writeat", _Dee_HashSelect(UINT32_C(0x5735b114), UINT64_C(0x2d7a153f48778210)), 2, args));
+		return inherit(DeeObject_CallAttrStringHash(this, "writeat", _Dee_HashSelectC(0x5735b114, 0x2d7a153f48778210), 2, args));
 	}
 	WUNUSED NONNULL_CXX((1, 2, 3)) Ref<deemon::int_> (writeat)(DeeObject *data, DeeObject *pos, DeeObject *writeall) {
 		DeeObject *args[3];
 		args[0] = data;
 		args[1] = pos;
 		args[2] = writeall;
-		return inherit(DeeObject_CallAttrStringHash(this, "writeat", _Dee_HashSelect(UINT32_C(0x5735b114), UINT64_C(0x2d7a153f48778210)), 3, args));
+		return inherit(DeeObject_CallAttrStringHash(this, "writeat", _Dee_HashSelectC(0x5735b114, 0x2d7a153f48778210), 3, args));
 	}
 	WUNUSED NONNULL_CXX((1, 2)) Ref<deemon::int_> (writeat)(DeeObject *data, DeeObject *pos, bool writeall) {
-		return inherit(DeeObject_CallAttrStringHashf(this, "writeat", _Dee_HashSelect(UINT32_C(0x5735b114), UINT64_C(0x2d7a153f48778210)), "oob", data, pos, writeall));
+		return inherit(DeeObject_CallAttrStringHashf(this, "writeat", _Dee_HashSelectC(0x5735b114, 0x2d7a153f48778210), "oob", data, pos, writeall));
 	}
 	WUNUSED NONNULL_CXX((1)) Ref<deemon::int_> (writeat)(DeeObject *data, Dee_ssize_t pos) {
-		return inherit(DeeObject_CallAttrStringHashf(this, "writeat", _Dee_HashSelect(UINT32_C(0x5735b114), UINT64_C(0x2d7a153f48778210)), "o" DEE_PCKdSIZ, data, pos));
+		return inherit(DeeObject_CallAttrStringHashf(this, "writeat", _Dee_HashSelectC(0x5735b114, 0x2d7a153f48778210), "o" DEE_PCKdSIZ, data, pos));
 	}
 	WUNUSED NONNULL_CXX((1, 3)) Ref<deemon::int_> (writeat)(DeeObject *data, Dee_ssize_t pos, DeeObject *writeall) {
-		return inherit(DeeObject_CallAttrStringHashf(this, "writeat", _Dee_HashSelect(UINT32_C(0x5735b114), UINT64_C(0x2d7a153f48778210)), "o" DEE_PCKdSIZ "o", data, pos, writeall));
+		return inherit(DeeObject_CallAttrStringHashf(this, "writeat", _Dee_HashSelectC(0x5735b114, 0x2d7a153f48778210), "o" DEE_PCKdSIZ "o", data, pos, writeall));
 	}
 	WUNUSED NONNULL_CXX((1)) Ref<deemon::int_> (writeat)(DeeObject *data, Dee_ssize_t pos, bool writeall) {
-		return inherit(DeeObject_CallAttrStringHashf(this, "writeat", _Dee_HashSelect(UINT32_C(0x5735b114), UINT64_C(0x2d7a153f48778210)), "o" DEE_PCKdSIZ "b", data, pos, writeall));
+		return inherit(DeeObject_CallAttrStringHashf(this, "writeat", _Dee_HashSelectC(0x5735b114, 0x2d7a153f48778210), "o" DEE_PCKdSIZ "b", data, pos, writeall));
 	}
 	WUNUSED NONNULL_CXX((1)) Ref<deemon::int_> (writeat)(DeeObject *data, size_t pos) {
-		return inherit(DeeObject_CallAttrStringHashf(this, "writeat", _Dee_HashSelect(UINT32_C(0x5735b114), UINT64_C(0x2d7a153f48778210)), "o" DEE_PCKuSIZ, data, pos));
+		return inherit(DeeObject_CallAttrStringHashf(this, "writeat", _Dee_HashSelectC(0x5735b114, 0x2d7a153f48778210), "o" DEE_PCKuSIZ, data, pos));
 	}
 	WUNUSED NONNULL_CXX((1, 3)) Ref<deemon::int_> (writeat)(DeeObject *data, size_t pos, DeeObject *writeall) {
-		return inherit(DeeObject_CallAttrStringHashf(this, "writeat", _Dee_HashSelect(UINT32_C(0x5735b114), UINT64_C(0x2d7a153f48778210)), "o" DEE_PCKuSIZ "o", data, pos, writeall));
+		return inherit(DeeObject_CallAttrStringHashf(this, "writeat", _Dee_HashSelectC(0x5735b114, 0x2d7a153f48778210), "o" DEE_PCKuSIZ "o", data, pos, writeall));
 	}
 	WUNUSED NONNULL_CXX((1)) Ref<deemon::int_> (writeat)(DeeObject *data, size_t pos, bool writeall) {
-		return inherit(DeeObject_CallAttrStringHashf(this, "writeat", _Dee_HashSelect(UINT32_C(0x5735b114), UINT64_C(0x2d7a153f48778210)), "o" DEE_PCKuSIZ "b", data, pos, writeall));
+		return inherit(DeeObject_CallAttrStringHashf(this, "writeat", _Dee_HashSelectC(0x5735b114, 0x2d7a153f48778210), "o" DEE_PCKuSIZ "b", data, pos, writeall));
 	}
 	WUNUSED NONNULL_CXX((2)) Ref<deemon::int_> (writeat)(char const *data, DeeObject *pos) {
-		return inherit(DeeObject_CallAttrStringHashf(this, "writeat", _Dee_HashSelect(UINT32_C(0x5735b114), UINT64_C(0x2d7a153f48778210)), "so", data, pos));
+		return inherit(DeeObject_CallAttrStringHashf(this, "writeat", _Dee_HashSelectC(0x5735b114, 0x2d7a153f48778210), "so", data, pos));
 	}
 	WUNUSED NONNULL_CXX((2, 3)) Ref<deemon::int_> (writeat)(char const *data, DeeObject *pos, DeeObject *writeall) {
-		return inherit(DeeObject_CallAttrStringHashf(this, "writeat", _Dee_HashSelect(UINT32_C(0x5735b114), UINT64_C(0x2d7a153f48778210)), "soo", data, pos, writeall));
+		return inherit(DeeObject_CallAttrStringHashf(this, "writeat", _Dee_HashSelectC(0x5735b114, 0x2d7a153f48778210), "soo", data, pos, writeall));
 	}
 	WUNUSED NONNULL_CXX((2)) Ref<deemon::int_> (writeat)(char const *data, DeeObject *pos, bool writeall) {
-		return inherit(DeeObject_CallAttrStringHashf(this, "writeat", _Dee_HashSelect(UINT32_C(0x5735b114), UINT64_C(0x2d7a153f48778210)), "sob", data, pos, writeall));
+		return inherit(DeeObject_CallAttrStringHashf(this, "writeat", _Dee_HashSelectC(0x5735b114, 0x2d7a153f48778210), "sob", data, pos, writeall));
 	}
 	WUNUSED Ref<deemon::int_> (writeat)(char const *data, Dee_ssize_t pos) {
-		return inherit(DeeObject_CallAttrStringHashf(this, "writeat", _Dee_HashSelect(UINT32_C(0x5735b114), UINT64_C(0x2d7a153f48778210)), "s" DEE_PCKdSIZ, data, pos));
+		return inherit(DeeObject_CallAttrStringHashf(this, "writeat", _Dee_HashSelectC(0x5735b114, 0x2d7a153f48778210), "s" DEE_PCKdSIZ, data, pos));
 	}
 	WUNUSED NONNULL_CXX((3)) Ref<deemon::int_> (writeat)(char const *data, Dee_ssize_t pos, DeeObject *writeall) {
-		return inherit(DeeObject_CallAttrStringHashf(this, "writeat", _Dee_HashSelect(UINT32_C(0x5735b114), UINT64_C(0x2d7a153f48778210)), "s" DEE_PCKdSIZ "o", data, pos, writeall));
+		return inherit(DeeObject_CallAttrStringHashf(this, "writeat", _Dee_HashSelectC(0x5735b114, 0x2d7a153f48778210), "s" DEE_PCKdSIZ "o", data, pos, writeall));
 	}
 	WUNUSED Ref<deemon::int_> (writeat)(char const *data, Dee_ssize_t pos, bool writeall) {
-		return inherit(DeeObject_CallAttrStringHashf(this, "writeat", _Dee_HashSelect(UINT32_C(0x5735b114), UINT64_C(0x2d7a153f48778210)), "s" DEE_PCKdSIZ "b", data, pos, writeall));
+		return inherit(DeeObject_CallAttrStringHashf(this, "writeat", _Dee_HashSelectC(0x5735b114, 0x2d7a153f48778210), "s" DEE_PCKdSIZ "b", data, pos, writeall));
 	}
 	WUNUSED Ref<deemon::int_> (writeat)(char const *data, size_t pos) {
-		return inherit(DeeObject_CallAttrStringHashf(this, "writeat", _Dee_HashSelect(UINT32_C(0x5735b114), UINT64_C(0x2d7a153f48778210)), "s" DEE_PCKuSIZ, data, pos));
+		return inherit(DeeObject_CallAttrStringHashf(this, "writeat", _Dee_HashSelectC(0x5735b114, 0x2d7a153f48778210), "s" DEE_PCKuSIZ, data, pos));
 	}
 	WUNUSED NONNULL_CXX((3)) Ref<deemon::int_> (writeat)(char const *data, size_t pos, DeeObject *writeall) {
-		return inherit(DeeObject_CallAttrStringHashf(this, "writeat", _Dee_HashSelect(UINT32_C(0x5735b114), UINT64_C(0x2d7a153f48778210)), "s" DEE_PCKuSIZ "o", data, pos, writeall));
+		return inherit(DeeObject_CallAttrStringHashf(this, "writeat", _Dee_HashSelectC(0x5735b114, 0x2d7a153f48778210), "s" DEE_PCKuSIZ "o", data, pos, writeall));
 	}
 	WUNUSED Ref<deemon::int_> (writeat)(char const *data, size_t pos, bool writeall) {
-		return inherit(DeeObject_CallAttrStringHashf(this, "writeat", _Dee_HashSelect(UINT32_C(0x5735b114), UINT64_C(0x2d7a153f48778210)), "s" DEE_PCKuSIZ "b", data, pos, writeall));
+		return inherit(DeeObject_CallAttrStringHashf(this, "writeat", _Dee_HashSelectC(0x5735b114, 0x2d7a153f48778210), "s" DEE_PCKuSIZ "b", data, pos, writeall));
 	}
 	WUNUSED NONNULL_CXX((1)) Ref<Bytes> (readallat)(DeeObject *pos) {
 		DeeObject *args[1];
 		args[0] = pos;
-		return inherit(DeeObject_CallAttrStringHash(this, "readallat", _Dee_HashSelect(UINT32_C(0x4a3b37ea), UINT64_C(0x92eb943eeeb4889d)), 1, args));
+		return inherit(DeeObject_CallAttrStringHash(this, "readallat", _Dee_HashSelectC(0x4a3b37ea, 0x92eb943eeeb4889d), 1, args));
 	}
 	WUNUSED NONNULL_CXX((1, 2)) Ref<Bytes> (readallat)(DeeObject *pos, DeeObject *maxbytes) {
 		DeeObject *args[2];
 		args[0] = pos;
 		args[1] = maxbytes;
-		return inherit(DeeObject_CallAttrStringHash(this, "readallat", _Dee_HashSelect(UINT32_C(0x4a3b37ea), UINT64_C(0x92eb943eeeb4889d)), 2, args));
+		return inherit(DeeObject_CallAttrStringHash(this, "readallat", _Dee_HashSelectC(0x4a3b37ea, 0x92eb943eeeb4889d), 2, args));
 	}
 	WUNUSED NONNULL_CXX((1)) Ref<Bytes> (readallat)(DeeObject *pos, Dee_ssize_t maxbytes) {
-		return inherit(DeeObject_CallAttrStringHashf(this, "readallat", _Dee_HashSelect(UINT32_C(0x4a3b37ea), UINT64_C(0x92eb943eeeb4889d)), "o" DEE_PCKdSIZ, pos, maxbytes));
+		return inherit(DeeObject_CallAttrStringHashf(this, "readallat", _Dee_HashSelectC(0x4a3b37ea, 0x92eb943eeeb4889d), "o" DEE_PCKdSIZ, pos, maxbytes));
 	}
 	WUNUSED NONNULL_CXX((1)) Ref<Bytes> (readallat)(DeeObject *pos, size_t maxbytes) {
-		return inherit(DeeObject_CallAttrStringHashf(this, "readallat", _Dee_HashSelect(UINT32_C(0x4a3b37ea), UINT64_C(0x92eb943eeeb4889d)), "o" DEE_PCKuSIZ, pos, maxbytes));
+		return inherit(DeeObject_CallAttrStringHashf(this, "readallat", _Dee_HashSelectC(0x4a3b37ea, 0x92eb943eeeb4889d), "o" DEE_PCKuSIZ, pos, maxbytes));
 	}
 	WUNUSED Ref<Bytes> (readallat)(Dee_ssize_t pos) {
-		return inherit(DeeObject_CallAttrStringHashf(this, "readallat", _Dee_HashSelect(UINT32_C(0x4a3b37ea), UINT64_C(0x92eb943eeeb4889d)),  DEE_PCKdSIZ, pos));
+		return inherit(DeeObject_CallAttrStringHashf(this, "readallat", _Dee_HashSelectC(0x4a3b37ea, 0x92eb943eeeb4889d),  DEE_PCKdSIZ, pos));
 	}
 	WUNUSED NONNULL_CXX((2)) Ref<Bytes> (readallat)(Dee_ssize_t pos, DeeObject *maxbytes) {
-		return inherit(DeeObject_CallAttrStringHashf(this, "readallat", _Dee_HashSelect(UINT32_C(0x4a3b37ea), UINT64_C(0x92eb943eeeb4889d)),  DEE_PCKdSIZ "o", pos, maxbytes));
+		return inherit(DeeObject_CallAttrStringHashf(this, "readallat", _Dee_HashSelectC(0x4a3b37ea, 0x92eb943eeeb4889d),  DEE_PCKdSIZ "o", pos, maxbytes));
 	}
 	WUNUSED Ref<Bytes> (readallat)(Dee_ssize_t pos, Dee_ssize_t maxbytes) {
-		return inherit(DeeObject_CallAttrStringHashf(this, "readallat", _Dee_HashSelect(UINT32_C(0x4a3b37ea), UINT64_C(0x92eb943eeeb4889d)),  DEE_PCKdSIZ DEE_PCKdSIZ, pos, maxbytes));
+		return inherit(DeeObject_CallAttrStringHashf(this, "readallat", _Dee_HashSelectC(0x4a3b37ea, 0x92eb943eeeb4889d),  DEE_PCKdSIZ DEE_PCKdSIZ, pos, maxbytes));
 	}
 	WUNUSED Ref<Bytes> (readallat)(Dee_ssize_t pos, size_t maxbytes) {
-		return inherit(DeeObject_CallAttrStringHashf(this, "readallat", _Dee_HashSelect(UINT32_C(0x4a3b37ea), UINT64_C(0x92eb943eeeb4889d)),  DEE_PCKdSIZ DEE_PCKuSIZ, pos, maxbytes));
+		return inherit(DeeObject_CallAttrStringHashf(this, "readallat", _Dee_HashSelectC(0x4a3b37ea, 0x92eb943eeeb4889d),  DEE_PCKdSIZ DEE_PCKuSIZ, pos, maxbytes));
 	}
 	WUNUSED Ref<Bytes> (readallat)(size_t pos) {
-		return inherit(DeeObject_CallAttrStringHashf(this, "readallat", _Dee_HashSelect(UINT32_C(0x4a3b37ea), UINT64_C(0x92eb943eeeb4889d)),  DEE_PCKuSIZ, pos));
+		return inherit(DeeObject_CallAttrStringHashf(this, "readallat", _Dee_HashSelectC(0x4a3b37ea, 0x92eb943eeeb4889d),  DEE_PCKuSIZ, pos));
 	}
 	WUNUSED NONNULL_CXX((2)) Ref<Bytes> (readallat)(size_t pos, DeeObject *maxbytes) {
-		return inherit(DeeObject_CallAttrStringHashf(this, "readallat", _Dee_HashSelect(UINT32_C(0x4a3b37ea), UINT64_C(0x92eb943eeeb4889d)),  DEE_PCKuSIZ "o", pos, maxbytes));
+		return inherit(DeeObject_CallAttrStringHashf(this, "readallat", _Dee_HashSelectC(0x4a3b37ea, 0x92eb943eeeb4889d),  DEE_PCKuSIZ "o", pos, maxbytes));
 	}
 	WUNUSED Ref<Bytes> (readallat)(size_t pos, Dee_ssize_t maxbytes) {
-		return inherit(DeeObject_CallAttrStringHashf(this, "readallat", _Dee_HashSelect(UINT32_C(0x4a3b37ea), UINT64_C(0x92eb943eeeb4889d)),  DEE_PCKuSIZ DEE_PCKdSIZ, pos, maxbytes));
+		return inherit(DeeObject_CallAttrStringHashf(this, "readallat", _Dee_HashSelectC(0x4a3b37ea, 0x92eb943eeeb4889d),  DEE_PCKuSIZ DEE_PCKdSIZ, pos, maxbytes));
 	}
 	WUNUSED Ref<Bytes> (readallat)(size_t pos, size_t maxbytes) {
-		return inherit(DeeObject_CallAttrStringHashf(this, "readallat", _Dee_HashSelect(UINT32_C(0x4a3b37ea), UINT64_C(0x92eb943eeeb4889d)),  DEE_PCKuSIZ DEE_PCKuSIZ, pos, maxbytes));
+		return inherit(DeeObject_CallAttrStringHashf(this, "readallat", _Dee_HashSelectC(0x4a3b37ea, 0x92eb943eeeb4889d),  DEE_PCKuSIZ DEE_PCKuSIZ, pos, maxbytes));
 	}
 	void (flush)() {
-		decref(throw_if_null(DeeObject_CallAttrStringHash(this, "flush", _Dee_HashSelect(UINT32_C(0xc55ede0a), UINT64_C(0x8a3df9f6a93e2205)), 0, NULL)));
+		decref(throw_if_null(DeeObject_CallAttrStringHash(this, "flush", _Dee_HashSelectC(0xc55ede0a, 0x8a3df9f6a93e2205), 0, NULL)));
 	}
 	WUNUSED NONNULL_CXX((1)) Ref<deemon::int_> (puts)(DeeObject *data) {
 		DeeObject *args[1];
 		args[0] = data;
-		return inherit(DeeObject_CallAttrStringHash(this, "puts", _Dee_HashSelect(UINT32_C(0x7cfecd38), UINT64_C(0x2f5a3dd681edead9)), 1, args));
+		return inherit(DeeObject_CallAttrStringHash(this, "puts", _Dee_HashSelectC(0x7cfecd38, 0x2f5a3dd681edead9), 1, args));
 	}
 	WUNUSED Ref<deemon::int_> (puts)(char const *data) {
-		return inherit(DeeObject_CallAttrStringHashf(this, "puts", _Dee_HashSelect(UINT32_C(0x7cfecd38), UINT64_C(0x2f5a3dd681edead9)), "s", data));
+		return inherit(DeeObject_CallAttrStringHashf(this, "puts", _Dee_HashSelectC(0x7cfecd38, 0x2f5a3dd681edead9), "s", data));
 	}
 	class _Wrap_pos
 		: public deemon::detail::ConstGetRefProxy<_Wrap_pos, deemon::int_>
@@ -571,16 +571,16 @@ public:
 		_Wrap_pos(DeeObject *self) DEE_CXX_NOTHROW
 			: m_self(self) {}
 		WUNUSED DREF DeeObject *_getref() const DEE_CXX_NOTHROW {
-			return DeeObject_GetAttrStringHash(m_self, "pos", _Dee_HashSelect(UINT32_C(0xb1aecbb4), UINT64_C(0x277b6d36f75741ae)));
+			return DeeObject_GetAttrStringHash(m_self, "pos", _Dee_HashSelectC(0xb1aecbb4, 0x277b6d36f75741ae));
 		}
 		WUNUSED bool bound() const {
-			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "pos", _Dee_HashSelect(UINT32_C(0xb1aecbb4), UINT64_C(0x277b6d36f75741ae))));
+			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "pos", _Dee_HashSelectC(0xb1aecbb4, 0x277b6d36f75741ae)));
 		}
 		void del() const {
-			throw_if_nonzero(DeeObject_DelAttrStringHash(m_self, "pos", _Dee_HashSelect(UINT32_C(0xb1aecbb4), UINT64_C(0x277b6d36f75741ae))));
+			throw_if_nonzero(DeeObject_DelAttrStringHash(m_self, "pos", _Dee_HashSelectC(0xb1aecbb4, 0x277b6d36f75741ae)));
 		}
 		int _setref(DeeObject *value) const DEE_CXX_NOTHROW {
-			return DeeObject_SetAttrStringHash(m_self, "pos", _Dee_HashSelect(UINT32_C(0xb1aecbb4), UINT64_C(0x277b6d36f75741ae)), value);
+			return DeeObject_SetAttrStringHash(m_self, "pos", _Dee_HashSelectC(0xb1aecbb4, 0x277b6d36f75741ae), value);
 		}
 	};
 	WUNUSED _Wrap_pos (pos)() {
@@ -594,10 +594,10 @@ public:
 		_Wrap_seq(DeeObject *self) DEE_CXX_NOTHROW
 			: m_self(self) {}
 		WUNUSED DREF DeeObject *_getref() const DEE_CXX_NOTHROW {
-			return DeeObject_GetAttrStringHash(m_self, "seq", _Dee_HashSelect(UINT32_C(0x232af2b7), UINT64_C(0x80a0b0950a5a5251)));
+			return DeeObject_GetAttrStringHash(m_self, "seq", _Dee_HashSelectC(0x232af2b7, 0x80a0b0950a5a5251));
 		}
 		WUNUSED bool bound() const {
-			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "seq", _Dee_HashSelect(UINT32_C(0x232af2b7), UINT64_C(0x80a0b0950a5a5251))));
+			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "seq", _Dee_HashSelectC(0x232af2b7, 0x80a0b0950a5a5251)));
 		}
 	};
 	WUNUSED _Wrap_seq (seq)() {
