@@ -96,8 +96,8 @@ INTDEF WUNUSED NONNULL((1)) int DCALL int_dec(DREF DeeIntObject **__restrict p_s
 
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeInt_AddSDigit(DeeIntObject *__restrict a, sdigit b);
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeInt_SubSDigit(DeeIntObject *__restrict a, sdigit b);
-INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeInt_AddU32(DeeIntObject *__restrict a, uint32_t b);
-INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeInt_SubU32(DeeIntObject *__restrict a, uint32_t b);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeInt_AddUInt32(DeeIntObject *__restrict a, uint32_t b);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeInt_SubUInt32(DeeIntObject *__restrict a, uint32_t b);
 
 DECL_END
 

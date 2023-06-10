@@ -674,6 +674,7 @@ udict_rehash(UDict *__restrict self, int sizedir) {
 		for (; iter < end; ++iter) {
 			struct udict_item *item;
 			dhash_t i, perturb;
+
 			/* Skip dummy keys. */
 			if (!iter->di_key || iter->di_key == dummy)
 				continue;
@@ -683,11 +684,13 @@ udict_rehash(UDict *__restrict self, int sizedir) {
 				if (!item->di_key)
 					break; /* Empty slot found. */
 			}
+
 			/* Transfer this object. */
 			item->di_key   = iter->di_key;
 			item->di_value = iter->di_value;
 		}
 		Dee_Free(self->ud_elem);
+
 		/* With all dummy items gone, the size now equals what is actually used. */
 		self->ud_size = self->ud_used;
 	}

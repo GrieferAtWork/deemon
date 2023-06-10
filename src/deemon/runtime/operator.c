@@ -3115,7 +3115,7 @@ DeeObject_AddUInt32(DeeObject *__restrict self, uint32_t val) {
 	DREF DeeObject *val_ob, *result;
 	/* Optimization for `int' */
 	if (DeeInt_Check(self))
-		return DeeInt_AddU32((DeeIntObject *)self, val);
+		return DeeInt_AddUInt32((DeeIntObject *)self, val);
 	val_ob = DeeInt_NewUInt32(val);
 	if unlikely(!val_ob)
 		goto err;
@@ -3131,7 +3131,7 @@ DeeObject_SubUInt32(DeeObject *__restrict self, uint32_t val) {
 	DREF DeeObject *val_ob, *result;
 	/* Optimization for `int' */
 	if (DeeInt_Check(self))
-		return DeeInt_SubU32((DeeIntObject *)self, val);
+		return DeeInt_SubUInt32((DeeIntObject *)self, val);
 	val_ob = DeeInt_NewUInt32(val);
 	if unlikely(!val_ob)
 		goto err;

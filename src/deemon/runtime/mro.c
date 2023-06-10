@@ -59,6 +59,13 @@ DECL_BEGIN
 DeeSystem_DEFINE_strcmp(dee_strcmp)
 #endif /* !CONFIG_HAVE_strcmp */
 
+#ifndef CONFIG_HAVE_strcmpz
+#define CONFIG_HAVE_strcmpz
+#undef strcmpz
+#define strcmpz dee_strcmpz
+DeeSystem_DEFINE_strcmpz(dee_strcmpz)
+#endif /* !CONFIG_HAVE_strcmpz */
+
 #ifndef NDEBUG
 #define DBG_memset (void)memset
 #else /* !NDEBUG */
@@ -83,18 +90,8 @@ LIST_HEAD(membercache_list_struct, Dee_membercache);
 PRIVATE struct membercache_list_struct
 membercache_list = LIST_HEAD_INITIALIZER(membercache_list);
 
-#define streq(a, b) (strcmp(a, b) == 0)
-LOCAL NONNULL((1, 2)) bool DCALL
-streq_len(char const *zero_zterminated,
-          char const *compare_to, size_t compare_to_length) {
-	/* TODO: return strcmpz(zero_zterminated, compare_to, compare_to_length) == 0; */
-	if (strlen(zero_zterminated) != compare_to_length)
-		return false;
-	return bcmpc(zero_zterminated, compare_to,
-	             compare_to_length, sizeof(char)) == 0;
-}
-
-
+#define streq(a, b)            (strcmp(a, b) == 0)
+#define streq_len(a, b, b_len) (strcmpz(a, b, b_len) == 0)
 
 /* Finalize a given member-cache. */
 INTERN NONNULL((1)) void DCALL
@@ -243,6 +240,7 @@ again_search_slots:
 		type = atomic_read(&slot->mcs_type);
 		if (type == MEMBERCACHE_UNUSED)
 			break;
+
 #ifndef CONFIG_NO_THREADS
 		if (type == MEMBERCACHE_UNINITIALIZED) {
 			/* Encountered an uninitialized slot along the cache-chain.
@@ -265,6 +263,7 @@ again_search_slots:
 			return true;
 		}
 #endif /* !CONFIG_NO_THREADS */
+
 		if (slot->mcs_hash != item->mcs_hash)
 			continue;
 		if (slot->mcs_method.m_name != item->mcs_name &&

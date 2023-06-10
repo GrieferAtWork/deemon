@@ -722,7 +722,7 @@ done:
 	if unlikely(!z)
 		goto err;
 	*p_self = z; /* Inherit reference. */
-	Dee_Decref(a);
+	Dee_Decref_unlikely(a);
 done2:
 	return 0;
 err:
@@ -824,7 +824,7 @@ DeeInt_AddSDigit(DeeIntObject *__restrict a, sdigit b) {
 }
 
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-DeeInt_AddU32(DeeIntObject *__restrict a, uint32_t b) {
+DeeInt_AddUInt32(DeeIntObject *__restrict a, uint32_t b) {
 	DeeIntObject *z;
 	if (!b)
 		return_reference_((DREF DeeObject *)a);
@@ -886,7 +886,7 @@ DeeInt_SubSDigit(DeeIntObject *__restrict a, sdigit b) {
 }
 
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-DeeInt_SubU32(DeeIntObject *__restrict a, uint32_t b) {
+DeeInt_SubUInt32(DeeIntObject *__restrict a, uint32_t b) {
 	DeeIntObject *z;
 	if (ABS(a->ob_size) <= 1)
 		return DeeInt_NewInt64((int64_t)MEDIUM_VALUE(a) - (int64_t)b);
