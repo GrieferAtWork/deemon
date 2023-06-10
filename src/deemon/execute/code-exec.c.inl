@@ -2398,7 +2398,7 @@ do_function_c:
 
 		TARGET(ASM_ADD_SIMM8, -1, +1) {
 			DREF DeeObject *math_result;
-			math_result = DeeObject_AddS8(TOP, READ_Simm8());
+			math_result = DeeObject_AddInt8(TOP, READ_Simm8());
 			if unlikely(!math_result)
 				HANDLE_EXCEPT();
 			Dee_Decref(TOP);
@@ -2407,7 +2407,7 @@ do_function_c:
 		}
 		TARGET(ASM_ADD_IMM32, -1, +1) {
 			DREF DeeObject *math_result;
-			math_result = DeeObject_AddInt(TOP, READ_imm32());
+			math_result = DeeObject_AddUInt32(TOP, READ_imm32());
 			if unlikely(!math_result)
 				HANDLE_EXCEPT();
 			Dee_Decref(TOP);
@@ -2417,7 +2417,7 @@ do_function_c:
 
 		TARGET(ASM_SUB_SIMM8, -1, +1) {
 			DREF DeeObject *math_result;
-			math_result = DeeObject_SubS8(TOP, READ_Simm8());
+			math_result = DeeObject_SubInt8(TOP, READ_Simm8());
 			if unlikely(!math_result)
 				HANDLE_EXCEPT();
 			Dee_Decref(TOP);
@@ -2426,7 +2426,7 @@ do_function_c:
 		}
 		TARGET(ASM_SUB_IMM32, -1, +1) {
 			DREF DeeObject *math_result;
-			math_result = DeeObject_SubInt(TOP, READ_imm32());
+			math_result = DeeObject_SubUInt32(TOP, READ_imm32());
 			if unlikely(!math_result)
 				HANDLE_EXCEPT();
 			Dee_Decref(TOP);
@@ -2436,7 +2436,7 @@ do_function_c:
 
 		TARGET(ASM_MUL_SIMM8, -1, +1) {
 			DREF DeeObject *math_result;
-			math_result = DeeObject_MulS8(TOP, READ_Simm8());
+			math_result = DeeObject_MulInt8(TOP, READ_Simm8());
 			if unlikely(!math_result)
 				HANDLE_EXCEPT();
 			Dee_Decref(TOP);
@@ -2446,7 +2446,7 @@ do_function_c:
 
 		TARGET(ASM_DIV_SIMM8, -1, +1) {
 			DREF DeeObject *math_result;
-			math_result = DeeObject_DivS8(TOP, READ_Simm8());
+			math_result = DeeObject_DivInt8(TOP, READ_Simm8());
 			if unlikely(!math_result)
 				HANDLE_EXCEPT();
 			Dee_Decref(TOP);
@@ -2456,7 +2456,7 @@ do_function_c:
 
 		TARGET(ASM_MOD_SIMM8, -1, +1) {
 			DREF DeeObject *math_result;
-			math_result = DeeObject_ModS8(TOP, READ_Simm8());
+			math_result = DeeObject_ModInt8(TOP, READ_Simm8());
 			if unlikely(!math_result)
 				HANDLE_EXCEPT();
 			Dee_Decref(TOP);
@@ -2466,7 +2466,7 @@ do_function_c:
 
 		TARGET(ASM_AND_IMM32, -1, +1) {
 			DREF DeeObject *math_result;
-			math_result = DeeObject_AndInt(TOP, READ_imm32());
+			math_result = DeeObject_AndUInt32(TOP, READ_imm32());
 			if unlikely(!math_result)
 				HANDLE_EXCEPT();
 			Dee_Decref(TOP);
@@ -2476,7 +2476,7 @@ do_function_c:
 
 		TARGET(ASM_OR_IMM32, -1, +1) {
 			DREF DeeObject *math_result;
-			math_result = DeeObject_OrInt(TOP, READ_imm32());
+			math_result = DeeObject_OrUInt32(TOP, READ_imm32());
 			if unlikely(!math_result)
 				HANDLE_EXCEPT();
 			Dee_Decref(TOP);
@@ -2486,7 +2486,7 @@ do_function_c:
 
 		TARGET(ASM_XOR_IMM32, -1, +1) {
 			DREF DeeObject *math_result;
-			math_result = DeeObject_XorInt(TOP, READ_imm32());
+			math_result = DeeObject_XorUInt32(TOP, READ_imm32());
 			if unlikely(!math_result)
 				HANDLE_EXCEPT();
 			Dee_Decref(TOP);
@@ -2496,7 +2496,7 @@ do_function_c:
 
 		TARGET(ASM_SHL_IMM8, -1, +1) {
 			DREF DeeObject *math_result;
-			math_result = DeeObject_ShlInt(TOP, READ_imm8());
+			math_result = DeeObject_ShlUInt8(TOP, READ_imm8());
 			if unlikely(!math_result)
 				HANDLE_EXCEPT();
 			Dee_Decref(TOP);
@@ -2506,7 +2506,7 @@ do_function_c:
 
 		TARGET(ASM_SHR_IMM8, -1, +1) {
 			DREF DeeObject *math_result;
-			math_result = DeeObject_ShrInt(TOP, READ_imm8());
+			math_result = DeeObject_ShrUInt8(TOP, READ_imm8());
 			if unlikely(!math_result)
 				HANDLE_EXCEPT();
 			Dee_Decref(TOP);
@@ -5620,7 +5620,7 @@ prefix_foreach_16:
 					if (prefix_pointer != (DREF DeeObject **)ITER_DONE) {
 						if unlikely(!prefix_pointer)
 							HANDLE_EXCEPT();
-						error = DeeObject_InplaceAddInt(prefix_pointer, READ_imm32());
+						error = DeeObject_InplaceAddUInt32(prefix_pointer, READ_imm32());
 						if unlikely(error)
 							HANDLE_EXCEPT();
 					} else {
@@ -5628,7 +5628,7 @@ prefix_foreach_16:
 						prefix_ob = get_prefix_object();
 						if unlikely(!prefix_ob)
 							HANDLE_EXCEPT();
-						error = DeeObject_InplaceAddInt(&prefix_ob, READ_imm32());
+						error = DeeObject_InplaceAddUInt32(&prefix_ob, READ_imm32());
 						if unlikely(error) {
 							Dee_Decref(prefix_ob);
 							HANDLE_EXCEPT();
@@ -5672,7 +5672,7 @@ prefix_foreach_16:
 					if (prefix_pointer != (DREF DeeObject **)ITER_DONE) {
 						if unlikely(!prefix_pointer)
 							HANDLE_EXCEPT();
-						error = DeeObject_InplaceSubInt(prefix_pointer, READ_imm32());
+						error = DeeObject_InplaceSubUInt32(prefix_pointer, READ_imm32());
 						if unlikely(error)
 							HANDLE_EXCEPT();
 					} else {
@@ -5680,7 +5680,7 @@ prefix_foreach_16:
 						prefix_ob = get_prefix_object();
 						if unlikely(!prefix_ob)
 							HANDLE_EXCEPT();
-						error = DeeObject_InplaceSubInt(&prefix_ob, READ_imm32());
+						error = DeeObject_InplaceSubUInt32(&prefix_ob, READ_imm32());
 						if unlikely(error) {
 							Dee_Decref(prefix_ob);
 							HANDLE_EXCEPT();
@@ -5698,7 +5698,7 @@ prefix_foreach_16:
 					if (prefix_pointer != (DREF DeeObject **)ITER_DONE) {
 						if unlikely(!prefix_pointer)
 							HANDLE_EXCEPT();
-						error = DeeObject_InplaceMulS8(prefix_pointer, READ_Simm8());
+						error = DeeObject_InplaceMulInt8(prefix_pointer, READ_Simm8());
 						if unlikely(error)
 							HANDLE_EXCEPT();
 					} else {
@@ -5706,7 +5706,7 @@ prefix_foreach_16:
 						prefix_ob = get_prefix_object();
 						if unlikely(!prefix_ob)
 							HANDLE_EXCEPT();
-						error = DeeObject_InplaceMulS8(&prefix_ob, READ_Simm8());
+						error = DeeObject_InplaceMulInt8(&prefix_ob, READ_Simm8());
 						if unlikely(error) {
 							Dee_Decref(prefix_ob);
 							HANDLE_EXCEPT();
@@ -5724,7 +5724,7 @@ prefix_foreach_16:
 					if (prefix_pointer != (DREF DeeObject **)ITER_DONE) {
 						if unlikely(!prefix_pointer)
 							HANDLE_EXCEPT();
-						error = DeeObject_InplaceDivS8(prefix_pointer, READ_Simm8());
+						error = DeeObject_InplaceDivInt8(prefix_pointer, READ_Simm8());
 						if unlikely(error)
 							HANDLE_EXCEPT();
 					} else {
@@ -5732,7 +5732,7 @@ prefix_foreach_16:
 						prefix_ob = get_prefix_object();
 						if unlikely(!prefix_ob)
 							HANDLE_EXCEPT();
-						error = DeeObject_InplaceDivS8(&prefix_ob, READ_Simm8());
+						error = DeeObject_InplaceDivInt8(&prefix_ob, READ_Simm8());
 						if unlikely(error) {
 							Dee_Decref(prefix_ob);
 							HANDLE_EXCEPT();
@@ -5750,7 +5750,7 @@ prefix_foreach_16:
 					if (prefix_pointer != (DREF DeeObject **)ITER_DONE) {
 						if unlikely(!prefix_pointer)
 							HANDLE_EXCEPT();
-						error = DeeObject_InplaceModS8(prefix_pointer, READ_Simm8());
+						error = DeeObject_InplaceModInt8(prefix_pointer, READ_Simm8());
 						if unlikely(error)
 							HANDLE_EXCEPT();
 					} else {
@@ -5758,7 +5758,7 @@ prefix_foreach_16:
 						prefix_ob = get_prefix_object();
 						if unlikely(!prefix_ob)
 							HANDLE_EXCEPT();
-						error = DeeObject_InplaceModS8(&prefix_ob, READ_Simm8());
+						error = DeeObject_InplaceModInt8(&prefix_ob, READ_Simm8());
 						if unlikely(error) {
 							Dee_Decref(prefix_ob);
 							HANDLE_EXCEPT();
@@ -5776,7 +5776,7 @@ prefix_foreach_16:
 					if (prefix_pointer != (DREF DeeObject **)ITER_DONE) {
 						if unlikely(!prefix_pointer)
 							HANDLE_EXCEPT();
-						error = DeeObject_InplaceAndInt(prefix_pointer, READ_imm32());
+						error = DeeObject_InplaceAndUInt32(prefix_pointer, READ_imm32());
 						if unlikely(error)
 							HANDLE_EXCEPT();
 					} else {
@@ -5784,7 +5784,7 @@ prefix_foreach_16:
 						prefix_ob = get_prefix_object();
 						if unlikely(!prefix_ob)
 							HANDLE_EXCEPT();
-						error = DeeObject_InplaceAndInt(&prefix_ob, READ_imm32());
+						error = DeeObject_InplaceAndUInt32(&prefix_ob, READ_imm32());
 						if unlikely(error) {
 							Dee_Decref(prefix_ob);
 							HANDLE_EXCEPT();
@@ -5802,7 +5802,7 @@ prefix_foreach_16:
 					if (prefix_pointer != (DREF DeeObject **)ITER_DONE) {
 						if unlikely(!prefix_pointer)
 							HANDLE_EXCEPT();
-						error = DeeObject_InplaceOrInt(prefix_pointer, READ_imm32());
+						error = DeeObject_InplaceOrUInt32(prefix_pointer, READ_imm32());
 						if unlikely(error)
 							HANDLE_EXCEPT();
 					} else {
@@ -5810,7 +5810,7 @@ prefix_foreach_16:
 						prefix_ob = get_prefix_object();
 						if unlikely(!prefix_ob)
 							HANDLE_EXCEPT();
-						error = DeeObject_InplaceOrInt(&prefix_ob, READ_imm32());
+						error = DeeObject_InplaceOrUInt32(&prefix_ob, READ_imm32());
 						if unlikely(error) {
 							Dee_Decref(prefix_ob);
 							HANDLE_EXCEPT();
@@ -5828,7 +5828,7 @@ prefix_foreach_16:
 					if (prefix_pointer != (DREF DeeObject **)ITER_DONE) {
 						if unlikely(!prefix_pointer)
 							HANDLE_EXCEPT();
-						error = DeeObject_InplaceXorInt(prefix_pointer, READ_imm32());
+						error = DeeObject_InplaceXorUInt32(prefix_pointer, READ_imm32());
 						if unlikely(error)
 							HANDLE_EXCEPT();
 					} else {
@@ -5836,7 +5836,7 @@ prefix_foreach_16:
 						prefix_ob = get_prefix_object();
 						if unlikely(!prefix_ob)
 							HANDLE_EXCEPT();
-						error = DeeObject_InplaceXorInt(&prefix_ob, READ_imm32());
+						error = DeeObject_InplaceXorUInt32(&prefix_ob, READ_imm32());
 						if unlikely(error) {
 							Dee_Decref(prefix_ob);
 							HANDLE_EXCEPT();
@@ -5854,7 +5854,7 @@ prefix_foreach_16:
 					if (prefix_pointer != (DREF DeeObject **)ITER_DONE) {
 						if unlikely(!prefix_pointer)
 							HANDLE_EXCEPT();
-						error = DeeObject_InplaceShlInt(prefix_pointer, READ_imm8());
+						error = DeeObject_InplaceShlUInt8(prefix_pointer, READ_imm8());
 						if unlikely(error)
 							HANDLE_EXCEPT();
 					} else {
@@ -5862,7 +5862,7 @@ prefix_foreach_16:
 						prefix_ob = get_prefix_object();
 						if unlikely(!prefix_ob)
 							HANDLE_EXCEPT();
-						error = DeeObject_InplaceShlInt(&prefix_ob, READ_imm8());
+						error = DeeObject_InplaceShlUInt8(&prefix_ob, READ_imm8());
 						if unlikely(error) {
 							Dee_Decref(prefix_ob);
 							HANDLE_EXCEPT();
@@ -5880,7 +5880,7 @@ prefix_foreach_16:
 					if (prefix_pointer != (DREF DeeObject **)ITER_DONE) {
 						if unlikely(!prefix_pointer)
 							HANDLE_EXCEPT();
-						error = DeeObject_InplaceShrInt(prefix_pointer, READ_imm8());
+						error = DeeObject_InplaceShrUInt8(prefix_pointer, READ_imm8());
 						if unlikely(error)
 							HANDLE_EXCEPT();
 					} else {
@@ -5888,7 +5888,7 @@ prefix_foreach_16:
 						prefix_ob = get_prefix_object();
 						if unlikely(!prefix_ob)
 							HANDLE_EXCEPT();
-						error = DeeObject_InplaceShrInt(&prefix_ob, READ_imm8());
+						error = DeeObject_InplaceShrUInt8(&prefix_ob, READ_imm8());
 						if unlikely(error) {
 							Dee_Decref(prefix_ob);
 							HANDLE_EXCEPT();

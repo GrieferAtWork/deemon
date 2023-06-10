@@ -2940,30 +2940,30 @@ DFUNDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeObject_InplaceXor)(DREF DeeObject 
 DFUNDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeObject_InplacePow)(DREF DeeObject **__restrict p_self, DeeObject *some_object);
 
 /* Math operations with C (aka. host) integer operand. */
-DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *(DCALL DeeObject_AddS8)(DeeObject *__restrict self, int8_t val);
-DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *(DCALL DeeObject_SubS8)(DeeObject *__restrict self, int8_t val);
-DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *(DCALL DeeObject_AddInt)(DeeObject *__restrict self, uint32_t val);
-DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *(DCALL DeeObject_SubInt)(DeeObject *__restrict self, uint32_t val);
-DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *(DCALL DeeObject_MulS8)(DeeObject *__restrict self, int8_t val);
-DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *(DCALL DeeObject_DivS8)(DeeObject *__restrict self, int8_t val);
-DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *(DCALL DeeObject_ModS8)(DeeObject *__restrict self, int8_t val);
-DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *(DCALL DeeObject_ShlInt)(DeeObject *__restrict self, uint8_t val);
-DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *(DCALL DeeObject_ShrInt)(DeeObject *__restrict self, uint8_t val);
-DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *(DCALL DeeObject_AndInt)(DeeObject *__restrict self, uint32_t val);
-DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *(DCALL DeeObject_OrInt)(DeeObject *__restrict self, uint32_t val);
-DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *(DCALL DeeObject_XorInt)(DeeObject *__restrict self, uint32_t val);
+DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *(DCALL DeeObject_AddInt8)(DeeObject *__restrict self, int8_t val);
+DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *(DCALL DeeObject_SubInt8)(DeeObject *__restrict self, int8_t val);
+DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *(DCALL DeeObject_AddUInt32)(DeeObject *__restrict self, uint32_t val);
+DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *(DCALL DeeObject_SubUInt32)(DeeObject *__restrict self, uint32_t val);
+DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *(DCALL DeeObject_MulInt8)(DeeObject *__restrict self, int8_t val);
+DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *(DCALL DeeObject_DivInt8)(DeeObject *__restrict self, int8_t val);
+DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *(DCALL DeeObject_ModInt8)(DeeObject *__restrict self, int8_t val);
+DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *(DCALL DeeObject_ShlUInt8)(DeeObject *__restrict self, uint8_t val);
+DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *(DCALL DeeObject_ShrUInt8)(DeeObject *__restrict self, uint8_t val);
+DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *(DCALL DeeObject_AndUInt32)(DeeObject *__restrict self, uint32_t val);
+DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *(DCALL DeeObject_OrUInt32)(DeeObject *__restrict self, uint32_t val);
+DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *(DCALL DeeObject_XorUInt32)(DeeObject *__restrict self, uint32_t val);
 DFUNDEF WUNUSED NONNULL((1)) int (DCALL DeeObject_InplaceAddS8)(DREF DeeObject **__restrict p_self, int8_t val);
 DFUNDEF WUNUSED NONNULL((1)) int (DCALL DeeObject_InplaceSubS8)(DREF DeeObject **__restrict p_self, int8_t val);
-DFUNDEF WUNUSED NONNULL((1)) int (DCALL DeeObject_InplaceAddInt)(DREF DeeObject **__restrict p_self, uint32_t val);
-DFUNDEF WUNUSED NONNULL((1)) int (DCALL DeeObject_InplaceSubInt)(DREF DeeObject **__restrict p_self, uint32_t val);
-DFUNDEF WUNUSED NONNULL((1)) int (DCALL DeeObject_InplaceMulS8)(DREF DeeObject **__restrict p_self, int8_t val);
-DFUNDEF WUNUSED NONNULL((1)) int (DCALL DeeObject_InplaceDivS8)(DREF DeeObject **__restrict p_self, int8_t val);
-DFUNDEF WUNUSED NONNULL((1)) int (DCALL DeeObject_InplaceModS8)(DREF DeeObject **__restrict p_self, int8_t val);
-DFUNDEF WUNUSED NONNULL((1)) int (DCALL DeeObject_InplaceShlInt)(DREF DeeObject **__restrict p_self, uint8_t val);
-DFUNDEF WUNUSED NONNULL((1)) int (DCALL DeeObject_InplaceShrInt)(DREF DeeObject **__restrict p_self, uint8_t val);
-DFUNDEF WUNUSED NONNULL((1)) int (DCALL DeeObject_InplaceAndInt)(DREF DeeObject **__restrict p_self, uint32_t val);
-DFUNDEF WUNUSED NONNULL((1)) int (DCALL DeeObject_InplaceOrInt)(DREF DeeObject **__restrict p_self, uint32_t val);
-DFUNDEF WUNUSED NONNULL((1)) int (DCALL DeeObject_InplaceXorInt)(DREF DeeObject **__restrict p_self, uint32_t val);
+DFUNDEF WUNUSED NONNULL((1)) int (DCALL DeeObject_InplaceAddUInt32)(DREF DeeObject **__restrict p_self, uint32_t val);
+DFUNDEF WUNUSED NONNULL((1)) int (DCALL DeeObject_InplaceSubUInt32)(DREF DeeObject **__restrict p_self, uint32_t val);
+DFUNDEF WUNUSED NONNULL((1)) int (DCALL DeeObject_InplaceMulInt8)(DREF DeeObject **__restrict p_self, int8_t val);
+DFUNDEF WUNUSED NONNULL((1)) int (DCALL DeeObject_InplaceDivInt8)(DREF DeeObject **__restrict p_self, int8_t val);
+DFUNDEF WUNUSED NONNULL((1)) int (DCALL DeeObject_InplaceModInt8)(DREF DeeObject **__restrict p_self, int8_t val);
+DFUNDEF WUNUSED NONNULL((1)) int (DCALL DeeObject_InplaceShlUInt8)(DREF DeeObject **__restrict p_self, uint8_t val);
+DFUNDEF WUNUSED NONNULL((1)) int (DCALL DeeObject_InplaceShrUInt8)(DREF DeeObject **__restrict p_self, uint8_t val);
+DFUNDEF WUNUSED NONNULL((1)) int (DCALL DeeObject_InplaceAndUInt32)(DREF DeeObject **__restrict p_self, uint32_t val);
+DFUNDEF WUNUSED NONNULL((1)) int (DCALL DeeObject_InplaceOrUInt32)(DREF DeeObject **__restrict p_self, uint32_t val);
+DFUNDEF WUNUSED NONNULL((1)) int (DCALL DeeObject_InplaceXorUInt32)(DREF DeeObject **__restrict p_self, uint32_t val);
 
 
 /* Comparison operator invocation.
