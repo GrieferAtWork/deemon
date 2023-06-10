@@ -398,7 +398,6 @@ struct Dee_weakref {
 #define Dee_WEAKREF(T) struct Dee_weakref
 #endif /* !__cplusplus */
 
-
 #ifdef DEE_SOURCE
 #define WEAKREF_INIT Dee_WEAKREF_INIT
 #define WEAKREF      Dee_WEAKREF

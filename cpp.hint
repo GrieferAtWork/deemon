@@ -1,3 +1,6 @@
+// Compiler
+#define alignas(x)
+#define _Alignas(x)
 #define __extension__
 #define attribute(x)
 #define __attribute(x)
@@ -13,6 +16,7 @@
 #define typeof decltype
 #define __typeof decltype
 #define __typeof__ decltype
+#define complex
 #define _Complex
 #define __complex
 #define __complex__
@@ -43,6 +47,7 @@
 #define __unsigned__ unsigned
 #define __restrict restrict
 #define __restrict__ restrict
+#define __restrict_arr restrict
 #define asm(...)
 #define __asm(...)
 #define __asm__(...)
@@ -55,6 +60,444 @@
 #define __ms_abi
 #define __sysv_abi
 
+
+
+// <__stdinc.h> + <hybrid/compiler.h>
+#define DECL_BEGIN extern "C" {
+#define __DECL_BEGIN extern "C" {
+#define __SYSDECL_BEGIN extern "C" {
+#define DECL_END }
+#define __DECL_END }
+#define __SYSDECL_END }
+
+#define __BOOL       bool
+#define __LONGLONG   long long
+#define __ULONGLONG  unsigned long long
+#define __LONGDOUBLE long double
+
+#define NULL 0
+#define __NULLPTR 0
+
+#define XBLOCK
+#define __XBLOCK
+#define XRETURN
+#define __XRETURN
+
+#define __P(x) x
+#define __builtin_va_list va_list
+#define DFL(x) = x
+#define __DFL(x) = x
+#define COMPILER_FLEXIBLE_ARRAY(T,n) T n[]
+#define __COMPILER_FLEXIBLE_ARRAY(T,n) T n[]
+#define ASMNAME(x)
+#define __COMPILER_ASMNAME(x)
+#define UNUSED(...) __VA_ARGS__
+#define __UNUSED(...) __VA_ARGS__
+#define static_assert(...)
+#define _Static_assert(...)
+#define STATIC_ASSERT(...)
+#define __STATIC_ASSERT(...)
+#define STATIC_ASSERT_MSG(...)
+#define __STATIC_ASSERT_MSG(...)
+
+#define DEFINE_PRIVATE_ALIAS(n,o) int n(){}
+#define __DEFINE_PRIVATE_ALIAS(n,o) int n(){}
+#define DEFINE_PUBLIC_ALIAS(n,o) int n(){}
+#define __DEFINE_PUBLIC_ALIAS(n,o) int n(){}
+#define DEFINE_INTERN_ALIAS(n,o) int n(){}
+#define __DEFINE_INTERN_ALIAS(n,o) int n(){}
+#define DEFINE_PRIVATE_WEAK_ALIAS(n,o) int n(){}
+#define __DEFINE_PRIVATE_WEAK_ALIAS(n,o) int n(){}
+#define DEFINE_PUBLIC_WEAK_ALIAS(n,o) int n(){}
+#define __DEFINE_PUBLIC_WEAK_ALIAS(n,o) int n(){}
+#define DEFINE_INTERN_WEAK_ALIAS(n,o) int n(){}
+#define __DEFINE_INTERN_WEAK_ALIAS(n,o) int n(){}
+
+#define __COMPILER_SREDIRECT(decl,attr,T,name,asmname) extern T name;
+#define __COMPILER_SREDIRECT2(decl,attr,Tdecl,name,asmname) extern Tdecl;
+#define __COMPILER_REDIRECT(decl,attr,Treturn,nothrow,cc,name,param,asmname,args)                                        Treturn name param;
+#define __COMPILER_REDIRECT_VOID(decl,attr,nothrow,cc,name,param,asmname,args)                                              void name param;
+#define __COMPILER_VREDIRECT(decl,attr,Treturn,nothrow,cc,name,param,asmname,args,before_va_start,varcount,vartypes)     Treturn name param;
+#define __COMPILER_VREDIRECT_VOID(decl,attr,nothrow,cc,name,param,asmname,args,before_va_start,varcount,vartypes)           void name param;
+#define __COMPILER_VFREDIRECT(decl,attr,Treturn,nothrow,cc,name,paramf,asmnamef,vparamf,vasmnamef,args,before_va_start)  Treturn name paramf;
+#define __COMPILER_VFREDIRECT_VOID(decl,attr,nothrow,cc,name,paramf,asmnamef,vparamf,vasmnamef,args,before_va_start)        void name paramf;
+#define __COMPILER_XREDIRECT(decl,attr,Treturn,nothrow,cc,name,param,asmname,code)                                       Treturn name param;
+#define __COMPILER_XREDIRECT_VOID(decl,attr,nothrow,cc,name,param,asmname,code)                                             void name param;
+#define __COMPILER_EIDECLARE(attr,Treturn,nothrow,cc,name,param,...)                                                     Treturn name param;
+#define __COMPILER_EIREDIRECT(attr,Treturn,nothrow,cc,name,param,asmname,...)                                            Treturn name param;
+#define __COMPILER_CREDIRECT(decl,attr,Treturn,nothrow,cc,name,param,asmname,args)                                       Treturn name param;
+#define __COMPILER_CREDIRECT_VOID(decl,attr,nothrow,cc,name,param,asmname,args)                                             void name param;
+#define __COMPILER_CVREDIRECT(decl,attr,Treturn,nothrow,cc,name,param,asmname,args,before_va_start,varcount,vartypes)    Treturn name param;
+#define __COMPILER_CVREDIRECT_VOID(decl,attr,nothrow,cc,name,param,asmname,args,before_va_start,varcount,vartypes)          void name param;
+#define __COMPILER_CVFREDIRECT(decl,attr,Treturn,nothrow,cc,name,paramf,asmnamef,vparamf,vasmnamef,args,before_va_start) Treturn name paramf;
+#define __COMPILER_CVFREDIRECT_VOID(decl,attr,nothrow,cc,name,paramf,asmnamef,vparamf,vasmnamef,args,before_va_start)       void name paramf;
+#define __COMPILER_CXREDIRECT(decl,attr,Treturn,nothrow,cc,name,param,asmname,code)                                      Treturn name param;
+#define __COMPILER_CXREDIRECT_VOID(decl,attr,nothrow,cc,name,param,asmname,code)                                            void name param;
+#define __COMPILER_CEIDECLARE(attr,Treturn,nothrow,cc,name,param,...)                                                    Treturn name param;
+#define __COMPILER_CEIREDIRECT(attr,Treturn,nothrow,cc,name,param,asmname,...)                                           Treturn name param;
+#define REDIRECT(decl,attr,Treturn,nothrow,cc,name,param,asmname,args)                                                   Treturn name param;
+#define REDIRECT_VOID(decl,attr,nothrow,cc,name,param,asmname,args)                                                         void name param;
+#define VREDIRECT(decl,attr,Treturn,nothrow,cc,name,param,asmname,args,before_va_start,varcount,vartypes)                Treturn name param;
+#define VREDIRECT_VOID(decl,attr,nothrow,cc,name,param,asmname,args,before_va_start,varcount,vartypes)                      void name param;
+#define VFREDIRECT(decl,attr,Treturn,nothrow,cc,name,paramf,asmnamef,vparamf,vasmnamef,args,before_va_start)             Treturn name paramf;
+#define VFREDIRECT_VOID(decl,attr,nothrow,cc,name,paramf,asmnamef,vparamf,vasmnamef,args,before_va_start)                   void name paramf;
+#define XREDIRECT(decl,attr,Treturn,nothrow,cc,name,param,asmname,code)                                                  Treturn name param;
+#define XREDIRECT_VOID(decl,attr,nothrow,cc,name,param,asmname,code)                                                        void name param;
+#define EIDECLARE(attr,Treturn,nothrow,cc,name,param,...)                                                                Treturn name param;
+#define EIREDIRECT(attr,Treturn,nothrow,cc,name,param,asmname,...)                                                       Treturn name param;
+
+#define __NAMESPACE_GLB_SYM                 ::
+#define __NAMESPACE_STD_BEGIN               namespace std {
+#define __NAMESPACE_STD_END                 }
+#define __NAMESPACE_STD_SYM                 ::std::
+#define __NAMESPACE_STD_USING(x)            using ::std::x;
+#define __NAMESPACE_GLB_USING(x)            using ::x;
+#define __NAMESPACE_GLB_USING_TYPE(x)       using ::x;
+#define __NAMESPACE_GLB_USING_OR_IMPL(x, i) using ::x;
+
+#define __NAMESPACE_INT_BEGIN namespace __intern {
+#define __NAMESPACE_INT_END   }
+#define __NAMESPACE_INT_SYM   ::__intern::
+#define __NAMESPACE_INT_LSYM  __intern::
+
+#define __STATIC_IF(x) if(x)
+#define __STATIC_ELSE(x) else
+#define __IF0 if(0)
+#define __IF1 if(1)
+#define __WHILE0 while(0)
+#define __WHILE1 while(1)
+#define likely
+#define unlikely
+#define __likely
+#define __unlikely
+#define likely_untraced
+#define unlikely_untraced
+#define __likely_untraced
+#define __unlikely_untraced
+#define untraced
+#define __untraced
+
+#define IMPDEF extern
+#define __IMPDEF extern
+#define EXPDEF
+#define __EXPDEF
+#define FUNDEF
+#define __PUBDEF
+#define DATDEF extern
+#define __DATDEF extern
+#define PUBLIC
+#define __PUBLIC
+#define INTERN
+#define __INTERN
+#define PUBLIC_CONST
+#define __PUBLIC_CONST
+#define INTERN_CONST
+#define __INTERN_CONST
+#define INTERN_COMDAT
+#define __INTERN_COMDAT
+#define INTDEF extern
+#define __INTDEF extern
+#define PRIVATE static
+#define __PRIVATE static
+#define FORCELOCAL
+#define __FORCELOCAL
+#define EXTERN_INLINE
+#define __EXTERN_INLINE
+#define EXTERN_FORCEINLINE
+#define __EXTERN_FORCEINLINE
+#define LOCAL
+#define __LOCAL
+#define __LOCAL_REDIRECT
+
+#define NONNULL(...)
+#define NONNULL_T(...)
+#define ATTR_NONNULL(...)
+#define ATTR_NONNULL_T(...)
+#define __ATTR_NONNULL(...)
+#define __ATTR_NONNULL_T(...)
+#define NONNULL_CXX(...)
+#define ATTR_NONNULL_CXX(...)
+#define __ATTR_NONNULL_CXX(...)
+#define WUNUSED
+#define WUNUSED_T
+#define ATTR_WUNUSED
+#define ATTR_WUNUSED_T
+#define __ATTR_WUNUSED
+#define __ATTR_WUNUSED_T
+
+#define NOTHROW
+#define NOTHROW_T
+#define __NOTHROW
+#define __NOTHROW_T
+#define NOTHROW_NCX
+#define NOTHROW_NCX_T
+#define __NOTHROW_NCX
+#define __NOTHROW_NCX_T
+#define __NOTHROW_KRN
+#define NOTHROW_RPC
+#define NOTHROW_RPC_T
+#define __NOTHROW_RPC
+#define __NOTHROW_RPC_T
+#define NOTHROW_RPC_KOS
+#define NOTHROW_RPC_KOS_T
+#define __NOTHROW_RPC_KOS
+#define __NOTHROW_RPC_KOS_T
+#define NOTHROW_RPC_NOKOS
+#define NOTHROW_RPC_NOKOS_T
+#define __NOTHROW_RPC_NOKOS
+#define __NOTHROW_RPC_NOKOS_T
+#define NOTHROW_RPC_PURE
+#define NOTHROW_RPC_PURE_T
+#define __NOTHROW_RPC_PURE
+#define __NOTHROW_RPC_PURE_T
+#define NOTHROW_KERNEL
+#define NOTHROW_KERNEL_T
+#define __NOTHROW_KERNEL
+#define __NOTHROW_KERNEL_T
+#define NOTHROW_USER
+#define NOTHROW_USER_T
+#define __NOTHROW_USER
+#define __NOTHROW_USER_T
+#define THROWING
+#define THROWING_T
+#define __THROWING
+#define __THROWING_T
+
+#define ASMCALL
+#define __ASMCALL
+
+#define __ATTR_W64
+#define ATTR_NOINLINE
+#define __ATTR_NOINLINE
+#define ATTR_NORETURN
+#define ATTR_NORETURN_T
+#define __ATTR_NORETURN
+#define __ATTR_NORETURN_T
+#define ATTR_FASTCALL
+#define __ATTR_FASTCALL
+#define ATTR_STDCALL
+#define __ATTR_STDCALL
+#define ATTR_CDECL
+#define __ATTR_CDECL
+#define ATTR_SYSVABI
+#define __ATTR_SYSVABI
+#define ATTR_MSABI
+#define __ATTR_MSABI
+#define ATTR_PURE
+#define ATTR_PURE_T
+#define __ATTR_PURE
+#define __ATTR_PURE_T
+#define ATTR_CONST
+#define ATTR_CONST_T
+#define __ATTR_CONST
+#define __ATTR_CONST_T
+#define ATTR_LEAF
+#define ATTR_LEAF_P
+#define __ATTR_LEAF
+#define __ATTR_LEAF_T
+#define ATTR_FLATTEN
+#define __ATTR_FLATTEN
+#define ATTR_MALLOC
+#define ATTR_MALLOC_T
+#define __ATTR_MALLOC
+#define __ATTR_MALLOC_T
+#define ATTR_HOT
+#define ATTR_HOT_T
+#define __ATTR_HOT
+#define __ATTR_HOT_T
+#define ATTR_COLD
+#define ATTR_COLD_T
+#define __ATTR_COLD
+#define __ATTR_COLD_T
+#define ATTR_WEAK
+#define __ATTR_WEAK
+#define ATTR_ALLOC_SIZE(x)
+#define ATTR_ALLOC_SIZE_T(x)
+#define __ATTR_ALLOC_SIZE(x)
+#define __ATTR_ALLOC_SIZE_T(x)
+#define ATTR_ASSUME_ALIGNED(x)
+#define ATTR_ASSUME_ALIGNED_T(x)
+#define __ATTR_ASSUME_ALIGNED(x)
+#define __ATTR_ASSUME_ALIGNED_T(x)
+#define ATTR_ALLOC_ALIGN(x)
+#define ATTR_ALLOC_ALIGN_T(x)
+#define __ATTR_ALLOC_ALIGN(x)
+#define __ATTR_ALLOC_ALIGN_T(x)
+#define ATTR_NOTHROW
+#define ATTR_NOTHROW_T
+#define __ATTR_NOTHROW
+#define __ATTR_NOTHROW_T
+#define ATTR_DLLIMPORT
+#define __ATTR_DLLIMPORT
+#define ATTR_DLLEXPORT
+#define __ATTR_DLLEXPORT
+#define ATTR_NOCLONE
+#define __ATTR_NOCLONE
+#define ATTR_USED
+#define __ATTR_USED
+#define ATTR_UNUSED
+#define __ATTR_UNUSED
+#define ATTR_SENTINEL
+#define ATTR_SENTINEL_T
+#define __ATTR_SENTINEL
+#define __ATTR_SENTINEL_T
+#define ATTR_SENTINEL_O(x)
+#define ATTR_SENTINEL_O_T(x)
+#define __ATTR_SENTINEL_O(x)
+#define __ATTR_SENTINEL_O_T(x)
+#define ATTR_THREAD
+#define __ATTR_THREAD
+#define ATTR_DEPRECATED(x)
+#define ATTR_DEPRECATED_T(x)
+#define __ATTR_DEPRECATED(x)
+#define __ATTR_DEPRECATED_T(x)
+#define ATTR_DEPRECATED_
+#define ATTR_DEPRECATED_T_
+#define __ATTR_DEPRECATED_
+#define __ATTR_DEPRECATED_T_
+#define ATTR_WARNING(x)
+#define ATTR_WARNING_T(x)
+#define __ATTR_WARNING(x)
+#define __ATTR_WARNING_T(x)
+#define ATTR_ERROR(x)
+#define ATTR_ERROR_T(x)
+#define __ATTR_ERROR(x)
+#define __ATTR_ERROR_T(x)
+#define ATTR_SECTION(x)
+#define __ATTR_SECTION(x)
+#define ATTR_RETNONNULL
+#define ATTR_RETNONNULL_T
+#define __ATTR_RETNONNULL
+#define __ATTR_RETNONNULL_T
+#define ATTR_ALIGNED(x)
+#define __ATTR_ALIGNED(x)
+#define ATTR_ALIGN(...) __VA_ARGS__
+#define __ATTR_ALIGN(...) __VA_ARGS__
+#define ATTR_ALIAS(x)
+#define __ATTR_ALIAS(x)
+#define ATTR_INLINE
+#define __ATTR_INLINE
+#define ATTR_FORCEINLINE
+#define __ATTR_FORCEINLINE
+#define ATTR_PACKED
+#define __ATTR_PACKED
+#define ATTR_RETURNS_TWICE
+#define ATTR_RETURNS_TWICE_T
+#define __ATTR_RETURNS_TWICE
+#define __ATTR_RETURNS_TWICE_T
+#define ATTR_EXTERNALLY_VISIBLE
+#define __ATTR_EXTERNALLY_VISIBLE
+#define ATTR_ARTIFICIAL
+#define __ATTR_ARTIFICIAL
+#define ATTR_FORMAT_ARG(x)
+#define ATTR_FORMAT_ARG_T(x)
+#define __ATTR_FORMAT_ARG(x)
+#define __ATTR_FORMAT_ARG_T(x)
+#define ATTR_FALLTHROUGH ;
+#define __ATTR_FALLTHROUGH ;
+#define ATTR_OPTIMIZE(x)
+#define __ATTR_OPTIMIZE(x)
+#define ATTR_TRANSPARENT_UNION
+#define __ATTR_TRANSPARENT_UNION
+#define ATTR_FORMAT_PRINTF(...)
+#define ATTR_FORMAT_PRINTF_T(...)
+#define __ATTR_FORMAT_PRINTF(...)
+#define __ATTR_FORMAT_PRINTF_T(...)
+#define ATTR_FORMAT_SCANF(...)
+#define ATTR_FORMAT_SCANF_T(...)
+#define __ATTR_FORMAT_SCANF(...)
+#define __ATTR_FORMAT_SCANF_T(...)
+#define ATTR_FORMAT_STRFMON(...)
+#define ATTR_FORMAT_STRFMON_T(...)
+#define __ATTR_FORMAT_STRFMON(...)
+#define __ATTR_FORMAT_STRFMON_T(...)
+#define ATTR_FORMAT_STRFTIME(...)
+#define ATTR_FORMAT_STRFTIME_T(...)
+#define __ATTR_FORMAT_STRFTIME(...)
+#define __ATTR_FORMAT_STRFTIME_T(...)
+#define ATTR_NOPLT
+#define __ATTR_NOPLT
+#define ATTR_SELECTANY
+#define __ATTR_SELECTANY
+#define ATTR_VISIBILITY(x)
+#define __ATTR_VISIBILITY(x)
+#define ATTR_ACCESS_NONE(x)
+#define ATTR_ACCESS_NONE_T(x)
+#define __ATTR_ACCESS_NONE(x)
+#define __ATTR_ACCESS_NONE_T(x)
+#define ATTR_INS(x,y)
+#define ATTR_INS_T(x,y)
+#define __ATTR_INS(x,y)
+#define __ATTR_INS_T(x,y)
+#define ATTR_OUTS(x,y)
+#define ATTR_OUTS_T(x,y)
+#define __ATTR_OUTS(x,y)
+#define __ATTR_OUTS_T(x,y)
+#define ATTR_INOUTS(x,y)
+#define ATTR_INOUTS_T(x,y)
+#define __ATTR_INOUTS(x,y)
+#define __ATTR_INOUTS_T(x,y)
+#define ATTR_IN_OPT(x)
+#define ATTR_IN_OPT_T(x)
+#define __ATTR_IN_OPT(x)
+#define __ATTR_IN_OPT_T(x)
+#define ATTR_OUT_OPT(x)
+#define ATTR_OUT_OPT_T(x)
+#define __ATTR_OUT_OPT(x)
+#define __ATTR_OUT_OPT_T(x)
+#define ATTR_INOUT_OPT(x)
+#define ATTR_INOUT_OPT_T(x)
+#define __ATTR_INOUT_OPT(x)
+#define __ATTR_INOUT_OPT_T(x)
+#define ATTR_IN(x)
+#define ATTR_IN_T(x)
+#define __ATTR_IN(x)
+#define __ATTR_IN_T(x)
+#define ATTR_OUT(x)
+#define ATTR_OUT_T(x)
+#define __ATTR_OUT(x)
+#define __ATTR_OUT_T(x)
+#define ATTR_INOUT(x)
+#define ATTR_INOUT_T(x)
+#define __ATTR_INOUT(x)
+#define __ATTR_INOUT_T(x)
+
+
+
+// <__stdcxx.h>
+#define __CXX_DEDUCE_TYPENAME typename
+#define __CXX_FORCEINLINE
+#define __CXX_CLASSMEMBER
+#define __CXX_INLINE_CONSTEXPR
+#define __CXX_DEFAULT_CTOR(T) T()
+#define __CXX_DEFAULT_DTOR(T) ~T()
+#define __CXX_DEFAULT_COPY(T,...) T(T const&)=default
+#define __CXX_DEFAULT_CTOR_NOEXCEPT(T) T()
+#define __CXX_DEFAULT_DTOR_NOEXCEPT(T) ~T()
+#define __CXX_DEFAULT_COPY_NOEXCEPT(T,...) T(T const&)=default
+#define __CXX_STATIC_CONST(T,decl) static T decl
+#define __CXX_DELETE_CTOR(T) T()
+#define __CXX_DELETE_DTOR(T) ~T()
+#define __CXX_DELETE_COPY(T) T(T const&)
+#define __CXX_DELETE_COPY_ASSIGN(T) T&operator=(T const&)
+#define __CXX_DELETE_VOLATILE_COPY_ASSIGN(T) T&operator=(T const&)volatile
+#define __CXXDECL_BEGIN extern "C++" {
+#define __CXXDECL_END }
+#define __CXX_THROWS(...)
+#define __CXX_NOEXCEPT
+#define __CXX_NOEXCEPT_IF(expr)
+#define __CXX_NOEXCEPT_IS(expr)
+#define __CXX_NOEXCEPT_IFNX(expr)
+#define __CXX11_CONSTEXPR
+#define __CXX11_CONSTEXPR_OR_CONST
+#define __CXX14_CONSTEXPR
+#define __CXX14_CONSTEXPR_OR_CONST
+#define __CXX17_CONSTEXPR
+#define __CXX17_CONSTEXPR_OR_CONST
+
+
+
+// <hybrid/typecore.h>
 #define INT8_C(c) c
 #define __INT8_C(c) c
 #define INT16_C(c) c
@@ -87,238 +530,114 @@
 #define __SIZE_C(c) c
 #define SSIZE_C(c) c
 #define __SSIZE_C(c) c
+#define __SHIFT_TYPE__        shift_t
+#define __INT8_TYPE__         int8_t
+#define __UINT8_TYPE__        uint8_t
+#define __INT16_TYPE__        int16_t
+#define __UINT16_TYPE__       uint16_t
+#define __INT32_TYPE__        int32_t
+#define __UINT32_TYPE__       uint32_t
+#define __INT64_TYPE__        int64_t
+#define __UINT64_TYPE__       uint64_t
+#define __SIZE_TYPE__         size_t
+#define __PTRDIFF_TYPE__      ptrdiff_t
+#define __SSIZE_TYPE__        ssize_t
+#define __INTPTR_TYPE__       intptr_t
+#define __UINTPTR_TYPE__      uintptr_t
+#define __BYTE_TYPE__         byte_t
+#define __REGISTER_TYPE__     register_t
+#define __SREGISTER_TYPE__    sregister_t
+#define __TYPEFOR_INTIB1      int8_t
+#define __TYPEFOR_UINTIB1     uint8_t
+#define __TYPEFOR_INTIB2      int16_t
+#define __TYPEFOR_UINTIB2     uint16_t
+#define __TYPEFOR_INTIB4      int32_t
+#define __TYPEFOR_UINTIB4     uint32_t
+#define __TYPEFOR_INTIB8      int64_t
+#define __TYPEFOR_UINTIB8     uint64_t
+#define __CHAR8_TYPE__        char
+#define __INT_LEAST8_TYPE__   int_least8_t
+#define __UINT_LEAST8_TYPE__  uint_least8_t
+#define __INT_LEAST16_TYPE__  int_least16_t
+#define __UINT_LEAST16_TYPE__ uint_least16_t
+#define __INT_LEAST32_TYPE__  int_least32_t
+#define __UINT_LEAST32_TYPE__ uint_least32_t
+#define __INT_LEAST64_TYPE__  int_least64_t
+#define __UINT_LEAST64_TYPE__ uint_least64_t
+#define __INT_FAST8_TYPE__    int_fast8_t
+#define __UINT_FAST8_TYPE__   uint_fast8_t
+#define __INT_FAST16_TYPE__   int_fast16_t
+#define __UINT_FAST16_TYPE__  uint_fast16_t
+#define __INT_FAST32_TYPE__   int_fast32_t
+#define __UINT_FAST32_TYPE__  uint_fast32_t
+#define __INT_FAST64_TYPE__   int_fast64_t
+#define __UINT_FAST64_TYPE__  uint_fast64_t
+#define __INTMAX_TYPE__       intmax_t
+#define __UINTMAX_TYPE__      uintmax_t
+#define __INTPTR_HALF_TYPE__  intptr_half_t
+#define __UINTPTR_HALF_TYPE__ uintptr_half_t
+#define __LONGPTR_TYPE__      longptr_t
+#define __ULONGPTR_TYPE__     ulongptr_t
+#define __SBYTE_TYPE__        sbyte_t
+#define __WCHAR_TYPE__        wchar_t
+#define __CHAR16_TYPE__       char16_t
+#define __CHAR32_TYPE__       char32_t
+#define __WCHAR16_TYPE__      char16_t
+#define __WCHAR32_TYPE__      char32_t
+#define __WINT_TYPE__         wint_t
+#define __SIG_ATOMIC_TYPE__   sig_atomic_t
+#define __INTSIZE_TYPE__      size_t
+#define __INTSSIZE_TYPE__     ssize_t
+#define __LONGSIZE_TYPE__     size_t
+#define __LONGSSIZE_TYPE__    ssize_t
+#define __LONG32_TYPE__       long32_t
+#define __ULONG32_TYPE__      ulong32_t
+#define __LONG64_TYPE__       long64_t
+#define __ULONG64_TYPE__      ulong64_t
 
-#define DREF
-#define DWEAK
-#define __LIBCCALL
-#define DCALL
-#define FCALL
-#define DPRINTER_CC
-#define __NULLPTR 0
-#define NULL 0
-#define __IF0 if(0)
-#define __IF1 if(1)
 
-#define NOTHROW(x) x
-#define NOTHROW_T(x) x
-#define __NOTHROW(x) x
-#define __NOTHROW_T(x) x
-#define NOTHROW_NCX(x) x
-#define NOTHROW_NCX_T(x) x
-#define __NOTHROW_NCX(x) x
-#define __NOTHROW_NCX_T(x) x
-#define __NOTHROW_KRN(x) x
-#define NOTHROW_RPC(x) x
-#define NOTHROW_RPC_T(x) x
-#define __NOTHROW_RPC(x) x
-#define __NOTHROW_RPC_T(x) x
-#define NOTHROW_RPC_KOS(x) x
-#define NOTHROW_RPC_KOS_T(x) x
-#define __NOTHROW_RPC_KOS(x) x
-#define __NOTHROW_RPC_KOS_T(x) x
-#define NOTHROW_RPC_NOKOS(x) x
-#define NOTHROW_RPC_NOKOS_T(x) x
-#define __NOTHROW_RPC_NOKOS(x) x
-#define __NOTHROW_RPC_NOKOS_T(x) x
-#define NOTHROW_RPC_PURE(x) x
-#define NOTHROW_RPC_PURE_T(x) x
-#define __NOTHROW_RPC_PURE(x) x
-#define __NOTHROW_RPC_PURE_T(x) x
 
-#define DECL_BEGIN extern "C" {
-#define __DECL_BEGIN extern "C" {
-#define __SYSDECL_BEGIN extern "C" {
-#define DECL_END }
-#define __DECL_END }
-#define __SYSDECL_END }
+// <hybrid/pointer.h>
+#define __HYBRID_FUNCPTR32(return,cc,name,args) return (cc *name)args
+#define __HYBRID_FUNCPTR64(return,cc,name,args) return (cc *name)args
+#define FUNCPTR32(return,cc,name,args) return (cc *name)args
+#define FUNCPTR64(return,cc,name,args) return (cc *name)args
+#define __HYBRID_PTR32(T) T *
+#define __HYBRID_PTR64(T) T *
+#define PTR32(T) T *
+#define PTR64(T) T *
 
-#define XBLOCK
-#define __XBLOCK
-#define XRETURN
-#define __XRETURN
 
-#define __ATTR_W64
-#define ATTR_NOINLINE
-#define __ATTR_NOINLINE
-#define ATTR_NORETURN
-#define __ATTR_NORETURN
-#define ATTR_FASTCALL
-#define __ATTR_FASTCALL
-#define ATTR_STDCALL
-#define __ATTR_STDCALL
-#define ATTR_CDECL
-#define __ATTR_CDECL
-#define ATTR_SYSVABI
-#define __ATTR_SYSVABI
-#define ATTR_MSABI
-#define __ATTR_MSABI
-#define ATTR_PURE
-#define ATTR_PURE_P
-#define __ATTR_PURE
-#define __ATTR_PURE_P
-#define ATTR_CONST
-#define ATTR_CONST_P
-#define __ATTR_CONST
-#define __ATTR_CONST_P
-#define ATTR_LEAF
-#define ATTR_LEAF_P
-#define __ATTR_LEAF
-#define __ATTR_LEAF_P
-#define ATTR_FLATTEN
-#define __ATTR_FLATTEN
-#define ATTR_MALLOC
-#define __ATTR_MALLOC
-#define ATTR_HOT
-#define __ATTR_HOT
-#define ATTR_COLD
-#define __ATTR_COLD
-#define ATTR_WEAK
-#define __ATTR_WEAK
-#define ATTR_ALLOC_SIZE(x)
-#define __ATTR_ALLOC_SIZE(x)
-#define ATTR_ASSUME_ALIGNED(x)
-#define __ATTR_ASSUME_ALIGNED(x)
-#define ATTR_ALLOC_ALIGN(x)
-#define __ATTR_ALLOC_ALIGN(x)
-#define ATTR_NOTHROW
-#define __ATTR_NOTHROW
-#define ATTR_DLLIMPORT
-#define __ATTR_DLLIMPORT
-#define ATTR_DLLEXPORT
-#define __ATTR_DLLEXPORT
-#define ATTR_NOCLONE
-#define __ATTR_NOCLONE
-#define ATTR_USED
-#define __ATTR_USED
-#define ATTR_UNUSED
-#define __ATTR_UNUSED
-#define ATTR_SENTINEL
-#define __ATTR_SENTINEL
-#define ATTR_SENTINEL_O(x)
-#define __ATTR_SENTINEL_O(x)
-#define ATTR_THREAD
-#define __ATTR_THREAD
-#define ATTR_DEPRECATED(x)
-#define __ATTR_DEPRECATED(x)
-#define ATTR_DEPRECATED_
-#define __ATTR_DEPRECATED_
-#define ATTR_WARNING(x)
-#define __ATTR_WARNING(x)
-#define ATTR_ERROR(x)
-#define __ATTR_ERROR(x)
-#define ATTR_SECTION(x)
-#define __ATTR_SECTION(x)
-#define ATTR_RETNONNULL
-#define __ATTR_RETNONNULL
-#define ATTR_ALIGNED(x)
-#define __ATTR_ALIGNED(x)
-#define ATTR_ALIAS(x)
-#define __ATTR_ALIAS(x)
-#define ATTR_INLINE
-#define __ATTR_INLINE
-#define ATTR_FORCEINLINE
-#define __ATTR_FORCEINLINE
-#define ATTR_PACKED
-#define __ATTR_PACKED
-#define ATTR_RETURNS_TWICE
-#define __ATTR_RETURNS_TWICE
-#define ATTR_EXTERNALLY_VISIBLE
-#define __ATTR_EXTERNALLY_VISIBLE
-#define ATTR_ARTIFICIAL
-#define __ATTR_ARTIFICIAL
-#define ATTR_FORMAT_ARG(x)
-#define __ATTR_FORMAT_ARG(x)
-#define ATTR_FALLTHROUGH ;
-#define __ATTR_FALLTHROUGH ;
-#define ATTR_OPTIMIZE(x)
-#define __ATTR_OPTIMIZE(x)
-#define ATTR_TRANSPARENT_UNION
-#define __ATTR_TRANSPARENT_UNION
-#define ATTR_FORMAT_PRINTF(...)
-#define __ATTR_FORMAT_PRINTF(...)
-#define ATTR_FORMAT_SCANF(...)
-#define __ATTR_FORMAT_SCANF(...)
-#define ATTR_FORMAT_STRFMON(...)
-#define __ATTR_FORMAT_STRFMON(...)
-#define ATTR_FORMAT_STRFTIME(...)
-#define __ATTR_FORMAT_STRFTIME(...)
-#define ATTR_NOPLT
-#define __ATTR_NOPLT
-#define ATTR_SELECTANY
-#define __ATTR_SELECTANY
-#define ATTR_VISIBILITY(x)
-#define __ATTR_VISIBILITY(x)
 
-#define NONNULL(...)
-#define ATTR_NONNULL(...)
-#define __ATTR_NONNULL(...)
-#define NONNULL_CXX(...)
-#define ATTR_NONNULL_CXX(...)
-#define __ATTR_NONNULL_CXX(...)
-#define WUNUSED
-#define ATTR_WUNUSED
-#define __ATTR_WUNUSED
-#define UNUSED(...) __VA_ARGS__
-#define __UNUSED(...) __VA_ARGS__
-#define IMPDEF
-#define __IMPDEF
-#define EXPDEF
-#define __EXPDEF
-#define FUNDEF
-#define __PUBDEF
-#define DATDEF
-#define __PUBDEF
-#define PUBLIC
-#define __PUBLIC
-#define INTERN
-#define __INTERN
-#define PUBLIC_CONST
-#define __PUBLIC_CONST
-#define INTERN_CONST
-#define __INTERN_CONST
-#define INTERN_COMDAT
-#define __INTERN_COMDAT
-#define PUBLIC_COMDAT
-#define __PUBLIC_COMDAT
-#define INTDEF
-#define __INTDEF
-#define PRIVATE
-#define __PRIVATE
-#define FORCELOCAL
-#define __FORCELOCAL
-#define EXTERN_INLINE
-#define __EXTERN_INLINE
-#define EXTERN_FORCEINLINE
-#define __EXTERN_FORCEINLINE
-#define LOCAL
-#define __LOCAL
-#define __LOCAL_REDIRECT
-#define DFL(x) = x
-#define __DFL(x) = x
-#define COMPILER_FLEXIBLE_ARRAY(T,n) T n[]
-#define __COMPILER_FLEXIBLE_ARRAY(T,n) T n[]
+// <hybrid/__assembly.h>
+#define PRIVATE_FUNCTION(sym)      ;int sym() {}
+#define INTERN_FUNCTION(sym)       ;int sym() {}
+#define PUBLIC_FUNCTION(sym)       ;int sym() {}
+#define PRIVATE_WEAK_FUNCTION(sym) ;int sym() {}
+#define INTERN_WEAK_FUNCTION(sym)  ;int sym() {}
+#define PUBLIC_WEAK_FUNCTION(sym)  ;int sym() {}
+#define PRIVATE_OBJECT(sym)        ;int sym;
+#define INTERN_OBJECT(sym)         ;int sym;
+#define PUBLIC_OBJECT(sym)         ;int sym;
+#define PRIVATE_WEAK_OBJECT(sym)   ;int sym;
+#define INTERN_WEAK_OBJECT(sym)    ;int sym;
+#define PUBLIC_WEAK_OBJECT(sym)    ;int sym;
+#define __ASM_BEGIN
+#define __ASM_END
+#define __ASM_ARG(x)
+#define __ASM_L(...)
 
-#define DFUNDEF extern
-#define DDATDEF extern
-#define ASSEMBLY_NAME(x,s) x
 
-#define DEFINE_PRIVATE_ALIAS(new,old) int new() {}
-#define DEFINE_PUBLIC_ALIAS(new,old) int new() {}
-#define DEFINE_INTERN_ALIAS(new,old) int new() {}
-#define DEFINE_PRIVATE_WEAK_ALIAS(new,old) int new() {}
-#define DEFINE_PUBLIC_WEAK_ALIAS(new,old) int new() {}
-#define DEFINE_INTERN_WEAK_ALIAS(new,old) int new() {}
 
-#define static_assert(...)
-#define _Static_assert(...)
-#define STATIC_ASSERT(...)
-#define __STATIC_ASSERT(...)
-#define STATIC_ASSERT_MSG(...)
-#define __STATIC_ASSERT_MSG(...)
+// <hybrid/__altint.h>
+#define __HYBRID_ALTINT(UID,allow_int_ops,...) __VA_ARGS__
+#define __HYBRID_ALTINT_UID(UID)
+#define __HYBRID_ALTINT_COMPAT(Ta,Tb)
+#define __HYBRID_ALTINT_TYPEDEF(Told,Tnew,allow_int_ops) typedef Told Tnew
 
-#define __CDECL_OR_DEFAULT
-#define __HYBRID_LIBATOMIC_DECL
-#define __HYBRID_LIBATOMIC_CC
+
+
+// <hybrid/sequence/[...].h>
 #define __HYBRID_Q_STRUCT struct
 #define __HYBRID_Q_CLASS class
 #define LIST_HEAD(n,t) struct n{struct t *lh_first;}
@@ -511,6 +830,12 @@
 #define RBTREE_Tkey int
 #define RBTREE_DEFINE_FUNCTION(decl,attr,returnType,nothrow,cc,name,params,args) decl returnType name params
 
+
+
+// <hybrid/[...].h>
+#define __CDECL_OR_DEFAULT
+#define __HYBRID_LIBATOMIC_DECL
+#define __HYBRID_LIBATOMIC_CC
 #define BSEARCH(...) for(;;)
 #define BSEARCH_EX(...) for(;;)
 #define BSEARCH_RANGE(...) for(;;)
@@ -518,20 +843,12 @@
 #define BITSET(num_bits) struct{unsigned int _bs_bits[42];}
 #define ATOMIC_ONCE_RUN(self, ...) __VA_ARGS__
 
-#define Dee_DEFINE_OBJMETHOD(name, func, self)            DeeObjMethodObject name
-#define DEFINE_OBJMETHOD(name, func, self)                DeeObjMethodObject name
-#define Dee_DEFINE_KWOBJMETHOD(name, func, self)          DeeKwObjMethodObject name
-#define DEFINE_KWOBJMETHOD(name, func, self)              DeeKwObjMethodObject name
-#define Dee_DEFINE_CLSMETHOD(name, func, type)            DeeClsMethodObject name
-#define DEFINE_CLSMETHOD(name, func, type)                DeeClsMethodObject name
-#define Dee_DEFINE_KWCLSMETHOD(name, func, type)          DeeKwClsMethodObject name
-#define DEFINE_KWCLSMETHOD(name, func, type)              DeeKwClsMethodObject name
-#define Dee_DEFINE_CLSPROPERTY(name, type, get, del, set) DeeClsPropertyObject name
-#define DEFINE_CLSPROPERTY(name, type, get, del, set)     DeeClsPropertyObject name
-#define Dee_DEFINE_CMETHOD(name, func)                    DeeCMethodObject name
-#define DEFINE_CMETHOD(name, func)                        DeeCMethodObject name
-#define Dee_DEFINE_KWCMETHOD(name, func)                  DeeKwCMethodObject name
-#define DEFINE_KWCMETHOD(name, func)                      DeeKwCMethodObject name
+
+
+// <deemon/[...].h>
+#define tpconst const
+#define Dee_tpconst const
+#define INTERN_TPCONST
 
 #define DeePrivateSystem_IF_E1(errno,e1,...)
 #define DeePrivateSystem_IF_E2(errno,e1,e2,...)
@@ -542,25 +859,8 @@
 #define DeeSystem_IF_E3(errno,e1,e2,e3,...)
 #define DeeSystem_IF_E4(errno,e1,e2,e3,e4,...)
 
-
-#define likely
-#define unlikely
-#define __likely
-#define __unlikely
-#define likely_untraced
-#define unlikely_untraced
-#define __likely_untraced
-#define __unlikely_untraced
-#define untraced
-#define __untraced
-
-#define TRY
-#define EXCEPT
-
-#define CASE(x) case x
-
-#define DeeSlab_ENUMERATE(func) func(0, 4) func(1, 5) func(2, 6) func(3, 8) func(4, 10)
-#define DEE_PRIVATE_DEFINE_SLAB_FUNCTIONS(index, size) \
+#define DeeSlab_ENUMERATE(func) func(0,4) func(1,5) func(2,6) func(3,8) func(4,10)
+#define DEE_PRIVATE_DEFINE_SLAB_FUNCTIONS(index,size) \
 	void *DeeSlab_Malloc##size(void); \
 	void *DeeSlab_Calloc##size(void); \
 	void *DeeSlab_TryMalloc##size(void); \
@@ -591,20 +891,6 @@
 #define Dee_WEAKREF_SUPPORT       struct weakref_list ob_weakrefs;
 #define WEAKREF(T)                struct weakref
 #define Dee_WEAKREF(T)            struct weakref
-#define DEFINE_KWDS(name, ...)                DeeKwdsObject name
-#define Dee_DEFINE_KWDS(name, ...)            DeeKwdsObject name
-#define DEFINE_KWLIST                         struct keyword name[] = __VA_ARGS__
-#define Dee_DEFINE_KWLIST(name, ...)          struct keyword name[] = __VA_ARGS__
-#define DEFINE_BYTES(name, ...)               DeeBytesObject name
-#define Dee_DEFINE_BYTES(name, ...)           DeeBytesObject name
-#define DEFINE_BYTES_EX(name, ...)            DeeBytesObject name
-#define Dee_DEFINE_BYTES_EX(name, ...)        DeeBytesObject name
-#define DEFINE_CODE(name, ...)                DeeCodeObject name
-#define Dee_DEFINE_CODE(name, ...)            DeeCodeObject name
-#define DEFINE_FUNCTION(name, ...)            DeeFunctionObject name
-#define Dee_DEFINE_FUNCTION(name, ...)        DeeFunctionObject name
-#define DEFINE_FUNCTION_NOREFS(name, ...)     DeeFunctionObject name
-#define Dee_DEFINE_FUNCTION_NOREFS(name, ...) DeeFunctionObject name
 
 #define Dee_CASE_WIDTH_1BYTE case 1
 #define CASE_WIDTH_1BYTE case 1
@@ -615,256 +901,179 @@
 #define Dee_SWITCH_SIZEOF_WIDTH(...) for(;;)
 #define SWITCH_SIZEOF_WIDTH(...) for(;;)
 #define DeeString_Foreach(...)
+
+#define DEFINE_KWDS(name, ...)                            DeeKwdsObject name = {}
+#define Dee_DEFINE_KWDS(name, ...)                        DeeKwdsObject name = {}
+#define DEFINE_KWLIST                                     struct keyword name[] = __VA_ARGS__
+#define Dee_DEFINE_KWLIST(name, ...)                      struct keyword name[] = __VA_ARGS__
+#define DEFINE_BYTES(name, ...)                           DeeBytesObject name = {}
+#define Dee_DEFINE_BYTES(name, ...)                       DeeBytesObject name = {}
+#define DEFINE_BYTES_EX(name, ...)                        DeeBytesObject name = {}
+#define Dee_DEFINE_BYTES_EX(name, ...)                    DeeBytesObject name = {}
+#define DEFINE_CODE(name, ...)                            DeeCodeObject name = {}
+#define Dee_DEFINE_CODE(name, ...)                        DeeCodeObject name = {}
+#define DEFINE_FUNCTION(name, ...)                        DeeFunctionObject name = {}
+#define Dee_DEFINE_FUNCTION(name, ...)                    DeeFunctionObject name = {}
+#define DEFINE_FUNCTION_NOREFS(name, ...)                 DeeFunctionObject name = {}
+#define Dee_DEFINE_FUNCTION_NOREFS(name, ...)             DeeFunctionObject name = {}
+#define DEFINE_OBJMETHOD(name, func, self)                DeeObjMethodObject name = {}
+#define Dee_DEFINE_OBJMETHOD(name, func, self)            DeeObjMethodObject name = {}
+#define DEFINE_KWOBJMETHOD(name, func, self)              DeeKwObjMethodObject name = {}
+#define Dee_DEFINE_KWOBJMETHOD(name, func, self)          DeeKwObjMethodObject name = {}
+#define DEFINE_CLSMETHOD(name, func, type)                DeeClsMethodObject name = {}
+#define Dee_DEFINE_CLSMETHOD(name, func, type)            DeeClsMethodObject name = {}
+#define DEFINE_KWCLSMETHOD(name, func, type)              DeeKwClsMethodObject name = {}
+#define Dee_DEFINE_KWCLSMETHOD(name, func, type)          DeeKwClsMethodObject name = {}
+#define DEFINE_CLSPROPERTY(name, type, get, del, set)     DeeClsPropertyObject name = {}
+#define Dee_DEFINE_CLSPROPERTY(name, type, get, del, set) DeeClsPropertyObject name = {}
+#define DEFINE_CMETHOD(name, func)                        DeeCMethodObject name = {}
+#define Dee_DEFINE_CMETHOD(name, func)                    DeeCMethodObject name = {}
+#define DEFINE_KWCMETHOD(name, func)                      DeeKwCMethodObject name = {}
+#define Dee_DEFINE_KWCMETHOD(name, func)                  DeeKwCMethodObject name = {}
+#define DEFINE_STRING_EX(n,a,b,c)                         DeeStringObject n = {}
+#define Dee_DEFINE_STRING_EX(n,a,b,c)                     DeeStringObject n = {}
+#define DEFINE_STRING(n,a)                                DeeStringObject n = {}
+#define Dee_DEFINE_STRING(n,a)                            DeeStringObject n = {}
+
+#define Dee_appexit_object                 appexit_object
+#define Dee_ascii_printer                  ascii_printer
+#define Dee_attribute_info                 attribute_info
+#define Dee_attribute_lookup_rules         attribute_lookup_rules
+#define Dee_attribute_object               attribute_object
+#define Dee_bool_object                    bool_object
+#define Dee_bytes_object                   bytes_object
+#define Dee_bytes_printer                  bytes_printer
+#define Dee_cell_object                    cell_object
+#define Dee_charptr                        dcharptr
+#define Dee_class_attribute                class_attribute
+#define Dee_class_desc                     class_desc
+#define Dee_class_descriptor_object        class_descriptor_object
+#define Dee_class_operator                 class_operator
+#define Dee_class_optable                  class_optable
+#define Dee_clsmember_object               clsmember_object
+#define Dee_clsmethod_object               clsmethod_object
+#define Dee_clsproperty_object             clsproperty_object
+#define Dee_cmethod_object                 cmethod_object
+#define Dee_code_frame                     code_frame
+#define Dee_code_object                    code_object
+#define Dee_compiler_error_loc             compiler_error_loc
+#define Dee_compiler_error_object          compiler_error_object
+#define Dee_compiler_items                 compiler_items
+#define Dee_compiler_object                compiler_object
+#define Dee_compiler_options               compiler_options
+#define Dee_ddi_exdat                      ddi_exdat
+#define Dee_ddi_object                     ddi_object
+#define Dee_ddi_regs                       ddi_regs
+#define Dee_ddi_saved                      ddi_saved
+#define Dee_ddi_state                      ddi_state
+#define Dee_ddi_xregs                      ddi_xregs
+#define Dee_deep_assoc                     deep_assoc
+#define Dee_deep_assoc_entry               deep_assoc_entry
+#define Dee_dex                            dex
+#define Dee_dex_notification               dex_notification
+#define Dee_dex_object                     dex_object
+#define Dee_dex_symbol                     dex_symbol
+#define Dee_dict_item                      dict_item
+#define Dee_dict_object                    dict_object
+#define Dee_enumattr_iterator_object       enumattr_iterator_object
+#define Dee_enumattr_object                enumattr_object
+#define Dee_error_object                   error_object
+#define Dee_except_frame                   except_frame
+#define Dee_except_handler                 except_handler
+#define Dee_file_buffer_link               file_buffer_link
+#define Dee_file_buffer_object             file_buffer_object
+#define Dee_file_object                    file_object
+#define Dee_file_reader_object             file_reader_object
+#define Dee_file_writer_object             file_writer_object
+#define Dee_filetype_object                filetype_object
+#define Dee_float_object                   float_object
+#define Dee_function_object                function_object
+#define Dee_gc_head                        gc_head
+#define Dee_gc_head_link                   gc_head_link
+#define Dee_hashset_item                   hashset_item
+#define Dee_hashset_object                 hashset_object
+#define Dee_instance_desc                  instance_desc
+#define Dee_instance_method                instance_method
+#define Dee_instancemember_object          instancemember_object
+#define Dee_int_object                     int_object
+#define Dee_kwclsmethod_object             kwclsmethod_object
+#define Dee_kwcmethod_object               kwcmethod_object
+#define Dee_kwobjmethod_object             kwobjmethod_object
+#define Dee_list_object                    list_object
+#define Dee_memory_file_object             memory_file_object
+#define Dee_module_object                  module_object
+#define Dee_module_path_object             module_path_object
+#define Dee_module_symbol                  module_symbol
+#define Dee_nomemory_error_object          nomemory_error_object
+#define Dee_none_object                    none_object
+#define Dee_object                         object_
+#define Dee_objmethod_object               objmethod_object
+#define Dee_opinfo                         opinfo
+#define Dee_property_object                property_object
+#define Dee_regex_range                    regex_range
+#define Dee_regex_range_ex                 regex_range_ex
+#define Dee_regex_range_ptr                regex_range_ptr
+#define Dee_repr_frame                     repr_frame
+#define Dee_rodict_item                    rodict_item
+#define Dee_rodict_object                  rodict_object
+#define Dee_roset_item                     roset_item
+#define Dee_roset_object                   roset_object
+#define Dee_set_inversion_object           set_inversion_object
+#define Dee_string_utf                     string_utf
+#define Dee_super_object                   super_object
+#define Dee_system_error_object            system_error_object
+#define Dee_system_file_object             system_file_object
+#define Dee_thread_interrupt               thread_interrupt
+#define Dee_thread_object                  thread_object
+#define Dee_threadexit_object              threadexit_object
+#define Dee_tls_callback_hooks             tls_callback_hooks
+#define Dee_traceback_object               traceback_object
+#define Dee_trepr_frame                    trepr_frame
+#define Dee_tuple_object                   tuple_object
+#define Dee_type_attr                      type_attr
+#define Dee_type_buffer                    type_buffer
+#define Dee_type_cast                      type_cast
+#define Dee_type_cmp                       type_cmp
+#define Dee_type_constructor               type_constructor
+#define Dee_type_gc                        type_gc
+#define Dee_type_getset                    type_getset
+#define Dee_type_math                      type_math
+#define Dee_type_member                    type_member
+#define Dee_type_method                    type_method
+#define Dee_type_nii                       type_nii
+#define Dee_type_nsi                       type_nsi
+#define Dee_type_object                    type_object
+#define Dee_type_seq                       type_seq
+#define Dee_type_with                      type_with
+#define Dee_unicode_printer                unicode_printer
+#define Dee_unitraits                      unitraits
+#define Dee_weakref                        weakref
+#define Dee_weakref_list                   weakref_list
+#define Dee_weakref_object                 weakref_object
+#define Dee_weakrefable_object             weakrefable_object
+#define Dee_yield_function_iterator_object yield_function_iterator_object
+#define Dee_yield_function_object          yield_function_object
+#define dee_keyword                        keyword
+#define dee_kwds_entry                     kwds_entry
+#define dee_kwds_mapping_object            kwds_mapping_object
+#define dee_kwds_object                    kwds_object
+
+
+
+// Misc. local macros
 #define DEFINE_STRING_TRAIT(name,function,test_ch) DeeObject *string_##name(String *self, size_t argc, DeeObject *const *argv);
 #define DEFINE_ANY_STRING_TRAIT(name,function) DeeObject *string_##name(String *self, size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define DEFINE_BYTES_TRAIT(name,function,test_ch) DeeObject *bytes_##name(Bytes *self, size_t argc, DeeObject *const *argv);
 #define DEFINE_ANY_BYTES_TRAIT(name,function) DeeObject *bytes_##name(Bytes *self, size_t argc, DeeObject *const *argv, DeeObject *kw);
-
-#define Dee_weakref          weakref
-#define Dee_object           object_
-#define Dee_type_object      type_object
-#define Dee_class_desc       class_desc
-#define Dee_type_method      type_method
-#define Dee_type_getset      type_getset
-#define Dee_type_member      type_member
-#define Dee_type_constructor type_constructor
-#define Dee_type_cast        type_cast
-#define Dee_type_gc          type_gc
-#define Dee_type_math        type_math
-#define Dee_type_cmp         type_cmp
-#define Dee_type_nii         type_nii
-#define Dee_type_seq         type_seq
-#define Dee_type_nsi         type_nsi
-#define Dee_type_attr        type_attr
-#define Dee_type_with        type_with
-#define Dee_type_buffer      type_buffer
-#define Dee_weakref_list     weakref_list
-#define Dee_opinfo           opinfo
-
-#define Dee_compiler_object  compiler_object
-#define Dee_compiler_options compiler_options
-#define Dee_compiler_items   compiler_items
-
-#define dee_kwds_entry           kwds_entry
-#define dee_kwds_object          kwds_object
-#define dee_kwds_mapping_object  kwds_mapping_object
-#define dee_keyword              keyword
-
-#define Dee_attribute_object         attribute_object
-#define Dee_enumattr_object          enumattr_object
-#define Dee_enumattr_iterator_object enumattr_iterator_object
-#define Dee_attribute_info           attribute_info
-#define Dee_attribute_lookup_rules   attribute_lookup_rules
-
-#define Dee_bool_object bool_object
-
-#define Dee_bytes_object   bytes_object
-#define Dee_bytes_printer  bytes_printer
-
-#define Dee_cell_object  cell_object
-
-#define Dee_class_descriptor_object class_descriptor_object
-#define Dee_class_optable           class_optable
-#define Dee_instance_desc           instance_desc
-#define Dee_class_operator          class_operator
-#define Dee_class_attribute         class_attribute
-#define Dee_instancemember_object   instancemember_object
-
-#define Dee_code_frame                      code_frame
-#define Dee_tuple_object                    tuple_object
-#define Dee_module_object                   module_object
-#define Dee_code_object                     code_object
-#define Dee_function_object                 function_object
-#define Dee_yield_function_object           yield_function_object
-#define Dee_yield_function_iterator_object  yield_function_iterator_object
-#define Dee_ddi_object                      ddi_object
-#define Dee_except_handler                  except_handler
-#define Dee_ddi_regs                        ddi_regs
-#define Dee_ddi_xregs                       ddi_xregs
-#define Dee_ddi_saved                       ddi_saved
-#define Dee_ddi_state                       ddi_state
-#define Dee_ddi_exdat                       ddi_exdat
-
-#define Dee_dex_object       dex_object
-#define Dee_dex_symbol       dex_symbol
-#define Dee_dex              dex
-#define Dee_dex_notification dex_notification
-
-#define Dee_dict_item   dict_item
-#define Dee_dict_object dict_object
-
-#define Dee_error_object        error_object
-#define Dee_appexit_object      appexit_object
-#define Dee_threadexit_object   threadexit_object
-
-#define Dee_system_error_object   system_error_object
-#define Dee_nomemory_error_object nomemory_error_object
-#define Dee_compiler_error_object compiler_error_object
-#define Dee_compiler_error_loc    compiler_error_loc
-
-#define Dee_file_object        file_object
-#define Dee_filetype_object    filetype_object
-
-#define Dee_system_file_object         system_file_object
-#define Dee_file_buffer_object         file_buffer_object
-#define Dee_file_buffer_link           file_buffer_link
-#define Dee_memory_file_object         memory_file_object
-#define Dee_file_reader_object         file_reader_object
-#define Dee_file_writer_object         file_writer_object
-
-#define Dee_float_object float_object
-
-#define Dee_gc_head_link gc_head_link
-#define Dee_gc_head      gc_head
-
-#define Dee_hashset_item   hashset_item
-#define Dee_hashset_object hashset_object
-
-#define Dee_instance_method    instance_method
-
-#define Dee_int_object             int_object
-
-#define Dee_list_object list_object
-
-#define Dee_module_path_object    module_path_object
-#define Dee_module_symbol         module_symbol
-#define Dee_thread_object         thread_object
-
-#define Dee_none_object none_object
-
-#define Dee_objmethod_object   objmethod_object
-#define Dee_kwobjmethod_object kwobjmethod_object
-#define Dee_clsmethod_object   clsmethod_object
-#define Dee_kwclsmethod_object kwclsmethod_object
-#define Dee_clsproperty_object clsproperty_object
-#define Dee_clsmember_object   clsmember_object
-#define Dee_cmethod_object     cmethod_object
-#define Dee_kwcmethod_object   kwcmethod_object
-
-#define Dee_property_object property_object
-
-#define Dee_rodict_item   rodict_item
-#define Dee_rodict_object rodict_object
-
-#define Dee_roset_item   roset_item
-#define Dee_roset_object roset_object
-
-#define Dee_set_inversion_object set_inversion_object
-
-#define Dee_ascii_printer   ascii_printer
-#define Dee_unicode_printer unicode_printer
-#define Dee_string_utf      string_utf
-#define Dee_unitraits       unitraits
-#define Dee_regex_range     regex_range
-#define Dee_regex_range_ex  regex_range_ex
-#define Dee_regex_range_ptr regex_range_ptr
-
-#define Dee_charptr dcharptr
-
-#define Dee_super_object  super_object
-
-#define Dee_traceback_object      traceback_object
-#define Dee_except_frame          except_frame
-#define Dee_repr_frame            repr_frame
-#define Dee_trepr_frame           trepr_frame
-#define Dee_deep_assoc_entry      deep_assoc_entry
-#define Dee_deep_assoc            deep_assoc
-#define Dee_thread_interrupt      thread_interrupt
-
-#define Dee_tls_callback_hooks  tls_callback_hooks
-
-#define Dee_weakref_object     weakref_object
-#define Dee_weakrefable_object weakrefable_object
-
-#define tpconst const
-#define Dee_tpconst const
-#define INTERN_TPCONST
-#define DEF_STRING(n,a,b,c) DeeStringObject n = {};
-#define DEFINE_STRING_EX(n,a,b,c) DeeStringObject n = {}
-#define Dee_DEFINE_STRING_EX(n,a,b,c) DeeStringObject n = {}
-#define DEFINE_STRING(n,a) DeeStringObject n = {}
-#define Dee_DEFINE_STRING(n,a) DeeStringObject n = {}
-#define ACTION(...)
-
-
 #define DEFINE_OPERATOR(return,name,args) return DeeObject_##name args {}
 #define DEFINE_INTERNAL_OPERATOR(return,name,args) return DeeObject_##name args {}
 #define DEFINE_MATH_INPLACE_INT_OPERATOR(DeeObject_InplaceXXX,reg,DeeInt_NewXXX,intX_t,operator_name) \
 	int DeeObject_InplaceXXX(DeeObject **__restrict p_self, intX_t val) {}
 #define DEFINE_TYPE_INHERIT_FUNCTION(name,opname,field) bool name(DeeTypeObject *self) {}
+#define DEF_STRING(n,a,b,c) DeeStringObject n = {};
 #define RESTRICT_IF_NOTYPE
-
+#define ACTION(...)
 #define CONSTEXPR_FRAME_BEGIN(...) if(0)
-
-#define __BOOL             bool
-#define __LONGLONG         long long
-#define __ULONGLONG        unsigned long long
-#define __LONGDOUBLE       long double
-#define __INT8_TYPE__      int8_t
-#define __UINT8_TYPE__     uint8_t
-#define __INT16_TYPE__     int16_t
-#define __UINT16_TYPE__    uint16_t
-#define __INT32_TYPE__     int32_t
-#define __UINT32_TYPE__    uint32_t
-#define __INT64_TYPE__     int64_t
-#define __UINT64_TYPE__    uint64_t
-#define __SIZE_TYPE__      size_t
-#define __PTRDIFF_TYPE__   ptrdiff_t
-#define __SSIZE_TYPE__     ssize_t
-#define __INTPTR_TYPE__    intptr_t
-#define __UINTPTR_TYPE__   uintptr_t
-#define __BYTE_TYPE__      byte_t
-#define __REGISTER_TYPE__  register_t
-#define __SREGISTER_TYPE__ sregister_t
-#define __TYPEFOR_INTIB1   int8_t
-#define __TYPEFOR_UINTIB1  uint8_t
-#define __TYPEFOR_INTIB2   int16_t
-#define __TYPEFOR_UINTIB2  uint16_t
-#define __TYPEFOR_INTIB4   int32_t
-#define __TYPEFOR_UINTIB4  uint32_t
-#define __TYPEFOR_INTIB8   int64_t
-#define __TYPEFOR_UINTIB8  uint64_t
-#define __CHAR8_TYPE__        char
-#define __INT_LEAST8_TYPE__   int_least8_t
-#define __UINT_LEAST8_TYPE__  uint_least8_t
-#define __INT_LEAST16_TYPE__  int_least16_t
-#define __UINT_LEAST16_TYPE__ uint_least16_t
-#define __INT_LEAST32_TYPE__  int_least32_t
-#define __UINT_LEAST32_TYPE__ uint_least32_t
-#define __INT_LEAST64_TYPE__  int_least64_t
-#define __UINT_LEAST64_TYPE__ uint_least64_t
-#define __INT_FAST8_TYPE__    int_fast8_t
-#define __UINT_FAST8_TYPE__   uint_fast8_t
-#define __INT_FAST16_TYPE__   int_fast16_t
-#define __UINT_FAST16_TYPE__  uint_fast16_t
-#define __INT_FAST32_TYPE__   int_fast32_t
-#define __UINT_FAST32_TYPE__  uint_fast32_t
-#define __INT_FAST64_TYPE__   int_fast64_t
-#define __UINT_FAST64_TYPE__  uint_fast64_t
-#define __INTMAX_TYPE__       intmax_t
-#define __UINTMAX_TYPE__      uintmax_t
-#define __INTPTR_HALF_TYPE__  intptr_half_t
-#define __UINTPTR_HALF_TYPE__ uintptr_half_t
-#define __LONGPTR_TYPE__      longptr_t
-#define __ULONGPTR_TYPE__     ulongptr_t
-#define __REGISTER_TYPE__     ulongptr_t
-#define __SREGISTER_TYPE__    longptr_t
-#define __BYTE_TYPE__         byte_t
-#define __SBYTE_TYPE__        sbyte_t
-#define __WCHAR_TYPE__        wchar_t
-#define __CHAR16_TYPE__       char16_t
-#define __CHAR32_TYPE__       char32_t
-#define __WCHAR16_TYPE__      char16_t
-#define __WCHAR32_TYPE__      char32_t
-#define __WINT_TYPE__         wint_t
-#define __SIG_ATOMIC_TYPE__   sig_atomic_t
-#define __INTSIZE_TYPE__      size_t
-#define __INTSSIZE_TYPE__     ssize_t
-#define __LONGSIZE_TYPE__     size_t
-#define __LONGSSIZE_TYPE__    ssize_t
-#define __LONG32_TYPE__       long32_t
-#define __ULONG32_TYPE__      ulong32_t
-#define __LONG64_TYPE__       long64_t
-#define __ULONG64_TYPE__      ulong64_t
-#define __builtin_va_list     va_list
-#define __SHIFT_TYPE__        shift_t
+#define TRY
+#define EXCEPT
+#define CASE(x) case x
