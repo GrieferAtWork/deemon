@@ -61,8 +61,15 @@ INTDEF ATTR_COLD int DCALL err_integer_overflow_i(size_t cutoff_bits, bool posit
 INTDEF NONNULL((1, 2)) int FCALL check_empty_keywords(DeeObject *kw, DeeTypeObject *tp_self);
 INTDEF NONNULL((1)) int FCALL check_empty_keywords_obj(DeeObject *__restrict kw);
 INTDEF ATTR_COLD NONNULL((1, 2)) int DCALL err_keywords_not_accepted(DeeTypeObject *tp_self, DeeObject *kw);
-INTDEF ATTR_COLD NONNULL((1, 2)) int DCALL err_keywords_func_not_accepted(char const *__restrict name, DeeObject *__restrict kw);
+INTDEF ATTR_COLD NONNULL((1, 2, 3)) int DCALL err_keywords_func_not_accepted(DeeTypeObject *tp_self, char const *__restrict name, DeeObject *__restrict kw);
+INTDEF ATTR_COLD NONNULL((1, 2, 4)) int DCALL err_keywords_func_not_accepted_len(DeeTypeObject *tp_self, char const *__restrict name, size_t namelen, DeeObject *__restrict kw);
 INTDEF ATTR_COLD NONNULL((1, 2)) int DCALL err_keywords_ctor_not_accepted(DeeTypeObject *tp_self, DeeObject *kw);
+INTDEF ATTR_COLD NONNULL((1, 2)) int DCALL err_classmember_requires_1_argument(DeeTypeObject *tp_self, char const *__restrict name);
+INTDEF ATTR_COLD NONNULL((1, 2)) int DCALL err_classmember_requires_1_argument_len(DeeTypeObject *tp_self, char const *__restrict name, size_t namelen);
+INTDEF ATTR_COLD NONNULL((1, 2)) int DCALL err_classproperty_requires_1_argument(DeeTypeObject *tp_self, char const *__restrict name);
+INTDEF ATTR_COLD NONNULL((1, 2)) int DCALL err_classproperty_requires_1_argument_len(DeeTypeObject *tp_self, char const *__restrict name, size_t namelen);
+INTDEF ATTR_COLD NONNULL((1, 2)) int DCALL err_classmethod_requires_at_least_1_argument(DeeTypeObject *tp_self, char const *__restrict name);
+INTDEF ATTR_COLD NONNULL((1, 2)) int DCALL err_classmethod_requires_at_least_1_argument_len(DeeTypeObject *tp_self, char const *__restrict name, size_t namelen);
 INTDEF ATTR_COLD int DCALL err_keywords_bad_for_argc(size_t argc, size_t kwdc);
 INTDEF ATTR_COLD NONNULL((1)) int DCALL err_keywords_not_found(char const *__restrict keyword);
 INTDEF ATTR_COLD NONNULL((1)) int DCALL err_keywords_shadows_positional(char const *__restrict keyword);
@@ -165,8 +172,15 @@ INTDEF ATTR_COLD NONNULL((1)) int DCALL err_file_not_found_ob(DeeObject *__restr
 #define err_integer_overflow(overflowing_object, cutoff_bits, positive_overflow)                          Dee_ASSUMED_VALUE(err_integer_overflow(overflowing_object, cutoff_bits, positive_overflow), -1)
 #define err_integer_overflow_i(cutoff_bits, positive_overflow)                                            Dee_ASSUMED_VALUE(err_integer_overflow_i(cutoff_bits, positive_overflow), -1)
 #define err_keywords_not_accepted(tp_self, kw)                                                            Dee_ASSUMED_VALUE(err_keywords_not_accepted(tp_self, kw), -1)
-#define err_keywords_func_not_accepted(name, kw)                                                          Dee_ASSUMED_VALUE(err_keywords_func_not_accepted(name, kw), -1)
+#define err_keywords_func_not_accepted(tp_self, name, kw)                                                 Dee_ASSUMED_VALUE(err_keywords_func_not_accepted(tp_self, name, kw), -1)
+#define err_keywords_func_not_accepted_len(tp_self, name, namelen, kw)                                    Dee_ASSUMED_VALUE(err_keywords_func_not_accepted_len(tp_self, name, namelen, kw), -1)
 #define err_keywords_ctor_not_accepted(tp_self, kw)                                                       Dee_ASSUMED_VALUE(err_keywords_ctor_not_accepted(tp_self, kw), -1)
+#define err_classmember_requires_1_argument(tp_self, name)                                                Dee_ASSUMED_VALUE(err_classmember_requires_1_argument(tp_self, name), -1)
+#define err_classmember_requires_1_argument_len(tp_self, name, namelen)                                   Dee_ASSUMED_VALUE(err_classmember_requires_1_argument_len(tp_self, name, namelen), -1)
+#define err_classproperty_requires_1_argument(tp_self, name)                                              Dee_ASSUMED_VALUE(err_classproperty_requires_1_argument(tp_self, name), -1)
+#define err_classproperty_requires_1_argument_len(tp_self, name, namelen)                                 Dee_ASSUMED_VALUE(err_classproperty_requires_1_argument_len(tp_self, name, namelen), -1)
+#define err_classmethod_requires_at_least_1_argument(tp_self, name)                                       Dee_ASSUMED_VALUE(err_classmethod_requires_at_least_1_argument(tp_self, name), -1)
+#define err_classmethod_requires_at_least_1_argument_len(tp_self, name, namelen)                          Dee_ASSUMED_VALUE(err_classmethod_requires_at_least_1_argument_len(tp_self, name, namelen), -1)
 #define err_keywords_bad_for_argc(argc, kwdc)                                                             Dee_ASSUMED_VALUE(err_keywords_bad_for_argc(argc, kwdc), -1)
 #define err_keywords_not_found(keyword)                                                                   Dee_ASSUMED_VALUE(err_keywords_not_found(keyword), -1)
 #define err_keywords_shadows_positional(keyword)                                                          Dee_ASSUMED_VALUE(err_keywords_shadows_positional(keyword), -1)

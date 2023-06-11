@@ -205,7 +205,7 @@ INTERN ATTR_COLD NONNULL((1)) int
 	ASSERT_OBJECT(tp);
 	ASSERT(DeeType_Check(tp));
 	return DeeError_Throwf(&DeeError_NotImplemented,
-	                       "Operator `%k.__%s__' is not implemented",
+	                       "Operator `%r.__%s__' is not implemented",
 	                       tp, info ? info->oi_sname : Q3);
 }
 
@@ -219,7 +219,7 @@ INTERN ATTR_COLD NONNULL((1)) int
 	ASSERT_OBJECT(tp);
 	ASSERT(DeeType_Check(tp));
 	return DeeError_Throwf(&DeeError_NotImplemented,
-	                       "Neither `%k.__%s__', nor `%k.__%s__' are implemented",
+	                       "Neither `%r.__%s__', nor `%r.__%s__' are implemented",
 	                       tp, info ? info->oi_sname : Q3,
 	                       tp, info2 ? info2->oi_sname : Q3);
 }
@@ -236,7 +236,7 @@ INTERN ATTR_COLD NONNULL((1)) int
 	ASSERT_OBJECT(tp);
 	ASSERT(DeeType_Check(tp));
 	return DeeError_Throwf(&DeeError_NotImplemented,
-	                       "Neither `%k.__%s__', nor `%k.__%s__', nor `%k.__%s__' are implemented",
+	                       "Neither `%r.__%s__', nor `%r.__%s__', nor `%r.__%s__' are implemented",
 	                       tp, info ? info->oi_sname : Q3,
 	                       tp, info2 ? info2->oi_sname : Q3,
 	                       tp, info3 ? info3->oi_sname : Q3);
@@ -369,20 +369,74 @@ INTERN ATTR_COLD NONNULL((1, 2)) int
 	                       tp_self, kw);
 }
 
-INTERN ATTR_COLD NONNULL((1, 2)) int
-(DCALL err_keywords_func_not_accepted)(char const *__restrict name,
+INTERN ATTR_COLD NONNULL((1, 2, 3)) int
+(DCALL err_keywords_func_not_accepted)(DeeTypeObject *tp_self,
+                                       char const *__restrict name,
                                        DeeObject *__restrict kw) {
 	return DeeError_Throwf(&DeeError_TypeError,
-	                       "Function %s does not accept keyword arguments %r",
-	                       name, kw);
+	                       "Function `%r.%s' does not accept keyword arguments %r",
+	                       tp_self, name, kw);
+}
+
+INTERN ATTR_COLD NONNULL((1, 2, 4)) int
+(DCALL err_keywords_func_not_accepted_len)(DeeTypeObject *tp_self,
+                                           char const *__restrict name,
+                                           size_t namelen,
+                                           DeeObject *__restrict kw) {
+	return DeeError_Throwf(&DeeError_TypeError,
+	                       "Function `%r.%$s' does not accept keyword arguments %r",
+	                       tp_self, namelen, name, kw);
 }
 
 INTERN ATTR_COLD NONNULL((1, 2)) int
 (DCALL err_keywords_ctor_not_accepted)(DeeTypeObject *tp_self, DeeObject *kw) {
 	return DeeError_Throwf(&DeeError_TypeError,
-	                       "Constructor for %k does not accept keyword arguments %r",
+	                       "Constructor for `%r' does not accept keyword arguments %r",
 	                       tp_self, kw);
 }
+
+INTERN ATTR_COLD NONNULL((1, 2)) int
+(DCALL err_classmember_requires_1_argument)(DeeTypeObject *tp_self, char const *__restrict name) {
+	return DeeError_Throwf(&DeeError_TypeError,
+	                       "Class member `%r.%s' must be called with exactly 1 argument",
+	                       tp_self, name);
+}
+
+INTERN ATTR_COLD NONNULL((1, 2)) int
+(DCALL err_classmember_requires_1_argument_len)(DeeTypeObject *tp_self, char const *__restrict name, size_t namelen) {
+	return DeeError_Throwf(&DeeError_TypeError,
+	                       "Class member `%r.%$s' must be called with exactly 1 argument",
+	                       tp_self, namelen, name);
+}
+
+INTERN ATTR_COLD NONNULL((1, 2)) int
+(DCALL err_classproperty_requires_1_argument)(DeeTypeObject *tp_self, char const *__restrict name) {
+	return DeeError_Throwf(&DeeError_TypeError,
+	                       "Class property `%r.%s' must be called with exactly 1 argument",
+	                       tp_self, name);
+}
+
+INTERN ATTR_COLD NONNULL((1, 2)) int
+(DCALL err_classproperty_requires_1_argument_len)(DeeTypeObject *tp_self, char const *__restrict name, size_t namelen) {
+	return DeeError_Throwf(&DeeError_TypeError,
+	                       "Class property `%r.%$s' must be called with exactly 1 argument",
+	                       tp_self, namelen, name);
+}
+
+INTERN ATTR_COLD NONNULL((1, 2)) int
+(DCALL err_classmethod_requires_at_least_1_argument)(DeeTypeObject *tp_self, char const *__restrict name) {
+	return DeeError_Throwf(&DeeError_TypeError,
+	                       "Class method `%r.%s' must be called with at least 1 argument",
+	                       tp_self, name);
+}
+
+INTERN ATTR_COLD NONNULL((1, 2)) int
+(DCALL err_classmethod_requires_at_least_1_argument_len)(DeeTypeObject *tp_self, char const *__restrict name, size_t namelen) {
+	return DeeError_Throwf(&DeeError_TypeError,
+	                       "Class method `%r.%$s' must be called with at least 1 argument",
+	                       tp_self, namelen, name);
+}
+
 
 INTERN ATTR_COLD int
 (DCALL err_keywords_bad_for_argc)(size_t argc, size_t kwdc) {
@@ -754,7 +808,7 @@ INTERN ATTR_COLD NONNULL((1, 2)) int
 	ASSERT_OBJECT(tp);
 	ASSERT(DeeType_Check(tp));
 	return DeeError_Throwf(&DeeError_AttributeError,
-	                       "Cannot %s unknown attribute `%k.%s'",
+	                       "Cannot %s unknown attribute `%r.%s'",
 	                       access_names[access & ATTR_ACCESS_MASK],
 	                       tp, name);
 }
@@ -767,7 +821,7 @@ INTERN ATTR_COLD NONNULL((1)) int
 	ASSERT(!namelen || name);
 	ASSERT(DeeType_Check(tp));
 	return DeeError_Throwf(&DeeError_AttributeError,
-	                       "Cannot %s unknown attribute `%k.%$s'",
+	                       "Cannot %s unknown attribute `%r.%$s'",
 	                       access_names[access & ATTR_ACCESS_MASK],
 	                       tp, namelen, name);
 }
@@ -776,7 +830,7 @@ INTERN ATTR_COLD NONNULL((1, 2)) int
 (DCALL err_unknown_attribute_lookup)(DeeTypeObject *__restrict tp,
                                      char const *__restrict name) {
 	return DeeError_Throwf(&DeeError_AttributeError,
-	                       "Unknown attribute `%k.%s'",
+	                       "Unknown attribute `%r.%s'",
 	                       tp, name);
 }
 
@@ -795,7 +849,7 @@ INTERN ATTR_COLD NONNULL((1, 2)) int
 	ASSERT_OBJECT(tp);
 	ASSERT(DeeType_Check(tp));
 	return DeeError_Throwf(&DeeError_AttributeError,
-	                       "Cannot %s attribute `%k.%s'",
+	                       "Cannot %s attribute `%r.%s'",
 	                       access_names[access & ATTR_ACCESS_MASK],
 	                       tp, name);
 }
@@ -808,7 +862,7 @@ INTERN ATTR_COLD NONNULL((1)) int
 	ASSERT(!namelen || name);
 	ASSERT(DeeType_Check(tp));
 	return DeeError_Throwf(&DeeError_AttributeError,
-	                       "Cannot %s attribute `%k.%$s'",
+	                       "Cannot %s attribute `%r.%$s'",
 	                       access_names[access & ATTR_ACCESS_MASK],
 	                       tp, namelen, name);
 }
@@ -835,7 +889,7 @@ INTERN ATTR_COLD NONNULL((1, 2)) int
 	ASSERT_OBJECT(tp);
 	ASSERT(DeeType_Check(tp));
 	return DeeError_Throwf(&DeeError_UnboundAttribute,
-	                       "Unbound attribute `%k.%s'",
+	                       "Unbound attribute `%r.%s'",
 	                       tp, name);
 }
 

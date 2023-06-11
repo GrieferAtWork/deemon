@@ -198,7 +198,7 @@ DFUNDEF WUNUSED NONNULL((1)) DREF /*ClsProperty*/ DeeObject *DCALL
 DeeClsProperty_New(DeeTypeObject *__restrict type,
                    Dee_getmethod_t get,
                    Dee_delmethod_t del,
-                   Dee_setmethod_t set);
+                   Dee_setmethod_t set); /* TODO: is-bound callback */
 
 /* Returns the name of the function bound by the given
  * `_ClassProperty', or `NULL' if the name could not be determined. */

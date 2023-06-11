@@ -54,9 +54,9 @@ INTDEF WUNUSED NONNULL((1, 2)) int DCALL type_delattr(DeeObject *self, DeeObject
 INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL type_setattr(DeeObject *self, DeeObject *name, DeeObject *value);
 
 /* For type-type, these should be accessed as members, not as class-wrappers:
- * >> import type_ from deemon;
- * >> print type_.baseof(x); // Should be a bound instance-method,
- * >>                        // rather than an unbound class method!
+ * >> import Type from deemon;
+ * >> print Type.baseof(x); // Should be a bound instance-method,
+ * >>                       // rather than an unbound class method!
  */
 #undef CONFIG_TYPE_ATTRIBUTE_FORWARD_GENERIC
 #undef CONFIG_TYPE_ATTRIBUTE_ENUM_PREVENT_DUPLICATES
@@ -2121,8 +2121,7 @@ PUBLIC WUNUSED NONNULL((1, 2)) int
 	DeeTypeObject *iter, *tp_self;
 	dhash_t hash;
 	ASSERT_OBJECT(self);
-	ASSERT_OBJECT(attr_name);
-	ASSERT(DeeString_Check(attr_name));
+	ASSERT_OBJECT_TYPE_EXACT(attr_name, &DeeString_Type);
 	iter = tp_self = Dee_TYPE(self);
 	hash           = DeeString_Hash(attr_name);
 again:
@@ -2347,10 +2346,10 @@ PUBLIC WUNUSED NONNULL((1, 2)) int
 	dhash_t hash;
 	DeeTypeObject *iter;
 	DeeTypeObject *tp_self;
-	ASSERT_OBJECT(attr_name);
-	ASSERT(DeeString_Check(attr_name));
-	iter = tp_self = Dee_TYPE(self);
-	hash           = DeeString_Hash(attr_name);
+	ASSERT_OBJECT_TYPE_EXACT(attr_name, &DeeString_Type);
+	tp_self = Dee_TYPE(self);
+	iter    = tp_self;
+	hash    = DeeString_Hash(attr_name);
 again:
 	if (iter->tp_attr)
 		goto do_iter_attr;
@@ -2627,8 +2626,7 @@ DeeObject_CallAttrKw(DeeObject *self, /*String*/ DeeObject *attr_name,
 	dhash_t hash;
 	DeeTypeObject *iter, *tp_self;
 	ASSERT_OBJECT(self);
-	ASSERT_OBJECT(attr_name);
-	ASSERT(DeeString_Check(attr_name));
+	ASSERT_OBJECT_TYPE_EXACT(attr_name, &DeeString_Type);
 	iter = tp_self = Dee_TYPE(self);
 again:
 	if (iter->tp_attr)
@@ -2906,8 +2904,7 @@ PUBLIC WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *
 	dhash_t hash;
 	DeeTypeObject *iter, *tp_self;
 	ASSERT_OBJECT(self);
-	ASSERT_OBJECT(attr_name);
-	ASSERT(DeeString_Check(attr_name));
+	ASSERT_OBJECT_TYPE_EXACT(attr_name, &DeeString_Type);
 	iter = tp_self = Dee_TYPE(self);
 again:
 	if (iter->tp_attr)
@@ -2991,8 +2988,7 @@ PUBLIC WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *
 	dhash_t hash;
 	DeeTypeObject *iter, *tp_self;
 	ASSERT_OBJECT(self);
-	ASSERT_OBJECT(attr_name);
-	ASSERT(DeeString_Check(attr_name));
+	ASSERT_OBJECT_TYPE_EXACT(attr_name, &DeeString_Type);
 	iter = tp_self = Dee_TYPE(self);
 again:
 	if (iter->tp_attr)

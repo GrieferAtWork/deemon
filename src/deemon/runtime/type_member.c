@@ -94,6 +94,7 @@ STATIC_ASSERT(STRUCT_BOOLBIT(0x40) == STRUCT_BOOLBIT6);
 STATIC_ASSERT(STRUCT_BOOLBIT(0x80) == STRUCT_BOOLBIT7);
 
 
+/* Reurns the object-type used to represent a given type-member. */
 INTERN WUNUSED NONNULL((1)) DeeTypeObject *DCALL
 type_member_typefor(struct type_member const *__restrict self) {
 	if (TYPE_MEMBER_ISCONST(self))
@@ -364,7 +365,7 @@ type_obmeth_call_kw(DeeTypeObject *cls_type,
 	}
 	return (*desc->m_func)(argv[0], argc - 1, argv + 1);
 err_no_keywords:
-	err_keywords_func_not_accepted(desc->m_name, kw);
+	err_keywords_func_not_accepted(cls_type, desc->m_name, kw);
 err:
 	return NULL;
 }
@@ -388,7 +389,7 @@ type_method_call_kw_normal(struct type_method const *desc,
 	}
 	return (*desc->m_func)(self, argc, argv);
 err_no_keywords:
-	err_keywords_func_not_accepted(desc->m_name, kw);
+	err_keywords_func_not_accepted(Dee_TYPE(self), desc->m_name, kw);
 err:
 	return NULL;
 }

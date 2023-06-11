@@ -28,6 +28,7 @@
 #include <deemon/class.h>
 #include <deemon/error.h>
 #include <deemon/file.h>
+#include <deemon/format.h>
 #include <deemon/instancemethod.h>
 #include <deemon/mro.h>
 #include <deemon/none.h>
@@ -525,13 +526,376 @@ Dee_membercache_addinstanceattrib(struct Dee_membercache *self,
 	return Dee_membercache_addslot(self, &slot);
 }
 
-#ifndef __INTELLISENSE__
-#define MRO_LEN
-#include "mro-impl.c.inl"
-/**/
-#include "mro-impl.c.inl"
-#endif /* !__INTELLISENSE__ */
+
+/* >> bool Dee_membercache_acquiretable(struct Dee_membercache *self, [[out]] DREF struct Dee_membercache_table **p_table);
+ * >> void Dee_membercache_releasetable(struct Dee_membercache *self, [[in]] DREF struct Dee_membercache_table *table);
+ * Helpers to acquire and release cache tables. */
+#define Dee_membercache_acquiretable(self, p_table)                   \
+	(Dee_membercache_tabuse_inc(self),                                \
+	 *(p_table) = atomic_read(&(self)->mc_table),                     \
+	 *(p_table) ? Dee_membercache_table_incref(*(p_table)) : (void)0, \
+	 Dee_membercache_tabuse_dec(self),                                \
+	 *(p_table) != NULL)
+#define Dee_membercache_releasetable(self, table) \
+	Dee_membercache_table_decref(table)
+
+/* Keyword argument list for a single argument `thisarg' */
+INTDEF struct keyword getter_kwlist[];
+
+
+#ifndef CONFIG_CALLTUPLE_OPTIMIZATIONS
+/* TODO: For binary compat:
+ * #define DEFINE_DeeType_CallCachedAttrTuple
+ * #define DEFINE_DeeType_CallCachedClassAttrTuple
+ * #define DEFINE_DeeType_CallCachedAttrTupleKw
+ * #define DEFINE_DeeType_CallCachedClassAttrTupleKw
+ */
+#endif /* !CONFIG_CALLTUPLE_OPTIMIZATIONS */
+
+
+/* Reurns the object-type used to represent a given type-member. */
+INTDEF WUNUSED NONNULL((1)) DeeTypeObject *DCALL
+type_member_typefor(struct type_member const *__restrict self);
+
+
+INTERN WUNUSED NONNULL((1, 2, 3, 5, 6)) int DCALL /* METHOD */
+type_method_findattr(struct Dee_membercache *cache, DeeTypeObject *decl,
+                     struct type_method const *chain, uint16_t perm,
+                     struct attribute_info *__restrict result,
+                     struct attribute_lookup_rules const *__restrict rules) {
+	ASSERT(perm & (ATTR_IMEMBER | ATTR_CMEMBER));
+	perm |= ATTR_PERMGET | ATTR_PERMCALL;
+	if ((perm & rules->alr_perm_mask) != rules->alr_perm_value)
+		goto nope;
+	for (; chain->m_name; ++chain) {
+		if (!streq(chain->m_name, rules->alr_name))
+			continue;
+		Dee_membercache_addmethod(cache, decl, rules->alr_hash, chain);
+		ASSERT(!(perm & ATTR_DOCOBJ));
+		result->a_doc      = chain->m_doc;
+		result->a_decl     = (DREF DeeObject *)decl;
+		result->a_perm     = perm;
+		result->a_attrtype = (chain->m_flag & TYPE_METHOD_FKWDS)
+		                     ? &DeeKwObjMethod_Type
+		                     : &DeeObjMethod_Type;
+		Dee_Incref(result->a_attrtype);
+		Dee_Incref(decl);
+		return 0;
+	}
+nope:
+	return 1;
+}
+
+INTERN WUNUSED NONNULL((1, 2, 3, 4)) int DCALL
+DeeType_FindInstanceMethodAttr(DeeTypeObject *tp_invoker,
+                               DeeTypeObject *tp_self,
+                               struct attribute_info *__restrict result,
+                               struct attribute_lookup_rules const *__restrict rules) {
+	uint16_t perm;
+	struct type_method const *chain;
+	perm = ATTR_IMEMBER | ATTR_CMEMBER | ATTR_PERMGET | ATTR_PERMCALL | ATTR_WRAPPER;
+	if ((perm & rules->alr_perm_mask) != rules->alr_perm_value)
+		goto nope;
+	chain = tp_self->tp_methods;
+	for (; chain->m_name; ++chain) {
+		if (!streq(chain->m_name, rules->alr_name))
+			continue;
+		Dee_membercache_addinstancemethod(&tp_invoker->tp_class_cache, tp_self, rules->alr_hash, chain);
+		ASSERT(!(perm & ATTR_DOCOBJ));
+		result->a_doc      = chain->m_doc;
+		result->a_decl     = (DREF DeeObject *)tp_self;
+		result->a_perm     = perm;
+		result->a_attrtype = (chain->m_flag & TYPE_METHOD_FKWDS)
+		                     ? &DeeKwObjMethod_Type
+		                     : &DeeObjMethod_Type;
+		Dee_Incref(result->a_attrtype);
+		Dee_Incref(tp_self);
+		return 0;
+	}
+nope:
+	return 1;
+}
+
+INTERN WUNUSED NONNULL((1, 2, 3, 5, 6)) int DCALL /* GETSET */
+type_getset_findattr(struct Dee_membercache *cache, DeeTypeObject *decl,
+                     struct type_getset const *chain, uint16_t perm,
+                     struct attribute_info *__restrict result,
+                     struct attribute_lookup_rules const *__restrict rules) {
+	ASSERT(perm & (ATTR_IMEMBER | ATTR_CMEMBER));
+	perm |= ATTR_PROPERTY;
+	for (; chain->gs_name; ++chain) {
+		uint16_t flags = perm;
+		if (chain->gs_get)
+			flags |= ATTR_PERMGET;
+		if (chain->gs_del)
+			flags |= ATTR_PERMDEL;
+		if (chain->gs_set)
+			flags |= ATTR_PERMSET;
+		if ((flags & rules->alr_perm_mask) != rules->alr_perm_value)
+			continue;
+		if (!streq(chain->gs_name, rules->alr_name))
+			continue;
+		Dee_membercache_addgetset(cache, decl, rules->alr_hash, chain);
+		ASSERT(!(perm & ATTR_DOCOBJ));
+		result->a_doc      = chain->gs_doc;
+		result->a_perm     = flags;
+		result->a_decl     = (DREF DeeObject *)decl;
+		result->a_attrtype = NULL;
+		Dee_Incref(decl);
+		return 0;
+	}
+	return 1;
+}
+
+INTERN WUNUSED NONNULL((1, 2, 3, 4)) int DCALL
+DeeType_FindInstanceGetSetAttr(DeeTypeObject *tp_invoker,
+                               DeeTypeObject *tp_self,
+                               struct attribute_info *__restrict result,
+                               struct attribute_lookup_rules const *__restrict rules) {
+	uint16_t perm;
+	struct type_getset const *chain;
+	perm  = ATTR_PROPERTY | ATTR_WRAPPER | ATTR_IMEMBER | ATTR_CMEMBER;
+	chain = tp_self->tp_getsets;
+	for (; chain->gs_name; ++chain) {
+		uint16_t flags = perm;
+		if (chain->gs_get)
+			flags |= ATTR_PERMGET;
+		if (chain->gs_del)
+			flags |= ATTR_PERMDEL;
+		if (chain->gs_set)
+			flags |= ATTR_PERMSET;
+		if ((flags & rules->alr_perm_mask) != rules->alr_perm_value)
+			continue;
+		if (!streq(chain->gs_name, rules->alr_name))
+			continue;
+		Dee_membercache_addinstancegetset(&tp_invoker->tp_class_cache, tp_self, rules->alr_hash, chain);
+		ASSERT(!(perm & ATTR_DOCOBJ));
+		result->a_doc      = chain->gs_doc;
+		result->a_perm     = flags;
+		result->a_decl     = (DREF DeeObject *)tp_self;
+		result->a_attrtype = NULL;
+		Dee_Incref(tp_self);
+		return 0;
+	}
+	return 1;
+}
+
+INTERN WUNUSED NONNULL((1, 2, 3, 5, 6)) int DCALL /* MEMBER */
+type_member_findattr(struct Dee_membercache *cache, DeeTypeObject *decl,
+                     struct type_member const *chain, uint16_t perm,
+                     struct attribute_info *__restrict result,
+                     struct attribute_lookup_rules const *__restrict rules) {
+	ASSERT(perm & (ATTR_IMEMBER | ATTR_CMEMBER));
+	perm |= ATTR_PERMGET;
+	for (; chain->m_name; ++chain) {
+		uint16_t flags = perm;
+		if (!TYPE_MEMBER_ISCONST(chain) &&
+		    !(chain->m_field.m_type & STRUCT_CONST))
+			flags |= (ATTR_PERMDEL | ATTR_PERMSET);
+		if ((flags & rules->alr_perm_mask) != rules->alr_perm_value)
+			continue;
+		if (!streq(chain->m_name, rules->alr_name))
+			continue;
+		Dee_membercache_addmember(cache, decl, rules->alr_hash, chain);
+		ASSERT(!(perm & ATTR_DOCOBJ));
+		result->a_doc      = chain->m_doc;
+		result->a_perm     = flags;
+		result->a_decl     = (DREF DeeObject *)decl;
+		result->a_attrtype = type_member_typefor(chain);
+		Dee_Incref(decl);
+		Dee_XIncref(result->a_attrtype);
+		return 0;
+	}
+	return 1;
+}
+
+INTERN WUNUSED NONNULL((1, 2, 3, 4)) int DCALL
+DeeType_FindInstanceMemberAttr(DeeTypeObject *tp_invoker,
+                               DeeTypeObject *tp_self,
+                               struct attribute_info *__restrict result,
+                               struct attribute_lookup_rules const *__restrict rules) {
+	uint16_t perm;
+	struct type_member const *chain;
+	perm  = ATTR_WRAPPER | ATTR_IMEMBER | ATTR_CMEMBER | ATTR_PERMGET;
+	chain = tp_self->tp_members;
+	for (; chain->m_name; ++chain) {
+		uint16_t flags = perm;
+		if (!TYPE_MEMBER_ISCONST(chain) &&
+		    !(chain->m_field.m_type & STRUCT_CONST))
+			flags |= (ATTR_PERMDEL | ATTR_PERMSET);
+		if ((flags & rules->alr_perm_mask) != rules->alr_perm_value)
+			continue;
+		if (!streq(chain->m_name, rules->alr_name))
+			continue;
+		Dee_membercache_addinstancemember(&tp_invoker->tp_class_cache, tp_self, rules->alr_hash, chain);
+		ASSERT(!(perm & ATTR_DOCOBJ));
+		result->a_doc      = chain->m_doc;
+		result->a_perm     = flags;
+		result->a_decl     = (DREF DeeObject *)tp_self;
+		result->a_attrtype = type_member_typefor(chain);
+		Dee_Incref(tp_self);
+		Dee_XIncref(result->a_attrtype);
+		return 0;
+	}
+	return 1;
+}
+
 
 DECL_END
+
+/* Define cache accessor functions */
+#ifndef __INTELLISENSE__
+#define DEFINE_DeeType_GetCachedAttr
+#include "mro-impl-cache.c.inl"
+#define DEFINE_DeeType_GetCachedAttrLen
+#include "mro-impl-cache.c.inl"
+#define DEFINE_DeeType_GetCachedClassAttr
+#include "mro-impl-cache.c.inl"
+#define DEFINE_DeeType_GetCachedClassAttrLen
+#include "mro-impl-cache.c.inl"
+#define DEFINE_DeeType_GetCachedInstanceAttr
+#include "mro-impl-cache.c.inl"
+#define DEFINE_DeeType_GetCachedInstanceAttrLen
+#include "mro-impl-cache.c.inl"
+
+#define DEFINE_DeeType_BoundCachedAttr
+#include "mro-impl-cache.c.inl"
+#define DEFINE_DeeType_BoundCachedAttrLen
+#include "mro-impl-cache.c.inl"
+#define DEFINE_DeeType_BoundCachedClassAttr
+#include "mro-impl-cache.c.inl"
+#define DEFINE_DeeType_BoundCachedClassAttrLen
+#include "mro-impl-cache.c.inl"
+#define DEFINE_DeeType_BoundCachedInstanceAttr
+#include "mro-impl-cache.c.inl"
+#define DEFINE_DeeType_BoundCachedInstanceAttrLen
+#include "mro-impl-cache.c.inl"
+
+#define DEFINE_DeeType_HasCachedAttr
+#include "mro-impl-cache.c.inl"
+#define DEFINE_DeeType_HasCachedAttrLen
+#include "mro-impl-cache.c.inl"
+#define DEFINE_DeeType_HasCachedClassAttr
+#include "mro-impl-cache.c.inl"
+#define DEFINE_DeeType_HasCachedClassAttrLen
+#include "mro-impl-cache.c.inl"
+
+#define DEFINE_DeeType_DelCachedAttr
+#include "mro-impl-cache.c.inl"
+#define DEFINE_DeeType_DelCachedAttrLen
+#include "mro-impl-cache.c.inl"
+#define DEFINE_DeeType_DelCachedClassAttr
+#include "mro-impl-cache.c.inl"
+#define DEFINE_DeeType_DelCachedClassAttrLen
+#include "mro-impl-cache.c.inl"
+#define DEFINE_DeeType_DelCachedInstanceAttr
+#include "mro-impl-cache.c.inl"
+#define DEFINE_DeeType_DelCachedInstanceAttrLen
+#include "mro-impl-cache.c.inl"
+
+#define DEFINE_DeeType_SetCachedAttr
+#include "mro-impl-cache.c.inl"
+#define DEFINE_DeeType_SetCachedAttrLen
+#include "mro-impl-cache.c.inl"
+#define DEFINE_DeeType_SetCachedClassAttr
+#include "mro-impl-cache.c.inl"
+#define DEFINE_DeeType_SetCachedClassAttrLen
+#include "mro-impl-cache.c.inl"
+#define DEFINE_DeeType_SetCachedInstanceAttr
+#include "mro-impl-cache.c.inl"
+#define DEFINE_DeeType_SetCachedInstanceAttrLen
+#include "mro-impl-cache.c.inl"
+
+#define DEFINE_DeeType_SetBasicCachedAttr
+#include "mro-impl-cache.c.inl"
+#define DEFINE_DeeType_SetBasicCachedAttrLen
+#include "mro-impl-cache.c.inl"
+#define DEFINE_DeeType_SetBasicCachedClassAttr
+#include "mro-impl-cache.c.inl"
+#define DEFINE_DeeType_SetBasicCachedClassAttrLen
+#include "mro-impl-cache.c.inl"
+//#define DEFINE_DeeType_SetBasicCachedInstanceAttr
+//#include "mro-impl-cache.c.inl"
+//#define DEFINE_DeeType_SetBasicCachedInstanceAttrLen
+//#include "mro-impl-cache.c.inl"
+
+#define DEFINE_DeeType_CallCachedAttr
+#include "mro-impl-cache.c.inl"
+#define DEFINE_DeeType_CallCachedAttrLen
+#include "mro-impl-cache.c.inl"
+#define DEFINE_DeeType_CallCachedClassAttr
+#include "mro-impl-cache.c.inl"
+#define DEFINE_DeeType_CallCachedClassAttrLen
+#include "mro-impl-cache.c.inl"
+//#define DEFINE_DeeType_CallCachedInstanceAttr
+//#include "mro-impl-cache.c.inl"
+//#define DEFINE_DeeType_CallCachedInstanceAttrLen
+//#include "mro-impl-cache.c.inl"
+
+#define DEFINE_DeeType_CallCachedAttrKw
+#include "mro-impl-cache.c.inl"
+#define DEFINE_DeeType_CallCachedAttrLenKw
+#include "mro-impl-cache.c.inl"
+#define DEFINE_DeeType_CallCachedClassAttrKw
+#include "mro-impl-cache.c.inl"
+#define DEFINE_DeeType_CallCachedClassAttrLenKw
+#include "mro-impl-cache.c.inl"
+#define DEFINE_DeeType_CallCachedInstanceAttrKw
+#include "mro-impl-cache.c.inl"
+#define DEFINE_DeeType_CallCachedInstanceAttrLenKw
+#include "mro-impl-cache.c.inl"
+
+#ifdef CONFIG_CALLTUPLE_OPTIMIZATIONS
+#define DEFINE_DeeType_CallCachedAttrTuple
+#include "mro-impl-cache.c.inl"
+//#define DEFINE_DeeType_CallCachedAttrLenTuple
+//#include "mro-impl-cache.c.inl"
+#define DEFINE_DeeType_CallCachedClassAttrTuple
+#include "mro-impl-cache.c.inl"
+//#define DEFINE_DeeType_CallCachedClassAttrLenTuple
+//#include "mro-impl-cache.c.inl"
+//#define DEFINE_DeeType_CallCachedInstanceAttrTuple
+//#include "mro-impl-cache.c.inl"
+//#define DEFINE_DeeType_CallCachedInstanceAttrLenTuple
+//#include "mro-impl-cache.c.inl"
+
+#define DEFINE_DeeType_CallCachedAttrTupleKw
+#include "mro-impl-cache.c.inl"
+//#define DEFINE_DeeType_CallCachedAttrLenTupleKw
+//#include "mro-impl-cache.c.inl"
+#define DEFINE_DeeType_CallCachedClassAttrTupleKw
+#include "mro-impl-cache.c.inl"
+//#define DEFINE_DeeType_CallCachedClassAttrLenTupleKw
+//#include "mro-impl-cache.c.inl"
+//#define DEFINE_DeeType_CallCachedInstanceAttrTupleKw
+//#include "mro-impl-cache.c.inl"
+//#define DEFINE_DeeType_CallCachedInstanceAttrLenTupleKw
+//#include "mro-impl-cache.c.inl"
+#endif /* CONFIG_CALLTUPLE_OPTIMIZATIONS */
+
+#define DEFINE_DeeType_VCallCachedAttrf
+#include "mro-impl-cache.c.inl"
+//#define DEFINE_DeeType_VCallCachedAttrLenf
+//#include "mro-impl-cache.c.inl"
+#define DEFINE_DeeType_VCallCachedClassAttrf
+#include "mro-impl-cache.c.inl"
+//#define DEFINE_DeeType_VCallCachedClassAttrLenf
+//#include "mro-impl-cache.c.inl"
+//#define DEFINE_DeeType_VCallCachedInstanceAttrf
+//#include "mro-impl-cache.c.inl"
+//#define DEFINE_DeeType_VCallCachedInstanceAttrLenf
+//#include "mro-impl-cache.c.inl"
+
+#define DEFINE_DeeType_FindCachedAttr
+#include "mro-impl-cache.c.inl"
+#define DEFINE_DeeType_FindCachedClassAttr
+#include "mro-impl-cache.c.inl"
+#endif /* !__INTELLISENSE__ */
+
+#ifndef __INTELLISENSE__
+#include "mro-impl.c.inl"
+#define DEFINE_MRO_ATTRLEN_FUNCTIONS
+#include "mro-impl.c.inl"
+#endif /* !__INTELLISENSE__ */
 
 #endif /* !GUARD_DEEMON_RUNTIME_MRO_C */

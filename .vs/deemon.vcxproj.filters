@@ -762,6 +762,9 @@
 		<ClInclude Include="..\src\deemon\runtime\builtin.h">
 			<Filter>src\runtime</Filter>
 		</ClInclude>
+		<ClInclude Include="..\src\deemon\runtime\mro-impl-cache.c.inl">
+			<Filter>src\runtime</Filter>
+		</ClInclude>
 		<ClInclude Include="..\src\deemon\runtime\mro-impl.c.inl">
 			<Filter>src\runtime</Filter>
 		</ClInclude>

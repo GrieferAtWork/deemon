@@ -1084,7 +1084,7 @@ PUBLIC WUNUSED ATTR_INS(2, 1) NONNULL((3)) int
 	DeeObject *const *iter, *const *end;
 	fmt_start   = format;
 	is_optional = false;
-	p_args       = (struct va_list_struct *)VALIST_ADDR(args);
+	p_args      = (struct va_list_struct *)VALIST_ADDR(args);
 	end         = (iter = argv) + argc;
 	for (;;) {
 		if (*format == '|') {
@@ -1402,8 +1402,15 @@ PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 Dee_VPackf(char const *__restrict format, va_list args) {
 	DREF DeeObject *result;
 	result = Dee_VPPackf((char const **)&format, (struct va_list_struct *)VALIST_ADDR(args));
-	if unlikely(!result)
+	if unlikely(!result) {
 		Dee_VPPackf_Cleanup(format, ((struct va_list_struct *)VALIST_ADDR(args))->vl_ap);
+	} else if unlikely(*format != '\0') {
+		/* More objects at the end -> cannot pack */
+		Dee_VPPackf_Cleanup(format, ((struct va_list_struct *)VALIST_ADDR(args))->vl_ap);
+		Dee_Decref(result);
+		err_invalid_argc(NULL, 2, 1, 1); /* TODO: 2 is just a guess; it could also be more... */
+		result = NULL;
+	}
 	return result;
 }
 
