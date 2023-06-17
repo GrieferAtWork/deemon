@@ -530,8 +530,10 @@ DECL_BEGIN
      defined(LOCAL_IS_VCALLF))
 #if defined(LOCAL_HAS_self) && defined(LOCAL_HAS_len)
 #define LOCAL_ATTR_NONNULL NONNULL((1, 2, 3, 6))
-#elif defined(LOCAL_HAS_self) || defined(LOCAL_HAS_len)
+#elif defined(LOCAL_HAS_self)
 #define LOCAL_ATTR_NONNULL NONNULL((1, 2, 3, 5))
+#elif defined(LOCAL_HAS_len)
+#define LOCAL_ATTR_NONNULL NONNULL((1, 2, 5))
 #else /* ... */
 #define LOCAL_ATTR_NONNULL NONNULL((1, 2, 4))
 #endif /* !... */
