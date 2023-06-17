@@ -3537,35 +3537,35 @@ DECL_END
 
 #ifndef __INTELLISENSE__
 #define DEFINE_DeeObject_TGenericGetAttrString
-#include "attribute-generic-access.c.inl"
+#include "attribute-access-generic.c.inl"
 #define DEFINE_DeeObject_TGenericGetAttrStringLen
-#include "attribute-generic-access.c.inl"
+#include "attribute-access-generic.c.inl"
 #define DEFINE_DeeObject_TGenericBoundAttrString
-#include "attribute-generic-access.c.inl"
+#include "attribute-access-generic.c.inl"
 #define DEFINE_DeeObject_TGenericBoundAttrStringLen
-#include "attribute-generic-access.c.inl"
+#include "attribute-access-generic.c.inl"
 #define DEFINE_DeeObject_TGenericCallAttrString
-#include "attribute-generic-access.c.inl"
+#include "attribute-access-generic.c.inl"
 #define DEFINE_DeeObject_TGenericCallAttrStringLen
-#include "attribute-generic-access.c.inl"
+#include "attribute-access-generic.c.inl"
 #define DEFINE_DeeObject_TGenericCallAttrStringKw
-#include "attribute-generic-access.c.inl"
+#include "attribute-access-generic.c.inl"
 #define DEFINE_DeeObject_TGenericCallAttrStringLenKw
-#include "attribute-generic-access.c.inl"
+#include "attribute-access-generic.c.inl"
 #define DEFINE_DeeObject_TGenericHasAttrString
-#include "attribute-generic-access.c.inl"
+#include "attribute-access-generic.c.inl"
 #define DEFINE_DeeObject_TGenericHasAttrStringLen
-#include "attribute-generic-access.c.inl"
+#include "attribute-access-generic.c.inl"
 #define DEFINE_DeeObject_TGenericDelAttrString
-#include "attribute-generic-access.c.inl"
+#include "attribute-access-generic.c.inl"
 #define DEFINE_DeeObject_TGenericDelAttrStringLen
-#include "attribute-generic-access.c.inl"
+#include "attribute-access-generic.c.inl"
 #define DEFINE_DeeObject_TGenericSetAttrString
-#include "attribute-generic-access.c.inl"
+#include "attribute-access-generic.c.inl"
 #define DEFINE_DeeObject_TGenericSetAttrStringLen
-#include "attribute-generic-access.c.inl"
+#include "attribute-access-generic.c.inl"
 #define DEFINE_DeeObject_TGenericFindAttr
-#include "attribute-generic-access.c.inl"
+#include "attribute-access-generic.c.inl"
 #endif /* !__INTELLISENSE__ */
 
 #endif /* !GUARD_DEEMON_RUNTIME_ATTRIBUTE_C */
