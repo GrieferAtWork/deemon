@@ -1002,7 +1002,8 @@ LOCAL_DeeType_AccessCachedAttr(DeeTypeObject *tp_self,
 			continue;
 
 #ifdef LOCAL_IS_FIND
-		if (rules->alr_decl && (DeeObject *)item->mcs_decl != result->a_decl)
+		if (rules->alr_decl != NULL &&
+		    rules->alr_decl != (DeeObject *)item->mcs_decl)
 			break; /* Attribute isn't declared by the requested declarator. */
 #endif /* LOCAL_IS_FIND */
 
