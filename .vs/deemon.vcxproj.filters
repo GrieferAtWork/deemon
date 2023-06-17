@@ -759,6 +759,9 @@
 		<ClInclude Include="..\src\deemon\objects\unicode\wildcompare.c.inl">
 			<Filter>src\objects\unicode</Filter>
 		</ClInclude>
+		<ClInclude Include="..\src\deemon\runtime\attribute-generic-access.c.inl">
+			<Filter>src\runtime</Filter>
+		</ClInclude>
 		<ClInclude Include="..\src\deemon\runtime\builtin.h">
 			<Filter>src\runtime</Filter>
 		</ClInclude>

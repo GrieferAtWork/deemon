@@ -262,6 +262,7 @@
 		<ClInclude Include="..\src\deemon\objects\unicode\string_functions-strip.c.inl" />
 		<ClInclude Include="..\src\deemon\objects\unicode\string_functions.h" />
 		<ClInclude Include="..\src\deemon\objects\unicode\wildcompare.c.inl" />
+		<ClInclude Include="..\src\deemon\runtime\attribute-generic-access.c.inl" />
 		<ClInclude Include="..\src\deemon\runtime\builtin.h" />
 		<ClInclude Include="..\src\deemon\runtime\mro-impl-cache.c.inl" />
 		<ClInclude Include="..\src\deemon\runtime\mro-impl.c.inl" />

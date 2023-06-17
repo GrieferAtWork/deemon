@@ -570,6 +570,7 @@ EXPORTS
 	_DeeObject_Free@4=DeeObject_Free@4
 	_DeeObject_FreeTracker@4=DeeObject_FreeTracker@4
 	_DeeObject_GenericEnumAttr@12=DeeObject_GenericEnumAttr@12
+	_DeeObject_GenericFindAttrString@16=DeeObject_GenericFindAttrString@16
 	_DeeObject_Get128Bit@8=DeeObject_Get128Bit@8
 	_DeeObject_Get16Bit@8=DeeObject_Get16Bit@8
 	_DeeObject_Get32Bit@8=DeeObject_Get32Bit@8
@@ -677,6 +678,8 @@ EXPORTS
 	_DeeObject_Sub@8=DeeObject_Sub@8
 	_DeeObject_SubInt8@8=DeeObject_SubInt8@8
 	_DeeObject_SubUInt32@8=DeeObject_SubUInt32@8
+	_DeeObject_TGenericBoundAttrString@16=DeeObject_TGenericBoundAttrString@16
+	_DeeObject_TGenericBoundAttrStringLen@20=DeeObject_TGenericBoundAttrStringLen@20
 	_DeeObject_TGenericCallAttrString@24=DeeObject_TGenericCallAttrString@24
 	_DeeObject_TGenericCallAttrStringKw@28=DeeObject_TGenericCallAttrStringKw@28
 	_DeeObject_TGenericCallAttrStringLen@28=DeeObject_TGenericCallAttrStringLen@28
@@ -685,6 +688,8 @@ EXPORTS
 	_DeeObject_TGenericDelAttrStringLen@20=DeeObject_TGenericDelAttrStringLen@20
 	_DeeObject_TGenericGetAttrString@16=DeeObject_TGenericGetAttrString@16
 	_DeeObject_TGenericGetAttrStringLen@20=DeeObject_TGenericGetAttrStringLen@20
+	_DeeObject_TGenericHasAttrString@12=DeeObject_TGenericHasAttrString@12
+	_DeeObject_TGenericHasAttrStringLen@16=DeeObject_TGenericHasAttrStringLen@16
 	_DeeObject_TGenericSetAttrString@20=DeeObject_TGenericSetAttrString@20
 	_DeeObject_TGenericSetAttrStringLen@24=DeeObject_TGenericSetAttrStringLen@24
 	_DeeObject_ThisCall@16=DeeObject_ThisCall@16
@@ -698,6 +703,7 @@ EXPORTS
 	_DeeObject_VCallAttrPack@16=DeeObject_VCallAttrPack@16
 	_DeeObject_VCallAttrStringHashPack@20=DeeObject_VCallAttrStringHashPack@20
 	_DeeObject_VCallAttrStringHashf@20=DeeObject_VCallAttrStringHashf@20
+	_DeeObject_VCallAttrStringLenHashf@24=DeeObject_VCallAttrStringLenHashf@24
 	_DeeObject_VCallAttrStringPack@16=DeeObject_VCallAttrStringPack@16
 	_DeeObject_VCallAttrStringf@16=DeeObject_VCallAttrStringf@16
 	_DeeObject_VCallAttrf@16=DeeObject_VCallAttrf@16
