@@ -2621,7 +2621,7 @@ DFUNDEF WUNUSED NONNULL((1, 2, 3)) int DCALL DeeObject_TGenericDelAttrString(Dee
 DFUNDEF WUNUSED NONNULL((1, 2, 3)) int DCALL DeeObject_TGenericDelAttrStringLen(DeeTypeObject *tp_self, DeeObject *self, char const *__restrict attr, size_t attrlen, Dee_hash_t hash);
 DFUNDEF WUNUSED NONNULL((1, 2, 3, 5)) int DCALL DeeObject_TGenericSetAttrString(DeeTypeObject *tp_self, DeeObject *self, char const *__restrict attr, Dee_hash_t hash, DeeObject *value);
 DFUNDEF WUNUSED NONNULL((1, 2, 3, 6)) int DCALL DeeObject_TGenericSetAttrStringLen(DeeTypeObject *tp_self, DeeObject *self, char const *__restrict attr, size_t attrlen, Dee_hash_t hash, DeeObject *value);
-DFUNDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL DeeObject_GenericEnumAttr(DeeTypeObject *__restrict tp_self, Dee_enum_t proc, void *arg);
+DFUNDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL DeeObject_TGenericEnumAttr(DeeTypeObject *__restrict tp_self, Dee_enum_t proc, void *arg);
 #define DeeObject_GenericGetAttrString(self, attr, hash)                                DeeObject_TGenericGetAttrString(Dee_TYPE(self), self, attr, hash)
 #define DeeObject_GenericGetAttrStringLen(self, attr, attrlen, hash)                    DeeObject_TGenericGetAttrStringLen(Dee_TYPE(self), self, attr, attrlen, hash)
 #define DeeObject_GenericCallAttrString(self, attr, hash, argc, argv)                   DeeObject_TGenericCallAttrString(Dee_TYPE(self), self, attr, hash, argc, argv)
@@ -2632,18 +2632,20 @@ DFUNDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL DeeObject_GenericEnumAttr(DeeT
 #define DeeObject_GenericDelAttrStringLen(self, attr, attrlen, hash)                    DeeObject_TGenericDelAttrStringLen(Dee_TYPE(self), self, attr, attrlen, hash)
 #define DeeObject_GenericSetAttrString(self, attr, hash, value)                         DeeObject_TGenericSetAttrString(Dee_TYPE(self), self, attr, hash, value)
 #define DeeObject_GenericSetAttrStringLen(self, attr, attrlen, hash, value)             DeeObject_TGenericSetAttrStringLen(Dee_TYPE(self), self, attr, attrlen, hash, value)
+#define DeeObject_GenericEnumAttr(self, proc, arg)                                      DeeObject_TGenericEnumAttr(Dee_TYPE(self), proc, arg)
 
 struct attribute_info;
 struct attribute_lookup_rules;
-DFUNDEF WUNUSED NONNULL((1, 2)) bool DCALL DeeObject_TGenericHasAttrString(DeeTypeObject *__restrict tp_self, char const *__restrict attr, Dee_hash_t hash);
-DFUNDEF WUNUSED NONNULL((1, 2)) bool DCALL DeeObject_TGenericHasAttrStringLen(DeeTypeObject *__restrict tp_self, char const *__restrict attr, size_t attrlen, Dee_hash_t hash);
-DFUNDEF WUNUSED NONNULL((1, 2, 3)) int DCALL DeeObject_TGenericBoundAttrString(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self, char const *__restrict attr, Dee_hash_t hash); /* -2 / -3: not found; -1: error; 0: unbound; 1: bound; */
-DFUNDEF WUNUSED NONNULL((1, 2, 3)) int DCALL DeeObject_TGenericBoundAttrStringLen(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self, char const *__restrict attr, size_t attrlen, Dee_hash_t hash); /* -2 / -3: not found; -1: error; 0: unbound; 1: bound; */
-DFUNDEF WUNUSED NONNULL((1, 3, 4)) int DCALL DeeObject_GenericFindAttrString(DeeTypeObject *tp_self, DeeObject *instance, struct attribute_info *__restrict result, struct attribute_lookup_rules const *__restrict rules);
-#define DeeObject_GenericBoundAttrString(self, attr, hash)             DeeObject_TGenericBoundAttrString(Dee_TYPE(self), self, attr, hash)
-#define DeeObject_GenericBoundAttrStringLen(self, attr, attrlen, hash) DeeObject_TGenericBoundAttrStringLen(Dee_TYPE(self), self, attr, attrlen, hash)
+DFUNDEF WUNUSED NONNULL((1, 2)) bool DCALL DeeObject_TGenericHasAttrString(DeeTypeObject *tp_self, char const *__restrict attr, Dee_hash_t hash);
+DFUNDEF WUNUSED NONNULL((1, 2)) bool DCALL DeeObject_TGenericHasAttrStringLen(DeeTypeObject *tp_self, char const *__restrict attr, size_t attrlen, Dee_hash_t hash);
+DFUNDEF WUNUSED NONNULL((1, 2, 3)) int DCALL DeeObject_TGenericBoundAttrString(DeeTypeObject *tp_self, DeeObject *self, char const *__restrict attr, Dee_hash_t hash); /* -2 / -3: not found; -1: error; 0: unbound; 1: bound; */
+DFUNDEF WUNUSED NONNULL((1, 2, 3)) int DCALL DeeObject_TGenericBoundAttrStringLen(DeeTypeObject *tp_self, DeeObject *self, char const *__restrict attr, size_t attrlen, Dee_hash_t hash); /* -2 / -3: not found; -1: error; 0: unbound; 1: bound; */
+DFUNDEF WUNUSED NONNULL((1, 3, 4)) int DCALL DeeObject_TGenericFindAttr(DeeTypeObject *tp_self, DeeObject *instance, struct attribute_info *__restrict result, struct attribute_lookup_rules const *__restrict rules);
 #define DeeObject_GenericHasAttrString(self, attr, hash)               DeeObject_TGenericHasAttrString(Dee_TYPE(self), attr, hash)
 #define DeeObject_GenericHasAttrStringLen(self, attr, attrlen, hash)   DeeObject_TGenericHasAttrStringLen(Dee_TYPE(self), attr, attrlen, hash)
+#define DeeObject_GenericBoundAttrString(self, attr, hash)             DeeObject_TGenericBoundAttrString(Dee_TYPE(self), self, attr, hash)
+#define DeeObject_GenericBoundAttrStringLen(self, attr, attrlen, hash) DeeObject_TGenericBoundAttrStringLen(Dee_TYPE(self), self, attr, attrlen, hash)
+#define DeeObject_GenericFindAttr(instance, result, rules)             DeeObject_TGenericFindAttr(Dee_TYPE(instance), instance, result, rules)
 
 #ifdef CONFIG_BUILDING_DEEMON
 INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL

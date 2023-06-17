@@ -39,7 +39,7 @@
 //#define DEFINE_DeeObject_TGenericDelAttrStringLen
 //#define DEFINE_DeeObject_TGenericSetAttrString
 //#define DEFINE_DeeObject_TGenericSetAttrStringLen
-#define DEFINE_DeeObject_GenericFindAttrString
+#define DEFINE_DeeObject_TGenericFindAttr
 #endif /* __INTELLISENSE__ */
 
 #if (defined(DEFINE_DeeObject_TGenericGetAttrString) +            \
@@ -62,7 +62,7 @@
      defined(DEFINE_DeeObject_TGenericDelAttrStringLen) +         \
      defined(DEFINE_DeeObject_TGenericSetAttrString) +            \
      defined(DEFINE_DeeObject_TGenericSetAttrStringLen) +         \
-     defined(DEFINE_DeeObject_GenericFindAttrString)) != 1
+     defined(DEFINE_DeeObject_TGenericFindAttr)) != 1
 #error "Must #define exactly one of these macros"
 #endif /* ... */
 
@@ -228,8 +228,8 @@
 #define LOCAL_DeeType_AccessMemberAttr(tp_invoker, tp_self, self) DeeType_SetMemberAttrLen(tp_invoker, tp_self, self, attr, attrlen, hash, value)
 #define LOCAL_IS_SET
 #define LOCAL_HAS_len
-#elif defined(DEFINE_DeeObject_GenericFindAttrString)
-#define LOCAL_DeeObject_AccessAttr                                DeeObject_GenericFindAttrString
+#elif defined(DEFINE_DeeObject_TGenericFindAttr)
+#define LOCAL_DeeObject_AccessAttr                                DeeObject_TGenericFindAttr
 #define LOCAL_DeeType_AccessCachedAttr(tp_self, self)             DeeType_FindCachedAttr(tp_self, self, retinfo, rules)
 #define LOCAL_DeeType_AccessMethodAttr(tp_invoker, tp_self, self) DeeType_FindMethodAttr(tp_invoker, tp_self, retinfo, rules)
 #define LOCAL_DeeType_AccessGetSetAttr(tp_invoker, tp_self, self) DeeType_FindGetSetAttr(tp_invoker, tp_self, retinfo, rules)
@@ -268,7 +268,7 @@ DECL_BEGIN
 #define LOCAL_ATTR_NOT_FOUND_RESULT (-2)
 #endif /* !... */
 
-#if defined(DEFINE_DeeObject_GenericFindAttrString)
+#if defined(DEFINE_DeeObject_TGenericFindAttr)
 #define LOCAL_ATTR_NONNULL NONNULL((1, 3, 4))
 #elif defined(LOCAL_HAS_tp_self) && defined(LOCAL_HAS_self) && defined(LOCAL_HAS_len) && (defined(LOCAL_IS_SET) || defined(LOCAL_IS_CALL_TUPLE) || defined(LOCAL_IS_CALL_TUPLE_KW))
 #define LOCAL_ATTR_NONNULL NONNULL((1, 2, 3, 6))
@@ -454,4 +454,4 @@ DECL_END
 #undef DEFINE_DeeObject_TGenericDelAttrStringLen
 #undef DEFINE_DeeObject_TGenericSetAttrString
 #undef DEFINE_DeeObject_TGenericSetAttrStringLen
-#undef DEFINE_DeeObject_GenericFindAttrString
+#undef DEFINE_DeeObject_TGenericFindAttr

@@ -286,13 +286,13 @@ DeeType_EnumAttr(DeeTypeObject *__restrict self,
 #ifdef CONFIG_TYPE_ATTRIBUTE_FORWARD_GENERIC
 #ifdef CONFIG_TYPE_ATTRIBUTE_ENUM_PREVENT_DUPLICATES
 		if (!tiny_set_contains(&finished_set, (DeeObject *)Dee_TYPE(iter))) {
-			temp = DeeObject_GenericEnumAttr(Dee_TYPE(iter), proc, arg);
+			temp = DeeObject_TGenericEnumAttr(Dee_TYPE(iter), proc, arg);
 			if unlikely(temp < 0)
 				goto err;
 			result += temp;
 		}
 #else /* CONFIG_TYPE_ATTRIBUTE_ENUM_PREVENT_DUPLICATES */
-		temp = DeeObject_GenericEnumAttr(Dee_TYPE(iter), proc, arg);
+		temp = DeeObject_TGenericEnumAttr(Dee_TYPE(iter), proc, arg);
 		if unlikely(temp < 0)
 			goto err;
 		result += temp;
@@ -300,7 +300,7 @@ DeeType_EnumAttr(DeeTypeObject *__restrict self,
 #endif /* CONFIG_TYPE_ATTRIBUTE_FORWARD_GENERIC */
 	} while ((iter = DeeType_Base(iter)) != NULL);
 #ifdef CONFIG_TYPE_ATTRIBUTE_FOLLOWUP_GENERIC
-	temp = DeeObject_GenericEnumAttr(Dee_TYPE(self), proc, arg);
+	temp = DeeObject_TGenericEnumAttr(Dee_TYPE(self), proc, arg);
 	if unlikely(temp < 0)
 		goto err;
 	result += temp;
@@ -320,7 +320,7 @@ err:
 }
 
 PUBLIC WUNUSED NONNULL((1, 2)) dssize_t DCALL
-DeeObject_GenericEnumAttr(DeeTypeObject *__restrict tp_self, denum_t proc, void *arg) {
+DeeObject_TGenericEnumAttr(DeeTypeObject *__restrict tp_self, denum_t proc, void *arg) {
 	dssize_t temp, result = 0;
 	ASSERT_OBJECT(tp_self);
 	ASSERT(DeeType_Check(tp_self));
@@ -354,9 +354,9 @@ err:
 }
 
 INTERN WUNUSED NONNULL((1, 2, 3)) int DCALL
-DeeType_FindAttrString(DeeTypeObject *__restrict self,
-                       struct attribute_info *__restrict result,
-                       struct attribute_lookup_rules const *__restrict rules) {
+DeeType_FindAttr(DeeTypeObject *__restrict self,
+                 struct attribute_info *__restrict result,
+                 struct attribute_lookup_rules const *__restrict rules) {
 	int error;
 	DeeTypeObject *iter;
 	if ((error = DeeType_FindCachedClassAttr(self, result, rules)) <= 0)
@@ -366,7 +366,7 @@ DeeType_FindAttrString(DeeTypeObject *__restrict self,
 continue_at_iter:
 		if (rules->alr_decl && rules->alr_decl != (DeeObject *)iter) {
 #ifdef CONFIG_TYPE_ATTRIBUTE_FORWARD_GENERIC
-			if ((error = DeeObject_GenericFindAttrString(iter, (DeeObject *)iter, result, rules)) <= 0)
+			if ((error = DeeObject_TGenericFindAttr(iter, (DeeObject *)iter, result, rules)) <= 0)
 				goto done;
 #endif /* CONFIG_TYPE_ATTRIBUTE_FORWARD_GENERIC */
 			iter = self = DeeType_Base(iter);
@@ -405,13 +405,13 @@ continue_at_iter:
 			}
 		}
 #ifdef CONFIG_TYPE_ATTRIBUTE_FORWARD_GENERIC
-		if ((error = DeeObject_GenericFindAttrString(iter, (DeeObject *)iter, result, rules)) <= 0)
+		if ((error = DeeObject_TGenericFindAttr(iter, (DeeObject *)iter, result, rules)) <= 0)
 			goto done;
 #endif /* CONFIG_TYPE_ATTRIBUTE_FORWARD_GENERIC */
 		;
 	} while ((iter = DeeType_Base(iter)) != NULL);
 #ifdef CONFIG_TYPE_ATTRIBUTE_FOLLOWUP_GENERIC
-	return DeeObject_GenericFindAttrString(self, (DeeObject *)self, result, rules);
+	return DeeObject_TGenericFindAttr(self, (DeeObject *)self, result, rules);
 #else /* CONFIG_TYPE_ATTRIBUTE_FOLLOWUP_GENERIC */
 	return 1; /* Not found */
 #endif /* !CONFIG_TYPE_ATTRIBUTE_FOLLOWUP_GENERIC */
@@ -1716,7 +1716,7 @@ do_iter_attr:
 					goto err;
 				return 0;
 			}
-			/* Don't consider attributes from lower levels for custom cattr access. */
+			/* Don't consider attributes from lower levels for custom attr access. */
 			break;
 		}
 	}
@@ -1791,7 +1791,7 @@ do_iter_attr:
 					goto err;
 				return 0;
 			}
-			/* Don't consider attributes from lower levels for custom cattr access. */
+			/* Don't consider attributes from lower levels for custom attr access. */
 			break;
 		}
 	}
@@ -1867,7 +1867,7 @@ do_iter_attr:
 					goto err;
 				return 0;
 			}
-			/* Don't consider attributes from lower levels for custom cattr access. */
+			/* Don't consider attributes from lower levels for custom attr access. */
 			break;
 		}
 	}
@@ -1957,7 +1957,7 @@ do_iter_attr:
 					return 0;
 				goto err;
 			}
-			/* Don't consider attributes from lower levels for custom cattr access. */
+			/* Don't consider attributes from lower levels for custom attr access. */
 			break;
 		}
 	}
@@ -2050,7 +2050,7 @@ do_iter_attr:
 					return 0;
 				goto err;
 			}
-			/* Don't consider attributes from lower levels for custom cattr access. */
+			/* Don't consider attributes from lower levels for custom attr access. */
 			break;
 		}
 	}
@@ -2144,7 +2144,7 @@ do_iter_attr:
 					return 0;
 				goto err;
 			}
-			/* Don't consider attributes from lower levels for custom cattr access. */
+			/* Don't consider attributes from lower levels for custom attr access. */
 			break;
 		}
 	}
@@ -3564,7 +3564,7 @@ DECL_END
 #include "attribute-generic-access.c.inl"
 #define DEFINE_DeeObject_TGenericSetAttrStringLen
 #include "attribute-generic-access.c.inl"
-#define DEFINE_DeeObject_GenericFindAttrString
+#define DEFINE_DeeObject_TGenericFindAttr
 #include "attribute-generic-access.c.inl"
 #endif /* !__INTELLISENSE__ */
 

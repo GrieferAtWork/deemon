@@ -569,8 +569,8 @@ EXPORTS
 	DeeObject_ForeachPair@12=_DeeObject_ForeachPair@12
 	DeeObject_Free@4=_DeeObject_Free@4
 	DeeObject_FreeTracker@4=_DeeObject_FreeTracker@4
-	DeeObject_GenericEnumAttr@12=_DeeObject_GenericEnumAttr@12
-	DeeObject_GenericFindAttrString@16=_DeeObject_GenericFindAttrString@16
+	DeeObject_TGenericEnumAttr@12=_DeeObject_TGenericEnumAttr@12
+	DeeObject_TGenericFindAttr@16=_DeeObject_TGenericFindAttr@16
 	DeeObject_Get128Bit@8=_DeeObject_Get128Bit@8
 	DeeObject_Get16Bit@8=_DeeObject_Get16Bit@8
 	DeeObject_Get32Bit@8=_DeeObject_Get32Bit@8

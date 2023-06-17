@@ -1159,7 +1159,7 @@ INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeModule_DelAttrString(DeeModuleObject
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeModule_DelAttrStringLen(DeeModuleObject *__restrict self, char const *__restrict attr_name, size_t attrlen, Dee_hash_t hash);
 INTDEF WUNUSED NONNULL((1, 2, 4)) int DCALL DeeModule_SetAttrString(DeeModuleObject *self, char const *__restrict attr_name, Dee_hash_t hash, DeeObject *value);
 INTDEF WUNUSED NONNULL((1, 2, 5)) int DCALL DeeModule_SetAttrStringLen(DeeModuleObject *self, char const *__restrict attr_name, size_t attrlen, Dee_hash_t hash, DeeObject *value);
-INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL DeeModule_FindAttrString(DeeModuleObject *__restrict self, struct attribute_info *__restrict result, struct attribute_lookup_rules const *__restrict rules);
+INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL DeeModule_FindAttr(DeeModuleObject *__restrict self, struct attribute_info *__restrict result, struct attribute_lookup_rules const *__restrict rules);
 #endif /* CONFIG_BUILDING_DEEMON */
 
 /* Lookup the module symbol associated with a given its name or GID.

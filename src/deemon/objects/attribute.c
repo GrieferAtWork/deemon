@@ -1406,9 +1406,9 @@ do_iter_attr:
 			if (!enumattr)
 				break;
 			if (enumattr == &type_enumattr)
-				return DeeType_FindAttrString((DeeTypeObject *)self, result, rules);
+				return DeeType_FindAttr((DeeTypeObject *)self, result, rules);
 			if (enumattr == &module_enumattr)
-				return DeeModule_FindAttrString((DeeModuleObject *)self, result, rules);
+				return DeeModule_FindAttr((DeeModuleObject *)self, result, rules);
 			data.ald_info    = result;
 			data.ald_rules   = rules;
 			data.ald_fnddecl = false;

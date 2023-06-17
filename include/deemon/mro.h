@@ -891,7 +891,7 @@ INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeType_GetAttrString(DeeTy
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeType_GetAttrStringLen(DeeTypeObject *__restrict self, char const *__restrict attr, size_t attrlen, dhash_t hash);
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeType_BoundAttrString(DeeTypeObject *__restrict self, char const *__restrict attr, dhash_t hash);
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeType_BoundAttrStringLen(DeeTypeObject *__restrict self, char const *__restrict attr, size_t attrlen, dhash_t hash);
-INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL DeeType_FindAttrString(DeeTypeObject *__restrict self, struct attribute_info *__restrict result, struct attribute_lookup_rules const *__restrict rules);
+INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL DeeType_FindAttr(DeeTypeObject *__restrict self, struct attribute_info *__restrict result, struct attribute_lookup_rules const *__restrict rules);
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeType_CallAttrString(DeeTypeObject *self, char const *__restrict attr, dhash_t hash, size_t argc, DeeObject *const *argv);
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeType_CallAttrStringLen(DeeTypeObject *self, char const *__restrict attr, size_t attrlen, dhash_t hash, size_t argc, DeeObject *const *argv);
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeType_CallAttrStringKw(DeeTypeObject *self, char const *__restrict attr, dhash_t hash, size_t argc, DeeObject *const *argv, DeeObject *kw);

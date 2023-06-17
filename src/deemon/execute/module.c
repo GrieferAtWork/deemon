@@ -1212,7 +1212,7 @@ module_enumattr(DeeTypeObject *UNUSED(tp_self),
 			goto err;
 		result += temp;
 	}
-	temp = DeeObject_GenericEnumAttr(&DeeModule_Type, proc, arg);
+	temp = DeeObject_TGenericEnumAttr(&DeeModule_Type, proc, arg);
 	if unlikely(temp < 0)
 		goto err;
 	return result + temp;
@@ -1223,9 +1223,9 @@ err_m1:
 }
 
 INTERN WUNUSED NONNULL((1, 2, 3)) int DCALL
-DeeModule_FindAttrString(DeeModuleObject *__restrict self,
-                         struct attribute_info *__restrict result,
-                         struct attribute_lookup_rules const *__restrict rules) {
+DeeModule_FindAttr(DeeModuleObject *__restrict self,
+                   struct attribute_info *__restrict result,
+                   struct attribute_lookup_rules const *__restrict rules) {
 	ASSERT_OBJECT(self);
 	if (!(self->mo_flags & MODULE_FDIDLOAD)) {
 		if (DeeInteractiveModule_Check(self)) {
@@ -1304,10 +1304,10 @@ DeeModule_FindAttrString(DeeModuleObject *__restrict self,
 			Dee_XDecref(attr_type);
 		}
 	}
-	return DeeObject_GenericFindAttrString(&DeeModule_Type,
-	                                       (DeeObject *)self,
-	                                       result,
-	                                       rules);
+	return DeeObject_TGenericFindAttr(&DeeModule_Type,
+	                                  (DeeObject *)self,
+	                                  result,
+	                                  rules);
 err:
 	return -1;
 }
