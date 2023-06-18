@@ -377,33 +377,33 @@ DECL_BEGIN
 #endif /* ... */
 
 
-INTERN WUNUSED LOCAL_ATTR_NONNULL LOCAL_return_t DCALL
-LOCAL_DeeType_AccessAttr(DeeTypeObject *self,
+INTERN WUNUSED LOCAL_ATTR_NONNULL LOCAL_return_t
+(DCALL LOCAL_DeeType_AccessAttr)(DeeTypeObject *self,
 #ifdef LOCAL_IS_FIND
-                         struct attribute_info *__restrict retinfo,
-                         struct attribute_lookup_rules const *__restrict rules
+                                 struct attribute_info *__restrict retinfo,
+                                 struct attribute_lookup_rules const *__restrict rules
 #else /* LOCAL_IS_FIND */
-                         char const *__restrict attr,
+                                 char const *__restrict attr,
 #ifdef LOCAL_HAS_len
-                         size_t attrlen,
+                                 size_t attrlen,
 #endif /* LOCAL_HAS_len */
-                         dhash_t hash
+                                 dhash_t hash
 #ifdef LOCAL_IS_CALL
-                         , size_t argc, DeeObject *const *argv
+                                 , size_t argc, DeeObject *const *argv
 #elif defined(LOCAL_IS_CALL_KW)
-                         , size_t argc, DeeObject *const *argv, DeeObject *kw
+                                 , size_t argc, DeeObject *const *argv, DeeObject *kw
 #elif defined(LOCAL_IS_CALL_TUPLE)
-                         , DeeObject *args
+                                 , DeeObject *args
 #elif defined(LOCAL_IS_CALL_TUPLE_KW)
-                         , DeeObject *args, DeeObject *kw
+                                 , DeeObject *args, DeeObject *kw
 #elif defined(LOCAL_IS_VCALLF)
-                         , char const *__restrict format, va_list args
+                                 , char const *__restrict format, va_list args
 #endif /* LOCAL_IS_CALL */
 #ifdef LOCAL_IS_SET
-                         , DeeObject *value
+                                 , DeeObject *value
 #endif /* LOCAL_IS_SET */
 #endif /* !LOCAL_IS_FIND */
-                         ) {
+                                 ) {
 #ifdef LOCAL_IS_CALL_LIKE
 #define LOCAL_invoke_result_OR_done invoke_result
 #else /* LOCAL_IS_CALL_LIKE */

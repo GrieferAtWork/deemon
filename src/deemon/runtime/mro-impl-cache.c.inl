@@ -859,75 +859,75 @@ err:
  * @return: * :        The attribute value.
  * @return: NULL:      An error occurred.
  * @return: ITER_DONE: The attribute could not be found in the cache. */
-INTERN WUNUSED LOCAL_ATTR_NONNULL DREF DeeObject *DCALL
+INTERN WUNUSED LOCAL_ATTR_NONNULL DREF DeeObject *
 #elif defined(LOCAL_IS_BOUND)
 /* @return: 1 : Attribute is bound.
  * @return: 0 : Attribute isn't bound.
  * @return: -1: An error occurred.
  * @return: -2: The attribute doesn't exist. */
-INTERN WUNUSED LOCAL_ATTR_NONNULL int DCALL
+INTERN WUNUSED LOCAL_ATTR_NONNULL int
 #elif defined(LOCAL_IS_HAS)
 /* @return: true : The attribute exists.
  * @return: false: The attribute doesn't exist. */
-INTERN WUNUSED LOCAL_ATTR_NONNULL bool DCALL
+INTERN WUNUSED LOCAL_ATTR_NONNULL bool
 #elif defined(LOCAL_IS_DEL)
 /* @return:  1: The attribute could not be found in the cache.
  * @return:  0: Successfully invoked the delete-operator on the attribute.
  * @return: -1: An error occurred. */
-INTERN WUNUSED LOCAL_ATTR_NONNULL int DCALL
+INTERN WUNUSED LOCAL_ATTR_NONNULL int
 #elif defined(LOCAL_IS_SET)
 /* @return:  1: The attribute could not be found in the cache.
  * @return:  0: Successfully invoked the set-operator on the attribute.
  * @return: -1: An error occurred. */
-INTERN WUNUSED LOCAL_ATTR_NONNULL int DCALL
+INTERN WUNUSED LOCAL_ATTR_NONNULL int
 #elif defined(LOCAL_IS_SET_BASIC)
 /* @return:  2: The attribute is non-basic.
  * @return:  1: The attribute could not be found in the cache.
  * @return:  0: Successfully invoked the set-operator on the attribute.
  * @return: -1: An error occurred. */
-INTERN WUNUSED LOCAL_ATTR_NONNULL int DCALL
+INTERN WUNUSED LOCAL_ATTR_NONNULL int
 #elif (defined(LOCAL_IS_CALL) || defined(LOCAL_IS_CALL_KW) ||             \
        defined(LOCAL_IS_CALL_TUPLE) || defined(LOCAL_IS_CALL_TUPLE_KW) || \
        defined(LOCAL_IS_VCALLF))
 /* @return: * :        The returned value.
  * @return: NULL:      An error occurred.
  * @return: ITER_DONE: The attribute could not be found in the cache. */
-INTERN WUNUSED LOCAL_ATTR_NONNULL DREF DeeObject *DCALL
+INTERN WUNUSED LOCAL_ATTR_NONNULL DREF DeeObject *
 #elif defined(LOCAL_IS_FIND)
-INTERN WUNUSED LOCAL_ATTR_NONNULL int DCALL
+INTERN WUNUSED LOCAL_ATTR_NONNULL int
 #else /* ... */
 #error "Invalid configuration"
 #endif /* !... */
-LOCAL_DeeType_AccessCachedAttr(DeeTypeObject *tp_self,
+(DCALL LOCAL_DeeType_AccessCachedAttr)(DeeTypeObject *tp_self,
 #ifdef LOCAL_IS_FIND
 #ifndef LOCAL_IS_CLASS
-                               DeeObject *instance,
+                                       DeeObject *instance,
 #endif /* !LOCAL_IS_CLASS */
-                               struct attribute_info *__restrict result,
-                               struct attribute_lookup_rules const *__restrict rules
+                                       struct attribute_info *__restrict result,
+                                       struct attribute_lookup_rules const *__restrict rules
 #else /* LOCAL_IS_FIND */
 #ifdef LOCAL_HAS_self
-                               DeeObject *self,
+                                       DeeObject *self,
 #endif /* LOCAL_HAS_self */
-                               char const *__restrict attr,
+                                       char const *__restrict attr,
 #ifdef LOCAL_HAS_len
-                               size_t attrlen,
+                                       size_t attrlen,
 #endif /* LOCAL_HAS_len */
-                               dhash_t hash
+                                       dhash_t hash
 #if defined(LOCAL_IS_SET) || defined(LOCAL_IS_SET_BASIC)
-                               , DeeObject *value
+                                       , DeeObject *value
 #elif defined(LOCAL_IS_CALL) || defined(LOCAL_IS_CALL_KW)
-                               , size_t argc, DeeObject *const *argv
+                                       , size_t argc, DeeObject *const *argv
 #elif defined(LOCAL_IS_CALL_TUPLE) || defined(LOCAL_IS_CALL_TUPLE_KW)
-                               , DeeObject *args
+                                       , DeeObject *args
 #elif defined(LOCAL_IS_VCALLF)
-                               , char const *__restrict format, va_list args
+                                       , char const *__restrict format, va_list args
 #endif /* ... */
 #ifdef LOCAL_HAS_kw
-                               , DeeObject *kw
+                                       , DeeObject *kw
 #endif /* LOCAL_HAS_kw */
 #endif /* !LOCAL_IS_FIND */
-                               ) {
+                                       ) {
 #if defined(LOCAL_IS_CLASS) && !defined(LOCAL_IS_HAS)
 #define LOCAL_HAS_self
 #define LOCAL_self ((DeeObject *)tp_self)
