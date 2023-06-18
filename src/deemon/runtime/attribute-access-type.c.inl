@@ -38,8 +38,8 @@
 //#define DEFINE_DeeType_DelAttrString
 //#define DEFINE_DeeType_DelAttrStringLen
 //#define DEFINE_DeeType_SetAttrString
-#define DEFINE_DeeType_SetAttrStringLen
-//#define DEFINE_DeeType_FindAttr
+//#define DEFINE_DeeType_SetAttrStringLen
+#define DEFINE_DeeType_FindAttr
 #endif /* __INTELLISENSE__ */
 
 #if (defined(DEFINE_DeeType_GetAttrString) +            \
@@ -278,6 +278,14 @@
 #define LOCAL_HAS_len
 #elif defined(DEFINE_DeeType_FindAttr)
 #define LOCAL_DeeType_AccessAttr                                    DeeType_FindAttr
+#define LOCAL_DeeType_AccessCachedClassAttr(self)                   DeeType_FindCachedClassAttr(self, retinfo, rules)
+#define LOCAL_DeeType_AccessClassMethodAttr(tp_invoker, tp_self)    DeeType_FindClassMethodAttr(tp_invoker, tp_self, retinfo, rules)
+#define LOCAL_DeeType_AccessClassGetSetAttr(tp_invoker, tp_self)    DeeType_FindClassGetSetAttr(tp_invoker, tp_self, retinfo, rules)
+#define LOCAL_DeeType_AccessClassMemberAttr(tp_invoker, tp_self)    DeeType_FindClassMemberAttr(tp_invoker, tp_self, retinfo, rules)
+#define LOCAL_DeeType_AccessInstanceMethodAttr(tp_invoker, tp_self) DeeType_FindInstanceMethodAttr(tp_invoker, tp_self, retinfo, rules)
+#define LOCAL_DeeType_AccessInstanceGetSetAttr(tp_invoker, tp_self) DeeType_FindInstanceGetSetAttr(tp_invoker, tp_self, retinfo, rules)
+#define LOCAL_DeeType_AccessInstanceMemberAttr(tp_invoker, tp_self) DeeType_FindInstanceMemberAttr(tp_invoker, tp_self, retinfo, rules)
+#define LOCAL_DeeObject_GenericAccessAttr(self)                     DeeObject_TGenericFindAttr((DeeTypeObject *)(self), self, retinfo, rules)
 #define LOCAL_IS_FIND
 #else /* ... */
 #error "Invalid configuration"
@@ -417,6 +425,14 @@ INTERN WUNUSED LOCAL_ATTR_NONNULL LOCAL_return_t
 	iter = self;
 	do {
 		if (DeeType_IsClass(iter)) {
+#ifdef LOCAL_IS_FIND
+			result = DeeClass_FindClassAttribute(self, iter, retinfo, rules);
+			if (result != LOCAL_ATTR_NOT_FOUND_RESULT)
+				goto done;
+			result = DeeClass_FindClassInstanceAttribute(self, iter, retinfo, rules);
+			if (result != LOCAL_ATTR_NOT_FOUND_RESULT)
+				goto done;
+#else /* LOCAL_IS_FIND */
 			struct class_attribute *cattr;
 			cattr = LOCAL_DeeType_QueryClassAttribute(self, iter);
 			if (cattr != NULL) {
@@ -442,6 +458,7 @@ INTERN WUNUSED LOCAL_ATTR_NONNULL LOCAL_return_t
 				return LOCAL_DeeClass_AccessInstanceAttribute(iter, cattr);
 #endif /* !LOCAL_IS_HAS */
 			}
+#endif /* !LOCAL_IS_FIND */
 		} else {
 			if (iter->tp_class_methods) {
 				result = LOCAL_DeeType_AccessClassMethodAttr(self, iter);
@@ -495,15 +512,15 @@ INTERN WUNUSED LOCAL_ATTR_NONNULL LOCAL_return_t
 		goto done;
 #endif /* CONFIG_TYPE_ATTRIBUTE_FOLLOWUP_GENERIC */
 
-#ifndef LOCAL_IS_HAS
+#if !defined(LOCAL_IS_HAS) && !defined(LOCAL_IS_FIND)
 #ifdef LOCAL_HAS_len
 	err_unknown_attribute_len(self, attr, attrlen, LOCAL_ATTR_ACCESS_OP);
 #else /* LOCAL_HAS_len */
 	err_unknown_attribute(self, attr, LOCAL_ATTR_ACCESS_OP);
 #endif /* !LOCAL_HAS_len */
 err:
-#endif /* !LOCAL_IS_HAS */
 	return LOCAL_ERROR_RETURN_VALUE;
+#endif /* !LOCAL_IS_HAS && !LOCAL_IS_FIND */
 #ifdef LOCAL_IS_CALL_LIKE
 invoke_result:
 	if (result) {

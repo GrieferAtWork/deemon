@@ -353,360 +353,6 @@ err:
 	return temp;
 }
 
-INTERN WUNUSED NONNULL((1, 2, 3)) int DCALL
-DeeType_FindAttr(DeeTypeObject *__restrict self,
-                 struct attribute_info *__restrict result,
-                 struct attribute_lookup_rules const *__restrict rules) {
-	int error;
-	DeeTypeObject *iter;
-	if ((error = DeeType_FindCachedClassAttr(self, result, rules)) <= 0)
-		goto done;
-	iter = self;
-	do {
-continue_at_iter:
-		if (rules->alr_decl && rules->alr_decl != (DeeObject *)iter) {
-#ifdef CONFIG_TYPE_ATTRIBUTE_FORWARD_GENERIC
-			if ((error = DeeObject_TGenericFindAttr(iter, (DeeObject *)iter, result, rules)) <= 0)
-				goto done;
-#endif /* CONFIG_TYPE_ATTRIBUTE_FORWARD_GENERIC */
-			iter = self = DeeType_Base(iter);
-			if (!iter)
-				break;
-			goto continue_at_iter;
-		}
-		if (DeeType_IsClass(iter)) {
-			if ((error = DeeClass_FindClassAttribute(self, iter, result, rules)) <= 0)
-				goto done;
-			if ((error = DeeClass_FindClassInstanceAttribute(self, iter, result, rules)) <= 0)
-				goto done;
-		} else {
-			if (iter->tp_class_methods &&
-			    (error = DeeType_FindClassMethodAttr(self, iter, result, rules)) <= 0)
-				goto done;
-			if (iter->tp_class_getsets &&
-			    (error = DeeType_FindClassGetSetAttr(self, iter, result, rules)) <= 0)
-				goto done;
-			if (iter->tp_class_members &&
-			    (error = DeeType_FindClassMemberAttr(self, iter, result, rules)) <= 0)
-				goto done;
-#ifdef CONFIG_TYPE_ATTRIBUTE_SPECIALCASE_TYPETYPE
-			if (iter != &DeeType_Type)
-#endif /* CONFIG_TYPE_ATTRIBUTE_SPECIALCASE_TYPETYPE */
-			{
-				if (iter->tp_methods && /* Access instance methods using `DeeClsMethodObject' */
-				    (error = DeeType_FindInstanceMethodAttr(self, iter, result, rules)) <= 0)
-					goto done;
-				if (iter->tp_getsets && /* Access instance getsets using `DeeClsPropertyObject' */
-				    (error = DeeType_FindInstanceGetSetAttr(self, iter, result, rules)) <= 0)
-					goto done;
-				if (iter->tp_members && /* Access instance members using `DeeClsMemberObject' */
-				    (error = DeeType_FindInstanceMemberAttr(self, iter, result, rules)) <= 0)
-					goto done;
-			}
-		}
-#ifdef CONFIG_TYPE_ATTRIBUTE_FORWARD_GENERIC
-		if ((error = DeeObject_TGenericFindAttr(iter, (DeeObject *)iter, result, rules)) <= 0)
-			goto done;
-#endif /* CONFIG_TYPE_ATTRIBUTE_FORWARD_GENERIC */
-		;
-	} while ((iter = DeeType_Base(iter)) != NULL);
-#ifdef CONFIG_TYPE_ATTRIBUTE_FOLLOWUP_GENERIC
-	return DeeObject_TGenericFindAttr(self, (DeeObject *)self, result, rules);
-#else /* CONFIG_TYPE_ATTRIBUTE_FOLLOWUP_GENERIC */
-	return 1; /* Not found */
-#endif /* !CONFIG_TYPE_ATTRIBUTE_FOLLOWUP_GENERIC */
-done:
-	return error;
-}
-
-#ifndef __INTELLISENSE__
-DECL_END
-
-#define DEFINE_DeeType_GetAttrString
-#include "attribute-access-type.c.inl"
-#define DEFINE_DeeType_GetAttrStringLen
-#include "attribute-access-type.c.inl"
-#define DEFINE_DeeType_BoundAttrString
-#include "attribute-access-type.c.inl"
-#define DEFINE_DeeType_BoundAttrStringLen
-#include "attribute-access-type.c.inl"
-#define DEFINE_DeeType_CallAttrString
-#include "attribute-access-type.c.inl"
-#define DEFINE_DeeType_CallAttrStringLen
-#include "attribute-access-type.c.inl"
-#define DEFINE_DeeType_CallAttrStringKw
-#include "attribute-access-type.c.inl"
-#define DEFINE_DeeType_CallAttrStringLenKw
-#include "attribute-access-type.c.inl"
-#define DEFINE_DeeType_HasAttrString
-#include "attribute-access-type.c.inl"
-#define DEFINE_DeeType_HasAttrStringLen
-#include "attribute-access-type.c.inl"
-#define DEFINE_DeeType_DelAttrString
-#include "attribute-access-type.c.inl"
-#define DEFINE_DeeType_DelAttrStringLen
-#include "attribute-access-type.c.inl"
-#define DEFINE_DeeType_SetAttrString
-#include "attribute-access-type.c.inl"
-#define DEFINE_DeeType_SetAttrStringLen
-#include "attribute-access-type.c.inl"
-
-DECL_BEGIN
-#endif /* !__INTELLISENSE__ */
-
-INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-DeeType_GetInstanceAttrString(DeeTypeObject *__restrict self,
-                              char const *__restrict attr, dhash_t hash) {
-	/* Use `tp_cache' and search for regular attributes, loading
-	 * them as though they were the equivalent typing in INSTANCE-mode.
-	 * Attributes that weren't found must then be searched for in
-	 * the non-class fields, before also being added to the `tp_cache'
-	 * cache.
-	 * -> `tp_cache' is purely reserved for instance-attributes (tp_methods, etc.)
-	 * -> `tp_class_cache' is used for class-attributes primarily,
-	 *     with instance-attributes overlaid when those don't overlap
-	 *     with class attributes of the same name.
-	 * The GetInstanceAttr-API is meant as a 3 namespace that contains the same
-	 * attributes as already defined for instance-attributes (aka. those from `tp_cache'),
-	 * though instead of producing bound attributes, unbound wrappers (as produced
-	 * by the overlay onto the regular class-attribute namespace (aka. `tp_class_cache'))
-	 * are accessed.
-	 * >> import stat from posix;
-	 * >> local x = stat(".");
-	 * >> print x.isreg;                       // callable (bound)   -- tp_methods       -- instance->tp_cache
-	 * >> print stat.isreg;                    // class-function     -- tp_class_members -- class->tp_class_cache
-	 * >> // Access to the unbound function `/posix/stat/i:isreg':
-	 * >> print stat.getinstanceattr("isreg"); // callable (unbound) -- tp_methods       -- class->tp_cache
-	 */
-	DeeTypeObject *iter;
-	DREF DeeObject *result;
-	if ((result = DeeType_GetCachedInstanceAttr(self, attr, hash)) != ITER_DONE)
-		goto done;
-	iter = self;
-	do {
-		if (DeeType_IsClass(iter)) {
-			struct class_attribute *cattr;
-			if ((cattr = DeeType_QueryIInstanceAttributeStringWithHash(self, iter, attr, hash)) != NULL) {
-				if (!class_attribute_mayaccess(cattr, iter)) {
-					err_class_protected_member(iter, cattr);
-					goto err;
-				}
-				return DeeClass_GetInstanceAttribute(iter, cattr);
-			}
-		} else {
-			if (iter->tp_methods && /* Access instance methods using `DeeClsMethodObject' */
-			    (result = DeeType_GetIInstanceMethodAttr(self, iter, attr, hash)) != ITER_DONE)
-				goto done;
-			if (iter->tp_getsets && /* Access instance getsets using `DeeClsPropertyObject' */
-			    (result = DeeType_GetIInstanceGetSetAttr(self, iter, attr, hash)) != ITER_DONE)
-				goto done;
-			if (iter->tp_members && /* Access instance members using `DeeClsMemberObject' */
-			    (result = DeeType_GetIInstanceMemberAttr(self, iter, attr, hash)) != ITER_DONE)
-				goto done;
-		}
-	} while ((iter = DeeType_Base(iter)) != NULL);
-	err_unknown_attribute(self, attr, ATTR_ACCESS_GET);
-err:
-	return NULL;
-done:
-	return result;
-}
-
-INTERN WUNUSED NONNULL((1, 2)) int DCALL
-DeeType_BoundInstanceAttrString(DeeTypeObject *__restrict self,
-                                char const *__restrict attr, dhash_t hash) {
-	DeeTypeObject *iter;
-	int result;
-	if ((result = DeeType_BoundCachedInstanceAttr(self, attr, hash)) != -2)
-		goto done;
-	iter = self;
-	do {
-		if (DeeType_IsClass(iter)) {
-			struct class_attribute *cattr;
-			if ((cattr = DeeType_QueryIInstanceAttributeStringWithHash(self, iter, attr, hash)) != NULL) {
-				if (!class_attribute_mayaccess(cattr, iter)) {
-					err_class_protected_member(iter, cattr);
-					goto err;
-				}
-				return DeeClass_BoundInstanceAttribute(iter, cattr);
-			}
-		} else {
-			if (iter->tp_methods && /* Access instance methods using `DeeClsMethodObject' */
-			    DeeType_HasIInstanceMethodAttr(self, iter, attr, hash))
-				goto yes;
-			if (iter->tp_getsets && /* Access instance getsets using `DeeClsPropertyObject' */
-			    DeeType_HasIInstanceGetSetAttr(self, iter, attr, hash))
-				goto yes;
-			if (iter->tp_members && /* Access instance members using `DeeClsMemberObject' */
-			    DeeType_HasIInstanceMemberAttr(self, iter, attr, hash))
-				goto yes;
-		}
-	} while ((iter = DeeType_Base(iter)) != NULL);
-	return -2;
-yes:
-	return 1;
-done:
-	return result;
-err:
-	return -1;
-}
-
-INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-DeeType_CallInstanceAttrStringKw(DeeTypeObject *self,
-                                 char const *__restrict attr, dhash_t hash,
-                                 size_t argc, DeeObject *const *argv,
-                                 DeeObject *kw) {
-	DeeTypeObject *iter;
-	DREF DeeObject *result;
-	if ((result = DeeType_CallCachedInstanceAttrKw(self, attr, hash, argc, argv, kw)) != ITER_DONE)
-		goto done;
-	iter = self;
-	do {
-		if (DeeType_IsClass(iter)) {
-			struct class_attribute *cattr;
-			if ((cattr = DeeType_QueryIInstanceAttributeStringWithHash(self, iter, attr, hash)) != NULL) {
-				if (!class_attribute_mayaccess(cattr, iter)) {
-					err_class_protected_member(iter, cattr);
-					goto err;
-				}
-				return DeeClass_CallInstanceAttributeKw(iter, cattr, argc, argv, kw);
-			}
-		} else {
-			if (iter->tp_methods && /* Access instance methods using `DeeClsMethodObject' */
-			    (result = DeeType_CallIInstanceMethodAttrKw(self, iter, attr, hash, argc, argv, kw)) != ITER_DONE)
-				goto done;
-			if (iter->tp_getsets && /* Access instance getsets using `DeeClsPropertyObject' */
-			    (result = DeeType_GetIInstanceGetSetAttr(self, iter, attr, hash)) != ITER_DONE)
-				goto done_invoke;
-			if (iter->tp_members && /* Access instance members using `DeeClsMemberObject' */
-			    (result = DeeType_GetIInstanceMemberAttr(self, iter, attr, hash)) != ITER_DONE)
-				goto done_invoke;
-		}
-	} while ((iter = DeeType_Base(iter)) != NULL);
-	err_unknown_attribute(self, attr, ATTR_ACCESS_GET);
-err:
-	return NULL;
-done_invoke:
-	if (result) {
-		DREF DeeObject *real_result;
-		real_result = DeeObject_CallKw(result, argc, argv, kw);
-		Dee_Decref(result);
-		result = real_result;
-	}
-done:
-	return result;
-}
-
-INTERN WUNUSED NONNULL((1, 2)) bool DCALL
-DeeType_HasInstanceAttrString(DeeTypeObject *__restrict self,
-                              char const *__restrict attr, dhash_t hash) {
-	DeeTypeObject *iter;
-	if (DeeType_HasCachedInstanceAttr(self, attr, hash))
-		goto yes;
-	iter = self;
-	do {
-		if (DeeType_IsClass(iter)) {
-			if (DeeType_QueryIInstanceAttributeStringWithHash(self, iter, attr, hash))
-				goto yes;
-		} else {
-			if (iter->tp_methods && /* Access instance methods using `DeeClsMethodObject' */
-			    DeeType_HasIInstanceMethodAttr(self, iter, attr, hash))
-				goto yes;
-			if (iter->tp_getsets && /* Access instance getsets using `DeeClsPropertyObject' */
-			    DeeType_HasIInstanceGetSetAttr(self, iter, attr, hash))
-				goto yes;
-			if (iter->tp_members && /* Access instance members using `DeeClsMemberObject' */
-			    DeeType_HasIInstanceMemberAttr(self, iter, attr, hash))
-				goto yes;
-		}
-	} while ((iter = DeeType_Base(iter)) != NULL);
-	return false;
-yes:
-	return true;
-}
-
-INTERN WUNUSED NONNULL((1, 2)) int
-(DCALL DeeType_DelInstanceAttrString)(DeeTypeObject *__restrict self,
-                                      char const *__restrict attr, dhash_t hash) {
-	DeeTypeObject *iter;
-	int result;
-	if ((result = DeeType_DelCachedInstanceAttr(self, attr, hash)) <= 0)
-		goto done;
-	iter = self;
-	do {
-		if (DeeType_IsClass(iter)) {
-			struct class_attribute *cattr;
-			if ((cattr = DeeType_QueryIInstanceAttributeStringWithHash(self, iter, attr, hash)) != NULL) {
-				if (!class_attribute_mayaccess(cattr, iter)) {
-					err_class_protected_member(iter, cattr);
-					goto err;
-				}
-				return DeeClass_DelInstanceAttribute(iter, cattr);
-			}
-		} else {
-			if (iter->tp_methods && /* Access instance methods using `DeeClsMethodObject' */
-			    DeeType_HasIInstanceMethodAttr(self, iter, attr, hash))
-				goto err_noaccess;
-			if (iter->tp_getsets && /* Access instance getsets using `DeeClsPropertyObject' */
-			    DeeType_HasIInstanceGetSetAttr(self, iter, attr, hash))
-				goto err_noaccess;
-			if (iter->tp_members && /* Access instance members using `DeeClsMemberObject' */
-			    DeeType_HasIInstanceMemberAttr(self, iter, attr, hash))
-				goto err_noaccess;
-		}
-	} while ((iter = DeeType_Base(iter)) != NULL);
-	err_unknown_attribute(self, attr, ATTR_ACCESS_GET);
-err:
-	return -1;
-err_noaccess:
-	err_cant_access_attribute(iter, attr, ATTR_ACCESS_DEL);
-	goto err;
-done:
-	return result;
-}
-
-INTERN WUNUSED NONNULL((1, 2, 4)) int
-(DCALL DeeType_SetInstanceAttrString)(DeeTypeObject *self,
-                                      char const *__restrict attr,
-                                      dhash_t hash, DeeObject *value) {
-	DeeTypeObject *iter;
-	int result;
-	if ((result = DeeType_SetCachedInstanceAttr(self, attr, hash, value)) <= 0)
-		goto done;
-	iter = self;
-	do {
-		if (DeeType_IsClass(iter)) {
-			struct class_attribute *cattr;
-			if ((cattr = DeeType_QueryIInstanceAttributeStringWithHash(self, iter, attr, hash)) != NULL) {
-				if (!class_attribute_mayaccess(cattr, iter)) {
-					err_class_protected_member(iter, cattr);
-					goto err;
-				}
-				return DeeClass_SetInstanceAttribute(iter, cattr, value);
-			}
-		} else {
-			if (iter->tp_methods && /* Access instance methods using `DeeClsMethodObject' */
-			    DeeType_HasIInstanceMethodAttr(self, iter, attr, hash))
-				goto err_noaccess;
-			if (iter->tp_getsets && /* Access instance getsets using `DeeClsPropertyObject' */
-			    DeeType_HasIInstanceGetSetAttr(self, iter, attr, hash))
-				goto err_noaccess;
-			if (iter->tp_members && /* Access instance members using `DeeClsMemberObject' */
-			    DeeType_HasIInstanceMemberAttr(self, iter, attr, hash))
-				goto err_noaccess;
-		}
-	} while ((iter = DeeType_Base(iter)) != NULL);
-	err_unknown_attribute(self, attr, ATTR_ACCESS_SET);
-err:
-	return -1;
-err_noaccess:
-	err_cant_access_attribute(iter, attr, ATTR_ACCESS_SET);
-	goto err;
-done:
-	return result;
-}
-
-
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL module_getattr(DeeObject *self, DeeObject *attr);
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL module_delattr(DeeObject *self, DeeObject *attr);
 INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL module_setattr(DeeObject *self, DeeObject *attr, DeeObject *value);
@@ -2596,6 +2242,7 @@ PUBLIC WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *
 DECL_END
 
 #ifndef __INTELLISENSE__
+/* DeeObject_TGeneric*Attr */
 #define DEFINE_DeeObject_TGenericGetAttrString
 #include "attribute-access-generic.c.inl"
 #define DEFINE_DeeObject_TGenericGetAttrStringLen
@@ -2626,6 +2273,53 @@ DECL_END
 #include "attribute-access-generic.c.inl"
 #define DEFINE_DeeObject_TGenericFindAttr
 #include "attribute-access-generic.c.inl"
+
+/* DeeType_*Attr */
+#define DEFINE_DeeType_GetAttrString
+#include "attribute-access-type.c.inl"
+#define DEFINE_DeeType_GetAttrStringLen
+#include "attribute-access-type.c.inl"
+#define DEFINE_DeeType_BoundAttrString
+#include "attribute-access-type.c.inl"
+#define DEFINE_DeeType_BoundAttrStringLen
+#include "attribute-access-type.c.inl"
+#define DEFINE_DeeType_CallAttrString
+#include "attribute-access-type.c.inl"
+#define DEFINE_DeeType_CallAttrStringLen
+#include "attribute-access-type.c.inl"
+#define DEFINE_DeeType_CallAttrStringKw
+#include "attribute-access-type.c.inl"
+#define DEFINE_DeeType_CallAttrStringLenKw
+#include "attribute-access-type.c.inl"
+#define DEFINE_DeeType_HasAttrString
+#include "attribute-access-type.c.inl"
+#define DEFINE_DeeType_HasAttrStringLen
+#include "attribute-access-type.c.inl"
+#define DEFINE_DeeType_DelAttrString
+#include "attribute-access-type.c.inl"
+#define DEFINE_DeeType_DelAttrStringLen
+#include "attribute-access-type.c.inl"
+#define DEFINE_DeeType_SetAttrString
+#include "attribute-access-type.c.inl"
+#define DEFINE_DeeType_SetAttrStringLen
+#include "attribute-access-type.c.inl"
+#define DEFINE_DeeType_FindAttr
+#include "attribute-access-type.c.inl"
+
+/* DeeType_*InstanceAttr */
+#define DEFINE_DeeType_GetInstanceAttrString
+#include "attribute-access-type-instance.c.inl"
+#define DEFINE_DeeType_BoundInstanceAttrString
+#include "attribute-access-type-instance.c.inl"
+#define DEFINE_DeeType_CallInstanceAttrStringKw
+#include "attribute-access-type-instance.c.inl"
+#define DEFINE_DeeType_HasInstanceAttrString
+#include "attribute-access-type-instance.c.inl"
+#define DEFINE_DeeType_DelInstanceAttrString
+#include "attribute-access-type-instance.c.inl"
+#define DEFINE_DeeType_SetInstanceAttrString
+#include "attribute-access-type-instance.c.inl"
+
 #endif /* !__INTELLISENSE__ */
 
 #endif /* !GUARD_DEEMON_RUNTIME_ATTRIBUTE_C */
