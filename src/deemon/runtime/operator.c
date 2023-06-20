@@ -96,15 +96,6 @@ DeeSystem_DEFINE_memsetp(dee_memsetp)
 #define RESTRICT_IF_NOTYPE __restrict
 #endif /* !DEFINE_TYPED_OPERATORS */
 
-/* Default wrappers for implementing tp_str/tp_repr <===> tp_print/tp_printrepr */
-INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeObject_DefaultStrWithPrint(DeeObject *__restrict self);
-INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeObject_DefaultReprWithPrintRepr(DeeObject *__restrict self);
-INTDEF WUNUSED NONNULL((1, 2)) dssize_t DCALL DeeObject_DefaultPrintWithStr(DeeObject *__restrict self, dformatprinter printer, void *arg);
-INTDEF WUNUSED NONNULL((1, 2)) dssize_t DCALL DeeObject_DefaultPrintReprWithRepr(DeeObject *__restrict self, dformatprinter printer, void *arg);
-INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeObject_TDefaultStrWithPrint(DeeTypeObject *tp_self, DeeObject *__restrict self);
-INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeObject_TDefaultReprWithPrintRepr(DeeTypeObject *tp_self, DeeObject *__restrict self);
-INTDEF WUNUSED NONNULL((1, 2, 3)) dssize_t DCALL DeeObject_TDefaultPrintWithStr(DeeTypeObject *tp_self, DeeObject *__restrict self, dformatprinter printer, void *arg);
-INTDEF WUNUSED NONNULL((1, 2, 3)) dssize_t DCALL DeeObject_TDefaultPrintReprWithRepr(DeeTypeObject *tp_self, DeeObject *__restrict self, dformatprinter printer, void *arg);
 
 
 /* Setup how operator callbacks are invoked.
@@ -167,88 +158,68 @@ INTDEF WUNUSED NONNULL((1, 2, 3)) dssize_t DCALL DeeObject_TDefaultPrintReprWith
  * So because of this, we only need to check for class operator callbacks in
  * a super-context, or in other words: when `DEFINE_TYPED_OPERATORS' is defined! */
 #ifdef DEFINE_TYPED_OPERATORS
-#define DeeType_INVOKE_ASSIGN(tp_self, self, other)                ((tp_self)->tp_init.tp_assign == &instance_assign ? instance_tassign(tp_self, self, other) : (*(tp_self)->tp_init.tp_assign)(self, other))
-#define DeeType_INVOKE_MOVEASSIGN(tp_self, self, other)            ((tp_self)->tp_init.tp_move_assign == &instance_moveassign ? instance_tmoveassign(tp_self, self, other) : (*(tp_self)->tp_init.tp_move_assign)(self, other))
-#define DeeType_INVOKE_STR(tp_self, self)                          ((tp_self)->tp_cast.tp_str == &DeeObject_DefaultStrWithPrint ? DeeObject_TDefaultStrWithPrint(tp_self, self) : \
-                                                                    (tp_self)->tp_cast.tp_str == &instance_str ? instance_tstr(tp_self, self) : \
-                                                                    (tp_self)->tp_cast.tp_str == &instance_str_by_print ? instance_tstr_by_print(tp_self, self) : \
-                                                                    (*(tp_self)->tp_cast.tp_str)(self))
-#define DeeType_INVOKE_PRINT(tp_self, self, printer, arg)          ((tp_self)->tp_cast.tp_print == &DeeObject_DefaultPrintWithStr ? DeeObject_TDefaultPrintWithStr(tp_self, self, printer, arg) : \
-                                                                    (tp_self)->tp_cast.tp_print == &instance_print ? instance_tprint(tp_self, self, printer, arg) : \
-                                                                    (tp_self)->tp_cast.tp_print == &instance_print_by_print ? instance_tprint_by_print(tp_self, self, printer, arg) : \
-                                                                    (*(tp_self)->tp_cast.tp_print)(self, printer, arg))
-#define DeeType_INVOKE_REPR(tp_self, self)                         ((tp_self)->tp_cast.tp_repr == &DeeObject_DefaultReprWithPrintRepr ? DeeObject_TDefaultReprWithPrintRepr(tp_self, self) : \
-                                                                    (tp_self)->tp_cast.tp_repr == &instance_repr ? instance_trepr(tp_self, self) : \
-                                                                    (tp_self)->tp_cast.tp_repr == &instance_repr_by_print ? instance_trepr_by_print(tp_self, self) : \
-                                                                    (*(tp_self)->tp_cast.tp_repr)(self))
-#ifdef CLASS_TP_FAUTOINIT
-#define DeeType_INVOKE_PRINTREPR(tp_self, self, printer, arg)      ((tp_self)->tp_cast.tp_printrepr == &DeeObject_DefaultPrintReprWithRepr ? DeeObject_TDefaultPrintReprWithRepr(tp_self, self, printer, arg) : \
-                                                                    (tp_self)->tp_cast.tp_printrepr == &instance_printrepr ? instance_tprintrepr(tp_self, self, printer, arg) : \
-                                                                    (tp_self)->tp_cast.tp_printrepr == &instance_printrepr_by_print ? instance_tprintrepr_by_print(tp_self, self, printer, arg) : \
-                                                                    (tp_self)->tp_cast.tp_printrepr == &instance_builtin_auto_printrepr ? instance_builtin_auto_tprintrepr(tp_self, self, printer, arg) : \
-                                                                    (*(tp_self)->tp_cast.tp_printrepr)(self, printer, arg))
-#else /* CLASS_TP_FAUTOINIT */
-#define DeeType_INVOKE_PRINTREPR(tp_self, self, printer, arg)      ((tp_self)->tp_cast.tp_printrepr == &DeeObject_DefaultPrintReprWithRepr ? DeeObject_TDefaultPrintReprWithRepr(tp_self, self, printer, arg) : \
-                                                                    (tp_self)->tp_cast.tp_printrepr == &instance_printrepr ? instance_tprintrepr(tp_self, self, printer, arg) : \
-                                                                    (tp_self)->tp_cast.tp_printrepr == &instance_printrepr_by_print ? instance_tprintrepr_by_print(tp_self, self, printer, arg) : \
-                                                                    (*(tp_self)->tp_cast.tp_printrepr)(self, printer, arg))
-#endif /* !CLASS_TP_FAUTOINIT */
-#define DeeType_INVOKE_BOOL(tp_self, self)                         ((tp_self)->tp_cast.tp_bool == &instance_bool ? instance_tbool(tp_self, self) : (*(tp_self)->tp_cast.tp_bool)(self))
-#define DeeType_INVOKE_NEXT(tp_self, self)                         ((tp_self)->tp_iter_next == &instance_next ? instance_tnext(tp_self, self) : (*(tp_self)->tp_iter_next)(self))
-#define DeeType_INVOKE_CALL(tp_self, self, argc,  argv)            ((tp_self)->tp_call == &instance_call ? instance_tcall(tp_self, self, argc,  argv) : (*(tp_self)->tp_call)(self, argc,  argv))
-#define DeeType_INVOKE_CALLKW(tp_self, self, argc,  argv,  kw)     ((tp_self)->tp_call_kw == &instance_callkw ? instance_tcallkw(tp_self, self, argc,  argv,  kw) : (*(tp_self)->tp_call_kw)(self, argc,  argv,  kw))
-#define DeeType_INVOKE_INT32(tp_self, self, result)                ((tp_self)->tp_math->tp_int32 == &instance_int32 ? instance_tint32(tp_self, self, result) : (*(tp_self)->tp_math->tp_int32)(self, result))
-#define DeeType_INVOKE_INT64(tp_self, self, result)                ((tp_self)->tp_math->tp_int64 == &instance_int64 ? instance_tint64(tp_self, self, result) : (*(tp_self)->tp_math->tp_int64)(self, result))
-#define DeeType_INVOKE_DOUBLE(tp_self, self, result)               ((tp_self)->tp_math->tp_double == &instance_double ? instance_tdouble(tp_self, self, result) : (*(tp_self)->tp_math->tp_double)(self, result))
-#define DeeType_INVOKE_INT(tp_self, self)                          ((tp_self)->tp_math->tp_int == &instance_int ? instance_tint(tp_self, self) : (*(tp_self)->tp_math->tp_int)(self))
-#define DeeType_INVOKE_INV(tp_self, self)                          ((tp_self)->tp_math->tp_inv == &instance_inv ? instance_tinv(tp_self, self) : (*(tp_self)->tp_math->tp_inv)(self))
-#define DeeType_INVOKE_POS(tp_self, self)                          ((tp_self)->tp_math->tp_pos == &instance_pos ? instance_tpos(tp_self, self) : (*(tp_self)->tp_math->tp_pos)(self))
-#define DeeType_INVOKE_NEG(tp_self, self)                          ((tp_self)->tp_math->tp_neg == &instance_neg ? instance_tneg(tp_self, self) : (*(tp_self)->tp_math->tp_neg)(self))
-#define DeeType_INVOKE_ADD(tp_self, self, other)                   ((tp_self)->tp_math->tp_add == &instance_add ? instance_tadd(tp_self, self, other) : (*(tp_self)->tp_math->tp_add)(self, other))
-#define DeeType_INVOKE_SUB(tp_self, self, other)                   ((tp_self)->tp_math->tp_sub == &instance_sub ? instance_tsub(tp_self, self, other) : (*(tp_self)->tp_math->tp_sub)(self, other))
-#define DeeType_INVOKE_MUL(tp_self, self, other)                   ((tp_self)->tp_math->tp_mul == &instance_mul ? instance_tmul(tp_self, self, other) : (*(tp_self)->tp_math->tp_mul)(self, other))
-#define DeeType_INVOKE_DIV(tp_self, self, other)                   ((tp_self)->tp_math->tp_div == &instance_div ? instance_tdiv(tp_self, self, other) : (*(tp_self)->tp_math->tp_div)(self, other))
-#define DeeType_INVOKE_MOD(tp_self, self, other)                   ((tp_self)->tp_math->tp_mod == &instance_mod ? instance_tmod(tp_self, self, other) : (*(tp_self)->tp_math->tp_mod)(self, other))
-#define DeeType_INVOKE_SHL(tp_self, self, other)                   ((tp_self)->tp_math->tp_shl == &instance_shl ? instance_tshl(tp_self, self, other) : (*(tp_self)->tp_math->tp_shl)(self, other))
-#define DeeType_INVOKE_SHR(tp_self, self, other)                   ((tp_self)->tp_math->tp_shr == &instance_shr ? instance_tshr(tp_self, self, other) : (*(tp_self)->tp_math->tp_shr)(self, other))
-#define DeeType_INVOKE_AND(tp_self, self, other)                   ((tp_self)->tp_math->tp_and == &instance_and ? instance_tand(tp_self, self, other) : (*(tp_self)->tp_math->tp_and)(self, other))
-#define DeeType_INVOKE_OR(tp_self, self, other)                    ((tp_self)->tp_math->tp_or == &instance_or ? instance_tor(tp_self, self, other) : (*(tp_self)->tp_math->tp_or)(self, other))
-#define DeeType_INVOKE_XOR(tp_self, self, other)                   ((tp_self)->tp_math->tp_xor == &instance_xor ? instance_txor(tp_self, self, other) : (*(tp_self)->tp_math->tp_xor)(self, other))
-#define DeeType_INVOKE_POW(tp_self, self, other)                   ((tp_self)->tp_math->tp_pow == &instance_pow ? instance_tpow(tp_self, self, other) : (*(tp_self)->tp_math->tp_pow)(self, other))
-#define DeeType_INVOKE_INC(tp_self, p_self)                        ((tp_self)->tp_math->tp_inc == &instance_inc ? instance_tinc(tp_self, p_self) : (*(tp_self)->tp_math->tp_inc)(p_self))
-#define DeeType_INVOKE_DEC(tp_self, p_self)                        ((tp_self)->tp_math->tp_dec == &instance_dec ? instance_tdec(tp_self, p_self) : (*(tp_self)->tp_math->tp_dec)(p_self))
-#define DeeType_INVOKE_IADD(tp_self, p_self, other)                ((tp_self)->tp_math->tp_inplace_add == &instance_iadd ? instance_tiadd(tp_self, p_self, other) : (*(tp_self)->tp_math->tp_inplace_add)(p_self, other))
-#define DeeType_INVOKE_ISUB(tp_self, p_self, other)                ((tp_self)->tp_math->tp_inplace_sub == &instance_isub ? instance_tisub(tp_self, p_self, other) : (*(tp_self)->tp_math->tp_inplace_sub)(p_self, other))
-#define DeeType_INVOKE_IMUL(tp_self, p_self, other)                ((tp_self)->tp_math->tp_inplace_mul == &instance_imul ? instance_timul(tp_self, p_self, other) : (*(tp_self)->tp_math->tp_inplace_mul)(p_self, other))
-#define DeeType_INVOKE_IDIV(tp_self, p_self, other)                ((tp_self)->tp_math->tp_inplace_div == &instance_idiv ? instance_tidiv(tp_self, p_self, other) : (*(tp_self)->tp_math->tp_inplace_div)(p_self, other))
-#define DeeType_INVOKE_IMOD(tp_self, p_self, other)                ((tp_self)->tp_math->tp_inplace_mod == &instance_imod ? instance_timod(tp_self, p_self, other) : (*(tp_self)->tp_math->tp_inplace_mod)(p_self, other))
-#define DeeType_INVOKE_ISHL(tp_self, p_self, other)                ((tp_self)->tp_math->tp_inplace_shl == &instance_ishl ? instance_tishl(tp_self, p_self, other) : (*(tp_self)->tp_math->tp_inplace_shl)(p_self, other))
-#define DeeType_INVOKE_ISHR(tp_self, p_self, other)                ((tp_self)->tp_math->tp_inplace_shr == &instance_ishr ? instance_tishr(tp_self, p_self, other) : (*(tp_self)->tp_math->tp_inplace_shr)(p_self, other))
-#define DeeType_INVOKE_IAND(tp_self, p_self, other)                ((tp_self)->tp_math->tp_inplace_and == &instance_iand ? instance_tiand(tp_self, p_self, other) : (*(tp_self)->tp_math->tp_inplace_and)(p_self, other))
-#define DeeType_INVOKE_IOR(tp_self, p_self, other)                 ((tp_self)->tp_math->tp_inplace_or == &instance_ior ? instance_tior(tp_self, p_self, other) : (*(tp_self)->tp_math->tp_inplace_or)(p_self, other))
-#define DeeType_INVOKE_IXOR(tp_self, p_self, other)                ((tp_self)->tp_math->tp_inplace_xor == &instance_ixor ? instance_tixor(tp_self, p_self, other) : (*(tp_self)->tp_math->tp_inplace_xor)(p_self, other))
-#define DeeType_INVOKE_IPOW(tp_self, p_self, other)                ((tp_self)->tp_math->tp_inplace_pow == &instance_ipow ? instance_tipow(tp_self, p_self, other) : (*(tp_self)->tp_math->tp_inplace_pow)(p_self, other))
-#define DeeType_INVOKE_HASH(tp_self, self)                         ((tp_self)->tp_cmp->tp_hash == &instance_hash ? instance_thash(tp_self, self) : (tp_self)->tp_cmp->tp_hash == &instance_builtin_hash ? instance_builtin_thash(tp_self, self) : (*(tp_self)->tp_cmp->tp_hash)(self))
-#define DeeType_INVOKE_EQ(tp_self, self, other)                    ((tp_self)->tp_cmp->tp_eq == &instance_eq ? instance_teq(tp_self, self, other) : (tp_self)->tp_cmp->tp_eq == &instance_builtin_eq ? instance_builtin_teq(tp_self, self, other) : (*(tp_self)->tp_cmp->tp_eq)(self, other))
-#define DeeType_INVOKE_NE(tp_self, self, other)                    ((tp_self)->tp_cmp->tp_ne == &instance_ne ? instance_tne(tp_self, self, other) : (tp_self)->tp_cmp->tp_ne == &instance_builtin_ne ? instance_builtin_tne(tp_self, self, other) : (*(tp_self)->tp_cmp->tp_ne)(self, other))
-#define DeeType_INVOKE_LO(tp_self, self, other)                    ((tp_self)->tp_cmp->tp_lo == &instance_lo ? instance_tlo(tp_self, self, other) : (tp_self)->tp_cmp->tp_lo == &instance_builtin_lo ? instance_builtin_tlo(tp_self, self, other) : (*(tp_self)->tp_cmp->tp_lo)(self, other))
-#define DeeType_INVOKE_LE(tp_self, self, other)                    ((tp_self)->tp_cmp->tp_le == &instance_le ? instance_tle(tp_self, self, other) : (tp_self)->tp_cmp->tp_le == &instance_builtin_le ? instance_builtin_tle(tp_self, self, other) : (*(tp_self)->tp_cmp->tp_le)(self, other))
-#define DeeType_INVOKE_GR(tp_self, self, other)                    ((tp_self)->tp_cmp->tp_gr == &instance_gr ? instance_tgr(tp_self, self, other) : (tp_self)->tp_cmp->tp_gr == &instance_builtin_gr ? instance_builtin_tgr(tp_self, self, other) : (*(tp_self)->tp_cmp->tp_gr)(self, other))
-#define DeeType_INVOKE_GE(tp_self, self, other)                    ((tp_self)->tp_cmp->tp_ge == &instance_ge ? instance_tge(tp_self, self, other) : (tp_self)->tp_cmp->tp_ge == &instance_builtin_ge ? instance_builtin_tge(tp_self, self, other) : (*(tp_self)->tp_cmp->tp_ge)(self, other))
-#define DeeType_INVOKE_ITER(tp_self, self)                         ((tp_self)->tp_seq->tp_iter_self == &instance_iter ? instance_titer(tp_self, self) : (*(tp_self)->tp_seq->tp_iter_self)(self))
-#define DeeType_INVOKE_SIZE(tp_self, self)                         ((tp_self)->tp_seq->tp_size == &instance_size ? instance_tsize(tp_self, self) : (*(tp_self)->tp_seq->tp_size)(self))
-#define DeeType_INVOKE_CONTAINS(tp_self, self, other)              ((tp_self)->tp_seq->tp_contains == &instance_contains ? instance_tcontains(tp_self, self, other) : (*(tp_self)->tp_seq->tp_contains)(self, other))
-#define DeeType_INVOKE_GETITEM(tp_self, self, index)               ((tp_self)->tp_seq->tp_get == &instance_getitem ? instance_tgetitem(tp_self, self, index) : (*(tp_self)->tp_seq->tp_get)(self, index))
-#define DeeType_INVOKE_DELITEM(tp_self, self, index)               ((tp_self)->tp_seq->tp_del == &instance_delitem ? instance_tdelitem(tp_self, self, index) : (*(tp_self)->tp_seq->tp_del)(self, index))
-#define DeeType_INVOKE_SETITEM(tp_self, self, index, value)        ((tp_self)->tp_seq->tp_set == &instance_setitem ? instance_tsetitem(tp_self, self, index, value) : (*(tp_self)->tp_seq->tp_set)(self, index, value))
-#define DeeType_INVOKE_GETRANGE(tp_self, self, start, end)         ((tp_self)->tp_seq->tp_range_get == &instance_getrange ? instance_tgetrange(tp_self, self, start, end) : (*(tp_self)->tp_seq->tp_range_get)(self, start, end))
-#define DeeType_INVOKE_DELRANGE(tp_self, self, start, end)         ((tp_self)->tp_seq->tp_range_del == &instance_delrange ? instance_tdelrange(tp_self, self, start, end) : (*(tp_self)->tp_seq->tp_range_del)(self, start, end))
-#define DeeType_INVOKE_SETRANGE(tp_self, self, start, end, values) ((tp_self)->tp_seq->tp_range_set == &instance_setrange ? instance_tsetrange(tp_self, self, start, end, values) : (*(tp_self)->tp_seq->tp_range_set)(self, start, end, values))
-#define DeeType_INVOKE_GETATTR(tp_self, self, name)                ((tp_self)->tp_attr->tp_getattr == &instance_getattr ? instance_tgetattr(tp_self, self, name) : (*(tp_self)->tp_attr->tp_getattr)(self, name))
-#define DeeType_INVOKE_DELATTR(tp_self, self, name)                ((tp_self)->tp_attr->tp_delattr == &instance_delattr ? instance_tdelattr(tp_self, self, name) : (*(tp_self)->tp_attr->tp_delattr)(self, name))
-#define DeeType_INVOKE_SETATTR(tp_self, self, name, value)         ((tp_self)->tp_attr->tp_setattr == &instance_setattr ? instance_tsetattr(tp_self, self, name, value) : (*(tp_self)->tp_attr->tp_setattr)(self, name, value))
-#define DeeType_INVOKE_ENTER(tp_self, self)                        ((tp_self)->tp_with->tp_enter == &instance_enter ? instance_tenter(tp_self, self) : (*(tp_self)->tp_with->tp_enter)(self))
-#define DeeType_INVOKE_LEAVE(tp_self, self)                        ((tp_self)->tp_with->tp_leave == &instance_leave ? instance_tleave(tp_self, self) : (*(tp_self)->tp_with->tp_leave)(self))
+#define DeeType_INVOKE_ASSIGN     DeeType_InvokeInitAssign
+#define DeeType_INVOKE_MOVEASSIGN DeeType_InvokeInitMoveAssign
+#define DeeType_INVOKE_STR        DeeType_InvokeCastStr
+#define DeeType_INVOKE_PRINT      DeeType_InvokeCastPrint
+#define DeeType_INVOKE_REPR       DeeType_InvokeCastRepr
+#define DeeType_INVOKE_PRINTREPR  DeeType_InvokeCastPrintRepr
+#define DeeType_INVOKE_BOOL       DeeType_InvokeCastBool
+#define DeeType_INVOKE_NEXT       DeeType_InvokeIterNext
+#define DeeType_INVOKE_CALL       DeeType_InvokeCall
+#define DeeType_INVOKE_CALLKW     DeeType_InvokeCallKw
+#define DeeType_INVOKE_INT32      DeeType_InvokeMathInt32
+#define DeeType_INVOKE_INT64      DeeType_InvokeMathInt64
+#define DeeType_INVOKE_DOUBLE     DeeType_InvokeMathDouble
+#define DeeType_INVOKE_INT        DeeType_InvokeMathInt
+#define DeeType_INVOKE_INV        DeeType_InvokeMathInv
+#define DeeType_INVOKE_POS        DeeType_InvokeMathPos
+#define DeeType_INVOKE_NEG        DeeType_InvokeMathNeg
+#define DeeType_INVOKE_ADD        DeeType_InvokeMathAdd
+#define DeeType_INVOKE_SUB        DeeType_InvokeMathSub
+#define DeeType_INVOKE_MUL        DeeType_InvokeMathMul
+#define DeeType_INVOKE_DIV        DeeType_InvokeMathDiv
+#define DeeType_INVOKE_MOD        DeeType_InvokeMathMod
+#define DeeType_INVOKE_SHL        DeeType_InvokeMathShl
+#define DeeType_INVOKE_SHR        DeeType_InvokeMathShr
+#define DeeType_INVOKE_AND        DeeType_InvokeMathAnd
+#define DeeType_INVOKE_OR         DeeType_InvokeMathOr
+#define DeeType_INVOKE_XOR        DeeType_InvokeMathXor
+#define DeeType_INVOKE_POW        DeeType_InvokeMathPow
+#define DeeType_INVOKE_INC        DeeType_InvokeMathInc
+#define DeeType_INVOKE_DEC        DeeType_InvokeMathDec
+#define DeeType_INVOKE_IADD       DeeType_InvokeMathInplaceAdd
+#define DeeType_INVOKE_ISUB       DeeType_InvokeMathInplaceSub
+#define DeeType_INVOKE_IMUL       DeeType_InvokeMathInplaceMul
+#define DeeType_INVOKE_IDIV       DeeType_InvokeMathInplaceDiv
+#define DeeType_INVOKE_IMOD       DeeType_InvokeMathInplaceMod
+#define DeeType_INVOKE_ISHL       DeeType_InvokeMathInplaceShl
+#define DeeType_INVOKE_ISHR       DeeType_InvokeMathInplaceShr
+#define DeeType_INVOKE_IAND       DeeType_InvokeMathInplaceAnd
+#define DeeType_INVOKE_IOR        DeeType_InvokeMathInplaceOr
+#define DeeType_INVOKE_IXOR       DeeType_InvokeMathInplaceXor
+#define DeeType_INVOKE_IPOW       DeeType_InvokeMathInplacePow
+#define DeeType_INVOKE_HASH       DeeType_InvokeCmpHash
+#define DeeType_INVOKE_EQ         DeeType_InvokeCmpEq
+#define DeeType_INVOKE_NE         DeeType_InvokeCmpNe
+#define DeeType_INVOKE_LO         DeeType_InvokeCmpLo
+#define DeeType_INVOKE_LE         DeeType_InvokeCmpLe
+#define DeeType_INVOKE_GR         DeeType_InvokeCmpGr
+#define DeeType_INVOKE_GE         DeeType_InvokeCmpGe
+#define DeeType_INVOKE_ITER       DeeType_InvokeSeqIterSelf
+#define DeeType_INVOKE_SIZE       DeeType_InvokeSeqSize
+#define DeeType_INVOKE_CONTAINS   DeeType_InvokeSeqContains
+#define DeeType_INVOKE_GETITEM    DeeType_InvokeSeqGet
+#define DeeType_INVOKE_DELITEM    DeeType_InvokeSeqDel
+#define DeeType_INVOKE_SETITEM    DeeType_InvokeSeqSet
+#define DeeType_INVOKE_GETRANGE   DeeType_InvokeSeqRangeGet
+#define DeeType_INVOKE_DELRANGE   DeeType_InvokeSeqRangeDel
+#define DeeType_INVOKE_SETRANGE   DeeType_InvokeSeqRangeSet
+#define DeeType_INVOKE_GETATTR    DeeType_InvokeAttrGetAttr
+#define DeeType_INVOKE_DELATTR    DeeType_InvokeAttrDelAttr
+#define DeeType_INVOKE_SETATTR    DeeType_InvokeAttrSetAttr
+#define DeeType_INVOKE_ENTER      DeeType_InvokeWithEnter
+#define DeeType_INVOKE_LEAVE      DeeType_InvokeWithLeave
 #else /* DEFINE_TYPED_OPERATORS */
 #define DeeType_INVOKE_ASSIGN(tp_self, self, other)                (*(tp_self)->tp_init.tp_assign)(self, other)
 #define DeeType_INVOKE_MOVEASSIGN(tp_self, self, other)            (*(tp_self)->tp_init.tp_move_assign)(self, other)

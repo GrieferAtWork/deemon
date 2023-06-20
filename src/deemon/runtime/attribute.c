@@ -396,24 +396,20 @@ again:
 		if (iter->tp_attr) {
 do_iter_attr:
 			if likely(iter->tp_attr->tp_getattr) {
-				DREF DeeObject *(DCALL *getattr)(DeeObject *, DeeObject *);
+				DREF DeeObject *(DCALL *tp_getattr)(DeeObject *, DeeObject *);
 				DREF DeeObject *found_object;
-				getattr = iter->tp_attr->tp_getattr;
-				if (getattr == &module_getattr)
+				tp_getattr = iter->tp_attr->tp_getattr;
+				if (tp_getattr == &module_getattr)
 					return DeeModule_HasAttrString((DeeModuleObject *)self, DeeString_STR(attr), hash);
-				if (getattr == &type_getattr)
+				if (tp_getattr == &type_getattr)
 					return DeeType_HasAttrString((DeeTypeObject *)self, DeeString_STR(attr), hash);
-				if (getattr == &super_getattr) {
+				if (tp_getattr == &super_getattr) {
 					iter    = DeeSuper_TYPE(self);
 					self    = DeeSuper_SELF(self);
 					tp_self = iter;
 					goto again;
 				}
-				if (getattr == &instance_getattr) {
-					found_object = instance_tgetattr(iter, self, attr);
-				} else {
-					found_object = (*getattr)(self, attr);
-				}
+				found_object = DeeType_invoke_attr_tp_getattr(iter, tp_getattr, self, attr);
 				if likely(found_object) {
 					Dee_Decref(found_object);
 					goto yes;
@@ -467,14 +463,14 @@ again:
 		if (iter->tp_attr) {
 do_iter_attr:
 			if likely(iter->tp_attr->tp_getattr) {
-				DREF DeeObject *(DCALL *getattr)(DeeObject *, DeeObject *);
+				DREF DeeObject *(DCALL *tp_getattr)(DeeObject *, DeeObject *);
 				DREF DeeObject *found_object, *attr_name_ob;
-				getattr = iter->tp_attr->tp_getattr;
-				if (getattr == &module_getattr)
+				tp_getattr = iter->tp_attr->tp_getattr;
+				if (tp_getattr == &module_getattr)
 					return DeeModule_HasAttrString((DeeModuleObject *)self, attr, hash);
-				if (getattr == &type_getattr)
+				if (tp_getattr == &type_getattr)
 					return DeeType_HasAttrString((DeeTypeObject *)self, attr, hash);
-				if (getattr == &super_getattr) {
+				if (tp_getattr == &super_getattr) {
 					iter    = DeeSuper_TYPE(self);
 					self    = DeeSuper_SELF(self);
 					tp_self = iter;
@@ -483,11 +479,7 @@ do_iter_attr:
 				attr_name_ob = DeeString_NewWithHash(attr, hash);
 				if unlikely(!attr_name_ob)
 					goto err;
-				if (getattr == &instance_getattr) {
-					found_object = instance_tgetattr(iter, self, attr_name_ob);
-				} else {
-					found_object = (*getattr)(self, attr_name_ob);
-				}
+				found_object = DeeType_invoke_attr_tp_getattr(iter, tp_getattr, self, attr_name_ob);
 				Dee_Decref(attr_name_ob);
 				if likely(found_object) {
 					Dee_Decref(found_object);
@@ -543,14 +535,14 @@ again:
 		if (iter->tp_attr) {
 do_iter_attr:
 			if likely(iter->tp_attr->tp_getattr) {
-				DREF DeeObject *(DCALL *getattr)(DeeObject *, DeeObject *);
+				DREF DeeObject *(DCALL *tp_getattr)(DeeObject *, DeeObject *);
 				DREF DeeObject *found_object, *attr_name_ob;
-				getattr = iter->tp_attr->tp_getattr;
-				if (getattr == &module_getattr)
+				tp_getattr = iter->tp_attr->tp_getattr;
+				if (tp_getattr == &module_getattr)
 					return DeeModule_HasAttrStringLen((DeeModuleObject *)self, attr, attrlen, hash);
-				if (getattr == &type_getattr)
+				if (tp_getattr == &type_getattr)
 					return DeeType_HasAttrStringLen((DeeTypeObject *)self, attr, attrlen, hash);
-				if (getattr == &super_getattr) {
+				if (tp_getattr == &super_getattr) {
 					iter    = DeeSuper_TYPE(self);
 					self    = DeeSuper_SELF(self);
 					tp_self = iter;
@@ -559,11 +551,7 @@ do_iter_attr:
 				attr_name_ob = DeeString_NewSizedWithHash(attr, attrlen, hash);
 				if unlikely(!attr_name_ob)
 					goto err;
-				if (getattr == &instance_getattr) {
-					found_object = instance_tgetattr(iter, self, attr_name_ob);
-				} else {
-					found_object = (*getattr)(self, attr_name_ob);
-				}
+				found_object = DeeType_invoke_attr_tp_getattr(iter, tp_getattr, self, attr_name_ob);
 				Dee_Decref(attr_name_ob);
 				if likely(found_object) {
 					Dee_Decref(found_object);
@@ -635,24 +623,20 @@ again:
 		if (iter->tp_attr) {
 do_iter_attr:
 			if likely(iter->tp_attr->tp_getattr) {
-				DREF DeeObject *(DCALL *getattr)(DeeObject *, DeeObject *);
+				DREF DeeObject *(DCALL *tp_getattr)(DeeObject *, DeeObject *);
 				DREF DeeObject *found_object;
-				getattr = iter->tp_attr->tp_getattr;
-				if (getattr == &module_getattr)
+				tp_getattr = iter->tp_attr->tp_getattr;
+				if (tp_getattr == &module_getattr)
 					return DeeModule_BoundAttrString((DeeModuleObject *)self, DeeString_STR(attr), hash);
-				if (getattr == &type_getattr)
+				if (tp_getattr == &type_getattr)
 					return DeeType_BoundAttrString((DeeTypeObject *)self, DeeString_STR(attr), hash);
-				if (getattr == &super_getattr) {
+				if (tp_getattr == &super_getattr) {
 					iter    = DeeSuper_TYPE(self);
 					self    = DeeSuper_SELF(self);
 					tp_self = iter;
 					goto again;
 				}
-				if (iter->tp_attr->tp_getattr == &instance_getattr) {
-					found_object = instance_tgetattr(iter, self, attr);
-				} else {
-					found_object = (*iter->tp_attr->tp_getattr)(self, attr);
-				}
+				found_object = DeeType_invoke_attr_tp_getattr(iter, tp_getattr, self, attr);
 				if likely(found_object) {
 					Dee_Decref(found_object);
 					goto is_bound;
@@ -724,14 +708,14 @@ again:
 		if (iter->tp_attr) {
 do_iter_attr:
 			if likely(iter->tp_attr->tp_getattr) {
-				DREF DeeObject *(DCALL *getattr)(DeeObject *, DeeObject *);
+				DREF DeeObject *(DCALL *tp_getattr)(DeeObject *, DeeObject *);
 				DREF DeeObject *found_object, *attr_name_ob;
-				getattr = iter->tp_attr->tp_getattr;
-				if (getattr == &module_getattr)
+				tp_getattr = iter->tp_attr->tp_getattr;
+				if (tp_getattr == &module_getattr)
 					return DeeModule_BoundAttrString((DeeModuleObject *)self, attr, hash);
-				if (getattr == &type_getattr)
+				if (tp_getattr == &type_getattr)
 					return DeeType_BoundAttrString((DeeTypeObject *)self, attr, hash);
-				if (getattr == &super_getattr) {
+				if (tp_getattr == &super_getattr) {
 					iter    = DeeSuper_TYPE(self);
 					self    = DeeSuper_SELF(self);
 					tp_self = iter;
@@ -740,11 +724,7 @@ do_iter_attr:
 				attr_name_ob = DeeString_NewWithHash(attr, hash);
 				if unlikely(!attr_name_ob)
 					goto err;
-				if (iter->tp_attr->tp_getattr == &instance_getattr) {
-					found_object = instance_tgetattr(iter, self, attr_name_ob);
-				} else {
-					found_object = (*iter->tp_attr->tp_getattr)(self, attr_name_ob);
-				}
+				found_object = DeeType_invoke_attr_tp_getattr(iter, tp_getattr, self, attr_name_ob);
 				Dee_Decref(attr_name_ob);
 				if likely(found_object) {
 					Dee_Decref(found_object);
@@ -818,14 +798,14 @@ again:
 		if (iter->tp_attr) {
 do_iter_attr:
 			if likely(iter->tp_attr->tp_getattr) {
-				DREF DeeObject *(DCALL *getattr)(DeeObject *, DeeObject *);
+				DREF DeeObject *(DCALL *tp_getattr)(DeeObject *, DeeObject *);
 				DREF DeeObject *found_object, *attr_name_ob;
-				getattr = iter->tp_attr->tp_getattr;
-				if (getattr == &module_getattr)
+				tp_getattr = iter->tp_attr->tp_getattr;
+				if (tp_getattr == &module_getattr)
 					return DeeModule_BoundAttrStringLen((DeeModuleObject *)self, attr, attrlen, hash);
-				if (getattr == &type_getattr)
+				if (tp_getattr == &type_getattr)
 					return DeeType_BoundAttrStringLen((DeeTypeObject *)self, attr, attrlen, hash);
-				if (getattr == &super_getattr) {
+				if (tp_getattr == &super_getattr) {
 					iter    = DeeSuper_TYPE(self);
 					self    = DeeSuper_SELF(self);
 					tp_self = iter;
@@ -834,11 +814,7 @@ do_iter_attr:
 				attr_name_ob = DeeString_NewSizedWithHash(attr, attrlen, hash);
 				if unlikely(!attr_name_ob)
 					goto err;
-				if (iter->tp_attr->tp_getattr == &instance_getattr) {
-					found_object = instance_tgetattr(iter, self, attr_name_ob);
-				} else {
-					found_object = (*iter->tp_attr->tp_getattr)(self, attr_name_ob);
-				}
+				found_object = DeeType_invoke_attr_tp_getattr(iter, tp_getattr, self, attr_name_ob);
 				Dee_Decref(attr_name_ob);
 				if likely(found_object) {
 					Dee_Decref(found_object);
@@ -911,26 +887,26 @@ again:
 		if (!iter)
 			break;
 		if (iter->tp_attr) {
-			DREF DeeObject *(DCALL *getattr)(DeeObject *, DeeObject *);
+			DREF DeeObject *(DCALL *tp_getattr)(DeeObject *, DeeObject *);
 do_iter_attr:
-			getattr = iter->tp_attr->tp_getattr;
-			if (getattr == &type_getattr)
+			tp_getattr = iter->tp_attr->tp_getattr;
+			if (tp_getattr == &type_getattr)
 				return type_callattr_kw(self, attr, argc, argv, kw);
-			if (getattr == &super_getattr) {
+			if (tp_getattr == &super_getattr) {
 				iter    = DeeSuper_TYPE(self);
 				self    = DeeSuper_SELF(self);
 				tp_self = iter;
 				goto again;
 			}
 #ifdef CONFIG_HAVE_SEQEACH_ATTRIBUTE_OPTIMIZATIONS
-			if (getattr == (DREF DeeObject *(DCALL *)(DeeObject *, /*String*/ DeeObject *))&seqeach_getattr)
+			if (tp_getattr == (DREF DeeObject *(DCALL *)(DeeObject *, /*String*/ DeeObject *))&seqeach_getattr)
 				return DeeSeqEach_CallAttrKw(((SeqEachBase *)self)->se_seq, attr, argc, argv, kw);
-			if (getattr == (DREF DeeObject *(DCALL *)(DeeObject *, /*String*/ DeeObject *))&seqeachw_getattr)
+			if (tp_getattr == (DREF DeeObject *(DCALL *)(DeeObject *, /*String*/ DeeObject *))&seqeachw_getattr)
 				return DeeSeqEach_CallAttrKw(self, attr, argc, argv, kw);
 #endif /* CONFIG_HAVE_SEQEACH_ATTRIBUTE_OPTIMIZATIONS */
-			if (!getattr)
+			if (!tp_getattr)
 				break;
-			result = (*getattr)(self, attr);
+			result = DeeType_invoke_attr_tp_getattr(iter, tp_getattr, self, attr);
 			goto done_invoke;
 		}
 	}
@@ -993,36 +969,36 @@ again:
 		if (!iter)
 			break;
 		if (iter->tp_attr) {
-			DREF DeeObject *(DCALL *getattr)(DeeObject *, DeeObject *);
+			DREF DeeObject *(DCALL *tp_getattr)(DeeObject *, DeeObject *);
 			DREF DeeObject *attr_name_ob;
 do_iter_attr:
-			getattr = iter->tp_attr->tp_getattr;
-			if (getattr == &type_getattr)
+			tp_getattr = iter->tp_attr->tp_getattr;
+			if (tp_getattr == &type_getattr)
 				return DeeType_CallAttrStringKw((DeeTypeObject *)self, attr, hash, argc, argv, kw);
-			if (getattr == &module_getattr) {
+			if (tp_getattr == &module_getattr) {
 				result = DeeModule_GetAttrString((DeeModuleObject *)self,
 				                                 attr,
 				                                 hash);
 				goto done_invoke;
 			}
-			if (getattr == &super_getattr) {
+			if (tp_getattr == &super_getattr) {
 				iter    = DeeSuper_TYPE(self);
 				self    = DeeSuper_SELF(self);
 				tp_self = iter;
 				goto again;
 			}
 #ifdef CONFIG_HAVE_SEQEACH_ATTRIBUTE_OPTIMIZATIONS
-			if (getattr == (DREF DeeObject *(DCALL *)(DeeObject *, /*String*/ DeeObject *))&seqeach_getattr)
+			if (tp_getattr == (DREF DeeObject *(DCALL *)(DeeObject *, /*String*/ DeeObject *))&seqeach_getattr)
 				return DeeSeqEach_CallAttrStringKw(((SeqEachBase *)self)->se_seq, attr, hash, argc, argv, kw);
-			if (getattr == (DREF DeeObject *(DCALL *)(DeeObject *, /*String*/ DeeObject *))&seqeachw_getattr)
+			if (tp_getattr == (DREF DeeObject *(DCALL *)(DeeObject *, /*String*/ DeeObject *))&seqeachw_getattr)
 				return DeeSeqEach_CallAttrStringKw(self, attr, hash, argc, argv, kw);
 #endif /* CONFIG_HAVE_SEQEACH_ATTRIBUTE_OPTIMIZATIONS */
-			if (!getattr)
+			if (!tp_getattr)
 				break;
 			attr_name_ob = DeeString_NewWithHash(attr, hash);
 			if unlikely(!attr_name_ob)
 				goto err;
-			result = (*getattr)(self, attr_name_ob);
+			result = DeeType_invoke_attr_tp_getattr(iter, tp_getattr, self, attr_name_ob);
 			Dee_Decref(attr_name_ob);
 			goto done_invoke;
 		}
@@ -1088,37 +1064,37 @@ again:
 		if (!iter)
 			break;
 		if (iter->tp_attr) {
-			DREF DeeObject *(DCALL *getattr)(DeeObject *, DeeObject *);
+			DREF DeeObject *(DCALL *tp_getattr)(DeeObject *, DeeObject *);
 			DREF DeeObject *attr_name_ob;
 do_iter_attr:
-			getattr = iter->tp_attr->tp_getattr;
-			if (getattr == &type_getattr)
+			tp_getattr = iter->tp_attr->tp_getattr;
+			if (tp_getattr == &type_getattr)
 				return DeeType_CallAttrStringLenKw((DeeTypeObject *)self, attr, attrlen, hash, argc, argv, kw);
-			if (getattr == &module_getattr) {
+			if (tp_getattr == &module_getattr) {
 				result = DeeModule_GetAttrStringLen((DeeModuleObject *)self,
 				                                    attr,
 				                                    attrlen,
 				                                    hash);
 				goto done_invoke;
 			}
-			if (getattr == &super_getattr) {
+			if (tp_getattr == &super_getattr) {
 				iter    = DeeSuper_TYPE(self);
 				self    = DeeSuper_SELF(self);
 				tp_self = iter;
 				goto again;
 			}
 #ifdef CONFIG_HAVE_SEQEACH_ATTRIBUTE_OPTIMIZATIONS
-			if (getattr == (DREF DeeObject *(DCALL *)(DeeObject *, /*String*/ DeeObject *))&seqeach_getattr)
+			if (tp_getattr == (DREF DeeObject *(DCALL *)(DeeObject *, /*String*/ DeeObject *))&seqeach_getattr)
 				return DeeSeqEach_CallAttrStringLenKw(((SeqEachBase *)self)->se_seq, attr, attrlen, hash, argc, argv, kw);
-			if (getattr == (DREF DeeObject *(DCALL *)(DeeObject *, /*String*/ DeeObject *))&seqeachw_getattr)
+			if (tp_getattr == (DREF DeeObject *(DCALL *)(DeeObject *, /*String*/ DeeObject *))&seqeachw_getattr)
 				return DeeSeqEach_CallAttrStringLenKw(self, attr, attrlen, hash, argc, argv, kw);
 #endif /* CONFIG_HAVE_SEQEACH_ATTRIBUTE_OPTIMIZATIONS */
-			if (!getattr)
+			if (!tp_getattr)
 				break;
 			attr_name_ob = DeeString_NewSizedWithHash(attr, attrlen, hash);
 			if unlikely(!attr_name_ob)
 				goto err;
-			result = (*getattr)(self, attr_name_ob);
+			result = DeeType_invoke_attr_tp_getattr(iter, tp_getattr, self, attr_name_ob);
 			Dee_Decref(attr_name_ob);
 			goto done_invoke;
 		}
@@ -1187,26 +1163,26 @@ again:
 		if (!iter)
 			break;
 		if (iter->tp_attr) {
-			DREF DeeObject *(DCALL *getattr)(DeeObject *, DeeObject *);
+			DREF DeeObject *(DCALL *tp_getattr)(DeeObject *, DeeObject *);
 do_iter_attr:
-			getattr = iter->tp_attr->tp_getattr;
-			if (getattr == &type_getattr)
+			tp_getattr = iter->tp_attr->tp_getattr;
+			if (tp_getattr == &type_getattr)
 				return type_callattr_tuple(self, attr, args);
-			if (getattr == &super_getattr) {
+			if (tp_getattr == &super_getattr) {
 				iter    = DeeSuper_TYPE(self);
 				self    = DeeSuper_SELF(self);
 				tp_self = iter;
 				goto again;
 			}
 #ifdef CONFIG_HAVE_SEQEACH_ATTRIBUTE_OPTIMIZATIONS
-			if (getattr == (DREF DeeObject *(DCALL *)(DeeObject *, /*String*/ DeeObject *))&seqeach_getattr)
+			if (tp_getattr == (DREF DeeObject *(DCALL *)(DeeObject *, /*String*/ DeeObject *))&seqeach_getattr)
 				return DeeSeqEach_CallAttrTuple(((SeqEachBase *)self)->se_seq, attr, args);
-			if (getattr == (DREF DeeObject *(DCALL *)(DeeObject *, /*String*/ DeeObject *))&seqeachw_getattr)
+			if (tp_getattr == (DREF DeeObject *(DCALL *)(DeeObject *, /*String*/ DeeObject *))&seqeachw_getattr)
 				return DeeSeqEach_CallAttrTuple(self, attr, args);
 #endif /* CONFIG_HAVE_SEQEACH_ATTRIBUTE_OPTIMIZATIONS */
-			if (!getattr)
+			if (!tp_getattr)
 				break;
-			result = (*getattr)(self, attr);
+			result = DeeType_invoke_attr_tp_getattr(iter, tp_getattr, self, attr);
 			goto done_invoke;
 		}
 	}
@@ -1271,26 +1247,26 @@ again:
 		if (!iter)
 			break;
 		if (iter->tp_attr) {
-			DREF DeeObject *(DCALL *getattr)(DeeObject *, DeeObject *);
+			DREF DeeObject *(DCALL *tp_getattr)(DeeObject *, DeeObject *);
 do_iter_attr:
-			getattr = iter->tp_attr->tp_getattr;
-			if (getattr == &type_getattr)
+			tp_getattr = iter->tp_attr->tp_getattr;
+			if (tp_getattr == &type_getattr)
 				return type_callattr_tuple_kw(self, attr, args, kw);
-			if (getattr == &super_getattr) {
+			if (tp_getattr == &super_getattr) {
 				iter    = DeeSuper_TYPE(self);
 				self    = DeeSuper_SELF(self);
 				tp_self = iter;
 				goto again;
 			}
 #ifdef CONFIG_HAVE_SEQEACH_ATTRIBUTE_OPTIMIZATIONS
-			if (getattr == (DREF DeeObject *(DCALL *)(DeeObject *, /*String*/ DeeObject *))&seqeach_getattr)
+			if (tp_getattr == (DREF DeeObject *(DCALL *)(DeeObject *, /*String*/ DeeObject *))&seqeach_getattr)
 				return DeeSeqEach_CallAttrTupleKw(((SeqEachBase *)self)->se_seq, attr, args, kw);
-			if (getattr == (DREF DeeObject *(DCALL *)(DeeObject *, /*String*/ DeeObject *))&seqeachw_getattr)
+			if (tp_getattr == (DREF DeeObject *(DCALL *)(DeeObject *, /*String*/ DeeObject *))&seqeachw_getattr)
 				return DeeSeqEach_CallAttrTupleKw(self, attr, args, kw);
 #endif /* CONFIG_HAVE_SEQEACH_ATTRIBUTE_OPTIMIZATIONS */
-			if (!getattr)
+			if (!tp_getattr)
 				break;
-			result = (*getattr)(self, attr);
+			result = DeeType_invoke_attr_tp_getattr(iter, tp_getattr, self, attr);
 			goto done_invoke;
 		}
 	}
@@ -1379,25 +1355,25 @@ again:
 			break;
 		if (iter->tp_attr) {
 			DREF DeeObject *attr_name_ob;
-			DREF DeeObject *(DCALL *getattr)(DeeObject *, DeeObject *);
+			DREF DeeObject *(DCALL *tp_getattr)(DeeObject *, DeeObject *);
 do_iter_attr:
-			getattr = iter->tp_attr->tp_getattr;
-			if (getattr == &type_getattr)
+			tp_getattr = iter->tp_attr->tp_getattr;
+			if (tp_getattr == &type_getattr)
 				return DeeType_GetAttrString((DeeTypeObject *)self, attr, hash);
-			if (getattr == &module_getattr)
+			if (tp_getattr == &module_getattr)
 				return DeeModule_GetAttrString((DeeModuleObject *)self, attr, hash);
-			if (getattr == &super_getattr) {
+			if (tp_getattr == &super_getattr) {
 				iter    = DeeSuper_TYPE(self);
 				self    = DeeSuper_SELF(self);
 				tp_self = iter;
 				goto again;
 			}
-			if (!getattr)
+			if (!tp_getattr)
 				break;
 			attr_name_ob = DeeString_NewWithHash(attr, hash);
 			if unlikely(!attr_name_ob)
 				goto err;
-			result = (*getattr)(self, attr_name_ob);
+			result = DeeType_invoke_attr_tp_getattr(iter, tp_getattr, self, attr_name_ob);
 			Dee_Decref(attr_name_ob);
 			return result;
 		}
@@ -1455,25 +1431,25 @@ again:
 			break;
 		if (iter->tp_attr) {
 			DREF DeeObject *attr_name_ob;
-			DREF DeeObject *(DCALL *getattr)(DeeObject *, DeeObject *);
+			DREF DeeObject *(DCALL *tp_getattr)(DeeObject *, DeeObject *);
 do_iter_attr:
-			getattr = iter->tp_attr->tp_getattr;
-			if (getattr == &type_getattr)
+			tp_getattr = iter->tp_attr->tp_getattr;
+			if (tp_getattr == &type_getattr)
 				return DeeType_GetAttrStringLen((DeeTypeObject *)self, attr, attrlen, hash);
-			if (getattr == &module_getattr)
+			if (tp_getattr == &module_getattr)
 				return DeeModule_GetAttrStringLen((DeeModuleObject *)self, attr, attrlen, hash);
-			if (getattr == &super_getattr) {
+			if (tp_getattr == &super_getattr) {
 				iter    = DeeSuper_TYPE(self);
 				self    = DeeSuper_SELF(self);
 				tp_self = iter;
 				goto again;
 			}
-			if (!getattr)
+			if (!tp_getattr)
 				break;
 			attr_name_ob = DeeString_NewSizedWithHash(attr, attrlen, hash);
 			if unlikely(!attr_name_ob)
 				goto err;
-			result = (*getattr)(self, attr_name_ob);
+			result = DeeType_invoke_attr_tp_getattr(iter, tp_getattr, self, attr_name_ob);
 			Dee_Decref(attr_name_ob);
 			return result;
 		}
@@ -1532,25 +1508,25 @@ again:
 			break;
 		if (iter->tp_attr) {
 			DREF DeeObject *attr_name_ob;
-			int (DCALL *delattr)(DeeObject *, DeeObject *);
+			int (DCALL *tp_delattr)(DeeObject *, DeeObject *);
 do_iter_attr:
-			delattr = iter->tp_attr->tp_delattr;
-			if (delattr == &type_delattr)
+			tp_delattr = iter->tp_attr->tp_delattr;
+			if (tp_delattr == &type_delattr)
 				return DeeType_DelAttrString((DeeTypeObject *)self, attr, hash);
-			if (delattr == &module_delattr)
+			if (tp_delattr == &module_delattr)
 				return DeeModule_DelAttrString((DeeModuleObject *)self, attr, hash);
-			if (delattr == &super_delattr) {
+			if (tp_delattr == &super_delattr) {
 				iter    = DeeSuper_TYPE(self);
 				self    = DeeSuper_SELF(self);
 				tp_self = iter;
 				goto again;
 			}
-			if (!delattr)
+			if (!tp_delattr)
 				break;
 			attr_name_ob = DeeString_NewWithHash(attr, hash);
 			if unlikely(!attr_name_ob)
 				goto err;
-			result = (*delattr)(self, attr_name_ob);
+			result = DeeType_invoke_attr_tp_delattr(iter, tp_delattr, self, attr_name_ob);
 			Dee_Decref(attr_name_ob);
 			return result;
 		}
@@ -1613,25 +1589,25 @@ again:
 			break;
 		if (iter->tp_attr) {
 			DREF DeeObject *attr_name_ob;
-			int (DCALL *delattr)(DeeObject *, DeeObject *);
+			int (DCALL *tp_delattr)(DeeObject *, DeeObject *);
 do_iter_attr:
-			delattr = iter->tp_attr->tp_delattr;
-			if (delattr == &type_delattr)
+			tp_delattr = iter->tp_attr->tp_delattr;
+			if (tp_delattr == &type_delattr)
 				return DeeType_DelAttrStringLen((DeeTypeObject *)self, attr, attrlen, hash);
-			if (delattr == &module_delattr)
+			if (tp_delattr == &module_delattr)
 				return DeeModule_DelAttrStringLen((DeeModuleObject *)self, attr, attrlen, hash);
-			if (delattr == &super_delattr) {
+			if (tp_delattr == &super_delattr) {
 				iter    = DeeSuper_TYPE(self);
 				self    = DeeSuper_SELF(self);
 				tp_self = iter;
 				goto again;
 			}
-			if (!delattr)
+			if (!tp_delattr)
 				break;
 			attr_name_ob = DeeString_NewSizedWithHash(attr, attrlen, hash);
 			if unlikely(!attr_name_ob)
 				goto err;
-			result = (*delattr)(self, attr_name_ob);
+			result = DeeType_invoke_attr_tp_delattr(iter, tp_delattr, self, attr_name_ob);
 			Dee_Decref(attr_name_ob);
 			return result;
 		}
@@ -1696,25 +1672,25 @@ again:
 			break;
 		if (iter->tp_attr) {
 			DREF DeeObject *attr_name_ob;
-			int (DCALL *setattr)(DeeObject *, DeeObject *, DeeObject *);
+			int (DCALL *tp_setattr)(DeeObject *, DeeObject *, DeeObject *);
 do_iter_attr:
-			setattr = iter->tp_attr->tp_setattr;
-			if (setattr == &type_setattr)
+			tp_setattr = iter->tp_attr->tp_setattr;
+			if (tp_setattr == &type_setattr)
 				return DeeType_SetAttrString((DeeTypeObject *)self, attr, hash, value);
-			if (setattr == &module_setattr)
+			if (tp_setattr == &module_setattr)
 				return DeeModule_SetAttrString((DeeModuleObject *)self, attr, hash, value);
-			if (setattr == &super_setattr) {
+			if (tp_setattr == &super_setattr) {
 				iter    = DeeSuper_TYPE(self);
 				self    = DeeSuper_SELF(self);
 				tp_self = iter;
 				goto again;
 			}
-			if (!setattr)
+			if (!tp_setattr)
 				break;
 			attr_name_ob = DeeString_NewWithHash(attr, hash);
 			if unlikely(!attr_name_ob)
 				goto err;
-			result = (*setattr)(self, attr_name_ob, value);
+			result = DeeType_invoke_attr_tp_setattr(iter, tp_setattr, self, attr_name_ob, value);
 			Dee_Decref(attr_name_ob);
 			return result;
 		}
@@ -1778,25 +1754,25 @@ again:
 			break;
 		if (iter->tp_attr) {
 			DREF DeeObject *attr_name_ob;
-			int (DCALL *setattr)(DeeObject *, DeeObject *, DeeObject *);
+			int (DCALL *tp_setattr)(DeeObject *, DeeObject *, DeeObject *);
 do_iter_attr:
-			setattr = iter->tp_attr->tp_setattr;
-			if (setattr == &type_setattr)
+			tp_setattr = iter->tp_attr->tp_setattr;
+			if (tp_setattr == &type_setattr)
 				return DeeType_SetAttrStringLen((DeeTypeObject *)self, attr, attrlen, hash, value);
-			if (setattr == &module_setattr)
+			if (tp_setattr == &module_setattr)
 				return DeeModule_SetAttrStringLen((DeeModuleObject *)self, attr, attrlen, hash, value);
-			if (setattr == &super_setattr) {
+			if (tp_setattr == &super_setattr) {
 				iter    = DeeSuper_TYPE(self);
 				self    = DeeSuper_SELF(self);
 				tp_self = iter;
 				goto again;
 			}
-			if (!setattr)
+			if (!tp_setattr)
 				break;
 			attr_name_ob = DeeString_NewSizedWithHash(attr, attrlen, hash);
 			if unlikely(!attr_name_ob)
 				goto err;
-			result = (*setattr)(self, attr_name_ob, value);
+			result = DeeType_invoke_attr_tp_setattr(iter, tp_setattr, self, attr_name_ob, value);
 			Dee_Decref(attr_name_ob);
 			return result;
 		}
@@ -1862,33 +1838,33 @@ again:
 			break;
 		if (iter->tp_attr) {
 			DREF DeeObject *attr_name_ob;
-			DREF DeeObject *(DCALL *getattr)(DeeObject *, DeeObject *);
+			DREF DeeObject *(DCALL *tp_getattr)(DeeObject *, DeeObject *);
 do_iter_attr:
-			getattr = iter->tp_attr->tp_getattr;
-			if (getattr == &type_getattr)
+			tp_getattr = iter->tp_attr->tp_getattr;
+			if (tp_getattr == &type_getattr)
 				return DeeType_CallAttrString((DeeTypeObject *)self, attr, hash, argc, argv);
-			if (getattr == &module_getattr) {
+			if (tp_getattr == &module_getattr) {
 				result = DeeModule_GetAttrString((DeeModuleObject *)self, attr, hash);
 				goto done_invoke;
 			}
-			if (getattr == &super_getattr) {
+			if (tp_getattr == &super_getattr) {
 				iter    = DeeSuper_TYPE(self);
 				self    = DeeSuper_SELF(self);
 				tp_self = iter;
 				goto again;
 			}
 #ifdef CONFIG_HAVE_SEQEACH_ATTRIBUTE_OPTIMIZATIONS
-			if (getattr == (DREF DeeObject *(DCALL *)(DeeObject *, /*String*/ DeeObject *))&seqeach_getattr)
+			if (tp_getattr == (DREF DeeObject *(DCALL *)(DeeObject *, /*String*/ DeeObject *))&seqeach_getattr)
 				return DeeSeqEach_CallAttrString(((SeqEachBase *)self)->se_seq, attr, hash, argc, argv);
-			if (getattr == (DREF DeeObject *(DCALL *)(DeeObject *, /*String*/ DeeObject *))&seqeachw_getattr)
+			if (tp_getattr == (DREF DeeObject *(DCALL *)(DeeObject *, /*String*/ DeeObject *))&seqeachw_getattr)
 				return DeeSeqEach_CallAttrString(self, attr, hash, argc, argv);
 #endif /* CONFIG_HAVE_SEQEACH_ATTRIBUTE_OPTIMIZATIONS */
-			if (!getattr)
+			if (!tp_getattr)
 				break;
 			attr_name_ob = DeeString_NewWithHash(attr, hash);
 			if unlikely(!attr_name_ob)
 				goto err;
-			result = (*getattr)(self, attr_name_ob);
+			result = DeeType_invoke_attr_tp_getattr(iter, tp_getattr, self, attr_name_ob);
 			Dee_Decref(attr_name_ob);
 			goto done_invoke;
 		}
@@ -1954,33 +1930,33 @@ again:
 			break;
 		if (iter->tp_attr) {
 			DREF DeeObject *attr_name_ob;
-			DREF DeeObject *(DCALL *getattr)(DeeObject *, DeeObject *);
+			DREF DeeObject *(DCALL *tp_getattr)(DeeObject *, DeeObject *);
 do_iter_attr:
-			getattr = iter->tp_attr->tp_getattr;
-			if (getattr == &type_getattr)
+			tp_getattr = iter->tp_attr->tp_getattr;
+			if (tp_getattr == &type_getattr)
 				return DeeType_CallAttrStringLen((DeeTypeObject *)self, attr, attrlen, hash, argc, argv);
-			if (getattr == &module_getattr) {
+			if (tp_getattr == &module_getattr) {
 				result = DeeModule_GetAttrStringLen((DeeModuleObject *)self, attr, attrlen, hash);
 				goto done_invoke;
 			}
-			if (getattr == &super_getattr) {
+			if (tp_getattr == &super_getattr) {
 				iter    = DeeSuper_TYPE(self);
 				self    = DeeSuper_SELF(self);
 				tp_self = iter;
 				goto again;
 			}
 #ifdef CONFIG_HAVE_SEQEACH_ATTRIBUTE_OPTIMIZATIONS
-			if (getattr == (DREF DeeObject *(DCALL *)(DeeObject *, /*String*/ DeeObject *))&seqeach_getattr)
+			if (tp_getattr == (DREF DeeObject *(DCALL *)(DeeObject *, /*String*/ DeeObject *))&seqeach_getattr)
 				return DeeSeqEach_CallAttrStringLen(((SeqEachBase *)self)->se_seq, attr, attrlen, hash, argc, argv);
-			if (getattr == (DREF DeeObject *(DCALL *)(DeeObject *, /*String*/ DeeObject *))&seqeachw_getattr)
+			if (tp_getattr == (DREF DeeObject *(DCALL *)(DeeObject *, /*String*/ DeeObject *))&seqeachw_getattr)
 				return DeeSeqEach_CallAttrStringLen(self, attr, attrlen, hash, argc, argv);
 #endif /* CONFIG_HAVE_SEQEACH_ATTRIBUTE_OPTIMIZATIONS */
-			if (!getattr)
+			if (!tp_getattr)
 				break;
 			attr_name_ob = DeeString_NewSizedWithHash(attr, attrlen, hash);
 			if unlikely(!attr_name_ob)
 				goto err;
-			result = (*getattr)(self, attr_name_ob);
+			result = DeeType_invoke_attr_tp_getattr(iter, tp_getattr, self, attr_name_ob);
 			Dee_Decref(attr_name_ob);
 			goto done_invoke;
 		}
