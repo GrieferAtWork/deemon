@@ -3717,7 +3717,8 @@ set_is_type:
 					if (mod !is none)
 						return mod;
 				}
-				if (x.parent is none)
+				x = x.parent;
+				if (x is none)
 					break;
 			}
 			return none;
