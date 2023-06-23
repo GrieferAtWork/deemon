@@ -39,7 +39,8 @@
 //#define DEFINE_DeeType_DelAttrStringLen
 //#define DEFINE_DeeType_SetAttrString
 //#define DEFINE_DeeType_SetAttrStringLen
-#define DEFINE_DeeType_FindAttr
+//#define DEFINE_DeeType_FindAttr
+#define DEFINE_DeeType_EnumAttr
 #endif /* __INTELLISENSE__ */
 
 #if (defined(DEFINE_DeeType_GetAttrString) +            \
@@ -62,7 +63,8 @@
      defined(DEFINE_DeeType_DelAttrStringLen) +         \
      defined(DEFINE_DeeType_SetAttrString) +            \
      defined(DEFINE_DeeType_SetAttrStringLen) +         \
-     defined(DEFINE_DeeType_FindAttr)) != 1
+     defined(DEFINE_DeeType_FindAttr) +                 \
+     defined(DEFINE_DeeType_EnumAttr)) != 1
 #error "Must #define exactly one of these macros"
 #endif /* ... */
 
@@ -287,6 +289,16 @@
 #define LOCAL_DeeType_AccessInstanceMemberAttr(tp_invoker, tp_self) DeeType_FindInstanceMemberAttr(tp_invoker, tp_self, retinfo, rules)
 #define LOCAL_DeeObject_GenericAccessAttr(self)                     DeeObject_TGenericFindAttr((DeeTypeObject *)(self), self, retinfo, rules)
 #define LOCAL_IS_FIND
+#elif defined(DEFINE_DeeType_EnumAttr)
+#define LOCAL_DeeType_AccessAttr                                    DeeType_EnumAttr
+#define LOCAL_DeeType_AccessClassMethodAttr(tp_invoker, tp_self)    type_method_enum(tp_self, (tp_self)->tp_class_methods, ATTR_CMEMBER, proc, arg)
+#define LOCAL_DeeType_AccessClassGetSetAttr(tp_invoker, tp_self)    type_getset_enum(tp_self, (tp_self)->tp_class_getsets, ATTR_CMEMBER | ATTR_PROPERTY, proc, arg)
+#define LOCAL_DeeType_AccessClassMemberAttr(tp_invoker, tp_self)    type_member_enum(tp_self, (tp_self)->tp_class_members, ATTR_CMEMBER, proc, arg)
+#define LOCAL_DeeType_AccessInstanceMethodAttr(tp_invoker, tp_self) type_obmeth_enum(tp_self, proc, arg)
+#define LOCAL_DeeType_AccessInstanceGetSetAttr(tp_invoker, tp_self) type_obprop_enum(tp_self, proc, arg)
+#define LOCAL_DeeType_AccessInstanceMemberAttr(tp_invoker, tp_self) type_obmemb_enum(tp_self, proc, arg)
+#define LOCAL_DeeObject_GenericAccessAttr(self)                     DeeObject_TGenericEnumAttr((DeeTypeObject *)(self), proc, arg)
+#define LOCAL_IS_ENUM
 #else /* ... */
 #error "Invalid configuration"
 #endif /* !... */
@@ -320,6 +332,10 @@ DECL_BEGIN
 #define LOCAL_return_t              int
 #define LOCAL_ATTR_NOT_FOUND_RESULT 1
 #define LOCAL_ERROR_RETURN_VALUE    (-1)
+#elif defined(LOCAL_IS_ENUM)
+#define LOCAL_return_t              dssize_t
+#define LOCAL_ATTR_NOT_FOUND_RESULT DONT_USE_THIS_MACRO
+#define LOCAL_ERROR_RETURN_VALUE    DONT_USE_THIS_MACRO
 #else /* ... */
 #define LOCAL_return_t              int
 #define LOCAL_ATTR_NOT_FOUND_RESULT (-2)
@@ -390,7 +406,9 @@ INTERN WUNUSED LOCAL_ATTR_NONNULL LOCAL_return_t
 #ifdef LOCAL_IS_FIND
                                  struct attribute_info *__restrict retinfo,
                                  struct attribute_lookup_rules const *__restrict rules
-#else /* LOCAL_IS_FIND */
+#elif defined(LOCAL_IS_ENUM)
+                                 denum_t proc, void *arg
+#else /* ... */
                                  char const *__restrict attr,
 #ifdef LOCAL_HAS_len
                                  size_t attrlen,
@@ -410,28 +428,50 @@ INTERN WUNUSED LOCAL_ATTR_NONNULL LOCAL_return_t
 #ifdef LOCAL_IS_SET
                                  , DeeObject *value
 #endif /* LOCAL_IS_SET */
-#endif /* !LOCAL_IS_FIND */
+#endif /* !... */
                                  ) {
 #ifdef LOCAL_IS_CALL_LIKE
 #define LOCAL_invoke_result_OR_done invoke_result
 #else /* LOCAL_IS_CALL_LIKE */
 #define LOCAL_invoke_result_OR_done done
 #endif /* !LOCAL_IS_CALL_LIKE */
+#ifdef LOCAL_IS_ENUM
+	LOCAL_return_t final_result = 0;
+#endif /* LOCAL_IS_ENUM */
 	LOCAL_return_t result;
 	DeeTypeObject *iter;
+
+	/* Try to access the cached version of the attribute. */
+#ifdef LOCAL_DeeType_AccessCachedClassAttr
 	result = LOCAL_DeeType_AccessCachedClassAttr(self);
 	if (result != LOCAL_ATTR_NOT_FOUND_RESULT)
 		goto done;
+#endif /* LOCAL_DeeType_AccessCachedClassAttr */
+
 	iter = self;
 	do {
+#ifdef LOCAL_IS_ENUM
+#define LOCAL_process_result(result, done) \
+	if unlikely(result < 0)                \
+		goto err;                          \
+	final_result += result
+#else /* LOCAL_IS_ENUM */
+#define LOCAL_process_result(result, done)     \
+	if (result != LOCAL_ATTR_NOT_FOUND_RESULT) \
+		goto done
+#endif /* !LOCAL_IS_ENUM */
+
 		if (DeeType_IsClass(iter)) {
 #ifdef LOCAL_IS_FIND
 			result = DeeClass_FindClassAttribute(self, iter, retinfo, rules);
-			if (result != LOCAL_ATTR_NOT_FOUND_RESULT)
-				goto done;
+			LOCAL_process_result(result, done);
 			result = DeeClass_FindClassInstanceAttribute(self, iter, retinfo, rules);
-			if (result != LOCAL_ATTR_NOT_FOUND_RESULT)
-				goto done;
+			LOCAL_process_result(result, done);
+#elif defined(LOCAL_IS_ENUM)
+			result = DeeClass_EnumClassAttributes(iter, proc, arg);
+			LOCAL_process_result(result, done);
+			result = DeeClass_EnumClassInstanceAttributes(iter, proc, arg);
+			LOCAL_process_result(result, done);
 #else /* LOCAL_IS_FIND */
 			struct class_attribute *cattr;
 			cattr = LOCAL_DeeType_QueryClassAttribute(self, iter);
@@ -462,18 +502,15 @@ INTERN WUNUSED LOCAL_ATTR_NONNULL LOCAL_return_t
 		} else {
 			if (iter->tp_class_methods) {
 				result = LOCAL_DeeType_AccessClassMethodAttr(self, iter);
-				if (result != LOCAL_ATTR_NOT_FOUND_RESULT)
-					goto done;
+				LOCAL_process_result(result, done);
 			}
 			if (iter->tp_class_getsets) {
 				result = LOCAL_DeeType_AccessClassGetSetAttr(self, iter);
-				if (result != LOCAL_ATTR_NOT_FOUND_RESULT)
-					goto LOCAL_invoke_result_OR_done;
+				LOCAL_process_result(result, LOCAL_invoke_result_OR_done);
 			}
 			if (iter->tp_class_members) {
 				result = LOCAL_DeeType_AccessClassMemberAttr(self, iter);
-				if (result != LOCAL_ATTR_NOT_FOUND_RESULT)
-					goto LOCAL_invoke_result_OR_done;
+				LOCAL_process_result(result, LOCAL_invoke_result_OR_done);
 			}
 
 #ifdef CONFIG_TYPE_ATTRIBUTE_SPECIALCASE_TYPETYPE
@@ -482,28 +519,25 @@ INTERN WUNUSED LOCAL_ATTR_NONNULL LOCAL_return_t
 			{
 				if (iter->tp_methods) { /* Access instance methods using `DeeClsMethodObject' */
 					result = LOCAL_DeeType_AccessInstanceMethodAttr(self, iter);
-					if (result != LOCAL_ATTR_NOT_FOUND_RESULT)
-						goto done;
+					LOCAL_process_result(result, done);
 				}
 				if (iter->tp_getsets) { /* Access instance getsets using `DeeClsPropertyObject' */
 					result = LOCAL_DeeType_AccessInstanceGetSetAttr(self, iter);
-					if (result != LOCAL_ATTR_NOT_FOUND_RESULT)
-						goto done;
+					LOCAL_process_result(result, done);
 				}
 				if (iter->tp_members) { /* Access instance members using `DeeClsMemberObject' */
 					result = LOCAL_DeeType_AccessInstanceMemberAttr(self, iter);
-					if (result != LOCAL_ATTR_NOT_FOUND_RESULT)
-						goto done;
+					LOCAL_process_result(result, done);
 				}
 			}
 		}
 
 #ifdef CONFIG_TYPE_ATTRIBUTE_FORWARD_GENERIC
 		result = LOCAL_DeeObject_GenericAccessAttr((DeeObject *)iter);
-		if (result != LOCAL_ATTR_NOT_FOUND_RESULT)
-			goto done;
+		LOCAL_process_result(result, done);
 #endif /* CONFIG_TYPE_ATTRIBUTE_FORWARD_GENERIC */
 
+#undef LOCAL_process_result
 	} while ((iter = DeeType_Base(iter)) != NULL);
 
 #ifdef CONFIG_TYPE_ATTRIBUTE_FOLLOWUP_GENERIC
@@ -512,7 +546,7 @@ INTERN WUNUSED LOCAL_ATTR_NONNULL LOCAL_return_t
 		goto done;
 #endif /* CONFIG_TYPE_ATTRIBUTE_FOLLOWUP_GENERIC */
 
-#if !defined(LOCAL_IS_HAS) && !defined(LOCAL_IS_FIND)
+#if !defined(LOCAL_IS_HAS) && !defined(LOCAL_IS_FIND) && !defined(LOCAL_IS_ENUM)
 #ifdef LOCAL_HAS_len
 	err_unknown_attribute_len(self, attr, attrlen, LOCAL_ATTR_ACCESS_OP);
 #else /* LOCAL_HAS_len */
@@ -520,7 +554,7 @@ INTERN WUNUSED LOCAL_ATTR_NONNULL LOCAL_return_t
 #endif /* !LOCAL_HAS_len */
 err:
 	return LOCAL_ERROR_RETURN_VALUE;
-#endif /* !LOCAL_IS_HAS && !LOCAL_IS_FIND */
+#endif /* !LOCAL_IS_HAS && !LOCAL_IS_FIND && !LOCAL_IS_ENUM */
 #ifdef LOCAL_IS_CALL_LIKE
 invoke_result:
 	if (result) {
@@ -542,8 +576,14 @@ invoke_result:
 		result = real_result;
 	}
 #endif /* LOCAL_IS_CALL_LIKE */
+#ifndef LOCAL_IS_ENUM
 done:
 	return result;
+#else /* !LOCAL_IS_ENUM */
+	return final_result;
+err:
+	return result;
+#endif /* LOCAL_IS_ENUM */
 #undef LOCAL_invoke_result_OR_done
 }
 
@@ -601,3 +641,4 @@ DECL_END
 #undef DEFINE_DeeType_SetAttrString
 #undef DEFINE_DeeType_SetAttrStringLen
 #undef DEFINE_DeeType_FindAttr
+#undef DEFINE_DeeType_EnumAttr

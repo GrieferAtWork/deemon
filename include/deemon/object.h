@@ -2621,7 +2621,7 @@ DFUNDEF WUNUSED NONNULL((1, 2, 3)) int DCALL DeeObject_TGenericDelAttrString(Dee
 DFUNDEF WUNUSED NONNULL((1, 2, 3)) int DCALL DeeObject_TGenericDelAttrStringLen(DeeTypeObject *tp_self, DeeObject *self, char const *__restrict attr, size_t attrlen, Dee_hash_t hash);
 DFUNDEF WUNUSED NONNULL((1, 2, 3, 5)) int DCALL DeeObject_TGenericSetAttrString(DeeTypeObject *tp_self, DeeObject *self, char const *__restrict attr, Dee_hash_t hash, DeeObject *value);
 DFUNDEF WUNUSED NONNULL((1, 2, 3, 6)) int DCALL DeeObject_TGenericSetAttrStringLen(DeeTypeObject *tp_self, DeeObject *self, char const *__restrict attr, size_t attrlen, Dee_hash_t hash, DeeObject *value);
-DFUNDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL DeeObject_TGenericEnumAttr(DeeTypeObject *__restrict tp_self, Dee_enum_t proc, void *arg);
+DFUNDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL DeeObject_TGenericEnumAttr(DeeTypeObject *tp_self, Dee_enum_t proc, void *arg);
 #define DeeObject_GenericGetAttrString(self, attr, hash)                                DeeObject_TGenericGetAttrString(Dee_TYPE(self), self, attr, hash)
 #define DeeObject_GenericGetAttrStringLen(self, attr, attrlen, hash)                    DeeObject_TGenericGetAttrStringLen(Dee_TYPE(self), self, attr, attrlen, hash)
 #define DeeObject_GenericCallAttrString(self, attr, hash, argc, argv)                   DeeObject_TGenericCallAttrString(Dee_TYPE(self), self, attr, hash, argc, argv)

@@ -43,6 +43,18 @@
 
 DECL_BEGIN
 
+/* For type-type, these should be accessed as members, not as class-wrappers:
+ * >> import Type from deemon;
+ * >> print Type.baseof(x); // Should be a bound instance-method,
+ * >>                       // rather than an unbound class method!
+ */
+#undef CONFIG_TYPE_ATTRIBUTE_FORWARD_GENERIC
+#undef CONFIG_TYPE_ATTRIBUTE_SPECIALCASE_TYPETYPE
+#undef CONFIG_TYPE_ATTRIBUTE_FOLLOWUP_GENERIC
+#define CONFIG_TYPE_ATTRIBUTE_FORWARD_GENERIC
+//#define CONFIG_TYPE_ATTRIBUTE_SPECIALCASE_TYPETYPE /* Don't enable this again. - It's better if this is off. */
+//#define CONFIG_TYPE_ATTRIBUTE_FOLLOWUP_GENERIC
+
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL type_getattr(DeeObject *self, DeeObject *attr);
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL type_callattr(DeeObject *self, DeeObject *attr, size_t argc, DeeObject *const *argv);
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL type_callattr_kw(DeeObject *self, DeeObject *attr, size_t argc, DeeObject *const *argv, DeeObject *kw);
@@ -52,20 +64,6 @@ INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL type_callattr_kw(DeeObject 
 #endif /* CONFIG_CALLTUPLE_OPTIMIZATIONS */
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL type_delattr(DeeObject *self, DeeObject *attr);
 INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL type_setattr(DeeObject *self, DeeObject *attr, DeeObject *value);
-
-/* For type-type, these should be accessed as members, not as class-wrappers:
- * >> import Type from deemon;
- * >> print Type.baseof(x); // Should be a bound instance-method,
- * >>                       // rather than an unbound class method!
- */
-#undef CONFIG_TYPE_ATTRIBUTE_FORWARD_GENERIC
-#undef CONFIG_TYPE_ATTRIBUTE_ENUM_PREVENT_DUPLICATES
-#undef CONFIG_TYPE_ATTRIBUTE_SPECIALCASE_TYPETYPE
-#undef CONFIG_TYPE_ATTRIBUTE_FOLLOWUP_GENERIC
-#define CONFIG_TYPE_ATTRIBUTE_FORWARD_GENERIC
-//#define CONFIG_TYPE_ATTRIBUTE_SPECIALCASE_TYPETYPE /* Don't enable this again. - It's better if this is off. */
-//#define CONFIG_TYPE_ATTRIBUTE_FOLLOWUP_GENERIC
-//#define CONFIG_TYPE_ATTRIBUTE_ENUM_PREVENT_DUPLICATES
 
 PUBLIC WUNUSED NONNULL((1, 2, 3)) dssize_t DCALL
 DeeObject_EnumAttr(DeeTypeObject *tp_self,
@@ -120,238 +118,6 @@ err:
 	return temp;
 }
 
-
-#ifdef CONFIG_TYPE_ATTRIBUTE_ENUM_PREVENT_DUPLICATES
-struct tiny_set {
-	DeeObject      **ts_map;      /* [owned_if(!= ts_smap)] Map of all objects. */
-	size_t           ts_mask;     /* Current hash-mask */
-	size_t           ts_size;     /* Number of contained objects. */
-	DREF DeeObject  *ts_smap[16]; /* Statically allocated map. */
-};
-
-#define tiny_set_init(x)                           \
-	((x)->ts_map = (x)->ts_smap, (x)->ts_size = 0, \
-	 bzero((x)->ts_smap, sizeof((x)->ts_smap)),    \
-	 (x)->ts_mask = COMPILER_LENOF((x)->ts_smap) - 1)
-#define tiny_set_fini(x) \
-	((x)->ts_map == (x)->ts_smap ? (void)0 : (void)Dee_Free((x)->ts_map))
-
-LOCAL bool DCALL
-tiny_set_contains(struct tiny_set *__restrict self,
-                  DeeObject *__restrict obj) {
-	dhash_t i, perturb;
-	perturb = i = Dee_HashPointer(obj) & self->ts_mask;
-	for (;; i = ((i << 2) + i + perturb + 1), perturb >>= 5) {
-		DeeObject *item = self->ts_map[i & self->ts_mask];
-		if (!item)
-			break; /* Not found */
-		if (item == obj)
-			return true;
-	}
-	return false;
-}
-
-LOCAL bool DCALL
-tiny_set_rehash(struct tiny_set *__restrict self) {
-	dhash_t i, j, perturb;
-	DeeObject **new_map;
-	size_t new_mask = (self->ts_mask << 1) | 1;
-	/* Allocate the new map. */
-	new_map = (DeeObject **)Dee_Callocc(new_mask + 1, sizeof(DeeObject *));
-	if unlikely(!new_map)
-		return false;
-	/* Rehash the old map. */
-	for (i = 0; i <= self->ts_mask; ++i) {
-		DeeObject *obj = self->ts_map[i];
-		if (!obj)
-			continue;
-		perturb = j = Dee_HashPointer(obj) & new_mask;
-		for (;; j = ((j << 2) + j + perturb + 1), perturb >>= 5) {
-			if (new_map[j])
-				continue;
-			new_map[j] = obj;
-			break;
-		}
-	}
-	/* Install the new map. */
-	if (self->ts_map != self->ts_smap)
-		Dee_Free(self->ts_map);
-	self->ts_map  = new_map;
-	self->ts_mask = new_mask;
-	return true;
-}
-
-LOCAL bool DCALL
-tiny_set_insert(struct tiny_set *__restrict self,
-                DeeObject *__restrict obj) {
-	dhash_t i, perturb;
-again:
-	perturb = i = Dee_HashPointer(obj) & self->ts_mask;
-	for (;; i = ((i << 2) + i + perturb + 1), perturb >>= 5) {
-		DeeObject *item = self->ts_map[i & self->ts_mask];
-		if (item == obj)
-			break; /* Already inserted */
-		if (item != NULL)
-			continue; /* Used slot */
-		/* Check if the set must be rehashed. */
-		if (self->ts_size >= self->ts_mask - 1) {
-			if (!tiny_set_rehash(self))
-				return false;
-			goto again;
-		}
-		self->ts_map[i & self->ts_mask] = obj;
-		++self->ts_size;
-		break;
-	}
-	return true;
-}
-#endif /* CONFIG_TYPE_ATTRIBUTE_ENUM_PREVENT_DUPLICATES */
-
-
-
-
-INTERN dssize_t DCALL
-DeeType_EnumAttr(DeeTypeObject *__restrict self,
-                 denum_t proc, void *arg) {
-	dssize_t temp, result = 0;
-	DeeTypeObject *iter = self;
-#ifdef CONFIG_TYPE_ATTRIBUTE_ENUM_PREVENT_DUPLICATES
-	struct tiny_set finished_set;
-	tiny_set_init(&finished_set);
-#endif /* CONFIG_TYPE_ATTRIBUTE_ENUM_PREVENT_DUPLICATES */
-	do {
-#ifdef CONFIG_TYPE_ATTRIBUTE_ENUM_PREVENT_DUPLICATES
-		if unlikely(!tiny_set_insert(&finished_set, (DeeObject *)self))
-			goto err_m1;
-#endif /* CONFIG_TYPE_ATTRIBUTE_ENUM_PREVENT_DUPLICATES */
-		if (DeeType_IsClass(iter)) {
-			temp = DeeClass_EnumClassAttributes(iter, proc, arg);
-			if unlikely(temp < 0)
-				goto err;
-			result += temp;
-			temp = DeeClass_EnumClassInstanceAttributes(iter, proc, arg);
-			if unlikely(temp < 0)
-				goto err;
-			result += temp;
-		} else {
-			if (iter->tp_class_methods) {
-				temp = type_method_enum(iter, iter->tp_class_methods,
-				                        ATTR_CMEMBER, proc, arg);
-				if unlikely(temp < 0)
-					goto err;
-				result += temp;
-			}
-			if (iter->tp_class_getsets) {
-				temp = type_getset_enum(iter, iter->tp_class_getsets,
-				                        ATTR_CMEMBER | ATTR_PROPERTY,
-				                        proc, arg);
-				if unlikely(temp < 0)
-					goto err;
-				result += temp;
-			}
-			if (iter->tp_class_members) {
-				temp = type_member_enum(iter, iter->tp_class_members,
-				                        ATTR_CMEMBER, proc, arg);
-				if unlikely(temp < 0)
-					goto err;
-				result += temp;
-			}
-#ifdef CONFIG_TYPE_ATTRIBUTE_SPECIALCASE_TYPETYPE
-			if (iter != &DeeType_Type)
-#endif /* CONFIG_TYPE_ATTRIBUTE_SPECIALCASE_TYPETYPE */
-			{
-				if (iter->tp_methods) {
-					/* Access instance methods using `DeeClsMethodObject' */
-					temp = type_obmeth_enum(iter, proc, arg);
-					if unlikely(temp < 0)
-						goto err;
-					result += temp;
-				}
-				if (iter->tp_getsets) {
-					/* Access instance getsets using `DeeClsPropertyObject' */
-					temp = type_obprop_enum(iter, proc, arg);
-					if unlikely(temp < 0)
-						goto err;
-					result += temp;
-				}
-				if (iter->tp_members) {
-					/* Access instance members using `DeeClsMemberObject' */
-					temp = type_obmemb_enum(iter, proc, arg);
-					if unlikely(temp < 0)
-						goto err;
-					result += temp;
-				}
-			}
-		}
-#ifdef CONFIG_TYPE_ATTRIBUTE_FORWARD_GENERIC
-#ifdef CONFIG_TYPE_ATTRIBUTE_ENUM_PREVENT_DUPLICATES
-		if (!tiny_set_contains(&finished_set, (DeeObject *)Dee_TYPE(iter))) {
-			temp = DeeObject_TGenericEnumAttr(Dee_TYPE(iter), proc, arg);
-			if unlikely(temp < 0)
-				goto err;
-			result += temp;
-		}
-#else /* CONFIG_TYPE_ATTRIBUTE_ENUM_PREVENT_DUPLICATES */
-		temp = DeeObject_TGenericEnumAttr(Dee_TYPE(iter), proc, arg);
-		if unlikely(temp < 0)
-			goto err;
-		result += temp;
-#endif /* !CONFIG_TYPE_ATTRIBUTE_ENUM_PREVENT_DUPLICATES */
-#endif /* CONFIG_TYPE_ATTRIBUTE_FORWARD_GENERIC */
-	} while ((iter = DeeType_Base(iter)) != NULL);
-#ifdef CONFIG_TYPE_ATTRIBUTE_FOLLOWUP_GENERIC
-	temp = DeeObject_TGenericEnumAttr(Dee_TYPE(self), proc, arg);
-	if unlikely(temp < 0)
-		goto err;
-	result += temp;
-#endif /* CONFIG_TYPE_ATTRIBUTE_FOLLOWUP_GENERIC */
-done:
-#ifdef CONFIG_TYPE_ATTRIBUTE_ENUM_PREVENT_DUPLICATES
-	tiny_set_fini(&finished_set);
-#endif /* CONFIG_TYPE_ATTRIBUTE_ENUM_PREVENT_DUPLICATES */
-	return result;
-#ifdef CONFIG_TYPE_ATTRIBUTE_ENUM_PREVENT_DUPLICATES
-err_m1:
-	temp = -1;
-#endif /* CONFIG_TYPE_ATTRIBUTE_ENUM_PREVENT_DUPLICATES */
-err:
-	result = temp;
-	goto done;
-}
-
-PUBLIC WUNUSED NONNULL((1, 2)) dssize_t DCALL
-DeeObject_TGenericEnumAttr(DeeTypeObject *__restrict tp_self, denum_t proc, void *arg) {
-	dssize_t temp, result = 0;
-	ASSERT_OBJECT(tp_self);
-	ASSERT(DeeType_Check(tp_self));
-	do {
-		if (tp_self->tp_methods) {
-			temp = type_method_enum(tp_self, tp_self->tp_methods,
-			                        ATTR_IMEMBER, proc, arg);
-			if unlikely(temp < 0)
-				goto err;
-			result += temp;
-		}
-		if (tp_self->tp_getsets) {
-			temp = type_getset_enum(tp_self, tp_self->tp_getsets,
-			                        ATTR_IMEMBER | ATTR_PROPERTY,
-			                        proc, arg);
-			if unlikely(temp < 0)
-				goto err;
-			result += temp;
-		}
-		if (tp_self->tp_members) {
-			temp = type_member_enum(tp_self, tp_self->tp_members,
-			                        ATTR_IMEMBER, proc, arg);
-			if unlikely(temp < 0)
-				goto err;
-			result += temp;
-		}
-	} while ((tp_self = DeeType_Base(tp_self)) != NULL);
-	return result;
-err:
-	return temp;
-}
 
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL module_getattr(DeeObject *self, DeeObject *attr);
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL module_delattr(DeeObject *self, DeeObject *attr);
@@ -2249,6 +2015,8 @@ DECL_END
 #include "attribute-access-generic.c.inl"
 #define DEFINE_DeeObject_TGenericFindAttr
 #include "attribute-access-generic.c.inl"
+#define DEFINE_DeeObject_TGenericEnumAttr
+#include "attribute-access-generic.c.inl"
 
 /* DeeType_*Attr */
 #define DEFINE_DeeType_GetAttrString
@@ -2280,6 +2048,8 @@ DECL_END
 #define DEFINE_DeeType_SetAttrStringLen
 #include "attribute-access-type.c.inl"
 #define DEFINE_DeeType_FindAttr
+#include "attribute-access-type.c.inl"
+#define DEFINE_DeeType_EnumAttr
 #include "attribute-access-type.c.inl"
 
 /* DeeType_*InstanceAttr */

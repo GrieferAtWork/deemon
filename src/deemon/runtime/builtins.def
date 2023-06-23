@@ -216,8 +216,8 @@ BUILTIN_DOC(compare, &builtin_compare, MODSYM_FREADONLY | MODSYM_FCONSTEXPR,
             "}")
 
 /* Load a module, given its name.
- * >> import(module_name: string, base?: Module) -> string;
- * NOTE: This is what `import' links against when
+ * >> import(module_name: string, base?: Module): string;
+ * NOTE: This is what `import' links against when used
  *       as a stand-alone within an expression. */
 BUILTIN_DOC(import, &builtin_import, MODSYM_FNORMAL,
             "(module_name:?Dstring,base?:?DModule)->?DModule\n"
@@ -227,7 +227,7 @@ BUILTIN_DOC(import, &builtin_import, MODSYM_FNORMAL,
 
 
 /* Load a module, given its name.
- * >> import(module_name: string, base?: Module) -> string;
+ * >> import(module_name: string, base?: Module): string;
  * NOTE: This is what `import' links against when
  *       as a stand-alone within an expression. */
 BUILTIN_DOC(hash, &builtin_hash, MODSYM_FREADONLY | MODSYM_FCONSTEXPR,
