@@ -77,8 +77,8 @@ typedef struct {
 #endif /* CONFIG_NO_THREADS */
 
 PRIVATE ATTR_COLD NONNULL((1, 2)) int DCALL
-err_unbound_attribute(DeeTypeObject *__restrict tp,
-                      char const *__restrict name) {
+err_unbound_attribute_string(DeeTypeObject *__restrict tp,
+                             char const *__restrict name) {
 	ASSERT_OBJECT(tp);
 	ASSERT(DeeType_Check(tp));
 	return DeeError_Throwf(&DeeError_UnboundAttribute,
@@ -87,11 +87,11 @@ err_unbound_attribute(DeeTypeObject *__restrict tp,
 }
 
 PRIVATE ATTR_COLD int DCALL err_unbound_once_callback(void) {
-	return err_unbound_attribute(&DeeOnce_Type, "callback");
+	return err_unbound_attribute_string(&DeeOnce_Type, "callback");
 }
 
 PRIVATE ATTR_COLD int DCALL err_unbound_once_result(void) {
-	return err_unbound_attribute(&DeeOnce_Type, "result");
+	return err_unbound_attribute_string(&DeeOnce_Type, "result");
 }
 
 PRIVATE ATTR_COLD int DCALL err_once_already_finished(void) {

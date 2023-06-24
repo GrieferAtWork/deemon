@@ -365,7 +365,7 @@ type_obmeth_call_kw(DeeTypeObject *cls_type,
 	}
 	return (*desc->m_func)(argv[0], argc - 1, argv + 1);
 err_no_keywords:
-	err_keywords_func_not_accepted(cls_type, desc->m_name, kw);
+	err_keywords_func_not_accepted_string(cls_type, desc->m_name, kw);
 err:
 	return NULL;
 }
@@ -389,7 +389,7 @@ type_method_call_kw_normal(struct type_method const *desc,
 	}
 	return (*desc->m_func)(self, argc, argv);
 err_no_keywords:
-	err_keywords_func_not_accepted(Dee_TYPE(self), desc->m_name, kw);
+	err_keywords_func_not_accepted_string(Dee_TYPE(self), desc->m_name, kw);
 err:
 	return NULL;
 }
@@ -399,8 +399,8 @@ type_getset_get(struct type_getset const *desc,
                 DeeObject *__restrict self) {
 	if likely(desc->gs_get)
 		return (*desc->gs_get)(self);
-	err_cant_access_attribute(type_getset_typeof(desc, self),
-	                          desc->gs_name, ATTR_ACCESS_GET);
+	err_cant_access_attribute_string(type_getset_typeof(desc, self),
+	                                 desc->gs_name, ATTR_ACCESS_GET);
 	return NULL;
 }
 
@@ -409,8 +409,8 @@ type_getset_del(struct type_getset const *desc,
                 DeeObject *__restrict self) {
 	if likely(desc->gs_del)
 		return (*desc->gs_del)(self);
-	return err_cant_access_attribute(type_getset_typeof(desc, self),
-	                                 desc->gs_name, ATTR_ACCESS_DEL);
+	return err_cant_access_attribute_string(type_getset_typeof(desc, self),
+	                                        desc->gs_name, ATTR_ACCESS_DEL);
 }
 
 INTERN WUNUSED NONNULL((1, 2, 3)) int DCALL
@@ -418,8 +418,8 @@ type_getset_set(struct type_getset const *desc,
                 DeeObject *self, DeeObject *value) {
 	if likely(desc->gs_set)
 		return (*desc->gs_set)(self, value);
-	return err_cant_access_attribute(type_getset_typeof(desc, self),
-	                                 desc->gs_name, ATTR_ACCESS_SET);
+	return err_cant_access_attribute_string(type_getset_typeof(desc, self),
+	                                        desc->gs_name, ATTR_ACCESS_SET);
 }
 
 PRIVATE struct keyword getter_kwlist[] = { K(thisarg), KEND };
@@ -439,7 +439,7 @@ type_obprop_call(DeeTypeObject *cls_type,
 	}
 	return (*desc->gs_get)(thisarg);
 err_unbound:
-	err_cant_access_attribute(cls_type, desc->gs_name, ATTR_ACCESS_GET);
+	err_cant_access_attribute_string(cls_type, desc->gs_name, ATTR_ACCESS_GET);
 err:
 	return NULL;
 }
@@ -460,7 +460,7 @@ type_obprop_call_kw(DeeTypeObject *cls_type,
 	}
 	return (*desc->gs_get)(thisarg);
 err_unbound:
-	err_cant_access_attribute(cls_type, desc->gs_name, ATTR_ACCESS_GET);
+	err_cant_access_attribute_string(cls_type, desc->gs_name, ATTR_ACCESS_GET);
 err:
 	return NULL;
 }
@@ -642,8 +642,8 @@ handle_null_ob:
 	default: break;
 	}
 is_unbound:
-	err_unbound_attribute(type_member_typeof(desc, self),
-	                      desc->m_name);
+	err_unbound_attribute_string(type_member_typeof(desc, self),
+	                             desc->m_name);
 	return NULL;
 }
 
@@ -909,8 +909,8 @@ type_member_set(struct type_member const *desc,
 	}
 	return 0;
 cant_access:
-	err_cant_access_attribute(type_member_typeof(desc, self),
-	                          desc->m_name, ATTR_ACCESS_SET);
+	err_cant_access_attribute_string(type_member_typeof(desc, self),
+	                                 desc->m_name, ATTR_ACCESS_SET);
 err:
 	return -1;
 }

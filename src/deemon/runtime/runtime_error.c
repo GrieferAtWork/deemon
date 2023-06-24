@@ -370,19 +370,19 @@ INTERN ATTR_COLD NONNULL((1, 2)) int
 }
 
 INTERN ATTR_COLD NONNULL((1, 2, 3)) int
-(DCALL err_keywords_func_not_accepted)(DeeTypeObject *tp_self,
-                                       char const *__restrict name,
-                                       DeeObject *__restrict kw) {
+(DCALL err_keywords_func_not_accepted_string)(DeeTypeObject *tp_self,
+                                              char const *__restrict name,
+                                              DeeObject *__restrict kw) {
 	return DeeError_Throwf(&DeeError_TypeError,
 	                       "Function `%r.%s' does not accept keyword arguments %r",
 	                       tp_self, name, kw);
 }
 
 INTERN ATTR_COLD NONNULL((1, 2, 4)) int
-(DCALL err_keywords_func_not_accepted_len)(DeeTypeObject *tp_self,
-                                           char const *__restrict name,
-                                           size_t namelen,
-                                           DeeObject *__restrict kw) {
+(DCALL err_keywords_func_not_accepted_string_len)(DeeTypeObject *tp_self,
+                                                  char const *__restrict name,
+                                                  size_t namelen,
+                                                  DeeObject *__restrict kw) {
 	return DeeError_Throwf(&DeeError_TypeError,
 	                       "Function `%r.%$s' does not accept keyword arguments %r",
 	                       tp_self, namelen, name, kw);
@@ -396,42 +396,45 @@ INTERN ATTR_COLD NONNULL((1, 2)) int
 }
 
 INTERN ATTR_COLD NONNULL((1, 2)) int
-(DCALL err_classmember_requires_1_argument)(DeeTypeObject *tp_self, char const *__restrict name) {
+(DCALL err_classmember_requires_1_argument_string)(DeeTypeObject *tp_self, char const *__restrict name) {
 	return DeeError_Throwf(&DeeError_TypeError,
 	                       "Class member `%r.%s' must be called with exactly 1 argument",
 	                       tp_self, name);
 }
 
 INTERN ATTR_COLD NONNULL((1, 2)) int
-(DCALL err_classmember_requires_1_argument_len)(DeeTypeObject *tp_self, char const *__restrict name, size_t namelen) {
+(DCALL err_classmember_requires_1_argument_string_len)(DeeTypeObject *tp_self,
+                                                       char const *__restrict name, size_t namelen) {
 	return DeeError_Throwf(&DeeError_TypeError,
 	                       "Class member `%r.%$s' must be called with exactly 1 argument",
 	                       tp_self, namelen, name);
 }
 
 INTERN ATTR_COLD NONNULL((1, 2)) int
-(DCALL err_classproperty_requires_1_argument)(DeeTypeObject *tp_self, char const *__restrict name) {
+(DCALL err_classproperty_requires_1_argument_string)(DeeTypeObject *tp_self, char const *__restrict name) {
 	return DeeError_Throwf(&DeeError_TypeError,
 	                       "Class property `%r.%s' must be called with exactly 1 argument",
 	                       tp_self, name);
 }
 
 INTERN ATTR_COLD NONNULL((1, 2)) int
-(DCALL err_classproperty_requires_1_argument_len)(DeeTypeObject *tp_self, char const *__restrict name, size_t namelen) {
+(DCALL err_classproperty_requires_1_argument_string_len)(DeeTypeObject *tp_self,
+                                                         char const *__restrict name, size_t namelen) {
 	return DeeError_Throwf(&DeeError_TypeError,
 	                       "Class property `%r.%$s' must be called with exactly 1 argument",
 	                       tp_self, namelen, name);
 }
 
 INTERN ATTR_COLD NONNULL((1, 2)) int
-(DCALL err_classmethod_requires_at_least_1_argument)(DeeTypeObject *tp_self, char const *__restrict name) {
+(DCALL err_classmethod_requires_at_least_1_argument_string)(DeeTypeObject *tp_self, char const *__restrict name) {
 	return DeeError_Throwf(&DeeError_TypeError,
 	                       "Class method `%r.%s' must be called with at least 1 argument",
 	                       tp_self, name);
 }
 
 INTERN ATTR_COLD NONNULL((1, 2)) int
-(DCALL err_classmethod_requires_at_least_1_argument_len)(DeeTypeObject *tp_self, char const *__restrict name, size_t namelen) {
+(DCALL err_classmethod_requires_at_least_1_argument_string_len)(DeeTypeObject *tp_self,
+                                                                char const *__restrict name, size_t namelen) {
 	return DeeError_Throwf(&DeeError_TypeError,
 	                       "Class method `%r.%$s' must be called with at least 1 argument",
 	                       tp_self, namelen, name);
@@ -802,9 +805,9 @@ PRIVATE char const access_names[4][4] = {
 };
 
 INTERN ATTR_COLD NONNULL((1, 2)) int
-(DCALL err_unknown_attribute)(DeeTypeObject *__restrict tp,
-                              char const *__restrict name,
-                              int access) {
+(DCALL err_unknown_attribute_string)(DeeTypeObject *__restrict tp,
+                                     char const *__restrict name,
+                                     int access) {
 	ASSERT_OBJECT(tp);
 	ASSERT(DeeType_Check(tp));
 	return DeeError_Throwf(&DeeError_AttributeError,
@@ -814,9 +817,9 @@ INTERN ATTR_COLD NONNULL((1, 2)) int
 }
 
 INTERN ATTR_COLD NONNULL((1)) int
-(DCALL err_unknown_attribute_len)(DeeTypeObject *__restrict tp,
-                                  char const *name, size_t namelen,
-                                  int access) {
+(DCALL err_unknown_attribute_string_len)(DeeTypeObject *__restrict tp,
+                                         char const *name, size_t namelen,
+                                         int access) {
 	ASSERT_OBJECT(tp);
 	ASSERT(!namelen || name);
 	ASSERT(DeeType_Check(tp));
@@ -827,25 +830,25 @@ INTERN ATTR_COLD NONNULL((1)) int
 }
 
 INTERN ATTR_COLD NONNULL((1, 2)) int
-(DCALL err_unknown_attribute_lookup)(DeeTypeObject *__restrict tp,
-                                     char const *__restrict name) {
+(DCALL err_unknown_attribute_lookup_string)(DeeTypeObject *__restrict tp,
+                                            char const *__restrict name) {
 	return DeeError_Throwf(&DeeError_AttributeError,
 	                       "Unknown attribute `%r.%s'",
 	                       tp, name);
 }
 
 INTERN ATTR_COLD NONNULL((2)) int
-(DCALL err_nodoc_attribute)(char const *base,
-                            char const *__restrict name) {
+(DCALL err_nodoc_attribute_string)(char const *base,
+                                   char const *__restrict name) {
 	return DeeError_Throwf(&DeeError_ValueError,
 	                       "No documentation found for `%s.%s'",
 	                       base ? base : "?", name);
 }
 
 INTERN ATTR_COLD NONNULL((1, 2)) int
-(DCALL err_cant_access_attribute)(DeeTypeObject *__restrict tp,
-                                  char const *__restrict name,
-                                  int access) {
+(DCALL err_cant_access_attribute_string)(DeeTypeObject *__restrict tp,
+                                         char const *__restrict name,
+                                         int access) {
 	ASSERT_OBJECT(tp);
 	ASSERT(DeeType_Check(tp));
 	return DeeError_Throwf(&DeeError_AttributeError,
@@ -855,9 +858,9 @@ INTERN ATTR_COLD NONNULL((1, 2)) int
 }
 
 INTERN ATTR_COLD NONNULL((1)) int
-(DCALL err_cant_access_attribute_len)(DeeTypeObject *__restrict tp,
-                                      char const *name, size_t namelen,
-                                      int access) {
+(DCALL err_cant_access_attribute_string_len)(DeeTypeObject *__restrict tp,
+                                             char const *name, size_t namelen,
+                                             int access) {
 	ASSERT_OBJECT(tp);
 	ASSERT(!namelen || name);
 	ASSERT(DeeType_Check(tp));
@@ -875,8 +878,8 @@ get_desc_name(struct class_desc *__restrict desc) {
 }
 
 INTERN ATTR_COLD NONNULL((1, 2)) int
-(DCALL err_cant_access_attribute_c)(struct class_desc *__restrict desc,
-                                    char const *__restrict name, int access) {
+(DCALL err_cant_access_attribute_string_c)(struct class_desc *__restrict desc,
+                                           char const *__restrict name, int access) {
 	return DeeError_Throwf(&DeeError_AttributeError,
 	                       "Cannot %s attribute `%s.%s'",
 	                       access_names[access & ATTR_ACCESS_MASK],
@@ -884,8 +887,8 @@ INTERN ATTR_COLD NONNULL((1, 2)) int
 }
 
 INTERN ATTR_COLD NONNULL((1, 2)) int
-(DCALL err_unbound_attribute)(DeeTypeObject *__restrict tp,
-                              char const *__restrict name) {
+(DCALL err_unbound_attribute_string)(DeeTypeObject *__restrict tp,
+                                     char const *__restrict name) {
 	ASSERT_OBJECT(tp);
 	ASSERT(DeeType_Check(tp));
 	return DeeError_Throwf(&DeeError_UnboundAttribute,
@@ -894,16 +897,16 @@ INTERN ATTR_COLD NONNULL((1, 2)) int
 }
 
 INTERN ATTR_COLD NONNULL((1, 2)) int
-(DCALL err_unbound_attribute_c)(struct class_desc *__restrict desc,
-                                char const *__restrict name) {
+(DCALL err_unbound_attribute_string_c)(struct class_desc *__restrict desc,
+                                       char const *__restrict name) {
 	return DeeError_Throwf(&DeeError_UnboundAttribute,
 	                       "Unbound attribute `%s.%s'",
 	                       get_desc_name(desc), name);
 }
 
 INTERN ATTR_COLD NONNULL((1, 2)) int
-(DCALL err_module_not_loaded_attr)(DeeModuleObject *__restrict self,
-                                   char const *__restrict name, int access) {
+(DCALL err_module_not_loaded_attr_string)(DeeModuleObject *__restrict self,
+                                          char const *__restrict name, int access) {
 	return DeeError_Throwf(&DeeError_AttributeError,
 	                       "Cannot %s global variable `%s' of module `%k' that hasn't been loaded yet",
 	                       access_names[access & ATTR_ACCESS_MASK],
@@ -911,9 +914,9 @@ INTERN ATTR_COLD NONNULL((1, 2)) int
 }
 
 INTERN ATTR_COLD NONNULL((1, 2)) int
-(DCALL err_module_not_loaded_attr_len)(DeeModuleObject *__restrict self,
-                                       char const *__restrict name,
-                                       size_t namelen, int access) {
+(DCALL err_module_not_loaded_attr_string_len)(DeeModuleObject *__restrict self,
+                                              char const *__restrict name,
+                                              size_t namelen, int access) {
 	return DeeError_Throwf(&DeeError_AttributeError,
 	                       "Cannot %s global variable `%$s' of module `%k' that hasn't been loaded yet",
 	                       access_names[access & ATTR_ACCESS_MASK],
@@ -921,8 +924,8 @@ INTERN ATTR_COLD NONNULL((1, 2)) int
 }
 
 INTERN ATTR_COLD NONNULL((1, 2)) int
-(DCALL err_module_no_such_global)(DeeModuleObject *__restrict self,
-                                  char const *__restrict name, int access) {
+(DCALL err_module_no_such_global_string)(DeeModuleObject *__restrict self,
+                                         char const *__restrict name, int access) {
 	return DeeError_Throwf(&DeeError_AttributeError,
 	                       "Cannot %s unknown global variable: `%k.%s'",
 	                       access_names[access & ATTR_ACCESS_MASK],
@@ -930,9 +933,9 @@ INTERN ATTR_COLD NONNULL((1, 2)) int
 }
 
 INTERN ATTR_COLD NONNULL((1, 2)) int
-(DCALL err_module_no_such_global_len)(DeeModuleObject *__restrict self,
-                                      char const *__restrict name,
-                                      size_t namelen, int access) {
+(DCALL err_module_no_such_global_string_len)(DeeModuleObject *__restrict self,
+                                             char const *__restrict name,
+                                             size_t namelen, int access) {
 	return DeeError_Throwf(&DeeError_AttributeError,
 	                       "Cannot %s unknown global variable: `%k.%$s'",
 	                       access_names[access & ATTR_ACCESS_MASK],
@@ -940,32 +943,32 @@ INTERN ATTR_COLD NONNULL((1, 2)) int
 }
 
 INTERN ATTR_COLD NONNULL((1, 2)) int
-(DCALL err_module_readonly_global)(DeeModuleObject *__restrict self,
-                                   char const *__restrict name) {
+(DCALL err_module_readonly_global_string)(DeeModuleObject *__restrict self,
+                                          char const *__restrict name) {
 	return DeeError_Throwf(&DeeError_AttributeError,
 	                       "Cannot modify read-only global variable: `%k.%s'",
 	                       self->mo_name, name);
 }
 
 INTERN ATTR_COLD NONNULL((1, 2)) int
-(DCALL err_module_cannot_read_property)(DeeModuleObject *__restrict self,
-                                        char const *__restrict name) {
+(DCALL err_module_cannot_read_property_string)(DeeModuleObject *__restrict self,
+                                               char const *__restrict name) {
 	return DeeError_Throwf(&DeeError_AttributeError,
 	                       "Cannot read global property: `%k.%s'",
 	                       self->mo_name, name);
 }
 
 INTERN ATTR_COLD NONNULL((1, 2)) int
-(DCALL err_module_cannot_delete_property)(DeeModuleObject *__restrict self,
-                                          char const *__restrict name) {
+(DCALL err_module_cannot_delete_property_string)(DeeModuleObject *__restrict self,
+                                                 char const *__restrict name) {
 	return DeeError_Throwf(&DeeError_AttributeError,
 	                       "Cannot write global property: `%k.%s'",
 	                       self->mo_name, name);
 }
 
 INTERN ATTR_COLD NONNULL((1, 2)) int
-(DCALL err_module_cannot_write_property)(DeeModuleObject *__restrict self,
-                                         char const *__restrict name) {
+(DCALL err_module_cannot_write_property_string)(DeeModuleObject *__restrict self,
+                                                char const *__restrict name) {
 	return DeeError_Throwf(&DeeError_AttributeError,
 	                       "Cannot write global property: `%k.%s'",
 	                       self->mo_name, name);
@@ -1069,14 +1072,14 @@ INTERN ATTR_COLD NONNULL((1)) int
 }
 
 INTERN ATTR_COLD NONNULL((1)) int
-(DCALL err_file_not_found)(char const *__restrict filename) {
+(DCALL err_file_not_found_string)(char const *__restrict filename) {
 	return DeeError_Throwf(&DeeError_FileNotFound,
 	                       "File `%s' could not be found",
 	                       filename);
 }
 
 INTERN ATTR_COLD NONNULL((1)) int
-(DCALL err_file_not_found_ob)(DeeObject *__restrict filename) {
+(DCALL err_file_not_found)(DeeObject *__restrict filename) {
 	return DeeError_Throwf(&DeeError_FileNotFound,
 	                       "File `%k' could not be found",
 	                       filename);

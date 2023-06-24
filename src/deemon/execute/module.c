@@ -263,7 +263,7 @@ read_symbol:
 		Dee_XIncref(callback);
 		DeeModule_LockEndRead(self);
 		if unlikely(!callback) {
-			err_module_cannot_read_property(self, MODULE_SYMBOL_GETNAMESTR(symbol));
+			err_module_cannot_read_property_string(self, MODULE_SYMBOL_GETNAMESTR(symbol));
 			return NULL;
 		}
 		/* Invoke the property callback. */
@@ -335,10 +335,10 @@ module_getattr_impl(DeeModuleObject *__restrict self,
 			return DeeModule_GetAttrSymbol(self, item);
 	}
 	/* Fallback: Do a generic attribute lookup on the module. */
-	result = DeeObject_GenericGetAttrString((DeeObject *)self, attr_name, hash);
+	result = DeeObject_GenericGetAttrStringHash((DeeObject *)self, attr_name, hash);
 	if (result != ITER_DONE)
 		return result;
-	err_module_no_such_global(self, attr_name, ATTR_ACCESS_GET);
+	err_module_no_such_global_string(self, attr_name, ATTR_ACCESS_GET);
 	return NULL;
 }
 
@@ -361,13 +361,13 @@ module_getattr_len_impl(DeeModuleObject *__restrict self,
 			return DeeModule_GetAttrSymbol(self, item);
 	}
 	/* Fallback: Do a generic attribute lookup on the module. */
-	result = DeeObject_GenericGetAttrStringLen((DeeObject *)self,
+	result = DeeObject_GenericGetAttrStringLenHash((DeeObject *)self,
 	                                           attr_name,
 	                                           attrlen,
 	                                           hash);
 	if (result != ITER_DONE)
 		return result;
-	err_module_no_such_global_len(self,
+	err_module_no_such_global_string_len(self,
 	                              attr_name,
 	                              attrlen,
 	                              ATTR_ACCESS_GET);
@@ -466,7 +466,7 @@ DeeModule_DelAttrSymbol(DeeModuleObject *__restrict self,
 	       symbol <= self->mo_bucketv + self->mo_bucketm);
 	if unlikely(symbol->ss_flags & (MODSYM_FREADONLY | MODSYM_FEXTERN | MODSYM_FPROPERTY)) {
 		if (symbol->ss_flags & MODSYM_FREADONLY)
-			return err_module_readonly_global(self, MODULE_SYMBOL_GETNAMESTR(symbol));
+			return err_module_readonly_global_string(self, MODULE_SYMBOL_GETNAMESTR(symbol));
 		if (symbol->ss_flags & MODSYM_FPROPERTY) {
 			DREF DeeObject *callback, *temp;
 			DeeModule_LockRead(self);
@@ -475,7 +475,7 @@ DeeModule_DelAttrSymbol(DeeModuleObject *__restrict self,
 			Dee_XIncref(callback);
 			DeeModule_LockEndRead(self);
 			if unlikely(!callback)
-				return err_module_cannot_delete_property(self, MODULE_SYMBOL_GETNAMESTR(symbol));
+				return err_module_cannot_delete_property_string(self, MODULE_SYMBOL_GETNAMESTR(symbol));
 			/* Invoke the property callback. */
 			temp = DeeObject_Call(callback, 0, NULL);
 			Dee_Decref(callback);
@@ -519,10 +519,10 @@ module_delattr_impl(DeeModuleObject *__restrict self,
 			return DeeModule_DelAttrSymbol(self, item);
 	}
 	/* Fallback: Do a generic attribute lookup on the module. */
-	error = DeeObject_GenericDelAttrString((DeeObject *)self, attr_name, hash);
+	error = DeeObject_GenericDelAttrStringHash((DeeObject *)self, attr_name, hash);
 	if unlikely(error <= 0)
 		return error;
-	return err_module_no_such_global(self, attr_name, ATTR_ACCESS_DEL);
+	return err_module_no_such_global_string(self, attr_name, ATTR_ACCESS_DEL);
 }
 
 LOCAL int DCALL
@@ -544,13 +544,13 @@ module_delattr_len_impl(DeeModuleObject *__restrict self,
 			return DeeModule_DelAttrSymbol(self, item);
 	}
 	/* Fallback: Do a generic attribute lookup on the module. */
-	error = DeeObject_GenericDelAttrStringLen((DeeObject *)self,
+	error = DeeObject_GenericDelAttrStringLenHash((DeeObject *)self,
 	                                          attr_name,
 	                                          attrlen,
 	                                          hash);
 	if unlikely(error <= 0)
 		return error;
-	return err_module_no_such_global_len(self,
+	return err_module_no_such_global_string_len(self,
 	                                     attr_name,
 	                                     attrlen,
 	                                     ATTR_ACCESS_DEL);
@@ -578,7 +578,7 @@ DeeModule_SetAttrSymbol(DeeModuleObject *__restrict self,
 			if unlikely(self->mo_globalv[symbol->ss_index] != NULL) {
 				DeeModule_LockEndWrite(self);
 err_is_readonly:
-				return err_module_readonly_global(self, MODULE_SYMBOL_GETNAMESTR(symbol));
+				return err_module_readonly_global_string(self, MODULE_SYMBOL_GETNAMESTR(symbol));
 			}
 			Dee_Incref(value);
 			self->mo_globalv[symbol->ss_index] = value;
@@ -592,7 +592,7 @@ err_is_readonly:
 			Dee_XIncref(callback);
 			DeeModule_LockEndWrite(self);
 			if unlikely(!callback)
-				return err_module_cannot_write_property(self, MODULE_SYMBOL_GETNAMESTR(symbol));
+				return err_module_cannot_write_property_string(self, MODULE_SYMBOL_GETNAMESTR(symbol));
 			temp = DeeObject_Call(callback, 1, (DeeObject **)&value);
 			Dee_Decref(callback);
 			Dee_XDecref(temp);
@@ -629,10 +629,10 @@ module_setattr_impl(DeeModuleObject *__restrict self,
 			return DeeModule_SetAttrSymbol(self, item, value);
 	}
 	/* Fallback: Do a generic attribute lookup on the module. */
-	error = DeeObject_GenericSetAttrString((DeeObject *)self, attr_name, hash, value);
+	error = DeeObject_GenericSetAttrStringHash((DeeObject *)self, attr_name, hash, value);
 	if unlikely(error <= 0)
 		return error;
-	return err_module_no_such_global(self, attr_name, ATTR_ACCESS_SET);
+	return err_module_no_such_global_string(self, attr_name, ATTR_ACCESS_SET);
 }
 
 LOCAL int DCALL
@@ -655,14 +655,14 @@ module_setattr_len_impl(DeeModuleObject *__restrict self,
 			return DeeModule_SetAttrSymbol(self, item, value);
 	}
 	/* Fallback: Do a generic attribute lookup on the module. */
-	error = DeeObject_GenericSetAttrStringLen((DeeObject *)self,
+	error = DeeObject_GenericSetAttrStringLenHash((DeeObject *)self,
 	                                          attr_name,
 	                                          attrlen,
 	                                          hash,
 	                                          value);
 	if unlikely(error <= 0)
 		return error;
-	return err_module_no_such_global_len(self,
+	return err_module_no_such_global_string_len(self,
 	                                     attr_name,
 	                                     attrlen,
 	                                     ATTR_ACCESS_SET);
@@ -695,7 +695,7 @@ DeeModule_GetAttrString(DeeModuleObject *__restrict self,
 			interactivemodule_lockendread(self);
 			return result;
 		}
-		err_module_not_loaded_attr(self, attr_name, ATTR_ACCESS_GET);
+		err_module_not_loaded_attr_string(self, attr_name, ATTR_ACCESS_GET);
 		return NULL;
 	}
 	return module_getattr_impl(self, attr_name, hash);
@@ -715,7 +715,7 @@ DeeModule_GetAttrStringLen(DeeModuleObject *__restrict self,
 			interactivemodule_lockendread(self);
 			return result;
 		}
-		err_module_not_loaded_attr_len(self,
+		err_module_not_loaded_attr_string_len(self,
 		                               attr_name,
 		                               attrlen,
 		                               ATTR_ACCESS_GET);
@@ -812,7 +812,7 @@ DeeModule_DelAttrString(DeeModuleObject *__restrict self,
 			}
 			return result;
 		}
-		return err_module_not_loaded_attr(self,
+		return err_module_not_loaded_attr_string(self,
 		                                  attr_name,
 		                                  ATTR_ACCESS_DEL);
 	}
@@ -834,7 +834,7 @@ DeeModule_DelAttrStringLen(DeeModuleObject *__restrict self,
 			}
 			return result;
 		}
-		return err_module_not_loaded_attr_len(self,
+		return err_module_not_loaded_attr_string_len(self,
 		                                      attr_name,
 		                                      attrlen,
 		                                      ATTR_ACCESS_DEL);
@@ -857,7 +857,7 @@ DeeModule_SetAttrString(DeeModuleObject *self,
 			}
 			return result;
 		}
-		return err_module_not_loaded_attr(self,
+		return err_module_not_loaded_attr_string(self,
 		                                  attr_name,
 		                                  ATTR_ACCESS_SET);
 	}
@@ -880,7 +880,7 @@ DeeModule_SetAttrStringLen(DeeModuleObject *self,
 			}
 			return result;
 		}
-		return err_module_not_loaded_attr_len(self,
+		return err_module_not_loaded_attr_string_len(self,
 		                                      attr_name,
 		                                      attrlen,
 		                                      ATTR_ACCESS_SET);

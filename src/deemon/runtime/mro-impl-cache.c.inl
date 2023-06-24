@@ -20,207 +20,207 @@
 #ifdef __INTELLISENSE__
 #include "mro.c"
 
-#undef DeeType_GetCachedAttr
-#undef DeeType_GetCachedAttrLen
-#undef DeeType_GetCachedClassAttr
-#undef DeeType_GetCachedClassAttrLen
-#undef DeeType_GetCachedInstanceAttr
-#undef DeeType_GetCachedInstanceAttrLen
-#undef DeeType_BoundCachedAttr
-#undef DeeType_BoundCachedAttrLen
-#undef DeeType_BoundCachedClassAttr
-#undef DeeType_BoundCachedClassAttrLen
-#undef DeeType_BoundCachedInstanceAttr
-#undef DeeType_BoundCachedInstanceAttrLen
-#undef DeeType_HasCachedAttr
-#undef DeeType_HasCachedAttrLen
-#undef DeeType_HasCachedClassAttr
-#undef DeeType_HasCachedClassAttrLen
-#undef DeeType_HasCachedInstanceAttr
-#undef DeeType_HasCachedInstanceAttrLen
-#undef DeeType_DelCachedAttr
-#undef DeeType_DelCachedAttrLen
-#undef DeeType_DelCachedClassAttr
-#undef DeeType_DelCachedClassAttrLen
-#undef DeeType_DelCachedInstanceAttr
-#undef DeeType_DelCachedInstanceAttrLen
-#undef DeeType_SetCachedAttr
-#undef DeeType_SetCachedAttrLen
-#undef DeeType_SetCachedClassAttr
-#undef DeeType_SetCachedClassAttrLen
-#undef DeeType_SetCachedInstanceAttr
-#undef DeeType_SetCachedInstanceAttrLen
-#undef DeeType_SetBasicCachedAttr
-#undef DeeType_SetBasicCachedAttrLen
-#undef DeeType_SetBasicCachedClassAttr
-#undef DeeType_SetBasicCachedClassAttrLen
-#undef DeeType_SetBasicCachedInstanceAttr
-#undef DeeType_SetBasicCachedInstanceAttrLen
-#undef DeeType_CallCachedAttr
-#undef DeeType_CallCachedAttrLen
-#undef DeeType_CallCachedClassAttr
-#undef DeeType_CallCachedClassAttrLen
-#undef DeeType_CallCachedInstanceAttr
-#undef DeeType_CallCachedInstanceAttrLen
-#undef DeeType_CallCachedAttr
-#undef DeeType_CallCachedAttrLen
-#undef DeeType_CallCachedClassAttr
-#undef DeeType_CallCachedClassAttrLen
-#undef DeeType_CallCachedInstanceAttr
-#undef DeeType_CallCachedInstanceAttrLen
-#undef DeeType_CallCachedAttrTuple
-#undef DeeType_CallCachedAttrLenTuple
-#undef DeeType_CallCachedClassAttrTuple
-#undef DeeType_CallCachedClassAttrLenTuple
-#undef DeeType_CallCachedInstanceAttrTuple
-#undef DeeType_CallCachedInstanceAttrLenTuple
-#undef DeeType_CallCachedAttr
-#undef DeeType_CallCachedAttrLen
-#undef DeeType_CallCachedClassAttr
-#undef DeeType_CallCachedClassAttrLen
-#undef DeeType_CallCachedInstanceAttr
-#undef DeeType_CallCachedInstanceAttrLen
-#undef DeeType_VCallCachedAttrf
-#undef DeeType_VCallCachedAttrLenf
-#undef DeeType_VCallCachedClassAttrf
-#undef DeeType_VCallCachedClassAttrLenf
-#undef DeeType_VCallCachedInstanceAttrf
-#undef DeeType_VCallCachedInstanceAttrLenf
+#undef DeeType_GetCachedAttrStringHash
+#undef DeeType_GetCachedAttrStringLenHash
+#undef DeeType_GetCachedClassAttrStringHash
+#undef DeeType_GetCachedClassAttrStringLenHash
+#undef DeeType_GetCachedInstanceAttrStringHash
+#undef DeeType_GetCachedInstanceAttrStringLenHash
+#undef DeeType_BoundCachedAttrStringHash
+#undef DeeType_BoundCachedAttrStringLenHash
+#undef DeeType_BoundCachedClassAttrStringHash
+#undef DeeType_BoundCachedClassAttrStringLenHash
+#undef DeeType_BoundCachedInstanceAttrStringHash
+#undef DeeType_BoundCachedInstanceAttrStringLenHash
+#undef DeeType_HasCachedAttrStringHash
+#undef DeeType_HasCachedAttrStringLenHash
+#undef DeeType_HasCachedClassAttrStringHash
+#undef DeeType_HasCachedClassAttrStringLenHash
+#undef DeeType_HasCachedInstanceAttrStringHash
+#undef DeeType_HasCachedInstanceAttrStringLenHash
+#undef DeeType_DelCachedAttrStringHash
+#undef DeeType_DelCachedAttrStringLenHash
+#undef DeeType_DelCachedClassAttrStringHash
+#undef DeeType_DelCachedClassAttrStringLenHash
+#undef DeeType_DelCachedInstanceAttrStringHash
+#undef DeeType_DelCachedInstanceAttrStringLenHash
+#undef DeeType_SetCachedAttrStringHash
+#undef DeeType_SetCachedAttrStringLenHash
+#undef DeeType_SetCachedClassAttrStringHash
+#undef DeeType_SetCachedClassAttrStringLenHash
+#undef DeeType_SetCachedInstanceAttrStringHash
+#undef DeeType_SetCachedInstanceAttrStringLenHash
+#undef DeeType_SetBasicCachedAttrStringHash
+#undef DeeType_SetBasicCachedAttrStringLenHash
+#undef DeeType_SetBasicCachedClassAttrStringHash
+#undef DeeType_SetBasicCachedClassAttrStringLenHash
+#undef DeeType_SetBasicCachedInstanceAttrStringHash
+#undef DeeType_SetBasicCachedInstanceAttrStringLenHash
+#undef DeeType_CallCachedAttrStringHash
+#undef DeeType_CallCachedAttrStringLenHash
+#undef DeeType_CallCachedClassAttrStringHash
+#undef DeeType_CallCachedClassAttrStringLenHash
+#undef DeeType_CallCachedInstanceAttrStringHash
+#undef DeeType_CallCachedInstanceAttrStringLenHash
+#undef DeeType_CallCachedAttrStringHash
+#undef DeeType_CallCachedAttrStringLenHash
+#undef DeeType_CallCachedClassAttrStringHash
+#undef DeeType_CallCachedClassAttrStringLenHash
+#undef DeeType_CallCachedInstanceAttrStringHash
+#undef DeeType_CallCachedInstanceAttrStringLenHash
+#undef DeeType_CallCachedAttrStringHashTuple
+#undef DeeType_CallCachedAttrStringLenHashTuple
+#undef DeeType_CallCachedClassAttrStringHashTuple
+#undef DeeType_CallCachedClassAttrStringLenHashTuple
+#undef DeeType_CallCachedInstanceAttrStringHashTuple
+#undef DeeType_CallCachedInstanceAttrStringLenHashTuple
+#undef DeeType_CallCachedAttrStringHash
+#undef DeeType_CallCachedAttrStringLenHash
+#undef DeeType_CallCachedClassAttrStringHash
+#undef DeeType_CallCachedClassAttrStringLenHash
+#undef DeeType_CallCachedInstanceAttrStringHash
+#undef DeeType_CallCachedInstanceAttrStringLenHash
+#undef DeeType_VCallCachedAttrStringHashf
+#undef DeeType_VCallCachedAttrStringLenHashf
+#undef DeeType_VCallCachedClassAttrStringHashf
+#undef DeeType_VCallCachedClassAttrStringLenHashf
+#undef DeeType_VCallCachedInstanceAttrStringHashf
+#undef DeeType_VCallCachedInstanceAttrStringLenHashf
 #undef DeeType_FindCachedAttr
 #undef DeeType_FindCachedClassAttr
 
-//#define DEFINE_DeeType_GetCachedAttr
-//#define DEFINE_DeeType_GetCachedAttrLen
-//#define DEFINE_DeeType_GetCachedClassAttr
-//#define DEFINE_DeeType_GetCachedClassAttrLen
-//#define DEFINE_DeeType_GetCachedInstanceAttr
-//#define DEFINE_DeeType_GetCachedInstanceAttrLen
-//#define DEFINE_DeeType_BoundCachedAttr
-//#define DEFINE_DeeType_BoundCachedAttrLen
-//#define DEFINE_DeeType_BoundCachedClassAttr
-//#define DEFINE_DeeType_BoundCachedClassAttrLen
-//#define DEFINE_DeeType_BoundCachedInstanceAttr
-//#define DEFINE_DeeType_BoundCachedInstanceAttrLen
-//#define DEFINE_DeeType_HasCachedAttr
-//#define DEFINE_DeeType_HasCachedAttrLen
-//#define DEFINE_DeeType_HasCachedClassAttr
-//#define DEFINE_DeeType_HasCachedClassAttrLen
-//#define DEFINE_DeeType_DelCachedAttr
-//#define DEFINE_DeeType_DelCachedAttrLen
-//#define DEFINE_DeeType_DelCachedClassAttr
-//#define DEFINE_DeeType_DelCachedClassAttrLen
-//#define DEFINE_DeeType_DelCachedInstanceAttr
-//#define DEFINE_DeeType_DelCachedInstanceAttrLen
-//#define DEFINE_DeeType_SetCachedAttr
-//#define DEFINE_DeeType_SetCachedAttrLen
-//#define DEFINE_DeeType_SetCachedClassAttr
-//#define DEFINE_DeeType_SetCachedClassAttrLen
-//#define DEFINE_DeeType_SetCachedInstanceAttr
-//#define DEFINE_DeeType_SetCachedInstanceAttrLen
-//#define DEFINE_DeeType_SetBasicCachedAttr
-//#define DEFINE_DeeType_SetBasicCachedAttrLen
-//#define DEFINE_DeeType_SetBasicCachedClassAttr
-//#define DEFINE_DeeType_SetBasicCachedClassAttrLen
-//#define DEFINE_DeeType_SetBasicCachedInstanceAttr
-//#define DEFINE_DeeType_SetBasicCachedInstanceAttrLen
-//#define DEFINE_DeeType_CallCachedAttr
-//#define DEFINE_DeeType_CallCachedAttrLen
-//#define DEFINE_DeeType_CallCachedClassAttr
-//#define DEFINE_DeeType_CallCachedClassAttrLen
-//#define DEFINE_DeeType_CallCachedInstanceAttr
-//#define DEFINE_DeeType_CallCachedInstanceAttrLen
-//#define DEFINE_DeeType_CallCachedAttrKw
-//#define DEFINE_DeeType_CallCachedAttrLenKw
-//#define DEFINE_DeeType_CallCachedClassAttrKw
-//#define DEFINE_DeeType_CallCachedClassAttrLenKw
-//#define DEFINE_DeeType_CallCachedInstanceAttrKw
-//#define DEFINE_DeeType_CallCachedInstanceAttrLenKw
-//#define DEFINE_DeeType_CallCachedAttrTuple
-//#define DEFINE_DeeType_CallCachedAttrLenTuple
-//#define DEFINE_DeeType_CallCachedClassAttrTuple
-//#define DEFINE_DeeType_CallCachedClassAttrLenTuple
-//#define DEFINE_DeeType_CallCachedInstanceAttrTuple
-//#define DEFINE_DeeType_CallCachedInstanceAttrLenTuple
-//#define DEFINE_DeeType_CallCachedAttrTupleKw
-//#define DEFINE_DeeType_CallCachedAttrLenTupleKw
-//#define DEFINE_DeeType_CallCachedClassAttrTupleKw
-//#define DEFINE_DeeType_CallCachedClassAttrLenTupleKw
-//#define DEFINE_DeeType_CallCachedInstanceAttrTupleKw
-//#define DEFINE_DeeType_CallCachedInstanceAttrLenTupleKw
-//#define DEFINE_DeeType_VCallCachedAttrf
-//#define DEFINE_DeeType_VCallCachedAttrLenf
-//#define DEFINE_DeeType_VCallCachedClassAttrf
-//#define DEFINE_DeeType_VCallCachedClassAttrLenf
-//#define DEFINE_DeeType_VCallCachedInstanceAttrf
-//#define DEFINE_DeeType_VCallCachedInstanceAttrLenf
+//#define DEFINE_DeeType_GetCachedAttrStringHash
+//#define DEFINE_DeeType_GetCachedAttrStringLenHash
+//#define DEFINE_DeeType_GetCachedClassAttrStringHash
+//#define DEFINE_DeeType_GetCachedClassAttrStringLenHash
+//#define DEFINE_DeeType_GetCachedInstanceAttrStringHash
+//#define DEFINE_DeeType_GetCachedInstanceAttrStringLenHash
+//#define DEFINE_DeeType_BoundCachedAttrStringHash
+//#define DEFINE_DeeType_BoundCachedAttrStringLenHash
+//#define DEFINE_DeeType_BoundCachedClassAttrStringHash
+//#define DEFINE_DeeType_BoundCachedClassAttrStringLenHash
+//#define DEFINE_DeeType_BoundCachedInstanceAttrStringHash
+//#define DEFINE_DeeType_BoundCachedInstanceAttrStringLenHash
+//#define DEFINE_DeeType_HasCachedAttrStringHash
+//#define DEFINE_DeeType_HasCachedAttrStringLenHash
+//#define DEFINE_DeeType_HasCachedClassAttrStringHash
+//#define DEFINE_DeeType_HasCachedClassAttrStringLenHash
+//#define DEFINE_DeeType_DelCachedAttrStringHash
+//#define DEFINE_DeeType_DelCachedAttrStringLenHash
+//#define DEFINE_DeeType_DelCachedClassAttrStringHash
+//#define DEFINE_DeeType_DelCachedClassAttrStringLenHash
+//#define DEFINE_DeeType_DelCachedInstanceAttrStringHash
+//#define DEFINE_DeeType_DelCachedInstanceAttrStringLenHash
+//#define DEFINE_DeeType_SetCachedAttrStringHash
+//#define DEFINE_DeeType_SetCachedAttrStringLenHash
+//#define DEFINE_DeeType_SetCachedClassAttrStringHash
+//#define DEFINE_DeeType_SetCachedClassAttrStringLenHash
+//#define DEFINE_DeeType_SetCachedInstanceAttrStringHash
+//#define DEFINE_DeeType_SetCachedInstanceAttrStringLenHash
+//#define DEFINE_DeeType_SetBasicCachedAttrStringHash
+//#define DEFINE_DeeType_SetBasicCachedAttrStringLenHash
+//#define DEFINE_DeeType_SetBasicCachedClassAttrStringHash
+//#define DEFINE_DeeType_SetBasicCachedClassAttrStringLenHash
+//#define DEFINE_DeeType_SetBasicCachedInstanceAttrStringHash
+//#define DEFINE_DeeType_SetBasicCachedInstanceAttrStringLenHash
+//#define DEFINE_DeeType_CallCachedAttrStringHash
+//#define DEFINE_DeeType_CallCachedAttrStringLenHash
+//#define DEFINE_DeeType_CallCachedClassAttrStringHash
+//#define DEFINE_DeeType_CallCachedClassAttrStringLenHash
+//#define DEFINE_DeeType_CallCachedInstanceAttrStringHash
+//#define DEFINE_DeeType_CallCachedInstanceAttrStringLenHash
+//#define DEFINE_DeeType_CallCachedAttrStringHashKw
+//#define DEFINE_DeeType_CallCachedAttrStringLenHashKw
+//#define DEFINE_DeeType_CallCachedClassAttrStringHashKw
+//#define DEFINE_DeeType_CallCachedClassAttrStringLenHashKw
+//#define DEFINE_DeeType_CallCachedInstanceAttrStringHashKw
+//#define DEFINE_DeeType_CallCachedInstanceAttrStringLenHashKw
+//#define DEFINE_DeeType_CallCachedAttrStringHashTuple
+//#define DEFINE_DeeType_CallCachedAttrStringLenHashTuple
+//#define DEFINE_DeeType_CallCachedClassAttrStringHashTuple
+//#define DEFINE_DeeType_CallCachedClassAttrStringLenHashTuple
+//#define DEFINE_DeeType_CallCachedInstanceAttrStringHashTuple
+//#define DEFINE_DeeType_CallCachedInstanceAttrStringLenHashTuple
+//#define DEFINE_DeeType_CallCachedAttrStringHashTupleKw
+//#define DEFINE_DeeType_CallCachedAttrStringLenHashTupleKw
+//#define DEFINE_DeeType_CallCachedClassAttrStringHashTupleKw
+//#define DEFINE_DeeType_CallCachedClassAttrStringLenHashTupleKw
+//#define DEFINE_DeeType_CallCachedInstanceAttrStringHashTupleKw
+//#define DEFINE_DeeType_CallCachedInstanceAttrStringLenHashTupleKw
+//#define DEFINE_DeeType_VCallCachedAttrStringHashf
+//#define DEFINE_DeeType_VCallCachedAttrStringLenHashf
+//#define DEFINE_DeeType_VCallCachedClassAttrStringHashf
+//#define DEFINE_DeeType_VCallCachedClassAttrStringLenHashf
+//#define DEFINE_DeeType_VCallCachedInstanceAttrStringHashf
+//#define DEFINE_DeeType_VCallCachedInstanceAttrStringLenHashf
 //#define DEFINE_DeeType_FindCachedAttr
 #define DEFINE_DeeType_FindCachedClassAttr
 #endif /* __INTELLISENSE__ */
 
-#if (defined(DEFINE_DeeType_GetCachedAttr) +                    \
-     defined(DEFINE_DeeType_GetCachedAttrLen) +                 \
-     defined(DEFINE_DeeType_GetCachedClassAttr) +               \
-     defined(DEFINE_DeeType_GetCachedClassAttrLen) +            \
-     defined(DEFINE_DeeType_GetCachedInstanceAttr) +            \
-     defined(DEFINE_DeeType_GetCachedInstanceAttrLen) +         \
-     defined(DEFINE_DeeType_BoundCachedAttr) +                  \
-     defined(DEFINE_DeeType_BoundCachedAttrLen) +               \
-     defined(DEFINE_DeeType_BoundCachedClassAttr) +             \
-     defined(DEFINE_DeeType_BoundCachedClassAttrLen) +          \
-     defined(DEFINE_DeeType_BoundCachedInstanceAttr) +          \
-     defined(DEFINE_DeeType_BoundCachedInstanceAttrLen) +       \
-     defined(DEFINE_DeeType_HasCachedAttr) +                    \
-     defined(DEFINE_DeeType_HasCachedAttrLen) +                 \
-     defined(DEFINE_DeeType_HasCachedClassAttr) +               \
-     defined(DEFINE_DeeType_HasCachedClassAttrLen) +            \
-     defined(DEFINE_DeeType_DelCachedAttr) +                    \
-     defined(DEFINE_DeeType_DelCachedAttrLen) +                 \
-     defined(DEFINE_DeeType_DelCachedClassAttr) +               \
-     defined(DEFINE_DeeType_DelCachedClassAttrLen) +            \
-     defined(DEFINE_DeeType_DelCachedInstanceAttr) +            \
-     defined(DEFINE_DeeType_DelCachedInstanceAttrLen) +         \
-     defined(DEFINE_DeeType_SetCachedAttr) +                    \
-     defined(DEFINE_DeeType_SetCachedAttrLen) +                 \
-     defined(DEFINE_DeeType_SetCachedClassAttr) +               \
-     defined(DEFINE_DeeType_SetCachedClassAttrLen) +            \
-     defined(DEFINE_DeeType_SetCachedInstanceAttr) +            \
-     defined(DEFINE_DeeType_SetCachedInstanceAttrLen) +         \
-     defined(DEFINE_DeeType_SetBasicCachedAttr) +               \
-     defined(DEFINE_DeeType_SetBasicCachedAttrLen) +            \
-     defined(DEFINE_DeeType_SetBasicCachedClassAttr) +          \
-     defined(DEFINE_DeeType_SetBasicCachedClassAttrLen) +       \
-     defined(DEFINE_DeeType_SetBasicCachedInstanceAttr) +       \
-     defined(DEFINE_DeeType_SetBasicCachedInstanceAttrLen) +    \
-     defined(DEFINE_DeeType_CallCachedAttr) +                   \
-     defined(DEFINE_DeeType_CallCachedAttrLen) +                \
-     defined(DEFINE_DeeType_CallCachedClassAttr) +              \
-     defined(DEFINE_DeeType_CallCachedClassAttrLen) +           \
-     defined(DEFINE_DeeType_CallCachedInstanceAttr) +           \
-     defined(DEFINE_DeeType_CallCachedInstanceAttrLen) +        \
-     defined(DEFINE_DeeType_CallCachedAttrKw) +                 \
-     defined(DEFINE_DeeType_CallCachedAttrLenKw) +              \
-     defined(DEFINE_DeeType_CallCachedClassAttrKw) +            \
-     defined(DEFINE_DeeType_CallCachedClassAttrLenKw) +         \
-     defined(DEFINE_DeeType_CallCachedInstanceAttrKw) +         \
-     defined(DEFINE_DeeType_CallCachedInstanceAttrLenKw) +      \
-     defined(DEFINE_DeeType_CallCachedAttrTuple) +              \
-     defined(DEFINE_DeeType_CallCachedAttrLenTuple) +           \
-     defined(DEFINE_DeeType_CallCachedClassAttrTuple) +         \
-     defined(DEFINE_DeeType_CallCachedClassAttrLenTuple) +      \
-     defined(DEFINE_DeeType_CallCachedInstanceAttrTuple) +      \
-     defined(DEFINE_DeeType_CallCachedInstanceAttrLenTuple) +   \
-     defined(DEFINE_DeeType_CallCachedAttrTupleKw) +            \
-     defined(DEFINE_DeeType_CallCachedAttrLenTupleKw) +         \
-     defined(DEFINE_DeeType_CallCachedClassAttrTupleKw) +       \
-     defined(DEFINE_DeeType_CallCachedClassAttrLenTupleKw) +    \
-     defined(DEFINE_DeeType_CallCachedInstanceAttrTupleKw) +    \
-     defined(DEFINE_DeeType_CallCachedInstanceAttrLenTupleKw) + \
-     defined(DEFINE_DeeType_VCallCachedAttrf) +                 \
-     defined(DEFINE_DeeType_VCallCachedAttrLenf) +              \
-     defined(DEFINE_DeeType_VCallCachedClassAttrf) +            \
-     defined(DEFINE_DeeType_VCallCachedClassAttrLenf) +         \
-     defined(DEFINE_DeeType_VCallCachedInstanceAttrf) +         \
-     defined(DEFINE_DeeType_VCallCachedInstanceAttrLenf) +      \
+#if (defined(DEFINE_DeeType_GetCachedAttrStringHash) +                    \
+     defined(DEFINE_DeeType_GetCachedAttrStringLenHash) +                 \
+     defined(DEFINE_DeeType_GetCachedClassAttrStringHash) +               \
+     defined(DEFINE_DeeType_GetCachedClassAttrStringLenHash) +            \
+     defined(DEFINE_DeeType_GetCachedInstanceAttrStringHash) +            \
+     defined(DEFINE_DeeType_GetCachedInstanceAttrStringLenHash) +         \
+     defined(DEFINE_DeeType_BoundCachedAttrStringHash) +                  \
+     defined(DEFINE_DeeType_BoundCachedAttrStringLenHash) +               \
+     defined(DEFINE_DeeType_BoundCachedClassAttrStringHash) +             \
+     defined(DEFINE_DeeType_BoundCachedClassAttrStringLenHash) +          \
+     defined(DEFINE_DeeType_BoundCachedInstanceAttrStringHash) +          \
+     defined(DEFINE_DeeType_BoundCachedInstanceAttrStringLenHash) +       \
+     defined(DEFINE_DeeType_HasCachedAttrStringHash) +                    \
+     defined(DEFINE_DeeType_HasCachedAttrStringLenHash) +                 \
+     defined(DEFINE_DeeType_HasCachedClassAttrStringHash) +               \
+     defined(DEFINE_DeeType_HasCachedClassAttrStringLenHash) +            \
+     defined(DEFINE_DeeType_DelCachedAttrStringHash) +                    \
+     defined(DEFINE_DeeType_DelCachedAttrStringLenHash) +                 \
+     defined(DEFINE_DeeType_DelCachedClassAttrStringHash) +               \
+     defined(DEFINE_DeeType_DelCachedClassAttrStringLenHash) +            \
+     defined(DEFINE_DeeType_DelCachedInstanceAttrStringHash) +            \
+     defined(DEFINE_DeeType_DelCachedInstanceAttrStringLenHash) +         \
+     defined(DEFINE_DeeType_SetCachedAttrStringHash) +                    \
+     defined(DEFINE_DeeType_SetCachedAttrStringLenHash) +                 \
+     defined(DEFINE_DeeType_SetCachedClassAttrStringHash) +               \
+     defined(DEFINE_DeeType_SetCachedClassAttrStringLenHash) +            \
+     defined(DEFINE_DeeType_SetCachedInstanceAttrStringHash) +            \
+     defined(DEFINE_DeeType_SetCachedInstanceAttrStringLenHash) +         \
+     defined(DEFINE_DeeType_SetBasicCachedAttrStringHash) +               \
+     defined(DEFINE_DeeType_SetBasicCachedAttrStringLenHash) +            \
+     defined(DEFINE_DeeType_SetBasicCachedClassAttrStringHash) +          \
+     defined(DEFINE_DeeType_SetBasicCachedClassAttrStringLenHash) +       \
+     defined(DEFINE_DeeType_SetBasicCachedInstanceAttrStringHash) +       \
+     defined(DEFINE_DeeType_SetBasicCachedInstanceAttrStringLenHash) +    \
+     defined(DEFINE_DeeType_CallCachedAttrStringHash) +                   \
+     defined(DEFINE_DeeType_CallCachedAttrStringLenHash) +                \
+     defined(DEFINE_DeeType_CallCachedClassAttrStringHash) +              \
+     defined(DEFINE_DeeType_CallCachedClassAttrStringLenHash) +           \
+     defined(DEFINE_DeeType_CallCachedInstanceAttrStringHash) +           \
+     defined(DEFINE_DeeType_CallCachedInstanceAttrStringLenHash) +        \
+     defined(DEFINE_DeeType_CallCachedAttrStringHashKw) +                 \
+     defined(DEFINE_DeeType_CallCachedAttrStringLenHashKw) +              \
+     defined(DEFINE_DeeType_CallCachedClassAttrStringHashKw) +            \
+     defined(DEFINE_DeeType_CallCachedClassAttrStringLenHashKw) +         \
+     defined(DEFINE_DeeType_CallCachedInstanceAttrStringHashKw) +         \
+     defined(DEFINE_DeeType_CallCachedInstanceAttrStringLenHashKw) +      \
+     defined(DEFINE_DeeType_CallCachedAttrStringHashTuple) +              \
+     defined(DEFINE_DeeType_CallCachedAttrStringLenHashTuple) +           \
+     defined(DEFINE_DeeType_CallCachedClassAttrStringHashTuple) +         \
+     defined(DEFINE_DeeType_CallCachedClassAttrStringLenHashTuple) +      \
+     defined(DEFINE_DeeType_CallCachedInstanceAttrStringHashTuple) +      \
+     defined(DEFINE_DeeType_CallCachedInstanceAttrStringLenHashTuple) +   \
+     defined(DEFINE_DeeType_CallCachedAttrStringHashTupleKw) +            \
+     defined(DEFINE_DeeType_CallCachedAttrStringLenHashTupleKw) +         \
+     defined(DEFINE_DeeType_CallCachedClassAttrStringHashTupleKw) +       \
+     defined(DEFINE_DeeType_CallCachedClassAttrStringLenHashTupleKw) +    \
+     defined(DEFINE_DeeType_CallCachedInstanceAttrStringHashTupleKw) +    \
+     defined(DEFINE_DeeType_CallCachedInstanceAttrStringLenHashTupleKw) + \
+     defined(DEFINE_DeeType_VCallCachedAttrStringHashf) +                 \
+     defined(DEFINE_DeeType_VCallCachedAttrStringLenHashf) +              \
+     defined(DEFINE_DeeType_VCallCachedClassAttrStringHashf) +            \
+     defined(DEFINE_DeeType_VCallCachedClassAttrStringLenHashf) +         \
+     defined(DEFINE_DeeType_VCallCachedInstanceAttrStringHashf) +         \
+     defined(DEFINE_DeeType_VCallCachedInstanceAttrStringLenHashf) +      \
      defined(DEFINE_DeeType_FindCachedAttr) +                   \
      defined(DEFINE_DeeType_FindCachedClassAttr)) != 1
 #error "Must #define exactly one of these macros"
@@ -229,278 +229,278 @@
 
 DECL_BEGIN
 
-#ifdef DEFINE_DeeType_GetCachedAttr
-#define LOCAL_DeeType_AccessCachedAttr DeeType_GetCachedAttr
+#ifdef DEFINE_DeeType_GetCachedAttrStringHash
+#define LOCAL_DeeType_AccessCachedAttr DeeType_GetCachedAttrStringHash
 #define LOCAL_IS_GET
-#elif defined(DEFINE_DeeType_GetCachedAttrLen)
-#define LOCAL_DeeType_AccessCachedAttr DeeType_GetCachedAttrLen
+#elif defined(DEFINE_DeeType_GetCachedAttrStringLenHash)
+#define LOCAL_DeeType_AccessCachedAttr DeeType_GetCachedAttrStringLenHash
 #define LOCAL_IS_GET
 #define LOCAL_HAS_len
-#elif defined(DEFINE_DeeType_GetCachedClassAttr)
-#define LOCAL_DeeType_AccessCachedAttr DeeType_GetCachedClassAttr
-#define LOCAL_IS_GET
-#define LOCAL_IS_CLASS
-#elif defined(DEFINE_DeeType_GetCachedClassAttrLen)
-#define LOCAL_DeeType_AccessCachedAttr DeeType_GetCachedClassAttrLen
+#elif defined(DEFINE_DeeType_GetCachedClassAttrStringHash)
+#define LOCAL_DeeType_AccessCachedAttr DeeType_GetCachedClassAttrStringHash
 #define LOCAL_IS_GET
 #define LOCAL_IS_CLASS
+#elif defined(DEFINE_DeeType_GetCachedClassAttrStringLenHash)
+#define LOCAL_DeeType_AccessCachedAttr DeeType_GetCachedClassAttrStringLenHash
+#define LOCAL_IS_GET
+#define LOCAL_IS_CLASS
 #define LOCAL_HAS_len
-#elif defined(DEFINE_DeeType_GetCachedInstanceAttr)
-#define LOCAL_DeeType_AccessCachedAttr DeeType_GetCachedInstanceAttr
+#elif defined(DEFINE_DeeType_GetCachedInstanceAttrStringHash)
+#define LOCAL_DeeType_AccessCachedAttr DeeType_GetCachedInstanceAttrStringHash
 #define LOCAL_IS_GET
 #define LOCAL_IS_INSTANCE
-#elif defined(DEFINE_DeeType_GetCachedInstanceAttrLen)
-#define LOCAL_DeeType_AccessCachedAttr DeeType_GetCachedInstanceAttrLen
+#elif defined(DEFINE_DeeType_GetCachedInstanceAttrStringLenHash)
+#define LOCAL_DeeType_AccessCachedAttr DeeType_GetCachedInstanceAttrStringLenHash
 #define LOCAL_IS_GET
 #define LOCAL_IS_INSTANCE
 #define LOCAL_HAS_len
-#elif defined(DEFINE_DeeType_BoundCachedAttr)
-#define LOCAL_DeeType_AccessCachedAttr DeeType_BoundCachedAttr
+#elif defined(DEFINE_DeeType_BoundCachedAttrStringHash)
+#define LOCAL_DeeType_AccessCachedAttr DeeType_BoundCachedAttrStringHash
 #define LOCAL_IS_BOUND
-#elif defined(DEFINE_DeeType_BoundCachedAttrLen)
-#define LOCAL_DeeType_AccessCachedAttr DeeType_BoundCachedAttrLen
+#elif defined(DEFINE_DeeType_BoundCachedAttrStringLenHash)
+#define LOCAL_DeeType_AccessCachedAttr DeeType_BoundCachedAttrStringLenHash
 #define LOCAL_IS_BOUND
 #define LOCAL_HAS_len
-#elif defined(DEFINE_DeeType_BoundCachedClassAttr)
-#define LOCAL_DeeType_AccessCachedAttr DeeType_BoundCachedClassAttr
-#define LOCAL_IS_BOUND
-#define LOCAL_IS_CLASS
-#elif defined(DEFINE_DeeType_BoundCachedClassAttrLen)
-#define LOCAL_DeeType_AccessCachedAttr DeeType_BoundCachedClassAttrLen
+#elif defined(DEFINE_DeeType_BoundCachedClassAttrStringHash)
+#define LOCAL_DeeType_AccessCachedAttr DeeType_BoundCachedClassAttrStringHash
 #define LOCAL_IS_BOUND
 #define LOCAL_IS_CLASS
+#elif defined(DEFINE_DeeType_BoundCachedClassAttrStringLenHash)
+#define LOCAL_DeeType_AccessCachedAttr DeeType_BoundCachedClassAttrStringLenHash
+#define LOCAL_IS_BOUND
+#define LOCAL_IS_CLASS
 #define LOCAL_HAS_len
-#elif defined(DEFINE_DeeType_BoundCachedInstanceAttr)
-#define LOCAL_DeeType_AccessCachedAttr DeeType_BoundCachedInstanceAttr
+#elif defined(DEFINE_DeeType_BoundCachedInstanceAttrStringHash)
+#define LOCAL_DeeType_AccessCachedAttr DeeType_BoundCachedInstanceAttrStringHash
 #define LOCAL_IS_BOUND
 #define LOCAL_IS_INSTANCE
-#elif defined(DEFINE_DeeType_BoundCachedInstanceAttrLen)
-#define LOCAL_DeeType_AccessCachedAttr DeeType_BoundCachedInstanceAttrLen
+#elif defined(DEFINE_DeeType_BoundCachedInstanceAttrStringLenHash)
+#define LOCAL_DeeType_AccessCachedAttr DeeType_BoundCachedInstanceAttrStringLenHash
 #define LOCAL_IS_BOUND
 #define LOCAL_IS_INSTANCE
 #define LOCAL_HAS_len
-#elif defined(DEFINE_DeeType_HasCachedAttr)
-#define LOCAL_DeeType_AccessCachedAttr DeeType_HasCachedAttr
+#elif defined(DEFINE_DeeType_HasCachedAttrStringHash)
+#define LOCAL_DeeType_AccessCachedAttr DeeType_HasCachedAttrStringHash
 #define LOCAL_IS_HAS
-#elif defined(DEFINE_DeeType_HasCachedAttrLen)
-#define LOCAL_DeeType_AccessCachedAttr DeeType_HasCachedAttrLen
+#elif defined(DEFINE_DeeType_HasCachedAttrStringLenHash)
+#define LOCAL_DeeType_AccessCachedAttr DeeType_HasCachedAttrStringLenHash
 #define LOCAL_IS_HAS
 #define LOCAL_HAS_len
-#elif defined(DEFINE_DeeType_HasCachedClassAttr)
-#define LOCAL_DeeType_AccessCachedAttr DeeType_HasCachedClassAttr
-#define LOCAL_IS_HAS
-#define LOCAL_IS_CLASS
-#elif defined(DEFINE_DeeType_HasCachedClassAttrLen)
-#define LOCAL_DeeType_AccessCachedAttr DeeType_HasCachedClassAttrLen
+#elif defined(DEFINE_DeeType_HasCachedClassAttrStringHash)
+#define LOCAL_DeeType_AccessCachedAttr DeeType_HasCachedClassAttrStringHash
 #define LOCAL_IS_HAS
 #define LOCAL_IS_CLASS
+#elif defined(DEFINE_DeeType_HasCachedClassAttrStringLenHash)
+#define LOCAL_DeeType_AccessCachedAttr DeeType_HasCachedClassAttrStringLenHash
+#define LOCAL_IS_HAS
+#define LOCAL_IS_CLASS
 #define LOCAL_HAS_len
-#elif defined(DEFINE_DeeType_HasCachedInstanceAttr)
-#define LOCAL_DeeType_AccessCachedAttr DeeType_HasCachedInstanceAttr
+#elif defined(DEFINE_DeeType_HasCachedInstanceAttrStringHash)
+#define LOCAL_DeeType_AccessCachedAttr DeeType_HasCachedInstanceAttrStringHash
 #define LOCAL_IS_HAS
 #define LOCAL_IS_INSTANCE
-#elif defined(DEFINE_DeeType_HasCachedInstanceAttrLen)
-#define LOCAL_DeeType_AccessCachedAttr DeeType_HasCachedInstanceAttrLen
+#elif defined(DEFINE_DeeType_HasCachedInstanceAttrStringLenHash)
+#define LOCAL_DeeType_AccessCachedAttr DeeType_HasCachedInstanceAttrStringLenHash
 #define LOCAL_IS_HAS
 #define LOCAL_IS_INSTANCE
 #define LOCAL_HAS_len
-#elif defined(DEFINE_DeeType_DelCachedAttr)
-#define LOCAL_DeeType_AccessCachedAttr DeeType_DelCachedAttr
+#elif defined(DEFINE_DeeType_DelCachedAttrStringHash)
+#define LOCAL_DeeType_AccessCachedAttr DeeType_DelCachedAttrStringHash
 #define LOCAL_IS_DEL
-#elif defined(DEFINE_DeeType_DelCachedAttrLen)
-#define LOCAL_DeeType_AccessCachedAttr DeeType_DelCachedAttrLen
+#elif defined(DEFINE_DeeType_DelCachedAttrStringLenHash)
+#define LOCAL_DeeType_AccessCachedAttr DeeType_DelCachedAttrStringLenHash
 #define LOCAL_IS_DEL
 #define LOCAL_HAS_len
-#elif defined(DEFINE_DeeType_DelCachedClassAttr)
-#define LOCAL_DeeType_AccessCachedAttr DeeType_DelCachedClassAttr
-#define LOCAL_IS_DEL
-#define LOCAL_IS_CLASS
-#elif defined(DEFINE_DeeType_DelCachedClassAttrLen)
-#define LOCAL_DeeType_AccessCachedAttr DeeType_DelCachedClassAttrLen
+#elif defined(DEFINE_DeeType_DelCachedClassAttrStringHash)
+#define LOCAL_DeeType_AccessCachedAttr DeeType_DelCachedClassAttrStringHash
 #define LOCAL_IS_DEL
 #define LOCAL_IS_CLASS
+#elif defined(DEFINE_DeeType_DelCachedClassAttrStringLenHash)
+#define LOCAL_DeeType_AccessCachedAttr DeeType_DelCachedClassAttrStringLenHash
+#define LOCAL_IS_DEL
+#define LOCAL_IS_CLASS
 #define LOCAL_HAS_len
-#elif defined(DEFINE_DeeType_DelCachedInstanceAttr)
-#define LOCAL_DeeType_AccessCachedAttr DeeType_DelCachedInstanceAttr
+#elif defined(DEFINE_DeeType_DelCachedInstanceAttrStringHash)
+#define LOCAL_DeeType_AccessCachedAttr DeeType_DelCachedInstanceAttrStringHash
 #define LOCAL_IS_DEL
 #define LOCAL_IS_INSTANCE
-#elif defined(DEFINE_DeeType_DelCachedInstanceAttrLen)
-#define LOCAL_DeeType_AccessCachedAttr DeeType_DelCachedInstanceAttrLen
+#elif defined(DEFINE_DeeType_DelCachedInstanceAttrStringLenHash)
+#define LOCAL_DeeType_AccessCachedAttr DeeType_DelCachedInstanceAttrStringLenHash
 #define LOCAL_IS_DEL
 #define LOCAL_IS_INSTANCE
 #define LOCAL_HAS_len
-#elif defined(DEFINE_DeeType_SetCachedAttr)
-#define LOCAL_DeeType_AccessCachedAttr DeeType_SetCachedAttr
+#elif defined(DEFINE_DeeType_SetCachedAttrStringHash)
+#define LOCAL_DeeType_AccessCachedAttr DeeType_SetCachedAttrStringHash
 #define LOCAL_IS_SET
-#elif defined(DEFINE_DeeType_SetCachedAttrLen)
-#define LOCAL_DeeType_AccessCachedAttr DeeType_SetCachedAttrLen
+#elif defined(DEFINE_DeeType_SetCachedAttrStringLenHash)
+#define LOCAL_DeeType_AccessCachedAttr DeeType_SetCachedAttrStringLenHash
 #define LOCAL_IS_SET
 #define LOCAL_HAS_len
-#elif defined(DEFINE_DeeType_SetCachedClassAttr)
-#define LOCAL_DeeType_AccessCachedAttr DeeType_SetCachedClassAttr
-#define LOCAL_IS_SET
-#define LOCAL_IS_CLASS
-#elif defined(DEFINE_DeeType_SetCachedClassAttrLen)
-#define LOCAL_DeeType_AccessCachedAttr DeeType_SetCachedClassAttrLen
+#elif defined(DEFINE_DeeType_SetCachedClassAttrStringHash)
+#define LOCAL_DeeType_AccessCachedAttr DeeType_SetCachedClassAttrStringHash
 #define LOCAL_IS_SET
 #define LOCAL_IS_CLASS
+#elif defined(DEFINE_DeeType_SetCachedClassAttrStringLenHash)
+#define LOCAL_DeeType_AccessCachedAttr DeeType_SetCachedClassAttrStringLenHash
+#define LOCAL_IS_SET
+#define LOCAL_IS_CLASS
 #define LOCAL_HAS_len
-#elif defined(DEFINE_DeeType_SetCachedInstanceAttr)
-#define LOCAL_DeeType_AccessCachedAttr DeeType_SetCachedInstanceAttr
+#elif defined(DEFINE_DeeType_SetCachedInstanceAttrStringHash)
+#define LOCAL_DeeType_AccessCachedAttr DeeType_SetCachedInstanceAttrStringHash
 #define LOCAL_IS_SET
 #define LOCAL_IS_INSTANCE
-#elif defined(DEFINE_DeeType_SetCachedInstanceAttrLen)
-#define LOCAL_DeeType_AccessCachedAttr DeeType_SetCachedInstanceAttrLen
+#elif defined(DEFINE_DeeType_SetCachedInstanceAttrStringLenHash)
+#define LOCAL_DeeType_AccessCachedAttr DeeType_SetCachedInstanceAttrStringLenHash
 #define LOCAL_IS_SET
 #define LOCAL_IS_INSTANCE
 #define LOCAL_HAS_len
-#elif defined(DEFINE_DeeType_SetBasicCachedAttr)
-#define LOCAL_DeeType_AccessCachedAttr DeeType_SetBasicCachedAttr
+#elif defined(DEFINE_DeeType_SetBasicCachedAttrStringHash)
+#define LOCAL_DeeType_AccessCachedAttr DeeType_SetBasicCachedAttrStringHash
 #define LOCAL_IS_SET_BASIC
-#elif defined(DEFINE_DeeType_SetBasicCachedAttrLen)
-#define LOCAL_DeeType_AccessCachedAttr DeeType_SetBasicCachedAttrLen
+#elif defined(DEFINE_DeeType_SetBasicCachedAttrStringLenHash)
+#define LOCAL_DeeType_AccessCachedAttr DeeType_SetBasicCachedAttrStringLenHash
 #define LOCAL_IS_SET_BASIC
 #define LOCAL_HAS_len
-#elif defined(DEFINE_DeeType_SetBasicCachedClassAttr)
-#define LOCAL_DeeType_AccessCachedAttr DeeType_SetBasicCachedClassAttr
-#define LOCAL_IS_SET_BASIC
-#define LOCAL_IS_CLASS
-#elif defined(DEFINE_DeeType_SetBasicCachedClassAttrLen)
-#define LOCAL_DeeType_AccessCachedAttr DeeType_SetBasicCachedClassAttrLen
+#elif defined(DEFINE_DeeType_SetBasicCachedClassAttrStringHash)
+#define LOCAL_DeeType_AccessCachedAttr DeeType_SetBasicCachedClassAttrStringHash
 #define LOCAL_IS_SET_BASIC
 #define LOCAL_IS_CLASS
+#elif defined(DEFINE_DeeType_SetBasicCachedClassAttrStringLenHash)
+#define LOCAL_DeeType_AccessCachedAttr DeeType_SetBasicCachedClassAttrStringLenHash
+#define LOCAL_IS_SET_BASIC
+#define LOCAL_IS_CLASS
 #define LOCAL_HAS_len
-#elif defined(DEFINE_DeeType_SetBasicCachedInstanceAttr)
-#define LOCAL_DeeType_AccessCachedAttr DeeType_SetBasicCachedInstanceAttr
+#elif defined(DEFINE_DeeType_SetBasicCachedInstanceAttrStringHash)
+#define LOCAL_DeeType_AccessCachedAttr DeeType_SetBasicCachedInstanceAttrStringHash
 #define LOCAL_IS_SET_BASIC
 #define LOCAL_IS_INSTANCE
-#elif defined(DEFINE_DeeType_SetBasicCachedInstanceAttrLen)
-#define LOCAL_DeeType_AccessCachedAttr DeeType_SetBasicCachedInstanceAttrLen
+#elif defined(DEFINE_DeeType_SetBasicCachedInstanceAttrStringLenHash)
+#define LOCAL_DeeType_AccessCachedAttr DeeType_SetBasicCachedInstanceAttrStringLenHash
 #define LOCAL_IS_SET_BASIC
 #define LOCAL_IS_INSTANCE
 #define LOCAL_HAS_len
-#elif defined(DEFINE_DeeType_CallCachedAttr)
-#define LOCAL_DeeType_AccessCachedAttr DeeType_CallCachedAttr
+#elif defined(DEFINE_DeeType_CallCachedAttrStringHash)
+#define LOCAL_DeeType_AccessCachedAttr DeeType_CallCachedAttrStringHash
 #define LOCAL_IS_CALL
-#elif defined(DEFINE_DeeType_CallCachedAttrLen)
-#define LOCAL_DeeType_AccessCachedAttr DeeType_CallCachedAttrLen
+#elif defined(DEFINE_DeeType_CallCachedAttrStringLenHash)
+#define LOCAL_DeeType_AccessCachedAttr DeeType_CallCachedAttrStringLenHash
 #define LOCAL_IS_CALL
 #define LOCAL_HAS_len
-#elif defined(DEFINE_DeeType_CallCachedClassAttr)
-#define LOCAL_DeeType_AccessCachedAttr DeeType_CallCachedClassAttr
-#define LOCAL_IS_CALL
-#define LOCAL_IS_CLASS
-#elif defined(DEFINE_DeeType_CallCachedClassAttrLen)
-#define LOCAL_DeeType_AccessCachedAttr DeeType_CallCachedClassAttrLen
+#elif defined(DEFINE_DeeType_CallCachedClassAttrStringHash)
+#define LOCAL_DeeType_AccessCachedAttr DeeType_CallCachedClassAttrStringHash
 #define LOCAL_IS_CALL
 #define LOCAL_IS_CLASS
+#elif defined(DEFINE_DeeType_CallCachedClassAttrStringLenHash)
+#define LOCAL_DeeType_AccessCachedAttr DeeType_CallCachedClassAttrStringLenHash
+#define LOCAL_IS_CALL
+#define LOCAL_IS_CLASS
 #define LOCAL_HAS_len
-#elif defined(DEFINE_DeeType_CallCachedInstanceAttr)
-#define LOCAL_DeeType_AccessCachedAttr DeeType_CallCachedInstanceAttr
+#elif defined(DEFINE_DeeType_CallCachedInstanceAttrStringHash)
+#define LOCAL_DeeType_AccessCachedAttr DeeType_CallCachedInstanceAttrStringHash
 #define LOCAL_IS_CALL
 #define LOCAL_IS_INSTANCE
-#elif defined(DEFINE_DeeType_CallCachedInstanceAttrLen)
-#define LOCAL_DeeType_AccessCachedAttr DeeType_CallCachedInstanceAttrLen
+#elif defined(DEFINE_DeeType_CallCachedInstanceAttrStringLenHash)
+#define LOCAL_DeeType_AccessCachedAttr DeeType_CallCachedInstanceAttrStringLenHash
 #define LOCAL_IS_CALL
 #define LOCAL_IS_INSTANCE
 #define LOCAL_HAS_len
-#elif defined(DEFINE_DeeType_CallCachedAttrKw)
-#define LOCAL_DeeType_AccessCachedAttr DeeType_CallCachedAttrKw
+#elif defined(DEFINE_DeeType_CallCachedAttrStringHashKw)
+#define LOCAL_DeeType_AccessCachedAttr DeeType_CallCachedAttrStringHashKw
 #define LOCAL_IS_CALL_KW
-#elif defined(DEFINE_DeeType_CallCachedAttrLenKw)
-#define LOCAL_DeeType_AccessCachedAttr DeeType_CallCachedAttrLenKw
+#elif defined(DEFINE_DeeType_CallCachedAttrStringLenHashKw)
+#define LOCAL_DeeType_AccessCachedAttr DeeType_CallCachedAttrStringLenHashKw
 #define LOCAL_IS_CALL_KW
 #define LOCAL_HAS_len
-#elif defined(DEFINE_DeeType_CallCachedClassAttrKw)
-#define LOCAL_DeeType_AccessCachedAttr DeeType_CallCachedClassAttrKw
-#define LOCAL_IS_CALL_KW
-#define LOCAL_IS_CLASS
-#elif defined(DEFINE_DeeType_CallCachedClassAttrLenKw)
-#define LOCAL_DeeType_AccessCachedAttr DeeType_CallCachedClassAttrLenKw
+#elif defined(DEFINE_DeeType_CallCachedClassAttrStringHashKw)
+#define LOCAL_DeeType_AccessCachedAttr DeeType_CallCachedClassAttrStringHashKw
 #define LOCAL_IS_CALL_KW
 #define LOCAL_IS_CLASS
+#elif defined(DEFINE_DeeType_CallCachedClassAttrStringLenHashKw)
+#define LOCAL_DeeType_AccessCachedAttr DeeType_CallCachedClassAttrStringLenHashKw
+#define LOCAL_IS_CALL_KW
+#define LOCAL_IS_CLASS
 #define LOCAL_HAS_len
-#elif defined(DEFINE_DeeType_CallCachedInstanceAttrKw)
-#define LOCAL_DeeType_AccessCachedAttr DeeType_CallCachedInstanceAttrKw
+#elif defined(DEFINE_DeeType_CallCachedInstanceAttrStringHashKw)
+#define LOCAL_DeeType_AccessCachedAttr DeeType_CallCachedInstanceAttrStringHashKw
 #define LOCAL_IS_CALL_KW
 #define LOCAL_IS_INSTANCE
-#elif defined(DEFINE_DeeType_CallCachedInstanceAttrLenKw)
-#define LOCAL_DeeType_AccessCachedAttr DeeType_CallCachedInstanceAttrLenKw
+#elif defined(DEFINE_DeeType_CallCachedInstanceAttrStringLenHashKw)
+#define LOCAL_DeeType_AccessCachedAttr DeeType_CallCachedInstanceAttrStringLenHashKw
 #define LOCAL_IS_CALL_KW
 #define LOCAL_IS_INSTANCE
 #define LOCAL_HAS_len
-#elif defined(DEFINE_DeeType_CallCachedAttrTuple)
-#define LOCAL_DeeType_AccessCachedAttr DeeType_CallCachedAttrTuple
+#elif defined(DEFINE_DeeType_CallCachedAttrStringHashTuple)
+#define LOCAL_DeeType_AccessCachedAttr DeeType_CallCachedAttrStringHashTuple
 #define LOCAL_IS_CALL_TUPLE
-#elif defined(DEFINE_DeeType_CallCachedAttrLenTuple)
-#define LOCAL_DeeType_AccessCachedAttr DeeType_CallCachedAttrLenTuple
+#elif defined(DEFINE_DeeType_CallCachedAttrStringLenHashTuple)
+#define LOCAL_DeeType_AccessCachedAttr DeeType_CallCachedAttrStringLenHashTuple
 #define LOCAL_IS_CALL_TUPLE
 #define LOCAL_HAS_len
-#elif defined(DEFINE_DeeType_CallCachedClassAttrTuple)
-#define LOCAL_DeeType_AccessCachedAttr DeeType_CallCachedClassAttrTuple
-#define LOCAL_IS_CALL_TUPLE
-#define LOCAL_IS_CLASS
-#elif defined(DEFINE_DeeType_CallCachedClassAttrLenTuple)
-#define LOCAL_DeeType_AccessCachedAttr DeeType_CallCachedClassAttrLenTuple
+#elif defined(DEFINE_DeeType_CallCachedClassAttrStringHashTuple)
+#define LOCAL_DeeType_AccessCachedAttr DeeType_CallCachedClassAttrStringHashTuple
 #define LOCAL_IS_CALL_TUPLE
 #define LOCAL_IS_CLASS
-#define LOCAL_HAS_len
-#elif defined(DEFINE_DeeType_CallCachedInstanceAttrTuple)
-#define LOCAL_DeeType_AccessCachedAttr DeeType_CallCachedInstanceAttrTuple
+#elif defined(DEFINE_DeeType_CallCachedClassAttrStringLenHashTuple)
+#define LOCAL_DeeType_AccessCachedAttr DeeType_CallCachedClassAttrStringLenHashTuple
 #define LOCAL_IS_CALL_TUPLE
-#define LOCAL_IS_INSTANCE
-#elif defined(DEFINE_DeeType_CallCachedInstanceAttrLenTuple)
-#define LOCAL_DeeType_AccessCachedAttr DeeType_CallCachedInstanceAttrLenTuple
-#define LOCAL_IS_CALL_TUPLE
-#define LOCAL_IS_INSTANCE
-#define LOCAL_HAS_len
-#elif defined(DEFINE_DeeType_CallCachedAttrTupleKw)
-#define LOCAL_DeeType_AccessCachedAttr DeeType_CallCachedAttrTupleKw
-#define LOCAL_IS_CALL_TUPLE_KW
-#elif defined(DEFINE_DeeType_CallCachedAttrLenTupleKw)
-#define LOCAL_DeeType_AccessCachedAttr DeeType_CallCachedAttrLenTupleKw
-#define LOCAL_IS_CALL_TUPLE_KW
-#define LOCAL_HAS_len
-#elif defined(DEFINE_DeeType_CallCachedClassAttrTupleKw)
-#define LOCAL_DeeType_AccessCachedAttr DeeType_CallCachedClassAttrTupleKw
-#define LOCAL_IS_CALL_TUPLE_KW
-#define LOCAL_IS_CLASS
-#elif defined(DEFINE_DeeType_CallCachedClassAttrLenTupleKw)
-#define LOCAL_DeeType_AccessCachedAttr DeeType_CallCachedClassAttrLenTupleKw
-#define LOCAL_IS_CALL_TUPLE_KW
 #define LOCAL_IS_CLASS
 #define LOCAL_HAS_len
-#elif defined(DEFINE_DeeType_CallCachedInstanceAttrTupleKw)
-#define LOCAL_DeeType_AccessCachedAttr DeeType_CallCachedInstanceAttrTupleKw
+#elif defined(DEFINE_DeeType_CallCachedInstanceAttrStringHashTuple)
+#define LOCAL_DeeType_AccessCachedAttr DeeType_CallCachedInstanceAttrStringHashTuple
+#define LOCAL_IS_CALL_TUPLE
+#define LOCAL_IS_INSTANCE
+#elif defined(DEFINE_DeeType_CallCachedInstanceAttrStringLenHashTuple)
+#define LOCAL_DeeType_AccessCachedAttr DeeType_CallCachedInstanceAttrStringLenHashTuple
+#define LOCAL_IS_CALL_TUPLE
+#define LOCAL_IS_INSTANCE
+#define LOCAL_HAS_len
+#elif defined(DEFINE_DeeType_CallCachedAttrStringHashTupleKw)
+#define LOCAL_DeeType_AccessCachedAttr DeeType_CallCachedAttrStringHashTupleKw
+#define LOCAL_IS_CALL_TUPLE_KW
+#elif defined(DEFINE_DeeType_CallCachedAttrStringLenHashTupleKw)
+#define LOCAL_DeeType_AccessCachedAttr DeeType_CallCachedAttrStringLenHashTupleKw
+#define LOCAL_IS_CALL_TUPLE_KW
+#define LOCAL_HAS_len
+#elif defined(DEFINE_DeeType_CallCachedClassAttrStringHashTupleKw)
+#define LOCAL_DeeType_AccessCachedAttr DeeType_CallCachedClassAttrStringHashTupleKw
+#define LOCAL_IS_CALL_TUPLE_KW
+#define LOCAL_IS_CLASS
+#elif defined(DEFINE_DeeType_CallCachedClassAttrStringLenHashTupleKw)
+#define LOCAL_DeeType_AccessCachedAttr DeeType_CallCachedClassAttrStringLenHashTupleKw
+#define LOCAL_IS_CALL_TUPLE_KW
+#define LOCAL_IS_CLASS
+#define LOCAL_HAS_len
+#elif defined(DEFINE_DeeType_CallCachedInstanceAttrStringHashTupleKw)
+#define LOCAL_DeeType_AccessCachedAttr DeeType_CallCachedInstanceAttrStringHashTupleKw
 #define LOCAL_IS_CALL_TUPLE_KW
 #define LOCAL_IS_INSTANCE
-#elif defined(DEFINE_DeeType_CallCachedInstanceAttrLenTupleKw)
-#define LOCAL_DeeType_AccessCachedAttr DeeType_CallCachedInstanceAttrLenTupleKw
+#elif defined(DEFINE_DeeType_CallCachedInstanceAttrStringLenHashTupleKw)
+#define LOCAL_DeeType_AccessCachedAttr DeeType_CallCachedInstanceAttrStringLenHashTupleKw
 #define LOCAL_IS_CALL_TUPLE_KW
 #define LOCAL_IS_INSTANCE
 #define LOCAL_HAS_len
-#elif defined(DEFINE_DeeType_VCallCachedAttrf)
-#define LOCAL_DeeType_AccessCachedAttr DeeType_VCallCachedAttrf
+#elif defined(DEFINE_DeeType_VCallCachedAttrStringHashf)
+#define LOCAL_DeeType_AccessCachedAttr DeeType_VCallCachedAttrStringHashf
 #define LOCAL_IS_VCALLF
-#elif defined(DEFINE_DeeType_VCallCachedAttrLenf)
-#define LOCAL_DeeType_AccessCachedAttr DeeType_VCallCachedAttrLenf
+#elif defined(DEFINE_DeeType_VCallCachedAttrStringLenHashf)
+#define LOCAL_DeeType_AccessCachedAttr DeeType_VCallCachedAttrStringLenHashf
 #define LOCAL_IS_VCALLF
 #define LOCAL_HAS_len
-#elif defined(DEFINE_DeeType_VCallCachedClassAttrf)
-#define LOCAL_DeeType_AccessCachedAttr DeeType_VCallCachedClassAttrf
-#define LOCAL_IS_VCALLF
-#define LOCAL_IS_CLASS
-#elif defined(DEFINE_DeeType_VCallCachedClassAttrLenf)
-#define LOCAL_DeeType_AccessCachedAttr DeeType_VCallCachedClassAttrLenf
+#elif defined(DEFINE_DeeType_VCallCachedClassAttrStringHashf)
+#define LOCAL_DeeType_AccessCachedAttr DeeType_VCallCachedClassAttrStringHashf
 #define LOCAL_IS_VCALLF
 #define LOCAL_IS_CLASS
+#elif defined(DEFINE_DeeType_VCallCachedClassAttrStringLenHashf)
+#define LOCAL_DeeType_AccessCachedAttr DeeType_VCallCachedClassAttrStringLenHashf
+#define LOCAL_IS_VCALLF
+#define LOCAL_IS_CLASS
 #define LOCAL_HAS_len
-#elif defined(DEFINE_DeeType_VCallCachedInstanceAttrf)
-#define LOCAL_DeeType_AccessCachedAttr DeeType_VCallCachedInstanceAttrf
+#elif defined(DEFINE_DeeType_VCallCachedInstanceAttrStringHashf)
+#define LOCAL_DeeType_AccessCachedAttr DeeType_VCallCachedInstanceAttrStringHashf
 #define LOCAL_IS_VCALLF
 #define LOCAL_IS_INSTANCE
-#elif defined(DEFINE_DeeType_VCallCachedInstanceAttrLenf)
-#define LOCAL_DeeType_AccessCachedAttr DeeType_VCallCachedInstanceAttrLenf
+#elif defined(DEFINE_DeeType_VCallCachedInstanceAttrStringLenHashf)
+#define LOCAL_DeeType_AccessCachedAttr DeeType_VCallCachedInstanceAttrStringLenHashf
 #define LOCAL_IS_VCALLF
 #define LOCAL_IS_INSTANCE
 #define LOCAL_HAS_len
@@ -717,7 +717,7 @@ dkwobjmethod_vcallf_len(dkwobjmethod_t self,
 	Dee_Decref(args_tuple);
 	return result;
 err_noargs:
-	err_classmethod_requires_at_least_1_argument_len(decl, attr, attrlen);
+	err_classmethod_requires_at_least_1_argument_string_len(decl, attr, attrlen);
 err_args_tuple:
 	Dee_Decref(args_tuple);
 err:
@@ -748,7 +748,7 @@ dobjmethod_vcallf_len(dobjmethod_t self,
 	Dee_Decref(args_tuple);
 	return result;
 err_noargs:
-	err_classmethod_requires_at_least_1_argument_len(decl, attr, attrlen);
+	err_classmethod_requires_at_least_1_argument_string_len(decl, attr, attrlen);
 err_args_tuple:
 	Dee_Decref(args_tuple);
 err:
@@ -785,7 +785,7 @@ dkwobjmethod_vcallf(dkwobjmethod_t self,
 	Dee_Decref(args_tuple);
 	return result;
 err_noargs:
-	err_classmethod_requires_at_least_1_argument(decl, attr);
+	err_classmethod_requires_at_least_1_argument_string(decl, attr);
 err_args_tuple:
 	Dee_Decref(args_tuple);
 err:
@@ -816,7 +816,7 @@ dobjmethod_vcallf(dobjmethod_t self,
 	Dee_Decref(args_tuple);
 	return result;
 err_noargs:
-	err_classmethod_requires_at_least_1_argument(decl, attr);
+	err_classmethod_requires_at_least_1_argument_string(decl, attr);
 err_args_tuple:
 	Dee_Decref(args_tuple);
 err:
@@ -945,16 +945,16 @@ INTERN WUNUSED LOCAL_ATTR_NONNULL int
 
 #ifdef LOCAL_HAS_len
 #define LOCAL_Dee_membercache_slot_matches(item)             streq_len(item->mcs_name, LOCAL_attr, attrlen)
-#define LOCAL_err_cant_access_attribute(tp, access)          err_cant_access_attribute_len(tp, LOCAL_attr, attrlen, access)
-#define LOCAL_err_classmember_requires_1_argument()          err_classmember_requires_1_argument_len(tp_self, LOCAL_attr, attrlen)
-#define LOCAL_err_classproperty_requires_1_argument()        err_classproperty_requires_1_argument_len(tp_self, LOCAL_attr, attrlen)
-#define LOCAL_err_classmethod_requires_at_least_1_argument() err_classmethod_requires_at_least_1_argument_len(tp_self, LOCAL_attr, attrlen)
+#define LOCAL_err_cant_access_attribute(tp, access)          err_cant_access_attribute_string_len(tp, LOCAL_attr, attrlen, access)
+#define LOCAL_err_classmember_requires_1_argument()          err_classmember_requires_1_argument_string_len(tp_self, LOCAL_attr, attrlen)
+#define LOCAL_err_classproperty_requires_1_argument()        err_classproperty_requires_1_argument_string_len(tp_self, LOCAL_attr, attrlen)
+#define LOCAL_err_classmethod_requires_at_least_1_argument() err_classmethod_requires_at_least_1_argument_string_len(tp_self, LOCAL_attr, attrlen)
 #else /* LOCAL_HAS_len */
 #define LOCAL_Dee_membercache_slot_matches(item)             streq(item->mcs_name, LOCAL_attr)
-#define LOCAL_err_cant_access_attribute(tp, access)          err_cant_access_attribute(tp, LOCAL_attr, access)
-#define LOCAL_err_classmember_requires_1_argument()          err_classmember_requires_1_argument(tp_self, LOCAL_attr)
-#define LOCAL_err_classproperty_requires_1_argument()        err_classproperty_requires_1_argument(tp_self, LOCAL_attr)
-#define LOCAL_err_classmethod_requires_at_least_1_argument() err_classmethod_requires_at_least_1_argument(tp_self, LOCAL_attr)
+#define LOCAL_err_cant_access_attribute(tp, access)          err_cant_access_attribute_string(tp, LOCAL_attr, access)
+#define LOCAL_err_classmember_requires_1_argument()          err_classmember_requires_1_argument_string(tp_self, LOCAL_attr)
+#define LOCAL_err_classproperty_requires_1_argument()        err_classproperty_requires_1_argument_string(tp_self, LOCAL_attr)
+#define LOCAL_err_classmethod_requires_at_least_1_argument() err_classmethod_requires_at_least_1_argument_string(tp_self, LOCAL_attr)
 #endif /* !LOCAL_HAS_len */
 #ifdef LOCAL_IS_CLASS
 #define LOCAL_DeeInstance_DESC(desc) class_desc_as_instance(desc)
@@ -1775,9 +1775,9 @@ cache_miss:
 #ifdef LOCAL_HAS_kw
 err_no_keywords:
 #ifdef LOCAL_HAS_len
-	err_keywords_func_not_accepted_len(tp_self, LOCAL_attr, attrlen, kw);
+	err_keywords_func_not_accepted_string_len(tp_self, LOCAL_attr, attrlen, kw);
 #else /* LOCAL_HAS_len */
-	err_keywords_func_not_accepted(tp_self, LOCAL_attr, kw);
+	err_keywords_func_not_accepted_string(tp_self, LOCAL_attr, kw);
 #endif /* !LOCAL_HAS_len */
 	/* Fallthru to `err' below. */
 #define NEED_err
@@ -1852,69 +1852,69 @@ err:
 
 DECL_END
 
-#undef DEFINE_DeeType_GetCachedAttr
-#undef DEFINE_DeeType_GetCachedAttrLen
-#undef DEFINE_DeeType_GetCachedClassAttr
-#undef DEFINE_DeeType_GetCachedClassAttrLen
-#undef DEFINE_DeeType_GetCachedInstanceAttr
-#undef DEFINE_DeeType_GetCachedInstanceAttrLen
-#undef DEFINE_DeeType_BoundCachedAttr
-#undef DEFINE_DeeType_BoundCachedAttrLen
-#undef DEFINE_DeeType_BoundCachedClassAttr
-#undef DEFINE_DeeType_BoundCachedClassAttrLen
-#undef DEFINE_DeeType_BoundCachedInstanceAttr
-#undef DEFINE_DeeType_BoundCachedInstanceAttrLen
-#undef DEFINE_DeeType_HasCachedAttr
-#undef DEFINE_DeeType_HasCachedAttrLen
-#undef DEFINE_DeeType_HasCachedClassAttr
-#undef DEFINE_DeeType_HasCachedClassAttrLen
-#undef DEFINE_DeeType_DelCachedAttr
-#undef DEFINE_DeeType_DelCachedAttrLen
-#undef DEFINE_DeeType_DelCachedClassAttr
-#undef DEFINE_DeeType_DelCachedClassAttrLen
-#undef DEFINE_DeeType_DelCachedInstanceAttr
-#undef DEFINE_DeeType_DelCachedInstanceAttrLen
-#undef DEFINE_DeeType_SetCachedAttr
-#undef DEFINE_DeeType_SetCachedAttrLen
-#undef DEFINE_DeeType_SetCachedClassAttr
-#undef DEFINE_DeeType_SetCachedClassAttrLen
-#undef DEFINE_DeeType_SetCachedInstanceAttr
-#undef DEFINE_DeeType_SetCachedInstanceAttrLen
-#undef DEFINE_DeeType_SetBasicCachedAttr
-#undef DEFINE_DeeType_SetBasicCachedAttrLen
-#undef DEFINE_DeeType_SetBasicCachedClassAttr
-#undef DEFINE_DeeType_SetBasicCachedClassAttrLen
-#undef DEFINE_DeeType_SetBasicCachedInstanceAttr
-#undef DEFINE_DeeType_SetBasicCachedInstanceAttrLen
-#undef DEFINE_DeeType_CallCachedAttr
-#undef DEFINE_DeeType_CallCachedAttrLen
-#undef DEFINE_DeeType_CallCachedClassAttr
-#undef DEFINE_DeeType_CallCachedClassAttrLen
-#undef DEFINE_DeeType_CallCachedInstanceAttr
-#undef DEFINE_DeeType_CallCachedInstanceAttrLen
-#undef DEFINE_DeeType_CallCachedAttrKw
-#undef DEFINE_DeeType_CallCachedAttrLenKw
-#undef DEFINE_DeeType_CallCachedClassAttrKw
-#undef DEFINE_DeeType_CallCachedClassAttrLenKw
-#undef DEFINE_DeeType_CallCachedInstanceAttrKw
-#undef DEFINE_DeeType_CallCachedInstanceAttrLenKw
-#undef DEFINE_DeeType_CallCachedAttrTuple
-#undef DEFINE_DeeType_CallCachedAttrLenTuple
-#undef DEFINE_DeeType_CallCachedClassAttrTuple
-#undef DEFINE_DeeType_CallCachedClassAttrLenTuple
-#undef DEFINE_DeeType_CallCachedInstanceAttrTuple
-#undef DEFINE_DeeType_CallCachedInstanceAttrLenTuple
-#undef DEFINE_DeeType_CallCachedAttrTupleKw
-#undef DEFINE_DeeType_CallCachedAttrLenTupleKw
-#undef DEFINE_DeeType_CallCachedClassAttrTupleKw
-#undef DEFINE_DeeType_CallCachedClassAttrLenTupleKw
-#undef DEFINE_DeeType_CallCachedInstanceAttrTupleKw
-#undef DEFINE_DeeType_CallCachedInstanceAttrLenTupleKw
-#undef DEFINE_DeeType_VCallCachedAttrf
-#undef DEFINE_DeeType_VCallCachedAttrLenf
-#undef DEFINE_DeeType_VCallCachedClassAttrf
-#undef DEFINE_DeeType_VCallCachedClassAttrLenf
-#undef DEFINE_DeeType_VCallCachedInstanceAttrf
-#undef DEFINE_DeeType_VCallCachedInstanceAttrLenf
+#undef DEFINE_DeeType_GetCachedAttrStringHash
+#undef DEFINE_DeeType_GetCachedAttrStringLenHash
+#undef DEFINE_DeeType_GetCachedClassAttrStringHash
+#undef DEFINE_DeeType_GetCachedClassAttrStringLenHash
+#undef DEFINE_DeeType_GetCachedInstanceAttrStringHash
+#undef DEFINE_DeeType_GetCachedInstanceAttrStringLenHash
+#undef DEFINE_DeeType_BoundCachedAttrStringHash
+#undef DEFINE_DeeType_BoundCachedAttrStringLenHash
+#undef DEFINE_DeeType_BoundCachedClassAttrStringHash
+#undef DEFINE_DeeType_BoundCachedClassAttrStringLenHash
+#undef DEFINE_DeeType_BoundCachedInstanceAttrStringHash
+#undef DEFINE_DeeType_BoundCachedInstanceAttrStringLenHash
+#undef DEFINE_DeeType_HasCachedAttrStringHash
+#undef DEFINE_DeeType_HasCachedAttrStringLenHash
+#undef DEFINE_DeeType_HasCachedClassAttrStringHash
+#undef DEFINE_DeeType_HasCachedClassAttrStringLenHash
+#undef DEFINE_DeeType_DelCachedAttrStringHash
+#undef DEFINE_DeeType_DelCachedAttrStringLenHash
+#undef DEFINE_DeeType_DelCachedClassAttrStringHash
+#undef DEFINE_DeeType_DelCachedClassAttrStringLenHash
+#undef DEFINE_DeeType_DelCachedInstanceAttrStringHash
+#undef DEFINE_DeeType_DelCachedInstanceAttrStringLenHash
+#undef DEFINE_DeeType_SetCachedAttrStringHash
+#undef DEFINE_DeeType_SetCachedAttrStringLenHash
+#undef DEFINE_DeeType_SetCachedClassAttrStringHash
+#undef DEFINE_DeeType_SetCachedClassAttrStringLenHash
+#undef DEFINE_DeeType_SetCachedInstanceAttrStringHash
+#undef DEFINE_DeeType_SetCachedInstanceAttrStringLenHash
+#undef DEFINE_DeeType_SetBasicCachedAttrStringHash
+#undef DEFINE_DeeType_SetBasicCachedAttrStringLenHash
+#undef DEFINE_DeeType_SetBasicCachedClassAttrStringHash
+#undef DEFINE_DeeType_SetBasicCachedClassAttrStringLenHash
+#undef DEFINE_DeeType_SetBasicCachedInstanceAttrStringHash
+#undef DEFINE_DeeType_SetBasicCachedInstanceAttrStringLenHash
+#undef DEFINE_DeeType_CallCachedAttrStringHash
+#undef DEFINE_DeeType_CallCachedAttrStringLenHash
+#undef DEFINE_DeeType_CallCachedClassAttrStringHash
+#undef DEFINE_DeeType_CallCachedClassAttrStringLenHash
+#undef DEFINE_DeeType_CallCachedInstanceAttrStringHash
+#undef DEFINE_DeeType_CallCachedInstanceAttrStringLenHash
+#undef DEFINE_DeeType_CallCachedAttrStringHashKw
+#undef DEFINE_DeeType_CallCachedAttrStringLenHashKw
+#undef DEFINE_DeeType_CallCachedClassAttrStringHashKw
+#undef DEFINE_DeeType_CallCachedClassAttrStringLenHashKw
+#undef DEFINE_DeeType_CallCachedInstanceAttrStringHashKw
+#undef DEFINE_DeeType_CallCachedInstanceAttrStringLenHashKw
+#undef DEFINE_DeeType_CallCachedAttrStringHashTuple
+#undef DEFINE_DeeType_CallCachedAttrStringLenHashTuple
+#undef DEFINE_DeeType_CallCachedClassAttrStringHashTuple
+#undef DEFINE_DeeType_CallCachedClassAttrStringLenHashTuple
+#undef DEFINE_DeeType_CallCachedInstanceAttrStringHashTuple
+#undef DEFINE_DeeType_CallCachedInstanceAttrStringLenHashTuple
+#undef DEFINE_DeeType_CallCachedAttrStringHashTupleKw
+#undef DEFINE_DeeType_CallCachedAttrStringLenHashTupleKw
+#undef DEFINE_DeeType_CallCachedClassAttrStringHashTupleKw
+#undef DEFINE_DeeType_CallCachedClassAttrStringLenHashTupleKw
+#undef DEFINE_DeeType_CallCachedInstanceAttrStringHashTupleKw
+#undef DEFINE_DeeType_CallCachedInstanceAttrStringLenHashTupleKw
+#undef DEFINE_DeeType_VCallCachedAttrStringHashf
+#undef DEFINE_DeeType_VCallCachedAttrStringLenHashf
+#undef DEFINE_DeeType_VCallCachedClassAttrStringHashf
+#undef DEFINE_DeeType_VCallCachedClassAttrStringLenHashf
+#undef DEFINE_DeeType_VCallCachedInstanceAttrStringHashf
+#undef DEFINE_DeeType_VCallCachedInstanceAttrStringLenHashf
 #undef DEFINE_DeeType_FindCachedAttr
 #undef DEFINE_DeeType_FindCachedClassAttr

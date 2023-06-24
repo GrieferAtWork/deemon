@@ -2792,7 +2792,7 @@ set_basic_member(DeeTypeObject *__restrict tp_self,
 	DeeTypeObject *iter   = tp_self;
 	char const *attr_name = DeeString_STR(member_name);
 	dhash_t attr_hash     = DeeString_Hash((DeeObject *)member_name);
-	if ((temp = DeeType_SetBasicCachedAttr(tp_self, self, attr_name, attr_hash, value)) <= 0)
+	if ((temp = DeeType_SetBasicCachedAttrStringHash(tp_self, self, attr_name, attr_hash, value)) <= 0)
 		goto done_temp;
 	do {
 		if (DeeType_IsClass(iter)) {
@@ -2800,9 +2800,9 @@ set_basic_member(DeeTypeObject *__restrict tp_self,
 			struct instance_desc *instance;
 			struct class_desc *desc;
 			DREF DeeObject *old_value;
-			attr = DeeType_QueryAttributeWithHash(tp_self, iter,
-			                                      (DeeObject *)member_name,
-			                                      attr_hash);
+			attr = DeeType_QueryAttributeHash(tp_self, iter,
+			                                  (DeeObject *)member_name,
+			                                  attr_hash);
 			if (!attr)
 				goto next_base;
 			if (attr->ca_flag & (CLASS_ATTRIBUTE_FCLASSMEM |
@@ -2820,7 +2820,7 @@ set_basic_member(DeeTypeObject *__restrict tp_self,
 			return 0;
 		}
 		if (iter->tp_members &&
-		    (temp = DeeType_SetMemberAttr(tp_self, iter, self, attr_name, attr_hash, value)) <= 0)
+		    (temp = DeeType_SetMemberAttrStringHash(tp_self, iter, self, attr_name, attr_hash, value)) <= 0)
 			goto done_temp;
 	next_base:;
 	} while ((iter = DeeType_Base(iter)) != NULL);
@@ -2844,9 +2844,9 @@ set_private_basic_member(DeeTypeObject *__restrict tp_self,
 		struct instance_desc *instance;
 		struct class_desc *desc = DeeClass_DESC(tp_self);
 		DREF DeeObject *old_value;
-		attr = DeeClassDesc_QueryInstanceAttributeStringWithHash(desc,
-		                                                         attr_name,
-		                                                         attr_hash);
+		attr = DeeClassDesc_QueryInstanceAttributeStringHash(desc,
+		                                                     attr_name,
+		                                                     attr_hash);
 		if (!attr)
 			goto not_found;
 		if (attr->ca_flag & (CLASS_ATTRIBUTE_FCLASSMEM |
@@ -2863,7 +2863,7 @@ set_private_basic_member(DeeTypeObject *__restrict tp_self,
 		return 0;
 	}
 	if (tp_self->tp_members &&
-	    (temp = DeeType_SetMemberAttr(tp_self, tp_self, self, attr_name, attr_hash, value)) <= 0)
+	    (temp = DeeType_SetMemberAttrStringHash(tp_self, tp_self, self, attr_name, attr_hash, value)) <= 0)
 		goto done_temp;
 not_found:
 	return DeeError_Throwf(&DeeError_AttributeError,
@@ -3280,9 +3280,7 @@ type_getinstanceattr(DeeTypeObject *self, size_t argc,
 		goto err;
 	if (DeeObject_AssertTypeExact(name, &DeeString_Type))
 		goto err;
-	return DeeType_GetInstanceAttrString(self,
-	                                     DeeString_STR(name),
-	                                     DeeString_Hash(name));
+	return DeeType_GetInstanceAttr(self, name);
 err:
 	return NULL;
 }
@@ -3296,12 +3294,7 @@ type_callinstanceattr(DeeTypeObject *self, size_t argc,
 	}
 	if (DeeObject_AssertTypeExact(argv[0], &DeeString_Type))
 		goto err;
-	return DeeType_CallInstanceAttrStringKw(self,
-	                                        DeeString_STR(argv[0]),
-	                                        DeeString_Hash(argv[0]),
-	                                        argc - 1,
-	                                        argv + 1,
-	                                        kw);
+	return DeeType_CallInstanceAttrKw(self, argv[0], argc - 1, argv + 1, kw);
 err:
 	return NULL;
 }
@@ -3316,9 +3309,7 @@ type_hasinstanceattr(DeeTypeObject *self, size_t argc,
 		goto err;
 	if (DeeObject_AssertTypeExact(name, &DeeString_Type))
 		goto err;
-	result = DeeType_HasInstanceAttrString(self,
-	                                       DeeString_STR(name),
-	                                       DeeString_Hash(name));
+	result = DeeType_HasInstanceAttr(self, name);
 	if unlikely(result < 0)
 		goto err;
 	return_bool_(result);
@@ -3337,15 +3328,16 @@ type_boundinstanceattr(DeeTypeObject *self, size_t argc,
 		goto err;
 	if (DeeObject_AssertTypeExact(name, &DeeString_Type))
 		goto err;
+
 	/* Instance attributes of types are always bound (because they're all wrappers) */
-	result = DeeType_BoundInstanceAttrString(self, DeeString_STR(name), DeeString_Hash(name));
+	result = DeeType_BoundInstanceAttr(self, name);
 	if (result > 0)
 		return_true;
 	if (result == -1)
 		goto err;
 	if (allow_missing)
 		return_false; /* Unknown attributes are unbound. */
-	err_unknown_attribute(self, DeeString_STR(name), ATTR_ACCESS_GET);
+	err_unknown_attribute(self, name, ATTR_ACCESS_GET);
 err:
 	return NULL;
 }
@@ -3359,9 +3351,7 @@ type_delinstanceattr(DeeTypeObject *self, size_t argc,
 		goto err;
 	if (DeeObject_AssertTypeExact(name, &DeeString_Type))
 		goto err;
-	if (DeeType_DelInstanceAttrString(self,
-	                                  DeeString_STR(name),
-	                                  DeeString_Hash(name)))
+	if (DeeType_DelInstanceAttr(self, name))
 		goto err;
 	return_none;
 err:
@@ -3376,10 +3366,7 @@ type_setinstanceattr(DeeTypeObject *self, size_t argc,
 		goto err;
 	if (DeeObject_AssertTypeExact(name, &DeeString_Type))
 		goto err;
-	if (DeeType_SetInstanceAttrString(self,
-	                                  DeeString_STR(name),
-	                                  DeeString_Hash(name),
-	                                  value))
+	if (DeeType_SetInstanceAttr(self, name, value))
 		goto err;
 	return_reference_(value);
 err:
@@ -3388,24 +3375,24 @@ err:
 
 
 PRIVATE bool DCALL
-impl_type_hasprivateattribute(DeeTypeObject *__restrict self,
-                              char const *name_str,
-                              dhash_t name_hash) {
+impl_type_hasprivateattribute_string_hash(DeeTypeObject *__restrict self,
+                                          char const *name_str,
+                                          dhash_t name_hash) {
 	/* TODO: Lookup the attribute in the member cache, and
 	 *       see which type is set as the declaring type! */
 	if (DeeType_IsClass(self)) {
 		struct class_desc *desc = DeeClass_DESC(self);
-		if (DeeClassDesc_QueryInstanceAttributeStringWithHash(desc, name_str, name_hash) != NULL)
+		if (DeeClassDesc_QueryInstanceAttributeStringHash(desc, name_str, name_hash) != NULL)
 			goto found;
 	} else {
 		if (self->tp_methods &&
-		    DeeType_HasMethodAttr(self, self, name_str, name_hash))
+		    DeeType_HasMethodAttrStringHash(self, self, name_str, name_hash))
 			goto found;
 		if (self->tp_getsets &&
-		    DeeType_HasGetSetAttr(self, self, name_str, name_hash))
+		    DeeType_HasGetSetAttrStringHash(self, self, name_str, name_hash))
 			goto found;
 		if (self->tp_members &&
-		    DeeType_HasMemberAttr(self, self, name_str, name_hash))
+		    DeeType_HasMemberAttrStringHash(self, self, name_str, name_hash))
 			goto found;
 	}
 	return 0;
@@ -3428,22 +3415,22 @@ type_hasattribute(DeeTypeObject *self, size_t argc,
 	name_hash = DeeString_Hash(name);
 	if (!self->tp_attr) {
 		DeeTypeObject *iter;
-		if (DeeType_HasCachedAttr(self, name_str, name_hash))
+		if (DeeType_HasCachedAttrStringHash(self, name_str, name_hash))
 			goto found;
 		iter = self;
 		for (;;) {
 			if (DeeType_IsClass(iter)) {
-				if (DeeType_QueryInstanceAttributeWithHash(self, iter, name, name_hash) != NULL)
+				if (DeeType_QueryInstanceAttributeHash(self, iter, name, name_hash) != NULL)
 					goto found;
 			} else {
 				if (iter->tp_methods &&
-				    DeeType_HasMethodAttr(self, iter, name_str, name_hash))
+				    DeeType_HasMethodAttrStringHash(self, iter, name_str, name_hash))
 					goto found;
 				if (iter->tp_getsets &&
-				    DeeType_HasGetSetAttr(self, iter, name_str, name_hash))
+				    DeeType_HasGetSetAttrStringHash(self, iter, name_str, name_hash))
 					goto found;
 				if (iter->tp_members &&
-				    DeeType_HasMemberAttr(self, iter, name_str, name_hash))
+				    DeeType_HasMemberAttrStringHash(self, iter, name_str, name_hash))
 					goto found;
 			}
 			iter = DeeType_Base(iter);
@@ -3470,9 +3457,9 @@ type_hasprivateattribute(DeeTypeObject *self, size_t argc,
 	if (DeeObject_AssertTypeExact(name, &DeeString_Type))
 		goto err;
 	return_bool(!self->tp_attr &&
-	            impl_type_hasprivateattribute(self,
-	                                          DeeString_STR(name),
-	                                          DeeString_Hash(name)));
+	            impl_type_hasprivateattribute_string_hash(self,
+	                                                      DeeString_STR(name),
+	                                                      DeeString_Hash(name)));
 err:
 	return NULL;
 }
@@ -4268,43 +4255,30 @@ PRIVATE struct type_getset tpconst type_getsets[] = {
 
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 type_getattr(DeeObject *self, DeeObject *name) {
-	return DeeType_GetAttrString((DeeTypeObject *)self,
-	                             DeeString_STR(name),
-	                             DeeString_Hash(name));
+	return DeeType_GetAttr((DeeTypeObject *)self, name);
 }
 
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 type_delattr(DeeObject *self, DeeObject *name) {
-	return DeeType_DelAttrString((DeeTypeObject *)self,
-	                             DeeString_STR(name),
-	                             DeeString_Hash(name));
+	return DeeType_DelAttr((DeeTypeObject *)self, name);
 }
 
 INTERN WUNUSED NONNULL((1, 2, 3)) int DCALL
 type_setattr(DeeObject *self, DeeObject *name, DeeObject *value) {
-	return DeeType_SetAttrString((DeeTypeObject *)self,
-	                             DeeString_STR(name),
-	                             DeeString_Hash(name),
-	                             value);
+	return DeeType_SetAttr((DeeTypeObject *)self, name, value);
 }
 
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 type_callattr(DeeObject *self, DeeObject *name,
               size_t argc, DeeObject *const *argv) {
-	return DeeType_CallAttrString((DeeTypeObject *)self,
-	                              DeeString_STR(name),
-	                              DeeString_Hash(name),
-	                              argc, argv);
+	return DeeType_CallAttr((DeeTypeObject *)self, name, argc, argv);
 }
 
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 type_callattr_kw(DeeObject *self, DeeObject *name,
                  size_t argc, DeeObject *const *argv,
                  DeeObject *kw) {
-	return DeeType_CallAttrStringKw((DeeTypeObject *)self,
-	                                DeeString_STR(name),
-	                                DeeString_Hash(name),
-	                                argc, argv, kw);
+	return DeeType_CallAttrKw((DeeTypeObject *)self, name, argc, argv, kw);
 }
 
 INTERN WUNUSED NONNULL((1, 2, 3)) dssize_t DCALL

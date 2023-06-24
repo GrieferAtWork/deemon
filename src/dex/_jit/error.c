@@ -820,9 +820,9 @@ PRIVATE char const access_names[4][4] = {
 };
 
 INTERN ATTR_COLD NONNULL((1, 2)) int
-(DCALL err_cant_access_attribute_c)(struct class_desc *__restrict desc,
-                                    char const *__restrict name,
-                                    int access) {
+(DCALL err_cant_access_attribute_string_c)(struct class_desc *__restrict desc,
+                                           char const *__restrict name,
+                                           int access) {
 	return DeeError_Throwf(&DeeError_AttributeError,
 	                       "Cannot %s attribute `%s.%s'",
 	                       access_names[access & ATTR_ACCESS_MASK],
@@ -830,7 +830,8 @@ INTERN ATTR_COLD NONNULL((1, 2)) int
 }
 
 INTERN ATTR_COLD NONNULL((1, 2)) int
-(DCALL err_unbound_attribute_c)(struct class_desc *__restrict desc, char const *__restrict name) {
+(DCALL err_unbound_attribute_string_c)(struct class_desc *__restrict desc,
+                                       char const *__restrict name) {
 	return DeeError_Throwf(&DeeError_UnboundAttribute,
 	                       "Unbound attribute `%s.%s'",
 	                       get_desc_name(desc), name);

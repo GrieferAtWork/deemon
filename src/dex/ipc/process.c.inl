@@ -4041,7 +4041,7 @@ process_get_exe(Process *__restrict self) {
 	if (!(self->p_state & PROCESS_FLAG_STARTED)) {
 		Process_LockEndRead(self);
 #define WANT_err_unbound_attribute
-		err_unbound_attribute(&DeeProcess_Type, "exe");
+		err_unbound_attribute_string(&DeeProcess_Type, "exe");
 		goto err;
 	}
 
@@ -4150,7 +4150,7 @@ process_set_exe(Process *self, DeeObject *value) {
 #ifdef CONFIG_ERROR_DELETE_UNBOUND
 	else if (!value) {
 #define WANT_err_unbound_attribute
-		err_unbound_attribute(&DeeProcess_Type, "exe");
+		err_unbound_attribute_string(&DeeProcess_Type, "exe");
 #define WANT_err
 		goto err;
 	}
@@ -4256,7 +4256,7 @@ process_get_argv(Process *__restrict self)
 	if (!(self->p_state & PROCESS_FLAG_STARTED)) {
 		Process_LockEndRead(self);
 #define WANT_err_unbound_attribute
-		err_unbound_attribute(&DeeProcess_Type, "argv");
+		err_unbound_attribute_string(&DeeProcess_Type, "argv");
 		goto err;
 	}
 
@@ -4321,7 +4321,7 @@ process_get_argv(Process *__restrict self)
 		if (!ITER_ISOK(cmdline_file)) {
 #define WANT_err_file_not_found
 			if (cmdline_file != NULL)
-				err_file_not_found(cmdline_path);
+				err_file_not_found_string(cmdline_path);
 			goto err;
 		}
 		cmdline_content = DeeFile_ReadBytes(cmdline_file, (size_t)-1, true);
@@ -4436,7 +4436,7 @@ process_set_argv(Process *self, DeeObject *value)
 #ifdef CONFIG_ERROR_DELETE_UNBOUND
 	else if (!value) {
 #define WANT_err_unbound_attribute
-		err_unbound_attribute(&DeeProcess_Type, "argv");
+		err_unbound_attribute_string(&DeeProcess_Type, "argv");
 #define WANT_err
 		goto err;
 	}
@@ -4498,7 +4498,7 @@ process_get_environ(Process *__restrict self) {
 	if (!(self->p_state & PROCESS_FLAG_STARTED)) {
 		Process_LockEndRead(self);
 #define WANT_err_unbound_attribute
-		err_unbound_attribute(&DeeProcess_Type, "environ");
+		err_unbound_attribute_string(&DeeProcess_Type, "environ");
 		goto err;
 	}
 
@@ -4545,7 +4545,7 @@ process_get_environ(Process *__restrict self) {
 		if (!ITER_ISOK(environ_file)) {
 #define WANT_err_file_not_found
 			if (environ_file != NULL)
-				err_file_not_found(environ_path);
+				err_file_not_found_string(environ_path);
 			goto err;
 		}
 		environ_content = DeeFile_ReadBytes(environ_file, (size_t)-1, true);
@@ -4618,7 +4618,7 @@ process_set_environ(Process *self, DeeObject *value) {
 #ifdef CONFIG_ERROR_DELETE_UNBOUND
 	else if (!value) {
 #define WANT_err_unbound_attribute
-		err_unbound_attribute(&DeeProcess_Type, "environ");
+		err_unbound_attribute_string(&DeeProcess_Type, "environ");
 		goto err;
 	}
 #endif /* CONFIG_ERROR_DELETE_UNBOUND */
@@ -4654,7 +4654,7 @@ process_get_pwd(Process *__restrict self) {
 	if (!(self->p_state & PROCESS_FLAG_STARTED)) {
 		Process_LockEndRead(self);
 #define WANT_err_unbound_attribute
-		err_unbound_attribute(&DeeProcess_Type, "pwd");
+		err_unbound_attribute_string(&DeeProcess_Type, "pwd");
 		goto err;
 	}
 
@@ -4761,7 +4761,7 @@ process_set_pwd(Process *self, DeeObject *value) {
 #ifdef CONFIG_ERROR_DELETE_UNBOUND
 	else if (!value) {
 #define WANT_err_unbound_attribute
-		err_unbound_attribute(&DeeProcess_Type, "pwd");
+		err_unbound_attribute_string(&DeeProcess_Type, "pwd");
 		goto err;
 	}
 #endif /* CONFIG_ERROR_DELETE_UNBOUND */
@@ -4805,7 +4805,7 @@ process_get_stdfd(Process *__restrict self, unsigned int std_handle_id) {
 	if (!(self->p_state & PROCESS_FLAG_STARTED)) {
 		Process_LockEndRead(self);
 #define WANT_err_unbound_attribute
-		err_unbound_attribute(&DeeProcess_Type, std_handle_names[std_handle_id]);
+		err_unbound_attribute_string(&DeeProcess_Type, std_handle_names[std_handle_id]);
 		goto err;
 	}
 
@@ -4916,7 +4916,7 @@ process_set_stdfd(Process *self, unsigned int std_handle_id, DeeObject *value) {
 #ifdef CONFIG_ERROR_DELETE_UNBOUND
 	else if (!value) {
 #define WANT_err_unbound_attribute
-		err_unbound_attribute(&DeeProcess_Type, std_handle_names[std_handle_id]);
+		err_unbound_attribute_string(&DeeProcess_Type, std_handle_names[std_handle_id]);
 #define WANT_err
 		goto err;
 	}

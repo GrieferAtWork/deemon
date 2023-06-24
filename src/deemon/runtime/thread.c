@@ -4400,7 +4400,7 @@ thread_callback_get(DeeThreadObject *__restrict self) {
 err_unbound:
 #endif /* !DeeThread_USE_SINGLE_THREADED */
 	(void)self;
-	err_unbound_attribute(&DeeThread_Type, "callback");
+	err_unbound_attribute_string(&DeeThread_Type, "callback");
 	return NULL;
 }
 
@@ -4461,7 +4461,7 @@ thread_callargs_get(DeeThreadObject *__restrict self) {
 err_unbound:
 #endif /* !DeeThread_USE_SINGLE_THREADED */
 	(void)self;
-	err_unbound_attribute(&DeeThread_Type, "callargs");
+	err_unbound_attribute_string(&DeeThread_Type, "callargs");
 	return NULL;
 }
 
@@ -4519,7 +4519,7 @@ thread_result_get(DeeThreadObject *__restrict self) {
 err_unbound:
 #endif /* !DeeThread_USE_SINGLE_THREADED */
 	(void)self;
-	err_unbound_attribute(&DeeThread_Type, "result");
+	err_unbound_attribute_string(&DeeThread_Type, "result");
 	return NULL;
 }
 
@@ -4532,7 +4532,7 @@ thread_id(DeeThreadObject *__restrict self) {
 	return DeeInt_NEWU(result);
 #else /* Dee_pid_t */
 	(void)self;
-	err_unbound_attribute(&DeeThread_Type, "id");
+	err_unbound_attribute_string(&DeeThread_Type, "id");
 	return NULL;
 #endif /* !Dee_pid_t */
 }
@@ -4672,7 +4672,7 @@ thread_get_osfhandle_np(DeeThreadObject *__restrict self) {
 	uint32_t state = atomic_read(&self->t_state);
 	if likely(state & Dee_THREAD_STATE_HASTHREAD)
 		return DeeInt_NewUIntptr((uintptr_t)hThread);
-	err_unbound_attribute(&DeeThread_Type, Dee_fd_osfhandle_GETSET);
+	err_unbound_attribute_string(&DeeThread_Type, Dee_fd_osfhandle_GETSET);
 	return NULL;
 }
 #endif /* DeeThread_USE_CreateThread */

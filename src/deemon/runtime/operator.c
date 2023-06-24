@@ -4896,12 +4896,12 @@ DEFINE_OPERATOR(DREF DeeObject *, GetAttr,
 	hash = DeeString_Hash(attr_name);
 
 	/* Search through the cache for the requested attribute. */
-	if ((result = DeeType_GetCachedAttr(iter, self, DeeString_STR(attr_name), hash)) != ITER_DONE)
+	if ((result = DeeType_GetCachedAttrStringHash(iter, self, DeeString_STR(attr_name), hash)) != ITER_DONE)
 		goto done;
 	for (;;) {
 		if (DeeType_IsClass(iter)) {
 			struct class_attribute *attr;
-			if ((attr = DeeType_QueryAttributeWithHash(tp_self, iter, attr_name, hash)) != NULL) {
+			if ((attr = DeeType_QueryAttributeHash(tp_self, iter, attr_name, hash)) != NULL) {
 				struct class_desc *desc;
 
 				/* Check if we're allowed to access this attr. */
@@ -4914,13 +4914,13 @@ DEFINE_OPERATOR(DREF DeeObject *, GetAttr,
 			}
 		} else {
 			if (iter->tp_methods &&
-			    (result = DeeType_GetMethodAttr(tp_self, iter, self, DeeString_STR(attr_name), hash)) != ITER_DONE)
+			    (result = DeeType_GetMethodAttrStringHash(tp_self, iter, self, DeeString_STR(attr_name), hash)) != ITER_DONE)
 				goto done;
 			if (iter->tp_getsets &&
-			    (result = DeeType_GetGetSetAttr(tp_self, iter, self, DeeString_STR(attr_name), hash)) != ITER_DONE)
+			    (result = DeeType_GetGetSetAttrStringHash(tp_self, iter, self, DeeString_STR(attr_name), hash)) != ITER_DONE)
 				goto done;
 			if (iter->tp_members &&
-			    (result = DeeType_GetMemberAttr(tp_self, iter, self, DeeString_STR(attr_name), hash)) != ITER_DONE)
+			    (result = DeeType_GetMemberAttrStringHash(tp_self, iter, self, DeeString_STR(attr_name), hash)) != ITER_DONE)
 				goto done;
 		}
 		iter = DeeType_Base(iter);
@@ -4934,9 +4934,7 @@ do_iter_attr:
 			break;
 		}
 	}
-	err_unknown_attribute(GET_TP_SELF(),
-	                      DeeString_STR(attr_name),
-	                      ATTR_ACCESS_GET);
+	err_unknown_attribute(GET_TP_SELF(), attr_name, ATTR_ACCESS_GET);
 	return NULL;
 done:
 	return result;
@@ -4954,12 +4952,12 @@ DEFINE_OPERATOR(int, DelAttr,
 		goto do_iter_attr;
 	hash = DeeString_Hash(attr_name);
 	/* Search through the cache for the requested attribute. */
-	if ((temp = DeeType_DelCachedAttr(iter, self, DeeString_STR(attr_name), hash)) <= 0)
+	if ((temp = DeeType_DelCachedAttrStringHash(iter, self, DeeString_STR(attr_name), hash)) <= 0)
 		goto done;
 	for (;;) {
 		if (DeeType_IsClass(iter)) {
 			struct class_attribute *attr;
-			if ((attr = DeeType_QueryAttributeWithHash(tp_self, iter, attr_name, hash)) != NULL) {
+			if ((attr = DeeType_QueryAttributeHash(tp_self, iter, attr_name, hash)) != NULL) {
 				struct class_desc *desc;
 				/* Check if we're allowed to access this attr. */
 				if (!class_attribute_mayaccess(attr, iter)) {
@@ -4971,13 +4969,13 @@ DEFINE_OPERATOR(int, DelAttr,
 			}
 		} else {
 			if (iter->tp_methods &&
-			    DeeType_HasMethodAttr(tp_self, iter, DeeString_STR(attr_name), hash))
+			    DeeType_HasMethodAttrStringHash(tp_self, iter, DeeString_STR(attr_name), hash))
 				goto noaccess;
 			if (iter->tp_getsets &&
-			    (temp = DeeType_DelGetSetAttr(tp_self, iter, self, DeeString_STR(attr_name), hash)) <= 0)
+			    (temp = DeeType_DelGetSetAttrStringHash(tp_self, iter, self, DeeString_STR(attr_name), hash)) <= 0)
 				goto done;
 			if (iter->tp_members &&
-			    (temp = DeeType_DelMemberAttr(tp_self, iter, self, DeeString_STR(attr_name), hash)) <= 0)
+			    (temp = DeeType_DelMemberAttrStringHash(tp_self, iter, self, DeeString_STR(attr_name), hash)) <= 0)
 				goto done;
 		}
 		iter = DeeType_Base(iter);
@@ -4991,14 +4989,10 @@ do_iter_attr:
 			break;
 		}
 	}
-	err_unknown_attribute(GET_TP_SELF(),
-	                      DeeString_STR(attr_name),
-	                      ATTR_ACCESS_DEL);
+	err_unknown_attribute(GET_TP_SELF(), attr_name, ATTR_ACCESS_DEL);
 	goto err;
 noaccess:
-	err_cant_access_attribute(iter,
-	                          DeeString_STR(attr_name),
-	                          ATTR_ACCESS_DEL);
+	err_cant_access_attribute(iter, attr_name, ATTR_ACCESS_DEL);
 err:
 	return -1;
 done:
@@ -5018,12 +5012,12 @@ DEFINE_OPERATOR(int, SetAttr,
 		goto do_iter_attr;
 	hash = DeeString_Hash(attr_name);
 	/* Search through the cache for the requested attribute. */
-	if ((temp = DeeType_SetCachedAttr(iter, self, DeeString_STR(attr_name), hash, value)) <= 0)
+	if ((temp = DeeType_SetCachedAttrStringHash(iter, self, DeeString_STR(attr_name), hash, value)) <= 0)
 		goto done;
 	for (;;) {
 		if (DeeType_IsClass(iter)) {
 			struct class_attribute *attr;
-			if ((attr = DeeType_QueryAttributeWithHash(tp_self, iter, attr_name, hash)) != NULL) {
+			if ((attr = DeeType_QueryAttributeHash(tp_self, iter, attr_name, hash)) != NULL) {
 				struct class_desc *desc;
 				/* Check if we're allowed to access this attr. */
 				if (!class_attribute_mayaccess(attr, iter)) {
@@ -5035,13 +5029,13 @@ DEFINE_OPERATOR(int, SetAttr,
 			}
 		} else {
 			if (iter->tp_methods &&
-			    DeeType_HasMethodAttr(tp_self, iter, DeeString_STR(attr_name), hash))
+			    DeeType_HasMethodAttrStringHash(tp_self, iter, DeeString_STR(attr_name), hash))
 				goto noaccess;
 			if (iter->tp_getsets &&
-			    (temp = DeeType_SetGetSetAttr(tp_self, iter, self, DeeString_STR(attr_name), hash, value)) <= 0)
+			    (temp = DeeType_SetGetSetAttrStringHash(tp_self, iter, self, DeeString_STR(attr_name), hash, value)) <= 0)
 				goto done;
 			if (iter->tp_members &&
-			    (temp = DeeType_SetMemberAttr(tp_self, iter, self, DeeString_STR(attr_name), hash, value)) <= 0)
+			    (temp = DeeType_SetMemberAttrStringHash(tp_self, iter, self, DeeString_STR(attr_name), hash, value)) <= 0)
 				goto done;
 		}
 		iter = DeeType_Base(iter);
@@ -5055,14 +5049,10 @@ do_iter_attr:
 			break;
 		}
 	}
-	err_unknown_attribute(GET_TP_SELF(),
-	                      DeeString_STR(attr_name),
-	                      ATTR_ACCESS_SET);
+	err_unknown_attribute(GET_TP_SELF(), attr_name, ATTR_ACCESS_SET);
 	goto err;
 noaccess:
-	err_cant_access_attribute(iter,
-	                          DeeString_STR(attr_name),
-	                          ATTR_ACCESS_SET);
+	err_cant_access_attribute(iter, attr_name, ATTR_ACCESS_SET);
 err:
 	return -1;
 done:
@@ -5092,12 +5082,12 @@ DEFINE_OPERATOR(DREF DeeObject *, CallAttr,
 	if (iter->tp_attr)
 		goto do_iter_attr;
 	hash = DeeString_Hash(attr_name);
-	if ((result = DeeType_CallCachedAttr(iter, self, DeeString_STR(attr_name), hash, argc, argv)) != ITER_DONE)
+	if ((result = DeeType_CallCachedAttrStringHash(iter, self, DeeString_STR(attr_name), hash, argc, argv)) != ITER_DONE)
 		goto done;
 	for (;;) {
 		if (DeeType_IsClass(iter)) {
 			struct class_attribute *attr;
-			if ((attr = DeeType_QueryAttributeWithHash(tp_self, iter, attr_name, hash)) != NULL) {
+			if ((attr = DeeType_QueryAttributeHash(tp_self, iter, attr_name, hash)) != NULL) {
 				struct class_desc *desc;
 				/* Check if we're allowed to access this attr. */
 				if (!class_attribute_mayaccess(attr, iter)) {
@@ -5112,13 +5102,13 @@ DEFINE_OPERATOR(DREF DeeObject *, CallAttr,
 			}
 		}
 		if (iter->tp_methods &&
-		    (result = DeeType_CallMethodAttr(tp_self, iter, self, DeeString_STR(attr_name), hash, argc, argv)) != ITER_DONE)
+		    (result = DeeType_CallMethodAttrStringHash(tp_self, iter, self, DeeString_STR(attr_name), hash, argc, argv)) != ITER_DONE)
 			goto done;
 		if (iter->tp_getsets &&
-		    (result = DeeType_GetGetSetAttr(tp_self, iter, self, DeeString_STR(attr_name), hash)) != ITER_DONE)
+		    (result = DeeType_GetGetSetAttrStringHash(tp_self, iter, self, DeeString_STR(attr_name), hash)) != ITER_DONE)
 			goto done_invoke;
 		if (iter->tp_members &&
-		    (result = DeeType_GetMemberAttr(tp_self, iter, self, DeeString_STR(attr_name), hash)) != ITER_DONE)
+		    (result = DeeType_GetMemberAttrStringHash(tp_self, iter, self, DeeString_STR(attr_name), hash)) != ITER_DONE)
 			goto done_invoke;
 		iter = DeeType_Base(iter);
 		if (!iter)
@@ -5145,9 +5135,7 @@ do_iter_attr:
 			goto done_invoke;
 		}
 	}
-	err_unknown_attribute(DeeObject_Class(self),
-	                      DeeString_STR(attr_name),
-	                      ATTR_ACCESS_GET);
+	err_unknown_attribute(DeeObject_Class(self), attr_name, ATTR_ACCESS_GET);
 err:
 	return NULL;
 done_invoke:

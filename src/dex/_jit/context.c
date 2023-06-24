@@ -218,13 +218,13 @@ fast_DeeInstance_GetAttribute(struct instance_desc *__restrict self,
 	}
 	return result;
 unbound:
-	err_unbound_attribute_c(class_desc_from_instance(self, this_arg),
-	                        DeeString_STR(attr->ca_name));
+	err_unbound_attribute_string_c(class_desc_from_instance(self, this_arg),
+	                               DeeString_STR(attr->ca_name));
 	return NULL;
 illegal:
-	err_cant_access_attribute_c(class_desc_from_instance(self, this_arg),
-	                            DeeString_STR(attr->ca_name),
-	                            ATTR_ACCESS_GET);
+	err_cant_access_attribute_string_c(class_desc_from_instance(self, this_arg),
+	                                   DeeString_STR(attr->ca_name),
+	                                   ATTR_ACCESS_GET);
 	return NULL;
 }
 
@@ -311,14 +311,14 @@ fast_DeeInstance_DelAttribute(struct instance_desc *__restrict self,
 	return 0;
 #ifdef CONFIG_ERROR_DELETE_UNBOUND
 unbound:
-	err_unbound_attribute_c(class_desc_from_instance(self, this_arg),
-	                        DeeString_STR(attr->ca_name));
+	err_unbound_attribute_string_c(class_desc_from_instance(self, this_arg),
+	                               DeeString_STR(attr->ca_name));
 	goto err;
 #endif /* CONFIG_ERROR_DELETE_UNBOUND */
 illegal:
-	err_cant_access_attribute_c(class_desc_from_instance(self, this_arg),
-	                            DeeString_STR(attr->ca_name),
-	                            ATTR_ACCESS_DEL);
+	err_cant_access_attribute_string_c(class_desc_from_instance(self, this_arg),
+	                                   DeeString_STR(attr->ca_name),
+	                                   ATTR_ACCESS_DEL);
 err:
 	return -1;
 }
@@ -368,9 +368,9 @@ fast_DeeInstance_SetAttribute(struct instance_desc *__restrict self,
 	}
 	return 0;
 illegal:
-	err_cant_access_attribute_c(class_desc_from_instance(self, this_arg),
-	                            DeeString_STR(attr->ca_name),
-	                            ATTR_ACCESS_SET);
+	err_cant_access_attribute_string_c(class_desc_from_instance(self, this_arg),
+	                                   DeeString_STR(attr->ca_name),
+	                                   ATTR_ACCESS_SET);
 err:
 	return -1;
 }

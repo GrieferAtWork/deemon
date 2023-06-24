@@ -809,7 +809,7 @@ got_result_modulepath:
 	if unlikely(!ITER_ISOK(input_stream)) {
 		result = (DREF DeeModuleObject *)input_stream;
 		if (input_stream == ITER_DONE && throw_error) {
-			err_file_not_found_ob((DeeObject *)module_path_ob);
+			err_file_not_found((DeeObject *)module_path_ob);
 			result = NULL;
 		}
 		goto got_result_modulepath;
@@ -1862,7 +1862,7 @@ load_module_after_dex_failure:
 					result = (DREF DeeModuleObject *)ITER_DONE;
 					goto got_result;
 				}
-				err_file_not_found_ob((DeeObject *)module_path_ob);
+				err_file_not_found((DeeObject *)module_path_ob);
 			}
 			goto err_buf_module_path;
 		}

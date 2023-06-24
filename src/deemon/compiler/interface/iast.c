@@ -532,7 +532,7 @@ ast_getreturnast(Ast *__restrict self) {
 		err_invalid_ast_type(self, AST_RETURN);
 		result = NULL;
 	} else if (!me->a_return) {
-		err_unbound_attribute(Dee_TYPE(self), "returnast");
+		err_unbound_attribute_string(Dee_TYPE(self), "returnast");
 		result = NULL;
 	} else {
 		result = DeeCompiler_GetAst(me->a_return);
@@ -552,7 +552,7 @@ ast_delreturnast(Ast *__restrict self) {
 		result = err_invalid_ast_type(self, AST_RETURN);
 #ifdef CONFIG_ERROR_DELETE_UNBOUND
 	} else if (!me->a_return) {
-		result = err_unbound_attribute(Dee_TYPE(self), "returnast");
+		result = err_unbound_attribute_string(Dee_TYPE(self), "returnast");
 #endif /* CONFIG_ERROR_DELETE_UNBOUND */
 	} else {
 		ast_decref(me->a_return);
@@ -646,7 +646,7 @@ ast_getthrowast(Ast *__restrict self) {
 		err_invalid_ast_type(self, AST_THROW);
 		result = NULL;
 	} else if (!me->a_throw) {
-		err_unbound_attribute(Dee_TYPE(self), "throwast");
+		err_unbound_attribute_string(Dee_TYPE(self), "throwast");
 		result = NULL;
 	} else {
 		result = DeeCompiler_GetAst(me->a_throw);
@@ -666,7 +666,7 @@ ast_delthrowast(Ast *__restrict self) {
 		result = err_invalid_ast_type(self, AST_THROW);
 #ifdef CONFIG_ERROR_DELETE_UNBOUND
 	} else if (!me->a_throw) {
-		result = err_unbound_attribute(Dee_TYPE(self), "throwast");
+		result = err_unbound_attribute_string(Dee_TYPE(self), "throwast");
 #endif /* CONFIG_ERROR_DELETE_UNBOUND */
 	} else {
 		ast_decref(me->a_throw);
@@ -893,7 +893,7 @@ ast_setloopisforeach(Ast *__restrict self,
 		result = err_invalid_ast_type(self, AST_LOOP);
 	} else if (newval) {
 		if (!me->a_loop.l_iter) {
-			result = err_unbound_attribute(Dee_TYPE(self), "loopiter");
+			result = err_unbound_attribute_string(Dee_TYPE(self), "loopiter");
 		} else {
 			me->a_flag |= AST_FLOOP_FOREACH;
 		}
@@ -1054,7 +1054,7 @@ ast_setloopflags(Ast *__restrict self,
 		result = err_invalid_ast_type(self, AST_LOOP);
 	} else {
 		if ((new_flags & AST_FLOOP_FOREACH) && !me->a_loop.l_iter) {
-			result = err_unbound_attribute(Dee_TYPE(self), "loopiter");
+			result = err_unbound_attribute_string(Dee_TYPE(self), "loopiter");
 		} else {
 			me->a_flag = new_flags;
 		}
@@ -1093,7 +1093,7 @@ ast_getloopcond(Ast *__restrict self) {
 		err_is_a_foreach_loop(self);
 		result = NULL;
 	} else if (!me->a_loop.l_cond) {
-		err_unbound_attribute(Dee_TYPE(self), "loopcond");
+		err_unbound_attribute_string(Dee_TYPE(self), "loopcond");
 		result = NULL;
 	} else {
 		result = DeeCompiler_GetAst(me->a_loop.l_cond);
@@ -1115,7 +1115,7 @@ ast_delloopcond(Ast *__restrict self) {
 		result = err_is_a_foreach_loop(self);
 #ifdef CONFIG_ERROR_DELETE_UNBOUND
 	} else if (!me->a_loop.l_cond) {
-		result = err_unbound_attribute(Dee_TYPE(self), "loopcond");
+		result = err_unbound_attribute_string(Dee_TYPE(self), "loopcond");
 #endif /* CONFIG_ERROR_DELETE_UNBOUND */
 	} else {
 		ast_decref(me->a_loop.l_cond);
@@ -1170,7 +1170,7 @@ ast_getloopnext(Ast *__restrict self) {
 		err_is_a_foreach_loop(self);
 		result = NULL;
 	} else if (!me->a_loop.l_next) {
-		err_unbound_attribute(Dee_TYPE(self), "loopnext");
+		err_unbound_attribute_string(Dee_TYPE(self), "loopnext");
 		result = NULL;
 	} else {
 		result = DeeCompiler_GetAst(me->a_loop.l_next);
@@ -1192,7 +1192,7 @@ ast_delloopnext(Ast *__restrict self) {
 		result = err_is_a_foreach_loop(self);
 #ifdef CONFIG_ERROR_DELETE_UNBOUND
 	} else if (!me->a_loop.l_next) {
-		result = err_unbound_attribute(Dee_TYPE(self), "loopnext");
+		result = err_unbound_attribute_string(Dee_TYPE(self), "loopnext");
 #endif /* CONFIG_ERROR_DELETE_UNBOUND */
 	} else {
 		ast_decref(me->a_loop.l_next);
@@ -1247,7 +1247,7 @@ ast_getloopelem(Ast *__restrict self) {
 		err_not_a_foreach_loop(self);
 		result = NULL;
 	} else if (!me->a_loop.l_elem) {
-		err_unbound_attribute(Dee_TYPE(self), "loopelem");
+		err_unbound_attribute_string(Dee_TYPE(self), "loopelem");
 		result = NULL;
 	} else {
 		result = DeeCompiler_GetAst(me->a_loop.l_elem);
@@ -1269,7 +1269,7 @@ ast_delloopelem(Ast *__restrict self) {
 		result = err_not_a_foreach_loop(self);
 #ifdef CONFIG_ERROR_DELETE_UNBOUND
 	} else if (!me->a_loop.l_elem) {
-		result = err_unbound_attribute(Dee_TYPE(self), "loopelem");
+		result = err_unbound_attribute_string(Dee_TYPE(self), "loopelem");
 #endif /* CONFIG_ERROR_DELETE_UNBOUND */
 	} else {
 		ast_decref(me->a_loop.l_elem);
@@ -1371,7 +1371,7 @@ ast_getlooploop(Ast *__restrict self) {
 		err_invalid_ast_type(self, AST_LOOP);
 		result = NULL;
 	} else if (!me->a_loop.l_loop) {
-		err_unbound_attribute(Dee_TYPE(self), "looploop");
+		err_unbound_attribute_string(Dee_TYPE(self), "looploop");
 		result = NULL;
 	} else {
 		result = DeeCompiler_GetAst(me->a_loop.l_loop);
@@ -1391,7 +1391,7 @@ ast_dellooploop(Ast *__restrict self) {
 		result = err_invalid_ast_type(self, AST_LOOP);
 #ifdef CONFIG_ERROR_DELETE_UNBOUND
 	} else if (!me->a_loop.l_loop) {
-		result = err_unbound_attribute(Dee_TYPE(self), "looploop");
+		result = err_unbound_attribute_string(Dee_TYPE(self), "looploop");
 #endif /* CONFIG_ERROR_DELETE_UNBOUND */
 	} else {
 		ast_decref(me->a_loop.l_loop);
@@ -1442,7 +1442,7 @@ ast_getloopelemcond(Ast *__restrict self) {
 		err_invalid_ast_type(self, AST_LOOP);
 		result = NULL;
 	} else if (!me->a_loop.l_elem) {
-		err_unbound_attribute(Dee_TYPE(self), "loopelemcond");
+		err_unbound_attribute_string(Dee_TYPE(self), "loopelemcond");
 		result = NULL;
 	} else {
 		result = DeeCompiler_GetAst(me->a_loop.l_elem);
@@ -1462,7 +1462,7 @@ ast_delloopelemcond(Ast *__restrict self) {
 		result = err_invalid_ast_type(self, AST_LOOP);
 #ifdef CONFIG_ERROR_DELETE_UNBOUND
 	} else if (!me->a_loop.l_elem) {
-		result = err_unbound_attribute(Dee_TYPE(self), "loopelemcond");
+		result = err_unbound_attribute_string(Dee_TYPE(self), "loopelemcond");
 #endif /* CONFIG_ERROR_DELETE_UNBOUND */
 	} else {
 		ast_decref(me->a_loop.l_elem);
@@ -1512,7 +1512,7 @@ ast_getloopiternext(Ast *__restrict self) {
 		err_invalid_ast_type(self, AST_LOOP);
 		result = NULL;
 	} else if (!me->a_loop.l_iter) {
-		err_unbound_attribute(Dee_TYPE(self), "loopiternext");
+		err_unbound_attribute_string(Dee_TYPE(self), "loopiternext");
 		result = NULL;
 	} else {
 		result = DeeCompiler_GetAst(me->a_loop.l_iter);
@@ -1531,10 +1531,10 @@ ast_delloopiternext(Ast *__restrict self) {
 	if unlikely(me->a_type != AST_LOOP) {
 		result = err_invalid_ast_type(self, AST_LOOP);
 	} else if (me->a_flag & AST_FLOOP_FOREACH) {
-		result = err_cant_access_attribute(Dee_TYPE(self), "loopiternext", ATTR_ACCESS_DEL);
+		result = err_cant_access_attribute_string(Dee_TYPE(self), "loopiternext", ATTR_ACCESS_DEL);
 #ifdef CONFIG_ERROR_DELETE_UNBOUND
 	} else if (!me->a_loop.l_iter) {
-		result = err_unbound_attribute(Dee_TYPE(self), "loopiternext");
+		result = err_unbound_attribute_string(Dee_TYPE(self), "loopiternext");
 #endif /* CONFIG_ERROR_DELETE_UNBOUND */
 	} else {
 		ast_decref(me->a_loop.l_iter);
@@ -1670,7 +1670,7 @@ ast_getconditionaltt(Ast *__restrict self) {
 		err_invalid_ast_type(self, AST_CONDITIONAL);
 		result = NULL;
 	} else if (!me->a_conditional.c_tt) {
-		err_unbound_attribute(Dee_TYPE(self), "conditionaltt");
+		err_unbound_attribute_string(Dee_TYPE(self), "conditionaltt");
 		result = NULL;
 	} else {
 		result = DeeCompiler_GetAst(me->a_conditional.c_tt);
@@ -1690,7 +1690,7 @@ ast_delconditionaltt(Ast *__restrict self) {
 		result = err_invalid_ast_type(self, AST_CONDITIONAL);
 #ifdef CONFIG_ERROR_DELETE_UNBOUND
 	} else if (!me->a_conditional.c_tt) {
-		result = err_unbound_attribute(Dee_TYPE(self), "conditionaltt");
+		result = err_unbound_attribute_string(Dee_TYPE(self), "conditionaltt");
 #endif /* CONFIG_ERROR_DELETE_UNBOUND */
 	} else {
 		ast_decref(me->a_conditional.c_tt);
@@ -1740,7 +1740,7 @@ ast_getconditionalff(Ast *__restrict self) {
 		err_invalid_ast_type(self, AST_CONDITIONAL);
 		result = NULL;
 	} else if (!me->a_conditional.c_ff) {
-		err_unbound_attribute(Dee_TYPE(self), "conditionalff");
+		err_unbound_attribute_string(Dee_TYPE(self), "conditionalff");
 		result = NULL;
 	} else {
 		result = DeeCompiler_GetAst(me->a_conditional.c_ff);
@@ -1760,7 +1760,7 @@ ast_delconditionalff(Ast *__restrict self) {
 		result = err_invalid_ast_type(self, AST_CONDITIONAL);
 #ifdef CONFIG_ERROR_DELETE_UNBOUND
 	} else if (!me->a_conditional.c_ff) {
-		result = err_unbound_attribute(Dee_TYPE(self), "conditionalff");
+		result = err_unbound_attribute_string(Dee_TYPE(self), "conditionalff");
 #endif /* CONFIG_ERROR_DELETE_UNBOUND */
 	} else {
 		ast_decref(me->a_conditional.c_ff);
@@ -2252,7 +2252,7 @@ ast_getoperatorfuncbinding(Ast *__restrict self) {
 		err_invalid_ast_type(self, AST_OPERATOR_FUNC);
 		result = NULL;
 	} else if (!me->a_operator_func.of_binding) {
-		err_unbound_attribute(Dee_TYPE(self), "operatorfuncbinding");
+		err_unbound_attribute_string(Dee_TYPE(self), "operatorfuncbinding");
 		result = NULL;
 	} else {
 		result = DeeCompiler_GetAst(me->a_operator_func.of_binding);
@@ -2272,7 +2272,7 @@ ast_deloperatorfuncbinding(Ast *__restrict self) {
 		result = err_invalid_ast_type(self, AST_OPERATOR_FUNC);
 #ifdef CONFIG_ERROR_DELETE_UNBOUND
 	} else if (!me->a_operator_func.of_binding) {
-		result = err_unbound_attribute(Dee_TYPE(self), "operatorfuncbinding");
+		result = err_unbound_attribute_string(Dee_TYPE(self), "operatorfuncbinding");
 #endif /* CONFIG_ERROR_DELETE_UNBOUND */
 	} else {
 		ast_decref(me->a_operator_func.of_binding);
@@ -2406,7 +2406,7 @@ ast_getoperatorb(Ast *__restrict self) {
 		err_invalid_ast_type(self, AST_OPERATOR);
 		result = NULL;
 	} else if (!me->a_operator.o_op1) {
-		err_unbound_attribute(Dee_TYPE(self), "operatorb");
+		err_unbound_attribute_string(Dee_TYPE(self), "operatorb");
 		result = NULL;
 	} else {
 		result = DeeCompiler_GetAst(me->a_operator.o_op1);
@@ -2426,7 +2426,7 @@ ast_deloperatorb(Ast *__restrict self) {
 		result = err_invalid_ast_type(self, AST_OPERATOR_FUNC);
 #ifdef CONFIG_ERROR_DELETE_UNBOUND
 	} else if (!me->a_operator.o_op1) {
-		result = err_unbound_attribute(Dee_TYPE(self), "operatorb");
+		result = err_unbound_attribute_string(Dee_TYPE(self), "operatorb");
 #endif /* CONFIG_ERROR_DELETE_UNBOUND */
 	} else {
 		ast_decref(me->a_operator.o_op1);
@@ -2476,7 +2476,7 @@ ast_getoperatorc(Ast *__restrict self) {
 		err_invalid_ast_type(self, AST_OPERATOR);
 		result = NULL;
 	} else if (!me->a_operator.o_op2) {
-		err_unbound_attribute(Dee_TYPE(self), "operatorc");
+		err_unbound_attribute_string(Dee_TYPE(self), "operatorc");
 		result = NULL;
 	} else {
 		result = DeeCompiler_GetAst(me->a_operator.o_op2);
@@ -2496,7 +2496,7 @@ ast_deloperatorc(Ast *__restrict self) {
 		result = err_invalid_ast_type(self, AST_OPERATOR_FUNC);
 #ifdef CONFIG_ERROR_DELETE_UNBOUND
 	} else if (!me->a_operator.o_op2) {
-		result = err_unbound_attribute(Dee_TYPE(self), "operatorc");
+		result = err_unbound_attribute_string(Dee_TYPE(self), "operatorc");
 #endif /* CONFIG_ERROR_DELETE_UNBOUND */
 	} else {
 		ast_decref(me->a_operator.o_op2);
@@ -2546,7 +2546,7 @@ ast_getoperatord(Ast *__restrict self) {
 		err_invalid_ast_type(self, AST_OPERATOR);
 		result = NULL;
 	} else if (!me->a_operator.o_op3) {
-		err_unbound_attribute(Dee_TYPE(self), "operatord");
+		err_unbound_attribute_string(Dee_TYPE(self), "operatord");
 		result = NULL;
 	} else {
 		result = DeeCompiler_GetAst(me->a_operator.o_op3);
@@ -2566,7 +2566,7 @@ ast_deloperatord(Ast *__restrict self) {
 		result = err_invalid_ast_type(self, AST_OPERATOR_FUNC);
 #ifdef CONFIG_ERROR_DELETE_UNBOUND
 	} else if (!me->a_operator.o_op3) {
-		result = err_unbound_attribute(Dee_TYPE(self), "operatord");
+		result = err_unbound_attribute_string(Dee_TYPE(self), "operatord");
 #endif /* CONFIG_ERROR_DELETE_UNBOUND */
 	} else {
 		ast_decref(me->a_operator.o_op3);
@@ -2918,7 +2918,7 @@ ast_getactiona(Ast *__restrict self) {
 		err_invalid_ast_type(self, AST_ACTION);
 		result = NULL;
 	} else if (AST_FACTION_ARGC_GT(me->a_flag) < 1) {
-		err_unknown_attribute(Dee_TYPE(self), "actiona", ATTR_ACCESS_GET);
+		err_unknown_attribute_string(Dee_TYPE(self), "actiona", ATTR_ACCESS_GET);
 		result = NULL;
 	} else {
 		result = DeeCompiler_GetAst(me->a_action.a_act0);
@@ -2944,7 +2944,7 @@ ast_setactiona(Ast *__restrict self,
 	} else if (value->ci_value->a_scope->s_base != me->a_scope->s_base) {
 		result = err_invalid_ast_basescope(value, me->a_scope->s_base);
 	} else if (AST_FACTION_ARGC_GT(me->a_flag) < 1) {
-		result = err_unknown_attribute(Dee_TYPE(self), "actiona", ATTR_ACCESS_SET);
+		result = err_unknown_attribute_string(Dee_TYPE(self), "actiona", ATTR_ACCESS_SET);
 	} else {
 		DREF struct ast *old_ast;
 		ast_incref(value->ci_value);
@@ -2967,7 +2967,7 @@ ast_getactionb(Ast *__restrict self) {
 		err_invalid_ast_type(self, AST_ACTION);
 		result = NULL;
 	} else if (AST_FACTION_ARGC_GT(me->a_flag) < 2) {
-		err_unknown_attribute(Dee_TYPE(self), "actionb", ATTR_ACCESS_GET);
+		err_unknown_attribute_string(Dee_TYPE(self), "actionb", ATTR_ACCESS_GET);
 		result = NULL;
 	} else {
 		result = DeeCompiler_GetAst(me->a_action.a_act1);
@@ -2993,7 +2993,7 @@ ast_setactionb(Ast *__restrict self,
 	} else if (value->ci_value->a_scope->s_base != me->a_scope->s_base) {
 		result = err_invalid_ast_basescope(value, me->a_scope->s_base);
 	} else if (AST_FACTION_ARGC_GT(me->a_flag) < 2) {
-		result = err_unknown_attribute(Dee_TYPE(self), "actionb", ATTR_ACCESS_SET);
+		result = err_unknown_attribute_string(Dee_TYPE(self), "actionb", ATTR_ACCESS_SET);
 	} else {
 		DREF struct ast *old_ast;
 		ast_incref(value->ci_value);
@@ -3016,7 +3016,7 @@ ast_getactionc(Ast *__restrict self) {
 		err_invalid_ast_type(self, AST_ACTION);
 		result = NULL;
 	} else if (AST_FACTION_ARGC_GT(me->a_flag) < 3) {
-		err_unknown_attribute(Dee_TYPE(self), "actionc", ATTR_ACCESS_GET);
+		err_unknown_attribute_string(Dee_TYPE(self), "actionc", ATTR_ACCESS_GET);
 		result = NULL;
 	} else {
 		result = DeeCompiler_GetAst(me->a_action.a_act2);
@@ -3042,7 +3042,7 @@ ast_setactionc(Ast *__restrict self,
 	} else if (value->ci_value->a_scope->s_base != me->a_scope->s_base) {
 		result = err_invalid_ast_basescope(value, me->a_scope->s_base);
 	} else if (AST_FACTION_ARGC_GT(me->a_flag) < 3) {
-		result = err_unknown_attribute(Dee_TYPE(self), "actionc", ATTR_ACCESS_SET);
+		result = err_unknown_attribute_string(Dee_TYPE(self), "actionc", ATTR_ACCESS_SET);
 	} else {
 		DREF struct ast *old_ast;
 		ast_incref(value->ci_value);

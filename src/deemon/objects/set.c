@@ -223,7 +223,7 @@ PRIVATE struct type_seq invset_seq = {
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeTypeObject *DCALL
 invset_iterator_get(DeeTypeObject *__restrict self) {
-	err_unknown_attribute(self, STR_Iterator, ATTR_ACCESS_GET);
+	err_unknown_attribute_string(self, STR_Iterator, ATTR_ACCESS_GET);
 	return NULL;
 }
 
@@ -764,7 +764,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeTypeObject *DCALL
 set_iterator_get(DeeTypeObject *__restrict self) {
 	if (self == &DeeSet_Type)
 		return_reference_(&DeeIterator_Type);
-	err_unknown_attribute(self, STR_Iterator, ATTR_ACCESS_GET);
+	err_unknown_attribute_string(self, STR_Iterator, ATTR_ACCESS_GET);
 	return NULL;
 }
 

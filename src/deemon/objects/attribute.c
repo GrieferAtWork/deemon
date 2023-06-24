@@ -425,7 +425,7 @@ attribute_init(DeeAttributeObject *__restrict self,
 	                                   &rules);
 	if (lookup_error > 0) {
 		/* Attribute wasn't found... */
-		err_unknown_attribute_lookup(Dee_TYPE(search_self), rules.alr_name);
+		err_unknown_attribute_lookup_string(Dee_TYPE(search_self), rules.alr_name);
 		goto err;
 	}
 	if likely(!lookup_error) {

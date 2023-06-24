@@ -94,9 +94,7 @@ f_builtin_boundattr(size_t argc, DeeObject *const *argv) {
 	default:
 		if (allow_missing)
 			return_false; /* Unknown attributes are unbound. */
-		err_unknown_attribute(DeeObject_Class(self),
-		                      DeeString_STR(attr),
-		                      ATTR_ACCESS_GET);
+		err_unknown_attribute(DeeObject_Class(self), attr, ATTR_ACCESS_GET);
 		break;
 	}
 err:

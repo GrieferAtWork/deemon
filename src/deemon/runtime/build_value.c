@@ -84,7 +84,7 @@ count_pack_args(char const *__restrict format) {
 		case 'n':
 		case '-': /* none */
 		case 'o':
-		case 'O': /* object */
+		case 'O': /* Object */
 		case 'f':
 		case 'D': /* float */
 		case 'd':
@@ -152,7 +152,7 @@ count_unpack_args(char const **__restrict p_format) {
 
 		case 'n':
 		case '-': /* none */
-		case 'o': /* object */
+		case 'o': /* Object */
 		case 's': /* string */
 		case 'f':
 		case 'D': /* float */
@@ -362,7 +362,7 @@ again:
 	case 'O':
 		result = va_arg(p_args->vl_ap, DeeObject *);
 		if (format[-1] == 'o') {
-			ASSERTF(result, "NULL-object passed as `o' operand");
+			ASSERTF(result, "NULL-object passed to `o' operand");
 			Dee_Incref(result);
 		}
 		break;

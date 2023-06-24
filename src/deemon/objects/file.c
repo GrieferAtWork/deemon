@@ -1810,7 +1810,7 @@ PUBLIC bool DCALL DeeFile_ResetStd(void) {
 		DREF DeeObject *old_stream;                               \
 		old_stream = DeeFile_SetStd(DEE_STDXXX, NULL);            \
 		if unlikely(!old_stream) {                                \
-			err_unbound_attribute(Dee_TYPE(self), #stdxxx);       \
+			err_unbound_attribute_string(Dee_TYPE(self), #stdxxx);       \
 			return -1;                                            \
 		}                                                         \
 		return 0;                                                 \

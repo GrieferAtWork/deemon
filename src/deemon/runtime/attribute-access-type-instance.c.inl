@@ -19,201 +19,201 @@
  */
 #ifdef __INTELLISENSE__
 #include "attribute.c"
-//#define DEFINE_DeeType_GetInstanceAttrString
-//#define DEFINE_DeeType_GetInstanceAttrStringLen
-//#define DEFINE_DeeType_BoundInstanceAttrString
-//#define DEFINE_DeeType_BoundInstanceAttrStringLen
-//#define DEFINE_DeeType_CallInstanceAttrString
-//#define DEFINE_DeeType_CallInstanceAttrStringLen
-//#define DEFINE_DeeType_CallInstanceAttrStringKw
-//#define DEFINE_DeeType_CallInstanceAttrStringLenKw
-//#define DEFINE_DeeType_CallInstanceAttrStringTuple
-//#define DEFINE_DeeType_CallInstanceAttrStringLenTuple
-//#define DEFINE_DeeType_CallInstanceAttrStringTupleKw
-//#define DEFINE_DeeType_CallInstanceAttrStringLenTupleKw
-//#define DEFINE_DeeType_VCallInstanceAttrStringf
-//#define DEFINE_DeeType_VCallInstanceAttrStringLenf
-#define DEFINE_DeeType_HasInstanceAttrString
-//#define DEFINE_DeeType_HasInstanceAttrStringLen
-//#define DEFINE_DeeType_DelInstanceAttrString
-//#define DEFINE_DeeType_DelInstanceAttrStringLen
-//#define DEFINE_DeeType_SetInstanceAttrString
-//#define DEFINE_DeeType_SetInstanceAttrStringLen
+//#define DEFINE_DeeType_GetInstanceAttrStringHash
+//#define DEFINE_DeeType_GetInstanceAttrStringLenHash
+//#define DEFINE_DeeType_BoundInstanceAttrStringHash
+//#define DEFINE_DeeType_BoundInstanceAttrStringLenHash
+//#define DEFINE_DeeType_CallInstanceAttrStringHash
+//#define DEFINE_DeeType_CallInstanceAttrStringLenHash
+//#define DEFINE_DeeType_CallInstanceAttrStringHashKw
+//#define DEFINE_DeeType_CallInstanceAttrStringLenHashKw
+//#define DEFINE_DeeType_CallInstanceAttrStringHashTuple
+//#define DEFINE_DeeType_CallInstanceAttrStringLenHashTuple
+//#define DEFINE_DeeType_CallInstanceAttrStringHashTupleKw
+//#define DEFINE_DeeType_CallInstanceAttrStringLenHashTupleKw
+//#define DEFINE_DeeType_VCallInstanceAttrStringHashf
+//#define DEFINE_DeeType_VCallInstanceAttrStringLenHashf
+#define DEFINE_DeeType_HasInstanceAttrStringHash
+//#define DEFINE_DeeType_HasInstanceAttrStringLenHash
+//#define DEFINE_DeeType_DelInstanceAttrStringHash
+//#define DEFINE_DeeType_DelInstanceAttrStringLenHash
+//#define DEFINE_DeeType_SetInstanceAttrStringHash
+//#define DEFINE_DeeType_SetInstanceAttrStringLenHash
 //#define DEFINE_DeeType_FindInstanceAttr
 #endif /* __INTELLISENSE__ */
 
-#if (defined(DEFINE_DeeType_GetInstanceAttrString) +            \
-     defined(DEFINE_DeeType_GetInstanceAttrStringLen) +         \
-     defined(DEFINE_DeeType_BoundInstanceAttrString) +          \
-     defined(DEFINE_DeeType_BoundInstanceAttrStringLen) +       \
-     defined(DEFINE_DeeType_CallInstanceAttrString) +           \
-     defined(DEFINE_DeeType_CallInstanceAttrStringLen) +        \
-     defined(DEFINE_DeeType_CallInstanceAttrStringKw) +         \
-     defined(DEFINE_DeeType_CallInstanceAttrStringLenKw) +      \
-     defined(DEFINE_DeeType_CallInstanceAttrStringTuple) +      \
-     defined(DEFINE_DeeType_CallInstanceAttrStringLenTuple) +   \
-     defined(DEFINE_DeeType_CallInstanceAttrStringTupleKw) +    \
-     defined(DEFINE_DeeType_CallInstanceAttrStringLenTupleKw) + \
-     defined(DEFINE_DeeType_VCallInstanceAttrStringf) +         \
-     defined(DEFINE_DeeType_VCallInstanceAttrStringLenf) +      \
-     defined(DEFINE_DeeType_HasInstanceAttrString) +            \
-     defined(DEFINE_DeeType_HasInstanceAttrStringLen) +         \
-     defined(DEFINE_DeeType_DelInstanceAttrString) +            \
-     defined(DEFINE_DeeType_DelInstanceAttrStringLen) +         \
-     defined(DEFINE_DeeType_SetInstanceAttrString) +            \
-     defined(DEFINE_DeeType_SetInstanceAttrStringLen) +         \
+#if (defined(DEFINE_DeeType_GetInstanceAttrStringHash) +            \
+     defined(DEFINE_DeeType_GetInstanceAttrStringLenHash) +         \
+     defined(DEFINE_DeeType_BoundInstanceAttrStringHash) +          \
+     defined(DEFINE_DeeType_BoundInstanceAttrStringLenHash) +       \
+     defined(DEFINE_DeeType_CallInstanceAttrStringHash) +           \
+     defined(DEFINE_DeeType_CallInstanceAttrStringLenHash) +        \
+     defined(DEFINE_DeeType_CallInstanceAttrStringHashKw) +         \
+     defined(DEFINE_DeeType_CallInstanceAttrStringLenHashKw) +      \
+     defined(DEFINE_DeeType_CallInstanceAttrStringHashTuple) +      \
+     defined(DEFINE_DeeType_CallInstanceAttrStringLenHashTuple) +   \
+     defined(DEFINE_DeeType_CallInstanceAttrStringHashTupleKw) +    \
+     defined(DEFINE_DeeType_CallInstanceAttrStringLenHashTupleKw) + \
+     defined(DEFINE_DeeType_VCallInstanceAttrStringHashf) +         \
+     defined(DEFINE_DeeType_VCallInstanceAttrStringLenHashf) +      \
+     defined(DEFINE_DeeType_HasInstanceAttrStringHash) +            \
+     defined(DEFINE_DeeType_HasInstanceAttrStringLenHash) +         \
+     defined(DEFINE_DeeType_DelInstanceAttrStringHash) +            \
+     defined(DEFINE_DeeType_DelInstanceAttrStringLenHash) +         \
+     defined(DEFINE_DeeType_SetInstanceAttrStringHash) +            \
+     defined(DEFINE_DeeType_SetInstanceAttrStringLenHash) +         \
      defined(DEFINE_DeeType_FindInstanceAttr)) != 1
 #error "Must #define exactly one of these macros"
 #endif /* ... */
 
-#ifdef DEFINE_DeeType_GetInstanceAttrString
-#define LOCAL_DeeType_AccessInstanceAttr                             DeeType_GetInstanceAttrString
-#define LOCAL_DeeType_AccessCachedInstanceAttr(self)                 DeeType_GetCachedInstanceAttr(self, attr, hash)
-#define LOCAL_DeeType_AccessIInstanceMethodAttr(tp_invoker, tp_self) DeeType_GetIInstanceMethodAttr(tp_invoker, tp_self, attr, hash)
-#define LOCAL_DeeType_AccessIInstanceGetSetAttr(tp_invoker, tp_self) DeeType_GetIInstanceGetSetAttr(tp_invoker, tp_self, attr, hash)
-#define LOCAL_DeeType_AccessIInstanceMemberAttr(tp_invoker, tp_self) DeeType_GetIInstanceMemberAttr(tp_invoker, tp_self, attr, hash)
+#ifdef DEFINE_DeeType_GetInstanceAttrStringHash
+#define LOCAL_DeeType_AccessInstanceAttr                             DeeType_GetInstanceAttrStringHash
+#define LOCAL_DeeType_AccessCachedInstanceAttr(self)                 DeeType_GetCachedInstanceAttrStringHash(self, attr, hash)
+#define LOCAL_DeeType_AccessIInstanceMethodAttr(tp_invoker, tp_self) DeeType_GetIInstanceMethodAttrStringHash(tp_invoker, tp_self, attr, hash)
+#define LOCAL_DeeType_AccessIInstanceGetSetAttr(tp_invoker, tp_self) DeeType_GetIInstanceGetSetAttrStringHash(tp_invoker, tp_self, attr, hash)
+#define LOCAL_DeeType_AccessIInstanceMemberAttr(tp_invoker, tp_self) DeeType_GetIInstanceMemberAttrStringHash(tp_invoker, tp_self, attr, hash)
 #define LOCAL_IS_GET
-#elif defined(DEFINE_DeeType_GetInstanceAttrStringLen)
-#define LOCAL_DeeType_AccessInstanceAttr                             DeeType_GetInstanceAttrStringLen
-#define LOCAL_DeeType_AccessCachedInstanceAttr(self)                 DeeType_GetCachedInstanceAttrLen(self, attr, attrlen, hash)
-#define LOCAL_DeeType_AccessIInstanceMethodAttr(tp_invoker, tp_self) DeeType_GetIInstanceMethodAttrLen(tp_invoker, tp_self, attr, attrlen, hash)
-#define LOCAL_DeeType_AccessIInstanceGetSetAttr(tp_invoker, tp_self) DeeType_GetIInstanceGetSetAttrLen(tp_invoker, tp_self, attr, attrlen, hash)
-#define LOCAL_DeeType_AccessIInstanceMemberAttr(tp_invoker, tp_self) DeeType_GetIInstanceMemberAttrLen(tp_invoker, tp_self, attr, attrlen, hash)
+#elif defined(DEFINE_DeeType_GetInstanceAttrStringLenHash)
+#define LOCAL_DeeType_AccessInstanceAttr                             DeeType_GetInstanceAttrStringLenHash
+#define LOCAL_DeeType_AccessCachedInstanceAttr(self)                 DeeType_GetCachedInstanceAttrStringLenHash(self, attr, attrlen, hash)
+#define LOCAL_DeeType_AccessIInstanceMethodAttr(tp_invoker, tp_self) DeeType_GetIInstanceMethodAttrStringLenHash(tp_invoker, tp_self, attr, attrlen, hash)
+#define LOCAL_DeeType_AccessIInstanceGetSetAttr(tp_invoker, tp_self) DeeType_GetIInstanceGetSetAttrStringLenHash(tp_invoker, tp_self, attr, attrlen, hash)
+#define LOCAL_DeeType_AccessIInstanceMemberAttr(tp_invoker, tp_self) DeeType_GetIInstanceMemberAttrStringLenHash(tp_invoker, tp_self, attr, attrlen, hash)
 #define LOCAL_IS_GET
 #define LOCAL_HAS_len
-#elif defined(DEFINE_DeeType_BoundInstanceAttrString)
-#define LOCAL_DeeType_AccessInstanceAttr                             DeeType_BoundInstanceAttrString
-#define LOCAL_DeeType_AccessCachedInstanceAttr(self)                 DeeType_BoundCachedInstanceAttr(self, attr, hash)
-#define LOCAL_DeeType_AccessIInstanceMethodAttr(tp_invoker, tp_self) (DeeType_HasIInstanceMethodAttr(tp_invoker, tp_self, attr, hash) ? 1 : -2)
-#define LOCAL_DeeType_AccessIInstanceGetSetAttr(tp_invoker, tp_self) (DeeType_HasIInstanceGetSetAttr(tp_invoker, tp_self, attr, hash) ? 1 : -2)
-#define LOCAL_DeeType_AccessIInstanceMemberAttr(tp_invoker, tp_self) (DeeType_HasIInstanceMemberAttr(tp_invoker, tp_self, attr, hash) ? 1 : -2)
+#elif defined(DEFINE_DeeType_BoundInstanceAttrStringHash)
+#define LOCAL_DeeType_AccessInstanceAttr                             DeeType_BoundInstanceAttrStringHash
+#define LOCAL_DeeType_AccessCachedInstanceAttr(self)                 DeeType_BoundCachedInstanceAttrStringHash(self, attr, hash)
+#define LOCAL_DeeType_AccessIInstanceMethodAttr(tp_invoker, tp_self) (DeeType_HasIInstanceMethodAttrStringHash(tp_invoker, tp_self, attr, hash) ? 1 : -2)
+#define LOCAL_DeeType_AccessIInstanceGetSetAttr(tp_invoker, tp_self) (DeeType_HasIInstanceGetSetAttrStringHash(tp_invoker, tp_self, attr, hash) ? 1 : -2)
+#define LOCAL_DeeType_AccessIInstanceMemberAttr(tp_invoker, tp_self) (DeeType_HasIInstanceMemberAttrStringHash(tp_invoker, tp_self, attr, hash) ? 1 : -2)
 #define LOCAL_IS_BOUND
-#elif defined(DEFINE_DeeType_BoundInstanceAttrStringLen)
-#define LOCAL_DeeType_AccessInstanceAttr                             DeeType_BoundInstanceAttrStringLen
-#define LOCAL_DeeType_AccessCachedInstanceAttr(self)                 DeeType_BoundCachedInstanceAttrLen(self, attr, attrlen, hash)
-#define LOCAL_DeeType_AccessIInstanceMethodAttr(tp_invoker, tp_self) (DeeType_HasIInstanceMethodAttrLen(tp_invoker, tp_self, attr, attrlen, hash) ? 1 : -2)
-#define LOCAL_DeeType_AccessIInstanceGetSetAttr(tp_invoker, tp_self) (DeeType_HasIInstanceGetSetAttrLen(tp_invoker, tp_self, attr, attrlen, hash) ? 1 : -2)
-#define LOCAL_DeeType_AccessIInstanceMemberAttr(tp_invoker, tp_self) (DeeType_HasIInstanceMemberAttrLen(tp_invoker, tp_self, attr, attrlen, hash) ? 1 : -2)
+#elif defined(DEFINE_DeeType_BoundInstanceAttrStringLenHash)
+#define LOCAL_DeeType_AccessInstanceAttr                             DeeType_BoundInstanceAttrStringLenHash
+#define LOCAL_DeeType_AccessCachedInstanceAttr(self)                 DeeType_BoundCachedInstanceAttrStringLenHash(self, attr, attrlen, hash)
+#define LOCAL_DeeType_AccessIInstanceMethodAttr(tp_invoker, tp_self) (DeeType_HasIInstanceMethodAttrStringLenHash(tp_invoker, tp_self, attr, attrlen, hash) ? 1 : -2)
+#define LOCAL_DeeType_AccessIInstanceGetSetAttr(tp_invoker, tp_self) (DeeType_HasIInstanceGetSetAttrStringLenHash(tp_invoker, tp_self, attr, attrlen, hash) ? 1 : -2)
+#define LOCAL_DeeType_AccessIInstanceMemberAttr(tp_invoker, tp_self) (DeeType_HasIInstanceMemberAttrStringLenHash(tp_invoker, tp_self, attr, attrlen, hash) ? 1 : -2)
 #define LOCAL_IS_BOUND
 #define LOCAL_HAS_len
-#elif defined(DEFINE_DeeType_CallInstanceAttrString)
-#define LOCAL_DeeType_AccessInstanceAttr                             DeeType_CallInstanceAttrString
-#define LOCAL_DeeType_AccessCachedInstanceAttr(self)                 DeeType_CallCachedInstanceAttr(self, attr, hash, argc, argv)
-#define LOCAL_DeeType_AccessIInstanceMethodAttr(tp_invoker, tp_self) DeeType_CallIInstanceMethodAttr(tp_invoker, tp_self, attr, hash, argc, argv)
-#define LOCAL_DeeType_AccessIInstanceGetSetAttr(tp_invoker, tp_self) DeeType_CallIInstanceGetSetAttr(tp_invoker, tp_self, attr, hash, argc, argv)
-#define LOCAL_DeeType_AccessIInstanceMemberAttr(tp_invoker, tp_self) DeeType_CallIInstanceMemberAttr(tp_invoker, tp_self, attr, hash, argc, argv)
+#elif defined(DEFINE_DeeType_CallInstanceAttrStringHash)
+#define LOCAL_DeeType_AccessInstanceAttr                             DeeType_CallInstanceAttrStringHash
+#define LOCAL_DeeType_AccessCachedInstanceAttr(self)                 DeeType_CallCachedInstanceAttrStringHash(self, attr, hash, argc, argv)
+#define LOCAL_DeeType_AccessIInstanceMethodAttr(tp_invoker, tp_self) DeeType_CallIInstanceMethodAttrStringHash(tp_invoker, tp_self, attr, hash, argc, argv)
+#define LOCAL_DeeType_AccessIInstanceGetSetAttr(tp_invoker, tp_self) DeeType_CallIInstanceGetSetAttrStringHash(tp_invoker, tp_self, attr, hash, argc, argv)
+#define LOCAL_DeeType_AccessIInstanceMemberAttr(tp_invoker, tp_self) DeeType_CallIInstanceMemberAttrStringHash(tp_invoker, tp_self, attr, hash, argc, argv)
 #define LOCAL_IS_CALL
-#elif defined(DEFINE_DeeType_CallInstanceAttrStringLen)
-#define LOCAL_DeeType_AccessInstanceAttr                             DeeType_CallInstanceAttrStringLen
-#define LOCAL_DeeType_AccessCachedInstanceAttr(self)                 DeeType_CallCachedInstanceAttrLen(self, attr, attrlen, hash, argc, argv)
-#define LOCAL_DeeType_AccessIInstanceMethodAttr(tp_invoker, tp_self) DeeType_CallIInstanceMethodAttrLen(tp_invoker, tp_self, attr, attrlen, hash, argc, argv)
-#define LOCAL_DeeType_AccessIInstanceGetSetAttr(tp_invoker, tp_self) DeeType_CallIInstanceGetSetAttrLen(tp_invoker, tp_self, attr, attrlen, hash, argc, argv)
-#define LOCAL_DeeType_AccessIInstanceMemberAttr(tp_invoker, tp_self) DeeType_CallIInstanceMemberAttrLen(tp_invoker, tp_self, attr, attrlen, hash, argc, argv)
+#elif defined(DEFINE_DeeType_CallInstanceAttrStringLenHash)
+#define LOCAL_DeeType_AccessInstanceAttr                             DeeType_CallInstanceAttrStringLenHash
+#define LOCAL_DeeType_AccessCachedInstanceAttr(self)                 DeeType_CallCachedInstanceAttrStringLenHash(self, attr, attrlen, hash, argc, argv)
+#define LOCAL_DeeType_AccessIInstanceMethodAttr(tp_invoker, tp_self) DeeType_CallIInstanceMethodAttrStringLenHash(tp_invoker, tp_self, attr, attrlen, hash, argc, argv)
+#define LOCAL_DeeType_AccessIInstanceGetSetAttr(tp_invoker, tp_self) DeeType_CallIInstanceGetSetAttrStringLenHash(tp_invoker, tp_self, attr, attrlen, hash, argc, argv)
+#define LOCAL_DeeType_AccessIInstanceMemberAttr(tp_invoker, tp_self) DeeType_CallIInstanceMemberAttrStringLenHash(tp_invoker, tp_self, attr, attrlen, hash, argc, argv)
 #define LOCAL_IS_CALL
 #define LOCAL_HAS_len
-#elif defined(DEFINE_DeeType_CallInstanceAttrStringKw)
-#define LOCAL_DeeType_AccessInstanceAttr                             DeeType_CallInstanceAttrStringKw
-#define LOCAL_DeeType_AccessCachedInstanceAttr(self)                 DeeType_CallCachedInstanceAttrKw(self, attr, hash, argc, argv, kw)
-#define LOCAL_DeeType_AccessIInstanceMethodAttr(tp_invoker, tp_self) DeeType_CallIInstanceMethodAttrKw(tp_invoker, tp_self, attr, hash, argc, argv, kw)
-#define LOCAL_DeeType_AccessIInstanceGetSetAttr(tp_invoker, tp_self) DeeType_CallIInstanceGetSetAttrKw(tp_invoker, tp_self, attr, hash, argc, argv, kw)
-#define LOCAL_DeeType_AccessIInstanceMemberAttr(tp_invoker, tp_self) DeeType_CallIInstanceMemberAttrKw(tp_invoker, tp_self, attr, hash, argc, argv, kw)
+#elif defined(DEFINE_DeeType_CallInstanceAttrStringHashKw)
+#define LOCAL_DeeType_AccessInstanceAttr                             DeeType_CallInstanceAttrStringHashKw
+#define LOCAL_DeeType_AccessCachedInstanceAttr(self)                 DeeType_CallCachedInstanceAttrStringHashKw(self, attr, hash, argc, argv, kw)
+#define LOCAL_DeeType_AccessIInstanceMethodAttr(tp_invoker, tp_self) DeeType_CallIInstanceMethodAttrStringHashKw(tp_invoker, tp_self, attr, hash, argc, argv, kw)
+#define LOCAL_DeeType_AccessIInstanceGetSetAttr(tp_invoker, tp_self) DeeType_CallIInstanceGetSetAttrStringHashKw(tp_invoker, tp_self, attr, hash, argc, argv, kw)
+#define LOCAL_DeeType_AccessIInstanceMemberAttr(tp_invoker, tp_self) DeeType_CallIInstanceMemberAttrStringHashKw(tp_invoker, tp_self, attr, hash, argc, argv, kw)
 #define LOCAL_IS_CALL_KW
-#elif defined(DEFINE_DeeType_CallInstanceAttrStringLenKw)
-#define LOCAL_DeeType_AccessInstanceAttr                             DeeType_CallInstanceAttrStringLenKw
-#define LOCAL_DeeType_AccessCachedInstanceAttr(self)                 DeeType_CallCachedInstanceAttrLenKw(self, attr, attrlen, hash, argc, argv, kw)
-#define LOCAL_DeeType_AccessIInstanceMethodAttr(tp_invoker, tp_self) DeeType_CallIInstanceMethodAttrLenKw(tp_invoker, tp_self, attr, attrlen, hash, argc, argv, kw)
-#define LOCAL_DeeType_AccessIInstanceGetSetAttr(tp_invoker, tp_self) DeeType_CallIInstanceGetSetAttrLenKw(tp_invoker, tp_self, attr, attrlen, hash, argc, argv, kw)
-#define LOCAL_DeeType_AccessIInstanceMemberAttr(tp_invoker, tp_self) DeeType_CallIInstanceMemberAttrLenKw(tp_invoker, tp_self, attr, attrlen, hash, argc, argv, kw)
+#elif defined(DEFINE_DeeType_CallInstanceAttrStringLenHashKw)
+#define LOCAL_DeeType_AccessInstanceAttr                             DeeType_CallInstanceAttrStringLenHashKw
+#define LOCAL_DeeType_AccessCachedInstanceAttr(self)                 DeeType_CallCachedInstanceAttrStringLenHashKw(self, attr, attrlen, hash, argc, argv, kw)
+#define LOCAL_DeeType_AccessIInstanceMethodAttr(tp_invoker, tp_self) DeeType_CallIInstanceMethodAttrStringLenHashKw(tp_invoker, tp_self, attr, attrlen, hash, argc, argv, kw)
+#define LOCAL_DeeType_AccessIInstanceGetSetAttr(tp_invoker, tp_self) DeeType_CallIInstanceGetSetAttrStringLenHashKw(tp_invoker, tp_self, attr, attrlen, hash, argc, argv, kw)
+#define LOCAL_DeeType_AccessIInstanceMemberAttr(tp_invoker, tp_self) DeeType_CallIInstanceMemberAttrStringLenHashKw(tp_invoker, tp_self, attr, attrlen, hash, argc, argv, kw)
 #define LOCAL_IS_CALL_KW
 #define LOCAL_HAS_len
-#elif defined(DEFINE_DeeType_CallInstanceAttrStringTuple)
-#define LOCAL_DeeType_AccessInstanceAttr                             DeeType_CallInstanceAttrStringTuple
-#define LOCAL_DeeType_AccessCachedInstanceAttr(self)                 DeeType_CallCachedInstanceAttrTuple(self, attr, hash, args)
-#define LOCAL_DeeType_AccessIInstanceMethodAttr(tp_invoker, tp_self) DeeType_CallIInstanceMethodAttrTuple(tp_invoker, tp_self, attr, hash, args)
-#define LOCAL_DeeType_AccessIInstanceGetSetAttr(tp_invoker, tp_self) DeeType_CallIInstanceGetSetAttrTuple(tp_invoker, tp_self, attr, hash, args)
-#define LOCAL_DeeType_AccessIInstanceMemberAttr(tp_invoker, tp_self) DeeType_CallIInstanceMemberAttrTuple(tp_invoker, tp_self, attr, hash, args)
+#elif defined(DEFINE_DeeType_CallInstanceAttrStringHashTuple)
+#define LOCAL_DeeType_AccessInstanceAttr                             DeeType_CallInstanceAttrStringHashTuple
+#define LOCAL_DeeType_AccessCachedInstanceAttr(self)                 DeeType_CallCachedInstanceAttrStringHashTuple(self, attr, hash, args)
+#define LOCAL_DeeType_AccessIInstanceMethodAttr(tp_invoker, tp_self) DeeType_CallIInstanceMethodAttrStringHashTuple(tp_invoker, tp_self, attr, hash, args)
+#define LOCAL_DeeType_AccessIInstanceGetSetAttr(tp_invoker, tp_self) DeeType_CallIInstanceGetSetAttrStringHashTuple(tp_invoker, tp_self, attr, hash, args)
+#define LOCAL_DeeType_AccessIInstanceMemberAttr(tp_invoker, tp_self) DeeType_CallIInstanceMemberAttrStringHashTuple(tp_invoker, tp_self, attr, hash, args)
 #define LOCAL_IS_CALL_TUPLE
-#elif defined(DEFINE_DeeType_CallInstanceAttrStringLenTuple)
-#define LOCAL_DeeType_AccessInstanceAttr                             DeeType_CallInstanceAttrStringLenTuple
-#define LOCAL_DeeType_AccessCachedInstanceAttr(self)                 DeeType_CallCachedInstanceAttrLenTuple(self, attr, attrlen, hash, args)
-#define LOCAL_DeeType_AccessIInstanceMethodAttr(tp_invoker, tp_self) DeeType_CallIInstanceMethodAttrLenTuple(tp_invoker, tp_self, attr, attrlen, hash, args)
-#define LOCAL_DeeType_AccessIInstanceGetSetAttr(tp_invoker, tp_self) DeeType_CallIInstanceGetSetAttrLenTuple(tp_invoker, tp_self, attr, attrlen, hash, args)
-#define LOCAL_DeeType_AccessIInstanceMemberAttr(tp_invoker, tp_self) DeeType_CallIInstanceMemberAttrLenTuple(tp_invoker, tp_self, attr, attrlen, hash, args)
+#elif defined(DEFINE_DeeType_CallInstanceAttrStringLenHashTuple)
+#define LOCAL_DeeType_AccessInstanceAttr                             DeeType_CallInstanceAttrStringLenHashTuple
+#define LOCAL_DeeType_AccessCachedInstanceAttr(self)                 DeeType_CallCachedInstanceAttrStringLenHashTuple(self, attr, attrlen, hash, args)
+#define LOCAL_DeeType_AccessIInstanceMethodAttr(tp_invoker, tp_self) DeeType_CallIInstanceMethodAttrStringLenHashTuple(tp_invoker, tp_self, attr, attrlen, hash, args)
+#define LOCAL_DeeType_AccessIInstanceGetSetAttr(tp_invoker, tp_self) DeeType_CallIInstanceGetSetAttrStringLenHashTuple(tp_invoker, tp_self, attr, attrlen, hash, args)
+#define LOCAL_DeeType_AccessIInstanceMemberAttr(tp_invoker, tp_self) DeeType_CallIInstanceMemberAttrStringLenHashTuple(tp_invoker, tp_self, attr, attrlen, hash, args)
 #define LOCAL_IS_CALL_TUPLE
 #define LOCAL_HAS_len
-#elif defined(DEFINE_DeeType_CallInstanceAttrStringTupleKw)
-#define LOCAL_DeeType_AccessInstanceAttr                             DeeType_CallInstanceAttrStringTupleKw
-#define LOCAL_DeeType_AccessCachedInstanceAttr(self)                 DeeType_CallCachedInstanceAttrTupleKw(self, attr, hash, args, kw)
-#define LOCAL_DeeType_AccessIInstanceMethodAttr(tp_invoker, tp_self) DeeType_CallIInstanceMethodAttrTupleKw(tp_invoker, tp_self, attr, hash, args, kw)
-#define LOCAL_DeeType_AccessIInstanceGetSetAttr(tp_invoker, tp_self) DeeType_CallIInstanceGetSetAttrTupleKw(tp_invoker, tp_self, attr, hash, args, kw)
-#define LOCAL_DeeType_AccessIInstanceMemberAttr(tp_invoker, tp_self) DeeType_CallIInstanceMemberAttrTupleKw(tp_invoker, tp_self, attr, hash, args, kw)
+#elif defined(DEFINE_DeeType_CallInstanceAttrStringHashTupleKw)
+#define LOCAL_DeeType_AccessInstanceAttr                             DeeType_CallInstanceAttrStringHashTupleKw
+#define LOCAL_DeeType_AccessCachedInstanceAttr(self)                 DeeType_CallCachedInstanceAttrStringHashTupleKw(self, attr, hash, args, kw)
+#define LOCAL_DeeType_AccessIInstanceMethodAttr(tp_invoker, tp_self) DeeType_CallIInstanceMethodAttrStringHashTupleKw(tp_invoker, tp_self, attr, hash, args, kw)
+#define LOCAL_DeeType_AccessIInstanceGetSetAttr(tp_invoker, tp_self) DeeType_CallIInstanceGetSetAttrStringHashTupleKw(tp_invoker, tp_self, attr, hash, args, kw)
+#define LOCAL_DeeType_AccessIInstanceMemberAttr(tp_invoker, tp_self) DeeType_CallIInstanceMemberAttrStringHashTupleKw(tp_invoker, tp_self, attr, hash, args, kw)
 #define LOCAL_IS_CALL_TUPLE_KW
-#elif defined(DEFINE_DeeType_CallInstanceAttrStringLenTupleKw)
-#define LOCAL_DeeType_AccessInstanceAttr                             DeeType_CallInstanceAttrStringLenTupleKw
-#define LOCAL_DeeType_AccessCachedInstanceAttr(self)                 DeeType_CallCachedInstanceAttrLenTupleKw(self, attr, attrlen, hash, args, kw)
-#define LOCAL_DeeType_AccessIInstanceMethodAttr(tp_invoker, tp_self) DeeType_CallIInstanceMethodAttrLenTupleKw(tp_invoker, tp_self, attr, attrlen, hash, args, kw)
-#define LOCAL_DeeType_AccessIInstanceGetSetAttr(tp_invoker, tp_self) DeeType_CallIInstanceGetSetAttrLenTupleKw(tp_invoker, tp_self, attr, attrlen, hash, args, kw)
-#define LOCAL_DeeType_AccessIInstanceMemberAttr(tp_invoker, tp_self) DeeType_CallIInstanceMemberAttrLenTupleKw(tp_invoker, tp_self, attr, attrlen, hash, args, kw)
+#elif defined(DEFINE_DeeType_CallInstanceAttrStringLenHashTupleKw)
+#define LOCAL_DeeType_AccessInstanceAttr                             DeeType_CallInstanceAttrStringLenHashTupleKw
+#define LOCAL_DeeType_AccessCachedInstanceAttr(self)                 DeeType_CallCachedInstanceAttrStringLenHashTupleKw(self, attr, attrlen, hash, args, kw)
+#define LOCAL_DeeType_AccessIInstanceMethodAttr(tp_invoker, tp_self) DeeType_CallIInstanceMethodAttrStringLenHashTupleKw(tp_invoker, tp_self, attr, attrlen, hash, args, kw)
+#define LOCAL_DeeType_AccessIInstanceGetSetAttr(tp_invoker, tp_self) DeeType_CallIInstanceGetSetAttrStringLenHashTupleKw(tp_invoker, tp_self, attr, attrlen, hash, args, kw)
+#define LOCAL_DeeType_AccessIInstanceMemberAttr(tp_invoker, tp_self) DeeType_CallIInstanceMemberAttrStringLenHashTupleKw(tp_invoker, tp_self, attr, attrlen, hash, args, kw)
 #define LOCAL_IS_CALL_TUPLE_KW
 #define LOCAL_HAS_len
-#elif defined(DEFINE_DeeType_VCallInstanceAttrStringf)
-#define LOCAL_DeeType_AccessInstanceAttr                             DeeType_VCallInstanceAttrStringf
-#define LOCAL_DeeType_AccessCachedInstanceAttr(self)                 DeeType_VCallCachedInstanceAttrf(self, attr, hash, format, args)
-#define LOCAL_DeeType_AccessIInstanceMethodAttr(tp_invoker, tp_self) DeeType_VCallIInstanceMethodAttrf(tp_invoker, tp_self, attr, hash, format, args)
-#define LOCAL_DeeType_AccessIInstanceGetSetAttr(tp_invoker, tp_self) DeeType_VCallIInstanceGetSetAttrf(tp_invoker, tp_self, attr, hash, format, args)
-#define LOCAL_DeeType_AccessIInstanceMemberAttr(tp_invoker, tp_self) DeeType_VCallIInstanceMemberAttrf(tp_invoker, tp_self, attr, hash, format, args)
+#elif defined(DEFINE_DeeType_VCallInstanceAttrStringHashf)
+#define LOCAL_DeeType_AccessInstanceAttr                             DeeType_VCallInstanceAttrStringHashf
+#define LOCAL_DeeType_AccessCachedInstanceAttr(self)                 DeeType_VCallCachedInstanceAttrStringHashf(self, attr, hash, format, args)
+#define LOCAL_DeeType_AccessIInstanceMethodAttr(tp_invoker, tp_self) DeeType_VCallIInstanceMethodAttrStringHashf(tp_invoker, tp_self, attr, hash, format, args)
+#define LOCAL_DeeType_AccessIInstanceGetSetAttr(tp_invoker, tp_self) DeeType_VCallIInstanceGetSetAttrStringHashf(tp_invoker, tp_self, attr, hash, format, args)
+#define LOCAL_DeeType_AccessIInstanceMemberAttr(tp_invoker, tp_self) DeeType_VCallIInstanceMemberAttrStringHashf(tp_invoker, tp_self, attr, hash, format, args)
 #define LOCAL_IS_VCALLF
-#elif defined(DEFINE_DeeType_VCallInstanceAttrStringLenf)
-#define LOCAL_DeeType_AccessInstanceAttr                             DeeType_VCallInstanceAttrStringLenf
-#define LOCAL_DeeType_AccessCachedInstanceAttr(self)                 DeeType_VCallCachedInstanceAttrLenf(self, attr, attrlen, hash, format, args)
-#define LOCAL_DeeType_AccessIInstanceMethodAttr(tp_invoker, tp_self) DeeType_VCallIInstanceMethodAttrLenf(tp_invoker, tp_self, attr, attrlen, hash, format, args)
-#define LOCAL_DeeType_AccessIInstanceGetSetAttr(tp_invoker, tp_self) DeeType_VCallIInstanceGetSetAttrLenf(tp_invoker, tp_self, attr, attrlen, hash, format, args)
-#define LOCAL_DeeType_AccessIInstanceMemberAttr(tp_invoker, tp_self) DeeType_VCallIInstanceMemberAttrLenf(tp_invoker, tp_self, attr, attrlen, hash, format, args)
+#elif defined(DEFINE_DeeType_VCallInstanceAttrStringLenHashf)
+#define LOCAL_DeeType_AccessInstanceAttr                             DeeType_VCallInstanceAttrStringLenHashf
+#define LOCAL_DeeType_AccessCachedInstanceAttr(self)                 DeeType_VCallCachedInstanceAttrStringLenHashf(self, attr, attrlen, hash, format, args)
+#define LOCAL_DeeType_AccessIInstanceMethodAttr(tp_invoker, tp_self) DeeType_VCallIInstanceMethodAttrStringLenHashf(tp_invoker, tp_self, attr, attrlen, hash, format, args)
+#define LOCAL_DeeType_AccessIInstanceGetSetAttr(tp_invoker, tp_self) DeeType_VCallIInstanceGetSetAttrStringLenHashf(tp_invoker, tp_self, attr, attrlen, hash, format, args)
+#define LOCAL_DeeType_AccessIInstanceMemberAttr(tp_invoker, tp_self) DeeType_VCallIInstanceMemberAttrStringLenHashf(tp_invoker, tp_self, attr, attrlen, hash, format, args)
 #define LOCAL_IS_VCALLF
 #define LOCAL_HAS_len
-#elif defined(DEFINE_DeeType_HasInstanceAttrString)
-#define LOCAL_DeeType_AccessInstanceAttr                             DeeType_HasInstanceAttrString
-#define LOCAL_DeeType_AccessCachedInstanceAttr(self)                 DeeType_HasCachedInstanceAttr(self, attr, hash)
-#define LOCAL_DeeType_AccessIInstanceMethodAttr(tp_invoker, tp_self) DeeType_HasIInstanceMethodAttr(tp_invoker, tp_self, attr, hash)
-#define LOCAL_DeeType_AccessIInstanceGetSetAttr(tp_invoker, tp_self) DeeType_HasIInstanceGetSetAttr(tp_invoker, tp_self, attr, hash)
-#define LOCAL_DeeType_AccessIInstanceMemberAttr(tp_invoker, tp_self) DeeType_HasIInstanceMemberAttr(tp_invoker, tp_self, attr, hash)
+#elif defined(DEFINE_DeeType_HasInstanceAttrStringHash)
+#define LOCAL_DeeType_AccessInstanceAttr                             DeeType_HasInstanceAttrStringHash
+#define LOCAL_DeeType_AccessCachedInstanceAttr(self)                 DeeType_HasCachedInstanceAttrStringHash(self, attr, hash)
+#define LOCAL_DeeType_AccessIInstanceMethodAttr(tp_invoker, tp_self) DeeType_HasIInstanceMethodAttrStringHash(tp_invoker, tp_self, attr, hash)
+#define LOCAL_DeeType_AccessIInstanceGetSetAttr(tp_invoker, tp_self) DeeType_HasIInstanceGetSetAttrStringHash(tp_invoker, tp_self, attr, hash)
+#define LOCAL_DeeType_AccessIInstanceMemberAttr(tp_invoker, tp_self) DeeType_HasIInstanceMemberAttrStringHash(tp_invoker, tp_self, attr, hash)
 #define LOCAL_IS_HAS
-#elif defined(DEFINE_DeeType_HasInstanceAttrStringLen)
-#define LOCAL_DeeType_AccessInstanceAttr                             DeeType_HasInstanceAttrStringLen
-#define LOCAL_DeeType_AccessCachedInstanceAttr(self)                 DeeType_HasCachedInstanceAttrLen(self, attr, attrlen, hash)
-#define LOCAL_DeeType_AccessIInstanceMethodAttr(tp_invoker, tp_self) DeeType_HasIInstanceMethodAttrLen(tp_invoker, tp_self, attr, attrlen, hash)
-#define LOCAL_DeeType_AccessIInstanceGetSetAttr(tp_invoker, tp_self) DeeType_HasIInstanceGetSetAttrLen(tp_invoker, tp_self, attr, attrlen, hash)
-#define LOCAL_DeeType_AccessIInstanceMemberAttr(tp_invoker, tp_self) DeeType_HasIInstanceMemberAttrLen(tp_invoker, tp_self, attr, attrlen, hash)
+#elif defined(DEFINE_DeeType_HasInstanceAttrStringLenHash)
+#define LOCAL_DeeType_AccessInstanceAttr                             DeeType_HasInstanceAttrStringLenHash
+#define LOCAL_DeeType_AccessCachedInstanceAttr(self)                 DeeType_HasCachedInstanceAttrStringLenHash(self, attr, attrlen, hash)
+#define LOCAL_DeeType_AccessIInstanceMethodAttr(tp_invoker, tp_self) DeeType_HasIInstanceMethodAttrStringLenHash(tp_invoker, tp_self, attr, attrlen, hash)
+#define LOCAL_DeeType_AccessIInstanceGetSetAttr(tp_invoker, tp_self) DeeType_HasIInstanceGetSetAttrStringLenHash(tp_invoker, tp_self, attr, attrlen, hash)
+#define LOCAL_DeeType_AccessIInstanceMemberAttr(tp_invoker, tp_self) DeeType_HasIInstanceMemberAttrStringLenHash(tp_invoker, tp_self, attr, attrlen, hash)
 #define LOCAL_IS_HAS
 #define LOCAL_HAS_len
-#elif defined(DEFINE_DeeType_DelInstanceAttrString)
-#define LOCAL_DeeType_AccessInstanceAttr                             DeeType_DelInstanceAttrString
-#define LOCAL_DeeType_AccessCachedInstanceAttr(self)                 DeeType_DelCachedInstanceAttr(self, attr, hash)
-#define LOCAL_DeeType_AccessIInstanceMethodAttr(tp_invoker, tp_self) (DeeType_HasIInstanceMethodAttr(tp_invoker, tp_self, attr, hash) ? err_cant_access_attribute(tp_self, attr, ATTR_ACCESS_DEL) : 1)
-#define LOCAL_DeeType_AccessIInstanceGetSetAttr(tp_invoker, tp_self) (DeeType_HasIInstanceGetSetAttr(tp_invoker, tp_self, attr, hash) ? err_cant_access_attribute(tp_self, attr, ATTR_ACCESS_DEL) : 1)
-#define LOCAL_DeeType_AccessIInstanceMemberAttr(tp_invoker, tp_self) (DeeType_HasIInstanceMemberAttr(tp_invoker, tp_self, attr, hash) ? err_cant_access_attribute(tp_self, attr, ATTR_ACCESS_DEL) : 1)
+#elif defined(DEFINE_DeeType_DelInstanceAttrStringHash)
+#define LOCAL_DeeType_AccessInstanceAttr                             DeeType_DelInstanceAttrStringHash
+#define LOCAL_DeeType_AccessCachedInstanceAttr(self)                 DeeType_DelCachedInstanceAttrStringHash(self, attr, hash)
+#define LOCAL_DeeType_AccessIInstanceMethodAttr(tp_invoker, tp_self) (DeeType_HasIInstanceMethodAttrStringHash(tp_invoker, tp_self, attr, hash) ? err_cant_access_attribute_string(tp_self, attr, ATTR_ACCESS_DEL) : 1)
+#define LOCAL_DeeType_AccessIInstanceGetSetAttr(tp_invoker, tp_self) (DeeType_HasIInstanceGetSetAttrStringHash(tp_invoker, tp_self, attr, hash) ? err_cant_access_attribute_string(tp_self, attr, ATTR_ACCESS_DEL) : 1)
+#define LOCAL_DeeType_AccessIInstanceMemberAttr(tp_invoker, tp_self) (DeeType_HasIInstanceMemberAttrStringHash(tp_invoker, tp_self, attr, hash) ? err_cant_access_attribute_string(tp_self, attr, ATTR_ACCESS_DEL) : 1)
 #define LOCAL_IS_DEL
-#elif defined(DEFINE_DeeType_DelInstanceAttrStringLen)
-#define LOCAL_DeeType_AccessInstanceAttr                             DeeType_DelInstanceAttrStringLen
-#define LOCAL_DeeType_AccessCachedInstanceAttr(self)                 DeeType_DelCachedInstanceAttrLen(self, attr, attrlen, hash)
-#define LOCAL_DeeType_AccessIInstanceMethodAttr(tp_invoker, tp_self) (DeeType_HasIInstanceMethodAttrLen(tp_invoker, tp_self, attr, attrlen, hash) ? err_cant_access_attribute_len(tp_self, attr, attrlen, ATTR_ACCESS_DEL) : 1)
-#define LOCAL_DeeType_AccessIInstanceGetSetAttr(tp_invoker, tp_self) (DeeType_HasIInstanceGetSetAttrLen(tp_invoker, tp_self, attr, attrlen, hash) ? err_cant_access_attribute_len(tp_self, attr, attrlen, ATTR_ACCESS_DEL) : 1)
-#define LOCAL_DeeType_AccessIInstanceMemberAttr(tp_invoker, tp_self) (DeeType_HasIInstanceMemberAttrLen(tp_invoker, tp_self, attr, attrlen, hash) ? err_cant_access_attribute_len(tp_self, attr, attrlen, ATTR_ACCESS_DEL) : 1)
+#elif defined(DEFINE_DeeType_DelInstanceAttrStringLenHash)
+#define LOCAL_DeeType_AccessInstanceAttr                             DeeType_DelInstanceAttrStringLenHash
+#define LOCAL_DeeType_AccessCachedInstanceAttr(self)                 DeeType_DelCachedInstanceAttrStringLenHash(self, attr, attrlen, hash)
+#define LOCAL_DeeType_AccessIInstanceMethodAttr(tp_invoker, tp_self) (DeeType_HasIInstanceMethodAttrStringLenHash(tp_invoker, tp_self, attr, attrlen, hash) ? err_cant_access_attribute_string_len(tp_self, attr, attrlen, ATTR_ACCESS_DEL) : 1)
+#define LOCAL_DeeType_AccessIInstanceGetSetAttr(tp_invoker, tp_self) (DeeType_HasIInstanceGetSetAttrStringLenHash(tp_invoker, tp_self, attr, attrlen, hash) ? err_cant_access_attribute_string_len(tp_self, attr, attrlen, ATTR_ACCESS_DEL) : 1)
+#define LOCAL_DeeType_AccessIInstanceMemberAttr(tp_invoker, tp_self) (DeeType_HasIInstanceMemberAttrStringLenHash(tp_invoker, tp_self, attr, attrlen, hash) ? err_cant_access_attribute_string_len(tp_self, attr, attrlen, ATTR_ACCESS_DEL) : 1)
 #define LOCAL_IS_DEL
 #define LOCAL_HAS_len
-#elif defined(DEFINE_DeeType_SetInstanceAttrString)
-#define LOCAL_DeeType_AccessInstanceAttr                             DeeType_SetInstanceAttrString
-#define LOCAL_DeeType_AccessCachedInstanceAttr(self)                 DeeType_SetCachedInstanceAttr(self, attr, hash, value)
-#define LOCAL_DeeType_AccessIInstanceMethodAttr(tp_invoker, tp_self) (DeeType_HasIInstanceMethodAttr(tp_invoker, tp_self, attr, hash) ? err_cant_access_attribute(tp_self, attr, ATTR_ACCESS_SET) : 1)
-#define LOCAL_DeeType_AccessIInstanceGetSetAttr(tp_invoker, tp_self) (DeeType_HasIInstanceGetSetAttr(tp_invoker, tp_self, attr, hash) ? err_cant_access_attribute(tp_self, attr, ATTR_ACCESS_SET) : 1)
-#define LOCAL_DeeType_AccessIInstanceMemberAttr(tp_invoker, tp_self) (DeeType_HasIInstanceMemberAttr(tp_invoker, tp_self, attr, hash) ? err_cant_access_attribute(tp_self, attr, ATTR_ACCESS_SET) : 1)
+#elif defined(DEFINE_DeeType_SetInstanceAttrStringHash)
+#define LOCAL_DeeType_AccessInstanceAttr                             DeeType_SetInstanceAttrStringHash
+#define LOCAL_DeeType_AccessCachedInstanceAttr(self)                 DeeType_SetCachedInstanceAttrStringHash(self, attr, hash, value)
+#define LOCAL_DeeType_AccessIInstanceMethodAttr(tp_invoker, tp_self) (DeeType_HasIInstanceMethodAttrStringHash(tp_invoker, tp_self, attr, hash) ? err_cant_access_attribute_string(tp_self, attr, ATTR_ACCESS_SET) : 1)
+#define LOCAL_DeeType_AccessIInstanceGetSetAttr(tp_invoker, tp_self) (DeeType_HasIInstanceGetSetAttrStringHash(tp_invoker, tp_self, attr, hash) ? err_cant_access_attribute_string(tp_self, attr, ATTR_ACCESS_SET) : 1)
+#define LOCAL_DeeType_AccessIInstanceMemberAttr(tp_invoker, tp_self) (DeeType_HasIInstanceMemberAttrStringHash(tp_invoker, tp_self, attr, hash) ? err_cant_access_attribute_string(tp_self, attr, ATTR_ACCESS_SET) : 1)
 #define LOCAL_IS_SET
-#elif defined(DEFINE_DeeType_SetInstanceAttrStringLen)
-#define LOCAL_DeeType_AccessInstanceAttr                             DeeType_SetInstanceAttrStringLen
-#define LOCAL_DeeType_AccessCachedInstanceAttr(self)                 DeeType_SetCachedInstanceAttrLen(self, attr, attrlen, hash, value)
-#define LOCAL_DeeType_AccessIInstanceMethodAttr(tp_invoker, tp_self) (DeeType_HasIInstanceMethodAttrLen(tp_invoker, tp_self, attr, attrlen, hash) ? err_cant_access_attribute_len(tp_self, attr, attrlen, ATTR_ACCESS_SET) : 1)
-#define LOCAL_DeeType_AccessIInstanceGetSetAttr(tp_invoker, tp_self) (DeeType_HasIInstanceGetSetAttrLen(tp_invoker, tp_self, attr, attrlen, hash) ? err_cant_access_attribute_len(tp_self, attr, attrlen, ATTR_ACCESS_SET) : 1)
-#define LOCAL_DeeType_AccessIInstanceMemberAttr(tp_invoker, tp_self) (DeeType_HasIInstanceMemberAttrLen(tp_invoker, tp_self, attr, attrlen, hash) ? err_cant_access_attribute_len(tp_self, attr, attrlen, ATTR_ACCESS_SET) : 1)
+#elif defined(DEFINE_DeeType_SetInstanceAttrStringLenHash)
+#define LOCAL_DeeType_AccessInstanceAttr                             DeeType_SetInstanceAttrStringLenHash
+#define LOCAL_DeeType_AccessCachedInstanceAttr(self)                 DeeType_SetCachedInstanceAttrStringLenHash(self, attr, attrlen, hash, value)
+#define LOCAL_DeeType_AccessIInstanceMethodAttr(tp_invoker, tp_self) (DeeType_HasIInstanceMethodAttrStringLenHash(tp_invoker, tp_self, attr, attrlen, hash) ? err_cant_access_attribute_string_len(tp_self, attr, attrlen, ATTR_ACCESS_SET) : 1)
+#define LOCAL_DeeType_AccessIInstanceGetSetAttr(tp_invoker, tp_self) (DeeType_HasIInstanceGetSetAttrStringLenHash(tp_invoker, tp_self, attr, attrlen, hash) ? err_cant_access_attribute_string_len(tp_self, attr, attrlen, ATTR_ACCESS_SET) : 1)
+#define LOCAL_DeeType_AccessIInstanceMemberAttr(tp_invoker, tp_self) (DeeType_HasIInstanceMemberAttrStringLenHash(tp_invoker, tp_self, attr, attrlen, hash) ? err_cant_access_attribute_string_len(tp_self, attr, attrlen, ATTR_ACCESS_SET) : 1)
 #define LOCAL_IS_SET
 #define LOCAL_HAS_len
 #elif defined(DEFINE_DeeType_FindInstanceAttr)
@@ -274,9 +274,9 @@ DECL_BEGIN
 
 /* Helpers for accessing attributes and performing operations. */
 #ifdef LOCAL_HAS_len
-#define LOCAL_DeeType_QueryInstanceAttribute(tp_invoker, tp_self) DeeType_QueryIInstanceAttributeStringLenWithHash(tp_invoker, tp_self, attr, attrlen, hash)
+#define LOCAL_DeeType_QueryInstanceAttribute(tp_invoker, tp_self) DeeType_QueryIInstanceAttributeStringLenHash(tp_invoker, tp_self, attr, attrlen, hash)
 #else /* LOCAL_HAS_len */
-#define LOCAL_DeeType_QueryInstanceAttribute(tp_invoker, tp_self) DeeType_QueryIInstanceAttributeStringWithHash(tp_invoker, tp_self, attr, hash)
+#define LOCAL_DeeType_QueryInstanceAttribute(tp_invoker, tp_self) DeeType_QueryIInstanceAttributeStringHash(tp_invoker, tp_self, attr, hash)
 #endif /* !LOCAL_HAS_len */
 
 #ifdef LOCAL_IS_GET
@@ -402,9 +402,9 @@ INTERN WUNUSED LOCAL_ATTR_NONNULL LOCAL_return_t
 
 #if !defined(LOCAL_IS_HAS) && !defined(LOCAL_IS_FIND)
 #ifdef LOCAL_HAS_len
-	err_unknown_attribute_len(self, attr, attrlen, LOCAL_ATTR_ACCESS_OP);
+	err_unknown_attribute_string_len(self, attr, attrlen, LOCAL_ATTR_ACCESS_OP);
 #else /* LOCAL_HAS_len */
-	err_unknown_attribute(self, attr, LOCAL_ATTR_ACCESS_OP);
+	err_unknown_attribute_string(self, attr, LOCAL_ATTR_ACCESS_OP);
 #endif /* !LOCAL_HAS_len */
 err:
 	return LOCAL_ERROR_RETURN_VALUE;
@@ -446,22 +446,22 @@ done:
 
 DECL_END
 
-#undef DEFINE_DeeType_GetInstanceAttrString
-#undef DEFINE_DeeType_GetInstanceAttrStringLen
-#undef DEFINE_DeeType_BoundInstanceAttrString
-#undef DEFINE_DeeType_BoundInstanceAttrStringLen
-#undef DEFINE_DeeType_CallInstanceAttrString
-#undef DEFINE_DeeType_CallInstanceAttrStringLen
-#undef DEFINE_DeeType_CallInstanceAttrStringKw
-#undef DEFINE_DeeType_CallInstanceAttrStringLenKw
-#undef DEFINE_DeeType_CallInstanceAttrStringTuple
-#undef DEFINE_DeeType_CallInstanceAttrStringLenTuple
-#undef DEFINE_DeeType_CallInstanceAttrStringTupleKw
-#undef DEFINE_DeeType_CallInstanceAttrStringLenTupleKw
-#undef DEFINE_DeeType_HasInstanceAttrString
-#undef DEFINE_DeeType_HasInstanceAttrStringLen
-#undef DEFINE_DeeType_DelInstanceAttrString
-#undef DEFINE_DeeType_DelInstanceAttrStringLen
-#undef DEFINE_DeeType_SetInstanceAttrString
-#undef DEFINE_DeeType_SetInstanceAttrStringLen
+#undef DEFINE_DeeType_GetInstanceAttrStringHash
+#undef DEFINE_DeeType_GetInstanceAttrStringLenHash
+#undef DEFINE_DeeType_BoundInstanceAttrStringHash
+#undef DEFINE_DeeType_BoundInstanceAttrStringLenHash
+#undef DEFINE_DeeType_CallInstanceAttrStringHash
+#undef DEFINE_DeeType_CallInstanceAttrStringLenHash
+#undef DEFINE_DeeType_CallInstanceAttrStringHashKw
+#undef DEFINE_DeeType_CallInstanceAttrStringLenHashKw
+#undef DEFINE_DeeType_CallInstanceAttrStringHashTuple
+#undef DEFINE_DeeType_CallInstanceAttrStringLenHashTuple
+#undef DEFINE_DeeType_CallInstanceAttrStringHashTupleKw
+#undef DEFINE_DeeType_CallInstanceAttrStringLenHashTupleKw
+#undef DEFINE_DeeType_HasInstanceAttrStringHash
+#undef DEFINE_DeeType_HasInstanceAttrStringLenHash
+#undef DEFINE_DeeType_DelInstanceAttrStringHash
+#undef DEFINE_DeeType_DelInstanceAttrStringLenHash
+#undef DEFINE_DeeType_SetInstanceAttrStringHash
+#undef DEFINE_DeeType_SetInstanceAttrStringLenHash
 #undef DEFINE_DeeType_FindInstanceAttr

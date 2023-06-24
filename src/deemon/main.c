@@ -1779,7 +1779,7 @@ operation_mode_printpp(int argc, char **argv) {
 		file = TPPFile_Open(*argv++);
 		if unlikely(!file) {
 			if (!(TPPLexer_Current->l_flags & TPPLEXER_FLAG_ERROR))
-				err_file_not_found(argv[-1]);
+				err_file_not_found_string(argv[-1]);
 			goto err;
 		}
 		TPPLexer_PushFileInherited(file);

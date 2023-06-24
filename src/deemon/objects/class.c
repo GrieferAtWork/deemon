@@ -2950,22 +2950,18 @@ instance_autoload_members_kw(DeeTypeObject *tp_self,
 				err_invalid_argc(tp_self->tp_name, argc, 0, i);
 				goto err;
 			}
-			if unlikely(DeeInstance_SetAttribute(desc,
-			                                     instance,
-			                                     self,
-			                                     at,
-			                                     argv[i]))
+			if unlikely(DeeInstance_SetAttribute(desc, instance, self, at, argv[i]))
 				goto err;
 		}
 		for (i = 0; i <= kw->kw_mask; ++i) {
 			struct class_attribute *at;
 			if (!kw->kw_map[i].ke_name)
 				continue;
-			at = DeeClassDesc_QueryInstanceAttributeStringWithHash(desc,
-			                                                       DeeString_STR(kw->kw_map[i].ke_name),
-			                                                       kw->kw_map[i].ke_hash);
+			at = DeeClassDesc_QueryInstanceAttributeHash(desc,
+			                                             (DeeObject *)kw->kw_map[i].ke_name,
+			                                             kw->kw_map[i].ke_hash);
 			if unlikely(!at || !CLASS_ATTRIBUTE_ALLOW_AUTOINIT(at)) {
-				err_unknown_attribute(tp_self,
+				err_unknown_attribute_string(tp_self,
 				                      DeeString_STR(kw->kw_map[i].ke_name),
 				                      ATTR_ACCESS_SET);
 				goto err;
@@ -2975,10 +2971,7 @@ instance_autoload_members_kw(DeeTypeObject *tp_self,
 				err_keywords_shadows_positional(DeeString_STR(kw->kw_map[i].ke_name));
 				goto err;
 			}
-			if unlikely(DeeInstance_SetAttribute(desc,
-			                                     instance,
-			                                     self,
-			                                     at,
+			if unlikely(DeeInstance_SetAttribute(desc, instance, self, at,
 			                                     kw_argv[kw->kw_map[i].ke_index]))
 				goto err;
 		}
@@ -3011,7 +3004,7 @@ instance_autoload_members_kw(DeeTypeObject *tp_self,
 				goto err_iter_data;
 			at = DeeClassDesc_QueryInstanceAttribute(desc, data[0]);
 			if unlikely(!at || !CLASS_ATTRIBUTE_ALLOW_AUTOINIT(at)) {
-				err_unknown_attribute(tp_self,
+				err_unknown_attribute_string(tp_self,
 				                      DeeString_STR(data[0]),
 				                      ATTR_ACCESS_SET);
 				goto err_iter_data;

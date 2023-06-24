@@ -79,8 +79,8 @@ INTERN ATTR_COLD int DCALL ipc_unimplemented(void) {
 #ifdef WANT_err_unbound_attribute
 #undef WANT_err_unbound_attribute
 INTERN ATTR_COLD NONNULL((1, 2)) int DCALL
-err_unbound_attribute(DeeTypeObject *__restrict tp,
-                      char const *__restrict name) {
+err_unbound_attribute_string(DeeTypeObject *__restrict tp,
+                             char const *__restrict name) {
 	ASSERT_OBJECT(tp);
 	ASSERT(DeeType_Check(tp));
 	return DeeError_Throwf(&DeeError_UnboundAttribute,
@@ -92,7 +92,7 @@ err_unbound_attribute(DeeTypeObject *__restrict tp,
 #ifdef WANT_err_file_not_found
 #undef WANT_err_file_not_found
 INTERN ATTR_COLD NONNULL((1)) int DCALL
-err_file_not_found(char const *__restrict filename) {
+err_file_not_found_string(char const *__restrict filename) {
 	return DeeError_Throwf(&DeeError_FileNotFound,
 	                       "File %q could not be found",
 	                       filename);

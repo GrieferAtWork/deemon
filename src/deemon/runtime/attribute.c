@@ -141,22 +141,22 @@ PUBLIC WUNUSED NONNULL((1, 2)) int
 again:
 	if (iter->tp_attr)
 		goto do_iter_attr;
-	if (DeeType_HasCachedAttr(iter, DeeString_STR(attr), hash))
+	if (DeeType_HasCachedAttrStringHash(iter, DeeString_STR(attr), hash))
 		goto yes;
 	iter = iter;
 	for (;;) {
 		if (DeeType_IsClass(iter)) {
-			if (DeeType_QueryAttributeWithHash(tp_self, iter, attr, hash))
+			if (DeeType_QueryAttributeHash(tp_self, iter, attr, hash))
 				goto yes;
 		} else {
 			if (iter->tp_methods &&
-			    DeeType_HasMethodAttr(tp_self, iter, DeeString_STR(attr), hash))
+			    DeeType_HasMethodAttrStringHash(tp_self, iter, DeeString_STR(attr), hash))
 				goto yes;
 			if (iter->tp_getsets &&
-			    DeeType_HasGetSetAttr(tp_self, iter, DeeString_STR(attr), hash))
+			    DeeType_HasGetSetAttrStringHash(tp_self, iter, DeeString_STR(attr), hash))
 				goto yes;
 			if (iter->tp_members &&
-			    DeeType_HasMemberAttr(tp_self, iter, DeeString_STR(attr), hash))
+			    DeeType_HasMemberAttrStringHash(tp_self, iter, DeeString_STR(attr), hash))
 				goto yes;
 		}
 		iter = DeeType_Base(iter);
@@ -171,7 +171,7 @@ do_iter_attr:
 				if (tp_getattr == &module_getattr)
 					return DeeModule_HasAttrString((DeeModuleObject *)self, DeeString_STR(attr), hash);
 				if (tp_getattr == &type_getattr)
-					return DeeType_HasAttrString((DeeTypeObject *)self, DeeString_STR(attr), hash);
+					return DeeType_HasAttrStringHash((DeeTypeObject *)self, DeeString_STR(attr), hash);
 				if (tp_getattr == &super_getattr) {
 					iter    = DeeSuper_TYPE(self);
 					self    = DeeSuper_SELF(self);
@@ -211,22 +211,22 @@ PUBLIC WUNUSED NONNULL((1, 2)) int
 again:
 	if (iter->tp_attr)
 		goto do_iter_attr;
-	if (DeeType_HasCachedAttr(iter, attr, hash))
+	if (DeeType_HasCachedAttrStringHash(iter, attr, hash))
 		goto yes;
 	iter = iter;
 	for (;;) {
 		if (DeeType_IsClass(iter)) {
-			if (DeeType_QueryAttributeStringWithHash(tp_self, iter, attr, hash))
+			if (DeeType_QueryAttributeStringHash(tp_self, iter, attr, hash))
 				goto yes;
 		} else {
 			if (iter->tp_methods &&
-			    DeeType_HasMethodAttr(tp_self, iter, attr, hash))
+			    DeeType_HasMethodAttrStringHash(tp_self, iter, attr, hash))
 				goto yes;
 			if (iter->tp_getsets &&
-			    DeeType_HasGetSetAttr(tp_self, iter, attr, hash))
+			    DeeType_HasGetSetAttrStringHash(tp_self, iter, attr, hash))
 				goto yes;
 			if (iter->tp_members &&
-			    DeeType_HasMemberAttr(tp_self, iter, attr, hash))
+			    DeeType_HasMemberAttrStringHash(tp_self, iter, attr, hash))
 				goto yes;
 		}
 		iter = DeeType_Base(iter);
@@ -241,7 +241,7 @@ do_iter_attr:
 				if (tp_getattr == &module_getattr)
 					return DeeModule_HasAttrString((DeeModuleObject *)self, attr, hash);
 				if (tp_getattr == &type_getattr)
-					return DeeType_HasAttrString((DeeTypeObject *)self, attr, hash);
+					return DeeType_HasAttrStringHash((DeeTypeObject *)self, attr, hash);
 				if (tp_getattr == &super_getattr) {
 					iter    = DeeSuper_TYPE(self);
 					self    = DeeSuper_SELF(self);
@@ -286,22 +286,22 @@ PUBLIC WUNUSED NONNULL((1, 2)) int
 again:
 	if (iter->tp_attr)
 		goto do_iter_attr;
-	if (DeeType_HasCachedAttrLen(iter, attr, attrlen, hash))
+	if (DeeType_HasCachedAttrStringLenHash(iter, attr, attrlen, hash))
 		goto yes;
 	iter = iter;
 	for (;;) {
 		if (DeeType_IsClass(iter)) {
-			if (DeeType_QueryAttributeStringLenWithHash(tp_self, iter, attr, attrlen, hash))
+			if (DeeType_QueryAttributeStringLenHash(tp_self, iter, attr, attrlen, hash))
 				goto yes;
 		} else {
 			if (iter->tp_methods &&
-			    DeeType_HasMethodAttrLen(tp_self, iter, attr, attrlen, hash))
+			    DeeType_HasMethodAttrStringLenHash(tp_self, iter, attr, attrlen, hash))
 				goto yes;
 			if (iter->tp_getsets &&
-			    DeeType_HasGetSetAttrLen(tp_self, iter, attr, attrlen, hash))
+			    DeeType_HasGetSetAttrStringLenHash(tp_self, iter, attr, attrlen, hash))
 				goto yes;
 			if (iter->tp_members &&
-			    DeeType_HasMemberAttrLen(tp_self, iter, attr, attrlen, hash))
+			    DeeType_HasMemberAttrStringLenHash(tp_self, iter, attr, attrlen, hash))
 				goto yes;
 		}
 		iter = DeeType_Base(iter);
@@ -316,7 +316,7 @@ do_iter_attr:
 				if (tp_getattr == &module_getattr)
 					return DeeModule_HasAttrStringLen((DeeModuleObject *)self, attr, attrlen, hash);
 				if (tp_getattr == &type_getattr)
-					return DeeType_HasAttrStringLen((DeeTypeObject *)self, attr, attrlen, hash);
+					return DeeType_HasAttrStringLenHash((DeeTypeObject *)self, attr, attrlen, hash);
 				if (tp_getattr == &super_getattr) {
 					iter    = DeeSuper_TYPE(self);
 					self    = DeeSuper_SELF(self);
@@ -362,12 +362,12 @@ again:
 	if (iter->tp_attr)
 		goto do_iter_attr;
 	/* Search through the cache for the requested attribute. */
-	if ((result = DeeType_BoundCachedAttr(iter, self, DeeString_STR(attr), hash)) != -2)
+	if ((result = DeeType_BoundCachedAttrStringHash(iter, self, DeeString_STR(attr), hash)) != -2)
 		goto done;
 	for (;;) {
 		if (DeeType_IsClass(iter)) {
 			struct class_attribute *cattr;
-			if ((cattr = DeeType_QueryAttributeWithHash(tp_self, iter, attr, hash)) != NULL) {
+			if ((cattr = DeeType_QueryAttributeHash(tp_self, iter, attr, hash)) != NULL) {
 				struct class_desc *desc;
 				/* Check if we're allowed to access this cattr. */
 				if (!class_attribute_mayaccess(cattr, iter)) {
@@ -383,13 +383,13 @@ again:
 			}
 		} else {
 			if (iter->tp_methods &&
-			    DeeType_HasMethodAttr(tp_self, iter, DeeString_STR(attr), hash))
+			    DeeType_HasMethodAttrStringHash(tp_self, iter, DeeString_STR(attr), hash))
 				goto is_bound;
 			if (iter->tp_getsets &&
-			    (result = DeeType_BoundGetSetAttr(tp_self, iter, self, DeeString_STR(attr), hash)) != -2)
+			    (result = DeeType_BoundGetSetAttrStringHash(tp_self, iter, self, DeeString_STR(attr), hash)) != -2)
 				goto done;
 			if (iter->tp_members &&
-			    (result = DeeType_BoundMemberAttr(tp_self, iter, self, DeeString_STR(attr), hash)) != -2)
+			    (result = DeeType_BoundMemberAttrStringHash(tp_self, iter, self, DeeString_STR(attr), hash)) != -2)
 				goto done;
 		}
 		iter = DeeType_Base(iter);
@@ -404,7 +404,7 @@ do_iter_attr:
 				if (tp_getattr == &module_getattr)
 					return DeeModule_BoundAttrString((DeeModuleObject *)self, DeeString_STR(attr), hash);
 				if (tp_getattr == &type_getattr)
-					return DeeType_BoundAttrString((DeeTypeObject *)self, DeeString_STR(attr), hash);
+					return DeeType_BoundAttrStringHash((DeeTypeObject *)self, DeeString_STR(attr), hash);
 				if (tp_getattr == &super_getattr) {
 					iter    = DeeSuper_TYPE(self);
 					self    = DeeSuper_SELF(self);
@@ -447,12 +447,12 @@ again:
 	if (iter->tp_attr)
 		goto do_iter_attr;
 	/* Search through the cache for the requested attribute. */
-	if ((result = DeeType_BoundCachedAttr(iter, self, attr, hash)) != -2)
+	if ((result = DeeType_BoundCachedAttrStringHash(iter, self, attr, hash)) != -2)
 		goto done;
 	for (;;) {
 		if (DeeType_IsClass(iter)) {
 			struct class_attribute *cattr;
-			if ((cattr = DeeType_QueryAttributeStringWithHash(tp_self, iter, attr, hash)) != NULL) {
+			if ((cattr = DeeType_QueryAttributeStringHash(tp_self, iter, attr, hash)) != NULL) {
 				struct class_desc *desc;
 				/* Check if we're allowed to access this cattr. */
 				if (!class_attribute_mayaccess(cattr, iter)) {
@@ -468,13 +468,13 @@ again:
 			}
 		} else {
 			if (iter->tp_methods &&
-			    DeeType_HasMethodAttr(tp_self, iter, attr, hash))
+			    DeeType_HasMethodAttrStringHash(tp_self, iter, attr, hash))
 				goto is_bound;
 			if (iter->tp_getsets &&
-			    (result = DeeType_BoundGetSetAttr(tp_self, iter, self, attr, hash)) != -2)
+			    (result = DeeType_BoundGetSetAttrStringHash(tp_self, iter, self, attr, hash)) != -2)
 				goto done;
 			if (iter->tp_members &&
-			    (result = DeeType_BoundMemberAttr(tp_self, iter, self, attr, hash)) != -2)
+			    (result = DeeType_BoundMemberAttrStringHash(tp_self, iter, self, attr, hash)) != -2)
 				goto done;
 		}
 		iter = DeeType_Base(iter);
@@ -489,7 +489,7 @@ do_iter_attr:
 				if (tp_getattr == &module_getattr)
 					return DeeModule_BoundAttrString((DeeModuleObject *)self, attr, hash);
 				if (tp_getattr == &type_getattr)
-					return DeeType_BoundAttrString((DeeTypeObject *)self, attr, hash);
+					return DeeType_BoundAttrStringHash((DeeTypeObject *)self, attr, hash);
 				if (tp_getattr == &super_getattr) {
 					iter    = DeeSuper_TYPE(self);
 					self    = DeeSuper_SELF(self);
@@ -537,12 +537,12 @@ again:
 	if (iter->tp_attr)
 		goto do_iter_attr;
 	/* Search through the cache for the requested attribute. */
-	if ((result = DeeType_BoundCachedAttrLen(iter, self, attr, attrlen, hash)) != -2)
+	if ((result = DeeType_BoundCachedAttrStringLenHash(iter, self, attr, attrlen, hash)) != -2)
 		goto done;
 	for (;;) {
 		if (DeeType_IsClass(iter)) {
 			struct class_attribute *cattr;
-			if ((cattr = DeeType_QueryAttributeStringLenWithHash(tp_self, iter, attr, attrlen, hash)) != NULL) {
+			if ((cattr = DeeType_QueryAttributeStringLenHash(tp_self, iter, attr, attrlen, hash)) != NULL) {
 				struct class_desc *desc;
 				/* Check if we're allowed to access this cattr. */
 				if (!class_attribute_mayaccess(cattr, iter)) {
@@ -558,13 +558,13 @@ again:
 			}
 		} else {
 			if (iter->tp_methods &&
-			    DeeType_HasMethodAttrLen(tp_self, iter, attr, attrlen, hash))
+			    DeeType_HasMethodAttrStringLenHash(tp_self, iter, attr, attrlen, hash))
 				goto is_bound;
 			if (iter->tp_getsets &&
-			    (result = DeeType_BoundGetSetAttrLen(tp_self, iter, self, attr, attrlen, hash)) != -2)
+			    (result = DeeType_BoundGetSetAttrStringLenHash(tp_self, iter, self, attr, attrlen, hash)) != -2)
 				goto done;
 			if (iter->tp_members &&
-			    (result = DeeType_BoundMemberAttrLen(tp_self, iter, self, attr, attrlen, hash)) != -2)
+			    (result = DeeType_BoundMemberAttrStringLenHash(tp_self, iter, self, attr, attrlen, hash)) != -2)
 				goto done;
 		}
 		iter = DeeType_Base(iter);
@@ -579,7 +579,7 @@ do_iter_attr:
 				if (tp_getattr == &module_getattr)
 					return DeeModule_BoundAttrStringLen((DeeModuleObject *)self, attr, attrlen, hash);
 				if (tp_getattr == &type_getattr)
-					return DeeType_BoundAttrStringLen((DeeTypeObject *)self, attr, attrlen, hash);
+					return DeeType_BoundAttrStringLenHash((DeeTypeObject *)self, attr, attrlen, hash);
 				if (tp_getattr == &super_getattr) {
 					iter    = DeeSuper_TYPE(self);
 					self    = DeeSuper_SELF(self);
@@ -628,14 +628,14 @@ again:
 	if (iter->tp_attr)
 		goto do_iter_attr;
 	hash = DeeString_Hash(attr);
-	if ((result = DeeType_CallCachedAttrKw(iter, self,
+	if ((result = DeeType_CallCachedAttrStringHashKw(iter, self,
 	                                       DeeString_STR(attr),
 	                                       hash, argc, argv, kw)) != ITER_DONE)
 		goto done;
 	for (;;) {
 		if (DeeType_IsClass(iter)) {
 			struct class_attribute *cattr;
-			if ((cattr = DeeType_QueryAttributeWithHash(tp_self, iter, attr, hash)) != NULL) {
+			if ((cattr = DeeType_QueryAttributeHash(tp_self, iter, attr, hash)) != NULL) {
 				struct class_desc *desc;
 				/* Check if we're allowed to access this cattr. */
 				if (!class_attribute_mayaccess(cattr, iter)) {
@@ -650,13 +650,13 @@ again:
 			}
 		}
 		if (iter->tp_methods &&
-		    (result = DeeType_CallMethodAttrKw(tp_self, iter, self, DeeString_STR(attr), hash, argc, argv, kw)) != ITER_DONE)
+		    (result = DeeType_CallMethodAttrStringHashKw(tp_self, iter, self, DeeString_STR(attr), hash, argc, argv, kw)) != ITER_DONE)
 			goto done;
 		if (iter->tp_getsets &&
-		    (result = DeeType_GetGetSetAttr(tp_self, iter, self, DeeString_STR(attr), hash)) != ITER_DONE)
+		    (result = DeeType_GetGetSetAttrStringHash(tp_self, iter, self, DeeString_STR(attr), hash)) != ITER_DONE)
 			goto done_invoke;
 		if (iter->tp_members &&
-		    (result = DeeType_GetMemberAttr(tp_self, iter, self, DeeString_STR(attr), hash)) != ITER_DONE)
+		    (result = DeeType_GetMemberAttrStringHash(tp_self, iter, self, DeeString_STR(attr), hash)) != ITER_DONE)
 			goto done_invoke;
 		iter = DeeType_Base(iter);
 		if (!iter)
@@ -685,9 +685,7 @@ do_iter_attr:
 			goto done_invoke;
 		}
 	}
-	err_unknown_attribute(tp_self,
-	                      DeeString_STR(attr),
-	                      ATTR_ACCESS_GET);
+	err_unknown_attribute(tp_self, attr, ATTR_ACCESS_GET);
 err:
 	return NULL;
 done_invoke:
@@ -712,12 +710,12 @@ DeeObject_CallAttrStringHashKw(DeeObject *self,
 again:
 	if (iter->tp_attr)
 		goto do_iter_attr;
-	if ((result = DeeType_CallCachedAttrKw(iter, self, attr, hash, argc, argv, kw)) != ITER_DONE)
+	if ((result = DeeType_CallCachedAttrStringHashKw(iter, self, attr, hash, argc, argv, kw)) != ITER_DONE)
 		goto done;
 	for (;;) {
 		if (DeeType_IsClass(iter)) {
 			struct class_attribute *cattr;
-			if ((cattr = DeeType_QueryAttributeStringWithHash(tp_self, iter, attr, hash)) != NULL) {
+			if ((cattr = DeeType_QueryAttributeStringHash(tp_self, iter, attr, hash)) != NULL) {
 				struct class_desc *desc;
 				/* Check if we're allowed to access this cattr. */
 				if (!class_attribute_mayaccess(cattr, iter)) {
@@ -732,13 +730,13 @@ again:
 			}
 		}
 		if (iter->tp_methods &&
-		    (result = DeeType_CallMethodAttrKw(tp_self, iter, self, attr, hash, argc, argv, kw)) != ITER_DONE)
+		    (result = DeeType_CallMethodAttrStringHashKw(tp_self, iter, self, attr, hash, argc, argv, kw)) != ITER_DONE)
 			goto done;
 		if (iter->tp_getsets &&
-		    (result = DeeType_GetGetSetAttr(tp_self, iter, self, attr, hash)) != ITER_DONE)
+		    (result = DeeType_GetGetSetAttrStringHash(tp_self, iter, self, attr, hash)) != ITER_DONE)
 			goto done_invoke;
 		if (iter->tp_members &&
-		    (result = DeeType_GetMemberAttr(tp_self, iter, self, attr, hash)) != ITER_DONE)
+		    (result = DeeType_GetMemberAttrStringHash(tp_self, iter, self, attr, hash)) != ITER_DONE)
 			goto done_invoke;
 		iter = DeeType_Base(iter);
 		if (!iter)
@@ -749,7 +747,7 @@ again:
 do_iter_attr:
 			tp_getattr = iter->tp_attr->tp_getattr;
 			if (tp_getattr == &type_getattr)
-				return DeeType_CallAttrStringKw((DeeTypeObject *)self, attr, hash, argc, argv, kw);
+				return DeeType_CallAttrStringHashKw((DeeTypeObject *)self, attr, hash, argc, argv, kw);
 			if (tp_getattr == &module_getattr) {
 				result = DeeModule_GetAttrString((DeeModuleObject *)self,
 				                                 attr,
@@ -778,9 +776,7 @@ do_iter_attr:
 			goto done_invoke;
 		}
 	}
-	err_unknown_attribute(tp_self,
-	                      attr,
-	                      ATTR_ACCESS_GET);
+	err_unknown_attribute_string(tp_self, attr, ATTR_ACCESS_GET);
 err:
 	return NULL;
 done_invoke:
@@ -807,12 +803,12 @@ DeeObject_CallAttrStringLenHashKw(DeeObject *self,
 again:
 	if (iter->tp_attr)
 		goto do_iter_attr;
-	if ((result = DeeType_CallCachedAttrLenKw(iter, self, attr, attrlen, hash, argc, argv, kw)) != ITER_DONE)
+	if ((result = DeeType_CallCachedAttrStringLenHashKw(iter, self, attr, attrlen, hash, argc, argv, kw)) != ITER_DONE)
 		goto done;
 	for (;;) {
 		if (DeeType_IsClass(iter)) {
 			struct class_attribute *cattr;
-			if ((cattr = DeeType_QueryAttributeStringLenWithHash(tp_self, iter, attr, attrlen, hash)) != NULL) {
+			if ((cattr = DeeType_QueryAttributeStringLenHash(tp_self, iter, attr, attrlen, hash)) != NULL) {
 				struct class_desc *desc;
 				/* Check if we're allowed to access this cattr. */
 				if (!class_attribute_mayaccess(cattr, iter)) {
@@ -827,13 +823,13 @@ again:
 			}
 		}
 		if (iter->tp_methods &&
-		    (result = DeeType_CallMethodAttrLenKw(tp_self, iter, self, attr, attrlen, hash, argc, argv, kw)) != ITER_DONE)
+		    (result = DeeType_CallMethodAttrStringLenHashKw(tp_self, iter, self, attr, attrlen, hash, argc, argv, kw)) != ITER_DONE)
 			goto done;
 		if (iter->tp_getsets &&
-		    (result = DeeType_GetGetSetAttrLen(tp_self, iter, self, attr, attrlen, hash)) != ITER_DONE)
+		    (result = DeeType_GetGetSetAttrStringLenHash(tp_self, iter, self, attr, attrlen, hash)) != ITER_DONE)
 			goto done_invoke;
 		if (iter->tp_members &&
-		    (result = DeeType_GetMemberAttrLen(tp_self, iter, self, attr, attrlen, hash)) != ITER_DONE)
+		    (result = DeeType_GetMemberAttrStringLenHash(tp_self, iter, self, attr, attrlen, hash)) != ITER_DONE)
 			goto done_invoke;
 		iter = DeeType_Base(iter);
 		if (!iter)
@@ -844,7 +840,7 @@ again:
 do_iter_attr:
 			tp_getattr = iter->tp_attr->tp_getattr;
 			if (tp_getattr == &type_getattr)
-				return DeeType_CallAttrStringLenKw((DeeTypeObject *)self, attr, attrlen, hash, argc, argv, kw);
+				return DeeType_CallAttrStringLenHashKw((DeeTypeObject *)self, attr, attrlen, hash, argc, argv, kw);
 			if (tp_getattr == &module_getattr) {
 				result = DeeModule_GetAttrStringLen((DeeModuleObject *)self,
 				                                    attr,
@@ -874,10 +870,7 @@ do_iter_attr:
 			goto done_invoke;
 		}
 	}
-	err_unknown_attribute_len(tp_self,
-	                          attr,
-	                          attrlen,
-	                          ATTR_ACCESS_GET);
+	err_unknown_attribute_string_len(tp_self, attr, attrlen, ATTR_ACCESS_GET);
 err:
 	return NULL;
 done_invoke:
@@ -906,12 +899,12 @@ again:
 	if (iter->tp_attr)
 		goto do_iter_attr;
 	hash = DeeString_Hash(attr);
-	if ((result = DeeType_CallCachedAttrTuple(iter, self, DeeString_STR(attr), hash, args)) != ITER_DONE)
+	if ((result = DeeType_CallCachedAttrStringHashTuple(iter, self, DeeString_STR(attr), hash, args)) != ITER_DONE)
 		goto done;
 	for (;;) {
 		if (DeeType_IsClass(iter)) {
 			struct class_attribute *cattr;
-			if ((cattr = DeeType_QueryAttributeWithHash(tp_self, iter, attr, hash)) != NULL) {
+			if ((cattr = DeeType_QueryAttributeHash(tp_self, iter, attr, hash)) != NULL) {
 				struct class_desc *desc;
 				/* Check if we're allowed to access this cattr. */
 				if (!class_attribute_mayaccess(cattr, iter)) {
@@ -926,13 +919,13 @@ again:
 			}
 		}
 		if (iter->tp_methods &&
-		    (result = DeeType_CallMethodAttrTuple(tp_self, iter, self, DeeString_STR(attr), hash, args)) != ITER_DONE)
+		    (result = DeeType_CallMethodAttrStringHashTuple(tp_self, iter, self, DeeString_STR(attr), hash, args)) != ITER_DONE)
 			goto done;
 		if (iter->tp_getsets &&
-		    (result = DeeType_GetGetSetAttr(tp_self, iter, self, DeeString_STR(attr), hash)) != ITER_DONE)
+		    (result = DeeType_GetGetSetAttrStringHash(tp_self, iter, self, DeeString_STR(attr), hash)) != ITER_DONE)
 			goto done_invoke;
 		if (iter->tp_members &&
-		    (result = DeeType_GetMemberAttr(tp_self, iter, self, DeeString_STR(attr), hash)) != ITER_DONE)
+		    (result = DeeType_GetMemberAttrStringHash(tp_self, iter, self, DeeString_STR(attr), hash)) != ITER_DONE)
 			goto done_invoke;
 		iter = DeeType_Base(iter);
 		if (!iter)
@@ -961,9 +954,7 @@ do_iter_attr:
 			goto done_invoke;
 		}
 	}
-	err_unknown_attribute(tp_self,
-	                      DeeString_STR(attr),
-	                      ATTR_ACCESS_GET);
+	err_unknown_attribute(tp_self, attr, ATTR_ACCESS_GET);
 err:
 	return NULL;
 done_invoke:
@@ -990,12 +981,12 @@ again:
 	if (iter->tp_attr)
 		goto do_iter_attr;
 	hash = DeeString_Hash(attr);
-	if ((result = DeeType_CallCachedAttrTupleKw(iter, self, DeeString_STR(attr), hash, args, kw)) != ITER_DONE)
+	if ((result = DeeType_CallCachedAttrStringHashTupleKw(iter, self, DeeString_STR(attr), hash, args, kw)) != ITER_DONE)
 		goto done;
 	for (;;) {
 		if (DeeType_IsClass(iter)) {
 			struct class_attribute *cattr;
-			if ((cattr = DeeType_QueryAttributeWithHash(tp_self, iter, attr, hash)) != NULL) {
+			if ((cattr = DeeType_QueryAttributeHash(tp_self, iter, attr, hash)) != NULL) {
 				struct class_desc *desc;
 				/* Check if we're allowed to access this cattr. */
 				if (!class_attribute_mayaccess(cattr, iter)) {
@@ -1010,13 +1001,13 @@ again:
 			}
 		}
 		if (iter->tp_methods &&
-		    (result = DeeType_CallMethodAttrTupleKw(tp_self, iter, self, DeeString_STR(attr), hash, args, kw)) != ITER_DONE)
+		    (result = DeeType_CallMethodAttrStringHashTupleKw(tp_self, iter, self, DeeString_STR(attr), hash, args, kw)) != ITER_DONE)
 			goto done;
 		if (iter->tp_getsets &&
-		    (result = DeeType_GetGetSetAttr(tp_self, iter, self, DeeString_STR(attr), hash)) != ITER_DONE)
+		    (result = DeeType_GetGetSetAttrStringHash(tp_self, iter, self, DeeString_STR(attr), hash)) != ITER_DONE)
 			goto done_invoke;
 		if (iter->tp_members &&
-		    (result = DeeType_GetMemberAttr(tp_self, iter, self, DeeString_STR(attr), hash)) != ITER_DONE)
+		    (result = DeeType_GetMemberAttrStringHash(tp_self, iter, self, DeeString_STR(attr), hash)) != ITER_DONE)
 			goto done_invoke;
 		iter = DeeType_Base(iter);
 		if (!iter)
@@ -1045,9 +1036,7 @@ do_iter_attr:
 			goto done_invoke;
 		}
 	}
-	err_unknown_attribute(tp_self,
-	                      DeeString_STR(attr),
-	                      ATTR_ACCESS_GET);
+	err_unknown_attribute(tp_self, attr, ATTR_ACCESS_GET);
 err:
 	return NULL;
 done_invoke:
@@ -1097,12 +1086,12 @@ DeeObject_GetAttrStringHash(DeeObject *__restrict self,
 again:
 	if (iter->tp_attr)
 		goto do_iter_attr;
-	if ((result = DeeType_GetCachedAttr(iter, self, attr, hash)) != ITER_DONE)
+	if ((result = DeeType_GetCachedAttrStringHash(iter, self, attr, hash)) != ITER_DONE)
 		goto done;
 	for (;;) {
 		if (DeeType_IsClass(iter)) {
 			struct class_attribute *cattr;
-			if ((cattr = DeeType_QueryAttributeStringWithHash(tp_self, iter, attr, hash)) != NULL) {
+			if ((cattr = DeeType_QueryAttributeStringHash(tp_self, iter, attr, hash)) != NULL) {
 				struct class_desc *desc;
 				/* Check if we're allowed to access this cattr. */
 				if (!class_attribute_mayaccess(cattr, iter)) {
@@ -1117,13 +1106,13 @@ again:
 			}
 		}
 		if (iter->tp_methods &&
-		    (result = DeeType_GetMethodAttr(tp_self, iter, self, attr, hash)) != ITER_DONE)
+		    (result = DeeType_GetMethodAttrStringHash(tp_self, iter, self, attr, hash)) != ITER_DONE)
 			goto done;
 		if (iter->tp_getsets &&
-		    (result = DeeType_GetGetSetAttr(tp_self, iter, self, attr, hash)) != ITER_DONE)
+		    (result = DeeType_GetGetSetAttrStringHash(tp_self, iter, self, attr, hash)) != ITER_DONE)
 			goto done;
 		if (iter->tp_members &&
-		    (result = DeeType_GetMemberAttr(tp_self, iter, self, attr, hash)) != ITER_DONE)
+		    (result = DeeType_GetMemberAttrStringHash(tp_self, iter, self, attr, hash)) != ITER_DONE)
 			goto done;
 		iter = DeeType_Base(iter);
 		if (!iter)
@@ -1134,7 +1123,7 @@ again:
 do_iter_attr:
 			tp_getattr = iter->tp_attr->tp_getattr;
 			if (tp_getattr == &type_getattr)
-				return DeeType_GetAttrString((DeeTypeObject *)self, attr, hash);
+				return DeeType_GetAttrStringHash((DeeTypeObject *)self, attr, hash);
 			if (tp_getattr == &module_getattr)
 				return DeeModule_GetAttrString((DeeModuleObject *)self, attr, hash);
 			if (tp_getattr == &super_getattr) {
@@ -1153,9 +1142,7 @@ do_iter_attr:
 			return result;
 		}
 	}
-	err_unknown_attribute(tp_self,
-	                      attr,
-	                      ATTR_ACCESS_GET);
+	err_unknown_attribute_string(tp_self, attr, ATTR_ACCESS_GET);
 err:
 	return NULL;
 done:
@@ -1173,12 +1160,12 @@ DeeObject_GetAttrStringLenHash(DeeObject *__restrict self,
 again:
 	if (iter->tp_attr)
 		goto do_iter_attr;
-	if ((result = DeeType_GetCachedAttrLen(iter, self, attr, attrlen, hash)) != ITER_DONE)
+	if ((result = DeeType_GetCachedAttrStringLenHash(iter, self, attr, attrlen, hash)) != ITER_DONE)
 		goto done;
 	for (;;) {
 		if (DeeType_IsClass(iter)) {
 			struct class_attribute *cattr;
-			if ((cattr = DeeType_QueryAttributeStringLenWithHash(tp_self, iter, attr, attrlen, hash)) != NULL) {
+			if ((cattr = DeeType_QueryAttributeStringLenHash(tp_self, iter, attr, attrlen, hash)) != NULL) {
 				struct class_desc *desc;
 				/* Check if we're allowed to access this cattr. */
 				if (!class_attribute_mayaccess(cattr, iter)) {
@@ -1193,13 +1180,13 @@ again:
 			}
 		}
 		if (iter->tp_methods &&
-		    (result = DeeType_GetMethodAttrLen(tp_self, iter, self, attr, attrlen, hash)) != ITER_DONE)
+		    (result = DeeType_GetMethodAttrStringLenHash(tp_self, iter, self, attr, attrlen, hash)) != ITER_DONE)
 			goto done;
 		if (iter->tp_getsets &&
-		    (result = DeeType_GetGetSetAttrLen(tp_self, iter, self, attr, attrlen, hash)) != ITER_DONE)
+		    (result = DeeType_GetGetSetAttrStringLenHash(tp_self, iter, self, attr, attrlen, hash)) != ITER_DONE)
 			goto done;
 		if (iter->tp_members &&
-		    (result = DeeType_GetMemberAttrLen(tp_self, iter, self, attr, attrlen, hash)) != ITER_DONE)
+		    (result = DeeType_GetMemberAttrStringLenHash(tp_self, iter, self, attr, attrlen, hash)) != ITER_DONE)
 			goto done;
 		iter = DeeType_Base(iter);
 		if (!iter)
@@ -1210,7 +1197,7 @@ again:
 do_iter_attr:
 			tp_getattr = iter->tp_attr->tp_getattr;
 			if (tp_getattr == &type_getattr)
-				return DeeType_GetAttrStringLen((DeeTypeObject *)self, attr, attrlen, hash);
+				return DeeType_GetAttrStringLenHash((DeeTypeObject *)self, attr, attrlen, hash);
 			if (tp_getattr == &module_getattr)
 				return DeeModule_GetAttrStringLen((DeeModuleObject *)self, attr, attrlen, hash);
 			if (tp_getattr == &super_getattr) {
@@ -1229,10 +1216,7 @@ do_iter_attr:
 			return result;
 		}
 	}
-	err_unknown_attribute_len(tp_self,
-	                          attr,
-	                          attrlen,
-	                          ATTR_ACCESS_GET);
+	err_unknown_attribute_string_len(tp_self, attr, attrlen, ATTR_ACCESS_GET);
 err:
 	return NULL;
 done:
@@ -1250,12 +1234,12 @@ PUBLIC WUNUSED NONNULL((1, 2)) int
 again:
 	if (iter->tp_attr)
 		goto do_iter_attr;
-	if ((result = DeeType_DelCachedAttr(iter, self, attr, hash)) <= 0)
+	if ((result = DeeType_DelCachedAttrStringHash(iter, self, attr, hash)) <= 0)
 		goto done;
 	for (;;) {
 		if (DeeType_IsClass(iter)) {
 			struct class_attribute *cattr;
-			if ((cattr = DeeType_QueryAttributeStringWithHash(tp_self, iter, attr, hash)) != NULL) {
+			if ((cattr = DeeType_QueryAttributeStringHash(tp_self, iter, attr, hash)) != NULL) {
 				struct class_desc *desc;
 				/* Check if we're allowed to access this cattr. */
 				if (!class_attribute_mayaccess(cattr, iter)) {
@@ -1270,13 +1254,13 @@ again:
 			}
 		}
 		if (iter->tp_methods &&
-		    DeeType_HasMethodAttr(tp_self, iter, attr, hash))
+		    DeeType_HasMethodAttrStringHash(tp_self, iter, attr, hash))
 			goto err_noaccess;
 		if (iter->tp_getsets &&
-		    (result = DeeType_DelGetSetAttr(tp_self, iter, self, attr, hash)) <= 0)
+		    (result = DeeType_DelGetSetAttrStringHash(tp_self, iter, self, attr, hash)) <= 0)
 			goto done;
 		if (iter->tp_members &&
-		    (result = DeeType_DelMemberAttr(tp_self, iter, self, attr, hash)) <= 0)
+		    (result = DeeType_DelMemberAttrStringHash(tp_self, iter, self, attr, hash)) <= 0)
 			goto done;
 		iter = DeeType_Base(iter);
 		if (!iter)
@@ -1287,7 +1271,7 @@ again:
 do_iter_attr:
 			tp_delattr = iter->tp_attr->tp_delattr;
 			if (tp_delattr == &type_delattr)
-				return DeeType_DelAttrString((DeeTypeObject *)self, attr, hash);
+				return DeeType_DelAttrStringHash((DeeTypeObject *)self, attr, hash);
 			if (tp_delattr == &module_delattr)
 				return DeeModule_DelAttrString((DeeModuleObject *)self, attr, hash);
 			if (tp_delattr == &super_delattr) {
@@ -1306,17 +1290,13 @@ do_iter_attr:
 			return result;
 		}
 	}
-	err_unknown_attribute(tp_self,
-	                      attr,
-	                      ATTR_ACCESS_DEL);
+	err_unknown_attribute_string(tp_self, attr, ATTR_ACCESS_DEL);
 err:
 	return -1;
 done:
 	return result;
 err_noaccess:
-	err_cant_access_attribute(tp_self,
-	                          attr,
-	                          ATTR_ACCESS_DEL);
+	err_cant_access_attribute_string(tp_self, attr, ATTR_ACCESS_DEL);
 	goto err;
 }
 
@@ -1331,12 +1311,12 @@ PUBLIC WUNUSED NONNULL((1, 2)) int
 again:
 	if (iter->tp_attr)
 		goto do_iter_attr;
-	if ((result = DeeType_DelCachedAttrLen(iter, self, attr, attrlen, hash)) <= 0)
+	if ((result = DeeType_DelCachedAttrStringLenHash(iter, self, attr, attrlen, hash)) <= 0)
 		goto done;
 	for (;;) {
 		if (DeeType_IsClass(iter)) {
 			struct class_attribute *cattr;
-			if ((cattr = DeeType_QueryAttributeStringLenWithHash(tp_self, iter, attr, attrlen, hash)) != NULL) {
+			if ((cattr = DeeType_QueryAttributeStringLenHash(tp_self, iter, attr, attrlen, hash)) != NULL) {
 				struct class_desc *desc;
 				/* Check if we're allowed to access this cattr. */
 				if (!class_attribute_mayaccess(cattr, iter)) {
@@ -1351,13 +1331,13 @@ again:
 			}
 		}
 		if (iter->tp_methods &&
-		    DeeType_HasMethodAttrLen(tp_self, iter, attr, attrlen, hash))
+		    DeeType_HasMethodAttrStringLenHash(tp_self, iter, attr, attrlen, hash))
 			goto err_noaccess;
 		if (iter->tp_getsets &&
-		    (result = DeeType_DelGetSetAttrLen(tp_self, iter, self, attr, attrlen, hash)) <= 0)
+		    (result = DeeType_DelGetSetAttrStringLenHash(tp_self, iter, self, attr, attrlen, hash)) <= 0)
 			goto done;
 		if (iter->tp_members &&
-		    (result = DeeType_DelMemberAttrLen(tp_self, iter, self, attr, attrlen, hash)) <= 0)
+		    (result = DeeType_DelMemberAttrStringLenHash(tp_self, iter, self, attr, attrlen, hash)) <= 0)
 			goto done;
 		iter = DeeType_Base(iter);
 		if (!iter)
@@ -1368,7 +1348,7 @@ again:
 do_iter_attr:
 			tp_delattr = iter->tp_attr->tp_delattr;
 			if (tp_delattr == &type_delattr)
-				return DeeType_DelAttrStringLen((DeeTypeObject *)self, attr, attrlen, hash);
+				return DeeType_DelAttrStringLenHash((DeeTypeObject *)self, attr, attrlen, hash);
 			if (tp_delattr == &module_delattr)
 				return DeeModule_DelAttrStringLen((DeeModuleObject *)self, attr, attrlen, hash);
 			if (tp_delattr == &super_delattr) {
@@ -1387,19 +1367,13 @@ do_iter_attr:
 			return result;
 		}
 	}
-	err_unknown_attribute_len(tp_self,
-	                          attr,
-	                          attrlen,
-	                          ATTR_ACCESS_DEL);
+	err_unknown_attribute_string_len(tp_self, attr, attrlen, ATTR_ACCESS_DEL);
 err:
 	return -1;
 done:
 	return result;
 err_noaccess:
-	err_cant_access_attribute_len(tp_self,
-	                              attr,
-	                              attrlen,
-	                              ATTR_ACCESS_DEL);
+	err_cant_access_attribute_string_len(tp_self, attr, attrlen, ATTR_ACCESS_DEL);
 	goto err;
 }
 
@@ -1414,12 +1388,12 @@ PUBLIC WUNUSED NONNULL((1, 2, 4)) int
 again:
 	if (iter->tp_attr)
 		goto do_iter_attr;
-	if ((result = DeeType_SetCachedAttr(iter, self, attr, hash, value)) <= 0)
+	if ((result = DeeType_SetCachedAttrStringHash(iter, self, attr, hash, value)) <= 0)
 		goto done;
 	for (;;) {
 		if (DeeType_IsClass(iter)) {
 			struct class_attribute *cattr;
-			if ((cattr = DeeType_QueryAttributeStringWithHash(tp_self, iter, attr, hash)) != NULL) {
+			if ((cattr = DeeType_QueryAttributeStringHash(tp_self, iter, attr, hash)) != NULL) {
 				struct class_desc *desc;
 				/* Check if we're allowed to access this cattr. */
 				if (!class_attribute_mayaccess(cattr, iter)) {
@@ -1434,13 +1408,13 @@ again:
 			}
 		}
 		if (iter->tp_methods &&
-		    DeeType_HasMethodAttr(tp_self, iter, attr, hash))
+		    DeeType_HasMethodAttrStringHash(tp_self, iter, attr, hash))
 			goto err_noaccess;
 		if (iter->tp_getsets &&
-		    (result = DeeType_SetGetSetAttr(tp_self, iter, self, attr, hash, value)) <= 0)
+		    (result = DeeType_SetGetSetAttrStringHash(tp_self, iter, self, attr, hash, value)) <= 0)
 			goto done;
 		if (iter->tp_members &&
-		    (result = DeeType_SetMemberAttr(tp_self, iter, self, attr, hash, value)) <= 0)
+		    (result = DeeType_SetMemberAttrStringHash(tp_self, iter, self, attr, hash, value)) <= 0)
 			goto done;
 		iter = DeeType_Base(iter);
 		if (!iter)
@@ -1451,7 +1425,7 @@ again:
 do_iter_attr:
 			tp_setattr = iter->tp_attr->tp_setattr;
 			if (tp_setattr == &type_setattr)
-				return DeeType_SetAttrString((DeeTypeObject *)self, attr, hash, value);
+				return DeeType_SetAttrStringHash((DeeTypeObject *)self, attr, hash, value);
 			if (tp_setattr == &module_setattr)
 				return DeeModule_SetAttrString((DeeModuleObject *)self, attr, hash, value);
 			if (tp_setattr == &super_setattr) {
@@ -1470,17 +1444,13 @@ do_iter_attr:
 			return result;
 		}
 	}
-	err_unknown_attribute(tp_self,
-	                      attr,
-	                      ATTR_ACCESS_SET);
+	err_unknown_attribute_string(tp_self, attr, ATTR_ACCESS_SET);
 err:
 	return -1;
 done:
 	return result;
 err_noaccess:
-	err_cant_access_attribute(tp_self,
-	                          attr,
-	                          ATTR_ACCESS_SET);
+	err_cant_access_attribute_string(tp_self, attr, ATTR_ACCESS_SET);
 	goto err;
 }
 
@@ -1496,12 +1466,12 @@ PUBLIC WUNUSED NONNULL((1, 2, 5)) int
 again:
 	if (iter->tp_attr)
 		goto do_iter_attr;
-	if ((result = DeeType_SetCachedAttrLen(iter, self, attr, attrlen, hash, value)) <= 0)
+	if ((result = DeeType_SetCachedAttrStringLenHash(iter, self, attr, attrlen, hash, value)) <= 0)
 		goto done;
 	for (;;) {
 		if (DeeType_IsClass(iter)) {
 			struct class_attribute *cattr;
-			if ((cattr = DeeType_QueryAttributeStringLenWithHash(tp_self, iter, attr, attrlen, hash)) != NULL) {
+			if ((cattr = DeeType_QueryAttributeStringLenHash(tp_self, iter, attr, attrlen, hash)) != NULL) {
 				struct class_desc *desc;
 				/* Check if we're allowed to access this cattr. */
 				if (!class_attribute_mayaccess(cattr, iter)) {
@@ -1516,13 +1486,13 @@ again:
 			}
 		}
 		if (iter->tp_methods &&
-		    DeeType_HasMethodAttrLen(tp_self, iter, attr, attrlen, hash))
+		    DeeType_HasMethodAttrStringLenHash(tp_self, iter, attr, attrlen, hash))
 			goto err_noaccess;
 		if (iter->tp_getsets &&
-		    (result = DeeType_SetGetSetAttrLen(tp_self, iter, self, attr, attrlen, hash, value)) <= 0)
+		    (result = DeeType_SetGetSetAttrStringLenHash(tp_self, iter, self, attr, attrlen, hash, value)) <= 0)
 			goto done;
 		if (iter->tp_members &&
-		    (result = DeeType_SetMemberAttrLen(tp_self, iter, self, attr, attrlen, hash, value)) <= 0)
+		    (result = DeeType_SetMemberAttrStringLenHash(tp_self, iter, self, attr, attrlen, hash, value)) <= 0)
 			goto done;
 		iter = DeeType_Base(iter);
 		if (!iter)
@@ -1533,7 +1503,7 @@ again:
 do_iter_attr:
 			tp_setattr = iter->tp_attr->tp_setattr;
 			if (tp_setattr == &type_setattr)
-				return DeeType_SetAttrStringLen((DeeTypeObject *)self, attr, attrlen, hash, value);
+				return DeeType_SetAttrStringLenHash((DeeTypeObject *)self, attr, attrlen, hash, value);
 			if (tp_setattr == &module_setattr)
 				return DeeModule_SetAttrStringLen((DeeModuleObject *)self, attr, attrlen, hash, value);
 			if (tp_setattr == &super_setattr) {
@@ -1552,19 +1522,13 @@ do_iter_attr:
 			return result;
 		}
 	}
-	err_unknown_attribute_len(tp_self,
-	                          attr,
-	                          attrlen,
-	                          ATTR_ACCESS_SET);
+	err_unknown_attribute_string_len(tp_self, attr, attrlen, ATTR_ACCESS_SET);
 err:
 	return -1;
 done:
 	return result;
 err_noaccess:
-	err_cant_access_attribute_len(tp_self,
-	                              attr,
-	                              attrlen,
-	                              ATTR_ACCESS_SET);
+	err_cant_access_attribute_string_len(tp_self, attr, attrlen, ATTR_ACCESS_SET);
 	goto err;
 }
 
@@ -1580,12 +1544,12 @@ DeeObject_CallAttrStringHash(DeeObject *self,
 again:
 	if (iter->tp_attr)
 		goto do_iter_attr;
-	if ((result = DeeType_CallCachedAttr(iter, self, attr, hash, argc, argv)) != ITER_DONE)
+	if ((result = DeeType_CallCachedAttrStringHash(iter, self, attr, hash, argc, argv)) != ITER_DONE)
 		goto done;
 	for (;;) {
 		if (DeeType_IsClass(iter)) {
 			struct class_attribute *cattr;
-			if ((cattr = DeeType_QueryAttributeStringWithHash(tp_self, iter, attr, hash)) != NULL) {
+			if ((cattr = DeeType_QueryAttributeStringHash(tp_self, iter, attr, hash)) != NULL) {
 				struct class_desc *desc;
 				/* Check if we're allowed to access this cattr. */
 				if (!class_attribute_mayaccess(cattr, iter)) {
@@ -1600,13 +1564,13 @@ again:
 			}
 		}
 		if (iter->tp_methods &&
-		    (result = DeeType_CallMethodAttr(tp_self, iter, self, attr, hash, argc, argv)) != ITER_DONE)
+		    (result = DeeType_CallMethodAttrStringHash(tp_self, iter, self, attr, hash, argc, argv)) != ITER_DONE)
 			goto done;
 		if (iter->tp_getsets &&
-		    (result = DeeType_GetGetSetAttr(tp_self, iter, self, attr, hash)) != ITER_DONE)
+		    (result = DeeType_GetGetSetAttrStringHash(tp_self, iter, self, attr, hash)) != ITER_DONE)
 			goto done_invoke;
 		if (iter->tp_members &&
-		    (result = DeeType_GetMemberAttr(tp_self, iter, self, attr, hash)) != ITER_DONE)
+		    (result = DeeType_GetMemberAttrStringHash(tp_self, iter, self, attr, hash)) != ITER_DONE)
 			goto done_invoke;
 		iter = DeeType_Base(iter);
 		if (!iter)
@@ -1617,7 +1581,7 @@ again:
 do_iter_attr:
 			tp_getattr = iter->tp_attr->tp_getattr;
 			if (tp_getattr == &type_getattr)
-				return DeeType_CallAttrString((DeeTypeObject *)self, attr, hash, argc, argv);
+				return DeeType_CallAttrStringHash((DeeTypeObject *)self, attr, hash, argc, argv);
 			if (tp_getattr == &module_getattr) {
 				result = DeeModule_GetAttrString((DeeModuleObject *)self, attr, hash);
 				goto done_invoke;
@@ -1644,9 +1608,7 @@ do_iter_attr:
 			goto done_invoke;
 		}
 	}
-	err_unknown_attribute(tp_self,
-	                      attr,
-	                      ATTR_ACCESS_GET);
+	err_unknown_attribute_string(tp_self, attr, ATTR_ACCESS_GET);
 err:
 	return NULL;
 done_invoke:
@@ -1672,12 +1634,12 @@ DeeObject_CallAttrStringLenHash(DeeObject *self,
 again:
 	if (iter->tp_attr)
 		goto do_iter_attr;
-	if ((result = DeeType_CallCachedAttrLen(iter, self, attr, attrlen, hash, argc, argv)) != ITER_DONE)
+	if ((result = DeeType_CallCachedAttrStringLenHash(iter, self, attr, attrlen, hash, argc, argv)) != ITER_DONE)
 		goto done;
 	for (;;) {
 		if (DeeType_IsClass(iter)) {
 			struct class_attribute *cattr;
-			if ((cattr = DeeType_QueryAttributeStringLenWithHash(tp_self, iter, attr, attrlen, hash)) != NULL) {
+			if ((cattr = DeeType_QueryAttributeStringLenHash(tp_self, iter, attr, attrlen, hash)) != NULL) {
 				struct class_desc *desc;
 				/* Check if we're allowed to access this cattr. */
 				if (!class_attribute_mayaccess(cattr, iter)) {
@@ -1692,13 +1654,13 @@ again:
 			}
 		}
 		if (iter->tp_methods &&
-		    (result = DeeType_CallMethodAttrLen(tp_self, iter, self, attr, attrlen, hash, argc, argv)) != ITER_DONE)
+		    (result = DeeType_CallMethodAttrStringLenHash(tp_self, iter, self, attr, attrlen, hash, argc, argv)) != ITER_DONE)
 			goto done;
 		if (iter->tp_getsets &&
-		    (result = DeeType_GetGetSetAttrLen(tp_self, iter, self, attr, attrlen, hash)) != ITER_DONE)
+		    (result = DeeType_GetGetSetAttrStringLenHash(tp_self, iter, self, attr, attrlen, hash)) != ITER_DONE)
 			goto done_invoke;
 		if (iter->tp_members &&
-		    (result = DeeType_GetMemberAttrLen(tp_self, iter, self, attr, attrlen, hash)) != ITER_DONE)
+		    (result = DeeType_GetMemberAttrStringLenHash(tp_self, iter, self, attr, attrlen, hash)) != ITER_DONE)
 			goto done_invoke;
 		iter = DeeType_Base(iter);
 		if (!iter)
@@ -1709,7 +1671,7 @@ again:
 do_iter_attr:
 			tp_getattr = iter->tp_attr->tp_getattr;
 			if (tp_getattr == &type_getattr)
-				return DeeType_CallAttrStringLen((DeeTypeObject *)self, attr, attrlen, hash, argc, argv);
+				return DeeType_CallAttrStringLenHash((DeeTypeObject *)self, attr, attrlen, hash, argc, argv);
 			if (tp_getattr == &module_getattr) {
 				result = DeeModule_GetAttrStringLen((DeeModuleObject *)self, attr, attrlen, hash);
 				goto done_invoke;
@@ -1736,10 +1698,7 @@ do_iter_attr:
 			goto done_invoke;
 		}
 	}
-	err_unknown_attribute_len(tp_self,
-	                          attr,
-	                          attrlen,
-	                          ATTR_ACCESS_GET);
+	err_unknown_attribute_string_len(tp_self, attr, attrlen, ATTR_ACCESS_GET);
 err:
 	return NULL;
 done_invoke:
@@ -1997,33 +1956,33 @@ DECL_END
 
 #ifndef __INTELLISENSE__
 /* DeeObject_TGeneric*Attr */
-#define DEFINE_DeeObject_TGenericGetAttrString
+#define DEFINE_DeeObject_TGenericGetAttrStringHash
 #include "attribute-access-generic.c.inl"
-#define DEFINE_DeeObject_TGenericGetAttrStringLen
+#define DEFINE_DeeObject_TGenericGetAttrStringLenHash
 #include "attribute-access-generic.c.inl"
-#define DEFINE_DeeObject_TGenericBoundAttrString
+#define DEFINE_DeeObject_TGenericBoundAttrStringHash
 #include "attribute-access-generic.c.inl"
-#define DEFINE_DeeObject_TGenericBoundAttrStringLen
+#define DEFINE_DeeObject_TGenericBoundAttrStringLenHash
 #include "attribute-access-generic.c.inl"
-#define DEFINE_DeeObject_TGenericCallAttrString
+#define DEFINE_DeeObject_TGenericCallAttrStringHash
 #include "attribute-access-generic.c.inl"
-#define DEFINE_DeeObject_TGenericCallAttrStringLen
+#define DEFINE_DeeObject_TGenericCallAttrStringLenHash
 #include "attribute-access-generic.c.inl"
-#define DEFINE_DeeObject_TGenericCallAttrStringKw
+#define DEFINE_DeeObject_TGenericCallAttrStringHashKw
 #include "attribute-access-generic.c.inl"
-#define DEFINE_DeeObject_TGenericCallAttrStringLenKw
+#define DEFINE_DeeObject_TGenericCallAttrStringLenHashKw
 #include "attribute-access-generic.c.inl"
-#define DEFINE_DeeObject_TGenericHasAttrString
+#define DEFINE_DeeObject_TGenericHasAttrStringHash
 #include "attribute-access-generic.c.inl"
-#define DEFINE_DeeObject_TGenericHasAttrStringLen
+#define DEFINE_DeeObject_TGenericHasAttrStringLenHash
 #include "attribute-access-generic.c.inl"
-#define DEFINE_DeeObject_TGenericDelAttrString
+#define DEFINE_DeeObject_TGenericDelAttrStringHash
 #include "attribute-access-generic.c.inl"
-#define DEFINE_DeeObject_TGenericDelAttrStringLen
+#define DEFINE_DeeObject_TGenericDelAttrStringLenHash
 #include "attribute-access-generic.c.inl"
-#define DEFINE_DeeObject_TGenericSetAttrString
+#define DEFINE_DeeObject_TGenericSetAttrStringHash
 #include "attribute-access-generic.c.inl"
-#define DEFINE_DeeObject_TGenericSetAttrStringLen
+#define DEFINE_DeeObject_TGenericSetAttrStringLenHash
 #include "attribute-access-generic.c.inl"
 #define DEFINE_DeeObject_TGenericFindAttr
 #include "attribute-access-generic.c.inl"
@@ -2031,33 +1990,33 @@ DECL_END
 #include "attribute-access-generic.c.inl"
 
 /* DeeType_*Attr */
-#define DEFINE_DeeType_GetAttrString
+#define DEFINE_DeeType_GetAttrStringHash
 #include "attribute-access-type.c.inl"
-#define DEFINE_DeeType_GetAttrStringLen
+#define DEFINE_DeeType_GetAttrStringLenHash
 #include "attribute-access-type.c.inl"
-#define DEFINE_DeeType_BoundAttrString
+#define DEFINE_DeeType_BoundAttrStringHash
 #include "attribute-access-type.c.inl"
-#define DEFINE_DeeType_BoundAttrStringLen
+#define DEFINE_DeeType_BoundAttrStringLenHash
 #include "attribute-access-type.c.inl"
-#define DEFINE_DeeType_CallAttrString
+#define DEFINE_DeeType_CallAttrStringHash
 #include "attribute-access-type.c.inl"
-#define DEFINE_DeeType_CallAttrStringLen
+#define DEFINE_DeeType_CallAttrStringLenHash
 #include "attribute-access-type.c.inl"
-#define DEFINE_DeeType_CallAttrStringKw
+#define DEFINE_DeeType_CallAttrStringHashKw
 #include "attribute-access-type.c.inl"
-#define DEFINE_DeeType_CallAttrStringLenKw
+#define DEFINE_DeeType_CallAttrStringLenHashKw
 #include "attribute-access-type.c.inl"
-#define DEFINE_DeeType_HasAttrString
+#define DEFINE_DeeType_HasAttrStringHash
 #include "attribute-access-type.c.inl"
-#define DEFINE_DeeType_HasAttrStringLen
+#define DEFINE_DeeType_HasAttrStringLenHash
 #include "attribute-access-type.c.inl"
-#define DEFINE_DeeType_DelAttrString
+#define DEFINE_DeeType_DelAttrStringHash
 #include "attribute-access-type.c.inl"
-#define DEFINE_DeeType_DelAttrStringLen
+#define DEFINE_DeeType_DelAttrStringLenHash
 #include "attribute-access-type.c.inl"
-#define DEFINE_DeeType_SetAttrString
+#define DEFINE_DeeType_SetAttrStringHash
 #include "attribute-access-type.c.inl"
-#define DEFINE_DeeType_SetAttrStringLen
+#define DEFINE_DeeType_SetAttrStringLenHash
 #include "attribute-access-type.c.inl"
 #define DEFINE_DeeType_FindAttr
 #include "attribute-access-type.c.inl"
@@ -2065,17 +2024,17 @@ DECL_END
 #include "attribute-access-type.c.inl"
 
 /* DeeType_*InstanceAttr */
-#define DEFINE_DeeType_GetInstanceAttrString
+#define DEFINE_DeeType_GetInstanceAttrStringHash
 #include "attribute-access-type-instance.c.inl"
-#define DEFINE_DeeType_BoundInstanceAttrString
+#define DEFINE_DeeType_BoundInstanceAttrStringHash
 #include "attribute-access-type-instance.c.inl"
-#define DEFINE_DeeType_CallInstanceAttrStringKw
+#define DEFINE_DeeType_CallInstanceAttrStringHashKw
 #include "attribute-access-type-instance.c.inl"
-#define DEFINE_DeeType_HasInstanceAttrString
+#define DEFINE_DeeType_HasInstanceAttrStringHash
 #include "attribute-access-type-instance.c.inl"
-#define DEFINE_DeeType_DelInstanceAttrString
+#define DEFINE_DeeType_DelInstanceAttrStringHash
 #include "attribute-access-type-instance.c.inl"
-#define DEFINE_DeeType_SetInstanceAttrString
+#define DEFINE_DeeType_SetInstanceAttrStringHash
 #include "attribute-access-type-instance.c.inl"
 
 #endif /* !__INTELLISENSE__ */

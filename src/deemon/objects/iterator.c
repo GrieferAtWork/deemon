@@ -1969,7 +1969,7 @@ DeeIterator_GetSeq(DeeObject *__restrict self) {
 			return result;
 	}
 /*err_noseq:*/
-	err_unknown_attribute(Dee_TYPE(self), STR_seq, ATTR_ACCESS_GET);
+	err_unknown_attribute_string(Dee_TYPE(self), STR_seq, ATTR_ACCESS_GET);
 	return NULL;
 }
 

@@ -545,10 +545,10 @@ INTDEF struct keyword getter_kwlist[];
 
 #ifndef CONFIG_CALLTUPLE_OPTIMIZATIONS
 /* TODO: For binary compat:
- * #define DEFINE_DeeType_CallCachedAttrTuple
- * #define DEFINE_DeeType_CallCachedClassAttrTuple
- * #define DEFINE_DeeType_CallCachedAttrTupleKw
- * #define DEFINE_DeeType_CallCachedClassAttrTupleKw
+ * #define DEFINE_DeeType_CallCachedAttrStringHashTuple
+ * #define DEFINE_DeeType_CallCachedClassAttrStringHashTuple
+ * #define DEFINE_DeeType_CallCachedAttrStringHashTupleKw
+ * #define DEFINE_DeeType_CallCachedClassAttrStringHashTupleKw
  */
 #endif /* !CONFIG_CALLTUPLE_OPTIMIZATIONS */
 
@@ -745,145 +745,145 @@ DECL_END
 
 /* Define cache accessor functions */
 #ifndef __INTELLISENSE__
-#define DEFINE_DeeType_GetCachedAttr
+#define DEFINE_DeeType_GetCachedAttrStringHash
 #include "mro-impl-cache.c.inl"
-#define DEFINE_DeeType_GetCachedAttrLen
+#define DEFINE_DeeType_GetCachedAttrStringLenHash
 #include "mro-impl-cache.c.inl"
-#define DEFINE_DeeType_GetCachedClassAttr
+#define DEFINE_DeeType_GetCachedClassAttrStringHash
 #include "mro-impl-cache.c.inl"
-#define DEFINE_DeeType_GetCachedClassAttrLen
+#define DEFINE_DeeType_GetCachedClassAttrStringLenHash
 #include "mro-impl-cache.c.inl"
-#define DEFINE_DeeType_GetCachedInstanceAttr
+#define DEFINE_DeeType_GetCachedInstanceAttrStringHash
 #include "mro-impl-cache.c.inl"
-#define DEFINE_DeeType_GetCachedInstanceAttrLen
-#include "mro-impl-cache.c.inl"
-
-#define DEFINE_DeeType_BoundCachedAttr
-#include "mro-impl-cache.c.inl"
-#define DEFINE_DeeType_BoundCachedAttrLen
-#include "mro-impl-cache.c.inl"
-#define DEFINE_DeeType_BoundCachedClassAttr
-#include "mro-impl-cache.c.inl"
-#define DEFINE_DeeType_BoundCachedClassAttrLen
-#include "mro-impl-cache.c.inl"
-#define DEFINE_DeeType_BoundCachedInstanceAttr
-#include "mro-impl-cache.c.inl"
-#define DEFINE_DeeType_BoundCachedInstanceAttrLen
+#define DEFINE_DeeType_GetCachedInstanceAttrStringLenHash
 #include "mro-impl-cache.c.inl"
 
-#define DEFINE_DeeType_HasCachedAttr
+#define DEFINE_DeeType_BoundCachedAttrStringHash
 #include "mro-impl-cache.c.inl"
-#define DEFINE_DeeType_HasCachedAttrLen
+#define DEFINE_DeeType_BoundCachedAttrStringLenHash
 #include "mro-impl-cache.c.inl"
-#define DEFINE_DeeType_HasCachedClassAttr
+#define DEFINE_DeeType_BoundCachedClassAttrStringHash
 #include "mro-impl-cache.c.inl"
-#define DEFINE_DeeType_HasCachedClassAttrLen
+#define DEFINE_DeeType_BoundCachedClassAttrStringLenHash
 #include "mro-impl-cache.c.inl"
-
-#define DEFINE_DeeType_DelCachedAttr
+#define DEFINE_DeeType_BoundCachedInstanceAttrStringHash
 #include "mro-impl-cache.c.inl"
-#define DEFINE_DeeType_DelCachedAttrLen
-#include "mro-impl-cache.c.inl"
-#define DEFINE_DeeType_DelCachedClassAttr
-#include "mro-impl-cache.c.inl"
-#define DEFINE_DeeType_DelCachedClassAttrLen
-#include "mro-impl-cache.c.inl"
-#define DEFINE_DeeType_DelCachedInstanceAttr
-#include "mro-impl-cache.c.inl"
-#define DEFINE_DeeType_DelCachedInstanceAttrLen
+#define DEFINE_DeeType_BoundCachedInstanceAttrStringLenHash
 #include "mro-impl-cache.c.inl"
 
-#define DEFINE_DeeType_SetCachedAttr
+#define DEFINE_DeeType_HasCachedAttrStringHash
 #include "mro-impl-cache.c.inl"
-#define DEFINE_DeeType_SetCachedAttrLen
+#define DEFINE_DeeType_HasCachedAttrStringLenHash
 #include "mro-impl-cache.c.inl"
-#define DEFINE_DeeType_SetCachedClassAttr
+#define DEFINE_DeeType_HasCachedClassAttrStringHash
 #include "mro-impl-cache.c.inl"
-#define DEFINE_DeeType_SetCachedClassAttrLen
-#include "mro-impl-cache.c.inl"
-#define DEFINE_DeeType_SetCachedInstanceAttr
-#include "mro-impl-cache.c.inl"
-#define DEFINE_DeeType_SetCachedInstanceAttrLen
+#define DEFINE_DeeType_HasCachedClassAttrStringLenHash
 #include "mro-impl-cache.c.inl"
 
-#define DEFINE_DeeType_SetBasicCachedAttr
+#define DEFINE_DeeType_DelCachedAttrStringHash
 #include "mro-impl-cache.c.inl"
-#define DEFINE_DeeType_SetBasicCachedAttrLen
+#define DEFINE_DeeType_DelCachedAttrStringLenHash
 #include "mro-impl-cache.c.inl"
-#define DEFINE_DeeType_SetBasicCachedClassAttr
+#define DEFINE_DeeType_DelCachedClassAttrStringHash
 #include "mro-impl-cache.c.inl"
-#define DEFINE_DeeType_SetBasicCachedClassAttrLen
+#define DEFINE_DeeType_DelCachedClassAttrStringLenHash
 #include "mro-impl-cache.c.inl"
-//#define DEFINE_DeeType_SetBasicCachedInstanceAttr
+#define DEFINE_DeeType_DelCachedInstanceAttrStringHash
+#include "mro-impl-cache.c.inl"
+#define DEFINE_DeeType_DelCachedInstanceAttrStringLenHash
+#include "mro-impl-cache.c.inl"
+
+#define DEFINE_DeeType_SetCachedAttrStringHash
+#include "mro-impl-cache.c.inl"
+#define DEFINE_DeeType_SetCachedAttrStringLenHash
+#include "mro-impl-cache.c.inl"
+#define DEFINE_DeeType_SetCachedClassAttrStringHash
+#include "mro-impl-cache.c.inl"
+#define DEFINE_DeeType_SetCachedClassAttrStringLenHash
+#include "mro-impl-cache.c.inl"
+#define DEFINE_DeeType_SetCachedInstanceAttrStringHash
+#include "mro-impl-cache.c.inl"
+#define DEFINE_DeeType_SetCachedInstanceAttrStringLenHash
+#include "mro-impl-cache.c.inl"
+
+#define DEFINE_DeeType_SetBasicCachedAttrStringHash
+#include "mro-impl-cache.c.inl"
+#define DEFINE_DeeType_SetBasicCachedAttrStringLenHash
+#include "mro-impl-cache.c.inl"
+#define DEFINE_DeeType_SetBasicCachedClassAttrStringHash
+#include "mro-impl-cache.c.inl"
+#define DEFINE_DeeType_SetBasicCachedClassAttrStringLenHash
+#include "mro-impl-cache.c.inl"
+//#define DEFINE_DeeType_SetBasicCachedInstanceAttrStringHash
 //#include "mro-impl-cache.c.inl"
-//#define DEFINE_DeeType_SetBasicCachedInstanceAttrLen
-//#include "mro-impl-cache.c.inl"
-
-#define DEFINE_DeeType_CallCachedAttr
-#include "mro-impl-cache.c.inl"
-#define DEFINE_DeeType_CallCachedAttrLen
-#include "mro-impl-cache.c.inl"
-#define DEFINE_DeeType_CallCachedClassAttr
-#include "mro-impl-cache.c.inl"
-#define DEFINE_DeeType_CallCachedClassAttrLen
-#include "mro-impl-cache.c.inl"
-//#define DEFINE_DeeType_CallCachedInstanceAttr
-//#include "mro-impl-cache.c.inl"
-//#define DEFINE_DeeType_CallCachedInstanceAttrLen
+//#define DEFINE_DeeType_SetBasicCachedInstanceAttrStringLenHash
 //#include "mro-impl-cache.c.inl"
 
-#define DEFINE_DeeType_CallCachedAttrKw
+#define DEFINE_DeeType_CallCachedAttrStringHash
 #include "mro-impl-cache.c.inl"
-#define DEFINE_DeeType_CallCachedAttrLenKw
+#define DEFINE_DeeType_CallCachedAttrStringLenHash
 #include "mro-impl-cache.c.inl"
-#define DEFINE_DeeType_CallCachedClassAttrKw
+#define DEFINE_DeeType_CallCachedClassAttrStringHash
 #include "mro-impl-cache.c.inl"
-#define DEFINE_DeeType_CallCachedClassAttrLenKw
+#define DEFINE_DeeType_CallCachedClassAttrStringLenHash
 #include "mro-impl-cache.c.inl"
-#define DEFINE_DeeType_CallCachedInstanceAttrKw
+//#define DEFINE_DeeType_CallCachedInstanceAttrStringHash
+//#include "mro-impl-cache.c.inl"
+//#define DEFINE_DeeType_CallCachedInstanceAttrStringLenHash
+//#include "mro-impl-cache.c.inl"
+
+#define DEFINE_DeeType_CallCachedAttrStringHashKw
 #include "mro-impl-cache.c.inl"
-#define DEFINE_DeeType_CallCachedInstanceAttrLenKw
+#define DEFINE_DeeType_CallCachedAttrStringLenHashKw
+#include "mro-impl-cache.c.inl"
+#define DEFINE_DeeType_CallCachedClassAttrStringHashKw
+#include "mro-impl-cache.c.inl"
+#define DEFINE_DeeType_CallCachedClassAttrStringLenHashKw
+#include "mro-impl-cache.c.inl"
+#define DEFINE_DeeType_CallCachedInstanceAttrStringHashKw
+#include "mro-impl-cache.c.inl"
+#define DEFINE_DeeType_CallCachedInstanceAttrStringLenHashKw
 #include "mro-impl-cache.c.inl"
 
 #ifdef CONFIG_CALLTUPLE_OPTIMIZATIONS
-#define DEFINE_DeeType_CallCachedAttrTuple
+#define DEFINE_DeeType_CallCachedAttrStringHashTuple
 #include "mro-impl-cache.c.inl"
-//#define DEFINE_DeeType_CallCachedAttrLenTuple
+//#define DEFINE_DeeType_CallCachedAttrStringLenHashTuple
 //#include "mro-impl-cache.c.inl"
-#define DEFINE_DeeType_CallCachedClassAttrTuple
+#define DEFINE_DeeType_CallCachedClassAttrStringHashTuple
 #include "mro-impl-cache.c.inl"
-//#define DEFINE_DeeType_CallCachedClassAttrLenTuple
+//#define DEFINE_DeeType_CallCachedClassAttrStringLenHashTuple
 //#include "mro-impl-cache.c.inl"
-//#define DEFINE_DeeType_CallCachedInstanceAttrTuple
+//#define DEFINE_DeeType_CallCachedInstanceAttrStringHashTuple
 //#include "mro-impl-cache.c.inl"
-//#define DEFINE_DeeType_CallCachedInstanceAttrLenTuple
+//#define DEFINE_DeeType_CallCachedInstanceAttrStringLenHashTuple
 //#include "mro-impl-cache.c.inl"
 
-#define DEFINE_DeeType_CallCachedAttrTupleKw
+#define DEFINE_DeeType_CallCachedAttrStringHashTupleKw
 #include "mro-impl-cache.c.inl"
-//#define DEFINE_DeeType_CallCachedAttrLenTupleKw
+//#define DEFINE_DeeType_CallCachedAttrStringLenHashTupleKw
 //#include "mro-impl-cache.c.inl"
-#define DEFINE_DeeType_CallCachedClassAttrTupleKw
+#define DEFINE_DeeType_CallCachedClassAttrStringHashTupleKw
 #include "mro-impl-cache.c.inl"
-//#define DEFINE_DeeType_CallCachedClassAttrLenTupleKw
+//#define DEFINE_DeeType_CallCachedClassAttrStringLenHashTupleKw
 //#include "mro-impl-cache.c.inl"
-//#define DEFINE_DeeType_CallCachedInstanceAttrTupleKw
+//#define DEFINE_DeeType_CallCachedInstanceAttrStringHashTupleKw
 //#include "mro-impl-cache.c.inl"
-//#define DEFINE_DeeType_CallCachedInstanceAttrLenTupleKw
+//#define DEFINE_DeeType_CallCachedInstanceAttrStringLenHashTupleKw
 //#include "mro-impl-cache.c.inl"
 #endif /* CONFIG_CALLTUPLE_OPTIMIZATIONS */
 
-#define DEFINE_DeeType_VCallCachedAttrf
+#define DEFINE_DeeType_VCallCachedAttrStringHashf
 #include "mro-impl-cache.c.inl"
-//#define DEFINE_DeeType_VCallCachedAttrLenf
+//#define DEFINE_DeeType_VCallCachedAttrStringLenHashf
 //#include "mro-impl-cache.c.inl"
-#define DEFINE_DeeType_VCallCachedClassAttrf
+#define DEFINE_DeeType_VCallCachedClassAttrStringHashf
 #include "mro-impl-cache.c.inl"
-//#define DEFINE_DeeType_VCallCachedClassAttrLenf
+//#define DEFINE_DeeType_VCallCachedClassAttrStringLenHashf
 //#include "mro-impl-cache.c.inl"
-//#define DEFINE_DeeType_VCallCachedInstanceAttrf
+//#define DEFINE_DeeType_VCallCachedInstanceAttrStringHashf
 //#include "mro-impl-cache.c.inl"
-//#define DEFINE_DeeType_VCallCachedInstanceAttrLenf
+//#define DEFINE_DeeType_VCallCachedInstanceAttrStringLenHashf
 //#include "mro-impl-cache.c.inl"
 
 #define DEFINE_DeeType_FindCachedAttr

@@ -61,15 +61,15 @@ INTDEF ATTR_COLD int DCALL err_integer_overflow_i(size_t cutoff_bits, bool posit
 INTDEF NONNULL((1, 2)) int FCALL check_empty_keywords(DeeObject *kw, DeeTypeObject *tp_self);
 INTDEF NONNULL((1)) int FCALL check_empty_keywords_obj(DeeObject *__restrict kw);
 INTDEF ATTR_COLD NONNULL((1, 2)) int DCALL err_keywords_not_accepted(DeeTypeObject *tp_self, DeeObject *kw);
-INTDEF ATTR_COLD NONNULL((1, 2, 3)) int DCALL err_keywords_func_not_accepted(DeeTypeObject *tp_self, char const *__restrict name, DeeObject *__restrict kw);
-INTDEF ATTR_COLD NONNULL((1, 2, 4)) int DCALL err_keywords_func_not_accepted_len(DeeTypeObject *tp_self, char const *__restrict name, size_t namelen, DeeObject *__restrict kw);
+INTDEF ATTR_COLD NONNULL((1, 2, 3)) int DCALL err_keywords_func_not_accepted_string(DeeTypeObject *tp_self, char const *__restrict name, DeeObject *__restrict kw);
+INTDEF ATTR_COLD NONNULL((1, 2, 4)) int DCALL err_keywords_func_not_accepted_string_len(DeeTypeObject *tp_self, char const *__restrict name, size_t namelen, DeeObject *__restrict kw);
 INTDEF ATTR_COLD NONNULL((1, 2)) int DCALL err_keywords_ctor_not_accepted(DeeTypeObject *tp_self, DeeObject *kw);
-INTDEF ATTR_COLD NONNULL((1, 2)) int DCALL err_classmember_requires_1_argument(DeeTypeObject *tp_self, char const *__restrict name);
-INTDEF ATTR_COLD NONNULL((1, 2)) int DCALL err_classmember_requires_1_argument_len(DeeTypeObject *tp_self, char const *__restrict name, size_t namelen);
-INTDEF ATTR_COLD NONNULL((1, 2)) int DCALL err_classproperty_requires_1_argument(DeeTypeObject *tp_self, char const *__restrict name);
-INTDEF ATTR_COLD NONNULL((1, 2)) int DCALL err_classproperty_requires_1_argument_len(DeeTypeObject *tp_self, char const *__restrict name, size_t namelen);
-INTDEF ATTR_COLD NONNULL((1, 2)) int DCALL err_classmethod_requires_at_least_1_argument(DeeTypeObject *tp_self, char const *__restrict name);
-INTDEF ATTR_COLD NONNULL((1, 2)) int DCALL err_classmethod_requires_at_least_1_argument_len(DeeTypeObject *tp_self, char const *__restrict name, size_t namelen);
+INTDEF ATTR_COLD NONNULL((1, 2)) int DCALL err_classmember_requires_1_argument_string(DeeTypeObject *tp_self, char const *__restrict name);
+INTDEF ATTR_COLD NONNULL((1, 2)) int DCALL err_classmember_requires_1_argument_string_len(DeeTypeObject *tp_self, char const *__restrict name, size_t namelen);
+INTDEF ATTR_COLD NONNULL((1, 2)) int DCALL err_classproperty_requires_1_argument_string(DeeTypeObject *tp_self, char const *__restrict name);
+INTDEF ATTR_COLD NONNULL((1, 2)) int DCALL err_classproperty_requires_1_argument_string_len(DeeTypeObject *tp_self, char const *__restrict name, size_t namelen);
+INTDEF ATTR_COLD NONNULL((1, 2)) int DCALL err_classmethod_requires_at_least_1_argument_string(DeeTypeObject *tp_self, char const *__restrict name);
+INTDEF ATTR_COLD NONNULL((1, 2)) int DCALL err_classmethod_requires_at_least_1_argument_string_len(DeeTypeObject *tp_self, char const *__restrict name, size_t namelen);
 INTDEF ATTR_COLD int DCALL err_keywords_bad_for_argc(size_t argc, size_t kwdc);
 INTDEF ATTR_COLD NONNULL((1)) int DCALL err_keywords_not_found(char const *__restrict keyword);
 INTDEF ATTR_COLD NONNULL((1)) int DCALL err_keywords_shadows_positional(char const *__restrict keyword);
@@ -128,29 +128,29 @@ INTDEF ATTR_COLD NONNULL((1)) int DCALL err_unimplemented_operator3(DeeTypeObjec
 #define ATTR_ACCESS_SET     2
 #define ATTR_ACCESS_MASK    3
 /* @param: access: One of `ATTR_ACCESS_*' */
-INTDEF ATTR_COLD NONNULL((1, 2)) int DCALL err_unknown_attribute(DeeTypeObject *__restrict tp, char const *__restrict name, int access);
-INTDEF ATTR_COLD NONNULL((1)) int DCALL err_unknown_attribute_len(DeeTypeObject *__restrict tp, char const *name, size_t namelen, int access);
-INTDEF ATTR_COLD NONNULL((1, 2)) int DCALL err_unknown_attribute_lookup(DeeTypeObject *__restrict tp, char const *__restrict name);
-INTDEF ATTR_COLD NONNULL((2)) int DCALL err_nodoc_attribute(char const *base, char const *__restrict name);
+INTDEF ATTR_COLD NONNULL((1, 2)) int DCALL err_unknown_attribute_string(DeeTypeObject *__restrict tp, char const *__restrict name, int access);
+INTDEF ATTR_COLD NONNULL((1)) int DCALL err_unknown_attribute_string_len(DeeTypeObject *__restrict tp, char const *name, size_t namelen, int access);
+INTDEF ATTR_COLD NONNULL((1, 2)) int DCALL err_unknown_attribute_lookup_string(DeeTypeObject *__restrict tp, char const *__restrict name);
+INTDEF ATTR_COLD NONNULL((2)) int DCALL err_nodoc_attribute_string(char const *base, char const *__restrict name);
 /* @param: access: One of `ATTR_ACCESS_*' */
-INTDEF ATTR_COLD NONNULL((1, 2)) int DCALL err_cant_access_attribute(DeeTypeObject *__restrict tp, char const *__restrict name, int access);
-INTDEF ATTR_COLD NONNULL((1)) int DCALL err_cant_access_attribute_len(DeeTypeObject *__restrict tp, char const *name, size_t namelen, int access);
-INTDEF ATTR_COLD NONNULL((1, 2)) int DCALL err_cant_access_attribute_c(struct class_desc *__restrict desc, char const *__restrict name, int access);
-INTDEF ATTR_COLD NONNULL((1, 2)) int DCALL err_unbound_attribute(DeeTypeObject *__restrict tp, char const *__restrict name);
-INTDEF ATTR_COLD NONNULL((1, 2)) int DCALL err_unbound_attribute_c(struct class_desc *__restrict desc, char const *__restrict name);
+INTDEF ATTR_COLD NONNULL((1, 2)) int DCALL err_cant_access_attribute_string(DeeTypeObject *__restrict tp, char const *__restrict name, int access);
+INTDEF ATTR_COLD NONNULL((1)) int DCALL err_cant_access_attribute_string_len(DeeTypeObject *__restrict tp, char const *name, size_t namelen, int access);
+INTDEF ATTR_COLD NONNULL((1, 2)) int DCALL err_cant_access_attribute_string_c(struct class_desc *__restrict desc, char const *__restrict name, int access);
+INTDEF ATTR_COLD NONNULL((1, 2)) int DCALL err_unbound_attribute_string(DeeTypeObject *__restrict tp, char const *__restrict name);
+INTDEF ATTR_COLD NONNULL((1, 2)) int DCALL err_unbound_attribute_string_c(struct class_desc *__restrict desc, char const *__restrict name);
 INTDEF ATTR_COLD NONNULL((1)) int DCALL err_expected_string_for_attribute(DeeObject *__restrict but_instead_got);
 INTDEF ATTR_COLD NONNULL((1, 2)) int DCALL err_class_protected_member(DeeTypeObject *__restrict class_type, struct class_attribute *__restrict member);
-INTDEF ATTR_COLD NONNULL((1, 2)) int DCALL err_module_not_loaded_attr(struct module_object *__restrict self, char const *__restrict name, int access);
-INTDEF ATTR_COLD NONNULL((1, 2)) int DCALL err_module_not_loaded_attr_len(struct module_object *__restrict self, char const *__restrict name, size_t namelen, int access);
-INTDEF ATTR_COLD NONNULL((1, 2)) int DCALL err_module_no_such_global(struct module_object *__restrict self, char const *__restrict name, int access);
-INTDEF ATTR_COLD NONNULL((1, 2)) int DCALL err_module_no_such_global_len(struct module_object *__restrict self, char const *__restrict name, size_t namelen, int access);
-INTDEF ATTR_COLD NONNULL((1, 2)) int DCALL err_module_readonly_global(struct module_object *__restrict self, char const *__restrict name);
-INTDEF ATTR_COLD NONNULL((1, 2)) int DCALL err_module_cannot_read_property(struct module_object *__restrict self, char const *__restrict name);
-INTDEF ATTR_COLD NONNULL((1, 2)) int DCALL err_module_cannot_delete_property(struct module_object *__restrict self, char const *__restrict name);
-INTDEF ATTR_COLD NONNULL((1, 2)) int DCALL err_module_cannot_write_property(struct module_object *__restrict self, char const *__restrict name);
+INTDEF ATTR_COLD NONNULL((1, 2)) int DCALL err_module_not_loaded_attr_string(struct module_object *__restrict self, char const *__restrict name, int access);
+INTDEF ATTR_COLD NONNULL((1, 2)) int DCALL err_module_not_loaded_attr_string_len(struct module_object *__restrict self, char const *__restrict name, size_t namelen, int access);
+INTDEF ATTR_COLD NONNULL((1, 2)) int DCALL err_module_no_such_global_string(struct module_object *__restrict self, char const *__restrict name, int access);
+INTDEF ATTR_COLD NONNULL((1, 2)) int DCALL err_module_no_such_global_string_len(struct module_object *__restrict self, char const *__restrict name, size_t namelen, int access);
+INTDEF ATTR_COLD NONNULL((1, 2)) int DCALL err_module_readonly_global_string(struct module_object *__restrict self, char const *__restrict name);
+INTDEF ATTR_COLD NONNULL((1, 2)) int DCALL err_module_cannot_read_property_string(struct module_object *__restrict self, char const *__restrict name);
+INTDEF ATTR_COLD NONNULL((1, 2)) int DCALL err_module_cannot_delete_property_string(struct module_object *__restrict self, char const *__restrict name);
+INTDEF ATTR_COLD NONNULL((1, 2)) int DCALL err_module_cannot_write_property_string(struct module_object *__restrict self, char const *__restrict name);
 
-INTDEF ATTR_COLD NONNULL((1)) int DCALL err_file_not_found(char const *__restrict filename);
-INTDEF ATTR_COLD NONNULL((1)) int DCALL err_file_not_found_ob(DeeObject *__restrict filename);
+INTDEF ATTR_COLD NONNULL((1)) int DCALL err_file_not_found_string(char const *__restrict filename);
+INTDEF ATTR_COLD NONNULL((1)) int DCALL err_file_not_found(DeeObject *__restrict filename);
 
 
 #ifndef Dee_ASSUMED_VALUE_IS_NOOP
@@ -172,15 +172,15 @@ INTDEF ATTR_COLD NONNULL((1)) int DCALL err_file_not_found_ob(DeeObject *__restr
 #define err_integer_overflow(overflowing_object, cutoff_bits, positive_overflow)                          Dee_ASSUMED_VALUE(err_integer_overflow(overflowing_object, cutoff_bits, positive_overflow), -1)
 #define err_integer_overflow_i(cutoff_bits, positive_overflow)                                            Dee_ASSUMED_VALUE(err_integer_overflow_i(cutoff_bits, positive_overflow), -1)
 #define err_keywords_not_accepted(tp_self, kw)                                                            Dee_ASSUMED_VALUE(err_keywords_not_accepted(tp_self, kw), -1)
-#define err_keywords_func_not_accepted(tp_self, name, kw)                                                 Dee_ASSUMED_VALUE(err_keywords_func_not_accepted(tp_self, name, kw), -1)
-#define err_keywords_func_not_accepted_len(tp_self, name, namelen, kw)                                    Dee_ASSUMED_VALUE(err_keywords_func_not_accepted_len(tp_self, name, namelen, kw), -1)
+#define err_keywords_func_not_accepted_string(tp_self, name, kw)                                          Dee_ASSUMED_VALUE(err_keywords_func_not_accepted_string(tp_self, name, kw), -1)
+#define err_keywords_func_not_accepted_string_len(tp_self, name, namelen, kw)                             Dee_ASSUMED_VALUE(err_keywords_func_not_accepted_string_len(tp_self, name, namelen, kw), -1)
 #define err_keywords_ctor_not_accepted(tp_self, kw)                                                       Dee_ASSUMED_VALUE(err_keywords_ctor_not_accepted(tp_self, kw), -1)
-#define err_classmember_requires_1_argument(tp_self, name)                                                Dee_ASSUMED_VALUE(err_classmember_requires_1_argument(tp_self, name), -1)
-#define err_classmember_requires_1_argument_len(tp_self, name, namelen)                                   Dee_ASSUMED_VALUE(err_classmember_requires_1_argument_len(tp_self, name, namelen), -1)
-#define err_classproperty_requires_1_argument(tp_self, name)                                              Dee_ASSUMED_VALUE(err_classproperty_requires_1_argument(tp_self, name), -1)
-#define err_classproperty_requires_1_argument_len(tp_self, name, namelen)                                 Dee_ASSUMED_VALUE(err_classproperty_requires_1_argument_len(tp_self, name, namelen), -1)
-#define err_classmethod_requires_at_least_1_argument(tp_self, name)                                       Dee_ASSUMED_VALUE(err_classmethod_requires_at_least_1_argument(tp_self, name), -1)
-#define err_classmethod_requires_at_least_1_argument_len(tp_self, name, namelen)                          Dee_ASSUMED_VALUE(err_classmethod_requires_at_least_1_argument_len(tp_self, name, namelen), -1)
+#define err_classmember_requires_1_argument_string(tp_self, name)                                         Dee_ASSUMED_VALUE(err_classmember_requires_1_argument_string(tp_self, name), -1)
+#define err_classmember_requires_1_argument_string_len(tp_self, name, namelen)                            Dee_ASSUMED_VALUE(err_classmember_requires_1_argument_string_len(tp_self, name, namelen), -1)
+#define err_classproperty_requires_1_argument_string(tp_self, name)                                       Dee_ASSUMED_VALUE(err_classproperty_requires_1_argument_string(tp_self, name), -1)
+#define err_classproperty_requires_1_argument_string_len(tp_self, name, namelen)                          Dee_ASSUMED_VALUE(err_classproperty_requires_1_argument_string_len(tp_self, name, namelen), -1)
+#define err_classmethod_requires_at_least_1_argument_string(tp_self, name)                                Dee_ASSUMED_VALUE(err_classmethod_requires_at_least_1_argument_string(tp_self, name), -1)
+#define err_classmethod_requires_at_least_1_argument_string_len(tp_self, name, namelen)                   Dee_ASSUMED_VALUE(err_classmethod_requires_at_least_1_argument_string_len(tp_self, name, namelen), -1)
 #define err_keywords_bad_for_argc(argc, kwdc)                                                             Dee_ASSUMED_VALUE(err_keywords_bad_for_argc(argc, kwdc), -1)
 #define err_keywords_not_found(keyword)                                                                   Dee_ASSUMED_VALUE(err_keywords_not_found(keyword), -1)
 #define err_keywords_shadows_positional(keyword)                                                          Dee_ASSUMED_VALUE(err_keywords_shadows_positional(keyword), -1)
@@ -227,27 +227,29 @@ INTDEF ATTR_COLD NONNULL((1)) int DCALL err_file_not_found_ob(DeeObject *__restr
 #define err_unimplemented_operator(tp, operator_name)                                                     Dee_ASSUMED_VALUE(err_unimplemented_operator(tp, operator_name), -1)
 #define err_unimplemented_operator2(tp, operator_name, operator_name2)                                    Dee_ASSUMED_VALUE(err_unimplemented_operator2(tp, operator_name, operator_name2), -1)
 #define err_unimplemented_operator3(tp, operator_name, operator_name2, operator_name3)                    Dee_ASSUMED_VALUE(err_unimplemented_operator3(tp, operator_name, operator_name2, operator_name3), -1)
-#define err_unknown_attribute(tp, name, access)                                                           Dee_ASSUMED_VALUE(err_unknown_attribute(tp, name, access), -1)
-#define err_unknown_attribute_len(tp, name, namelen, access)                                              Dee_ASSUMED_VALUE(err_unknown_attribute_len(tp, name, namelen, access), -1)
-#define err_unknown_attribute_lookup(tp, name)                                                            Dee_ASSUMED_VALUE(err_unknown_attribute_lookup(tp, name), -1)
-#define err_nodoc_attribute(base, name)                                                                   Dee_ASSUMED_VALUE(err_nodoc_attribute(base, name), -1)
-#define err_cant_access_attribute(tp, name, access)                                                       Dee_ASSUMED_VALUE(err_cant_access_attribute(tp, name, access), -1)
-#define err_cant_access_attribute_len(tp, name, namelen, access)                                          Dee_ASSUMED_VALUE(err_cant_access_attribute_len(tp, name, namelen, access), -1)
-#define err_cant_access_attribute_c(desc, name, access)                                                   Dee_ASSUMED_VALUE(err_cant_access_attribute_c(desc, name, access), -1)
-#define err_unbound_attribute(tp, name)                                                                   Dee_ASSUMED_VALUE(err_unbound_attribute(tp, name), -1)
-#define err_unbound_attribute_c(desc, name)                                                               Dee_ASSUMED_VALUE(err_unbound_attribute_c(desc, name), -1)
+#define err_unknown_attribute(tp, name, access)                                                           err_unknown_attribute_string(tp, DeeString_STR(name), access)
+#define err_unknown_attribute_string(tp, name, access)                                                    Dee_ASSUMED_VALUE(err_unknown_attribute_string(tp, name, access), -1)
+#define err_unknown_attribute_string_len(tp, name, namelen, access)                                       Dee_ASSUMED_VALUE(err_unknown_attribute_string_len(tp, name, namelen, access), -1)
+#define err_unknown_attribute_lookup_string(tp, name)                                                     Dee_ASSUMED_VALUE(err_unknown_attribute_lookup_string(tp, name), -1)
+#define err_nodoc_attribute_string(base, name)                                                            Dee_ASSUMED_VALUE(err_nodoc_attribute_string(base, name), -1)
+#define err_cant_access_attribute(tp, name, access)                                                       err_cant_access_attribute_string(tp, DeeString_STR(name), access)
+#define err_cant_access_attribute_string(tp, name, access)                                                Dee_ASSUMED_VALUE(err_cant_access_attribute_string(tp, name, access), -1)
+#define err_cant_access_attribute_string_len(tp, name, namelen, access)                                   Dee_ASSUMED_VALUE(err_cant_access_attribute_string_len(tp, name, namelen, access), -1)
+#define err_cant_access_attribute_string_c(desc, name, access)                                            Dee_ASSUMED_VALUE(err_cant_access_attribute_string_c(desc, name, access), -1)
+#define err_unbound_attribute_string(tp, name)                                                            Dee_ASSUMED_VALUE(err_unbound_attribute_string(tp, name), -1)
+#define err_unbound_attribute_string_c(desc, name)                                                        Dee_ASSUMED_VALUE(err_unbound_attribute_string_c(desc, name), -1)
 #define err_expected_string_for_attribute(but_instead_got)                                                Dee_ASSUMED_VALUE(err_expected_string_for_attribute(but_instead_got), -1)
 #define err_class_protected_member(class_type, member)                                                    Dee_ASSUMED_VALUE(err_class_protected_member(class_type, member), -1)
-#define err_module_not_loaded_attr(self, name, access)                                                    Dee_ASSUMED_VALUE(err_module_not_loaded_attr(self, name, access), -1)
-#define err_module_not_loaded_attr_len(self, name, namelen, access)                                       Dee_ASSUMED_VALUE(err_module_not_loaded_attr_len(self, name, namelen, access), -1)
-#define err_module_no_such_global(self, name, access)                                                     Dee_ASSUMED_VALUE(err_module_no_such_global(self, name, access), -1)
-#define err_module_no_such_global_len(self, name, namelen, access)                                        Dee_ASSUMED_VALUE(err_module_no_such_global_len(self, name, namelen, access), -1)
-#define err_module_readonly_global(self, name)                                                            Dee_ASSUMED_VALUE(err_module_readonly_global(self, name), -1)
-#define err_module_cannot_read_property(self, name)                                                       Dee_ASSUMED_VALUE(err_module_cannot_read_property(self, name), -1)
-#define err_module_cannot_delete_property(self, name)                                                     Dee_ASSUMED_VALUE(err_module_cannot_delete_property(self, name), -1)
-#define err_module_cannot_write_property(self, name)                                                      Dee_ASSUMED_VALUE(err_module_cannot_write_property(self, name), -1)
+#define err_module_not_loaded_attr_string(self, name, access)                                             Dee_ASSUMED_VALUE(err_module_not_loaded_attr_string(self, name, access), -1)
+#define err_module_not_loaded_attr_string_len(self, name, namelen, access)                                Dee_ASSUMED_VALUE(err_module_not_loaded_attr_string_len(self, name, namelen, access), -1)
+#define err_module_no_such_global_string(self, name, access)                                              Dee_ASSUMED_VALUE(err_module_no_such_global_string(self, name, access), -1)
+#define err_module_no_such_global_string_len(self, name, namelen, access)                                 Dee_ASSUMED_VALUE(err_module_no_such_global_string_len(self, name, namelen, access), -1)
+#define err_module_readonly_global_string(self, name)                                                     Dee_ASSUMED_VALUE(err_module_readonly_global_string(self, name), -1)
+#define err_module_cannot_read_property_string(self, name)                                                Dee_ASSUMED_VALUE(err_module_cannot_read_property_string(self, name), -1)
+#define err_module_cannot_delete_property_string(self, name)                                              Dee_ASSUMED_VALUE(err_module_cannot_delete_property_string(self, name), -1)
+#define err_module_cannot_write_property_string(self, name)                                               Dee_ASSUMED_VALUE(err_module_cannot_write_property_string(self, name), -1)
+#define err_file_not_found_string(filename)                                                               Dee_ASSUMED_VALUE(err_file_not_found_string(filename), -1)
 #define err_file_not_found(filename)                                                                      Dee_ASSUMED_VALUE(err_file_not_found(filename), -1)
-#define err_file_not_found_ob(filename)                                                                   Dee_ASSUMED_VALUE(err_file_not_found_ob(filename), -1)
 #endif /* !Dee_ASSUMED_VALUE_IS_NOOP */
 
 DECL_END

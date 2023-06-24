@@ -482,19 +482,18 @@ INTERN DeeTypeObject DeeStructType_Type = {
 
 
 
-PRIVATE ATTR_COLD int DCALL
-err_unknown_attribute(DeeTypeObject *__restrict tp,
-                      DeeObject *__restrict name,
-                      char const *__restrict reason) {
+PRIVATE ATTR_COLD NONNULL((1, 2, 3)) int DCALL
+err_unknown_attribute_with_reason(DeeTypeObject *tp, DeeObject *name,
+                                  char const *__restrict reason) {
 	return DeeError_Throwf(&DeeError_AttributeError,
 	                       "Cannot %s unknown attribute `%k.%k'",
 	                       reason, tp, name);
 }
 
 
-PRIVATE WUNUSED DREF struct lvalue_object *DCALL
-struct_getattr(DeeStructTypeObject *__restrict tp_self,
-               void *self, DeeObject *__restrict name) {
+PRIVATE WUNUSED NONNULL((1, 3)) DREF struct lvalue_object *DCALL
+struct_getattr(DeeStructTypeObject *tp_self,
+               void *self, DeeObject *name) {
 	DREF struct lvalue_object *result;
 	dhash_t i, perturb, hash;
 	hash = DeeString_Hash(name);
@@ -517,14 +516,14 @@ struct_getattr(DeeStructTypeObject *__restrict tp_self,
 		result->l_ptr.uint = (uintptr_t)self + field->sf_offset;
 		return result;
 	}
-	err_unknown_attribute((DeeTypeObject *)tp_self, name, "get");
+	err_unknown_attribute_with_reason((DeeTypeObject *)tp_self, name, "get");
 err:
 	return NULL;
 }
 
-PRIVATE int DCALL
-struct_delattr(DeeStructTypeObject *__restrict tp_self,
-               void *self, DeeObject *__restrict name) {
+PRIVATE WUNUSED NONNULL((1, 3)) int DCALL
+struct_delattr(DeeStructTypeObject *tp_self,
+               void *self, DeeObject *name) {
 	dhash_t i, perturb, hash;
 	hash = DeeString_Hash(name);
 	i = perturb = STRUCT_TYPE_HASHST(tp_self, hash);
@@ -546,13 +545,13 @@ struct_delattr(DeeStructTypeObject *__restrict tp_self,
 		CTYPES_FAULTPROTECT(bzero(dst, size), return -1);
 		return 0;
 	}
-	return err_unknown_attribute((DeeTypeObject *)tp_self, name, "delete");
+	return err_unknown_attribute_with_reason((DeeTypeObject *)tp_self, name, "delete");
 }
 
-PRIVATE int DCALL
-struct_setattr(DeeStructTypeObject *__restrict tp_self,
-               void *self, DeeObject *__restrict name,
-               DeeObject *__restrict value) {
+PRIVATE WUNUSED NONNULL((1, 3, 4)) int DCALL
+struct_setattr(DeeStructTypeObject *tp_self,
+               void *self, DeeObject *name,
+               DeeObject *value) {
 	dhash_t i, perturb, hash;
 	hash = DeeString_Hash(name);
 	i = perturb = STRUCT_TYPE_HASHST(tp_self, hash);
@@ -570,10 +569,10 @@ struct_setattr(DeeStructTypeObject *__restrict tp_self,
 		                        (void *)((uintptr_t)self + field->sf_offset),
 		                        value);
 	}
-	return err_unknown_attribute((DeeTypeObject *)tp_self, name, "set");
+	return err_unknown_attribute_with_reason((DeeTypeObject *)tp_self, name, "set");
 }
 
-PRIVATE dssize_t DCALL
+PRIVATE NONNULL((1, 2)) dssize_t DCALL
 struct_enumattr(DeeStructTypeObject *__restrict self, denum_t proc, void *arg) {
 	size_t i;
 	dssize_t temp, result = 0;
@@ -604,9 +603,9 @@ PRIVATE struct stype_attr struct_attr = {
 };
 
 
-PRIVATE int DCALL
-struct_setpair(DeeStructTypeObject *__restrict tp_self,
-               void *self, DeeObject *__restrict pair) {
+PRIVATE WUNUSED NONNULL((1, 3)) int DCALL
+struct_setpair(DeeStructTypeObject *tp_self,
+               void *self, DeeObject *pair) {
 	DREF DeeObject *key_and_value[2];
 	int result;
 	if unlikely(DeeObject_Unpack(pair, 2, key_and_value))
@@ -621,9 +620,9 @@ err:
 	return -1;
 }
 
-PRIVATE int DCALL
-struct_assign(DeeStructTypeObject *__restrict tp_self,
-              void *self, DeeObject *__restrict value) {
+PRIVATE WUNUSED NONNULL((1, 3)) int DCALL
+struct_assign(DeeStructTypeObject *tp_self,
+              void *self, DeeObject *value) {
 	size_t fast_size;
 	DREF DeeObject *elem;
 	if (DeeObject_InstanceOfExact(value, (DeeTypeObject *)tp_self)) {
@@ -693,9 +692,9 @@ err:
 	return -1;
 }
 
-PRIVATE int DCALL
-struct_init(DeeStructTypeObject *__restrict tp_self,
-            void *self, size_t argc, DeeObject *const *argv) {
+PRIVATE NONNULL((1)) int DCALL
+struct_init(DeeStructTypeObject *tp_self, void *self,
+            size_t argc, DeeObject *const *argv) {
 	DeeObject *value = Dee_None;
 	if (DeeArg_Unpack(argc, argv, "|o:struct", &value))
 		goto err;
@@ -708,8 +707,8 @@ err:
 }
 
 
-PRIVATE WUNUSED DREF DeeObject *DCALL
-struct_repr(DeeStructTypeObject *__restrict tp_self, void *self) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+struct_repr(DeeStructTypeObject *tp_self, void *self) {
 	size_t i;
 	bool is_first                = true;
 	struct ascii_printer printer = ASCII_PRINTER_INIT;

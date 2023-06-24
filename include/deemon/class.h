@@ -452,12 +452,12 @@ DDATDEF DeeTypeObject DeeClassDescriptor_Type;
 /* Lookup class / instance attributes within the given class descriptor.
  * @return: * :   A pointer to attribute that was found.
  * @return: NULL: Attribute could not be found (no error is thrown) */
-DFUNDEF WUNUSED NONNULL((1, 2)) struct Dee_class_attribute *(DCALL DeeClassDescriptor_QueryClassAttributeWithHash)(DeeClassDescriptorObject *self, /*String*/ DeeObject *attr, Dee_hash_t hash);
-DFUNDEF WUNUSED NONNULL((1, 2)) struct Dee_class_attribute *(DCALL DeeClassDescriptor_QueryClassAttributeStringWithHash)(DeeClassDescriptorObject *__restrict self, char const *__restrict attr, Dee_hash_t hash);
-DFUNDEF WUNUSED NONNULL((1, 2)) struct Dee_class_attribute *(DCALL DeeClassDescriptor_QueryClassAttributeStringLenWithHash)(DeeClassDescriptorObject *__restrict self, char const *__restrict attr, size_t attrlen, Dee_hash_t hash);
-DFUNDEF WUNUSED NONNULL((1, 2)) struct Dee_class_attribute *(DCALL DeeClassDescriptor_QueryInstanceAttributeWithHash)(DeeClassDescriptorObject *self, /*String*/ DeeObject *attr, Dee_hash_t hash);
-DFUNDEF WUNUSED NONNULL((1, 2)) struct Dee_class_attribute *(DCALL DeeClassDescriptor_QueryInstanceAttributeStringWithHash)(DeeClassDescriptorObject *__restrict self, char const *__restrict attr, Dee_hash_t hash);
-DFUNDEF WUNUSED NONNULL((1, 2)) struct Dee_class_attribute *(DCALL DeeClassDescriptor_QueryInstanceAttributeStringLenWithHash)(DeeClassDescriptorObject *__restrict self, char const *__restrict attr, size_t attrlen, Dee_hash_t hash);
+DFUNDEF WUNUSED NONNULL((1, 2)) struct Dee_class_attribute *(DCALL DeeClassDescriptor_QueryClassAttributeHash)(DeeClassDescriptorObject *self, /*String*/ DeeObject *attr, Dee_hash_t hash);
+DFUNDEF WUNUSED NONNULL((1, 2)) struct Dee_class_attribute *(DCALL DeeClassDescriptor_QueryClassAttributeStringHash)(DeeClassDescriptorObject *__restrict self, char const *__restrict attr, Dee_hash_t hash);
+DFUNDEF WUNUSED NONNULL((1, 2)) struct Dee_class_attribute *(DCALL DeeClassDescriptor_QueryClassAttributeStringLenHash)(DeeClassDescriptorObject *__restrict self, char const *__restrict attr, size_t attrlen, Dee_hash_t hash);
+DFUNDEF WUNUSED NONNULL((1, 2)) struct Dee_class_attribute *(DCALL DeeClassDescriptor_QueryInstanceAttributeHash)(DeeClassDescriptorObject *self, /*String*/ DeeObject *attr, Dee_hash_t hash);
+DFUNDEF WUNUSED NONNULL((1, 2)) struct Dee_class_attribute *(DCALL DeeClassDescriptor_QueryInstanceAttributeStringHash)(DeeClassDescriptorObject *__restrict self, char const *__restrict attr, Dee_hash_t hash);
+DFUNDEF WUNUSED NONNULL((1, 2)) struct Dee_class_attribute *(DCALL DeeClassDescriptor_QueryInstanceAttributeStringLenHash)(DeeClassDescriptorObject *__restrict self, char const *__restrict attr, size_t attrlen, Dee_hash_t hash);
 #ifdef __INTELLISENSE__
 DFUNDEF WUNUSED NONNULL((1, 2)) struct Dee_class_attribute *(DCALL DeeClassDescriptor_QueryClassAttribute)(DeeClassDescriptorObject *self, /*String*/ DeeObject *attr);
 DFUNDEF WUNUSED NONNULL((1, 2)) struct Dee_class_attribute *(DCALL DeeClassDescriptor_QueryClassAttributeString)(DeeClassDescriptorObject *__restrict self, char const *__restrict attr);
@@ -467,17 +467,17 @@ DFUNDEF WUNUSED NONNULL((1, 2)) struct Dee_class_attribute *(DCALL DeeClassDescr
 DFUNDEF WUNUSED NONNULL((1, 2)) struct Dee_class_attribute *(DCALL DeeClassDescriptor_QueryInstanceAttributeStringLen)(DeeClassDescriptorObject *__restrict self, char const *__restrict attr, size_t attrlen);
 #else /* __INTELLISENSE__ */
 #define DeeClassDescriptor_QueryClassAttribute(self, attr) \
-	DeeClassDescriptor_QueryClassAttributeWithHash(self, attr, DeeString_Hash(attr))
+	DeeClassDescriptor_QueryClassAttributeHash(self, attr, DeeString_Hash(attr))
 #define DeeClassDescriptor_QueryInstanceAttribute(self, attr) \
-	DeeClassDescriptor_QueryInstanceAttributeWithHash(self, attr, DeeString_Hash(attr))
+	DeeClassDescriptor_QueryInstanceAttributeHash(self, attr, DeeString_Hash(attr))
 #define DeeClassDescriptor_QueryClassAttributeString(self, attr) \
-	DeeClassDescriptor_QueryClassAttributeStringWithHash(self, attr, Dee_HashStr(attr))
+	DeeClassDescriptor_QueryClassAttributeStringHash(self, attr, Dee_HashStr(attr))
 #define DeeClassDescriptor_QueryInstanceAttributeString(self, attr) \
-	DeeClassDescriptor_QueryInstanceAttributeStringWithHash(self, attr, Dee_HashStr(attr))
+	DeeClassDescriptor_QueryInstanceAttributeStringHash(self, attr, Dee_HashStr(attr))
 #define DeeClassDescriptor_QueryClassAttributeStringLen(self, attr, attrlen) \
-	DeeClassDescriptor_QueryClassAttributeStringLenWithHash(self, attr, attrlen, Dee_HashPtr(attr, attrlen))
+	DeeClassDescriptor_QueryClassAttributeStringLenHash(self, attr, attrlen, Dee_HashPtr(attr, attrlen))
 #define DeeClassDescriptor_QueryInstanceAttributeStringLen(self, attr, attrlen) \
-	DeeClassDescriptor_QueryInstanceAttributeStringLenWithHash(self, attr, attrlen, Dee_HashPtr(attr, attrlen))
+	DeeClassDescriptor_QueryInstanceAttributeStringLenHash(self, attr, attrlen, Dee_HashPtr(attr, attrlen))
 #endif /* !__INTELLISENSE__ */
 
 
@@ -547,31 +547,31 @@ struct Dee_class_desc {
 	 ((DeeTypeObject *)Dee_REQUIRES_OBJECT(self))->tp_class)
 
 
-#define DeeClassDesc_QueryClassAttribute(self, attr)                                    DeeClassDescriptor_QueryClassAttribute((self)->cd_desc, attr)
-#define DeeClassDesc_QueryClassAttributeWithHash(self, attr, hash)                      DeeClassDescriptor_QueryClassAttributeWithHash((self)->cd_desc, attr, hash)
-#define DeeClassDesc_QueryClassAttributeString(self, attr)                              DeeClassDescriptor_QueryClassAttributeString((self)->cd_desc, attr) 
-#define DeeClassDesc_QueryClassAttributeStringLen(self, attr, attrlen)                  DeeClassDescriptor_QueryClassAttributeStringLen((self)->cd_desc, attr, attrlen) 
-#define DeeClassDesc_QueryClassAttributeStringWithHash(self, attr, hash)                DeeClassDescriptor_QueryClassAttributeStringWithHash((self)->cd_desc, attr, hash)
-#define DeeClassDesc_QueryClassAttributeStringLenWithHash(self, attr, attrlen, hash)    DeeClassDescriptor_QueryClassAttributeStringLenWithHash((self)->cd_desc, attr, attrlen, hash)
-#define DeeClassDesc_QueryInstanceAttribute(self, attr)                                 DeeClassDescriptor_QueryInstanceAttribute((self)->cd_desc, attr)
-#define DeeClassDesc_QueryInstanceAttributeWithHash(self, attr, hash)                   DeeClassDescriptor_QueryInstanceAttributeWithHash((self)->cd_desc, attr, hash)
-#define DeeClassDesc_QueryInstanceAttributeString(self, attr)                           DeeClassDescriptor_QueryInstanceAttributeString((self)->cd_desc, attr) 
-#define DeeClassDesc_QueryInstanceAttributeStringLen(self, attr, attrlen)               DeeClassDescriptor_QueryInstanceAttributeStringLen((self)->cd_desc, attr, attrlen) 
-#define DeeClassDesc_QueryInstanceAttributeStringWithHash(self, attr, hash)             DeeClassDescriptor_QueryInstanceAttributeStringWithHash((self)->cd_desc, attr, hash)
-#define DeeClassDesc_QueryInstanceAttributeStringLenWithHash(self, attr, attrlen, hash) DeeClassDescriptor_QueryInstanceAttributeStringLenWithHash((self)->cd_desc, attr, attrlen, hash)
+#define DeeClassDesc_QueryClassAttribute(self, attr)                                DeeClassDescriptor_QueryClassAttribute((self)->cd_desc, attr)
+#define DeeClassDesc_QueryClassAttributeHash(self, attr, hash)                      DeeClassDescriptor_QueryClassAttributeHash((self)->cd_desc, attr, hash)
+#define DeeClassDesc_QueryClassAttributeString(self, attr)                          DeeClassDescriptor_QueryClassAttributeString((self)->cd_desc, attr)
+#define DeeClassDesc_QueryClassAttributeStringLen(self, attr, attrlen)              DeeClassDescriptor_QueryClassAttributeStringLen((self)->cd_desc, attr, attrlen)
+#define DeeClassDesc_QueryClassAttributeStringHash(self, attr, hash)                DeeClassDescriptor_QueryClassAttributeStringHash((self)->cd_desc, attr, hash)
+#define DeeClassDesc_QueryClassAttributeStringLenHash(self, attr, attrlen, hash)    DeeClassDescriptor_QueryClassAttributeStringLenHash((self)->cd_desc, attr, attrlen, hash)
+#define DeeClassDesc_QueryInstanceAttribute(self, attr)                             DeeClassDescriptor_QueryInstanceAttribute((self)->cd_desc, attr)
+#define DeeClassDesc_QueryInstanceAttributeHash(self, attr, hash)                   DeeClassDescriptor_QueryInstanceAttributeHash((self)->cd_desc, attr, hash)
+#define DeeClassDesc_QueryInstanceAttributeString(self, attr)                       DeeClassDescriptor_QueryInstanceAttributeString((self)->cd_desc, attr)
+#define DeeClassDesc_QueryInstanceAttributeStringLen(self, attr, attrlen)           DeeClassDescriptor_QueryInstanceAttributeStringLen((self)->cd_desc, attr, attrlen)
+#define DeeClassDesc_QueryInstanceAttributeStringHash(self, attr, hash)             DeeClassDescriptor_QueryInstanceAttributeStringHash((self)->cd_desc, attr, hash)
+#define DeeClassDesc_QueryInstanceAttributeStringLenHash(self, attr, attrlen, hash) DeeClassDescriptor_QueryInstanceAttributeStringLenHash((self)->cd_desc, attr, attrlen, hash)
 
-#define DeeClass_QueryClassAttribute(self, attr)                                    DeeClassDesc_QueryClassAttribute(DeeClass_DESC(self), attr)
-#define DeeClass_QueryClassAttributeWithHash(self, attr, hash)                      DeeClassDesc_QueryClassAttributeWithHash(DeeClass_DESC(self), attr, hash)
-#define DeeClass_QueryClassAttributeString(self, attr)                              DeeClassDesc_QueryClassAttributeString(DeeClass_DESC(self), attr) 
-#define DeeClass_QueryClassAttributeStringLen(self, attr, attrlen)                  DeeClassDesc_QueryClassAttributeStringLen(DeeClass_DESC(self), attr, attrlen) 
-#define DeeClass_QueryClassAttributeStringWithHash(self, attr, hash)                DeeClassDesc_QueryClassAttributeStringWithHash(DeeClass_DESC(self), attr, hash)
-#define DeeClass_QueryClassAttributeStringLenWithHash(self, attr, attrlen, hash)    DeeClassDesc_QueryClassAttributeStringLenWithHash(DeeClass_DESC(self), attr, attrlen, hash)
-#define DeeClass_QueryInstanceAttribute(self, attr)                                 DeeClassDesc_QueryInstanceAttribute(DeeClass_DESC(self), attr)
-#define DeeClass_QueryInstanceAttributeWithHash(self, attr, hash)                   DeeClassDesc_QueryInstanceAttributeWithHash(DeeClass_DESC(self), attr, hash)
-#define DeeClass_QueryInstanceAttributeString(self, attr)                           DeeClassDesc_QueryInstanceAttributeString(DeeClass_DESC(self), attr) 
-#define DeeClass_QueryInstanceAttributeStringLen(self, attr, attrlen)               DeeClassDesc_QueryInstanceAttributeStringLen(DeeClass_DESC(self), attr, attrlen) 
-#define DeeClass_QueryInstanceAttributeStringWithHash(self, attr, hash)             DeeClassDesc_QueryInstanceAttributeStringWithHash(DeeClass_DESC(self), attr, hash)
-#define DeeClass_QueryInstanceAttributeStringLenWithHash(self, attr, attrlen, hash) DeeClassDesc_QueryInstanceAttributeStringLenWithHash(DeeClass_DESC(self), attr, attrlen, hash)
+#define DeeClass_QueryClassAttribute(self, attr)                                DeeClassDesc_QueryClassAttribute(DeeClass_DESC(self), attr)
+#define DeeClass_QueryClassAttributeHash(self, attr, hash)                      DeeClassDesc_QueryClassAttributeHash(DeeClass_DESC(self), attr, hash)
+#define DeeClass_QueryClassAttributeString(self, attr)                          DeeClassDesc_QueryClassAttributeString(DeeClass_DESC(self), attr)
+#define DeeClass_QueryClassAttributeStringLen(self, attr, attrlen)              DeeClassDesc_QueryClassAttributeStringLen(DeeClass_DESC(self), attr, attrlen)
+#define DeeClass_QueryClassAttributeStringHash(self, attr, hash)                DeeClassDesc_QueryClassAttributeStringHash(DeeClass_DESC(self), attr, hash)
+#define DeeClass_QueryClassAttributeStringLenHash(self, attr, attrlen, hash)    DeeClassDesc_QueryClassAttributeStringLenHash(DeeClass_DESC(self), attr, attrlen, hash)
+#define DeeClass_QueryInstanceAttribute(self, attr)                             DeeClassDesc_QueryInstanceAttribute(DeeClass_DESC(self), attr)
+#define DeeClass_QueryInstanceAttributeHash(self, attr, hash)                   DeeClassDesc_QueryInstanceAttributeHash(DeeClass_DESC(self), attr, hash)
+#define DeeClass_QueryInstanceAttributeString(self, attr)                       DeeClassDesc_QueryInstanceAttributeString(DeeClass_DESC(self), attr)
+#define DeeClass_QueryInstanceAttributeStringLen(self, attr, attrlen)           DeeClassDesc_QueryInstanceAttributeStringLen(DeeClass_DESC(self), attr, attrlen)
+#define DeeClass_QueryInstanceAttributeStringHash(self, attr, hash)             DeeClassDesc_QueryInstanceAttributeStringHash(DeeClass_DESC(self), attr, hash)
+#define DeeClass_QueryInstanceAttributeStringLenHash(self, attr, attrlen, hash) DeeClassDesc_QueryInstanceAttributeStringLenHash(DeeClass_DESC(self), attr, attrlen, hash)
 
 
 struct Dee_instance_desc {

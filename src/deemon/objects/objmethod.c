@@ -1415,7 +1415,7 @@ clsproperty_get_nokw(DeeClsPropertyObject *__restrict self,
                      size_t argc, DeeObject *const *argv) {
 	DeeObject *thisarg;
 	if (!self->cp_get) {
-		err_cant_access_attribute(&DeeClsProperty_Type, STR_get, ATTR_ACCESS_GET);
+		err_cant_access_attribute_string(&DeeClsProperty_Type, STR_get, ATTR_ACCESS_GET);
 		goto err;
 	}
 	if (DeeArg_Unpack(argc, argv, "o:get", &thisarg))
@@ -1435,7 +1435,7 @@ clsproperty_get(DeeClsPropertyObject *__restrict self,
                 DeeObject *kw) {
 	DeeObject *thisarg;
 	if unlikely(!self->cp_get) {
-		err_cant_access_attribute(&DeeClsProperty_Type, STR_get, ATTR_ACCESS_GET);
+		err_cant_access_attribute_string(&DeeClsProperty_Type, STR_get, ATTR_ACCESS_GET);
 		goto err;
 	}
 	if (DeeArg_UnpackKw(argc, argv, kw, getter_kwlist, "o:get", &thisarg))
@@ -1456,7 +1456,7 @@ clsproperty_delete(DeeClsPropertyObject *__restrict self,
                    DeeObject *kw) {
 	DeeObject *thisarg;
 	if unlikely(!self->cp_del) {
-		err_cant_access_attribute(&DeeClsProperty_Type, "delete", ATTR_ACCESS_GET);
+		err_cant_access_attribute_string(&DeeClsProperty_Type, "delete", ATTR_ACCESS_GET);
 		goto err;
 	}
 	if (DeeArg_UnpackKw(argc, argv, kw, getter_kwlist, "o:delete", &thisarg))
@@ -1479,7 +1479,7 @@ clsproperty_set(DeeClsPropertyObject *__restrict self,
                 DeeObject *kw) {
 	DeeObject *thisarg, *value;
 	if unlikely(!self->cp_set) {
-		err_cant_access_attribute(&DeeClsProperty_Type, STR_set, ATTR_ACCESS_GET);
+		err_cant_access_attribute_string(&DeeClsProperty_Type, STR_set, ATTR_ACCESS_GET);
 		goto err;
 	}
 	if (DeeArg_UnpackKw(argc, argv, kw, setter_kwlist, "oo:set", &thisarg, &value))

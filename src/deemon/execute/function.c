@@ -443,7 +443,7 @@ function_get_module(Function *__restrict self) {
 		goto err_unbound; /* Shouldn't happen... */
 	return_reference_((DREF DeeObject *)self->fo_code->co_module);
 err_unbound:
-	err_unbound_attribute(&DeeFunction_Type, STR___module__);
+	err_unbound_attribute_string(&DeeFunction_Type, STR___module__);
 	return NULL;
 }
 
@@ -1686,7 +1686,7 @@ yfi_getyfunc(YFIterator *__restrict self) {
 	Dee_XIncref(result);
 	DeeYieldFunctionIterator_LockEndRead(self);
 	if unlikely(!result)
-		err_unbound_attribute(&DeeYieldFunctionIterator_Type, STR_seq);
+		err_unbound_attribute_string(&DeeYieldFunctionIterator_Type, STR_seq);
 	return result;
 }
 #endif /* !CONFIG_NO_THREADS */
@@ -1701,7 +1701,7 @@ yfi_getthis(YFIterator *__restrict self) {
 	Dee_XIncref(result);
 	DeeYieldFunctionIterator_LockEndRead(self);
 	if unlikely(!result)
-		err_unbound_attribute(&DeeYieldFunctionIterator_Type, "__this__");
+		err_unbound_attribute_string(&DeeYieldFunctionIterator_Type, "__this__");
 	return result;
 }
 
@@ -1721,7 +1721,7 @@ yfi_getfunc(YFIterator *__restrict self) {
 	DeeYieldFunctionIterator_LockWrite(self);
 	if unlikely(!self->yi_func) {
 		DeeYieldFunctionIterator_LockEndWrite(self);
-		err_unbound_attribute(&DeeYieldFunctionIterator_Type, "__func__");
+		err_unbound_attribute_string(&DeeYieldFunctionIterator_Type, "__func__");
 		return NULL;
 	}
 	result = self->yi_func->yf_func;
@@ -1736,7 +1736,7 @@ yfi_getcode(YFIterator *__restrict self) {
 	DeeYieldFunctionIterator_LockWrite(self);
 	if unlikely(!self->yi_func) {
 		DeeYieldFunctionIterator_LockEndWrite(self);
-		err_unbound_attribute(&DeeYieldFunctionIterator_Type, "__code__");
+		err_unbound_attribute_string(&DeeYieldFunctionIterator_Type, "__code__");
 		return NULL;
 	}
 	result = self->yi_func->yf_func->fo_code;
@@ -1752,7 +1752,7 @@ yfi_getrefs(YFIterator *__restrict self) {
 	DeeYieldFunctionIterator_LockWrite(self);
 	if unlikely(!self->yi_func) {
 		DeeYieldFunctionIterator_LockEndWrite(self);
-		err_unbound_attribute(&DeeYieldFunctionIterator_Type, "__refs__");
+		err_unbound_attribute_string(&DeeYieldFunctionIterator_Type, "__refs__");
 		return NULL;
 	}
 	func = self->yi_func->yf_func;
@@ -1770,7 +1770,7 @@ yfi_getkwds(YFIterator *__restrict self) {
 	DeeYieldFunctionIterator_LockWrite(self);
 	if unlikely(!self->yi_func) {
 		DeeYieldFunctionIterator_LockEndWrite(self);
-		err_unbound_attribute(&DeeYieldFunctionIterator_Type, STR___kwds__);
+		err_unbound_attribute_string(&DeeYieldFunctionIterator_Type, STR___kwds__);
 		return NULL;
 	}
 	func = self->yi_func->yf_func;
@@ -1787,7 +1787,7 @@ yfi_getargs(YFIterator *__restrict self) {
 	DeeYieldFunctionIterator_LockWrite(self);
 	if unlikely(!self->yi_func) {
 		DeeYieldFunctionIterator_LockEndWrite(self);
-		err_unbound_attribute(&DeeYieldFunctionIterator_Type, "__args__");
+		err_unbound_attribute_string(&DeeYieldFunctionIterator_Type, "__args__");
 		return NULL;
 	}
 	result = (DeeObject *)self->yi_func->yf_args;
@@ -1803,7 +1803,7 @@ yfi_get_func_reference(YFIterator *__restrict self,
 	DeeYieldFunctionIterator_LockWrite(self);
 	if unlikely(!self->yi_func) {
 		DeeYieldFunctionIterator_LockEndWrite(self);
-		err_unbound_attribute(&DeeYieldFunctionIterator_Type, attr_name);
+		err_unbound_attribute_string(&DeeYieldFunctionIterator_Type, attr_name);
 		return NULL;
 	}
 	result = self->yi_func;

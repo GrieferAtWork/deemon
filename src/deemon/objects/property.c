@@ -370,7 +370,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 property_call(Property *self, size_t argc, DeeObject *const *argv) {
 	if likely(self->p_get)
 		return DeeObject_Call(self->p_get, argc, argv);
-	err_unbound_attribute(&DeeProperty_Type, STR_get);
+	err_unbound_attribute_string(&DeeProperty_Type, STR_get);
 	return NULL;
 }
 

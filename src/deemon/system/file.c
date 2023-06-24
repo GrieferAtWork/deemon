@@ -396,7 +396,7 @@ DeeSystemFile_Filename(/*SystemFile*/ DeeObject *__restrict self) {
 	ASSERT_OBJECT_TYPE((DeeObject *)me, (DeeTypeObject *)&DeeSystemFile_Type);
 	result = me->sf_filename;
 	if unlikely(!result)
-		err_cant_access_attribute(Dee_TYPE(me), STR_filename, ATTR_ACCESS_GET);
+		err_cant_access_attribute_string(Dee_TYPE(me), STR_filename, ATTR_ACCESS_GET);
 	return NULL;
 #else /* ... */
 	SystemFile *me = (SystemFile *)self;

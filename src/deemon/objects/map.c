@@ -1523,7 +1523,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeTypeObject *DCALL
 map_iterator_get(DeeTypeObject *__restrict self) {
 	if (self == &DeeMapping_Type)
 		return_reference_(&DeeIterator_Type);
-	err_unknown_attribute(self, STR_Iterator, ATTR_ACCESS_GET);
+	err_unknown_attribute_string(self, STR_Iterator, ATTR_ACCESS_GET);
 	return NULL;
 }
 

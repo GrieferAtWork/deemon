@@ -73,15 +73,15 @@ has_generic_attribute(DeeTypeObject *tp_self, DeeObject *self, DeeObject *attr) 
 		/* TODO: Search the type's instance-attribute cache and check
 		 *       if the attribute is implemented by the type itself. */
 		if (DeeType_IsClass(tp_self))
-			return DeeClass_QueryInstanceAttributeStringWithHash(tp_self, name, hash) != NULL ? 1 : 0;
+			return DeeClass_QueryInstanceAttributeStringHash(tp_self, name, hash) != NULL ? 1 : 0;
 		if (tp_self->tp_methods &&
-		    DeeType_HasMethodAttr(tp_self, tp_self, name, hash))
+		    DeeType_HasMethodAttrStringHash(tp_self, tp_self, name, hash))
 			goto yes;
 		if (tp_self->tp_getsets &&
-		    DeeType_HasGetSetAttr(tp_self, tp_self, name, hash))
+		    DeeType_HasGetSetAttrStringHash(tp_self, tp_self, name, hash))
 			goto yes;
 		if (tp_self->tp_members &&
-		    DeeType_HasMemberAttr(tp_self, tp_self, name, hash))
+		    DeeType_HasMemberAttrStringHash(tp_self, tp_self, name, hash))
 			goto yes;
 	}
 	return 0;
@@ -105,24 +105,22 @@ vcall_generic_attribute(DeeTypeObject *tp_self, DeeObject *self,
 	 *       if the attribute is implemented by the type itself. */
 	if (DeeType_IsClass(tp_self)) {
 		struct class_attribute *member;
-		if ((member = DeeType_QueryAttributeStringWithHash(tp_self, tp_self, name, hash)) != NULL) {
+		if ((member = DeeType_QueryAttributeStringHash(tp_self, tp_self, name, hash)) != NULL) {
 			struct class_desc *desc = DeeClass_DESC(tp_self);
-			return DeeInstance_VCallAttributef(desc,
-			                                   DeeInstance_DESC(desc,
-			                                                    self),
+			return DeeInstance_VCallAttributef(desc, DeeInstance_DESC(desc, self),
 			                                   self, member, format, args);
 		}
 		result = ITER_DONE;
 	} else {
 		result = ITER_DONE;
 		if (tp_self->tp_methods &&
-		    (result = DeeType_VCallMethodAttrf(tp_self, tp_self, self, name, hash, format, args)) != ITER_DONE)
+		    (result = DeeType_VCallMethodAttrStringHashf(tp_self, tp_self, self, name, hash, format, args)) != ITER_DONE)
 			goto done;
 		if (tp_self->tp_getsets &&
-		    (result = DeeType_GetGetSetAttr(tp_self, tp_self, self, name, hash)) != ITER_DONE)
+		    (result = DeeType_GetGetSetAttrStringHash(tp_self, tp_self, self, name, hash)) != ITER_DONE)
 			goto done_call;
 		if (tp_self->tp_members &&
-		    (result = DeeType_GetMemberAttr(tp_self, tp_self, self, name, hash)) != ITER_DONE)
+		    (result = DeeType_GetMemberAttrStringHash(tp_self, tp_self, self, name, hash)) != ITER_DONE)
 			goto done_call;
 	}
 done:
@@ -150,27 +148,21 @@ get_generic_attribute(DeeTypeObject *tp_self, DeeObject *self, DeeObject *name) 
 	 *       if the attribute is implemented by the type itself. */
 	if (DeeType_IsClass(tp_self)) {
 		struct class_attribute *member;
-		if ((member = DeeType_QueryAttributeStringWithHash(tp_self, tp_self,
-		                                                   DeeString_STR(name),
-		                                                   hash)) != NULL) {
+		if ((member = DeeType_QueryAttributeHash(tp_self, tp_self, name, hash)) != NULL) {
 			struct class_desc *desc = DeeClass_DESC(tp_self);
-			return DeeInstance_GetAttribute(desc,
-			                                DeeInstance_DESC(desc,
-			                                                 self),
-			                                self,
-			                                member);
+			return DeeInstance_GetAttribute(desc, DeeInstance_DESC(desc, self), self, member);
 		}
 		result = ITER_DONE;
 	} else {
 		result = ITER_DONE;
 		if (tp_self->tp_methods &&
-		    (result = DeeType_GetMethodAttr(tp_self, tp_self, self, DeeString_STR(name), hash)) != ITER_DONE)
+		    (result = DeeType_GetMethodAttrStringHash(tp_self, tp_self, self, DeeString_STR(name), hash)) != ITER_DONE)
 			goto done;
 		if (tp_self->tp_getsets &&
-		    (result = DeeType_GetGetSetAttr(tp_self, tp_self, self, DeeString_STR(name), hash)) != ITER_DONE)
+		    (result = DeeType_GetGetSetAttrStringHash(tp_self, tp_self, self, DeeString_STR(name), hash)) != ITER_DONE)
 			goto done;
 		if (tp_self->tp_members &&
-		    (result = DeeType_GetMemberAttr(tp_self, tp_self, self, DeeString_STR(name), hash)) != ITER_DONE)
+		    (result = DeeType_GetMemberAttrStringHash(tp_self, tp_self, self, DeeString_STR(name), hash)) != ITER_DONE)
 			goto done;
 	}
 done:

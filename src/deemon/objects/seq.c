@@ -1096,7 +1096,7 @@ seq_iterator_get(DeeTypeObject *__restrict self) {
 	if (found == (1 | 2))
 		return_reference_(&DeeGenericIterator_Type);
 fail:
-	err_unknown_attribute(self, STR_Iterator, ATTR_ACCESS_GET);
+	err_unknown_attribute_string(self, STR_Iterator, ATTR_ACCESS_GET);
 	return NULL;
 }
 

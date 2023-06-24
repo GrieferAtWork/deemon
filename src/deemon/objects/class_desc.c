@@ -2904,9 +2904,9 @@ DeeClass_FindClassAttribute(DeeTypeObject *tp_invoker, DeeTypeObject *self,
 	struct class_desc *my_class = DeeClass_DESC(self);
 	uint16_t perm;
 	DREF DeeTypeObject *attr_type;
-	attr = DeeType_QueryClassAttributeStringWithHash(tp_invoker, self,
-	                                                 rules->alr_name,
-	                                                 rules->alr_hash);
+	attr = DeeType_QueryClassAttributeStringHash(tp_invoker, self,
+	                                             rules->alr_name,
+	                                             rules->alr_hash);
 	if (!attr)
 		goto not_found;
 	attr_type = NULL;
@@ -2973,9 +2973,9 @@ DeeClass_FindClassInstanceAttribute(DeeTypeObject *tp_invoker, DeeTypeObject *se
 	struct class_desc *my_class = DeeClass_DESC(self);
 	uint16_t perm;
 	DREF DeeTypeObject *attr_type;
-	attr = DeeType_QueryInstanceAttributeStringWithHash(tp_invoker, self,
-	                                                    rules->alr_name,
-	                                                    rules->alr_hash);
+	attr = DeeType_QueryInstanceAttributeStringHash(tp_invoker, self,
+	                                                rules->alr_name,
+	                                                rules->alr_hash);
 	if (!attr)
 		goto not_found;
 	attr_type = NULL;
@@ -3048,9 +3048,9 @@ DeeClass_FindInstanceAttribute(DeeTypeObject *tp_invoker, DeeTypeObject *self, D
 	struct class_desc *my_class = DeeClass_DESC(self);
 	uint16_t perm;
 	DREF DeeTypeObject *attr_type;
-	attr = DeeType_QueryAttributeStringWithHash(tp_invoker, self,
-	                                            rules->alr_name,
-	                                            rules->alr_hash);
+	attr = DeeType_QueryAttributeStringHash(tp_invoker, self,
+	                                        rules->alr_name,
+	                                        rules->alr_hash);
 	if (!attr)
 		goto not_found;
 	attr_type = NULL, inst = NULL;
@@ -3170,7 +3170,7 @@ DeeClass_GetInstanceAttribute(DeeTypeObject *__restrict class_type,
 	DeeObject_Init(result, &DeeProperty_Type);
 	return (DREF DeeObject *)result;
 unbound:
-	err_unbound_attribute(class_type,
+	err_unbound_attribute_string(class_type,
 	                      DeeString_STR(attr->ca_name));
 err:
 	return NULL;
@@ -3256,7 +3256,7 @@ DeeClass_CallInstanceAttribute(DeeTypeObject *class_type,
 	Dee_Decref(callback);
 	return result;
 unbound:
-	err_unbound_attribute(class_type,
+	err_unbound_attribute_string(class_type,
 	                      DeeString_STR(attr->ca_name));
 err:
 	return NULL;
@@ -3313,7 +3313,7 @@ DeeClass_CallInstanceAttributeKw(DeeTypeObject *class_type,
 	Dee_Decref(callback);
 	return result;
 unbound:
-	err_unbound_attribute(class_type,
+	err_unbound_attribute_string(class_type,
 	                      DeeString_STR(attr->ca_name));
 err:
 	return NULL;
@@ -3373,7 +3373,7 @@ DeeClass_CallInstanceAttributeTuple(DeeTypeObject *class_type,
 	Dee_Decref(callback);
 	return result;
 unbound:
-	err_unbound_attribute(class_type,
+	err_unbound_attribute_string(class_type,
 	                      DeeString_STR(attr->ca_name));
 err:
 	return NULL;
@@ -3430,7 +3430,7 @@ DeeClass_CallInstanceAttributeTupleKw(DeeTypeObject *class_type,
 	Dee_Decref(callback);
 	return result;
 unbound:
-	err_unbound_attribute(class_type,
+	err_unbound_attribute_string(class_type,
 	                      DeeString_STR(attr->ca_name));
 err:
 	return NULL;
@@ -3494,7 +3494,7 @@ DeeClass_VCallInstanceAttributef(DeeTypeObject *class_type,
 	Dee_Decref(callback);
 	return result;
 unbound:
-	err_unbound_attribute(class_type,
+	err_unbound_attribute_string(class_type,
 	                      DeeString_STR(attr->ca_name));
 	goto err;
 err_args_tuple:
@@ -3511,7 +3511,7 @@ DeeClass_DelInstanceAttribute(DeeTypeObject *__restrict class_type,
 		goto err_noaccess;
 	/* Make sure not to re-write readonly attributes. */
 	if (attr->ca_flag & CLASS_ATTRIBUTE_FREADONLY) {
-		return err_cant_access_attribute(class_type,
+		return err_cant_access_attribute_string(class_type,
 		                                 DeeString_STR(attr->ca_name),
 		                                 ATTR_ACCESS_DEL);
 	}
@@ -3553,10 +3553,10 @@ DeeClass_DelInstanceAttribute(DeeTypeObject *__restrict class_type,
 	return 0;
 #ifdef CONFIG_ERROR_DELETE_UNBOUND
 unbound:
-	return err_unbound_attribute(class_type, DeeString_STR(attr->ca_name));
+	return err_unbound_attribute_string(class_type, DeeString_STR(attr->ca_name));
 #endif /* CONFIG_ERROR_DELETE_UNBOUND */
 err_noaccess:
-	return err_cant_access_attribute(class_type,
+	return err_cant_access_attribute_string(class_type,
 	                                 DeeString_STR(attr->ca_name),
 	                                 ATTR_ACCESS_DEL);
 }
@@ -3571,7 +3571,7 @@ DeeClass_SetInstanceAttribute(DeeTypeObject *class_type,
 
 	/* Make sure not to re-write readonly attributes. */
 	if (attr->ca_flag & CLASS_ATTRIBUTE_FREADONLY) {
-		err_cant_access_attribute(class_type,
+		err_cant_access_attribute_string(class_type,
 		                          DeeString_STR(attr->ca_name),
 		                          ATTR_ACCESS_SET);
 		goto err;
@@ -3612,7 +3612,7 @@ DeeClass_SetInstanceAttribute(DeeTypeObject *class_type,
 	}
 	return 0;
 err_noaccess:
-	err_cant_access_attribute(class_type,
+	err_cant_access_attribute_string(class_type,
 	                          DeeString_STR(attr->ca_name),
 	                          ATTR_ACCESS_SET);
 err:
@@ -3667,10 +3667,10 @@ DeeInstance_GetAttribute(struct class_desc *__restrict desc,
 	}
 	return result;
 unbound:
-	err_unbound_attribute_c(desc, DeeString_STR(attr->ca_name));
+	err_unbound_attribute_string_c(desc, DeeString_STR(attr->ca_name));
 	return NULL;
 illegal:
-	err_cant_access_attribute_c(desc,
+	err_cant_access_attribute_string_c(desc,
 	                            DeeString_STR(attr->ca_name),
 	                            ATTR_ACCESS_GET);
 	return NULL;
@@ -3761,11 +3761,11 @@ DeeInstance_CallAttribute(struct class_desc *__restrict desc,
 	}
 	return result;
 unbound:
-	err_unbound_attribute_c(desc,
+	err_unbound_attribute_string_c(desc,
 	                        DeeString_STR(attr->ca_name));
 	goto err;
 illegal:
-	err_cant_access_attribute_c(desc,
+	err_cant_access_attribute_string_c(desc,
 	                            DeeString_STR(attr->ca_name),
 	                            ATTR_ACCESS_GET);
 err:
@@ -3817,11 +3817,11 @@ DeeInstance_VCallAttributef(struct class_desc *__restrict desc,
 	}
 	return result;
 unbound:
-	err_unbound_attribute_c(desc,
+	err_unbound_attribute_string_c(desc,
 	                        DeeString_STR(attr->ca_name));
 	goto err;
 illegal:
-	err_cant_access_attribute_c(desc,
+	err_cant_access_attribute_string_c(desc,
 	                            DeeString_STR(attr->ca_name),
 	                            ATTR_ACCESS_GET);
 err:
@@ -3874,11 +3874,11 @@ DeeInstance_CallAttributeKw(struct class_desc *__restrict desc,
 	}
 	return result;
 unbound:
-	err_unbound_attribute_c(desc,
+	err_unbound_attribute_string_c(desc,
 	                        DeeString_STR(attr->ca_name));
 	goto err;
 illegal:
-	err_cant_access_attribute_c(desc,
+	err_cant_access_attribute_string_c(desc,
 	                            DeeString_STR(attr->ca_name),
 	                            ATTR_ACCESS_GET);
 err:
@@ -3931,11 +3931,11 @@ DeeInstance_CallAttributeTuple(struct class_desc *__restrict desc,
 	}
 	return result;
 unbound:
-	err_unbound_attribute_c(desc,
+	err_unbound_attribute_string_c(desc,
 	                        DeeString_STR(attr->ca_name));
 	goto err;
 illegal:
-	err_cant_access_attribute_c(desc,
+	err_cant_access_attribute_string_c(desc,
 	                            DeeString_STR(attr->ca_name),
 	                            ATTR_ACCESS_GET);
 err:
@@ -3987,11 +3987,11 @@ DeeInstance_CallAttributeTupleKw(struct class_desc *__restrict desc,
 	}
 	return result;
 unbound:
-	err_unbound_attribute_c(desc,
+	err_unbound_attribute_string_c(desc,
 	                        DeeString_STR(attr->ca_name));
 	goto err;
 illegal:
-	err_cant_access_attribute_c(desc,
+	err_cant_access_attribute_string_c(desc,
 	                            DeeString_STR(attr->ca_name),
 	                            ATTR_ACCESS_GET);
 err:
@@ -4073,12 +4073,12 @@ DeeInstance_DelAttribute(struct class_desc *__restrict desc,
 	return 0;
 #ifdef CONFIG_ERROR_DELETE_UNBOUND
 unbound:
-	err_unbound_attribute_c(desc,
+	err_unbound_attribute_string_c(desc,
 	                        DeeString_STR(attr->ca_name));
 	goto err;
 #endif /* CONFIG_ERROR_DELETE_UNBOUND */
 illegal:
-	err_cant_access_attribute_c(desc,
+	err_cant_access_attribute_string_c(desc,
 	                            DeeString_STR(attr->ca_name),
 	                            ATTR_ACCESS_DEL);
 err:
@@ -4135,7 +4135,7 @@ DeeInstance_SetAttribute(struct class_desc *__restrict desc,
 	}
 	return 0;
 illegal:
-	err_cant_access_attribute_c(desc,
+	err_cant_access_attribute_string_c(desc,
 	                            DeeString_STR(attr->ca_name),
 	                            ATTR_ACCESS_SET);
 err:
@@ -4169,7 +4169,7 @@ INTERN WUNUSED NONNULL((1, 2, 3, 4)) int
 	Dee_XDecref(old_value);
 	return 0;
 illegal:
-	return err_cant_access_attribute_c(desc,
+	return err_cant_access_attribute_string_c(desc,
 	                                   DeeString_STR(attr->ca_name),
 	                                   ATTR_ACCESS_SET);
 }
@@ -4201,8 +4201,8 @@ class_attribute_mayaccess_impl(struct class_attribute *__restrict self,
  * @return: * :   A pointer to attribute that was found.
  * @return: NULL: Attribute could not be found (no error is thrown) */
 PUBLIC WUNUSED NONNULL((1, 2)) struct class_attribute *DCALL
-DeeClassDescriptor_QueryClassAttributeWithHash(DeeClassDescriptorObject *self,
-                                               /*String*/ DeeObject *name, dhash_t hash) {
+DeeClassDescriptor_QueryClassAttributeHash(DeeClassDescriptorObject *self,
+                                           /*String*/ DeeObject *name, dhash_t hash) {
 	struct class_attribute *result;
 	dhash_t i, perturb;
 	ASSERT_OBJECT_TYPE_EXACT(name, &DeeString_Type);
@@ -4220,8 +4220,8 @@ DeeClassDescriptor_QueryClassAttributeWithHash(DeeClassDescriptorObject *self,
 }
 
 PUBLIC WUNUSED NONNULL((1, 2)) struct class_attribute *DCALL
-DeeClassDescriptor_QueryClassAttributeStringWithHash(DeeClassDescriptorObject *__restrict self,
-                                                     char const *__restrict name, dhash_t hash) {
+DeeClassDescriptor_QueryClassAttributeStringHash(DeeClassDescriptorObject *__restrict self,
+                                                 char const *__restrict name, dhash_t hash) {
 	struct class_attribute *result;
 	dhash_t i, perturb;
 	i = perturb = hash & self->cd_cattr_mask;
@@ -4239,10 +4239,10 @@ DeeClassDescriptor_QueryClassAttributeStringWithHash(DeeClassDescriptorObject *_
 }
 
 PUBLIC WUNUSED NONNULL((1, 2)) struct class_attribute *DCALL
-DeeClassDescriptor_QueryClassAttributeStringLenWithHash(DeeClassDescriptorObject *__restrict self,
-                                                        char const *__restrict name,
-                                                        size_t attrlen,
-                                                        dhash_t hash) {
+DeeClassDescriptor_QueryClassAttributeStringLenHash(DeeClassDescriptorObject *__restrict self,
+                                                    char const *__restrict name,
+                                                    size_t attrlen,
+                                                    dhash_t hash) {
 	struct class_attribute *result;
 	dhash_t i, perturb;
 	i = perturb = hash & self->cd_cattr_mask;
@@ -4259,8 +4259,8 @@ DeeClassDescriptor_QueryClassAttributeStringLenWithHash(DeeClassDescriptorObject
 }
 
 PUBLIC WUNUSED NONNULL((1, 2)) struct class_attribute *DCALL
-DeeClassDescriptor_QueryInstanceAttributeWithHash(DeeClassDescriptorObject *self,
-                                                  /*String*/ DeeObject *name, dhash_t hash) {
+DeeClassDescriptor_QueryInstanceAttributeHash(DeeClassDescriptorObject *self,
+                                              /*String*/ DeeObject *name, dhash_t hash) {
 	struct class_attribute *result;
 	dhash_t i, perturb;
 	ASSERT_OBJECT_TYPE_EXACT(name, &DeeString_Type);
@@ -4278,8 +4278,8 @@ DeeClassDescriptor_QueryInstanceAttributeWithHash(DeeClassDescriptorObject *self
 }
 
 PUBLIC WUNUSED NONNULL((1, 2)) struct class_attribute *DCALL
-DeeClassDescriptor_QueryInstanceAttributeStringWithHash(DeeClassDescriptorObject *__restrict self,
-                                                        char const *__restrict name, dhash_t hash) {
+DeeClassDescriptor_QueryInstanceAttributeStringHash(DeeClassDescriptorObject *__restrict self,
+                                                    char const *__restrict name, dhash_t hash) {
 	struct class_attribute *result;
 	dhash_t i, perturb;
 	i = perturb = hash & self->cd_iattr_mask;
@@ -4297,9 +4297,9 @@ DeeClassDescriptor_QueryInstanceAttributeStringWithHash(DeeClassDescriptorObject
 }
 
 PUBLIC WUNUSED NONNULL((1, 2)) struct class_attribute *DCALL
-DeeClassDescriptor_QueryInstanceAttributeStringLenWithHash(DeeClassDescriptorObject *__restrict self,
-                                                           char const *__restrict name,
-                                                           size_t attrlen, dhash_t hash) {
+DeeClassDescriptor_QueryInstanceAttributeStringLenHash(DeeClassDescriptorObject *__restrict self,
+                                                       char const *__restrict name,
+                                                       size_t attrlen, dhash_t hash) {
 	struct class_attribute *result;
 	dhash_t i, perturb;
 	i = perturb = hash & self->cd_iattr_mask;
@@ -4351,7 +4351,7 @@ err_unbound_class_member(/*Class*/ DeeTypeObject *__restrict class_type,
 	}
 	/* Throw the error. */
 got_it:
-	return err_unbound_attribute(class_type, name);
+	return err_unbound_attribute_string(class_type, name);
 }
 
 PRIVATE ATTR_COLD NONNULL((1, 2)) int DCALL
@@ -4378,7 +4378,7 @@ err_unbound_member(/*Class*/ DeeTypeObject *__restrict class_type,
 	}
 
 	/* Throw the error. */
-	return err_unbound_attribute(class_type, name);
+	return err_unbound_attribute_string(class_type, name);
 }
 
 
