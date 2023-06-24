@@ -127,6 +127,9 @@ INTDEF WUNUSED NONNULL((1, 2)) int DCALL super_delattr(DeeObject *self, DeeObjec
 INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL super_setattr(DeeObject *self, DeeObject *attr, DeeObject *value);
 
 
+/* @return: 1 : does exists
+ * @return: 0 : doesn't exist
+ * @return: -1: Error. */
 PUBLIC WUNUSED NONNULL((1, 2)) int
 (DCALL DeeObject_HasAttr)(DeeObject *self, /*String*/ DeeObject *attr) {
 	DeeTypeObject *iter, *tp_self;
@@ -195,6 +198,9 @@ err:
 	return -1;
 }
 
+/* @return: 1 : does exists
+ * @return: 0 : doesn't exist
+ * @return: -1: Error. */
 PUBLIC WUNUSED NONNULL((1, 2)) int
 (DCALL DeeObject_HasAttrStringHash)(DeeObject *__restrict self,
                                     char const *__restrict attr,
@@ -266,6 +272,9 @@ err:
 	return -1;
 }
 
+/* @return: 1 : does exists
+ * @return: 0 : doesn't exist
+ * @return: -1: Error. */
 PUBLIC WUNUSED NONNULL((1, 2)) int
 (DCALL DeeObject_HasAttrStringLenHash)(DeeObject *__restrict self,
                                        char const *__restrict attr,
@@ -1751,6 +1760,9 @@ PUBLIC WUNUSED NONNULL((1, 2)) DREF DeeObject *
 	return DeeObject_GetAttrStringHash(self, attr, Dee_HashStr(attr));
 }
 
+/* @return: 1 : does exists
+ * @return: 0 : doesn't exist
+ * @return: -1: Error. */
 PUBLIC WUNUSED NONNULL((1, 2)) int
 (DCALL DeeObject_HasAttrString)(DeeObject *__restrict self,
                                 char const *__restrict attr) {

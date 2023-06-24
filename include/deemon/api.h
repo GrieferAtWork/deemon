@@ -443,12 +443,8 @@ DECL_BEGIN
 extern void (__debugbreak)(void);
 #pragma intrinsic(__debugbreak)
 #define Dee_BREAKPOINT() __debugbreak()
-#elif defined(__COMPILER_HAVE_GCC_ASM) && (defined(__i386__) || defined(__x86_64__))
-#ifdef __NO_XBLOCK
-#define Dee_BREAKPOINT() __asm__ __volatile__("int {$}3" : )
-#else /* __NO_XBLOCK */
+#elif defined(__COMPILER_HAVE_GCC_ASM) && !defined(__NO_XBLOCK) && (defined(__i386__) || defined(__x86_64__))
 #define Dee_BREAKPOINT() XBLOCK({ __asm__ __volatile__("int {$}3" : ); (void)0; })
-#endif /* !__NO_XBLOCK */
 #else /* ... */
 #define Dee_BREAKPOINT_IS_NOOP
 #define Dee_BREAKPOINT() (void)0

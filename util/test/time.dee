@@ -23,12 +23,12 @@ import * from deemon;
 import * from errors;
 import * from time;
 
-local t = Time(nanosecond: 63844635905820157600);
+local t = Time(nanosecond: 63_844_635_905_820_157_600);
 assert !t.isdelta;
 assert t.istimestamp;
-assert t.nanoseconds == 63844635905820157600;
-assert t.nanosecond  == 820157600;
-assert t.microsecond == 820157;
+assert t.nanoseconds == 63_844_635_905_820_157_600;
+assert t.nanosecond  == 820_157_600;
+assert t.microsecond == 820_157;
 assert t.millisecond == 820;
 assert t.second      == 5;
 assert t.minute      == 5;
@@ -52,12 +52,13 @@ assert t.asdelta.isdelta;
 assert t.astimestamp.istimestamp;
 assert !t.astimestamp.isdelta;
 assert (try t + t catch (e...) e) is ValueError;
-assert (t + nanoseconds(7)) == Time(nanosecond: 63844635905820157607);
+assert (t + nanoseconds(7)) == Time(nanosecond: 63_844_635_905_820_157_607);
 assert (t + nanoseconds(7)).istimestamp;
 assert !(t + nanoseconds(7)).isdelta;
 assert (t - t) is Time;
 assert (t - t) == Time();
 assert (t - t) == Time(0);
+assert (t - t) == Time(nanosecond: 0);
 assert (t - t).isdelta;
 assert !(t - t).istimestamp;
 assert t == t.asdelta;
@@ -72,11 +73,11 @@ assert (try t % t catch (e...) e) is ValueError;
 assert (-t.asdelta) < Time(0);
 assert (t.asdelta / 1).isdelta;
 assert (t.asdelta / 1) is Time;
-assert (t.asdelta / 1) == Time(63844635905820157600);
+assert (t.asdelta / 1) == Time(63_844_635_905_820_157_600);
 assert (t.asdelta / nanoseconds(1)) is int;
-assert (t.asdelta / nanoseconds(1)) == 63844635905820157600;
+assert (t.asdelta / nanoseconds(1)) == 63_844_635_905_820_157_600;
 assert (t.asdelta / nanoseconds(2)) is int;
-assert (t.asdelta / nanoseconds(2)) == 31922317952910078800;
+assert (t.asdelta / nanoseconds(2)) == 31_922_317_952_910_078_800;
 assert (t.asdelta % 1).isdelta;
 assert (t.asdelta % 1) is Time;
 assert (t.asdelta % 1) == 0;
@@ -87,7 +88,7 @@ assert (t.asdelta % nanoseconds(2)) == Time(0);
 assert (t.asdelta % nanoseconds(3)) == Time(1);
 assert (-nanoseconds(42)).isdelta;
 assert !(-nanoseconds(42)).istimestamp;
-assert (-t.asdelta).operator int() == -63844635905820157600;
+assert (-t.asdelta).operator int() == -63_844_635_905_820_157_600;
 assert (-nanoseconds(42)).operator int() == -42;
 assert (-nanoseconds(42)) < Time(0);
 assert (-nanoseconds(42)) == Time(-42);
@@ -116,7 +117,7 @@ function assertTimeEqual(a: Time, b: Time) {
 
 /* Assert that you're able to construct from nanoseconds */
 local x = Time();
-x.nanoseconds = 63844635905820157600;
+x.nanoseconds = 63_844_635_905_820_157_600;
 assertTimeEqual(t, x);
 
 
@@ -191,7 +192,7 @@ assert x.mday == 26;
 assert x.hour == 13;
 assert x.minute == 5;
 assert x.second == 5;
-assert x.nanosecond == 820157600;
+assert x.nanosecond == 820_157_600;
 assertTimeEqual(t, x);
 
 
@@ -203,4 +204,4 @@ assert before0.mday == 31;
 assert before0.hour == 23;
 assert before0.minute == 59;
 assert before0.second == 59;
-assert before0.nanosecond == 999999999;
+assert before0.nanosecond == 999_999_999;

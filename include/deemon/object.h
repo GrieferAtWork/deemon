@@ -1642,7 +1642,7 @@ struct Dee_type_seq {
 };
 
 struct Dee_type_attr {
-	/* Attribute operators. */
+	/* Basic attribute operators. */
 	WUNUSED_T NONNULL_T((1, 2))    DREF DeeObject *(DCALL *tp_getattr)(DeeObject *self, /*String*/ DeeObject *name);
 	WUNUSED_T NONNULL_T((1, 2))    int             (DCALL *tp_delattr)(DeeObject *self, /*String*/ DeeObject *name);
 	WUNUSED_T NONNULL_T((1, 2, 3)) int             (DCALL *tp_setattr)(DeeObject *self, /*String*/ DeeObject *name, DeeObject *value);
@@ -2995,7 +2995,7 @@ DFUNDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeObject_CompareGe)(DeeObject *self,
 DFUNDEF WUNUSED NONNULL((1, 2)) int
 (DCALL DeeObject_Compare)(DeeObject *lhs, DeeObject *rhs);
 
-/* Compare a pre-keyed `keyed_search_item' with `elem' using the given (optional) `key' function
+/* Compare a pre-keyed `lhs_keyed' with `rhs' using the given (optional) `key' function
  * @return: == -2: An error occurred.
  * @return: == -1: `lhs < key(rhs)'
  * @return: == 0:  Objects compare as equal

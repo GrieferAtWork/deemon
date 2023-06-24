@@ -5326,13 +5326,10 @@ DEFINE_OPERATOR(void, PutBuf,
 	(void)self;
 	(void)info;
 	(void)flags;
-#elif 1
-#ifdef DEFINE_TYPED_OPERATORS
-	(void)tp_self;
-#endif /* DEFINE_TYPED_OPERATORS */
+#elif !defined(DEFINE_TYPED_OPERATORS)
 	if (info->bb_put)
 		(*info->bb_put)(self, info, flags);
-#else
+#else /* !DEFINE_TYPED_OPERATORS */
 	LOAD_TP_SELF;
 	do {
 		if (tp_self->tp_buffer && tp_self->tp_buffer->tp_getbuf) {
@@ -5341,7 +5338,7 @@ DEFINE_OPERATOR(void, PutBuf,
 			break;
 		}
 	} while (type_inherit_buffer(tp_self));
-#endif
+#endif /* DEFINE_TYPED_OPERATORS */
 }
 
 
@@ -5359,16 +5356,17 @@ PUBLIC WUNUSED NONNULL((1, 3)) int
 (DCALL DeeObject_Unpack)(DeeObject *__restrict self, size_t objc,
                          /*out*/ DREF DeeObject **__restrict objv) {
 	DREF DeeObject *iterator, *elem;
-	size_t fast_size, i = 0;
+	size_t fast_size, i;
+
 	/* Try to make use of the fast-sequence API. */
 	fast_size = DeeFastSeq_GetSize(self);
 	if (fast_size != DEE_FASTSEQ_NOTFAST) {
 		if (objc != fast_size)
 			return err_invalid_unpack_size(self, objc, fast_size);
-		for (; i < objc; ++i) {
+		for (i = 0; i < objc; ++i) {
 			elem = DeeFastSeq_GetItem(self, i);
 			if unlikely(!elem)
-				goto err;
+				goto err_objv;
 			objv[i] = elem; /* Inherit reference. */
 		}
 		return 0;
@@ -5379,31 +5377,34 @@ PUBLIC WUNUSED NONNULL((1, 3)) int
 		Dee_Incref_n(Dee_None, objc);
 		return 0;
 	}
+
 	/* Fallback: Use an iterator. */
 	if ((iterator = DeeObject_IterSelf(self)) == NULL)
 		goto err;
-	for (; i < objc; ++i) {
+	for (i = 0; i < objc; ++i) {
 		elem = DeeObject_IterNext(iterator);
 		if unlikely(!ITER_ISOK(elem)) {
 			if (elem)
 				err_invalid_unpack_size(self, objc, i);
-			goto err_iter;
+			goto err_iter_objv;
 		}
 		objv[i] = elem; /* Inherit reference. */
 	}
+
 	/* Check to make sure that the iterator actually ends here. */
 	elem = DeeObject_IterNext(iterator);
 	if unlikely(elem != ITER_DONE) {
 		if (elem)
 			err_invalid_unpack_iter_size(self, iterator, objc);
-		goto err_iter;
+		goto err_iter_objv;
 	}
 	Dee_Decref(iterator);
 	return 0;
-err_iter:
+err_iter_objv:
 	Dee_Decref(iterator);
-err:
+err_objv:
 	Dee_Decrefv(objv, i);
+err:
 	return -1;
 }
 
@@ -5432,6 +5433,7 @@ DeeObject_Foreach(DeeObject *__restrict self,
 		}
 		return result;
 	}
+
 	/* Fallback: Use an iterator. */
 	if ((self = DeeObject_IterSelf(self)) == NULL)
 		goto err;
@@ -5592,7 +5594,7 @@ err:
 	return -1;
 }
 
-/* Compare a pre-keyed `keyed_search_item' with `elem' using the given (optional) `key' function
+/* Compare a pre-keyed `lhs_keyed' with `rhs' using the given (optional) `key' function
  * @return: == -2: An error occurred.
  * @return: == -1: `lhs < key(rhs)'
  * @return: == 0:  Objects compare as equal
@@ -5614,12 +5616,17 @@ err:
 }
 
 
+/* Compare a pre-keyed `keyed_search_item' with `elem' using the given (optional) `key' function
+ * @return:  > 0: The objects are equal.
+ * @return: == 0: The objects are non-equal.
+ * @return:  < 0: An error occurred. */
 PUBLIC WUNUSED NONNULL((1, 2)) int
 (DCALL DeeObject_CompareKeyEq)(DeeObject *keyed_search_item,
                                DeeObject *elem, /*nullable*/ DeeObject *key) {
 	int result;
 	if (!key)
 		return DeeObject_CompareEq(keyed_search_item, elem);
+
 	/* TODO: Special optimizations for specific keys (e.g. `string.lower') */
 	elem = DeeObject_Call(key, 1, (DeeObject **)&elem);
 	if unlikely(!elem)

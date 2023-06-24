@@ -70,6 +70,15 @@
 #define __DECL_END }
 #define __SYSDECL_END }
 
+#define __pragma_GCC_diagnostic_push
+#define __pragma_GCC_diagnostic_pop
+#define __pragma_GCC_diagnostic_ignored(name)
+#define __pragma_GCC_diagnostic_push_ignored(name)
+#define __pragma_GCC_diagnostic_pop_ignored(name)
+#define __pragma_MSVC_diagnostic_ignored
+#define __pragma_MSVC_diagnostic_push_ignored
+#define __pragma_MSVC_diagnostic_pop_ignored(ids)
+
 #define __BOOL       bool
 #define __LONGLONG   long long
 #define __ULONGLONG  unsigned long long
@@ -85,8 +94,8 @@
 
 #define __P(x) x
 #define __builtin_va_list va_list
-#define DFL(x) = x
-#define __DFL(x) = x
+#define DFL(x) =x
+#define __DFL(x) =x
 #define COMPILER_FLEXIBLE_ARRAY(T,n) T n[]
 #define __COMPILER_FLEXIBLE_ARRAY(T,n) T n[]
 #define ASMNAME(x)
@@ -861,30 +870,47 @@
 
 #define DeeSlab_ENUMERATE(func) func(0,4) func(1,5) func(2,6) func(3,8) func(4,10)
 #define DEE_PRIVATE_DEFINE_SLAB_FUNCTIONS(index,size) \
-	void *DeeSlab_Malloc##size(void); \
-	void *DeeSlab_Calloc##size(void); \
-	void *DeeSlab_TryMalloc##size(void); \
-	void *DeeSlab_TryCalloc##size(void); \
-	void *DeeDbgSlab_Malloc##size(char const *file, int line); \
-	void *DeeDbgSlab_Calloc##size(char const *file, int line); \
-	void *DeeDbgSlab_TryMalloc##size(char const *file, int line); \
-	void *DeeDbgSlab_TryCalloc##size(char const *file, int line); \
-	void *DeeGCObject_SlabMalloc##size(void); \
-	void *DeeGCObject_SlabCalloc##size(void); \
-	void *DeeGCObject_SlabTryMalloc##size(void); \
-	void *DeeGCObject_SlabTryCalloc##size(void); \
-	void DeeSlab_Free##size(void *restrict ptr); \
-	void DeeDbgSlab_Free##size(void *restrict ptr, char const *file, int line); \
-	void DeeGCObject_SlabFree##size(void *restrict ptr);
+	void*DeeSlab_Malloc##size(void); \
+	void*DeeSlab_Calloc##size(void); \
+	void*DeeSlab_TryMalloc##size(void); \
+	void*DeeSlab_TryCalloc##size(void); \
+	void*DeeDbgSlab_Malloc##size(char const*file,int line); \
+	void*DeeDbgSlab_Calloc##size(char const*file,int line); \
+	void*DeeDbgSlab_TryMalloc##size(char const*file,int line); \
+	void*DeeDbgSlab_TryCalloc##size(char const*file,int line); \
+	void*DeeGCObject_SlabMalloc##size(void); \
+	void*DeeGCObject_SlabCalloc##size(void); \
+	void*DeeGCObject_SlabTryMalloc##size(void); \
+	void*DeeGCObject_SlabTryCalloc##size(void); \
+	void DeeSlab_Free##size(void*restrict ptr); \
+	void DeeDbgSlab_Free##size(void*restrict ptr, char const*file,int line); \
+	void DeeGCObject_SlabFree##size(void*restrict ptr);
 
-#define OBJECT_HEAD               Dee_refcnt_t ob_refcnt; DeeTypeObject *ob_type;
-#define Dee_OBJECT_HEAD           Dee_refcnt_t ob_refcnt; DeeTypeObject *ob_type;
-#define OBJECT_HEAD_EX(Ttype)     Dee_refcnt_t ob_refcnt; Ttype *ob_type;
-#define Dee_OBJECT_HEAD_EX(Ttype) Dee_refcnt_t ob_refcnt; Ttype *ob_type;
-#define ERROR_OBJECT_HEAD         Dee_refcnt_t ob_refcnt; DeeTypeObject *ob_type; struct Dee_string_object *e_message; DeeObject *e_inner;
-#define Dee_ERROR_OBJECT_HEAD     Dee_refcnt_t ob_refcnt; DeeTypeObject *ob_type; struct Dee_string_object *e_message; DeeObject *e_inner;
-#define FILE_OBJECT_HEAD          Dee_refcnt_t ob_refcnt; DeeFileTypeObject *ob_type;
-#define Dee_FILE_OBJECT_HEAD      Dee_refcnt_t ob_refcnt; DeeFileTypeObject *ob_type;
+#define DREF
+#define DWEAK
+#define FCALL
+#define DCALL
+#define DPRINTER_CC
+#define DFUNDEF
+#define DDATDEF extern
+#define ASSEMBLY_NAME(x,s)  x
+#define Dee_DOC(x)          x
+#define Dee_DOC_DEF(name,x) char const name[]=x
+#define Dee_DOC_REF(name)   extern char const name[]
+#define Dee_DOC_GET(name)   name
+#define DOC(x)              x
+#define DOC_DEF(name,x)     char const name[]=x
+#define DOC_REF(name)       extern char const name[]
+#define DOC_GET(name)       name
+
+#define OBJECT_HEAD               Dee_refcnt_t ob_refcnt;DeeTypeObject*ob_type;
+#define Dee_OBJECT_HEAD           Dee_refcnt_t ob_refcnt;DeeTypeObject*ob_type;
+#define OBJECT_HEAD_EX(Ttype)     Dee_refcnt_t ob_refcnt;Ttype*ob_type;
+#define Dee_OBJECT_HEAD_EX(Ttype) Dee_refcnt_t ob_refcnt;Ttype*ob_type;
+#define ERROR_OBJECT_HEAD         Dee_refcnt_t ob_refcnt;DeeTypeObject*ob_type;struct string_object*e_message;DeeObject*e_inner;
+#define Dee_ERROR_OBJECT_HEAD     Dee_refcnt_t ob_refcnt;DeeTypeObject*ob_type;struct string_object*e_message;DeeObject*e_inner;
+#define FILE_OBJECT_HEAD          Dee_refcnt_t ob_refcnt;DeeFileTypeObject*ob_type;
+#define Dee_FILE_OBJECT_HEAD      Dee_refcnt_t ob_refcnt;DeeFileTypeObject*ob_type;
 
 #define DEE_PRIVATE_REFCHANGE_PRIVATE_DATA
 #define WEAKREF_SUPPORT           struct weakref_list ob_weakrefs;
@@ -902,38 +928,38 @@
 #define SWITCH_SIZEOF_WIDTH(...) for(;;)
 #define DeeString_Foreach(...)
 
-#define DEFINE_KWDS(name, ...)                            DeeKwdsObject name = {}
-#define Dee_DEFINE_KWDS(name, ...)                        DeeKwdsObject name = {}
-#define DEFINE_KWLIST                                     struct keyword name[] = __VA_ARGS__
-#define Dee_DEFINE_KWLIST(name, ...)                      struct keyword name[] = __VA_ARGS__
-#define DEFINE_BYTES(name, ...)                           DeeBytesObject name = {}
-#define Dee_DEFINE_BYTES(name, ...)                       DeeBytesObject name = {}
-#define DEFINE_BYTES_EX(name, ...)                        DeeBytesObject name = {}
-#define Dee_DEFINE_BYTES_EX(name, ...)                    DeeBytesObject name = {}
-#define DEFINE_CODE(name, ...)                            DeeCodeObject name = {}
-#define Dee_DEFINE_CODE(name, ...)                        DeeCodeObject name = {}
-#define DEFINE_FUNCTION(name, ...)                        DeeFunctionObject name = {}
-#define Dee_DEFINE_FUNCTION(name, ...)                    DeeFunctionObject name = {}
-#define DEFINE_FUNCTION_NOREFS(name, ...)                 DeeFunctionObject name = {}
-#define Dee_DEFINE_FUNCTION_NOREFS(name, ...)             DeeFunctionObject name = {}
-#define DEFINE_OBJMETHOD(name, func, self)                DeeObjMethodObject name = {}
-#define Dee_DEFINE_OBJMETHOD(name, func, self)            DeeObjMethodObject name = {}
-#define DEFINE_KWOBJMETHOD(name, func, self)              DeeKwObjMethodObject name = {}
-#define Dee_DEFINE_KWOBJMETHOD(name, func, self)          DeeKwObjMethodObject name = {}
-#define DEFINE_CLSMETHOD(name, func, type)                DeeClsMethodObject name = {}
-#define Dee_DEFINE_CLSMETHOD(name, func, type)            DeeClsMethodObject name = {}
-#define DEFINE_KWCLSMETHOD(name, func, type)              DeeKwClsMethodObject name = {}
-#define Dee_DEFINE_KWCLSMETHOD(name, func, type)          DeeKwClsMethodObject name = {}
-#define DEFINE_CLSPROPERTY(name, type, get, del, set)     DeeClsPropertyObject name = {}
-#define Dee_DEFINE_CLSPROPERTY(name, type, get, del, set) DeeClsPropertyObject name = {}
-#define DEFINE_CMETHOD(name, func)                        DeeCMethodObject name = {}
-#define Dee_DEFINE_CMETHOD(name, func)                    DeeCMethodObject name = {}
-#define DEFINE_KWCMETHOD(name, func)                      DeeKwCMethodObject name = {}
-#define Dee_DEFINE_KWCMETHOD(name, func)                  DeeKwCMethodObject name = {}
-#define DEFINE_STRING_EX(n,a,b,c)                         DeeStringObject n = {}
-#define Dee_DEFINE_STRING_EX(n,a,b,c)                     DeeStringObject n = {}
-#define DEFINE_STRING(n,a)                                DeeStringObject n = {}
-#define Dee_DEFINE_STRING(n,a)                            DeeStringObject n = {}
+#define DEFINE_KWDS(name, ...)                            DeeKwdsObject name={}
+#define Dee_DEFINE_KWDS(name, ...)                        DeeKwdsObject name={}
+#define DEFINE_KWLIST                                     struct keyword name[]=__VA_ARGS__
+#define Dee_DEFINE_KWLIST(name, ...)                      struct keyword name[]=__VA_ARGS__
+#define DEFINE_BYTES(name, ...)                           DeeBytesObject name={}
+#define Dee_DEFINE_BYTES(name, ...)                       DeeBytesObject name={}
+#define DEFINE_BYTES_EX(name, ...)                        DeeBytesObject name={}
+#define Dee_DEFINE_BYTES_EX(name, ...)                    DeeBytesObject name={}
+#define DEFINE_CODE(name, ...)                            DeeCodeObject name={}
+#define Dee_DEFINE_CODE(name, ...)                        DeeCodeObject name={}
+#define DEFINE_FUNCTION(name, ...)                        DeeFunctionObject name={}
+#define Dee_DEFINE_FUNCTION(name, ...)                    DeeFunctionObject name={}
+#define DEFINE_FUNCTION_NOREFS(name, ...)                 DeeFunctionObject name={}
+#define Dee_DEFINE_FUNCTION_NOREFS(name, ...)             DeeFunctionObject name={}
+#define DEFINE_OBJMETHOD(name, func, self)                DeeObjMethodObject name={}
+#define Dee_DEFINE_OBJMETHOD(name, func, self)            DeeObjMethodObject name={}
+#define DEFINE_KWOBJMETHOD(name, func, self)              DeeKwObjMethodObject name={}
+#define Dee_DEFINE_KWOBJMETHOD(name, func, self)          DeeKwObjMethodObject name={}
+#define DEFINE_CLSMETHOD(name, func, type)                DeeClsMethodObject name={}
+#define Dee_DEFINE_CLSMETHOD(name, func, type)            DeeClsMethodObject name={}
+#define DEFINE_KWCLSMETHOD(name, func, type)              DeeKwClsMethodObject name={}
+#define Dee_DEFINE_KWCLSMETHOD(name, func, type)          DeeKwClsMethodObject name={}
+#define DEFINE_CLSPROPERTY(name, type, get, del, set)     DeeClsPropertyObject name={}
+#define Dee_DEFINE_CLSPROPERTY(name, type, get, del, set) DeeClsPropertyObject name={}
+#define DEFINE_CMETHOD(name, func)                        DeeCMethodObject name={}
+#define Dee_DEFINE_CMETHOD(name, func)                    DeeCMethodObject name={}
+#define DEFINE_KWCMETHOD(name, func)                      DeeKwCMethodObject name={}
+#define Dee_DEFINE_KWCMETHOD(name, func)                  DeeKwCMethodObject name={}
+#define DEFINE_STRING_EX(n,a,b,c)                         DeeStringObject n={}
+#define Dee_DEFINE_STRING_EX(n,a,b,c)                     DeeStringObject n={}
+#define DEFINE_STRING(n,a)                                DeeStringObject n={}
+#define Dee_DEFINE_STRING(n,a)                            DeeStringObject n={}
 
 #define Dee_appexit_object                 appexit_object
 #define Dee_ascii_printer                  ascii_printer
@@ -1019,6 +1045,7 @@
 #define Dee_roset_item                     roset_item
 #define Dee_roset_object                   roset_object
 #define Dee_set_inversion_object           set_inversion_object
+#define Dee_string_object                  string_object
 #define Dee_string_utf                     string_utf
 #define Dee_super_object                   super_object
 #define Dee_system_error_object            system_error_object
@@ -1061,16 +1088,15 @@
 
 
 // Misc. local macros
-#define DEFINE_STRING_TRAIT(name,function,test_ch) DeeObject *string_##name(String *self, size_t argc, DeeObject *const *argv);
-#define DEFINE_ANY_STRING_TRAIT(name,function) DeeObject *string_##name(String *self, size_t argc, DeeObject *const *argv, DeeObject *kw);
-#define DEFINE_BYTES_TRAIT(name,function,test_ch) DeeObject *bytes_##name(Bytes *self, size_t argc, DeeObject *const *argv);
-#define DEFINE_ANY_BYTES_TRAIT(name,function) DeeObject *bytes_##name(Bytes *self, size_t argc, DeeObject *const *argv, DeeObject *kw);
-#define DEFINE_OPERATOR(return,name,args) return DeeObject_##name args {}
-#define DEFINE_INTERNAL_OPERATOR(return,name,args) return DeeObject_##name args {}
-#define DEFINE_MATH_INPLACE_INT_OPERATOR(DeeObject_InplaceXXX,reg,DeeInt_NewXXX,intX_t,operator_name) \
-	int DeeObject_InplaceXXX(DeeObject **__restrict p_self, intX_t val) {}
-#define DEFINE_TYPE_INHERIT_FUNCTION(name,opname,field) bool name(DeeTypeObject *self) {}
-#define DEF_STRING(n,a,b,c) DeeStringObject n = {};
+#define DEFINE_STRING_TRAIT(name,function,test_ch) DeeObject*string_##name(String*self,size_t argc,DeeObject*const*argv);
+#define DEFINE_ANY_STRING_TRAIT(name,function) DeeObject*string_##name(String*self,size_t argc,DeeObject*const*argv,DeeObject*kw);
+#define DEFINE_BYTES_TRAIT(name,function,test_ch) DeeObject*bytes_##name(Bytes*self,size_t argc,DeeObject*const*argv);
+#define DEFINE_ANY_BYTES_TRAIT(name,function) DeeObject*bytes_##name(Bytes*self,size_t argc,DeeObject*const*argv,DeeObject*kw);
+#define DEFINE_OPERATOR(return,name,args) return DeeObject_T##name args{} return DeeObject_##name args
+#define DEFINE_INTERNAL_OPERATOR(return,name,args) return DeeObject_T##name args{} return DeeObject_##name args
+#define DEFINE_MATH_INPLACE_INT_OPERATOR(DeeObject_InplaceXXX,reg,DeeInt_NewXXX,intX_t,operator_name) int DeeObject_InplaceXXX(DeeObject**__restrict p_self,intX_t val){}
+#define DEFINE_TYPE_INHERIT_FUNCTION(name,opname,field) bool name(DeeTypeObject*self){}
+#define DEF_STRING(n,a,b,c) DeeStringObject n={};
 #define RESTRICT_IF_NOTYPE
 #define ACTION(...)
 #define CONSTEXPR_FRAME_BEGIN(...) if(0)

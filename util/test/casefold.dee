@@ -24,10 +24,13 @@
  *
  * Make sure that this is working properly.
  * Btw: `Straße' is german for `street' :) */
-assert "Straße". casecompare("Straße")   == 0;
-assert "Strasse".casecompare("Strasse")  == 0;
-assert "Straße". casecompare("Strasse")  == 0;
-assert "Strasse".casecompare("Straße")   == 0;
-assert "Straße". casecompare("Strassse") != 0;
-assert "Straßße".casecompare("Strasse")  != 0;
-assert "Straßße".casecompare("Strassse") != 0;
+assert "Straße". casecompare("Straße")    == 0;
+assert "Strasse".casecompare("Strasse")   == 0;
+assert "Straße". casecompare("Strasse")   == 0;
+assert "Strasse".casecompare("Straße")    == 0;
+assert "Straße". casecompare("Strassse")  != 0;
+assert "Straßße".casecompare("Strasse")   != 0;
+assert "Straßße".casecompare("Strassse")  != 0;
+assert "Straßße".casecompare("Strasssse") == 0;
+assert "Straßße".casecompare("Strassße")  == 0;
+assert "Straßße".casecompare("Straßsse")  == 0;
