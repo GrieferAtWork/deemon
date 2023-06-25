@@ -4268,19 +4268,6 @@ type_setattr(DeeObject *self, DeeObject *name, DeeObject *value) {
 	return DeeType_SetAttr((DeeTypeObject *)self, name, value);
 }
 
-INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-type_callattr(DeeObject *self, DeeObject *name,
-              size_t argc, DeeObject *const *argv) {
-	return DeeType_CallAttr((DeeTypeObject *)self, name, argc, argv);
-}
-
-INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-type_callattr_kw(DeeObject *self, DeeObject *name,
-                 size_t argc, DeeObject *const *argv,
-                 DeeObject *kw) {
-	return DeeType_CallAttrKw((DeeTypeObject *)self, name, argc, argv, kw);
-}
-
 INTERN WUNUSED NONNULL((1, 2, 3)) dssize_t DCALL
 type_enumattr(DeeTypeObject *UNUSED(tp_self),
               DeeObject *self, denum_t proc, void *arg) {

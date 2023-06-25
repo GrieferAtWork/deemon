@@ -908,8 +908,8 @@ DeeString_New(/*unsigned*/ char const *__restrict str);
  * WARNING: In order to prevent race conditions, only use this function
  *          with statically allocated strings, as a heap implementation
  *          that doesn't fill free memory and uses a block-size field in
- *          an unfortunate location could falsely trigger a match. */
-#ifdef __ARCH_PAGESIZE_MIN
+ *          an unfortunate location could wrongfully trigger a match. */
+#if defined(__ARCH_PAGESIZE_MIN) && !defined(__OPTIMIZE_SIZE__)
 LOCAL WUNUSED NONNULL((1)) DeeObject *DCALL
 DeeString_IsObject(/*unsigned*/ char const *__restrict str) {
 	DeeStringObject *base;
@@ -961,8 +961,8 @@ DeeString_NewAutoWithHash(/*unsigned*/ char const *__restrict str, Dee_hash_t ha
 	result = DeeString_IsObject(str);
 	if (result) {
 		Dee_hash_t hashof_str = ((DeeStringObject const *)result)->s_hash;
-		if (hashof_str != hash) {
-			if (hashof_str != DEE_STRING_HASH_UNSET)
+		if unlikely(hashof_str != hash) {
+			if unlikely(hashof_str != DEE_STRING_HASH_UNSET)
 				goto return_new_string;
 			((DeeStringObject *)result)->s_hash = hash;
 		}
@@ -974,12 +974,12 @@ return_new_string:
 	return result;
 }
 
-#else /* __ARCH_PAGESIZE_MIN */
-#define DeeString_IsObject_IS_NOOP 1
+#else /* __ARCH_PAGESIZE_MIN && !__OPTIMIZE_SIZE__ */
+#define DeeString_IsObject_IS_NOOP
 #define DeeString_IsObject(str)              ((DeeObject *)NULL)
 #define DeeString_NewAuto(str)               DeeString_New(str)
 #define DeeString_NewAutoWithHash(str, hash) DeeString_NewWithHash(str, hash)
-#endif /* !__ARCH_PAGESIZE_MIN */
+#endif /* !__ARCH_PAGESIZE_MIN || __OPTIMIZE_SIZE__ */
 
 /* Construct a new string using printf-like (and deemon-enhanced) format-arguments. */
 DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DeeString_Newf(/*utf-8*/ char const *__restrict format, ...);

@@ -130,6 +130,7 @@ DeeModule_GetRoot(DeeObject *__restrict self,
 	DREF DeeFunctionObject *result;
 	DeeModuleObject *me = (DeeModuleObject *)self;
 	ASSERT_OBJECT_TYPE(self, &DeeModule_Type);
+
 	/* Check if this module has been loaded. */
 	if unlikely(DeeModule_InitImports(self))
 		goto err;
@@ -170,6 +171,7 @@ PUBLIC WUNUSED NONNULL((1)) struct module_symbol *DCALL
 DeeModule_GetSymbolID(DeeModuleObject *__restrict self, uint16_t gid) {
 	struct module_symbol *iter, *end;
 	struct module_symbol *result = NULL;
+
 	/* Check if the module has actually been loaded yet.
 	 * This needs to be done to prevent a race condition
 	 * when reading the bucket fields below, as they only
@@ -182,6 +184,7 @@ DeeModule_GetSymbolID(DeeModuleObject *__restrict self, uint16_t gid) {
 			continue; /* Skip empty entries. */
 		if (iter->ss_index == gid) {
 			result = iter;
+
 			/* If it's a symbol, we still stored it's name as
 			 * the result value, meaning we won't return NULL
 			 * but still keep on searching for another symbol
@@ -255,6 +258,7 @@ read_symbol:
 			err_unbound_global(self, symbol->ss_index);
 		return result;
 	}
+
 	/* External symbol, or property. */
 	if (symbol->ss_flags & MODSYM_FPROPERTY) {
 		DREF DeeObject *callback;
@@ -266,11 +270,13 @@ read_symbol:
 			err_module_cannot_read_property_string(self, MODULE_SYMBOL_GETNAMESTR(symbol));
 			return NULL;
 		}
+
 		/* Invoke the property callback. */
 		result = DeeObject_Call(callback, 0, NULL);
 		Dee_Decref(callback);
 		return result;
 	}
+
 	/* External symbol. */
 	ASSERT(symbol->ss_extern.ss_impid < self->mo_importc);
 	self = self->mo_importv[symbol->ss_extern.ss_impid];
@@ -291,6 +297,7 @@ read_symbol:
 		DeeModule_LockEndRead(self);
 		return result;
 	}
+
 	/* External symbol, or property. */
 	if (symbol->ss_flags & MODSYM_FPROPERTY) {
 		DREF DeeObject *callback, *callback_result;
@@ -300,6 +307,7 @@ read_symbol:
 		DeeModule_LockEndRead(self);
 		if unlikely(!callback)
 			return 0;
+
 		/* Invoke the property callback. */
 		callback_result = DeeObject_Call(callback, 0, NULL);
 		Dee_Decref(callback);
@@ -313,6 +321,7 @@ read_symbol:
 			return 0;
 		return -1;
 	}
+
 	/* External symbol. */
 	ASSERT(symbol->ss_extern.ss_impid < self->mo_importc);
 	self = self->mo_importv[symbol->ss_extern.ss_impid];
@@ -334,6 +343,7 @@ module_getattr_impl(DeeModuleObject *__restrict self,
 		if (!strcmp(MODULE_SYMBOL_GETNAMESTR(item), attr_name))
 			return DeeModule_GetAttrSymbol(self, item);
 	}
+
 	/* Fallback: Do a generic attribute lookup on the module. */
 	result = DeeObject_GenericGetAttrStringHash((DeeObject *)self, attr_name, hash);
 	if (result != ITER_DONE)
@@ -360,17 +370,12 @@ module_getattr_len_impl(DeeModuleObject *__restrict self,
 		if (bcmpc(MODULE_SYMBOL_GETNAMESTR(item), attr_name, attrlen, sizeof(char)) == 0)
 			return DeeModule_GetAttrSymbol(self, item);
 	}
+
 	/* Fallback: Do a generic attribute lookup on the module. */
-	result = DeeObject_GenericGetAttrStringLenHash((DeeObject *)self,
-	                                           attr_name,
-	                                           attrlen,
-	                                           hash);
+	result = DeeObject_GenericGetAttrStringLenHash((DeeObject *)self, attr_name, attrlen, hash);
 	if (result != ITER_DONE)
 		return result;
-	err_module_no_such_global_string_len(self,
-	                              attr_name,
-	                              attrlen,
-	                              ATTR_ACCESS_GET);
+	err_module_no_such_global_string_len(self, attr_name, attrlen, ATTR_ACCESS_GET);
 	return NULL;
 }
 
@@ -388,8 +393,9 @@ module_boundattr_impl(DeeModuleObject *__restrict self,
 		if (!strcmp(MODULE_SYMBOL_GETNAMESTR(item), attr_name))
 			return DeeModule_BoundAttrSymbol(self, item);
 	}
+
 	/* Fallback: Do a generic attribute lookup on the module. */
-	return DeeObject_GenericBoundAttrString((DeeObject *)self, attr_name, hash);
+	return DeeObject_GenericBoundAttrStringHash((DeeObject *)self, attr_name, hash);
 }
 
 LOCAL int DCALL
@@ -409,11 +415,9 @@ module_boundattr_len_impl(DeeModuleObject *__restrict self,
 		if (bcmpc(MODULE_SYMBOL_GETNAMESTR(item), attr_name, attrlen, sizeof(char)) == 0)
 			return DeeModule_BoundAttrSymbol(self, item);
 	}
+
 	/* Fallback: Do a generic attribute lookup on the module. */
-	return DeeObject_GenericBoundAttrStringLen((DeeObject *)self,
-	                                           attr_name,
-	                                           attrlen,
-	                                           hash);
+	return DeeObject_GenericBoundAttrStringLenHash((DeeObject *)self, attr_name, attrlen, hash);
 }
 
 LOCAL bool DCALL
@@ -431,7 +435,7 @@ module_hasattr_impl(DeeModuleObject *__restrict self,
 			return true;
 	}
 	/* Fallback: Do a generic attribute lookup on the module. */
-	return DeeObject_GenericHasAttrString((DeeObject *)self, attr_name, hash);
+	return DeeObject_GenericHasAttrStringHash((DeeObject *)self, attr_name, hash);
 }
 
 LOCAL bool DCALL
@@ -451,11 +455,9 @@ module_hasattr_len_impl(DeeModuleObject *__restrict self,
 		if (bcmpc(MODULE_SYMBOL_GETNAMESTR(item), attr_name, attrlen, sizeof(char)) == 0)
 			return true;
 	}
+
 	/* Fallback: Do a generic attribute lookup on the module. */
-	return DeeObject_GenericHasAttrStringLen((DeeObject *)self,
-	                                         attr_name,
-	                                         attrlen,
-	                                         hash);
+	return DeeObject_GenericHasAttrStringLenHash((DeeObject *)self, attr_name, attrlen, hash);
 }
 
 PUBLIC WUNUSED NONNULL((1, 2)) int DCALL
@@ -476,12 +478,14 @@ DeeModule_DelAttrSymbol(DeeModuleObject *__restrict self,
 			DeeModule_LockEndRead(self);
 			if unlikely(!callback)
 				return err_module_cannot_delete_property_string(self, MODULE_SYMBOL_GETNAMESTR(symbol));
+
 			/* Invoke the property callback. */
 			temp = DeeObject_Call(callback, 0, NULL);
 			Dee_Decref(callback);
 			Dee_XDecref(temp);
 			return temp ? 0 : -1;
 		}
+
 		/* External symbol. */
 		ASSERT(symbol->ss_extern.ss_impid < self->mo_importc);
 		self = self->mo_importv[symbol->ss_extern.ss_impid];
@@ -518,6 +522,7 @@ module_delattr_impl(DeeModuleObject *__restrict self,
 		if (!strcmp(MODULE_SYMBOL_GETNAMESTR(item), attr_name))
 			return DeeModule_DelAttrSymbol(self, item);
 	}
+
 	/* Fallback: Do a generic attribute lookup on the module. */
 	error = DeeObject_GenericDelAttrStringHash((DeeObject *)self, attr_name, hash);
 	if unlikely(error <= 0)
@@ -543,17 +548,12 @@ module_delattr_len_impl(DeeModuleObject *__restrict self,
 		if (bcmpc(MODULE_SYMBOL_GETNAMESTR(item), attr_name, attrlen, sizeof(char)) == 0)
 			return DeeModule_DelAttrSymbol(self, item);
 	}
+
 	/* Fallback: Do a generic attribute lookup on the module. */
-	error = DeeObject_GenericDelAttrStringLenHash((DeeObject *)self,
-	                                          attr_name,
-	                                          attrlen,
-	                                          hash);
+	error = DeeObject_GenericDelAttrStringLenHash((DeeObject *)self, attr_name, attrlen, hash);
 	if unlikely(error <= 0)
 		return error;
-	return err_module_no_such_global_string_len(self,
-	                                     attr_name,
-	                                     attrlen,
-	                                     ATTR_ACCESS_DEL);
+	return err_module_no_such_global_string_len(self, attr_name, attrlen, ATTR_ACCESS_DEL);
 }
 
 PUBLIC WUNUSED NONNULL((1, 2, 3)) int DCALL
@@ -605,7 +605,7 @@ err_is_readonly:
 	ASSERT(symbol->ss_index < self->mo_globalc);
 	Dee_Incref(value);
 	DeeModule_LockWrite(self);
-	temp                               = self->mo_globalv[symbol->ss_index];
+	temp = self->mo_globalv[symbol->ss_index];
 	self->mo_globalv[symbol->ss_index] = value;
 	DeeModule_LockEndWrite(self);
 	Dee_XDecref(temp);
@@ -628,6 +628,7 @@ module_setattr_impl(DeeModuleObject *__restrict self,
 		if (!strcmp(MODULE_SYMBOL_GETNAMESTR(item), attr_name))
 			return DeeModule_SetAttrSymbol(self, item, value);
 	}
+
 	/* Fallback: Do a generic attribute lookup on the module. */
 	error = DeeObject_GenericSetAttrStringHash((DeeObject *)self, attr_name, hash, value);
 	if unlikely(error <= 0)
@@ -654,18 +655,12 @@ module_setattr_len_impl(DeeModuleObject *__restrict self,
 		if (bcmpc(MODULE_SYMBOL_GETNAMESTR(item), attr_name, attrlen, sizeof(char)) == 0)
 			return DeeModule_SetAttrSymbol(self, item, value);
 	}
+
 	/* Fallback: Do a generic attribute lookup on the module. */
-	error = DeeObject_GenericSetAttrStringLenHash((DeeObject *)self,
-	                                          attr_name,
-	                                          attrlen,
-	                                          hash,
-	                                          value);
+	error = DeeObject_GenericSetAttrStringLenHash((DeeObject *)self, attr_name, attrlen, hash, value);
 	if unlikely(error <= 0)
 		return error;
-	return err_module_no_such_global_string_len(self,
-	                                     attr_name,
-	                                     attrlen,
-	                                     ATTR_ACCESS_SET);
+	return err_module_no_such_global_string_len(self, attr_name, attrlen, ATTR_ACCESS_SET);
 }
 
 
@@ -683,8 +678,8 @@ INTDEF NONNULL((1)) void DCALL interactivemodule_lockendwrite(DeeModuleObject *_
 
 
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-DeeModule_GetAttrString(DeeModuleObject *__restrict self,
-                        char const *__restrict attr_name, dhash_t hash) {
+DeeModule_GetAttrStringHash(DeeModuleObject *__restrict self,
+                            char const *__restrict attr_name, dhash_t hash) {
 	ASSERT_OBJECT_TYPE(self, &DeeModule_Type);
 	if (!(self->mo_flags & MODULE_FDIDLOAD)) {
 		if (DeeInteractiveModule_Check(self)) {
@@ -702,9 +697,9 @@ DeeModule_GetAttrString(DeeModuleObject *__restrict self,
 }
 
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-DeeModule_GetAttrStringLen(DeeModuleObject *__restrict self,
-                           char const *__restrict attr_name,
-                           size_t attrlen, dhash_t hash) {
+DeeModule_GetAttrStringLenHash(DeeModuleObject *__restrict self,
+                               char const *__restrict attr_name,
+                               size_t attrlen, dhash_t hash) {
 	ASSERT_OBJECT_TYPE(self, &DeeModule_Type);
 	if (!(self->mo_flags & MODULE_FDIDLOAD)) {
 		if (DeeInteractiveModule_Check(self)) {
@@ -715,18 +710,15 @@ DeeModule_GetAttrStringLen(DeeModuleObject *__restrict self,
 			interactivemodule_lockendread(self);
 			return result;
 		}
-		err_module_not_loaded_attr_string_len(self,
-		                               attr_name,
-		                               attrlen,
-		                               ATTR_ACCESS_GET);
+		err_module_not_loaded_attr_string_len(self, attr_name, attrlen, ATTR_ACCESS_GET);
 		return NULL;
 	}
 	return module_getattr_len_impl(self, attr_name, attrlen, hash);
 }
 
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
-DeeModule_BoundAttrString(DeeModuleObject *__restrict self,
-                          char const *__restrict attr_name, dhash_t hash) {
+DeeModule_BoundAttrStringHash(DeeModuleObject *__restrict self,
+                              char const *__restrict attr_name, dhash_t hash) {
 	ASSERT_OBJECT_TYPE(self, &DeeModule_Type);
 	if (!(self->mo_flags & MODULE_FDIDLOAD)) {
 		if (DeeInteractiveModule_Check(self)) {
@@ -743,9 +735,9 @@ DeeModule_BoundAttrString(DeeModuleObject *__restrict self,
 }
 
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
-DeeModule_BoundAttrStringLen(DeeModuleObject *__restrict self,
-                             char const *__restrict attr_name,
-                             size_t attrlen, dhash_t hash) {
+DeeModule_BoundAttrStringLenHash(DeeModuleObject *__restrict self,
+                                 char const *__restrict attr_name,
+                                 size_t attrlen, dhash_t hash) {
 	ASSERT_OBJECT_TYPE(self, &DeeModule_Type);
 	if (!(self->mo_flags & MODULE_FDIDLOAD)) {
 		if (DeeInteractiveModule_Check(self)) {
@@ -762,8 +754,8 @@ DeeModule_BoundAttrStringLen(DeeModuleObject *__restrict self,
 }
 
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
-DeeModule_HasAttrString(DeeModuleObject *__restrict self,
-                        char const *__restrict attr_name, dhash_t hash) {
+DeeModule_HasAttrStringHash(DeeModuleObject *__restrict self,
+                            char const *__restrict attr_name, dhash_t hash) {
 	ASSERT_OBJECT_TYPE(self, &DeeModule_Type);
 	if (!(self->mo_flags & MODULE_FDIDLOAD)) {
 		if (DeeInteractiveModule_Check(self)) {
@@ -780,9 +772,9 @@ DeeModule_HasAttrString(DeeModuleObject *__restrict self,
 }
 
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
-DeeModule_HasAttrStringLen(DeeModuleObject *__restrict self,
-                           char const *__restrict attr_name,
-                           size_t attrlen, dhash_t hash) {
+DeeModule_HasAttrStringLenHash(DeeModuleObject *__restrict self,
+                               char const *__restrict attr_name,
+                               size_t attrlen, dhash_t hash) {
 	ASSERT_OBJECT_TYPE(self, &DeeModule_Type);
 	if (!(self->mo_flags & MODULE_FDIDLOAD)) {
 		if (DeeInteractiveModule_Check(self)) {
@@ -799,8 +791,8 @@ DeeModule_HasAttrStringLen(DeeModuleObject *__restrict self,
 }
 
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
-DeeModule_DelAttrString(DeeModuleObject *__restrict self,
-                        char const *__restrict attr_name, dhash_t hash) {
+DeeModule_DelAttrStringHash(DeeModuleObject *__restrict self,
+                            char const *__restrict attr_name, dhash_t hash) {
 	ASSERT_OBJECT_TYPE(self, &DeeModule_Type);
 	if (!(self->mo_flags & MODULE_FDIDLOAD)) {
 		if (DeeInteractiveModule_Check(self)) {
@@ -812,17 +804,15 @@ DeeModule_DelAttrString(DeeModuleObject *__restrict self,
 			}
 			return result;
 		}
-		return err_module_not_loaded_attr_string(self,
-		                                  attr_name,
-		                                  ATTR_ACCESS_DEL);
+		return err_module_not_loaded_attr_string(self, attr_name, ATTR_ACCESS_DEL);
 	}
 	return module_delattr_impl(self, attr_name, hash);
 }
 
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
-DeeModule_DelAttrStringLen(DeeModuleObject *__restrict self,
-                           char const *__restrict attr_name,
-                           size_t attrlen, dhash_t hash) {
+DeeModule_DelAttrStringLenHash(DeeModuleObject *__restrict self,
+                               char const *__restrict attr_name,
+                               size_t attrlen, dhash_t hash) {
 	ASSERT_OBJECT_TYPE(self, &DeeModule_Type);
 	if (!(self->mo_flags & MODULE_FDIDLOAD)) {
 		if (DeeInteractiveModule_Check(self)) {
@@ -834,18 +824,15 @@ DeeModule_DelAttrStringLen(DeeModuleObject *__restrict self,
 			}
 			return result;
 		}
-		return err_module_not_loaded_attr_string_len(self,
-		                                      attr_name,
-		                                      attrlen,
-		                                      ATTR_ACCESS_DEL);
+		return err_module_not_loaded_attr_string_len(self, attr_name, attrlen, ATTR_ACCESS_DEL);
 	}
 	return module_delattr_len_impl(self, attr_name, attrlen, hash);
 }
 
 INTERN WUNUSED NONNULL((1, 2, 4)) int DCALL
-DeeModule_SetAttrString(DeeModuleObject *self,
-                        char const *__restrict attr_name, dhash_t hash,
-                        DeeObject *value) {
+DeeModule_SetAttrStringHash(DeeModuleObject *self,
+                            char const *__restrict attr_name, dhash_t hash,
+                            DeeObject *value) {
 	ASSERT_OBJECT_TYPE(self, &DeeModule_Type);
 	if (!(self->mo_flags & MODULE_FDIDLOAD)) {
 		if (DeeInteractiveModule_Check(self)) {
@@ -857,18 +844,16 @@ DeeModule_SetAttrString(DeeModuleObject *self,
 			}
 			return result;
 		}
-		return err_module_not_loaded_attr_string(self,
-		                                  attr_name,
-		                                  ATTR_ACCESS_SET);
+		return err_module_not_loaded_attr_string(self, attr_name, ATTR_ACCESS_SET);
 	}
 	return module_setattr_impl(self, attr_name, hash, value);
 }
 
 INTERN WUNUSED NONNULL((1, 2, 5)) int DCALL
-DeeModule_SetAttrStringLen(DeeModuleObject *self,
-                           char const *__restrict attr_name,
-                           size_t attrlen, dhash_t hash,
-                           DeeObject *value) {
+DeeModule_SetAttrStringLenHash(DeeModuleObject *self,
+                               char const *__restrict attr_name,
+                               size_t attrlen, dhash_t hash,
+                               DeeObject *value) {
 	ASSERT_OBJECT_TYPE(self, &DeeModule_Type);
 	if (!(self->mo_flags & MODULE_FDIDLOAD)) {
 		if (DeeInteractiveModule_Check(self)) {
@@ -880,10 +865,7 @@ DeeModule_SetAttrStringLen(DeeModuleObject *self,
 			}
 			return result;
 		}
-		return err_module_not_loaded_attr_string_len(self,
-		                                      attr_name,
-		                                      attrlen,
-		                                      ATTR_ACCESS_SET);
+		return err_module_not_loaded_attr_string_len(self, attr_name, attrlen, ATTR_ACCESS_SET);
 	}
 	return module_setattr_len_impl(self, attr_name, attrlen, hash, value);
 }
@@ -897,8 +879,21 @@ err_module_not_loaded(DeeModuleObject *__restrict self) {
 }
 
 
-PUBLIC WUNUSED NONNULL((1)) int DCALL
-DeeModule_RunInit(DeeObject *__restrict self) {
+/* Try to run the initializer of a module, should it not have been run yet.
+ * This function will atomically ensure that the initializer
+ * is only run once, and only so in a single thread.
+ * Additionally, this function will also call itself recursively on
+ * all other modules imported by the given one before actually invoking
+ * the module's own initializer.
+ *    This is done by calling `DeeModule_InitImports(self)'
+ * NOTE: When `DeeModule_GetRoot()' is called with `set_initialized' set to `true', the
+ *       module was-initialized flag is set the same way it would be by this function.
+ * @throws: Error.RuntimeError: The module has not been loaded yet. (aka. no source code was assigned)
+ * @return: -1: An error occurred during initialization.
+ * @return:  0: Successfully initialized the module/the module was already initialized.
+ * @return:  1: You are already in the process of initializing this module (not an error). */
+PUBLIC WUNUSED NONNULL((1)) int
+(DCALL DeeModule_RunInit)(DeeObject *__restrict self) {
 	uint16_t flags;
 	DeeThreadObject *caller;
 	DeeModuleObject *me = (DeeModuleObject *)self;
@@ -1027,6 +1022,7 @@ begin_init:
 		init_function = DeeModule_GetRoot(self, false);
 		if unlikely(!init_function)
 			goto err;
+
 		/* Call the module's main function with globally registered argv. */
 		argv        = Dee_GetArgv();
 		init_result = DeeObject_Call(init_function,
@@ -1048,7 +1044,12 @@ err:
 }
 
 
-PUBLIC int (DCALL DeeModule_InitImports)(DeeObject *__restrict self) {
+/* Initialize all modules imported by the given one.
+ * @throws: Error.RuntimeError: The module has not been loaded yet. (aka. no source code was assigned)
+ * @return: -1: An error occurred during initialization.
+ * @return:  0: All modules imported by the given one are now initialized. */
+PUBLIC WUNUSED NONNULL((1)) int
+(DCALL DeeModule_InitImports)(DeeObject *__restrict self) {
 	DeeModuleObject *me = (DeeModuleObject *)self;
 	size_t i;
 	uint16_t flags;
@@ -1087,6 +1088,12 @@ err:
 }
 
 
+/* Return the name of a global variable in the given module.
+ * @return: NULL: The given `gid' is not recognized, or the module hasn't finished/started loading yet.
+ * @return: * :   The name of the global associated with `gid'.
+ *                Note that in the case of aliases existing for `gid', this function prefers not to
+ *                return the name of an alias, but that of the original symbol itself, so long as that
+ *                symbol actually exist, which if it doesn't, it will return the name of a random alias. */
 PUBLIC WUNUSED NONNULL((1)) char const *DCALL
 DeeModule_GlobalName(DeeObject *__restrict self, uint16_t gid) {
 	struct module_symbol *sym;
@@ -1110,26 +1117,20 @@ module_printrepr(DeeModuleObject *__restrict self,
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 module_getattr(DeeModuleObject *__restrict self,
                /*String*/ DeeObject *__restrict name) {
-	return DeeModule_GetAttrString(self,
-	                               DeeString_STR(name),
-	                               DeeString_Hash(name));
+	return DeeModule_GetAttrStringHash(self, DeeString_STR(name), DeeString_Hash(name));
 }
 
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 module_delattr(DeeModuleObject *__restrict self,
                /*String*/ DeeObject *__restrict name) {
-	return DeeModule_DelAttrString(self,
-	                               DeeString_STR(name),
-	                               DeeString_Hash(name));
+	return DeeModule_DelAttrStringHash(self, DeeString_STR(name), DeeString_Hash(name));
 }
 
 INTERN WUNUSED NONNULL((1, 2, 3)) int DCALL
 module_setattr(DeeModuleObject *__restrict self,
                /*String*/ DeeObject *__restrict name,
                DeeObject *__restrict value) {
-	return DeeModule_SetAttrString(self,
-	                               DeeString_STR(name),
-	                               DeeString_Hash(name), value);
+	return DeeModule_SetAttrStringHash(self, DeeString_STR(name), DeeString_Hash(name), value);
 }
 
 INTERN WUNUSED NONNULL((1, 2, 3)) dssize_t DCALL

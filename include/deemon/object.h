@@ -2641,11 +2641,11 @@ DFUNDEF WUNUSED NONNULL((1, 2)) bool DCALL DeeObject_TGenericHasAttrStringLenHas
 DFUNDEF WUNUSED NONNULL((1, 2, 3)) int DCALL DeeObject_TGenericBoundAttrStringHash(DeeTypeObject *tp_self, DeeObject *self, char const *__restrict attr, Dee_hash_t hash); /* -2 / -3: not found; -1: error; 0: unbound; 1: bound; */
 DFUNDEF WUNUSED NONNULL((1, 2, 3)) int DCALL DeeObject_TGenericBoundAttrStringLenHash(DeeTypeObject *tp_self, DeeObject *self, char const *__restrict attr, size_t attrlen, Dee_hash_t hash); /* -2 / -3: not found; -1: error; 0: unbound; 1: bound; */
 DFUNDEF WUNUSED NONNULL((1, 3, 4)) int DCALL DeeObject_TGenericFindAttr(DeeTypeObject *tp_self, DeeObject *instance, struct attribute_info *__restrict result, struct attribute_lookup_rules const *__restrict rules);
-#define DeeObject_GenericHasAttrString(self, attr, hash)               DeeObject_TGenericHasAttrStringHash(Dee_TYPE(self), attr, hash)
-#define DeeObject_GenericHasAttrStringLen(self, attr, attrlen, hash)   DeeObject_TGenericHasAttrStringLenHash(Dee_TYPE(self), attr, attrlen, hash)
-#define DeeObject_GenericBoundAttrString(self, attr, hash)             DeeObject_TGenericBoundAttrStringHash(Dee_TYPE(self), self, attr, hash)
-#define DeeObject_GenericBoundAttrStringLen(self, attr, attrlen, hash) DeeObject_TGenericBoundAttrStringLenHash(Dee_TYPE(self), self, attr, attrlen, hash)
-#define DeeObject_GenericFindAttr(instance, result, rules)             DeeObject_TGenericFindAttr(Dee_TYPE(instance), instance, result, rules)
+#define DeeObject_GenericHasAttrStringHash(self, attr, hash)               DeeObject_TGenericHasAttrStringHash(Dee_TYPE(self), attr, hash)
+#define DeeObject_GenericHasAttrStringLenHash(self, attr, attrlen, hash)   DeeObject_TGenericHasAttrStringLenHash(Dee_TYPE(self), attr, attrlen, hash)
+#define DeeObject_GenericBoundAttrStringHash(self, attr, hash)             DeeObject_TGenericBoundAttrStringHash(Dee_TYPE(self), self, attr, hash)
+#define DeeObject_GenericBoundAttrStringLenHash(self, attr, attrlen, hash) DeeObject_TGenericBoundAttrStringLenHash(Dee_TYPE(self), self, attr, attrlen, hash)
+#define DeeObject_GenericFindAttr(instance, result, rules)                 DeeObject_TGenericFindAttr(Dee_TYPE(instance), instance, result, rules)
 
 #ifdef CONFIG_BUILDING_DEEMON
 INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL

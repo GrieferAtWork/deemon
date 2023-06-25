@@ -5060,7 +5060,6 @@ done:
 }
 
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL type_getattr(DeeObject *self, DeeObject *name);
-INTDEF WUNUSED NONNULL((1, 2, 4)) DREF DeeObject *DCALL type_callattr(DeeObject *self, DeeObject *name, size_t argc, DeeObject *const *argv);
 #ifndef DEFINE_TYPED_OPERATORS
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL super_getattr(DeeObject *self, DeeObject *name);
 INTDEF WUNUSED NONNULL((1, 2, 3, 5)) DREF DeeObject *DCALL
@@ -5118,7 +5117,7 @@ DEFINE_OPERATOR(DREF DeeObject *, CallAttr,
 do_iter_attr:
 			getattr = iter->tp_attr->tp_getattr;
 			if (getattr == &type_getattr)
-				return type_callattr(self, attr_name, argc, argv);
+				return DeeType_CallAttr((DeeTypeObject *)self, attr_name, argc, argv);
 #ifndef DEFINE_TYPED_OPERATORS
 			if (getattr == &super_getattr)
 				return DeeObject_TCallAttr(DeeSuper_TYPE(self), DeeSuper_SELF(self), attr_name, argc, argv);

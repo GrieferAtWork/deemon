@@ -585,7 +585,7 @@ INTDEF WUNUSED NONNULL((1, 2, 3, 5)) DREF DeeObject *(DCALL DeeType_VCallClassMe
 //INTDEF WUNUSED NONNULL((1, 2, 3, 5)) DREF DeeObject *(DCALL DeeType_VCallInstanceMethodAttrStringHashf)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, dhash_t hash, char const *__restrict format, va_list args);
 //INTDEF WUNUSED NONNULL((1, 2, 3, 6)) DREF DeeObject *(DCALL DeeType_VCallInstanceMethodAttrStringHashf)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, size_t attrlen, dhash_t hash, char const *__restrict format, va_list args);
 //INTDEF WUNUSED NONNULL((1, 2, 3, 5)) DREF DeeObject *(DCALL DeeType_VCallIInstanceMethodAttrStringHashf)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, dhash_t hash, char const *__restrict format, va_list args);
-//INTDEF WUNUSED NONNULL((1, 2, 3, 6)) DREF DeeObject *(DCALL DeeType_VCallIInstanceMethodAttrStringHashf)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, size_t attrlen, dhash_t hash, char const *__restrict format, va_list args);
+//INTDEF WUNUSED NONNULL((1, 2, 3, 6)) DREF DeeObject *(DCALL DeeType_VCallIInstanceMethodAttrStringLenHashf)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, size_t attrlen, dhash_t hash, char const *__restrict format, va_list args);
 #else /* __INTELLISENSE__ */
 INTDEF WUNUSED NONNULL((1, 2, 3, 4, 5)) DREF DeeObject *DCALL /* CALL_METHOD */
 type_method_callattr_string_hash(struct Dee_membercache *cache, DeeTypeObject *decl,
@@ -659,6 +659,69 @@ type_method_vcallattr_string_hashf(struct Dee_membercache *cache, DeeTypeObject 
 //INTDEF WUNUSED NONNULL((1, 2, 3, 5)) DREF DeeObject *(DCALL DeeType_VCallInstanceMethodAttrStringHashf)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, dhash_t hash, char const *__restrict format, va_list args);
 //INTDEF WUNUSED NONNULL((1, 2, 3, 5)) DREF DeeObject *(DCALL DeeType_VCallIInstanceMethodAttrStringHashf)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, dhash_t hash, char const *__restrict format, va_list args);
 #endif /* !__INTELLISENSE__ */
+#define DeeType_CallMethodAttr(tp_invoker, tp_self, self, attr, argc, argv)                            DeeType_CallMethodAttrStringHash(tp_invoker, tp_self, self, DeeString_STR(attr), DeeString_Hash(attr), argc, argv)
+#define DeeType_CallMethodAttrString(tp_invoker, tp_self, self, attr, argc, argv)                      DeeType_CallMethodAttrStringHash(tp_invoker, tp_self, self, attr, Dee_HashStr(attr), argc, argv)
+#define DeeType_CallMethodAttrStringLen(tp_invoker, tp_self, self, attr, attrlen, argc, argv)          DeeType_CallMethodAttrStringLenHash(tp_invoker, tp_self, self, attr, attrlen, Dee_HashPtr(attr, attrlen), argc, argv)
+#define DeeType_CallMethodAttrKw(tp_invoker, tp_self, self, attr, argc, argv, kw)                      DeeType_CallMethodAttrStringHashKw(tp_invoker, tp_self, self, DeeString_STR(attr), DeeString_Hash(attr), argc, argv, kw)
+#define DeeType_CallMethodAttrStringKw(tp_invoker, tp_self, self, attr, argc, argv, kw)                DeeType_CallMethodAttrStringHashKw(tp_invoker, tp_self, self, attr, Dee_HashStr(attr), argc, argv, kw)
+#define DeeType_CallMethodAttrStringLenKw(tp_invoker, tp_self, self, attr, attrlen, argc, argv, kw)    DeeType_CallMethodAttrStringLenHashKw(tp_invoker, tp_self, self, attr, attrlen, Dee_HashPtr(attr, attrlen), argc, argv, kw)
+#define DeeType_CallClassMethodAttr(tp_invoker, tp_self, attr, argc, argv)                             DeeType_CallClassMethodAttrStringHash(tp_invoker, tp_self, DeeString_STR(attr), DeeString_Hash(attr), argc, argv)
+#define DeeType_CallClassMethodAttrString(tp_invoker, tp_self, attr, argc, argv)                       DeeType_CallClassMethodAttrStringHash(tp_invoker, tp_self, attr, Dee_HashStr(attr), argc, argv)
+#define DeeType_CallClassMethodAttrStringLen(tp_invoker, tp_self, attr, attrlen, argc, argv)           DeeType_CallClassMethodAttrStringLenHash(tp_invoker, tp_self, attr, attrlen, Dee_HashPtr(attr, attrlen), argc, argv)
+#define DeeType_CallClassMethodAttrKw(tp_invoker, tp_self, attr, argc, argv, kw)                       DeeType_CallClassMethodAttrStringHashKw(tp_invoker, tp_self, DeeString_STR(attr), DeeString_Hash(attr), argc, argv, kw)
+#define DeeType_CallClassMethodAttrStringKw(tp_invoker, tp_self, attr, argc, argv, kw)                 DeeType_CallClassMethodAttrStringHashKw(tp_invoker, tp_self, attr, Dee_HashStr(attr), argc, argv, kw)
+#define DeeType_CallClassMethodAttrStringLenKw(tp_invoker, tp_self, attr, attrlen, argc, argv, kw)     DeeType_CallClassMethodAttrStringLenHashKw(tp_invoker, tp_self, attr, attrlen, Dee_HashPtr(attr, attrlen), argc, argv, kw)
+#define DeeType_CallInstanceMethodAttr(tp_invoker, tp_self, attr, argc, argv)                          DeeType_CallInstanceMethodAttrStringHash(tp_invoker, tp_self, DeeString_STR(attr), DeeString_Hash(attr), argc, argv)
+#define DeeType_CallInstanceMethodAttrString(tp_invoker, tp_self, attr, argc, argv)                    DeeType_CallInstanceMethodAttrStringHash(tp_invoker, tp_self, attr, Dee_HashStr(attr), argc, argv)
+#define DeeType_CallInstanceMethodAttrStringLen(tp_invoker, tp_self, attr, attrlen, argc, argv)        DeeType_CallInstanceMethodAttrStringLenHash(tp_invoker, tp_self, attr, attrlen, Dee_HashPtr(attr, attrlen), argc, argv)
+#define DeeType_CallInstanceMethodAttrKw(tp_invoker, tp_self, attr, argc, argv, kw)                    DeeType_CallInstanceMethodAttrStringHashKw(tp_invoker, tp_self, DeeString_STR(attr), DeeString_Hash(attr), argc, argv, kw)
+#define DeeType_CallInstanceMethodAttrStringKw(tp_invoker, tp_self, attr, argc, argv, kw)              DeeType_CallInstanceMethodAttrStringHashKw(tp_invoker, tp_self, attr, Dee_HashStr(attr), argc, argv, kw)
+#define DeeType_CallInstanceMethodAttrStringLenKw(tp_invoker, tp_self, attr, attrlen, argc, argv, kw)  DeeType_CallInstanceMethodAttrStringLenHashKw(tp_invoker, tp_self, attr, attrlen, Dee_HashPtr(attr, attrlen), argc, argv, kw)
+#define DeeType_CallIInstanceMethodAttr(tp_invoker, tp_self, attr, argc, argv)                         DeeType_CallIInstanceMethodAttrStringHash(tp_invoker, tp_self, DeeString_STR(attr), DeeString_Hash(attr), argc, argv)
+#define DeeType_CallIInstanceMethodAttrString(tp_invoker, tp_self, attr, argc, argv)                   DeeType_CallIInstanceMethodAttrStringHash(tp_invoker, tp_self, attr, Dee_HashStr(attr), argc, argv)
+#define DeeType_CallIInstanceMethodAttrStringLen(tp_invoker, tp_self, attr, attrlen, argc, argv)       DeeType_CallIInstanceMethodAttrStringLenHash(tp_invoker, tp_self, attr, attrlen, Dee_HashPtr(attr, attrlen), argc, argv)
+#define DeeType_CallIInstanceMethodAttrKw(tp_invoker, tp_self, attr, argc, argv, kw)                   DeeType_CallIInstanceMethodAttrStringHashKw(tp_invoker, tp_self, DeeString_STR(attr), DeeString_Hash(attr), argc, argv, kw)
+#define DeeType_CallIInstanceMethodAttrStringKw(tp_invoker, tp_self, attr, argc, argv, kw)             DeeType_CallIInstanceMethodAttrStringHashKw(tp_invoker, tp_self, attr, Dee_HashStr(attr), argc, argv, kw)
+#define DeeType_CallIInstanceMethodAttrStringLenKw(tp_invoker, tp_self, attr, attrlen, argc, argv, kw) DeeType_CallIInstanceMethodAttrStringLenHashKw(tp_invoker, tp_self, attr, attrlen, Dee_HashPtr(attr, attrlen), argc, argv, kw)
+#ifdef CONFIG_CALLTUPLE_OPTIMIZATIONS
+#define DeeType_CallMethodAttrTuple(tp_invoker, tp_self, self, attr, args)                            DeeType_CallMethodAttrStringHashTuple(tp_invoker, tp_self, self, DeeString_STR(attr), DeeString_Hash(attr), args)
+#define DeeType_CallMethodAttrStringTuple(tp_invoker, tp_self, self, attr, args)                      DeeType_CallMethodAttrStringHashTuple(tp_invoker, tp_self, self, attr, Dee_HashStr(attr), args)
+#define DeeType_CallMethodAttrStringLenTuple(tp_invoker, tp_self, self, attr, attrlen, args)          DeeType_CallMethodAttrStringLenHashTuple(tp_invoker, tp_self, self, attr, attrlen, Dee_HashPtr(attr, attrlen), args)
+#define DeeType_CallMethodAttrTupleKw(tp_invoker, tp_self, self, attr, args, kw)                      DeeType_CallMethodAttrStringHashTupleKw(tp_invoker, tp_self, self, DeeString_STR(attr), DeeString_Hash(attr), args, kw)
+#define DeeType_CallMethodAttrStringTupleKw(tp_invoker, tp_self, self, attr, args, kw)                DeeType_CallMethodAttrStringHashTupleKw(tp_invoker, tp_self, self, attr, Dee_HashStr(attr), args, kw)
+#define DeeType_CallMethodAttrStringLenTupleKw(tp_invoker, tp_self, self, attr, attrlen, args, kw)    DeeType_CallMethodAttrStringLenHashTupleKw(tp_invoker, tp_self, self, attr, attrlen, Dee_HashPtr(attr, attrlen), args, kw)
+#define DeeType_CallClassMethodAttrTuple(tp_invoker, tp_self, attr, args)                             DeeType_CallClassMethodAttrStringHashTuple(tp_invoker, tp_self, DeeString_STR(attr), DeeString_Hash(attr), args)
+#define DeeType_CallClassMethodAttrStringTuple(tp_invoker, tp_self, attr, args)                       DeeType_CallClassMethodAttrStringHashTuple(tp_invoker, tp_self, attr, Dee_HashStr(attr), args)
+#define DeeType_CallClassMethodAttrStringLenTuple(tp_invoker, tp_self, attr, attrlen, args)           DeeType_CallClassMethodAttrStringLenHashTuple(tp_invoker, tp_self, attr, attrlen, Dee_HashPtr(attr, attrlen), args)
+#define DeeType_CallClassMethodAttrTupleKw(tp_invoker, tp_self, attr, args, kw)                       DeeType_CallClassMethodAttrStringHashTupleKw(tp_invoker, tp_self, DeeString_STR(attr), DeeString_Hash(attr), args, kw)
+#define DeeType_CallClassMethodAttrStringTupleKw(tp_invoker, tp_self, attr, args, kw)                 DeeType_CallClassMethodAttrStringHashTupleKw(tp_invoker, tp_self, attr, Dee_HashStr(attr), args, kw)
+#define DeeType_CallClassMethodAttrStringLenTupleKw(tp_invoker, tp_self, attr, attrlen, args, kw)     DeeType_CallClassMethodAttrStringLenHashTupleKw(tp_invoker, tp_self, attr, attrlen, Dee_HashPtr(attr, attrlen), args, kw)
+#define DeeType_CallInstanceMethodAttrTuple(tp_invoker, tp_self, attr, args)                          DeeType_CallInstanceMethodAttrStringHashTuple(tp_invoker, tp_self, DeeString_STR(attr), DeeString_Hash(attr), args)
+#define DeeType_CallInstanceMethodAttrStringTuple(tp_invoker, tp_self, attr, args)                    DeeType_CallInstanceMethodAttrStringHashTuple(tp_invoker, tp_self, attr, Dee_HashStr(attr), args)
+#define DeeType_CallInstanceMethodAttrStringLenTuple(tp_invoker, tp_self, attr, attrlen, args)        DeeType_CallInstanceMethodAttrStringLenHashTuple(tp_invoker, tp_self, attr, attrlen, Dee_HashPtr(attr, attrlen), args)
+#define DeeType_CallInstanceMethodAttrTupleKw(tp_invoker, tp_self, attr, args, kw)                    DeeType_CallInstanceMethodAttrStringHashTupleKw(tp_invoker, tp_self, DeeString_STR(attr), DeeString_Hash(attr), args, kw)
+#define DeeType_CallInstanceMethodAttrStringTupleKw(tp_invoker, tp_self, attr, args, kw)              DeeType_CallInstanceMethodAttrStringHashTupleKw(tp_invoker, tp_self, attr, Dee_HashStr(attr), args, kw)
+#define DeeType_CallInstanceMethodAttrStringLenTupleKw(tp_invoker, tp_self, attr, attrlen, args, kw)  DeeType_CallInstanceMethodAttrStringLenHashTupleKw(tp_invoker, tp_self, attr, attrlen, Dee_HashPtr(attr, attrlen), args, kw)
+#define DeeType_CallIInstanceMethodAttrTuple(tp_invoker, tp_self, attr, args)                         DeeType_CallIInstanceMethodAttrStringHashTuple(tp_invoker, tp_self, DeeString_STR(attr), DeeString_Hash(attr), args)
+#define DeeType_CallIInstanceMethodAttrStringTuple(tp_invoker, tp_self, attr, args)                   DeeType_CallIInstanceMethodAttrStringHashTuple(tp_invoker, tp_self, attr, Dee_HashStr(attr), args)
+#define DeeType_CallIInstanceMethodAttrStringLenTuple(tp_invoker, tp_self, attr, attrlen, args)       DeeType_CallIInstanceMethodAttrStringLenHashTuple(tp_invoker, tp_self, attr, attrlen, Dee_HashPtr(attr, attrlen), args)
+#define DeeType_CallIInstanceMethodAttrTupleKw(tp_invoker, tp_self, attr, args, kw)                   DeeType_CallIInstanceMethodAttrStringHashTupleKw(tp_invoker, tp_self, DeeString_STR(attr), DeeString_Hash(attr), args, kw)
+#define DeeType_CallIInstanceMethodAttrStringTupleKw(tp_invoker, tp_self, attr, args, kw)             DeeType_CallIInstanceMethodAttrStringHashTupleKw(tp_invoker, tp_self, attr, Dee_HashStr(attr), args, kw)
+#define DeeType_CallIInstanceMethodAttrStringLenTupleKw(tp_invoker, tp_self, attr, attrlen, args, kw) DeeType_CallIInstanceMethodAttrStringLenHashTupleKw(tp_invoker, tp_self, attr, attrlen, Dee_HashPtr(attr, attrlen), args, kw)
+#endif /* CONFIG_CALLTUPLE_OPTIMIZATIONS */
+#define DeeType_VCallMethodAttrf(tp_invoker, tp_self, self, attr, format, args)                      DeeType_VCallMethodAttrStringHashf(tp_invoker, tp_self, self, DeeString_STR(attr), DeeString_Hash(attr), format, args)
+#define DeeType_VCallMethodAttrStringf(tp_invoker, tp_self, self, attr, format, args)                DeeType_VCallMethodAttrStringHashf(tp_invoker, tp_self, self, attr, Dee_HashStr(attr), format, args)
+//#define DeeType_VCallMethodAttrStringLenf(tp_invoker, tp_self, self, attr, attrlen, format, args)    DeeType_VCallMethodAttrStringLenHashf(tp_invoker, tp_self, self, attr, attrlen, Dee_HashPtr(attr, attrlen), format, args)
+#define DeeType_VCallClassMethodAttrf(tp_invoker, tp_self, attr, format, args)                       DeeType_VCallClassMethodAttrStringHashf(tp_invoker, tp_self, DeeString_STR(attr), DeeString_Hash(attr), format, args)
+#define DeeType_VCallClassMethodAttrStringf(tp_invoker, tp_self, attr, format, args)                 DeeType_VCallClassMethodAttrStringHashf(tp_invoker, tp_self, attr, Dee_HashStr(attr), format, args)
+//#define DeeType_VCallClassMethodAttrStringLenf(tp_invoker, tp_self, attr, attrlen, format, args)     DeeType_VCallClassMethodAttrStringLenHashf(tp_invoker, tp_self, attr, attrlen, Dee_HashPtr(attr, attrlen), format, args)
+//#define DeeType_VCallInstanceMethodAttrf(tp_invoker, tp_self, attr, format, args)                    DeeType_VCallInstanceMethodAttrStringHashf(tp_invoker, tp_self, DeeString_STR(attr), DeeString_Hash(attr), format, args)
+//#define DeeType_VCallInstanceMethodAttrStringf(tp_invoker, tp_self, attr, format, args)              DeeType_VCallInstanceMethodAttrStringHashf(tp_invoker, tp_self, attr, Dee_HashStr(attr), format, args)
+//#define DeeType_VCallInstanceMethodAttrStringLenf(tp_invoker, tp_self, attr, attrlen, format, args)  DeeType_VCallInstanceMethodAttrStringLenHashf(tp_invoker, tp_self, attr, attrlen, Dee_HashPtr(attr, attrlen), format, args)
+//#define DeeType_VCallIInstanceMethodAttrf(tp_invoker, tp_self, attr, format, args)                   DeeType_VCallIInstanceMethodAttrStringHashf(tp_invoker, tp_self, DeeString_STR(attr), DeeString_Hash(attr), format, args)
+//#define DeeType_VCallIInstanceMethodAttrStringf(tp_invoker, tp_self, attr, format, args)             DeeType_VCallIInstanceMethodAttrStringHashf(tp_invoker, tp_self, attr, Dee_HashStr(attr), format, args)
+//#define DeeType_VCallIInstanceMethodAttrStringLenf(tp_invoker, tp_self, attr, attrlen, format, args) DeeType_VCallIInstanceMethodAttrStringLenHashf(tp_invoker, tp_self, attr, attrlen, Dee_HashPtr(attr, attrlen), format, args)
+
 
 /* Get attributes from `tp_self->tp_getsets' / `tp_self->tp_class_getsets'.
  * @return: * :        The attribute value.
@@ -691,6 +754,23 @@ INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeType_GetIInstanceGet
 INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeType_GetInstanceGetSetAttrStringLenHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, size_t attrlen, dhash_t hash);
 INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeType_GetIInstanceGetSetAttrStringLenHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, size_t attrlen, dhash_t hash);
 #endif /* !__INTELLISENSE__ */
+#define DeeType_GetGetSetAttr(tp_invoker, tp_self, self, attr)                      DeeType_GetGetSetAttrStringHash(tp_invoker, tp_self, self, DeeString_STR(attr), DeeString_Hash(attr))
+#define DeeType_GetGetSetAttrHash(tp_invoker, tp_self, self, attr, hash)            DeeType_GetGetSetAttrStringHash(tp_invoker, tp_self, self, DeeString_STR(attr), hash)
+#define DeeType_GetGetSetAttrString(tp_invoker, tp_self, self, attr)                DeeType_GetGetSetAttrStringHash(tp_invoker, tp_self, self, attr, Dee_HashStr(attr))
+#define DeeType_GetGetSetAttrStringLen(tp_invoker, tp_self, self, attr, attrlen)    DeeType_GetGetSetAttrStringLenHash(tp_invoker, tp_self, self, attr, attrlen, Dee_HashPtr(attr, attrlen))
+#define DeeType_GetClassGetSetAttr(tp_invoker, tp_self, attr)                       DeeType_GetClassGetSetAttrStringHash(tp_invoker, tp_self, DeeString_STR(attr), DeeString_Hash(attr))
+#define DeeType_GetClassGetSetAttrHash(tp_invoker, tp_self, attr, hash)             DeeType_GetClassGetSetAttrStringHash(tp_invoker, tp_self, DeeString_STR(attr), hash)
+#define DeeType_GetClassGetSetAttrString(tp_invoker, tp_self, attr)                 DeeType_GetClassGetSetAttrStringHash(tp_invoker, tp_self, attr, Dee_HashStr(attr))
+#define DeeType_GetClassGetSetAttrStringLen(tp_invoker, tp_self, attr, attrlen)     DeeType_GetClassGetSetAttrStringLenHash(tp_invoker, tp_self, attr, attrlen, Dee_HashPtr(attr, attrlen))
+#define DeeType_GetInstanceGetSetAttr(tp_invoker, tp_self, attr)                    DeeType_GetInstanceGetSetAttrStringHash(tp_invoker, tp_self, DeeString_STR(attr), DeeString_Hash(attr))
+#define DeeType_GetInstanceGetSetAttrHash(tp_invoker, tp_self, attr, hash)          DeeType_GetInstanceGetSetAttrStringHash(tp_invoker, tp_self, DeeString_STR(attr), hash)
+#define DeeType_GetInstanceGetSetAttrString(tp_invoker, tp_self, attr)              DeeType_GetInstanceGetSetAttrStringHash(tp_invoker, tp_self, attr, Dee_HashStr(attr))
+#define DeeType_GetInstanceGetSetAttrStringLen(tp_invoker, tp_self, attr, attrlen)  DeeType_GetInstanceGetSetAttrStringLenHash(tp_invoker, tp_self, attr, attrlen, Dee_HashPtr(attr, attrlen))
+#define DeeType_GetIInstanceGetSetAttr(tp_invoker, tp_self, attr)                   DeeType_GetIInstanceGetSetAttrStringHash(tp_invoker, tp_self, DeeString_STR(attr), DeeString_Hash(attr))
+#define DeeType_GetIInstanceGetSetAttrHash(tp_invoker, tp_self, attr, hash)         DeeType_GetIInstanceGetSetAttrStringHash(tp_invoker, tp_self, DeeString_STR(attr), hash)
+#define DeeType_GetIInstanceGetSetAttrString(tp_invoker, tp_self, attr)             DeeType_GetIInstanceGetSetAttrStringHash(tp_invoker, tp_self, attr, Dee_HashStr(attr))
+#define DeeType_GetIInstanceGetSetAttrStringLen(tp_invoker, tp_self, attr, attrlen) DeeType_GetIInstanceGetSetAttrStringLenHash(tp_invoker, tp_self, attr, attrlen, Dee_HashPtr(attr, attrlen))
+
 
 /* Call attributes from `tp_self->tp_getsets' / `tp_self->tp_class_getsets'.
  * @return: * :        The functions's return value.
@@ -715,6 +795,23 @@ INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeType_CallInstanceGet
 INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeType_CallIInstanceGetSetAttrStringHashKw)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, dhash_t hash, size_t argc, DeeObject *const *argv, DeeObject *kw);
 INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeType_CallIInstanceGetSetAttrStringLenHashKw)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, size_t attrlen, dhash_t hash, size_t argc, DeeObject *const *argv, DeeObject *kw);
 #endif /* !__INTELLISENSE__ */
+#define DeeType_CallInstanceGetSetAttr(tp_invoker, tp_self, attr, argc, argv)                          DeeType_CallInstanceGetSetAttrStringHash(tp_invoker, tp_self, DeeString_STR(attr), DeeString_Hash(attr), argc, argv)
+#define DeeType_CallInstanceGetSetAttrHash(tp_invoker, tp_self, attr, hash, argc, argv)                DeeType_CallInstanceGetSetAttrStringHash(tp_invoker, tp_self, DeeString_STR(attr), hash, argc, argv)
+#define DeeType_CallInstanceGetSetAttrString(tp_invoker, tp_self, attr, argc, argv)                    DeeType_CallInstanceGetSetAttrStringHash(tp_invoker, tp_self, attr, Dee_HashStr(attr), argc, argv)
+#define DeeType_CallInstanceGetSetAttrStringLen(tp_invoker, tp_self, attr, attrlen, argc, argv)        DeeType_CallInstanceGetSetAttrStringLenHash(tp_invoker, tp_self, attr, attrlen, Dee_HashPtr(attr, attrlen), argc, argv)
+#define DeeType_CallInstanceGetSetAttrKw(tp_invoker, tp_self, attr, argc, argv, kw)                    DeeType_CallInstanceGetSetAttrStringHashKw(tp_invoker, tp_self, DeeString_STR(attr), DeeString_Hash(attr), argc, argv, kw)
+#define DeeType_CallInstanceGetSetAttrHashKw(tp_invoker, tp_self, attr, hash, argc, argv, kw)          DeeType_CallInstanceGetSetAttrStringHashKw(tp_invoker, tp_self, DeeString_STR(attr), hash, argc, argv, kw)
+#define DeeType_CallInstanceGetSetAttrStringKw(tp_invoker, tp_self, attr, argc, argv, kw)              DeeType_CallInstanceGetSetAttrStringHashKw(tp_invoker, tp_self, attr, Dee_HashStr(attr), argc, argv, kw)
+#define DeeType_CallInstanceGetSetAttrStringLenKw(tp_invoker, tp_self, attr, attrlen, argc, argv, kw)  DeeType_CallInstanceGetSetAttrStringLenHashKw(tp_invoker, tp_self, attr, attrlen, Dee_HashPtr(attr, attrlen), argc, argv, kw)
+#define DeeType_CallIInstanceGetSetAttr(tp_invoker, tp_self, attr, argc, argv)                         DeeType_CallIInstanceGetSetAttrStringHash(tp_invoker, tp_self, DeeString_STR(attr), DeeString_Hash(attr), argc, argv)
+#define DeeType_CallIInstanceGetSetAttrHash(tp_invoker, tp_self, attr, hash, argc, argv)               DeeType_CallIInstanceGetSetAttrStringHash(tp_invoker, tp_self, DeeString_STR(attr), hash, argc, argv)
+#define DeeType_CallIInstanceGetSetAttrString(tp_invoker, tp_self, attr, argc, argv)                   DeeType_CallIInstanceGetSetAttrStringHash(tp_invoker, tp_self, attr, Dee_HashStr(attr), argc, argv)
+#define DeeType_CallIInstanceGetSetAttrStringLen(tp_invoker, tp_self, attr, attrlen, argc, argv)       DeeType_CallIInstanceGetSetAttrStringLenHash(tp_invoker, tp_self, attr, attrlen, Dee_HashPtr(attr, attrlen), argc, argv)
+#define DeeType_CallIInstanceGetSetAttrKw(tp_invoker, tp_self, attr, argc, argv, kw)                   DeeType_CallIInstanceGetSetAttrStringHashKw(tp_invoker, tp_self, DeeString_STR(attr), DeeString_Hash(attr), argc, argv, kw)
+#define DeeType_CallIInstanceGetSetAttrHashKw(tp_invoker, tp_self, attr, hash, argc, argv, kw)         DeeType_CallIInstanceGetSetAttrStringHashKw(tp_invoker, tp_self, DeeString_STR(attr), hash, argc, argv, kw)
+#define DeeType_CallIInstanceGetSetAttrStringKw(tp_invoker, tp_self, attr, argc, argv, kw)             DeeType_CallIInstanceGetSetAttrStringHashKw(tp_invoker, tp_self, attr, Dee_HashStr(attr), argc, argv, kw)
+#define DeeType_CallIInstanceGetSetAttrStringLenKw(tp_invoker, tp_self, attr, attrlen, argc, argv, kw) DeeType_CallIInstanceGetSetAttrStringLenHashKw(tp_invoker, tp_self, attr, attrlen, Dee_HashPtr(attr, attrlen), argc, argv, kw)
+
 
 /* Check if attributes from `tp_self->tp_getsets' / `tp_self->tp_class_getsets' are bound.
  * @return:  1: The attribute is bound.
@@ -740,6 +837,15 @@ type_getset_boundattr_string_len_hash(struct Dee_membercache *cache, DeeTypeObje
 #define DeeType_BoundClassGetSetAttrStringHash(tp_invoker, tp_self, attr, hash)              type_getset_boundattr_string_hash(&(tp_invoker)->tp_class_cache, tp_self, (tp_self)->tp_class_getsets, (DeeObject *)(tp_invoker), attr, hash)
 #define DeeType_BoundClassGetSetAttrStringLenHash(tp_invoker, tp_self, attr, attrlen, hash)  type_getset_boundattr_string_len_hash(&(tp_invoker)->tp_class_cache, tp_self, (tp_self)->tp_class_getsets, (DeeObject *)(tp_invoker), attr, attrlen, hash)
 #endif /* !__INTELLISENSE__ */
+#define DeeType_BoundGetSetAttr(tp_invoker, tp_self, self, attr)                   DeeType_BoundGetSetAttrStringHash(tp_invoker, tp_self, self, DeeString_STR(attr), DeeString_Hash(attr))
+#define DeeType_BoundGetSetAttrHash(tp_invoker, tp_self, self, attr, hash)         DeeType_BoundGetSetAttrStringHash(tp_invoker, tp_self, self, DeeString_STR(attr), hash)
+#define DeeType_BoundGetSetAttrString(tp_invoker, tp_self, self, attr)             DeeType_BoundGetSetAttrStringHash(tp_invoker, tp_self, self, attr, Dee_HashStr(attr))
+#define DeeType_BoundGetSetAttrStringLen(tp_invoker, tp_self, self, attr, attrlen) DeeType_BoundGetSetAttrStringLenHash(tp_invoker, tp_self, self, attr, attrlen, Dee_HashPtr(attr, attrlen))
+#define DeeType_BoundClassGetSetAttr(tp_invoker, tp_self, attr)                    DeeType_BoundClassGetSetAttrStringHash(tp_invoker, tp_self, DeeString_STR(attr), DeeString_Hash(attr))
+#define DeeType_BoundClassGetSetAttrHash(tp_invoker, tp_self, attr, hash)          DeeType_BoundClassGetSetAttrStringHash(tp_invoker, tp_self, DeeString_STR(attr), hash)
+#define DeeType_BoundClassGetSetAttrString(tp_invoker, tp_self, attr)              DeeType_BoundClassGetSetAttrStringHash(tp_invoker, tp_self, attr, Dee_HashStr(attr))
+#define DeeType_BoundClassGetSetAttrStringLen(tp_invoker, tp_self, attr, attrlen)  DeeType_BoundClassGetSetAttrStringLenHash(tp_invoker, tp_self, attr, attrlen, Dee_HashPtr(attr, attrlen))
+
 
 /* Delete attributes from `tp_self->tp_getsets' / `tp_self->tp_class_getsets'.
  * @return:  0: Success.
@@ -764,6 +870,15 @@ type_getset_delattr_string_len_hash(struct Dee_membercache *cache, DeeTypeObject
 #define DeeType_DelClassGetSetAttrStringHash(tp_invoker, tp_self, attr, hash)              type_getset_delattr_string_hash(&(tp_invoker)->tp_class_cache, tp_self, (tp_self)->tp_class_getsets, (DeeObject *)(tp_invoker), attr, hash)
 #define DeeType_DelClassGetSetAttrStringLenHash(tp_invoker, tp_self, attr, attrlen, hash)  type_getset_delattr_string_len_hash(&(tp_invoker)->tp_class_cache, tp_self, (tp_self)->tp_class_getsets, (DeeObject *)(tp_invoker), attr, attrlen, hash)
 #endif /* !__INTELLISENSE__ */
+#define DeeType_DelGetSetAttr(tp_invoker, tp_self, self, attr)                   DeeType_DelGetSetAttrStringHash(tp_invoker, tp_self, self, DeeString_STR(attr), DeeString_Hash(attr))
+#define DeeType_DelGetSetAttrHash(tp_invoker, tp_self, self, attr, hash)         DeeType_DelGetSetAttrStringHash(tp_invoker, tp_self, self, DeeString_STR(attr), hash)
+#define DeeType_DelGetSetAttrString(tp_invoker, tp_self, self, attr)             DeeType_DelGetSetAttrStringHash(tp_invoker, tp_self, self, attr, Dee_HashStr(attr))
+#define DeeType_DelGetSetAttrStringLen(tp_invoker, tp_self, self, attr, attrlen) DeeType_DelGetSetAttrStringLenHash(tp_invoker, tp_self, self, attr, attrlen, Dee_HashPtr(attr, attrlen))
+#define DeeType_DelClassGetSetAttr(tp_invoker, tp_self, attr)                    DeeType_DelClassGetSetAttrStringHash(tp_invoker, tp_self, DeeString_STR(attr), DeeString_Hash(attr))
+#define DeeType_DelClassGetSetAttrHash(tp_invoker, tp_self, attr, hash)          DeeType_DelClassGetSetAttrStringHash(tp_invoker, tp_self, DeeString_STR(attr), hash)
+#define DeeType_DelClassGetSetAttrString(tp_invoker, tp_self, attr)              DeeType_DelClassGetSetAttrStringHash(tp_invoker, tp_self, attr, Dee_HashStr(attr))
+#define DeeType_DelClassGetSetAttrStringLen(tp_invoker, tp_self, attr, attrlen)  DeeType_DelClassGetSetAttrStringLenHash(tp_invoker, tp_self, attr, attrlen, Dee_HashPtr(attr, attrlen))
+
 
 /* Set attributes from `tp_self->tp_getsets' / `tp_self->tp_class_getsets'.
  * @return:  0: Success.
@@ -789,6 +904,14 @@ type_getset_setattr_string_len_hash(struct Dee_membercache *cache, DeeTypeObject
 #define DeeType_SetClassGetSetAttrStringHash(tp_invoker, tp_self, attr, hash, value)              type_getset_setattr_string_hash(&(tp_invoker)->tp_class_cache, tp_self, (tp_self)->tp_class_getsets, (DeeObject *)(tp_invoker), attr, hash, value)
 #define DeeType_SetClassGetSetAttrStringLenHash(tp_invoker, tp_self, attr, attrlen, hash, value)  type_getset_setattr_string_len_hash(&(tp_invoker)->tp_class_cache, tp_self, (tp_self)->tp_class_getsets, (DeeObject *)(tp_invoker), attr, attrlen, hash, value)
 #endif /* !__INTELLISENSE__ */
+#define DeeType_SetGetSetAttr(tp_invoker, tp_self, self, attr, value)                   DeeType_SetGetSetAttrStringHash(tp_invoker, tp_self, self, DeeString_STR(attr), DeeString_Hash(attr), value)
+#define DeeType_SetGetSetAttrHash(tp_invoker, tp_self, self, attr, hash, value)         DeeType_SetGetSetAttrStringHash(tp_invoker, tp_self, self, DeeString_STR(attr), hash, value)
+#define DeeType_SetGetSetAttrString(tp_invoker, tp_self, self, attr, value)             DeeType_SetGetSetAttrStringHash(tp_invoker, tp_self, self, attr, Dee_HashStr(attr), value)
+#define DeeType_SetGetSetAttrStringLen(tp_invoker, tp_self, self, attr, attrlen, value) DeeType_SetGetSetAttrStringLenHash(tp_invoker, tp_self, self, attr, attrlen, Dee_HashPtr(attr, attrlen), value)
+#define DeeType_SetClassGetSetAttr(tp_invoker, tp_self, attr, value)                    DeeType_SetClassGetSetAttrStringHash(tp_invoker, tp_self, DeeString_STR(attr), DeeString_Hash(attr), value)
+#define DeeType_SetClassGetSetAttrHash(tp_invoker, tp_self, attr, hash, value)          DeeType_SetClassGetSetAttrStringHash(tp_invoker, tp_self, DeeString_STR(attr), hash, value)
+#define DeeType_SetClassGetSetAttrString(tp_invoker, tp_self, attr, value)              DeeType_SetClassGetSetAttrStringHash(tp_invoker, tp_self, attr, Dee_HashStr(attr), value)
+#define DeeType_SetClassGetSetAttrStringLen(tp_invoker, tp_self, attr, attrlen, value)  DeeType_SetClassGetSetAttrStringLenHash(tp_invoker, tp_self, attr, attrlen, Dee_HashPtr(attr, attrlen), value)
 
 
 /* Get attributes from `tp_self->tp_members' / `tp_self->tp_class_members'.
@@ -822,6 +945,23 @@ INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeType_GetIInstanceMem
 INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeType_GetInstanceMemberAttrStringLenHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, size_t attrlen, dhash_t hash);
 INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeType_GetIInstanceMemberAttrStringLenHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, size_t attrlen, dhash_t hash);
 #endif /* !__INTELLISENSE__ */
+#define DeeType_GetMemberAttr(tp_invoker, tp_self, self, attr)                      DeeType_GetMemberAttrStringHash(tp_invoker, tp_self, self, DeeString_STR(attr), DeeString_Hash(attr))
+#define DeeType_GetMemberAttrHash(tp_invoker, tp_self, self, attr, hash)            DeeType_GetMemberAttrStringHash(tp_invoker, tp_self, self, DeeString_STR(attr), hash)
+#define DeeType_GetMemberAttrString(tp_invoker, tp_self, self, attr)                DeeType_GetMemberAttrStringHash(tp_invoker, tp_self, self, attr, Dee_HashStr(attr))
+#define DeeType_GetMemberAttrStringLen(tp_invoker, tp_self, self, attr, attrlen)    DeeType_GetMemberAttrStringLenHash(tp_invoker, tp_self, self, attr, attrlen, Dee_HashPtr(attr, attrlen))
+#define DeeType_GetClassMemberAttr(tp_invoker, tp_self, attr)                       DeeType_GetClassMemberAttrStringHash(tp_invoker, tp_self, DeeString_STR(attr), DeeString_Hash(attr))
+#define DeeType_GetClassMemberAttrHash(tp_invoker, tp_self, attr, hash)             DeeType_GetClassMemberAttrStringHash(tp_invoker, tp_self, DeeString_STR(attr), hash)
+#define DeeType_GetClassMemberAttrString(tp_invoker, tp_self, attr)                 DeeType_GetClassMemberAttrStringHash(tp_invoker, tp_self, attr, Dee_HashStr(attr))
+#define DeeType_GetClassMemberAttrStringLen(tp_invoker, tp_self, attr, attrlen)     DeeType_GetClassMemberAttrStringLenHash(tp_invoker, tp_self, attr, attrlen, Dee_HashPtr(attr, attrlen))
+#define DeeType_GetInstanceMemberAttr(tp_invoker, tp_self, attr)                    DeeType_GetInstanceMemberAttrStringHash(tp_invoker, tp_self, DeeString_STR(attr), DeeString_Hash(attr))
+#define DeeType_GetInstanceMemberAttrHash(tp_invoker, tp_self, attr, hash)          DeeType_GetInstanceMemberAttrStringHash(tp_invoker, tp_self, DeeString_STR(attr), hash)
+#define DeeType_GetInstanceMemberAttrString(tp_invoker, tp_self, attr)              DeeType_GetInstanceMemberAttrStringHash(tp_invoker, tp_self, attr, Dee_HashStr(attr))
+#define DeeType_GetInstanceMemberAttrStringLen(tp_invoker, tp_self, attr, attrlen)  DeeType_GetInstanceMemberAttrStringLenHash(tp_invoker, tp_self, attr, attrlen, Dee_HashPtr(attr, attrlen))
+#define DeeType_GetIInstanceMemberAttr(tp_invoker, tp_self, attr)                   DeeType_GetIInstanceMemberAttrStringHash(tp_invoker, tp_self, DeeString_STR(attr), DeeString_Hash(attr))
+#define DeeType_GetIInstanceMemberAttrHash(tp_invoker, tp_self, attr, hash)         DeeType_GetIInstanceMemberAttrStringHash(tp_invoker, tp_self, DeeString_STR(attr), hash)
+#define DeeType_GetIInstanceMemberAttrString(tp_invoker, tp_self, attr)             DeeType_GetIInstanceMemberAttrStringHash(tp_invoker, tp_self, attr, Dee_HashStr(attr))
+#define DeeType_GetIInstanceMemberAttrStringLen(tp_invoker, tp_self, attr, attrlen) DeeType_GetIInstanceMemberAttrStringLenHash(tp_invoker, tp_self, attr, attrlen, Dee_HashPtr(attr, attrlen))
+
 
 /* Call attributes from `tp_self->tp_members' / `tp_self->tp_class_members'.
  * @return: * :        The functions's return value.
@@ -846,6 +986,23 @@ INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeType_CallInstanceMem
 INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeType_CallIInstanceMemberAttrStringHashKw)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, dhash_t hash, size_t argc, DeeObject *const *argv, DeeObject *kw);
 INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeType_CallIInstanceMemberAttrStringLenHashKw)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, size_t attrlen, dhash_t hash, size_t argc, DeeObject *const *argv, DeeObject *kw);
 #endif /* !__INTELLISENSE__ */
+#define DeeType_CallInstanceMemberAttr(tp_invoker, tp_self, attr, argc, argv)                          DeeType_CallInstanceMemberAttrStringHash(tp_invoker, tp_self, DeeString_STR(attr), DeeString_Hash(attr), argc, argv)
+#define DeeType_CallInstanceMemberAttrHash(tp_invoker, tp_self, attr, hash, argc, argv)                DeeType_CallInstanceMemberAttrStringHash(tp_invoker, tp_self, DeeString_STR(attr), hash, argc, argv)
+#define DeeType_CallInstanceMemberAttrString(tp_invoker, tp_self, attr, argc, argv)                    DeeType_CallInstanceMemberAttrStringHash(tp_invoker, tp_self, attr, Dee_HashStr(attr), argc, argv)
+#define DeeType_CallInstanceMemberAttrStringLen(tp_invoker, tp_self, attr, attrlen, argc, argv)        DeeType_CallInstanceMemberAttrStringLenHash(tp_invoker, tp_self, attr, attrlen, Dee_HashPtr(attr, attrlen), argc, argv)
+#define DeeType_CallInstanceMemberAttrKw(tp_invoker, tp_self, attr, argc, argv, kw)                    DeeType_CallInstanceMemberAttrStringHashKw(tp_invoker, tp_self, DeeString_STR(attr), DeeString_Hash(attr), argc, argv, kw)
+#define DeeType_CallInstanceMemberAttrHashKw(tp_invoker, tp_self, attr, hash, argc, argv, kw)          DeeType_CallInstanceMemberAttrStringHashKw(tp_invoker, tp_self, DeeString_STR(attr), hash, argc, argv, kw)
+#define DeeType_CallInstanceMemberAttrStringKw(tp_invoker, tp_self, attr, argc, argv, kw)              DeeType_CallInstanceMemberAttrStringHashKw(tp_invoker, tp_self, attr, Dee_HashStr(attr), argc, argv, kw)
+#define DeeType_CallInstanceMemberAttrStringLenKw(tp_invoker, tp_self, attr, attrlen, argc, argv, kw)  DeeType_CallInstanceMemberAttrStringLenHashKw(tp_invoker, tp_self, attr, attrlen, Dee_HashPtr(attr, attrlen), argc, argv, kw)
+#define DeeType_CallIInstanceMemberAttr(tp_invoker, tp_self, attr, argc, argv)                         DeeType_CallIInstanceMemberAttrStringHash(tp_invoker, tp_self, DeeString_STR(attr), DeeString_Hash(attr), argc, argv)
+#define DeeType_CallIInstanceMemberAttrHash(tp_invoker, tp_self, attr, hash, argc, argv)               DeeType_CallIInstanceMemberAttrStringHash(tp_invoker, tp_self, DeeString_STR(attr), hash, argc, argv)
+#define DeeType_CallIInstanceMemberAttrString(tp_invoker, tp_self, attr, argc, argv)                   DeeType_CallIInstanceMemberAttrStringHash(tp_invoker, tp_self, attr, Dee_HashStr(attr), argc, argv)
+#define DeeType_CallIInstanceMemberAttrStringLen(tp_invoker, tp_self, attr, attrlen, argc, argv)       DeeType_CallIInstanceMemberAttrStringLenHash(tp_invoker, tp_self, attr, attrlen, Dee_HashPtr(attr, attrlen), argc, argv)
+#define DeeType_CallIInstanceMemberAttrKw(tp_invoker, tp_self, attr, argc, argv, kw)                   DeeType_CallIInstanceMemberAttrStringHashKw(tp_invoker, tp_self, DeeString_STR(attr), DeeString_Hash(attr), argc, argv, kw)
+#define DeeType_CallIInstanceMemberAttrHashKw(tp_invoker, tp_self, attr, hash, argc, argv, kw)         DeeType_CallIInstanceMemberAttrStringHashKw(tp_invoker, tp_self, DeeString_STR(attr), hash, argc, argv, kw)
+#define DeeType_CallIInstanceMemberAttrStringKw(tp_invoker, tp_self, attr, argc, argv, kw)             DeeType_CallIInstanceMemberAttrStringHashKw(tp_invoker, tp_self, attr, Dee_HashStr(attr), argc, argv, kw)
+#define DeeType_CallIInstanceMemberAttrStringLenKw(tp_invoker, tp_self, attr, attrlen, argc, argv, kw) DeeType_CallIInstanceMemberAttrStringLenHashKw(tp_invoker, tp_self, attr, attrlen, Dee_HashPtr(attr, attrlen), argc, argv, kw)
+
 
 /* Check if attributes from `tp_self->tp_members' / `tp_self->tp_class_members' are bound.
  * @return:  1: The attribute is bound.
@@ -871,6 +1028,14 @@ type_member_boundattr_string_len_hash(struct Dee_membercache *cache, DeeTypeObje
 #define DeeType_BoundMemberAttrStringLenHash(tp_invoker, tp_self, self, attr, attrlen, hash) type_member_boundattr_string_len_hash(&(tp_invoker)->tp_cache, tp_self, (tp_self)->tp_members, self, attr, attrlen, hash)
 #define DeeType_BoundClassMemberAttrStringLenHash(tp_invoker, tp_self, attr, attrlen, hash)  type_member_boundattr_string_len_hash(&(tp_invoker)->tp_class_cache, tp_self, (tp_self)->tp_class_members, (DeeObject *)(tp_invoker), attr, attrlen, hash)
 #endif /* !__INTELLISENSE__ */
+#define DeeType_BoundMemberAttr(tp_invoker, tp_self, self, attr)                   DeeType_BoundMemberAttrStringHash(tp_invoker, tp_self, self, DeeString_STR(attr), DeeString_Hash(attr))
+#define DeeType_BoundMemberAttrHash(tp_invoker, tp_self, self, attr, hash)         DeeType_BoundMemberAttrStringHash(tp_invoker, tp_self, self, DeeString_STR(attr), hash)
+#define DeeType_BoundMemberAttrString(tp_invoker, tp_self, self, attr)             DeeType_BoundMemberAttrStringHash(tp_invoker, tp_self, self, attr, Dee_HashStr(attr))
+#define DeeType_BoundMemberAttrStringLen(tp_invoker, tp_self, self, attr, attrlen) DeeType_BoundMemberAttrStringLenHash(tp_invoker, tp_self, self, attr, attrlen, Dee_HashPtr(attr, attrlen))
+#define DeeType_BoundClassMemberAttr(tp_invoker, tp_self, attr)                    DeeType_BoundClassMemberAttrStringHash(tp_invoker, tp_self, DeeString_STR(attr), DeeString_Hash(attr))
+#define DeeType_BoundClassMemberAttrHash(tp_invoker, tp_self, attr, hash)          DeeType_BoundClassMemberAttrStringHash(tp_invoker, tp_self, DeeString_STR(attr), hash)
+#define DeeType_BoundClassMemberAttrString(tp_invoker, tp_self, attr)              DeeType_BoundClassMemberAttrStringHash(tp_invoker, tp_self, attr, Dee_HashStr(attr))
+#define DeeType_BoundClassMemberAttrStringLen(tp_invoker, tp_self, attr, attrlen)  DeeType_BoundClassMemberAttrStringLenHash(tp_invoker, tp_self, attr, attrlen, Dee_HashPtr(attr, attrlen))
 
 
 /* Delete attributes from `tp_self->tp_members' / `tp_self->tp_class_members'.
@@ -896,6 +1061,14 @@ type_member_delattr_string_len_hash(struct Dee_membercache *cache, DeeTypeObject
 #define DeeType_DelMemberAttrStringLenHash(tp_invoker, tp_self, self, attr, attrlen, hash) type_member_delattr_string_len_hash(&(tp_invoker)->tp_cache, tp_self, (tp_self)->tp_members, self, attr, attrlen, hash)
 #define DeeType_DelClassMemberAttrStringLenHash(tp_invoker, tp_self, attr, attrlen, hash)  type_member_delattr_string_len_hash(&(tp_invoker)->tp_class_cache, tp_self, (tp_self)->tp_class_members, (DeeObject *)(tp_invoker), attr, attrlen, hash)
 #endif /* !__INTELLISENSE__ */
+#define DeeType_DelMemberAttr(tp_invoker, tp_self, self, attr)                   DeeType_DelMemberAttrStringHash(tp_invoker, tp_self, self, DeeString_STR(attr), DeeString_Hash(attr))
+#define DeeType_DelMemberAttrHash(tp_invoker, tp_self, self, attr, hash)         DeeType_DelMemberAttrStringHash(tp_invoker, tp_self, self, DeeString_STR(attr), hash)
+#define DeeType_DelMemberAttrString(tp_invoker, tp_self, self, attr)             DeeType_DelMemberAttrStringHash(tp_invoker, tp_self, self, attr, Dee_HashStr(attr))
+#define DeeType_DelMemberAttrStringLen(tp_invoker, tp_self, self, attr, attrlen) DeeType_DelMemberAttrStringLenHash(tp_invoker, tp_self, self, attr, attrlen, Dee_HashPtr(attr, attrlen))
+#define DeeType_DelClassMemberAttr(tp_invoker, tp_self, attr)                    DeeType_DelClassMemberAttrStringHash(tp_invoker, tp_self, DeeString_STR(attr), DeeString_Hash(attr))
+#define DeeType_DelClassMemberAttrHash(tp_invoker, tp_self, attr, hash)          DeeType_DelClassMemberAttrStringHash(tp_invoker, tp_self, DeeString_STR(attr), hash)
+#define DeeType_DelClassMemberAttrString(tp_invoker, tp_self, attr)              DeeType_DelClassMemberAttrStringHash(tp_invoker, tp_self, attr, Dee_HashStr(attr))
+#define DeeType_DelClassMemberAttrStringLen(tp_invoker, tp_self, attr, attrlen)  DeeType_DelClassMemberAttrStringLenHash(tp_invoker, tp_self, attr, attrlen, Dee_HashPtr(attr, attrlen))
 
 
 /* Set attributes from `tp_self->tp_members' / `tp_self->tp_class_members'.
@@ -922,6 +1095,14 @@ type_member_setattr_string_len_hash(struct Dee_membercache *cache, DeeTypeObject
 #define DeeType_SetMemberAttrStringLenHash(tp_invoker, tp_self, self, attr, attrlen, hash, value) type_member_setattr_string_len_hash(&(tp_invoker)->tp_cache, tp_self, (tp_self)->tp_members, self, attr, attrlen, hash, value)
 #define DeeType_SetClassMemberAttrStringLenHash(tp_invoker, tp_self, attr, attrlen, hash, value)  type_member_setattr_string_len_hash(&(tp_invoker)->tp_class_cache, tp_self, (tp_self)->tp_class_members, (DeeObject *)(tp_invoker), attr, attrlen, hash, value)
 #endif /* !__INTELLISENSE__ */
+#define DeeType_SetMemberAttr(tp_invoker, tp_self, self, attr, value)                   DeeType_SetMemberAttrStringHash(tp_invoker, tp_self, self, DeeString_STR(attr), DeeString_Hash(attr), value)
+#define DeeType_SetMemberAttrHash(tp_invoker, tp_self, self, attr, hash, value)         DeeType_SetMemberAttrStringHash(tp_invoker, tp_self, self, DeeString_STR(attr), hash, value)
+#define DeeType_SetMemberAttrString(tp_invoker, tp_self, self, attr, value)             DeeType_SetMemberAttrStringHash(tp_invoker, tp_self, self, attr, Dee_HashStr(attr), value)
+#define DeeType_SetMemberAttrStringLen(tp_invoker, tp_self, self, attr, attrlen, value) DeeType_SetMemberAttrStringLenHash(tp_invoker, tp_self, self, attr, attrlen, Dee_HashPtr(attr, attrlen), value)
+#define DeeType_SetClassMemberAttr(tp_invoker, tp_self, attr, value)                    DeeType_SetClassMemberAttrStringHash(tp_invoker, tp_self, DeeString_STR(attr), DeeString_Hash(attr), value)
+#define DeeType_SetClassMemberAttrHash(tp_invoker, tp_self, attr, hash, value)          DeeType_SetClassMemberAttrStringHash(tp_invoker, tp_self, DeeString_STR(attr), hash, value)
+#define DeeType_SetClassMemberAttrString(tp_invoker, tp_self, attr, value)              DeeType_SetClassMemberAttrStringHash(tp_invoker, tp_self, attr, Dee_HashStr(attr), value)
+#define DeeType_SetClassMemberAttrStringLen(tp_invoker, tp_self, attr, attrlen, value)  DeeType_SetClassMemberAttrStringLenHash(tp_invoker, tp_self, attr, attrlen, Dee_HashPtr(attr, attrlen), value)
 
 
 /* Check for the existence of specific attributes. */
@@ -1003,6 +1184,55 @@ INTDEF WUNUSED NONNULL((1, 2, 3)) bool (DCALL DeeType_HasInstanceMemberAttrStrin
 #define DeeType_HasIInstanceMemberAttrStringHash(tp_invoker, tp_self, attr, hash)             type_member_hasattr_string_hash(&(tp_invoker)->tp_cache, tp_self, (tp_self)->tp_members, attr, hash)
 #define DeeType_HasIInstanceMemberAttrStringLenHash(tp_invoker, tp_self, attr, attrlen, hash) type_member_hasattr_string_len_hash(&(tp_invoker)->tp_cache, tp_self, (tp_self)->tp_members, attr, attrlen, hash)
 #endif /* !__INTELLISENSE__ */
+#define DeeType_HasMethodAttr(tp_invoker, tp_self, attr)                            DeeType_HasMethodAttrStringHash(tp_invoker, tp_self, DeeString_STR(attr), DeeString_Hash(attr))
+#define DeeType_HasMethodAttrHash(tp_invoker, tp_self, attr, hash)                  DeeType_HasMethodAttrStringHash(tp_invoker, tp_self, DeeString_STR(attr), hash)
+#define DeeType_HasMethodAttrString(tp_invoker, tp_self, attr)                      DeeType_HasMethodAttrStringHash(tp_invoker, tp_self, attr, Dee_HashStr(attr))
+#define DeeType_HasMethodAttrStringLen(tp_invoker, tp_self, attr, attrlen)          DeeType_HasMethodAttrStringLenHash(tp_invoker, tp_self, attr, attrlen, Dee_HashPtr(attr, attrlen))
+#define DeeType_HasClassMethodAttr(tp_invoker, tp_self, attr)                       DeeType_HasClassMethodAttrStringHash(tp_invoker, tp_self, DeeString_STR(attr), DeeString_Hash(attr))
+#define DeeType_HasClassMethodAttrHash(tp_invoker, tp_self, attr, hash)             DeeType_HasClassMethodAttrStringHash(tp_invoker, tp_self, DeeString_STR(attr), hash)
+#define DeeType_HasClassMethodAttrString(tp_invoker, tp_self, attr)                 DeeType_HasClassMethodAttrStringHash(tp_invoker, tp_self, attr, Dee_HashStr(attr))
+#define DeeType_HasClassMethodAttrStringLen(tp_invoker, tp_self, attr, attrlen)     DeeType_HasClassMethodAttrStringLenHash(tp_invoker, tp_self, attr, attrlen, Dee_HashPtr(attr, attrlen))
+#define DeeType_HasInstanceMethodAttr(tp_invoker, tp_self, attr)                    DeeType_HasInstanceMethodAttrStringHash(tp_invoker, tp_self, DeeString_STR(attr), DeeString_Hash(attr))
+#define DeeType_HasInstanceMethodAttrHash(tp_invoker, tp_self, attr, hash)          DeeType_HasInstanceMethodAttrStringHash(tp_invoker, tp_self, DeeString_STR(attr), hash)
+#define DeeType_HasInstanceMethodAttrString(tp_invoker, tp_self, attr)              DeeType_HasInstanceMethodAttrStringHash(tp_invoker, tp_self, attr, Dee_HashStr(attr))
+#define DeeType_HasInstanceMethodAttrStringLen(tp_invoker, tp_self, attr, attrlen)  DeeType_HasInstanceMethodAttrStringLenHash(tp_invoker, tp_self, attr, attrlen, Dee_HashPtr(attr, attrlen))
+#define DeeType_HasIInstanceMethodAttr(tp_invoker, tp_self, attr)                   DeeType_HasIInstanceMethodAttrStringHash(tp_invoker, tp_self, DeeString_STR(attr), DeeString_Hash(attr))
+#define DeeType_HasIInstanceMethodAttrHash(tp_invoker, tp_self, attr, hash)         DeeType_HasIInstanceMethodAttrStringHash(tp_invoker, tp_self, DeeString_STR(attr), hash)
+#define DeeType_HasIInstanceMethodAttrString(tp_invoker, tp_self, attr)             DeeType_HasIInstanceMethodAttrStringHash(tp_invoker, tp_self, attr, Dee_HashStr(attr))
+#define DeeType_HasIInstanceMethodAttrStringLen(tp_invoker, tp_self, attr, attrlen) DeeType_HasIInstanceMethodAttrStringLenHash(tp_invoker, tp_self, attr, attrlen, Dee_HashPtr(attr, attrlen))
+#define DeeType_HasGetSetAttr(tp_invoker, tp_self, attr)                            DeeType_HasGetSetAttrStringHash(tp_invoker, tp_self, DeeString_STR(attr), DeeString_Hash(attr))
+#define DeeType_HasGetSetAttrHash(tp_invoker, tp_self, attr, hash)                  DeeType_HasGetSetAttrStringHash(tp_invoker, tp_self, DeeString_STR(attr), hash)
+#define DeeType_HasGetSetAttrString(tp_invoker, tp_self, attr)                      DeeType_HasGetSetAttrStringHash(tp_invoker, tp_self, attr, Dee_HashStr(attr))
+#define DeeType_HasGetSetAttrStringLen(tp_invoker, tp_self, attr, attrlen)          DeeType_HasGetSetAttrStringLenHash(tp_invoker, tp_self, attr, attrlen, Dee_HashPtr(attr, attrlen))
+#define DeeType_HasClassGetSetAttr(tp_invoker, tp_self, attr)                       DeeType_HasClassGetSetAttrStringHash(tp_invoker, tp_self, DeeString_STR(attr), DeeString_Hash(attr))
+#define DeeType_HasClassGetSetAttrHash(tp_invoker, tp_self, attr, hash)             DeeType_HasClassGetSetAttrStringHash(tp_invoker, tp_self, DeeString_STR(attr), hash)
+#define DeeType_HasClassGetSetAttrString(tp_invoker, tp_self, attr)                 DeeType_HasClassGetSetAttrStringHash(tp_invoker, tp_self, attr, Dee_HashStr(attr))
+#define DeeType_HasClassGetSetAttrStringLen(tp_invoker, tp_self, attr, attrlen)     DeeType_HasClassGetSetAttrStringLenHash(tp_invoker, tp_self, attr, attrlen, Dee_HashPtr(attr, attrlen))
+#define DeeType_HasInstanceGetSetAttr(tp_invoker, tp_self, attr)                    DeeType_HasInstanceGetSetAttrStringHash(tp_invoker, tp_self, DeeString_STR(attr), DeeString_Hash(attr))
+#define DeeType_HasInstanceGetSetAttrHash(tp_invoker, tp_self, attr, hash)          DeeType_HasInstanceGetSetAttrStringHash(tp_invoker, tp_self, DeeString_STR(attr), hash)
+#define DeeType_HasInstanceGetSetAttrString(tp_invoker, tp_self, attr)              DeeType_HasInstanceGetSetAttrStringHash(tp_invoker, tp_self, attr, Dee_HashStr(attr))
+#define DeeType_HasInstanceGetSetAttrStringLen(tp_invoker, tp_self, attr, attrlen)  DeeType_HasInstanceGetSetAttrStringLenHash(tp_invoker, tp_self, attr, attrlen, Dee_HashPtr(attr, attrlen))
+#define DeeType_HasIInstanceGetSetAttr(tp_invoker, tp_self, attr)                   DeeType_HasIInstanceGetSetAttrStringHash(tp_invoker, tp_self, DeeString_STR(attr), DeeString_Hash(attr))
+#define DeeType_HasIInstanceGetSetAttrHash(tp_invoker, tp_self, attr, hash)         DeeType_HasIInstanceGetSetAttrStringHash(tp_invoker, tp_self, DeeString_STR(attr), hash)
+#define DeeType_HasIInstanceGetSetAttrString(tp_invoker, tp_self, attr)             DeeType_HasIInstanceGetSetAttrStringHash(tp_invoker, tp_self, attr, Dee_HashStr(attr))
+#define DeeType_HasIInstanceGetSetAttrStringLen(tp_invoker, tp_self, attr, attrlen) DeeType_HasIInstanceGetSetAttrStringLenHash(tp_invoker, tp_self, attr, attrlen, Dee_HashPtr(attr, attrlen))
+#define DeeType_HasMemberAttr(tp_invoker, tp_self, attr)                            DeeType_HasMemberAttrStringHash(tp_invoker, tp_self, DeeString_STR(attr), DeeString_Hash(attr))
+#define DeeType_HasMemberAttrHash(tp_invoker, tp_self, attr, hash)                  DeeType_HasMemberAttrStringHash(tp_invoker, tp_self, DeeString_STR(attr), hash)
+#define DeeType_HasMemberAttrString(tp_invoker, tp_self, attr)                      DeeType_HasMemberAttrStringHash(tp_invoker, tp_self, attr, Dee_HashStr(attr))
+#define DeeType_HasMemberAttrStringLen(tp_invoker, tp_self, attr, attrlen)          DeeType_HasMemberAttrStringLenHash(tp_invoker, tp_self, attr, attrlen, Dee_HashPtr(attr, attrlen))
+#define DeeType_HasClassMemberAttr(tp_invoker, tp_self, attr)                       DeeType_HasClassMemberAttrStringHash(tp_invoker, tp_self, DeeString_STR(attr), DeeString_Hash(attr))
+#define DeeType_HasClassMemberAttrHash(tp_invoker, tp_self, attr, hash)             DeeType_HasClassMemberAttrStringHash(tp_invoker, tp_self, DeeString_STR(attr), hash)
+#define DeeType_HasClassMemberAttrString(tp_invoker, tp_self, attr)                 DeeType_HasClassMemberAttrStringHash(tp_invoker, tp_self, attr, Dee_HashStr(attr))
+#define DeeType_HasClassMemberAttrStringLen(tp_invoker, tp_self, attr, attrlen)     DeeType_HasClassMemberAttrStringLenHash(tp_invoker, tp_self, attr, attrlen, Dee_HashPtr(attr, attrlen))
+#define DeeType_HasInstanceMemberAttr(tp_invoker, tp_self, attr)                    DeeType_HasInstanceMemberAttrStringHash(tp_invoker, tp_self, DeeString_STR(attr), DeeString_Hash(attr))
+#define DeeType_HasInstanceMemberAttrHash(tp_invoker, tp_self, attr, hash)          DeeType_HasInstanceMemberAttrStringHash(tp_invoker, tp_self, DeeString_STR(attr), hash)
+#define DeeType_HasInstanceMemberAttrString(tp_invoker, tp_self, attr)              DeeType_HasInstanceMemberAttrStringHash(tp_invoker, tp_self, attr, Dee_HashStr(attr))
+#define DeeType_HasInstanceMemberAttrStringLen(tp_invoker, tp_self, attr, attrlen)  DeeType_HasInstanceMemberAttrStringLenHash(tp_invoker, tp_self, attr, attrlen, Dee_HashPtr(attr, attrlen))
+#define DeeType_HasIInstanceMemberAttr(tp_invoker, tp_self, attr)                   DeeType_HasIInstanceMemberAttrStringHash(tp_invoker, tp_self, DeeString_STR(attr), DeeString_Hash(attr))
+#define DeeType_HasIInstanceMemberAttrHash(tp_invoker, tp_self, attr, hash)         DeeType_HasIInstanceMemberAttrStringHash(tp_invoker, tp_self, DeeString_STR(attr), hash)
+#define DeeType_HasIInstanceMemberAttrString(tp_invoker, tp_self, attr)             DeeType_HasIInstanceMemberAttrStringHash(tp_invoker, tp_self, attr, Dee_HashStr(attr))
+#define DeeType_HasIInstanceMemberAttrStringLen(tp_invoker, tp_self, attr, attrlen) DeeType_HasIInstanceMemberAttrStringLenHash(tp_invoker, tp_self, attr, attrlen, Dee_HashPtr(attr, attrlen))
+
 
 /* Find matching attributes. */
 #ifdef __INTELLISENSE__
@@ -1052,6 +1282,7 @@ DeeType_FindInstanceMemberAttr(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self
                                struct attribute_info *__restrict result,
                                struct attribute_lookup_rules const *__restrict rules);
 #endif /* !__INTELLISENSE__ */
+
 
 /* Misc. functions here for completeness, but don't *really* make
  * sense since they only throw errors when an attribute is found. */
@@ -1132,6 +1363,11 @@ INTDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeType_DelAttrStringLenHash)(DeeTypeO
 INTDEF WUNUSED NONNULL((1, 2, 4)) int (DCALL DeeType_SetAttrStringHash)(DeeTypeObject *self, char const *__restrict attr, dhash_t hash, DeeObject *value);
 INTDEF WUNUSED NONNULL((1, 2, 5)) int (DCALL DeeType_SetAttrStringLenHash)(DeeTypeObject *self, char const *__restrict attr, size_t attrlen, dhash_t hash, DeeObject *value);
 INTDEF WUNUSED NONNULL((1, 2)) dssize_t (DCALL DeeType_EnumAttr)(DeeTypeObject *self, denum_t proc, void *arg);
+#define DeeType_CallAttrStringHashTuple(self, attr, hash, args)                   DeeType_CallAttrStringHash(self, attr, hash, DeeTuple_SIZE(args), DeeTuple_ELEM(args))
+#define DeeType_CallAttrStringLenHashTuple(self, attr, attrlen, hash, args)       DeeType_CallAttrStringLenHash(self, attr, attrlen, hash, DeeTuple_SIZE(args), DeeTuple_ELEM(args))
+#define DeeType_CallAttrStringHashTupleKw(self, attr, hash, args, kw)             DeeType_CallAttrStringHashKw(self, attr, hash, DeeTuple_SIZE(args), DeeTuple_ELEM(args), kw)
+#define DeeType_CallAttrStringLenHashTupleKw(self, attr, attrlen, hash, args, kw) DeeType_CallAttrStringLenHashKw(self, attr, attrlen, hash, DeeTuple_SIZE(args), DeeTuple_ELEM(args), kw)
+
 
 /* Instance-only (wrapper) attribute access to the attributes of instance of types. */
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *(DCALL DeeType_GetInstanceAttrStringHash)(DeeTypeObject *self, char const *__restrict attr, dhash_t hash);
@@ -1140,11 +1376,15 @@ INTDEF WUNUSED NONNULL((1, 2)) bool (DCALL DeeType_HasInstanceAttrStringHash)(De
 INTDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeType_BoundInstanceAttrStringHash)(DeeTypeObject *self, char const *__restrict attr, dhash_t hash);
 INTDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeType_DelInstanceAttrStringHash)(DeeTypeObject *self, char const *__restrict attr, dhash_t hash);
 INTDEF WUNUSED NONNULL((1, 2, 4)) int (DCALL DeeType_SetInstanceAttrStringHash)(DeeTypeObject *self, char const *__restrict attr, dhash_t hash, DeeObject *value);
+#define DeeType_CallInstanceAttrStringHashTupleKw(self, attr, hash, args, kw) \
+	DeeType_CallInstanceAttrStringHashKw(self, attr, hash, DeeTuple_SIZE(args), DeeTuple_ELEM(args), kw)
 
 #define DeeType_GetAttr(self, attr)                          DeeType_GetAttrStringHash(self, DeeString_STR(attr), DeeString_Hash(attr))
 #define DeeType_BoundAttr(self, attr)                        DeeType_BoundAttrStringHash(self, DeeString_STR(attr), DeeString_Hash(attr))
 #define DeeType_CallAttr(self, attr, argc, argv)             DeeType_CallAttrStringHash(self, DeeString_STR(attr), DeeString_Hash(attr), argc, argv)
 #define DeeType_CallAttrKw(self, attr, argc, argv, kw)       DeeType_CallAttrStringHashKw(self, DeeString_STR(attr), DeeString_Hash(attr), argc, argv, kw)
+#define DeeType_CallAttrTuple(self, attr, args)              DeeType_CallAttrStringHashTuple(self, DeeString_STR(attr), DeeString_Hash(attr), args)
+#define DeeType_CallAttrTupleKw(self, attr, args, kw)        DeeType_CallAttrStringHashTupleKw(self, DeeString_STR(attr), DeeString_Hash(attr), args, kw)
 #define DeeType_HasAttr(self, attr)                          DeeType_HasAttrStringHash(self, DeeString_STR(attr), DeeString_Hash(attr))
 #define DeeType_DelAttr(self, attr)                          DeeType_DelAttrStringHash(self, DeeString_STR(attr), DeeString_Hash(attr))
 #define DeeType_SetAttr(self, attr, value)                   DeeType_SetAttrStringHash(self, DeeString_STR(attr), DeeString_Hash(attr), value)
@@ -1152,18 +1392,22 @@ INTDEF WUNUSED NONNULL((1, 2, 4)) int (DCALL DeeType_SetInstanceAttrStringHash)(
 #define DeeType_BoundAttrString(self, attr)                  DeeType_BoundAttrStringHash(self, attr, Dee_HashStr(attr))
 #define DeeType_CallAttrString(self, attr, argc, argv)       DeeType_CallAttrStringHash(self, attr, Dee_HashStr(attr), argc, argv)
 #define DeeType_CallAttrStringKw(self, attr, argc, argv, kw) DeeType_CallAttrStringHashKw(self, attr, Dee_HashStr(attr), argc, argv, kw)
+#define DeeType_CallAttrStringTuple(self, attr, args)        DeeType_CallAttrStringHashTuple(self, attr, Dee_HashStr(attr), args)
+#define DeeType_CallAttrStringTupleKw(self, attr, args, kw)  DeeType_CallAttrStringHashTupleKw(self, attr, Dee_HashStr(attr), args, kw)
 #define DeeType_HasAttrString(self, attr)                    DeeType_HasAttrStringHash(self, attr, Dee_HashStr(attr))
 #define DeeType_DelAttrString(self, attr)                    DeeType_DelAttrStringHash(self, attr, Dee_HashStr(attr))
 #define DeeType_SetAttrString(self, attr, value)             DeeType_SetAttrStringHash(self, attr, Dee_HashStr(attr), value)
 
 #define DeeType_GetInstanceAttr(self, attr)                          DeeType_GetInstanceAttrStringHash(self, DeeString_STR(attr), DeeString_Hash(attr))
 #define DeeType_CallInstanceAttrKw(self, attr, argc, argv, kw)       DeeType_CallInstanceAttrStringHashKw(self, DeeString_STR(attr), DeeString_Hash(attr), argc, argv, kw)
+#define DeeType_CallInstanceAttrTupleKw(self, attr, args, kw)        DeeType_CallInstanceAttrStringHashTupleKw(self, DeeString_STR(attr), DeeString_Hash(attr), args, kw)
 #define DeeType_HasInstanceAttr(self, attr)                          DeeType_HasInstanceAttrStringHash(self, DeeString_STR(attr), DeeString_Hash(attr))
 #define DeeType_BoundInstanceAttr(self, attr)                        DeeType_BoundInstanceAttrStringHash(self, DeeString_STR(attr), DeeString_Hash(attr))
 #define DeeType_DelInstanceAttr(self, attr)                          DeeType_DelInstanceAttrStringHash(self, DeeString_STR(attr), DeeString_Hash(attr))
 #define DeeType_SetInstanceAttr(self, attr, value)                   DeeType_SetInstanceAttrStringHash(self, DeeString_STR(attr), DeeString_Hash(attr), value)
 #define DeeType_GetInstanceAttrString(self, attr)                    DeeType_GetInstanceAttrStringHash(self, attr, Dee_HashStr(attr))
 #define DeeType_CallInstanceAttrStringKw(self, attr, argc, argv, kw) DeeType_CallInstanceAttrStringHashKw(self, attr, Dee_HashStr(attr), argc, argv, kw)
+#define DeeType_CallInstanceAttrStringTupleKw(self, attr, args, kw)  DeeType_CallInstanceAttrStringHashTupleKw(self, attr, Dee_HashStr(attr), args, kw)
 #define DeeType_HasInstanceAttrString(self, attr)                    DeeType_HasInstanceAttrStringHash(self, attr, Dee_HashStr(attr))
 #define DeeType_BoundInstanceAttrString(self, attr)                  DeeType_BoundInstanceAttrStringHash(self, attr, Dee_HashStr(attr))
 #define DeeType_DelInstanceAttrString(self, attr)                    DeeType_DelInstanceAttrStringHash(self, attr, Dee_HashStr(attr))
