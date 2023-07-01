@@ -244,20 +244,24 @@ DeeSystem_DEFINE_memcasecmp(dee_memcasecmp)
 #undef __libc_bzero
 #define __libc_bzero bzero
 #undef malloc
+#undef mallocv
 #undef calloc
 #undef realloc
 #undef reallocv
 #undef free
 #undef __libc_malloc
+#undef __libc_mallocv
 #undef __libc_calloc
 #undef __libc_realloc
 #undef __libc_free
 #define malloc(s)            Dee_TryMalloc(s)
+#define mallocv(c, n)        Dee_TryMallocc(c, n)
 #define calloc(c, n)         Dee_TryCallocc(c, n)
 #define realloc(p, s)        Dee_TryRealloc(p, s)
 #define reallocv(p, c, n)    Dee_TryReallocc(p, c, n)
 #define free(p)              Dee_Free(p)
 #define __libc_malloc(s)     Dee_TryMalloc(s)
+#define __libc_mallocv(c, n) Dee_TryMallocc(c, n)
 #define __libc_calloc(c, n)  Dee_TryCallocc(c, n)
 #define __libc_realloc(p, s) Dee_TryRealloc(p, s)
 #define __libc_free(p)       Dee_Free(p)

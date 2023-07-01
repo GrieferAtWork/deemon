@@ -1837,6 +1837,7 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 type_expression_name_unescape(struct type_expression_name *__restrict self) {
 	struct unicode_printer printer = UNICODE_PRINTER_INIT;
 	char const *iter, *end, *flush_start;
+
 	/* Parse the string and unescape special symbols. */
 	iter = self->ten_start;
 	end  = self->ten_end;
@@ -2428,16 +2429,12 @@ err_seq_type:
 		if (seq_type == &DeeList_Type || seq_type == &DeeSeq_Type) {
 			DREF DeeListObject *result;
 			Dee_DecrefNokill(seq_type);
-			result = DeeGCObject_MALLOC(DeeListObject);
+			result = (DREF DeeListObject *)objectlist_packlist(&ol);
 			if unlikely(!result) {
+err_ol:
 				objectlist_fini(&ol);
 				goto err;
 			}
-			DeeObject_Init(result, &DeeList_Type);
-			result->l_list = ol; /* Inherit */
-			weakref_support_init(result);
-			Dee_atomic_rwlock_init(&result->l_lock);
-			DeeGC_Track((DeeObject *)result);
 			return (DREF DeeObject *)result;
 		}
 
@@ -2445,10 +2442,9 @@ err_seq_type:
 		if (seq_type == &DeeTuple_Type) {
 			DREF DeeTupleObject *result;
 			Dee_DecrefNokill(seq_type);
-			result = (DREF DeeTupleObject *)DeeTuple_NewVectorSymbolic(ol.ol_elemc, ol.ol_elemv);
+			result = (DREF DeeTupleObject *)objectlist_packtuple(&ol);
 			if unlikely(!result)
-				Dee_Decrefv(ol.ol_elemv, ol.ol_elemc);
-			Dee_objectlist_fini_nodecref(&ol);
+				goto err_ol;
 			return (DREF DeeObject *)result;
 		}
 
