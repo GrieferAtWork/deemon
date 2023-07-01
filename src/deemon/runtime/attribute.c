@@ -451,9 +451,9 @@ PUBLIC ATTR_SENTINEL WUNUSED NONNULL((1, 2)) DREF DeeObject *
 }
 
 PUBLIC ATTR_SENTINEL WUNUSED NONNULL((1, 2)) DREF DeeObject *
-DeeObject_CallAttrStringHashPack(DeeObject *self,
-                                 char const *__restrict attr,
-                                 dhash_t hash, size_t argc, ...) {
+(DeeObject_CallAttrStringHashPack)(DeeObject *self,
+                                   char const *__restrict attr,
+                                   dhash_t hash, size_t argc, ...) {
 	DREF DeeObject *result;
 	va_list args;
 	va_start(args, argc);
@@ -470,9 +470,9 @@ PUBLIC WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *
 }
 
 PUBLIC WUNUSED NONNULL((1, 2, 4)) DREF DeeObject *
-DeeObject_CallAttrStringHashf(DeeObject *self,
-                              char const *__restrict attr, dhash_t hash,
-                              char const *__restrict format, ...) {
+(DeeObject_CallAttrStringHashf)(DeeObject *self,
+                                char const *__restrict attr, dhash_t hash,
+                                char const *__restrict format, ...) {
 	DREF DeeObject *result;
 	va_list args;
 	va_start(args, format);
@@ -482,10 +482,10 @@ DeeObject_CallAttrStringHashf(DeeObject *self,
 }
 
 PUBLIC WUNUSED NONNULL((1, 2, 5)) DREF DeeObject *
-DeeObject_CallAttrStringLenHashf(DeeObject *self,
-                                 char const *__restrict attr,
-                                 size_t attrlen, dhash_t hash,
-                                 char const *__restrict format, ...) {
+(DeeObject_CallAttrStringLenHashf)(DeeObject *self,
+                                   char const *__restrict attr,
+                                   size_t attrlen, dhash_t hash,
+                                   char const *__restrict format, ...) {
 	DREF DeeObject *result;
 	va_list args;
 	va_start(args, format);

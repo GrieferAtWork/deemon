@@ -878,7 +878,7 @@ DECL_BEGIN
 
 
 /* What visibility should the function have? */
-#if defined(LOCAL_HAS_tp_self)
+#if defined(LOCAL_HAS_tp_self) && !defined(LOCAL_IS_ENUM)
 #define LOCAL_DECL INTERN
 #else /* ... */
 #define LOCAL_DECL PUBLIC
@@ -889,16 +889,20 @@ DECL_BEGIN
 #define LOCAL_ATTR_NONNULL NONNULL((1, 3, 4))
 #elif defined(DEFINE_DeeObject_EnumAttr)
 #define LOCAL_ATTR_NONNULL NONNULL((1, 2))
-#elif defined(LOCAL_HAS_tp_self) && defined(LOCAL_HAS_len) && (defined(LOCAL_IS_SET) || defined(LOCAL_IS_CALL_TUPLE) || defined(LOCAL_IS_CALL_TUPLE_KW))
+#elif defined(LOCAL_HAS_tp_self) && defined(LOCAL_HAS_len) && defined(LOCAL_HAS_hash) && (defined(LOCAL_IS_SET) || defined(LOCAL_IS_CALL_TUPLE) || defined(LOCAL_IS_CALL_TUPLE_KW))
 #define LOCAL_ATTR_NONNULL NONNULL((1, 2, 3, 6))
-#elif defined(LOCAL_HAS_tp_self) && (defined(LOCAL_IS_SET) || defined(LOCAL_IS_CALL_TUPLE) || defined(LOCAL_IS_CALL_TUPLE_KW))
+#elif defined(LOCAL_HAS_tp_self) && (defined(LOCAL_HAS_len) || defined(LOCAL_HAS_hash)) && (defined(LOCAL_IS_SET) || defined(LOCAL_IS_CALL_TUPLE) || defined(LOCAL_IS_CALL_TUPLE_KW))
 #define LOCAL_ATTR_NONNULL NONNULL((1, 2, 3, 5))
+#elif defined(LOCAL_HAS_tp_self) && (defined(LOCAL_IS_SET) || defined(LOCAL_IS_CALL_TUPLE) || defined(LOCAL_IS_CALL_TUPLE_KW))
+#define LOCAL_ATTR_NONNULL NONNULL((1, 2, 3, 4))
 #elif defined(LOCAL_HAS_tp_self)
 #define LOCAL_ATTR_NONNULL NONNULL((1, 2, 3))
-#elif defined(LOCAL_HAS_len) && (defined(LOCAL_IS_SET) || defined(LOCAL_IS_CALL_TUPLE) || defined(LOCAL_IS_CALL_TUPLE_KW))
+#elif defined(LOCAL_HAS_len) && defined(LOCAL_HAS_hash) && (defined(LOCAL_IS_SET) || defined(LOCAL_IS_CALL_TUPLE) || defined(LOCAL_IS_CALL_TUPLE_KW))
 #define LOCAL_ATTR_NONNULL NONNULL((1, 2, 5))
-#elif defined(LOCAL_IS_SET) || defined(LOCAL_IS_CALL_TUPLE) || defined(LOCAL_IS_CALL_TUPLE_KW)
+#elif (defined(LOCAL_HAS_len) || defined(LOCAL_HAS_hash)) && (defined(LOCAL_IS_SET) || defined(LOCAL_IS_CALL_TUPLE) || defined(LOCAL_IS_CALL_TUPLE_KW))
 #define LOCAL_ATTR_NONNULL NONNULL((1, 2, 4))
+#elif defined(LOCAL_IS_SET) || defined(LOCAL_IS_CALL_TUPLE) || defined(LOCAL_IS_CALL_TUPLE_KW)
+#define LOCAL_ATTR_NONNULL NONNULL((1, 2, 3))
 #else /* ... */
 #define LOCAL_ATTR_NONNULL NONNULL((1, 2))
 #endif /* !... */
@@ -917,7 +921,7 @@ LOCAL_DECL WUNUSED LOCAL_ATTR_NONNULL LOCAL_return_t
                                    , denum_t proc, void *arg
 #else /* LOCAL_IS_ENUM */
 #ifdef LOCAL_IS_FIND
-                                   , struct attribute_info *__restrict retinfo,
+                                   , struct attribute_info *__restrict retinfo
                                    , struct attribute_lookup_rules const *__restrict rules
 #else /* LOCAL_IS_FIND */
 #ifdef LOCAL_HAS_string
