@@ -2813,8 +2813,10 @@ DeeJsonObject_ParseIntoAttribute(DeeJsonParser *__restrict self,
 		attr       = DeeClassDesc_QueryInstanceAttribute(attr_class, (DeeObject *)attr_name);
 		if (!attr) {
 			/* Check if the attribute exists in a base-class */
+			DeeTypeMRO mro;
+			into_type = DeeTypeMRO_Init(&mro, into_type);
 			for (;;) {
-				into_type = DeeType_Base(into_type);
+				into_type = DeeTypeMRO_Next(&mro, into_type);
 				if (into_type == NULL)
 					goto fallback;
 				if (!DeeType_IsClass(into_type))
@@ -3000,7 +3002,7 @@ DeeJson_ParseIntoType(DeeJsonParser *__restrict self,
 	}
 
 	/* Mapping types */
-	if (DeeType_IsInherited(into_type, &DeeMapping_Type)) {
+	if (DeeType_Implements(into_type, &DeeMapping_Type)) {
 		int tok;
 		tok = libjson_parser_peeknext(&self->djp_parser);
 		if (tok == JSON_PARSER_OBJECT) {
@@ -3020,7 +3022,7 @@ check_result_and_maybe_cast_to_into_type:
 	}
 
 	/* Sequence types */
-	if (DeeType_IsInherited(into_type, &DeeSeq_Type)) {
+	if (DeeType_Implements(into_type, &DeeSeq_Type)) {
 		int tok;
 		tok = libjson_parser_peeknext(&self->djp_parser);
 		if (tok == JSON_PARSER_ARRAY) {
@@ -3281,14 +3283,14 @@ DeeJson_WriteObject(DeeJsonWriter *__restrict self,
 			                obj);
 			goto err;
 		}
-		if (DeeType_IsInherited(type, &DeeMapping_Type)) {
+		if (DeeType_Implements(type, &DeeMapping_Type)) {
 			if unlikely(libjson_writer_beginobject(&self->djw_writer))
 				goto err;
 			if unlikely(DeeObject_ForeachPair(obj, &json_foreach_write_pair, self) < 0)
 				goto err;
 			if unlikely(libjson_writer_endobject(&self->djw_writer))
 				goto err;
-		} else if (DeeType_IsInherited(type, &DeeSeq_Type)) {
+		} else if (DeeType_Implements(type, &DeeSeq_Type)) {
 			if unlikely(libjson_writer_beginarray(&self->djw_writer))
 				goto err;
 			if unlikely(DeeObject_Foreach(obj, &json_foreach_write_item, self) < 0)

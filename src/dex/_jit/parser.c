@@ -1132,15 +1132,16 @@ JIT_IsCatchable(DeeObject *thrown_object,
 			mask = (DeeTypeObject *)DeeTuple_GET(typemask, i);
 			if (DeeNone_Check(mask))
 				mask = &DeeNone_Type;
-			if (DeeType_IsInherited(thrown_object_type, mask))
+			if (DeeType_Implements(thrown_object_type, mask))
 				return true; /* Got a match! */
 		}
 		return false;
 	}
-	/* Fallback: Do a regular is-instance check.
-	 * NOTE: `DeeType_IsInherited()' simply returns `false' when
+
+	/* Fallback: Do a regular implements check.
+	 * NOTE: `DeeType_InheritsFrom()' simply returns `false' when
 	 *       its second argument isn't actually a type at runtime. */
-	return DeeType_IsInherited(thrown_object_type, (DeeTypeObject *)typemask);
+	return DeeType_Implements(thrown_object_type, (DeeTypeObject *)typemask);
 }
 
 

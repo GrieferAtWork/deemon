@@ -112,7 +112,7 @@ INTERN WUNUSED NONNULL((1)) int
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeRoSet_FromSequenceOrMappingForContains(DeeObject *__restrict self) {
 	DREF DeeObject *keys, *result;
-	if (!DeeObject_InstanceOf(self, &DeeMapping_Type))
+	if (!DeeMapping_Check(self))
 		return DeeRoSet_FromSequence(self);
 
 	/* `x in Mapping' checks if `x' is a key.

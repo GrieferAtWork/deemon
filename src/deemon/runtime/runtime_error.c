@@ -71,9 +71,8 @@ INTERN ATTR_COLD int (DCALL err_no_active_exception)(void) {
 INTERN ATTR_COLD NONNULL((1)) int
 (DCALL err_subclass_final_type)(DeeTypeObject *__restrict tp) {
 	ASSERT_OBJECT(tp);
-	ASSERT(DeeType_Check(tp));
 	return DeeError_Throwf(&DeeError_ValueError,
-	                       "Cannot create sub-class of final type `%k'", tp);
+	                       "Cannot create sub-class of final type `%r'", tp);
 }
 
 PUBLIC ATTR_COLD NONNULL((1, 2)) int
@@ -81,9 +80,8 @@ PUBLIC ATTR_COLD NONNULL((1, 2)) int
                                    DeeTypeObject *wanted_type) {
 	ASSERT_OBJECT(self);
 	ASSERT_OBJECT(wanted_type);
-	ASSERT(DeeType_Check(wanted_type));
 	return DeeError_Throwf(&DeeError_TypeError,
-	                       "Expected instance of `%k', but got a `%k' object: %k",
+	                       "Expected instance of `%r', but got a `%r' object: %k",
 	                       wanted_type, Dee_TYPE(self), self);
 }
 
@@ -200,24 +198,22 @@ INTERN ATTR_COLD NONNULL((1)) int
 }
 
 INTERN ATTR_COLD NONNULL((1)) int
-(DCALL err_unimplemented_operator)(DeeTypeObject *__restrict tp, uint16_t operator_name) {
+(DCALL err_unimplemented_operator)(DeeTypeObject const *__restrict tp, uint16_t operator_name) {
 	struct opinfo const *info = Dee_OperatorInfo(Dee_TYPE(tp), operator_name);
 	ASSERT_OBJECT(tp);
-	ASSERT(DeeType_Check(tp));
 	return DeeError_Throwf(&DeeError_NotImplemented,
 	                       "Operator `%r.__%s__' is not implemented",
 	                       tp, info ? info->oi_sname : Q3);
 }
 
 INTERN ATTR_COLD NONNULL((1)) int
-(DCALL err_unimplemented_operator2)(DeeTypeObject *__restrict tp,
+(DCALL err_unimplemented_operator2)(DeeTypeObject const *__restrict tp,
                                     uint16_t operator_name,
                                     uint16_t operator_name2) {
 	struct opinfo const *info, *info2;
 	info  = Dee_OperatorInfo(Dee_TYPE(tp), operator_name);
 	info2 = Dee_OperatorInfo(Dee_TYPE(tp), operator_name2);
 	ASSERT_OBJECT(tp);
-	ASSERT(DeeType_Check(tp));
 	return DeeError_Throwf(&DeeError_NotImplemented,
 	                       "Neither `%r.__%s__', nor `%r.__%s__' are implemented",
 	                       tp, info ? info->oi_sname : Q3,
@@ -225,7 +221,7 @@ INTERN ATTR_COLD NONNULL((1)) int
 }
 
 INTERN ATTR_COLD NONNULL((1)) int
-(DCALL err_unimplemented_operator3)(DeeTypeObject *__restrict tp,
+(DCALL err_unimplemented_operator3)(DeeTypeObject const *__restrict tp,
                                     uint16_t operator_name,
                                     uint16_t operator_name2,
                                     uint16_t operator_name3) {
@@ -234,7 +230,6 @@ INTERN ATTR_COLD NONNULL((1)) int
 	info2 = Dee_OperatorInfo(Dee_TYPE(tp), operator_name2);
 	info3 = Dee_OperatorInfo(Dee_TYPE(tp), operator_name3);
 	ASSERT_OBJECT(tp);
-	ASSERT(DeeType_Check(tp));
 	return DeeError_Throwf(&DeeError_NotImplemented,
 	                       "Neither `%r.__%s__', nor `%r.__%s__', nor `%r.__%s__' are implemented",
 	                       tp, info ? info->oi_sname : Q3,
@@ -244,7 +239,7 @@ INTERN ATTR_COLD NONNULL((1)) int
 
 INTERN ATTR_COLD NONNULL((1)) int
 (DCALL err_index_out_of_bounds)(DeeObject *__restrict self,
-                        size_t index, size_t size) {
+                                size_t index, size_t size) {
 	ASSERT_OBJECT(self);
 	return DeeError_Throwf(&DeeError_IndexError,
 	                       "Index `%" PRFuSIZ "' lies outside the valid bounds "
@@ -809,7 +804,6 @@ INTERN ATTR_COLD NONNULL((1, 2)) int
                                      char const *__restrict name,
                                      int access) {
 	ASSERT_OBJECT(tp);
-	ASSERT(DeeType_Check(tp));
 	return DeeError_Throwf(&DeeError_AttributeError,
 	                       "Cannot %s unknown attribute `%r.%s'",
 	                       access_names[access & ATTR_ACCESS_MASK],
@@ -822,7 +816,6 @@ INTERN ATTR_COLD NONNULL((1)) int
                                          int access) {
 	ASSERT_OBJECT(tp);
 	ASSERT(!namelen || name);
-	ASSERT(DeeType_Check(tp));
 	return DeeError_Throwf(&DeeError_AttributeError,
 	                       "Cannot %s unknown attribute `%r.%$s'",
 	                       access_names[access & ATTR_ACCESS_MASK],
@@ -850,7 +843,6 @@ INTERN ATTR_COLD NONNULL((1, 2)) int
                                          char const *__restrict name,
                                          int access) {
 	ASSERT_OBJECT(tp);
-	ASSERT(DeeType_Check(tp));
 	return DeeError_Throwf(&DeeError_AttributeError,
 	                       "Cannot %s attribute `%r.%s'",
 	                       access_names[access & ATTR_ACCESS_MASK],
@@ -863,7 +855,6 @@ INTERN ATTR_COLD NONNULL((1)) int
                                              int access) {
 	ASSERT_OBJECT(tp);
 	ASSERT(!namelen || name);
-	ASSERT(DeeType_Check(tp));
 	return DeeError_Throwf(&DeeError_AttributeError,
 	                       "Cannot %s attribute `%r.%$s'",
 	                       access_names[access & ATTR_ACCESS_MASK],
@@ -890,7 +881,6 @@ INTERN ATTR_COLD NONNULL((1, 2)) int
 (DCALL err_unbound_attribute_string)(DeeTypeObject *__restrict tp,
                                      char const *__restrict name) {
 	ASSERT_OBJECT(tp);
-	ASSERT(DeeType_Check(tp));
 	return DeeError_Throwf(&DeeError_UnboundAttribute,
 	                       "Unbound attribute `%r.%s'",
 	                       tp, name);

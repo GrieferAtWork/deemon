@@ -1050,10 +1050,12 @@ set_object_entry:
 			JITLValue_Fini(&lv);
 			if unlikely(!result->js_clsattrib.jc_obj)
 				goto err;
-			if (DeeObject_AssertType(result->js_clsattrib.jc_obj,
-			                         ent->oe_attr.a_class)) {
-				Dee_Decref(result->js_clsattrib.jc_obj);
-				goto err;
+			if (!DeeType_IsAbstract(ent->oe_attr.a_class)) {
+				if (DeeObject_AssertType(result->js_clsattrib.jc_obj,
+				                         ent->oe_attr.a_class)) {
+					Dee_Decref(result->js_clsattrib.jc_obj);
+					goto err;
+				}
 			}
 			result->js_kind              = JIT_SYMBOL_CLSATTRIB;
 			result->js_clsattrib.jc_attr = ent->oe_attr.a_attr;

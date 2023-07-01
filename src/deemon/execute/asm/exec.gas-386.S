@@ -1157,7 +1157,7 @@ run_finally_after_return:
 	movl   s_type(%eax), %ecx  /* %ecx = ((DeeSuperObject *)current_exception)->s_type */
 4:	pushl  %ecx                /* <thrown_object_type> */
 	ADJUST_CFA_OFFSET(4)
-	call   fSYM(DeeType_IsInherited,8)
+	call   fSYM(DeeType_Implements,8)
 	ADJUST_CFA_OFFSET(-8)
 	testl  %eax, %eax
 	popl   %edx /* current_except */
@@ -1166,8 +1166,8 @@ run_finally_after_return:
 	ADJUST_CFA_OFFSET(-4)
 	popl   %eax /* ip_addr */
 	ADJUST_CFA_OFFSET(-4)
-	/* if (DeeObject_InstanceOf(current_exception,
-	 *                          current_except->eh_mask))
+	/* if (DeeObject_Implements(current_exception,
+	 *                              current_except->eh_mask))
 	 *     goto exec_except; */
 	jnz    run_except_handler_in_edx_handled
 2:	loop   1b
@@ -3577,7 +3577,7 @@ target_instanceof:
 	/* Special case: The deemon specs allow `none' to be
 	 *               written as the second argument to `is' */
 	je     1f                            /* if (DeeNone_Check(FIRST)) goto 1f; */
-	pushl  %edx                          /* DeeType_IsInherited:1:inherited_type=FIRST */
+	pushl  %edx                          /* DeeType_InheritsFrom:1:inherited_type=FIRST */
 	ADJUST_CFA_OFFSET(4)
 	movl   ob_type(%ecx), %eax
 	cmpl   $(SYM(DeeSuper_Type)), %eax
@@ -3585,9 +3585,42 @@ target_instanceof:
 	/* Check against the effective class of the
 	 * super-wrapper, not the super-type itself. */
 	movl   s_type(%ecx), %eax
-3:	pushl  %eax                          /* DeeType_IsInherited:0:test_type */
+3:	pushl  %eax                          /* DeeType_InheritsFrom:0:test_type */
 	ADJUST_CFA_OFFSET(4)
-	call   fSYM(DeeType_IsInherited,8)
+	call   fSYM(DeeType_InheritsFrom,8)
+	ADJUST_CFA_OFFSET(-8)
+	movzbl %al, %eax
+2:	ASSERT_BELOW_EQUAL(%eax,$1)
+	leal   SYM(Dee_FalseTrue)(,%eax,8), %eax
+	incref %eax
+	xchgl  SECOND, %eax /* Exchange the lower-order operand with the boolean object. */
+	decref %eax
+	sp_popref %eax
+	jmp    .disp
+1:	cmpl   $(SYM(DeeNone_Singleton)), %ecx /* `x is none' - Return true if `x' is the none-singleton. */
+	sete   %al
+	jmp    2b
+
+
+
+target_implements:
+	movl   SECOND, %ecx
+	movl   FIRST,  %edx
+	cmpl   $(SYM(DeeNone_Singleton)), %edx
+	/* Special case: The deemon specs allow `none' to be
+	 *               written as the second argument to `is' */
+	je     1f                            /* if (DeeNone_Check(FIRST)) goto 1f; */
+	pushl  %edx                          /* DeeType_Implements:1:inherited_type=FIRST */
+	ADJUST_CFA_OFFSET(4)
+	movl   ob_type(%ecx), %eax
+	cmpl   $(SYM(DeeSuper_Type)), %eax
+	jne    3f                            /* if (!DeeSuper_Check(SECOND)) goto 3f; */
+	/* Check against the effective class of the
+	 * super-wrapper, not the super-type itself. */
+	movl   s_type(%ecx), %eax
+3:	pushl  %eax                          /* DeeType_Implements:0:test_type */
+	ADJUST_CFA_OFFSET(4)
+	call   fSYM(DeeType_Implements,8)
 	ADJUST_CFA_OFFSET(-8)
 	movzbl %al, %eax
 2:	ASSERT_BELOW_EQUAL(%eax,$1)
@@ -6577,11 +6610,11 @@ target_supergetattr_this_rc:
 	ADJUST_CFA_OFFSET(4)
 	pushl  %ecx          /* DeeObject_TGetAttr:tp_self */
 	ADJUST_CFA_OFFSET(4)
-	pushl  %ecx          /* DeeObject_AssertType:required_type */
+	pushl  %ecx          /* DeeObject_AssertImplements:required_type */
 	ADJUST_CFA_OFFSET(4)
-	pushl  %edx          /* DeeObject_AssertType:self */
+	pushl  %edx          /* DeeObject_AssertImplements:self */
 	ADJUST_CFA_OFFSET(4)
-	call   fSYM(DeeObject_AssertType,8)
+	call   fSYM(DeeObject_AssertImplements,8)
 	ADJUST_CFA_OFFSET(-8)
 	testl  %eax, %eax
 	jnz    .except_x12
@@ -6627,11 +6660,11 @@ target_supercallattr_this_rc:
 	ADJUST_CFA_OFFSET(4)
 	pushl  %ecx            /* DeeObject_TCallAttr:tp_self */
 	ADJUST_CFA_OFFSET(4)
-	pushl  %ecx            /* DeeObject_AssertType:required_type */
+	pushl  %ecx            /* DeeObject_AssertImplements:required_type */
 	ADJUST_CFA_OFFSET(4)
-	pushl  %edx            /* DeeObject_AssertType:self */
+	pushl  %edx            /* DeeObject_AssertImplements:self */
 	ADJUST_CFA_OFFSET(4)
-	call   fSYM(DeeObject_AssertType,8)
+	call   fSYM(DeeObject_AssertImplements,8)
 	ADJUST_CFA_OFFSET(-8)
 	testl  %eax, %eax
 	jnz    .except_x24
@@ -8612,6 +8645,9 @@ prefix_target_superof = prefix_invop
 .ifndef prefix_target_instanceof
 prefix_target_instanceof = prefix_invop
 .endif
+.ifndef prefix_target_implements
+prefix_target_implements = prefix_invop
+.endif
 .ifndef prefix_target_str
 prefix_target_str = prefix_invop
 .endif
@@ -9677,6 +9713,9 @@ repr_target_superof = repr_invop
 .ifndef repr_target_instanceof
 repr_target_instanceof = repr_invop
 .endif
+.ifndef repr_target_implements
+repr_target_implements = repr_invop
+.endif
 .ifndef repr_target_str
 repr_target_str = repr_invop
 .endif
@@ -10208,9 +10247,9 @@ inst_table:
 	.long target_classof                 /* 0x4a : `classof top' */
 	.long target_superof                 /* 0x4b : `superof top' */
 	.long target_instanceof              /* 0x4c : `instanceof top, pop' */
-	.long target_str                     /* 0x4d : `str top' */
-	.long target_repr                    /* 0x4e : `repr top' */
-	.long invop
+	.long target_implements              /* 0x4d : `implements top, pop' */
+	.long target_str                     /* 0x4e : `str top' */
+	.long target_repr                    /* 0x4f : `repr top' */
 	.long target_bool                    /* 0x50 : `bool top' */
 	.long target_not                     /* 0x51 : `not top' */
 	.long target_assign                  /* 0x52 : `assign pop, pop' */
@@ -10724,9 +10763,9 @@ prefix_inst_table:
 	.long prefix_target_classof                 /* 0x4a : `classof top' */
 	.long prefix_target_superof                 /* 0x4b : `superof top' */
 	.long prefix_target_instanceof              /* 0x4c : `instanceof top, pop' */
-	.long prefix_target_str                     /* 0x4d : `str top' */
-	.long prefix_target_repr                    /* 0x4e : `repr top' */
-	.long prefix_invop
+	.long prefix_target_implements              /* 0x4d : `implements top, pop' */
+	.long prefix_target_str                     /* 0x4e : `str top' */
+	.long prefix_target_repr                    /* 0x4f : `repr top' */
 	.long prefix_target_bool                    /* 0x50 : `bool top' */
 	.long prefix_target_not                     /* 0x51 : `not top' */
 	.long prefix_target_assign                  /* 0x52 : `assign pop, pop' */
@@ -11240,9 +11279,9 @@ repr_inst_table:
 	.long repr_target_classof                 /* 0x4a : `classof top' */
 	.long repr_target_superof                 /* 0x4b : `superof top' */
 	.long repr_target_instanceof              /* 0x4c : `instanceof top, pop' */
-	.long repr_target_str                     /* 0x4d : `str top' */
-	.long repr_target_repr                    /* 0x4e : `repr top' */
-	.long repr_invop
+	.long repr_target_implements              /* 0x4d : `implements top, pop' */
+	.long repr_target_str                     /* 0x4e : `str top' */
+	.long repr_target_repr                    /* 0x4f : `repr top' */
 	.long repr_target_bool                    /* 0x50 : `bool top' */
 	.long repr_target_not                     /* 0x51 : `not top' */
 	.long repr_target_assign                  /* 0x52 : `assign pop, pop' */

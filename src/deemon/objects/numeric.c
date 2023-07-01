@@ -490,6 +490,8 @@ numeric_get_isfloat(DeeObject *__restrict self) {
 	DREF DeeFloatObject *flt_val, *flt_trunc_val, *int_as_flt_val;
 	DREF DeeIntObject *int_val;
 	DeeTypeObject *tp = Dee_TYPE(self);
+	DeeTypeMRO mro;
+	DeeTypeMRO_Init(&mro, tp);
 	do {
 		bool has_float, has_int;
 		has_float = DeeType_HasPrivateOperator(tp, OPERATOR_FLOAT);
@@ -539,7 +541,7 @@ numeric_get_isfloat(DeeObject *__restrict self) {
 			Dee_Decref(flt_val);
 			return_bool_(error);
 		}
-	} while ((tp = DeeType_Base(tp)) != NULL);
+	} while ((tp = DeeTypeMRO_Next(&mro, tp)) != NULL);
 	return_false;
 err_flt_val:
 	Dee_Decref(flt_val);

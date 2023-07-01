@@ -435,7 +435,11 @@ INTDEF DeeTypeObject DictValuesIterator_Type;
 INTERN WUNUSED NONNULL((1)) int DCALL
 dictproxyiterator_ctor(DictProxyIterator *__restrict self) {
 	DeeTypeObject *proxy_type;
-	proxy_type             = (DeeObject_InstanceOf((DeeObject *)self, &DictKeysIterator_Type) ? &DeeDictKeys_Type : DeeObject_InstanceOf((DeeObject *)self, &DictItemsIterator_Type) ? &DeeDictItems_Type : &DeeDictValues_Type);
+	proxy_type = (DeeObject_InstanceOf((DeeObject *)self, &DictKeysIterator_Type)
+	              ? &DeeDictKeys_Type
+	              : DeeObject_InstanceOf((DeeObject *)self, &DictItemsIterator_Type)
+	                ? &DeeDictItems_Type
+	                : &DeeDictValues_Type);
 	self->dpi_base.di_dict = (DeeDictObject *)DeeDict_New();
 	if unlikely(!self->dpi_base.di_dict)
 		goto err;

@@ -18,7 +18,7 @@
  * 3. This notice may not be removed or altered from any source distribution. *
  */
 #ifdef __INTELLISENSE__
-#define DEE_SOURCE
+#include "builtins.c"
 #define SIZEOF 16
 #define SIGNED 1
 #endif /* __INTELLISENSE__ */
@@ -1331,7 +1331,9 @@ INTERN DeeSTypeObject TYPE_NAME = {
 		/* .tp_members       = */ NULL,
 		/* .tp_class_methods = */ NULL,
 		/* .tp_class_getsets = */ NULL,
-		/* .tp_class_members = */ X(int_class_members)
+		/* .tp_class_members = */ X(int_class_members),
+		/* .tp_call_kw       = */ NULL,
+		/* .tp_mro           = */ ctypes_numeric_mro,
 	},
 #ifndef CONFIG_NO_THREADS
 	/* .st_cachelock = */ DEE_ATOMIC_RWLOCK_INIT,

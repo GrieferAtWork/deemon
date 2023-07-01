@@ -2291,7 +2291,7 @@ ot_init(ObjectTable *__restrict self,
 	if (DeeArg_Unpack(argc, argv, "o|o:_ObjectTable", &ob, &type))
 		goto err;
 	if (type) {
-		if (DeeObject_AssertType(ob, type))
+		if (DeeObject_AssertImplements(ob, type))
 			goto err;
 	} else {
 		type = Dee_TYPE(ob);
@@ -2433,8 +2433,10 @@ instancemember_get(DeeInstanceMemberObject *self, size_t argc,
 	struct class_desc *desc;
 	if (DeeArg_UnpackKw(argc, argv, kw, thisarg_kwlist, "o:get", &thisarg))
 		goto err;
-	if (DeeObject_AssertType(thisarg, self->im_type))
-		goto err;
+	if (!DeeType_IsAbstract(self->im_type)) {
+		if (DeeObject_AssertType(thisarg, self->im_type))
+			goto err;
+	}
 	desc = DeeClass_DESC(self->im_type);
 	return DeeInstance_GetAttribute(desc,
 	                                DeeInstance_DESC(desc,
@@ -2452,8 +2454,10 @@ instancemember_delete(DeeInstanceMemberObject *self, size_t argc,
 	struct class_desc *desc;
 	if (DeeArg_UnpackKw(argc, argv, kw, thisarg_kwlist, "o:delete", &thisarg))
 		goto err;
-	if (DeeObject_AssertType(thisarg, self->im_type))
-		goto err;
+	if (!DeeType_IsAbstract(self->im_type)) {
+		if (DeeObject_AssertType(thisarg, self->im_type))
+			goto err;
+	}
 	desc = DeeClass_DESC(self->im_type);
 	if (DeeInstance_DelAttribute(desc,
 	                             DeeInstance_DESC(desc,
@@ -2474,8 +2478,10 @@ instancemember_set(DeeInstanceMemberObject *self, size_t argc,
 	PRIVATE struct keyword kwlist[] = { K(thisarg), K(value), KEND };
 	if (DeeArg_UnpackKw(argc, argv, kw, kwlist, "oo:set", &thisarg, &value))
 		goto err;
-	if (DeeObject_AssertType(thisarg, self->im_type))
-		goto err;
+	if (!DeeType_IsAbstract(self->im_type)) {
+		if (DeeObject_AssertType(thisarg, self->im_type))
+			goto err;
+	}
 	desc = DeeClass_DESC(self->im_type);
 	if (DeeInstance_SetAttribute(desc,
 	                             DeeInstance_DESC(desc,
@@ -3217,8 +3223,10 @@ DeeClass_CallInstanceAttribute(DeeTypeObject *class_type,
 			                attr->ca_name);
 			goto err;
 		}
-		if (DeeObject_AssertType(argv[0], class_type))
-			goto err;
+		if (!DeeType_IsAbstract(class_type)) {
+			if (DeeObject_AssertType(argv[0], class_type))
+				goto err;
+		}
 		return DeeInstance_GetAttribute(my_class,
 		                                DeeInstance_DESC(my_class, argv[0]),
 		                                argv[0],
@@ -3274,8 +3282,10 @@ DeeClass_CallInstanceAttributeKw(DeeTypeObject *class_type,
 		DeeObject *thisarg;
 		if (DeeArg_UnpackKw(argc, argv, kw, thisarg_kwlist, "o:get", &thisarg))
 			goto err;
-		if (DeeObject_AssertType(thisarg, class_type))
-			goto err;
+		if (!DeeType_IsAbstract(class_type)) {
+			if (DeeObject_AssertType(thisarg, class_type))
+				goto err;
+		}
 		return DeeInstance_GetAttribute(my_class,
 		                                DeeInstance_DESC(my_class, thisarg),
 		                                thisarg,
@@ -3334,8 +3344,10 @@ DeeClass_CallInstanceAttributeTuple(DeeTypeObject *class_type,
 			                attr->ca_name);
 			goto err;
 		}
-		if (DeeObject_AssertType(DeeTuple_GET(args, 0), class_type))
-			goto err;
+		if (!DeeType_IsAbstract(class_type)) {
+			if (DeeObject_AssertType(DeeTuple_GET(args, 0), class_type))
+				goto err;
+		}
 		return DeeInstance_GetAttribute(my_class,
 		                                DeeInstance_DESC(my_class, DeeTuple_GET(args, 0)),
 		                                DeeTuple_GET(args, 0),
@@ -3391,8 +3403,10 @@ DeeClass_CallInstanceAttributeTupleKw(DeeTypeObject *class_type,
 		if (DeeArg_UnpackKw(DeeTuple_SIZE(args), DeeTuple_ELEM(args),
 		                    kw, thisarg_kwlist, "o:get", &thisarg))
 			goto err;
-		if (DeeObject_AssertType(thisarg, class_type))
-			goto err;
+		if (!DeeType_IsAbstract(class_type)) {
+			if (DeeObject_AssertType(thisarg, class_type))
+				goto err;
+		}
 		return DeeInstance_GetAttribute(my_class,
 		                                DeeInstance_DESC(my_class, thisarg),
 		                                thisarg,
@@ -3453,8 +3467,10 @@ DeeClass_VCallInstanceAttributef(DeeTypeObject *class_type,
 		                  DeeTuple_ELEM(args_tuple),
 		                  "o:get", &thisarg))
 			goto err_args_tuple;
-		if (DeeObject_AssertType(thisarg, class_type))
-			goto err_args_tuple;
+		if (!DeeType_IsAbstract(class_type)) {
+			if (DeeObject_AssertType(thisarg, class_type))
+				goto err_args_tuple;
+		}
 		result = DeeInstance_GetAttribute(my_class,
 		                                  DeeInstance_DESC(my_class, thisarg),
 		                                  thisarg,
@@ -4192,7 +4208,7 @@ class_attribute_mayaccess_impl(struct class_attribute *__restrict self,
 	if (!caller_frame ||
 	    !(caller_frame->cf_func->fo_code->co_flags & CODE_FTHISCALL))
 		return false;
-	return DeeType_IsInherited(DeeObject_Class(caller_frame->cf_this),
+	return DeeType_InheritsFrom(DeeObject_Class(caller_frame->cf_this),
 	                           impl_class);
 }
 
@@ -4480,8 +4496,10 @@ INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *
                                   uint16_t addr) {
 	if (DeeObject_AssertType(tp_self, &DeeType_Type))
 		goto err;
-	if (DeeObject_AssertType(self, tp_self))
-		goto err;
+	if (!DeeType_IsAbstract(tp_self)) {
+		if (DeeObject_AssertType(self, tp_self))
+			goto err;
+	}
 	if (!DeeType_IsClass(tp_self))
 		goto err_req_class;
 	if (addr >= DeeClass_DESC(tp_self)->cd_desc->cd_imemb_size)
@@ -4502,8 +4520,10 @@ INTERN WUNUSED NONNULL((1, 2)) int
                                     uint16_t addr) {
 	if (DeeObject_AssertType(tp_self, &DeeType_Type))
 		goto err;
-	if (DeeObject_AssertType(self, tp_self))
-		goto err;
+	if (!DeeType_IsAbstract(tp_self)) {
+		if (DeeObject_AssertType(self, tp_self))
+			goto err;
+	}
 	if (!DeeType_IsClass(tp_self))
 		goto err_req_class;
 	if (addr >= DeeClass_DESC(tp_self)->cd_desc->cd_imemb_size)
@@ -4523,8 +4543,10 @@ INTERN WUNUSED NONNULL((1, 2)) int
                                   uint16_t addr) {
 	if (DeeObject_AssertType(tp_self, &DeeType_Type))
 		goto err;
-	if (DeeObject_AssertType(self, tp_self))
-		goto err;
+	if (!DeeType_IsAbstract(tp_self)) {
+		if (DeeObject_AssertType(self, tp_self))
+			goto err;
+	}
 	if (!DeeType_IsClass(tp_self))
 		goto err_req_class;
 	if (addr >= DeeClass_DESC(tp_self)->cd_desc->cd_imemb_size)
@@ -4544,8 +4566,10 @@ INTERN WUNUSED NONNULL((1, 2, 4)) int
                                   uint16_t addr, DeeObject *value) {
 	if (DeeObject_AssertType(tp_self, &DeeType_Type))
 		goto err;
-	if (DeeObject_AssertType(self, tp_self))
-		goto err;
+	if (!DeeType_IsAbstract(tp_self)) {
+		if (DeeObject_AssertType(self, tp_self))
+			goto err;
+	}
 	if (!DeeType_IsClass(tp_self))
 		goto err_req_class;
 	if (addr >= DeeClass_DESC(tp_self)->cd_desc->cd_imemb_size)

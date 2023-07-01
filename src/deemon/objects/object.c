@@ -79,6 +79,13 @@ PUBLIC WUNUSED NONNULL((1, 2)) int
 }
 
 PUBLIC WUNUSED NONNULL((1, 2)) int
+(DCALL DeeObject_AssertImplements)(DeeObject *self, DeeTypeObject *required_type) {
+	if likely(DeeObject_Implements(self, required_type))
+		return 0;
+	return DeeObject_TypeAssertFailed(self, required_type);
+}
+
+PUBLIC WUNUSED NONNULL((1, 2)) int
 (DCALL DeeObject_AssertTypeExact)(DeeObject *self, DeeTypeObject *required_type) {
 	if likely(DeeObject_InstanceOfExact(self, required_type))
 		return 0;
@@ -104,13 +111,26 @@ DeeObject_Class(DeeObject *__restrict self) {
  * NOTE: When `inherited_type' is not a type, this function simply returns `false'
  * >> return inherited_type.baseof(test_type); */
 PUBLIC WUNUSED NONNULL((1)) bool DCALL
-DeeType_IsInherited(DeeTypeObject const *test_type,
-                    DeeTypeObject const *inherited_type) {
+DeeType_InheritsFrom(DeeTypeObject const *test_type,
+                     DeeTypeObject const *inherited_type) {
 	do {
 		if (test_type == inherited_type)
 			return true;
-	} while ((test_type != test_type->tp_base) &&
-	         (test_type = test_type->tp_base) != NULL);
+	} while ((test_type = DeeType_Base(test_type)) != NULL);
+	return false;
+}
+
+/* Same as `DeeType_InheritsFrom()', but also check `tp_mro' for matches.
+ * This function should be used when `implemented_type' is an abstract type. */
+PUBLIC WUNUSED NONNULL((1)) bool DCALL
+DeeType_Implements(DeeTypeObject const *test_type,
+                   DeeTypeObject const *implemented_type) {
+	DeeTypeMRO mro;
+	test_type = DeeTypeMRO_Init(&mro, test_type);
+	do {
+		if (test_type == implemented_type)
+			return true;
+	} while ((test_type = DeeTypeMRO_Next(&mro, test_type)) != NULL);
 	return false;
 }
 
@@ -2172,9 +2192,9 @@ object_is(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	if (DeeNone_Check((DeeObject *)tp)) {
 		is_instance = DeeNone_Check(self);
 	} else if (DeeSuper_Check(self)) {
-		is_instance = DeeType_IsInherited(DeeSuper_TYPE(self), tp);
+		is_instance = DeeType_InheritsFrom(DeeSuper_TYPE(self), tp);
 	} else {
-		is_instance = DeeObject_InstanceOf(self, tp);
+		is_instance = DeeObject_Implements(self, tp);
 	}
 	return_bool_(is_instance);
 err:
@@ -2624,12 +2644,20 @@ type_fini(DeeTypeObject *__restrict self) {
 	Dee_membercache_fini(&self->tp_cache);
 	Dee_membercache_fini(&self->tp_class_cache);
 
+	/* Cleanup extra MRO types */
+	if (self->tp_mro != NULL) {
+		size_t i;
+		for (i = 0; self->tp_mro[i] != NULL; ++i)
+			Dee_Decref_unlikely(self->tp_mro[i]);
+		Dee_Free((void *)self->tp_mro);
+	}
+
 	/* Cleanup name & doc objects should those have been used. */
 	if (self->tp_flags & TP_FNAMEOBJECT)
-		Dee_XDecref(COMPILER_CONTAINER_OF(self->tp_name, DeeStringObject, s_str));
+		Dee_XDecref_likely(COMPILER_CONTAINER_OF(self->tp_name, DeeStringObject, s_str));
 	if (self->tp_flags & TP_FDOCOBJECT)
-		Dee_XDecref(COMPILER_CONTAINER_OF(self->tp_doc, DeeStringObject, s_str));
-	Dee_XDecref(self->tp_base);
+		Dee_XDecref_likely(COMPILER_CONTAINER_OF(self->tp_doc, DeeStringObject, s_str));
+	Dee_XDecref_unlikely(self->tp_base);
 }
 
 
@@ -2638,6 +2666,11 @@ type_visit(DeeTypeObject *__restrict self,
            dvisit_t proc, void *arg) {
 	if (DeeType_IsClass(self))
 		class_visit(self, proc, arg);
+	if (self->tp_mro != NULL) {
+		size_t i;
+		for (i = 0; self->tp_mro[i] != NULL; ++i)
+			Dee_Visit(self->tp_mro[i]);
+	}
 	Dee_XVisit(self->tp_base);
 }
 
@@ -2653,16 +2686,16 @@ type_pclear(DeeTypeObject *__restrict self, unsigned int gc_priority) {
 		class_pclear(self, gc_priority);
 }
 
+PRIVATE struct keyword kwlist_other[] = { K(other), KEND };
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 type_baseof(DeeTypeObject *self, size_t argc,
             DeeObject *const *argv, DeeObject *kw) {
 	DeeTypeObject *other;
-	PRIVATE struct keyword kwlist[] = { K(other), KEND };
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist, "o:baseof", &other))
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist_other, "o:baseof", &other))
 		goto err;
 	if (!DeeType_Check((DeeObject *)other))
 		return_false;
-	return_bool(DeeType_IsInherited(other, self));
+	return_bool(DeeType_InheritsFrom(other, self));
 err:
 	return NULL;
 }
@@ -2671,10 +2704,20 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 type_derivedfrom(DeeTypeObject *self, size_t argc,
                  DeeObject *const *argv, DeeObject *kw) {
 	DeeTypeObject *other;
-	PRIVATE struct keyword kwlist[] = { K(other), KEND };
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist, "o:derivedfrom", &other))
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist_other, "o:derivedfrom", &other))
 		goto err;
-	return_bool(DeeType_IsInherited(self, other));
+	return_bool(DeeType_InheritsFrom(self, other));
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+type_implements(DeeTypeObject *self, size_t argc,
+                DeeObject *const *argv, DeeObject *kw) {
+	DeeTypeObject *other;
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist_other, "o:implements", &other))
+		goto err;
+	return_bool(DeeType_Implements(self, other));
 err:
 	return NULL;
 }
@@ -2822,7 +2865,8 @@ set_basic_member(DeeTypeObject *__restrict tp_self,
 		if (iter->tp_members &&
 		    (temp = DeeType_SetMemberAttrStringHash(tp_self, iter, self, attr_name, attr_hash, value)) <= 0)
 			goto done_temp;
-	next_base:;
+next_base:
+		;
 	} while ((iter = DeeType_Base(iter)) != NULL);
 	return DeeError_Throwf(&DeeError_AttributeError,
 	                       "Could not find member %k in %k, or its bases",
@@ -3414,10 +3458,12 @@ type_hasattribute(DeeTypeObject *self, size_t argc,
 	name_str  = DeeString_STR(name);
 	name_hash = DeeString_Hash(name);
 	if (!self->tp_attr) {
+		DeeTypeMRO mro;
 		DeeTypeObject *iter;
 		if (DeeType_HasCachedAttrStringHash(self, name_str, name_hash))
 			goto found;
 		iter = self;
+		DeeTypeMRO_Init(&mro, iter);
 		for (;;) {
 			if (DeeType_IsClass(iter)) {
 				if (DeeType_QueryInstanceAttributeHash(self, iter, name, name_hash) != NULL)
@@ -3433,7 +3479,7 @@ type_hasattribute(DeeTypeObject *self, size_t argc,
 				    DeeType_HasMemberAttrStringHash(self, iter, name_str, name_hash))
 					goto found;
 			}
-			iter = DeeType_Base(iter);
+			iter = DeeTypeMRO_Next(&mro, iter);
 			if (!iter)
 				break;
 			if (iter->tp_attr)
@@ -3519,7 +3565,7 @@ type_derivedfrom_not_same(DeeTypeObject *self, size_t argc,
 	DeeTypeObject *other;
 	if (DeeArg_Unpack(argc, argv, "o:derived_from", &other))
 		goto err;
-	return_bool(self != other && DeeType_IsInherited(self, other));
+	return_bool(self != other && DeeType_InheritsFrom(self, other));
 err:
 	return NULL;
 }
@@ -3711,6 +3757,9 @@ PRIVATE struct type_method tpconst type_methods[] = {
 	              "(other:?.)->?Dbool\n"
 	              "Returns ?t if @this ?. is equal to, or has been derived from @other\n"
 	              "If @other isn't a ?., ?f is returned"),
+	TYPE_KWMETHOD("implements", &type_implements,
+	              "(other:?.)->?Dbool\n"
+	              "Check if @other appears in ?#__mro__"),
 	TYPE_KWMETHOD("newinstance", &type_newinstance,
 	              "(fields!!)->\n"
 	              "Allocate a new instance of @this ?. and initialize members in accordance to @fields\n"
@@ -4185,10 +4234,9 @@ PRIVATE struct type_getset tpconst type_getsets[] = {
 	            "->?Dbool\n"
 	            "Returns ?t if @this Type implements the buffer interface\n"
 	            "The most prominent Type to which this applies is ?DBytes, however other types also support this"),
-	/* TODO: __bases__->?S?DType  Sequence of all of this type's bases, starting with the immediate ?#__base__,
-	 *                            followed by its base, and so on. */
-	/* TODO: __mro__->?S?DType    Method Resolution Order. Same as ?#__bases__, but preceded by @this
-	 *                            Type\n${{ this, __bases__... }}  */
+	/* TODO: __bases__->?S?DType  Immediate bases of this type. */
+	/* TODO: __mro__->?S?DType    Method Resolution Order. Similar to ?#__bases__, but
+	 *                            preceded by @this Type, and followed by all base classes. */
 	TYPE_GETTER("__class__", &type_get_classdesc,
 	            "->?Ert:ClassDescriptor\n"
 	            "#tAttributeError{@this typeType is a user-defined class (s.a. ?#__isclass__)}"

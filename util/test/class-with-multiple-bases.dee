@@ -1,3 +1,4 @@
+#!/usr/bin/deemon
 /* Copyright (c) 2018-2023 Griefer@Work                                       *
  *                                                                            *
  * This software is provided 'as-is', without any express or implied          *
@@ -17,25 +18,40 @@
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
  */
-#ifndef GUARD_DEEMON_CALLABLE_H
-#define GUARD_DEEMON_CALLABLE_H 1
 
-#include "api.h"
 
-#include "object.h"
+import * from deemon;
 
-DECL_BEGIN
+class A {
+	function foo() {
+		return 1;
+	}
+}
 
-/* `Callable from deemon'
- *
- * Base class for callable wrapper types, such as ObjMethod, CMethod,
- * InstanceMethod or just a plain old function. There is no particular
- * reason why this exists, other than to allow user-code to query
- * for a type for that particular set of objects type simply writing
- * `x is Callable from deemon' */
-DDATDEF DeeTypeObject DeeCallable_Type;
-#define DeeCallable_Check(ob) DeeObject_Implements(ob, &DeeCallable_Type)
+class B {
+	member y;
+	function bar() {
+		return 2;
+	}
+}
 
-DECL_END
+class C: { A, B, Numeric } {
+	function foo() {
+		return 10 + (this as A).foo();
+	}
+}
 
-#endif /* !GUARD_DEEMON_CALLABLE_H */
+local x = C();
+x.y = "foo";
+assert x is A;
+assert x is B;
+assert x is C;
+assert x is Numeric;
+assert x.y == "foo";
+assert x.y is string;
+assert C.__base__ === B, "Because `B' has instance members, it must be the primary base";
+// TODO: assert C.__mro__ == { C, A, B, Numeric, Object };
+// TODO: assert C.__bases__ == { A, B, Numeric };
+
+assert x.foo() == 11;
+assert x.bar() == 2;

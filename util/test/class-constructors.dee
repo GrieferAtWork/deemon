@@ -81,22 +81,3 @@
 	assert inst.another_one == "Hey, no matter what you do...";
 
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

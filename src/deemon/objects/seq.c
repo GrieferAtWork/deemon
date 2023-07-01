@@ -533,8 +533,10 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 seq_iterself(DeeObject *__restrict self) {
 	int found              = 0;
 	DeeTypeObject *tp_iter = Dee_TYPE(self);
+	DeeTypeMRO mro;
 	/* To prevent recursion, we must manually search for the proper
 	 * callback in order to check if it isn't `seq_getitem' / `seq_size'. */
+	DeeTypeMRO_Init(&mro, tp_iter);
 	while (tp_iter != &DeeSeq_Type) {
 		struct type_seq *seq;
 		if ((seq = tp_iter->tp_seq) != NULL) {
@@ -551,21 +553,23 @@ seq_iterself(DeeObject *__restrict self) {
 				/* Save the getitem operator. */
 				result->si_getitem = tp_iter->tp_seq->tp_get;
 				if unlikely(!result->si_getitem) {
-					tp_iter = Dee_TYPE(self);
 					/* TODO: Make use of operator inheritance. */
+					tp_iter = Dee_TYPE(self);
+					DeeTypeMRO_Init(&mro, tp_iter);
 					while (!tp_iter->tp_seq &&
 					       (!tp_iter->tp_seq->tp_get ||
 					        tp_iter->tp_seq->tp_get == &seq_getitem))
-						tp_iter = DeeType_Base(tp_iter);
+						tp_iter = DeeTypeMRO_Next(&mro, tp_iter);
 					result->si_getitem = tp_iter->tp_seq->tp_get;
 				}
 				if unlikely(!tp_iter->tp_seq->tp_size) {
-					tp_iter = Dee_TYPE(self);
 					/* TODO: Make use of operator inheritance. */
+					tp_iter = Dee_TYPE(self);
+					DeeTypeMRO_Init(&mro, tp_iter);
 					while (!tp_iter->tp_seq &&
 					       (!tp_iter->tp_seq->tp_size ||
 					        tp_iter->tp_seq->tp_size == &seq_size))
-						tp_iter = DeeType_Base(tp_iter);
+						tp_iter = DeeTypeMRO_Next(&mro, tp_iter);
 				}
 				/* Figure out the size of the Sequence. */
 				result->si_size = (*tp_iter->tp_seq->tp_size)(self);
@@ -584,7 +588,7 @@ seq_iterself(DeeObject *__restrict self) {
 				return (DREF DeeObject *)result;
 			}
 		}
-		tp_iter = DeeType_Base(tp_iter);
+		tp_iter = DeeTypeMRO_Next(&mro, tp_iter);
 	}
 	if unlikely(Dee_TYPE(self) == &DeeSeq_Type) {
 		/* Special case: Create an empty Iterator.
@@ -943,16 +947,18 @@ PRIVATE struct type_math seq_math = {
 PRIVATE WUNUSED NONNULL((1)) bool DCALL
 sequence_should_use_getitem(DeeTypeObject *__restrict self) {
 	DeeTypeObject *iter, *base;
+	DeeTypeMRO mro;
 	int found;
 	if (self == &DeeSeq_Type)
 		return false;
-	if (DeeType_IsInherited(self, &DeeMapping_Type))
+	if (DeeType_Implements(self, &DeeMapping_Type))
 		return false;
 	iter  = self;
 	found = 0;
+	DeeTypeMRO_Init(&mro, iter);
 	do {
 		struct type_seq *seq;
-		base = DeeType_Base(iter);
+		base = DeeTypeMRO_Next(&mro, iter);
 		if ((seq = iter->tp_seq) != NULL) {
 			if (seq->tp_get && seq->tp_get != &seq_getitem &&
 			    (!base || !base->tp_seq || seq->tp_get != base->tp_seq->tp_get))
@@ -1065,14 +1071,17 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeTypeObject *DCALL
 seq_iterator_get(DeeTypeObject *__restrict self) {
 	DeeTypeObject *iter, *base;
 	int found;
+	DeeTypeMRO mro;
 	/* Special case: Accessing the `Iterator' field of the raw `Sequence' type
 	 *               will yield the (intended) base-class for all iterators. */
 	if (self == &DeeSeq_Type)
 		return_reference_(&DeeIterator_Type);
-	iter = self, found = 0;
+	iter  = self;
+	found = 0;
+	DeeTypeMRO_Init(&mro, iter);
 	do {
 		struct type_seq *seq;
-		base = DeeType_Base(iter);
+		base = DeeTypeMRO_Next(&mro, iter);
 		if ((seq = iter->tp_seq) != NULL) {
 			/* If sub-classes override both the get+size operators, then our stub-version is used. */
 			if (seq->tp_get && seq->tp_get != &seq_getitem &&

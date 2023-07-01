@@ -19,7 +19,7 @@
  */
 #ifdef __INTELLISENSE__
 #include "attribute.c"
-//#define DEFINE_DeeObject_GetAttr
+#define DEFINE_DeeObject_GetAttr
 //#define DEFINE_DeeObject_TGetAttr
 //#define DEFINE_DeeObject_GetAttrStringHash
 //#define DEFINE_DeeObject_TGetAttrStringHash
@@ -59,7 +59,7 @@
 //#define DEFINE_DeeObject_TVCallAttrf
 //#define DEFINE_DeeObject_VCallAttrStringHashf
 //#define DEFINE_DeeObject_TVCallAttrStringHashf
-#define DEFINE_DeeObject_VCallAttrStringLenHashf
+//#define DEFINE_DeeObject_VCallAttrStringLenHashf
 //#define DEFINE_DeeObject_TVCallAttrStringLenHashf
 //#define DEFINE_DeeObject_HasAttr
 //#define DEFINE_DeeObject_THasAttr
@@ -1036,6 +1036,7 @@ LOCAL_DECL WUNUSED LOCAL_ATTR_NONNULL LOCAL_return_t
 	if (result != LOCAL_ATTR_NOT_FOUND_RESULT) \
 		goto done
 #endif /* !LOCAL_IS_ENUM */
+	DeeTypeMRO mro;
 	DeeTypeObject *tp_iter;
 #ifndef LOCAL_HAS_tp_self
 	DeeTypeObject *tp_self = Dee_TYPE(self);
@@ -1061,7 +1062,7 @@ LOCAL_DECL WUNUSED LOCAL_ATTR_NONNULL LOCAL_return_t
 	ASSERT_OBJECT_TYPE(tp_self, &DeeType_Type);
 #endif /* LOCAL_HAS_tp_self */
 #ifdef LOCAL_HAS_tp_self
-	ASSERT_OBJECT_TYPE(self, tp_self);
+	ASSERT_OBJECT_TYPE_A(self, tp_self);
 #else /* LOCAL_HAS_tp_self */
 	ASSERT_OBJECT(self);
 #endif /* !LOCAL_HAS_tp_self */
@@ -1098,6 +1099,7 @@ again:
 #endif /* LOCAL_DeeType_AccessCachedAttr */
 
 	/* Slow path: must check for the attribute everywhere. */
+	DeeTypeMRO_Init(&mro, tp_iter);
 	for (;;) {
 		if (DeeType_IsClass(tp_iter)) {
 #ifdef LOCAL_IS_ENUM
@@ -1142,7 +1144,7 @@ again:
 		}
 
 		/* Move on to the next base class. */
-		tp_iter = DeeType_Base(tp_iter);
+		tp_iter = DeeTypeMRO_Next(&mro, tp_iter);
 		if (!tp_iter)
 			break;
 

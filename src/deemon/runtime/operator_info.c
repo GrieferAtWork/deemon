@@ -26,6 +26,7 @@
 #include <deemon/attribute.h>
 #include <deemon/bool.h>
 #include <deemon/bytes.h>
+#include <deemon/class.h>
 #include <deemon/error.h>
 #include <deemon/file.h>
 #include <deemon/float.h>
@@ -43,6 +44,12 @@
 #include "../objects/gc_inspect.h"
 #include "runtime_error.h"
 #include "strings.h"
+
+#ifndef NDEBUG
+#define DBG_memset (void)memset
+#else /* !NDEBUG */
+#define DBG_memset(dst, byte, n_bytes) (void)0
+#endif /* NDEBUG */
 
 DECL_BEGIN
 
@@ -1789,20 +1796,22 @@ DeeType_HasOperator(DeeTypeObject const *__restrict self, uint16_t name) {
 
 	case OPERATOR_STR:
 		/* Special case: `operator str' can be implemented in 2 ways */
-		do {
+		DeeType_mro_foreach_start(self) {
 			if (self->tp_cast.tp_str != NULL ||
 			    self->tp_cast.tp_print != NULL)
 				return true;
-		} while ((self = DeeType_Base(self)) != NULL);
+		}
+		DeeType_mro_foreach_end(self);
 		return false;
 
 	case OPERATOR_REPR:
 		/* Special case: `operator repr' can be implemented in 2 ways */
-		do {
+		DeeType_mro_foreach_start(self) {
 			if (self->tp_cast.tp_repr != NULL ||
 			    self->tp_cast.tp_printrepr != NULL)
 				return true;
-		} while ((self = DeeType_Base(self)) != NULL);
+		}
+		DeeType_mro_foreach_end(self);
 		return false;
 
 	default:
@@ -1810,10 +1819,11 @@ DeeType_HasOperator(DeeTypeObject const *__restrict self, uint16_t name) {
 	}
 	info = Dee_OperatorInfo(Dee_TYPE(self), name);
 	if (info) {
-		do {
+		DeeType_mro_foreach_start(self) {
 			if (DeeType_GetOpPointer(self, info) != NULL)
 				return true;
-		} while ((self = DeeType_Base(self)) != NULL);
+		}
+		DeeType_mro_foreach_end(self);
 	}
 	return false;
 }
@@ -1825,6 +1835,17 @@ DeeType_HasPrivateOperator(DeeTypeObject const *__restrict self, uint16_t name) 
 	void const *my_ptr;
 	struct opinfo const *info;
 	DeeTypeObject *base;
+	DeeTypeMRO mro;
+	if (DeeType_IsClass(self)) {
+		/* TODO: Special case: must look at what's implemented by the class! */
+		DREF DeeObject *op;
+		op = DeeClass_TryGetPrivateOperator((DeeTypeObject *)self, name);
+		if (op) {
+			Dee_Decref(op);
+			return true;
+		}
+		return false;
+	}
 	switch (name) {
 
 	case OPERATOR_CONSTRUCTOR:
@@ -1837,21 +1858,27 @@ DeeType_HasPrivateOperator(DeeTypeObject const *__restrict self, uint16_t name) 
 		/* Special case: `operator str' can be implemented in 2 ways */
 		if (self->tp_cast.tp_str == NULL && self->tp_cast.tp_print == NULL)
 			return false;
-		base = DeeType_Base(self);
-		if (base == NULL)
-			return true;
-		return (self->tp_cast.tp_str != base->tp_cast.tp_str ||
-		        self->tp_cast.tp_print != base->tp_cast.tp_print);
+		base = (DeeTypeObject *)self;
+		DeeTypeMRO_Init(&mro, base);
+		while ((base = DeeTypeMRO_Next(&mro, base)) != NULL) {
+			if (self->tp_cast.tp_str == base->tp_cast.tp_str &&
+			    self->tp_cast.tp_print == base->tp_cast.tp_print)
+				return false;
+		}
+		return true;
 
 	case OPERATOR_REPR:
 		/* Special case: `operator repr' can be implemented in 2 ways */
 		if (self->tp_cast.tp_repr == NULL && self->tp_cast.tp_printrepr == NULL)
 			return false;
-		base = DeeType_Base(self);
-		if (base == NULL)
-			return true;
-		return (self->tp_cast.tp_repr != base->tp_cast.tp_repr ||
-		        self->tp_cast.tp_printrepr != base->tp_cast.tp_printrepr);
+		base = (DeeTypeObject *)self;
+		DeeTypeMRO_Init(&mro, base);
+		while ((base = DeeTypeMRO_Next(&mro, base)) != NULL) {
+			if (self->tp_cast.tp_repr == base->tp_cast.tp_repr &&
+			    self->tp_cast.tp_printrepr == base->tp_cast.tp_printrepr)
+				return false;
+		}
+		return true;
 
 	default:
 		break;
@@ -1862,16 +1889,94 @@ DeeType_HasPrivateOperator(DeeTypeObject const *__restrict self, uint16_t name) 
 	my_ptr = DeeType_GetOpPointer(self, info);
 	if (my_ptr == NULL)
 		return false; /* Operator not implemented */
-	base = DeeType_Base(self);
-	if (base == NULL)
-		return true; /* No base --> operator is private */
-	if (my_ptr != DeeType_GetOpPointer(base, info))
-		return true; /* Base has different impl -> operator is private */
-
-	/* Base has same impl -> operator was inherited */
-	return false;
+	base = (DeeTypeObject *)self;
+	DeeTypeMRO_Init(&mro, base);
+	while ((base = DeeTypeMRO_Next(&mro, base)) != NULL) {
+		if (my_ptr == DeeType_GetOpPointer(base, info))
+			return false; /* Base has same impl -> operator was inherited */
+	}
+	return true; /* Operator is distinct from all bases. */
 }
 
+/* Advance an MRO enumerator, returning the next type in MRO order.
+ * @param: tp_iter: The previously enumerated type
+ * @return: * :     The next type for the purpose of MRO resolution.
+ * @return: NULL:   End of MRO chain has been reached. */
+PUBLIC WUNUSED NONNULL((1, 2)) DeeTypeObject *FCALL
+DeeTypeMRO_Next(DeeTypeMRO *__restrict self,
+                DeeTypeObject const *tp_iter) {
+	DeeTypeObject *result;
+	if (tp_iter == self->tp_mro_orig) {
+		/* Got here after the first type in the MRO resolution order. */
+		self->tp_mro_iter = tp_iter->tp_mro;
+		if (self->tp_mro_iter) {
+			result = *self->tp_mro_iter++;
+			ASSERTF(result != NULL,
+			        "tp_mro[0] of type %r is NULL",
+			        tp_iter->tp_mro);
+			goto done;
+		}
+	} else if (self->tp_mro_iter != NULL) {
+		/* One of the types being enumerated has a custom MRO -> load the next element.
+		 * If that element happens to be NULL, then enumeration will end. */
+		result = *self->tp_mro_iter++;
+		goto done;
+	}
+
+	/* Load the next *true* base. */
+	result = tp_iter->tp_base;
+	ASSERTF(result != self->tp_mro_orig,
+	        "Type base loop with %r",
+	        result);
+done:
+	return result;
+}
+
+/* Like `DeeTypeMRO_Next()', but only enumerate direct
+ * bases of the type passed to `DeeTypeMRO_Init()' */
+PUBLIC WUNUSED NONNULL((1, 2)) DeeTypeObject *FCALL
+DeeTypeMRO_NextDirectBase(DeeTypeMRO *__restrict self,
+                          DeeTypeObject const *tp_iter) {
+	DeeTypeObject *result;
+	if (tp_iter == self->tp_mro_orig) {
+		/* Got here after the first type in the MRO resolution order. */
+		self->tp_mro_iter = tp_iter->tp_mro;
+		if (self->tp_mro_iter) {
+			ASSERTF(self->tp_mro_iter[0] != NULL,
+			        "tp_mro[0] of type %r is NULL",
+			        tp_iter->tp_mro);
+			goto select_from_mro_iter;
+		}
+
+		/* Load only the first *true* base. */
+		result = tp_iter->tp_base;
+		ASSERTF(result != self->tp_mro_orig,
+		        "Type base loop with %r",
+		        result);
+	} else if (self->tp_mro_iter != NULL) {
+		/* One of the types being enumerated has a custom MRO -> load the next element.
+		 * If that element happens to be NULL, then enumeration will end. */
+		DeeTypeObject *first_non_direct_base;
+select_from_mro_iter:
+		result = *self->tp_mro_iter++;
+
+		/* The first non-direct base is the first base of the initial type's first base. */
+		first_non_direct_base = self->tp_mro_orig->tp_mro[0];
+		if (first_non_direct_base->tp_mro) {
+			first_non_direct_base = first_non_direct_base->tp_mro[0];
+		} else {
+			first_non_direct_base = first_non_direct_base->tp_base;
+		}
+		if (result == first_non_direct_base) {
+			/* Stop enumeration once the first non-direct base is reached. */
+			result = NULL;
+		}
+	} else {
+		/* Don't enumerate recursive bases. */
+		result = NULL;
+	}
+	return result;
+}
 
 
 

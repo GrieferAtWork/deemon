@@ -673,11 +673,17 @@
                                     * >> ELSE
                                     * >>     PUSH(tp.baseof(type POP()));
                                     * >> FI */
-#define ASM_STR               0x4d /* [1][-1,+1]   `str top'                            - Apply the __str__ operator to the top-most stack entry.
+#define ASM_IMPLEMENTS        0x4d /* [1][-2,+1]   `implements top, pop'                - Same as `ASM_INSTANCEOF', but supports `tp_mro', whereas `ASM_INSTANCEOF' only supports `tp_base'
+                                    * >> Object tp = POP();
+                                    * >> IF tp === none THEN
+                                    * >>     PUSH(POP() === none);
+                                    * >> ELSE
+                                    * >>     PUSH(type(POP()) in Type.__mro__(tp));
+                                    * >> FI */
+#define ASM_STR               0x4e /* [1][-1,+1]   `str top'                            - Apply the __str__ operator to the top-most stack entry.
                                     * >> PUSH(str POP()); */
-#define ASM_REPR              0x4e /* [1][-1,+1]   `repr top'                           - Apply the __repr__ operator to the top-most stack entry.
+#define ASM_REPR              0x4f /* [1][-1,+1]   `repr top'                           - Apply the __repr__ operator to the top-most stack entry.
                                     * >> PUSH(repr POP()); */
-/*      ASM_                  0x4f  *               --------                            - ------------------ */
 #define ASM_BOOL              0x50 /* [1][-1,+1]   `bool top' - `cast top, bool'        - Apply the __bool__ operator to the top-most stack entry and store the result as a bool.
                                     * >> PUSH(!!POP()); */
 #define ASM_NOT               0x51 /* [1][-1,+1]   `not top'                            - Apply the __bool__ operator to the top-most stack entry and store the result as an inverted bool.

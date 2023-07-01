@@ -52,7 +52,7 @@ DeeError_Catch(DeeTypeObject *__restrict type) {
 	DeeObject *current;
 	ASSERT_OBJECT_TYPE(type, &DeeType_Type);
 	current = DeeError_Current();
-	if (current && DeeObject_InstanceOf(current, type))
+	if (current && DeeObject_Implements(current, type))
 		return DeeError_Handled(ERROR_HANDLED_INTERRUPT);
 	return false;
 }
@@ -293,12 +293,13 @@ PUBLIC WUNUSED DeeObject *DCALL DeeError_Current(void) {
 }
 
 /* Check if the current exception is an instance of `tp' */
-PUBLIC WUNUSED NONNULL((1)) bool DCALL DeeError_CurrentIs(DeeTypeObject *__restrict tp) {
+PUBLIC WUNUSED NONNULL((1)) bool DCALL
+DeeError_CurrentIs(DeeTypeObject *__restrict tp) {
 	DeeThreadObject *ts = DeeThread_Self();
 	ASSERT((ts->t_except != NULL) == (ts->t_exceptsz != 0));
 	if unlikely(!ts->t_except)
 		return false;
-	return DeeObject_InstanceOf(ts->t_except->ef_error, tp);
+	return DeeObject_Implements(ts->t_except->ef_error, tp);
 }
 
 

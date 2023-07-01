@@ -440,6 +440,7 @@ INTERN WUNUSED LOCAL_ATTR_NONNULL LOCAL_return_t
 #endif /* LOCAL_IS_ENUM */
 	LOCAL_return_t result;
 	DeeTypeObject *iter;
+	DeeTypeMRO mro;
 
 	/* Try to access the cached version of the attribute. */
 #ifdef LOCAL_DeeType_AccessCachedClassAttr
@@ -449,6 +450,7 @@ INTERN WUNUSED LOCAL_ATTR_NONNULL LOCAL_return_t
 #endif /* LOCAL_DeeType_AccessCachedClassAttr */
 
 	iter = self;
+	DeeTypeMRO_Init(&mro, iter);
 	do {
 #ifdef LOCAL_IS_ENUM
 #define LOCAL_process_result(result, done) \
@@ -538,7 +540,7 @@ INTERN WUNUSED LOCAL_ATTR_NONNULL LOCAL_return_t
 #endif /* CONFIG_TYPE_ATTRIBUTE_FORWARD_GENERIC */
 
 #undef LOCAL_process_result
-	} while ((iter = DeeType_Base(iter)) != NULL);
+	} while ((iter = DeeTypeMRO_Next(&mro, iter)) != NULL);
 
 #ifdef CONFIG_TYPE_ATTRIBUTE_FOLLOWUP_GENERIC
 	result = LOCAL_DeeObject_GenericAccessAttr((DeeObject *)self);

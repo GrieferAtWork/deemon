@@ -232,7 +232,7 @@ se_print(SeqEachBase *__restrict self, dformatprinter printer, void *arg) {
 
 PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
 se_printrepr(SeqEachBase *__restrict self, dformatprinter printer, void *arg) {
-	if (DeeObject_InstanceOf(self->se_seq, &DeeSeq_Type))
+	if (DeeSeq_Check(self->se_seq))
 		return DeeFormat_Printf(printer, arg, "%r.each", self->se_seq);
 	return DeeFormat_Printf(printer, arg, "(%r as Sequence).each", self->se_seq);
 }

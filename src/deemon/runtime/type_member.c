@@ -275,17 +275,19 @@ type_member_enum(DeeTypeObject *__restrict tp_self,
 PRIVATE WUNUSED NONNULL((1, 2)) DeeTypeObject *DCALL
 type_getset_typeof(struct type_getset const *chain,
                    DeeObject *__restrict self) {
-	DeeTypeObject *result = Dee_TYPE(self);
+	DeeTypeObject *result;
+	DeeTypeMRO mro;
+	result = DeeTypeMRO_Init(&mro, Dee_TYPE(self));
 	do {
 		if (result->tp_getsets == chain)
 			return result;
-	} while ((result = DeeType_Base(result)) != NULL);
+	} while ((result = DeeTypeMRO_Next(&mro, result)) != NULL);
 	if (DeeType_Check(self)) {
-		result = (DeeTypeObject *)self;
+		result = DeeTypeMRO_Init(&mro, (DeeTypeObject *)self);
 		do {
 			if (result->tp_class_getsets == chain)
 				return result;
-		} while ((result = DeeType_Base(result)) != NULL);
+		} while ((result = DeeTypeMRO_Next(&mro, result)) != NULL);
 	}
 	return Dee_TYPE(self);
 }
@@ -293,17 +295,19 @@ type_getset_typeof(struct type_getset const *chain,
 PRIVATE WUNUSED NONNULL((1, 2)) DeeTypeObject *DCALL
 type_member_typeof(struct type_member const *chain,
                    DeeObject *__restrict self) {
-	DeeTypeObject *result = Dee_TYPE(self);
+	DeeTypeObject *result;
+	DeeTypeMRO mro;
+	result = DeeTypeMRO_Init(&mro, Dee_TYPE(self));
 	do {
 		if (result->tp_members == chain)
 			return result;
-	} while ((result = DeeType_Base(result)) != NULL);
+	} while ((result = DeeTypeMRO_Next(&mro, result)) != NULL);
 	if (DeeType_Check(self)) {
-		result = (DeeTypeObject *)self;
+		result = DeeTypeMRO_Init(&mro, (DeeTypeObject *)self);
 		do {
 			if (result->tp_class_members == chain)
 				return result;
-		} while ((result = DeeType_Base(result)) != NULL);
+		} while ((result = DeeTypeMRO_Next(&mro, result)) != NULL);
 	}
 	return Dee_TYPE(self);
 }
@@ -319,7 +323,7 @@ type_obmeth_call(DeeTypeObject *cls_type,
 		                desc->m_name);
 		goto err;
 	}
-	if (!(cls_type->tp_flags & TP_FABSTRACT)) {
+	if (!DeeType_IsAbstract(cls_type)) {
 		if (DeeObject_AssertType(argv[0], cls_type))
 			goto err;
 	}
@@ -343,7 +347,7 @@ type_obmeth_call_kw(DeeTypeObject *cls_type,
 		                desc->m_name);
 		goto err;
 	}
-	if (!(cls_type->tp_flags & TP_FABSTRACT)) {
+	if (!DeeType_IsAbstract(cls_type)) {
 		if (DeeObject_AssertType(argv[0], cls_type))
 			goto err;
 	}
@@ -396,7 +400,7 @@ type_obmeth_vcallf(DeeTypeObject *cls_type,
 		Dee_VPPackf_Cleanup(format, ((struct va_list_struct *)VALIST_ADDR(args))->vl_ap);
 		goto err;
 	} 
-	if (!(cls_type->tp_flags & TP_FABSTRACT)) {
+	if (!DeeType_IsAbstract(cls_type)) {
 		if (DeeObject_AssertType(thisarg, cls_type))
 			goto err_thisarg;
 	}
@@ -475,7 +479,7 @@ type_obprop_call(DeeTypeObject *cls_type,
 		goto err_unbound;
 	if unlikely(DeeArg_Unpack(argc, argv, "o:get", &thisarg))
 		goto err;
-	if (!(cls_type->tp_flags & TP_FABSTRACT)) {
+	if (!DeeType_IsAbstract(cls_type)) {
 		if (DeeObject_AssertType(thisarg, cls_type))
 			goto err;
 	}
@@ -496,7 +500,7 @@ type_obprop_call_kw(DeeTypeObject *cls_type,
 		goto err_unbound;
 	if unlikely(DeeArg_UnpackKw(argc, argv, kw, getter_kwlist, "o:get", &thisarg))
 		goto err;
-	if (!(cls_type->tp_flags & TP_FABSTRACT)) {
+	if (!DeeType_IsAbstract(cls_type)) {
 		if (DeeObject_AssertType(thisarg, cls_type))
 			goto err;
 	}
@@ -518,7 +522,7 @@ type_obprop_vcallf(DeeTypeObject *cls_type,
 	thisarg = Dee_VPackf(format, args);
 	if unlikely(!thisarg)
 		goto err;
-	if (!(cls_type->tp_flags & TP_FABSTRACT)) {
+	if (!DeeType_IsAbstract(cls_type)) {
 		if (DeeObject_AssertType(thisarg, cls_type))
 			goto err_thisarg;
 	}
@@ -542,7 +546,7 @@ type_obmemb_call(DeeTypeObject *cls_type,
 	if (DeeArg_Unpack(argc, argv, "o:get", &thisarg))
 		goto err;
 	/* Allow non-instance objects for generic types. */
-	if (!(cls_type->tp_flags & TP_FABSTRACT)) {
+	if (!DeeType_IsAbstract(cls_type)) {
 		if (DeeObject_AssertType(thisarg, cls_type))
 			goto err;
 	}
@@ -560,7 +564,7 @@ type_obmemb_call_kw(DeeTypeObject *cls_type,
 	if (DeeArg_UnpackKw(argc, argv, kw, getter_kwlist, "o:get", &thisarg))
 		goto err;
 	/* Allow non-instance objects for generic types. */
-	if (!(cls_type->tp_flags & TP_FABSTRACT)) {
+	if (!DeeType_IsAbstract(cls_type)) {
 		if (DeeObject_AssertType(thisarg, cls_type))
 			goto err;
 	}
@@ -577,7 +581,7 @@ type_obmemb_vcallf(DeeTypeObject *cls_type,
 	thisarg = Dee_VPackf(format, args);
 	if unlikely(!thisarg)
 		goto err;
-	if (!(cls_type->tp_flags & TP_FABSTRACT)) {
+	if (!DeeType_IsAbstract(cls_type)) {
 		if (DeeObject_AssertType(thisarg, cls_type))
 			goto err_thisarg;
 	}

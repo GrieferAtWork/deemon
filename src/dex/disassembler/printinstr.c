@@ -255,9 +255,9 @@ PRIVATE char const mnemonic_names[256][31] = {
 	/* 0x4a */ "classof top", /* `ASM_CLASSOF' */
 	/* 0x4b */ "superof top", /* `ASM_SUPEROF' */
 	/* 0x4c */ "instanceof top, pop", /* `ASM_INSTANCEOF' */
-	/* 0x4d */ "str    top", /* `ASM_STR' */
-	/* 0x4e */ "repr   top", /* `ASM_REPR' */
-	/* 0x4f */ UNKNOWN_MNEMONIC, /* --- */
+	/* 0x4d */ "implements top, pop", /* `ASM_IMPLEMENTS' */
+	/* 0x4e */ "str    top", /* `ASM_STR' */
+	/* 0x4f */ "repr   top", /* `ASM_REPR' */
 	/* 0x50 */ "bool   top", /* `ASM_BOOL' */
 	/* 0x51 */ "not    top", /* `ASM_NOT' */
 	/* 0x52 */ "assign pop, pop", /* `ASM_ASSIGN' */

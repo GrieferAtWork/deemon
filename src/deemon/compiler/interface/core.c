@@ -367,7 +367,7 @@ DeeCompiler_GetItem(DeeTypeObject *__restrict type,
                     void *__restrict value) {
 #ifndef NDEBUG
 	DeeTypeObject *tp = type;
-	for (;; tp = tp->tp_base) {
+	for (;; tp = DeeType_Base(tp)) {
 		if (!tp->tp_init.tp_dtor)
 			continue;
 		ASSERTF(tp->tp_init.tp_dtor == (void (DCALL *)(DeeObject *__restrict))&DeeCompilerItem_Fini,
@@ -383,7 +383,7 @@ DeeCompiler_GetObjItem(DeeTypeObject *__restrict type,
                        DeeObject *__restrict value) {
 #ifndef NDEBUG
 	DeeTypeObject *tp = type;
-	for (;; tp = tp->tp_base) {
+	for (;; tp = DeeType_Base(tp)) {
 		if (!tp->tp_init.tp_dtor)
 			continue;
 		ASSERTF(tp->tp_init.tp_dtor == (void (DCALL *)(DeeObject *__restrict))&DeeCompilerObjItem_Fini,
@@ -414,7 +414,7 @@ INTERN bool DCALL DeeCompiler_DelItem(void *value) {
 #ifndef NDEBUG
 		{
 			DeeTypeObject *tp = Dee_TYPE(item);
-			for (;; tp = tp->tp_base) {
+			for (;; tp = DeeType_Base(tp)) {
 				if (!tp->tp_init.tp_dtor)
 					continue;
 				ASSERTF(tp->tp_init.tp_dtor == (void (DCALL *)(DeeObject *__restrict))&DeeCompilerItem_Fini,
@@ -441,7 +441,7 @@ DeeCompiler_DelItemType(DeeTypeObject *__restrict type) {
 	DeeCompilerObject *com = DeeCompiler_Current;
 #ifndef NDEBUG
 	DeeTypeObject *tp = type;
-	for (;; tp = tp->tp_base) {
+	for (;; tp = DeeType_Base(tp)) {
 		if (!tp->tp_init.tp_dtor)
 			continue;
 		ASSERTF(tp->tp_init.tp_dtor == (void (DCALL *)(DeeObject *__restrict))&DeeCompilerItem_Fini,

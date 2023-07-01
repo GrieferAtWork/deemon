@@ -197,7 +197,7 @@ emit_instruction:
 				if (argc != 2)
 					goto fallback_generate_goperator;
 				/* Special case: `assert a is b' */
-				error = asm_ginstanceof();
+				error = asm_gimplements();
 				break;
 
 			case FAKE_OPERATOR_SAME_OBJECT:

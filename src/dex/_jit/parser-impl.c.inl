@@ -2985,9 +2985,9 @@ DEFINE_SECONDARY(CmpEQOperand) {
 					if (DeeNone_Check(rhs)) {
 						is_instance = DeeNone_Check(lhs);
 					} else if (DeeSuper_Check(lhs)) {
-						is_instance = DeeType_IsInherited(DeeSuper_TYPE(lhs), (DeeTypeObject *)rhs);
+						is_instance = DeeType_Implements(DeeSuper_TYPE(lhs), (DeeTypeObject *)rhs);
 					} else {
-						is_instance = DeeObject_InstanceOf(lhs, (DeeTypeObject *)rhs);
+						is_instance = DeeObject_Implements(lhs, (DeeTypeObject *)rhs);
 					}
 					Dee_Decref(rhs);
 					Dee_Decref(lhs);
@@ -3059,9 +3059,9 @@ DEFINE_SECONDARY(CmpEQOperand) {
 					if (DeeNone_Check(rhs)) {
 						is_instance = DeeNone_Check(lhs);
 					} else if (DeeSuper_Check(lhs)) {
-						is_instance = DeeType_IsInherited(DeeSuper_TYPE(lhs), (DeeTypeObject *)rhs);
+						is_instance = DeeType_Implements(DeeSuper_TYPE(lhs), (DeeTypeObject *)rhs);
 					} else {
-						is_instance = DeeObject_InstanceOf(lhs, (DeeTypeObject *)rhs);
+						is_instance = DeeObject_Implements(lhs, (DeeTypeObject *)rhs);
 					}
 					merge = DeeBool_For(is_instance);
 					Dee_Incref(merge);

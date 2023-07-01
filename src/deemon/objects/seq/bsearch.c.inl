@@ -117,10 +117,12 @@ LOCAL_DeeSeq_BFind(DeeObject *self, size_t start, size_t end,
                    DeeObject *keyed_search_item, DeeObject *key
                    LOCAL__EXTRA_PARAMS) {
 	DeeTypeObject *tp_self;
+	DeeTypeMRO mro;
 	ASSERT_OBJECT(self);
 	if unlikely(start >= end)
 		goto notfound;
 	tp_self = Dee_TYPE(self);
+	DeeTypeMRO_Init(&mro, tp_self);
 	while (tp_self != &DeeSeq_Type) {
 		struct type_seq *seq = tp_self->tp_seq;
 		if (seq) {
@@ -179,7 +181,8 @@ do_lookup_tpget:
 				return result;
 			}
 		}
-		if ((tp_self = DeeType_Base(tp_self)) == NULL)
+		tp_self = DeeTypeMRO_Next(&mro, tp_self);
+		if (tp_self == NULL)
 			break;
 	}
 	err_no_generic_sequence(self);

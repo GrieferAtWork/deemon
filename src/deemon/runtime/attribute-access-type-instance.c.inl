@@ -334,6 +334,7 @@ INTERN WUNUSED LOCAL_ATTR_NONNULL LOCAL_return_t
 #endif /* !LOCAL_IS_CALL_LIKE */
 	LOCAL_return_t result;
 	DeeTypeObject *iter;
+	DeeTypeMRO mro;
 
 	/* Use `tp_cache' and search for regular attributes, loading
 	 * them as though they were the equivalent typing in INSTANCE-mode.
@@ -360,6 +361,7 @@ INTERN WUNUSED LOCAL_ATTR_NONNULL LOCAL_return_t
 	if (result != LOCAL_ATTR_NOT_FOUND_RESULT)
 		goto done;
 	iter = self;
+	DeeTypeMRO_Init(&mro, iter);
 	do {
 		if (DeeType_IsClass(iter)) {
 #ifdef LOCAL_IS_FIND
@@ -398,7 +400,7 @@ INTERN WUNUSED LOCAL_ATTR_NONNULL LOCAL_return_t
 					goto done;
 			}
 		}
-	} while ((iter = DeeType_Base(iter)) != NULL);
+	} while ((iter = DeeTypeMRO_Next(&mro, iter)) != NULL);
 
 #if !defined(LOCAL_IS_HAS) && !defined(LOCAL_IS_FIND)
 #ifdef LOCAL_HAS_len

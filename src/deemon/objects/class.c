@@ -38,6 +38,7 @@
 #include <deemon/thread.h>
 #include <deemon/tuple.h>
 #include <deemon/util/atomic.h>
+#include <deemon/util/objectlist.h>
 
 #include "../runtime/runtime_error.h"
 
@@ -52,6 +53,7 @@ class_fini(DeeTypeObject *__restrict self) {
 	uint16_t i, size;
 	my_class = self->tp_class;
 	//my_class = DeeClass_DESC(self); /* This fails, because `self' may no longer be a valid object */
+
 	/* Clear all class members (including cached operators). */
 	size = my_class->cd_desc->cd_cmemb_size;
 again:
@@ -65,6 +67,7 @@ again:
 		my_class->cd_members[i] = NULL;
 		if (Dee_DecrefIfNotOne(ob))
 			continue;
+
 		/* We're responsible for destroying this member! */
 		if (buflen == COMPILER_LENOF(buffer)) {
 			Dee_class_desc_lock_endwrite(my_class);
@@ -74,6 +77,7 @@ again:
 		}
 		buffer[buflen++] = ob; /* Inherit reference. */
 	}
+
 	/* Also clear all cached operators. */
 	for (i = 0; i < CLASS_HEADER_OPC1; ++i) {
 		struct class_optable *table;
@@ -88,6 +92,7 @@ again:
 			table->co_operators[j] = NULL;
 			if (Dee_DecrefIfNotOne(ob))
 				continue;
+
 			/* We're responsible for destroying this member! */
 			if (buflen == COMPILER_LENOF(buffer)) {
 				Dee_class_desc_lock_endwrite(my_class);
@@ -102,28 +107,59 @@ again:
 	if (buflen) {
 		/* Clear the buffer. */
 		Dee_Decrefv(buffer, buflen);
+
 		/* Since custom destructors may have been able to
 		 * re-assign new members, we must keep clearing them
 		 * all until none are left! */
 		goto again;
 	}
+
 	/* With all references objects who's destruction could potentially
 	 * have side-effects now gone, we can move on to free heap-allocated
 	 * data structures. */
 	for (i = 0; i < CLASS_HEADER_OPC1; ++i)
 		Dee_Free(my_class->cd_ops[i]);
 	Dee_Decref(my_class->cd_desc);
-	if (!self->tp_base || self->tp_math != self->tp_base->tp_math)
-		Dee_Free(self->tp_math);
-	if ((self->tp_cmp != &instance_builtin_cmp) &&
-	    (!self->tp_base || self->tp_cmp != self->tp_base->tp_cmp))
-		Dee_Free(self->tp_cmp);
-	if (!self->tp_base || self->tp_seq != self->tp_base->tp_seq)
-		Dee_Free(self->tp_seq);
-	if (!self->tp_base || self->tp_attr != self->tp_base->tp_attr)
-		Dee_Free((void *)self->tp_attr);
-	if (!self->tp_base || self->tp_with != self->tp_base->tp_with)
-		Dee_Free(self->tp_with);
+
+	/* Free operator containers that aren't inherited. */
+	{
+		unsigned int base_inherited = 0;
+#define BASE_INHERITED_MATH 0x0001
+#define BASE_INHERITED_CMP  0x0002
+#define BASE_INHERITED_SEQ  0x0004
+#define BASE_INHERITED_ATTR 0x0008
+#define BASE_INHERITED_WITH 0x0010
+		DeeTypeObject *base;
+		DeeTypeMRO mro;
+		base = DeeTypeMRO_Init(&mro, DeeType_Base(self));
+		do {
+			if (self->tp_math == base->tp_math)
+				base_inherited |= BASE_INHERITED_MATH;
+			if (self->tp_cmp == base->tp_cmp)
+				base_inherited |= BASE_INHERITED_CMP;
+			if (self->tp_seq == base->tp_seq)
+				base_inherited |= BASE_INHERITED_SEQ;
+			if (self->tp_attr == base->tp_attr)
+				base_inherited |= BASE_INHERITED_ATTR;
+			if (self->tp_with == base->tp_with)
+				base_inherited |= BASE_INHERITED_WITH;
+		} while ((base = DeeTypeMRO_NextDirectBase(&mro, base)) != NULL);
+		if (!(base_inherited & BASE_INHERITED_MATH))
+			Dee_Free(self->tp_math);
+		if (!(base_inherited & BASE_INHERITED_CMP) && (self->tp_cmp != &instance_builtin_cmp))
+			Dee_Free(self->tp_cmp);
+		if (!(base_inherited & BASE_INHERITED_SEQ))
+			Dee_Free(self->tp_seq);
+		if (!(base_inherited & BASE_INHERITED_ATTR))
+			Dee_Free((void *)self->tp_attr);
+		if (!(base_inherited & BASE_INHERITED_WITH))
+			Dee_Free(self->tp_with);
+#undef BASE_INHERITED_MATH
+#undef BASE_INHERITED_CMP
+#undef BASE_INHERITED_SEQ
+#undef BASE_INHERITED_ATTR
+#undef BASE_INHERITED_WITH
+	}
 }
 
 INTERN NONNULL((1, 2)) void DCALL
@@ -369,10 +405,12 @@ class_desc_get_known_operator(DeeTypeObject *__restrict tp_self,
  * a NotImplemented error, or return NULL and don't throw
  * an error when `DeeClass_TryGetOperator()' was used. */
 PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-DeeClass_GetOperator(DeeTypeObject *__restrict self, uint16_t name) {
+DeeClass_GetOperator(DeeTypeObject const *__restrict self, uint16_t name) {
 	DREF DeeObject *result;
-	DeeTypeObject *iter = self;
+	DeeTypeObject const *iter = self;
+	DeeTypeMRO mro;
 	ASSERT(DeeType_IsClass(iter));
+	DeeTypeMRO_Init(&mro, iter);
 	do {
 		/* Search the descriptor cache of this type. */
 		struct class_desc *iter_class;
@@ -428,7 +466,7 @@ DeeClass_GetOperator(DeeTypeObject *__restrict self, uint16_t name) {
 			}
 			return result;
 		}
-	} while ((iter = DeeType_Base(iter)) != NULL && DeeType_IsClass(iter));
+	} while ((iter = DeeTypeMRO_Next(&mro, iter)) != NULL && DeeType_IsClass(iter));
 done:
 	err_unimplemented_operator(self, name);
 	return NULL;
@@ -438,10 +476,12 @@ done:
  * if the operator hasn't been implemented, and `ITER_DONE' when it
  * has been, but wasn't assigned anything. */
 PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-DeeClass_TryGetOperator(DeeTypeObject *__restrict self, uint16_t name) {
+DeeClass_TryGetOperator(DeeTypeObject const *__restrict self, uint16_t name) {
 	DREF DeeObject *result;
-	DeeTypeObject *iter = self;
+	DeeTypeObject const *iter = self;
+	DeeTypeMRO mro;
 	ASSERT(DeeType_IsClass(iter));
+	DeeTypeMRO_Init(&mro, iter);
 	do {
 		/* Search the descriptor cache of this type. */
 		struct class_desc *iter_class;
@@ -497,14 +537,14 @@ DeeClass_TryGetOperator(DeeTypeObject *__restrict self, uint16_t name) {
 			}
 			return result;
 		}
-	} while ((iter = DeeType_Base(iter)) != NULL && DeeType_IsClass(iter));
+	} while ((iter = DeeTypeMRO_Next(&mro, iter)) != NULL && DeeType_IsClass(iter));
 	return NULL;
 }
 
 /* Same as `DeeClass_TryGetOperator()', but don't return an operator
  * that has been inherited from a base-class, but return `NULL' instead. */
 PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-DeeClass_TryGetPrivateOperator(DeeTypeObject *__restrict self, uint16_t name) {
+DeeClass_TryGetPrivateOperator(DeeTypeObject const *__restrict self, uint16_t name) {
 	DREF DeeObject *result;
 	DeeClassDescriptorObject *desc;
 	uint16_t i, perturb;
@@ -999,6 +1039,7 @@ instance_builtin_deepload(DeeObject *__restrict self) {
 			goto err;
 	} while ((tp_self = DeeType_Base(tp_self)) != NULL &&
 	         DeeType_IsClass(tp_self));
+
 	/* Invoke deepload for all non-user defined base classes. */
 	for (; tp_self; tp_self = DeeType_Base(tp_self)) {
 		if (!tp_self->tp_init.tp_deepload)
@@ -1042,7 +1083,7 @@ instance_builtin_tassign(DeeTypeObject *tp_self,
 	DREF DeeObject **old_items;
 	if unlikely(self == other)
 		goto done;
-	if (DeeObject_AssertType(other, tp_self))
+	if (DeeObject_AssertImplements(other, tp_self))
 		goto err;
 	tp_super = DeeType_Base(tp_self);
 	if (tp_super && DeeObject_TAssign(tp_super, self, other))
@@ -3730,9 +3771,7 @@ INTERN WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
 instance_builtin_teq(DeeTypeObject *tp_self, DeeObject *self, DeeObject *other) {
 	DREF DeeObject *result;
 	int temp;
-
-	/* Make sure that `other' is an instance of `self' */
-	if (DeeObject_AssertType(other, tp_self))
+	if (DeeObject_AssertImplements(other, tp_self))
 		goto err;
 
 	/* Compare the underlying objects. */
@@ -3762,9 +3801,7 @@ INTERN WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
 instance_builtin_tne(DeeTypeObject *tp_self, DeeObject *self, DeeObject *other) {
 	DREF DeeObject *result;
 	int temp;
-
-	/* Make sure that `other' is an instance of `self' */
-	if (DeeObject_AssertType(other, tp_self))
+	if (DeeObject_AssertImplements(other, tp_self))
 		goto err;
 
 	/* Compare the underlying objects. */
@@ -3794,7 +3831,7 @@ INTERN WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
 instance_builtin_tlo(DeeTypeObject *tp_self, DeeObject *self, DeeObject *other) {
 	DREF DeeObject *result;
 	int temp;
-	if (DeeObject_AssertType(other, tp_self))
+	if (DeeObject_AssertImplements(other, tp_self))
 		goto err;
 
 	/* BASE < OTHER || (BASE == OTHER && SELF < OTHER) */
@@ -3834,7 +3871,7 @@ INTERN WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
 instance_builtin_tle(DeeTypeObject *tp_self, DeeObject *self, DeeObject *other) {
 	DREF DeeObject *result;
 	int temp;
-	if (DeeObject_AssertType(other, tp_self))
+	if (DeeObject_AssertImplements(other, tp_self))
 		goto err;
 
 	/* BASE < OTHER || (BASE == OTHER && SELF <= OTHER) */
@@ -3874,7 +3911,7 @@ INTERN WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
 instance_builtin_tgr(DeeTypeObject *tp_self, DeeObject *self, DeeObject *other) {
 	DREF DeeObject *result;
 	int temp;
-	if (DeeObject_AssertType(other, tp_self))
+	if (DeeObject_AssertImplements(other, tp_self))
 		goto err;
 
 	/* BASE > OTHER || (BASE == OTHER && SELF > OTHER) */
@@ -3914,7 +3951,7 @@ INTERN WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
 instance_builtin_tge(DeeTypeObject *tp_self, DeeObject *self, DeeObject *other) {
 	DREF DeeObject *result;
 	int temp;
-	if (DeeObject_AssertType(other, tp_self))
+	if (DeeObject_AssertImplements(other, tp_self))
 		goto err;
 
 	/* BASE > OTHER || (BASE == OTHER && SELF >= OTHER) */
@@ -3952,11 +3989,14 @@ err:
 
 INTERN WUNUSED NONNULL((1)) dhash_t DCALL
 instance_builtin_hash(DeeObject *__restrict self) {
-	DeeTypeObject *tp_self = Dee_TYPE(self);
-	dhash_t result = Dee_HashPointer(tp_self);
+	DeeTypeObject *tp_self;
+	dhash_t result;
+	DeeTypeMRO mro;
+	tp_self = DeeTypeMRO_Init(&mro, Dee_TYPE(self));
+	result  = Dee_HashPointer(tp_self);
 	do {
 		result = Dee_HashCombine(result, instance_builtin_thash(tp_self, self));
-	} while ((tp_self = DeeType_Base(tp_self)) != NULL &&
+	} while ((tp_self = DeeTypeMRO_Next(&mro, tp_self)) != NULL &&
 	         DeeType_IsClass(tp_self));
 	if (tp_self != NULL)
 		result = Dee_HashCombine(result, DeeObject_THash(tp_self, self));
@@ -5039,19 +5079,165 @@ err:
 }
 
 
-/* Create a new class type derived from `base',
+
+struct class_bases {
+	DREF DeeTypeObject  *cb_base; /* [0..1] Primary class base. */
+	DREF DeeTypeObject **cb_mro;  /* [0..1][0..N][owned] Class MRO override (or NULL if not needed) */
+};
+
+/* Finalize the given class-bases descriptor. */
+PRIVATE NONNULL((1)) void DCALL
+class_bases_fini(struct class_bases *__restrict self) {
+	if (self->cb_mro != NULL) {
+		size_t i;
+		for (i = 0; self->cb_mro[i] != NULL; ++i)
+			Dee_Decref_unlikely(self->cb_mro[i]);
+		Dee_Free(self->cb_mro);
+	}
+	Dee_XDecref_unlikely(self->cb_base);
+}
+
+/* Load class bases from `bases'. */
+PRIVATE NONNULL((1, 2)) int DCALL
+class_bases_init(struct class_bases *__restrict self,
+                 DeeObject *__restrict bases) {
+	struct objectlist bases_list;
+	if (DeeNone_Check(bases)) {
+		/* Special case: no base */
+no_base:
+		self->cb_base = NULL;
+		self->cb_mro  = NULL;
+	} else if (DeeType_Check(bases)) {
+		/* Single base. */
+		self->cb_base = (DREF DeeTypeObject *)bases;
+		Dee_Incref(bases);
+		self->cb_mro = NULL;
+	} else {
+		/* MRO support: Types are appended to the MRO the first time they're
+		 *              encountered, following a breath-first, left-to-right
+		 *              search:
+		 * >> local result = [bases...];
+		 * >> local scanMe = copy result;
+		 * >> while (scanMe) {
+		 * >>     local newScanMe = [];
+		 * >>     for (local base: scanMe.__bases__) {
+		 * >>         for (local baseBase: base.__bases__) {
+		 * >>             if (baseBase !in result) {
+		 * >>                 result.append(baseBase);
+		 * >>                 newScanMe.append(baseBase);
+		 * >>             }
+		 * >>         }
+		 * >>     }
+		 * >>     scanMe = newScanMe;
+		 * >> } */
+		size_t direct_base_count;
+		size_t mro_i, mro_end;
+		if (objectlist_initseq(&bases_list, bases))
+			goto err;
+
+		/* Check for special case: no bases */
+		direct_base_count = bases_list.ol_elemc;
+		if unlikely(direct_base_count == 0) {
+			objectlist_fini(&bases_list);
+			goto no_base;
+		}
+
+		/* Check for special case: single base */
+		if unlikely(direct_base_count == 1) {
+			self->cb_base = (DREF DeeTypeObject *)bases_list.ol_elemv[0];
+			Dee_Free(bases_list.ol_elemv);
+			if (DeeObject_AssertType((DeeObject *)self->cb_base, &DeeType_Type)) {
+				Dee_Decref_unlikely(self->cb_base);
+				goto err;
+			}
+			goto done;
+		}
+
+		/* Determine the primary base. */
+		self->cb_base = NULL;
+		for (mro_i = 0; mro_i < direct_base_count; ++mro_i) {
+			DeeTypeObject *base = (DeeTypeObject *)bases_list.ol_elemv[mro_i];
+			if (DeeObject_AssertType((DeeObject *)base, &DeeType_Type))
+				goto err_bases_list;
+			if (!DeeType_IsAbstract(base)) {
+				/* Non-abstract types must appear as base, but
+				 * there can only be 1 such base per sub-class. */
+				if (self->cb_base != NULL) {
+					DeeError_Throwf(&DeeError_TypeError,
+					                "Cannot construct type with at least 2 non-abstract bases %r and %r",
+					                self->cb_base, base);
+					goto err_bases_list;
+				}
+				self->cb_base = base;
+			}
+		}
+		if (self->cb_base == NULL) {
+			/* Fallback: just use the first abstract base as primary base. */
+			self->cb_base = (DeeTypeObject *)bases_list.ol_elemv[0];
+		}
+
+		/* Recursively scan for more bases. */
+		mro_i   = 0;
+		mro_end = direct_base_count;
+		for (;;) {
+			for (; mro_i < mro_end; ++mro_i) {
+				/* Enumerate the direct bases of this base, and append all that
+				 * we didn't already come across to the MRO vector that we are
+				 * currently constructing. */
+				DeeTypeObject *base = (DeeTypeObject *)bases_list.ol_elemv[mro_i];
+				DeeTypeMRO base_mro;
+				base = DeeTypeMRO_Init(&base_mro, base);
+				do {
+					if (!objectlist_contains_byid(&bases_list, (DeeObject *)base)) {
+						if (Dee_objectlist_append(&bases_list, (DeeObject *)base))
+							goto err_bases_list;
+					}
+				} while ((base = DeeTypeMRO_NextDirectBase(&base_mro, base)) != NULL);
+			}
+			ASSERT(mro_i == mro_end);
+			if (mro_end == bases_list.ol_elemc)
+				break;
+			mro_end = bases_list.ol_elemc;
+		}
+
+		/* Finalist the MRO vector. */
+		if (objectlist_setallocated(&bases_list, bases_list.ol_elemc + 1))
+			goto err_bases_list;
+		bases_list.ol_elemv[bases_list.ol_elemc] = NULL;
+		self->cb_mro = (DREF DeeTypeObject **)bases_list.ol_elemv; /* Inherit vector + references */
+
+		/* Create a reference for the primary base. */
+		Dee_Incref(self->cb_base);
+	}
+
+done:
+	return 0;
+err_bases_list:
+	objectlist_fini(&bases_list);
+err:
+	return -1;
+}
+
+
+/* Create a new class type derived from `bases',
  * featuring traits from `descriptor'.
- * @param: base: The base of the resulting class.
- *               You may pass `Dee_None' to have the resulting
- *               class not be derived from anything (be base-less).
+ * @param: bases: The base of the resulting class.
+ *                You may pass `Dee_None' to have the resulting
+ *                class not be derived from anything (be base-less).
+ *                You may also pass a sequence of types, in which
+ *                case this sequence (and its order) describe the
+ *                class's top-level MRO (thus becoming its __bases__).
  * @param: descriptor: A `DeeClassDescriptor_Type'-object, detailing the class's prototype.
  * @param: declaring_module: When non-NULL, the module that gets stored in `tp_module'
+ *                           NOTE: Passing NULL here must be allowed for situations where
+ *                                 code is executing without having a module-context (as
+ *                                 is the case for code running in a JIT-context)
  * @throw: TypeError: The given `base' is neither `none', nor a type-object.
  * @throw: TypeError: The given `base' is a final or variable type. */
 PUBLIC WUNUSED NONNULL((1, 2)) DREF DeeTypeObject *DCALL
-DeeClass_New(DeeTypeObject *__restrict base,
-             DeeObject *__restrict descriptor,
+DeeClass_New(DeeObject *bases, DeeObject *descriptor,
              struct Dee_module_object *declaring_module) {
+	struct class_bases cbases;
 	DeeClassDescriptorObject *desc;
 	DREF DeeTypeObject *result;
 	DeeTypeObject *result_type_type;
@@ -5059,24 +5245,24 @@ DeeClass_New(DeeTypeObject *__restrict base,
 	size_t result_class_offset;
 	ASSERT_OBJECT_TYPE_EXACT(descriptor, &DeeClassDescriptor_Type);
 	ASSERT_OBJECT_TYPE_OPT(declaring_module, &DeeModule_Type);
-	desc             = (DeeClassDescriptorObject *)descriptor;
-	result_type_type = Dee_TYPE(base);
-	if (result_type_type == &DeeNone_Type) {
+	desc = (DeeClassDescriptorObject *)descriptor;
+
+	/* Load class bases. */
+	if unlikely(class_bases_init(&cbases, bases))
+		goto err;
+	if (cbases.cb_base == NULL) {
 		result_type_type = &DeeType_Type; /* No base class. */
 	} else {
 		/* Make sure that the given base-object is actually a type. */
-		if unlikely(!DeeType_IsInherited((DeeTypeObject *)result_type_type, &DeeType_Type)) {
-			DeeObject_TypeAssertFailed((DeeObject *)base, &DeeType_Type);
-			goto err;
-		}
+		result_type_type = Dee_TYPE(cbases.cb_base);
 		ASSERTF(!(result_type_type->tp_flags & TP_FVARIABLE),
 		        "type-type objects must not have the variable-size flag, but %s has it set!",
 		        result_type_type->tp_name);
-		if (base->tp_flags & (TP_FFINAL | TP_FVARIABLE)) {
+		if (cbases.cb_base->tp_flags & (TP_FFINAL | TP_FVARIABLE)) {
 			DeeError_Throwf(&DeeError_TypeError,
 			                "Cannot use final, or variable type `%s' as class base",
-			                base->tp_name);
-			goto err;
+			                cbases.cb_base->tp_name);
+			goto err_cbases;
 		}
 	}
 	result_class_offset = result_type_type->tp_init.tp_alloc.tp_instance_size;
@@ -5084,8 +5270,8 @@ DeeClass_New(DeeTypeObject *__restrict base,
 err_custom_allocator:
 		DeeError_Throwf(&DeeError_TypeError,
 		                "Cannot use `%s' with custom allocator as class base",
-		                base->tp_name);
-		goto err;
+		                cbases.cb_base->tp_name);
+		goto err_cbases;
 	}
 	result_class_offset += (sizeof(void *) - 1);
 	result_class_offset &= ~(sizeof(void *) - 1);
@@ -5095,7 +5281,7 @@ err_custom_allocator:
 	                                                  offsetof(struct class_desc, cd_members) +
 	                                                  (desc->cd_cmemb_size * sizeof(DREF DeeObject *)));
 	if unlikely(!result)
-		goto err;
+		goto err_cbases;
 
 	/* Figure out where the class descriptor starts. */
 	result_class     = (struct class_desc *)((uintptr_t)result + result_class_offset);
@@ -5105,19 +5291,20 @@ err_custom_allocator:
 	result->tp_flags = ((TP_FHEAP | TP_FGC) |
 	                    (desc->cd_flags & (TP_FFINAL | TP_FTRUNCATE |
 	                                       TP_FINTERRUPT | TP_FMOVEANY)));
-	if (DeeNone_Check(base)) {
+	result->tp_mro = cbases.cb_mro; /* Inherit reference */
+	if (cbases.cb_base == NULL) {
 		/*result->tp_base = NULL;*/
 		result_class->cd_offset = sizeof(DeeObject);
 	} else {
 		/* Calculate the offset of instance descriptors. */
-		result_class->cd_offset = base->tp_init.tp_alloc.tp_instance_size;
-		if (base->tp_init.tp_alloc.tp_free) {
+		result_class->cd_offset = cbases.cb_base->tp_init.tp_alloc.tp_instance_size;
+		if (cbases.cb_base->tp_init.tp_alloc.tp_free) {
 #ifndef CONFIG_NO_OBJECT_SLABS
 			void (DCALL *tp_free)(void *__restrict ob);
 			size_t base_size;
-			tp_free = base->tp_init.tp_alloc.tp_free;
+			tp_free = cbases.cb_base->tp_init.tp_alloc.tp_free;
 			/* Figure out the slab size used by the base-class. */
-			if (base->tp_flags & TP_FGC) {
+			if (cbases.cb_base->tp_flags & TP_FGC) {
 #define CHECK_ALLOCATOR(index, size)                          \
 				if (tp_free == &DeeGCObject_SlabFree##size) { \
 					base_size = size * sizeof(void *);        \
@@ -5148,10 +5335,9 @@ err_custom_allocator:
 		}
 		result_class->cd_offset += (sizeof(void *) - 1);
 		result_class->cd_offset &= ~(sizeof(void *) - 1);
-		result->tp_base = base;
-		result->tp_flags |= base->tp_flags & TP_FINTERHITABLE;
-		result->tp_weakrefs = base->tp_weakrefs;
-		Dee_Incref(base);
+		result->tp_base = cbases.cb_base; /* Inherit reference */
+		result->tp_flags |= cbases.cb_base->tp_flags & TP_FINTERHITABLE;
+		result->tp_weakrefs = cbases.cb_base->tp_weakrefs;
 	}
 	result_class->cd_desc = desc;
 	Dee_Incref(desc);
@@ -5173,6 +5359,18 @@ err_custom_allocator:
 	result->tp_init.tp_alloc.tp_instance_size += offsetof(struct instance_desc, id_vtab);        /* Instance descriptor header. */
 	result->tp_init.tp_alloc.tp_instance_size += desc->cd_imemb_size * sizeof(DREF DeeObject *); /* Instance member objects. */
 
+	/* When the type doesn't have any instance members, it's an abstract type */
+	if (desc->cd_imemb_size == 0) {
+		result->tp_flags |= TP_FABSTRACT;
+
+		/* Try to re-use the instance descriptor of the base class. */
+		if (cbases.cb_base && DeeType_IsClass(cbases.cb_base)) {
+			result_class->cd_offset                   = cbases.cb_base->tp_class->cd_offset;
+			result->tp_init.tp_alloc.tp_instance_size = cbases.cb_base->tp_init.tp_alloc.tp_instance_size;
+		}
+	}
+
+
 	/* Assign default / mandatory operators. */
 	result->tp_init.tp_alloc.tp_copy_ctor = &instance_builtin_copy;
 	result->tp_init.tp_assign             = &instance_builtin_assign;
@@ -5182,7 +5380,7 @@ err_custom_allocator:
 	result->tp_visit                      = &instance_visit;
 	result->tp_gc                         = &instance_gc;
 #ifdef CONFIG_NOBASE_OPTIMIZED_CLASS_OPERATORS
-	if (DeeNone_Check(base) || base == &DeeObject_Type) {
+	if (cbases.cb_base == NULL || cbases.cb_base == &DeeObject_Type) {
 		result->tp_init.tp_alloc.tp_copy_ctor = &instance_builtin_nobase_copy;
 		result->tp_init.tp_deepload           = &instance_builtin_nobase_deepload;
 	}
@@ -5229,7 +5427,7 @@ err_custom_allocator:
 
 			case OPERATOR_INT:
 				if unlikely(LAZY_ALLOCATE(result->tp_math))
-					goto err_r_base;
+					goto err_r_base_cbases;
 				result->tp_math->tp_int32 = &instance_int32;
 				result->tp_math->tp_int64 = &instance_int64;
 				result->tp_math->tp_int   = &instance_int;
@@ -5268,7 +5466,7 @@ err_custom_allocator:
 			default:
 				/* Bind the C-wrapper-function for this operator. */
 				if (bind_class_operator(result_type_type, result, op->co_name))
-					goto err_r_base;
+					goto err_r_base_cbases;
 				break;
 			}
 		} while (++i <= desc->cd_clsop_mask);
@@ -5291,7 +5489,7 @@ err_custom_allocator:
 #ifdef CLASS_TP_FAUTOINIT
 			if (desc->cd_flags & CLASS_TP_FAUTOINIT) {
 #ifdef CONFIG_NOBASE_OPTIMIZED_CLASS_OPERATORS
-				if (DeeNone_Check(base) || base == &DeeObject_Type) {
+				if (cbases.cb_base == NULL || cbases.cb_base == &DeeObject_Type) {
 					result->tp_init.tp_alloc.tp_ctor        = &instance_auto_nobase_ctor;
 					result->tp_init.tp_alloc.tp_any_ctor    = &instance_auto_nobase_init;
 					result->tp_init.tp_alloc.tp_any_ctor_kw = &instance_auto_nobase_initkw;
@@ -5310,7 +5508,7 @@ err_custom_allocator:
 				result->tp_init.tp_alloc.tp_any_ctor_kw = &instance_inherited_initkw;
 			} else
 #ifdef CONFIG_NOBASE_OPTIMIZED_CLASS_OPERATORS
-			if (DeeNone_Check(base) || base == &DeeObject_Type) {
+			if (cbases.cb_base == NULL || cbases.cb_base == &DeeObject_Type) {
 				result->tp_init.tp_alloc.tp_ctor        = &instance_nobase_ctor;
 				result->tp_init.tp_alloc.tp_any_ctor    = &instance_nobase_init;
 				result->tp_init.tp_alloc.tp_any_ctor_kw = &instance_nobase_initkw;
@@ -5340,7 +5538,7 @@ err_custom_allocator:
 #ifdef CLASS_TP_FAUTOINIT
 			if (desc->cd_flags & CLASS_TP_FAUTOINIT) {
 #ifdef CONFIG_NOBASE_OPTIMIZED_CLASS_OPERATORS
-				if (DeeNone_Check(base) || base == &DeeObject_Type) {
+				if (cbases.cb_base == NULL || cbases.cb_base == &DeeObject_Type) {
 					result->tp_init.tp_alloc.tp_ctor        = &instance_builtin_auto_nobase_ctor;
 					result->tp_init.tp_alloc.tp_any_ctor    = &instance_builtin_auto_nobase_init;
 					result->tp_init.tp_alloc.tp_any_ctor_kw = &instance_builtin_auto_nobase_initkw;
@@ -5360,7 +5558,7 @@ err_custom_allocator:
 				result->tp_init.tp_alloc.tp_any_ctor_kw = &instance_builtin_inherited_initkw;
 			} else
 #ifdef CONFIG_NOBASE_OPTIMIZED_CLASS_OPERATORS
-			if (DeeNone_Check(base) || base == &DeeObject_Type) {
+			if (cbases.cb_base == NULL || cbases.cb_base == &DeeObject_Type) {
 				result->tp_init.tp_alloc.tp_ctor        = &instance_builtin_nobase_ctor;
 				result->tp_init.tp_alloc.tp_any_ctor    = &instance_builtin_nobase_init;
 				result->tp_init.tp_alloc.tp_any_ctor_kw = &instance_builtin_nobase_initkw;
@@ -5403,13 +5601,13 @@ err_custom_allocator:
 			error = (*result_type_type->tp_init.tp_alloc.tp_any_ctor_kw)((DeeObject *)result, 0, NULL, NULL);
 		}
 		if unlikely(error)
-			goto err_r_base;
+			goto err_r_base_cbases;
 	}
 
 	/* Initialize the resulting object, and start tracking it. */
 	DeeObject_Init(result, result_type_type);
 	return (DeeTypeObject *)DeeGC_Track((DeeObject *)result);
-err_r_base:
+err_r_base_cbases:
 	Dee_weakref_fini(&result->tp_module);
 	Dee_Free(result->tp_math);
 	Dee_Free(result->tp_cmp);
@@ -5422,6 +5620,8 @@ err_r_base:
 	Dee_Decref_unlikely(desc);
 /*err_r:*/
 	DeeGCObject_Free(result);
+err_cbases:
+	class_bases_fini(&cbases);
 err:
 	return NULL;
 }

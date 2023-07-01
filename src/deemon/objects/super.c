@@ -64,14 +64,16 @@ DeeSuper_New(DeeTypeObject *tp_self, DeeObject *self) {
 	if (DeeObject_AssertType(tp_self, &DeeType_Type))
 		goto err;
 	if (DeeSuper_Check(self)) {
-		if unlikely(!DeeType_IsAbstract(tp_self) &&
-		            !DeeType_IsInherited(DeeSuper_TYPE(self), tp_self))
-			goto err_badtype;
+		if (!DeeType_IsAbstract(tp_self)) {
+			if unlikely(!DeeType_Implements(DeeSuper_TYPE(self), tp_self))
+				goto err_badtype;
+		}
 		self = DeeSuper_SELF(self);
 	} else {
-		if unlikely(!DeeType_IsAbstract(tp_self) &&
-		            DeeObject_AssertType(self, tp_self))
-			goto err;
+		if (!DeeType_IsAbstract(tp_self)) {
+			if (DeeObject_AssertType(self, tp_self))
+				goto err;
+		}
 	}
 	ASSERT(!DeeSuper_Check(self));
 

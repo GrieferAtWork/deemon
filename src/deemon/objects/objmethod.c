@@ -79,6 +79,8 @@ done:
 PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) char const *DCALL
 typeobject_find_objmethod(DeeTypeObject *__restrict self,
                           dobjmethod_t meth) {
+	DeeTypeMRO mro;
+	DeeTypeMRO_Init(&mro, self);
 	do {
 		struct type_method const *iter;
 		iter = self->tp_class_methods;
@@ -87,13 +89,15 @@ typeobject_find_objmethod(DeeTypeObject *__restrict self,
 				if (iter->m_func == meth)
 					return iter->m_name;
 			}
-	} while ((self = DeeType_Base(self)) != NULL);
+	} while ((self = DeeTypeMRO_Next(&mro, self)) != NULL);
 	return NULL;
 }
 
 PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) char const *DCALL
 typeobject_find_objmethod_doc(DeeTypeObject *__restrict self,
                               dobjmethod_t meth) {
+	DeeTypeMRO mro;
+	DeeTypeMRO_Init(&mro, self);
 	do {
 		struct type_method const *iter;
 		iter = self->tp_class_methods;
@@ -102,13 +106,15 @@ typeobject_find_objmethod_doc(DeeTypeObject *__restrict self,
 				if (iter->m_func == meth)
 					return iter->m_doc;
 			}
-	} while ((self = DeeType_Base(self)) != NULL);
+	} while ((self = DeeTypeMRO_Next(&mro, self)) != NULL);
 	return NULL;
 }
 
 PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) DeeTypeObject *DCALL
 typeobject_find_objmethod_type(DeeTypeObject *__restrict self,
                                dobjmethod_t meth) {
+	DeeTypeMRO mro;
+	DeeTypeMRO_Init(&mro, self);
 	do {
 		struct type_method const *iter;
 		iter = self->tp_class_methods;
@@ -117,7 +123,7 @@ typeobject_find_objmethod_type(DeeTypeObject *__restrict self,
 				if (iter->m_func == meth)
 					return self;
 			}
-	} while ((self = DeeType_Base(self)) != NULL);
+	} while ((self = DeeTypeMRO_Next(&mro, self)) != NULL);
 	return NULL;
 }
 
@@ -127,10 +133,12 @@ PUBLIC ATTR_PURE WUNUSED NONNULL((1)) char const *DCALL
 DeeObjMethod_GetName(DeeObject const *__restrict self) {
 	dobjmethod_t func;
 	DeeTypeObject *tp_self;
+	DeeTypeMRO mro;
 	ASSERT_OBJECT(self);
 	ASSERT(DeeObjMethod_Check(self) || DeeKwObjMethod_Check(self));
 	func    = DeeObjMethod_FUNC(self);
 	tp_self = Dee_TYPE(DeeObjMethod_SELF(self));
+	DeeTypeMRO_Init(&mro, tp_self);
 	do {
 		struct type_method const *iter;
 		if (tp_self == &DeeType_Type) {
@@ -145,7 +153,7 @@ DeeObjMethod_GetName(DeeObject const *__restrict self) {
 				if (iter->m_func == func)
 					return iter->m_name;
 			}
-	} while ((tp_self = DeeType_Base(tp_self)) != NULL);
+	} while ((tp_self = DeeTypeMRO_Next(&mro, tp_self)) != NULL);
 	return NULL;
 }
 
@@ -153,10 +161,12 @@ PUBLIC ATTR_PURE WUNUSED NONNULL((1)) char const *DCALL
 DeeObjMethod_GetDoc(DeeObject const *__restrict self) {
 	dobjmethod_t func;
 	DeeTypeObject *tp_self;
+	DeeTypeMRO mro;
 	ASSERT_OBJECT(self);
 	ASSERT(DeeObjMethod_Check(self) || DeeKwObjMethod_Check(self));
 	func    = DeeObjMethod_FUNC(self);
 	tp_self = Dee_TYPE(DeeObjMethod_SELF(self));
+	DeeTypeMRO_Init(&mro, tp_self);
 	do {
 		struct type_method const *iter;
 		if (tp_self == &DeeType_Type) {
@@ -172,7 +182,7 @@ DeeObjMethod_GetDoc(DeeObject const *__restrict self) {
 					return iter->m_doc;
 			}
 		}
-	} while ((tp_self = DeeType_Base(tp_self)) != NULL);
+	} while ((tp_self = DeeTypeMRO_Next(&mro, tp_self)) != NULL);
 	return NULL;
 }
 
@@ -181,10 +191,12 @@ PUBLIC ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) DeeTypeObject *DCALL
 DeeObjMethod_GetType(DeeObject const *__restrict self) {
 	dobjmethod_t func;
 	DeeTypeObject *tp_self;
+	DeeTypeMRO mro;
 	ASSERT_OBJECT(self);
 	ASSERT(DeeObjMethod_Check(self) || DeeKwObjMethod_Check(self));
 	func    = DeeObjMethod_FUNC(self);
 	tp_self = Dee_TYPE(DeeObjMethod_SELF(self));
+	DeeTypeMRO_Init(&mro, tp_self);
 	do {
 		struct type_method const *iter;
 		if (tp_self == &DeeType_Type) {
@@ -199,7 +211,7 @@ DeeObjMethod_GetType(DeeObject const *__restrict self) {
 				if (iter->m_func == func)
 					return tp_self;
 			}
-	} while ((tp_self = DeeType_Base(tp_self)) != NULL);
+	} while ((tp_self = DeeTypeMRO_Next(&mro, tp_self)) != NULL);
 	return Dee_TYPE(DeeObjMethod_SELF(self));
 }
 
@@ -974,7 +986,7 @@ clsmethod_call(DeeClsMethodObject *self, size_t argc, DeeObject *const *argv) {
 	if unlikely(!argc)
 		goto err_argc_zero;
 	/* Allow non-instance objects for generic types. */
-	if (!(self->cm_type->tp_flags & TP_FABSTRACT)) {
+	if (!DeeType_IsAbstract(self->cm_type)) {
 		if (DeeObject_AssertType(argv[0], self->cm_type))
 			goto err;
 	}
@@ -1225,7 +1237,7 @@ kwclsmethod_call(DeeKwClsMethodObject *self, size_t argc, DeeObject *const *argv
 	if unlikely(!argc)
 		goto err_argc_zero;
 	/* Allow non-instance objects for generic types. */
-	if (!(self->cm_type->tp_flags & TP_FABSTRACT)) {
+	if (!DeeType_IsAbstract(self->cm_type)) {
 		if (DeeObject_AssertType(argv[0], self->cm_type))
 			goto err;
 	}
@@ -1243,7 +1255,7 @@ kwclsmethod_call_kw(DeeKwClsMethodObject *self, size_t argc,
 	if unlikely(!argc)
 		goto err_argc_zero;
 	/* Allow non-instance objects for generic types. */
-	if (!(self->cm_type->tp_flags & TP_FABSTRACT)) {
+	if (!DeeType_IsAbstract(self->cm_type)) {
 		if (DeeObject_AssertType(argv[0], self->cm_type))
 			goto err;
 	}
@@ -1422,9 +1434,10 @@ clsproperty_get_nokw(DeeClsPropertyObject *__restrict self,
 	if (DeeArg_Unpack(argc, argv, "o:get", &thisarg))
 		goto err;
 	/* Allow non-instance objects for generic types. */
-	if (!(self->cp_type->tp_flags & TP_FABSTRACT) &&
-	    DeeObject_AssertType(thisarg, self->cp_type))
-		goto err;
+	if (!DeeType_IsAbstract(self->cp_type)) {
+		if (DeeObject_AssertType(thisarg, self->cp_type))
+			goto err;
+	}
 	return (*self->cp_get)(thisarg);
 err:
 	return NULL;
@@ -1442,7 +1455,7 @@ clsproperty_get(DeeClsPropertyObject *__restrict self,
 	if (DeeArg_UnpackKw(argc, argv, kw, getter_kwlist, "o:get", &thisarg))
 		goto err;
 	/* Allow non-instance objects for generic types. */
-	if (!(self->cp_type->tp_flags & TP_FABSTRACT)) {
+	if (!DeeType_IsAbstract(self->cp_type)) {
 		if (DeeObject_AssertType(thisarg, self->cp_type))
 			goto err;
 	}
@@ -1463,7 +1476,7 @@ clsproperty_delete(DeeClsPropertyObject *__restrict self,
 	if (DeeArg_UnpackKw(argc, argv, kw, getter_kwlist, "o:delete", &thisarg))
 		goto err;
 	/* Allow non-instance objects for generic types. */
-	if (!(self->cp_type->tp_flags & TP_FABSTRACT)) {
+	if (!DeeType_IsAbstract(self->cp_type)) {
 		if (DeeObject_AssertType(thisarg, self->cp_type))
 			goto err;
 	}
@@ -1486,7 +1499,7 @@ clsproperty_set(DeeClsPropertyObject *__restrict self,
 	if (DeeArg_UnpackKw(argc, argv, kw, setter_kwlist, "oo:set", &thisarg, &value))
 		goto err;
 	/* Allow non-instance objects for generic types. */
-	if (!(self->cp_type->tp_flags & TP_FABSTRACT)) {
+	if (!DeeType_IsAbstract(self->cp_type)) {
 		if (DeeObject_AssertType(thisarg, self->cp_type))
 			goto err;
 	}
@@ -1717,7 +1730,7 @@ clsmember_get(DeeClsMemberObject *self, size_t argc,
 	if (DeeArg_UnpackKw(argc, argv, kw, getter_kwlist, "o:get", &thisarg))
 		goto err;
 	/* Allow non-instance objects for generic types. */
-	if (!(self->cm_type->tp_flags & TP_FABSTRACT)) {
+	if (!DeeType_IsAbstract(self->cm_type)) {
 		if (DeeObject_AssertType(thisarg, self->cm_type))
 			goto err;
 	}
@@ -1733,7 +1746,7 @@ clsmember_delete(DeeClsMemberObject *self, size_t argc,
 	if (DeeArg_UnpackKw(argc, argv, kw, getter_kwlist, "o:delete", &thisarg))
 		goto err;
 	/* Allow non-instance objects for generic types. */
-	if (!(self->cm_type->tp_flags & TP_FABSTRACT)) {
+	if (!DeeType_IsAbstract(self->cm_type)) {
 		if (DeeObject_AssertType(thisarg, self->cm_type))
 			goto err;
 	}
@@ -1751,7 +1764,7 @@ clsmember_set(DeeClsMemberObject *self, size_t argc,
 	if (DeeArg_UnpackKw(argc, argv, kw, getter_kwlist, "oo:set", &thisarg, &value))
 		goto err;
 	/* Allow non-instance objects for generic types. */
-	if (!(self->cm_type->tp_flags & TP_FABSTRACT)) {
+	if (!DeeType_IsAbstract(self->cm_type)) {
 		if (DeeObject_AssertType(thisarg, self->cm_type))
 			goto err;
 	}
@@ -1957,10 +1970,11 @@ gotit:
 }
 
 PRIVATE WUNUSED NONNULL((1, 2, 3)) struct type_member const *DCALL
-type_seach_cmethod(DeeTypeObject *self,
-                   dcmethod_t func_ptr,
+type_seach_cmethod(DeeTypeObject *self, dcmethod_t func_ptr,
                    DeeTypeObject **__restrict ptarget_type) {
 	struct type_member const *result;
+	DeeTypeMRO mro;
+	DeeTypeMRO_Init(&mro, self);
 	do {
 		if (self->tp_class_members &&
 		    (result = type_member_search_cmethod(self, self->tp_class_members, ptarget_type, func_ptr)) != NULL)
@@ -1968,7 +1982,7 @@ type_seach_cmethod(DeeTypeObject *self,
 		if (self->tp_members &&
 		    (result = type_member_search_cmethod(self, self->tp_members, ptarget_type, func_ptr)) != NULL)
 			goto gotit;
-	} while ((self = DeeType_Base(self)) != NULL);
+	} while ((self = DeeTypeMRO_Next(&mro, self)) != NULL);
 	return NULL;
 gotit:
 	return result;

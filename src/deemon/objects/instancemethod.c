@@ -202,7 +202,9 @@ instancemethod_getattr(InstanceMethod *__restrict self,
                        DeeTypeObject **p_decl_type) {
 	struct class_attribute *result;
 	DeeTypeObject *tp_iter;
+	DeeTypeMRO mro;
 	tp_iter = Dee_TYPE(self->im_this);
+	DeeTypeMRO_Init(&mro, tp_iter);
 	do {
 		DeeClassDescriptorObject *desc;
 		struct class_desc *my_class;
@@ -245,7 +247,7 @@ instancemethod_getattr(InstanceMethod *__restrict self,
 			Dee_class_desc_lock_read(my_class);
 		}
 		Dee_class_desc_lock_endread(my_class);
-	} while ((tp_iter = DeeType_Base(tp_iter)) != NULL);
+	} while ((tp_iter = DeeTypeMRO_Next(&mro, tp_iter)) != NULL);
 	return NULL;
 }
 

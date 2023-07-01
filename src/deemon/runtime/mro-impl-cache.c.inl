@@ -664,7 +664,7 @@ dkwobjmethod_vcallf_len(dkwobjmethod_t self,
 		Dee_VPPackf_Cleanup(format, ((struct va_list_struct *)VALIST_ADDR(args))->vl_ap);
 		goto err;
 	} 
-	if (!(cls_type->tp_flags & TP_FABSTRACT)) {
+	if (!DeeType_IsAbstract(cls_type)) {
 		if (DeeObject_AssertType(thisarg, cls_type))
 			goto err_thisarg;
 	}
@@ -699,7 +699,7 @@ dobjmethod_vcallf_len(dobjmethod_t self,
 		Dee_VPPackf_Cleanup(format, ((struct va_list_struct *)VALIST_ADDR(args))->vl_ap);
 		goto err;
 	} 
-	if (!(cls_type->tp_flags & TP_FABSTRACT)) {
+	if (!DeeType_IsAbstract(cls_type)) {
 		if (DeeObject_AssertType(thisarg, cls_type))
 			goto err_thisarg;
 	}
@@ -739,7 +739,7 @@ dkwobjmethod_vcallf(dkwobjmethod_t self,
 		Dee_VPPackf_Cleanup(format, ((struct va_list_struct *)VALIST_ADDR(args))->vl_ap);
 		goto err;
 	} 
-	if (!(cls_type->tp_flags & TP_FABSTRACT)) {
+	if (!DeeType_IsAbstract(cls_type)) {
 		if (DeeObject_AssertType(thisarg, cls_type))
 			goto err_thisarg;
 	}
@@ -774,7 +774,7 @@ dobjmethod_vcallf(dobjmethod_t self,
 		Dee_VPPackf_Cleanup(format, ((struct va_list_struct *)VALIST_ADDR(args))->vl_ap);
 		goto err;
 	} 
-	if (!(cls_type->tp_flags & TP_FABSTRACT)) {
+	if (!DeeType_IsAbstract(cls_type)) {
 		if (DeeObject_AssertType(thisarg, cls_type))
 			goto err_thisarg;
 	}
@@ -1034,7 +1034,7 @@ INTERN WUNUSED LOCAL_ATTR_NONNULL int
 			if (item->mcs_method.m_flag & TYPE_METHOD_FKWDS) {
 				Dee_membercache_releasetable(&tp_self->LOCAL_tp_cache, table);
 #ifdef LOCAL_MUST_ASSERT_ARGC
-				if unlikely(!(decl->tp_flags & TP_FABSTRACT)) {
+				if unlikely(!DeeType_IsAbstract(decl)) {
 					if (DeeObject_AssertType(LOCAL_argv[0], decl))
 						goto err;
 #define NEED_err
@@ -1044,7 +1044,7 @@ INTERN WUNUSED LOCAL_ATTR_NONNULL int
 			}
 			Dee_membercache_releasetable(&tp_self->LOCAL_tp_cache, table);
 #ifdef LOCAL_MUST_ASSERT_ARGC
-			if unlikely(!(decl->tp_flags & TP_FABSTRACT)) {
+			if unlikely(!DeeType_IsAbstract(decl)) {
 				if (DeeObject_AssertType(LOCAL_argv[0], decl))
 					goto err;
 #define NEED_err
@@ -1097,7 +1097,7 @@ check_and_invoke_callback:
 				Dee_membercache_releasetable(&tp_self->LOCAL_tp_cache, table);
 				if unlikely(LOCAL_unpack_one_for_getter(&thisarg))
 					goto err;
-				if unlikely(!(decl->tp_flags & TP_FABSTRACT) &&
+				if unlikely(!DeeType_IsAbstract(decl) &&
 				            DeeObject_AssertType(thisarg, decl)) {
 					result = NULL;
 				} else {
@@ -1153,7 +1153,7 @@ check_and_invoke_callback:
 			if unlikely(LOCAL_unpack_one_for_getter(&thisarg))
 				goto err;
 #define NEED_err
-			if unlikely(!(decl->tp_flags & TP_FABSTRACT) &&
+			if unlikely(!DeeType_IsAbstract(decl) &&
 			            DeeObject_AssertType(LOCAL_argv[0], decl)) {
 				result = NULL;
 			} else {
@@ -1221,7 +1221,7 @@ check_and_invoke_callback:
 				return DeeKwClsMethod_New(decl, (dkwobjmethod_t)func);
 #else /* LOCAL_IS_GET */
 #ifdef LOCAL_MUST_ASSERT_ARGC
-				if unlikely(!(decl->tp_flags & TP_FABSTRACT)) {
+				if unlikely(!DeeType_IsAbstract(decl)) {
 					if (DeeObject_AssertType(LOCAL_argv[0], decl))
 						goto err;
 #define NEED_err
@@ -1235,7 +1235,7 @@ check_and_invoke_callback:
 			return DeeClsMethod_New(decl, func);
 #else /* LOCAL_IS_GET */
 #ifdef LOCAL_MUST_ASSERT_ARGC
-			if unlikely(!(decl->tp_flags & TP_FABSTRACT)) {
+			if unlikely(!DeeType_IsAbstract(decl)) {
 				if (DeeObject_AssertType(LOCAL_argv[0], decl))
 					goto err;
 #define NEED_err
@@ -1268,7 +1268,7 @@ check_and_invoke_callback:
 				Dee_membercache_releasetable(&tp_self->LOCAL_tp_cache, table);
 				if unlikely(LOCAL_unpack_one_for_getter(&thisarg))
 					goto err;
-				if unlikely(!(decl->tp_flags & TP_FABSTRACT) &&
+				if unlikely(!DeeType_IsAbstract(decl) &&
 				            DeeObject_AssertType(thisarg, decl)) {
 					result = NULL;
 				} else {
@@ -1305,7 +1305,7 @@ check_and_invoke_callback:
 			if unlikely(LOCAL_unpack_one_for_getter(&thisarg))
 				goto err;
 #define NEED_err
-			if unlikely(!(decl->tp_flags & TP_FABSTRACT) &&
+			if unlikely(!DeeType_IsAbstract(decl) &&
 			            DeeObject_AssertType(thisarg, decl)) {
 				result = NULL;
 			} else {

@@ -802,11 +802,14 @@ INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeClass_BoundInstanceAttribute(DeeType
 
 struct Dee_module_object;
 
-/* Create a new class type derived from `base',
+/* Create a new class type derived from `bases',
  * featuring traits from `descriptor'.
- * @param: base: The base of the resulting class.
- *               You may pass `Dee_None' to have the resulting
- *               class not be derived from anything (be base-less).
+ * @param: bases: The base of the resulting class.
+ *                You may pass `Dee_None' to have the resulting
+ *                class not be derived from anything (be base-less).
+ *                You may also pass a sequence of types, in which
+ *                case this sequence (and its order) describe the
+ *                class's top-level MRO (thus becoming its __bases__).
  * @param: descriptor: A `DeeClassDescriptor_Type'-object, detailing the class's prototype.
  * @param: declaring_module: When non-NULL, the module that gets stored in `tp_module'
  *                           NOTE: Passing NULL here must be allowed for situations where
@@ -815,8 +818,7 @@ struct Dee_module_object;
  * @throw: TypeError: The given `base' is neither `none', nor a type-object.
  * @throw: TypeError: The given `base' is a final or variable type. */
 DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeTypeObject *DCALL
-DeeClass_New(DeeTypeObject *__restrict base,
-             DeeObject *__restrict descriptor,
+DeeClass_New(DeeObject *bases, DeeObject *descriptor,
              struct Dee_module_object *declaring_module);
 
 /* Return the nearest operator function for `name',
@@ -825,18 +827,18 @@ DeeClass_New(DeeTypeObject *__restrict base,
  * a NotImplemented error, or return NULL and don't throw
  * an error when `DeeClass_TryGetOperator()' was used. */
 DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-DeeClass_GetOperator(DeeTypeObject *__restrict self, uint16_t name);
+DeeClass_GetOperator(DeeTypeObject const *__restrict self, uint16_t name);
 
 /* Same as `DeeClass_GetOperator()', but don't simply return `NULL'
  * if the operator hasn't been implemented, and `ITER_DONE' when it
  * has been, but wasn't assigned anything. */
 DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-DeeClass_TryGetOperator(DeeTypeObject *__restrict self, uint16_t name);
+DeeClass_TryGetOperator(DeeTypeObject const *__restrict self, uint16_t name);
 
 /* Same as `DeeClass_TryGetOperator()', but don't return an operator
  * that has been inherited from a base-class, but return `NULL' instead. */
 DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-DeeClass_TryGetPrivateOperator(DeeTypeObject *__restrict self, uint16_t name);
+DeeClass_TryGetPrivateOperator(DeeTypeObject const *__restrict self, uint16_t name);
 
 
 #ifdef CONFIG_BUILDING_DEEMON

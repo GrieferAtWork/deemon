@@ -245,12 +245,14 @@ object_format_impl(DeeObject *__restrict self,
                    /*utf-8*/ char const *__restrict format_str,
                    size_t format_len, DeeObject *format_str_obj) {
 	DeeTypeObject *tp_self;
+	DeeTypeMRO mro;
 	tp_self = Dee_TYPE(self);
 	if (tp_self == &DeeSuper_Type) {
 		tp_self = DeeSuper_TYPE(self);
 		self    = DeeSuper_SELF(self);
 	}
 	/* TODO: Optimizations for known types! */
+	DeeTypeMRO_Init(&mro, tp_self);
 	do {
 		DREF DeeObject *format_function;
 		if (tp_self == &DeeObject_Type)
@@ -294,7 +296,7 @@ call_format_function:
 			Dee_Decref(callback_result);
 			return result;
 		}
-	} while ((tp_self = DeeType_Base(tp_self)) != NULL);
+	} while ((tp_self = DeeTypeMRO_Next(&mro, tp_self)) != NULL);
 	/* Fallback: Format using `object.__format__' */
 	return object_format_generic(self, printer, arg, format_str, format_len);
 err:

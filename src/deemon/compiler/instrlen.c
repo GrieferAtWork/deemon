@@ -220,9 +220,9 @@ PRIVATE uint8_t const intr_len[256] = {
 	/* 0x4a */ 1, /* `ASM_CLASSOF':                 `classof top' */
 	/* 0x4b */ 1, /* `ASM_SUPEROF':                 `superof top' */
 	/* 0x4c */ 1, /* `ASM_INSTANCEOF':              `instanceof top, pop' */
-	/* 0x4d */ 1, /* `ASM_STR':                     `str top' */
-	/* 0x4e */ 1, /* `ASM_REPR':                    `repr top' */
-	/* 0x4f */ 1, /* --- */
+	/* 0x4d */ 1, /* `ASM_IMPLEMENTS':              `implements top, pop' */
+	/* 0x4e */ 1, /* `ASM_STR':                     `str top' */
+	/* 0x4f */ 1, /* `ASM_REPR':                    `repr top' */
 	/* 0x50 */ 1, /* `ASM_BOOL':                    `bool top' */
 	/* 0x51 */ 1, /* `ASM_NOT':                     `not top' */
 	/* 0x52 */ 1, /* `ASM_ASSIGN':                  `assign pop, pop' */
@@ -738,9 +738,9 @@ PRIVATE uint8_t const stack_effect[256] = {
 	/* 0x4a */ STACK_EFFECT(1, 1), /* `ASM_CLASSOF':                 `classof top' */
 	/* 0x4b */ STACK_EFFECT(1, 1), /* `ASM_SUPEROF':                 `superof top' */
 	/* 0x4c */ STACK_EFFECT(2, 1), /* `ASM_INSTANCEOF':              `instanceof top, pop' */
-	/* 0x4d */ STACK_EFFECT(1, 1), /* `ASM_STR':                     `str top' */
-	/* 0x4e */ STACK_EFFECT(1, 1), /* `ASM_REPR':                    `repr top' */
-	/* 0x4f */ STACK_EFFECT_UNDEF, /* --- */
+	/* 0x4d */ STACK_EFFECT(2, 1), /* `ASM_IMPLEMENTS':              `implements top, pop' */
+	/* 0x4e */ STACK_EFFECT(1, 1), /* `ASM_STR':                     `str top' */
+	/* 0x4f */ STACK_EFFECT(1, 1), /* `ASM_REPR':                    `repr top' */
 	/* 0x50 */ STACK_EFFECT(1, 1), /* `ASM_BOOL':                    `bool top' */
 	/* 0x51 */ STACK_EFFECT(1, 1), /* `ASM_NOT':                     `not top' */
 	/* 0x52 */ STACK_EFFECT(2, 0), /* `ASM_ASSIGN':                  `assign pop, pop' */

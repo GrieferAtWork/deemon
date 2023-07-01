@@ -348,7 +348,7 @@ PUBLIC WUNUSED LOCAL_ATTR_NONNULL LOCAL_return_t
 #endif /* LOCAL_HAS_tp_self */
 #ifdef LOCAL_HAS_self
 #ifdef LOCAL_HAS_tp_self
-	ASSERT_OBJECT_TYPE(self, tp_self);
+	ASSERT_OBJECT_TYPE_A(self, tp_self);
 #else /* LOCAL_HAS_tp_self */
 	ASSERT_OBJECT(self);
 #endif /* !LOCAL_HAS_tp_self */
@@ -360,13 +360,15 @@ PUBLIC WUNUSED LOCAL_ATTR_NONNULL LOCAL_return_t
 	if (result == LOCAL_ATTR_NOT_FOUND_RESULT)
 #endif /* LOCAL_DeeType_AccessCachedAttr */
 	{
+		DeeTypeMRO mro;
 		DeeTypeObject *iter = tp_self;
+		DeeTypeMRO_Init(&mro, iter);
 		do {
 #ifdef LOCAL_IS_FIND
 continue_at_iter:
 			if (rules->alr_decl != NULL &&
 			    rules->alr_decl != (DeeObject *)iter) {
-				iter = DeeType_Base(iter);
+				iter = DeeTypeMRO_Next(&mro, iter);
 				if (!iter)
 					break;
 
@@ -403,7 +405,7 @@ continue_at_iter:
 			}
 
 #undef LOCAL_process_result
-		} while ((iter = DeeType_Base(iter)) != NULL);
+		} while ((iter = DeeTypeMRO_Next(&mro, iter)) != NULL);
 	}
 #ifndef LOCAL_IS_ENUM
 done:

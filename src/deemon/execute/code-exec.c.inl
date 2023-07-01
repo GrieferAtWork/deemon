@@ -1939,9 +1939,27 @@ do_push_module:
 			if (DeeNone_Check(FIRST)) {
 				is_instance = DeeNone_Check(SECOND);
 			} else if (DeeSuper_Check(SECOND)) {
-				is_instance = DeeType_IsInherited(DeeSuper_TYPE(SECOND), (DeeTypeObject *)FIRST);
+				is_instance = DeeType_InheritsFrom(DeeSuper_TYPE(SECOND), (DeeTypeObject *)FIRST);
 			} else {
 				is_instance = DeeObject_InstanceOf(SECOND, (DeeTypeObject *)FIRST);
+			}
+			POPREF();
+			Dee_Decref(TOP);
+			TOP = DeeBool_For(is_instance);
+			Dee_Incref(TOP);
+			DISPATCH();
+		}
+
+		TARGET(ASM_IMPLEMENTS, -2, +1) {
+			bool is_instance;
+			/* Special case: The deemon specs allow `none' to be
+			 *               written as the second argument to `is' */
+			if (DeeNone_Check(FIRST)) {
+				is_instance = DeeNone_Check(SECOND);
+			} else if (DeeSuper_Check(SECOND)) {
+				is_instance = DeeType_Implements(DeeSuper_TYPE(SECOND), (DeeTypeObject *)FIRST);
+			} else {
+				is_instance = DeeObject_Implements(SECOND, (DeeTypeObject *)FIRST);
 			}
 			POPREF();
 			Dee_Decref(TOP);
@@ -1966,13 +1984,15 @@ do_push_module:
 
 			/* Required handling for object repr streaming into a file via `<<' */
 			case ASM_SHL: {
-				DeeTypeObject *tp_temp = Dee_TYPE(SECOND);
+				DeeTypeMRO mro;
+				DeeTypeObject *tp_temp;
+				tp_temp = DeeTypeMRO_Init(&mro, Dee_TYPE(SECOND));
 				for (;;) {
 					DREF DeeObject *other;
 					DREF DeeObject *(DCALL *tp_shl)(DeeObject *, DeeObject *);
 					if (!tp_temp->tp_math ||
 					    (tp_shl = tp_temp->tp_math->tp_shl) == NULL) {
-						tp_temp = tp_temp->tp_base;
+						tp_temp = DeeTypeMRO_Next(&mro, tp_temp);
 						if (!tp_temp)
 							break;
 						continue;
@@ -2152,12 +2172,12 @@ do_class_c:
 				if unlikely(DeeObject_AssertTypeExact(descriptor, &DeeClassDescriptor_Type)) {
 					new_class = NULL;
 				} else {
-					new_class = DeeClass_New((DeeTypeObject *)TOP, descriptor, code->co_module);
+					new_class = DeeClass_New(TOP, descriptor, code->co_module);
 				}
 				Dee_Decref(descriptor);
 			}
 #else /* EXEC_SAFE */
-			new_class = DeeClass_New((DeeTypeObject *)TOP, CONSTimm, code->co_module);
+			new_class = DeeClass_New(TOP, CONSTimm, code->co_module);
 #endif /* !EXEC_SAFE */
 			if unlikely(!new_class)
 				HANDLE_EXCEPT();
@@ -2190,12 +2210,12 @@ do_class_gc:
 				if unlikely(DeeObject_AssertTypeExact(descriptor, &DeeClassDescriptor_Type)) {
 					new_class = NULL;
 				} else {
-					new_class = DeeClass_New((DeeTypeObject *)base, descriptor, code->co_module);
+					new_class = DeeClass_New(base, descriptor, code->co_module);
 				}
 				Dee_Decref(descriptor);
 			}
 #else /* EXEC_SAFE */
-			new_class = DeeClass_New((DeeTypeObject *)base, CONSTimm, code->co_module);
+			new_class = DeeClass_New(base, CONSTimm, code->co_module);
 #endif /* !EXEC_SAFE */
 			Dee_Decref(base);
 			if unlikely(!new_class)
@@ -2232,12 +2252,12 @@ do_class_gc:
 				if unlikely(DeeObject_AssertTypeExact(descriptor, &DeeClassDescriptor_Type)) {
 					new_class = NULL;
 				} else {
-					new_class = DeeClass_New((DeeTypeObject *)base, descriptor, code->co_module);
+					new_class = DeeClass_New(base, descriptor, code->co_module);
 				}
 				Dee_Decref(descriptor);
 			}
 #else /* EXEC_SAFE */
-			new_class = DeeClass_New((DeeTypeObject *)base, CONSTimm, code->co_module);
+			new_class = DeeClass_New(base, CONSTimm, code->co_module);
 #endif /* !EXEC_SAFE */
 			Dee_Decref(base);
 			if unlikely(!new_class)
@@ -4525,7 +4545,7 @@ do_setattr_this_c:
 					DREF DeeTypeObject *new_class;
 					if (DeeObject_AssertTypeExact(TOP, &DeeClassDescriptor_Type))
 						HANDLE_EXCEPT();
-					new_class = DeeClass_New((DeeTypeObject *)SECOND, TOP, code->co_module);
+					new_class = DeeClass_New(SECOND, TOP, code->co_module);
 					if unlikely(!new_class)
 						HANDLE_EXCEPT();
 					POPREF();
@@ -4573,12 +4593,12 @@ do_setattr_this_c:
 						if unlikely(DeeObject_AssertTypeExact(descriptor, &DeeClassDescriptor_Type)) {
 							new_class = NULL;
 						} else {
-							new_class = DeeClass_New((DeeTypeObject *)base, descriptor, code->co_module);
+							new_class = DeeClass_New(base, descriptor, code->co_module);
 						}
 						Dee_Decref(descriptor);
 					}
 #else /* EXEC_SAFE */
-					new_class = DeeClass_New((DeeTypeObject *)base, CONSTimm, code->co_module);
+					new_class = DeeClass_New(base, CONSTimm, code->co_module);
 #endif /* !EXEC_SAFE */
 					Dee_Decref(base);
 					if unlikely(!new_class)
@@ -5353,7 +5373,7 @@ do_supergetattr_rc:
 					ASSERT_REFimm();
 					ASSERT_CONSTimm2();
 					ASSERT_THISCALL();
-					if (DeeObject_AssertType(THIS, (DeeTypeObject *)REFimm))
+					if (DeeObject_AssertImplements(THIS, (DeeTypeObject *)REFimm))
 						HANDLE_EXCEPT();
 #ifdef EXEC_SAFE
 					{
@@ -5390,7 +5410,7 @@ do_supercallattr_rc:
 					ASSERT_THISCALL();
 					argc = READ_imm8();
 					ASSERT_USAGE(-(int)argc, +1);
-					if (DeeObject_AssertType(THIS, (DeeTypeObject *)REFimm))
+					if (DeeObject_AssertImplements(THIS, (DeeTypeObject *)REFimm))
 						HANDLE_EXCEPT();
 #ifdef EXEC_SAFE
 					{
@@ -6987,7 +7007,7 @@ handle_except:
 					thrown_object_type = Dee_TYPE(current_exception);
 					if (thrown_object_type == &DeeSuper_Type) /* Special case for super-views */
 						thrown_object_type = DeeSuper_TYPE(current_exception);
-					if (!DeeType_IsInherited(thrown_object_type, current_except->eh_mask))
+					if (!DeeType_Implements(thrown_object_type, current_except->eh_mask))
 						continue;
 				}
 				goto exec_except_maybe_handle; /* Execute this one! */

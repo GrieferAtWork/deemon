@@ -126,10 +126,10 @@ public:
 		return DeeType_HasPrivateOperator((DeeTypeObject *)this, name);
 	}
 	WUNUSED bool cderivedfrom(DeeTypeObject *base_type) const DEE_CXX_NOTHROW {
-		return DeeType_IsInherited((DeeTypeObject *)this, base_type);
+		return DeeType_InheritsFrom((DeeTypeObject *)this, base_type);
 	}
 	WUNUSED bool cbaseof(DeeTypeObject *derived_type) const DEE_CXX_NOTHROW {
-		return DeeType_IsInherited(derived_type, (DeeTypeObject *)this);
+		return DeeType_InheritsFrom(derived_type, (DeeTypeObject *)this);
 	}
 
 public:

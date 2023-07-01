@@ -984,6 +984,7 @@ do_opcode:
 			 * >> bool  top
 			 */
 		case ASM_INSTANCEOF:
+		case ASM_IMPLEMENTS:
 			--stacksz;
 			ATTR_FALLTHROUGH
 		case ASM_ISNONE:

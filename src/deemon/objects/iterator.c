@@ -288,10 +288,12 @@ PRIVATE int DCALL
 iterator_do_revert(DeeObject *__restrict self, size_t count,
                    DeeObject *count_ob,
                    DeeObject *minus_count_ob) {
+	DREF DeeObject *temp, *temp2;
 	DeeTypeObject *tp_self;
 	int error;
-	DREF DeeObject *temp, *temp2;
+	DeeTypeMRO mro;
 	tp_self = Dee_TYPE(self);
+	DeeTypeMRO_Init(&mro, tp_self);
 	while (tp_self != &DeeIterator_Type) {
 		struct type_math *m;
 		struct type_nii const *nii;
@@ -528,7 +530,7 @@ iterator_do_revert(DeeObject *__restrict self, size_t count,
 				goto done;
 			}
 		}
-		if ((tp_self = DeeType_Base(tp_self)) == NULL)
+		if ((tp_self = DeeTypeMRO_Next(&mro, tp_self)) == NULL)
 			break;
 	}
 	err_not_bidirectional(self);
@@ -546,9 +548,11 @@ iterator_do_advance(DeeObject *__restrict self, size_t count,
                     DeeObject *count_ob,
                     DeeObject *minus_count_ob) {
 	DeeTypeObject *tp_self;
-	int error;
 	DREF DeeObject *temp, *temp2;
+	int error;
+	DeeTypeMRO mro;
 	tp_self = Dee_TYPE(self);
+	DeeTypeMRO_Init(&mro, tp_self);
 	while (tp_self != &DeeIterator_Type) {
 		struct type_math *m;
 		struct type_nii const *nii;
@@ -767,7 +771,7 @@ iterator_do_advance(DeeObject *__restrict self, size_t count,
 			}
 			goto done;
 		}
-		if ((tp_self = DeeType_Base(tp_self)) == NULL)
+		if ((tp_self = DeeTypeMRO_Next(&mro, tp_self)) == NULL)
 			break;
 	}
 done:
@@ -1157,9 +1161,11 @@ PRIVATE struct type_method tpconst iterator_methods[] = {
 INTERN WUNUSED NONNULL((1)) size_t DCALL
 DeeIterator_GetIndex(DeeObject *__restrict self) {
 	DREF DeeObject *copy, *temp;
+	DeeTypeObject *tp_self = Dee_TYPE(self);
+	DeeTypeMRO mro;
 	size_t index;
 	int error;
-	DeeTypeObject *tp_self = Dee_TYPE(self);
+	DeeTypeMRO_Init(&mro, tp_self);
 	while (tp_self != &DeeIterator_Type) {
 		struct type_nii const *nii;
 		if (tp_self->tp_cmp && (nii = tp_self->tp_cmp->tp_nii) != NULL) {
@@ -1190,7 +1196,7 @@ DeeIterator_GetIndex(DeeObject *__restrict self) {
 				goto err;
 			goto got_rewound_iter;
 		}
-		if ((tp_self = DeeType_Base(tp_self)) == NULL)
+		if ((tp_self = DeeTypeMRO_Next(&mro, tp_self)) == NULL)
 			break;
 	}
 	err_not_bidirectional(self);
@@ -1238,7 +1244,9 @@ INTERN WUNUSED NONNULL((1)) int DCALL
 DeeIterator_SetIndex(DeeObject *__restrict self, size_t new_index) {
 	DeeTypeObject *tp_self;
 	DREF DeeObject *temp;
+	DeeTypeMRO mro;
 	tp_self = Dee_TYPE(self);
+	DeeTypeMRO_Init(&mro, tp_self);
 	while (tp_self != &DeeIterator_Type) {
 		struct type_nii const *nii;
 		if (tp_self->tp_cmp && (nii = tp_self->tp_cmp->tp_nii) != NULL) {
@@ -1251,7 +1259,7 @@ DeeIterator_SetIndex(DeeObject *__restrict self, size_t new_index) {
 			}
 			break;
 		}
-		if ((tp_self = DeeType_Base(tp_self)) == NULL)
+		if ((tp_self = DeeTypeMRO_Next(&mro, tp_self)) == NULL)
 			break;
 	}
 	temp = DeeObject_CallAttr(self, (DeeObject *)&str_rewind, 0, NULL);
@@ -1269,10 +1277,11 @@ err:
  * @return: -1: Error */
 INTERN WUNUSED NONNULL((1)) int DCALL
 DeeIterator_Rewind(DeeObject *__restrict self) {
-	DeeTypeObject *tp_self;
+	DeeTypeObject *tp_self = Dee_TYPE(self);
 	DREF DeeObject *temp, *temp2, *temp3;
+	DeeTypeMRO mro;
 	int error;
-	tp_self = Dee_TYPE(self);
+	DeeTypeMRO_Init(&mro, tp_self);
 	while (tp_self != &DeeIterator_Type) {
 		struct type_math *m;
 		struct type_nii const *nii;
@@ -1473,7 +1482,7 @@ DeeIterator_Rewind(DeeObject *__restrict self) {
 			Dee_Decref(temp);
 			goto done;
 		}
-		if ((tp_self = DeeType_Base(tp_self)) == NULL)
+		if ((tp_self = DeeTypeMRO_Next(&mro, tp_self)) == NULL)
 			break;
 	}
 	err_not_bidirectional(self);
@@ -1512,8 +1521,9 @@ DeeIterator_Advance(DeeObject *__restrict self, size_t step) {
  * @return: -1: Error */
 INTERN WUNUSED NONNULL((1)) int DCALL
 DeeIterator_Prev(DeeObject *__restrict self) {
-	DeeTypeObject *tp_self;
-	tp_self = Dee_TYPE(self);
+	DeeTypeObject *tp_self = Dee_TYPE(self);
+	DeeTypeMRO mro;
+	DeeTypeMRO_Init(&mro, tp_self);
 	while (tp_self != &DeeIterator_Type) {
 		DREF DeeObject *temp, *temp2;
 		DREF DeeObject *new_self;
@@ -1769,7 +1779,7 @@ do_prev_with_rewind_iterator:
 				goto err;
 			goto do_prev_with_rewind_iterator;
 		}
-		if ((tp_self = DeeType_Base(tp_self)) == NULL)
+		if ((tp_self = DeeTypeMRO_Next(&mro, tp_self)) == NULL)
 			break;
 	}
 	err_not_bidirectional(self);
@@ -1796,6 +1806,8 @@ DeeIterator_Next(DeeObject *__restrict self) {
 INTERN WUNUSED NONNULL((1)) int DCALL
 DeeIterator_HasPrev(DeeObject *__restrict self) {
 	DeeTypeObject *tp_self = Dee_TYPE(self);
+	DeeTypeMRO mro;
+	DeeTypeMRO_Init(&mro, tp_self);
 	while (tp_self != &DeeIterator_Type) {
 		DREF DeeObject *temp, *temp2;
 		int error;
@@ -1864,7 +1876,7 @@ DeeIterator_HasPrev(DeeObject *__restrict self) {
 			Dee_Decref(temp2);
 			return error;
 		}
-		if ((tp_self = DeeType_Base(tp_self)) == NULL)
+		if ((tp_self = DeeTypeMRO_Next(&mro, tp_self)) == NULL)
 			break;
 	}
 	err_not_bidirectional(self);
@@ -1976,6 +1988,8 @@ DeeIterator_GetSeq(DeeObject *__restrict self) {
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 iterator_is_bidirectional(DeeObject *__restrict self) {
 	DeeTypeObject *tp_self = Dee_TYPE(self);
+	DeeTypeMRO mro;
+	DeeTypeMRO_Init(&mro, tp_self);
 	while (tp_self != &DeeIterator_Type) {
 		size_t i;
 		struct type_cmp *c;
@@ -2001,7 +2015,7 @@ iterator_is_bidirectional(DeeObject *__restrict self) {
 			if (temp != 0)
 				return temp;
 		}
-		if ((tp_self = DeeType_Base(tp_self)) == NULL)
+		if ((tp_self = DeeTypeMRO_Next(&mro, tp_self)) == NULL)
 			break;
 	}
 	return 0;
@@ -2057,9 +2071,11 @@ iterator_set_index(DeeObject *__restrict self,
 	DeeTypeObject *tp_self;
 	DREF DeeObject *temp;
 	size_t newindex;
+	DeeTypeMRO mro;
 	if (DeeObject_AsSize(indexob, &newindex))
 		goto err;
 	tp_self = Dee_TYPE(self);
+	DeeTypeMRO_Init(&mro, tp_self);
 	while (tp_self != &DeeIterator_Type) {
 		struct type_nii const *nii;
 		if (tp_self->tp_cmp && (nii = tp_self->tp_cmp->tp_nii) != NULL) {
@@ -2072,7 +2088,7 @@ iterator_set_index(DeeObject *__restrict self,
 			}
 			break;
 		}
-		if ((tp_self = DeeType_Base(tp_self)) == NULL)
+		if ((tp_self = DeeTypeMRO_Next(&mro, tp_self)) == NULL)
 			break;
 	}
 	temp = DeeObject_CallAttr(self, (DeeObject *)&str_rewind, 0, NULL);
@@ -2415,7 +2431,7 @@ PRIVATE struct type_math iterator_math = {
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 iterator_assign(DeeObject *self, DeeObject *other) {
 	size_t index;
-	if (DeeObject_AssertType(other, Dee_TYPE(self)))
+	if (DeeObject_AssertImplements(other, Dee_TYPE(self)))
 		goto err;
 	/* XXX: What about:
 	 * >> this.rewind();

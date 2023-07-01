@@ -192,6 +192,7 @@ DECL_BEGIN
  *       which in return is re-used internally as a placeholder
  *       to represent an empty, general-purpose sequence. */
 DDATDEF DeeTypeObject DeeSeq_Type; /* `Sequence from deemon' */
+#define DeeSeq_Check(ob) DeeObject_Implements(ob, &DeeSeq_Type)
 
 /* Similar to what `DeeSeq_Type' is for all sequence-style types,
  * `DeeIterator_Type' is the the same for all iterator-type types.

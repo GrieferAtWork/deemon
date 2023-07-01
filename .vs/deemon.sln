@@ -323,6 +323,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{2360741E-F
 		..\util\test\casefold.dee = ..\util\test\casefold.dee
 		..\util\test\cformat.dee = ..\util\test\cformat.dee
 		..\util\test\class-constructors.dee = ..\util\test\class-constructors.dee
+		..\util\test\class-with-multiple-bases.dee = ..\util\test\class-with-multiple-bases.dee
 		..\util\test\conversion-operator.dee = ..\util\test\conversion-operator.dee
 		..\util\test\cover.dee = ..\util\test\cover.dee
 		..\util\test\ctypes.dee = ..\util\test\ctypes.dee

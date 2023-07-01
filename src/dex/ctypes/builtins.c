@@ -29,6 +29,7 @@
 #include <deemon/bool.h>
 #include <deemon/int.h>
 #include <deemon/none.h>
+#include <deemon/numeric.h>
 #include <deemon/string.h>
 #include <deemon/super.h>
 
@@ -43,6 +44,18 @@
 #undef T
 #undef X
 #undef F
+
+DECL_BEGIN
+
+/* MRO vector for built-in C numeric types defined by `ctypes'. */
+PRIVATE DeeTypeObject *tpconst ctypes_numeric_mro[] = {
+	(DeeTypeObject *)&DeeStructured_Type,
+	(DeeTypeObject *)&DeeNumeric_Type,
+	(DeeTypeObject *)&DeeObject_Type,
+	(DeeTypeObject *)NULL
+};
+
+DECL_END
 
 #ifndef __INTELLISENSE__
 

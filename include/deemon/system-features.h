@@ -13884,6 +13884,17 @@ DECL_END
 	(void *)((uint8_t *)memmovedownc(dst, src, elem_count, elem_size) + ((elem_count) * (elem_size)))
 #endif /* !CONFIG_HAVE_mempmovedownc */
 
+#undef memchrp
+#if defined(CONFIG_HAVE_memchrl) && __SIZEOF_POINTER__ == 4
+#define memchrp memchrl
+#elif defined(CONFIG_HAVE_memchrq) && __SIZEOF_POINTER__ == 8
+#define memchrp memchrq
+#elif defined(CONFIG_HAVE_memchrw) && __SIZEOF_POINTER__ == 2
+#define memchrp memchrq
+#elif defined(CONFIG_HAVE_memchr) && __SIZEOF_POINTER__ == 1
+#define memchrp memchr
+#endif /* ... */
+
 
 
 

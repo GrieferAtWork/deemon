@@ -271,7 +271,7 @@ after_multiple_constexpr:
 			expanded_expr = self->a_multiple.m_astv[0]->a_expand;
 			expanded_type = ast_predict_type(expanded_expr);
 			if (expanded_type &&
-			    DeeType_IsInherited(expanded_type, needed_type)) {
+			    DeeType_InheritsFrom(expanded_type, needed_type)) {
 				if (ast_assign(self, expanded_expr))
 					goto err;
 				OPTIMIZE_VERBOSE("Replace `{ x... }' with `x' of type %k\n",

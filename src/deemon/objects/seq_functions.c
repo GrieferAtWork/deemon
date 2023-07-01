@@ -103,12 +103,14 @@ INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeSeq_GetItem(DeeObject *__restrict self, size_t index) {
 	DeeTypeObject *tp_self;
 	DREF DeeObject *result;
+	DeeTypeMRO mro;
 	ASSERT_OBJECT(self);
 	tp_self = Dee_TYPE(self);
 	if unlikely(tp_self == &DeeSeq_Type) {
 		err_index_out_of_bounds(self, index, 0);
 		goto err;
 	}
+	DeeTypeMRO_Init(&mro, tp_self);
 	for (;;) {
 		struct type_seq *seq;
 		if ((seq = tp_self->tp_seq) != NULL) {
@@ -187,7 +189,7 @@ return_result_first:
 				return result;
 			}
 		}
-		if ((tp_self = DeeType_Base(tp_self)) == NULL)
+		if ((tp_self = DeeTypeMRO_Next(&mro, tp_self)) == NULL)
 			break;
 		if (tp_self == &DeeSeq_Type)
 			break;
@@ -213,11 +215,13 @@ err_no_generic_sequence(DeeObject *__restrict self) {
 INTERN WUNUSED NONNULL((1)) int DCALL
 DeeSeq_NonEmpty(DeeObject *__restrict self) {
 	DeeTypeObject *tp_self;
+	DeeTypeMRO mro;
 	int result;
 	ASSERT_OBJECT(self);
 	tp_self = Dee_TYPE(self);
 	if unlikely(tp_self == &DeeSeq_Type)
 		return 0;
+	DeeTypeMRO_Init(&mro, tp_self);
 	for (;;) {
 		struct type_seq *seq;
 		if ((seq = tp_self->tp_seq) != NULL) {
@@ -257,7 +261,7 @@ DeeSeq_NonEmpty(DeeObject *__restrict self) {
 				return 1;
 			}
 		}
-		if ((tp_self = DeeType_Base(tp_self)) == NULL)
+		if ((tp_self = DeeTypeMRO_Next(&mro, tp_self)) == NULL)
 			break;
 		if (tp_self == &DeeSeq_Type)
 			break;
@@ -273,8 +277,10 @@ INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeSeq_Front(DeeObject *__restrict self) {
 	DeeTypeObject *tp_self;
 	DREF DeeObject *result;
+	DeeTypeMRO mro;
 	ASSERT_OBJECT(self);
 	tp_self = Dee_TYPE(self);
+	DeeTypeMRO_Init(&mro, tp_self);
 	while (tp_self != &DeeSeq_Type) {
 		struct type_seq *seq;
 		if ((seq = tp_self->tp_seq) != NULL) {
@@ -310,7 +316,7 @@ DeeSeq_Front(DeeObject *__restrict self) {
 				return result;
 			}
 		}
-		if ((tp_self = DeeType_Base(tp_self)) == NULL)
+		if ((tp_self = DeeTypeMRO_Next(&mro, tp_self)) == NULL)
 			break;
 	}
 	err_unimplemented_operator2(Dee_TYPE(self),
@@ -328,8 +334,10 @@ DeeSeq_Back(DeeObject *__restrict self) {
 	DeeTypeObject *tp_self;
 	size_t seq_length;
 	DREF DeeObject *result, *temp;
+	DeeTypeMRO mro;
 	ASSERT_OBJECT(self);
 	tp_self = Dee_TYPE(self);
+	DeeTypeMRO_Init(&mro, tp_self);
 	while (tp_self != &DeeSeq_Type) {
 		struct type_seq *seq;
 		if ((seq = tp_self->tp_seq) != NULL) {
@@ -403,7 +411,7 @@ DeeSeq_Back(DeeObject *__restrict self) {
 				return result;
 			}
 		}
-		if ((tp_self = DeeType_Base(tp_self)) == NULL)
+		if ((tp_self = DeeTypeMRO_Next(&mro, tp_self)) == NULL)
 			break;
 	}
 	err_no_generic_sequence(self);
@@ -1020,8 +1028,10 @@ DeeSeq_StartsWith(DeeObject *self,
                   DeeObject *key) {
 	DeeTypeObject *tp_self;
 	DREF DeeObject *result;
+	DeeTypeMRO mro;
 	ASSERT_OBJECT(self);
 	tp_self = Dee_TYPE(self);
+	DeeTypeMRO_Init(&mro, tp_self);
 	while (tp_self != &DeeSeq_Type) {
 		struct type_seq *seq;
 		if ((seq = tp_self->tp_seq) != NULL) {
@@ -1065,7 +1075,7 @@ check:
 				goto check;
 			}
 		}
-		if ((tp_self = DeeType_Base(tp_self)) == NULL)
+		if ((tp_self = DeeTypeMRO_Next(&mro, tp_self)) == NULL)
 			break;
 	}
 	err_unimplemented_operator2(Dee_TYPE(self),
@@ -1084,8 +1094,10 @@ DeeSeq_EndsWith(DeeObject *self,
 	DeeTypeObject *tp_self;
 	size_t seq_length;
 	DREF DeeObject *result, *temp;
+	DeeTypeMRO mro;
 	ASSERT_OBJECT(self);
 	tp_self = Dee_TYPE(self);
+	DeeTypeMRO_Init(&mro, tp_self);
 	while (tp_self != &DeeSeq_Type) {
 		struct type_seq *seq;
 		if ((seq = tp_self->tp_seq) != NULL) {
@@ -1172,7 +1184,7 @@ err_r:
 				goto check;
 			}
 		}
-		if ((tp_self = DeeType_Base(tp_self)) == NULL)
+		if ((tp_self = DeeTypeMRO_Next(&mro, tp_self)) == NULL)
 			break;
 	}
 	err_no_generic_sequence(self);
@@ -1294,11 +1306,13 @@ DeeSeq_Find(DeeObject *self,
 	DeeTypeObject *tp_self;
 	size_t i, seq_length;
 	DREF DeeObject *temp;
+	DeeTypeMRO mro;
 	int error;
 	ASSERT_OBJECT(self);
 	if unlikely(start >= end)
 		goto notfound;
 	tp_self = Dee_TYPE(self);
+	DeeTypeMRO_Init(&mro, tp_self);
 	while (tp_self != &DeeSeq_Type) {
 		struct type_seq *seq = tp_self->tp_seq;
 		if (seq) {
@@ -1417,7 +1431,7 @@ do_lookup_tpget:
 				return result;
 			}
 		}
-		if ((tp_self = DeeType_Base(tp_self)) == NULL)
+		if ((tp_self = DeeTypeMRO_Next(&mro, tp_self)) == NULL)
 			break;
 	}
 	err_no_generic_sequence(self);
@@ -1440,11 +1454,13 @@ DeeSeq_RFind(DeeObject *self,
 	DeeTypeObject *tp_self;
 	size_t i, seq_length;
 	DREF DeeObject *temp;
+	DeeTypeMRO mro;
 	int error;
 	ASSERT_OBJECT(self);
 	if unlikely(start >= end)
 		goto notfound;
 	tp_self = Dee_TYPE(self);
+	DeeTypeMRO_Init(&mro, tp_self);
 	while (tp_self != &DeeSeq_Type) {
 		struct type_seq *seq = tp_self->tp_seq;
 		if (seq) {
@@ -1566,7 +1582,7 @@ do_lookup_tpget:
 				return result;
 			}
 		}
-		if ((tp_self = DeeType_Base(tp_self)) == NULL)
+		if ((tp_self = DeeTypeMRO_Next(&mro, tp_self)) == NULL)
 			break;
 	}
 	err_no_generic_sequence(self);

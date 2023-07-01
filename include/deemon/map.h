@@ -88,6 +88,7 @@ DECL_BEGIN
  *       iterator interface, provided a `class member Iterator: Type' which represents
  *       the iterator type used by the mapping. */
 DDATDEF DeeTypeObject DeeMapping_Type; /* `Mapping from deemon' */
+#define DeeMapping_Check(ob) DeeObject_Implements(ob, &DeeMapping_Type)
 
 /* An empty instance of a generic mapping object.
  * NOTE: This is _NOT_ a singleton. - Usercode may create more by

@@ -2344,8 +2344,18 @@ do_this_as_typesym_ref:
 				if (PUSH_RESULT) {
 					if (asm_putddi(self))
 						goto err;
-					if (asm_ginstanceof())
-						goto err;
+					if (self->a_action.a_act1->a_type == AST_CONSTEXPR &&
+					    DeeType_Check(self->a_action.a_act1->a_constexpr) &&
+					    !DeeType_IsAbstract((DeeTypeObject *)self->a_action.a_act1->a_constexpr)) {
+						/* The type being checked isn't abstract, meaning that it
+						 * cannot appear as a secondary base, meaning that INSTANCEOF
+						 * is sufficient. */
+						if (asm_ginstanceof())
+							goto err;
+					} else {
+						if (asm_gimplements())
+							goto err;
+					}
 				}
 			}	break;
 

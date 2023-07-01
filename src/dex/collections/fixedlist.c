@@ -237,16 +237,19 @@ fl_init(size_t argc, DeeObject *const *argv) {
 		result->fl_size = size;
 	} else {
 		size_t i;
-		if (DeeType_IsInherited(Dee_TYPE(size_ob), &DeeMapping_Type))
+		if (DeeMapping_Check(size_ob))
 			goto init_from_iterator;
+
 		/* Initialize from sequence. */
 		size = DeeFastSeq_GetSize(size_ob);
 		if (size == (size_t)-1) {
 			DeeTypeObject *iter;
 			DREF DeeObject *iterator;
-			iter = Dee_TYPE(size_ob);
+			DeeTypeMRO mro;
+			iter = DeeTypeMRO_Init(&mro, Dee_TYPE(size_ob));
 			for (;;) {
-				DeeTypeObject *base = DeeType_Base(iter);
+				DeeTypeObject *base;
+				base = DeeTypeMRO_Next(&mro, iter);
 				if (iter->tp_seq &&
 				    (!base || iter->tp_seq != base->tp_seq)) {
 					if (iter->tp_seq->tp_get &&

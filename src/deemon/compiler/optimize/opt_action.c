@@ -461,8 +461,8 @@ action_set_expr_result:
 		    self->a_action.a_act1->a_type == AST_CONSTEXPR) {
 			if (DeeType_Check(self->a_action.a_act1->a_constexpr)) {
 				/* Propagate constants. */
-				expr_result = DeeBool_For(DeeObject_InstanceOf(self->a_action.a_act0->a_constexpr,
-				                                               (DeeTypeObject *)self->a_action.a_act1->a_constexpr));
+				expr_result = DeeBool_For(DeeObject_Implements(self->a_action.a_act0->a_constexpr,
+				                                                   (DeeTypeObject *)self->a_action.a_act1->a_constexpr));
 				Dee_Incref(expr_result);
 				goto action_set_expr_result;
 			}

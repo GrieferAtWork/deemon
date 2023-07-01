@@ -581,6 +581,12 @@ INSTR("instanceof", (
 	O2(ASM_ISNONE,     FNORMAL, (TOP)(NONE)) /* `instanceof top, none' */
 ))
 
+/* CONSTRAINTS: `implements <s>, <ns>' */
+INSTR("implements", (
+	O2(ASM_IMPLEMENTS, FNORMAL, (TOP)(POP))  /* `implements top, pop' */
+	O2(ASM_ISNONE,     FNORMAL, (TOP)(NONE)) /* `implements top, none' */
+))
+
 /* CONSTRAINTS: `str <s>' */
 INSTR("str", (
 	O1(ASM_STR, FNORMAL, (TOP)) /* `str top' */

@@ -2500,6 +2500,28 @@ struct Dee_type_object {
 	WUNUSED_T ATTR_INS_T(3, 2) NONNULL_T((1))
 	DREF DeeObject *(DCALL *tp_call_kw)(DeeObject *self, size_t argc,
 	                                    DeeObject *const *argv, DeeObject *kw);
+
+	/* [1..1][0..N][owned] NULL-terminated MRO override for this type.
+	 * - When NULL, MRO for this type is facilitated through `tp_base'
+	 * - When non-NULL, MRO for this type is [<the type itself>, tp_mro[0], tp_mro[1], ...]
+	 *   until the first NULL-element in `tp_mro' is reached. Note that for this purpose,
+	 *   it is assumed that `tp_mro[0] != NULL', and that <the type itself> does not appear
+	 *   within `tp_mro' a second time.
+	 * In order to enumerate the MRO of a type, irregardless of that type having a custom
+	 * `tp_mro' or not, you should use `DeeTypeMRO' and its helper API (its API is also
+	 * used in order to facilitate MRO for stuff like `DeeObject_GetAttr()', as well as
+	 * all other operators)
+	 *
+	 * NOTES:
+	 *  - MRO bases that don't appear in `tp_base' must not define any
+	 *    extra instance fields (i.e. have the `TP_FABSTRACT' flag set).
+	 *    As such, these types essentially only at as interface definitions,
+	 *    but not as actual types when it comes to instancing.
+	 *  - Constructors/Destructors of MRO bases are NOT invoked by default.
+	 *    They are only invoked if sub-classed by a user-defined class type.
+	 */
+	DREF DeeTypeObject *Dee_tpconst *tp_mro;
+
 	/* Lazily-filled hash-table of instance members.
 	 * >> The member vectors are great for static allocation, but walking
 	 *    all of them each time a member is accessed is way too slow.
@@ -2525,7 +2547,7 @@ struct Dee_type_object {
 #define DeeType_IsIntTruncated(x)        (((DeeTypeObject const *)Dee_REQUIRES_OBJECT(x))->tp_flags & Dee_TP_FTRUNCATE)
 #define DeeType_HasMoveAny(x)            (((DeeTypeObject const *)Dee_REQUIRES_OBJECT(x))->tp_flags & Dee_TP_FMOVEANY)
 #define DeeType_IsIterator(x)            (((DeeTypeObject const *)Dee_REQUIRES_OBJECT(x))->tp_iter_next != NULL)
-#define DeeType_IsTypeType(x)            DeeType_IsInherited((DeeTypeObject const *)Dee_REQUIRES_OBJECT(x), &DeeType_Type)
+#define DeeType_IsTypeType(x)            DeeType_InheritsFrom((DeeTypeObject const *)Dee_REQUIRES_OBJECT(x), &DeeType_Type)
 #define DeeType_IsCustom(x)              (((DeeTypeObject const *)Dee_REQUIRES_OBJECT(x))->tp_flags & Dee_TP_FHEAP) /* Custom types are those not pre-defined, but created dynamically. */
 #define DeeType_IsSuperConstructible(x)  (((DeeTypeObject const *)Dee_REQUIRES_OBJECT(x))->tp_flags & Dee_TP_FINHERITCTOR)
 #define DeeType_IsNoArgConstructible(x)  (((DeeTypeObject const *)Dee_REQUIRES_OBJECT(x))->tp_init.tp_alloc.tp_ctor != NULL)
@@ -2551,6 +2573,38 @@ struct Dee_type_object {
 	 : ((tp_self)->tp_flags & TP_FGC)              \
 	   ? DeeGCObject_Free(obj)                     \
 	   : DeeObject_Free(obj))
+
+typedef struct {
+	DeeTypeObject  const *tp_mro_orig; /* [1..1] MRO origin */
+	DeeTypeObject *const *tp_mro_iter; /* [?..1][valid_if(:tp_iter != tp_mro_orig)] MRO array pointer */
+} DeeTypeMRO;
+
+/* Initialize an MRO enumerator. */
+#define DeeTypeMRO_Init(self, tp_iter) \
+	((DeeTypeObject *)((self)->tp_mro_orig = (tp_iter)))
+
+/* Advance an MRO enumerator, returning the next type in MRO order.
+ * @param: tp_iter: The previously enumerated type
+ * @return: * :     The next type for the purpose of MRO resolution.
+ * @return: NULL:   End of MRO chain has been reached. */
+DFUNDEF WUNUSED NONNULL((1, 2)) DeeTypeObject *FCALL
+DeeTypeMRO_Next(DeeTypeMRO *__restrict self,
+                DeeTypeObject const *tp_iter);
+
+/* Like `DeeTypeMRO_Next()', but only enumerate direct
+ * bases of the type passed to `DeeTypeMRO_Init()' */
+DFUNDEF WUNUSED NONNULL((1, 2)) DeeTypeObject *FCALL
+DeeTypeMRO_NextDirectBase(DeeTypeMRO *__restrict self,
+                          DeeTypeObject const *tp_iter);
+
+#define DeeType_mro_foreach_start(tp_iter)  \
+	do {                                    \
+		DeeTypeMRO _tp_mro;          \
+		DeeTypeMRO_Init(&_tp_mro, tp_iter); \
+		do
+#define DeeType_mro_foreach_end(tp_iter)                                  \
+		while (((tp_iter) = DeeTypeMRO_Next(&_tp_mro, tp_iter)) != NULL); \
+	}	__WHILE0
 
 
 
@@ -2736,6 +2790,7 @@ DDATDEF DeeTypeObject DeeType_Type;   /* `type(object)' */
  * @return: -1: The object doesn't match the required typing.
  * @return:  0: The object matches the required typing. */
 DFUNDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeObject_AssertType)(DeeObject *self, DeeTypeObject *required_type);
+DFUNDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeObject_AssertImplements)(DeeObject *self, DeeTypeObject *required_type);
 DFUNDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeObject_AssertTypeExact)(DeeObject *self, DeeTypeObject *required_type);
 /* Throw a TypeError stating that an instance of `required_type' was required, when `self' was given. */
 DFUNDEF ATTR_COLD NONNULL((1, 2)) int (DCALL DeeObject_TypeAssertFailed)(DeeObject *self, DeeTypeObject *required_type);
@@ -2749,6 +2804,8 @@ DFUNDEF ATTR_COLD NONNULL((1, 2)) int (DCALL DeeObject_TypeAssertFailed)(DeeObje
 	(DeeNone_CheckExact(self) ? 0 : DeeObject_AssertTypeExact(self, required_type))
 #define DeeObject_AssertType(self, required_type) \
 	(unlikely((DeeObject_AssertType)((DeeObject *)Dee_REQUIRES_OBJECT(self), required_type)))
+#define DeeObject_AssertImplements(self, required_type) \
+	(unlikely((DeeObject_AssertImplements)((DeeObject *)Dee_REQUIRES_OBJECT(self), required_type)))
 #ifndef __OPTIMIZE_SIZE__
 #define DeeObject_AssertTypeExact(self, required_type) \
 	(unlikely(Dee_TYPE(self) == required_type ? 0 : DeeObject_TypeAssertFailed((DeeObject *)(self), required_type)))
@@ -2768,15 +2825,24 @@ DFUNDEF WUNUSED ATTR_RETNONNULL NONNULL((1)) DeeTypeObject *DCALL
 DeeObject_Class(DeeObject *__restrict self);
 
 /* Object inheritance checking. */
-#define DeeObject_InstanceOf(self, super_type)       DeeType_IsInherited(Dee_TYPE(self), super_type)
+#define DeeObject_Implements(self, super_type)       DeeType_Implements(Dee_TYPE(self), super_type)
+#define DeeObject_InstanceOf(self, super_type)       DeeType_InheritsFrom(Dee_TYPE(self), super_type)
 #define DeeObject_InstanceOfExact(self, object_type) (Dee_TYPE(self) == (object_type))
 
 /* Return true if `test_type' is equal to, or derived from `inherited_type'
  * NOTE: When `inherited_type' is not a type, this function simply returns `false'
  * >> return inherited_type is Type && inherited_type.baseof(test_type); */
 DFUNDEF WUNUSED NONNULL((1)) bool DCALL
-DeeType_IsInherited(DeeTypeObject const *test_type,
-                    DeeTypeObject const *inherited_type);
+DeeType_InheritsFrom(DeeTypeObject const *test_type,
+                     DeeTypeObject const *inherited_type);
+
+/* Same as `DeeType_InheritsFrom()', but also check `tp_mro' for matches.
+ * This function should be used when `implemented_type' is an abstract type.
+ *
+ * NOTE: The user-code `is' */
+DFUNDEF WUNUSED NONNULL((1)) bool DCALL
+DeeType_Implements(DeeTypeObject const *test_type,
+                   DeeTypeObject const *implemented_type);
 
 /* Return the module used to define a given type `self',
  * or `NULL' if that module could not be determined.
