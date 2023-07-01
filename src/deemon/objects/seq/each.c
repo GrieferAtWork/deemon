@@ -1593,7 +1593,7 @@ done:
 
 
 INTERN WUNUSED DREF DeeObject *DCALL
-DeeSeqEach_CallAttrString(DeeObject *__restrict self,
+DeeSeqEach_CallAttrStringHash(DeeObject *__restrict self,
                           char const *__restrict attr, dhash_t hash,
                           size_t argc, DeeObject *const *argv) {
 	DREF DeeObject *result;
@@ -1612,7 +1612,7 @@ err:
 }
 
 INTERN WUNUSED DREF DeeObject *DCALL
-DeeSeqEach_CallAttrStringLen(DeeObject *__restrict self,
+DeeSeqEach_CallAttrStringLenHash(DeeObject *__restrict self,
                              char const *__restrict attr, size_t attrlen, dhash_t hash,
                              size_t argc, DeeObject *const *argv) {
 	DREF DeeObject *result;
@@ -1631,7 +1631,7 @@ err:
 }
 
 INTERN WUNUSED DREF DeeObject *DCALL
-DeeSeqEach_CallAttrStringKw(DeeObject *__restrict self,
+DeeSeqEach_CallAttrStringHashKw(DeeObject *__restrict self,
                             char const *__restrict attr, dhash_t hash,
                             size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	DREF DeeObject *result;
@@ -1651,7 +1651,7 @@ err:
 }
 
 INTERN WUNUSED DREF DeeObject *DCALL
-DeeSeqEach_CallAttrStringLenKw(DeeObject *__restrict self,
+DeeSeqEach_CallAttrStringLenHashKw(DeeObject *__restrict self,
                                char const *__restrict attr, size_t attrlen, dhash_t hash,
                                size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	DREF DeeObject *result;

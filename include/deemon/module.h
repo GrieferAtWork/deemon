@@ -1149,17 +1149,38 @@ DeeModule_Import(/*String*/ DeeObject *__restrict module_name);
 /* Access global variables of a given module by their name described by a C-string.
  * These functions act and behave just as once would expect, raising errors when
  * appropriate and returning NULL/false/-1 upon error or not knowing the given name. */
-INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeModule_GetAttrStringHash(DeeModuleObject *__restrict self, char const *__restrict attr_name, Dee_hash_t hash);
-INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeModule_GetAttrStringLenHash(DeeModuleObject *__restrict self, char const *__restrict attr_name, size_t attrlen, Dee_hash_t hash);
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeModule_HasAttrStringHash(DeeModuleObject *__restrict self, char const *__restrict attr_name, Dee_hash_t hash);
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeModule_HasAttrStringLenHash(DeeModuleObject *__restrict self, char const *__restrict attr_name, size_t attrlen, Dee_hash_t hash);
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeModule_BoundAttrStringHash(DeeModuleObject *__restrict self, char const *__restrict attr_name, Dee_hash_t hash);
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeModule_BoundAttrStringLenHash(DeeModuleObject *__restrict self, char const *__restrict attr_name, size_t attrlen, Dee_hash_t hash);
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeModule_DelAttrStringHash(DeeModuleObject *__restrict self, char const *__restrict attr_name, Dee_hash_t hash);
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeModule_DelAttrStringLenHash(DeeModuleObject *__restrict self, char const *__restrict attr_name, size_t attrlen, Dee_hash_t hash);
-INTDEF WUNUSED NONNULL((1, 2, 4)) int DCALL DeeModule_SetAttrStringHash(DeeModuleObject *self, char const *__restrict attr_name, Dee_hash_t hash, DeeObject *value);
-INTDEF WUNUSED NONNULL((1, 2, 5)) int DCALL DeeModule_SetAttrStringLenHash(DeeModuleObject *self, char const *__restrict attr_name, size_t attrlen, Dee_hash_t hash, DeeObject *value);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeModule_GetAttrStringHash(DeeModuleObject *__restrict self, char const *__restrict attr, Dee_hash_t hash);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeModule_GetAttrStringLenHash(DeeModuleObject *__restrict self, char const *__restrict attr, size_t attrlen, Dee_hash_t hash);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeModule_HasAttrStringHash(DeeModuleObject *__restrict self, char const *__restrict attr, Dee_hash_t hash);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeModule_HasAttrStringLenHash(DeeModuleObject *__restrict self, char const *__restrict attr, size_t attrlen, Dee_hash_t hash);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeModule_BoundAttrStringHash(DeeModuleObject *__restrict self, char const *__restrict attr, Dee_hash_t hash);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeModule_BoundAttrStringLenHash(DeeModuleObject *__restrict self, char const *__restrict attr, size_t attrlen, Dee_hash_t hash);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeModule_DelAttrStringHash(DeeModuleObject *__restrict self, char const *__restrict attr, Dee_hash_t hash);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeModule_DelAttrStringLenHash(DeeModuleObject *__restrict self, char const *__restrict attr, size_t attrlen, Dee_hash_t hash);
+INTDEF WUNUSED NONNULL((1, 2, 4)) int DCALL DeeModule_SetAttrStringHash(DeeModuleObject *self, char const *__restrict attr, Dee_hash_t hash, DeeObject *value);
+INTDEF WUNUSED NONNULL((1, 2, 5)) int DCALL DeeModule_SetAttrStringLenHash(DeeModuleObject *self, char const *__restrict attr, size_t attrlen, Dee_hash_t hash, DeeObject *value);
 INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL DeeModule_FindAttr(DeeModuleObject *__restrict self, struct attribute_info *__restrict result, struct attribute_lookup_rules const *__restrict rules);
+
+#define DeeModule_GetAttr(self, attr)                          DeeModule_GetAttrStringHash(self, DeeString_STR(attr), DeeString_Hash(attr))
+#define DeeModule_GetAttrHash(self, attr, hash)                DeeModule_GetAttrStringHash(self, DeeString_STR(attr), hash)
+#define DeeModule_GetAttrString(self, attr)                    DeeModule_GetAttrStringHash(self, attr, Dee_HashStr(attr))
+#define DeeModule_GetAttrStringLen(self, attr, attrlen)        DeeModule_GetAttrStringLenHash(self, attr, attrlen, Dee_HashPtr(attr, attrlen))
+#define DeeModule_HasAttr(self, attr)                          DeeModule_HasAttrStringHash(self, DeeString_STR(attr), DeeString_Hash(attr))
+#define DeeModule_HasAttrHash(self, attr, hash)                DeeModule_HasAttrStringHash(self, DeeString_STR(attr), hash)
+#define DeeModule_HasAttrString(self, attr)                    DeeModule_HasAttrStringHash(self, attr, Dee_HashStr(attr))
+#define DeeModule_HasAttrStringLen(self, attr, attrlen)        DeeModule_HasAttrStringLenHash(self, attr, attrlen, Dee_HashPtr(attr, attrlen))
+#define DeeModule_BoundAttr(self, attr)                        DeeModule_BoundAttrStringHash(self, DeeString_STR(attr), DeeString_Hash(attr))
+#define DeeModule_BoundAttrHash(self, attr, hash)              DeeModule_BoundAttrStringHash(self, DeeString_STR(attr), hash)
+#define DeeModule_BoundAttrString(self, attr)                  DeeModule_BoundAttrStringHash(self, attr, Dee_HashStr(attr))
+#define DeeModule_BoundAttrStringLen(self, attr, attrlen)      DeeModule_BoundAttrStringLenHash(self, attr, attrlen, Dee_HashPtr(attr, attrlen))
+#define DeeModule_DelAttr(self, attr)                          DeeModule_DelAttrStringHash(self, DeeString_STR(attr), DeeString_Hash(attr))
+#define DeeModule_DelAttrHash(self, attr, hash)                DeeModule_DelAttrStringHash(self, DeeString_STR(attr), hash)
+#define DeeModule_DelAttrString(self, attr)                    DeeModule_DelAttrStringHash(self, attr, Dee_HashStr(attr))
+#define DeeModule_DelAttrStringLen(self, attr, attrlen)        DeeModule_DelAttrStringLenHash(self, attr, attrlen, Dee_HashPtr(attr, attrlen))
+#define DeeModule_SetAttr(self, attr, value)                   DeeModule_SetAttrStringHash(self, DeeString_STR(attr), DeeString_Hash(attr), value)
+#define DeeModule_SetAttrHash(self, attr, hash, value)         DeeModule_SetAttrStringHash(self, DeeString_STR(attr), hash, value)
+#define DeeModule_SetAttrString(self, attr, value)             DeeModule_SetAttrStringHash(self, attr, Dee_HashStr(attr), value)
+#define DeeModule_SetAttrStringLen(self, attr, attrlen, value) DeeModule_SetAttrStringLenHash(self, attr, attrlen, Dee_HashPtr(attr, attrlen), value)
 #endif /* CONFIG_BUILDING_DEEMON */
 
 /* Lookup the module symbol associated with a given its name or GID.
@@ -1170,8 +1191,8 @@ INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL DeeModule_FindAttr(DeeModuleObject *
  *         `DeeModule_UnlockSymbols()'
  *          Additionally, you must be extremely careful, as an interactive
  *          module may arbitrarily modify its global object table! */
-DFUNDEF WUNUSED NONNULL((1, 2)) struct Dee_module_symbol *DCALL DeeModule_GetSymbolString(DeeModuleObject *__restrict self, char const *__restrict attr_name, Dee_hash_t hash);
-DFUNDEF WUNUSED NONNULL((1, 2)) struct Dee_module_symbol *DCALL DeeModule_GetSymbolStringLen(DeeModuleObject *__restrict self, char const *__restrict attr_name, size_t attrlen, Dee_hash_t hash);
+DFUNDEF WUNUSED NONNULL((1, 2)) struct Dee_module_symbol *DCALL DeeModule_GetSymbolString(DeeModuleObject *__restrict self, char const *__restrict attr, Dee_hash_t hash);
+DFUNDEF WUNUSED NONNULL((1, 2)) struct Dee_module_symbol *DCALL DeeModule_GetSymbolStringLen(DeeModuleObject *__restrict self, char const *__restrict attr, size_t attrlen, Dee_hash_t hash);
 DFUNDEF WUNUSED NONNULL((1)) struct Dee_module_symbol *DCALL DeeModule_GetSymbolID(DeeModuleObject *__restrict self, uint16_t gid);
 DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeModule_GetAttrSymbol(DeeModuleObject *__restrict self, struct Dee_module_symbol *__restrict symbol);
 DFUNDEF WUNUSED NONNULL((1, 2)) int DCALL DeeModule_BoundAttrSymbol(DeeModuleObject *__restrict self, struct Dee_module_symbol *__restrict symbol);
