@@ -91,6 +91,8 @@ DECL_END
 #include "attribute-access-generic.c.inl"
 #define DEFINE_DeeObject_TGenericCallAttrStringLenHashKw
 #include "attribute-access-generic.c.inl"
+#define DEFINE_DeeObject_VTGenericCallAttrStringHashf
+#include "attribute-access-generic.c.inl"
 #define DEFINE_DeeObject_TGenericHasAttrStringHash
 #include "attribute-access-generic.c.inl"
 #define DEFINE_DeeObject_TGenericHasAttrStringLenHash
@@ -124,6 +126,8 @@ DECL_END
 #define DEFINE_DeeType_CallAttrStringHashKw
 #include "attribute-access-type.c.inl"
 #define DEFINE_DeeType_CallAttrStringLenHashKw
+#include "attribute-access-type.c.inl"
+#define DEFINE_DeeType_VCallAttrStringHashf
 #include "attribute-access-type.c.inl"
 #define DEFINE_DeeType_HasAttrStringHash
 #include "attribute-access-type.c.inl"
@@ -222,47 +226,20 @@ DECL_END
 #define DEFINE_DeeObject_TCallAttr
 #include "attribute-access-object.c.inl"
 
+/* Special-case optimizations for `VCallAttrf' */
+#define DEFINE_DeeObject_VCallAttrf
+#include "attribute-access-object.c.inl"
+#define DEFINE_DeeObject_VCallAttrStringHashf
+#include "attribute-access-object.c.inl"
+
 DECL_BEGIN
 #endif /* !__INTELLISENSE__ */
-
-
-PUBLIC WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
-DeeObject_VCallAttrf(DeeObject *self, /*String*/ DeeObject *attr,
-                     char const *__restrict format, va_list args) {
-	DREF DeeObject *result, *args_tuple;
-	args_tuple = DeeTuple_VNewf(format, args);
-	if unlikely(!args_tuple)
-		goto err;
-	result = DeeObject_CallAttr(self, attr,
-	                            DeeTuple_SIZE(args_tuple),
-	                            DeeTuple_ELEM(args_tuple));
-	Dee_Decref(args_tuple);
-	return result;
-err:
-	return NULL;
-}
-
-PUBLIC WUNUSED NONNULL((1, 2, 4)) DREF DeeObject *DCALL
-DeeObject_VCallAttrStringHashf(DeeObject *self,
-                               char const *__restrict attr, dhash_t hash,
-                               char const *__restrict format, va_list args) {
-	DREF DeeObject *result, *args_tuple;
-	args_tuple = DeeTuple_VNewf(format, args);
-	if unlikely(!args_tuple)
-		goto err;
-	result = DeeObject_CallAttrStringHash(self, attr, hash,
-	                                      DeeTuple_SIZE(args_tuple),
-	                                      DeeTuple_ELEM(args_tuple));
-	Dee_Decref(args_tuple);
-	return result;
-err:
-	return NULL;
-}
 
 PUBLIC WUNUSED NONNULL((1, 2, 5)) DREF DeeObject *DCALL
 DeeObject_VCallAttrStringLenHashf(DeeObject *self,
                                   char const *__restrict attr, size_t attrlen, dhash_t hash,
                                   char const *__restrict format, va_list args) {
+	/* TODO: Encode `attr' as a string. */
 	DREF DeeObject *result, *args_tuple;
 	args_tuple = DeeTuple_VNewf(format, args);
 	if unlikely(!args_tuple)

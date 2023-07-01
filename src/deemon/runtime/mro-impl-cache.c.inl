@@ -147,14 +147,14 @@
 //#define DEFINE_DeeType_CallCachedClassAttrStringLenHashTupleKw
 //#define DEFINE_DeeType_CallCachedInstanceAttrStringHashTupleKw
 //#define DEFINE_DeeType_CallCachedInstanceAttrStringLenHashTupleKw
-//#define DEFINE_DeeType_VCallCachedAttrStringHashf
+#define DEFINE_DeeType_VCallCachedAttrStringHashf
 //#define DEFINE_DeeType_VCallCachedAttrStringLenHashf
 //#define DEFINE_DeeType_VCallCachedClassAttrStringHashf
 //#define DEFINE_DeeType_VCallCachedClassAttrStringLenHashf
 //#define DEFINE_DeeType_VCallCachedInstanceAttrStringHashf
 //#define DEFINE_DeeType_VCallCachedInstanceAttrStringLenHashf
 //#define DEFINE_DeeType_FindCachedAttr
-#define DEFINE_DeeType_FindCachedClassAttr
+//#define DEFINE_DeeType_FindCachedClassAttr
 #endif /* __INTELLISENSE__ */
 
 #if (defined(DEFINE_DeeType_GetCachedAttrStringHash) +                    \
@@ -640,187 +640,156 @@ DECL_BEGIN
 #define LOCAL_invoke_dobjmethod(func, decl)              (*(func))(LOCAL_argv[0], LOCAL_argc - 1, LOCAL_argv + 1)
 #define LOCAL_MUST_ASSERT_ARGC
 #elif defined(LOCAL_HAS_format)
-#define LOCAL_invoke_dkwobjmethod_thisarg(func, thisarg) \
-	dkwobjmethod_vthiscallf(func, thisarg, format, args)
-#ifndef DKWOBJMETHOD_VTHISCALLF_DEFINED
-#define DKWOBJMETHOD_VTHISCALLF_DEFINED
-PRIVATE NONNULL((1, 2, 3)) DREF DeeObject *DCALL
-dkwobjmethod_vthiscallf(dkwobjmethod_t self,
-                        DeeObject *thisarg,
-                        char const *__restrict format,
-                        va_list args) {
-	DREF DeeObject *result, *args_tuple;
-	args_tuple = DeeTuple_VNewf(format, args);
-	if unlikely(!args_tuple)
-		goto err;
-	result = (*self)(thisarg,
-	                 DeeTuple_SIZE(args_tuple),
-	                 DeeTuple_ELEM(args_tuple),
-	                 NULL);
-	Dee_Decref(args_tuple);
-	return result;
-err:
-	return NULL;
-}
-#endif /* !DKWOBJMETHOD_VTHISCALLF_DEFINED */
-
-#define LOCAL_invoke_dobjmethod_thisarg(func, thisarg) \
-	dobjmethod_vthiscallf(func, thisarg, format, args)
-#ifndef DOBJMETHOD_VTHISCALLF_DEFINED
-#define DOBJMETHOD_VTHISCALLF_DEFINED
-PRIVATE NONNULL((1, 2, 3)) DREF DeeObject *DCALL
-dobjmethod_vthiscallf(dobjmethod_t self,
-                      DeeObject *thisarg,
-                      char const *__restrict format,
-                      va_list args) {
-	DREF DeeObject *result, *args_tuple;
-	args_tuple = DeeTuple_VNewf(format, args);
-	if unlikely(!args_tuple)
-		goto err;
-	result = (*self)(thisarg,
-	                 DeeTuple_SIZE(args_tuple),
-	                 DeeTuple_ELEM(args_tuple));
-	Dee_Decref(args_tuple);
-	return result;
-err:
-	return NULL;
-}
-#endif /* !DOBJMETHOD_VTHISCALLF_DEFINED */
-
+#define LOCAL_invoke_dkwobjmethod_thisarg(func, thisarg) DeeKwObjMethod_VCallFuncf(func, thisarg, format, args)
+#define LOCAL_invoke_dobjmethod_thisarg(func, thisarg)   DeeObjMethod_VCallFuncf(func, thisarg, format, args)
 #ifdef LOCAL_HAS_len
 #define LOCAL_invoke_dkwobjmethod(func, decl) \
-	dkwobjmethod_vcallf_len(func, format, args, decl, attr, attrlen)
+	dkwobjmethod_vcallf_len(func, decl, attr, attrlen, format, args)
 #define LOCAL_invoke_dobjmethod(func, decl) \
-	dobjmethod_vcallf_len(func, format, args, decl, attr, attrlen)
+	dobjmethod_vcallf_len(func, decl, attr, attrlen, format, args)
 #ifndef DKWOBJMETHOD_VCALLF_LEN_DEFINED
 #define DKWOBJMETHOD_VCALLF_LEN_DEFINED
-PRIVATE NONNULL((1, 2, 4, 5)) DREF DeeObject *DCALL
+PRIVATE NONNULL((1, 2, 3, 5)) DREF DeeObject *DCALL
 dkwobjmethod_vcallf_len(dkwobjmethod_t self,
-                        char const *__restrict format,
-                        va_list args,
-                        DeeTypeObject *__restrict decl,
-                        char const *__restrict attr, size_t attrlen) {
-	DREF DeeObject *result, *args_tuple;
-	args_tuple = DeeTuple_VNewf(format, args);
-	if unlikely(!args_tuple)
-		goto err;
-	if unlikely(DeeTuple_SIZE(args_tuple) == 0)
+                        DeeTypeObject *__restrict cls_type,
+                        char const *__restrict attr, size_t attrlen,
+                        char const *__restrict format, va_list args) {
+	DREF DeeObject *result, *thisarg;
+	if unlikely(*format == '\0')
 		goto err_noargs;
-	if unlikely(!(decl->tp_flags & TP_FABSTRACT)) {
-		if (DeeObject_AssertType(DeeTuple_GET(args_tuple, 0), decl))
-			goto err_args_tuple;
+
+	/* Use the first argument as the this-argument. */
+	thisarg = Dee_VPPackf((char const **)&format, (struct va_list_struct *)VALIST_ADDR(args));
+	if unlikely(!thisarg) {
+		Dee_VPPackf_Cleanup(format, ((struct va_list_struct *)VALIST_ADDR(args))->vl_ap);
+		goto err;
+	} 
+	if (!(cls_type->tp_flags & TP_FABSTRACT)) {
+		if (DeeObject_AssertType(thisarg, cls_type))
+			goto err_thisarg;
 	}
-	result = (*self)(DeeTuple_GET(args_tuple, 0),
-	                 DeeTuple_SIZE(args_tuple) - 1,
-	                 DeeTuple_ELEM(args_tuple) + 1,
-	                 NULL);
-	Dee_Decref(args_tuple);
+
+	/* Invoke the function. */
+	result = DeeKwObjMethod_VCallFuncf(self, thisarg, format, args);
+	Dee_Decref(thisarg);
 	return result;
-err_noargs:
-	err_classmethod_requires_at_least_1_argument_string_len(decl, attr, attrlen);
-err_args_tuple:
-	Dee_Decref(args_tuple);
+err_thisarg:
+	Dee_Decref(thisarg);
 err:
 	return NULL;
+err_noargs:
+	err_classmethod_requires_at_least_1_argument_string_len(cls_type, attr, attrlen);
+	goto err;
 }
 #endif /* !DKWOBJMETHOD_VCALLF_LEN_DEFINED */
 #ifndef DOBJMETHOD_VCALLF_LEN_DEFINED
 #define DOBJMETHOD_VCALLF_LEN_DEFINED
-PRIVATE NONNULL((1, 2, 4, 5)) DREF DeeObject *DCALL
+PRIVATE NONNULL((1, 2, 3, 5)) DREF DeeObject *DCALL
 dobjmethod_vcallf_len(dobjmethod_t self,
-                      char const *__restrict format,
-                      va_list args,
-                      DeeTypeObject *__restrict decl,
-                      char const *__restrict attr, size_t attrlen) {
-	DREF DeeObject *result, *args_tuple;
-	args_tuple = DeeTuple_VNewf(format, args);
-	if unlikely(!args_tuple)
-		goto err;
-	if unlikely(DeeTuple_SIZE(args_tuple) == 0)
+                      DeeTypeObject *__restrict cls_type,
+                      char const *__restrict attr, size_t attrlen,
+                      char const *__restrict format, va_list args) {
+	DREF DeeObject *result, *thisarg;
+	if unlikely(*format == '\0')
 		goto err_noargs;
-	if unlikely(!(decl->tp_flags & TP_FABSTRACT)) {
-		if (DeeObject_AssertType(DeeTuple_GET(args_tuple, 0), decl))
-			goto err_args_tuple;
+
+	/* Use the first argument as the this-argument. */
+	thisarg = Dee_VPPackf((char const **)&format, (struct va_list_struct *)VALIST_ADDR(args));
+	if unlikely(!thisarg) {
+		Dee_VPPackf_Cleanup(format, ((struct va_list_struct *)VALIST_ADDR(args))->vl_ap);
+		goto err;
+	} 
+	if (!(cls_type->tp_flags & TP_FABSTRACT)) {
+		if (DeeObject_AssertType(thisarg, cls_type))
+			goto err_thisarg;
 	}
-	result = (*self)(DeeTuple_GET(args_tuple, 0),
-	                 DeeTuple_SIZE(args_tuple) - 1,
-	                 DeeTuple_ELEM(args_tuple) + 1);
-	Dee_Decref(args_tuple);
+
+	/* Invoke the function. */
+	result = DeeObjMethod_VCallFuncf(self, thisarg, format, args);
+	Dee_Decref(thisarg);
 	return result;
-err_noargs:
-	err_classmethod_requires_at_least_1_argument_string_len(decl, attr, attrlen);
-err_args_tuple:
-	Dee_Decref(args_tuple);
+err_thisarg:
+	Dee_Decref(thisarg);
 err:
 	return NULL;
+err_noargs:
+	err_classmethod_requires_at_least_1_argument_string_len(cls_type, attr, attrlen);
+	goto err;
 }
 #endif /* !DOBJMETHOD_VCALLF_LEN_DEFINED */
 #else /* LOCAL_HAS_len */
 #define LOCAL_invoke_dkwobjmethod(func, decl) \
-	dkwobjmethod_vcallf(func, format, args, decl, attr)
+	dkwobjmethod_vcallf(func, decl, attr, format, args)
 #define LOCAL_invoke_dobjmethod(func, decl) \
-	dobjmethod_vcallf(func, format, args, decl, attr)
+	dobjmethod_vcallf(func, decl, attr, format, args)
 #ifndef DKWOBJMETHOD_VCALLF_DEFINED
 #define DKWOBJMETHOD_VCALLF_DEFINED
-PRIVATE NONNULL((1, 2, 4, 5)) DREF DeeObject *DCALL
+PRIVATE NONNULL((1, 2, 3, 4)) DREF DeeObject *DCALL
 dkwobjmethod_vcallf(dkwobjmethod_t self,
-                    char const *__restrict format,
-                    va_list args,
-                    DeeTypeObject *__restrict decl,
-                    char const *__restrict attr) {
-	DREF DeeObject *result, *args_tuple;
-	args_tuple = DeeTuple_VNewf(format, args);
-	if unlikely(!args_tuple)
-		goto err;
-	if unlikely(DeeTuple_SIZE(args_tuple) == 0)
+                    DeeTypeObject *__restrict cls_type,
+                    char const *__restrict attr,
+                    char const *__restrict format, va_list args) {
+	DREF DeeObject *result, *thisarg;
+	if unlikely(*format == '\0')
 		goto err_noargs;
-	if unlikely(!(decl->tp_flags & TP_FABSTRACT)) {
-		if (DeeObject_AssertType(DeeTuple_GET(args_tuple, 0), decl))
-			goto err_args_tuple;
+
+	/* Use the first argument as the this-argument. */
+	thisarg = Dee_VPPackf((char const **)&format, (struct va_list_struct *)VALIST_ADDR(args));
+	if unlikely(!thisarg) {
+		Dee_VPPackf_Cleanup(format, ((struct va_list_struct *)VALIST_ADDR(args))->vl_ap);
+		goto err;
+	} 
+	if (!(cls_type->tp_flags & TP_FABSTRACT)) {
+		if (DeeObject_AssertType(thisarg, cls_type))
+			goto err_thisarg;
 	}
-	result = (*self)(DeeTuple_GET(args_tuple, 0),
-	                 DeeTuple_SIZE(args_tuple) - 1,
-	                 DeeTuple_ELEM(args_tuple) + 1,
-	                 NULL);
-	Dee_Decref(args_tuple);
+
+	/* Invoke the function. */
+	result = DeeKwObjMethod_VCallFuncf(self, thisarg, format, args);
+	Dee_Decref(thisarg);
 	return result;
-err_noargs:
-	err_classmethod_requires_at_least_1_argument_string(decl, attr);
-err_args_tuple:
-	Dee_Decref(args_tuple);
+err_thisarg:
+	Dee_Decref(thisarg);
 err:
 	return NULL;
+err_noargs:
+	err_classmethod_requires_at_least_1_argument_string(cls_type, attr);
+	goto err;
 }
 #endif /* !DKWOBJMETHOD_VCALLF_DEFINED */
 #ifndef DOBJMETHOD_VCALLF_DEFINED
 #define DOBJMETHOD_VCALLF_DEFINED
-PRIVATE NONNULL((1, 2, 4, 5)) DREF DeeObject *DCALL
+PRIVATE NONNULL((1, 2, 3, 4)) DREF DeeObject *DCALL
 dobjmethod_vcallf(dobjmethod_t self,
-                  char const *__restrict format,
-                  va_list args,
-                  DeeTypeObject *__restrict decl,
-                  char const *__restrict attr) {
-	DREF DeeObject *result, *args_tuple;
-	args_tuple = DeeTuple_VNewf(format, args);
-	if unlikely(!args_tuple)
-		goto err;
-	if unlikely(DeeTuple_SIZE(args_tuple) == 0)
+                  DeeTypeObject *__restrict cls_type,
+                  char const *__restrict attr,
+                  char const *__restrict format, va_list args) {
+	DREF DeeObject *result, *thisarg;
+	if unlikely(*format == '\0')
 		goto err_noargs;
-	if unlikely(!(decl->tp_flags & TP_FABSTRACT)) {
-		if (DeeObject_AssertType(DeeTuple_GET(args_tuple, 0), decl))
-			goto err_args_tuple;
+
+	/* Use the first argument as the this-argument. */
+	thisarg = Dee_VPPackf((char const **)&format, (struct va_list_struct *)VALIST_ADDR(args));
+	if unlikely(!thisarg) {
+		Dee_VPPackf_Cleanup(format, ((struct va_list_struct *)VALIST_ADDR(args))->vl_ap);
+		goto err;
+	} 
+	if (!(cls_type->tp_flags & TP_FABSTRACT)) {
+		if (DeeObject_AssertType(thisarg, cls_type))
+			goto err_thisarg;
 	}
-	result = (*self)(DeeTuple_GET(args_tuple, 0),
-	                 DeeTuple_SIZE(args_tuple) - 1,
-	                 DeeTuple_ELEM(args_tuple) + 1);
-	Dee_Decref(args_tuple);
+
+	/* Invoke the function. */
+	result = DeeObjMethod_VCallFuncf(self, thisarg, format, args);
+	Dee_Decref(thisarg);
 	return result;
-err_noargs:
-	err_classmethod_requires_at_least_1_argument_string(decl, attr);
-err_args_tuple:
-	Dee_Decref(args_tuple);
+err_thisarg:
+	Dee_Decref(thisarg);
 err:
 	return NULL;
+err_noargs:
+	err_classmethod_requires_at_least_1_argument_string(cls_type, attr);
+	goto err;
 }
 #endif /* !DOBJMETHOD_VCALLF_DEFINED */
 #endif /* !LOCAL_HAS_len */

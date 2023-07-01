@@ -36,6 +36,7 @@
 #include <deemon/string.h>
 #include <deemon/system-features.h> /* _Exit(), abort() */
 #include <deemon/thread.h>
+#include <deemon/tuple.h>
 #include <deemon/util/atomic.h>
 
 #include "../runtime/runtime_error.h"
@@ -2450,6 +2451,43 @@ DeeKwObjMethod_CallFunc_d(dkwobjmethod_t fun, DeeObject *self,
 	return result;
 }
 #endif /* !NDEBUG */
+
+
+INTERN WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
+DeeKwObjMethod_VCallFuncf(Dee_kwobjmethod_t funptr, DeeObject *__restrict thisarg,
+                          char const *__restrict format, va_list args) {
+	/* XXX: Optimizations? */
+	DREF DeeObject *result, *args_tuple;
+	args_tuple = DeeTuple_VNewf(format, args);
+	if unlikely(!args_tuple)
+		goto err;
+	result = DeeKwObjMethod_CallFunc(funptr, thisarg,
+	                                 DeeTuple_SIZE(args_tuple),
+	                                 DeeTuple_ELEM(args_tuple),
+	                                 NULL);
+	Dee_Decref(args_tuple);
+	return result;
+err:
+	return NULL;
+}
+
+INTERN WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
+DeeObjMethod_VCallFuncf(Dee_objmethod_t funptr, DeeObject *__restrict thisarg,
+                        char const *__restrict format, va_list args) {
+	/* XXX: Optimizations? */
+	DREF DeeObject *result, *args_tuple;
+	args_tuple = DeeTuple_VNewf(format, args);
+	if unlikely(!args_tuple)
+		goto err;
+	result = DeeObjMethod_CallFunc(funptr, thisarg,
+	                               DeeTuple_SIZE(args_tuple),
+	                               DeeTuple_ELEM(args_tuple));
+	Dee_Decref(args_tuple);
+	return result;
+err:
+	return NULL;
+}
+
 
 
 DECL_END

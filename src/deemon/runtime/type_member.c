@@ -370,6 +370,48 @@ err:
 	return NULL;
 }
 
+#ifdef CONFIG_HAVE_VA_LIST_IS_NOT_ARRAY
+#define VALIST_ADDR(x) (&(x))
+#else /* CONFIG_HAVE_VA_LIST_IS_NOT_ARRAY */
+#define VALIST_ADDR(x) (&(x)[0])
+#endif /* !CONFIG_HAVE_VA_LIST_IS_NOT_ARRAY */
+
+
+INTERN WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
+type_obmeth_vcallf(DeeTypeObject *cls_type,
+                   struct type_method const *desc,
+                   char const *__restrict format,
+                   va_list args) {
+	DREF DeeObject *thisarg, *result;
+	if unlikely(*format == '\0') {
+		DeeError_Throwf(&DeeError_TypeError,
+		                "classmethod `%s' must be called with at least 1 argument",
+		                desc->m_name);
+		goto err;
+	}
+
+	/* Use the first argument as the this-argument. */
+	thisarg = Dee_VPPackf((char const **)&format, (struct va_list_struct *)VALIST_ADDR(args));
+	if unlikely(!thisarg) {
+		Dee_VPPackf_Cleanup(format, ((struct va_list_struct *)VALIST_ADDR(args))->vl_ap);
+		goto err;
+	} 
+	if (!(cls_type->tp_flags & TP_FABSTRACT)) {
+		if (DeeObject_AssertType(thisarg, cls_type))
+			goto err_thisarg;
+	}
+
+	/* Invoke the function. */
+	result = type_method_vcallf(desc, thisarg, format, args);
+	Dee_Decref(thisarg);
+	return result;
+err_thisarg:
+	Dee_Decref(thisarg);
+err:
+	return NULL;
+}
+
+
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 type_method_call_kw_normal(struct type_method const *desc,
                            DeeObject *self, size_t argc,
@@ -465,6 +507,33 @@ err:
 	return NULL;
 }
 
+INTERN WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
+type_obprop_vcallf(DeeTypeObject *cls_type,
+                   struct type_getset const *desc,
+                   char const *__restrict format,
+                   va_list args) {
+	DREF DeeObject *thisarg, *result;
+	if unlikely(!desc->gs_get)
+		goto err_unbound;
+	thisarg = Dee_VPackf(format, args);
+	if unlikely(!thisarg)
+		goto err;
+	if (!(cls_type->tp_flags & TP_FABSTRACT)) {
+		if (DeeObject_AssertType(thisarg, cls_type))
+			goto err_thisarg;
+	}
+	result = (*desc->gs_get)(thisarg);
+	Dee_Decref(thisarg);
+	return result;
+err_thisarg:
+	Dee_Decref(thisarg);
+err:
+	return NULL;
+err_unbound:
+	err_cant_access_attribute_string(cls_type, desc->gs_name, ATTR_ACCESS_GET);
+	goto err;
+}
+
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 type_obmemb_call(DeeTypeObject *cls_type,
                  struct type_member const *desc,
@@ -496,6 +565,27 @@ type_obmemb_call_kw(DeeTypeObject *cls_type,
 			goto err;
 	}
 	return type_member_get(desc, thisarg);
+err:
+	return NULL;
+}
+
+INTERN WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
+type_obmemb_vcallf(DeeTypeObject *cls_type,
+                   struct type_member const *desc,
+                   char const *__restrict format, va_list args) {
+	DREF DeeObject *thisarg, *result;
+	thisarg = Dee_VPackf(format, args);
+	if unlikely(!thisarg)
+		goto err;
+	if (!(cls_type->tp_flags & TP_FABSTRACT)) {
+		if (DeeObject_AssertType(thisarg, cls_type))
+			goto err_thisarg;
+	}
+	result = type_member_get(desc, thisarg);
+	Dee_Decref(thisarg);
+	return result;
+err_thisarg:
+	Dee_Decref(thisarg);
 err:
 	return NULL;
 }

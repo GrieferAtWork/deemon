@@ -31,8 +31,8 @@
 //#define DEFINE_DeeObject_TGenericCallAttrStringLenHashTuple
 //#define DEFINE_DeeObject_TGenericCallAttrStringHashTupleKw
 //#define DEFINE_DeeObject_TGenericCallAttrStringLenHashTupleKw
-//#define DEFINE_DeeObject_TGenericVCallAttrStringHashf
-//#define DEFINE_DeeObject_TGenericVCallAttrStringLenHashf
+//#define DEFINE_DeeObject_VTGenericCallAttrStringHashf
+//#define DEFINE_DeeObject_VTGenericCallAttrStringLenHashf
 //#define DEFINE_DeeObject_TGenericHasAttrStringHash
 //#define DEFINE_DeeObject_TGenericHasAttrStringLenHash
 //#define DEFINE_DeeObject_TGenericDelAttrStringHash
@@ -55,8 +55,8 @@
      defined(DEFINE_DeeObject_TGenericCallAttrStringLenHashTuple) +   \
      defined(DEFINE_DeeObject_TGenericCallAttrStringHashTupleKw) +    \
      defined(DEFINE_DeeObject_TGenericCallAttrStringLenHashTupleKw) + \
-     defined(DEFINE_DeeObject_TGenericVCallAttrStringHashf) +         \
-     defined(DEFINE_DeeObject_TGenericVCallAttrStringLenHashf) +      \
+     defined(DEFINE_DeeObject_VTGenericCallAttrStringHashf) +         \
+     defined(DEFINE_DeeObject_VTGenericCallAttrStringLenHashf) +      \
      defined(DEFINE_DeeObject_TGenericHasAttrStringHash) +            \
      defined(DEFINE_DeeObject_TGenericHasAttrStringLenHash) +         \
      defined(DEFINE_DeeObject_TGenericDelAttrStringHash) +            \
@@ -158,15 +158,15 @@
 #define LOCAL_DeeType_AccessMemberAttr(tp_invoker, tp_self, self) DeeType_GetMemberAttrStringLenHash(tp_invoker, tp_self, self, attr, attrlen, hash)
 #define LOCAL_IS_CALL_TUPLE_KW
 #define LOCAL_HAS_len
-#elif defined(DEFINE_DeeObject_TGenericVCallAttrStringHashf)
-#define LOCAL_DeeObject_TGenericAccessAttr                        DeeObject_TGenericVCallAttrStringHashf
+#elif defined(DEFINE_DeeObject_VTGenericCallAttrStringHashf)
+#define LOCAL_DeeObject_TGenericAccessAttr                        DeeObject_VTGenericCallAttrStringHashf
 #define LOCAL_DeeType_AccessCachedAttr(tp_self, self)             DeeType_VCallCachedAttrStringHashf(tp_self, self, attr, hash, format, args)
 #define LOCAL_DeeType_AccessMethodAttr(tp_invoker, tp_self, self) DeeType_VCallMethodAttrStringHashf(tp_invoker, tp_self, self, attr, hash, format, args)
 #define LOCAL_DeeType_AccessGetSetAttr(tp_invoker, tp_self, self) DeeType_GetGetSetAttrStringHash(tp_invoker, tp_self, self, attr, hash)
 #define LOCAL_DeeType_AccessMemberAttr(tp_invoker, tp_self, self) DeeType_GetMemberAttrStringHash(tp_invoker, tp_self, self, attr, hash)
 #define LOCAL_IS_VCALLF
-#elif defined(DEFINE_DeeObject_TGenericVCallAttrStringLenHashf)
-#define LOCAL_DeeObject_TGenericAccessAttr                        DeeObject_TGenericVCallAttrStringLenHashf
+#elif defined(DEFINE_DeeObject_VTGenericCallAttrStringLenHashf)
+#define LOCAL_DeeObject_TGenericAccessAttr                        DeeObject_VTGenericCallAttrStringLenHashf
 #define LOCAL_DeeType_AccessCachedAttr(tp_self, self)             DeeType_VCallCachedAttrStringLenHashf(tp_self, self, attr, attrlen, hash, format, args)
 #define LOCAL_DeeType_AccessMethodAttr(tp_invoker, tp_self, self) DeeType_VCallMethodAttrStringLenHashf(tp_invoker, tp_self, self, attr, attrlen, hash, format, args)
 #define LOCAL_DeeType_AccessGetSetAttr(tp_invoker, tp_self, self) DeeType_GetGetSetAttrStringLenHash(tp_invoker, tp_self, self, attr, attrlen, hash)
@@ -477,6 +477,8 @@ DECL_END
 #undef DEFINE_DeeObject_TGenericCallAttrStringLenHashTuple
 #undef DEFINE_DeeObject_TGenericCallAttrStringHashTupleKw
 #undef DEFINE_DeeObject_TGenericCallAttrStringLenHashTupleKw
+#undef DEFINE_DeeObject_VTGenericCallAttrStringHashf
+#undef DEFINE_DeeObject_VTGenericCallAttrStringLenHashf
 #undef DEFINE_DeeObject_TGenericHasAttrStringHash
 #undef DEFINE_DeeObject_TGenericHasAttrStringLenHash
 #undef DEFINE_DeeObject_TGenericDelAttrStringHash

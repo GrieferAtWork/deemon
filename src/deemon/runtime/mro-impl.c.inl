@@ -19,7 +19,7 @@
  */
 #ifdef __INTELLISENSE__
 #include "mro.c"
-#define DEFINE_MRO_ATTRLEN_FUNCTIONS
+//#define DEFINE_MRO_ATTRLEN_FUNCTIONS
 #endif /* __INTELLISENSE__ */
 
 DECL_BEGIN
@@ -183,7 +183,7 @@ N_len_hash(type_method_callattr_string)(struct Dee_membercache *cache, DeeTypeOb
 	return ITER_DONE;
 }
 
-INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *
+INTERN WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *
 (DCALL NLenHash(DeeType_CallInstanceMethodAttrString))(DeeTypeObject *tp_invoker,
                                                        DeeTypeObject *tp_self,
                                                        ATTR_ARG, dhash_t hash,
@@ -231,6 +231,26 @@ S(DeeType_CallInstanceMethodAttrStringHashKw,
 	return ITER_DONE;
 }
 
+#ifndef DEFINE_MRO_ATTRLEN_FUNCTIONS
+INTERN WUNUSED NONNULL((1, 2, 3, IFELSE(5, 6))) DREF DeeObject *
+(DCALL S(DeeType_VCallInstanceMethodAttrStringHashf,
+         DeeType_VCallInstanceMethodAttrStringLenHashf))(DeeTypeObject *tp_invoker,
+                                                         DeeTypeObject *tp_self,
+                                                         ATTR_ARG, dhash_t hash,
+                                                         char const *__restrict format,
+                                                         va_list args) {
+	struct type_method const *chain = tp_self->tp_methods;
+	for (; chain->m_name; ++chain) {
+		if (!NAMEEQ(chain->m_name))
+			continue;
+		Dee_membercache_addinstancemethod(&tp_invoker->tp_class_cache, tp_self, hash, chain);
+		return type_obmeth_vcallf(tp_self, chain, format, args);
+	}
+	return ITER_DONE;
+}
+#endif /* !DEFINE_MRO_ATTRLEN_FUNCTIONS */
+
+
 INTERN WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
 S(DeeType_CallIInstanceMethodAttrStringHashKw,
   DeeType_CallIInstanceMethodAttrStringLenHashKw)(DeeTypeObject *tp_invoker,
@@ -269,23 +289,13 @@ type_method_vcallattr_string_hashf(struct Dee_membercache *cache, DeeTypeObject 
                                    struct type_method const *chain, DeeObject *self,
                                    ATTR_ARG, dhash_t hash,
                                    char const *__restrict format, va_list args) {
-	DREF DeeObject *result, *args_tuple;
 	for (; chain->m_name; ++chain) {
 		if (!NAMEEQ(chain->m_name))
 			continue;
 		Dee_membercache_addmethod(cache, decl, hash, chain);
-		args_tuple = DeeTuple_VNewf(format, args);
-		if unlikely(!args_tuple)
-			goto err;
-		result = type_method_call(chain, self,
-		                          DeeTuple_SIZE(args_tuple),
-		                          DeeTuple_ELEM(args_tuple));
-		Dee_Decref(args_tuple);
-		return result;
+		return type_method_vcallf(chain, self, format, args);
 	}
 	return ITER_DONE;
-err:
-	return NULL;
 }
 
 #if 0
@@ -294,24 +304,14 @@ INTERN WUNUSED NONNULL((1, 2, 3, IFELSE(5, 6))) DREF DeeObject *
                                                    DeeTypeObject *tp_self,
                                                    ATTR_ARG, dhash_t hash,
                                                    char const *__restrict format, va_list args) {
-	DREF DeeObject *result, *args_tuple;
 	struct type_method const *chain = tp_self->tp_methods;
 	for (; chain->m_name; ++chain) {
 		if (!NAMEEQ(chain->m_name))
 			continue;
 		Dee_membercache_addinstancemethod(&tp_invoker->tp_class_cache, tp_self, hash, chain);
-		args_tuple = DeeTuple_VNewf(format, args);
-		if unlikely(!args_tuple)
-			goto err;
-		result = type_obmeth_call(tp_self, chain,
-		                          DeeTuple_SIZE(args_tuple),
-		                          DeeTuple_ELEM(args_tuple));
-		Dee_Decref(args_tuple);
-		return result;
+		return type_obmeth_vcallf(tp_self, chain, format, args);
 	}
 	return ITER_DONE;
-err:
-	return NULL;
 }
 
 INTERN WUNUSED NONNULL((1, 2, 3, IFELSE(5, 6))) DREF DeeObject *
@@ -319,24 +319,14 @@ INTERN WUNUSED NONNULL((1, 2, 3, IFELSE(5, 6))) DREF DeeObject *
                                                     DeeTypeObject *tp_self,
                                                     ATTR_ARG, dhash_t hash,
                                                     char const *__restrict format, va_list args) {
-	DREF DeeObject *result, *args_tuple;
 	struct type_method const *chain = tp_self->tp_methods;
 	for (; chain->m_name; ++chain) {
 		if (!NAMEEQ(chain->m_name))
 			continue;
 		Dee_membercache_addmethod(&tp_invoker->tp_cache, tp_self, hash, chain);
-		args_tuple = DeeTuple_VNewf(format, args);
-		if unlikely(!args_tuple)
-			goto err;
-		result = type_obmeth_call(tp_self, chain,
-		                          DeeTuple_SIZE(args_tuple),
-		                          DeeTuple_ELEM(args_tuple));
-		Dee_Decref(args_tuple);
-		return result;
+		return type_obmeth_vcallf(tp_self, chain, format, args);
 	}
 	return ITER_DONE;
-err:
-	return NULL;
 }
 #endif
 #endif /* !DEFINE_MRO_ATTRLEN_FUNCTIONS */
@@ -431,6 +421,26 @@ S(DeeType_CallInstanceGetSetAttrStringHashKw,
 	}
 	return ITER_DONE;
 }
+
+
+#ifndef DEFINE_MRO_ATTRLEN_FUNCTIONS
+INTERN WUNUSED NONNULL((1, 2, 3, IFELSE(5, 6))) DREF DeeObject *
+(DCALL S(DeeType_VCallInstanceGetSetAttrStringHashf,
+         DeeType_VCallInstanceGetSetAttrStringLenHashf))(DeeTypeObject *tp_invoker,
+                                                         DeeTypeObject *tp_self,
+                                                         ATTR_ARG, dhash_t hash,
+                                                         char const *__restrict format,
+                                                         va_list args) {
+	struct type_getset const *chain = tp_self->tp_getsets;
+	for (; chain->gs_name; ++chain) {
+		if (!NAMEEQ(chain->gs_name))
+			continue;
+		Dee_membercache_addinstancegetset(&tp_invoker->tp_class_cache, tp_self, hash, chain);
+		return type_obprop_vcallf(tp_self, chain, format, args);
+	}
+	return ITER_DONE;
+}
+#endif /* !DEFINE_MRO_ATTRLEN_FUNCTIONS */
 
 INTERN WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
 S(DeeType_CallIInstanceGetSetAttrStringHashKw,
@@ -612,6 +622,24 @@ S(DeeType_CallIInstanceMemberAttrStringHashKw,
 	return ITER_DONE;
 }
 
+#ifndef DEFINE_MRO_ATTRLEN_FUNCTIONS
+INTERN WUNUSED NONNULL((1, 2, 3, IFELSE(5, 6))) DREF DeeObject *
+(DCALL S(DeeType_VCallInstanceMemberAttrStringHashf,
+         DeeType_VCallInstanceMemberAttrStringLenHashf))(DeeTypeObject *tp_invoker,
+                                                         DeeTypeObject *tp_self,
+                                                         ATTR_ARG, dhash_t hash,
+                                                         char const *__restrict format,
+                                                         va_list args) {
+	struct type_member const *chain = tp_self->tp_members;
+	for (; chain->m_name; ++chain) {
+		if (!NAMEEQ(chain->m_name))
+			continue;
+		Dee_membercache_addmember(&tp_invoker->tp_cache, tp_self, hash, chain);
+		return type_obmemb_vcallf(tp_self, chain, format, args);
+	}
+	return ITER_DONE;
+}
+#endif /* !DEFINE_MRO_ATTRLEN_FUNCTIONS */
 
 
 

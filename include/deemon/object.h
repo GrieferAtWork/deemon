@@ -95,27 +95,30 @@ typedef __UINTPTR_TYPE__ uintptr_t;
 #endif /* __INTELLISENSE__ */
 
 #ifdef DEE_SOURCE
-#define Dee_weakref          weakref
-#define Dee_object           object_
-#define Dee_type_object      type_object
-#define Dee_class_desc       class_desc
-#define Dee_type_method      type_method
-#define Dee_type_getset      type_getset
-#define Dee_type_member      type_member
-#define Dee_type_constructor type_constructor
-#define Dee_type_cast        type_cast
-#define Dee_type_gc          type_gc
-#define Dee_type_math        type_math
-#define Dee_type_cmp         type_cmp
-#define Dee_type_nii         type_nii
-#define Dee_type_seq         type_seq
-#define Dee_type_nsi         type_nsi
-#define Dee_type_attr        type_attr
-#define Dee_type_with        type_with
-#define Dee_type_buffer      type_buffer
-#define Dee_weakref_list     weakref_list
-#define Dee_opinfo           opinfo
+#define Dee_weakref                weakref
+#define Dee_object                 object_
+#define Dee_type_object            type_object
+#define Dee_class_desc             class_desc
+#define Dee_type_method            type_method
+#define Dee_type_getset            type_getset
+#define Dee_type_member            type_member
+#define Dee_type_constructor       type_constructor
+#define Dee_type_cast              type_cast
+#define Dee_type_gc                type_gc
+#define Dee_type_math              type_math
+#define Dee_type_cmp               type_cmp
+#define Dee_type_nii               type_nii
+#define Dee_type_seq               type_seq
+#define Dee_type_nsi               type_nsi
+#define Dee_type_attr              type_attr
+#define Dee_type_with              type_with
+#define Dee_type_buffer            type_buffer
+#define Dee_weakref_list           weakref_list
+#define Dee_opinfo                 opinfo
+#define Dee_attribute_info         attribute_info
+#define Dee_attribute_lookup_rules attribute_lookup_rules
 #endif /* DEE_SOURCE */
+
 
 struct Dee_type_object;
 struct Dee_object;
@@ -2606,6 +2609,8 @@ INTDEF NONNULL((1)) bool DCALL type_inherit_with(DeeTypeObject *__restrict self)
 INTDEF NONNULL((1)) bool DCALL type_inherit_buffer(DeeTypeObject *__restrict self);        /* tp_getbuf, tp_putbuf, tp_buffer_flags */
 #endif /* CONFIG_BUILDING_DEEMON */
 
+struct Dee_attribute_info;
+struct Dee_attribute_lookup_rules;
 
 /* Generic attribute lookup through `tp_self[->tp_base...]->tp_methods, tp_getsets, tp_members'
  * @return: -1 / ---   / NULL:          Error.
@@ -2617,35 +2622,101 @@ DFUNDEF WUNUSED NONNULL((1, 2, 3)) ATTR_INS(6, 5) DREF DeeObject *DCALL DeeObjec
 DFUNDEF WUNUSED NONNULL((1, 2, 3)) ATTR_INS(7, 6) DREF DeeObject *DCALL DeeObject_TGenericCallAttrStringLenHash(DeeTypeObject *tp_self, DeeObject *self, char const *__restrict attr, size_t attrlen, Dee_hash_t hash, size_t argc, DeeObject *const *argv);
 DFUNDEF WUNUSED NONNULL((1, 2, 3)) ATTR_INS(6, 5) DREF DeeObject *DCALL DeeObject_TGenericCallAttrStringHashKw(DeeTypeObject *tp_self, DeeObject *self, char const *__restrict attr, Dee_hash_t hash, size_t argc, DeeObject *const *argv, DeeObject *kw);
 DFUNDEF WUNUSED NONNULL((1, 2, 3)) ATTR_INS(7, 6) DREF DeeObject *DCALL DeeObject_TGenericCallAttrStringLenHashKw(DeeTypeObject *tp_self, DeeObject *self, char const *__restrict attr, size_t attrlen, Dee_hash_t hash, size_t argc, DeeObject *const *argv, DeeObject *kw);
+DFUNDEF WUNUSED NONNULL((1, 2, 3, 5)) DREF DeeObject *DCALL DeeObject_VTGenericCallAttrStringHashf(DeeTypeObject *tp_self, DeeObject *self, char const *__restrict attr, Dee_hash_t hash, char const *__restrict format, va_list args);
 DFUNDEF WUNUSED NONNULL((1, 2, 3)) int DCALL DeeObject_TGenericDelAttrStringHash(DeeTypeObject *tp_self, DeeObject *self, char const *__restrict attr, Dee_hash_t hash);
 DFUNDEF WUNUSED NONNULL((1, 2, 3)) int DCALL DeeObject_TGenericDelAttrStringLenHash(DeeTypeObject *tp_self, DeeObject *self, char const *__restrict attr, size_t attrlen, Dee_hash_t hash);
 DFUNDEF WUNUSED NONNULL((1, 2, 3, 5)) int DCALL DeeObject_TGenericSetAttrStringHash(DeeTypeObject *tp_self, DeeObject *self, char const *__restrict attr, Dee_hash_t hash, DeeObject *value);
 DFUNDEF WUNUSED NONNULL((1, 2, 3, 6)) int DCALL DeeObject_TGenericSetAttrStringLenHash(DeeTypeObject *tp_self, DeeObject *self, char const *__restrict attr, size_t attrlen, Dee_hash_t hash, DeeObject *value);
-DFUNDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL DeeObject_TGenericEnumAttr(DeeTypeObject *tp_self, Dee_enum_t proc, void *arg);
-#define DeeObject_GenericGetAttrStringHash(self, attr, hash)                                DeeObject_TGenericGetAttrStringHash(Dee_TYPE(self), self, attr, hash)
-#define DeeObject_GenericGetAttrStringLenHash(self, attr, attrlen, hash)                    DeeObject_TGenericGetAttrStringLenHash(Dee_TYPE(self), self, attr, attrlen, hash)
-#define DeeObject_GenericCallAttrStringHash(self, attr, hash, argc, argv)                   DeeObject_TGenericCallAttrStringHash(Dee_TYPE(self), self, attr, hash, argc, argv)
-#define DeeObject_GenericCallAttrStringLenHash(self, attr, attrlen, hash, argc, argv)       DeeObject_TGenericCallAttrStringLenHash(Dee_TYPE(self), self, attr, attrlen, hash, argc, argv)
-#define DeeObject_GenericCallAttrStringHashKw(self, attr, hash, argc, argv, kw)             DeeObject_TGenericCallAttrStringHashKw(Dee_TYPE(self), self, attr, hash, argc, argv, kw)
-#define DeeObject_GenericCallAttrStringLenHashKw(self, attr, attrlen, hash, argc, argv, kw) DeeObject_TGenericCallAttrStringLenHashKw(Dee_TYPE(self), self, attr, attrlen, hash, argc, argv, kw)
-#define DeeObject_GenericDelAttrStringHash(self, attr, hash)                                DeeObject_TGenericDelAttrStringHash(Dee_TYPE(self), self, attr, hash)
-#define DeeObject_GenericDelAttrStringLenHash(self, attr, attrlen, hash)                    DeeObject_TGenericDelAttrStringLenHash(Dee_TYPE(self), self, attr, attrlen, hash)
-#define DeeObject_GenericSetAttrStringHash(self, attr, hash, value)                         DeeObject_TGenericSetAttrStringHash(Dee_TYPE(self), self, attr, hash, value)
-#define DeeObject_GenericSetAttrStringLenHash(self, attr, attrlen, hash, value)             DeeObject_TGenericSetAttrStringLenHash(Dee_TYPE(self), self, attr, attrlen, hash, value)
-#define DeeObject_GenericEnumAttr(self, proc, arg)                                          DeeObject_TGenericEnumAttr(Dee_TYPE(self), proc, arg)
-
-struct attribute_info;
-struct attribute_lookup_rules;
 DFUNDEF WUNUSED NONNULL((1, 2)) bool DCALL DeeObject_TGenericHasAttrStringHash(DeeTypeObject *tp_self, char const *__restrict attr, Dee_hash_t hash);
 DFUNDEF WUNUSED NONNULL((1, 2)) bool DCALL DeeObject_TGenericHasAttrStringLenHash(DeeTypeObject *tp_self, char const *__restrict attr, size_t attrlen, Dee_hash_t hash);
 DFUNDEF WUNUSED NONNULL((1, 2, 3)) int DCALL DeeObject_TGenericBoundAttrStringHash(DeeTypeObject *tp_self, DeeObject *self, char const *__restrict attr, Dee_hash_t hash); /* -2 / -3: not found; -1: error; 0: unbound; 1: bound; */
 DFUNDEF WUNUSED NONNULL((1, 2, 3)) int DCALL DeeObject_TGenericBoundAttrStringLenHash(DeeTypeObject *tp_self, DeeObject *self, char const *__restrict attr, size_t attrlen, Dee_hash_t hash); /* -2 / -3: not found; -1: error; 0: unbound; 1: bound; */
-DFUNDEF WUNUSED NONNULL((1, 3, 4)) int DCALL DeeObject_TGenericFindAttr(DeeTypeObject *tp_self, DeeObject *instance, struct attribute_info *__restrict result, struct attribute_lookup_rules const *__restrict rules);
-#define DeeObject_GenericHasAttrStringHash(self, attr, hash)               DeeObject_TGenericHasAttrStringHash(Dee_TYPE(self), attr, hash)
-#define DeeObject_GenericHasAttrStringLenHash(self, attr, attrlen, hash)   DeeObject_TGenericHasAttrStringLenHash(Dee_TYPE(self), attr, attrlen, hash)
-#define DeeObject_GenericBoundAttrStringHash(self, attr, hash)             DeeObject_TGenericBoundAttrStringHash(Dee_TYPE(self), self, attr, hash)
-#define DeeObject_GenericBoundAttrStringLenHash(self, attr, attrlen, hash) DeeObject_TGenericBoundAttrStringLenHash(Dee_TYPE(self), self, attr, attrlen, hash)
-#define DeeObject_GenericFindAttr(instance, result, rules)                 DeeObject_TGenericFindAttr(Dee_TYPE(instance), instance, result, rules)
+
+DFUNDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL DeeObject_TGenericEnumAttr(DeeTypeObject *tp_self, Dee_enum_t proc, void *arg);
+DFUNDEF WUNUSED NONNULL((1, 3, 4)) int DCALL DeeObject_TGenericFindAttr(DeeTypeObject *tp_self, DeeObject *self, struct Dee_attribute_info *__restrict result, struct Dee_attribute_lookup_rules const *__restrict rules);
+
+#define DeeObject_TGenericGetAttr(tp_self, self, attr)                                      DeeObject_TGenericGetAttrStringHash(tp_self, self, DeeString_STR(attr), DeeString_Hash(attr))
+#define DeeObject_TGenericGetAttrHash(tp_self, self, attr, hash)                            DeeObject_TGenericGetAttrStringHash(tp_self, self, DeeString_STR(attr), hash)
+#define DeeObject_TGenericGetAttrString(tp_self, self, attr)                                DeeObject_TGenericGetAttrStringHash(tp_self, self, attr, Dee_HashStr(attr))
+#define DeeObject_TGenericGetAttrStringLen(tp_self, self, attr, attrlen)                    DeeObject_TGenericGetAttrStringLenHash(tp_self, self, attr, attrlen, Dee_HashPtr(attr, attrlen))
+#define DeeObject_TGenericCallAttr(tp_self, self, attr, argc, argv)                         DeeObject_TGenericCallAttrStringHash(tp_self, self, DeeString_STR(attr), DeeString_Hash(attr), argc, argv)
+#define DeeObject_TGenericCallAttrHash(tp_self, self, attr, hash, argc, argv)               DeeObject_TGenericCallAttrStringHash(tp_self, self, DeeString_STR(attr), hash, argc, argv)
+#define DeeObject_TGenericCallAttrString(tp_self, self, attr, argc, argv)                   DeeObject_TGenericCallAttrStringHash(tp_self, self, attr, Dee_HashStr(attr), argc, argv)
+#define DeeObject_TGenericCallAttrStringLen(tp_self, self, attr, attrlen, argc, argv)       DeeObject_TGenericCallAttrStringLenHash(tp_self, self, attr, attrlen, Dee_HashPtr(attr, attrlen), argc, argv)
+#define DeeObject_TGenericCallAttrKw(tp_self, self, attr, argc, argv, kw)                   DeeObject_TGenericCallAttrStringHashKw(tp_self, self, DeeString_STR(attr), DeeString_Hash(attr), argc, argv, kw)
+#define DeeObject_TGenericCallAttrHashKw(tp_self, self, attr, hash, argc, argv, kw)         DeeObject_TGenericCallAttrStringHashKw(tp_self, self, DeeString_STR(attr), hash, argc, argv, kw)
+#define DeeObject_TGenericCallAttrStringKw(tp_self, self, attr, argc, argv, kw)             DeeObject_TGenericCallAttrStringHashKw(tp_self, self, attr, Dee_HashStr(attr), argc, argv, kw)
+#define DeeObject_TGenericCallAttrStringLenKw(tp_self, self, attr, attrlen, argc, argv, kw) DeeObject_TGenericCallAttrStringLenHashKw(tp_self, self, attr, attrlen, Dee_HashPtr(attr, attrlen), argc, argv, kw)
+#define DeeObject_VTGenericCallAttrf(tp_self, self, attr, format, args)                     DeeObject_VTGenericCallAttrStringHashf(tp_self, self, DeeString_STR(attr), DeeString_Hash(attr), format, args)
+#define DeeObject_VTGenericCallAttrHashf(tp_self, self, attr, hash, format, args)           DeeObject_VTGenericCallAttrStringHashf(tp_self, self, DeeString_STR(attr), hash, format, args)
+#define DeeObject_VTGenericCallAttrStringf(tp_self, self, attr, format, args)               DeeObject_VTGenericCallAttrStringHashf(tp_self, self, attr, Dee_HashStr(attr), format, args)
+#define DeeObject_TGenericDelAttr(tp_self, self, attr)                                      DeeObject_TGenericDelAttrStringHash(tp_self, self, DeeString_STR(attr), DeeString_Hash(attr))
+#define DeeObject_TGenericDelAttrHash(tp_self, self, attr, hash)                            DeeObject_TGenericDelAttrStringHash(tp_self, self, DeeString_STR(attr), hash)
+#define DeeObject_TGenericDelAttrString(tp_self, self, attr)                                DeeObject_TGenericDelAttrStringHash(tp_self, self, attr, Dee_HashStr(attr))
+#define DeeObject_TGenericDelAttrStringLen(tp_self, self, attr, attrlen)                    DeeObject_TGenericDelAttrStringLenHash(tp_self, self, attr, attrlen, Dee_HashPtr(attr, attrlen))
+#define DeeObject_TGenericSetAttr(tp_self, self, attr, value)                               DeeObject_TGenericSetAttrStringHash(tp_self, self, DeeString_STR(attr), DeeString_Hash(attr), value)
+#define DeeObject_TGenericSetAttrHash(tp_self, self, attr, hash, value)                     DeeObject_TGenericSetAttrStringHash(tp_self, self, DeeString_STR(attr), hash, value)
+#define DeeObject_TGenericSetAttrString(tp_self, self, attr, value)                         DeeObject_TGenericSetAttrStringHash(tp_self, self, attr, Dee_HashStr(attr), value)
+#define DeeObject_TGenericSetAttrStringLen(tp_self, self, attr, attrlen, value)             DeeObject_TGenericSetAttrStringLenHash(tp_self, self, attr, attrlen, Dee_HashPtr(attr, attrlen), value)
+#define DeeObject_TGenericHasAttr(tp_self, self, attr)                                      DeeObject_TGenericHasAttrStringHash(tp_self, self, DeeString_STR(attr), DeeString_Hash(attr))
+#define DeeObject_TGenericHasAttrHash(tp_self, self, attr, hash)                            DeeObject_TGenericHasAttrStringHash(tp_self, self, DeeString_STR(attr), hash)
+#define DeeObject_TGenericHasAttrString(tp_self, self, attr)                                DeeObject_TGenericHasAttrStringHash(tp_self, self, attr, Dee_HashStr(attr))
+#define DeeObject_TGenericHasAttrStringLen(tp_self, self, attr, attrlen)                    DeeObject_TGenericHasAttrStringLenHash(tp_self, self, attr, attrlen, Dee_HashPtr(attr, attrlen))
+#define DeeObject_TGenericBoundAttr(tp_self, self, attr)                                    DeeObject_TGenericBoundAttrStringHash(tp_self, self, DeeString_STR(attr), DeeString_Hash(attr))
+#define DeeObject_TGenericBoundAttrHash(tp_self, self, attr, hash)                          DeeObject_TGenericBoundAttrStringHash(tp_self, self, DeeString_STR(attr), hash)
+#define DeeObject_TGenericBoundAttrString(tp_self, self, attr)                              DeeObject_TGenericBoundAttrStringHash(tp_self, self, attr, Dee_HashStr(attr))
+#define DeeObject_TGenericBoundAttrStringLen(tp_self, self, attr, attrlen)                  DeeObject_TGenericBoundAttrStringLenHash(tp_self, self, attr, attrlen, Dee_HashPtr(attr, attrlen))
+
+#define DeeObject_GenericGetAttr(self, attr)                                                DeeObject_TGenericGetAttr(Dee_TYPE(self), self, attr)
+#define DeeObject_GenericGetAttrHash(self, attr, hash)                                      DeeObject_TGenericGetAttrHash(Dee_TYPE(self), self, attr, hash)
+#define DeeObject_GenericGetAttrString(self, attr)                                          DeeObject_TGenericGetAttrString(Dee_TYPE(self), self, attr)
+#define DeeObject_GenericGetAttrStringLen(self, attr, attrlen)                              DeeObject_TGenericGetAttrStringLen(Dee_TYPE(self), self, attr, attrlen)
+#define DeeObject_GenericGetAttrStringHash(self, attr, hash)                                DeeObject_TGenericGetAttrStringHash(Dee_TYPE(self), self, attr, hash)
+#define DeeObject_GenericGetAttrStringLenHash(self, attr, attrlen, hash)                    DeeObject_TGenericGetAttrStringLenHash(Dee_TYPE(self), self, attr, attrlen, hash)
+#define DeeObject_GenericCallAttr(self, attr, argc, argv)                                   DeeObject_TGenericCallAttr(Dee_TYPE(self), self, attr, argc, argv)
+#define DeeObject_GenericCallAttrHash(self, attr, hash, argc, argv)                         DeeObject_TGenericCallAttrHash(Dee_TYPE(self), self, attr, hash, argc, argv)
+#define DeeObject_GenericCallAttrString(self, attr, argc, argv)                             DeeObject_TGenericCallAttrString(Dee_TYPE(self), self, attr, argc, argv)
+#define DeeObject_GenericCallAttrStringLen(self, attr, attrlen, argc, argv)                 DeeObject_TGenericCallAttrStringLen(Dee_TYPE(self), self, attr, attrlen, argc, argv)
+#define DeeObject_GenericCallAttrStringHash(self, attr, hash, argc, argv)                   DeeObject_TGenericCallAttrStringHash(Dee_TYPE(self), self, attr, hash, argc, argv)
+#define DeeObject_GenericCallAttrStringLenHash(self, attr, attrlen, hash, argc, argv)       DeeObject_TGenericCallAttrStringLenHash(Dee_TYPE(self), self, attr, attrlen, hash, argc, argv)
+#define DeeObject_GenericCallAttrKw(self, attr, argc, argv, kw)                             DeeObject_TGenericCallAttrKw(Dee_TYPE(self), self, attr, argc, argv, kw)
+#define DeeObject_GenericCallAttrHashKw(self, attr, hash, argc, argv, kw)                   DeeObject_TGenericCallAttrHashKw(Dee_TYPE(self), self, attr, hash, argc, argv, kw)
+#define DeeObject_GenericCallAttrStringKw(self, attr, argc, argv, kw)                       DeeObject_TGenericCallAttrStringKw(Dee_TYPE(self), self, attr, argc, argv, kw)
+#define DeeObject_GenericCallAttrStringLenKw(self, attr, attrlen, argc, argv, kw)           DeeObject_TGenericCallAttrStringLenKw(Dee_TYPE(self), self, attr, attrlen, argc, argv, kw)
+#define DeeObject_GenericCallAttrStringHashKw(self, attr, hash, argc, argv, kw)             DeeObject_TGenericCallAttrStringHashKw(Dee_TYPE(self), self, attr, hash, argc, argv, kw)
+#define DeeObject_GenericCallAttrStringLenHashKw(self, attr, attrlen, hash, argc, argv, kw) DeeObject_TGenericCallAttrStringLenHashKw(Dee_TYPE(self), self, attr, attrlen, hash, argc, argv, kw)
+#define DeeObject_VGenericCallAttrf(self, attr, format, args)                               DeeObject_VTGenericCallAttrf(Dee_TYPE(self), self, attr, format, args)
+#define DeeObject_VGenericCallAttrHashf(self, attr, hash, format, args)                     DeeObject_VTGenericCallAttrHashf(Dee_TYPE(self), self, attr, hash, format, args)
+#define DeeObject_VGenericCallAttrStringf(self, attr, format, args)                         DeeObject_VTGenericCallAttrStringf(Dee_TYPE(self), self, attr, format, args)
+#define DeeObject_VGenericCallAttrStringHashf(self, attr, hash, format, args)               DeeObject_VTGenericCallAttrStringHashf(Dee_TYPE(self), self, attr, hash, format, args)
+#define DeeObject_GenericDelAttr(self, attr)                                                DeeObject_TGenericDelAttr(Dee_TYPE(self), self, attr)
+#define DeeObject_GenericDelAttrHash(self, attr, hash)                                      DeeObject_TGenericDelAttrHash(Dee_TYPE(self), self, attr, hash)
+#define DeeObject_GenericDelAttrString(self, attr)                                          DeeObject_TGenericDelAttrString(Dee_TYPE(self), self, attr)
+#define DeeObject_GenericDelAttrStringLen(self, attr, attrlen)                              DeeObject_TGenericDelAttrStringLen(Dee_TYPE(self), self, attr, attrlen)
+#define DeeObject_GenericDelAttrStringHash(self, attr, hash)                                DeeObject_TGenericDelAttrStringHash(Dee_TYPE(self), self, attr, hash)
+#define DeeObject_GenericDelAttrStringLenHash(self, attr, attrlen, hash)                    DeeObject_TGenericDelAttrStringLenHash(Dee_TYPE(self), self, attr, attrlen, hash)
+#define DeeObject_GenericSetAttr(self, attr, value)                                         DeeObject_TGenericSetAttr(Dee_TYPE(self), self, attr, value)
+#define DeeObject_GenericSetAttrHash(self, attr, hash, value)                               DeeObject_TGenericSetAttrHash(Dee_TYPE(self), self, attr, hash, value)
+#define DeeObject_GenericSetAttrString(self, attr, value)                                   DeeObject_TGenericSetAttrString(Dee_TYPE(self), self, attr, value)
+#define DeeObject_GenericSetAttrStringLen(self, attr, attrlen, value)                       DeeObject_TGenericSetAttrStringLen(Dee_TYPE(self), self, attr, attrlen, value)
+#define DeeObject_GenericSetAttrStringHash(self, attr, hash, value)                         DeeObject_TGenericSetAttrStringHash(Dee_TYPE(self), self, attr, hash, value)
+#define DeeObject_GenericSetAttrStringLenHash(self, attr, attrlen, hash, value)             DeeObject_TGenericSetAttrStringLenHash(Dee_TYPE(self), self, attr, attrlen, hash, value)
+#define DeeObject_GenericHasAttr(self, attr)                                                DeeObject_TGenericHasAttr(Dee_TYPE(self), attr)
+#define DeeObject_GenericHasAttrHash(self, attr, hash)                                      DeeObject_TGenericHasAttrHash(Dee_TYPE(self), attr, hash)
+#define DeeObject_GenericHasAttrString(self, attr)                                          DeeObject_TGenericHasAttrString(Dee_TYPE(self), attr)
+#define DeeObject_GenericHasAttrStringLen(self, attr, attrlen)                              DeeObject_TGenericHasAttrStringLen(Dee_TYPE(self), attr, attrlen)
+#define DeeObject_GenericHasAttrStringHash(self, attr, hash)                                DeeObject_TGenericHasAttrStringHash(Dee_TYPE(self), attr, hash)
+#define DeeObject_GenericHasAttrStringLenHash(self, attr, attrlen, hash)                    DeeObject_TGenericHasAttrStringLenHash(Dee_TYPE(self), attr, attrlen, hash)
+#define DeeObject_GenericBoundAttr(self, attr)                                              DeeObject_TGenericBoundAttr(Dee_TYPE(self), self, attr)
+#define DeeObject_GenericBoundAttrHash(self, attr, hash)                                    DeeObject_TGenericBoundAttrHash(Dee_TYPE(self), self, attr, hash)
+#define DeeObject_GenericBoundAttrString(self, attr)                                        DeeObject_TGenericBoundAttrString(Dee_TYPE(self), self, attr)
+#define DeeObject_GenericBoundAttrStringLen(self, attr, attrlen)                            DeeObject_TGenericBoundAttrStringLen(Dee_TYPE(self), self, attr, attrlen)
+#define DeeObject_GenericBoundAttrStringHash(self, attr, hash)                              DeeObject_TGenericBoundAttrStringHash(Dee_TYPE(self), self, attr, hash)
+#define DeeObject_GenericBoundAttrStringLenHash(self, attr, attrlen, hash)                  DeeObject_TGenericBoundAttrStringLenHash(Dee_TYPE(self), self, attr, attrlen, hash)
+#define DeeObject_GenericEnumAttr(self, proc, arg)                                          DeeObject_TGenericEnumAttr(Dee_TYPE(self), proc, arg)
+#define DeeObject_GenericFindAttr(self, result, rules)                                      DeeObject_TGenericFindAttr(Dee_TYPE(self), self, result, rules)
+
+
 
 #ifdef CONFIG_BUILDING_DEEMON
 INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL

@@ -59,7 +59,7 @@
 //#define DEFINE_DeeObject_TVCallAttrf
 //#define DEFINE_DeeObject_VCallAttrStringHashf
 //#define DEFINE_DeeObject_TVCallAttrStringHashf
-//#define DEFINE_DeeObject_VCallAttrStringLenHashf
+#define DEFINE_DeeObject_VCallAttrStringLenHashf
 //#define DEFINE_DeeObject_TVCallAttrStringLenHashf
 //#define DEFINE_DeeObject_HasAttr
 //#define DEFINE_DeeObject_THasAttr
@@ -79,7 +79,7 @@
 //#define DEFINE_DeeObject_TSetAttrStringHash
 //#define DEFINE_DeeObject_SetAttrStringLenHash
 //#define DEFINE_DeeObject_TSetAttrStringLenHash
-#define DEFINE_DeeObject_FindAttr
+//#define DEFINE_DeeObject_FindAttr
 //#define DEFINE_DeeObject_EnumAttr
 #endif /* __INTELLISENSE__ */
 
@@ -564,14 +564,14 @@ DECL_BEGIN
 #endif /* !... */
 #elif defined(LOCAL_IS_VCALLF)
 #ifndef LOCAL_HAS_string
-#define LOCAL_DeeType_AccessCachedAttr(tp_self, self)             DeeType_VCallCachedAttrHashTuplef(tp_self, self, attr, hash, format, args)
-#define LOCAL_DeeType_AccessMethodAttr(tp_invoker, tp_self, self) DeeType_VCallMethodAttrHashTuplef(tp_invoker, tp_self, self, attr, hash, format, args)
+#define LOCAL_DeeType_AccessCachedAttr(tp_self, self)             DeeType_VCallCachedAttrHashf(tp_self, self, attr, hash, format, args)
+#define LOCAL_DeeType_AccessMethodAttr(tp_invoker, tp_self, self) DeeType_VCallMethodAttrHashf(tp_invoker, tp_self, self, attr, hash, format, args)
 #elif defined(LOCAL_HAS_len)
-#define LOCAL_DeeType_AccessCachedAttr(tp_self, self)             DeeType_VCallCachedAttrStringLenHashTuplef(tp_self, self, attr, attrlen, hash, format, args)
-#define LOCAL_DeeType_AccessMethodAttr(tp_invoker, tp_self, self) DeeType_VCallMethodAttrStringLenHashTuplef(tp_invoker, tp_self, self, attr, attrlen, hash, format, args)
+#define LOCAL_DeeType_AccessCachedAttr(tp_self, self)             DeeType_VCallCachedAttrStringLenHashf(tp_self, self, attr, attrlen, hash, format, args)
+#define LOCAL_DeeType_AccessMethodAttr(tp_invoker, tp_self, self) DeeType_VCallMethodAttrStringLenHashf(tp_invoker, tp_self, self, attr, attrlen, hash, format, args)
 #else /* ... */
-#define LOCAL_DeeType_AccessCachedAttr(tp_self, self)             DeeType_VCallCachedAttrStringHashTuplef(tp_self, self, attr, hash, format, args)
-#define LOCAL_DeeType_AccessMethodAttr(tp_invoker, tp_self, self) DeeType_VCallMethodAttrStringHashTuplef(tp_invoker, tp_self, self, attr, hash, format, args)
+#define LOCAL_DeeType_AccessCachedAttr(tp_self, self)             DeeType_VCallCachedAttrStringHashf(tp_self, self, attr, hash, format, args)
+#define LOCAL_DeeType_AccessMethodAttr(tp_invoker, tp_self, self) DeeType_VCallMethodAttrStringHashf(tp_invoker, tp_self, self, attr, hash, format, args)
 #endif /* !... */
 #endif
 #elif defined(LOCAL_IS_BOUND)

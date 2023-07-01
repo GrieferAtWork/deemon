@@ -19,7 +19,7 @@
  */
 #ifdef __INTELLISENSE__
 #include "attribute.c"
-#define DEFINE_DeeType_GetAttrStringHash
+//#define DEFINE_DeeType_GetAttrStringHash
 //#define DEFINE_DeeType_GetAttrStringLenHash
 //#define DEFINE_DeeType_BoundAttrStringHash
 //#define DEFINE_DeeType_BoundAttrStringLenHash
@@ -31,7 +31,7 @@
 //#define DEFINE_DeeType_CallAttrStringLenHashTuple
 //#define DEFINE_DeeType_CallAttrStringHashTupleKw
 //#define DEFINE_DeeType_CallAttrStringLenHashTupleKw
-//#define DEFINE_DeeType_VCallAttrStringHashf
+#define DEFINE_DeeType_VCallAttrStringHashf
 //#define DEFINE_DeeType_VCallAttrStringLenHashf
 //#define DEFINE_DeeType_HasAttrStringHash
 //#define DEFINE_DeeType_HasAttrStringLenHash
@@ -195,18 +195,18 @@
 #define LOCAL_DeeType_AccessCachedClassAttr(self)                   DeeType_VCallCachedClassAttrStringHashf(self, attr, hash, format, args)
 #define LOCAL_DeeType_AccessClassMethodAttr(tp_invoker, tp_self)    DeeType_VCallClassMethodAttrStringHashf(tp_invoker, tp_self, attr, hash, format, args)
 #define LOCAL_DeeType_AccessInstanceMethodAttr(tp_invoker, tp_self) DeeType_VCallInstanceMethodAttrStringHashf(tp_invoker, tp_self, attr, hash, format, args)
-#define LOCAL_DeeType_AccessInstanceGetSetAttr(tp_invoker, tp_self) DeeType_VCallInstanceGetSetAttrf(tp_invoker, tp_self, attr, hash, format, args)
-#define LOCAL_DeeType_AccessInstanceMemberAttr(tp_invoker, tp_self) DeeType_VCallInstanceMemberAttrf(tp_invoker, tp_self, attr, hash, format, args)
-#define LOCAL_DeeObject_GenericAccessAttr(self)                     DeeObject_GenericVCallAttrStringf(self, attr, hash, format, args)
+#define LOCAL_DeeType_AccessInstanceGetSetAttr(tp_invoker, tp_self) DeeType_VCallInstanceGetSetAttrStringHashf(tp_invoker, tp_self, attr, hash, format, args)
+#define LOCAL_DeeType_AccessInstanceMemberAttr(tp_invoker, tp_self) DeeType_VCallInstanceMemberAttrStringHashf(tp_invoker, tp_self, attr, hash, format, args)
+#define LOCAL_DeeObject_GenericAccessAttr(self)                     DeeObject_VGenericCallAttrStringHashf(self, attr, hash, format, args)
 #define LOCAL_IS_VCALLF
 #elif defined(DEFINE_DeeType_VCallAttrStringLenHashf)
 #define LOCAL_DeeType_AccessAttr                                    DeeType_VCallAttrStringLenHashf
 #define LOCAL_DeeType_AccessCachedClassAttr(self)                   DeeType_VCallCachedClassAttrStringLenHashf(self, attr, attrlen, hash, format, args)
 #define LOCAL_DeeType_AccessClassMethodAttr(tp_invoker, tp_self)    DeeType_VCallClassMethodAttrStringLenHashf(tp_invoker, tp_self, attr, attrlen, hash, format, args)
-#define LOCAL_DeeType_AccessInstanceMethodAttr(tp_invoker, tp_self) DeeType_VCallInstanceMethodAttrLenf(tp_invoker, tp_self, attr, attrlen, hash, format, args)
-#define LOCAL_DeeType_AccessInstanceGetSetAttr(tp_invoker, tp_self) DeeType_VCallInstanceGetSetAttrLenf(tp_invoker, tp_self, attr, attrlen, hash, format, args)
-#define LOCAL_DeeType_AccessInstanceMemberAttr(tp_invoker, tp_self) DeeType_VCallInstanceMemberAttrLenf(tp_invoker, tp_self, attr, attrlen, hash, format, args)
-#define LOCAL_DeeObject_GenericAccessAttr(self)                     DeeObject_GenericVCallAttrStringLenf(self, attr, attrlen, hash, format, args)
+#define LOCAL_DeeType_AccessInstanceMethodAttr(tp_invoker, tp_self) DeeType_VCallInstanceMethodAttrLenHashf(tp_invoker, tp_self, attr, attrlen, hash, format, args)
+#define LOCAL_DeeType_AccessInstanceGetSetAttr(tp_invoker, tp_self) DeeType_VCallInstanceGetSetAttrLenHashf(tp_invoker, tp_self, attr, attrlen, hash, format, args)
+#define LOCAL_DeeType_AccessInstanceMemberAttr(tp_invoker, tp_self) DeeType_VCallInstanceMemberAttrLenHashf(tp_invoker, tp_self, attr, attrlen, hash, format, args)
+#define LOCAL_DeeObject_GenericAccessAttr(self)                     DeeObject_VGenericCallAttrStringLenHashf(self, attr, attrlen, hash, format, args)
 #define LOCAL_IS_VCALLF
 #define LOCAL_HAS_len
 #elif defined(DEFINE_DeeType_HasAttrStringHash)
@@ -635,6 +635,8 @@ DECL_END
 #undef DEFINE_DeeType_CallAttrStringLenHashTuple
 #undef DEFINE_DeeType_CallAttrStringHashTupleKw
 #undef DEFINE_DeeType_CallAttrStringLenHashTupleKw
+#undef DEFINE_DeeType_VCallAttrStringHashf
+#undef DEFINE_DeeType_VCallAttrStringLenHashf
 #undef DEFINE_DeeType_HasAttrStringHash
 #undef DEFINE_DeeType_HasAttrStringLenHash
 #undef DEFINE_DeeType_DelAttrStringHash

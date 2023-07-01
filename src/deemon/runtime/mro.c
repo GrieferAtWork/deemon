@@ -48,6 +48,12 @@
 #include "runtime_error.h"
 #include "strings.h"
 
+#ifdef CONFIG_HAVE_VA_LIST_IS_NOT_ARRAY
+#define VALIST_ADDR(x) (&(x))
+#else /* CONFIG_HAVE_VA_LIST_IS_NOT_ARRAY */
+#define VALIST_ADDR(x) (&(x)[0])
+#endif /* !CONFIG_HAVE_VA_LIST_IS_NOT_ARRAY */
+
 DECL_BEGIN
 
 #undef byte_t
