@@ -603,6 +603,7 @@ err:
 #undef LOCAL_IS_DEL
 #undef LOCAL_IS_SET
 #undef LOCAL_IS_FIND
+#undef LOCAL_IS_ENUM
 #undef LOCAL_HAS_len
 #undef LOCAL_ATTR_NONNULL
 #undef LOCAL_ATTR_ACCESS_OP

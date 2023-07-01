@@ -779,10 +779,10 @@ set_frozen_get(DeeTypeObject *__restrict self) {
 	rules.alr_decl       = NULL;
 	rules.alr_perm_mask  = ATTR_PERMGET | ATTR_IMEMBER;
 	rules.alr_perm_value = ATTR_PERMGET | ATTR_IMEMBER;
-	error = DeeAttribute_Lookup(Dee_TYPE(self),
-	                            (DeeObject *)self,
-	                            &info,
-	                            &rules);
+	error = DeeObject_FindAttr(Dee_TYPE(self),
+	                           (DeeObject *)self,
+	                           &info,
+	                           &rules);
 	if unlikely(error < 0)
 		goto err;
 	if (error != 0)

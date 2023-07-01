@@ -22,7 +22,6 @@ EXPORTS
 	_DeeAssert_BadObjectTypeExact@16=DeeAssert_BadObjectTypeExact@16
 	_DeeAssert_BadObjectTypeExactOpt@16=DeeAssert_BadObjectTypeExactOpt@16
 	_DeeAssert_BadObjectTypeOpt@16=DeeAssert_BadObjectTypeOpt@16
-	_DeeAttribute_Lookup@16=DeeAttribute_Lookup@16
 	_DeeBytes_FromSequence@4=DeeBytes_FromSequence@4
 	_DeeBytes_NewBuffer@8=DeeBytes_NewBuffer@8
 	_DeeBytes_NewBufferData@8=DeeBytes_NewBufferData@8
@@ -565,6 +564,7 @@ EXPORTS
 	_DeeObject_Enter@4=DeeObject_Enter@4
 	_DeeObject_EnumAttr@16=DeeObject_EnumAttr@16
 	_DeeObject_ExtendInherited@12=DeeObject_ExtendInherited@12
+	_DeeObject_FindAttr@16=DeeObject_FindAttr@16
 	_DeeObject_Foreach@12=DeeObject_Foreach@12
 	_DeeObject_ForeachPair@12=DeeObject_ForeachPair@12
 	_DeeObject_Free@4=DeeObject_Free@4

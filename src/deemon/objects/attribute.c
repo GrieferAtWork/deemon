@@ -419,10 +419,10 @@ attribute_init(DeeAttributeObject *__restrict self,
 				goto err;
 		}
 	}
-	lookup_error = DeeAttribute_Lookup(Dee_TYPE(search_self),
-	                                   search_self,
-	                                   &self->a_info,
-	                                   &rules);
+	lookup_error = DeeObject_FindAttr(Dee_TYPE(search_self),
+	                                  search_self,
+	                                  &self->a_info,
+	                                  &rules);
 	if (lookup_error > 0) {
 		/* Attribute wasn't found... */
 		err_unknown_attribute_lookup_string(Dee_TYPE(search_self), rules.alr_name);
@@ -489,10 +489,10 @@ attribute_exists(DeeTypeObject *__restrict UNUSED(self), size_t argc,
 				goto err;
 		}
 	}
-	lookup_error = DeeAttribute_Lookup(Dee_TYPE(search_self),
-	                                   search_self,
-	                                   &info,
-	                                   &rules);
+	lookup_error = DeeObject_FindAttr(Dee_TYPE(search_self),
+	                                  search_self,
+	                                  &info,
+	                                  &rules);
 	if (lookup_error != 0) {
 		if likely(lookup_error > 0)
 			return_false;
@@ -556,10 +556,10 @@ attribute_lookup(DeeTypeObject *__restrict UNUSED(self), size_t argc,
 				goto err;
 		}
 	}
-	lookup_error = DeeAttribute_Lookup(Dee_TYPE(search_self),
-	                                   search_self,
-	                                   &info,
-	                                   &rules);
+	lookup_error = DeeObject_FindAttr(Dee_TYPE(search_self),
+	                                  search_self,
+	                                  &info,
+	                                  &rules);
 	if (lookup_error != 0) {
 		if likely(lookup_error > 0)
 			return_none;
@@ -1289,147 +1289,6 @@ PUBLIC DeeTypeObject DeeEnumAttrIterator_Type = {
 	/* .tp_class_getsets = */ NULL,
 	/* .tp_class_members = */ NULL
 };
-
-
-
-
-struct attribute_lookup_data {
-	struct attribute_info               *ald_info;    /* [1..1] The result info. */
-	struct attribute_lookup_rules const *ald_rules;   /* [1..1] Lookup rules */
-	bool                                 ald_fnddecl; /* [valid_if(ald_rules->alr_decl != NULL)]
-	                                                   * Set to true after `alr_decl' had been encountered. */
-};
-
-PRIVATE dssize_t DCALL
-attribute_lookup_enum(DeeObject *__restrict declarator,
-                      char const *__restrict attr_name, char const *attr_doc,
-                      uint16_t perm, DeeTypeObject *attr_type,
-                      struct attribute_lookup_data *__restrict arg) {
-	dhash_t attr_hash;
-	struct attribute_info *result;
-	struct attribute_lookup_rules const *rules = arg->ald_rules;
-	if (rules->alr_decl) {
-		if (declarator != rules->alr_decl) {
-			if (arg->ald_fnddecl)
-				return -3; /* The requested declarator came and went without a match... */
-			return 0;
-		}
-		arg->ald_fnddecl = true;
-	}
-	if ((perm & rules->alr_perm_mask) != rules->alr_perm_value)
-		return 0;
-	if (perm & ATTR_NAMEOBJ) {
-		attr_hash = DeeString_Hash((DeeObject *)COMPILER_CONTAINER_OF(attr_name, DeeStringObject, s_str));
-	} else {
-		attr_hash = Dee_HashStr(attr_name);
-	}
-	if (attr_hash != rules->alr_hash)
-		return 0;
-	if (strcmp(attr_name, arg->ald_rules->alr_name) != 0)
-		return 0;
-	/* This is the one! */
-	result = arg->ald_info;
-	if (!attr_doc) {
-		ASSERT(!(perm & ATTR_DOCOBJ));
-		result->a_doc = NULL;
-	} else if (perm & ATTR_DOCOBJ) {
-		result->a_doc = attr_doc;
-		Dee_Incref(COMPILER_CONTAINER_OF(attr_doc, DeeStringObject, s_str));
-	} else {
-		result->a_doc = attr_doc;
-	}
-	result->a_decl = declarator;
-	Dee_Incref(declarator);
-	result->a_perm     = perm;
-	result->a_attrtype = attr_type;
-	Dee_XIncref(attr_type);
-	return -2; /* Stop enumeration! */
-}
-
-
-INTDEF WUNUSED NONNULL((1, 2, 3)) dssize_t DCALL
-type_enumattr(DeeTypeObject *UNUSED(tp_self),
-              DeeObject *self, denum_t proc, void *arg);
-INTDEF WUNUSED NONNULL((1, 2, 3)) dssize_t DCALL
-module_enumattr(DeeTypeObject *UNUSED(tp_self),
-                DeeObject *self, denum_t proc, void *arg);
-
-
-/* Lookup the descriptor for an attribute, given a set of lookup rules.
- * @param: rules: The result of follow for the lookup.
- * @return:  0: Successfully queried the attribute.
- *              The given `result' was filled, and the must finalize
- *              it through use of `attribute_info_fini()'.
- * @return:  1: No attribute matching the given requirements was found.
- * @return: -1: An error occurred. */
-PUBLIC WUNUSED NONNULL((1, 2, 3, 4)) int DCALL
-DeeAttribute_Lookup(DeeTypeObject *tp_self, DeeObject *self,
-                    struct attribute_info *__restrict result,
-                    struct attribute_lookup_rules const *__restrict rules) {
-	int error;
-	DeeTypeObject *iter = tp_self;
-	ASSERT_OBJECT_TYPE(tp_self, &DeeType_Type);
-	ASSERT_OBJECT_TYPE_A(self, tp_self);
-	ASSERT_OBJECT_OPT(rules->alr_decl);
-	if (tp_self->tp_attr)
-		goto do_iter_attr;
-	/* Search through the cache for the requested attribute. */
-	if ((error = DeeType_FindCachedAttr(tp_self, self, result, rules)) <= 0)
-		goto done;
-	for (;;) {
-		if (rules->alr_decl && iter != (DeeTypeObject *)rules->alr_decl)
-			goto next_iter;
-		if (DeeType_IsClass(iter)) {
-			if ((error = DeeClass_FindInstanceAttribute(tp_self, iter, self, result, rules)) <= 0)
-				goto done;
-		} else {
-			if (iter->tp_methods &&
-			    (error = DeeType_FindMethodAttr(tp_self, iter, result, rules)) <= 0)
-				goto done;
-			if (iter->tp_getsets &&
-			    (error = DeeType_FindGetSetAttr(tp_self, iter, result, rules)) <= 0)
-				goto done;
-			if (iter->tp_members &&
-			    (error = DeeType_FindMemberAttr(tp_self, iter, result, rules)) <= 0)
-				goto done;
-		}
-next_iter:
-		iter = DeeType_Base(iter);
-		if (!iter)
-			break;
-		if (iter->tp_attr) {
-			dssize_t enum_error;
-			struct attribute_lookup_data data;
-			dssize_t (DCALL *enumattr)(DeeTypeObject *, DeeObject *, denum_t, void *);
-do_iter_attr:
-			enumattr = iter->tp_attr->tp_enumattr;
-			if (!enumattr)
-				break;
-			if (enumattr == &type_enumattr)
-				return DeeType_FindAttr((DeeTypeObject *)self, result, rules);
-			if (enumattr == &module_enumattr)
-				return DeeModule_FindAttr((DeeModuleObject *)self, result, rules);
-			data.ald_info    = result;
-			data.ald_rules   = rules;
-			data.ald_fnddecl = false;
-			enum_error       = (*enumattr)(iter, self, (denum_t)&attribute_lookup_enum, &data);
-			if (enum_error == 0 || enum_error == -3) /* Not found */
-				break; /* Don't consider attributes from lower levels for custom member access. */
-			if (enum_error == -1)
-				goto err;             /* Error... */
-			ASSERT(enum_error == -2); /* Found it! */
-			return 0;
-		}
-	}
-	return 1; /* Not found */
-done:
-	return error;
-err:
-	return -1;
-}
-
-
-
 
 DECL_END
 

@@ -631,7 +631,7 @@ super_setattr(Super *self, /*String*/ DeeObject *name, DeeObject *value) {
 	return DeeObject_TSetAttr(self->s_type, self->s_self, name, value);
 }
 
-PRIVATE WUNUSED NONNULL((1, 2, 3)) dssize_t DCALL
+INTERN WUNUSED NONNULL((1, 2, 3)) dssize_t DCALL
 super_enumattr(DeeTypeObject *UNUSED(tp_self),
                Super *self, denum_t proc, void *arg) {
 	return DeeObject_EnumAttr(self->s_type, self->s_self, proc, arg);

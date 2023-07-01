@@ -186,11 +186,9 @@ struct Dee_attribute_lookup_rules {
  * @return:  1: No attribute matching the given requirements was found.
  * @return: -1: An error occurred. */
 DFUNDEF WUNUSED NONNULL((1, 2, 3, 4)) int DCALL
-DeeAttribute_Lookup(DeeTypeObject *tp_self, DeeObject *self,
-                    struct Dee_attribute_info *__restrict result,
-                    struct Dee_attribute_lookup_rules const *__restrict rules);
-
-
+DeeObject_FindAttr(DeeTypeObject *tp_self, DeeObject *self,
+                   struct Dee_attribute_info *__restrict result,
+                   struct Dee_attribute_lookup_rules const *__restrict rules);
 
 DECL_END
 

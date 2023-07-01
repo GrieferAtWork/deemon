@@ -59,14 +59,17 @@ DECL_BEGIN
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL type_getattr(DeeObject *self, DeeObject *attr);
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL type_delattr(DeeObject *self, DeeObject *attr);
 INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL type_setattr(DeeObject *self, DeeObject *attr, DeeObject *value);
+INTDEF WUNUSED NONNULL((1, 2, 3)) dssize_t DCALL type_enumattr(DeeTypeObject *tp_self, DeeObject *self, denum_t proc, void *arg);
 
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL module_getattr(DeeObject *self, DeeObject *attr);
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL module_delattr(DeeObject *self, DeeObject *attr);
 INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL module_setattr(DeeObject *self, DeeObject *attr, DeeObject *value);
+INTDEF WUNUSED NONNULL((1, 2, 3)) dssize_t DCALL module_enumattr(DeeTypeObject *tp_self, DeeObject *self, denum_t proc, void *arg);
 
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL super_getattr(DeeObject *self, DeeObject *attr);
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL super_delattr(DeeObject *self, DeeObject *attr);
 INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL super_setattr(DeeObject *self, DeeObject *attr, DeeObject *value);
+INTDEF WUNUSED NONNULL((1, 2, 3)) dssize_t DCALL super_enumattr(DeeTypeObject *tp_self, DeeObject *self, denum_t proc, void *arg);
 
 #ifndef __INTELLISENSE__
 DECL_END
@@ -154,6 +157,8 @@ DECL_END
 #include "attribute-access-type-instance.c.inl"
 
 /* DeeObject_*Attr */
+#define DEFINE_DeeObject_FindAttr
+#include "attribute-access-object.c.inl"
 #define DEFINE_DeeObject_EnumAttr
 #include "attribute-access-object.c.inl"
 #define DEFINE_DeeObject_HasAttr
