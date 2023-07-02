@@ -19,7 +19,7 @@
  */
 #ifdef __INTELLISENSE__
 #include "attribute.c"
-#define DEFINE_DeeObject_GetAttr
+//#define DEFINE_DeeObject_GetAttr
 //#define DEFINE_DeeObject_TGetAttr
 //#define DEFINE_DeeObject_GetAttrStringHash
 //#define DEFINE_DeeObject_TGetAttrStringHash
@@ -79,7 +79,7 @@
 //#define DEFINE_DeeObject_TSetAttrStringHash
 //#define DEFINE_DeeObject_SetAttrStringLenHash
 //#define DEFINE_DeeObject_TSetAttrStringLenHash
-//#define DEFINE_DeeObject_FindAttr
+#define DEFINE_DeeObject_FindAttr
 //#define DEFINE_DeeObject_EnumAttr
 #endif /* __INTELLISENSE__ */
 
@@ -1101,6 +1101,21 @@ again:
 	/* Slow path: must check for the attribute everywhere. */
 	DeeTypeMRO_Init(&mro, tp_iter);
 	for (;;) {
+#ifdef LOCAL_IS_FIND
+continue_at_iter:
+		if (rules->alr_decl && rules->alr_decl != (DeeObject *)tp_iter) {
+			tp_iter = DeeTypeMRO_Next(&mro, tp_iter);
+			if (!tp_iter)
+				break;
+
+			/* Also set `tp_self', so we don't corrupt the cache by
+			 * potentially failing to cache attributes that should
+			 * have been visible. */
+			tp_self = tp_iter;
+			goto continue_at_iter;
+		}
+#endif /* LOCAL_IS_FIND */
+
 		if (DeeType_IsClass(tp_iter)) {
 #ifdef LOCAL_IS_ENUM
 			result = DeeClass_EnumInstanceAttributes(tp_iter, self, proc, arg);

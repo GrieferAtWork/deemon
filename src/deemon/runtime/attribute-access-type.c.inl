@@ -287,7 +287,7 @@
 #define LOCAL_DeeType_AccessInstanceMethodAttr(tp_invoker, tp_self) DeeType_FindInstanceMethodAttr(tp_invoker, tp_self, retinfo, rules)
 #define LOCAL_DeeType_AccessInstanceGetSetAttr(tp_invoker, tp_self) DeeType_FindInstanceGetSetAttr(tp_invoker, tp_self, retinfo, rules)
 #define LOCAL_DeeType_AccessInstanceMemberAttr(tp_invoker, tp_self) DeeType_FindInstanceMemberAttr(tp_invoker, tp_self, retinfo, rules)
-#define LOCAL_DeeObject_GenericAccessAttr(self)                     DeeObject_TGenericFindAttr((DeeTypeObject *)(self), self, retinfo, rules)
+#define LOCAL_DeeObject_GenericAccessAttr(self)                     DeeObject_TGenericFindAttr(Dee_TYPE(self), self, retinfo, rules)
 #define LOCAL_IS_FIND
 #elif defined(DEFINE_DeeType_EnumAttr)
 #define LOCAL_DeeType_AccessAttr                                    DeeType_EnumAttr
@@ -297,7 +297,7 @@
 #define LOCAL_DeeType_AccessInstanceMethodAttr(tp_invoker, tp_self) type_obmeth_enum(tp_self, proc, arg)
 #define LOCAL_DeeType_AccessInstanceGetSetAttr(tp_invoker, tp_self) type_obprop_enum(tp_self, proc, arg)
 #define LOCAL_DeeType_AccessInstanceMemberAttr(tp_invoker, tp_self) type_obmemb_enum(tp_self, proc, arg)
-#define LOCAL_DeeObject_GenericAccessAttr(self)                     DeeObject_TGenericEnumAttr((DeeTypeObject *)(self), proc, arg)
+#define LOCAL_DeeObject_GenericAccessAttr(self)                     DeeObject_TGenericEnumAttr(Dee_TYPE(self), proc, arg)
 #define LOCAL_IS_ENUM
 #else /* ... */
 #error "Invalid configuration"
@@ -462,6 +462,25 @@ INTERN WUNUSED LOCAL_ATTR_NONNULL LOCAL_return_t
 	if (result != LOCAL_ATTR_NOT_FOUND_RESULT) \
 		goto done
 #endif /* !LOCAL_IS_ENUM */
+
+#ifdef LOCAL_IS_FIND
+continue_at_iter:
+		if (rules->alr_decl && rules->alr_decl != (DeeObject *)iter) {
+#ifdef CONFIG_TYPE_ATTRIBUTE_FORWARD_GENERIC
+			result = LOCAL_DeeObject_GenericAccessAttr((DeeObject *)iter);
+			LOCAL_process_result(result, done);
+#endif /* CONFIG_TYPE_ATTRIBUTE_FORWARD_GENERIC */
+			iter = DeeTypeMRO_Next(&mro, iter);
+			if (!iter)
+				break;
+
+			/* Also set `self', so we don't corrupt the cache by
+			 * potentially failing to cache attributes that should
+			 * have been visible. */
+			self = iter;
+			goto continue_at_iter;
+		}
+#endif /* LOCAL_IS_FIND */
 
 		if (DeeType_IsClass(iter)) {
 #ifdef LOCAL_IS_FIND

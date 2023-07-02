@@ -372,7 +372,7 @@ continue_at_iter:
 				if (!iter)
 					break;
 
-				/* Also set tp_self, so we don't corrupt the cache by
+				/* Also set `tp_self', so we don't corrupt the cache by
 				 * potentially failing to cache attributes that should
 				 * have been visible. */
 				tp_self = iter;
