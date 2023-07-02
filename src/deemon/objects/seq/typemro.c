@@ -45,7 +45,7 @@ typemroiter_copy(TypeMROIterator *__restrict self,
 	self->tmi_iter = other->tmi_iter;
 	memcpy(&self->tmi_mro, &other->tmi_mro, sizeof(self->tmi_mro));
 	TypeMROIterator_LockRelease(other);
-	Dee_Incref(self->tmi_mro.tp_mro_orig);
+	Dee_Incref((DeeTypeObject *)self->tmi_mro.tp_mro_orig);
 	return 0;
 }
 
@@ -60,7 +60,7 @@ typemroiter_init(TypeMROIterator *__restrict self,
 		if (DeeObject_AssertType(self->tmi_mro.tp_mro_orig, &DeeType_Type))
 			goto err;
 	}
-	Dee_Incref(self->tmi_mro.tp_mro_orig);
+	Dee_Incref((DeeTypeObject *)self->tmi_mro.tp_mro_orig);
 	self->tmi_iter = NULL;
 	Dee_atomic_lock_init(&self->tmi_lock);
 	return 0;
