@@ -3752,6 +3752,16 @@ set_is_type:
 		}
 	}
 
+	@@Returns the types of the base classes of @this node, or @{}
+	@@if @this node isn't a type, or if that type doesn't have any bases.
+	public final property objectbases: {Type...} = {
+		get(): {Type...} {
+			if (object !is bound || object !is Type)
+				return {};
+			return Type.__bases__(object);
+		}
+	}
+
 	@@Returns the doc-node for @objectbase
 	public final property objectbasenode: Doc | none = {
 		get(): Doc | none {

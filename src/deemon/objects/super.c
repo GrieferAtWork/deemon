@@ -732,13 +732,13 @@ PUBLIC DeeTypeObject DeeSuper_Type = {
 
 	                         "\n"
 	                         "(ob:?.)\n"
-	                         "Same as ${Super(Super.selfof(ob), Super.typeof(ob).__base__}\n"
+	                         "Same as ${Super(Super.selfof(ob), Type.__base__(Super.typeof(ob))}\n"
 	                         "#tTypeError{The class of @ob has no base-class}"
 
 	                         "\n"
 	                         "(ob)\n"
 	                         "#tTypeError{The type of @ob has no base-class}"
-	                         "Same as ${Super(ob, type(ob).__base__}\n"
+	                         "Same as ${Super(ob, Type.__base__(type(ob))}\n"
 
 	                         "\n"
 	                         "(ob,tp:?DType)\n"

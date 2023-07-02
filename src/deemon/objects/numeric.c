@@ -1283,7 +1283,7 @@ PRIVATE struct type_getset tpconst numeric_getsets[] = {
 	            "${"
 	            /**/ "property isfloat: bool {\n"
 	            /**/ "	get(): bool {\n"
-	            /**/ "		for (local tp = type(this); tp !is none; tp = tp.__base__) {\n"
+	            /**/ "		for (local tp = type(this).__mro__) {\n"
 	            /**/ "			local hasFloat = tp.hasprivateoperator(\"float\"));\n"
 	            /**/ "			local hasInt   = tp.hasprivateoperator(\"int\"));\n"
 	            /**/ "			if (hasFloat || hasInt) {\n"
