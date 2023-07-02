@@ -186,6 +186,26 @@ librt_get_ObjectTable_impl_f(void) {
 	return DeeObject_GetAttrString((DeeObject *)&DeeClassDescriptor_Type, "ObjectTable");
 }
 
+LOCAL WUNUSED DREF DeeObject *DCALL
+librt_get_TypeMRO_impl_f(void) {
+	return get_type_of(DeeObject_GetAttrString((DeeObject *)&DeeInt_Type, "__mro__"));
+}
+
+LOCAL WUNUSED DREF DeeObject *DCALL
+librt_get_TypeBases_impl_f(void) {
+	return get_type_of(DeeObject_GetAttrString((DeeObject *)&DeeInt_Type, "__bases__"));
+}
+
+LOCAL WUNUSED DREF DeeObject *DCALL
+librt_get_TypeMROIterator_impl_f(void) {
+	return get_iterator_of(librt_get_TypeMRO_impl_f());
+}
+
+LOCAL WUNUSED DREF DeeObject *DCALL
+librt_get_TypeBasesIterator_impl_f(void) {
+	return get_iterator_of(librt_get_TypeBases_impl_f());
+}
+
 PRIVATE WUNUSED DREF DeeObject *DCALL
 librt_get_ClassOperatorTable_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
 	return librt_get_ClassOperatorTable_impl_f();
@@ -215,6 +235,27 @@ PRIVATE WUNUSED DREF DeeObject *DCALL
 librt_get_ObjectTable_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
 	return librt_get_ObjectTable_impl_f();
 }
+
+PRIVATE WUNUSED DREF DeeObject *DCALL
+librt_get_TypeMRO_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
+	return librt_get_TypeMRO_impl_f();
+}
+
+PRIVATE WUNUSED DREF DeeObject *DCALL
+librt_get_TypeMROIterator_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
+	return librt_get_TypeMROIterator_impl_f();
+}
+
+PRIVATE WUNUSED DREF DeeObject *DCALL
+librt_get_TypeBases_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
+	return librt_get_TypeBases_impl_f();
+}
+
+PRIVATE WUNUSED DREF DeeObject *DCALL
+librt_get_TypeBasesIterator_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
+	return librt_get_TypeBasesIterator_impl_f();
+}
+
 
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
@@ -1741,6 +1782,10 @@ PRIVATE DEFINE_CMETHOD(librt_get_ClassAttribute, &librt_get_ClassAttribute_f);
 PRIVATE DEFINE_CMETHOD(librt_get_ClassAttributeTable, &librt_get_ClassAttributeTable_f);
 PRIVATE DEFINE_CMETHOD(librt_get_ClassAttributeTableIterator, &librt_get_ClassAttributeTableIterator_f);
 PRIVATE DEFINE_CMETHOD(librt_get_ObjectTable, &librt_get_ObjectTable_f);
+PRIVATE DEFINE_CMETHOD(librt_get_TypeMRO, &librt_get_TypeMRO_f);
+PRIVATE DEFINE_CMETHOD(librt_get_TypeMROIterator, &librt_get_TypeMROIterator_f);
+PRIVATE DEFINE_CMETHOD(librt_get_TypeBases, &librt_get_TypeBases_f);
+PRIVATE DEFINE_CMETHOD(librt_get_TypeBasesIterator, &librt_get_TypeBasesIterator_f);
 PRIVATE DEFINE_CMETHOD(librt_get_RoDictIterator, &librt_get_RoDictIterator_f);
 PRIVATE DEFINE_CMETHOD(librt_get_RoSetIterator, &librt_get_RoSetIterator_f);
 PRIVATE DEFINE_CMETHOD(librt_get_KwdsIterator, &librt_get_KwdsIterator_f);
@@ -2102,6 +2147,10 @@ PRIVATE struct dex_symbol symbols[] = {
 	{ "ClassAttributeTable", (DeeObject *)&librt_get_ClassAttributeTable, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                 /* ClassAttributeTable_Type */
 	{ "ClassAttributeTableIterator", (DeeObject *)&librt_get_ClassAttributeTableIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR }, /* ClassAttributeTableIterator_Type */
 	{ "ObjectTable", (DeeObject *)&librt_get_ObjectTable, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                                 /* ObjectTable_Type */
+	{ "TypeMRO", (DeeObject *)&librt_get_TypeMRO, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                                         /* TypeMRO_Type */
+	{ "TypeMROIterator", (DeeObject *)&librt_get_TypeMROIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                         /* TypeMROIterator_Type */
+	{ "TypeBases", (DeeObject *)&librt_get_TypeBases, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                                     /* TypeBases_Type */
+	{ "TypeBasesIterator", (DeeObject *)&librt_get_TypeBasesIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                     /* TypeBasesIterator_Type */
 
 	/* Internal types used to drive natively defined types */
 	{ "TypeOperators", (DeeObject *)&librt_get_TypeOperators, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR,
