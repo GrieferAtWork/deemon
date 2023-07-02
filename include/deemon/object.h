@@ -2575,7 +2575,7 @@ struct Dee_type_object {
 	   : DeeObject_Free(obj))
 
 typedef struct {
-	DeeTypeObject  const *tp_mro_orig; /* [1..1] MRO origin */
+	DeeTypeObject  const *tp_mro_orig; /* [1..1][const] MRO origin */
 	DeeTypeObject *const *tp_mro_iter; /* [?..1][valid_if(:tp_iter != tp_mro_orig)] MRO array pointer */
 } DeeTypeMRO;
 

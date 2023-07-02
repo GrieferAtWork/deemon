@@ -5097,6 +5097,13 @@ class_bases_fini(struct class_bases *__restrict self) {
 	Dee_XDecref_unlikely(self->cb_base);
 }
 
+PRIVATE ATTR_COLD NONNULL((1)) int DCALL
+err_cannot_use_final_type_as_base(DeeTypeObject *__restrict base) {
+	return DeeError_Throwf(&DeeError_TypeError,
+	                       "Cannot use final, or variable type `%s' as class base",
+	                       base->tp_name);
+}
+
 /* Load class bases from `bases'. */
 PRIVATE NONNULL((1, 2)) int DCALL
 class_bases_init(struct class_bases *__restrict self,
@@ -5159,6 +5166,10 @@ no_base:
 			DeeTypeObject *base = (DeeTypeObject *)bases_list.ol_elemv[mro_i];
 			if (DeeObject_AssertType((DeeObject *)base, &DeeType_Type))
 				goto err_bases_list;
+			if (base->tp_flags & (TP_FFINAL | TP_FVARIABLE)) {
+				err_cannot_use_final_type_as_base(base);
+				goto err_bases_list;
+			}
 			if (!DeeType_IsAbstract(base)) {
 				/* Non-abstract types must appear as base, but
 				 * there can only be 1 such base per sub-class. */
@@ -5259,9 +5270,7 @@ DeeClass_New(DeeObject *bases, DeeObject *descriptor,
 		        "type-type objects must not have the variable-size flag, but %s has it set!",
 		        result_type_type->tp_name);
 		if (cbases.cb_base->tp_flags & (TP_FFINAL | TP_FVARIABLE)) {
-			DeeError_Throwf(&DeeError_TypeError,
-			                "Cannot use final, or variable type `%s' as class base",
-			                cbases.cb_base->tp_name);
+			err_cannot_use_final_type_as_base(cbases.cb_base);
 			goto err_cbases;
 		}
 	}

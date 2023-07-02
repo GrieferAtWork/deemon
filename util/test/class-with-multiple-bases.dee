@@ -50,8 +50,8 @@ assert x is Numeric;
 assert x.y == "foo";
 assert x.y is string;
 assert C.__base__ === B, "Because `B' has instance members, it must be the primary base";
-// TODO: assert C.__mro__ == { C, A, B, Numeric, Object };
-// TODO: assert C.__bases__ == { A, B, Numeric };
+assert C.__mro__ == { C, A, B, Numeric, Object };
+assert C.__bases__ == { A, B, Numeric };
 
 assert x.foo() == 11;
 assert x.bar() == 2;

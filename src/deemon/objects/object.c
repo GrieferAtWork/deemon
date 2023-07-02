@@ -57,6 +57,7 @@
 
 #include "../runtime/runtime_error.h"
 #include "../runtime/strings.h"
+#include "seq/typemro.h"
 
 DECL_BEGIN
 
@@ -4208,24 +4209,43 @@ type_gcpriority(DeeObject *__restrict self) {
 }
 
 PRIVATE struct type_member tpconst type_members[] = {
-	TYPE_MEMBER_FIELD_DOC(STR___name__, STRUCT_CONST | STRUCT_CSTR_OPT, offsetof(DeeTypeObject, tp_name), "->?X2?Dstring?N"),
-	TYPE_MEMBER_FIELD_DOC(STR___doc__, STRUCT_CONST | STRUCT_CSTR_OPT, offsetof(DeeTypeObject, tp_doc), "->?X2?Dstring?N"),
-	TYPE_MEMBER_FIELD_DOC("__base__", STRUCT_OBJECT_OPT, offsetof(DeeTypeObject, tp_base), "->?X2?DType?N"),
-	TYPE_MEMBER_BITFIELD("isfinal", STRUCT_CONST, DeeTypeObject, tp_flags, TP_FFINAL),
-	TYPE_MEMBER_BITFIELD("isinterrupt", STRUCT_CONST, DeeTypeObject, tp_flags, TP_FINTERRUPT),
-	TYPE_MEMBER_BITFIELD("isabstract", STRUCT_CONST, DeeTypeObject, tp_flags, TP_FABSTRACT),
-	TYPE_MEMBER_BITFIELD("__isvariable__", STRUCT_CONST, DeeTypeObject, tp_flags, TP_FVARIABLE),
+	TYPE_MEMBER_FIELD_DOC(STR___name__, STRUCT_CONST | STRUCT_CSTR_OPT, offsetof(DeeTypeObject, tp_name),
+	                      "->?X2?Dstring?N\n"
+	                      "Name of this type, or ?N if it has none"),
+	TYPE_MEMBER_FIELD_DOC(STR___doc__, STRUCT_CONST | STRUCT_CSTR_OPT, offsetof(DeeTypeObject, tp_doc),
+	                      "->?X2?Dstring?N\n"
+	                      "Doc string for this type, including documentation on operators, or ?N if it has none"),
+	TYPE_MEMBER_FIELD_DOC("__base__", STRUCT_OBJECT_OPT, offsetof(DeeTypeObject, tp_base),
+	                      "->?X2?DType?N\n"
+	                      "The immediate/primary base of this type, or ?N if it has none"),
+	TYPE_MEMBER_BITFIELD_DOC("isfinal", STRUCT_CONST, DeeTypeObject, tp_flags, TP_FFINAL,
+	                         "True if this type cannot be sub-classed"),
+	TYPE_MEMBER_BITFIELD_DOC("isinterrupt", STRUCT_CONST, DeeTypeObject, tp_flags, TP_FINTERRUPT,
+	                         "True if instances of this type, when thrown, can only be caught by "
+	                         "an ${@[interrupt] catch (...)} catch-all expression, or by a catch "
+	                         "expression that explicitly names this type"),
+	TYPE_MEMBER_BITFIELD_DOC("isabstract", STRUCT_CONST, DeeTypeObject, tp_flags, TP_FABSTRACT,
+	                         "True if this type is #Iabstract, meaning it can be used as an interface"),
+	TYPE_MEMBER_BITFIELD_DOC("__isvariable__", STRUCT_CONST, DeeTypeObject, tp_flags, TP_FVARIABLE,
+	                         "True if instances of this type have a variable size (s.a. ?#__instancesize__)"),
 	TYPE_MEMBER_BITFIELD("__isgc__", STRUCT_CONST, DeeTypeObject, tp_flags, TP_FGC),
-	TYPE_MEMBER_FIELD("__isclass__", STRUCT_CONST | STRUCT_BOOLPTR, offsetof(DeeTypeObject, tp_class)),
-	TYPE_MEMBER_FIELD("__isarithmetic__", STRUCT_CONST | STRUCT_BOOLPTR, offsetof(DeeTypeObject, tp_math)),
-	TYPE_MEMBER_FIELD("__iscomparable__", STRUCT_CONST | STRUCT_BOOLPTR, offsetof(DeeTypeObject, tp_cmp)),
-	TYPE_MEMBER_FIELD("__issequence__", STRUCT_CONST | STRUCT_BOOLPTR, offsetof(DeeTypeObject, tp_seq)),
+	TYPE_MEMBER_FIELD_DOC("__isclass__", STRUCT_CONST | STRUCT_BOOLPTR, offsetof(DeeTypeObject, tp_class),
+	                      "True if this type is a user-defined class (s.a. ?#__class__)"),
+	TYPE_MEMBER_FIELD_DOC("__isarithmetic__", STRUCT_CONST | STRUCT_BOOLPTR, offsetof(DeeTypeObject, tp_math),
+	                      "True if this type implements math-related operators"),
+	TYPE_MEMBER_FIELD_DOC("__iscomparable__", STRUCT_CONST | STRUCT_BOOLPTR, offsetof(DeeTypeObject, tp_cmp),
+	                      "True if this type implements compare-related operators"),
+	TYPE_MEMBER_FIELD_DOC("__issequence__", STRUCT_CONST | STRUCT_BOOLPTR, offsetof(DeeTypeObject, tp_seq),
+	                      "True if this type implements sequence-related operators"),
 	TYPE_MEMBER_BITFIELD("__isinttruncated__", STRUCT_CONST, DeeTypeObject, tp_flags, TP_FTRUNCATE),
 	TYPE_MEMBER_BITFIELD("__hasmoveany__", STRUCT_CONST, DeeTypeObject, tp_flags, TP_FMOVEANY),
-	TYPE_MEMBER_FIELD("__isiterator__", STRUCT_CONST | STRUCT_BOOLPTR, offsetof(DeeTypeObject, tp_iter_next)),
-	TYPE_MEMBER_BITFIELD("__iscustom__", STRUCT_CONST, DeeTypeObject, tp_flags, TP_FHEAP),
+	TYPE_MEMBER_FIELD_DOC("__isiterator__", STRUCT_CONST | STRUCT_BOOLPTR, offsetof(DeeTypeObject, tp_iter_next),
+	                      "True if this type implements the ${operator iter} operator"),
+	TYPE_MEMBER_BITFIELD_DOC("__iscustom__", STRUCT_CONST, DeeTypeObject, tp_flags, TP_FHEAP,
+	                         "True if this type was dynamically allocated on the heap"),
 	TYPE_MEMBER_BITFIELD("__issuperconstructible__", STRUCT_CONST, DeeTypeObject, tp_flags, TP_FINHERITCTOR),
-	TYPE_MEMBER_FIELD("__isnoargconstructible__", STRUCT_CONST | STRUCT_BOOLPTR, offsetof(DeeTypeObject, tp_init.tp_alloc.tp_ctor)),
+	TYPE_MEMBER_FIELD("__isnoargconstructible__", STRUCT_CONST | STRUCT_BOOLPTR,
+	                  offsetof(DeeTypeObject, tp_init.tp_alloc.tp_ctor)),
 	TYPE_MEMBER_END
 };
 
@@ -4234,9 +4254,12 @@ PRIVATE struct type_getset tpconst type_getsets[] = {
 	            "->?Dbool\n"
 	            "Returns ?t if @this Type implements the buffer interface\n"
 	            "The most prominent Type to which this applies is ?DBytes, however other types also support this"),
-	/* TODO: __bases__->?S?DType  Immediate bases of this type. */
-	/* TODO: __mro__->?S?DType    Method Resolution Order. Similar to ?#__bases__, but
-	 *                            preceded by @this Type, and followed by all base classes. */
+	TYPE_GETTER("__bases__", &TypeBases_New,
+	            "->?Ert:TypeBases\n"
+	            "Returns a sequence type ?S?DType that represents all immediate bases of @this ?DType"),
+	TYPE_GETTER("__mro__", &TypeMRO_New,
+	            "->?Ert:TypeMRO\n"
+	            "Returns a sequence type ?S?DType that represents the MethodResolutionOrder of @this ?DType"),
 	TYPE_GETTER("__class__", &type_get_classdesc,
 	            "->?Ert:ClassDescriptor\n"
 	            "#tAttributeError{@this typeType is a user-defined class (s.a. ?#__isclass__)}"

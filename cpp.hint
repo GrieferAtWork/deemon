@@ -928,6 +928,8 @@
 #define SWITCH_SIZEOF_WIDTH(...) for(;;)
 #define DeeString_Foreach(...)
 
+#define DeeType_mro_foreach_start(...) for(;;)
+
 #define DEFINE_KWDS(name, ...)                            DeeKwdsObject name={}
 #define Dee_DEFINE_KWDS(name, ...)                        DeeKwdsObject name={}
 #define DEFINE_KWLIST                                     struct keyword name[]=__VA_ARGS__
