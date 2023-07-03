@@ -641,18 +641,23 @@ PRIVATE struct type_member tpconst array_class_members[] = {
 	TYPE_MEMBER_END
 };
 
+PRIVATE DeeTypeObject *tpconst array_mro[] = {
+	DeeSType_AsType(&DeeStructured_Type),
+	&DeeSeq_Type,
+	&DeeObject_Type,
+	NULL
+};
 
 INTERN DeeArrayTypeObject DeeArray_Type = {
-	/* XXX: Somehow find a way to include functionality from `DeeSeq_Type' */
 	/* .ft_base = */ {
 		/* .st_base = */ {
-			OBJECT_HEAD_INIT((DeeTypeObject *)&DeeArrayType_Type),
+			OBJECT_HEAD_INIT(&DeeArrayType_Type),
 			/* .tp_name     = */ "Array",
 			/* .tp_doc      = */ NULL,
 			/* .tp_flags    = */ TP_FNORMAL | TP_FINHERITCTOR | TP_FTRUNCATE | TP_FMOVEANY,
 			/* .tp_weakrefs = */ 0,
 			/* .tp_features = */ TF_NONE,
-			/* .tp_base     = */ (DeeTypeObject *)&DeeStructured_Type,
+			/* .tp_base     = */ DeeSType_AsType(&DeeStructured_Type),
 			/* .tp_init = */ {
 				{
 					/* .tp_alloc = */ {
@@ -687,7 +692,9 @@ INTERN DeeArrayTypeObject DeeArray_Type = {
 			/* .tp_members       = */ NULL,
 			/* .tp_class_methods = */ NULL,
 			/* .tp_class_getsets = */ NULL,
-			/* .tp_class_members = */ array_class_members
+			/* .tp_class_members = */ array_class_members,
+			/* .tp_call_kw       = */ NULL,
+			/* .tp_mro           = */ array_mro,
 		},
 #ifndef CONFIG_NO_THREADS
 		/* .st_cachelock = */ DEE_ATOMIC_RWLOCK_INIT,
@@ -757,7 +764,7 @@ arraytype_new(DeeSTypeObject *__restrict item_type,
 	result->at_base.st_base.tp_init.tp_alloc.tp_instance_size += sizeof(DeeObject);
 	result->at_base.st_base.tp_name  = DeeString_STR(name); /* Inherit reference. */
 	result->at_base.st_base.tp_flags = TP_FTRUNCATE | TP_FINHERITCTOR | TP_FNAMEOBJECT | TP_FHEAP | TP_FMOVEANY;
-	result->at_base.st_base.tp_base  = &DeeArray_Type.at_base.st_base; /* Inherit reference. */
+	result->at_base.st_base.tp_base  = DeeArrayType_AsType(&DeeArray_Type); /* Inherit reference. */
 	result->at_count                 = num_items;
 
 	/* Finalize the array type. */
