@@ -2295,12 +2295,14 @@ ast_genasm_userasm(struct ast *__restrict self) {
 	size_t i, count;
 	struct cleanup_mode *cleanup_actions = NULL, *cleanup_dst;
 	uint32_t old_lexer_flags, old_lexer_tokens;
+
 	/* Save the assembler state before user-assembly is processed. */
 	old_state.as_handlerc = current_assembler.a_handlerc;
 	old_state.as_stackcur = current_assembler.a_stackcur;
 	ASSERT(self->a_type == AST_ASSEMBLY);
 	ASSERT(self->a_assembly.as_text.at_text);
 	ASSERT(self->a_assembly.as_text.at_text->s_refcnt);
+
 	/* Keep track of operands that must be popped during cleanup. */
 	if (self->a_assembly.as_num_o ||
 	    self->a_assembly.as_num_i) {
@@ -2605,7 +2607,7 @@ create_assembly_file:
 	/* Re-adjust the stack depth to what the caller expects. */
 	ASSERT(old_state.as_handlerc == current_assembler.a_handlerc);
 	if (old_state.as_stackcur != current_assembler.a_stackcur) {
-		/* NOTE: Omit any warnings when `SP' was set as a clobber operand. */
+		/* NOTE: Don't omit stack miss-alignment warnings when `SP' was specified in the clobber list. */
 		if (!(self->a_flag & AST_FASSEMBLY_CLOBSP)) {
 			if (old_state.as_stackcur < current_assembler.a_stackcur) {
 				if (WARN(W_UASM_DOESNT_CLEANUP_STACK,

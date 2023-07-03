@@ -1134,6 +1134,10 @@
 #define ASM_JMP_POP_POP       0xf018 /* [2][-2,+0]   `jmp pop, #pop'                      - Similar to `ASM_JMP_POP', but pop a second integer that describes the absolute stack-depth that should be adjusted for before jumping.
                                       * >> int new_sp = int(POP());
                                       * >> int new_ip = int(POP());
+                                      * >> IF new_ip < 0 || new_ip > MAX_VALID_INSTRUCTION_INDEX THEN
+                                      * >>     THROW_OR_UNDEFINED_BEHAVIOR(Error.RuntimeError.SegFault());
+                                      * >>     EXCEPT();
+                                      * >> FI
                                       * >> IF new_sp < 0 THEN
                                       * >>     THROW_OR_UNDEFINED_BEHAVIOR(Error.RuntimeError.SegFault());
                                       * >>     EXCEPT();
@@ -1145,10 +1149,6 @@
                                       * >>         THROW_OR_UNDEFINED_BEHAVIOR(Error.RuntimeError.SegFault());
                                       * >>         EXCEPT();
                                       * >>     FI
-                                      * >> FI
-                                      * >> IF new_ip < 0 || new_ip > MAX_VALID_INSTRUCTION_INDEX THEN
-                                      * >>     THROW_OR_UNDEFINED_BEHAVIOR(Error.RuntimeError.SegFault());
-                                      * >>     EXCEPT();
                                       * >> FI
                                       * >> WHILE new_sp != SP DO
                                       * >>     IF new_sp < SP THEN
@@ -1193,12 +1193,12 @@
 #define ASM16_POP_STATIC      0xf02b /* [4][-1,+0]   `pop static <imm16>'                 - Pop the top stack value into the static variable indexed by `<imm16>', overwriting the previous value.
                                       * [4][-0,+0]   `mov static <imm16>, PREFIX'         - `PREFIX: pop static <imm16>' */
 #define ASM16_POP_EXTERN      0xf02c /* [6][-1,+0]   `pop extern <imm16>:<imm16>'         - Pop the top stack value into the extern variable indexed by `<imm16>:<imm16>', overwriting the previous value.
-                                      * [6][-0,+0]   `mov PREFIX, extern <imm16>:<imm16>' - `PREFIX: pop extern <imm16>:<imm16>' */
+                                      * [6][-0,+0]   `mov extern <imm16>:<imm16>, PREFIX' - `PREFIX: pop extern <imm16>:<imm16>' */
 /*      ASM_                  0xf02d  *               --------                            - ------------------ */
 #define ASM16_POP_GLOBAL      0xf02e /* [4][-1,+0]   `pop global <imm16>'                 - Pop the top stack value into the global variable indexed by `<imm16>', overwriting the previous value.
-                                      * [4][-0,+0]   `mov PREFIX, global <imm16>'         - `PREFIX: pop global <imm16>' */
+                                      * [4][-0,+0]   `mov global <imm16>, PREFIX'         - `PREFIX: pop global <imm16>' */
 #define ASM16_POP_LOCAL       0xf02f /* [4][-1,+0]   `pop local <imm16>'                  - Pop the top stack value into the local variable indexed by `<imm16>', overwriting the previous value.
-                                      * [4][-0,+0]   `mov PREFIX, local <imm16>'          - `PREFIX: pop local <imm16>' */
+                                      * [4][-0,+0]   `mov local <imm16>, PREFIX'          - `PREFIX: pop local <imm16>' */
 /*      ASM_                  0xf030  *               --------                            - ------------------ */
 /*      ASM_                  0xf031  *               --------                            - ------------------ */
 #define ASM_PUSH_EXCEPT       0xf032 /* [2][-0,+1]   `push except'                        - Push the current exception onto the stack. (Used by `catch' statements to access throw's error Object)
@@ -1238,8 +1238,8 @@
                                       * >> PUSH(List({ POP(IMM16)... })); */
 /*      ASM_                  0xf044  *               --------                            - ------------------ */
 /*      ASM_                  0xf045  *               --------                            - ------------------ */
-#define ASM16_UNPACK          0xf046 /* [4][-1,+n]   `unpack pop, #<imm16>'                 - Pop a sequence and unpack it into <imm16> elements then pushed onto the stack.
-                                      * >> PUSH(Tuple.unpack(POP(),IMM16)...); */
+#define ASM16_UNPACK          0xf046 /* [4][-1,+n]   `unpack pop, #<imm16>'               - Pop a sequence and unpack it into <imm16> elements then pushed onto the stack.
+                                      * >> PUSH(Tuple.unpack(POP(), IMM16)...); */
 /*      ASM_                  0xf047  *               --------                            - ------------------ */
 /*      ASM_                  0xf048  *               --------                            - ------------------ */
 /*      ASM_                  0xf049  *               --------                            - ------------------ */
@@ -1363,7 +1363,7 @@
 #define ASM16_PRINT_C_NL      0xf0a3 /* [4][-0,+0]   `print const <imm16>, nl'            - Same as `ASM_PRINT_C16', but follow up by printing a new-line character. */
 #define ASM_RANGE_0_I32       0xf0a4 /* [6][-0,+1]   `push range $0, $<imm32>'            - Create a new range from using `int(0)' as `begin' and `int(<imm32>)' as `end'. */
 /*      ASM_                  0xf0a5  *               --------                            - ------------------ */
-#define ASM_VARARGS_UNPACK    0xf0a6 /* [3][-0,+n]   `unpack varargs, #<imm8>'            - Unpack variable arguments and push `imm8' stack items. - Behaves the same as `push varargs; unpack pop, #<imm8>', except that the varargs Tuple doesn't need to be pushed. */
+#define ASM_VARARGS_UNPACK    0xf0a6 /* [3][-0,+n]   `unpack varargs, #<imm8>'            - Unpack variable arguments and push `imm8' stack items. - Behaves the same as `push varargs; unpack pop, #<imm8>', except that the varargs Tuple doesn't need to be created. */
 #define ASM_PUSH_VARKWDS_NE   0xf0a7 /* [2][-0,+1]   `push bool varkwds'                  - Push true/false indicative of variable keyword arguments being present. (Illegal instruction if the code doesn't have the `CODE_FVARKWDS' flag set) */
 /*      ASM_                  0xf0a7  *               --------                            - ------------------ */
 /*      ASM_                  0xf0a8  *               --------                            - ------------------ */

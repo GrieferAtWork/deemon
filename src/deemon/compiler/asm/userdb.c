@@ -120,7 +120,6 @@ INTERN size_t const asm_mnemonics_count = 0
 #pragma pack(pop)
 #endif /* __COMPILER_HAVE_PRAGMA_PACK */
 
-
 DECL_END
 #endif
 #endif /* !CONFIG_LANGUAGE_NO_ASM */

@@ -515,7 +515,7 @@ struct ast {
                                         * >> __asm__ [volatile][goto]("text..."
                                         * >>                         [: <ouput_operands>
                                         * >>                         [: <input_operands>
-                                        * >>                         [: <clobber_list>    // NOTE: Ignored for now
+                                        * >>                         [: <clobber_list>
                                         * >>                         [: <label_list>]]]]);
                                         */
 #define AST_FASSEMBLY_NORMAL   0x0000  /* Normal assembly flags. */

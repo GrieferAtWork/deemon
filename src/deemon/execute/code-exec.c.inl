@@ -1662,18 +1662,18 @@ do_push_ref:
 do_push_arg:
 			ASSERT_ARGimm();
 			/* Simple case: Direct argument/default reference. */
-			if (imm_val < frame->cf_argc) {
+			if likely(imm_val < frame->cf_argc) {
 				value = frame->cf_argv[imm_val];
 			} else if (frame->cf_kw) {
 				value = frame->cf_kw->fk_kargv[imm_val - frame->cf_argc];
 				if (!value) {
 					value = code->co_defaultv[imm_val - code->co_argc_min];
-					if (!value)
+					if unlikely(!value)
 						goto err_unbound_arg;
 				}
 			} else {
 				value = code->co_defaultv[imm_val - code->co_argc_min];
-				if (!value)
+				if unlikely(!value)
 					goto err_unbound_arg;
 			}
 			PUSHREF(value);

@@ -82,6 +82,7 @@ for (local x: names) {
 #define UNUSED          OPERAND_CLASS_UNUSED
 #define POP             OPERAND_CLASS_POP
 #define TOP             OPERAND_CLASS_TOP
+#define POP_OR_TOP      OPERAND_CLASS_POP_OR_TOP
 #define REF             OPERAND_CLASS_REF
 #define ARG             OPERAND_CLASS_ARG
 #define CONST           OPERAND_CLASS_CONST
@@ -1241,8 +1242,8 @@ for (local x: names) {
 #undef LO
 #undef NE
 #undef EQ
-#undef INT
 #undef BOOL
+#undef INT
 #undef DICT
 #undef HASHSET
 #undef TUPLE
@@ -1279,6 +1280,7 @@ for (local x: names) {
 #undef CONST
 #undef ARG
 #undef REF
+#undef POP_OR_TOP
 #undef TOP
 #undef POP
 #undef UNUSED
