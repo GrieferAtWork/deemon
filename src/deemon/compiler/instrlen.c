@@ -547,14 +547,14 @@ PRIVATE uint8_t const intr_len_f0[256] = {
 	/* 0x8e */ 2, /* --- */
 	/* 0x8f */ 2, /* `ASM16_DELOP':                 `---' */
 	/* 0x90 */ 2, /* `ASM16_NOP':                   `nop16' */
-	/* 0x91 */ 2, /* `ASM_REDUCE_MIN':              `reduce top, min' */
-	/* 0x92 */ 2, /* `ASM_REDUCE_MAX':              `reduce top, max' */
-	/* 0x93 */ 2, /* `ASM_REDUCE_SUM':              `reduce top, sum' */
-	/* 0x94 */ 2, /* `ASM_REDUCE_ANY':              `reduce top, any' */
-	/* 0x95 */ 2, /* `ASM_REDUCE_ALL':              `reduce top, all' */
-	/* 0x96 */ 2, /* --- */
-	/* 0x97 */ 2, /* --- */
-	/* 0x98 */ 2, /* --- */
+	/* 0x91 */ 2, /* --- */
+	/* 0x92 */ 2, /* --- */
+	/* 0x93 */ 2, /* --- */
+	/* 0x94 */ 2, /* `ASM_REDUCE_MIN':              `reduce top, min' */
+	/* 0x95 */ 2, /* `ASM_REDUCE_MAX':              `reduce top, max' */
+	/* 0x96 */ 2, /* `ASM_REDUCE_SUM':              `reduce top, sum' */
+	/* 0x97 */ 2, /* `ASM_REDUCE_ANY':              `reduce top, any' */
+	/* 0x98 */ 2, /* `ASM_REDUCE_ALL':              `reduce top, all' */
 	/* 0x99 */ 2, /* --- */
 	/* 0x9a */ 2, /* --- */
 	/* 0x9b */ 2, /* --- */
@@ -1065,14 +1065,14 @@ PRIVATE uint8_t const stack_effect_f0[256] = {
 	/* 0x8e */ STACK_EFFECT_UNDEF, /* --- */
 	/* 0x8f */ STACK_EFFECT(0, 0), /* `ASM16_DELOP':                 `---' */
 	/* 0x90 */ STACK_EFFECT(0, 0), /* `ASM16_NOP':                   `nop16' */
-	/* 0x91 */ STACK_EFFECT(1, 1), /* `ASM_REDUCE_MIN':              `reduce top, min' */
-	/* 0x92 */ STACK_EFFECT(1, 1), /* `ASM_REDUCE_MAX':              `reduce top, max' */
-	/* 0x93 */ STACK_EFFECT(1, 1), /* `ASM_REDUCE_SUM':              `reduce top, sum' */
-	/* 0x94 */ STACK_EFFECT(1, 1), /* `ASM_REDUCE_ANY':              `reduce top, any' */
-	/* 0x95 */ STACK_EFFECT(1, 1), /* `ASM_REDUCE_ALL':              `reduce top, all' */
-	/* 0x96 */ STACK_EFFECT_UNDEF, /* --- */
-	/* 0x97 */ STACK_EFFECT_UNDEF, /* --- */
-	/* 0x98 */ STACK_EFFECT_UNDEF, /* --- */
+	/* 0x91 */ STACK_EFFECT_UNDEF, /* --- */
+	/* 0x92 */ STACK_EFFECT_UNDEF, /* --- */
+	/* 0x93 */ STACK_EFFECT_UNDEF, /* --- */
+	/* 0x94 */ STACK_EFFECT(1, 1), /* `ASM_REDUCE_MIN':              `reduce top, min' */
+	/* 0x95 */ STACK_EFFECT(1, 1), /* `ASM_REDUCE_MAX':              `reduce top, max' */
+	/* 0x96 */ STACK_EFFECT(1, 1), /* `ASM_REDUCE_SUM':              `reduce top, sum' */
+	/* 0x97 */ STACK_EFFECT(1, 1), /* `ASM_REDUCE_ANY':              `reduce top, any' */
+	/* 0x98 */ STACK_EFFECT(1, 1), /* `ASM_REDUCE_ALL':              `reduce top, all' */
 	/* 0x99 */ STACK_EFFECT_UNDEF, /* --- */
 	/* 0x9a */ STACK_EFFECT_UNDEF, /* --- */
 	/* 0x9b */ STACK_EFFECT_UNDEF, /* --- */

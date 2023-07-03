@@ -1342,14 +1342,14 @@
 #define ASM16_DELOP           0xf08f /* [2][-0,+0]    --------                            - Same as `ASM_DELOP' (we ignore the F0 prefix) */
 #define ASM16_NOP             0xf090 /* [2][-0,+0]   `nop16'                              - Same as `ASM_NOP' (we ignore the F0 prefix)
                                       *              `nop16 PREFIX' - `PREFIX: nop16' */
-#define ASM_REDUCE_MIN        0xf091 /* [2][-1,+1]   `reduce top, min'                    - Push the lowest element of a sequence `top' */
-#define ASM_REDUCE_MAX        0xf092 /* [2][-1,+1]   `reduce top, max'                    - Push the greatest element of a sequence `top' */
-#define ASM_REDUCE_SUM        0xf093 /* [2][-1,+1]   `reduce top, sum'                    - Push the sum of all element in sequence `top' */
-#define ASM_REDUCE_ANY        0xf094 /* [2][-1,+1]   `reduce top, any'                    - Push `true' if any element of a sequence `top' is true. */
-#define ASM_REDUCE_ALL        0xf095 /* [2][-1,+1]   `reduce top, all'                    - Push `true' if all elements of a sequence `top' are true. */
-/*      ASM_                  0xf096  *               --------                            - ------------------ */
-/*      ASM_                  0xf097  *               --------                            - ------------------ */
-/*      ASM_                  0xf098  *               --------                            - ------------------ */
+/*      ASM_                  0xf091  *               --------                            - ------------------ */
+/*      ASM_                  0xf092  *               --------                            - ------------------ */
+/*      ASM_                  0xf093  *               --------                            - ------------------ */
+#define ASM_REDUCE_MIN        0xf094 /* [2][-1,+1]   `reduce top, min'                    - Push the lowest element of a sequence `top' */
+#define ASM_REDUCE_MAX        0xf095 /* [2][-1,+1]   `reduce top, max'                    - Push the greatest element of a sequence `top' */
+#define ASM_REDUCE_SUM        0xf096 /* [2][-1,+1]   `reduce top, sum'                    - Push the sum of all element in sequence `top' */
+#define ASM_REDUCE_ANY        0xf097 /* [2][-1,+1]   `reduce top, any'                    - Push `true' if any element of a sequence `top' is true. */
+#define ASM_REDUCE_ALL        0xf098 /* [2][-1,+1]   `reduce top, all'                    - Push `true' if all elements of a sequence `top' are true. */
 /*      ASM_                  0xf099  *               --------                            - ------------------ */
 /*      ASM_                  0xf09a  *               --------                            - ------------------ */
 /*      ASM_                  0xf09b  *               --------                            - ------------------ */

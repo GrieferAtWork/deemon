@@ -582,14 +582,14 @@ PRIVATE char const mnemonic_names_f0[256][32] = {
 	/* 0xf08e */ UNKNOWN_MNEMONIC, /* --- */
 	/* 0xf08f */ UNKNOWN_MNEMONIC, /* --- */
 	/* 0xf090 */ "nop16", /* `ASM16_NOP' */
-	/* 0xf091 */ "reduce top, min", /* `ASM_REDUCE_MIN' */
-	/* 0xf092 */ "reduce top, max", /* `ASM_REDUCE_MAX' */
-	/* 0xf093 */ "reduce top, sum", /* `ASM_REDUCE_SUM' */
-	/* 0xf094 */ "reduce top, any", /* `ASM_REDUCE_ANY' */
-	/* 0xf095 */ "reduce top, all", /* `ASM_REDUCE_ALL' */
-	/* 0xf096 */ UNKNOWN_MNEMONIC, /* --- */
-	/* 0xf097 */ UNKNOWN_MNEMONIC, /* --- */
-	/* 0xf098 */ UNKNOWN_MNEMONIC, /* --- */
+	/* 0xf091 */ UNKNOWN_MNEMONIC, /* --- */
+	/* 0xf092 */ UNKNOWN_MNEMONIC, /* --- */
+	/* 0xf093 */ UNKNOWN_MNEMONIC, /* --- */
+	/* 0xf094 */ "reduce top, min", /* `ASM_REDUCE_MIN' */
+	/* 0xf095 */ "reduce top, max", /* `ASM_REDUCE_MAX' */
+	/* 0xf096 */ "reduce top, sum", /* `ASM_REDUCE_SUM' */
+	/* 0xf097 */ "reduce top, any", /* `ASM_REDUCE_ANY' */
+	/* 0xf098 */ "reduce top, all", /* `ASM_REDUCE_ALL' */
 	/* 0xf099 */ UNKNOWN_MNEMONIC, /* --- */
 	/* 0xf09a */ UNKNOWN_MNEMONIC, /* --- */
 	/* 0xf09b */ UNKNOWN_MNEMONIC, /* --- */

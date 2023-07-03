@@ -10573,14 +10573,14 @@ inst_table_f0:
 	.long invop
 	.long target16_delop                 /* 0x8f : `-' */
 	.long target16_nop                   /* 0x90 : `nop16' */
-	.long target_reduce_min              /* 0x91 : `reduce top, min' */
-	.long target_reduce_max              /* 0x92 : `reduce top, max' */
-	.long target_reduce_sum              /* 0x93 : `reduce top, sum' */
-	.long target_reduce_any              /* 0x94 : `reduce top, any' */
-	.long target_reduce_all              /* 0x95 : `reduce top, all' */
 	.long invop
 	.long invop
 	.long invop
+	.long target_reduce_min              /* 0x94 : `reduce top, min' */
+	.long target_reduce_max              /* 0x95 : `reduce top, max' */
+	.long target_reduce_sum              /* 0x96 : `reduce top, sum' */
+	.long target_reduce_any              /* 0x97 : `reduce top, any' */
+	.long target_reduce_all              /* 0x98 : `reduce top, all' */
 	.long invop
 	.long invop
 	.long invop
@@ -11089,14 +11089,14 @@ prefix_inst_table_f0:
 	.long prefix_invop
 	.long prefix_target16_delop                 /* 0x8f : `-' */
 	.long prefix_target16_nop                   /* 0x90 : `nop16' */
-	.long prefix_target_reduce_min              /* 0x91 : `reduce top, min' */
-	.long prefix_target_reduce_max              /* 0x92 : `reduce top, max' */
-	.long prefix_target_reduce_sum              /* 0x93 : `reduce top, sum' */
-	.long prefix_target_reduce_any              /* 0x94 : `reduce top, any' */
-	.long prefix_target_reduce_all              /* 0x95 : `reduce top, all' */
 	.long prefix_invop
 	.long prefix_invop
 	.long prefix_invop
+	.long prefix_target_reduce_min              /* 0x94 : `reduce top, min' */
+	.long prefix_target_reduce_max              /* 0x95 : `reduce top, max' */
+	.long prefix_target_reduce_sum              /* 0x96 : `reduce top, sum' */
+	.long prefix_target_reduce_any              /* 0x97 : `reduce top, any' */
+	.long prefix_target_reduce_all              /* 0x98 : `reduce top, all' */
 	.long prefix_invop
 	.long prefix_invop
 	.long prefix_invop
