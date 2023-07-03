@@ -92,7 +92,7 @@ DECL_BEGIN
 #define TIME_TYPEKIND(type, kind) ((type) << 8 | (kind))
 #endif /* __BYTE_ORDER__ != __ORDER_LITTLE_ENDIAN__ */
 
-union u_type_repr_kind {
+union u_time_repr_kind {
 	struct {
 		uint8_t  t_type; /* Time encoding (One of `TIME_*') */
 		uint8_t  t_kind; /* Time representation (One of `TIME_REPR_*') */

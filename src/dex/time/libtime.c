@@ -400,7 +400,7 @@ INTERN_CONST char const month_names[] =
 NAMEOF_JAN NAMEOF_FEB NAMEOF_MAR NAMEOF_APR NAMEOF_MAY NAMEOF_JUN
 NAMEOF_JUL NAMEOF_AUG NAMEOF_SEP NAMEOF_OCT NAMEOF_NOV NAMEOF_DEC;
 
-#define days2nano(n) (NANOSECONDS_PER_DAY * UINT64_C(n))
+#define days2nano(n) (UINT64_C(n) * NANOSECONDS_PER_DAY)
 INTERN_CONST struct month const month_info[2][MONTHS_PER_YEAR + 1] = {
 	/* No leap year: */
 	{
@@ -3146,7 +3146,7 @@ time_init_kw(DeeTimeObject *__restrict self,
 		time_init_addrepr_months(self, &arg, TIME_REPR_MILLENNIA);
 	}
 	if (argc > 12 || DeeKwArgs_MaybeHaveMoreArgs(&kwds)) {
-		union u_type_repr_kind addend_kind;
+		union u_time_repr_kind addend_kind;
 		Dee_int128_t addend;
 		addend_kind.t_typekind = self->t_typekind;
 		addend                 = self->t_nanos;
