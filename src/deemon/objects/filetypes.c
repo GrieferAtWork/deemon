@@ -239,7 +239,7 @@ PUBLIC DeeFileTypeObject DeeMemoryFile_Type = {
 		/* .tp_doc      = */ NULL,
 		/* .tp_flags    = */ TP_FNORMAL,
 		/* .tp_weakrefs = */ 0,
-		/* .tp_features = */ TF_HASFILEOPS,
+		/* .tp_features = */ 0,
 		/* .tp_base     = */ (DeeTypeObject *)&DeeFile_Type,
 		/* .tp_init = */ {
 			{
@@ -697,7 +697,7 @@ PUBLIC DeeFileTypeObject DeeFileReader_Type = {
 		                         /**/ "offsets, and not character offsets, not its preferred encoding"),
 		/* .tp_flags    = */ TP_FNORMAL,
 		/* .tp_weakrefs = */ 0,
-		/* .tp_features = */ TF_HASFILEOPS | TF_NONLOOPING,
+		/* .tp_features = */ TF_NONLOOPING,
 		/* .tp_base     = */ (DeeTypeObject *)&DeeFile_Type,
 		/* .tp_init = */ {
 			{
@@ -1643,7 +1643,7 @@ PUBLIC DeeFileTypeObject DeeFileWriter_Type = {
 		/* .tp_doc      = */ NULL,
 		/* .tp_flags    = */ TP_FNORMAL,
 		/* .tp_weakrefs = */ 0,
-		/* .tp_features = */ TF_HASFILEOPS | TF_NONLOOPING,
+		/* .tp_features = */ TF_NONLOOPING,
 		/* .tp_base     = */ (DeeTypeObject *)&DeeFile_Type,
 		/* .tp_init = */ {
 			{
@@ -1765,7 +1765,7 @@ PUBLIC DeeFileTypeObject DeeFilePrinter_Type = {
 		/* .tp_doc      = */ NULL,
 		/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 		/* .tp_weakrefs = */ 0,
-		/* .tp_features = */ TF_HASFILEOPS,
+		/* .tp_features = */ 0,
 		/* .tp_base     = */ (DeeTypeObject *)&DeeFile_Type,
 		/* .tp_init = */ {
 			{

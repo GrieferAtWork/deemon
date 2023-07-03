@@ -2441,8 +2441,7 @@ DeeObject_PInvokeOperator(DREF DeeObject **__restrict p_self, uint16_t name,
                                        /* Set of special flags that are inherited by sub-classes. */
 
 #define Dee_TF_NONE             0x00000000 /* No special features. */
-#define Dee_TF_HASFILEOPS       0x00000001 /* The type implements file operations (for types typed as DeeFileType_Type). */
-#define Dee_TF_NONLOOPING       0x00000002 /* The object's tp_visit function can be skipped when searching for conventional reference loops.
+#define Dee_TF_NONLOOPING       0x00000001 /* The object's tp_visit function can be skipped when searching for conventional reference loops.
                                             * This flag may be set when it is known that an object will only ever point to other objects
                                             * that either don't point to any objects, or are guarantied to never point back.
                                             * An example for where this flag should be used would be an object that only ever
@@ -2465,7 +2464,6 @@ DeeObject_PInvokeOperator(DREF DeeObject **__restrict p_self, uint16_t name,
 #define TP_FHEAP            Dee_TP_FHEAP
 #define TP_FINTERHITABLE    Dee_TP_FINTERHITABLE
 #define TF_NONE             Dee_TF_NONE
-#define TF_HASFILEOPS       Dee_TF_HASFILEOPS
 #define TF_NONLOOPING       Dee_TF_NONLOOPING
 #define TF_SINGLETON        Dee_TF_SINGLETON
 #endif /* DEE_SOURCE */

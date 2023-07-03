@@ -2087,8 +2087,8 @@ type_inherit_int(DeeTypeObject *__restrict self) {
 		if (self->tp_math != NULL) {
 			self->tp_math->tp_int32  = base_math->tp_int32;
 			self->tp_math->tp_int64  = base_math->tp_int64;
-			self->tp_math->tp_double = base_math->tp_double;
 			self->tp_math->tp_int    = base_math->tp_int;
+			self->tp_math->tp_double = base_math->tp_double;
 		} else {
 			self->tp_math = base_math;
 		}
