@@ -1489,14 +1489,35 @@ struct Dee_type_gc {
 	 * The global variable `x' is never unbound, meaning that
 	 * when deemon is shutting down, the following GC-cycle
 	 * still exists and must be cleaned up before terminating:
-	 *    x ─> MyClass ─> function(MyClass.operators) ─> code ─> module
-	 *    ^      ^  ^                                     │       │  │
-	 *    │      │  │                                     │       │  │
-	 *    │      │  └─────────────────────────────────────┘       │  │
-	 *    │      │                                                │  │
-	 *    │      └────────────────────────────────────────────────┘  │
-	 *    │                                                          │
-	 *    └──────────────────────────────────────────────────────────┘
+	 *
+	 *  ***********************************************************************
+	 *  *                                                                     *
+	 *  *    x ─> MyClass ─> function(MyClass.operators) ─> code ─> module    *
+	 *  *    ^      ^  ^                                     │       │  │     *
+	 *  *    │      │  │                                     │       │  │     *
+	 *  *    │      │  └─────────────────────────────────────┘       │  │     *
+	 *  *    │      │                                                │  │     *
+	 *  *    │      └────────────────────────────────────────────────┘  │     *
+	 *  *    │                                                          │     *
+	 *  *    └──────────────────────────────────────────────────────────┘     *
+	 *  *                                                                     *
+	 *  ***********************************************************************
+	 *
+	 *  * NOTE: The '*' around the graphic above are required to work around a
+	 *          VS bug that causes the IDE's internal parser to enter an infinite
+	 *          loop. I don't know exactly what's causing it, but you can test
+	 *          it for yourself by creating a file with the following contents,
+	 *          then closing+reopening VS (2017) and opening that file:
+	 *          >>  #ifndef FOO                                              <<
+	 *          >>  #define FOO                                              <<
+	 *          >>  //│                                                      <<
+	 *          >>  //│                                                      <<
+	 *          >>  //│                                                      <<
+	 *          >>  //│                                                      <<
+	 *          >>  #endif                                                   <<
+	 *          I have no idea what exactly is going on here, but the bug only
+	 *          seems to appear when at least 4 consecutive comment lines end
+	 *          with the '│' unicode character.
 	 *
 	 * This might seem simple at first, but the order with which the GC
 	 * chooses to deal with this cycle determines if the destructor can
