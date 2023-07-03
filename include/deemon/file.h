@@ -185,6 +185,8 @@ typedef void *Dee_fd_t; /* FILE * */
 #define FILE_OPERATOR_UNGETC OPERATOR_EXTENDED(0x0009) /* `operator ungetc(ch: int): int' */
 #define FILE_OPERATOR_PUTC   OPERATOR_EXTENDED(0x000a) /* `operator putc(ch: int): int' */
 #define FILE_OPERATOR_COUNT                    0x000b
+#define GETC_EOF             Dee_GETC_EOF
+#define GETC_ERR             Dee_GETC_ERR
 #endif /* DEE_SOURCE */
 
 struct Dee_filetype_object {
@@ -200,15 +202,15 @@ struct Dee_filetype_object {
 	WUNUSED_T NONNULL_T((1))                   int       (DCALL *ft_close)(DeeFileObject *__restrict self);
 	WUNUSED_T NONNULL_T((1)) ATTR_OUTS_T(2, 3) size_t    (DCALL *ft_pread)(DeeFileObject *__restrict self, void *buffer, size_t bufsize, Dee_pos_t pos, Dee_ioflag_t flags);
 	WUNUSED_T NONNULL_T((1)) ATTR_INS_T(2, 3)  size_t    (DCALL *ft_pwrite)(DeeFileObject *__restrict self, void const *buffer, size_t bufsize, Dee_pos_t pos, Dee_ioflag_t flags);
-#define GETC_EOF (-1)
-#define GETC_ERR (-2)
-	/* Read and return one byte, or `GETC_EOF' for EOF and `GETC_ERR' if an error occurred. */
+#define Dee_GETC_EOF (-1)
+#define Dee_GETC_ERR (-2)
+	/* Read and return one byte, or `Dee_GETC_EOF' for EOF and `Dee_GETC_ERR' if an error occurred. */
 	WUNUSED_T NONNULL_T((1)) int (DCALL *ft_getc)(DeeFileObject *__restrict self, Dee_ioflag_t flags);
 	/* Return a previous read byte. (Required for implementing scanf())
-	 * NOTE: The return value of this function is `GETC_EOF' for EOF, `GETC_ERR' for errors, and `0' for success. */
+	 * NOTE: The return value of this function is `Dee_GETC_EOF' for EOF, `Dee_GETC_ERR' for errors, and `0' for success. */
 	WUNUSED_T NONNULL_T((1)) int (DCALL *ft_ungetc)(DeeFileObject *__restrict self, int ch);
 	/* Write a single byte to the file.
-	 * NOTE: The return value of this function is `GETC_EOF' for EOF, `GETC_ERR' for errors, and `0' for success. */
+	 * NOTE: The return value of this function is `Dee_GETC_EOF' for EOF, `Dee_GETC_ERR' for errors, and `0' for success. */
 	WUNUSED_T NONNULL_T((1)) int (DCALL *ft_putc)(DeeFileObject *__restrict self, int ch, Dee_ioflag_t flags);
 };
 
@@ -285,11 +287,11 @@ DFUNDEF WUNUSED NONNULL((1)) int DCALL DeeFile_Sync(DeeObject *__restrict self);
 DFUNDEF WUNUSED NONNULL((1)) int DCALL DeeFile_Trunc(DeeObject *__restrict self, Dee_pos_t size);
 DFUNDEF WUNUSED NONNULL((1)) int DCALL DeeFile_TruncHere(DeeObject *__restrict self, Dee_pos_t *p_size);
 DFUNDEF WUNUSED NONNULL((1)) int DCALL DeeFile_Close(DeeObject *__restrict self);
-DFUNDEF WUNUSED NONNULL((1)) int DCALL DeeFile_Getc(DeeObject *__restrict self); /* @return: GETC_ERR: Error */
-DFUNDEF WUNUSED NONNULL((1)) int DCALL DeeFile_Getcf(DeeObject *__restrict self, Dee_ioflag_t flags); /* @return: GETC_ERR: Error */
-DFUNDEF WUNUSED NONNULL((1)) int DCALL DeeFile_Ungetc(DeeObject *__restrict self, int ch); /* @return: GETC_ERR: Error */
-DFUNDEF WUNUSED NONNULL((1)) int DCALL DeeFile_Putc(DeeObject *__restrict self, int ch); /* @return: GETC_ERR: Error */
-DFUNDEF WUNUSED NONNULL((1)) int DCALL DeeFile_Putcf(DeeObject *__restrict self, int ch, Dee_ioflag_t flags); /* @return: GETC_ERR: Error */
+DFUNDEF WUNUSED NONNULL((1)) int DCALL DeeFile_Getc(DeeObject *__restrict self); /* @return: Dee_GETC_ERR: Error */
+DFUNDEF WUNUSED NONNULL((1)) int DCALL DeeFile_Getcf(DeeObject *__restrict self, Dee_ioflag_t flags); /* @return: Dee_GETC_ERR: Error */
+DFUNDEF WUNUSED NONNULL((1)) int DCALL DeeFile_Ungetc(DeeObject *__restrict self, int ch); /* @return: Dee_GETC_ERR: Error */
+DFUNDEF WUNUSED NONNULL((1)) int DCALL DeeFile_Putc(DeeObject *__restrict self, int ch); /* @return: Dee_GETC_ERR: Error */
+DFUNDEF WUNUSED NONNULL((1)) int DCALL DeeFile_Putcf(DeeObject *__restrict self, int ch, Dee_ioflag_t flags); /* @return: Dee_GETC_ERR: Error */
 
 /* Returns the total size of a given file stream.
  * If the file doesn't support retrieval of its
@@ -346,7 +348,7 @@ DeeFile_Filename(DeeObject *__restrict self);
 
 /* Read text from a file, a line or block at a time.
  * @param: readall: When true, keep trying to read data until `DeeFile_Read()'
- *                  actually returns ZERO(0), rather than stopping one it returns
+ *                  actually returns ZERO(0), rather than stopping once it returns
  *                  something other than the then effective read buffer size.
  * @return: ITER_DONE: [DeeFile_ReadLine] The file has ended. */
 DFUNDEF WUNUSED NONNULL((1)) DREF /*Bytes*/ DeeObject *DCALL
@@ -357,7 +359,8 @@ DFUNDEF WUNUSED NONNULL((1)) DREF /*Bytes*/ DeeObject *DCALL
 DeeFile_PReadBytes(DeeObject *__restrict self, size_t max_length, Dee_pos_t pos, bool readall);
 
 
-/* HINT: `DeeFile_Printf' is literally implemented as `DeeFormat_Printf(&DeeFile_WriteAll, self, format, ...)'
+/* HINT: `DeeFile_Printf' is literally implemented as
+ *       `DeeFormat_Printf(&DeeFile_WriteAll, self, format, ...)'
  * @return: -1: Error */
 DFUNDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t
 DeeFile_Printf(DeeObject *__restrict self, char const *__restrict format, ...);

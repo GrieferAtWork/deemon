@@ -148,8 +148,8 @@ file_getc_with_read(DeeFileObject *__restrict self,
 	ASSERT(ft_read != &file_read_with_getc);
 	status = (*ft_read)(self, &result, 1, flags);
 	ASSERT(status == 0 || status == 1 || status == (size_t)-1);
-	if likely(status == 1)
-		return result;
+	if likely(status > 0)
+		return (unsigned int)result;
 	if (status == 0)
 		return GETC_EOF;
 	return GETC_ERR;
@@ -169,8 +169,8 @@ file_putc_with_write(DeeFileObject *__restrict self,
 	byte   = (byte_t)(unsigned int)ch;
 	status = (*ft_write)(self, &byte, 1, flags);
 	ASSERT(status == 0 || status == 1 || status == (size_t)-1);
-	if likely(status == 1)
-		return ch;
+	if likely(status > 0)
+		return 0;
 	if (status == 0)
 		return GETC_EOF;
 	return GETC_ERR;
@@ -989,6 +989,11 @@ DeeFile_Filename(DeeObject *__restrict self) {
 	/* return NULL;*/
 }
 
+/* Read text from a file, a line or block at a time.
+ * @param: readall: When true, keep trying to read data until `DeeFile_Read()'
+ *                  actually returns ZERO(0), rather than stopping once it returns
+ *                  something other than the then effective read buffer size.
+ * @return: ITER_DONE: [DeeFile_ReadLine] The file has ended. */
 PUBLIC WUNUSED NONNULL((1)) DREF /*Bytes*/ DeeObject *DCALL
 DeeFile_ReadLine(DeeObject *__restrict self,
                  size_t maxbytes, bool keep_lf) {
@@ -1221,7 +1226,7 @@ err_printer:
 		self    = DeeSuper_SELF(self);
 		goto again;
 	} else if (tp_self == &DeeNone_Type) {
-		return 0;
+		return_empty_bytes;
 	} else if (DeeFileType_Check(tp_self)) {
 		goto do_handle_filetype;
 	}
@@ -1298,7 +1303,7 @@ err_printer:
 		self    = DeeSuper_SELF(self);
 		goto again;
 	} else if (tp_self == &DeeNone_Type) {
-		return 0;
+		return_empty_bytes;
 	} else if (DeeFileType_Check(tp_self)) {
 		goto do_handle_filetype;
 	}
@@ -1498,12 +1503,9 @@ err:
 
 
 
-PUBLIC WUNUSED NONNULL((1, 2)) dssize_t DCALL
-DeeFile_VPrintf(DeeObject *__restrict self,
-                char const *__restrict format, va_list args) {
-	return DeeFormat_VPrintf((dformatprinter)&DeeFile_WriteAll, self, format, args);
-}
-
+/* HINT: `DeeFile_Printf' is literally implemented as
+ *       `DeeFormat_Printf(&DeeFile_WriteAll, self, format, ...)'
+ * @return: -1: Error */
 PUBLIC WUNUSED NONNULL((1, 2)) dssize_t
 DeeFile_Printf(DeeObject *__restrict self,
                char const *__restrict format, ...) {
@@ -1513,6 +1515,12 @@ DeeFile_Printf(DeeObject *__restrict self,
 	result = DeeFile_VPrintf(self, format, args);
 	va_end(args);
 	return result;
+}
+
+PUBLIC WUNUSED NONNULL((1, 2)) dssize_t DCALL
+DeeFile_VPrintf(DeeObject *__restrict self,
+                char const *__restrict format, va_list args) {
+	return DeeFormat_VPrintf((dformatprinter)&DeeFile_WriteAll, self, format, args);
 }
 
 
