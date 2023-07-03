@@ -429,11 +429,23 @@ INTDEF void FCALL JITLValue_Visit(JITLValue *__restrict self, dvisit_t proc, voi
 
 /* Interact with an L-Value
  * NOTE: For all of these, the caller must ensure that `self->lv_kind != JIT_LVALUE_NONE' */
-INTDEF int FCALL JITLValue_IsBound(JITLValue *__restrict self, JITContext *__restrict context); /* -1: error; 0: no; 1: yes */
-INTDEF WUNUSED DREF DeeObject *FCALL JITLValue_GetValue(JITLValue *__restrict self, JITContext *__restrict context);
-INTDEF int FCALL JITLValue_DelValue(JITLValue *__restrict self, JITContext *__restrict context);
-INTDEF int FCALL JITLValue_SetValue(JITLValue *__restrict self, JITContext *__restrict context, DeeObject *__restrict value);
-/* TODO: JITLValue_CallValue() */
+INTDEF WUNUSED NONNULL((1, 2)) int FCALL
+JITLValue_IsBound(JITLValue *__restrict self,
+                  JITContext *__restrict context); /* -1: error; 0: no; 1: yes */
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *FCALL
+JITLValue_GetValue(JITLValue *__restrict self,
+                   JITContext *__restrict context);
+INTDEF WUNUSED NONNULL((1, 2)) int FCALL
+JITLValue_DelValue(JITLValue *__restrict self,
+                   JITContext *__restrict context);
+INTDEF WUNUSED NONNULL((1, 2, 3)) int FCALL
+JITLValue_SetValue(JITLValue *__restrict self,
+                   JITContext *__restrict context,
+                   DeeObject *value);
+INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *FCALL
+JITLValue_CallValue(JITLValue *__restrict self,
+                    JITContext *__restrict context,
+                    DeeObject *args, DeeObject *kw);
 
 
 struct jit_lvalue_list {

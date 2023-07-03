@@ -2230,57 +2230,14 @@ err_result_copy:
 #endif /* JIT_EVAL */
 				JITLexer_Yield(self);
 #ifdef JIT_EVAL
-#ifndef __OPTIMIZE_SIZE__
-				/* Optimization for callattr expressions. */
-				/* TODO: Instead of doing this here, check for `JIT_LVALUE_ATTR' / `JIT_LVALUE_ATTRSTR'
-				 *       when executing a call-expression. - That way, we can handle a _lot_ more cases,
-				 *       than by only handling the default `self.func(args...)' case. */
-				if (self->jl_tok == '(') {
-					DREF DeeObject *args;
-					DREF DeeObject *kwds;
-					JITLexer_Yield(self);
-					if (self->jl_tok == ')') {
-						JITLexer_Yield(self);
-						args = Dee_EmptyTuple;
-						Dee_Incref(Dee_EmptyTuple);
-						kwds = NULL;
-					} else {
-						args = JITLexer_EvalArgumentList(self, &kwds);
-						if (ISERR(args))
-							goto err_r;
-						LOAD_LVALUE(args, err_r);
-						if (self->jl_tok == ')') {
-							JITLexer_Yield(self);
-						} else {
-							syn_call_expected_rparen_after_call(self);
-							Dee_XDecref(kwds);
-							Dee_Decref(args);
-							goto err_r;
-						}
-					}
-					rhs = DeeObject_CallAttrStringLenTupleKw(lhs,
-					                                         attr_name,
-					                                         attr_size,
-					                                         args,
-					                                         kwds);
-					Dee_XDecref(kwds);
-					Dee_Decref(args);
-					if unlikely(!rhs)
-						goto err_r_invoke;
-					Dee_Decref(lhs);
-					lhs = rhs;
-				} else
-#endif /* !__OPTIMIZE_SIZE__ */
-				{
-					/* Generic attribute lookup */
-					ASSERT(self->jl_lvalue.lv_kind == JIT_LVALUE_NONE);
-					self->jl_lvalue.lv_kind            = JIT_LVALUE_ATTRSTR;
-					self->jl_lvalue.lv_attrstr.la_base = lhs; /* Inherit reference. */
-					self->jl_lvalue.lv_attrstr.la_name = attr_name;
-					self->jl_lvalue.lv_attrstr.la_size = attr_size;
-					self->jl_lvalue.lv_attrstr.la_hash = Dee_HashUtf8(attr_name, attr_size);
-					lhs = JIT_LVALUE;
-				}
+				/* Generic attribute lookup */
+				ASSERT(self->jl_lvalue.lv_kind == JIT_LVALUE_NONE);
+				self->jl_lvalue.lv_kind            = JIT_LVALUE_ATTRSTR;
+				self->jl_lvalue.lv_attrstr.la_base = lhs; /* Inherit reference. */
+				self->jl_lvalue.lv_attrstr.la_name = attr_name;
+				self->jl_lvalue.lv_attrstr.la_size = attr_size;
+				self->jl_lvalue.lv_attrstr.la_hash = Dee_HashUtf8(attr_name, attr_size);
+				lhs = JIT_LVALUE;
 #endif /* JIT_EVAL */
 			}
 			break;
@@ -2419,45 +2376,82 @@ err_start_expr:
 #endif /* !JIT_EVAL */
 			IF_EVAL(pos = self->jl_tokstart;)
 			JITLexer_Yield(self);
-			LOAD_LVALUE(lhs, err);
-			if (self->jl_tok == ')') {
-				JITLexer_Yield(self);
 #ifdef JIT_EVAL
-				rhs = Dee_EmptyTuple;
-				Dee_Incref(Dee_EmptyTuple);
-				kwds = NULL;
-#endif /* JIT_EVAL */
-			} else {
-#ifdef JIT_EVAL
-				rhs = JITLexer_EvalArgumentList(self, &kwds);
-				if (ISERR(rhs))
-					goto err_r;
-				ASSERT(rhs != JIT_LVALUE);
+			if (lhs == JIT_LVALUE) {
+				JITLValue function_lvalue;
+				function_lvalue = self->jl_lvalue;
+				self->jl_lvalue.lv_kind = JIT_LVALUE_NONE;
 				if (self->jl_tok == ')') {
 					JITLexer_Yield(self);
+					rhs = Dee_EmptyTuple;
+					Dee_Incref(Dee_EmptyTuple);
+					kwds = NULL;
 				} else {
-					syn_call_expected_rparen_after_call(self);
-					Dee_XDecref(kwds);
-					DECREF(rhs);
-					goto err_r;
+					rhs = JITLexer_EvalArgumentList(self, &kwds);
+					if (ISERR(rhs)) {
+err_function_lvalue:
+						JITLValue_Fini(&function_lvalue);
+						goto err;
+					}
+					ASSERT(rhs != JIT_LVALUE);
+					if (self->jl_tok != ')') {
+						syn_call_expected_rparen_after_call(self);
+						Dee_XDecref(kwds);
+						DECREF(rhs);
+						goto err_function_lvalue;
+					}
+					JITLexer_Yield(self);
 				}
-#else /* JIT_EVAL */
-				if (JITLexer_SkipPair(self, '(', ')'))
-					goto err_r;
-#endif /* !JIT_EVAL */
-			}
-#ifdef JIT_EVAL
-			{
-				DREF DeeObject *call_result;
-				call_result = DeeObject_CallTupleKw(lhs, rhs, kwds);
+				lhs = JITLValue_CallValue(&function_lvalue, self->jl_context, rhs, kwds);
 				Dee_XDecref(kwds);
 				Dee_Decref(rhs);
-				if unlikely(!call_result)
-					goto err_r_invoke;
-				Dee_Decref(lhs);
-				lhs = call_result;
-			}
+				JITLValue_Fini(&function_lvalue);
+				if unlikely(!lhs) {
+					JITLexer_ErrorTrace(self, pos);
+					goto err;
+				}
+			} else
+#endif /* !JIT_EVAL */
+			{
+				if (self->jl_tok == ')') {
+					JITLexer_Yield(self);
+#ifdef JIT_EVAL
+					rhs = Dee_EmptyTuple;
+					Dee_Incref(Dee_EmptyTuple);
+					kwds = NULL;
 #endif /* JIT_EVAL */
+				} else {
+#ifdef JIT_EVAL
+					rhs = JITLexer_EvalArgumentList(self, &kwds);
+					if (ISERR(rhs))
+						goto err_r;
+					ASSERT(rhs != JIT_LVALUE);
+					if (self->jl_tok == ')') {
+						JITLexer_Yield(self);
+					} else {
+						syn_call_expected_rparen_after_call(self);
+						Dee_XDecref(kwds);
+						DECREF(rhs);
+						goto err_r;
+					}
+#else /* JIT_EVAL */
+					if (JITLexer_SkipPair(self, '(', ')'))
+						goto err_r;
+#endif /* !JIT_EVAL */
+				}
+#ifdef JIT_EVAL
+				{
+					DREF DeeObject *call_result;
+					call_result = DeeObject_CallTupleKw(lhs, rhs, kwds);
+					Dee_XDecref(kwds);
+					Dee_Decref(rhs);
+					if unlikely(!call_result)
+						goto err_r_invoke;
+					Dee_Decref(lhs);
+					lhs = call_result;
+				}
+#endif /* JIT_EVAL */
+			}
 		}	break;
 
 		case JIT_KEYWORD:

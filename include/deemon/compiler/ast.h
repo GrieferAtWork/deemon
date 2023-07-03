@@ -455,16 +455,22 @@ struct ast {
                                         * all cases that could be expressed as constant key- expressions of a
                                         * Dict, (or even more preferred, indices of a List) are packaged
                                         * together within a compile-time generated jump table that is stored
-                                        * as a constant/static variable and used using one of the 2 following
+                                        * as a constant/static variable and used using one of the following
                                         * code patterns (depending on whether or not all of the switch's
-                                        * targets share the same stack-alignment)
+                                        * targets share the same stack-alignment, as well as the typing of
+                                        * case expressions):
+                                        *
                                         * >>#if IDENTICAL_STACK_DEPTHS
                                         * >>     push     const @{ "foo": 1f.SP, "bar": 2f }
                                         * >>#else
                                         * >>     push     const @{ "foo": (1f.SP, 1f.PC), "bar": (2f.SP, 2f.PC) }
                                         * >>#endif
                                         * >>     push     <s_expr>
+                                        * >>#if IDENTICAL_STACK_DEPTHS
+                                        * >>     push     @3f.PC          // Default case
+                                        * >>#else
                                         * >>     push     @(3f.SP, 3f.PC) // Default case
+                                        * >>#endif
                                         * >>     callattr top, @"get", #2
                                         * >>#if IDENTICAL_STACK_DEPTHS
                                         * >>     jmp      pop
@@ -479,8 +485,8 @@ struct ast {
                                         * >>3:   // default: (non-constant cases would go here, too)
                                         * >>     jmp      .done
                                         * >>.done:
-                                        * Or when all constant case labels are integer
-                                        * expressions (non-matching stack code excluded):
+                                        *
+                                        * Or when all constant case labels are integer expressions:
                                         * >>     push     <s_expr>
                                         * >>     dup
                                         * >>     push     $3
@@ -498,8 +504,7 @@ struct ast {
                                         * >>     jmp      .done
                                         * >>4:   // default: (non-constant cases would go here, too)
                                         * >>     jmp      .done
-                                        * >>.done:
-                                        */
+                                        * >>.done: */
 		struct {
 			DREF struct ast   *s_expr;    /* [1..1] The expression on which the switch is enacted. */
 			DREF struct ast   *s_block;   /* [1..1] The expression containing all of the labels. */
@@ -516,8 +521,7 @@ struct ast {
                                         * >>                         [: <ouput_operands>
                                         * >>                         [: <input_operands>
                                         * >>                         [: <clobber_list>
-                                        * >>                         [: <label_list>]]]]);
-                                        */
+                                        * >>                         [: <label_list>]]]]); */
 #define AST_FASSEMBLY_NORMAL   0x0000  /* Normal assembly flags. */
 #define AST_FASSEMBLY_FORMAT   0x0001  /* Format the assembly text before parsing it. */
 #define AST_FASSEMBLY_VOLATILE 0x0002  /* Do not perform peephole optimization on assembly text.
@@ -532,9 +536,10 @@ struct ast {
                                         * In any case: that state will be fixed by the assembler. */
 #define AST_FASSEMBLY_REACH    0x0010  /* User-assembly can be reached through non-conventional means.
                                         * An example for this would be a jump into the assembly block from another one.
-                                        * When this flag is set, the optimizer must assembly that it is unpredictable
-                                        * whether or not the assembly block returns, or doesn't return, similar to how
-                                        * a label definition can return without the previous statement returning. */
+                                        * When this flag is set, the optimizer must assume that the block can always be
+                                        * reached, even if that doesn't appear to be the case, similar to how a label
+                                        * definition can return without the previous statement returning (only that in
+                                        * this case, it's also impossible to determine where the block is reachable from). */
 #define AST_FASSEMBLY_NORETURN 0x0020  /* The user-assembly statement doesn't return through normal means.
                                         * User-code should contain something along the lines of a `ret' instruction,
                                         * or something similar.

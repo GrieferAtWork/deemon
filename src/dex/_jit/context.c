@@ -377,7 +377,7 @@ err:
 
 
 
-INTERN int FCALL
+INTERN WUNUSED NONNULL((1, 2)) int FCALL
 JITLValue_IsBound(JITLValue *__restrict self,
                   JITContext *__restrict context) {
 	int result;
@@ -473,7 +473,7 @@ err:
 
 
 
-INTERN WUNUSED DREF DeeObject *FCALL
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *FCALL
 JITLValue_GetValue(JITLValue *__restrict self,
                    JITContext *__restrict context) {
 	DREF DeeObject *result;
@@ -528,8 +528,8 @@ err_unbound:
 
 	case JIT_LVALUE_CLSATTRIB:
 		result = fast_DeeInstance_GetAttribute(self->lv_clsattrib.lc_desc,
-		                                  self->lv_clsattrib.lc_obj,
-		                                  self->lv_clsattrib.lc_attr);
+		                                       self->lv_clsattrib.lc_obj,
+		                                       self->lv_clsattrib.lc_attr);
 		break;
 
 	case JIT_LVALUE_ATTR:
@@ -570,7 +570,7 @@ err:
 
 
 
-INTERN int FCALL
+INTERN WUNUSED NONNULL((1, 2)) int FCALL
 JITLValue_DelValue(JITLValue *__restrict self,
                    JITContext *__restrict context) {
 	int result;
@@ -663,10 +663,10 @@ err:
 
 
 
-INTERN int FCALL
+INTERN WUNUSED NONNULL((1, 2, 3)) int FCALL
 JITLValue_SetValue(JITLValue *__restrict self,
                    JITContext *__restrict context,
-                   DeeObject *__restrict value) {
+                   DeeObject *value) {
 	int result;
 	ASSERT(self->lv_kind != JIT_LVALUE_NONE);
 	switch (self->lv_kind) {
@@ -769,6 +769,44 @@ JITLValue_SetValue(JITLValue *__restrict self,
 err:
 	return -1;
 }
+
+INTERN WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *FCALL
+JITLValue_CallValue(JITLValue *__restrict self, JITContext *__restrict context,
+                    DeeObject *args, DeeObject *kw) {
+	DREF DeeObject *result;
+	ASSERT(self->lv_kind != JIT_LVALUE_NONE);
+	switch (self->lv_kind) {
+
+	case JIT_LVALUE_ATTR:
+		result = DeeObject_CallAttrTupleKw(self->lv_attr.la_base,
+		                                   (DeeObject *)self->lv_attr.la_name,
+		                                   args, kw);
+		break;
+
+	case JIT_LVALUE_ATTRSTR:
+		result = DeeObject_CallAttrStringLenHashTupleKw(self->lv_attr.la_base,
+		                                                self->lv_attrstr.la_name,
+		                                                self->lv_attrstr.la_size,
+		                                                self->lv_attrstr.la_hash,
+		                                                args, kw);
+		break;
+
+	default: {
+		DREF DeeObject *function;
+		/* Fallback: get the value object, then call it. */
+		function = JITLValue_GetValue(self, context);
+		if unlikely(!function)
+			goto err;
+		result = DeeObject_CallTupleKw(function, args, kw);
+		Dee_Decref(function);
+	}	break;
+
+	}
+	return result;
+err:
+	return NULL;
+}
+
 
 
 /* Finalize the given L-value list. */
