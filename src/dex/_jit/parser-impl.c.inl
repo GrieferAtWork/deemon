@@ -1094,10 +1094,8 @@ done_y1:
 				                         (char const *)param_end,
 				                         (char const *)source_start,
 				                         (char const *)source_end,
-				                         self->jl_context->jc_locals.otp_tab,
+				                         self->jl_context,
 				                         self->jl_text,
-				                         self->jl_context->jc_impbase,
-				                         self->jl_context->jc_globals,
 				                         is_expression == AST_PARSE_WASEXPR_NO
 				                         ? JIT_FUNCTION_FNORMAL  /* w/ statements */
 				                         : JIT_FUNCTION_FRETEXPR /* w/ return-expression */);
@@ -1203,10 +1201,8 @@ not_a_java_lambda:
 					                         (char const *)param_end,
 					                         (char const *)source_start,
 					                         (char const *)source_end,
-					                         self->jl_context->jc_locals.otp_tab,
+					                         self->jl_context,
 					                         self->jl_text,
-					                         self->jl_context->jc_impbase,
-					                         self->jl_context->jc_globals,
 					                         JIT_FUNCTION_FRETEXPR);
 					if (!result && DeeError_CurrentIs(&DeeError_SyntaxError))
 						self->jl_context->jc_flags |= JITCONTEXT_FSYNERR;
@@ -1242,10 +1238,8 @@ not_a_java_lambda:
 					                         (char const *)param_end,
 					                         (char const *)source_start,
 					                         (char const *)source_end,
-					                         self->jl_context->jc_locals.otp_tab,
+					                         self->jl_context,
 					                         self->jl_text,
-					                         self->jl_context->jc_impbase,
-					                         self->jl_context->jc_globals,
 					                         JIT_FUNCTION_FNORMAL);
 					if (!result && DeeError_CurrentIs(&DeeError_SyntaxError))
 						self->jl_context->jc_flags |= JITCONTEXT_FSYNERR;
@@ -1306,10 +1300,8 @@ not_a_java_lambda:
 				                         NULL,
 				                         (char const *)source_start,
 				                         (char const *)source_end,
-				                         self->jl_context->jc_locals.otp_tab,
+				                         self->jl_context,
 				                         self->jl_text,
-				                         self->jl_context->jc_impbase,
-				                         self->jl_context->jc_globals,
 				                         JIT_FUNCTION_FRETEXPR);
 				if (!result && DeeError_CurrentIs(&DeeError_SyntaxError))
 					self->jl_context->jc_flags |= JITCONTEXT_FSYNERR;
@@ -1349,10 +1341,8 @@ skip_arrow_lambda:
 				                         NULL,
 				                         (char const *)source_start,
 				                         (char const *)source_end,
-				                         self->jl_context->jc_locals.otp_tab,
+				                         self->jl_context,
 				                         self->jl_text,
-				                         self->jl_context->jc_impbase,
-				                         self->jl_context->jc_globals,
 				                         JIT_FUNCTION_FNORMAL);
 				if (!result && DeeError_CurrentIs(&DeeError_SyntaxError))
 					self->jl_context->jc_flags |= JITCONTEXT_FSYNERR;
@@ -1876,7 +1866,7 @@ err_oo_class_reinit_lvalue:
 			if (name == ENCODE_INT32('i', 'm', 'p', 'o') &&
 			    UNALIGNED_GET16(tok_begin + 4) == ENCODE_INT16('r', 't')) {
 #ifdef JIT_EVAL
-				result = DeeObject_GetAttrString((DeeObject *)DeeModule_GetDeemon(), "import");
+				result = JITContext_GetImport(self->jl_context);
 #else /* JIT_EVAL */
 				result = 0;
 #endif /* !JIT_EVAL */
@@ -1989,10 +1979,8 @@ err_oo_class_reinit_lvalue:
 				                         (char const *)symbol_name + symbol_size,
 				                         (char const *)source_start,
 				                         (char const *)source_end,
-				                         self->jl_context->jc_locals.otp_tab,
+				                         self->jl_context,
 				                         self->jl_text,
-				                         self->jl_context->jc_impbase,
-				                         self->jl_context->jc_globals,
 				                         is_expression == AST_PARSE_WASEXPR_NO
 				                         ? JIT_FUNCTION_FNORMAL  /* w/ statements */
 				                         : JIT_FUNCTION_FRETEXPR /* w/ return-expression */);

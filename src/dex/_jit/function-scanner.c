@@ -353,7 +353,7 @@ JITLexer_SkipParamList(JITLexer *__restrict self) {
 }
 
 
-INTERN void FCALL
+INTERN NONNULL((1)) void FCALL
 JITLexer_ScanExpression(JITLexer *__restrict self, bool allow_casts) {
 again:
 	switch (self->jl_tok) {
@@ -847,7 +847,7 @@ do_again_docast:
 	}
 }
 
-INTERN void FCALL
+INTERN NONNULL((1)) void FCALL
 JITLexer_ScanStatement(JITLexer *__restrict self) {
 again:
 	switch (self->jl_tok) {

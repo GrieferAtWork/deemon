@@ -848,20 +848,26 @@ JITLexer_EvalModule(JITLexer *__restrict self) {
 	DREF /*Module*/ DeeObject *result;
 	struct unicode_printer printer;
 	unsigned char *name_start, *name_end;
+	DeeObject *import_function;
 	error = JITLexer_ParseModuleName(self,
 	                                 &printer,
 	                                 &name_start,
 	                                 &name_end);
 	if unlikely(error < 0)
 		goto err;
+	import_function = self->jl_context->jc_import;
 	if (error > 0) {
 		/* The printer was used. */
-		DREF DeeObject *str;
-		str = unicode_printer_pack(&printer);
+		DREF DeeStringObject *str;
+		str = (DREF DeeStringObject *)unicode_printer_pack(&printer);
 		if unlikely(!str)
 			goto err_trace;
 		if (DeeString_STR(str)[0] != '.') {
-			result = DeeModule_ImportGlobal(str);
+			if (import_function) {
+				result = DeeObject_Call(import_function, 1, (DeeObject **)&str);
+			} else {
+				result = DeeModule_ImportGlobal((DeeObject *)str);
+			}
 		} else {
 			DeeModuleObject *base = self->jl_context->jc_impbase;
 			if unlikely(!base) {
@@ -870,7 +876,32 @@ JITLexer_EvalModule(JITLexer *__restrict self) {
 				                str);
 				goto err_trace;
 			}
-			result = DeeModule_ImportRel((DeeObject *)base, str);
+			if (import_function) {
+				DeeObject *args[2];
+				args[0] = (DeeObject *)str;
+				args[1] = (DeeObject *)base;
+				result = DeeObject_Call(import_function, 2, args);
+			} else {
+				result = DeeModule_ImportRel((DeeObject *)base, (DeeObject *)str);
+			}
+		}
+		Dee_Decref(str);
+	} else if (import_function) {
+		DREF DeeStringObject *str;
+		if (name_start[0] == '.' && !self->jl_context->jc_impbase)
+			goto err_name_start_end_cannot_import_relative;
+		str = (DREF DeeStringObject *)DeeString_NewUtf8((char const *)name_start,
+		                                                (size_t)(name_end - name_start),
+		                                                STRING_ERROR_FSTRICT);
+		if unlikely(!str)
+			goto err_trace;
+		if (name_start[0] == '.') {
+			DeeObject *args[2];
+			args[0] = (DeeObject *)str;
+			args[1] = (DeeObject *)self->jl_context->jc_impbase;
+			result = DeeObject_Call(import_function, 2, args);
+		} else {
+			result = DeeObject_Call(import_function, 1, (DeeObject **)&str);
 		}
 		Dee_Decref(str);
 	} else if (name_start[0] != '.') {
@@ -879,6 +910,7 @@ JITLexer_EvalModule(JITLexer *__restrict self) {
 	} else {
 		DeeModuleObject *base = self->jl_context->jc_impbase;
 		if unlikely(!base) {
+err_name_start_end_cannot_import_relative:
 			DeeError_Throwf(&DeeError_CompilerError,
 			                "Cannot import relative module %$q",
 			                (size_t)(name_end - name_start),

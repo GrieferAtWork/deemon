@@ -194,10 +194,8 @@ err_var_symbol:
 			                          (char const *)param_end,
 			                          (char const *)source_start,
 			                          (char const *)source_end,
-			                          self->jl_context->jc_locals.otp_tab,
+			                          self->jl_context,
 			                          self->jl_text,
-			                          self->jl_context->jc_impbase,
-			                          self->jl_context->jc_globals,
 			                          JIT_FUNCTION_FRETEXPR);
 			if (!current && DeeError_CurrentIs(&DeeError_SyntaxError))
 				self->jl_context->jc_flags |= JITCONTEXT_FSYNERR;
@@ -235,10 +233,8 @@ err_var_symbol:
 			                          (char const *)param_end,
 			                          (char const *)source_start,
 			                          (char const *)source_end,
-			                          self->jl_context->jc_locals.otp_tab,
+			                          self->jl_context,
 			                          self->jl_text,
-			                          self->jl_context->jc_impbase,
-			                          self->jl_context->jc_globals,
 			                          JIT_FUNCTION_FNORMAL);
 			if (!current && DeeError_CurrentIs(&DeeError_SyntaxError))
 				self->jl_context->jc_flags |= JITCONTEXT_FSYNERR;

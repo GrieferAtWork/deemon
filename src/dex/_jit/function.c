@@ -41,7 +41,7 @@ DECL_BEGIN
 
 typedef JITFunctionObject JITFunction;
 
-INTERN NONNULL((1)) bool DCALL
+PRIVATE WUNUSED NONNULL((1)) bool DCALL
 JITFunction_TryRehashArguments(JITFunction *__restrict self,
                                size_t new_mask) {
 	size_t i, j, perturb;
@@ -105,7 +105,7 @@ JITFunction_TryRehashArguments(JITFunction *__restrict self,
  * when re-hashing, this function will also update indices contained
  * within the `self->jf_argv' vector, as well as the `self->jf_selfarg',
  * `self->jf_varargs' and `self->jf_varkwds' fields. */
-INTERN struct jit_object_entry *DCALL
+INTERN WUNUSED NONNULL((1)) struct jit_object_entry *DCALL
 JITFunction_CreateArgument(JITFunction *__restrict self,
                            /*utf-8*/ char const *namestr,
                            size_t namelen) {
@@ -175,19 +175,19 @@ err:
 	return NULL;
 }
 
-PRIVATE WUNUSED DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 JITLexer_ParseDefaultValue(JITLexer *__restrict self,
-                           DeeModuleObject *impbase,
-                           DeeObject *globals) {
+                           JITContext const *__restrict context) {
 	JITContext ctx      = JITCONTEXT_INIT;
 	DeeThreadObject *ts = DeeThread_Self();
 	DREF DeeObject *result;
 	self->jl_context        = &ctx;
 	self->jl_lvalue.lv_kind = JIT_LVALUE_NONE;
-	ctx.jc_impbase          = impbase;
+	ctx.jc_import           = context->jc_import;
+	ctx.jc_impbase          = context->jc_impbase;
 	ctx.jc_locals.otp_tab   = NULL;
 	ctx.jc_locals.otp_ind   = 0;
-	ctx.jc_globals          = globals;
+	ctx.jc_globals          = context->jc_globals;
 	ctx.jc_retval           = NULL;
 	ctx.jc_except           = ts->t_exceptsz;
 	ctx.jc_flags            = 0;
@@ -227,7 +227,7 @@ JITLexer_ParseDefaultValue(JITLexer *__restrict self,
 			}
 		}
 	}
-	if (ctx.jc_globals != globals) {
+	if (ctx.jc_globals != context->jc_globals) {
 		ASSERT(ctx.jc_globals);
 		Dee_Decref(ctx.jc_globals);
 	}
@@ -237,18 +237,21 @@ JITLexer_ParseDefaultValue(JITLexer *__restrict self,
 
 /* Create a new JIT function object by parsing the specified
  * parameter list, and executing the given source region.
+ * @param: context: The following fields are used:
+ *                  - `jc_import'         (for `JITFunctionObject.jf_import')
+ *                  - `jc_impbase'        (for `JITFunctionObject.jf_impbase')
+ *                  - `jc_globals'        (for `JITFunctionObject.jf_globals')
+ *                  - `jc_locals.otp_tab' (to scan for referenced variables)
  * @param: flags: Set of `JIT_FUNCTION_F*', optionally or'd with `JIT_FUNCTION_FTHISCALL' */
-INTERN WUNUSED NONNULL((5, 6)) DREF DeeObject *DCALL
+INTERN WUNUSED NONNULL((5, 6, 7, 8)) DREF DeeObject *DCALL
 JITFunction_New(/*utf-8*/ char const *name_start,
                 /*utf-8*/ char const *name_end,
                 /*utf-8*/ char const *params_start,
                 /*utf-8*/ char const *params_end,
                 /*utf-8*/ char const *source_start,
                 /*utf-8*/ char const *source_end,
-                JITObjectTable *parent_object_table,
+                JITContext const *__restrict context,
                 DeeObject *__restrict source,
-                DeeModuleObject *impbase,
-                DeeObject *globals,
                 uint16_t flags) {
 	JITLexer lex;
 	DREF JITFunction *result;
@@ -258,8 +261,9 @@ JITFunction_New(/*utf-8*/ char const *name_start,
 	result->jf_source_start = source_start;
 	result->jf_source_end   = source_end;
 	result->jf_source       = source;
-	result->jf_impbase      = impbase;
-	result->jf_globals      = globals;
+	result->jf_import       = context->jc_import;
+	result->jf_impbase      = context->jc_impbase;
+	result->jf_globals      = context->jc_globals;
 	JITObjectTable_Init(&result->jf_args);
 	JITObjectTable_Init(&result->jf_refs);
 	result->jf_args.ot_prev.otp_ind = 2;
@@ -274,8 +278,9 @@ JITFunction_New(/*utf-8*/ char const *name_start,
 	result->jf_argc_max             = 0;
 	result->jf_flags                = flags & ~JIT_FUNCTION_FTHISCALL;
 	Dee_Incref(source);
-	Dee_XIncref(impbase);
-	Dee_XIncref(globals);
+	Dee_XIncref(result->jf_import);
+	Dee_XIncref(result->jf_impbase);
+	Dee_XIncref(result->jf_globals);
 	DeeObject_Init(result, &JITFunction_Type);
 
 	if (params_end > params_start) {
@@ -393,7 +398,7 @@ err_no_keyword_for_argument:
 								JITLexer_Yield(&lex);
 								lex.jl_text = source;
 								/* Parse the default value. */
-								default_value = JITLexer_ParseDefaultValue(&lex, impbase, globals);
+								default_value = JITLexer_ParseDefaultValue(&lex, context);
 								if unlikely(!default_value)
 									goto err_r;
 								if unlikely(argent->oe_value)
@@ -497,7 +502,7 @@ err_no_keyword_for_argument:
 	               (unsigned char *)source_start,
 	               (unsigned char *)source_end);
 	lex.jl_scandata.jl_function = result;
-	lex.jl_scandata.jl_parobtab = parent_object_table;
+	lex.jl_scandata.jl_parobtab = context->jc_locals.otp_tab;
 	lex.jl_scandata.jl_flags    = JIT_SCANDATA_FNORMAL;
 
 	/* Scan the source code of the function for yield statements, as
@@ -540,6 +545,7 @@ PRIVATE NONNULL((1)) void DCALL
 jf_fini(JITFunction *__restrict self) {
 	Dee_Decref(self->jf_source);
 	Dee_XDecref(self->jf_impbase);
+	Dee_XDecref(self->jf_import);
 	Dee_XDecref(self->jf_globals);
 	JITObjectTable_Fini(&self->jf_args);
 	JITObjectTable_Fini(&self->jf_refs);
@@ -551,6 +557,7 @@ jf_visit(JITFunction *__restrict self, dvisit_t proc, void *arg) {
 	size_t i;
 	Dee_Visit(self->jf_source);
 	Dee_XVisit(self->jf_impbase);
+	Dee_XVisit(self->jf_import);
 	Dee_XVisit(self->jf_globals);
 	if (self->jf_args.ot_list != jit_empty_object_list) {
 		for (i = 0; i <= self->jf_args.ot_mask; ++i) {
@@ -795,6 +802,7 @@ done_args:
 	lexer.jl_text    = self->jf_source;
 	lexer.jl_context = &context;
 	JITLValue_Init(&lexer.jl_lvalue);
+	context.jc_import         = self->jf_import;
 	context.jc_impbase        = self->jf_impbase;
 	context.jc_globals        = self->jf_globals;
 	context.jc_retval         = JITCONTEXT_RETVAL_UNSET;
@@ -999,6 +1007,14 @@ jf_equal(JITFunction *__restrict a,
 			goto nope;
 		temp = DeeObject_CompareEq((DeeObject *)a->jf_impbase,
 		                           (DeeObject *)b->jf_impbase);
+		if (temp <= 0)
+			goto err_temp;
+	}
+	if (a->jf_import != b->jf_import) {
+		if (!a->jf_import || !b->jf_import)
+			goto nope;
+		temp = DeeObject_CompareEq(a->jf_import,
+		                           b->jf_import);
 		if (temp <= 0)
 			goto err_temp;
 	}
@@ -1241,6 +1257,9 @@ PRIVATE struct type_member tpconst jf_members[] = {
 	TYPE_MEMBER_FIELD_DOC("__impbase__", STRUCT_OBJECT_OPT, offsetof(JITFunction, jf_impbase),
 	                      "->?X2?DModule?N\n"
 	                      "Returns the module used for relative module imports"),
+	TYPE_MEMBER_FIELD_DOC("__import__", STRUCT_OBJECT_OPT, offsetof(JITFunction, jf_import),
+	                      "->?X2?DCallable?N\n"
+	                      "Function used to resolve $import statements, or ?N when ?Dimport is used instead"),
 	TYPE_MEMBER_FIELD_DOC("__globals__", STRUCT_OBJECT_OPT, offsetof(JITFunction, jf_globals),
 	                      "->?X2?M?Dstring?O?N"),
 	TYPE_MEMBER_FIELD_DOC("__module__", STRUCT_OBJECT_OPT, offsetof(JITFunction, jf_impbase),

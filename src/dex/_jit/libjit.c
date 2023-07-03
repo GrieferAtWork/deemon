@@ -41,6 +41,8 @@ DECL_BEGIN
  * starts with a leading underscore, indicative of this fact. */
 
 
+PRIVATE struct keyword exec_kwlist[] = { K(expr), K(globals), K(import), K(base), KEND };
+
 PRIVATE WUNUSED DREF DeeObject *DCALL
 libjit_exec_f(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	DREF DeeObject *result;
@@ -50,12 +52,13 @@ libjit_exec_f(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	char const *usertext;
 	size_t usersize;
 	DeeThreadObject *ts;
-	PRIVATE struct keyword kwlist[] = { K(expr), K(globals), K(base), KEND };
-	globals                         = NULL;
-	context.jc_impbase              = NULL;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist, "o|oo:exec",
+	globals            = NULL;
+	context.jc_import  = NULL;
+	context.jc_impbase = NULL;
+	if (DeeArg_UnpackKw(argc, argv, kw, exec_kwlist, "o|ooo:exec",
 	                    &lexer.jl_text,
 	                    &globals,
+	                    &context.jc_import,
 	                    &context.jc_impbase))
 		goto err;
 	if (DeeString_Check(lexer.jl_text)) {
@@ -207,7 +210,7 @@ PRIVATE DEFINE_KWCMETHOD(libjit_exec, &libjit_exec_f);
 
 PRIVATE struct dex_symbol symbols[] = {
 	{ "exec", (DeeObject *)&libjit_exec, MODSYM_FNORMAL,
-	  DOC("(expr:?X3?Dstring?DBytes?DFile,globals?:?M?Dstring?O,base?:?DModule)->\n"
+	  DOC("(expr:?X3?Dstring?DBytes?DFile,globals?:?M?Dstring?O,base?:?DModule,import?:?DCallable)->\n"
 	      "Execute a given expression @expr and return the result\n"
 	      "This function is used to implement the builtin ?Dexec function") },
 	/* TODO: `mode:?Dstring=!Prestricted'

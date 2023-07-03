@@ -718,6 +718,7 @@ JITObjectTable_Create(JITObjectTable *__restrict self,
 #define JITCONTEXT_FSYNERR 0x0001 /* A syntax error occurred that may not be caught. */
 
 struct jit_context {
+	DeeObject       *jc_import;   /* [0..1] `import' function override (when NULL, use `deemon.operator . ("import")' instead) */
 	DeeModuleObject *jc_impbase;  /* [0..1] Base module used for relative, static imports (such as `foo from .baz.bar')
 	                               * When `NULL', code isn't allowed to perform relative imports.
 	                               * NOTE: If this isn't a module, JIT itself will throw an error. */
@@ -742,9 +743,14 @@ struct jit_context {
 	uint16_t         jc_except;   /* [const] Exception indirection at the start of code. */
 	uint16_t         jc_flags;    /* Context flags (Set of `JITCONTEXT_F*') */
 };
-#define JITCONTEXT_INIT    { NULL, { NULL, 0 }, NULL, NULL, 0, JITCONTEXT_FNORMAL }
-#define JITContext_Init(x) bzero(x, sizeof(JITContext))
-#define JITContext_Fini(x) (void)0
+#define JITCONTEXT_INIT       { NULL, NULL, { NULL, 0 }, NULL, NULL, 0, JITCONTEXT_FNORMAL }
+#define JITContext_Init(self) bzero(self, sizeof(JITContext))
+#define JITContext_Fini(self) (void)0
+
+/* Return a reference to the used `import' function. */
+#define JITContext_GetImport(self)                                          \
+	((self)->jc_import ? (Dee_Incref((self)->jc_import), (self)->jc_import) \
+	                   : DeeObject_GetAttrString((DeeObject *)DeeModule_GetDeemon(), "import"))
 
 
 /* Check if the current scope is the global scope. */
@@ -1248,6 +1254,7 @@ struct jit_function_object {
 	/*utf-8*/ char const   *jf_source_start; /* [1..1][const] Source start pointer. */
 	/*utf-8*/ char const   *jf_source_end;   /* [1..1][const] Source end pointer. */
 	DREF DeeObject         *jf_source;       /* [1..1][const] The object that owns input text. */
+	DREF DeeObject         *jf_import;       /* [0..1][const] `import' function override (when NULL, use `deemon.operator . ("import")' instead) */
 	DREF DeeModuleObject   *jf_impbase;      /* [0..1][const] Base module used for relative, static imports (such as `foo from .baz.bar')
 	                                          * When `NULL', code isn't allowed to perform relative imports. */
 	DREF DeeObject         *jf_globals;      /* [0..1][const] Mapping-like object for global variables. */
@@ -1273,18 +1280,21 @@ INTDEF DeeTypeObject JITFunction_Type;
 
 /* Create a new JIT function object by parsing the specified
  * parameter list, and executing the given source region.
+ * @param: context: The following fields are used:
+ *                  - `jc_import'         (for `JITFunctionObject.jf_import')
+ *                  - `jc_impbase'        (for `JITFunctionObject.jf_impbase')
+ *                  - `jc_globals'        (for `JITFunctionObject.jf_globals')
+ *                  - `jc_locals.otp_tab' (to scan for referenced variables)
  * @param: flags: Set of `JIT_FUNCTION_F*', optionally or'd with `JIT_FUNCTION_FTHISCALL' */
-INTDEF WUNUSED NONNULL((5, 6)) DREF DeeObject *DCALL
+INTDEF WUNUSED NONNULL((5, 6, 7, 8)) DREF DeeObject *DCALL
 JITFunction_New(/*utf-8*/ char const *name_start,
                 /*utf-8*/ char const *name_end,
                 /*utf-8*/ char const *params_start,
                 /*utf-8*/ char const *params_end,
                 /*utf-8*/ char const *source_start,
                 /*utf-8*/ char const *source_end,
-                JITObjectTable *parent_object_table,
+                JITContext const *__restrict context,
                 DeeObject *__restrict source,
-                DeeModuleObject *impbase,
-                DeeObject *globals,
                 uint16_t flags);
 
 #define JIT_FUNCTION_FTHISCALL 0x8000 /* Special flag for `JITFunction_New()': Inject a hidden argument
@@ -1295,15 +1305,15 @@ JITFunction_New(/*utf-8*/ char const *name_start,
  * when re-hashing, this function will also update indices contained
  * within the `self->jf_argv' vector, as well as the `self->jf_selfarg',
  * `self->jf_varargs' and `self->jf_varkwds' fields. */
-INTDEF struct jit_object_entry *DCALL
+INTDEF WUNUSED NONNULL((1)) struct jit_object_entry *DCALL
 JITFunction_CreateArgument(JITFunctionObject *__restrict self,
                            /*utf-8*/ char const *namestr,
                            size_t namelen);
 
 /* Analyze the contents of an expression/statement for possible references
  * to symbols from surrounding scopes, or the use of `yield'. */
-INTDEF void FCALL JITLexer_ScanExpression(JITLexer *__restrict self, bool allow_casts);
-INTDEF void FCALL JITLexer_ScanStatement(JITLexer *__restrict self);
+INTDEF NONNULL((1)) void FCALL JITLexer_ScanExpression(JITLexer *__restrict self, bool allow_casts);
+INTDEF NONNULL((1)) void FCALL JITLexer_ScanStatement(JITLexer *__restrict self);
 INTDEF NONNULL((1, 2)) void DCALL
 JITLexer_ReferenceKeyword(JITLexer *__restrict self,
                           char const *__restrict name,
@@ -1420,7 +1430,8 @@ struct jit_yield_function_iterator_object {
 	JITLexer                     ji_lex;   /* [OVERRIDE(.jl_text, [const][== ji_func->jy_func->jf_source])]
 	                                        * [OVERRIDE(.jl_context, [const][== &ji_ctx])]
 	                                        * [lock(ji_lock)] The associated lexer. */
-	JITContext                   ji_ctx;   /* [OVERRIDE(.jc_impbase, [const][== ji_func->jy_func->jf_impbase])]
+	JITContext                   ji_ctx;   /* [OVERRIDE(.jc_import, [const][== ji_func->jy_func->jf_import])]
+	                                        * [OVERRIDE(.jc_impbase, [const][== ji_func->jy_func->jf_impbase])]
 	                                        * [OVERRIDE(.jc_locals.otp_ind, [>= 1])]
 	                                        * [OVERRIDE(.jc_locals.otp_tab, [owned_if(!= &ji_loc)])]
 	                                        * [OVERRIDE(.jc_globals, [lock(WRITE_ONCE)]
