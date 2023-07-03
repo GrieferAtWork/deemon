@@ -239,12 +239,14 @@ pointer_get_deref(struct pointer_object *__restrict self) {
 	result = DeeObject_MALLOC(struct lvalue_object);
 	if unlikely(!result)
 		goto done;
+
 	/* Lookup the l-value version of the base-type. */
 	type = DeeSType_LValue(((DeePointerTypeObject *)Dee_TYPE(self))->pt_orig);
 	if unlikely(!type)
 		goto err_r;
+
 	/* Initialize the new l-value object. */
-	DeeObject_InitNoref(result, (DeeTypeObject *)type);
+	DeeObject_InitNoref(result, DeeLValueType_AsType(type));
 	result->l_ptr.ptr = self->p_ptr.ptr;
 done:
 	return result;
@@ -304,13 +306,13 @@ PRIVATE struct type_method tpconst pointer_methods[] = {
 INTERN DeePointerTypeObject DeePointer_Type = {
 	/* .pt_base = */ {
 		/* .st_base = */ {
-			OBJECT_HEAD_INIT((DeeTypeObject *)&DeePointerType_Type),
+			OBJECT_HEAD_INIT(&DeePointerType_Type),
 			/* .tp_name     = */ "Pointer",
 			/* .tp_doc      = */ NULL,
 			/* .tp_flags    = */ TP_FNORMAL | TP_FTRUNCATE | TP_FMOVEANY | TP_FINHERITCTOR,
 			/* .tp_weakrefs = */ 0,
 			/* .tp_features = */ TF_NONE,
-			/* .tp_base     = */ (DeeTypeObject *)&DeeStructured_Type,
+			/* .tp_base     = */ DeeSType_AsType(&DeeStructured_Type),
 			/* .tp_init = */ {
 				{
 					/* .tp_alloc = */ {
@@ -569,7 +571,7 @@ PRIVATE WUNUSED DREF struct pointer_object *DCALL
 lvalue_ref(struct lvalue_object *__restrict self) {
 	DREF struct pointer_object *result;
 	DREF DeePointerTypeObject *pointer_type;
-	pointer_type = DeeSType_Pointer(((DeeLValueTypeObject *)Dee_TYPE(self))->lt_orig);
+	pointer_type = DeeSType_Pointer(DeeType_AsLValueType(Dee_TYPE(self))->lt_orig);
 	if unlikely(!pointer_type)
 		goto err;
 	result = DeeObject_MALLOC(struct pointer_object);
@@ -586,14 +588,14 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 lvalue_sizeof(struct lvalue_object *__restrict self) {
 	size_t result;
-	result = DeeSType_Sizeof(((DeeLValueTypeObject *)Dee_TYPE(self))->lt_orig);
+	result = DeeSType_Sizeof(DeeType_AsLValueType(Dee_TYPE(self))->lt_orig);
 	return DeeInt_NewSize(result);
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 lvalue_alignof(struct lvalue_object *__restrict self) {
 	size_t result;
-	result = DeeSType_Alignof(((DeeLValueTypeObject *)Dee_TYPE(self))->lt_orig);
+	result = DeeSType_Alignof(DeeType_AsLValueType(Dee_TYPE(self))->lt_orig);
 	return DeeInt_NewSize(result);
 }
 
@@ -626,7 +628,7 @@ lvalue_copy(struct lvalue_object *__restrict self) {
 	DeeObject *result;
 	size_t datasize;
 	uint8_t *dst, *src;
-	DeeSTypeObject *orig_type = ((DeeLValueTypeObject *)Dee_TYPE(self))->lt_orig;
+	DeeSTypeObject *orig_type = DeeType_AsLValueType(Dee_TYPE(self))->lt_orig;
 	result = DeeType_AllocInstance(&orig_type->st_base);
 	if unlikely(!result)
 		goto done;
@@ -639,7 +641,7 @@ lvalue_copy(struct lvalue_object *__restrict self) {
 		DeeType_FreeInstance(&orig_type->st_base, result);
 		return NULL;
 	});
-	DeeObject_Init(result, (DeeTypeObject *)orig_type);
+	DeeObject_Init(result, DeeSType_AsType(orig_type));
 
 	/* Handle GC objects (which can appear if the user
 	 * their own creates sub-classes of types from ctypes) */
@@ -651,7 +653,7 @@ done:
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 lvalue_tp_assign(struct lvalue_object *self, DeeObject *other) {
-	return DeeStruct_Assign(((DeeLValueTypeObject *)Dee_TYPE(self))->lt_orig,
+	return DeeStruct_Assign(DeeType_AsLValueType(Dee_TYPE(self))->lt_orig,
 	                        self->l_ptr.ptr, other);
 }
 
@@ -660,7 +662,7 @@ lvalue_getbuf(struct lvalue_object *__restrict self,
               DeeBuffer *__restrict info,
               unsigned int UNUSED(flags)) {
 	info->bb_base = self->l_ptr.ptr;
-	info->bb_size = DeeSType_Sizeof(((DeeLValueTypeObject *)Dee_TYPE(self))->lt_orig);
+	info->bb_size = DeeSType_Sizeof(DeeType_AsLValueType(Dee_TYPE(self))->lt_orig);
 	return 0;
 }
 
@@ -674,13 +676,13 @@ PRIVATE struct type_buffer lvalue_buffer = {
 INTERN DeeLValueTypeObject DeeLValue_Type = {
 	/* .pt_base = */ {
 		/* .st_base = */ {
-			OBJECT_HEAD_INIT((DeeTypeObject *)&DeeLValueType_Type),
+			OBJECT_HEAD_INIT(&DeeLValueType_Type),
 			/* .tp_name     = */ "LValue",
 			/* .tp_doc      = */ NULL,
 			/* .tp_flags    = */ TP_FNORMAL | TP_FVARIABLE | TP_FMOVEANY | TP_FTRUNCATE,
 			/* .tp_weakrefs = */ 0,
 			/* .tp_features = */ TF_NONE,
-			/* .tp_base     = */ (DeeTypeObject *)&DeeStructured_Type,
+			/* .tp_base     = */ DeeSType_AsType(&DeeStructured_Type),
 			/* .tp_init = */ {
 				{
 					/* .tp_var = */ {

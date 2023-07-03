@@ -203,7 +203,7 @@ capi_atomic_cmpxch_val(size_t argc, DeeObject *const *argv) {
 		default: __builtin_unreachable();
 		}
 	}, goto err_result_obj);
-	DeeObject_Init(result_obj, (DeeTypeObject *)basetype);
+	DeeObject_Init(result_obj, DeeSType_AsType(basetype));
 	return result_obj;
 #ifdef CONFIG_HAVE_CTYPES_FAULTPROTECT
 err_result_obj:
@@ -248,7 +248,7 @@ err:
 			default: __builtin_unreachable();                                                             \
 			}                                                                                             \
 		}, goto err_result_obj);                                                                          \
-		DeeObject_Init(result_obj, (DeeTypeObject *)basetype);                                            \
+		DeeObject_Init(result_obj, DeeSType_AsType(basetype));                                            \
 		return result_obj;                                                                                \
 IF_HAVE_FAULTPROTECT(err_result_obj:                                                                      \
 		DeeObject_Free(result_obj);)                                                                      \
@@ -330,7 +330,7 @@ DEFINE_ATOMIC_BINOP_VOID(capi_atomic_write, "atomic_write", atomic_write)
 			default: __builtin_unreachable();                                              \
 			}                                                                              \
 		}, goto err_result_obj);                                                           \
-		DeeObject_Init(result_obj, (DeeTypeObject *)basetype);                             \
+		DeeObject_Init(result_obj, DeeSType_AsType(basetype));                             \
 		return result_obj;                                                                 \
 IF_HAVE_FAULTPROTECT(err_result_obj:                                                       \
 		DeeObject_Free(result_obj);)                                                       \

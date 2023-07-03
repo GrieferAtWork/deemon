@@ -254,20 +254,20 @@ struct lvalue_type_object {
  * (such as C-integer types, or C-style struct/union-declarations). */
 INTDEF DeeTypeObject DeeSType_Type;
 #define DeeSType_Check(ob)         DeeObject_InstanceOf((DeeObject *)(ob), &DeeSType_Type)
+#define DeeSType_AsType(x)         (&(x)->st_base)
 #define DeeSType_Sizeof(x)         ((DeeSTypeObject *)(x))->st_sizeof
 #define DeeSType_Alignof(x)        ((DeeSTypeObject *)(x))->st_align
-#define DeeSType_Base(x)           ((DeeSTypeObject *)DeeType_Base((DeeTypeObject *)(x)))
-#define DeeSType_AsType(x)         (&(x)->st_base)
+#define DeeSType_Base(x)           DeeType_AsSType(DeeType_Base(DeeSType_AsType(x)))
 #define DeeSType_AsObject(x)       ((DeeObject *)&(x)->st_base)
 #define DeeType_AsSType(x)         COMPILER_CONTAINER_OF(x, DeeSTypeObject, st_base)
 #define DeeType_AsPointerType(x)   COMPILER_CONTAINER_OF(x, DeePointerTypeObject, pt_base.st_base)
 #define DeeType_AsLValueType(x)    COMPILER_CONTAINER_OF(x, DeeLValueTypeObject, lt_base.st_base)
 #define DeeSType_AsPointerType(x)  COMPILER_CONTAINER_OF(x, DeePointerTypeObject, pt_base)
 #define DeeSType_AsLValueType(x)   COMPILER_CONTAINER_OF(x, DeeLValueTypeObject, lt_base)
-#define DeePointerType_AsObject(x) ((DeeObject *)&(x)->pt_base.st_base)
+#define DeePointerType_AsObject(x) DeeSType_AsObject(DeePointerType_AsSType(x))
 #define DeePointerType_AsType(x)   (&(x)->pt_base.st_base)
 #define DeePointerType_AsSType(x)  (&(x)->pt_base)
-#define DeeLValueType_AsObject(x)  ((DeeObject *)&(x)->lt_base.st_base)
+#define DeeLValueType_AsObject(x)  DeeSType_AsObject(DeeLValueType_AsSType(x))
 #define DeeLValueType_AsType(x)    (&(x)->lt_base.st_base)
 #define DeeLValueType_AsSType(x)   (&(x)->lt_base)
 
@@ -359,8 +359,8 @@ INTDEF DeeLValueTypeObject DeeLValue_Type;
 #define DeePointer_Check(ob) DeePointerType_Check(Dee_TYPE(ob))
 #define DeeLValue_Check(ob)  DeeLValueType_Check(Dee_TYPE(ob))
 #else
-#define DeePointer_Check(ob) DeeObject_InstanceOf(ob, (DeeTypeObject *)&DeePointer_Type)
-#define DeeLValue_Check(ob)  DeeObject_InstanceOf(ob, (DeeTypeObject *)&DeeLValue_Type)
+#define DeePointer_Check(ob) DeeObject_InstanceOf(ob, DeePointerType_AsType(&DeePointer_Type))
+#define DeeLValue_Check(ob)  DeeObject_InstanceOf(ob, DeeLValueType_AsType(&DeeLValue_Type))
 #endif
 
 /* Interpret `self' as a pointer and store the result in `*result'
@@ -752,7 +752,7 @@ struct array_type_object {
 INTDEF DeeTypeObject DeeArrayType_Type;
 #define DeeArrayType_Check(ob) \
 	DeeObject_InstanceOfExact((DeeObject *)(ob), &DeeArrayType_Type) /* `array_type' is final */
-#define DeeArrayType_AsObject(x) ((DeeObject *)&(x)->at_base.st_base)
+#define DeeArrayType_AsObject(x) DeeSType_AsObject(DeeArrayType_AsSType(x))
 #define DeeArrayType_AsType(x)   (&(x)->at_base.st_base)
 #define DeeArrayType_AsSType(x)  (&(x)->at_base)
 
@@ -824,7 +824,7 @@ struct cfunction_type_object {
 #endif /* !CONFIG_NO_CFUNCTION */
 };
 
-#define DeeCFunctionType_AsObject(x) ((DeeObject *)&(x)->ft_base.st_base)
+#define DeeCFunctionType_AsObject(x) DeeSType_AsObject(DeeCFunctionType_AsSType(x))
 #define DeeCFunctionType_AsType(x)   (&(x)->ft_base.st_base)
 #define DeeCFunctionType_AsSType(x)  (&(x)->ft_base)
 
@@ -892,6 +892,10 @@ struct empty_struct_type_object {
 	struct struct_field st_fvec[1]; /* [1..st_fmsk+1][const] Hash-vector of field names. */
 };
 #endif /* !__INTELLISENSE__ */
+
+#define DeeStructType_AsObject(x) DeeSType_AsObject(DeeStructType_AsSType(x))
+#define DeeStructType_AsType(x)   (&(x)->st_base.st_base)
+#define DeeStructType_AsSType(x)  (&(x)->st_base)
 
 #define STRUCT_TYPE_HASHST(self, hash)  ((hash) & ((DeeStructTypeObject *)(self))->st_fmsk)
 #define STRUCT_TYPE_HASHNX(hs, perturb) (void)((hs) = ((hs) << 2) + (hs) + (perturb) + 1, (perturb) >>= 5) /* This `5' is tunable. */

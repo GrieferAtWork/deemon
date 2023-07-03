@@ -512,11 +512,11 @@ struct_getattr(DeeStructTypeObject *tp_self,
 		result = DeeObject_MALLOC(struct lvalue_object);
 		if unlikely(!result)
 			goto err;
-		DeeObject_Init(result, (DeeTypeObject *)field->sf_type);
+		DeeObject_Init(result, DeeLValueType_AsType(field->sf_type));
 		result->l_ptr.uint = (uintptr_t)self + field->sf_offset;
 		return result;
 	}
-	err_unknown_attribute_with_reason((DeeTypeObject *)tp_self, name, "get");
+	err_unknown_attribute_with_reason(DeeStructType_AsType(tp_self), name, "get");
 err:
 	return NULL;
 }
@@ -545,7 +545,7 @@ struct_delattr(DeeStructTypeObject *tp_self,
 		CTYPES_FAULTPROTECT(bzero(dst, size), return -1);
 		return 0;
 	}
-	return err_unknown_attribute_with_reason((DeeTypeObject *)tp_self, name, "delete");
+	return err_unknown_attribute_with_reason(DeeStructType_AsType(tp_self), name, "delete");
 }
 
 PRIVATE WUNUSED NONNULL((1, 3, 4)) int DCALL
@@ -569,7 +569,7 @@ struct_setattr(DeeStructTypeObject *tp_self,
 		                        (void *)((uintptr_t)self + field->sf_offset),
 		                        value);
 	}
-	return err_unknown_attribute_with_reason((DeeTypeObject *)tp_self, name, "set");
+	return err_unknown_attribute_with_reason(DeeStructType_AsType(tp_self), name, "set");
 }
 
 PRIVATE NONNULL((1, 2)) dssize_t DCALL
@@ -579,11 +579,10 @@ struct_enumattr(DeeStructTypeObject *__restrict self, denum_t proc, void *arg) {
 	for (i = 0; i < self->st_fmsk; ++i) {
 		if (!self->st_fvec[i].sf_name)
 			continue;
-		temp = (*proc)((DeeObject *)self,
-		               DeeString_STR(self->st_fvec[i].sf_name),
-		               NULL,
+		temp = (*proc)(DeeStructType_AsObject(self),
+		               DeeString_STR(self->st_fvec[i].sf_name), NULL,
 		               ATTR_PERMGET | ATTR_PERMDEL | ATTR_PERMSET,
-		               (DeeTypeObject *)self->st_fvec[i].sf_type,
+		               DeeLValueType_AsType(self->st_fvec[i].sf_type),
 		               arg);
 		if unlikely(temp < 0)
 			goto err;
@@ -625,7 +624,7 @@ struct_assign(DeeStructTypeObject *tp_self,
               void *self, DeeObject *value) {
 	size_t fast_size;
 	DREF DeeObject *elem;
-	if (DeeObject_InstanceOfExact(value, (DeeTypeObject *)tp_self)) {
+	if (DeeObject_InstanceOfExact(value, DeeStructType_AsType(tp_self))) {
 		uint8_t *dst, *src;
 		size_t size; /* Copy-assign. */
 		dst  = (uint8_t *)self;
@@ -742,13 +741,13 @@ err:
 INTERN struct empty_struct_type_object DeeStruct_Type = {
 	/* .st_base = */ {
 		/* .st_base = */ {
-			OBJECT_HEAD_INIT((DeeTypeObject *)&DeeStructType_Type),
+			OBJECT_HEAD_INIT(&DeeStructType_Type),
 			/* .tp_name     = */ "Struct",
 			/* .tp_doc      = */ NULL,
 			/* .tp_flags    = */ TP_FNORMAL | TP_FINHERITCTOR | TP_FTRUNCATE | TP_FMOVEANY,
 			/* .tp_weakrefs = */ 0,
 			/* .tp_features = */ TF_NONE,
-			/* .tp_base     = */ (DeeTypeObject *)&DeeStructured_Type,
+			/* .tp_base     = */ DeeSType_AsType(&DeeStructured_Type),
 			/* .tp_init = */ {
 				{
 					/* .tp_alloc = */ {

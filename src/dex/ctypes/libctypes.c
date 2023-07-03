@@ -227,7 +227,7 @@ f_ctypes_sizeof(size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, "o:sizeof", &arg))
 		goto err;
 	if (DeeStruct_Check(arg)) {
-		type = (DeeSTypeObject *)Dee_TYPE(arg);
+		type = DeeType_AsSType(Dee_TYPE(arg));
 	} else {
 		if (DeeBytes_Check(arg))
 			return DeeInt_NewSize(DeeBytes_SIZE(arg));
@@ -236,7 +236,7 @@ f_ctypes_sizeof(size_t argc, DeeObject *const *argv) {
 			goto err;
 	}
 	if (DeeLValueType_Check(type))
-		type = ((DeeLValueTypeObject *)type)->lt_orig;
+		type = DeeSType_AsLValueType(type)->lt_orig;
 	result = DeeSType_Sizeof(type);
 	return DeeInt_NewSize(result);
 err:
@@ -251,14 +251,14 @@ f_ctypes_alignof(size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, "o:alignof", &arg))
 		goto err;
 	if (DeeStruct_Check(arg)) {
-		type = (DeeSTypeObject *)Dee_TYPE(arg);
+		type = DeeType_AsSType(Dee_TYPE(arg));
 	} else {
 		type = DeeSType_Get(arg);
 		if unlikely(!type)
 			goto err;
 	}
 	if (DeeLValueType_Check(type))
-		type = ((DeeLValueTypeObject *)type)->lt_orig;
+		type = DeeSType_AsLValueType(type)->lt_orig;
 	result = DeeSType_Alignof(type);
 	return DeeInt_NewSize(result);
 err:
@@ -349,7 +349,7 @@ f_ctypes_intfor(size_t argc, DeeObject *const *argv) {
 	default: break;
 	}
 	if (result)
-		return_reference_((DeeObject *)result);
+		return_reference_(DeeSType_AsObject(result));
 	DeeError_Throwf(&DeeError_ValueError,
 	                "No C integer type with a width of `%" PRFuSIZ "' bytes exists",
 	                intsize);
@@ -605,12 +605,12 @@ PRIVATE struct dex_symbol symbols[] = {
 	{ "ArrayType", (DeeObject *)&DeeArrayType_Type },
 	{ "StructType", (DeeObject *)&DeeStructType_Type },
 	{ "FunctionType", (DeeObject *)&DeeCFunctionType_Type },
-	{ "Structured", (DeeObject *)&DeeStructured_Type },
-	{ "Pointer", (DeeObject *)&DeePointer_Type },
-	{ "LValue", (DeeObject *)&DeeLValue_Type },
-	{ "Array", (DeeObject *)&DeeArray_Type },
-	{ "Struct", (DeeObject *)&DeeStruct_Type },
-	{ "Function", (DeeObject *)&DeeCFunction_Type },
+	{ "Structured", DeeSType_AsObject(&DeeStructured_Type) },
+	{ "Pointer", DeePointerType_AsObject(&DeePointer_Type) },
+	{ "LValue", DeeLValueType_AsObject(&DeeLValue_Type) },
+	{ "Array", DeeArrayType_AsObject(&DeeArray_Type) },
+	{ "Struct", DeeStructType_AsObject(&DeeStruct_Type) },
+	{ "Function", DeeCFunctionType_AsObject(&DeeCFunction_Type) },
 	{ "struct", (DeeObject *)&ctypes_struct },
 	{ "union", (DeeObject *)&ctypes_union },
 
@@ -643,22 +643,22 @@ PRIVATE struct dex_symbol symbols[] = {
 	{ "dlopen", (DeeObject *)&DeeShlib_Type }, /* Convenience alias for `ShLib' */
 
 	/* Export all the C-types. */
-	{ "void", (DeeObject *)&DeeCVoid_Type },
-	{ "char", (DeeObject *)&DeeCChar_Type },
-	{ "wchar_t", (DeeObject *)&DeeCWChar_Type },
-	{ "char16_t", (DeeObject *)&DeeCChar16_Type },
-	{ "char32_t", (DeeObject *)&DeeCChar32_Type },
-	{ "bool", (DeeObject *)&DeeCBool_Type },
-	{ "int8_t", (DeeObject *)&DeeCInt8_Type },
-	{ "int16_t", (DeeObject *)&DeeCInt16_Type },
-	{ "int32_t", (DeeObject *)&DeeCInt32_Type },
-	{ "int64_t", (DeeObject *)&DeeCInt64_Type },
-	{ "int128_t", (DeeObject *)&DeeCInt128_Type },
-	{ "uint8_t", (DeeObject *)&DeeCUInt8_Type },
-	{ "uint16_t", (DeeObject *)&DeeCUInt16_Type },
-	{ "uint32_t", (DeeObject *)&DeeCUInt32_Type },
-	{ "uint64_t", (DeeObject *)&DeeCUInt64_Type },
-	{ "uint128_t", (DeeObject *)&DeeCUInt128_Type },
+	{ "void", DeeSType_AsObject(&DeeCVoid_Type) },
+	{ "char", DeeSType_AsObject(&DeeCChar_Type) },
+	{ "wchar_t", DeeSType_AsObject(&DeeCWChar_Type) },
+	{ "char16_t", DeeSType_AsObject(&DeeCChar16_Type) },
+	{ "char32_t", DeeSType_AsObject(&DeeCChar32_Type) },
+	{ "bool", DeeSType_AsObject(&DeeCBool_Type) },
+	{ "int8_t", DeeSType_AsObject(&DeeCInt8_Type) },
+	{ "int16_t", DeeSType_AsObject(&DeeCInt16_Type) },
+	{ "int32_t", DeeSType_AsObject(&DeeCInt32_Type) },
+	{ "int64_t", DeeSType_AsObject(&DeeCInt64_Type) },
+	{ "int128_t", DeeSType_AsObject(&DeeCInt128_Type) },
+	{ "uint8_t", DeeSType_AsObject(&DeeCUInt8_Type) },
+	{ "uint16_t", DeeSType_AsObject(&DeeCUInt16_Type) },
+	{ "uint32_t", DeeSType_AsObject(&DeeCUInt32_Type) },
+	{ "uint64_t", DeeSType_AsObject(&DeeCUInt64_Type) },
+	{ "uint128_t", DeeSType_AsObject(&DeeCUInt128_Type) },
 	/* TODO: endian-specific integer types (e.g. `le16' and `be16')
 	 *       These could be used in structures and always encode/decode
 	 *       the underlying value to/from a regular deemon `int' object
@@ -671,26 +671,26 @@ PRIVATE struct dex_symbol symbols[] = {
 	 * >> x = foo(le: 0x12345678);
 	 * >> print x.be; // 0x78563412
 	 */
-	{ "float", (DeeObject *)&DeeCFloat_Type },
-	{ "double", (DeeObject *)&DeeCDouble_Type },
-	{ "ldouble", (DeeObject *)&DeeCLDouble_Type },
-	{ "schar", (DeeObject *)&DeeCSChar_Type },
-	{ "uchar", (DeeObject *)&DeeCUChar_Type },
-	{ "short", (DeeObject *)&DeeCShort_Type },
-	{ "ushort", (DeeObject *)&DeeCUShort_Type },
-	{ "int", (DeeObject *)&DeeCInt_Type },
-	{ "uint", (DeeObject *)&DeeCUInt_Type },
-	{ "long", (DeeObject *)&DeeCLong_Type },
-	{ "ulong", (DeeObject *)&DeeCULong_Type },
-	{ "llong", (DeeObject *)&DeeCLLong_Type },
-	{ "ullong", (DeeObject *)&DeeCULLong_Type },
+	{ "float", DeeSType_AsObject(&DeeCFloat_Type) },
+	{ "double", DeeSType_AsObject(&DeeCDouble_Type) },
+	{ "ldouble", DeeSType_AsObject(&DeeCLDouble_Type) },
+	{ "schar", DeeSType_AsObject(&DeeCSChar_Type) },
+	{ "uchar", DeeSType_AsObject(&DeeCUChar_Type) },
+	{ "short", DeeSType_AsObject(&DeeCShort_Type) },
+	{ "ushort", DeeSType_AsObject(&DeeCUShort_Type) },
+	{ "int", DeeSType_AsObject(&DeeCInt_Type) },
+	{ "uint", DeeSType_AsObject(&DeeCUInt_Type) },
+	{ "long", DeeSType_AsObject(&DeeCLong_Type) },
+	{ "ulong", DeeSType_AsObject(&DeeCULong_Type) },
+	{ "llong", DeeSType_AsObject(&DeeCLLong_Type) },
+	{ "ullong", DeeSType_AsObject(&DeeCULLong_Type) },
 
 	/* Other, platform-specific C-types. */
-	{ "size_t", (DeeObject *)&CUINT_SIZED(__SIZEOF_SIZE_T__) },
-	{ "ssize_t", (DeeObject *)&CINT_SIZED(__SIZEOF_SIZE_T__) },
-	{ "ptrdiff_t", (DeeObject *)&CUINT_SIZED(__SIZEOF_PTRDIFF_T__) },
-	{ "intptr_t", (DeeObject *)&CINT_SIZED(__SIZEOF_POINTER__) },
-	{ "uintptr_t", (DeeObject *)&CUINT_SIZED(__SIZEOF_POINTER__) },
+	{ "size_t", DeeSType_AsObject(&CUINT_SIZED(__SIZEOF_SIZE_T__)) },
+	{ "ssize_t", DeeSType_AsObject(&CINT_SIZED(__SIZEOF_SIZE_T__)) },
+	{ "ptrdiff_t", DeeSType_AsObject(&CUINT_SIZED(__SIZEOF_PTRDIFF_T__)) },
+	{ "intptr_t", DeeSType_AsObject(&CINT_SIZED(__SIZEOF_POINTER__)) },
+	{ "uintptr_t", DeeSType_AsObject(&CUINT_SIZED(__SIZEOF_POINTER__)) },
 
 	/* Export some helper functions */
 	{ "sizeof", (DeeObject *)&ctypes_sizeof, MODSYM_FNORMAL,
@@ -1309,52 +1309,52 @@ libctypes_fini_type(DeeSTypeObject *__restrict self) {
 PRIVATE void DCALL
 libctypes_fini(DeeDexObject *__restrict UNUSED(self)) {
 	/* Clear caches for static C-types, so they don't show up as leaks. */
-	libctypes_fini_type((DeeSTypeObject *)&DeeStructured_Type);
-	libctypes_fini_type((DeeSTypeObject *)&DeePointer_Type);
-	libctypes_fini_type((DeeSTypeObject *)&DeeLValue_Type);
-	libctypes_fini_type((DeeSTypeObject *)&DeeArray_Type);
-	libctypes_fini_type((DeeSTypeObject *)&DeeCFunction_Type);
-	libctypes_fini_type((DeeSTypeObject *)&DeeCVoid_Type);
-	libctypes_fini_type((DeeSTypeObject *)&DeeCChar_Type);
-	libctypes_fini_type((DeeSTypeObject *)&DeeCWChar_Type);
-	libctypes_fini_type((DeeSTypeObject *)&DeeCChar16_Type);
-	libctypes_fini_type((DeeSTypeObject *)&DeeCChar32_Type);
-	libctypes_fini_type((DeeSTypeObject *)&DeeCBool_Type);
-	libctypes_fini_type((DeeSTypeObject *)&DeeCInt8_Type);
-	libctypes_fini_type((DeeSTypeObject *)&DeeCInt16_Type);
-	libctypes_fini_type((DeeSTypeObject *)&DeeCInt32_Type);
-	libctypes_fini_type((DeeSTypeObject *)&DeeCInt64_Type);
-	libctypes_fini_type((DeeSTypeObject *)&DeeCUInt8_Type);
-	libctypes_fini_type((DeeSTypeObject *)&DeeCUInt16_Type);
-	libctypes_fini_type((DeeSTypeObject *)&DeeCUInt32_Type);
-	libctypes_fini_type((DeeSTypeObject *)&DeeCUInt64_Type);
-	libctypes_fini_type((DeeSTypeObject *)&DeeCFloat_Type);
-	libctypes_fini_type((DeeSTypeObject *)&DeeCDouble_Type);
-	libctypes_fini_type((DeeSTypeObject *)&DeeCLDouble_Type);
+	libctypes_fini_type(&DeeStructured_Type);
+	libctypes_fini_type(DeePointerType_AsSType(&DeePointer_Type));
+	libctypes_fini_type(DeeLValueType_AsSType(&DeeLValue_Type));
+	libctypes_fini_type(DeeArrayType_AsSType(&DeeArray_Type));
+	libctypes_fini_type(DeeCFunctionType_AsSType(&DeeCFunction_Type));
+	libctypes_fini_type(&DeeCVoid_Type);
+	libctypes_fini_type(&DeeCChar_Type);
+	libctypes_fini_type(&DeeCWChar_Type);
+	libctypes_fini_type(&DeeCChar16_Type);
+	libctypes_fini_type(&DeeCChar32_Type);
+	libctypes_fini_type(&DeeCBool_Type);
+	libctypes_fini_type(&DeeCInt8_Type);
+	libctypes_fini_type(&DeeCInt16_Type);
+	libctypes_fini_type(&DeeCInt32_Type);
+	libctypes_fini_type(&DeeCInt64_Type);
+	libctypes_fini_type(&DeeCUInt8_Type);
+	libctypes_fini_type(&DeeCUInt16_Type);
+	libctypes_fini_type(&DeeCUInt32_Type);
+	libctypes_fini_type(&DeeCUInt64_Type);
+	libctypes_fini_type(&DeeCFloat_Type);
+	libctypes_fini_type(&DeeCDouble_Type);
+	libctypes_fini_type(&DeeCLDouble_Type);
 
 #ifdef CONFIG_SUCHAR_NEEDS_OWN_TYPE
-	libctypes_fini_type((DeeSTypeObject *)&DeeCSChar_Type);
-	libctypes_fini_type((DeeSTypeObject *)&DeeCUChar_Type);
+	libctypes_fini_type(&DeeCSChar_Type);
+	libctypes_fini_type(&DeeCUChar_Type);
 #endif /* CONFIG_SUCHAR_NEEDS_OWN_TYPE */
 
 #ifdef CONFIG_SHORT_NEEDS_OWN_TYPE
-	libctypes_fini_type((DeeSTypeObject *)&DeeCShort_Type);
-	libctypes_fini_type((DeeSTypeObject *)&DeeCUShort_Type);
+	libctypes_fini_type(&DeeCShort_Type);
+	libctypes_fini_type(&DeeCUShort_Type);
 #endif /* CONFIG_SHORT_NEEDS_OWN_TYPE */
 
 #ifdef CONFIG_INT_NEEDS_OWN_TYPE
-	libctypes_fini_type((DeeSTypeObject *)&DeeCInt_Type);
-	libctypes_fini_type((DeeSTypeObject *)&DeeCUInt_Type);
+	libctypes_fini_type(&DeeCInt_Type);
+	libctypes_fini_type(&DeeCUInt_Type);
 #endif /* CONFIG_INT_NEEDS_OWN_TYPE */
 
 #ifdef CONFIG_LONG_NEEDS_OWN_TYPE
-	libctypes_fini_type((DeeSTypeObject *)&DeeCLong_Type);
-	libctypes_fini_type((DeeSTypeObject *)&DeeCULong_Type);
+	libctypes_fini_type(&DeeCLong_Type);
+	libctypes_fini_type(&DeeCULong_Type);
 #endif /* CONFIG_LONG_NEEDS_OWN_TYPE */
 
 #ifdef CONFIG_LLONG_NEEDS_OWN_TYPE
-	libctypes_fini_type((DeeSTypeObject *)&DeeCLLong_Type);
-	libctypes_fini_type((DeeSTypeObject *)&DeeCULLong_Type);
+	libctypes_fini_type(&DeeCLLong_Type);
+	libctypes_fini_type(&DeeCULLong_Type);
 #endif /* CONFIG_LLONG_NEEDS_OWN_TYPE */
 }
 #endif /* !NDEBUG */

@@ -27,6 +27,7 @@
 #include <deemon/alloc.h>
 #include <deemon/bool.h>
 #include <deemon/bytes.h>
+#include <deemon/callable.h>
 #include <deemon/error.h>
 #include <deemon/float.h>
 #include <deemon/format.h>
@@ -180,11 +181,18 @@ cc_lookup(char const *__restrict name) {
 }
 
 
+PRIVATE DeeTypeObject *tpconst function_mro[] = {
+	DeeSType_AsType(&DeeStructured_Type),
+	&DeeCallable_Type,
+	&DeeObject_Type,
+	NULL
+};
+
 
 INTERN DeeCFunctionTypeObject DeeCFunction_Type = {
 	/* .ft_base = */ {
 		/* .st_base = */ {
-			OBJECT_HEAD_INIT((DeeTypeObject *)&DeeCFunctionType_Type),
+			OBJECT_HEAD_INIT(&DeeCFunctionType_Type),
 			/* .tp_name     = */ "Function",
 			/* .tp_doc      = */ NULL,
 			/* Don't inherit constructors, because this type cannot be constructed.
@@ -192,7 +200,7 @@ INTERN DeeCFunctionTypeObject DeeCFunction_Type = {
 			/* .tp_flags    = */ TP_FNORMAL /*|TP_FINHERITCTOR*/ | TP_FTRUNCATE | TP_FMOVEANY,
 			/* .tp_weakrefs = */ 0,
 			/* .tp_features = */ TF_NONE,
-			/* .tp_base     = */ (DeeTypeObject *)&DeeStructured_Type,
+			/* .tp_base     = */ DeeSType_AsType(&DeeStructured_Type),
 			/* .tp_init = */ {
 				{
 					/* .tp_alloc = */ {
@@ -227,7 +235,9 @@ INTERN DeeCFunctionTypeObject DeeCFunction_Type = {
 			/* .tp_members       = */ NULL,
 			/* .tp_class_methods = */ NULL,
 			/* .tp_class_getsets = */ NULL,
-			/* .tp_class_members = */ NULL
+			/* .tp_class_members = */ NULL,
+			/* .tp_call_kw       = */ NULL,
+			/* .tp_mro           = */ function_mro
 		},
 #ifndef CONFIG_NO_THREADS
 		/* .st_cachelock = */ DEE_ATOMIC_RWLOCK_INIT,
@@ -376,7 +386,7 @@ cfunctiontype_new(DeeSTypeObject *__restrict return_type,
 	result->ft_base.st_base.tp_init.tp_alloc.tp_instance_size = sizeof(DeeObject);
 	result->ft_base.st_base.tp_name  = DeeString_STR(name); /* Inherit reference. */
 	result->ft_base.st_base.tp_flags = TP_FTRUNCATE | TP_FINHERITCTOR | TP_FNAMEOBJECT | TP_FHEAP | TP_FMOVEANY;
-	result->ft_base.st_base.tp_base  = &DeeCFunction_Type.ft_base.st_base; /* Inherit reference. */
+	result->ft_base.st_base.tp_base  = DeeCFunctionType_AsType(&DeeCFunction_Type); /* Inherit reference. */
 	result->ft_hash                  = function_hash;
 	result->ft_argc                  = argc;
 	result->ft_argv                  = argv_copy; /* Inherit */
@@ -499,7 +509,7 @@ again:
 PRIVATE WUNUSED NONNULL((1)) dhash_t DCALL
 cfunction_hashof(DeeSTypeObject *__restrict return_type,
                  ctypes_cc_t calling_convention, size_t argc,
-                 DeeSTypeObject **__restrict argv) {
+                 DeeSTypeObject *const *argv) {
 	dhash_t result;
 	size_t i;
 	result = Dee_HashPointer(return_type) ^ (dhash_t)calling_convention ^ (dhash_t)argc;
@@ -512,7 +522,7 @@ PRIVATE bool DCALL
 cfunction_equals(DeeCFunctionTypeObject *__restrict self,
                  DeeSTypeObject *__restrict return_type,
                  ctypes_cc_t calling_convention, size_t argc,
-                 DeeSTypeObject **__restrict argv) {
+                 DeeSTypeObject *const *argv) {
 	size_t i;
 	if (self->ft_orig != return_type)
 		goto nope;

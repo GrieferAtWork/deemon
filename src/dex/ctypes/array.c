@@ -769,7 +769,7 @@ arraytype_new(DeeSTypeObject *__restrict item_type,
 
 	/* Finalize the array type. */
 	DeeObject_Init(DeeArrayType_AsType(result), &DeeArrayType_Type);
-	DeeGC_Track((DeeObject *)DeeArrayType_AsType(result));
+	DeeGC_Track(DeeArrayType_AsObject(result));
 done:
 	return result;
 err_r:
@@ -780,9 +780,7 @@ err_r:
 INTERN NONNULL((1)) bool DCALL
 stype_array_rehash(DeeSTypeObject *__restrict self,
                    size_t new_mask) {
-	struct array_type_list *new_map, *dst;
-	struct array_type_list *biter, *bend;
-	DeeArrayTypeObject *iter, *next;
+	struct array_type_list *new_map;
 again:
 	new_map = (struct array_type_list *)Dee_TryCallocc(new_mask + 1,
 	                                                   sizeof(struct array_type_list));
@@ -797,11 +795,14 @@ again:
 
 	/* Do the re-hash. */
 	if (self->st_array.sa_size) {
+		struct array_type_list *biter, *bend;
 		ASSERT(self->st_array.sa_list);
 		bend = (biter = self->st_array.sa_list) + (self->st_array.sa_mask + 1);
 		for (; biter < bend; ++biter) {
+			DeeArrayTypeObject *iter, *next;
 			iter = LIST_FIRST(biter);
 			while (iter) {
+				struct array_type_list *dst;
 				next = LIST_NEXT(iter, at_chain);
 				dst  = &new_map[iter->at_count & new_mask];
 				/* Insert the entry into the new hash-map. */
@@ -823,7 +824,7 @@ again:
 INTDEF WUNUSED NONNULL((1)) DREF DeeArrayTypeObject *DCALL
 DeeSType_Array(DeeSTypeObject *__restrict self,
                size_t num_items) {
-	DREF DeeArrayTypeObject *result, *new_result;
+	DREF DeeArrayTypeObject *result;
 	DREF struct array_type_list *bucket;
 	ASSERT_OBJECT_TYPE(DeeSType_AsType(self), &DeeSType_Type);
 	DeeSType_CacheLockRead(self);
@@ -853,6 +854,7 @@ register_type:
 	ASSERT(!self->st_array.sa_size ||
 	       self->st_array.sa_mask);
 	if (self->st_array.sa_size) {
+		DREF DeeArrayTypeObject *new_result;
 		new_result = LIST_FIRST(&self->st_array.sa_list[num_items & self->st_array.sa_mask]);
 		while (new_result && new_result->at_count != num_items)
 			new_result = LIST_NEXT(new_result, at_chain);

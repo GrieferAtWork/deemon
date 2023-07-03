@@ -114,9 +114,9 @@ F(pointer_sub)(DeePointerTypeObject *tp_self,
 	CTYPES_FAULTPROTECT(value.ptr = self->ptr,
 	                    goto err);
 	if (DeePointer_Check(some_object)) {
-		if (((DeePointerTypeObject *)Dee_TYPE(some_object))->pt_orig !=
+		if (DeeType_AsPointerType(Dee_TYPE(some_object))->pt_orig !=
 		    tp_self->pt_orig) {
-			DeeObject_TypeAssertFailed(some_object, (DeeTypeObject *)tp_self);
+			DeeObject_TypeAssertFailed(some_object, DeePointerType_AsType(tp_self));
 			goto err;
 		}
 		value.uint -= ((struct pointer_object *)some_object)->p_ptr.uint;
@@ -224,7 +224,7 @@ F(pointer_getitem)(DeePointerTypeObject *tp_self, union pointer *self,
 		goto err_r;
 
 	/* Initialize the new l-value object. */
-	DeeObject_InitNoref(result, (DeeTypeObject *)type);
+	DeeObject_InitNoref(result, DeeLValueType_AsType(type));
 	CTYPES_FAULTPROTECT(result->l_ptr.ptr = (__BYTE_TYPE__ *)self->ptr + index,
 	                    goto err_r);
 done:

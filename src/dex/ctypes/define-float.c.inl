@@ -104,7 +104,7 @@ float_newdouble(CONFIG_CTYPES_DOUBLE_TYPE val) {
 	result = DeeObject_MALLOC(Float_double_object);
 	if unlikely(!result)
 		goto done;
-	DeeObject_Init(result, (DeeTypeObject *)&DeeCDouble_Type);
+	DeeObject_Init(result, DeeSType_AsType(&DeeCDouble_Type));
 	result->f_value = val;
 done:
 	return (DREF DeeObject *)result;
@@ -119,7 +119,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL F(fltnew)(T val) {
 	result = DeeObject_MALLOC(X(Float));
 	if unlikely(!result)
 		goto done;
-	DeeObject_Init(result, (DeeTypeObject *)&TYPE_NAME);
+	DeeObject_Init(result, DeeSType_AsType(&TYPE_NAME));
 	result->f_value = val;
 done:
 	return (DREF DeeObject *)result;
@@ -413,7 +413,7 @@ PRIVATE struct stype_cmp tpconst F(floatcmp) = {
 
 INTERN DeeSTypeObject TYPE_NAME = {
 	/* .st_base = */ {
-		OBJECT_HEAD_INIT((DeeTypeObject *)&DeeSType_Type),
+		OBJECT_HEAD_INIT(&DeeSType_Type),
 #ifdef NAME
 		/* .tp_name     = */ NAME,
 #else /* NAME */
@@ -423,7 +423,7 @@ INTERN DeeSTypeObject TYPE_NAME = {
 		/* .tp_flags    = */ TP_FNORMAL | TP_FTRUNCATE | TP_FINHERITCTOR,
 		/* .tp_weakrefs = */ 0,
 		/* .tp_features = */ TF_NONE,
-		/* .tp_base     = */ (DeeTypeObject *)&DeeStructured_Type,
+		/* .tp_base     = */ DeeSType_AsType(&DeeStructured_Type),
 		/* .tp_init = */ {
 			{
 				/* .tp_alloc = */ {

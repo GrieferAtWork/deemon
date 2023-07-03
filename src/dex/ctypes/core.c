@@ -72,8 +72,8 @@ DeeObject_AsPointer(DeeObject *self,
 	/* Emit a type-assertion error. */
 	pointer_type = DeeSType_Pointer(pointer_base);
 	if (pointer_type) {
-		DeeObject_TypeAssertFailed(self, (DeeTypeObject *)pointer_type);
-		Dee_Decref((DeeObject *)pointer_type);
+		DeeObject_TypeAssertFailed(self, DeePointerType_AsType(pointer_type));
+		Dee_Decref(DeePointerType_AsType(pointer_type));
 	}
 	return -1;
 }
@@ -194,7 +194,7 @@ DeeObject_AsGenericPointer(DeeObject *self,
 	error = DeeObject_TryAsGenericPointer(self, p_pointer_base, result);
 	if (error <= 0)
 		return error;
-	return DeeObject_TypeAssertFailed(self, (DeeTypeObject *)&DeePointer_Type);
+	return DeeObject_TypeAssertFailed(self, DeePointerType_AsType(&DeePointer_Type));
 }
 
 /* Similar to `DeeObject_TryAsPointer()', but fills in `*p_pointer_base' with the
@@ -690,7 +690,7 @@ pointertype_new(DeeSTypeObject *__restrict self) {
 
 	/* Finish the pointer type. */
 	DeeObject_Init(DeePointerType_AsType(result), &DeePointerType_Type);
-	DeeGC_Track((DeeObject *)DeePointerType_AsType(result));
+	DeeGC_Track(DeePointerType_AsObject(result));
 done:
 	return result;
 err_r:
@@ -734,7 +734,7 @@ lvaluetype_new(DeeSTypeObject *__restrict self) {
 
 	/* Finish the lvalue type. */
 	DeeObject_Init(DeeLValueType_AsType(result), &DeeLValueType_Type);
-	DeeGC_Track((DeeObject *)DeeLValueType_AsType(result));
+	DeeGC_Track(DeeLValueType_AsObject(result));
 done:
 	return result;
 err_r:
@@ -1154,7 +1154,7 @@ PRIVATE struct type_method tpconst struct_methods[] = {
  * to forward them to their structured counterparts! */
 INTERN DeeSTypeObject DeeStructured_Type = {
 	/* .st_base = */ {
-		OBJECT_HEAD_INIT((DeeTypeObject *)&DeeSType_Type),
+		OBJECT_HEAD_INIT(&DeeSType_Type),
 		/* .tp_name     = */ "Structured",
 		/* .tp_doc      = */ NULL,
 		/* .tp_flags    = */ TP_FNORMAL | TP_FTRUNCATE | TP_FMOVEANY,
@@ -1233,12 +1233,12 @@ INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeObject_Ref(DeeObject *__restrict self) {
 	DREF struct pointer_object *result;
 	DREF DeePointerTypeObject *tp_result;
-	if (DeeObject_AssertType(self, (DeeTypeObject *)&DeeStructured_Type))
+	if (DeeObject_AssertType(self, DeeSType_AsType(&DeeStructured_Type)))
 		goto err;
 	if (DeeLValue_Check(self)) {
 		/* Special case: Must reference the data originally designated through the l-value. */
 		/* Lookup the required pointer type. */
-		tp_result = DeeSType_Pointer(((DeeLValueTypeObject *)Dee_TYPE(self))->lt_orig);
+		tp_result = DeeSType_Pointer(DeeType_AsLValueType(Dee_TYPE(self))->lt_orig);
 		if unlikely(!tp_result)
 			goto err;
 
@@ -1246,7 +1246,7 @@ DeeObject_Ref(DeeObject *__restrict self) {
 		result = (DREF struct pointer_object *)DeeObject_MALLOC(struct pointer_object);
 		if unlikely(!result)
 			goto err_tpres;
-		DeeObject_InitNoref(result, (DeeTypeObject *)tp_result); /* Inherit reference: result_type */
+		DeeObject_InitNoref(result, DeePointerType_AsType(tp_result)); /* Inherit reference: result_type */
 
 		/* Copy the l-value pointer into the regular pointer. */
 		result->p_ptr.ptr = ((struct lvalue_object *)self)->l_ptr.ptr;
@@ -1262,7 +1262,7 @@ DeeObject_Ref(DeeObject *__restrict self) {
 	result = (DREF struct pointer_object *)DeeObject_MALLOC(struct pointer_object);
 	if unlikely(!result)
 		goto err_tpres;
-	DeeObject_InitNoref(result, (DeeTypeObject *)tp_result); /* Inherit reference: result_type */
+	DeeObject_InitNoref(result, DeePointerType_AsType(tp_result)); /* Inherit reference: result_type */
 	result->p_ptr.ptr = DeeStruct_Data(self);
 done:
 	return (DREF DeeObject *)result;
@@ -1278,19 +1278,19 @@ DeeObject_Deref(DeeObject *__restrict self) {
 	DREF DeeLValueTypeObject *tp_result;
 	if (DeePointer_Check(self)) {
 		/* Regular pointer. */
-		tp_result = DeeSType_LValue(((DeePointerTypeObject *)Dee_TYPE(self))->pt_orig);
+		tp_result = DeeSType_LValue(DeeType_AsPointerType(Dee_TYPE(self))->pt_orig);
 		if unlikely(!tp_result)
 			goto err;
 		result = DeeObject_MALLOC(struct lvalue_object);
 		if unlikely(!result)
 			goto err_tpres;
-		DeeObject_InitNoref(result, (DeeTypeObject *)tp_result); /* Inherit reference: result_type */
+		DeeObject_InitNoref(result, DeeLValueType_AsType(tp_result)); /* Inherit reference: result_type */
 		result->l_ptr.ptr = ((struct pointer_object *)self)->p_ptr.ptr;
 		return (DREF DeeObject *)result;
 	}
 	if (DeeLValue_Check(self)) {
 		DREF DeePointerTypeObject *tp_base;
-		tp_base = (DeePointerTypeObject *)((DeeLValueTypeObject *)Dee_TYPE(self))->lt_orig;
+		tp_base = DeeSType_AsPointerType(DeeType_AsLValueType(Dee_TYPE(self))->lt_orig);
 		if (DeePointerType_Check(tp_base)) {
 			/* LValue-to-pointer. */
 			tp_result = DeeSType_LValue(tp_base->pt_orig);
@@ -1299,7 +1299,7 @@ DeeObject_Deref(DeeObject *__restrict self) {
 			result = DeeObject_MALLOC(struct lvalue_object);
 			if unlikely(!result)
 				goto err_tpres;
-			DeeObject_InitNoref(result, (DeeTypeObject *)tp_result); /* Inherit reference: result_type */
+			DeeObject_InitNoref(result, DeeLValueType_AsType(tp_result)); /* Inherit reference: result_type */
 			/* Dereference this pointer. */
 			CTYPES_FAULTPROTECT(result->l_ptr.ptr = *(void **)((struct lvalue_object *)self)->l_ptr.ptr,
 			                    goto err_tpres_r);
@@ -1307,7 +1307,7 @@ DeeObject_Deref(DeeObject *__restrict self) {
 		}
 	}
 	/* Throw an error. */
-	DeeObject_TypeAssertFailed(self, (DeeTypeObject *)&DeePointer_Type);
+	DeeObject_TypeAssertFailed(self, DeePointerType_AsType(&DeePointer_Type));
 err:
 	return NULL;
 #ifdef CONFIG_HAVE_CTYPES_FAULTPROTECT
@@ -1315,7 +1315,7 @@ err_tpres_r:
 	DeeObject_FREE(result);
 #endif /* CONFIG_HAVE_CTYPES_FAULTPROTECT */
 err_tpres:
-	Dee_Decref((DeeObject *)tp_result);
+	Dee_Decref(DeeLValueType_AsObject(tp_result));
 	goto err;
 }
 
@@ -1329,7 +1329,7 @@ DeePointer_New(DeePointerTypeObject *pointer_type,
 	if unlikely(!result)
 		goto done;
 	/* Initialize the new pointer object. */
-	DeeObject_Init(result, (DeeTypeObject *)pointer_type);
+	DeeObject_Init(result, DeePointerType_AsType(pointer_type));
 	result->p_ptr.ptr = pointer_value;
 done:
 	return (DREF DeeObject *)result;
@@ -1344,7 +1344,7 @@ DeePointer_NewFor(DeeSTypeObject *pointer_type,
 	if unlikely(!ptr_type)
 		goto err;
 	result = DeePointer_New(ptr_type, pointer_value);
-	Dee_Decref((DeeObject *)ptr_type);
+	Dee_Decref(DeePointerType_AsObject(ptr_type));
 	return result;
 err:
 	return NULL;
@@ -1361,7 +1361,7 @@ DeeStruct_Assign(DeeSTypeObject *tp_self,
 			return (*tp_self->st_assign)(orig_type, self, value);
 	} while ((tp_self = DeeSType_Base(tp_self)) != NULL &&
 	         DeeSType_Check(tp_self));
-	if (DeeObject_InstanceOf(value, (DeeTypeObject *)orig_type)) {
+	if (DeeObject_InstanceOf(value, DeeSType_AsType(orig_type))) {
 		uint8_t *dst, *src;
 		size_t size; /* Copy-assign. */
 		dst  = (uint8_t *)self;
@@ -1827,7 +1827,7 @@ atype_fini(DeeArrayTypeObject *__restrict self) {
 	ASSERT(LIST_ISBOUND(self, at_chain));
 	LIST_REMOVE(self, at_chain);
 	DeeSType_CacheLockEndWrite(orig);
-	Dee_Decref((DeeObject *)orig);
+	Dee_Decref(DeeSType_AsObject(orig));
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -1904,26 +1904,23 @@ INTERN ATTR_COLD void DCALL err_no_cfunction(void) {
 #ifndef CONFIG_NO_CFUNCTION
 PRIVATE NONNULL((1)) void DCALL
 ftype_fini(DeeCFunctionTypeObject *__restrict self) {
-	size_t i;
 	DeeSTypeObject *orig = self->ft_orig;
 	/* Delete the weak-link to the original type. */
 	DeeSType_CacheLockWrite(orig);
 	ASSERT(LIST_ISBOUND(self, ft_chain));
 	LIST_REMOVE(self, ft_chain);
 	DeeSType_CacheLockEndWrite(orig);
+
 	Dee_Decref(DeeSType_AsType(orig));
-	for (i = 0; i < self->ft_argc; ++i)
-		Dee_Decref(DeeSType_AsType(self->ft_argv[i]));
+	Dee_Decrefv((DeeObject **)self->ft_argv, self->ft_argc);
 	Dee_Free(self->ft_argv);
 	Dee_Free(self->ft_ffi_arg_type_v);
 }
 
 PRIVATE NONNULL((1, 2)) void DCALL
 ftype_visit(DeeCFunctionTypeObject *__restrict self, dvisit_t proc, void *arg) {
-	size_t i;
 	Dee_Visit(DeeSType_AsType(self->ft_orig));
-	for (i = 0; i < self->ft_argc; ++i)
-		Dee_Visit(DeeSType_AsType(self->ft_argv[i]));
+	Dee_Visitv((DeeObject **)self->ft_argv, self->ft_argc);
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL

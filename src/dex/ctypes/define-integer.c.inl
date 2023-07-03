@@ -433,7 +433,7 @@ INTERN WUNUSED DREF DeeObject *DCALL int_newint(CTYPES_INT val) {
 	result = DeeObject_MALLOC(Integer_int_object);
 	if unlikely(!result)
 		goto done;
-	DeeObject_Init(result, (DeeTypeObject *)&DeeCInt_Type);
+	DeeObject_Init(result, DeeSType_AsType(&DeeCInt_Type));
 	result->i_value = val;
 done:
 	return (DREF DeeObject *)result;
@@ -446,7 +446,7 @@ INTERN WUNUSED DREF DeeObject *DCALL F(int_new)(T val) {
 	result = DeeObject_MALLOC(X(Integer));
 	if unlikely(!result)
 		goto done;
-	DeeObject_Init(result, (DeeTypeObject *)&TYPE_NAME);
+	DeeObject_Init(result, DeeSType_AsType(&TYPE_NAME));
 	result->i_value = val;
 done:
 	return (DREF DeeObject *)result;
@@ -460,7 +460,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL F(int_new_)(T val) {
 	result = DeeObject_MALLOC(X(Integer));
 	if unlikely(!result)
 		goto done;
-	DeeObject_Init(result, (DeeTypeObject *)&TYPE_NAME);
+	DeeObject_Init(result, DeeSType_AsType(&TYPE_NAME));
 	result->i_value = val;
 done:
 	return (DREF DeeObject *)result;
@@ -1214,7 +1214,7 @@ PRIVATE struct stype_cmp tpconst F(intcmp) = {
 
 
 PRIVATE X(Integer) X(int_min) = {
-	OBJECT_HEAD_INIT((DeeTypeObject *)&TYPE_NAME),
+	OBJECT_HEAD_INIT(DeeSType_AsType(&TYPE_NAME)),
 #ifdef SIGNED
 #if SIZEOF == 1
 	INT8_MIN
@@ -1239,7 +1239,7 @@ PRIVATE X(Integer) X(int_min) = {
 };
 
 PRIVATE X(Integer) X(int_max) = {
-	OBJECT_HEAD_INIT((DeeTypeObject *)&TYPE_NAME),
+	OBJECT_HEAD_INIT(DeeSType_AsType(&TYPE_NAME)),
 #ifdef SIGNED
 #if SIZEOF == 1
 	INT8_MAX
@@ -1275,8 +1275,8 @@ PRIVATE X(Integer) X(int_max) = {
 
 PRIVATE struct type_member tpconst X(int_class_members)[] = {
 #if !defined(NO_SIGNED_TYPE_NAME) && !defined(NO_UNSIGNED_TYPE_NAME)
-	TYPE_MEMBER_CONST("signed", (DeeObject *)&SIGNED_TYPE_NAME),
-	TYPE_MEMBER_CONST("unsigned", (DeeObject *)&UNSIGNED_TYPE_NAME),
+	TYPE_MEMBER_CONST("signed", DeeSType_AsType(&SIGNED_TYPE_NAME)),
+	TYPE_MEMBER_CONST("unsigned", DeeSType_AsType(&UNSIGNED_TYPE_NAME)),
 #endif /* !NO_SIGNED_TYPE_NAME && !NO_UNSIGNED_TYPE_NAME */
 	TYPE_MEMBER_CONST("min", &X(int_min)),
 	TYPE_MEMBER_CONST("max", &X(int_max)),
@@ -1286,7 +1286,7 @@ PRIVATE struct type_member tpconst X(int_class_members)[] = {
 
 INTERN DeeSTypeObject TYPE_NAME = {
 	/* .st_base = */ {
-		OBJECT_HEAD_INIT((DeeTypeObject *)&DeeSType_Type),
+		OBJECT_HEAD_INIT(&DeeSType_Type),
 #ifdef NAME
 		/* .tp_name     = */ NAME,
 #else /* NAME */
@@ -1296,7 +1296,7 @@ INTERN DeeSTypeObject TYPE_NAME = {
 		/* .tp_flags    = */ TP_FNORMAL | TP_FTRUNCATE | TP_FINHERITCTOR,
 		/* .tp_weakrefs = */ 0,
 		/* .tp_features = */ TF_NONE,
-		/* .tp_base     = */ (DeeTypeObject *)&DeeStructured_Type,
+		/* .tp_base     = */ DeeSType_AsType(&DeeStructured_Type),
 		/* .tp_init = */ {
 			{
 				/* .tp_alloc = */ {

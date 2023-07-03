@@ -49,10 +49,10 @@ DECL_BEGIN
 
 /* MRO vector for built-in C numeric types defined by `ctypes'. */
 PRIVATE DeeTypeObject *tpconst ctypes_numeric_mro[] = {
-	(DeeTypeObject *)&DeeStructured_Type,
-	(DeeTypeObject *)&DeeNumeric_Type,
-	(DeeTypeObject *)&DeeObject_Type,
-	(DeeTypeObject *)NULL
+	DeeSType_AsType(&DeeStructured_Type),
+	&DeeNumeric_Type,
+	&DeeObject_Type,
+	NULL
 };
 
 DECL_END
@@ -330,13 +330,13 @@ void_init(DeeSTypeObject *__restrict UNUSED(tp_self),
 
 INTERN DeeSTypeObject DeeCVoid_Type = {
 	/* .st_base = */ {
-		OBJECT_HEAD_INIT((DeeTypeObject *)&DeeSType_Type),
+		OBJECT_HEAD_INIT(&DeeSType_Type),
 		/* .tp_name     = */ DeeString_STR(&str_void),
 		/* .tp_doc      = */ NULL,
 		/* .tp_flags    = */ TP_FNORMAL | TP_FTRUNCATE | TP_FNAMEOBJECT | TP_FINHERITCTOR,
 		/* .tp_weakrefs = */ 0,
 		/* .tp_features = */ TF_NONE,
-		/* .tp_base     = */ (DeeTypeObject *)&DeeStructured_Type,
+		/* .tp_base     = */ DeeSType_AsType(&DeeStructured_Type),
 		/* .tp_init = */ {
 			{
 				/* .tp_alloc = */ {

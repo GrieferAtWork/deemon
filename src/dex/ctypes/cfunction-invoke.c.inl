@@ -172,21 +172,20 @@ cfunction_call(DeeCFunctionTypeObject *__restrict tp_self,
 				break;
 
 			case FFI_TYPE_STRUCT:
-				if (DeeObject_AssertType(arg, (DeeTypeObject *)argt))
+				if (DeeObject_AssertType(arg, DeeSType_AsType(argt)))
 					goto err_wbuf;
 				iter->p = DeeStruct_Data(arg);
 				break;
 
 			case FFI_TYPE_POINTER: {
-				DeeSTypeObject *arg_type;
-				arg_type = argt;
+				DeeSTypeObject *arg_type = argt;
 				if (DeeLValueType_Check(arg_type)) {
-					if (DeeObject_AssertTypeExact(arg, (DeeTypeObject *)arg_type))
+					if (DeeObject_AssertTypeExact(arg, DeeSType_AsType(arg_type)))
 						goto err_wbuf;
 					iter->p = ((struct lvalue_object *)arg)->l_ptr.ptr;
 				} else {
 					ASSERT(DeePointerType_Check(arg_type));
-					if (DeeObject_AsPointer(arg, ((DeePointerTypeObject *)arg_type)->pt_orig,
+					if (DeeObject_AsPointer(arg, DeeSType_AsPointerType(arg_type)->pt_orig,
 					                        (union pointer *)&iter->p))
 						goto err_wbuf;
 				}
@@ -234,8 +233,8 @@ cfunction_call(DeeCFunctionTypeObject *__restrict tp_self,
 				*argp_iter        = (void *)iter;
 			} else if (DeeLValueType_Check(dee_va_type)) {
 				/* Lvalue argument --> cast to lvalue-base */
-				dee_va_type       = (DeeTypeObject *)((DeeLValueTypeObject *)dee_va_type)->lt_orig;
-				*dee_va_ffi_types = stype_ffitype((DeeSTypeObject *)dee_va_type);
+				dee_va_type       = DeeSType_AsType(DeeType_AsLValueType(dee_va_type)->lt_orig);
+				*dee_va_ffi_types = stype_ffitype(DeeType_AsSType(dee_va_type));
 				*argp_iter        = ((struct lvalue_object *)dee_va_arg)->l_ptr.ptr;
 			} else if (dee_va_type == &DeeNone_Type) {
 				/* none --> NULL pointer */
@@ -287,7 +286,7 @@ cfunction_call(DeeCFunctionTypeObject *__restrict tp_self,
 				/* Fallback: Any structured object. */
 				if (DeeObject_AssertType(dee_va_type, &DeeSType_Type))
 					goto err_wbuf;
-				*dee_va_ffi_types = stype_ffitype((DeeSTypeObject *)dee_va_type);
+				*dee_va_ffi_types = stype_ffitype(DeeType_AsSType(dee_va_type));
 				if unlikely(!*dee_va_ffi_types)
 					goto err_wbuf;
 				/* Prefer hard copies */
@@ -377,7 +376,7 @@ def_var_data:
 			goto done_wbuf;
 
 		/* Construct a new structured type that is returned as result. */
-		DeeObject_Init(result, (DeeTypeObject *)orig_type);
+		DeeObject_Init(result, DeeSType_AsType(orig_type));
 		memcpy(DeeStruct_Data(result), ret_mem, DeeSType_Sizeof(orig_type));
 	}
 #undef ret_mem
