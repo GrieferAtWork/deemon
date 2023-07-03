@@ -435,7 +435,7 @@ DEF_WARNING(W_EXPECTED_RPAREN_AFTER_SUPER_INIT, (WG_SYNTAX), WSTATE_ERROR, WARNF
 DEF_WARNING(W_EXPECTED_LPAREN_OR_EQUAL_IN_CONSTRUCTOR_INIT, (WG_SYNTAX), WSTATE_ERROR, WARNF("Expected `(' or `=' after member name in constructor initializer list, but got " TOK_S, TOK_A))
 DEF_WARNING(W_EXPECTED_RPAREN_CONSTRUCTOR_INIT, (WG_SYNTAX), WSTATE_ERROR, WARNF("Expected `)' after initializer expression in constructor initializer list, but got " TOK_S, TOK_A))
 DEF_WARNING(W_AMBIGUOUS_OPERATOR_ASSIGNMENT, (WG_SYNTAX), WSTATE_ERROR, WARNF("Cannot assign callback to ambiguous operator"))
-DEF_WARNING(W_PRIVATE_OPERATOR_IS_PUBLIC, (WG_SYNTAX), WSTATE_ERROR, WARNF("Private `operator %s' is exposed as public", ARG(char *)))
+DEF_WARNING(W_PRIVATE_OPERATOR_IS_PUBLIC, (WG_SYNTAX), WSTATE_WARN, WARNF("Private `operator %s' is exposed as public", ARG(char *)))
 DEF_WARNING(W_OPERATOR_WAS_ALREADY_DEFINED, (WG_SYNTAX), WSTATE_ERROR, WARNF("Redefining `operator %s', after it had already been defined", ARG(char *)))
 DEF_WARNING(W_CANNOT_DELETE_INHERITED_CONSTRUCTOR, (WG_SYNTAX), WSTATE_ERROR, WARNF("Cannot delete constructor for `%s', after it had already been inherited", ARG(char *)))
 DEF_WARNING(W_CANNOT_DELETE_DEFAULT_CONSTRUCTOR, (WG_SYNTAX), WSTATE_WARN, WARNF("Deleting constructor for `%s', after it had been declared as `default'", ARG(char *)))
