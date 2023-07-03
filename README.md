@@ -59,10 +59,11 @@ make
 - Modular code design with one script able to import another script's globals
 - Sequences anywhere: anywhere expressions appear as `,`-separated lists, it's possible to use a sequence as `seq...`, causing its elements to appear as distinct elements. E.g. to concat two sequences, do `{ a..., b... }`
 - Object-oriented programming and classes
+	- Polymorphism
+	- Type inheritance, and multiple base classes
 	- Member functions and properties (getsets)
-	- Type inheritance
 	- Private and public members
-	- User-defined destructors
+	- User-defined constructors and destructors
 	- User-definable operators
 - All of your usual C-like statements/expressions
 - Co-routines (aka. "yield"-functions)

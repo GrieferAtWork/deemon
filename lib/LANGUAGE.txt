@@ -2211,8 +2211,12 @@ ast_parse_class ::= (
 	/* Optional base expression.
 	 * Only ": <base>" is portable; the other syntax forms only exist
 	 * for backwards compatibility with deemon 100+ and need not be
-	 * supported by other implementations */
-	[	((':' | 'extends') ast_parse_unaryhead) |
+	 * supported by other implementations
+	 *
+	 * Also note that only the ": <base>" syntax supports specifying
+	 * multiple bases. */
+	[	(':' ast_parse_unaryhead [',' ast_parse_unaryhead]...) |
+		('extends' ast_parse_unaryhead) |
 		('(' ast_parse_expr ')')
 	]
 

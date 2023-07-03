@@ -1483,6 +1483,56 @@ do_parse_class_base_after_yield:
 		maker.cm_base = ast_parse_unaryhead(LOOKUP_SYM_NORMAL);
 		if unlikely(!maker.cm_base)
 			goto err;
+		if (tok == ',') {
+			/* Support for multiple bases */
+			DREF struct ast **basev;
+			size_t basec, basea;
+			basev = (DREF struct ast **)Dee_Mallocc(2, sizeof(DREF struct ast *));
+			if unlikely(!basev)
+				goto err;
+			basev[0] = maker.cm_base; /* Inherit reference. */
+			basec    = 1;
+			basea    = 2;
+			do {
+				/* Consume the `,' */
+				if unlikely(yield() < 0)
+					goto err_basev;
+				if (basec >= basea) {
+					DREF struct ast **new_basev;
+					size_t new_basea;
+					new_basea = basea * 2;
+					new_basev = (DREF struct ast **)Dee_TryReallocc(basev, new_basea,
+					                                                sizeof(DREF struct ast *));
+					if unlikely(!new_basev) {
+						new_basea = basec + 1;
+						new_basev = (DREF struct ast **)Dee_Reallocc(basev, new_basea,
+						                                             sizeof(DREF struct ast *));
+						if unlikely(!new_basev)
+							goto err_basev;
+					}
+					basea = new_basea;
+					basev = new_basev;
+				}
+				basev[basec] = ast_parse_unaryhead(LOOKUP_SYM_NORMAL);
+				if unlikely(!basev[basec])
+					goto err_basev;
+				++basec;
+			} while (tok == ',');
+			if (basea > basec) {
+				DREF struct ast **new_basev;
+				new_basev = (DREF struct ast **)Dee_TryReallocc(basev, basec,
+				                                                sizeof(DREF struct ast *));
+				if likely(new_basev)
+					basev = new_basev;
+			}
+			maker.cm_base = ast_multiple(AST_FMULTIPLE_GENERIC, basec, basev);
+			if unlikely(!maker.cm_base) {
+err_basev:
+				ast_decrefv(basev, basec);
+				Dee_Free(basev);
+				goto err;
+			}
+		}
 	} else if (tok == '(') {
 		/* Just another syntax for class bases that the old
 		 * deemon supported and we're supporting as well.
@@ -1520,7 +1570,7 @@ do_parse_class_base_after_yield:
 			goto do_parse_class_base;
 		}
 
-		/* Automatically use `Object' as base class unless `@nobase' was specified. */
+		/* Automatically use `Object' as base class when `-fold-style-classes' is active. */
 		if (HAS(EXT_OLD_STYLE_CLASSES)) {
 			DREF DeeModuleObject *rt_d200_module;
 			PRIVATE char const old_base[] = "OldUserClass";
@@ -1888,17 +1938,17 @@ define_operator:
 				/* Not actually an operator (shares a slot with `OPERATOR_ITERSELF')
 				 * This operator can be used by `DeeClass_SetOperator()' to wrap the
 				 * given callback using an internal wrapper type that behaves as follows:
-				 * >> class my_class {
-				 * >>     
-				 * >>     operator __iter__() {
+				 * >> class MyClass {
+				 * >>
+				 * >>     public operator __iter__() {
 				 * >>         return () -> {
 				 * >>             yield 10;
 				 * >>             yield 20;
 				 * >>             yield 30;
 				 * >>         }().operator __iter__();
 				 * >>     }
-				 * >>     
-				 * >>     operator for {
+				 * >>
+				 * >>     public operator for() {
 				 * >>         // Same as the above.
 				 * >>         yield 10;
 				 * >>         yield 20;

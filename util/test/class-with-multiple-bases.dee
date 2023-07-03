@@ -35,7 +35,7 @@ class B {
 	}
 }
 
-class C: { A, B, Numeric } {
+class C: A, B, Numeric {
 	function foo() {
 		return 10 + (this as A).foo();
 	}
