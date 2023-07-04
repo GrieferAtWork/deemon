@@ -761,7 +761,7 @@ print_module_name(JITLexer *__restrict self,
 			    self->jl_tok != JIT_RAWSTRING)
 				break;
 		} else {
-			syn_module_expected_dot_keyword_or_string(self);
+			syn_import_expected_dot_keyword_or_string(self);
 			goto err_trace;
 		}
 	}
@@ -776,19 +776,18 @@ err_trace:
 /* Parse a module name, either writing it to `*printer' (if non-NULL),
  * or storing the name's start and end pointers in `*p_name_start' and
  * `*p_name_end'
- * @return:  1: Successfully parsed the module name and stored it in `*printer'
- *              In this case, this function will have also initialized `*printer'
+ * @return:  1: Successfully parsed the module name and written it to `*printer'
  * @return:  0: Successfully parsed the module name and stored it in `*p_name_start' / `*p_name_end'
  * @return: -1: An error occurred. */
-INTERN int FCALL
-JITLexer_ParseModuleName(JITLexer *__restrict self,
-                         struct unicode_printer *printer,
-                         /*utf-8*/ unsigned char **p_name_start,
-                         /*utf-8*/ unsigned char **p_name_end) {
+INTERN WUNUSED NONNULL((1)) int FCALL
+JITLexer_EvalModuleName(JITLexer *__restrict self,
+                        struct unicode_printer *printer,
+                        /*utf-8*/ unsigned char **p_name_start,
+                        /*utf-8*/ unsigned char **p_name_end) {
 	int error;
 	/* Optimization for simple/inline module names, such that we
 	 * don't have to actually copy the module name at this point! */
-	if (self->jl_tok == '.' || self->jl_tok == JIT_KEYWORD) {
+	if (TOKEN_IS_DOT(self) || self->jl_tok == JIT_KEYWORD) {
 		unsigned char *start, *end;
 		start = self->jl_tokstart;
 		end   = self->jl_tokend;
@@ -820,7 +819,7 @@ JITLexer_ParseModuleName(JITLexer *__restrict self,
 		/* Check if the keyword following the simple module
 		 * name is something that would belong to our name. */
 		JITLexer_YieldAt(self, end);
-		if (self->jl_tok == '.' ||
+		if (TOKEN_IS_DOT(self) ||
 		    self->jl_tok == JIT_KEYWORD ||
 		    self->jl_tok == JIT_STRING ||
 		    self->jl_tok == JIT_RAWSTRING) {
@@ -830,14 +829,31 @@ JITLexer_ParseModuleName(JITLexer *__restrict self,
 		return 0;
 	}
 use_printer:
-	if (printer)
-		unicode_printer_init(printer);
-	error = print_module_name(self,
-	                          printer);
+	error = print_module_name(self, printer);
 	if (error == 0)
 		error = 1;
 	return error;
 }
+
+/* Same as `JITLexer_EvalModuleName()', but always parse into a printer.
+ * @return:  0: Successfully.
+ * @return: -1: An error occurred. */
+INTERN WUNUSED NONNULL((1, 2)) int FCALL
+JITLexer_EvalModuleNameIntoPrinter(JITLexer *__restrict self,
+                                   struct unicode_printer *__restrict printer) {
+	int result;
+	unsigned char *name_start, *name_end;
+	result = JITLexer_EvalModuleName(self, printer, &name_start, &name_end);
+	if (result > 0) {
+		result = 0;
+	} else if (result == 0) {
+		if unlikely(unicode_printer_print(printer, (char const *)name_start,
+		                                  (size_t)(name_end - name_start)) < 0)
+			result = -1;
+	}
+	return result;
+}
+
 
 
 
@@ -849,10 +865,8 @@ JITLexer_EvalModule(JITLexer *__restrict self) {
 	struct unicode_printer printer;
 	unsigned char *name_start, *name_end;
 	DeeObject *import_function;
-	error = JITLexer_ParseModuleName(self,
-	                                 &printer,
-	                                 &name_start,
-	                                 &name_end);
+	unicode_printer_init(&printer);
+	error = JITLexer_EvalModuleName(self, &printer, &name_start, &name_end);
 	if unlikely(error < 0)
 		goto err;
 	import_function = self->jl_context->jc_import;
@@ -868,6 +882,8 @@ JITLexer_EvalModule(JITLexer *__restrict self) {
 			} else {
 				result = DeeModule_ImportGlobal((DeeObject *)str);
 			}
+		} else if (DeeString_SIZE(str) == 1) {
+			result = JITContext_GetCurrentModule(self->jl_context);
 		} else {
 			DeeModuleObject *base = self->jl_context->jc_impbase;
 			if unlikely(!base) {
@@ -888,8 +904,14 @@ JITLexer_EvalModule(JITLexer *__restrict self) {
 		Dee_Decref(str);
 	} else if (import_function) {
 		DREF DeeStringObject *str;
-		if (name_start[0] == '.' && !self->jl_context->jc_impbase)
-			goto err_name_start_end_cannot_import_relative;
+		if (name_start[0] == '.') {
+			if (name_end == name_start + 1) {
+				result = JITContext_GetCurrentModule(self->jl_context);
+				goto done;
+			}
+			if (!self->jl_context->jc_impbase)
+				goto err_name_start_end_cannot_import_relative;
+		}
 		str = (DREF DeeStringObject *)DeeString_NewUtf8((char const *)name_start,
 		                                                (size_t)(name_end - name_start),
 		                                                STRING_ERROR_FSTRICT);
@@ -907,14 +929,14 @@ JITLexer_EvalModule(JITLexer *__restrict self) {
 	} else if (name_start[0] != '.') {
 		result = DeeModule_ImportGlobalString((char const *)name_start,
 		                                      (size_t)(name_end - name_start));
+	} else if (name_end == name_start + 1) {
+		result = JITContext_GetCurrentModule(self->jl_context);
 	} else {
 		DeeModuleObject *base = self->jl_context->jc_impbase;
 		if unlikely(!base) {
 err_name_start_end_cannot_import_relative:
-			DeeError_Throwf(&DeeError_CompilerError,
-			                "Cannot import relative module %$q",
-			                (size_t)(name_end - name_start),
-			                name_start);
+			err_cannot_import_relative((char const *)name_start,
+			                           (size_t)(name_end - name_start));
 			goto err_trace;
 		}
 		result = DeeModule_ImportRelString((DeeObject *)base,
@@ -923,6 +945,7 @@ err_name_start_end_cannot_import_relative:
 	}
 	if unlikely(!result)
 		goto err_trace;
+done:
 	return result;
 err_trace:
 	JITLexer_ErrorTrace(self, self->jl_tokstart);

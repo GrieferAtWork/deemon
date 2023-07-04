@@ -199,9 +199,9 @@ err:
 }
 
 PUBLIC WUNUSED NONNULL((1, 2)) struct module_symbol *DCALL
-DeeModule_GetSymbolString(DeeModuleObject *__restrict self,
-                          char const *__restrict attr_name,
-                          dhash_t hash) {
+DeeModule_GetSymbolStringHash(DeeModuleObject *__restrict self,
+                              char const *__restrict attr_name,
+                              dhash_t hash) {
 	dhash_t i, perturb;
 	ASSERT_OBJECT_TYPE(self, &DeeModule_Type);
 	ASSERT(!DeeInteractiveModule_Check(self));
@@ -220,9 +220,9 @@ DeeModule_GetSymbolString(DeeModuleObject *__restrict self,
 }
 
 PUBLIC WUNUSED NONNULL((1, 2)) struct module_symbol *DCALL
-DeeModule_GetSymbolStringLen(DeeModuleObject *__restrict self,
-                             char const *__restrict attr_name,
-                             size_t attrlen, dhash_t hash) {
+DeeModule_GetSymbolStringLenHash(DeeModuleObject *__restrict self,
+                                 char const *__restrict attr_name,
+                                 size_t attrlen, dhash_t hash) {
 	dhash_t i, perturb;
 	ASSERT_OBJECT_TYPE(self, &DeeModule_Type);
 	perturb = i = MODULE_HASHST(self, hash);
@@ -1236,7 +1236,7 @@ DeeModule_FindAttr(DeeModuleObject *__restrict self,
 	}
 	if (!rules->alr_decl || rules->alr_decl == (DeeObject *)self) {
 		struct module_symbol *sym, *doc_sym;
-		sym = DeeModule_GetSymbolString(self,
+		sym = DeeModule_GetSymbolStringHash(self,
 		                                rules->alr_name,
 		                                rules->alr_hash);
 		if (sym) {

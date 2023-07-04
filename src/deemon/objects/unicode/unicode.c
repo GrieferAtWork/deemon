@@ -5555,6 +5555,8 @@ err:
 	return NULL;
 }
 
+/* @return: 0 : Success
+ * @return: -1: Error */
 PUBLIC WUNUSED NONNULL((1, 2)) int DCALL
 DeeString_DecodeBackslashEscaped(struct unicode_printer *__restrict printer,
                                  /*utf-8*/ char const *__restrict start,

@@ -1592,7 +1592,7 @@ err_basev:
 				}
 				goto err;
 			}
-			oldbase_sym = DeeModule_GetSymbolString(rt_d200_module, old_base,
+			oldbase_sym = DeeModule_GetSymbolStringHash(rt_d200_module, old_base,
 			                                        Dee_HashStr(old_base));
 			if unlikely(!oldbase_sym) {
 				Dee_Decref(rt_d200_module);

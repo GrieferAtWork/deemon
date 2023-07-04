@@ -1358,7 +1358,7 @@ decl_ast_parse_unary(struct decl_ast *__restrict self) {
 		} else if (self->da_type == DAST_SYMBOL &&
 		           self->da_symbol->s_type == SYMBOL_TYPE_MODULE) {
 			struct module_symbol *modsym;
-			modsym = DeeModule_GetSymbolString(self->da_symbol->s_module, token.t_kwd->k_name,
+			modsym = DeeModule_GetSymbolStringHash(self->da_symbol->s_module, token.t_kwd->k_name,
 			                                   Dee_HashPtr(token.t_kwd->k_name, token.t_kwd->k_size));
 			if likely(modsym) {
 				struct symbol *new_symbol;

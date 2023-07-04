@@ -24,6 +24,7 @@
 #include <deemon/api.h>
 #include <deemon/class.h>
 #include <deemon/dex.h>
+#include <deemon/map.h>
 #include <deemon/object.h>
 #include <deemon/system-features.h> /* bzero(), bcmpc(), ... */
 #include <deemon/util/rlock.h>
@@ -257,6 +258,10 @@ typedef struct jit_yield_function_iterator_object JITYieldFunctionIteratorObject
 	case TOK_POW_EQUAL
 
 
+
+/* Helpers for working with  */
+#define TOKEN_IS_DOT(self)       ((self)->jl_tok == '.' || (self)->jl_tok == TOK_DOTS)
+#define TOKEN_IS_DOT_count(self) ((self)->jl_tok == TOK_DOTS ? 3 : 1)
 
 
 struct jit_object_entry;
@@ -657,6 +662,15 @@ struct jit_object_entry {
 	};
 };
 
+#define jit_object_entry_fini(self)                     \
+	(Dee_XDecref((self)->oe_value),                     \
+	 (self)->oe_type == JIT_OBJECT_ENTRY_EXTERN_ATTR    \
+	 ? (void)Dee_Decref((self)->oe_extern_attr.ea_name) \
+	 : (void)0)
+#define jit_object_entry_visit(self)                     \
+	Dee_XVisit((self)->oe_value) /* No need to visit `oe_extern_attr.ea_name' (it's always a string) */
+
+
 struct jit_object_table_pointer {
 	JITObjectTable    *otp_tab; /* [0..1] The table that is being referenced. */
 	size_t             otp_ind; /* The number of scopes for which `otp_tab' table is shared.
@@ -747,7 +761,7 @@ JITObjectTable_Create(JITObjectTable *__restrict self,
                       /*utf-8*/ char const *namestr,
                       size_t namelen, dhash_t namehsh);
 
-/* Add a *-import module or object to `self'
+/* Add a *-import module or object to `self' (if not already persent)
  * @return: 0 : Success
  * @return: -1: Success */
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL
@@ -822,6 +836,14 @@ struct jit_context {
 #define JITContext_GetImport(self)                                          \
 	((self)->jc_import ? (Dee_Incref((self)->jc_import), (self)->jc_import) \
 	                   : DeeObject_GetAttrString((DeeObject *)DeeModule_GetDeemon(), "import"))
+
+/* Return a reference to an object that implements attribute
+ * operators such that it allows access to JIT globals. */
+/* TODO: This currently returns an object implementing *mapping* operators, but we need *attribute* operators! */
+/* NOTE: Also remember that we need to re-return the *same* object if invoked multiple times! */
+#define JITContext_GetCurrentModule(self)                      \
+	((self)->jc_globals ? DeeObject_NewRef((self)->jc_globals) \
+	                    : DeeObject_NewRef(Dee_EmptyMapping))
 
 
 /* Check if the current scope is the global scope. */
@@ -982,7 +1004,7 @@ JITLexer_SkipKeywordLabelList(JITLexer *__restrict self);
 /* NOTE: This function might not necessarily return a module when a custom import override was defined.
  *       If that is the case, the caller must instead access the attributes of the returned object! */
 INTDEF WUNUSED DREF DeeObject *FCALL JITLexer_EvalModule(JITLexer *__restrict self);
-#define JITLexer_SkipModule(self) (JITLexer_ParseModuleName(self, NULL, NULL, NULL) < 0 ? -1 : 0)
+#define JITLexer_SkipModule(self) JITLexer_SkipModuleName(self)
 
 
 /* Parse a comma-separated list of expressions,
@@ -1023,15 +1045,34 @@ INTDEF int DCALL JITLexer_SkipComma(JITLexer *__restrict self, uint16_t mode, ui
 /* Parse a module name, either writing it to `*printer' (if non-NULL),
  * or storing the name's start and end pointers in `*p_name_start' and
  * `*p_name_end'
- * @return:  1: Successfully parsed the module name and stored it in `*printer'
- *              In this case, this function will have also initialized `*printer'
+ * @return:  1: Successfully parsed the module name and written it to `*printer'
  * @return:  0: Successfully parsed the module name and stored it in `*p_name_start' / `*p_name_end'
  * @return: -1: An error occurred. */
-INTDEF int FCALL
-JITLexer_ParseModuleName(JITLexer *__restrict self,
-                         struct unicode_printer *printer,
-                         /*utf-8*/ unsigned char **p_name_start,
-                         /*utf-8*/ unsigned char **p_name_end);
+INTDEF WUNUSED NONNULL((1)) int FCALL
+JITLexer_EvalModuleName(JITLexer *__restrict self,
+                        struct unicode_printer *printer,
+                        /*utf-8*/ unsigned char **p_name_start,
+                        /*utf-8*/ unsigned char **p_name_end);
+#define JITLexer_SkipModuleName(self) \
+	(JITLexer_EvalModuleName(self, NULL, NULL, NULL) < 0 ? -1 : 0)
+#define JITLexer_SkipModuleNameIntoPrinter(self) \
+	JITLexer_SkipModuleName(self)
+
+/* Same as `JITLexer_EvalModuleName()', but always parse into a printer.
+ * @return:  0: Successfully.
+ * @return: -1: An error occurred. */
+INTDEF WUNUSED NONNULL((1, 2)) int FCALL
+JITLexer_EvalModuleNameIntoPrinter(JITLexer *__restrict self,
+                                   struct unicode_printer *__restrict printer);
+
+/* Evaluate a symbol name for an import statement and write it to `printer'
+ * @return:  0: Successfully.
+ * @return: -1: An error occurred. */
+INTDEF WUNUSED NONNULL((1, 2)) int FCALL
+JITLexer_EvalSymbolNameIntoPrinter(JITLexer *__restrict self,
+                                   struct unicode_printer *__restrict printer);
+INTDEF WUNUSED NONNULL((1)) int FCALL
+JITLexer_SkipSymbolNameIntoPrinter(JITLexer *__restrict self);
 
 /* Parse lookup mode modifiers:
  * >> local x = 42;
@@ -1207,6 +1248,42 @@ INTDEF WUNUSED DREF DeeObject *FCALL JITLexer_EvalImport(JITLexer *__restrict se
 INTDEF int FCALL JITLexer_SkipImport(JITLexer *__restrict self);
 INTDEF WUNUSED DREF DeeObject *FCALL JITLexer_EvalFromImport(JITLexer *__restrict self);
 INTDEF int FCALL JITLexer_SkipFromImport(JITLexer *__restrict self);
+
+struct jit_import_item {
+	char const           *ii_symbol_name; /* [1..1] The name by which the item should be imported. */
+	size_t                ii_symbol_size; /* Length of `ii_symbol_name' (in characters) */
+	DREF DeeStringObject *ii_import_name; /* [0..1] The name of the object being imported.
+	                                       * When NULL, `ii_symbol_name' is used instead. */
+};
+
+/* Import a named module and bind it as a local variable. */
+INTDEF WUNUSED NONNULL((1, 2)) int FCALL
+JITContext_DoImportModule(JITContext *__restrict self,
+                          struct jit_import_item const *__restrict spec);
+
+/* Import a named symbol from a module and binding it to a local symbol. */
+INTDEF WUNUSED NONNULL((1, 2, 3)) int FCALL
+JITContext_DoImportSymbol(JITContext *__restrict self,
+                          struct jit_import_item const *__restrict spec,
+                          DeeObject *__restrict source_module);
+
+/* Import a all symbols from a module and bind them to local symbols. */
+INTDEF WUNUSED NONNULL((1, 2)) int FCALL
+JITContext_DoImportStar(JITContext *__restrict self,
+                        DeeObject *__restrict source_module);
+
+
+/* @return:  1: OK (when `allow_module_name' is true, a module import was parsed)
+ * @return:  0: OK
+ * @return: -1: Error */
+INTDEF WUNUSED NONNULL((1, 2)) int FCALL
+JITLexer_EvalImportItem(JITLexer *__restrict self,
+                        struct jit_import_item *__restrict result,
+                        bool allow_module_name);
+INTDEF WUNUSED NONNULL((1)) int FCALL
+JITLexer_SkipImportItem(JITLexer *__restrict self,
+                        bool allow_module_name);
+
 
 /* Parse a class declaration, and return the produced class type.
  * Parsing starts after the `class' (or `class final'), meaning
@@ -1546,81 +1623,90 @@ INTDEF ATTR_COLD int DCALL err_invalid_unpack_size(DeeObject *__restrict unpack_
 INTDEF ATTR_COLD int DCALL err_invalid_unpack_iter_size(DeeObject *__restrict unpack_object, DeeObject *__restrict unpack_iterator, size_t need_size);
 
 /* Syntax Exception handlers. */
-INTDEF ATTR_COLD int FCALL syn_if_expected_lparen_after_if(JITLexer *__restrict self);
-INTDEF ATTR_COLD int FCALL syn_if_expected_rparen_after_if(JITLexer *__restrict self);
-INTDEF ATTR_COLD int FCALL syn_with_expected_lparen_after_with(JITLexer *__restrict self);
-INTDEF ATTR_COLD int FCALL syn_with_expected_rparen_after_with(JITLexer *__restrict self);
-INTDEF ATTR_COLD int FCALL syn_for_expected_lparen_after_for(JITLexer *__restrict self);
-INTDEF ATTR_COLD int FCALL syn_for_expected_rparen_after_for(JITLexer *__restrict self);
-INTDEF ATTR_COLD int FCALL syn_for_expected_semi1_after_for(JITLexer *__restrict self);
-INTDEF ATTR_COLD int FCALL syn_for_expected_semi2_after_for(JITLexer *__restrict self);
-INTDEF ATTR_COLD int FCALL syn_for_expected_rparen_after_foreach(JITLexer *__restrict self);
-INTDEF ATTR_COLD int FCALL syn_throw_expected_semi_after_throw(JITLexer *__restrict self);
-INTDEF ATTR_COLD int FCALL syn_yield_expected_semi_after_yield(JITLexer *__restrict self);
-INTDEF ATTR_COLD int FCALL syn_break_expected_semi_after_break(JITLexer *__restrict self);
-INTDEF ATTR_COLD int FCALL syn_continue_expected_semi_after_continue(JITLexer *__restrict self);
-INTDEF ATTR_COLD int FCALL syn_return_expected_semi_after_return(JITLexer *__restrict self);
-INTDEF ATTR_COLD int FCALL syn_foreach_expected_lparen_after_foreach(JITLexer *__restrict self);
-INTDEF ATTR_COLD int FCALL syn_foreach_expected_colon_after_foreach(JITLexer *__restrict self);
-INTDEF ATTR_COLD int FCALL syn_foreach_expected_rparen_after_foreach(JITLexer *__restrict self);
-INTDEF ATTR_COLD int FCALL syn_while_expected_lparen_after_while(JITLexer *__restrict self);
-INTDEF ATTR_COLD int FCALL syn_while_expected_rparen_after_while(JITLexer *__restrict self);
-INTDEF ATTR_COLD int FCALL syn_dowhile_expected_while_after_do(JITLexer *__restrict self);
-INTDEF ATTR_COLD int FCALL syn_dowhile_expected_lparen_after_while(JITLexer *__restrict self);
-INTDEF ATTR_COLD int FCALL syn_dowhile_expected_rparen_after_while(JITLexer *__restrict self);
-INTDEF ATTR_COLD int FCALL syn_dowhile_expected_semi_after_while(JITLexer *__restrict self);
-INTDEF ATTR_COLD int FCALL syn_asm_nonempty_string(JITLexer *__restrict self);
-INTDEF ATTR_COLD int FCALL syn_asm_expected_lparen_after_asm(JITLexer *__restrict self);
-INTDEF ATTR_COLD int FCALL syn_asm_expected_rparen_after_asm(JITLexer *__restrict self);
-INTDEF ATTR_COLD int FCALL syn_asm_expected_string_after_asm(JITLexer *__restrict self);
-INTDEF ATTR_COLD int FCALL syn_asm_expected_semi_after_asm(JITLexer *__restrict self);
-INTDEF ATTR_COLD int FCALL syn_asm_expected_keyword_after_lbracket(JITLexer *__restrict self);
-INTDEF ATTR_COLD int FCALL syn_asm_expected_rbracket_after_lbracket(JITLexer *__restrict self);
-INTDEF ATTR_COLD int FCALL syn_asm_expected_string_before_operand(JITLexer *__restrict self);
-INTDEF ATTR_COLD int FCALL syn_asm_expected_lparen_before_operand(JITLexer *__restrict self);
-INTDEF ATTR_COLD int FCALL syn_asm_expected_rparen_after_operand(JITLexer *__restrict self);
-INTDEF ATTR_COLD int FCALL syn_asm_expected_keyword_for_label_operand(JITLexer *__restrict self);
-INTDEF ATTR_COLD int FCALL syn_try_expected_lparen_after_catch(JITLexer *__restrict self);
-INTDEF ATTR_COLD int FCALL syn_try_expected_rparen_after_catch(JITLexer *__restrict self);
-INTDEF ATTR_COLD int FCALL syn_try_expected_keyword_after_as_in_catch(JITLexer *__restrict self);
-INTDEF ATTR_COLD int FCALL syn_brace_expected_rbrace(JITLexer *__restrict self);
-INTDEF ATTR_COLD int FCALL syn_brace_expected_keyword_after_dot(JITLexer *__restrict self);
-INTDEF ATTR_COLD int FCALL syn_brace_expected_equals_after_dot(JITLexer *__restrict self);
-INTDEF ATTR_COLD int FCALL syn_brace_expected_colon_after_key(JITLexer *__restrict self);
-INTDEF ATTR_COLD int FCALL syn_expr_expected_semi_after_expr(JITLexer *__restrict self);
-INTDEF ATTR_COLD int FCALL syn_expr_unexpected_token(JITLexer *__restrict self);
-INTDEF ATTR_COLD int FCALL syn_function_expected_lparen_after_function(JITLexer *__restrict self);
-INTDEF ATTR_COLD int FCALL syn_function_expected_arrow_or_lbrace_after_function(JITLexer *__restrict self);
-INTDEF ATTR_COLD int FCALL syn_call_expected_rparen_after_call(JITLexer *__restrict self);
-INTDEF ATTR_COLD int FCALL syn_bound_cannot_test(JITLexer *__restrict self);
-INTDEF ATTR_COLD int FCALL syn_pack_expected_rparen_after_lparen(JITLexer *__restrict self);
-INTDEF ATTR_COLD int FCALL syn_paren_expected_rparen_after_lparen(JITLexer *__restrict self);
-INTDEF ATTR_COLD int FCALL syn_bracket_expected_rbracket_after_lbracket(JITLexer *__restrict self);
-INTDEF ATTR_COLD int FCALL syn_attr_expected_keyword(JITLexer *__restrict self);
-INTDEF ATTR_COLD int FCALL syn_item_expected_rbracket_after_lbracket(JITLexer *__restrict self);
-INTDEF ATTR_COLD int FCALL syn_isin_expected_is_or_in_after_exclaim(JITLexer *__restrict self);
-INTDEF ATTR_COLD int FCALL syn_operator_expected_empty_string(JITLexer *__restrict self);
-INTDEF ATTR_COLD int FCALL syn_operator_expected_lbracket_or_dot_after_del(JITLexer *__restrict self);
-INTDEF ATTR_COLD int FCALL syn_operator_unknown_name(JITLexer *__restrict self);
-INTDEF ATTR_COLD int FCALL syn_module_expected_dot_keyword_or_string(JITLexer *__restrict self);
-INTDEF ATTR_COLD int FCALL syn_anno_expected_rbracket(JITLexer *__restrict self);
-INTDEF ATTR_COLD int FCALL syn_class_expected_class_after_final(JITLexer *__restrict self);
-INTDEF ATTR_COLD int FCALL syn_class_expected_rparen_after_lparen_base(JITLexer *__restrict self);
-INTDEF ATTR_COLD int FCALL syn_class_expected_lbrace_after_class(JITLexer *__restrict self);
-INTDEF ATTR_COLD int FCALL syn_class_expected_rbrace_after_class(JITLexer *__restrict self);
-INTDEF ATTR_COLD int FCALL syn_class_not_thiscall(JITLexer *__restrict self);
-INTDEF ATTR_COLD int FCALL syn_nth_expected_lparen(JITLexer *__restrict self);
-INTDEF ATTR_COLD int FCALL syn_nth_expected_rparen(JITLexer *__restrict self);
-INTDEF ATTR_COLD int FCALL syn_type_annotation_unexpected_token(JITLexer *__restrict self);
-INTDEF ATTR_COLD int FCALL syn_type_annotation_expected_dots_or_colon(JITLexer *__restrict self);
-INTDEF ATTR_COLD int FCALL syn_type_annotation_expected_rbrace(JITLexer *__restrict self);
-INTDEF ATTR_COLD int FCALL syn_type_annotation_expected_rparen(JITLexer *__restrict self);
-INTDEF ATTR_COLD int FCALL syn_type_annotation_expected_string_after_asm(JITLexer *__restrict self);
-INTDEF ATTR_COLD int FCALL syn_template_string_unterminated(JITLexer *__restrict self);
-INTDEF ATTR_COLD int FCALL syn_template_string_unmatched_lbrace(JITLexer *__restrict self);
-INTDEF ATTR_COLD int FCALL syn_template_string_unmatched_rbrace(JITLexer *__restrict self);
-INTDEF ATTR_COLD int FCALL syn_template_string_no_digit_or_hex_after_backslash_x_u_U(JITLexer *__restrict self);
-INTDEF ATTR_COLD int FCALL syn_template_string_undefined_escape(JITLexer *__restrict self, int ch);
+INTDEF ATTR_COLD NONNULL((1)) int FCALL syn_if_expected_lparen_after_if(JITLexer *__restrict self);
+INTDEF ATTR_COLD NONNULL((1)) int FCALL syn_if_expected_rparen_after_if(JITLexer *__restrict self);
+INTDEF ATTR_COLD NONNULL((1)) int FCALL syn_with_expected_lparen_after_with(JITLexer *__restrict self);
+INTDEF ATTR_COLD NONNULL((1)) int FCALL syn_with_expected_rparen_after_with(JITLexer *__restrict self);
+INTDEF ATTR_COLD NONNULL((1)) int FCALL syn_for_expected_lparen_after_for(JITLexer *__restrict self);
+INTDEF ATTR_COLD NONNULL((1)) int FCALL syn_for_expected_rparen_after_for(JITLexer *__restrict self);
+INTDEF ATTR_COLD NONNULL((1)) int FCALL syn_for_expected_semi1_after_for(JITLexer *__restrict self);
+INTDEF ATTR_COLD NONNULL((1)) int FCALL syn_for_expected_semi2_after_for(JITLexer *__restrict self);
+INTDEF ATTR_COLD NONNULL((1)) int FCALL syn_for_expected_rparen_after_foreach(JITLexer *__restrict self);
+INTDEF ATTR_COLD NONNULL((1)) int FCALL syn_throw_expected_semi_after_throw(JITLexer *__restrict self);
+INTDEF ATTR_COLD NONNULL((1)) int FCALL syn_yield_expected_semi_after_yield(JITLexer *__restrict self);
+INTDEF ATTR_COLD NONNULL((1)) int FCALL syn_break_expected_semi_after_break(JITLexer *__restrict self);
+INTDEF ATTR_COLD NONNULL((1)) int FCALL syn_continue_expected_semi_after_continue(JITLexer *__restrict self);
+INTDEF ATTR_COLD NONNULL((1)) int FCALL syn_return_expected_semi_after_return(JITLexer *__restrict self);
+INTDEF ATTR_COLD NONNULL((1)) int FCALL syn_foreach_expected_lparen_after_foreach(JITLexer *__restrict self);
+INTDEF ATTR_COLD NONNULL((1)) int FCALL syn_foreach_expected_colon_after_foreach(JITLexer *__restrict self);
+INTDEF ATTR_COLD NONNULL((1)) int FCALL syn_foreach_expected_rparen_after_foreach(JITLexer *__restrict self);
+INTDEF ATTR_COLD NONNULL((1)) int FCALL syn_while_expected_lparen_after_while(JITLexer *__restrict self);
+INTDEF ATTR_COLD NONNULL((1)) int FCALL syn_while_expected_rparen_after_while(JITLexer *__restrict self);
+INTDEF ATTR_COLD NONNULL((1)) int FCALL syn_dowhile_expected_while_after_do(JITLexer *__restrict self);
+INTDEF ATTR_COLD NONNULL((1)) int FCALL syn_dowhile_expected_lparen_after_while(JITLexer *__restrict self);
+INTDEF ATTR_COLD NONNULL((1)) int FCALL syn_dowhile_expected_rparen_after_while(JITLexer *__restrict self);
+INTDEF ATTR_COLD NONNULL((1)) int FCALL syn_dowhile_expected_semi_after_while(JITLexer *__restrict self);
+INTDEF ATTR_COLD NONNULL((1)) int FCALL syn_asm_nonempty_string(JITLexer *__restrict self);
+INTDEF ATTR_COLD NONNULL((1)) int FCALL syn_asm_expected_lparen_after_asm(JITLexer *__restrict self);
+INTDEF ATTR_COLD NONNULL((1)) int FCALL syn_asm_expected_rparen_after_asm(JITLexer *__restrict self);
+INTDEF ATTR_COLD NONNULL((1)) int FCALL syn_asm_expected_string_after_asm(JITLexer *__restrict self);
+INTDEF ATTR_COLD NONNULL((1)) int FCALL syn_asm_expected_semi_after_asm(JITLexer *__restrict self);
+INTDEF ATTR_COLD NONNULL((1)) int FCALL syn_asm_expected_keyword_after_lbracket(JITLexer *__restrict self);
+INTDEF ATTR_COLD NONNULL((1)) int FCALL syn_asm_expected_rbracket_after_lbracket(JITLexer *__restrict self);
+INTDEF ATTR_COLD NONNULL((1)) int FCALL syn_asm_expected_string_before_operand(JITLexer *__restrict self);
+INTDEF ATTR_COLD NONNULL((1)) int FCALL syn_asm_expected_lparen_before_operand(JITLexer *__restrict self);
+INTDEF ATTR_COLD NONNULL((1)) int FCALL syn_asm_expected_rparen_after_operand(JITLexer *__restrict self);
+INTDEF ATTR_COLD NONNULL((1)) int FCALL syn_asm_expected_keyword_for_label_operand(JITLexer *__restrict self);
+INTDEF ATTR_COLD NONNULL((1)) int FCALL syn_try_expected_lparen_after_catch(JITLexer *__restrict self);
+INTDEF ATTR_COLD NONNULL((1)) int FCALL syn_try_expected_rparen_after_catch(JITLexer *__restrict self);
+INTDEF ATTR_COLD NONNULL((1)) int FCALL syn_try_expected_keyword_after_as_in_catch(JITLexer *__restrict self);
+INTDEF ATTR_COLD NONNULL((1)) int FCALL syn_brace_expected_rbrace(JITLexer *__restrict self);
+INTDEF ATTR_COLD NONNULL((1)) int FCALL syn_brace_expected_keyword_after_dot(JITLexer *__restrict self);
+INTDEF ATTR_COLD NONNULL((1)) int FCALL syn_brace_expected_equals_after_dot(JITLexer *__restrict self);
+INTDEF ATTR_COLD NONNULL((1)) int FCALL syn_brace_expected_colon_after_key(JITLexer *__restrict self);
+INTDEF ATTR_COLD NONNULL((1)) int FCALL syn_expr_expected_semi_after_expr(JITLexer *__restrict self);
+INTDEF ATTR_COLD NONNULL((1)) int FCALL syn_expr_unexpected_token(JITLexer *__restrict self);
+INTDEF ATTR_COLD NONNULL((1)) int FCALL syn_function_expected_lparen_after_function(JITLexer *__restrict self);
+INTDEF ATTR_COLD NONNULL((1)) int FCALL syn_function_expected_arrow_or_lbrace_after_function(JITLexer *__restrict self);
+INTDEF ATTR_COLD NONNULL((1)) int FCALL syn_call_expected_rparen_after_call(JITLexer *__restrict self);
+INTDEF ATTR_COLD NONNULL((1)) int FCALL syn_bound_cannot_test(JITLexer *__restrict self);
+INTDEF ATTR_COLD NONNULL((1)) int FCALL syn_pack_expected_rparen_after_lparen(JITLexer *__restrict self);
+INTDEF ATTR_COLD NONNULL((1)) int FCALL syn_paren_expected_rparen_after_lparen(JITLexer *__restrict self);
+INTDEF ATTR_COLD NONNULL((1)) int FCALL syn_bracket_expected_rbracket_after_lbracket(JITLexer *__restrict self);
+INTDEF ATTR_COLD NONNULL((1)) int FCALL syn_attr_expected_keyword(JITLexer *__restrict self);
+INTDEF ATTR_COLD NONNULL((1)) int FCALL syn_item_expected_rbracket_after_lbracket(JITLexer *__restrict self);
+INTDEF ATTR_COLD NONNULL((1)) int FCALL syn_isin_expected_is_or_in_after_exclaim(JITLexer *__restrict self);
+INTDEF ATTR_COLD NONNULL((1)) int FCALL syn_operator_expected_empty_string(JITLexer *__restrict self);
+INTDEF ATTR_COLD NONNULL((1)) int FCALL syn_operator_expected_lbracket_or_dot_after_del(JITLexer *__restrict self);
+INTDEF ATTR_COLD NONNULL((1)) int FCALL syn_operator_unknown_name(JITLexer *__restrict self);
+INTDEF ATTR_COLD NONNULL((1)) int FCALL syn_anno_expected_rbracket(JITLexer *__restrict self);
+INTDEF ATTR_COLD NONNULL((1)) int FCALL syn_class_expected_class_after_final(JITLexer *__restrict self);
+INTDEF ATTR_COLD NONNULL((1)) int FCALL syn_class_expected_rparen_after_lparen_base(JITLexer *__restrict self);
+INTDEF ATTR_COLD NONNULL((1)) int FCALL syn_class_expected_lbrace_after_class(JITLexer *__restrict self);
+INTDEF ATTR_COLD NONNULL((1)) int FCALL syn_class_expected_rbrace_after_class(JITLexer *__restrict self);
+INTDEF ATTR_COLD NONNULL((1)) int FCALL syn_class_not_thiscall(JITLexer *__restrict self);
+INTDEF ATTR_COLD NONNULL((1)) int FCALL syn_nth_expected_lparen(JITLexer *__restrict self);
+INTDEF ATTR_COLD NONNULL((1)) int FCALL syn_nth_expected_rparen(JITLexer *__restrict self);
+INTDEF ATTR_COLD NONNULL((1)) int FCALL syn_type_annotation_unexpected_token(JITLexer *__restrict self);
+INTDEF ATTR_COLD NONNULL((1)) int FCALL syn_type_annotation_expected_dots_or_colon(JITLexer *__restrict self);
+INTDEF ATTR_COLD NONNULL((1)) int FCALL syn_type_annotation_expected_rbrace(JITLexer *__restrict self);
+INTDEF ATTR_COLD NONNULL((1)) int FCALL syn_type_annotation_expected_rparen(JITLexer *__restrict self);
+INTDEF ATTR_COLD NONNULL((1)) int FCALL syn_type_annotation_expected_string_after_asm(JITLexer *__restrict self);
+INTDEF ATTR_COLD NONNULL((1)) int FCALL syn_template_string_unterminated(JITLexer *__restrict self);
+INTDEF ATTR_COLD NONNULL((1)) int FCALL syn_template_string_unmatched_lbrace(JITLexer *__restrict self);
+INTDEF ATTR_COLD NONNULL((1)) int FCALL syn_template_string_unmatched_rbrace(JITLexer *__restrict self);
+INTDEF ATTR_COLD NONNULL((1)) int FCALL syn_template_string_no_digit_or_hex_after_backslash_x_u_U(JITLexer *__restrict self);
+INTDEF ATTR_COLD NONNULL((1)) int FCALL syn_template_string_undefined_escape(JITLexer *__restrict self, int ch);
+INTDEF ATTR_COLD NONNULL((1)) int FCALL syn_import_expected_dot_keyword_or_string(JITLexer *__restrict self);
+INTDEF ATTR_COLD NONNULL((1)) int FCALL syn_import_expected_keyword_after_as(JITLexer *__restrict self);
+INTDEF ATTR_COLD NONNULL((1)) int FCALL syn_import_expected_keyword_or_string_in_import_list(JITLexer *__restrict self);
+INTDEF ATTR_COLD NONNULL((1, 2)) int FCALL syn_import_invalid_name_for_module_symbol(JITLexer *__restrict self, struct jit_import_item const *__restrict item);
+INTDEF ATTR_COLD NONNULL((1, 2)) int FCALL syn_import_invalid_name_for_import_symbol(JITLexer *__restrict self, struct jit_import_item const *__restrict item);
+INTDEF ATTR_COLD NONNULL((1)) int FCALL syn_import_expected_comma_or_from_after_star(JITLexer *__restrict self);
+INTDEF ATTR_COLD NONNULL((1)) int FCALL syn_import_expected_from_after_symbol_import_list(JITLexer *__restrict self);
+INTDEF ATTR_COLD NONNULL((1)) int FCALL syn_import_expected_import_after_from(JITLexer *__restrict self);
+INTDEF ATTR_COLD NONNULL((1)) int FCALL syn_import_unexpected_from_after_module_import_list(JITLexer *__restrict self);
+INTDEF ATTR_COLD NONNULL((1)) int FCALL syn_import_unexpected_star_duplication_in_import_list(JITLexer *__restrict self);
 
 #define ATTR_ACCESS_GET     0
 #define ATTR_ACCESS_DEL     1
@@ -1630,6 +1716,7 @@ INTDEF ATTR_COLD int FCALL syn_template_string_undefined_escape(JITLexer *__rest
 INTDEF ATTR_COLD int (DCALL err_invalid_argc)(char const *function_name, size_t argc_cur, size_t argc_min, size_t argc_max);
 INTDEF ATTR_COLD NONNULL((1, 2)) int (DCALL err_unbound_attribute_string_c)(struct class_desc *__restrict desc, char const *__restrict name);
 INTDEF ATTR_COLD NONNULL((1, 2)) int (DCALL err_cant_access_attribute_string_c)(struct class_desc *__restrict desc, char const *__restrict name, int access);
+INTDEF ATTR_COLD int (FCALL err_cannot_import_relative)(char const *module_name, size_t module_namelen);
 
 /* TODO: Dee_ASSUMED_VALUE-optimizations for all of the errors above! */
 

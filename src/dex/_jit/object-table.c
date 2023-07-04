@@ -76,15 +76,15 @@ err:
 
 INTERN NONNULL((1)) void DCALL
 JITObjectTable_Fini(JITObjectTable *__restrict self) {
-	size_t i;
-	if (self->ot_list == jit_empty_object_list)
-		return;
-	for (i = 0; i <= self->ot_mask; ++i) {
-		if (!ITER_ISOK(self->ot_list[i].oe_namestr))
-			continue;
-		Dee_XDecref(self->ot_list[i].oe_value);
+	if (self->ot_list != jit_empty_object_list) {
+		size_t i;
+		for (i = 0; i <= self->ot_mask; ++i) {
+			if (!ITER_ISOK(self->ot_list[i].oe_namestr))
+				continue;
+			jit_object_entry_fini(&self->ot_list[i]);
+		}
+		Dee_Free(self->ot_list);
 	}
-	Dee_Free(self->ot_list);
 	if unlikely(self->ot_star_importc) {
 		Dee_Decrefv(self->ot_star_importv, self->ot_star_importc);
 		Dee_Free(self->ot_star_importv);
@@ -95,13 +95,13 @@ JITObjectTable_Fini(JITObjectTable *__restrict self) {
 
 INTERN NONNULL((1, 2)) void DCALL
 JITObjectTable_Visit(JITObjectTable *__restrict self, dvisit_t proc, void *arg) {
-	size_t i;
-	if (self->ot_list == jit_empty_object_list)
-		return;
-	for (i = 0; i <= self->ot_mask; ++i) {
-		if (!ITER_ISOK(self->ot_list[i].oe_namestr))
-			continue;
-		Dee_XVisit(self->ot_list[i].oe_value);
+	if (self->ot_list != jit_empty_object_list) {
+		size_t i;
+		for (i = 0; i <= self->ot_mask; ++i) {
+			if (!ITER_ISOK(self->ot_list[i].oe_namestr))
+				continue;
+			jit_object_entry_visit(&self->ot_list[i]);
+		}
 	}
 	Dee_Visitv(self->ot_star_importv, self->ot_star_importc);
 }
@@ -355,14 +355,19 @@ err:
 }
 
 
-/* Add a *-import module or object to `self'
+/* Add a *-import module or object to `self' (if not already present)
  * @return: 0 : Success
  * @return: -1: Success */
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 JITObjectTable_AddImportStar(JITObjectTable *__restrict self,
                              DeeObject *module_or_object) {
+	size_t i;
 	DREF DeeObject **new_star_importv;
 	ASSERT_OBJECT(module_or_object);
+	for (i = 0; i < self->ot_star_importc; ++i) {
+		if (self->ot_star_importv[i] == module_or_object)
+			return 0; /* Already present. */
+	}
 	new_star_importv = (DREF DeeObject **)Dee_Reallocc(self->ot_star_importv,
 	                                                   self->ot_star_importc + 1,
 	                                                   sizeof(DREF DeeObject *));
@@ -408,7 +413,7 @@ JITObjectTable_FindImportStar(JITObjectTable *__restrict self,
 		/* Check if this star-import exposes the required attribute. */
 		if (DeeModule_Check(module_or_object)) {
 			struct Dee_module_symbol *symbol;
-			symbol = DeeModule_GetSymbolStringLen((DeeModuleObject *)module_or_object,
+			symbol = DeeModule_GetSymbolStringLenHash((DeeModuleObject *)module_or_object,
 			                                      namestr, namelen, namehsh);
 			if (symbol) {
 				/* Found it! */
@@ -432,7 +437,6 @@ JITObjectTable_FindImportStar(JITObjectTable *__restrict self,
 	}
 	return ITER_DONE;
 }
-
 
 DECL_END
 

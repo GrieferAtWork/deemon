@@ -879,6 +879,8 @@ DeeString_PrintRepr(DeeObject *__restrict self,
 DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeString_FromBackslashEscaped(/*utf-8*/ char const *__restrict start,
                                size_t length, unsigned int error_mode);
+/* @return: 0 : Success
+ * @return: -1: Error */
 DFUNDEF WUNUSED NONNULL((1, 2)) int DCALL
 DeeString_DecodeBackslashEscaped(struct Dee_unicode_printer *__restrict printer,
                                  /*utf-8*/ char const *__restrict start,

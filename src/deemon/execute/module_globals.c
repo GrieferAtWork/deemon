@@ -347,7 +347,7 @@ me_contains(ModuleExports *self, DeeObject *key) {
 		return_false;
 	if (DeeModule_LockSymbols(mod))
 		goto err;
-	result = DeeModule_GetSymbolString(mod,
+	result = DeeModule_GetSymbolStringHash(mod,
 	                                   DeeString_STR(key),
 	                                   DeeString_Hash(key)) != NULL;
 	DeeModule_UnlockSymbols(mod);
@@ -415,7 +415,7 @@ me_get(ModuleExports *self, DeeObject *key) {
 		goto err_unknown_key;
 	if (DeeModule_LockSymbols(mod))
 		goto err;
-	symbol = DeeModule_GetSymbolString(mod,
+	symbol = DeeModule_GetSymbolStringHash(mod,
 	                                   DeeString_STR(key),
 	                                   DeeString_Hash(key));
 	if unlikely(!symbol)
@@ -444,7 +444,7 @@ me_get_f(ModuleExports *self, size_t argc, DeeObject *const *argv) {
 		goto err_unknown_key;
 	if (DeeModule_LockSymbols(mod))
 		goto err;
-	symbol = DeeModule_GetSymbolString(mod,
+	symbol = DeeModule_GetSymbolStringHash(mod,
 	                                   DeeString_STR(key),
 	                                   DeeString_Hash(key));
 	if unlikely(!symbol)
@@ -473,7 +473,7 @@ me_del(ModuleExports *__restrict self, DeeObject *__restrict key) {
 		goto err_unknown_key;
 	if (DeeModule_LockSymbols(mod))
 		goto err;
-	symbol = DeeModule_GetSymbolString(mod,
+	symbol = DeeModule_GetSymbolStringHash(mod,
 	                                   DeeString_STR(key),
 	                                   DeeString_Hash(key));
 	if unlikely(!symbol)
@@ -500,7 +500,7 @@ me_set(ModuleExports *__restrict self,
 		goto err_unknown_key;
 	if (DeeModule_LockSymbols(mod))
 		goto err;
-	symbol = DeeModule_GetSymbolString(mod,
+	symbol = DeeModule_GetSymbolStringHash(mod,
 	                                   DeeString_STR(key),
 	                                   DeeString_Hash(key));
 	if unlikely(!symbol)

@@ -408,8 +408,8 @@ EXPORTS
 	_DeeModule_GetRoot@8=DeeModule_GetRoot@8
 	_DeeModule_GetString@8=DeeModule_GetString@8
 	_DeeModule_GetSymbolID@8=DeeModule_GetSymbolID@8
-	_DeeModule_GetSymbolString@12=DeeModule_GetSymbolString@12
-	_DeeModule_GetSymbolStringLen@16=DeeModule_GetSymbolStringLen@16
+	_DeeModule_GetSymbolStringHash@12=DeeModule_GetSymbolStringHash@12
+	_DeeModule_GetSymbolStringLenHash@16=DeeModule_GetSymbolStringLenHash@16
 	_DeeModule_GlobalName@8=DeeModule_GlobalName@8
 	_DeeModule_ImportGlobal@4=DeeModule_ImportGlobal@4
 	_DeeModule_ImportGlobalString@8=DeeModule_ImportGlobalString@8
@@ -498,6 +498,7 @@ EXPORTS
 	_DeeObject_AsUInt32@8=DeeObject_AsUInt32@8
 	_DeeObject_AsUInt64@8=DeeObject_AsUInt64@8
 	_DeeObject_AsUInt8@8=DeeObject_AsUInt8@8
+	_DeeObject_AssertImplements@8=DeeObject_AssertImplements@8
 	_DeeObject_AssertType@8=DeeObject_AssertType@8
 	_DeeObject_AssertTypeExact@8=DeeObject_AssertTypeExact@8
 	_DeeObject_Assign@8=DeeObject_Assign@8

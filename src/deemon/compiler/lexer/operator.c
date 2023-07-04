@@ -220,7 +220,7 @@ do_generic:
 		function_symbol->s_type            = SYMBOL_TYPE_EXTERN;
 		function_symbol->s_extern.e_module = DeeModule_GetDeemon();
 		Dee_Incref(function_symbol->s_extern.e_module);
-		function_symbol->s_extern.e_symbol = DeeModule_GetSymbolString(function_symbol->s_extern.e_module,
+		function_symbol->s_extern.e_symbol = DeeModule_GetSymbolStringHash(function_symbol->s_extern.e_module,
 		                                                               DeeString_STR(function_name),
 		                                                               DeeString_Hash((DeeObject *)function_name));
 		ASSERTF(function_symbol->s_extern.e_symbol,
@@ -332,7 +332,7 @@ do_generic:
 		function_symbol->s_type            = SYMBOL_TYPE_EXTERN;
 		function_symbol->s_extern.e_module = DeeModule_GetDeemon();
 		Dee_Incref(function_symbol->s_extern.e_module);
-		function_symbol->s_extern.e_symbol = DeeModule_GetSymbolString(function_symbol->s_extern.e_module,
+		function_symbol->s_extern.e_symbol = DeeModule_GetSymbolStringHash(function_symbol->s_extern.e_module,
 		                                                               DeeString_STR(function_name),
 		                                                               DeeString_Hash((DeeObject *)function_name));
 		ASSERTF(function_symbol->s_extern.e_symbol,

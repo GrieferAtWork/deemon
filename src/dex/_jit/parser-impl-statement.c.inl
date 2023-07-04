@@ -725,12 +725,298 @@ err:
 	return ERROR;
 }
 
+
+#ifdef JIT_EVAL
+#ifndef CONFIG_HAVE_memrend
+#define CONFIG_HAVE_memrend
+#define memrend dee_memrend
+DeeSystem_DEFINE_memrend(dee_memrend)
+#endif /* !CONFIG_HAVE_memrend */
+
+/* Fill in `result->ii_symbol_name' and `result->ii_symbol_size' a module name `.foo.bar', etc. */
+PRIVATE WUNUSED NONNULL((1, 2)) int FCALL
+get_module_symbol_name(JITLexer *__restrict self,
+                       struct jit_import_item *__restrict result,
+                       bool is_module) {
+	DeeStringObject *module_name = result->ii_import_name;
+	char *utf8_repr, *symbol_start;
+	size_t symbol_length;
+	utf8_repr = DeeString_AsUtf8((DeeObject *)module_name);
+	if unlikely(!utf8_repr)
+		goto err;
+	symbol_start  = (char *)memrend(utf8_repr, '.', WSTR_LENGTH(utf8_repr)) + 1;
+	symbol_length = (size_t)((utf8_repr + WSTR_LENGTH(utf8_repr)) - symbol_start);
+
+	/* Make sure that the symbol name is valid. */
+	{
+		char *iter, *end;
+		end = (iter = symbol_start) + symbol_length;
+		if unlikely(!symbol_length)
+			goto bad_symbol_name;
+		for (; iter < end; ++iter) {
+			uint32_t ch;
+			uniflag_t flags;
+			ch    = unicode_readutf8_n(&iter, end);
+			flags = DeeUni_Flags(ch);
+			if (iter == symbol_start ? !(flags & UNICODE_ISSYMSTRT)
+			                         : !(flags & UNICODE_ISSYMCONT)) {
+bad_symbol_name:
+				if (is_module) {
+					syn_import_invalid_name_for_module_symbol(self, result);
+				} else {
+					syn_import_invalid_name_for_import_symbol(self, result);
+				}
+				goto err;
+			}
+		}
+	}
+
+	/* Lookup/create a keyword for the module's symbol name. */
+	result->ii_symbol_name = symbol_start;
+	result->ii_symbol_size = symbol_length;
+	return 0;
+err:
+	return -1;
+}
+#endif /* JIT_EVAL */
+
+
+/* Evaluate a symbol name for an import statement and write it to `printer'
+ * @return:  0: Successfully.
+ * @return: -1: An error occurred. */
+INTERN WUNUSED IFELSE(NONNULL((1, 2)), NONNULL((1))) int FCALL
+FUNC(SymbolNameIntoPrinter)(JITLexer *__restrict self
+                            IF_EVAL(, struct unicode_printer *__restrict printer)) {
+	if (self->jl_tok == JIT_KEYWORD) {
+#ifdef JIT_EVAL
+		if (unicode_printer_print(printer,
+		                          JITLexer_TokPtr(self),
+		                          JITLexer_TokLen(self)) < 0)
+			goto err;
+#endif /* JIT_EVAL */
+		JITLexer_Yield(self);
+	} else if (self->jl_tok == TOK_STRING) {
+#ifdef JIT_EVAL
+		if (DeeString_DecodeBackslashEscaped(printer,
+		                                     JITLexer_TokPtr(self) + 1,
+		                                     JITLexer_TokLen(self) - 2,
+		                                     STRING_ERROR_FSTRICT))
+			goto err;
+#endif /* JIT_EVAL */
+		JITLexer_Yield(self);
+	} else {
+		syn_import_expected_keyword_or_string_in_import_list(self);
+		goto err;
+	}
+	return 0;
+err:
+	return -1;
+}
+
+
+/* @return:  1: OK (when `allow_module_name' is true, a module import was parsed)
+ * @return:  0: OK
+ * @return: -1: Error */
+INTERN WUNUSED IFELSE(NONNULL((1, 2)), NONNULL((1))) int FCALL
+FUNC(ImportItem)(JITLexer *__restrict self,
+                 IF_EVAL(struct jit_import_item *__restrict result, )
+                 bool allow_module_name) {
+#ifdef JIT_EVAL
+	struct unicode_printer printer;
+#endif /* JIT_EVAL */
+	int return_value = 0;
+	if (self->jl_tok == JIT_KEYWORD) {
+		/* - `foo'
+		 * - `foo = bar'
+		 * - `foo = .foo.bar'
+		 * - `foo = "bar"'
+		 * - `foo as bar'
+		 * - `foo.bar'
+		 * - `foo.bar as foobar' */
+#ifdef JIT_EVAL
+		result->ii_symbol_name = JITLexer_TokPtr(self);
+		result->ii_symbol_size = JITLexer_TokLen(self);
+#endif /* JIT_EVAL */
+		JITLexer_Yield(self);
+		if (self->jl_tok == '=') {
+			/* - `foo = bar'
+			 * - `foo = .foo.bar'
+			 * - `foo = "bar"' */
+			JITLexer_Yield(self);
+#ifdef JIT_EVAL
+			unicode_printer_init(&printer);
+			return_value = allow_module_name
+			               ? JITLexer_EvalModuleNameIntoPrinter(self, &printer)
+			               : JITLexer_EvalSymbolNameIntoPrinter(self, &printer);
+			if unlikely(return_value < 0)
+				goto err_printer;
+			result->ii_import_name = (DREF DeeStringObject *)unicode_printer_pack(&printer);
+			if unlikely(!result->ii_import_name)
+				goto err;
+#else /* JIT_EVAL */
+			return_value = allow_module_name
+			               ? JITLexer_SkipModuleNameIntoPrinter(self)
+			               : JITLexer_SkipSymbolNameIntoPrinter(self);
+			if unlikely(return_value < 0)
+				goto err_printer;
+#endif /* !JIT_EVAL */
+		} else if (JITLexer_ISKWD(self, "as")) {
+			/* - `foo as bar' */
+			JITLexer_Yield(self);
+			if (self->jl_tok == JIT_KEYWORD) {
+#ifdef JIT_EVAL
+				result->ii_import_name = (DREF DeeStringObject *)DeeString_NewUtf8(result->ii_symbol_name,
+				                                                                   result->ii_symbol_size,
+				                                                                   STRING_ERROR_FSTRICT);
+				if unlikely(!result->ii_import_name)
+					goto err;
+				result->ii_symbol_name = JITLexer_TokPtr(self);
+				result->ii_symbol_size = JITLexer_TokLen(self);
+#endif /* JIT_EVAL */
+				JITLexer_Yield(self);
+			} else {
+				syn_import_expected_keyword_after_as(self);
+				goto err;
+			}
+		} else if (TOKEN_IS_DOT(self) && allow_module_name) {
+			/* - `foo.bar'
+			 * - `foo.bar as foobar' */
+#ifdef JIT_EVAL
+			unicode_printer_init(&printer);
+			if unlikely(unicode_printer_print(&printer,
+			                                  result->ii_symbol_name,
+			                                  result->ii_symbol_size) < 0)
+				goto err_printer;
+#endif /* JIT_EVAL */
+			goto complete_module_name;
+		} else {
+#ifdef JIT_EVAL
+			result->ii_import_name = NULL;
+#endif /* JIT_EVAL */
+		}
+	} else if (TOKEN_IS_DOT(self) && allow_module_name) {
+		/* - `.foo.bar'
+		 * - `.foo.bar as foobar' */
+#ifdef JIT_EVAL
+		unicode_printer_init(&printer);
+#endif /* JIT_EVAL */
+complete_module_name:
+		return_value = 1;
+#ifdef JIT_EVAL
+		if unlikely(unicode_printer_printascii(&printer, "...", TOKEN_IS_DOT_count(self)) < 0)
+			goto err_printer;
+#endif /* JIT_EVAL */
+		JITLexer_Yield(self);
+
+		/* Make sure to properly parse `import . as me' */
+		if ((self->jl_tok == JIT_KEYWORD && !JITLexer_ISTOK(self, "as")) ||
+		    TOKEN_IS_DOT(self) || self->jl_tok == TOK_STRING) {
+#ifdef JIT_EVAL
+			if unlikely(JITLexer_EvalModuleNameIntoPrinter(self, &printer) < 0)
+				goto err_printer;
+#else /* JIT_EVAL */
+			if unlikely(JITLexer_SkipModuleNameIntoPrinter(self) < 0)
+				goto err;
+#endif /* !JIT_EVAL */
+		}
+#ifdef JIT_EVAL
+		result->ii_import_name = (DREF DeeStringObject *)unicode_printer_pack(&printer);
+		if unlikely(!result->ii_import_name)
+			goto err;
+#endif /* JIT_EVAL */
+		if (JITLexer_ISKWD(self, "as")) {
+			/* - `.foo.bar as foobar' */
+			JITLexer_Yield(self);
+			if unlikely(self->jl_tok != JIT_KEYWORD) {
+				syn_import_expected_keyword_after_as(self);
+				goto err_name;
+			}
+#ifdef JIT_EVAL
+			result->ii_symbol_name = JITLexer_TokPtr(self);
+			result->ii_symbol_size = JITLexer_TokLen(self);
+#endif /* JIT_EVAL */
+			JITLexer_Yield(self);
+		} else {
+			/* - `.foo.bar' */
+
+			/* Autogenerate the module import symbol name. */
+autogenerate_symbol_name:;
+#ifdef JIT_EVAL
+			if unlikely(get_module_symbol_name(self, result, return_value != 0))
+				goto err_name;
+#endif /* JIT_EVAL */
+		}
+	} else if (self->jl_tok == TOK_STRING) {
+		/* - `"foo"'
+		 * - `"foo" as foobar'
+		 * - `"foo.bar"'
+		 * - `"foo.bar" as foobar' */
+#ifdef JIT_EVAL
+		unicode_printer_init(&printer);
+		return_value = allow_module_name
+		               ? JITLexer_EvalModuleNameIntoPrinter(self, &printer)
+		               : JITLexer_EvalSymbolNameIntoPrinter(self, &printer);
+#else /* JIT_EVAL */
+		return_value = allow_module_name
+		               ? JITLexer_SkipModuleNameIntoPrinter(self)
+		               : JITLexer_SkipSymbolNameIntoPrinter(self);
+#endif /* !JIT_EVAL */
+		if unlikely(return_value < 0)
+			goto err_printer;
+#ifdef JIT_EVAL
+		result->ii_import_name = (DREF DeeStringObject *)unicode_printer_pack(&printer);
+		if unlikely(!result->ii_import_name)
+			goto err;
+#endif /* JIT_EVAL */
+		if (!JITLexer_ISKWD(self, "as"))
+			goto autogenerate_symbol_name;
+
+		/* An import alias was given. */
+		JITLexer_Yield(self);
+		if unlikely(self->jl_tok != JIT_KEYWORD) {
+			syn_import_expected_keyword_after_as(self);
+			goto err_name;
+		}
+#ifdef JIT_EVAL
+		result->ii_symbol_name = JITLexer_TokPtr(self);
+		result->ii_symbol_size = JITLexer_TokLen(self);
+#endif /* JIT_EVAL */
+		JITLexer_Yield(self);
+	} else {
+		syn_import_expected_keyword_or_string_in_import_list(self);
+		goto err;
+	}
+	return return_value;
+err_printer:
+#ifdef JIT_EVAL
+	unicode_printer_fini(&printer);
+	goto err;
+#endif /* JIT_EVAL */
+err_name:
+#ifdef JIT_EVAL
+	Dee_Decref(result->ii_import_name);
+#endif /* JIT_EVAL */
+err:
+	return -1;
+}
+
+
+/* NOTE: Unlike other statements, the Import-statement parsers expect the
+ *       lexer to point *after* the leading `import' or `from' keyword */
 INTERN RETURN_TYPE FCALL
 FUNC(Import)(JITLexer *__restrict self) {
-	RETURN_TYPE result;
+#ifdef JIT_EVAL
+	struct jit_import_item item;
+	DREF DeeObject *mod;
+	struct jit_import_item *item_v;
+	size_t item_a, item_c;
+#endif /* JIT_EVAL */
+	bool allow_modules, has_star;
+	int error;
 
 	/* Special handling for `import(...)' expressions. */
 	if (self->jl_tok == '(' || JITLexer_ISKWD(self, "pack")) {
+		RETURN_TYPE result;
 #ifdef JIT_EVAL
 		result = JITContext_GetImport(self->jl_context);
 		if unlikely(!result)
@@ -765,18 +1051,264 @@ FUNC(Import)(JITLexer *__restrict self) {
 	 *       and then creating `JIT_OBJECT_ENTRY_EXTERN_SYMBOL' or `JIT_OBJECT_ENTRY_EXTERN_ATTR[STR]' symbols.
 	 */
 
+	allow_modules = true;
+	has_star      = false; /* When true, import all */
+	if (self->jl_tok == '*') {
+		has_star = true;
+		JITLexer_Yield(self);
+		if (JITLexer_ISKWD(self, "from")) {
+			JITLexer_Yield(self);
+#ifdef JIT_EVAL
+			mod = JITLexer_EvalModule(self);
+			if unlikely(!mod)
+				goto err;
+			if unlikely(JITContext_DoImportStar(self->jl_context, mod))
+				goto err_mod_invoke;
+			Dee_Decref(mod);
+#else /* JIT_EVAL */
+			if unlikely(JITLexer_SkipModule(self))
+				goto err;
+#endif /* !JIT_EVAL */
+			goto done;
+		} else if (self->jl_tok == ',') {
+#ifdef JIT_EVAL
+			item_c = 0;
+			item_a = 0;
+			item_v = NULL;
+#endif /* JIT_EVAL */
+			allow_modules = false;
+			goto import_parse_list;
+		}
+		syn_import_expected_comma_or_from_after_star(self);
+		goto err;
+	}
+#ifdef JIT_EVAL
+	error = JITLexer_EvalImportItem(self, &item, true);
+#else /* JIT_EVAL */
+	error = JITLexer_SkipImportItem(self, true);
+#endif /* !JIT_EVAL */
+	if unlikely(error < 0)
+		goto err;
+	if (error) {
+		/* Module import list */
+		for (;;) {
+import_item_as_module:
+#ifdef JIT_EVAL
+			if (JITContext_DoImportModule(self->jl_context, &item))
+				goto err_item_invoke;
+			Dee_XDecref(item.ii_import_name);
+#endif /* JIT_EVAL */
+parse_module_import_list:
+			if (self->jl_tok != ',')
+				break;
+			JITLexer_Yield(self);
+#ifdef JIT_EVAL
+			error = JITLexer_EvalImportItem(self, &item, true);
+#else /* JIT_EVAL */
+			error = JITLexer_SkipImportItem(self, true);
+#endif /* !JIT_EVAL */
+			if unlikely(error < 0)
+				goto err;
+		}
 
-	/* TODO: Import statements */
-	DERROR_NOTIMPLEMENTED();
-	result = ERROR;
-	return result;
+		/* Warn if the module import list is followed by a `from' */
+		if (JITLexer_ISKWD(self, "from")) {
+			syn_import_unexpected_from_after_module_import_list(self);
+			goto err;
+		}
+	} else if (JITLexer_ISKWD(self, "from")) {
+		/*  - `import foo from bar' */
+		JITLexer_Yield(self);
+#ifdef JIT_EVAL
+		mod = JITLexer_EvalModule(self);
+		if unlikely(!mod)
+			goto err_item;
+		error = JITContext_DoImportSymbol(self->jl_context, &item, mod);
+		Dee_Decref(mod);
+		if unlikely(error)
+			goto err_item_invoke;
+		Dee_XDecref(item.ii_import_name);
+#else /* JIT_EVAL */
+		if unlikely(JITLexer_SkipModule(self))
+			goto err;
+#endif /* !JIT_EVAL */
+	} else if (self->jl_tok == ',') {
+#ifdef JIT_EVAL
+		item_a = 4;
+		item_v = (struct jit_import_item *)Dee_TryMallocc(4, sizeof(struct jit_import_item));
+		if unlikely(!item_v) {
+			item_a = 2;
+			item_v = (struct jit_import_item *)Dee_Mallocc(2, sizeof(struct jit_import_item));
+			if unlikely(!item_v)
+				goto err_item;
+		}
+		item_v[0] = item;
+		item_c    = 1;
+#endif /* JIT_EVAL */
+import_parse_list:
+		do {
+			ASSERT(self->jl_tok == ',');
+			JITLexer_Yield(self);
+			if (self->jl_tok == '*') {
+				if (has_star) {
+					syn_import_unexpected_star_duplication_in_import_list(self);
+					goto err_item_v;
+				}
+				has_star = true;
+				JITLexer_Yield(self);
+
+				/* Don't allow modules after `*' confirmed that symbols are being imported.
+				 * -> There is no such thing as import-all-modules. */
+				allow_modules = false;
+			} else {
+				/* Parse the next import item. */
+#ifdef JIT_EVAL
+				ASSERT(item_c <= item_a);
+				if (item_c >= item_a) {
+					/* Allocate more space. */
+					struct jit_import_item *new_item_v;
+					size_t new_item_a = item_a * 2;
+					if unlikely(!new_item_a)
+						new_item_a = 2;
+					new_item_v = (struct jit_import_item *)Dee_TryReallocc(item_v, new_item_a,
+					                                                       sizeof(struct jit_import_item));
+					if unlikely(!new_item_v) {
+						new_item_a = item_c + 1;
+						new_item_v = (struct jit_import_item *)Dee_Reallocc(item_v, new_item_a,
+						                                                    sizeof(struct jit_import_item));
+						if unlikely(!new_item_v)
+							goto err_item_v;
+					}
+					item_v = new_item_v;
+					item_a = new_item_a;
+				}
+				error = JITLexer_EvalImportItem(self, &item_v[item_c], allow_modules);
+#else /* JIT_EVAL */
+				error = JITLexer_SkipImportItem(self, allow_modules);
+#endif /* !JIT_EVAL */
+				if unlikely(error < 0)
+					goto err_item_v;
+#ifdef JIT_EVAL
+				++item_c; /* Import parsing confirmed. */
+#endif /* JIT_EVAL */
+				if (error) {
+					/* We're dealing with a module import list!
+					 * -> Import all items already parsed as modules. */
+					ASSERT(allow_modules != false);
+#ifdef JIT_EVAL
+					{
+						size_t i;
+						for (i = 0; i < item_c; ++i) {
+							if unlikely(JITContext_DoImportModule(self->jl_context, &item_v[i]))
+								goto err_item_v_invoke;
+							Dee_XClear(item_v[i].ii_import_name);
+						}
+						Dee_Free(item_v);
+					}
+#endif /* JIT_EVAL */
+					/* Then continue by parsing the remainder as a module import list. */
+					goto parse_module_import_list;
+				}
+			}
+		} while (self->jl_tok == ',');
+
+		/* A multi-item, comma-separated import list has now been parsed. */
+		if (JITLexer_ISKWD(self, "from")) {
+
+			/* import foo, bar, foobar from foobarfoo;  (symbol import) */
+			JITLexer_Yield(self);
+#ifdef JIT_EVAL
+			mod = JITLexer_EvalModule(self);
+			if unlikely(!mod)
+				goto err_item_v;
+#else /* JIT_EVAL */
+			if unlikely(JITLexer_SkipModule(self))
+				goto err_item_v;
+#endif /* !JIT_EVAL */
+
+#ifdef JIT_EVAL
+			/* If `*' was apart of the symbol import list,
+			 * start by importing all symbols from the module. */
+			if (has_star) {
+				if unlikely(JITContext_DoImportStar(self->jl_context, mod))
+					goto err_item_v_mod_invoke;
+			}
+
+			/* Now import all the explicitly defined symbols. */
+			{
+				size_t i;
+				for (i = 0; i < item_c; ++i) {
+					if unlikely(JITContext_DoImportSymbol(self->jl_context, &item_v[i], mod))
+						goto err_item_v_mod_invoke;
+					Dee_XClear(item_v[i].ii_import_name);
+				}
+				Dee_Decref(mod);
+			}
+#endif /* JIT_EVAL */
+		} else {
+			if unlikely(!allow_modules) {
+				/* Warn if there is a `from' missing following a symbol import list. */
+				syn_import_expected_from_after_symbol_import_list(self);
+				goto err_item_v;
+			}
+
+			/* import foo, bar, foobar;  (module import) */
+#ifdef JIT_EVAL
+			{
+				size_t i;
+				for (i = 0; i < item_c; ++i) {
+					if unlikely(JITContext_DoImportModule(self->jl_context, &item_v[i]))
+						goto err_item_v_invoke;
+					Dee_XClear(item_v[i].ii_import_name);
+				}
+			}
+#endif /* JIT_EVAL */
+		}
+#ifdef JIT_EVAL
+		Dee_Free(item_v);
+#endif /* JIT_EVAL */
+	} else {
+		/* This is simply a single-module, stand-along import statement. */
+		goto import_item_as_module;
+	}
+done:
+#ifdef JIT_EVAL
+	return_none;
+#else /* JIT_EVAL */
+	return 0;
+#endif /* !JIT_EVAL */
+#ifdef JIT_EVAL
+err_item_v_mod_invoke:
+	Dee_Decref(mod);
+err_item_v_invoke:
+	JITLexer_ErrorTrace(self, self->jl_tokstart);
+err_item_v:
+	while (item_c--)
+		Dee_XDecref(item_v[item_c].ii_import_name);
+	Dee_Free(item_v);
+	goto err;
+err_item_invoke:
+	JITLexer_ErrorTrace(self, self->jl_tokstart);
+err_item:
+	Dee_XDecref(item.ii_import_name);
+	goto err;
+err_mod_invoke:
+	JITLexer_ErrorTrace(self, self->jl_tokstart);
+/*err_mod:*/
+	Dee_Decref(mod);
+#else /* JIT_EVAL */
+err_item_v:
+#endif /* !JIT_EVAL */
 err:
 	return ERROR;
 }
 
 INTERN RETURN_TYPE FCALL
 FUNC(FromImport)(JITLexer *__restrict self) {
-	RETURN_TYPE result;
+	bool has_star = false;
+#ifdef JIT_EVAL
+	DREF DeeObject *mod;
+#endif /* JIT_EVAL */
 
 	/* - from deemon import *;
 	 * - from deemon import Object;
@@ -787,15 +1319,77 @@ FUNC(FromImport)(JITLexer *__restrict self) {
 	 * - from deemon import Object as MyObject;
 	 * - from deemon import "Object" as MyObject;
 	 * - from deemon import Object as MyObject, List as MyList; */
+#ifdef JIT_EVAL
+	mod = JITLexer_EvalModule(self);
+	if unlikely(!mod)
+		goto err;
+#else /* JIT_EVAL */
+	if unlikely(JITLexer_SkipModule(self))
+		goto err;
+#endif /* !JIT_EVAL */
 
-	/* TODO: Import statements */
-	(void)self;
-	DERROR_NOTIMPLEMENTED();
-	result = ERROR;
-	return result;
-/*
+	/* All right! we've got the module. */
+	if (!JITLexer_ISKWD(self, "import")) {
+		syn_import_expected_import_after_from(self);
+		goto err_mod;
+	}
+	JITLexer_Yield(self);
+
+	for (;;) {
+		/* Parse an entire import list. */
+		if (self->jl_tok == '*') {
+			if (has_star) {
+				syn_import_unexpected_star_duplication_in_import_list(self);
+				goto err_mod;
+			}
+#ifdef JIT_EVAL
+			if (JITContext_DoImportStar(self->jl_context, mod))
+				goto err_mod_invoke;
+#endif /* JIT_EVAL */
+			JITLexer_Yield(self);
+			has_star = true;
+		} else {
+#ifdef JIT_EVAL
+			struct jit_import_item item;
+#endif /* JIT_EVAL */
+			int error;
+#ifdef JIT_EVAL
+			error = JITLexer_EvalImportItem(self, &item, false);
+#else /* JIT_EVAL */
+			error = JITLexer_SkipImportItem(self, false);
+#endif /* !JIT_EVAL */
+			if unlikely(error < 0)
+				goto err_mod;
+#ifdef JIT_EVAL
+			error = JITContext_DoImportSymbol(self->jl_context, &item, mod);
+			Dee_XDecref(item.ii_import_name);
+			if unlikely(error)
+				goto err_mod_invoke;
+#endif /* JIT_EVAL */
+		}
+		if (self->jl_tok != ',')
+			break;
+		JITLexer_Yield(self);
+	}
+#ifdef JIT_EVAL
+	Dee_Decref(mod);
+#endif /* JIT_EVAL */
+
+#ifdef JIT_EVAL
+	return_none;
+#else /* JIT_EVAL */
+	return 0;
+#endif /* !JIT_EVAL */
+#ifdef JIT_EVAL
+err_mod_invoke:
+	JITLexer_ErrorTrace(self, self->jl_tokstart);
+#endif /* JIT_EVAL */
+err_mod:
+#ifdef JIT_EVAL
+	Dee_Decref(mod);
+#endif /* JIT_EVAL */
 err:
-	return ERROR;*/
+	return ERROR;
 }
 
 

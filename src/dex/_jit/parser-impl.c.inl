@@ -19,8 +19,8 @@
  */
 #ifdef __INTELLISENSE__
 #include "parser.c"
-//#define JIT_SKIP 1
-#define JIT_EVAL 1
+#define JIT_SKIP 1
+//#define JIT_EVAL 1
 #endif /* __INTELLISENSE__ */
 
 #include <deemon/bool.h>
@@ -2001,7 +2001,7 @@ err_oo_class_reinit_lvalue:
 				symbol_hash = Dee_HashUtf8(symbol_name, symbol_size);
 				if (DeeModule_Check(mod)) {
 					struct module_symbol *symbol;
-					symbol = DeeModule_GetSymbolStringLen((DREF DeeModuleObject *)mod,
+					symbol = DeeModule_GetSymbolStringLenHash((DREF DeeModuleObject *)mod,
 					                                      symbol_name, symbol_size,
 					                                      symbol_hash);
 					if unlikely(!symbol) {

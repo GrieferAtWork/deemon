@@ -303,7 +303,7 @@ struct import_item {
 	struct ast_loc        ii_import_loc;  /* Parser location of `ii_import_name' */
 	struct TPPKeyword    *ii_symbol_name; /* [1..1] The name by which the item should be imported. */
 	DREF DeeStringObject *ii_import_name; /* [0..1] The name of the object being imported.
-	                                       * When NULL, `ii_snam' is used instead. */
+	                                       * When NULL, `ii_symbol_name' is used instead. */
 };
 
 /* Return `bar' for a module name `.foo.bar', etc. */
@@ -320,11 +320,11 @@ get_module_symbol_name(DeeStringObject *__restrict module_name, bool is_module) 
 	/* Make sure that the symbol name is valid. */
 	{
 		char *iter, *end;
-		uint32_t ch;
 		end = (iter = symbol_start) + symbol_length;
 		if unlikely(!symbol_length)
 			goto bad_symbol_name;
 		for (; iter < end; ++iter) {
+			uint32_t ch;
 			uniflag_t flags;
 			ch    = unicode_readutf8_n(&iter, end);
 			flags = DeeUni_Flags(ch);
@@ -336,7 +336,8 @@ bad_symbol_name:
 					         module_name, symbol_length, symbol_start))
 						goto err;
 				} else {
-					if (WARN(W_INVALID_NAME_FOR_IMPORT_SYMBOL, module_name))
+					if (WARN(W_INVALID_NAME_FOR_IMPORT_SYMBOL,
+					         module_name, symbol_length, symbol_start))
 						goto err;
 				}
 				break;
@@ -351,7 +352,7 @@ err:
 }
 
 
-/* @return:  2: Failed
+/* @return:  2: Nothing was parsed
  * @return:  1: OK (when `allow_module_name' is true, a module import was parsed)
  * @return:  0: OK
  * @return: -1: Error */
@@ -423,9 +424,9 @@ parse_import_symbol(struct import_item *__restrict result,
 				goto err;
 			unicode_printer_init(&printer);
 			if unlikely(unicode_printer_print(&printer,
-				                               result->ii_symbol_name->k_name,
-				                               result->ii_symbol_name->k_size) < 0)
-			goto err_printer;
+			                                  result->ii_symbol_name->k_name,
+			                                  result->ii_symbol_name->k_size) < 0)
+				goto err_printer;
 			goto complete_module_name;
 		} else {
 			if (is_reserved_symbol_name(result->ii_symbol_name) &&
@@ -449,8 +450,7 @@ complete_module_name:
 		/* Make sure to properly parse `import . as me' */
 		if ((TPP_ISKEYWORD(tok) && tok != KWD_as) ||
 		    TOK_ISDOT(tok) || tok == TOK_STRING ||
-		    (tok == TOK_CHAR && !HAS(EXT_CHARACTER_LITERALS)) ||
-		    (UNICODE_PRINTER_LENGTH(&printer) != 1)) {
+		    (tok == TOK_CHAR && !HAS(EXT_CHARACTER_LITERALS))) {
 			if unlikely(ast_parse_module_name(&printer, true) < 0)
 				goto err_printer;
 		}
@@ -710,9 +710,9 @@ ast_import_single_from_module(DeeModuleObject *__restrict mod,
 		goto done;
 	}
 	if (item->ii_import_name) {
-		sym = DeeModule_GetSymbolString(mod,
-		                                DeeString_STR(item->ii_import_name),
-		                                DeeString_Hash((DeeObject *)item->ii_import_name));
+		sym = DeeModule_GetSymbolStringHash(mod,
+		                                    DeeString_STR(item->ii_import_name),
+		                                    DeeString_Hash((DeeObject *)item->ii_import_name));
 		if (!sym) {
 			if (WARNAT(&item->ii_import_loc, W_MODULE_IMPORT_NOT_FOUND,
 			           DeeString_STR(item->ii_import_name),
@@ -870,9 +870,10 @@ INTERN int FCALL ast_parse_post_import(void) {
 			Dee_Decref(mod);
 			goto done;
 		} else if (tok == ',') {
-			item_a = item_c = 0;
-			item_v          = NULL;
-			allow_modules   = false;
+			item_c = 0;
+			item_a = 0;
+			item_v = NULL;
+			allow_modules = false;
 			goto import_parse_list;
 		}
 		if (WARN(W_EXPECTED_COMMA_OR_FROM_AFTER_START_IN_IMPORT_LIST))
@@ -1182,8 +1183,9 @@ INTERN WUNUSED DREF struct ast *FCALL ast_parse_import(void) {
 		 * - from deemon import Object as MyObject;
 		 * - from deemon import "Object" as MyObject;
 		 * - from deemon import Object as MyObject, List as MyList; */
-		bool did_import_all = false;
-		result              = ast_setddi(ast_constexpr(Dee_None), &import_loc);
+		bool has_star = false;
+		result = ast_constexpr(Dee_None);
+		result = ast_setddi(result, &import_loc);
 		if unlikely(!result)
 			goto err;
 		if unlikely(yield() < 0)
@@ -1198,14 +1200,14 @@ INTERN WUNUSED DREF struct ast *FCALL ast_parse_import(void) {
 		for (;;) {
 			/* Parse an entire import list. */
 			if (tok == '*') {
-				if (did_import_all &&
+				if (has_star &&
 				    WARN(W_UNEXPECTED_STAR_DUPLICATION_IN_IMPORT_LIST))
 					goto err_r_module;
 				if unlikely(ast_import_all_from_module(mod, NULL))
 					goto err_r_module;
 				if unlikely(yield() < 0)
 					goto err_r_module;
-				did_import_all = true;
+				has_star = true;
 			} else {
 				int error;
 				struct import_item item;
@@ -1259,7 +1261,8 @@ INTERN WUNUSED DREF struct ast *FCALL ast_parse_import(void) {
 			result = ast_parse_postexpr(result);
 			goto done;
 		}
-		result = ast_setddi(ast_constexpr(Dee_None), &import_loc);
+		result = ast_constexpr(Dee_None);
+		result = ast_setddi(result, &import_loc);
 		if unlikely(!result)
 			goto err;
 		if unlikely(ast_parse_post_import())

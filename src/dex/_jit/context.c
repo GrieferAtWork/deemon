@@ -1071,16 +1071,14 @@ set_star_import:
 			if (star_import_symbol) {
 				ASSERT(DeeModule_Check(star_import));
 				result->js_kind = JIT_SYMBOL_EXTERN;
-				result->js_extern.jx_mod = (DREF DeeModuleObject *)star_import;
+				result->js_extern.jx_mod = (DREF DeeModuleObject *)star_import; /* Inherit reference */
 				result->js_extern.jx_sym = star_import_symbol;
-				Dee_Incref(star_import);
 			} else {
 				result->js_kind = JIT_SYMBOL_ATTRSTR;
-				result->js_attrstr.ja_base = star_import;
+				result->js_attrstr.ja_base = star_import; /* Inherit reference */
 				result->js_attrstr.ja_name = name;
 				result->js_attrstr.ja_size = namelen;
 				result->js_attrstr.ja_hash = hash;
-				Dee_Incref(star_import);
 			}
 			goto done;
 		}
@@ -1247,6 +1245,170 @@ JITContext_LookupNth(JITContext *__restrict self,
 	                       namelen, name);
 }
 
+
+
+
+
+/* Import a named module and bind it as a local variable. */
+INTERN WUNUSED NONNULL((1, 2)) int FCALL
+JITContext_DoImportModule(JITContext *__restrict self,
+                          struct jit_import_item const *__restrict spec) {
+	JITObjectTable *tab;
+	struct jit_object_entry *ent;
+	DREF DeeObject *source_module;
+	char const *source_name;
+	size_t source_size;
+	if (spec->ii_import_name) {
+		source_name = DeeString_AsUtf8((DeeObject *)spec->ii_import_name);
+		if unlikely(!source_name)
+			goto err;
+		source_size = WSTR_LENGTH(source_name);
+	} else {
+		source_name = spec->ii_symbol_name;
+		source_size = spec->ii_symbol_size;
+	}
+
+	if (*source_name == '.') {
+		/* Special case: module-relative import */
+		if (source_size == 1) {
+			/* Special case: current module */
+			source_module = JITContext_GetCurrentModule(self);
+		} else if (!self->jc_impbase) {
+			err_cannot_import_relative(source_name, source_size);
+			goto err;
+		} else if (self->jc_import) {
+			/* Special case: invoke the user-defined import hook */
+			DeeObject *args[2];
+			args[0] = (DeeObject *)spec->ii_import_name;
+			args[1] = (DeeObject *)self->jc_impbase;
+			if (args[0]) {
+				source_module = DeeObject_Call(self->jc_import, 2, args);
+			} else {
+				args[0] = DeeString_NewUtf8(source_name, source_size, STRING_ERROR_FSTRICT);
+				if unlikely(!args[0])
+					goto err;
+				source_module = DeeObject_Call(self->jc_import, 2, args);
+				Dee_Decref(args[0]);
+			}
+		} else {
+			source_module = DeeModule_ImportRelString((DeeObject *)self->jc_impbase,
+			                                          source_name, source_size);
+		}
+	} else if (self->jc_import) {
+		/* Absolute module import with user-defined import hook. */
+		if (spec->ii_import_name) {
+			source_module = DeeObject_Call(self->jc_import, 1, (DeeObject **)&spec->ii_import_name);
+		} else {
+			DREF DeeStringObject *import_name;
+			import_name = (DREF DeeStringObject *)DeeString_NewUtf8(source_name, source_size, STRING_ERROR_FSTRICT);
+			if unlikely(!import_name)
+				goto err;
+			source_module = DeeObject_Call(self->jc_import, 1, (DeeObject **)&import_name);
+			Dee_Decref(import_name);
+		}
+	} else {
+		source_module = DeeModule_ImportGlobalString(source_name, source_size);
+	}
+	if unlikely(!source_module)
+		goto err;
+
+	/* Load the local symbol table for writing. */
+	tab = JITContext_GetRWLocals(self);
+	if unlikely(!tab)
+		goto err_source_module;
+	ent = JITObjectTable_Create(tab, spec->ii_symbol_name, spec->ii_symbol_size,
+	                            Dee_HashUtf8(spec->ii_symbol_name, spec->ii_symbol_size));
+	if (!ent)
+		goto err_source_module;
+
+	/* Store the module as a local variable. */
+	jit_object_entry_fini(ent);
+	ent->oe_type  = JIT_OBJECT_ENTRY_TYPE_LOCAL;
+	ent->oe_value = source_module; /* Inherit reference */
+	return 0;
+err_source_module:
+	Dee_Decref(source_module);
+err:
+	return -1;
+}
+
+
+/* Import a named symbol from a module and binding it to a local symbol. */
+INTERN WUNUSED NONNULL((1, 2, 3)) int FCALL
+JITContext_DoImportSymbol(JITContext *__restrict self,
+                          struct jit_import_item const *__restrict spec,
+                          DeeObject *__restrict source_module) {
+	JITObjectTable *tab;
+	struct jit_object_entry *ent;
+	dhash_t symbol_hash;
+	tab = JITContext_GetRWLocals(self);
+	if unlikely(!tab)
+		goto err;
+	symbol_hash = Dee_HashUtf8(spec->ii_symbol_name, spec->ii_symbol_size);
+	ent = JITObjectTable_Create(tab, spec->ii_symbol_name, spec->ii_symbol_size, symbol_hash);
+	if (!ent)
+		goto err;
+	jit_object_entry_fini(ent);
+	if (DeeModule_Check(source_module)) {
+		struct Dee_module_symbol *modsym;
+		char const *source_name;
+		size_t source_size;
+		dhash_t source_hash;
+		if (spec->ii_import_name) {
+			source_name = DeeString_AsUtf8((DeeObject *)spec->ii_import_name);
+			if unlikely(!source_name)
+				goto err;
+			source_size = WSTR_LENGTH(source_name);
+			source_hash = DeeString_Hash((DeeObject *)spec->ii_import_name);
+		} else {
+			source_name = spec->ii_symbol_name;
+			source_size = spec->ii_symbol_size;
+			source_hash = symbol_hash;
+		}
+		modsym = DeeModule_GetSymbolStringLenHash((DeeModuleObject *)source_module,
+		                                          source_name, source_size, source_hash);
+		if unlikely(!modsym) {
+			DeeError_Throwf(&DeeError_SyntaxError,
+			                "Symbol `%$s' could not be found in module `%k'",
+			                source_size, source_name,
+			                ((DeeModuleObject *)source_module)->mo_name);
+			goto err;
+		}
+		ent->oe_type = JIT_OBJECT_ENTRY_EXTERN_SYMBOL;
+		ent->oe_extern_symbol.es_mod = (DeeModuleObject *)source_module;
+		ent->oe_extern_symbol.es_sym = modsym;
+		Dee_Incref(source_module);
+	} else if (spec->ii_import_name) {
+		ent->oe_type = JIT_OBJECT_ENTRY_EXTERN_ATTR;
+		ent->oe_extern_attr.ea_base = source_module;
+		ent->oe_extern_attr.ea_name = spec->ii_import_name;
+		Dee_Incref(spec->ii_import_name);
+		Dee_Incref(source_module);
+	} else {
+		ent->oe_type = JIT_OBJECT_ENTRY_EXTERN_ATTRSTR;
+		ent->oe_extern_attrstr.eas_base = source_module;
+		ent->oe_extern_attrstr.eas_name = spec->ii_symbol_name;
+		ent->oe_extern_attrstr.eas_size = spec->ii_symbol_size;
+		ent->oe_extern_attrstr.eas_hash = symbol_hash;
+		Dee_Incref(source_module);
+	}
+	return 0;
+err:
+	return -1;
+}
+
+/* Import a all symbols from a module and bind them to local symbols. */
+INTERN WUNUSED NONNULL((1, 2)) int FCALL
+JITContext_DoImportStar(JITContext *__restrict self,
+                        DeeObject *__restrict source_module) {
+	JITObjectTable *tab;
+	tab = JITContext_GetRWLocals(self);
+	if unlikely(!tab)
+		goto err;
+	return JITObjectTable_AddImportStar(tab, source_module);
+err:
+	return -1;
+}
 
 
 DECL_END
