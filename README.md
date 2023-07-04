@@ -68,12 +68,12 @@ make
 - All of your usual C-like statements/expressions
 - Co-routines (aka. "yield"-functions)
 - Generator expressions (`x = for (local elem: y) if (elem) elem + 1;`)
-- Java-like lambda functions
+- Java-like lambda functions (`list.sort(key: e -> e.casefold())`)
 - Type annotations (`local x: {string: int} = Dict();`)
 - Exceptions and try-catch/finally
 - With-statements (`with (lock) { ... }`)
 - GCC-style statements-in-expressions (`local x = ({ local y = 10; y + 20; });`)
-- Optionally assigned variables (`local x; if (y) x = 10; print x is bound;`)
+- Optionally assigned variables (`local x; if (y) { x = 10; } print x is bound;`)
 - Default/optional/keyword arguments in functions (`function foo(x, y = 10, z?) {} foo(1, z: "Hello");`)
 - ...
 
@@ -96,6 +96,7 @@ make
 - Floating point numbers
 - File/std I/O
 - Dynamic module imports (`local x = "deemon"; local y = import(x);`)
+- Execute strings as code (`print exec("(a, b) -> a + b")(10, 20);`)
 
 ### Extended runtime library
 - Modules are either native shared libraries (`.so` or `.dll`), or deemon scripts (`.dee`)
