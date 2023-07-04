@@ -259,7 +259,7 @@ DEFINE_TYPE_INHERIT_FUNCTION(type_inherit_file_trunc, "operator trunc", ft_trunc
 DEFINE_TYPE_INHERIT_FUNCTION(type_inherit_file_close, "operator close", ft_close)
 #undef DEFINE_TYPE_INHERIT_FUNCTION
 
-#define DEFINE_TYPE_INHERIT_FUNCTION_WITH_ALT(name, opname, field, alt_condition, altfunc)                       \
+#define DEFINE_TYPE_INHERIT_FUNCTION_WITH_ALT(name, opname, field, alt_condition, altfunc, ...)                  \
 	INTERN NONNULL((1)) bool DCALL                                                                               \
 	name(DeeFileTypeObject *__restrict self) {                                                                   \
 		DeeFileTypeObject *base;                                                                                 \
@@ -278,29 +278,39 @@ DEFINE_TYPE_INHERIT_FUNCTION(type_inherit_file_close, "operator close", ft_close
 			}                                                                                                    \
 			LOG_INHERIT(DeeFileType_AsType(base), DeeFileType_AsType(self), opname);                             \
 			self->field = base->field;                                                                           \
+			__VA_ARGS__;                                                                                         \
 			return true;                                                                                         \
 		}                                                                                                        \
 		return false;                                                                                            \
 	}
 DEFINE_TYPE_INHERIT_FUNCTION_WITH_ALT(type_inherit_file_read, "operator read", ft_read,
-                                      self->ft_getc != NULL, &file_read_with_getc)
+                                      self->ft_getc != NULL, &file_read_with_getc,
+                                      if (base->ft_getc) self->ft_getc = base->ft_getc)
 DEFINE_TYPE_INHERIT_FUNCTION_WITH_ALT(type_inherit_file_write, "operator write", ft_write,
-                                      self->ft_putc != NULL, &file_write_with_putc)
+                                      self->ft_putc != NULL, &file_write_with_putc,
+                                      if (base->ft_putc) self->ft_putc = base->ft_putc)
 DEFINE_TYPE_INHERIT_FUNCTION_WITH_ALT(type_inherit_file_getc, "operator getc", ft_getc,
-                                      self->ft_read != NULL, &file_getc_with_read)
+                                      self->ft_read != NULL, &file_getc_with_read,
+                                      if (base->ft_read) self->ft_read = base->ft_read)
 DEFINE_TYPE_INHERIT_FUNCTION_WITH_ALT(type_inherit_file_putc, "operator putc", ft_putc,
-                                      self->ft_write != NULL, &file_putc_with_write)
+                                      self->ft_write != NULL, &file_putc_with_write,
+                                      if (base->ft_write) self->ft_write = base->ft_write)
 DEFINE_TYPE_INHERIT_FUNCTION_WITH_ALT(type_inherit_file_pread, "operator pread", ft_pread,
                                       (self->ft_seek != NULL || type_inherit_file_seek(self)) &&
                                       (self->ft_read != NULL || type_inherit_file_read(self)),
-                                      &file_pread_with_seek_and_read)
+                                      &file_pread_with_seek_and_read,
+                                      if (base->ft_seek) self->ft_seek = base->ft_seek;
+                                      if (base->ft_read) self->ft_read = base->ft_read)
 DEFINE_TYPE_INHERIT_FUNCTION_WITH_ALT(type_inherit_file_pwrite, "operator pwrite", ft_pwrite,
                                       (self->ft_seek != NULL || type_inherit_file_seek(self)) &&
                                       (self->ft_write != NULL || type_inherit_file_write(self)),
-                                      &file_pwrite_with_seek_and_write)
+                                      &file_pwrite_with_seek_and_write,
+                                      if (base->ft_seek) self->ft_seek = base->ft_seek;
+                                      if (base->ft_write) self->ft_write = base->ft_write)
 DEFINE_TYPE_INHERIT_FUNCTION_WITH_ALT(type_inherit_file_ungetc, "operator ungetc", ft_ungetc,
                                       (self->ft_seek != NULL || type_inherit_file_seek(self)),
-                                      &file_ungetc_with_seek)
+                                      &file_ungetc_with_seek,
+                                      if (base->ft_seek) self->ft_seek = base->ft_seek)
 #undef DEFINE_TYPE_INHERIT_FUNCTION_WITH_ALT
 
 
