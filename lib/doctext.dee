@@ -1705,8 +1705,20 @@ again_parse_character_after_question:
 				} else {
 					if (!ch2.issymstrt())
 						goto continue_after_questionStart;
-					while (i < end && (docstring.issymcont(i) || docstring[i] in "."))
-						++i;
+					while (i < end) {
+						if (docstring.issymcont(i)) {
+							++i;
+							continue;
+						}
+						if (docstring[i] in ".") {
+							local nextIndex = i + 1;
+							if (nextIndex < end && docstring.issymstrt(nextIndex)) {
+								i += 2;
+								continue;
+							}
+						}
+						break;
+					}
 					nameEnd = i;
 				}
 				ref = unEscapePoundCharacters(docstring[nameStart:nameEnd]);
@@ -1753,8 +1765,20 @@ again_parse_character_after_question:
 					} else {
 						if (!ch2.issymstrt())
 							goto continue_after_questionStart;
-						while (i < end && (docstring.issymcont(i) || docstring[i] in ".:"))
-							++i;
+						while (i < end) {
+							if (docstring.issymcont(i)) {
+								++i;
+								continue;
+							}
+							if (docstring[i] in ".:") {
+								local nextIndex = i + 1;
+								if (nextIndex < end && docstring.issymstrt(nextIndex)) {
+									i += 2;
+									continue;
+								}
+							}
+							break;
+						}
 						nameEnd = i;
 					}
 					local globalName = unEscapePoundCharacters(

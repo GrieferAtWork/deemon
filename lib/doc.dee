@@ -679,19 +679,19 @@ local function qualifyTyperefString(docnode: WeakRef with Doc, s: string): strin
 
 		case "#": {
 			local node = docnode.value;
-			local len = decodeNameEnd(s, 2);
+			local nameEnd = decodeNameEnd(s, 2);
 			if (node.ismodule) {
 				local mod = node.module;
 				return f"?E{
 					/* TODO: This only works for global modules! */
 					encodeName(Module.__name__(mod))
 				}:{
-					s.substr(2, len)
+					s.substr(2, nameEnd)
 				}";
 			}
 			if (!node.istype && node.parent !is none)
 				node = node.parent;
-			return f"?A{s.substr(2, len)}{node.qualpath}";
+			return f"?A{s.substr(2, nameEnd)}{node.qualpath}";
 		}	break;
 
 		case "N":
@@ -709,15 +709,15 @@ local function qualifyTyperefString(docnode: WeakRef with Doc, s: string): strin
 			return s;
 
 		case "A": {
-			local attr_end;
-			attr_end = findNonEscaped(s, "?", 2);
-			if (attr_end < 0)
+			local attrEnd;
+			attrEnd = findNonEscaped(s, "?", 2);
+			if (attrEnd < 0)
 				break;
-			local tail = s.substr(attr_end);
+			local tail = s.substr(attrEnd);
 			local newtail = qualifyTyperefString(docnode, tail);
 			if (tail === newtail)
 				return s;
-			return s.substr(0, attr_end) + newtail;
+			return s.substr(0, attrEnd) + newtail;
 		}	break;
 
 		default: break;
