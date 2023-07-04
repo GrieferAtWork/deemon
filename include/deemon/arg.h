@@ -166,9 +166,13 @@ DeeKwds_NewWithHint(size_t num_items);
  * NOTE: The keywords argument index is set to the old number of
  *       keywords that had already been defined previously. */
 INTDEF WUNUSED NONNULL((1, 2)) int
-(DCALL DeeKwds_AppendStr)(DREF DeeObject **__restrict p_self,
-                          char const *__restrict name,
-                          size_t name_len, Dee_hash_t hash);
+(DCALL DeeKwds_AppendStringLenHash)(DREF DeeObject **__restrict p_self,
+                                    char const *__restrict name,
+                                    size_t name_len, Dee_hash_t hash);
+#define DeeKwds_AppendStringLen(p_self, name, name_len) DeeKwds_AppendStringLenHash(p_self, name, name_len, Dee_HashPtr(name, name_len))
+#define DeeKwds_AppendStringHash(p_self, name, hash)    DeeKwds_AppendStringLenHash(p_self, name, strlen(name), hash)
+#define DeeKwds_AppendString(p_self, name)              DeeKwds_AppendStringHash(p_self, name, Dee_HashStr(name))
+
 INTDEF WUNUSED NONNULL((1, 2)) int
 (DCALL DeeKwds_Append)(DREF DeeObject **__restrict p_self,
                        DeeObject *__restrict name);
@@ -180,8 +184,8 @@ DeeKwds_GetByIndex(DeeObject *__restrict self, size_t keyword_index);
 
 #ifndef __INTELLISENSE__
 #ifndef __NO_builtin_expect
-#define DeeKwds_AppendStr(p_self, name, name_len, hash) \
-	__builtin_expect(DeeKwds_AppendStr(p_self, name, name_len, hash), 0)
+#define DeeKwds_AppendStringLenHash(p_self, name, name_len, hash) \
+	__builtin_expect(DeeKwds_AppendStringLenHash(p_self, name, name_len, hash), 0)
 #define DeeKwds_Append(p_self, name) \
 	__builtin_expect(DeeKwds_Append(p_self, name), 0)
 #endif /* !__NO_builtin_expect */
@@ -408,7 +412,7 @@ struct dee_keyword {
  *   `argc - kw->kw_size .. argc - 1' (if `kw->kw_size > argc', a TypeError is thrown),
  *    using names from `kwlist + NUM_POSITIONAL' to match association.
  * -> Otherwise, positional arguments are also parsed regularly, before
- *    using `DeeObject_GetItemString()' to lookup argument names starting
+ *    using `DeeObject_GetItemStringHash()' to lookup argument names starting
  *    at `kwlist + NUM_POSITIONAL', counting how may arguments were actually
  *    found (and failing if a non-optional argument wasn't given), before
  *    finally using `DeeObject_Size()' to see how many keyword-arguments

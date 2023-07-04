@@ -413,7 +413,7 @@ JITLValue_IsBound(JITLValue *__restrict self,
 	case JIT_LVALUE_GLOBALSTR:
 		if unlikely(!context->jc_globals)
 			return 0;
-		result = DeeObject_BoundItemStringLen(context->jc_globals,
+		result = DeeObject_BoundItemStringLenHash(context->jc_globals,
 		                                      self->lv_globalstr.lg_namestr,
 		                                      self->lv_globalstr.lg_namelen,
 		                                      self->lv_globalstr.lg_namehsh,
@@ -520,7 +520,7 @@ err_unbound:
 			                           self->lv_globalstr.lg_namelen);
 			goto err;
 		}
-		result = DeeObject_GetItemStringLen(context->jc_globals,
+		result = DeeObject_GetItemStringLenHash(context->jc_globals,
 		                                    self->lv_globalstr.lg_namestr,
 		                                    self->lv_globalstr.lg_namelen,
 		                                    self->lv_globalstr.lg_namehsh);
@@ -613,7 +613,7 @@ JITLValue_DelValue(JITLValue *__restrict self,
 		if unlikely(!context->jc_globals)
 			return err_unknown_global_str_len(self->lv_globalstr.lg_namestr,
 		                                  self->lv_globalstr.lg_namelen);
-		result = DeeObject_DelItemStringLen(context->jc_globals,
+		result = DeeObject_DelItemStringLenHash(context->jc_globals,
 		                                    self->lv_globalstr.lg_namestr,
 		                                    self->lv_globalstr.lg_namelen,
 		                                    self->lv_globalstr.lg_namehsh);
@@ -716,7 +716,7 @@ JITLValue_SetValue(JITLValue *__restrict self,
 			if unlikely(!context->jc_globals)
 				goto err;
 		}
-		result = DeeObject_SetItemStringLen(context->jc_globals,
+		result = DeeObject_SetItemStringLenHash(context->jc_globals,
 		                                    self->lv_globalstr.lg_namestr,
 		                                    self->lv_globalstr.lg_namelen,
 		                                    self->lv_globalstr.lg_namehsh,
@@ -1201,7 +1201,7 @@ set_global:
 		/* Check if the symbol exists within the global symbol table. */
 		if (self->jc_globals) {
 			int error;
-			error = DeeObject_HasItemStringLen(self->jc_globals,
+			error = DeeObject_HasItemStringLenHash(self->jc_globals,
 			                                   name, namelen, hash);
 			if unlikely(error < 0)
 				goto err;

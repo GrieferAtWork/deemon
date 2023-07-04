@@ -1044,9 +1044,7 @@ libdisasm_printmembername(dformatprinter printer, void *arg,
 			DeeModuleObject *mod = code->co_module;
 			if (!DeeInteractiveModule_Check(code->co_module)) {
 				struct module_symbol *class_sym;
-				class_sym = DeeModule_GetSymbolStringHash(code->co_module,
-				                                      class_name,
-				                                      Dee_HashStr(class_name));
+				class_sym = DeeModule_GetSymbolString(code->co_module, class_name);
 				if (!class_sym)
 					goto search_module_root_constants;
 				if (class_sym->ss_index < mod->mo_globalc &&

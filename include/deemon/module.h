@@ -1198,6 +1198,8 @@ DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeModule_GetAttrSymbol(De
 DFUNDEF WUNUSED NONNULL((1, 2)) int DCALL DeeModule_BoundAttrSymbol(DeeModuleObject *__restrict self, struct Dee_module_symbol *__restrict symbol);
 DFUNDEF WUNUSED NONNULL((1, 2)) int DCALL DeeModule_DelAttrSymbol(DeeModuleObject *__restrict self, struct Dee_module_symbol *__restrict symbol);
 DFUNDEF WUNUSED NONNULL((1, 2, 3)) int DCALL DeeModule_SetAttrSymbol(DeeModuleObject *__restrict self, struct Dee_module_symbol *__restrict symbol, DeeObject *__restrict value);
+#define DeeModule_GetSymbol(self, attr)                   DeeModule_GetSymbolStringHash(self, DeeString_STR(attr), DeeString_Hash(attr))
+#define DeeModule_GetSymbolHash(self, attr, hash)         DeeModule_GetSymbolStringHash(self, DeeString_STR(attr), hash)
 #define DeeModule_GetSymbolString(self, attr)             DeeModule_GetSymbolStringHash(self, attr, Dee_HashStr(attr))
 #define DeeModule_GetSymbolStringLen(self, attr, attrlen) DeeModule_GetSymbolStringLenHash(self, attr, attrlen, Dee_HashPtr(attr, attrlen))
 

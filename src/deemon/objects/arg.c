@@ -321,9 +321,9 @@ done:
  * NOTE: The keywords argument index is set to the old number of
  *       keywords that had already been defined previously. */
 INTERN WUNUSED NONNULL((1, 2)) int
-(DCALL DeeKwds_AppendStr)(DREF DeeObject **__restrict p_self,
-                          char const *__restrict name,
-                          size_t name_len, dhash_t hash) {
+(DCALL DeeKwds_AppendStringLenHash)(DREF DeeObject **__restrict p_self,
+                                    char const *__restrict name,
+                                    size_t name_len, dhash_t hash) {
 	dhash_t i, perturb;
 	struct kwds_entry *entry;
 	DREF Kwds *self = (DREF Kwds *)*p_self;
@@ -1529,7 +1529,7 @@ DeeKwArgs_GetString(DeeKwArgs *__restrict self,
 		++self->kwa_kwused;
 		return_reference(self->kwa_kwargv[kw_index]);
 	}
-	result = DeeObject_GetItemString(self->kwa_kw, name, hash);
+	result = DeeObject_GetItemStringHash(self->kwa_kw, name, hash);
 	if likely(result)
 		++self->kwa_kwused;
 	return result;
@@ -1555,7 +1555,7 @@ DeeKwArgs_GetStringLen(DeeKwArgs *__restrict self,
 		++self->kwa_kwused;
 		return_reference(self->kwa_kwargv[kw_index]);
 	}
-	result = DeeObject_GetItemStringLen(self->kwa_kw, name, namelen, hash);
+	result = DeeObject_GetItemStringLenHash(self->kwa_kw, name, namelen, hash);
 	if likely(result)
 		++self->kwa_kwused;
 	return result;
@@ -1575,7 +1575,7 @@ DeeKwArgs_GetStringDef(DeeKwArgs *__restrict self,
 			}
 		} else {
 			DREF DeeObject *result;
-			result = DeeObject_GetItemStringDef(self->kwa_kw, name, hash, ITER_DONE);
+			result = DeeObject_GetItemStringHashDef(self->kwa_kw, name, hash, ITER_DONE);
 			if likely(result != ITER_DONE) {
 				++self->kwa_kwused;
 			} else {
@@ -1604,7 +1604,7 @@ DeeKwArgs_GetStringLenDef(DeeKwArgs *__restrict self, char const *__restrict nam
 			}
 		} else {
 			DREF DeeObject *result;
-			result = DeeObject_GetItemStringLenDef(self->kwa_kw, name, namelen, hash, ITER_DONE);
+			result = DeeObject_GetItemStringLenHashDef(self->kwa_kw, name, namelen, hash, ITER_DONE);
 			if likely(result != ITER_DONE) {
 				++self->kwa_kwused;
 			} else {
@@ -1645,7 +1645,7 @@ DeeArg_GetKwString(size_t argc, DeeObject *const *argv, DeeObject *kw,
 		ASSERT(kw_index < num_keywords);
 		return_reference(argv[(argc - num_keywords) + kw_index]);
 	}
-	return DeeObject_GetItemString(kw, name, hash);
+	return DeeObject_GetItemStringHash(kw, name, hash);
 }
 
 PUBLIC WUNUSED NONNULL((4)) DREF DeeObject *DCALL
@@ -1671,7 +1671,7 @@ DeeArg_GetKwStringLen(size_t argc, DeeObject *const *argv, DeeObject *kw,
 		ASSERT(kw_index < num_keywords);
 		return_reference(argv[(argc - num_keywords) + kw_index]);
 	}
-	return DeeObject_GetItemStringLen(kw, name, namelen, hash);
+	return DeeObject_GetItemStringLenHash(kw, name, namelen, hash);
 }
 
 PUBLIC WUNUSED NONNULL((4, 6)) DREF DeeObject *DCALL
@@ -1695,7 +1695,7 @@ return_def:
 		ASSERT(kw_index < num_keywords);
 		return_reference(argv[(argc - num_keywords) + kw_index]);
 	}
-	return DeeObject_GetItemStringDef(kw, name, hash, def);
+	return DeeObject_GetItemStringHashDef(kw, name, hash, def);
 }
 
 PUBLIC WUNUSED NONNULL((4, 7)) DREF DeeObject *DCALL
@@ -1720,7 +1720,7 @@ return_def:
 		ASSERT(kw_index < num_keywords);
 		return_reference(argv[(argc - num_keywords) + kw_index]);
 	}
-	return DeeObject_GetItemStringLenDef(kw, name, namelen, hash, def);
+	return DeeObject_GetItemStringLenHashDef(kw, name, namelen, hash, def);
 }
 
 

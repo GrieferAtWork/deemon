@@ -118,14 +118,14 @@ INTDEF WUNUSED NONNULL((1, 2)) bool DCALL DeeDict_HasItemStringLen(DeeObject *__
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeDict_ByHash(DeeObject *__restrict self, Dee_hash_t hash, bool key_only);
 #else /* CONFIG_BUILDING_DEEMON */
 #define DeeDict_GetItemDef(self, key, def)                        DeeObject_GetItemDef(self, key, def)
-#define DeeDict_GetItemString(self, key, hash)                    DeeObject_GetItemString(self, key, hash)
-#define DeeDict_GetItemStringDef(self, key, hash, def)            DeeObject_GetItemStringDef(self, key, hash, def)
-#define DeeDict_GetItemStringLen(self, key, keylen, hash)         DeeObject_GetItemStringLen(self, key, keylen, hash)
-#define DeeDict_GetItemStringLenDef(self, key, keylen, hash, def) DeeObject_GetItemStringLenDef(self, key, keylen, hash, def)
-#define DeeDict_DelItemString(self, key, hash)                    DeeObject_DelItemString(self, key, hash)
-#define DeeDict_DelItemStringLen(self, key, keylen, hash)         DeeObject_DelItemStringLen(self, key, keylen, hash)
-#define DeeDict_SetItemString(self, key, hash, value)             DeeObject_SetItemString(self, key, hash, value)
-#define DeeDict_SetItemStringLen(self, key, keylen, hash, value)  DeeObject_SetItemStringLen(self, key, keylen, hash, value)
+#define DeeDict_GetItemString(self, key, hash)                    DeeObject_GetItemStringHash(self, key, hash)
+#define DeeDict_GetItemStringDef(self, key, hash, def)            DeeObject_GetItemStringHashDef(self, key, hash, def)
+#define DeeDict_GetItemStringLen(self, key, keylen, hash)         DeeObject_GetItemStringLenHash(self, key, keylen, hash)
+#define DeeDict_GetItemStringLenDef(self, key, keylen, hash, def) DeeObject_GetItemStringLenHashDef(self, key, keylen, hash, def)
+#define DeeDict_DelItemString(self, key, hash)                    DeeObject_DelItemStringHash(self, key, hash)
+#define DeeDict_DelItemStringLen(self, key, keylen, hash)         DeeObject_DelItemStringLenHash(self, key, keylen, hash)
+#define DeeDict_SetItemString(self, key, hash, value)             DeeObject_SetItemStringHash(self, key, hash, value)
+#define DeeDict_SetItemStringLen(self, key, keylen, hash, value)  DeeObject_SetItemStringLenHash(self, key, keylen, hash, value)
 #endif /* !CONFIG_BUILDING_DEEMON */
 #define DeeDict_GetItem(self, key)        DeeObject_GetItem(self, key)
 #define DeeDict_DelItem(self, key)        DeeObject_DelItem(self, key)

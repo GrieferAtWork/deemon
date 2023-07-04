@@ -581,8 +581,8 @@ ast_sym_import_from_deemon(void) {
 	import_symbol->s_type            = SYMBOL_TYPE_EXTERN;
 	import_symbol->s_extern.e_module = DeeModule_GetDeemon();
 	Dee_Incref(import_symbol->s_extern.e_module);
-	import_symbol->s_extern.e_symbol = DeeModule_GetSymbolStringHash(import_symbol->s_extern.e_module, STR_import,
-	                                                             DeeString_Hash((DeeObject *)&str_import));
+	import_symbol->s_extern.e_symbol = DeeModule_GetSymbol(import_symbol->s_extern.e_module,
+	                                                       (DeeObject *)&str_import);
 	ASSERT(import_symbol->s_extern.e_symbol);
 	return ast_sym(import_symbol);
 err:

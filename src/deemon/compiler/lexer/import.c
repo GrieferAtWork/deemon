@@ -710,9 +710,7 @@ ast_import_single_from_module(DeeModuleObject *__restrict mod,
 		goto done;
 	}
 	if (item->ii_import_name) {
-		sym = DeeModule_GetSymbolStringHash(mod,
-		                                    DeeString_STR(item->ii_import_name),
-		                                    DeeString_Hash((DeeObject *)item->ii_import_name));
+		sym = DeeModule_GetSymbol(mod, (DeeObject *)item->ii_import_name);
 		if (!sym) {
 			if (WARNAT(&item->ii_import_loc, W_MODULE_IMPORT_NOT_FOUND,
 			           DeeString_STR(item->ii_import_name),

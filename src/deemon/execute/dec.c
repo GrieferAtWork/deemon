@@ -1653,7 +1653,7 @@ err_function_code:
 			if unlikely(name >= (char const *)end)
 				GOTO_CORRUPTED(reader, corrupt_r); /* Validate bounds. */
 			name_len = strlen(name);
-			if unlikely(DeeKwds_AppendStr(&result, name, name_len,
+			if unlikely(DeeKwds_AppendStringLenHash(&result, name, name_len,
 			                              Dee_HashPtr(name, name_len)))
 				goto err_r;
 		}

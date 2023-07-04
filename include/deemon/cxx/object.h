@@ -1994,22 +1994,22 @@ public:
 		, m_key(right.m_key)
 		, m_hsh(right.m_hsh) {}
 	WUNUSED DREF DeeObject *_getref() const DEE_CXX_NOTHROW {
-		return DeeObject_GetItemString(m_ptr, m_key, m_hsh);
+		return DeeObject_GetItemStringHash(m_ptr, m_key, m_hsh);
 	}
 	WUNUSED DREF DeeObject *_getref(DeeObject *def) const DEE_CXX_NOTHROW {
-		return DeeObject_GetItemStringDef(m_ptr, m_key, m_hsh, def);
+		return DeeObject_GetItemStringHashDef(m_ptr, m_key, m_hsh, def);
 	}
 	WUNUSED int _setref(DeeObject *value) const DEE_CXX_NOTHROW {
-		return DeeObject_SetItemString(m_ptr, m_key, m_hsh, value);
+		return DeeObject_SetItemStringHash(m_ptr, m_key, m_hsh, value);
 	}
 	bool has() const {
-		return throw_if_negative(DeeObject_HasItemString(m_ptr, m_key, m_hsh)) != 0;
+		return throw_if_negative(DeeObject_HasItemStringHash(m_ptr, m_key, m_hsh)) != 0;
 	}
 	bool bound(bool allow_missing = true) const {
-		return throw_if_minusone(DeeObject_BoundItemString(m_ptr, m_key, m_hsh, allow_missing)) > 0;
+		return throw_if_minusone(DeeObject_BoundItemStringHash(m_ptr, m_key, m_hsh, allow_missing)) > 0;
 	}
 	void del() const {
-		throw_if_nonzero(DeeObject_DelItemString(m_ptr, m_key, m_hsh));
+		throw_if_nonzero(DeeObject_DelItemStringHash(m_ptr, m_key, m_hsh));
 	}
 };
 
@@ -2031,22 +2031,22 @@ public:
 		, m_len(right.m_len)
 		, m_hsh(right.m_hsh) {}
 	WUNUSED DREF DeeObject *_getref() const DEE_CXX_NOTHROW {
-		return DeeObject_GetItemStringLen(m_ptr, m_key, m_len, m_hsh);
+		return DeeObject_GetItemStringLenHash(m_ptr, m_key, m_len, m_hsh);
 	}
 	WUNUSED DREF DeeObject *_getref(DeeObject *def) const DEE_CXX_NOTHROW {
-		return DeeObject_GetItemStringLenDef(m_ptr, m_key, m_len, m_hsh, def);
+		return DeeObject_GetItemStringLenHashDef(m_ptr, m_key, m_len, m_hsh, def);
 	}
 	WUNUSED int _setref(DeeObject *value) const DEE_CXX_NOTHROW {
-		return DeeObject_SetItemStringLen(m_ptr, m_key, m_len, m_hsh, value);
+		return DeeObject_SetItemStringLenHash(m_ptr, m_key, m_len, m_hsh, value);
 	}
 	bool has() const {
-		return throw_if_negative(DeeObject_HasItemStringLen(m_ptr, m_key, m_len, m_hsh)) != 0;
+		return throw_if_negative(DeeObject_HasItemStringLenHash(m_ptr, m_key, m_len, m_hsh)) != 0;
 	}
 	bool bound(bool allow_missing = true) const {
-		return throw_if_minusone(DeeObject_BoundItemStringLen(m_ptr, m_key, m_len, m_hsh, allow_missing)) > 0;
+		return throw_if_minusone(DeeObject_BoundItemStringLenHash(m_ptr, m_key, m_len, m_hsh, allow_missing)) > 0;
 	}
 	void del() const {
-		throw_if_nonzero(DeeObject_DelItemStringLen(m_ptr, m_key, m_len, m_hsh));
+		throw_if_nonzero(DeeObject_DelItemStringLenHash(m_ptr, m_key, m_len, m_hsh));
 	}
 };
 
@@ -2557,22 +2557,22 @@ public:
 		return inherit(result);
 	}
 	NONNULL_CXX((1)) Ref<GetItemType> getitem(char const *key) {
-		return inherit(DeeObject_GetItemString(((ProxyType *)this)->ptr(), key, Dee_HashStr(key)));
+		return inherit(DeeObject_GetItemString(((ProxyType *)this)->ptr(), key));
 	}
 	NONNULL_CXX((1, 2)) Ref<GetItemType> getitem(char const *key, DeeObject *def) {
-		return inherit(DeeObject_GetItemStringDef(((ProxyType *)this)->ptr(), key, Dee_HashStr(key), def));
+		return inherit(DeeObject_GetItemStringDef(((ProxyType *)this)->ptr(), key, def));
 	}
 	NONNULL_CXX((1)) Ref<GetItemType> getitem(char const *key, Dee_hash_t hash) {
-		return inherit(DeeObject_GetItemString(((ProxyType *)this)->ptr(), key, hash));
+		return inherit(DeeObject_GetItemStringHash(((ProxyType *)this)->ptr(), key, hash));
 	}
 	NONNULL_CXX((1, 3)) Ref<GetItemType> getitem(char const *key, Dee_hash_t hash, DeeObject *def) {
-		return inherit(DeeObject_GetItemStringDef(((ProxyType *)this)->ptr(), key, hash, def));
+		return inherit(DeeObject_GetItemStringHashDef(((ProxyType *)this)->ptr(), key, hash, def));
 	}
 	NONNULL_CXX((1)) Ref<GetItemType> getitem(char const *key, size_t keylen, Dee_hash_t hash) {
-		return inherit(DeeObject_GetItemStringLen(((ProxyType *)this)->ptr(), key, keylen, hash));
+		return inherit(DeeObject_GetItemStringLenHash(((ProxyType *)this)->ptr(), key, keylen, hash));
 	}
 	NONNULL_CXX((1, 4)) Ref<GetItemType> getitem(char const *key, size_t keylen, Dee_hash_t hash, DeeObject *def) {
-		return inherit(DeeObject_GetItemStringLenDef(((ProxyType *)this)->ptr(), key, keylen, hash, def));
+		return inherit(DeeObject_GetItemStringLenHashDef(((ProxyType *)this)->ptr(), key, keylen, hash, def));
 	}
 
 	NONNULL_CXX((1)) bool bounditem(DeeObject *index_or_key, bool allow_missing = true) {
@@ -2582,13 +2582,13 @@ public:
 		return throw_if_minusone(DeeObject_BoundItemIndex(((ProxyType *)this)->ptr(), index, allow_missing)) > 0;
 	}
 	NONNULL_CXX((1)) bool bounditem(char const *key, bool allow_missing = true) {
-		return throw_if_minusone(DeeObject_BoundItemString(((ProxyType *)this)->ptr(), key, Dee_HashStr(key), allow_missing)) > 0;
+		return throw_if_minusone(DeeObject_BoundItemString(((ProxyType *)this)->ptr(), key, allow_missing)) > 0;
 	}
 	NONNULL_CXX((1)) bool bounditem(char const *key, Dee_hash_t hash, bool allow_missing = true) {
-		return throw_if_minusone(DeeObject_BoundItemString(((ProxyType *)this)->ptr(), key, hash, allow_missing)) > 0;
+		return throw_if_minusone(DeeObject_BoundItemStringHash(((ProxyType *)this)->ptr(), key, hash, allow_missing)) > 0;
 	}
 	NONNULL_CXX((1)) bool bounditem(char const *key, size_t keylen, Dee_hash_t hash, bool allow_missing = true) {
-		return throw_if_minusone(DeeObject_BoundItemStringLen(((ProxyType *)this)->ptr(), key, keylen, hash, allow_missing)) > 0;
+		return throw_if_minusone(DeeObject_BoundItemStringLenHash(((ProxyType *)this)->ptr(), key, keylen, hash, allow_missing)) > 0;
 	}
 
 	NONNULL_CXX((1)) bool hasitem(DeeObject *index_or_key) {
@@ -2598,13 +2598,13 @@ public:
 		return throw_if_negative(DeeObject_HasItemIndex(((ProxyType *)this)->ptr(), index)) != 0;
 	}
 	NONNULL_CXX((1)) bool hasitem(char const *key) {
-		return throw_if_negative(DeeObject_HasItemString(((ProxyType *)this)->ptr(), key, Dee_HashStr(key))) != 0;
+		return throw_if_negative(DeeObject_HasItemString(((ProxyType *)this)->ptr(), key)) != 0;
 	}
 	NONNULL_CXX((1)) bool hasitem(char const *key, Dee_hash_t hash) {
-		return throw_if_negative(DeeObject_HasItemString(((ProxyType *)this)->ptr(), key, hash)) != 0;
+		return throw_if_negative(DeeObject_HasItemStringHash(((ProxyType *)this)->ptr(), key, hash)) != 0;
 	}
 	NONNULL_CXX((1)) bool hasitem(char const *key, size_t keylen, Dee_hash_t hash) {
-		return throw_if_negative(DeeObject_HasItemStringLen(((ProxyType *)this)->ptr(), key, keylen, hash)) != 0;
+		return throw_if_negative(DeeObject_HasItemStringLenHash(((ProxyType *)this)->ptr(), key, keylen, hash)) != 0;
 	}
 
 	NONNULL_CXX((1)) void delitem(DeeObject *index_or_key) {
@@ -2614,13 +2614,13 @@ public:
 		throw_if_nonzero(DeeObject_DelItemIndex(((ProxyType *)this)->ptr(), index));
 	}
 	NONNULL_CXX((1)) void delitem(char const *key) {
-		throw_if_nonzero(DeeObject_DelItemString(((ProxyType *)this)->ptr(), key, Dee_HashStr(key)));
+		throw_if_nonzero(DeeObject_DelItemString(((ProxyType *)this)->ptr(), key));
 	}
 	NONNULL_CXX((1)) void delitem(char const *key, Dee_hash_t hash) {
-		throw_if_nonzero(DeeObject_DelItemString(((ProxyType *)this)->ptr(), key, hash));
+		throw_if_nonzero(DeeObject_DelItemStringHash(((ProxyType *)this)->ptr(), key, hash));
 	}
 	NONNULL_CXX((1)) void delitem(char const *key, size_t keylen, Dee_hash_t hash) {
-		throw_if_nonzero(DeeObject_DelItemStringLen(((ProxyType *)this)->ptr(), key, keylen, hash));
+		throw_if_nonzero(DeeObject_DelItemStringLenHash(((ProxyType *)this)->ptr(), key, keylen, hash));
 	}
 
 	NONNULL_CXX((1, 2)) void setitem(DeeObject *index_or_key, DeeObject *value) {
@@ -2630,13 +2630,13 @@ public:
 		throw_if_nonzero(DeeObject_SetItemIndex(((ProxyType *)this)->ptr(), index, value));
 	}
 	NONNULL_CXX((1, 2)) void setitem(char const *key, DeeObject *value) {
-		throw_if_nonzero(DeeObject_SetItemString(((ProxyType *)this)->ptr(), key, Dee_HashStr(key), value));
+		throw_if_nonzero(DeeObject_SetItemString(((ProxyType *)this)->ptr(), key, value));
 	}
 	NONNULL_CXX((1, 3)) void setitem(char const *key, Dee_hash_t hash, DeeObject *value) {
-		throw_if_nonzero(DeeObject_SetItemString(((ProxyType *)this)->ptr(), key, hash, value));
+		throw_if_nonzero(DeeObject_SetItemStringHash(((ProxyType *)this)->ptr(), key, hash, value));
 	}
 	NONNULL_CXX((1, 4)) void setitem(char const *key, size_t keylen, Dee_hash_t hash, DeeObject *value) {
-		throw_if_nonzero(DeeObject_SetItemStringLen(((ProxyType *)this)->ptr(), key, keylen, hash, value));
+		throw_if_nonzero(DeeObject_SetItemStringLenHash(((ProxyType *)this)->ptr(), key, keylen, hash, value));
 	}
 };
 

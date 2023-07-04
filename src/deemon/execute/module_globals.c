@@ -347,9 +347,7 @@ me_contains(ModuleExports *self, DeeObject *key) {
 		return_false;
 	if (DeeModule_LockSymbols(mod))
 		goto err;
-	result = DeeModule_GetSymbolStringHash(mod,
-	                                   DeeString_STR(key),
-	                                   DeeString_Hash(key)) != NULL;
+	result = DeeModule_GetSymbol(mod, key) != NULL;
 	DeeModule_UnlockSymbols(mod);
 	return_bool_(result);
 err:
@@ -415,9 +413,7 @@ me_get(ModuleExports *self, DeeObject *key) {
 		goto err_unknown_key;
 	if (DeeModule_LockSymbols(mod))
 		goto err;
-	symbol = DeeModule_GetSymbolStringHash(mod,
-	                                   DeeString_STR(key),
-	                                   DeeString_Hash(key));
+	symbol = DeeModule_GetSymbol(mod, key);
 	if unlikely(!symbol)
 		goto err_unknown_key_unlock;
 	result = module_my_getattr_symbol(self, mod, symbol);
@@ -444,9 +440,7 @@ me_get_f(ModuleExports *self, size_t argc, DeeObject *const *argv) {
 		goto err_unknown_key;
 	if (DeeModule_LockSymbols(mod))
 		goto err;
-	symbol = DeeModule_GetSymbolStringHash(mod,
-	                                   DeeString_STR(key),
-	                                   DeeString_Hash(key));
+	symbol = DeeModule_GetSymbol(mod, key);
 	if unlikely(!symbol)
 		goto err_unknown_key_unlock;
 	result = module_it_getattr_symbol(mod, symbol);
@@ -473,9 +467,7 @@ me_del(ModuleExports *__restrict self, DeeObject *__restrict key) {
 		goto err_unknown_key;
 	if (DeeModule_LockSymbols(mod))
 		goto err;
-	symbol = DeeModule_GetSymbolStringHash(mod,
-	                                   DeeString_STR(key),
-	                                   DeeString_Hash(key));
+	symbol = DeeModule_GetSymbol(mod, key);
 	if unlikely(!symbol)
 		goto err_unknown_key_unlock;
 	result = DeeModule_DelAttrSymbol(mod, symbol);
@@ -500,9 +492,7 @@ me_set(ModuleExports *__restrict self,
 		goto err_unknown_key;
 	if (DeeModule_LockSymbols(mod))
 		goto err;
-	symbol = DeeModule_GetSymbolStringHash(mod,
-	                                   DeeString_STR(key),
-	                                   DeeString_Hash(key));
+	symbol = DeeModule_GetSymbol(mod, key);
 	if unlikely(!symbol)
 		goto err_unknown_key_unlock;
 	result = DeeModule_SetAttrSymbol(mod, symbol, value);

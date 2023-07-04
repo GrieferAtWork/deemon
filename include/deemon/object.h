@@ -3176,18 +3176,18 @@ DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *(DCALL DeeObject_ContainsObject)
 DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *(DCALL DeeObject_GetItem)(DeeObject *self, DeeObject *index);
 DFUNDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeObject_GetItemDef)(DeeObject *self, DeeObject *key, DeeObject *def);
 DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *(DCALL DeeObject_GetItemIndex)(DeeObject *__restrict self, size_t index);
-DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *(DCALL DeeObject_GetItemString)(DeeObject *__restrict self, char const *__restrict key, Dee_hash_t hash);
-DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *(DCALL DeeObject_GetItemStringLen)(DeeObject *__restrict self, char const *__restrict key, size_t keylen, Dee_hash_t hash);
-DFUNDEF WUNUSED NONNULL((1, 2, 4)) DREF DeeObject *(DCALL DeeObject_GetItemStringDef)(DeeObject *self, char const *__restrict key, Dee_hash_t hash, DeeObject *def);
-DFUNDEF WUNUSED NONNULL((1, 2, 5)) DREF DeeObject *(DCALL DeeObject_GetItemStringLenDef)(DeeObject *self, char const *__restrict key, size_t keylen, Dee_hash_t hash, DeeObject *def);
+DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *(DCALL DeeObject_GetItemStringHash)(DeeObject *__restrict self, char const *__restrict key, Dee_hash_t hash);
+DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *(DCALL DeeObject_GetItemStringLenHash)(DeeObject *__restrict self, char const *__restrict key, size_t keylen, Dee_hash_t hash);
+DFUNDEF WUNUSED NONNULL((1, 2, 4)) DREF DeeObject *(DCALL DeeObject_GetItemStringHashDef)(DeeObject *self, char const *__restrict key, Dee_hash_t hash, DeeObject *def);
+DFUNDEF WUNUSED NONNULL((1, 2, 5)) DREF DeeObject *(DCALL DeeObject_GetItemStringLenHashDef)(DeeObject *self, char const *__restrict key, size_t keylen, Dee_hash_t hash, DeeObject *def);
 DFUNDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeObject_DelItem)(DeeObject *self, DeeObject *index);
 DFUNDEF WUNUSED NONNULL((1)) int (DCALL DeeObject_DelItemIndex)(DeeObject *__restrict self, size_t index);
-DFUNDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeObject_DelItemString)(DeeObject *__restrict self, char const *__restrict key, Dee_hash_t hash);
-DFUNDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeObject_DelItemStringLen)(DeeObject *__restrict self, char const *__restrict key, size_t keylen, Dee_hash_t hash);
+DFUNDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeObject_DelItemStringHash)(DeeObject *__restrict self, char const *__restrict key, Dee_hash_t hash);
+DFUNDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeObject_DelItemStringLenHash)(DeeObject *__restrict self, char const *__restrict key, size_t keylen, Dee_hash_t hash);
 DFUNDEF WUNUSED NONNULL((1, 2, 3)) int (DCALL DeeObject_SetItem)(DeeObject *self, DeeObject *index, DeeObject *value);
 DFUNDEF WUNUSED NONNULL((1, 3)) int (DCALL DeeObject_SetItemIndex)(DeeObject *self, size_t index, DeeObject *value);
-DFUNDEF WUNUSED NONNULL((1, 2, 4)) int (DCALL DeeObject_SetItemString)(DeeObject *self, char const *__restrict key, Dee_hash_t hash, DeeObject *value);
-DFUNDEF WUNUSED NONNULL((1, 2, 5)) int (DCALL DeeObject_SetItemStringLen)(DeeObject *self, char const *__restrict key, size_t keylen, Dee_hash_t hash, DeeObject *value);
+DFUNDEF WUNUSED NONNULL((1, 2, 4)) int (DCALL DeeObject_SetItemStringHash)(DeeObject *self, char const *__restrict key, Dee_hash_t hash, DeeObject *value);
+DFUNDEF WUNUSED NONNULL((1, 2, 5)) int (DCALL DeeObject_SetItemStringLenHash)(DeeObject *self, char const *__restrict key, size_t keylen, Dee_hash_t hash, DeeObject *value);
 DFUNDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeObject_GetRange)(DeeObject *self, DeeObject *begin, DeeObject *end);
 DFUNDEF WUNUSED NONNULL((1, 3)) DREF DeeObject *(DCALL DeeObject_GetRangeBeginIndex)(DeeObject *self, Dee_ssize_t begin, DeeObject *end);
 DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *(DCALL DeeObject_GetRangeEndIndex)(DeeObject *self, DeeObject *begin, Dee_ssize_t end);
@@ -3197,6 +3197,14 @@ DFUNDEF WUNUSED NONNULL((1, 2, 3, 4)) int (DCALL DeeObject_SetRange)(DeeObject *
 DFUNDEF WUNUSED NONNULL((1, 3, 4)) int (DCALL DeeObject_SetRangeBeginIndex)(DeeObject *self, Dee_ssize_t begin, DeeObject *end, DeeObject *value);
 DFUNDEF WUNUSED NONNULL((1, 2, 4)) int (DCALL DeeObject_SetRangeEndIndex)(DeeObject *self, DeeObject *begin, Dee_ssize_t end, DeeObject *value);
 DFUNDEF WUNUSED NONNULL((1, 4)) int (DCALL DeeObject_SetRangeIndex)(DeeObject *self, Dee_ssize_t begin, Dee_ssize_t end, DeeObject *value);
+#define DeeObject_GetItemString(self, key)                    DeeObject_GetItemStringHash(self, key, Dee_HashStr(key))
+#define DeeObject_GetItemStringLen(self, key, keylen)         DeeObject_GetItemStringLenHash(self, key, keylen, Dee_HashPtr(key, keylen))
+#define DeeObject_GetItemStringDef(self, key, def)            DeeObject_GetItemStringHashDef(self, key, Dee_HashStr(key), def)
+#define DeeObject_GetItemStringLenDef(self, key, keylen, def) DeeObject_GetItemStringLenHashDef(self, key, keylen, Dee_HashPtr(key, keylen), def)
+#define DeeObject_DelItemString(self, key)                    DeeObject_DelItemStringHash(self, key, Dee_HashStr(key))
+#define DeeObject_DelItemStringLen(self, key, keylen)         DeeObject_DelItemStringLenHash(self, key, keylen, Dee_HashPtr(key, keylen))
+#define DeeObject_SetItemString(self, key, value)             DeeObject_SetItemStringHash(self, key, Dee_HashStr(key), value)
+#define DeeObject_SetItemStringLen(self, key, keylen, value)  DeeObject_SetItemStringLenHash(self, key, keylen, Dee_HashPtr(key, keylen), value)
 
 /* Check if a given item exists (`deemon.hasitem(self, index)')
  * @return: 0:  Doesn't exist;
@@ -3204,8 +3212,10 @@ DFUNDEF WUNUSED NONNULL((1, 4)) int (DCALL DeeObject_SetRangeIndex)(DeeObject *s
  * @return: -1: Error. */
 DFUNDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeObject_HasItem)(DeeObject *self, DeeObject *index);
 DFUNDEF WUNUSED NONNULL((1)) int (DCALL DeeObject_HasItemIndex)(DeeObject *__restrict self, size_t index);
-DFUNDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeObject_HasItemString)(DeeObject *__restrict self, char const *__restrict key, Dee_hash_t hash);
-DFUNDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeObject_HasItemStringLen)(DeeObject *__restrict self, char const *__restrict key, size_t keylen, Dee_hash_t hash);
+DFUNDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeObject_HasItemStringHash)(DeeObject *__restrict self, char const *__restrict key, Dee_hash_t hash);
+DFUNDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeObject_HasItemStringLenHash)(DeeObject *__restrict self, char const *__restrict key, size_t keylen, Dee_hash_t hash);
+#define DeeObject_HasItemString(self, key)            DeeObject_HasItemStringHash(self, key, Dee_HashStr(key))
+#define DeeObject_HasItemStringLen(self, key, keylen) DeeObject_HasItemStringLenHash(self, key, keylen, Dee_HashPtr(key, keylen))
 
 /* Check if a given item is bound (`self[index] is bound' / `deemon.bounditem(self, index)')
  * @return: 1 : Item is bound.
@@ -3214,8 +3224,10 @@ DFUNDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeObject_HasItemStringLen)(DeeObject
  * @return: -2: Item doesn't exist (Only when `allow_missing' is `true': `KeyError' or `IndexError' were caught). */
 DFUNDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeObject_BoundItem)(DeeObject *self, DeeObject *index, bool allow_missing);
 DFUNDEF WUNUSED NONNULL((1)) int (DCALL DeeObject_BoundItemIndex)(DeeObject *__restrict self, size_t index, bool allow_missing);
-DFUNDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeObject_BoundItemString)(DeeObject *__restrict self, char const *__restrict key, Dee_hash_t hash, bool allow_missing);
-DFUNDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeObject_BoundItemStringLen)(DeeObject *__restrict self, char const *__restrict key, size_t keylen, Dee_hash_t hash, bool allow_missing);
+DFUNDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeObject_BoundItemStringHash)(DeeObject *__restrict self, char const *__restrict key, Dee_hash_t hash, bool allow_missing);
+DFUNDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeObject_BoundItemStringLenHash)(DeeObject *__restrict self, char const *__restrict key, size_t keylen, Dee_hash_t hash, bool allow_missing);
+#define DeeObject_BoundItemString(self, key, allow_missing)            DeeObject_BoundItemStringHash(self, key, Dee_HashStr(key), allow_missing)
+#define DeeObject_BoundItemStringLen(self, key, keylen, allow_missing) DeeObject_BoundItemStringLenHash(self, key, keylen, Dee_HashPtr(key, keylen), allow_missing)
 
 /* NOTE: The `argv' vector itself isn't inherited; only its elements are! */
 DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *(DCALL DeeObject_ConcatInherited)(/*inherit(on_success)*/ DREF DeeObject *self, DeeObject *other);
@@ -3453,12 +3465,12 @@ DDATDEF DeeObject DeeNotImplemented_Singleton;
 #define DeeObject_InplacePow(p_self, some_object)                  __builtin_expect(DeeObject_InplacePow(p_self, some_object), 0)
 #define DeeObject_DelItem(self, index)                             __builtin_expect(DeeObject_DelItem(self, index), 0)
 #define DeeObject_DelItemIndex(self, index)                        __builtin_expect(DeeObject_DelItemIndex(self, index), 0)
-#define DeeObject_DelItemString(self, key, hash)                   __builtin_expect(DeeObject_DelItemString(self, key, hash), 0)
-#define DeeObject_DelItemStringLen(self, key, keylen, hash)        __builtin_expect(DeeObject_DelItemStringLen(self, key, keylen, hash), 0)
+#define DeeObject_DelItemStringHash(self, key, hash)                   __builtin_expect(DeeObject_DelItemStringHash(self, key, hash), 0)
+#define DeeObject_DelItemStringLenHash(self, key, keylen, hash)        __builtin_expect(DeeObject_DelItemStringLenHash(self, key, keylen, hash), 0)
 #define DeeObject_SetItem(self, index, value)                      __builtin_expect(DeeObject_SetItem(self, index, value), 0)
 #define DeeObject_SetItemIndex(self, index, value)                 __builtin_expect(DeeObject_SetItemIndex(self, index, value), 0)
-#define DeeObject_SetItemString(self, key, hash, value)            __builtin_expect(DeeObject_SetItemString(self, key, hash, value), 0)
-#define DeeObject_SetItemStringLen(self, key, keylen, hash, value) __builtin_expect(DeeObject_SetItemStringLen(self, key, keylen, hash, value), 0)
+#define DeeObject_SetItemStringHash(self, key, hash, value)            __builtin_expect(DeeObject_SetItemStringHash(self, key, hash, value), 0)
+#define DeeObject_SetItemStringLenHash(self, key, keylen, hash, value) __builtin_expect(DeeObject_SetItemStringLenHash(self, key, keylen, hash, value), 0)
 #define DeeObject_DelRange(self, begin, end)                       __builtin_expect(DeeObject_DelRange(self, begin, end), 0)
 #define DeeObject_SetRange(self, begin, end, value)                __builtin_expect(DeeObject_SetRange(self, begin, end, value), 0)
 #define DeeObject_SetRangeBeginIndex(self, begin, end, value)      __builtin_expect(DeeObject_SetRangeBeginIndex(self, begin, end, value), 0)

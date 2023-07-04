@@ -4351,7 +4351,7 @@ err:
 }
 
 PUBLIC WUNUSED NONNULL((1, 2)) int
-(DCALL DeeObject_BoundItemString)(DeeObject *__restrict self,
+(DCALL DeeObject_BoundItemStringHash)(DeeObject *__restrict self,
                                   char const *__restrict key,
                                   dhash_t hash,
                                   bool allow_missing) {
@@ -4398,7 +4398,7 @@ err:
 }
 
 PUBLIC WUNUSED NONNULL((1, 2)) int
-(DCALL DeeObject_BoundItemStringLen)(DeeObject *__restrict self,
+(DCALL DeeObject_BoundItemStringLenHash)(DeeObject *__restrict self,
                                      char const *__restrict key,
                                      size_t keylen, dhash_t hash,
                                      bool allow_missing) {
@@ -4561,7 +4561,7 @@ err:
 }
 
 PUBLIC WUNUSED NONNULL((1, 2)) int
-(DCALL DeeObject_HasItemString)(DeeObject *__restrict self,
+(DCALL DeeObject_HasItemStringHash)(DeeObject *__restrict self,
                                 char const *__restrict key,
                                 dhash_t hash) {
 	int result;
@@ -4585,7 +4585,7 @@ err:
 }
 
 PUBLIC WUNUSED NONNULL((1, 2)) int
-(DCALL DeeObject_HasItemStringLen)(DeeObject *__restrict self,
+(DCALL DeeObject_HasItemStringLenHash)(DeeObject *__restrict self,
                                    char const *__restrict key,
                                    size_t keylen, dhash_t hash) {
 	int result;
@@ -4727,7 +4727,7 @@ err:
 }
 
 PUBLIC WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-DeeObject_GetItemString(DeeObject *__restrict self,
+DeeObject_GetItemStringHash(DeeObject *__restrict self,
                         char const *__restrict key,
                         dhash_t hash) {
 	DREF DeeObject *key_ob, *result;
@@ -4754,7 +4754,7 @@ err:
 }
 
 PUBLIC WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-DeeObject_GetItemStringLen(DeeObject *__restrict self,
+DeeObject_GetItemStringLenHash(DeeObject *__restrict self,
                            char const *__restrict key,
                            size_t keylen,
                            dhash_t hash) {
@@ -4782,7 +4782,7 @@ err:
 }
 
 PUBLIC WUNUSED NONNULL((1, 2, 4)) DREF DeeObject *DCALL
-DeeObject_GetItemStringDef(DeeObject *self,
+DeeObject_GetItemStringHashDef(DeeObject *self,
                            char const *__restrict key,
                            dhash_t hash,
                            DeeObject *def) {
@@ -4810,7 +4810,7 @@ err:
 }
 
 PUBLIC WUNUSED NONNULL((1, 2, 5)) DREF DeeObject *DCALL
-DeeObject_GetItemStringLenDef(DeeObject *self,
+DeeObject_GetItemStringLenHashDef(DeeObject *self,
                               char const *__restrict key,
                               size_t keylen, dhash_t hash,
                               DeeObject *def) {
@@ -4838,7 +4838,7 @@ err:
 }
 
 PUBLIC WUNUSED NONNULL((1, 2)) int
-(DCALL DeeObject_DelItemString)(DeeObject *__restrict self,
+(DCALL DeeObject_DelItemStringHash)(DeeObject *__restrict self,
                                 char const *__restrict key,
                                 dhash_t hash) {
 	DREF DeeObject *key_ob;
@@ -4858,7 +4858,7 @@ err:
 }
 
 PUBLIC WUNUSED NONNULL((1, 2)) int
-(DCALL DeeObject_DelItemStringLen)(DeeObject *__restrict self,
+(DCALL DeeObject_DelItemStringLenHash)(DeeObject *__restrict self,
                                    char const *__restrict key,
                                    size_t keylen, dhash_t hash) {
 	DREF DeeObject *key_ob;
@@ -4878,7 +4878,7 @@ err:
 }
 
 PUBLIC WUNUSED NONNULL((1, 2, 4)) int
-(DCALL DeeObject_SetItemString)(DeeObject *self,
+(DCALL DeeObject_SetItemStringHash)(DeeObject *self,
                                 char const *__restrict key,
                                 dhash_t hash, DeeObject *value) {
 	DREF DeeObject *key_ob;
@@ -4899,7 +4899,7 @@ err:
 }
 
 PUBLIC WUNUSED NONNULL((1, 2, 5)) int
-(DCALL DeeObject_SetItemStringLen)(DeeObject *self,
+(DCALL DeeObject_SetItemStringLenHash)(DeeObject *self,
                                    char const *__restrict key,
                                    size_t keylen, dhash_t hash,
                                    DeeObject *value) {

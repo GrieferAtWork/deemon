@@ -1117,20 +1117,20 @@ module_printrepr(DeeModuleObject *__restrict self,
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 module_getattr(DeeModuleObject *__restrict self,
                /*String*/ DeeObject *__restrict name) {
-	return DeeModule_GetAttrStringHash(self, DeeString_STR(name), DeeString_Hash(name));
+	return DeeModule_GetAttr(self, name);
 }
 
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 module_delattr(DeeModuleObject *__restrict self,
                /*String*/ DeeObject *__restrict name) {
-	return DeeModule_DelAttrStringHash(self, DeeString_STR(name), DeeString_Hash(name));
+	return DeeModule_DelAttr(self, name);
 }
 
 INTERN WUNUSED NONNULL((1, 2, 3)) int DCALL
 module_setattr(DeeModuleObject *__restrict self,
                /*String*/ DeeObject *__restrict name,
                DeeObject *__restrict value) {
-	return DeeModule_SetAttrStringHash(self, DeeString_STR(name), DeeString_Hash(name), value);
+	return DeeModule_SetAttr(self, name, value);
 }
 
 INTERN WUNUSED NONNULL((1, 2, 3)) dssize_t DCALL
@@ -1237,8 +1237,8 @@ DeeModule_FindAttr(DeeModuleObject *__restrict self,
 	if (!rules->alr_decl || rules->alr_decl == (DeeObject *)self) {
 		struct module_symbol *sym, *doc_sym;
 		sym = DeeModule_GetSymbolStringHash(self,
-		                                rules->alr_name,
-		                                rules->alr_hash);
+		                                    rules->alr_name,
+		                                    rules->alr_hash);
 		if (sym) {
 			uint16_t perm;
 			DREF DeeTypeObject *attr_type;

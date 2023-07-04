@@ -44,9 +44,7 @@ bind_module_symbol(DeeModuleObject *__restrict module,
                    char const *__restrict symbol_name) {
 	struct module_symbol *symbol;
 	int32_t temp;
-	symbol = DeeModule_GetSymbolStringHash(module,
-	                                   symbol_name,
-	                                   Dee_HashStr(symbol_name));
+	symbol = DeeModule_GetSymbolString(module, symbol_name);
 	if unlikely(!symbol)
 		return 1; /* Doesn't exists */
 	if (symbol->ss_flags & MODSYM_FEXTERN) {

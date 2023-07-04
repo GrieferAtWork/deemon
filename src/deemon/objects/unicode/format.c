@@ -73,7 +73,7 @@ Formatter_GetUnaryArg(struct formatter *__restrict self,
 			Dee_Incref(result);
 		} else {
 			size_t len = (size_t)(key_end - fmt_start);
-			result = DeeObject_GetItemStringLen(self->f_args,
+			result = DeeObject_GetItemStringLenHash(self->f_args,
 			                                    fmt_start,
 			                                    len,
 			                                    Dee_HashPtr(fmt_start, len));
