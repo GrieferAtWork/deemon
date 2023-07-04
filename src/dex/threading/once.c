@@ -639,11 +639,11 @@ PRIVATE struct type_getset once_getsets[] = {
 INTERN DeeTypeObject DeeOnce_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "Once",
-	/* .tp_doc      = */ DOC("Helper to ensure that some operation only happens once\n"
-	                         "?GOnce can be used in one of 2 ways:\n"
+	/* .tp_doc      = */ DOC("Helper to ensure that some operation only happens once. "
+	                         /**/ "?GOnce can be used in one of 2 ways:\n"
 	                         "${"
 	                         /**/ "import Once from threading;\n"
-	                         /**/ "local o = Once((x) -\\> { print \"Calculating...\"; return x * 2; });\n"
+	                         /**/ "local o = Once(x -\\> { print \"Calculating...\"; return x * 2; });\n"
 	                         /**/ "print o(42);        /* Calculating... 84 */\n"
 	                         /**/ "print o();          /* 84 */\n"
 	                         /**/ "print o(\"ignored\"); /* 84 */\n"

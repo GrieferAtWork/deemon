@@ -56,12 +56,12 @@ PRIVATE struct dex_symbol symbols[] = {
 	{ "all", (DeeObject *)&libthreading_lockunion_all, MODSYM_FNORMAL,
 	  DOC("(locks!:?GLock)->?GLock\n"
 	      "#tValueError{No @locks specified (a lock union must contain at least 1 lock)}"
-	      "Return a lock union for all of the given @locks, or re-returns ${locks.first} when "
-	      /**/ "only a single lock was given\n"
+	      "Return a ?GLockUnion for all of the given @locks, or re-returns ${locks.first} "
+	      /**/ "when only a single lock was given\n"
 	      "Lock unions can be used to (safely) acquire multiple locks at the same time, whilst "
 	      /**/ "ensuring that doing so doesn't result in a dead-lock (as would normally be the "
 	      /**/ "case when 2 threads acquire multiple locks at the same time, but not in the same "
-	      /**/ "order)") },
+	      /**/ "order). For more details on how this is done, see ?GLockUnion") },
 
 	/* Semaphore */
 	{ "Semaphore", (DeeObject *)&DeeSemaphore_Type },

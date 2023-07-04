@@ -756,7 +756,12 @@ PRIVATE struct type_cmp tls_cmp = {
 INTERN DeeTypeObject DeeTLS_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "TLS",
-	/* .tp_doc      = */ DOC("()\n"
+	/* .tp_doc      = */ DOC("Thread-Local-Storage container. Instance of ?. objects behave similar to ?DCell, "
+	                         /**/ "except that every thread has its own, private instance of a bound ?#value. "
+	                         /**/ "You can also specify a $factory function in the constructor that will be "
+	                         /**/ "used in order to produce the initially bound ?#value in new threads.\n"
+	                         "\n"
+	                         "()\n"
 	                         "(factory:?DCallable)\n"
 	                         "Construct a new tls descriptor using an optional @factory that "
 	                         /**/ "is used to construct the default values of per-thread variables\n"

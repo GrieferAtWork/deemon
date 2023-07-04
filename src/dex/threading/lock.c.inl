@@ -889,11 +889,29 @@ PRIVATE struct type_getset LOCAL_lockapi_getsets[] = {
 INTERN DeeTypeObject LOCAL_DeeLock_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ LOCAL_S_Lock,
-#ifdef LOCAL_lockapi_init_kw
-	/* .tp_doc      = */ DOC("(acquired=!f)"),
-#else /* LOCAL_lockapi_init_kw */
+#ifdef CONFIG_NO_DOC
 	/* .tp_doc      = */ NULL,
-#endif /* !LOCAL_lockapi_init_kw */
+#else /* CONFIG_NO_DOC */
+	/* .tp_doc      = */ ""
+#ifdef DEFINE_DeeAtomicLock_Type__AND__DeeAtomicRWLock_Type
+	                     "Atomic spin-lock using ?Ayield?DThread to block until the lock becomes available. "
+	                     /**/ "A recursive version of this lock is available as ?GRAtomicLock\n"
+#elif defined(DEFINE_DeeSharedLock_Type__AND__DeeSharedRWLock_Type)
+	                     "Shared (preemptive) lock using ?Ectypes:futex_wait and ?Ectypes:futex_timedwait to block until the lock becomes available. "
+	                     /**/ "A recursive version of this lock is available as ?GRSharedLock\n"
+#elif defined(DEFINE_RDeeAtomicLock_Type__AND__DeeRAtomicRWLock_Type)
+	                     "Recursive, Atomic spin-lock using ?Ayield?DThread to block until the lock becomes available. "
+	                     /**/ "A non-recursive version of this lock is available as ?GAtomicLock\n"
+#elif defined(DEFINE_RDeeSharedLock_Type__AND__DeeRSharedRWLock_Type)
+	                     "Recursive, Shared (preemptive) lock using ?Ectypes:futex_wait and ?Ectypes:futex_timedwait to block until the lock becomes available. "
+	                     /**/ "A non-recursive version of this lock is available as ?GSharedLock\n"
+#endif /* ... */
+	                     "\n"
+#ifdef LOCAL_lockapi_init_kw
+	                     "(acquired=!f)"
+#endif /* LOCAL_lockapi_init_kw */
+	                     "",
+#endif /* !CONFIG_NO_DOC */
 	/* .tp_flags    = */ TP_FNORMAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
@@ -1307,11 +1325,29 @@ PRIVATE struct type_getset LOCAL_rwlockapi_getsets[] = {
 INTERN DeeTypeObject LOCAL_DeeRWLock_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ LOCAL_S_RWLock,
-#ifdef LOCAL_rwlockapi_init_kw
-	/* .tp_doc      = */ DOC("(readers=!0,writing=!f)"),
-#else /* LOCAL_rwlockapi_init_kw */
+#ifdef CONFIG_NO_DOC
 	/* .tp_doc      = */ NULL,
-#endif /* !LOCAL_rwlockapi_init_kw */
+#else /* CONFIG_NO_DOC */
+	/* .tp_doc      = */ ""
+#ifdef DEFINE_DeeAtomicLock_Type__AND__DeeAtomicRWLock_Type
+	                     "Atomic read/write spin-lock using ?Ayield?DThread to block until the lock becomes available. "
+	                     /**/ "A recursive version of this lock is available as ?GRAtomicRWLock\n"
+#elif defined(DEFINE_DeeSharedLock_Type__AND__DeeSharedRWLock_Type)
+	                     "Shared (preemptive) read/write lock using ?Ectypes:futex_wait and ?Ectypes:futex_timedwait to block until the lock becomes available. "
+	                     /**/ "A recursive version of this lock is available as ?GRSharedRWLock\n"
+#elif defined(DEFINE_RDeeAtomicLock_Type__AND__DeeRAtomicRWLock_Type)
+	                     "Recursive, Atomic read/write spin-lock using ?Ayield?DThread to block until the lock becomes available. "
+	                     /**/ "A non-recursive version of this lock is available as ?GAtomicRWLock\n"
+#elif defined(DEFINE_RDeeSharedLock_Type__AND__DeeRSharedRWLock_Type)
+	                     "Recursive, Shared (preemptive) read/write lock using ?Ectypes:futex_wait and ?Ectypes:futex_timedwait to block until the lock becomes available. "
+	                     /**/ "A non-recursive version of this lock is available as ?GSharedRWLock\n"
+#endif /* ... */
+	                     "\n"
+#ifdef LOCAL_rwlockapi_init_kw
+	                     "(readers=!0,writing=!f)"
+#endif /* LOCAL_rwlockapi_init_kw */
+	                     "",
+#endif /* !CONFIG_NO_DOC */
 	/* .tp_flags    = */ TP_FNORMAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
@@ -1591,7 +1627,9 @@ PRIVATE struct type_getset LOCAL_rwlockapi_writelock_getsets[] = {
 INTERN DeeTypeObject LOCAL_DeeRWLockReadLock_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ LOCAL_S_RWLockReadLock,
-	/* .tp_doc      = */ DOC("(lock:?G" LOCAL_S_RWLock ")"),
+	/* .tp_doc      = */ DOC("Wrapper for creating/holding read-locks for ?G" LOCAL_S_RWLock "\n"
+	                         "\n"
+	                         "(lock:?G" LOCAL_S_RWLock ")"),
 	/* .tp_flags    = */ TP_FNORMAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
@@ -1635,7 +1673,9 @@ INTERN DeeTypeObject LOCAL_DeeRWLockReadLock_Type = {
 INTERN DeeTypeObject LOCAL_DeeRWLockWriteLock_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ LOCAL_S_RWLockWriteLock,
-	/* .tp_doc      = */ DOC("(lock:?G" LOCAL_S_RWLock ")"),
+	/* .tp_doc      = */ DOC("Wrapper for creating/holding write-locks for ?G" LOCAL_S_RWLock "\n"
+	                         "\n"
+	                         "(lock:?G" LOCAL_S_RWLock ")"),
 	/* .tp_flags    = */ TP_FNORMAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
