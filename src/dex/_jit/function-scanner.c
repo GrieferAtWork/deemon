@@ -26,6 +26,7 @@
 
 #include <deemon/stringutils.h>
 
+#include <hybrid/minmax.h>
 #include <hybrid/unaligned.h>
 #include <hybrid/wordbits.h>
 
@@ -47,8 +48,38 @@ JITLexer_ReferenceKeyword(JITLexer *__restrict self,
 	for (; iter; iter = iter->ot_prev.otp_tab) {
 		struct jit_object_entry *ent, *destent;
 		ent = JITObjectTable_Lookup(iter, name, size, hash);
-		if (!ent || !ent->oe_value)
+		if (!ent) {
+			DREF DeeObject *star_import;
+			struct Dee_module_symbol *mod_symbol;
+
+			/* Check if the symbol might have been defined by *-import */
+			star_import = JITObjectTable_FindImportStar(iter, name, size, hash, &mod_symbol);
+			if (star_import == ITER_DONE)
+				continue;
+			if unlikely(!star_import)
+				goto err;
+
+			/* Must create an explicit module-import for the referenced symbol. */
+			destent = JITObjectTable_Create(&self->jl_scandata.jl_function->jf_refs,
+			                                name, size, hash);
+			if unlikely(!destent) {
+				Dee_Decref_unlikely(star_import);
+				goto err;
+			}
+			if (mod_symbol) {
+				ASSERT(DeeModule_Check(star_import));
+				destent->oe_type = JIT_OBJECT_ENTRY_EXTERN_SYMBOL;
+				destent->oe_extern_symbol.es_mod = (DREF DeeModuleObject *)star_import; /* Inherit reference */
+				destent->oe_extern_symbol.es_sym = mod_symbol;
+			} else {
+				destent->oe_type = JIT_OBJECT_ENTRY_EXTERN_ATTRSTR;
+				destent->oe_extern_attrstr.eas_base = star_import; /* Inherit reference */
+				destent->oe_extern_attrstr.eas_name = name;
+				destent->oe_extern_attrstr.eas_size = size;
+				destent->oe_extern_attrstr.eas_hash = hash;
+			}
 			continue;
+		}
 		switch (ent->oe_type) {
 
 		case JIT_OBJECT_ENTRY_TYPE_ATTR:
@@ -64,6 +95,7 @@ do_alias_thisattr:
 				                                name, size, hash);
 				if unlikely(!destent)
 					goto err;
+				destent->oe_type = JIT_OBJECT_ENTRY_TYPE_ATTR;
 				destent->oe_attr.a_attr  = ent->oe_attr.a_attr;
 				destent->oe_attr.a_class = ent->oe_attr.a_class;
 				Dee_Incref(destent->oe_attr.a_class);
@@ -102,6 +134,7 @@ do_alias_thisattr:
 					goto err;
 
 				/* Load the symbols as a fixed attribute into the object table. */
+				destent->oe_type = JIT_OBJECT_ENTRY_TYPE_ATTR_FIXED;
 				destent->oe_attr_fixed.af_obj  = effective_this->oe_value;
 				destent->oe_attr_fixed.af_attr = ent->oe_attr.a_attr;
 				destent->oe_attr_fixed.af_desc = DeeInstance_DESC(ent->oe_attr.a_class->tp_class,
@@ -110,26 +143,37 @@ do_alias_thisattr:
 			}
 			break;
 
+		case JIT_OBJECT_ENTRY_TYPE_LOCAL:
+			if (!ent->oe_value)
+				continue;
+			ATTR_FALLTHROUGH
 		case JIT_OBJECT_ENTRY_TYPE_ATTR_FIXED:
+		case JIT_OBJECT_ENTRY_EXTERN_SYMBOL:
+		case JIT_OBJECT_ENTRY_EXTERN_ATTR:
+		case JIT_OBJECT_ENTRY_EXTERN_ATTRSTR: {
+			STATIC_ASSERT(offsetof(struct jit_object_entry, oe_value) == offsetof(struct jit_object_entry, oe_attr_fixed.af_obj));
+			STATIC_ASSERT(offsetof(struct jit_object_entry, oe_value) == offsetof(struct jit_object_entry, oe_extern_symbol.es_mod));
+			STATIC_ASSERT(offsetof(struct jit_object_entry, oe_value) == offsetof(struct jit_object_entry, oe_extern_attr.ea_base));
+			STATIC_ASSERT(offsetof(struct jit_object_entry, oe_value) == offsetof(struct jit_object_entry, oe_extern_attrstr.eas_base));
+			enum {
+				COPY_SIZE = MAX_C(sizeof(destent->oe_attr_fixed),
+				                  sizeof(destent->oe_extern_symbol),
+				                  sizeof(destent->oe_extern_attr),
+				                  sizeof(destent->oe_extern_attrstr))
+			};
 			destent = JITObjectTable_Create(&self->jl_scandata.jl_function->jf_refs,
 			                                name, size, hash);
 			if unlikely(!destent)
 				goto err;
-			destent->oe_type = JIT_OBJECT_ENTRY_TYPE_ATTR_FIXED;
-			memcpy(&destent->oe_attr_fixed, &ent->oe_attr_fixed,
-			       sizeof(destent->oe_attr_fixed));
+			destent->oe_type = ent->oe_type;
+			memcpy(&destent->oe_value, &ent->oe_value, COPY_SIZE);
 			Dee_Incref(destent->oe_attr_fixed.af_obj);
-			break;
+			if (ent->oe_type == JIT_OBJECT_ENTRY_EXTERN_ATTR)
+				Dee_Incref(destent->oe_extern_attr.ea_name);
+		}	break;
 
 		default:
-			destent = JITObjectTable_Create(&self->jl_scandata.jl_function->jf_refs,
-			                                name, size, hash);
-			if unlikely(!destent)
-				goto err;
-			destent->oe_type  = JIT_OBJECT_ENTRY_TYPE_LOCAL;
-			destent->oe_value = ent->oe_value;
-			Dee_XIncref(ent->oe_value);
-			break;
+			__builtin_unreachable();
 		}
 		break;
 	}

@@ -1041,11 +1041,13 @@ done:
  * @param: mode: Set of `LOOKUP_SYM_*'
  * @return: 0:  The specified symbol was found, and `result' was filled
  * @return: -1: An error occurred. */
-INTERN int FCALL
+INTERN WUNUSED NONNULL((1, 2)) int FCALL
 JITContext_Lookup(JITContext *__restrict self,
-                  struct jit_symbol *__restrict result,
-                  /*utf-8*/ char const *__restrict name,
+                  JITSymbol *__restrict result,
+                  /*utf-8*/ char const *name,
                   size_t namelen, unsigned int mode) {
+	DREF DeeObject *star_import;
+	struct Dee_module_symbol *star_import_symbol;
 	JITObjectTable *tab;
 	struct jit_object_entry *ent;
 	dhash_t hash = Dee_HashUtf8(name, namelen);
@@ -1056,21 +1058,51 @@ JITContext_Lookup(JITContext *__restrict self,
 		tab = JITContext_GetROLocals(self);
 		if (!tab)
 			break; /* No locals */
-		ent = JITObjectTable_Lookup(tab,
-		                            name,
-		                            namelen,
-		                            hash);
-		if (!ent)
-			break;
+		ent = JITObjectTable_Lookup(tab, name, namelen, hash);
+		if (!ent) {
+			/* Check for a *-import */
+			star_import = JITObjectTable_FindImportStar(tab, name, namelen, hash,
+			                                            &star_import_symbol);
+			if (star_import == ITER_DONE)
+				break;
+set_star_import:
+			if unlikely(!star_import)
+				goto err;
+			if (star_import_symbol) {
+				ASSERT(DeeModule_Check(star_import));
+				result->js_kind = JIT_SYMBOL_EXTERN;
+				result->js_extern.jx_mod = (DREF DeeModuleObject *)star_import;
+				result->js_extern.jx_sym = star_import_symbol;
+				Dee_Incref(star_import);
+			} else {
+				result->js_kind = JIT_SYMBOL_ATTRSTR;
+				result->js_attrstr.ja_base = star_import;
+				result->js_attrstr.ja_name = name;
+				result->js_attrstr.ja_size = namelen;
+				result->js_attrstr.ja_hash = hash;
+				Dee_Incref(star_import);
+			}
+			goto done;
+		}
+
 		/* Found a local variable entry. */
 set_object_entry:
 		switch (ent->oe_type) {
 
+		case JIT_OBJECT_ENTRY_TYPE_LOCAL:
+			result->js_kind = JIT_SYMBOL_OBJENT;
+			result->js_objent.jo_tab     = tab;
+			result->js_objent.jo_ent     = ent;
+			result->js_objent.jo_namestr = ent->oe_namestr;
+			result->js_objent.jo_namelen = ent->oe_namelen;
+			break;
+
 		case JIT_OBJECT_ENTRY_TYPE_ATTR_FIXED:
-			result->js_kind              = JIT_SYMBOL_CLSATTRIB;
+			result->js_kind = JIT_SYMBOL_CLSATTRIB;
 			result->js_clsattrib.jc_obj  = ent->oe_attr_fixed.af_obj;
 			result->js_clsattrib.jc_attr = ent->oe_attr_fixed.af_attr;
 			result->js_clsattrib.jc_desc = ent->oe_attr_fixed.af_desc;
+			Dee_Incref(result->js_clsattrib.jc_obj);
 			break;
 
 		case JIT_OBJECT_ENTRY_TYPE_ATTR: {
@@ -1095,18 +1127,38 @@ set_object_entry:
 					goto err;
 				}
 			}
-			result->js_kind              = JIT_SYMBOL_CLSATTRIB;
+			result->js_kind = JIT_SYMBOL_CLSATTRIB;
 			result->js_clsattrib.jc_attr = ent->oe_attr.a_attr;
 			result->js_clsattrib.jc_desc = DeeInstance_DESC(ent->oe_attr.a_class->tp_class,
 			                                                result->js_clsattrib.jc_obj);
 		}	break;
 
+		case JIT_OBJECT_ENTRY_EXTERN_SYMBOL:
+			result->js_kind = JIT_SYMBOL_EXTERN;
+			result->js_extern.jx_mod = ent->oe_extern_symbol.es_mod;
+			result->js_extern.jx_sym = ent->oe_extern_symbol.es_sym;
+			Dee_Incref(result->js_extern.jx_mod);
+			break;
+
+		case JIT_OBJECT_ENTRY_EXTERN_ATTR:
+			result->js_kind = JIT_SYMBOL_ATTR;
+			result->js_attr.ja_base = ent->oe_extern_attr.ea_base;
+			result->js_attr.ja_name = ent->oe_extern_attr.ea_name;
+			Dee_Incref(result->js_attr.ja_base);
+			Dee_Incref(result->js_attr.ja_name);
+			break;
+
+		case JIT_OBJECT_ENTRY_EXTERN_ATTRSTR:
+			result->js_kind = JIT_SYMBOL_ATTRSTR;
+			result->js_attrstr.ja_base = ent->oe_extern_attrstr.eas_base;
+			result->js_attrstr.ja_name = ent->oe_extern_attrstr.eas_name;
+			result->js_attrstr.ja_size = ent->oe_extern_attrstr.eas_size;
+			result->js_attrstr.ja_hash = ent->oe_extern_attrstr.eas_hash;
+			Dee_Incref(result->js_attrstr.ja_base);
+			break;
+
 		default:
-			result->js_kind              = JIT_SYMBOL_OBJENT;
-			result->js_objent.jo_tab     = tab;
-			result->js_objent.jo_ent     = ent;
-			result->js_objent.jo_namestr = ent->oe_namestr;
-			result->js_objent.jo_namelen = ent->oe_namelen;
+			__builtin_unreachable();
 		}
 done:
 		return 0;
@@ -1120,7 +1172,7 @@ set_global:
 				goto err;
 		}
 #endif
-		result->js_kind                 = JIT_SYMBOL_GLOBALSTR;
+		result->js_kind = JIT_SYMBOL_GLOBALSTR;
 		result->js_globalstr.jg_namestr = name;
 		result->js_globalstr.jg_namelen = namelen;
 		result->js_globalstr.jg_namehsh = hash;
@@ -1129,28 +1181,30 @@ set_global:
 	default:
 		tab = JITContext_GetROLocals(self);
 		for (; tab; tab = tab->ot_prev.otp_tab) {
-			ent = JITObjectTable_Lookup(tab,
-			                            name,
-			                            namelen,
-			                            hash);
+			ent = JITObjectTable_Lookup(tab, name, namelen, hash);
 			if (ent)
 				goto set_object_entry;
+			star_import = JITObjectTable_FindImportStar(tab, name, namelen, hash,
+			                                            &star_import_symbol);
+			if (star_import != ITER_DONE)
+				goto set_star_import;
 		}
+
 		/* If we're not allowed to declare things, always
 		 * assume that this is referring to a global */
 		if (!(mode & LOOKUP_SYM_ALLOWDECL))
 			goto set_global;
+
 		/* While inside of the global scope, untyped
 		 * symbols are always declared as global! */
 		if (JITContext_IsGlobalScope(self))
 			goto set_global;
+
 		/* Check if the symbol exists within the global symbol table. */
 		if (self->jc_globals) {
 			int error;
 			error = DeeObject_HasItemStringLen(self->jc_globals,
-			                                   name,
-			                                   namelen,
-			                                   hash);
+			                                   name, namelen, hash);
 			if unlikely(error < 0)
 				goto err;
 			if (error)
@@ -1160,14 +1214,12 @@ set_global:
 	}
 	if unlikely(!(mode & LOOKUP_SYM_ALLOWDECL))
 		goto err_unknown_var;
+
 	/* Create a new local variable. */
 	tab = JITContext_GetRWLocals(self);
 	if unlikely(!tab)
 		goto err;
-	ent = JITObjectTable_Create(tab,
-	                            name,
-	                            namelen,
-	                            hash);
+	ent = JITObjectTable_Create(tab, name, namelen, hash);
 	if unlikely(!ent)
 		goto err;
 	goto set_object_entry;
@@ -1179,10 +1231,10 @@ err:
 	return -1;
 }
 
-INTERN int FCALL
+INTERN WUNUSED NONNULL((1, 2)) int FCALL
 JITContext_LookupNth(JITContext *__restrict self,
-                     struct jit_symbol *__restrict result,
-                     /*utf-8*/ char const *__restrict name,
+                     JITSymbol *__restrict result,
+                     /*utf-8*/ char const *name,
                      size_t namelen, size_t nth) {
 	(void)self;
 	(void)result;

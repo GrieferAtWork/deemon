@@ -177,10 +177,11 @@ parse_remainder_before_rbrace_popscope_wrap:
 			}
 			if (name == ENCODE_INT32('f', 'r', 'o', 'm')) {
 				IF_EVAL(JITContext_PushScope(self->jl_context));
-				result = FUNC(ImportHybrid)(self, true, &was_expression);
+				JITLexer_Yield(self);
+				was_expression = AST_PARSE_WASEXPR_NO;
+				result = FUNC(FromImport)(self);
 				if (ISERR(result))
 					goto err;
-				ASSERT(was_expression == AST_PARSE_WASEXPR_NO);
 				/* Same as `assert': `import' requires a trailing `;' */
 				goto parse_remainder_after_semicolon_hybrid_popscope;
 			}
@@ -231,7 +232,8 @@ parse_remainder_after_semicolon_hybrid_popscope:
 			if (name == ENCODE_INT32('i', 'm', 'p', 'o') &&
 			    UNALIGNED_GET16(tok_begin + 4) == ENCODE_INT16('r', 't')) {
 				IF_EVAL(JITContext_PushScope(self->jl_context));
-				result = FUNC(ImportHybrid)(self, false, &was_expression);
+				JITLexer_Yield(self);
+				result = FUNC(ImportHybrid)(self, &was_expression);
 				if (ISERR(result))
 					goto err;
 				/* Same as `assert': `import' requires a trailing `;' */
@@ -546,7 +548,9 @@ is_a_statement:
 				goto check_semi_after_expression;
 			}
 			if (name == ENCODE_INT32('f', 'r', 'o', 'm')) {
-				result = FUNC(ImportHybrid)(self, true, &was_expression);
+				JITLexer_Yield(self);
+				was_expression = AST_PARSE_WASEXPR_NO;
+				result = FUNC(FromImport)(self);
 				goto check_semi_after_expression;
 			}
 			break;
@@ -587,7 +591,8 @@ is_a_statement:
 			}
 			if (name == ENCODE_INT32('i', 'm', 'p', 'o') &&
 			    UNALIGNED_GET16(tok_begin + 4) == ENCODE_INT16('r', 't')) {
-				result = FUNC(ImportHybrid)(self, false, &was_expression);
+				JITLexer_Yield(self);
+				result = FUNC(ImportHybrid)(self, &was_expression);
 				goto parse_unary_suffix_if_notexpr;
 			}
 			if (name == ENCODE_INT32('s', 'w', 'i', 't') &&

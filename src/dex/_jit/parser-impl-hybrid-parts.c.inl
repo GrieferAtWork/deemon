@@ -1253,37 +1253,21 @@ H_FUNC(Assert)(JITLexer *__restrict self, JIT_ARGS) {
 
 #ifdef JIT_HYBRID
 INTERN RETURN_TYPE FCALL
-H_FUNC(Import)(JITLexer *__restrict self, bool is_from_import, JIT_ARGS)
-#else /* JIT_HYBRID */
-INTERN RETURN_TYPE FCALL
-H_FUNC(Import)(JITLexer *__restrict self, bool is_from_import)
-#endif /* !JIT_HYBRID */
-{
-	RETURN_TYPE result;
-	ASSERT(is_from_import
-	       ? JITLexer_ISKWD(self, "from")
-	       : JITLexer_ISKWD(self, "import"));
-#ifdef JIT_HYBRID
-	if (!is_from_import) {
-		JITLexer_Yield(self);
+H_FUNC(Import)(JITLexer *__restrict self, JIT_ARGS) {
+	if (self->jl_tok == '(' || JITLexer_ISKWD(self, "pack")) {
+		/* Special handling for `import(...)' expressions. */
 		*p_was_expression = AST_PARSE_WASEXPR_YES;
-#ifdef JIT_EVAL
-		result = DeeObject_GetAttrString((DeeObject *)DeeModule_GetDeemon(), "import");
-#else /* JIT_EVAL */
-		result = 0;
-#endif /* !JIT_EVAL */
-		return result;
+	} else {
+		/* All other uses of `import' and `from' are statements. */
+		*p_was_expression = AST_PARSE_WASEXPR_NO;
 	}
-#endif /* JIT_HYBRID */
-	/* TODO: Import statements */
-	(void)is_from_import;
-#ifdef JIT_HYBRID
-	(void)p_was_expression;
-#endif /* JIT_HYBRID */
-	DERROR_NOTIMPLEMENTED();
-	result = ERROR;
-	return result;
+#ifdef JIT_EVAL
+	return JITLexer_EvalImport(self);
+#else /* JIT_EVAL */
+	return JITLexer_SkipImport(self);
+#endif /* !JIT_EVAL */
 }
+#endif /* JIT_HYBRID */
 
 
 DECL_END

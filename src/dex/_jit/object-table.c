@@ -85,6 +85,12 @@ JITObjectTable_Fini(JITObjectTable *__restrict self) {
 		Dee_XDecref(self->ot_list[i].oe_value);
 	}
 	Dee_Free(self->ot_list);
+	if unlikely(self->ot_star_importc) {
+		Dee_Decrefv(self->ot_star_importv, self->ot_star_importc);
+		Dee_Free(self->ot_star_importv);
+	} else {
+		ASSERT(!self->ot_star_importv);
+	}
 }
 
 INTERN NONNULL((1, 2)) void DCALL
@@ -97,6 +103,7 @@ JITObjectTable_Visit(JITObjectTable *__restrict self, dvisit_t proc, void *arg) 
 			continue;
 		Dee_XVisit(self->ot_list[i].oe_value);
 	}
+	Dee_Visitv(self->ot_star_importv, self->ot_star_importc);
 }
 
 
@@ -264,7 +271,7 @@ JITObjectTable_Delete(JITObjectTable *__restrict self,
 /* Lookup a given object within `self'
  * @return: * :   The entry associated with the given name.
  * @return: NULL: Could not find an object matching the specified name. (no error was thrown) */
-INTERN struct jit_object_entry *DCALL
+INTERN WUNUSED NONNULL((1)) struct jit_object_entry *DCALL
 JITObjectTable_Lookup(JITObjectTable *__restrict self,
                       /*utf-8*/ char const *namestr,
                       size_t namelen, dhash_t namehsh) {
@@ -286,7 +293,7 @@ JITObjectTable_Lookup(JITObjectTable *__restrict self,
 /* Lookup or create an entry for a given name within `self'
  * @return: * :   The entry associated with the given name.
  * @return: NULL: Failed to create a new entry. (an error _WAS_ thrown) */
-INTERN struct jit_object_entry *DCALL
+INTERN WUNUSED NONNULL((1)) struct jit_object_entry *DCALL
 JITObjectTable_Create(JITObjectTable *__restrict self,
                       /*utf-8*/ char const *namestr,
                       size_t namelen, dhash_t namehsh) {
@@ -345,6 +352,85 @@ again:
 	return result_entry;
 err:
 	return NULL;
+}
+
+
+/* Add a *-import module or object to `self'
+ * @return: 0 : Success
+ * @return: -1: Success */
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
+JITObjectTable_AddImportStar(JITObjectTable *__restrict self,
+                             DeeObject *module_or_object) {
+	DREF DeeObject **new_star_importv;
+	ASSERT_OBJECT(module_or_object);
+	new_star_importv = (DREF DeeObject **)Dee_Reallocc(self->ot_star_importv,
+	                                                   self->ot_star_importc + 1,
+	                                                   sizeof(DREF DeeObject *));
+	if unlikely(!new_star_importv)
+		goto err;
+	Dee_Incref(module_or_object);
+	new_star_importv[self->ot_star_importc] = module_or_object;
+	self->ot_star_importv = new_star_importv;
+	++self->ot_star_importc;
+	return 0;
+err:
+	return -1;
+}
+
+/* Search the list of *-imports of `self' for the one (if it exists)
+ * that has an attribute matching the given `namestr'. If found,
+ * return a reference to it, and if not found, return ITER_DONE.
+ * NOTE: This function searches `self->ot_star_importv' in reverse
+ *       order, meaning that modules from which an import happened
+ *       more recently (as per `JITObjectTable_AddImportStar()')
+ *       will be hit first. Also note that once a hit is found, the
+ *       search ends (this behavior differs from the core compiler,
+ *       where multiple *-imports of the same symbol-name result
+ *       in a compiler error stating that the symbol is ambiguous).
+ *       However, this difference is acceptable, since it only
+ *       affects code that would otherwise be malformed.
+ * @param: p_mod_symbol: when non-NULL, store the module-symbol (in
+ *                       case the *-import was made for a module)
+ * @return: * :        The module/object defining `namestr'
+ * @return: ITER_DONE: The *-imported module defines `namestr'
+ * @return: NULL:      An error was thrown. */
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+JITObjectTable_FindImportStar(JITObjectTable *__restrict self,
+                              /*utf-8*/ char const *namestr,
+                              size_t namelen, dhash_t namehsh,
+                              struct Dee_module_symbol **p_mod_symbol) {
+	size_t i = self->ot_star_importc;
+	while (i) {
+		DeeObject *module_or_object;
+		--i;
+		module_or_object = self->ot_star_importv[i];
+
+		/* Check if this star-import exposes the required attribute. */
+		if (DeeModule_Check(module_or_object)) {
+			struct Dee_module_symbol *symbol;
+			symbol = DeeModule_GetSymbolStringLen((DeeModuleObject *)module_or_object,
+			                                      namestr, namelen, namehsh);
+			if (symbol) {
+				/* Found it! */
+				if (p_mod_symbol)
+					*p_mod_symbol = symbol;
+				return_reference_(module_or_object);
+			}
+		} else {
+			/* Check if object has the required attribute (generic code-path) */
+			int hasattr;
+			hasattr = DeeObject_HasAttrStringLenHash(module_or_object,
+			                                         namestr, namelen, namehsh);
+			if (hasattr != 0) {
+				if unlikely(hasattr < 0)
+					return NULL; /* Error */
+				if (p_mod_symbol)
+					*p_mod_symbol = NULL;
+				return_reference_(module_or_object);
+			}
+		}
+	}
+	return ITER_DONE;
 }
 
 

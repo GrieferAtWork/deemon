@@ -332,7 +332,8 @@ FUNC(Statement)(JITLexer *__restrict self) {
 				goto done;
 			}
 			if (name == ENCODE_INT32('f', 'r', 'o', 'm')) {
-				result = FUNC(Import)(self, true);
+				JITLexer_Yield(self);
+				result = FUNC(FromImport)(self);
 				goto done;
 			}
 			break;
@@ -473,7 +474,8 @@ FUNC(Statement)(JITLexer *__restrict self) {
 			}
 			if (name == ENCODE_INT32('i', 'm', 'p', 'o') &&
 			    UNALIGNED_GET16(tok_begin + 4) == ENCODE_INT16('r', 't')) {
-				result = FUNC(Import)(self, false);
+				JITLexer_Yield(self);
+				result = FUNC(Import)(self);
 				goto done;
 			}
 			if (name == ENCODE_INT32('s', 'w', 'i', 't') &&
@@ -722,6 +724,80 @@ err_r:
 err:
 	return ERROR;
 }
+
+INTERN RETURN_TYPE FCALL
+FUNC(Import)(JITLexer *__restrict self) {
+	RETURN_TYPE result;
+
+	/* Special handling for `import(...)' expressions. */
+	if (self->jl_tok == '(' || JITLexer_ISKWD(self, "pack")) {
+#ifdef JIT_EVAL
+		result = JITContext_GetImport(self->jl_context);
+		if unlikely(!result)
+			goto err;
+#endif /* JIT_EVAL */
+		result = CALL_SECONDARY(UnaryOperand, result);
+		if (ISERR(result))
+			goto err;
+		return CALL_SECONDARY(Operand, result);
+	}
+
+	/* - import deemon;
+	 * - import deemon, util;
+	 * - import my_deemon = deemon;
+	 * - import my_deemon = "deemon";
+	 * - import my_deemon = deemon, my_util = util;
+	 * - import deemon as my_deemon;
+	 * - import "deemon" as my_deemon;
+	 * - import deemon as my_deemon, util as my_util;
+	 * - import * from deemon;
+	 * - import Object from deemon;
+	 * - import Object, List from deemon;
+	 * - import MyObject = Object from deemon;
+	 * - import MyObject = "Object" from deemon;
+	 * - import MyObject = Object, MyList = List from deemon;
+	 * - import Object as MyObject from deemon;
+	 * - import "Object" as MyObject from deemon;
+	 * - import Object as MyObject, List as MyList from deemon;
+	 *
+	 * NOTE: *-import is facilitated via `JITObjectTable_AddImportStar(JITContext_GetRWLocals(self->jl_context))'
+	 * NOTE: single-import is facilitated via `JITObjectTable_Create(JITContext_GetRWLocals(self->jl_context))',
+	 *       and then creating `JIT_OBJECT_ENTRY_EXTERN_SYMBOL' or `JIT_OBJECT_ENTRY_EXTERN_ATTR[STR]' symbols.
+	 */
+
+
+	/* TODO: Import statements */
+	DERROR_NOTIMPLEMENTED();
+	result = ERROR;
+	return result;
+err:
+	return ERROR;
+}
+
+INTERN RETURN_TYPE FCALL
+FUNC(FromImport)(JITLexer *__restrict self) {
+	RETURN_TYPE result;
+
+	/* - from deemon import *;
+	 * - from deemon import Object;
+	 * - from deemon import Object, List;
+	 * - from deemon import MyObject = Object;
+	 * - from deemon import MyObject = "Object";
+	 * - from deemon import MyObject = Object, MyList = List;
+	 * - from deemon import Object as MyObject;
+	 * - from deemon import "Object" as MyObject;
+	 * - from deemon import Object as MyObject, List as MyList; */
+
+	/* TODO: Import statements */
+	(void)self;
+	DERROR_NOTIMPLEMENTED();
+	result = ERROR;
+	return result;
+/*
+err:
+	return ERROR;*/
+}
+
 
 DECL_END
 

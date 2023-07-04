@@ -1992,26 +1992,36 @@ err_oo_class_reinit_lvalue:
 				goto done;
 			} else if (JITLexer_ISKWD(self, "from")) {
 #ifdef JIT_EVAL
-				DREF DeeModuleObject *mod;
-				struct module_symbol *symbol;
+				DREF DeeObject *mod;
+				dhash_t symbol_hash;
 				JITLexer_Yield(self);
-				mod = (DREF DeeModuleObject *)JITLexer_EvalModule(self);
+				mod = JITLexer_EvalModule(self);
 				if unlikely(!mod)
 					goto err;
-				symbol = DeeModule_GetSymbolStringLen(mod,
-				                                      symbol_name,
-				                                      symbol_size,
-				                                      Dee_HashUtf8(symbol_name, symbol_size));
-				if unlikely(!symbol) {
-					DeeError_Throwf(&DeeError_SymbolError,
-					                "Symbol `%$s' could not be found in mod `%k'",
-					                symbol_size, symbol_name, mod);
-					Dee_Decref(mod);
-					goto err;
+				symbol_hash = Dee_HashUtf8(symbol_name, symbol_size);
+				if (DeeModule_Check(mod)) {
+					struct module_symbol *symbol;
+					symbol = DeeModule_GetSymbolStringLen((DREF DeeModuleObject *)mod,
+					                                      symbol_name, symbol_size,
+					                                      symbol_hash);
+					if unlikely(!symbol) {
+						DeeError_Throwf(&DeeError_SymbolError,
+						                "Symbol `%$s' could not be found in mod `%k'",
+						                symbol_size, symbol_name, mod);
+						Dee_Decref(mod);
+						goto err;
+					}
+					self->jl_lvalue.lv_kind          = JIT_LVALUE_EXTERN;
+					self->jl_lvalue.lv_extern.lx_mod = (DREF DeeModuleObject *)mod; /* Inherit reference. */
+					self->jl_lvalue.lv_extern.lx_sym = symbol;
+				} else {
+					/* When the import function didn't return */
+					self->jl_lvalue.lv_kind = JIT_LVALUE_ATTRSTR;
+					self->jl_lvalue.lv_attrstr.la_base = mod; /* Inherit reference. */
+					self->jl_lvalue.lv_attrstr.la_name = symbol_name;
+					self->jl_lvalue.lv_attrstr.la_size = symbol_size;
+					self->jl_lvalue.lv_attrstr.la_hash = symbol_hash;
 				}
-				self->jl_lvalue.lv_kind          = JIT_LVALUE_EXTERN;
-				self->jl_lvalue.lv_extern.lx_mod = mod; /* Inherit reference. */
-				self->jl_lvalue.lv_extern.lx_sym = symbol;
 #else /* JIT_EVAL */
 				JITLexer_Yield(self);
 				if unlikely(JITLexer_SkipModule(self))
