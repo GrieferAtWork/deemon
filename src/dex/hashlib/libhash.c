@@ -2299,7 +2299,7 @@ dhashalgo_find(char const *__restrict name) {
 }
 
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED DREF DeeObject *DCALL
 dhashmain_f(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	char const *name;
 	DeeObject *data, *start = NULL;

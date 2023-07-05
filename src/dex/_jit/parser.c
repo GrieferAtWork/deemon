@@ -958,7 +958,7 @@ err:
  * >> local x = 42;
  *    ^     ^
  */
-INTERN int DCALL
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
 JITLexer_ParseLookupMode(JITLexer *__restrict self,
                          unsigned int *__restrict p_mode) {
 next_modifier:
@@ -999,7 +999,7 @@ err:
 
 /* Recursively skip a pair of tokens, such as `{' and `}' or `(' and `)'
  * NOTE: Entry is expected to be after the initial instance of `pair_open' */
-INTERN int FCALL
+INTERN WUNUSED NONNULL((1)) int FCALL
 JITLexer_SkipPair(JITLexer *__restrict self,
                   unsigned int pair_open,
                   unsigned int pair_close) {
@@ -1030,7 +1030,7 @@ err_eof:
 
 
 
-PRIVATE DREF DeeObject *FCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *FCALL
 JITLexer_ParseCatchExprItem(JITLexer *__restrict self) {
 	DREF DeeObject *result;
 	result = JITLexer_EvalUnary(self, JITLEXER_EVAL_FPRIMARY);
@@ -1046,7 +1046,7 @@ JITLexer_ParseCatchExprItem(JITLexer *__restrict self) {
  *             ^      ^
  * >> }
  * Also handles multi-catch masks. */
-PRIVATE DREF DeeObject *FCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *FCALL
 JITLexer_ParseCatchExpr(JITLexer *__restrict self) {
 	DREF DeeObject *result, *next;
 	result = JITLexer_ParseCatchExprItem(self);
@@ -1092,7 +1092,7 @@ err_r:
  *             ^            ^
  * >> }
  */
-INTERN int FCALL
+INTERN WUNUSED NONNULL((1, 2, 3, 4)) int FCALL
 JITLexer_ParseCatchMask(JITLexer *__restrict self,
                         DREF DeeObject **__restrict p_typemask,
                         char const **__restrict p_symbol_name,
@@ -1166,7 +1166,7 @@ err:
  *       call this function as:
  *       >> can_catch = (!mask || JIT_IsCatchable(obj, mask)) &&
  *       >>             (allow_interrupts || !DeeObject_IsInterrupt(obj)); */
-INTERN NONNULL((1, 2)) bool FCALL
+INTERN WUNUSED NONNULL((1, 2)) bool FCALL
 JIT_IsCatchable(DeeObject *thrown_object,
                 DeeObject *typemask) {
 	DeeTypeObject *thrown_object_type;

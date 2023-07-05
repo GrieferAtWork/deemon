@@ -53,7 +53,7 @@ struct Dee_tuple_object {
 #define DeeTuple_SET(ob, i, v)   (void)(((DeeTupleObject *)Dee_REQUIRES_OBJECT(ob))->t_elem[i] = (DeeObject *)Dee_REQUIRES_OBJECT(v))
 
 /* Define a statically allocated tuple:
- * >> PRIVATE DREF DeeObject *DCALL get_my_tuple(void) {
+ * >> PRIVATE WUNUSED DREF DeeObject *DCALL get_my_tuple(void) {
  * >>     PRIVATE DEFINE_TUPLE(my_tuple, 2, { Dee_EmptyString, Dee_EmptyString });
  * >>     return_reference((DeeObject *)&my_tuple);
  * >> }

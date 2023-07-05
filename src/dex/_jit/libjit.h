@@ -1075,57 +1075,63 @@ JITLexer_SkipSymbolNameIntoPrinter(JITLexer *__restrict self);
  * >> local x = 42;
  *    ^     ^
  */
-INTDEF int DCALL
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL
 JITLexer_ParseLookupMode(JITLexer *__restrict self,
                          unsigned int *__restrict p_mode);
 
 
 /* Parse or skip a template string. */
-INTERN WUNUSED DREF DeeObject *FCALL JITLexer_EvalTemplateString(JITLexer *__restrict self);
-INTERN int FCALL JITLexer_SkipTemplateString(JITLexer *__restrict self);
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *FCALL
+JITLexer_EvalTemplateString(JITLexer *__restrict self);
+INTERN WUNUSED NONNULL((1)) int FCALL
+JITLexer_SkipTemplateString(JITLexer *__restrict self);
 
 
 /* Skip evaluation functions. (same as the regular functions,
  * but expressions are skipped, rather than being evaluated)
  * However, syntax error are still thrown.
  * @param: flags: Set of `JITLEXER_EVAL_F*' */
-INTDEF int FCALL JITLexer_SkipUnaryHead(JITLexer *__restrict self, unsigned int flags);
-INTDEF int FCALL JITLexer_SkipUnary(JITLexer *__restrict self, unsigned int flags);
-INTDEF int FCALL JITLexer_SkipProd(JITLexer *__restrict self, unsigned int flags);
-INTDEF int FCALL JITLexer_SkipSum(JITLexer *__restrict self, unsigned int flags);
-INTDEF int FCALL JITLexer_SkipShift(JITLexer *__restrict self, unsigned int flags);
-INTDEF int FCALL JITLexer_SkipCmp(JITLexer *__restrict self, unsigned int flags);
-INTDEF int FCALL JITLexer_SkipCmpEQ(JITLexer *__restrict self, unsigned int flags);
-INTDEF int FCALL JITLexer_SkipAnd(JITLexer *__restrict self, unsigned int flags);
-INTDEF int FCALL JITLexer_SkipXor(JITLexer *__restrict self, unsigned int flags);
-INTDEF int FCALL JITLexer_SkipOr(JITLexer *__restrict self, unsigned int flags);
-INTDEF int FCALL JITLexer_SkipAs(JITLexer *__restrict self, unsigned int flags);
-INTDEF int FCALL JITLexer_SkipLand(JITLexer *__restrict self, unsigned int flags);
-INTDEF int FCALL JITLexer_SkipLor(JITLexer *__restrict self, unsigned int flags);
-INTDEF int FCALL JITLexer_SkipCond(JITLexer *__restrict self, unsigned int flags);
-INTDEF int FCALL JITLexer_SkipAssign(JITLexer *__restrict self, unsigned int flags); /* NOTE: Also handles inplace operators. */
-INTDEF int FCALL JITLexer_SkipUnaryOperand(JITLexer *__restrict self, unsigned int flags);
-INTDEF int FCALL JITLexer_SkipProdOperand(JITLexer *__restrict self, unsigned int flags);
-INTDEF int FCALL JITLexer_SkipSumOperand(JITLexer *__restrict self, unsigned int flags);
-INTDEF int FCALL JITLexer_SkipShiftOperand(JITLexer *__restrict self, unsigned int flags);
-INTDEF int FCALL JITLexer_SkipCmpOperand(JITLexer *__restrict self, unsigned int flags);
-INTDEF int FCALL JITLexer_SkipCmpEQOperand(JITLexer *__restrict self, unsigned int flags);
-INTDEF int FCALL JITLexer_SkipAndOperand(JITLexer *__restrict self, unsigned int flags);
-INTDEF int FCALL JITLexer_SkipXorOperand(JITLexer *__restrict self, unsigned int flags);
-INTDEF int FCALL JITLexer_SkipOrOperand(JITLexer *__restrict self, unsigned int flags);
-INTDEF int FCALL JITLexer_SkipAsOperand(JITLexer *__restrict self, unsigned int flags);
-INTDEF int FCALL JITLexer_SkipLandOperand(JITLexer *__restrict self, unsigned int flags);
-INTDEF int FCALL JITLexer_SkipLorOperand(JITLexer *__restrict self, unsigned int flags);
-INTDEF int FCALL JITLexer_SkipCondOperand(JITLexer *__restrict self, unsigned int flags);
-INTDEF int FCALL JITLexer_SkipAssignOperand(JITLexer *__restrict self, unsigned int flags);
+INTDEF WUNUSED NONNULL((1)) int FCALL JITLexer_SkipUnaryHead(JITLexer *__restrict self, unsigned int flags);
+INTDEF WUNUSED NONNULL((1)) int FCALL JITLexer_SkipUnary(JITLexer *__restrict self, unsigned int flags);
+INTDEF WUNUSED NONNULL((1)) int FCALL JITLexer_SkipProd(JITLexer *__restrict self, unsigned int flags);
+INTDEF WUNUSED NONNULL((1)) int FCALL JITLexer_SkipSum(JITLexer *__restrict self, unsigned int flags);
+INTDEF WUNUSED NONNULL((1)) int FCALL JITLexer_SkipShift(JITLexer *__restrict self, unsigned int flags);
+INTDEF WUNUSED NONNULL((1)) int FCALL JITLexer_SkipCmp(JITLexer *__restrict self, unsigned int flags);
+INTDEF WUNUSED NONNULL((1)) int FCALL JITLexer_SkipCmpEQ(JITLexer *__restrict self, unsigned int flags);
+INTDEF WUNUSED NONNULL((1)) int FCALL JITLexer_SkipAnd(JITLexer *__restrict self, unsigned int flags);
+INTDEF WUNUSED NONNULL((1)) int FCALL JITLexer_SkipXor(JITLexer *__restrict self, unsigned int flags);
+INTDEF WUNUSED NONNULL((1)) int FCALL JITLexer_SkipOr(JITLexer *__restrict self, unsigned int flags);
+INTDEF WUNUSED NONNULL((1)) int FCALL JITLexer_SkipAs(JITLexer *__restrict self, unsigned int flags);
+INTDEF WUNUSED NONNULL((1)) int FCALL JITLexer_SkipLand(JITLexer *__restrict self, unsigned int flags);
+INTDEF WUNUSED NONNULL((1)) int FCALL JITLexer_SkipLor(JITLexer *__restrict self, unsigned int flags);
+INTDEF WUNUSED NONNULL((1)) int FCALL JITLexer_SkipCond(JITLexer *__restrict self, unsigned int flags);
+INTDEF WUNUSED NONNULL((1)) int FCALL JITLexer_SkipAssign(JITLexer *__restrict self, unsigned int flags); /* NOTE: Also handles inplace operators. */
+INTDEF WUNUSED NONNULL((1)) int FCALL JITLexer_SkipUnaryOperand(JITLexer *__restrict self, unsigned int flags);
+INTDEF WUNUSED NONNULL((1)) int FCALL JITLexer_SkipProdOperand(JITLexer *__restrict self, unsigned int flags);
+INTDEF WUNUSED NONNULL((1)) int FCALL JITLexer_SkipSumOperand(JITLexer *__restrict self, unsigned int flags);
+INTDEF WUNUSED NONNULL((1)) int FCALL JITLexer_SkipShiftOperand(JITLexer *__restrict self, unsigned int flags);
+INTDEF WUNUSED NONNULL((1)) int FCALL JITLexer_SkipCmpOperand(JITLexer *__restrict self, unsigned int flags);
+INTDEF WUNUSED NONNULL((1)) int FCALL JITLexer_SkipCmpEQOperand(JITLexer *__restrict self, unsigned int flags);
+INTDEF WUNUSED NONNULL((1)) int FCALL JITLexer_SkipAndOperand(JITLexer *__restrict self, unsigned int flags);
+INTDEF WUNUSED NONNULL((1)) int FCALL JITLexer_SkipXorOperand(JITLexer *__restrict self, unsigned int flags);
+INTDEF WUNUSED NONNULL((1)) int FCALL JITLexer_SkipOrOperand(JITLexer *__restrict self, unsigned int flags);
+INTDEF WUNUSED NONNULL((1)) int FCALL JITLexer_SkipAsOperand(JITLexer *__restrict self, unsigned int flags);
+INTDEF WUNUSED NONNULL((1)) int FCALL JITLexer_SkipLandOperand(JITLexer *__restrict self, unsigned int flags);
+INTDEF WUNUSED NONNULL((1)) int FCALL JITLexer_SkipLorOperand(JITLexer *__restrict self, unsigned int flags);
+INTDEF WUNUSED NONNULL((1)) int FCALL JITLexer_SkipCondOperand(JITLexer *__restrict self, unsigned int flags);
+INTDEF WUNUSED NONNULL((1)) int FCALL JITLexer_SkipAssignOperand(JITLexer *__restrict self, unsigned int flags);
 
 /* Parse any kind of post-expression operand. */
-INTDEF WUNUSED DREF DeeObject *FCALL JITLexer_EvalOperand(JITLexer *__restrict self, /*inherit(always)*/ DREF DeeObject *__restrict lhs, unsigned int flags);
-INTDEF int FCALL JITLexer_SkipOperand(JITLexer *__restrict self, unsigned int flags);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *FCALL
+JITLexer_EvalOperand(JITLexer *__restrict self,
+                     /*inherit(always)*/ DREF DeeObject *__restrict lhs,
+                     unsigned int flags);
+INTDEF WUNUSED NONNULL((1)) int FCALL
+JITLexer_SkipOperand(JITLexer *__restrict self, unsigned int flags);
 
 /* Recursively skip a pair of tokens, such as `{' and `}' or `(' and `)'
  * NOTE: Entry is expected to be after the initial instance of `pair_open' */
-INTDEF int FCALL
+INTDEF WUNUSED NONNULL((1)) int FCALL
 JITLexer_SkipPair(JITLexer *__restrict self,
                   unsigned int pair_open,
                   unsigned int pair_close);
@@ -1138,11 +1144,11 @@ JITLexer_SkipPair(JITLexer *__restrict self,
 
 
 /* Parse a whole statement. */
-INTDEF WUNUSED DREF DeeObject *FCALL JITLexer_EvalStatement(JITLexer *__restrict self);
-INTDEF int FCALL JITLexer_SkipStatement(JITLexer *__restrict self);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *FCALL JITLexer_EvalStatement(JITLexer *__restrict self);
+INTDEF WUNUSED NONNULL((1)) int FCALL JITLexer_SkipStatement(JITLexer *__restrict self);
 
-INTDEF WUNUSED DREF DeeObject *FCALL JITLexer_EvalStatementBlock(JITLexer *__restrict self);
-INTDEF int FCALL JITLexer_SkipStatementBlock(JITLexer *__restrict self);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *FCALL JITLexer_EvalStatementBlock(JITLexer *__restrict self);
+INTDEF WUNUSED NONNULL((1)) int FCALL JITLexer_SkipStatementBlock(JITLexer *__restrict self);
 
 
 /************************************************************************/
@@ -1153,7 +1159,8 @@ INTDEF int FCALL JITLexer_SkipStatementBlock(JITLexer *__restrict self);
  *             ^                                    ^
  * @return: 0 : Success
  * @return: -1: Compiler error (only thrown when `throw_errors != false') */
-INTDEF int FCALL JITLexer_SkipTypeAnnotation(JITLexer *__restrict self, bool throw_errors);
+INTDEF WUNUSED NONNULL((1)) int FCALL
+JITLexer_SkipTypeAnnotation(JITLexer *__restrict self, bool throw_errors);
 /************************************************************************/
 
 
@@ -1172,7 +1179,7 @@ INTDEF int FCALL JITLexer_SkipTypeAnnotation(JITLexer *__restrict self, bool thr
  *                    You may use `JIT_IsCatchable()' to determine if the object can
  *                    be caught using this mask.
  */
-INTDEF int FCALL
+INTDEF WUNUSED NONNULL((1, 2, 3, 4)) int FCALL
 JITLexer_ParseCatchMask(JITLexer *__restrict self,
                         DREF DeeObject **__restrict p_typemask,
                         char const **__restrict p_symbol_name,
@@ -1184,7 +1191,7 @@ JITLexer_ParseCatchMask(JITLexer *__restrict self,
  *       call this function as:
  *       >> can_catch = (!mask || JIT_IsCatchable(obj, mask)) &&
  *       >>             (allow_interrupts || !DeeObject_IsInterrupt(obj)); */
-INTDEF NONNULL((1, 2)) bool FCALL
+INTDEF WUNUSED NONNULL((1, 2)) bool FCALL
 JIT_IsCatchable(DeeObject *thrown_object,
                 DeeObject *typemask);
 

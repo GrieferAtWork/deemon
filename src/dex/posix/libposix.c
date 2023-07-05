@@ -75,7 +75,7 @@ DECL_BEGIN
 /* Timestamp creation */
 #if defined(NEED_DeeTime_NewUnix) || defined(NEED_DeeTime_NewFILETIME)
 PRIVATE DREF DeeObject *dee_time_module = NULL;
-PRIVATE DREF DeeObject *DCALL get_time_module(void) {
+PRIVATE WUNUSED DREF DeeObject *DCALL get_time_module(void) {
 	if (dee_time_module == NULL)
 		dee_time_module = DeeModule_OpenGlobalString("time", 4, NULL, true);
 	return dee_time_module;

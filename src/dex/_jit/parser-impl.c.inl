@@ -82,10 +82,10 @@
 #define CALL_PRIMARYF(name, flags)   JITLexer_Skip##name(self, flags)
 #define CALL_SECONDARY(name, result) JITLexer_Skip##name(self, JITLEXER_EVAL_FSECONDARY)
 #define DEFINE_PRIMARY(name) \
-	INTERN int FCALL JITLexer_Skip##name(JITLexer *__restrict self, unsigned int flags)
+	INTERN WUNUSED NONNULL((1)) int FCALL JITLexer_Skip##name(JITLexer *__restrict self, unsigned int flags)
 #define DEFINE_SECONDARY(name) \
-	INTERN int FCALL JITLexer_Skip##name(JITLexer *__restrict self, unsigned int flags)
-#else
+	INTERN WUNUSED NONNULL((1)) int FCALL JITLexer_Skip##name(JITLexer *__restrict self, unsigned int flags)
+#else /* JIT_SKIP */
 #define LOAD_LVALUE(obj, err)                                                   \
 	do {                                                                        \
 		if ((obj) == JIT_LVALUE && ((obj) = JITLexer_PackLValue(self)) == NULL) \
@@ -117,14 +117,15 @@
 #define CALL_PRIMARY(name)           JITLexer_Eval##name(self, flags)
 #define CALL_PRIMARYF(name, flags)   JITLexer_Eval##name(self, flags)
 #define CALL_SECONDARY(name, result) JITLexer_Eval##name(self, result, JITLEXER_EVAL_FSECONDARY)
-#define DEFINE_PRIMARY(name)     \
-	INTERN WUNUSED DREF DeeObject *FCALL \
+#define DEFINE_PRIMARY(name)                          \
+	INTERN WUNUSED NONNULL((1)) DREF DeeObject *FCALL \
 	JITLexer_Eval##name(JITLexer *__restrict self, unsigned int flags)
-#define DEFINE_SECONDARY(name)                     \
-	INTERN WUNUSED DREF DeeObject *FCALL                   \
-	JITLexer_Eval##name(JITLexer *__restrict self, \
-	                    /*inherit(always)*/ DREF DeeObject *__restrict lhs, unsigned int flags)
-#endif
+#define DEFINE_SECONDARY(name)                                              \
+	INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *FCALL                    \
+	JITLexer_Eval##name(JITLexer *__restrict self,                          \
+	                    /*inherit(always)*/ DREF DeeObject *__restrict lhs, \
+	                    unsigned int flags)
+#endif /* !JIT_SKIP */
 
 
 

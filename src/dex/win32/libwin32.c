@@ -868,7 +868,7 @@ PRIVATE DeeHandleObject Dee_INVALID_HANDLE_VALUE = {
  *       handle. - This wrapper is only used for binary compatibility
  *       with the internal interfaces for handles vs. file descriptors! */
 #define libwin32_CreateHandle_ALWAYS_RETURNS_UNIQUE_REFERENCE
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED DREF DeeObject *DCALL
 libwin32_CreateHandle(HANDLE hHandle) {
 	DREF DeeHandleObject *result;
 	result = DeeObject_MALLOC(DeeHandleObject);
@@ -2442,7 +2442,7 @@ PRIVATE DEFINE_STRING_EX(str_nul, "\0", 0x514e28b7, 0x0);
 
 /* Split a given `str' at each instance of a NUL-character,
  * returning the sequence of resulting strings. */
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED DREF DeeObject *DCALL
 split_nul_string(/*inherit(always)*/ DREF DeeObject *str) {
 	DREF DeeObject *result;
 	DeeObject *argv[1];

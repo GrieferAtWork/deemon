@@ -1692,7 +1692,7 @@ INTERN ATTR_COLD NONNULL((1)) int
 #endif /* posix_enumenv_USE_environ || posix_enumenv_USE_wenviron */
 
 
-PRIVATE DREF DeeTupleObject *DCALL
+PRIVATE WUNUSED DREF DeeTupleObject *DCALL
 environ_iterator_next(EnvironIterator *__restrict self) {
 #if (defined(posix_enumenv_USE_GetEnvironmentStringsW) || \
      (defined(posix_enumenv_USE_environ) || defined(posix_enumenv_USE_wenviron)))
@@ -1817,7 +1817,7 @@ err:
 #endif /* posix_enumenv_USE_STUB */
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED DREF DeeObject *DCALL
 environ_iterator_next_key(EnvironIterator *__restrict self) {
 #if (defined(posix_enumenv_USE_GetEnvironmentStringsW) || \
      (defined(posix_enumenv_USE_environ) || defined(posix_enumenv_USE_wenviron)))
@@ -1914,7 +1914,7 @@ err:
 #endif /* posix_enumenv_USE_STUB */
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED DREF DeeObject *DCALL
 environ_iterator_next_value(EnvironIterator *__restrict self) {
 #if (defined(posix_enumenv_USE_GetEnvironmentStringsW) || \
      (defined(posix_enumenv_USE_environ) || defined(posix_enumenv_USE_wenviron)))
