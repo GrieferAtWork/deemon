@@ -1768,7 +1768,20 @@ err:
 }
 
 PRIVATE struct type_method tpconst numeric_methods[] = {
-	/* TODO: function gcd(other: Numeric): Numeric (GreatestCommonDivisor) */
+	/* TODO: function gcd(other: Numeric): Numeric (GreatestCommonDivisor)
+	 * >> function gcd(a, b) {
+	 * >>	do {
+	 * >>		local x;
+	 * >>		x = a % b;
+	 * >>		a = b;
+	 * >>		b = x;
+	 * >>	} while (b);
+	 * >>	return a;
+	 * >> } */
+	/* TODO: function lcm(other: Numeric): Numeric (LeastCommonMultiple)
+	 * >> function lcm(a, b) {
+	 * >>	return a * (b / gcd(a, b));
+	 * >> } */
 	TYPE_KWMETHOD(STR_tostr, &numeric_tostr,
 	              "(radix=!10,precision=!0,mode=!P{})->?Dstring\n"
 	              "Convert @this number into an integer and call :int.tostr\n"

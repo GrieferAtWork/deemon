@@ -670,7 +670,10 @@ PRIVATE struct type_getset tpconst copyfile_progress_getsets[] = {
 INTERN DeeTypeObject DeeCopyFileProgress_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "CopyFileProgress",
-	/* .tp_doc      = */ DOC("(srcfile:?DFile,dstfile:?DFile,copied=!0,total?:?Dint)"),
+	/* .tp_doc      = */ DOC("The type of object that is passed to the $progress argument of "
+	                         /**/ "?Gcopyfile, ?Gcopyfileat, ?Gfcopyfile and ?Glcopyfile\n"
+	                         "\n"
+	                         "(srcfile:?DFile,dstfile:?DFile,copied=!0,total?:?Dint)"),
 	/* .tp_flags    = */ TP_FNORMAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,

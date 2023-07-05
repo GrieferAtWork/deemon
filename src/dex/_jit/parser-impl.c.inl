@@ -1872,14 +1872,11 @@ err_oo_class_reinit_lvalue:
 #endif /* !JIT_EVAL */
 				goto done_y1;
 			}
-#if 1
 			if (name == ENCODE_INT32('a', 's', 's', 'e') &&
 			    UNALIGNED_GET16(tok_begin + 4) == ENCODE_INT16('r', 't')) {
-				/* TODO: Assert expressions */
-				DERROR_NOTIMPLEMENTED();
-				goto err;
+				result = FUNC(Assert)(self, false);
+				goto done;
 			}
-#endif
 			break;
 
 		case 7:

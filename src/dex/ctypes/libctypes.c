@@ -720,6 +720,9 @@ PRIVATE struct dex_symbol symbols[] = {
 	{ "bswap64", (DeeObject *)&ctypes_bswap64, MODSYM_FNORMAL,
 	  DOC("(x:?Guint64_t)->?Guint64_t\n"
 	      "Return @x with reversed endian") },
+	{ "bswap128", (DeeObject *)&ctypes_bswap128, MODSYM_FNORMAL,
+	  DOC("(x:?Guint128_t)->?Guint128_t\n"
+	      "Return @x with reversed endian") },
 
 	{ "htole16", (DeeObject *)&ctypes_htole16, MODSYM_FNORMAL,
 	  DOC("(x:?Guint16_t)->?Guint16_t\n"

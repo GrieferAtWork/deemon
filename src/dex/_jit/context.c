@@ -414,10 +414,10 @@ JITLValue_IsBound(JITLValue *__restrict self,
 		if unlikely(!context->jc_globals)
 			return 0;
 		result = DeeObject_BoundItemStringLenHash(context->jc_globals,
-		                                      self->lv_globalstr.lg_namestr,
-		                                      self->lv_globalstr.lg_namelen,
-		                                      self->lv_globalstr.lg_namehsh,
-		                                      true);
+		                                          self->lv_globalstr.lg_namestr,
+		                                          self->lv_globalstr.lg_namelen,
+		                                          self->lv_globalstr.lg_namehsh,
+		                                          true);
 		if (result < -1)
 			result = 0; /* Attribute doesn't exist */
 		break;
@@ -521,9 +521,9 @@ err_unbound:
 			goto err;
 		}
 		result = DeeObject_GetItemStringLenHash(context->jc_globals,
-		                                    self->lv_globalstr.lg_namestr,
-		                                    self->lv_globalstr.lg_namelen,
-		                                    self->lv_globalstr.lg_namehsh);
+		                                        self->lv_globalstr.lg_namestr,
+		                                        self->lv_globalstr.lg_namelen,
+		                                        self->lv_globalstr.lg_namehsh);
 		break;
 
 	case JIT_LVALUE_CLSATTRIB:
@@ -610,13 +610,14 @@ JITLValue_DelValue(JITLValue *__restrict self,
 		break;
 
 	case JIT_LVALUE_GLOBALSTR:
-		if unlikely(!context->jc_globals)
+		if unlikely(!context->jc_globals) {
 			return err_unknown_global_str_len(self->lv_globalstr.lg_namestr,
-		                                  self->lv_globalstr.lg_namelen);
+			                                  self->lv_globalstr.lg_namelen);
+		}
 		result = DeeObject_DelItemStringLenHash(context->jc_globals,
-		                                    self->lv_globalstr.lg_namestr,
-		                                    self->lv_globalstr.lg_namelen,
-		                                    self->lv_globalstr.lg_namehsh);
+		                                        self->lv_globalstr.lg_namestr,
+		                                        self->lv_globalstr.lg_namelen,
+		                                        self->lv_globalstr.lg_namehsh);
 		break;
 
 	case JIT_LVALUE_CLSATTRIB:
@@ -717,10 +718,10 @@ JITLValue_SetValue(JITLValue *__restrict self,
 				goto err;
 		}
 		result = DeeObject_SetItemStringLenHash(context->jc_globals,
-		                                    self->lv_globalstr.lg_namestr,
-		                                    self->lv_globalstr.lg_namelen,
-		                                    self->lv_globalstr.lg_namehsh,
-		                                    value);
+		                                        self->lv_globalstr.lg_namestr,
+		                                        self->lv_globalstr.lg_namelen,
+		                                        self->lv_globalstr.lg_namehsh,
+		                                        value);
 		break;
 
 	case JIT_LVALUE_CLSATTRIB:
@@ -1246,6 +1247,31 @@ JITContext_LookupNth(JITContext *__restrict self,
 }
 
 
+
+
+/* Return a reference to an object that implements attribute
+ * operators such that it allows access to JIT globals. */
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+JITContext_GetCurrentModule(JITContext *__restrict self) {
+	DREF DeeObject *result;
+	if (self->jc_globals == NULL) {
+		self->jc_globals = DeeDict_New();
+		if unlikely(!self->jc_globals)
+			goto err;
+	}
+
+	/* FIXME: The current-module object isn't supposed to change id:
+	 * >> import . as a;
+	 * >> import . as b;
+	 * >> assert a == b;  // OK
+	 * >> assert a === b; // FAIL  (because it's actually 2 different objects)
+	 */
+	result = self->jc_globals;
+	result = DeeObject_GetAttrString(result, "byattr");
+	return result;
+err:
+	return NULL;
+}
 
 
 

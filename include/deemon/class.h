@@ -408,7 +408,7 @@ struct Dee_class_descriptor_object {
 #define CLASS_TP_FAUTOINIT                              Dee_TP_FGC      /* FLAG: When set, the construction operator is implemented to automatically initialize
                                                                          *       class members in compliance to the `this = default;' constructor definition.
                                                                          *       Additionally, if not already defined by the caller, this flag also causes
-                                                                         *      `operator repr' to be implemented (see above).
+                                                                         *       `operator repr' to be implemented (see above).
                                                                          * NOTE: This flag should not be used together with `TP_FINHERITCTOR' */
 #define CLASS_TP_FSUPERKWDS                             Dee_TP_FHEAP    /* FLAG: When set, the superargs operator actually returns a tuple `(args, kwds)' which
                                                                          *       should then be used to invoke the super-constructor as `super(args..., **kwds)'
@@ -419,7 +419,7 @@ struct Dee_class_descriptor_object {
 	                                                                     *       in that its presence causes `CLASS_OPERATOR_SUPERARGS'
 	                                                                     *       to be implemented such that it forwards all arguments
 	                                                                     *       to the underlying base-type, while also implementing
-	                                                                     *      `OPERATOR_CONSTRUCTOR' as a no-op for any number of
+	                                                                     *       `OPERATOR_CONSTRUCTOR' as a no-op for any number of
 	                                                                     *       arguments.
 	                                                                     *       If the user overrides `CLASS_OPERATOR_SUPERARGS',
 	                                                                     *       the `TP_FINHERITCTOR' flag is simply ignored.

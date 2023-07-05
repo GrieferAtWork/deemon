@@ -326,7 +326,7 @@ local function _gethome(user: string = none): string {
 	return "/home/me";
 }
 
-@@@@interrupt
+@@@interrupt
 @@@param env A Dict-style mapping used to resolve variable names. Defaults to @posix.environ
 @@@throw ValueError The given @options string contains unrecognized options
 @@@throw ValueError An unknown environment variable was accessed and @"f" isn't part of @options

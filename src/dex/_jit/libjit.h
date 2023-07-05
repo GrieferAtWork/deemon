@@ -839,11 +839,8 @@ struct jit_context {
 
 /* Return a reference to an object that implements attribute
  * operators such that it allows access to JIT globals. */
-/* TODO: This currently returns an object implementing *mapping* operators, but we need *attribute* operators! */
-/* NOTE: Also remember that we need to re-return the *same* object if invoked multiple times! */
-#define JITContext_GetCurrentModule(self)                      \
-	((self)->jc_globals ? DeeObject_NewRef((self)->jc_globals) \
-	                    : DeeObject_NewRef(Dee_EmptyMapping))
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+JITContext_GetCurrentModule(JITContext *__restrict self);
 
 
 /* Check if the current scope is the global scope. */

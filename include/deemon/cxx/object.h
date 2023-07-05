@@ -240,9 +240,10 @@ class Exception: public std::exception {
 public:
 	virtual const char *what() const DEE_CXX_NOTHROW {
 		DeeObject *current = DeeError_Current();
-		return current
-		       ? Dee_TYPE(current)->tp_name
-		       : "No exception";
+		if (!current)
+			return "No exception";
+		char const *result = Dee_TYPE(current)->tp_name;
+		return result ? result : "<Unnamed exception>";
 	}
 };
 
@@ -407,7 +408,7 @@ public:
 		Dee_Decref(oldval);
 	}
 
-	WUNUSED bool isnull() const DEE_CXX_NOTHROW {
+	WUNUSED bool isempty() const DEE_CXX_NOTHROW {
 		return m_ptr == NULL;
 	}
 	WUNUSED bool ispresent() const DEE_CXX_NOTHROW {
@@ -807,7 +808,7 @@ public:
 		return *(T *)m_ptr;
 	}
 	using RefBase::isnone;
-	using RefBase::isnull;
+	using RefBase::isempty;
 	using RefBase::ispresent;
 	using RefBase::operator DeeObject *;
 

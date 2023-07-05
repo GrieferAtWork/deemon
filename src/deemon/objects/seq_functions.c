@@ -1634,7 +1634,7 @@ DeeSeq_CountSeq(DeeObject *self,
 	(void)seq;
 	(void)key;
 	/*
-	 * >> function copy_iterator(seq, iter, i) {
+	 * >> function copyIterator(seq, iter, i) {
 	 * >>     try {
 	 * >>         return copy iter;
 	 * >>     } catch (Error.RuntimeError.NotImplemented |
@@ -1645,11 +1645,11 @@ DeeSeq_CountSeq(DeeObject *self,
 	 * >>         return result;
 	 * >>     }
 	 * >> }
-	 * >> function iter_same(a, b) {
+	 * >> function iterSame(a: Iterator, b: Iterator) {
 	 * >>     try {
-	 * >>         foreach(local elem_b: b) {
+	 * >>         foreach (local elem_b: b) {
 	 * >>             local elem_a = a.operator __next__();
-	 * >>             if (!key(elem_a, elem_b))
+	 * >>             if (key(elem_a) != key(elem_b))
 	 * >>                 return false;
 	 * >>         }
 	 * >>     } catch (Signal.StopIteration) {
@@ -1668,11 +1668,13 @@ DeeSeq_CountSeq(DeeObject *self,
 	 * >> }
 	 * >> local result = 0;
 	 * >> local i = 0;
-	 * >> foreach(local elem: iter) {
+	 * >> first = key(first);
+	 * >> foreach (local elem: iter) {
 	 * >>     ++i;
-	 * >>     if (key(elem, first)) {
-	 * >>         if (iter_same(copy_iterator(self, iter, i),
-	 * >>                       copy_iterator(seq, head, 1)))
+	 * >>     if (first != key(elem)) {
+	 * >>         local aIter = copyIterator(self, iter, i);
+	 * >>         local bIter = copyIterator(seq, head, 1);
+	 * >>         if (iterSame(aIter, bIter))
 	 * >>             ++result;
 	 * >>     }
 	 * >> }
@@ -1720,7 +1722,7 @@ DeeSeq_CompareVV(DeeObject *const *lhsv, size_t lhsc,
 		if (diff != 0)
 			return diff;
 	}
-	return lhsc < rhsc ? -1 : 0;
+	return lhsc < rhsc ? -1 : lhsc > rhsc ? 1 : 0;
 }
 
 INTERN WUNUSED NONNULL((3)) int DCALL
@@ -1738,7 +1740,7 @@ DeeSeq_CompareVF(DeeObject *const *lhsv, size_t lhsc,
 		if (diff != 0)
 			return diff;
 	}
-	return lhsc < rhsc ? -1 : 0;
+	return lhsc < rhsc ? -1 : lhsc > rhsc ? 1 : 0;
 }
 
 INTERN WUNUSED NONNULL((3)) int DCALL
@@ -1804,7 +1806,7 @@ DeeSeq_CompareFV(DeeObject *lhs, size_t lhsc,
 		if (diff != 0)
 			return diff;
 	}
-	return lhsc < rhsc ? -1 : 0;
+	return lhsc < rhsc ? -1 : lhsc > rhsc ? 1 : 0;
 }
 
 INTERN WUNUSED NONNULL((1, 3)) int DCALL
@@ -1828,7 +1830,7 @@ DeeSeq_CompareFF(DeeObject *lhs, size_t lhsc, DeeObject *rhs, size_t rhsc) {
 		if (diff != 0)
 			return diff;
 	}
-	return lhsc < rhsc ? -1 : 0;
+	return lhsc < rhsc ? -1 : lhsc > rhsc ? 1 : 0;
 }
 
 INTERN WUNUSED NONNULL((1, 3)) int DCALL
