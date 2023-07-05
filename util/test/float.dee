@@ -21,6 +21,56 @@
 
 import * from deemon;
 
+function parseFloat(x: string): float {
+	local a = float(x);
+	local b = exec(x);
+	assert a == b;
+	assert b is float;
+	return a;
+}
+
+assert parseFloat("0.0") == 0.0;
+assert parseFloat("-0.0") == -0.0;
+assert parseFloat("+0.0") == +0.0;
+assert parseFloat("0.5") == 0.5;
+assert parseFloat("-0.5") == -0.5;
+assert parseFloat("+0.5") == +0.5;
+assert parseFloat("1.0") == 1.0;
+assert parseFloat("-1.0") == -1.0;
+assert parseFloat("+1.0") == +1.0;
+assert float("0") == 0.0;
+assert float("1") == 1.0;
+assert parseFloat("1.0E2") == 100;
+assert parseFloat("1.0E2") == 100.0;
+assert parseFloat("1.0E2") == 1.0E2;
+assert parseFloat("1.0E+2") == 1.0E+2;
+assert parseFloat("1.0E-2") == 1.0E-2;
+assert parseFloat("1.0E-2") == 0.01;
+assert parseFloat("1P2") == 1P2;
+assert parseFloat("1P2") == 100;
+assert parseFloat("1P2") == 100.0;
+assert parseFloat("1P+2") == 1P+2;
+assert parseFloat("1P-2") == 1P-2;
+assert parseFloat("1P-2") == 0.01;
+assert float("1E2") == 100;
+assert float("1E2") == 100.0;
+assert float("1E2") == 1.0E2;
+assert float("1E+2") == 1.0E+2;
+assert float("1E-2") == 1.0E-2;
+assert float("1E-2") == 0.01;
+assert float("inf") == float.inf;
+assert float("+inf") == +float.inf;
+assert float("-inf") == -float.inf;
+assert float("INF") == float.inf;
+assert float("+INF") == +float.inf;
+assert float("-INF") == -float.inf;
+assert float("nan").isnan;
+assert float("+nan").isnan;
+assert float("-nan").isnan;
+assert float("NAN").isnan;
+assert float("+NAN").isnan;
+assert float("-NAN").isnan;
+
 assert -0.0 == 0.0;
 assert (0.5).trunc  == 0.0;
 assert (-0.5).trunc == -0.0;
@@ -54,6 +104,7 @@ assert (-float.inf).isinf;
 assert !(-float.inf).isnormal;
 assert !(-float.inf).isfinite;
 
+assert float.nan != float.nan;
 assert float.nan.isnan;
 assert !float.nan.isinf;
 assert !float.nan.isnormal;

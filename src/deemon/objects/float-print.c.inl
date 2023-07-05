@@ -38,14 +38,14 @@
 /* Print a string representation of the given floating point value.
  * @param: flags: Set of `DEEFLOAT_PRINT_F*' */
 #ifdef DEFINE_DeeFloat_LPrint
-#define LOCAL_float_t long double
+#define LOCAL_float_t __LONGDOUBLE
 PUBLIC WUNUSED NONNULL((2)) dssize_t DCALL
-DeeFloat_LPrint(long double value, dformatprinter printer, void *arg,
+DeeFloat_LPrint(LOCAL_float_t value, dformatprinter printer, void *arg,
                 size_t width, size_t precision, unsigned int flags)
 #else /* DEFINE_DeeFloat_LPrint */
-#define LOCAL_float_t  double
+#define LOCAL_float_t double
 PUBLIC WUNUSED NONNULL((2)) dssize_t DCALL
-DeeFloat_Print(double value, dformatprinter printer, void *arg,
+DeeFloat_Print(LOCAL_float_t value, dformatprinter printer, void *arg,
                size_t width, size_t precision, unsigned int flags)
 #endif /* !DEFINE_DeeFloat_LPrint */
 {

@@ -162,147 +162,18 @@ err_cannot_invoke_inplace(DeeObject *base, uint16_t opname) {
 #ifndef TPPLIKE_STRING_TO_FLOAT_DEFINED
 #define TPPLIKE_STRING_TO_FLOAT_DEFINED 1
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-JIT_atof(JITLexer *__restrict self, char const *__restrict start, size_t length) {
-	double fltval = 0;
-	char *iter, *end, ch;
-	int numsys, more, float_extension_mult;
-	iter = (char *)start;
-	end  = (char *)start + length;
-	if (*iter == '0') {
-		if (++iter == end)
-			goto done_zero;
-		if (*iter == 'x' || *iter == 'X') {
-			if (++iter == end)
-				goto done_zero;
-			numsys = 16;
-		} else if (*iter == 'b' || *iter == 'B') {
-			if (++iter == end)
-				goto done_zero;
-			numsys = 2;
-		} else if (*iter == '.') {
-			numsys = 10;
-		} else {
-			numsys = 8;
-		}
-	} else {
-		numsys = 10;
-	}
-	float_extension_mult = 0;
-	do {
-		ch = *iter++;
-		switch (ch) {
-
-		case 'p':
-		case 'P':
-			goto flt_ext;
-
-		case '0':
-		case '1':
-		case '2':
-		case '3':
-		case '4':
-		case '5':
-		case '6':
-		case '7':
-		case '8':
-		case '9': more = ch - '0'; break;
-		case 'e':
-			if (numsys < (10 + 'e' - 'a'))
-				goto flt_ext;
-			ATTR_FALLTHROUGH
-		case 'a':
-		case 'b':
-		case 'c':
-		case 'd':
-			more = 10 + ch - 'a';
-			break;
-
-		case 'E':
-			if (numsys < (10 + 'E' - 'A'))
-				goto flt_ext;
-			ATTR_FALLTHROUGH
-		case 'A':
-		case 'B':
-		case 'C':
-		case 'D':
-			more = 10 + ch - 'A';
-			break;
-
-		case 'f':
-		case 'F':
-			if (numsys < (10 + 'f' - 'a'))
-				goto sfx;
-			more = 0xf;
-			break;
-
-		case '.':
-			float_extension_mult = numsys;
-			goto next;
-
-		default:
-			goto sfx;
-		}
-		if unlikely(more >= numsys)
-			goto sfx;
-		if (float_extension_mult != 0) {
-			fltval += (double)more / (double)float_extension_mult;
-			float_extension_mult *= numsys;
-		} else {
-			fltval = fltval * numsys + more;
-		}
-next:
-		;
-	} while (iter < end);
-done:
-	return DeeFloat_New(fltval);
-flt_ext:
-	/* Read the Float extension: E[+/-][int] */
-#define float_extension_pos numsys
-#define float_extension_off more
-	float_extension_pos = 1;
-	float_extension_off = 0;
-	if (iter == end) {
-		--iter;
-		goto sfx;
-	}
-	ch = *iter++;
-	if (ch == '-' || ch == '+') {
-		float_extension_pos = (ch == '+');
-		if (iter == end) {
-			--iter;
-			goto sfx;
-		}
-		ch = *iter++;
-	}
-	while (ch >= '0' && ch <= '9') {
-		float_extension_off = float_extension_off * 10 + (ch - '0');
-		if (iter == end)
-			break;
-		ch = *iter++;
-	}
-	float_extension_mult = 1;
-	while (float_extension_off != 0) {
-		float_extension_mult *= 10;
-		--float_extension_off;
-	}
-	if (float_extension_pos) {
-		fltval *= float_extension_mult;
-	} else {
-		fltval /= float_extension_mult;
-	}
-#undef float_extension_pos
-#undef float_extension_off
-sfx:
-	if (iter != end)
-		goto err_invalid_suffix;
-	goto done;
-err_invalid_suffix:
-	--iter;
+JIT_atof(JITLexer *__restrict self,
+         char const *__restrict start, size_t length) {
+	double result;
+	char const *endptr;
+	result = Dee_Strtod(start, (char **)&endptr);
+	if (endptr != start + length)
+		goto err_badnum;
+	return DeeFloat_New(result);
+err_badnum:
 	(void)SYNTAXERROR("Invalid floating point number %$q",
 	                  length, start);
 	return NULL;
-done_zero:
-	return DeeFloat_New(0.0);
 }
 #endif /* !TPPLIKE_STRING_TO_FLOAT_DEFINED */
 

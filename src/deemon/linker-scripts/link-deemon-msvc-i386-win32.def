@@ -947,6 +947,8 @@ EXPORTS
 	Dee_RunAtExit@4=_Dee_RunAtExit@4
 	Dee_SetArgv@4=_Dee_SetArgv@4
 	Dee_Shutdown@0=_Dee_Shutdown@0
+	Dee_Strtod@8=_Dee_Strtod@8
+	Dee_Strtold@8=_Dee_Strtold@8
 	Dee_TryCalloc@4=_Dee_TryCalloc@4
 	Dee_TryCollectMemory@4=_Dee_TryCollectMemory@4
 	Dee_TryMalloc@4=_Dee_TryMalloc@4

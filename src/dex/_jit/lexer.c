@@ -60,13 +60,14 @@ raw_again:
 		/* Scan an integer or floating point token. */
 		self->jl_tok = TOK_INT;
 		while (iter < self->jl_end) {
+			unsigned char *start;
 			ch = *iter++;
 			if unlikely(ch > 0x7f) {
-				unsigned char *start;
 				/* UTF-8 sequence. */
 				--iter;
 				start = iter;
 				ch32 = unicode_readutf8_n(&iter, self->jl_end);
+handle_int_or_float_ch32:
 				if (!(DeeUni_Flags(ch32) & (UNICODE_ISSYMCONT | UNICODE_ISDIGIT))) {
 					if (ch32 == '.' && self->jl_tok == TOK_INT) {
 						self->jl_tok = TOK_FLOAT;
@@ -74,6 +75,10 @@ raw_again:
 					}
 					iter = start;
 					break;
+				} else {
+					if (((ch32 == 'p' || ch32 == 'P')) ||
+					    ((ch32 == 'e' || ch32 == 'E') && self->jl_tok == TOK_FLOAT))
+						goto handle_decimal_power_suffix;
 				}
 			} else {
 				if (!(DeeUni_Flags(ch) & (UNICODE_ISSYMCONT | UNICODE_ISDIGIT))) {
@@ -83,6 +88,24 @@ raw_again:
 					}
 					--iter;
 					break;
+				} else {
+					if (((ch == 'p' || ch == 'P')) ||
+					    ((ch == 'e' || ch == 'E') && self->jl_tok == TOK_FLOAT)) {
+handle_decimal_power_suffix:
+						self->jl_tok = TOK_FLOAT;
+						ch = *iter;
+						if (ch == '+' || ch == '-') {
+							++iter;
+						} else if (ch > 0x7f) {
+							start = iter;
+							ch32 = unicode_readutf8_n(&iter, self->jl_end);
+							if (ch32 == '+' || ch32 == '-') {
+								/* Accept '+' or '-' after decimal power suffix. */
+							} else {
+								goto handle_int_or_float_ch32;
+							}
+						}
+					}
 				}
 			}
 		}

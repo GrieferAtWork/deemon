@@ -87,7 +87,7 @@ done:
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
-float_init(Float *__restrict self) {
+float_ctor(Float *__restrict self) {
 	self->f_value = 0.0; /* Default to 0. */
 	return 0;
 }
@@ -100,31 +100,27 @@ float_copy(Float *__restrict self,
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
-float_ctor(Float *__restrict self,
+float_init(Float *__restrict self,
            size_t argc, DeeObject *const *argv) {
 	DeeObject *arg;
-	char *str;
 	if (DeeArg_Unpack(argc, argv, "o:float", &arg))
 		goto err;
-	/* Invoke the float-operator on anything that isn't a string. */
-	if (!DeeString_Check(arg))
-		return DeeObject_AsDouble(arg, &self->f_value);
-	/* TODO: String encodings? */
-	str = DeeString_STR(arg);
-	/* Skip leading space. */
-	while (DeeUni_IsSpace(*str))
-		++str;
-	self->f_value = strtod(str, &str); /* FIXME: This needs a feature check! */
-	/* Skip trailing space. */
-	while (DeeUni_IsSpace(*str))
-		++str;
-	if (*str) {
-		/* There is more here than just a floating point number. */
-		return DeeError_Throwf(&DeeError_ValueError,
-		                       "Not a float point number %k",
-		                       arg);
+
+	/* Special case for when a string is given. */
+	if (DeeString_Check(arg)) {
+		char *str     = DeeString_STR(arg);
+		self->f_value = Dee_Strtod(str, (char **)&str);
+		if (str != DeeString_END(arg)) {
+			/* There is more here than just a floating point number. */
+			return DeeError_Throwf(&DeeError_ValueError,
+			                       "Not a float point number %k",
+			                       arg);
+		}
+		return 0;
 	}
-	return 0;
+
+	/* Invoke the float-operator on everything else */
+	return DeeObject_AsDouble(arg, &self->f_value);
 err:
 	return -1;
 }
@@ -361,12 +357,16 @@ PRIVATE struct Dee_float_ieee754_object float_inf =
 FLOAT_IEEE754_INIT(UINT32_C(0x7ff00000), UINT32_C(0x00000000));
 PRIVATE struct Dee_float_ieee754_object float_nan =
 FLOAT_IEEE754_INIT(UINT32_C(0x7ff80000), UINT32_C(0x00000000));
+#define float_inf_value (*(double const *)float_inf.f_words)
+#define float_nan_value (*(double const *)float_nan.f_words)
 
 #undef FLOAT_IEEE754_INIT
 #elif defined(CONFIG_HAVE_CONSTANT_HUGE_VAL)
 #define float_inf_IS_CONSTANT
 PRIVATE DEFINE_FLOAT(float_inf, HUGE_VAL);
+#define float_inf_value HUGE_VAL
 #elif defined(HUGE_VAL)
+#define float_inf_value HUGE_VAL
 #define float_inf_IS_VARIABLE
 #define float_HAVE_VARIABLE
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -377,8 +377,9 @@ float_inf(DeeObject *__restrict self) {
 #endif /* ... */
 
 #if !defined(float_nan_IS_CONSTANT)
-#ifdef CONSTANT_NAN
+#ifdef CONFIG_HAVE_CONSTANT_NAN
 #define float_nan_IS_CONSTANT
+#define float_nan_value NAN
 PRIVATE DEFINE_FLOAT(float_nan, NAN);
 #elif defined(NAN) || defined(CONFIG_HAVE_nan)
 #define float_nan_IS_VARIABLE
@@ -388,8 +389,10 @@ float_nan(DeeObject *__restrict self) {
 	(void)self;
 #ifdef NAN
 	return DeeFloat_New(NAN);
+#define float_nan_value NAN
 #else /* NAN */
 	return DeeFloat_New(nan(""));
+#define float_nan_value nan("")
 #endif /* !NAN */
 }
 #endif /* CONFIG_HAVE_nan */
@@ -805,10 +808,10 @@ PUBLIC DeeTypeObject DeeFloat_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (dfunptr_t)&float_init,
+				/* .tp_ctor      = */ (dfunptr_t)&float_ctor,
 				/* .tp_copy_ctor = */ (dfunptr_t)&float_copy,
 				/* .tp_deep_ctor = */ (dfunptr_t)&float_copy,
-				/* .tp_any_ctor  = */ (dfunptr_t)&float_ctor,
+				/* .tp_any_ctor  = */ (dfunptr_t)&float_init,
 				TYPE_FIXED_ALLOCATOR(Float)
 			}
 		},
@@ -848,9 +851,13 @@ DECL_END
 #ifndef __INTELLISENSE__
 #define DEFINE_DeeFloat_Print
 #include "float-print.c.inl"
+#define DEFINE_Dee_Strtod
+#include "float-parse.c.inl"
 #ifdef __COMPILER_HAVE_LONGDOUBLE
 #define DEFINE_DeeFloat_LPrint
 #include "float-print.c.inl"
+#define DEFINE_Dee_Strtold
+#include "float-parse.c.inl"
 #endif /* __COMPILER_HAVE_LONGDOUBLE */
 #endif /* !__INTELLISENSE__ */
 #endif /* CONFIG_HAVE_FPU */

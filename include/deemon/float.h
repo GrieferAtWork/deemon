@@ -93,6 +93,12 @@ DDATDEF DeeTypeObject DeeFloat_Type;
 /* Create and return a new floating point object. */
 #ifdef CONFIG_HAVE_FPU
 DFUNDEF WUNUSED DREF DeeObject *DCALL DeeFloat_New(double value);
+
+/* Convert a string into a floating-point number. */
+DFUNDEF NONNULL((1)) double DCALL Dee_Strtod(char const *str, char **p_endptr);
+#ifdef __COMPILER_HAVE_LONGDOUBLE
+DFUNDEF NONNULL((1)) __LONGDOUBLE DCALL Dee_Strtold(char const *str, char **p_endptr);
+#endif /* __COMPILER_HAVE_LONGDOUBLE */
 #endif /* CONFIG_HAVE_FPU */
 
 
@@ -105,7 +111,7 @@ DeeFloat_Print(double value, Dee_formatprinter_t printer, void *arg,
                size_t width, size_t precision, unsigned int flags);
 #ifdef __COMPILER_HAVE_LONGDOUBLE
 DFUNDEF WUNUSED NONNULL((2)) Dee_ssize_t DCALL
-DeeFloat_LPrint(long double value, Dee_formatprinter_t printer, void *arg,
+DeeFloat_LPrint(__LONGDOUBLE value, Dee_formatprinter_t printer, void *arg,
                 size_t width, size_t precision, unsigned int flags);
 #endif /* __COMPILER_HAVE_LONGDOUBLE */
 #define DeeFloat_PrintRepr(self, printer, arg) \

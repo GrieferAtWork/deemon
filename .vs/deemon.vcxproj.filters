@@ -654,6 +654,9 @@
 		<ClInclude Include="..\src\deemon\execute\code-invoke.c.inl">
 			<Filter>src\execute</Filter>
 		</ClInclude>
+		<ClInclude Include="..\src\deemon\objects\float-parse.c.inl">
+			<Filter>src\objects</Filter>
+		</ClInclude>
 		<ClInclude Include="..\src\deemon\objects\float-print.c.inl">
 			<Filter>src\objects</Filter>
 		</ClInclude>
