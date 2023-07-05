@@ -69,7 +69,9 @@ JITLexer_MaybeExpressionBegin(JITLexer *__restrict self) {
 	case TOK_INT:
 	case JIT_STRING:
 	case JIT_RAWSTRING:
+#ifdef CONFIG_HAVE_FPU
 	case TOK_FLOAT:
+#endif /* CONFIG_HAVE_FPU */
 	case TOK_DOTS:
 		goto yes;
 

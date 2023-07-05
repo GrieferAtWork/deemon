@@ -44,7 +44,9 @@ enum {
 	TOK_CHAR      = '\'', /* 'f'. */
 	TOK_STRING    = '\"', /* "foobar". (also includes `r"foobar"' when `TPP_CONFIG_RAW_STRING_LITERALS' is enabled) */
 	TOK_INT       = '0',  /* 42 */
+#ifdef CONFIG_HAVE_FPU
 	TOK_FLOAT     = 'f',  /* 42.0 */
+#endif /* CONFIG_HAVE_FPU */
 /*	TOK_LF        = '\n', */
 /*	TOK_SPACE     = ' ', */
 /*	TOK_COMMENT   = 'c',  /* like this one! */

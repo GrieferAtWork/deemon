@@ -411,7 +411,9 @@ again:
 		break;
 
 	case TOK_INT:
+#ifdef CONFIG_HAVE_FPU
 	case TOK_FLOAT:
+#endif /* CONFIG_HAVE_FPU */
 do_yield_suffix:
 		JITLexer_Yield(self);
 		break;

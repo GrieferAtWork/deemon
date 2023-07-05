@@ -69,26 +69,33 @@ raw_again:
 				ch32 = unicode_readutf8_n(&iter, self->jl_end);
 handle_int_or_float_ch32:
 				if (!(DeeUni_Flags(ch32) & (UNICODE_ISSYMCONT | UNICODE_ISDIGIT))) {
+#ifdef CONFIG_HAVE_FPU
 					if (ch32 == '.' && self->jl_tok == TOK_INT) {
 						self->jl_tok = TOK_FLOAT;
 						continue;
 					}
+#endif /* CONFIG_HAVE_FPU */
 					iter = start;
 					break;
 				} else {
+#ifdef CONFIG_HAVE_FPU
 					if (((ch32 == 'p' || ch32 == 'P')) ||
 					    ((ch32 == 'e' || ch32 == 'E') && self->jl_tok == TOK_FLOAT))
 						goto handle_decimal_power_suffix;
+#endif /* CONFIG_HAVE_FPU */
 				}
 			} else {
 				if (!(DeeUni_Flags(ch) & (UNICODE_ISSYMCONT | UNICODE_ISDIGIT))) {
+#ifdef CONFIG_HAVE_FPU
 					if (ch == '.' && self->jl_tok == TOK_INT) {
 						self->jl_tok = TOK_FLOAT;
 						continue;
 					}
+#endif /* CONFIG_HAVE_FPU */
 					--iter;
 					break;
 				} else {
+#ifdef CONFIG_HAVE_FPU
 					if (((ch == 'p' || ch == 'P')) ||
 					    ((ch == 'e' || ch == 'E') && self->jl_tok == TOK_FLOAT)) {
 handle_decimal_power_suffix:
@@ -106,6 +113,7 @@ handle_decimal_power_suffix:
 							}
 						}
 					}
+#endif /* CONFIG_HAVE_FPU */
 				}
 			}
 		}

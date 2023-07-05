@@ -21,6 +21,11 @@
 
 import * from deemon;
 
+if (!float.hasoperator("constructor")) {
+	/* Disable this test if floating-point support isn't enabled. */
+	return;
+}
+
 function parseFloat(x: string): float {
 	local a = float(x);
 	local b = exec(x);

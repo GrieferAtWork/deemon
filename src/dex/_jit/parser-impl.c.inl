@@ -159,6 +159,7 @@ err_cannot_invoke_inplace(DeeObject *base, uint16_t opname) {
 }
 #endif /* !ERROR_CANNOT_TEST_BINDING_DEFINED */
 
+#ifdef CONFIG_HAVE_FPU
 #ifndef TPPLIKE_STRING_TO_FLOAT_DEFINED
 #define TPPLIKE_STRING_TO_FLOAT_DEFINED 1
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
@@ -176,6 +177,7 @@ err_badnum:
 	return NULL;
 }
 #endif /* !TPPLIKE_STRING_TO_FLOAT_DEFINED */
+#endif /* CONFIG_HAVE_FPU */
 
 
 INTERN RETURN_TYPE FCALL
@@ -668,6 +670,7 @@ done_y1:
 #endif /* !JIT_EVAL */
 		goto done_y1;
 
+#ifdef CONFIG_HAVE_FPU
 	case TOK_FLOAT:
 		/* Floating point constant */
 #ifdef JIT_EVAL
@@ -678,6 +681,7 @@ done_y1:
 		result = 0;
 #endif /* !JIT_EVAL */
 		goto done_y1;
+#endif /* CONFIG_HAVE_FPU */
 
 	case '#':
 		JITLexer_Yield(self);
