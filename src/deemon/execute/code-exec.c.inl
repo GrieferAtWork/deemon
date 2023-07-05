@@ -2055,13 +2055,13 @@ do_push_module:
 			case ASM_FPRINT_NL: {
 				int error;
 				switch (*ip.u8++) {
-				case ASM_PRINT:
+				case ASM_FPRINT:
 					error = DeeFile_PrintObjectRepr(SECOND, TOP);
 					break;
-				case ASM_PRINT_SP:
+				case ASM_FPRINT_SP:
 					error = DeeFile_PrintObjectReprSp(SECOND, TOP);
 					break;
-				case ASM_PRINT_NL:
+				case ASM_FPRINT_NL:
 					error = DeeFile_PrintObjectReprNl(SECOND, TOP);
 					break;
 				default: __builtin_unreachable();
