@@ -13720,6 +13720,11 @@ DECL_END
  * >> 	dee_memsetp(dst, (__UINTPTR_TYPE__)(pointer), num_pointers)
  * >> DeeSystem_DEFINE_memsetp(dee_memsetp)
  * >> #endif // !CONFIG_HAVE_memsetp
+ * >> #ifndef CONFIG_HAVE_mempsetp
+ * >> #define mempsetp(dst, pointer, num_pointers) \
+ * >> 	dee_mempsetp(dst, (__UINTPTR_TYPE__)(pointer), num_pointers)
+ * >> DeeSystem_DEFINE_mempsetp(dee_mempsetp)
+ * >> #endif // !CONFIG_HAVE_mempsetp
  */
 #undef memsetp
 #undef CONFIG_HAVE_memsetp
@@ -13731,6 +13736,13 @@ DECL_END
 #else /* CONFIG_HAVE_memsetl */
 #define DeeSystem_DEFINE_memsetp DeeSystem_DEFINE_memsetl
 #endif /* !CONFIG_HAVE_memsetl */
+#ifdef CONFIG_HAVE_mempsetl
+#define CONFIG_HAVE_mempsetp
+#define mempsetp(dst, pointer, num_pointers) \
+	mempsetl(dst, (uint32_t)(pointer), num_pointers)
+#else /* CONFIG_HAVE_mempsetl */
+#define DeeSystem_DEFINE_mempsetp DeeSystem_DEFINE_mempsetl
+#endif /* !CONFIG_HAVE_mempsetl */
 #elif __SIZEOF_POINTER__ == 8
 #ifdef CONFIG_HAVE_memsetq
 #define CONFIG_HAVE_memsetp
@@ -13739,6 +13751,13 @@ DECL_END
 #else /* CONFIG_HAVE_memsetq */
 #define DeeSystem_DEFINE_memsetp DeeSystem_DEFINE_memsetq
 #endif /* !CONFIG_HAVE_memsetq */
+#ifdef CONFIG_HAVE_mempsetq
+#define CONFIG_HAVE_mempsetp
+#define mempsetp(dst, pointer, num_pointers) \
+	mempsetq(dst, (uint64_t)(pointer), num_pointers)
+#else /* CONFIG_HAVE_mempsetq */
+#define DeeSystem_DEFINE_mempsetp DeeSystem_DEFINE_mempsetq
+#endif /* !CONFIG_HAVE_mempsetq */
 #elif __SIZEOF_POINTER__ == 2
 #ifdef CONFIG_HAVE_memsetw
 #define CONFIG_HAVE_memsetp
@@ -13747,10 +13766,20 @@ DECL_END
 #else /* CONFIG_HAVE_memsetw */
 #define DeeSystem_DEFINE_memsetp DeeSystem_DEFINE_memsetw
 #endif /* !CONFIG_HAVE_memsetw */
+#ifdef CONFIG_HAVE_mempsetw
+#define CONFIG_HAVE_mempsetp
+#define mempsetp(dst, pointer, num_pointers) \
+	mempsetw(dst, (uint16_t)(pointer), num_pointers)
+#else /* CONFIG_HAVE_mempsetw */
+#define DeeSystem_DEFINE_mempsetp DeeSystem_DEFINE_mempsetw
+#endif /* !CONFIG_HAVE_mempsetw */
 #elif __SIZEOF_POINTER__ == 1
 #define CONFIG_HAVE_memsetp
+#define CONFIG_HAVE_mempsetp
 #define memsetp(dst, pointer, num_pointers) \
 	memset(dst, (int)(unsigned int)(__UINT8_TYPE__)(pointer), num_pointers)
+#define mempsetp(dst, pointer, num_pointers) \
+	mempset(dst, (int)(unsigned int)(__UINT8_TYPE__)(pointer), num_pointers)
 #elif !defined(__DEEMON__)
 #error "Unsupported __SIZEOF_POINTER__"
 #endif
