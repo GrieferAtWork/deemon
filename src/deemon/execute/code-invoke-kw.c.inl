@@ -274,11 +274,11 @@ PP_CAT2(MY_FUNCTION_NAME, IntellisenseInternal)
 		                 code->co_argc_max);
 #if defined(KW_IS_MAPPING) || CODE_FLAGS & CODE_FYIELDING
 #if (CODE_FLAGS & CODE_FYIELDING) && (defined(KW_IS_MAPPING) || CODE_FLAGS & CODE_FVARKWDS)
+#define LOCAL_NEED_err_kargv_varkwds
 		goto UNIQUE(err_kargv_varkwds);
 #else /* (CODE_FLAGS & CODE_FYIELDING) && (KW_IS_MAPPING || CODE_FLAGS & CODE_FVARKWDS) */
 UNIQUE(err_kargv):
-		while (ex_argc--)
-			Dee_XDecref(frame.cf_kw->fk_kargv[ex_argc]);
+		Dee_XDecrefv(frame.cf_kw->fk_kargv, ex_argc);
 		goto err_ex_frame;
 #endif /* !(CODE_FLAGS & CODE_FYIELDING) || !(KW_IS_MAPPING || CODE_FLAGS & CODE_FVARKWDS) */
 #else /* KW_IS_MAPPING || CODE_FLAGS & CODE_FYIELDING */
@@ -288,18 +288,18 @@ UNIQUE(err_kargv):
 #endif /* !(CODE_FLAGS & CODE_FVARKWDS) */
 #if CODE_FLAGS & CODE_FYIELDING
 	/* Yield-function invocation. */
-	yf = DeeObject_MALLOC(DeeYieldFunctionObject);
+	yf = (DREF DeeYieldFunctionObject *)DeeObject_Malloc(DeeYieldFunction_Sizeof(frame.cf_argc));
 	if unlikely(!yf) {
-#if !(defined(CALL_TUPLE) && defined(KW_IS_MAPPING) && (CODE_FLAGS == (CODE_FYIELDING | CODE_FVARKWDS)))
+#ifdef LOCAL_NEED_err_kargv_varkwds
+#undef LOCAL_NEED_err_kargv_varkwds
 UNIQUE(err_kargv_varkwds):
-#endif /* !(CALL_TUPLE && KW_IS_MAPPING && (CODE_FLAGS == (CODE_FYIELDING | CODE_FVARKWDS))) */
+#endif /* LOCAL_NEED_err_kargv_varkwds */
 #if defined(KW_IS_MAPPING) || CODE_FLAGS & CODE_FVARKWDS
 		/*Dee_XDecref(frame.cf_kw->fk_varkwds);*/
 #if defined(KW_IS_MAPPING) && !(CODE_FLAGS & CODE_FVARKWDS)
 UNIQUE(err_kargv):
 #endif /* KW_IS_MAPPING && !(CODE_FLAGS & CODE_FVARKWDS) */
-		while (ex_argc--)
-			Dee_XDecref(frame.cf_kw->fk_kargv[ex_argc]);
+		Dee_XDecrefv(frame.cf_kw->fk_kargv, ex_argc);
 		goto err_ex_frame;
 #else /* KW_IS_MAPPING || CODE_FLAGS & CODE_FVARKWDS */
 		goto UNIQUE(err_kargv);
@@ -307,31 +307,17 @@ UNIQUE(err_kargv):
 	}
 	yf->yf_func = self;
 	Dee_Incref(self);
+
 	/* Pack together an argument tuple for the yield-function. */
-#if defined(CALL_TUPLE) && defined(KW_IS_MAPPING)
-	yf->yf_args = (DREF DeeTupleObject *)args;
-	Dee_Incref(args);
-#else /* CALL_TUPLE && KW_IS_MAPPING */
-#if defined(CALL_TUPLE) && !defined(KW_IS_MAPPING)
-	if unlikely(!kw_argc) {
-		yf->yf_args = (DREF DeeTupleObject *)args;
-		Dee_Incref(args);
-	} else
-#endif /* CALL_TUPLE && !KW_IS_MAPPING */
-	{
-		yf->yf_args = (DREF DeeTupleObject *)DeeTuple_NewVector(frame.cf_argc, GET_ARGV());
-		if unlikely(!yf->yf_args) {
-			DeeObject_FREE(yf);
-			goto UNIQUE(err_kargv_varkwds);
-		}
-	}
-#endif /* !CALL_TUPLE || !KW_IS_MAPPING */
+	yf->yf_argc = frame.cf_argc;
+	Dee_Movrefv(yf->yf_argv, GET_ARGV(), frame.cf_argc);
 #ifdef CALL_THIS
 	yf->yf_this = this_arg;
 	Dee_Incref(this_arg);
 #else /* CALL_THIS */
 	yf->yf_this = NULL;
 #endif /* !CALL_THIS */
+
 	/* Initialize references stored within the keyword argument extension. */
 #if CODE_FLAGS & CODE_FVARKWDS
 	/* ... */
@@ -365,8 +351,7 @@ UNIQUE(err_kargv):
 			/*Dee_XDecref(frame.cf_kw->fk_varkwds);*/
 #endif /* CODE_FLAGS & CODE_FVARKWDS */
 #ifdef KW_IS_MAPPING
-			while (ex_argc--)
-				Dee_XDecref(frame.cf_kw->fk_kargv[ex_argc]);
+			Dee_XDecrefv(frame.cf_kw->fk_kargv, ex_argc);
 #endif /* KW_IS_MAPPING */
 			goto err_ex_frame;
 		}

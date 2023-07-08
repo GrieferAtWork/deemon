@@ -165,7 +165,7 @@ INTERN DEFINE_KWCMETHOD(builtin_import, &f_builtin_import);
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
 f_builtin_hash(size_t argc, DeeObject *const *argv) {
-	dssize_t result = DeeObject_Hashv(argc, argv);
+	dssize_t result = DeeObject_Hashv(argv, argc);
 	return DeeInt_NewHash(result);
 }
 

@@ -908,13 +908,16 @@ struct Dee_function_object {
 
 struct Dee_yield_function_object {
 	Dee_OBJECT_HEAD 
-	/* TODO: Turn this object into a variable-length one,
-	 *       with elements of `yf_args' being stored in-line. */
-	DREF DeeFunctionObject       *yf_func; /* [1..1][const] The function we are derived from. */
-	DREF struct Dee_tuple_object *yf_args; /* [1..1][const] Arguments that we are called with. */
-	struct Dee_code_frame_kwds   *yf_kw;   /* [0..1][owned][const] Keyword arguments. */
-	DREF DeeObject               *yf_this; /* [0..1][const] 'this' object during callback. */
+	DREF DeeFunctionObject                   *yf_func;  /* [1..1][const] The function we are derived from. */
+	struct Dee_code_frame_kwds               *yf_kw;    /* [0..1][owned][const] Keyword arguments. */
+	DREF DeeObject                           *yf_this;  /* [0..1][const] 'this' object during callback. */
+	size_t                                    yf_argc;  /* [const] Argument count */
+	COMPILER_FLEXIBLE_ARRAY(DREF DeeObject *, yf_argv); /* [1..1][const][yf_argc] Argument vector*/
 };
+
+#ifdef CONFIG_BUILDING_DEEMON
+#define DeeYieldFunction_Sizeof(argc) (offsetof(DeeYieldFunctionObject, yf_argv) + ((argc) * sizeof(DREF DeeObject *)))
+#endif /* CONFIG_BUILDING_DEEMON */
 
 struct Dee_yield_function_iterator_object {
 	Dee_OBJECT_HEAD /* GC Object. */
@@ -927,7 +930,8 @@ struct Dee_yield_function_iterator_object {
 	                                        * [OVERRIDE(.cf_argv, DREF [0..1][(!= NULL) == (:yi_func != NULL)])]
 	                                        * [OVERRIDE(.cf_ip, [?..1][valid_if(:yi_func != NULL)])]
 	                                        * [OVERRIDE(.cf_this, DREF [0..1])]
-	                                        * [.cf_argv == yi_func->yf_args || NULL]
+	                                        * [.cf_argc == yi_func->yf_this || 0]
+	                                        * [.cf_argv == yi_func->yf_this || NULL]
 	                                        * [.cf_this == yi_func->yf_this || NULL]
 	                                        * Execution frame of this iterator. */
 #ifndef CONFIG_NO_THREADS

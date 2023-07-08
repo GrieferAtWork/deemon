@@ -1793,8 +1793,8 @@ tuple_bool(Tuple *__restrict self) {
 
 PRIVATE WUNUSED NONNULL((1)) dhash_t DCALL
 tuple_hash(Tuple *__restrict self) {
-	return DeeObject_Hashv(DeeTuple_SIZE(self),
-	                       DeeTuple_ELEM(self));
+	return DeeObject_Hashv(DeeTuple_ELEM(self),
+	                       DeeTuple_SIZE(self));
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL

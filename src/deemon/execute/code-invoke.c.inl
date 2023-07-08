@@ -372,21 +372,13 @@ err_ex_frame:
 	/* Special case: Create a yield-function callback. */
 	{
 		DREF DeeYieldFunctionObject *yf;
-		yf = DeeObject_MALLOC(DeeYieldFunctionObject);
+		yf = (DREF DeeYieldFunctionObject *)DeeObject_Malloc(DeeYieldFunction_Sizeof(GET_ARGC()));
 		if unlikely(!yf)
 			goto err;
 		yf->yf_func = self;
 		Dee_Incref(self);
-		/* Pack together an argument tuple for the yield-function. */
-#ifdef CALL_TUPLE
-		yf->yf_args = (DREF DeeTupleObject *)args;
-		Dee_Incref(args);
-#else /* CALL_TUPLE */
-		yf->yf_args = (DREF DeeTupleObject *)DeeTuple_NewVector(GET_ARGC(),
-		                                                        GET_ARGV());
-		if unlikely(!yf->yf_args)
-			goto err_r;
-#endif /* !CALL_TUPLE */
+		yf->yf_argc = GET_ARGC();
+		Dee_Movrefv(yf->yf_argv, GET_ARGV(), GET_ARGC());
 #ifdef CALL_THIS
 		yf->yf_this = this_arg;
 		Dee_Incref(this_arg);
@@ -396,10 +388,6 @@ err_ex_frame:
 		yf->yf_kw = NULL;
 		DeeObject_Init(yf, &DeeYieldFunction_Type);
 		return (DREF DeeObject *)yf;
-#ifndef CALL_TUPLE
-err_r:
-		DeeObject_FREE(yf);
-#endif /* !CALL_TUPLE */
 	}
 err:
 	return NULL;

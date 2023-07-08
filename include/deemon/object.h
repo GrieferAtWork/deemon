@@ -2882,6 +2882,7 @@ DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeObject_VNewf(DeeTypeObj
 DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeObject_Copy(DeeObject *__restrict self);
 DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeObject_DeepCopy(DeeObject *__restrict self);
 DFUNDEF WUNUSED NONNULL((1)) int DCALL DeeObject_InplaceDeepCopy(/*in|out*/ DREF DeeObject **__restrict p_self);
+DFUNDEF WUNUSED NONNULL((1)) int DCALL DeeObject_InplaceDeepCopyv(/*in|out*/ DREF DeeObject **__restrict object_vector, size_t object_count);
 #define DeeObject_XInplaceDeepCopy(p_self) (!*(p_self) ? 0 : DeeObject_InplaceDeepCopy(p_self))
 #ifndef CONFIG_NO_THREADS
 /* A helper functions to acquire the proper read/write locks on a given
@@ -2979,7 +2980,7 @@ DFUNDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL DeeObject_ThisCallTuple
 
 /* Generate and return the hash of a given object. */
 DFUNDEF WUNUSED /*ATTR_PURE*/ NONNULL((1)) Dee_hash_t (DCALL DeeObject_Hash)(DeeObject *__restrict self);
-DFUNDEF WUNUSED /*ATTR_PURE*/ ATTR_INS(2, 1) Dee_hash_t (DCALL DeeObject_Hashv)(size_t object_count, DeeObject *const *__restrict object_vector);
+DFUNDEF WUNUSED /*ATTR_PURE*/ ATTR_INS(1, 2) Dee_hash_t (DCALL DeeObject_Hashv)(DeeObject *const *__restrict object_vector, size_t object_count);
 
 /* GC operator invocation. */
 DFUNDEF NONNULL((1, 2)) void (DCALL DeeObject_Visit)(DeeObject *__restrict self, Dee_visit_t proc, void *arg);
@@ -3439,6 +3440,7 @@ DDATDEF DeeObject DeeNotImplemented_Singleton;
 #ifndef __INTELLISENSE__
 #ifndef __NO_builtin_expect
 #define DeeObject_InplaceDeepCopy(p_self)                          __builtin_expect(DeeObject_InplaceDeepCopy(p_self), 0)
+#define DeeObject_InplaceDeepCopyv(object_vector, object_count)    __builtin_expect(DeeObject_InplaceDeepCopyv(object_vector, object_count), 0)
 #define DeeObject_Assign(self, some_object)                        __builtin_expect(DeeObject_Assign(self, some_object), 0)
 #define DeeObject_MoveAssign(self, other)                          __builtin_expect(DeeObject_MoveAssign(self, other), 0)
 #define DeeObject_AsInt8(self, result)                             __builtin_expect(DeeObject_AsInt8(self, result), 0)

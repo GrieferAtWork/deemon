@@ -1043,6 +1043,19 @@ err:
 	return -1;
 }
 
+PUBLIC WUNUSED NONNULL((1)) int
+(DCALL DeeObject_InplaceDeepCopyv)(/*in|out*/ DREF DeeObject **__restrict object_vector,
+                                   size_t object_count) {
+	size_t i;
+	for (i = 0; i < object_count; ++i) {
+		if (DeeObject_InplaceDeepCopy(&object_vector[i]))
+			goto err;
+	}
+	return 0;
+err:
+	return -1;
+}
+
 PUBLIC WUNUSED NONNULL((1, 2)) int
 (DCALL DeeObject_InplaceDeepCopyWithLock)(DREF DeeObject **__restrict p_self,
                                           Dee_atomic_rwlock_t *__restrict p_lock) {
@@ -1971,9 +1984,9 @@ DEFINE_OPERATOR(dhash_t, Hash, (DeeObject *RESTRICT_IF_NOTYPE self)) {
 }
 
 #ifndef DEFINE_TYPED_OPERATORS
-PUBLIC WUNUSED /*ATTR_PURE*/ ATTR_INS(2, 1) dhash_t
-(DCALL DeeObject_Hashv)(size_t object_count,
-                        DeeObject *const *__restrict object_vector) {
+PUBLIC WUNUSED /*ATTR_PURE*/ ATTR_INS(1, 2) dhash_t
+(DCALL DeeObject_Hashv)(DeeObject *const *__restrict object_vector,
+                        size_t object_count) {
 	size_t i;
 	dhash_t result;
 	/* Check for special case: no objects, i.e.: an empty sequence */
