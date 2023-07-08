@@ -2635,8 +2635,8 @@ file_readline(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	}
 	result = DeeFile_ReadLine(self, maxbytes, keeplf);
 	if (result == ITER_DONE) {
-		result = Dee_EmptyString;
-		Dee_Incref(Dee_EmptyString);
+		result = Dee_None;
+		Dee_Incref(Dee_None);
 	}
 	return result;
 err:
@@ -2806,12 +2806,12 @@ PRIVATE struct type_method tpconst file_methods[] = {
 	TYPE_METHOD(STR_size, &file_size,
 	            "->?Dint\n"
 	            "Returns the size (in bytes) of the file stream"),
-	TYPE_METHOD("readline",
-	            &file_readline,
-	            "(keeplf:?Dbool)->?DBytes\n"
-	            "(maxbytes=!-1,keeplf=!t)->?DBytes\n"
+	TYPE_METHOD("readline", &file_readline,
+	            "(keeplf:?Dbool)->?X2?DBytes?N\n"
+	            "(maxbytes=!-1,keeplf=!t)->?X2?DBytes?N\n"
 	            "Read one line from the file stream, but read at most @maxbytes bytes.\n"
-	            "When @keeplf is ?f, strip the trailing linefeed from the returned Bytes object"),
+	            "When @keeplf is ?f, strip the trailing linefeed from the returned ?DBytes object.\n"
+	            "Once EOF is reached, return ?N instead"),
 
 	/* Deprecated functions. */
 	TYPE_METHOD("readall", &file_readall,
