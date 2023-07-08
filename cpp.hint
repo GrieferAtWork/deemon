@@ -646,6 +646,44 @@
 
 
 
+// <hybrid/int128.h>
+#define __HYBRID_INT128_DEFINE_BINARY_CXX_OPERATOR(op,name) \
+	template<class ValType>__hybrid_uint128_t&operator op##=(__hybrid_uint128_t&self,ValType v){} \
+	template<class ValType>__hybrid_int128_t&operator op##=(__hybrid_int128_t&self,ValType v){} \
+	template<class ValType>__hybrid_uint128_t&operator op##=(__hybrid_uint128_t&self,ValType v){} \
+	template<class ValType>__hybrid_int128_t&operator op##=(__hybrid_int128_t&self,ValType v){} \
+	template<class ValType>__hybrid_uint128_t operator op(__hybrid_uint128_t const&self,ValType __v){} \
+	template<class ValType>__hybrid_int128_t operator op(__hybrid_int128_t const&self,ValType __v){} \
+	template<class ValType>__hybrid_uint128_t operator op(__hybrid_uint128_t const&self,ValType __v){} \
+	template<class ValType>__hybrid_int128_t operator op(__hybrid_int128_t const&self,ValType __v){} \
+	__hybrid_uint128_t&operator op##=(__hybrid_uint128_t&self,__hybrid_uint128_t const&v){} \
+	__hybrid_uint128_t&operator op##=(__hybrid_uint128_t&self,__hybrid_int128_t const&v){} \
+	__hybrid_int128_t&operator op##=(__hybrid_int128_t&self,__hybrid_uint128_t const&v){} \
+	__hybrid_int128_t&operator op##=(__hybrid_int128_t&self,__hybrid_int128_t const&v){} \
+	__hybrid_uint128_t operator op(__hybrid_uint128_t const&self,__hybrid_uint128_t const&v){} \
+	__hybrid_uint128_t operator op(__hybrid_uint128_t const&self,__hybrid_int128_t const&v){} \
+	__hybrid_int128_t operator op(__hybrid_int128_t const&self,__hybrid_uint128_t const&v){} \
+	__hybrid_int128_t operator op(__hybrid_int128_t const&self,__hybrid_int128_t const&v){}
+#define __HYBRID_INT128_DEFINE_COMPARE_CXX_OPERATOR(op,np,name) \
+	template<class ValType>bool operator op(__hybrid_uint128_t const&self,ValType v){} \
+	template<class ValType>bool operator np(__hybrid_uint128_t const&self,ValType v){} \
+	template<class ValType>bool operator op(__hybrid_int128_t const&self,ValType v){} \
+	template<class ValType>bool operator np(__hybrid_int128_t const&self,ValType v){} \
+	template<class ValType>bool operator op(__hybrid_uint128_t const&self,ValType v){} \
+	template<class ValType>bool operator np(__hybrid_uint128_t const&self,ValType v){} \
+	template<class ValType>bool operator op(__hybrid_int128_t const&self,ValType v){} \
+	template<class ValType>bool operator np(__hybrid_int128_t const&self,ValType v){} \
+	bool operator op(__hybrid_int128_t const&self,__hybrid_int128_t const&v){} \
+	bool operator op(__hybrid_int128_t const&self,__hybrid_uint128_t const&v){} \
+	bool operator np(__hybrid_int128_t const&self,__hybrid_int128_t const&v){} \
+	bool operator np(__hybrid_int128_t const&self,__hybrid_uint128_t const&v){} \
+	bool operator op(__hybrid_uint128_t const&self,__hybrid_int128_t const&v){} \
+	bool operator op(__hybrid_uint128_t const&self,__hybrid_uint128_t const&v){} \
+	bool operator np(__hybrid_uint128_t const&self,__hybrid_int128_t const&v){} \
+	bool operator np(__hybrid_uint128_t const&self,__hybrid_uint128_t const&v){}
+
+
+
 // <hybrid/sequence/[...].h>
 #define __HYBRID_Q_STRUCT struct
 #define __HYBRID_Q_CLASS class
@@ -1023,9 +1061,9 @@
 #define DEFINE_UINT90(n,a)                                DeeIntObject n={}
 #define Dee_DEFINE_UINT90(n,a)                            DeeIntObject n={}
 
-#define _DeeSystem_DEFINE_memccpyT(rT,T,Tneedle,name) rT*name(void*__restrict dst,void const*__restrict src,Tneedle needle,size_t num_bytes){}
-#define _DeeSystem_DEFINE_memchrT(rT,T,Tneedle,name) rT*name(void const*__restrict p,Tneedle c,size_t n){}
-#define _DeeSystem_DEFINE_memrchrT(rT, T, Tneedle, name) rT*name(void const*__restrict p,Tneedle c,size_t n){}
+#define _DeeSystem_DEFINE_memccpyT(rT,T,Tneedle,name) rT*name(void*restrict dst,void const*restrict src,Tneedle needle,size_t num_bytes){}
+#define _DeeSystem_DEFINE_memchrT(rT,T,Tneedle,name) rT*name(void const*restrict p,Tneedle c,size_t n){}
+#define _DeeSystem_DEFINE_memrchrT(rT, T, Tneedle, name) rT*name(void const*restrict p,Tneedle c,size_t n){}
 #define _DeeSystem_DEFINE_memcmpT(T,name) int name(void const*s1,void const*s2,size_t n){}
 #define _DeeSystem_DEFINE_strcmpT(T,unsignedT,name) int name(T const*s1,T const*s2){}
 #define _DeeSystem_DEFINE_strncmpT(T,unsignedT,name) int name(T const*s1,T const*s2,size_t maxlen){}
@@ -1041,7 +1079,7 @@
 #define DeeSystem_DEFINE_memchrw(name) _DeeSystem_DEFINE_memchrT(uint16_t,uint16_t,uint16_t,name)
 #define DeeSystem_DEFINE_memchrl(name) _DeeSystem_DEFINE_memchrT(uint32_t,uint32_t,uint32_t,name)
 #define DeeSystem_DEFINE_memchrq(name) _DeeSystem_DEFINE_memchrT(uint64_t,uint64_t,uint64_t,name)
-#define DeeSystem_DEFINE_wmemchr(name) _DeeSystem_DEFINE_memchrT(Dee_wchar_t,Dee_wchar_t,__WINT_TYPE__,name)
+#define DeeSystem_DEFINE_wmemchr(name) _DeeSystem_DEFINE_memchrT(Dee_wchar_t,Dee_wchar_t,wint_t,name)
 #define DeeSystem_DEFINE_memcmpw(name) _DeeSystem_DEFINE_memcmpT(uint16_t,name)
 #define DeeSystem_DEFINE_memcmpl(name) _DeeSystem_DEFINE_memcmpT(uint32_t,name)
 #define DeeSystem_DEFINE_memcmpq(name) _DeeSystem_DEFINE_memcmpT(uint64_t,name)
@@ -1051,8 +1089,8 @@
 #define DeeSystem_DEFINE_strncasecmp(name) _DeeSystem_DEFINE_strncasecmpT(char,unsigned char,name)
 #define DeeSystem_DEFINE_stpncpy(name) _DeeSystem_DEFINE_stpncpyT(char,name,strnlen)
 #define DeeSystem_DEFINE_strncpy(name) _DeeSystem_DEFINE_strncpyT(char,name,strnlen)
-#define _DeeSystem_DEFINE_memmemT(rT,T,memchr,memeq,name) rT*name(void const*__restrict haystack,size_t haystack_length,void const*__restrict needle,size_t needle_length){}
-#define _DeeSystem_DEFINE_memrmemT(rT,T,memrchr,memeq,name) rT*name(void const*__restrict haystack,size_t haystack_length,void const*__restrict needle,size_t needle_length){}
+#define _DeeSystem_DEFINE_memmemT(rT,T,memchr,memeq,name) rT*name(void const*restrict haystack,size_t haystack_length,void const*restrict needle,size_t needle_length){}
+#define _DeeSystem_DEFINE_memrmemT(rT,T,memrchr,memeq,name) rT*name(void const*restrict haystack,size_t haystack_length,void const*restrict needle,size_t needle_length){}
 #define DeeSystem_DEFINE_memmem(name) _DeeSystem_DEFINE_memmemT(void,uint8_t,memchr,,name)
 #define DeeSystem_DEFINE_memmemw(name,memchrw,memeqw) _DeeSystem_DEFINE_memmemT(uint16_t,uint16_t,memchrw,memeqw,name)
 #define DeeSystem_DEFINE_memmeml(name,memchrl,memeql) _DeeSystem_DEFINE_memmemT(uint32_t,uint32_t,memchrl,memeql,name)
@@ -1061,13 +1099,13 @@
 #define DeeSystem_DEFINE_memrmemw(name,memrchrw,memeqw) _DeeSystem_DEFINE_memrmemT(uint16_t,uint16_t,memrchrw,memeqw,name)
 #define DeeSystem_DEFINE_memrmeml(name,memrchrl,memeql) _DeeSystem_DEFINE_memrmemT(uint32_t,uint32_t,memrchrl,memeql,name)
 #define DeeSystem_DEFINE_memrmemq(name,memrchrq,memeqq) _DeeSystem_DEFINE_memrmemT(uint64_t,uint64_t,memrchrq,memeqq,name)
-#define DeeSystem_DEFINE_strnlen(name) size_t name(char const*__restrict str,size_t maxlen){}
-#define _DeeSystem_DEFINE_strlenT(T,name) size_t name(T const*__restrict str){}
+#define DeeSystem_DEFINE_strnlen(name) size_t name(char const*restrict str,size_t maxlen){}
+#define _DeeSystem_DEFINE_strlenT(T,name) size_t name(T const*restrict str){}
 #define DeeSystem_DEFINE_wcslen(name) _DeeSystem_DEFINE_strlenT(Dee_wchar_t,name)
 #define _DeeSystem_DEFINE_strcmpzT(T,Tu,Tr,name) Tr name(T const*lhs,T const*rhs,size_t rhs_len){}
 #define DeeSystem_DEFINE_strcmpz(name) _DeeSystem_DEFINE_strcmpzT(char,unsigned char,int,name)
-#define DeeSystem_DEFINE_rawmemchr(name) void*name(void const*__restrict p,int c){}
-#define DeeSystem_DEFINE_rawmemrchr(name) void*name(void const*__restrict p,int c){}
+#define DeeSystem_DEFINE_rawmemchr(name) void*name(void const*restrict p,int c){}
+#define DeeSystem_DEFINE_rawmemrchr(name) void*name(void const*restrict p,int c){}
 #define DeeSystem_DEFINE_memend(name) void*name(void const*p,int byte,size_t num_bytes){}
 #define DeeSystem_DEFINE_memxend(name) void*name(void const*p,int byte,size_t num_bytes){}
 #define DeeSystem_DEFINE_memrend(name) void*name(void const*p,int byte,size_t num_bytes){}
@@ -1076,154 +1114,154 @@
 #define DeeSystem_DEFINE_memrlen(name) size_t name(void const*p,int byte,size_t num_bytes){}
 #define DeeSystem_DEFINE_rawmemlen(name) size_t name(void const*p,int byte){}
 #define DeeSystem_DEFINE_rawmemrlen(name) size_t name(void const*p,int byte){}
-#define DeeSystem_DEFINE_memxchr(name) void*name(void const*__restrict p,int c,size_t n){}
-#define DeeSystem_DEFINE_rawmemxchr(name) void*name(void const*__restrict p,int c){}
+#define DeeSystem_DEFINE_memxchr(name) void*name(void const*restrict p,int c,size_t n){}
+#define DeeSystem_DEFINE_rawmemxchr(name) void*name(void const*restrict p,int c){}
 #define DeeSystem_DEFINE_rawmemxlen(name) size_t name(void const*p,int byte){}
 #define DeeSystem_DEFINE_memcasecmp(name) int name(void const*a,void const*b,size_t n){}
-#define DeeSystem_DEFINE_memcasemem(name) void*name(void const*__restrict haystack,size_t haystack_len,void const*__restrict needle,size_t needle_len){}
-#define DeeSystem_DEFINE_memrev(name) void*name(void*__restrict buf,size_t n){}
-#define DeeSystem_DEFINE_memxrchr(name) void*name(void const*__restrict p,int c,size_t n){}
+#define DeeSystem_DEFINE_memcasemem(name) void*name(void const*restrict haystack,size_t haystack_len,void const*restrict needle,size_t needle_len){}
+#define DeeSystem_DEFINE_memrev(name) void*name(void*restrict buf,size_t n){}
+#define DeeSystem_DEFINE_memxrchr(name) void*name(void const*restrict p,int c,size_t n){}
 #define DeeSystem_DEFINE_memxrend(name) void*name(void const*p,int byte,size_t num_bytes){}
 #define DeeSystem_DEFINE_memxrlen(name) size_t name(void const*p,int byte,size_t num_bytes){}
-#define DeeSystem_DEFINE_rawmemxrchr(name) void*name(void const*__restrict p,int c){}
+#define DeeSystem_DEFINE_rawmemxrchr(name) void*name(void const*restrict p,int c){}
 #define DeeSystem_DEFINE_rawmemxrlen(name) size_t name(void const*p,int byte){}
-#define DeeSystem_DEFINE_memcasermem(name) void*_##name##_memlowerrchr(void const*__restrict p,uint8_t c,size_t n){} void*name(void const*__restrict haystack,size_t haystack_len,void const*__restrict needle,size_t needle_len){}
+#define DeeSystem_DEFINE_memcasermem(name) void*_##name##_memlowerrchr(void const*restrict p,uint8_t c,size_t n){} void*name(void const*restrict haystack,size_t haystack_len,void const*restrict needle,size_t needle_len){}
 #define DeeSystem_DEFINE_qsort(name) void _##name##_swapmemory(uint8_t*a,uint8_t*b,size_t num_bytes); void name(void*base,size_t count,size_t size,int (*compare)(void const*a,void const*b)){}
-#define _DeeSystem_DEFINE_memsetT(T,name) void*name(void*__restrict p,T c,size_t n){}
+#define _DeeSystem_DEFINE_memsetT(T,name) void*name(void*restrict p,T c,size_t n){}
 #define DeeSystem_DEFINE_memsetw(name) _DeeSystem_DEFINE_memsetT(uint16_t,name)
 #define DeeSystem_DEFINE_memsetl(name) _DeeSystem_DEFINE_memsetT(uint32_t,name)
 #define DeeSystem_DEFINE_memsetq(name) _DeeSystem_DEFINE_memsetT(uint64_t,name)
 #define DeeSystem_DEFINE_memsetp(name) _DeeSystem_DEFINE_memsetT(uintptr_t,name)
-#define _DeeSystem_DEFINE_mempsetT(T,name) void*name(void*__restrict p,T c,size_t n){}
+#define _DeeSystem_DEFINE_mempsetT(T,name) void*name(void*restrict p,T c,size_t n){}
 #define DeeSystem_DEFINE_mempsetw(name) _DeeSystem_DEFINE_mempsetT(uint16_t,name)
 #define DeeSystem_DEFINE_mempsetl(name) _DeeSystem_DEFINE_mempsetT(uint32_t,name)
 #define DeeSystem_DEFINE_mempsetq(name) _DeeSystem_DEFINE_mempsetT(uint64_t,name)
 #define DeeSystem_DEFINE_mempsetp(name) _DeeSystem_DEFINE_mempsetT(uintptr_t,name)
 
 
-#define Dee_appexit_object                 appexit_object
-#define Dee_ascii_printer                  ascii_printer
-#define Dee_attribute_info                 attribute_info
-#define Dee_attribute_lookup_rules         attribute_lookup_rules
-#define Dee_attribute_object               attribute_object
-#define Dee_bool_object                    bool_object
-#define Dee_bytes_object                   bytes_object
-#define Dee_bytes_printer                  bytes_printer
-#define Dee_cell_object                    cell_object
-#define Dee_charptr                        dcharptr
-#define Dee_class_attribute                class_attribute
-#define Dee_class_desc                     class_desc
-#define Dee_class_descriptor_object        class_descriptor_object
-#define Dee_class_operator                 class_operator
-#define Dee_class_optable                  class_optable
-#define Dee_clsmember_object               clsmember_object
-#define Dee_clsmethod_object               clsmethod_object
-#define Dee_clsproperty_object             clsproperty_object
-#define Dee_cmethod_object                 cmethod_object
-#define Dee_code_frame                     code_frame
-#define Dee_code_object                    code_object
-#define Dee_compiler_error_loc             compiler_error_loc
-#define Dee_compiler_error_object          compiler_error_object
-#define Dee_compiler_items                 compiler_items
-#define Dee_compiler_object                compiler_object
-#define Dee_compiler_options               compiler_options
-#define Dee_ddi_exdat                      ddi_exdat
-#define Dee_ddi_object                     ddi_object
-#define Dee_ddi_regs                       ddi_regs
-#define Dee_ddi_saved                      ddi_saved
-#define Dee_ddi_state                      ddi_state
-#define Dee_ddi_xregs                      ddi_xregs
-#define Dee_deep_assoc                     deep_assoc
-#define Dee_deep_assoc_entry               deep_assoc_entry
-#define Dee_dex                            dex
-#define Dee_dex_notification               dex_notification
-#define Dee_dex_object                     dex_object
-#define Dee_dex_symbol                     dex_symbol
-#define Dee_dict_item                      dict_item
-#define Dee_dict_object                    dict_object
-#define Dee_enumattr_iterator_object       enumattr_iterator_object
-#define Dee_enumattr_object                enumattr_object
-#define Dee_error_object                   error_object
-#define Dee_except_frame                   except_frame
-#define Dee_except_handler                 except_handler
-#define Dee_file_buffer_link               file_buffer_link
-#define Dee_file_buffer_object             file_buffer_object
-#define Dee_file_object                    file_object
-#define Dee_file_reader_object             file_reader_object
-#define Dee_file_writer_object             file_writer_object
-#define Dee_filetype_object                filetype_object
-#define Dee_float_object                   float_object
-#define Dee_function_object                function_object
-#define Dee_gc_head                        gc_head
-#define Dee_gc_head_link                   gc_head_link
-#define Dee_hashset_item                   hashset_item
-#define Dee_hashset_object                 hashset_object
-#define Dee_instance_desc                  instance_desc
-#define Dee_instance_method                instance_method
-#define Dee_instancemember_object          instancemember_object
-#define Dee_int_object                     int_object
-#define Dee_kwclsmethod_object             kwclsmethod_object
-#define Dee_kwcmethod_object               kwcmethod_object
-#define Dee_kwobjmethod_object             kwobjmethod_object
-#define Dee_list_object                    list_object
-#define Dee_memory_file_object             memory_file_object
-#define Dee_module_object                  module_object
-#define Dee_module_path_object             module_path_object
-#define Dee_module_symbol                  module_symbol
-#define Dee_nomemory_error_object          nomemory_error_object
-#define Dee_none_object                    none_object
-#define Dee_object                         object_
-#define Dee_objmethod_object               objmethod_object
-#define Dee_opinfo                         opinfo
-#define Dee_property_object                property_object
-#define Dee_regex_range                    regex_range
-#define Dee_regex_range_ex                 regex_range_ex
-#define Dee_regex_range_ptr                regex_range_ptr
-#define Dee_repr_frame                     repr_frame
-#define Dee_rodict_item                    rodict_item
-#define Dee_rodict_object                  rodict_object
-#define Dee_roset_item                     roset_item
-#define Dee_roset_object                   roset_object
-#define Dee_set_inversion_object           set_inversion_object
-#define Dee_string_object                  string_object
-#define Dee_string_utf                     string_utf
-#define Dee_super_object                   super_object
-#define Dee_system_error_object            system_error_object
-#define Dee_system_file_object             system_file_object
-#define Dee_thread_interrupt               thread_interrupt
-#define Dee_thread_object                  thread_object
-#define Dee_threadexit_object              threadexit_object
-#define Dee_tls_callback_hooks             tls_callback_hooks
-#define Dee_traceback_object               traceback_object
-#define Dee_trepr_frame                    trepr_frame
-#define Dee_tuple_object                   tuple_object
-#define Dee_type_attr                      type_attr
-#define Dee_type_buffer                    type_buffer
-#define Dee_type_cast                      type_cast
-#define Dee_type_cmp                       type_cmp
-#define Dee_type_constructor               type_constructor
-#define Dee_type_gc                        type_gc
-#define Dee_type_getset                    type_getset
-#define Dee_type_math                      type_math
-#define Dee_type_member                    type_member
-#define Dee_type_method                    type_method
-#define Dee_type_nii                       type_nii
-#define Dee_type_nsi                       type_nsi
-#define Dee_type_object                    type_object
-#define Dee_type_seq                       type_seq
-#define Dee_type_with                      type_with
-#define Dee_unicode_printer                unicode_printer
-#define Dee_unitraits                      unitraits
-#define Dee_weakref                        weakref
-#define Dee_weakref_list                   weakref_list
-#define Dee_weakref_object                 weakref_object
-#define Dee_weakrefable_object             weakrefable_object
-#define Dee_yield_function_iterator_object yield_function_iterator_object
-#define Dee_yield_function_object          yield_function_object
-#define dee_keyword                        keyword
-#define dee_kwds_entry                     kwds_entry
-#define dee_kwds_mapping_object            kwds_mapping_object
-#define dee_kwds_object                    kwds_object
+#define appexit_object                 Dee_appexit_object
+#define ascii_printer                  Dee_ascii_printer
+#define attribute_info                 Dee_attribute_info
+#define attribute_lookup_rules         Dee_attribute_lookup_rules
+#define attribute_object               Dee_attribute_object
+#define bool_object                    Dee_bool_object
+#define bytes_object                   Dee_bytes_object
+#define bytes_printer                  Dee_bytes_printer
+#define cell_object                    Dee_cell_object
+#define charptr                        Dee_dcharptr
+#define class_attribute                Dee_class_attribute
+#define class_desc                     Dee_class_desc
+#define class_descriptor_object        Dee_class_descriptor_object
+#define class_operator                 Dee_class_operator
+#define class_optable                  Dee_class_optable
+#define clsmember_object               Dee_clsmember_object
+#define clsmethod_object               Dee_clsmethod_object
+#define clsproperty_object             Dee_clsproperty_object
+#define cmethod_object                 Dee_cmethod_object
+#define code_frame                     Dee_code_frame
+#define code_object                    Dee_code_object
+#define compiler_error_loc             Dee_compiler_error_loc
+#define compiler_error_object          Dee_compiler_error_object
+#define compiler_items                 Dee_compiler_items
+#define compiler_object                Dee_compiler_object
+#define compiler_options               Dee_compiler_options
+#define ddi_exdat                      Dee_ddi_exdat
+#define ddi_object                     Dee_ddi_object
+#define ddi_regs                       Dee_ddi_regs
+#define ddi_saved                      Dee_ddi_saved
+#define ddi_state                      Dee_ddi_state
+#define ddi_xregs                      Dee_ddi_xregs
+#define deep_assoc                     Dee_deep_assoc
+#define deep_assoc_entry               Dee_deep_assoc_entry
+#define dex                            Dee_dex
+#define dex_notification               Dee_dex_notification
+#define dex_object                     Dee_dex_object
+#define dex_symbol                     Dee_dex_symbol
+#define dict_item                      Dee_dict_item
+#define dict_object                    Dee_dict_object
+#define enumattr_iterator_object       Dee_enumattr_iterator_object
+#define enumattr_object                Dee_enumattr_object
+#define error_object                   Dee_error_object
+#define except_frame                   Dee_except_frame
+#define except_handler                 Dee_except_handler
+#define file_buffer_link               Dee_file_buffer_link
+#define file_buffer_object             Dee_file_buffer_object
+#define file_object                    Dee_file_object
+#define file_reader_object             Dee_file_reader_object
+#define file_writer_object             Dee_file_writer_object
+#define filetype_object                Dee_filetype_object
+#define float_object                   Dee_float_object
+#define function_object                Dee_function_object
+#define gc_head                        Dee_gc_head
+#define gc_head_link                   Dee_gc_head_link
+#define hashset_item                   Dee_hashset_item
+#define hashset_object                 Dee_hashset_object
+#define instance_desc                  Dee_instance_desc
+#define instance_method                Dee_instance_method
+#define instancemember_object          Dee_instancemember_object
+#define int_object                     Dee_int_object
+#define kwclsmethod_object             Dee_kwclsmethod_object
+#define kwcmethod_object               Dee_kwcmethod_object
+#define kwobjmethod_object             Dee_kwobjmethod_object
+#define list_object                    Dee_list_object
+#define memory_file_object             Dee_memory_file_object
+#define module_object                  Dee_module_object
+#define module_path_object             Dee_module_path_object
+#define module_symbol                  Dee_module_symbol
+#define nomemory_error_object          Dee_nomemory_error_object
+#define none_object                    Dee_none_object
+#define object                         Dee_object_
+#define objmethod_object               Dee_objmethod_object
+#define opinfo                         Dee_opinfo
+#define property_object                Dee_property_object
+#define regex_range                    Dee_regex_range
+#define regex_range_ex                 Dee_regex_range_ex
+#define regex_range_ptr                Dee_regex_range_ptr
+#define repr_frame                     Dee_repr_frame
+#define rodict_item                    Dee_rodict_item
+#define rodict_object                  Dee_rodict_object
+#define roset_item                     Dee_roset_item
+#define roset_object                   Dee_roset_object
+#define set_inversion_object           Dee_set_inversion_object
+#define string_object                  Dee_string_object
+#define string_utf                     Dee_string_utf
+#define super_object                   Dee_super_object
+#define system_error_object            Dee_system_error_object
+#define system_file_object             Dee_system_file_object
+#define thread_interrupt               Dee_thread_interrupt
+#define thread_object                  Dee_thread_object
+#define threadexit_object              Dee_threadexit_object
+#define tls_callback_hooks             Dee_tls_callback_hooks
+#define traceback_object               Dee_traceback_object
+#define trepr_frame                    Dee_trepr_frame
+#define tuple_object                   Dee_tuple_object
+#define type_attr                      Dee_type_attr
+#define type_buffer                    Dee_type_buffer
+#define type_cast                      Dee_type_cast
+#define type_cmp                       Dee_type_cmp
+#define type_constructor               Dee_type_constructor
+#define type_gc                        Dee_type_gc
+#define type_getset                    Dee_type_getset
+#define type_math                      Dee_type_math
+#define type_member                    Dee_type_member
+#define type_method                    Dee_type_method
+#define type_nii                       Dee_type_nii
+#define type_nsi                       Dee_type_nsi
+#define type_object                    Dee_type_object
+#define type_seq                       Dee_type_seq
+#define type_with                      Dee_type_with
+#define unicode_printer                Dee_unicode_printer
+#define unitraits                      Dee_unitraits
+#define weakref                        Dee_weakref
+#define weakref_list                   Dee_weakref_list
+#define weakref_object                 Dee_weakref_object
+#define weakrefable_object             Dee_weakrefable_object
+#define yield_function_iterator_object Dee_yield_function_iterator_object
+#define yield_function_object          Dee_yield_function_object
+#define keyword                        dee_keyword
+#define kwds_entry                     dee_kwds_entry
+#define kwds_mapping_object            dee_kwds_mapping_object
+#define kwds_object                    dee_kwds_object
 
 
 
@@ -1234,7 +1272,7 @@
 #define DEFINE_ANY_BYTES_TRAIT(name,function) DeeObject*bytes_##name(Bytes*self,size_t argc,DeeObject*const*argv,DeeObject*kw);
 #define DEFINE_OPERATOR(return,name,args) return DeeObject_T##name args{} return DeeObject_##name args
 #define DEFINE_INTERNAL_OPERATOR(return,name,args) return DeeObject_T##name args{} return DeeObject_##name args
-#define DEFINE_MATH_INPLACE_INT_OPERATOR(DeeObject_InplaceXXX,reg,DeeInt_NewXXX,intX_t,operator_name) int DeeObject_InplaceXXX(DeeObject**__restrict p_self,intX_t val){}
+#define DEFINE_MATH_INPLACE_INT_OPERATOR(DeeObject_InplaceXXX,reg,DeeInt_NewXXX,intX_t,operator_name) int DeeObject_InplaceXXX(DeeObject**restrict p_self,intX_t val){}
 #define DEFINE_TYPE_INHERIT_FUNCTION(name,...) bool name(DeeTypeObject*self){}
 #define DEFINE_JSON_ITERATOR_COMPARE(name,...) DeeObject*name(DeeJsonIteratorObject*self,DeeJsonIteratorObject*other){}
 #define DEF_STRING(n,a,b,c) DeeStringObject n={};
