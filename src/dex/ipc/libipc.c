@@ -28,6 +28,7 @@
 #include <deemon/api.h>
 #include <deemon/dex.h>
 #include <deemon/error.h>
+#include <deemon/objmethod.h>
 #include <deemon/system.h>
 
 #ifndef __INTELLISENSE__
@@ -38,6 +39,9 @@
 #define WANT_ipc_unimplemented
 #define WANT_err_unbound_attribute
 #define WANT_err_file_not_found
+DECL_BEGIN
+PRIVATE WUNUSED DREF DeeStringObject *DCALL process_get_shell(void);
+DECL_END
 #endif /* __INTELLISENSE__ */
 
 DECL_BEGIN
@@ -99,11 +103,26 @@ err_file_not_found_string(char const *__restrict filename) {
 }
 #endif /* !WANT_err_file_not_found */
 
+PRIVATE WUNUSED DREF DeeObject *DCALL
+ipc_SHELL_get_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
+	return (DREF DeeObject *)process_get_shell();
+}
+PRIVATE DEFINE_CMETHOD(ipc_SHELL_get, &ipc_SHELL_get_f);
+
 
 PRIVATE struct dex_symbol symbols[] = {
 	{ "Process", (DeeObject *)&DeeProcess_Type },
 	{ "Pipe", (DeeObject *)&DeePipe_Type },
-	// TODO: { "enumproc", (DeeObject *)&DeeProcEnum_Type },
+	{ "SHELL", (DeeObject *)&ipc_SHELL_get, MODSYM_FREADONLY | MODSYM_FPROPERTY,
+	  DOC("->?Dstring\n"
+	      "The absolute filename of the used system shell command interpreter program\n"
+	      "When the $\"$SHELL\" environment variable is defined, this global evaluations "
+	      /**/ "to that variable's contents. Otherwise (except on windows), the system "
+	      /**/ "file #C{/etc/shells} is read line-by-line, and the first line containing "
+	      /**/ "an absolute filename that points to an executable file is used. If that "
+	      /**/ "file doesn't exist or does not specify a valid shell program, a system-"
+	      /**/ "specific default is used, which is #C{cmd.exe} on windows, and #C{/bin/sh} "
+	      /**/ "on all other systems.") },
 	{ NULL }
 };
 

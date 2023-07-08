@@ -48,6 +48,9 @@
 #include <hybrid/sequence/list.h>
 
 #include <stdbool.h>
+#ifdef CONFIG_HAVE_PATHS_H
+#include <paths.h> /* _PATH_SHELLS */
+#endif /* CONFIG_HAVE_PATHS_H */
 
 #include "libipc.h"
 
@@ -222,6 +225,14 @@
 #   define PATH_MAX 260
 #endif /* !... */
 #endif /* !PATH_MAX */
+
+
+/* Check if we want to support `/etc/shells' */
+#undef CONFIG_IPC_HAVE_etc_shells
+#ifndef CONFIG_HOST_WINDOWS
+#define CONFIG_IPC_HAVE_etc_shells
+#endif /* !CONFIG_HOST_WINDOWS */
+#define CONFIG_IPC_HAVE_etc_shells
 
 
 DECL_BEGIN
@@ -697,6 +708,206 @@ PRIVATE Process this_process = {
 };
 
 
+#ifdef CONFIG_IPC_HAVE_etc_shells
+
+/* [0..1][lock(WRITE_ONCE)] The default /etc/shells shell. */
+PRIVATE DREF DeeStringObject *ipc_etc_shells_default_shell = NULL;
+#define HAVE_ipc_etc_shells_default_shell_fini
+#define ipc_etc_shells_default_shell_fini()     \
+	(ITER_ISOK(ipc_etc_shells_default_shell)    \
+	 ? Dee_Decref(ipc_etc_shells_default_shell) \
+	 : (void)0)
+
+#ifndef _PATH_SHELLS
+#define _PATH_SHELLS "/etc/shells"
+#endif /* !_PATH_SHELLS */
+
+#ifndef CONFIG_HAVE_strnlen
+#define CONFIG_HAVE_strnlen
+#undef strnlen
+#define strnlen dee_strnlen
+DeeSystem_DEFINE_strnlen(strnlen)
+#endif /* !CONFIG_HAVE_strnlen */
+
+#undef is_executable_file_USE_waccess
+#undef is_executable_file_USE_access
+#undef is_executable_file_USE_DeeFile_Open
+#if defined(CONFIG_HAVE_waccess) && defined(CONFIG_PREFER_WCHAR_FUNCTIONS)
+#define is_executable_file_USE_waccess
+#elif defined(CONFIG_HAVE_access)
+#define is_executable_file_USE_access
+#elif defined(CONFIG_HAVE_waccess)
+#define is_executable_file_USE_waccess
+#else /* CONFIG_HAVE_waccess */
+#define is_executable_file_USE_DeeFile_Open
+#endif /* !CONFIG_HAVE_waccess */
+
+#ifdef X_OK
+#define is_executable_file_USED_X_OK X_OK
+#elif defined(F_OK)
+#define is_executable_file_USED_X_OK F_OK
+#else /* ... */
+#define is_executable_file_USED_X_OK 0
+#endif /* !... */
+
+/* @return: 1 : Yes
+ * @return: 0 : No
+ * @return: -1: Error */
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+is_executable_file(DeeStringObject *__restrict filename) {
+#ifdef is_executable_file_USE_waccess
+	{
+		int error;
+		dwchar_t const *filename_wide;
+		filename_wide = DeeString_AsWide((DeeObject *)filename);
+		if unlikely(!filename_wide)
+			goto err;
+#define NEED_err
+		error = waccess(filename_wide, is_executable_file_USED_X_OK);
+		if (error == 0)
+			return 1;
+	}
+#endif /* is_executable_file_USE_waccess */
+
+#ifdef is_executable_file_USE_access
+	{
+		int error;
+		char const *filename_utf8;
+		filename_utf8 = DeeString_AsUtf8((DeeObject *)filename);
+		if unlikely(!filename_utf8)
+			goto err;
+#define NEED_err
+		error = access(filename_utf8, is_executable_file_USED_X_OK);
+		if (error == 0)
+			return 1;
+	}
+#endif /* is_executable_file_USE_access */
+
+#ifdef is_executable_file_USE_DeeFile_Open
+	{
+		DREF DeeObject *fp;
+		fp = DeeFile_Open((DeeObject *)filename, Dee_OPEN_FRDONLY, 0);
+		if (ITER_ISOK(fp)) {
+			Dee_Decref_likely(fp);
+			return 1;
+		}
+		if unlikely(!fp)
+			goto err;
+#define NEED_err
+	}
+#endif /* is_executable_file_USE_DeeFile_Open */
+
+	return 0;
+#ifdef NEED_err
+#undef NEED_err
+err:
+	return -1;
+#endif /* NEED_err */
+}
+
+PRIVATE WUNUSED DREF DeeStringObject *DCALL
+process_do_get_etc_shells_default_shell(void) {
+	DREF DeeObject *fp, *line;
+	fp = DeeFile_OpenString(_PATH_SHELLS, Dee_OPEN_FRDONLY, 0);
+	if (!ITER_ISOK(fp))
+		return (DREF DeeStringObject *)fp; /* File-not-found or error. */
+	while (ITER_ISOK(line = DeeFile_ReadLine(fp, (size_t)-1, false))) {
+		char const *line_data;
+		size_t line_size;
+		line_data = (char const *)DeeBytes_DATA(line);
+		line_size = strnlen(line_data, DeeBytes_SIZE(line));
+
+		/* Strip leading/trailing whitespace. */
+		while (line_size && isspace(line_data[0])) {
+			++line_data;
+			--line_size;
+		}
+		while (line_size && isspace(line_data[line_size - 1]))
+			--line_size;
+
+		/* Ignore anything that isn't an absolute path (including line starting with '#') */
+		if (DeeSystem_IsAbsN(line_data, line_size)) {
+			DREF DeeStringObject *filename;
+			int error;
+			filename = (DREF DeeStringObject *)DeeString_NewUtf8(line_data, line_size, STRING_ERROR_FREPLAC);
+			if unlikely(!filename) {
+err_fp:
+				line = NULL;
+				break;
+			}
+			error = is_executable_file(filename);
+			if (error > 0)
+				return filename;
+			Dee_Decref(filename);
+			if (error < 0)
+				goto err_fp;
+		}
+		Dee_Decref(line);
+	}
+	Dee_Decref(fp);
+	return (DREF DeeStringObject *)ITER_DONE;
+}
+
+
+/* @return: * :        The default shell (according to `/etc/shells')
+ * @return: ITER_DONE: `/etc/shells' does not exist, or does not specify any valid shells.
+ * @return: NULL:      Error. */
+PRIVATE WUNUSED DREF DeeStringObject *DCALL
+process_get_etc_shells_default_shell(void) {
+	DREF DeeStringObject *result;
+again:
+	result = atomic_read(&ipc_etc_shells_default_shell);
+	if (result != NULL) {
+		if (result != (DREF DeeStringObject *)ITER_DONE)
+			Dee_Incref(result);
+	} else {
+		result = process_do_get_etc_shells_default_shell();
+		if unlikely(!atomic_cmpxch(&ipc_etc_shells_default_shell, NULL, result)) {
+			Dee_Decref_likely(result);
+			goto again;
+		}
+	}
+	return result;
+}
+#endif /* CONFIG_IPC_HAVE_etc_shells */
+
+/* Get the absolute pathname of the shell to use in order to execute shell-commands. */
+PRIVATE WUNUSED DREF DeeStringObject *DCALL process_get_shell(void) {
+	DREF DeeStringObject *result;
+	/* Allow overriding the system shell program with the "$SHELL" environment variable. */
+	result = (DREF DeeStringObject *)Dee_GetEnv((DeeObject *)&str_SHELL);
+	if (result == (DREF DeeStringObject *)ITER_DONE) {
+		/* On unix, try to make use of `/etc/shells':
+		 * >> function getDefaultShell(): string {
+		 * >>     local result = posix.environ.get("SHELL");
+		 * >>     if (result !is none)
+		 * >>         return result;
+		 * >>     local fp = File.open("/etc/shells", "r");
+		 * >>     for (;;) {
+		 * >>         local line = fp.readline(false);
+		 * >>         if (line is none)
+		 * >>             break;
+		 * >>         line = line.strip();
+		 * >>         if (posix.isabs(line)) {
+		 * >>             if (posix.access(line, posix.X_OK))
+		 * >>                 return line;
+		 * >>         }
+		 * >>     }
+		 * >>     return "/bin/sh";
+		 * >> } */
+#ifdef CONFIG_IPC_HAVE_etc_shells
+		result = process_get_etc_shells_default_shell();
+		if (result == (DREF DeeStringObject *)ITER_DONE)
+#endif /* CONFIG_IPC_HAVE_etc_shells */
+		{
+			result = (DREF DeeStringObject *)&str_DEFAULT_SHELL;
+			Dee_Incref(result);
+		}
+	}
+	return result;
+}
+
+
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 process_init(Process *__restrict self,
              size_t argc, DeeObject *const *argv) {
@@ -719,26 +930,10 @@ process_init(Process *__restrict self,
 		Dee_Incref(exe_or_cmdline_or_pid);
 		Dee_XIncref(self->p_envp);
 	} else if (DeeString_Check(exe_or_cmdline_or_pid)) {
-		/* Allow overriding the system shell program with the "$SHELL" environment variable. */
-		self->p_exe = Dee_GetEnv((DeeObject *)&str_SHELL);
+		/* Use the system shell as executable. */
+		self->p_exe = (DREF DeeObject *)process_get_shell();
 		if unlikely(!self->p_exe)
 			goto err;
-		if (self->p_exe == ITER_DONE) {
-			/* TODO: On unix, try to make use of `/etc/shells':
-			 * >> function getDefaultShell(): string {
-			 * >>     local result = posix.environ.get("SHELL");
-			 * >>     if (result !is none)
-			 * >>         return result;
-			 * >>     for (local line: File.open("/etc/shells", "r")) {
-			 * >>         line = line[:-1]; // Strip trailing "\n"
-			 * >>         if (posix.access(line, posix.X_OK))
-			 * >>             return line;
-			 * >>     }
-			 * >>     return "/bin/sh";
-			 * >> } */
-			self->p_exe = (DREF DeeObject *)&str_DEFAULT_SHELL;
-			Dee_Incref(self->p_exe);
-		}
 
 		/* Now pack the cmdline/argv-tuple */
 #ifdef ipc_Process_USE_CreateProcessW
@@ -5180,7 +5375,8 @@ INTERN DeeTypeObject DeeProcess_Type = {
 
 
 #if (defined(HAVE_ipc_reaped_childprocs_clear) || \
-     defined(HAVE_ipc_exe2path_fini))
+     defined(HAVE_ipc_exe2path_fini) ||           \
+     defined(HAVE_ipc_etc_shells_default_shell_fini))
 #ifdef HAVE_libipc_fini
 #error "Multiple definitions of `libipc_fini()'"
 #endif /* HAVE_libipc_fini */
@@ -5193,6 +5389,9 @@ libipc_fini(DeeDexObject *__restrict UNUSED(self)) {
 #ifdef HAVE_ipc_exe2path_fini
 	ipc_exe2path_fini();
 #endif /* HAVE_ipc_exe2path_fini */
+#ifdef HAVE_ipc_etc_shells_default_shell_fini
+	ipc_etc_shells_default_shell_fini();
+#endif /* HAVE_ipc_etc_shells_default_shell_fini */
 }
 #endif /* ... */
 
