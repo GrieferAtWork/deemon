@@ -1413,13 +1413,15 @@ err_function_code:
 	case DTYPE_LIST: {
 		uint32_t i, length;
 		uint8_t const *end;
+		DeeListObject *ret;
 		length = Dec_DecodePointer(&reader);
-		result = (DREF DeeObject *)DeeList_NewUninitialized(length);
-		if unlikely(!result)
-			goto done;
+		ret    = DeeList_NewUninitialized(length);
+		if unlikely(!ret)
+			goto err;
 		end = self->df_data + self->df_size;
 		for (i = 0; i < length; ++i) {
 			DREF DeeObject *item;
+
 			/* Read the individual list items. */
 			if unlikely(reader >= end) {
 				item = ITER_DONE;
@@ -1427,16 +1429,18 @@ err_function_code:
 				item = DecFile_LoadObject(self, &reader);
 			}
 			if unlikely(!ITER_ISOK(item)) {
-				Dee_Decrefv(DeeList_ELEM(result), i);
-				DeeList_FreeUninitialized((DREF DeeListObject *)result);
+				Dee_Decrefv(DeeList_ELEM(ret), i);
+				DeeList_FreeUninitialized(ret);
 				result = item;
 				goto done;
 			}
+
 			/* Save the item within the list. */
-			DeeList_SET(result, i, item);
+			DeeList_SET(ret, i, item);
 		}
+
 		/* Start tracking the new list now that it's been initialized. */
-		DeeGC_Track((DeeObject *)result);
+		result = DeeList_FinalizeUninitialized(ret);
 	}	break;
 
 	case DTYPE_CLASSDESC: {

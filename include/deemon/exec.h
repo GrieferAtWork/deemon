@@ -88,7 +88,7 @@ DFUNDEF void DCALL DeeModule_InitPath(void);
 #define DeeModule_FiniPath() DeeList_Clear((DeeObject *)&DeeModule_Path)
 
 /* Initialize the module path sub-system and return its global list of path. */
-#define DeeModule_GetPath() (DeeModule_InitPath(), (DeeObject *)&DeeModule_Path)
+#define DeeModule_GetPath() (DeeModule_InitPath(), &DeeModule_Path)
 
 /* Return the time (in UTC milliseconds since 01-01-1970) when deemon was compiled.
  * This value is also used to initialize the `mo_ctime' value of the builtin

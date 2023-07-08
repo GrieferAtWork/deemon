@@ -609,6 +609,7 @@ EXPORTS
 	_DeeObject_InplaceAndUInt32@8=DeeObject_InplaceAndUInt32@8
 	_DeeObject_InplaceDeepCopy@4=DeeObject_InplaceDeepCopy@4
 	_DeeObject_InplaceDeepCopyWithLock@8=DeeObject_InplaceDeepCopyWithLock@8
+	_DeeObject_InplaceDeepCopyv@8=DeeObject_InplaceDeepCopyv@8
 	_DeeObject_InplaceDiv@8=DeeObject_InplaceDiv@8
 	_DeeObject_InplaceDivInt8@8=DeeObject_InplaceDivInt8@8
 	_DeeObject_InplaceMod@8=DeeObject_InplaceMod@8

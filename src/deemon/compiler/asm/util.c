@@ -258,8 +258,11 @@ INTERN WUNUSED NONNULL((1)) int
 	if (DeeTuple_Check(value)) {
 		/* Special case for tuples: If only constant expressions are
 		 * contained, then we can push the tuple as a constant expression, too. */
-		size_t start, end, len = DeeTuple_SIZE(value);
+		size_t start, end, len;
 		bool is_first_part;
+		DeeTupleObject *val;
+		val = (DeeTupleObject *)value;
+		len = DeeTuple_SIZE(val);
 
 		/* Special case: empty tuple. */
 		if (!len)
@@ -267,7 +270,7 @@ INTERN WUNUSED NONNULL((1)) int
 
 		/* Check if the tuple can be pushed as a constant expression. */
 		for (start = 0; start < len; ++start) {
-			if (!asm_allowconst(DeeTuple_GET(value, start)))
+			if (!asm_allowconst(DeeTuple_GET(val, start)))
 				goto push_tuple_parts;
 		}
 		goto push_constexpr;
@@ -277,8 +280,7 @@ push_tuple_parts:
 		is_first_part = start == end;
 		if (!is_first_part) {
 			DREF DeeObject *subrange;
-			subrange = tuple_getrange_i((DeeTupleObject *)value,
-			                            (dssize_t)start, (dssize_t)end);
+			subrange = tuple_getrange_i(val, (dssize_t)start, (dssize_t)end);
 			if unlikely(!subrange)
 				goto err;
 			cid = asm_newconst(subrange);
@@ -291,8 +293,8 @@ push_tuple_parts:
 		while (end < len) {
 			uint16_t pack_length = 0;
 			while (end < len && pack_length < STACK_PACK_THRESHOLD &&
-			       !asm_allowconst(DeeTuple_GET(value, end))) {
-				if (asm_gpush_constexpr(DeeTuple_GET(value, end)))
+			       !asm_allowconst(DeeTuple_GET(val, end))) {
+				if (asm_gpush_constexpr(DeeTuple_GET(val, end)))
 					goto err;
 				++pack_length, ++end;
 			}
@@ -308,18 +310,17 @@ push_tuple_parts:
 			}
 			start = end;
 			/* Collect constant parts. */
-			while (end < len && asm_allowconst(DeeTuple_GET(value, end)))
+			while (end < len && asm_allowconst(DeeTuple_GET(val, end)))
 				++end;
 			if (end > start) {
 				DREF DeeObject *subrange;
 				if (end == start + 1) {
-					if (asm_gpush_constexpr(DeeTuple_GET(value, start)))
+					if (asm_gpush_constexpr(DeeTuple_GET(val, start)))
 						goto err;
 					if (asm_gextend(1))
 						goto err;
 				} else {
-					subrange = tuple_getrange_i((DeeTupleObject *)value,
-					                            (dssize_t)start, (dssize_t)end);
+					subrange = tuple_getrange_i(val, (dssize_t)start, (dssize_t)end);
 					if unlikely(!subrange)
 						goto err;
 					cid = asm_newconst(subrange);
@@ -339,32 +340,34 @@ push_tuple_parts:
 		size_t start, end;
 		int temp;
 		bool is_first_part = true;
-		DeeList_LockRead(value);
+		DeeListObject *val;
+		val = (DeeListObject *)value;
+		DeeList_LockRead(val);
 		/* Special case: empty list. */
-		if (!DeeList_SIZE(value)) {
-			DeeList_LockEndRead(value);
+		if (!DeeList_SIZE(val)) {
+			DeeList_LockEndRead(val);
 			return asm_gpack_list(0);
 		}
 		end = 0;
-		while (end < DeeList_SIZE(value)) {
+		while (end < DeeList_SIZE(val)) {
 			uint16_t pack_length = 0;
-			while (end < DeeList_SIZE(value) &&
+			while (end < DeeList_SIZE(val) &&
 			       pack_length < STACK_PACK_THRESHOLD) {
-				DeeObject *item = DeeList_GET(value, end);
+				DeeObject *item = DeeList_GET(val, end);
 				if (asm_allowconst(item))
 					break;
 				Dee_Incref(item);
-				DeeList_LockEndRead(value);
+				DeeList_LockEndRead(val);
 				temp = asm_gpush_constexpr(item);
 				Dee_Decref(item);
 				if unlikely(temp)
 					goto err;
-				DeeList_LockRead(value);
+				DeeList_LockRead(val);
 				++pack_length, ++end;
 			}
 			if (pack_length) {
 				ASSERT(pack_length <= STACK_PACK_THRESHOLD);
-				DeeList_LockEndRead(value);
+				DeeList_LockEndRead(val);
 				if (is_first_part) {
 					if (asm_gpack_list(pack_length))
 						goto err;
@@ -374,20 +377,20 @@ push_tuple_parts:
 					if (asm_gextend(pack_length))
 						goto err;
 				}
-				DeeList_LockRead(value);
+				DeeList_LockRead(val);
 			}
 			/* Collect constant parts. */
 			start = end;
-			while (end < DeeList_SIZE(value) &&
-			       asm_allowconst(DeeList_GET(value, end)))
+			while (end < DeeList_SIZE(val) &&
+			       asm_allowconst(DeeList_GET(val, end)))
 				++end;
 			if (end > start) {
 				DREF DeeObject *subrange;
 				if (end == start + 1) {
 					/* Special case: encode as  `pack List, #1' */
-					subrange = DeeList_GET(value, start);
+					subrange = DeeList_GET(val, start);
 					Dee_Incref(subrange);
-					DeeList_LockEndRead(value);
+					DeeList_LockEndRead(val);
 					temp = asm_gpush_constexpr(subrange);
 					Dee_Decref(subrange);
 					if unlikely(temp)
@@ -401,9 +404,8 @@ push_tuple_parts:
 							goto err;
 					}
 				} else {
-					DeeList_LockEndRead(value);
-					subrange = list_getrange_as_tuple((DeeListObject *)value,
-					                                  (dssize_t)start, (dssize_t)end);
+					DeeList_LockEndRead(val);
+					subrange = list_getrange_as_tuple(val, (dssize_t)start, (dssize_t)end);
 					if unlikely(!subrange)
 						goto err;
 					cid = asm_newconst(subrange);
@@ -421,7 +423,7 @@ push_tuple_parts:
 							goto err;
 					}
 				}
-				DeeList_LockRead(value);
+				DeeList_LockRead(val);
 			}
 		}
 		return 0;
@@ -448,15 +450,17 @@ push_tuple_parts:
 		size_t i, mask, ro_mask, num_items;
 		struct dict_item *elem;
 		DREF DeeRoDictObject *rodict;
+		DeeDictObject *val;
+		val = (DeeDictObject *)value;
 check_dict_again:
-		DeeDict_LockRead(value);
-		if (!((DeeDictObject *)value)->d_used) {
+		DeeDict_LockRead(val);
+		if (!val->d_used) {
 			/* Simple case: The Dict is empty, so we can just pack an empty Dict at runtime. */
-			DeeDict_LockEndRead(value);
+			DeeDict_LockEndRead(val);
 			return asm_gpack_dict(0);
 		}
-		mask = ((DeeDictObject *)value)->d_mask;
-		elem = ((DeeDictObject *)value)->d_elem;
+		mask = val->d_mask;
+		elem = val->d_elem;
 		for (i = 0; i <= mask; ++i) {
 			if (!elem[i].di_key)
 				continue;
@@ -464,18 +468,18 @@ check_dict_again:
 				continue;
 			if (!asm_allowconst(elem[i].di_key) ||
 			    !asm_allowconst(elem[i].di_value)) {
-				DeeDict_LockEndRead(value);
+				DeeDict_LockEndRead(val);
 				goto push_dict_parts;
 			}
 		}
-		num_items = ((DeeDictObject *)value)->d_used;
+		num_items = val->d_used;
 		ro_mask   = RODICT_INITIAL_MASK;
 		while (ro_mask <= num_items)
 			ro_mask = (ro_mask << 1) | 1;
 		ro_mask = (ro_mask << 1) | 1;
 		rodict  = (DREF DeeRoDictObject *)DeeObject_TryCalloc(SIZEOF_RODICT(ro_mask));
 		if unlikely(!rodict) {
-			DeeDict_LockEndRead(value);
+			DeeDict_LockEndRead(val);
 			if (Dee_CollectMemory(SIZEOF_RODICT(ro_mask)))
 				goto check_dict_again;
 			goto err;
@@ -496,7 +500,7 @@ check_dict_again:
 			                      elem[i].di_key,
 			                      elem[i].di_value);
 		}
-		DeeDict_LockEndRead(value);
+		DeeDict_LockEndRead(val);
 		DeeObject_Init(rodict, &DeeRoDict_Type);
 
 		/* All right! we've got the ro-Dict all packed together!
@@ -516,19 +520,19 @@ check_dict_again:
 push_dict_parts:
 		/* Construct a Dict by pushing its individual parts. */
 		num_items = 0;
-		DeeDict_LockRead(value);
-		for (i = 0; i <= ((DeeDictObject *)value)->d_mask; ++i) {
+		DeeDict_LockRead(val);
+		for (i = 0; i <= val->d_mask; ++i) {
 			struct dict_item *item;
 			int error;
 			DREF DeeObject *item_key, *item_value;
-			item     = &((DeeDictObject *)value)->d_elem[i];
+			item     = &val->d_elem[i];
 			item_key = item->di_key;
 			if (!item_key || item_key == dummy)
 				continue;
 			item_value = item->di_value;
 			Dee_Incref(item_key);
 			Dee_Incref(item_value);
-			DeeDict_LockEndRead(value);
+			DeeDict_LockEndRead(val);
 
 			/* Push the key & item. */
 			error = asm_gpush_constexpr(item_key);
@@ -539,9 +543,9 @@ push_dict_parts:
 			if unlikely(error)
 				goto err;
 			++num_items;
-			DeeDict_LockRead(value);
+			DeeDict_LockRead(val);
 		}
-		DeeDict_LockEndRead(value);
+		DeeDict_LockEndRead(val);
 
 		/* With everything pushed, pack together the Dict. */
 		return asm_gpack_dict((uint16_t)num_items);
@@ -557,33 +561,35 @@ push_dict_parts:
 		size_t i, mask, ro_mask, num_items;
 		struct hashset_item *elem;
 		DREF DeeRoSetObject *roset;
+		DeeHashSetObject *val;
+		val = (DeeHashSetObject *)value;
 check_set_again:
-		DeeHashSet_LockRead(value);
-		if (!((DeeHashSetObject *)value)->hs_used) {
+		DeeHashSet_LockRead(val);
+		if (!val->hs_used) {
 			/* Simple case: The set is empty, so we can just pack an empty HashSet at runtime. */
-			DeeHashSet_LockRead(value);
+			DeeHashSet_LockRead(val);
 			return asm_gpack_hashset(0);
 		}
-		mask = ((DeeHashSetObject *)value)->hs_mask;
-		elem = ((DeeHashSetObject *)value)->hs_elem;
+		mask = val->hs_mask;
+		elem = val->hs_elem;
 		for (i = 0; i <= mask; ++i) {
 			if (!elem[i].hsi_key)
 				continue;
 			if (elem[i].hsi_key == dummy)
 				continue;
 			if (!asm_allowconst(elem[i].hsi_key)) {
-				DeeHashSet_LockEndRead(value);
+				DeeHashSet_LockEndRead(val);
 				goto push_set_parts;
 			}
 		}
-		num_items = ((DeeHashSetObject *)value)->hs_used;
+		num_items = val->hs_used;
 		ro_mask   = ROSET_INITIAL_MASK;
 		while (ro_mask <= num_items)
 			ro_mask = (ro_mask << 1) | 1;
 		ro_mask = (ro_mask << 1) | 1;
 		roset   = (DREF DeeRoSetObject *)DeeObject_TryCalloc(SIZEOF_ROSET(ro_mask));
 		if unlikely(!roset) {
-			DeeHashSet_LockEndRead(value);
+			DeeHashSet_LockEndRead(val);
 			if (Dee_CollectMemory(SIZEOF_ROSET(ro_mask)))
 				goto check_set_again;
 			goto err;
@@ -591,7 +597,7 @@ check_set_again:
 		roset->rs_size = num_items;
 		roset->rs_mask = ro_mask;
 
-		/* Pack all key-value pairs into the ro-set. */
+		/* Pack all values into the ro-set. */
 		for (i = 0; i <= mask; ++i) {
 			if (!elem[i].hsi_key)
 				continue;
@@ -602,7 +608,7 @@ check_set_again:
 			                     elem[i].hsi_hash,
 			                     elem[i].hsi_key);
 		}
-		DeeHashSet_LockEndRead(value);
+		DeeHashSet_LockEndRead(val);
 		DeeObject_Init(roset, &DeeRoSet_Type);
 
 		/* All right! we've got the ro-set all packed together!
@@ -622,26 +628,27 @@ check_set_again:
 push_set_parts:
 		/* Construct a set by pushing its individual parts. */
 		num_items = 0;
-		DeeHashSet_LockRead(value);
-		for (i = 0; i <= ((DeeHashSetObject *)value)->hs_mask; ++i) {
+		DeeHashSet_LockRead(val);
+		for (i = 0; i <= val->hs_mask; ++i) {
 			struct hashset_item *item;
 			int error;
 			DREF DeeObject *item_key;
-			item     = &((DeeHashSetObject *)value)->hs_elem[i];
+			item     = &val->hs_elem[i];
 			item_key = item->hsi_key;
 			if (!item_key || item_key == dummy)
 				continue;
 			Dee_Incref(item_key);
-			DeeHashSet_LockEndRead(value);
+			DeeHashSet_LockEndRead(val);
 			/* Push the key & item. */
 			error = asm_gpush_constexpr(item_key);
 			Dee_Decref(item_key);
 			if unlikely(error)
 				goto err;
 			++num_items;
-			DeeHashSet_LockRead(value);
+			DeeHashSet_LockRead(val);
 		}
-		DeeHashSet_LockEndRead(value);
+		DeeHashSet_LockEndRead(val);
+
 		/* With everything pushed, pack together the set. */
 		return asm_gpack_hashset((uint16_t)num_items);
 	}

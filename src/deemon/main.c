@@ -409,11 +409,13 @@ PRIVATE WUNUSED int DCALL cmd_traditional(char *UNUSED(arg)) {
 PRIVATE WUNUSED NONNULL((1)) int DCALL cmd_L(char *arg) {
 	int result;
 	DREF DeeObject *path;
+	DeeListObject *paths;
 	path = DeeString_NewUtf8(arg, strlen(arg),
 	                         STRING_ERROR_FIGNORE);
 	if unlikely(!path)
 		goto err;
-	result = DeeList_Append(DeeModule_GetPath(), path);
+	paths  = DeeModule_GetPath();
+	result = DeeList_Append((DeeObject *)paths, path);
 	Dee_Decref(path);
 	return result;
 err:

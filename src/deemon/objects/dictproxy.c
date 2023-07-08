@@ -60,9 +60,9 @@ INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 dictiterator_next_key(DictIterator *__restrict self) {
 	DREF DeeObject *result;
 	struct dict_item *item, *end;
-	DeeDictObject *Dict = self->di_dict;
-	DeeDict_LockRead(Dict);
-	end = Dict->d_elem + (Dict->d_mask + 1);
+	DeeDictObject *dict = self->di_dict;
+	DeeDict_LockRead(dict);
+	end = dict->d_elem + (dict->d_mask + 1);
 	for (;;) {
 		struct dict_item *old_item;
 		item     = atomic_read(&self->di_next);
@@ -74,7 +74,7 @@ dictiterator_next_key(DictIterator *__restrict self) {
 				goto dict_has_changed;
 			goto iter_exhausted;
 		}
-		if unlikely(item < Dict->d_elem)
+		if unlikely(item < dict->d_elem)
 			goto dict_has_changed;
 
 		/* Search for the next non-empty item. */
@@ -90,14 +90,14 @@ dictiterator_next_key(DictIterator *__restrict self) {
 	}
 	result = item->di_key;
 	Dee_Incref(result);
-	DeeDict_LockEndRead(Dict);
+	DeeDict_LockEndRead(dict);
 	return result;
 dict_has_changed:
-	DeeDict_LockEndRead(Dict);
-	err_changed_sequence((DeeObject *)Dict);
+	DeeDict_LockEndRead(dict);
+	err_changed_sequence((DeeObject *)dict);
 	return NULL;
 iter_exhausted:
-	DeeDict_LockEndRead(Dict);
+	DeeDict_LockEndRead(dict);
 	return ITER_DONE;
 }
 
@@ -105,9 +105,9 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 dictiterator_next_item(DictIterator *__restrict self) {
 	DREF DeeObject *result, *result_key, *result_item;
 	struct dict_item *item, *end;
-	DeeDictObject *Dict = self->di_dict;
-	DeeDict_LockRead(Dict);
-	end = Dict->d_elem + (Dict->d_mask + 1);
+	DeeDictObject *dict = self->di_dict;
+	DeeDict_LockRead(dict);
+	end = dict->d_elem + (dict->d_mask + 1);
 	for (;;) {
 		struct dict_item *old_item;
 		item     = atomic_read(&self->di_next);
@@ -119,7 +119,7 @@ dictiterator_next_item(DictIterator *__restrict self) {
 				goto dict_has_changed;
 			goto iter_exhausted;
 		}
-		if unlikely(item < Dict->d_elem)
+		if unlikely(item < dict->d_elem)
 			goto dict_has_changed;
 
 		/* Search for the next non-empty item. */
@@ -137,17 +137,17 @@ dictiterator_next_item(DictIterator *__restrict self) {
 	result_item = item->di_value;
 	Dee_Incref(result_key);
 	Dee_Incref(result_item);
-	DeeDict_LockEndRead(Dict);
+	DeeDict_LockEndRead(dict);
 	result = DeeTuple_Pack(2, result_key, result_item);
 	Dee_Decref(result_item);
 	Dee_Decref(result_key);
 	return result;
 dict_has_changed:
-	DeeDict_LockEndRead(Dict);
-	err_changed_sequence((DeeObject *)Dict);
+	DeeDict_LockEndRead(dict);
+	err_changed_sequence((DeeObject *)dict);
 	return NULL;
 iter_exhausted:
-	DeeDict_LockEndRead(Dict);
+	DeeDict_LockEndRead(dict);
 	return ITER_DONE;
 }
 
@@ -155,9 +155,9 @@ INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 dictiterator_next_value(DictIterator *__restrict self) {
 	DREF DeeObject *result;
 	struct dict_item *item, *end;
-	DeeDictObject *Dict = self->di_dict;
-	DeeDict_LockRead(Dict);
-	end = Dict->d_elem + (Dict->d_mask + 1);
+	DeeDictObject *dict = self->di_dict;
+	DeeDict_LockRead(dict);
+	end = dict->d_elem + (dict->d_mask + 1);
 	for (;;) {
 		struct dict_item *old_item;
 		item     = atomic_read(&self->di_next);
@@ -169,7 +169,7 @@ dictiterator_next_value(DictIterator *__restrict self) {
 				goto dict_has_changed;
 			goto iter_exhausted;
 		}
-		if unlikely(item < Dict->d_elem)
+		if unlikely(item < dict->d_elem)
 			goto dict_has_changed;
 
 		/* Search for the next non-empty item. */
@@ -185,39 +185,39 @@ dictiterator_next_value(DictIterator *__restrict self) {
 	}
 	result = item->di_value;
 	Dee_Incref(result);
-	DeeDict_LockEndRead(Dict);
+	DeeDict_LockEndRead(dict);
 	return result;
 dict_has_changed:
-	DeeDict_LockEndRead(Dict);
-	err_changed_sequence((DeeObject *)Dict);
+	DeeDict_LockEndRead(dict);
+	err_changed_sequence((DeeObject *)dict);
 	return NULL;
 iter_exhausted:
-	DeeDict_LockEndRead(Dict);
+	DeeDict_LockEndRead(dict);
 	return ITER_DONE;
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 dictiterator_bool(DictIterator *__restrict self) {
 	struct dict_item *item = READ_ITEM(self);
-	DeeDictObject *Dict    = self->di_dict;
+	DeeDictObject *dict    = self->di_dict;
 	/* Check if the iterator is in-bounds.
 	 * NOTE: Since this is nothing but a shallow boolean check anyways, there
 	 *       is no need to lock the Dict since we're not dereferencing anything. */
-	return (item >= Dict->d_elem &&
-	        item < Dict->d_elem + (Dict->d_mask + 1));
+	return (item >= dict->d_elem &&
+	        item < dict->d_elem + (dict->d_mask + 1));
 }
 
 INTERN WUNUSED NONNULL((1)) int DCALL
 dictiterator_init(DictIterator *__restrict self,
                   size_t argc, DeeObject *const *argv) {
-	DeeDictObject *Dict;
-	if (DeeArg_Unpack(argc, argv, "o:_DictIterator", &Dict))
+	DeeDictObject *dict;
+	if (DeeArg_Unpack(argc, argv, "o:_DictIterator", &dict))
 		goto err;
-	if (DeeObject_AssertType(Dict, &DeeDict_Type))
+	if (DeeObject_AssertType(dict, &DeeDict_Type))
 		goto err;
-	self->di_dict = Dict;
-	Dee_Incref(Dict);
-	self->di_next = atomic_read(&Dict->d_elem);
+	self->di_dict = dict;
+	Dee_Incref(dict);
+	self->di_next = atomic_read(&dict->d_elem);
 	return 0;
 err:
 	return -1;
@@ -593,13 +593,13 @@ err:
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 proxy_init(DictProxy *__restrict self,
            size_t argc, DeeObject *const *argv) {
-	DeeObject *Dict;
-	if (DeeArg_Unpack(argc, argv, "o:_DictProxy", &Dict))
+	DeeObject *dict;
+	if (DeeArg_Unpack(argc, argv, "o:_DictProxy", &dict))
 		goto err;
-	if (DeeObject_AssertType(Dict, &DeeDict_Type))
+	if (DeeObject_AssertType(dict, &DeeDict_Type))
 		goto err;
-	self->dp_dict = (DREF DeeDictObject *)Dict;
-	Dee_Incref(Dict);
+	self->dp_dict = (DREF DeeDictObject *)dict;
+	Dee_Incref(dict);
 	return 0;
 err:
 	return -1;

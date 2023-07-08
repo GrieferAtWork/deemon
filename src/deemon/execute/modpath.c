@@ -2183,7 +2183,7 @@ DeeModule_OpenGlobal(DeeObject *__restrict module_name,
 	module_namelen = WSTR_LENGTH(module_namestr);
 
 	/* Default case: Must load a new module. */
-	paths = (DeeListObject *)DeeModule_GetPath();
+	paths = DeeModule_GetPath();
 	DeeList_LockRead(paths);
 	for (i = 0; i < DeeList_SIZE(paths); ++i) {
 		path = DeeList_GET(paths, i);
@@ -2262,7 +2262,7 @@ DeeModule_OpenGlobalString(/*utf-8*/ char const *__restrict module_name,
 		goto err;
 
 	/* Default case: Must load a new module. */
-	paths = (DeeListObject *)DeeModule_GetPath();
+	paths = DeeModule_GetPath();
 	DeeList_LockRead(paths);
 	for (i = 0; i < DeeList_SIZE(paths); ++i) {
 		path = DeeList_GET(paths, i);

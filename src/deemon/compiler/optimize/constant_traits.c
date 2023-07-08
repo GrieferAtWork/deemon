@@ -262,16 +262,17 @@ again0:
 			goto usecopy;
 		CONSTEXPR_FRAME_BEGIN(self) {
 			size_t i;
-			DeeList_LockRead(self);
-			for (i = 0; i < DeeList_SIZE(self); ++i) {
-				int temp = allow_constexpr(DeeList_GET(self, i));
+			DeeListObject *me = (DeeListObject *)self;
+			DeeList_LockRead(me);
+			for (i = 0; i < DeeList_SIZE(me); ++i) {
+				int temp = allow_constexpr(DeeList_GET(me, i));
 				if (temp == CONSTEXPR_ILLEGAL) {
-					DeeList_LockEndRead(self);
+					DeeList_LockEndRead(me);
 					CONSTEXPR_FRAME_BREAK;
 					goto illegal;
 				}
 			}
-			DeeList_LockEndRead(self);
+			DeeList_LockEndRead(me);
 		}
 		CONSTEXPR_FRAME_END;
 		goto usecopy;
@@ -284,7 +285,7 @@ again0:
 		CONSTEXPR_FRAME_BEGIN(self) {
 			size_t i;
 			DeeHashSetObject *me = (DeeHashSetObject *)self;
-			DeeHashSet_LockRead(self);
+			DeeHashSet_LockRead(me);
 			for (i = 0; i <= me->hs_mask; ++i) {
 				int temp;
 				DeeObject *key = me->hs_elem[i].hsi_key;
@@ -292,12 +293,12 @@ again0:
 					continue;
 				temp = allow_constexpr(key);
 				if (temp == CONSTEXPR_ILLEGAL) {
-					DeeHashSet_LockEndRead(self);
+					DeeHashSet_LockEndRead(me);
 					CONSTEXPR_FRAME_BREAK;
 					goto illegal;
 				}
 			}
-			DeeHashSet_LockEndRead(self);
+			DeeHashSet_LockEndRead(me);
 		}
 		CONSTEXPR_FRAME_END;
 		goto usecopy;
@@ -310,7 +311,7 @@ again0:
 		CONSTEXPR_FRAME_BEGIN(self) {
 			size_t i;
 			DeeDictObject *me = (DeeDictObject *)self;
-			DeeDict_LockRead(self);
+			DeeDict_LockRead(me);
 			for (i = 0; i <= me->d_mask; ++i) {
 				int temp;
 				DeeObject *key = me->d_elem[i].di_key;
@@ -319,12 +320,12 @@ again0:
 				temp = allow_constexpr(key);
 				if (temp == CONSTEXPR_ILLEGAL ||
 				    (temp = allow_constexpr(me->d_elem[i].di_value)) == CONSTEXPR_ILLEGAL) {
-					DeeDict_LockEndRead(self);
+					DeeDict_LockEndRead(me);
 					CONSTEXPR_FRAME_BREAK;
 					goto illegal;
 				}
 			}
-			DeeDict_LockEndRead(self);
+			DeeDict_LockEndRead(me);
 		}
 		CONSTEXPR_FRAME_END;
 		goto usecopy;

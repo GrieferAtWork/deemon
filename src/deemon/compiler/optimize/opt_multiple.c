@@ -163,9 +163,8 @@ multiple_continue_at_iter:
 				Dee_Incref(value);
 				ast_decref(branch);
 			}
-			DeeGC_Track((DeeObject *)new_list);
 			Dee_Free(self->a_multiple.m_astv);
-			self->a_constexpr = (DREF DeeObject *)new_list; /* Inherit reference. */
+			self->a_constexpr = DeeList_FinalizeUninitialized(new_list); /* Inherit reference. */
 		} else if (self->a_flag == AST_FMULTIPLE_HASHSET) {
 			DREF DeeObject *new_set;
 			size_t i;

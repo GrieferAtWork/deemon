@@ -914,27 +914,28 @@ INTERN WUNUSED int (DCALL dec_putobj)(DeeObject *self) {
 	/* `List' */
 	if (tp_self == &DeeList_Type) {
 		size_t i, length;
-		if (dec_recursion_check(self))
+		DeeListObject *me = (DeeListObject *)self;
+		if (dec_recursion_check((DeeObject *)me))
 			goto err;
 		if (dec_putb(DTYPE_LIST))
 			goto err;
-		DeeList_LockRead(self);
-		length = DeeList_SIZE(self);
-		DeeList_LockEndRead(self);
+		DeeList_LockRead(me);
+		length = DeeList_SIZE(me);
+		DeeList_LockEndRead(me);
 		if (dec_putptr((uint32_t)length))
 			goto err;
-		DEC_RECURSION_BEGIN(self);
+		DEC_RECURSION_BEGIN((DeeObject *)me);
 
 		/* Encode all of the list's elements. */
-		DeeList_LockRead(self);
+		DeeList_LockRead(me);
 		for (i = 0; i < length; ++i) {
 			DREF DeeObject *obj;
 			int error;
 
 			/* Must re-validate the list's length, because it may have changed. */
-			obj = (i < DeeList_SIZE(self) ? DeeList_GET(self, i) : Dee_None);
+			obj = (i < DeeList_SIZE(me) ? DeeList_GET(me, i) : Dee_None);
 			Dee_Incref(obj);
-			DeeList_LockEndRead(self);
+			DeeList_LockEndRead(me);
 
 			/* Emit the list item. */
 			error = dec_putobj(obj);
@@ -943,9 +944,9 @@ INTERN WUNUSED int (DCALL dec_putobj)(DeeObject *self) {
 				DEC_RECURSION_BREAK();
 				goto err;
 			}
-			DeeList_LockRead(self);
+			DeeList_LockRead(me);
 		}
-		DeeList_LockEndRead(self);
+		DeeList_LockEndRead(me);
 		DEC_RECURSION_END();
 		goto done;
 	}
@@ -954,7 +955,7 @@ INTERN WUNUSED int (DCALL dec_putobj)(DeeObject *self) {
 	if (tp_self == &DeeHashSet_Type) {
 		size_t i, length, written;
 		DeeHashSetObject *me = (DeeHashSetObject *)self;
-		if (dec_recursion_check(self))
+		if (dec_recursion_check((DeeObject *)me))
 			goto err;
 		if (dec_putb((DTYPE16_HASHSET & 0xff00) >> 8))
 			goto err;
@@ -965,7 +966,7 @@ INTERN WUNUSED int (DCALL dec_putobj)(DeeObject *self) {
 		DeeHashSet_LockEndRead(me);
 		if (dec_putptr((uint32_t)length))
 			goto err;
-		DEC_RECURSION_BEGIN(self);
+		DEC_RECURSION_BEGIN((DeeObject *)me);
 
 		/* Encode all of the set's elements. */
 		written = 0;
@@ -1009,7 +1010,7 @@ INTERN WUNUSED int (DCALL dec_putobj)(DeeObject *self) {
 	if (tp_self == &DeeDict_Type) {
 		size_t i, length, written;
 		DeeDictObject *me = (DeeDictObject *)self;
-		if (dec_recursion_check(self))
+		if (dec_recursion_check((DeeObject *)me))
 			goto err;
 		if (dec_putb((DTYPE16_DICT & 0xff00) >> 8))
 			goto err;
@@ -1020,7 +1021,7 @@ INTERN WUNUSED int (DCALL dec_putobj)(DeeObject *self) {
 		DeeDict_LockEndRead(me);
 		if (dec_putptr((uint32_t)length))
 			goto err;
-		DEC_RECURSION_BEGIN(self);
+		DEC_RECURSION_BEGIN((DeeObject *)me);
 
 		/* Encode all of the Dict's elements. */
 		written = 0;

@@ -554,23 +554,24 @@ DeeTuple_FromSequence(DeeObject *__restrict self) {
 	if (DeeTuple_CheckExact(self))
 		return_reference_(self);
 	if (DeeList_CheckExact(self)) {
-		seq_length = atomic_read(&DeeList_SIZE(self));
+		DeeListObject *me = (DeeListObject *)self;
+		seq_length = DeeList_SIZE_ATOMIC(me);
 list_size_changed:
 		result = DeeTuple_NewUninitialized(seq_length);
 		if unlikely(!result)
 			goto err;
 		COMPILER_READ_BARRIER();
-		DeeList_LockRead(self);
-		if unlikely(seq_length != DeeList_SIZE(self)) {
-			seq_length = DeeList_SIZE(self);
-			DeeList_LockEndRead(self);
+		DeeList_LockRead(me);
+		if unlikely(seq_length != DeeList_SIZE(me)) {
+			seq_length = DeeList_SIZE(me);
+			DeeList_LockEndRead(me);
 			DeeTuple_FreeUninitialized(result);
 			goto list_size_changed;
 		}
 		Dee_Movrefv(DeeTuple_ELEM(result),
-		            DeeList_ELEM(self),
+		            DeeList_ELEM(me),
 		            seq_length);
-		DeeList_LockEndRead(self);
+		DeeList_LockEndRead(me);
 		goto done;
 	}
 
@@ -989,7 +990,8 @@ DeeTuple_ConcatInherited(/*inherit(on_success)*/ DREF DeeObject *self,
 		}
 		if (DeeList_CheckExact(sequence)) {
 			DREF Tuple *new_result;
-			size_t lstsize = atomic_read(&DeeList_SIZE(sequence));
+			DeeListObject *seq = (DeeListObject *)sequence;
+			size_t lstsize = DeeList_SIZE_ATOMIC(seq);
 			if unlikely(!lstsize)
 				goto done;
 handle_list_size:
@@ -1003,20 +1005,20 @@ handle_list_size:
 			}
 			result = new_result;
 			COMPILER_READ_BARRIER();
-			DeeList_LockRead(sequence);
+			DeeList_LockRead(seq);
 
 			/* Check if the list's size has changes in the mean time. */
-			if unlikely(lstsize != DeeList_SIZE(sequence)) {
-				lstsize = DeeList_SIZE(sequence);
-				DeeList_LockEndRead(sequence);
+			if unlikely(lstsize != DeeList_SIZE(seq)) {
+				lstsize = DeeList_SIZE(seq);
+				DeeList_LockEndRead(seq);
 				goto handle_list_size;
 			}
 
 			/* Copy elements from the list. */
 			Dee_Movrefv(result->t_elem + oldsize,
-			            DeeList_ELEM(sequence),
+			            DeeList_ELEM(seq),
 			            lstsize);
-			DeeList_LockEndRead(sequence);
+			DeeList_LockEndRead(seq);
 			goto done;
 		}
 	} else {
@@ -1037,21 +1039,22 @@ handle_list_size:
 		}
 		if (DeeList_CheckExact(sequence)) {
 			size_t lstsize;
-			lstsize = atomic_read(&DeeList_SIZE(sequence));
+			DeeListObject *seq = (DeeListObject *)sequence;
+			lstsize = DeeList_SIZE_ATOMIC(seq);
 handle_list_size2:
 			result = DeeTuple_NewUninitialized(oldsize + lstsize);
 			if unlikely(!result)
 				goto err;
 			COMPILER_READ_BARRIER();
-			DeeList_LockRead(sequence);
+			DeeList_LockRead(seq);
 			/* Make sure the list didn't change size in he mean time. */
-			if unlikely(lstsize != DeeList_SIZE(sequence)) {
-				lstsize = DeeList_SIZE(sequence);
+			if unlikely(lstsize != DeeList_SIZE(seq)) {
+				lstsize = DeeList_SIZE(seq);
 				goto handle_list_size2;
 			}
 			Dee_Movrefv(DeeTuple_ELEM(result) + oldsize,
-			            DeeList_ELEM(sequence), lstsize);
-			DeeList_LockEndRead(sequence);
+			            DeeList_ELEM(seq), lstsize);
+			DeeList_LockEndRead(seq);
 			Dee_Movrefv(DeeTuple_ELEM(result),
 			            DeeTuple_ELEM(me), oldsize);
 			Dee_Decref_unlikely(me);

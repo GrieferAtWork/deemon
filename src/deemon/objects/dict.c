@@ -364,6 +364,7 @@ dict_deepload(Dict *__restrict self) {
 		old_item_count = item_count;
 		items          = new_items;
 	}
+
 	/* Copy all used items. */
 	for (i = 0, hash_i = 0; i < item_count; ++hash_i) {
 		ASSERT(hash_i <= self->d_mask);
@@ -378,6 +379,7 @@ dict_deepload(Dict *__restrict self) {
 		++i;
 	}
 	DeeDict_LockEndRead(self);
+
 	/* With our own local copy of all items being
 	 * used, replace all of them with deep copies. */
 	for (i = 0; i < item_count; ++i) {
@@ -392,6 +394,7 @@ dict_deepload(Dict *__restrict self) {
 	new_map = (struct dict_item *)Dee_Callocc(new_mask + 1, sizeof(struct dict_item));
 	if unlikely(!new_map)
 		goto err_items_v;
+
 	/* Insert all the copied items into the new map. */
 	for (i = 0; i < item_count; ++i) {
 		dhash_t j, perturb, hash;
@@ -488,6 +491,7 @@ dict_clear(Dict *__restrict self) {
 	ASSERT((self->d_elem == DeeDict_EmptyItems) == (self->d_mask == 0));
 	ASSERT((self->d_elem == DeeDict_EmptyItems) == (self->d_size == 0));
 	ASSERT(self->d_used <= self->d_size);
+
 	/* Extract the vector and mask. */
 	elem         = self->d_elem;
 	mask         = self->d_mask;
@@ -496,6 +500,7 @@ dict_clear(Dict *__restrict self) {
 	self->d_used = 0;
 	self->d_size = 0;
 	DeeDict_LockEndWrite(self);
+
 	/* Destroy the vector. */
 	if (elem != DeeDict_EmptyItems) {
 		struct dict_item *iter, *end;
@@ -547,9 +552,11 @@ dict_rehash(Dict *__restrict self, int sizedir) {
 	} else if (sizedir < 0) {
 		if unlikely(!self->d_used) {
 			ASSERT(!self->d_used);
+
 			/* Special case: delete the vector. */
 			if (self->d_size) {
 				ASSERT(self->d_elem != DeeDict_EmptyItems);
+
 				/* Must discard dummy items. */
 				end = (iter = self->d_elem) + (self->d_mask + 1);
 				for (; iter < end; ++iter) {
@@ -583,6 +590,7 @@ dict_rehash(Dict *__restrict self, int sizedir) {
 		for (; iter < end; ++iter) {
 			struct dict_item *item;
 			dhash_t i, perturb;
+
 			/* Skip dummy keys. */
 			if (!iter->di_key || iter->di_key == dummy)
 				continue;
@@ -592,12 +600,14 @@ dict_rehash(Dict *__restrict self, int sizedir) {
 				if (!item->di_key)
 					break; /* Empty slot found. */
 			}
+
 			/* Transfer this object. */
 			item->di_key   = iter->di_key;
 			item->di_hash  = iter->di_hash;
 			item->di_value = iter->di_value;
 		}
 		Dee_Free(self->d_elem);
+
 		/* With all dummy items gone, the size now equals what is actually used. */
 		self->d_size = self->d_used;
 	}
@@ -819,6 +829,7 @@ again_lock:
 		item->di_key   = dummy;
 		item->di_value = NULL;
 		ASSERT(me->d_used);
+
 		/* Try to rehash the Dict and get rid of dummy
 		 * items if there are a lot of them now. */
 		if (--me->d_used <= me->d_size / 3)
@@ -868,6 +879,7 @@ again_lock:
 		item->di_key   = dummy;
 		item->di_value = NULL;
 		ASSERT(me->d_used);
+
 		/* Try to rehash the Dict and get rid of dummy
 		 * items if there are a lot of them now. */
 		if (--me->d_used <= me->d_size / 3)
@@ -919,6 +931,7 @@ again:
 			goto again_lock;
 		}
 #endif /* !CONFIG_NO_THREADS */
+
 		/* Override an existing entry. */
 		old_value = item->di_value;
 		Dee_Incref(value);
@@ -940,6 +953,7 @@ again:
 		ASSERT(first_dummy != DeeDict_EmptyItems);
 		ASSERT(!first_dummy->di_key ||
 		       first_dummy->di_key == dummy);
+
 		/* Write to the first dummy item. */
 		key_ob = (DREF DeeStringObject *)DeeObject_TryMalloc(offsetof(DeeStringObject, s_str) +
 		                                                     (key_len + 1) * sizeof(char));
@@ -952,6 +966,7 @@ again:
 		memcpyc(key_ob->s_str, key, key_len + 1, sizeof(char));
 		if (first_dummy->di_key)
 			Dee_DecrefNokill(first_dummy->di_key);
+
 		/* Fill in the target slot. */
 		first_dummy->di_key   = (DREF DeeObject *)key_ob; /* Inherit reference. */
 		first_dummy->di_hash  = hash;
@@ -959,12 +974,14 @@ again:
 		Dee_Incref(value);
 		++me->d_used;
 		++me->d_size;
+
 		/* Try to keep the Dict vector big at least twice as big as the element count. */
 		if (me->d_size * 2 > me->d_mask)
 			dict_rehash(me, 1);
 		DeeDict_LockEndWrite(me);
 		return 0;
 	}
+
 	/* Rehash the Dict and try again. */
 	if (dict_rehash(me, 1)) {
 		DeeDict_LockDowngrade(me);
@@ -1016,6 +1033,7 @@ again:
 			goto again_lock;
 		}
 #endif /* !CONFIG_NO_THREADS */
+
 		/* Override an existing entry. */
 		old_value = item->di_value;
 		Dee_Incref(value);
@@ -1036,6 +1054,7 @@ again:
 		ASSERT(first_dummy != DeeDict_EmptyItems);
 		ASSERT(!first_dummy->di_key ||
 		       first_dummy->di_key == dummy);
+
 		/* Write to the first dummy item. */
 		key_ob = (DREF DeeStringObject *)DeeObject_TryMalloc(offsetof(DeeStringObject, s_str) +
 		                                                     (keylen + 1) * sizeof(char));
@@ -1048,6 +1067,7 @@ again:
 		*(char *)mempcpyc(key_ob->s_str, key, keylen, sizeof(char)) = '\0';
 		if (first_dummy->di_key)
 			Dee_DecrefNokill(first_dummy->di_key);
+
 		/* Fill in the target slot. */
 		first_dummy->di_key   = (DREF DeeObject *)key_ob; /* Inherit reference. */
 		first_dummy->di_hash  = hash;
@@ -1055,12 +1075,14 @@ again:
 		Dee_Incref(value);
 		++me->d_used;
 		++me->d_size;
+
 		/* Try to keep the Dict vector big at least twice as big as the element count. */
 		if (me->d_size * 2 > me->d_mask)
 			dict_rehash(me, 1);
 		DeeDict_LockEndWrite(me);
 		return 0;
 	}
+
 	/* Rehash the Dict and try again. */
 	if (dict_rehash(me, 1)) {
 		DeeDict_LockDowngrade(me);
@@ -1105,6 +1127,7 @@ restart:
 		item_key = item->di_key;
 		Dee_Incref(item_key);
 		DeeDict_LockEndRead(self);
+
 		/* Invoke the compare operator outside of any lock. */
 		error = DeeObject_CompareEq(key, item_key);
 		Dee_Decref(item_key);
@@ -1113,6 +1136,7 @@ restart:
 		if unlikely(error < 0)
 			goto err; /* Error in compare operator. */
 		DeeDict_LockRead(self);
+
 		/* Check if the Dict was modified. */
 		if (self->d_elem != vector ||
 		    self->d_mask != mask ||
@@ -1153,6 +1177,7 @@ restart:
 		Dee_Incref(item_key);
 		Dee_Incref(item_value);
 		DeeDict_LockEndRead(self);
+
 		/* Invoke the compare operator outside of any lock. */
 		error = DeeObject_CompareEq(key, item_key);
 		Dee_Decref(item_key);
@@ -1162,6 +1187,7 @@ restart:
 		if unlikely(error < 0)
 			goto err; /* Error in compare operator. */
 		DeeDict_LockRead(self);
+
 		/* Check if the Dict was modified. */
 		if (self->d_elem != vector ||
 		    self->d_mask != mask ||
@@ -1183,11 +1209,13 @@ DeeDict_GetItemDef(DeeObject *self,
 	struct dict_item *vector;
 	dhash_t i, perturb;
 	int error;
-	dhash_t hash = DeeObject_Hash(key);
-	DeeDict_LockRead(self);
+	dhash_t hash;
+	Dict *me = (Dict *)self;
+	hash = DeeObject_Hash(key);
+	DeeDict_LockRead(me);
 restart:
-	vector  = ((Dict *)self)->d_elem;
-	mask    = ((Dict *)self)->d_mask;
+	vector  = me->d_elem;
+	mask    = me->d_mask;
 	perturb = i = hash & mask;
 	for (;; DeeDict_HashNx(i, perturb)) {
 		DREF DeeObject *item_key, *item_value;
@@ -1202,7 +1230,8 @@ restart:
 		item_value = item->di_value;
 		Dee_Incref(item_key);
 		Dee_Incref(item_value);
-		DeeDict_LockEndRead(self);
+		DeeDict_LockEndRead(me);
+
 		/* Invoke the compare operator outside of any lock. */
 		error = DeeObject_CompareEq(key, item_key);
 		Dee_Decref(item_key);
@@ -1211,15 +1240,16 @@ restart:
 		Dee_Decref(item_value);
 		if unlikely(error < 0)
 			goto err; /* Error in compare operator. */
-		DeeDict_LockRead(self);
+		DeeDict_LockRead(me);
+
 		/* Check if the Dict was modified. */
-		if (((Dict *)self)->d_elem != vector ||
-		    ((Dict *)self)->d_mask != mask ||
+		if (me->d_elem != vector ||
+		    me->d_mask != mask ||
 		    item->di_key != item_key ||
 		    item->di_value != item_value)
 			goto restart;
 	}
-	DeeDict_LockEndRead(self);
+	DeeDict_LockEndRead(me);
 	if (def != ITER_DONE)
 		Dee_Incref(def);
 	return def;

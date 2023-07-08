@@ -620,7 +620,7 @@ tpp_unknown_file(int mode, char *__restrict filename,
                  struct TPPKeyword **p_keyword_entry) {
 	DeeStringObject *buffer, *new_buffer;
 	size_t buflen;
-	DeeObject *libpath;
+	DeeListObject *libpath;
 	size_t i;
 	struct TPPKeyword *keyword_entry;
 	DREF DeeObject *path, *stream;

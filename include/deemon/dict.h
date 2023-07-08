@@ -179,13 +179,13 @@ DeeDict_NewKeyItemsInherited(size_t num_keyitems,
 #define DeeDict_LockWriting(self)    Dee_atomic_rwlock_writing(&(self)->d_lock)
 #define DeeDict_LockTryRead(self)    Dee_atomic_rwlock_tryread(&(self)->d_lock)
 #define DeeDict_LockTryWrite(self)   Dee_atomic_rwlock_trywrite(&(self)->d_lock)
-#define DeeDict_LockRead(self)       Dee_atomic_rwlock_read(&((DeeDictObject *)Dee_REQUIRES_OBJECT(self))->d_lock)  /* TODO: Remove cast */
-#define DeeDict_LockWrite(self)      Dee_atomic_rwlock_write(&((DeeDictObject *)Dee_REQUIRES_OBJECT(self))->d_lock) /* TODO: Remove cast */
+#define DeeDict_LockRead(self)       Dee_atomic_rwlock_read(&(self)->d_lock)
+#define DeeDict_LockWrite(self)      Dee_atomic_rwlock_write(&(self)->d_lock)
 #define DeeDict_LockTryUpgrade(self) Dee_atomic_rwlock_tryupgrade(&(self)->d_lock)
 #define DeeDict_LockUpgrade(self)    Dee_atomic_rwlock_upgrade(&(self)->d_lock)
 #define DeeDict_LockDowngrade(self)  Dee_atomic_rwlock_downgrade(&(self)->d_lock)
-#define DeeDict_LockEndWrite(self)   Dee_atomic_rwlock_endwrite(&((DeeDictObject *)Dee_REQUIRES_OBJECT(self))->d_lock) /* TODO: Remove cast */
-#define DeeDict_LockEndRead(self)    Dee_atomic_rwlock_endread(&((DeeDictObject *)Dee_REQUIRES_OBJECT(self))->d_lock)  /* TODO: Remove cast */
+#define DeeDict_LockEndWrite(self)   Dee_atomic_rwlock_endwrite(&(self)->d_lock)
+#define DeeDict_LockEndRead(self)    Dee_atomic_rwlock_endread(&(self)->d_lock)
 #define DeeDict_LockEnd(self)        Dee_atomic_rwlock_end(&(self)->d_lock)
 
 DECL_END

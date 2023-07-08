@@ -383,7 +383,7 @@ DeeList_NewVectorInherited(size_t objc, /*inherit(on_success)*/ DREF DeeObject *
 
 	/* Now that the list's been filled with data,
 	 * we can start tracking it as a GC object. */
-	DeeGC_Track((DeeObject *)result);
+	result = (DREF List *)DeeList_FinalizeUninitialized(result);
 done:
 	return (DREF DeeObject *)result;
 }
@@ -511,10 +511,11 @@ err:
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeList_ExtendInherited(/*inherit(on_success)*/ DREF DeeObject *self, size_t argc,
                         /*inherit(on_success)*/ DREF DeeObject *const *argv) {
+	List *me = (List *)self;
 	DREF List *result;
-	if (!DeeObject_IsShared(self)) {
+	if (!DeeObject_IsShared(me)) {
 		size_t req_alloc, old_elema;
-		result    = (DREF List *)self;
+		result    = me;
 		req_alloc = result->l_list.ol_elemc + argc;
 		old_elema = DeeList_GetAlloc(result);
 		/* Make sure there are sufficient buffers. */
@@ -527,7 +528,7 @@ DeeList_ExtendInherited(/*inherit(on_success)*/ DREF DeeObject *self, size_t arg
 				new_elema = DEE_OBJECTLIST_MINALLOC;
 do_realloc_vector:
 			new_elemv = (DREF DeeObject **)Dee_TryReallocc(result->l_list.ol_elemv, new_elema,
-			                                                sizeof(DREF DeeObject *));
+			                                               sizeof(DREF DeeObject *));
 			if unlikely(!new_elemv) {
 				if (new_elema > req_alloc) {
 					new_elema = req_alloc;
@@ -546,21 +547,21 @@ do_realloc_vector:
 	} else {
 		DREF DeeObject **new_elemv;
 		size_t list_size;
-		list_size = DeeList_SIZE_ATOMIC(self);
+		list_size = DeeList_SIZE_ATOMIC(me);
 allocate_new_vector:
 		new_elemv = (DREF DeeObject **)Dee_Mallocc(list_size + argc,
 		                                            sizeof(DREF DeeObject *));
 		if unlikely(!new_elemv)
 			goto err;
-		DeeList_LockRead(self);
-		if unlikely(DeeList_SIZE(self) != list_size) {
-			list_size = DeeList_SIZE(self);
-			DeeList_LockEndRead(self);
+		DeeList_LockRead(me);
+		if unlikely(DeeList_SIZE(me) != list_size) {
+			list_size = DeeList_SIZE(me);
+			DeeList_LockEndRead(me);
 			Dee_Free(new_elemv);
 			goto allocate_new_vector;
 		}
-		Dee_Movrefv(new_elemv, DeeList_ELEM(self), list_size);
-		DeeList_LockEndRead(self);
+		Dee_Movrefv(new_elemv, DeeList_ELEM(me), list_size);
+		DeeList_LockEndRead(me);
 
 		/* Create the new list descriptor. */
 		result = DeeGCObject_MALLOC(List);
@@ -2828,17 +2829,18 @@ err:
 /* Reverse the order of the elements of `self' */
 PUBLIC NONNULL((1)) void DCALL
 DeeList_Reverse(DeeObject *__restrict self) {
+	List *me = (List *)self;
 	DeeObject **lo, **hi;
-	DeeList_LockWrite(self);
-	lo = DeeList_ELEM(self);
-	hi = lo + DeeList_SIZE(self);
+	DeeList_LockWrite(me);
+	lo = DeeList_ELEM(me);
+	hi = lo + DeeList_SIZE(me);
 	while (lo < hi) {
 		DeeObject *temp;
 		temp  = *lo;
 		*lo++ = *--hi;
 		*hi   = temp;
 	}
-	DeeList_LockEndWrite(self);
+	DeeList_LockEndWrite(me);
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -2910,19 +2912,20 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeList_Sorted(DeeObject *self, DeeObject *key) {
+	List *me = (List *)self;
 	DeeObject **oldv;
 	size_t objc;
 	DeeTupleObject *result;
-	objc = DeeList_SIZE_ATOMIC(self);
+	objc = DeeList_SIZE_ATOMIC(me);
 	oldv = (DeeObject **)Dee_Mallocc(objc, sizeof(DeeObject *));
 	if unlikely(!oldv)
 		goto err;
 again:
-	DeeList_LockRead(self);
-	if unlikely(DeeList_SIZE(self) > objc) {
+	DeeList_LockRead(me);
+	if unlikely(DeeList_SIZE(me) > objc) {
 		DeeObject **new_objv;
-		objc = DeeList_SIZE(self);
-		DeeList_LockEndRead(self);
+		objc = DeeList_SIZE(me);
+		DeeList_LockEndRead(me);
 		new_objv = (DeeObject **)Dee_Reallocc(oldv, objc, sizeof(DeeObject *));
 		if unlikely(!new_objv)
 			goto err_oldv;
@@ -2931,8 +2934,8 @@ again:
 	}
 
 	/* Read all the old elements from the list. */
-	Dee_Movrefv(oldv, DeeList_ELEM(self), objc);
-	DeeList_LockEndRead(self);
+	Dee_Movrefv(oldv, DeeList_ELEM(me), objc);
+	DeeList_LockEndRead(me);
 
 	/* Allocate the new list */
 	result = DeeTuple_NewUninitialized(objc);
@@ -3643,30 +3646,30 @@ DeeList_CompareS(List *lhs, DeeObject *rhs) {
 }
 
 PRIVATE WUNUSED NONNULL((1)) dhash_t DCALL
-list_hash(List *__restrict self) {
+list_hash(List *__restrict me) {
 	size_t i;
 	dhash_t result;
 	DREF DeeObject *elem;
-	DeeList_LockRead(self);
-	if unlikely(!self->l_list.ol_elemc) {
-		DeeList_LockEndRead(self);
+	DeeList_LockRead(me);
+	if unlikely(!me->l_list.ol_elemc) {
+		DeeList_LockEndRead(me);
 		return DEE_HASHOF_EMPTY_SEQUENCE;
 	}
-	elem = self->l_list.ol_elemv[0];
+	elem = me->l_list.ol_elemv[0];
 	Dee_Incref(elem);
-	DeeList_LockEndRead(self);
+	DeeList_LockEndRead(me);
 	result = DeeObject_Hash(elem);
 	Dee_Decref(elem);
-	DeeList_LockRead(self);
-	for (i = 1; i < self->l_list.ol_elemc; ++i) {
-		elem = self->l_list.ol_elemv[i];
+	DeeList_LockRead(me);
+	for (i = 1; i < me->l_list.ol_elemc; ++i) {
+		elem = me->l_list.ol_elemv[i];
 		Dee_Incref(elem);
-		DeeList_LockEndRead(self);
+		DeeList_LockEndRead(me);
 		result = Dee_HashCombine(result, DeeObject_Hash(elem));
 		Dee_Decref(elem);
-		DeeList_LockRead(self);
+		DeeList_LockRead(me);
 	}
-	DeeList_LockEndRead(self);
+	DeeList_LockEndRead(me);
 	return result;
 }
 

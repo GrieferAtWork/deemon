@@ -1439,12 +1439,13 @@ yfi_clear(YFIterator *__restrict self) {
 	Dee_XDecref(obj[1]);
 	Dee_XDecref(obj[2]);
 	Dee_XDecref(obj[3]);
+
 	/* Clear local objects. */
-	while (numlocals--)
-		Dee_XDecref(locals[numlocals]);
+	Dee_XDecrefv(locals, numlocals);
+
 	/* Clear objects from the stack. */
-	while (stacksize--)
-		Dee_Decref(stack[stacksize]);
+	Dee_Decrefv(stack, stacksize);
+
 	/* Free a heap-allocated stack, and local variable memory. */
 	if (heap_stack)
 		Dee_Free(stack);

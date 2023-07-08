@@ -136,28 +136,28 @@ DeeHashSet_NewItemsInherited(size_t num_items,
  *       Yet the point here is, that this is similar to what python
  *       does for its dictionary lookup.
  */
-#define DeeHashSet_HashSt(self, hash)  ((hash) & ((DeeHashSetObject *)Dee_REQUIRES_OBJECT(self))->hs_mask)
+#define DeeHashSet_HashSt(self, hash)  ((hash) & (self)->hs_mask)
 #define DeeHashSet_HashNx(hs, perturb) (void)((hs) = ((hs) << 2) + (hs) + (perturb) + 1, (perturb) >>= 5) /* This `5' is tunable. */
-#define DeeHashSet_HashIt(self, i)     (((DeeHashSetObject *)Dee_REQUIRES_OBJECT(self))->hs_elem + ((i) & ((DeeHashSetObject *)(self))->hs_mask))
+#define DeeHashSet_HashIt(self, i)     ((self)->hs_elem + ((i) & (self)->hs_mask))
 
 
 /* Locking helpers. */
-#define DeeHashSet_LockReading(self)    Dee_atomic_rwlock_reading(&((DeeHashSetObject *)Dee_REQUIRES_OBJECT(self))->hs_lock)
-#define DeeHashSet_LockWriting(self)    Dee_atomic_rwlock_writing(&((DeeHashSetObject *)Dee_REQUIRES_OBJECT(self))->hs_lock)
-#define DeeHashSet_LockTryRead(self)    Dee_atomic_rwlock_tryread(&((DeeHashSetObject *)Dee_REQUIRES_OBJECT(self))->hs_lock)
-#define DeeHashSet_LockTryWrite(self)   Dee_atomic_rwlock_trywrite(&((DeeHashSetObject *)Dee_REQUIRES_OBJECT(self))->hs_lock)
-#define DeeHashSet_LockCanRead(self)    Dee_atomic_rwlock_canread(&((DeeHashSetObject *)Dee_REQUIRES_OBJECT(self))->hs_lock)
-#define DeeHashSet_LockCanWrite(self)   Dee_atomic_rwlock_canwrite(&((DeeHashSetObject *)Dee_REQUIRES_OBJECT(self))->hs_lock)
-#define DeeHashSet_LockWaitRead(self)   Dee_atomic_rwlock_waitread(&((DeeHashSetObject *)Dee_REQUIRES_OBJECT(self))->hs_lock)
-#define DeeHashSet_LockWaitWrite(self)  Dee_atomic_rwlock_waitwrite(&((DeeHashSetObject *)Dee_REQUIRES_OBJECT(self))->hs_lock)
-#define DeeHashSet_LockRead(self)       Dee_atomic_rwlock_read(&((DeeHashSetObject *)Dee_REQUIRES_OBJECT(self))->hs_lock)
-#define DeeHashSet_LockWrite(self)      Dee_atomic_rwlock_write(&((DeeHashSetObject *)Dee_REQUIRES_OBJECT(self))->hs_lock)
-#define DeeHashSet_LockTryUpgrade(self) Dee_atomic_rwlock_tryupgrade(&((DeeHashSetObject *)Dee_REQUIRES_OBJECT(self))->hs_lock)
-#define DeeHashSet_LockUpgrade(self)    Dee_atomic_rwlock_upgrade(&((DeeHashSetObject *)Dee_REQUIRES_OBJECT(self))->hs_lock)
-#define DeeHashSet_LockDowngrade(self)  Dee_atomic_rwlock_downgrade(&((DeeHashSetObject *)Dee_REQUIRES_OBJECT(self))->hs_lock)
-#define DeeHashSet_LockEndWrite(self)   Dee_atomic_rwlock_endwrite(&((DeeHashSetObject *)Dee_REQUIRES_OBJECT(self))->hs_lock)
-#define DeeHashSet_LockEndRead(self)    Dee_atomic_rwlock_endread(&((DeeHashSetObject *)Dee_REQUIRES_OBJECT(self))->hs_lock)
-#define DeeHashSet_LockEnd(self)        Dee_atomic_rwlock_end(&((DeeHashSetObject *)Dee_REQUIRES_OBJECT(self))->hs_lock)
+#define DeeHashSet_LockReading(self)    Dee_atomic_rwlock_reading(&(self)->hs_lock)
+#define DeeHashSet_LockWriting(self)    Dee_atomic_rwlock_writing(&(self)->hs_lock)
+#define DeeHashSet_LockTryRead(self)    Dee_atomic_rwlock_tryread(&(self)->hs_lock)
+#define DeeHashSet_LockTryWrite(self)   Dee_atomic_rwlock_trywrite(&(self)->hs_lock)
+#define DeeHashSet_LockCanRead(self)    Dee_atomic_rwlock_canread(&(self)->hs_lock)
+#define DeeHashSet_LockCanWrite(self)   Dee_atomic_rwlock_canwrite(&(self)->hs_lock)
+#define DeeHashSet_LockWaitRead(self)   Dee_atomic_rwlock_waitread(&(self)->hs_lock)
+#define DeeHashSet_LockWaitWrite(self)  Dee_atomic_rwlock_waitwrite(&(self)->hs_lock)
+#define DeeHashSet_LockRead(self)       Dee_atomic_rwlock_read(&(self)->hs_lock)
+#define DeeHashSet_LockWrite(self)      Dee_atomic_rwlock_write(&(self)->hs_lock)
+#define DeeHashSet_LockTryUpgrade(self) Dee_atomic_rwlock_tryupgrade(&(self)->hs_lock)
+#define DeeHashSet_LockUpgrade(self)    Dee_atomic_rwlock_upgrade(&(self)->hs_lock)
+#define DeeHashSet_LockDowngrade(self)  Dee_atomic_rwlock_downgrade(&(self)->hs_lock)
+#define DeeHashSet_LockEndWrite(self)   Dee_atomic_rwlock_endwrite(&(self)->hs_lock)
+#define DeeHashSet_LockEndRead(self)    Dee_atomic_rwlock_endread(&(self)->hs_lock)
+#define DeeHashSet_LockEnd(self)        Dee_atomic_rwlock_end(&(self)->hs_lock)
 
 DECL_END
 

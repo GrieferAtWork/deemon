@@ -43,10 +43,10 @@ typedef struct Dee_list_object DeeListObject;
 struct Dee_list_object {
 	Dee_OBJECT_HEAD /* GC Object */
 	struct Dee_objectlist l_list; /* [owned][lock(l_lock)] Object list. */
-#define DeeList_GetAlloc(self)     Dee_objectlist_getalloc(&((DeeListObject const *)Dee_REQUIRES_OBJECT(self))->l_list)
-#define _DeeList_SetAlloc(self, v) _Dee_objectlist_setalloc(&((DeeListObject *)Dee_REQUIRES_OBJECT(self))->l_list, v)
+#define DeeList_GetAlloc(self)     Dee_objectlist_getalloc(&(self)->l_list)
+#define _DeeList_SetAlloc(self, v) _Dee_objectlist_setalloc(&(self)->l_list, v)
 #ifdef DEE_OBJECTLIST_HAVE_ELEMA
-#define DeeList_GetAlloc_ATOMIC(ob) Dee_atomic_read(&((DeeListObject const *)Dee_REQUIRES_OBJECT(ob))->l_list.ol_elema)
+#define DeeList_GetAlloc_ATOMIC(ob) Dee_atomic_read(&(ob)->l_list.ol_elema)
 #endif /* DEE_OBJECTLIST_HAVE_ELEMA */
 #ifndef CONFIG_NO_THREADS
 	Dee_atomic_rwlock_t l_lock;  /* Lock used for accessing this list. */
@@ -54,26 +54,26 @@ struct Dee_list_object {
 	Dee_WEAKREF_SUPPORT
 };
 
-#define DeeList_LockReading(self)    Dee_atomic_rwlock_reading(&((DeeListObject *)Dee_REQUIRES_OBJECT(self))->l_lock)
-#define DeeList_LockWriting(self)    Dee_atomic_rwlock_writing(&((DeeListObject *)Dee_REQUIRES_OBJECT(self))->l_lock)
-#define DeeList_LockTryRead(self)    Dee_atomic_rwlock_tryread(&((DeeListObject *)Dee_REQUIRES_OBJECT(self))->l_lock)
-#define DeeList_LockTryWrite(self)   Dee_atomic_rwlock_trywrite(&((DeeListObject *)Dee_REQUIRES_OBJECT(self))->l_lock)
-#define DeeList_LockRead(self)       Dee_atomic_rwlock_read(&((DeeListObject *)Dee_REQUIRES_OBJECT(self))->l_lock)
-#define DeeList_LockWrite(self)      Dee_atomic_rwlock_write(&((DeeListObject *)Dee_REQUIRES_OBJECT(self))->l_lock)
-#define DeeList_LockTryUpgrade(self) Dee_atomic_rwlock_tryupgrade(&((DeeListObject *)Dee_REQUIRES_OBJECT(self))->l_lock)
-#define DeeList_LockUpgrade(self)    Dee_atomic_rwlock_upgrade(&((DeeListObject *)Dee_REQUIRES_OBJECT(self))->l_lock)
-#define DeeList_LockDowngrade(self)  Dee_atomic_rwlock_downgrade(&((DeeListObject *)Dee_REQUIRES_OBJECT(self))->l_lock)
-#define DeeList_LockEndWrite(self)   Dee_atomic_rwlock_endwrite(&((DeeListObject *)Dee_REQUIRES_OBJECT(self))->l_lock)
-#define DeeList_LockEndRead(self)    Dee_atomic_rwlock_endread(&((DeeListObject *)Dee_REQUIRES_OBJECT(self))->l_lock)
-#define DeeList_LockEnd(self)        Dee_atomic_rwlock_end(&((DeeListObject *)Dee_REQUIRES_OBJECT(self))->l_lock)
-#define DeeList_LockWrite2(a, b)     Dee_atomic_rwlock_write_2(&((DeeListObject *)Dee_REQUIRES_OBJECT(a))->l_lock, &((DeeListObject *)Dee_REQUIRES_OBJECT(b))->l_lock)
+#define DeeList_LockReading(self)    Dee_atomic_rwlock_reading(&(self)->l_lock)
+#define DeeList_LockWriting(self)    Dee_atomic_rwlock_writing(&(self)->l_lock)
+#define DeeList_LockTryRead(self)    Dee_atomic_rwlock_tryread(&(self)->l_lock)
+#define DeeList_LockTryWrite(self)   Dee_atomic_rwlock_trywrite(&(self)->l_lock)
+#define DeeList_LockRead(self)       Dee_atomic_rwlock_read(&(self)->l_lock)
+#define DeeList_LockWrite(self)      Dee_atomic_rwlock_write(&(self)->l_lock)
+#define DeeList_LockTryUpgrade(self) Dee_atomic_rwlock_tryupgrade(&(self)->l_lock)
+#define DeeList_LockUpgrade(self)    Dee_atomic_rwlock_upgrade(&(self)->l_lock)
+#define DeeList_LockDowngrade(self)  Dee_atomic_rwlock_downgrade(&(self)->l_lock)
+#define DeeList_LockEndWrite(self)   Dee_atomic_rwlock_endwrite(&(self)->l_lock)
+#define DeeList_LockEndRead(self)    Dee_atomic_rwlock_endread(&(self)->l_lock)
+#define DeeList_LockEnd(self)        Dee_atomic_rwlock_end(&(self)->l_lock)
+#define DeeList_LockWrite2(a, b)     Dee_atomic_rwlock_write_2(&(a)->l_lock, &(b)->l_lock)
 
-#define DeeList_IsEmpty(ob)     (!DeeList_SIZE(ob))
-#define DeeList_SIZE(ob)        ((DeeListObject const *)Dee_REQUIRES_OBJECT(ob))->l_list.ol_elemc
-#define DeeList_SIZE_ATOMIC(ob) Dee_atomic_read(&((DeeListObject const *)Dee_REQUIRES_OBJECT(ob))->l_list.ol_elemc)
-#define DeeList_ELEM(ob)        ((DeeListObject const *)Dee_REQUIRES_OBJECT(ob))->l_list.ol_elemv
-#define DeeList_GET(ob, i)      ((DeeListObject const *)Dee_REQUIRES_OBJECT(ob))->l_list.ol_elemv[i]
-#define DeeList_SET(ob, i, v)   (void)(((DeeListObject *)Dee_REQUIRES_OBJECT(ob))->l_list.ol_elemv[i] = (v))
+#define DeeList_IsEmpty(ob)     ((ob)->l_list.ol_elemc == 0)
+#define DeeList_SIZE(ob)        (ob)->l_list.ol_elemc
+#define DeeList_SIZE_ATOMIC(ob) Dee_atomic_read(&(ob)->l_list.ol_elemc)
+#define DeeList_ELEM(ob)        (ob)->l_list.ol_elemv
+#define DeeList_GET(ob, i)      (ob)->l_list.ol_elemv[i]
+#define DeeList_SET(ob, i, v)   (void)((ob)->l_list.ol_elemv[i] = (v))
 
 #define DeeList_Check(x)       DeeObject_InstanceOf(x, &DeeList_Type)
 #define DeeList_CheckExact(x)  DeeObject_InstanceOfExact(x, &DeeList_Type)
@@ -96,7 +96,7 @@ DeeList_NewVectorInheritedHeap2(/*inherit(on_success)*/ DREF DeeObject **objv,
                                 size_t objc);
 #endif /* !DEE_OBJECTLIST_HAVE_ELEMA */
 
-/* Create a new list object. */
+/* Create a new List object. */
 #define DeeList_New()   DeeObject_NewDefault(&DeeList_Type)
 DFUNDEF WUNUSED DREF DeeObject *DCALL DeeList_NewHint(size_t n_prealloc);
 DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeList_FromSequence(DeeObject *__restrict self);
@@ -105,6 +105,14 @@ DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeList_FromIterator(DeeObjec
 /* WARNING: The caller must start gc-tracking the list once elements are initialized. */
 DFUNDEF WUNUSED DREF DeeListObject *DCALL DeeList_NewUninitialized(size_t n_elem);
 DFUNDEF NONNULL((1)) void DCALL DeeList_FreeUninitialized(DREF DeeListObject *__restrict self);
+
+/* Finalize an List object originally created with `DeeList_NewUninitialized()' */
+#ifdef __INTELLISENSE__
+DFUNDEF WUNUSED DREF DeeObject *DCALL DeeList_FinalizeUninitialized(/*inherit(always)*/ DREF DeeListObject *__restrict self);
+#else /* __INTELLISENSE__ */
+#define DeeList_FinalizeUninitialized(self) DeeGC_Track((DeeObject *)(self))
+#endif /* !__INTELLISENSE__ */
+
 
 #ifdef CONFIG_BUILDING_DEEMON
 /* Concat a list and some generic sequence,

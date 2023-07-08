@@ -28,6 +28,7 @@
 #include <deemon/code.h>
 #include <deemon/error.h>
 #include <deemon/exec.h>
+#include <deemon/list.h>
 #include <deemon/module.h>
 #include <deemon/none.h>
 #include <deemon/object.h>
@@ -1419,7 +1420,8 @@ PRIVATE struct type_getset tpconst module_getsets[] = {
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 module_class_getpath(DeeObject *__restrict UNUSED(self)) {
-	return_reference(DeeModule_GetPath());
+	DeeListObject *result = DeeModule_GetPath();
+	return_reference_((DeeObject *)result);
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -1433,7 +1435,8 @@ module_class_gethome(DeeObject *__restrict UNUSED(self)) {
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 module_class_setpath(DeeObject *UNUSED(self),
                      DeeObject *value) {
-	return DeeObject_Assign(DeeModule_GetPath(), value);
+	DeeListObject *paths = DeeModule_GetPath();
+	return DeeObject_Assign((DeeObject *)paths, value);
 }
 
 PRIVATE struct type_getset tpconst module_class_getsets[] = {
