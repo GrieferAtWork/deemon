@@ -90,6 +90,9 @@
 
 DECL_BEGIN
 
+STATIC_ASSERT(sizeof(Dee_uint128_t) == 16);
+STATIC_ASSERT(sizeof(Dee_int128_t) == 16);
+
 #define packw(x) \
 	(((x)&0xff) ^ (((x)&0xff00) >> 8))
 #define packl(x)                        \
