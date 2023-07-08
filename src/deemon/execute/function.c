@@ -871,7 +871,7 @@ err:
 }
 
 
-PRIVATE WUNUSED NONNULL((1,)) DREF YFunction *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF YFunction *DCALL
 yf_copy(YFunction *__restrict self) {
 	DREF YFunction *result;
 	struct code_frame_kwds *kw;
@@ -908,7 +908,7 @@ err:
 	return NULL;
 }
 
-PRIVATE WUNUSED NONNULL((1,)) DREF YFunction *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF YFunction *DCALL
 yf_deepcopy(YFunction *__restrict self) {
 	size_t i, count;
 	struct code_frame_kwds *kw;
