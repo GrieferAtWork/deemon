@@ -19,6 +19,10 @@
  */
 #ifndef GUARD_DEEMON_API_H
 #define GUARD_DEEMON_API_H 1
+
+/* Since we use and include a small portable sub-set of KOS system headers, we
+ * still need to tell those headers that remainder of the KOS system header
+ * suite isn't available unless we're being hosted by true KOS. */
 #ifndef __KOS__
 #define __NO_KOS_SYSTEM_HEADERS__ 1
 #endif /* !__KOS__ */
@@ -85,7 +89,7 @@
 #define DEE_SOURCE
 #endif /* !DEE_SOURCE && CONFIG_BUILDING_DEEMON */
 
-/* Disable garbage */
+/* Disable MSVC garbage */
 #define _CRT_SECURE_NO_DEPRECATE   1
 #define _CRT_SECURE_NO_WARNINGS    1
 #define _CRT_NONSTDC_NO_WARNINGS   1

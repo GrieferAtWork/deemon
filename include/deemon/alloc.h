@@ -147,7 +147,7 @@ DECL_BEGIN
 
 #ifdef __CC__
 /* Default malloc/free functions used for heap allocation.
- * NOTE: Upon allocation failure caches are cleared and an `Error.NoMemory' is thrown. */
+ * NOTE: Upon allocation failure, caches are cleared and an `Error.NoMemory' is thrown. */
 DFUNDEF ATTR_MALLOC WUNUSED void *(DCALL Dee_Malloc)(size_t n_bytes);
 DFUNDEF ATTR_MALLOC WUNUSED void *(DCALL Dee_Calloc)(size_t n_bytes);
 DFUNDEF WUNUSED void *(DCALL Dee_Realloc)(void *ptr, size_t n_bytes);

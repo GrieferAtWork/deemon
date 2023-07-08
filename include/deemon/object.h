@@ -187,15 +187,15 @@ DFUNDEF ATTR_CONST WUNUSED Dee_hash_t
 /* Hash a utf-8 encoded string.
  * You can think of these as hashing the ordinal values of the given string,
  * thus allowing this hashing function to return the same value for a string
- * encoded in utf-8, as `Dee_Hash2Byte()' would for a 2-byte, and Dee_Hash4Byte() for
- * a 4-byte string. */
+ * encoded in utf-8, as `Dee_Hash2Byte()' would for a 2-byte, and Dee_Hash4Byte()
+ * for a 4-byte string. */
 DFUNDEF ATTR_PURE WUNUSED ATTR_INS(1, 2) Dee_hash_t (DCALL Dee_HashUtf8)(char const *__restrict ptr, size_t n_bytes);
 DFUNDEF ATTR_PURE WUNUSED ATTR_INS(1, 2) Dee_hash_t (DCALL Dee_HashCaseUtf8)(char const *__restrict ptr, size_t n_bytes);
 
 /* Same as the regular hashing function, but with the guaranty that
  * for integer arrays where all items contain values `<= 0xff', the
- * return value is identical to a call to `Dee_HashPtr()' with the array
- * contents down-casted to the fitting data type. */
+ * return value is identical to a call to `Dee_HashPtr()' with the
+ * array contents down-casted to the fitting data type. */
 #ifdef __INTELLISENSE__
 DFUNDEF ATTR_PURE WUNUSED ATTR_INS(1, 2) Dee_hash_t (DCALL Dee_Hash1Byte)(uint8_t const *__restrict ptr, size_t n_bytes);
 DFUNDEF ATTR_PURE WUNUSED ATTR_INS(1, 2) Dee_hash_t (DCALL Dee_HashCase1Byte)(uint8_t const *__restrict ptr, size_t n_bytes);

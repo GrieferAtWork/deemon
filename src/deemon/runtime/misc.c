@@ -1092,6 +1092,12 @@ done:
 #error "Unable to determine desired hash algorithm"
 #endif /* !... */
 
+PUBLIC ATTR_PURE WUNUSED ATTR_IN(1) dhash_t DCALL
+Dee_HashStr(char const *__restrict str) {
+	return Dee_HashPtr(str, strlen(str));
+}
+
+
 
 
 #if 0
@@ -1109,11 +1115,8 @@ done:
 #define BEGIN_TRYALLOC() DBG_ALIGNMENT_DISABLE()
 #define END_TRYALLOC()   DBG_ALIGNMENT_ENABLE()
 
-PUBLIC ATTR_PURE WUNUSED ATTR_IN(1) dhash_t DCALL
-Dee_HashStr(char const *__restrict str) {
-	return Dee_HashPtr(str, strlen(str));
-}
-
+/* Default malloc/free functions used for heap allocation.
+ * NOTE: Upon allocation failure, caches are cleared and an `Error.NoMemory' is thrown. */
 PUBLIC ATTR_MALLOC WUNUSED void *
 (DCALL Dee_Malloc)(size_t n_bytes) {
 	void *result;
