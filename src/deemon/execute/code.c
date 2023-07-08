@@ -50,6 +50,10 @@
 #include "../runtime/runtime_error.h"
 #include "../runtime/strings.h"
 
+#ifdef CONFIG_HAVE_PATHS_H
+#include <paths.h> /* _PATH_DEVNULL */
+#endif /* CONFIG_HAVE_PATHS_H */
+
 #ifndef NDEBUG
 #define DBG_memset (void)memset
 #else /* !NDEBUG */
@@ -208,6 +212,10 @@ DECL_BEGIN
 #define ALTSTACK_ALLOC_FAILED NULL
 #endif /* !... */
 
+#ifndef _PATH_DEVNULL
+#define _PATH_DEVNULL "/dev/null"
+#endif /* !_PATH_DEVNULL */
+
 LOCAL void *DCALL tryalloc_altstack(void) {
 #ifdef EXEC_ALTSTACK_ALLOC_USE_VirtualAlloc
 	return VirtualAlloc(NULL,
@@ -227,7 +235,7 @@ LOCAL void *DCALL tryalloc_altstack(void) {
 	            -1, 0);
 #else /* MAP_ANONYMOUS */
 	void *result;
-	int fd = open("/dev/null", O_RDONLY);
+	int fd = open(_PATH_DEVNULL, O_RDONLY);
 	if unlikely(fd < 0)
 		return ALTSTACK_ALLOC_FAILED;
 	result = mmap(NULL,

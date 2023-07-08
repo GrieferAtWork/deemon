@@ -74,6 +74,26 @@
 #include <stdio.h>
 #endif /* DEESYSTEM_FILE_USE_STDIO */
 
+#ifdef CONFIG_HAVE_PATHS_H
+#include <paths.h> /* _PATH_DEVNULL */
+#endif /* CONFIG_HAVE_PATHS_H */
+
+#ifndef _PATH_DEV
+#define _PATH_DEV "/dev/"
+#endif /* !_PATH_DEV */
+
+#ifndef _PATH_DEVSTDIN
+#define _PATH_DEVSTDIN _PATH_DEV "stdin"
+#endif /* !_PATH_DEVSTDIN */
+
+#ifndef _PATH_DEVSTDOUT
+#define _PATH_DEVSTDOUT _PATH_DEV "stdout"
+#endif /* !_PATH_DEVSTDOUT */
+
+#ifndef _PATH_DEVSTDERR
+#define _PATH_DEVSTDERR _PATH_DEV "stderr"
+#endif /* !_PATH_DEVSTDERR */
+
 
 
 
@@ -105,18 +125,18 @@
 #ifndef CONFIG_HAVE_stdin
 #undef stdin
 #ifdef CONFIG_HAVE_fopen_binary
-#define stdin fopen("/dev/stdin", "rb")
+#define stdin fopen(_PATH_DEVSTDIN, "rb")
 #else /* CONFIG_HAVE_fopen_binary */
-#define stdin fopen("/dev/stdin", "r")
+#define stdin fopen(_PATH_DEVSTDIN, "r")
 #endif /* !CONFIG_HAVE_fopen_binary */
 #endif /* !CONFIG_HAVE_stdin */
 
 #ifndef CONFIG_HAVE_stdout
 #undef stdout
 #ifdef CONFIG_HAVE_fopen_binary
-#define stdout fopen("/dev/stdout", "rb")
+#define stdout fopen(_PATH_DEVSTDOUT, "w+b")
 #else /* CONFIG_HAVE_fopen_binary */
-#define stdout fopen("/dev/stdout", "r")
+#define stdout fopen(_PATH_DEVSTDOUT, "w+")
 #endif /* !CONFIG_HAVE_fopen_binary */
 #endif /* !CONFIG_HAVE_stdout */
 
@@ -125,9 +145,9 @@
 #ifdef CONFIG_HAVE_stdout
 #define stderr stdout
 #elif defined(CONFIG_HAVE_fopen_binary)
-#define stderr fopen("/dev/stderr", "rb")
+#define stderr fopen(_PATH_DEVSTDERR, "w+b")
 #else /* CONFIG_HAVE_fopen_binary */
-#define stderr fopen("/dev/stderr", "r")
+#define stderr fopen(_PATH_DEVSTDERR, "w+")
 #endif /* !CONFIG_HAVE_fopen_binary */
 #endif /* !CONFIG_HAVE_stderr */
 

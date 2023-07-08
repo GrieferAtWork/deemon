@@ -267,6 +267,7 @@ header_nostdinc("sys/param.h");
 header_nostdinc("envlock.h");
 header_nostdinc("spawn.h");
 header_nostdinc("vfork.h");
+header_nostdinc("paths.h");
 header_nostdinc("sys/sendfile.h");
 
 include_known_headers();
@@ -1933,6 +1934,13 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif !defined(CONFIG_HAVE_VFORK_H) && \
       (__has_include(<vfork.h>))
 #define CONFIG_HAVE_VFORK_H
+#endif
+
+#ifdef CONFIG_NO_PATHS_H
+#undef CONFIG_HAVE_PATHS_H
+#elif !defined(CONFIG_HAVE_PATHS_H) && \
+      (__has_include(<paths.h>))
+#define CONFIG_HAVE_PATHS_H
 #endif
 
 #ifdef CONFIG_NO_SYS_SENDFILE_H

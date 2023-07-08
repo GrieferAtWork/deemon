@@ -32,6 +32,10 @@
 
 #include "misc.c"
 
+#ifdef CONFIG_HAVE_PATHS_H
+#include <paths.h> /* _PATH_DEVNULL */
+#endif /* CONFIG_HAVE_PATHS_H */
+
 #ifndef CONFIG_NO_OBJECT_SLABS
 
 #undef NO_OBJECT_SLABS
@@ -352,6 +356,10 @@ INTERN void DCALL DeeSlab_Finalize(void) {
 #endif
 }
 
+#ifndef _PATH_DEVNULL
+#define _PATH_DEVNULL "/dev/null"
+#endif /* !_PATH_DEVNULL */
+
 INTERN void DCALL DeeSlab_Initialize(void) {
 	size_t total;
 	unsigned int i;
@@ -422,7 +430,7 @@ INTERN void DCALL DeeSlab_Initialize(void) {
 		                           0);
 #else /* MAP_ANONYMOUS */
 		{
-			int fd = open("/dev/null", O_RDONLY);
+			int fd = open(_PATH_DEVNULL, O_RDONLY);
 			if unlikely(fd < 0)
 				goto disable_slabs;
 			slab_memory = (void *)mmap(NULL,
