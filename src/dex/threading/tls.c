@@ -51,8 +51,16 @@ thread_tls_get(size_t index) {
 	caller = DeeThread_Self();
 	desc   = (struct tls_descriptor *)caller->t_context.d_tls;
 	if unlikely(!desc || index >= desc->td_size) {
-		/* TODO: If `Dee_THREAD_STATE_TERMINATING' is set, don't allow TLS alloc! */
-		size_t old_size = desc ? desc->td_size : 0;
+		size_t old_size;
+		if (caller->t_state & Dee_THREAD_STATE_TERMINATING) {
+			/* If `Dee_THREAD_STATE_TERMINATING' is set, don't allow TLS alloc! */
+			DeeError_Throwf(&DeeError_RuntimeError,
+			                "Cannot allocate TLS variables for "
+			                "thread %r that has begun termination",
+			                caller);
+			goto err;
+		}
+		old_size = desc ? desc->td_size : 0;
 		desc = (struct tls_descriptor *)Dee_Realloc(desc,
 		                                            offsetof(struct tls_descriptor, td_elem) +
 		                                            (index + 1) * sizeof(DREF DeeObject *));
