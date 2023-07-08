@@ -1902,7 +1902,7 @@ DeeType_HasPrivateOperator(DeeTypeObject const *__restrict self, uint16_t name) 
  * @param: tp_iter: The previously enumerated type
  * @return: * :     The next type for the purpose of MRO resolution.
  * @return: NULL:   End of MRO chain has been reached. */
-PUBLIC WUNUSED NONNULL((1, 2)) DeeTypeObject *FCALL
+PUBLIC WUNUSED NONNULL((1, 2)) DeeTypeObject *DFCALL
 DeeTypeMRO_Next(DeeTypeMRO *__restrict self,
                 DeeTypeObject const *tp_iter) {
 	DeeTypeObject *result;
@@ -1934,7 +1934,7 @@ done:
 
 /* Like `DeeTypeMRO_Next()', but only enumerate direct
  * bases of the type passed to `DeeTypeMRO_Init()' */
-PUBLIC WUNUSED NONNULL((1, 2)) DeeTypeObject *FCALL
+PUBLIC WUNUSED NONNULL((1, 2)) DeeTypeObject *DFCALL
 DeeTypeMRO_NextDirectBase(DeeTypeMRO *__restrict self,
                           DeeTypeObject const *tp_iter) {
 	DeeTypeObject *result;

@@ -166,7 +166,7 @@ DFUNDEF ATTR_PURE WUNUSED ATTR_IN(1) Dee_hash_t (DCALL Dee_HashCaseStr)(char con
 /* Combine 2 hash values into 1, while losing
  * as little entropy from either as possible. */
 DFUNDEF ATTR_CONST WUNUSED Dee_hash_t
-(FCALL Dee_HashCombine)(Dee_hash_t a, Dee_hash_t b);
+(DFCALL Dee_HashCombine)(Dee_hash_t a, Dee_hash_t b);
 
 #if __SIZEOF_POINTER__ <= 4
 #define _Dee_HashSelect(hash32, hash64)  hash32
@@ -2606,13 +2606,13 @@ typedef struct {
  * @param: tp_iter: The previously enumerated type
  * @return: * :     The next type for the purpose of MRO resolution.
  * @return: NULL:   End of MRO chain has been reached. */
-DFUNDEF WUNUSED NONNULL((1, 2)) DeeTypeObject *FCALL
+DFUNDEF WUNUSED NONNULL((1, 2)) DeeTypeObject *DFCALL
 DeeTypeMRO_Next(DeeTypeMRO *__restrict self,
                 DeeTypeObject const *tp_iter);
 
 /* Like `DeeTypeMRO_Next()', but only enumerate direct
  * bases of the type passed to `DeeTypeMRO_Init()' */
-DFUNDEF WUNUSED NONNULL((1, 2)) DeeTypeObject *FCALL
+DFUNDEF WUNUSED NONNULL((1, 2)) DeeTypeObject *DFCALL
 DeeTypeMRO_NextDirectBase(DeeTypeMRO *__restrict self,
                           DeeTypeObject const *tp_iter);
 

@@ -42,10 +42,10 @@ INTDEF struct compiler_options *inner_compiler_options;
 
 
 /* Parse a string. */
-INTDEF WUNUSED DREF DeeObject *FCALL ast_parse_string(void);
+INTDEF WUNUSED DREF DeeObject *DFCALL ast_parse_string(void);
 
 /* Parse a template string. */
-INTDEF WUNUSED DREF struct ast *FCALL ast_parse_template_string(void);
+INTDEF WUNUSED DREF struct ast *DFCALL ast_parse_template_string(void);
 
 /* Decode the current token (which must be a TOK_STRING) as a unicode string. */
 INTDEF WUNUSED NONNULL((1)) int DCALL
@@ -54,37 +54,37 @@ ast_decode_unicode_string(struct unicode_printer *__restrict printer);
 #define PARSE_UNARY_DISALLOW_CASTS 0x10000
 
 /* @param: lookup_mode: Set of `LOOKUP_SYM_*', optionally or'd with `PARSE_UNARY_DISALLOW_CASTS' */
-INTDEF WUNUSED DREF struct ast *FCALL ast_parse_unaryhead(unsigned int lookup_mode);
-INTDEF WUNUSED DREF struct ast *FCALL ast_parse_unary(unsigned int lookup_mode);
-INTDEF WUNUSED DREF struct ast *FCALL ast_parse_prod(unsigned int lookup_mode);
-INTDEF WUNUSED DREF struct ast *FCALL ast_parse_sum(unsigned int lookup_mode);
-INTDEF WUNUSED DREF struct ast *FCALL ast_parse_shift(unsigned int lookup_mode);
-INTDEF WUNUSED DREF struct ast *FCALL ast_parse_cmp(unsigned int lookup_mode);
-INTDEF WUNUSED DREF struct ast *FCALL ast_parse_cmpeq(unsigned int lookup_mode);
-INTDEF WUNUSED DREF struct ast *FCALL ast_parse_and(unsigned int lookup_mode);
-INTDEF WUNUSED DREF struct ast *FCALL ast_parse_xor(unsigned int lookup_mode);
-INTDEF WUNUSED DREF struct ast *FCALL ast_parse_or(unsigned int lookup_mode);
-INTDEF WUNUSED DREF struct ast *FCALL ast_parse_as(unsigned int lookup_mode);
-INTDEF WUNUSED DREF struct ast *FCALL ast_parse_land(unsigned int lookup_mode);
-INTDEF WUNUSED DREF struct ast *FCALL ast_parse_lor(unsigned int lookup_mode);
-INTDEF WUNUSED DREF struct ast *FCALL ast_parse_cond(unsigned int lookup_mode);
-INTDEF WUNUSED DREF struct ast *FCALL ast_parse_assign(unsigned int lookup_mode); /* NOTE: Also handled inplace operators. */
+INTDEF WUNUSED DREF struct ast *DFCALL ast_parse_unaryhead(unsigned int lookup_mode);
+INTDEF WUNUSED DREF struct ast *DFCALL ast_parse_unary(unsigned int lookup_mode);
+INTDEF WUNUSED DREF struct ast *DFCALL ast_parse_prod(unsigned int lookup_mode);
+INTDEF WUNUSED DREF struct ast *DFCALL ast_parse_sum(unsigned int lookup_mode);
+INTDEF WUNUSED DREF struct ast *DFCALL ast_parse_shift(unsigned int lookup_mode);
+INTDEF WUNUSED DREF struct ast *DFCALL ast_parse_cmp(unsigned int lookup_mode);
+INTDEF WUNUSED DREF struct ast *DFCALL ast_parse_cmpeq(unsigned int lookup_mode);
+INTDEF WUNUSED DREF struct ast *DFCALL ast_parse_and(unsigned int lookup_mode);
+INTDEF WUNUSED DREF struct ast *DFCALL ast_parse_xor(unsigned int lookup_mode);
+INTDEF WUNUSED DREF struct ast *DFCALL ast_parse_or(unsigned int lookup_mode);
+INTDEF WUNUSED DREF struct ast *DFCALL ast_parse_as(unsigned int lookup_mode);
+INTDEF WUNUSED DREF struct ast *DFCALL ast_parse_land(unsigned int lookup_mode);
+INTDEF WUNUSED DREF struct ast *DFCALL ast_parse_lor(unsigned int lookup_mode);
+INTDEF WUNUSED DREF struct ast *DFCALL ast_parse_cond(unsigned int lookup_mode);
+INTDEF WUNUSED DREF struct ast *DFCALL ast_parse_assign(unsigned int lookup_mode); /* NOTE: Also handled inplace operators. */
 
 /* With the current token one of the unary operator symbols, consume
  * it and parse the second operand before returning the combination */
-INTDEF WUNUSED NONNULL((1)) DREF struct ast *FCALL ast_parse_prod_operand(/*inherit(always)*/ DREF struct ast *__restrict lhs);
-INTDEF WUNUSED NONNULL((1)) DREF struct ast *FCALL ast_parse_sum_operand(/*inherit(always)*/ DREF struct ast *__restrict lhs);
-INTDEF WUNUSED NONNULL((1)) DREF struct ast *FCALL ast_parse_shift_operand(/*inherit(always)*/ DREF struct ast *__restrict lhs);
-INTDEF WUNUSED NONNULL((1)) DREF struct ast *FCALL ast_parse_cmp_operand(/*inherit(always)*/ DREF struct ast *__restrict lhs);
-INTDEF WUNUSED NONNULL((1)) DREF struct ast *FCALL ast_parse_cmpeq_operand(/*inherit(always)*/ DREF struct ast *__restrict lhs);
-INTDEF WUNUSED NONNULL((1)) DREF struct ast *FCALL ast_parse_and_operand(/*inherit(always)*/ DREF struct ast *__restrict lhs);
-INTDEF WUNUSED NONNULL((1)) DREF struct ast *FCALL ast_parse_xor_operand(/*inherit(always)*/ DREF struct ast *__restrict lhs);
-INTDEF WUNUSED NONNULL((1)) DREF struct ast *FCALL ast_parse_or_operand(/*inherit(always)*/ DREF struct ast *__restrict lhs);
-INTDEF WUNUSED NONNULL((1)) DREF struct ast *FCALL ast_parse_as_operand(/*inherit(always)*/ DREF struct ast *__restrict lhs);
-INTDEF WUNUSED NONNULL((1)) DREF struct ast *FCALL ast_parse_land_operand(/*inherit(always)*/ DREF struct ast *__restrict lhs);
-INTDEF WUNUSED NONNULL((1)) DREF struct ast *FCALL ast_parse_lor_operand(/*inherit(always)*/ DREF struct ast *__restrict lhs);
-INTDEF WUNUSED NONNULL((1)) DREF struct ast *FCALL ast_parse_cond_operand(/*inherit(always)*/ DREF struct ast *__restrict lhs);
-INTDEF WUNUSED NONNULL((1)) DREF struct ast *FCALL ast_parse_assign_operand(/*inherit(always)*/ DREF struct ast *__restrict lhs);
+INTDEF WUNUSED NONNULL((1)) DREF struct ast *DFCALL ast_parse_prod_operand(/*inherit(always)*/ DREF struct ast *__restrict lhs);
+INTDEF WUNUSED NONNULL((1)) DREF struct ast *DFCALL ast_parse_sum_operand(/*inherit(always)*/ DREF struct ast *__restrict lhs);
+INTDEF WUNUSED NONNULL((1)) DREF struct ast *DFCALL ast_parse_shift_operand(/*inherit(always)*/ DREF struct ast *__restrict lhs);
+INTDEF WUNUSED NONNULL((1)) DREF struct ast *DFCALL ast_parse_cmp_operand(/*inherit(always)*/ DREF struct ast *__restrict lhs);
+INTDEF WUNUSED NONNULL((1)) DREF struct ast *DFCALL ast_parse_cmpeq_operand(/*inherit(always)*/ DREF struct ast *__restrict lhs);
+INTDEF WUNUSED NONNULL((1)) DREF struct ast *DFCALL ast_parse_and_operand(/*inherit(always)*/ DREF struct ast *__restrict lhs);
+INTDEF WUNUSED NONNULL((1)) DREF struct ast *DFCALL ast_parse_xor_operand(/*inherit(always)*/ DREF struct ast *__restrict lhs);
+INTDEF WUNUSED NONNULL((1)) DREF struct ast *DFCALL ast_parse_or_operand(/*inherit(always)*/ DREF struct ast *__restrict lhs);
+INTDEF WUNUSED NONNULL((1)) DREF struct ast *DFCALL ast_parse_as_operand(/*inherit(always)*/ DREF struct ast *__restrict lhs);
+INTDEF WUNUSED NONNULL((1)) DREF struct ast *DFCALL ast_parse_land_operand(/*inherit(always)*/ DREF struct ast *__restrict lhs);
+INTDEF WUNUSED NONNULL((1)) DREF struct ast *DFCALL ast_parse_lor_operand(/*inherit(always)*/ DREF struct ast *__restrict lhs);
+INTDEF WUNUSED NONNULL((1)) DREF struct ast *DFCALL ast_parse_cond_operand(/*inherit(always)*/ DREF struct ast *__restrict lhs);
+INTDEF WUNUSED NONNULL((1)) DREF struct ast *DFCALL ast_parse_assign_operand(/*inherit(always)*/ DREF struct ast *__restrict lhs);
 
 /* Check if the given token qualifies for the associated operation parser function. */
 #define TOKEN_IS_PROD(tok)   ((tok) == '*' || (tok) == '/' || (tok) == '%' || (tok) == TOK_POW)
@@ -122,23 +122,23 @@ INTDEF WUNUSED NONNULL((1)) DREF struct ast *FCALL ast_parse_assign_operand(/*in
 
 /* Given a basic unary expression `ast', parse its unary
  * suffix (including attribute, call, range & item operators). */
-INTDEF WUNUSED NONNULL((1)) DREF struct ast *FCALL
+INTDEF WUNUSED NONNULL((1)) DREF struct ast *DFCALL
 ast_parse_unary_operand(/*inherit(always)*/ DREF struct ast *__restrict baseexpr);
 
 /* Given a unary expression `ast', parse anything that may
  * follow it before it could be considered a full expression. */
-INTDEF WUNUSED NONNULL((1)) DREF struct ast *FCALL
+INTDEF WUNUSED NONNULL((1)) DREF struct ast *DFCALL
 ast_parse_postexpr(/*inherit(always)*/ DREF struct ast *__restrict baseexpr);
 
 
 /* Given an `key'-expression in `{ key : foo }', parse the remainder
  * of a brace expression with the current token being the one after the `:' */
-INTDEF WUNUSED NONNULL((1)) DREF struct ast *FCALL
+INTDEF WUNUSED NONNULL((1)) DREF struct ast *DFCALL
 ast_parse_mapping(struct ast *__restrict initial_key);
 
 /* Given an `item'-expression in `{ item, foo }', parse the remainder
  * of a brace expression with the current token being a `,' */
-INTDEF WUNUSED NONNULL((1)) DREF struct ast *FCALL
+INTDEF WUNUSED NONNULL((1)) DREF struct ast *DFCALL
 ast_parse_brace_list(struct ast *__restrict initial_item);
 
 
@@ -166,13 +166,13 @@ ast_parse_brace_list(struct ast *__restrict initial_item);
  * >> import <symbol-name> = <import-name> from <module-name>
  * >> import(<expression>)
  */
-INTDEF WUNUSED DREF struct ast *FCALL ast_parse_import(void);
+INTDEF WUNUSED DREF struct ast *DFCALL ast_parse_import(void);
 
 /* Parse a module name and generate an AST to reference a single symbol `import_name'. */
-INTDEF WUNUSED NONNULL((1)) DREF struct ast *FCALL
+INTDEF WUNUSED NONNULL((1)) DREF struct ast *DFCALL
 ast_parse_import_single(struct TPPKeyword *__restrict import_name);
 
-INTDEF WUNUSED NONNULL((1)) struct symbol *FCALL
+INTDEF WUNUSED NONNULL((1)) struct symbol *DFCALL
 ast_parse_import_single_sym(struct TPPKeyword *__restrict import_name);
 
 /* Parse a comma-separated list of expressions,
@@ -242,7 +242,7 @@ ast_parse_try(bool is_statement);
 
 /* Parse a with-statement/expression.
  * NOTE: This function expects the current token to be `with' */
-INTDEF WUNUSED DREF struct ast *FCALL
+INTDEF WUNUSED DREF struct ast *DFCALL
 ast_parse_with(bool is_statement, bool allow_nonblock);
 
 /* Parse a regular, old statement. */
@@ -310,7 +310,7 @@ ast_build_operator(uint16_t name, uint16_t flags,
  * `KWD_for', `KWD_foreach', `KWD_while' or `KWD_do'
  * The returned expression is usually a call-operator
  * on an anonymous lambda function. */
-INTDEF WUNUSED DREF struct ast *FCALL
+INTDEF WUNUSED DREF struct ast *DFCALL
 ast_parse_loopexpr(void);
 
 /* Parse a new function declaration, starting at either the argument
@@ -382,7 +382,7 @@ INTDEF WUNUSED int DCALL parse_arglist(void);
 
 /* Parse the contents of a brace initializer,
  * starting after the '{' token and ending on '}'. */
-INTDEF WUNUSED DREF struct ast *FCALL ast_parse_brace_items(void);
+INTDEF WUNUSED DREF struct ast *DFCALL ast_parse_brace_items(void);
 
 /* Parse a class definition, starting at the `{' token (or at `:' when a base exists).
  * The returned AST is of type `AST_CLASS' (create_symbol == false) or `AST_STORE' (create_symbol == true).
@@ -411,7 +411,7 @@ ast_parse_for_head(DREF struct ast **__restrict p_init,
                    DREF struct ast **__restrict p_iter_or_next);
 
 /* Parse an assertion statement. (must be started ontop of the `assert' keyword) */
-INTDEF WUNUSED DREF struct ast *FCALL
+INTDEF WUNUSED DREF struct ast *DFCALL
 ast_parse_assert(bool needs_parenthesis);
 
 /* Parse a cast expression suffix following parenthesis, or
@@ -426,7 +426,7 @@ ast_parse_assert(bool needs_parenthesis);
  *                           ^
  *                           exit
  */
-INTDEF WUNUSED NONNULL((1)) DREF struct ast *FCALL
+INTDEF WUNUSED NONNULL((1)) DREF struct ast *DFCALL
 ast_parse_cast(struct ast *__restrict typeexpr);
 
 
@@ -437,13 +437,13 @@ ast_parse_cast(struct ast *__restrict typeexpr);
 #define AST_PARSE_WASEXPR_MAYBE  2 /* It could either be an expression, or a statement. */
 
 /* @param: p_was_expression: When non-NULL, set to one of `AST_PARSE_WASEXPR_*' */
-INTERN WUNUSED DREF struct ast *FCALL
+INTERN WUNUSED DREF struct ast *DFCALL
 ast_parse_statement_or_expression(unsigned int *p_was_expression);
 
 /* Parse a primary and second expression in hybrid mode. */
 #define ast_parse_hybrid_primary(p_was_expression) \
 	ast_parse_statement_or_expression(p_was_expression)
-LOCAL WUNUSED NONNULL((1)) DREF struct ast *FCALL
+LOCAL WUNUSED NONNULL((1)) DREF struct ast *DFCALL
 ast_parse_hybrid_secondary(unsigned int *__restrict p_was_expression) {
 	DREF struct ast *result;
 	switch (*p_was_expression) {
@@ -465,32 +465,32 @@ ast_parse_hybrid_secondary(unsigned int *__restrict p_was_expression) {
 
 
 /* Parse a statement or a brace-expression, with the current token being a `{' */
-INTDEF WUNUSED DREF struct ast *FCALL
+INTDEF WUNUSED DREF struct ast *DFCALL
 ast_parse_statement_or_braces(unsigned int *p_was_expression);
 
 /* With the current token being `try', parse the construct and
  * try to figure out if it's a statement or an expression. */
-INTERN WUNUSED DREF struct ast *FCALL
+INTERN WUNUSED DREF struct ast *DFCALL
 ast_parse_try_hybrid(unsigned int *p_was_expression);
 
 /* Same as `ast_parse_try_hybrid' but for if statements / expressions. */
-INTERN WUNUSED DREF struct ast *FCALL
+INTERN WUNUSED DREF struct ast *DFCALL
 ast_parse_if_hybrid(unsigned int *p_was_expression);
 
 /* Same as `ast_parse_try_hybrid' but for with statements / expressions. */
-INTERN WUNUSED DREF struct ast *FCALL
+INTERN WUNUSED DREF struct ast *DFCALL
 ast_parse_with_hybrid(unsigned int *p_was_expression);
 
 /* Same as `ast_parse_try_hybrid' but for assert statements / expressions. */
-INTERN WUNUSED DREF struct ast *FCALL
+INTERN WUNUSED DREF struct ast *DFCALL
 ast_parse_assert_hybrid(unsigned int *p_was_expression);
 
 /* Same as `ast_parse_try_hybrid' but for import statements / expressions. */
-INTERN WUNUSED DREF struct ast *FCALL
+INTERN WUNUSED DREF struct ast *DFCALL
 ast_parse_import_hybrid(unsigned int *p_was_expression);
 
 /* Same as `ast_parse_try_hybrid' but for loopexpr statements / expressions. */
-INTDEF WUNUSED DREF struct ast *FCALL
+INTDEF WUNUSED DREF struct ast *DFCALL
 ast_parse_loopexpr_hybrid(unsigned int *p_was_expression);
 
 

@@ -423,7 +423,7 @@ struct futex_controller {
 #define RBTREE_GETNODE(self)    (self)->fc_node
 #define RBTREE_GETKEY(self)     (self)->fc_addr
 #define RBTREE_REDFIELD         fc_isred
-#define RBTREE_CC               FCALL
+#define RBTREE_CC               DFCALL
 #define RBTREE_NOTHROW          NOTHROW
 #define RBTREE_DECL             PRIVATE
 #define RBTREE_IMPL             PRIVATE

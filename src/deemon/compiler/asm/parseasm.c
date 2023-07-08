@@ -108,7 +108,7 @@ userassembler_fini(void) {
 	Dee_Free(symtab.st_map);
 }
 
-PRIVATE WUNUSED bool FCALL symtab_rehash(void) {
+PRIVATE WUNUSED bool DFCALL symtab_rehash(void) {
 	struct asm_sym **new_map, **biter, **bend;
 	size_t old_size = symtab.st_alloc;
 	size_t new_size = old_size;
@@ -153,7 +153,7 @@ rehash_realloc:
 	return true;
 }
 
-INTERN WUNUSED NONNULL((1)) struct asm_sym *FCALL
+INTERN WUNUSED NONNULL((1)) struct asm_sym *DFCALL
 uasm_label_symbol(struct TPPKeyword *__restrict name) {
 	char const *text = name->k_name;
 	size_t size      = name->k_size;
@@ -188,7 +188,7 @@ not_a_label:
 }
 
 
-INTERN WUNUSED NONNULL((1)) struct asm_sym *FCALL
+INTERN WUNUSED NONNULL((1)) struct asm_sym *DFCALL
 uasm_symbol(struct TPPKeyword *__restrict name) {
 	struct asm_sym *result, **p_result;
 	if (symtab.st_alloc) {
@@ -217,7 +217,7 @@ err:
 }
 
 
-INTERN WUNUSED NONNULL((1)) struct asm_sym *FCALL
+INTERN WUNUSED NONNULL((1)) struct asm_sym *DFCALL
 uasm_fbsymbol(struct TPPKeyword *__restrict name,
               bool return_back_symbol) {
 	struct asm_sym *result, **p_result;
@@ -279,7 +279,7 @@ err:
 	return NULL;
 }
 
-INTERN WUNUSED NONNULL((1)) struct asm_sym *FCALL
+INTERN WUNUSED NONNULL((1)) struct asm_sym *DFCALL
 uasm_fbsymbol_def(struct TPPKeyword *__restrict name) {
 	struct asm_sym *result, **p_result;
 	if (symtab.st_alloc) {
@@ -331,7 +331,7 @@ err:
 #define TOK_IS_SYMBOL_NAME(x) \
 	(TPP_ISKEYWORD(x) || TOK_IS_SYMBOL_NAME_CH(x))
 
-INTERN WUNUSED struct TPPKeyword *FCALL uasm_parse_symnam(void) {
+INTERN WUNUSED struct TPPKeyword *DFCALL uasm_parse_symnam(void) {
 	struct TPPKeyword *result;
 	char *symbol_start;
 	char *symbol_end;
@@ -403,7 +403,7 @@ err:
 }
 
 
-PRIVATE WUNUSED int FCALL
+PRIVATE WUNUSED int DFCALL
 uasm_parse_intexpr_unary_base(struct asm_intexpr *result, uint16_t features) {
 	switch (tok) {
 
@@ -606,7 +606,7 @@ err:
 	return -1;
 }
 
-PRIVATE WUNUSED int FCALL
+PRIVATE WUNUSED int DFCALL
 uasm_parse_intexpr_unary(struct asm_intexpr *result, uint16_t features) {
 	if unlikely(uasm_parse_intexpr_unary_base(result, features))
 		goto err;
@@ -671,7 +671,7 @@ err:
 	return -1;
 }
 
-PRIVATE WUNUSED int FCALL
+PRIVATE WUNUSED int DFCALL
 uasm_parse_intexpr_sum(struct asm_intexpr *result, uint16_t features) {
 	if unlikely(uasm_parse_intexpr_unary(result, features))
 		goto err;
@@ -757,13 +757,13 @@ err:
 	return -1;
 }
 
-INTERN WUNUSED NONNULL((1)) int FCALL
+INTERN WUNUSED NONNULL((1)) int DFCALL
 uasm_parse_intexpr(struct asm_intexpr *result, uint16_t features) {
 	/* TODO: All the other expression levels. */
 	return uasm_parse_intexpr_sum(result, features);
 }
 
-INTERN WUNUSED int32_t FCALL
+INTERN WUNUSED int32_t DFCALL
 uasm_parse_imm16(uint16_t features) {
 	struct asm_intexpr result;
 	if unlikely(uasm_parse_intexpr(&result, features))
@@ -782,7 +782,7 @@ err:
 
 
 /* Helper functions for parsing the arguments of symbol class operands. */
-PRIVATE WUNUSED int32_t FCALL
+PRIVATE WUNUSED int32_t DFCALL
 do_parse_module_operands(void) {
 	int32_t result;
 	/* Parse a module by name. */
@@ -804,7 +804,7 @@ err:
 	return -1;
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) int FCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DFCALL
 do_parse_extern_operands(uint16_t *__restrict pmid,
                          uint16_t *__restrict pgid) {
 	DREF DeeModuleObject *module;
@@ -868,14 +868,14 @@ err:
 	return -1;
 }
 
-PRIVATE ATTR_COLD int FCALL
+PRIVATE ATTR_COLD int DFCALL
 err_unknown_symbol(struct TPPKeyword *__restrict name) {
 	return DeeError_Throwf(&DeeError_CompilerError,
 	                       "Unknown symbol `%s'",
 	                       name->k_name);
 }
 
-PRIVATE WUNUSED int32_t FCALL do_parse_global_operands(void) {
+PRIVATE WUNUSED int32_t DFCALL do_parse_global_operands(void) {
 	int32_t result;
 	struct symbol *sym;
 	if (tok == '@') {
@@ -909,7 +909,7 @@ err:
 	return -1;
 }
 
-PRIVATE WUNUSED int32_t FCALL do_parse_stack_operands(void) {
+PRIVATE WUNUSED int32_t DFCALL do_parse_stack_operands(void) {
 	if (skip('#', W_UASM_EXPECTED_HASH_AFTER_STACK_PREFIX))
 		goto err;
 	return uasm_parse_imm16(UASM_INTEXPR_FHASSP);
@@ -917,7 +917,7 @@ err:
 	return -1;
 }
 
-PRIVATE WUNUSED int32_t FCALL do_parse_local_operands(void) {
+PRIVATE WUNUSED int32_t DFCALL do_parse_local_operands(void) {
 	int32_t result;
 	struct symbol *sym;
 	if (tok == '@') {
@@ -963,7 +963,7 @@ err:
 	return -1;
 }
 
-PRIVATE WUNUSED int32_t FCALL do_parse_constexpr(void) {
+PRIVATE WUNUSED int32_t DFCALL do_parse_constexpr(void) {
 	DREF struct ast *imm_const;
 	DREF DeeObject *const_val;
 	int32_t cid;
@@ -994,7 +994,7 @@ err:
 	return -1;
 }
 
-PRIVATE WUNUSED int32_t FCALL do_parse_const_operands(void) {
+PRIVATE WUNUSED int32_t DFCALL do_parse_const_operands(void) {
 	int32_t result;
 	if (tok == '@') {
 		if unlikely(yield() < 0)
@@ -1010,7 +1010,7 @@ err:
 	return -1;
 }
 
-PRIVATE WUNUSED int32_t FCALL do_parse_arg_operands(void) {
+PRIVATE WUNUSED int32_t DFCALL do_parse_arg_operands(void) {
 	int32_t result;
 	struct symbol *sym;
 	if (tok == '@') {
@@ -1050,7 +1050,7 @@ err:
 	return -1;
 }
 
-PRIVATE WUNUSED int32_t FCALL do_parse_ref_operands(void) {
+PRIVATE WUNUSED int32_t DFCALL do_parse_ref_operands(void) {
 	int32_t result;
 	struct symbol *sym;
 	if (tok == '@') {
@@ -1086,7 +1086,7 @@ err:
 	return -1;
 }
 
-PRIVATE WUNUSED int32_t FCALL do_parse_static_operands(void) {
+PRIVATE WUNUSED int32_t DFCALL do_parse_static_operands(void) {
 	int32_t result;
 	struct symbol *sym;
 	if (tok == '@') {
@@ -1132,7 +1132,7 @@ err:
 	return -1;
 }
 
-PRIVATE NONNULL((1)) void FCALL
+PRIVATE NONNULL((1)) void DFCALL
 asm_invoke_operand_determine_intclass(struct asm_invoke_operand *__restrict self) {
 	if (self->io_intexpr.ie_val < 0) {
 		if (self->io_intexpr.ie_val < INT16_MIN ||
@@ -1183,7 +1183,7 @@ asm_invoke_operand_determine_intclass(struct asm_invoke_operand *__restrict self
 	}
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) int FCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DFCALL
 do_translate_operand_ast(struct asm_invoke_operand *__restrict result,
                          struct ast *__restrict expr) {
 	switch (expr->a_type) {
@@ -1351,7 +1351,7 @@ err:
 /* Parse a deemon-level expression following `@' and
  * try to convert it into an assembly invocation operand.
  * In order words: accept pretty much all symbols, as well as constants. */
-PRIVATE WUNUSED NONNULL((1)) int FCALL
+PRIVATE WUNUSED NONNULL((1)) int DFCALL
 do_parse_atoperand(struct asm_invoke_operand *__restrict result) {
 	DREF struct ast *imm_expr;
 	if unlikely(scope_push())
@@ -1377,7 +1377,7 @@ err:
 /* @param: recognize_sp: When true, recognize `sp', as seen as operand of `print'.
  *                       Otherwise, `sp' is recognized as representative of the
  *                       current stack depth. */
-PRIVATE WUNUSED NONNULL((1)) int FCALL
+PRIVATE WUNUSED NONNULL((1)) int DFCALL
 do_parse_operand(struct asm_invoke_operand *__restrict result,
                  bool recognize_sp) {
 	/* Parse the actual operand. */
@@ -1754,7 +1754,7 @@ err:
 	return -1;
 }
 
-INTERN WUNUSED NONNULL((1)) int FCALL
+INTERN WUNUSED NONNULL((1)) int DFCALL
 uasm_parse_operand(struct asm_invoke_operand *__restrict result) {
 	ASSERT(!result->io_class);
 	/* Parse the actual operand. */
@@ -1775,7 +1775,7 @@ err:
 	return -1;
 }
 
-INTERN WUNUSED int FCALL
+INTERN WUNUSED int DFCALL
 uasm_parse_instruction(void) {
 	struct TPPKeyword *name;
 	struct asm_mnemonic *mnemonic;
@@ -1982,7 +1982,7 @@ err:
 
 
 /* Parse and compile user-defined assembly until EOF is encountered. */
-INTERN WUNUSED int FCALL uasm_parse(void) {
+INTERN WUNUSED int DFCALL uasm_parse(void) {
 	int error;
 continue_line:
 	while (tok > 0) {

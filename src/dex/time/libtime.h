@@ -345,20 +345,20 @@ INTDEF DeeTypeObject DeeTime_Type;
 #define DeeTime_CheckExact(ob) DeeObject_InstanceOfExact(ob, &DeeTime_Type)
 
 /* Return the integer value for the specified representation of `self' */
-INTDEF NONNULL((1, 2)) void FCALL
+INTDEF NONNULL((1, 2)) void DFCALL
 _DeeTime_GetRepr(Dee_int128_t *__restrict p_result,
                  DeeTimeObject const *__restrict self,
                  uint8_t repr);
-INTDEF WUNUSED NONNULL((1)) Dee_int128_t FCALL
+INTDEF WUNUSED NONNULL((1)) Dee_int128_t DFCALL
 DeeTime_GetRepr(DeeTimeObject const *__restrict self,
                 uint8_t repr);
-INTDEF WUNUSED NONNULL((1)) uint8_t FCALL
+INTDEF WUNUSED NONNULL((1)) uint8_t DFCALL
 DeeTime_GetRepr8(DeeTimeObject const *__restrict self, uint8_t repr);
-INTDEF WUNUSED NONNULL((1)) uint32_t FCALL
+INTDEF WUNUSED NONNULL((1)) uint32_t DFCALL
 DeeTime_GetRepr32(DeeTimeObject const *__restrict self, uint8_t repr);
 
 /* Set the integer value for the specified representation of `self' */
-INTDEF NONNULL((1, 2)) void FCALL
+INTDEF NONNULL((1, 2)) void DFCALL
 DeeTime_SetRepr(DeeTimeObject *__restrict self,
                 Dee_int128_t const *__restrict p_value,
                 uint8_t repr);
@@ -379,20 +379,20 @@ DeeTime_SetRepr(DeeTimeObject *__restrict self,
 
 
 /* Return the current time in UTC */
-INTDEF NONNULL((1)) void FCALL time_now_utc(Dee_int128_t *__restrict p_result);
-INTDEF NONNULL((1)) void FCALL time_now_local(Dee_int128_t *__restrict p_result);
+INTDEF NONNULL((1)) void DFCALL time_now_utc(Dee_int128_t *__restrict p_result);
+INTDEF NONNULL((1)) void DFCALL time_now_local(Dee_int128_t *__restrict p_result);
 
 /* Convert between days-since-01-01-0000 and that the relevant year.
  * When converting from year-to-day, return that year's 01-01-XXXX. */
-INTDEF NONNULL((1)) void FCALL time_inplace_day2year(Dee_int128_t *__restrict p_value);
-INTDEF NONNULL((1)) void FCALL time_inplace_year2day(Dee_int128_t *__restrict p_value);
+INTDEF NONNULL((1)) void DFCALL time_inplace_day2year(Dee_int128_t *__restrict p_value);
+INTDEF NONNULL((1)) void DFCALL time_inplace_year2day(Dee_int128_t *__restrict p_value);
 
 /* Convert between a specific month and that month's starting nano-second */
-INTDEF NONNULL((1)) void FCALL time_inplace_nanosecond2month(Dee_int128_t *__restrict p_value);
-INTDEF NONNULL((1)) void FCALL time_inplace_month2nanosecond(Dee_int128_t *__restrict p_value);
+INTDEF NONNULL((1)) void DFCALL time_inplace_nanosecond2month(Dee_int128_t *__restrict p_value);
+INTDEF NONNULL((1)) void DFCALL time_inplace_month2nanosecond(Dee_int128_t *__restrict p_value);
 
 /* Check if the year referenced by the year-counter `*p_year' is a leap-year */
-INTDEF NONNULL((1)) bool FCALL time_years_isleapyear(Dee_int128_t const *__restrict p_year);
+INTDEF NONNULL((1)) bool DFCALL time_years_isleapyear(Dee_int128_t const *__restrict p_year);
 
 struct month {
 	uint64_t m_start; /* Nano-seconds into the year for when this month starts */

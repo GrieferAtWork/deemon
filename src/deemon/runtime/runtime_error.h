@@ -58,8 +58,8 @@ INTDEF ATTR_COLD NONNULL((1)) int DCALL err_expected_single_character_string(Dee
 INTDEF ATTR_COLD NONNULL((1)) int DCALL err_integer_overflow(DeeObject *__restrict overflowing_object, size_t cutoff_bits, bool positive_overflow);
 INTDEF ATTR_COLD int DCALL err_integer_overflow_i(size_t cutoff_bits, bool positive_overflow);
 #define xcheck_empty_keywords(kw) (!(kw) ? 0 : check_empty_keywords(kw))
-INTDEF NONNULL((1, 2)) int FCALL check_empty_keywords(DeeObject *kw, DeeTypeObject *tp_self);
-INTDEF NONNULL((1)) int FCALL check_empty_keywords_obj(DeeObject *__restrict kw);
+INTDEF NONNULL((1, 2)) int DFCALL check_empty_keywords(DeeObject *kw, DeeTypeObject *tp_self);
+INTDEF NONNULL((1)) int DFCALL check_empty_keywords_obj(DeeObject *__restrict kw);
 INTDEF ATTR_COLD NONNULL((1, 2)) int DCALL err_keywords_not_accepted(DeeTypeObject *tp_self, DeeObject *kw);
 INTDEF ATTR_COLD NONNULL((1, 2, 3)) int DCALL err_keywords_func_not_accepted_string(DeeTypeObject *tp_self, char const *__restrict name, DeeObject *__restrict kw);
 INTDEF ATTR_COLD NONNULL((1, 2, 4)) int DCALL err_keywords_func_not_accepted_string_len(DeeTypeObject *tp_self, char const *__restrict name, size_t namelen, DeeObject *__restrict kw);

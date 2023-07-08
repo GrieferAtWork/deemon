@@ -33,10 +33,10 @@ DECL_BEGIN
  *   - '{'                       (Start of the class body)
  * @param: tp_flags: Set of `0 | TP_FFINAL' */
 #ifdef JIT_EVAL
-INTERN WUNUSED DREF DeeTypeObject *FCALL
+INTERN WUNUSED DREF DeeTypeObject *DFCALL
 JITLexer_EvalClass(JITLexer *__restrict self, uint16_t tp_flags)
 #else /* JIT_EVAL */
-INTERN int FCALL
+INTERN int DFCALL
 JITLexer_SkipClass(JITLexer *__restrict self)
 #endif /* !JIT_EVAL */
 {

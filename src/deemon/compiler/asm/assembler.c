@@ -1621,7 +1621,7 @@ err:
 
 
 /* Assembly writing. */
-INTERN WUNUSED struct asm_rel *(FCALL asm_allocrel)(void) {
+INTERN WUNUSED struct asm_rel *(DFCALL asm_allocrel)(void) {
 	struct asm_rel *result;
 	ASSERT(current_assembler.a_curr->sec_relc <=
 	       current_assembler.a_curr->sec_rela);
@@ -1653,7 +1653,7 @@ do_realloc:
 	return result;
 }
 
-INTERN WUNUSED instruction_t *(FCALL asm_alloc)(size_t n_bytes) {
+INTERN WUNUSED instruction_t *(DFCALL asm_alloc)(size_t n_bytes) {
 	instruction_t *result;
 	size_t min_size, new_size;
 	ASSERT(current_assembler.a_curr);

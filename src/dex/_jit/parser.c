@@ -53,7 +53,7 @@ INTERN_CONST char const rt_operator_names[1 + (AST_OPERATOR_MAX - AST_OPERATOR_M
 /* Check if the current token may refer to the start of an expression.
  * The currently selected token is not altered/is restored before this function returns.
  * NOTE: This function may also be used with `JITSmallLexer' */
-INTERN bool FCALL
+INTERN bool DFCALL
 JITLexer_MaybeExpressionBegin(JITLexer *__restrict self) {
 	switch (self->jl_tok) {
 
@@ -202,7 +202,7 @@ PRIVATE DEFINE_STRING_EX(str_operators, "operators", 0xd4b6b76c, 0xc8d5b5ae0eb73
 /*[[[end]]]*/
 
 
-INTERN WUNUSED DREF DeeObject *FCALL
+INTERN WUNUSED DREF DeeObject *DFCALL
 JIT_GetOperatorFunction(uint16_t opname) {
 	DREF DeeObject *result;
 	DREF DeeModuleObject *operators_module;
@@ -251,7 +251,7 @@ err:
 
 
 
-INTERN int32_t FCALL
+INTERN int32_t DFCALL
 JITLexer_ParseOperatorName(JITLexer *__restrict self,
                            uint16_t features) {
 	int32_t result;
@@ -781,7 +781,7 @@ err_trace:
  * @return:  1: Successfully parsed the module name and written it to `*printer'
  * @return:  0: Successfully parsed the module name and stored it in `*p_name_start' / `*p_name_end'
  * @return: -1: An error occurred. */
-INTERN WUNUSED NONNULL((1)) int FCALL
+INTERN WUNUSED NONNULL((1)) int DFCALL
 JITLexer_EvalModuleName(JITLexer *__restrict self,
                         struct unicode_printer *printer,
                         /*utf-8*/ unsigned char **p_name_start,
@@ -840,7 +840,7 @@ use_printer:
 /* Same as `JITLexer_EvalModuleName()', but always parse into a printer.
  * @return:  0: Successfully.
  * @return: -1: An error occurred. */
-INTERN WUNUSED NONNULL((1, 2)) int FCALL
+INTERN WUNUSED NONNULL((1, 2)) int DFCALL
 JITLexer_EvalModuleNameIntoPrinter(JITLexer *__restrict self,
                                    struct unicode_printer *__restrict printer) {
 	int result;
@@ -860,7 +860,7 @@ JITLexer_EvalModuleNameIntoPrinter(JITLexer *__restrict self,
 
 
 
-INTERN WUNUSED DREF /*Module*/ DeeObject *FCALL
+INTERN WUNUSED DREF /*Module*/ DeeObject *DFCALL
 JITLexer_EvalModule(JITLexer *__restrict self) {
 	int error;
 	DREF /*Module*/ DeeObject *result;
@@ -1001,7 +1001,7 @@ err:
 
 /* Recursively skip a pair of tokens, such as `{' and `}' or `(' and `)'
  * NOTE: Entry is expected to be after the initial instance of `pair_open' */
-INTERN WUNUSED NONNULL((1)) int FCALL
+INTERN WUNUSED NONNULL((1)) int DFCALL
 JITLexer_SkipPair(JITLexer *__restrict self,
                   unsigned int pair_open,
                   unsigned int pair_close) {
@@ -1032,7 +1032,7 @@ err_eof:
 
 
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *FCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DFCALL
 JITLexer_ParseCatchExprItem(JITLexer *__restrict self) {
 	DREF DeeObject *result;
 	result = JITLexer_EvalUnary(self, JITLEXER_EVAL_FPRIMARY);
@@ -1048,7 +1048,7 @@ JITLexer_ParseCatchExprItem(JITLexer *__restrict self) {
  *             ^      ^
  * >> }
  * Also handles multi-catch masks. */
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *FCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DFCALL
 JITLexer_ParseCatchExpr(JITLexer *__restrict self) {
 	DREF DeeObject *result, *next;
 	result = JITLexer_ParseCatchExprItem(self);
@@ -1094,7 +1094,7 @@ err_r:
  *             ^            ^
  * >> }
  */
-INTERN WUNUSED NONNULL((1, 2, 3, 4)) int FCALL
+INTERN WUNUSED NONNULL((1, 2, 3, 4)) int DFCALL
 JITLexer_ParseCatchMask(JITLexer *__restrict self,
                         DREF DeeObject **__restrict p_typemask,
                         char const **__restrict p_symbol_name,
@@ -1168,7 +1168,7 @@ err:
  *       call this function as:
  *       >> can_catch = (!mask || JIT_IsCatchable(obj, mask)) &&
  *       >>             (allow_interrupts || !DeeObject_IsInterrupt(obj)); */
-INTERN WUNUSED NONNULL((1, 2)) bool FCALL
+INTERN WUNUSED NONNULL((1, 2)) bool DFCALL
 JIT_IsCatchable(DeeObject *thrown_object,
                 DeeObject *typemask) {
 	DeeTypeObject *thrown_object_type;

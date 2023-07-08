@@ -320,7 +320,7 @@ INTERN ATTR_COLD int
 }
 
 INTERN NONNULL((1, 2)) int
-(FCALL check_empty_keywords)(DeeObject *kw, DeeTypeObject *tp_self) {
+(DFCALL check_empty_keywords)(DeeObject *kw, DeeTypeObject *tp_self) {
 	if (DeeKwds_Check(kw)) {
 		if (DeeKwds_SIZE(kw) != 0)
 			goto err_no_keywords;
@@ -339,7 +339,7 @@ err:
 }
 
 INTERN NONNULL((1)) int
-(FCALL check_empty_keywords_obj)(DeeObject *__restrict kw) {
+(DFCALL check_empty_keywords_obj)(DeeObject *__restrict kw) {
 	if (DeeKwds_Check(kw)) {
 		if (DeeKwds_SIZE(kw) != 0)
 			goto err_no_keywords;

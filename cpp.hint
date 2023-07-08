@@ -888,7 +888,7 @@
 
 #define DREF
 #define DWEAK
-#define FCALL
+#define DFCALL
 #define DCALL
 #define DPRINTER_CC
 #define DFUNDEF

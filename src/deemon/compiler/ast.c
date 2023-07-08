@@ -99,7 +99,7 @@ INTERN WUNUSED DREF struct ast *DCALL ast_new(void) {
 }
 #endif /* NDEBUG */
 
-INTERN NONNULL((1)) void FCALL
+INTERN NONNULL((1)) void DFCALL
 loc_here(struct ast_loc *__restrict info) {
 	info->l_file = TPPLexer_Global.l_token.t_file;
 	/* Query line/column information for the current token's start position. */
@@ -107,7 +107,7 @@ loc_here(struct ast_loc *__restrict info) {
 	             TPPLexer_Global.l_token.t_begin);
 }
 
-INTERN NONNULL((2)) struct ast *FCALL
+INTERN NONNULL((2)) struct ast *DFCALL
 ast_setddi(struct ast *self,
            struct ast_loc *__restrict info) {
 	if unlikely(!self)
@@ -127,7 +127,7 @@ done:
 	return self;
 }
 
-INTERN struct ast *FCALL
+INTERN struct ast *DFCALL
 ast_sethere(struct ast *self) {
 	if unlikely(!self)
 		goto done; /* Special case: Ignore `NULL' for `ast'. */
@@ -142,7 +142,7 @@ done:
 	return self;
 }
 
-INTERN NONNULL((2)) struct ast *FCALL
+INTERN NONNULL((2)) struct ast *DFCALL
 ast_putddi(struct ast *self,
            struct ast_loc *__restrict info) {
 	if unlikely(!self)
@@ -162,7 +162,7 @@ done:
 	return self;
 }
 
-INTERN struct ast *FCALL
+INTERN struct ast *DFCALL
 ast_puthere(struct ast *self) {
 	if unlikely(!self)
 		goto done; /* Special case: Ignore `NULL' for `ast'. */

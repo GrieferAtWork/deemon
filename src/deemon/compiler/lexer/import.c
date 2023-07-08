@@ -241,7 +241,7 @@ err:
 	return NULL;
 }
 
-INTERN WUNUSED NONNULL((1)) struct symbol *FCALL
+INTERN WUNUSED NONNULL((1)) struct symbol *DFCALL
 ast_parse_import_single_sym(struct TPPKeyword *__restrict import_name) {
 	DREF DeeModuleObject *mod;
 	struct symbol *extern_symbol;
@@ -285,7 +285,7 @@ err:
 	return NULL;
 }
 
-INTERN WUNUSED NONNULL((1)) DREF struct ast *FCALL
+INTERN WUNUSED NONNULL((1)) DREF struct ast *DFCALL
 ast_parse_import_single(struct TPPKeyword *__restrict import_name) {
 	struct symbol *extern_symbol;
 	extern_symbol = ast_parse_import_single_sym(import_name);
@@ -826,9 +826,9 @@ err:
 }
 
 
-INTDEF WUNUSED DREF struct ast *FCALL ast_sym_import_from_deemon(void);
+INTDEF WUNUSED DREF struct ast *DFCALL ast_sym_import_from_deemon(void);
 
-INTERN int FCALL ast_parse_post_import(void) {
+INTERN int DFCALL ast_parse_post_import(void) {
 	/* - import deemon;
 	 * - import deemon, util;
 	 * - import my_deemon = deemon;
@@ -1054,7 +1054,7 @@ err:
 }
 
 /* Same as `ast_parse_try_hybrid' but for import statements / expressions. */
-INTERN WUNUSED DREF struct ast *FCALL
+INTERN WUNUSED DREF struct ast *DFCALL
 ast_parse_import_hybrid(unsigned int *p_was_expression) {
 	DREF struct ast *result;
 	struct ast_loc import_loc;
@@ -1092,7 +1092,7 @@ err:
 }
 
 
-INTERN WUNUSED DREF struct ast *FCALL ast_parse_import(void) {
+INTERN WUNUSED DREF struct ast *DFCALL ast_parse_import(void) {
 	DREF DeeModuleObject *mod;
 	DREF struct ast *result;
 	struct ast_loc import_loc;

@@ -186,7 +186,7 @@ err:
 }
 
 
-INTERN void FCALL
+INTERN void DFCALL
 JITLexer_ScanForHead(JITLexer *__restrict self) {
 	bool has_paren;
 	if (JITLexer_ISKWD(self, "pack"))
@@ -208,7 +208,7 @@ JITLexer_ScanForHead(JITLexer *__restrict self) {
 		JITLexer_Yield(self);
 }
 
-INTERN void FCALL
+INTERN void DFCALL
 JITLexer_ScanCatchMask(JITLexer *__restrict self) {
 	bool hasparen;
 	if (JITLexer_ISKWD(self, "pack"))
@@ -227,7 +227,7 @@ JITLexer_ScanCatchMask(JITLexer *__restrict self) {
 		JITLexer_Yield(self);
 }
 
-INTERN void FCALL
+INTERN void DFCALL
 JITLexer_QuickSkipModuleName(JITLexer *__restrict self) {
 	if (self->jl_tok == '.' || self->jl_tok == JIT_KEYWORD) {
 		unsigned char *start, *end;
@@ -295,7 +295,7 @@ do_print:
 }
 
 
-INTERN void FCALL
+INTERN void DFCALL
 JITLexer_QuickSkipOperatorName(JITLexer *__restrict self) {
 	switch (self->jl_tok) {
 
@@ -376,7 +376,7 @@ done_y1:
 }
 
 /* Starting _AFTER_ the leading '(', skip ahead until _AFTER_ the closing ')' */
-PRIVATE void FCALL
+PRIVATE void DFCALL
 JITLexer_SkipParamList(JITLexer *__restrict self) {
 	unsigned int recursion;
 	recursion = 1;
@@ -397,7 +397,7 @@ JITLexer_SkipParamList(JITLexer *__restrict self) {
 }
 
 
-INTERN NONNULL((1)) void FCALL
+INTERN NONNULL((1)) void DFCALL
 JITLexer_ScanExpression(JITLexer *__restrict self, bool allow_casts) {
 again:
 	switch (self->jl_tok) {
@@ -893,7 +893,7 @@ do_again_docast:
 	}
 }
 
-INTERN NONNULL((1)) void FCALL
+INTERN NONNULL((1)) void DFCALL
 JITLexer_ScanStatement(JITLexer *__restrict self) {
 again:
 	switch (self->jl_tok) {
@@ -1149,7 +1149,7 @@ done_skip_semi:
 /* Assume that the given source text start/ends with `{' and `}'.
  * This function trims those characters, before also trimming any
  * additional whitespace next to them. */
-INTERN NONNULL((1, 2)) void FCALL
+INTERN NONNULL((1, 2)) void DFCALL
 JITFunction_TrimSurroundingBraces(/*utf-8*/ char const **__restrict p_source_start,
                                   /*utf-8*/ char const **__restrict p_source_end) {
 	/*utf-8*/ char const *source_start = *p_source_start;

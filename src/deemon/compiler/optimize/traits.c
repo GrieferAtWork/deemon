@@ -186,7 +186,7 @@ again:
 /* Predict the typing of a given AST, or return NULL when unpredictable.
  * NOTE: When the `OPTIMIZE_FNOPREDICT' flag is set, this function always returns `NULL'.
  * @param: flags: Set of `AST_PREDICT_TYPE_F_*' */
-INTERN WUNUSED NONNULL((1)) DeeTypeObject *FCALL
+INTERN WUNUSED NONNULL((1)) DeeTypeObject *DFCALL
 ast_predict_type_ex(struct ast *__restrict self, unsigned int flags) {
 	ASSERT_AST(self);
 	/* When AST type prediction is disabled, always indicate unpredictable ASTs. */

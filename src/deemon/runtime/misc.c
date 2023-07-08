@@ -108,7 +108,7 @@ DECL_BEGIN
 /* Combine 2 hash values into 1, while losing
  * as little entropy from either as possible. */
 PUBLIC ATTR_CONST WUNUSED dhash_t
-(FCALL Dee_HashCombine)(dhash_t a, dhash_t b) {
+(DFCALL Dee_HashCombine)(dhash_t a, dhash_t b) {
 	/* Take from https://stackoverflow.com/a/27952689/3296587 */
 #if __SIZEOF_POINTER__ >= 8
 	a ^= b + UINT64_C(0x517cc1b727220a95) + (a << 6) + (a >> 2);

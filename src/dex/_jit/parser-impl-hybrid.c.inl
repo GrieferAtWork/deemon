@@ -23,7 +23,7 @@
 
 DECL_BEGIN
 
-INTERN RETURN_TYPE FCALL
+INTERN RETURN_TYPE DFCALL
 FUNC(StatementOrBraces)(JITLexer *__restrict self,
                         unsigned int *p_was_expression) {
 	RETURN_TYPE result;
@@ -427,7 +427,7 @@ err:
 #if defined(JIT_SKIP)/* || 1*/
 /* Same as `JITLexer_SkipHybrid()', but the current token
  * is `{', and a trailing `;' should _NOT_ be consumed */
-INTERN RETURN_TYPE FCALL
+INTERN RETURN_TYPE DFCALL
 FUNC(HybridAtBrace)(JITLexer *__restrict self,
                     unsigned int *p_was_expression) {
 	unsigned int was_expression;
@@ -460,7 +460,7 @@ err:
 #endif /* JIT_SKIP */
 
 
-INTERN RETURN_TYPE FCALL
+INTERN RETURN_TYPE DFCALL
 FUNC(Hybrid)(JITLexer *__restrict self,
              unsigned int *p_was_expression) {
 	unsigned int was_expression;

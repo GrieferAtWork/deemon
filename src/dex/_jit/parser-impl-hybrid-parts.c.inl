@@ -60,7 +60,7 @@
 DECL_BEGIN
 
 
-INTERN RETURN_TYPE FCALL
+INTERN RETURN_TYPE DFCALL
 H_FUNC(Try)(JITLexer *__restrict self, JIT_ARGS) {
 	RETURN_TYPE result;
 	IF_HYBRID(unsigned int was_expression;)
@@ -345,7 +345,7 @@ err:
 }
 
 
-INTERN RETURN_TYPE FCALL
+INTERN RETURN_TYPE DFCALL
 H_FUNC(If)(JITLexer *__restrict self, JIT_ARGS) {
 	RETURN_TYPE result;
 	ASSERT(JITLexer_ISKWD(self, "if"));
@@ -441,7 +441,7 @@ err:
 	return ERROR;
 }
 
-INTERN RETURN_TYPE FCALL
+INTERN RETURN_TYPE DFCALL
 H_FUNC(Del)(JITLexer *__restrict self, JIT_ARGS) {
 	ASSERT(JITLexer_ISKWD(self, "del"));
 #ifdef JIT_HYBRID
@@ -454,7 +454,7 @@ H_FUNC(Del)(JITLexer *__restrict self, JIT_ARGS) {
 	return ERROR;
 }
 
-INTERN RETURN_TYPE FCALL
+INTERN RETURN_TYPE DFCALL
 H_FUNC(For)(JITLexer *__restrict self, JIT_ARGS) {
 	RETURN_TYPE result;
 	ASSERT(JITLexer_ISKWD(self, "for"));
@@ -740,7 +740,7 @@ err:
 #endif /* !JIT_HYBRID */
 }
 
-INTERN RETURN_TYPE FCALL
+INTERN RETURN_TYPE DFCALL
 H_FUNC(Foreach)(JITLexer *__restrict self, JIT_ARGS) {
 	RETURN_TYPE result;
 	ASSERT(JITLexer_ISKWD(self, "foreach"));
@@ -885,7 +885,7 @@ err:
 #endif /* !JIT_HYBRID */
 }
 
-INTERN RETURN_TYPE FCALL
+INTERN RETURN_TYPE DFCALL
 H_FUNC(While)(JITLexer *__restrict self, JIT_ARGS) {
 	RETURN_TYPE result;
 	ASSERT(JITLexer_ISKWD(self, "while"));
@@ -1020,7 +1020,7 @@ err:
 #endif /* !JIT_HYBRID */
 }
 
-INTERN RETURN_TYPE FCALL
+INTERN RETURN_TYPE DFCALL
 H_FUNC(Do)(JITLexer *__restrict self, JIT_ARGS) {
 	RETURN_TYPE result;
 	ASSERT(JITLexer_ISKWD(self, "do"));
@@ -1170,7 +1170,7 @@ err:
 #endif /* !JIT_HYBRID */
 }
 
-INTERN RETURN_TYPE FCALL
+INTERN RETURN_TYPE DFCALL
 H_FUNC(With)(JITLexer *__restrict self, JIT_ARGS) {
 	RETURN_TYPE result;
 #ifdef JIT_EVAL
@@ -1239,7 +1239,7 @@ err:
 	return ERROR;
 }
 
-INTERN RETURN_TYPE FCALL
+INTERN RETURN_TYPE DFCALL
 H_FUNC(Assert)(JITLexer *__restrict self, JIT_ARGS) {
 	ASSERT(JITLexer_ISKWD(self, "assert"));
 #ifdef JIT_HYBRID
@@ -1252,7 +1252,7 @@ H_FUNC(Assert)(JITLexer *__restrict self, JIT_ARGS) {
 }
 
 #ifdef JIT_HYBRID
-INTERN RETURN_TYPE FCALL
+INTERN RETURN_TYPE DFCALL
 H_FUNC(Import)(JITLexer *__restrict self, JIT_ARGS) {
 	if (self->jl_tok == '(' || JITLexer_ISKWD(self, "pack")) {
 		/* Special handling for `import(...)' expressions. */

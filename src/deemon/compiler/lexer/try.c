@@ -320,7 +320,7 @@ err:
 
 /* With the current token being `try', parse the construct and
  * try to figure out if it's a statement or an expression. */
-INTERN WUNUSED DREF struct ast *FCALL
+INTERN WUNUSED DREF struct ast *DFCALL
 ast_parse_try_hybrid(unsigned int *p_was_expression) {
 	DREF struct ast *result, *merge;
 	struct ast_loc loc;

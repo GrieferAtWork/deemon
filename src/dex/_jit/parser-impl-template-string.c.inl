@@ -29,10 +29,10 @@ DECL_BEGIN
 
 /* Parse a template string */
 #ifdef JIT_EVAL
-INTERN WUNUSED NONNULL((1)) DREF DeeObject *FCALL
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DFCALL
 JITLexer_EvalTemplateString(JITLexer *__restrict self)
 #else /* JIT_EVAL */
-INTERN WUNUSED NONNULL((1)) int FCALL
+INTERN WUNUSED NONNULL((1)) int DFCALL
 JITLexer_SkipTemplateString(JITLexer *__restrict self)
 #endif /* !JIT_EVAL */
 {

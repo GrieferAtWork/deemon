@@ -476,6 +476,15 @@ extern void (__debugbreak)(void);
 #endif /* !__i386__ || __x86_64__ */
 #endif /* !DCALL */
 
+/* Calling convention for short leaf functions with up to 2 arguments (e.g. `Dee_HashCombine'). */
+#ifndef DFCALL
+#if defined(__i386__) && !defined(__x86_64__)
+#define DFCALL __ATTR_FASTCALL /* arg0: %ecx, arg1: %edx, argN: 4+N*4(%esp) (callee-cleanup) */
+#else /* __i386__ && !__x86_64__ */
+#define DFCALL /* nothing (use default calling convention) */
+#endif /* !__i386__ || __x86_64__ */
+#endif /* !DFCALL */
+
 /* Calling convention for `dformatprinter' */
 #ifndef DPRINTER_CC
 #if defined(__KOS__) && __KOS_VERSION__ >= 400
@@ -503,17 +512,6 @@ extern void (__debugbreak)(void);
 #ifndef DWEAK
 #define DWEAK /* Annotation for data that is thread-volatile. */
 #endif /* !DWEAK */
-
-
-#ifdef DEE_SOURCE
-#ifndef FCALL
-#if defined(__i386__) && !defined(__x86_64__)
-#define FCALL __ATTR_FASTCALL /* arg0: %ecx, arg1: %edx, argN: 4+N*4(%esp) (callee-cleanup) */
-#else /* __i386__ && !__x86_64__ */
-#define FCALL /* nothing (use default calling convention) */
-#endif /* !__i386__ || __x86_64__ */
-#endif /* !FCALL */
-#endif /* DEE_SOURCE */
 
 #if !defined(NDEBUG) && !defined(CONFIG_NO_CHECKMEMORY) && defined(_DEBUG)
 #ifdef CONFIG_HOST_WINDOWS

@@ -56,7 +56,7 @@ DECL_BEGIN
 
 /* Parse a with-statement/expression.
  * NOTE: This function expects the current token to be `with' */
-INTERN WUNUSED DREF struct ast *FCALL
+INTERN WUNUSED DREF struct ast *DFCALL
 ast_parse_with(bool is_statement, bool allow_nonblock) {
 	struct ast_loc loc;
 	struct symbol *expression_sym;
@@ -193,7 +193,7 @@ err_scope_r:
 
 
 /* Same as `ast_parse_try_hybrid' but for with statements / expressions. */
-INTERN WUNUSED DREF struct ast *FCALL
+INTERN WUNUSED DREF struct ast *DFCALL
 ast_parse_with_hybrid(unsigned int *p_was_expression) {
 	struct ast_loc loc;
 	struct symbol *expression_sym;

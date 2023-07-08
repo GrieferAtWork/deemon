@@ -474,7 +474,7 @@ err:
 
 
 /* @param: ao_flags: Set of `ASM_OVERLOAD_F*' */
-PRIVATE bool FCALL
+PRIVATE bool DFCALL
 compatible_operand(struct asm_invoke_operand   const *__restrict iop,
                    struct asm_overload_operand const *__restrict oop,
                    uint16_t ao_flags) {
@@ -765,7 +765,7 @@ PRIVATE struct reldesc const reldescs[ASM_OVERLOAD_FRELMSK + 1] = {
 	asm_putrel(reldescs[(flags) & ASM_OVERLOAD_FRELMSK].rd_rel##bits, sym, 0)
 
 
-INTERN WUNUSED NONNULL((1, 2)) int FCALL
+INTERN WUNUSED NONNULL((1, 2)) int DFCALL
 uasm_invoke(struct asm_mnemonic *__restrict instr,
             struct asm_invocation *__restrict invoc) {
 	struct asm_overload *iter, *end;

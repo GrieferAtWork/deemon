@@ -568,26 +568,26 @@ INTDEF struct user_assembler current_userasm;
 #define uasm_defsym(sym) (void)(asm_defsym(sym), current_userasm.ua_lasti = ASM_DELOP)
 
 /* Parse (process tokens from TPP) user-define assembly. */
-INTDEF WUNUSED int FCALL uasm_parse(void);
-INTDEF WUNUSED int FCALL uasm_parse_instruction(void);
-INTDEF WUNUSED int FCALL uasm_parse_directive(void);
-INTDEF WUNUSED struct TPPKeyword *FCALL uasm_parse_symnam(void);
+INTDEF WUNUSED int DFCALL uasm_parse(void);
+INTDEF WUNUSED int DFCALL uasm_parse_instruction(void);
+INTDEF WUNUSED int DFCALL uasm_parse_directive(void);
+INTDEF WUNUSED struct TPPKeyword *DFCALL uasm_parse_symnam(void);
 /* Parse an operand. NOTE: The caller is responsible for ZERO-initializing `result' beforehand. */
-INTDEF WUNUSED NONNULL((1)) int FCALL uasm_parse_operand(struct asm_invoke_operand *__restrict result);
+INTDEF WUNUSED NONNULL((1)) int DFCALL uasm_parse_operand(struct asm_invoke_operand *__restrict result);
 /* Parse an integer expression as found in operands, following a `$' token.
  * @param: features: Set of `UASM_INTEXPR_F*' */
-INTDEF WUNUSED NONNULL((1)) int FCALL uasm_parse_intexpr(struct asm_intexpr *result, uint16_t features);
+INTDEF WUNUSED NONNULL((1)) int DFCALL uasm_parse_intexpr(struct asm_intexpr *result, uint16_t features);
 #define UASM_INTEXPR_FNORMAL 0x0000
 #define UASM_INTEXPR_FHASSP  0x0001 /* Recognize case-insensitive `SP' as expanding to `current_assembler.a_stackcur' */
 
 /* Parse and return a 16-bit unsigned integer.
  * @return: -1: An error was thrown.
  * @param: features: Set of `UASM_INTEXPR_F*' */
-INTDEF WUNUSED int32_t FCALL uasm_parse_imm16(uint16_t features);
+INTDEF WUNUSED int32_t DFCALL uasm_parse_imm16(uint16_t features);
 
 /* Invoke a given `instr' using data from `invoc'.
  * NOTE: This function also sets the `CODE_FASSEMBLY' flag in the current base scope. */
-INTDEF WUNUSED NONNULL((1, 2)) int FCALL
+INTDEF WUNUSED NONNULL((1, 2)) int DFCALL
 uasm_invoke(struct asm_mnemonic *__restrict instr,
             struct asm_invocation *__restrict invoc);
 
@@ -598,20 +598,20 @@ uasm_invoke(struct asm_mnemonic *__restrict instr,
  * If the given name does not start with `.L', or if the following
  * integer is greater than `current_userasm.ua_labelc', NULL is
  * returned, but no error is set. */
-INTDEF WUNUSED NONNULL((1)) struct asm_sym *FCALL
+INTDEF WUNUSED NONNULL((1)) struct asm_sym *DFCALL
 uasm_label_symbol(struct TPPKeyword *__restrict name);
 
 /* Lookup a user-assembly symbol, given its name.
  * If the symbol doesn't already exist, it is automatically created. */
-INTDEF WUNUSED NONNULL((1)) struct asm_sym *FCALL
+INTDEF WUNUSED NONNULL((1)) struct asm_sym *DFCALL
 uasm_symbol(struct TPPKeyword *__restrict name);
 
 /* Same as `uasm_symbol', but create/lookup symbols using forward/backward semantics. */
-INTDEF WUNUSED NONNULL((1)) struct asm_sym *FCALL
+INTDEF WUNUSED NONNULL((1)) struct asm_sym *DFCALL
 uasm_fbsymbol(struct TPPKeyword *__restrict name, bool return_back_symbol);
 
 /* Return an F/B symbol suitable to be defined at some specific address. */
-INTDEF WUNUSED NONNULL((1)) struct asm_sym *FCALL
+INTDEF WUNUSED NONNULL((1)) struct asm_sym *DFCALL
 uasm_fbsymbol_def(struct TPPKeyword *__restrict name);
 
 #endif /* !CONFIG_LANGUAGE_NO_ASM */
@@ -966,7 +966,7 @@ INTDEF WUNUSED struct except_handler *(DCALL asm_pack_exceptv)(void);
 #define asm_diicsp()   (void)(Dee_ASSERT(current_assembler.a_stackcur >= 1), asm_incsp()) /* asm_decsp(), asm_incsp(), asm_incsp() */
 
 /* Allocate a new, uninitialized relocation within the current text section. */
-INTDEF WUNUSED struct asm_rel *FCALL asm_allocrel(void);
+INTDEF WUNUSED struct asm_rel *DFCALL asm_allocrel(void);
 
 /* Place a new relocation at the current text position. */
 INTDEF WUNUSED int DCALL asm_putrel(uint16_t type, struct asm_sym *sym, uint16_t value);
@@ -981,7 +981,7 @@ INTDEF WUNUSED int DCALL asm_putrel(uint16_t type, struct asm_sym *sym, uint16_t
 
 /* Write data to the current text section.
  * @return: -1|NULL: An error occurred. */
-INTDEF WUNUSED instruction_t *FCALL asm_alloc(size_t n_bytes);
+INTDEF WUNUSED instruction_t *DFCALL asm_alloc(size_t n_bytes);
 INTDEF WUNUSED int DCALL asm_put(instruction_t instr);
 INTDEF WUNUSED int DCALL asm_put16(uint16_t instr); /* 16-bit, big-endian encoded instruction, or 8-bit when top 8 bits are clear. */
 INTDEF WUNUSED int DCALL asm_putimm8(instruction_t instr, uint8_t imm8);

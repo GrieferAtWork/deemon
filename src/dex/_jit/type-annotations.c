@@ -41,7 +41,7 @@ DECL_BEGIN
 #define THROW_ERROR(expr) \
 	(throw_errors ? (expr) : -1)
 
-PRIVATE WUNUSED NONNULL((1)) int FCALL
+PRIVATE WUNUSED NONNULL((1)) int DFCALL
 parse_unary_head(JITLexer *__restrict self, bool throw_errors) {
 	switch (self->jl_tok) {
 
@@ -240,7 +240,7 @@ err:
 	return -1;
 }
 
-PRIVATE WUNUSED NONNULL((1)) int FCALL
+PRIVATE WUNUSED NONNULL((1)) int DFCALL
 parse_unary(JITLexer *__restrict self, bool throw_errors) {
 	int result;
 	result = parse_unary_head(self, throw_errors);
@@ -255,7 +255,7 @@ parse_unary(JITLexer *__restrict self, bool throw_errors) {
 	return result;
 }
 
-PRIVATE WUNUSED NONNULL((1)) int FCALL
+PRIVATE WUNUSED NONNULL((1)) int DFCALL
 parse_alt(JITLexer *__restrict self, bool throw_errors) {
 	int result;
 again:
@@ -273,7 +273,7 @@ again:
  *             ^                                    ^
  * @return: 0 : Success
  * @return: -1: Compiler error (only thrown when `throw_errors != false') */
-INTERN WUNUSED NONNULL((1)) int FCALL
+INTERN WUNUSED NONNULL((1)) int DFCALL
 JITLexer_SkipTypeAnnotation(JITLexer *__restrict self, bool throw_errors) {
 	int result;
 again:

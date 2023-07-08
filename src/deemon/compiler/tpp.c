@@ -827,7 +827,7 @@ parser_warn_pack_used(struct ast_loc *loc) {
 
 }
 
-INTERN WUNUSED NONNULL((1)) int FCALL
+INTERN WUNUSED NONNULL((1)) int DFCALL
 _parser_paren_begin(bool *__restrict p_has_paren, int wnum) {
 	ASSERT(tok != '(');
 	if (tok == KWD_pack) {

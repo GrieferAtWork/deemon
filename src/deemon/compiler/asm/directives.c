@@ -92,7 +92,7 @@ LOCAL WUNUSED NONNULL((1, 2)) bool dee_strcaseeq(char *a, char *b) {
 	 MEMCASEEQ(token.t_kwd->k_name, str, sizeof(str) - sizeof(char)))
 
 
-PRIVATE WUNUSED DREF DeeObject *FCALL do_parse_constant(void) {
+PRIVATE WUNUSED DREF DeeObject *DFCALL do_parse_constant(void) {
 	DREF struct ast *const_ast;
 	DREF DeeObject *result;
 	if unlikely(scope_push())
@@ -121,7 +121,7 @@ err:
 	return NULL;
 }
 
-PRIVATE struct asm_sym *FCALL do_parse_symbol_for_op(int wid) {
+PRIVATE struct asm_sym *DFCALL do_parse_symbol_for_op(int wid) {
 	struct asm_intexpr expr;
 	if unlikely(uasm_parse_intexpr(&expr, UASM_INTEXPR_FHASSP))
 		goto err;
@@ -145,11 +145,11 @@ err:
 	return NULL;
 }
 
-PRIVATE struct asm_sym *FCALL do_parse_symbol_for_except(void) {
+PRIVATE struct asm_sym *DFCALL do_parse_symbol_for_except(void) {
 	return do_parse_symbol_for_op(W_UASM_EXCEPT_NEED_ABSOLUTE_SYMBOL);
 }
 
-PRIVATE struct asm_sym *FCALL do_parse_symbol_for_reloc(void) {
+PRIVATE struct asm_sym *DFCALL do_parse_symbol_for_reloc(void) {
 	return do_parse_symbol_for_op(W_UASM_RELOC_NEED_ABSOLUTE_SYMBOL);
 }
 
@@ -175,7 +175,7 @@ PRIVATE struct reloc_type const reloc_db[] = {
 };
 STATIC_ASSERT(COMPILER_LENOF(reloc_db) == R_DMN_COUNT);
 
-PRIVATE uint16_t FCALL
+PRIVATE uint16_t DFCALL
 get_reloc_by_name(char const *__restrict name) {
 	uint16_t result;
 	size_t namelen;
@@ -196,7 +196,7 @@ get_reloc_by_name(char const *__restrict name) {
 /*  ================================  */
 /*  === User-assembly directives ===  */
 /*  ================================  */
-INTERN WUNUSED int FCALL
+INTERN WUNUSED int DFCALL
 uasm_parse_directive(void) {
 #define NAMEISKWD(x)                       \
 	(name->k_size == COMPILER_STRLEN(x) && \

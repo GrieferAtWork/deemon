@@ -41,7 +41,7 @@
 
 DECL_BEGIN
 
-INTERN void FCALL
+INTERN void DFCALL
 JITLValue_Fini(JITLValue *__restrict self) {
 	switch (self->lv_kind) {
 
@@ -65,7 +65,7 @@ JITLValue_Fini(JITLValue *__restrict self) {
 	}
 }
 
-INTERN void FCALL
+INTERN void DFCALL
 JITLValue_Visit(JITLValue *__restrict self, dvisit_t proc, void *arg) {
 	switch (self->lv_kind) {
 
@@ -90,7 +90,7 @@ JITLValue_Visit(JITLValue *__restrict self, dvisit_t proc, void *arg) {
 }
 
 
-PRIVATE bool FCALL
+PRIVATE bool DFCALL
 update_symbol_objent(JITSymbol *__restrict self) {
 	struct jit_object_table *tab;
 	struct jit_object_entry *ent;
@@ -377,7 +377,7 @@ err:
 
 
 
-INTERN WUNUSED NONNULL((1, 2)) int FCALL
+INTERN WUNUSED NONNULL((1, 2)) int DFCALL
 JITLValue_IsBound(JITLValue *__restrict self,
                   JITContext *__restrict context) {
 	int result;
@@ -473,7 +473,7 @@ err:
 
 
 
-INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *FCALL
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DFCALL
 JITLValue_GetValue(JITLValue *__restrict self,
                    JITContext *__restrict context) {
 	DREF DeeObject *result;
@@ -570,7 +570,7 @@ err:
 
 
 
-INTERN WUNUSED NONNULL((1, 2)) int FCALL
+INTERN WUNUSED NONNULL((1, 2)) int DFCALL
 JITLValue_DelValue(JITLValue *__restrict self,
                    JITContext *__restrict context) {
 	int result;
@@ -664,7 +664,7 @@ err:
 
 
 
-INTERN WUNUSED NONNULL((1, 2, 3)) int FCALL
+INTERN WUNUSED NONNULL((1, 2, 3)) int DFCALL
 JITLValue_SetValue(JITLValue *__restrict self,
                    JITContext *__restrict context,
                    DeeObject *value) {
@@ -771,7 +771,7 @@ err:
 	return -1;
 }
 
-INTERN WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *FCALL
+INTERN WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DFCALL
 JITLValue_CallValue(JITLValue *__restrict self, JITContext *__restrict context,
                     DeeObject *args, DeeObject *kw) {
 	DREF DeeObject *result;
@@ -1042,7 +1042,7 @@ done:
  * @param: mode: Set of `LOOKUP_SYM_*'
  * @return: 0:  The specified symbol was found, and `result' was filled
  * @return: -1: An error occurred. */
-INTERN WUNUSED NONNULL((1, 2)) int FCALL
+INTERN WUNUSED NONNULL((1, 2)) int DFCALL
 JITContext_Lookup(JITContext *__restrict self,
                   JITSymbol *__restrict result,
                   /*utf-8*/ char const *name,
@@ -1230,7 +1230,7 @@ err:
 	return -1;
 }
 
-INTERN WUNUSED NONNULL((1, 2)) int FCALL
+INTERN WUNUSED NONNULL((1, 2)) int DFCALL
 JITContext_LookupNth(JITContext *__restrict self,
                      JITSymbol *__restrict result,
                      /*utf-8*/ char const *name,
@@ -1276,7 +1276,7 @@ err:
 
 
 /* Import a named module and bind it as a local variable. */
-INTERN WUNUSED NONNULL((1, 2)) int FCALL
+INTERN WUNUSED NONNULL((1, 2)) int DFCALL
 JITContext_DoImportModule(JITContext *__restrict self,
                           struct jit_import_item const *__restrict spec) {
 	JITObjectTable *tab;
@@ -1360,7 +1360,7 @@ err:
 
 
 /* Import a named symbol from a module and binding it to a local symbol. */
-INTERN WUNUSED NONNULL((1, 2, 3)) int FCALL
+INTERN WUNUSED NONNULL((1, 2, 3)) int DFCALL
 JITContext_DoImportSymbol(JITContext *__restrict self,
                           struct jit_import_item const *__restrict spec,
                           DeeObject *__restrict source_module) {
@@ -1424,7 +1424,7 @@ err:
 }
 
 /* Import a all symbols from a module and bind them to local symbols. */
-INTERN WUNUSED NONNULL((1, 2)) int FCALL
+INTERN WUNUSED NONNULL((1, 2)) int DFCALL
 JITContext_DoImportStar(JITContext *__restrict self,
                         DeeObject *__restrict source_module) {
 	JITObjectTable *tab;

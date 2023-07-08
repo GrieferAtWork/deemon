@@ -82,9 +82,9 @@
 #define CALL_PRIMARYF(name, flags)   JITLexer_Skip##name(self, flags)
 #define CALL_SECONDARY(name, result) JITLexer_Skip##name(self, JITLEXER_EVAL_FSECONDARY)
 #define DEFINE_PRIMARY(name) \
-	INTERN WUNUSED NONNULL((1)) int FCALL JITLexer_Skip##name(JITLexer *__restrict self, unsigned int flags)
+	INTERN WUNUSED NONNULL((1)) int DFCALL JITLexer_Skip##name(JITLexer *__restrict self, unsigned int flags)
 #define DEFINE_SECONDARY(name) \
-	INTERN WUNUSED NONNULL((1)) int FCALL JITLexer_Skip##name(JITLexer *__restrict self, unsigned int flags)
+	INTERN WUNUSED NONNULL((1)) int DFCALL JITLexer_Skip##name(JITLexer *__restrict self, unsigned int flags)
 #else /* JIT_SKIP */
 #define LOAD_LVALUE(obj, err)                                                   \
 	do {                                                                        \
@@ -118,10 +118,10 @@
 #define CALL_PRIMARYF(name, flags)   JITLexer_Eval##name(self, flags)
 #define CALL_SECONDARY(name, result) JITLexer_Eval##name(self, result, JITLEXER_EVAL_FSECONDARY)
 #define DEFINE_PRIMARY(name)                          \
-	INTERN WUNUSED NONNULL((1)) DREF DeeObject *FCALL \
+	INTERN WUNUSED NONNULL((1)) DREF DeeObject *DFCALL \
 	JITLexer_Eval##name(JITLexer *__restrict self, unsigned int flags)
 #define DEFINE_SECONDARY(name)                                              \
-	INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *FCALL                    \
+	INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DFCALL                    \
 	JITLexer_Eval##name(JITLexer *__restrict self,                          \
 	                    /*inherit(always)*/ DREF DeeObject *__restrict lhs, \
 	                    unsigned int flags)
@@ -180,7 +180,7 @@ err_badnum:
 #endif /* CONFIG_HAVE_FPU */
 
 
-INTERN RETURN_TYPE FCALL
+INTERN RETURN_TYPE DFCALL
 #ifdef JIT_EVAL
 JITLexer_EvalKeywordLabelList(JITLexer *__restrict self,
                               char const *__restrict first_label_name,
@@ -250,7 +250,7 @@ err:
 }
 
 
-INTERN RETURN_TYPE FCALL
+INTERN RETURN_TYPE DFCALL
 #ifdef JIT_EVAL
 JITLexer_EvalArgumentList(JITLexer *__restrict self, DREF DeeObject **__restrict p_kwds)
 #else /* JIT_EVAL */
@@ -565,7 +565,7 @@ err:
 
 
 
-INTERN RETURN_TYPE FCALL
+INTERN RETURN_TYPE DFCALL
 FUNC(BraceItems)(JITLexer *__restrict self) {
 	RETURN_TYPE result;
 	if (self->jl_tok == '}') {
@@ -3796,7 +3796,7 @@ err_r:
 	return ERROR;
 }
 
-INTERN RETURN_TYPE FCALL
+INTERN RETURN_TYPE DFCALL
 FUNC(Operand)(JITLexer *__restrict self,
               IF_EVAL(/*inherit(always)*/ DREF DeeObject *__restrict lhs, ) unsigned int flags) {
 	RETURN_TYPE result = LHS_OR_OK;

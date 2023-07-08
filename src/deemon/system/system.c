@@ -627,7 +627,7 @@ DeeSystem_DEFINE_memrend(dee_memrend)
  * last `DeeSystem_SEP' or `DeeSystem_ALTSEP' in `path', or
  * just re-returns `path' when no such character exists. */
 PUBLIC ATTR_PURE ATTR_RETNONNULL WUNUSED ATTR_INS(1, 2) char const *
-(FCALL DeeSystem_BaseName)(char const *__restrict path, size_t pathlen) {
+(DFCALL DeeSystem_BaseName)(char const *__restrict path, size_t pathlen) {
 #if defined(DeeSystem_ALTSEP) && (DeeSystem_ALTSEP != DeeSystem_SEP)
 	char const *result = path + pathlen;
 	while (result > path && !DeeSystem_IsSep(result[-1]))

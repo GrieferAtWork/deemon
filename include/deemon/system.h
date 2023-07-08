@@ -102,7 +102,7 @@ struct Dee_unicode_printer;
  * last `DeeSystem_SEP' or `DeeSystem_ALTSEP' in `path', or
  * just re-returns `path' when no such character exists. */
 DFUNDEF ATTR_PURE ATTR_RETNONNULL WUNUSED ATTR_INS(1, 2) char const *
-(FCALL DeeSystem_BaseName)(char const *__restrict path, size_t pathlen);
+(DFCALL DeeSystem_BaseName)(char const *__restrict path, size_t pathlen);
 
 #ifdef CONFIG_NO_memrend
 #undef CONFIG_HAVE_memrend

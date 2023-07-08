@@ -99,13 +99,13 @@ err_invalid_unpack_iter_size(DeeObject *__restrict unpack_object,
 
 
 /* Syntax Exception handlers. */
-LOCAL NONNULL((1)) void FCALL
+LOCAL NONNULL((1)) void DFCALL
 syn_trace_here(JITLexer *__restrict self) {
 	JITLexer_ErrorTrace(self, self->jl_tokstart);
 	self->jl_context->jc_flags |= JITCONTEXT_FSYNERR;
 }
 
-INTERN ATTR_COLD NONNULL((1)) int FCALL
+INTERN ATTR_COLD NONNULL((1)) int DFCALL
 syn_if_expected_lparen_after_if(JITLexer *__restrict self) {
 	syn_trace_here(self);
 	return DeeError_Throwf(&DeeError_SyntaxError,
@@ -114,7 +114,7 @@ syn_if_expected_lparen_after_if(JITLexer *__restrict self) {
 	                       JITLexer_TokPtr(self));
 }
 
-INTERN ATTR_COLD NONNULL((1)) int FCALL
+INTERN ATTR_COLD NONNULL((1)) int DFCALL
 syn_if_expected_rparen_after_if(JITLexer *__restrict self) {
 	syn_trace_here(self);
 	return DeeError_Throwf(&DeeError_SyntaxError,
@@ -123,7 +123,7 @@ syn_if_expected_rparen_after_if(JITLexer *__restrict self) {
 	                       JITLexer_TokPtr(self));
 }
 
-INTERN ATTR_COLD NONNULL((1)) int FCALL
+INTERN ATTR_COLD NONNULL((1)) int DFCALL
 syn_with_expected_lparen_after_with(JITLexer *__restrict self) {
 	syn_trace_here(self);
 	return DeeError_Throwf(&DeeError_SyntaxError,
@@ -132,7 +132,7 @@ syn_with_expected_lparen_after_with(JITLexer *__restrict self) {
 	                       JITLexer_TokPtr(self));
 }
 
-INTERN ATTR_COLD NONNULL((1)) int FCALL
+INTERN ATTR_COLD NONNULL((1)) int DFCALL
 syn_with_expected_rparen_after_with(JITLexer *__restrict self) {
 	syn_trace_here(self);
 	return DeeError_Throwf(&DeeError_SyntaxError,
@@ -141,7 +141,7 @@ syn_with_expected_rparen_after_with(JITLexer *__restrict self) {
 	                       JITLexer_TokPtr(self));
 }
 
-INTERN ATTR_COLD NONNULL((1)) int FCALL
+INTERN ATTR_COLD NONNULL((1)) int DFCALL
 syn_for_expected_lparen_after_for(JITLexer *__restrict self) {
 	syn_trace_here(self);
 	return DeeError_Throwf(&DeeError_SyntaxError,
@@ -150,7 +150,7 @@ syn_for_expected_lparen_after_for(JITLexer *__restrict self) {
 	                       JITLexer_TokPtr(self));
 }
 
-INTERN ATTR_COLD NONNULL((1)) int FCALL
+INTERN ATTR_COLD NONNULL((1)) int DFCALL
 syn_for_expected_rparen_after_for(JITLexer *__restrict self) {
 	syn_trace_here(self);
 	return DeeError_Throwf(&DeeError_SyntaxError,
@@ -159,7 +159,7 @@ syn_for_expected_rparen_after_for(JITLexer *__restrict self) {
 	                       JITLexer_TokPtr(self));
 }
 
-INTERN ATTR_COLD NONNULL((1)) int FCALL
+INTERN ATTR_COLD NONNULL((1)) int DFCALL
 syn_for_expected_rparen_after_foreach(JITLexer *__restrict self) {
 	syn_trace_here(self);
 	return DeeError_Throwf(&DeeError_SyntaxError,
@@ -168,7 +168,7 @@ syn_for_expected_rparen_after_foreach(JITLexer *__restrict self) {
 	                       JITLexer_TokPtr(self));
 }
 
-INTERN ATTR_COLD NONNULL((1)) int FCALL
+INTERN ATTR_COLD NONNULL((1)) int DFCALL
 syn_for_expected_semi1_after_for(JITLexer *__restrict self) {
 	syn_trace_here(self);
 	return DeeError_Throwf(&DeeError_SyntaxError,
@@ -177,7 +177,7 @@ syn_for_expected_semi1_after_for(JITLexer *__restrict self) {
 	                       JITLexer_TokPtr(self));
 }
 
-INTERN ATTR_COLD NONNULL((1)) int FCALL
+INTERN ATTR_COLD NONNULL((1)) int DFCALL
 syn_for_expected_semi2_after_for(JITLexer *__restrict self) {
 	syn_trace_here(self);
 	return DeeError_Throwf(&DeeError_SyntaxError,
@@ -186,7 +186,7 @@ syn_for_expected_semi2_after_for(JITLexer *__restrict self) {
 	                       JITLexer_TokPtr(self));
 }
 
-INTERN ATTR_COLD NONNULL((1)) int FCALL
+INTERN ATTR_COLD NONNULL((1)) int DFCALL
 syn_throw_expected_semi_after_throw(JITLexer *__restrict self) {
 	syn_trace_here(self);
 	return DeeError_Throwf(&DeeError_SyntaxError,
@@ -195,7 +195,7 @@ syn_throw_expected_semi_after_throw(JITLexer *__restrict self) {
 	                       JITLexer_TokPtr(self));
 }
 
-INTERN ATTR_COLD NONNULL((1)) int FCALL
+INTERN ATTR_COLD NONNULL((1)) int DFCALL
 syn_yield_expected_semi_after_yield(JITLexer *__restrict self) {
 	syn_trace_here(self);
 	return DeeError_Throwf(&DeeError_SyntaxError,
@@ -204,7 +204,7 @@ syn_yield_expected_semi_after_yield(JITLexer *__restrict self) {
 	                       JITLexer_TokPtr(self));
 }
 
-INTERN ATTR_COLD NONNULL((1)) int FCALL
+INTERN ATTR_COLD NONNULL((1)) int DFCALL
 syn_break_expected_semi_after_break(JITLexer *__restrict self) {
 	syn_trace_here(self);
 	return DeeError_Throwf(&DeeError_SyntaxError,
@@ -213,7 +213,7 @@ syn_break_expected_semi_after_break(JITLexer *__restrict self) {
 	                       JITLexer_TokPtr(self));
 }
 
-INTERN ATTR_COLD NONNULL((1)) int FCALL
+INTERN ATTR_COLD NONNULL((1)) int DFCALL
 syn_continue_expected_semi_after_continue(JITLexer *__restrict self) {
 	syn_trace_here(self);
 	return DeeError_Throwf(&DeeError_SyntaxError,
@@ -222,7 +222,7 @@ syn_continue_expected_semi_after_continue(JITLexer *__restrict self) {
 	                       JITLexer_TokPtr(self));
 }
 
-INTERN ATTR_COLD NONNULL((1)) int FCALL
+INTERN ATTR_COLD NONNULL((1)) int DFCALL
 syn_return_expected_semi_after_return(JITLexer *__restrict self) {
 	syn_trace_here(self);
 	return DeeError_Throwf(&DeeError_SyntaxError,
@@ -231,7 +231,7 @@ syn_return_expected_semi_after_return(JITLexer *__restrict self) {
 	                       JITLexer_TokPtr(self));
 }
 
-INTERN ATTR_COLD NONNULL((1)) int FCALL
+INTERN ATTR_COLD NONNULL((1)) int DFCALL
 syn_foreach_expected_lparen_after_foreach(JITLexer *__restrict self) {
 	syn_trace_here(self);
 	return DeeError_Throwf(&DeeError_SyntaxError,
@@ -240,7 +240,7 @@ syn_foreach_expected_lparen_after_foreach(JITLexer *__restrict self) {
 	                       JITLexer_TokPtr(self));
 }
 
-INTERN ATTR_COLD NONNULL((1)) int FCALL
+INTERN ATTR_COLD NONNULL((1)) int DFCALL
 syn_foreach_expected_colon_after_foreach(JITLexer *__restrict self) {
 	syn_trace_here(self);
 	return DeeError_Throwf(&DeeError_SyntaxError,
@@ -249,7 +249,7 @@ syn_foreach_expected_colon_after_foreach(JITLexer *__restrict self) {
 	                       JITLexer_TokPtr(self));
 }
 
-INTERN ATTR_COLD NONNULL((1)) int FCALL
+INTERN ATTR_COLD NONNULL((1)) int DFCALL
 syn_foreach_expected_rparen_after_foreach(JITLexer *__restrict self) {
 	syn_trace_here(self);
 	return DeeError_Throwf(&DeeError_SyntaxError,
@@ -258,7 +258,7 @@ syn_foreach_expected_rparen_after_foreach(JITLexer *__restrict self) {
 	                       JITLexer_TokPtr(self));
 }
 
-INTERN ATTR_COLD NONNULL((1)) int FCALL
+INTERN ATTR_COLD NONNULL((1)) int DFCALL
 syn_while_expected_lparen_after_while(JITLexer *__restrict self) {
 	syn_trace_here(self);
 	return DeeError_Throwf(&DeeError_SyntaxError,
@@ -267,7 +267,7 @@ syn_while_expected_lparen_after_while(JITLexer *__restrict self) {
 	                       JITLexer_TokPtr(self));
 }
 
-INTERN ATTR_COLD NONNULL((1)) int FCALL
+INTERN ATTR_COLD NONNULL((1)) int DFCALL
 syn_while_expected_rparen_after_while(JITLexer *__restrict self) {
 	syn_trace_here(self);
 	return DeeError_Throwf(&DeeError_SyntaxError,
@@ -278,7 +278,7 @@ syn_while_expected_rparen_after_while(JITLexer *__restrict self) {
 
 
 
-INTERN ATTR_COLD NONNULL((1)) int FCALL
+INTERN ATTR_COLD NONNULL((1)) int DFCALL
 syn_dowhile_expected_while_after_do(JITLexer *__restrict self) {
 	syn_trace_here(self);
 	return DeeError_Throwf(&DeeError_SyntaxError,
@@ -287,7 +287,7 @@ syn_dowhile_expected_while_after_do(JITLexer *__restrict self) {
 	                       JITLexer_TokPtr(self));
 }
 
-INTERN ATTR_COLD NONNULL((1)) int FCALL
+INTERN ATTR_COLD NONNULL((1)) int DFCALL
 syn_dowhile_expected_lparen_after_while(JITLexer *__restrict self) {
 	syn_trace_here(self);
 	return DeeError_Throwf(&DeeError_SyntaxError,
@@ -296,7 +296,7 @@ syn_dowhile_expected_lparen_after_while(JITLexer *__restrict self) {
 	                       JITLexer_TokPtr(self));
 }
 
-INTERN ATTR_COLD NONNULL((1)) int FCALL
+INTERN ATTR_COLD NONNULL((1)) int DFCALL
 syn_dowhile_expected_rparen_after_while(JITLexer *__restrict self) {
 	syn_trace_here(self);
 	return DeeError_Throwf(&DeeError_SyntaxError,
@@ -305,7 +305,7 @@ syn_dowhile_expected_rparen_after_while(JITLexer *__restrict self) {
 	                       JITLexer_TokPtr(self));
 }
 
-INTERN ATTR_COLD NONNULL((1)) int FCALL
+INTERN ATTR_COLD NONNULL((1)) int DFCALL
 syn_dowhile_expected_semi_after_while(JITLexer *__restrict self) {
 	syn_trace_here(self);
 	return DeeError_Throwf(&DeeError_SyntaxError,
@@ -314,7 +314,7 @@ syn_dowhile_expected_semi_after_while(JITLexer *__restrict self) {
 	                       JITLexer_TokPtr(self));
 }
 
-INTERN ATTR_COLD NONNULL((1)) int FCALL
+INTERN ATTR_COLD NONNULL((1)) int DFCALL
 syn_asm_nonempty_string(JITLexer *__restrict self) {
 	syn_trace_here(self);
 	return DeeError_Throwf(&DeeError_SyntaxError,
@@ -322,7 +322,7 @@ syn_asm_nonempty_string(JITLexer *__restrict self) {
 	                       "assembly text are not supported");
 }
 
-INTERN ATTR_COLD NONNULL((1)) int FCALL
+INTERN ATTR_COLD NONNULL((1)) int DFCALL
 syn_asm_expected_string_after_asm(JITLexer *__restrict self) {
 	syn_trace_here(self);
 	return DeeError_Throwf(&DeeError_SyntaxError,
@@ -331,7 +331,7 @@ syn_asm_expected_string_after_asm(JITLexer *__restrict self) {
 	                       JITLexer_TokPtr(self));
 }
 
-INTERN ATTR_COLD NONNULL((1)) int FCALL
+INTERN ATTR_COLD NONNULL((1)) int DFCALL
 syn_asm_expected_semi_after_asm(JITLexer *__restrict self) {
 	syn_trace_here(self);
 	return DeeError_Throwf(&DeeError_SyntaxError,
@@ -340,7 +340,7 @@ syn_asm_expected_semi_after_asm(JITLexer *__restrict self) {
 	                       JITLexer_TokPtr(self));
 }
 
-INTERN ATTR_COLD NONNULL((1)) int FCALL
+INTERN ATTR_COLD NONNULL((1)) int DFCALL
 syn_asm_expected_lparen_after_asm(JITLexer *__restrict self) {
 	syn_trace_here(self);
 	return DeeError_Throwf(&DeeError_SyntaxError,
@@ -349,7 +349,7 @@ syn_asm_expected_lparen_after_asm(JITLexer *__restrict self) {
 	                       JITLexer_TokPtr(self));
 }
 
-INTERN ATTR_COLD NONNULL((1)) int FCALL
+INTERN ATTR_COLD NONNULL((1)) int DFCALL
 syn_asm_expected_rparen_after_asm(JITLexer *__restrict self) {
 	syn_trace_here(self);
 	return DeeError_Throwf(&DeeError_SyntaxError,
@@ -358,7 +358,7 @@ syn_asm_expected_rparen_after_asm(JITLexer *__restrict self) {
 	                       JITLexer_TokPtr(self));
 }
 
-INTERN ATTR_COLD NONNULL((1)) int FCALL
+INTERN ATTR_COLD NONNULL((1)) int DFCALL
 syn_asm_expected_keyword_after_lbracket(JITLexer *__restrict self) {
 	syn_trace_here(self);
 	return DeeError_Throwf(&DeeError_SyntaxError,
@@ -367,7 +367,7 @@ syn_asm_expected_keyword_after_lbracket(JITLexer *__restrict self) {
 	                       JITLexer_TokPtr(self));
 }
 
-INTERN ATTR_COLD NONNULL((1)) int FCALL
+INTERN ATTR_COLD NONNULL((1)) int DFCALL
 syn_asm_expected_rbracket_after_lbracket(JITLexer *__restrict self) {
 	syn_trace_here(self);
 	return DeeError_Throwf(&DeeError_SyntaxError,
@@ -376,7 +376,7 @@ syn_asm_expected_rbracket_after_lbracket(JITLexer *__restrict self) {
 	                       JITLexer_TokPtr(self));
 }
 
-INTERN ATTR_COLD NONNULL((1)) int FCALL
+INTERN ATTR_COLD NONNULL((1)) int DFCALL
 syn_asm_expected_string_before_operand(JITLexer *__restrict self) {
 	syn_trace_here(self);
 	return DeeError_Throwf(&DeeError_SyntaxError,
@@ -385,7 +385,7 @@ syn_asm_expected_string_before_operand(JITLexer *__restrict self) {
 	                       JITLexer_TokPtr(self));
 }
 
-INTERN ATTR_COLD NONNULL((1)) int FCALL
+INTERN ATTR_COLD NONNULL((1)) int DFCALL
 syn_asm_expected_lparen_before_operand(JITLexer *__restrict self) {
 	syn_trace_here(self);
 	return DeeError_Throwf(&DeeError_SyntaxError,
@@ -394,7 +394,7 @@ syn_asm_expected_lparen_before_operand(JITLexer *__restrict self) {
 	                       JITLexer_TokPtr(self));
 }
 
-INTERN ATTR_COLD NONNULL((1)) int FCALL
+INTERN ATTR_COLD NONNULL((1)) int DFCALL
 syn_asm_expected_rparen_after_operand(JITLexer *__restrict self) {
 	syn_trace_here(self);
 	return DeeError_Throwf(&DeeError_SyntaxError,
@@ -403,7 +403,7 @@ syn_asm_expected_rparen_after_operand(JITLexer *__restrict self) {
 	                       JITLexer_TokPtr(self));
 }
 
-INTERN ATTR_COLD NONNULL((1)) int FCALL
+INTERN ATTR_COLD NONNULL((1)) int DFCALL
 syn_asm_expected_keyword_for_label_operand(JITLexer *__restrict self) {
 	syn_trace_here(self);
 	return DeeError_Throwf(&DeeError_SyntaxError,
@@ -414,7 +414,7 @@ syn_asm_expected_keyword_for_label_operand(JITLexer *__restrict self) {
 
 
 
-INTERN ATTR_COLD NONNULL((1)) int FCALL
+INTERN ATTR_COLD NONNULL((1)) int DFCALL
 syn_try_expected_lparen_after_catch(JITLexer *__restrict self) {
 	syn_trace_here(self);
 	return DeeError_Throwf(&DeeError_SyntaxError,
@@ -423,7 +423,7 @@ syn_try_expected_lparen_after_catch(JITLexer *__restrict self) {
 	                       JITLexer_TokPtr(self));
 }
 
-INTERN ATTR_COLD NONNULL((1)) int FCALL
+INTERN ATTR_COLD NONNULL((1)) int DFCALL
 syn_try_expected_rparen_after_catch(JITLexer *__restrict self) {
 	syn_trace_here(self);
 	return DeeError_Throwf(&DeeError_SyntaxError,
@@ -432,7 +432,7 @@ syn_try_expected_rparen_after_catch(JITLexer *__restrict self) {
 	                       JITLexer_TokPtr(self));
 }
 
-INTERN ATTR_COLD NONNULL((1)) int FCALL
+INTERN ATTR_COLD NONNULL((1)) int DFCALL
 syn_try_expected_keyword_after_as_in_catch(JITLexer *__restrict self) {
 	syn_trace_here(self);
 	return DeeError_Throwf(&DeeError_SyntaxError,
@@ -441,7 +441,7 @@ syn_try_expected_keyword_after_as_in_catch(JITLexer *__restrict self) {
 	                       JITLexer_TokPtr(self));
 }
 
-INTERN ATTR_COLD NONNULL((1)) int FCALL
+INTERN ATTR_COLD NONNULL((1)) int DFCALL
 syn_brace_expected_rbrace(JITLexer *__restrict self) {
 	syn_trace_here(self);
 	return DeeError_Throwf(&DeeError_SyntaxError,
@@ -450,7 +450,7 @@ syn_brace_expected_rbrace(JITLexer *__restrict self) {
 	                       JITLexer_TokPtr(self));
 }
 
-INTERN ATTR_COLD NONNULL((1)) int FCALL
+INTERN ATTR_COLD NONNULL((1)) int DFCALL
 syn_brace_expected_keyword_after_dot(JITLexer *__restrict self) {
 	syn_trace_here(self);
 	return DeeError_Throwf(&DeeError_SyntaxError,
@@ -459,7 +459,7 @@ syn_brace_expected_keyword_after_dot(JITLexer *__restrict self) {
 	                       JITLexer_TokPtr(self));
 }
 
-INTERN ATTR_COLD NONNULL((1)) int FCALL
+INTERN ATTR_COLD NONNULL((1)) int DFCALL
 syn_brace_expected_equals_after_dot(JITLexer *__restrict self) {
 	syn_trace_here(self);
 	return DeeError_Throwf(&DeeError_SyntaxError,
@@ -468,7 +468,7 @@ syn_brace_expected_equals_after_dot(JITLexer *__restrict self) {
 	                       JITLexer_TokPtr(self));
 }
 
-INTERN ATTR_COLD NONNULL((1)) int FCALL
+INTERN ATTR_COLD NONNULL((1)) int DFCALL
 syn_brace_expected_colon_after_key(JITLexer *__restrict self) {
 	syn_trace_here(self);
 	return DeeError_Throwf(&DeeError_SyntaxError,
@@ -478,7 +478,7 @@ syn_brace_expected_colon_after_key(JITLexer *__restrict self) {
 }
 
 
-INTERN ATTR_COLD NONNULL((1)) int FCALL
+INTERN ATTR_COLD NONNULL((1)) int DFCALL
 syn_expr_expected_semi_after_expr(JITLexer *__restrict self) {
 	syn_trace_here(self);
 	return DeeError_Throwf(&DeeError_SyntaxError,
@@ -487,7 +487,7 @@ syn_expr_expected_semi_after_expr(JITLexer *__restrict self) {
 	                       JITLexer_TokPtr(self));
 }
 
-INTERN ATTR_COLD NONNULL((1)) int FCALL
+INTERN ATTR_COLD NONNULL((1)) int DFCALL
 syn_expr_unexpected_token(JITLexer *__restrict self) {
 	syn_trace_here(self);
 	return DeeError_Throwf(&DeeError_SyntaxError,
@@ -497,7 +497,7 @@ syn_expr_unexpected_token(JITLexer *__restrict self) {
 }
 
 
-INTERN ATTR_COLD NONNULL((1)) int FCALL
+INTERN ATTR_COLD NONNULL((1)) int DFCALL
 syn_function_expected_lparen_after_function(JITLexer *__restrict self) {
 	syn_trace_here(self);
 	return DeeError_Throwf(&DeeError_SyntaxError,
@@ -506,7 +506,7 @@ syn_function_expected_lparen_after_function(JITLexer *__restrict self) {
 	                       JITLexer_TokPtr(self));
 }
 
-INTERN ATTR_COLD NONNULL((1)) int FCALL
+INTERN ATTR_COLD NONNULL((1)) int DFCALL
 syn_function_expected_arrow_or_lbrace_after_function(JITLexer *__restrict self) {
 	syn_trace_here(self);
 	return DeeError_Throwf(&DeeError_SyntaxError,
@@ -516,7 +516,7 @@ syn_function_expected_arrow_or_lbrace_after_function(JITLexer *__restrict self) 
 }
 
 
-INTERN ATTR_COLD NONNULL((1)) int FCALL
+INTERN ATTR_COLD NONNULL((1)) int DFCALL
 syn_call_expected_rparen_after_call(JITLexer *__restrict self) {
 	syn_trace_here(self);
 	return DeeError_Throwf(&DeeError_SyntaxError,
@@ -526,7 +526,7 @@ syn_call_expected_rparen_after_call(JITLexer *__restrict self) {
 }
 
 
-INTERN ATTR_COLD NONNULL((1)) int FCALL
+INTERN ATTR_COLD NONNULL((1)) int DFCALL
 syn_bound_cannot_test(JITLexer *__restrict self) {
 	syn_trace_here(self);
 	return DeeError_Throwf(&DeeError_SyntaxError,
@@ -535,7 +535,7 @@ syn_bound_cannot_test(JITLexer *__restrict self) {
 }
 
 
-INTERN ATTR_COLD NONNULL((1)) int FCALL
+INTERN ATTR_COLD NONNULL((1)) int DFCALL
 syn_pack_expected_rparen_after_lparen(JITLexer *__restrict self) {
 	syn_trace_here(self);
 	return DeeError_Throwf(&DeeError_SyntaxError,
@@ -545,7 +545,7 @@ syn_pack_expected_rparen_after_lparen(JITLexer *__restrict self) {
 }
 
 
-INTERN ATTR_COLD NONNULL((1)) int FCALL
+INTERN ATTR_COLD NONNULL((1)) int DFCALL
 syn_paren_expected_rparen_after_lparen(JITLexer *__restrict self) {
 	syn_trace_here(self);
 	return DeeError_Throwf(&DeeError_SyntaxError,
@@ -555,7 +555,7 @@ syn_paren_expected_rparen_after_lparen(JITLexer *__restrict self) {
 }
 
 
-INTERN ATTR_COLD NONNULL((1)) int FCALL
+INTERN ATTR_COLD NONNULL((1)) int DFCALL
 syn_bracket_expected_rbracket_after_lbracket(JITLexer *__restrict self) {
 	syn_trace_here(self);
 	return DeeError_Throwf(&DeeError_SyntaxError,
@@ -565,7 +565,7 @@ syn_bracket_expected_rbracket_after_lbracket(JITLexer *__restrict self) {
 }
 
 
-INTERN ATTR_COLD NONNULL((1)) int FCALL
+INTERN ATTR_COLD NONNULL((1)) int DFCALL
 syn_attr_expected_keyword(JITLexer *__restrict self) {
 	syn_trace_here(self);
 	return DeeError_Throwf(&DeeError_SyntaxError,
@@ -575,7 +575,7 @@ syn_attr_expected_keyword(JITLexer *__restrict self) {
 }
 
 
-INTERN ATTR_COLD NONNULL((1)) int FCALL
+INTERN ATTR_COLD NONNULL((1)) int DFCALL
 syn_item_expected_rbracket_after_lbracket(JITLexer *__restrict self) {
 	syn_trace_here(self);
 	return DeeError_Throwf(&DeeError_SyntaxError,
@@ -585,7 +585,7 @@ syn_item_expected_rbracket_after_lbracket(JITLexer *__restrict self) {
 }
 
 
-INTERN ATTR_COLD NONNULL((1)) int FCALL
+INTERN ATTR_COLD NONNULL((1)) int DFCALL
 syn_isin_expected_is_or_in_after_exclaim(JITLexer *__restrict self) {
 	syn_trace_here(self);
 	return DeeError_Throwf(&DeeError_SyntaxError,
@@ -595,14 +595,14 @@ syn_isin_expected_is_or_in_after_exclaim(JITLexer *__restrict self) {
 }
 
 
-INTERN ATTR_COLD NONNULL((1)) int FCALL
+INTERN ATTR_COLD NONNULL((1)) int DFCALL
 syn_operator_expected_empty_string(JITLexer *__restrict self) {
 	syn_trace_here(self);
 	return DeeError_Throwf(&DeeError_SyntaxError,
 	                       "Expected an empty string for `operator str'");
 }
 
-INTERN ATTR_COLD NONNULL((1)) int FCALL
+INTERN ATTR_COLD NONNULL((1)) int DFCALL
 syn_operator_expected_lbracket_or_dot_after_del(JITLexer *__restrict self) {
 	syn_trace_here(self);
 	return DeeError_Throwf(&DeeError_SyntaxError,
@@ -611,7 +611,7 @@ syn_operator_expected_lbracket_or_dot_after_del(JITLexer *__restrict self) {
 	                       JITLexer_TokPtr(self));
 }
 
-INTERN ATTR_COLD NONNULL((1)) int FCALL
+INTERN ATTR_COLD NONNULL((1)) int DFCALL
 syn_operator_unknown_name(JITLexer *__restrict self) {
 	syn_trace_here(self);
 	return DeeError_Throwf(&DeeError_SyntaxError,
@@ -621,7 +621,7 @@ syn_operator_unknown_name(JITLexer *__restrict self) {
 }
 
 
-INTERN ATTR_COLD NONNULL((1)) int FCALL
+INTERN ATTR_COLD NONNULL((1)) int DFCALL
 syn_anno_expected_rbracket(JITLexer *__restrict self) {
 	syn_trace_here(self);
 	return DeeError_Throwf(&DeeError_SyntaxError,
@@ -631,7 +631,7 @@ syn_anno_expected_rbracket(JITLexer *__restrict self) {
 }
 
 
-INTERN ATTR_COLD NONNULL((1)) int FCALL
+INTERN ATTR_COLD NONNULL((1)) int DFCALL
 syn_class_expected_class_after_final(JITLexer *__restrict self) {
 	syn_trace_here(self);
 	return DeeError_Throwf(&DeeError_SyntaxError,
@@ -641,7 +641,7 @@ syn_class_expected_class_after_final(JITLexer *__restrict self) {
 }
 
 
-INTERN ATTR_COLD NONNULL((1)) int FCALL
+INTERN ATTR_COLD NONNULL((1)) int DFCALL
 syn_class_expected_rparen_after_lparen_base(JITLexer *__restrict self) {
 	syn_trace_here(self);
 	return DeeError_Throwf(&DeeError_SyntaxError,
@@ -651,7 +651,7 @@ syn_class_expected_rparen_after_lparen_base(JITLexer *__restrict self) {
 }
 
 
-INTERN ATTR_COLD NONNULL((1)) int FCALL
+INTERN ATTR_COLD NONNULL((1)) int DFCALL
 syn_class_expected_lbrace_after_class(JITLexer *__restrict self) {
 	syn_trace_here(self);
 	return DeeError_Throwf(&DeeError_SyntaxError,
@@ -661,7 +661,7 @@ syn_class_expected_lbrace_after_class(JITLexer *__restrict self) {
 }
 
 
-INTERN ATTR_COLD NONNULL((1)) int FCALL
+INTERN ATTR_COLD NONNULL((1)) int DFCALL
 syn_class_expected_rbrace_after_class(JITLexer *__restrict self) {
 	syn_trace_here(self);
 	return DeeError_Throwf(&DeeError_SyntaxError,
@@ -670,14 +670,14 @@ syn_class_expected_rbrace_after_class(JITLexer *__restrict self) {
 	                       JITLexer_TokPtr(self));
 }
 
-INTERN ATTR_COLD NONNULL((1)) int FCALL
+INTERN ATTR_COLD NONNULL((1)) int DFCALL
 syn_class_not_thiscall(JITLexer *__restrict self) {
 	syn_trace_here(self);
 	return DeeError_Throwf(&DeeError_SyntaxError,
 	                       "`this' or `super' are only allowed in thiscall functions");
 }
 
-INTERN ATTR_COLD NONNULL((1)) int FCALL
+INTERN ATTR_COLD NONNULL((1)) int DFCALL
 syn_nth_expected_lparen(JITLexer *__restrict self) {
 	syn_trace_here(self);
 	return DeeError_Throwf(&DeeError_SyntaxError,
@@ -686,7 +686,7 @@ syn_nth_expected_lparen(JITLexer *__restrict self) {
 	                       JITLexer_TokPtr(self));
 }
 
-INTERN ATTR_COLD NONNULL((1)) int FCALL
+INTERN ATTR_COLD NONNULL((1)) int DFCALL
 syn_nth_expected_rparen(JITLexer *__restrict self) {
 	syn_trace_here(self);
 	return DeeError_Throwf(&DeeError_SyntaxError,
@@ -696,7 +696,7 @@ syn_nth_expected_rparen(JITLexer *__restrict self) {
 }
 
 
-INTERN ATTR_COLD NONNULL((1)) int FCALL
+INTERN ATTR_COLD NONNULL((1)) int DFCALL
 syn_type_annotation_unexpected_token(JITLexer *__restrict self) {
 	syn_trace_here(self);
 	return DeeError_Throwf(&DeeError_SyntaxError,
@@ -705,7 +705,7 @@ syn_type_annotation_unexpected_token(JITLexer *__restrict self) {
 	                       JITLexer_TokPtr(self));
 }
 
-INTERN ATTR_COLD NONNULL((1)) int FCALL
+INTERN ATTR_COLD NONNULL((1)) int DFCALL
 syn_type_annotation_expected_dots_or_colon(JITLexer *__restrict self) {
 	syn_trace_here(self);
 	return DeeError_Throwf(&DeeError_SyntaxError,
@@ -714,7 +714,7 @@ syn_type_annotation_expected_dots_or_colon(JITLexer *__restrict self) {
 	                       JITLexer_TokPtr(self));
 }
 
-INTERN ATTR_COLD NONNULL((1)) int FCALL
+INTERN ATTR_COLD NONNULL((1)) int DFCALL
 syn_type_annotation_expected_rbrace(JITLexer *__restrict self) {
 	syn_trace_here(self);
 	return DeeError_Throwf(&DeeError_SyntaxError,
@@ -723,7 +723,7 @@ syn_type_annotation_expected_rbrace(JITLexer *__restrict self) {
 	                       JITLexer_TokPtr(self));
 }
 
-INTERN ATTR_COLD NONNULL((1)) int FCALL
+INTERN ATTR_COLD NONNULL((1)) int DFCALL
 syn_type_annotation_expected_rparen(JITLexer *__restrict self) {
 	syn_trace_here(self);
 	return DeeError_Throwf(&DeeError_SyntaxError,
@@ -732,7 +732,7 @@ syn_type_annotation_expected_rparen(JITLexer *__restrict self) {
 	                       JITLexer_TokPtr(self));
 }
 
-INTERN ATTR_COLD NONNULL((1)) int FCALL
+INTERN ATTR_COLD NONNULL((1)) int DFCALL
 syn_type_annotation_expected_string_after_asm(JITLexer *__restrict self) {
 	syn_trace_here(self);
 	return DeeError_Throwf(&DeeError_SyntaxError,
@@ -741,33 +741,33 @@ syn_type_annotation_expected_string_after_asm(JITLexer *__restrict self) {
 	                       JITLexer_TokPtr(self));
 }
 
-INTERN ATTR_COLD NONNULL((1)) int FCALL
+INTERN ATTR_COLD NONNULL((1)) int DFCALL
 syn_template_string_unterminated(JITLexer *__restrict self) {
 	syn_trace_here(self);
 	return DeeError_Throwf(&DeeError_SyntaxError, "Unterminated template string");
 }
 
-INTERN ATTR_COLD NONNULL((1)) int FCALL
+INTERN ATTR_COLD NONNULL((1)) int DFCALL
 syn_template_string_unmatched_lbrace(JITLexer *__restrict self) {
 	syn_trace_here(self);
 	return DeeError_Throwf(&DeeError_SyntaxError, "Unmatched '{' in template string");
 }
 
-INTERN ATTR_COLD NONNULL((1)) int FCALL
+INTERN ATTR_COLD NONNULL((1)) int DFCALL
 syn_template_string_unmatched_rbrace(JITLexer *__restrict self) {
 	syn_trace_here(self);
 	return DeeError_Throwf(&DeeError_SyntaxError,
 	                       "Unmatched '}' in template string");
 }
 
-INTERN ATTR_COLD NONNULL((1)) int FCALL
+INTERN ATTR_COLD NONNULL((1)) int DFCALL
 syn_template_string_no_digit_or_hex_after_backslash_x_u_U(JITLexer *__restrict self) {
 	syn_trace_here(self);
 	return DeeError_Throwf(&DeeError_SyntaxError,
 	                       "No digits, or hex-chars found after `\\x', `\\u' or `\\U'");
 }
 
-INTERN ATTR_COLD NONNULL((1)) int FCALL
+INTERN ATTR_COLD NONNULL((1)) int DFCALL
 syn_template_string_undefined_escape(JITLexer *__restrict self, int ch) {
 	syn_trace_here(self);
 	return DeeError_Throwf(&DeeError_SyntaxError,
@@ -776,7 +776,7 @@ syn_template_string_undefined_escape(JITLexer *__restrict self, int ch) {
 }
 
 
-INTERN ATTR_COLD NONNULL((1)) int FCALL
+INTERN ATTR_COLD NONNULL((1)) int DFCALL
 syn_import_expected_dot_keyword_or_string(JITLexer *__restrict self) {
 	syn_trace_here(self);
 	return DeeError_Throwf(&DeeError_SyntaxError,
@@ -785,7 +785,7 @@ syn_import_expected_dot_keyword_or_string(JITLexer *__restrict self) {
 	                       JITLexer_TokPtr(self));
 }
 
-INTERN ATTR_COLD NONNULL((1)) int FCALL
+INTERN ATTR_COLD NONNULL((1)) int DFCALL
 syn_import_expected_keyword_after_as(JITLexer *__restrict self) {
 	syn_trace_here(self);
 	return DeeError_Throwf(&DeeError_SyntaxError,
@@ -794,7 +794,7 @@ syn_import_expected_keyword_after_as(JITLexer *__restrict self) {
 	                       JITLexer_TokPtr(self));
 }
 
-INTERN ATTR_COLD NONNULL((1)) int FCALL
+INTERN ATTR_COLD NONNULL((1)) int DFCALL
 syn_import_expected_keyword_or_string_in_import_list(JITLexer *__restrict self) {
 	syn_trace_here(self);
 	return DeeError_Throwf(&DeeError_SyntaxError,
@@ -803,7 +803,7 @@ syn_import_expected_keyword_or_string_in_import_list(JITLexer *__restrict self) 
 	                       JITLexer_TokPtr(self));
 }
 
-INTERN ATTR_COLD NONNULL((1, 2)) int FCALL
+INTERN ATTR_COLD NONNULL((1, 2)) int DFCALL
 syn_import_invalid_name_for_module_symbol(JITLexer *__restrict self,
                                           struct jit_import_item const *__restrict item) {
 	syn_trace_here(self);
@@ -814,7 +814,7 @@ syn_import_invalid_name_for_module_symbol(JITLexer *__restrict self,
 	                       item->ii_symbol_name);
 }
 
-INTERN ATTR_COLD NONNULL((1, 2)) int FCALL
+INTERN ATTR_COLD NONNULL((1, 2)) int DFCALL
 syn_import_invalid_name_for_import_symbol(JITLexer *__restrict self,
                                           struct jit_import_item const *__restrict item) {
 	syn_trace_here(self);
@@ -825,7 +825,7 @@ syn_import_invalid_name_for_import_symbol(JITLexer *__restrict self,
 	                       item->ii_symbol_name);
 }
 
-INTERN ATTR_COLD NONNULL((1)) int FCALL
+INTERN ATTR_COLD NONNULL((1)) int DFCALL
 syn_import_expected_comma_or_from_after_star(JITLexer *__restrict self) {
 	syn_trace_here(self);
 	return DeeError_Throwf(&DeeError_SyntaxError,
@@ -834,7 +834,7 @@ syn_import_expected_comma_or_from_after_star(JITLexer *__restrict self) {
 	                       JITLexer_TokPtr(self));
 }
 
-INTERN ATTR_COLD NONNULL((1)) int FCALL
+INTERN ATTR_COLD NONNULL((1)) int DFCALL
 syn_import_expected_from_after_symbol_import_list(JITLexer *__restrict self) {
 	syn_trace_here(self);
 	return DeeError_Throwf(&DeeError_SyntaxError,
@@ -843,7 +843,7 @@ syn_import_expected_from_after_symbol_import_list(JITLexer *__restrict self) {
 	                       JITLexer_TokPtr(self));
 }
 
-INTERN ATTR_COLD NONNULL((1)) int FCALL
+INTERN ATTR_COLD NONNULL((1)) int DFCALL
 syn_import_expected_import_after_from(JITLexer *__restrict self) {
 	syn_trace_here(self);
 	return DeeError_Throwf(&DeeError_SyntaxError,
@@ -852,14 +852,14 @@ syn_import_expected_import_after_from(JITLexer *__restrict self) {
 	                       JITLexer_TokPtr(self));
 }
 
-INTERN ATTR_COLD NONNULL((1)) int FCALL
+INTERN ATTR_COLD NONNULL((1)) int DFCALL
 syn_import_unexpected_from_after_module_import_list(JITLexer *__restrict self) {
 	syn_trace_here(self);
 	return DeeError_Throwf(&DeeError_SyntaxError,
 	                       "Unexpected `from' following a module import list");
 }
 
-INTERN ATTR_COLD NONNULL((1)) int FCALL
+INTERN ATTR_COLD NONNULL((1)) int DFCALL
 syn_import_unexpected_star_duplication_in_import_list(JITLexer *__restrict self) {
 	syn_trace_here(self);
 	return DeeError_Throwf(&DeeError_SyntaxError,
@@ -922,7 +922,7 @@ INTERN ATTR_COLD NONNULL((1, 2)) int
 }
 
 INTERN ATTR_COLD int
-(FCALL err_cannot_import_relative)(char const *module_name,
+(DFCALL err_cannot_import_relative)(char const *module_name,
                                    size_t module_namelen) {
 	return DeeError_Throwf(&DeeError_CompilerError,
 	                       "Cannot import relative module %$q",

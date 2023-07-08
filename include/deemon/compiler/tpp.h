@@ -282,7 +282,7 @@ int skip(tok_t expected_tok, int wnum, ...);
 #define TPP_BREAKF()      TPPLexer_Current->l_flags = _old_flags
 #define TPP_POPF()        TPPLexer_Current->l_flags = _old_flags; }	__WHILE0
 
-INTDEF WUNUSED NONNULL((1)) int FCALL
+INTDEF WUNUSED NONNULL((1)) int DFCALL
 _parser_paren_begin(bool *__restrict p_has_paren, int wnum);
 #define paren_begin(p_has_paren, W_EXPECTED_LPAREN)   \
 	(likely(tok == '(')                               \

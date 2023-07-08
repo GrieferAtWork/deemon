@@ -36,7 +36,7 @@
 
 DECL_BEGIN
 
-INTERN WUNUSED NONNULL((1)) DREF struct ast *FCALL
+INTERN WUNUSED NONNULL((1)) DREF struct ast *DFCALL
 ast_parse_mapping(struct ast *__restrict initial_key) {
 	size_t elema, elemc;
 	DREF struct ast *result;
@@ -156,7 +156,7 @@ err:
 	goto done;
 }
 
-INTERN WUNUSED NONNULL((1)) DREF struct ast *FCALL
+INTERN WUNUSED NONNULL((1)) DREF struct ast *DFCALL
 ast_parse_brace_list(struct ast *__restrict initial_item) {
 	DREF struct ast *result;
 	DREF struct ast **elemv;
@@ -239,7 +239,7 @@ err:
 
 /* Parse the contents of a brace initializer,
  * starting after the '{' token and ending on '}'. */
-INTERN WUNUSED DREF struct ast *FCALL
+INTERN WUNUSED DREF struct ast *DFCALL
 ast_parse_brace_items(void) {
 	DREF struct ast *result, *new_result;
 	/* Parse the initial item. */

@@ -684,13 +684,13 @@ INTDEF DeeTypeObject DeeAst_Type;
  *       the current LC location in the active source file.
  * HINT: This function behaves as a noop when `self' is NULL
  * @return: * : == self */
-INTDEF NONNULL((2)) struct ast *FCALL ast_setddi(struct ast *self, struct ast_loc *__restrict info);
-INTDEF struct ast *FCALL ast_sethere(struct ast *self);
+INTDEF NONNULL((2)) struct ast *DFCALL ast_setddi(struct ast *self, struct ast_loc *__restrict info);
+INTDEF struct ast *DFCALL ast_sethere(struct ast *self);
 /* Same as the set functions above, but don't override existing debug information. */
-INTDEF NONNULL((2)) struct ast *FCALL ast_putddi(struct ast *self, struct ast_loc *__restrict info);
-INTDEF struct ast *FCALL ast_puthere(struct ast *self);
+INTDEF NONNULL((2)) struct ast *DFCALL ast_putddi(struct ast *self, struct ast_loc *__restrict info);
+INTDEF struct ast *DFCALL ast_puthere(struct ast *self);
 /* Fill the given AST location with the current source position. */
-INTDEF NONNULL((1)) void FCALL loc_here(struct ast_loc *__restrict info);
+INTDEF NONNULL((1)) void DFCALL loc_here(struct ast_loc *__restrict info);
 
 /* NOTE: Functions below use `current_scope' to initialize `a_scope', meaning
  *       that all of them expect the caller to be holding the compiler lock.

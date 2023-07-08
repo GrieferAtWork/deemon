@@ -446,7 +446,7 @@ err:
 }
 
 
-PRIVATE WUNUSED NONNULL((1, 2)) DREF struct ast *FCALL
+PRIVATE WUNUSED NONNULL((1, 2)) DREF struct ast *DFCALL
 make_bound_expression(struct ast *__restrict base_expr,
                       struct ast_loc *__restrict loc) {
 	DREF struct ast *result;
@@ -554,7 +554,7 @@ err:
 	return -1;
 }
 
-INTERN WUNUSED DREF DeeObject *FCALL
+INTERN WUNUSED DREF DeeObject *DFCALL
 ast_parse_string(void) {
 	struct unicode_printer printer = UNICODE_PRINTER_INIT;
 	ASSERT(tok == TOK_STRING || tok == TOK_CHAR);
@@ -571,7 +571,7 @@ err:
 	return NULL;
 }
 
-INTERN WUNUSED DREF struct ast *FCALL
+INTERN WUNUSED DREF struct ast *DFCALL
 ast_sym_import_from_deemon(void) {
 	struct symbol *import_symbol;
 	import_symbol = new_unnamed_symbol();
@@ -589,7 +589,7 @@ err:
 	return NULL;
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) size_t FCALL
+PRIVATE WUNUSED NONNULL((1, 2)) size_t DFCALL
 count_chars_without_escaped_linefeeds(char const *start,
                                       char const *end) {
 	size_t result = 0;
@@ -607,7 +607,7 @@ count_chars_without_escaped_linefeeds(char const *start,
 	return result;
 }
 
-PRIVATE WUNUSED int FCALL verify_consistent_grouping(void) {
+PRIVATE WUNUSED int DFCALL verify_consistent_grouping(void) {
 	char const *tok_start, *tok_end, *iter, *lastsep;
 	size_t interval, wanted_interval;
 	tok_start = token.t_begin;
@@ -644,7 +644,7 @@ PRIVATE WUNUSED int FCALL verify_consistent_grouping(void) {
 	return 0;
 }
 
-INTERN WUNUSED DREF struct ast *FCALL
+INTERN WUNUSED DREF struct ast *DFCALL
 ast_parse_unaryhead(unsigned int lookup_mode) {
 	DREF struct ast *result;
 	DREF struct ast *merge;
@@ -1706,7 +1706,7 @@ err_flags_merge_r:
 	goto err_r;
 }
 
-INTERN WUNUSED NONNULL((1)) DREF struct ast *FCALL
+INTERN WUNUSED NONNULL((1)) DREF struct ast *DFCALL
 ast_parse_unary_operand(/*inherit(always)*/ DREF struct ast *__restrict result) {
 	DREF struct ast *merge;
 	DREF struct ast *other;
@@ -2009,7 +2009,7 @@ err:
 	return NULL;
 }
 
-INTERN WUNUSED DREF struct ast *FCALL
+INTERN WUNUSED DREF struct ast *DFCALL
 ast_parse_unary(unsigned int lookup_mode) {
 	DREF struct ast *result;
 	result = ast_parse_unaryhead(lookup_mode);
@@ -2019,7 +2019,7 @@ ast_parse_unary(unsigned int lookup_mode) {
 }
 
 
-INTERN WUNUSED NONNULL((1)) DREF struct ast *FCALL
+INTERN WUNUSED NONNULL((1)) DREF struct ast *DFCALL
 ast_parse_prod_operand(/*inherit(always)*/ DREF struct ast *__restrict lhs) {
 	DREF struct ast *rhs, *merge;
 	struct ast_loc loc;
@@ -2049,7 +2049,7 @@ err_r:
 	return NULL;
 }
 
-INTERN WUNUSED NONNULL((1)) DREF struct ast *FCALL
+INTERN WUNUSED NONNULL((1)) DREF struct ast *DFCALL
 ast_parse_sum_operand(/*inherit(always)*/ DREF struct ast *__restrict lhs) {
 	DREF struct ast *rhs, *merge;
 	struct ast_loc loc;
@@ -2084,7 +2084,7 @@ err_r:
 	return NULL;
 }
 
-INTERN WUNUSED NONNULL((1)) DREF struct ast *FCALL
+INTERN WUNUSED NONNULL((1)) DREF struct ast *DFCALL
 ast_parse_shift_operand(/*inherit(always)*/ DREF struct ast *__restrict lhs) {
 	DREF struct ast *rhs, *merge;
 	struct ast_loc loc;
@@ -2114,7 +2114,7 @@ err_r:
 	return NULL;
 }
 
-INTERN WUNUSED NONNULL((1)) DREF struct ast *FCALL
+INTERN WUNUSED NONNULL((1)) DREF struct ast *DFCALL
 ast_parse_cmp_operand(/*inherit(always)*/ DREF struct ast *__restrict lhs) {
 	DREF struct ast *rhs, *merge;
 	struct ast_loc loc;
@@ -2158,7 +2158,7 @@ err_r:
 }
 
 
-INTERN WUNUSED NONNULL((1)) DREF struct ast *FCALL
+INTERN WUNUSED NONNULL((1)) DREF struct ast *DFCALL
 ast_parse_cmpeq_operand(/*inherit(always)*/ DREF struct ast *__restrict lhs) {
 	DREF struct ast *rhs, *merge;
 	struct ast_loc loc;
@@ -2245,7 +2245,7 @@ err_r:
 }
 
 
-INTERN WUNUSED NONNULL((1)) DREF struct ast *FCALL
+INTERN WUNUSED NONNULL((1)) DREF struct ast *DFCALL
 ast_parse_and_operand(/*inherit(always)*/ DREF struct ast *__restrict lhs) {
 	DREF struct ast *rhs, *merge;
 	struct ast_loc loc;
@@ -2274,7 +2274,7 @@ err_r:
 }
 
 
-INTERN WUNUSED NONNULL((1)) DREF struct ast *FCALL
+INTERN WUNUSED NONNULL((1)) DREF struct ast *DFCALL
 ast_parse_xor_operand(/*inherit(always)*/ DREF struct ast *__restrict lhs) {
 	DREF struct ast *rhs, *merge;
 	struct ast_loc loc;
@@ -2303,7 +2303,7 @@ err_r:
 }
 
 
-INTERN WUNUSED NONNULL((1)) DREF struct ast *FCALL
+INTERN WUNUSED NONNULL((1)) DREF struct ast *DFCALL
 ast_parse_or_operand(/*inherit(always)*/ DREF struct ast *__restrict lhs) {
 	DREF struct ast *rhs, *merge;
 	struct ast_loc loc;
@@ -2332,7 +2332,7 @@ err_r:
 }
 
 
-INTERN WUNUSED NONNULL((1)) DREF struct ast *FCALL
+INTERN WUNUSED NONNULL((1)) DREF struct ast *DFCALL
 ast_parse_as_operand(/*inherit(always)*/ DREF struct ast *__restrict lhs) {
 	DREF struct ast *rhs, *merge;
 	struct ast_loc loc;
@@ -2361,7 +2361,7 @@ err_r:
 }
 
 
-INTERN WUNUSED NONNULL((1)) DREF struct ast *FCALL
+INTERN WUNUSED NONNULL((1)) DREF struct ast *DFCALL
 ast_parse_land_operand(/*inherit(always)*/ DREF struct ast *__restrict lhs) {
 	DREF struct ast *rhs, *merge;
 	struct ast_loc loc;
@@ -2399,7 +2399,7 @@ err:
 }
 
 
-INTERN WUNUSED NONNULL((1)) DREF struct ast *FCALL
+INTERN WUNUSED NONNULL((1)) DREF struct ast *DFCALL
 ast_parse_lor_operand(/*inherit(always)*/ DREF struct ast *__restrict lhs) {
 	DREF struct ast *rhs, *merge;
 	struct ast_loc loc;
@@ -2444,7 +2444,7 @@ err:
 	return NULL;
 }
 
-INTERN WUNUSED NONNULL((1)) DREF struct ast *FCALL
+INTERN WUNUSED NONNULL((1)) DREF struct ast *DFCALL
 ast_parse_cond_operand(/*inherit(always)*/ DREF struct ast *__restrict lhs) {
 	DREF struct ast *merge, *tt, *ff;
 	struct ast_loc loc;
@@ -2543,7 +2543,7 @@ PRIVATE uint16_t const inplace_fops[] = {
 	/* [TOK_POW_EQUAL - TOK_INPLACE_MIN] = */ OPERATOR_INPLACE_POW
 };
 
-INTERN WUNUSED NONNULL((1)) DREF struct ast *FCALL
+INTERN WUNUSED NONNULL((1)) DREF struct ast *DFCALL
 ast_parse_assign_operand(/*inherit(always)*/ DREF struct ast *__restrict lhs) {
 	DREF struct ast *rhs, *merge;
 	struct ast_loc loc;
@@ -2582,7 +2582,7 @@ err_r:
 }
 
 
-INTERN WUNUSED DREF struct ast *FCALL
+INTERN WUNUSED DREF struct ast *DFCALL
 ast_parse_prod(unsigned int lookup_mode) {
 	DREF struct ast *result;
 	result = ast_parse_unary(lookup_mode);
@@ -2591,7 +2591,7 @@ ast_parse_prod(unsigned int lookup_mode) {
 	return result;
 }
 
-INTERN WUNUSED DREF struct ast *FCALL
+INTERN WUNUSED DREF struct ast *DFCALL
 ast_parse_sum(unsigned int lookup_mode) {
 	DREF struct ast *result;
 	result = ast_parse_prod(lookup_mode);
@@ -2600,7 +2600,7 @@ ast_parse_sum(unsigned int lookup_mode) {
 	return result;
 }
 
-INTERN WUNUSED DREF struct ast *FCALL
+INTERN WUNUSED DREF struct ast *DFCALL
 ast_parse_shift(unsigned int lookup_mode) {
 	DREF struct ast *result;
 	result = ast_parse_sum(lookup_mode);
@@ -2609,7 +2609,7 @@ ast_parse_shift(unsigned int lookup_mode) {
 	return result;
 }
 
-INTERN WUNUSED DREF struct ast *FCALL
+INTERN WUNUSED DREF struct ast *DFCALL
 ast_parse_cmp(unsigned int lookup_mode) {
 	DREF struct ast *result;
 	result = ast_parse_shift(lookup_mode);
@@ -2618,7 +2618,7 @@ ast_parse_cmp(unsigned int lookup_mode) {
 	return result;
 }
 
-INTERN WUNUSED DREF struct ast *FCALL
+INTERN WUNUSED DREF struct ast *DFCALL
 ast_parse_cmpeq(unsigned int lookup_mode) {
 	DREF struct ast *result;
 	result = ast_parse_cmp(lookup_mode);
@@ -2627,7 +2627,7 @@ ast_parse_cmpeq(unsigned int lookup_mode) {
 	return result;
 }
 
-INTERN WUNUSED DREF struct ast *FCALL
+INTERN WUNUSED DREF struct ast *DFCALL
 ast_parse_and(unsigned int lookup_mode) {
 	DREF struct ast *result;
 	result = ast_parse_cmpeq(lookup_mode);
@@ -2636,7 +2636,7 @@ ast_parse_and(unsigned int lookup_mode) {
 	return result;
 }
 
-INTERN WUNUSED DREF struct ast *FCALL
+INTERN WUNUSED DREF struct ast *DFCALL
 ast_parse_xor(unsigned int lookup_mode) {
 	DREF struct ast *result;
 	result = ast_parse_and(lookup_mode);
@@ -2645,7 +2645,7 @@ ast_parse_xor(unsigned int lookup_mode) {
 	return result;
 }
 
-INTERN WUNUSED DREF struct ast *FCALL
+INTERN WUNUSED DREF struct ast *DFCALL
 ast_parse_or(unsigned int lookup_mode) {
 	DREF struct ast *result;
 	result = ast_parse_xor(lookup_mode);
@@ -2654,7 +2654,7 @@ ast_parse_or(unsigned int lookup_mode) {
 	return result;
 }
 
-INTERN WUNUSED DREF struct ast *FCALL
+INTERN WUNUSED DREF struct ast *DFCALL
 ast_parse_as(unsigned int lookup_mode) {
 	DREF struct ast *result;
 	result = ast_parse_or(lookup_mode);
@@ -2663,7 +2663,7 @@ ast_parse_as(unsigned int lookup_mode) {
 	return result;
 }
 
-INTERN WUNUSED DREF struct ast *FCALL
+INTERN WUNUSED DREF struct ast *DFCALL
 ast_parse_land(unsigned int lookup_mode) {
 	DREF struct ast *result;
 	result = ast_parse_as(lookup_mode);
@@ -2672,7 +2672,7 @@ ast_parse_land(unsigned int lookup_mode) {
 	return result;
 }
 
-INTERN WUNUSED DREF struct ast *FCALL
+INTERN WUNUSED DREF struct ast *DFCALL
 ast_parse_lor(unsigned int lookup_mode) {
 	DREF struct ast *result;
 	result = ast_parse_land(lookup_mode);
@@ -2681,7 +2681,7 @@ ast_parse_lor(unsigned int lookup_mode) {
 	return result;
 }
 
-INTERN WUNUSED DREF struct ast *FCALL
+INTERN WUNUSED DREF struct ast *DFCALL
 ast_parse_cond(unsigned int lookup_mode) {
 	DREF struct ast *result;
 	result = ast_parse_lor(lookup_mode);
@@ -2691,7 +2691,7 @@ ast_parse_cond(unsigned int lookup_mode) {
 }
 
 
-INTERN WUNUSED DREF struct ast *FCALL
+INTERN WUNUSED DREF struct ast *DFCALL
 ast_parse_assign(unsigned int lookup_mode) {
 #ifdef __OPTIMIZE_SIZE__
 	DREF struct ast *result;
@@ -2870,7 +2870,7 @@ done:
 
 
 
-INTERN WUNUSED NONNULL((1)) DREF struct ast *FCALL
+INTERN WUNUSED NONNULL((1)) DREF struct ast *DFCALL
 ast_parse_postexpr(/*inherit(always)*/ DREF struct ast *__restrict baseexpr) {
 	baseexpr = ast_parse_unary_operand(baseexpr);
 	if unlikely(!baseexpr)

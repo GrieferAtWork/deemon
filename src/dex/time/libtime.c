@@ -183,7 +183,7 @@ __HYBRID_UINT128_INIT16N(0x0000, 0x0000, 0x0000, 0x0002, 0xbd24, 0xd971, 0x356e,
 
 
 /* Return the current time in UTC */
-INTERN NONNULL((1)) void FCALL
+INTERN NONNULL((1)) void DFCALL
 time_now_utc(Dee_int128_t *__restrict p_result) {
 
 #ifdef time_now_utc_USE_GetSystemTimePreciseAsFileTime
@@ -319,7 +319,7 @@ PRIVATE void do_call_tzset(void) {
 #endif /* WANT_call_tzset */
 
 /* Return the current time in local time */
-INTERN NONNULL((1)) void FCALL
+INTERN NONNULL((1)) void DFCALL
 time_now_local(Dee_int128_t *__restrict p_result) {
 
 #ifdef time_now_local_USE_GetSystemTimePreciseAsFileTime
@@ -440,7 +440,7 @@ INTERN_CONST struct month const month_info[2][MONTHS_PER_YEAR + 1] = {
 
 
 /* Check if the year referenced by the year-counter `*p_year' is a leap-year */
-INTERN NONNULL((1)) bool FCALL
+INTERN NONNULL((1)) bool DFCALL
 time_years_isleapyear(Dee_int128_t const *__restrict p_year) {
 	Dee_int128_t year_mod_400;
 	Dee_int128_t year_mod_100;
@@ -608,7 +608,7 @@ PRIVATE uint32_t const y400_table[401] = {
 
 /* Convert between days-since-01-01-0000 and that the relevant year.
  * When converting from year-to-day, return that year's 01-01-XXXX. */
-INTERN NONNULL((1)) void FCALL
+INTERN NONNULL((1)) void DFCALL
 time_inplace_day2year(Dee_int128_t *__restrict p_value) {
 	/* Inaccurate version of this function would look like:
 	 * >> return (400 * value) / 146097;
@@ -632,7 +632,7 @@ time_inplace_day2year(Dee_int128_t *__restrict p_value) {
 	*p_value = base;
 }
 
-INTERN NONNULL((1)) void FCALL
+INTERN NONNULL((1)) void DFCALL
 time_inplace_year2day(Dee_int128_t *__restrict p_value) {
 	Dee_int128_t ydiv;
 	uint16_t ymod;
@@ -644,7 +644,7 @@ time_inplace_year2day(Dee_int128_t *__restrict p_value) {
 
 
 /* Convert between a specific month and that month's starting nano-second */
-INTERN NONNULL((1)) void FCALL
+INTERN NONNULL((1)) void DFCALL
 time_inplace_nanosecond2month(Dee_int128_t *__restrict p_value) {
 	Dee_int128_t year = *p_value;
 	Dee_int128_t start_of_year_nanoseconds;
@@ -669,7 +669,7 @@ time_inplace_nanosecond2month(Dee_int128_t *__restrict p_value) {
 	*p_value = year;
 }
 
-INTERN NONNULL((1)) void FCALL
+INTERN NONNULL((1)) void DFCALL
 time_inplace_month2nanosecond(Dee_int128_t *__restrict p_value) {
 	Dee_int128_t year;
 	uint8_t month_in_year;
@@ -684,21 +684,21 @@ time_inplace_month2nanosecond(Dee_int128_t *__restrict p_value) {
 	*p_value = year;
 }
 
-INTERN WUNUSED NONNULL((1)) uint8_t FCALL
+INTERN WUNUSED NONNULL((1)) uint8_t DFCALL
 DeeTime_GetRepr8(DeeTimeObject const *__restrict self, uint8_t repr) {
 	Dee_int128_t result;
 	_DeeTime_GetRepr(&result, self, repr);
 	return __hybrid_int128_get8(result);
 }
 
-INTERN WUNUSED NONNULL((1)) uint32_t FCALL
+INTERN WUNUSED NONNULL((1)) uint32_t DFCALL
 DeeTime_GetRepr32(DeeTimeObject const *__restrict self, uint8_t repr) {
 	Dee_int128_t result;
 	_DeeTime_GetRepr(&result, self, repr);
 	return __hybrid_int128_get32(result);
 }
 
-INTERN WUNUSED NONNULL((1)) Dee_int128_t FCALL
+INTERN WUNUSED NONNULL((1)) Dee_int128_t DFCALL
 DeeTime_GetRepr(DeeTimeObject const *__restrict self,
                 uint8_t repr) {
 	Dee_int128_t result;
@@ -708,7 +708,7 @@ DeeTime_GetRepr(DeeTimeObject const *__restrict self,
 
 
 /* Return the integer value for the specified representation of `self' */
-INTERN NONNULL((1, 2)) void FCALL
+INTERN NONNULL((1, 2)) void DFCALL
 _DeeTime_GetRepr(Dee_int128_t *__restrict p_result,
                  DeeTimeObject const *__restrict self,
                  uint8_t repr) {
@@ -942,7 +942,7 @@ _DeeTime_GetRepr(Dee_int128_t *__restrict p_result,
 	}
 }
 
-LOCAL NONNULL((1)) void FCALL
+LOCAL NONNULL((1)) void DFCALL
 DeeTime_MakeTimestamp(DeeTimeObject *__restrict self) {
 	/* Ensure that `self' uses nano-seconds, and change it to a timestamp */
 	if unlikely(self->t_typekind != TIME_TYPEKIND(TIME_TYPE_NANOSECONDS, TIME_KIND_TIMESTAMP)) {
@@ -953,7 +953,7 @@ DeeTime_MakeTimestamp(DeeTimeObject *__restrict self) {
 }
 
 /* Set the integer value for the specified representation of `self' */
-INTERN NONNULL((1, 2)) void FCALL
+INTERN NONNULL((1, 2)) void DFCALL
 DeeTime_SetRepr(DeeTimeObject *__restrict self,
                 Dee_int128_t const *__restrict p_value,
                 uint8_t repr) {
@@ -2951,7 +2951,7 @@ time_ctor(DeeTimeObject *__restrict self) {
 /* @return:  0: Success (Argument is present)
  * @return:  1: Argument not present
  * @return: -1: Error */
-PRIVATE WUNUSED NONNULL((1, 5, 7)) int FCALL
+PRIVATE WUNUSED NONNULL((1, 5, 7)) int DFCALL
 time_init_getarg(DeeKwArgs *__restrict kwds,
                  size_t argc, DeeObject *const *argv,
                  size_t default_argi,
@@ -2972,7 +2972,7 @@ time_init_getarg(DeeKwArgs *__restrict kwds,
 }
 
 
-PRIVATE NONNULL((1, 2)) void FCALL
+PRIVATE NONNULL((1, 2)) void DFCALL
 time_init_addrepr(DeeTimeObject *__restrict self,
                   Dee_int128_t const *__restrict p_value,
                   uint8_t repr) {
@@ -2986,7 +2986,7 @@ time_init_addrepr(DeeTimeObject *__restrict self,
 	}
 }
 
-PRIVATE NONNULL((1, 2)) void FCALL
+PRIVATE NONNULL((1, 2)) void DFCALL
 time_init_addrepr_months(DeeTimeObject *__restrict self,
                          Dee_int128_t const *__restrict p_value,
                          uint8_t repr) {
@@ -3009,7 +3009,7 @@ time_init_addrepr_months(DeeTimeObject *__restrict self,
 	}
 }
 
-PRIVATE NONNULL((1, 2)) void FCALL
+PRIVATE NONNULL((1, 2)) void DFCALL
 time_init_setrepr(DeeTimeObject *__restrict self,
                   Dee_int128_t const *__restrict p_value,
                   uint8_t repr) {

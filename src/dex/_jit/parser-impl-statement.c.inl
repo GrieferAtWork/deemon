@@ -25,7 +25,7 @@
 
 DECL_BEGIN
 
-INTERN RETURN_TYPE FCALL
+INTERN RETURN_TYPE DFCALL
 FUNC(StatementBlock)(JITLexer *__restrict self) {
 	RETURN_TYPE result;
 #ifndef JIT_EVAL
@@ -68,7 +68,7 @@ err:
 
 #ifndef IS_COL_DEFINED
 #define IS_COL_DEFINED 1
-LOCAL WUNUSED bool FCALL
+LOCAL WUNUSED bool DFCALL
 JITLexer_IsColumn(JITLexer *__restrict self) {
 	switch (self->jl_tok) {
 	case ':': break;
@@ -85,7 +85,7 @@ JITLexer_IsColumn(JITLexer *__restrict self) {
 
 #ifndef SKIP_ASSEMBLY_OPERAND_NAME_DEFINED
 #define SKIP_ASSEMBLY_OPERAND_NAME_DEFINED 1
-LOCAL WUNUSED int FCALL
+LOCAL WUNUSED int DFCALL
 JITLexer_SkipAssemblyOperandName(JITLexer *__restrict self) {
 	if (self->jl_tok == '[') {
 		JITLexer_Yield(self);
@@ -109,7 +109,7 @@ err:
 #endif /* !SKIP_ASSEMBLY_OPERAND_NAME_DEFINED */
 
 
-LOCAL WUNUSED int FCALL
+LOCAL WUNUSED int DFCALL
 FUNC(AssemblyOperands)(JITLexer *__restrict self
 #ifdef JIT_EVAL
                        , bool is_input
@@ -204,7 +204,7 @@ err:
 
 #ifndef SKIP_ASSEMBLY_CLOBBER_DEFINED
 #define SKIP_ASSEMBLY_CLOBBER_DEFINED 1
-LOCAL void FCALL
+LOCAL void DFCALL
 JITLexer_SkipAssemblyClobber(JITLexer *__restrict self) {
 	while (self->jl_tok == JIT_STRING ||
 	       self->jl_tok == JIT_RAWSTRING) {
@@ -221,7 +221,7 @@ JITLexer_SkipAssemblyClobber(JITLexer *__restrict self) {
 
 #ifndef SKIP_ASSEMBLY_LABELS_DEFINED
 #define SKIP_ASSEMBLY_LABELS_DEFINED 1
-LOCAL WUNUSED int FCALL
+LOCAL WUNUSED int DFCALL
 JITLexer_SkipAssemblyLabels(JITLexer *__restrict self) {
 	while (self->jl_tok == JIT_KEYWORD || self->jl_tok == '[') {
 		if unlikely(JITLexer_SkipAssemblyOperandName(self))
@@ -243,7 +243,7 @@ err:
 
 
 
-INTERN RETURN_TYPE FCALL
+INTERN RETURN_TYPE DFCALL
 FUNC(Statement)(JITLexer *__restrict self) {
 	RETURN_TYPE result;
 	switch (self->jl_tok) {
@@ -734,7 +734,7 @@ DeeSystem_DEFINE_memrend(dee_memrend)
 #endif /* !CONFIG_HAVE_memrend */
 
 /* Fill in `result->ii_symbol_name' and `result->ii_symbol_size' a module name `.foo.bar', etc. */
-PRIVATE WUNUSED NONNULL((1, 2)) int FCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DFCALL
 get_module_symbol_name(JITLexer *__restrict self,
                        struct jit_import_item *__restrict result,
                        bool is_module) {
@@ -784,7 +784,7 @@ err:
 /* Evaluate a symbol name for an import statement and write it to `printer'
  * @return:  0: Successfully.
  * @return: -1: An error occurred. */
-INTERN WUNUSED IFELSE(NONNULL((1, 2)), NONNULL((1))) int FCALL
+INTERN WUNUSED IFELSE(NONNULL((1, 2)), NONNULL((1))) int DFCALL
 FUNC(SymbolNameIntoPrinter)(JITLexer *__restrict self
                             IF_EVAL(, struct unicode_printer *__restrict printer)) {
 	if (self->jl_tok == JIT_KEYWORD) {
@@ -817,7 +817,7 @@ err:
 /* @return:  1: OK (when `allow_module_name' is true, a module import was parsed)
  * @return:  0: OK
  * @return: -1: Error */
-INTERN WUNUSED IFELSE(NONNULL((1, 2)), NONNULL((1))) int FCALL
+INTERN WUNUSED IFELSE(NONNULL((1, 2)), NONNULL((1))) int DFCALL
 FUNC(ImportItem)(JITLexer *__restrict self,
                  IF_EVAL(struct jit_import_item *__restrict result, )
                  bool allow_module_name) {
@@ -1003,7 +1003,7 @@ err:
 
 /* NOTE: Unlike other statements, the Import-statement parsers expect the
  *       lexer to point *after* the leading `import' or `from' keyword */
-INTERN RETURN_TYPE FCALL
+INTERN RETURN_TYPE DFCALL
 FUNC(Import)(JITLexer *__restrict self) {
 #ifdef JIT_EVAL
 	struct jit_import_item item;
@@ -1303,7 +1303,7 @@ err:
 	return ERROR;
 }
 
-INTERN RETURN_TYPE FCALL
+INTERN RETURN_TYPE DFCALL
 FUNC(FromImport)(JITLexer *__restrict self) {
 	bool has_star = false;
 #ifdef JIT_EVAL

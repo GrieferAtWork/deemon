@@ -33,7 +33,7 @@
 
 DECL_BEGIN
 
-PRIVATE WUNUSED NONNULL((1)) DREF struct ast *FCALL
+PRIVATE WUNUSED NONNULL((1)) DREF struct ast *DFCALL
 add_getattr_format(struct ast *__restrict self) {
 	DREF struct ast *attr, *result;
 	attr = ast_constexpr((DeeObject *)&str_format);
@@ -48,7 +48,7 @@ err:
 	return NULL;
 }
 
-PRIVATE WUNUSED NONNULL((1)) DREF struct ast *FCALL
+PRIVATE WUNUSED NONNULL((1)) DREF struct ast *DFCALL
 add_call_sequence(struct ast *__restrict base, size_t argc,
                   /*inherit(on_success)*/ DREF struct ast **argv) {
 	DREF struct ast *result, *args, *args_sequence;
@@ -74,7 +74,7 @@ err:
 	return NULL;
 }
 
-PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) char *FCALL
+PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) char *DFCALL
 find_unescape_quote(char *text, char *end, char quote) {
 	while (text < end) {
 		char ch = *text++;
@@ -93,7 +93,7 @@ find_unescape_quote(char *text, char *end, char quote) {
 
 
 /* Parse a template string. */
-INTERN WUNUSED DREF struct ast *FCALL
+INTERN WUNUSED DREF struct ast *DFCALL
 ast_parse_template_string(void) {
 	STATIC_ASSERT(TOK_STRING == '"');
 	STATIC_ASSERT(TOK_CHAR == '\'');

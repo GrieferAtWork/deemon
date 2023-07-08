@@ -41,7 +41,7 @@
  */
 DECL_BEGIN
 
-PRIVATE WUNUSED DREF struct ast *FCALL
+PRIVATE WUNUSED DREF struct ast *DFCALL
 wrap_yield(DREF struct ast *self, struct ast_loc *__restrict loc) {
 	DREF struct ast *result;
 	result = ast_setddi(ast_yield(ast_setddi(self, loc)), loc);
@@ -50,7 +50,7 @@ wrap_yield(DREF struct ast *self, struct ast_loc *__restrict loc) {
 	return result;
 }
 
-PRIVATE WUNUSED DREF struct ast *FCALL
+PRIVATE WUNUSED DREF struct ast *DFCALL
 parse_generator_loop(struct ast_loc *__restrict ddi_loc) {
 	struct ast_loc loc;
 	uint32_t old_flags;
@@ -313,7 +313,7 @@ err:
 	return NULL;
 }
 
-INTERN WUNUSED DREF struct ast *FCALL ast_parse_loopexpr(void) {
+INTERN WUNUSED DREF struct ast *DFCALL ast_parse_loopexpr(void) {
 	struct ast_loc loc;
 	tok_t mode = tok;
 	DREF struct ast *result, *other, *merge;
@@ -373,7 +373,7 @@ err:
 
 
 /* Same as `ast_parse_try_hybrid' but for loopexpr statements / expressions. */
-INTERN WUNUSED DREF struct ast *FCALL
+INTERN WUNUSED DREF struct ast *DFCALL
 ast_parse_loopexpr_hybrid(unsigned int *p_was_expression) {
 	/* TODO */
 	*p_was_expression = AST_PARSE_WASEXPR_NO;

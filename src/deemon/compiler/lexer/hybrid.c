@@ -31,7 +31,7 @@
 
 DECL_BEGIN
 
-PRIVATE WUNUSED DREF struct ast *FCALL ast_do_parse_brace_items(void) {
+PRIVATE WUNUSED DREF struct ast *DFCALL ast_do_parse_brace_items(void) {
 	DREF struct ast *result;
 	uint32_t old_flags = TPPLexer_Current->l_flags;
 	TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTLF;
@@ -49,7 +49,7 @@ err_flags:
 
 
 /* @param: mode: Set of `AST_COMMA_*' - What is allowed and when should we pack values. */
-INTERN WUNUSED DREF struct ast *FCALL
+INTERN WUNUSED DREF struct ast *DFCALL
 ast_parse_statement_or_expression(unsigned int *p_was_expression) {
 	DREF struct ast *result;
 	unsigned int was_expression;
@@ -161,7 +161,7 @@ err:
 
 
 /* Same as `ast_parse_try_hybrid' but for if statements / expressions. */
-INTERN WUNUSED DREF struct ast *FCALL
+INTERN WUNUSED DREF struct ast *DFCALL
 ast_parse_if_hybrid(unsigned int *p_was_expression) {
 	DREF struct ast *tt_branch;
 	DREF struct ast *ff_branch;
@@ -227,7 +227,7 @@ err:
 
 
 /* Parse a statement or a brace-expression, with the current token being a `{' */
-INTERN WUNUSED DREF struct ast *FCALL
+INTERN WUNUSED DREF struct ast *DFCALL
 ast_parse_statement_or_braces(unsigned int *p_was_expression) {
 	DREF struct ast *result, **new_elemv;
 	DREF struct ast *remainder;

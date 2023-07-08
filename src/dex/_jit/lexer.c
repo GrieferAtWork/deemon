@@ -31,7 +31,7 @@
 
 DECL_BEGIN
 
-INTERN void FCALL
+INTERN void DFCALL
 JITLexer_Yield(JITLexer *__restrict self) {
 	uniflag_t flags;
 	uint32_t ch32;

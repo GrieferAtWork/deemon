@@ -3493,8 +3493,7 @@ PRIVATE struct dex_symbol symbols[] = {
 	      /**/ "specific. Though if no exception is thrown, such trailing data is ignored and has no "
 	      /**/ "effect.") },
 	{ "write", (DeeObject *)&libjson_write, MODSYM_FNORMAL,
-	  DOC("(data:?X8?O?Dfloat?Dint?Dstring?Dbool?N?DSequence?DMapping,pretty=!f,recursion:?X2?DCallable?N=!N)->?Dstring\n"
-	      "(data:?X8?O?Dfloat?Dint?Dstring?Dbool?N?DSequence?DMapping,into:?DFile,pretty=!f,recursion:?X2?DCallable?N=!N)->?DFile\n"
+	  DOC("(data:?X8?O?Dfloat?Dint?Dstring?Dbool?N?DSequence?DMapping,into?:?DFile,pretty=!f,recursion:?X2?DCallable?N=!N)->?DFile\n"
 	      "#precursion{An optional callback that is invoked to replace inner instances of objects referencing "
 	      /*       */ "themselves via some attribute. When set to ?N, or if the object returned by the callback, "
 	      /*       */ "is also currently being written, a :ValueError is thrown instead.}"
