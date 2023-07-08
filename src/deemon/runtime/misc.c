@@ -94,10 +94,10 @@ STATIC_ASSERT(sizeof(Dee_uint128_t) == 16);
 STATIC_ASSERT(sizeof(Dee_int128_t) == 16);
 
 #define packw(x) \
-	(((x)&0xff) ^ (((x)&0xff00) >> 8))
-#define packl(x)                        \
-	(((x)&0xff) ^ (((x)&0xff00) >> 8) ^ \
-	 (((x)&0xff0000) >> 16) ^ (((x)&0xff000000) >> 24))
+	(((x)&UINT16_C(0xff)) ^ (((x)&UINT16_C(0xff00)) >> 8))
+#define packl(x)                                            \
+	(((x)&UINT32_C(0xff)) ^ (((x)&UINT32_C(0xff00)) >> 8) ^ \
+	 (((x)&UINT32_C(0xff0000)) >> 16) ^ (((x)&UINT32_C(0xff000000)) >> 24))
 
 
 #if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
@@ -122,19 +122,19 @@ PUBLIC ATTR_CONST WUNUSED dhash_t
 }
 
 
-#if _Dee_HashSelect(1, 2) == 1
+#if _Dee_HashSelect(32, 64) == 32
 // This Hash function is based on code from here:
 // https://en.wikipedia.org/wiki/MurmurHash
 // It was referenced as pretty good here:
 // http://programmers.stackexchange.com/questions/49550/which-hashing-algorithm-is-best-for-uniqueness-and-speed
 
 #define ROT32(x, y) ((x << y) | (x >> (32 - y))) // avoid effort
-#define c1 0xcc9e2d51
-#define c2 0x1b873593
+#define c1 UINT32_C(0xcc9e2d51)
+#define c2 UINT32_C(0x1b873593)
 #define r1 15
 #define r2 13
 #define m  5
-#define n  0xe6546b64
+#define n  UINT32_C(0xe6546b64)
 PUBLIC ATTR_PURE WUNUSED ATTR_INS(1, 2) dhash_t DCALL
 Dee_HashPtr(void const *__restrict ptr, size_t n_bytes) {
 	uint8_t const *tail;
@@ -172,9 +172,9 @@ Dee_HashPtr(void const *__restrict ptr, size_t n_bytes) {
 	}
 	hash ^= n_bytes;
 	hash ^= (hash >> 16);
-	hash *= 0x85ebca6b;
+	hash *= UINT32_C(0x85ebca6b);
 	hash ^= (hash >> 13);
-	hash *= 0xc2b2ae35;
+	hash *= UINT32_C(0xc2b2ae35);
 	hash ^= (hash >> 16);
 	return hash;
 }
@@ -223,9 +223,9 @@ Dee_Hash2Byte(uint16_t const *__restrict ptr, size_t n_words) {
 	}
 	hash ^= n_words;
 	hash ^= (hash >> 16);
-	hash *= 0x85ebca6b;
+	hash *= UINT32_C(0x85ebca6b);
 	hash ^= (hash >> 13);
-	hash *= 0xc2b2ae35;
+	hash *= UINT32_C(0xc2b2ae35);
 	hash ^= (hash >> 16);
 	return hash;
 }
@@ -278,9 +278,9 @@ Dee_Hash4Byte(uint32_t const *__restrict ptr, size_t n_dwords) {
 	}
 	hash ^= n_dwords;
 	hash ^= (hash >> 16);
-	hash *= 0x85ebca6b;
+	hash *= UINT32_C(0x85ebca6b);
 	hash ^= (hash >> 13);
-	hash *= 0xc2b2ae35;
+	hash *= UINT32_C(0xc2b2ae35);
 	hash ^= (hash >> 16);
 	return hash;
 }
@@ -331,9 +331,9 @@ Dee_HashCasePtr(void const *__restrict ptr, size_t n_bytes) {
 	}
 	hash ^= n_bytes;
 	hash ^= (hash >> 16);
-	hash *= 0x85ebca6b;
+	hash *= UINT32_C(0x85ebca6b);
 	hash ^= (hash >> 13);
-	hash *= 0xc2b2ae35;
+	hash *= UINT32_C(0xc2b2ae35);
 	hash ^= (hash >> 16);
 	return hash;
 }
@@ -382,9 +382,9 @@ Dee_HashCase2Byte(uint16_t const *__restrict ptr, size_t n_words) {
 	}
 	hash ^= n_words;
 	hash ^= (hash >> 16);
-	hash *= 0x85ebca6b;
+	hash *= UINT32_C(0x85ebca6b);
 	hash ^= (hash >> 13);
-	hash *= 0xc2b2ae35;
+	hash *= UINT32_C(0xc2b2ae35);
 	hash ^= (hash >> 16);
 	return hash;
 }
@@ -436,9 +436,9 @@ Dee_HashCase4Byte(uint32_t const *__restrict ptr, size_t n_dwords) {
 	}
 	hash ^= n_dwords;
 	hash ^= (hash >> 16);
-	hash *= 0x85ebca6b;
+	hash *= UINT32_C(0x85ebca6b);
 	hash ^= (hash >> 13);
-	hash *= 0xc2b2ae35;
+	hash *= UINT32_C(0xc2b2ae35);
 	hash ^= (hash >> 16);
 	return hash;
 }
@@ -492,9 +492,9 @@ do_tail_1:
 done:
 	hash ^= n_chars;
 	hash ^= (hash >> 16);
-	hash *= 0x85ebca6b;
+	hash *= UINT32_C(0x85ebca6b);
 	hash ^= (hash >> 13);
-	hash *= 0xc2b2ae35;
+	hash *= UINT32_C(0xc2b2ae35);
 	hash ^= (hash >> 16);
 	return hash;
 }
@@ -552,9 +552,9 @@ do_tail_1:
 done:
 	hash ^= n_chars;
 	hash ^= (hash >> 16);
-	hash *= 0x85ebca6b;
+	hash *= UINT32_C(0x85ebca6b);
 	hash ^= (hash >> 13);
-	hash *= 0xc2b2ae35;
+	hash *= UINT32_C(0xc2b2ae35);
 	hash ^= (hash >> 16);
 	return hash;
 }
@@ -567,9 +567,9 @@ done:
 #undef m
 #undef n
 
-#elif _Dee_HashSelect(1, 2) == 2
+#elif _Dee_HashSelect(32, 64) == 64
 
-#define m    0xc6a4a7935bd1e995ull
+#define m    UINT64_C(0xc6a4a7935bd1e995)
 #define r    47
 //#define seed 0xe17a1465
 PUBLIC ATTR_PURE WUNUSED ATTR_INS(1, 2) dhash_t DCALL
