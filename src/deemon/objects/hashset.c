@@ -94,6 +94,7 @@ DeeHashSet_NewItemsInherited(size_t num_items,
 		}
 
 		/* Without any dummy items, these are identical. */
+		result->hs_mask = mask;
 		result->hs_used = num_items;
 		result->hs_size = num_items;
 next_key:

@@ -2163,8 +2163,8 @@ PRIVATE struct type_method tpconst dict_methods[] = {
 	            "Same as #setnew but return the previously assigned object on failure"),
 	TYPE_METHOD("update", &dict_update,
 	            "(items:?S?T2?O?O)\n"
-	            "Iterate @items and unpack each element into 2 others, using them as "
-	            /**/ "key and value to insert into @this ?."),
+	            "Iterate @items and unpack each element into 2 others, "
+	            /**/ "using them as key and value to insert into @this ?."),
 	TYPE_KWMETHOD("byhash", &dict_byhash, DOC_GET(map_byhash_doc)),
 #ifndef CONFIG_NO_DEEMON_100_COMPAT
 	/* Old function names. */
