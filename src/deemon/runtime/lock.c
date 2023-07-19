@@ -666,10 +666,11 @@ PUBLIC NONNULL((1)) void
 	(void)self;
 #else /* CONFIG_NO_THREADS */
 	unsigned int lockword;
+again:
 	lockword = atomic_read(&self->rs_lock.ra_lock);
 	if (lockword == 0) {
 		if (!atomic_cmpxch_explicit(&self->rs_lock.ra_lock, 0, 1, Dee_ATOMIC_ACQUIRE, Dee_ATOMIC_ACQUIRE))
-			goto waitfor;
+			goto again;
 settid:
 		self->rs_lock.ra_tid = __hybrid_gettid();
 		return;
@@ -678,7 +679,6 @@ settid:
 		atomic_inc_explicit(&self->rs_lock.ra_lock, Dee_ATOMIC_ACQUIRE);
 		return;
 	}
-waitfor:
 	_Dee_rshared_lock_waiting_start(self);
 	do {
 		DeeFutex_WaitIntNoInt(&self->rs_lock.ra_lock, lockword);
@@ -700,10 +700,11 @@ PUBLIC WUNUSED NONNULL((1)) int
 #else /* CONFIG_NO_THREADS */
 	int result;
 	unsigned int lockword;
+again:
 	lockword = atomic_read(&self->rs_lock.ra_lock);
 	if (lockword == 0) {
 		if (!atomic_cmpxch_explicit(&self->rs_lock.ra_lock, 0, 1, Dee_ATOMIC_ACQUIRE, Dee_ATOMIC_ACQUIRE))
-			goto waitfor;
+			goto again;
 settid:
 		self->rs_lock.ra_tid = __hybrid_gettid();
 		return 0;
@@ -712,7 +713,6 @@ settid:
 		atomic_inc_explicit(&self->rs_lock.ra_lock, Dee_ATOMIC_ACQUIRE);
 		return 0;
 	}
-waitfor:
 	_Dee_rshared_lock_waiting_start(self);
 	do {
 		result = DeeFutex_WaitInt(&self->rs_lock.ra_lock, lockword);
@@ -742,10 +742,11 @@ PUBLIC WUNUSED NONNULL((1)) int
 	int result;
 	unsigned int lockword;
 	uint64_t now_microseconds, then_microseconds;
+again:
 	lockword = atomic_read(&self->rs_lock.ra_lock);
 	if (lockword == 0) {
 		if (!atomic_cmpxch_explicit(&self->rs_lock.ra_lock, 0, 1, Dee_ATOMIC_ACQUIRE, Dee_ATOMIC_ACQUIRE))
-			goto waitfor;
+			goto again;
 settid:
 		self->rs_lock.ra_tid = __hybrid_gettid();
 		return 0;
@@ -754,7 +755,6 @@ settid:
 		atomic_inc_explicit(&self->rs_lock.ra_lock, Dee_ATOMIC_ACQUIRE);
 		return 0;
 	}
-waitfor:
 	if (timeout_nanoseconds == (uint64_t)-1) {
 do_infinite_timeout:
 		_Dee_rshared_lock_waiting_start(self);
