@@ -968,40 +968,40 @@ PRIVATE struct type_getset tpconst numeric_getsets[] = {
 	            "#tIntegerOverflow{The value of @this number is outside the requested range}"
 	            "When @this number fits the range ${-128 ... 127}, return the same value as @s8\n"
 	            "Otherwise, an integer in the range ${128 ... 255} is returned as ${256 - this}\n"
-	            "This is the same behavior as casting an 8-bit integer to becoming signed, by "
-	            /**/ "re-interpreting the most significant bit as a sign-bit"),
+	            "This is the same behavior as casting an 8-bit integer to becoming signed, "
+	            /**/ "by re-interpreting the most significant bit as a sign-bit"),
 	TYPE_GETTER("signed16", &numeric_signed16,
 	            "->?Dint\n"
 	            "#tNotImplemented{@this number does not implement ${operator int}}"
 	            "#tIntegerOverflow{The value of @this number is outside the requested range}"
 	            "When @this number fits the range ${-32768 ... 32767}, return the same value as @s16\n"
 	            "Otherwise, an integer in the range ${32768 ... 65535} is returned as ${65536 - this}\n"
-	            "This is the same behavior as casting an 16-bit integer to becoming signed, by "
-	            /**/ "re-interpreting the most significant bit as a sign-bit"),
+	            "This is the same behavior as casting an 16-bit integer to becoming signed, "
+	            /**/ "by re-interpreting the most significant bit as a sign-bit"),
 	TYPE_GETTER("signed32", &numeric_signed32,
 	            "->?Dint\n"
 	            "#tNotImplemented{@this number does not implement ${operator int}}"
 	            "#tIntegerOverflow{The value of @this number is outside the requested range}"
 	            "When @this number fits the range ${-2147483648 ... 2147483647}, return the same value as @s32\n"
 	            "Otherwise, an integer in the range ${2147483648 ... 4294967295} is returned as ${4294967296 - this}\n"
-	            "This is the same behavior as casting an 32-bit integer to becoming signed, by "
-	            /**/ "re-interpreting the most significant bit as a sign-bit"),
+	            "This is the same behavior as casting an 32-bit integer to becoming signed, "
+	            /**/ "by re-interpreting the most significant bit as a sign-bit"),
 	TYPE_GETTER("signed64", &numeric_signed64,
 	            "->?Dint\n"
 	            "#tNotImplemented{@this number does not implement ${operator int}}"
 	            "#tIntegerOverflow{The value of @this number is outside the requested range}"
 	            "When @this number fits the range ${-9223372036854775808 ... 9223372036854775807}, return the same value as @s64\n"
 	            "Otherwise, an integer in the range ${9223372036854775808 ... 18446744073709551615} is returned as ${18446744073709551616 - this}\n"
-	            "This is the same behavior as casting an 64-bit integer to becoming signed, by "
-	            /**/ "re-interpreting the most significant bit as a sign-bit"),
+	            "This is the same behavior as casting an 64-bit integer to becoming signed, "
+	            /**/ "by re-interpreting the most significant bit as a sign-bit"),
 	TYPE_GETTER("signed128", &numeric_signed128,
 	            "->?Dint\n"
 	            "#tNotImplemented{@this number does not implement ${operator int}}"
 	            "#tIntegerOverflow{The value of @this number is outside the requested range}"
 	            "When @this number fits the range ${-170141183460469231731687303715884105728 ... 170141183460469231731687303715884105727}, return the same value as @s128\n"
 	            "Otherwise, an integer in the range ${170141183460469231731687303715884105728 ... 340282366920938463463374607431768211455} is returned as ${340282366920938463463374607431768211456 - this}\n"
-	            "This is the same behavior as casting an 128-bit integer to becoming signed, by "
-	            /**/ "re-interpreting the most significant bit as a sign-bit"),
+	            "This is the same behavior as casting an 128-bit integer to becoming signed, "
+	            /**/ "by re-interpreting the most significant bit as a sign-bit"),
 	TYPE_GETTER("unsigned8", &numeric_unsigned8,
 	            "->?Dint\n"
 	            "#tNotImplemented{@this number does not implement ${operator int}}"

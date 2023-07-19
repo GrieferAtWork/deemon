@@ -1727,12 +1727,12 @@ PUBLIC DeeTypeObject DeeBytes_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ DeeString_STR(&str_Bytes),
 	/* .tp_doc      = */ DOC("An string-like abstract buffer object type for viewing & editing "
-	                         /**/ "the memory of any object implementing the buffer interface, or "
-	                         /**/ "to allocate fixed-length buffers for raw bytes which "
-	                         /**/ "can then be loaded with arbitrary data (most notably "
-	                         /**/ "through use of ?Areadinto?DFile)\n"
-	                         "A ?. object implements the sequence interface as a ${{int...}}-like sequence, "
-	                         /**/ "with each integer being a value between $0 and $0xff\n"
+	                         /**/ "the memory of any object implementing the buffer interface, "
+	                         /**/ "or to allocate fixed-length buffers for raw bytes which can "
+	                         /**/ "then be loaded with arbitrary data (most notably through use "
+	                         /**/ "of ?Areadinto?DFile)\n"
+	                         "A ?. object implements the sequence interface as a ${{int...}}-like "
+	                         /**/ "sequence, with each integer being a value between $0 and $0xff\n"
 	                         "\n"
 
 	                         "()\n"
