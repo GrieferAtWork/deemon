@@ -3549,7 +3549,8 @@ instance_builtin_thash(DeeTypeObject *tp_self,
 	uint16_t i;
 	struct instance_desc *instance;
 	DREF DeeObject *member;
-	dhash_t result = 0;
+	dhash_t result;
+	result   = DEE_HASHOF_EMPTY_SEQUENCE;
 	desc     = DeeClass_DESC(tp_self);
 	instance = DeeInstance_DESC(desc, self);
 	Dee_instance_desc_lock_read(instance);
@@ -3998,7 +3999,7 @@ instance_builtin_hash(DeeObject *__restrict self) {
 		result = Dee_HashCombine(result, instance_builtin_thash(tp_self, self));
 	} while ((tp_self = DeeTypeMRO_Next(&mro, tp_self)) != NULL &&
 	         DeeType_IsClass(tp_self));
-	if (tp_self != NULL)
+	if (tp_self != NULL && tp_self != &DeeObject_Type)
 		result = Dee_HashCombine(result, DeeObject_THash(tp_self, self));
 	return result;
 }
