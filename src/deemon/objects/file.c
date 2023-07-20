@@ -2944,9 +2944,9 @@ file_getutf8(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, ":getutf8"))
 		goto err;
 	result = DeeFile_GetUtf8(self);
-	if unlikely(result == GETC_ERR)
+	if unlikely(result == (uint32_t)GETC_ERR)
 		goto err;
-	if (result == GETC_EOF)
+	if (result == (uint32_t)GETC_EOF)
 		return_empty_string;
 	return DeeString_Chr(result);
 err:
