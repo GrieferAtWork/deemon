@@ -33,6 +33,7 @@
 #include <deemon/object.h>
 #include <deemon/rodict.h>
 #include <deemon/seq.h>
+#include <deemon/set.h>
 #include <deemon/string.h>
 #include <deemon/super.h>
 #include <deemon/thread.h>
@@ -710,6 +711,14 @@ PRIVATE DeeTypeObject DeeMappingProxy_Type = {
 	/* .tp_class_members = */ proxy_class_members
 };
 
+PRIVATE DeeTypeObject *tpconst mapping_keys_mro[] = {
+	&DeeMappingProxy_Type,
+	&DeeSet_Type,
+	&DeeSeq_Type,
+	&DeeObject_Type,
+	NULL
+};
+
 PRIVATE DeeTypeObject DeeMappingKeys_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_MappingKeys",
@@ -753,7 +762,9 @@ PRIVATE DeeTypeObject DeeMappingKeys_Type = {
 	/* .tp_members       = */ NULL,
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,
-	/* .tp_class_members = */ proxykeys_class_members
+	/* .tp_class_members = */ proxykeys_class_members,
+	/* .tp_call_kw       = */ NULL,
+	/* .tp_mro           = */ mapping_keys_mro
 };
 
 PRIVATE DeeTypeObject DeeMappingValues_Type = {

@@ -30,12 +30,13 @@
 #include <deemon/map.h>
 #include <deemon/object.h>
 #include <deemon/seq.h>
+#include <deemon/set.h>
 #include <deemon/system-features.h>
 #include <deemon/tuple.h>
 #include <deemon/util/atomic.h>
 
-#include "../runtime/strings.h"
 #include "../runtime/runtime_error.h"
+#include "../runtime/strings.h"
 
 DECL_BEGIN
 
@@ -829,6 +830,14 @@ PUBLIC DeeTypeObject DeeDictProxy_Type = {
 	/* .tp_class_members = */ proxy_class_members
 };
 
+PRIVATE DeeTypeObject *tpconst dict_keys_mro[] = {
+	&DeeDictProxy_Type,
+	&DeeSet_Type,
+	&DeeSeq_Type,
+	&DeeObject_Type,
+	NULL
+};
+
 PUBLIC DeeTypeObject DeeDictKeys_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_DictKeys",
@@ -872,7 +881,9 @@ PUBLIC DeeTypeObject DeeDictKeys_Type = {
 	/* .tp_members       = */ NULL,
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,
-	/* .tp_class_members = */ dict_keys_class_members
+	/* .tp_class_members = */ dict_keys_class_members,
+	/* .tp_call_kw       = */ NULL,
+	/* .tp_mro           = */ dict_keys_mro
 };
 
 PUBLIC DeeTypeObject DeeDictItems_Type = {
