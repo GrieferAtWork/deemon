@@ -3315,23 +3315,109 @@ PUBLIC WUNUSED DREF DeeObject *
 	DREF DeeIntObject *result;
 	size_t total_bits;
 	size_t total_digits;
-	bool is_negative = false;
-	total_bits       = length * 8;
+	bool is_negative;
+
+	/* Fast-passes for some "simple" byte-counts */
+#ifndef __OPTIMIZE_SIZE__
+#if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
+#define IS_NATIVE_ENDIAN() (little_endian)
+#else /* __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__ */
+#define IS_NATIVE_ENDIAN() (!little_endian)
+#endif /* __BYTE_ORDER__ != __ORDER_LITTLE_ENDIAN__ */
+	switch (length) {
+	case 0:
+		goto return_zero;
+
+	case 1:
+		if (as_signed) {
+			return DeeInt_NewInt8(*(int8_t const *)buf);
+		} else {
+			return DeeInt_NewUInt8(*(uint8_t const *)buf);
+		}
+		break;
+
+	case 2:
+		if (as_signed) {
+			int16_t val = *(int16_t const *)buf;
+			if unlikely(!IS_NATIVE_ENDIAN())
+				val = (int16_t)__hybrid_bswap16((uint16_t)val);
+			return DeeInt_NewInt16(val);
+		} else {
+			uint16_t val = *(uint16_t const *)buf;
+			if unlikely(!IS_NATIVE_ENDIAN())
+				val = __hybrid_bswap16(val);
+			return DeeInt_NewUInt16(val);
+		}
+		break;
+
+	case 4:
+		if (as_signed) {
+			int32_t val = *(int32_t const *)buf;
+			if unlikely(!IS_NATIVE_ENDIAN())
+				val = (int32_t)__hybrid_bswap32((uint32_t)val);
+			return DeeInt_NewInt32(val);
+		} else {
+			uint32_t val = *(uint32_t const *)buf;
+			if unlikely(!IS_NATIVE_ENDIAN())
+				val = __hybrid_bswap32(val);
+			return DeeInt_NewUInt32(val);
+		}
+		break;
+
+	case 8:
+		if (as_signed) {
+			int64_t val = *(int64_t const *)buf;
+			if unlikely(!IS_NATIVE_ENDIAN())
+				val = (int64_t)__hybrid_bswap64((uint64_t)val);
+			return DeeInt_NewInt64(val);
+		} else {
+			uint64_t val = *(uint64_t const *)buf;
+			if unlikely(!IS_NATIVE_ENDIAN())
+				val = __hybrid_bswap64(val);
+			return DeeInt_NewUInt64(val);
+		}
+		break;
+
+	case 16:
+		if (as_signed) {
+			Dee_int128_t val = *(Dee_int128_t const *)buf;
+			if unlikely(!IS_NATIVE_ENDIAN())
+				__hybrid_int128_bswap(val);
+			return DeeInt_NewInt128(val);
+		} else {
+			Dee_uint128_t val = *(Dee_uint128_t const *)buf;
+			if unlikely(!IS_NATIVE_ENDIAN())
+				__hybrid_uint128_bswap(val);
+			return DeeInt_NewUInt128(val);
+		}
+		break;
+
+	default:
+		break;
+	}
+#undef IS_NATIVE_ENDIAN
+#endif /* !__OPTIMIZE_SIZE__ */
+
+	/* Fallback that works for arbitrary byte-counts */
+	is_negative = false;
+	total_bits  = length * 8;
 	if (as_signed) {
 		uint8_t sign_byte;
 		uint8_t msb_byte;
 		unsigned int msb_topbit;
+#ifndef __OPTIMIZE_SIZE__
 		if (!length)
 			goto return_zero;
+#endif /* !__OPTIMIZE_SIZE__ */
 		sign_byte = 0x00;
 		if (little_endian) {
-			if (((uint8_t *)buf)[length - 1] & 0x80) {
+			if (((uint8_t const *)buf)[length - 1] & 0x80) {
 				sign_byte   = 0xff;
 				is_negative = true;
 			}
 
 			/* Strip leading sign bytes. */
-			while (((uint8_t *)buf)[length - 1] == sign_byte) {
+			while (((uint8_t const *)buf)[length - 1] == sign_byte) {
 				if (!--length) {
 					if (sign_byte)
 						goto return_m1;
@@ -3339,15 +3425,23 @@ PUBLIC WUNUSED DREF DeeObject *
 				}
 				total_bits -= 8;
 			}
-			msb_byte = ((uint8_t *)buf)[length - 1];
+			msb_byte = ((uint8_t const *)buf)[length - 1];
+
+			/* Check for special case: does the sign-bit differ in the next byte? */
+			if (is_negative && !(msb_byte & 0x80)) {
+				msb_byte = ((uint8_t const *)buf)[length];
+				++length;
+				total_bits += 1;
+				goto got_total_bits;
+			}
 		} else {
-			if (((uint8_t *)buf)[0] & 0x80) {
+			if (((uint8_t const *)buf)[0] & 0x80) {
 				sign_byte   = 0xff;
 				is_negative = true;
 			}
 
 			/* Strip leading sign bytes. */
-			while (((uint8_t *)buf)[0] == sign_byte) {
+			while (((uint8_t const *)buf)[0] == sign_byte) {
 				if (!--length) {
 					if (sign_byte)
 						goto return_m1;
@@ -3356,7 +3450,16 @@ PUBLIC WUNUSED DREF DeeObject *
 				total_bits -= 8;
 				buf = (void *)((uint8_t *)buf + 1);
 			}
-			msb_byte = ((uint8_t *)buf)[0];
+			msb_byte = ((uint8_t const *)buf)[0];
+
+			/* Check for special case: does the sign-bit differ in the next byte? */
+			if (is_negative && !(msb_byte & 0x80)) {
+				buf      = (void *)((uint8_t *)buf - 1);
+				msb_byte = ((uint8_t const *)buf)[0];
+				++length;
+				total_bits += 1;
+				goto got_total_bits;
+			}
 		}
 
 		/* Strip leading bits. */
@@ -3369,24 +3472,28 @@ PUBLIC WUNUSED DREF DeeObject *
 			--msb_topbit;
 		}
 		total_bits -= (7 - msb_topbit);
+		if (is_negative)
+			++total_bits; /* Need 1 extra bit for the last sign-bit */
 	} else {
 		uint8_t msb_byte;
 		unsigned int msb_topbit;
 		if (little_endian) {
-			while (length && !((uint8_t *)buf)[length - 1])
-				--length, total_bits -= 8;
+			while (length && !((uint8_t const *)buf)[length - 1]) {
+				--length;
+				total_bits -= 8;
+			}
 			if (!length)
 				goto return_zero;
-			msb_byte = ((uint8_t *)buf)[length - 1];
+			msb_byte = ((uint8_t const *)buf)[length - 1];
 		} else {
-			while (length && !((uint8_t *)buf)[0]) {
+			while (length && !((uint8_t const *)buf)[0]) {
 				--length;
 				total_bits -= 8;
 				buf = (void *)((uint8_t *)buf + 1);
 			}
 			if (!length)
 				goto return_zero;
-			msb_byte = ((uint8_t *)buf)[0];
+			msb_byte = ((uint8_t const *)buf)[0];
 		}
 		msb_topbit = 7;
 		while (msb_topbit) {
@@ -3401,6 +3508,7 @@ PUBLIC WUNUSED DREF DeeObject *
 	/* At this point, we've determined the exact number
 	 * of bits, as well as having extracted the sign bit,
 	 * and having stripped unused sign extensions. */
+got_total_bits:
 	total_digits = (total_bits + (DIGIT_BITS - 1)) / DIGIT_BITS;
 	ASSERT(total_digits >= 1);
 	result = DeeInt_Alloc(total_digits);
@@ -3420,17 +3528,17 @@ PUBLIC WUNUSED DREF DeeObject *
 				if (!byte_bits)
 					byte_bits = 8;
 				if (little_endian) {
-					byte_value = ((uint8_t *)buf)[byte_index];
+					byte_value = ((uint8_t const *)buf)[byte_index];
 				} else {
-					byte_value = ((uint8_t *)buf)[(length - 1) - byte_index];
+					byte_value = ((uint8_t const *)buf)[(length - 1) - byte_index];
 				}
 				temp |= (digit)(byte_value & (uint8_t)((1 << byte_bits) - 1)) << num_bits;
 				num_bits += byte_bits;
 			} else {
 				if (little_endian) {
-					temp |= (digit)((uint8_t *)buf)[byte_index] << num_bits;
+					temp |= (digit)((uint8_t const *)buf)[byte_index] << num_bits;
 				} else {
-					temp |= (digit)((uint8_t *)buf)[(length - 1) - byte_index] << num_bits;
+					temp |= (digit)((uint8_t const *)buf)[(length - 1) - byte_index] << num_bits;
 				}
 				num_bits += 8;
 			}
@@ -3483,6 +3591,7 @@ done_decr:
 	}
 
 	/* Finally, fill in the integer size field. */
+	ASSERT(result->ob_digit[total_digits - 1] != 0);
 	result->ob_size = (dssize_t)total_digits;
 	if (is_negative)
 		result->ob_size = -result->ob_size;

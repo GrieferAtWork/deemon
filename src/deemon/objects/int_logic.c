@@ -1673,7 +1673,8 @@ int_bitwise(DeeIntObject *__restrict a, char op,
 		z = DeeInt_Alloc(size_a);
 		if unlikely(!z)
 			goto err;
-		v_complement(z->ob_digit, a->ob_digit, size_a), a = z;
+		v_complement(z->ob_digit, a->ob_digit, size_a);
+		a = z;
 	} else {
 		Dee_Incref(a);
 	}
@@ -1683,7 +1684,8 @@ int_bitwise(DeeIntObject *__restrict a, char op,
 		z = DeeInt_Alloc(size_b);
 		if unlikely(!z)
 			goto err_a;
-		v_complement(z->ob_digit, b->ob_digit, size_b), b = z;
+		v_complement(z->ob_digit, b->ob_digit, size_b);
+		b = z;
 	} else {
 		Dee_Incref(b);
 	}
