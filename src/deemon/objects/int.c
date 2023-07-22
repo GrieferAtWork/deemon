@@ -3532,13 +3532,13 @@ got_total_bits:
 				} else {
 					byte_value = ((uint8_t const *)buf)[(length - 1) - byte_index];
 				}
-				temp |= (digit)(byte_value & (uint8_t)((1 << byte_bits) - 1)) << num_bits;
+				temp |= (twodigits)(byte_value & (uint8_t)((1 << byte_bits) - 1)) << num_bits;
 				num_bits += byte_bits;
 			} else {
 				if (little_endian) {
-					temp |= (digit)((uint8_t const *)buf)[byte_index] << num_bits;
+					temp |= (twodigits)((uint8_t const *)buf)[byte_index] << num_bits;
 				} else {
-					temp |= (digit)((uint8_t const *)buf)[(length - 1) - byte_index] << num_bits;
+					temp |= (twodigits)((uint8_t const *)buf)[(length - 1) - byte_index] << num_bits;
 				}
 				num_bits += 8;
 			}
