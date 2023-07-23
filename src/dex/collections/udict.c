@@ -1605,7 +1605,7 @@ urodict_rehash(DREF URoDict *__restrict self,
 	result = URODICT_ALLOC(new_mask);
 	if unlikely(!result)
 		goto done;
-	for (i = 0; i < old_mask; ++i) {
+	for (i = 0; i <= old_mask; ++i) {
 		size_t j, perturb;
 		struct udict_item *item;
 		if (!self->urd_elem[i].di_key)
@@ -1682,6 +1682,7 @@ URoDict_FromIterator_impl(DeeObject *__restrict self, size_t mask) {
 	DREF URoDict *result, *new_result;
 	DREF DeeObject *elem;
 	size_t elem_count = 0;
+
 	/* Construct a read-only Dict from an iterator. */
 	result = URODICT_ALLOC(mask);
 	if unlikely(!result)
@@ -1693,6 +1694,7 @@ URoDict_FromIterator_impl(DeeObject *__restrict self, size_t mask) {
 		Dee_Decref(elem);
 		if unlikely(error)
 			goto err_r;
+
 		/* Check if we must re-hash the resulting Dict. */
 		if (elem_count * 2 > mask) {
 			size_t new_mask = (mask << 1) | 1;
@@ -1702,8 +1704,10 @@ URoDict_FromIterator_impl(DeeObject *__restrict self, size_t mask) {
 				Dee_Decref(key_and_value[0]);
 				goto err_r;
 			}
-			mask = new_mask;
+			result = new_result;
+			mask   = new_mask;
 		}
+
 		/* Insert the key-value pair into the resulting Dict. */
 		urodict_insert(result, mask, &elem_count, key_and_value[0], key_and_value[1]);
 		if (DeeThread_CheckInterrupt())

@@ -1,0 +1,133 @@
+#!/usr/bin/deemon
+/* Copyright (c) 2018-2023 Griefer@Work                                       *
+ *                                                                            *
+ * This software is provided 'as-is', without any express or implied          *
+ * warranty. In no event will the authors be held liable for any damages      *
+ * arising from the use of this software.                                     *
+ *                                                                            *
+ * Permission is granted to anyone to use this software for any purpose,      *
+ * including commercial applications, and to alter it and redistribute it     *
+ * freely, subject to the following restrictions:                             *
+ *                                                                            *
+ * 1. The origin of this software must not be misrepresented; you must not    *
+ *    claim that you wrote the original software. If you use this software    *
+ *    in a product, an acknowledgement (see the following) in the product     *
+ *    documentation is required:                                              *
+ *    Portions Copyright (c) 2018-2023 Griefer@Work                           *
+ * 2. Altered source versions must be plainly marked as such, and must not be *
+ *    misrepresented as being the original software.                          *
+ * 3. This notice may not be removed or altered from any source distribution. *
+ */
+
+import * from deemon;
+import * from collections;
+
+global final KEY1 = "_1";
+global final KEY2 = "_2";
+global final KEY3 = "_3";
+global final KEY4 = "_4";
+global final KEY5 = "_5";
+global final KEY6 = "_6";
+global final KEY7 = "_7";
+global final KEY8 = "_8";
+global final KEY9 = "_9";
+global final KEYA = "_A";
+
+function identical(a, b): bool {
+	return type(a) == type(b) && a == b;
+}
+
+function assertSet(s) {
+	assert identical(#s, 9);
+	assert KEY1 in s;
+	assert KEY2 in s;
+	assert KEY3 in s;
+	assert KEY4 in s;
+	assert KEY5 in s;
+	assert KEY6 in s;
+	assert KEY7 in s;
+	assert KEY8 in s;
+	assert KEY9 in s;
+	assert KEYA !in s;
+}
+
+function assertMap(m) {
+	assert identical(#m, 9);
+	assert identical(m[KEY1], 1);
+	assert identical(m[KEY2], 2);
+	assert identical(m[KEY3], 3);
+	assert identical(m[KEY4], 4);
+	assert identical(m[KEY5], 5);
+	assert identical(m[KEY6], 6);
+	assert identical(m[KEY7], 7);
+	assert identical(m[KEY8], 8);
+	assert identical(m[KEY9], 9);
+	assert identical(m.get(KEY1), 1);
+	assert identical(m.get(KEY2), 2);
+	assert identical(m.get(KEY3), 3);
+	assert identical(m.get(KEY4), 4);
+	assert identical(m.get(KEY5), 5);
+	assert identical(m.get(KEY6), 6);
+	assert identical(m.get(KEY7), 7);
+	assert identical(m.get(KEY8), 8);
+	assert identical(m.get(KEY9), 9);
+	assert m[KEYA] !is bound;
+}
+
+global final set = {
+	KEY1,
+	KEY2,
+	KEY3,
+	KEY4,
+	KEY5,
+	KEY6,
+	KEY7,
+	KEY8,
+	KEY9,
+};
+
+global final map = {
+	KEY1: 1,
+	KEY2: 2,
+	KEY3: 3,
+	KEY4: 4,
+	KEY5: 5,
+	KEY6: 6,
+	KEY7: 7,
+	KEY8: 8,
+	KEY9: 9,
+};
+
+assertSet(set);
+assertSet(HashSet(set));
+assertSet(HashSet(set).frozen);
+assertSet(HashSet.Frozen(set));
+assertSet(UniqueSet(set));
+assertSet(UniqueSet(HashSet(set)));
+assertSet(UniqueSet(HashSet(set).frozen));
+assertSet(UniqueSet(HashSet.Frozen(set)));
+assertSet(UniqueSet(set).frozen);
+assertSet(UniqueSet(HashSet(set)).frozen);
+assertSet(UniqueSet(HashSet(set).frozen).frozen);
+assertSet(UniqueSet(HashSet.Frozen(set)).frozen);
+assertSet(UniqueSet.Frozen(set));
+assertSet(UniqueSet.Frozen(HashSet(set)));
+assertSet(UniqueSet.Frozen(HashSet(set).frozen));
+assertSet(UniqueSet.Frozen(HashSet.Frozen(set)));
+
+assertMap(map);
+assertMap(Dict(map));
+assertMap(Dict(map).frozen);
+assertMap(Dict.Frozen(map));
+assertMap(UniqueDict(map));
+assertMap(UniqueDict(Dict(map)));
+assertMap(UniqueDict(Dict(map).frozen));
+assertMap(UniqueDict(Dict.Frozen(map)));
+assertMap(UniqueDict(map).frozen);
+assertMap(UniqueDict(Dict(map)).frozen);
+assertMap(UniqueDict(Dict(map).frozen).frozen);
+assertMap(UniqueDict(Dict.Frozen(map)).frozen);
+assertMap(UniqueDict.Frozen(map));
+assertMap(UniqueDict.Frozen(Dict(map)));
+assertMap(UniqueDict.Frozen(Dict(map).frozen));
+assertMap(UniqueDict.Frozen(Dict.Frozen(map)));
