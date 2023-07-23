@@ -6233,7 +6233,7 @@ PRIVATE struct dex_symbol symbols[] = {
 	LIBWIN32_CREATEDIRECTORY_DEF
 	LIBWIN32_DELETEFILE_DEF
 	LIBWIN32_GETSYSTEMDIRECTORY_DEF_DOC("Returns the windows system directory ($r\"C:\\Windows\\system32\")")
-	LIBWIN32_GETWINDOWSDIRECTORY_DEF_DOC("Returns the windows system directory ($r\"C:\\Windows\")")
+	LIBWIN32_GETWINDOWSDIRECTORY_DEF_DOC("Returns the windows directory ($r\"C:\\Windows\")")
 	LIBWIN32_GETSYSTEMWINDOWSDIRECTORY_DEF_DOC("Returns the system windows directory ($r\"C:\\Windows\")")
 	LIBWIN32_GETSYSTEMWOW64DIRECTORY_DEF_DOC("Returns the windows SysWOW64 directory ($r\"C:\\Windows\\SysWOW64\")")
 	LIBWIN32_GETLOGICALDRIVESTRINGS_DEF_DOC("Returns a list of known system drives ($({ r\"C:\\\", r\"D:\\\", r\"E:\\\" }))")

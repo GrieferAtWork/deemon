@@ -4308,7 +4308,7 @@ PRIVATE struct type_method tpconst int_methods[] = {
 	TYPE_KWMETHOD("bin", &int_bin, numeric_bin_doc),
 	TYPE_KWMETHOD("oct", &int_oct, numeric_oct_doc),
 	TYPE_KWMETHOD("tobytes", &int_tobytes,
-	              "(length?:?.,byteorder:?Dstring=!N,signed=!f)->?DBytes\n"
+	              "(length?:?.,byteorder:?X2?Dstring?N=!N,signed=!f)->?DBytes\n"
 	              "#pbyteorder{The byteorder encoding used by the returned bytes. "
 	              /*            */ "One of $\"little\" (for little-endian), $\"big\" (for big-endian) "
 	              /*            */ "or ?N (for host-endian)}"

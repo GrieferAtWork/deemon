@@ -28,12 +28,15 @@
 #include <deemon/arg.h>
 #include <deemon/bool.h>
 #include <deemon/bytes.h>
+#include <deemon/error.h>
 #include <deemon/gc.h>
 #include <deemon/int.h>
 #include <deemon/none.h>
 #include <deemon/string.h>
 #include <deemon/super.h>
 #include <deemon/system-features.h> /* memcpy() */
+
+#include <hybrid/overflow.h>
 
 DECL_BEGIN
 
@@ -599,6 +602,70 @@ lvalue_alignof(struct lvalue_object *__restrict self) {
 	return DeeInt_NewSize(result);
 }
 
+INTDEF ATTR_COLD NONNULL((1)) int /* From "./core.c" */
+(DCALL err_bytes_not_writable)(DeeBytesObject *__restrict UNUSED(bytes_ob));
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeBytesObject *DCALL
+lvalue_tobytes(struct lvalue_object *self, size_t argc, DeeObject *const *argv) {
+	DeeBytesObject *data = NULL;
+	size_t data_size, offset = 0;
+	DeeLValueTypeObject *ltype = DeeType_AsLValueType(Dee_TYPE(self));
+	size_t type_size = DeeSType_Sizeof(ltype->lt_orig);
+	if (DeeArg_Unpack(argc, argv, "|o" UNPuSIZ, &data, &offset))
+		goto err;
+
+	/* When no explicit buffer was given, create a new one. */
+	if (data == NULL) {
+		data = (DREF DeeBytesObject *)DeeBytes_NewBufferUninitialized(type_size);
+		if unlikely(!data)
+			goto err;
+		CTYPES_FAULTPROTECT(memcpy(DeeBytes_DATA(data), self->l_ptr.ptr, type_size), goto err_data);
+		return data;
+#ifdef CONFIG_HAVE_CTYPES_FAULTPROTECT
+err_data:
+		Dee_DecrefDokill(data);
+		goto err;
+#endif /* CONFIG_HAVE_CTYPES_FAULTPROTECT */
+	}
+
+	/* Otherwise, copy bytes of `self' into the provided bytes-buffer at the specified offset. */
+	if (DeeObject_AssertTypeExact(data, &DeeBytes_Type))
+		goto err;
+	if unlikely(!DeeBytes_WRITABLE(data))
+		goto err_not_writable;
+	data_size = DeeBytes_SIZE(data);
+	if unlikely(OVERFLOW_USUB(data_size, offset, &data_size))
+		goto err_bad_size;
+	if unlikely(data_size < type_size)
+		goto err_bad_size;
+	CTYPES_FAULTPROTECT({
+		memmove(DeeBytes_DATA(data) + offset, self->l_ptr.ptr, type_size);
+	}, goto err);
+
+	return_reference_(data);
+err_bad_size:
+	data_size = DeeBytes_SIZE(data);
+	if (OVERFLOW_USUB(data_size, offset, &data_size))
+		data_size = 0;
+	DeeError_Throwf(&DeeError_ValueError,
+	                "Invalid bytes size: lvalue type `%r' has an "
+	                "instance size of `%" PRFuSIZ "', but the given "
+	                "`%" PRFuSIZ "'-large buffer at offset `%" PRFuSIZ "' "
+	                "provides at most `%" PRFuSIZ " bytes'",
+	                self, type_size, DeeBytes_SIZE(data), offset, data_size);
+err:
+	return NULL;
+err_not_writable:
+	err_bytes_not_writable(data);
+	goto err;
+}
+
+DOC_REF(struct_tobytes_doc);
+PRIVATE struct type_method tpconst lvalue_methods[] = {
+	TYPE_METHOD("tobytes", &lvalue_tobytes, struct_tobytes_doc),
+	TYPE_METHOD_END
+};
+
 PRIVATE struct type_getset tpconst lvalue_getsets[] = {
 	TYPE_GETTER("ref", &lvalue_ref,
 	            "->?Gpointer\n"
@@ -712,7 +779,7 @@ INTERN DeeLValueTypeObject DeeLValue_Type = {
 			/* .tp_attr          = */ NULL,
 			/* .tp_with          = */ NULL,
 			/* .tp_buffer        = */ &lvalue_buffer,
-			/* .tp_methods       = */ NULL,
+			/* .tp_methods       = */ lvalue_methods,
 			/* .tp_getsets       = */ lvalue_getsets,
 			/* .tp_members       = */ NULL,
 			/* .tp_class_methods = */ NULL,

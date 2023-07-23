@@ -38,6 +38,8 @@
 #include <deemon/string.h>
 #include <deemon/system-features.h> /* bzero(), ... */
 
+#include <hybrid/overflow.h>
+
 DECL_BEGIN
 
 DOC_DEF(ispointer_doc,
@@ -55,6 +57,12 @@ DOC_DEF(isfunction_doc,
 DOC_DEF(isstruct_doc,
         "->?Dbool\n"
         "Returns ?t if @this ?GStructuredType is a ?GStructType");
+DOC_DEF(struct_tobytes_doc,
+        "->?DBytes\n"
+        "(data:?DBytes,offset=!0)->?DBytes\n"
+        "#tValueError{The given ${#data - offset} is less than ?#sizeof}"
+        "#tBufferError{The given @data is not writable}"
+        "Retrieve the underlying bytes of @this struct object instance");
 
 
 /* Interpret `self' as a pointer and store the result in `*result'
@@ -310,6 +318,40 @@ stype_vfunc(DeeSTypeObject *self, size_t argc, DeeObject *const *argv) {
 	return stype_dofunc(self, argc, argv, CC_FVARARGS);
 }
 
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+stype_frombytes(DeeSTypeObject *self, size_t argc, DeeObject *const *argv) {
+	DREF DeeObject *result;
+	DeeBytesObject *data;
+	size_t type_size, data_size, offset = 0;
+	if (DeeArg_Unpack(argc, argv, "o|" UNPuSIZ ":frombytes", &data, &offset))
+		goto err;
+	if (DeeObject_AssertTypeExact(data, &DeeBytes_Type))
+		goto err;
+	type_size = DeeSType_Sizeof(self);
+	data_size = DeeBytes_SIZE(data);
+	if unlikely(OVERFLOW_UADD(data_size, offset, &data_size))
+		goto err_bad_size;
+	if unlikely(type_size > data_size)
+		goto err_bad_size;
+	result = DeeType_AllocInstance(DeeSType_AsType(self));
+	if unlikely(!result)
+		goto err;
+	memcpy(DeeObject_DATA(result), DeeBytes_DATA(data) + offset, type_size);
+	DeeObject_Init(result, DeeSType_AsType(self));
+	return result;
+err_bad_size:
+	data_size = DeeBytes_SIZE(data);
+	if (OVERFLOW_USUB(data_size, offset, &data_size))
+		data_size = 0;
+	DeeError_Throwf(&DeeError_ValueError,
+	                "Invalid bytes size: structued type `%r' has an "
+	                "instance size of `%" PRFuSIZ "', but the given "
+	                "`%" PRFuSIZ "'-large buffer at offset `%" PRFuSIZ "' "
+	                "provides at most `%" PRFuSIZ " bytes'",
+	                self, type_size, DeeBytes_SIZE(data), offset, data_size);
+err:
+	return NULL;
+}
 
 PRIVATE struct type_method tpconst stype_methods[] = {
 	TYPE_METHOD("func", &stype_func,
@@ -327,6 +369,10 @@ PRIVATE struct type_method tpconst stype_methods[] = {
 	            "#tValueError{The given @cc is unknown, or not supported by the host}"
 	            "#pcc{The name of the calling convention}"
 	            "Same as ?#func, but enable support for varargs"),
+	TYPE_METHOD("frombytes", &stype_frombytes,
+	            "(data:?DBytes,offset=!0)->?.\n"
+	            "#tValueError{The given ${#data - offset} is less than ?#sizeof}"
+	            "Construct an instance of @this structured type from @data"),
 	//TYPE_METHOD("is_pointer", &type_is_return_false, "->?Dbool\nDeprecated (always returns ?f)"),
 	//TYPE_METHOD("is_lvalue", &type_is_return_false, "->?Dbool\nDeprecated (always returns ?f)"),
 	//TYPE_METHOD("is_structured", &type_is_return_false, "->?Dbool\nDeprecated (always returns ?f)"),
@@ -568,9 +614,64 @@ ltype_sizeof(DeeLValueTypeObject *__restrict self) {
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-ltype_repr(DeePointerTypeObject *__restrict self) {
-	return DeeString_Newf("%r.lvalue", self->pt_orig);
+ltype_repr(DeeLValueTypeObject *__restrict self) {
+	return DeeString_Newf("%r.lvalue", self->lt_orig);
 }
+
+INTERN ATTR_COLD NONNULL((1)) int
+(DCALL err_bytes_not_writable)(DeeBytesObject *__restrict UNUSED(bytes_ob)) {
+	return DeeError_Throwf(&DeeError_BufferError,
+	                       "The Bytes object is not writable");
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF struct lvalue_object *DCALL
+ltype_frombytes(DeeLValueTypeObject *self, size_t argc, DeeObject *const *argv) {
+	DREF struct lvalue_object *result;
+	DeeBytesObject *data;
+	size_t type_size, data_size, offset = 0;
+	if (DeeArg_Unpack(argc, argv, "o|" UNPuSIZ ":frombytes", &data, &offset))
+		goto err;
+	if (DeeObject_AssertTypeExact(data, &DeeBytes_Type))
+		goto err;
+	if (!DeeBytes_WRITABLE(data))
+		goto err_not_writable;
+	type_size = DeeSType_Sizeof(self->lt_orig);
+	data_size = DeeBytes_SIZE(data);
+	if unlikely(OVERFLOW_UADD(data_size, offset, &data_size))
+		goto err_bad_size;
+	if unlikely(type_size > data_size)
+		goto err_bad_size;
+	result = DeeObject_MALLOC(struct lvalue_object);
+	if unlikely(!result)
+		goto err;
+	result->l_ptr.ptr = DeeBytes_DATA(data) + offset;
+	DeeObject_Init(result, DeeLValueType_AsType(self));
+	return result;
+err_bad_size:
+	data_size = DeeBytes_SIZE(data);
+	if (OVERFLOW_USUB(data_size, offset, &data_size))
+		data_size = 0;
+	DeeError_Throwf(&DeeError_ValueError,
+	                "Invalid bytes size: lvalue type `%r' has an "
+	                "instance size of `%" PRFuSIZ "', but the given "
+	                "`%" PRFuSIZ "'-large buffer at offset `%" PRFuSIZ "' "
+	                "provides at most `%" PRFuSIZ " bytes'",
+	                self, type_size, DeeBytes_SIZE(data), offset, data_size);
+err:
+	return NULL;
+err_not_writable:
+	err_bytes_not_writable(data);
+	goto err;
+}
+
+PRIVATE struct type_method tpconst ltype_methods[] = {
+	TYPE_METHOD("frombytes", &ltype_frombytes,
+	            "(data:?DBytes,offset=!0)->?.\n"
+	            "#tValueError{The given ${#data - offset} is less than ?#sizeof}"
+	            "#tBufferError{The given @data is not writable (an lvalue view cannot be created)}"
+	            "Construct an instance of @this structured type from @data"),
+	TYPE_METHOD_END
+};
 
 PRIVATE struct type_getset tpconst ltype_getsets[] = {
 	TYPE_GETTER("sizeof", &ltype_sizeof,
@@ -634,7 +735,7 @@ INTERN DeeTypeObject DeeLValueType_Type = {
 	/* .tp_attr          = */ NULL,
 	/* .tp_with          = */ NULL,
 	/* .tp_buffer        = */ NULL,
-	/* .tp_methods       = */ NULL,
+	/* .tp_methods       = */ ltype_methods,
 	/* .tp_getsets       = */ ltype_getsets,
 	/* .tp_members       = */ ltype_members,
 	/* .tp_class_methods = */ NULL,
@@ -1131,6 +1232,51 @@ PRIVATE struct type_getset tpconst struct_getsets[] = {
 	TYPE_GETSET_END
 };
 
+PRIVATE WUNUSED NONNULL((1)) DREF DeeBytesObject *DCALL
+struct_tobytes(DeeObject *self, size_t argc, DeeObject *const *argv) {
+	DeeBytesObject *data = NULL;
+	size_t data_size, offset = 0;
+	DeeSTypeObject *stype = DeeType_AsSType(Dee_TYPE(self));
+	size_t type_size = DeeSType_Sizeof(stype);
+	if (DeeArg_Unpack(argc, argv, "|o" UNPuSIZ, &data, &offset))
+		goto err;
+
+	/* When no explicit buffer was given, return a writable view for the data of `self' */
+	if (data == NULL) {
+		return (DREF DeeBytesObject *)DeeBytes_NewView(self, DeeObject_DATA(self),
+		                                               type_size, Dee_BUFFER_FWRITABLE);
+	}
+
+	/* Otherwise, copy bytes of `self' into the provided bytes-buffer at the specified offset. */
+	if (DeeObject_AssertTypeExact(data, &DeeBytes_Type))
+		goto err;
+	if unlikely(!DeeBytes_WRITABLE(data))
+		goto err_not_writable;
+	data_size = DeeBytes_SIZE(data);
+	if unlikely(OVERFLOW_USUB(data_size, offset, &data_size))
+		goto err_bad_size;
+	if unlikely(data_size < type_size)
+		goto err_bad_size;
+	memcpy(DeeBytes_DATA(data) + offset, DeeObject_DATA(self), type_size);
+
+	return_reference_(data);
+err_bad_size:
+	data_size = DeeBytes_SIZE(data);
+	if (OVERFLOW_USUB(data_size, offset, &data_size))
+		data_size = 0;
+	DeeError_Throwf(&DeeError_ValueError,
+	                "Invalid bytes size: structured type `%r' has an "
+	                "instance size of `%" PRFuSIZ "', but the given "
+	                "`%" PRFuSIZ "'-large buffer at offset `%" PRFuSIZ "' "
+	                "provides at most `%" PRFuSIZ " bytes'",
+	                self, type_size, DeeBytes_SIZE(data), offset, data_size);
+err:
+	return NULL;
+err_not_writable:
+	err_bytes_not_writable(data);
+	goto err;
+}
+
 #ifndef CONFIG_NO_DEEMON_100_COMPAT
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 struct_ref_func(DeeObject *self, size_t argc, DeeObject *const *argv) {
@@ -1140,15 +1286,18 @@ struct_ref_func(DeeObject *self, size_t argc, DeeObject *const *argv) {
 err:
 	return NULL;
 }
+#endif /* !CONFIG_NO_DEEMON_100_COMPAT */
 
 PRIVATE struct type_method tpconst struct_methods[] = {
+	TYPE_METHOD("tobytes", &struct_tobytes, struct_tobytes_doc),
+#ifndef CONFIG_NO_DEEMON_100_COMPAT
 	/* Methods for backwards-compatibility with deemon 100+ */
 	TYPE_METHOD("__ref__", &struct_ref_func,
-	            "->pointer\n"
+	            "->?GPointer\n"
 	            "Deprecated alias for ?#ref"),
+#endif /* !CONFIG_NO_DEEMON_100_COMPAT */
 	TYPE_METHOD_END
 };
-#endif /* !CONFIG_NO_DEEMON_100_COMPAT */
 
 /* This type needs to implement _all_ operators
  * to forward them to their structured counterparts! */
