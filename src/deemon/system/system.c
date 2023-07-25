@@ -1843,6 +1843,7 @@ again:
 #ifdef DeeMapFile_IS_CreateFileMapping
 					size_t bytes_in_page;
 					bytes_in_page = (psm + 1) - ((uintptr_t)nul & psm);
+					bytes_in_page &= psm;
 					if (used_nulbytes > bytes_in_page) {
 						void *tail_base;
 						size_t tail_size;
