@@ -956,6 +956,8 @@
 #define WEAKREF(T)                struct weakref
 #define Dee_WEAKREF(T)            struct weakref
 
+#define Dee_ONCE(...) __VA_ARGS__
+
 #define Dee_CASE_WIDTH_1BYTE case 1
 #define CASE_WIDTH_1BYTE case 1
 #define Dee_CASE_WIDTH_2BYTE case 2

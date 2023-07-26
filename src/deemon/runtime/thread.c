@@ -3766,19 +3766,20 @@ thread_init(DeeThreadObject *__restrict self,
 	if (argc == 1 && DeeInt_Check(argv[0])) {
 		/* Construct unmanaged thread from TID */
 		DeeOSThreadObject *me = DeeThread_AsOSThread(self);
-		me->ot_thread.t_str_curr          = NULL;
-		me->ot_thread.t_repr_curr         = NULL;
-		me->ot_thread.t_deepassoc.da_used = 0;
-		me->ot_thread.t_deepassoc.da_mask = 0;
-		me->ot_thread.t_deepassoc.da_list = empty_deep_assoc;
-		me->ot_thread.t_exec              = NULL;
-		me->ot_thread.t_except            = NULL;
-		me->ot_thread.t_execsz            = 0;
-		me->ot_thread.t_exceptsz          = 0;
-		me->ot_thread.t_state             = Dee_THREAD_STATE_STARTED | Dee_THREAD_STATE_HASTID | Dee_THREAD_STATE_UNMANAGED;
-		me->ot_thread.t_interrupt.ti_next = NULL;
-		me->ot_thread.t_interrupt.ti_intr = NULL;
-		me->ot_thread.t_interrupt.ti_args = NULL;
+		me->ot_thread.t_str_curr               = NULL;
+		me->ot_thread.t_repr_curr              = NULL;
+		me->ot_thread.t_deepassoc.da_used      = 0;
+		me->ot_thread.t_deepassoc.da_mask      = 0;
+		me->ot_thread.t_deepassoc.da_list      = empty_deep_assoc;
+		me->ot_thread.t_deepassoc.da_recursion = 0;
+		me->ot_thread.t_exec                   = NULL;
+		me->ot_thread.t_except                 = NULL;
+		me->ot_thread.t_execsz                 = 0;
+		me->ot_thread.t_exceptsz               = 0;
+		me->ot_thread.t_state                  = Dee_THREAD_STATE_STARTED | Dee_THREAD_STATE_HASTID | Dee_THREAD_STATE_UNMANAGED;
+		me->ot_thread.t_interrupt.ti_next      = NULL;
+		me->ot_thread.t_interrupt.ti_intr      = NULL;
+		me->ot_thread.t_interrupt.ti_args      = NULL;
 #ifndef CONFIG_NO_THREADS
 		me->ot_thread.t_int_vers       = 0;
 		me->ot_thread.t_global.le_prev = NULL;
@@ -3849,9 +3850,10 @@ thread_init(DeeThreadObject *__restrict self,
 	self->t_interrupt.ti_args = NULL;
 	self->t_global.le_prev    = NULL;
 	DBG_memset(&self->t_global.le_next, 0xcc, sizeof(self->t_global.le_next));
-	self->t_deepassoc.da_used = 0;
-	self->t_deepassoc.da_mask = 0;
-	self->t_deepassoc.da_list = empty_deep_assoc;
+	self->t_deepassoc.da_used      = 0;
+	self->t_deepassoc.da_mask      = 0;
+	self->t_deepassoc.da_list      = empty_deep_assoc;
+	self->t_deepassoc.da_recursion = 0;
 	return 0;
 err_main:
 	Dee_XDecref(self->t_inout.io_main);
