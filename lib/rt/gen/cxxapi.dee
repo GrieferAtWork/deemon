@@ -433,7 +433,7 @@ final class CxxType {
 				 * Additionally, any deemon type can also be encoded as `DEE_ENABLE_IF_OBJECT_PTR_T()'
 				 * We must generate overloads for all possible permutations of argument types, and
 				 * always chose the correct return type. */
-				
+
 				@@Mapping for @(cxxParameterTypes...) to @(cxxReturnType, {cxxArgumentNames...})
 				local overloads: {{string...}: (string, {string...})} = Dict();
 				for (local d: c.decls) {

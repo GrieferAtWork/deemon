@@ -162,6 +162,10 @@
 #define XRETURN             __XRETURN
 #define NOTHROW             __NOTHROW
 #define NOTHROW_T           __NOTHROW_T
+#define NOTHROW_CB          __NOTHROW_CB
+#define NOTHROW_CB_T        __NOTHROW_CB_T
+#define NOTHROW_CB_NCX      __NOTHROW_CB_NCX
+#define NOTHROW_CB_NCX_T    __NOTHROW_CB_NCX_T
 #define NOTHROW_NCX         __NOTHROW_NCX
 #define NOTHROW_NCX_T       __NOTHROW_NCX_T
 #define NOTHROW_RPC         __NOTHROW_RPC
@@ -244,5 +248,24 @@
 #ifdef __ASSEMBLER__
 #include "__assembly.h"
 #endif /* __ASSEMBLER__ */
+
+#if !defined(__NO_KOS_SYSTEM_HEADERS__) && defined(_KOS_ANNO_H)
+#define PHYS            __PHYS
+#define VIRT            __VIRT
+#define NCX             __NCX
+#define UNCHECKED       __UNCHECKED
+#define REF             __REF
+#define REF_IF          __REF_IF
+#define NOBLOCK         __NOBLOCK
+#define NOBLOCK_IF      __NOBLOCK_IF
+#define BLOCKING        __BLOCKING
+#define BLOCKING_IF     __BLOCKING_IF
+#define NOPREEMPT       __NOPREEMPT
+#define ABNORMAL_RETURN __ABNORMAL_RETURN
+#define THROWS          __THROWS
+#ifndef WEAK
+#define WEAK __WEAK
+#endif /* !WEAK */
+#endif /* !__NO_KOS_SYSTEM_HEADERS__ && _KOS_ANNO_H */
 
 #endif /* !__GUARD_HYBRID_COMPILER_H */

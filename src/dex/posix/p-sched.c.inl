@@ -31,24 +31,35 @@ DECL_BEGIN
 #undef posix_system_USE_system
 #undef posix_system_USE_fork_AND_wexec
 #undef posix_system_USE_fork_AND_exec
-/* TODO: posix_system_USE_ipc_Process */
+#undef posix_system_USE_posix_spawn
+#undef posix_system_USE_wspawnve
+#undef posix_system_USE_spawnve
+#undef posix_system_USE_ipc_Process
 #undef posix_system_USE_STUB
 #if defined(CONFIG_HAVE_wsystem) && defined(CONFIG_PREFER_WCHAR_FUNCTIONS)
 #define posix_system_USE_wsystem
-#elif defined(CONFIG_HAVE_vfork) && defined(CONFIG_HAVE_wexecv) && \
-      defined(CONFIG_HAVE_waitpid) && defined(CONFIG_HAVE__Exit) && \
-      defined(CONFIG_PREFER_WCHAR_FUNCTIONS)
+#elif defined(CONFIG_HAVE_wspawnve) && defined(P_WAIT) && defined(CONFIG_PREFER_WCHAR_FUNCTIONS) && 0
+#define posix_system_USE_wspawnve /* TODO */
+#elif (defined(CONFIG_HAVE_vfork) && defined(CONFIG_HAVE_wexecv) && \
+       defined(CONFIG_HAVE_waitpid) && defined(CONFIG_HAVE__Exit) && \
+       defined(CONFIG_PREFER_WCHAR_FUNCTIONS))
 #define posix_system_USE_fork_AND_wexec
 #elif defined(CONFIG_HAVE_system)
 #define posix_system_USE_system
-#elif defined(CONFIG_HAVE_vfork) && defined(CONFIG_HAVE_execv) && \
-      defined(CONFIG_HAVE_waitpid) && defined(CONFIG_HAVE__Exit)
+#elif defined(CONFIG_HAVE_spawnve) && defined(P_WAIT) && 0
+#define posix_system_USE_spawnve /* TODO */
+#elif defined(CONFIG_HAVE_SPAWN_H) && defined(CONFIG_HAVE_posix_spawn) && 0
+#define posix_system_USE_posix_spawn /* TODO */
+#elif (defined(CONFIG_HAVE_vfork) && defined(CONFIG_HAVE_execv) && \
+       defined(CONFIG_HAVE_waitpid) && defined(CONFIG_HAVE__Exit))
 #define posix_system_USE_fork_AND_exec
 #elif defined(CONFIG_HAVE_wsystem)
 #define posix_system_USE_wsystem
-#elif defined(CONFIG_HAVE_vfork) && defined(CONFIG_HAVE_wexecv) && \
-      defined(CONFIG_HAVE_waitpid) && defined(CONFIG_HAVE__Exit)
+#elif (defined(CONFIG_HAVE_vfork) && defined(CONFIG_HAVE_wexecv) && \
+       defined(CONFIG_HAVE_waitpid) && defined(CONFIG_HAVE__Exit))
 #define posix_system_USE_fork_AND_wexec
+#elif defined(CONFIG_HAVE_wspawnve) && defined(P_WAIT) && 0
+#define posix_system_USE_wspawnve /* TODO */
 #else /* ... */
 #define posix_system_USE_STUB
 #endif /* !... */

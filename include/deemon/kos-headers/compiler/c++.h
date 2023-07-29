@@ -96,9 +96,9 @@
 #define __CXX_NOEXCEPT_IFNX(expr) noexcept(noexcept(expr))
 #else /* ... */
 #define __CXX_NOEXCEPT            throw()
-#define __CXX_NOEXCEPT_IF(expr)   /* nothing */
+#define __CXX_NOEXCEPT_IF(expr)   /* Nothing */
 #define __CXX_NOEXCEPT_IS(expr)   0
-#define __CXX_NOEXCEPT_IFNX(expr) /* nothing */
+#define __CXX_NOEXCEPT_IFNX(expr) /* Nothing */
 #endif /* !... */
 
 #if (__has_feature(cxx_override_control) || \
@@ -107,7 +107,7 @@
 #define __COMPILER_HAVE_CXX11_OVERRIDE
 #define __CXX_OVERRIDE override
 #else /* ... */
-#define __CXX_OVERRIDE /* nothing */
+#define __CXX_OVERRIDE /* Nothing */
 #endif /* !... */
 
 #if !defined(__KOS__) || !defined(__KERNEL__)
@@ -143,13 +143,13 @@
 
 #define __NAMESPACE_GLB_SYM ::
 #ifdef __NO_NAMESPACE_STD
-#define __NAMESPACE_STD_BEGIN               /* nothing */
-#define __NAMESPACE_STD_END                 /* nothing */
-#define __NAMESPACE_STD_SYM                 /* nothing */
-#define __NAMESPACE_STD_USING(x)            /* nothing */
-#define __NAMESPACE_GLB_USING(x)            /* nothing */
-#define __NAMESPACE_GLB_USING_OR_IMPL(x, i) /* nothing */
-#define __NAMESPACE_GLB_USING_TYPE(x)       /* nothing */
+#define __NAMESPACE_STD_BEGIN               /* Nothing */
+#define __NAMESPACE_STD_END                 /* Nothing */
+#define __NAMESPACE_STD_SYM                 /* Nothing */
+#define __NAMESPACE_STD_USING(x)            /* Nothing */
+#define __NAMESPACE_GLB_USING(x)            /* Nothing */
+#define __NAMESPACE_GLB_USING_OR_IMPL(x, i) /* Nothing */
+#define __NAMESPACE_GLB_USING_TYPE(x)       /* Nothing */
 #else /* __NO_NAMESPACE_STD */
 #define __NAMESPACE_STD_BEGIN               namespace std {
 #define __NAMESPACE_STD_END                 }
@@ -177,13 +177,15 @@ using namespace std; /* Overlay */
 #define __BOOL                bool
 #define __DFL(expr)           = expr
 
+#ifndef __register
 #ifdef __INTELLISENSE__
-#define __register /* nothing */
+#define __register /* Nothing */
 #elif defined(__cplusplus) && __cplusplus >= 201703L
 #define __register /* nothing (warning : ISO C++17 does not allow 'register' storage class specifier [-Wregister]) */
 #else /* ... */
 #define __register register
 #endif /* !... */
+#endif /* !__register */
 
 #ifdef __INTELLISENSE__
 __NAMESPACE_INT_BEGIN

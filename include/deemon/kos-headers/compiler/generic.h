@@ -706,7 +706,7 @@
 #if __has_attribute(__noplt__)
 #define __ATTR_NOPLT __attribute__((__noplt__))
 #else /* ... */
-#define __ATTR_NOPLT /* nothing */
+#define __ATTR_NOPLT /* Nothing */
 #define __NO_ATTR_NOPLT
 #endif /* !... */
 
@@ -815,16 +815,22 @@
 #endif /* !__PREPROCESSOR_HAVE_VA_ARGS */
 #endif /* !... */
 
-#if !__has_builtin(__builtin_assume)
-#if 0
+#if __has_builtin(__builtin_assume)
+/* Already exists as a *true* builtin */
+#elif __has_attribute(__assume__)
+#ifdef __NO_XBLOCK
+#define __builtin_assume(x) __attribute__((__assume__(x)))
+#else /* __NO_XBLOCK */
+#define __builtin_assume(x) __XBLOCK({ __attribute__((__assume__(x))); (void)0; })
+#endif /* !__NO_XBLOCK */
+#elif 1
 #define __builtin_assume_has_sideeffects
 #define __builtin_assume(x) (!(x) ? __builtin_unreachable() : (void)0)
-#else
+#else /* ... */
 #undef __builtin_assume_has_sideeffects
 #define __NO_builtin_assume
 #define __builtin_assume(x) (void)0
-#endif
-#endif /* ... */
+#endif /* !... */
 
 #if !__has_builtin(__builtin_unreachable) /*|| defined(__TINYC__)*/
 #define __NO_builtin_unreachable
@@ -892,14 +898,14 @@ namespace __intern { template<class T> struct __compiler_alignof { char __x; T _
 #define __ATTR_ARTIFICIAL __attribute__((__artificial__))
 #else /* __has_attribute(__artificial__) */
 #define __NO_ATTR_ARTIFICIAL
-#define __ATTR_ARTIFICIAL /* nothing */
+#define __ATTR_ARTIFICIAL /* Nothing */
 #endif /* !__has_attribute(__artificial__) */
 
 #if __has_attribute(__format_arg__)
 #define __ATTR_FORMAT_ARG(x) __attribute__((__format_arg__(x)))
 #else /* __has_attribute(__format_arg__) */
 #define __NO_ATTR_FORMAT_ARG
-#define __ATTR_FORMAT_ARG(x) /* nothing */
+#define __ATTR_FORMAT_ARG(x) /* Nothing */
 #endif /* !__has_attribute(__format_arg__) */
 
 #define __LOCAL      static __ATTR_INLINE

@@ -178,9 +178,9 @@
 #ifdef _MSC_VER
 /* 4522: Incorrect warning about multiple  assignment
  *       operators after `__CXX_DELETE_COPY_ASSIGN()' */
-#define __CXXDECL_BEGIN              \
-	__pragma(warning(push))          \
-	__pragma(warning(disable: 4522)) \
+#define __CXXDECL_BEGIN               \
+	__pragma(warning(push))           \
+	__pragma(warning(disable : 4522)) \
 	extern "C++" {
 #define __CXXDECL_END \
 	}                 \
