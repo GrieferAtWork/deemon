@@ -278,8 +278,8 @@ done:
 
 PRIVATE NONNULL((1, 2, 3)) void DCALL
 smap_cache(SharedMap *__restrict self,
-           DeeObject *__restrict key,
-           DeeObject *__restrict value,
+           DeeObject *key,
+           DeeObject *value,
            dhash_t hash) {
 	dhash_t i, perturb;
 	SharedItemEx *item;
@@ -290,6 +290,7 @@ smap_cache(SharedMap *__restrict self,
 			return; /* Already cached. (possible due to race conditions) */
 		if (item->si_key)
 			continue;
+
 		/* Make sure that the given `key' isn't already cached.
 		 * NOTE: Because we can't be certain that `hash' is consistent
 		 *       for the object (since a malicious caller may intentionally
@@ -299,6 +300,7 @@ smap_cache(SharedMap *__restrict self,
 			if (self->sm_map[i].si_key == key)
 				return; /* Already in cache! */
 		}
+
 		/* Setup this cache-entry as a slot for this key. */
 		item->si_key   = key;
 		item->si_value = value;
@@ -356,6 +358,7 @@ again_search:
 			return_true;
 		}
 	}
+
 	/* Find the item in the key vector. */
 	SharedMap_LockRead(self);
 	if (self->sm_loaded) {
@@ -374,10 +377,12 @@ again_search:
 			Dee_Incref(item_value);
 			SharedMap_LockEndRead(self);
 			item_hash = DeeObject_Hash(item_key);
+
 			/* Cache the key-value pair in the hash-vector */
 			SharedMap_LockWrite(self);
 			smap_cache(self, item_key, item_value, item_hash);
 			SharedMap_LockEndWrite(self);
+
 			/* Check if this is the key we're looking for. */
 			Dee_Decref(item_value);
 			if (item_hash == hash) {
@@ -446,6 +451,7 @@ again_search:
 		}
 		Dee_Decref(item_value);
 	}
+
 	/* Find the item in the key vector. */
 	SharedMap_LockRead(self);
 	if (self->sm_loaded) {
@@ -464,10 +470,12 @@ again_search:
 			Dee_Incref(item_value);
 			SharedMap_LockEndRead(self);
 			item_hash = DeeObject_Hash(item_key);
+
 			/* Cache the key-value pair in the hash-vector */
 			SharedMap_LockWrite(self);
 			smap_cache(self, item_key, item_value, item_hash);
 			SharedMap_LockEndWrite(self);
+
 			/* Check if this is the key we're looking for. */
 			if (item_hash == hash) {
 				temp = DeeObject_CompareEq(key, item_key);
@@ -537,6 +545,7 @@ again_search:
 		}
 		Dee_Decref(item_value);
 	}
+
 	/* Find the item in the key vector. */
 	SharedMap_LockRead(self);
 	if (self->sm_loaded) {
@@ -555,10 +564,12 @@ again_search:
 			Dee_Incref(item_value);
 			SharedMap_LockEndRead(self);
 			item_hash = DeeObject_Hash(item_key);
+
 			/* Cache the key-value pair in the hash-vector */
 			SharedMap_LockWrite(self);
 			smap_cache(self, item_key, item_value, item_hash);
 			SharedMap_LockEndWrite(self);
+
 			/* Check if this is the key we're looking for. */
 			if (item_hash == hash) {
 				temp = DeeObject_CompareEq(key, item_key);
@@ -709,13 +720,16 @@ INTERN DeeTypeObject SharedMap_Type = {
 
 
 
-/* Create a new shared vector that will inherit elements
- * from the given vector once `DeeSharedMap_Decref()' is called.
+/* Create a new shared map that will inherit elements from
+ * the given vector once `DeeSharedMap_Decref()' is called.
  * NOTE: This function implicitly inherits a reference to each item
  *       of the given vector, though does not actually inherit the
- *       vector itself! */
+ *       vector itself!
+ * NOTE: Do NOT free the given `vector' before calling `DeeSharedMap_Decref'
+ *       on the returned object, as `vector' will be shared with it until
+ *       that point in time! */
 PUBLIC WUNUSED DREF DeeObject *DCALL
-DeeSharedMap_NewShared(size_t length, DREF DeeSharedItem *vector) {
+DeeSharedMap_NewShared(size_t length, DREF DeeSharedItem const *vector) {
 	DREF SharedMap *result;
 	size_t mask = 0x03;
 	while (length * 2 >= mask)
@@ -734,19 +748,20 @@ done:
 }
 
 /* Check if the reference counter of `self' is 1. When it is,
- * simply destroy the shared vector without freeing `sv_vector',
- * but still decref() all contained objects.
+ * simply destroy the shared vector without freeing `vector',
+ * as passed to `DeeSharedMap_NewShared()', but still decref()
+ * all contained object.
  * Otherwise, try to allocate a new vector with a length of `sv_length'.
- * If doing so fails, don't raise an error but replace `sv_vector' with
+ * If doing so fails, don't raise an error but replace `sskv_vector' with
  * `NULL' and `sv_length' with `0' before decref()-ing all elements
  * that that pair of members used to refer to.
  * If allocation does succeed, memcpy() all objects contained in
  * the original vector into the dynamically allocated one, thus
  * transferring ownership to that vector before writing it back
- * to the SharedVector object.
+ * to the SharedMap object.
  * >> In the end, this behavior is required to implement a fast,
  *    general-purpose sequence type that can be used to implement
- *    the `ASM_CALL_SEQ' opcode, as generated for brace-initializers.
+ *    the `ASM_CALL_MAP' opcode, as generated for brace-initializers.
  * NOTE: During decref(), objects are destroyed in reverse order,
  *       mirroring the behavior of adjstack/pop instructions. */
 PUBLIC NONNULL((1)) void DCALL
@@ -766,6 +781,7 @@ done_decref_vector:
 		Dee_Decrefv(vector, count);
 		return;
 	}
+
 	/* Difficult case: must duplicate the vector. */
 	SharedMap_LockWrite(me);
 	if (!me->sm_length) {
@@ -776,11 +792,13 @@ done_decref_vector:
 		                                           sizeof(DREF DeeObject *));
 		if unlikely(!vector)
 			goto err_cannot_inherit;
+
 		/* Simply copy all the elements, transferring
 		 * all the references that they represent. */
 		vector = (DREF DeeObject **)memcpyc(vector, me->sm_vector,
 		                                    me->sm_length * 2,
 		                                    sizeof(DREF DeeObject *));
+
 		/* Give the SharedMap its very own copy
 		 * which it will take to its grave. */
 		me->sm_vector = (DeeSharedItem *)vector;
@@ -793,11 +811,13 @@ err_cannot_inherit:
 	/* Special case: failed to create a copy that the vector may call its own. */
 	vector = (DREF DeeObject **)me->sm_vector;
 	count  = me->sm_length * 2;
+
 	/* Override with an empty vector. */
 	me->sm_vector = NULL;
 	me->sm_length = 0;
 	SharedMap_LockEndWrite(me);
 	Dee_Decref(me);
+
 	/* Destroy the items that the caller wanted the vector to inherit. */
 	goto done_decref_vector;
 }

@@ -95,9 +95,9 @@ INTDEF WUNUSED NONNULL((1, 2)) bool DCALL DeeRoDict_HasItemStringLen(DeeObject *
 #endif /* CONFIG_BUILDING_DEEMON */
 
 /* Hash-iteration control. */
-#define DeeRoDict_HashSt(self, hash)  ((hash) & ((DeeRoDictObject *)Dee_REQUIRES_OBJECT(self))->rd_mask)
+#define DeeRoDict_HashSt(self, hash)  ((hash) & (self)->rd_mask)
 #define DeeRoDict_HashNx(hs, perturb) (void)((hs) = ((hs) << 2) + (hs) + (perturb) + 1, (perturb) >>= 5) /* This `5' is tunable. */
-#define DeeRoDict_HashIt(self, i)     (((DeeRoDictObject *)Dee_REQUIRES_OBJECT(self))->rd_elem+((i) & ((DeeRoDictObject *)Dee_REQUIRES_OBJECT(self))->rd_mask))
+#define DeeRoDict_HashIt(self, i)     ((self)->rd_elem+((i) & (self)->rd_mask))
 
 
 DECL_END

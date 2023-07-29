@@ -99,6 +99,48 @@ DDATDEF DeeTypeObject DeeMapping_Type; /* `Mapping from deemon' */
 DDATDEF DeeObject          DeeMapping_EmptyInstance;
 #define Dee_EmptyMapping (&DeeMapping_EmptyInstance)
 
+
+
+
+
+#undef si_key
+#undef si_value
+typedef struct {
+	DREF DeeObject  *si_key;    /* [1..1][const] The key of this shared item. */
+	DREF DeeObject  *si_value;  /* [1..1][const] The value of this shared item. */
+} DeeSharedItem;
+
+/* Create a new shared map that will inherit elements from
+ * the given vector once `DeeSharedMap_Decref()' is called.
+ * NOTE: This function implicitly inherits a reference to each item
+ *       of the given vector, though does not actually inherit the
+ *       vector itself!
+ * NOTE: Do NOT free the given `vector' before calling `DeeSharedMap_Decref'
+ *       on the returned object, as `vector' will be shared with it until
+ *       that point in time! */
+DFUNDEF WUNUSED DREF DeeObject *DCALL
+DeeSharedMap_NewShared(size_t length, DREF DeeSharedItem const *vector);
+
+/* Check if the reference counter of `self' is 1. When it is,
+ * simply destroy the shared vector without freeing `vector',
+ * as passed to `DeeSharedMap_NewShared()', but still decref()
+ * all contained object.
+ * Otherwise, try to allocate a new vector with a length of `sv_length'.
+ * If doing so fails, don't raise an error but replace `sskv_vector' with
+ * `NULL' and `sv_length' with `0' before decref()-ing all elements
+ * that that pair of members used to refer to.
+ * If allocation does succeed, memcpy() all objects contained in
+ * the original vector into the dynamically allocated one, thus
+ * transferring ownership to that vector before writing it back
+ * to the SharedMap object.
+ * >> In the end, this behavior is required to implement a fast,
+ *    general-purpose sequence type that can be used to implement
+ *    the `ASM_CALL_MAP' opcode, as generated for brace-initializers.
+ * NOTE: During decref(), objects are destroyed in reverse order,
+ *       mirroring the behavior of adjstack/pop instructions. */
+DFUNDEF NONNULL((1)) void DCALL
+DeeSharedMap_Decref(DREF DeeObject *__restrict self);
+
 DECL_END
 
 #endif /* !GUARD_DEEMON_MAP_H */

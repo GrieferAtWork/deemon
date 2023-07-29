@@ -41,17 +41,17 @@ typedef struct {
 
 typedef struct {
 	OBJECT_HEAD
-	size_t              sm_length; /* [lock(sm_lock)] The number of items in this vector. */
-	DeeSharedItem      *sm_vector; /* [1..1][const][0..sv_length][lock(sm_lock)][owned]
-	                                * The vector of objects that is being referenced.
-	                                * NOTE: Elements of this vector must not be changed. */
+	size_t               sm_length; /* [lock(sm_lock)] The number of items in this vector. */
+	DeeSharedItem const *sm_vector; /* [1..1][const][0..sv_length][lock(sm_lock)][owned]
+	                                 * The vector of objects that is being referenced.
+	                                 * NOTE: Elements of this vector must not be changed. */
 #ifndef CONFIG_NO_THREADS
-	Dee_atomic_rwlock_t sm_lock;   /* Lock for this shared-vector. */
+	Dee_atomic_rwlock_t  sm_lock;   /* Lock for this shared-vector. */
 #endif /* !CONFIG_NO_THREADS */
-	size_t              sm_loaded; /* [lock(sm_lock)] Set to non-zero once `sm_vector' has been fully loaded. */
-	size_t              sm_mask;   /* [const][> sm_length][!0] Hash-vector mask for `skv_map'. */
-	SharedItemEx        sm_map[1]; /* [lock(WRITE_ONCE)] Hash-vector of cached keys.
-	                                * This hash-vector is populated lazily as objects are queried by key. */
+	size_t               sm_loaded; /* [lock(sm_lock)] Set to non-zero once `sm_vector' has been fully loaded. */
+	size_t               sm_mask;   /* [const][> sm_length][!0] Hash-vector mask for `skv_map'. */
+	SharedItemEx         sm_map[1]; /* [lock(WRITE_ONCE)] Hash-vector of cached keys.
+	                                 * This hash-vector is populated lazily as objects are queried by key. */
 } SharedMap;
 
 #define SharedMap_LockReading(self)    Dee_atomic_rwlock_reading(&(self)->sm_lock)

@@ -41,5 +41,3 @@ assert val.tobytes() == bytes;
 assert val.tobytes(bytes);
 assert deemon.int.frombytes(bytes) == 0x11223344;
 assert (int)val == 0x11223344;
-
-print repr void.ptr;

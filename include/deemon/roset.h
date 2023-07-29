@@ -98,11 +98,9 @@ DeeRoSet_Insert(/*in|out*/ DREF DeeRoSetObject **__restrict p_self,
                 DeeObject *__restrict key);
 
 /* Hash-iteration control. */
-#define DeeRoSet_HASHST(self, ro)    ((ro) & ((DeeRoSetObject *)Dee_REQUIRES_OBJECT(self))->rs_mask)
+#define DeeRoSet_HASHST(self, ro)    ((ro) & (self)->rs_mask)
 #define DeeRoSet_HASHNX(hs, perturb) (void)((hs) = ((hs) << 2) + (hs) + (perturb) + 1, (perturb) >>= 5) /* This `5' is tunable. */
-#define DeeRoSet_HASHIT(self, i)                              \
-	(((DeeRoSetObject *)Dee_REQUIRES_OBJECT(self))->rs_elem + \
-	 ((i) & ((DeeRoSetObject *)Dee_REQUIRES_OBJECT(self))->rs_mask))
+#define DeeRoSet_HASHIT(self, i)     ((self)->rs_elem + ((i) & (self)->rs_mask))
 
 DECL_END
 

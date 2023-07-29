@@ -522,7 +522,7 @@ roset_printrepr(RoSet *__restrict self,
 	dssize_t temp, result;
 	bool is_first = true;
 	size_t i;
-	result = DeeFormat_PRINT(printer, arg, "{ ");
+	result = DeeFormat_PRINT(printer, arg, "HashSet.Frozen({ ");
 	if unlikely(result < 0)
 		goto done;
 	for (i = 0; i <= self->rs_mask; ++i) {
@@ -534,9 +534,9 @@ roset_printrepr(RoSet *__restrict self,
 		is_first = false;
 	}
 	if (is_first) {
-		DO(err, DeeFormat_PRINT(printer, arg, "}"));
+		DO(err, DeeFormat_PRINT(printer, arg, "})"));
 	} else {
-		DO(err, DeeFormat_PRINT(printer, arg, " }"));
+		DO(err, DeeFormat_PRINT(printer, arg, " })"));
 	}
 done:
 	return result;

@@ -532,8 +532,7 @@ rodict_size(RoDict *__restrict self) {
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-rodict_contains(RoDict *self,
-                DeeObject *key) {
+rodict_contains(RoDict *self, DeeObject *key) {
 	size_t i, perturb, hash;
 	struct rodict_item *item;
 	hash    = DeeObject_Hash(key);
@@ -559,8 +558,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-rodict_getitem(RoDict *self,
-               DeeObject *key) {
+rodict_getitem(RoDict *self, DeeObject *key) {
 	size_t i, perturb, hash;
 	struct rodict_item *item;
 	hash    = DeeObject_Hash(key);
@@ -587,9 +585,9 @@ err:
 
 INTERN WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
 DeeRoDict_GetItemDef(DeeObject *self, DeeObject *key, DeeObject *def) {
+	RoDict *me = (RoDict *)self;
 	size_t i, perturb, hash;
 	struct rodict_item *item;
-	RoDict *me = (RoDict *)self;
 	hash     = DeeObject_Hash(key);
 	perturb = i = RODICT_HASHST(me, hash);
 	for (;; RODICT_HASHNX(i, perturb)) {
@@ -618,9 +616,9 @@ INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 DeeRoDict_GetItemString(DeeObject *__restrict self,
                         char const *__restrict key,
                         dhash_t hash) {
+	RoDict *me = (RoDict *)self;
 	size_t i, perturb;
 	struct rodict_item *item;
-	RoDict *me = (RoDict *)self;
 	perturb = i = RODICT_HASHST(me, hash);
 	for (;; RODICT_HASHNX(i, perturb)) {
 		item = RODICT_HASHIT(me, i);
@@ -642,9 +640,9 @@ DeeRoDict_GetItemStringLen(DeeObject *__restrict self,
                            char const *__restrict key,
                            size_t keylen,
                            dhash_t hash) {
+	RoDict *me = (RoDict *)self;
 	size_t i, perturb;
 	struct rodict_item *item;
-	RoDict *me = (RoDict *)self;
 	perturb = i = RODICT_HASHST(me, hash);
 	for (;; RODICT_HASHNX(i, perturb)) {
 		item = RODICT_HASHIT(me, i);
@@ -666,9 +664,9 @@ DeeRoDict_GetItemStringDef(DeeObject *self,
                            char const *__restrict key,
                            dhash_t hash,
                            DeeObject *def) {
+	RoDict *me = (RoDict *)self;
 	size_t i, perturb;
 	struct rodict_item *item;
-	RoDict *me = (RoDict *)self;
 	perturb = i = RODICT_HASHST(me, hash);
 	for (;; RODICT_HASHNX(i, perturb)) {
 		item = RODICT_HASHIT(me, i);
@@ -690,9 +688,9 @@ DeeRoDict_GetItemStringLenDef(DeeObject *self,
                               size_t keylen,
                               dhash_t hash,
                               DeeObject *def) {
+	RoDict *me = (RoDict *)self;
 	size_t i, perturb;
 	struct rodict_item *item;
-	RoDict *me = (RoDict *)self;
 	perturb = i = RODICT_HASHST(me, hash);
 	for (;; RODICT_HASHNX(i, perturb)) {
 		item = RODICT_HASHIT(me, i);
@@ -712,9 +710,9 @@ INTERN WUNUSED NONNULL((1, 2)) bool DCALL
 DeeRoDict_HasItemString(DeeObject *__restrict self,
                         char const *__restrict key,
                         dhash_t hash) {
+	RoDict *me = (RoDict *)self;
 	size_t i, perturb;
 	struct rodict_item *item;
-	RoDict *me = (RoDict *)self;
 	perturb = i = RODICT_HASHST(me, hash);
 	for (;; RODICT_HASHNX(i, perturb)) {
 		item = RODICT_HASHIT(me, i);
@@ -735,9 +733,9 @@ DeeRoDict_HasItemStringLen(DeeObject *__restrict self,
                            char const *__restrict key,
                            size_t keylen,
                            dhash_t hash) {
+	RoDict *me = (RoDict *)self;
 	size_t i, perturb;
 	struct rodict_item *item;
-	RoDict *me = (RoDict *)self;
 	perturb = i = RODICT_HASHST(me, hash);
 	for (;; RODICT_HASHNX(i, perturb)) {
 		item = RODICT_HASHIT(me, i);
@@ -756,14 +754,15 @@ DeeRoDict_HasItemStringLen(DeeObject *__restrict self,
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeRoDict_ByHash(DeeObject *__restrict self, Dee_hash_t hash) {
+	RoDict *me = (RoDict *)self;
 	DREF DeeObject *result;
 	DREF DeeTupleObject *match;
 	dhash_t i, perturb;
 	match = NULL;
-	perturb = i = DeeRoDict_HashSt(self, hash);
+	perturb = i = DeeRoDict_HashSt(me, hash);
 	for (;; DeeRoDict_HashNx(i, perturb)) {
 		struct rodict_item *item;
-		item = DeeRoDict_HashIt(self, i);
+		item = DeeRoDict_HashIt(me, i);
 		if (!item->rdi_key)
 			break; /* Not found */
 		if (item->rdi_hash != hash)
@@ -772,7 +771,7 @@ DeeRoDict_ByHash(DeeObject *__restrict self, Dee_hash_t hash) {
 			/* There are multiple matches for `hash'. */
 			Dee_Decref(match);
 			/* XXX: RoDict-specific optimizations? */
-			return DeeMap_HashFilter(self, hash);
+			return DeeMap_HashFilter((DeeObject *)me, hash);
 		}
 		match = DeeTuple_NewUninitialized(2);
 		if unlikely(!match)
@@ -829,7 +828,7 @@ rodict_printrepr(RoDict *__restrict self,
 	dssize_t temp, result;
 	bool is_first = true;
 	size_t i;
-	result = DeeFormat_PRINT(printer, arg, "{ ");
+	result = DeeFormat_PRINT(printer, arg, "Dict.Frozen({ ");
 	if unlikely(result < 0)
 		goto done;
 	for (i = 0; i <= self->rd_mask; ++i) {
@@ -843,9 +842,9 @@ rodict_printrepr(RoDict *__restrict self,
 		is_first = false;
 	}
 	if (is_first) {
-		DO(err, DeeFormat_PRINT(printer, arg, "}"));
+		DO(err, DeeFormat_PRINT(printer, arg, "})"));
 	} else {
-		DO(err, DeeFormat_PRINT(printer, arg, " }"));
+		DO(err, DeeFormat_PRINT(printer, arg, " })"));
 	}
 done:
 	return result;

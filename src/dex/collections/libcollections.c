@@ -82,6 +82,15 @@ PRIVATE struct dex_symbol symbols[] = {
 	{ "FixedList", (DeeObject *)&FixedList_Type },
 	{ "UniqueDict", (DeeObject *)&UDict_Type },
 	{ "UniqueSet", (DeeObject *)&USet_Type },
+	/* TODO: RBTree and LLRBTree
+	 * >> local rm = RBTree();
+	 * >> rm[10:20] = "foo";
+	 * >> print rm[15]; // "foo"
+	 *
+	 * A special map type that uses an R/B-trees to facilitate the use
+	 * of red/black trees in order to reference not just simple keys,
+	 * but ranges of keys.
+	 */
 	{ NULL }
 };
 

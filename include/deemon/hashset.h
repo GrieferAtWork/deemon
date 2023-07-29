@@ -125,13 +125,13 @@ DeeHashSet_NewItemsInherited(size_t num_items,
  * >>     return NULL;
  * >> }
  * Requirements to prevent an infinite loop:
- *   - `DeeHashSet_HashNx()' must be able to eventually enumerate all integers `<= hs_mask'
- *   - `hs_size' must always be lower than `hs_mask', ensuring that at least one(1)
- *      entry exists that no value has been assigned to (Acting as a sentinel to
- *      terminate a search for an existing element).
- *   - `hs_elem' must never be empty (or `NULL' for that matter)
+ * - `DeeHashSet_HashNx()' must be able to eventually enumerate all integers `<= hs_mask'
+ * - `hs_size' must always be lower than `hs_mask', ensuring that at least one(1)
+ *   entry exists that no value has been assigned to (Acting as a sentinel to
+ *   terminate a search for an existing element).
+ * - `hs_elem' must never be empty (or `NULL' for that matter)
  * NOTE: I can't say that I came up with the way that this mapping
- *       algorithm works (but noone can really claim to have invented
+ *       algorithm works (but no-one can really claim to have invented
  *       something ~new~ nowadays. - It's always been done already).
  *       Yet the point here is, that this is similar to what python
  *       does for its dictionary lookup.
