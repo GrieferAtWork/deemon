@@ -253,12 +253,15 @@ LOCAL int DCALL os_futex_wait64_timed(void *uaddr, uint64_t expected,
 #endif /* ... */
 
 
+
+/************************************************************************/
+/* MASTER CONTROL FOR HOW FUTEX ARE IMPLEMENTED                         */
+/************************************************************************/
 /* Figure out how we want to implement the deemon Futex API.
  *
  * NOTE: All implementations except for `DeeFutex_USE_os_futex'
  *       use dynamically allocated structures and a binary tree
- *       to translate wake/wait-addresses into those structures.
- */
+ *       to translate wake/wait-addresses into those structures. */
 #undef DeeFutex_USE_os_futex
 #undef DeeFutex_USE_os_futex_32_only
 #undef DeeFutex_USE_WaitOnAddress_OR_CONDITION_VARIABLE_AND_SRWLOCK_OR_CreateSemaphoreW
@@ -290,7 +293,7 @@ LOCAL int DCALL os_futex_wait64_timed(void *uaddr, uint64_t expected,
  * >>     WAKE(&STATUS); */
 #define DeeFutex_USE_os_futex_32_only
 #elif defined(CONFIG_HOST_WINDOWS)
-/* Windows 8+:     WaitOnAddress is pretty much the same as SYS_futex(2)
+/* Windows 8+:     WaitOnAddress is pretty much the same as linux's `sys_futex(2)'
  * Windows Vista+: SRWLOCK + CONDITION_VARIABLE (same as `pthread_cond_t' + `pthread_mutex_t')
  * Windows XP+:    CreateSemaphoreW (same as `sem_t') */
 #define DeeFutex_USE_WaitOnAddress_OR_CONDITION_VARIABLE_AND_SRWLOCK_OR_CreateSemaphoreW
@@ -696,7 +699,7 @@ futex_controller_do_destroy(struct futex_controller *__restrict self) {
 #ifdef DeeFutex_USE_os_futex_32_only
 	/* No OS-specific cleanup necessary */
 #elif defined(DeeFutex_USE_WaitOnAddress_OR_CONDITION_VARIABLE_AND_SRWLOCK_OR_CreateSemaphoreW)
-	/* NOTE: NO need to handle `NT_FUTEX_IMPLEMENTATION_UNINITIALIZED' here, since
+	/* NOTE: No need to handle `NT_FUTEX_IMPLEMENTATION_UNINITIALIZED' here, since
 	 *       the futex controller couldn't have been created in the first place if
 	 *       the implementation wasn't known. */
 	switch (nt_futex_implementation) {

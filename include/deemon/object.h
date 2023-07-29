@@ -2534,8 +2534,10 @@ struct Dee_type_object {
 	 * NOTES:
 	 *  - MRO bases that don't appear in `tp_base' must not define any
 	 *    extra instance fields (i.e. have the `TP_FABSTRACT' flag set).
-	 *    As such, these types essentially only at as interface definitions,
-	 *    but not as actual types when it comes to instancing.
+	 *    As such, these types essentially only act as interface definitions,
+	 *    with the ability to define fixed functions and operations,
+	 *    thought no actual instance members, but not as actual types
+	 *    when it comes to instancing.
 	 *  - Constructors/Destructors of MRO bases are NOT invoked by default.
 	 *    They are only invoked if sub-classed by a user-defined class type.
 	 */

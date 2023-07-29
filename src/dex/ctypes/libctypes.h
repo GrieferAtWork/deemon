@@ -164,10 +164,32 @@ struct stype_seq {
 
 struct stype_attr {
 	/* Structured attribute operators. */
-	WUNUSED_T NONNULL_T((1, 3))    DREF DeeObject *(DCALL *st_getattr)(DeeSTypeObject *tp_self, void *self, /*String*/ DeeObject *name);
-	WUNUSED_T NONNULL_T((1, 3))    int             (DCALL *st_delattr)(DeeSTypeObject *tp_self, void *self, /*String*/ DeeObject *name);
-	WUNUSED_T NONNULL_T((1, 3, 4)) int             (DCALL *st_setattr)(DeeSTypeObject *tp_self, void *self, /*String*/ DeeObject *name, DeeObject *value);
-	WUNUSED_T NONNULL_T((1, 2))    dssize_t        (DCALL *st_enumattr)(DeeSTypeObject *__restrict tp_self, denum_t proc, void *arg);
+
+	/* Get a struct attribute (excluding generic attributes)
+	 * @return: * :        Attribute value
+	 * @return: NULL:      Error
+	 * @return: ITER_DONE: No such attribute */
+	WUNUSED_T NONNULL_T((1, 3)) DREF DeeObject *
+	(DCALL *st_getattr)(DeeSTypeObject *tp_self, void *self, /*String*/ DeeObject *name);
+
+	/* Delete a struct attribute (excluding generic attributes)
+	 * @return: 0 : Success
+	 * @return: -1: Error
+	 * @return: -2: No such attribute */
+	WUNUSED_T NONNULL_T((1, 3)) int
+	(DCALL *st_delattr)(DeeSTypeObject *tp_self, void *self, /*String*/ DeeObject *name);
+
+	/* Set a struct attribute (excluding generic attributes)
+	 * @return: 0 : Success
+	 * @return: -1: Error
+	 * @return: -2: No such attribute */
+	WUNUSED_T NONNULL_T((1, 3, 4)) int
+	(DCALL *st_setattr)(DeeSTypeObject *tp_self, void *self,
+	                    /*String*/ DeeObject *name, DeeObject *value);
+
+	/* Enumerate struct attributes (excluding generic attributes) */
+	WUNUSED_T NONNULL_T((1, 2)) dssize_t
+	(DCALL *st_enumattr)(DeeSTypeObject *__restrict tp_self, denum_t proc, void *arg);
 };
 
 
@@ -474,10 +496,33 @@ INTDEF WUNUSED NONNULL((1, 3, 4)) int DCALL DeeStruct_SetItem(DeeSTypeObject *tp
 INTDEF WUNUSED NONNULL((1, 3, 4)) DREF DeeObject *DCALL DeeStruct_GetRange(DeeSTypeObject *tp_self, void *self, DeeObject *begin, DeeObject *end);
 INTDEF WUNUSED NONNULL((1, 3, 4)) int DCALL DeeStruct_DelRange(DeeSTypeObject *tp_self, void *self, DeeObject *begin, DeeObject *end);
 INTDEF WUNUSED NONNULL((1, 3, 4, 5)) int DCALL DeeStruct_SetRange(DeeSTypeObject *tp_self, void *self, DeeObject *begin, DeeObject *end, DeeObject *value);
-INTDEF WUNUSED NONNULL((1, 3)) DREF DeeObject *DCALL DeeStruct_GetAttr(DeeSTypeObject *tp_self, void *self, DeeObject *name);
-INTDEF WUNUSED NONNULL((1, 3)) int DCALL DeeStruct_DelAttr(DeeSTypeObject *tp_self, void *self, DeeObject *name);
-INTDEF WUNUSED NONNULL((1, 3, 4)) int DCALL DeeStruct_SetAttr(DeeSTypeObject *tp_self, void *self, DeeObject *name, DeeObject *value);
-INTDEF WUNUSED NONNULL((1, 2)) dssize_t DCALL DeeStruct_EnumAttr(DeeSTypeObject *__restrict tp_self, denum_t proc, void *arg);
+
+/* Get a struct attribute (excluding generic attributes)
+ * @return: * :        Attribute value
+ * @return: ITER_DONE: No such attribute
+ * @return: NULL:      Error */
+INTDEF WUNUSED NONNULL((1, 3)) DREF DeeObject *DCALL
+DeeStruct_GetAttr(DeeSTypeObject *tp_self, void *self, DeeObject *name);
+
+/* Delete a struct attribute (excluding generic attributes)
+ * @return: 0 : Success
+ * @return: -1: Error
+ * @return: -2: No such attribute */
+INTDEF WUNUSED NONNULL((1, 3)) int DCALL
+DeeStruct_DelAttr(DeeSTypeObject *tp_self, void *self, DeeObject *name);
+
+/* Set a struct attribute (excluding generic attributes)
+ * @return: 0 : Success
+ * @return: -1: Error
+ * @return: -2: No such attribute */
+INTDEF WUNUSED NONNULL((1, 3, 4)) int DCALL
+DeeStruct_SetAttr(DeeSTypeObject *tp_self, void *self,
+                  DeeObject *name, DeeObject *value);
+
+/* Enumerate struct attributes (excluding generic attributes) */
+INTDEF WUNUSED NONNULL((1, 2)) dssize_t DCALL
+DeeStruct_EnumAttr(DeeSTypeObject *__restrict tp_self,
+                   denum_t proc, void *arg);
 
 
 #ifdef __SIZEOF_BOOL__

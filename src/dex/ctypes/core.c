@@ -1093,14 +1093,52 @@ struct_setrange(DeeObject *self, DeeObject *begin,
 	                          DeeStruct_Data(self), begin, end, value);
 }
 
-DEFINE_BINARY_STRUCT_OPERATOR(DREF DeeObject *, struct_getattr, DeeStruct_GetAttr)
-DEFINE_BINARY_STRUCT_OPERATOR(int, struct_delattr, DeeStruct_DelAttr)
-DEFINE_TRINARY_STRUCT_OPERATOR(int, struct_setattr, DeeStruct_SetAttr)
+/* If attribute isn't defined, must use `DeeObject_TGenericGetAttr()' and friends! */
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+struct_getattr(DeeObject *self, DeeObject *attr) {
+	DREF DeeObject *result;
+	result = DeeStruct_GetAttr(DeeType_AsSType(Dee_TYPE(self)),
+	                           DeeStruct_Data(self), attr);
+	if (result == ITER_DONE)
+		result = DeeObject_GenericGetAttr(self, attr);
+	return result;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+struct_delattr(DeeObject *self, DeeObject *attr) {
+	int result;
+	result = DeeStruct_DelAttr(DeeType_AsSType(Dee_TYPE(self)),
+	                           DeeStruct_Data(self), attr);
+	if (result == -2)
+		result = DeeObject_GenericDelAttr(self, attr);
+	return result;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2, 3)) int DCALL
+struct_setattr(DeeObject *self, DeeObject *attr, DeeObject *value) {
+	int result;
+	result = DeeStruct_SetAttr(DeeType_AsSType(Dee_TYPE(self)),
+	                           DeeStruct_Data(self), attr, value);
+	if (result == -2)
+		result = DeeObject_GenericSetAttr(self, attr, value);
+	return result;
+}
 
 PRIVATE WUNUSED NONNULL((1, 2, 3)) dssize_t DCALL
 struct_enumattr(DeeTypeObject *tp_self, DeeObject *UNUSED(self),
                 denum_t proc, void *arg) {
-	return DeeStruct_EnumAttr(DeeType_AsSType(tp_self), proc, arg);
+	dssize_t result;
+	result = DeeStruct_EnumAttr(DeeType_AsSType(tp_self), proc, arg);
+	if (result >= 0) {
+		dssize_t temp;
+		temp = DeeObject_TGenericEnumAttr(tp_self, proc, arg);
+		if unlikely(temp < 0) {
+			result = temp;
+		} else {
+			result += temp;
+		}
+	}
+	return result;
 }
 #undef DEFINE_BINARY_INPLACE_STRUCT_OPERATOR
 #undef DEFINE_UNARY_INPLACE_STRUCT_OPERATOR
@@ -1337,7 +1375,7 @@ INTERN DeeSTypeObject DeeStructured_Type = {
 		/* .tp_cmp           = */ &struct_cmp,
 		/* .tp_seq           = */ &struct_seq,
 		/* .tp_iter_next     = */ NULL,
-		/* .tp_attr          = */ &struct_attr, /* TODO: Base attribute operators must go into another (hidden) base-class (else, these are always run _before_ standard struct methods/getsets) */
+		/* .tp_attr          = */ &struct_attr,
 		/* .tp_with          = */ NULL,
 		/* .tp_buffer        = */ &struct_buffer,
 #ifndef CONFIG_NO_DEEMON_100_COMPAT
@@ -1917,6 +1955,10 @@ DeeStruct_SetRange(DeeSTypeObject *tp_self, void *self,
 	return err_unimplemented_operator(orig_type, OPERATOR_SETRANGE);
 }
 
+/* Get a struct attribute (excluding generic attributes)
+ * @return: * :        Attribute value
+ * @return: ITER_DONE: No such attribute
+ * @return: NULL:      Error */
 INTERN WUNUSED NONNULL((1, 3)) DREF DeeObject *DCALL
 DeeStruct_GetAttr(DeeSTypeObject *tp_self, void *self, DeeObject *name) {
 	DeeSTypeObject *orig_type = tp_self;
@@ -1925,10 +1967,13 @@ DeeStruct_GetAttr(DeeSTypeObject *tp_self, void *self, DeeObject *name) {
 			return (*tp_self->st_attr->st_getattr)(orig_type, self, name);
 	} while ((tp_self = DeeSType_Base(tp_self)) != NULL &&
 	         DeeSType_Check(tp_self));
-	err_unimplemented_operator(orig_type, OPERATOR_GETATTR);
-	return NULL;
+	return ITER_DONE;
 }
 
+/* Delete a struct attribute (excluding generic attributes)
+ * @return: 0 : Success
+ * @return: -1: Error
+ * @return: -2: No such attribute */
 INTERN WUNUSED NONNULL((1, 3)) int DCALL
 DeeStruct_DelAttr(DeeSTypeObject *tp_self, void *self, DeeObject *name) {
 	DeeSTypeObject *orig_type = tp_self;
@@ -1937,9 +1982,13 @@ DeeStruct_DelAttr(DeeSTypeObject *tp_self, void *self, DeeObject *name) {
 			return (*tp_self->st_attr->st_delattr)(orig_type, self, name);
 	} while ((tp_self = DeeSType_Base(tp_self)) != NULL &&
 	         DeeSType_Check(tp_self));
-	return err_unimplemented_operator(orig_type, OPERATOR_DELATTR);
+	return -2;
 }
 
+/* Set a struct attribute (excluding generic attributes)
+ * @return: 0 : Success
+ * @return: -1: Error
+ * @return: -2: No such attribute */
 INTERN WUNUSED NONNULL((1, 3, 4)) int DCALL
 DeeStruct_SetAttr(DeeSTypeObject *tp_self, void *self,
                   DeeObject *name, DeeObject *value) {
@@ -1949,9 +1998,10 @@ DeeStruct_SetAttr(DeeSTypeObject *tp_self, void *self,
 			return (*tp_self->st_attr->st_setattr)(orig_type, self, name, value);
 	} while ((tp_self = DeeSType_Base(tp_self)) != NULL &&
 	         DeeSType_Check(tp_self));
-	return err_unimplemented_operator(orig_type, OPERATOR_SETATTR);
+	return -2;
 }
 
+/* Enumerate struct attributes (excluding generic attributes) */
 INTERN WUNUSED NONNULL((1, 2)) dssize_t DCALL
 DeeStruct_EnumAttr(DeeSTypeObject *__restrict tp_self,
                    denum_t proc, void *arg) {

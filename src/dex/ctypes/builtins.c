@@ -47,7 +47,12 @@
 
 DECL_BEGIN
 
-/* MRO vector for built-in C numeric types defined by `ctypes'. */
+/* MRO vector for built-in C numeric types defined by `ctypes'.
+ * Semantically equivalent to:
+ * >> class SomeInteger: ctypes.Structured, deemon.Numeric {
+ * >>     ...
+ * >> }
+ */
 PRIVATE DeeTypeObject *tpconst ctypes_numeric_mro[] = {
 	DeeSType_AsType(&DeeStructured_Type),
 	&DeeNumeric_Type,
