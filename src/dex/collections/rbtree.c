@@ -1083,6 +1083,7 @@ struct rbtree_minmax {
 };
 
 /* Lookup the node containing a given `key', where `root' is guarantied to overlap with [minkey:maxkey]
+ * NOTE: The caller must currently be holding a read-lock to `self'!
  * @return: 1 : Version changed after (lock is still held)
  * @return: 0 : Success (in this case, a read-lock to `self' is still being held)
  * @return: -1: Error */
@@ -1252,7 +1253,11 @@ again:
 			continue;
 		}
 
-		/* Helper macro to do all of the necessary work to perform a safe comparison operation. */
+		/* Re-acquire lock. */
+		RBTree_LockRead(self);
+		if unlikely(self->rbt_version != version)
+			goto again;
+
 		temp = rbtree_do_minmaxlocate_node_in_root(self, minkey, maxkey, result, root);
 		if (temp > 0)
 			goto again; /* Version changed */
@@ -1723,6 +1728,26 @@ rbtree_insert_after(RBTree *self,
 	rbtree_abi__insert_repair(&self->rbt_root, newnode, predecessor);
 }
 
+/* Insert `newnode' as the immediate predecessor of `successor' */
+PRIVATE WUNUSED NONNULL((1, 2, 3)) void DCALL
+rbtree_insert_before(RBTree *self,
+                     struct rbtree_node *__restrict successor,
+                     struct rbtree_node *__restrict newnode) {
+	if (!successor->rbtn_lhs) {
+		successor->rbtn_lhs = newnode;
+	} else {
+		successor = successor->rbtn_lhs;
+		while (successor->rbtn_rhs)
+			successor = successor->rbtn_rhs;
+		successor->rbtn_rhs = newnode;
+	}
+	newnode->rbtn_par = successor;
+	newnode->rbtn_lhs = NULL;
+	newnode->rbtn_rhs = NULL;
+	rbtree_node_setred(newnode);
+	rbtree_abi__insert_repair(&self->rbt_root, newnode, successor);
+}
+
 PRIVATE WUNUSED NONNULL((1, 2, 3, 4)) int DCALL
 rbtree_setrange(RBTree *self, DeeObject *minkey,
                 DeeObject *maxkey, DeeObject *value) {
@@ -1868,15 +1893,19 @@ endread_and_again_insert:
 			/* Insert `hinode' as the immediate successor of `newnode' */
 			rbtree_insert_after(self, newnode, hinode);
 
+			/* Try to merge `newnode' with its neighbors. */
+			SLIST_INIT(&removed_nodes);
+			rbtree_do_mergenode(self, newnode, &removed_nodes);
+
 			/* And we're done -> increment the version counter. */
 			++self->rbt_version;
 			RBTree_LockEndWrite(self);
+			rbtree_node_slist_destroyall(&removed_nodes);
 			return 0;
 		}
 
 		RBTree_LockWrite(self);
 		if unlikely(self->rbt_version != overlap.rbtdioi_vers) {
-/*endwrite_and_again_insert:*/
 			RBTree_LockEndWrite(self);
 			Dee_XDecref(maxkey_succ);
 			Dee_XDecref(minkey_pred);
@@ -1920,8 +1949,20 @@ endread_and_again_insert:
 			}
 		}
 
-		/* Insert `newnode' as the immediate successor of `range.rbtmm_min' */
-		rbtree_insert_after(self, range.rbtmm_min, newnode);
+		/* Insert `newnode' as the immediate successor of `range.rbtmm_min',
+		 * but only if `range.rbtmm_min' wasn't just removed. If it was,
+		 * then we can assume that `range.rbtmm_max' wasn't removed (since
+		 * that would be the case where there are no overlaps, which is
+		 * handled below, as it doesn't require nodes being split), which
+		 * means that we can just insert *before* `range.rbtmm_max' */
+		if (!minkey_pred) {
+			rbtree_insert_after(self, range.rbtmm_min, newnode);
+		} else {
+			rbtree_insert_before(self, range.rbtmm_max, newnode);
+		}
+
+		/* Try to merge `newnode' with its neighbors. */
+		rbtree_do_mergenode(self, newnode, &removed_nodes);
 
 		/* And we're done -> increment the version counter. */
 		++self->rbt_version;
@@ -1996,8 +2037,14 @@ err:
 PRIVATE WUNUSED NONNULL((1, 2, 3)) int DCALL
 rbtree_delrange(RBTree *self, DeeObject *minkey, DeeObject *maxkey) {
 	int error;
+	uintptr_t version;
 	struct rbtree_minmax range;
+	struct rbtree_node_slist removed_nodes;
+	bool minkey_le_minnode_minkey;
+	bool maxkey_ge_maxnode_maxkey;
+
 	/* Construct a new node for the caller-given range. */
+again_minmaxlocate:
 	error = rbtree_do_minmaxlocate_node(self, minkey, maxkey, &range);
 	if (error != 0) {
 		if unlikely(error < 0)
@@ -2005,11 +2052,199 @@ rbtree_delrange(RBTree *self, DeeObject *minkey, DeeObject *maxkey) {
 		/* No nodes exist in the given range -> nothing to do. */
 		return 0;
 	}
+	version = self->rbt_version;
 
-	/* Given key-range overlaps with another range. */
-	/* TODO: Split nodes to override existing values */
-	RBTree_LockEndRead(self);
-	return DeeError_NOTIMPLEMENTED();
+	/* At this point, we've got the complete set of nodes that overlap
+	 * with the caller-given key-range saved in `range'. We must now
+	 * check how/where we (might) need to split these nodes.
+	 *
+	 * For this purpose, we must check if the caller's key-range forms
+	 * a full-, or partial overlap with the range of existing nodes.
+	 *
+	 * -> Figure out `minkey_le_minnode_minkey' and `maxkey_ge_maxnode_maxkey' */
+	{
+		DREF DeeObject *minnode_minkey;
+		DREF DeeObject *maxnode_maxkey;
+		minnode_minkey = rbtree_node_get_minkey(range.rbtmm_min);
+		maxnode_maxkey = rbtree_node_get_maxkey(range.rbtmm_max);
+		Dee_Incref(minnode_minkey);
+		Dee_Incref(maxnode_maxkey);
+		RBTree_LockEndRead(self);
+
+		/* Check for full overlap on lower bound */
+		error = DeeObject_CompareLe(minkey, minnode_minkey);
+		Dee_Decref_unlikely(minnode_minkey);
+		if unlikely(error < 0) {
+			Dee_Decref_unlikely(maxnode_maxkey);
+			goto err;
+		}
+		minkey_le_minnode_minkey = error != 0;
+
+		/* Check for full overlap on upper bound */
+		error = DeeObject_CompareLo(maxkey, maxnode_maxkey);
+		Dee_Decref_unlikely(maxnode_maxkey);
+		if unlikely(error < 0)
+			goto err;
+		maxkey_ge_maxnode_maxkey = error == 0;
+
+		RBTree_LockRead(self);
+		if unlikely(self->rbt_version != version) {
+/*endread_and_again_minmaxlocate:*/
+			RBTree_LockEndRead(self);
+			goto again_minmaxlocate;
+		}
+	}
+
+	/* Split nodes as necessary */
+	if (!minkey_le_minnode_minkey || !maxkey_ge_maxnode_maxkey) {
+		DREF DeeObject *minkey_pred = NULL;
+		DREF DeeObject *maxkey_succ = NULL;
+		bool remove_empty;
+		struct rbtree_node *remove_minnode;
+		struct rbtree_node *remove_maxnode;
+		RBTree_LockEndRead(self);
+		if (!minkey_le_minnode_minkey) {
+			minkey_pred = DeeObject_Predecessor(minkey);
+			if unlikely(!minkey_pred)
+				goto err;
+		}
+		if (!maxkey_ge_maxnode_maxkey) {
+			maxkey_succ = DeeObject_Successor(maxkey);
+			if unlikely(!maxkey_succ) {
+				Dee_XDecref(minkey_pred);
+				goto err;
+			}
+		}
+
+		if (minkey_pred && maxkey_succ && (range.rbtmm_min == range.rbtmm_max)) {
+			/* Special case: Partial overlap on *both* sides with the same node:
+			 * >> local rb = RBTree();
+			 * >> rb[10:20] = "foo";
+			 * >> del rb[12:18]; // We are here right now
+			 * >> print repr rb; // RBTree({ [10:11]: "foo", [19:20]: "foo" })
+			 */
+			struct rbtree_node *lonode;
+			struct rbtree_node *hinode;
+			lonode = range.rbtmm_min;
+			hinode = rbtree_node_alloc();
+			if unlikely(!hinode)
+				goto err;
+			RBTree_LockWrite(self);
+			if unlikely(self->rbt_version != version) {
+				RBTree_LockEndWrite(self);
+				rbtree_node_free(hinode);
+				Dee_Decref(maxkey_succ);
+				Dee_Decref(minkey_pred);
+				goto again_minmaxlocate;
+			}
+
+			/* Fill in `hinode' and update `lonode' */
+			hinode->rbtn_maxkey = rbtree_node_get_maxkey(lonode); /* Inherit reference */
+			hinode->rbtn_minkey = maxkey_succ;                    /* Inherit reference */
+			lonode->rbtn_maxkey = minkey_pred;                    /* Inherit reference */
+			hinode->rbtn_value  = rbtree_node_get_value(lonode);
+			Dee_Incref(hinode->rbtn_value);
+
+			/* Insert `hinode' as the immediate successor of `lonode' */
+			rbtree_insert_after(self, lonode, hinode);
+
+			/* And we're done -> increment the version counter. */
+			++self->rbt_version;
+			RBTree_LockEndWrite(self);
+			return 0;
+		}
+
+		RBTree_LockWrite(self);
+		if unlikely(self->rbt_version != version) {
+			RBTree_LockEndWrite(self);
+			Dee_XDecref(maxkey_succ);
+			Dee_XDecref(minkey_pred);
+			goto again_minmaxlocate;
+		}
+
+		/* Figure out which nodes will need to be removed */
+		remove_empty   = false;
+		remove_minnode = range.rbtmm_min;
+		remove_maxnode = range.rbtmm_max;
+		if (minkey_pred) {
+			if (remove_minnode == remove_maxnode)
+				remove_empty = true;
+			SWAP(range.rbtmm_min->rbtn_maxkey, minkey_pred);
+			remove_minnode = rbtree_abi_nextnode(range.rbtmm_min);
+		}
+		if (maxkey_succ) {
+			if (remove_minnode == remove_maxnode)
+				remove_empty = true;
+			SWAP(range.rbtmm_max->rbtn_minkey, maxkey_succ);
+			remove_maxnode = rbtree_abi_prevnode(range.rbtmm_max);
+		}
+
+		/* Remove all nodes within the range [remove_minnode,remove_maxnode] */
+		SLIST_INIT(&removed_nodes);
+		if (remove_empty) {
+			/* Special case: no nodes need to be removed. */
+		} else {
+			struct rbtree_node *iter = remove_minnode;
+			for (;;) {
+				struct rbtree_node *next;
+				if (iter == remove_maxnode) {
+					rbtree_abi_removenode(&self->rbt_root, iter);
+					SLIST_INSERT(&removed_nodes, iter, rbtn_link);
+					break;
+				}
+				next = rbtree_abi_nextnode(iter);
+				rbtree_abi_removenode(&self->rbt_root, iter);
+				SLIST_INSERT(&removed_nodes, iter, rbtn_link);
+				iter = next;
+			}
+		}
+
+		/* And we're done -> increment the version counter. */
+		++self->rbt_version;
+		RBTree_LockEndWrite(self);
+
+		/* Cleanup... */
+		Dee_XDecref(maxkey_succ);
+		Dee_XDecref(minkey_pred);
+		rbtree_node_slist_destroyall(&removed_nodes);
+		return 0;
+	}
+
+	/* Upgrade to a write-lock. */
+	if (!RBTree_LockUpgrade(self)) {
+		if unlikely(self->rbt_version != version) {
+/*endwrite_and_again_insert:*/
+			RBTree_LockEndWrite(self);
+			goto again_minmaxlocate;
+		}
+	}
+
+	/* Remove old nodes */
+	SLIST_INIT(&removed_nodes);
+	{
+		struct rbtree_node *iter = range.rbtmm_min;
+		for (;;) {
+			struct rbtree_node *next;
+			ASSERT(iter);
+			if (iter == range.rbtmm_max) {
+				rbtree_abi_removenode(&self->rbt_root, iter);
+				SLIST_INSERT(&removed_nodes, iter, rbtn_link);
+				break;
+			}
+			next = rbtree_abi_nextnode(iter);
+			rbtree_abi_removenode(&self->rbt_root, iter);
+			SLIST_INSERT(&removed_nodes, iter, rbtn_link);
+			iter = next;
+		}
+	}
+
+	/* And we're done -> increment the version counter. */
+	++self->rbt_version;
+	RBTree_LockEndWrite(self);
+
+	/* Cleanup... */
+	rbtree_node_slist_destroyall(&removed_nodes);
+	return 0;
 err:
 	return -1;
 }
