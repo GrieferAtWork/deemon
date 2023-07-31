@@ -20,7 +20,6 @@
 #ifndef GUARD_DEX_COLLECTIONS_USET_C
 #define GUARD_DEX_COLLECTIONS_USET_C 1
 #define DEE_SOURCE
-#define _KOS_SOURCE 1
 
 #include "libcollections.h"
 /**/
