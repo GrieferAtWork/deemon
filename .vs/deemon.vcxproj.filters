@@ -285,6 +285,9 @@
 		<ClInclude Include="..\include\deemon\kos-headers\compiler\c.h">
 			<Filter>include\kos-headers\compiler</Filter>
 		</ClInclude>
+		<ClInclude Include="..\include\deemon\kos-headers\compiler\checker.h">
+			<Filter>include\kos-headers\compiler</Filter>
+		</ClInclude>
 		<ClInclude Include="..\include\deemon\kos-headers\compiler\clang.h">
 			<Filter>include\kos-headers\compiler</Filter>
 		</ClInclude>

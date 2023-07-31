@@ -934,7 +934,8 @@ JITLexer_EvalModule(JITLexer *__restrict self) {
 	} else if (name_end == name_start + 1) {
 		result = JITContext_GetCurrentModule(self->jl_context);
 	} else {
-		DeeModuleObject *base = self->jl_context->jc_impbase;
+		DeeModuleObject *base;
+		base = self->jl_context->jc_impbase;
 		if unlikely(!base) {
 err_name_start_end_cannot_import_relative:
 			err_cannot_import_relative((char const *)name_start,

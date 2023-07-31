@@ -76,21 +76,23 @@ err_unknown_key(DeeObject *__restrict map, DeeObject *__restrict key) {
 	                       key, Dee_TYPE(map), map);
 }
 
+INTERN ATTR_COLD NONNULL((1, 2)) int
+(DCALL err_unbound_attribute_string)(DeeTypeObject *__restrict tp,
+                                     char const *__restrict name) {
+	ASSERT_OBJECT(tp);
+	return DeeError_Throwf(&DeeError_UnboundAttribute,
+	                       "Unbound attribute `%r.%s'",
+	                       tp, name);
+}
+
+
 
 PRIVATE struct dex_symbol symbols[] = {
 	{ "Deque", (DeeObject *)&Deque_Type },
 	{ "FixedList", (DeeObject *)&FixedList_Type },
 	{ "UniqueDict", (DeeObject *)&UDict_Type },
 	{ "UniqueSet", (DeeObject *)&USet_Type },
-	/* TODO: RBTree and LLRBTree
-	 * >> local rm = RBTree();
-	 * >> rm[10:20] = "foo";
-	 * >> print rm[15]; // "foo"
-	 *
-	 * A special map type that uses an R/B-trees to facilitate the use
-	 * of red/black trees in order to reference not just simple keys,
-	 * but ranges of keys.
-	 */
+	{ "RBTree", (DeeObject *)&RBTree_Type },
 	{ NULL }
 };
 

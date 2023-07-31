@@ -1205,7 +1205,7 @@ udict_repr(UDict *__restrict self) {
 	size_t mask;
 again:
 	unicode_printer_init(&p);
-	if (UNICODE_PRINTER_PRINT(&p, "{ ") < 0)
+	if (UNICODE_PRINTER_PRINT(&p, "UniqueDict({ ") < 0)
 		goto err;
 	UDict_LockRead(self);
 	is_first = true;
@@ -1235,9 +1235,9 @@ again:
 			goto restart;
 	}
 	UDict_LockEndRead(self);
-	if unlikely((is_first ? unicode_printer_putascii(&p, '}')
-		                   : UNICODE_PRINTER_PRINT(&p, " }")) < 0)
-	goto err;
+	if unlikely((is_first ? UNICODE_PRINTER_PRINT(&p, "})")
+	                      : UNICODE_PRINTER_PRINT(&p, " })")) < 0)
+		goto err;
 	return unicode_printer_pack(&p);
 restart:
 	UDict_LockEndRead(self);
@@ -1282,15 +1282,15 @@ PRIVATE struct type_method tpconst udict_methods[] = {
 	            "Delete @key from @this and return its previously assigned value or @def when @key had no item associated"),
 	TYPE_METHOD("clear", &udict_clearfun,
 	            "()\n"
-	            "Clear all values from @this :Dict"),
+	            "Clear all values from @this ?."),
 	TYPE_METHOD("popitem", &udict_popsomething,
 	            "->?T2?O?O\n"
 	            "#r{A random pair key-value pair that has been removed}"
-	            "#tValueError{@this :Dict was empty}"),
+	            "#tValueError{@this ?. was empty}"),
 	TYPE_METHOD("setdefault", &udict_setdefault,
 	            "(key,def=!N)->\n"
 	            "#r{The object currently assigned to @key}"
-	            "Lookup @key in @this Dict and return its value if found. Otherwise, assign @def to @key and return it instead"),
+	            "Lookup @key in @this ?. and return its value if found. Otherwise, assign @def to @key and return it instead"),
 	TYPE_METHOD("setold", &udict_setold,
 	            "(key,value)->?Dbool\n"
 	            "#r{Indicative of @value having been assigned to @key}"
@@ -1310,7 +1310,7 @@ PRIVATE struct type_method tpconst udict_methods[] = {
 	TYPE_METHOD("update", &udict_update,
 	            "(items:?S?T2?O?O)\n"
 	            "Iterate @items and unpack each element into 2 others, using them as "
-	            /**/ "key and value to insert into @this Dict"),
+	            /**/ "key and value to insert into @this ?."),
 	TYPE_METHOD_END
 };
 
