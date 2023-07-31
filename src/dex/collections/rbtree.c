@@ -35,6 +35,7 @@
 #include <deemon/object.h>
 #include <deemon/seq.h>
 #include <deemon/system-features.h>
+#include <deemon/thread.h>
 #include <deemon/tuple.h>
 #include <deemon/util/atomic.h>
 #include <deemon/util/lock.h>
@@ -44,19 +45,19 @@
 #include <stdbool.h>
 
 #undef SWAP
-#define SWAP(a, b)      \
-	do {                \
-		DeeObject *_sw; \
-		_sw = (a);      \
-		(a) = (b);      \
-		(b) = _sw;      \
+#define SWAP(p_a, p_b)     \
+	do {                   \
+		DeeObject *_swtmp; \
+		_swtmp = *(p_a);   \
+		*(p_a) = *(p_b);   \
+		*(p_b) = _swtmp;   \
 	}	__WHILE0
 
 #undef ABS
 #define ABS(x) ((x) < 0 ? -(x) : (x))
 
 #define DOC_SPLIT_ERROR \
-	"#tTypeError{Tried to split a node with a key-type that does not support predecessor/successor semantics}"
+	"#tNotImplemented{Tried to split a node with a key-type that does not support predecessor/successor semantics}"
 
 DECL_BEGIN
 
@@ -115,12 +116,17 @@ DECL_END
 #define RBTREE_DECL            PRIVATE
 #define RBTREE_IMPL            PRIVATE
 
-#define RBTREE_KEY_LO(a, b) DONE_USE_RBTREE_KEY_LO
-#define RBTREE_KEY_EQ(a, b) DONE_USE_RBTREE_KEY_EQ
-#define RBTREE_KEY_NE(a, b) DONE_USE_RBTREE_KEY_NE
-#define RBTREE_KEY_GR(a, b) DONE_USE_RBTREE_KEY_GR
-#define RBTREE_KEY_GE(a, b) DONE_USE_RBTREE_KEY_GE
-#define RBTREE_KEY_LE(a, b) DONE_USE_RBTREE_KEY_LE
+/* Key comparison is done by invoking user-operators, which can only
+ * happen when *not* holding the R/B-tree's lock. As such, we have to
+ * re-implement anything that would need to invoke these operators,
+ * and to ensure that generated code doesn't use them, hook them such
+ * that they would cause a compiler error */
+#define RBTREE_KEY_LO(a, b) DONE_USE_RBTREE_KEY_LO;
+#define RBTREE_KEY_EQ(a, b) DONE_USE_RBTREE_KEY_EQ;
+#define RBTREE_KEY_NE(a, b) DONE_USE_RBTREE_KEY_NE;
+#define RBTREE_KEY_GR(a, b) DONE_USE_RBTREE_KEY_GR;
+#define RBTREE_KEY_GE(a, b) DONE_USE_RBTREE_KEY_GE;
+#define RBTREE_KEY_LE(a, b) DONE_USE_RBTREE_KEY_LE;
 
 /* Features */
 #define RBTREE_WANT_PREV_NEXT_NODE
@@ -130,6 +136,7 @@ DECL_END
 #define RBTREE_OMIT_REMOVE         /* Need custom remove function */
 #define RBTREE_WANT__INSERT_REPAIR /* Need this internal function to re-implement insert */
 
+/* Generate code... */
 #include <hybrid/sequence/rbtree-abi.h>
 DECL_BEGIN
 
@@ -139,7 +146,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeObject_Predecessor(DeeObject *__restrict self) {
 	self = DeeObject_Copy(self);
 	if likely(self) {
-		if unlikely(DeeObject_Dec(&self))
+		if unlikely(DeeObject_Dec((DeeObject **)&self))
 			Dee_Clear(self);
 	}
 	return self;
@@ -150,7 +157,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeObject_Successor(DeeObject *__restrict self) {
 	self = DeeObject_Copy(self);
 	if likely(self) {
-		if unlikely(DeeObject_Inc(&self))
+		if unlikely(DeeObject_Inc((DeeObject **)&self))
 			Dee_Clear(self);
 	}
 	return self;
@@ -217,15 +224,17 @@ rbtree_node_slist_destroyall(struct rbtree_node_slist *__restrict self) {
 
 
 
-
-
-PRIVATE ATTR_PURE WUNUSED NONNULL((1)) size_t DCALL
-rbtree_node_count(struct rbtree_node const *__restrict self);
+/************************************************************************/
+/* RBTreeIterator IMPLEMENTATION                                        */
+/************************************************************************/
 
 PRIVATE WUNUSED NONNULL((1)) DREF RBTree *DCALL
 rbtreeiter_nii_getseq(RBTreeIterator *__restrict self) {
 	return_reference_(self->rbti_tree);
 }
+
+PRIVATE ATTR_PURE WUNUSED NONNULL((1)) size_t DCALL
+rbtree_node_count(struct rbtree_node const *__restrict self);
 
 PRIVATE WUNUSED NONNULL((1)) size_t DCALL
 rbtreeiter_nii_getindex(RBTreeIterator *__restrict self) {
@@ -743,10 +752,10 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-rbtreeiter_remove(RBTreeIterator *self, size_t argc, DeeObject *const *argv) {
+rbtreeiter_removenode(RBTreeIterator *self, size_t argc, DeeObject *const *argv) {
 	struct rbtree_node *node;
 	RBTree *tree = self->rbti_tree;
-	if (DeeArg_Unpack(argc, argv, ":remove"))
+	if (DeeArg_Unpack(argc, argv, ":removenode"))
 		goto err;
 	RBTree_LockWrite(tree);
 	if unlikely(!RBTreeIterator_VersionOK(self, tree))
@@ -849,6 +858,31 @@ DEFINE_RBTREE_NODE_SUBNODE_GETTER(rbtreeiter_get_rhs, rbtn_rhs, "rhs")
 DEFINE_RBTREE_NODE_SUBNODE_GETTER(rbtreeiter_get_parent, rbtn_par, "parent")
 #undef DEFINE_RBTREE_NODE_SUBNODE_GETTER
 
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+rbtreeiter_get_isred(RBTreeIterator *__restrict self) {
+	bool result;
+	RBTree *tree = self->rbti_tree;
+	struct rbtree_node *node;
+	RBTree_LockRead(tree);
+	if unlikely(!RBTreeIterator_VersionOK(self, tree))
+		goto err_changed_unlock;
+	node = RBTreeIterator_GetNext(self);
+	if unlikely(!node)
+		goto err_unlock_unbound;
+	result = rbtree_node_isred(node);
+	RBTree_LockEndRead(tree);
+	return_bool_(result);
+err_unlock_unbound:
+	RBTree_LockEndRead(tree);
+	err_unbound_attribute_string(&RBTreeIterator_Type, "isred");
+	return NULL;
+err_changed_unlock:
+	RBTree_LockEndRead(tree);
+/*err_changed:*/
+	err_changed_sequence((DeeObject *)tree);
+	return NULL;
+}
+
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 rbtreeiter_ctor(RBTreeIterator *__restrict self) {
 	self->rbti_tree = (DREF RBTree *)DeeObject_NewDefault(&RBTree_Type);
@@ -937,7 +971,7 @@ PRIVATE struct type_cmp rbtreeiter_cmp = {
 };
 
 PRIVATE struct type_method tpconst rbtreeiter_methods[] = {
-	TYPE_METHOD("remove", &rbtreeiter_remove,
+	TYPE_METHOD("removenode", &rbtreeiter_removenode,
 	            "()\n"
 	            "#tValueError{No node is selected by @this ?.}"
 	            "Remove the node selected by @this ?. from the associated ?#seq. "
@@ -958,6 +992,9 @@ PRIVATE struct type_getset tpconst rbtreeiter_getsets[] = {
 	TYPE_GETTER("parent", &rbtreeiter_get_parent,
 	            "->?.\n"
 	            "The parent of the selected node (or unbound if the node is the root node)"),
+	TYPE_GETTER("isred", &rbtreeiter_get_isred,
+	            "->?DBool\n"
+	            "Evaluates to ?t if the selected node is red"),
 	TYPE_GETSET_END
 };
 
@@ -1016,6 +1053,11 @@ INTERN DeeTypeObject RBTreeIterator_Type = {
 
 
 
+
+
+/************************************************************************/
+/* RBTree IMPLEMENTATION                                                */
+/************************************************************************/
 
 
 PRIVATE WUNUSED NONNULL((1)) DREF RBTreeIterator *DCALL
@@ -1429,7 +1471,7 @@ rbtree_do_mergenode(RBTree *self, struct rbtree_node *__restrict node,
 			 * of the tree as a whole, we don't need to re-insert
 			 * the caller's node! */
 			rbtree_abi_removenode(&self->rbt_root, nextnode);
-			SWAP(node->rbtn_minkey, nextnode->rbtn_minkey);
+			SWAP(&node->rbtn_minkey, &nextnode->rbtn_minkey);
 			SLIST_INSERT_HEAD(removed_nodes, nextnode, rbtn_link);
 		}
 	}
@@ -1439,7 +1481,7 @@ rbtree_do_mergenode(RBTree *self, struct rbtree_node *__restrict node,
 		if (nextnode && rbtree_node_get_value(nextnode) == rbtree_node_get_value(node) &&
 		    key_adjacent(rbtree_node_get_maxkey(node), rbtree_node_get_minkey(nextnode))) {
 			rbtree_abi_removenode(&self->rbt_root, nextnode);
-			SWAP(node->rbtn_maxkey, nextnode->rbtn_maxkey);
+			SWAP(&node->rbtn_maxkey, &nextnode->rbtn_maxkey);
 			SLIST_INSERT_HEAD(removed_nodes, nextnode, rbtn_link);
 		}
 	}
@@ -1709,7 +1751,7 @@ rbtree_getitem(RBTree *self, DeeObject *key) {
 }
 
 /* Insert `newnode' as the immediate successor of `predecessor' */
-PRIVATE WUNUSED NONNULL((1, 2, 3)) void DCALL
+PRIVATE NONNULL((1, 2, 3)) void DCALL
 rbtree_insert_after(RBTree *self,
                     struct rbtree_node *__restrict predecessor,
                     struct rbtree_node *__restrict newnode) {
@@ -1729,7 +1771,7 @@ rbtree_insert_after(RBTree *self,
 }
 
 /* Insert `newnode' as the immediate predecessor of `successor' */
-PRIVATE WUNUSED NONNULL((1, 2, 3)) void DCALL
+PRIVATE NONNULL((1, 2, 3)) void DCALL
 rbtree_insert_before(RBTree *self,
                      struct rbtree_node *__restrict successor,
                      struct rbtree_node *__restrict newnode) {
@@ -1919,13 +1961,13 @@ endread_and_again_insert:
 		if (minkey_pred) {
 			if (remove_minnode == remove_maxnode)
 				remove_empty = true;
-			SWAP(range.rbtmm_min->rbtn_maxkey, minkey_pred);
+			SWAP(&range.rbtmm_min->rbtn_maxkey, &minkey_pred);
 			remove_minnode = rbtree_abi_nextnode(range.rbtmm_min);
 		}
 		if (maxkey_succ) {
 			if (remove_minnode == remove_maxnode)
 				remove_empty = true;
-			SWAP(range.rbtmm_max->rbtn_minkey, maxkey_succ);
+			SWAP(&range.rbtmm_max->rbtn_minkey, &maxkey_succ);
 			remove_maxnode = rbtree_abi_prevnode(range.rbtmm_max);
 		}
 
@@ -2009,9 +2051,9 @@ endread_and_again_insert:
 	/* Turn the first node from the pre-existing range into the new node
 	 * In an intrusive R/B-tree, we'd need to swap the actual nodes (though
 	 * that would also be simple, since there are parent-pointers) */
-	SWAP(range.rbtmm_min->rbtn_minkey, newnode->rbtn_minkey);
-	SWAP(range.rbtmm_min->rbtn_maxkey, newnode->rbtn_maxkey);
-	SWAP(range.rbtmm_min->rbtn_value, newnode->rbtn_value);
+	SWAP(&range.rbtmm_min->rbtn_minkey, &newnode->rbtn_minkey);
+	SWAP(&range.rbtmm_min->rbtn_maxkey, &newnode->rbtn_maxkey);
+	SWAP(&range.rbtmm_min->rbtn_value, &newnode->rbtn_value);
 	if (rbtree_node_isred(newnode)) {
 		/* Keep red-bit */
 		rbtree_node_setred(range.rbtmm_min);
@@ -2169,13 +2211,13 @@ again_minmaxlocate:
 		if (minkey_pred) {
 			if (remove_minnode == remove_maxnode)
 				remove_empty = true;
-			SWAP(range.rbtmm_min->rbtn_maxkey, minkey_pred);
+			SWAP(&range.rbtmm_min->rbtn_maxkey, &minkey_pred);
 			remove_minnode = rbtree_abi_nextnode(range.rbtmm_min);
 		}
 		if (maxkey_succ) {
 			if (remove_minnode == remove_maxnode)
 				remove_empty = true;
-			SWAP(range.rbtmm_max->rbtn_minkey, maxkey_succ);
+			SWAP(&range.rbtmm_max->rbtn_minkey, &maxkey_succ);
 			remove_maxnode = rbtree_abi_prevnode(range.rbtmm_max);
 		}
 
@@ -2608,6 +2650,118 @@ rbtree_clear(RBTree *self) {
 	++self->rbt_version;
 	RBTree_LockEndWrite(self);
 	rbtree_node_destroy_tree(tree);
+}
+
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+rbtree_optimize_impl(RBTree *self) {
+	struct rbtree_node_slist removed_nodes;
+	size_t i, position = 0;
+	uintptr_t version;
+	struct rbtree_node *prev, *next;
+	SLIST_INIT(&removed_nodes);
+again:
+	RBTree_LockRead(self);
+	prev    = self->rbt_root;
+	version = self->rbt_version;
+	if (!prev)
+		goto done_unlock;
+	while (prev->rbtn_lhs)
+		prev = prev->rbtn_lhs;
+	for (i = 0; i < position; ++i) {
+		prev = rbtree_abi_nextnode(prev);
+		if unlikely(!prev)
+			goto done_unlock;
+	}
+
+	/* Try to merge `node' with its successor */
+	for (;;) {
+again_nextnode:
+		next = rbtree_abi_nextnode(prev);
+		if (!next)
+			goto done_unlock;
+		if (rbtree_node_get_value(prev) == rbtree_node_get_value(next)) {
+			int temp;
+			DREF DeeObject *prev_maxkey, *prev_maxkey_succ;
+			DREF DeeObject *next_minkey;
+			prev_maxkey = rbtree_node_get_maxkey(prev);
+			next_minkey = rbtree_node_get_minkey(next);
+			RBTree_LockEndRead(self);
+
+			/* Increment the max-key of the predecessor */
+			prev_maxkey_succ = DeeObject_Successor(prev_maxkey);
+			Dee_Decref(prev_maxkey);
+			if unlikely(!prev_maxkey_succ) {
+				Dee_Decref(next_minkey);
+				goto err;
+			}
+
+			/* Compare keys */
+			temp = DeeObject_CompareEq(prev_maxkey_succ, next_minkey);
+			Dee_Decref(prev_maxkey_succ);
+			Dee_Decref(next_minkey);
+			if (temp != 0) {
+				if unlikely(temp < 0)
+					goto err;
+				/* Yes! can merge these 2 nodes! */
+				RBTree_LockWrite(self);
+				if unlikely(version != self->rbt_version) {
+					RBTree_LockEndWrite(self);
+					goto check_interrupt_and_again;
+				}
+
+				/* Remove the node from the tree. */
+				rbtree_abi_removenode(&self->rbt_root, next);
+
+				/* Update the node which we're keeping to reflect the grown range's size. */
+				SWAP(&prev->rbtn_maxkey, &next->rbtn_maxkey);
+
+				/* Track the removed node for later disposal. */
+				SLIST_INSERT(&removed_nodes, next, rbtn_link);
+
+				++self->rbt_version;
+				version = self->rbt_version;
+				RBTree_LockDowngrade(self);
+				goto again_nextnode;
+			}
+
+			/* Just keep going as normal */
+			RBTree_LockRead(self);
+			if unlikely(version != self->rbt_version) {
+				RBTree_LockEndRead(self);
+				goto check_interrupt_and_again;
+			}
+		} /* if (rbtree_node_get_value(prev) == rbtree_node_get_value(next)) */
+
+		/* Can't merge these nodes. */
+		prev = next;
+		++position;
+	}
+
+	/* Done... */
+done_unlock:
+	RBTree_LockEndRead(self);
+	rbtree_node_slist_destroyall(&removed_nodes);
+	return 0;
+check_interrupt_and_again:
+	/* Just to be safe: put an interrupt-check in here! */
+	if (DeeThread_CheckInterrupt())
+		goto err;
+	goto again;
+err:
+	rbtree_node_slist_destroyall(&removed_nodes);
+	return -1;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+rbtree_optimize(RBTree *self, size_t argc, DeeObject *const *argv) {
+	if (DeeArg_Unpack(argc, argv, ":clear"))
+		goto err;
+	if unlikely(rbtree_optimize_impl(self))
+		goto err;
+	return_none;
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -3181,6 +3335,27 @@ PRIVATE struct type_method tpconst rbtree_methods[] = {
 	            "->?T3?O?O?O\n"
 	            "#r{the greatest element that used to be stored in @this ?. (s.a. ?#last)}"
 	            "#tValueError{@this ?. was empty}"),
+	TYPE_METHOD("optimize", &rbtree_optimize,
+	            "()\n"
+	            "Search for adjacent nodes that can be merged due to having identical (as per ${===}) "
+	            /**/ "values, as well as consecutive key-ranges. By default, this sort of optimization "
+	            /**/ "is only done when using ?Dint as key type, though if custom key types are used, "
+	            /**/ "then this function may be used to perform that same optimization.\n"
+	            "The reason why this is only done for ?Dint by default, is because that is the only "
+	            /**/ "builtin type where there can truly be distinct predecessor/successor elements. "
+	            /**/ "For example, $\"bar\" has no successor. $\"bas\" would come after it, but in-"
+	            /**/ "between the two lies an infinite number of other strings, like $\"bara\" or $\"barfoo\". "
+	            /**/ "Additionally, doing this sort of thing may trigger user-defined operators, which in "
+	            /**/ "turn may call back to @this ?., which would prevent ?#op:setrange to function as an "
+	            /**/ "atomic operation in regards to all other APIs (since it would be possible to access "
+	            /**/ "the tree in an inconsistent state where nodes haven't been merged, yet).\n"
+	            "As such, only ?Dint is merged automatically while all other types need to make use of "
+	            /**/ "this function to perform that operation, though do note that this function will throw "
+	            /**/ "an exception if it encounters a key that doesn't implement ${operator copy} or "
+	            /**/ "${operator ++} / ${operator --} (which is another reason why auto-merging is only "
+	            /**/ "done for ?Dint by default).\n"
+	            "#T{There is #Bno need to call this function when using ?Dint as keys, or some type "
+	            /**/ "that does not implement ${operator ++} and ${operator --} (like ?Dstring)}"),
 
 	/* Generic methods */
 	TYPE_METHOD("clear", &rbtree_doclear,
@@ -3259,11 +3434,11 @@ INTERN DeeTypeObject RBTree_Type = {
 	                         "Construct an empty ?.\n"
 	                         "\n"
 
-	                         "(seq:?SX2?T2?O?O?T3?O?O?O)\n"
-	                         "Construct an R/B-tree from a sequence of ${(minkey,maxkey,value)} or ${([minkey:maxkey],value)}\n"
+	                         "(seq:?S?X2?T3?O?O?O?T2?Ert:SeqRange?O)\n"
+	                         "Construct an ?. from a sequence of ${(minkey,maxkey,value)} or ${([minkey:maxkey],value)}\n"
 	                         "\n"
 
-	                         "delrange(minkey,maxkey)\n"
+	                         "delrange(minkey,maxkey)->\n"
 	                         DOC_SPLIT_ERROR
 	                         "Delete all nodes intersecting with ${[minkey:maxkey]}, and split nodes where necessary\n"
 	                         "\n"
@@ -3278,7 +3453,7 @@ INTERN DeeTypeObject RBTree_Type = {
 	                         "#r{The value that is bound to @key}\n"
 	                         "\n"
 
-	                         "delitem(key)\n"
+	                         "delitem(key)->\n"
 	                         DOC_SPLIT_ERROR
 	                         "Alias for ?#op:delrange called as ${del this[key:key]}\n"
 	                         "\n"
