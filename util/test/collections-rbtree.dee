@@ -1,0 +1,88 @@
+#!/usr/bin/deemon
+/* Copyright (c) 2018-2023 Griefer@Work                                       *
+ *                                                                            *
+ * This software is provided 'as-is', without any express or implied          *
+ * warranty. In no event will the authors be held liable for any damages      *
+ * arising from the use of this software.                                     *
+ *                                                                            *
+ * Permission is granted to anyone to use this software for any purpose,      *
+ * including commercial applications, and to alter it and redistribute it     *
+ * freely, subject to the following restrictions:                             *
+ *                                                                            *
+ * 1. The origin of this software must not be misrepresented; you must not    *
+ *    claim that you wrote the original software. If you use this software    *
+ *    in a product, an acknowledgement (see the following) in the product     *
+ *    documentation is required:                                              *
+ *    Portions Copyright (c) 2018-2023 Griefer@Work                           *
+ * 2. Altered source versions must be plainly marked as such, and must not be *
+ *    misrepresented as being the original software.                          *
+ * 3. This notice may not be removed or altered from any source distribution. *
+ */
+
+import * from deemon;
+import * from collections;
+
+function verify(rb: RBTree, expected: {(Object, Object, Object)...}) {
+	assert expected == rb;
+	for (local lo, hi, value: expected) {
+		for (local key: [lo:hi+1]) {
+			assert rb[key] == value;
+			assert rb.get(key) == value;
+		}
+	}
+	if (expected) {
+		assert rb.get(expected.first[0] - 1) is none;
+		assert rb.get(expected.first[0] - 1, "foo") == "foo";
+		assert rb.get(expected.last[1] + 1) is none;
+		assert rb.get(expected.last[1] + 1, "foo") == "foo";
+	}
+}
+
+local rb = RBTree();
+local foo = "foo";
+verify(rb, {});
+
+rb[10:20] = foo;
+verify(rb, { (10, 20, "foo") });
+
+rb[21:30] = "bar";
+verify(rb, { (10, 20, "foo"), (21, 30, "bar") });
+
+rb[28:30] = "tail";
+verify(rb, { (10, 20, "foo"), (21, 27, "bar"), (28, 30, "tail") });
+
+rb[10:12] = "head";
+verify(rb, { (10, 12, "head"), (13, 20, "foo"), (21, 27, "bar"), (28, 30, "tail") });
+
+rb[14:15] = "x-x";
+verify(rb, { (10, 12, "head"), (13, 13, "foo"), (14, 15, "x-x"), (16, 20, "foo"), (21, 27, "bar"), (28, 30, "tail") });
+
+rb[14:15] = "-x-";
+verify(rb, { (10, 12, "head"), (13, 13, "foo"), (14, 15, "-x-"), (16, 20, "foo"), (21, 27, "bar"), (28, 30, "tail") });
+
+del rb[14:15];
+verify(rb, { (10, 12, "head"), (13, 13, "foo"), (16, 20, "foo"), (21, 27, "bar"), (28, 30, "tail") });
+
+rb[14:15] = foo;
+verify(rb, { (10, 12, "head"), (13, 20, "foo"), (21, 27, "bar"), (28, 30, "tail") });
+
+rb[19:22] = foo;
+verify(rb, { (10, 12, "head"), (13, 22, "foo"), (23, 27, "bar"), (28, 30, "tail") });
+
+del rb[20];
+verify(rb, { (10, 12, "head"), (13, 19, "foo"), (21, 22, "foo"), (23, 27, "bar"), (28, 30, "tail") });
+
+rb[20] = foo;
+verify(rb, { (10, 12, "head"), (13, 22, "foo"), (23, 27, "bar"), (28, 30, "tail") });
+
+rb[26:27] = foo;
+verify(rb, { (10, 12, "head"), (13, 22, "foo"), (23, 25, "bar"), (26, 27, "foo"), (28, 30, "tail") });
+
+rb[13:27] = foo;
+verify(rb, { (10, 12, "head"), (13, 27, "foo"), (28, 30, "tail") });
+
+del rb[13:27];
+verify(rb, { (10, 12, "head"), (28, 30, "tail") });
+
+del rb[0:99];
+verify(rb, {});

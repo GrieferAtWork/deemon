@@ -1955,7 +1955,7 @@ endread_and_again_insert:
 		 * that would be the case where there are no overlaps, which is
 		 * handled below, as it doesn't require nodes being split), which
 		 * means that we can just insert *before* `range.rbtmm_max' */
-		if (!minkey_pred) {
+		if (minkey_pred) {
 			rbtree_insert_after(self, range.rbtmm_min, newnode);
 		} else {
 			rbtree_insert_before(self, range.rbtmm_max, newnode);
