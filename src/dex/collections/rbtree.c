@@ -84,6 +84,7 @@ struct rbtree_node {
 		uintptr_t                rbtn_red;    /* Lowest bit of this indicates if node is red. */
 	};
 };
+#define rbtree_node_tryalloc() DeeObject_TRYMALLOC(struct rbtree_node)
 #define rbtree_node_alloc()    DeeObject_MALLOC(struct rbtree_node)
 #define rbtree_node_free(self) DeeObject_FREE(Dee_REQUIRES_TYPE(struct rbtree_node *, self))
 
@@ -3064,12 +3065,91 @@ rbtree_ctor(RBTree *__restrict self) {
 	return 0;
 }
 
+/* Copy the sub-tree `tree'. The caller is expected to be holding a read-lock
+ * @return: * :        A duplicate of `tree' (lock is still held)
+ * @return: NULL:      Error (lock was lost)
+ * @return: ITER_DONE: Version error (lock was lost) */
+PRIVATE WUNUSED NONNULL((1, 2)) struct rbtree_node *DCALL
+rbtree_copy_subtree_locked(RBTree *__restrict self,
+                           struct rbtree_node *__restrict tree) {
+	struct rbtree_node *result;
+	result = rbtree_node_tryalloc();
+	if likely(!result) {
+		uintptr_t version = self->rbt_version;
+		RBTree_LockEndRead(self);
+		result = rbtree_node_alloc();
+		if unlikely(!result)
+			return NULL;
+		RBTree_LockRead(self);
+		if unlikely(self->rbt_version != version) {
+			RBTree_LockEndRead(self);
+			rbtree_node_free(result);
+			return (struct rbtree_node *)ITER_DONE;
+		}
+	}
+
+	/* Recursively copy sub-trees. */
+	result->rbtn_lhs = NULL;
+	result->rbtn_rhs = NULL;
+	if (tree->rbtn_lhs) {
+		struct rbtree_node *copy;
+		copy = rbtree_copy_subtree_locked(self, tree->rbtn_lhs);
+		if unlikely(!ITER_ISOK((DeeObject *)copy)) {
+			rbtree_node_free(result);
+			return copy;
+		}
+		copy->rbtn_par   = result;
+		result->rbtn_lhs = copy;
+	}
+	if (tree->rbtn_rhs) {
+		struct rbtree_node *copy;
+		copy = rbtree_copy_subtree_locked(self, tree->rbtn_rhs);
+		if unlikely(!ITER_ISOK((DeeObject *)copy)) {
+			if (result->rbtn_lhs)
+				rbtree_node_destroy_tree(result->rbtn_lhs);
+			rbtree_node_free(result);
+			return copy;
+		}
+		copy->rbtn_par   = result;
+		result->rbtn_rhs = copy;
+	}
+	/*result->rbtn_par = ...;*/ /* Filled in by the caller! */
+
+	result->rbtn_minkey = tree->rbtn_minkey;
+	result->rbtn_maxkey = tree->rbtn_maxkey;
+	result->rbtn_value  = tree->rbtn_value;
+	Dee_Incref(rbtree_node_get_minkey(result));
+	Dee_Incref(rbtree_node_get_maxkey(result));
+	Dee_Incref(rbtree_node_get_value(result));
+	return result;
+}
+
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 rbtree_copy(RBTree *__restrict self, RBTree *__restrict other) {
-	(void)self;
-	(void)other;
-	/* TODO */
-	return DeeError_NOTIMPLEMENTED();
+	struct rbtree_node *tree_copy;
+again:
+	RBTree_LockRead(other);
+	if (other->rbt_root) {
+		tree_copy = rbtree_copy_subtree_locked(other, other->rbt_root);
+		if unlikely(!ITER_ISOK(tree_copy)) {
+			if unlikely(!tree_copy)
+				goto err; /* Error */
+			goto again;   /* Version changed */
+		}
+		/* Root node has no parent. */
+		tree_copy->rbtn_par = NULL;
+	} else {
+		tree_copy = NULL;
+	}
+	RBTree_LockEndRead(other);
+
+	/* Fill in members of `self' */
+	self->rbt_root    = tree_copy; /* Inherit */
+	self->rbt_version = 0;
+	Dee_atomic_rwlock_init(&self->rbt_lock);
+	return 0;
+err:
+	return -1;
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
@@ -3083,6 +3163,59 @@ PRIVATE NONNULL((1)) void DCALL
 rbtree_fini(RBTree *__restrict self) {
 	if (self->rbt_root)
 		rbtree_node_destroy_tree(self->rbt_root);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+rbtree_assign(RBTree *self, DeeObject *other) {
+	ATTR_ALIGNED(COMPILER_ALIGNOF(RBTree))
+	char buf[sizeof(RBTree) - DEE_OBJECT_OFFSETOF_DATA];
+	RBTree *temp = (RBTree *)(buf - DEE_OBJECT_OFFSETOF_DATA);
+	struct rbtree_node *old_tree;
+	if (DeeObject_InstanceOfExact(other, &RBTree_Type)) {
+		if unlikely(self == (RBTree *)other)
+			goto done;
+		if unlikely(rbtree_copy(temp, (RBTree *)other))
+			goto err;
+	} else {
+		temp->rbt_root    = NULL;
+		temp->rbt_version = 0;
+		Dee_atomic_rwlock_init(&temp->rbt_lock);
+		if unlikely(rbtree_insert_sequence(temp, other)) {
+			rbtree_fini(temp);
+			goto err;
+		}
+	}
+
+	RBTree_LockWrite(self);
+	old_tree       = self->rbt_root;
+	self->rbt_root = temp->rbt_root;
+	++self->rbt_version;
+	RBTree_LockEndWrite(self);
+	if (old_tree)
+		rbtree_node_destroy_tree(old_tree);
+done:
+	return 0;
+err:
+	return -1;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+rbtree_move_assign(RBTree *self, RBTree *other) {
+	struct rbtree_node *old_tree;
+	if unlikely(self == other)
+		return 0;
+	DeeLock_Acquire2(RBTree_LockWrite(self), RBTree_LockTryWrite(self), RBTree_LockEndWrite(self),
+	                 RBTree_LockWrite(other), RBTree_LockTryWrite(other), RBTree_LockEndWrite(other));
+	old_tree        = self->rbt_root;
+	self->rbt_root  = other->rbt_root;
+	other->rbt_root = NULL;
+	++other->rbt_version;
+	++self->rbt_version;
+	RBTree_LockEndWrite(other);
+	RBTree_LockEndWrite(self);
+	if (old_tree)
+		rbtree_node_destroy_tree(old_tree);
+	return 0;
 }
 
 PRIVATE NONNULL((1, 2)) void DCALL
@@ -3477,8 +3610,8 @@ INTERN DeeTypeObject RBTree_Type = {
 			}
 		},
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&rbtree_fini,
-		/* .tp_assign      = */ NULL,
-		/* .tp_move_assign = */ NULL,
+		/* .tp_assign      = */ (int (DCALL *)(DeeObject *, DeeObject *))&rbtree_assign,
+		/* .tp_move_assign = */ (int (DCALL *)(DeeObject *, DeeObject *))&rbtree_move_assign,
 		/* .tp_deepload    = */ (int (DCALL *)(DeeObject *__restrict))&rbtree_deepload
 	},
 	/* .tp_cast = */ {
@@ -3492,7 +3625,13 @@ INTERN DeeTypeObject RBTree_Type = {
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&rbtree_visit,
 	/* .tp_gc            = */ &rbtree_gc,
 	/* .tp_math          = */ NULL,
-	/* .tp_cmp           = */ NULL,
+	/* .tp_cmp           = */ NULL, /* NOTE: the dex initializer fills this in with `DeeSeq_Type.tp_cmp',
+	                                 *       because the map compare operator (which is designed with the
+	                                 *       fact in mind that Mapping item orders are undefined, and that
+	                                 *       all items are 2-element tuples, neither of which applies to
+	                                 *       RBTree).
+	                                 * But, since RBTrees are strongly ordered, we can just override the
+	                                 * Mapping compare operators yet again with those from Sequence. */
 	/* .tp_seq           = */ &rbtree_seq,
 	/* .tp_iter_next     = */ NULL,
 	/* .tp_attr          = */ NULL,

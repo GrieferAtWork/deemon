@@ -28,6 +28,7 @@
 #include <deemon/dex.h>
 #include <deemon/error.h>
 #include <deemon/format.h>
+#include <deemon/seq.h>
 
 DECL_BEGIN
 
@@ -95,8 +96,16 @@ PRIVATE struct dex_symbol symbols[] = {
 	{ NULL }
 };
 
+PRIVATE WUNUSED_T NONNULL_T((1)) int DCALL
+libcollections_init(DeeDexObject *__restrict self) {
+	(void)self;
+	RBTree_Type.tp_cmp = DeeSeq_Type.tp_cmp;
+	return 0;
+}
+
 PUBLIC struct dex DEX = {
-	/* .d_symbols = */ symbols
+	/* .d_symbols = */ symbols,
+	/* .d_init    = */ &libcollections_init,
 };
 
 DECL_END

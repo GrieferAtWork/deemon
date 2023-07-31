@@ -23,18 +23,47 @@ import * from deemon;
 import * from collections;
 
 function verify(rb: RBTree, expected: {(Object, Object, Object)...}) {
+	assert rb == expected;
 	assert expected == rb;
+	assert !(rb != expected);
+	assert !(expected != rb);
 	for (local lo, hi, value: expected) {
 		for (local key: [lo:hi+1]) {
 			assert rb[key] == value;
 			assert rb.get(key) == value;
 		}
 	}
+	assert #rb == #expected;
 	if (expected) {
 		assert rb.get(expected.first[0] - 1) is none;
 		assert rb.get(expected.first[0] - 1, "foo") == "foo";
 		assert rb.get(expected.last[1] + 1) is none;
 		assert rb.get(expected.last[1] + 1, "foo") == "foo";
+		assert rb;
+	} else {
+		assert !rb;
+	}
+	local cp = copy rb;
+	assert cp !== rb;
+	assert cp == rb;
+	assert rb == cp;
+	rb := cp;
+	assert cp !== rb;
+	assert rb == cp;
+	assert cp == rb;
+	assert #cp == #expected;
+	assert #rb == #expected;
+	rb.operator move := (cp);
+	assert cp !== rb;
+	assert !cp;
+	assert !#cp;
+	assert #rb == #expected;
+	if (expected) {
+		assert rb != cp;
+		assert cp != rb;
+	} else {
+		assert rb == cp;
+		assert cp == rb;
 	}
 }
 
