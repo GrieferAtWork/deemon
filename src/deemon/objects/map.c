@@ -70,23 +70,360 @@ err:
 	return NULL;
 }
 
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+map_setdefault(DeeObject *self, size_t argc, DeeObject *const *argv) {
+	struct type_nsi const *nsi;
+	DREF DeeObject *result;
+	DeeObject *key, *value = Dee_None;
+	if (DeeArg_Unpack(argc, argv, "o|o:setdefault", &key, &value))
+		goto err;
+	nsi = DeeType_NSI(Dee_TYPE(self));
+	if (nsi && nsi->nsi_class == TYPE_SEQX_CLASS_MAP && nsi->nsi_maplike.nsi_setdefault)
+		return (*nsi->nsi_maplike.nsi_setdefault)(self, key, value);
+
+	/* Fallback: lookup key and override if not already present (thread-unsafe) */
+	result = DeeObject_GetItemDef(self, key, ITER_DONE);
+	if (result == ITER_DONE) {
+		if unlikely(DeeObject_SetItem(self, key, value))
+			goto err;
+		result = value;
+		Dee_Incref(value);
+	}
+	return result;
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+map_pop(DeeObject *self, size_t argc, DeeObject *const *argv) {
+	DREF DeeObject *result;
+	DeeObject *key, *def = NULL;
+	if (DeeArg_Unpack(argc, argv, "o|o:pop", &key, &def))
+		goto err;
+	result = DeeObject_GetItemDef(self, key, ITER_DONE);
+	if (result == ITER_DONE) {
+		/* Not present -> use default */
+		if (def) {
+			result = def;
+			Dee_Incref(def);
+		} else {
+			err_unknown_key((DeeObject *)self, key);
+			result = NULL;
+		}
+	} else if (result != NULL) {
+		/* Remove `key' from `self' */
+		if unlikely(DeeObject_DelItem(self, key))
+			goto err_r;
+	}
+	return result;
+err_r:
+	Dee_Decref(result);
+err:
+	return NULL;
+}
+
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+map_popitem(DeeObject *self, size_t argc, DeeObject *const *argv) {
+	int temp;
+	DREF DeeObject *result, *iter, *key;
+	if (DeeArg_Unpack(argc, argv, ":popitem"))
+		goto err;
+	iter = DeeObject_IterSelf(self);
+	if unlikely(!iter)
+		goto err;
+	result = DeeObject_IterNext(iter);
+	Dee_Decref_likely(iter);
+	if unlikely(!result)
+		goto err;
+	if (result == ITER_DONE)
+		goto err_r_empty;
+	key = DeeObject_GetItemIndex(result, 0);
+	if unlikely(!key)
+		goto err_r;
+	temp = DeeObject_DelItem(self, key);
+	Dee_Decref(key);
+	if unlikely(temp)
+		goto err_r;
+	return result;
+err_r_empty:
+	err_empty_sequence(self);
+err_r:
+	Dee_Decref(result);
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+map_clear(DeeObject *self, size_t argc, DeeObject *const *argv) {
+	int temp;
+	if (DeeArg_Unpack(argc, argv, ":clear"))
+		goto err;
+	for (;;) {
+		DREF DeeObject *item, *iter, *key;
+		iter = DeeObject_IterSelf(self);
+		if unlikely(!iter)
+			goto err;
+		item = DeeObject_IterNext(iter);
+		Dee_Decref_likely(iter);
+		if unlikely(!item)
+			goto err;
+		if (item == ITER_DONE)
+			break;
+		key = DeeObject_GetItemIndex(item, 0);
+		Dee_Decref(item);
+		if unlikely(!key)
+			goto err;
+		temp = DeeObject_DelItem(self, key);
+		Dee_Decref(key);
+		if unlikely(temp)
+			goto err;
+	}
+	return_none;
+err:
+	return NULL;
+}
+
+
+PRIVATE WUNUSED NONNULL((2, 3)) Dee_ssize_t DCALL
+map_update_callback(void *arg, DeeObject *key, DeeObject *value) {
+	return DeeObject_SetItem((DeeObject *)arg, key, value);
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+map_update(DeeObject *self, size_t argc, DeeObject *const *argv) {
+	DeeObject *seq;
+	if (DeeArg_Unpack(argc, argv, "o:update", &seq))
+		goto err;
+	if (self != seq) {
+		if unlikely(DeeObject_ForeachPair(seq, &map_update_callback, self) < 0)
+			goto err;
+	}
+	return_none;
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+map_setold(DeeObject *self, size_t argc, DeeObject *const *argv) {
+	struct type_nsi const *nsi;
+	DREF DeeObject *old_value;
+	DeeObject *key, *value;
+	if (DeeArg_Unpack(argc, argv, "oo:setold", &key, &value))
+		goto err;
+	nsi = DeeType_NSI(Dee_TYPE(self));
+	if (nsi && nsi->nsi_class == TYPE_SEQX_CLASS_MAP && nsi->nsi_maplike.nsi_updateold) {
+		int error;
+		error = (*nsi->nsi_maplike.nsi_updateold)(self, key, value, NULL);
+		if unlikely(error < 0)
+			goto err;
+		return_bool_(error > 0);
+	}
+
+	/* Fallback: must use thread-unsafe (multi-step) operations. */
+	old_value = DeeObject_GetItemDef(self, key, ITER_DONE);
+	if (ITER_ISOK(old_value)) {
+		Dee_Decref(old_value);
+		if unlikely(DeeObject_SetItem(self, key, value))
+			goto err;
+		return_true;
+	}
+	if unlikely(!old_value)
+		goto err;
+	return_false;
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+map_setnew(DeeObject *self, size_t argc, DeeObject *const *argv) {
+	struct type_nsi const *nsi;
+	DREF DeeObject *old_value;
+	DeeObject *key, *value;
+	if (DeeArg_Unpack(argc, argv, "oo:setnew", &key, &value))
+		goto err;
+	nsi = DeeType_NSI(Dee_TYPE(self));
+	if (nsi && nsi->nsi_class == TYPE_SEQX_CLASS_MAP && nsi->nsi_maplike.nsi_insertnew) {
+		int error;
+		error = (*nsi->nsi_maplike.nsi_insertnew)(self, key, value, NULL);
+		if unlikely(error < 0)
+			goto err;
+		return_bool_(error == 0);
+	}
+
+	/* Fallback: must use thread-unsafe (multi-step) operations. */
+	old_value = DeeObject_GetItemDef(self, key, ITER_DONE);
+	if (ITER_ISOK(old_value)) {
+		Dee_Decref(old_value);
+		return_false;
+	}
+	if unlikely(!old_value)
+		goto err;
+	if unlikely(DeeObject_SetItem(self, key, value))
+		goto err;
+	return_false;
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+map_setold_ex(DeeObject *self, size_t argc, DeeObject *const *argv) {
+	struct type_nsi const *nsi;
+	DREF DeeObject *old_value, *result;
+	DeeObject *key, *value;
+	if (DeeArg_Unpack(argc, argv, "oo:setold_ex", &key, &value))
+		goto err;
+	nsi = DeeType_NSI(Dee_TYPE(self));
+	if (nsi && nsi->nsi_class == TYPE_SEQX_CLASS_MAP && nsi->nsi_maplike.nsi_updateold) {
+		int error;
+		error = (*nsi->nsi_maplike.nsi_updateold)(self, key, value, &old_value);
+		if unlikely(error < 0)
+			goto err;
+		if (error == 1) {
+			result = DeeTuple_Pack(2, Dee_True, old_value);
+			Dee_Decref_unlikely(old_value);
+		} else {
+			result = DeeTuple_Pack(2, Dee_False, Dee_None);
+		}
+		return result;
+	}
+
+	/* Fallback: must use thread-unsafe (multi-step) operations. */
+	old_value = DeeObject_GetItemDef(self, key, ITER_DONE);
+	if (ITER_ISOK(old_value)) {
+		if unlikely(DeeObject_SetItem(self, key, value)) {
+			Dee_Decref(old_value);
+			goto err;
+		}
+		result = DeeTuple_Pack(2, Dee_True, old_value);
+		Dee_Decref_unlikely(old_value);
+		return result;
+	}
+	if unlikely(!old_value)
+		goto err;
+	return DeeTuple_Pack(2, Dee_False, Dee_None);
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+map_setnew_ex(DeeObject *self, size_t argc, DeeObject *const *argv) {
+	struct type_nsi const *nsi;
+	DREF DeeObject *result, *old_value;
+	DeeObject *key, *value;
+	if (DeeArg_Unpack(argc, argv, "oo:setnew_ex", &key, &value))
+		goto err;
+	nsi = DeeType_NSI(Dee_TYPE(self));
+	if (nsi && nsi->nsi_class == TYPE_SEQX_CLASS_MAP && nsi->nsi_maplike.nsi_insertnew) {
+		int error;
+		error = (*nsi->nsi_maplike.nsi_insertnew)(self, key, value, &old_value);
+		if unlikely(error < 0)
+			goto err;
+		if (error == 0) {
+			result = DeeTuple_Pack(2, Dee_True, Dee_None);
+		} else {
+			result = DeeTuple_Pack(2, Dee_False, old_value);
+			Dee_Decref_unlikely(old_value);
+		}
+		return result;
+	}
+
+	/* Fallback: must use thread-unsafe (multi-step) operations. */
+	old_value = DeeObject_GetItemDef(self, key, ITER_DONE);
+	if (ITER_ISOK(old_value)) {
+		result = DeeTuple_Pack(2, Dee_False, old_value);
+		Dee_Decref_unlikely(old_value);
+		return result;
+	}
+	if unlikely(!old_value)
+		goto err;
+	if unlikely(DeeObject_SetItem(self, key, value))
+		goto err;
+	return DeeTuple_Pack(2, Dee_True, Dee_None);
+err:
+	return NULL;
+}
+
+#ifndef CONFIG_NO_DEEMON_100_COMPAT
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+map_insert_all(DeeObject *self, size_t argc, DeeObject *const *argv) {
+	return DeeObject_CallAttrString(self, "update", argc, argv);
+}
+#endif /* !CONFIG_NO_DEEMON_100_COMPAT */
+
 
 
 
 DOC_DEF(map_get_doc,
         "(key,def=!N)->\n"
         "#r{The value associated with @key or @def when @key has no value associated}");
-
 DOC_DEF(map_byhash_doc,
         "(template:?O)->?S?T2?O?O\n"
         "#ptemplate{The object who's hash should be used to search for collisions}"
         "Same as ?Abyhash?DSequence, but rather than comparing the hashes of the "
         /**/ "key-value pairs, search for pairs where the key matches the hash of @template");
+DOC_DEF(map_setdefault_doc,
+        "(key,def=!N)->\n"
+        "#r{The object currently assigned to @key}"
+        "Lookup @key in @this ?. and return its value if found. "
+        /**/ "Otherwise, assign @def to @key and return it instead");
+DOC_DEF(map_pop_doc,
+        "(key)->\n"
+        "(key,def)->\n"
+        "#tKeyError{No @def was given and @key was not found}"
+        "Delete @key from @this ?. and return its previously assigned "
+        /**/ "value or @def when @key had no item associated");
+DOC_DEF(map_popitem_doc,
+        "->?T2?O?O\n"
+        "#r{A random pair key-value pair that has been removed}"
+        "#tValueError{@this ?. was empty}");
+DOC_DEF(map_clear_doc,
+        "()\n"
+        "Clear all values from @this ?.");
+DOC_DEF(map_update_doc,
+        "(items:?S?T2?O?O)\n"
+        "Iterate @items and unpack each element into 2 others, "
+        /**/ "using them as key and value to insert into @this ?.");
+DOC_DEF(map_setold_doc,
+        "(key,value)->?Dbool\n"
+        "#r{Indicative of @value having been assigned to @key}"
+        "Assign @value to @key, only succeeding when @key already existed to begin with");
+DOC_DEF(map_setnew_doc,
+        "(key,value)->?Dbool\n"
+        "#r{Indicative of @value having been assigned to @key}"
+        "Assign @value to @key, only succeeding when @key didn't exist before");
+DOC_DEF(map_setold_ex_doc,
+        "(key,value)->?T2?Dbool?O\n"
+        "#r{A pair of values (new-value-was-assigned, old-value-or-none)}"
+        "Same as ?#setold but also return the previously assigned value");
+DOC_DEF(map_setnew_ex_doc,
+        "(key,value)->?T2?Dbool?O\n"
+        "#r{A pair of values (new-value-was-assigned, old-value-or-none)}"
+        "Same as ?#setnew but return the previously assigned value on failure");
 
 INTDEF struct type_method tpconst map_methods[];
 INTERN_TPCONST struct type_method tpconst map_methods[] = {
+	/* Default operations for all mappings. */
 	TYPE_METHOD(STR_get, &map_get, DOC_GET(map_get_doc)),
 	TYPE_KWMETHOD("byhash", &map_byhash, DOC_GET(map_byhash_doc)),
+
+	/* Default operations for modifiable mappings. */
+	TYPE_METHOD("setdefault", &map_setdefault, DOC_GET(map_setdefault_doc)),
+	TYPE_METHOD("pop", &map_pop, DOC_GET(map_pop_doc)),
+	TYPE_METHOD("popitem", &map_popitem, DOC_GET(map_popitem_doc)),
+	TYPE_METHOD("clear", &map_clear, DOC_GET(map_clear_doc)),
+	TYPE_METHOD("update", &map_update, DOC_GET(map_update_doc)),
+	TYPE_METHOD("setold", &map_setold, DOC_GET(map_setold_doc)),
+	TYPE_METHOD("setnew", &map_setnew, DOC_GET(map_setnew_doc)),
+	TYPE_METHOD("setold_ex", &map_setold_ex, DOC_GET(map_setold_ex_doc)),
+	TYPE_METHOD("setnew_ex", &map_setnew_ex, DOC_GET(map_setnew_ex_doc)),
+
+	/* Old function names. */
+#ifndef CONFIG_NO_DEEMON_100_COMPAT
+	TYPE_METHOD("insert_all", &map_insert_all,
+	            "(items:?S?T2?O?O)\n"
+	            "A deprecated alias for ?#update"),
+#endif /* !CONFIG_NO_DEEMON_100_COMPAT */
 	TYPE_METHOD_END
 };
 

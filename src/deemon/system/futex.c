@@ -419,6 +419,7 @@ struct futex_controller {
 #define futex_controller_free(self) DeeObject_FREE(self)
 
 /* Define the futex-controller tree access API */
+DECL_END
 #define RBTREE_LEFT_LEANING
 #define RBTREE(name)            futex_tree_##name
 #define RBTREE_T                struct futex_controller
@@ -431,6 +432,7 @@ struct futex_controller {
 #define RBTREE_DECL             PRIVATE
 #define RBTREE_IMPL             PRIVATE
 #include <hybrid/sequence/rbtree-abi.h>
+DECL_BEGIN
 
 
 /* Lock for the Futex tree controls below. */

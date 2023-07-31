@@ -2046,7 +2046,7 @@ dict_setold_ex(Dict *self, size_t argc, DeeObject *const *argv) {
 		goto err;
 	if (error == 1) {
 		result = DeeTuple_Pack(2, Dee_True, old_value);
-		Dee_Decref(old_value);
+		Dee_Decref_unlikely(old_value);
 	} else {
 		result = DeeTuple_Pack(2, Dee_False, Dee_None);
 	}
@@ -2123,55 +2123,29 @@ err:
  */
 
 DOC_REF(map_get_doc);
+DOC_REF(map_pop_doc);
+DOC_REF(map_clear_doc);
+DOC_REF(map_popitem_doc);
+DOC_REF(map_setdefault_doc);
+DOC_REF(map_setold_doc);
+DOC_REF(map_setnew_doc);
+DOC_REF(map_setold_ex_doc);
+DOC_REF(map_setnew_ex_doc);
+DOC_REF(map_update_doc);
 DOC_REF(map_byhash_doc);
 
 PRIVATE struct type_method tpconst dict_methods[] = {
 	TYPE_METHOD(STR_get, &dict_get, DOC_GET(map_get_doc)),
-	TYPE_METHOD(STR_pop, &dict_pop,
-	            "(key)->\n"
-	            "(key,def)->\n"
-	            "#tKeyError{No @def was given and @key was not found}"
-	            "Delete @key from @this and return its previously assigned "
-	            /**/ "value or @def when @key had no item associated"),
-	TYPE_METHOD(STR_clear, &dict_doclear,
-	            "()\n"
-	            "Clear all values from @this ?."),
-	TYPE_METHOD("popitem", &dict_popsomething,
-	            "->?T2?O?O\n"
-	            "#r{A random pair key-value pair that has been removed}"
-	            "#tValueError{@this ?. was empty}"),
-	TYPE_METHOD("setdefault", &dict_setdefault,
-	            "(key,def=!N)->\n"
-	            "#r{The object currently assigned to @key}"
-	            "Lookup @key in @this ?. and return its value if found. "
-	            /**/ "Otherwise, assign @def to @key and return it instead"),
-	TYPE_METHOD("setold", &dict_setold,
-	            "(key,value)->?Dbool\n"
-	            "#r{Indicative of @value having been assigned to @key}"
-	            "Assign @value to @key, only succeeding when @key already existed to begin with"),
-	TYPE_METHOD("setnew", &dict_setnew,
-	            "(key,value)->?Dbool\n"
-	            "#r{Indicative of @value having been assigned to @key}"
-	            "Assign @value to @key, only succeeding when @key didn't exist before"),
-	TYPE_METHOD("setold_ex", &dict_setold_ex,
-	            "(key,value)->?T2?Dbool?O\n"
-	            "#r{A pair of values (new-value-was-assigned, old-value-or-none)}"
-	            "Same as #setold but also return the previously assigned object"),
-	TYPE_METHOD("setnew_ex", &dict_setnew_ex,
-	            "(key,value)->?T2?Dbool?O\n"
-	            "#r{A pair of values (new-value-was-assigned, old-value-or-none)}"
-	            "Same as #setnew but return the previously assigned object on failure"),
-	TYPE_METHOD("update", &dict_update,
-	            "(items:?S?T2?O?O)\n"
-	            "Iterate @items and unpack each element into 2 others, "
-	            /**/ "using them as key and value to insert into @this ?."),
+	TYPE_METHOD(STR_pop, &dict_pop, DOC_GET(map_pop_doc)),
+	TYPE_METHOD(STR_clear, &dict_doclear, DOC_GET(map_clear_doc)),
+	TYPE_METHOD("popitem", &dict_popsomething, DOC_GET(map_popitem_doc)),
+	TYPE_METHOD("setdefault", &dict_setdefault, DOC_GET(map_setdefault_doc)),
+	TYPE_METHOD("setold", &dict_setold, DOC_GET(map_setold_doc)),
+	TYPE_METHOD("setnew", &dict_setnew, DOC_GET(map_setnew_doc)),
+	TYPE_METHOD("setold_ex", &dict_setold_ex, DOC_GET(map_setold_ex_doc)),
+	TYPE_METHOD("setnew_ex", &dict_setnew_ex, DOC_GET(map_setnew_ex_doc)),
+	TYPE_METHOD("update", &dict_update, DOC_GET(map_update_doc)),
 	TYPE_KWMETHOD("byhash", &dict_byhash, DOC_GET(map_byhash_doc)),
-#ifndef CONFIG_NO_DEEMON_100_COMPAT
-	/* Old function names. */
-	TYPE_METHOD("insert_all", &dict_update,
-	            "(items:?S?T2?O?O)\n"
-	            "A deprecated alias for ?#update"),
-#endif /* !CONFIG_NO_DEEMON_100_COMPAT */
 	TYPE_METHOD_END
 };
 

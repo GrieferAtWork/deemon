@@ -445,15 +445,15 @@ struct Dee_type_nsi {
 
 			/* Update an existing mapping element
 			 * @param: p_oldvalue: When non-NULL, store a reference to the old item here.
-			 * @return: 1:  The existing key was updated.
-			 * @return: 0: `key' doesn't exist. (*p_oldvalue is left unchanged)
+			 * @return: 1:  The existing key was updated (*p_oldvalue is set to the previous value)
+			 * @return: 0:  `key' doesn't exist. (*p_oldvalue is left unchanged)
 			 * @return: -1: Error. */
 			WUNUSED_T NONNULL_T((1, 2, 3)) int             (DCALL *nsi_updateold)(DeeObject *self, DeeObject *key, DeeObject *value, DREF DeeObject **p_oldvalue);
 
 			/* Insert a new mapping element, but don't change a pre-existing one
 			 * @param: p_oldvalue: When non-NULL, store a reference to the old item here.
-			 * @return: 1:  A new element was inserted.
-			 * @return: 0: `key' doesn't exist. (*p_oldvalue is left unchanged)
+			 * @return: 1:  `key' already exists (*p_oldvalue is set to its associated value)
+			 * @return: 0:  `key' didn't exist and was thus added (*p_oldvalue is left unchanged)
 			 * @return: -1: Error. */
 			WUNUSED_T NONNULL_T((1, 2, 3)) int             (DCALL *nsi_insertnew)(DeeObject *self, DeeObject *key, DeeObject *value, DREF DeeObject **p_oldvalue);
 		}                   nsi_maplike;
