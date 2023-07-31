@@ -134,6 +134,29 @@ DECL_END
 DECL_BEGIN
 
 
+/* Return the value of `{ self = copy self; --self; }' */
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+DeeObject_Predecessor(DeeObject *__restrict self) {
+	self = DeeObject_Copy(self);
+	if likely(self) {
+		if unlikely(DeeObject_Dec(&self))
+			Dee_Clear(self);
+	}
+	return self;
+}
+
+/* Return the value of `{ self = copy self; ++self; }' */
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+DeeObject_Successor(DeeObject *__restrict self) {
+	self = DeeObject_Copy(self);
+	if likely(self) {
+		if unlikely(DeeObject_Inc(&self))
+			Dee_Clear(self);
+	}
+	return self;
+}
+
+
 
 typedef struct rbtree_object RBTree;
 typedef struct {
@@ -1680,6 +1703,26 @@ rbtree_getitem(RBTree *self, DeeObject *key) {
 	return result;
 }
 
+/* Insert `newnode' as the immediate successor of `predecessor' */
+PRIVATE WUNUSED NONNULL((1, 2, 3)) void DCALL
+rbtree_insert_after(RBTree *self,
+                    struct rbtree_node *__restrict predecessor,
+                    struct rbtree_node *__restrict newnode) {
+	if (!predecessor->rbtn_rhs) {
+		predecessor->rbtn_rhs = newnode;
+	} else {
+		predecessor = predecessor->rbtn_rhs;
+		while (predecessor->rbtn_lhs)
+			predecessor = predecessor->rbtn_lhs;
+		predecessor->rbtn_lhs = newnode;
+	}
+	newnode->rbtn_par = predecessor;
+	newnode->rbtn_lhs = NULL;
+	newnode->rbtn_rhs = NULL;
+	rbtree_node_setred(newnode);
+	rbtree_abi__insert_repair(&self->rbt_root, newnode, predecessor);
+}
+
 PRIVATE WUNUSED NONNULL((1, 2, 3, 4)) int DCALL
 rbtree_setrange(RBTree *self, DeeObject *minkey,
                 DeeObject *maxkey, DeeObject *value) {
@@ -1753,7 +1796,7 @@ endread_and_again_insert:
 		Dee_Decref_unlikely(minnode_minkey);
 		if unlikely(error < 0) {
 			Dee_Decref_unlikely(maxnode_maxkey);
-			goto err;
+			goto err_newnode;
 		}
 		minkey_le_minnode_minkey = error != 0;
 
@@ -1761,12 +1804,134 @@ endread_and_again_insert:
 		error = DeeObject_CompareLo(maxkey, maxnode_maxkey);
 		Dee_Decref_unlikely(maxnode_maxkey);
 		if unlikely(error < 0)
-			goto err;
+			goto err_newnode;
 		maxkey_ge_maxnode_maxkey = error == 0;
 
 		RBTree_LockRead(self);
 		if unlikely(self->rbt_version != overlap.rbtdioi_vers)
 			goto endread_and_again_insert;
+	}
+
+	/* Split nodes as necessary */
+	if (!minkey_le_minnode_minkey || !maxkey_ge_maxnode_maxkey) {
+		DREF DeeObject *minkey_pred = NULL;
+		DREF DeeObject *maxkey_succ = NULL;
+		bool remove_empty;
+		struct rbtree_node *remove_minnode;
+		struct rbtree_node *remove_maxnode;
+		RBTree_LockEndRead(self);
+		if (!minkey_le_minnode_minkey) {
+			minkey_pred = DeeObject_Predecessor(minkey);
+			if unlikely(!minkey_pred)
+				goto err_newnode;
+		}
+		if (!maxkey_ge_maxnode_maxkey) {
+			maxkey_succ = DeeObject_Successor(maxkey);
+			if unlikely(!maxkey_succ) {
+				Dee_XDecref(minkey_pred);
+				goto err_newnode;
+			}
+		}
+
+		if (minkey_pred && maxkey_succ && (range.rbtmm_min == range.rbtmm_max)) {
+			/* Special case: Partial overlap on *both* sides with the same node:
+			 * >> local rb = RBTree();
+			 * >> rb[10:20] = "foo";
+			 * >> rb[12:18] = "bar"; // We are here right now
+			 * >> print repr rb;     // RBTree({ [10:11]: "foo", [12:18]: "bar", [19:20]: "foo" })
+			 */
+			struct rbtree_node *lonode;
+			struct rbtree_node *hinode;
+			lonode = range.rbtmm_min;
+			hinode = rbtree_node_alloc();
+			if unlikely(!hinode)
+				goto err_newnode;
+			RBTree_LockWrite(self);
+			if unlikely(self->rbt_version != overlap.rbtdioi_vers) {
+				RBTree_LockEndWrite(self);
+				rbtree_node_free(hinode);
+				Dee_Decref(maxkey_succ);
+				Dee_Decref(minkey_pred);
+				goto again_insert;
+			}
+
+			/* Fill in `hinode' and update `lonode' */
+			hinode->rbtn_maxkey = rbtree_node_get_maxkey(lonode); /* Inherit reference */
+			hinode->rbtn_minkey = maxkey_succ;                    /* Inherit reference */
+			lonode->rbtn_maxkey = minkey_pred;                    /* Inherit reference */
+			hinode->rbtn_value  = rbtree_node_get_value(lonode);
+			Dee_Incref(hinode->rbtn_value);
+
+			/* Insert `newnode' as the immediate successor of `lonode' */
+			rbtree_insert_after(self, lonode, newnode);
+
+			/* Insert `hinode' as the immediate successor of `newnode' */
+			rbtree_insert_after(self, newnode, hinode);
+
+			/* And we're done -> increment the version counter. */
+			++self->rbt_version;
+			RBTree_LockEndWrite(self);
+			return 0;
+		}
+
+		RBTree_LockWrite(self);
+		if unlikely(self->rbt_version != overlap.rbtdioi_vers) {
+/*endwrite_and_again_insert:*/
+			RBTree_LockEndWrite(self);
+			Dee_XDecref(maxkey_succ);
+			Dee_XDecref(minkey_pred);
+			goto again_insert;
+		}
+
+		/* Figure out which nodes will need to be removed */
+		remove_empty   = false;
+		remove_minnode = range.rbtmm_min;
+		remove_maxnode = range.rbtmm_max;
+		if (minkey_pred) {
+			if (remove_minnode == remove_maxnode)
+				remove_empty = true;
+			SWAP(range.rbtmm_min->rbtn_maxkey, minkey_pred);
+			remove_minnode = rbtree_abi_nextnode(range.rbtmm_min);
+		}
+		if (maxkey_succ) {
+			if (remove_minnode == remove_maxnode)
+				remove_empty = true;
+			SWAP(range.rbtmm_max->rbtn_minkey, maxkey_succ);
+			remove_maxnode = rbtree_abi_prevnode(range.rbtmm_max);
+		}
+
+		/* Remove all nodes within the range [remove_minnode,remove_maxnode] */
+		SLIST_INIT(&removed_nodes);
+		if (remove_empty) {
+			/* Special case: no nodes need to be removed. */
+		} else {
+			struct rbtree_node *iter = remove_minnode;
+			for (;;) {
+				struct rbtree_node *next;
+				if (iter == remove_maxnode) {
+					rbtree_abi_removenode(&self->rbt_root, iter);
+					SLIST_INSERT(&removed_nodes, iter, rbtn_link);
+					break;
+				}
+				next = rbtree_abi_nextnode(iter);
+				rbtree_abi_removenode(&self->rbt_root, iter);
+				SLIST_INSERT(&removed_nodes, iter, rbtn_link);
+				iter = next;
+			}
+		}
+
+		/* Insert `newnode' as the immediate successor of `range.rbtmm_min' */
+		rbtree_insert_after(self, range.rbtmm_min, newnode);
+
+		/* And we're done -> increment the version counter. */
+		++self->rbt_version;
+		RBTree_LockEndWrite(self);
+
+		/* Cleanup... */
+		Dee_XDecref(maxkey_succ);
+		Dee_XDecref(minkey_pred);
+		rbtree_node_slist_destroyall(&removed_nodes);
+		return 0;
 	}
 
 	/* Upgrade to a write-lock. */
@@ -1776,14 +1941,6 @@ endread_and_again_insert:
 			RBTree_LockEndWrite(self);
 			goto again_insert;
 		}
-	}
-
-	/* Split nodes as necessary */
-	if (!minkey_le_minnode_minkey || !maxkey_ge_maxnode_maxkey) {
-		RBTree_LockEndWrite(self);
-		/* TODO: Split nodes to override existing values */
-		DeeError_NOTIMPLEMENTED();
-		goto err_newnode;
 	}
 
 	/* Remove old nodes (except for the first one, since
