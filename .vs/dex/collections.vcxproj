@@ -42,6 +42,7 @@
 		<ClCompile Include="..\..\src\dex\collections\deque.c" />
 		<ClCompile Include="..\..\src\dex\collections\fixedlist.c" />
 		<ClCompile Include="..\..\src\dex\collections\libcollections.c" />
+		<ClCompile Include="..\..\src\dex\collections\rangemap.c" />
 		<ClCompile Include="..\..\src\dex\collections\rbtree.c" />
 		<ClCompile Include="..\..\src\dex\collections\udict.c" />
 		<ClCompile Include="..\..\src\dex\collections\unique.c" />

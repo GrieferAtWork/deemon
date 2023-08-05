@@ -56,8 +56,12 @@
 #undef ABS
 #define ABS(x) ((x) < 0 ? -(x) : (x))
 
-#define DOC_SPLIT_ERROR \
-	"#tNotImplemented{Tried to split a node with a key-type that does not support predecessor/successor semantics}"
+
+#define DOC_ERRMSG_NOTHING_SELECTED \
+	"No node selected (iterator has been exhausted)"
+#define DOC_ERROR_RuntimeError_CHANGED \
+	"#tRuntimeError{Sequence changed after iterator was created}"
+
 
 DECL_BEGIN
 
@@ -89,12 +93,13 @@ struct rbtree_node {
 #define rbtree_node_free(self) DeeObject_FREE(Dee_REQUIRES_TYPE(struct rbtree_node *, self))
 
 /* Get referenced objects. */
-#define rbtree_node_get_minkey(self) (self)->rbtn_minkey
-#define rbtree_node_get_maxkey(self) (self)->rbtn_maxkey
-#define rbtree_node_get_value(self)  ((DREF DeeObject *)((uintptr_t)(self)->rbtn_value & ~1))
-#define rbtree_node_isred(self)      ((self)->rbtn_red & 1)
-#define rbtree_node_setred(self)     (void)((self)->rbtn_red |= 1)
-#define rbtree_node_setblack(self)   (void)((self)->rbtn_red &= ~1)
+#define rbtree_node_get_minkey(self)   (self)->rbtn_minkey
+#define rbtree_node_get_maxkey(self)   (self)->rbtn_maxkey
+#define rbtree_node_get_value(self)    ((DREF DeeObject *)((uintptr_t)(self)->rbtn_value & ~1))
+#define rbtree_node_set_value(self, v) (void)((self)->rbtn_value = (DREF DeeObject *)(((uintptr_t)(self)->rbtn_value & 1) | (uintptr_t)(v)))
+#define rbtree_node_isred(self)        ((self)->rbtn_red & 1)
+#define rbtree_node_setred(self)       (void)((self)->rbtn_red |= 1)
+#define rbtree_node_setblack(self)     (void)((self)->rbtn_red &= ~1)
 
 
 /* Define RBTree API using the hybrid templates. */
@@ -817,8 +822,36 @@ DEFINE_RBTREE_NODE_FIELD_GETTER(rbtreeiter_get_maxkey, rbtree_node_get_maxkey, "
 DEFINE_RBTREE_NODE_FIELD_GETTER(rbtreeiter_get_value, rbtree_node_get_value, "value")
 #undef DEFINE_RBTREE_NODE_FIELD_GETTER
 
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+rbtreeiter_set_value(RBTreeIterator *self, DeeObject *value) {
+	DREF DeeObject *oldval;
+	RBTree *tree = self->rbti_tree;
+	struct rbtree_node *node;
+	RBTree_LockWrite(tree);
+	if unlikely(!RBTreeIterator_VersionOK(self, tree))
+		goto err_changed_unlock;
+	node = RBTreeIterator_GetNext(self);
+	if unlikely(!node) {
+		RBTree_LockEndWrite(tree);
+		goto err_unbound;
+	}
+	oldval = rbtree_node_get_value(node);
+	rbtree_node_set_value(node, value);
+	Dee_Incref(value);
+	RBTree_LockEndWrite(tree);
+	Dee_Decref(oldval);
+	return 0;
+err_unbound:
+	return err_unbound_attribute_string(&RBTreeIterator_Type, "value");
+err_changed_unlock:
+	RBTree_LockEndWrite(tree);
+/*err_changed:*/
+	return err_changed_sequence((DeeObject *)tree);
+}
+
+
 #define DEFINE_RBTREE_NODE_SUBNODE_GETTER(rbtreeiter_get_FOO, rbtn_FOO, str_FOO) \
-	PRIVATE WUNUSED NONNULL((1)) DREF RBTreeIterator *DCALL                      \
+	PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL                           \
 	rbtreeiter_get_FOO(RBTreeIterator *__restrict self) {                        \
 		RBTree *tree = self->rbti_tree;                                          \
 		DREF RBTreeIterator *result;                                             \
@@ -831,17 +864,20 @@ DEFINE_RBTREE_NODE_FIELD_GETTER(rbtreeiter_get_value, rbtree_node_get_value, "va
 		if unlikely(!RBTreeIterator_VersionOK(self, tree))                       \
 			goto err_r_changed_unlock;                                           \
 		node = RBTreeIterator_GetNext(self);                                     \
-		if likely(node)                                                          \
-			node = node->rbtn_FOO;                                               \
 		if unlikely(!node)                                                       \
 			goto err_r_unlock_unbound;                                           \
+		node = node->rbtn_FOO;                                                   \
 		result->rbti_version = tree->rbt_version;                                \
 		RBTree_LockEndRead(tree);                                                \
+		if (!node) {                                                             \
+			DeeObject_FREE(result);                                              \
+			return_none;                                                         \
+		}                                                                        \
 		result->rbti_next = node;                                                \
 		Dee_Incref(result->rbti_tree);                                           \
 		DeeObject_Init(result, &RBTreeIterator_Type);                            \
 	done:                                                                        \
-		return result;                                                           \
+		return (DREF DeeObject *)result;                                         \
 	err_r_unlock_unbound:                                                        \
 		RBTree_LockEndRead(tree);                                                \
 		DeeObject_FREE(result);                                                  \
@@ -854,9 +890,9 @@ DEFINE_RBTREE_NODE_FIELD_GETTER(rbtreeiter_get_value, rbtree_node_get_value, "va
 		err_changed_sequence((DeeObject *)tree);                                 \
 		return NULL;                                                             \
 	}
-DEFINE_RBTREE_NODE_SUBNODE_GETTER(rbtreeiter_get_lhs, rbtn_lhs, "lhs")
-DEFINE_RBTREE_NODE_SUBNODE_GETTER(rbtreeiter_get_rhs, rbtn_rhs, "rhs")
-DEFINE_RBTREE_NODE_SUBNODE_GETTER(rbtreeiter_get_parent, rbtn_par, "parent")
+DEFINE_RBTREE_NODE_SUBNODE_GETTER(rbtreeiter_get_lhs, rbtn_lhs, "__lhs__")
+DEFINE_RBTREE_NODE_SUBNODE_GETTER(rbtreeiter_get_rhs, rbtn_rhs, "__rhs__")
+DEFINE_RBTREE_NODE_SUBNODE_GETTER(rbtreeiter_get_parent, rbtn_par, "__parent__")
 #undef DEFINE_RBTREE_NODE_SUBNODE_GETTER
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -875,7 +911,7 @@ rbtreeiter_get_isred(RBTreeIterator *__restrict self) {
 	return_bool_(result);
 err_unlock_unbound:
 	RBTree_LockEndRead(tree);
-	err_unbound_attribute_string(&RBTreeIterator_Type, "isred");
+	err_unbound_attribute_string(&RBTreeIterator_Type, "__isred__");
 	return NULL;
 err_changed_unlock:
 	RBTree_LockEndRead(tree);
@@ -974,34 +1010,51 @@ PRIVATE struct type_cmp rbtreeiter_cmp = {
 PRIVATE struct type_method tpconst rbtreeiter_methods[] = {
 	TYPE_METHOD("removenode", &rbtreeiter_removenode,
 	            "()\n"
-	            "#tValueError{No node is selected by @this ?.}"
+	            "#tValueError{" DOC_ERRMSG_NOTHING_SELECTED "}"
+	            DOC_ERROR_RuntimeError_CHANGED
 	            "Remove the node selected by @this ?. from the associated ?#seq. "
 	            /**/ "Upon success, the node selected by @this ?. will be cleared"),
 	TYPE_METHOD_END
 };
 
 PRIVATE struct type_getset tpconst rbtreeiter_getsets[] = {
-	TYPE_GETTER("minkey", &rbtreeiter_get_minkey, "The lower-bound key of the selected node"),
-	TYPE_GETTER("maxkey", &rbtreeiter_get_maxkey, "The upper-bound key of the selected node"),
-	TYPE_GETTER("value", &rbtreeiter_get_value, "The value of the selected node"),
-	TYPE_GETTER("lhs", &rbtreeiter_get_lhs,
+	TYPE_GETTER("minkey", &rbtreeiter_get_minkey,
+	            DOC_ERROR_RuntimeError_CHANGED
+	            "The lower-bound key of the selected node"),
+	TYPE_GETTER("maxkey", &rbtreeiter_get_maxkey,
+	            DOC_ERROR_RuntimeError_CHANGED
+	            "The upper-bound key of the selected node"),
+	TYPE_GETSET("value", &rbtreeiter_get_value, NULL, &rbtreeiter_set_value,
+	            "#tUnboundAttribute{" DOC_ERRMSG_NOTHING_SELECTED "}"
+	            DOC_ERROR_RuntimeError_CHANGED
+	            "Get or set the value of the selected node"),
+	TYPE_GETTER("__lhs__", &rbtreeiter_get_lhs,
 	            "->?.\n"
-	            "The left child of the selected node (or unbound if no such node exists)"),
-	TYPE_GETTER("rhs", &rbtreeiter_get_rhs,
+	            DOC_ERROR_RuntimeError_CHANGED
+	            "#tUnboundAttribute{" DOC_ERRMSG_NOTHING_SELECTED "}"
+	            "The left child of the selected node (or ?N if no such node exists)"),
+	TYPE_GETTER("__rhs__", &rbtreeiter_get_rhs,
 	            "->?.\n"
-	            "The right child of the selected node (or unbound if no such node exists)"),
-	TYPE_GETTER("parent", &rbtreeiter_get_parent,
+	            DOC_ERROR_RuntimeError_CHANGED
+	            "#tUnboundAttribute{" DOC_ERRMSG_NOTHING_SELECTED "}"
+	            "The right child of the selected node (or ?N if no such node exists)"),
+	TYPE_GETTER("__parent__", &rbtreeiter_get_parent,
 	            "->?.\n"
-	            "The parent of the selected node (or unbound if the node is the root node)"),
-	TYPE_GETTER("isred", &rbtreeiter_get_isred,
+	            DOC_ERROR_RuntimeError_CHANGED
+	            "#tUnboundAttribute{" DOC_ERRMSG_NOTHING_SELECTED "}"
+	            "The parent of the selected node (or ?N if the node is the root node)"),
+	TYPE_GETTER("__isred__", &rbtreeiter_get_isred,
 	            "->?DBool\n"
+	            DOC_ERROR_RuntimeError_CHANGED
+	            "#tUnboundAttribute{" DOC_ERRMSG_NOTHING_SELECTED "}"
 	            "Evaluates to ?t if the selected node is red"),
 	TYPE_GETSET_END
 };
 
 PRIVATE struct type_member tpconst rbtreeiter_members[] = {
 	TYPE_MEMBER_FIELD_DOC("seq", STRUCT_OBJECT, offsetof(RBTreeIterator, rbti_tree), "->?GRBTree"),
-	TYPE_MEMBER_FIELD("__version__", STRUCT_UINTPTR_T | STRUCT_ATOMIC | STRUCT_CONST, offsetof(RBTreeIterator, rbti_version)),
+	TYPE_MEMBER_FIELD("__version__", STRUCT_UINTPTR_T | STRUCT_ATOMIC | STRUCT_CONST,
+	                  offsetof(RBTreeIterator, rbti_version)),
 	TYPE_MEMBER_END
 };
 
@@ -2978,12 +3031,19 @@ rbtree_get_itroot(RBTree *__restrict self) {
 	result->rbti_tree = self;
 	Dee_Incref(self);
 	RBTree_LockRead(self);
-	result->rbti_version = self->rbt_version;
+	if unlikely(!self->rbt_root)
+		goto err_r_unlock_empty;
 	result->rbti_next    = self->rbt_root;
+	result->rbti_version = self->rbt_version;
 	RBTree_LockEndRead(self);
 	DeeObject_Init(result, &RBTreeIterator_Type);
 done:
 	return result;
+err_r_unlock_empty:
+	RBTree_LockEndRead(self);
+	DeeObject_FREE(result);
+	err_empty_sequence((DeeObject *)self);
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeTupleObject *DCALL
@@ -3056,6 +3116,14 @@ rbtree_get_depth(RBTree *__restrict self) {
 	return DeeInt_NewSize(result);
 }
 
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+rbtree_sizeof(RBTree *__restrict self) {
+	size_t result;
+	result = rbtree_nsi_getsize(self);
+	result *= sizeof(struct rbtree_node);
+	result += sizeof(RBTree);
+	return DeeInt_NewSize(result);
+}
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 rbtree_ctor(RBTree *__restrict self) {
@@ -3462,12 +3530,12 @@ PRIVATE struct type_method tpconst rbtree_methods[] = {
 
 	TYPE_METHOD("popfront", &rbtree_popfront,
 	            "->?T3?O?O?O\n"
-	            "#r{the lowest element that used to be stored in @this ?. (s.a. ?#first)}"
-	            "#tValueError{@this ?. was empty}"),
+	            DOC_ERROR_ValueError_EMPTY_SEQUENCE
+	            "#r{the lowest element that used to be stored in @this ?. (s.a. ?#first)}"),
 	TYPE_METHOD("popback", &rbtree_popback,
 	            "->?T3?O?O?O\n"
-	            "#r{the greatest element that used to be stored in @this ?. (s.a. ?#last)}"
-	            "#tValueError{@this ?. was empty}"),
+	            DOC_ERROR_ValueError_EMPTY_SEQUENCE
+	            "#r{the greatest element that used to be stored in @this ?. (s.a. ?#last)}"),
 	TYPE_METHOD("optimize", &rbtree_optimize,
 	            "()\n"
 	            "Search for adjacent nodes that can be merged due to having identical (as per ${===}) "
@@ -3497,14 +3565,14 @@ PRIVATE struct type_method tpconst rbtree_methods[] = {
 	TYPE_METHOD("pop", &rbtree_pop,
 	            "(key)->\n"
 	            "(key,def)->\n"
-	            "#tTypeError{Tried to split a node with a key-type that does not support predecessor/successor semantics}"
+	            DOC_ERROR_NotImplemented_CANNOT_SPLIT
 	            "#tKeyError{No @def was given and @key was not found}"
 	            "Delete @key from @this and return its previously assigned "
 	            /**/ "value or @def when @key had no item associated"),
 	TYPE_METHOD("popitem", &rbtree_popitem,
 	            "->?T3?O?O?O\n"
-	            "#r{A random pair minkey-maxkey-value pair that has been removed}"
-	            "#tValueError{@this ?. was empty}"),
+	            DOC_ERROR_ValueError_EMPTY_SEQUENCE
+	            "#r{A random pair minkey-maxkey-value pair that has been removed}"),
 	TYPE_METHOD("setdefault", &rbtree_setdefault,
 	            "(key,def=!N)->\n"
 	            "#r{The object currently assigned to @key}"
@@ -3512,31 +3580,36 @@ PRIVATE struct type_method tpconst rbtree_methods[] = {
 	            /**/ "Otherwise, assign @def to @key and return it instead"),
 	TYPE_METHOD("update", &rbtree_update,
 	            "(items:?S?T3?O?O?O)\n"
-	            DOC_SPLIT_ERROR
+	            DOC_ERROR_NotImplemented_CANNOT_SPLIT
 	            "Iterate @items and unpack each element into 3 others, "
 	            /**/ "using them as #C{minkey,maxkey,value} to insert into @this ?."),
 	TYPE_METHOD_END
 };
 
 PRIVATE struct type_getset tpconst rbtree_getsets[] = {
-	TYPE_GETTER("itroot", &rbtree_get_itroot,
-	            "->?#Iterator\n"
-	            "Return an ?#Iterator for the root node of the tree"),
 	TYPE_GETTER("first", &rbtree_get_first,
 	            "->?T3?O?O?O\n"
+	            DOC_ERROR_ValueError_EMPTY_SEQUENCE
 	            "Return the triple #C{minkey,maxkey,value} for the lowest range in @this ?."),
 	TYPE_GETTER("last", &rbtree_get_last,
 	            "->?T3?O?O?O\n"
+	            DOC_ERROR_ValueError_EMPTY_SEQUENCE
 	            "Return the triple #C{minkey,maxkey,value} for the greatest range in @this ?."),
-	TYPE_GETTER("depth", &rbtree_get_depth,
+	TYPE_GETTER("__root__", &rbtree_get_itroot,
+	            "->?#Iterator\n"
+	            DOC_ERROR_ValueError_EMPTY_SEQUENCE
+	            "Return an ?#Iterator for the root node of the tree"),
+	TYPE_GETTER("__depth__", &rbtree_get_depth,
 	            "->?Dint\n"
 	            "Depth of the left-most tree node (since the tree is balanced, "
 	            /**/ "this is either the tree's max-depth, or one less than that)"),
+	TYPE_GETTER("__sizeof__", &rbtree_sizeof, "->?Dint"),
 	TYPE_GETSET_END
 };
 
 PRIVATE struct type_member tpconst rbtree_members[] = {
-	TYPE_MEMBER_FIELD("__version__", STRUCT_UINTPTR_T | STRUCT_ATOMIC | STRUCT_CONST, offsetof(RBTree, rbt_version)),
+	TYPE_MEMBER_FIELD_DOC("__version__", STRUCT_UINTPTR_T | STRUCT_ATOMIC | STRUCT_CONST, offsetof(RBTree, rbt_version),
+	                      "Internal version number of the tree (used to invalidate iterators when the tree changes)"),
 	TYPE_MEMBER_END
 };
 
@@ -3572,33 +3645,34 @@ INTERN DeeTypeObject RBTree_Type = {
 	                         "\n"
 
 	                         "delrange(minkey,maxkey)->\n"
-	                         DOC_SPLIT_ERROR
+	                         DOC_ERROR_NotImplemented_CANNOT_SPLIT
 	                         "Delete all nodes intersecting with ${[minkey:maxkey]}, and split nodes where necessary\n"
 	                         "\n"
 
 	                         "setrange(minkey,maxkey,value)->\n"
-	                         DOC_SPLIT_ERROR
+	                         DOC_ERROR_NotImplemented_CANNOT_SPLIT
 	                         "Assign @value to the key-range ${[minkey:maxkey]}\n"
 	                         "\n"
 
 	                         "getitem(key)->\n"
-	                         DOC_SPLIT_ERROR
+	                         DOC_ERROR_KeyError_NO_SUCH_KEY
+	                         DOC_ERROR_NotImplemented_CANNOT_SPLIT
 	                         "#r{The value that is bound to @key}\n"
 	                         "\n"
 
 	                         "delitem(key)->\n"
-	                         DOC_SPLIT_ERROR
+	                         DOC_ERROR_NotImplemented_CANNOT_SPLIT
 	                         "Alias for ?#op:delrange called as ${del this[key:key]}\n"
 	                         "\n"
 
 	                         "setitem(key,value)->\n"
-	                         DOC_SPLIT_ERROR
+	                         DOC_ERROR_NotImplemented_CANNOT_SPLIT
 	                         "Alias for ?#op:setrange called as ${this[key:key] = value}"
 	),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FGC,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
-	/* .tp_base     = */ &DeeMapping_Type,
+	/* .tp_base     = */ &RangeMap_Type,
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {

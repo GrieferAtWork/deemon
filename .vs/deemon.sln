@@ -316,6 +316,7 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{2360741E-FB49-40D4-B684-00007A1732AC}"
 	ProjectSection(SolutionItems) = preProject
 		..\util\test\asnumeric.dee = ..\util\test\asnumeric.dee
+		..\util\test\assert.dee = ..\util\test\assert.dee
 		..\util\test\bsearch.dee = ..\util\test\bsearch.dee
 		..\util\test\byattr.dee = ..\util\test\byattr.dee
 		..\util\test\byhash.dee = ..\util\test\byhash.dee
@@ -324,6 +325,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{2360741E-F
 		..\util\test\cformat.dee = ..\util\test\cformat.dee
 		..\util\test\class-constructors.dee = ..\util\test\class-constructors.dee
 		..\util\test\class-with-multiple-bases.dee = ..\util\test\class-with-multiple-bases.dee
+		..\util\test\collections-rbtree.dee = ..\util\test\collections-rbtree.dee
 		..\util\test\collections.dee = ..\util\test\collections.dee
 		..\util\test\conversion-operator.dee = ..\util\test\conversion-operator.dee
 		..\util\test\cover.dee = ..\util\test\cover.dee

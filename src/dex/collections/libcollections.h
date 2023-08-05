@@ -617,6 +617,280 @@ INTDEF DeeTypeObject URoDict_Type;
 INTDEF DeeTypeObject URoDictIterator_Type;
 
 
+/* Base class for range-based mapping types.
+ *
+ * These sort of types behave similar to (and are derived from) deemon.Mapping,
+ * except that rather than operating on the basis of a singular key for every
+ * contained value, each contained value is mapped to a range of keys (where
+ * this range is a closed range, i.e. include both its lower and upper bound)
+ *
+ * In order to qualify as a RangeMap, a type must implement at least:
+ * >> operator for(): {(Object, Object, Object)...};
+ *
+ * In order to be mutable, sub-classes of RangeMap must implement at least:
+ * >> operator del[:] (minkey: Object, maxkey: Object);
+ * >> operator [:]= (minkey: Object, maxkey: Object, value: Object);
+ *
+ * A mapping of this type behaves as follows:
+ * >>
+ * >> //// Overwritten operators
+ * >>
+ * >> @@Construct an empty @RangeMap object
+ * >> this();
+ * >>
+ * >> @@Return the value of the node containing @key
+ * >> operator [] (key: Object): Object;
+ * >>
+ * >> @@(only if writable)
+ * >> @@Alias for @(del this[key:key])
+ * >> operator del[] (key: Object);
+ * >>
+ * >> @@(only if writable)
+ * >> @@Alias for @(this[key:key] = value)
+ * >> operator []= (key: Object, value: Object);
+ * >>
+ * >> @@(only if writable)
+ * >> @@Delete all nodes that fully overlap with @[minkey:maxkey],
+ * >> @@and trim/split any node (of the 0-2) that partially with it.
+ * >> operator del[:] (minkey: Object, maxkey: Object);
+ * >>
+ * >> @@(only if writable)
+ * >> @@Delete all nodes that fully overlap with @[minkey:maxkey],
+ * >> @@trim/split any node (of the 0-2) that partially with it,
+ * >> @@then construct a new node mapping this node to @value. If
+ * >> @@a simple, primitive key-type is used, and @value is identical
+ * >> @@to that of an adjacent node (as per @===), nodes *may* be
+ * >> @@merged.
+ * >> operator [:]= (minkey: Object, maxkey: Object, value: Object);
+ * >>
+ * >> @@Return the number of nodes within @this @RangeMap
+ * >> operator # (): int;
+ * >>
+ * >> @@Evaluate to true when @this @RangeMap contains at least @1 node.
+ * >> operator bool(): bool;
+ * >>
+ * >> @@Generate a string describing the look of @this @RangeMap as follows:
+ * >> @@>> { [minkey1:maxkey1]: value1, [minkey2:maxkey2]: value1, ... [minkeyN:maxkeyN]: valueN }
+ * >> operator repr(): string;
+ * >>
+ * >> @@Check if a range exists that contains @key
+ * >> operator contains(key: Object): bool;
+ * >>
+ * >> @@Return a proxy describing the union of @this @RangeMap and @other
+ * >> @@Where both @RangeMap contain overlapping nodes, it is undefined
+ * >> @@which value will be bound in the resulting @RangeMap
+ * >> operator | (other: RangeMap): RangeMap;
+ * >> operator | (other: {(Object, Object, Object)...}): RangeMap;
+ * >>
+ * >> @@Return a proxy describing the itersection of @this @RangeMap and @other
+ * >> @@Only ranges that exist in both maps will be included in the resulting @RangeMap,
+ * >> @@though if @this and @other map different values, it is undefined which will
+ * >> @@appear in the resulting @RangeMap.
+ * >> operator & (other: RangeMap): RangeMap;
+ * >> operator & (other: {(Object, Object, Object)...}): RangeMap;
+ * >>
+ * >> @@Return a proxy describing all ranges that appear in only one of the given @(RangeMap)s
+ * >> operator ^ (other: RangeMap): RangeMap;
+ * >> operator ^ (other: {(Object, Object, Object)...}): RangeMap;
+ * >>
+ * >> @@Produce a hash of all minkey/maxkey/value nodes contained within the RangeMap.
+ * >> @@This hash is equal to:
+ * >> @@>> local result = 0;
+ * >> @@>> for (local minkey, maxkey, value: this)
+ * >> @@>>     result ^= deemon.hash(minkey, maxkey, value);
+ * >> @@>> return result;
+ * >> operator hash(): int;
+ * >>
+ * >> @@Check for equality / inequality between @(RangeMap)s
+ * >> operator == (other: RangeMap): bool;
+ * >> operator == (other: {(Object, Object, Object)...}): bool;
+ * >> operator != (other: RangeMap): bool;
+ * >> operator != (other: {(Object, Object, Object)...}): bool;
+ * >>
+ * >>
+ * >>
+ * >> //// Overwritten properties
+ * >>
+ * >> @@The first element of the @RangeMap as a @(minkey, maxkey, value)-tuple
+ * >> @@@throws ValueError @this @RangeMap is empty
+ * >> property first: (Object, Object, Object) = { get() { ... } };
+ * >>
+ * >> @@The last element of the @RangeMap as a @(minkey, maxkey, value)-tuple
+ * >> @@@throws ValueError @this @RangeMap is empty
+ * >> property last: (Object, Object, Object) = { get() { ... } };
+ * >>
+ * >> @@Return a set object that contains all keys that are apart
+ * >> @@of any of the nodes of @this @RangeMap. This set can only
+ * >> @@be enumerated if all used keys implement @(operator copy)
+ * >> @@and @(operator ++). Otherwise, it is still possible to check
+ * >> @@for membership using @(operator contains) (which behaves the
+ * >> @@same as @(RangeMap.operator contains))
+ * >> property keys: {Object...} = { get() { ... } };
+ * >> property iterkeys: Keys.Iterator = { get() { ... } };
+ * >>
+ * >> @@Return the set-type of @keys
+ * >> static property Keys: Type = { get() { ... } };
+ * >>
+ * >> @@Same as @Mapping.values
+ * >> property values: {Object...} = { get() { ... } };
+ * >> property itervalues: Values.Iterator = { get() { ... } };
+ * >>
+ * >> @@Return the sequence-type of @values
+ * >> static property Values: Type = { get() { ... } };
+ * >>
+ * >> @@Return a sequence proxy to enumerate the min/max/value of
+ * >> @@each defined node.
+ * >> property items: {(Object, Object, Object)...} = { get() { ... } };
+ * >> property iteritems: Items.Iterator = { get() { ... } };
+ * >>
+ * >> @@Return the sequence-type of @items
+ * >> static property Items: Type = { get() { ... } };
+ * >>
+ * >> @@Common sub-class of @Keys, @Values, @Items, @AsMap, @AsMap.Keys, @AsMap.Values and @AsMap.Items
+ * >> static property Proxy: Type = { get() { ... } };
+ * >>
+ * >> @@Return the effective iterator type
+ * >> static property Iterator: Type = { get() { ... } };
+ * >>
+ * >>
+ * >>
+ * >> //// Overwritten functions
+ * >>
+ * >> @@Delete all nodes
+ * >> function clear();
+ * >>
+ * >> @@Pop a random node and return it as a @(minkey, maxkey, value)-tuple
+ * >> @@@throws ValueError @this @RangeMap is empty
+ * >> function popitem(): (Object, Object, Object);
+ * >>
+ * >> @@Return the value of the node containing @key, or @def if no such node exists
+ * >> function get(key: Object, def: Object = none): Object;
+ * >>
+ * >> @@Return the value of the node containing @key, or create a new node:
+ * >> @@>> try {
+ * >> @@>>     return this[key];
+ * >> @@>> } catch (KeyError) {
+ * >> @@>> }
+ * >> @@>> this[key] = def;
+ * >> @@>> return def;
+ * >> function setdefault(key: Object, def: Object = none): Object;
+ * >>
+ * >> @@Remove a singular @key without removing the containing node. Same as:
+ * >> @@>> local result = this[key];
+ * >> @@>> del this[key];
+ * >> @@>> return result;
+ * >> @@@throws KeyError No node contains @key
+ * >> function pop(key: Object): Object;
+ * >> function pop(key: Object, def: Object): Object;
+ * >>
+ * >> @@Override from @Mapping.update, taking a sequence of @(minkey, maxkey, value)-tuples
+ * >> function update(items: {(Object, Object, Object)...});
+ * >>
+ * >> @@Remove and return the @first node
+ * >> @@@throws ValueError @this @RangeMap is empty
+ * >> function popfront(): (Object, Object, Object);
+ * >>
+ * >> @@Remove and return the @last node
+ * >> @@@throws ValueError @this @RangeMap is empty
+ * >> function popback(): (Object, Object, Object);
+ * >>
+ * >>
+ * >>
+ * >> //// New properties & functions
+ * >>
+ * >> @@Return a sequence proxy to enumerate the key-ranges of @this @RangeMap
+ * >> property ranges: {(Object, Object)...} = { get() { ... } };
+ * >> property iterranges: Ranges.Iterator = { get() { ... } };
+ * >>
+ * >> @@Return the sequence-type of @ranges
+ * >> static property Ranges: Type = { get() { ... } };
+ * >>
+ * >> @@Same as @this.asmap.items
+ * >> property mapitems: {(Object, Object)...} = { get() { ... } };
+ * >> property itermapitems: MapItems.Iterator = { get() { ... } };
+ * >>
+ * >> @@Return the sequence-type of @mapitems
+ * >> static property MapItems: Type = { get() { ... } };
+ * >>
+ * >> @@Return a sequence proxy to enumerate the nodes of @this @RangeMap
+ * >> property nodes: {Iterator...} = { get() { ... } };
+ * >> property iternodes: Nodes.Iterator = { get() { ... } };
+ * >>
+ * >> @@Return the sequence-type of @nodes
+ * >> static property Nodes: Type = { get() { ... } };
+ * >>
+ * >> @@Return a map-proxy that allows the node-map to be used as
+ * >> @@though it were a regular map. Any operation performed on the
+ * >> @@returned map-like object is forwarded to @this @RangeMap
+ * >> property asmap: {Object: Object} = { get() { ... } };
+ * >> property iterasmap: AsMap.Iterator = { get() { ... } };
+ * >>
+ * >> @@Return the map-type of @asmap
+ * >> static property AsMap: Type = { get() { ... } };
+ * >>
+ * >> @@Return a @(minkey, maxkey, value)-tuple for the node
+ * >> @@containing @key, or @none if no such node exists
+ * >> function locate(key: Object): (Object, Object, Object) | none;
+ * >>
+ * >> @@Return an iterator pointing to the node
+ * >> @@containing @key, or @none if no such node exists
+ * >> function itlocate(key: Object): Iterator | none;
+ * >>
+ * >> @@Return a sequence of @(minkey, maxkey, value)-tuple describing
+ * >> @@all nodes that overlap with the given @[minkey:maxkey] node.
+ * >> function rlocate(minkey: Object, maxkey: Object): {(Object, Object, Object)...};
+ * >>
+ * >> @@Remove and return the node containing @key, or @none if no such node exists
+ * >> function remove(key: Object): (Object, Object, Object) | none;
+ * >>
+ * >> @@Remove all nodes that overlap with @[minkey:maxkey]
+ * >> function rremove(minkey: Object, maxkey: Object): {(Object, Object, Object)...};
+ * >>
+ * >> @@Return the node that precedes the one containing @key, or @none if no such node exists
+ * >> function prevnode(key: Object): (Object, Object, Object) | none;
+ * >>
+ * >> @@Return the node that succeeds the one containing @key, or @none if no such node exists
+ * >> function nextnode(key: Object): (Object, Object, Object) | none;
+ * >>
+ * >> @@Return an iterator to the node that precedes the one containing @key, or @none if no such node exists
+ * >> function itprevnode(key: Object): Iterator | none;
+ * >>
+ * >> @@Return an iterator to the node that succeeds the one containing @key, or @none if no such node exists
+ * >> function itnextnode(key: Object): Iterator | none;
+ * >>
+ * >> @@Try to merge adjacent nodes
+ * >> function optimize();
+ *
+ * And its iterator behaves as follows:
+ * >> @@Remove the node selected by @this iterator. Same as @seq.remove(minkey)
+ * >> @@@throws ValueError No node selected
+ * >> function removenode();
+ * >>
+ * >> @@@throws UnboundAttribute No node selected
+ * >> property minkey: Object = { get() { ... } };
+ * >> @@@throws UnboundAttribute No node selected
+ * >> property maxkey: Object = { get() { ... } };
+ * >> @@@throws UnboundAttribute No node selected
+ * >> property value: Object = { get() { ... } };
+ */
+INTDEF DeeTypeObject RangeMap_Type;
+INTDEF DeeTypeObject RangeMapProxy_Type;
+INTDEF DeeTypeObject RangeMapProxyIterator_Type;
+INTDEF DeeTypeObject RangeMapKeys_Type; /* {Key...} */
+INTDEF DeeTypeObject RangeMapKeysIterator_Type;
+INTDEF DeeTypeObject RangeMapValues_Type; /* {Value...} */
+INTDEF DeeTypeObject RangeMapValuesIterator_Type;
+INTDEF DeeTypeObject RangeMapItems_Type; /* {(MinKey, MaxKey, Value)...} */
+INTDEF DeeTypeObject RangeMapItemsIterator_Type;
+INTDEF DeeTypeObject RangeMapNodes_Type; /* {Iterator...} */
+INTDEF DeeTypeObject RangeMapNodesIterator_Type;
+INTDEF DeeTypeObject RangeMapRanges_Type; /* {(MinKey, MaxKey)...} */
+INTDEF DeeTypeObject RangeMapRangesIterator_Type;
+INTDEF DeeTypeObject RangeMapMapItems_Type; /* {(Key, Value)...} */
+INTDEF DeeTypeObject RangeMapMapItemsIterator_Type;
+INTDEF DeeTypeObject RangeMapAsMap_Type; /* {Key: Value} */
+INTDEF DeeTypeObject RangeMapAsMapIterator_Type;
+
 
 /* R/B tree types:
  * >> import RBTree from collections;
@@ -659,9 +933,23 @@ INTDEF ATTR_COLD NONNULL((1)) int (DCALL err_unbound_index)(DeeObject *__restric
 INTDEF ATTR_COLD NONNULL((1)) int (DCALL err_changed_sequence)(DeeObject *__restrict seq);
 INTDEF ATTR_COLD NONNULL((1, 2)) int (DCALL err_unknown_key)(DeeObject *__restrict map, DeeObject *__restrict key);
 INTDEF ATTR_COLD NONNULL((1, 2)) int (DCALL err_unbound_attribute_string)(DeeTypeObject *__restrict tp, char const *__restrict name);
+INTERN ATTR_COLD NONNULL((1, 2)) int (DCALL err_unknown_attribute_string)(DeeTypeObject *__restrict tp, char const *__restrict name, int access);
+INTDEF ATTR_COLD NONNULL((1)) int (DCALL err_unimplemented_operator)(DeeTypeObject const *__restrict tp, uint16_t operator_name);
+
+#define ATTR_ACCESS_GET     0
+#define ATTR_ACCESS_DEL     1
+#define ATTR_ACCESS_SET     2
+#define ATTR_ACCESS_MASK    3
 
 
 
+/* Common error documentation strings */
+#define DOC_ERROR_ValueError_EMPTY_SEQUENCE \
+	"#tValueError{@this ?. is empty}"
+#define DOC_ERROR_KeyError_NO_SUCH_KEY \
+	"#tKeyError{No such @key}"
+#define DOC_ERROR_NotImplemented_CANNOT_SPLIT \
+	"#tNotImplemented{Tried to split a node with a key-type that does not support predecessor/successor semantics}"
 
 DECL_END
 

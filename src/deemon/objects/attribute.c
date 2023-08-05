@@ -20,28 +20,7 @@
 #ifndef GUARD_DEEMON_OBJECTS_ATTRIBUTE_C
 #define GUARD_DEEMON_OBJECTS_ATTRIBUTE_C 1
 
-#include <deemon/alloc.h>
 #include <deemon/api.h>
-#include <deemon/arg.h>
-#include <deemon/attribute.h>
-#include <deemon/bool.h>
-#include <deemon/class.h>
-#include <deemon/error.h>
-#include <deemon/format.h>
-#include <deemon/module.h>
-#include <deemon/mro.h>
-#include <deemon/none.h>
-#include <deemon/object.h>
-#include <deemon/seq.h>
-#include <deemon/string.h>
-#include <deemon/super.h>
-#include <deemon/system-features.h>
-#include <deemon/util/atomic.h>
-
-#include <hybrid/spcall.h>
-
-#include "../runtime/runtime_error.h"
-#include "../runtime/strings.h"
 
 /* Without our use of SJLJ, gcc emits the following warning (on some platforms):
  * >> /src/deemon/objects/attribute.c: In function ‘enumattriter_next’:
@@ -65,6 +44,28 @@
  *
  * Obviously this is total bogus, so just suppress it. */
 __pragma_GCC_diagnostic_ignored(Wmaybe_uninitialized)
+
+#include <deemon/alloc.h>
+#include <deemon/arg.h>
+#include <deemon/attribute.h>
+#include <deemon/bool.h>
+#include <deemon/class.h>
+#include <deemon/error.h>
+#include <deemon/format.h>
+#include <deemon/module.h>
+#include <deemon/mro.h>
+#include <deemon/none.h>
+#include <deemon/object.h>
+#include <deemon/seq.h>
+#include <deemon/string.h>
+#include <deemon/super.h>
+#include <deemon/system-features.h>
+#include <deemon/util/atomic.h>
+
+#include <hybrid/spcall.h>
+
+#include "../runtime/runtime_error.h"
+#include "../runtime/strings.h"
 
 DECL_BEGIN
 

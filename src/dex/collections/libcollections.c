@@ -85,6 +85,33 @@ INTERN ATTR_COLD NONNULL((1, 2)) int
 	                       tp, name);
 }
 
+PRIVATE char const access_names[4][4] = {
+	/* [ATTR_ACCESS_GET] = */ "get",
+	/* [ATTR_ACCESS_DEL] = */ "del",
+	/* [ATTR_ACCESS_SET] = */ "set",
+	/* [?]               = */ "",
+};
+
+INTERN ATTR_COLD NONNULL((1, 2)) int
+(DCALL err_unknown_attribute_string)(DeeTypeObject *__restrict tp,
+                                     char const *__restrict name,
+                                     int access) {
+	ASSERT_OBJECT(tp);
+	return DeeError_Throwf(&DeeError_AttributeError,
+	                       "Cannot %s unknown attribute `%r.%s'",
+	                       access_names[access & ATTR_ACCESS_MASK],
+	                       tp, name);
+}
+
+INTERN ATTR_COLD NONNULL((1)) int
+(DCALL err_unimplemented_operator)(DeeTypeObject const *__restrict tp, uint16_t operator_name) {
+	struct opinfo const *info = Dee_OperatorInfo(Dee_TYPE(tp), operator_name);
+	ASSERT_OBJECT(tp);
+	return DeeError_Throwf(&DeeError_NotImplemented,
+	                       "Operator `%r.__%s__' is not implemented",
+	                       tp, info ? info->oi_sname : "??" "?");
+}
+
 
 
 PRIVATE struct dex_symbol symbols[] = {
@@ -92,6 +119,7 @@ PRIVATE struct dex_symbol symbols[] = {
 	{ "FixedList", (DeeObject *)&FixedList_Type },
 	{ "UniqueDict", (DeeObject *)&UDict_Type },
 	{ "UniqueSet", (DeeObject *)&USet_Type },
+	{ "RangeMap", (DeeObject *)&RangeMap_Type },
 	{ "RBTree", (DeeObject *)&RBTree_Type },
 	{ NULL }
 };

@@ -431,9 +431,9 @@ INTERN_TPCONST struct type_method tpconst map_methods[] = {
 
 typedef struct {
 	OBJECT_HEAD
-	DREF DeeObject  *mpi_iter; /* [1..1][const] The iterator for enumerating `mpi_map'. */
-	DREF DeeObject  *mpi_map;  /* [1..1][const] The mapping object for which this is a proxy. */
-	struct type_nsi const *mpi_nsi;  /* [0..1][const][->nsi_class == TYPE_SEQX_CLASS_MAP] If available, the NSI interface of the map. */
+	DREF DeeObject        *mpi_iter; /* [1..1][const] The iterator for enumerating `mpi_map'. */
+	DREF DeeObject        *mpi_map;  /* [1..1][const] The mapping object for which this is a proxy. */
+	struct type_nsi const *mpi_nsi;  /* [0..1][const][->nsi_class == TYPE_SEQX_CLASS_MAP] If available, the NSI interface of `mpi_map'. */
 } MapProxyIterator;
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
@@ -507,6 +507,11 @@ PRIVATE NONNULL((1, 2)) void DCALL
 proxy_iterator_visit(MapProxyIterator *__restrict self, dvisit_t proc, void *arg) {
 	Dee_Visit(self->mpi_iter);
 	Dee_Visit(self->mpi_map);
+}
+
+PRIVATE NONNULL((1)) int DCALL
+proxy_iterator_bool(MapProxyIterator *__restrict self) {
+	return DeeObject_Bool(self->mpi_iter);
 }
 
 PRIVATE struct type_member tpconst proxy_iterator_members[] = {
@@ -592,7 +597,7 @@ PRIVATE DeeTypeObject DeeMappingProxyIterator_Type = {
 	/* .tp_cast = */ {
 		/* .tp_str  = */ NULL,
 		/* .tp_repr = */ NULL,
-		/* .tp_bool = */ NULL
+		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&proxy_iterator_bool
 	},
 	/* .tp_call          = */ NULL,
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&proxy_iterator_visit,
@@ -1848,17 +1853,17 @@ PRIVATE struct type_getset tpconst map_getsets[] = {
 	            "Construct a wrapper for @this mapping that behaves like a generic class object, "
 	            /**/ "such that any attribute address ${this.byattr.foo} behaves like ${this[\"foo\"]} "
 	            /**/ "(during all of $get, $del and $set).\n"
-	            "Note that the returned object doesn't implement the ?DSequence- or ?DMapping "
+	            "Note that the returned object doesn't implement the ?DSequence- or ?. "
 	            /**/ "interfaces, but instead simply behaves like a completely generic object.\n"
 	            "This attribute only makes sense if @this mapping behaves like ${{string: Object}}."),
 	TYPE_GETTER(STR_frozen, &DeeRoDict_FromSequence,
 	            "->?#Frozen\n"
 	            "Returns a read-only (frozen) copy of @this ?."),
-	/* TODO: keytype->?DType
+	/* TODO: KeyType->?DType
 	 *       Check if the type of @this overrides the ?#KeyType class attribute.
 	 *       If so, return its value; else, return the common base-class of all
 	 *       keys in @this ?.. When @this is empty, ?O is returned.
-	 * TODO: valuetype->?DType
+	 * TODO: ValueType->?DType
 	 *       Check if the type of @this overrides the ?#ValueType class attribute.
 	 *       If so, return its value; else, return the common base-class of all
 	 *       values in @this ?.. When @this is empty, ?O is returned. */
@@ -1919,7 +1924,7 @@ PRIVATE struct type_getset tpconst map_class_getsets[] = {
 	TYPE_GETTER(STR_Iterator, &map_iterator_get,
 	            "->?DType\n"
 	            "Returns the iterator class used by instances of @this ?. type\n"
-	            "This member must be overwritten by sub-classes of ?DMapping"),
+	            "This member must be overwritten by sub-classes of ?."),
 	TYPE_GETTER("Frozen", &map_frozen_get,
 	            "->?DType\n"
 	            "Returns the type of sequence returned by the #i:frozen property"),

@@ -362,7 +362,7 @@ struct Dee_type_nsi {
 			 * NOTE: Any object implementing sequence extensions _must_ at
 			 *       the very least provide the operators for `nsi_getsize'!
 			 * NOTE: The `*_fast' variants are allowed to assume:
-			 *      `index < ANY_PREVIOUS(nsi_getsize(ob)))' */
+			 *       `index < ANY_PREVIOUS(nsi_getsize(ob)))' */
 
 			/* [1..1] ERROR: (size_t)-1 */
 			WUNUSED_T NONNULL_T((1))    size_t          (DCALL *nsi_getsize)(DeeObject *__restrict self);
