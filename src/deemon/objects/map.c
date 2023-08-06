@@ -156,10 +156,10 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 map_clear(DeeObject *self, size_t argc, DeeObject *const *argv) {
-	int temp;
 	if (DeeArg_Unpack(argc, argv, ":clear"))
 		goto err;
 	for (;;) {
+		int temp;
 		DREF DeeObject *item, *iter, *key;
 		iter = DeeObject_IterSelf(self);
 		if unlikely(!iter)

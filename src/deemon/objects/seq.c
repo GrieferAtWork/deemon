@@ -4159,7 +4159,7 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 	              "}"),
 
 
-/* Old function names/deprecated functions. */
+	/* Old function names/deprecated functions. */
 #ifndef CONFIG_NO_DEEMON_100_COMPAT
 	TYPE_METHOD("front", &seq_front_deprecated,
 	            "->\n"
