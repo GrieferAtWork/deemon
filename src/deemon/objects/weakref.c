@@ -160,24 +160,8 @@ PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 ob_weakref_assign(WeakRef *__restrict self,
                   DeeObject *__restrict other) {
 	if (DeeWeakRef_Check(other)) {
-#if 1
 		Dee_weakref_copyassign(&self->wr_ref,
 		                       &((WeakRef *)other)->wr_ref);
-#else
-		DREF DeeObject *refobj;
-		refobj = Dee_weakref_lock(&((WeakRef *)other)->wr_ref);
-		if (!refobj) {
-			Dee_weakref_clear(&self->wr_ref);
-		} else {
-#ifdef NDEBUG
-			Dee_weakref_set(&self->wr_ref, refobj);
-#else /* NDEBUG */
-			bool ok = Dee_weakref_set(&self->wr_ref, refobj);
-			ASSERT(ok && "Then how did `other' manage to create one?");
-#endif /* !NDEBUG */
-			Dee_Decref(refobj);
-		}
-#endif
 	} else {
 		/* Assign the given other to our weak reference. */
 		if (!Dee_weakref_set(&self->wr_ref, other))
@@ -189,8 +173,7 @@ ob_weakref_assign(WeakRef *__restrict self,
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 ob_weakref_moveassign(WeakRef *__restrict self,
                       WeakRef *__restrict other) {
-	Dee_weakref_moveassign(&self->wr_ref,
-	                       &other->wr_ref);
+	Dee_weakref_moveassign(&self->wr_ref, &other->wr_ref);
 	return 0;
 }
 

@@ -188,60 +188,78 @@ weakrefs_get(DeeObject *__restrict ob) {
 #define PTRLOCK_ADDR_MASK (~1l)
 #define PTRLOCK_LOCK_MASK 1l
 
-#define GET_POINTER(x) ((uintptr_t)(x)&PTRLOCK_ADDR_MASK)
-#define LOCK_POINTER(x) ptrlock_lock((void **)&(x))
+#define GET_POINTER(x)     ((uintptr_t)(x)&PTRLOCK_ADDR_MASK)
+#define LOCK_POINTER(x)    ptrlock_lock((void **)&(x))
 #define TRYLOCK_POINTER(x) ptrlock_trylock((void **)&(x))
-#define UNLOCK_POINTER(x) ptrlock_unlock((void **)&(x))
-#define WEAKREF_LOCK(x) LOCK_POINTER((x)->wr_next)
+#define UNLOCK_POINTER(x)  ptrlock_unlock((void **)&(x))
+#define WAITFOR_POINTER(x) ptrlock_waitfor((void **)&(x))
+#define WEAKREF_LOCK(x)    LOCK_POINTER((x)->wr_next)
 #define WEAKREF_TRYLOCK(x) TRYLOCK_POINTER((x)->wr_next)
-#define WEAKREF_UNLOCK(x) UNLOCK_POINTER((x)->wr_next)
+#define WEAKREF_UNLOCK(x)  UNLOCK_POINTER((x)->wr_next)
+#define WEAKREF_WAITFOR(x) WAITFOR_POINTER((x)->wr_next)
 
-#define PTRLOCK_LBYTE(self) ((__BYTE_TYPE__ *)(self))[0]
-LOCAL bool DCALL ptrlock_trylock(void **__restrict self) {
-	__BYTE_TYPE__ lold;
+#define WEAKREF_PREV_TRYLOCK(x) TRYLOCK_POINTER(*(x)->wr_pself)
+#define WEAKREF_PREV_UNLOCK(x)  atomic_write((x)->wr_pself, (x))
+
+LOCAL NONNULL((1)) bool DCALL ptrlock_trylock(void **self) {
+	uintptr_t lold;
 	do {
-		lold = atomic_read(&PTRLOCK_LBYTE(self));
+		lold = atomic_read((uintptr_t *)self);
 		if (lold & PTRLOCK_LOCK_MASK)
 			return false;
-	} while (!atomic_cmpxch_weak(&PTRLOCK_LBYTE(self), lold, lold | PTRLOCK_LOCK_MASK));
+	} while (!atomic_cmpxch_weak((uintptr_t *)self, lold, lold | PTRLOCK_LOCK_MASK));
 	return true;
 }
 
-LOCAL void DCALL ptrlock_lock(void **__restrict self) {
-	__BYTE_TYPE__ lold;
+LOCAL NONNULL((1)) void DCALL ptrlock_lock(void **self) {
+	uintptr_t lold;
 again:
 	do {
-		lold = atomic_read(&PTRLOCK_LBYTE(self));
+		lold = atomic_read((uintptr_t *)self);
 		/* Wait while the lock already is in write-mode or has readers. */
 		if (lold & PTRLOCK_LOCK_MASK) {
 			SCHED_YIELD();
 			goto again;
 		}
-	} while (!atomic_cmpxch_weak(&PTRLOCK_LBYTE(self), lold, lold | PTRLOCK_LOCK_MASK));
+	} while (!atomic_cmpxch_weak((uintptr_t *)self, lold, lold | PTRLOCK_LOCK_MASK));
 }
 
-LOCAL void DCALL ptrlock_unlock(void **__restrict self) {
-#ifndef NDEBUG
-	__BYTE_TYPE__ lold;
-	do {
-		lold = atomic_read(&PTRLOCK_LBYTE(self));
-	} while (!atomic_cmpxch_weak(&PTRLOCK_LBYTE(self), lold, lold & ~(PTRLOCK_LOCK_MASK)));
-	ASSERTF((lold & PTRLOCK_LOCK_MASK) != 0, "Pointer was not locked.");
+LOCAL NONNULL((1)) void DCALL ptrlock_waitfor(void **self) {
+	/* Wait while the lock already is in write-mode or has readers. */
+	for (;;) {
+		uintptr_t lold;
+		lold = atomic_read((uintptr_t *)self);
+		if (!(lold & PTRLOCK_LOCK_MASK))
+			break;
+		SCHED_YIELD();
+	}
+}
+
+#ifdef NDEBUG
+#define ptrlock_unlock(self) atomic_and((uintptr_t *)(self), ~(PTRLOCK_LOCK_MASK));
 #else /* NDEBUG */
-	atomic_and(&PTRLOCK_LBYTE(self), ~(PTRLOCK_LOCK_MASK));
+#define ptrlock_unlock(self)                                                            \
+	do {                                                                                \
+		uintptr_t _pl_old = atomic_fetchand((uintptr_t *)(self), ~(PTRLOCK_LOCK_MASK)); \
+		ASSERTF((_pl_old & PTRLOCK_LOCK_MASK) != 0, "Pointer was not locked.");         \
+	}	__WHILE0
 #endif /* !NDEBUG */
-}
 
-#if __SIZEOF_POINTER__ == 4 && __SIZEOF_LONG__ == 4
-#define WEAKREF_BAD_POINTER 0xccccccccul
-#elif __SIZEOF_POINTER__ == 8 && __SIZEOF_LONG__ == 8
-#define WEAKREF_BAD_POINTER 0xccccccccccccccccul
-#elif defined(__SIZEOF_LONG_LONG__) && \
-      __SIZEOF_POINTER__ == 8 && __SIZEOF_LONG_LONG__ == 8
-#define WEAKREF_BAD_POINTER 0xccccccccccccccccull
-#else
-#define WEAKREF_BAD_POINTER -1
-#endif
+#if __SIZEOF_POINTER__ == 4
+#define WEAKREF_BAD_POINTER UINT32_C(0xcccccccc)
+#elif __SIZEOF_POINTER__ == 8
+#define WEAKREF_BAD_POINTER UINT64_C(0xcccccccccccccccc)
+#else /* __SIZEOF_POINTER__ == ... */
+#define WEAKREF_BAD_POINTER (-1)
+#endif /* __SIZEOF_POINTER__ != ... */
+
+#ifdef NDEBUG
+#define WEAKREF_EMPTY_NEXTVAL NULL
+#define WEAKREF_SETBAD(x, T)  (void)0
+#else /* NDEBUG */
+#define WEAKREF_EMPTY_NEXTVAL (struct weakref *)((uintptr_t)WEAKREF_BAD_POINTER & PTRLOCK_ADDR_MASK)
+#define WEAKREF_SETBAD(x, T)  ((x) = (T)WEAKREF_BAD_POINTER)
+#endif /* !NDEBUG */
 
 
 #ifdef __INTELLISENSE__
@@ -267,25 +285,22 @@ again:
 	if unlikely(!WEAKREFS_OK(list, ob))
 		return false;
 	LOCK_POINTER(list->wl_nodes);
-	next           = (struct weakref *)GET_POINTER(list->wl_nodes);
+	next = (struct weakref *)GET_POINTER(list->wl_nodes);
 	self->wr_obj   = ob;
 	self->wr_pself = &list->wl_nodes;
+	self->wr_next  = next;
 	if (next) {
-		ASSERT(next->wr_obj == ob);
 		if unlikely(!WEAKREF_TRYLOCK(next)) {
-			UNLOCK_POINTER(list->wl_nodes);
+			UNLOCK_POINTER(list->wl_nodes); /* WEAKREF_UNLOCK(list) */
 			SCHED_YIELD();
 			goto again;
 		}
+		ASSERT(next->wr_obj == ob);
 		ASSERT(next->wr_pself == &list->wl_nodes);
 		next->wr_pself = &self->wr_next;
-		self->wr_next  = next;
-		WEAKREF_UNLOCK(next);
-	} else {
-		self->wr_next = NULL;
+		WEAKREF_UNLOCK(next);             /* WEAKREF_UNLOCK(next) */
 	}
-	/* NOTE: This also unlocks the weakref list for writing. */
-	atomic_write(&list->wl_nodes, self);
+	atomic_write(&list->wl_nodes, self);  /* WEAKREF_UNLOCK(list) */
 	return true;
 }
 
@@ -303,32 +318,82 @@ PUBLIC NONNULL((1, 2)) void
 #ifndef NDEBUG
 	ASSERT(other->wr_obj != (DeeObject *)WEAKREF_BAD_POINTER);
 #endif /* !NDEBUG */
-#ifndef NDEBUG
-	self->wr_pself = (struct weakref **)WEAKREF_BAD_POINTER;
-	self->wr_next  = (struct weakref *)WEAKREF_BAD_POINTER;
-#endif /* !NDEBUG */
-	self->wr_del = other->wr_del;
+	WEAKREF_SETBAD(self->wr_pself, struct weakref **);
+	self->wr_del  = other->wr_del;
 again:
 	if (other->wr_obj) {
 		WEAKREF_LOCK(other);
 		COMPILER_READ_BARRIER();
 		if likely(other->wr_obj) {
-			if unlikely(!TRYLOCK_POINTER(*other->wr_pself)) {
+			if unlikely(!WEAKREF_PREV_TRYLOCK(other)) {
 				WEAKREF_UNLOCK(other);
 				SCHED_YIELD();
 				goto again;
 			}
 			self->wr_pself = other->wr_pself;
 			self->wr_next  = (struct weakref *)other;
+			self->wr_obj   = other->wr_obj;
 			((struct weakref *)other)->wr_pself = &self->wr_next;
-			WEAKREF_UNLOCK(other);
-			atomic_write(self->wr_pself, self);
+			WEAKREF_UNLOCK(other);     /* WEAKREF_UNLOCK(other); */
+			WEAKREF_PREV_UNLOCK(self); /* WEAKREF_UNLOCK(other->PREV); */
 		} else {
-			atomic_write(&((struct weakref *)other)->wr_next, NULL); /* WEAKREF_UNLOCK(other); */
-			self->wr_obj = NULL;
+			ASSERT(other->wr_next == (struct Dee_weakref *)PTRLOCK_LOCK_MASK);
+			atomic_write(&((struct weakref *)other)->wr_next, WEAKREF_EMPTY_NEXTVAL); /* WEAKREF_UNLOCK(other); */
+			goto set_dst_empty;
 		}
 	} else {
-		self->wr_obj = NULL;
+set_dst_empty:
+		self->wr_obj  = NULL;
+		self->wr_next = WEAKREF_EMPTY_NEXTVAL;
+	}
+}
+
+PUBLIC NONNULL((1, 2)) void DCALL
+Dee_weakref_move(struct weakref *__restrict dst,
+                 struct weakref *__restrict src) {
+	ASSERT(dst != src);
+#ifndef NDEBUG
+	ASSERT(src->wr_obj != (DeeObject *)WEAKREF_BAD_POINTER);
+#endif /* !NDEBUG */
+	dst->wr_del = src->wr_del;
+again:
+	WEAKREF_SETBAD(dst->wr_pself, struct weakref **);
+	if (src->wr_obj) {
+		WEAKREF_LOCK(src);
+		COMPILER_READ_BARRIER();
+		if likely(src->wr_obj) {
+			struct weakref *next;
+			if unlikely(TRYLOCK_POINTER(*src->wr_pself)) {
+				/* Prevent a deadlock. */
+				WEAKREF_UNLOCK(src);
+				SCHED_YIELD();
+				goto again;
+			}
+			next          = (struct weakref *)GET_POINTER(src->wr_next);
+			dst->wr_pself = src->wr_pself;
+			dst->wr_next  = next;
+			dst->wr_obj   = src->wr_obj;
+			if (next) {
+				if unlikely(!WEAKREF_TRYLOCK(next)) {
+					/* Prevent a deadlock. */
+					WEAKREF_UNLOCK(*src->wr_pself);
+					WEAKREF_UNLOCK(src);
+					SCHED_YIELD();
+					goto again;
+				}
+				next->wr_pself = &dst->wr_next;
+				WEAKREF_UNLOCK(next);         /* WEAKREF_UNLOCK(src->NEXT) */
+			}
+			atomic_write(dst->wr_pself, dst); /* WEAKREF_UNLOCK(src->PREV) */
+			WEAKREF_UNLOCK(src);              /* WEAKREF_UNLOCK(src) */
+		} else {
+			WEAKREF_UNLOCK(src);
+			goto set_dst_empty;
+		}
+	} else {
+set_dst_empty:
+		dst->wr_obj  = NULL;
+		dst->wr_next = WEAKREF_EMPTY_NEXTVAL;
 	}
 }
 
@@ -351,75 +416,78 @@ PUBLIC void
 again:
 	if (other->wr_obj) {
 		WEAKREF_LOCK(other);
+#define LOCAL_UNLOCK_other() WEAKREF_UNLOCK(other)
 		COMPILER_READ_BARRIER();
 		if likely(other->wr_obj) {
-			if unlikely(!TRYLOCK_POINTER(*other->wr_pself)) {
-				WEAKREF_UNLOCK(other);
+#define LOCAL_UNLOCK_other__prev() atomic_write(other->wr_pself, other)
+			if unlikely(!WEAKREF_PREV_TRYLOCK(other)) {
+				LOCAL_UNLOCK_other();
 				SCHED_YIELD();
 				goto again;
 			}
+#define LOCAL_UNLOCK_self() WEAKREF_UNLOCK(self)
 			if unlikely(!WEAKREF_TRYLOCK(self)) {
-				struct weakref **p = other->wr_pself;
-				UNLOCK_POINTER(*other->wr_pself);
-				WEAKREF_UNLOCK(other);
-				if unlikely(p == &self->wr_next)
-					return;
-				WEAKREF_LOCK(self);
-				WEAKREF_UNLOCK(self);
+				struct weakref **other_pself = other->wr_pself;
+				LOCAL_UNLOCK_other__prev();
+				LOCAL_UNLOCK_other();
+				if (other_pself == &self->wr_next)
+					return; /* Special case: `self' is the predecessor of `other' */
+				WEAKREF_WAITFOR(self);
 				goto again;
 			}
 			COMPILER_READ_BARRIER();
-			if unlikely(self->wr_obj) {
-				struct weakref *next;
-				if unlikely(!TRYLOCK_POINTER(*self->wr_pself)) {
-#if 0
-					struct weakref **block = self->wr_pself;
-#endif
-					struct weakref **p       = self->wr_pself;
-					struct weakref **other_p = other->wr_pself;
-					WEAKREF_UNLOCK(self);
-					UNLOCK_POINTER(*other->wr_pself);
-					WEAKREF_UNLOCK(other);
-					if unlikely(p == other_p || p == &other->wr_next)
-						return;
+			if (self->wr_obj) {
+				struct weakref *old_self_next;
+				if unlikely(self->wr_obj == other->wr_obj) {
+					/* Special case: both point to the same object -> must clear `other' */
+					LOCAL_UNLOCK_self();
+					LOCAL_UNLOCK_other__prev();
+					LOCAL_UNLOCK_other();
+					return;
+				}
+
+#define LOCAL_UNLOCK_self__prev() WEAKREF_PREV_UNLOCK(self)
+				if unlikely(!WEAKREF_PREV_TRYLOCK(self)) {
+					LOCAL_UNLOCK_self();
+					LOCAL_UNLOCK_other__prev();
+					LOCAL_UNLOCK_other();
 					SCHED_YIELD();
-#if 0 /* Potential SEGFAULT */
-					LOCK_POINTER(*block);
-					UNLOCK_POINTER(*block);
-#endif
 					goto again;
 				}
-				next = (struct weakref *)GET_POINTER(self->wr_next);
-				if (next) {
-					if unlikely(!WEAKREF_TRYLOCK(next)) {
+				old_self_next = (struct weakref *)GET_POINTER(self->wr_next);
+				if (old_self_next) {
+					if unlikely(!WEAKREF_TRYLOCK(old_self_next)) {
 						/* Prevent a deadlock. */
-						WEAKREF_UNLOCK(*self->wr_pself);
-						WEAKREF_UNLOCK(self);
-						UNLOCK_POINTER(*other->wr_pself);
-						WEAKREF_UNLOCK(other);
-						if unlikely(next == other)
+						LOCAL_UNLOCK_self__prev();
+						LOCAL_UNLOCK_self();
+						LOCAL_UNLOCK_other__prev();
+						LOCAL_UNLOCK_other();
+						if unlikely(old_self_next == other)
 							return;
 						SCHED_YIELD();
-#if 0 /* Potential SEGFAULT */
-						WEAKREF_LOCK(next);
-						WEAKREF_UNLOCK(next);
-#endif
 						goto again;
 					}
-					next->wr_pself = self->wr_pself;
-					WEAKREF_UNLOCK(next);
+					old_self_next->wr_pself = self->wr_pself;
+					WEAKREF_UNLOCK(old_self_next); /* LOCAL_UNLOCK_self__self(); */
 				}
-				atomic_write(self->wr_pself, next);
+				atomic_write(self->wr_pself, old_self_next); /* LOCAL_UNLOCK_self__prev(); */
+#undef LOCAL_UNLOCK_self__prev
 			}
+
+			/* Insert `self' before `other' */
 			self->wr_pself = other->wr_pself;
+			self->wr_obj   = other->wr_obj;
 			((struct weakref *)other)->wr_pself = &self->wr_next;
-			WEAKREF_UNLOCK(other);
-			atomic_write(&self->wr_next, other);
-			atomic_write(self->wr_pself, self);
+			WEAKREF_PREV_UNLOCK(self);           /* LOCAL_UNLOCK_other__prev(); */
+			LOCAL_UNLOCK_other();
+			atomic_write(&self->wr_next, other); /* LOCAL_UNLOCK_self(); */
+#undef LOCAL_UNLOCK_self
+#undef LOCAL_UNLOCK_other__prev
 		} else {
-			atomic_write(&((struct weakref *)other)->wr_next, NULL); /* WEAKREF_UNLOCK(other); */
+			atomic_write(&((struct weakref *)other)->wr_next, WEAKREF_EMPTY_NEXTVAL); /* LOCAL_UNLOCK_other(); */
 			Dee_weakref_clear(self);
 		}
+#undef LOCAL_UNLOCK_other
 	} else {
 		Dee_weakref_clear(self);
 	}
@@ -429,150 +497,123 @@ PUBLIC NONNULL((1, 2)) void DCALL
 Dee_weakref_moveassign(struct weakref *self,
                        struct weakref *other) {
 #ifndef NDEBUG
+	ASSERT(self->wr_obj != (DeeObject *)WEAKREF_BAD_POINTER);
 	ASSERT(other->wr_obj != (DeeObject *)WEAKREF_BAD_POINTER);
 #endif /* !NDEBUG */
 	if unlikely(self == other)
 		return;
 again:
-#ifndef NDEBUG
-	self->wr_pself = (struct weakref **)WEAKREF_BAD_POINTER;
-	self->wr_next  = (struct weakref *)WEAKREF_BAD_POINTER;
-#endif /* !NDEBUG */
 	if (other->wr_obj) {
 		WEAKREF_LOCK(other);
+#define LOCAL_UNLOCK_other() WEAKREF_UNLOCK(other)
 		COMPILER_READ_BARRIER();
 		if likely(other->wr_obj) {
-			if (!TRYLOCK_POINTER(*other->wr_pself)) {
-				WEAKREF_UNLOCK(other);
+			struct weakref *next;
+#define LOCAL_UNLOCK_other__prev() atomic_write(other->wr_pself, other)
+			if unlikely(!WEAKREF_PREV_TRYLOCK(other)) {
+				LOCAL_UNLOCK_other();
 				SCHED_YIELD();
 				goto again;
 			}
+			next = (struct weakref *)GET_POINTER(other->wr_next);
+#define LOCAL_UNLOCK_other__next() do { if (next) WEAKREF_UNLOCK(next); } __WHILE0
+			if (next) {
+				if unlikely(!WEAKREF_TRYLOCK(next)) {
+					LOCAL_UNLOCK_other__prev();
+					LOCAL_UNLOCK_other();
+					SCHED_YIELD();
+					goto again;
+				}
+			}
+
+#define LOCAL_UNLOCK_self() WEAKREF_UNLOCK(self)
 			if unlikely(!WEAKREF_TRYLOCK(self)) {
-				struct weakref **p = other->wr_pself;
-				UNLOCK_POINTER(*other->wr_pself);
-				WEAKREF_UNLOCK(other);
-				if unlikely(p == &self->wr_next)
+				if (other->wr_pself == &self->wr_next || self == next) {
+					/* Special case: `self' is a neighbor of `other' */
+					if (next) {
+						next->wr_pself = other->wr_pself;
+						WEAKREF_UNLOCK(next); /* LOCAL_UNLOCK_other__next(); */
+					}
+					atomic_write(other->wr_pself, next); /* LOCAL_UNLOCK_other__prev(); */
+					other->wr_obj = NULL;
+					WEAKREF_SETBAD(other->wr_pself, struct weakref **);
+					atomic_write(&other->wr_next, WEAKREF_EMPTY_NEXTVAL); /* LOCAL_UNLOCK_other(); */
 					return;
-				WEAKREF_LOCK(self);
-				WEAKREF_UNLOCK(self);
+				}
+				LOCAL_UNLOCK_other__next();
+				LOCAL_UNLOCK_other__prev();
+				LOCAL_UNLOCK_other();
+				WEAKREF_WAITFOR(self);
 				goto again;
 			}
 			COMPILER_READ_BARRIER();
-			if unlikely(self->wr_obj) {
-				struct weakref *next;
-				if unlikely(!TRYLOCK_POINTER(*self->wr_pself)) {
-#if 0
-					struct weakref **block = self->wr_pself;
-#endif
-					struct weakref **p       = self->wr_pself;
-					struct weakref **other_p = other->wr_pself;
-					WEAKREF_UNLOCK(self);
-					UNLOCK_POINTER(*other->wr_pself);
-					WEAKREF_UNLOCK(other);
-					if unlikely(p == other_p || p == &other->wr_next)
-						return;
+			if (self->wr_obj) {
+				struct weakref *old_self_next;
+				if unlikely(self->wr_obj == other->wr_obj) {
+					/* Special case: both point to the same object -> must clear `other' */
+					if (next) {
+						next->wr_pself = other->wr_pself;
+						WEAKREF_UNLOCK(next); /* LOCAL_UNLOCK_other__next(); */
+					}
+					atomic_write(other->wr_pself, next); /* LOCAL_UNLOCK_other__prev(); */
+					other->wr_obj = NULL;
+					WEAKREF_SETBAD(other->wr_pself, struct weakref **);
+					atomic_write(&other->wr_next, WEAKREF_EMPTY_NEXTVAL); /* LOCAL_UNLOCK_other(); */
+					LOCAL_UNLOCK_self();
+					return;
+				}
+
+#define LOCAL_UNLOCK_self__prev() WEAKREF_PREV_UNLOCK(self)
+				if unlikely(!WEAKREF_PREV_TRYLOCK(self)) {
+					LOCAL_UNLOCK_self();
+					LOCAL_UNLOCK_other__next();
+					LOCAL_UNLOCK_other__prev();
+					LOCAL_UNLOCK_other();
 					SCHED_YIELD();
-#if 0 /* Potential SEGFAULT */
-					LOCK_POINTER(*block);
-					UNLOCK_POINTER(*block);
-#endif
 					goto again;
 				}
-				next = (struct weakref *)GET_POINTER(self->wr_next);
-				if (next) {
-					if unlikely(!WEAKREF_TRYLOCK(next)) {
+				old_self_next = (struct weakref *)GET_POINTER(self->wr_next);
+				if (old_self_next) {
+					if unlikely(!WEAKREF_TRYLOCK(old_self_next)) {
 						/* Prevent a deadlock. */
-						WEAKREF_UNLOCK(*self->wr_pself);
-						WEAKREF_UNLOCK(self);
-						UNLOCK_POINTER(*other->wr_pself);
-						WEAKREF_UNLOCK(other);
-						if unlikely(next == other)
+						LOCAL_UNLOCK_self__prev();
+						LOCAL_UNLOCK_self();
+						LOCAL_UNLOCK_other__next();
+						LOCAL_UNLOCK_other__prev();
+						LOCAL_UNLOCK_other();
+						if unlikely(old_self_next == other)
 							return;
 						SCHED_YIELD();
-#if 0 /* Potential SEGFAULT */
-						WEAKREF_LOCK(next);
-						WEAKREF_UNLOCK(next);
-#endif
 						goto again;
 					}
-					next->wr_pself = self->wr_pself;
-					WEAKREF_UNLOCK(next);
+					old_self_next->wr_pself = self->wr_pself;
+					WEAKREF_UNLOCK(old_self_next); /* LOCAL_UNLOCK_self__self(); */
 				}
-				atomic_write(self->wr_pself, next);
+				atomic_write(self->wr_pself, old_self_next); /* LOCAL_UNLOCK_self__prev(); */
+#undef LOCAL_UNLOCK_self__prev
 			}
-			{
-				struct weakref *next;
-				next           = (struct weakref *)GET_POINTER(other->wr_next);
-				self->wr_pself = other->wr_pself;
-				self->wr_next  = next;
-				if (next) {
-					if unlikely(!WEAKREF_TRYLOCK(next)) {
-						/* Prevent a deadlock. */
-						WEAKREF_UNLOCK(*other->wr_pself);
-						WEAKREF_UNLOCK(other);
-						SCHED_YIELD();
-						goto again;
-					}
-					next->wr_pself = &self->wr_next;
-					atomic_write(self->wr_pself, self);
-					WEAKREF_UNLOCK(next);
-				} else {
-					atomic_write(self->wr_pself, self);
-				}
-			}
-			/*WEAKREF_UNLOCK(other);*/
-		} else {
-			/*WEAKREF_UNLOCK(other);*/
-			self->wr_obj = NULL;
-		}
-	} else {
-		self->wr_obj = NULL;
-	}
-}
 
-PUBLIC NONNULL((1, 2)) void DCALL
-Dee_weakref_move(struct weakref *__restrict dst,
-                 struct weakref *__restrict src) {
-	ASSERT(dst != src);
-#ifndef NDEBUG
-	ASSERT(src->wr_obj != (DeeObject *)WEAKREF_BAD_POINTER);
-#endif /* !NDEBUG */
-	dst->wr_del = src->wr_del;
-again:
-#ifndef NDEBUG
-	dst->wr_pself = (struct weakref **)WEAKREF_BAD_POINTER;
-	dst->wr_next  = (struct weakref *)WEAKREF_BAD_POINTER;
-#endif /* !NDEBUG */
-	if (src->wr_obj) {
-		WEAKREF_LOCK(src);
-		COMPILER_READ_BARRIER();
-		if likely(src->wr_obj) {
-			struct weakref *next;
-			LOCK_POINTER(*src->wr_pself);
-			next          = (struct weakref *)GET_POINTER(src->wr_next);
-			dst->wr_pself = src->wr_pself;
-			dst->wr_next  = next;
+			self->wr_pself = other->wr_pself;
+			self->wr_obj   = other->wr_obj;
+			other->wr_obj = NULL;
+			WEAKREF_SETBAD(other->wr_pself, struct weakref **);
 			if (next) {
-				if unlikely(!WEAKREF_TRYLOCK(next)) {
-					/* Prevent a deadlock. */
-					WEAKREF_UNLOCK(*src->wr_pself);
-					WEAKREF_UNLOCK(src);
-					SCHED_YIELD();
-					goto again;
-				}
-				next->wr_pself = &dst->wr_next;
-				atomic_write(dst->wr_pself, dst);
-				WEAKREF_UNLOCK(next);
-			} else {
-				atomic_write(dst->wr_pself, dst);
+				next->wr_pself = &self->wr_next;
+				WEAKREF_UNLOCK(next);                             /* LOCAL_UNLOCK_other__next(); */
 			}
-			/*WEAKREF_UNLOCK(src);*/
+			WEAKREF_PREV_UNLOCK(self);                            /* LOCAL_UNLOCK_other__prev(); */
+			atomic_write(&other->wr_next, WEAKREF_EMPTY_NEXTVAL); /* LOCAL_UNLOCK_other(); */
+			atomic_write(&self->wr_next, next);                   /* LOCAL_UNLOCK_self(); */
+#undef LOCAL_UNLOCK_self
+#undef LOCAL_UNLOCK_other__next
+#undef LOCAL_UNLOCK_other__prev
 		} else {
-			/*WEAKREF_UNLOCK(src);*/
-			dst->wr_obj = NULL;
+			atomic_write(&other->wr_next, WEAKREF_EMPTY_NEXTVAL); /* LOCAL_UNLOCK_other(); */
+			Dee_weakref_clear(self);
 		}
+#undef LOCAL_UNLOCK_other
 	} else {
-		dst->wr_obj = NULL;
+		Dee_weakref_clear(self);
 	}
 }
 
@@ -588,28 +629,31 @@ again:
 		COMPILER_READ_BARRIER();
 		if likely(self->wr_obj) {
 			struct weakref *next;
-			LOCK_POINTER(*self->wr_pself);
+			if unlikely(!WEAKREF_PREV_TRYLOCK(self)) {
+				/* Prevent a deadlock. */
+				WEAKREF_UNLOCK(self);
+				SCHED_YIELD();
+				goto again;
+			}
 			next = (struct weakref *)GET_POINTER(self->wr_next);
 			if (next) {
 				if unlikely(!WEAKREF_TRYLOCK(next)) {
 					/* Prevent a deadlock. */
-					WEAKREF_UNLOCK(*self->wr_pself);
+					WEAKREF_PREV_UNLOCK(self);
 					WEAKREF_UNLOCK(self);
 					SCHED_YIELD();
 					goto again;
 				}
 				next->wr_pself = self->wr_pself;
-				WEAKREF_UNLOCK(next);
+				WEAKREF_UNLOCK(next);           /* WEAKREF_UNLOCK(self->NEXT) */
 			}
-			atomic_write(self->wr_pself, next);
+			atomic_write(self->wr_pself, next); /* WEAKREF_UNLOCK(self->PREV) */
 		}
 		/*WEAKREF_UNLOCK(self);*/
 	}
-#ifndef NDEBUG
-	self->wr_pself = (struct weakref **)WEAKREF_BAD_POINTER;
-	self->wr_next  = (struct weakref *)WEAKREF_BAD_POINTER;
-	self->wr_obj   = (DeeObject *)WEAKREF_BAD_POINTER;
-#endif /* !NDEBUG */
+	WEAKREF_SETBAD(self->wr_pself, struct weakref **);
+	WEAKREF_SETBAD(self->wr_next, struct weakref *);
+	WEAKREF_SETBAD(self->wr_obj, DeeObject *);
 }
 
 PUBLIC NONNULL((1)) bool DCALL
@@ -621,9 +665,9 @@ again:
 	if (self->wr_obj) {
 		WEAKREF_LOCK(self);
 		COMPILER_READ_BARRIER();
-		if (self->wr_obj) {
+		if likely(self->wr_obj) {
 			struct weakref *next;
-			if unlikely(!TRYLOCK_POINTER(*self->wr_pself)) {
+			if unlikely(!WEAKREF_PREV_TRYLOCK(self)) {
 				WEAKREF_UNLOCK(self);
 				SCHED_YIELD();
 				goto again;
@@ -632,7 +676,7 @@ again:
 			if (next) {
 				if unlikely(!WEAKREF_TRYLOCK(next)) {
 					/* Prevent a deadlock. */
-					WEAKREF_UNLOCK(*self->wr_pself);
+					WEAKREF_PREV_UNLOCK(self);
 					WEAKREF_UNLOCK(self);
 					SCHED_YIELD();
 					goto again;
@@ -643,12 +687,8 @@ again:
 			atomic_write(self->wr_pself, next);
 			self->wr_obj = NULL;
 		}
-#ifndef NDEBUG
-		self->wr_pself = (struct weakref **)WEAKREF_BAD_POINTER;
-		atomic_write(&self->wr_next, (struct weakref *)((uintptr_t)WEAKREF_BAD_POINTER & PTRLOCK_ADDR_MASK));
-#else /* !NDEBUG */
-		atomic_write(&self->wr_next, NULL);
-#endif /* NDEBUG */
+		WEAKREF_SETBAD(self->wr_pself, struct weakref **);
+		atomic_write(&self->wr_next, WEAKREF_EMPTY_NEXTVAL);
 		return true;
 	}
 	return false;
@@ -663,7 +703,6 @@ PUBLIC NONNULL((1, 2)) bool DCALL
 Dee_weakref_set(struct weakref *__restrict self,
                 DeeObject *__restrict ob) {
 	struct weakref_list *new_list;
-	struct weakref *next;
 	ASSERT_OBJECT(ob);
 	ASSERT(IS_ALIGNED((uintptr_t)self, PTRLOCK_LOCK_MASK + 1));
 	new_list = WEAKREFS_GET(ob);
@@ -675,43 +714,61 @@ again:
 		/* Still the same object. */
 		WEAKREF_UNLOCK(self);
 	} else {
-		/* Delete a previously assigned object. */
-		if (self->wr_obj) {
-			if unlikely(!TRYLOCK_POINTER(*self->wr_pself)) {
+		struct weakref *next;
+		if unlikely(!TRYLOCK_POINTER(new_list->wl_nodes)) {
+			WEAKREF_UNLOCK(self);
+			SCHED_YIELD();
+			goto again;
+		}
+
+		next = (struct weakref *)GET_POINTER(new_list->wl_nodes);
+		if (next) {
+			if unlikely(!WEAKREF_TRYLOCK(next)) {
+				UNLOCK_POINTER(new_list->wl_nodes);
 				WEAKREF_UNLOCK(self);
 				SCHED_YIELD();
 				goto again;
 			}
-			next = (struct weakref *)GET_POINTER(self->wr_next);
-			if (next) {
-				if unlikely(!WEAKREF_TRYLOCK(next)) {
+		}
+
+		/* Delete a previously assigned object. */
+		if (self->wr_obj) {
+			struct weakref *old_self_next;
+			if unlikely(!WEAKREF_PREV_TRYLOCK(self)) {
+				if (next)
+					WEAKREF_UNLOCK(next);            /* WEAKREF_UNLOCK(new_list->FIRST) */
+				UNLOCK_POINTER(new_list->wl_nodes);  /* WEAKREF_UNLOCK(new_list) */
+				WEAKREF_UNLOCK(self);                /* WEAKREF_UNLOCK(self) */
+				SCHED_YIELD();
+				goto again;
+			}
+			old_self_next = (struct weakref *)GET_POINTER(self->wr_next);
+			if (old_self_next) {
+				if unlikely(!WEAKREF_TRYLOCK(old_self_next)) {
 					/* Prevent a deadlock. */
-					WEAKREF_UNLOCK(*self->wr_pself);
-					WEAKREF_UNLOCK(self);
+					WEAKREF_PREV_UNLOCK(self);          /* WEAKREF_UNLOCK(self->PREV) */
+					if (next)
+						WEAKREF_UNLOCK(next);           /* WEAKREF_UNLOCK(new_list->FIRST) */
+					UNLOCK_POINTER(new_list->wl_nodes); /* WEAKREF_UNLOCK(new_list) */
+					WEAKREF_UNLOCK(self);               /* WEAKREF_UNLOCK(self) */
 					SCHED_YIELD();
 					goto again;
 				}
-				next->wr_pself = self->wr_pself;
-				WEAKREF_UNLOCK(next);
+				old_self_next->wr_pself = self->wr_pself;
+				WEAKREF_UNLOCK(old_self_next);           /* WEAKREF_UNLOCK(self->NEXT) */
 			}
-			atomic_write(self->wr_pself, next);
+			atomic_write(self->wr_pself, old_self_next); /* WEAKREF_UNLOCK(self->PREV) */
 		}
 
 		/* Now to re-insert the weakref. */
 		self->wr_pself = &new_list->wl_nodes;
 		self->wr_obj   = ob;
-		LOCK_POINTER(new_list->wl_nodes);
-		next = (struct weakref *)GET_POINTER(new_list->wl_nodes);
 		if (next) {
-			/* Fix the self-pointer of the next object. */
-			WEAKREF_LOCK(next);
 			next->wr_pself = &self->wr_next;
-			atomic_write(&self->wr_next, next);
-			WEAKREF_UNLOCK(next);
-		} else {
-			atomic_write(&self->wr_next, next);
+			WEAKREF_UNLOCK(next);                /* WEAKREF_UNLOCK(new_list->FIRST) */
 		}
-		atomic_write(&new_list->wl_nodes, self);
+		atomic_write(&new_list->wl_nodes, self); /* WEAKREF_UNLOCK(new_list) */
+		atomic_write(&self->wr_next, next);      /* WEAKREF_UNLOCK(self) */
 	}
 	return true;
 }
@@ -736,18 +793,8 @@ PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *
 		WEAKREF_LOCK(self);
 		COMPILER_READ_BARRIER();
 		result = self->wr_obj; /* Re-read in case it changed. */
-		{
-			/* Do an atomic-inc-if-not-zero on the reference counter. */
-			drefcnt_t refcnt;
-			do {
-				refcnt = atomic_read(&result->ob_refcnt);
-				if (!refcnt) {
-					result = NULL;
-					break;
-				}
-			} while (!atomic_cmpxch_weak_or_write(&result->ob_refcnt,
-			                                      refcnt, refcnt + 1));
-		}
+		if (likely(result) && !Dee_IncrefIfNotZero(result))
+			result = NULL;
 		WEAKREF_UNLOCK(self);
 	}
 	return result;
@@ -808,7 +855,7 @@ again:
 				struct weakref *next;
 
 				/* Delete a previously assigned object. */
-				if unlikely(!TRYLOCK_POINTER(*self->wr_pself)) {
+				if unlikely(!WEAKREF_PREV_TRYLOCK(self)) {
 					WEAKREF_UNLOCK(self);
 					SCHED_YIELD();
 					goto again;
@@ -817,86 +864,93 @@ again:
 				if (next) {
 					if unlikely(!WEAKREF_TRYLOCK(next)) {
 						/* Prevent a deadlock. */
-						WEAKREF_UNLOCK(*self->wr_pself);
-						WEAKREF_UNLOCK(self);
+						WEAKREF_PREV_UNLOCK(self); /* WEAKREF_UNLOCK(self->PREV) */
+						WEAKREF_UNLOCK(self);            /* WEAKREF_UNLOCK(self) */
 						SCHED_YIELD();
 						goto again;
 					}
 					next->wr_pself = self->wr_pself;
-					WEAKREF_UNLOCK(next);
+					WEAKREF_UNLOCK(next);                /* WEAKREF_UNLOCK(self->NEXT) */
 				}
-				atomic_write(self->wr_pself, next);
+				atomic_write(self->wr_pself, next);      /* WEAKREF_UNLOCK(self->PREV) */
 
 				/* Now to re-insert the weakref. */
 				self->wr_obj = NULL;
-#ifndef NDEBUG
-				self->wr_pself = (struct weakref **)WEAKREF_BAD_POINTER;
-				atomic_write(&self->wr_next, (struct weakref *)((uintptr_t)WEAKREF_BAD_POINTER & PTRLOCK_ADDR_MASK));
-#else /* !NDEBUG */
-				atomic_write(&self->wr_next, NULL);
-#endif /* NDEBUG */
+				WEAKREF_SETBAD(self->wr_pself, struct weakref **);
+				atomic_write(&self->wr_next, WEAKREF_EMPTY_NEXTVAL); /* WEAKREF_UNLOCK(self) */
 			}
 		} else {
 			struct weakref_list *new_list;
 			new_list = WEAKREFS_GET(new_ob);
 			if unlikely(!WEAKREFS_OK(new_list, new_ob)) {
 				WEAKREF_UNLOCK(self);
-				/* Weak referencing is not supported. */
+				/* Weak referencing is not supported by `new_ob'. */
 				return ITER_DONE;
 			} else if unlikely(old_ob == new_ob) {
+				/* Special case: `old_ob' matches `new_ob' */
 				WEAKREF_UNLOCK(self);
 			} else {
 				struct weakref *next;
+				if (!TRYLOCK_POINTER(new_list->wl_nodes)) {
+					WEAKREF_UNLOCK(self);
+					SCHED_YIELD();
+					goto again;
+				}
+
+				next = (struct weakref *)GET_POINTER(new_list->wl_nodes);
+				if (next) {
+					if (!WEAKREF_TRYLOCK(next)) {
+						UNLOCK_POINTER(new_list->wl_nodes); /* WEAKREF_UNLOCK(new_list) */
+						WEAKREF_UNLOCK(self);               /* WEAKREF_UNLOCK(self) */
+						SCHED_YIELD();
+						goto again;
+					}
+				}
+
 				/* Delete a previously assigned object. */
 				if (old_ob) {
-					LOCK_POINTER(*self->wr_pself);
-					next = (struct weakref *)GET_POINTER(self->wr_next);
-					if (next) {
-						if unlikely(!WEAKREF_TRYLOCK(next)) {
+					struct weakref *old_self_next;
+					if (!WEAKREF_PREV_TRYLOCK(self)) {
+						if (next)
+							WEAKREF_UNLOCK(next);           /* WEAKREF_UNLOCK(new_list->FIRST) */
+						UNLOCK_POINTER(new_list->wl_nodes); /* WEAKREF_UNLOCK(new_list) */
+						WEAKREF_UNLOCK(self);               /* WEAKREF_UNLOCK(self) */
+						SCHED_YIELD();
+						goto again;
+					}
+					old_self_next = (struct weakref *)GET_POINTER(self->wr_next);
+					if (old_self_next) {
+						if unlikely(!WEAKREF_TRYLOCK(old_self_next)) {
 							/* Prevent a deadlock. */
-							WEAKREF_UNLOCK(*self->wr_pself);
-							WEAKREF_UNLOCK(self);
+							WEAKREF_PREV_UNLOCK(self);    /* WEAKREF_UNLOCK(self->PREV) */
+							if (next)
+								WEAKREF_UNLOCK(next);           /* WEAKREF_UNLOCK(new_list->FIRST) */
+							UNLOCK_POINTER(new_list->wl_nodes); /* WEAKREF_UNLOCK(new_list) */
+							WEAKREF_UNLOCK(self);               /* WEAKREF_UNLOCK(self) */
 							SCHED_YIELD();
 							goto again;
 						}
-						next->wr_pself = self->wr_pself;
-						WEAKREF_UNLOCK(next);
+						old_self_next->wr_pself = self->wr_pself;
+						WEAKREF_UNLOCK(old_self_next);           /* WEAKREF_UNLOCK(self->NEXT) */
 					}
-					atomic_write(self->wr_pself, next);
+					atomic_write(self->wr_pself, old_self_next); /* WEAKREF_UNLOCK(self->PREV) */
 				}
 
 				/* Now to re-insert the weakref. */
 				self->wr_pself = &new_list->wl_nodes;
 				self->wr_obj   = new_ob;
-				LOCK_POINTER(new_list->wl_nodes);
-				next = (struct weakref *)GET_POINTER(new_list->wl_nodes);
 				if (next) {
-					/* Fix the self-pointer of the next object. */
-					WEAKREF_LOCK(next);
 					next->wr_pself = &self->wr_next;
-					atomic_write(&self->wr_next, next);
-					WEAKREF_UNLOCK(next);
-				} else {
-					atomic_write(&self->wr_next, next);
+					WEAKREF_UNLOCK(next);                /* WEAKREF_UNLOCK(new_list->FIRST) */
 				}
-				atomic_write(&new_list->wl_nodes, self);
+				atomic_write(&self->wr_next, next);      /* WEAKREF_UNLOCK(self) */
+				atomic_write(&new_list->wl_nodes, self); /* WEAKREF_UNLOCK(new_list) */
 			}
 		}
 	} else if (result != NULL) {
-		drefcnt_t refcnt;
-#if 0 /* Can't happen, because we're locking the weakref */
-		COMPILER_READ_BARRIER();
-		result = self->wr_obj; /* Re-read in case it changed. */
-#endif
 		/* Do an atomic-inc-if-not-zero on the reference counter. */
-		do {
-			refcnt = atomic_read(&result->ob_refcnt);
-			if (!refcnt) {
-				result = NULL;
-				break;
-			}
-		} while (!atomic_cmpxch_weak_or_write(&result->ob_refcnt,
-		                                      refcnt, refcnt + 1));
+		if (!Dee_IncrefIfNotZero(result))
+			result = NULL;
 		WEAKREF_UNLOCK(self);
 	}
 	return result;
@@ -951,7 +1005,10 @@ destroy_weak:
 			list = (struct weakref_list *)((uintptr_t)self + undo_start->tp_weakrefs);
 restart_clear_weakrefs:
 			LOCK_POINTER(list->wl_nodes);
-			if ((iter = (struct weakref *)GET_POINTER(list->wl_nodes)) != NULL) {
+			iter = (struct weakref *)GET_POINTER(list->wl_nodes);
+			if (iter == NULL) {
+				UNLOCK_POINTER(list->wl_nodes);
+			} else {
 				if (!WEAKREF_TRYLOCK(iter)) {
 					/* Prevent deadlock. */
 					UNLOCK_POINTER(list->wl_nodes);
@@ -963,28 +1020,25 @@ restart_clear_weakrefs:
 				if (next) {
 					if (!WEAKREF_TRYLOCK(next)) {
 						/* Prevent deadlock. */
-						WEAKREF_UNLOCK(iter);
-						UNLOCK_POINTER(list->wl_nodes);
+						WEAKREF_UNLOCK(iter);           /* WEAKREF_UNLOCK(list->FIRST) */
+						UNLOCK_POINTER(list->wl_nodes); /* WEAKREF_UNLOCK(list) */
 						SCHED_YIELD();
 						goto restart_clear_weakrefs;
 					}
 					next->wr_pself = &list->wl_nodes;
-					WEAKREF_UNLOCK(next);
+					WEAKREF_UNLOCK(next);    /* WEAKREF_UNLOCK(list->FIRST) */
 				}
 
 				/* Overwrite the weakly referenced object with NULL,
 				 * indicating that the link has been severed. */
-				atomic_write(&iter->wr_obj, NULL);
-				atomic_write(&list->wl_nodes, next);
+				atomic_write(&list->wl_nodes, next); /* WEAKREF_UNLOCK(list) */
+				WEAKREF_SETBAD(iter->wr_pself, struct weakref **);
+				iter->wr_obj = NULL;
+				COMPILER_WRITE_BARRIER();
 				if (iter->wr_del) {
 					(*iter->wr_del)(iter);
 				} else {
-#ifndef NDEBUG
-					iter->wr_pself = (struct weakref **)WEAKREF_BAD_POINTER;
-					atomic_write(&iter->wr_next, (struct weakref *)((uintptr_t)WEAKREF_BAD_POINTER & PTRLOCK_ADDR_MASK));
-#else /* !NDEBUG */
-					atomic_write(&iter->wr_next, NULL);
-#endif /* NDEBUG */
+					atomic_write(&iter->wr_next, WEAKREF_EMPTY_NEXTVAL);
 				}
 				goto restart_clear_weakrefs;
 			}
@@ -1072,7 +1126,8 @@ PUBLIC NONNULL((1)) void
 	struct weakref *iter, *next;
 restart_clear_weakrefs:
 	LOCK_POINTER(list->wl_nodes);
-	if ((iter = (struct weakref *)GET_POINTER(list->wl_nodes)) != NULL) {
+	iter = (struct weakref *)GET_POINTER(list->wl_nodes);
+	if (iter != NULL) {
 		if (!WEAKREF_TRYLOCK(iter)) {
 			/* Prevent deadlock. */
 			UNLOCK_POINTER(list->wl_nodes);
@@ -1084,8 +1139,8 @@ restart_clear_weakrefs:
 		if (next) {
 			if (!WEAKREF_TRYLOCK(next)) {
 				/* Prevent deadlock. */
-				WEAKREF_UNLOCK(iter);
-				UNLOCK_POINTER(list->wl_nodes);
+				WEAKREF_UNLOCK(iter);           /* WEAKREF_UNLOCK(list->FIRST) */
+				UNLOCK_POINTER(list->wl_nodes); /* WEAKREF_UNLOCK(list) */
 				SCHED_YIELD();
 				goto restart_clear_weakrefs;
 			}
@@ -1095,25 +1150,18 @@ restart_clear_weakrefs:
 
 		/* Overwrite the weakly referenced object with NULL,
 		 * indicating that the link has been severed. */
-		atomic_write(&iter->wr_obj, NULL);
 		atomic_write(&list->wl_nodes, next);
+		WEAKREF_SETBAD(iter->wr_pself, struct weakref **);
+		iter->wr_obj = NULL;
+		COMPILER_WRITE_BARRIER();
 		if (iter->wr_del) {
 			(*iter->wr_del)(iter);
 		} else {
-#ifndef NDEBUG
-			iter->wr_pself = (struct weakref **)WEAKREF_BAD_POINTER;
-			atomic_write(&iter->wr_next, (struct weakref *)((uintptr_t)WEAKREF_BAD_POINTER & PTRLOCK_ADDR_MASK));
-#else /* !NDEBUG */
-			atomic_write(&iter->wr_next, NULL);
-#endif /* NDEBUG */
+			atomic_write(&iter->wr_next, WEAKREF_EMPTY_NEXTVAL);
 		}
 		goto restart_clear_weakrefs;
 	}
-#if 1
-	atomic_write(&list->wl_nodes, NULL);
-#else
-	UNLOCK_POINTER(list->wl_nodes);
-#endif
+	atomic_write(&list->wl_nodes, NULL); /* WEAKREF_UNLOCK(list) */
 }
 
 
