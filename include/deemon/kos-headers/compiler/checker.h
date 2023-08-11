@@ -143,6 +143,7 @@
 #define __GCC_HAS_BUILTIN___builtin_va_start
 #define __GCC_HAS_BUILTIN___builtin_va_arg
 #define __GCC_HAS_BUILTIN___builtin_va_end
+#define __GCC_HAS_BUILTIN___builtin_va_copy
 #define __GCC_HAS_BUILTIN___atomic_load_n
 #define __GCC_HAS_BUILTIN___atomic_load
 #define __GCC_HAS_BUILTIN___atomic_store_n
@@ -165,6 +166,18 @@
 #define __GCC_HAS_BUILTIN___atomic_fetch_nand
 #define __GCC_HAS_BUILTIN___builtin_assume
 #define __GCC_HAS_BUILTIN___builtin_choose_expr
+#define __GCC_HAS_BUILTIN___builtin_isgreater
+#define __GCC_HAS_BUILTIN___builtin_isgreaterequal
+#define __GCC_HAS_BUILTIN___builtin_isless
+#define __GCC_HAS_BUILTIN___builtin_islessequal
+#define __GCC_HAS_BUILTIN___builtin_islessgreater
+#define __GCC_HAS_BUILTIN___builtin_isunordered
+#define __GCC_HAS_BUILTIN___builtin_iseqsig
+#define __GCC_HAS_BUILTIN___builtin_isfinite
+#define __GCC_HAS_BUILTIN___builtin_isinf_sign
+#define __GCC_HAS_BUILTIN___builtin_isnormal
+#define __GCC_HAS_BUILTIN___builtin_signbit
+#define __GCC_HAS_BUILTIN___builtin_fpclassify
 
 /************************************************************************/
 /* Checker-specific builtins                                            */
@@ -195,6 +208,23 @@
  * Remove `noderef' from a type/variable and re-return that variable.
  * NOTE: the annotation is only removed for the duration of the current scope */
 #define __GCC_HAS_BUILTIN___builtin_remove_noderef
+
+/* >> bool __builtin_tag_get(char const *name);
+ * Return true/false indicate of the tag `name' currently being enabled,
+ * as  per `__attribute__((tag(...)))' attributes,  as well as preceding
+ * uses of `__builtin_tag_set()'
+ *
+ * When the state of `name' is known, this evaluates to a  compile-time
+ * constant expression. Otherwise, it evaluations to a void-expression. */
+#define __GCC_HAS_BUILTIN___builtin_tag_get
+
+/* >> void __builtin_tag_set(char const *name, bool active);
+ * Set  the state of the tag `name' to `active'. The state of tags can
+ * be read  out using  `__builtin_tag_get()'.  When `active'  isn't  a
+ * compile-time constant expression, the state of `name' is marked  as
+ * unknown, such that `__builtin_tag_get()' for that same tag will not
+ * evaluate to a compile-time constant expression. */
+#define __GCC_HAS_BUILTIN___builtin_tag_set
 
 #ifndef __has_feature
 #define __NO_has_feature
@@ -339,17 +369,26 @@
 /* TODO: `__ATTR_BLOCKING' should be a no-op for now, and places that use it should
  *       explicitly be annotated as THROWS(E_INTERRUPT) (if appropriate). Later on,
  *       this annotation should then become some  special tag that warns if  called
- *       from a `__ATTR_NOBLOCK' function. */
-#define __ATTR_BLOCKING         __checker_attribute__(__throws__(E_INTERRUPT))
-#define __ATTR_BLOCKING_IF(...) __checker_attribute__(__throws__(E_INTERRUPT)) /* XXX: Condition */
+ *       from a `__ATTR_NOBLOCK' or `__ATTR_NOPREEMPT' function. */
+#define __ATTR_BLOCKING         /* nothing */
+#define __ATTR_BLOCKING_IF(...) /* nothing */
 
 #define __ATTR_THROWS(...)      __checker_attribute__(__throws__(__VA_ARGS__))
-#define __ATTR_THROWING         __checker_attribute__(__throws__(...))
+/* TODO: __attribute__((__throws__(code if condition)))
+ *
+ * Here,  `condition' is saved as a code-block  and is evaluated at the call-site
+ * of  the function in question. It can already make use of function arguments by
+ * their name, as well as `__builtin_tag_get()' in order to indicate that certain
+ * exceptions are only thrown in specific contexts. When the expression cannot be
+ * determined  at compile-time, the behavior is the  same as when it evaluates to
+ * true.
+ * >> void task_yield(void) THROWS(E_WOULDBLOCK_PREEMPTED if !PREEMPTION_ENABLED());
+ */
+
 
 #define __ATTR_NOBLOCK          __checker_attribute__(__tag__("NOBLOCK"))
 #define __ATTR_NOBLOCK_IF(...)  __checker_attribute__(__tag__("NOBLOCK")) /* XXX: Condition */
 #define __ATTR_NOPREEMPT        __checker_attribute__(__tag__("NOPREEMPT"), __require_caller_tag__("NOPREEMPT"))
-
 
 #define __ATTR_NORETURN                      __checker_attribute__(__noreturn__)
 #define __ATTR_NOINLINE                      /* Nothing */
@@ -402,6 +441,9 @@
 #define __ATTR_IN(ptr_index)                 __checker_attribute__(__nonnull__(ptr_index))
 #define __ATTR_OUT(ptr_index)                __checker_attribute__(__nonnull__(ptr_index))
 #define __ATTR_INOUT(ptr_index)              __checker_attribute__(__nonnull__(ptr_index))
+#define __ATTR_FDARG(fd_index)               /* Nothing */
+#define __ATTR_FDREAD(fd_index)              /* Nothing */
+#define __ATTR_FDWRITE(fd_index)             /* Nothing */
 #define __ATTR_WARNING(text)                 /* Nothing */
 #define __ATTR_ERROR(text)                   /* Nothing */
 #define __ATTR_SECTION(name)                 /* Nothing */
@@ -462,7 +504,8 @@
 #define __restrict restrict
 #define __restrict__ restrict
 #define __restrict_arr restrict
-#define __register /* Nothing */
+#define __register     /* Nothing */
+#define _Complex       /* Nothing */
 
 #define __COMPILER_HAVE_VARIABLE_LENGTH_ARRAYS
 #define __COMPILER_FLEXIBLE_ARRAY(T, x) T x[]
@@ -513,15 +556,32 @@
 #define __builtin_va_start(ap, last_arg) (void)0
 #define __builtin_va_arg(ap, T)          __builtin_void(*(T *)0)
 #define __builtin_va_end(ap)             (void)0
+#define __builtin_va_copy(dst, src)      (void)((dst) = (src))
 
 #define __COMPILER_HAVE_BUG_BLOATY_CXX_USING 0
 
-/* Atomic builtins (only need to emulate semantics ). */
+/* Floating-point builtins */
+#define __builtin_isgreater(x, y)      __builtin_rvoid(((x) + (y), 0))
+#define __builtin_isgreaterequal(x, y) __builtin_rvoid(((x) + (y), 0))
+#define __builtin_isless(x, y)         __builtin_rvoid(((x) + (y), 0))
+#define __builtin_islessequal(x, y)    __builtin_rvoid(((x) + (y), 0))
+#define __builtin_islessgreater(x, y)  __builtin_rvoid(((x) + (y), 0))
+#define __builtin_isunordered(u, v)    __builtin_rvoid(((u) + (v), 0))
+#define __builtin_iseqsig(x, y)        __builtin_rvoid(((x) + (y), 0))
+#define __builtin_isfinite(x)          __builtin_rvoid((x, 0))
+#define __builtin_isinf_sign(x)        __builtin_rvoid((x, 0))
+#define __builtin_isnormal(x)          __builtin_rvoid((x, 0))
+#define __builtin_signbit(x)           __builtin_rvoid((x, 0))
+#define __builtin_fpclassify(FP_NAN, FP_INFINITE, FP_NORMAL, FP_SUBNORMAL, FP_ZERO, x) \
+	__builtin_rvoid((FP_NAN, FP_INFINITE, FP_NORMAL, FP_SUBNORMAL, FP_ZERO, x, 0))
+
+
+/* Atomic builtins (only need to emulate semantics). */
 #define __atomic_load_n(ptr, memorder)                 __builtin_rvoid(*(ptr))
 #define __atomic_load(ptr, p_ret, memorder)            (void)(__builtin_void(*(p_ret)) = __builtin_rvoid(*(ptr)))
 #define __atomic_store_n(ptr, val, memorder)           (void)(__builtin_void(*(ptr)) = (val))
 #define __atomic_store(ptr, p_val, memorder)           (void)(__builtin_void(*(ptr)) = *(p_val))
-#define __atomic_exchange_n(ptr, val, memorder)        __builtin_rvoid(__builtin_void(*(ptr)) += (val))
+#define __atomic_exchange_n(ptr, val, memorder)        __builtin_rvoid(__builtin_void(*(ptr)) = (val))
 #define __atomic_exchange(ptr, p_val, p_ret, memorder) (void)(*(p_ret) = __atomic_exchange_n(ptr, *(p_val), memorder))
 #define __atomic_compare_exchange_n(ptr, p_expected, desired, weak, success_memorder, failure_memorder) \
 	(!__builtin_rvoid(__builtin_void(*(ptr)) = __builtin_rvoid(*(p_expected) = 0)))
