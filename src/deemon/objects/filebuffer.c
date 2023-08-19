@@ -864,7 +864,9 @@ buffer_seek_or_unlock(Buffer *__restrict self,
 			if (self->fb_cnt >= skipsz) {
 				self->fb_cnt -= skipsz;
 			} else {
-				self->fb_cnt = 0;
+				/* New position lies beyond the current buffer end.
+				 * -> In this case, we must do a full seek. */
+				goto full_seek;
 			}
 		}
 		self->fb_ptr = new_pos;
