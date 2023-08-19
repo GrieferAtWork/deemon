@@ -832,7 +832,11 @@ buffer_seek_or_unlock(Buffer *__restrict self,
 		if (whence == SEEK_SET) {
 			new_abspos = (dpos_t)off;
 		} else {
+			/* Special case: position-query */
+			if (off == 0)
+				return old_abspos;
 			new_abspos = old_abspos + off;
+			off = new_abspos - self->fb_fpos; /* In case we need to do a full seek. */
 		}
 		if unlikely(new_abspos >= INT64_MAX) {
 			DeeError_Throwf(&DeeError_ValueError,
