@@ -41,8 +41,8 @@ local t = Thread(() -> {
 		futex_wait(ftx.word.ref, 0);
 	assert state == "main->thread";
 	assert ftx.word == 1;
-	ftx.word = 2;
 	state = "thread->main";
+	ftx.word = 2;
 	futex_wakeall(ftx.word.ref);
 	return "OK";
 });
