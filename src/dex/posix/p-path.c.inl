@@ -51,8 +51,9 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL posix_path_tailof_f(DeeObject
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL posix_path_driveof_f(DeeObject *__restrict path);
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL posix_path_inctrail_f(DeeObject *__restrict path);
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL posix_path_exctrail_f(DeeObject *__restrict path);
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL posix_path_abspath_f(DeeObject *__restrict path, DeeObject *pwd);
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL posix_path_relpath_f(DeeObject *__restrict path, DeeObject *pwd);
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL posix_path_walklink_f(DeeObject *link, DeeObject *linkname);
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL posix_path_abspath_f(DeeObject *path, DeeObject *pwd);
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL posix_path_relpath_f(DeeObject *path, DeeObject *pwd);
 PRIVATE WUNUSED ATTR_INS(2, 1) DREF DeeObject *DCALL posix_path_joinpath_f(size_t pathc, DeeObject *const *__restrict pathv);
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL posix_path_normalpath_f(DeeObject *__restrict path);
 
@@ -294,8 +295,150 @@ done:
 
 
 
+#ifdef CONFIG_HOST_WINDOWS
+/* Check if `path_str...+=path_len' is a special NT filename */
+PRIVATE WUNUSED NONNULL((1)) bool DCALL
+posix_path_is_nt_special(char const *path_str, size_t path_len) {
+	switch (path_len) {
+#ifdef DEE_SYSTEM_FS_ICASE
+#define eqfscase(a, b) ((a) == (b) || (a) == ((b) - ('A' - 'a')))
+#else /* DEE_SYSTEM_FS_ICASE */
+#define eqfscase(a, b) ((a) == (b))
+#endif /* !DEE_SYSTEM_FS_ICASE */
+
+	case 3:
+		if (eqfscase(path_str[0], 'N') && eqfscase(path_str[1], 'U') && eqfscase(path_str[2], 'L'))
+			goto is_special; /* NUL */
+		if (eqfscase(path_str[0], 'C') && eqfscase(path_str[1], 'O') && eqfscase(path_str[2], 'N'))
+			goto is_special; /* CON */
+		if (eqfscase(path_str[0], 'P') && eqfscase(path_str[1], 'R') && eqfscase(path_str[2], 'N'))
+			goto is_special; /* PRN */
+		if (eqfscase(path_str[0], 'A') && eqfscase(path_str[1], 'U') && eqfscase(path_str[2], 'X'))
+			goto is_special; /* AUX */
+		break;
+
+	case 4:
+		/* COM1, COM2, COM3, COM4, COM5, COM6, COM7, COM8, COM9,
+		 * LPT1, LPT2, LPT3, LPT4, LPT5, LPT6, LPT7, LPT8, LPT9 */
+		if (path_str[3] >= '1' && path_str[3] <= '9' &&
+		    ((eqfscase(path_str[0], 'C') && eqfscase(path_str[1], 'O') && eqfscase(path_str[1], 'M')) ||
+		     (eqfscase(path_str[0], 'L') && eqfscase(path_str[1], 'P') && eqfscase(path_str[1], 'T'))))
+			goto is_special;
+		break;
+
+	case 6:
+		if (eqfscase(path_str[3], 'I') && eqfscase(path_str[4], 'N') && path_str[5] == '$') {
+			if (eqfscase(path_str[0], 'C') && eqfscase(path_str[1], 'O') && eqfscase(path_str[2], 'N'))
+				goto is_special; /* CONIN$ */
+#ifdef CONFIG_WANT_WINDOWS_STD_FILES
+			if (eqfscase(path_str[0], 'S') && eqfscase(path_str[1], 'T') && eqfscase(path_str[2], 'D'))
+				goto is_special; /* STDIN$ */
+#endif /* CONFIG_WANT_WINDOWS_STD_FILES */
+		}
+		break;
+
+	case 7:
+		if (eqfscase(path_str[3], 'O') && eqfscase(path_str[4], 'U') &&
+		    eqfscase(path_str[5], 'T') && path_str[6] == '$') {
+			if (eqfscase(path_str[0], 'C') && eqfscase(path_str[1], 'O') && eqfscase(path_str[2], 'N'))
+				goto is_special; /* CONOUT$ */
+#ifdef CONFIG_WANT_WINDOWS_STD_FILES
+			if (eqfscase(path_str[0], 'S') && eqfscase(path_str[1], 'T') && eqfscase(path_str[2], 'D'))
+				goto is_special; /* STDOUT$ */
+#endif /* CONFIG_WANT_WINDOWS_STD_FILES */
+		}
+#ifdef CONFIG_WANT_WINDOWS_STD_FILES
+		if (eqfscase(path_str[0], 'S') && eqfscase(path_str[1], 'T') && eqfscase(path_str[2], 'D') &&
+		    eqfscase(path_str[3], 'E') && eqfscase(path_str[4], 'R') && eqfscase(path_str[5], 'R') &&
+		    path_str[6] == '$')
+			goto is_special; /* STDERR$ */
+#endif /* CONFIG_WANT_WINDOWS_STD_FILES */
+		break;
+
+#undef eqfscase
+	default:
+		break;
+	}
+	return false;
+is_special:
+	return true;
+}
+#endif /* CONFIG_HOST_WINDOWS */
+
+
+/* Similar to `posix_path_abspath_f()', don't try to get rid of `..' elements,
+ * and use `posix_path_headof_f(linkname)' when `link' isn't an absolute path:
+ * >> if (isabs(link))
+ * >>     return link;
+ * >> linkname = headof(linkname);
+ * >> while (link.startswith("." + FS_SEP))
+ * >>     link = link[#("." + FS_SEP):];
+ * >> return headof(linkname) + link; */
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+posix_path_walklink_f(DeeObject *link, DeeObject *linkname) {
+	DREF DeeObject *result;
+	char const *link_base, *link_start, *link_end;
+	char const *name_base, *name_end;
+
+	/* Check for simple case: `link' is absolute */
+	if (DeeString_IsAbsPath(link))
+		goto return_link;
+
+#ifdef CONFIG_HOST_WINDOWS
+	/* Don't modify special filenames such as `CON' or `NUL' */
+	if (posix_path_is_nt_special(DeeString_STR(link),
+	                             DeeString_SIZE(link)))
+		goto return_link;
+#endif /* CONFIG_HOST_WINDOWS */
+
+	/* Load `linkname' as UTF-8 and check where the containing directory ends. */
+	name_base = DeeString_AsUtf8(linkname);
+	if unlikely(!name_base)
+		goto err;
+	name_end = DeeSystem_BaseName(name_base, WSTR_LENGTH(name_base));
+	ASSERT(name_end >= name_base);
+	if (name_end <= name_base) {
+		/* The link name is empty, meaning the link text
+		 * can just be used as-is and be PWD-relative */
+		goto return_link;
+	}
+
+	/* Load the string as UTF-8 and strip leading `./' */
+	link_base = DeeString_AsUtf8(link);
+	if unlikely(!link_base)
+		goto err;
+	link_start = link_base;
+	link_end   = link_base + WSTR_LENGTH(link_base);
+	while (link_start < link_end &&
+	       link_end[0] == '.' &&
+	       DeeSystem_IsSep(link_end[1]))
+		link_start += 2;
+
+	/* Return the string "{[name_base:name_end)}{[link_start:link_end)}" */
+	{
+		char *dst;
+		size_t name_len = (size_t)(name_end - name_base);
+		size_t link_len = (size_t)(link_end - link_start);
+		result = DeeString_NewBuffer(name_len + link_len);
+		if unlikely(!result)
+			goto err;
+		dst = DeeString_STR(result);
+		dst = (char *)mempcpyc(dst, name_base, name_len, sizeof(char));
+		memcpyc(dst, link_base, link_len, sizeof(char));
+	}
+
+	/* Set the resulting string as UTF-8 */
+	result = DeeString_SetUtf8(result, STRING_ERROR_FIGNORE);
+	return result;
+return_link:
+	return_reference_(link);
+err:
+	return NULL;
+}
+
+
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-posix_path_abspath_f(DeeObject *__restrict path, DeeObject *pwd) {
+posix_path_abspath_f(DeeObject *path, DeeObject *pwd) {
 	DREF DeeObject *result;
 	ASSERT_OBJECT_TYPE_EXACT(path, &DeeString_Type);
 	ASSERT_OBJECT_TYPE_EXACT_OPT(pwd, &DeeString_Type);
@@ -322,72 +465,9 @@ return_unmodified:
 
 #ifdef CONFIG_HOST_WINDOWS
 	/* Don't modify special filenames such as `CON' or `NUL' */
-	{
-		char const *path_str;
-		size_t path_len;
-		path_str = DeeString_STR(path);
-		path_len = DeeString_SIZE(path);
-		switch (path_len) {
-#ifdef DEE_SYSTEM_FS_ICASE
-#define eqfscase(a, b) ((a) == (b) || (a) == ((b) - ('A' - 'a')))
-#else /* DEE_SYSTEM_FS_ICASE */
-#define eqfscase(a, b) ((a) == (b))
-#endif /* !DEE_SYSTEM_FS_ICASE */
-	
-		case 3:
-			if (eqfscase(path_str[0], 'N') && eqfscase(path_str[1], 'U') && eqfscase(path_str[2], 'L'))
-				goto return_unmodified; /* NUL */
-			if (eqfscase(path_str[0], 'C') && eqfscase(path_str[1], 'O') && eqfscase(path_str[2], 'N'))
-				goto return_unmodified; /* CON */
-			if (eqfscase(path_str[0], 'P') && eqfscase(path_str[1], 'R') && eqfscase(path_str[2], 'N'))
-				goto return_unmodified; /* PRN */
-			if (eqfscase(path_str[0], 'A') && eqfscase(path_str[1], 'U') && eqfscase(path_str[2], 'X'))
-				goto return_unmodified; /* AUX */
-			break;
-	
-		case 4:
-			/* COM1, COM2, COM3, COM4, COM5, COM6, COM7, COM8, COM9,
-			 * LPT1, LPT2, LPT3, LPT4, LPT5, LPT6, LPT7, LPT8, LPT9 */
-			if (path_str[3] >= '1' && path_str[3] <= '9' &&
-			    ((eqfscase(path_str[0], 'C') && eqfscase(path_str[1], 'O') && eqfscase(path_str[1], 'M')) ||
-			     (eqfscase(path_str[0], 'L') && eqfscase(path_str[1], 'P') && eqfscase(path_str[1], 'T'))))
-				goto return_unmodified;
-			break;
-	
-		case 6:
-			if (eqfscase(path_str[3], 'I') && eqfscase(path_str[4], 'N') && path_str[5] == '$') {
-				if (eqfscase(path_str[0], 'C') && eqfscase(path_str[1], 'O') && eqfscase(path_str[2], 'N'))
-					goto return_unmodified; /* CONIN$ */
-#ifdef CONFIG_WANT_WINDOWS_STD_FILES
-				if (eqfscase(path_str[0], 'S') && eqfscase(path_str[1], 'T') && eqfscase(path_str[2], 'D'))
-					goto return_unmodified; /* STDIN$ */
-#endif /* CONFIG_WANT_WINDOWS_STD_FILES */
-			}
-			break;
-	
-		case 7:
-			if (eqfscase(path_str[3], 'O') && eqfscase(path_str[4], 'U') &&
-			    eqfscase(path_str[5], 'T') && path_str[6] == '$') {
-				if (eqfscase(path_str[0], 'C') && eqfscase(path_str[1], 'O') && eqfscase(path_str[2], 'N'))
-					goto return_unmodified; /* CONOUT$ */
-#ifdef CONFIG_WANT_WINDOWS_STD_FILES
-				if (eqfscase(path_str[0], 'S') && eqfscase(path_str[1], 'T') && eqfscase(path_str[2], 'D'))
-					goto return_unmodified; /* STDOUT$ */
-#endif /* CONFIG_WANT_WINDOWS_STD_FILES */
-			}
-#ifdef CONFIG_WANT_WINDOWS_STD_FILES
-			if (eqfscase(path_str[0], 'S') && eqfscase(path_str[1], 'T') && eqfscase(path_str[2], 'D') &&
-			    eqfscase(path_str[3], 'E') && eqfscase(path_str[4], 'R') && eqfscase(path_str[5], 'R') &&
-			    path_str[6] == '$')
-				goto return_unmodified; /* STDERR$ */
-#endif /* CONFIG_WANT_WINDOWS_STD_FILES */
-			break;
-	
-#undef eqfscase
-		default:
-			break;
-		}
-	}
+	if (posix_path_is_nt_special(DeeString_STR(path),
+	                             DeeString_SIZE(path)))
+		goto return_unmodified;
 #endif /* CONFIG_HOST_WINDOWS */
 
 	/* If the given `pwd' isn't absolute, make it using the real PWD. */
@@ -553,7 +633,7 @@ PRIVATE char const aligned_upref_buffer[MAX_UPREF_COPY][3] = {
 };
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-posix_path_relpath_f(DeeObject *__restrict path, DeeObject *pwd) {
+posix_path_relpath_f(DeeObject *path, DeeObject *pwd) {
 	DREF DeeObject *result;
 	size_t uprefs, pth_length;
 	char *dst;
@@ -1316,6 +1396,37 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_abspath_f_impl(DeeObject *path, D
 	if (pwd && DeeObject_AssertTypeExact(pwd, &DeeString_Type))
 		goto err;
 	return posix_path_abspath_f(path, pwd);
+err:
+	return NULL;
+}
+
+/*[[[deemon import("rt.gen.dexutils").gw("walklink", "linktext:?Dstring,linkname:?Dstring->?Dstring", libname: "posix");]]]*/
+FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_walklink_f_impl(DeeObject *linktext, DeeObject *linkname);
+PRIVATE WUNUSED DREF DeeObject *DCALL posix_walklink_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
+#define POSIX_WALKLINK_DEF { "walklink", (DeeObject *)&posix_walklink, MODSYM_FNORMAL, DOC("(linktext:?Dstring,linkname:?Dstring)->?Dstring") },
+#define POSIX_WALKLINK_DEF_DOC(doc) { "walklink", (DeeObject *)&posix_walklink, MODSYM_FNORMAL, DOC("(linktext:?Dstring,linkname:?Dstring)->?Dstring\n" doc) },
+PRIVATE DEFINE_KWCMETHOD(posix_walklink, &posix_walklink_f);
+#ifndef POSIX_KWDS_LINKTEXT_LINKNAME_DEFINED
+#define POSIX_KWDS_LINKTEXT_LINKNAME_DEFINED
+PRIVATE DEFINE_KWLIST(posix_kwds_linktext_linkname, { KEX("linktext", 0x1a980550, 0xe7f93f503eadfdf7), KEX("linkname", 0x8fc35daf, 0xe202766a17bf6f0a), KEND });
+#endif /* !POSIX_KWDS_LINKTEXT_LINKNAME_DEFINED */
+PRIVATE WUNUSED DREF DeeObject *DCALL posix_walklink_f(size_t argc, DeeObject *const *argv, DeeObject *kw) {
+	DeeObject *linktext;
+	DeeObject *linkname;
+	if (DeeArg_UnpackKw(argc, argv, kw, posix_kwds_linktext_linkname, "oo:walklink", &linktext, &linkname))
+		goto err;
+	return posix_walklink_f_impl(linktext, linkname);
+err:
+	return NULL;
+}
+FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_walklink_f_impl(DeeObject *linktext, DeeObject *linkname)
+/*[[[end]]]*/
+{
+	if (DeeObject_AssertTypeExact(linktext, &DeeString_Type))
+		goto err;
+	if (DeeObject_AssertTypeExact(linkname, &DeeString_Type))
+		goto err;
+	return posix_path_walklink_f(linktext, linkname);
 err:
 	return NULL;
 }

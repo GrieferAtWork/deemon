@@ -299,14 +299,9 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_chmod_f_impl(DeeObject *path, Dee
 	/* Try to readlink() the given `path' to see if it's a symbolic link. */
 	link_text = posix_readlink_f_impl(path);
 	if (link_text) {
-		DREF DeeObject *parts[2], *full_path, *result;
-		parts[0] = posix_path_headof_f(path);
-		if unlikely(!parts[0])
-			goto err_link_text;
-		parts[1] = link_text;
-		full_path = posix_path_joinpath_f(2, parts);
-		Dee_Decref(parts[1]);
-		Dee_Decref(parts[0]);
+		DREF DeeObject *full_path, *result;
+		full_path = posix_path_walklink_f(link_text, path);
+		Dee_Decref(link_text);
 		if unlikely(!full_path)
 			goto err;
 		result = posix_lchmod_f_impl(full_path, mode);
@@ -318,8 +313,6 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_chmod_f_impl(DeeObject *path, Dee
 
 	/* Not a symbolic link -> lchmod() will work to do what we want! */
 	return posix_lchmod_f_impl(path, mode);
-err_link_text:
-	Dee_Decref(link_text);
 err:
 	return NULL;
 #endif /* posix_chmod_USE_posix_readlink__AND__posix_lchmod */
