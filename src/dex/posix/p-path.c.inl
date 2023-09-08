@@ -575,11 +575,11 @@ posix_path_relpath_f(DeeObject *__restrict path, DeeObject *pwd) {
 			/* If the given path is drive-relative, then we still want to
 			 * turn it into a normal (PWD-relative) path:
 			 * >> chdir(r"D:\path\to\my\folder");
-			 * >> print relpath(r"\foo.txt"); // "..\..\..\..\foo.txt"
+			 * >> print relpath(r"\foo.txt"); // r"..\..\..\..\foo.txt"
 			 *
 			 * Also: without this check, we'd have different behavior for:
-			 * >> print relpath(r"\foo.txt");      // "\foo.txt"
-			 * >> print relpath(r"\foo.txt", "."); // "..\..\..\..\foo.txt"
+			 * >> print relpath(r"\foo.txt");      // r"\foo.txt"
+			 * >> print relpath(r"\foo.txt", "."); // r"..\..\..\..\foo.txt"
 			 */
 			if (!DeeSystem_IsSep(DeeString_STR(path)[0]))
 #endif /* DEE_SYSTEM_FS_DRIVES */

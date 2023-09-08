@@ -359,11 +359,11 @@ struct Dee_thread_object {
 	union {
 		DREF DeeObject            *io_main;   /* [0..1][lock(Dee_THREAD_STATE_SETUP)][valid_if(!Dee_THREAD_STATE_STARTED)]
 		                                       * The callable object that is executed by this thread.
-		                                       * NOTE: If NULL when at time of thread start, `Thread.current.run' is used instead */
+		                                       * NOTE: If NULL at time of thread start, `Thread.current.run' is used instead */
 		DREF DeeObject            *io_result; /* [1..1][lock(DeeThread_Self())]
 		                                       * [if(Dee_THREAD_STATE_TERMINATED, [lock(Dee_THREAD_STATE_SETUP)])]
 		                                       * [valid_if(Dee_THREAD_STATE_TERMINATED && t_exceptsz == 0)]
-		                                       * Return return value (unset if the thread exits with an error) */
+		                                       * Thread return value (unset if the thread exits with an error) */
 	} t_inout; /* Input/output data */
 #endif /* !CONFIG_NO_THREADS */
 	union {
@@ -420,8 +420,8 @@ DDATDEF DeeTypeObject DeeThread_Type;
 #define DeeThread_Check(ob)      DeeObject_InstanceOf(ob, &DeeThread_Type)
 #define DeeThread_CheckExact(ob) DeeObject_InstanceOfExact(ob, &DeeThread_Type)
 
-/* Construct a new wrapper for an external reference to `thread'
- * NOTE: The given `thread' is _NOT_ inherited! */
+/* Construct a new wrapper for an external reference to `pid'
+ * NOTE: The given `pid' is _NOT_ inherited! */
 #ifdef Dee_pid_t
 DFUNDEF WUNUSED DREF DeeObject *DCALL DeeThread_FromTid(Dee_pid_t pid);
 #endif /* Dee_pid_t */
@@ -438,8 +438,8 @@ DeeThread_Start(/*Thread*/ DeeObject *__restrict self);
  * Interrupts are received when a thread calls `DeeThread_CheckInterrupt()'.
  * NOTE: Interrupts are received in order of being sent.
  * NOTE: When `interrupt_args' is non-NULL, rather than throwing the given
- *      `interrupt_main' as an error upon arrival, it is invoked
- *       using `operator ()' with `interrupt_args' (which must be a tuple).
+ *       `interrupt_main' as an error upon arrival, it is invoked using
+ *       `operator ()' with `interrupt_args' (which must be a tuple).
  * @return:  1: The thread has been terminated.
  * @return:  0: Successfully scheduled the interrupt object.
  * @return: -1: An error occurred. (Always returned for `CONFIG_NO_THREADS') */
@@ -465,8 +465,8 @@ DeeThread_Detach(/*Thread*/ DeeObject *__restrict self);
 
 /* Join the given thread.
  * @return: ITER_DONE: The given timeout has expired. (never returned for `(uint64_t)-1')
- * @return: * :   Successfully joined the thread and wrote its return value in *pthread_result.
- * @return: NULL: An error occurred.
+ * @return: * :   Successfully joined the thread (return value is the thread's return)
+ * @return: NULL: An error occurred. (Always returned for `CONFIG_NO_THREADS')
  *                NOTE: If the thread crashed, its errors are propagated into the calling
  *                      thread after being encapsulated as `Error.ThreadError' objects.
  * @param: timeout_nanoseconds: The timeout in microseconds, 0 for try-join,
@@ -496,7 +496,7 @@ DeeThread_GetTid(/*Thread*/ DeeObject *__restrict self);
  * a traceback object describing what is actually being run by it.
  * Note that this is just a snapshot that by no means will remain
  * consistent once this function returns.
- * NOTE: If the given thread is the caller's this is identical `(traceback from deemon)()' */
+ * NOTE: If the given thread is the caller's this is identical `(Traceback from deemon)()' */
 DFUNDEF WUNUSED NONNULL((1)) DREF /*Traceback*/ DeeObject *DCALL
 DeeThread_Trace(/*Thread*/ DeeObject *__restrict self);
 
@@ -570,7 +570,7 @@ DFUNDEF WUNUSED ATTR_CONST ATTR_RETNONNULL DeeThreadObject *DCALL DeeThread_Self
  * @return: NULL: Failed to allocate a thread controller for the caller (out-of-memory)
  *                Note that in this case, no exception is thrown (because none can be
  *                thrown, as the caller doesn't have a deemon thread-context) */
-DFUNDEF WUNUSED DeeThreadObject *DCALL DCALL DeeThread_Accede(void);
+DFUNDEF WUNUSED DeeThreadObject *DCALL DeeThread_Accede(void);
 
 /* Secede deemon's control over the calling thread by simulating said
  * thread's termination in the eyes of user-code. Following, this the

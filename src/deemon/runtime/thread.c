@@ -1581,7 +1581,7 @@ FORCELOCAL DeeThreadObject *(thread_tls_get)(void) {
 	return (DeeThreadObject *)result;
 }
 #define thread_tls_set(value) thread_tls_set(value)
-FORCELOCAL void(thread_tls_set)(void *value) {
+FORCELOCAL void (thread_tls_set)(void *value) {
 	__asm {
 		MOV ECX, value
 		MOV EAX, thread_self_tls
@@ -1757,13 +1757,13 @@ DeeThread_AllocateCurrentThread(void) {
 
 	/* Set expected thread flags. */
 	result->at_os_thread.ot_thread.t_state = 0 |
-#ifndef DeeThread_USE_CreateThread /* NOTE: `DeeThread_GetCurrentHThread()' returns a proper handle, so don't set this flag in that case! */
-	                                         Dee_THREAD_STATE_UNMANAGED | /* Don't allow deemon to detach the OS-handle of this thread */
-#endif /* !DeeThread_USE_CreateThread */
 #ifdef DeeThread_GetCurrentTid
 	                                         Dee_THREAD_STATE_HASTID |
 #endif /* DeeThread_GetCurrentTid */
 #ifdef DeeThread_HAVE_GetCurrentXThread
+#ifndef DeeThread_USE_CreateThread /* NOTE: `DeeThread_GetCurrentHThread()' returns a proper handle, so don't set this flag in that case! */
+	                                         Dee_THREAD_STATE_UNMANAGED | /* Don't allow deemon to detach the OS-handle of this thread */
+#endif /* !DeeThread_USE_CreateThread */
 	                                         Dee_THREAD_STATE_HASTHREAD |
 #endif /* DeeThread_HAVE_GetCurrentXThread */
 	                                         Dee_THREAD_STATE_STARTED;
@@ -1812,7 +1812,7 @@ DeeThread_AllocateCurrentThread(void) {
  * @return: NULL: Failed to allocate a thread controller for the caller (out-of-memory)
  *                Note that in this case, no exception is thrown (because none can be
  *                thrown, as the caller doesn't have a deemon thread-context) */
-PUBLIC WUNUSED DeeThreadObject *DCALL DCALL DeeThread_Accede(void) {
+PUBLIC WUNUSED DeeThreadObject *DCALL DeeThread_Accede(void) {
 #ifdef DeeThread_USE_SINGLE_THREADED
 	Dee_Fatalf("Threading support is disabled");
 	return NULL;
@@ -2929,8 +2929,8 @@ DeeThread_Wake(/*Thread*/ DeeObject *__restrict self) {
  * Interrupts are received when a thread calls `DeeThread_CheckInterrupt()'.
  * NOTE: Interrupts are received in order of being sent.
  * NOTE: When `interrupt_args' is non-NULL, rather than throwing the given
- *      `interrupt_main' as an error upon arrival, it is invoked
- *       using `operator ()' with `interrupt_args' (which must be a tuple).
+ *       `interrupt_main' as an error upon arrival, it is invoked using
+ *       `operator ()' with `interrupt_args' (which must be a tuple).
  * @return:  1: The thread has been terminated.
  * @return:  0: Successfully scheduled the interrupt object.
  * @return: -1: An error occurred. (Always returned for `CONFIG_NO_THREADS') */
@@ -3270,7 +3270,7 @@ DeeThread_RethrowExceptionsOrUnlock(DeeThreadObject *__restrict self) {
 
 /* Join the given thread.
  * @return: ITER_DONE: The given timeout has expired. (never returned for `(uint64_t)-1')
- * @return: * :   Successfully joined the thread and wrote its return value in *pthread_result.
+ * @return: * :   Successfully joined the thread (return value is the thread's return)
  * @return: NULL: An error occurred. (Always returned for `CONFIG_NO_THREADS')
  *                NOTE: If the thread crashed, its errors are propagated into the calling
  *                      thread after being encapsulated as `Error.ThreadError' objects.
@@ -3565,8 +3565,8 @@ thread_fini(DeeThreadObject *__restrict self) {
 
 
 #ifdef Dee_pid_t
-/* Construct a new wrapper for an external reference to `thread'
- * NOTE: The given `thread' is _NOT_ inherited! */
+/* Construct a new wrapper for an external reference to `pid'
+ * NOTE: The given `pid' is _NOT_ inherited! */
 DFUNDEF WUNUSED DREF DeeObject *DCALL DeeThread_FromTid(Dee_pid_t tid) {
 	DREF DeeOSThreadObject *result;
 	result = DeeGCObject_CALLOC(DeeOSThreadObject);
@@ -5087,7 +5087,7 @@ err:
  * a traceback object describing what is actually being run by it.
  * Note that this is just a snapshot that by no means will remain
  * consistent once this function returns.
- * NOTE: If the given thread is the caller's this is identical `(traceback from deemon)()' */
+ * NOTE: If the given thread is the caller's this is identical `(Traceback from deemon)()' */
 PUBLIC WUNUSED NONNULL((1)) DREF /*Traceback*/ DeeObject *DCALL
 DeeThread_Trace(/*Thread*/ DeeObject *__restrict self) {
 	DeeThreadObject *me = (DeeThreadObject *)self;
