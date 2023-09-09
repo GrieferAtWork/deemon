@@ -5130,6 +5130,13 @@ posix_dfd_makepath(DeeObject *dfd, DeeObject *path, unsigned int atflags) {
 	if (DeeString_IsAbsPath(path))
 		return_reference_(path);
 
+	/* Special NT filenames must be treated like absolute paths! */
+#ifdef CONFIG_HOST_WINDOWS
+	if (posix_path_is_nt_special(DeeString_STR(path),
+	                             DeeString_SIZE(path)))
+		return_reference_(path);
+#endif /* CONFIG_HOST_WINDOWS */
+
 	/* Must combine `dfd' with `path' */
 	unicode_printer_init(&printer);
 	if (DeeString_Check(dfd)) {
