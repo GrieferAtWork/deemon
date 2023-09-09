@@ -1001,7 +1001,7 @@ yfi_init(YFIterator *__restrict self,
 	self->yi_frame.cf_this  = yield_function->yf_this;
 	Dee_XIncref(self->yi_frame.cf_this);
 	self->yi_frame.cf_stacksz = 0;
-	Dee_ratomic_rwlock_init(&self->yi_lock);
+	Dee_rshared_rwlock_init(&self->yi_lock);
 	return 0;
 err_r_base:
 	Dee_Decref(self->yi_frame.cf_func);
@@ -1369,11 +1369,14 @@ yfi_visit(YFIterator *__restrict self,
           dvisit_t proc, void *arg) {
 	if (self->yi_frame.cf_prev != CODE_FRAME_NOT_EXECUTING)
 		return; /* Can't visit a frame that is current executing. */
-	DeeYieldFunctionIterator_LockWrite(self);
+
+	/* NOTE: This won't dead-lock if the caller is inside
+	 *       the function because the lock is recursive! */
+	DeeYieldFunctionIterator_LockReadNoInt(self);
 #ifndef CONFIG_NO_THREADS
 	COMPILER_READ_BARRIER();
 	if (self->yi_frame.cf_prev != CODE_FRAME_NOT_EXECUTING) {
-		DeeYieldFunctionIterator_LockEndWrite(self);
+		DeeYieldFunctionIterator_LockEndRead(self);
 		return; /* See above... */
 	}
 #endif /* !CONFIG_NO_THREADS */
@@ -1392,7 +1395,7 @@ yfi_visit(YFIterator *__restrict self,
 	Dee_Visitv(self->yi_frame.cf_stack,
 	           (size_t)(self->yi_frame.cf_sp -
 	                    self->yi_frame.cf_stack));
-	DeeYieldFunctionIterator_LockEndWrite(self);
+	DeeYieldFunctionIterator_LockEndRead(self);
 }
 
 PRIVATE NONNULL((1)) void DCALL
@@ -1402,7 +1405,11 @@ yfi_clear(YFIterator *__restrict self) {
 	DeeObject **locals;
 	size_t numlocals = 0;
 	bool heap_stack  = false;
-	DeeYieldFunctionIterator_LockWrite(self);
+
+	/* NOTE: This won't dead-lock if the caller is inside
+	 *       the function because the lock is recursive! */
+	DeeYieldFunctionIterator_LockWriteNoInt(self);
+
 	/* Execute established finally handlers. */
 	yfi_run_finally(self);
 	if unlikely(self->yi_frame.cf_prev != CODE_FRAME_NOT_EXECUTING) {
@@ -1455,7 +1462,8 @@ yfi_clear(YFIterator *__restrict self) {
 PRIVATE NONNULL((1)) DREF DeeObject *DCALL
 yfi_iter_next(YFIterator *__restrict self) {
 	DREF DeeObject *result;
-	DeeYieldFunctionIterator_LockWrite(self);
+	if unlikely(DeeYieldFunctionIterator_LockWrite(self))
+		goto err;
 	if unlikely(!self->yi_func) {
 		/* Special case: Always be indicative of an exhausted iterator
 		 * when default-constructed, or after being cleared. */
@@ -1491,6 +1499,8 @@ yfi_iter_next(YFIterator *__restrict self) {
 done:
 	DeeYieldFunctionIterator_LockEndWrite(self);
 	return result;
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
@@ -1573,7 +1583,8 @@ yfi_copy(YFIterator *__restrict self,
 	DeeCodeObject *code;
 	size_t stack_size;
 again:
-	DeeYieldFunctionIterator_LockWrite(other);
+	if unlikely(DeeYieldFunctionIterator_LockRead(other))
+		goto err;
 
 	/* Make sure that the function is actually copyable. */
 	code = NULL;
@@ -1583,7 +1594,7 @@ again:
 			char *function_name;
 			Dee_Incref(code);
 			function_name = DeeCode_NAME(code);
-			DeeYieldFunctionIterator_LockEndWrite(other);
+			DeeYieldFunctionIterator_LockEndRead(other);
 			if (!function_name)
 				function_name = "?";
 			DeeError_Throwf(&DeeError_ValueError, "Function `%s' is not copyable", function_name);
@@ -1648,8 +1659,8 @@ again:
 	Dee_XIncref(self->yi_frame.cf_this);
 	Dee_XIncref(self->yi_frame.cf_vargs);
 
-	DeeYieldFunctionIterator_LockEndWrite(other);
-	Dee_ratomic_rwlock_init(&self->yi_lock);
+	DeeYieldFunctionIterator_LockEndRead(other);
+	Dee_rshared_rwlock_init(&self->yi_lock);
 	if (code) {
 		DeeObject *this_arg;
 		DeeObject *varargs;
@@ -1671,7 +1682,7 @@ again:
 			if (elem != this_arg && elem != varargs) {
 				if (inplace_deepcopy_noarg(&self->yi_frame.cf_stack[i],
 				                           argc, argv, refc, refv))
-					goto err;
+					goto err_self;
 			}
 		}
 		for (i = 0; i < code->co_localc; ++i) {
@@ -1680,7 +1691,7 @@ again:
 			if (elem != this_arg && elem != varargs) {
 				if (inplace_deepcopy_noarg(&self->yi_frame.cf_frame[i],
 				                           argc, argv, refc, refv))
-					goto err;
+					goto err_self;
 			}
 		}
 		/* WARNING: There are some thing that we don't copy, such as the this-argument.
@@ -1689,8 +1700,9 @@ again:
 		ASSERT(!stack_size);
 	}
 	return 0;
-err:
+err_self:
 	yfi_dtor(self);
+err:
 	return -1;
 nomem_stack:
 	if (self->yi_frame.cf_stacksz) {
@@ -1700,7 +1712,7 @@ nomem_stack:
 		Dee_Free(vector);
 	}
 nomem:
-	DeeYieldFunctionIterator_LockEndWrite(other);
+	DeeYieldFunctionIterator_LockEndRead(other);
 	if (Dee_CollectMemory(1))
 		goto again;
 	return -1;
@@ -1710,20 +1722,24 @@ nomem:
 PRIVATE WUNUSED NONNULL((1)) DREF YFunction *DCALL
 yfi_getyfunc(YFIterator *__restrict self) {
 	DREF YFunction *result;
-	DeeYieldFunctionIterator_LockRead(self);
+	if unlikely(DeeYieldFunctionIterator_LockRead(self))
+		goto err;
 	result = self->yi_func;
 	Dee_XIncref(result);
 	DeeYieldFunctionIterator_LockEndRead(self);
 	if unlikely(!result)
 		err_unbound_attribute_string(&DeeYieldFunctionIterator_Type, STR_seq);
 	return result;
+err:
+	return NULL;
 }
 #endif /* !CONFIG_NO_THREADS */
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 yfi_getthis(YFIterator *__restrict self) {
 	DREF DeeObject *result;
-	DeeYieldFunctionIterator_LockRead(self);
+	if unlikely(DeeYieldFunctionIterator_LockRead(self))
+		goto err;
 	result = self->yi_frame.cf_this;
 	if (!(self->yi_frame.cf_flags & CODE_FTHISCALL))
 		result = NULL;
@@ -1732,6 +1748,8 @@ yfi_getthis(YFIterator *__restrict self) {
 	if unlikely(!result)
 		err_unbound_attribute_string(&DeeYieldFunctionIterator_Type, "__this__");
 	return result;
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -1740,6 +1758,7 @@ yfi_getframe(YFIterator *__restrict self) {
 	                                     &self->yi_frame,
 	                                     DEEFRAME_FREADONLY |
 	                                     DEEFRAME_FUNDEFSP |
+	                                     DEEFRAME_FSHRLOCK |
 	                                     DEEFRAME_FRECLOCK,
 	                                     &self->yi_lock);
 }
@@ -1747,101 +1766,119 @@ yfi_getframe(YFIterator *__restrict self) {
 PRIVATE WUNUSED NONNULL((1)) DREF Function *DCALL
 yfi_getfunc(YFIterator *__restrict self) {
 	DREF Function *result;
-	DeeYieldFunctionIterator_LockWrite(self);
+	if unlikely(DeeYieldFunctionIterator_LockRead(self))
+		goto err;
 	if unlikely(!self->yi_func) {
-		DeeYieldFunctionIterator_LockEndWrite(self);
+		DeeYieldFunctionIterator_LockEndRead(self);
 		err_unbound_attribute_string(&DeeYieldFunctionIterator_Type, "__func__");
-		return NULL;
+		goto err;
 	}
 	result = self->yi_func->yf_func;
 	Dee_Incref(result);
-	DeeYieldFunctionIterator_LockEndWrite(self);
+	DeeYieldFunctionIterator_LockEndRead(self);
 	return result;
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeCodeObject *DCALL
 yfi_getcode(YFIterator *__restrict self) {
 	DREF DeeCodeObject *result;
-	DeeYieldFunctionIterator_LockWrite(self);
+	if unlikely(DeeYieldFunctionIterator_LockRead(self))
+		goto err;
 	if unlikely(!self->yi_func) {
-		DeeYieldFunctionIterator_LockEndWrite(self);
+		DeeYieldFunctionIterator_LockEndRead(self);
 		err_unbound_attribute_string(&DeeYieldFunctionIterator_Type, "__code__");
-		return NULL;
+		goto err;
 	}
 	result = self->yi_func->yf_func->fo_code;
 	Dee_Incref(result);
-	DeeYieldFunctionIterator_LockEndWrite(self);
+	DeeYieldFunctionIterator_LockEndRead(self);
 	return result;
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 yfi_getrefs(YFIterator *__restrict self) {
 	DREF DeeObject *result;
 	DREF Function *func;
-	DeeYieldFunctionIterator_LockWrite(self);
+	if unlikely(DeeYieldFunctionIterator_LockRead(self))
+		goto err;
 	if unlikely(!self->yi_func) {
-		DeeYieldFunctionIterator_LockEndWrite(self);
+		DeeYieldFunctionIterator_LockEndRead(self);
 		err_unbound_attribute_string(&DeeYieldFunctionIterator_Type, "__refs__");
-		return NULL;
+		goto err;
 	}
 	func = self->yi_func->yf_func;
 	Dee_Incref(func);
-	DeeYieldFunctionIterator_LockEndWrite(self);
+	DeeYieldFunctionIterator_LockEndRead(self);
 	result = function_get_refs(func);
 	Dee_Decref(func);
 	return result;
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 yfi_getkwds(YFIterator *__restrict self) {
 	DREF DeeObject *result;
 	DREF Function *func;
-	DeeYieldFunctionIterator_LockWrite(self);
+	if unlikely(DeeYieldFunctionIterator_LockRead(self))
+		goto err;
 	if unlikely(!self->yi_func) {
-		DeeYieldFunctionIterator_LockEndWrite(self);
+		DeeYieldFunctionIterator_LockEndRead(self);
 		err_unbound_attribute_string(&DeeYieldFunctionIterator_Type, STR___kwds__);
-		return NULL;
+		goto err;
 	}
 	func = self->yi_func->yf_func;
 	Dee_Incref(func);
-	DeeYieldFunctionIterator_LockEndWrite(self);
+	DeeYieldFunctionIterator_LockEndRead(self);
 	result = function_get_kwds(func);
 	Dee_Decref(func);
 	return result;
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 yfi_getargs(YFIterator *__restrict self) {
 	DREF DeeObject *result;
 	DREF YFunction *yfunction;
-	DeeYieldFunctionIterator_LockWrite(self);
+	if unlikely(DeeYieldFunctionIterator_LockRead(self))
+		goto err;
 	if unlikely(!self->yi_func) {
-		DeeYieldFunctionIterator_LockEndWrite(self);
+		DeeYieldFunctionIterator_LockEndRead(self);
 		err_unbound_attribute_string(&DeeYieldFunctionIterator_Type, "__args__");
-		return NULL;
+		goto err;
 	}
 	yfunction = self->yi_func;
 	Dee_Incref(yfunction);
-	DeeYieldFunctionIterator_LockEndWrite(self);
+	DeeYieldFunctionIterator_LockEndRead(self);
 	result = yf_get_args(yfunction);
 	Dee_Decref(yfunction);
 	return result;
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF YFunction *DCALL
 yfi_get_func_reference(YFIterator *__restrict self,
                        char const *__restrict attr_name) {
 	DREF YFunction *result;
-	DeeYieldFunctionIterator_LockWrite(self);
+	if unlikely(DeeYieldFunctionIterator_LockRead(self))
+		goto err;
 	if unlikely(!self->yi_func) {
-		DeeYieldFunctionIterator_LockEndWrite(self);
+		DeeYieldFunctionIterator_LockEndRead(self);
 		err_unbound_attribute_string(&DeeYieldFunctionIterator_Type, attr_name);
-		return NULL;
+		goto err;
 	}
 	result = self->yi_func;
 	Dee_Incref(result);
-	DeeYieldFunctionIterator_LockEndWrite(self);
+	DeeYieldFunctionIterator_LockEndRead(self);
 	return result;
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL

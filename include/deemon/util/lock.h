@@ -403,6 +403,10 @@ typedef struct {
 	(Dee_shared_rwlock_tryupgrade(self) ? 1 : (Dee_shared_rwlock_endread(self), Dee_shared_rwlock_write(self)))
 #define _Dee_shared_rwlock_upgrade_NDEBUG(self) \
 	(Dee_shared_rwlock_tryupgrade(self) ? 1 : (_Dee_shared_rwlock_endread_NDEBUG(self), Dee_shared_rwlock_write(self)))
+#define Dee_shared_rwlock_upgrade_noint(self) \
+	(Dee_shared_rwlock_tryupgrade(self) ? 1 : (Dee_shared_rwlock_endread(self), Dee_shared_rwlock_write_noint(self), 0))
+#define _Dee_shared_rwlock_upgrade_noint_NDEBUG(self) \
+	(Dee_shared_rwlock_tryupgrade(self) ? 1 : (_Dee_shared_rwlock_endread_NDEBUG(self), Dee_shared_rwlock_write_noint(self), 0))
 
 /* Release a lock of the indicated type. */
 #define Dee_shared_rwlock_endread(self)          (void)Dee_shared_rwlock_endread_ex(self)

@@ -49,51 +49,6 @@ DECL_BEGIN
 
 typedef DeeFrameObject Frame;
 
-#ifndef CONFIG_NO_THREADS
-#define PLOCK_READ(x)                                               \
-	((x)->f_plock ? ((x)->f_flags & DEEFRAME_FRECLOCK               \
-	                 ? (void)Dee_ratomic_rwlock_read((x)->f_prlock) \
-	                 : (void)Dee_atomic_rwlock_read((x)->f_plock))  \
-	              : (void)0)
-#define PLOCK_TRYREAD(x)                                         \
-	((x)->f_plock ? ((x)->f_flags & DEEFRAME_FRECLOCK            \
-	                 ? Dee_ratomic_rwlock_tryread((x)->f_prlock) \
-	                 : Dee_atomic_rwlock_tryread((x)->f_plock))  \
-	              : true)
-#define PLOCK_WRITE(x)                                                    \
-	((x)->f_flags & DEEFRAME_FWRITABLE                                    \
-	 ? ((x)->f_plock ? ((x)->f_flags & DEEFRAME_FRECLOCK                  \
-	                    ? (Dee_ratomic_rwlock_write((x)->f_prlock), true) \
-	                    : (Dee_atomic_rwlock_write((x)->f_plock)),        \
-	                    true)                                             \
-	                 : true)                                              \
-	 : false)
-#define PLOCK_TRYWRITE(x)                                            \
-	((x)->f_flags & DEEFRAME_FWRITABLE                               \
-	 ? ((x)->f_plock ? ((x)->f_flags & DEEFRAME_FRECLOCK             \
-	                    ? Dee_ratomic_rwlock_trywrite((x)->f_prlock) \
-	                    : Dee_atomic_rwlock_trywrite((x)->f_plock))  \
-	                 : true)                                         \
-	 : false)
-#define PLOCK_ENDREAD(x)                                               \
-	((x)->f_plock ? ((x)->f_flags & DEEFRAME_FRECLOCK                  \
-	                 ? (void)Dee_ratomic_rwlock_endread((x)->f_prlock) \
-	                 : (void)Dee_atomic_rwlock_endread((x)->f_plock))  \
-	              : (void)0)
-#define PLOCK_ENDWRITE(x)                                               \
-	((x)->f_plock ? ((x)->f_flags & DEEFRAME_FRECLOCK                   \
-	                 ? (void)Dee_ratomic_rwlock_endwrite((x)->f_prlock) \
-	                 : (void)Dee_atomic_rwlock_endwrite((x)->f_plock))  \
-	              : (void)0)
-#else /* !CONFIG_NO_THREADS */
-#define PLOCK_READ(x)     (void)0
-#define PLOCK_TRYREAD(x)  true
-#define PLOCK_WRITE(x)    ((x)->f_flags & DEEFRAME_FWRITABLE)
-#define PLOCK_TRYWRITE(x) ((x)->f_flags & DEEFRAME_FWRITABLE)
-#define PLOCK_ENDREAD(x)  (void)0
-#define PLOCK_ENDWRITE(x) (void)0
-#endif /* CONFIG_NO_THREADS */
-
 /* Construct a frame object owned by `owner'
  * The intended use of this is for tracebacks and yield_function-iterators.
  * @param: flags: Set of `DEEFRAME_F*' */
@@ -111,7 +66,7 @@ PUBLIC WUNUSED NONNULL((2)) DREF DeeObject *
 	result->f_flags = flags;
 	Dee_atomic_rwlock_init(&result->f_lock);
 #ifndef CONFIG_NO_THREADS
-	result->f_plock = (Dee_atomic_rwlock_t *)lock;
+	result->f_palock = (Dee_atomic_rwlock_t *)lock;
 #else /* !CONFIG_NO_THREADS */
 	(void)lock; /* Unused... */
 #endif /* CONFIG_NO_THREADS */
@@ -244,20 +199,28 @@ frame_print(Frame *__restrict self,
 	dssize_t result;
 	DREF DeeCodeObject *code;
 	code_addr_t ip;
+again:
 	DeeFrame_LockRead(self);
-	if (!self->f_frame) {
+	if unlikely(!self->f_frame) {
 		DeeFrame_LockEndRead(self);
 		return 0;
 	}
-	PLOCK_READ(self);
+	if (!DeeFrame_PLockTryRead(self)) {
+		DeeFrame_LockEndRead(self);
+		if unlikely(DeeFrame_PLockWaitRead(self))
+			goto err;
+		goto again;
+	}
 	code = self->f_frame->cf_func->fo_code;
 	Dee_Incref(code);
 	ip = (code_addr_t)(self->f_frame->cf_ip - code->co_code);
-	PLOCK_ENDREAD(self);
+	DeeFrame_PLockEndRead(self);
 	DeeFrame_LockEndRead(self);
 	result = print_ddi(printer, arg, code, ip);
 	Dee_Decref_unlikely(code);
 	return result;
+err:
+	return -1;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeCodeObject *DCALL
@@ -269,17 +232,23 @@ frame_getddi(Frame *__restrict self,
 	uint8_t *result;
 	code_addr_t startip;
 	DREF DeeCodeObject *code;
+again:
 	DeeFrame_LockRead(self);
 	if unlikely(!self->f_frame) {
 		DeeFrame_LockEndRead(self);
 		return (DREF DeeCodeObject *)ITER_DONE;
 	}
-	PLOCK_READ(self);
+	if (!DeeFrame_PLockTryRead(self)) {
+		DeeFrame_LockEndRead(self);
+		if unlikely(DeeFrame_PLockWaitRead(self))
+			goto err;
+		goto again;
+	}
 	code = self->f_frame->cf_func->fo_code;
 	Dee_Incref(code);
 	startip = (code_addr_t)(self->f_frame->cf_ip -
 	                        code->co_code);
-	PLOCK_ENDREAD(self);
+	DeeFrame_PLockEndRead(self);
 	DeeFrame_LockEndRead(self);
 	if (p_startip)
 		*p_startip = startip;
@@ -291,9 +260,11 @@ frame_getddi(Frame *__restrict self,
 	if (DDI_ISOK(result))
 		return code;
 	Dee_Decref(code);
-	return result == DDI_NEXT_DONE
-	       ? (DREF DeeCodeObject *)ITER_DONE
-	       : (DREF DeeCodeObject *)NULL;
+	if unlikely(result != DDI_NEXT_DONE)
+		goto err;
+	return (DREF DeeCodeObject *)ITER_DONE;
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeTupleObject *DCALL
@@ -467,17 +438,25 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 frame_getfunc(Frame *__restrict self) {
 	DREF DeeFunctionObject *result;
+again:
 	DeeFrame_LockRead(self);
 	if unlikely(!self->f_frame) {
 		DeeFrame_LockEndRead(self);
 		return_none;
 	}
-	PLOCK_READ(self);
+	if (!DeeFrame_PLockTryRead(self)) {
+		DeeFrame_LockEndRead(self);
+		if unlikely(DeeFrame_PLockWaitRead(self))
+			goto err;
+		goto again;
+	}
 	result = self->f_frame->cf_func;
 	Dee_Incref(result);
-	PLOCK_ENDREAD(self);
+	DeeFrame_PLockEndRead(self);
 	DeeFrame_LockEndRead(self);
 	return (DREF DeeObject *)result;
+err:
+	return NULL;
 }
 
 PRIVATE ATTR_COLD int DCALL
@@ -495,36 +474,51 @@ err_readonly_frame(Frame *__restrict UNUSED(self)) {
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 frame_getcode(Frame *__restrict self) {
 	DREF DeeCodeObject *result;
+again:
 	DeeFrame_LockRead(self);
 	if unlikely(!self->f_frame)
 		goto err_df;
-	PLOCK_READ(self);
+	if (!DeeFrame_PLockTryRead(self)) {
+		DeeFrame_LockEndRead(self);
+		if unlikely(DeeFrame_PLockWaitRead(self))
+			goto err;
+		goto again;
+	}
 	result = self->f_frame->cf_func->fo_code;
 	Dee_Incref(result);
-	PLOCK_ENDREAD(self);
+	DeeFrame_PLockEndRead(self);
 	DeeFrame_LockEndRead(self);
 	return (DREF DeeObject *)result;
 err_df:
 	DeeFrame_LockEndRead(self);
 	err_dead_frame(self);
+err:
 	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 frame_getpc(Frame *__restrict self) {
 	code_addr_t pc;
+again:
 	DeeFrame_LockRead(self);
 	if unlikely(!self->f_frame)
 		goto err_df;
-	PLOCK_READ(self);
+	if (!DeeFrame_PLockTryRead(self)) {
+		DeeFrame_LockEndRead(self);
+		if unlikely(DeeFrame_PLockWaitRead(self))
+			goto err;
+		goto again;
+	}
+	DeeFrame_LockRead(self);
 	pc = (code_addr_t)(self->f_frame->cf_ip -
 	                   self->f_frame->cf_func->fo_code->co_code);
-	PLOCK_ENDREAD(self);
+	DeeFrame_PLockEndRead(self);
 	DeeFrame_LockEndRead(self);
 	return DeeInt_NewUInt32(pc);
 err_df:
 	DeeFrame_LockEndRead(self);
 	err_dead_frame(self);
+err:
 	return NULL;
 }
 
@@ -548,11 +542,14 @@ frame_revengsp(Frame *__restrict self) {
  * `-1' when `DEEFRAME_FUNDEFSP2' is set.
  * @return: * : The actual depth of the stack.
  * @return: -1: Information could not be determined. (no error was thrown)
- * @return: -2: The frame has continued execution, or was otherwise released. (no error was thrown) */
+ * @return: -2: The frame has continued execution, or was otherwise released. (no error was thrown)
+ * @return: -3: An error was thrown */
 PRIVATE WUNUSED NONNULL((1)) int32_t DCALL
 frame_getsp(Frame *__restrict self) {
 	int32_t result;
-	uint16_t flags = atomic_read(&self->f_flags);
+	uint16_t flags;
+again:
+	flags = atomic_read(&self->f_flags);
 	if (!(flags & DEEFRAME_FUNDEFSP)) {
 		DeeFrame_LockRead(self);
 		if unlikely(!self->f_frame) {
@@ -562,10 +559,15 @@ frame_getsp(Frame *__restrict self) {
 		if (flags & DEEFRAME_FREGENGSP) {
 			result = self->f_revsp;
 		} else {
-			PLOCK_READ(self);
+			if (!DeeFrame_PLockTryRead(self)) {
+				DeeFrame_LockEndRead(self);
+				if unlikely(DeeFrame_PLockWaitRead(self))
+					goto err;
+				goto again;
+			}
 			result = (int32_t)(self->f_frame->cf_sp -
 			                   self->f_frame->cf_stack);
-			PLOCK_ENDREAD(self);
+			DeeFrame_PLockEndRead(self);
 		}
 		DeeFrame_LockEndRead(self);
 		return result;
@@ -574,6 +576,8 @@ frame_getsp(Frame *__restrict self) {
 		return -1;
 	/* Try to reverse-engineer stack information. */
 	return frame_revengsp(self);
+err:
+	return -3;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
@@ -590,12 +594,18 @@ frame_setpc(Frame *self, DeeObject *value) {
 	 * a later point in time could yield invalid results. */
 	if ((self->f_flags & (DEEFRAME_FUNDEFSP | DEEFRAME_FUNDEFSP2)) == DEEFRAME_FUNDEFSP)
 		frame_revengsp(self);
+again:
 	DeeFrame_LockRead(self);
 	if unlikely(!self->f_frame)
 		goto err_df;
-	PLOCK_READ(self);
+	if (!DeeFrame_PLockTryRead(self)) {
+		DeeFrame_LockEndRead(self);
+		if unlikely(DeeFrame_PLockWaitRead(self))
+			goto err;
+		goto again;
+	}
 	self->f_frame->cf_ip = self->f_frame->cf_func->fo_code->co_code + pc;
-	PLOCK_ENDREAD(self);
+	DeeFrame_PLockEndRead(self);
 	DeeFrame_LockEndRead(self);
 	return 0;
 err_df:
@@ -608,6 +618,8 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 frame_getsp_obj(Frame *__restrict self) {
 	int32_t result = frame_getsp(self);
+	if unlikely(result == -3)
+		goto err;
 	if unlikely(result == -2)
 		goto err_df;
 	if unlikely(result == -1)
