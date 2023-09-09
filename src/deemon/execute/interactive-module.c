@@ -1536,7 +1536,7 @@ err:
  *       the internal state of the interactive module itself, as
  *       well as various other objects associated with it.
  *       For these reasons, interactive modules do not inherit from
- *      `sequence', similar to how file objects don't either.
+ *       `Sequence', similar to how file objects don't either.
  * PARSING vs. NON-BLOCKING:
  *     - The parser will block until either sufficient tokens have been
  *       made available to construct a full statement (that is guarantied
@@ -1642,7 +1642,7 @@ err:
  *     - Modules of this type will never set the `MODULE_FDIDLOAD' flag, meaning
  *       that they will never finish ~loading~ in the sense that they will
  *       relinquish their right to modify the module's `mo_importv', `mo_globalv',
- *      `mo_root', `mo_bucketv', etc... fields.
+ *       `mo_root', `mo_bucketv', etc... fields.
  *     - Interactive code should refrain from starting new threads.
  *       TODO: Currently, not abiding by this rule will result in hard undefined
  *             behavior, potentially resulting in deemon crashing completely.

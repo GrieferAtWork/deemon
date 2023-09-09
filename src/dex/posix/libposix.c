@@ -1720,6 +1720,8 @@ PRIVATE struct dex_symbol symbols[] = {
 	/* TODO: ioctl() */
 	/* TODO: posix_fallocate() */
 	/* TODO: posix_fadvise() */
+	/* TODO: fcntl commands */
+	/* TODO: ioctl commands */
 
 	/* Filesystem control */
 	D(POSIX_TRUNCATE_DEF)
@@ -1739,7 +1741,6 @@ PRIVATE struct dex_symbol symbols[] = {
 	/* TODO: minor() */
 	/* TODO: mkdev() */
 	D(POSIX_SYNC_DEF)
-	/* TODO: utime() */
 	/* TODO: pathconf() */
 	/* TODO: fpathconf() */
 	/* TODO: statvfs() */
@@ -1759,9 +1760,13 @@ PRIVATE struct dex_symbol symbols[] = {
 
 	/* Path normalization */
 	D(POSIX_REALPATH_DEF)
+	/* TODO: frealpath() */
+	/* TODO: realpathat() */
 
 	/* System information */
 	/* TODO: uname() */
+	/* TODO: sethostname() */
+	/* TODO: setdomainname() */
 	/* TODO: confstr() */
 	/* TODO: sysconf() */
 	/* TODO: times() */
@@ -1779,6 +1784,7 @@ PRIVATE struct dex_symbol symbols[] = {
 	/* Process control */
 	D(POSIX_GETPID_DEF)
 	D(POSIX_SYSTEM_DEF)
+	/* TODO: gettid() */
 	/* TODO: execl() */
 	/* TODO: execle() */
 	/* TODO: execlp() */

@@ -2172,6 +2172,10 @@ DeeNTSystem_PrintFinalPathNameByHandle(struct unicode_printer *__restrict printe
 	if unlikely(!lpBuffer)
 		goto err;
 	for (;;) {
+		/* TODO: This doesn't work for windows device files like `NUL' or `CON'
+		 *       However, ProcessHacker _is_ able to correctly disable \Device\Null
+		 *       for NUL, so there must still be something else that can be done
+		 *       here, which we simply aren't doing, yet. */
 		dwNewBufSize = (*pdyn_GetFinalPathNameByHandleW)((HANDLE)hFile,
 		                                                 lpBuffer,
 		                                                 dwBufSize,
