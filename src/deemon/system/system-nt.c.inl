@@ -1846,8 +1846,8 @@ PUBLIC ATTR_COLD NONNULL((3)) int
                                  char const *__restrict format,
                                  va_list args) {
 	int result;
-	/* Automatically select the proper error class. */
-	if (!tp) {
+	if (tp == NULL) {
+		/* Automatically select the proper error class. */
 		if (DeeNTSystem_IsFileNotFoundError(dwError)) {
 			tp = &DeeError_FileNotFound;
 		} else if (DeeNTSystem_IsExists(dwError)) {
@@ -1877,6 +1877,7 @@ PUBLIC ATTR_COLD NONNULL((3)) int
 			tp = &DeeError_SystemError;
 		}
 	}
+
 	/* Check for error types derived from `errors.SystemError' */
 	if (DeeType_Check(tp) &&
 	    DeeType_InheritsFrom(tp, &DeeError_SystemError)) {
@@ -1912,7 +1913,9 @@ PUBLIC ATTR_COLD NONNULL((2)) int
                                      va_list args) {
 	int result;
 	DeeNT_DWORD dwError;
+	DBG_ALIGNMENT_DISABLE();
 	dwError = GetLastError();
+	DBG_ALIGNMENT_ENABLE();
 	result = DeeNTSystem_VThrowErrorf(tp,
 	                                  dwError,
 	                                  format,
@@ -1969,6 +1972,7 @@ DeeNTSystem_CreateFile(/*String*/ DeeObject *__restrict lpFileName,
 		    eqnocase(DeeString_STR(lpFileName)[3], 'I') &&
 		    eqnocase(DeeString_STR(lpFileName)[4], 'N') &&
 		    DeeString_STR(lpFileName)[5] == '$') {
+			DBG_ALIGNMENT_DISABLE();
 			hResult = GetStdHandle(STD_INPUT_HANDLE);
 do_copy_and_return_hResult:
 			if (dwCreationDisposition == CREATE_NEW ||
@@ -1976,13 +1980,17 @@ do_copy_and_return_hResult:
 			    dwCreationDisposition == TRUNCATE_EXISTING) {
 				/* These modes cannot be used to access STD* files. */
 				SetLastError(ERROR_INVALID_PARAMETER);
+				DBG_ALIGNMENT_ENABLE();
 				return INVALID_HANDLE_VALUE;
 			}
 
 			if (!DuplicateHandle(GetCurrentProcess(), hResult,
 			                     GetCurrentProcess(), &hResult,
-			                     dwDesiredAccess, FALSE, 0))
+			                     dwDesiredAccess, FALSE, 0)) {
+				DBG_ALIGNMENT_ENABLE();
 				return INVALID_HANDLE_VALUE;
+			}
+			DBG_ALIGNMENT_ENABLE();
 			if unlikely(hResult == NULL)
 				hResult = INVALID_HANDLE_VALUE;
 			return hResult;
@@ -1992,12 +2000,14 @@ do_copy_and_return_hResult:
 			if (eqnocase(DeeString_STR(lpFileName)[3], 'O') &&
 			    eqnocase(DeeString_STR(lpFileName)[4], 'U') &&
 			    eqnocase(DeeString_STR(lpFileName)[5], 'T')) {
+				DBG_ALIGNMENT_DISABLE();
 				hResult = GetStdHandle(STD_OUTPUT_HANDLE);
 				goto do_copy_and_return_hResult;
 			}
 			if (eqnocase(DeeString_STR(lpFileName)[3], 'E') &&
 			    eqnocase(DeeString_STR(lpFileName)[4], 'R') &&
 			    eqnocase(DeeString_STR(lpFileName)[5], 'R')) {
+				DBG_ALIGNMENT_DISABLE();
 				hResult = GetStdHandle(STD_ERROR_HANDLE);
 				goto do_copy_and_return_hResult;
 			}
@@ -2101,7 +2111,10 @@ DeeNTSystem_CreateFileNoATime(/*String*/ DeeObject *__restrict lpFileName,
 		(void)bResult;
 #else /* Dee_DPRINT_IS_NOOP */
 		if (!bResult) {
-			DWORD dwError = GetLastError();
+			DWORD dwError;
+			DBG_ALIGNMENT_DISABLE();
+			dwError = GetLastError();
+			DBG_ALIGNMENT_ENABLE();
 			Dee_DPRINTF("DeeNTSystem_CreateFileNoATime: SetFileTime: GetLastError: %lu\n", dwError);
 		}
 #endif /* !Dee_DPRINT_IS_NOOP */
@@ -2308,7 +2321,9 @@ DeeNTSystem_PrintFinalPathNameByHandle(struct unicode_printer *__restrict printe
 	DWORD dwNewBufSize, dwBufSize;
 	if (!pdyn_GetFinalPathNameByHandleW) {
 		/* Try to load `GetFinalPathNameByHandleW()' */
-		HMODULE hKernel32 = GetKernel32Handle();
+		HMODULE hKernel32;
+		DBG_ALIGNMENT_DISABLE();
+		hKernel32 = GetKernel32Handle();
 		if (!hKernel32) {
 			atomic_write((void **)&pdyn_GetFinalPathNameByHandleW, (void *)(uintptr_t)-1);
 		} else {
@@ -2318,6 +2333,7 @@ DeeNTSystem_PrintFinalPathNameByHandle(struct unicode_printer *__restrict printe
 				*(void **)&func = (void *)(uintptr_t)-1;
 			atomic_write(&pdyn_GetFinalPathNameByHandleW, func);
 		}
+		DBG_ALIGNMENT_ENABLE();
 	}
 	if (*(void **)&pdyn_GetFinalPathNameByHandleW == (void *)(uintptr_t)-1)
 		return 2;
@@ -2328,6 +2344,7 @@ DeeNTSystem_PrintFinalPathNameByHandle(struct unicode_printer *__restrict printe
 	if unlikely(!lpBuffer)
 		goto err;
 	for (;;) {
+		DBG_ALIGNMENT_DISABLE();
 		dwNewBufSize = (*pdyn_GetFinalPathNameByHandleW)((HANDLE)hFile,
 		                                                 lpBuffer,
 		                                                 dwBufSize,
@@ -2335,6 +2352,7 @@ DeeNTSystem_PrintFinalPathNameByHandle(struct unicode_printer *__restrict printe
 		if unlikely(!dwNewBufSize) {
 			DWORD dwError;
 			dwError = GetLastError();
+			DBG_ALIGNMENT_ENABLE();
 			if (DeeNTSystem_IsIntr(dwError)) {
 				if (DeeThread_CheckInterrupt())
 					goto err_lpBuffer;
@@ -2345,13 +2363,16 @@ DeeNTSystem_PrintFinalPathNameByHandle(struct unicode_printer *__restrict printe
 				goto do_resize_buffer;
 			}
 			unicode_printer_free_wchar(printer, lpBuffer);
+			DBG_ALIGNMENT_DISABLE();
 			SetLastError(dwError);
+			DBG_ALIGNMENT_ENABLE();
 			/* Some files don't support this function. -> treat these cases as unsupported. */
 			if (dwError == ERROR_INVALID_FUNCTION ||
 			    dwError == ERROR_INVALID_PARAMETER)
 				return 2;
 			return 1;
 		}
+		DBG_ALIGNMENT_ENABLE();
 		if (dwNewBufSize <= dwBufSize)
 			break;
 		--dwNewBufSize; /* This would include the trailing NUL-character */
@@ -2414,7 +2435,9 @@ DeeNTSystem_PrintNtQueryObject_ObjectNameInformation(struct unicode_printer *__r
 	NT_OBJECT_NAME_INFORMATION *ntInfo;
 	if (!pdyn_NtQueryObject) {
 		/* Try to load `NtQueryObject()' */
-		HMODULE hNtdll = GetNtdllHandle();
+		HMODULE hNtdll;
+		DBG_ALIGNMENT_DISABLE();
+		hNtdll = GetNtdllHandle();
 		if (!hNtdll) {
 			atomic_write((void **)&pdyn_NtQueryObject, (void *)(uintptr_t)-1);
 		} else {
@@ -2424,6 +2447,7 @@ DeeNTSystem_PrintNtQueryObject_ObjectNameInformation(struct unicode_printer *__r
 				*(void **)&func = (void *)(uintptr_t)-1;
 			atomic_write(&pdyn_NtQueryObject, func);
 		}
+		DBG_ALIGNMENT_ENABLE();
 	}
 	if (*(void **)&pdyn_NtQueryObject == (void *)(uintptr_t)-1)
 		return 2;
@@ -2440,9 +2464,11 @@ DeeNTSystem_PrintNtQueryObject_ObjectNameInformation(struct unicode_printer *__r
 		NTSTATUS ntResult;
 		ulRetBufSize   = 0;
 		dwBufSizeBytes = LOCAL_ALLOC_BUFSIZE_FOR(dwBufSize) * sizeof(WCHAR);
+		DBG_ALIGNMENT_DISABLE();
 		ntResult = (*pdyn_NtQueryObject)((HANDLE)hFile,
 		                                 1 /* ObjectNameInformation*/,
 		                                 lpBuffer, dwBufSizeBytes, &ulRetBufSize);
+		DBG_ALIGNMENT_ENABLE();
 		if (ntResult == 0)
 			break;
 		ntResult &= 0xffff;
@@ -2460,7 +2486,9 @@ DeeNTSystem_PrintNtQueryObject_ObjectNameInformation(struct unicode_printer *__r
 		if (ntResult == ERROR_INVALID_FUNCTION ||
 		    ntResult == ERROR_INVALID_PARAMETER)
 			return 2;
+		DBG_ALIGNMENT_DISABLE();
 		SetLastError(ntResult);
+		DBG_ALIGNMENT_ENABLE();
 		return 1;
 do_resize_buffer:
 		lpNewBuffer = unicode_printer_resize_wchar(printer, lpBuffer, LOCAL_ALLOC_BUFSIZE_FOR(ulRetBufSize));
@@ -2774,7 +2802,9 @@ DeeNTSystem_ConvertNtDrivePathToDosPath(struct unicode_printer *__restrict print
 			*--wDriveStringEnd = '\0';
 
 		/* Query the device name attached to the drive. */
+		DBG_ALIGNMENT_DISABLE();
 		dwDeviceLen = QueryDosDeviceW(wDriveString, wDeviceBuffer, dwDeviceBufLen);
+		DBG_ALIGNMENT_ENABLE();
 		if unlikely(dwDeviceLen > dwDeviceBufLen)
 			continue; /* Too long (can't fit) */
 
@@ -2834,8 +2864,10 @@ DeeNTSystem_RegQueryValueExW(HKEY hKey, LPCWSTR lpValueName) {
 		goto err;
 again:
 	dwResultReqLen = dwResultLen;
+	DBG_ALIGNMENT_DISABLE();
 	lStatus = RegQueryValueExW(hKey, lpValueName, NULL, &dwType,
 	                           (LPBYTE)wResult, &dwResultReqLen);
+	DBG_ALIGNMENT_ENABLE();
 	if (lStatus == ERROR_MORE_DATA) {
 		if (dwResultReqLen <= dwResultLen)
 			dwResultReqLen = dwResultLen * 2;
@@ -2891,7 +2923,12 @@ DeeNTSystem_ConvertNtComPathToDosPath(struct unicode_printer *__restrict printer
 	HKEY hKey;
 	LPWSTR wKeyValue;
 	size_t wKeyValueLen;
-	if (RegOpenKeyExW(HKEY_LOCAL_MACHINE, wstr_Hardware_DeviceMap_SerialComm, 0, KEY_QUERY_VALUE, &hKey) != 0)
+	LSTATUS lStatus;
+	DBG_ALIGNMENT_DISABLE();
+	lStatus = RegOpenKeyExW(HKEY_LOCAL_MACHINE, wstr_Hardware_DeviceMap_SerialComm,
+	                        0, KEY_QUERY_VALUE, &hKey);
+	DBG_ALIGNMENT_ENABLE();
+	if (lStatus != 0)
 		goto done;
 	str.ptr = printer->up_buffer;
 	SWITCH_SIZEOF_WIDTH(printer->up_flags & UNICODE_PRINTER_FWIDTH) {
@@ -2991,7 +3028,8 @@ DeeNTSystem_ConvertNtPathToDosPath(struct unicode_printer *__restrict printer,
 			return 0;
 		}
 
-		/* Check for files that can be mapped to `COM1', `COM2', etc... */
+		/* Check for r"\Device\Serial[...]" and r"\Device\UsbSer[...]",
+		 * which are files that can be mapped to `COM1', `COM2', etc... */
 		if (end_offset >= start_offset + 14 &&
 		    (unicode_printer_memcasecmp8(printer, (uint8_t const *)"Serial", start_offset + 8, 6) == 0 ||
 		     unicode_printer_memcasecmp8(printer, (uint8_t const *)"UsbSer", start_offset + 8, 6) == 0))
@@ -3096,6 +3134,7 @@ DeeNTSystem_PrintMappedFileName(struct Dee_unicode_printer *__restrict printer,
 	DWORD dwNewBufSize, dwBufSize;
 	if (pdyn_GetMappedFileNameW == NULL) {
 		LPGETMAPPEDFILENAMEW lpGetMappedFileNameW = NULL;
+		DBG_ALIGNMENT_DISABLE();
 		lpGetMappedFileNameW = (LPGETMAPPEDFILENAMEW)GetProcAddress(GetModuleHandleW(wPsapi),
 		                                                            name_GetMappedFileNameW);
 		if (!lpGetMappedFileNameW) {
@@ -3118,6 +3157,7 @@ DeeNTSystem_PrintMappedFileName(struct Dee_unicode_printer *__restrict printer,
 					FreeLibrary(hModule);
 			}
 		}
+		DBG_ALIGNMENT_ENABLE();
 		if (!lpGetMappedFileNameW)
 			*(void **)&lpGetMappedFileNameW = (void *)(uintptr_t)-1;
 		atomic_write(&pdyn_GetMappedFileNameW, lpGetMappedFileNameW);
@@ -3130,6 +3170,7 @@ DeeNTSystem_PrintMappedFileName(struct Dee_unicode_printer *__restrict printer,
 	if unlikely(!lpBuffer)
 		goto err;
 	for (;;) {
+		DBG_ALIGNMENT_DISABLE();
 		dwNewBufSize = (*pdyn_GetMappedFileNameW)((HANDLE)hProcess,
 		                                          (LPVOID)lpv,
 		                                          lpBuffer,
@@ -3137,6 +3178,7 @@ DeeNTSystem_PrintMappedFileName(struct Dee_unicode_printer *__restrict printer,
 		if unlikely(!dwNewBufSize) {
 			DWORD dwError;
 			dwError = GetLastError();
+			DBG_ALIGNMENT_ENABLE();
 			if (DeeNTSystem_IsIntr(dwError)) {
 				if (DeeThread_CheckInterrupt())
 					goto err_lpBuffer;
@@ -3150,6 +3192,7 @@ DeeNTSystem_PrintMappedFileName(struct Dee_unicode_printer *__restrict printer,
 			SetLastError(dwError);
 			return 1;
 		}
+		DBG_ALIGNMENT_ENABLE();
 		if (dwNewBufSize <= dwBufSize)
 			break;
 do_resize_buffer:
@@ -3188,9 +3231,13 @@ DeeNTSystem_FormatMessage(DeeNT_DWORD dwFlags, void const *lpSource,
 	if (error == 0)
 		return unicode_printer_pack(&printer);
 	/* Preserve LastError during `unicode_printer_fini()' */
+	DBG_ALIGNMENT_DISABLE();
 	dwLastError = GetLastError();
+	DBG_ALIGNMENT_ENABLE();
 	unicode_printer_fini(&printer);
+	DBG_ALIGNMENT_DISABLE();
 	SetLastError(dwLastError);
+	DBG_ALIGNMENT_ENABLE();
 	if (error < 0)
 		goto err;
 	return ITER_DONE;
@@ -3220,7 +3267,6 @@ again:
 	                              buffer,
 	                              dwBufSize,
 	                              (va_list *)Arguments);
-	DBG_ALIGNMENT_ENABLE();
 	if unlikely(!dwNewBufsize) {
 		DWORD dwError;
 		dwError = GetLastError();
@@ -3244,6 +3290,7 @@ again:
 		}
 		goto err_release;
 	}
+	DBG_ALIGNMENT_ENABLE();
 	if (dwNewBufsize > dwBufSize) {
 		LPWSTR new_buffer;
 		/* Increase the buffer and try again. */
