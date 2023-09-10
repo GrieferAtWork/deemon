@@ -12345,6 +12345,215 @@ PUBLIC void (DCALL Dee_unicode_printer_memmove)(struct unicode_printer *__restri
 	}
 }
 
+PUBLIC WUNUSED NONNULL((1, 2)) int
+(DCALL Dee_unicode_printer_memcmp8)(struct unicode_printer const *__restrict self,
+                                    uint8_t const *rhs, size_t lhs_start, size_t num_chars) {
+	union dcharptr str;
+	str.ptr = self->up_buffer;
+	ASSERT(lhs_start + num_chars >= lhs_start);
+	ASSERT(lhs_start + num_chars <= (str.ptr ? WSTR_LENGTH(str.ptr) : 0) || !num_chars);
+	SWITCH_SIZEOF_WIDTH(self->up_flags & UNICODE_PRINTER_FWIDTH) {
+
+	CASE_WIDTH_1BYTE:
+		return memcmp(str.cp8 + lhs_start, rhs, num_chars);
+
+	CASE_WIDTH_2BYTE: {
+		size_t i;
+		str.cp16 += lhs_start;
+		for (i = 0; i < num_chars; ++i) {
+			uint16_t l = str.cp16[i];
+			uint8_t r  = rhs[i];
+			if (l != r)
+				return l < r ? -1 : 1;
+		}
+	}	break;
+
+	CASE_WIDTH_4BYTE: {
+		size_t i;
+		str.cp32 += lhs_start;
+		for (i = 0; i < num_chars; ++i) {
+			uint32_t l = str.cp32[i];
+			uint8_t r  = rhs[i];
+			if (l != r)
+				return l < r ? -1 : 1;
+		}
+	}	break;
+
+	}
+	return 0;
+}
+
+PUBLIC WUNUSED NONNULL((1, 2)) int
+(DCALL Dee_unicode_printer_memcmp16)(struct unicode_printer const *__restrict self,
+                                     uint16_t const *rhs, size_t lhs_start, size_t num_chars) {
+	union dcharptr str;
+	str.ptr = self->up_buffer;
+	ASSERT(lhs_start + num_chars >= lhs_start);
+	ASSERT(lhs_start + num_chars <= (str.ptr ? WSTR_LENGTH(str.ptr) : 0) || !num_chars);
+	SWITCH_SIZEOF_WIDTH(self->up_flags & UNICODE_PRINTER_FWIDTH) {
+
+	CASE_WIDTH_1BYTE: {
+		size_t i;
+		str.cp8 += lhs_start;
+		for (i = 0; i < num_chars; ++i) {
+			uint8_t l  = str.cp8[i];
+			uint16_t r = rhs[i];
+			if (l != r)
+				return l < r ? -1 : 1;
+		}
+	}	break;
+
+	CASE_WIDTH_2BYTE:
+		return memcmp(str.cp16 + lhs_start, rhs, num_chars * 2); /* FIXME: Incorrect on LE for !=0 */
+
+	CASE_WIDTH_4BYTE: {
+		size_t i;
+		str.cp32 += lhs_start;
+		for (i = 0; i < num_chars; ++i) {
+			uint32_t l = str.cp32[i];
+			uint16_t r = rhs[i];
+			if (l != r)
+				return l < r ? -1 : 1;
+		}
+	}	break;
+
+	}
+	return 0;
+}
+
+PUBLIC WUNUSED NONNULL((1, 2)) int
+(DCALL Dee_unicode_printer_memcmp32)(struct unicode_printer const *__restrict self,
+                                     uint32_t const *rhs, size_t lhs_start, size_t num_chars) {
+	union dcharptr str;
+	str.ptr = self->up_buffer;
+	ASSERT(lhs_start + num_chars >= lhs_start);
+	ASSERT(lhs_start + num_chars <= (str.ptr ? WSTR_LENGTH(str.ptr) : 0) || !num_chars);
+	SWITCH_SIZEOF_WIDTH(self->up_flags & UNICODE_PRINTER_FWIDTH) {
+
+	CASE_WIDTH_1BYTE: {
+		size_t i;
+		str.cp8 += lhs_start;
+		for (i = 0; i < num_chars; ++i) {
+			uint8_t l  = str.cp8[i];
+			uint32_t r = rhs[i];
+			if (l != r)
+				return l < r ? -1 : 1;
+		}
+	}	break;
+
+	CASE_WIDTH_2BYTE: {
+		size_t i;
+		str.cp16 += lhs_start;
+		for (i = 0; i < num_chars; ++i) {
+			uint16_t l = str.cp16[i];
+			uint32_t r = rhs[i];
+			if (l != r)
+				return l < r ? -1 : 1;
+		}
+	}	break;
+
+	CASE_WIDTH_4BYTE:
+		return memcmp(str.cp32 + lhs_start, rhs, num_chars * 4); /* FIXME: Incorrect on LE for !=0 */
+
+	}
+	return 0;
+}
+
+PUBLIC WUNUSED NONNULL((1, 2)) void
+(DCALL Dee_unicode_printer_memcpy8)(struct Dee_unicode_printer *__restrict self,
+                                    uint8_t const *src, size_t dst, size_t num_chars) {
+	union dcharptr str;
+	str.ptr = self->up_buffer;
+	ASSERT(dst + num_chars >= dst);
+	ASSERT(dst + num_chars <= (str.ptr ? WSTR_LENGTH(str.ptr) : 0) || !num_chars);
+	SWITCH_SIZEOF_WIDTH(self->up_flags & UNICODE_PRINTER_FWIDTH) {
+
+	CASE_WIDTH_1BYTE:
+		memcpy(str.cp8 + dst, src, num_chars);
+		break;
+
+	CASE_WIDTH_2BYTE: {
+		size_t i;
+		str.cp16 += dst;
+		for (i = 0; i < num_chars; ++i) {
+			str.cp16[i] = (uint16_t)src[i];
+		}
+	}	break;
+
+	CASE_WIDTH_4BYTE: {
+		size_t i;
+		str.cp32 += dst;
+		for (i = 0; i < num_chars; ++i) {
+			str.cp32[i] = (uint32_t)src[i];
+		}
+	}	break;
+
+	}
+}
+
+PUBLIC WUNUSED NONNULL((1, 2)) void
+(DCALL Dee_unicode_printer_memcpy16)(struct Dee_unicode_printer *__restrict self,
+                                     uint16_t const *src, size_t dst, size_t num_chars) {
+	union dcharptr str;
+	str.ptr = self->up_buffer;
+	ASSERT(dst + num_chars >= dst);
+	ASSERT(dst + num_chars <= (str.ptr ? WSTR_LENGTH(str.ptr) : 0) || !num_chars);
+	SWITCH_SIZEOF_WIDTH(self->up_flags & UNICODE_PRINTER_FWIDTH) {
+
+	CASE_WIDTH_1BYTE: {
+		size_t i;
+		str.cp8 += dst;
+		for (i = 0; i < num_chars; ++i) {
+			str.cp8[i] = (uint8_t)src[i];
+		}
+	}	break;
+
+	CASE_WIDTH_2BYTE:
+		memcpyw(str.cp16 + dst, src, num_chars);
+		break;
+
+	CASE_WIDTH_4BYTE: {
+		size_t i;
+		str.cp32 += dst;
+		for (i = 0; i < num_chars; ++i) {
+			str.cp32[i] = (uint32_t)src[i];
+		}
+	}	break;
+
+	}
+}
+
+PUBLIC WUNUSED NONNULL((1, 2)) void
+(DCALL Dee_unicode_printer_memcpy32)(struct Dee_unicode_printer *__restrict self,
+                                     uint32_t const *src, size_t dst, size_t num_chars) {
+	union dcharptr str;
+	str.ptr = self->up_buffer;
+	ASSERT(dst + num_chars >= dst);
+	ASSERT(dst + num_chars <= (str.ptr ? WSTR_LENGTH(str.ptr) : 0) || !num_chars);
+	SWITCH_SIZEOF_WIDTH(self->up_flags & UNICODE_PRINTER_FWIDTH) {
+
+	CASE_WIDTH_1BYTE: {
+		size_t i;
+		str.cp8 += dst;
+		for (i = 0; i < num_chars; ++i) {
+			str.cp8[i] = (uint8_t)src[i];
+		}
+	}	break;
+
+	CASE_WIDTH_2BYTE: {
+		size_t i;
+		str.cp16 += dst;
+		for (i = 0; i < num_chars; ++i) {
+			str.cp16[i] = (uint16_t)src[i];
+		}
+	}	break;
+
+	CASE_WIDTH_4BYTE:
+		memcpyl(str.cp32 + dst, src, num_chars);
+		break;
+	}
+}
+
 
 DECL_END
 

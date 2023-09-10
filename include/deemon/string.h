@@ -2788,6 +2788,12 @@ NONNULL((1)) void Dee_unicode_printer_fini(struct Dee_unicode_printer *__restric
 #define Dee_unicode_printer_memchr          unicode_printer_memchr
 #define Dee_unicode_printer_memrchr         unicode_printer_memrchr
 #define Dee_unicode_printer_memmove         unicode_printer_memmove
+#define Dee_unicode_printer_memcmp8         unicode_printer_memcmp8
+#define Dee_unicode_printer_memcmp16        unicode_printer_memcmp16
+#define Dee_unicode_printer_memcmp32        unicode_printer_memcmp32
+#define Dee_unicode_printer_memcpy8         unicode_printer_memcpy8
+#define Dee_unicode_printer_memcpy16        unicode_printer_memcpy16
+#define Dee_unicode_printer_memcpy32        unicode_printer_memcpy32
 #define Dee_unicode_printer_printf          unicode_printer_printf
 #define Dee_unicode_printer_vprintf         unicode_printer_vprintf
 #define Dee_unicode_printer_printobject     unicode_printer_printobject
@@ -3152,6 +3158,28 @@ DFUNDEF NONNULL((1)) void
 (DCALL Dee_unicode_printer_memmove)(struct Dee_unicode_printer *__restrict self,
                                     size_t dst, size_t src, size_t length);
 
+/* Compare characters of `self' against `rhs' */
+DFUNDEF WUNUSED NONNULL((1, 2)) int
+(DCALL Dee_unicode_printer_memcmp8)(struct Dee_unicode_printer const *__restrict self,
+                                    uint8_t const *rhs, size_t lhs_start, size_t num_chars);
+DFUNDEF WUNUSED NONNULL((1, 2)) int
+(DCALL Dee_unicode_printer_memcmp16)(struct Dee_unicode_printer const *__restrict self,
+                                     uint16_t const *rhs, size_t lhs_start, size_t num_chars);
+DFUNDEF WUNUSED NONNULL((1, 2)) int
+(DCALL Dee_unicode_printer_memcmp32)(struct Dee_unicode_printer const *__restrict self,
+                                     uint32_t const *rhs, size_t lhs_start, size_t num_chars);
+
+/* Copy characters from `src' into `self' */
+DFUNDEF WUNUSED NONNULL((1, 2)) void
+(DCALL Dee_unicode_printer_memcpy8)(struct Dee_unicode_printer *__restrict self,
+                                    uint8_t const *src, size_t dst, size_t num_chars);
+DFUNDEF WUNUSED NONNULL((1, 2)) void
+(DCALL Dee_unicode_printer_memcpy16)(struct Dee_unicode_printer *__restrict self,
+                                     uint16_t const *src, size_t dst, size_t num_chars);
+DFUNDEF WUNUSED NONNULL((1, 2)) void
+(DCALL Dee_unicode_printer_memcpy32)(struct Dee_unicode_printer *__restrict self,
+                                     uint32_t const *src, size_t dst, size_t num_chars);
+
 /* Erase `count' characters at index `i' from the given unicode_printer `self' */
 #define Dee_unicode_printer_erase(self, i, count)                                           \
 	(void)(Dee_unicode_printer_memmove(self, i, (i) + (count),                              \
@@ -3266,6 +3294,12 @@ WUNUSED NONNULL((1, 2)) Dee_ssize_t (Dee_unicode_printer_printobjectrepr)(struct
 #define unicode_printer_memchr          Dee_unicode_printer_memchr
 #define unicode_printer_memrchr         Dee_unicode_printer_memrchr
 #define unicode_printer_memmove         Dee_unicode_printer_memmove
+#define unicode_printer_memcmp8         Dee_unicode_printer_memcmp8
+#define unicode_printer_memcmp16        Dee_unicode_printer_memcmp16
+#define unicode_printer_memcmp32        Dee_unicode_printer_memcmp32
+#define unicode_printer_memcpy8         Dee_unicode_printer_memcpy8
+#define unicode_printer_memcpy16        Dee_unicode_printer_memcpy16
+#define unicode_printer_memcpy32        Dee_unicode_printer_memcpy32
 #define unicode_printer_printf          Dee_unicode_printer_printf
 #define unicode_printer_vprintf         Dee_unicode_printer_vprintf
 #define unicode_printer_printobject     Dee_unicode_printer_printobject

@@ -39,6 +39,7 @@
 #include <deemon/thread.h>
 #include <deemon/util/atomic.h>
 
+#include <hybrid/align.h>
 #include <hybrid/unaligned.h>
 #include <hybrid/wordbits.h>
 
@@ -58,12 +59,32 @@
 #endif
 #endif /* !PATH_MAX */
 
+#undef byte_t
+#define byte_t __BYTE_TYPE__
+
 DECL_BEGIN
 
 #ifdef _WIN32_WCE
 #undef GetProcAddress
 #define GetProcAddress GetProcAddressA
 #endif /* _WIN32_WCE */
+
+#ifndef CONFIG_HAVE_wcsend
+#ifndef CONFIG_HAVE_wcslen
+#define CONFIG_HAVE_wcslen
+#undef wcslen
+#define wcslen dee_wcslen
+DeeSystem_DEFINE_wcslen(dee_wcslen)
+#endif /* !CONFIG_HAVE_wcslen */
+#undef wcsend
+#define wcsend(str) ((str) + wcslen(str))
+#endif /* !CONFIG_HAVE_wcsend */
+
+#ifndef CONFIG_HAVE_memcasecmp
+#define CONFIG_HAVE_memcasecmp
+#define memcasecmp dee_memcasecmp
+DeeSystem_DEFINE_memcasecmp(dee_memcasecmp)
+#endif /* !CONFIG_HAVE_memcasecmp */
 
 
 #if defined(Dee_fd_GETSET) && defined(Dee_fd_t_IS_HANDLE)
@@ -2166,16 +2187,13 @@ DeeNTSystem_PrintFinalPathNameByHandle(struct unicode_printer *__restrict printe
 	}
 	if (*(void **)&pdyn_GetFinalPathNameByHandleW == (void *)(uintptr_t)-1)
 		return 2;
+
 	/* Make use of `GetFinalPathNameByHandleW()' */
 	dwBufSize = PATH_MAX;
 	lpBuffer = unicode_printer_alloc_wchar(printer, dwBufSize);
 	if unlikely(!lpBuffer)
 		goto err;
 	for (;;) {
-		/* TODO: This doesn't work for windows device files like `NUL' or `CON'
-		 *       However, ProcessHacker _is_ able to correctly disable \Device\Null
-		 *       for NUL, so there must still be something else that can be done
-		 *       here, which we simply aren't doing, yet. */
 		dwNewBufSize = (*pdyn_GetFinalPathNameByHandleW)((HANDLE)hFile,
 		                                                 lpBuffer,
 		                                                 dwBufSize,
@@ -2194,6 +2212,10 @@ DeeNTSystem_PrintFinalPathNameByHandle(struct unicode_printer *__restrict printe
 			}
 			unicode_printer_free_wchar(printer, lpBuffer);
 			SetLastError(dwError);
+			/* Some files don't support this function. -> treat these cases as unsupported. */
+			if (dwError == ERROR_INVALID_FUNCTION ||
+			    dwError == ERROR_INVALID_PARAMETER)
+				return 2;
 			return 1;
 		}
 		if (dwNewBufSize <= dwBufSize)
@@ -2215,7 +2237,132 @@ err:
 	return -1;
 }
 
-#if 0
+
+typedef NTSTATUS (NTAPI *LPNTQUERYOBJECT)(HANDLE Handle, int /*OBJECT_INFORMATION_CLASS*/ ObjectInformationClass,
+                                          PVOID ObjectInformation, ULONG ObjectInformationLength, PULONG ReturnLength);
+PRIVATE LPNTQUERYOBJECT pdyn_NtQueryObject = NULL;
+
+#ifndef DEFINED_GET_NTDLL_HANDLE
+#define DEFINED_GET_NTDLL_HANDLE 1
+PRIVATE WCHAR const wNtdll[]    = { 'N', 'T', 'D', 'L', 'L', 0 };
+PRIVATE WCHAR const wNtdllDll[] = { 'N', 't', 'd', 'l', 'l', '.', 'd', 'l', 'l', 0 };
+PRIVATE HMODULE DCALL GetNtdllHandle(void) {
+	HMODULE hNtdll;
+	hNtdll = GetModuleHandleW(wNtdll);
+	if (!hNtdll)
+		hNtdll = LoadLibraryW(wNtdllDll);
+	return hNtdll;
+}
+#endif /* !DEFINED_GET_NTDLL_HANDLE */
+
+
+typedef struct {
+	USHORT Length;
+	USHORT MaximumLength;
+	PWSTR  Buffer;
+} NT_UNICODE_STRING;
+
+typedef struct {
+	NT_UNICODE_STRING Name;
+	WCHAR NameBuffer[1];
+} NT_OBJECT_NAME_INFORMATION;
+
+/* @return: 2:  Unsupported.
+ * @return: 1:  The system call failed (s.a. `GetLastError()').
+ * @return: 0:  Success.
+ * @return: -1: A deemon callback failed and an error was thrown. */
+PRIVATE WUNUSED int DCALL
+DeeNTSystem_PrintNtQueryObject_ObjectNameInformation(struct unicode_printer *__restrict printer,
+                                                     HANDLE hFile) {
+	LPWSTR lpNewBuffer, lpBuffer;
+	DWORD dwBufSize, dwBufSizeBytes;
+	ULONG ulRetBufSize;
+	NT_OBJECT_NAME_INFORMATION *ntInfo;
+	if (!pdyn_NtQueryObject) {
+		/* Try to load `NtQueryObject()' */
+		HMODULE hNtdll = GetNtdllHandle();
+		if (!hNtdll) {
+			atomic_write((void **)&pdyn_NtQueryObject, (void *)(uintptr_t)-1);
+		} else {
+			LPNTQUERYOBJECT func;
+			func = (LPNTQUERYOBJECT)GetProcAddress(hNtdll, "NtQueryObject");
+			if (!func)
+				*(void **)&func = (void *)(uintptr_t)-1;
+			atomic_write(&pdyn_NtQueryObject, func);
+		}
+	}
+	if (*(void **)&pdyn_NtQueryObject == (void *)(uintptr_t)-1)
+		return 2;
+
+#define LOCAL_ALLOC_BUFSIZE_FOR(n_chars) \
+	((n_chars) + CEILDIV(offsetof(NT_OBJECT_NAME_INFORMATION, NameBuffer), sizeof(WCHAR)))
+
+	/* Make use of `NtQueryObject()' */
+	dwBufSize = PATH_MAX;
+	lpBuffer  = unicode_printer_alloc_wchar(printer, LOCAL_ALLOC_BUFSIZE_FOR(dwBufSize));
+	if unlikely(!lpBuffer)
+		goto err;
+	for (;;) {
+		NTSTATUS ntResult;
+		ulRetBufSize   = 0;
+		dwBufSizeBytes = LOCAL_ALLOC_BUFSIZE_FOR(dwBufSize) * sizeof(WCHAR);
+		ntResult = (*pdyn_NtQueryObject)((HANDLE)hFile,
+		                                 1 /* ObjectNameInformation*/,
+		                                 lpBuffer, dwBufSizeBytes, &ulRetBufSize);
+		if (ntResult == 0)
+			break;
+		ntResult &= 0xffff;
+		if (DeeNTSystem_IsIntr(ntResult)) {
+			if (DeeThread_CheckInterrupt())
+				goto err_lpBuffer;
+			continue;
+		}
+		if (DeeNTSystem_IsBufferTooSmall(ntResult)) {
+			if (!ulRetBufSize)
+				ulRetBufSize = dwBufSize * 2;
+			goto do_resize_buffer;
+		}
+		unicode_printer_free_wchar(printer, lpBuffer);
+		if (ntResult == ERROR_INVALID_FUNCTION ||
+		    ntResult == ERROR_INVALID_PARAMETER)
+			return 2;
+		SetLastError(ntResult);
+		return 1;
+do_resize_buffer:
+		lpNewBuffer = unicode_printer_resize_wchar(printer, lpBuffer, LOCAL_ALLOC_BUFSIZE_FOR(ulRetBufSize));
+		if unlikely(!lpNewBuffer) {
+err_lpBuffer:
+			unicode_printer_free_wchar(printer, lpBuffer);
+			goto err;
+		}
+	}
+
+	/* Validate what's written in the returned buffer. */
+	ntInfo = (NT_OBJECT_NAME_INFORMATION *)lpBuffer;
+	if (dwBufSizeBytes <= offsetof(NT_OBJECT_NAME_INFORMATION, NameBuffer))
+		goto err_unsupported;
+	if (ntInfo->Name.Length > (dwBufSizeBytes - offsetof(NT_OBJECT_NAME_INFORMATION, NameBuffer)))
+		goto err_unsupported;
+	if ((void *)ntInfo->Name.Buffer < (void *)ntInfo->NameBuffer)
+		goto err_unsupported;
+	if (((byte_t *)ntInfo->Name.Buffer + ntInfo->Name.Length) >=
+	    ((byte_t *)ntInfo + dwBufSizeBytes))
+		goto err_unsupported;
+
+	/* Move the actual NT name to where we need it. */
+	dwBufSize = ntInfo->Name.Length / sizeof(WCHAR);
+	memmovedownw((void *)ntInfo, (void *)ntInfo->Name.Buffer, dwBufSize);
+	if unlikely(unicode_printer_commit_wchar(printer, lpBuffer, dwBufSize) < 0)
+		goto err;
+	return 0;
+err_unsupported:
+	unicode_printer_free_wchar(printer, lpBuffer);
+	return 2;
+err:
+	return -1;
+#undef LOCAL_ALLOC_BUFSIZE_FOR
+}
+
 /* @return: 2:  Unsupported.
  * @return: 1:  The system call failed (s.a. `GetLastError()').
  * @return: 0:  Success.
@@ -2253,7 +2400,471 @@ os_err:
 	DBG_ALIGNMENT_ENABLE();
 	return 1;
 }
-#endif
+
+PRIVATE WUNUSED LPWSTR DCALL DeeNTSystem_GetLogicalDriveStrings(void) {
+	LPWSTR lpBuffer, lpNewBuffer;
+	DWORD dwBufSize = PATH_MAX, dwError;
+	lpBuffer        = (LPWSTR)Dee_Mallocc(dwBufSize, sizeof(WCHAR));
+	if unlikely(!lpBuffer)
+		goto err;
+again:
+	for (;;) {
+		DBG_ALIGNMENT_DISABLE();
+		dwError = GetLogicalDriveStringsW(dwBufSize + 1, lpBuffer);
+		if (!dwError) {
+			dwError = GetLastError();
+			DBG_ALIGNMENT_ENABLE();
+			if (DeeNTSystem_IsIntr(dwError)) {
+				if (DeeThread_CheckInterrupt())
+					goto err_lpBuffer;
+				goto again;
+			}
+			if (dwError != NO_ERROR) {
+				DeeNTSystem_ThrowErrorf(NULL, dwError, "Failed to query logical drive strings");
+				goto err_lpBuffer;
+			}
+		} else {
+			DBG_ALIGNMENT_ENABLE();
+		}
+		if (dwError <= dwBufSize)
+			break;
+		/* Resize to fit. */
+		lpNewBuffer = (LPWSTR)Dee_Reallocc(lpBuffer, dwError, sizeof(WCHAR));
+		if unlikely(!lpNewBuffer)
+			goto err_lpBuffer;
+		lpBuffer  = lpNewBuffer;
+		dwBufSize = dwError;
+	}
+
+	/* Ensure that there are 2 trailing NUL-characters */
+	{
+		DWORD dwStrippedSize = dwError;
+		while (dwStrippedSize && lpBuffer[dwStrippedSize - 1] == '\0')
+			--dwStrippedSize;
+		dwStrippedSize += 2;
+		if unlikely(dwStrippedSize != dwError) {
+			if unlikely(dwStrippedSize < dwError) {
+				lpNewBuffer = (LPWSTR)Dee_TryReallocc(lpBuffer, dwStrippedSize, sizeof(WCHAR));
+				if likely(lpNewBuffer)
+					lpBuffer = lpNewBuffer;
+			} else {
+				lpNewBuffer = (LPWSTR)Dee_Reallocc(lpBuffer, dwStrippedSize, sizeof(WCHAR));
+				if unlikely(!lpNewBuffer)
+					goto err_lpBuffer;
+				lpNewBuffer[dwStrippedSize - 2] = '\0';
+				lpNewBuffer[dwStrippedSize - 1] = '\0';
+				lpBuffer = lpNewBuffer;
+			}
+		}
+	}
+	return lpBuffer;
+err_lpBuffer:
+	Dee_Free(lpBuffer);
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+unicode_printer_memcasecmp8(struct Dee_unicode_printer const *__restrict self,
+                            uint8_t const *rhs, size_t lhs_start, size_t num_chars) {
+	union dcharptr str;
+	str.ptr = self->up_buffer;
+	ASSERT(lhs_start + num_chars >= lhs_start);
+	ASSERT(lhs_start + num_chars <= (str.ptr ? WSTR_LENGTH(str.ptr) : 0) || !num_chars);
+	SWITCH_SIZEOF_WIDTH(self->up_flags & UNICODE_PRINTER_FWIDTH) {
+
+	CASE_WIDTH_1BYTE:
+		return memcasecmp(str.cp8 + lhs_start, rhs, num_chars);
+
+	CASE_WIDTH_2BYTE: {
+		size_t i;
+		str.cp16 += lhs_start;
+		for (i = 0; i < num_chars; ++i) {
+			uint16_t l = str.cp16[i];
+			uint8_t r  = rhs[i];
+			if (l != r) {
+				l = (uint16_t)DeeUni_ToLower(l);
+				r = (uint8_t)DeeUni_ToLower(r);
+				if (l != r)
+					return l < r ? -1 : 1;
+			}
+		}
+	}	break;
+
+	CASE_WIDTH_4BYTE: {
+		size_t i;
+		str.cp32 += lhs_start;
+		for (i = 0; i < num_chars; ++i) {
+			uint32_t l = str.cp32[i];
+			uint8_t r  = rhs[i];
+			if (l != r) {
+				l = (uint32_t)DeeUni_ToLower(l);
+				r = (uint8_t)DeeUni_ToLower(r);
+				if (l != r)
+					return l < r ? -1 : 1;
+			}
+		}
+	}	break;
+
+	}
+	return 0;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+unicode_printer_memcasecmp16(struct Dee_unicode_printer const *__restrict self,
+                             uint16_t const *rhs, size_t lhs_start, size_t num_chars) {
+	union dcharptr str;
+	str.ptr = self->up_buffer;
+	ASSERT(lhs_start + num_chars >= lhs_start);
+	ASSERT(lhs_start + num_chars <= (str.ptr ? WSTR_LENGTH(str.ptr) : 0) || !num_chars);
+	SWITCH_SIZEOF_WIDTH(self->up_flags & UNICODE_PRINTER_FWIDTH) {
+
+	CASE_WIDTH_1BYTE: {
+		size_t i;
+		str.cp8 += lhs_start;
+		for (i = 0; i < num_chars; ++i) {
+			uint8_t l  = str.cp8[i];
+			uint16_t r = rhs[i];
+			if (l != r) {
+				l = (uint8_t)DeeUni_ToLower(l);
+				r = (uint16_t)DeeUni_ToLower(r);
+				if (l != r)
+					return l < r ? -1 : 1;
+			}
+		}
+	}	break;
+
+	CASE_WIDTH_2BYTE: {
+		size_t i;
+		str.cp16 += lhs_start;
+		for (i = 0; i < num_chars; ++i) {
+			uint16_t l = str.cp16[i];
+			uint16_t r = rhs[i];
+			if (l != r) {
+				l = (uint16_t)DeeUni_ToLower(l);
+				r = (uint16_t)DeeUni_ToLower(r);
+				if (l != r)
+					return l < r ? -1 : 1;
+			}
+		}
+	}	break;
+
+	CASE_WIDTH_4BYTE: {
+		size_t i;
+		str.cp32 += lhs_start;
+		for (i = 0; i < num_chars; ++i) {
+			uint32_t l = str.cp32[i];
+			uint16_t r = rhs[i];
+			if (l != r) {
+				l = (uint32_t)DeeUni_ToLower(l);
+				r = (uint16_t)DeeUni_ToLower(r);
+				if (l != r)
+					return l < r ? -1 : 1;
+			}
+		}
+	}	break;
+
+	}
+	return 0;
+}
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+unicode_printer_replace_substring16(struct unicode_printer *__restrict printer,
+                                    size_t replace_off, size_t replace_len,
+                                    uint16_t const *newstr, size_t newstr_len) {
+	if unlikely(newstr_len > replace_len) {
+		size_t copy_src = replace_off + replace_len;
+		size_t copy_dst = replace_off + newstr_len;
+		size_t missing  = newstr_len - replace_len;
+		size_t copy_siz = UNICODE_PRINTER_LENGTH(printer) - copy_src;
+		/* Just need to do something to the necessary extra space! */
+		if unlikely(unicode_printer_print16(printer, newstr, missing) < 0)
+			goto err;
+		unicode_printer_memmove(printer, copy_dst, copy_src, copy_siz);
+	} else if likely(newstr_len < replace_len) {
+		size_t copy_src = replace_off + replace_len;
+		size_t copy_siz = UNICODE_PRINTER_LENGTH(printer) - copy_src;
+		size_t copy_dst = replace_off + newstr_len;
+		unicode_printer_memmove(printer, copy_dst, copy_src, copy_siz);
+		unicode_printer_truncate(printer, copy_dst + copy_siz);
+	}
+	unicode_printer_memcpy16(printer, newstr, replace_off, newstr_len);
+	return 0;
+err:
+	return -1;
+}
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+DeeNTSystem_ConvertNtDrivePathToDosPath(struct unicode_printer *__restrict printer,
+                                        size_t start_offset) {
+	/* Handle r"\Device\HarddiskVolume{N}\"-like prefixes.
+	 *
+	 * For this purpose, enumerate `QueryDosDevice()' with strings
+	 * returned by `GetLogicalDriveStringsW()' to find the drive
+	 * that contains the given device:
+	 *
+	 * Program:
+	 * >> import * from win32;
+	 * >> for (local drive: GetLogicalDriveStrings()) {
+	 * >>     local dosdev = QueryDosDevice(drive.rstrip("\\")).first;
+	 * >>     print repr drive, repr dosdev;
+	 * >> }
+	 *
+	 * Out:
+	 * >> "C:\\" "\\Device\\HarddiskVolume3"
+	 * >> "D:\\" "\\Device\\HarddiskVolume5"
+	 * >> "E:\\" "\\Device\\HarddiskVolume6"
+	 */
+	LPWSTR wDriveStrings, wDriveString, wNextDriveString;
+	LPWSTR wDeviceBuffer;
+	DWORD dwDeviceBufLen;
+	wDriveStrings = DeeNTSystem_GetLogicalDriveStrings();
+	if unlikely(!wDriveStrings)
+		goto err;
+	dwDeviceBufLen = (UNICODE_PRINTER_LENGTH(printer) - start_offset) + 1;
+	wDeviceBuffer  = (LPWSTR)Dee_Mallocac(dwDeviceBufLen, sizeof(WCHAR));
+	if unlikely(!wDeviceBuffer)
+		goto err_wDriveStrings;
+
+	for (wDriveString = wDriveStrings; *wDriveString;
+	     wDriveString = wNextDriveString) {
+		int diff;
+		DWORD dwDeviceLen;
+		LPWSTR wDriveStringEnd;
+		size_t wDriveStringLen;
+		wDriveStringEnd  = wcsend(wDriveString);
+		wNextDriveString = wDriveStringEnd + 1;
+
+		/* Trim trailing '\'-characters, since `QueryDosDeviceW()' dosen't like those */
+		while (wDriveStringEnd > wDriveString && wDriveStringEnd[-1] == (WCHAR)'\\')
+			*--wDriveStringEnd = '\0';
+
+		/* Query the device name attached to the drive. */
+		dwDeviceLen = QueryDosDeviceW(wDriveString, wDeviceBuffer, dwDeviceBufLen);
+		if unlikely(dwDeviceLen > dwDeviceBufLen)
+			continue; /* Too long (can't fit) */
+
+		/* Don't include trailing NUL characters in the compare below. */
+		while (dwDeviceLen && !wDeviceBuffer[dwDeviceLen - 1])
+			--dwDeviceLen;
+		if (!dwDeviceLen)
+			continue; /* It can't be this one. */
+
+		diff = unicode_printer_memcasecmp16(printer, (uint16_t const *)wDeviceBuffer,
+		                                    start_offset, dwDeviceLen);
+		if (diff != 0)
+			continue;
+
+		/* Got it!
+		 *
+		 * Now we must replace the text in `printer':
+		 * >> printer[start_offset:start_offset+dwDeviceLen] = wDriveString...wDriveStringEnd */
+		wDriveStringLen = (size_t)(wDriveStringEnd - wDriveString);
+		if unlikely(unicode_printer_replace_substring16(printer, start_offset, dwDeviceLen,
+		                                                (uint16_t const *)wDriveString, wDriveStringLen))
+			goto err_wDriveStrings_wDeviceBuffer;
+		goto done;
+	}
+
+	/* Unsupported prefix :(
+	 *
+	 * -> Return as-is, even though that'll probably lead to later problems,
+	 *    but at least doing so allows us to easily see unsupported pattern
+	 *    and add support for them later */
+done:
+	Dee_Freea(wDeviceBuffer);
+	Dee_Free(wDriveStrings);
+	return 0;
+err_wDriveStrings_wDeviceBuffer:
+	Dee_Freea(wDeviceBuffer);
+err_wDriveStrings:
+	Dee_Free(wDriveStrings);
+err:
+	return -1;
+}
+
+
+/* @return: NULL:      An error was thrown
+ * @return: ITER_DONE: System error (ignore) */
+PRIVATE WUNUSED NONNULL((1, 2)) LPWSTR DCALL
+DeeNTSystem_RegQueryValueExW(HKEY hKey, LPCWSTR lpValueName) {
+	DWORD dwType;
+	LPWSTR wResult, wNewResult;
+	DWORD dwResultLen;
+	DWORD dwResultReqLen;
+	LSTATUS lStatus;
+
+	dwResultLen = 64 * sizeof(WCHAR);
+	wResult     = (LPWSTR)Dee_Malloc(dwResultLen);
+	if unlikely(!wResult)
+		goto err;
+again:
+	dwResultReqLen = dwResultLen;
+	lStatus = RegQueryValueExW(hKey, lpValueName, NULL, &dwType,
+	                           (LPBYTE)wResult, &dwResultReqLen);
+	if (lStatus == ERROR_MORE_DATA) {
+		if (dwResultReqLen <= dwResultLen)
+			dwResultReqLen = dwResultLen * 2;
+	} else if (lStatus != 0) {
+		goto err_r_unsupported;
+	}
+
+	/* Make sure it's a string. */
+	if (dwType != REG_SZ && dwType != REG_EXPAND_SZ)
+		goto err_r_unsupported;
+
+	/* Shouldn't happen: misaligned buffer size. */
+	if unlikely(dwResultReqLen & 1)
+		++dwResultReqLen;
+
+	/* Try to allocate to the requested buffer size. */
+	wNewResult = (LPWSTR)Dee_TryRealloc(wResult, dwResultReqLen);
+	if likely(wNewResult) {
+		wResult = wNewResult;
+		if (lStatus == ERROR_MORE_DATA) {
+			dwResultLen = dwResultReqLen;
+			goto again;
+		}
+	} else if (lStatus == ERROR_MORE_DATA) {
+		/* Deal with case where we *need* more space. */
+		wNewResult = (LPWSTR)Dee_Realloc(wResult, dwResultReqLen);
+		if unlikely(!wNewResult)
+			goto err_r;
+		wResult     = wNewResult;
+		dwResultLen = dwResultReqLen;
+		goto again;
+	}
+	return wNewResult;
+err_r_unsupported:
+	Dee_Free(wResult);
+	return (LPWSTR)ITER_DONE;
+err_r:
+	Dee_Free(wResult);
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+DeeNTSystem_ConvertNtComPathToDosPath(struct unicode_printer *__restrict printer,
+                                      size_t start_offset) {
+	union dcharptr str;
+	static WCHAR const wstr_Hardware_DeviceMap_SerialComm[] = {
+		'H', 'a', 'r', 'd', 'w', 'a', 'r', 'e', '\\',
+		'D', 'e', 'v', 'i', 'c', 'e', 'M', 'a', 'p', '\\',
+		'S', 'e', 'r', 'i', 'a', 'l', 'C', 'o', 'm', 'm', 0
+	};
+	int error;
+	HKEY hKey;
+	LPWSTR wKeyValue;
+	size_t wKeyValueLen;
+	if (RegOpenKeyExW(HKEY_LOCAL_MACHINE, wstr_Hardware_DeviceMap_SerialComm, 0, KEY_QUERY_VALUE, &hKey) != 0)
+		goto done;
+	str.ptr = printer->up_buffer;
+	SWITCH_SIZEOF_WIDTH(printer->up_flags & UNICODE_PRINTER_FWIDTH) {
+
+	CASE_WIDTH_2BYTE:
+		wKeyValue = DeeNTSystem_RegQueryValueExW(hKey, (LPCWSTR)(str.cp16 + start_offset));
+		break;
+
+	CASE_WIDTH_1BYTE:
+	CASE_WIDTH_4BYTE: {
+		LPWSTR wStr;
+		size_t i, wStrLen;
+		wStrLen = UNICODE_PRINTER_LENGTH(printer) - start_offset;
+		wStr    = (LPWSTR)Dee_Mallocac(wStrLen + 1, sizeof(WCHAR));
+		if unlikely(!wStr)
+			goto err;
+		for (i = 0; i < wStrLen; ++i) {
+			wStr[i] = (WCHAR)UNICODE_PRINTER_GETCHAR(printer, start_offset + i);
+		}
+		wStr[wStrLen] = (WCHAR)'\0';
+		wKeyValue = DeeNTSystem_RegQueryValueExW(hKey, wStr);
+		Dee_Freea(wStr);
+	}	break;
+
+	}
+	(void)RegCloseKey(hKey);
+	if (wKeyValue == (LPWSTR)ITER_DONE)
+		goto done;
+	if unlikely(!wKeyValue)
+		goto err;
+
+	/* Replace the filename with the COM name. */
+	wKeyValueLen = wcslen(wKeyValue);
+	error = unicode_printer_replace_substring16(printer, start_offset,
+	                                            UNICODE_PRINTER_LENGTH(printer) - start_offset,
+	                                            (uint16_t const *)wKeyValue, wKeyValueLen);
+	Dee_Free(wKeyValue);
+	if unlikely(error)
+		goto err;
+done:
+	return 0;
+err:
+	return -1;
+}
+
+/* Convert "\Device\..." path names to their DOS equivalent
+ * @param: start_offset: The starting offset of the path in `printer'
+ * @return: 0:  Success.
+ * @return: -1: An error was thrown. */
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+DeeNTSystem_ConvertNtPathToDosPath(struct unicode_printer *__restrict printer,
+                                   size_t start_offset) {
+	size_t end_offset = UNICODE_PRINTER_LENGTH(printer);
+	/* NOTE: Most of the special handling here is derived from:
+	 *       https://stackoverflow.com/a/18792477/3296587 */
+
+	if (end_offset >= start_offset + 8 &&
+		unicode_printer_memcasecmp8(printer, (uint8_t const *)"\\Device\\", start_offset, 8) == 0) {
+
+		/* Check for r"\Device\Mup\<SERVER>\<SHARE>"-like prefixes. */
+		if (end_offset >= start_offset + 12 &&
+		    unicode_printer_memcasecmp8(printer, (uint8_t const *)"Mup\\", start_offset + 8, 4) == 0) {
+			++start_offset; /* Keep the first r'\' */
+			unicode_printer_memmove(printer, start_offset, start_offset + 10,
+			                        (end_offset - start_offset) - 10);
+			unicode_printer_truncate(printer, end_offset - 10);
+			return 0;
+		}
+
+		/* Check for r"\Device\LanmanRedirector\<SERVER>\<SHARE>"-like prefixes. */
+		if (end_offset >= start_offset + 26 &&
+		    unicode_printer_memcasecmp8(printer, (uint8_t const *)"LanmanRedirector\\", start_offset + 8, 16) == 0) {
+			++start_offset; /* Keep the first r'\' */
+			unicode_printer_memmove(printer, start_offset, start_offset + 24,
+			                        (end_offset - start_offset) - 24);
+			unicode_printer_truncate(printer, end_offset - 24);
+			return 0;
+		}
+
+		/* Check for r"\Device\Null" */
+		if (end_offset == start_offset + 12 &&
+		    unicode_printer_memcasecmp8(printer, (uint8_t const *)"Null", start_offset + 8, 4) == 0) {
+			UNICODE_PRINTER_SETCHAR(printer, start_offset + 0, 'N');
+			UNICODE_PRINTER_SETCHAR(printer, start_offset + 1, 'U');
+			UNICODE_PRINTER_SETCHAR(printer, start_offset + 2, 'L');
+			unicode_printer_truncate(printer, start_offset + 3);
+			return 0;
+		}
+
+		/* Check for r"\Device\ConDrv" */
+		if (end_offset == start_offset + 14 &&
+		    unicode_printer_memcasecmp8(printer, (uint8_t const *)"ConDrv", start_offset + 8, 6) == 0) {
+			UNICODE_PRINTER_SETCHAR(printer, start_offset + 0, 'C');
+			UNICODE_PRINTER_SETCHAR(printer, start_offset + 1, 'O');
+			UNICODE_PRINTER_SETCHAR(printer, start_offset + 2, 'N');
+			unicode_printer_truncate(printer, start_offset + 3);
+			return 0;
+		}
+
+		/* Check for files that can be mapped to `COM1', `COM2', etc... */
+		if (end_offset >= start_offset + 14 &&
+		    (unicode_printer_memcasecmp8(printer, (uint8_t const *)"Serial", start_offset + 8, 6) == 0 ||
+		     unicode_printer_memcasecmp8(printer, (uint8_t const *)"UsbSer", start_offset + 8, 6) == 0))
+			return DeeNTSystem_ConvertNtComPathToDosPath(printer, start_offset);
+	}
+	return DeeNTSystem_ConvertNtDrivePathToDosPath(printer, start_offset);
+}
 
 /* @return: 1:  The system call failed (s.a. `GetLastError()').
  * @return: 0:  Success.
@@ -2264,7 +2875,8 @@ DeeNTSystem_PrintFilenameOfHandle(struct unicode_printer *__restrict printer,
 	int error;
 	size_t length;
 	length = UNICODE_PRINTER_LENGTH(printer);
-	error  = DeeNTSystem_PrintFinalPathNameByHandle(printer, hFile, 0);
+	error  = 2;
+	/*error  = DeeNTSystem_PrintFinalPathNameByHandle(printer, hFile, 0);*/
 	if (error == 0) {
 		size_t new_length;
 		/* Try to get rid of the \\?\ prefix */
@@ -2310,55 +2922,20 @@ not_a_drive_prefix:
 	if (error != 2)
 		return error; /* Error (-1) or System error (1) */
 
-	/* GetFinalPathNameByHandle() isn't supported -- try to emulate it */
-#if 0
-	error = DeeNTSystem_PrintMappedFileNameWrapper(printer, (HANDLE)hFile);
-	if (error == 0) {
-		size_t new_length;
-		new_length = UNICODE_PRINTER_LENGTH(printer);
-		if (new_length >= length + 8 &&
-		    UNICODE_PRINTER_GETCHAR(printer, length + 0) == '\\' &&
-		    UNICODE_PRINTER_GETCHAR(printer, length + 1) == 'D' &&
-		    UNICODE_PRINTER_GETCHAR(printer, length + 2) == 'e' &&
-		    UNICODE_PRINTER_GETCHAR(printer, length + 3) == 'v' &&
-		    UNICODE_PRINTER_GETCHAR(printer, length + 4) == 'i' &&
-		    UNICODE_PRINTER_GETCHAR(printer, length + 5) == 'c' &&
-		    UNICODE_PRINTER_GETCHAR(printer, length + 6) == 'e' &&
-		    UNICODE_PRINTER_GETCHAR(printer, length + 7) == '\\') {
-			/* Check for r"\Device\Mup\<SERVER>\<SHARE>"-like prefixes. */
-			if (new_length >= length + 12 &&
-			    UNICODE_PRINTER_GETCHAR(printer, length + 8) == 'M' &&
-			    UNICODE_PRINTER_GETCHAR(printer, length + 9) == 'u' &&
-			    UNICODE_PRINTER_GETCHAR(printer, length + 10) == 'p' &&
-			    UNICODE_PRINTER_GETCHAR(printer, length + 11) == '\\') {
-				++length; /* Keep the first r'\' */
-				unicode_printer_memmove(printer, length, length + 10,
-				                        (new_length - length) - 10);
-				unicode_printer_truncate(printer, new_length - 10);
-				return 0;
-			}
-			/* TODO: Handle r"\Device\HarddiskVolume{N}\"-like prefixes.
-			 * For this purpose, enumerate `QueryDosDevice()' with strings
-			 * returned by `GetLogicalDriveStringsW()' to find the drive
-			 * that contains the given device:
-			 * Program:
-			 * >> import * from win32;
-			 * >> for (local drive: GetLogicalDriveStrings()) {
-			 * >>     local dosdev = QueryDosDevice(drive.rstrip("\\")).first;
-			 * >>     print repr drive, repr dosdev;
-			 * >> }
-			 * Out:
-			 * >> "C:\\" "\\Device\\HarddiskVolume3"
-			 * >> "D:\\" "\\Device\\HarddiskVolume5"
-			 * >> "E:\\" "\\Device\\HarddiskVolume6"
-			 */
-			
-		}
-		return 0;
-	}
-#endif
+	/* Try to use `NtQueryObject(ObjectNameInformation)' */
+	error = DeeNTSystem_PrintNtQueryObject_ObjectNameInformation(printer, (HANDLE)hFile);
+	if (error == 0)
+		return DeeNTSystem_ConvertNtPathToDosPath(printer, length);
 	if (error != 2)
 		return error; /* Error (-1) or System error (1) */
+
+	/* Try to use `GetMappedFileName(MapViewOfFile(CreateFileMapping(hFile)))' */
+	error = DeeNTSystem_PrintMappedFileNameWrapper(printer, (HANDLE)hFile);
+	if (error == 0)
+		return DeeNTSystem_ConvertNtPathToDosPath(printer, length);
+	if (error != 2)
+		return error; /* Error (-1) or System error (1) */
+
 	return DeeError_Throwf(&DeeError_UnsupportedAPI,
 	                       "No way to print the filename of handle %p",
 	                       hFile);

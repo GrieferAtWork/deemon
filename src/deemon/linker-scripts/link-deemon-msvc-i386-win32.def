@@ -178,6 +178,8 @@ EXPORTS
 	DeeFile_GetSize@4=_DeeFile_GetSize@4
 	DeeFile_GetStd@4=_DeeFile_GetStd@4
 	DeeFile_GetSysFD@4=_DeeFile_GetSysFD@4
+	DeeFile_GetUtf8@4=_DeeFile_GetUtf8@4
+	DeeFile_GetUtf8f@8=_DeeFile_GetUtf8f@8
 	DeeFile_Getc@4=_DeeFile_Getc@4
 	DeeFile_Getcf@8=_DeeFile_Getcf@8
 	DeeFile_IsAtty@4=_DeeFile_IsAtty@4
@@ -221,6 +223,7 @@ EXPORTS
 	DeeFile_Trunc@12=_DeeFile_Trunc@12
 	DeeFile_TruncHere@8=_DeeFile_TruncHere@8
 	DeeFile_TryGetStd@4=_DeeFile_TryGetStd@4
+	DeeFile_UngetUtf8@8=_DeeFile_UngetUtf8@8
 	DeeFile_Ungetc@8=_DeeFile_Ungetc@8
 	DeeFile_VPrintf@12=_DeeFile_VPrintf@12
 	DeeFile_Write@12=_DeeFile_Write@12
@@ -1026,6 +1029,12 @@ EXPORTS
 	Dee_unicode_printer_free_utf32@8=_Dee_unicode_printer_free_utf32@8
 	Dee_unicode_printer_free_utf8@8=_Dee_unicode_printer_free_utf8@8
 	Dee_unicode_printer_memchr@16=_Dee_unicode_printer_memchr@16
+	Dee_unicode_printer_memcmp16@16=_Dee_unicode_printer_memcmp16@16
+	Dee_unicode_printer_memcmp32@16=_Dee_unicode_printer_memcmp32@16
+	Dee_unicode_printer_memcmp8@16=_Dee_unicode_printer_memcmp8@16
+	Dee_unicode_printer_memcpy16@16=_Dee_unicode_printer_memcpy16@16
+	Dee_unicode_printer_memcpy32@16=_Dee_unicode_printer_memcpy32@16
+	Dee_unicode_printer_memcpy8@16=_Dee_unicode_printer_memcpy8@16
 	Dee_unicode_printer_memmove@16=_Dee_unicode_printer_memmove@16
 	Dee_unicode_printer_memrchr@16=_Dee_unicode_printer_memrchr@16
 	Dee_unicode_printer_pack@4=_Dee_unicode_printer_pack@4

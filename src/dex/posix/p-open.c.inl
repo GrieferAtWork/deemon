@@ -307,6 +307,8 @@ for (local f: functions) {
 
 
 /* Figure out how to implement `open()' */
+/* TODO: On windows, must use open_osfhandle(CreateFile()), else our
+ *       custom `STDIN$', `STDOUT$', `STDERR$' magic won't work! */
 #undef posix_open_USE_wopen
 #undef posix_open_USE_open
 #undef posix_open_USE_STUB
