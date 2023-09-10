@@ -2592,10 +2592,12 @@ NONNULL((1)) void Dee_ascii_printer_fini(struct Dee_ascii_printer *__restrict se
 DFUNDEF WUNUSED NONNULL((1)) Dee_ssize_t DPRINTER_CC
 Dee_ascii_printer_print(void *__restrict self, char const *__restrict data, size_t datalen);
 
+/* Allocate space for `datalen' bytes at the end of `self',
+ * then return a pointer to the start of this new buffer. */
 DFUNDEF WUNUSED NONNULL((1)) char *DCALL
 Dee_ascii_printer_alloc(struct Dee_ascii_printer *__restrict self, size_t datalen);
 
-/* Release the last `datalen' bytes from the printer to be
+/* Release exactly `datalen' bytes from the printer to be
  * re-used in subsequent calls, or be truncated eventually. */
 DFUNDEF NONNULL((1)) void DCALL
 Dee_ascii_printer_release(struct Dee_ascii_printer *__restrict self, size_t datalen);
@@ -2624,7 +2626,7 @@ DFUNDEF WUNUSED NONNULL((1)) int (DCALL Dee_ascii_printer_putc)(struct Dee_ascii
  *       >> ascii_printer_allocstr("foo\0");    // Table is now `foobar\0foo\0'
  *       >> ascii_printer_allocstr("bar\0");    // Table is still `foobar\0foo\0' - `bar\0' points into `foobar\0'
  * @return: * :   A pointer to a volitile memory location within the already printed string
- *               (the caller should calculate the offset to `ASCII_PRINTER_STR(self)'
+ *                (the caller should calculate the offset to `ASCII_PRINTER_STR(self)'
  *                to ensure consistency if the function is called multiple times)
  * @return: NULL: An error occurred. */
 DFUNDEF WUNUSED NONNULL((1, 2)) char *DCALL
@@ -2712,7 +2714,9 @@ NONNULL((1)) void Dee_unicode_printer_fini(struct Dee_unicode_printer *__restric
 #define UNICODE_PRINTER_GETCHAR             Dee_UNICODE_PRINTER_GETCHAR
 #define UNICODE_PRINTER_SETCHAR             Dee_UNICODE_PRINTER_SETCHAR
 #define unicode_printer_truncate            Dee_unicode_printer_truncate
+#define unicode_printer_clear               Dee_unicode_printer_clear
 #ifdef __INTELLISENSE__
+#define Dee_unicode_printer_init_string     unicode_printer_init_string
 #define Dee_unicode_printer_pack            unicode_printer_pack
 #define Dee_unicode_printer_trypack         unicode_printer_trypack
 #define Dee_unicode_printer_allocate        unicode_printer_allocate
@@ -2803,8 +2807,7 @@ NONNULL((1)) void Dee_unicode_printer_fini(struct Dee_unicode_printer *__restric
 #endif /* DEE_SOURCE */
 
 
-#undef CONFIG_UNICODE_PRINTER_MUSTFINI_IF_EMPTY
-#define Dee_UNICODE_PRINTER_ISEMPTY(x)       ((x)->up_buffer == NULL)
+#define Dee_UNICODE_PRINTER_ISEMPTY(x)       ((x)->up_length == 0)
 #define Dee_UNICODE_PRINTER_LENGTH(x)        ((x)->up_length) /* Used length */
 #define Dee_UNICODE_PRINTER_BUFSIZE(x)       ((x)->up_buffer ? Dee_WSTR_LENGTH((x)->up_buffer) : NULL) /* Allocated length */
 #define Dee_UNICODE_PRINTER_WIDTH(x)         ((x)->up_flags & Dee_UNICODE_PRINTER_FWIDTH) /* Current width */
@@ -2812,15 +2815,27 @@ NONNULL((1)) void Dee_unicode_printer_fini(struct Dee_unicode_printer *__restric
 #define Dee_UNICODE_PRINTER_SETCHAR(x, i, v) Dee_STRING_WIDTH_SETCHAR(Dee_UNICODE_PRINTER_WIDTH(x), (x)->up_buffer, i, v) /* Replace a character (`v' must fit into the buffer's current width) */
 
 #ifndef NDEBUG
-#define Dee_unicode_printer_truncate(self, len)                                             \
-	(void)(Dee_ASSERT((len) <= (self)->up_length),                                          \
-	       (self)->up_length ? (void)Dee_UNICODE_PRINTER_SETCHAR(self, (len), 0) : (void)0, \
+#define Dee_unicode_printer_truncate(self, len)                                           \
+	(void)(Dee_ASSERT((len) <= (self)->up_length),                                        \
+	       (self)->up_length ? (void)Dee_UNICODE_PRINTER_SETCHAR(self, len, 0) : (void)0, \
 	       (self)->up_length = (len))
+#define Dee_unicode_printer_clear(self)                                                 \
+	(void)((self)->up_length ? (void)Dee_UNICODE_PRINTER_SETCHAR(self, 0, 0) : (void)0, \
+	       (self)->up_length = 0)
 #else /* !NDEBUG */
 #define Dee_unicode_printer_truncate(self, len)    \
 	(void)(Dee_ASSERT((len) <= (self)->up_length), \
 	       (self)->up_length = (len))
+#define Dee_unicode_printer_clear(self) \
+	(void)((self)->up_length = 0)
 #endif /* NDEBUG */
+
+/* Initialize a unicode printer from a given `string'
+ * The caller must ensure that `!DeeObject_IsShared(string) || string == Dee_EmptyString' */
+DFUNDEF NONNULL((1, 2)) void DCALL
+Dee_unicode_printer_init_string(/*inherit(always)*/ struct Dee_unicode_printer *__restrict self,
+                                DREF DeeObject *__restrict string);
+
 
 /* _Always_ inherit all string data (even upon error) saved in
  * `self', and construct a new string from all that data, before
@@ -3170,13 +3185,13 @@ DFUNDEF WUNUSED NONNULL((1, 2)) int
                                      uint32_t const *rhs, size_t lhs_start, size_t num_chars);
 
 /* Copy characters from `src' into `self' */
-DFUNDEF WUNUSED NONNULL((1, 2)) void
+DFUNDEF NONNULL((1, 2)) void
 (DCALL Dee_unicode_printer_memcpy8)(struct Dee_unicode_printer *__restrict self,
                                     uint8_t const *src, size_t dst, size_t num_chars);
-DFUNDEF WUNUSED NONNULL((1, 2)) void
+DFUNDEF NONNULL((1, 2)) void
 (DCALL Dee_unicode_printer_memcpy16)(struct Dee_unicode_printer *__restrict self,
                                      uint16_t const *src, size_t dst, size_t num_chars);
-DFUNDEF WUNUSED NONNULL((1, 2)) void
+DFUNDEF NONNULL((1, 2)) void
 (DCALL Dee_unicode_printer_memcpy32)(struct Dee_unicode_printer *__restrict self,
                                      uint32_t const *src, size_t dst, size_t num_chars);
 
@@ -3219,6 +3234,7 @@ WUNUSED NONNULL((1, 2)) Dee_ssize_t (Dee_unicode_printer_printobjectrepr)(struct
 
 #ifdef DEE_SOURCE
 #ifndef __INTELLISENSE__
+#define unicode_printer_init_string     Dee_unicode_printer_init_string
 #define unicode_printer_pack            Dee_unicode_printer_pack
 #define unicode_printer_trypack         Dee_unicode_printer_trypack
 #define unicode_printer_allocate        Dee_unicode_printer_allocate

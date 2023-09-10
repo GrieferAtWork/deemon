@@ -145,7 +145,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_readlink_f_impl(DeeObject *file)
 			goto err;
 		}
 		DeeNTSystem_ThrowErrorf(&DeeError_FSError, dwError,
-		                        "Failed to read link %r",
+		                        "Failed to read symbolic link %r",
 		                        file);
 		goto err;
 	}
@@ -153,7 +153,7 @@ ok_got_ownds_linkfd:
 #define NEED_nt_FReadLink
 	result = nt_FReadLink(hLinkFile, file, true);
 	DBG_ALIGNMENT_DISABLE();
-	CloseHandle(hLinkFile);
+	(void)CloseHandle(hLinkFile);
 	DBG_ALIGNMENT_ENABLE();
 	return result;
 err:
@@ -207,7 +207,7 @@ EINTR_LABEL(again)
 		if unlikely(req_size < 0) {
 			error = DeeSystem_GetErrno();
 			DBG_ALIGNMENT_ENABLE();
-			EINTR_HANDLE(error, again, err);
+			EINTR_HANDLE(error, again, err_buffer);
 #ifdef EACCES
 			if (error == EACCES) {
 #define NEED_err_unix_path_no_access
@@ -418,7 +418,7 @@ EINTR_LABEL(again)
 			req_size = readlinkat(os_dfd, utf8_file, buffer, bufsize + 1);
 #endif /* !... */
 			if unlikely(req_size < 0) {
-				EINTR_HANDLE(DeeSystem_GetErrno(), again, err);
+				EINTR_HANDLE(DeeSystem_GetErrno(), again, err_buffer);
 				goto do_abspath_readlink;
 			}
 			DBG_ALIGNMENT_ENABLE();
@@ -435,7 +435,7 @@ EINTR_LABEL(again)
 #endif /* !posix_readlinkat_USE_freadlinkat */
 			new_buffer = (char *)DeeString_Resize1ByteBuffer((uint8_t *)buffer, bufsize);
 			if unlikely(!new_buffer) {
-/*err_buffer:*/
+EINTR_LABEL(err_buffer)
 				DeeString_Free1ByteBuffer((uint8_t *)buffer);
 				goto err;
 			}

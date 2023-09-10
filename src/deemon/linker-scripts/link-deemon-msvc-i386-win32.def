@@ -1029,6 +1029,7 @@ EXPORTS
 	Dee_unicode_printer_free_utf16@8=_Dee_unicode_printer_free_utf16@8
 	Dee_unicode_printer_free_utf32@8=_Dee_unicode_printer_free_utf32@8
 	Dee_unicode_printer_free_utf8@8=_Dee_unicode_printer_free_utf8@8
+	Dee_unicode_printer_init_string@8=_Dee_unicode_printer_init_string@8
 	Dee_unicode_printer_memchr@16=_Dee_unicode_printer_memchr@16
 	Dee_unicode_printer_memcmp16@16=_Dee_unicode_printer_memcmp16@16
 	Dee_unicode_printer_memcmp32@16=_Dee_unicode_printer_memcmp32@16

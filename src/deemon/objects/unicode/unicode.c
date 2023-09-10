@@ -3380,6 +3380,73 @@ err:
 }
 
 
+/* Initialize a unicode printer from a given `string'
+ * The caller must ensure that `!DeeObject_IsShared(string) || string == Dee_EmptyString' */
+PUBLIC NONNULL((1, 2)) void DCALL
+Dee_unicode_printer_init_string(/*inherit(always)*/ struct Dee_unicode_printer *__restrict self,
+                                DREF DeeObject *__restrict string) {
+	String *str = (String *)string;
+	struct Dee_string_utf *utf;
+	ASSERT_OBJECT_TYPE_EXACT(str, &DeeString_Type);
+
+	/* Check for special case: caller is giving using the empty string. */
+	if unlikely(str == (String *)Dee_EmptyString) {
+		unicode_printer_init(self);
+		Dee_DecrefNokill(str);
+		return;
+	}
+
+	/* Ensure that the string isn't being shared. */
+	ASSERT(!DeeObject_IsShared(str));
+
+	/* Check how the string is being encoded. */
+	utf = str->s_data;
+	if (!utf) {
+		/* LATIN-1/ASCII string. */
+inherit_latin1_string:
+		DBG_memset(str, 0xcc, offsetof(String, s_len));
+		self->up_length = str->s_len;
+		self->up_buffer = str->s_str; /* This inherits the entire string. */
+		self->up_flags  = STRING_WIDTH_1BYTE;
+	} else {
+		/* Extended-width string */
+		ASSERT(utf->u_width == STRING_WIDTH_1BYTE ||
+		       utf->u_width == STRING_WIDTH_2BYTE ||
+		       utf->u_width == STRING_WIDTH_4BYTE);
+
+		/* Check if it's a latin-1 string (s.a. `DeeString_STR_ISLATIN1()') */
+		if ((utf->u_width == STRING_WIDTH_1BYTE) ||
+		    (utf->u_flags & Dee_STRING_UTF_FASCII)) {
+			/* LATIN-1 string. */
+			Dee_string_utf_fini(utf, str);
+			Dee_string_utf_free(utf);
+			goto inherit_latin1_string;
+		}
+
+		/* It's an extended-width string */
+		if ((uint8_t *)utf->u_utf8 != (uint8_t *)str->s_str)
+			Dee_Free(utf->u_utf8);
+		if ((uint16_t *)utf->u_utf16 != (uint16_t *)utf->u_data[Dee_STRING_WIDTH_2BYTE])
+			Dee_Free(utf->u_utf16);
+		Dee_Free(utf->u_data[Dee_STRING_WIDTH_1BYTE]);
+
+		/* Extract the actually used string. */
+		self->up_flags = (unsigned char)utf->u_width;
+		if (utf->u_width == STRING_WIDTH_2BYTE) {
+			self->up_buffer = utf->u_data[STRING_WIDTH_2BYTE];
+			Dee_Free(utf->u_data[STRING_WIDTH_4BYTE]);
+		} else {
+			self->up_buffer = utf->u_data[STRING_WIDTH_4BYTE];
+			Dee_Free(utf->u_data[STRING_WIDTH_2BYTE]);
+		}
+		self->up_length = WSTR_LENGTH(self->up_buffer);
+		Dee_string_utf_free(utf);
+		DeeObject_Free(str);
+	}
+	Dee_DecrefNokill(&DeeString_Type);
+}
+
+
 /* _Always_ inherit all string data (even upon error) saved in
  * `self', and construct a new string from all that data, before
  * returning a reference to that string.

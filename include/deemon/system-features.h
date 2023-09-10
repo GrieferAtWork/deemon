@@ -1283,10 +1283,13 @@ sizeof("off_t");
 
 // unistd.h and stdlib.h
 func("realpath", "", test: 'extern char const path[]; extern char buf[]; char c = *realpath(path, buf); return c != 0;');
+func("realpath3", "", test: 'extern char buf[]; char c = *realpath3("/foobar", buf, 42); return c != 0;');
+func("lrealpath", "", test: 'extern char buf[]; char c = *lrealpath("/foobar", buf, 42); return c != 0;');
 func("frealpath", "", test: 'extern char buf[]; char c = *frealpath(2, buf, 42); return c != 0;');
 func("frealpath4", "", test: 'extern char buf[]; char c = *frealpath4(2, buf, 42, 0); return c != 0;');
+func("realpathat", "", test: 'extern char buf[]; char c = *realpathat(2, "foobar", buf, 42, 0); return c != 0;');
 func("frealpathat", "", test: 'extern char buf[]; char c = *frealpathat(2, "foobar", buf, 42, 0); return c != 0;');
-func("resolvepath", "", test: 'extern char buf[]; return resolvepath("/foobar", buf, 42);');
+func("canonicalize_file_name", "", test: 'char *p = canonicalize_file_name("/foobar"); return p != 0;');
 
 // dirent.h
 constant("DT_UNKNOWN", "defined(CONFIG_HAVE_DIRENT_H)");
@@ -9527,6 +9530,20 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #define CONFIG_HAVE_realpath
 #endif
 
+#ifdef CONFIG_NO_realpath3
+#undef CONFIG_HAVE_realpath3
+#elif !defined(CONFIG_HAVE_realpath3) && \
+      (defined(realpath3) || defined(__realpath3_defined))
+#define CONFIG_HAVE_realpath3
+#endif
+
+#ifdef CONFIG_NO_lrealpath
+#undef CONFIG_HAVE_lrealpath
+#elif !defined(CONFIG_HAVE_lrealpath) && \
+      (defined(lrealpath) || defined(__lrealpath_defined))
+#define CONFIG_HAVE_lrealpath
+#endif
+
 #ifdef CONFIG_NO_frealpath
 #undef CONFIG_HAVE_frealpath
 #elif !defined(CONFIG_HAVE_frealpath) && \
@@ -9541,6 +9558,13 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #define CONFIG_HAVE_frealpath4
 #endif
 
+#ifdef CONFIG_NO_realpathat
+#undef CONFIG_HAVE_realpathat
+#elif !defined(CONFIG_HAVE_realpathat) && \
+      (defined(realpathat) || defined(__realpathat_defined))
+#define CONFIG_HAVE_realpathat
+#endif
+
 #ifdef CONFIG_NO_frealpathat
 #undef CONFIG_HAVE_frealpathat
 #elif !defined(CONFIG_HAVE_frealpathat) && \
@@ -9548,11 +9572,11 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #define CONFIG_HAVE_frealpathat
 #endif
 
-#ifdef CONFIG_NO_resolvepath
-#undef CONFIG_HAVE_resolvepath
-#elif !defined(CONFIG_HAVE_resolvepath) && \
-      (defined(resolvepath) || defined(__resolvepath_defined))
-#define CONFIG_HAVE_resolvepath
+#ifdef CONFIG_NO_canonicalize_file_name
+#undef CONFIG_HAVE_canonicalize_file_name
+#elif !defined(CONFIG_HAVE_canonicalize_file_name) && \
+      (defined(canonicalize_file_name) || defined(__canonicalize_file_name_defined))
+#define CONFIG_HAVE_canonicalize_file_name
 #endif
 
 #ifdef CONFIG_NO_DT_UNKNOWN
@@ -10815,11 +10839,41 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #define wrename _wrename
 #endif /* wrename = _wrename */
 
-#if !defined(CONFIG_HAVE_resolvepath) && defined(CONFIG_HAVE_frealpathat) && defined(AT_FDCWD)
-#define CONFIG_HAVE_resolvepath
-#undef resolvepath
-#define resolvepath(path, buf, buflen) (frealpathat(AT_FDCWD, path, buf, buflen, 0) ? 0 : -1)
-#endif /* resolvepath = frealpathat */
+#if !defined(CONFIG_HAVE_realpathat) && defined(CONFIG_HAVE_frealpathat)
+#define CONFIG_HAVE_realpathat
+#undef realpathat
+#define realpathat(dfd, path, buf, buflen, atflags) frealpathat(dfd, path, buf, buflen, atflags)
+#endif /* realpathat = frealpathat */
+
+#if !defined(CONFIG_HAVE_lrealpath) && defined(CONFIG_HAVE_realpathat) && defined(CONFIG_HAVE_AT_FDCWD) && defined(CONFIG_HAVE_AT_SYMLINK_NOFOLLOW)
+#define CONFIG_HAVE_lrealpath
+#undef lrealpath
+#define lrealpath(path, buf, buflen) realpathat(AT_FDCWD, path, buf, buflen, AT_SYMLINK_NOFOLLOW)
+#endif /* lrealpath = realpathat */
+
+#if !defined(CONFIG_HAVE_realpath3) && defined(CONFIG_HAVE_realpathat) && defined(CONFIG_HAVE_AT_FDCWD)
+#define CONFIG_HAVE_realpath3
+#undef realpath3
+#define realpath3(path, buf, buflen) realpathat(AT_FDCWD, path, buf, buflen, 0)
+#endif /* realpath3 = realpathat */
+
+#if !defined(CONFIG_HAVE_frealpath) && defined(CONFIG_HAVE_frealpath4)
+#define CONFIG_HAVE_frealpath
+#undef frealpath
+#define frealpath(fd, buf, buflen) frealpath4(fd, buf, buflen, 0)
+#endif /* frealpath = frealpath4 */
+
+#ifndef CONFIG_HAVE_canonicalize_file_name
+#ifdef CONFIG_HAVE_realpath
+#define CONFIG_HAVE_canonicalize_file_name
+#undef canonicalize_file_name
+#define canonicalize_file_name(path) realpath(path, NULL)
+#elif defined(CONFIG_HAVE_realpathat) && defined(CONFIG_HAVE_AT_FDCWD)
+#define CONFIG_HAVE_canonicalize_file_name
+#undef canonicalize_file_name
+#define canonicalize_file_name(path) realpathat(AT_FDCWD, path, NULL, 0, 0)
+#endif /* ... */
+#endif /* !CONFIG_HAVE_canonicalize_file_name */
 
 #if defined(CONFIG_HAVE__wlink) && !defined(CONFIG_HAVE_wlink)
 #define CONFIG_HAVE_wlink

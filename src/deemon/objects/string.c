@@ -64,6 +64,8 @@ typedef DeeStringObject String;
 DeeSystem_DEFINE_memmem(dee_memmem)
 #endif /* !CONFIG_HAVE_memmem */
 
+/* Release exactly `datalen' bytes from the printer to be
+ * re-used in subsequent calls, or be truncated eventually. */
 PUBLIC NONNULL((1)) void
 (DCALL Dee_ascii_printer_release)(struct ascii_printer *__restrict self, size_t datalen) {
 	ASSERT(self->ap_length >= datalen);
@@ -72,6 +74,8 @@ PUBLIC NONNULL((1)) void
 	self->ap_length -= datalen;
 }
 
+/* Allocate space for `datalen' bytes at the end of `self',
+ * then return a pointer to the start of this new buffer. */
 PUBLIC WUNUSED NONNULL((1)) char *
 (DCALL Dee_ascii_printer_alloc)(struct ascii_printer *__restrict self, size_t datalen) {
 	String *string;
@@ -134,6 +138,7 @@ realloc_again:
 	return result;
 }
 
+/* Print a single character, returning -1 on error or 0 on success. */
 PUBLIC WUNUSED NONNULL((1)) int
 (DCALL Dee_ascii_printer_putc)(struct ascii_printer *__restrict self, char ch) {
 	/* Quick check: Can we print to an existing buffer. */
@@ -151,6 +156,7 @@ err:
 	return -1;
 }
 
+/* Append the given data to a string printer. (HINT: Use this one as a `Dee_formatprinter_t') */
 PUBLIC WUNUSED NONNULL((1)) dssize_t
 (DPRINTER_CC Dee_ascii_printer_print)(void *__restrict self,
                                       char const *__restrict data,
@@ -222,6 +228,8 @@ done:
 	return (dssize_t)datalen;
 }
 
+/* Pack together data from a string printer and return the generated contained string.
+ * Upon success, as well as upon failure, the state of `self' is undefined upon return. */
 PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *
 (DCALL Dee_ascii_printer_pack)(struct ascii_printer *__restrict self) {
 	DREF String *result = self->ap_string;
@@ -249,6 +257,19 @@ PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *
 	return (DREF DeeObject *)result;
 }
 
+/* Search the buffer that has already been created for an existing instance
+ * of `str...+=length' and if found, return a pointer to its location.
+ * Otherwise, append the given string and return a pointer to that location.
+ * Upon error (append failed to allocate more memory), NULL is returned.
+ * HINT: This function is very useful when creating
+ *       string tables for NUL-terminated strings:
+ *       >> ascii_printer_allocstr("foobar\0"); // Table is now `foobar\0'
+ *       >> ascii_printer_allocstr("foo\0");    // Table is now `foobar\0foo\0'
+ *       >> ascii_printer_allocstr("bar\0");    // Table is still `foobar\0foo\0' - `bar\0' points into `foobar\0'
+ * @return: * :   A pointer to a volitile memory location within the already printed string
+ *                (the caller should calculate the offset to `ASCII_PRINTER_STR(self)'
+ *                to ensure consistency if the function is called multiple times)
+ * @return: NULL: An error occurred. */
 PUBLIC WUNUSED NONNULL((1, 2)) char *
 (DCALL Dee_ascii_printer_allocstr)(struct ascii_printer *__restrict self,
                                    char const *__restrict str, size_t length) {

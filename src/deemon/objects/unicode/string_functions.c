@@ -12459,7 +12459,7 @@ PUBLIC WUNUSED NONNULL((1, 2)) int
 	return 0;
 }
 
-PUBLIC WUNUSED NONNULL((1, 2)) void
+PUBLIC NONNULL((1, 2)) void
 (DCALL Dee_unicode_printer_memcpy8)(struct Dee_unicode_printer *__restrict self,
                                     uint8_t const *src, size_t dst, size_t num_chars) {
 	union dcharptr str;
@@ -12491,7 +12491,7 @@ PUBLIC WUNUSED NONNULL((1, 2)) void
 	}
 }
 
-PUBLIC WUNUSED NONNULL((1, 2)) void
+PUBLIC NONNULL((1, 2)) void
 (DCALL Dee_unicode_printer_memcpy16)(struct Dee_unicode_printer *__restrict self,
                                      uint16_t const *src, size_t dst, size_t num_chars) {
 	union dcharptr str;
@@ -12523,7 +12523,7 @@ PUBLIC WUNUSED NONNULL((1, 2)) void
 	}
 }
 
-PUBLIC WUNUSED NONNULL((1, 2)) void
+PUBLIC NONNULL((1, 2)) void
 (DCALL Dee_unicode_printer_memcpy32)(struct Dee_unicode_printer *__restrict self,
                                      uint32_t const *src, size_t dst, size_t num_chars) {
 	union dcharptr str;

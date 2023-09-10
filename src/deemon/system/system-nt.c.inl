@@ -2795,7 +2795,7 @@ DeeNTSystem_ConvertNtDrivePathToDosPath(struct unicode_printer *__restrict print
 	wDriveStrings = DeeNTSystem_GetLogicalDriveStrings();
 	if unlikely(!wDriveStrings)
 		goto err;
-	dwDeviceBufLen = (UNICODE_PRINTER_LENGTH(printer) - start_offset) + 1;
+	dwDeviceBufLen = (DWORD)(UNICODE_PRINTER_LENGTH(printer) - start_offset) + 1;
 	wDeviceBuffer  = (LPWSTR)Dee_Mallocac(dwDeviceBufLen, sizeof(WCHAR));
 	if unlikely(!wDeviceBuffer)
 		goto err_wDriveStrings;

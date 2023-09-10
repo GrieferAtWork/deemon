@@ -2111,6 +2111,7 @@ found_option:
 			iter = next + 1;
 		}
 	}
+
 	/* Actually open the file. */
 	result = DeeFile_Open(path, oflags, mode);
 	if unlikely(!ITER_ISOK(result)) {

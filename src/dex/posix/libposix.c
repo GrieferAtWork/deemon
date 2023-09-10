@@ -145,6 +145,13 @@ local ALL_STUBS = {
 	("posix_fchownat_USE_STUB",     { "fchownat" }),
 	("posix_pipe_USE_STUB",         { "pipe" }),
 	("posix_pipe2_USE_STUB",        { "pipe2" }),
+	("posix_lrealpath_USE_STUB",    { "lrealpath" }),
+	("posix_frealpath_USE_STUB",    { "frealpath" }),
+	("posix_realpath_USE_STUB",     { "realpath" }),
+	("posix_realpathat_USE_STUB",   { "realpathat" }),
+	("posix_lresolvepath_USE_STUB", { "lresolvepath" }),
+	("posix_resolvepath_USE_STUB",  { "resolvepath" }),
+	("posix_resolvepathat_USE_STUB",{ "resolvepathat" }),
 	("posix_strerror_USE_STUB",     { "strerror" }),
 	("posix_strerrorname_USE_STUB", { "strerrorname" }),
 	("posix_open_USE_STUB",         { "open", "_open" }),
@@ -621,6 +628,13 @@ print("#endif /" "* POSIX_STUBS_TOTLEN == 0 *" "/");
 #define len_posix_freadlink_USE_STUB /* nothing */
 #define str_posix_freadlink_USE_STUB /* nothing */
 #endif /* !posix_freadlink_USE_STUB */
+#ifdef posix_frealpath_USE_STUB
+#define len_posix_frealpath_USE_STUB +10
+#define str_posix_frealpath_USE_STUB 'f', 'r', 'e', 'a', 'l', 'p', 'a', 't', 'h', '\0',
+#else /* posix_frealpath_USE_STUB */
+#define len_posix_frealpath_USE_STUB /* nothing */
+#define str_posix_frealpath_USE_STUB /* nothing */
+#endif /* !posix_frealpath_USE_STUB */
 #ifdef posix_frename_USE_STUB
 #define len_posix_frename_USE_STUB +8
 #define str_posix_frename_USE_STUB 'f', 'r', 'e', 'n', 'a', 'm', 'e', '\0',
@@ -628,6 +642,13 @@ print("#endif /" "* POSIX_STUBS_TOTLEN == 0 *" "/");
 #define len_posix_frename_USE_STUB /* nothing */
 #define str_posix_frename_USE_STUB /* nothing */
 #endif /* !posix_frename_USE_STUB */
+#ifdef posix_fresolvepath_USE_STUB
+#define len_posix_fresolvepath_USE_STUB +13
+#define str_posix_fresolvepath_USE_STUB 'f', 'r', 'e', 's', 'o', 'l', 'v', 'e', 'p', 'a', 't', 'h', '\0',
+#else /* posix_fresolvepath_USE_STUB */
+#define len_posix_fresolvepath_USE_STUB /* nothing */
+#define str_posix_fresolvepath_USE_STUB /* nothing */
+#endif /* !posix_fresolvepath_USE_STUB */
 #ifdef posix_fsymlinkat_USE_STUB
 #define len_posix_fsymlinkat_USE_STUB +23
 #define str_posix_fsymlinkat_USE_STUB 'f', 's', 'y', 'm', 'l', 'i', 'n', 'k', 'a', 't', '\0', '_', 'f', 's', 'y', 'm', 'l', 'i', 'n', 'k', 'a', 't', '\0',
@@ -726,6 +747,20 @@ print("#endif /" "* POSIX_STUBS_TOTLEN == 0 *" "/");
 #define len_posix_linkat_USE_STUB /* nothing */
 #define str_posix_linkat_USE_STUB /* nothing */
 #endif /* !posix_linkat_USE_STUB */
+#ifdef posix_lrealpath_USE_STUB
+#define len_posix_lrealpath_USE_STUB +10
+#define str_posix_lrealpath_USE_STUB 'l', 'r', 'e', 'a', 'l', 'p', 'a', 't', 'h', '\0',
+#else /* posix_lrealpath_USE_STUB */
+#define len_posix_lrealpath_USE_STUB /* nothing */
+#define str_posix_lrealpath_USE_STUB /* nothing */
+#endif /* !posix_lrealpath_USE_STUB */
+#ifdef posix_lresolvepath_USE_STUB
+#define len_posix_lresolvepath_USE_STUB +13
+#define str_posix_lresolvepath_USE_STUB 'l', 'r', 'e', 's', 'o', 'l', 'v', 'e', 'p', 'a', 't', 'h', '\0',
+#else /* posix_lresolvepath_USE_STUB */
+#define len_posix_lresolvepath_USE_STUB /* nothing */
+#define str_posix_lresolvepath_USE_STUB /* nothing */
+#endif /* !posix_lresolvepath_USE_STUB */
 #ifdef posix_lseek_USE_STUB
 #define len_posix_lseek_USE_STUB +6
 #define str_posix_lseek_USE_STUB 'l', 's', 'e', 'e', 'k', '\0',
@@ -831,6 +866,20 @@ print("#endif /" "* POSIX_STUBS_TOTLEN == 0 *" "/");
 #define len_posix_readlinkat_USE_STUB /* nothing */
 #define str_posix_readlinkat_USE_STUB /* nothing */
 #endif /* !posix_readlinkat_USE_STUB */
+#ifdef posix_realpath_USE_STUB
+#define len_posix_realpath_USE_STUB +9
+#define str_posix_realpath_USE_STUB 'r', 'e', 'a', 'l', 'p', 'a', 't', 'h', '\0',
+#else /* posix_realpath_USE_STUB */
+#define len_posix_realpath_USE_STUB /* nothing */
+#define str_posix_realpath_USE_STUB /* nothing */
+#endif /* !posix_realpath_USE_STUB */
+#ifdef posix_realpathat_USE_STUB
+#define len_posix_realpathat_USE_STUB +11
+#define str_posix_realpathat_USE_STUB 'r', 'e', 'a', 'l', 'p', 'a', 't', 'h', 'a', 't', '\0',
+#else /* posix_realpathat_USE_STUB */
+#define len_posix_realpathat_USE_STUB /* nothing */
+#define str_posix_realpathat_USE_STUB /* nothing */
+#endif /* !posix_realpathat_USE_STUB */
 #ifdef posix_remove_USE_STUB
 #define len_posix_remove_USE_STUB +7
 #define str_posix_remove_USE_STUB 'r', 'e', 'm', 'o', 'v', 'e', '\0',
@@ -866,6 +915,20 @@ print("#endif /" "* POSIX_STUBS_TOTLEN == 0 *" "/");
 #define len_posix_renameat_USE_STUB /* nothing */
 #define str_posix_renameat_USE_STUB /* nothing */
 #endif /* !posix_renameat_USE_STUB */
+#ifdef posix_resolvepath_USE_STUB
+#define len_posix_resolvepath_USE_STUB +12
+#define str_posix_resolvepath_USE_STUB 'r', 'e', 's', 'o', 'l', 'v', 'e', 'p', 'a', 't', 'h', '\0',
+#else /* posix_resolvepath_USE_STUB */
+#define len_posix_resolvepath_USE_STUB /* nothing */
+#define str_posix_resolvepath_USE_STUB /* nothing */
+#endif /* !posix_resolvepath_USE_STUB */
+#ifdef posix_resolvepathat_USE_STUB
+#define len_posix_resolvepathat_USE_STUB +14
+#define str_posix_resolvepathat_USE_STUB 'r', 'e', 's', 'o', 'l', 'v', 'e', 'p', 'a', 't', 'h', 'a', 't', '\0',
+#else /* posix_resolvepathat_USE_STUB */
+#define len_posix_resolvepathat_USE_STUB /* nothing */
+#define str_posix_resolvepathat_USE_STUB /* nothing */
+#endif /* !posix_resolvepathat_USE_STUB */
 #ifdef posix_rmdir_USE_STUB
 #define len_posix_rmdir_USE_STUB +6
 #define str_posix_rmdir_USE_STUB 'r', 'm', 'd', 'i', 'r', '\0',
@@ -1208,7 +1271,9 @@ print("#endif /" "* POSIX_STUBS_TOTLEN == 0 *" "/");
 	len_posix_flink_USE_STUB \
 	len_posix_fmkdirat_USE_STUB \
 	len_posix_freadlink_USE_STUB \
+	len_posix_frealpath_USE_STUB \
 	len_posix_frename_USE_STUB \
+	len_posix_fresolvepath_USE_STUB \
 	len_posix_fsymlinkat_USE_STUB \
 	len_posix_fsync_USE_STUB \
 	len_posix_ftruncate_USE_STUB \
@@ -1223,6 +1288,8 @@ print("#endif /" "* POSIX_STUBS_TOTLEN == 0 *" "/");
 	len_posix_lcopyfile_USE_STUB \
 	len_posix_link_USE_STUB \
 	len_posix_linkat_USE_STUB \
+	len_posix_lrealpath_USE_STUB \
+	len_posix_lresolvepath_USE_STUB \
 	len_posix_lseek_USE_STUB \
 	len_posix_lstat_USE_STUB \
 	len_posix_lutime_USE_STUB \
@@ -1238,11 +1305,15 @@ print("#endif /" "* POSIX_STUBS_TOTLEN == 0 *" "/");
 	len_posix_read_USE_STUB \
 	len_posix_readlink_USE_STUB \
 	len_posix_readlinkat_USE_STUB \
+	len_posix_realpath_USE_STUB \
+	len_posix_realpathat_USE_STUB \
 	len_posix_remove_USE_STUB \
 	len_posix_removeat_USE_STUB \
 	len_posix_rename_USE_STUB \
 	len_posix_renameat2_USE_STUB \
 	len_posix_renameat_USE_STUB \
+	len_posix_resolvepath_USE_STUB \
+	len_posix_resolvepathat_USE_STUB \
 	len_posix_rmdir_USE_STUB \
 	len_posix_rmdirat_USE_STUB \
 	len_posix_setenv_USE_STUB \
@@ -1346,7 +1417,9 @@ PRIVATE struct {
 		str_posix_flink_USE_STUB
 		str_posix_fmkdirat_USE_STUB
 		str_posix_freadlink_USE_STUB
+		str_posix_frealpath_USE_STUB
 		str_posix_frename_USE_STUB
+		str_posix_fresolvepath_USE_STUB
 		str_posix_fsymlinkat_USE_STUB
 		str_posix_fsync_USE_STUB
 		str_posix_ftruncate_USE_STUB
@@ -1361,6 +1434,8 @@ PRIVATE struct {
 		str_posix_lcopyfile_USE_STUB
 		str_posix_link_USE_STUB
 		str_posix_linkat_USE_STUB
+		str_posix_lrealpath_USE_STUB
+		str_posix_lresolvepath_USE_STUB
 		str_posix_lseek_USE_STUB
 		str_posix_lstat_USE_STUB
 		str_posix_lutime_USE_STUB
@@ -1376,11 +1451,15 @@ PRIVATE struct {
 		str_posix_read_USE_STUB
 		str_posix_readlink_USE_STUB
 		str_posix_readlinkat_USE_STUB
+		str_posix_realpath_USE_STUB
+		str_posix_realpathat_USE_STUB
 		str_posix_remove_USE_STUB
 		str_posix_removeat_USE_STUB
 		str_posix_rename_USE_STUB
 		str_posix_renameat2_USE_STUB
 		str_posix_renameat_USE_STUB
+		str_posix_resolvepath_USE_STUB
+		str_posix_resolvepathat_USE_STUB
 		str_posix_rmdir_USE_STUB
 		str_posix_rmdirat_USE_STUB
 		str_posix_setenv_USE_STUB
@@ -1759,9 +1838,44 @@ PRIVATE struct dex_symbol symbols[] = {
 	/* TODO: flistxattr() */
 
 	/* Path normalization */
-	D(POSIX_REALPATH_DEF)
-	/* TODO: frealpath() */
-	/* TODO: realpathat() */
+	D(POSIX_LREALPATH_DEF_DOC("#tFileAccessError{Permissions to access @path were denied (consider using ?Glresolvepath)}"
+	                          "#tFileNotFound{Some part of @path does not exist (consider using ?Glresolvepath)}"
+	                          "#tNoDirectory{Some part of @path isn't a directory (consider using ?Glresolvepath)}"
+	                          "#tSystemError{Failed to resolve the realpath for some reason}"
+	                          "Return the absolute, fully resolved, canonical name of @path.\n"
+	                          "This function also ensures that @path actually exists. If "
+	                          /**/ "this is not a requirement, consider using ?Glresolvepath instead.\n"
+	                          "If @path is a symbolic link, don't resolve that link but return the path to the link itself"))
+	D(POSIX_REALPATH_DEF_DOC("#tFileAccessError{Permissions to access @path were denied (consider using ?Gresolvepath)}"
+	                         "#tFileNotFound{Some part of @path does not exist (consider using ?Gresolvepath)}"
+	                         "#tNoDirectory{Some part of @path isn't a directory (consider using ?Gresolvepath)}"
+	                         "#tSystemError{Failed to resolve the realpath for some reason}"
+	                         "Return the absolute, fully resolved, canonical name of @path.\n"
+	                         "This function also ensures that @path actually exists. If "
+	                         /**/ "this is not a requirement, consider using ?Gresolvepath instead"))
+	D(POSIX_FREALPATH_DEF_DOC("#tSystemError{Failed to resolve the realpath for some reason}"
+	                          "#patflags{Should always be $0, except on KOS where ?GAT_DOSPATH can also be passed}"
+	                          "Return the absolute, fully resolved, canonical name of @fd"))
+	D(POSIX_REALPATHAT_DEF_DOC("#tFileAccessError{Permissions to access @dfd:@path were denied (consider using ?Gresolvepathat)}"
+	                           "#tFileNotFound{Some part of @dfd:@path does not exist (consider using ?Gresolvepathat)}"
+	                           "#tNoDirectory{Some part of @dfd:@path isn't a directory (consider using ?Gresolvepathat)}"
+	                           "#tSystemError{Failed to resolve the realpath for some reason}"
+	                           "#patflags{Set of ?GAT_SYMLINK_NOFOLLOW, ?GAT_DOSPATH}"
+	                           "Return the absolute, fully resolved, canonical name of @dfd:@path.\n"
+	                           "This function also ensures that @dfd:@path actually exists. If "
+	                           /**/ "this is not a requirement, consider using ?Gresolvepathat instead"))
+	D(POSIX_LRESOLVEPATH_DEF_DOC("#tSystemError{Failed to resolve the path for some reason}"
+	                             "Same as ?Glrealpath, but don't force the returned path to be absolute (if @path is "
+	                             /**/ "relative, then so will the returned path be), and handle errors by simply not "
+	                             /**/ "expanding a relevant portion of the path"))
+	D(POSIX_RESOLVEPATH_DEF_DOC("#tSystemError{Failed to resolve the path for some reason}"
+	                            "Same as ?Grealpath, but don't force the returned path to be absolute (if @path is "
+	                            /**/ "relative, then so will the returned path be), and handle errors by simply not "
+	                            /**/ "expanding a relevant portion of the path"))
+	D(POSIX_RESOLVEPATHAT_DEF_DOC("#tSystemError{Failed to resolve the path for some reason}"
+	                              "Same as ?Grealpathat, but don't force the returned path to be absolute (if @dfd:@path "
+	                              /**/ "is relative, then so will the returned path be), and handle errors by simply not "
+	                              /**/ "expanding a relevant portion of the path"))
 
 	/* System information */
 	/* TODO: uname() */

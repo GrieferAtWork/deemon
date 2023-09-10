@@ -1144,9 +1144,7 @@ done:
 		/* Check for special case: The printer was never used.
 		 * If this is the case, we can simply re-return the given path. */
 		if (UNICODE_PRINTER_ISEMPTY(&printer)) {
-#ifdef CONFIG_UNICODE_PRINTER_MUSTFINI_IF_EMPTY
 			unicode_printer_fini(&printer);
-#endif /* CONFIG_UNICODE_PRINTER_MUSTFINI_IF_EMPTY */
 			return_reference_(path);
 		}
 
@@ -1587,13 +1585,13 @@ print("#ifdef CONFIG_HOST_WINDOWS");
 PRIVATE_DEFINE_STRING("posix_DEV_NULL", "NUL");
 PRIVATE_DEFINE_STRING("posix_DEV_TTY", "CON");
 print("#ifdef CONFIG_WANT_WINDOWS_STD_FILES");
-PRIVATE_DEFINE_STRING("posix_DEV_STDIN", "stdIN$");
-PRIVATE_DEFINE_STRING("posix_DEV_STDOUT", "stdOUT$");
-PRIVATE_DEFINE_STRING("posix_DEV_STDERR", "stdERR$");
+PRIVATE_DEFINE_STRING("posix_DEV_STDIN", "STDIN$");
+PRIVATE_DEFINE_STRING("posix_DEV_STDOUT", "STDOUT$");
+PRIVATE_DEFINE_STRING("posix_DEV_STDERR", "STDERR$");
 print("#else /" "* CONFIG_WANT_WINDOWS_STD_FILES *" "/");
 print("/" "* Not ~really~ the same, but (might be) good enough... *" "/");
-PRIVATE_DEFINE_STRING("posix_DEV_STDIN", "conIN$");
-PRIVATE_DEFINE_STRING("posix_DEV_STDOUT", "conOUT$");
+PRIVATE_DEFINE_STRING("posix_DEV_STDIN", "CONIN$");
+PRIVATE_DEFINE_STRING("posix_DEV_STDOUT", "CONOUT$");
 print("#define posix_DEV_STDERR posix_DEV_STDOUT");
 print("#endif /" "* !CONFIG_WANT_WINDOWS_STD_FILES *" "/");
 print("#else /" "* CONFIG_HOST_WINDOWS *" "/");
@@ -1608,13 +1606,13 @@ print("#endif /" "* !CONFIG_HOST_WINDOWS *" "/");
 PRIVATE DEFINE_STRING_EX(posix_DEV_NULL, "NUL", 0x297be5d1, 0x3d8f7ae6aa67df1c);
 PRIVATE DEFINE_STRING_EX(posix_DEV_TTY, "CON", 0xb110e83f, 0xa73f81bd9988039c);
 #ifdef CONFIG_WANT_WINDOWS_STD_FILES
-PRIVATE DEFINE_STRING_EX(posix_DEV_STDIN, "stdIN$", 0x4466c44e, 0xe6dfc5c009c7236d);
-PRIVATE DEFINE_STRING_EX(posix_DEV_STDOUT, "stdOUT$", 0x83344df4, 0xd67542b6f922acbf);
-PRIVATE DEFINE_STRING_EX(posix_DEV_STDERR, "stdERR$", 0xb338bb23, 0x8ed956ddcad49d39);
+PRIVATE DEFINE_STRING_EX(posix_DEV_STDIN, "STDIN$", 0xb0ec2c08, 0xbeb042cc01f0e59b);
+PRIVATE DEFINE_STRING_EX(posix_DEV_STDOUT, "STDOUT$", 0x601e7682, 0x8c5aa4b421050b);
+PRIVATE DEFINE_STRING_EX(posix_DEV_STDERR, "STDERR$", 0xa538f46f, 0xc334b8fd0ebabcc0);
 #else /* CONFIG_WANT_WINDOWS_STD_FILES */
 /* Not ~really~ the same, but (might be) good enough... */
-PRIVATE DEFINE_STRING_EX(posix_DEV_STDIN, "conIN$", 0x8a109c76, 0x4cd9aca36f923d90);
-PRIVATE DEFINE_STRING_EX(posix_DEV_STDOUT, "conOUT$", 0x99f68777, 0xd154664875fe4613);
+PRIVATE DEFINE_STRING_EX(posix_DEV_STDIN, "CONIN$", 0xd8214f01, 0x1ecaafc7dbbd22f4);
+PRIVATE DEFINE_STRING_EX(posix_DEV_STDOUT, "CONOUT$", 0x72267aa6, 0xa91f9d83a4b324db);
 #define posix_DEV_STDERR posix_DEV_STDOUT
 #endif /* !CONFIG_WANT_WINDOWS_STD_FILES */
 #else /* CONFIG_HOST_WINDOWS */

@@ -363,9 +363,6 @@ done:
 		/* Check for special case: The printer was never used.
 		 * If this is the case, we can simply re-return the given path. */
 		if (UNICODE_PRINTER_ISEMPTY(&printer)) {
-#ifdef CONFIG_UNICODE_PRINTER_MUSTFINI_IF_EMPTY
-			unicode_printer_fini(&printer);
-#endif /* CONFIG_UNICODE_PRINTER_MUSTFINI_IF_EMPTY */
 			unicode_printer_fini(&printer);
 #ifdef CONFIG_HOST_WINDOWS
 return_unmodified:

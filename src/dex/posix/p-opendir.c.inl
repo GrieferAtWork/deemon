@@ -1320,7 +1320,7 @@ diriter_loadstat(DeeDirIteratorObject *__restrict self) {
 			goto err;
 		hFile = DeeNTSystem_CreateFileNoATime((DeeObject *)fullname, GENERIC_READ,
 		                                      FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, NULL, OPEN_EXISTING,
-		                                      FILE_ATTRIBUTE_NORMAL | FILE_FLAG_BACKUP_SEMANTICS | FILE_FLAG_OPEN_REPARSE_POINT,
+		                                      FILE_ATTRIBUTE_NORMAL | FILE_FLAG_BACKUP_SEMANTICS,
 		                                      NULL);
 		if unlikely(hFile == NULL)
 			goto err_fullname;
