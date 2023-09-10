@@ -386,7 +386,7 @@ DFUNDEF WUNUSED ATTR_INOUT(1) ATTR_INOUT(2) int DCALL DeeFile_PrintAllNl(DeeObje
 
 
 /* Open a new system file.
- * @param: oflags: Set of `OPEN_F*'
+ * @param: oflags: Set of `Dee_OPEN_F*'
  * @param: mode:   Permissions that should be applied when a new file is created. (Ignored when not supported by the host)
  * NOTE: If the host doesn't not support a filesystem or the requested open-mode
  *      (like that's ever going to happen... - deemon being used somewhere without
@@ -394,8 +394,8 @@ DFUNDEF WUNUSED ATTR_INOUT(1) ATTR_INOUT(2) int DCALL DeeFile_PrintAllNl(DeeObje
  * @return: * :        A new reference to the file in question.
  * @return: NULL:      An error (other than file-not-found) has occurred.
  * @return: ITER_DONE: The specified file does not exist.
- * @return: ITER_DONE: `OPEN_FCREAT' has not been given and file could not be found (no error was thrown)
- * @return: ITER_DONE: `OPEN_FEXCL' has been given and the file already exists (no error was thrown) */
+ * @return: ITER_DONE: `Dee_OPEN_FCREAT' has not been given and file could not be found (no error was thrown)
+ * @return: ITER_DONE: `Dee_OPEN_FEXCL' has been given and the file already exists (no error was thrown) */
 DFUNDEF WUNUSED ATTR_INOUT(1) DREF /*File*/ DeeObject *DCALL
 DeeFile_Open(/*String*/ DeeObject *__restrict filename, int oflags, int mode);
 DFUNDEF WUNUSED NONNULL((1)) DREF /*File*/ DeeObject *DCALL
@@ -406,7 +406,7 @@ DeeFile_OpenString(/*utf-8*/ char const *__restrict filename, int oflags, int mo
 #define Dee_OPEN_FRDWR     0x00000002 /* Open for reading + writing. */
 #define Dee_OPEN_FACCMODE  0x00000003 /* Mask for read/write access. */
 #define Dee_OPEN_FCREAT    0x00000040 /* Create the file if it was missing. */
-#define Dee_OPEN_FEXCL     0x00000080 /* Used with `OPEN_FCREAT': Fail if file already exists. */
+#define Dee_OPEN_FEXCL     0x00000080 /* Used with `Dee_OPEN_FCREAT': Fail if file already exists. */
 #define Dee_OPEN_FTRUNC    0x00000200 /* Truncate existing files. */
 #define Dee_OPEN_FAPPEND   0x00000400 /* Append to the end of files. */
 #define Dee_OPEN_FNONBLOCK 0x00000800 /* Don't block when attempting to read/write (Ignored if the host doesn't support this) */

@@ -465,6 +465,7 @@ EXPORTS
 	DeeNTSystem_IsUncError@4=_DeeNTSystem_IsUncError@4
 	DeeNTSystem_IsUnsupportedError@4=_DeeNTSystem_IsUnsupportedError@4
 	DeeNTSystem_IsXDev@4=_DeeNTSystem_IsXDev@4
+	DeeNTSystem_OpenFile@12=_DeeNTSystem_OpenFile@12
 	DeeNTSystem_PrintFilenameOfHandle@8=_DeeNTSystem_PrintFilenameOfHandle@8
 	DeeNTSystem_PrintFinalPathNameByHandle@12=_DeeNTSystem_PrintFinalPathNameByHandle@12
 	DeeNTSystem_PrintFormatMessage@32=_DeeNTSystem_PrintFormatMessage@32

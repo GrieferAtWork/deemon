@@ -459,16 +459,6 @@ done:
 /* File open API                                                        */
 /************************************************************************/
 
-
-#ifdef DEESYSTEM_FILE_USE_WINDOWS
-PRIVATE DWORD const generic_access[4] = {
-	/* [OPEN_FRDONLY] = */ FILE_GENERIC_READ,
-	/* [OPEN_FWRONLY] = */ FILE_GENERIC_WRITE,
-	/* [OPEN_FRDWR]   = */ FILE_GENERIC_READ | FILE_GENERIC_WRITE,
-	/* [0x3]          = */ FILE_GENERIC_READ | FILE_GENERIC_WRITE
-};
-#endif /* DEESYSTEM_FILE_USE_WINDOWS */
-
 #ifdef DEESYSTEM_FILE_USE_UNIX
 /* Fix names of aliasing flags. */
 #ifndef CONFIG_HAVE_O_CREAT
@@ -636,107 +626,11 @@ DeeFile_Open(/*String*/ DeeObject *__restrict filename, int oflags, int mode) {
 	/* NOTE: this implementation is mirrored in `posix__open_f_impl()' */
 	DREF SystemFile *result;
 	HANDLE hFile;
-	DWORD dwDesiredAccess, dwShareMode;
-	DWORD dwCreationDisposition, dwFlagsAndAttributes;
-	dwDesiredAccess      = generic_access[oflags & OPEN_FACCMODE];
-	dwShareMode          = (FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE);
-	dwFlagsAndAttributes = (FILE_ATTRIBUTE_NORMAL | FILE_FLAG_BACKUP_SEMANTICS);
-	/* Apply exclusivity flags. */
-	if (oflags & OPEN_FXREAD)
-		dwShareMode &= ~(FILE_SHARE_READ);
-	if (oflags & OPEN_FXWRITE)
-		dwShareMode &= ~(FILE_SHARE_WRITE);
-	if (oflags & OPEN_FCREAT) {
-		if (oflags & OPEN_FEXCL) {
-			dwCreationDisposition = CREATE_NEW;
-		} else {
-			dwCreationDisposition = ((oflags & OPEN_FTRUNC)
-			                         ? CREATE_ALWAYS
-			                         : OPEN_ALWAYS);
-		}
-		if (!(mode & 0444))
-			dwFlagsAndAttributes |= FILE_ATTRIBUTE_READONLY;
-	} else {
-		dwCreationDisposition = ((oflags & OPEN_FTRUNC)
-		                         ? TRUNCATE_EXISTING
-		                         : OPEN_EXISTING);
-	}
-	if ((oflags & OPEN_FAPPEND) &&
-	    (oflags & OPEN_FACCMODE) != OPEN_FRDONLY) {
-#if (FILE_GENERIC_WRITE & FILE_APPEND_DATA) == 0
-		dwDesiredAccess |= FILE_APPEND_DATA;
-#endif /* (FILE_GENERIC_WRITE & FILE_APPEND_DATA) == 0 */
-		dwDesiredAccess &= ~FILE_WRITE_DATA;
-	}
-	if (oflags & (OPEN_FDIRECT | OPEN_FSYNC))
-		dwFlagsAndAttributes |= FILE_FLAG_WRITE_THROUGH;
-	if (oflags & OPEN_FHIDDEN)
-		dwFlagsAndAttributes |= FILE_ATTRIBUTE_HIDDEN;
-	if (oflags & OPEN_FNOFOLLOW)
-		dwFlagsAndAttributes |= FILE_FLAG_OPEN_REPARSE_POINT;
-again:
-	if (oflags & OPEN_FNOATIME) {
-		hFile = DeeNTSystem_CreateFileNoATime(filename, dwDesiredAccess, dwShareMode, NULL,
-		                                      dwCreationDisposition, dwFlagsAndAttributes, NULL);
-	} else {
-		hFile = DeeNTSystem_CreateFile(filename, dwDesiredAccess, dwShareMode, NULL,
-		                               dwCreationDisposition, dwFlagsAndAttributes, NULL);
-	}
+	hFile = DeeNTSystem_OpenFile(filename, oflags, mode);
 	if unlikely(!hFile)
 		goto err;
-	if unlikely(hFile == INVALID_HANDLE_VALUE) {
-		DWORD error;
-		DBG_ALIGNMENT_DISABLE();
-		error = GetLastError();
-		DBG_ALIGNMENT_ENABLE();
-
-/*check_nt_error:*/
-		/* Handle file already-exists. */
-		if ((error == ERROR_FILE_EXISTS) &&
-		    (oflags & OPEN_FEXCL))
-			return ITER_DONE;
-
-		/* Throw the error as an NT error. */
-		if (DeeNTSystem_IsBadAllocError(error)) {
-			if (Dee_CollectMemory(1))
-				goto again;
-		} else if (DeeNTSystem_IsNotDir(error) ||
-		           DeeNTSystem_IsFileNotFoundError(error)) {
-			if (!(oflags & OPEN_FCREAT))
-				return ITER_DONE;
-			DeeNTSystem_ThrowErrorf(&DeeError_FileNotFound, error,
-			                        "File %r could not be found",
-			                        filename);
-		} else if (DeeNTSystem_IsAccessDeniedError(error)) {
-			DeeNTSystem_ThrowErrorf(&DeeError_FileAccessError, error,
-			                        "Access has not been granted for file %r",
-			                        filename);
-		} else {
-			DeeNTSystem_ThrowErrorf(&DeeError_FSError, error,
-			                        "Failed to obtain a writable handle for %r",
-			                        filename);
-		}
-		goto err;
-	}
-
-	/* Simple case: The open was successful. */
-	Dee_Incref(filename);
-#if 0 /* XXX: Only if `fp' is a pipe */
-	{
-		DWORD new_mode = oflags & OPEN_FNONBLOCK ? PIPE_NOWAIT : PIPE_WAIT;
-		DBG_ALIGNMENT_DISABLE();
-		SetNamedPipeHandleState(fp, &new_mode, NULL, NULL);
-		DBG_ALIGNMENT_ENABLE();
-	}
-#endif
-#if 0 /* Technically we'd need to do this, but then again: \
-       * Windows doesn't even have fork (natively...) */
-	if (!(oflags & OPEN_FCLOEXEC)) {
-		DBG_ALIGNMENT_DISABLE();
-		SetHandleInformation(fp, HANDLE_FLAG_INHERIT, HANDLE_FLAG_INHERIT);
-		DBG_ALIGNMENT_ENABLE();
-	}
-#endif
+	if (hFile == INVALID_HANDLE_VALUE)
+		return ITER_DONE;
 	result = DeeObject_MALLOC(SystemFile);
 	if unlikely(!result)
 		goto err_fp;
@@ -744,13 +638,12 @@ again:
 	result->sf_handle    = hFile;
 	result->sf_ownhandle = hFile;    /* Inherit handle. */
 	result->sf_filename  = filename; /* Inherit reference. */
+	Dee_Incref(filename); /* For `result->sf_filename' */
 	result->sf_filetype  = (uint32_t)FILE_TYPE_UNKNOWN;
 	result->sf_pendingc  = 0;
 	return (DREF DeeObject *)result;
 err_fp:
 	CloseHandle(hFile);
-/*err_filename:*/
-	Dee_Decref(filename);
 err:
 	return NULL;
 #endif /* DEESYSTEM_FILE_USE_WINDOWS */
@@ -766,10 +659,10 @@ err:
 #else /* O_RDONLY == OPEN_FRDONLY && O_WRONLY == OPEN_FWRONLY && O_RDWR == OPEN_FRDWR */
 	{
 		PRIVATE int const accmode_flags[4] = {
-			/* [OPEN_FRDONLY] = */ O_RDONLY,
-			/* [OPEN_FWRONLY] = */ O_WRONLY,
-			/* [OPEN_FRDWR  ] = */ O_RDWR,
-			/* [OPEN_F???   ] = */ O_RDWR
+			/* [Dee_OPEN_FRDONLY] = */ O_RDONLY,
+			/* [Dee_OPEN_FWRONLY] = */ O_WRONLY,
+			/* [Dee_OPEN_FRDWR  ] = */ O_RDWR,
+			/* [Dee_OPEN_F???   ] = */ O_RDWR
 		};
 		used_oflags = accmode_flags[oflags & OPEN_FACCMODE];
 #if SHARED_FLAGS != 0

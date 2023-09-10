@@ -2119,7 +2119,8 @@ found_option:
 		/* Handle file-not-found / file-already-exists errors. */
 		if ((oflags & (OPEN_FCREAT | OPEN_FEXCL)) == (OPEN_FCREAT | OPEN_FEXCL)) {
 			DeeError_Throwf(&DeeError_FileExists,
-			                "File %r already exists", path);
+			                "File %r already exists",
+			                path);
 		} else {
 			DeeError_Throwf(&DeeError_FileNotFound,
 			                "File %r could not be found",
@@ -2211,8 +2212,9 @@ PRIVATE struct type_method tpconst file_class_methods[] = {
 
 	              "Not that unlike in many other places, case is NOT ignored for these options\n"
 
-	              "In addition to the string-based options for @oflags, an integer bit-set may be "
-	              /**/ "passed consisting of `OPEN_F*' flags that can be found in deemon's system headers"),
+	              "In addition to the string-based options for @oflags, an integer bit-set may be passed "
+	              /**/ "consisting of #C{Dee_OPEN_F*} flags that can be found in deemon's system headers. "
+	              /**/ "Note that these flags may not necessarily equal the #C{O_*} flags from ?Mposix"),
 	TYPE_METHOD_END
 };
 

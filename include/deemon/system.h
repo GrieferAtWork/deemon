@@ -265,6 +265,18 @@ DeeNTSystem_CreateFileNoATime(/*String*/ DeeObject *__restrict lpFileName,
                               /*DWORD*/ DeeNT_DWORD dwFlagsAndAttributes,
                               /*HANDLE*/ void *hTemplateFile);
 
+/* Wrapper around `DeeNTSystem_CreateFile()' and `DeeNTSystem_CreateFileNoATime()'
+ * that is used to implement `posix.open()' and `File.open()' by taking unix-like
+ * oflags and mode.
+ * @param: oflags: Set of `Dee_OPEN_F*'
+ * @param: mode:   When no bits from `0444' are set, use `FILE_ATTRIBUTE_READONLY'
+ * @return: * :    The new handle.
+ * @return: NULL:  A deemon callback failed and an error was thrown.
+ * @return: INVALID_HANDLE_VALUE: File not found (`!Dee_OPEN_FCREAT') or already
+ *                                exists (`Dee_OPEN_FCREAT | Dee_OPEN_FEXCL') */
+DFUNDEF WUNUSED NONNULL((1)) /*HANDLE*/ void *DCALL
+DeeNTSystem_OpenFile(/*String*/ DeeObject *__restrict filename, int oflags, int mode);
+
 /* Determine the filename from a handle, as returned by `DeeNTSystem_CreateFile()' */
 DFUNDEF WUNUSED DREF /*String*/ DeeObject *DCALL
 DeeNTSystem_GetFilenameOfHandle(/*HANDLE*/ void *hFile);

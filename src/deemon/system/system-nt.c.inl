@@ -2110,6 +2110,132 @@ DeeNTSystem_CreateFileNoATime(/*String*/ DeeObject *__restrict lpFileName,
 }
 
 
+/* Wrapper around `DeeNTSystem_CreateFile()' and `DeeNTSystem_CreateFileNoATime()'
+ * that is used to implement `posix.open()' and `File.open()' by taking unix-like
+ * oflags and mode.
+ * @param: oflags: Set of `Dee_OPEN_F*'
+ * @param: mode:   When no bits from `0444' are set, use `FILE_ATTRIBUTE_READONLY'
+ * @return: * :    The new handle.
+ * @return: NULL:  A deemon callback failed and an error was thrown.
+ * @return: INVALID_HANDLE_VALUE: File not found (`!Dee_OPEN_FCREAT') or already
+ *                                exists (`Dee_OPEN_FCREAT | Dee_OPEN_FEXCL') */
+PUBLIC WUNUSED NONNULL((1)) /*HANDLE*/ void *DCALL
+DeeNTSystem_OpenFile(/*String*/ DeeObject *__restrict filename, int oflags, int mode) {
+	PRIVATE DWORD const generic_access[4] = {
+		/* [OPEN_FRDONLY] = */ FILE_GENERIC_READ,
+		/* [OPEN_FWRONLY] = */ FILE_GENERIC_WRITE,
+		/* [OPEN_FRDWR]   = */ FILE_GENERIC_READ | FILE_GENERIC_WRITE,
+		/* [0x3]          = */ FILE_GENERIC_READ | FILE_GENERIC_WRITE
+	};
+	HANDLE hFile;
+	DWORD dwDesiredAccess, dwShareMode;
+	DWORD dwCreationDisposition, dwFlagsAndAttributes;
+	dwDesiredAccess      = generic_access[oflags & OPEN_FACCMODE];
+	dwShareMode          = (FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE);
+	dwFlagsAndAttributes = (FILE_ATTRIBUTE_NORMAL | FILE_FLAG_BACKUP_SEMANTICS);
+	/* Apply exclusivity flags. */
+	if (oflags & OPEN_FXREAD)
+		dwShareMode &= ~(FILE_SHARE_READ);
+	if (oflags & OPEN_FXWRITE)
+		dwShareMode &= ~(FILE_SHARE_WRITE);
+	if (oflags & OPEN_FCREAT) {
+		if (oflags & OPEN_FEXCL) {
+			dwCreationDisposition = CREATE_NEW;
+		} else {
+			dwCreationDisposition = ((oflags & OPEN_FTRUNC)
+			                         ? CREATE_ALWAYS
+			                         : OPEN_ALWAYS);
+		}
+		if (!(mode & 0444))
+			dwFlagsAndAttributes |= FILE_ATTRIBUTE_READONLY;
+	} else {
+		dwCreationDisposition = ((oflags & OPEN_FTRUNC)
+		                         ? TRUNCATE_EXISTING
+		                         : OPEN_EXISTING);
+	}
+	if ((oflags & OPEN_FAPPEND) &&
+	    (oflags & OPEN_FACCMODE) != OPEN_FRDONLY) {
+#if (FILE_GENERIC_WRITE & FILE_APPEND_DATA) == 0
+		dwDesiredAccess |= FILE_APPEND_DATA;
+#endif /* (FILE_GENERIC_WRITE & FILE_APPEND_DATA) == 0 */
+		dwDesiredAccess &= ~FILE_WRITE_DATA;
+	}
+	if (oflags & (OPEN_FDIRECT | OPEN_FSYNC))
+		dwFlagsAndAttributes |= FILE_FLAG_WRITE_THROUGH;
+	if (oflags & OPEN_FHIDDEN)
+		dwFlagsAndAttributes |= FILE_ATTRIBUTE_HIDDEN;
+	if (oflags & OPEN_FNOFOLLOW)
+		dwFlagsAndAttributes |= FILE_FLAG_OPEN_REPARSE_POINT;
+again:
+	if (oflags & OPEN_FNOATIME) {
+		hFile = DeeNTSystem_CreateFileNoATime(filename, dwDesiredAccess, dwShareMode, NULL,
+		                                      dwCreationDisposition, dwFlagsAndAttributes, NULL);
+	} else {
+		hFile = DeeNTSystem_CreateFile(filename, dwDesiredAccess, dwShareMode, NULL,
+		                               dwCreationDisposition, dwFlagsAndAttributes, NULL);
+	}
+	if unlikely(!hFile)
+		goto err;
+	if unlikely(hFile == INVALID_HANDLE_VALUE) {
+		DWORD error;
+		DBG_ALIGNMENT_DISABLE();
+		error = GetLastError();
+		DBG_ALIGNMENT_ENABLE();
+
+/*check_nt_error:*/
+		/* Handle file already-exists. */
+		if ((error == ERROR_FILE_EXISTS) && (oflags & OPEN_FEXCL))
+			return INVALID_HANDLE_VALUE;
+
+		/* Throw the error as an NT error. */
+		if (DeeNTSystem_IsBadAllocError(error)) {
+			if (Dee_CollectMemory(1))
+				goto again;
+		} else if (DeeNTSystem_IsNotDir(error) ||
+		           DeeNTSystem_IsFileNotFoundError(error)) {
+			if (!(oflags & OPEN_FCREAT))
+				return INVALID_HANDLE_VALUE;
+			DeeNTSystem_ThrowErrorf(&DeeError_FileNotFound, error,
+			                        "File %r could not be found",
+			                        filename);
+		} else if (DeeNTSystem_IsAccessDeniedError(error)) {
+			DeeNTSystem_ThrowErrorf(&DeeError_FileAccessError, error,
+			                        "Access has not been granted for file %r",
+			                        filename);
+		} else {
+			DeeNTSystem_ThrowErrorf(&DeeError_FSError, error,
+			                        "Failed to obtain a writable handle for %r",
+			                        filename);
+		}
+		goto err;
+	}
+
+#if 0 /* XXX: Only if `fp' is a pipe */
+	{
+		DWORD new_mode = oflags & OPEN_FNONBLOCK ? PIPE_NOWAIT : PIPE_WAIT;
+		DBG_ALIGNMENT_DISABLE();
+		SetNamedPipeHandleState(fp, &new_mode, NULL, NULL);
+		DBG_ALIGNMENT_ENABLE();
+	}
+#endif
+#if 0 /* Technically we'd need to do this, but then again: \
+       * Windows doesn't even have fork (natively...) */
+	if (!(oflags & OPEN_FCLOEXEC)) {
+		DBG_ALIGNMENT_DISABLE();
+		SetHandleInformation(fp, HANDLE_FLAG_INHERIT, HANDLE_FLAG_INHERIT);
+		DBG_ALIGNMENT_ENABLE();
+	}
+#endif
+
+	return hFile;
+/*
+err_fp:
+	CloseHandle(hFile);*/
+err:
+	return NULL;
+}
+
+
 /* Determine the filename from a handle, as returned by `DeeNTSystem_CreateFile()' */
 PUBLIC WUNUSED /*String*/ DREF DeeObject *DCALL
 DeeNTSystem_GetFilenameOfHandle(/*HANDLE*/ void *hFile) {
