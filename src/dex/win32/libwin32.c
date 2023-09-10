@@ -1769,8 +1769,10 @@ again:
 					goto err_result;
 				goto again;
 			}
-			if (dwError != NO_ERROR)
+			if (dwError != NO_ERROR) {
+				DeeString_FreeWideBuffer(lpBuffer);
 				RETURN_ERROR(dwError, "Failed to determine TEMPPATH");
+			}
 		} else {
 			DBG_ALIGNMENT_ENABLE();
 		}
@@ -1842,8 +1844,10 @@ again:
 					goto err_result;
 				goto again;
 			}
-			if (dwError != NO_ERROR)
+			if (dwError != NO_ERROR) {
+				DeeString_FreeWideBuffer(lpBuffer);
 				RETURN_ERROR(dwError, "Failed to determine the DLL Directory");
+			}
 		} else {
 			DBG_ALIGNMENT_ENABLE();
 		}
@@ -2221,8 +2225,10 @@ again:
 					goto err_result;
 				goto again;
 			}
-			if (dwError != NO_ERROR)
+			if (dwError != NO_ERROR) {
+				DeeString_FreeWideBuffer(lpBuffer);
 				RETURN_ERROR(dwError, "Failed to determine the system directory");
+			}
 		} else {
 			DBG_ALIGNMENT_ENABLE();
 		}
@@ -2279,8 +2285,10 @@ again:
 					goto err_result;
 				goto again;
 			}
-			if (dwError != NO_ERROR)
+			if (dwError != NO_ERROR) {
+				DeeString_FreeWideBuffer(lpBuffer);
 				RETURN_ERROR(dwError, "Failed to determine the Windows directory");
+			}
 		} else {
 			DBG_ALIGNMENT_ENABLE();
 		}
@@ -2335,8 +2343,10 @@ again:
 					goto err_result;
 				goto again;
 			}
-			if (dwError != NO_ERROR)
+			if (dwError != NO_ERROR) {
+				DeeString_FreeWideBuffer(lpBuffer);
 				RETURN_ERROR(dwError, "Failed to determine the System-Windows directory");
+			}
 		} else {
 			DBG_ALIGNMENT_ENABLE();
 		}
@@ -2413,8 +2423,10 @@ again:
 					goto err_result;
 				goto again;
 			}
-			if (dwError != NO_ERROR)
+			if (dwError != NO_ERROR) {
+				DeeString_FreeWideBuffer(lpBuffer);
 				RETURN_ERROR(dwError, "Failed to determine the SystemWow64 directory");
+			}
 		} else {
 			DBG_ALIGNMENT_ENABLE();
 		}
@@ -2490,8 +2502,10 @@ again:
 					goto err_result;
 				goto again;
 			}
-			if (dwError != NO_ERROR)
+			if (dwError != NO_ERROR) {
+				DeeString_FreeWideBuffer(lpBuffer);
 				RETURN_ERROR(dwError, "Failed to query logical drive strings");
+			}
 		} else {
 			DBG_ALIGNMENT_ENABLE();
 		}
