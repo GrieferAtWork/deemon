@@ -2809,7 +2809,7 @@ DeeNTSystem_ConvertNtDrivePathToDosPath(struct unicode_printer *__restrict print
 		wDriveStringEnd  = wcsend(wDriveString);
 		wNextDriveString = wDriveStringEnd + 1;
 
-		/* Trim trailing '\'-characters, since `QueryDosDeviceW()' dosen't like those */
+		/* Trim trailing '\'-characters, since `QueryDosDeviceW()' doesn't like those */
 		while (wDriveStringEnd > wDriveString && wDriveStringEnd[-1] == (WCHAR)'\\')
 			*--wDriveStringEnd = '\0';
 
