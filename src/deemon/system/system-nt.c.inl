@@ -1971,6 +1971,14 @@ DeeNTSystem_CreateFile(/*String*/ DeeObject *__restrict lpFileName,
 		    DeeString_STR(lpFileName)[5] == '$') {
 			hResult = GetStdHandle(STD_INPUT_HANDLE);
 do_copy_and_return_hResult:
+			if (dwCreationDisposition == CREATE_NEW ||
+			    dwCreationDisposition == CREATE_ALWAYS ||
+			    dwCreationDisposition == TRUNCATE_EXISTING) {
+				/* These modes cannot be used to access STD* files. */
+				SetLastError(ERROR_INVALID_PARAMETER);
+				return INVALID_HANDLE_VALUE;
+			}
+
 			if (!DuplicateHandle(GetCurrentProcess(), hResult,
 			                     GetCurrentProcess(), &hResult,
 			                     dwDesiredAccess, FALSE, 0))
