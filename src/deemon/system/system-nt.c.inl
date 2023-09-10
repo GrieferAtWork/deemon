@@ -2223,19 +2223,31 @@ again:
 		goto err;
 	}
 
-#if 0 /* XXX: Only if `fp' is a pipe */
-	{
-		DWORD new_mode = oflags & OPEN_FNONBLOCK ? PIPE_NOWAIT : PIPE_WAIT;
-		DBG_ALIGNMENT_DISABLE();
-		SetNamedPipeHandleState(fp, &new_mode, NULL, NULL);
-		DBG_ALIGNMENT_ENABLE();
+	/* When the file is a pipe (which it can be if `filename' starts with r"\\.\pipe\"),
+	 * then we have to change the pipe to non-blocking if the caller wants it to be so.
+	 * 
+	 * NOTE: We only need to do this if the caller set the NONBLOCK flag, since otherwise
+	 *       the default behavior of a named pipe is to block:
+	 * """PIPE_WAIT [...] This mode is the default if no wait-mode flag is specified""" */
+	if (oflags & OPEN_FNONBLOCK) {
+		static char const pipe_prefix[] = "\\\\.\\pipe\\";
+		char const *filename_str = DeeString_STR(filename);
+		if (memcasecmp(filename_str, pipe_prefix, COMPILER_STRLEN(pipe_prefix) * sizeof(char)) == 0) {
+			DBG_ALIGNMENT_DISABLE();
+			if (GetFileType(hFile) == FILE_TYPE_PIPE) {
+				DWORD new_mode = /*!(oflags & OPEN_FNONBLOCK) ? PIPE_WAIT :*/ PIPE_NOWAIT;
+				(void)SetNamedPipeHandleState(hFile, &new_mode, NULL, NULL);
+			}
+			DBG_ALIGNMENT_ENABLE();
+		}
 	}
-#endif
+
 #if 0 /* Technically we'd need to do this, but then again: \
-       * Windows doesn't even have fork (natively...) */
+       * Windows doesn't even have fork (natively...).     \
+       * Also: ipc.Process() automatically manages this flag! */
 	if (!(oflags & OPEN_FCLOEXEC)) {
 		DBG_ALIGNMENT_DISABLE();
-		SetHandleInformation(fp, HANDLE_FLAG_INHERIT, HANDLE_FLAG_INHERIT);
+		SetHandleInformation(hFile, HANDLE_FLAG_INHERIT, HANDLE_FLAG_INHERIT);
 		DBG_ALIGNMENT_ENABLE();
 	}
 #endif
