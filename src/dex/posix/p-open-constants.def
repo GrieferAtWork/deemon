@@ -1371,6 +1371,39 @@ PRIVATE DEFINE_INT75(posix_O_NOLINKS, O_NOLINKS);
 #else /* CONFIG_HAVE_O_NOLINKS */
 #define POSIX_O_NOLINKS_DEF /* nothing */
 #endif /* !CONFIG_HAVE_O_NOLINKS */
+#ifdef O_HIDDEN
+#define POSIX_O_HIDDEN_DEF \
+	{ "O_HIDDEN", (DeeObject *)&posix_O_HIDDEN, MODSYM_FREADONLY | MODSYM_FCONSTEXPR, "When creating a new file, mark it with the DOS HIDDEN attribute" },
+#if DeeInt_IsSmallInt(O_HIDDEN)
+#define posix_O_HIDDEN (*DeeInt_ForSmallInt(O_HIDDEN))
+#elif O_HIDDEN >= 0
+#if O_HIDDEN <= 0x7fffull /* 15-bit */
+PRIVATE DEFINE_UINT15(posix_O_HIDDEN, O_HIDDEN);
+#elif O_HIDDEN <= 0x3fffffffull /* 30-bit */
+PRIVATE DEFINE_UINT30(posix_O_HIDDEN, O_HIDDEN);
+#elif O_HIDDEN <= 0x1fffffffffffull /* 45-bit */
+PRIVATE DEFINE_UINT45(posix_O_HIDDEN, O_HIDDEN);
+#elif O_HIDDEN <= 0xfffffffffffffffull /* 60-bit */
+PRIVATE DEFINE_UINT60(posix_O_HIDDEN, O_HIDDEN);
+#else
+PRIVATE DEFINE_UINT75(posix_O_HIDDEN, O_HIDDEN);
+#endif
+#else /* O_HIDDEN >= 0 */
+#if O_HIDDEN >= -0x4000ll /* 15-bit */
+PRIVATE DEFINE_INT15(posix_O_HIDDEN, O_HIDDEN);
+#elif O_HIDDEN >= -0x20000000ll /* 30-bit */
+PRIVATE DEFINE_INT30(posix_O_HIDDEN, O_HIDDEN);
+#elif O_HIDDEN >= -0x100000000000ll /* 45-bit */
+PRIVATE DEFINE_INT45(posix_O_HIDDEN, O_HIDDEN);
+#elif O_HIDDEN >= -0x800000000000000ll /* 60-bit */
+PRIVATE DEFINE_INT60(posix_O_HIDDEN, O_HIDDEN);
+#else
+PRIVATE DEFINE_INT75(posix_O_HIDDEN, O_HIDDEN);
+#endif
+#endif /* O_HIDDEN < 0 */
+#else /* O_HIDDEN */
+#define POSIX_O_HIDDEN_DEF /* nothing */
+#endif /* !O_HIDDEN */
 #define POSIX_AT_FDCWD_DEF \
 	{ "AT_FDCWD", (DeeObject *)&posix_AT_FDCWD, MODSYM_FREADONLY | MODSYM_FCONSTEXPR, "Special value used to indicate the *at functions should use the current working directory" },
 #if DeeInt_IsSmallInt(AT_FDCWD)

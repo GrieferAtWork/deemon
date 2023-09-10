@@ -92,6 +92,7 @@ fgii_conf("O_EXEC");
 fgii_conf("O_SEARCH");
 fgii_conf("O_TTY_INIT");
 fgii_conf("O_NOLINKS");
+fgii     ("O_HIDDEN", doc: "When creating a new file, mark it with the DOS HIDDEN attribute");
 
 fgi      ("AT_FDCWD",            doc: "Special value used to indicate the *at functions should use the current working directory");
 fgi      ("AT_SYMLINK_NOFOLLOW", doc: "Do not follow symbolic links");
@@ -165,6 +166,7 @@ print "/" "**" "/";
 	POSIX_O_SEARCH_DEF \
 	POSIX_O_TTY_INIT_DEF \
 	POSIX_O_NOLINKS_DEF \
+	POSIX_O_HIDDEN_DEF \
 	POSIX_AT_FDCWD_DEF \
 	POSIX_AT_SYMLINK_NOFOLLOW_DEF \
 	POSIX_AT_REMOVEDIR_DEF \
@@ -188,19 +190,19 @@ print "/" "**" "/";
 /**/
 /*[[[end]]]*/
 
-#ifdef O_CLOEXEC
+#ifdef CONFIG_HAVE_O_CLOEXEC
 #define POSIX_OPEN_O_NOINHERIT_ALIAS_DEF \
-	{ "O_NOINHERIT", (DeeObject *)&posix_O_CLOEXEC, MODSYM_FREADONLY | MODSYM_FCONSTEXPR, "Alias for #O_CLOEXEC" },
-#else /* O_CLOEXEC */
+	{ "O_NOINHERIT", (DeeObject *)&posix_O_CLOEXEC, MODSYM_FREADONLY | MODSYM_FCONSTEXPR, "Alias for ?GO_CLOEXEC" },
+#else /* CONFIG_HAVE_O_CLOEXEC */
 #define POSIX_OPEN_O_NOINHERIT_ALIAS_DEF /* nothing */
-#endif /* !O_CLOEXEC */
+#endif /* !CONFIG_HAVE_O_CLOEXEC */
 
-#ifdef O_NONBLOCK
+#ifdef CONFIG_HAVE_O_NONBLOCK
 #define POSIX_OPEN_O_NDELAY_ALIAS_DEF \
-	{ "O_NDELAY", (DeeObject *)&posix_O_NONBLOCK, MODSYM_FREADONLY | MODSYM_FCONSTEXPR, "Alias for #O_NONBLOCK" },
-#else /* O_NONBLOCK */
+	{ "O_NDELAY", (DeeObject *)&posix_O_NONBLOCK, MODSYM_FREADONLY | MODSYM_FCONSTEXPR, "Alias for ?GO_NONBLOCK" },
+#else /* CONFIG_HAVE_O_NONBLOCK */
 #define POSIX_OPEN_O_NDELAY_ALIAS_DEF /* nothing */
-#endif /* !O_NONBLOCK */
+#endif /* !CONFIG_HAVE_O_NONBLOCK */
 
 #define POSIX_OPEN_DEFS              \
 	POSIX_OPEN_BASIC_DEFS            \
@@ -307,11 +309,10 @@ for (local f: functions) {
 
 
 /* Figure out how to implement `open()' */
-/* TODO: On windows, must use open_osfhandle(CreateFile()), else our
- *       custom `STDIN$', `STDOUT$', `STDERR$' magic won't work! */
 #undef posix_open_USE_wopen
 #undef posix_open_USE_open
 #undef posix_open_USE_STUB
+#ifndef posix_open_USE_open_osfhandle__AND__CreateFile
 #if defined(CONFIG_HAVE_wopen) && defined(CONFIG_PREFER_WCHAR_FUNCTIONS)
 #define posix_open_USE_wopen
 #elif defined(CONFIG_HAVE_open)
@@ -321,6 +322,9 @@ for (local f: functions) {
 #else /* ... */
 #define posix_open_USE_STUB
 #endif /* !... */
+#endif /* !posix_open_USE_open_osfhandle__AND__CreateFile */
+
+
 
 
 
@@ -329,7 +333,9 @@ for (local f: functions) {
 #undef posix_creat_USE_creat
 #undef posix_creat_USE_open
 #undef posix_creat_USE_STUB
-#if defined(CONFIG_HAVE_wcreat) && defined(CONFIG_PREFER_WCHAR_FUNCTIONS)
+#ifdef posix_open_USE_open_osfhandle__AND__CreateFile
+#define posix_creat_USE_open
+#elif defined(CONFIG_HAVE_wcreat) && defined(CONFIG_PREFER_WCHAR_FUNCTIONS)
 #define posix_creat_USE_wcreat
 #elif defined(CONFIG_HAVE_creat)
 #define posix_creat_USE_creat
@@ -347,7 +353,9 @@ for (local f: functions) {
 #undef posix_openat_USE_openat
 #undef posix_openat_USE_posix_open
 #undef posix_openat_USE_STUB
-#if defined(CONFIG_HAVE_wopenat) && defined(CONFIG_PREFER_WCHAR_FUNCTIONS)
+#ifdef posix_open_USE_open_osfhandle__AND__CreateFile
+#define posix_openat_USE_posix_open
+#elif defined(CONFIG_HAVE_wopenat) && defined(CONFIG_PREFER_WCHAR_FUNCTIONS)
 #define posix_openat_USE_wopenat
 #define posix_openat_USE_posix_open
 #elif defined(CONFIG_HAVE_openat)
@@ -392,8 +400,153 @@ err:
 FORCELOCAL WUNUSED DREF DeeObject *DCALL posix__open_f_impl(DeeObject *filename, unsigned int oflags, unsigned int mode)
 /*[[[end]]]*/
 {
+#ifdef posix_open_USE_open_osfhandle__AND__CreateFile
+	/* This implementation is stolen from `DeeFile_Open()' */
+	PRIVATE DWORD const generic_access[4] = {
+		/* [OPEN_FRDONLY] = */ FILE_GENERIC_READ,
+		/* [OPEN_FWRONLY] = */ FILE_GENERIC_WRITE,
+		/* [OPEN_FRDWR]   = */ FILE_GENERIC_READ | FILE_GENERIC_WRITE,
+		/* [0x3]          = */ FILE_GENERIC_READ | FILE_GENERIC_WRITE
+	};
+	DREF DeeObject *result;
+	int resfd;
+	HANDLE hFile;
+	DWORD dwDesiredAccess, dwShareMode;
+	DWORD dwCreationDisposition, dwFlagsAndAttributes;
+	dwDesiredAccess      = generic_access[oflags & OPEN_FACCMODE];
+	dwShareMode          = (FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE);
+	dwFlagsAndAttributes = (FILE_ATTRIBUTE_NORMAL | FILE_FLAG_BACKUP_SEMANTICS);
+	/* Apply exclusivity flags. */
+	if (oflags & OPEN_FXREAD)
+		dwShareMode &= ~(FILE_SHARE_READ);
+	if (oflags & OPEN_FXWRITE)
+		dwShareMode &= ~(FILE_SHARE_WRITE);
+	if (oflags & OPEN_FCREAT) {
+		if (oflags & OPEN_FEXCL) {
+			dwCreationDisposition = CREATE_NEW;
+		} else {
+			dwCreationDisposition = ((oflags & OPEN_FTRUNC)
+			                         ? CREATE_ALWAYS
+			                         : OPEN_ALWAYS);
+		}
+		if (!(mode & 0444))
+			dwFlagsAndAttributes |= FILE_ATTRIBUTE_READONLY;
+	} else {
+		dwCreationDisposition = ((oflags & OPEN_FTRUNC)
+		                         ? TRUNCATE_EXISTING
+		                         : OPEN_EXISTING);
+	}
+	if ((oflags & OPEN_FAPPEND) &&
+	    (oflags & OPEN_FACCMODE) != OPEN_FRDONLY) {
+#if (FILE_GENERIC_WRITE & FILE_APPEND_DATA) == 0
+		dwDesiredAccess |= FILE_APPEND_DATA;
+#endif /* (FILE_GENERIC_WRITE & FILE_APPEND_DATA) == 0 */
+		dwDesiredAccess &= ~FILE_WRITE_DATA;
+	}
+	if (oflags & (OPEN_FDIRECT | OPEN_FSYNC))
+		dwFlagsAndAttributes |= FILE_FLAG_WRITE_THROUGH;
+	if (oflags & OPEN_FHIDDEN)
+		dwFlagsAndAttributes |= FILE_ATTRIBUTE_HIDDEN;
+	if (oflags & OPEN_FNOFOLLOW)
+		dwFlagsAndAttributes |= FILE_FLAG_OPEN_REPARSE_POINT;
+again:
+	if (oflags & OPEN_FNOATIME) {
+		hFile = DeeNTSystem_CreateFileNoATime(filename, dwDesiredAccess, dwShareMode, NULL,
+		                                      dwCreationDisposition, dwFlagsAndAttributes, NULL);
+	} else {
+		hFile = DeeNTSystem_CreateFile(filename, dwDesiredAccess, dwShareMode, NULL,
+		                               dwCreationDisposition, dwFlagsAndAttributes, NULL);
+	}
+	if unlikely(!hFile)
+		goto err;
+	if unlikely(hFile == INVALID_HANDLE_VALUE) {
+		DWORD error;
+		DBG_ALIGNMENT_DISABLE();
+		error = GetLastError();
+		DBG_ALIGNMENT_ENABLE();
+
+/*check_nt_error:*/
+		/* Handle file already-exists. */
+		if ((error == ERROR_FILE_EXISTS) && (oflags & OPEN_FEXCL)) {
+			DeeNTSystem_ThrowErrorf(&DeeError_FileExists, error, "File %r already exists", filename);
+			goto err;
+		}
+
+		/* Throw the error as an NT error. */
+		if (DeeNTSystem_IsBadAllocError(error)) {
+			if (Dee_CollectMemory(1))
+				goto again;
+		} else if (DeeNTSystem_IsNotDir(error) ||
+		           DeeNTSystem_IsFileNotFoundError(error)) {
+			if (!(oflags & OPEN_FCREAT))
+				return ITER_DONE;
+			DeeNTSystem_ThrowErrorf(&DeeError_FileNotFound, error,
+			                        "File %r could not be found",
+			                        filename);
+		} else if (DeeNTSystem_IsAccessDeniedError(error)) {
+			DeeNTSystem_ThrowErrorf(&DeeError_FileAccessError, error,
+			                        "Access has not been granted for file %r",
+			                        filename);
+		} else {
+			DeeNTSystem_ThrowErrorf(&DeeError_FSError, error,
+			                        "Failed to obtain a writable handle for %r",
+			                        filename);
+		}
+		goto err;
+	}
+
+#if 0 /* XXX: Only if `fp' is a pipe */
+	{
+		DWORD new_mode = oflags & OPEN_FNONBLOCK ? PIPE_NOWAIT : PIPE_WAIT;
+		DBG_ALIGNMENT_DISABLE();
+		SetNamedPipeHandleState(fp, &new_mode, NULL, NULL);
+		DBG_ALIGNMENT_ENABLE();
+	}
+#endif
+#if 0 /* Technically we'd need to do this, but then again: \
+       * Windows doesn't even have fork (natively...) */
+	if (!(oflags & OPEN_FCLOEXEC)) {
+		DBG_ALIGNMENT_DISABLE();
+		SetHandleInformation(fp, HANDLE_FLAG_INHERIT, HANDLE_FLAG_INHERIT);
+		DBG_ALIGNMENT_ENABLE();
+	}
+#endif
+
+	/* Wrap the handle into a file descriptor. */
+ENOMEM_LABEL(again_wrap)
+	{
+		int fd_flags = 0;
+#ifdef _O_RDONLY
+		if ((oflags & Dee_OPEN_FACCMODE) == Dee_OPEN_FRDONLY)
+			fd_flags |= _O_RDONLY;
+#endif /* _O_RDONLY */
+#ifdef _O_APPEND
+		if (oflags & Dee_OPEN_FAPPEND)
+			fd_flags |= _O_APPEND;
+#endif /* _O_APPEND */
+		resfd = open_osfhandle((intptr_t)hFile, fd_flags);
+	}
+	if unlikely(resfd == -1) {
+		resfd = DeeSystem_GetErrno();
+		ENOMEM_HANDLE(resfd, again_wrap, err_fp)
+		if (Dee_CollectMemory(1))
+			goto again_wrap;
+
+	}
+
+	result = DeeInt_NewUInt((unsigned int)resfd);
+	if unlikely(!result)
+		(void)OPT_close(resfd);
+	return result;
+err_fp:
+	CloseHandle(hFile);
+err:
+	return NULL;
+#endif /* posix_open_USE_open_osfhandle__AND__CreateFile */
+
 #if defined(posix_open_USE_wopen) || defined(posix_open_USE_open)
-	int result;
+	DREF DeeObject *result;
+	int resfd;
 EINTR_LABEL(again)
 
 #ifdef posix_open_USE_wopen
@@ -403,7 +556,7 @@ EINTR_LABEL(again)
 		if unlikely(!wide_filename)
 			goto err;
 		DBG_ALIGNMENT_DISABLE();
-		result = wopen(wide_filename, (int)oflags, (int)mode);
+		resfd = wopen(wide_filename, (int)oflags, (int)mode);
 	}
 #endif /* posix_open_USE_wopen */
 
@@ -414,24 +567,27 @@ EINTR_LABEL(again)
 		if unlikely(!utf8_filename)
 			goto err;
 		DBG_ALIGNMENT_DISABLE();
-		result = open(utf8_filename, (int)oflags, (int)mode);
+		resfd = open(utf8_filename, (int)oflags, (int)mode);
 	}
 #endif /* posix_open_USE_open */
 
 	DBG_ALIGNMENT_ENABLE();
-	if (result < 0) {
-		result = DeeSystem_GetErrno();
-		EINTR_HANDLE(result, again, err)
-		HANDLE_ENOENT_ENOTDIR(result, err, "File or directory %r could not be found", filename)
-		HANDLE_EEXIST_IF(result, oflags & OPEN_FEXCL, err, "File %r already exists", filename)
-		HANDLE_EACCES(result, err, "Failed to access %r", filename)
-		HANDLE_ENXIO_EISDIR(result, err, "Cannot open directory %r for writing", filename)
-		HANDLE_EROFS_ETXTBSY(result, err, "Read-only file %r", filename)
-		HANDLE_ENOSYS(result, err, "open")
-		DeeUnixSystem_ThrowErrorf(&DeeError_FSError, result, "Failed to open %r", filename);
+	if (resfd < 0) {
+		resfd = DeeSystem_GetErrno();
+		EINTR_HANDLE(resfd, again, err)
+		HANDLE_ENOENT_ENOTDIR(resfd, err, "File or directory %r could not be found", filename)
+		HANDLE_EEXIST_IF(resfd, oflags & OPEN_FEXCL, err, "File %r already exists", filename)
+		HANDLE_EACCES(resfd, err, "Failed to access %r", filename)
+		HANDLE_ENXIO_EISDIR(resfd, err, "Cannot open directory %r for writing", filename)
+		HANDLE_EROFS_ETXTBSY(resfd, err, "Read-only file %r", filename)
+		HANDLE_ENOSYS(resfd, err, "open")
+		DeeUnixSystem_ThrowErrorf(&DeeError_FSError, resfd, "Failed to open %r", filename);
 		goto err;
 	}
-	return DeeInt_NewUInt((unsigned int)result);
+	result = DeeInt_NewUInt((unsigned int)resfd);
+	if unlikely(!result)
+		(void)OPT_close(resfd);
+	return result;
 err:
 	return NULL;
 #endif /* posix_open_USE_wopen || posix_open_USE_open */

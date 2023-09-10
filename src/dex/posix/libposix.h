@@ -70,6 +70,140 @@
 #endif /* !CONFIG_HAVE_close */
 
 
+/* Check for special case where we roll our own `open(2)' function */
+#undef posix_open_USE_open_osfhandle__AND__CreateFile
+#if defined(CONFIG_HAVE_open_osfhandle) && defined(CONFIG_HOST_WINDOWS)
+/* On windows, must use open_osfhandle(CreateFile()), else our
+ * custom `STDIN$', `STDOUT$', `STDERR$' magic won't work! */
+#define posix_open_USE_open_osfhandle__AND__CreateFile
+#endif /* !... */
+
+#if defined(posix_open_USE_open_osfhandle__AND__CreateFile) || defined(__DEEMON__)
+/* Use our own set of O_* flags! */
+#undef CONFIG_HAVE_O_RDONLY
+#undef CONFIG_HAVE_O_WRONLY
+#undef CONFIG_HAVE_O_RDWR
+#undef CONFIG_HAVE_O_APPEND
+#undef CONFIG_HAVE_O_CREAT
+#undef CONFIG_HAVE_O_TRUNC
+#undef CONFIG_HAVE_O_EXCL
+#undef CONFIG_HAVE_O_TEXT
+#undef CONFIG_HAVE_O_BINARY
+#undef CONFIG_HAVE_O_WTEXT
+#undef CONFIG_HAVE_O_U16TEXT
+#undef CONFIG_HAVE_O_U8TEXT
+#undef CONFIG_HAVE_O_CLOEXEC
+#undef CONFIG_HAVE_O_TEMPORARY
+#undef CONFIG_HAVE_O_SHORT_LIVED
+#undef CONFIG_HAVE_O_OBTAIN_DIR
+#undef CONFIG_HAVE_O_SEQUENTIAL
+#undef CONFIG_HAVE_O_RANDOM
+#undef CONFIG_HAVE_O_NOCTTY
+#undef CONFIG_HAVE_O_NONBLOCK
+#undef CONFIG_HAVE_O_SYNC
+#undef CONFIG_HAVE_O_RSYNC
+#undef CONFIG_HAVE_O_DSYNC
+#undef CONFIG_HAVE_O_ASYNC
+#undef CONFIG_HAVE_O_DIRECT
+#undef CONFIG_HAVE_O_LARGEFILE
+#undef CONFIG_HAVE_O_DIRECTORY
+#undef CONFIG_HAVE_O_NOFOLLOW
+#undef CONFIG_HAVE_O_NOATIME
+#undef CONFIG_HAVE_O_PATH
+#undef CONFIG_HAVE_O_TMPFILE
+#undef CONFIG_HAVE_O_CLOFORK
+#undef CONFIG_HAVE_O_SYMLINK
+#undef CONFIG_HAVE_O_DOSPATH
+#undef CONFIG_HAVE_O_SHLOCK
+#undef CONFIG_HAVE_O_EXLOCK
+#undef CONFIG_HAVE_O_XATTR
+#undef CONFIG_HAVE_O_EXEC
+#undef CONFIG_HAVE_O_SEARCH
+#undef CONFIG_HAVE_O_TTY_INIT
+#undef CONFIG_HAVE_O_NOLINKS
+
+/*[[[deemon
+function feature(a, b) {
+	print("#undef ", a);
+	print("#define CONFIG_HAVE_", a);
+	print("#define ", a, " ", b);
+}
+feature("O_RDONLY",   "Dee_OPEN_FRDONLY");
+feature("O_WRONLY",   "Dee_OPEN_FWRONLY");
+feature("O_RDWR",     "Dee_OPEN_FRDWR");
+feature("O_ACCMODE",  "Dee_OPEN_FACCMODE");
+feature("O_CREAT",    "Dee_OPEN_FCREAT");
+feature("O_EXCL",     "Dee_OPEN_FEXCL");
+feature("O_TRUNC",    "Dee_OPEN_FTRUNC");
+feature("O_NONBLOCK", "Dee_OPEN_FNONBLOCK");
+feature("O_SYNC",     "Dee_OPEN_FSYNC");
+feature("O_DIRECT",   "Dee_OPEN_FDIRECT");
+feature("O_NOFOLLOW", "Dee_OPEN_FNOFOLLOW");
+feature("O_NOATIME",  "Dee_OPEN_FNOATIME");
+feature("O_CLOEXEC",  "Dee_OPEN_FCLOEXEC");
+feature("O_SHLOCK",   "Dee_OPEN_FXREAD");
+feature("O_EXLOCK",   "Dee_OPEN_FXWRITE");
+feature("O_HIDDEN",   "Dee_OPEN_FHIDDEN");
+]]]*/
+#undef O_RDONLY
+#define CONFIG_HAVE_O_RDONLY
+#define O_RDONLY Dee_OPEN_FRDONLY
+#undef O_WRONLY
+#define CONFIG_HAVE_O_WRONLY
+#define O_WRONLY Dee_OPEN_FWRONLY
+#undef O_RDWR
+#define CONFIG_HAVE_O_RDWR
+#define O_RDWR Dee_OPEN_FRDWR
+#undef O_ACCMODE
+#define CONFIG_HAVE_O_ACCMODE
+#define O_ACCMODE Dee_OPEN_FACCMODE
+#undef O_CREAT
+#define CONFIG_HAVE_O_CREAT
+#define O_CREAT Dee_OPEN_FCREAT
+#undef O_EXCL
+#define CONFIG_HAVE_O_EXCL
+#define O_EXCL Dee_OPEN_FEXCL
+#undef O_TRUNC
+#define CONFIG_HAVE_O_TRUNC
+#define O_TRUNC Dee_OPEN_FTRUNC
+#undef O_NONBLOCK
+#define CONFIG_HAVE_O_NONBLOCK
+#define O_NONBLOCK Dee_OPEN_FNONBLOCK
+#undef O_SYNC
+#define CONFIG_HAVE_O_SYNC
+#define O_SYNC Dee_OPEN_FSYNC
+#undef O_DIRECT
+#define CONFIG_HAVE_O_DIRECT
+#define O_DIRECT Dee_OPEN_FDIRECT
+#undef O_NOFOLLOW
+#define CONFIG_HAVE_O_NOFOLLOW
+#define O_NOFOLLOW Dee_OPEN_FNOFOLLOW
+#undef O_NOATIME
+#define CONFIG_HAVE_O_NOATIME
+#define O_NOATIME Dee_OPEN_FNOATIME
+#undef O_CLOEXEC
+#define CONFIG_HAVE_O_CLOEXEC
+#define O_CLOEXEC Dee_OPEN_FCLOEXEC
+#undef O_SHLOCK
+#define CONFIG_HAVE_O_SHLOCK
+#define O_SHLOCK Dee_OPEN_FXREAD
+#undef O_EXLOCK
+#define CONFIG_HAVE_O_EXLOCK
+#define O_EXLOCK Dee_OPEN_FXWRITE
+#undef O_HIDDEN
+#define CONFIG_HAVE_O_HIDDEN
+#define O_HIDDEN Dee_OPEN_FHIDDEN
+/*[[[end]]]*/
+
+/* This one needs support from `open_osfhandle()' */
+#ifdef _O_APPEND
+#undef O_APPEND
+#define CONFIG_HAVE_O_APPEND
+#define O_APPEND Dee_OPEN_FAPPEND
+#endif /* _O_APPEND */
+#endif /* posix_open_USE_open_osfhandle__AND__CreateFile */
+
+
 DECL_BEGIN
 
 #ifdef EINTR
@@ -142,12 +276,12 @@ DECL_BEGIN
 		DeeUnixSystem_ThrowErrorf(&DeeError_FileAccessError, error, __VA_ARGS__); \
 		goto err_label;                                                           \
 	});
-#define HANDLE_EEXIST_IF(error, cond, err_label, ...)                                 \
-	DeeSystem_IF_E1(error, EEXIST, {                                                  \
-		if (cond) {                                                                   \
-			DeeUnixSystem_ThrowErrorf(&DeeError_FileAccessError, error, __VA_ARGS__); \
-			goto err_label;                                                           \
-		}                                                                             \
+#define HANDLE_EEXIST_IF(error, cond, err_label, ...)                            \
+	DeeSystem_IF_E1(error, EEXIST, {                                             \
+		if (cond) {                                                              \
+			DeeUnixSystem_ThrowErrorf(&DeeError_FileExists, error, __VA_ARGS__); \
+			goto err_label;                                                      \
+		}                                                                        \
 	});
 #define HANDLE_EINVAL(error, err_label, ...)                \
 	DeeSystem_IF_E1(error, EINVAL, {                        \

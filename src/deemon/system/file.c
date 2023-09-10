@@ -633,6 +633,7 @@ DeeFile_Open(/*String*/ DeeObject *__restrict filename, int oflags, int mode) {
 
 	/* Windows implementation */
 #ifdef DEESYSTEM_FILE_USE_WINDOWS
+	/* NOTE: this implementation is mirrored in `posix__open_f_impl()' */
 	DREF SystemFile *result;
 	HANDLE hFile;
 	DWORD dwDesiredAccess, dwShareMode;
