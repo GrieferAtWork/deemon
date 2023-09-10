@@ -22,31 +22,35 @@ import * from deemon;
 import * from threading;
 
 
-@@Suspends executing within the given thread @t until the returned object
-@@has been destroyed, or until its $__leave__ operator has been invoked.
+@@Suspends executing within the given thread @t until the returned object has
+@@been destroyed, or until its @(operator leave) operator has been invoked.
+@@
 @@Make sure not to acquire any lock that the thread may be holding while
 @@you're suspending it. Doing so will cause a deadlock.
+@@
 @@Also note that this function acts synchronously, meaning that once it returns
 @@the with_closure to the caller, the given thread @t will already be suspended.
 @@Also note that the thread @t can still be interrupted
-@@>import thread from deemon;
+@@
+@@>import Thread from deemon;
 @@>import milliseconds, seconds from time;
-@@>local my_thread = thread(() -> {
+@@>import suspend_thread from thread_util;
+@@>local myThread = Thread(() -> {
 @@>    for (;;) {
 @@>        print "In thread";
-@@>        thread.sleep(milliseconds(20));
+@@>        Thread.sleep(milliseconds(20));
 @@>    }
 @@>});
-@@>my_thread.start();
-@@>thread.sleep(seconds(1));
-@@>with (suspend_thread(my_thread)) {
+@@>myThread.start();
+@@>Thread.sleep(seconds(1));
+@@>with (suspend_thread(myThread)) {
 @@>    print "The thread is now suspended";
-@@>    thread.sleep(milliseconds(100));
+@@>    Thread.sleep(milliseconds(100));
 @@>}
 @@>print "The thread is now running again";
-@@>thread.sleep(seconds(1));
-@@>my_thread.interrupt();
-@@>my_thread.join();
+@@>Thread.sleep(seconds(1));
+@@>myThread.interrupt();
+@@>myThread.join();
 function suspend_thread(t: Thread) {
 	local key = Semaphore(0);
 	local sync = Semaphore(0);
@@ -54,19 +58,19 @@ function suspend_thread(t: Thread) {
 	/* Send an interrupt to the thread. */
 	t.interrupt(() -> {
 		/* Signal to indicate that the thread is now suspended. */
-		sync.post();
+		sync.release();
 		/* Wait until we're allowed to resume again. */
-		key.wait();
+		key.waitfor();
 	}, pack());
 
 	/* Wait for the interrupt to be acknowledged. */
-	sync.wait();
+	sync.waitfor();
 
 	/* Return a with-compatible object. */
 	return (class {
-		private m_key: Semaphore;
+		private member m_key: Semaphore;
 		this(key: Semaphore) { m_key = key; }
-		operator leave() { m_key.post(); }
+		operator leave() { m_key.release(); }
 		operator enter() { }
 	})(key);
 }
