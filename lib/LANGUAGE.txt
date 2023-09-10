@@ -2880,10 +2880,6 @@ compiler_annotation ::= (
 
 parse_tags ::= (
 
-	/* Documentation string of human-readable text (terminated by a line-feed) */
-	('@' [*...] '\n') |
-	/* TODO: Document type annotations */
-
 	/* Compiler annotations */
 	('[' ',' ~~ compiler_annotation... ']') |
 
@@ -3035,7 +3031,14 @@ parse_tags ::= (
 	)...)
 );
 
-parse_tags_block ::= [('@' parse_tags)...];
+parse_tags_block ::= [(
+	/* TODO: Document type annotations */
+
+	/* Documentation string of human-readable text (terminated by a line-feed) */
+	('@@' [*...] '\n') |
+
+	('@' parse_tags) |
+)...];
 /************************************************************************************/
 
 
