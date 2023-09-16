@@ -163,8 +163,10 @@ DFUNDEF ATTR_PURE WUNUSED ATTR_IN(1) Dee_hash_t (DCALL Dee_HashCaseStr)(char con
 #define Dee_HashCaseStr(str) Dee_HashCasePtr(str, strlen(str))
 #endif /* !__INTELLISENSE__ */
 
-/* Combine 2 hash values into 1, while losing
- * as little entropy from either as possible. */
+/* Combine 2 hash values into 1, while losing as little entropy
+ * from either as possible. Note that this function tries to
+ * include the order of arguments in the result, meaning that:
+ * - Dee_HashCombine(a, b) != Dee_HashCombine(b, a) */
 DFUNDEF ATTR_CONST WUNUSED Dee_hash_t
 (DFCALL Dee_HashCombine)(Dee_hash_t a, Dee_hash_t b);
 
@@ -291,8 +293,8 @@ struct Dee_object {
 
 #ifndef Dee_STATIC_REFCOUNT_INIT
 #ifdef CONFIG_BUILDING_DEEMON
-/* We add +1 for all statically initialized objects,
- * so we can easily add them to deemon's builtin module. */
+/* We add +1 for all statically initialized objects, so
+ * we can easily add them to deemon's builtin module. */
 #define Dee_STATIC_REFCOUNT_INIT 3
 #else /* CONFIG_BUILDING_DEEMON */
 #define Dee_STATIC_REFCOUNT_INIT 2
@@ -384,7 +386,7 @@ typedef NONNULL_T((1)) void (DCALL *Dee_weakref_callback_t)(struct Dee_weakref *
 /* Object weak reference tracing. */
 struct Dee_weakref {
 	struct Dee_weakref   **wr_pself; /* [0..1][lock(BIT0(wr_next))][valid_if(wr_pself != NULL)] Indirect self pointer. */
-	struct Dee_weakref    *wr_next;  /* [0..1][lock(BIT0(wr_next))][valid_if(wr_pself != NULL)][ORDER(BEFORE(*wr_pself))] Next weak references. */
+	struct Dee_weakref    *wr_next;  /* [0..1][lock(BIT0(wr_next))][valid_if(wr_pself != NULL)] Next weak references. */
 	DeeObject             *wr_obj;   /* [0..1][lock(BIT0(wr_next))] Pointed-to object. */
 	Dee_weakref_callback_t wr_del;   /* [0..1][const]
 	                                  * An optional callback that is invoked when the bound object
@@ -489,11 +491,13 @@ struct Dee_weakref_list {
 
 /* Finalize weakref support (must be called manually by
  * destructors of types implementing weakref support!) */
+DFUNDEF NONNULL((1)) void (DCALL Dee_weakref_support_fini)(struct Dee_weakref_list *__restrict self);
+#ifndef __OPTIMIZE_SIZE__
 #define Dee_weakref_support_fini(x)                                     \
 	(__hybrid_atomic_load(&(x)->ob_weakrefs.wl_nodes, __ATOMIC_ACQUIRE) \
-	 ? Dee_weakref_support_fini(&(x)->ob_weakrefs)                      \
+	 ? (Dee_weakref_support_fini)(&(x)->ob_weakrefs)                    \
 	 : (void)0)
-DFUNDEF NONNULL((1)) void (DCALL Dee_weakref_support_fini)(struct Dee_weakref_list *__restrict self);
+#endif /* !__OPTIMIZE_SIZE__ */
 
 #ifdef DEE_SOURCE
 #define WEAKREF_SUPPORT      Dee_WEAKREF_SUPPORT
@@ -593,7 +597,7 @@ DFUNDEF WUNUSED NONNULL((1)) bool (DCALL Dee_weakref_bound)(struct Dee_weakref *
  * `NULL' when none was assigned, or `Dee_ITER_DONE' when `new_ob'
  * does not support weak referencing functionality (in which case
  * the actual pointed-to weak object of `self' isn't changed).
- * NOTE: You may pass `NULL' for `new_ob' to clear the the weakref. */
+ * NOTE: You may pass `NULL' for `new_ob' to clear the weakref. */
 DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *
 (DCALL Dee_weakref_cmpxch)(struct Dee_weakref *__restrict self,
                            DeeObject *old_ob, DeeObject *new_ob);

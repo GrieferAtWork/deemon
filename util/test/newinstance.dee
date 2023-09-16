@@ -48,7 +48,7 @@ class MyList: List {
  * field initializers, as well as  */
 local x = MyList.newinstance({
 	MyList: ({ "mylist_member" : "abc" }, none),
-	List:   ({ }, pack([10, 20, 30])),
+	List:   ({ }, ({10, 20, 30},)),
 });
 
 assert x is MyList;

@@ -77,7 +77,7 @@ struct Dee_unicode_printer;
 #define DeeSystem_SEP_S        "/"
 #define DeeSystem_ALTSEP       '\\'
 #define DeeSystem_ALTSEP_S     "\\"
-#define DeeSystem_IsSep(x)     ((x) == '\\' || (x) == '/')
+#define DeeSystem_IsSep(x)     ((x) == '/' || (x) == '\\')
 #define DeeSystem_IsAbs(x)     ((x)[0] == '/') /* Absolute paths still require a leading '/'! */
 #define DeeSystem_IsAbsN(x, n) ((n) >= 1 && (x)[0] == '/')
 #define DEE_SYSTEM_IS_ABS_CHECKS_LEADING_SLASHES

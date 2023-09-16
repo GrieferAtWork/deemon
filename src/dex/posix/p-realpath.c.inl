@@ -322,10 +322,12 @@ err:
 	return NULL;
 }
 
+/* Max # of recursive symbolic links */
+#define POSIX_PRINT_RESOLVED_PATH_MAX_LINK 64
+
 /* @return: 1 : Success, but hit ENOENT
 /* @return: 0 : Success
 /* @return: -1: Error */
-#define POSIX_PRINT_RESOLVED_PATH_MAX_LINK 64
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 posix_print_resolved_path(struct unicode_printer *__restrict printer,
                           DeeObject *__restrict path, uint32_t max_link,

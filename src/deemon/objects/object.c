@@ -831,7 +831,7 @@ PUBLIC WUNUSED NONNULL((1)) bool (DCALL Dee_weakref_bound)(struct weakref *__res
  * `NULL' when none was assigned, or `Dee_ITER_DONE' when `new_ob'
  * does not support weak referencing functionality (in which case
  * the actual pointed-to weak object of `self' isn't changed).
- * NOTE: You may pass `NULL' for `new_ob' to clear the the weakref. */
+ * NOTE: You may pass `NULL' for `new_ob' to clear the weakref. */
 PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 Dee_weakref_cmpxch(struct weakref *__restrict self,
                    DeeObject *old_ob,
@@ -1070,7 +1070,8 @@ DeeFatal_BadIncref(DeeObject *ob, char const *file, int line) {
 	bad_refcnt_lock_acquire();
 	Dee_DPRINTF("\n\n\n" FILE_AND_LINE_FORMAT "BAD_INCREF(%p)\n",
 	            file, line, ob);
-	Dee_DPRINTF("refcnt : %" PRFuSIZ " (%" PRFXSIZ ")\n", ob->ob_refcnt, ob->ob_refcnt);
+	Dee_DPRINTF("refcnt : %" PRFuSIZ " (%" PRFXSIZ ")\n",
+	            ob->ob_refcnt, ob->ob_refcnt);
 	type = Dee_TYPE(ob);
 	if (DeeObject_Check(type) && DeeType_Check(type)) {
 		Dee_DPRINTF("type : %s (%p)", type->tp_name, type);
@@ -1088,7 +1089,8 @@ DeeFatal_BadDecref(DeeObject *ob, char const *file, int line) {
 	bad_refcnt_lock_acquire();
 	Dee_DPRINTF("\n\n\n" FILE_AND_LINE_FORMAT "BAD_DECREF(%p)\n",
 	            file, line, ob);
-	Dee_DPRINTF("refcnt : %" PRFuSIZ " (%" PRFXSIZ ")\n", ob->ob_refcnt, ob->ob_refcnt);
+	Dee_DPRINTF("refcnt : %" PRFuSIZ " (%" PRFXSIZ ")\n",
+	            ob->ob_refcnt, ob->ob_refcnt);
 	type = Dee_TYPE(ob);
 	if (DeeObject_Check(type) && DeeType_Check(type)) {
 		Dee_DPRINTF("type : %s (%p)", type->tp_name, type);
@@ -1326,7 +1328,7 @@ again:
 					/* Incref() the new type that now describes this revived object.
 					 * NOTE: The fact that this type may use a different (or none at all)
 					 *       tp_free function, is the reason why no GC-able type from who's
-					 *       destruction a user-callback that can somehow get ahold of the
+					 *       destruction a user-callback that can somehow get a hold of the
 					 *       instance being destroyed (which is also possible for any weakly
 					 *       referenceable type), is allowed to assume that it will actually
 					 *       be called, limiting its use to pre-allocated object caches that

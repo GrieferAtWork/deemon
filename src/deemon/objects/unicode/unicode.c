@@ -5866,13 +5866,12 @@ again_flush:
 	}
 done:
 	return result;
-err:
-	return -1;
 err_bytes_too_large:
 	DeeError_Throwf(&DeeError_UnicodeEncodeError,
 	                "Unicode character U+%.4" PRFX32 " cannot fit into a single byte",
 	                ch32);
-	goto err;
+err:
+	return -1;
 }
 
 PUBLIC WUNUSED NONNULL((1)) int
