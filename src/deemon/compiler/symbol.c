@@ -1221,6 +1221,7 @@ is_reserved_symbol_name(struct TPPKeyword *__restrict name) {
 	/* Quick check: any keywords not registered as builtin are allowed. */
 	if (TPP_ISUSERKEYWORD(name->k_id))
 		return false;
+
 	/* White-list of non-reserved builtin keywords. */
 	switch (name->k_id) {
 
@@ -1235,6 +1236,8 @@ is_reserved_symbol_name(struct TPPKeyword *__restrict name) {
 	case KWD_line:
 	case KWD_error:
 	case KWD_warning:
+	case KWD_define:
+	case KWD_defined:
 #if !defined(TPP_CONFIG_EXTENSION_IDENT_SCCS) || TPP_CONFIG_EXTENSION_IDENT_SCCS
 	case KWD_ident:
 	case KWD_sccs:
