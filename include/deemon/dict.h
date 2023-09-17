@@ -158,11 +158,11 @@ DeeDict_NewKeyItemsInherited(size_t num_keyitems,
  * >>     return NULL;
  * >> }
  * Requirements to prevent an infinite loop:
- *   - `DeeDict_HashNx()' must be able to eventually enumerate all integers `<= d_mask'
- *   - `d_size' must always be lower than `d_mask', ensuring that at least one(1)
- *      entry exists that no value has been assigned to (Acting as a sentinel to
- *      terminate a search for an existing element).
- *   - `d_elem' must never be empty (or `NULL' for that matter)
+ * - `DeeDict_HashNx()' must be able to eventually enumerate all integers `<= d_mask'
+ * - `d_size' must always be lower than `d_mask', ensuring that at least one(1)
+ *   entry exists that no value has been assigned to (Acting as a sentinel to
+ *   terminate a search for an existing element).
+ * - `d_elem' must never be empty (or `NULL' for that matter)
  * NOTE: I can't say that I came up with the way that this mapping
  *       algorithm works (but noone can really claim to have invented
  *       something ~new~ nowadays. - It's always been done already).
