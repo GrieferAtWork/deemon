@@ -542,8 +542,10 @@ ssi_visit(StringScanIterator *__restrict self, dvisit_t proc, void *arg) {
 	PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL                   \
 	name(StringScanIterator *self, StringScanIterator *other) {             \
 		if (DeeObject_AssertTypeExact(other, &StringScanIterator_Type))     \
-			return NULL;                                                    \
+			goto err;                                                       \
 		return_bool(GET_FORMAT_POINTER(self) op GET_FORMAT_POINTER(other)); \
+	err:                                                                    \
+		return NULL;                                                        \
 	}
 DEFINE_STRINGSCANITERATOR_COMPARE(ssi_eq, ==)
 DEFINE_STRINGSCANITERATOR_COMPARE(ssi_ne, !=)

@@ -656,12 +656,14 @@ do_realloc:
 			}
 			if (Dee_CollectMemory(new_alloc * sizeof(struct class_member)))
 				goto do_realloc;
-			return NULL;
+			goto err;
 		}
 		self->cm_class_initv = new_vector;
 		self->cm_class_inita = new_alloc;
 	}
 	return self->cm_class_initv + self->cm_class_initc++;
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL

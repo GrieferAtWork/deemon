@@ -380,7 +380,7 @@ INTDEF DeeTypeObject DeeGenericIterator_Type;
 	name(SeqIterator *self, SeqIterator *other) {                  \
 		DREF DeeObject *lindex, *rindex, *result;                  \
 		if (DeeObject_AssertType(other, &DeeGenericIterator_Type)) \
-			return NULL;                                           \
+			goto err;                                              \
 		SeqIterator_LockRead(self);                                \
 		lindex = self->si_index;                                   \
 		Dee_Incref(lindex);                                        \
@@ -393,6 +393,8 @@ INTDEF DeeTypeObject DeeGenericIterator_Type;
 		Dee_Decref(rindex);                                        \
 		Dee_Decref(lindex);                                        \
 		return result;                                             \
+	err:                                                           \
+		return NULL;                                               \
 	}
 DEFINE_SEQITERATOR_COMPARE(seqiterator_eq, DeeObject_CompareEqObject)
 DEFINE_SEQITERATOR_COMPARE(seqiterator_ne, DeeObject_CompareNeObject)

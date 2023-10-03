@@ -86,8 +86,10 @@ INTDEF DeeTypeObject SeqSubRangeIterator_Type;
 	PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL                \
 	name(SubRangeIterator *self, SubRangeIterator *other) {              \
 		if (DeeObject_AssertTypeExact(other, &SeqSubRangeIterator_Type)) \
-			return NULL;                                                 \
+			goto err;                                                    \
 		return_bool(READ_SIZE(other) op READ_SIZE(self));                \
+	err:                                                                 \
+		return NULL;                                                     \
 	}
 DEFINE_SUBRANGEITERATOR_COMPARE(subrangeiterator_eq, ==)
 DEFINE_SUBRANGEITERATOR_COMPARE(subrangeiterator_ne, !=)

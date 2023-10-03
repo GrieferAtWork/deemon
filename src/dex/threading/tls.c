@@ -643,8 +643,10 @@ tls_hash(TLS *__restrict self) {
 	PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL \
 	name(TLS *self, TLS *other) {                         \
 		if (DeeObject_AssertType(other, &DeeTLS_Type))    \
-			return NULL;                                  \
+			goto err;                                     \
 		return_bool_(self op other);                      \
+	err:                                                  \
+		return NULL;                                      \
 	}
 DEFINE_TLS_COMPARE(tls_eq, ==)
 DEFINE_TLS_COMPARE(tls_ne, !=)

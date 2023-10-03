@@ -1402,11 +1402,12 @@ bytes_iswritable(Bytes *__restrict self) {
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 bytes_getfirst(Bytes *__restrict self) {
-	if unlikely(DeeBytes_IsEmpty(self)) {
-		err_empty_sequence((DeeObject *)self);
-		return NULL;
-	}
+	if unlikely(DeeBytes_IsEmpty(self))
+		goto err_empty;
 	return DeeInt_NewUInt8(DeeBytes_DATA(self)[0]);
+err_empty:
+	err_empty_sequence((DeeObject *)self);
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
@@ -1431,11 +1432,12 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 bytes_getlast(Bytes *__restrict self) {
-	if unlikely(DeeBytes_IsEmpty(self)) {
-		err_empty_sequence((DeeObject *)self);
-		return NULL;
-	}
+	if unlikely(DeeBytes_IsEmpty(self))
+		goto err_empty;
 	return DeeInt_NewUInt8(DeeBytes_DATA(self)[DeeBytes_SIZE(self) - 1]);
+err_empty:
+	err_empty_sequence((DeeObject *)self);
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL

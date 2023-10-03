@@ -234,8 +234,10 @@ PRIVATE struct type_member tpconst bcfi_members[] = {
 	PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL     \
 	name(BytesFindIterator *self, BytesFindIterator *other) { \
 		if (DeeObject_AssertTypeExact(other, Dee_TYPE(self))) \
-			return NULL;                                      \
+			goto err;                                         \
 		return_bool(READ_PTR(self) op READ_PTR(other));       \
+	err:                                                      \
+		return NULL;                                          \
 	}
 DEFINE_BYTESFINDITERATOR_COMPARE(bfi_eq, ==)
 DEFINE_BYTESFINDITERATOR_COMPARE(bfi_ne, !=)

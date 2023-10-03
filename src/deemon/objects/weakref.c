@@ -225,8 +225,10 @@ ob_weakref_hash(WeakRef *__restrict self) {
 		if (DeeNone_Check(other))                                   \
 			return_bool((void *)LAZY_GETOBJ(self) op(void *) NULL); \
 		if (DeeObject_AssertTypeExact(other, &DeeWeakRef_Type))     \
-			return NULL;                                            \
+			goto err;                                               \
 		return_bool(LAZY_GETOBJ(self) op LAZY_GETOBJ(other));       \
+	err:                                                            \
+		return NULL;                                                \
 	}
 DEFINE_WEAKREF_COMPARE(ob_weakref_eq, ==)
 DEFINE_WEAKREF_COMPARE(ob_weakref_ne, !=)

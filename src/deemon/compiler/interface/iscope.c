@@ -140,17 +140,19 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 scope_getbase(DeeCompilerScopeObject *__restrict self) {
 	DREF DeeObject *result;
 	if (COMPILER_BEGIN(self->ci_compiler))
-		return NULL;
+		goto err;
 	result = DeeCompiler_GetScope((DeeScopeObject *)self->ci_value->s_base);
 	COMPILER_END();
 	return result;
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 scope_getprev(DeeCompilerScopeObject *__restrict self) {
 	DREF DeeObject *result;
 	if (COMPILER_BEGIN(self->ci_compiler))
-		return NULL;
+		goto err;
 	if (!self->ci_value->s_prev) {
 		result = Dee_None;
 		Dee_Incref(result);
@@ -159,6 +161,8 @@ scope_getprev(DeeCompilerScopeObject *__restrict self) {
 	}
 	COMPILER_END();
 	return result;
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -205,10 +209,12 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 scope_bool(DeeCompilerScopeObject *__restrict self) {
 	int result;
 	if (COMPILER_BEGIN(self->ci_compiler))
-		return -1;
+		goto err;
 	result = self->ci_value->s_mapc != 0;
 	COMPILER_END();
 	return result;
+err:
+	return -1;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -222,10 +228,12 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 scope_size(DeeCompilerScopeObject *__restrict self) {
 	DREF DeeObject *result;
 	if (COMPILER_BEGIN(self->ci_compiler))
-		return NULL;
+		goto err;
 	result = DeeInt_NewSize(self->ci_value->s_mapc);
 	COMPILER_END();
 	return result;
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
@@ -233,7 +241,7 @@ scope_contains(DeeCompilerScopeObject *self,
                DeeObject *elem) {
 	DREF DeeObject *result;
 	if (COMPILER_BEGIN(self->ci_compiler))
-		return NULL;
+		goto err;
 	if (DeeObject_InstanceOfExact(elem, &DeeCompilerSymbol_Type)) {
 		result = DeeBool_For((((DeeCompilerSymbolObject *)elem)->ci_compiler == self->ci_compiler &&
 		                      ((DeeCompilerSymbolObject *)elem)->ci_value != NULL &&
@@ -252,6 +260,8 @@ scope_contains(DeeCompilerScopeObject *self,
 done:
 	COMPILER_END();
 	return result;
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
@@ -265,7 +275,7 @@ scope_getitem(DeeCompilerScopeObject *self, DeeObject *elem) {
 	if unlikely(!utf8)
 		goto err;
 	if (COMPILER_BEGIN(self->ci_compiler))
-		return NULL;
+		goto err;
 	sym = scope_lookup_str(self->ci_value, utf8, WSTR_LENGTH(utf8));
 	if unlikely(!sym) {
 		err_item_not_found((DeeObject *)self, elem);
@@ -291,7 +301,7 @@ scope_delitem(DeeCompilerScopeObject *__restrict self,
 	if unlikely(!utf8)
 		goto err;
 	if (COMPILER_BEGIN(self->ci_compiler))
-		return -1;
+		goto err;
 	sym = scope_lookup_str(self->ci_value, utf8, WSTR_LENGTH(utf8));
 	if unlikely(!sym) {
 		err_item_not_found((DeeObject *)self, elem);
@@ -329,16 +339,17 @@ scope_newanon(DeeCompilerScopeObject *self, size_t argc, DeeObject *const *argv)
 	DREF DeeObject *result = NULL;
 	struct symbol *sym;
 	if (COMPILER_BEGIN(self->ci_compiler))
-		return NULL;
-	if (DeeArg_Unpack(argc, argv, ":newanon"))
 		goto done;
+	if (DeeArg_Unpack(argc, argv, ":newanon"))
+		goto done_compiler_end;
 	sym = new_unnamed_symbol_in_scope(self->ci_value);
 	if unlikely(!sym)
-		goto done;
+		goto done_compiler_end;
 	sym->s_type = SYMBOL_TYPE_NONE;
 	result      = DeeCompiler_GetSymbol(sym);
-done:
+done_compiler_end:
 	COMPILER_END();
+done:
 	return result;
 }
 
@@ -354,36 +365,37 @@ scope_newlocal(DeeCompilerScopeObject *self, size_t argc,
 	char *name_utf8;
 	PRIVATE struct keyword kwlist[] = { K(name), K(requirenew), K(loc), KEND };
 	if (COMPILER_BEGIN(self->ci_compiler))
-		return NULL;
+		goto done;
 	if (DeeArg_UnpackKw(argc, argv, kw, kwlist, "o|bo:newlocal", &name, &requirenew, &loc))
-		goto done;
+		goto done_compiler_end;
 	if (DeeObject_AssertTypeExact(name, &DeeString_Type))
-		goto done;
+		goto done_compiler_end;
 	name_utf8 = DeeString_AsUtf8(name);
 	if unlikely(!name_utf8)
-		goto done;
+		goto done_compiler_end;
 	kwd = TPPLexer_LookupKeyword(name_utf8, WSTR_LENGTH(name_utf8), 1);
 	if unlikely(!kwd)
-		goto done;
+		goto done_compiler_end;
 	sym = get_local_symbol_in_scope(self->ci_value, kwd);
 	if unlikely(sym) {
 		if (requirenew) {
 			DeeError_Throwf(&DeeError_ValueError,
 			                "Local symbol %r has already been defined");
-			goto done;
+			goto done_compiler_end;
 		}
 	} else {
 		struct ast_loc symloc;
 		if unlikely(get_astloc_from_obj(loc, &symloc))
-			goto done;
+			goto done_compiler_end;
 		sym = new_local_symbol_in_scope(self->ci_value, kwd, &symloc);
 		if unlikely(!sym)
-			goto done;
+			goto done_compiler_end;
 		sym->s_type = SYMBOL_TYPE_NONE;
 	}
 	result = DeeCompiler_GetSymbol(sym);
-done:
+done_compiler_end:
 	COMPILER_END();
+done:
 	return result;
 }
 

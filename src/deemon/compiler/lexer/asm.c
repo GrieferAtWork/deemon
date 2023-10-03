@@ -98,7 +98,7 @@ do_realloc:
 			}
 			if (Dee_CollectMemory(new_alloc * sizeof(struct asm_operand)))
 				goto do_realloc;
-			return NULL;
+			goto err;
 		}
 		self->ol_v = result;
 		self->ol_a = new_alloc;
@@ -108,6 +108,8 @@ do_realloc:
 	result += self->ol_c++;
 	++self->ol_count[type];
 	return result;
+err:
+	return NULL;
 }
 
 PRIVATE int DCALL

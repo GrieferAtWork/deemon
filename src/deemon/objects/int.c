@@ -4256,7 +4256,7 @@ err:
 		diff = int_compareint(self, y);                                   \
 		Dee_Decref(y);                                                    \
 		return_bool_(diff cmp 0);                                         \
-err:                                                                      \
+	err:                                                                  \
 		return NULL;                                                      \
 	}
 DEFINE_INT_COMPARE_FUNCTION(isgreater, >)

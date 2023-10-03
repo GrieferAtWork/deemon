@@ -168,7 +168,7 @@ again:
 		if (Dee_CollectMemory(offsetof(DeeTupleObject, t_elem) +
 		                      (size_t)end * sizeof(DREF DeeObject *)))
 			goto again;
-		return NULL;
+		goto err;
 	}
 
 	/* Copy vector elements. */
@@ -180,6 +180,8 @@ again:
 	DeeObject_Init(result, &DeeTuple_Type);
 	result->t_size = (size_t)end;
 	return (DREF DeeObject *)result;
+err:
+	return NULL;
 }
 
 

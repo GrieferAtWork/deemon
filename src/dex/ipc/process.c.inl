@@ -4077,9 +4077,11 @@ process_osfhandle_np(Process *__restrict self) {
 	Process_LockWrite(self);
 	hProcess = process_nt_gethandle_or_unlock(self);
 	if unlikely(hProcess == INVALID_HANDLE_VALUE)
-		return NULL;
+		goto err;
 	Process_LockEndWrite(self);
 	return DeeInt_NewUIntptr((uintptr_t)hProcess);
+err:
+	return NULL;
 }
 #endif /* ipc_Process_USE_CreateProcessW */
 

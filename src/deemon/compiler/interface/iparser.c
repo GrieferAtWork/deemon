@@ -53,18 +53,18 @@ PRIVATE struct keyword lookupmode_kwlist[] = { K(lookupmode), KEND };
 		DeeCompilerAstObject *head;                                            \
 		DREF struct ast *result_ast;                                           \
 		if (COMPILER_BEGIN(self->cw_compiler))                                 \
-			return NULL;                                                       \
+			goto done;                                                         \
 		if (DeeArg_UnpackKw(argc, argv, kw, suffix_kwlist, "o:" #name, &head)) \
-			goto done;                                                         \
+			goto done_compiler_end;                                            \
 		if (DeeObject_AssertTypeExact(head, &DeeCompilerAst_Type))             \
-			goto done;                                                         \
+			goto done_compiler_end;                                            \
 		if unlikely(head->ci_compiler != self->cw_compiler) {                  \
 			err_invalid_ast_compiler(head);                                    \
-			goto done;                                                         \
+			goto done_compiler_end;                                            \
 		}                                                                      \
 		if unlikely(head->ci_value->a_scope->s_base != current_basescope) {    \
 			err_invalid_ast_basescope(head, current_basescope);                \
-			goto done;                                                         \
+			goto done_compiler_end;                                            \
 		}                                                                      \
 		ast_incref(head->ci_value);                                            \
 		IF_SUFFIX(if (!(is_suffix)) {                                          \
@@ -77,13 +77,14 @@ PRIVATE struct keyword lookupmode_kwlist[] = { K(lookupmode), KEND };
 					result = Dee_None;                                         \
 					Dee_Incref(result);                                        \
 				}                                                              \
-				goto done;                                                     \
+				goto done_compiler_end;                                        \
 			}                                                                  \
 		}                                                                      \
 		result = DeeCompiler_GetAst(result_ast);                               \
 		ast_decref_unlikely(result_ast);                                       \
-	done:                                                                      \
+	done_compiler_end:                                                         \
 		COMPILER_END();                                                        \
+	done:                                                                      \
 		return result;                                                         \
 	}
 #define DEFINE_SIMPLE_LOOKUPMODE_PARSER_FUNCTION(name, func)                                  \
@@ -96,11 +97,11 @@ PRIVATE struct keyword lookupmode_kwlist[] = { K(lookupmode), KEND };
 		DeeObject *lookup_mode_ob = Dee_EmptyString;                                          \
 		uint16_t old_exceptsz;                                                                \
 		if (COMPILER_BEGIN(self->cw_compiler))                                                \
-			return NULL;                                                                      \
+			goto done;                                                                        \
 		if (DeeArg_UnpackKw(argc, argv, kw, lookupmode_kwlist, "|o:" #name, &lookup_mode_ob)) \
-			goto done;                                                                        \
+			goto done_compiler_end;                                                           \
 		if unlikely(get_scope_lookupmode(lookup_mode_ob, &lookup_mode))                       \
-			goto done;                                                                        \
+			goto done_compiler_end;                                                           \
 		result_ast   = func(lookup_mode);                                                     \
 		old_exceptsz = DeeThread_Self()->t_exceptsz;                                          \
 		if unlikely(!result_ast) {                                                            \
@@ -108,12 +109,13 @@ PRIVATE struct keyword lookupmode_kwlist[] = { K(lookupmode), KEND };
 				result = Dee_None;                                                            \
 				Dee_Incref(result);                                                           \
 			}                                                                                 \
-			goto done;                                                                        \
+			goto done_compiler_end;                                                           \
 		}                                                                                     \
 		result = DeeCompiler_GetAst(result_ast);                                              \
 		ast_decref_unlikely(result_ast);                                                      \
-	done:                                                                                     \
+	done_compiler_end:                                                                        \
 		COMPILER_END();                                                                       \
+	done:                                                                                     \
 		return result;                                                                        \
 	}
 DEFINE_SIMPLE_LOOKUPMODE_PARSER_FUNCTION(parse_unaryhead, ast_parse_unaryhead)
@@ -165,9 +167,9 @@ parser_parse_stmt(DeeCompilerWrapperObject *self, size_t argc,
 	uint16_t old_exceptsz;
 	PRIVATE struct keyword kwlist[] = { K(nonblocking), KEND };
 	if (COMPILER_BEGIN(self->cw_compiler))
-		return NULL;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist, "|b:parse_stmt", &nonblocking))
 		goto done;
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist, "|b:parse_stmt", &nonblocking))
+		goto done_compiler_end;
 	old_exceptsz = DeeThread_Self()->t_exceptsz;
 	result_ast   = ast_parse_statement(nonblocking);
 	if unlikely(!result_ast) {
@@ -175,12 +177,13 @@ parser_parse_stmt(DeeCompilerWrapperObject *self, size_t argc,
 			result = Dee_None;
 			Dee_Incref(result);
 		}
-		goto done;
+		goto done_compiler_end;
 	}
 	result = DeeCompiler_GetAst(result_ast);
 	ast_decref_unlikely(result_ast);
-done:
+done_compiler_end:
 	COMPILER_END();
+done:
 	return result;
 }
 
@@ -194,13 +197,13 @@ parser_parse_allstmt(DeeCompilerWrapperObject *self, size_t argc,
 	uint16_t old_exceptsz;
 	PRIVATE struct keyword kwlist[] = { K(end), KEND };
 	if (COMPILER_BEGIN(self->cw_compiler))
-		return NULL;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist, "|o:parse_allstmt", &end))
 		goto done;
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist, "|o:parse_allstmt", &end))
+		goto done_compiler_end;
 	if (end != Dee_EmptyString) {
 		end_token = get_token_from_obj(end, true);
 		if unlikely(end_token == TOK_ERR)
-			goto done;
+			goto done_compiler_end;
 	}
 	old_exceptsz = DeeThread_Self()->t_exceptsz;
 	result_ast = ast_parse_statements_until(AST_FMULTIPLE_KEEPLAST,
@@ -210,12 +213,13 @@ parser_parse_allstmt(DeeCompilerWrapperObject *self, size_t argc,
 			result = Dee_None;
 			Dee_Incref(result);
 		}
-		goto done;
+		goto done_compiler_end;
 	}
 	result = DeeCompiler_GetAst(result_ast);
 	ast_decref_unlikely(result_ast);
-done:
+done_compiler_end:
 	COMPILER_END();
+done:
 	return result;
 }
 
@@ -354,11 +358,13 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 parser_getlfstmt(DeeCompilerWrapperObject *__restrict self) {
 	DREF DeeObject *result;
 	if (COMPILER_BEGIN(self->cw_compiler))
-		return NULL;
+		goto err;
 	result = DeeBool_For(parser_flags & PARSE_FLFSTMT);
 	Dee_Incref(result);
 	COMPILER_END();
 	return result;
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL

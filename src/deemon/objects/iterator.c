@@ -190,16 +190,18 @@ err:
 	name(DeeObject *self, DeeObject *other) {                 \
 		dssize_t mylen, otlen;                                \
 		if (DeeObject_AssertTypeExact(other, Dee_TYPE(self))) \
-			return NULL;                                      \
+			goto err;                                         \
 		if (self == other)                                    \
 			if_same;                                          \
 		mylen = get_remaining_iterations(self);               \
 		if unlikely(mylen < 0)                                \
-			return NULL;                                      \
+			goto err;                                         \
 		otlen = get_remaining_iterations(other);              \
 		if unlikely(otlen < 0)                                \
-			return NULL;                                      \
+			goto err;                                         \
 		return_bool_(otlen op mylen);                         \
+	err:                                                      \
+		return NULL;                                          \
 	}
 DEFINE_ITERATOR_COMPARE(iterator_eq, ==, return_true)
 DEFINE_ITERATOR_COMPARE(iterator_ne, !=, return_false)

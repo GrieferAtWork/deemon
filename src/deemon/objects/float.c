@@ -248,8 +248,10 @@ float_hash(Float *__restrict self) {
 	name(Float *self, DeeObject *other) {                 \
 		double other_val;                                 \
 		if (DeeObject_AsDouble(other, &other_val))        \
-			return NULL;                                  \
+			goto err;                                     \
 		return_bool(self->f_value op other_val);          \
+	err:                                                  \
+		return NULL;                                      \
 	}
 DEFINE_FLOAT_COMPARE(float_eq, ==)
 DEFINE_FLOAT_COMPARE(float_ne, !=)

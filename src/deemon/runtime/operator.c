@@ -3569,10 +3569,12 @@ DEFINE_OBJECT_COMPARE_OPERATOR(CompareGeObject, ge, le, OPERATOR_GE, DeeType_INV
 		int result;                                    \
 		val = name##Object(self, some_object);         \
 		if unlikely(!val)                              \
-			return -1;                                 \
+			goto err;                                  \
 		result = DeeObject_Bool(val);                  \
 		Dee_Decref(val);                               \
 		return result;                                 \
+	err:                                               \
+		return -1;                                     \
 	}
 DEFINE_COMPARE_OPERATOR(DeeObject_CompareLo, lo, ge, OPERATOR_LO)
 DEFINE_COMPARE_OPERATOR(DeeObject_CompareLe, le, gr, OPERATOR_LE)

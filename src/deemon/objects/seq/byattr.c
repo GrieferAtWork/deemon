@@ -171,7 +171,7 @@ byattr_hash(MapByAttr *__restrict self) {
 		if unlikely(DeeObject_AssertType(other, &MapByAttr_Type))              \
 			goto err;                                                          \
 		return DeeObject_Compare##Name##Object(self->mba_map, other->mba_map); \
-err:                                                                           \
+	err:                                                                       \
 		return NULL;                                                           \
 	}
 DEFINE_MAPBYATTR_COMPARE(byattr_eq, Eq)

@@ -125,7 +125,7 @@ do_realloc:
 		}
 		if (Dee_CollectMemory(new_size))
 			goto do_realloc;
-		return NULL;
+		goto err;
 	}
 	sec->ds_iter  = result + (sec->ds_iter - sec->ds_begin);
 	sec->ds_begin = result;
@@ -134,6 +134,8 @@ do_realloc:
 	sec->ds_iter += n_bytes;
 end:
 	return result;
+err:
+	return NULL;
 }
 
 /* Search for an existing instance of `data...+=n_bytes' within the

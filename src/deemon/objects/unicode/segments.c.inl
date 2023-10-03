@@ -149,8 +149,10 @@ PRIVATE struct type_getset tpconst ssegiter_getsets[] = {
 	PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL               \
 	name(StringSegmentsIterator *self, StringSegmentsIterator *other) { \
 		if (DeeObject_AssertTypeExact(other, Dee_TYPE(self)))           \
-			return NULL;                                                \
+			goto err;                                                   \
 		return_bool(READ_PTR(self) op READ_PTR(other));                 \
+	err:                                                                \
+		return NULL;                                                    \
 	}
 DEFINE_STRINGSEGMENTSITERATOR_COMPARE(ssegiter_eq, ==)
 DEFINE_STRINGSEGMENTSITERATOR_COMPARE(ssegiter_ne, !=)

@@ -119,8 +119,8 @@ DeeError_Display(char const *reason,
 	if (reason == NULL)
 		reason = "Unhandled exception\n";
 	status = DeeFormat_Printf(&stderr_printer, NULL,
-	                          ">> %k: %k\n",
-	                          Dee_TYPE(error), error);
+	                          "%s>> %k: %k\n",
+	                          reason, Dee_TYPE(error), error);
 	if unlikely(status < 0)
 		goto handle_print_error;
 	if (traceback) {

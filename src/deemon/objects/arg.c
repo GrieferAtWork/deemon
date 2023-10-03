@@ -195,8 +195,10 @@ kwds_nsi_nextvalue(KwdsIterator *__restrict self) {
 	PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL     \
 	name(KwdsIterator *self, KwdsIterator *other) {           \
 		if (DeeObject_AssertTypeExact(other, Dee_TYPE(self))) \
-			return NULL;                                      \
+			goto err;                                         \
 		return_bool(READ_ITER(self) op READ_ITER(other));     \
+	err:                                                      \
+		return NULL;                                          \
 	}
 DEFINE_KWDSITERATOR_COMPARE(kwdsiter_eq, ==)
 DEFINE_KWDSITERATOR_COMPARE(kwdsiter_ne, !=)

@@ -250,9 +250,9 @@ err:
 		}, goto err_result_obj);                                                                          \
 		DeeObject_Init(result_obj, DeeSType_AsType(basetype));                                            \
 		return result_obj;                                                                                \
-IF_HAVE_FAULTPROTECT(err_result_obj:                                                                      \
+	IF_HAVE_FAULTPROTECT(err_result_obj:                                                                  \
 		DeeObject_Free(result_obj);)                                                                      \
-err:                                                                                                      \
+	err:                                                                                                  \
 		return NULL;                                                                                      \
 	}
 DEFINE_ATOMIC_BINOP(capi_atomic_fetchadd, "atomic_fetchadd", atomic_fetchadd)
@@ -293,7 +293,7 @@ DEFINE_ATOMIC_BINOP(capi_atomic_nandfetch, "atomic_nandfetch", atomic_nandfetch)
 			}                                                                \
 		}, goto err);                                                        \
 		return_none;                                                         \
-err:                                                                         \
+	err:                                                                     \
 		return NULL;                                                         \
 	}
 DEFINE_ATOMIC_BINOP_VOID(capi_atomic_add, "atomic_add", atomic_add)
@@ -332,9 +332,9 @@ DEFINE_ATOMIC_BINOP_VOID(capi_atomic_write, "atomic_write", atomic_write)
 		}, goto err_result_obj);                                                           \
 		DeeObject_Init(result_obj, DeeSType_AsType(basetype));                             \
 		return result_obj;                                                                 \
-IF_HAVE_FAULTPROTECT(err_result_obj:                                                       \
+	IF_HAVE_FAULTPROTECT(err_result_obj:                                                   \
 		DeeObject_Free(result_obj);)                                                       \
-err:                                                                                       \
+	err:                                                                                   \
 		return NULL;                                                                       \
 	}
 DEFINE_ATOMIC_UNOP(capi_atomic_fetchinc, "atomic_fetchinc", atomic_fetchinc)
@@ -364,7 +364,7 @@ DEFINE_ATOMIC_UNOP(capi_atomic_read, "atomic_read", atomic_read)
 			}                                                               \
 		}, goto err);                                                       \
 		return_none;                                                        \
-err:                                                                        \
+	err:                                                                    \
 		return NULL;                                                        \
 	}
 DEFINE_ATOMIC_UNOP_VOID(capi_atomic_inc, "atomic_inc", atomic_inc)

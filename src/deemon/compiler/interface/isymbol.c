@@ -83,14 +83,17 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeStringObject *DCALL
 symbol_getkind(DeeCompilerSymbolObject *__restrict self) {
 	DREF DeeStringObject *result = NULL;
 	struct symbol *sym;
-	COMPILER_BEGIN(self->ci_compiler);
+	if (COMPILER_BEGIN(self->ci_compiler))
+		goto done;
 	sym = DeeCompilerItem_VALUE(self, struct symbol);
 	if likely(sym) {
 		ASSERT(sym->s_type < COMPILER_LENOF(symbol_type_names));
 		result = symbol_type_names[sym->s_type];
 		Dee_Incref(result);
 	}
+/*done_compiler_end:*/
 	COMPILER_END();
+done:
 	return result;
 }
 
@@ -106,7 +109,8 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 symbol_delkind(DeeCompilerSymbolObject *__restrict self) {
 	int result = -1;
 	struct symbol *sym;
-	COMPILER_BEGIN(self->ci_compiler);
+	if (COMPILER_BEGIN(self->ci_compiler))
+		goto done;
 	sym = DeeCompilerItem_VALUE(self, struct symbol);
 	if likely(sym) {
 		if unlikely(SYMBOL_TYPE_IS_IMMUTABLE(sym->s_type)) {
@@ -118,7 +122,9 @@ symbol_delkind(DeeCompilerSymbolObject *__restrict self) {
 			result      = 0;
 		}
 	}
+/*done_compiler_end:*/
 	COMPILER_END();
+done:
 	return result;
 }
 
@@ -129,10 +135,10 @@ symbol_setkind(DeeCompilerSymbolObject *__restrict self,
 	struct symbol *sym;
 	uint16_t new_kind;
 	if (DeeObject_AssertTypeExact(value, &DeeString_Type))
-		goto done2;
+		goto done;
 	new_kind = get_symbol_kind_from_name(DeeString_STR(value));
 	if unlikely(new_kind == (uint16_t)-1)
-		goto done2;
+		goto done;
 	switch (new_kind) {
 
 	case SYMBOL_TYPE_EXTERN:
@@ -145,7 +151,8 @@ symbol_setkind(DeeCompilerSymbolObject *__restrict self,
 	default: break;
 	}
 
-	COMPILER_BEGIN(self->ci_compiler);
+	if (COMPILER_BEGIN(self->ci_compiler))
+		goto done;
 	sym = DeeCompilerItem_VALUE(self, struct symbol);
 	if likely(sym) {
 		if unlikely(SYMBOL_TYPE_IS_IMMUTABLE(sym->s_type)) {
@@ -179,8 +186,9 @@ symbol_setkind(DeeCompilerSymbolObject *__restrict self,
 			result = 0;
 		}
 	}
+/*done_compiler_end:*/
 	COMPILER_END();
-done2:
+done:
 	return result;
 }
 
@@ -188,14 +196,17 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 symbol_name(DeeCompilerSymbolObject *__restrict self) {
 	DREF DeeObject *result = NULL;
 	struct symbol *sym;
-	COMPILER_BEGIN(self->ci_compiler);
+	if (COMPILER_BEGIN(self->ci_compiler))
+		goto done;
 	sym = DeeCompilerItem_VALUE(self, struct symbol);
 	if likely(sym) {
 		result = DeeString_NewUtf8(sym->s_name->k_name,
 		                           sym->s_name->k_size,
 		                           STRING_ERROR_FIGNORE);
 	}
+/*done_compiler_end:*/
 	COMPILER_END();
+done:
 	return result;
 }
 
@@ -204,14 +215,17 @@ symbol_print(DeeCompilerSymbolObject *__restrict self,
              dformatprinter printer, void *arg) {
 	dssize_t result = -1;
 	struct symbol *sym;
-	COMPILER_BEGIN(self->ci_compiler);
+	if (COMPILER_BEGIN(self->ci_compiler))
+		goto done;
 	sym = DeeCompilerItem_VALUE(self, struct symbol);
 	if likely(sym) {
 		result = DeeFormat_Print(printer, arg,
 		                         sym->s_name->k_name,
 		                         sym->s_name->k_size);
 	}
+/*done_compiler_end:*/
 	COMPILER_END();
+done:
 	return result;
 }
 
@@ -220,14 +234,17 @@ symbol_printrepr(DeeCompilerSymbolObject *__restrict self,
                  dformatprinter printer, void *arg) {
 	dssize_t result = -1;
 	struct symbol *sym;
-	COMPILER_BEGIN(self->ci_compiler);
+	if (COMPILER_BEGIN(self->ci_compiler))
+		goto done;
 	sym = DeeCompilerItem_VALUE(self, struct symbol);
 	if likely(sym) {
 		result = DeeFormat_Printf(printer, arg, "<symbol %$q>",
 		                          sym->s_name->k_size,
 		                          sym->s_name->k_name);
 	}
+/*done_compiler_end:*/
 	COMPILER_END();
+done:
 	return result;
 }
 
@@ -310,8 +327,9 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 symbol_getalias(DeeCompilerSymbolObject *self, size_t argc, DeeObject *const *argv) {
 	DREF DeeObject *result = NULL;
 	struct symbol *sym;
-	COMPILER_BEGIN(self->ci_compiler);
 	if (DeeArg_Unpack(argc, argv, ":getalias"))
+		goto done;
+	if (COMPILER_BEGIN(self->ci_compiler))
 		goto done;
 	sym = DeeCompilerItem_VALUE(self, struct symbol);
 	if likely(sym) {
@@ -326,8 +344,9 @@ symbol_getalias(DeeCompilerSymbolObject *self, size_t argc, DeeObject *const *ar
 			result = DeeCompiler_GetSymbol(sym);
 		}
 	}
-done:
+/*done_compiler_end:*/
 	COMPILER_END();
+done:
 	return result;
 }
 
@@ -337,21 +356,22 @@ symbol_setalias(DeeCompilerSymbolObject *self, size_t argc, DeeObject *const *ar
 	struct symbol *sym;
 	DeeCompilerSymbolObject *other;
 	struct symbol *other_sym;
-	COMPILER_BEGIN(self->ci_compiler);
 	if (DeeArg_Unpack(argc, argv, "o:setalias", &other))
 		goto done;
-	if (DeeObject_AssertTypeExact(other, &DeeCompilerSymbol_Type))
+	if (COMPILER_BEGIN(self->ci_compiler))
 		goto done;
+	if (DeeObject_AssertTypeExact(other, &DeeCompilerSymbol_Type))
+		goto done_compiler_end;
 	if unlikely(other->ci_compiler != DeeCompiler_Current) {
 		err_invalid_symbol_compiler(other);
-		goto done;
+		goto done_compiler_end;
 	}
 	other_sym = DeeCompilerItem_VALUE(other, struct symbol);
 	if unlikely(!other_sym)
-		goto done;
+		goto done_compiler_end;
 	sym = DeeCompilerItem_VALUE(self, struct symbol);
 	if unlikely(!sym)
-		goto done;
+		goto done_compiler_end;
 	if unlikely(SYMBOL_TYPE_IS_IMMUTABLE(sym->s_type)) {
 		err_symbol_readonly(sym);
 	} else {
@@ -363,7 +383,7 @@ symbol_setalias(DeeCompilerSymbolObject *self, size_t argc, DeeObject *const *ar
 				                "Symbol alias loop with %$q",
 				                sym->s_name->k_size,
 				                sym->s_name->k_name);
-				goto done;
+				goto done_compiler_end;
 			}
 			if (iter->s_type != SYMBOL_TYPE_ALIAS)
 				break;
@@ -379,8 +399,9 @@ symbol_setalias(DeeCompilerSymbolObject *self, size_t argc, DeeObject *const *ar
 		result = (DREF DeeObject *)self;
 		Dee_Incref(result);
 	}
-done:
+done_compiler_end:
 	COMPILER_END();
+done:
 	return result;
 }
 
@@ -420,11 +441,13 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 symbol_bool(DeeCompilerSymbolObject *__restrict self) {
 	int result = -1;
 	struct symbol *sym;
-	COMPILER_BEGIN(self->ci_compiler);
+	if (COMPILER_BEGIN(self->ci_compiler))
+		goto done;
 	sym = DeeCompilerItem_VALUE(self, struct symbol);
 	if likely(sym)
 		result = sym->s_type != SYMBOL_TYPE_NONE;
 	COMPILER_END();
+done:
 	return result;
 }
 

@@ -142,7 +142,7 @@ repeatiter_visit(RepeatIterator *__restrict self, dvisit_t proc, void *arg) {
 		DREF DeeObject *my_iter, *ot_iter;                                        \
 		DREF DeeObject *result;                                                   \
 		if (DeeObject_AssertTypeExact(other, &SeqRepeatIterator_Type))            \
-			return NULL;                                                          \
+			goto err;                                                             \
 		check_diffnum;                                                            \
 		RepeatIterator_LockRead(self);                                            \
 		my_iter = self->rpi_iter;                                                 \
@@ -161,6 +161,8 @@ repeatiter_visit(RepeatIterator *__restrict self, dvisit_t proc, void *arg) {
 		Dee_Decref(ot_iter);                                                      \
 		Dee_Decref(my_iter);                                                      \
 		return result;                                                            \
+	err:                                                                          \
+		return NULL;                                                              \
 	}
 
 DEFINE_REPEATITER_COMPARE(repeatiter_eq, {
@@ -1054,11 +1056,13 @@ repeatitem_nsi_getsize_fast(RepeatItem *__restrict self) {
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 repeatitem_nsi_getitem(RepeatItem *__restrict self, size_t index) {
-	if unlikely(index >= self->rpit_num) {
-		err_index_out_of_bounds((DeeObject *)self, index, self->rpit_num);
-		return NULL;
-	}
+	if unlikely(index >= self->rpit_num)
+		goto err_bounds;
 	return_reference_(self->rpit_obj);
+err_bounds:
+	err_index_out_of_bounds((DeeObject *)self, index, self->rpit_num);
+/*err:*/
+	return NULL;
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL

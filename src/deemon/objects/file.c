@@ -2458,11 +2458,12 @@ PUBLIC bool DCALL DeeFile_ResetStd(void) {
 	file_class_del_##stdxxx(DeeObject *__restrict self) {          \
 		DREF DeeObject *old_stream;                                \
 		old_stream = DeeFile_SetStd(DEE_STDXXX, NULL);             \
-		if unlikely(!old_stream) {                                 \
-			err_unbound_attribute_string(Dee_TYPE(self), #stdxxx); \
-			return -1;                                             \
-		}                                                          \
+		if unlikely(!old_stream)                                   \
+			goto err_unbound;                                      \
 		return 0;                                                  \
+	err_unbound:                                                   \
+		err_unbound_attribute_string(Dee_TYPE(self), #stdxxx);     \
+		return -1;                                                 \
 	}                                                              \
 	PRIVATE WUNUSED NONNULL((1, 2)) int DCALL                      \
 	file_class_set_##stdxxx(DeeObject *UNUSED(self),               \

@@ -83,26 +83,28 @@ is_defined_by_deemon_core(DeeTypeObject *__restrict self) {
 PRIVATE WUNUSED NONNULL((1)) DeeTypeObject *DCALL
 filter_builtin_deemon_types(/*inherit(always)*/ DREF DeeObject *__restrict self) {
 	DREF DeeObject *type_module;
-	if (!DeeType_Check(self) || DeeType_IsCustom(self)) {
-		Dee_Decref(self);
-		return NULL;
-	}
+	if (!DeeType_Check(self))
+		goto err_decref_self;
+	if (DeeType_IsCustom(self))
+		goto err_decref_self;
 	type_module = DeeType_GetModule((DeeTypeObject *)self);
 	if unlikely(!type_module) {
 		DeeError_Handled(ERROR_HANDLED_RESTORE);
-		Dee_Decref(self);
-		return NULL;
+		goto err_decref_self;
 	}
 	Dee_Decref(type_module);
+
 	/* Only propagate types from the builtin deemon module. */
-	if (type_module != (DeeObject *)&DeeModule_Deemon) {
-		Dee_Decref(self);
-		return NULL;
-	}
+	if (type_module != (DeeObject *)&DeeModule_Deemon)
+		goto err_decref_self;
+
 	/* Because it's builtin+non-custom, it mustn't be heap-allocated
 	 * (but be allocated statically), so decref-ing it mustn't kill it */
 	Dee_DecrefNokill(self);
 	return (DeeTypeObject *)self;
+err_decref_self:
+	Dee_Decref(self);
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DeeTypeObject *DCALL

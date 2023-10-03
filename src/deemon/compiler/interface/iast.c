@@ -407,14 +407,14 @@ ast_setmultiple(Ast *__restrict self, DeeObject *__restrict value) {
 	DREF DeeCompilerAstObject **new_astv;
 	DREF struct ast **old_astv;
 	if (COMPILER_BEGIN(self->ci_compiler))
-		return -1;
+		goto err;
 	me = self->ci_value;
 	if unlikely(me->a_type != AST_MULTIPLE) {
 		result = err_invalid_ast_type(self, AST_MULTIPLE);
 	} else {
 		new_astv = (DREF DeeCompilerAstObject **)DeeSeq_AsHeapVector(value, &new_astc);
 		if unlikely(!new_astv) {
-err:
+err_compiler_end:
 			result = -1;
 		} else {
 #ifdef CONFIG_AST_IS_STRUCT
@@ -427,7 +427,7 @@ err_branch_v:
 					for (i = 0; i < new_astc; ++i)
 						Dee_Decref(new_astv[i]);
 					Dee_Free(new_astv);
-					goto err;
+					goto err_compiler_end;
 				}
 				if unlikely(new_astv[i]->ci_compiler != DeeCompiler_Current) {
 					err_invalid_ast_compiler(new_astv[i]);
@@ -454,6 +454,8 @@ err_branch_v:
 	}
 	COMPILER_END();
 	return result;
+err:
+	return -1;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -461,7 +463,7 @@ ast_getmultiple_typing(Ast *__restrict self) {
 	DREF DeeObject *result;
 	struct ast *me;
 	if (COMPILER_BEGIN(self->ci_compiler))
-		return NULL;
+		goto err;
 	me = self->ci_value;
 	if unlikely(me->a_type != AST_MULTIPLE) {
 		err_invalid_ast_type(self, AST_MULTIPLE);
@@ -496,6 +498,8 @@ ast_getmultiple_typing(Ast *__restrict self) {
 	}
 	COMPILER_END();
 	return result;
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
@@ -504,7 +508,7 @@ ast_setmultiple_typing(Ast *__restrict self,
 	int result = 0;
 	struct ast *me;
 	if (COMPILER_BEGIN(self->ci_compiler))
-		return -1;
+		goto err;
 	me = self->ci_value;
 	if unlikely(me->a_type != AST_MULTIPLE) {
 		result = err_invalid_ast_type(self, AST_MULTIPLE);
@@ -519,6 +523,8 @@ ast_setmultiple_typing(Ast *__restrict self,
 	}
 	COMPILER_END();
 	return result;
+err:
+	return -1;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -526,7 +532,7 @@ ast_getreturnast(Ast *__restrict self) {
 	DREF DeeObject *result;
 	struct ast *me;
 	if (COMPILER_BEGIN(self->ci_compiler))
-		return NULL;
+		goto err;
 	me = self->ci_value;
 	if unlikely(me->a_type != AST_RETURN) {
 		err_invalid_ast_type(self, AST_RETURN);
@@ -539,6 +545,8 @@ ast_getreturnast(Ast *__restrict self) {
 	}
 	COMPILER_END();
 	return result;
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
@@ -546,7 +554,7 @@ ast_delreturnast(Ast *__restrict self) {
 	int result = 0;
 	struct ast *me;
 	if (COMPILER_BEGIN(self->ci_compiler))
-		return -1;
+		goto err;
 	me = self->ci_value;
 	if unlikely(me->a_type != AST_RETURN) {
 		result = err_invalid_ast_type(self, AST_RETURN);
@@ -560,6 +568,8 @@ ast_delreturnast(Ast *__restrict self) {
 	}
 	COMPILER_END();
 	return result;
+err:
+	return -1;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
@@ -570,7 +580,7 @@ ast_setreturnast(Ast *__restrict self,
 	if (DeeNone_Check(value))
 		return ast_delreturnast(self);
 	if (COMPILER_BEGIN(self->ci_compiler))
-		return -1;
+		goto err;
 	me = self->ci_value;
 	if unlikely(me->a_type != AST_RETURN) {
 		result = err_invalid_ast_type(self, AST_RETURN);
@@ -589,6 +599,8 @@ ast_setreturnast(Ast *__restrict self,
 	}
 	COMPILER_END();
 	return result;
+err:
+	return -1;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -596,7 +608,7 @@ ast_getyieldast(Ast *__restrict self) {
 	DREF DeeObject *result;
 	struct ast *me;
 	if (COMPILER_BEGIN(self->ci_compiler))
-		return NULL;
+		goto err;
 	me = self->ci_value;
 	if unlikely(me->a_type != AST_YIELD) {
 		err_invalid_ast_type(self, AST_YIELD);
@@ -606,6 +618,8 @@ ast_getyieldast(Ast *__restrict self) {
 	}
 	COMPILER_END();
 	return result;
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
@@ -614,7 +628,7 @@ ast_setyieldast(Ast *__restrict self,
 	int result = 0;
 	struct ast *me;
 	if (COMPILER_BEGIN(self->ci_compiler))
-		return -1;
+		goto err;
 	me = self->ci_value;
 	if unlikely(me->a_type != AST_YIELD) {
 		result = err_invalid_ast_type(self, AST_YIELD);
@@ -633,6 +647,8 @@ ast_setyieldast(Ast *__restrict self,
 	}
 	COMPILER_END();
 	return result;
+err:
+	return -1;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -640,7 +656,7 @@ ast_getthrowast(Ast *__restrict self) {
 	DREF DeeObject *result;
 	struct ast *me;
 	if (COMPILER_BEGIN(self->ci_compiler))
-		return NULL;
+		goto err;
 	me = self->ci_value;
 	if unlikely(me->a_type != AST_THROW) {
 		err_invalid_ast_type(self, AST_THROW);
@@ -653,6 +669,8 @@ ast_getthrowast(Ast *__restrict self) {
 	}
 	COMPILER_END();
 	return result;
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
@@ -660,7 +678,7 @@ ast_delthrowast(Ast *__restrict self) {
 	int result = 0;
 	struct ast *me;
 	if (COMPILER_BEGIN(self->ci_compiler))
-		return -1;
+		goto err;
 	me = self->ci_value;
 	if unlikely(me->a_type != AST_THROW) {
 		result = err_invalid_ast_type(self, AST_THROW);
@@ -674,6 +692,8 @@ ast_delthrowast(Ast *__restrict self) {
 	}
 	COMPILER_END();
 	return result;
+err:
+	return -1;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
@@ -684,7 +704,7 @@ ast_setthrowast(Ast *__restrict self,
 	if (DeeNone_Check(value))
 		return ast_delthrowast(self);
 	if (COMPILER_BEGIN(self->ci_compiler))
-		return -1;
+		goto err;
 	me = self->ci_value;
 	if unlikely(me->a_type != AST_THROW) {
 		result = err_invalid_ast_type(self, AST_THROW);
@@ -703,6 +723,8 @@ ast_setthrowast(Ast *__restrict self,
 	}
 	COMPILER_END();
 	return result;
+err:
+	return -1;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -710,7 +732,7 @@ ast_gettryguard(Ast *__restrict self) {
 	DREF DeeObject *result;
 	struct ast *me;
 	if (COMPILER_BEGIN(self->ci_compiler))
-		return NULL;
+		goto err;
 	me = self->ci_value;
 	if unlikely(me->a_type != AST_TRY) {
 		err_invalid_ast_type(self, AST_TRY);
@@ -720,6 +742,8 @@ ast_gettryguard(Ast *__restrict self) {
 	}
 	COMPILER_END();
 	return result;
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
@@ -728,7 +752,7 @@ ast_settryguard(Ast *__restrict self,
 	int result = 0;
 	struct ast *me;
 	if (COMPILER_BEGIN(self->ci_compiler))
-		return -1;
+		goto err;
 	me = self->ci_value;
 	if unlikely(me->a_type != AST_TRY) {
 		result = err_invalid_ast_type(self, AST_TRY);
@@ -747,6 +771,8 @@ ast_settryguard(Ast *__restrict self,
 	}
 	COMPILER_END();
 	return result;
+err:
+	return -1;
 }
 
 
@@ -755,7 +781,7 @@ ast_gettryhandlers(Ast *__restrict self) {
 	DREF DeeTupleObject *result;
 	struct ast *me;
 	if (COMPILER_BEGIN(self->ci_compiler))
-		return NULL;
+		goto err;
 	me = self->ci_value;
 	if unlikely(me->a_type != AST_TRY) {
 		err_invalid_ast_type(self, AST_TRY);
@@ -764,13 +790,13 @@ ast_gettryhandlers(Ast *__restrict self) {
 		size_t i;
 		result = DeeTuple_NewUninitialized(me->a_try.t_catchc);
 		if unlikely(!result)
-			goto done;
+			goto done_compiler_end;
 		for (i = 0; i < me->a_try.t_catchc; ++i) {
 			DREF DeeTupleObject *triple;
 			DREF DeeObject *temp;
 			triple = DeeTuple_NewUninitialized(3);
 			if unlikely(!triple)
-				goto err_r_i;
+				goto err_compiler_end_r_i;
 			switch (me->a_try.t_catchv[i].ce_flags &
 			        (EXCEPTION_HANDLER_FFINALLY | EXCEPTION_HANDLER_FINTERPT)) {
 			case EXCEPTION_HANDLER_FFINALLY | EXCEPTION_HANDLER_FINTERPT:
@@ -788,17 +814,17 @@ ast_gettryhandlers(Ast *__restrict self) {
 				break;
 			}
 			if unlikely(!temp) {
-err_r_i_triple_0:
+err_compiler_end_r_i_triple_0:
 				DeeTuple_FreeUninitialized(triple);
-				goto err_r_i;
+				goto err_compiler_end_r_i;
 			}
 			DeeTuple_SET(triple, 0, temp); /* Inherit reference. */
 			if (me->a_try.t_catchv[i].ce_mask) {
 				temp = DeeCompiler_GetAst(me->a_try.t_catchv[i].ce_mask);
 				if unlikely(!temp) {
-err_r_i_triple_1:
+err_compiler_end_r_i_triple_1:
 					Dee_Decref(DeeTuple_GET(triple, 0));
-					goto err_r_i_triple_0;
+					goto err_compiler_end_r_i_triple_0;
 				}
 			} else {
 				temp = Dee_None;
@@ -807,22 +833,24 @@ err_r_i_triple_1:
 			DeeTuple_SET(triple, 1, temp); /* Inherit reference. */
 			temp = DeeCompiler_GetAst(me->a_try.t_catchv[i].ce_code);
 			if unlikely(!temp) {
-/*err_r_i_triple_2:*/
+/*err_compiler_end_r_i_triple_2:*/
 				Dee_Decref(DeeTuple_GET(triple, 1));
-				goto err_r_i_triple_1;
+				goto err_compiler_end_r_i_triple_1;
 			}
 			DeeTuple_SET(triple, 2, temp);   /* Inherit reference. */
 			DeeTuple_SET(result, i, triple); /* Inherit reference. */
 		}
-		goto done;
-err_r_i:
+		goto done_compiler_end;
+err_compiler_end_r_i:
 		Dee_Decrefv(DeeTuple_ELEM(result), i);
 		DeeTuple_FreeUninitialized(result);
 		result = NULL;
 	}
-done:
+done_compiler_end:
 	COMPILER_END();
 	return result;
+err:
+	return NULL;
 }
 
 
@@ -832,7 +860,7 @@ ast_settryhandlers(Ast *__restrict self,
 	int result = 0;
 	struct ast *me;
 	if (COMPILER_BEGIN(self->ci_compiler))
-		return -1;
+		goto err;
 	me = self->ci_value;
 	if unlikely(me->a_type != AST_TRY) {
 		result = err_invalid_ast_type(self, AST_TRY);
@@ -858,6 +886,8 @@ ast_settryhandlers(Ast *__restrict self,
 	}
 	COMPILER_END();
 	return result;
+err:
+	return -1;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -865,7 +895,7 @@ ast_getloopisforeach(Ast *__restrict self) {
 	DREF DeeObject *result;
 	struct ast *me;
 	if (COMPILER_BEGIN(self->ci_compiler))
-		return NULL;
+		goto err;
 	me = self->ci_value;
 	if unlikely(me->a_type != AST_LOOP) {
 		err_invalid_ast_type(self, AST_LOOP);
@@ -876,6 +906,8 @@ ast_getloopisforeach(Ast *__restrict self) {
 	}
 	COMPILER_END();
 	return result;
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
@@ -887,7 +919,7 @@ ast_setloopisforeach(Ast *__restrict self,
 	if unlikely(newval < 0)
 		goto err;
 	if (COMPILER_BEGIN(self->ci_compiler))
-		return -1;
+		goto err;
 	me = self->ci_value;
 	if unlikely(me->a_type != AST_LOOP) {
 		result = err_invalid_ast_type(self, AST_LOOP);
@@ -911,7 +943,7 @@ ast_getloopispostcond(Ast *__restrict self) {
 	DREF DeeObject *result;
 	struct ast *me;
 	if (COMPILER_BEGIN(self->ci_compiler))
-		return NULL;
+		goto err;
 	me = self->ci_value;
 	if unlikely(me->a_type != AST_LOOP) {
 		err_invalid_ast_type(self, AST_LOOP);
@@ -922,6 +954,8 @@ ast_getloopispostcond(Ast *__restrict self) {
 	}
 	COMPILER_END();
 	return result;
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
@@ -933,7 +967,7 @@ ast_setloopispostcond(Ast *__restrict self,
 	if unlikely(newval < 0)
 		goto err;
 	if (COMPILER_BEGIN(self->ci_compiler))
-		return -1;
+		goto err;
 	me = self->ci_value;
 	if unlikely(me->a_type != AST_LOOP) {
 		result = err_invalid_ast_type(self, AST_LOOP);
@@ -953,7 +987,7 @@ ast_getloopisunlikely(Ast *__restrict self) {
 	DREF DeeObject *result;
 	struct ast *me;
 	if (COMPILER_BEGIN(self->ci_compiler))
-		return NULL;
+		goto err;
 	me = self->ci_value;
 	if unlikely(me->a_type != AST_LOOP) {
 		err_invalid_ast_type(self, AST_LOOP);
@@ -964,6 +998,8 @@ ast_getloopisunlikely(Ast *__restrict self) {
 	}
 	COMPILER_END();
 	return result;
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
@@ -975,7 +1011,7 @@ ast_setloopisunlikely(Ast *__restrict self,
 	if unlikely(newval < 0)
 		goto err;
 	if (COMPILER_BEGIN(self->ci_compiler))
-		return -1;
+		goto err;
 	me = self->ci_value;
 	if unlikely(me->a_type != AST_LOOP) {
 		result = err_invalid_ast_type(self, AST_LOOP);
@@ -995,7 +1031,7 @@ ast_getloopflags(Ast *__restrict self) {
 	DREF DeeObject *result;
 	struct ast *me;
 	if (COMPILER_BEGIN(self->ci_compiler))
-		return NULL;
+		goto err;
 	me = self->ci_value;
 	if unlikely(me->a_type != AST_LOOP) {
 		err_invalid_ast_type(self, AST_LOOP);
@@ -1005,33 +1041,35 @@ ast_getloopflags(Ast *__restrict self) {
 		struct unicode_printer printer = UNICODE_PRINTER_INIT;
 		if (me->a_flag & AST_FLOOP_FOREACH) {
 			if unlikely(UNICODE_PRINTER_PRINT(&printer, "foreach") < 0)
-				goto err_printer;
+				goto err_compiler_end_printer;
 			is_first = false;
 		}
 		if (me->a_flag & AST_FLOOP_POSTCOND) {
 			if (!is_first &&
 			    unlikely(unicode_printer_put8(&printer, ',')))
-				goto err_printer;
+				goto err_compiler_end_printer;
 			if unlikely(UNICODE_PRINTER_PRINT(&printer, "postcond") < 0)
-				goto err_printer;
+				goto err_compiler_end_printer;
 			is_first = false;
 		}
 		if (me->a_flag & AST_FLOOP_UNLIKELY) {
 			if (!is_first &&
 			    unlikely(unicode_printer_put8(&printer, ',')))
-				goto err_printer;
+				goto err_compiler_end_printer;
 			if unlikely(UNICODE_PRINTER_PRINT(&printer, "unlikely") < 0)
-				goto err_printer;
+				goto err_compiler_end_printer;
 		}
 		result = unicode_printer_pack(&printer);
-		goto done;
-err_printer:
+		goto done_compiler_end;
+err_compiler_end_printer:
 		unicode_printer_fini(&printer);
 		result = NULL;
 	}
-done:
+done_compiler_end:
 	COMPILER_END();
 	return result;
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
@@ -1048,7 +1086,7 @@ ast_setloopflags(Ast *__restrict self,
 			goto err;
 	}
 	if (COMPILER_BEGIN(self->ci_compiler))
-		return -1;
+		goto err;
 	me = self->ci_value;
 	if unlikely(me->a_type != AST_LOOP) {
 		result = err_invalid_ast_type(self, AST_LOOP);
@@ -1084,7 +1122,7 @@ ast_getloopcond(Ast *__restrict self) {
 	DREF DeeObject *result;
 	struct ast *me;
 	if (COMPILER_BEGIN(self->ci_compiler))
-		return NULL;
+		goto err;
 	me = self->ci_value;
 	if unlikely(me->a_type != AST_LOOP) {
 		err_invalid_ast_type(self, AST_LOOP);
@@ -1100,6 +1138,8 @@ ast_getloopcond(Ast *__restrict self) {
 	}
 	COMPILER_END();
 	return result;
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
@@ -1107,7 +1147,7 @@ ast_delloopcond(Ast *__restrict self) {
 	int result = 0;
 	struct ast *me;
 	if (COMPILER_BEGIN(self->ci_compiler))
-		return -1;
+		goto err;
 	me = self->ci_value;
 	if unlikely(me->a_type != AST_LOOP) {
 		result = err_invalid_ast_type(self, AST_LOOP);
@@ -1123,6 +1163,8 @@ ast_delloopcond(Ast *__restrict self) {
 	}
 	COMPILER_END();
 	return result;
+err:
+	return -1;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
@@ -1133,7 +1175,7 @@ ast_setloopcond(Ast *__restrict self,
 	if (DeeNone_Check(value))
 		return ast_delloopcond(self);
 	if (COMPILER_BEGIN(self->ci_compiler))
-		return -1;
+		goto err;
 	me = self->ci_value;
 	if unlikely(me->a_type != AST_LOOP) {
 		result = err_invalid_ast_type(self, AST_LOOP);
@@ -1154,6 +1196,8 @@ ast_setloopcond(Ast *__restrict self,
 	}
 	COMPILER_END();
 	return result;
+err:
+	return -1;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -1161,7 +1205,7 @@ ast_getloopnext(Ast *__restrict self) {
 	DREF DeeObject *result;
 	struct ast *me;
 	if (COMPILER_BEGIN(self->ci_compiler))
-		return NULL;
+		goto err;
 	me = self->ci_value;
 	if unlikely(me->a_type != AST_LOOP) {
 		err_invalid_ast_type(self, AST_LOOP);
@@ -1177,6 +1221,8 @@ ast_getloopnext(Ast *__restrict self) {
 	}
 	COMPILER_END();
 	return result;
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
@@ -1184,7 +1230,7 @@ ast_delloopnext(Ast *__restrict self) {
 	int result = 0;
 	struct ast *me;
 	if (COMPILER_BEGIN(self->ci_compiler))
-		return -1;
+		goto err;
 	me = self->ci_value;
 	if unlikely(me->a_type != AST_LOOP) {
 		result = err_invalid_ast_type(self, AST_LOOP);
@@ -1200,6 +1246,8 @@ ast_delloopnext(Ast *__restrict self) {
 	}
 	COMPILER_END();
 	return result;
+err:
+	return -1;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
@@ -1210,7 +1258,7 @@ ast_setloopnext(Ast *__restrict self,
 	if (DeeNone_Check(value))
 		return ast_delloopnext(self);
 	if (COMPILER_BEGIN(self->ci_compiler))
-		return -1;
+		goto err;
 	me = self->ci_value;
 	if unlikely(me->a_type != AST_LOOP) {
 		result = err_invalid_ast_type(self, AST_LOOP);
@@ -1231,6 +1279,8 @@ ast_setloopnext(Ast *__restrict self,
 	}
 	COMPILER_END();
 	return result;
+err:
+	return -1;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -1238,7 +1288,7 @@ ast_getloopelem(Ast *__restrict self) {
 	DREF DeeObject *result;
 	struct ast *me;
 	if (COMPILER_BEGIN(self->ci_compiler))
-		return NULL;
+		goto err;
 	me = self->ci_value;
 	if unlikely(me->a_type != AST_LOOP) {
 		err_invalid_ast_type(self, AST_LOOP);
@@ -1254,6 +1304,8 @@ ast_getloopelem(Ast *__restrict self) {
 	}
 	COMPILER_END();
 	return result;
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
@@ -1261,7 +1313,7 @@ ast_delloopelem(Ast *__restrict self) {
 	int result = 0;
 	struct ast *me;
 	if (COMPILER_BEGIN(self->ci_compiler))
-		return -1;
+		goto err;
 	me = self->ci_value;
 	if unlikely(me->a_type != AST_LOOP) {
 		result = err_invalid_ast_type(self, AST_LOOP);
@@ -1277,6 +1329,8 @@ ast_delloopelem(Ast *__restrict self) {
 	}
 	COMPILER_END();
 	return result;
+err:
+	return -1;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
@@ -1287,7 +1341,7 @@ ast_setloopelem(Ast *__restrict self,
 	if (DeeNone_Check(value))
 		return ast_delloopelem(self);
 	if (COMPILER_BEGIN(self->ci_compiler))
-		return -1;
+		goto err;
 	me = self->ci_value;
 	if unlikely(me->a_type != AST_LOOP) {
 		result = err_invalid_ast_type(self, AST_LOOP);
@@ -1308,6 +1362,8 @@ ast_setloopelem(Ast *__restrict self,
 	}
 	COMPILER_END();
 	return result;
+err:
+	return -1;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -1315,7 +1371,7 @@ ast_getloopiter(Ast *__restrict self) {
 	DREF DeeObject *result;
 	struct ast *me;
 	if (COMPILER_BEGIN(self->ci_compiler))
-		return NULL;
+		goto err;
 	me = self->ci_value;
 	if unlikely(me->a_type != AST_LOOP) {
 		err_invalid_ast_type(self, AST_LOOP);
@@ -1328,6 +1384,8 @@ ast_getloopiter(Ast *__restrict self) {
 	}
 	COMPILER_END();
 	return result;
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
@@ -1336,7 +1394,7 @@ ast_setloopiter(Ast *__restrict self,
 	int result = 0;
 	struct ast *me;
 	if (COMPILER_BEGIN(self->ci_compiler))
-		return -1;
+		goto err;
 	me = self->ci_value;
 	if unlikely(me->a_type != AST_LOOP) {
 		result = err_invalid_ast_type(self, AST_LOOP);
@@ -1357,6 +1415,8 @@ ast_setloopiter(Ast *__restrict self,
 	}
 	COMPILER_END();
 	return result;
+err:
+	return -1;
 }
 
 
@@ -1365,7 +1425,7 @@ ast_getlooploop(Ast *__restrict self) {
 	DREF DeeObject *result;
 	struct ast *me;
 	if (COMPILER_BEGIN(self->ci_compiler))
-		return NULL;
+		goto err;
 	me = self->ci_value;
 	if unlikely(me->a_type != AST_LOOP) {
 		err_invalid_ast_type(self, AST_LOOP);
@@ -1378,6 +1438,8 @@ ast_getlooploop(Ast *__restrict self) {
 	}
 	COMPILER_END();
 	return result;
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
@@ -1385,7 +1447,7 @@ ast_dellooploop(Ast *__restrict self) {
 	int result = 0;
 	struct ast *me;
 	if (COMPILER_BEGIN(self->ci_compiler))
-		return -1;
+		goto err;
 	me = self->ci_value;
 	if unlikely(me->a_type != AST_LOOP) {
 		result = err_invalid_ast_type(self, AST_LOOP);
@@ -1399,6 +1461,8 @@ ast_dellooploop(Ast *__restrict self) {
 	}
 	COMPILER_END();
 	return result;
+err:
+	return -1;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
@@ -1409,7 +1473,7 @@ ast_setlooploop(Ast *__restrict self,
 	if (DeeNone_Check(value))
 		return ast_dellooploop(self);
 	if (COMPILER_BEGIN(self->ci_compiler))
-		return -1;
+		goto err;
 	me = self->ci_value;
 	if unlikely(me->a_type != AST_LOOP) {
 		result = err_invalid_ast_type(self, AST_LOOP);
@@ -1428,6 +1492,8 @@ ast_setlooploop(Ast *__restrict self,
 	}
 	COMPILER_END();
 	return result;
+err:
+	return -1;
 }
 
 
@@ -1436,7 +1502,7 @@ ast_getloopelemcond(Ast *__restrict self) {
 	DREF DeeObject *result;
 	struct ast *me;
 	if (COMPILER_BEGIN(self->ci_compiler))
-		return NULL;
+		goto err;
 	me = self->ci_value;
 	if unlikely(me->a_type != AST_LOOP) {
 		err_invalid_ast_type(self, AST_LOOP);
@@ -1449,6 +1515,8 @@ ast_getloopelemcond(Ast *__restrict self) {
 	}
 	COMPILER_END();
 	return result;
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
@@ -1456,7 +1524,7 @@ ast_delloopelemcond(Ast *__restrict self) {
 	int result = 0;
 	struct ast *me;
 	if (COMPILER_BEGIN(self->ci_compiler))
-		return -1;
+		goto err;
 	me = self->ci_value;
 	if unlikely(me->a_type != AST_LOOP) {
 		result = err_invalid_ast_type(self, AST_LOOP);
@@ -1470,6 +1538,8 @@ ast_delloopelemcond(Ast *__restrict self) {
 	}
 	COMPILER_END();
 	return result;
+err:
+	return -1;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
@@ -1480,7 +1550,7 @@ ast_setloopelemcond(Ast *__restrict self,
 	if (DeeNone_Check(value))
 		return ast_delloopelemcond(self);
 	if (COMPILER_BEGIN(self->ci_compiler))
-		return -1;
+		goto err;
 	me = self->ci_value;
 	if unlikely(me->a_type != AST_LOOP) {
 		result = err_invalid_ast_type(self, AST_LOOP);
@@ -1499,6 +1569,8 @@ ast_setloopelemcond(Ast *__restrict self,
 	}
 	COMPILER_END();
 	return result;
+err:
+	return -1;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -1506,7 +1578,7 @@ ast_getloopiternext(Ast *__restrict self) {
 	DREF DeeObject *result;
 	struct ast *me;
 	if (COMPILER_BEGIN(self->ci_compiler))
-		return NULL;
+		goto err;
 	me = self->ci_value;
 	if unlikely(me->a_type != AST_LOOP) {
 		err_invalid_ast_type(self, AST_LOOP);
@@ -1519,6 +1591,8 @@ ast_getloopiternext(Ast *__restrict self) {
 	}
 	COMPILER_END();
 	return result;
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
@@ -1526,7 +1600,7 @@ ast_delloopiternext(Ast *__restrict self) {
 	int result = 0;
 	struct ast *me;
 	if (COMPILER_BEGIN(self->ci_compiler))
-		return -1;
+		goto err;
 	me = self->ci_value;
 	if unlikely(me->a_type != AST_LOOP) {
 		result = err_invalid_ast_type(self, AST_LOOP);
@@ -1542,6 +1616,8 @@ ast_delloopiternext(Ast *__restrict self) {
 	}
 	COMPILER_END();
 	return result;
+err:
+	return -1;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
@@ -1552,7 +1628,7 @@ ast_setloopiternext(Ast *__restrict self,
 	if (DeeNone_Check(value))
 		return ast_delloopiternext(self);
 	if (COMPILER_BEGIN(self->ci_compiler))
-		return -1;
+		goto err;
 	me = self->ci_value;
 	if unlikely(me->a_type != AST_LOOP) {
 		result = err_invalid_ast_type(self, AST_LOOP);
@@ -1571,6 +1647,8 @@ ast_setloopiternext(Ast *__restrict self,
 	}
 	COMPILER_END();
 	return result;
+err:
+	return -1;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -1578,7 +1656,7 @@ ast_getloopctlisbreak(Ast *__restrict self) {
 	DREF DeeObject *result;
 	struct ast *me;
 	if (COMPILER_BEGIN(self->ci_compiler))
-		return NULL;
+		goto err;
 	me = self->ci_value;
 	if unlikely(me->a_type != AST_LOOPCTL) {
 		err_invalid_ast_type(self, AST_LOOPCTL);
@@ -1589,6 +1667,8 @@ ast_getloopctlisbreak(Ast *__restrict self) {
 	}
 	COMPILER_END();
 	return result;
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
@@ -1600,7 +1680,7 @@ ast_setloopctlisbreak(Ast *__restrict self,
 	if unlikely(newval < 0)
 		goto err;
 	if (COMPILER_BEGIN(self->ci_compiler))
-		return -1;
+		goto err;
 	me = self->ci_value;
 	if unlikely(me->a_type != AST_LOOP) {
 		result = err_invalid_ast_type(self, AST_LOOP);
@@ -1620,7 +1700,7 @@ ast_getconditionalcond(Ast *__restrict self) {
 	DREF DeeObject *result;
 	struct ast *me;
 	if (COMPILER_BEGIN(self->ci_compiler))
-		return NULL;
+		goto err;
 	me = self->ci_value;
 	if unlikely(me->a_type != AST_CONDITIONAL) {
 		err_invalid_ast_type(self, AST_CONDITIONAL);
@@ -1630,6 +1710,8 @@ ast_getconditionalcond(Ast *__restrict self) {
 	}
 	COMPILER_END();
 	return result;
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
@@ -1638,7 +1720,7 @@ ast_setconditionalcond(Ast *__restrict self,
 	int result = 0;
 	struct ast *me;
 	if (COMPILER_BEGIN(self->ci_compiler))
-		return -1;
+		goto err;
 	me = self->ci_value;
 	if unlikely(me->a_type != AST_CONDITIONAL) {
 		result = err_invalid_ast_type(self, AST_CONDITIONAL);
@@ -1657,6 +1739,8 @@ ast_setconditionalcond(Ast *__restrict self,
 	}
 	COMPILER_END();
 	return result;
+err:
+	return -1;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -1664,7 +1748,7 @@ ast_getconditionaltt(Ast *__restrict self) {
 	DREF DeeObject *result;
 	struct ast *me;
 	if (COMPILER_BEGIN(self->ci_compiler))
-		return NULL;
+		goto err;
 	me = self->ci_value;
 	if unlikely(me->a_type != AST_CONDITIONAL) {
 		err_invalid_ast_type(self, AST_CONDITIONAL);
@@ -1677,6 +1761,8 @@ ast_getconditionaltt(Ast *__restrict self) {
 	}
 	COMPILER_END();
 	return result;
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
@@ -1684,7 +1770,7 @@ ast_delconditionaltt(Ast *__restrict self) {
 	int result = 0;
 	struct ast *me;
 	if (COMPILER_BEGIN(self->ci_compiler))
-		return -1;
+		goto err;
 	me = self->ci_value;
 	if unlikely(me->a_type != AST_CONDITIONAL) {
 		result = err_invalid_ast_type(self, AST_CONDITIONAL);
@@ -1698,6 +1784,8 @@ ast_delconditionaltt(Ast *__restrict self) {
 	}
 	COMPILER_END();
 	return result;
+err:
+	return -1;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
@@ -1708,7 +1796,7 @@ ast_setconditionaltt(Ast *__restrict self,
 	if (DeeNone_Check(value))
 		return ast_delconditionaltt(self);
 	if (COMPILER_BEGIN(self->ci_compiler))
-		return -1;
+		goto err;
 	me = self->ci_value;
 	if unlikely(me->a_type != AST_CONDITIONAL) {
 		result = err_invalid_ast_type(self, AST_CONDITIONAL);
@@ -1727,6 +1815,8 @@ ast_setconditionaltt(Ast *__restrict self,
 	}
 	COMPILER_END();
 	return result;
+err:
+	return -1;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -1734,7 +1824,7 @@ ast_getconditionalff(Ast *__restrict self) {
 	DREF DeeObject *result;
 	struct ast *me;
 	if (COMPILER_BEGIN(self->ci_compiler))
-		return NULL;
+		goto err;
 	me = self->ci_value;
 	if unlikely(me->a_type != AST_CONDITIONAL) {
 		err_invalid_ast_type(self, AST_CONDITIONAL);
@@ -1747,6 +1837,8 @@ ast_getconditionalff(Ast *__restrict self) {
 	}
 	COMPILER_END();
 	return result;
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
@@ -1754,7 +1846,7 @@ ast_delconditionalff(Ast *__restrict self) {
 	int result = 0;
 	struct ast *me;
 	if (COMPILER_BEGIN(self->ci_compiler))
-		return -1;
+		goto err;
 	me = self->ci_value;
 	if unlikely(me->a_type != AST_CONDITIONAL) {
 		result = err_invalid_ast_type(self, AST_CONDITIONAL);
@@ -1768,6 +1860,8 @@ ast_delconditionalff(Ast *__restrict self) {
 	}
 	COMPILER_END();
 	return result;
+err:
+	return -1;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
@@ -1778,7 +1872,7 @@ ast_setconditionalff(Ast *__restrict self,
 	if (DeeNone_Check(value))
 		return ast_delconditionalff(self);
 	if (COMPILER_BEGIN(self->ci_compiler))
-		return -1;
+		goto err;
 	me = self->ci_value;
 	if unlikely(me->a_type != AST_CONDITIONAL) {
 		result = err_invalid_ast_type(self, AST_CONDITIONAL);
@@ -1797,6 +1891,8 @@ ast_setconditionalff(Ast *__restrict self,
 	}
 	COMPILER_END();
 	return result;
+err:
+	return -1;
 }
 
 
@@ -1805,7 +1901,7 @@ ast_getconditionalflags(Ast *__restrict self) {
 	DREF DeeObject *result;
 	struct ast *me;
 	if (COMPILER_BEGIN(self->ci_compiler))
-		return NULL;
+		goto err;
 	me = self->ci_value;
 	if unlikely(me->a_type != AST_CONDITIONAL) {
 		err_invalid_ast_type(self, AST_CONDITIONAL);
@@ -1815,33 +1911,35 @@ ast_getconditionalflags(Ast *__restrict self) {
 		struct unicode_printer printer = UNICODE_PRINTER_INIT;
 		if (me->a_flag & AST_FCOND_BOOL) {
 			if unlikely(unicode_printer_print(&printer, STR_bool, 4) < 0)
-				goto err_printer;
+				goto err_compiler_end_printer;
 			is_first = false;
 		}
 		if (me->a_flag & AST_FCOND_LIKELY) {
 			if (!is_first &&
 			    unlikely(unicode_printer_put8(&printer, ',')))
-				goto err_printer;
+				goto err_compiler_end_printer;
 			if unlikely(UNICODE_PRINTER_PRINT(&printer, "likely") < 0)
-				goto err_printer;
+				goto err_compiler_end_printer;
 			is_first = false;
 		}
 		if (me->a_flag & AST_FCOND_UNLIKELY) {
 			if (!is_first &&
 			    unlikely(unicode_printer_put8(&printer, ',')))
-				goto err_printer;
+				goto err_compiler_end_printer;
 			if unlikely(UNICODE_PRINTER_PRINT(&printer, "unlikely") < 0)
-				goto err_printer;
+				goto err_compiler_end_printer;
 		}
 		result = unicode_printer_pack(&printer);
-		goto done;
-err_printer:
+		goto done_compiler_end;
+err_compiler_end_printer:
 		unicode_printer_fini(&printer);
 		result = NULL;
 	}
-done:
+done_compiler_end:
 	COMPILER_END();
 	return result;
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
@@ -1858,7 +1956,7 @@ ast_setconditionalflags(Ast *__restrict self,
 			goto err;
 	}
 	if (COMPILER_BEGIN(self->ci_compiler))
-		return -1;
+		goto err;
 	me = self->ci_value;
 	if unlikely(me->a_type != AST_CONDITIONAL) {
 		result = err_invalid_ast_type(self, AST_CONDITIONAL);
@@ -1877,7 +1975,7 @@ ast_getconditionalisbool(Ast *__restrict self) {
 	DREF DeeObject *result;
 	struct ast *me;
 	if (COMPILER_BEGIN(self->ci_compiler))
-		return NULL;
+		goto err;
 	me = self->ci_value;
 	if unlikely(me->a_type != AST_CONDITIONAL) {
 		err_invalid_ast_type(self, AST_CONDITIONAL);
@@ -1888,6 +1986,8 @@ ast_getconditionalisbool(Ast *__restrict self) {
 	}
 	COMPILER_END();
 	return result;
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
@@ -1899,7 +1999,7 @@ ast_setconditionalisbool(Ast *__restrict self,
 	if unlikely(newval < 0)
 		goto err;
 	if (COMPILER_BEGIN(self->ci_compiler))
-		return -1;
+		goto err;
 	me = self->ci_value;
 	if unlikely(me->a_type != AST_CONDITIONAL) {
 		result = err_invalid_ast_type(self, AST_CONDITIONAL);
@@ -1919,7 +2019,7 @@ ast_getconditionalislikely(Ast *__restrict self) {
 	DREF DeeObject *result;
 	struct ast *me;
 	if (COMPILER_BEGIN(self->ci_compiler))
-		return NULL;
+		goto err;
 	me = self->ci_value;
 	if unlikely(me->a_type != AST_CONDITIONAL) {
 		err_invalid_ast_type(self, AST_CONDITIONAL);
@@ -1930,6 +2030,8 @@ ast_getconditionalislikely(Ast *__restrict self) {
 	}
 	COMPILER_END();
 	return result;
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
@@ -1941,7 +2043,7 @@ ast_setconditionalislikely(Ast *__restrict self,
 	if unlikely(newval < 0)
 		goto err;
 	if (COMPILER_BEGIN(self->ci_compiler))
-		return -1;
+		goto err;
 	me = self->ci_value;
 	if unlikely(me->a_type != AST_CONDITIONAL) {
 		result = err_invalid_ast_type(self, AST_CONDITIONAL);
@@ -1961,7 +2063,7 @@ ast_getconditionalisunlikely(Ast *__restrict self) {
 	DREF DeeObject *result;
 	struct ast *me;
 	if (COMPILER_BEGIN(self->ci_compiler))
-		return NULL;
+		goto err;
 	me = self->ci_value;
 	if unlikely(me->a_type != AST_CONDITIONAL) {
 		err_invalid_ast_type(self, AST_CONDITIONAL);
@@ -1972,6 +2074,8 @@ ast_getconditionalisunlikely(Ast *__restrict self) {
 	}
 	COMPILER_END();
 	return result;
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
@@ -1983,7 +2087,7 @@ ast_setconditionalisunlikely(Ast *__restrict self,
 	if unlikely(newval < 0)
 		goto err;
 	if (COMPILER_BEGIN(self->ci_compiler))
-		return -1;
+		goto err;
 	me = self->ci_value;
 	if unlikely(me->a_type != AST_CONDITIONAL) {
 		result = err_invalid_ast_type(self, AST_CONDITIONAL);
@@ -2003,7 +2107,7 @@ ast_getboolast(Ast *__restrict self) {
 	DREF DeeObject *result;
 	struct ast *me;
 	if (COMPILER_BEGIN(self->ci_compiler))
-		return NULL;
+		goto err;
 	me = self->ci_value;
 	if unlikely(me->a_type != AST_BOOL) {
 		err_invalid_ast_type(self, AST_BOOL);
@@ -2013,6 +2117,8 @@ ast_getboolast(Ast *__restrict self) {
 	}
 	COMPILER_END();
 	return result;
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
@@ -2021,7 +2127,7 @@ ast_setboolast(Ast *__restrict self,
 	int result = 0;
 	struct ast *me;
 	if (COMPILER_BEGIN(self->ci_compiler))
-		return -1;
+		goto err;
 	me = self->ci_value;
 	if unlikely(me->a_type != AST_BOOL) {
 		result = err_invalid_ast_type(self, AST_BOOL);
@@ -2040,6 +2146,8 @@ ast_setboolast(Ast *__restrict self,
 	}
 	COMPILER_END();
 	return result;
+err:
+	return -1;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -2047,7 +2155,7 @@ ast_getboolisnegated(Ast *__restrict self) {
 	DREF DeeObject *result;
 	struct ast *me;
 	if (COMPILER_BEGIN(self->ci_compiler))
-		return NULL;
+		goto err;
 	me = self->ci_value;
 	if unlikely(me->a_type != AST_BOOL) {
 		err_invalid_ast_type(self, AST_BOOL);
@@ -2058,6 +2166,8 @@ ast_getboolisnegated(Ast *__restrict self) {
 	}
 	COMPILER_END();
 	return result;
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
@@ -2069,7 +2179,7 @@ ast_setboolisnegated(Ast *__restrict self,
 	if unlikely(newval < 0)
 		goto err;
 	if (COMPILER_BEGIN(self->ci_compiler))
-		return -1;
+		goto err;
 	me = self->ci_value;
 	if unlikely(me->a_type != AST_BOOL) {
 		result = err_invalid_ast_type(self, AST_BOOL);
@@ -2089,7 +2199,7 @@ ast_getexpandast(Ast *__restrict self) {
 	DREF DeeObject *result;
 	struct ast *me;
 	if (COMPILER_BEGIN(self->ci_compiler))
-		return NULL;
+		goto err;
 	me = self->ci_value;
 	if unlikely(me->a_type != AST_EXPAND) {
 		err_invalid_ast_type(self, AST_EXPAND);
@@ -2099,6 +2209,8 @@ ast_getexpandast(Ast *__restrict self) {
 	}
 	COMPILER_END();
 	return result;
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
@@ -2107,7 +2219,7 @@ ast_setexpandast(Ast *__restrict self,
 	int result = 0;
 	struct ast *me;
 	if (COMPILER_BEGIN(self->ci_compiler))
-		return -1;
+		goto err;
 	me = self->ci_value;
 	if unlikely(me->a_type != AST_EXPAND) {
 		result = err_invalid_ast_type(self, AST_EXPAND);
@@ -2126,6 +2238,8 @@ ast_setexpandast(Ast *__restrict self,
 	}
 	COMPILER_END();
 	return result;
+err:
+	return -1;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -2133,7 +2247,7 @@ ast_getfunctioncode(Ast *__restrict self) {
 	DREF DeeObject *result;
 	struct ast *me;
 	if (COMPILER_BEGIN(self->ci_compiler))
-		return NULL;
+		goto err;
 	me = self->ci_value;
 	if unlikely(me->a_type != AST_FUNCTION) {
 		err_invalid_ast_type(self, AST_FUNCTION);
@@ -2143,6 +2257,8 @@ ast_getfunctioncode(Ast *__restrict self) {
 	}
 	COMPILER_END();
 	return result;
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
@@ -2151,7 +2267,7 @@ ast_setfunctioncode(Ast *__restrict self,
 	int result = 0;
 	struct ast *me;
 	if (COMPILER_BEGIN(self->ci_compiler))
-		return -1;
+		goto err;
 	me = self->ci_value;
 	if unlikely(me->a_type != AST_EXPAND) {
 		result = err_invalid_ast_type(self, AST_EXPAND);
@@ -2179,6 +2295,8 @@ ast_setfunctioncode(Ast *__restrict self,
 	}
 	COMPILER_END();
 	return result;
+err:
+	return -1;
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
@@ -2209,7 +2327,7 @@ ast_getoperatorfuncname(Ast *__restrict self) {
 	DREF DeeObject *result;
 	struct ast *me;
 	if (COMPILER_BEGIN(self->ci_compiler))
-		return NULL;
+		goto err;
 	me = self->ci_value;
 	if unlikely(me->a_type != AST_OPERATOR_FUNC) {
 		err_invalid_ast_type(self, AST_OPERATOR_FUNC);
@@ -2219,6 +2337,8 @@ ast_getoperatorfuncname(Ast *__restrict self) {
 	}
 	COMPILER_END();
 	return result;
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
@@ -2227,7 +2347,7 @@ ast_setoperatorfuncname(Ast *__restrict self,
 	int result = 0;
 	struct ast *me;
 	if (COMPILER_BEGIN(self->ci_compiler))
-		return -1;
+		goto err;
 	me = self->ci_value;
 	if unlikely(me->a_type != AST_OPERATOR_FUNC) {
 		result = err_invalid_ast_type(self, AST_OPERATOR_FUNC);
@@ -2239,6 +2359,8 @@ ast_setoperatorfuncname(Ast *__restrict self,
 	}
 	COMPILER_END();
 	return result;
+err:
+	return -1;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -2246,7 +2368,7 @@ ast_getoperatorfuncbinding(Ast *__restrict self) {
 	DREF DeeObject *result;
 	struct ast *me;
 	if (COMPILER_BEGIN(self->ci_compiler))
-		return NULL;
+		goto err;
 	me = self->ci_value;
 	if unlikely(me->a_type != AST_OPERATOR_FUNC) {
 		err_invalid_ast_type(self, AST_OPERATOR_FUNC);
@@ -2259,6 +2381,8 @@ ast_getoperatorfuncbinding(Ast *__restrict self) {
 	}
 	COMPILER_END();
 	return result;
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
@@ -2266,7 +2390,7 @@ ast_deloperatorfuncbinding(Ast *__restrict self) {
 	int result = 0;
 	struct ast *me;
 	if (COMPILER_BEGIN(self->ci_compiler))
-		return -1;
+		goto err;
 	me = self->ci_value;
 	if unlikely(me->a_type != AST_OPERATOR_FUNC) {
 		result = err_invalid_ast_type(self, AST_OPERATOR_FUNC);
@@ -2280,6 +2404,8 @@ ast_deloperatorfuncbinding(Ast *__restrict self) {
 	}
 	COMPILER_END();
 	return result;
+err:
+	return -1;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
@@ -2290,7 +2416,7 @@ ast_setoperatorfuncbinding(Ast *__restrict self,
 	if (DeeNone_Check(value))
 		return ast_deloperatorfuncbinding(self);
 	if (COMPILER_BEGIN(self->ci_compiler))
-		return -1;
+		goto err;
 	me = self->ci_value;
 	if unlikely(me->a_type != AST_OPERATOR_FUNC) {
 		result = err_invalid_ast_type(self, AST_OPERATOR_FUNC);
@@ -2309,6 +2435,8 @@ ast_setoperatorfuncbinding(Ast *__restrict self,
 	}
 	COMPILER_END();
 	return result;
+err:
+	return -1;
 }
 
 
@@ -2317,7 +2445,7 @@ ast_getoperatorname(Ast *__restrict self) {
 	DREF DeeObject *result;
 	struct ast *me;
 	if (COMPILER_BEGIN(self->ci_compiler))
-		return NULL;
+		goto err;
 	me = self->ci_value;
 	if unlikely(me->a_type != AST_OPERATOR) {
 		err_invalid_ast_type(self, AST_OPERATOR);
@@ -2327,6 +2455,8 @@ ast_getoperatorname(Ast *__restrict self) {
 	}
 	COMPILER_END();
 	return result;
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
@@ -2335,7 +2465,7 @@ ast_setoperatorname(Ast *__restrict self,
 	int result = 0;
 	struct ast *me;
 	if (COMPILER_BEGIN(self->ci_compiler))
-		return -1;
+		goto err;
 	me = self->ci_value;
 	if unlikely(me->a_type != AST_OPERATOR) {
 		result = err_invalid_ast_type(self, AST_OPERATOR);
@@ -2347,6 +2477,8 @@ ast_setoperatorname(Ast *__restrict self,
 	}
 	COMPILER_END();
 	return result;
+err:
+	return -1;
 }
 
 
@@ -2355,7 +2487,7 @@ ast_getoperatora(Ast *__restrict self) {
 	DREF DeeObject *result;
 	struct ast *me;
 	if (COMPILER_BEGIN(self->ci_compiler))
-		return NULL;
+		goto err;
 	me = self->ci_value;
 	if unlikely(me->a_type != AST_OPERATOR) {
 		err_invalid_ast_type(self, AST_OPERATOR);
@@ -2365,6 +2497,8 @@ ast_getoperatora(Ast *__restrict self) {
 	}
 	COMPILER_END();
 	return result;
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
@@ -2373,7 +2507,7 @@ ast_setoperatora(Ast *__restrict self,
 	int result = 0;
 	struct ast *me;
 	if (COMPILER_BEGIN(self->ci_compiler))
-		return -1;
+		goto err;
 	me = self->ci_value;
 	if unlikely(me->a_type != AST_OPERATOR) {
 		result = err_invalid_ast_type(self, AST_OPERATOR);
@@ -2392,6 +2526,8 @@ ast_setoperatora(Ast *__restrict self,
 	}
 	COMPILER_END();
 	return result;
+err:
+	return -1;
 }
 
 
@@ -2400,7 +2536,7 @@ ast_getoperatorb(Ast *__restrict self) {
 	DREF DeeObject *result;
 	struct ast *me;
 	if (COMPILER_BEGIN(self->ci_compiler))
-		return NULL;
+		goto err;
 	me = self->ci_value;
 	if unlikely(me->a_type != AST_OPERATOR) {
 		err_invalid_ast_type(self, AST_OPERATOR);
@@ -2413,6 +2549,8 @@ ast_getoperatorb(Ast *__restrict self) {
 	}
 	COMPILER_END();
 	return result;
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
@@ -2420,7 +2558,7 @@ ast_deloperatorb(Ast *__restrict self) {
 	int result = 0;
 	struct ast *me;
 	if (COMPILER_BEGIN(self->ci_compiler))
-		return -1;
+		goto err;
 	me = self->ci_value;
 	if unlikely(me->a_type != AST_OPERATOR_FUNC) {
 		result = err_invalid_ast_type(self, AST_OPERATOR_FUNC);
@@ -2434,6 +2572,8 @@ ast_deloperatorb(Ast *__restrict self) {
 	}
 	COMPILER_END();
 	return result;
+err:
+	return -1;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
@@ -2444,7 +2584,7 @@ ast_setoperatorb(Ast *__restrict self,
 	if (DeeNone_Check(value))
 		return ast_deloperatorb(self);
 	if (COMPILER_BEGIN(self->ci_compiler))
-		return -1;
+		goto err;
 	me = self->ci_value;
 	if unlikely(me->a_type != AST_OPERATOR) {
 		result = err_invalid_ast_type(self, AST_OPERATOR);
@@ -2463,6 +2603,8 @@ ast_setoperatorb(Ast *__restrict self,
 	}
 	COMPILER_END();
 	return result;
+err:
+	return -1;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -2470,7 +2612,7 @@ ast_getoperatorc(Ast *__restrict self) {
 	DREF DeeObject *result;
 	struct ast *me;
 	if (COMPILER_BEGIN(self->ci_compiler))
-		return NULL;
+		goto err;
 	me = self->ci_value;
 	if unlikely(me->a_type != AST_OPERATOR) {
 		err_invalid_ast_type(self, AST_OPERATOR);
@@ -2483,6 +2625,8 @@ ast_getoperatorc(Ast *__restrict self) {
 	}
 	COMPILER_END();
 	return result;
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
@@ -2490,7 +2634,7 @@ ast_deloperatorc(Ast *__restrict self) {
 	int result = 0;
 	struct ast *me;
 	if (COMPILER_BEGIN(self->ci_compiler))
-		return -1;
+		goto err;
 	me = self->ci_value;
 	if unlikely(me->a_type != AST_OPERATOR_FUNC) {
 		result = err_invalid_ast_type(self, AST_OPERATOR_FUNC);
@@ -2504,6 +2648,8 @@ ast_deloperatorc(Ast *__restrict self) {
 	}
 	COMPILER_END();
 	return result;
+err:
+	return -1;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
@@ -2514,7 +2660,7 @@ ast_setoperatorc(Ast *__restrict self,
 	if (DeeNone_Check(value))
 		return ast_deloperatorc(self);
 	if (COMPILER_BEGIN(self->ci_compiler))
-		return -1;
+		goto err;
 	me = self->ci_value;
 	if unlikely(me->a_type != AST_OPERATOR) {
 		result = err_invalid_ast_type(self, AST_OPERATOR);
@@ -2533,6 +2679,8 @@ ast_setoperatorc(Ast *__restrict self,
 	}
 	COMPILER_END();
 	return result;
+err:
+	return -1;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -2540,7 +2688,7 @@ ast_getoperatord(Ast *__restrict self) {
 	DREF DeeObject *result;
 	struct ast *me;
 	if (COMPILER_BEGIN(self->ci_compiler))
-		return NULL;
+		goto err;
 	me = self->ci_value;
 	if unlikely(me->a_type != AST_OPERATOR) {
 		err_invalid_ast_type(self, AST_OPERATOR);
@@ -2553,6 +2701,8 @@ ast_getoperatord(Ast *__restrict self) {
 	}
 	COMPILER_END();
 	return result;
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
@@ -2560,7 +2710,7 @@ ast_deloperatord(Ast *__restrict self) {
 	int result = 0;
 	struct ast *me;
 	if (COMPILER_BEGIN(self->ci_compiler))
-		return -1;
+		goto err;
 	me = self->ci_value;
 	if unlikely(me->a_type != AST_OPERATOR_FUNC) {
 		result = err_invalid_ast_type(self, AST_OPERATOR_FUNC);
@@ -2574,6 +2724,8 @@ ast_deloperatord(Ast *__restrict self) {
 	}
 	COMPILER_END();
 	return result;
+err:
+	return -1;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
@@ -2584,7 +2736,7 @@ ast_setoperatord(Ast *__restrict self,
 	if (DeeNone_Check(value))
 		return ast_deloperatord(self);
 	if (COMPILER_BEGIN(self->ci_compiler))
-		return -1;
+		goto err;
 	me = self->ci_value;
 	if unlikely(me->a_type != AST_OPERATOR) {
 		result = err_invalid_ast_type(self, AST_OPERATOR);
@@ -2603,6 +2755,8 @@ ast_setoperatord(Ast *__restrict self,
 	}
 	COMPILER_END();
 	return result;
+err:
+	return -1;
 }
 
 
@@ -2611,7 +2765,7 @@ ast_getoperatorflags(Ast *__restrict self) {
 	DREF DeeObject *result;
 	struct ast *me;
 	if (COMPILER_BEGIN(self->ci_compiler))
-		return NULL;
+		goto err;
 	me = self->ci_value;
 	if unlikely(me->a_type != AST_OPERATOR) {
 		err_invalid_ast_type(self, AST_OPERATOR);
@@ -2655,6 +2809,8 @@ err_printer:
 done:
 	COMPILER_END();
 	return result;
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
@@ -2671,7 +2827,7 @@ ast_setoperatorflags(Ast *__restrict self,
 			goto err;
 	}
 	if (COMPILER_BEGIN(self->ci_compiler))
-		return -1;
+		goto err;
 	me = self->ci_value;
 	if unlikely(me->a_type != AST_OPERATOR) {
 		result = err_invalid_ast_type(self, AST_OPERATOR);
@@ -2689,7 +2845,7 @@ ast_getoperatorispost(Ast *__restrict self) {
 	DREF DeeObject *result;
 	struct ast *me;
 	if (COMPILER_BEGIN(self->ci_compiler))
-		return NULL;
+		goto err;
 	me = self->ci_value;
 	if unlikely(me->a_type != AST_OPERATOR) {
 		err_invalid_ast_type(self, AST_OPERATOR);
@@ -2700,6 +2856,8 @@ ast_getoperatorispost(Ast *__restrict self) {
 	}
 	COMPILER_END();
 	return result;
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
@@ -2711,7 +2869,7 @@ ast_setoperatorispost(Ast *__restrict self,
 	if unlikely(newval < 0)
 		goto err;
 	if (COMPILER_BEGIN(self->ci_compiler))
-		return -1;
+		goto err;
 	me = self->ci_value;
 	if unlikely(me->a_type != AST_OPERATOR) {
 		result = err_invalid_ast_type(self, AST_OPERATOR);
@@ -2731,7 +2889,7 @@ ast_getoperatorisvarargs(Ast *__restrict self) {
 	DREF DeeObject *result;
 	struct ast *me;
 	if (COMPILER_BEGIN(self->ci_compiler))
-		return NULL;
+		goto err;
 	me = self->ci_value;
 	if unlikely(me->a_type != AST_OPERATOR) {
 		err_invalid_ast_type(self, AST_OPERATOR);
@@ -2742,6 +2900,8 @@ ast_getoperatorisvarargs(Ast *__restrict self) {
 	}
 	COMPILER_END();
 	return result;
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
@@ -2753,7 +2913,7 @@ ast_setoperatorisvarargs(Ast *__restrict self,
 	if unlikely(newval < 0)
 		goto err;
 	if (COMPILER_BEGIN(self->ci_compiler))
-		return -1;
+		goto err;
 	me = self->ci_value;
 	if unlikely(me->a_type != AST_OPERATOR) {
 		result = err_invalid_ast_type(self, AST_OPERATOR);
@@ -2773,7 +2933,7 @@ ast_getoperatorismaybeprefix(Ast *__restrict self) {
 	DREF DeeObject *result;
 	struct ast *me;
 	if (COMPILER_BEGIN(self->ci_compiler))
-		return NULL;
+		goto err;
 	me = self->ci_value;
 	if unlikely(me->a_type != AST_OPERATOR) {
 		err_invalid_ast_type(self, AST_OPERATOR);
@@ -2784,6 +2944,8 @@ ast_getoperatorismaybeprefix(Ast *__restrict self) {
 	}
 	COMPILER_END();
 	return result;
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
@@ -2795,7 +2957,7 @@ ast_setoperatorismaybeprefix(Ast *__restrict self,
 	if unlikely(newval < 0)
 		goto err;
 	if (COMPILER_BEGIN(self->ci_compiler))
-		return -1;
+		goto err;
 	me = self->ci_value;
 	if unlikely(me->a_type != AST_OPERATOR) {
 		result = err_invalid_ast_type(self, AST_OPERATOR);
@@ -2815,7 +2977,7 @@ ast_getoperatorisdontoptimize(Ast *__restrict self) {
 	DREF DeeObject *result;
 	struct ast *me;
 	if (COMPILER_BEGIN(self->ci_compiler))
-		return NULL;
+		goto err;
 	me = self->ci_value;
 	if unlikely(me->a_type != AST_OPERATOR) {
 		err_invalid_ast_type(self, AST_OPERATOR);
@@ -2826,6 +2988,8 @@ ast_getoperatorisdontoptimize(Ast *__restrict self) {
 	}
 	COMPILER_END();
 	return result;
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
@@ -2837,7 +3001,7 @@ ast_setoperatorisdontoptimize(Ast *__restrict self,
 	if unlikely(newval < 0)
 		goto err;
 	if (COMPILER_BEGIN(self->ci_compiler))
-		return -1;
+		goto err;
 	me = self->ci_value;
 	if unlikely(me->a_type != AST_OPERATOR) {
 		result = err_invalid_ast_type(self, AST_OPERATOR);
@@ -2857,7 +3021,7 @@ ast_getactionname(Ast *__restrict self) {
 	DREF DeeObject *result;
 	struct ast *me;
 	if (COMPILER_BEGIN(self->ci_compiler))
-		return NULL;
+		goto err;
 	me = self->ci_value;
 	if unlikely(me->a_type != AST_ACTION) {
 		err_invalid_ast_type(self, AST_ACTION);
@@ -2869,6 +3033,8 @@ ast_getactionname(Ast *__restrict self) {
 	}
 	COMPILER_END();
 	return result;
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
@@ -2877,7 +3043,7 @@ ast_setactionname(Ast *__restrict self,
 	int result = 0;
 	struct ast *me;
 	if (COMPILER_BEGIN(self->ci_compiler))
-		return -1;
+		goto err;
 	me = self->ci_value;
 	if unlikely(me->a_type != AST_ACTION) {
 		result = err_invalid_ast_type(self, AST_ACTION);
@@ -2905,6 +3071,8 @@ ast_setactionname(Ast *__restrict self,
 	}
 	COMPILER_END();
 	return result;
+err:
+	return -1;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -2912,7 +3080,7 @@ ast_getactiona(Ast *__restrict self) {
 	DREF DeeObject *result;
 	struct ast *me;
 	if (COMPILER_BEGIN(self->ci_compiler))
-		return NULL;
+		goto err;
 	me = self->ci_value;
 	if unlikely(me->a_type != AST_ACTION) {
 		err_invalid_ast_type(self, AST_ACTION);
@@ -2925,6 +3093,8 @@ ast_getactiona(Ast *__restrict self) {
 	}
 	COMPILER_END();
 	return result;
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
@@ -2933,7 +3103,7 @@ ast_setactiona(Ast *__restrict self,
 	int result = 0;
 	struct ast *me;
 	if (COMPILER_BEGIN(self->ci_compiler))
-		return -1;
+		goto err;
 	me = self->ci_value;
 	if unlikely(me->a_type != AST_ACTION) {
 		result = err_invalid_ast_type(self, AST_ACTION);
@@ -2954,6 +3124,8 @@ ast_setactiona(Ast *__restrict self,
 	}
 	COMPILER_END();
 	return result;
+err:
+	return -1;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -2961,7 +3133,7 @@ ast_getactionb(Ast *__restrict self) {
 	DREF DeeObject *result;
 	struct ast *me;
 	if (COMPILER_BEGIN(self->ci_compiler))
-		return NULL;
+		goto err;
 	me = self->ci_value;
 	if unlikely(me->a_type != AST_ACTION) {
 		err_invalid_ast_type(self, AST_ACTION);
@@ -2974,6 +3146,8 @@ ast_getactionb(Ast *__restrict self) {
 	}
 	COMPILER_END();
 	return result;
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
@@ -2982,7 +3156,7 @@ ast_setactionb(Ast *__restrict self,
 	int result = 0;
 	struct ast *me;
 	if (COMPILER_BEGIN(self->ci_compiler))
-		return -1;
+		goto err;
 	me = self->ci_value;
 	if unlikely(me->a_type != AST_ACTION) {
 		result = err_invalid_ast_type(self, AST_ACTION);
@@ -3003,6 +3177,8 @@ ast_setactionb(Ast *__restrict self,
 	}
 	COMPILER_END();
 	return result;
+err:
+	return -1;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -3010,7 +3186,7 @@ ast_getactionc(Ast *__restrict self) {
 	DREF DeeObject *result;
 	struct ast *me;
 	if (COMPILER_BEGIN(self->ci_compiler))
-		return NULL;
+		goto err;
 	me = self->ci_value;
 	if unlikely(me->a_type != AST_ACTION) {
 		err_invalid_ast_type(self, AST_ACTION);
@@ -3023,6 +3199,8 @@ ast_getactionc(Ast *__restrict self) {
 	}
 	COMPILER_END();
 	return result;
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
@@ -3031,7 +3209,7 @@ ast_setactionc(Ast *__restrict self,
 	int result = 0;
 	struct ast *me;
 	if (COMPILER_BEGIN(self->ci_compiler))
-		return -1;
+		goto err;
 	me = self->ci_value;
 	if unlikely(me->a_type != AST_ACTION) {
 		result = err_invalid_ast_type(self, AST_ACTION);
@@ -3052,6 +3230,8 @@ ast_setactionc(Ast *__restrict self,
 	}
 	COMPILER_END();
 	return result;
+err:
+	return -1;
 }
 
 
@@ -5171,10 +5351,12 @@ ast_print(DeeCompilerAstObject *__restrict self,
           dformatprinter printer, void *arg) {
 	dssize_t result;
 	if (COMPILER_BEGIN(self->ci_compiler))
-		return -1;
+		goto err;
 	result = print_ast_code(self->ci_value, printer, arg, false, NULL, 0);
 	COMPILER_END();
 	return result;
+err:
+	return -1;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
@@ -5182,10 +5364,12 @@ ast_printrepr(DeeCompilerAstObject *__restrict self,
               dformatprinter printer, void *arg) {
 	dssize_t result;
 	if (COMPILER_BEGIN(self->ci_compiler))
-		return -1;
+		goto err;
 	result = print_ast_repr(self->ci_value, printer, arg);
 	COMPILER_END();
 	return result;
+err:
+	return -1;
 }
 
 

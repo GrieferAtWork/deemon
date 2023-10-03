@@ -183,8 +183,10 @@ INTDEF DeeTypeObject SeqSegmentsIterator_Type;
 	PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL                \
 	name(SegmentsIterator *self, SegmentsIterator *other) {              \
 		if (DeeObject_AssertTypeExact(other, &SeqSegmentsIterator_Type)) \
-			return NULL;                                                 \
+			goto err;                                                    \
 		return func(self->si_iter, other->si_iter);                      \
+	err:                                                                 \
+		return NULL;                                                     \
 	}
 DEFINE_SEGITER_COMPARE(segiter_eq, DeeObject_CompareEqObject)
 DEFINE_SEGITER_COMPARE(segiter_ne, DeeObject_CompareNeObject)

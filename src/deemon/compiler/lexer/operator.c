@@ -231,12 +231,12 @@ do_generic:
 		args = ast_operator2(OPERATOR_CALL, 0, function_ast, args);
 		ast_decref(function_ast);
 		return args;
-err:
-		return NULL;
 	}
 
 	/* Encode a regular, old varargs operator. */
 	return ast_operator1(name, flags | AST_OPERATOR_FVARARGS, args);
+err:
+	return NULL;
 }
 
 INTERN WUNUSED NONNULL((3, 4)) DREF struct ast *DCALL

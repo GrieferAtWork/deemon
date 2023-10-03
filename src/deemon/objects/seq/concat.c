@@ -211,7 +211,7 @@ done:
 		DREF DeeObject *my_curr, *ot_curr;                                     \
 		DREF DeeObject **my_pseq, **ot_pseq;                                   \
 		if (DeeObject_AssertTypeExact(other, &SeqConcatIterator_Type))         \
-			return NULL;                                                       \
+			goto err;                                                          \
 		if (self == other)                                                     \
 			if_equal;                                                          \
 		CatIterator_LockRead2(self, other);                                    \
@@ -232,6 +232,8 @@ done:
 		Dee_Decref(ot_curr);                                                   \
 		Dee_Decref(my_curr);                                                   \
 		return result;                                                         \
+	err:                                                                       \
+		return NULL;                                                           \
 	}
 DEFINE_CATITERATOR_COMPARE(catiterator_eq, return_true, return_false, DeeObject_CompareEqObject)
 DEFINE_CATITERATOR_COMPARE(catiterator_ne, return_false, return_true, DeeObject_CompareNeObject)
